@@ -551,7 +551,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.17.2"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.17.3"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2279,13 +2279,24 @@ let externTimer = null;
 function externZu() { clearTimeout(externTimer); $("externBlatt").classList.add("versteckt"); } // von Hand geschlossen → nicht wieder aufgehen
 function externVersuch(art, weg, wege, wert) {
   clearTimeout(externTimer);
-  let weg0 = false; const merke = () => { if (document.hidden) { weg0 = true; externMerken(art, weg.k); $("externBlatt").classList.add("versteckt"); } };
-  document.addEventListener("visibilitychange", merke);
-  try { if (weg.neu) window.open(weg.url, "_blank", "noopener"); else location.href = weg.url; } catch {}
+  // Messung für die Fehlersuche: wann die App in den Hintergrund geht / zurückkommt, ob sie den Fokus verliert
+  const t0 = performance.now(), m = { art, weg: weg.k, versteckt_ms: null, zurueck_ms: null, blur_ms: null, pagehide: false, fehler: "",
+    modus: matchMedia("(display-mode: standalone)").matches ? "standalone" : matchMedia("(display-mode: minimal-ui)").matches ? "minimal-ui" : "browser" };
+  let weg0 = false;
+  const merke = () => {
+    if (document.hidden) { if (m.versteckt_ms == null) m.versteckt_ms = Math.round(performance.now() - t0); weg0 = true; externMerken(art, weg.k); $("externBlatt").classList.add("versteckt"); }
+    else if (m.versteckt_ms != null && m.zurueck_ms == null) m.zurueck_ms = Math.round(performance.now() - t0);
+  };
+  const blur = () => { if (m.blur_ms == null) m.blur_ms = Math.round(performance.now() - t0); };
+  const hide = () => { m.pagehide = true; };
+  document.addEventListener("visibilitychange", merke); addEventListener("blur", blur); addEventListener("pagehide", hide);
+  try { if (weg.neu) { const w = window.open(weg.url, "_blank", "noopener"); m.fenster = w === null ? "null" : "objekt"; } else location.href = weg.url; } catch (e) { m.fehler = String(e?.message || e).slice(0, 150); }
   externTimer = setTimeout(() => {
     document.removeEventListener("visibilitychange", merke);
     if (!weg0 && !document.hidden) externBlatt(art, wege, wert, weg.k);
   }, 2000);
+  // nach 6 s melden (auch wenn der Nutzer zurückgekommen ist)
+  setTimeout(() => { removeEventListener("blur", blur); removeEventListener("pagehide", hide); api("diagnose", { art: "extern", daten: { ...m, erfolg: weg0 } }).catch(() => {}); }, 6000);
 }
 function extern(art, wert) {
   if (!wert) return;

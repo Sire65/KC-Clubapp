@@ -17,7 +17,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.17.0";
+const SERVER_VERSION = "0.17.3";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -1962,6 +1962,15 @@ Köcheclub Werne`,
         const last = typeof p.last === "string" ? p.last.length : 0;
         if (last > MAX_TESTDATEN * 1.1) throw new Fehler("Testdaten zu groß.");
         return json({ ok: true, server: SERVER_VERSION, zeit: jetzt(), dbMs, wartung, empfangen: last, ...(groesse ? { daten: testDaten(groesse) } : {}) });
+      }
+
+      // Fehlersuche (KC-CLUB-EXTERN-DIAGNOSE): was beim Öffnen anderer Apps auf dem Handy passiert – nur technische Angaben, ins Änderungsprotokoll
+      case "diagnose": {
+        const d = (p.daten && typeof p.daten === "object") ? p.daten : {};
+        const sauber: Record<string, unknown> = {};
+        for (const [k, v] of Object.entries(d).slice(0, 20)) sauber[txt(k, 30)] = typeof v === "number" || typeof v === "boolean" ? v : txt(v, 200);
+        await protokoll(ich.person_id, "diagnose_" + (txt(p.art, 20).replace(/[^a-z_]/g, "") || "allg"), { ...sauber, ua: txt(req.headers.get("user-agent"), 200), version: txt(req.headers.get("x-club-version"), 20) });
+        return json({ ok: true });
       }
 
       case "communicator_status": {
