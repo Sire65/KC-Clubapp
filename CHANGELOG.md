@@ -1,5 +1,9 @@
 # Änderungen
 
+## 0.6.1 – 2026-09-28 (DEV)
+
+- Doppel-Tipp-Sperre beim Speichern von Treffen und Vorschlägen (Anlass: Treffen 30.10. wurde doppelt angelegt).
+
 ## 0.6.0 – 2026-09-28 (DEV)
 
 - KC-CLUB-KALENDER: Termine wahlweise als Liste oder Kalender (Wahl wird gemerkt). Blättern Monat ‹ › und Jahr « »,

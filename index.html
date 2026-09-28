@@ -407,7 +407,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.6.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.6.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -780,17 +780,26 @@ async function treffenForm(t) {
     <label class="feld">Ort (leer = beim Gastgeber)<input id="tfOrt" value="${esc(t?.ort || "")}"></label>
     <label class="feld">Beschreibung / Tagesordnung<textarea id="tfBeschr" rows="3">${esc(t?.beschreibung || "")}</textarea></label>
     <label class="schalter"><span>Alle Mitglieder benachrichtigen (Push/Mail)</span><input type="checkbox" id="tfInfo" checked></label>
-    <div class="knoepfe"><button class="knopf haupt" onclick="treffenSpeichern('${t?.id || ""}')">Speichern</button><button class="knopf" onclick="$('treffenForm').classList.add('versteckt')">Abbrechen</button></div>`;
+    <div class="knoepfe"><button class="knopf haupt" onclick="treffenSpeichern('${t?.id || ""}', this)">Speichern</button><button class="knopf" onclick="$('treffenForm').classList.add('versteckt')">Abbrechen</button></div>`;
   $("treffenForm").classList.remove("versteckt"); window.scrollTo(0, 0);
 }
-async function treffenSpeichern(id) {
+// Doppel-Tipp-Sperre: Knopf ist gesperrt, bis der Server geantwortet hat (sonst entstehen doppelte Einträge)
+async function einmal(knopf, arbeit) {
+  if (knopf?.disabled) return;
+  const text = knopf?.textContent;
+  if (knopf) { knopf.disabled = true; knopf.textContent = "⏳ Speichert …"; }
+  try { await arbeit(); } finally { if (knopf && knopf.isConnected) { knopf.disabled = false; knopf.textContent = text; } }
+}
+async function treffenSpeichern(id, knopf) {
   const datum = $("tfDatum").value, zeit = $("tfZeit").value;
   if (!datum || !zeit) return melde("Bitte Datum und Uhrzeit angeben.", true);
   const beginn = new Date(`${datum}T${zeit}:00`); // Gerätezeit = deutsche Zeit
-  try {
-    const r = await api("treffen_speichern", { id: id || undefined, titel: $("tfTitel").value, beginn: beginn.toISOString(), gastgeber_person_id: $("tfGast").value || null, ort: $("tfOrt").value, beschreibung: $("tfBeschr").value, benachrichtigen: $("tfInfo").checked });
-    $("treffenForm").classList.add("versteckt"); melde(r.versand ? `Gespeichert – ${r.versand.gesendet} Mitglieder benachrichtigt` : "Gespeichert"); treffenLaden();
-  } catch (e) { melde(e.message, true); }
+  await einmal(knopf, async () => {
+    try {
+      const r = await api("treffen_speichern", { id: id || undefined, titel: $("tfTitel").value, beginn: beginn.toISOString(), gastgeber_person_id: $("tfGast").value || null, ort: $("tfOrt").value, beschreibung: $("tfBeschr").value, benachrichtigen: $("tfInfo").checked });
+      $("treffenForm").classList.add("versteckt"); melde(r.versand ? `Gespeichert – ${r.versand.gesendet} Mitglieder benachrichtigt` : "Gespeichert"); treffenLaden();
+    } catch (e) { melde(e.message, true); }
+  });
 }
 async function treffenAbsagen(id) {
   if (!confirm("Treffen wirklich absagen? Alle Mitglieder werden benachrichtigt.")) return;
@@ -866,21 +875,23 @@ function vorschlagForm(art) {
       <label class="schalter"><span><b>🔒 Geheime Abstimmung</b><br><small class="hinweis">Niemand sieht, wer wie gestimmt hat; Ergebnis erst am Ende</small></span><input type="checkbox" id="vfGeheim"></label>
       <div class="zwei"><label class="feld">Abstimmen bis (freiwillig)<input id="vfFristDatum" type="date"></label><label class="feld">Uhrzeit<input id="vfFristZeit" type="time" value="20:00"></label></div>` : ""}
     <label class="schalter"><span>${vfArt === "abstimmung" ? "Alle Mitglieder benachrichtigen" : "Vorstand benachrichtigen"}</span><input type="checkbox" id="vfInfo" checked></label>
-    <div class="knoepfe"><button class="knopf haupt" onclick="vorschlagSpeichern()">${vfArt === "abstimmung" ? "Abstimmung starten" : "Vorschlagen"}</button><button class="knopf" onclick="$('vorschlagForm').classList.add('versteckt')">Abbrechen</button></div>`;
+    <div class="knoepfe"><button class="knopf haupt" onclick="vorschlagSpeichern(this)">${vfArt === "abstimmung" ? "Abstimmung starten" : "Vorschlagen"}</button><button class="knopf" onclick="$('vorschlagForm').classList.add('versteckt')">Abbrechen</button></div>`;
   $("vorschlagForm").classList.remove("versteckt"); window.scrollTo(0, 0);
 }
-async function vorschlagSpeichern() {
+async function vorschlagSpeichern(knopf) {
   const daten = { art: vfArt, titel: $("vfTitel").value, beschreibung: $("vfBeschr").value, treffen_id: $("vfTreffen").value || null, benachrichtigen: $("vfInfo").checked };
   if (vfArt === "abstimmung") {
     daten.optionen = $("vfOptionen").value.split("\n").map((x) => x.trim()).filter(Boolean);
     daten.geheim = $("vfGeheim").checked;
     if ($("vfFristDatum").value) daten.frist = new Date(`${$("vfFristDatum").value}T${$("vfFristZeit").value || "20:00"}:00`).toISOString();
   }
-  try {
-    const r = await api("vorschlag_speichern", daten);
-    $("vorschlagForm").classList.add("versteckt");
-    melde(r.versand ? `Gespeichert – ${r.versand.gesendet} benachrichtigt` : "Gespeichert"); vorschlaegeLaden();
-  } catch (e) { melde(e.message, true); }
+  await einmal(knopf, async () => {
+    try {
+      const r = await api("vorschlag_speichern", daten);
+      $("vorschlagForm").classList.add("versteckt");
+      melde(r.versand ? `Gespeichert – ${r.versand.gesendet} benachrichtigt` : "Gespeichert"); vorschlaegeLaden();
+    } catch (e) { melde(e.message, true); }
+  });
 }
 
 // ---------- Dienstpläne (Sollplan aus dem Dienstplan; andere nur mit Freigabe) ----------
