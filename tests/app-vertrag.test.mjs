@@ -334,7 +334,10 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(android.waLink("0171 123 45").startsWith("intent://send?phone=4917112345#Intent;scheme=whatsapp;"), "WhatsApp Android falsch");
   assert.equal(iphone.waLink("+49 171 12345"), "whatsapp://send?phone=4917112345");
   assert.equal(pc.waLink("0171 12345"), "https://wa.me/4917112345");
-  assert.equal(android.routeLink("Markt 1, 59368 Werne"), "geo:0,0?q=Markt%201%2C%2059368%20Werne");
+  // 0.17.1: Android öffnet Google Maps direkt (Rückfall: Browser) statt „geo:“ (leeres Auswahlfenster)
+  const r = android.routeLink("Markt 1, 59368 Werne");
+  assert.ok(r.startsWith("intent://www.google.com/maps/dir/?api=1&destination=Markt%201%2C%2059368%20Werne#Intent;scheme=https;package=com.google.android.apps.maps;"), "Route Android falsch");
+  assert.ok(decodeURIComponent(r.match(/S\.browser_fallback_url=([^;]+)/)[1]) === "https://www.google.com/maps/dir/?api=1&destination=Markt%201%2C%2059368%20Werne", "Route-Rückfall falsch");
   assert.ok(iphone.routeLink("Markt 1").startsWith("https://maps.apple.com/?daddr="), "Route iPhone falsch");
   assert.ok(/m\.onclick = \(\) => m\.remove\(\)/.test(html) && /Math\.min\(20000, \(4000 \+ String\(t\)\.length \* 70\)/.test(html), "Meldungen verschwinden zu schnell");
 }

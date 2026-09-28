@@ -1,5 +1,10 @@
 # Änderungen
 
+## 0.17.1 – 2026-09-28 (DEV)
+
+- KC-CLUB-KONTAKT: „🗺️ Route“ öffnet auf Android jetzt direkt Google Maps mit der Routenplanung zur Adresse
+  (ist Maps nicht installiert: dieselbe Route im Browser). Vorher („geo:“) ging teils nur ein leeres Auswahlfenster auf.
+
 ## 0.17.0 – 2026-09-28 (DEV)
 
 - KC-CLUB-COMMUNICATOR-STATUS: dritte LED (Mitte) für den KC Communicator (Push & E-Mail): 🟢 läuft, 🟡 eingeschränkt
