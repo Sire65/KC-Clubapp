@@ -38,13 +38,14 @@
   .ktag.geb { background: var(--lilabg); color: var(--lila); font-weight: 900; }
   .ktag.frist { background: var(--gelbbg); color: var(--gelb); font-weight: 900; }
   .ktag.dienst { background: var(--blaubg); color: var(--blau); font-weight: 900; }
+  .ktag.feiertag { background: var(--rotbg); color: var(--rot2); font-weight: 900; }
   .ktag.veranst { background: var(--gruenbg); color: var(--gruen); font-weight: 900; }
   .ktag.treffen { background: var(--rot); color: #fff; font-weight: 900; }
   .ktag.gewaehlt { box-shadow: 0 0 0 3px var(--text); }
   .ktag .punkte { display: flex; gap: 3px; margin-top: auto; margin-bottom: 6px; min-height: 6px; }
   .ktag .punkte i { width: 6px; height: 6px; border-radius: 50%; display: block; }
   .p-treffen { background: var(--rot); } .ktag.treffen .p-treffen { background: #fff; }
-  .p-veranst { background: var(--gruen); } .p-dienst { background: var(--blau); } .p-frist { background: #d19a22; } .p-geb { background: var(--lila); }
+  .p-feiertag { background: var(--rot3); } .p-veranst { background: var(--gruen); } .p-dienst { background: var(--blau); } .p-frist { background: #d19a22; } .p-geb { background: var(--lila); }
   .legende { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 12px; font-size: .8rem; color: var(--grau); font-weight: 700; }
   .legende i { display: inline-block; width: 12px; height: 12px; border-radius: 4px; margin-right: 5px; vertical-align: -1px; }
   .keintrag { display: flex; gap: 10px; align-items: center; padding: 10px 0; border-top: 1px solid var(--linie); cursor: pointer; }
@@ -280,7 +281,7 @@
         <div class="tage" id="kalGitter"></div>
         <div class="legende">
           <span><i style="background:var(--rot)"></i>Club-Treffen</span><span><i style="background:var(--gruenbg);outline:1px solid var(--gruen)"></i>🎪 Veranstaltung</span><span><i style="background:var(--blaubg);outline:1px solid var(--blau)"></i>mein Dienst</span>
-          <span><i style="background:var(--gelbbg);outline:1px solid #d19a22"></i>Abstimmungs-Frist</span><span><i style="background:var(--lilabg);outline:1px solid var(--lila)"></i>🎂 Geburtstag</span>
+          <span><i style="background:var(--gelbbg);outline:1px solid #d19a22"></i>Abstimmungs-Frist</span><span><i style="background:var(--lilabg);outline:1px solid var(--lila)"></i>🎂 Geburtstag</span><span><i style="background:var(--rotbg);outline:1px solid var(--rot3)"></i>🇩🇪 Feiertag NRW</span>
           <span><i style="outline:2px solid var(--gold)"></i>heute</span>
         </div>
       </div>
@@ -365,6 +366,7 @@
       <summary>🎨 Darstellung</summary>
       <div class="schalter"><div><b>🔠 Große Schrift</b></div><input type="checkbox" id="setGross" onchange="einstellung('gross', this.checked)"></div>
       <div class="schalter"><div><b>🌙 Dunkles Design</b></div><input type="checkbox" id="setDunkel" onchange="einstellung('dunkel', this.checked)"></div>
+      <div class="schalter"><div><b>🇩🇪 Feiertage NRW im Kalender</b><div class="hinweis">Gesetzliche Feiertage in Nordrhein-Westfalen</div></div><input type="checkbox" id="setFeiertage" onchange="einstellung('feiertage', this.checked); if (KAL) kalZeichnen()"></div>
     </details>
     <details class="karte" data-klappe="install">
       <summary>📲 Auf den Startbildschirm</summary>
@@ -412,7 +414,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.8.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.8.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -432,7 +434,7 @@ function einstellung(k, an) { try { localStorage.setItem("kc_club_" + k, an ? "1
 function anwendenDesign() {
   document.documentElement.classList.toggle("dunkel", einst("dunkel", false));
   document.documentElement.classList.toggle("gross", einst("gross", false));
-  $("setDunkel").checked = einst("dunkel", false); $("setGross").checked = einst("gross", false); $("setTon").checked = einst("ton", true);
+  $("setDunkel").checked = einst("dunkel", false); $("setFeiertage").checked = einst("feiertage", true); $("setGross").checked = einst("gross", false); $("setTon").checked = einst("ton", true);
 }
 function dunkelUmschalten() { einstellung("dunkel", !einst("dunkel", false)); }
 
@@ -695,8 +697,24 @@ async function kalLaden() {
   try { KAL = await api("kalender", { von: start, bis: ende }); KAL.start = start; kalZeichnen(); } catch (e) { melde(e.message, true); }
 }
 // Einträge je Tag (YYYY-MM-DD) zusammenstellen
+// Gesetzliche Feiertage NRW – für jedes Jahr berechnet (Ostern nach der Gauß'schen Osterformel), ohne Server
+const FEIERTAGE_CACHE = {};
+function feiertageNRW(jahr) {
+  if (FEIERTAGE_CACHE[jahr]) return FEIERTAGE_CACHE[jahr];
+  const a = jahr % 19, b = Math.floor(jahr / 100), c = jahr % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3);
+  const h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const monat = Math.floor((h + l - 7 * m + 114) / 31), tag = ((h + l - 7 * m + 114) % 31) + 1;
+  const ostern = `${jahr}-${String(monat).padStart(2, "0")}-${String(tag).padStart(2, "0")}`;
+  const liste = [
+    [`${jahr}-01-01`, "Neujahr"], [tagPlus(ostern, -2), "Karfreitag"], [tagPlus(ostern, 1), "Ostermontag"], [`${jahr}-05-01`, "Tag der Arbeit"],
+    [tagPlus(ostern, 39), "Christi Himmelfahrt"], [tagPlus(ostern, 50), "Pfingstmontag"], [tagPlus(ostern, 60), "Fronleichnam"],
+    [`${jahr}-10-03`, "Tag der Deutschen Einheit"], [`${jahr}-11-01`, "Allerheiligen"], [`${jahr}-12-25`, "1. Weihnachtstag"], [`${jahr}-12-26`, "2. Weihnachtstag"],
+  ];
+  return (FEIERTAGE_CACHE[jahr] = Object.fromEntries(liste));
+}
 function kalEintraege(tag) {
   const e = [];
+  if (einst("feiertage", true)) { const ft = feiertageNRW(+tag.slice(0, 4))[tag]; if (ft) e.push({ art: "feiertag", name: ft }); }
   // Treffen am Beginntag; Veranstaltungen an jedem Tag von Beginn bis Ende (mehrtägig, z. B. Weihnachtsmarkt)
   for (const t of KAL.treffen) {
     const von = berlinIso(t.beginn), bis = t.ende ? berlinIso(t.ende) : von;
@@ -709,7 +727,7 @@ function kalEintraege(tag) {
   return e;
 }
 function kalZeichnen() {
-  const heute = heuteIso(), rang = ["treffen", "veranst", "dienst", "frist", "geb"];
+  const heute = heuteIso(), rang = ["treffen", "veranst", "dienst", "feiertag", "frist", "geb"];
   const tage = [...Array(42)].map((_, i) => tagPlus(KAL.start, i));
   // letzte Woche weglassen, wenn sie ganz im Folgemonat liegt
   const sichtbar = +tage[35].slice(5, 7) - 1 !== kalM ? tage.slice(0, 35) : tage;
@@ -731,6 +749,7 @@ function kalTagZeigen() {
   const kopf = `<h3 style="margin:0 0 4px">${esc(fTagLang.format(new Date(kalTagWahl + "T12:00:00Z")))}</h3>`;
   if (!e.length) { $("kalTag").innerHTML = `<div class="karte">${kopf}<p class="hinweis" style="margin:6px 0 0">Keine Termine an diesem Tag.</p></div>`; return; }
   const zeilen = e.filter((x) => x.art !== "treffen" && x.art !== "veranst").map((x) => {
+    if (x.art === "feiertag") return `<div class="keintrag"><div class="farbe" style="background:var(--rot3)"></div><div style="flex:1"><b>🇩🇪 Feiertag: ${esc(x.name)}</b><small>gesetzlicher Feiertag in NRW</small></div></div>`;
     if (x.art === "dienst") return `<div class="keintrag" onclick="dpNurIch()"><div class="farbe" style="background:var(--blau)"></div><div style="flex:1"><b>🗓️ Mein Dienst ${esc(x.d.start)}–${esc(x.d.ende)} Uhr</b><small>${esc(x.d.bereich || "Dienstplan")}</small></div><b style="color:var(--rot)">›</b></div>`;
     if (x.art === "frist") return `<div class="keintrag" onclick="zeige('vorschlaege')"><div class="farbe" style="background:#d19a22"></div><div style="flex:1"><b>🗳️ ${x.f.offen ? "Abstimmen bis" : "Abstimmung endete"} ${esc(fZeit.format(new Date(x.f.frist)))} Uhr</b><small>${esc(x.f.titel)}</small></div><b style="color:var(--rot)">›</b></div>`;
     const ich = x.g.person_id === ICH?.person_id;

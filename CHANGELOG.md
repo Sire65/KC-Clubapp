@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.8.1 – 2026-09-28 (DEV)
+
+- KC-CLUB-FEIERTAGE: gesetzliche Feiertage NRW im Kalender (hellrot, Tag antippen zeigt den Namen). Werden in der App
+  für jedes Jahr berechnet (Ostern nach Gauß) – kein Server, keine fremde Quelle. Schalter unter Einstellungen → Darstellung
+  „🇩🇪 Feiertage NRW im Kalender“ (Standard an, je Gerät).
+
 ## 0.8.0 – 2026-09-28 (DEV)
 
 - KC-CLUB-GEBURTSTAG-FREIGABE (0.7.0): Einstellungen → Privatsphäre „Meinen Geburtstag anzeigen (ohne Jahr)“ (Standard aus);

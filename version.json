@@ -1,7 +1,8 @@
 {
-  "version": "0.8.0",
+  "version": "0.8.1",
   "datum": "2026-09-28",
   "neu": [
+    "Feiertage NRW im Kalender – ein- und ausschaltbar unter Einstellungen → Darstellung",
     "Geburtstags-Push: 2 Tage vorher und am Tag – mit „Gratulieren“ direkt in den Chat",
     "Veranstaltungen (z. B. Weihnachtsmarkt) im Kalender, auch über mehrere Tage",
     "Einstellungen → Privatsphäre: „Meinen Geburtstag anzeigen (ohne Jahr)“"

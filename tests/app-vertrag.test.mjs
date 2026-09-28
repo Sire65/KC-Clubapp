@@ -143,4 +143,22 @@ assert.ok(/t\.art === "veranstaltung" \? tag >= von && tag <= bis/.test(html), "
 const mig8 = lies("supabase/migrations/20260928_kc_club_v08_geburtstag_push_veranstaltung.sql");
 for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_beide", "club_geburtstag_mail"]) assert.ok(mig8.includes(`'${k}'`), `Regel ${k} fehlt`);
 
+// 20. 0.8.1: Feiertage NRW – berechnet, abschaltbar.
+{
+  const code = html.slice(html.indexOf("const FEIERTAGE_CACHE"), html.indexOf("function kalEintraege(tag)"));
+  const tagPlus = (iso, n) => { const d = new Date(iso + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+  const feiertageNRW = new Function("tagPlus", code + ";return feiertageNRW;")(tagPlus);
+  const erwartet = {
+    2025: { "2025-04-18": "Karfreitag", "2025-04-21": "Ostermontag", "2025-05-29": "Christi Himmelfahrt", "2025-06-09": "Pfingstmontag", "2025-06-19": "Fronleichnam" },
+    2026: { "2026-01-01": "Neujahr", "2026-04-03": "Karfreitag", "2026-04-06": "Ostermontag", "2026-05-01": "Tag der Arbeit", "2026-05-14": "Christi Himmelfahrt", "2026-05-25": "Pfingstmontag", "2026-06-04": "Fronleichnam", "2026-10-03": "Tag der Deutschen Einheit", "2026-11-01": "Allerheiligen", "2026-12-25": "1. Weihnachtstag", "2026-12-26": "2. Weihnachtstag" },
+    2027: { "2027-03-26": "Karfreitag", "2027-03-29": "Ostermontag", "2027-05-06": "Christi Himmelfahrt", "2027-05-17": "Pfingstmontag", "2027-05-27": "Fronleichnam" },
+  };
+  for (const [jahr, tage] of Object.entries(erwartet)) {
+    const f = feiertageNRW(+jahr);
+    for (const [tag, name] of Object.entries(tage)) assert.equal(f[tag], name, `${name} ${jahr} falsch`);
+  }
+  assert.equal(Object.keys(feiertageNRW(2026)).length, 11, "NRW hat 11 gesetzliche Feiertage");
+  assert.ok(/id="setFeiertage"/.test(html) && /einst\("feiertage", true\)/.test(html), "Schalter Feiertage NRW fehlt");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
