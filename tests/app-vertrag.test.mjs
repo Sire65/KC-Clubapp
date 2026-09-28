@@ -197,4 +197,34 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/enable row level security/.test(mig9), "RLS fehlt");
 }
 
+// 22. 0.10.0: Aktionen / Ausflüge aus dem KC Manager (KC-CLUB-AKTIONEN).
+{
+  assert.ok(aktionen.has("aktionen_liste"), "Server-Aktion aktionen_liste fehlt");
+  assert.ok(/const AKTIONEN_QUELLE = \{ tabelle: "kc_manager_state_sections", aktionen: "activities"/.test(server), "Aktionen müssen aus dem KC Manager gelesen werden (keine zweite Datenhaltung)");
+  assert.ok(!/from\(AKTIONEN_QUELLE\.tabelle\)\.(update|insert|upsert|delete)/.test(server), "Club-App darf KC-Manager-Daten nicht ändern");
+  // Datenschutz: Kosten/Reisebüro nur für Teilnehmende + Admin, Bemerkungen nur Admin
+  assert.ok(/\.\.\.\(dabei \|\| ich\.admin \? \{\s*kosten:/.test(server), "Kosten für alle sichtbar");
+  assert.ok(/\.\.\.\(ich\.admin \? \{ bemerkung:/.test(server), "Bemerkungen für alle sichtbar");
+  // Reiseverlauf-Parser: Preiszeilen werden abgeschnitten
+  const code = server.slice(server.indexOf("function reiseverlauf("), server.indexOf("async function aktionenRoh"));
+  const txt = (v, max) => String(v ?? "").slice(0, max);
+  const reiseverlauf = new Function("txt", code.replace(/\(beschreibung: unknown\)/, "(beschreibung)") + ";return reiseverlauf;")(txt);
+  const v = reiseverlauf("11.05.2027 Bremerhaven - 12.05.2027 Seetag - 13.05.2027\nMolde (Moldefjord) - 14.05.2027 Nordfjordeid (Eidsfjord) -\n15.05.2027 Seetag - 16.05.2027 BremerhavenPRO-Tarif\n2 x Frühbucher 1,12 -100,00 € -200,00 €");
+  assert.deepEqual(v.map((x) => x.ort), ["Bremerhaven", "Seetag", "Molde (Moldefjord)", "Nordfjordeid (Eidsfjord)", "Seetag", "Bremerhaven"], "Reiseverlauf falsch");
+  assert.equal(v[0].datum, "2027-05-11");
+  assert.ok(!JSON.stringify(v).includes("€"), "Preise im Reiseverlauf");
+  // App: Kachel, Ansicht, Kalender, Datenstand sichtbar
+  assert.ok(/t: "Aktionen", u: "Ausflüge & Reisen", v: "aktionen"/.test(html), "Kachel Aktionen fehlt");
+  assert.ok(/id="v-aktionen"/.test(html) && /api\("aktionen_liste"\)/.test(html), "Ansicht Aktionen fehlt");
+  assert.ok(/e\.push\(\{ art: "aktion", a \}\)/.test(html) && /\.ktag\.aktion/.test(html), "Aktionen im Kalender fehlen");
+  assert.ok(/Stand unbekannt/.test(html), "Datenstand der Aktionen muss sichtbar sein (UNKNOWN nie als OK)");
+}
+
+// 23. 0.10.0: Empfänger-Schnellwahl setzt Häkchen; Test-Nachricht an mich selbst.
+{
+  assert.ok(/function gruppeWahl\(a\)/.test(html) && /const empfGruppe = \(a\) =>/.test(html), "Schnellwahl setzt keine Häkchen");
+  assert.ok(/function testAnMich\(\)/.test(html), "„Test an mich“ fehlt");
+  assert.ok(/const nurIch = /.test(server) && /if \(count === 1\) ziel\.push\(ich\.person_id\)/.test(server), "Server erlaubt keinen Test an sich selbst");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

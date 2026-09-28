@@ -16,9 +16,9 @@
     --bg: #f5eee3; --karte: #ffffff; --karte2: #efe5d6; --text: #2b1a1c; --grau: #7b6b66; --linie: #e4d7c4;
     --gruen: #2e7d4f; --gruenbg: #e3f2e8; --gelb: #9a6b00; --gelbbg: #fbf0d6; --rotbg: #fbe3e3; --schatten: 0 6px 18px rgba(80, 30, 20, .10);
     --radius: 18px; --fs: 16px;
-    --blau: #1f5f99; --blaubg: #e3edf7; --lila: #7b3fa0; --lilabg: #f1e6f7;
+    --blau: #1f5f99; --blaubg: #e3edf7; --lila: #7b3fa0; --lilabg: #f1e6f7; --tuerkis: #0e7c86; --tuerkisbg: #dcf1f3;
   }
-  :root.dunkel { --bg: #1b1415; --karte: #2a2021; --karte2: #33282a; --text: #f4e9e4; --grau: #b9a8a3; --linie: #45393a; --gruenbg: #1f3a2a; --gelbbg: #3a2f17; --rotbg: #4a2126; --schatten: 0 6px 18px rgba(0,0,0,.35); --blau: #8cbbe8; --blaubg: #1d2c3d; --lila: #cfa3e8; --lilabg: #33203d; }
+  :root.dunkel { --bg: #1b1415; --karte: #2a2021; --karte2: #33282a; --text: #f4e9e4; --grau: #b9a8a3; --linie: #45393a; --gruenbg: #1f3a2a; --gelbbg: #3a2f17; --rotbg: #4a2126; --schatten: 0 6px 18px rgba(0,0,0,.35); --blau: #8cbbe8; --blaubg: #1d2c3d; --lila: #cfa3e8; --lilabg: #33203d; --tuerkis: #6fd0d8; --tuerkisbg: #173338; }
   /* Kalender (KC-CLUB-KALENDER) */
   .umschalter { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: var(--karte2); padding: 5px; border-radius: 16px; margin: 4px 0 12px; }
   .umschalter button { border: none; border-radius: 12px; padding: 10px; font-weight: 800; background: none; cursor: pointer; }
@@ -40,12 +40,13 @@
   .ktag.dienst { background: var(--blaubg); color: var(--blau); font-weight: 900; }
   .ktag.feiertag { background: var(--rotbg); color: var(--rot2); font-weight: 900; }
   .ktag.veranst { background: var(--gruenbg); color: var(--gruen); font-weight: 900; }
+  .ktag.aktion { background: var(--tuerkisbg); color: var(--tuerkis); font-weight: 900; }
   .ktag.treffen { background: var(--rot); color: #fff; font-weight: 900; }
   .ktag.gewaehlt { box-shadow: 0 0 0 3px var(--text); }
   .ktag .punkte { display: flex; gap: 3px; margin-top: auto; margin-bottom: 6px; min-height: 6px; }
   .ktag .punkte i { width: 6px; height: 6px; border-radius: 50%; display: block; }
   .p-treffen { background: var(--rot); } .ktag.treffen .p-treffen { background: #fff; }
-  .p-feiertag { background: var(--rot3); } .p-veranst { background: var(--gruen); } .p-dienst { background: var(--blau); } .p-frist { background: #d19a22; } .p-geb { background: var(--lila); }
+  .p-feiertag { background: var(--rot3); } .p-veranst { background: var(--gruen); } .p-aktion { background: var(--tuerkis); } .p-dienst { background: var(--blau); } .p-frist { background: #d19a22; } .p-geb { background: var(--lila); }
   .legende { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 12px; font-size: .8rem; color: var(--grau); font-weight: 700; }
   .legende i { display: inline-block; width: 12px; height: 12px; border-radius: 4px; margin-right: 5px; vertical-align: -1px; }
   .keintrag { display: flex; gap: 10px; align-items: center; padding: 10px 0; border-top: 1px solid var(--linie); cursor: pointer; }
@@ -286,7 +287,7 @@
         <div class="wt"><span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span><span>Sa</span><span>So</span></div>
         <div class="tage" id="kalGitter"></div>
         <div class="legende">
-          <span><i style="background:var(--rot)"></i>Club-Treffen</span><span><i style="background:var(--gruenbg);outline:1px solid var(--gruen)"></i>🎪 Veranstaltung</span><span><i style="background:var(--blaubg);outline:1px solid var(--blau)"></i>mein Dienst</span>
+          <span><i style="background:var(--rot)"></i>Club-Treffen</span><span><i style="background:var(--gruenbg);outline:1px solid var(--gruen)"></i>🎪 Veranstaltung</span><span><i style="background:var(--tuerkisbg);outline:1px solid var(--tuerkis)"></i>🧳 Aktion / Ausflug</span><span><i style="background:var(--blaubg);outline:1px solid var(--blau)"></i>mein Dienst</span>
           <span><i style="background:var(--gelbbg);outline:1px solid #d19a22"></i>Abstimmungs-Frist</span><span><i style="background:var(--lilabg);outline:1px solid var(--lila)"></i>🎂 Geburtstag</span><span><i style="background:var(--rotbg);outline:1px solid var(--rot3)"></i>🇩🇪 Feiertag NRW</span>
           <span><i style="outline:2px solid var(--gold)"></i>heute</span>
         </div>
@@ -301,6 +302,12 @@
     <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>🗳️ Vorschläge</h2><button class="knopf haupt klein" onclick="vorschlagForm()">＋ Neu</button></div>
     <div id="vorschlagForm" class="karte versteckt"></div>
     <div id="vorschlagListe"><div class="karte hinweis">Wird geladen …</div></div>
+  </section>
+
+  <!-- AKTIONEN / AUSFLÜGE (KC-CLUB-AKTIONEN) -->
+  <section id="v-aktionen" class="versteckt">
+    <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>🧳 Aktionen</h2></div>
+    <div id="aktionListe"><div class="karte hinweis">Wird geladen …</div></div>
   </section>
 
   <!-- SITZUNGSPROTOKOLLE (KC-CLUB-PROTOKOLLE) -->
@@ -433,7 +440,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.9.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.10.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -499,6 +506,7 @@ const KACHELN = {
     { sym: "🗳️", t: "Vorschläge", u: "Themen & Abstimmungen", v: "vorschlaege", zahl: () => INIT?.offeneAbstimmungen || 0 },
     { sym: "📄", t: "Protokolle", u: "Sitzungen · Aufgaben", v: "protokolle", nur: () => ICH?.protokolle !== false, zahl: () => (INIT?.protokolleUngelesen || 0) + (INIT?.meineAufgaben?.length || 0) },
     { sym: "🗓️", t: "Dienstpläne", u: "Meine & freigegebene Zeiten", v: "dienste" },
+    { sym: "🧳", t: "Aktionen", u: "Ausflüge & Reisen", v: "aktionen" },
   ],
   mein: [
     { sym: "🟢", t: "Mein Status", u: "verfügbar, Urlaub …", aktion: "statusBlatt()" },
@@ -663,7 +671,7 @@ function zeige(v, ausHistorie) {
   const vorher = aktuelleAnsicht;
   aktuelleAnsicht = v;
   if (vorher === "protokoll" && v !== "protokoll" && prTimer) prSpeichernJetzt(false).catch(() => {}); // ungespeicherte Eingaben sichern
-  ["start", "termine", "vorschlaege", "protokolle", "protokoll", "dienste", "nachrichten", "chat", "neu", "mitglieder", "einstellungen"].forEach((x) => $("v-" + x).classList.toggle("versteckt", x !== v));
+  ["start", "termine", "vorschlaege", "aktionen", "protokolle", "protokoll", "dienste", "nachrichten", "chat", "neu", "mitglieder", "einstellungen"].forEach((x) => $("v-" + x).classList.toggle("versteckt", x !== v));
   document.querySelectorAll("#fuss button").forEach((b) => b.classList.toggle("an", b.dataset.v === v || (v === "chat" && b.dataset.v === "nachrichten") || (v === "neu" && b.dataset.v === "nachrichten")));
   $("eingabe").classList.toggle("versteckt", v !== "chat");
   clearInterval(chatTimer);
@@ -671,6 +679,7 @@ function zeige(v, ausHistorie) {
   if (v === "termine") treffenLaden();
   if (v === "vorschlaege") { $("vorschlagForm").classList.add("versteckt"); vorschlaegeLaden(); }
   if (v === "protokolle") protokolleLaden();
+  if (v === "aktionen") aktionenLaden();
   if (v === "dienste") dienstLaden();
   if (v === "nachrichten") unterhLaden();
   if (v === "mitglieder") mitgliederLaden();
@@ -749,6 +758,7 @@ function kalEintraege(tag) {
     const von = berlinIso(t.beginn), bis = t.ende ? berlinIso(t.ende) : von;
     if (t.art === "veranstaltung" ? tag >= von && tag <= bis : von === tag) e.push({ art: t.art === "veranstaltung" ? "veranst" : "treffen", t });
   }
+  for (const a of KAL.aktionen || []) if (tag >= a.von && tag <= a.bis) e.push({ art: "aktion", a });
   for (const d of KAL.dienste) if (d.datum === tag) e.push({ art: "dienst", d });
   for (const f of KAL.fristen) if (berlinIso(f.frist) === tag) e.push({ art: "frist", f });
   const md = tag.slice(5), schalt = new Date(Date.UTC(+tag.slice(0, 4), 1, 29)).getUTCDate() === 29;
@@ -756,7 +766,7 @@ function kalEintraege(tag) {
   return e;
 }
 function kalZeichnen() {
-  const heute = heuteIso(), rang = ["treffen", "veranst", "dienst", "feiertag", "frist", "geb"];
+  const heute = heuteIso(), rang = ["treffen", "aktion", "veranst", "dienst", "feiertag", "frist", "geb"];
   const tage = [...Array(42)].map((_, i) => tagPlus(KAL.start, i));
   // letzte Woche weglassen, wenn sie ganz im Folgemonat liegt
   const sichtbar = +tage[35].slice(5, 7) - 1 !== kalM ? tage.slice(0, 35) : tage;
@@ -779,6 +789,8 @@ function kalTagZeigen() {
   if (!e.length) { $("kalTag").innerHTML = `<div class="karte">${kopf}<p class="hinweis" style="margin:6px 0 0">Keine Termine an diesem Tag.</p></div>`; return; }
   const zeilen = e.filter((x) => x.art !== "treffen" && x.art !== "veranst").map((x) => {
     if (x.art === "feiertag") return `<div class="keintrag"><div class="farbe" style="background:var(--rot3)"></div><div style="flex:1"><b>🇩🇪 Feiertag: ${esc(x.name)}</b><small>gesetzlicher Feiertag in NRW</small></div></div>`;
+    if (x.art === "aktion") { const n = Math.round((new Date(kalTagWahl + "T12:00:00Z") - new Date(x.a.von + "T12:00:00Z")) / 86400000) + 1, ges = Math.round((new Date(x.a.bis + "T12:00:00Z") - new Date(x.a.von + "T12:00:00Z")) / 86400000) + 1;
+      return `<div class="keintrag" onclick="zeige('aktionen')"><div class="farbe" style="background:var(--tuerkis)"></div><div style="flex:1"><b>${aktionSymbol(x.a)} ${esc(x.a.titel)}</b><small>${ges > 1 ? `Tag ${n} von ${ges}` : "Aktion"}${x.a.veranstalter ? " · " + esc(x.a.veranstalter) : ""}</small></div><b style="color:var(--rot)">›</b></div>`; }
     if (x.art === "dienst") return `<div class="keintrag" onclick="dpNurIch()"><div class="farbe" style="background:var(--blau)"></div><div style="flex:1"><b>🗓️ Mein Dienst ${esc(x.d.start)}–${esc(x.d.ende)} Uhr</b><small>${esc(x.d.bereich || "Dienstplan")}</small></div><b style="color:var(--rot)">›</b></div>`;
     if (x.art === "frist") return `<div class="keintrag" onclick="zeige('vorschlaege')"><div class="farbe" style="background:#d19a22"></div><div style="flex:1"><b>🗳️ ${x.f.offen ? "Abstimmen bis" : "Abstimmung endete"} ${esc(fZeit.format(new Date(x.f.frist)))} Uhr</b><small>${esc(x.f.titel)}</small></div><b style="color:var(--rot)">›</b></div>`;
     const ich = x.g.person_id === ICH?.person_id;
@@ -1141,20 +1153,39 @@ async function neueNachricht() {
   empfWahl = { personen: [], aemter: [], alle: false, vorstand: false }; $("neuBetreff").value = ""; $("empfSuche").value = "";
   zeige("neu"); empfListe();
 }
+// Schnellwahl (Alle / Ämter) setzt die Häkchen der zugehörigen Personen – so sieht man sofort, wer dazugehört
+const empfGruppe = (a) => MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && (a === "*" || (m.aemter || []).includes(a))).map((m) => m.person_id);
+const empfTest = () => empfWahl.personen.length === 1 && empfWahl.personen[0] === ICH.person_id;
 function empfListe() {
   const q = $("empfSuche").value.toLowerCase();
+  const chip = (a, text) => {
+    const g = empfGruppe(a), an = g.length > 0 && g.every((p) => empfWahl.personen.includes(p));
+    return `<button class="knopf klein ${an ? "haupt" : ""}" onclick='gruppeWahl(${JSON.stringify(a).replace(/'/g, "&#39;")})'>${text} <small>(${g.length})</small></button>`;
+  };
   $("schnellEmpf").innerHTML = [
-    ICH.vorstand ? `<button class="knopf klein ${empfWahl.alle ? "haupt" : ""}" onclick="empfWahl.alle=!empfWahl.alle;empfListe()">👥 Alle Mitglieder</button>` : "",
-    ...AEMTER.map((a) => `<button class="knopf klein ${empfWahl.aemter.includes(a) ? "haupt" : ""}" onclick="amtWahl('${esc(a)}')">🎖️ ${esc(a)}</button>`),
+    ICH.vorstand ? chip("*", "👥 Alle Mitglieder") : "",
+    ...AEMTER.map((a) => chip(a, "🎖️ " + esc(a))),
+    `<button class="knopf klein ${empfTest() ? "haupt" : ""}" onclick="testAnMich()">🧪 Test an mich</button>`,
   ].join("");
   $("empfListe").innerHTML = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && (!q || m.name.toLowerCase().includes(q))).map((m) => `<label>
     <input type="checkbox" ${empfWahl.personen.includes(m.person_id) ? "checked" : ""} onchange="personWahl('${m.person_id}', this.checked)">
     <span>${esc(m.name)}${m.aemter?.length ? ` <span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}</span></label>`).join("");
-  const teile = [empfWahl.alle && "alle Mitglieder", ...empfWahl.aemter, ...empfWahl.personen.map((p) => MITGLIEDER.find((m) => m.person_id === p)?.name)].filter(Boolean);
-  $("empfGewaehlt").textContent = teile.join(", ") || "niemand";
+  $("empfGewaehlt").textContent = empfTest() ? "nur du selbst (Test)" : (empfWahl.personen.map((p) => MITGLIEDER.find((m) => m.person_id === p)?.name).filter(Boolean).join(", ") || "niemand");
 }
-function amtWahl(a) { empfWahl.aemter = empfWahl.aemter.includes(a) ? empfWahl.aemter.filter((x) => x !== a) : [...empfWahl.aemter, a]; empfListe(); }
-function personWahl(p, an) { empfWahl.personen = an ? [...new Set([...empfWahl.personen, p])] : empfWahl.personen.filter((x) => x !== p); empfListe(); }
+function gruppeWahl(a) {
+  const g = empfGruppe(a);
+  if (!g.length) return melde(`Zu „${a}“ gehörst nur du. Für einen Test tippe auf „🧪 Test an mich“.`);
+  const alleDrin = g.every((p) => empfWahl.personen.includes(p));
+  const ohneIch = empfWahl.personen.filter((p) => p !== ICH.person_id);
+  empfWahl.personen = alleDrin ? ohneIch.filter((p) => !g.includes(p)) : [...new Set([...ohneIch, ...g])];
+  $("empfSuche").value = ""; empfListe();
+}
+function testAnMich() {
+  empfWahl.personen = empfTest() ? [] : [ICH.person_id];
+  if (empfTest() && !$("neuBetreff").value) $("neuBetreff").value = "🧪 Test an mich";
+  empfListe();
+}
+function personWahl(p, an) { const ohneIch = empfWahl.personen.filter((x) => x !== ICH.person_id); empfWahl.personen = an ? [...new Set([...ohneIch, p])] : ohneIch.filter((x) => x !== p); empfListe(); }
 let neuEntwurf = null;
 function neuWeiter() {
   if (!empfWahl.alle && !empfWahl.vorstand && !empfWahl.aemter.length && !empfWahl.personen.length) return melde("Bitte mindestens einen Empfänger wählen.", true);
@@ -1210,6 +1241,41 @@ async function dateienGewaehlt(input) {
     chipsZeigen();
   }
   input.value = "";
+}
+
+// ---------- Aktionen / Ausflüge (KC-CLUB-AKTIONEN) – Daten aus dem KC Manager, hier nur zum Ansehen ----------
+const fDatumLang = new Intl.DateTimeFormat("de-DE", { timeZone: "UTC", weekday: "short", day: "2-digit", month: "2-digit", year: "numeric" });
+const euro = (n) => new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 2 }).format(n);
+const aktionSymbol = (a) => /schiff|kreuz|cruise|fjord|fähre/i.test(a.titel + " " + (a.veranstalter || "")) ? "🚢" : /bus/i.test(a.titel) ? "🚌" : "🧳";
+async function aktionenLaden() {
+  try {
+    const { aktionen, stand } = await api("aktionen_liste");
+    const heute = heuteIso(), kommend = aktionen.filter((a) => a.bis >= heute), vorbei = aktionen.filter((a) => a.bis < heute).reverse();
+    $("aktionListe").innerHTML = (kommend.map(aktionKarte).join("") || '<div class="karte hinweis">Zurzeit ist keine Aktion geplant.</div>')
+      + (vorbei.length ? `<div class="abschnitt"><h3>Vergangene Aktionen</h3></div>` + vorbei.map(aktionKarte).join("") : "")
+      + `<p class="hinweis" style="font-size:.85rem">Die Angaben kommen aus dem KC Manager${stand ? ` (Stand ${esc(zeitKurz(stand))})` : " – Stand unbekannt"}. Änderungen bitte dort eintragen.</p>`;
+  } catch (e) { melde(e.message, true); }
+}
+function aktionKarte(a) {
+  const heute = heuteIso(), tage = Math.round((new Date(a.von + "T12:00:00Z") - new Date(heute + "T12:00:00Z")) / 86400000);
+  const lauf = a.von <= heute && a.bis >= heute;
+  const wannText = a.von === a.bis ? fDatumLang.format(new Date(a.von + "T12:00:00Z")) : `${fDatumLang.format(new Date(a.von + "T12:00:00Z"))} – ${fDatumLang.format(new Date(a.bis + "T12:00:00Z"))}`;
+  const marken = [
+    a.stattgefunden ? '<span class="marke gruen">✔ hat stattgefunden</span>' : lauf ? '<span class="marke gruen">🎉 läuft gerade</span>' : tage > 0 ? `<span class="marke gelb">⏳ in ${tage === 1 ? "1 Tag" : tage + " Tagen"}</span>` : "",
+    a.status ? `<span class="marke">${esc(a.status)}</span>` : "",
+    a.dabei ? '<span class="marke gruen">✅ Du bist dabei</span>' : "",
+  ].join(" ");
+  const verlauf = a.verlauf?.length ? `<p style="margin:12px 0 4px"><b>🗺️ Reiseverlauf</b></p>` + a.verlauf.map((v) => `<div class="keintrag"><div class="farbe" style="background:var(--tuerkis)"></div><div style="flex:1"><b>${/seetag/i.test(v.ort) ? "🌊" : "⚓"} ${esc(v.ort)}</b><small>${esc(fDatumLang.format(new Date(v.datum + "T12:00:00Z")))}</small></div></div>`).join("") : "";
+  const offen = a.teilnehmer.filter((t) => !t.bestaetigt);
+  const teil = a.teilnehmer.length ? `<p style="margin:12px 0 0"><b>👥 Dabei (${a.teilnehmer.length - offen.length}${offen.length ? ` + ${offen.length} noch offen` : ""}):</b> ${esc(a.teilnehmer.filter((t) => t.bestaetigt).map((t) => t.name).join(", "))}${offen.length ? `<br><small class="hinweis">noch offen: ${esc(offen.map((t) => t.name).join(", "))}</small>` : ""}</p>` : "";
+  const k = a.kosten, rb = a.reisebuero;
+  const kosten = k && (k.proPerson || k.zusatz) ? `<p style="margin:10px 0 0"><b>💶 Preis pro Person:</b> ${k.proPerson ? euro(k.proPerson) : "–"}${k.zusatz ? ` + ${euro(k.zusatz)} Zusatzkosten = <b>${euro((k.proPerson || 0) + k.zusatz)}</b>` : ""}</p>` : "";
+  const buero = rb ? `<p style="margin:6px 0 0"><b>🏢 ${esc(rb.name)}</b>${rb.kontakt ? " · " + esc(rb.kontakt) : ""}${rb.telefon ? ` · <a href="tel:${esc(rb.telefon.replace(/[^\d+]/g, ""))}">📞 ${esc(rb.telefon)}</a>` : ""}</p>` : "";
+  const bem = a.bemerkung ? `<p class="hinweis" style="margin:8px 0 0">🔒 Nur für Admin: ${esc(a.bemerkung)}</p>` : "";
+  return `<div class="karte">${marken}
+    <div style="font-size:1.15rem;font-weight:800;margin-top:6px">${aktionSymbol(a)} ${esc(a.titel)}</div>
+    <div class="hinweis">${esc(wannText)}${a.veranstalter ? " · " + esc(a.veranstalter) : ""}${a.anreise ? " · Anreise: " + esc(a.anreise) : ""}</div>
+    ${verlauf}${teil}${kosten}${buero}${bem}</div>`;
 }
 
 // ---------- Sitzungsprotokolle (KC-CLUB-PROTOKOLLE) & Aufgaben (KC-CLUB-AUFGABEN) ----------
@@ -1586,7 +1652,7 @@ async function jetztAktualisieren() {
     if (h.startsWith("#nachricht=")) chatOeffnen(h.slice(11));
     else if (h.startsWith("#gratulieren=")) gratulieren(h.slice(13));
     else if (h.startsWith("#protokoll=")) protokollOeffnen(h.slice(11));
-    else if (["#termine", "#vorschlaege", "#protokolle", "#dienste", "#nachrichten", "#mitglieder", "#einstellungen"].includes(h)) zeige(h.slice(1));
+    else if (["#termine", "#vorschlaege", "#aktionen", "#protokolle", "#dienste", "#nachrichten", "#mitglieder", "#einstellungen"].includes(h)) zeige(h.slice(1));
   });
   updatePruefen(false);
   document.addEventListener("visibilitychange", () => { if (!document.hidden) { neuLaden(); updatePruefen(false); if (chatId) chatLaden(false); } });

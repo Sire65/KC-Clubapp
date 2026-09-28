@@ -18,6 +18,7 @@ Farben Weinrot/Beige, Logo Kochmütze, große Knöpfe, ohne Ballast.
 | Dienstpläne – eigene Zeiten, andere nur mit Freigabe, mehrere nebeneinander mit Zeitbalken | ✅ 0.2.0 |
 | Benachrichtigungen je Bereich (Push / E-Mail), Dienst-Erinnerung am Vorabend | ✅ 0.3.0 |
 | „Zurück“ bleibt in der App, Kennzahlen im Kopf führen in die Bereiche | ✅ 0.3.0 |
+| Aktionen | Ausflüge & Reisen aus dem KC Manager, im Kalender (0.10.0) |
 | Protokolle | Vorlage automatisch, Foto/Datei anhängen, 7 Tage Einspruch, Aufgaben (0.9.0) |
 | Freigegebene Programme | bald |
 
