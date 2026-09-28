@@ -7,14 +7,14 @@
 //           KC-CLUB-VORSCHLAG (0.2.0), KC-CLUB-OHNEAPP (0.2.0), KC-CLUB-DIENSTE (0.2.0),
 //           KC-CLUB-BENACHRICHTIGUNG (0.3.0), KC-CLUB-DIENSTERINNERUNG (0.3.0), KC-CLUB-KALENDER (0.6.0),
 //           KC-CLUB-GEBURTSTAG-FREIGABE (0.7.0), KC-CLUB-GEBURTSTAG-PUSH (0.8.0), KC-CLUB-VERANSTALTUNG (0.8.0),
-//           KC-CLUB-PROTOKOLLE (0.9.0), KC-CLUB-AUFGABEN (0.9.0), KC-CLUB-AKTIONEN (0.10.0)
+//           KC-CLUB-PROTOKOLLE (0.9.0), KC-CLUB-AUFGABEN (0.9.0), KC-CLUB-AKTIONEN (0.10.0), KC-CLUB-LOESCHEN (0.11.0)
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.10.0";
+const SERVER_VERSION = "0.11.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -62,6 +62,11 @@ async function aktiveMitglieder() {
 }
 async function protokoll(person: string | null, aktion: string, details: Record<string, unknown> = {}) {
   await db.from("kc_club_protokoll").insert({ person_id: person, aktion, details });
+}
+// KC-CLUB-LOESCHEN: vor jedem Löschen eine vollständige Sicherung ins Änderungsprotokoll (Wiederherstellungspunkt)
+async function geloescht(ich: { person_id: string }, was: string, sicherung: Record<string, unknown>) {
+  const { error } = await db.from("kc_club_protokoll").insert({ person_id: ich.person_id, aktion: was + "_geloescht", details: { sicherung } });
+  if (error) throw new Fehler("Sicherung fehlgeschlagen – es wurde nichts gelöscht.", 500);
 }
 
 // Versand über den KC Communicator (Push, sonst/zusätzlich Mail über web.de).
@@ -235,6 +240,8 @@ async function vorschlaegeListe(ich: Ich) {
       abgestimmt: !!mein, meine: v.geheim ? null : mein?.wahl ?? null, stimmen: s.length, berechtigt, ergebnis,
       darfAbschliessen: v.status === "offen" && (ich.vorstand || (eigener && v.art === "thema")),
       darfZurueckziehen: v.status === "offen" && (ich.vorstand || eigener),
+      // löschen: Organisation immer; wer ihn gemacht hat, solange niemand sonst abgestimmt/unterstützt hat
+      darfLoeschen: ich.vorstand || (eigener && !s.some((x: any) => x.person_id !== ich.person_id) && !(geh ?? []).some((g: any) => g.vorschlag_id === v.id)),
     };
   });
 }
@@ -266,6 +273,8 @@ async function abstimmungsErgebnis(v: any) {
 const EINSPRUCH_TAGE = 7;
 const nurProtokolle = (ich: Ich) => { if (!ich.protokolle) throw new Fehler("Protokolle sind nur für Mitglieder.", 403); };
 const darfBearbeiten = (ich: Ich, pr: any) => pr.verfasser === ich.person_id || ich.vorstand;
+// Entwurf (nie veröffentlicht): Verfasser oder Organisation; veröffentlicht: nur Organisation (Clubsprecher, Kassenwart, Admin)
+const darfProtokollLoeschen = (ich: Ich, pr: any) => ich.vorstand || (pr.verfasser === ich.person_id && pr.status === "entwurf" && pr.version === 1);
 async function protokollLeser(): Promise<string[]> {
   const [leute, { data: r }] = await Promise.all([aktiveMitglieder(), db.from("kc_club_rollen").select("person_id").eq("protokolle_lesen", false)]);
   const aus = new Set((r ?? []).map((x: any) => x.person_id));
@@ -618,6 +627,17 @@ Deno.serve(async (req) => {
         return json({ ok: true, versand });
       }
 
+      case "treffen_loeschen": {
+        // endgültig entfernen (z. B. Test oder doppelt angelegt) – ohne Benachrichtigung; Absagen bleibt der Weg mit Nachricht an alle
+        nurVorstand(ich);
+        const { data: t } = await db.from("kc_club_treffen").select("*").eq("id", String(p.id || "")).maybeSingle();
+        if (!t) throw new Fehler("Termin nicht gefunden.", 404);
+        const { data: teil } = await db.from("kc_club_teilnahme").select("*").eq("treffen_id", t.id);
+        await geloescht(ich, "treffen", { treffen: t, teilnahme: teil ?? [] });
+        await db.from("kc_club_treffen").delete().eq("id", t.id);
+        return json({ ok: true });
+      }
+
       case "treffen_antwort": {
         const antwort = String(p.antwort || "");
         if (!["ja", "nein", "vielleicht"].includes(antwort)) throw new Fehler("Bitte zusagen, absagen oder vielleicht wählen.");
@@ -709,6 +729,21 @@ Deno.serve(async (req) => {
         } else throw new Fehler("Unbekannter Status.");
         await protokoll(ich.person_id, "vorschlag_" + p.status, { vorschlag: v.id, versand });
         return json({ ok: true, versand });
+      }
+
+      case "vorschlag_loeschen": {
+        const { data: v } = await db.from("kc_club_vorschlaege").select("*").eq("id", String(p.id || "")).maybeSingle();
+        if (!v) throw new Fehler("Vorschlag nicht gefunden.", 404);
+        const [{ data: st }, { data: geh }] = await Promise.all([
+          db.from("kc_club_stimmen").select("*").eq("vorschlag_id", v.id),
+          db.from("kc_club_geheime_stimmen").select("wahl").eq("vorschlag_id", v.id),
+        ]);
+        const fremd = (st ?? []).some((x: any) => x.person_id !== ich.person_id) || (geh ?? []).length > 0;
+        if (!ich.vorstand && !(v.erstellt_von === ich.person_id && !fremd)) throw new Fehler("Löschen dürfen Clubsprecher, Kassenwart oder Admin – oder du selbst, solange noch niemand abgestimmt hat.", 403);
+        // geheime Stimmen ohne Person – nur die Anzahl je Antwort wird gesichert
+        await geloescht(ich, "vorschlag", { vorschlag: v, stimmen: v.geheim ? [] : st ?? [], geheim: (geh ?? []).map((g: any) => g.wahl) });
+        await db.from("kc_club_vorschlaege").delete().eq("id", v.id);
+        return json({ ok: true });
       }
 
       // ----- Dienstzeiten aus dem Dienstplan (nur veröffentlichter Sollplan) -----
@@ -891,6 +926,8 @@ Deno.serve(async (req) => {
         if (me || !m) throw new Fehler("Nachricht konnte nicht gespeichert werden.", 500);
         if (anlagen.length) await db.from("kc_communication_message_attachments").insert(anlagen.map((attachment_id: string) => ({ message_id: m.id, attachment_id, hochgeladen_von_person_id: ich.person_id })));
         await Promise.all([
+          // neue Nachricht: wer die Unterhaltung ausgeblendet hatte, sieht sie wieder (wie bei WhatsApp)
+          db.from("kc_communication_thread_participants").update({ hidden_at: null }).eq("thread_id", threadId).not("hidden_at", "is", null),
           db.from("kc_communication_threads").update({ updated_at: jetzt() }).eq("id", threadId),
           db.from("kc_communication_thread_participants").update({ last_read_at: m.created_at }).eq("thread_id", threadId).eq("person_id", ich.person_id),
         ]);
@@ -909,6 +946,42 @@ Deno.serve(async (req) => {
         }, `club-nachricht:${m.id}`);
         await protokoll(ich.person_id, "nachricht_gesendet", { thread: threadId, neu, empfaenger: ziel.length, anlagen: anlagen.length, versand });
         return json({ ok: true, id: threadId, versand });
+      }
+
+      case "nachricht_loeschen": {
+        // eigene Nachricht (Admin: jede) für alle entfernen, samt Anlagen-Verknüpfung
+        const { data: m } = await db.from("kc_communication_messages").select("*").eq("id", String(p.id || "")).maybeSingle();
+        if (!m) throw new Fehler("Nachricht nicht gefunden.", 404);
+        await binTeilnehmer(m.thread_id, ich.person_id);
+        if (m.sender_person_id !== ich.person_id && !ich.admin) throw new Fehler("Du kannst nur deine eigenen Nachrichten löschen.", 403);
+        const { data: ma } = await db.from("kc_communication_message_attachments").select("attachment_id").eq("message_id", m.id);
+        await geloescht(ich, "nachricht", { nachricht: m, anlagen: (ma ?? []).map((x: any) => x.attachment_id) });
+        await db.from("kc_communication_messages").delete().eq("id", m.id);
+        return json({ ok: true });
+      }
+
+      case "unterhaltung_ausblenden": {
+        // nur für mich entfernen; schreibt jemand wieder, erscheint sie erneut
+        const id = String(p.id || "");
+        await binTeilnehmer(id, ich.person_id);
+        await db.from("kc_communication_thread_participants").update({ hidden_at: jetzt() }).eq("thread_id", id).eq("person_id", ich.person_id);
+        await protokoll(ich.person_id, "unterhaltung_ausgeblendet", { thread: id });
+        return json({ ok: true });
+      }
+
+      case "unterhaltung_loeschen": {
+        // für alle löschen: nur Admin (z. B. Test-Unterhaltungen); vollständige Sicherung vorher
+        nurAdmin(ich);
+        const id = String(p.id || "");
+        await binTeilnehmer(id, ich.person_id);
+        const [{ data: t }, { data: tn }, { data: msgs }] = await Promise.all([
+          db.from("kc_communication_threads").select("*").eq("id", id).single(),
+          db.from("kc_communication_thread_participants").select("*").eq("thread_id", id),
+          db.from("kc_communication_messages").select("*").eq("thread_id", id).order("created_at").limit(2000),
+        ]);
+        await geloescht(ich, "unterhaltung", { unterhaltung: t, teilnehmer: tn ?? [], nachrichten: msgs ?? [] });
+        await db.from("kc_communication_threads").delete().eq("id", id);
+        return json({ ok: true });
       }
 
       // ----- Aktionen / Ausflüge (KC-CLUB-AKTIONEN) -----
@@ -944,12 +1017,13 @@ Deno.serve(async (req) => {
             return {
               id: pr.id, titel: pr.titel, datum: pr.datum, ort: pr.ort, version: pr.version, status: protokollStatus(pr, zahl(ew, pr.id)), einspruch_bis: pr.einspruch_bis,
               verfasser: { person_id: pr.verfasser, name: leute.get(pr.verfasser)?.display_name || pr.verfasser }, eigen: pr.verfasser === ich.person_id,
-              darfBearbeiten: darfBearbeiten(ich, pr), gelesen: pr.status === "entwurf" || (!!g && g.version >= pr.version),
+              darfBearbeiten: darfBearbeiten(ich, pr), darfLoeschen: darfProtokollLoeschen(ich, pr), gelesen: pr.status === "entwurf" || (!!g && g.version >= pr.version),
               anlagen: zahl(an, pr.id), einwaende: zahl(ew, pr.id), aufgabenOffen: aufgaben.filter((a: any) => a.protokoll_id === pr.id).length,
             };
           }),
           aufgaben: aufgaben.map((a: any) => ({ id: a.id, text: a.text, faellig: a.faellig, person_id: a.person_id, name: leute.get(a.person_id)?.display_name || a.person_id,
-            protokoll: a.protokoll_id ? { id: a.protokoll_id, titel: (prot.get(a.protokoll_id) as any)?.titel ?? "" } : null, meine: a.person_id === ich.person_id })),
+            protokoll: a.protokoll_id ? { id: a.protokoll_id, titel: (prot.get(a.protokoll_id) as any)?.titel ?? "" } : null, meine: a.person_id === ich.person_id,
+            verwalten: ich.vorstand || a.erstellt_von === ich.person_id || (a.protokoll_id && prot.get(a.protokoll_id) ? darfBearbeiten(ich, prot.get(a.protokoll_id)) : false) })),
           treffenOhneProtokoll: (tr ?? []).filter((t: any) => !mitProtokoll.has(t.id)),
         });
       }
@@ -1023,10 +1097,11 @@ Deno.serve(async (req) => {
           },
           anlagen: aids.map((id: string) => (att ?? []).find((y: any) => y.id === id)).filter(Boolean).map((y: any) => ({ id: y.id, name: y.file_name, mime: y.mime_type, groesse: y.size_bytes })),
           einwaende: (ew ?? []).map((x: any) => ({ id: x.id, name: name(x.person_id), text: x.text, erstellt_am: x.erstellt_am, erledigt_am: x.erledigt_am, eigen: x.person_id === ich.person_id })),
-          aufgaben: (auf ?? []).map((a: any) => ({ id: a.id, person_id: a.person_id, name: name(a.person_id), text: a.text, faellig: a.faellig, erledigt_am: a.erledigt_am, meine: a.person_id === ich.person_id })),
+          aufgaben: (auf ?? []).map((a: any) => ({ id: a.id, person_id: a.person_id, name: name(a.person_id), text: a.text, faellig: a.faellig, erledigt_am: a.erledigt_am, meine: a.person_id === ich.person_id,
+            verwalten: bearb || a.erstellt_von === ich.person_id })),
           // Lesestand nur für Verfasser/Organisation
           gelesen: leser.length ? { von: leser.filter((id) => aktuell.has(id)).map(name).sort(), fehlt: leser.filter((id) => !aktuell.has(id)).map(name).sort() } : null,
-          fassungen: fa ?? [], darfBearbeiten: bearb, eigen: pr.verfasser === ich.person_id,
+          fassungen: fa ?? [], darfBearbeiten: bearb, darfLoeschen: darfProtokollLoeschen(ich, pr), eigen: pr.verfasser === ich.person_id,
           schreiber: bearb ? (await protokollLeser()) : [],
         });
       }
@@ -1117,13 +1192,29 @@ Deno.serve(async (req) => {
       }
 
       case "protokoll_loeschen": {
-        // nur ein noch nie veröffentlichter Entwurf (z. B. versehentlich angelegt)
+        // Entwurf: Verfasser oder Organisation; veröffentlichtes Protokoll (z. B. Test): nur Organisation. Sicherung vorher.
         nurProtokolle(ich);
         const pr = await protokollHolen(p.id);
-        if (!darfBearbeiten(ich, pr)) throw new Fehler("Löschen darf nur, wer das Protokoll schreibt.", 403);
-        if (pr.status !== "entwurf" || pr.version > 1) throw new Fehler("Veröffentlichte Protokolle können nicht gelöscht werden – bitte „Korrigieren“ nutzen.", 409);
-        await db.from("kc_club_sitzungsprotokolle").delete().eq("id", pr.id).eq("status", "entwurf").eq("version", 1);
-        await protokoll(ich.person_id, "sitzungsprotokoll_entwurf_geloescht", { protokoll: pr.id, titel: pr.titel });
+        if (!darfProtokollLoeschen(ich, pr)) throw new Fehler(pr.status === "entwurf" && pr.version === 1 ? "Löschen darf nur, wer das Protokoll schreibt." : "Veröffentlichte Protokolle löschen nur Clubsprecher, Kassenwart oder Admin.", 403);
+        const [{ data: pa }, { data: auf }, { data: ew }, { data: fa }] = await Promise.all([
+          db.from("kc_club_sitzungsprotokoll_anlagen").select("attachment_id,reihenfolge").eq("protokoll_id", pr.id),
+          db.from("kc_club_aufgaben").select("*").eq("protokoll_id", pr.id),
+          db.from("kc_club_sitzungsprotokoll_einwaende").select("*").eq("protokoll_id", pr.id),
+          db.from("kc_club_sitzungsprotokoll_fassungen").select("*").eq("protokoll_id", pr.id),
+        ]);
+        await geloescht(ich, "sitzungsprotokoll", { protokoll: pr, anlagen: pa ?? [], aufgaben: auf ?? [], einwaende: ew ?? [], fassungen: fa ?? [] });
+        await db.from("kc_club_sitzungsprotokolle").delete().eq("id", pr.id);
+        return json({ ok: true });
+      }
+
+      case "einwand_loeschen": {
+        nurProtokolle(ich);
+        const { data: e } = await db.from("kc_club_sitzungsprotokoll_einwaende").select("*").eq("id", String(p.id || "")).maybeSingle();
+        if (!e) throw new Fehler("Einwand nicht gefunden.", 404);
+        const pr = await protokollHolen(e.protokoll_id);
+        if (e.person_id !== ich.person_id && !darfBearbeiten(ich, pr)) throw new Fehler("Löschen darf nur, wer den Einwand geschrieben hat.", 403);
+        await geloescht(ich, "sitzungsprotokoll_einwand", { einwand: e });
+        await db.from("kc_club_sitzungsprotokoll_einwaende").delete().eq("id", e.id);
         return json({ ok: true });
       }
 
@@ -1200,8 +1291,8 @@ Deno.serve(async (req) => {
         nurProtokolle(ich);
         const x = await aufgabeHolen(ich, p.id);
         if (!x.verwalten) throw new Fehler("Löschen darf nur, wer die Aufgabe eingetragen hat.", 403);
+        await geloescht(ich, "aufgabe", { aufgabe: x.a });
         await db.from("kc_club_aufgaben").delete().eq("id", x.a.id);
-        await protokoll(ich.person_id, "aufgabe_geloescht", { aufgabe: x.a.id, text: x.a.text });
         return json({ ok: true });
       }
 

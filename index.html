@@ -207,6 +207,7 @@
   .eingabe textarea { flex: 1; resize: none; max-height: 140px; padding: 12px; border-radius: 18px; border: 1px solid var(--linie); background: var(--karte); }
   .eingabe .rund { background: var(--rot); }
   .anhaengen { display: grid; gap: 8px; }
+  .blase .weg { border: none; background: none; padding: 0 0 0 6px; cursor: pointer; font-size: .85rem; opacity: .7; }
   .anhaengen .knopf { font-size: 1.05rem; padding: 16px; }
   .prbild { margin-top: 10px; }
   .prbild img { display: block; width: 100%; max-height: 70vh; object-fit: contain; border-radius: 12px; background: var(--karte2); cursor: zoom-in; min-height: 60px; }
@@ -345,7 +346,7 @@
 
   <!-- UNTERHALTUNG -->
   <section id="v-chat" class="versteckt">
-    <div class="kopf2"><button class="zurueck" onclick="zeige('nachrichten')">‹</button><h2 id="chatTitel">…</h2></div>
+    <div class="kopf2"><button class="zurueck" onclick="zeige('nachrichten')">‹</button><h2 id="chatTitel">…</h2><button class="rund" id="chatMenueKnopf" title="Unterhaltung löschen" onclick="chatMenue()">🗑️</button></div>
     <div class="hinweis" id="chatTeilnehmer" style="margin-left:54px"></div>
     <div class="chat" id="chat"></div>
   </section>
@@ -416,6 +417,13 @@
     <div id="stExtra"><label class="feld">Bis (freiwillig)<input type="date" id="stBis"></label><label class="feld">Hinweis (freiwillig, z. B. „ab 18 Uhr erreichbar“)<input id="stHinweis" maxlength="120"></label></div>
     <button class="knopf haupt" onclick="statusSpeichern()">Speichern</button><button class="knopf" onclick="$('statusBlatt').classList.add('versteckt')">Abbrechen</button></div>
 </div>
+<div class="blatt versteckt" id="chatBlatt" onclick="if(event.target===this)this.classList.add('versteckt')">
+  <div class="blatt-innen"><h3>Unterhaltung entfernen</h3>
+    <button class="knopf" onclick="unterhaltungWeg(false)">🙈 Nur bei mir entfernen</button>
+    <p class="hinweis" style="margin:0 4px 6px;font-size:.85rem">Die anderen behalten sie. Schreibt jemand wieder, erscheint sie erneut.</p>
+    <button class="knopf haupt versteckt" id="chatAllesLoeschen" onclick="unterhaltungWeg(true)">🗑️ Für alle löschen (Admin)</button>
+    <button class="knopf" onclick="$('chatBlatt').classList.add('versteckt')">Abbrechen</button></div>
+</div>
 <div class="blatt versteckt" id="anlageBlatt" onclick="if(event.target===this)this.classList.add('versteckt')">
   <div class="blatt-innen"><h3>Anlage hinzufügen</h3>
     <button class="knopf" onclick="anlageWahl('dateiKamera')">📷 Foto aufnehmen</button>
@@ -440,7 +448,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.10.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.11.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -867,7 +875,7 @@ function treffenKarte(t, vorbei) {
       <span class="marke gruen">✅ ${t.ja}</span> <span class="marke gelb">❓ ${t.vielleicht}</span> <span class="marke rot">❌ ${t.nein}</span>
       ${t.ja ? `<div>✅ ${liste("ja")}</div>` : ""}${t.vielleicht ? `<div>❓ ${liste("vielleicht")}</div>` : ""}${t.nein ? `<div>❌ ${liste("nein")}</div>` : ""}
     </div>`}
-    ${ICH?.vorstand && offen ? `<div class="knoepfe"><button class="knopf klein" onclick='treffenForm(${JSON.stringify(bearbeiten).replace(/'/g, "&#39;")})'>✏️ Ändern</button><button class="knopf klein" onclick="treffenAbsagen('${t.id}', ${va})">Absagen</button></div>` : ""}
+    ${ICH?.vorstand ? `<div class="knoepfe">${offen ? `<button class="knopf klein" onclick='treffenForm(${JSON.stringify(bearbeiten).replace(/'/g, "&#39;")})'>✏️ Ändern</button><button class="knopf klein" onclick="treffenAbsagen('${t.id}', ${va})">Absagen</button>` : ""}<button class="knopf klein" onclick="treffenLoeschen('${t.id}', ${va})">🗑️ Löschen</button></div>` : ""}
   </div>`;
 }
 async function antwort(id, a) {
@@ -927,6 +935,11 @@ async function treffenSpeichern(id, knopf) {
     } catch (e) { melde(e.message, true); }
   });
 }
+// KC-CLUB-LOESCHEN: endgültig entfernen (z. B. Test) – ohne Nachricht an die Mitglieder; Sicherung liegt im Änderungsprotokoll
+async function treffenLoeschen(id, va) {
+  if (!confirm(`${va ? "Termin" : "Treffen"} endgültig löschen?\n\nZu- und Absagen gehen mit verloren. Es wird niemand benachrichtigt (zum Absagen mit Nachricht an alle bitte „Absagen“ nutzen).\nEine Sicherung bleibt im Änderungsprotokoll.`)) return;
+  try { await api("treffen_loeschen", { id }); melde("🗑️ Gelöscht"); treffenLaden(); neuLaden(); } catch (e) { melde(e.message, true); }
+}
 async function treffenAbsagen(id, va) {
   if (!confirm(`${va ? "Termin" : "Treffen"} wirklich absagen? Alle Mitglieder werden benachrichtigt.`)) return;
   try { await api("treffen_absagen", { id }); melde("Abgesagt – alle wurden benachrichtigt"); treffenLaden(); } catch (e) { melde(e.message, true); }
@@ -975,6 +988,7 @@ function vorschlagKarte(v) {
   const knoepfe = [
     v.darfAbschliessen ? `<button class="knopf klein" onclick="vorschlagStatus('${v.id}','abgeschlossen','${v.art}')">${v.art === "abstimmung" ? "🏁 Abstimmung beenden" : "✔ Erledigt / in Tagesordnung"}</button>` : "",
     v.darfZurueckziehen ? `<button class="knopf klein" onclick="vorschlagStatus('${v.id}','zurueckgezogen')">Zurückziehen</button>` : "",
+    v.darfLoeschen ? `<button class="knopf klein" onclick="vorschlagLoeschen('${v.id}')">🗑️ Löschen</button>` : "",
   ].join("");
   return `<div class="karte">${kopf}<div class="wann" style="font-size:1.12rem;font-weight:800;margin-top:6px">${esc(v.titel)}</div>${unter}
     ${v.beschreibung ? `<p style="white-space:pre-wrap;margin:8px 0 0">${esc(v.beschreibung)}</p>` : ""}${mitte}${knoepfe ? `<div class="knoepfe">${knoepfe}</div>` : ""}</div>`;
@@ -987,6 +1001,10 @@ async function vorschlagStatus(id, status, art) {
   const frage = status === "zurueckgezogen" ? "Vorschlag wirklich zurückziehen?" : art === "abstimmung" ? "Abstimmung jetzt beenden? Alle bekommen das Ergebnis." : "Als erledigt markieren (z. B. in die Tagesordnung aufgenommen)?";
   if (!confirm(frage)) return;
   try { await api("vorschlag_status", { id, status }); melde("Gespeichert"); vorschlaegeLaden(); neuLaden(); } catch (e) { melde(e.message, true); }
+}
+async function vorschlagLoeschen(id) {
+  if (!confirm("Diesen Vorschlag bzw. diese Abstimmung endgültig löschen?\n\nAlle Stimmen gehen mit verloren. Es wird niemand benachrichtigt.\nEine Sicherung bleibt im Änderungsprotokoll.")) return;
+  try { await api("vorschlag_loeschen", { id }); melde("🗑️ Gelöscht"); vorschlaegeLaden(); neuLaden(); } catch (e) { melde(e.message, true); }
 }
 let vfArt = "thema";
 function vorschlagForm(art) {
@@ -1125,7 +1143,7 @@ async function chatLaden(scrollen) {
     $("chatTitel").textContent = u.betreff || andere.map((x) => x.name).join(", ");
     let st = "";
     if (andere.length === 1) { if (!MITGLIEDER) await mitgliederHolen().catch(() => {}); const m = MITGLIEDER?.find((x) => x.person_id === andere[0].person_id); if (m?.status) st = statusText(m.status); }
-    $("chatTeilnehmer").textContent = u.betreff || andere.length > 1 ? "Mit: " + andere.map((x) => x.name).join(", ") : st;
+    $("chatTeilnehmer").textContent = !andere.length ? "Nur du (Test-Unterhaltung)" : u.betreff || andere.length > 1 ? "Mit: " + andere.map((x) => x.name).join(", ") : st;
     const stand = JSON.stringify(u.nachrichten.map((m) => [m.id, m.gelesenVon?.length]));
     if (stand === chatStand && !scrollen) return;
     const neuVonAnderen = chatStand && u.nachrichten.length && !u.nachrichten[u.nachrichten.length - 1].eigen && stand !== chatStand;
@@ -1133,12 +1151,25 @@ async function chatLaden(scrollen) {
     $("chat").innerHTML = u.nachrichten.map((m) => `<div class="blase${m.eigen ? " eigen" : ""}">
       ${!m.eigen && andere.length > 1 ? `<div class="von">${esc(m.von)}</div>` : ""}${m.text === "📎" && m.anlagen.length ? "" : `<div class="txt">${esc(m.text)}</div>`}
       ${m.anlagen.map((a) => /^image\//.test(a.mime || "") ? `<img data-anlage="${a.id}" alt="${esc(a.name)}" onclick="anlageOeffnen('${a.id}')">` : `<div class="anlage" onclick="anlageOeffnen('${a.id}')">📄 ${esc(a.name)}</div>`).join("")}
-      <div class="fuss">${zeitKurz(m.zeit)}${m.eigen ? " " + (m.gelesenAlle ? '<b title="gelesen">✓✓</b>' : m.gelesenVon?.length ? `✓✓ ${m.gelesenVon.length}/${andere.length}` : "✓") : ""}</div></div>`).join("")
+      <div class="fuss">${zeitKurz(m.zeit)}${m.eigen ? " " + (m.gelesenAlle ? '<b title="gelesen">✓✓</b>' : m.gelesenVon?.length ? `✓✓ ${m.gelesenVon.length}/${andere.length}` : "✓") : ""}${m.eigen || ICH.admin ? ` <button class="weg" title="Nachricht löschen" onclick="nachrichtLoeschen('${m.id}')">🗑️</button>` : ""}</div></div>`).join("")
       || '<p class="hinweis">Schreib die erste Nachricht.</p>';
     document.querySelectorAll("img[data-anlage]").forEach(bildLaden);
     if (neuVonAnderen && einst("ton", true)) ton();
     if (scrollen || neuVonAnderen) setTimeout(() => window.scrollTo(0, document.body.scrollHeight), 50);
   } catch (e) { melde(e.message, true); }
+}
+// KC-CLUB-LOESCHEN: eigene Nachricht für alle löschen; Unterhaltung nur für mich entfernen oder (Admin) für alle löschen
+async function nachrichtLoeschen(id) {
+  if (!confirm("Diese Nachricht für alle löschen?")) return;
+  try { await api("nachricht_loeschen", { id }); chatStand = ""; melde("🗑️ Gelöscht"); chatLaden(false); } catch (e) { melde(e.message, true); }
+}
+function chatMenue() { $("chatAllesLoeschen").classList.toggle("versteckt", !ICH?.admin || !chatId); $("chatBlatt").classList.remove("versteckt"); }
+async function unterhaltungWeg(fuerAlle) {
+  $("chatBlatt").classList.add("versteckt");
+  if (!chatId) return zeige("nachrichten"); // noch nicht gesendeter Entwurf
+  if (fuerAlle && !confirm("Unterhaltung mit allen Nachrichten für ALLE Teilnehmer endgültig löschen?\nEine Sicherung bleibt im Änderungsprotokoll.")) return;
+  try { await api(fuerAlle ? "unterhaltung_loeschen" : "unterhaltung_ausblenden", { id: chatId }); melde(fuerAlle ? "🗑️ Für alle gelöscht" : "🙈 Aus deiner Liste entfernt"); zeige("nachrichten"); neuLaden(); }
+  catch (e) { melde(e.message, true); }
 }
 const bildCache = {};
 async function bildLaden(img) {
@@ -1300,7 +1331,7 @@ async function protokolleLaden() {
   try {
     prListe = await api("protokolle_liste");
     const { protokolle, aufgaben, treffenOhneProtokoll } = prListe;
-    const auf = aufgaben.length ? `<div class="karte"><h3>📌 Offene Aufgaben</h3>${aufgaben.map((a) => aufgabeZeile(a, a.meine || ICH.vorstand)).join("")}</div>` : "";
+    const auf = aufgaben.length ? `<div class="karte"><h3>📌 Offene Aufgaben</h3>${aufgaben.map((a) => aufgabeZeile(a, a.meine || ICH.vorstand, a.verwalten)).join("")}</div>` : "";
     const neu = treffenOhneProtokoll.length ? `<div class="karte"><h3>✍️ Protokoll schreiben</h3><p class="hinweis" style="margin-top:0">Wer diesmal schreibt, tippt beim Treffen auf „Anlegen“ – Datum, Ort, wer da war und die Themen trägt die App schon ein.</p>
       ${treffenOhneProtokoll.map((t) => `<div class="zeile"><div style="flex:1"><b>${esc(t.titel)}</b><div class="hinweis" style="font-size:.85rem">${esc(wann(t.beginn))}${t.ort ? " · " + esc(t.ort) : ""}</div></div>
         <button class="knopf haupt klein" onclick="einmal(this, () => protokollAnlegen('${t.id}'))">＋ Anlegen</button></div>`).join("")}</div>` : "";
@@ -1319,7 +1350,8 @@ function protokollKarte(p) {
   return `<div class="karte prkarte" data-suche="${esc((p.titel + " " + (p.ort || "") + " " + p.datum).toLowerCase())}" ${offen ? `style="cursor:pointer" onclick="protokollOeffnen('${p.id}')"` : ""}>
     ${prStatusMarke(p)}${!p.gelesen ? ' <span class="marke rot">🆕 neu</span>' : ""}${p.version > 1 ? ` <span class="marke">Fassung ${p.version}</span>` : ""}
     <div style="font-size:1.12rem;font-weight:800;margin-top:6px">${esc(p.titel)}</div>
-    <div class="hinweis" style="font-size:.85rem">${esc(tagKurz(p.datum))}${p.ort ? " · " + esc(p.ort) : ""} · ${p.status === "entwurf" && !p.darfBearbeiten ? "wird geschrieben von " : "von "}${esc(p.verfasser.name)}${info ? " · " + info : ""}</div></div>`;
+    <div class="hinweis" style="font-size:.85rem">${esc(tagKurz(p.datum))}${p.ort ? " · " + esc(p.ort) : ""} · ${p.status === "entwurf" && !p.darfBearbeiten ? "wird geschrieben von " : "von "}${esc(p.verfasser.name)}${info ? " · " + info : ""}</div>
+    ${p.darfLoeschen ? `<div class="knoepfe"><button class="knopf klein" onclick="event.stopPropagation();protokollLoeschen('${p.id}', ${p.status !== "entwurf"})">🗑️ Löschen</button></div>` : ""}</div>`;
 }
 async function protokollAnlegen(treffenId) {
   try { const r = await api("protokoll_vorlage", treffenId ? { treffen_id: treffenId } : { titel: prompt("Wofür ist das Protokoll? (z. B. Jahreshauptversammlung)", "Sitzung des Köcheclubs") || "" }); protokollOeffnen(r.id); }
@@ -1392,7 +1424,7 @@ function protokollFormular() {
     <div class="knoepfe">
       <button class="knopf haupt" onclick="einmal(this, protokollVeroeffentlichen)">📢 Veröffentlichen</button>
       <button class="knopf" onclick="einmal(this, () => prSpeichernJetzt(true))">💾 Speichern</button>
-      ${p.version === 1 ? '<button class="knopf" onclick="protokollLoeschen()">🗑️ Entwurf löschen</button>' : ""}
+      ${PR.darfLoeschen ? `<button class="knopf" onclick="protokollLoeschen()">🗑️ ${p.version === 1 ? "Entwurf" : "Protokoll"} löschen</button>` : ""}
     </div>
     <p class="hinweis" style="font-size:.85rem">Nach dem Veröffentlichen bekommen alle Mitglieder (ohne Aushilfen) Bescheid und haben ${7} Tage Zeit für Einwände – danach gilt das Protokoll als genehmigt.</p>`;
   document.querySelectorAll("#prAnlagen img[data-anlage]").forEach(bildLaden);
@@ -1454,7 +1486,11 @@ async function aufgabeErledigt(id, erledigt) {
 }
 async function aufgabeLoeschen(id) {
   if (!confirm("Aufgabe löschen?")) return;
-  try { await api("aufgabe_loeschen", { id }); await prNeuLaden(); } catch (e) { melde(e.message, true); }
+  try {
+    await api("aufgabe_loeschen", { id }); melde("🗑️ Gelöscht");
+    if (aktuelleAnsicht === "protokoll") { if ($("prAufgaben")) await prNeuLaden(); else protokollOeffnen(prId, true); } else protokolleLaden();
+    neuLaden();
+  } catch (e) { melde(e.message, true); }
 }
 async function protokollVeroeffentlichen() {
   try { await prSpeichernJetzt(false); } catch { return; }
@@ -1463,9 +1499,16 @@ async function protokollVeroeffentlichen() {
   try { const r = await api("protokoll_veroeffentlichen", { id: prId }); melde(`📢 Veröffentlicht – Einwände bis ${fKurz.format(new Date(r.einspruch_bis))}`); protokollOeffnen(prId, true); }
   catch (e) { melde(e.message, true); }
 }
-async function protokollLoeschen() {
-  if (!confirm("Diesen Entwurf wirklich löschen? Angehängte Fotos/Dateien werden aus dem Protokoll entfernt.")) return;
-  try { clearTimeout(prTimer); prTimer = null; await api("protokoll_loeschen", { id: prId }); PR = null; melde("Entwurf gelöscht"); zeige("protokolle"); } catch (e) { melde(e.message, true); }
+async function protokollLoeschen(id, veroeffentlicht) {
+  id = id || prId;
+  if (veroeffentlicht === undefined) veroeffentlicht = !!PR && (PR.protokoll.roh !== "entwurf" || PR.protokoll.version > 1);
+  if (!confirm(`${veroeffentlicht ? "Dieses Protokoll" : "Diesen Entwurf"} endgültig löschen?\n\nAufgaben, Einwände und Lesebestätigungen dazu gehen mit verloren. Es wird niemand benachrichtigt.\nEine Sicherung bleibt im Änderungsprotokoll.`)) return;
+  try {
+    if (id === prId) { clearTimeout(prTimer); prTimer = null; }
+    await api("protokoll_loeschen", { id }); if (id === prId) PR = null; melde("🗑️ Gelöscht");
+    if (aktuelleAnsicht === "protokolle") protokolleLaden(); else zeige("protokolle");
+    neuLaden();
+  } catch (e) { melde(e.message, true); }
 }
 function protokollLesen() {
   const p = PR.protokoll, einspruchOffen = p.einspruch_bis && new Date(p.einspruch_bis) > new Date() && p.roh === "veroeffentlicht";
@@ -1485,14 +1528,14 @@ function protokollLesen() {
       ${p.kurzfassung ? `<p style="margin:10px 0 0"><b>Kurzfassung</b></p><p style="white-space:pre-wrap;margin:4px 0 0">${esc(p.kurzfassung)}</p>` : ""}
     </div>
     ${PR.anlagen.length ? `<div class="karte"><h3>📎 Das Protokoll</h3><p class="hinweis" style="margin-top:0;font-size:.85rem">Antippen zum Vergrößern bzw. Öffnen.</p>${anlagenListe(false)}</div>` : ""}
-    ${PR.aufgaben.length ? `<div class="karte"><h3>📌 Aufgaben</h3>${PR.aufgaben.map((a) => aufgabeZeile(a, a.meine || PR.darfBearbeiten)).join("")}</div>` : ""}
+    ${PR.aufgaben.length ? `<div class="karte"><h3>📌 Aufgaben</h3>${PR.aufgaben.map((a) => aufgabeZeile(a, a.meine || PR.darfBearbeiten, a.verwalten)).join("")}</div>` : ""}
     ${PR.einwaende.length || einspruchOffen ? `<div class="karte"><h3>⚠️ Einwände</h3>
       ${PR.einwaende.map((e) => `<div class="zeile"><div style="flex:1${e.erledigt_am ? ";opacity:.6" : ""}"><b>${esc(e.name)}:</b> ${esc(e.text)}<div class="hinweis" style="font-size:.85rem">${esc(zeitKurz(e.erstellt_am))}${e.erledigt_am ? " · ✔ erledigt" : ""}</div></div>
-        ${!e.erledigt_am && (PR.darfBearbeiten || e.eigen) ? `<button class="knopf klein" onclick="einwandErledigt('${e.id}')">✔ erledigt</button>` : ""}</div>`).join("") || '<p class="hinweis" style="margin-top:0">Keine Einwände.</p>'}
+        ${!e.erledigt_am && (PR.darfBearbeiten || e.eigen) ? `<button class="knopf klein" onclick="einwandErledigt('${e.id}')">✔ erledigt</button>` : ""}${PR.darfBearbeiten || e.eigen ? `<button class="knopf klein" title="löschen" onclick="einwandLoeschen('${e.id}')">🗑️</button>` : ""}</div>`).join("") || '<p class="hinweis" style="margin-top:0">Keine Einwände.</p>'}
       ${einspruchOffen ? `<div class="knoepfe"><button class="knopf" onclick="einwandSchreiben()">⚠️ Einwand erheben</button></div>` : ""}</div>` : ""}
     ${PR.gelesen ? `<div class="karte"><h3>👁️ Gelesen ${PR.gelesen.von.length} von ${PR.gelesen.von.length + PR.gelesen.fehlt.length}</h3>
       ${PR.gelesen.fehlt.length ? `<p class="hinweis" style="margin:0">Noch nicht gelesen: ${esc(PR.gelesen.fehlt.join(", "))}</p>` : '<p class="hinweis" style="margin:0">Alle haben es gelesen 👍</p>'}</div>` : ""}
-    ${PR.darfBearbeiten && p.roh === "veroeffentlicht" ? `<div class="knoepfe"><button class="knopf" onclick="protokollKorrigieren()">✏️ Korrigieren (neue Fassung)</button></div>` : ""}
+    ${(PR.darfBearbeiten && p.roh === "veroeffentlicht") || PR.darfLoeschen ? `<div class="knoepfe">${PR.darfBearbeiten && p.roh === "veroeffentlicht" ? '<button class="knopf" onclick="protokollKorrigieren()">✏️ Korrigieren (neue Fassung)</button>' : ""}${PR.darfLoeschen ? '<button class="knopf" onclick="protokollLoeschen()">🗑️ Protokoll löschen</button>' : ""}</div>` : ""}
     ${PR.fassungen.length ? `<p class="hinweis" style="font-size:.85rem">Frühere Fassungen: ${PR.fassungen.map((f) => `Fassung ${f.version} (gesichert ${esc(zeitKurz(f.gesichert_am))})`).join(", ")} – bleiben im Archiv erhalten.</p>` : ""}`;
   document.querySelectorAll("#protokollInhalt img[data-anlage]").forEach(bildLaden);
 }
@@ -1500,6 +1543,10 @@ async function einwandSchreiben() {
   const text = prompt("Was stimmt im Protokoll nicht? (Der Schriftführer und Clubsprecher/Kassenwart bekommen Bescheid.)");
   if (!text || !text.trim()) return;
   try { await api("protokoll_einwand", { id: prId, text }); melde("Einwand gesendet"); protokollOeffnen(prId, true); } catch (e) { melde(e.message, true); }
+}
+async function einwandLoeschen(id) {
+  if (!confirm("Diesen Einwand löschen?")) return;
+  try { await api("einwand_loeschen", { id }); melde("🗑️ Gelöscht"); protokollOeffnen(prId, true); } catch (e) { melde(e.message, true); }
 }
 async function einwandErledigt(id) {
   try { await api("einwand_erledigt", { id }); protokollOeffnen(prId, true); } catch (e) { melde(e.message, true); }

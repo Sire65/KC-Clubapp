@@ -169,13 +169,14 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   // Leserecht aus der Rollen-Registry (Aushilfen nein), nicht hart codiert im Server
   assert.ok(/protokolle: r \? r\.protokolle_lesen !== false : true/.test(server), "Protokoll-Recht aus kc_club_rollen fehlt");
   assert.ok(!/["'`]Aushilfe/.test(server), "Server darf das Amt „Aushilfe“ nicht hart codieren");
-  assert.equal((server.match(/nurProtokolle\(ich\)/g) || []).length, 13, "jede Protokoll-/Aufgaben-Aktion prüft das Leserecht");
+  assert.equal((server.match(/nurProtokolle\(ich\)/g) || []).length, 14, "jede Protokoll-/Aufgaben-Aktion prüft das Leserecht");
   // 7 Tage Einspruch; genehmigt erst nach Fristablauf ohne offene Einwände
   assert.ok(/const EINSPRUCH_TAGE = 7;/.test(server), "Einspruchsfrist 7 Tage fehlt");
   assert.ok(/if \(offeneEinwaende > 0\) return "einwand";/.test(server), "offener Einwand darf nicht als genehmigt gelten");
   // Entwürfe nur für Verfasser/Organisation; veröffentlichte Protokolle nicht löschbar; Korrektur sichert alte Fassung
   assert.ok(/pr\.status === "entwurf" && !bearb\) throw/.test(server), "Entwurf für andere sichtbar");
-  assert.ok(/pr\.status !== "entwurf" \|\| pr\.version > 1\) throw/.test(server), "veröffentlichtes Protokoll löschbar");
+  // ab 0.11.0 (KC-CLUB-LOESCHEN): veröffentlichte Protokolle darf nur die Organisation löschen, Entwürfe auch der Verfasser
+  assert.ok(/const darfProtokollLoeschen = \(ich: Ich, pr: any\) => ich\.vorstand \|\| \(pr\.verfasser === ich\.person_id && pr\.status === "entwurf" && pr\.version === 1\);/.test(server), "Löschrecht Protokolle falsch");
   assert.ok(/kc_club_sitzungsprotokoll_fassungen"\)\.upsert/.test(server), "alte Fassung wird nicht gesichert");
   // Anlagen: nur eigene Uploads verknüpfen; Leser dürfen Protokoll-Anlagen öffnen
   assert.ok(/kc_club_sitzungsprotokoll_anlagen"\)\.select\("protokoll_id"\)\.eq\("attachment_id", att\.id\)/.test(server), "anlage_url kennt Protokoll-Anlagen nicht");
@@ -225,6 +226,33 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/function gruppeWahl\(a\)/.test(html) && /const empfGruppe = \(a\) =>/.test(html), "Schnellwahl setzt keine Häkchen");
   assert.ok(/function testAnMich\(\)/.test(html), "„Test an mich“ fehlt");
   assert.ok(/const nurIch = /.test(server) && /if \(count === 1\) ziel\.push\(ich\.person_id\)/.test(server), "Server erlaubt keinen Test an sich selbst");
+}
+
+// 24. 0.11.0: Löschen überall (KC-CLUB-LOESCHEN) – mit Rechteprüfung, Sicherung vorher und Sicherheitsabfrage.
+{
+  for (const a of ["treffen_loeschen", "vorschlag_loeschen", "protokoll_loeschen", "einwand_loeschen", "aufgabe_loeschen", "nachricht_loeschen", "unterhaltung_ausblenden", "unterhaltung_loeschen"])
+    assert.ok(aktionen.has(a), `Server-Aktion ${a} fehlt`);
+  // jede Lösch-Aktion sichert vorher (Wiederherstellungspunkt) und die Sicherung muss vor dem delete stehen
+  for (const a of ["treffen_loeschen", "vorschlag_loeschen", "protokoll_loeschen", "einwand_loeschen", "aufgabe_loeschen", "nachricht_loeschen", "unterhaltung_loeschen"]) {
+    const block = server.slice(server.indexOf(`case "${a}"`), server.indexOf("return json", server.indexOf(`case "${a}"`)));
+    const s1 = block.indexOf("await geloescht("), d1 = block.indexOf(".delete()");
+    assert.ok(s1 > 0 && d1 > s1, `${a}: Sicherung fehlt oder kommt nach dem Löschen`);
+  }
+  assert.ok(/if \(error\) throw new Fehler\("Sicherung fehlgeschlagen – es wurde nichts gelöscht\."/.test(server), "Löschen ohne gelungene Sicherung");
+  // Rechte
+  assert.ok(/case "treffen_loeschen": \{[\s\S]{0,200}nurVorstand\(ich\)/.test(server), "Treffen löschen ohne Rechteprüfung");
+  assert.ok(/case "unterhaltung_loeschen": \{[\s\S]{0,200}nurAdmin\(ich\)/.test(server), "Unterhaltung für alle löschen nur Admin");
+  assert.ok(/m\.sender_person_id !== ich\.person_id && !ich\.admin\) throw/.test(server), "fremde Nachrichten löschbar");
+  // geheime Abstimmung: Sicherung ohne Personen
+  assert.ok(/stimmen: v\.geheim \? \[\] : st/.test(server), "geheime Stimmen mit Person gesichert");
+  // App: Knöpfe mit Sicherheitsabfrage
+  for (const [fn, api] of [["treffenLoeschen", "treffen_loeschen"], ["vorschlagLoeschen", "vorschlag_loeschen"], ["protokollLoeschen", "protokoll_loeschen"], ["einwandLoeschen", "einwand_loeschen"], ["nachrichtLoeschen", "nachricht_loeschen"]]) {
+    const i = html.indexOf(`async function ${fn}(`);
+    assert.ok(i > 0, `${fn} fehlt`);
+    const body = html.slice(i, html.indexOf(`api("${api}"`, i));
+    assert.ok(/confirm\(/.test(body), `${fn}: keine Sicherheitsabfrage vor dem Löschen`);
+  }
+  assert.ok(/id="chatBlatt"/.test(html) && /unterhaltung_ausblenden/.test(html), "Unterhaltung entfernen fehlt");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
