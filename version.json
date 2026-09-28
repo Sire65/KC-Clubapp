@@ -1,10 +1,10 @@
 {
-  "version": "0.11.0",
+  "version": "0.11.1",
   "datum": "2026-09-28",
   "neu": [
+    "„🧪 Test an mich“ jetzt direkt: Kachel unter Mein Bereich und Knopf in Kommunikation",
     "Löschen überall: Treffen, Vorschläge, Protokolle, Aufgaben, Einwände, Nachrichten und Unterhaltungen (mit Sicherheitsabfrage)",
     "Neu: Aktionen – Ausflüge & Reisen (z. B. Kreuzfahrt Mein Schiff 2 im Mai 2027) mit Reiseverlauf und Teilnehmern",
-    "Aktionen auch im Kalender (türkis)",
-    "Protokolle: Vorlage füllt sich selbst (Datum, Ort, wer da war, Themen, Abstimmungen)"
+    "Aktionen auch im Kalender (türkis)"
   ]
 }

@@ -1,5 +1,10 @@
 # Änderungen
 
+## 0.11.1 – 2026-09-28 (DEV)
+
+- „🧪 Test an mich“ ist jetzt direkt erreichbar: Kachel unter „Mein Bereich“ und Knopf „🧪 Test“ oben in Kommunikation
+  (vorher nur über „＋ Neu“). Öffnet die Test-Unterhaltung mit vorbereitetem Text – nur noch auf ➤ tippen.
+
 ## 0.11.0 – 2026-09-28 (DEV)
 
 - KC-CLUB-LOESCHEN: 🗑️ Löschen überall dort, wo etwas wieder weg muss (z. B. Tests) – immer mit Sicherheitsabfrage,

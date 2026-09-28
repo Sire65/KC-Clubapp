@@ -225,6 +225,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 {
   assert.ok(/function gruppeWahl\(a\)/.test(html) && /const empfGruppe = \(a\) =>/.test(html), "Schnellwahl setzt keine Häkchen");
   assert.ok(/function testAnMich\(\)/.test(html), "„Test an mich“ fehlt");
+  assert.ok(/aktion: "testAnMichStarten\(\)"/.test(html) && /onclick="testAnMichStarten\(\)"/.test(html), "„Test an mich“ nicht direkt erreichbar (Kachel/Kommunikation)");
   assert.ok(/const nurIch = /.test(server) && /if \(count === 1\) ziel\.push\(ich\.person_id\)/.test(server), "Server erlaubt keinen Test an sich selbst");
 }
 
