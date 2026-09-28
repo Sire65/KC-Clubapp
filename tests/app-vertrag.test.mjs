@@ -339,4 +339,37 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/m\.onclick = \(\) => m\.remove\(\)/.test(html) && /Math\.min\(20000, \(4000 \+ String\(t\)\.length \* 70\)/.test(html), "Meldungen verschwinden zu schnell");
 }
 
+// 29. 0.15.0: Fotoalbum – Supabase-Dateispeicher über den Anlagen-Kern, Speicheranzeige, Papierkorb, Filter.
+{
+  for (const a of ["fotos_liste", "foto_hochladen", "foto_oeffnen", "foto_aendern", "foto_loeschen", "foto_wiederherstellen"]) assert.ok(aktionen.has(a), `Server-Aktion ${a} fehlt`);
+  // ein Kern für Dateien: Anlagen und Fotos laufen über dateiAblegen (kein zweiter Upload-Weg)
+  assert.equal((server.match(/storage\.from\(BUCKET\)\.upload\(/g) || []).length, 1, "mehr als ein Upload-Weg");
+  assert.ok(/case "anlage_hochladen": \{\s*const r = await dateiAblegen\(/.test(server), "Anlagen nutzen nicht den gemeinsamen Kern");
+  assert.ok(/dateiAblegen\(ich, p\.name, p\.mime, p\.daten, \/\^image\\\/\(jpeg\|png\|webp\)\$\/\)/.test(server), "Fotoalbum nimmt nicht nur Bilder an");
+  // Speicher: Grenze kostenloser Plan, Stopp vor voll; Anzeige in der App
+  assert.ok(/const SPEICHER_GRENZE = 1024 \* 1024 \* 1024;/.test(server) && /sp\.belegt >= SPEICHER_GRENZE \* FOTO_STOPP/.test(server), "Speicher-Stopp fehlt");
+  // Löschen: Sicherung + Papierkorb; endgültig erst nach 30 Tagen in der Wartung; Wiederherstellen nur Admin
+  const del = server.slice(server.indexOf('case "foto_loeschen"'), server.indexOf('case "foto_wiederherstellen"'));
+  assert.ok(/await geloescht\(ich, "foto"/.test(del) && /geloescht_am: jetzt\(\)/.test(del) && !/dateienEntfernen/.test(del), "Foto wird sofort endgültig gelöscht");
+  assert.ok(/lt\("geloescht_am", new Date\(Date\.now\(\) - PAPIERKORB_TAGE \* 86400000\)/.test(server), "Papierkorb wird nicht geleert");
+  assert.ok(/case "foto_wiederherstellen": \{\s*nurAdmin\(ich\);/.test(server), "Wiederherstellen ohne Admin-Prüfung");
+  assert.ok(/const darfFotoAendern = \(ich: Ich, f: any\) => f\.hochgeladen_von === ich\.person_id \|\| ich\.vorstand;/.test(server), "Foto-Rechte falsch");
+  // App: Kachel, Ansicht, Filter, verkleinern mit Vorschau, EXIF-Datum, Zurück schließt Großansicht
+  assert.ok(/t: "Fotoalbum"/.test(html) && /id="v-fotos"/.test(html) && /id="fotoBetrachter"/.test(html), "Fotoalbum in der App fehlt");
+  assert.ok(/verkleinern\(roh, 1600, 0\.82\), klein = await verkleinern\(roh, 360, 0\.7\)/.test(html), "Fotos werden nicht verkleinert");
+  assert.ok(/faFilterSetzen\('thema'/.test(html) && /faFilterSetzen\('jahr'/.test(html) && /faFilterSetzen\('bezug'/.test(html), "Filter fehlen");
+  assert.ok(/if \(faZurueck\) \{ faZurueck = false; return; \}/.test(html) && /fotoSchliessen\(true\)/.test(html), "Zurück schließt die Großansicht nicht");
+  // EXIF-Datum aus einem kleinen JPEG mit DateTimeOriginal lesen
+  const code = html.slice(html.indexOf("async function exifDatum"), html.indexOf("async function fotosHochladen"));
+  const exifDatum = new Function(code + ";return exifDatum;")();
+  const tiff = [0x4d, 0x4d, 0, 42, 0, 0, 0, 8, 0, 1, 0x87, 0x69, 0, 4, 0, 0, 0, 1, 0, 0, 0, 26, 0, 0, 0, 0, 0, 1, 0x90, 0x03, 0, 2, 0, 0, 0, 20, 0, 0, 0, 44, 0, 0, 0, 0,
+    ...[..."2027:05:11 18:30:00"].map((c) => c.charCodeAt(0)), 0];
+  const app1 = [0xff, 0xe1, 0, 8 + tiff.length, 0x45, 0x78, 0x69, 0x66, 0, 0, ...tiff];
+  const blob = new Blob([new Uint8Array([0xff, 0xd8, ...app1, 0xff, 0xd9])]);
+  assert.equal(await exifDatum(blob), "2027-05-11");
+  assert.equal(await exifDatum(new Blob([new Uint8Array([1, 2, 3, 4])])), null);
+  const mig = lies("supabase/migrations/20260928_kc_club_v15_fotoalbum.sql");
+  assert.ok(mig.includes("alter table kc_club_fotos enable row level security") && /revoke all on function kc_club_speicher_belegt\(\) from public, anon, authenticated/.test(mig), "Fotoalbum-Tabelle/Funktion nicht abgesichert");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

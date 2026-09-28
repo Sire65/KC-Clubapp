@@ -8,14 +8,15 @@
 //           KC-CLUB-BENACHRICHTIGUNG (0.3.0), KC-CLUB-DIENSTERINNERUNG (0.3.0), KC-CLUB-KALENDER (0.6.0),
 //           KC-CLUB-GEBURTSTAG-FREIGABE (0.7.0), KC-CLUB-GEBURTSTAG-PUSH (0.8.0), KC-CLUB-VERANSTALTUNG (0.8.0),
 //           KC-CLUB-PROTOKOLLE (0.9.0), KC-CLUB-AUFGABEN (0.9.0), KC-CLUB-AKTIONEN (0.10.0), KC-CLUB-LOESCHEN (0.11.0),
-//           KC-CLUB-KONTAKT (0.13.0), KC-CLUB-TERMINFINDUNG, KC-CLUB-NACHFASSEN, KC-CLUB-MITFAHREN, KC-CLUB-NOTFALL, KC-CLUB-KALENDERABO (0.14.0)
+//           KC-CLUB-KONTAKT (0.13.0), KC-CLUB-TERMINFINDUNG, KC-CLUB-NACHFASSEN, KC-CLUB-MITFAHREN, KC-CLUB-NOTFALL, KC-CLUB-KALENDERABO (0.14.0),
+//           KC-CLUB-FOTOALBUM (0.15.0)
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.14.0";
+const SERVER_VERSION = "0.15.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -118,6 +119,77 @@ async function senden(eventKey: string, personIds: string[], vars: Record<string
   }
   return { gesendet, fehler };
 }
+
+// ---------- Dateien (KC-CLUB-ANLAGEN) ----------
+// Eine Datei in den Anlagen-Kern legen (Bucket + kc_communication_attachments) – für Nachrichten, Protokolle und das Fotoalbum.
+async function dateiAblegen(ich: Ich, nameRoh: unknown, mimeRoh: unknown, datenRoh: unknown, erlaubt?: RegExp) {
+  const name = txt(nameRoh, 150).replace(/[\\/]/g, "_") || "Anlage";
+  const mime = txt(mimeRoh, 100) || "application/octet-stream";
+  if (/(x-msdownload|x-sh|javascript|x-executable|html)/i.test(mime) || /\.(exe|bat|cmd|js|sh|html?)$/i.test(name)) throw new Fehler("Dieser Dateityp ist nicht erlaubt.");
+  if (erlaubt && !erlaubt.test(mime)) throw new Fehler("Dieser Dateityp ist hier nicht erlaubt.");
+  const b64 = String(datenRoh || "");
+  const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+  if (!bytes.length) throw new Fehler("Leere Datei.");
+  if (bytes.length > MAX_ANLAGE) throw new Fehler("Die Datei ist zu groß (höchstens 8 MB).");
+  const pfad = `club/${ich.person_id}/${crypto.randomUUID()}-${name.replace(/[^\w.\-äöüÄÖÜß ]/g, "_")}`;
+  const up = await db.storage.from(BUCKET).upload(pfad, bytes, { contentType: mime, upsert: false });
+  if (up.error) throw new Fehler("Hochladen fehlgeschlagen.", 500);
+  const { data: link } = await db.from("kc_core_user_links").select("user_id").eq("person_id", SYSTEM_UPLOADER).eq("active", true).limit(1).maybeSingle();
+  const hash = [...new Uint8Array(await crypto.subtle.digest("SHA-256", bytes))].map((x) => x.toString(16).padStart(2, "0")).join("");
+  const { data: att, error } = await db.from("kc_communication_attachments").insert({
+    org_id: ORG, uploaded_by: link?.user_id, bucket: BUCKET, object_path: pfad, file_name: name, mime_type: mime, size_bytes: bytes.length, sha256: hash,
+  }).select("id").single();
+  if (error || !att) { await db.storage.from(BUCKET).remove([pfad]); throw new Fehler("Anlage konnte nicht gespeichert werden.", 500); }
+  return { id: att.id as string, name, groesse: bytes.length };
+}
+// Dateien endgültig entfernen (Speicher wird frei) – nur für Dateien, die sonst nirgends verknüpft sind
+async function dateienEntfernen(ids: (string | null | undefined)[]) {
+  const u = ids.filter(Boolean) as string[];
+  if (!u.length) return;
+  const { data: att } = await db.from("kc_communication_attachments").select("id,bucket,object_path").in("id", u);
+  for (const b of new Set((att ?? []).map((x: any) => x.bucket))) await db.storage.from(b).remove((att ?? []).filter((x: any) => x.bucket === b).map((x: any) => x.object_path));
+  await db.from("kc_communication_attachments").delete().in("id", u);
+}
+
+// ---------- Fotoalbum (KC-CLUB-FOTOALBUM) ----------
+// Kostenloser Supabase-Plan: 1 GB Dateispeicher. Ab 95 % nimmt das Album keine Fotos mehr an (Rest bleibt für Anlagen/Protokolle).
+const SPEICHER_GRENZE = 1024 * 1024 * 1024;
+const FOTO_STOPP = 0.95;
+const FOTO_SCHNITT = 260 * 1024; // durchschnittliche Größe Foto + Vorschau – nur für „ca. x weitere Fotos“
+const PAPIERKORB_TAGE = 30;
+const THEMEN_VORSCHLAG = ["Clubabend", "Kochen", "Ausflug", "Reise", "Feier", "Veranstaltung"];
+async function speicherStand() {
+  const { data } = await db.rpc("kc_club_speicher_belegt");
+  const belegt = Number(data) || 0;
+  return { belegt, grenze: SPEICHER_GRENZE, prozent: Math.round((belegt / SPEICHER_GRENZE) * 1000) / 10,
+    fotosMoeglich: Math.max(0, Math.floor((SPEICHER_GRENZE * FOTO_STOPP - belegt) / FOTO_SCHNITT)) };
+}
+const darfFotoAendern = (ich: Ich, f: any) => f.hochgeladen_von === ich.person_id || ich.vorstand;
+async function fotoHolen(id: unknown) {
+  const { data: f } = await db.from("kc_club_fotos").select("*").eq("id", String(id || "")).maybeSingle();
+  if (!f) throw new Fehler("Foto nicht gefunden.", 404);
+  return f;
+}
+// Anlässe für die Auswahl: Treffen/Veranstaltungen (letzte 3 Jahre bis heute+1 Jahr) und Aktionen aus dem KC Manager
+async function fotoAnlaesse() {
+  const [{ data: tr }, { liste }] = await Promise.all([
+    db.from("kc_club_treffen").select("id,titel,beginn").neq("status", "abgesagt")
+      .gte("beginn", new Date(Date.now() - 3 * 365 * 86400000).toISOString()).lte("beginn", new Date(Date.now() + 365 * 86400000).toISOString()).order("beginn", { ascending: false }),
+    aktionenRoh(),
+  ]);
+  return [
+    ...(liste as any[]).map((a) => ({ art: "aktion", id: String(a.id), titel: txt(a.activity, 120) || "Aktion", datum: a.dateFrom })),
+    ...(tr ?? []).map((t: any) => ({ art: "treffen", id: t.id, titel: t.titel, datum: berlinTag(new Date(t.beginn)) })),
+  ].sort((x, y) => String(y.datum).localeCompare(String(x.datum)));
+}
+async function fotoBezugPruefen(art: unknown, id: unknown) {
+  if (!art) return { bezug_art: null, bezug_id: null };
+  const a = String(art), i = String(id || "");
+  if (a !== "treffen" && a !== "aktion") throw new Fehler("Unbekannter Anlass.");
+  if (!(await fotoAnlaesse()).some((x) => x.art === a && x.id === i)) throw new Fehler("Anlass nicht gefunden.");
+  return { bezug_art: a, bezug_id: i };
+}
+const fotoDatum = (v: unknown) => { const d = String(v || ""); if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || d < "1950-01-01" || d > berlinTag(new Date(Date.now() + 86400000))) throw new Fehler("Bitte ein gültiges Datum wählen."); return d; };
 
 // ---------- Anmeldung ----------
 type Ich = { person_id: string; name: string; vorname: string; admin: boolean; vorstand: boolean; aemter: string[]; protokolle: boolean; kontakte: boolean };
@@ -657,7 +729,19 @@ Köcheclub Werne`,
         await protokoll(null, "treffen_erinnerung", { treffen: t.id, empfaenger: ziel.length });
         n++;
       }
-      return json({ ok: true, erinnerungen: n, beendet, dienst, geb, aufg, nachfass });
+      // KC-CLUB-FOTOALBUM: Papierkorb nach 30 Tagen endgültig leeren (Dateien entfernen → Speicher wird frei)
+      let fotosEntfernt = 0;
+      {
+        const { data: alt } = await db.from("kc_club_fotos").select("id,attachment_id,vorschau_id")
+          .lt("geloescht_am", new Date(Date.now() - PAPIERKORB_TAGE * 86400000).toISOString()).limit(200);
+        for (const f of alt ?? []) {
+          await db.from("kc_club_fotos").delete().eq("id", f.id);
+          await dateienEntfernen([f.attachment_id, f.vorschau_id]);
+          fotosEntfernt++;
+        }
+        if (fotosEntfernt) await protokoll(null, "fotos_endgueltig_entfernt", { anzahl: fotosEntfernt });
+      }
+      return json({ ok: true, erinnerungen: n, beendet, dienst, geb, aufg, nachfass, fotosEntfernt });
     }
 
     const ich = await anmelden(req);
@@ -1668,23 +1752,8 @@ Köcheclub Werne`,
 
       // ----- Anlagen -----
       case "anlage_hochladen": {
-        const name = txt(p.name, 150).replace(/[\\/]/g, "_") || "Anlage";
-        const mime = txt(p.mime, 100) || "application/octet-stream";
-        if (/(x-msdownload|x-sh|javascript|x-executable|html)/i.test(mime) || /\.(exe|bat|cmd|js|sh|html?)$/i.test(name)) throw new Fehler("Dieser Dateityp ist nicht erlaubt.");
-        const b64 = String(p.daten || "");
-        const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
-        if (!bytes.length) throw new Fehler("Leere Datei.");
-        if (bytes.length > MAX_ANLAGE) throw new Fehler("Die Datei ist zu groß (höchstens 8 MB).");
-        const pfad = `club/${ich.person_id}/${crypto.randomUUID()}-${name.replace(/[^\w.\-äöüÄÖÜß ]/g, "_")}`;
-        const up = await db.storage.from(BUCKET).upload(pfad, bytes, { contentType: mime, upsert: false });
-        if (up.error) throw new Fehler("Hochladen fehlgeschlagen.", 500);
-        const { data: link } = await db.from("kc_core_user_links").select("user_id").eq("person_id", SYSTEM_UPLOADER).eq("active", true).limit(1).maybeSingle();
-        const hash = [...new Uint8Array(await crypto.subtle.digest("SHA-256", bytes))].map((x) => x.toString(16).padStart(2, "0")).join("");
-        const { data: att, error } = await db.from("kc_communication_attachments").insert({
-          org_id: ORG, uploaded_by: link?.user_id, bucket: BUCKET, object_path: pfad, file_name: name, mime_type: mime, size_bytes: bytes.length, sha256: hash,
-        }).select("id").single();
-        if (error || !att) throw new Fehler("Anlage konnte nicht gespeichert werden.", 500);
-        return json({ ok: true, id: att.id, name, groesse: bytes.length });
+        const r = await dateiAblegen(ich, p.name, p.mime, p.daten);
+        return json({ ok: true, ...r });
       }
 
       case "anlage_url": {
@@ -1711,6 +1780,107 @@ Köcheclub Werne`,
         const { data: s } = await db.storage.from(att.bucket).createSignedUrl(att.object_path, 600, p.herunterladen ? { download: att.file_name } : undefined);
         if (!s?.signedUrl) throw new Fehler("Anlage kann gerade nicht geöffnet werden.", 500);
         return json({ url: s.signedUrl, name: att.file_name });
+      }
+
+      // ----- Fotoalbum (KC-CLUB-FOTOALBUM) -----
+      case "fotos_liste": {
+        const papierkorb = !!p.papierkorb && ich.admin;
+        let q = db.from("kc_club_fotos").select("*");
+        q = papierkorb ? q.not("geloescht_am", "is", null) : q.is("geloescht_am", null);
+        if (p.thema) q = q.eq("thema", txt(p.thema, 60));
+        if (/^\d{4}$/.test(String(p.jahr || ""))) q = q.gte("datum", `${p.jahr}-01-01`).lte("datum", `${p.jahr}-12-31`);
+        if (p.bezug_art && p.bezug_id) q = q.eq("bezug_art", String(p.bezug_art)).eq("bezug_id", String(p.bezug_id));
+        const [{ data: fotos }, { data: alle }, anlaesse, speicher, { count: imKorb }] = await Promise.all([
+          q.order("datum", { ascending: false }).order("hochgeladen_am", { ascending: false }).limit(600),
+          db.from("kc_club_fotos").select("thema,datum,bezug_art,bezug_id").is("geloescht_am", null),
+          fotoAnlaesse(), speicherStand(),
+          ich.admin ? db.from("kc_club_fotos").select("id", { count: "exact", head: true }).not("geloescht_am", "is", null) : Promise.resolve({ count: 0 }),
+        ]);
+        const liste = fotos ?? [];
+        const [leute, { data: att }] = await Promise.all([
+          personen(liste.map((f: any) => f.hochgeladen_von)),
+          liste.length ? db.from("kc_communication_attachments").select("id,object_path").in("id", liste.map((f: any) => f.vorschau_id || f.attachment_id)) : Promise.resolve({ data: [] as any[] }),
+        ]);
+        const pfad = new Map((att ?? []).map((a: any) => [a.id, a.object_path]));
+        const pfade = [...new Set([...pfad.values()])] as string[];
+        const { data: urls } = pfade.length ? await db.storage.from(BUCKET).createSignedUrls(pfade, 3600) : { data: [] as any[] };
+        const url = new Map((urls ?? []).map((u: any) => [u.path, u.signedUrl]));
+        const zaehle = (key: (f: any) => string | null) => { const m = new Map<string, number>(); for (const f of alle ?? []) { const k = key(f); if (k) m.set(k, (m.get(k) ?? 0) + 1); } return m; };
+        const themen = zaehle((f) => f.thema || null), jahre = zaehle((f) => String(f.datum).slice(0, 4)), bez = zaehle((f) => f.bezug_art ? `${f.bezug_art}|${f.bezug_id}` : null);
+        const alleThemen = [...new Set([...themen.keys(), ...THEMEN_VORSCHLAG])];
+        return json({
+          fotos: liste.map((f: any) => ({
+            id: f.id, thema: f.thema, datum: f.datum, beschreibung: f.beschreibung, bezug_art: f.bezug_art, bezug_id: f.bezug_id,
+            von: { person_id: f.hochgeladen_von, name: leute.get(f.hochgeladen_von)?.display_name ?? "" },
+            vorschau: url.get(pfad.get(f.vorschau_id || f.attachment_id)) ?? null, darfAendern: darfFotoAendern(ich, f),
+            ...(papierkorb ? { geloescht_am: f.geloescht_am, endgueltig_am: new Date(new Date(f.geloescht_am).getTime() + PAPIERKORB_TAGE * 86400000).toISOString() } : {}),
+          })),
+          themen: alleThemen.map((t) => ({ thema: t, anzahl: themen.get(t) ?? 0 })).sort((a, b) => b.anzahl - a.anzahl || a.thema.localeCompare(b.thema)),
+          jahre: [...jahre.entries()].map(([jahr, anzahl]) => ({ jahr, anzahl })).sort((a, b) => b.jahr.localeCompare(a.jahr)),
+          anlaesse: anlaesse.map((x) => ({ ...x, anzahl: bez.get(`${x.art}|${x.id}`) ?? 0 })),
+          speicher, papierkorb: imKorb ?? 0,
+        });
+      }
+
+      case "foto_hochladen": {
+        const sp = await speicherStand();
+        if (sp.belegt >= SPEICHER_GRENZE * FOTO_STOPP) throw new Fehler("Der kostenlose Speicher ist fast voll – bitte zuerst alte Fotos löschen oder Hansi Bescheid geben.", 507);
+        const datum = fotoDatum(p.datum);
+        const bezug = await fotoBezugPruefen(p.bezug_art, p.bezug_id);
+        const bild = await dateiAblegen(ich, p.name, p.mime, p.daten, /^image\/(jpeg|png|webp)$/);
+        let vorschau: { id: string; groesse: number } | null = null;
+        try {
+          if (p.vorschau) vorschau = await dateiAblegen(ich, "vorschau-" + txt(p.name, 120), "image/jpeg", p.vorschau, /^image\/jpeg$/);
+          const { data: f, error } = await db.from("kc_club_fotos").insert({
+            attachment_id: bild.id, vorschau_id: vorschau?.id ?? null, thema: txt(p.thema, 60), datum, ...bezug,
+            beschreibung: txt(p.beschreibung, 300), groesse: bild.groesse + (vorschau?.groesse ?? 0), hochgeladen_von: ich.person_id,
+          }).select("id").single();
+          if (error || !f) throw new Fehler("Foto konnte nicht gespeichert werden.", 500);
+          await protokoll(ich.person_id, "foto_hochgeladen", { foto: f.id, groesse: bild.groesse + (vorschau?.groesse ?? 0) });
+          return json({ ok: true, id: f.id });
+        } catch (e) { await dateienEntfernen([bild.id, vorschau?.id]); throw e; }
+      }
+
+      case "foto_oeffnen": {
+        const f = await fotoHolen(p.id);
+        if (f.geloescht_am && !ich.admin) throw new Fehler("Foto nicht gefunden.", 404);
+        const { data: att } = await db.from("kc_communication_attachments").select("bucket,object_path,file_name").eq("id", f.attachment_id).maybeSingle();
+        if (!att) throw new Fehler("Foto nicht gefunden.", 404);
+        const { data: su } = await db.storage.from(att.bucket).createSignedUrl(att.object_path, 3600, p.herunterladen ? { download: att.file_name } : undefined);
+        if (!su?.signedUrl) throw new Fehler("Foto kann gerade nicht geöffnet werden.", 500);
+        return json({ url: su.signedUrl, name: att.file_name });
+      }
+
+      case "foto_aendern": {
+        const f = await fotoHolen(p.id);
+        if (f.geloescht_am) throw new Fehler("Das Foto liegt im Papierkorb.", 409);
+        if (!darfFotoAendern(ich, f)) throw new Fehler("Ändern darf nur, wer das Foto hochgeladen hat (oder Clubsprecher/Kassenwart).", 403);
+        const upd: Record<string, unknown> = {};
+        if (p.thema !== undefined) upd.thema = txt(p.thema, 60);
+        if (p.beschreibung !== undefined) upd.beschreibung = txt(p.beschreibung, 300);
+        if (p.datum !== undefined) upd.datum = fotoDatum(p.datum);
+        if (p.bezug_art !== undefined) Object.assign(upd, await fotoBezugPruefen(p.bezug_art, p.bezug_id));
+        await db.from("kc_club_fotos").update(upd).eq("id", f.id);
+        await protokoll(ich.person_id, "foto_geaendert", { foto: f.id, vorher: { thema: f.thema, datum: f.datum, beschreibung: f.beschreibung, bezug_art: f.bezug_art, bezug_id: f.bezug_id } });
+        return json({ ok: true });
+      }
+
+      case "foto_loeschen": {
+        // Papierkorb: 30 Tage wiederherstellbar (Admin), danach entfernt die Wartung die Dateien
+        const f = await fotoHolen(p.id);
+        if (f.geloescht_am) return json({ ok: true });
+        if (!darfFotoAendern(ich, f)) throw new Fehler("Löschen darf nur, wer das Foto hochgeladen hat (oder Clubsprecher/Kassenwart).", 403);
+        await geloescht(ich, "foto", { foto: f });
+        await db.from("kc_club_fotos").update({ geloescht_am: jetzt(), geloescht_von: ich.person_id }).eq("id", f.id);
+        return json({ ok: true, papierkorbTage: PAPIERKORB_TAGE });
+      }
+
+      case "foto_wiederherstellen": {
+        nurAdmin(ich);
+        const f = await fotoHolen(p.id);
+        await db.from("kc_club_fotos").update({ geloescht_am: null, geloescht_von: null }).eq("id", f.id);
+        await protokoll(ich.person_id, "foto_wiederhergestellt", { foto: f.id });
+        return json({ ok: true });
       }
 
       // ----- Push -----
