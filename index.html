@@ -1,0 +1,704 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#741521">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Köcheclub">
+<title>Köcheclub Werne</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  :root {
+    --rot: #741521; --rot2: #9b2536; --rot3: #c0485a; --gold: #c9a46a;
+    --bg: #f5eee3; --karte: #ffffff; --karte2: #efe5d6; --text: #2b1a1c; --grau: #7b6b66; --linie: #e4d7c4;
+    --gruen: #2e7d4f; --gruenbg: #e3f2e8; --gelb: #9a6b00; --gelbbg: #fbf0d6; --rotbg: #fbe3e3; --schatten: 0 6px 18px rgba(80, 30, 20, .10);
+    --radius: 18px; --fs: 16px;
+  }
+  :root.dunkel { --bg: #1b1415; --karte: #2a2021; --karte2: #33282a; --text: #f4e9e4; --grau: #b9a8a3; --linie: #45393a; --gruenbg: #1f3a2a; --gelbbg: #3a2f17; --rotbg: #4a2126; --schatten: 0 6px 18px rgba(0,0,0,.35); }
+  :root.gross { --fs: 19px; }
+  * { box-sizing: border-box; }
+  html { font-size: var(--fs); }
+  body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); -webkit-tap-highlight-color: transparent; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  .seite { max-width: 1100px; margin: 0 auto; padding: 12px 14px calc(96px + env(safe-area-inset-bottom)); }
+  .versteckt { display: none !important; }
+
+  /* Kopf (Hero) */
+  .hero { background: linear-gradient(135deg, #4d0c16 0%, var(--rot) 45%, var(--rot2) 75%, #b5705a 100%); color: #fff; border-radius: 26px; padding: 18px; box-shadow: 0 12px 30px rgba(116, 21, 33, .35); }
+  .kopfzeile { display: flex; align-items: center; gap: 12px; }
+  .logo { width: 54px; height: 54px; border-radius: 16px; background: rgba(255,255,255,.14); display: grid; place-items: center; flex: none; }
+  .logo img { width: 40px; }
+  .marke-klein { font-size: .72rem; letter-spacing: .12em; font-weight: 800; opacity: .85; }
+  .titel { font-size: 1.35rem; font-weight: 800; line-height: 1.15; }
+  .statuschip { margin-top: 6px; border: none; border-radius: 12px; padding: 4px 10px; background: rgba(255,255,255,.18); color: #fff; font-weight: 700; font-size: .82rem; cursor: pointer; }
+  .rund { width: 48px; height: 48px; border-radius: 50%; border: none; background: rgba(255,255,255,.16); color: #fff; font-size: 1.15rem; cursor: pointer; flex: none; }
+  .rund:active { transform: scale(.94); }
+  .knopfreihe { margin-left: auto; display: flex; gap: 8px; }
+  .info { margin-top: 16px; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.18); border-radius: 20px; padding: 16px; }
+  .info h2 { margin: 0; font-size: 1.5rem; }
+  .info .unter { opacity: .9; margin-top: 4px; }
+  .kacheln3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
+  .mini { background: rgba(255,255,255,.14); border-radius: 16px; padding: 12px; min-height: 70px; }
+  .mini b { display: block; font-size: 1.2rem; }
+  .mini span { font-size: .72rem; letter-spacing: .06em; font-weight: 700; text-transform: uppercase; opacity: .9; }
+
+  /* Schnellzugriff */
+  .abschnitt { display: flex; align-items: center; justify-content: space-between; margin: 22px 2px 10px; }
+  .abschnitt h3 { margin: 0; font-size: 1.3rem; }
+  .register { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
+  .register button { border: none; border-radius: 14px; padding: 11px 6px; background: var(--karte2); font-weight: 800; cursor: pointer; }
+  .register button.an { background: var(--rot); color: #fff; }
+  .raster { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
+  .kachel { position: relative; overflow: hidden; background: var(--karte); border: none; border-radius: var(--radius); padding: 16px; text-align: left; min-height: 124px; box-shadow: var(--schatten); cursor: pointer; }
+  .kachel::after { content: ""; position: absolute; right: -24px; top: -24px; width: 88px; height: 88px; border-radius: 50%; background: radial-gradient(circle at 30% 70%, rgba(201,164,106,.28), rgba(116,21,33,.10)); }
+  .kachel .sym { font-size: 2rem; line-height: 1; }
+  .kachel b { display: block; font-size: 1.1rem; margin-top: 10px; }
+  .kachel small { color: var(--grau); font-weight: 700; }
+  .kachel .zahl { position: absolute; right: 12px; bottom: 12px; background: var(--rot); color: #fff; border-radius: 12px; padding: 2px 9px; font-weight: 800; font-size: .85rem; z-index: 1; }
+  .kachel.bald { opacity: .55; }
+  .kachel.bald .zahl { background: var(--grau); }
+
+  .karte { background: var(--karte); border-radius: var(--radius); padding: 16px; box-shadow: var(--schatten); margin-top: 12px; }
+  .karte h3 { margin: 0 0 10px; font-size: 1.15rem; }
+  .hinweis { color: var(--grau); }
+  .zeile { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--linie); }
+  .zeile:last-child { border-bottom: none; }
+
+  /* Knöpfe & Formulare */
+  .knopf { border: none; border-radius: 14px; padding: 13px 16px; font-weight: 800; cursor: pointer; background: var(--karte2); }
+  .knopf.haupt { background: var(--rot); color: #fff; }
+  .knopf.gruen { background: var(--gruen); color: #fff; }
+  .knopf.klein { padding: 8px 12px; border-radius: 12px; font-size: .9rem; }
+  .knopf:disabled { opacity: .5; }
+  .knoepfe { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  label.feld { display: block; margin-top: 10px; font-weight: 700; font-size: .92rem; }
+  .feld input, .feld select, .feld textarea { display: block; width: 100%; margin-top: 5px; padding: 12px; border: 1px solid var(--linie); border-radius: 12px; background: var(--bg); }
+  .zwei { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .marke { display: inline-block; font-size: .78rem; font-weight: 800; padding: 3px 9px; border-radius: 10px; background: var(--karte2); }
+  .marke.gruen { background: var(--gruenbg); color: var(--gruen); }
+  .marke.gelb { background: var(--gelbbg); color: var(--gelb); }
+  .marke.rot { background: var(--rotbg); color: #a51d1d; }
+
+  /* Treffen */
+  .treffen .wann { font-size: 1.15rem; font-weight: 800; }
+  .antworten { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
+  .antworten button { border: 2px solid var(--linie); background: var(--karte); border-radius: 14px; padding: 12px 4px; font-weight: 800; cursor: pointer; }
+  .antworten button.an.ja { background: var(--gruen); border-color: var(--gruen); color: #fff; }
+  .antworten button.an.nein { background: #a51d1d; border-color: #a51d1d; color: #fff; }
+  .antworten button.an.vielleicht { background: var(--gold); border-color: var(--gold); color: #fff; }
+  .namen { margin-top: 10px; font-size: .92rem; line-height: 1.6; }
+
+  /* Nachrichten */
+  .unterh { display: flex; gap: 12px; align-items: center; padding: 12px 4px; border-bottom: 1px solid var(--linie); cursor: pointer; }
+  .avatar { width: 46px; height: 46px; border-radius: 50%; background: var(--rot); color: #fff; display: grid; place-items: center; font-weight: 800; flex: none; }
+  .unterh .mitte { flex: 1; min-width: 0; }
+  .unterh .mitte div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .punkt { background: var(--rot); color: #fff; border-radius: 12px; padding: 2px 9px; font-weight: 800; font-size: .85rem; }
+  .chat { display: flex; flex-direction: column; gap: 6px; padding: 8px 0 120px; }
+  .blase { max-width: 82%; padding: 9px 12px; border-radius: 16px; background: var(--karte); box-shadow: var(--schatten); word-wrap: break-word; }
+  .blase .txt { white-space: pre-wrap; }
+  .blase.eigen { align-self: flex-end; background: var(--rot); color: #fff; border-bottom-right-radius: 4px; }
+  .blase:not(.eigen) { border-bottom-left-radius: 4px; }
+  .blase .von { font-size: .78rem; font-weight: 800; color: var(--rot2); margin-bottom: 2px; }
+  .blase .fuss { font-size: .72rem; opacity: .75; text-align: right; margin-top: 4px; }
+  .blase img { max-width: 100%; border-radius: 10px; margin-top: 6px; display: block; cursor: pointer; }
+  .anlage { display: inline-block; margin-top: 6px; padding: 7px 10px; border-radius: 10px; background: rgba(0,0,0,.08); cursor: pointer; font-weight: 700; }
+  .blase.eigen .anlage { background: rgba(255,255,255,.18); }
+  .eingabe { position: fixed; left: 0; right: 0; bottom: calc(76px + env(safe-area-inset-bottom)); padding: 8px 12px; background: var(--bg); border-top: 1px solid var(--linie); }
+  .eingabe .innen { max-width: 1100px; margin: 0 auto; display: flex; gap: 8px; align-items: flex-end; }
+  .eingabe textarea { flex: 1; resize: none; max-height: 140px; padding: 12px; border-radius: 18px; border: 1px solid var(--linie); background: var(--karte); }
+  .eingabe .rund { background: var(--rot); }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; max-width: 1100px; margin: 0 auto 6px; }
+  .chip { background: var(--karte2); border: none; border-radius: 12px; padding: 6px 10px; font-weight: 700; }
+  .wahlliste label { display: flex; align-items: center; gap: 10px; padding: 10px 4px; border-bottom: 1px solid var(--linie); }
+  .wahlliste input { width: 22px; height: 22px; accent-color: var(--rot); }
+
+  /* Fußleiste */
+  .fuss-leiste { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(8px + env(safe-area-inset-bottom)); width: min(760px, calc(100% - 16px)); background: var(--karte); border-radius: 22px; box-shadow: 0 8px 24px rgba(0,0,0,.14); display: grid; grid-template-columns: repeat(5, 1fr); padding: 6px; z-index: 20; }
+  .fuss-leiste button { border: none; background: none; border-radius: 16px; padding: 8px 2px; font-size: .74rem; font-weight: 800; cursor: pointer; position: relative; }
+  .fuss-leiste button span { display: block; font-size: 1.3rem; }
+  .fuss-leiste button.an { background: var(--karte2); color: var(--rot); }
+  .fuss-leiste .zaehler { position: absolute; top: 2px; right: 18%; background: var(--rot); color: #fff; border-radius: 10px; font-size: .7rem; padding: 1px 6px; }
+
+  .kopf2 { display: flex; align-items: center; gap: 10px; margin: 6px 0 4px; }
+  .kopf2 h2 { margin: 0; font-size: 1.35rem; flex: 1; }
+  .zurueck { width: 44px; height: 44px; border-radius: 50%; border: none; background: var(--karte); box-shadow: var(--schatten); font-size: 1.2rem; cursor: pointer; }
+  .meldung { position: fixed; left: 50%; transform: translateX(-50%); top: 14px; background: #2b1a1c; color: #fff; padding: 12px 18px; border-radius: 14px; z-index: 50; max-width: 92%; box-shadow: 0 8px 24px rgba(0,0,0,.25); }
+  .meldung.fehler { background: #a51d1d; }
+  .updatebalken { background: var(--gelbbg); color: var(--gelb); border-radius: 14px; padding: 12px; margin-top: 10px; display: flex; gap: 10px; align-items: center; font-weight: 700; }
+  .schalter { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--linie); }
+  .schalter:last-child { border-bottom: none; }
+  .schalter input { width: 26px; height: 26px; accent-color: var(--rot); }
+  .blatt { position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 40; display: flex; align-items: flex-end; justify-content: center; }
+  .blatt-innen { background: var(--karte); width: min(560px, 100%); border-radius: 22px 22px 0 0; padding: 18px 16px calc(18px + env(safe-area-inset-bottom)); display: grid; gap: 10px; }
+  .blatt-innen h3 { margin: 0 0 4px; }
+  .blatt-innen .knopf { padding: 16px; font-size: 1.05rem; text-align: left; }
+  @media (max-width: 560px) { .titel { font-size: 1.12rem; } .rund { width: 42px; height: 42px; } .knopfreihe { gap: 6px; } .raster { grid-template-columns: 1fr 1fr; } .info h2 { font-size: 1.25rem; } }
+</style>
+</head>
+<body>
+<div id="gesperrt" class="seite versteckt">
+  <div class="hero"><div class="kopfzeile"><div class="logo"><img src="kc-kochmuetze-weiss.webp" alt=""></div><div><div class="marke-klein">KÖCHECLUB WERNE</div><div class="titel">Willkommen</div></div></div></div>
+  <div class="karte"><h3>🔑 Persönlicher Link nötig</h3><p>Bitte öffne die App über deinen <b>persönlichen Link</b>, den du von Hansi bekommen hast (per WhatsApp oder Mail). Danach kannst du sie auf den Startbildschirm legen.</p></div>
+</div>
+
+<div id="app" class="versteckt">
+<div class="seite">
+  <!-- START -->
+  <section id="v-start">
+    <div class="hero">
+      <div class="kopfzeile">
+        <div class="logo"><img src="kc-kochmuetze-weiss.webp" alt="Kochmütze"></div>
+        <div><div class="marke-klein">KÖCHECLUB WERNE</div><div class="titel" id="begruessung">Köcheclub Werne</div><button class="statuschip" id="statusChip" onclick="statusBlatt()">🟢 verfügbar ▾</button></div>
+        <div class="knopfreihe">
+          <button class="rund" title="Einstellungen" onclick="zeige('einstellungen')">⚙️</button>
+          <button class="rund" title="Hell/Dunkel" onclick="dunkelUmschalten()">🌙</button>
+          <button class="rund" title="Aktualisieren" onclick="neuLaden(true)">↻</button>
+        </div>
+      </div>
+      <div class="info" id="heroInfo"><h2>Einen Moment …</h2><div class="unter">Daten werden geladen.</div></div>
+    </div>
+    <div id="updateHinweis"></div>
+    <div class="abschnitt"><h3>Schnellzugriff</h3><span class="marke" id="versionMarke">v–</span></div>
+    <div class="register" id="register">
+      <button data-r="verein" class="an" onclick="register('verein')">Verein</button>
+      <button data-r="mein" onclick="register('mein')">Mein Bereich</button>
+      <button data-r="programme" onclick="register('programme')">Programme</button>
+    </div>
+    <div class="raster" id="raster"></div>
+    <div class="karte"><h3>Heute wichtig</h3><div id="wichtig" class="hinweis">…</div></div>
+  </section>
+
+  <!-- TERMINE -->
+  <section id="v-termine" class="versteckt">
+    <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>📅 Termine</h2><button id="neuTreffenKnopf" class="knopf haupt klein versteckt" onclick="treffenForm()">＋ Neu</button></div>
+    <div id="treffenForm" class="karte versteckt"></div>
+    <div id="treffenListe"></div>
+  </section>
+
+  <!-- NACHRICHTEN -->
+  <section id="v-nachrichten" class="versteckt">
+    <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>💬 Kommunikation</h2><button class="knopf haupt klein" onclick="neueNachricht()">＋ Neu</button></div>
+    <div class="karte" id="unterhListe"><span class="hinweis">Wird geladen …</span></div>
+  </section>
+
+  <!-- UNTERHALTUNG -->
+  <section id="v-chat" class="versteckt">
+    <div class="kopf2"><button class="zurueck" onclick="zeige('nachrichten')">‹</button><h2 id="chatTitel">…</h2></div>
+    <div class="hinweis" id="chatTeilnehmer" style="margin-left:54px"></div>
+    <div class="chat" id="chat"></div>
+  </section>
+
+  <!-- NEUE NACHRICHT -->
+  <section id="v-neu" class="versteckt">
+    <div class="kopf2"><button class="zurueck" onclick="zeige('nachrichten')">‹</button><h2>Neue Nachricht</h2></div>
+    <div class="karte">
+      <h3>An wen?</h3>
+      <div class="knoepfe" id="schnellEmpf"></div>
+      <label class="feld">Name suchen<input id="empfSuche" placeholder="🔍 z. B. Anne" oninput="empfListe()"></label>
+      <div class="wahlliste" id="empfListe"></div>
+      <label class="feld">Betreff (freiwillig, z. B. bei Gruppen)<input id="neuBetreff" maxlength="120"></label>
+    </div>
+    <div class="karte"><div class="hinweis">Gewählt: <b id="empfGewaehlt">niemand</b></div><div class="knoepfe"><button class="knopf haupt" onclick="neuWeiter()">Weiter zum Schreiben ›</button></div></div>
+  </section>
+
+  <!-- MITGLIEDER -->
+  <section id="v-mitglieder" class="versteckt">
+    <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>👥 Aktive Mitglieder</h2><button class="knopf klein" onclick="statusBlatt()">Mein Status</button></div>
+    <div class="karte" id="mitgliederListe"><span class="hinweis">Wird geladen …</span></div>
+  </section>
+
+  <!-- EINSTELLUNGEN -->
+  <section id="v-einstellungen" class="versteckt">
+    <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>⚙️ Einstellungen</h2></div>
+    <div class="karte">
+      <div class="schalter"><div><b>🔔 Push-Benachrichtigungen</b><div class="hinweis" id="pushStatus">…</div></div><button class="knopf klein" id="pushKnopf" onclick="pushUmschalten()">Einschalten</button></div>
+      <div class="schalter"><div><b>🔊 Warnton bei neuer Nachricht</b><div class="hinweis">Kurzer Ton, wenn die App offen ist</div></div><input type="checkbox" id="setTon" onchange="einstellung('ton', this.checked)"></div>
+      <div class="schalter"><div><b>🔠 Große Schrift</b></div><input type="checkbox" id="setGross" onchange="einstellung('gross', this.checked)"></div>
+      <div class="schalter"><div><b>🌙 Dunkles Design</b></div><input type="checkbox" id="setDunkel" onchange="einstellung('dunkel', this.checked)"></div>
+      <div class="knoepfe"><button class="knopf klein" onclick="tonTest()">Ton testen</button><button class="knopf klein" onclick="pushTest()">Test-Push senden</button></div>
+    </div>
+    <div class="karte"><h3>📲 Auf den Startbildschirm</h3><p class="hinweis" id="installHinweis">Android: Menü ⋮ → „App installieren“ bzw. „Zum Startbildschirm hinzufügen“. iPhone: Teilen □↑ → „Zum Home-Bildschirm“.</p><button id="installKnopf" class="knopf haupt versteckt" onclick="installieren()">📲 Jetzt installieren</button></div>
+    <div class="karte"><h3>ℹ️ App</h3><div class="zeile"><span>Version</span><b id="appVersion" style="margin-left:auto"></b></div><div class="zeile"><span>Angemeldet als</span><b id="ichName" style="margin-left:auto"></b></div>
+      <div class="knoepfe"><button class="knopf klein" onclick="updatePruefen(true)">Nach Update suchen</button></div></div>
+  </section>
+</div>
+
+<div class="eingabe versteckt" id="eingabe">
+  <div class="chips" id="anlagenChips"></div>
+  <div class="innen">
+    <button class="rund" title="Anlage" onclick="anlageMenue()">📎</button>
+    <textarea id="text" rows="1" placeholder="Nachricht schreiben …" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
+    <button class="rund" title="Senden" id="sendenKnopf" onclick="senden()">➤</button>
+  </div>
+</div>
+<div class="blatt versteckt" id="statusBlatt" onclick="if(event.target===this)this.classList.add('versteckt')">
+  <div class="blatt-innen"><h3>Mein Status</h3><div class="liste" style="display:grid;gap:8px"></div>
+    <div id="stExtra"><label class="feld">Bis (freiwillig)<input type="date" id="stBis"></label><label class="feld">Hinweis (freiwillig, z. B. „ab 18 Uhr erreichbar“)<input id="stHinweis" maxlength="120"></label></div>
+    <button class="knopf haupt" onclick="statusSpeichern()">Speichern</button><button class="knopf" onclick="$('statusBlatt').classList.add('versteckt')">Abbrechen</button></div>
+</div>
+<div class="blatt versteckt" id="anlageBlatt" onclick="if(event.target===this)this.classList.add('versteckt')">
+  <div class="blatt-innen"><h3>Anlage hinzufügen</h3>
+    <button class="knopf" onclick="anlageWahl('dateiKamera')">📷 Foto aufnehmen</button>
+    <button class="knopf" onclick="anlageWahl('dateiBild')">🖼️ Bild aus der Galerie</button>
+    <button class="knopf" onclick="anlageWahl('dateiDok')">📄 Datei oder PDF</button>
+    <button class="knopf" onclick="anlageMenue()">Abbrechen</button></div>
+</div>
+<input type="file" id="dateiKamera" accept="image/*" capture="environment" class="versteckt" onchange="dateienGewaehlt(this)">
+<input type="file" id="dateiBild" accept="image/*" multiple class="versteckt" onchange="dateienGewaehlt(this)">
+<input type="file" id="dateiDok" accept="application/pdf,image/*,.doc,.docx,.xls,.xlsx,.txt" multiple class="versteckt" onchange="dateienGewaehlt(this)">
+
+<nav class="fuss-leiste" id="fuss">
+  <button data-v="start" class="an" onclick="zeige('start')"><span>🏠</span>Start</button>
+  <button data-v="termine" onclick="zeige('termine')"><span>📅</span>Termine</button>
+  <button data-v="nachrichten" onclick="zeige('nachrichten')"><span>💬</span>Nachrichten<i class="zaehler versteckt" id="fussZaehler"></i></button>
+  <button data-v="mitglieder" onclick="zeige('mitglieder')"><span>👥</span>Mitglieder</button>
+  <button data-v="einstellungen" onclick="zeige('einstellungen')"><span>⚙️</span>Mehr</button>
+</nav>
+</div>
+
+<script>
+const APP_VERSION = "0.1.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
+const TZ = "Europe/Berlin";
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fTag = new Intl.DateTimeFormat("de-DE", { timeZone: TZ, weekday: "short", day: "2-digit", month: "2-digit" });
+const fZeit = new Intl.DateTimeFormat("de-DE", { timeZone: TZ, hour: "2-digit", minute: "2-digit" });
+const fKurz = new Intl.DateTimeFormat("de-DE", { timeZone: TZ, day: "2-digit", month: "2-digit" });
+const wann = (iso) => `${fTag.format(new Date(iso))}, ${fZeit.format(new Date(iso))} Uhr`;
+const zeitKurz = (iso) => { const d = new Date(iso), h = new Date(); return d.toDateString() === h.toDateString() ? fZeit.format(d) : fKurz.format(d) + " " + fZeit.format(d); };
+const initialen = (n) => String(n || "?").split(/\s+/).map((x) => x[0]).slice(0, 2).join("").toUpperCase();
+
+let KEY = "", ICH = null, INIT = null, MITGLIEDER = null, AEMTER = [], aktuelleAnsicht = "start", reg = "verein";
+let chatId = null, chatTimer = null, empfWahl = { personen: [], aemter: [], alle: false, vorstand: false }, anlagen = [], letzteUngelesen = null;
+
+function einst(k, def) { try { const v = localStorage.getItem("kc_club_" + k); return v === null ? def : v === "1"; } catch { return def; } }
+function einstellung(k, an) { try { localStorage.setItem("kc_club_" + k, an ? "1" : "0"); } catch {} anwendenDesign(); }
+function anwendenDesign() {
+  document.documentElement.classList.toggle("dunkel", einst("dunkel", false));
+  document.documentElement.classList.toggle("gross", einst("gross", false));
+  $("setDunkel").checked = einst("dunkel", false); $("setGross").checked = einst("gross", false); $("setTon").checked = einst("ton", true);
+}
+function dunkelUmschalten() { einstellung("dunkel", !einst("dunkel", false)); }
+
+function melde(t, fehler) {
+  const m = document.createElement("div"); m.className = "meldung" + (fehler ? " fehler" : ""); m.textContent = t;
+  document.body.appendChild(m); setTimeout(() => m.remove(), fehler ? 5000 : 2600);
+}
+async function api(action, daten = {}) {
+  const r = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json", "x-club-token": KEY, "x-club-version": APP_VERSION }, body: JSON.stringify({ action, ...daten }) });
+  const j = await r.json().catch(() => ({}));
+  if (r.status === 401) { $("app").classList.add("versteckt"); $("gesperrt").classList.remove("versteckt"); throw new Error(j.error || "Kein Zugang"); }
+  if (!r.ok) throw new Error(j.error || "Fehler " + r.status);
+  return j;
+}
+
+// ---------- Eigener Status ----------
+const STATUS = { verfuegbar: ["🟢", "verfügbar"], beschaeftigt: ["🟠", "beschäftigt"], urlaub: ["🏖️", "im Urlaub"], krank: ["🤒", "krank"], abwesend: ["🔴", "nicht erreichbar"] };
+const fDatumKurz = (d) => d ? d.split("-").reverse().slice(0, 2).join(".") + "." : "";
+const statusText = (s) => { const x = STATUS[s?.status] || STATUS.verfuegbar; return `${x[0]} ${x[1]}${s?.bis ? " bis " + fDatumKurz(s.bis) : ""}${s?.hinweis ? " · " + s.hinweis : ""}`; };
+function statusBlatt() {
+  const s = INIT?.status || {};
+  $("statusBlatt").querySelector(".liste").innerHTML = Object.entries(STATUS).map(([k, [sym, t]]) =>
+    `<button class="knopf ${s.status === k ? "haupt" : ""}" onclick="statusWahl='${k}';statusBlatt2()">${sym} ${t}</button>`).join("");
+  statusWahl = s.status || "verfuegbar"; $("stBis").value = s.bis || ""; $("stHinweis").value = s.hinweis || "";
+  statusBlatt2(); $("statusBlatt").classList.remove("versteckt");
+}
+let statusWahl = "verfuegbar";
+function statusBlatt2() {
+  [...$("statusBlatt").querySelectorAll(".liste .knopf")].forEach((b, i) => b.classList.toggle("haupt", Object.keys(STATUS)[i] === statusWahl));
+  $("stExtra").classList.toggle("versteckt", statusWahl === "verfuegbar");
+}
+async function statusSpeichern() {
+  try { await api("status_setzen", { status: statusWahl, bis: $("stBis").value, hinweis: $("stHinweis").value }); $("statusBlatt").classList.add("versteckt"); melde("Status gespeichert"); MITGLIEDER = null; neuLaden(); }
+  catch (e) { melde(e.message, true); }
+}
+
+// ---------- Start ----------
+const KACHELN = {
+  verein: [
+    { sym: "📅", t: "Termine", u: "Treffen · Zu- & Absagen", v: "termine" },
+    { sym: "💬", t: "Kommunikation", u: "Nachrichten & Anlagen", v: "nachrichten", zahl: () => INIT?.ungelesen || 0 },
+    { sym: "👥", t: "Aktive Mitglieder", u: "Status · Ämter · Kontakt", v: "mitglieder" },
+    { sym: "🗳️", t: "Vorschläge", u: "Themen nächste Sitzung", bald: true },
+    { sym: "📄", t: "Protokolle", u: "Sitzungen & Beschlüsse", bald: true },
+    { sym: "🗓️", t: "Dienstpläne", u: "Dienste & Einteilung", bald: true },
+  ],
+  mein: [
+    { sym: "🟢", t: "Mein Status", u: "verfügbar, Urlaub …", aktion: "statusBlatt()" },
+    { sym: "🗓️", t: "Mein Dienstplan", u: "Meine Dienste", bald: true },
+    { sym: "🎓", t: "Meine Schulungen", u: "Zusammenfassungen", bald: true },
+    { sym: "⚙️", t: "Einstellungen", u: "Push, Ton, Schrift", v: "einstellungen" },
+  ],
+  programme: [
+    { sym: "💻", t: "Freigegebene Programme", u: "Kasse, Schulungsversion …", bald: true },
+  ],
+};
+function register(r) { reg = r; document.querySelectorAll("#register button").forEach((b) => b.classList.toggle("an", b.dataset.r === r)); kachelnZeigen(); }
+function kachelnZeigen() {
+  $("raster").innerHTML = KACHELN[reg].map((k, i) => {
+    const z = k.zahl ? k.zahl() : 0;
+    return `<button class="kachel${k.bald ? " bald" : ""}" onclick="${k.bald ? `melde('„${k.t}“ kommt in einer der nächsten Versionen.')` : k.aktion || `zeige('${k.v}')`}">
+      <div class="sym">${k.sym}</div><b>${esc(k.t)}</b><small>${esc(k.u)}</small>${k.bald ? '<span class="zahl">bald</span>' : z ? `<span class="zahl">${z}</span>` : ""}</button>`;
+  }).join("");
+}
+function heroZeigen() {
+  const t = INIT?.naechstesTreffen;
+  if (!t) { $("heroInfo").innerHTML = `<h2>Kein Treffen geplant</h2><div class="unter">Sobald ein Köcheclub-Treffen ansteht, siehst du es hier.</div><div class="kacheln3"><div class="mini"><b>${INIT?.ungelesen || 0}</b><span>Neue Nachr.</span></div><div class="mini"><b>${INIT?.mitgliederAnzahl || "–"}</b><span>Mitglieder</span></div><div class="mini"><b>—</b><span>Nächstes Treffen</span></div></div>`; return; }
+  const tage = Math.ceil((new Date(t.beginn) - Date.now()) / 86400000);
+  const ort = t.ort || (t.gastgeber ? "bei " + t.gastgeber.name : "");
+  const meine = { ja: "✅ Ich komme", nein: "❌ Abgesagt", vielleicht: "❓ Vielleicht" }[t.meine] || "Noch offen";
+  $("heroInfo").innerHTML = `<h2>${esc(t.titel)}</h2><div class="unter">${esc(wann(t.beginn))}${ort ? " · " + esc(ort) : ""}</div>
+    <div class="kacheln3"><div class="mini"><b>${t.ja}</b><span>Zusagen</span></div><div class="mini" onclick="zeige('termine')" style="cursor:pointer"><b style="font-size:1rem">${meine}</b><span>Deine Antwort</span></div>
+    <div class="mini"><b>${tage <= 0 ? "Heute" : tage === 1 ? "Morgen" : tage + " Tage"}</b><span>bis zum Treffen</span></div></div>`;
+}
+function wichtigZeigen() {
+  const h = [];
+  if (INIT?.ungelesen) h.push(`<div class="zeile" style="cursor:pointer" onclick="zeige('nachrichten')">💬 <b>${INIT.ungelesen} neue Nachricht${INIT.ungelesen > 1 ? "en" : ""}</b><span style="margin-left:auto">›</span></div>`);
+  const t = INIT?.naechstesTreffen;
+  if (t && !t.meine) h.push(`<div class="zeile" style="cursor:pointer" onclick="zeige('termine')">📅 Bitte für <b>${esc(t.titel)}</b> zu- oder absagen<span style="margin-left:auto">›</span></div>`);
+  if (pushMoeglich() && Notification.permission !== "granted") h.push(`<div class="zeile">🔔 Benachrichtigungen sind aus<button class="knopf haupt klein" style="margin-left:auto" onclick="pushEinschalten()">Einschalten</button></div>`);
+  $("wichtig").innerHTML = h.join("") || "Alles erledigt 👍";
+}
+async function neuLaden(vonHand) {
+  try {
+    INIT = await api("init"); ICH = INIT.ich;
+    $("begruessung").textContent = "Hallo " + ICH.vorname + "!";
+    $("statusChip").textContent = statusText(INIT.status) + " ▾";
+    $("ichName").textContent = ICH.name + (ICH.admin ? " (Admin)" : ICH.vorstand ? " (Vorstand)" : "");
+    $("neuTreffenKnopf").classList.toggle("versteckt", !ICH.vorstand);
+    heroZeigen(); kachelnZeigen(); wichtigZeigen(); zaehlerZeigen();
+    if (vonHand) { melde("Aktualisiert"); updatePruefen(false); }
+  } catch (e) { melde(e.message, true); }
+}
+function zaehlerZeigen() {
+  const n = INIT?.ungelesen || 0;
+  $("fussZaehler").textContent = n; $("fussZaehler").classList.toggle("versteckt", !n);
+  try { n ? navigator.setAppBadge?.(n) : navigator.clearAppBadge?.(); } catch {}
+  if (letzteUngelesen !== null && n > letzteUngelesen && einst("ton", true)) ton();
+  letzteUngelesen = n;
+}
+
+// ---------- Ansichten ----------
+function zeige(v) {
+  aktuelleAnsicht = v;
+  ["start", "termine", "nachrichten", "chat", "neu", "mitglieder", "einstellungen"].forEach((x) => $("v-" + x).classList.toggle("versteckt", x !== v));
+  document.querySelectorAll("#fuss button").forEach((b) => b.classList.toggle("an", b.dataset.v === v || (v === "chat" && b.dataset.v === "nachrichten") || (v === "neu" && b.dataset.v === "nachrichten")));
+  $("eingabe").classList.toggle("versteckt", v !== "chat");
+  clearInterval(chatTimer);
+  if (v !== "chat") chatId = null;
+  if (v === "termine") treffenLaden();
+  if (v === "nachrichten") unterhLaden();
+  if (v === "mitglieder") mitgliederLaden();
+  if (v === "einstellungen") pushStatusZeigen();
+  if (v === "start") neuLaden();
+  const hash = v === "start" ? "" : v === "chat" ? "" : "#" + v;
+  if (v !== "chat") history.replaceState(null, "", location.pathname + hash);
+  window.scrollTo(0, 0);
+}
+
+// ---------- Treffen ----------
+async function treffenLaden() {
+  try {
+    const { treffen } = await api("treffen_liste");
+    const kommend = treffen.filter((t) => new Date(t.beginn) > Date.now() - 3 * 3600000), vorbei = treffen.filter((t) => !kommend.includes(t)).reverse();
+    $("treffenListe").innerHTML = (kommend.map(treffenKarte).join("") || '<div class="karte hinweis">Zurzeit ist kein Treffen geplant.</div>')
+      + (vorbei.length ? `<div class="abschnitt"><h3>Vergangene Treffen</h3></div>` + vorbei.map((t) => treffenKarte(t, true)).join("") : "");
+  } catch (e) { melde(e.message, true); }
+}
+function treffenKarte(t, vorbei) {
+  const ort = t.ort || (t.gastgeber ? "bei " + t.gastgeber.name : "");
+  const liste = (a, sym) => t.teilnahme.filter((x) => x.antwort === a).map((x) => esc(x.name) + (x.notiz ? ` <i class="hinweis">(${esc(x.notiz)})</i>` : "")).join(", ");
+  const offen = t.status === "geplant" && !vorbei;
+  return `<div class="karte treffen">
+    ${t.status === "abgesagt" ? '<span class="marke rot">❌ abgesagt</span>' : ""}
+    <div class="wann">${esc(t.titel)}</div><div>${esc(wann(t.beginn))}${ort ? " · 📍 " + esc(ort) : ""}</div>
+    ${t.beschreibung ? `<p class="hinweis" style="white-space:pre-wrap">${esc(t.beschreibung)}</p>` : ""}
+    ${offen ? `<div class="antworten">
+      <button class="ja ${t.meine === "ja" ? "an" : ""}" onclick="antwort('${t.id}','ja')">✅ Ich komme</button>
+      <button class="vielleicht ${t.meine === "vielleicht" ? "an" : ""}" onclick="antwort('${t.id}','vielleicht')">❓ Vielleicht</button>
+      <button class="nein ${t.meine === "nein" ? "an" : ""}" onclick="antwort('${t.id}','nein')">❌ Kann nicht</button></div>` : ""}
+    <div class="namen">
+      <span class="marke gruen">✅ ${t.ja}</span> <span class="marke gelb">❓ ${t.vielleicht}</span> <span class="marke rot">❌ ${t.nein}</span>
+      ${t.ja ? `<div>✅ ${liste("ja")}</div>` : ""}${t.vielleicht ? `<div>❓ ${liste("vielleicht")}</div>` : ""}${t.nein ? `<div>❌ ${liste("nein")}</div>` : ""}
+    </div>
+    ${ICH?.vorstand && offen ? `<div class="knoepfe"><button class="knopf klein" onclick='treffenForm(${JSON.stringify({ id: t.id, titel: t.titel, beginn: t.beginn, ort: t.ort, beschreibung: t.beschreibung, gastgeber: t.gastgeber?.person_id || "" }).replace(/'/g, "&#39;")})'>✏️ Ändern</button><button class="knopf klein" onclick="treffenAbsagen('${t.id}')">Absagen</button></div>` : ""}
+  </div>`;
+}
+async function antwort(id, a) {
+  let notiz = "";
+  if (a !== "ja") notiz = prompt(a === "nein" ? "Kurzer Grund (freiwillig):" : "Kurze Notiz (freiwillig):", "") ?? "";
+  try { await api("treffen_antwort", { id, antwort: a, notiz }); melde(a === "ja" ? "Schön, dass du kommst!" : "Gespeichert"); treffenLaden(); } catch (e) { melde(e.message, true); }
+}
+async function treffenForm(t) {
+  if (!MITGLIEDER) await mitgliederHolen();
+  const d = t?.beginn ? new Date(t.beginn) : null;
+  const datum = d ? new Intl.DateTimeFormat("sv-SE", { timeZone: TZ }).format(d) : "";
+  const zeit = d ? fZeit.format(d) : "18:00";
+  $("treffenForm").innerHTML = `<h3>${t?.id ? "Treffen ändern" : "Neues Treffen"}</h3>
+    <label class="feld">Titel<input id="tfTitel" value="${esc(t?.titel || "Köcheclub-Treffen")}"></label>
+    <div class="zwei"><label class="feld">Datum<input id="tfDatum" type="date" value="${datum}"></label><label class="feld">Uhrzeit<input id="tfZeit" type="time" value="${zeit}"></label></div>
+    <label class="feld">Gastgeber<select id="tfGast"><option value="">– niemand –</option>${MITGLIEDER.map((m) => `<option value="${m.person_id}" ${t?.gastgeber === m.person_id ? "selected" : ""}>${esc(m.name)}</option>`).join("")}</select></label>
+    <label class="feld">Ort (leer = beim Gastgeber)<input id="tfOrt" value="${esc(t?.ort || "")}"></label>
+    <label class="feld">Beschreibung / Tagesordnung<textarea id="tfBeschr" rows="3">${esc(t?.beschreibung || "")}</textarea></label>
+    <label class="schalter"><span>Alle Mitglieder benachrichtigen (Push/Mail)</span><input type="checkbox" id="tfInfo" checked></label>
+    <div class="knoepfe"><button class="knopf haupt" onclick="treffenSpeichern('${t?.id || ""}')">Speichern</button><button class="knopf" onclick="$('treffenForm').classList.add('versteckt')">Abbrechen</button></div>`;
+  $("treffenForm").classList.remove("versteckt"); window.scrollTo(0, 0);
+}
+async function treffenSpeichern(id) {
+  const datum = $("tfDatum").value, zeit = $("tfZeit").value;
+  if (!datum || !zeit) return melde("Bitte Datum und Uhrzeit angeben.", true);
+  const beginn = new Date(`${datum}T${zeit}:00`); // Gerätezeit = deutsche Zeit
+  try {
+    const r = await api("treffen_speichern", { id: id || undefined, titel: $("tfTitel").value, beginn: beginn.toISOString(), gastgeber_person_id: $("tfGast").value || null, ort: $("tfOrt").value, beschreibung: $("tfBeschr").value, benachrichtigen: $("tfInfo").checked });
+    $("treffenForm").classList.add("versteckt"); melde(r.versand ? `Gespeichert – ${r.versand.gesendet} Mitglieder benachrichtigt` : "Gespeichert"); treffenLaden();
+  } catch (e) { melde(e.message, true); }
+}
+async function treffenAbsagen(id) {
+  if (!confirm("Treffen wirklich absagen? Alle Mitglieder werden benachrichtigt.")) return;
+  try { await api("treffen_absagen", { id }); melde("Abgesagt – alle wurden benachrichtigt"); treffenLaden(); } catch (e) { melde(e.message, true); }
+}
+
+// ---------- Nachrichten ----------
+async function unterhLaden() {
+  try {
+    const { unterhaltungen } = await api("unterhaltungen");
+    $("unterhListe").innerHTML = unterhaltungen.map((u) => `<div class="unterh" onclick="chatOeffnen('${u.id}')">
+      <div class="avatar">${u.anzahl > 2 ? "👥" : esc(initialen(u.teilnehmer[0]))}</div>
+      <div class="mitte"><div><b>${esc(u.betreff || u.teilnehmer.join(", "))}</b></div><div class="hinweis">${u.letzte ? esc(u.letzte.von + ": " + u.letzte.text) : "Noch keine Nachricht"}</div></div>
+      <div style="text-align:right"><div class="hinweis" style="font-size:.8rem">${u.letzte ? zeitKurz(u.letzte.zeit) : ""}</div>${u.ungelesen ? `<span class="punkt">${u.ungelesen}</span>` : ""}</div></div>`).join("")
+      || '<p class="hinweis">Noch keine Nachrichten. Tippe oben auf „＋ Neu“.</p>';
+  } catch (e) { melde(e.message, true); }
+}
+async function chatOeffnen(id) {
+  chatId = id; zeige("chat"); chatId = id;
+  history.replaceState(null, "", location.pathname + "#nachricht=" + id);
+  await chatLaden(true);
+  chatTimer = setInterval(() => chatLaden(false), 10000);
+}
+let chatStand = "";
+async function chatLaden(scrollen) {
+  if (!chatId) return;
+  try {
+    const u = await api("unterhaltung", { id: chatId });
+    const andere = u.teilnehmer.filter((x) => x.person_id !== ICH.person_id);
+    $("chatTitel").textContent = u.betreff || andere.map((x) => x.name).join(", ");
+    let st = "";
+    if (andere.length === 1) { if (!MITGLIEDER) await mitgliederHolen().catch(() => {}); const m = MITGLIEDER?.find((x) => x.person_id === andere[0].person_id); if (m?.status) st = statusText(m.status); }
+    $("chatTeilnehmer").textContent = u.betreff || andere.length > 1 ? "Mit: " + andere.map((x) => x.name).join(", ") : st;
+    const stand = JSON.stringify(u.nachrichten.map((m) => [m.id, m.gelesenVon?.length]));
+    if (stand === chatStand && !scrollen) return;
+    const neuVonAnderen = chatStand && u.nachrichten.length && !u.nachrichten[u.nachrichten.length - 1].eigen && stand !== chatStand;
+    chatStand = stand;
+    $("chat").innerHTML = u.nachrichten.map((m) => `<div class="blase${m.eigen ? " eigen" : ""}">
+      ${!m.eigen && andere.length > 1 ? `<div class="von">${esc(m.von)}</div>` : ""}${m.text === "📎" && m.anlagen.length ? "" : `<div class="txt">${esc(m.text)}</div>`}
+      ${m.anlagen.map((a) => /^image\//.test(a.mime || "") ? `<img data-anlage="${a.id}" alt="${esc(a.name)}" onclick="anlageOeffnen('${a.id}')">` : `<div class="anlage" onclick="anlageOeffnen('${a.id}')">📄 ${esc(a.name)}</div>`).join("")}
+      <div class="fuss">${zeitKurz(m.zeit)}${m.eigen ? " " + (m.gelesenAlle ? '<b title="gelesen">✓✓</b>' : m.gelesenVon?.length ? `✓✓ ${m.gelesenVon.length}/${andere.length}` : "✓") : ""}</div></div>`).join("")
+      || '<p class="hinweis">Schreib die erste Nachricht.</p>';
+    document.querySelectorAll("img[data-anlage]").forEach(bildLaden);
+    if (neuVonAnderen && einst("ton", true)) ton();
+    if (scrollen || neuVonAnderen) setTimeout(() => window.scrollTo(0, document.body.scrollHeight), 50);
+  } catch (e) { melde(e.message, true); }
+}
+const bildCache = {};
+async function bildLaden(img) {
+  const id = img.dataset.anlage;
+  try { if (!bildCache[id]) bildCache[id] = (await api("anlage_url", { id })).url; img.src = bildCache[id]; } catch {}
+}
+async function anlageOeffnen(id) { try { const r = await api("anlage_url", { id }); window.open(r.url, "_blank"); } catch (e) { melde(e.message, true); } }
+
+async function mitgliederHolen() { const r = await api("mitglieder"); MITGLIEDER = r.mitglieder; AEMTER = r.aemter; return r; }
+async function neueNachricht() {
+  if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return melde(e.message, true); }
+  empfWahl = { personen: [], aemter: [], alle: false, vorstand: false }; $("neuBetreff").value = ""; $("empfSuche").value = "";
+  zeige("neu"); empfListe();
+}
+function empfListe() {
+  const q = $("empfSuche").value.toLowerCase();
+  $("schnellEmpf").innerHTML = [
+    ICH.vorstand ? `<button class="knopf klein ${empfWahl.alle ? "haupt" : ""}" onclick="empfWahl.alle=!empfWahl.alle;empfListe()">👥 Alle Mitglieder</button>` : "",
+    `<button class="knopf klein ${empfWahl.vorstand ? "haupt" : ""}" onclick="empfWahl.vorstand=!empfWahl.vorstand;empfListe()">⭐ Vorstand</button>`,
+    ...AEMTER.map((a) => `<button class="knopf klein ${empfWahl.aemter.includes(a) ? "haupt" : ""}" onclick="amtWahl('${esc(a)}')">🎖️ ${esc(a)}</button>`),
+  ].join("");
+  $("empfListe").innerHTML = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && (!q || m.name.toLowerCase().includes(q))).map((m) => `<label>
+    <input type="checkbox" ${empfWahl.personen.includes(m.person_id) ? "checked" : ""} onchange="personWahl('${m.person_id}', this.checked)">
+    <span>${esc(m.name)}${m.aemter?.length ? ` <span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}${m.vorstand ? ' <span class="marke gelb">Vorstand</span>' : ""}</span></label>`).join("");
+  const teile = [empfWahl.alle && "alle Mitglieder", empfWahl.vorstand && "Vorstand", ...empfWahl.aemter, ...empfWahl.personen.map((p) => MITGLIEDER.find((m) => m.person_id === p)?.name)].filter(Boolean);
+  $("empfGewaehlt").textContent = teile.join(", ") || "niemand";
+}
+function amtWahl(a) { empfWahl.aemter = empfWahl.aemter.includes(a) ? empfWahl.aemter.filter((x) => x !== a) : [...empfWahl.aemter, a]; empfListe(); }
+function personWahl(p, an) { empfWahl.personen = an ? [...new Set([...empfWahl.personen, p])] : empfWahl.personen.filter((x) => x !== p); empfListe(); }
+let neuEntwurf = null;
+function neuWeiter() {
+  if (!empfWahl.alle && !empfWahl.vorstand && !empfWahl.aemter.length && !empfWahl.personen.length) return melde("Bitte mindestens einen Empfänger wählen.", true);
+  neuEntwurf = { empfaenger: { ...empfWahl }, betreff: $("neuBetreff").value };
+  chatId = null; zeige("chat"); chatStand = "";
+  $("chatTitel").textContent = $("neuBetreff").value || $("empfGewaehlt").textContent;
+  $("chatTeilnehmer").textContent = "An: " + $("empfGewaehlt").textContent;
+  $("chat").innerHTML = '<p class="hinweis">Schreib die erste Nachricht und tippe auf ➤.</p>';
+  $("text").focus();
+}
+async function senden() {
+  const text = $("text").value.trim();
+  if (!text && !anlagen.length) return;
+  $("sendenKnopf").disabled = true;
+  try {
+    const daten = { text, anlagen: anlagen.map((a) => a.id) };
+    const r = chatId ? await api("nachricht_senden", { id: chatId, ...daten }) : await api("nachricht_senden", { ...daten, ...neuEntwurf });
+    $("text").value = ""; $("text").style.height = "auto"; anlagen = []; chipsZeigen(); neuEntwurf = null;
+    if (!chatId) { chatId = r.id; history.replaceState(null, "", location.pathname + "#nachricht=" + r.id); clearInterval(chatTimer); chatTimer = setInterval(() => chatLaden(false), 10000); }
+    await chatLaden(true);
+  } catch (e) { melde(e.message, true); }
+  $("sendenKnopf").disabled = false;
+}
+
+// ---------- Anlagen ----------
+function anlageMenue() { $("anlageBlatt").classList.toggle("versteckt"); }
+function anlageWahl(id) { $("anlageBlatt").classList.add("versteckt"); $(id).click(); }
+function chipsZeigen() { $("anlagenChips").innerHTML = anlagen.map((a, i) => `<button class="chip" onclick="anlagen.splice(${i},1);chipsZeigen()">${a.laedt ? "⏳" : "📎"} ${esc(a.name)} ✕</button>`).join(""); }
+async function verkleinern(datei) {
+  if (!/^image\/(jpeg|png|webp|heic|heif)/.test(datei.type)) return datei;
+  try {
+    const bild = await createImageBitmap(datei); const max = 1600, f = Math.min(1, max / Math.max(bild.width, bild.height));
+    const c = document.createElement("canvas"); c.width = Math.round(bild.width * f); c.height = Math.round(bild.height * f);
+    c.getContext("2d").drawImage(bild, 0, 0, c.width, c.height);
+    const blob = await new Promise((r) => c.toBlob(r, "image/jpeg", 0.82));
+    return blob && blob.size < datei.size ? new File([blob], datei.name.replace(/\.\w+$/, "") + ".jpg", { type: "image/jpeg" }) : datei;
+  } catch { return datei; }
+}
+const base64 = (buf) => { let s = ""; const b = new Uint8Array(buf); for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode(...b.subarray(i, i + 0x8000)); return btoa(s); };
+async function dateienGewaehlt(input) {
+  for (const roh of [...input.files].slice(0, 10)) {
+    const eintrag = { name: roh.name, laedt: true }; anlagen.push(eintrag); chipsZeigen();
+    try {
+      const d = await verkleinern(roh);
+      if (d.size > 8 * 1024 * 1024) throw new Error(`${roh.name} ist zu groß (höchstens 8 MB).`);
+      const r = await api("anlage_hochladen", { name: d.name, mime: d.type || "application/octet-stream", daten: base64(await d.arrayBuffer()) });
+      Object.assign(eintrag, { id: r.id, name: r.name, laedt: false });
+    } catch (e) { anlagen.splice(anlagen.indexOf(eintrag), 1); melde(e.message, true); }
+    chipsZeigen();
+  }
+  input.value = "";
+}
+
+// ---------- Mitglieder (+ Admin: Links und Ämter) ----------
+async function mitgliederLaden() {
+  try {
+    await mitgliederHolen();
+    $("mitgliederListe").innerHTML = MITGLIEDER.map((m) => `<div class="zeile">
+      <div class="avatar" style="width:40px;height:40px">${esc(initialen(m.name))}</div>
+      <div style="flex:1"><b>${esc(m.name)}</b>${m.vorstand ? ' <span class="marke gelb">Vorstand</span>' : ""}${m.aemter?.length ? ` <span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}
+        <div class="hinweis" style="font-size:.85rem">${m.status ? esc(statusText(m.status)) : m.aktiv ? "🟢 verfügbar" : "⚪ noch nicht in der App"}${m.aktiv ? " · 📲 aktiv" : ""}</div>
+        ${ICH.admin && (m.app || m.push || !m.mail) ? `<div class="hinweis" style="font-size:.85rem">${[m.app && m.zuletzt ? "zuletzt " + zeitKurz(m.zuletzt) : m.app ? "Link verschickt" : "", m.push ? "🔔 Push" : "", m.mail ? "" : "⚠️ keine Mail"].filter(Boolean).join(" · ")}</div>` : ""}</div>
+      ${m.person_id !== ICH.person_id ? `<button class="knopf klein" onclick="direkt('${m.person_id}')">💬</button>` : ""}
+      ${ICH.admin ? `<button class="knopf klein" onclick="linkTeilen('${m.person_id}')">🔗</button><button class="knopf klein" onclick="rolleBearbeiten('${m.person_id}')">🎖️</button>` : ""}</div>`).join("")
+      + (ICH.admin ? '<p class="hinweis">🔗 = persönlichen App-Link erzeugen und per WhatsApp schicken (ein neuer Link macht den alten ungültig). 🎖️ = Vorstand/Ämter.</p>' : "");
+  } catch (e) { melde(e.message, true); }
+}
+function direkt(pid) { empfWahl = { personen: [pid], aemter: [], alle: false, vorstand: false }; $("neuBetreff").value = ""; neuEntwurf = { empfaenger: { ...empfWahl }, betreff: "" };
+  chatId = null; zeige("chat"); chatStand = ""; const m = MITGLIEDER.find((x) => x.person_id === pid);
+  $("chatTitel").textContent = m?.name || ""; $("chatTeilnehmer").textContent = ""; $("chat").innerHTML = '<p class="hinweis">Schreib eine Nachricht und tippe auf ➤.</p>'; }
+async function linkTeilen(pid) {
+  const m = MITGLIEDER.find((x) => x.person_id === pid);
+  if (m.app && !confirm(`${m.name} hat schon einen Link. Neuen erzeugen? Der alte funktioniert dann nicht mehr.`)) return;
+  try {
+    const { link } = await api("link_erzeugen", { person_id: pid });
+    const text = `Hallo ${m.vorname}, hier ist dein persönlicher Link zur Köcheclub-App: ${link}\n\nEinfach antippen und dann „Zum Startbildschirm hinzufügen“. Bitte nicht weitergeben. Viele Grüße, Hansi`;
+    if (confirm(`Link für ${m.name} erzeugt.\n\nOK = per WhatsApp schicken\nAbbrechen = in die Zwischenablage kopieren`)) window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank");
+    else { try { await navigator.clipboard.writeText(text); melde("Text mit Link kopiert"); } catch { prompt("Zum Kopieren:", text); } }
+    mitgliederLaden();
+  } catch (e) { melde(e.message, true); }
+}
+async function rolleBearbeiten(pid) {
+  const m = MITGLIEDER.find((x) => x.person_id === pid);
+  const vorstand = confirm(`${m.name}: Gehört zum Vorstand?\n\nOK = ja, Abbrechen = nein`);
+  const aemter = prompt(`Ämter von ${m.name} (mit Komma getrennt, z. B. Kassenwart, Clubsprecher – leer = keine):`, (m.aemter || []).join(", "));
+  if (aemter === null) return;
+  try { await api("rolle_setzen", { person_id: pid, vorstand, aemter: aemter.split(",").map((x) => x.trim()).filter(Boolean) }); MITGLIEDER = null; melde("Gespeichert"); mitgliederLaden(); } catch (e) { melde(e.message, true); }
+}
+
+// ---------- Push & Ton ----------
+const pushMoeglich = () => "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+function b64url(s) { const p = "=".repeat((4 - (s.length % 4)) % 4), b = atob((s + p).replace(/-/g, "+").replace(/_/g, "/")); return Uint8Array.from(b, (c) => c.charCodeAt(0)); }
+async function pushStatusZeigen() {
+  if (!pushMoeglich()) { $("pushStatus").textContent = "Auf diesem Gerät nicht möglich (iPhone: erst auf den Home-Bildschirm legen)."; $("pushKnopf").disabled = true; return; }
+  const reg = await navigator.serviceWorker.ready, sub = await reg.pushManager.getSubscription();
+  const an = sub && Notification.permission === "granted";
+  $("pushStatus").textContent = an ? "Eingeschaltet ✅" : Notification.permission === "denied" ? "Im Browser blockiert – bitte in den Handy-Einstellungen erlauben." : "Ausgeschaltet";
+  $("pushKnopf").textContent = an ? "Ausschalten" : "Einschalten";
+}
+async function pushEinschalten() {
+  try {
+    if (!INIT?.vapidPublicKey) throw new Error("Push ist gerade nicht verfügbar.");
+    const erl = await Notification.requestPermission();
+    if (erl !== "granted") throw new Error("Benachrichtigungen wurden nicht erlaubt.");
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.getSubscription() || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64url(INIT.vapidPublicKey) });
+    await api("push_anmelden", { subscription: sub.toJSON(), userAgent: navigator.userAgent });
+    melde("Benachrichtigungen sind an 🔔"); pushStatusZeigen(); wichtigZeigen();
+  } catch (e) { melde(e.message, true); }
+}
+async function pushUmschalten() {
+  const reg = await navigator.serviceWorker.ready, sub = await reg.pushManager.getSubscription();
+  if (sub && Notification.permission === "granted") { try { await api("push_abmelden", { endpoint: sub.endpoint }); await sub.unsubscribe(); melde("Benachrichtigungen aus"); } catch (e) { melde(e.message, true); } pushStatusZeigen(); }
+  else pushEinschalten();
+}
+async function pushTest() { try { const r = await api("push_test"); melde(r.ok ? "Test-Push geschickt 🔔" : "Push ging nicht – ist er eingeschaltet?", !r.ok); } catch (e) { melde(e.message, true); } }
+let audio;
+function ton() {
+  try {
+    audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+    [0, 0.18].forEach((t, i) => { const o = audio.createOscillator(), g = audio.createGain(); o.frequency.value = i ? 1320 : 880; g.gain.setValueAtTime(0.0001, audio.currentTime + t);
+      g.gain.exponentialRampToValueAtTime(0.25, audio.currentTime + t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + t + 0.16); o.connect(g).connect(audio.destination); o.start(audio.currentTime + t); o.stop(audio.currentTime + t + 0.17); });
+    navigator.vibrate?.([80, 60, 80]);
+  } catch {}
+}
+function tonTest() { ton(); }
+
+// ---------- Installation & Update ----------
+let installEreignis = null;
+window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); installEreignis = e; $("installKnopf").classList.remove("versteckt"); });
+async function installieren() { if (!installEreignis) return; installEreignis.prompt(); await installEreignis.userChoice.catch(() => {}); installEreignis = null; $("installKnopf").classList.add("versteckt"); }
+function versionNeuer(a, b) { const x = a.split(".").map(Number), y = b.split(".").map(Number); for (let i = 0; i < 3; i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); } return false; }
+async function updatePruefen(vonHand) {
+  try {
+    const v = await (await fetch("version.json?x=" + Date.now(), { cache: "no-store" })).json();
+    if (versionNeuer(v.version, APP_VERSION)) {
+      $("updateHinweis").innerHTML = `<div class="updatebalken">🆕 Neue Version ${esc(v.version)}${v.neu?.length ? ": " + esc(v.neu[0]) : ""}<button class="knopf haupt klein" style="margin-left:auto" onclick="jetztAktualisieren()">Jetzt aktualisieren</button></div>`;
+    } else if (vonHand) melde(`Du hast die neueste Version (${APP_VERSION}).`);
+  } catch {}
+}
+async function jetztAktualisieren() {
+  try { const reg = await navigator.serviceWorker.getRegistration(); await reg?.update(); reg?.waiting?.postMessage("jetzt-aktivieren"); } catch {}
+  setTimeout(() => location.reload(), 400);
+}
+
+// ---------- Start der App ----------
+(function start() {
+  anwendenDesign();
+  $("versionMarke").textContent = "v" + APP_VERSION; $("appVersion").textContent = APP_VERSION;
+  const url = new URL(location.href), k = url.searchParams.get("k");
+  try { if (k) localStorage.setItem("kc_club_key", k); KEY = k || localStorage.getItem("kc_club_key") || ""; } catch { KEY = k || ""; }
+  if (k) { url.searchParams.delete("k"); history.replaceState(null, "", url.pathname + url.hash); }
+  if (!KEY) { $("gesperrt").classList.remove("versteckt"); return; }
+  $("app").classList.remove("versteckt");
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+    navigator.serviceWorker.addEventListener("message", (e) => { if (e.data?.typ === "push") { neuLaden(); if (chatId) chatLaden(false); } });
+  }
+  neuLaden().then(() => {
+    const h = location.hash;
+    if (h.startsWith("#nachricht=")) chatOeffnen(h.slice(11));
+    else if (["#termine", "#nachrichten", "#mitglieder", "#einstellungen"].includes(h)) zeige(h.slice(1));
+  });
+  updatePruefen(false);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) { neuLaden(); updatePruefen(false); if (chatId) chatLaden(false); } });
+  setInterval(() => { if (!document.hidden && aktuelleAnsicht !== "chat") neuLaden(); }, 60000);
+})();
+</script>
+</body>
+</html>
