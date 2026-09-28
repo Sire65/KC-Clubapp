@@ -1,8 +1,9 @@
 {
-  "version": "0.5.0",
+  "version": "0.6.0",
   "datum": "2026-09-28",
   "neu": [
-    "Kachel „Update prüfen“ unter Programme mit Versionsnummer – findet sie etwas Neues, kann direkt aktualisiert werden",
-    "Die kleine Versionsanzeige neben „Schnellzugriff“ ist jetzt ein Knopf zum Update-Prüfen"
+    "Termine als Kalender: Monate und Jahre blättern, Treffen, eigene Dienste, Abstimmungs-Fristen und Geburtstage farbig markiert",
+    "Tag antippen zeigt alle Einträge – Treffen direkt zu- oder absagen, Geburtstagskind direkt anschreiben",
+    "„Heute wichtig“ zeigt, wer heute Geburtstag hat"
   ]
 }

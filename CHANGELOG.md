@@ -1,5 +1,15 @@
 # Änderungen
 
+## 0.6.0 – 2026-09-28 (DEV)
+
+- KC-CLUB-KALENDER: Termine wahlweise als Liste oder Kalender (Wahl wird gemerkt). Blättern Monat ‹ › und Jahr « »,
+  Wischen links/rechts, Monatsname antippen = zurück zu heute. Farben: Club-Treffen weinrot, eigener Dienst blau,
+  Abstimmungs-Frist gelb, Geburtstag lila, heute goldener Rahmen; Punkte je Eintrag.
+- Tag antippen: Treffen als volle Karte mit Zu-/Absage und Tagesordnung, Dienst → Dienstplan, Frist → Vorschläge,
+  Geburtstag → direkt gratulieren (Nachricht).
+- Geburtstage aus kc_core_people.birth_date – an die App gehen nur Tag und Monat, kein Geburtsjahr.
+  „Heute wichtig“ zeigt, wer heute Geburtstag hat.
+
 ## 0.5.0 – 2026-09-28 (DEV)
 
 - Kachel „🔄 Update prüfen“ unter Programme mit installierter Versionsnummer; findet sie eine neuere Version,

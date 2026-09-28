@@ -5,14 +5,14 @@
 // kc_communication_attachments (+ Bucket), kc_member_push_subscriptions, KC Communicator Router (Push/Mail über web.de).
 // Features: KC-CLUB-STATUS, KC-CLUB-ZUGANG, KC-CLUB-TREFFEN, KC-CLUB-NACHRICHTEN, KC-CLUB-ANLAGEN, KC-CLUB-PUSH, KC-CLUB-ADMIN,
 //           KC-CLUB-VORSCHLAG (0.2.0), KC-CLUB-OHNEAPP (0.2.0), KC-CLUB-DIENSTE (0.2.0),
-//           KC-CLUB-BENACHRICHTIGUNG (0.3.0), KC-CLUB-DIENSTERINNERUNG (0.3.0)
+//           KC-CLUB-BENACHRICHTIGUNG (0.3.0), KC-CLUB-DIENSTERINNERUNG (0.3.0), KC-CLUB-KALENDER (0.6.0)
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.3.0";
+const SERVER_VERSION = "0.6.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -53,9 +53,10 @@ async function personen(ids: string[]): Promise<Map<string, Person>> {
   return new Map((data ?? []).map((p: Person) => [p.person_id, p]));
 }
 async function aktiveMitglieder() {
-  const { data } = await db.from("kc_core_people").select("person_id,display_name,given_name,preferred_name,email")
+  // birth_date nur für „Geburtstag heute“ – wird nie ungefiltert an die App gegeben
+  const { data } = await db.from("kc_core_people").select("person_id,display_name,given_name,preferred_name,email,birth_date")
     .eq("active", true).eq("org_id", ORG).not("person_id", "like", "KC-P-TEST%").order("display_name");
-  return (data ?? []) as Person[];
+  return (data ?? []) as (Person & { birth_date?: string })[];
 }
 async function protokoll(person: string | null, aktion: string, details: Record<string, unknown> = {}) {
   await db.from("kc_club_protokoll").insert({ person_id: person, aktion, details });
@@ -139,9 +140,10 @@ async function statusMap(ids?: string[]) {
 }
 
 // ---------- Treffen ----------
-async function treffenListe(ich: Ich, nurNaechstes = false) {
+async function treffenListe(ich: Ich, nurNaechstes = false, zeitraum?: { von: string; bis: string }) {
   let q = db.from("kc_club_treffen").select("*").order("beginn");
-  q = nurNaechstes ? q.gte("beginn", new Date(Date.now() - 3 * 3600000).toISOString()).eq("status", "geplant").limit(1)
+  q = zeitraum ? q.gte("beginn", zeitraum.von).lt("beginn", zeitraum.bis).limit(100)
+    : nurNaechstes ? q.gte("beginn", new Date(Date.now() - 3 * 3600000).toISOString()).eq("status", "geplant").limit(1)
     : q.gte("beginn", new Date(Date.now() - 30 * 86400000).toISOString()).limit(60);
   const { data: treffen } = await q;
   const ids = (treffen ?? []).map((t: any) => t.id);
@@ -345,8 +347,12 @@ Deno.serve(async (req) => {
           db.from("kc_club_benachrichtigung").select("bereich,push,email").eq("person_id", ich.person_id),
           db.from("kc_core_people").select("email").eq("person_id", ich.person_id).maybeSingle(),
         ]);
+        // Geburtstage heute (nur Tag/Monat; 29.02. wird in Nicht-Schaltjahren am 28.02. gefeiert)
+        const heuteMd = berlinTag(new Date()).slice(5), schalt = new Date(Number(berlinTag(new Date()).slice(0, 4)), 1, 29).getDate() === 29;
+        const geburtstageHeute = mitglieder.filter((m: any) => m.birth_date && (String(m.birth_date).slice(5, 10) === heuteMd || (!schalt && heuteMd === "02-28" && String(m.birth_date).slice(5, 10) === "02-29")))
+          .map((m: any) => ({ person_id: m.person_id, name: m.display_name, vorname: vorname(m) }));
         const benachrichtigung = Object.fromEntries(BEREICHE.map((b) => { const x: any = (wahl ?? []).find((y: any) => y.bereich === b); return [b, x ? { push: x.push, email: x.email } : STANDARD_WAHL[b]]; }));
-        return json({ ich, status: meinStatus, server: SERVER_VERSION, ungelesen, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null });
+        return json({ ich, status: meinStatus, server: SERVER_VERSION, ungelesen, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null });
       }
 
       case "mitglieder": {
@@ -537,6 +543,32 @@ Deno.serve(async (req) => {
           gewaehlt,
           dienste: (sch ?? []).map((s: any) => ({ person_id: s.person_id, datum: s.work_date, start: String(s.start_time ?? "").slice(0, 5), ende: String(s.end_time ?? "").slice(0, 5), pause: s.break_minutes ?? 0, bereich: s.area, zone: s.zone })),
           stand: letzte?.[0]?.published_at ?? null,
+        });
+      }
+
+      // ----- Kalender (KC-CLUB-KALENDER): Treffen, eigene Dienste, Abstimmungsfristen, Tagesordnung, Geburtstage -----
+      case "kalender": {
+        const datum = (s: unknown) => /^\d{4}-\d{2}-\d{2}$/.test(String(s || "")) ? String(s) : null;
+        const von = datum(p.von), bis = datum(p.bis);
+        if (!von || !bis || bis < von || (new Date(bis).getTime() - new Date(von).getTime()) > 62 * 86400000) throw new Fehler("Ungültiger Zeitraum.");
+        // Tagesgrenzen in deutscher Zeit (großzügig ±1 Tag, genaue Zuordnung macht die App)
+        const zeitraum = { von: new Date(new Date(von).getTime() - 86400000).toISOString(), bis: new Date(new Date(bis).getTime() + 2 * 86400000).toISOString() };
+        const [treffen, { data: dienste }, { data: fristen }, { data: leute }] = await Promise.all([
+          treffenListe(ich, false, zeitraum),
+          db.from("kc_dp_plan_published").select("work_date,start_time,end_time,area").eq("org_id", ORG).eq("status", "published")
+            .eq("person_id", ich.person_id).gte("work_date", von).lte("work_date", bis).order("work_date").order("start_time"),
+          db.from("kc_club_vorschlaege").select("id,titel,frist,status").eq("art", "abstimmung").neq("status", "zurueckgezogen").gte("frist", zeitraum.von).lt("frist", zeitraum.bis),
+          db.from("kc_core_people").select("person_id,display_name,given_name,preferred_name,birth_date").eq("active", true).eq("org_id", ORG)
+            .not("person_id", "like", "KC-P-TEST%").not("birth_date", "is", null),
+        ]);
+        const tids = treffen.map((t: any) => t.id);
+        const { data: themen } = tids.length ? await db.from("kc_club_vorschlaege").select("treffen_id,titel").eq("art", "thema").neq("status", "zurueckgezogen").in("treffen_id", tids) : { data: [] as any[] };
+        return json({
+          treffen: treffen.map((t: any) => ({ ...t, themen: (themen ?? []).filter((x: any) => x.treffen_id === t.id).map((x: any) => x.titel) })),
+          dienste: (dienste ?? []).map((s: any) => ({ datum: s.work_date, start: String(s.start_time).slice(0, 5), ende: String(s.end_time).slice(0, 5), bereich: s.area })),
+          fristen: (fristen ?? []).map((v: any) => ({ id: v.id, titel: v.titel, frist: v.frist, offen: v.status === "offen" })),
+          // Datenschutz: nur Tag und Monat, kein Geburtsjahr
+          geburtstage: (leute ?? []).map((m: any) => ({ person_id: m.person_id, name: m.display_name, vorname: vorname(m), md: String(m.birth_date).slice(5, 10) })),
         });
       }
 

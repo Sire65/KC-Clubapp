@@ -106,4 +106,11 @@ assert.ok(/t: "Update prüfen"/.test(progr) && /aktion: "updateKachel\(\)"/.test
 assert.ok(/Installiert: v\$\{APP_VERSION\}/.test(progr), "Versionsnummer in der Kachel fehlt");
 assert.ok(/id="versionMarke"[^>]*onclick="updateKachel\(\)"/.test(html), "Versions-Knopf fehlt");
 
+// 16. KC-CLUB-KALENDER: Monats-/Jahres-Blättern, Farben je Art, Geburtstage nur Tag/Monat.
+assert.ok(/onclick="kalBlaettern\(-12\)"/.test(html) && /onclick="kalBlaettern\(1\)"/.test(html) && /onclick="kalBlaettern\(12\)"/.test(html), "Blätterpfeile Monat/Jahr fehlen");
+for (const k of ["treffen", "dienst", "frist", "geb"]) assert.ok(new RegExp(`\\.ktag\\.${k} \\{`).test(html), `Farbe für ${k} fehlt`);
+assert.ok(/md: String\(m\.birth_date\)\.slice\(5, 10\)/.test(server), "Geburtstage dürfen nur als Tag/Monat an die App gehen");
+assert.ok(!/birth_date: m\.birth_date|birth_date\s*[,}]\s*\)\)/.test(server.slice(server.indexOf('case "kalender"'), server.indexOf('case "benachrichtigung_setzen"'))), "Geburtsjahr darf nicht an die App gehen");
+assert.ok(/\[\$\("kalGitter"\), kalBlaettern\]/.test(html), "Wischen im Kalender fehlt");
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

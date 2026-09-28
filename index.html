@@ -16,8 +16,39 @@
     --bg: #f5eee3; --karte: #ffffff; --karte2: #efe5d6; --text: #2b1a1c; --grau: #7b6b66; --linie: #e4d7c4;
     --gruen: #2e7d4f; --gruenbg: #e3f2e8; --gelb: #9a6b00; --gelbbg: #fbf0d6; --rotbg: #fbe3e3; --schatten: 0 6px 18px rgba(80, 30, 20, .10);
     --radius: 18px; --fs: 16px;
+    --blau: #1f5f99; --blaubg: #e3edf7; --lila: #7b3fa0; --lilabg: #f1e6f7;
   }
-  :root.dunkel { --bg: #1b1415; --karte: #2a2021; --karte2: #33282a; --text: #f4e9e4; --grau: #b9a8a3; --linie: #45393a; --gruenbg: #1f3a2a; --gelbbg: #3a2f17; --rotbg: #4a2126; --schatten: 0 6px 18px rgba(0,0,0,.35); }
+  :root.dunkel { --bg: #1b1415; --karte: #2a2021; --karte2: #33282a; --text: #f4e9e4; --grau: #b9a8a3; --linie: #45393a; --gruenbg: #1f3a2a; --gelbbg: #3a2f17; --rotbg: #4a2126; --schatten: 0 6px 18px rgba(0,0,0,.35); --blau: #8cbbe8; --blaubg: #1d2c3d; --lila: #cfa3e8; --lilabg: #33203d; }
+  /* Kalender (KC-CLUB-KALENDER) */
+  .umschalter { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: var(--karte2); padding: 5px; border-radius: 16px; margin: 4px 0 12px; }
+  .umschalter button { border: none; border-radius: 12px; padding: 10px; font-weight: 800; background: none; cursor: pointer; }
+  .umschalter button.an { background: var(--karte); box-shadow: var(--schatten); color: var(--rot); }
+  .kalnav { display: flex; align-items: center; gap: 6px; }
+  .kalnav .pf { width: 42px; height: 42px; border-radius: 12px; border: none; background: var(--karte2); font-weight: 900; font-size: 1.1rem; color: var(--rot); cursor: pointer; flex: none; }
+  .kalnav .mitte { flex: 1; text-align: center; border: none; background: none; cursor: pointer; }
+  .kalnav .monat { font-size: 1.3rem; font-weight: 900; }
+  .kalnav .jahr { font-size: .9rem; color: var(--grau); font-weight: 800; }
+  .wt { display: grid; grid-template-columns: repeat(7, 1fr); margin-top: 12px; font-size: .75rem; font-weight: 800; color: var(--grau); text-align: center; }
+  .wt span:nth-child(n+6) { color: var(--rot2); }
+  .tage { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 6px; touch-action: pan-y; }
+  .ktag { aspect-ratio: 1 / 1.05; border-radius: 12px; border: none; background: none; display: flex; flex-direction: column; align-items: center; padding: 6px 0 0; font-size: 1rem; cursor: pointer; color: var(--text); }
+  .ktag.aus { color: var(--grau); opacity: .45; }
+  .ktag.we { color: var(--rot2); }
+  .ktag.heute { outline: 2px solid var(--gold); font-weight: 800; }
+  .ktag.geb { background: var(--lilabg); color: var(--lila); font-weight: 900; }
+  .ktag.frist { background: var(--gelbbg); color: var(--gelb); font-weight: 900; }
+  .ktag.dienst { background: var(--blaubg); color: var(--blau); font-weight: 900; }
+  .ktag.treffen { background: var(--rot); color: #fff; font-weight: 900; }
+  .ktag.gewaehlt { box-shadow: 0 0 0 3px var(--text); }
+  .ktag .punkte { display: flex; gap: 3px; margin-top: auto; margin-bottom: 6px; min-height: 6px; }
+  .ktag .punkte i { width: 6px; height: 6px; border-radius: 50%; display: block; }
+  .p-treffen { background: var(--rot); } .ktag.treffen .p-treffen { background: #fff; }
+  .p-dienst { background: var(--blau); } .p-frist { background: #d19a22; } .p-geb { background: var(--lila); }
+  .legende { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 12px; font-size: .8rem; color: var(--grau); font-weight: 700; }
+  .legende i { display: inline-block; width: 12px; height: 12px; border-radius: 4px; margin-right: 5px; vertical-align: -1px; }
+  .keintrag { display: flex; gap: 10px; align-items: center; padding: 10px 0; border-top: 1px solid var(--linie); cursor: pointer; }
+  .keintrag .farbe { width: 6px; align-self: stretch; border-radius: 4px; flex: none; }
+  .keintrag small { display: block; color: var(--grau); font-weight: 700; }
   :root.gross { --fs: 19px; }
   * { box-sizing: border-box; }
   html { font-size: var(--fs); }
@@ -76,8 +107,8 @@
   .register .anz { display: inline-block; min-width: 20px; margin-left: 5px; padding: 0 6px; border-radius: 10px; font-size: .72rem; line-height: 18px; background: rgba(0,0,0,.08); vertical-align: 1px; }
   .register button.an .anz { background: rgba(255,255,255,.25); }
   .raster { touch-action: pan-y; }
-  .raster.rein-links { animation: reinLinks .22s ease-out; }
-  .raster.rein-rechts { animation: reinRechts .22s ease-out; }
+  .rein-links { animation: reinLinks .22s ease-out; }
+  .rein-rechts { animation: reinRechts .22s ease-out; }
   @keyframes reinLinks { from { transform: translateX(40px); opacity: .3; } to { transform: none; opacity: 1; } }
   @keyframes reinRechts { from { transform: translateX(-40px); opacity: .3; } to { transform: none; opacity: 1; } }
   .wischhinweis { text-align: center; font-size: .78rem; color: var(--grau); margin-top: 6px; }
@@ -235,7 +266,25 @@
   <!-- TERMINE -->
   <section id="v-termine" class="versteckt">
     <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>📅 Termine</h2><button id="neuTreffenKnopf" class="knopf haupt klein versteckt" onclick="treffenForm()">＋ Neu</button></div>
+    <div class="umschalter"><button data-m="liste" onclick="termineModus('liste')">☰ Liste</button><button data-m="kalender" onclick="termineModus('kalender')">🗓️ Kalender</button></div>
     <div id="treffenForm" class="karte versteckt"></div>
+    <div id="kalender" class="versteckt">
+      <div class="karte">
+        <div class="kalnav">
+          <button class="pf" title="Ein Jahr zurück" onclick="kalBlaettern(-12)">«</button><button class="pf" title="Einen Monat zurück" onclick="kalBlaettern(-1)">‹</button>
+          <button class="mitte" title="Zurück zu heute" onclick="kalHeute()"><div class="monat" id="kalMonat"></div><div class="jahr" id="kalJahr"></div></button>
+          <button class="pf" title="Einen Monat vor" onclick="kalBlaettern(1)">›</button><button class="pf" title="Ein Jahr vor" onclick="kalBlaettern(12)">»</button>
+        </div>
+        <div class="wt"><span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span><span>Sa</span><span>So</span></div>
+        <div class="tage" id="kalGitter"></div>
+        <div class="legende">
+          <span><i style="background:var(--rot)"></i>Club-Treffen</span><span><i style="background:var(--blaubg);outline:1px solid var(--blau)"></i>mein Dienst</span>
+          <span><i style="background:var(--gelbbg);outline:1px solid #d19a22"></i>Abstimmungs-Frist</span><span><i style="background:var(--lilabg);outline:1px solid var(--lila)"></i>🎂 Geburtstag</span>
+          <span><i style="outline:2px solid var(--gold)"></i>heute</span>
+        </div>
+      </div>
+      <div id="kalTag"></div>
+    </div>
     <div id="treffenListe"></div>
   </section>
 
@@ -358,7 +407,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.5.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.6.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -449,14 +498,18 @@ function registerWischen(schritt) {
   const i = REGISTER.findIndex(([r]) => r === reg), n = i + schritt;
   if (n >= 0 && n < REGISTER.length) register(REGISTER[n][0], schritt);
 }
+// Wischen links/rechts: Register auf der Startseite, Monate im Kalender
 (function wischenEinrichten() {
-  let x0 = null, y0 = 0;
-  const flaeche = () => [$("raster"), $("register")];
-  document.addEventListener("touchstart", (e) => { if (flaeche().some((f) => f.contains(e.target))) { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; } else x0 = null; }, { passive: true });
+  let x0 = null, y0 = 0, ziel = null;
+  const flaechen = () => [[$("raster"), registerWischen], [$("register"), registerWischen], [$("kalGitter"), kalBlaettern]];
+  document.addEventListener("touchstart", (e) => {
+    const f = flaechen().find(([el]) => el && el.contains(e.target));
+    ziel = f ? f[1] : null; if (ziel) { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }
+  }, { passive: true });
   document.addEventListener("touchend", (e) => {
-    if (x0 === null) return;
-    const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0; x0 = null;
-    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) registerWischen(dx < 0 ? 1 : -1);
+    if (!ziel) return;
+    const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0, f = ziel; ziel = null;
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) f(dx < 0 ? 1 : -1);
   }, { passive: true });
 })();
 function kachelnZeigen() {
@@ -540,6 +593,9 @@ function wichtigZeigen() {
   const h = [];
   if (INIT?.ungelesen) h.push(`<div class="zeile" style="cursor:pointer" onclick="zeige('nachrichten')">💬 <b>${INIT.ungelesen} neue Nachricht${INIT.ungelesen > 1 ? "en" : ""}</b><span style="margin-left:auto">›</span></div>`);
   if (INIT?.offeneAbstimmungen) h.push(`<div class="zeile" style="cursor:pointer" onclick="zeige('vorschlaege')">🗳️ <b>${INIT.offeneAbstimmungen === 1 ? "1 Abstimmung wartet" : INIT.offeneAbstimmungen + " Abstimmungen warten"}</b> auf deine Stimme<span style="margin-left:auto">›</span></div>`);
+  for (const g of INIT?.geburtstageHeute || []) h.push(g.person_id === ICH?.person_id
+    ? `<div class="zeile">🎂 <b>Alles Gute zum Geburtstag, ${esc(g.vorname)}!</b></div>`
+    : `<div class="zeile" style="cursor:pointer" onclick="direkt('${g.person_id}')">🎂 <b>${esc(g.name)}</b> hat heute Geburtstag<button class="knopf haupt klein" style="margin-left:auto">💬 Gratulieren</button></div>`);
   const nd = INIT?.naechsterDienst;
   if (nd) h.push(`<div class="zeile" style="cursor:pointer" onclick="dpNurIch()">🗓️ Nächster Dienst: <b>${nd.datum === heuteIso() ? "heute" : esc(fTagDp.format(new Date(nd.datum + "T12:00:00Z")))}, ${esc(nd.start)}–${esc(nd.ende)} Uhr</b>${nd.bereich ? " · " + esc(nd.bereich) : ""}<span style="margin-left:auto">›</span></div>`);
   const t = INIT?.naechstesTreffen;
@@ -608,8 +664,79 @@ window.addEventListener("popstate", (e) => {
   else zeige(s.v || "start", true);
 });
 
+// ---------- Kalender (Treffen, eigene Dienste, Abstimmungsfristen, Geburtstage) ----------
+const MONATE = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
+const fTagLang = new Intl.DateTimeFormat("de-DE", { timeZone: "UTC", weekday: "long", day: "2-digit", month: "long" });
+let termineArt = (() => { try { return localStorage.getItem("kc_club_termine_modus") || "liste"; } catch { return "liste"; } })();
+let kalJ = null, kalM = null, kalTagWahl = null, KAL = null;
+const berlinIso = (iso) => new Intl.DateTimeFormat("sv-SE", { timeZone: TZ }).format(new Date(iso));
+function termineModus(m) {
+  termineArt = m; try { localStorage.setItem("kc_club_termine_modus", m); } catch {}
+  treffenLaden();
+}
+function kalHeute() { const h = heuteIso(); kalJ = +h.slice(0, 4); kalM = +h.slice(5, 7) - 1; kalTagWahl = h; kalLaden(); }
+function kalBlaettern(n) {
+  const d = new Date(Date.UTC(kalJ, kalM + n, 1)); kalJ = d.getUTCFullYear(); kalM = d.getUTCMonth(); kalTagWahl = null;
+  const g = $("kalGitter"); g.classList.remove("rein-links", "rein-rechts"); void g.offsetWidth; g.classList.add(n > 0 ? "rein-links" : "rein-rechts");
+  kalLaden();
+}
+async function kalLaden() {
+  if (kalJ === null) { const h = heuteIso(); kalJ = +h.slice(0, 4); kalM = +h.slice(5, 7) - 1; kalTagWahl = h; }
+  const erster = `${kalJ}-${String(kalM + 1).padStart(2, "0")}-01`;
+  const start = montag(erster), ende = tagPlus(start, 41); // 6 Wochen Raster
+  $("kalMonat").textContent = MONATE[kalM]; $("kalJahr").textContent = kalJ;
+  try { KAL = await api("kalender", { von: start, bis: ende }); KAL.start = start; kalZeichnen(); } catch (e) { melde(e.message, true); }
+}
+// Einträge je Tag (YYYY-MM-DD) zusammenstellen
+function kalEintraege(tag) {
+  const e = [];
+  for (const t of KAL.treffen) if (berlinIso(t.beginn) === tag) e.push({ art: "treffen", t });
+  for (const d of KAL.dienste) if (d.datum === tag) e.push({ art: "dienst", d });
+  for (const f of KAL.fristen) if (berlinIso(f.frist) === tag) e.push({ art: "frist", f });
+  const md = tag.slice(5), schalt = new Date(Date.UTC(+tag.slice(0, 4), 1, 29)).getUTCDate() === 29;
+  for (const g of KAL.geburtstage) if (g.md === md || (!schalt && md === "02-28" && g.md === "02-29")) e.push({ art: "geb", g });
+  return e;
+}
+function kalZeichnen() {
+  const heute = heuteIso(), rang = ["treffen", "dienst", "frist", "geb"];
+  const tage = [...Array(42)].map((_, i) => tagPlus(KAL.start, i));
+  // letzte Woche weglassen, wenn sie ganz im Folgemonat liegt
+  const sichtbar = +tage[35].slice(5, 7) - 1 !== kalM ? tage.slice(0, 35) : tage;
+  $("kalGitter").innerHTML = sichtbar.map((tag, i) => {
+    const e = kalEintraege(tag), arten = [...new Set(e.map((x) => x.art))];
+    const haupt = rang.find((r) => arten.includes(r));
+    const kl = ["ktag", +tag.slice(5, 7) - 1 !== kalM ? "aus" : "", i % 7 >= 5 ? "we" : "", tag === heute ? "heute" : "", haupt || "", tag === kalTagWahl ? "gewaehlt" : ""].filter(Boolean).join(" ");
+    return `<button class="${kl}" onclick="kalTag('${tag}')">${+tag.slice(8)}<span class="punkte">${e.slice(0, 4).map((x) => `<i class="p-${x.art}"></i>`).join("")}</span></button>`;
+  }).join("");
+  kalTagZeigen();
+}
+function kalTag(tag) {
+  if (+tag.slice(5, 7) - 1 !== kalM) { kalJ = +tag.slice(0, 4); kalM = +tag.slice(5, 7) - 1; kalTagWahl = tag; return kalLaden(); }
+  kalTagWahl = tag; kalZeichnen();
+}
+function kalTagZeigen() {
+  if (!kalTagWahl || +kalTagWahl.slice(5, 7) - 1 !== kalM) { $("kalTag").innerHTML = '<p class="hinweis" style="text-align:center">Tippe auf einen Tag, um die Termine zu sehen.</p>'; return; }
+  const e = kalEintraege(kalTagWahl);
+  const kopf = `<h3 style="margin:0 0 4px">${esc(fTagLang.format(new Date(kalTagWahl + "T12:00:00Z")))}</h3>`;
+  if (!e.length) { $("kalTag").innerHTML = `<div class="karte">${kopf}<p class="hinweis" style="margin:6px 0 0">Keine Termine an diesem Tag.</p></div>`; return; }
+  const zeilen = e.filter((x) => x.art !== "treffen").map((x) => {
+    if (x.art === "dienst") return `<div class="keintrag" onclick="dpNurIch()"><div class="farbe" style="background:var(--blau)"></div><div style="flex:1"><b>🗓️ Mein Dienst ${esc(x.d.start)}–${esc(x.d.ende)} Uhr</b><small>${esc(x.d.bereich || "Dienstplan")}</small></div><b style="color:var(--rot)">›</b></div>`;
+    if (x.art === "frist") return `<div class="keintrag" onclick="zeige('vorschlaege')"><div class="farbe" style="background:#d19a22"></div><div style="flex:1"><b>🗳️ ${x.f.offen ? "Abstimmen bis" : "Abstimmung endete"} ${esc(fZeit.format(new Date(x.f.frist)))} Uhr</b><small>${esc(x.f.titel)}</small></div><b style="color:var(--rot)">›</b></div>`;
+    const ich = x.g.person_id === ICH?.person_id;
+    return `<div class="keintrag"${ich ? "" : ` onclick="direkt('${x.g.person_id}')"`}><div class="farbe" style="background:var(--lila)"></div><div style="flex:1"><b>🎂 ${ich ? "Dein Geburtstag – alles Gute!" : esc(x.g.name) + " hat Geburtstag"}</b>${ich ? "" : "<small>💬 antippen zum Gratulieren</small>"}</div>${ich ? "" : '<b style="color:var(--rot)">›</b>'}</div>`;
+  }).join("");
+  // Treffen als volle Karte (mit Zu-/Absage), darunter die Tagesordnung
+  const treffen = e.filter((x) => x.art === "treffen").map((x) => treffenKarte(x.t, new Date(x.t.beginn) < Date.now() - 3 * 3600000)
+    + (x.t.themen?.length ? `<div class="karte" style="margin-top:6px"><b>📋 Tagesordnung</b><div class="hinweis">${x.t.themen.map((th) => "• " + esc(th)).join("<br>")}</div></div>` : "")).join("");
+  $("kalTag").innerHTML = (zeilen ? `<div class="karte">${kopf}${zeilen}</div>` : `<div class="karte" style="padding-bottom:4px">${kopf}</div>`) + treffen;
+}
+
 // ---------- Treffen ----------
 async function treffenLaden() {
+  document.querySelectorAll("#v-termine .umschalter button").forEach((b) => b.classList.toggle("an", b.dataset.m === termineArt));
+  $("kalender").classList.toggle("versteckt", termineArt !== "kalender");
+  $("treffenListe").classList.toggle("versteckt", termineArt === "kalender");
+  if (termineArt === "kalender") return kalLaden();
   try {
     const { treffen } = await api("treffen_liste");
     const kommend = treffen.filter((t) => new Date(t.beginn) > Date.now() - 3 * 3600000), vorbei = treffen.filter((t) => !kommend.includes(t)).reverse();
@@ -971,7 +1098,9 @@ async function mitgliederLaden() {
       + (ICH.admin ? '<p class="hinweis">🔗 = persönlichen App-Link erzeugen und per WhatsApp schicken (ein neuer Link macht den alten ungültig). 🎖️ = Vorstand/Ämter.</p>' : "");
   } catch (e) { melde(e.message, true); }
 }
-function direkt(pid) { empfWahl = { personen: [pid], aemter: [], alle: false, vorstand: false }; $("neuBetreff").value = ""; neuEntwurf = { empfaenger: { ...empfWahl }, betreff: "" };
+async function direkt(pid) {
+  if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return melde(e.message, true); }
+  empfWahl = { personen: [pid], aemter: [], alle: false, vorstand: false }; $("neuBetreff").value = ""; neuEntwurf = { empfaenger: { ...empfWahl }, betreff: "" };
   chatId = null; zeige("chat"); chatStand = ""; const m = MITGLIEDER.find((x) => x.person_id === pid);
   $("chatTitel").textContent = m?.name || ""; $("chatTeilnehmer").textContent = ""; $("chat").innerHTML = '<p class="hinweis">Schreib eine Nachricht und tippe auf ➤.</p>'; }
 async function linkTeilen(pid) {
