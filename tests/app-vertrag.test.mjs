@@ -256,4 +256,17 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/id="chatBlatt"/.test(html) && /unterhaltung_ausblenden/.test(html), "Unterhaltung entfernen fehlt");
 }
 
+// 25. 0.12.0: Aktionen als Kacheln, Details erst nach Antippen.
+{
+  assert.ok(/function aktionKachel\(a\)/.test(html) && /class="raster">\$\{kommend\.map\(aktionKachel\)/.test(html), "Aktionen nicht als Kacheln");
+  assert.ok(/id="v-aktion"/.test(html) && /async function aktionOeffnen\(id, ausHistorie\)/.test(html), "Detailansicht Aktion fehlt");
+  assert.ok(/s\.v === "aktion" && s\.id\) aktionOeffnen\(s\.id, true\)/.test(html), "Zurück aus der Aktion fehlt");
+  const f = new Intl.DateTimeFormat("de-DE", { timeZone: "UTC", day: "2-digit", month: "2-digit", year: "numeric" });
+  const code = html.slice(html.indexOf("function aktionZeitraum(a)"), html.indexOf("function aktionKachel(a)"));
+  const zr = new Function("fKurzJahr", code + ";return aktionZeitraum;")(f);
+  assert.equal(zr({ von: "2027-05-11", bis: "2027-05-16" }), "11.–16.05.2027");
+  assert.equal(zr({ von: "2026-12-30", bis: "2027-01-02" }), "30.12.2026 – 02.01.2027");
+  assert.equal(zr({ von: "2027-05-11", bis: "2027-05-11" }), "11.05.2027");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

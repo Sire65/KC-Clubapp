@@ -207,6 +207,10 @@
   .eingabe textarea { flex: 1; resize: none; max-height: 140px; padding: 12px; border-radius: 18px; border: 1px solid var(--linie); background: var(--karte); }
   .eingabe .rund { background: var(--rot); }
   .anhaengen { display: grid; gap: 8px; }
+  .aktkachel b { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; font-size: 1.02rem; }
+  .aktkachel { padding-bottom: 46px; }
+  .aktkachel .zahl { background: var(--tuerkis); }
+  .aktkachel.vorbei { opacity: .7; }
   .blase .weg { border: none; background: none; padding: 0 0 0 6px; cursor: pointer; font-size: .85rem; opacity: .7; }
   .anhaengen .knopf { font-size: 1.05rem; padding: 16px; }
   .prbild { margin-top: 10px; }
@@ -309,6 +313,11 @@
   <section id="v-aktionen" class="versteckt">
     <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>🧳 Aktionen</h2></div>
     <div id="aktionListe"><div class="karte hinweis">Wird geladen …</div></div>
+  </section>
+
+  <section id="v-aktion" class="versteckt">
+    <div class="kopf2"><button class="zurueck" onclick="zeige('aktionen')">‹</button><h2>🧳 Aktion</h2></div>
+    <div id="aktionInhalt"></div>
   </section>
 
   <!-- SITZUNGSPROTOKOLLE (KC-CLUB-PROTOKOLLE) -->
@@ -448,7 +457,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.11.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.12.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -680,7 +689,7 @@ function zeige(v, ausHistorie) {
   const vorher = aktuelleAnsicht;
   aktuelleAnsicht = v;
   if (vorher === "protokoll" && v !== "protokoll" && prTimer) prSpeichernJetzt(false).catch(() => {}); // ungespeicherte Eingaben sichern
-  ["start", "termine", "vorschlaege", "aktionen", "protokolle", "protokoll", "dienste", "nachrichten", "chat", "neu", "mitglieder", "einstellungen"].forEach((x) => $("v-" + x).classList.toggle("versteckt", x !== v));
+  ["start", "termine", "vorschlaege", "aktionen", "aktion", "protokolle", "protokoll", "dienste", "nachrichten", "chat", "neu", "mitglieder", "einstellungen"].forEach((x) => $("v-" + x).classList.toggle("versteckt", x !== v));
   document.querySelectorAll("#fuss button").forEach((b) => b.classList.toggle("an", b.dataset.v === v || (v === "chat" && b.dataset.v === "nachrichten") || (v === "neu" && b.dataset.v === "nachrichten")));
   $("eingabe").classList.toggle("versteckt", v !== "chat");
   clearInterval(chatTimer);
@@ -695,9 +704,9 @@ function zeige(v, ausHistorie) {
   if (v === "einstellungen") { pushStatusZeigen(); wahlZeigen(); geburtstagSchalterZeigen(); }
   if (v === "start") neuLaden();
   // KC-CLUB-ZURUECK: jede Ansicht bekommt einen Verlaufseintrag, damit „Zurück“ eine Ansicht zurückgeht statt die App zu schließen
-  const hash = v === "start" || v === "chat" ? "" : v === "protokoll" ? "#protokoll=" + prId : "#" + v;
+  const hash = v === "start" || v === "chat" ? "" : v === "protokoll" ? "#protokoll=" + prId : v === "aktion" ? "#aktion=" + aktionId : "#" + v;
   if (!ausHistorie) {
-    const st = { v, id: v === "chat" ? chatId : v === "protokoll" ? prId : null };
+    const st = { v, id: v === "chat" ? chatId : v === "protokoll" ? prId : v === "aktion" ? aktionId : null };
     if (v === vorher && v !== "chat") history.replaceState(st, "", location.pathname + hash);
     else history.pushState(st, "", location.pathname + hash);
   }
@@ -716,6 +725,7 @@ window.addEventListener("popstate", (e) => {
   }
   if (s.v === "chat" && s.id) chatOeffnen(s.id, true);
   else if (s.v === "protokoll" && s.id) protokollOeffnen(s.id, true);
+  else if (s.v === "aktion" && s.id) aktionOeffnen(s.id, true);
   else if (s.v === "chat") zeige("nachrichten", true); // ungesendeter Entwurf lässt sich nicht wiederherstellen
   else zeige(s.v || "start", true);
 });
@@ -799,7 +809,7 @@ function kalTagZeigen() {
   const zeilen = e.filter((x) => x.art !== "treffen" && x.art !== "veranst").map((x) => {
     if (x.art === "feiertag") return `<div class="keintrag"><div class="farbe" style="background:var(--rot3)"></div><div style="flex:1"><b>🇩🇪 Feiertag: ${esc(x.name)}</b><small>gesetzlicher Feiertag in NRW</small></div></div>`;
     if (x.art === "aktion") { const n = Math.round((new Date(kalTagWahl + "T12:00:00Z") - new Date(x.a.von + "T12:00:00Z")) / 86400000) + 1, ges = Math.round((new Date(x.a.bis + "T12:00:00Z") - new Date(x.a.von + "T12:00:00Z")) / 86400000) + 1;
-      return `<div class="keintrag" onclick="zeige('aktionen')"><div class="farbe" style="background:var(--tuerkis)"></div><div style="flex:1"><b>${aktionSymbol(x.a)} ${esc(x.a.titel)}</b><small>${ges > 1 ? `Tag ${n} von ${ges}` : "Aktion"}${x.a.veranstalter ? " · " + esc(x.a.veranstalter) : ""}</small></div><b style="color:var(--rot)">›</b></div>`; }
+      return `<div class="keintrag" onclick="aktionOeffnen('${esc(x.a.id)}')"><div class="farbe" style="background:var(--tuerkis)"></div><div style="flex:1"><b>${aktionSymbol(x.a)} ${esc(x.a.titel)}</b><small>${ges > 1 ? `Tag ${n} von ${ges}` : "Aktion"}${x.a.veranstalter ? " · " + esc(x.a.veranstalter) : ""}</small></div><b style="color:var(--rot)">›</b></div>`; }
     if (x.art === "dienst") return `<div class="keintrag" onclick="dpNurIch()"><div class="farbe" style="background:var(--blau)"></div><div style="flex:1"><b>🗓️ Mein Dienst ${esc(x.d.start)}–${esc(x.d.ende)} Uhr</b><small>${esc(x.d.bereich || "Dienstplan")}</small></div><b style="color:var(--rot)">›</b></div>`;
     if (x.art === "frist") return `<div class="keintrag" onclick="zeige('vorschlaege')"><div class="farbe" style="background:#d19a22"></div><div style="flex:1"><b>🗳️ ${x.f.offen ? "Abstimmen bis" : "Abstimmung endete"} ${esc(fZeit.format(new Date(x.f.frist)))} Uhr</b><small>${esc(x.f.titel)}</small></div><b style="color:var(--rot)">›</b></div>`;
     const ich = x.g.person_id === ICH?.person_id;
@@ -1289,14 +1299,37 @@ async function dateienGewaehlt(input) {
 const fDatumLang = new Intl.DateTimeFormat("de-DE", { timeZone: "UTC", weekday: "short", day: "2-digit", month: "2-digit", year: "numeric" });
 const euro = (n) => new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 2 }).format(n);
 const aktionSymbol = (a) => /schiff|kreuz|cruise|fjord|fähre/i.test(a.titel + " " + (a.veranstalter || "")) ? "🚢" : /bus/i.test(a.titel) ? "🚌" : "🧳";
+let AKTIONEN = null, AKTIONEN_STAND = null, aktionId = null;
+// Übersicht als Kacheln (Symbol, Name, Datum, Countdown); Details erst nach Antippen
 async function aktionenLaden() {
   try {
     const { aktionen, stand } = await api("aktionen_liste");
+    AKTIONEN = aktionen; AKTIONEN_STAND = stand;
     const heute = heuteIso(), kommend = aktionen.filter((a) => a.bis >= heute), vorbei = aktionen.filter((a) => a.bis < heute).reverse();
-    $("aktionListe").innerHTML = (kommend.map(aktionKarte).join("") || '<div class="karte hinweis">Zurzeit ist keine Aktion geplant.</div>')
-      + (vorbei.length ? `<div class="abschnitt"><h3>Vergangene Aktionen</h3></div>` + vorbei.map(aktionKarte).join("") : "")
+    $("aktionListe").innerHTML = (kommend.length ? `<div class="raster">${kommend.map(aktionKachel).join("")}</div>` : '<div class="karte hinweis">Zurzeit ist keine Aktion geplant.</div>')
+      + (vorbei.length ? `<div class="abschnitt"><h3>Vergangene Aktionen</h3></div><div class="raster">${vorbei.map(aktionKachel).join("")}</div>` : "")
       + `<p class="hinweis" style="font-size:.85rem">Die Angaben kommen aus dem KC Manager${stand ? ` (Stand ${esc(zeitKurz(stand))})` : " – Stand unbekannt"}. Änderungen bitte dort eintragen.</p>`;
   } catch (e) { melde(e.message, true); }
+}
+const fKurzJahr = new Intl.DateTimeFormat("de-DE", { timeZone: "UTC", day: "2-digit", month: "2-digit", year: "numeric" });
+function aktionZeitraum(a) {
+  const v = new Date(a.von + "T12:00:00Z"), b = new Date(a.bis + "T12:00:00Z");
+  if (a.von === a.bis) return fKurzJahr.format(v);
+  return a.von.slice(0, 7) === a.bis.slice(0, 7) ? `${a.von.slice(8)}.–${fKurzJahr.format(b)}` : `${fKurzJahr.format(v)} – ${fKurzJahr.format(b)}`;
+}
+function aktionKachel(a) {
+  const heute = heuteIso(), tage = Math.round((new Date(a.von + "T12:00:00Z") - new Date(heute + "T12:00:00Z")) / 86400000);
+  const hinweis = a.bis < heute ? "" : a.von <= heute ? "läuft" : tage === 1 ? "morgen" : `in ${tage} T.`;
+  return `<button class="kachel aktkachel${a.bis < heute ? " vorbei" : ""}" onclick="aktionOeffnen('${esc(a.id)}')">
+    <div class="sym">${aktionSymbol(a)}</div><b>${esc(a.titel)}</b><small>📅 ${esc(aktionZeitraum(a))}${a.dabei ? " · ✅ dabei" : ""}</small>${hinweis ? `<span class="zahl">${hinweis}</span>` : ""}</button>`;
+}
+async function aktionOeffnen(id, ausHistorie) {
+  aktionId = id;
+  if (!AKTIONEN) { try { const r = await api("aktionen_liste"); AKTIONEN = r.aktionen; AKTIONEN_STAND = r.stand; } catch (e) { return melde(e.message, true); } }
+  const a = AKTIONEN.find((x) => x.id === id);
+  if (!a) return zeige("aktionen", ausHistorie);
+  zeige("aktion", ausHistorie);
+  $("aktionInhalt").innerHTML = aktionKarte(a) + `<p class="hinweis" style="font-size:.85rem">Die Angaben kommen aus dem KC Manager${AKTIONEN_STAND ? ` (Stand ${esc(zeitKurz(AKTIONEN_STAND))})` : " – Stand unbekannt"}.</p>`;
 }
 function aktionKarte(a) {
   const heute = heuteIso(), tage = Math.round((new Date(a.von + "T12:00:00Z") - new Date(heute + "T12:00:00Z")) / 86400000);
@@ -1710,6 +1743,7 @@ async function jetztAktualisieren() {
     if (h.startsWith("#nachricht=")) chatOeffnen(h.slice(11));
     else if (h.startsWith("#gratulieren=")) gratulieren(h.slice(13));
     else if (h.startsWith("#protokoll=")) protokollOeffnen(h.slice(11));
+    else if (h.startsWith("#aktion=")) aktionOeffnen(decodeURIComponent(h.slice(8)));
     else if (["#termine", "#vorschlaege", "#aktionen", "#protokolle", "#dienste", "#nachrichten", "#mitglieder", "#einstellungen"].includes(h)) zeige(h.slice(1));
   });
   updatePruefen(false);
