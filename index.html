@@ -280,9 +280,11 @@
 
   <!-- TERMINE -->
   <section id="v-termine" class="versteckt">
-    <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>📅 Termine</h2><button id="neuTreffenKnopf" class="knopf haupt klein versteckt" onclick="treffenForm()">＋ Neu</button></div>
+    <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>📅 Termine</h2><button id="neuUmfrageKnopf" class="knopf klein versteckt" onclick="umfrageForm()" title="Terminfindung: mehrere Termine zur Auswahl">🗓️ Umfrage</button><button id="neuTreffenKnopf" class="knopf haupt klein versteckt" onclick="treffenForm()">＋ Neu</button></div>
     <div class="umschalter"><button data-m="liste" onclick="termineModus('liste')">☰ Liste</button><button data-m="kalender" onclick="termineModus('kalender')">🗓️ Kalender</button></div>
     <div id="treffenForm" class="karte versteckt"></div>
+    <div id="terminumfrageForm" class="karte versteckt"></div>
+    <div id="terminfindung"></div>
     <div id="kalender" class="versteckt">
       <div class="karte">
         <div class="kalnav">
@@ -407,6 +409,17 @@
       <div class="schalter"><div><b>✉️ Meine E-Mail-Adresse</b></div><input type="checkbox" id="setKontakt_mail" onchange="kontaktFreigabe('mail', this.checked)"></div>
       <div class="schalter"><div><b>🏠 Meine Adresse</b></div><input type="checkbox" id="setKontakt_adresse" onchange="kontaktFreigabe('adresse', this.checked)"></div>
       <div class="knoepfe"><button class="knopf klein" onclick="mitgliedOeffnen(ICH.person_id)">👁️ So sehen mich die anderen</button></div>
+      <p style="margin:16px 0 0"><b>🆘 Mein Notfallkontakt</b></p>
+      <p class="hinweis" style="margin:2px 0 0;font-size:.85rem">Wer soll im Notfall (z. B. auf einem Ausflug) benachrichtigt werden? Sehen nur Clubsprecher, Kassenwart und Admin.</p>
+      <label class="feld">Name<input id="nfName" maxlength="120" placeholder="z. B. Maria Muster"></label>
+      <div class="zwei"><label class="feld">Telefon<input id="nfTel" maxlength="40" inputmode="tel"></label><label class="feld">Beziehung<input id="nfBez" maxlength="60" placeholder="z. B. Ehefrau"></label></div>
+      <div class="knoepfe"><button class="knopf klein" onclick="einmal(this, notfallSpeichern)">💾 Notfallkontakt speichern</button></div>
+    </details>
+    <details class="karte" data-klappe="handykalender">
+      <summary>📲 Termine im Handy-Kalender</summary>
+      <p class="hinweis" style="margin-top:0">Alle Treffen, Veranstaltungen, Aktionen und freigegebenen Geburtstage erscheinen automatisch in deinem normalen Handy-Kalender – und bleiben aktuell.</p>
+      <div id="kalAboInfo"></div>
+      <button class="knopf haupt" id="kalAboKnopf" onclick="kalenderAbo()">📲 Kalender verbinden</button>
     </details>
     <details class="karte" data-klappe="darstellung">
       <summary>🎨 Darstellung</summary>
@@ -470,7 +483,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.13.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.14.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -673,6 +686,7 @@ function wichtigZeigen() {
   const in7 = tagPlus(heuteIso(), 7);
   for (const a of (INIT?.meineAufgaben || []).filter((x) => x.faellig && x.faellig <= in7))
     h.push(`<div class="zeile">📌 <span style="flex:1"><b>${esc(a.text)}</b> ${faelligText(a.faellig)}</span><button class="knopf klein" onclick="aufgabeErledigt('${a.id}', true)">✔ erledigt</button></div>`);
+  for (const u of INIT?.terminfindungOffen || []) h.push(`<div class="zeile" style="cursor:pointer" onclick="zeige('termine')">🗓️ Bitte Termine ankreuzen: <b>${esc(u.titel)}</b><span style="margin-left:auto">›</span></div>`);
   if (INIT?.protokolleUngelesen) h.push(`<div class="zeile" style="cursor:pointer" onclick="zeige('protokolle')">📄 <b>${INIT.protokolleUngelesen === 1 ? "1 neues Protokoll" : INIT.protokolleUngelesen + " neue Protokolle"}</b> zum Lesen<span style="margin-left:auto">›</span></div>`);
   if (pushMoeglich() && Notification.permission !== "granted") h.push(`<div class="zeile">🔔 Benachrichtigungen sind aus<button class="knopf haupt klein" style="margin-left:auto" onclick="pushEinschalten()">Einschalten</button></div>`);
   $("wichtig").innerHTML = h.join("") || "Alles erledigt 👍";
@@ -684,6 +698,7 @@ async function neuLaden(vonHand) {
     $("statusChip").textContent = statusText(INIT.status) + " ▾";
     $("ichName").textContent = ICH.name + (ICH.aemter?.length ? ` (${ICH.aemter.join(", ")})` : ICH.admin ? " (Admin)" : "");
     $("neuTreffenKnopf").classList.toggle("versteckt", !ICH.vorstand);
+    $("neuUmfrageKnopf").classList.toggle("versteckt", !ICH.vorstand);
     heroZeigen(); registerZeigen(); kachelnZeigen(); wichtigZeigen(); zaehlerZeigen();
     if (vonHand) { melde("Aktualisiert"); updatePruefen(false); }
   } catch (e) { melde(e.message, true); }
@@ -714,7 +729,7 @@ function zeige(v, ausHistorie) {
   if (v === "dienste") dienstLaden();
   if (v === "nachrichten") unterhLaden();
   if (v === "mitglieder") mitgliederLaden();
-  if (v === "einstellungen") { pushStatusZeigen(); wahlZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); }
+  if (v === "einstellungen") { pushStatusZeigen(); wahlZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); }
   if (v === "start") neuLaden();
   // KC-CLUB-ZURUECK: jede Ansicht bekommt einen Verlaufseintrag, damit „Zurück“ eine Ansicht zurückgeht statt die App zu schließen
   const hash = v === "start" || v === "chat" ? "" : v === "protokoll" ? "#protokoll=" + prId : v === "aktion" ? "#aktion=" + aktionId : v === "mitglied" ? "#mitglied=" + mitgliedId : "#" + v;
@@ -864,6 +879,7 @@ async function treffenLaden() {
   document.querySelectorAll("#v-termine .umschalter button").forEach((b) => b.classList.toggle("an", b.dataset.m === termineArt));
   $("kalender").classList.toggle("versteckt", termineArt !== "kalender");
   $("treffenListe").classList.toggle("versteckt", termineArt === "kalender");
+  terminfindungLaden();
   if (termineArt === "kalender") return kalLaden();
   try {
     const { treffen, geburtstage } = await api("treffen_liste");
@@ -883,6 +899,7 @@ function zeitText(t) {
   return wann(t.beginn);
 }
 function treffenKarte(t, vorbei) {
+  TREFFEN_IDX.set(t.id, t);
   const ort = t.ort || (t.gastgeber ? "bei " + t.gastgeber.name : "");
   const liste = (a, sym) => t.teilnahme.filter((x) => x.antwort === a).map((x) => esc(x.name) + (x.notiz ? ` <i class="hinweis">(${esc(x.notiz)})</i>` : "")).join(", ");
   const va = t.art === "veranstaltung"; // Veranstaltung: ohne Zu-/Absage
@@ -900,6 +917,8 @@ function treffenKarte(t, vorbei) {
       <span class="marke gruen">✅ ${t.ja}</span> <span class="marke gelb">❓ ${t.vielleicht}</span> <span class="marke rot">❌ ${t.nein}</span>
       ${t.ja ? `<div>✅ ${liste("ja")}</div>` : ""}${t.vielleicht ? `<div>❓ ${liste("vielleicht")}</div>` : ""}${t.nein ? `<div>❌ ${liste("nein")}</div>` : ""}
     </div>`}
+    ${mitfahrtBlock("treffen", t.id, t.mitfahrten || [], offen)}
+    ${offen ? `<div class="knoepfe"><button class="knopf klein" onclick="inKalender('${t.id}')">📲 In meinen Kalender</button></div>` : ""}
     ${ICH?.vorstand ? `<div class="knoepfe">${offen ? `<button class="knopf klein" onclick='treffenForm(${JSON.stringify(bearbeiten).replace(/'/g, "&#39;")})'>✏️ Ändern</button><button class="knopf klein" onclick="treffenAbsagen('${t.id}', ${va})">Absagen</button>` : ""}<button class="knopf klein" onclick="treffenLoeschen('${t.id}', ${va})">🗑️ Löschen</button></div>` : ""}
   </div>`;
 }
@@ -1343,7 +1362,7 @@ async function aktionOeffnen(id, ausHistorie) {
   const a = AKTIONEN.find((x) => x.id === id);
   if (!a) return zeige("aktionen", ausHistorie);
   zeige("aktion", ausHistorie);
-  $("aktionInhalt").innerHTML = aktionKarte(a) + `<p class="hinweis" style="font-size:.85rem">Die Angaben kommen aus dem KC Manager${AKTIONEN_STAND ? ` (Stand ${esc(zeitKurz(AKTIONEN_STAND))})` : " – Stand unbekannt"}.</p>`;
+  $("aktionInhalt").innerHTML = aktionKarte(a) + `<div class="karte">${mitfahrtBlock("aktion", a.id, a.mitfahrten || [], a.bis >= heuteIso())}</div>` + `<p class="hinweis" style="font-size:.85rem">Die Angaben kommen aus dem KC Manager${AKTIONEN_STAND ? ` (Stand ${esc(zeitKurz(AKTIONEN_STAND))})` : " – Stand unbekannt"}.</p>`;
 }
 function aktionKarte(a) {
   const heute = heuteIso(), tage = Math.round((new Date(a.von + "T12:00:00Z") - new Date(heute + "T12:00:00Z")) / 86400000);
@@ -1629,6 +1648,147 @@ async function mitgliederLaden() {
       + (ICH.admin ? '<p class="hinweis">🔗 = persönlichen App-Link erzeugen und per WhatsApp schicken (ein neuer Link macht den alten ungültig). 🎖️ = Amt und Rechte.</p>' : "");
   } catch (e) { melde(e.message, true); }
 }
+// ---------- Terminfindung (KC-CLUB-TERMINFINDUNG) ----------
+let UMFRAGEN = [];
+async function terminfindungLaden() {
+  try {
+    const { umfragen } = await api("terminumfragen_liste");
+    UMFRAGEN = umfragen.filter((u) => u.status === "offen");
+    $("terminfindung").innerHTML = UMFRAGEN.map(umfrageKarte).join("");
+  } catch (e) { melde(e.message, true); }
+}
+function umfrageKarte(u) {
+  const punkte = (o) => o.ja.length * 2 + o.vielleicht.length;
+  const beste = Math.max(0, ...u.optionen.map(punkte));
+  const zeile = (o) => {
+    const k = (w, sym) => `<button class="knopf klein${o.meine === w ? " haupt" : ""}" title="${w}" onclick="umfrageAntwort('${o.id}', '${o.meine === w ? "" : w}')">${sym}</button>`;
+    return `<div class="zeile"><div style="flex:1"><b>${esc(wann(o.beginn))}</b>${beste && punkte(o) === beste ? ' <span class="marke gruen">⭐ beste Wahl</span>' : ""}
+      <div class="hinweis" style="font-size:.85rem">✅ ${o.ja.length} · ❓ ${o.vielleicht.length} · ❌ ${o.nein.length}</div></div>
+      ${k("ja", "✅")}${k("vielleicht", "❓")}${k("nein", "❌")}
+      ${u.darfFestlegen ? `<button class="knopf klein" title="Diesen Termin festlegen" onclick="umfrageFestlegen('${u.id}', '${o.id}')">📅</button>` : ""}</div>`;
+  };
+  const wer = u.optionen.map((o) => `<p style="margin:6px 0"><b>${esc(wann(o.beginn))}</b><br><span class="hinweis">✅ ${esc(o.ja.join(", ") || "–")}<br>❓ ${esc(o.vielleicht.join(", ") || "–")}<br>❌ ${esc(o.nein.join(", ") || "–")}</span></p>`).join("");
+  return `<div class="karte" style="border-left:6px solid var(--gold)">
+    <span class="marke gelb">🗓️ Terminfindung</span>${u.frist ? ` <span class="marke">⏳ bis ${esc(wann(u.frist))}</span>` : ""}
+    <div style="font-size:1.12rem;font-weight:800;margin-top:6px">${esc(u.titel)}</div>
+    <div class="hinweis" style="font-size:.85rem">von ${esc(u.von)} · ${u.antwortende} ${u.antwortende === 1 ? "hat" : "haben"} geantwortet${u.ort ? " · 📍 " + esc(u.ort) : ""}</div>
+    ${u.beschreibung ? `<p class="hinweis" style="white-space:pre-wrap">${esc(u.beschreibung)}</p>` : ""}
+    <p class="hinweis" style="margin:8px 0 0;font-size:.85rem">Bei jedem Termin antippen: ✅ passt · ❓ vielleicht · ❌ passt nicht${u.darfFestlegen ? " · 📅 = diesen Termin festlegen" : ""}</p>
+    ${u.optionen.map(zeile).join("")}
+    <details style="margin-top:8px"><summary class="hinweis">👥 Wer hat was angekreuzt?</summary>${wer}</details>
+    ${u.darfLoeschen ? `<div class="knoepfe"><button class="knopf klein" onclick="umfrageLoeschen('${u.id}')">🗑️ Löschen</button></div>` : ""}</div>`;
+}
+async function umfrageAntwort(optionId, antwort) {
+  try { await api("terminumfrage_antwort", { option_id: optionId, antwort }); await terminfindungLaden(); neuLaden(); } catch (e) { melde(e.message, true); }
+}
+async function umfrageFestlegen(id, optionId) {
+  const u = UMFRAGEN.find((x) => x.id === id), o = u?.optionen.find((x) => x.id === optionId);
+  if (!o || !confirm(`„${u.titel}“ auf ${wann(o.beginn)} festlegen?\n\nDer Termin wird angelegt, alle bekommen die Einladung. Wer „passt“ angekreuzt hat, ist schon zugesagt.`)) return;
+  try { const r = await api("terminumfrage_festlegen", { id, option_id: optionId }); melde(`📅 Festgelegt${r.versand ? ` – ${r.versand.gesendet} Mitglieder benachrichtigt` : ""}`); treffenLaden(); neuLaden(); }
+  catch (e) { melde(e.message, true); }
+}
+async function umfrageLoeschen(id) {
+  if (!confirm("Diese Terminfindung endgültig löschen? Alle Antworten gehen mit verloren. Eine Sicherung bleibt im Änderungsprotokoll.")) return;
+  try { await api("terminumfrage_loeschen", { id }); melde("🗑️ Gelöscht"); terminfindungLaden(); neuLaden(); } catch (e) { melde(e.message, true); }
+}
+let tuArt = "treffen";
+const tuReihe = () => `<div class="zwei tuReihe"><label class="feld">Datum<input type="date" class="tuDatum"></label><label class="feld">Uhrzeit<input type="time" class="tuZeit" value="18:00"></label></div>`;
+function tuReiheNeu() { if ($("tuReihen").children.length < 10) $("tuReihen").insertAdjacentHTML("beforeend", tuReihe()); else melde("Höchstens 10 Terminvorschläge."); }
+function umfrageForm() {
+  tuArt = "treffen";
+  const reihe = tuReihe;
+  $("terminumfrageForm").innerHTML = `<h3>🗓️ Terminfindung starten</h3>
+    <p class="hinweis" style="margin-top:0">Mehrere Termine vorschlagen – alle kreuzen an, was passt. Danach legst du mit 📅 den besten Termin fest.</p>
+    <div class="artwahl"><button type="button" class="knopf haupt" data-art="treffen" onclick="tuArtWahl('treffen')">👥 Club-Treffen</button><button type="button" class="knopf" data-art="veranstaltung" onclick="tuArtWahl('veranstaltung')">🎪 Veranstaltung</button></div>
+    <label class="feld">Titel<input id="tuTitel" maxlength="120" value="Köcheclub-Treffen"></label>
+    <label class="feld">Ort (freiwillig)<input id="tuOrt" maxlength="200"></label>
+    <label class="feld">Beschreibung (freiwillig)<textarea id="tuBeschr" rows="2"></textarea></label>
+    <p style="margin:12px 0 0"><b>Terminvorschläge</b></p>
+    <div id="tuReihen">${reihe()}${reihe()}${reihe()}</div>
+    <button class="knopf klein" onclick="tuReiheNeu()">＋ weiterer Termin</button>
+    <label class="feld">Antworten bis (freiwillig)<input type="date" id="tuFrist"></label>
+    <label class="schalter"><span><b>📣 Alle benachrichtigen</b></span><input type="checkbox" id="tuInfo" checked></label>
+    <div class="knoepfe"><button class="knopf haupt" onclick="einmal(this, umfrageSpeichern)">🗓️ Starten</button><button class="knopf" onclick="$('terminumfrageForm').classList.add('versteckt')">Abbrechen</button></div>`;
+  $("terminumfrageForm").classList.remove("versteckt"); $("treffenForm").classList.add("versteckt");
+  $("terminumfrageForm").scrollIntoView({ behavior: "smooth" });
+}
+function tuArtWahl(a) { tuArt = a; document.querySelectorAll("#terminumfrageForm .artwahl .knopf").forEach((k) => k.classList.toggle("haupt", k.dataset.art === a)); }
+async function umfrageSpeichern() {
+  const optionen = [...document.querySelectorAll("#tuReihen .tuReihe")].map((r) => { const d = r.querySelector(".tuDatum").value, z = r.querySelector(".tuZeit").value || "18:00"; return d ? new Date(`${d}T${z}:00`).toISOString() : null; }).filter(Boolean);
+  if (optionen.length < 2) return melde("Bitte mindestens 2 Termine eintragen.", true);
+  const frist = $("tuFrist").value ? new Date(`${$("tuFrist").value}T23:59:00`).toISOString() : null;
+  try {
+    const r = await api("terminumfrage_speichern", { titel: $("tuTitel").value, ort: $("tuOrt").value, beschreibung: $("tuBeschr").value, art: tuArt, optionen, frist, benachrichtigen: $("tuInfo").checked });
+    $("terminumfrageForm").classList.add("versteckt"); melde(`🗓️ Gestartet${r.versand ? ` – ${r.versand.gesendet} Mitglieder benachrichtigt` : ""}`); terminfindungLaden();
+  } catch (e) { melde(e.message, true); }
+}
+
+// ---------- Mitfahrgelegenheiten (KC-CLUB-MITFAHREN) ----------
+function mitfahrtBlock(art, bezugId, liste, offen) {
+  if (!offen && !liste.length) return "";
+  const zeilen = liste.map((m) => `<div class="zeile"><div style="flex:1"><b>🚗 ${esc(m.fahrer.name)}</b> <span class="marke${m.frei ? " gruen" : ""}">${m.frei ? `${m.frei} von ${m.plaetze} frei` : "voll"}</span>
+      <div class="hinweis" style="font-size:.85rem">${m.treffpunkt ? "📍 " + esc(m.treffpunkt) + " · " : ""}${m.mitfahrer.length ? "Mit: " + esc(m.mitfahrer.join(", ")) : "noch niemand"}${m.notiz ? " · " + esc(m.notiz) : ""}</div></div>
+      ${offen && !m.eigen ? (m.dabei ? `<button class="knopf klein gruen" onclick="mitfahrtPlatz('${m.id}', false)">✔ dabei</button>` : m.frei ? `<button class="knopf klein" onclick="mitfahrtPlatz('${m.id}', true)">Mitfahren</button>` : "") : ""}
+      ${m.eigen && offen ? `<button class="knopf klein" title="ändern" onclick="mitfahrtAnbieten('${art}', '${esc(bezugId)}', ${m.plaetze}, ${JSON.stringify(m.treffpunkt || "").replace(/"/g, "&quot;")})">✏️</button>` : ""}
+      ${m.darfLoeschen ? `<button class="knopf klein" title="löschen" onclick="mitfahrtLoeschen('${m.id}', '${art}')">🗑️</button>` : ""}</div>`).join("");
+  const eigene = liste.some((m) => m.eigen);
+  return `<div style="margin-top:10px;border-top:1px solid var(--linie);padding-top:8px"><b>🚗 Mitfahren</b>${zeilen || '<p class="hinweis" style="margin:4px 0">Noch keine Mitfahrgelegenheit.</p>'}
+    ${offen && !eigene ? `<div class="knoepfe"><button class="knopf klein" onclick="mitfahrtAnbieten('${art}', '${esc(bezugId)}')">🚗 Ich fahre und nehme mit</button></div>` : ""}</div>`;
+}
+async function mitfahrtNeuLaden(art) { if (art === "aktion") { AKTIONEN = null; aktionOeffnen(aktionId, true); } else treffenLaden(); }
+async function mitfahrtAnbieten(art, bezugId, plaetze, treffpunkt) {
+  const p = prompt("Wie viele freie Plätze hast du?", String(plaetze || 3));
+  if (p === null) return;
+  const t = prompt("Treffpunkt / Abfahrt (freiwillig, z. B. „Marktplatz 17:30“):", treffpunkt || "");
+  if (t === null) return;
+  try { await api("mitfahrt_anbieten", { bezug_art: art, bezug_id: bezugId, plaetze: Number(p), treffpunkt: t }); melde("🚗 Eingetragen"); mitfahrtNeuLaden(art); } catch (e) { melde(e.message, true); }
+}
+async function mitfahrtPlatz(id, dabei) {
+  try { await api("mitfahrt_platz", { id, dabei }); melde(dabei ? "🚗 Du fährst mit – der Fahrer weiß Bescheid" : "Abgemeldet"); mitfahrtNeuLaden(aktuelleAnsicht === "aktion" ? "aktion" : "treffen"); } catch (e) { melde(e.message, true); }
+}
+async function mitfahrtLoeschen(id, art) {
+  if (!confirm("Diese Mitfahrgelegenheit löschen? Wer schon mitfährt, bekommt Bescheid.")) return;
+  try { await api("mitfahrt_loeschen", { id }); melde("🗑️ Gelöscht"); mitfahrtNeuLaden(art); } catch (e) { melde(e.message, true); }
+}
+
+// ---------- Handy-Kalender (KC-CLUB-KALENDERABO) ----------
+// Einzeltermin: .ics-Datei – öffnet sich auf jedem Handy im Kalender
+const TREFFEN_IDX = new Map();
+function inKalender(id) {
+  const t = TREFFEN_IDX.get(id); if (!t) return;
+  const z = (iso) => new Date(iso).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, ""), e = (s) => String(s || "").replace(/[\;,]/g, (c) => "\\" + c).replace(/\n/g, "\\n");
+  const tag = (iso) => berlinIso(iso).replace(/-/g, ""), danach = (iso) => tagPlus(berlinIso(iso), 1).replace(/-/g, "");
+  const ics = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Koecheclub Werne//Club-App//DE", "BEGIN:VEVENT", `UID:treffen-${t.id}@koecheclub-werne`, `DTSTAMP:${z(new Date().toISOString())}`,
+    `SUMMARY:${e(t.titel)}`, ...(t.ganztaegig ? [`DTSTART;VALUE=DATE:${tag(t.beginn)}`, `DTEND;VALUE=DATE:${danach(t.ende || t.beginn)}`] : [`DTSTART:${z(t.beginn)}`, `DTEND:${z(t.ende || new Date(new Date(t.beginn).getTime() + 3 * 3600000).toISOString())}`]),
+    ...(t.ort ? [`LOCATION:${e(t.ort)}`] : []), `DESCRIPTION:${e((t.beschreibung ? t.beschreibung + "\n\n" : "") + location.origin + location.pathname + "#termine")}`, "END:VEVENT", "END:VCALENDAR"].join("\r\n");
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([ics], { type: "text/calendar" })); a.download = t.titel.replace(/[^\wäöüÄÖÜß ]/g, "") + ".ics";
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  melde("📲 Termin-Datei erstellt – antippen, dann „Zum Kalender hinzufügen“");
+}
+// Abo: alle Termine automatisch und immer aktuell im Handy-Kalender
+function kalenderAboZeigen(url) {
+  const a = INIT?.kalenderAbo;
+  $("kalAboInfo").innerHTML = url ? `<div class="karte" style="background:var(--karte2)">
+      <p style="margin-top:0"><b>📱 iPhone:</b> einfach antippen – fertig.</p>
+      <a class="knopf haupt" href="${esc(url.replace(/^https:/, "webcal:"))}">📅 Kalender jetzt abonnieren</a>
+      <p><b>🤖 Android (Google Kalender):</b> Link kopieren, dann einmalig am PC unter <i>calendar.google.com</i> → „Weitere Kalender ＋“ → „Per URL“ einfügen. Danach erscheinen die Termine auch auf dem Handy.</p>
+      <button class="knopf" onclick="navigator.clipboard.writeText(${JSON.stringify(url).replace(/"/g, "&quot;")}).then(() => melde('📋 Link kopiert'), () => prompt('Link:', ${JSON.stringify(url).replace(/"/g, "&quot;")}))">📋 Link kopieren</button>
+      <p class="hinweis" style="font-size:.85rem">Den Link bitte nicht weitergeben – er zeigt deine Club-Termine.</p></div>`
+    : a ? `<p class="hinweis">✅ Kalender verbunden seit ${esc(zeitKurz(a.erstellt_am))}${a.zuletzt_abgerufen ? ` · zuletzt aktualisiert ${esc(zeitKurz(a.zuletzt_abgerufen))}` : " · noch nicht abgerufen"}.</p>` : "";
+  $("kalAboKnopf").textContent = a || url ? "🔄 Neuen Link erzeugen" : "📲 Kalender verbinden";
+}
+async function kalenderAbo() {
+  if (INIT?.kalenderAbo && !confirm("Neuen Kalender-Link erzeugen? Der alte Link funktioniert dann nicht mehr (z. B. auf einem alten Handy).")) return;
+  try { const r = await api("kalender_abo"); INIT.kalenderAbo = { erstellt_am: new Date().toISOString(), zuletzt_abgerufen: null }; kalenderAboZeigen(r.url); } catch (e) { melde(e.message, true); }
+}
+
+// ---------- Notfallkontakt (KC-CLUB-NOTFALL) ----------
+function notfallZeigen() { const n = INIT?.notfall || {}; $("nfName").value = n.name || ""; $("nfTel").value = n.telefon || ""; $("nfBez").value = n.beziehung || ""; }
+async function notfallSpeichern() {
+  const d = { name: $("nfName").value, telefon: $("nfTel").value, beziehung: $("nfBez").value };
+  try { await api("notfall_setzen", d); INIT.notfall = d.name || d.telefon ? d : null; melde(d.name || d.telefon ? "🆘 Notfallkontakt gespeichert" : "Notfallkontakt entfernt"); } catch (e) { melde(e.message, true); }
+}
+
 // ---------- Mitglieder-Details (KC-CLUB-KONTAKT) ----------
 // Antippen in der Liste → Karte mit den Angaben, die das Mitglied freigegeben hat (Admin: alles), plus Knöpfe zum Anrufen usw.
 let mitgliedId = null, MD = null;
@@ -1662,6 +1822,7 @@ function mitgliedZeigen() {
       <div class="hinweis" style="margin-top:4px">${m.status ? esc(statusText(m.status)) : ""}${m.geburtstag ? ` · 🎂 ${esc(m.geburtstag.slice(3) + "." + m.geburtstag.slice(0, 2) + ".")}` : ""}</div>
     </div>
     <div class="karte">${zeilen}${leer}</div>
+    ${m.notfall ? `<div class="karte"><h3>🆘 Notfallkontakt</h3><div class="zeile"><div style="flex:1"><b>${esc(m.notfall.name || "–")}</b>${m.notfall.beziehung ? ` <span class="hinweis">(${esc(m.notfall.beziehung)})</span>` : ""}<div class="hinweis">${esc(m.notfall.telefon || "")}</div></div>${m.notfall.telefon ? `<a class="knopf klein" href="tel:${esc(nurZiffern(m.notfall.telefon))}">📞</a>` : ""}</div><p class="hinweis" style="font-size:.85rem;margin-bottom:0">🔒 Nur für ${m.selbst ? "dich und " : ""}Clubsprecher, Kassenwart und Admin sichtbar.</p></div>` : m.selbst ? '<p class="hinweis">🆘 Noch kein Notfallkontakt – eintragen unter ⚙️ Mehr → Privatsphäre.</p>' : ""}
     <div class="knoepfe">
       ${m.selbst ? "" : `<button class="knopf haupt" onclick="direkt('${m.person_id}')">💬 Nachricht in der App</button>`}
       ${zeilen ? '<button class="knopf" onclick="kontaktSpeichern()">📇 Ins Telefonbuch</button>' : ""}

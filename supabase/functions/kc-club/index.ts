@@ -8,14 +8,14 @@
 //           KC-CLUB-BENACHRICHTIGUNG (0.3.0), KC-CLUB-DIENSTERINNERUNG (0.3.0), KC-CLUB-KALENDER (0.6.0),
 //           KC-CLUB-GEBURTSTAG-FREIGABE (0.7.0), KC-CLUB-GEBURTSTAG-PUSH (0.8.0), KC-CLUB-VERANSTALTUNG (0.8.0),
 //           KC-CLUB-PROTOKOLLE (0.9.0), KC-CLUB-AUFGABEN (0.9.0), KC-CLUB-AKTIONEN (0.10.0), KC-CLUB-LOESCHEN (0.11.0),
-//           KC-CLUB-KONTAKT (0.13.0)
+//           KC-CLUB-KONTAKT (0.13.0), KC-CLUB-TERMINFINDUNG, KC-CLUB-NACHFASSEN, KC-CLUB-MITFAHREN, KC-CLUB-NOTFALL, KC-CLUB-KALENDERABO (0.14.0)
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.13.0";
+const SERVER_VERSION = "0.14.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -175,7 +175,10 @@ async function treffenListe(ich: Ich, nurNaechstes = false, zeitraum?: { von: st
   const { data: treffen } = await q;
   const ids = (treffen ?? []).map((t: any) => t.id);
   const { data: teil } = ids.length ? await db.from("kc_club_teilnahme").select("*").in("treffen_id", ids) : { data: [] as any[] };
-  const leute = await personen([...(teil ?? []).map((x: any) => x.person_id), ...(treffen ?? []).map((t: any) => t.gastgeber_person_id)]);
+  const [leute, mitfahrten] = await Promise.all([
+    personen([...(teil ?? []).map((x: any) => x.person_id), ...(treffen ?? []).map((t: any) => t.gastgeber_person_id)]),
+    nurNaechstes ? Promise.resolve(new Map<string, any[]>()) : mitfahrtenZu(ich, "treffen", ids),
+  ]);
   return (treffen ?? []).map((t: any) => {
     const tn = (teil ?? []).filter((x: any) => x.treffen_id === t.id)
       .map((x: any) => ({ person_id: x.person_id, name: leute.get(x.person_id)?.display_name || x.person_id, antwort: x.antwort, notiz: x.notiz }))
@@ -186,6 +189,7 @@ async function treffenListe(ich: Ich, nurNaechstes = false, zeitraum?: { von: st
       gastgeber: t.gastgeber_person_id ? { person_id: t.gastgeber_person_id, name: leute.get(t.gastgeber_person_id)?.display_name } : null,
       teilnahme: tn, ja: zahl("ja"), nein: zahl("nein"), vielleicht: zahl("vielleicht"),
       meine: tn.find((x: any) => x.person_id === ich.person_id)?.antwort ?? null,
+      mitfahrten: mitfahrten.get(t.id) ?? [],
     };
   });
 }
@@ -350,7 +354,7 @@ async function aktionenLesen(ich: Ich) {
   const aktionen = liste.map((a: any) => {
     const teilnehmer = (Array.isArray(a.participants) ? a.participants : []).map((t: any) => {
       const m: any = mgMap.get(t.memberId);
-      const p = m ? kern.get(namensSchluessel(m.firstName, m.lastName)) : null;
+      const p: any = m ? kern.get(namensSchluessel(m.firstName, m.lastName)) : null;
       return { person_id: p?.person_id ?? null, name: p?.display_name || [m?.preferredName || m?.firstName, m?.lastName].filter(Boolean).join(" ") || "unbekannt", bestaetigt: !!t.confirmed };
     }).sort((x: any, y: any) => x.name.localeCompare(y.name));
     const dabei = teilnehmer.some((t: any) => t.person_id === ich.person_id);
@@ -365,6 +369,8 @@ async function aktionenLesen(ich: Ich) {
       ...(ich.admin ? { bemerkung: txt(a.remarks, 1000) || null } : {}),
     };
   }).sort((x: any, y: any) => String(x.von).localeCompare(String(y.von)));
+  const mf = await mitfahrtenZu(ich, "aktion", aktionen.map((a: any) => a.id));
+  for (const a of aktionen as any[]) a.mitfahrten = mf.get(a.id) ?? [];
   return { aktionen, stand };
 }
 
@@ -377,6 +383,112 @@ async function festnetzAusManager(p: any) {
   const schluessel = namensSchluessel(p.given_name || p.display_name.split(" ")[0], p.family_name || p.display_name.split(" ").slice(-1)[0]);
   const m: any = (Array.isArray(mg?.payload?.data) ? mg.payload.data : []).find((x: any) => namensSchluessel(x.firstName, x.lastName) === schluessel);
   return txt(m?.phone, 40) || null;
+}
+
+// ---------- Mitfahrgelegenheiten (KC-CLUB-MITFAHREN) ----------
+// Bezug: Treffen/Veranstaltung (kc_club_treffen) oder Aktion (ID aus dem KC Manager).
+async function mitfahrtenZu(ich: Ich, art: "treffen" | "aktion", ids: string[]) {
+  if (!ids.length) return new Map<string, any[]>();
+  const { data: mf } = await db.from("kc_club_mitfahrt").select("*").eq("bezug_art", art).in("bezug_id", ids).order("erstellt_am");
+  const mids = (mf ?? []).map((m: any) => m.id);
+  const { data: pl } = mids.length ? await db.from("kc_club_mitfahrt_platz").select("mitfahrt_id,person_id").in("mitfahrt_id", mids) : { data: [] as any[] };
+  const leute = await personen([...(mf ?? []).map((m: any) => m.fahrer), ...(pl ?? []).map((x: any) => x.person_id)]);
+  const aus = new Map<string, any[]>();
+  for (const m of mf ?? []) {
+    const mit = (pl ?? []).filter((x: any) => x.mitfahrt_id === m.id);
+    aus.set(m.bezug_id, [...(aus.get(m.bezug_id) ?? []), {
+      id: m.id, fahrer: { person_id: m.fahrer, name: leute.get(m.fahrer)?.display_name || m.fahrer }, plaetze: m.plaetze, treffpunkt: m.treffpunkt, notiz: m.notiz,
+      mitfahrer: mit.map((x: any) => leute.get(x.person_id)?.display_name || x.person_id), frei: Math.max(0, m.plaetze - mit.length),
+      eigen: m.fahrer === ich.person_id, dabei: mit.some((x: any) => x.person_id === ich.person_id), darfLoeschen: m.fahrer === ich.person_id || ich.vorstand,
+    }]);
+  }
+  return aus;
+}
+async function mitfahrtBezugTitel(art: string, id: string) {
+  if (art === "treffen") {
+    const { data: t } = await db.from("kc_club_treffen").select("id,titel,beginn").eq("id", id).maybeSingle();
+    return t ? `${t.titel} (${wann(t.beginn)})` : null;
+  }
+  const a: any = (await aktionenRoh()).liste.find((x: any) => String(x.id) === id);
+  return a ? txt(a.activity, 200) : null;
+}
+
+// ---------- Terminfindung (KC-CLUB-TERMINFINDUNG) ----------
+async function terminumfragenListe(ich: Ich) {
+  const [{ data: offen }, { data: fertig }] = await Promise.all([
+    db.from("kc_club_terminumfragen").select("*").eq("status", "offen").order("erstellt_am", { ascending: false }).limit(20),
+    db.from("kc_club_terminumfragen").select("*").neq("status", "offen").order("geaendert_am", { ascending: false }).limit(5),
+  ]);
+  const alle = [...(offen ?? []), ...(fertig ?? [])];
+  const ids = alle.map((u: any) => u.id);
+  const { data: opt } = ids.length ? await db.from("kc_club_terminumfrage_optionen").select("*").in("umfrage_id", ids).order("beginn") : { data: [] as any[] };
+  const oids = (opt ?? []).map((o: any) => o.id);
+  const { data: ant } = oids.length ? await db.from("kc_club_terminumfrage_antworten").select("option_id,person_id,antwort").in("option_id", oids) : { data: [] as any[] };
+  const leute = await personen([...alle.map((u: any) => u.erstellt_von), ...(ant ?? []).map((x: any) => x.person_id)]);
+  const name = (id: string) => leute.get(id)?.display_name || id;
+  return alle.map((u: any) => {
+    const o = (opt ?? []).filter((x: any) => x.umfrage_id === u.id);
+    const a = (ant ?? []).filter((x: any) => o.some((y: any) => y.id === x.option_id));
+    return {
+      id: u.id, titel: u.titel, beschreibung: u.beschreibung, ort: u.ort, art: u.art, status: u.status, frist: u.frist, festgelegt_option: u.festgelegt_option,
+      von: name(u.erstellt_von), antwortende: new Set(a.map((x: any) => x.person_id)).size,
+      optionen: o.map((x: any) => {
+        const z = (w: string) => a.filter((y: any) => y.option_id === x.id && y.antwort === w).map((y: any) => name(y.person_id)).sort();
+        return { id: x.id, beginn: x.beginn, ja: z("ja"), vielleicht: z("vielleicht"), nein: z("nein"), meine: a.find((y: any) => y.option_id === x.id && y.person_id === ich.person_id)?.antwort ?? null };
+      }),
+      darfFestlegen: u.status === "offen" && (ich.vorstand || u.erstellt_von === ich.person_id),
+      darfLoeschen: ich.vorstand || u.erstellt_von === ich.person_id,
+    };
+  });
+}
+
+// ---------- Handy-Kalender (KC-CLUB-KALENDERABO) ----------
+// Persönlicher, geheimer Abo-Link (nur Hash gespeichert). Enthält Treffen/Veranstaltungen, Aktionen und freigegebene Geburtstage.
+const icsText = (s: unknown) => String(s ?? "").replace(/\\/g, "\\\\").replace(/;/g, "\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
+const icsZeit = (iso: string) => new Date(iso).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+const icsTag = (d: string) => d.replace(/-/g, "");
+const tagDanach = (d: string) => new Date(new Date(d + "T12:00:00Z").getTime() + 86400000).toISOString().slice(0, 10);
+function icsFalten(zeile: string) {
+  // Zeilen über 75 Zeichen umbrechen (RFC 5545)
+  const teile: string[] = []; let rest = zeile;
+  while (rest.length > 74) { teile.push(rest.slice(0, 74)); rest = " " + rest.slice(74); }
+  teile.push(rest); return teile.join("\r\n");
+}
+async function kalenderIcs(token: string) {
+  const { data: abo } = await db.from("kc_club_kalender_abo").select("person_id").eq("token_hash", await sha256(token)).maybeSingle();
+  if (!abo) return new Response("Kalender-Link ungültig – bitte in der App neu erzeugen.", { status: 404, headers: { "Content-Type": "text/plain; charset=utf-8" } });
+  const { data: pe } = await db.from("kc_core_people").select("person_id,display_name,given_name,preferred_name,active").eq("person_id", abo.person_id).maybeSingle();
+  if (!pe?.active) return new Response("Kein Zugang.", { status: 403 });
+  db.from("kc_club_kalender_abo").update({ zuletzt_abgerufen: jetzt() }).eq("person_id", abo.person_id).then(() => {});
+  const ich = { person_id: pe.person_id, name: pe.display_name, vorname: vorname(pe), admin: false, vorstand: false, aemter: [], protokolle: false, kontakte: false } as Ich;
+  const [{ data: tr }, akt, geb] = await Promise.all([
+    db.from("kc_club_treffen").select("*").gte("beginn", new Date(Date.now() - 60 * 86400000).toISOString()).lte("beginn", new Date(Date.now() + 500 * 86400000).toISOString()).order("beginn"),
+    aktionenRoh(), geburtstageSichtbar(ich),
+  ]);
+  const stamp = icsZeit(jetzt()), z: string[] = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Koecheclub Werne//Club-App//DE", "CALSCALE:GREGORIAN", "METHOD:PUBLISH",
+    "X-WR-CALNAME:Köcheclub Werne", "X-WR-TIMEZONE:Europe/Berlin", "REFRESH-INTERVAL;VALUE=DURATION:PT6H", "X-PUBLISHED-TTL:PT6H"];
+  for (const t of tr ?? []) {
+    const ort = t.ort || "";
+    z.push("BEGIN:VEVENT", `UID:treffen-${t.id}@koecheclub-werne`, `DTSTAMP:${stamp}`, `SUMMARY:${icsText((t.art === "veranstaltung" ? "🎪 " : "🍳 ") + t.titel)}`);
+    if (t.ganztaegig) z.push(`DTSTART;VALUE=DATE:${icsTag(berlinTag(new Date(t.beginn)))}`, `DTEND;VALUE=DATE:${icsTag(tagDanach(berlinTag(new Date(t.ende || t.beginn))))}`);
+    else z.push(`DTSTART:${icsZeit(t.beginn)}`, `DTEND:${icsZeit(t.ende || new Date(new Date(t.beginn).getTime() + 3 * 3600000).toISOString())}`);
+    if (ort) z.push(`LOCATION:${icsText(ort)}`);
+    z.push(`DESCRIPTION:${icsText((t.beschreibung ? t.beschreibung + "\n\n" : "") + APP_URL + "#termine")}`, `STATUS:${t.status === "abgesagt" ? "CANCELLED" : "CONFIRMED"}`, "END:VEVENT");
+  }
+  for (const a of akt.liste as any[]) {
+    z.push("BEGIN:VEVENT", `UID:aktion-${icsText(a.id)}@koecheclub-werne`, `DTSTAMP:${stamp}`, `SUMMARY:${icsText("🧳 " + txt(a.activity, 200))}`,
+      `DTSTART;VALUE=DATE:${icsTag(a.dateFrom)}`, `DTEND;VALUE=DATE:${icsTag(tagDanach(a.dateTo || a.dateFrom))}`, `DESCRIPTION:${icsText(APP_URL + "#aktion=" + a.id)}`, "END:VEVENT");
+  }
+  const jahr = Number(berlinTag(new Date()).slice(0, 4));
+  for (const g of geb) {
+    if (g.person_id === ich.person_id) continue;
+    const d = `${jahr}-${g.md}`;
+    if (g.md === "02-29") continue; // Schalttag: im Abo ausgelassen (App zeigt ihn am 28.02.)
+    z.push("BEGIN:VEVENT", `UID:geburtstag-${g.person_id}@koecheclub-werne`, `DTSTAMP:${stamp}`, `SUMMARY:${icsText("🎂 " + g.name)}`,
+      `DTSTART;VALUE=DATE:${icsTag(d)}`, `DTEND;VALUE=DATE:${icsTag(tagDanach(d))}`, "RRULE:FREQ=YEARLY", "TRANSP:TRANSPARENT", "END:VEVENT");
+  }
+  z.push("END:VCALENDAR");
+  return new Response(z.map(icsFalten).join("\r\n") + "\r\n", { headers: { ...cors, "Content-Type": "text/calendar; charset=utf-8", "Cache-Control": "no-store", "Content-Disposition": 'inline; filename="koecheclub.ics"' } });
 }
 
 // ---------- Nachrichten ----------
@@ -401,6 +513,12 @@ async function empfaengerAufloesen(ich: Ich, e: any): Promise<string[]> {
 // ---------- Hauptprogramm ----------
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+  // KC-CLUB-KALENDERABO: Handy-Kalender holt die Termine per GET ?kalender=<geheimer Link>
+  if (req.method === "GET") {
+    const k = new URL(req.url).searchParams.get("kalender") ?? "";
+    if (!/^[0-9a-f]{32,96}$/.test(k)) return new Response("Nicht gefunden", { status: 404 });
+    try { return await kalenderIcs(k); } catch (e) { console.error(e); return new Response("Fehler", { status: 500 }); }
+  }
   if (req.method !== "POST") return json({ error: "POST erwartet" }, 405);
   let p: any; try { p = await req.json(); } catch { return json({ error: "Ungültige Anfrage" }, 400); }
   const a = String(p?.action || "");
@@ -472,6 +590,36 @@ Deno.serve(async (req) => {
           }
         }
       }
+      // KC-CLUB-NACHFASSEN: 3 Tage vor dem Treffen einmal an alle, die noch nicht zu- oder abgesagt haben
+      let nachfass = 0;
+      {
+        const in3 = berlinTag(new Date(Date.now() + 3 * 86400000));
+        const { data: tf } = await db.from("kc_club_treffen").select("*").eq("status", "geplant").eq("art", "treffen").is("nachfass_gesendet_am", null)
+          .gte("beginn", new Date().toISOString()).lte("beginn", new Date(Date.now() + 4 * 86400000).toISOString());
+        for (const t of tf ?? []) {
+          if (berlinTag(new Date(t.beginn)) !== in3) continue;
+          const { data: ok } = await db.from("kc_club_treffen").update({ nachfass_gesendet_am: jetzt() }).eq("id", t.id).is("nachfass_gesendet_am", null).select("id");
+          if (!ok?.length) continue;
+          const { data: an } = await db.from("kc_club_teilnahme").select("person_id").eq("treffen_id", t.id);
+          const geantwortet = new Set((an ?? []).map((x: any) => x.person_id));
+          const ziel = (await aktiveMitglieder()).map((x) => x.person_id).filter((id) => !geantwortet.has(id));
+          if (ziel.length) await senden("club_erinnerung", ziel, {
+            titel: "❔ Kommst du?", kurz: `${t.titel} am ${wann(t.beginn)} – bitte kurz zu- oder absagen.`,
+            betreff: `Köcheclub Werne – bitte zu- oder absagen: ${t.titel}, ${wann(t.beginn)}`,
+            text: `Hallo,
+
+in 3 Tagen ist unser Treffen „${t.titel}“ (${wann(t.beginn, true)}${t.ort ? ", " + t.ort : ""}).
+
+Du hast noch nicht zu- oder abgesagt – bitte kurz in der Köcheclub-App antippen: ${APP_URL}#termine
+
+Viele Grüße
+Köcheclub Werne`,
+            url: APP_URL + "#termine",
+          }, `club-nachfass:${t.id}`);
+          await protokoll(null, "treffen_nachfass", { treffen: t.id, empfaenger: ziel.length });
+          nachfass++;
+        }
+      }
       // KC-CLUB-AUFGABEN: Erinnerung am Tag vor der Fälligkeit (nur mitgeteilte Aufgaben, höchstens einmal)
       let aufg = 0;
       {
@@ -509,7 +657,7 @@ Deno.serve(async (req) => {
         await protokoll(null, "treffen_erinnerung", { treffen: t.id, empfaenger: ziel.length });
         n++;
       }
-      return json({ ok: true, erinnerungen: n, beendet, dienst, geb, aufg });
+      return json({ ok: true, erinnerungen: n, beendet, dienst, geb, aufg, nachfass });
     }
 
     const ich = await anmelden(req);
@@ -564,9 +712,22 @@ Deno.serve(async (req) => {
           protokolleUngelesen = (pv ?? []).filter((x: any) => !(gl ?? []).some((g: any) => g.protokoll_id === x.id && g.version >= x.version)).length;
         }
         const { data: kf } = await db.from("kc_club_freigaben").select("bereich,erlaubt").eq("person_id", ich.person_id).like("bereich", "kontakt_%");
+        // KC-CLUB-TERMINFINDUNG: offene Umfragen, bei denen ich noch nichts angekreuzt habe
+        const { data: tu } = await db.from("kc_club_terminumfragen").select("id,titel").eq("status", "offen");
+        let terminfindungOffen: any[] = [];
+        if ((tu ?? []).length) {
+          const { data: to } = await db.from("kc_club_terminumfrage_optionen").select("id,umfrage_id").in("umfrage_id", (tu ?? []).map((x: any) => x.id));
+          const { data: ta } = (to ?? []).length ? await db.from("kc_club_terminumfrage_antworten").select("option_id").eq("person_id", ich.person_id).in("option_id", (to ?? []).map((x: any) => x.id)) : { data: [] as any[] };
+          const beantwortet = new Set((ta ?? []).map((x: any) => (to ?? []).find((o: any) => o.id === x.option_id)?.umfrage_id));
+          terminfindungOffen = (tu ?? []).filter((x: any) => !beantwortet.has(x.id)).map((x: any) => ({ id: x.id, titel: x.titel }));
+        }
+        const [{ data: nf }, { data: kab }] = await Promise.all([
+          db.from("kc_club_notfall").select("name,telefon,beziehung").eq("person_id", ich.person_id).maybeSingle(),
+          db.from("kc_club_kalender_abo").select("erstellt_am,zuletzt_abgerufen").eq("person_id", ich.person_id).maybeSingle(),
+        ]);
         const kontaktFreigabe = Object.fromEntries(KONTAKT_FELDER.map((f) => [f, !!(kf ?? []).find((x: any) => x.bereich === "kontakt_" + f)?.erlaubt]));
         const benachrichtigung = Object.fromEntries(BEREICHE.map((b) => { const x: any = (wahl ?? []).find((y: any) => y.bereich === b); return [b, x ? { push: x.push, email: x.email } : STANDARD_WAHL[b]]; }));
-        return json({ ich, status: meinStatus, server: SERVER_VERSION, ungelesen, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, hatGeburtstag, kontaktFreigabe, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null });
+        return json({ ich, status: meinStatus, server: SERVER_VERSION, ungelesen, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, notfall: nf ?? null, kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null });
       }
 
       case "mitglieder": {
@@ -856,7 +1017,9 @@ Deno.serve(async (req) => {
         };
         const kontakt: Record<string, unknown> = {};
         for (const f of KONTAKT_FELDER) if (darf(f) && werte[f]) kontakt[f] = werte[f];
-        await protokoll(ich.person_id, "mitglied_details", { fuer: pid, felder: Object.keys(kontakt) });
+        // KC-CLUB-NOTFALL: nur man selbst und die Organisation (Clubsprecher, Kassenwart, Admin)
+        const { data: nf } = selbst || ich.vorstand ? await db.from("kc_club_notfall").select("name,telefon,beziehung").eq("person_id", pid).maybeSingle() : { data: null };
+        await protokoll(ich.person_id, "mitglied_details", { fuer: pid, felder: Object.keys(kontakt), notfall: !!nf });
         return json({
           person_id: pid, name: pe.display_name, vorname: vorname(pe), aemter: rolle?.aemter ?? [], status: st.get(pid) ?? null, selbst,
           geburtstag: pe.birth_date && (selbst || frei("geburtstag")) ? String(pe.birth_date).slice(5, 10) : null,
@@ -864,6 +1027,7 @@ Deno.serve(async (req) => {
           // welche Angaben freigegeben sind (nur für mich selbst bzw. Admin – für „nur für dich sichtbar“)
           ...(selbst || ich.admin ? { freigegeben: Object.fromEntries(KONTAKT_FELDER.map((f) => [f, frei("kontakt_" + f)])) } : {}),
           darfKontakte: ich.kontakte || ich.admin,
+          notfall: nf ?? null,
         });
       }
 
@@ -1037,6 +1201,157 @@ Deno.serve(async (req) => {
         await geloescht(ich, "unterhaltung", { unterhaltung: t, teilnehmer: tn ?? [], nachrichten: msgs ?? [] });
         await db.from("kc_communication_threads").delete().eq("id", id);
         return json({ ok: true });
+      }
+
+      // ----- Terminfindung (KC-CLUB-TERMINFINDUNG) -----
+      case "terminumfragen_liste": {
+        return json({ umfragen: await terminumfragenListe(ich) });
+      }
+
+      case "terminumfrage_speichern": {
+        nurVorstand(ich);
+        const titel = txt(p.titel, 120);
+        if (!titel) throw new Fehler("Bitte einen Titel eingeben (z. B. „Nächstes Treffen“).");
+        const optionen = [...new Set((Array.isArray(p.optionen) ? p.optionen : []).map((x: unknown) => new Date(String(x))).filter((d: Date) => !isNaN(d.getTime()) && d.getTime() > Date.now()).map((d: Date) => d.toISOString()))].sort() as string[];
+        if (optionen.length < 2 || optionen.length > 10) throw new Fehler("Bitte 2 bis 10 Terminvorschläge in der Zukunft angeben.");
+        const frist = p.frist ? new Date(String(p.frist)) : null;
+        if (frist && (isNaN(frist.getTime()) || frist.getTime() < Date.now())) throw new Fehler("Die Antwortfrist liegt in der Vergangenheit.");
+        const { data: u, error } = await db.from("kc_club_terminumfragen").insert({ titel, beschreibung: txt(p.beschreibung, 2000) || null, ort: txt(p.ort, 200) || null,
+          art: p.art === "veranstaltung" ? "veranstaltung" : "treffen", frist: frist ? frist.toISOString() : null, erstellt_von: ich.person_id }).select().single();
+        if (error || !u) throw new Fehler("Speichern fehlgeschlagen.", 500);
+        await db.from("kc_club_terminumfrage_optionen").insert(optionen.map((beginn, i) => ({ umfrage_id: u.id, beginn, reihenfolge: i })));
+        let versand = null;
+        if (p.benachrichtigen !== false) {
+          const ziel = (await aktiveMitglieder()).map((x) => x.person_id).filter((id) => id !== ich.person_id);
+          versand = await senden("club_vorschlag", ziel, {
+            titel: "🗓️ Welcher Termin passt dir?", kurz: `${titel} – bitte ${optionen.length} Termine ankreuzen.`,
+            betreff: `Köcheclub Werne – Terminfindung: ${titel}`,
+            text: `Hallo,\n\n${ich.name} sucht einen Termin für „${titel}“:\n\n${optionen.map((o) => "🗓️ " + wann(o, true)).join("\n")}\n\nBitte in der Köcheclub-App ankreuzen, was dir passt (ja / vielleicht / nein)${frist ? ` – bis ${wann(frist.toISOString())}` : ""}: ${APP_URL}#termine\n\nViele Grüße\nKöcheclub Werne`,
+            url: APP_URL + "#termine",
+          }, `club-terminumfrage:${u.id}`);
+        }
+        await protokoll(ich.person_id, "terminumfrage_angelegt", { umfrage: u.id, optionen: optionen.length, versand });
+        return json({ ok: true, id: u.id, versand });
+      }
+
+      case "terminumfrage_antwort": {
+        const { data: o } = await db.from("kc_club_terminumfrage_optionen").select("id,umfrage_id").eq("id", String(p.option_id || "")).maybeSingle();
+        if (!o) throw new Fehler("Terminvorschlag nicht gefunden.", 404);
+        const { data: u } = await db.from("kc_club_terminumfragen").select("status").eq("id", o.umfrage_id).single();
+        if (u?.status !== "offen") throw new Fehler("Diese Terminfindung ist schon abgeschlossen.", 409);
+        const antwort = String(p.antwort || "");
+        if (!antwort) await db.from("kc_club_terminumfrage_antworten").delete().eq("option_id", o.id).eq("person_id", ich.person_id);
+        else if (["ja", "vielleicht", "nein"].includes(antwort)) await db.from("kc_club_terminumfrage_antworten").upsert({ option_id: o.id, person_id: ich.person_id, antwort, geaendert_am: jetzt() });
+        else throw new Fehler("Bitte ja, vielleicht oder nein wählen.");
+        return json({ ok: true });
+      }
+
+      case "terminumfrage_festlegen": {
+        const { data: u } = await db.from("kc_club_terminumfragen").select("*").eq("id", String(p.id || "")).maybeSingle();
+        if (!u) throw new Fehler("Terminfindung nicht gefunden.", 404);
+        if (!ich.vorstand && u.erstellt_von !== ich.person_id) throw new Fehler("Festlegen darf, wer die Terminfindung gestartet hat, oder Clubsprecher/Kassenwart.", 403);
+        if (u.status !== "offen") throw new Fehler("Diese Terminfindung ist schon abgeschlossen.", 409);
+        const { data: o } = await db.from("kc_club_terminumfrage_optionen").select("*").eq("id", String(p.option_id || "")).eq("umfrage_id", u.id).maybeSingle();
+        if (!o) throw new Fehler("Terminvorschlag nicht gefunden.", 404);
+        // Termin anlegen; Antworten werden als Zu-/Absagen übernommen (ja → komme, vielleicht → vielleicht, nein → kann nicht)
+        const { data: t, error } = await db.from("kc_club_treffen").insert({ titel: u.titel, beginn: o.beginn, ort: u.ort, beschreibung: u.beschreibung, art: u.art, ganztaegig: false,
+          erstellt_von: ich.person_id, geaendert_am: jetzt() }).select().single();
+        if (error || !t) throw new Fehler("Termin konnte nicht angelegt werden.", 500);
+        const { data: an } = await db.from("kc_club_terminumfrage_antworten").select("person_id,antwort").eq("option_id", o.id);
+        if (u.art === "treffen" && (an ?? []).length) await db.from("kc_club_teilnahme").insert((an ?? []).map((x: any) => ({ treffen_id: t.id, person_id: x.person_id, antwort: x.antwort, notiz: null, geaendert_am: jetzt() })));
+        await db.from("kc_club_terminumfragen").update({ status: "festgelegt", festgelegt_option: o.id, festgelegt_treffen_id: t.id, geaendert_am: jetzt() }).eq("id", u.id);
+        let versand = null;
+        if (p.benachrichtigen !== false) {
+          const ziel = (await aktiveMitglieder()).map((x) => x.person_id).filter((id) => id !== ich.person_id);
+          versand = await senden("club_treffen", ziel, treffenText(t, "", "neu"), `club-treffen:${t.id}:festgelegt`);
+        }
+        await protokoll(ich.person_id, "terminumfrage_festgelegt", { umfrage: u.id, treffen: t.id, beginn: o.beginn, versand });
+        return json({ ok: true, treffen_id: t.id, versand });
+      }
+
+      case "terminumfrage_loeschen": {
+        const { data: u } = await db.from("kc_club_terminumfragen").select("*").eq("id", String(p.id || "")).maybeSingle();
+        if (!u) throw new Fehler("Terminfindung nicht gefunden.", 404);
+        if (!ich.vorstand && u.erstellt_von !== ich.person_id) throw new Fehler("Löschen darf, wer die Terminfindung gestartet hat, oder Clubsprecher/Kassenwart.", 403);
+        const { data: o } = await db.from("kc_club_terminumfrage_optionen").select("*").eq("umfrage_id", u.id);
+        const { data: an } = (o ?? []).length ? await db.from("kc_club_terminumfrage_antworten").select("*").in("option_id", (o ?? []).map((x: any) => x.id)) : { data: [] as any[] };
+        await geloescht(ich, "terminumfrage", { umfrage: u, optionen: o ?? [], antworten: an ?? [] });
+        await db.from("kc_club_terminumfragen").delete().eq("id", u.id);
+        return json({ ok: true });
+      }
+
+      // ----- Mitfahrgelegenheiten (KC-CLUB-MITFAHREN) -----
+      case "mitfahrt_anbieten": {
+        const art = p.bezug_art === "aktion" ? "aktion" : "treffen", bid = String(p.bezug_id || "");
+        const titel = await mitfahrtBezugTitel(art, bid);
+        if (!titel) throw new Fehler("Termin nicht gefunden.", 404);
+        const plaetze = Math.round(Number(p.plaetze));
+        if (!(plaetze >= 1 && plaetze <= 8)) throw new Fehler("Bitte 1 bis 8 freie Plätze angeben.");
+        const zeile = { plaetze, treffpunkt: txt(p.treffpunkt, 150) || null, notiz: txt(p.notiz, 300) || null };
+        const { data: vorh } = await db.from("kc_club_mitfahrt").select("id").eq("bezug_art", art).eq("bezug_id", bid).eq("fahrer", ich.person_id).maybeSingle();
+        if (vorh) await db.from("kc_club_mitfahrt").update(zeile).eq("id", vorh.id);
+        else await db.from("kc_club_mitfahrt").insert({ ...zeile, bezug_art: art, bezug_id: bid, fahrer: ich.person_id });
+        await protokoll(ich.person_id, "mitfahrt_angeboten", { bezug_art: art, bezug_id: bid, plaetze });
+        return json({ ok: true });
+      }
+
+      case "mitfahrt_platz": {
+        const { data: m } = await db.from("kc_club_mitfahrt").select("*").eq("id", String(p.id || "")).maybeSingle();
+        if (!m) throw new Fehler("Mitfahrgelegenheit nicht gefunden.", 404);
+        if (m.fahrer === ich.person_id) throw new Fehler("Das ist deine eigene Fahrt.");
+        const titel = (await mitfahrtBezugTitel(m.bezug_art, m.bezug_id)) || "Termin";
+        if (p.dabei === false) {
+          await db.from("kc_club_mitfahrt_platz").delete().eq("mitfahrt_id", m.id).eq("person_id", ich.person_id);
+        } else {
+          const { count } = await db.from("kc_club_mitfahrt_platz").select("person_id", { count: "exact", head: true }).eq("mitfahrt_id", m.id);
+          if ((count ?? 0) >= m.plaetze) throw new Fehler("Leider sind schon alle Plätze vergeben.", 409);
+          await db.from("kc_club_mitfahrt_platz").upsert({ mitfahrt_id: m.id, person_id: ich.person_id });
+        }
+        const versand = await senden("club_treffen", [m.fahrer], {
+          titel: p.dabei === false ? "🚗 Mitfahrt abgesagt" : "🚗 Neue Mitfahrt", kurz: `${ich.name} ${p.dabei === false ? "fährt doch nicht mit" : "fährt bei dir mit"}: ${titel}`,
+          betreff: `Köcheclub Werne – ${p.dabei === false ? "Mitfahrt abgesagt" : "neue Mitfahrt"}: ${titel}`,
+          text: `Hallo,\n\n${ich.name} ${p.dabei === false ? "fährt doch nicht bei dir mit" : "fährt bei dir mit"} – ${titel}.\n\nAlle Mitfahrer siehst du in der Köcheclub-App: ${APP_URL}#termine\n\nViele Grüße\nKöcheclub Werne`,
+          url: APP_URL + (m.bezug_art === "aktion" ? "#aktion=" + m.bezug_id : "#termine"),
+        }, `club-mitfahrt:${m.id}:${ich.person_id}:${Date.now()}`);
+        await protokoll(ich.person_id, p.dabei === false ? "mitfahrt_abgesagt" : "mitfahrt_zugesagt", { mitfahrt: m.id, versand });
+        return json({ ok: true });
+      }
+
+      case "mitfahrt_loeschen": {
+        const { data: m } = await db.from("kc_club_mitfahrt").select("*").eq("id", String(p.id || "")).maybeSingle();
+        if (!m) throw new Fehler("Mitfahrgelegenheit nicht gefunden.", 404);
+        if (m.fahrer !== ich.person_id && !ich.vorstand) throw new Fehler("Löschen darf nur, wer die Fahrt anbietet.", 403);
+        const { data: pl } = await db.from("kc_club_mitfahrt_platz").select("person_id").eq("mitfahrt_id", m.id);
+        await geloescht(ich, "mitfahrt", { mitfahrt: m, mitfahrer: (pl ?? []).map((x: any) => x.person_id) });
+        await db.from("kc_club_mitfahrt").delete().eq("id", m.id);
+        const ziel = (pl ?? []).map((x: any) => x.person_id).filter((id: string) => id !== ich.person_id);
+        if (ziel.length) {
+          const titel = (await mitfahrtBezugTitel(m.bezug_art, m.bezug_id)) || "Termin";
+          await senden("club_treffen", ziel, {
+            titel: "🚗 Mitfahrt entfällt", kurz: `Die Fahrt zu „${titel}“ fällt aus – bitte eine andere Mitfahrt suchen.`,
+            betreff: `Köcheclub Werne – Mitfahrt entfällt: ${titel}`,
+            text: `Hallo,\n\ndie Mitfahrgelegenheit zu „${titel}“ fällt leider aus. Bitte schau in der Köcheclub-App nach einer anderen Fahrt: ${APP_URL}#termine\n\nViele Grüße\nKöcheclub Werne`,
+            url: APP_URL + "#termine",
+          }, `club-mitfahrt-entfaellt:${m.id}`);
+        }
+        return json({ ok: true });
+      }
+
+      // ----- Notfallkontakt (KC-CLUB-NOTFALL) & Kalender-Abo (KC-CLUB-KALENDERABO) -----
+      case "notfall_setzen": {
+        const zeile = { name: txt(p.name, 120) || null, telefon: txt(p.telefon, 40) || null, beziehung: txt(p.beziehung, 60) || null };
+        if (!zeile.name && !zeile.telefon) await db.from("kc_club_notfall").delete().eq("person_id", ich.person_id);
+        else await db.from("kc_club_notfall").upsert({ person_id: ich.person_id, ...zeile, geaendert_am: jetzt() });
+        await protokoll(ich.person_id, "notfall_gesetzt", { gesetzt: !!(zeile.name || zeile.telefon) });
+        return json({ ok: true });
+      }
+
+      case "kalender_abo": {
+        // neuer Link (der alte wird ungültig) – gespeichert wird nur der Hash
+        const token = zufall();
+        await db.from("kc_club_kalender_abo").upsert({ person_id: ich.person_id, token_hash: await sha256(token), erstellt_am: jetzt(), zuletzt_abgerufen: null });
+        await protokoll(ich.person_id, "kalender_abo_erzeugt", {});
+        return json({ ok: true, url: `${SUPA}/functions/v1/kc-club?kalender=${token}` });
       }
 
       // ----- Aktionen / Ausflüge (KC-CLUB-AKTIONEN) -----

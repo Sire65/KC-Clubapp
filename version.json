@@ -1,10 +1,10 @@
 {
-  "version": "0.13.0",
+  "version": "0.14.0",
   "datum": "2026-09-28",
   "neu": [
-    "Mitglieder antippen: Handy, Festnetz, E-Mail, Adresse – anrufen, WhatsApp, Route, ins Telefonbuch",
-    "Einstellungen → Privatsphäre: selbst festlegen, was andere sehen",
-    "„Meine Daten“ mit Knopf „Korrektur an Hansi melden“",
-    "Aktionen als Kacheln (Name, Datum, Countdown) – antippen zeigt alle Details"
+    "🗓️ Terminfindung: mehrere Termine zur Auswahl ankreuzen",
+    "❔ Erinnerung 3 Tage vorher, wer noch nicht zu- oder abgesagt hat",
+    "🚗 Mitfahrgelegenheiten bei Treffen und Aktionen",
+    "📲 Termine im Handy-Kalender · 🆘 Notfallkontakt"
   ]
 }

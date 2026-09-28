@@ -293,4 +293,35 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/kontakt_handy/.test(mig) && /kontakte_sehen boolean not null default true/.test(mig), "Migration Kontakt fehlt");
 }
 
+// 27. 0.14.0: Terminfindung, Nachfassen, Mitfahren, Notfall, Handy-Kalender.
+{
+  for (const a of ["terminumfragen_liste", "terminumfrage_speichern", "terminumfrage_antwort", "terminumfrage_festlegen", "terminumfrage_loeschen",
+    "mitfahrt_anbieten", "mitfahrt_platz", "mitfahrt_loeschen", "notfall_setzen", "kalender_abo"]) assert.ok(aktionen.has(a), `Server-Aktion ${a} fehlt`);
+  // Terminfindung: nur Organisation startet; Festlegen übernimmt Antworten als Zu-/Absagen
+  assert.ok(/case "terminumfrage_speichern": \{\s*nurVorstand\(ich\);/.test(server), "Terminfindung ohne Rechteprüfung");
+  assert.ok(/kc_club_teilnahme"\)\.insert\(\(an \?\? \[\]\)\.map\(\(x: any\) => \(\{ treffen_id: t\.id, person_id: x\.person_id, antwort: x\.antwort/.test(server), "Antworten werden beim Festlegen nicht übernommen");
+  // Nachfassen: nur 3 Tage vorher, nur ohne Antwort, höchstens einmal
+  assert.ok(/const in3 = berlinTag\(new Date\(Date\.now\(\) \+ 3 \* 86400000\)\)/.test(server) && /\.filter\(\(id\) => !geantwortet\.has\(id\)\)/.test(server), "Nachfassen falsch");
+  assert.ok(/update\(\{ nachfass_gesendet_am: jetzt\(\) \}\)\.eq\("id", t\.id\)\.is\("nachfass_gesendet_am", null\)/.test(server), "Nachfassen ohne Doppelversand-Sperre");
+  // Mitfahren: Platzgrenze, Fahrer bekommt Bescheid, Löschen mit Sicherung
+  assert.ok(/if \(\(count \?\? 0\) >= m\.plaetze\) throw new Fehler\("Leider sind schon alle Plätze vergeben\."/.test(server), "Plätze werden nicht begrenzt");
+  // Notfall: nur selbst oder Organisation
+  assert.ok(/selbst \|\| ich\.vorstand \? await db\.from\("kc_club_notfall"\)/.test(server), "Notfallkontakt zu breit sichtbar");
+  // Kalender-Abo: nur Hash gespeichert, GET liefert iCalendar
+  assert.ok(/token_hash: await sha256\(token\)/.test(server.slice(server.indexOf('case "kalender_abo"'))), "Kalender-Link nicht gehasht");
+  assert.ok(/"Content-Type": "text\/calendar; charset=utf-8"/.test(server) && /if \(req\.method === "GET"\)/.test(server), "Kalender-Abo (GET/ICS) fehlt");
+  const code = server.slice(server.indexOf("const icsText"), server.indexOf("async function kalenderIcs"));
+  const f = new Function(code.replace(/: string\[\]/g, "").replace(/: unknown|: string/g, "") + ";return { icsText, icsFalten, tagDanach };")();
+  assert.equal(f.icsText("a,b;c\nd"), "a\\,b\;c\\nd");
+  assert.equal(f.tagDanach("2026-12-31"), "2027-01-01");
+  assert.ok(f.icsFalten("X".repeat(200)).split("\r\n").every((z) => z.length <= 75), "ICS-Zeilen zu lang");
+  // App
+  assert.ok(/id="terminfindung"/.test(html) && /function umfrageKarte\(u\)/.test(html), "Terminfindung in der App fehlt");
+  assert.ok(/mitfahrtBlock\("treffen", t\.id/.test(html) && /mitfahrtBlock\("aktion", a\.id/.test(html), "Mitfahren fehlt bei Treffen/Aktionen");
+  assert.ok(/function inKalender\(id\)/.test(html) && /webcal:/.test(html), "Kalender-Knöpfe fehlen");
+  assert.ok(/id="nfName"/.test(html) && /api\("notfall_setzen"/.test(html), "Notfallkontakt-Eingabe fehlt");
+  const mig = lies("supabase/migrations/20260928_kc_club_v14_terminfindung_mitfahren.sql");
+  for (const tab of ["kc_club_terminumfragen", "kc_club_mitfahrt", "kc_club_notfall", "kc_club_kalender_abo"]) assert.ok(mig.includes(`alter table ${tab} enable row level security`), `RLS ${tab} fehlt`);
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
