@@ -245,12 +245,14 @@
   .blatt-innen .knopf { padding: 16px; font-size: 1.05rem; text-align: left; }
   @media (max-width: 560px) { .titel { font-size: 1.12rem; } .rund { width: 42px; height: 42px; } .knopfreihe { gap: 6px; } .raster { grid-template-columns: 1fr 1fr; } .info h2 { font-size: 1.25rem; } }
   /* Verbindungs-LEDs & Rundinstrumente (KC-CLUB-VERBINDUNG) */
-  .leds { width: 26px; height: 48px; border-radius: 13px; border: none; padding: 0; background: rgba(0,0,0,.28); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 9px; cursor: pointer; flex: none; }
-  .led { width: 11px; height: 11px; border-radius: 50%; display: inline-block; flex: none; background: #8d8d8d; box-shadow: inset 0 -1px 2px rgba(0,0,0,.45); }
+  .leds { width: 26px; height: 48px; border-radius: 13px; border: none; padding: 0; background: rgba(0,0,0,.28); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; cursor: pointer; flex: none; }
+  .led { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex: none; background: #8d8d8d; box-shadow: inset 0 -1px 2px rgba(0,0,0,.45); }
   .led.gruen { background: #3ddc6f; box-shadow: 0 0 6px 2px rgba(61,220,111,.7); }
   .led.rot { background: #ff4545; box-shadow: 0 0 6px 2px rgba(255,69,69,.75); animation: ledPuls 1.2s infinite; }
   .led.blau { background: #3aa0ff; box-shadow: 0 0 6px 2px rgba(58,160,255,.75); }
   .led.grau { background: #a3a3a3; }
+  .led.gelb { background: #ffb020; box-shadow: 0 0 6px 2px rgba(255,176,32,.75); }
+  .vb-abschnitt { font-weight: 800; margin-top: 6px; padding-top: 10px; border-top: 2px solid var(--linie); }
   .led.daten { background: #5c4b1f; }
   .led.daten.an { background: #ffcf3a; box-shadow: 0 0 6px 2px rgba(255,207,58,.8); }
   .led.daten.flackern { animation: ledFlackern .16s steps(2) infinite; }
@@ -265,7 +267,7 @@
   .vb-tabelle { width: 100%; font-size: .9rem; border-collapse: collapse; }
   .vb-tabelle td { padding: 5px 0; border-bottom: 1px solid var(--linie); }
   .vb-tabelle td:last-child { text-align: right; font-weight: 700; }
-  @media (max-width: 560px) { .leds { height: 42px; } }
+  @media (max-width: 560px) { .leds { height: 42px; gap: 4px; } .led { width: 9px; height: 9px; } }
   /* Fotoalbum (KC-CLUB-FOTOALBUM) */
   .speicherbalken { height: 10px; border-radius: 6px; background: var(--karte2); overflow: hidden; margin: 8px 0 6px; }
   .speicherbalken i { display: block; height: 100%; background: var(--gruen); border-radius: 6px; }
@@ -304,7 +306,7 @@
         <div class="kopftext"><div class="marke-klein">KÖCHECLUB WERNE</div><button class="statuschip" id="statusChip" onclick="statusBlatt()">🟢 verfügbar ▾</button></div>
         <div class="kopfrechts">
           <div class="knopfreihe">
-            <button class="leds" id="leds" title="Verbindung zum Server" aria-label="Verbindung zum Server" onclick="verbindungBlatt()"><i class="led grau" id="ledStatus"></i><i class="led daten" id="ledDaten"></i></button>
+            <button class="leds" id="leds" title="Verbindung zum Server" aria-label="Verbindung zum Server" onclick="verbindungBlatt()"><i class="led grau" id="ledStatus"></i><i class="led grau" id="ledComm"></i><i class="led daten" id="ledDaten"></i></button>
             <button class="rund" title="Hell/Dunkel" onclick="dunkelUmschalten()">🌙</button>
             <button class="rund" title="Aktualisieren" onclick="neuLaden(true)">↻</button>
           </div>
@@ -506,7 +508,7 @@
   </div>
 </div>
 <div class="blatt versteckt" id="verbindungBlatt" onclick="if(event.target===this)this.classList.add('versteckt')">
-  <div class="blatt-innen" style="max-height:92vh;overflow:auto"><h3>📡 Verbindung zum Server</h3><div id="vbInhalt" style="display:grid;gap:10px"></div>
+  <div class="blatt-innen" style="max-height:92vh;overflow:auto"><h3>📡 Verbindung</h3><div id="vbInhalt" style="display:grid;gap:10px"></div>
     <button class="knopf" onclick="$('verbindungBlatt').classList.add('versteckt')">Schließen</button></div>
 </div>
 <div class="blatt versteckt" id="statusBlatt" onclick="if(event.target===this)this.classList.add('versteckt')">
@@ -545,7 +547,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.16.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.17.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -593,10 +595,11 @@ async function api(action, daten = {}) {
 
 // ---------- Verbindung zum Server (KC-CLUB-VERBINDUNG) ----------
 // Obere LED = Status (grün verbunden · rot keine Verbindung · blau Wartung · grau unbekannt/veraltet).
+// Mittlere LED = KC Communicator (Push & E-Mail): Zustand vom Server (KC-CLUB-COMMUNICATOR-STATUS), gelb = eingeschränkt.
 // Untere LED = Datenverkehr: leuchtet nur, während wirklich Daten mit dem Server (Supabase) laufen.
 const SUPA_HOST = new URL(API).host;
 const VB_VERALTET_MS = 3 * 60 * 1000; // ohne erfolgreiche Antwort länger als 3 Minuten → „veraltet“ (nie als OK anzeigen)
-const VB = { letzteOk: 0, letzterFehler: 0, fehlerText: "", anfragen: 0, fehler: 0, laufend: 0, zeiten: [], server: null, wartung: null, update: false, bytes: 0, test: null };
+const VB = { comm: null, commZeit: 0, letzteOk: 0, letzterFehler: 0, fehlerText: "", anfragen: 0, fehler: 0, laufend: 0, zeiten: [], server: null, wartung: null, update: false, bytes: 0, test: null };
 function vbStart() { VB.laufend++; vbDatenLed(); }
 function vbEnde(ok, ms, fehlerText) {
   VB.laufend = Math.max(0, VB.laufend - 1); VB.anfragen++;
@@ -616,10 +619,18 @@ function vbZustand() {
   if (Date.now() - VB.letzteOk > VB_VERALTET_MS) return ["grau", `Veraltet – letzte Antwort um ${fZeit.format(new Date(VB.letzteOk))} Uhr`];
   return ["gruen", "Verbunden mit dem Server"];
 }
+// Communicator: ohne Serververbindung oder mit altem Stand nie „grün“ zeigen
+function vbCommZustand() {
+  const [server] = vbZustand();
+  if (!VB.comm) return ["grau", "KC Communicator: noch unbekannt"];
+  if (server === "rot" || server === "grau" || Date.now() - VB.commZeit > VB_VERALTET_MS) return ["grau", "KC Communicator: Stand unbekannt (keine aktuelle Verbindung)"];
+  return [VB.comm.farbe, VB.comm.text];
+}
+function vbCommSetzen(c) { if (c) { VB.comm = c; VB.commZeit = Date.now(); } vbStatusLed(); }
 function vbStatusLed() {
   const l = $("ledStatus"); if (!l) return;
-  const [farbe, text] = vbZustand();
-  l.className = "led " + farbe; $("leds").title = text;
+  const [farbe, text] = vbZustand(), [cFarbe, cText] = vbCommZustand();
+  l.className = "led " + farbe; $("ledComm").className = "led " + cFarbe; $("leds").title = text + " · " + cText;
   if (!$("verbindungBlatt").classList.contains("versteckt")) vbBlattZeigen();
 }
 // echte Datenübertragungen, die nicht über api() laufen (Fotos/Vorschauen aus dem Supabase-Speicher)
@@ -647,7 +658,33 @@ function rundinstrument(titel, wert, max, einheit, zonen, dezimal = 0) {
     <div class="i-wert">${zahl}<small> ${einheit}</small></div><div class="i-titel">${esc(titel)}</div></div>`;
 }
 const mittel = (a) => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
-function verbindungBlatt() { vbBlattZeigen(); $("verbindungBlatt").classList.remove("versteckt"); }
+function verbindungBlatt() { vbBlattZeigen(); $("verbindungBlatt").classList.remove("versteckt"); communicatorPruefen(); }
+async function communicatorPruefen() {
+  try { vbCommSetzen(await api("communicator_status")); } catch { /* Serverfehler zeigt schon die obere LED */ }
+}
+const zustandText = { ok: "🟢 läuft", stoerung: "🔴 Störung", unbekannt: "⚪ unbekannt", aus: "– nicht eingerichtet" };
+function vbCommBlock() {
+  const c = VB.comm, [farbe, text] = vbCommZustand();
+  const zeile = (a, b) => `<tr><td>${a}</td><td>${b}</td></tr>`;
+  const zeit = (iso) => iso ? esc(zeitKurz(iso)) + " Uhr" : "–";
+  const kanal = (k) => c?.[k] ? `${zustandText[c[k].zustand] || "–"}${c[k].letzterErfolg ? ` · zuletzt ${zeit(c[k].letzterErfolg)}` : ""}` : "–";
+  const b = c?.bericht;
+  return `<div class="vb-abschnitt">📣 KC Communicator (Push &amp; E-Mail)</div>
+    <div class="vb-status"><i class="led ${farbe}"></i><b>${esc(text)}</b></div>
+    <table class="vb-tabelle">
+      ${zeile("Push", kanal("push"))}
+      ${zeile("E-Mail", kanal("email"))}
+      ${zeile("Zugestellt (24 Std.)", b?.erfolg != null ? b.erfolg.toLocaleString("de-DE", { maximumFractionDigits: 1 }) + " %" : "–")}
+      ${zeile("Ø Zustellzeit Push / E-Mail", b ? `${b.pushMs != null ? (b.pushMs / 1000).toLocaleString("de-DE", { maximumFractionDigits: 1 }) + " s" : "–"} / ${b.mailMs != null ? (b.mailMs / 1000).toLocaleString("de-DE", { maximumFractionDigits: 1 }) + " s" : "–"}` : "–")}
+      ${zeile("Warteschlange / Fehler", b ? `${b.warteschlange} / ${b.fehler}` : "–")}
+      ${zeile("Club-Benachrichtigungen (7 Tage)", c?.club ? `${c.club.gesendet} zugestellt · ${c.club.offen} offen · ${c.club.fehler} Fehler` : "–")}
+      ${zeile("Letzte Club-Benachrichtigung", zeit(c?.club?.letzte))}
+      ${c?.erreichbar ? zeile("Erreichbar", c.erreichbar.ok ? `ja${c.erreichbar.ms != null ? ` (${c.erreichbar.ms} ms)` : ""}` : "nein") : ""}
+      ${zeile("Stand des Berichts", zeit(b?.zeit))}
+      ${ICH?.admin && c ? zeile("Versandwege", [...(c.push?.wege || []), ...(c.email?.wege || [])].map((w) => `${esc(w.anbieter)} (${w.rolle === "primary" ? "Haupt" : w.rolle === "fallback" ? "Ersatz" : esc(w.rolle)}): ${{ healthy: "ok", unknown: "unbekannt", degraded: "eingeschränkt", down: "Störung", unhealthy: "Störung" }[w.zustand] || esc(w.zustand)}${w.fehlerInFolge ? `, ${w.fehlerInFolge}× Fehler` : ""}`).join("<br>") || "–") : ""}
+    </table>
+    <button class="knopf" onclick="$('verbindungBlatt').classList.add('versteckt');testAnMichStarten()">🧪 Test-Benachrichtigung an mich</button>`;
+}
 function vbBlattZeigen() {
   const [farbe, text] = vbZustand(), t = VB.test, c = navigator.connection;
   const antwort = t?.ping ?? (VB.zeiten.length ? Math.round(mittel(VB.zeiten)) : null);
@@ -669,8 +706,9 @@ function vbBlattZeigen() {
       ${VB.wartung?.an ? `<tr><td>Wartung seit</td><td>${VB.wartung.seit ? esc(zeitKurz(VB.wartung.seit)) + " Uhr" : "–"}</td></tr>` : ""}
     </table>
     <button class="knopf haupt" id="vbTestKnopf" onclick="verbindungTesten()" ${VB.test?.laeuft ? "disabled" : ""}>▶️ Verbindung testen</button>
+    ${vbCommBlock()}
     ${ICH?.admin ? `<button class="knopf" onclick="wartungUmschalten()">${VB.wartung?.an ? "✅ Wartung beenden" : "🔧 Wartung ankündigen (LED blau)"}</button>` : ""}
-    <p class="hinweis" style="font-size:.85rem;margin:0">Obere LED: 🟢 verbunden · 🔴 keine Verbindung · 🔵 Wartung · ⚪ unbekannt/veraltet. Untere LED flackert nur, wenn gerade wirklich Daten übertragen werden.</p>`;
+    <p class="hinweis" style="font-size:.85rem;margin:0">Obere LED = Server (Supabase): 🟢 verbunden · 🔴 keine Verbindung · 🔵 Wartung · ⚪ unbekannt/veraltet.<br>Mittlere LED = KC Communicator: 🟢 läuft · 🟡 eingeschränkt · 🔴 Störung · 🔵 Versand pausiert · ⚪ unbekannt.<br>Untere LED flackert nur, wenn gerade wirklich Daten übertragen werden.</p>`;
 }
 async function verbindungTesten() {
   if (VB.test?.laeuft) return;
@@ -689,6 +727,7 @@ async function verbindungTesten() {
     t0 = performance.now(); const r = await api("ping", { last });
     if (r.empfangen !== last.length) throw new Error("Upload unvollständig");
     VB.test.up = Math.round((UP * 8 / 1e6) / Math.max(0.05, (performance.now() - t0 - ping) / 1000) * 10) / 10;
+    text("⏳ KC Communicator prüfen …"); await communicatorPruefen();
     VB.test.zeit = Date.now(); VB.test.laeuft = false; vbBlattZeigen();
     melde(`✔ Verbindung in Ordnung – ${ping} ms, ↓ ${VB.test.down.toLocaleString("de-DE")} / ↑ ${VB.test.up.toLocaleString("de-DE")} Mbit/s`);
   } catch (e) {
@@ -881,7 +920,7 @@ function wichtigZeigen() {
 async function neuLaden(vonHand) {
   try {
     INIT = await api("init"); ICH = INIT.ich;
-    VB.wartung = INIT.wartung || null; VB.server = INIT.server || null; vbStatusLed();
+    VB.wartung = INIT.wartung || null; VB.server = INIT.server || null; vbCommSetzen(INIT.communicator || null);
     $("begruessung").textContent = "Hallo " + ICH.vorname + "!";
     $("statusChip").textContent = statusText(INIT.status) + " ▾";
     $("ichName").textContent = ICH.name + (ICH.aemter?.length ? ` (${ICH.aemter.join(", ")})` : ICH.admin ? " (Admin)" : "");

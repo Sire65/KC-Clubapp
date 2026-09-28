@@ -399,4 +399,23 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/add column if not exists wartung boolean not null default false/.test(mig) && /'KC_CLUBAPP'/.test(mig), "Registry-Migration fehlt");
 }
 
+// 31. 0.17.0: Communicator-LED – Zustand des KC Communicators (nur lesen), nie „grün“ ohne aktuelle Serververbindung.
+{
+  assert.ok(aktionen.has("communicator_status"), "Server-Aktion communicator_status fehlt");
+  const cs = server.slice(server.indexOf("async function communicatorStatus"), server.indexOf("// ---------- Anmeldung"));
+  assert.ok(!/\.(insert|update|upsert|delete)\(/.test(cs), "Communicator-Status darf nichts verändern");
+  assert.ok(/kc_communication_health_snapshots/.test(cs) && /kc_communication_provider_routes/.test(cs) && /eq\("source_program", "kc-club"\)/.test(cs), "Quellen des Communicator-Status fehlen");
+  assert.ok(/method: "OPTIONS"/.test(cs), "Erreichbarkeit wird nicht ohne Versand geprüft");
+  assert.ok(/alterMin > COMM_BERICHT_VERALTET_MIN\) \{ farbe = "grau"/.test(cs), "veralteter Bericht wird nicht grau");
+  assert.ok(/\.\.\.\(ich\.admin \? \{ wege:/.test(cs), "Versandwege nicht auf Admin beschränkt");
+  assert.ok(/id="ledComm"/.test(html) && /communicator, notfall/.test(server), "Communicator-LED fehlt");
+  const code = html.slice(html.indexOf("const VB_VERALTET_MS"), html.indexOf("function vbCommSetzen"));
+  const f = new Function("navigator", "fZeit", code + ";return { VB, vbCommZustand };")({ onLine: true }, { format: () => "" });
+  assert.equal(f.vbCommZustand()[0], "grau", "Communicator ohne Stand nicht grau");
+  f.VB.comm = { farbe: "gruen", text: "ok" }; f.VB.commZeit = Date.now();
+  assert.equal(f.vbCommZustand()[0], "grau", "Communicator grün ohne Serververbindung");
+  f.VB.letzteOk = Date.now(); assert.equal(f.vbCommZustand()[0], "gruen");
+  f.VB.commZeit = Date.now() - 4 * 60000; assert.equal(f.vbCommZustand()[0], "grau", "veralteter Communicator-Stand als OK");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

@@ -9,14 +9,15 @@
 //           KC-CLUB-GEBURTSTAG-FREIGABE (0.7.0), KC-CLUB-GEBURTSTAG-PUSH (0.8.0), KC-CLUB-VERANSTALTUNG (0.8.0),
 //           KC-CLUB-PROTOKOLLE (0.9.0), KC-CLUB-AUFGABEN (0.9.0), KC-CLUB-AKTIONEN (0.10.0), KC-CLUB-LOESCHEN (0.11.0),
 //           KC-CLUB-KONTAKT (0.13.0), KC-CLUB-TERMINFINDUNG, KC-CLUB-NACHFASSEN, KC-CLUB-MITFAHREN, KC-CLUB-NOTFALL, KC-CLUB-KALENDERABO (0.14.0),
-//           KC-CLUB-FOTOALBUM (0.15.0), KC-CLUB-VERBINDUNG (0.16.0)
+//           KC-CLUB-FOTOALBUM (0.15.0), KC-CLUB-VERBINDUNG (0.16.0),
+//           KC-CLUB-COMMUNICATOR-STATUS (0.17.0)
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.16.0";
+const SERVER_VERSION = "0.17.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -204,6 +205,57 @@ function testDaten(n: number) {
   const b = new Uint8Array(Math.ceil(n * 3 / 4)); for (let i = 0; i < b.length; i += 65536) crypto.getRandomValues(b.subarray(i, i + 65536));
   let s = ""; for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode(...b.subarray(i, i + 0x8000));
   return btoa(s).slice(0, n);
+}
+
+// ---------- Zustand KC Communicator (KC-CLUB-COMMUNICATOR-STATUS) ----------
+// Nur lesen: Einstellungen, Versandwege (provider_routes), Gesundheitsbericht (alle 5 Min.) und die eigenen Versandaufträge.
+// Farbe: rot = Störung · blau = Versand pausiert (Wartung) · gelb = eingeschränkt · grün = läuft · grau = unbekannt/veraltet.
+const COMM_BERICHT_VERALTET_MIN = 15;
+const COMM_OK = ["sent", "displayed", "opened", "delivered", "acknowledged"];
+const COMM_OFFEN = ["queued", "pending", "processing", "retry_scheduled", "scheduled"];
+const COMM_FEHLER = ["failed", "dead_lettered", "error"];
+async function communicatorStatus(ich: Ich, erreichbarkeit = false) {
+  const seit7 = new Date(Date.now() - 7 * 86400000).toISOString();
+  const [{ data: st }, { data: wege }, { data: bericht }, { data: auftr }, erreichbar] = await Promise.all([
+    db.from("kc_communication_settings").select("enabled,dispatch_enabled").eq("id", "global").maybeSingle(),
+    db.from("kc_communication_provider_routes").select("channel,provider_id,role,enabled,health_status,last_success_at,last_failure_at,consecutive_failures").eq("enabled", true).in("channel", ["push", "email"]),
+    db.from("kc_communication_health_snapshots").select("created_at,success_rate,avg_push_ms,avg_email_ms,queued,retrying,failed,active_devices").order("created_at", { ascending: false }).limit(1).maybeSingle(),
+    db.from("kc_communication_requests").select("status,channel,sent_at,created_at").eq("source_program", "kc-club").gte("created_at", seit7).order("created_at", { ascending: false }).limit(500),
+    erreichbarkeit ? (async () => {
+      const t0 = Date.now();
+      try { const r = await fetch(`${SUPA}/functions/v1/kc-communication-router`, { method: "OPTIONS", signal: AbortSignal.timeout(4000) }); return { ok: r.status < 500, ms: Date.now() - t0 }; }
+      catch { return { ok: false, ms: null }; }
+    })() : Promise.resolve(null),
+  ]);
+  const liste = auftr ?? [];
+  const zahl = (arr: string[]) => liste.filter((x: any) => arr.includes(x.status)).length;
+  const seit24 = new Date(Date.now() - 86400000).toISOString();
+  const club = { gesendet: zahl(COMM_OK), offen: zahl(COMM_OFFEN), fehler: zahl(COMM_FEHLER),
+    fehler24: liste.filter((x: any) => COMM_FEHLER.includes(x.status) && x.created_at >= seit24).length,
+    letzte: liste.find((x: any) => COMM_OK.includes(x.status))?.sent_at ?? null };
+  const kanal = (k: string) => {
+    const w = (wege ?? []).filter((x: any) => x.channel === k);
+    if (!w.length) return { zustand: "aus", letzterErfolg: null };
+    const gut = w.some((x: any) => x.health_status === "healthy" && (x.consecutive_failures ?? 0) < 3);
+    const kaputt = w.every((x: any) => (x.consecutive_failures ?? 0) >= 3 || ["down", "unhealthy", "failed"].includes(x.health_status));
+    return { zustand: kaputt ? "stoerung" : gut ? "ok" : "unbekannt", letzterErfolg: w.map((x: any) => x.last_success_at).filter(Boolean).sort().pop() ?? null,
+      ...(ich.admin ? { wege: w.map((x: any) => ({ anbieter: x.provider_id, rolle: x.role, zustand: x.health_status, fehlerInFolge: x.consecutive_failures })) } : {}) };
+  };
+  const push = kanal("push"), email = kanal("email");
+  const alterMin = bericht ? (Date.now() - new Date(bericht.created_at).getTime()) / 60000 : null;
+  let farbe: string, text: string;
+  if (!st?.enabled) { farbe = "rot"; text = "KC Communicator ist ausgeschaltet – es gehen keine Benachrichtigungen raus"; }
+  else if (erreichbar && !erreichbar.ok) { farbe = "rot"; text = "KC Communicator antwortet nicht"; }
+  else if (!st.dispatch_enabled) { farbe = "blau"; text = "Versand pausiert (Wartung) – Benachrichtigungen werden gesammelt und später verschickt"; }
+  else if (push.zustand === "stoerung" && email.zustand === "stoerung") { farbe = "rot"; text = "Störung: weder Push noch E-Mail kommen an"; }
+  else if (alterMin == null || alterMin > COMM_BERICHT_VERALTET_MIN) { farbe = "grau"; text = alterMin == null ? "Kein Zustandsbericht vorhanden" : `Zustandsbericht veraltet (${Math.round(alterMin)} Min. alt)`; }
+  else if (push.zustand === "stoerung" || email.zustand === "stoerung" || (bericht?.failed ?? 0) > 0 || club.fehler24 > 0 || Number(bericht?.success_rate ?? 100) < 90) {
+    farbe = "gelb"; text = push.zustand === "stoerung" ? "Eingeschränkt: Push gestört – es geht per E-Mail raus" : email.zustand === "stoerung" ? "Eingeschränkt: E-Mail gestört – Push läuft" : "Eingeschränkt: einzelne Benachrichtigungen fehlgeschlagen";
+  }
+  else { farbe = "gruen"; text = "KC Communicator läuft – Push und E-Mail werden zugestellt"; }
+  return { farbe, text, erreichbar, push, email, club,
+    bericht: bericht ? { zeit: bericht.created_at, erfolg: Number(bericht.success_rate), pushMs: Math.round(Number(bericht.avg_push_ms) || 0) || null, mailMs: Math.round(Number(bericht.avg_email_ms) || 0) || null,
+      warteschlange: (bericht.queued ?? 0) + (bericht.retrying ?? 0), fehler: bericht.failed ?? 0, geraete: bericht.active_devices ?? null } : null };
 }
 
 // ---------- Anmeldung ----------
@@ -825,9 +877,10 @@ Köcheclub Werne`,
           db.from("kc_club_kalender_abo").select("erstellt_am,zuletzt_abgerufen").eq("person_id", ich.person_id).maybeSingle(),
           wartungLesen(),
         ]);
+        const communicator = await communicatorStatus(ich).catch(() => null);
         const kontaktFreigabe = Object.fromEntries(KONTAKT_FELDER.map((f) => [f, !!(kf ?? []).find((x: any) => x.bereich === "kontakt_" + f)?.erlaubt]));
         const benachrichtigung = Object.fromEntries(BEREICHE.map((b) => { const x: any = (wahl ?? []).find((y: any) => y.bereich === b); return [b, x ? { push: x.push, email: x.email } : STANDARD_WAHL[b]]; }));
-        return json({ ich, status: meinStatus, server: SERVER_VERSION, ungelesen, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, notfall: nf ?? null, kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null });
+        return json({ ich, status: meinStatus, server: SERVER_VERSION, ungelesen, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, communicator, notfall: nf ?? null, kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null });
       }
 
       case "mitglieder": {
@@ -1909,6 +1962,10 @@ Köcheclub Werne`,
         const last = typeof p.last === "string" ? p.last.length : 0;
         if (last > MAX_TESTDATEN * 1.1) throw new Fehler("Testdaten zu groß.");
         return json({ ok: true, server: SERVER_VERSION, zeit: jetzt(), dbMs, wartung, empfangen: last, ...(groesse ? { daten: testDaten(groesse) } : {}) });
+      }
+
+      case "communicator_status": {
+        return json(await communicatorStatus(ich, true));
       }
 
       case "wartung_setzen": {
