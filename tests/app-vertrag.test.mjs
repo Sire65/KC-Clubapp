@@ -113,4 +113,7 @@ assert.ok(/md: String\(m\.birth_date\)\.slice\(5, 10\)/.test(server), "Geburtsta
 assert.ok(!/birth_date: m\.birth_date|birth_date\s*[,}]\s*\)\)/.test(server.slice(server.indexOf('case "kalender"'), server.indexOf('case "benachrichtigung_setzen"'))), "Geburtsjahr darf nicht an die App gehen");
 assert.ok(/\[\$\("kalGitter"\), kalBlaettern\]/.test(html), "Wischen im Kalender fehlt");
 
+// 17. 0.6.2: Zu-/Absage-Hinweis in „Heute wichtig“ erst 7 Tage vor dem Treffen.
+assert.ok(/ZUSAGE_TAGE_VORHER = 7/.test(html) && /new Date\(t\.beginn\) - Date\.now\(\) <= ZUSAGE_TAGE_VORHER \* 86400000/.test(html), "Zusage-Hinweis muss auf 7 Tage vorher begrenzt sein");
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

@@ -1,5 +1,10 @@
 # Änderungen
 
+## 0.6.2 – 2026-09-28 (DEV)
+
+- „Heute wichtig“: Hinweis „Bitte zu- oder absagen“ erscheint erst 7 Tage vor dem Treffen (vorher nicht), jetzt mit Datum.
+- Daten: doppelt angelegtes Treffen 30.10. (1ea3e2b4…) auf Anweisung ohne Benachrichtigung entfernt (Protokoll-Eintrag vorhanden).
+
 ## 0.6.1 – 2026-09-28 (DEV)
 
 - Doppel-Tipp-Sperre beim Speichern von Treffen und Vorschlägen (Anlass: Treffen 30.10. wurde doppelt angelegt).

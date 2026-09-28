@@ -407,7 +407,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.6.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.6.2"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -598,8 +598,10 @@ function wichtigZeigen() {
     : `<div class="zeile" style="cursor:pointer" onclick="direkt('${g.person_id}')">🎂 <b>${esc(g.name)}</b> hat heute Geburtstag<button class="knopf haupt klein" style="margin-left:auto">💬 Gratulieren</button></div>`);
   const nd = INIT?.naechsterDienst;
   if (nd) h.push(`<div class="zeile" style="cursor:pointer" onclick="dpNurIch()">🗓️ Nächster Dienst: <b>${nd.datum === heuteIso() ? "heute" : esc(fTagDp.format(new Date(nd.datum + "T12:00:00Z")))}, ${esc(nd.start)}–${esc(nd.ende)} Uhr</b>${nd.bereich ? " · " + esc(nd.bereich) : ""}<span style="margin-left:auto">›</span></div>`);
-  const t = INIT?.naechstesTreffen;
-  if (t && !t.meine) h.push(`<div class="zeile" style="cursor:pointer" onclick="zeige('termine')">📅 Bitte für <b>${esc(t.titel)}</b> zu- oder absagen<span style="margin-left:auto">›</span></div>`);
+  // Zu-/Absage-Hinweis erst 7 Tage vor dem Treffen (vorher bleibt „Heute wichtig“ ruhig)
+  const t = INIT?.naechstesTreffen, ZUSAGE_TAGE_VORHER = 7;
+  if (t && !t.meine && new Date(t.beginn) - Date.now() <= ZUSAGE_TAGE_VORHER * 86400000)
+    h.push(`<div class="zeile" style="cursor:pointer" onclick="zeige('termine')">📅 Bitte für <b>${esc(t.titel)}</b> am ${esc(wann(t.beginn))} zu- oder absagen<span style="margin-left:auto">›</span></div>`);
   if (pushMoeglich() && Notification.permission !== "granted") h.push(`<div class="zeile">🔔 Benachrichtigungen sind aus<button class="knopf haupt klein" style="margin-left:auto" onclick="pushEinschalten()">Einschalten</button></div>`);
   $("wichtig").innerHTML = h.join("") || "Alles erledigt 👍";
 }
