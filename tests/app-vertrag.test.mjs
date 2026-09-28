@@ -269,4 +269,28 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.equal(zr({ von: "2027-05-11", bis: "2027-05-11" }), "11.05.2027");
 }
 
+// 26. 0.13.0: Mitglieder-Details (KC-CLUB-KONTAKT) – nur Freigegebenes, Admin alles, Aushilfen nichts.
+{
+  for (const a of ["mitglied_details", "kontakt_freigabe"]) assert.ok(aktionen.has(a), `Server-Aktion ${a} fehlt`);
+  assert.ok(/const darf = \(f: string\) => selbst \|\| ich\.admin \|\| \(ich\.kontakte && frei\("kontakt_" \+ f\)\);/.test(server), "Sichtbarkeitsregel Kontaktdaten falsch");
+  assert.ok(/kontakte: r \? r\.kontakte_sehen !== false : true/.test(server), "Recht „Kontakte sehen“ nicht aus der Rollen-Registry");
+  assert.ok(/for \(const f of KONTAKT_FELDER\) if \(darf\(f\) && werte\[f\]\) kontakt\[f\] = werte\[f\];/.test(server), "nicht freigegebene Angaben würden ausgeliefert");
+  assert.ok(/const festnetz = darf\("festnetz"\) \? await festnetzAusManager/.test(server), "Festnetz wird ohne Freigabe gelesen");
+  assert.ok(!/from\(AKTIONEN_QUELLE\.tabelle\)\.(update|insert|upsert|delete)/.test(server), "KC-Manager-Daten dürfen nicht geändert werden");
+  // Geburtsjahr nie an die App
+  assert.ok(/geburtstag: pe\.birth_date && \(selbst \|\| frei\("geburtstag"\)\) \? String\(pe\.birth_date\)\.slice\(5, 10\)/.test(server), "Geburtsjahr/ungefreigebener Geburtstag ausgeliefert");
+  // App
+  for (const f of ["handy", "festnetz", "mail", "adresse"]) assert.ok(html.includes(`id="setKontakt_${f}"`), `Schalter ${f} fehlt`);
+  assert.ok(/onclick="mitgliedOeffnen\('\$\{m\.person_id\}'\)"/.test(html), "Mitglied in der Liste nicht antippbar");
+  assert.ok(/async function korrekturMelden\(\)/.test(html) && /x\.admin/.test(html), "Korrektur an Admin fehlt");
+  assert.ok(/s\.v === "mitglied" && s\.id\) mitgliedOeffnen\(s\.id, true\)/.test(html), "Zurück aus Mitglied-Details fehlt");
+  const code = html.slice(html.indexOf("const nurZiffern"), html.indexOf("const adresseText"));
+  const waNummer = new Function(code + ";return waNummer;")();
+  assert.equal(waNummer("0171 1234567"), "491711234567");
+  assert.equal(waNummer("+49 171 1234567"), "491711234567");
+  assert.equal(waNummer("0049 171 1234567"), "491711234567");
+  const mig = lies("supabase/migrations/20260928_kc_club_v13_kontakt_freigabe.sql");
+  assert.ok(/kontakt_handy/.test(mig) && /kontakte_sehen boolean not null default true/.test(mig), "Migration Kontakt fehlt");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

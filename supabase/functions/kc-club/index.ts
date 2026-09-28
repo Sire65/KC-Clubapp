@@ -7,14 +7,15 @@
 //           KC-CLUB-VORSCHLAG (0.2.0), KC-CLUB-OHNEAPP (0.2.0), KC-CLUB-DIENSTE (0.2.0),
 //           KC-CLUB-BENACHRICHTIGUNG (0.3.0), KC-CLUB-DIENSTERINNERUNG (0.3.0), KC-CLUB-KALENDER (0.6.0),
 //           KC-CLUB-GEBURTSTAG-FREIGABE (0.7.0), KC-CLUB-GEBURTSTAG-PUSH (0.8.0), KC-CLUB-VERANSTALTUNG (0.8.0),
-//           KC-CLUB-PROTOKOLLE (0.9.0), KC-CLUB-AUFGABEN (0.9.0), KC-CLUB-AKTIONEN (0.10.0), KC-CLUB-LOESCHEN (0.11.0)
+//           KC-CLUB-PROTOKOLLE (0.9.0), KC-CLUB-AUFGABEN (0.9.0), KC-CLUB-AKTIONEN (0.10.0), KC-CLUB-LOESCHEN (0.11.0),
+//           KC-CLUB-KONTAKT (0.13.0)
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.11.0";
+const SERVER_VERSION = "0.13.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -119,7 +120,7 @@ async function senden(eventKey: string, personIds: string[], vars: Record<string
 }
 
 // ---------- Anmeldung ----------
-type Ich = { person_id: string; name: string; vorname: string; admin: boolean; vorstand: boolean; aemter: string[]; protokolle: boolean };
+type Ich = { person_id: string; name: string; vorname: string; admin: boolean; vorstand: boolean; aemter: string[]; protokolle: boolean; kontakte: boolean };
 async function anmelden(req: Request): Promise<Ich> {
   const token = req.headers.get("x-club-token") ?? "";
   if (!/^[0-9a-f]{32,96}$/.test(token)) throw new Fehler("Kein Zugang – bitte den persönlichen Link neu öffnen.", 401);
@@ -133,7 +134,9 @@ async function anmelden(req: Request): Promise<Ich> {
   db.from("kc_club_zugang").update({ zuletzt_gesehen: jetzt(), app_version: txt(req.headers.get("x-club-version"), 20) || null }).eq("person_id", z.person_id).then(() => {});
   return { person_id: p.person_id, name: p.display_name, vorname: vorname(p), admin: !!r?.ist_admin, vorstand: !!(r?.ist_vorstand || r?.ist_admin), aemter: r?.aemter ?? [],
     // Sitzungsprotokolle: Recht aus der Rollen-Registry (Standard ja; Aushilfen nein)
-    protokolle: r ? r.protokolle_lesen !== false : true };
+    protokolle: r ? r.protokolle_lesen !== false : true,
+    // Kontaktdaten anderer (sofern freigegeben): Rollen-Registry (Standard ja; Aushilfen nein)
+    kontakte: r ? r.kontakte_sehen !== false : true };
 }
 // „vorstand“ ist intern das Recht, Treffen/Veranstaltungen/Abstimmungen anzulegen (im Club: Clubsprecher, Kassenwart, Admin)
 const nurVorstand = (ich: Ich) => { if (!ich.vorstand) throw new Fehler("Das dürfen nur Clubsprecher, Kassenwart und Admin.", 403); };
@@ -365,6 +368,17 @@ async function aktionenLesen(ich: Ich) {
   return { aktionen, stand };
 }
 
+// ---------- Mitglieder-Details (KC-CLUB-KONTAKT) ----------
+// Handy, E-Mail, Adresse aus kc_core_people (führend); Festnetz nur aus dem KC Manager (Mitglieder, gleiche Zuordnung wie bei Aktionen).
+// Sichtbar: eigene Daten immer; Admin alles; sonst nur, was das Mitglied freigegeben hat – und nur mit Recht „Kontakte sehen“.
+const KONTAKT_FELDER = ["handy", "festnetz", "mail", "adresse"];
+async function festnetzAusManager(p: any) {
+  const { data: mg } = await db.from(AKTIONEN_QUELLE.tabelle).select("payload").eq("org_id", ORG).eq("section_key", AKTIONEN_QUELLE.mitglieder).maybeSingle();
+  const schluessel = namensSchluessel(p.given_name || p.display_name.split(" ")[0], p.family_name || p.display_name.split(" ").slice(-1)[0]);
+  const m: any = (Array.isArray(mg?.payload?.data) ? mg.payload.data : []).find((x: any) => namensSchluessel(x.firstName, x.lastName) === schluessel);
+  return txt(m?.phone, 40) || null;
+}
+
 // ---------- Nachrichten ----------
 async function binTeilnehmer(threadId: string, person: string) {
   const { data } = await db.from("kc_communication_thread_participants").select("thread_id").eq("thread_id", threadId).eq("person_id", person).maybeSingle();
@@ -549,8 +563,10 @@ Deno.serve(async (req) => {
           const { data: gl } = vids.length ? await db.from("kc_club_sitzungsprotokoll_gelesen").select("protokoll_id,version").eq("person_id", ich.person_id).in("protokoll_id", vids) : { data: [] as any[] };
           protokolleUngelesen = (pv ?? []).filter((x: any) => !(gl ?? []).some((g: any) => g.protokoll_id === x.id && g.version >= x.version)).length;
         }
+        const { data: kf } = await db.from("kc_club_freigaben").select("bereich,erlaubt").eq("person_id", ich.person_id).like("bereich", "kontakt_%");
+        const kontaktFreigabe = Object.fromEntries(KONTAKT_FELDER.map((f) => [f, !!(kf ?? []).find((x: any) => x.bereich === "kontakt_" + f)?.erlaubt]));
         const benachrichtigung = Object.fromEntries(BEREICHE.map((b) => { const x: any = (wahl ?? []).find((y: any) => y.bereich === b); return [b, x ? { push: x.push, email: x.email } : STANDARD_WAHL[b]]; }));
-        return json({ ich, status: meinStatus, server: SERVER_VERSION, ungelesen, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, hatGeburtstag, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null });
+        return json({ ich, status: meinStatus, server: SERVER_VERSION, ungelesen, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, hatGeburtstag, kontaktFreigabe, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null });
       }
 
       case "mitglieder": {
@@ -566,11 +582,11 @@ Deno.serve(async (req) => {
           aemter,
           mitglieder: leute.map((m) => ({
             person_id: m.person_id, name: m.display_name, vorname: vorname(m),
-            vorstand: !!(r.get(m.person_id) as any)?.ist_vorstand, aemter: (r.get(m.person_id) as any)?.aemter ?? [],
+            vorstand: !!(r.get(m.person_id) as any)?.ist_vorstand, aemter: (r.get(m.person_id) as any)?.aemter ?? [], admin: !!(r.get(m.person_id) as any)?.ist_admin,
             status: st.get(m.person_id) ?? null,
             // für alle nur grob: in den letzten 14 Tagen in der App gewesen (genaue Zeit nur für den Admin)
             aktiv: !!(z.get(m.person_id) as any)?.zuletzt_gesehen && Date.now() - new Date((z.get(m.person_id) as any).zuletzt_gesehen).getTime() < 14 * 86400000,
-            ...(ich.admin ? { protokolle: (r.get(m.person_id) as any)?.protokolle_lesen !== false, app: !!(z.get(m.person_id) as any)?.aktiv, zuletzt: (z.get(m.person_id) as any)?.zuletzt_gesehen ?? null, push: ps.has(m.person_id), mail: !!m.email } : {}),
+            ...(ich.admin ? { kontakte: (r.get(m.person_id) as any)?.kontakte_sehen !== false, protokolle: (r.get(m.person_id) as any)?.protokolle_lesen !== false, app: !!(z.get(m.person_id) as any)?.aktiv, zuletzt: (z.get(m.person_id) as any)?.zuletzt_gesehen ?? null, push: ps.has(m.person_id), mail: !!m.email } : {}),
           })),
         });
       }
@@ -810,6 +826,45 @@ Deno.serve(async (req) => {
         await db.from("kc_club_benachrichtigung").upsert({ person_id: ich.person_id, bereich, push: !!p.push, email: !!p.email, geaendert_am: jetzt() });
         await protokoll(ich.person_id, "benachrichtigung_gesetzt", { bereich, push: !!p.push, email: !!p.email });
         return json({ ok: true });
+      }
+
+      case "kontakt_freigabe": {
+        const feld = String(p.feld || "");
+        if (!KONTAKT_FELDER.includes(feld)) throw new Fehler("Unbekannte Angabe.");
+        await db.from("kc_club_freigaben").upsert({ person_id: ich.person_id, bereich: "kontakt_" + feld, erlaubt: !!p.erlaubt, geaendert_am: jetzt() });
+        await protokoll(ich.person_id, "kontakt_freigabe", { feld, erlaubt: !!p.erlaubt });
+        return json({ ok: true });
+      }
+
+      case "mitglied_details": {
+        const pid = String(p.person_id || "");
+        const { data: pe } = await db.from("kc_core_people").select("person_id,display_name,given_name,family_name,preferred_name,phone,email,street,postal_code,city,birth_date,active,org_id")
+          .eq("person_id", pid).maybeSingle();
+        if (!pe?.active || pe.org_id !== ORG) throw new Fehler("Mitglied nicht gefunden.", 404);
+        const selbst = pid === ich.person_id;
+        const [{ data: fr }, { data: rolle }, st] = await Promise.all([
+          db.from("kc_club_freigaben").select("bereich,erlaubt").eq("person_id", pid),
+          db.from("kc_club_rollen").select("aemter").eq("person_id", pid).maybeSingle(),
+          statusMap([pid]),
+        ]);
+        const frei = (b: string) => !!(fr ?? []).find((x: any) => x.bereich === b)?.erlaubt;
+        const darf = (f: string) => selbst || ich.admin || (ich.kontakte && frei("kontakt_" + f));
+        const festnetz = darf("festnetz") ? await festnetzAusManager(pe) : null;
+        const werte: Record<string, unknown> = {
+          handy: txt(pe.phone, 40) || null, festnetz, mail: txt(pe.email, 120) || null,
+          adresse: pe.street || pe.city ? { strasse: txt(pe.street, 120), plz: txt(pe.postal_code, 10), ort: txt(pe.city, 80) } : null,
+        };
+        const kontakt: Record<string, unknown> = {};
+        for (const f of KONTAKT_FELDER) if (darf(f) && werte[f]) kontakt[f] = werte[f];
+        await protokoll(ich.person_id, "mitglied_details", { fuer: pid, felder: Object.keys(kontakt) });
+        return json({
+          person_id: pid, name: pe.display_name, vorname: vorname(pe), aemter: rolle?.aemter ?? [], status: st.get(pid) ?? null, selbst,
+          geburtstag: pe.birth_date && (selbst || frei("geburtstag")) ? String(pe.birth_date).slice(5, 10) : null,
+          kontakt,
+          // welche Angaben freigegeben sind (nur für mich selbst bzw. Admin – für „nur für dich sichtbar“)
+          ...(selbst || ich.admin ? { freigegeben: Object.fromEntries(KONTAKT_FELDER.map((f) => [f, frei("kontakt_" + f)])) } : {}),
+          darfKontakte: ich.kontakte || ich.admin,
+        });
       }
 
       case "geburtstag_freigabe": {
@@ -1380,7 +1435,7 @@ Deno.serve(async (req) => {
         const pid = String(p.person_id || "");
         const aemter = (Array.isArray(p.aemter) ? p.aemter : []).map((x: unknown) => txt(x, 40)).filter(Boolean).slice(0, 5);
         await db.from("kc_club_rollen").upsert({ person_id: pid, ist_vorstand: !!p.vorstand, ...(pid === ich.person_id ? {} : { ist_admin: !!p.admin }), aemter,
-          ...(typeof p.protokolle === "boolean" ? { protokolle_lesen: p.protokolle } : {}), geaendert_am: jetzt() });
+          ...(typeof p.protokolle === "boolean" ? { protokolle_lesen: p.protokolle } : {}), ...(typeof p.kontakte === "boolean" ? { kontakte_sehen: p.kontakte } : {}), geaendert_am: jetzt() });
         await protokoll(ich.person_id, "rolle_gesetzt", { fuer: pid, vorstand: !!p.vorstand, aemter, protokolle: p.protokolle ?? null });
         return json({ ok: true });
       }

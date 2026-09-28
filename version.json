@@ -1,10 +1,10 @@
 {
-  "version": "0.12.0",
+  "version": "0.13.0",
   "datum": "2026-09-28",
   "neu": [
-    "Aktionen als Kacheln (Name, Datum, Countdown) – antippen zeigt alle Details",
-    "„🧪 Test an mich“ jetzt direkt: Kachel unter Mein Bereich und Knopf in Kommunikation",
-    "Löschen überall: Treffen, Vorschläge, Protokolle, Aufgaben, Einwände, Nachrichten und Unterhaltungen (mit Sicherheitsabfrage)",
-    "Neu: Aktionen – Ausflüge & Reisen (z. B. Kreuzfahrt Mein Schiff 2 im Mai 2027) mit Reiseverlauf und Teilnehmern"
+    "Mitglieder antippen: Handy, Festnetz, E-Mail, Adresse – anrufen, WhatsApp, Route, ins Telefonbuch",
+    "Einstellungen → Privatsphäre: selbst festlegen, was andere sehen",
+    "„Meine Daten“ mit Knopf „Korrektur an Hansi melden“",
+    "Aktionen als Kacheln (Name, Datum, Countdown) – antippen zeigt alle Details"
   ]
 }
