@@ -327,12 +327,15 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 28. 0.14.1: WhatsApp/Route öffnen die App direkt (kein Zwischenfenster), Meldungen lange genug lesbar.
 {
   assert.ok(!/href="https:\/\/wa\.me\/\$\{[^"]*" target="_blank"/.test(html), "WhatsApp-Knopf öffnet wieder ein Zwischenfenster");
-  assert.ok(/href="\$\{esc\(waLink\(k\.handy\)\)\}"/.test(html) && /href="\$\{esc\(routeLink\(/.test(html), "WhatsApp-/Route-Knopf nutzt nicht die App-Links");
+  // 0.17.2: Knöpfe laufen über extern() (mehrere Wege, Rückfall-Fenster, gemerkter Weg)
+  assert.ok(/onclick="extern\('whatsapp', MD\.kontakt\.handy\)"/.test(html) && /onclick="extern\('route', adresseText\(MD\.kontakt\.adresse\)\)"/.test(html), "WhatsApp-/Route-Knopf nutzt nicht extern()");
+  assert.ok(/id="externBlatt"/.test(html) && /externBlatt\(art, wege, wert, weg\.k\)/.test(html) && /externMerken\(art, weg\.k\)/.test(html), "Rückfall-Fenster fehlt");
   const code = html.slice(html.indexOf("const nurZiffern"), html.indexOf("const adresseText"));
   const mach = (ua) => new Function("navigator", code + ";return { waLink, routeLink };")({ userAgent: ua });
   const android = mach("Mozilla/5.0 (Linux; Android 14)"), iphone = mach("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0)"), pc = mach("Mozilla/5.0 (X11; Linux)");
   assert.ok(android.waLink("0171 123 45").startsWith("intent://send?phone=4917112345#Intent;scheme=whatsapp;"), "WhatsApp Android falsch");
   assert.equal(iphone.waLink("+49 171 12345"), "whatsapp://send?phone=4917112345");
+  assert.equal(iphone.waLink("+49 (0)171 12345"), "whatsapp://send?phone=4917112345", "+49 (0) falsch umgesetzt");
   assert.equal(pc.waLink("0171 12345"), "https://wa.me/4917112345");
   // 0.17.1: Android öffnet Google Maps direkt (Rückfall: Browser) statt „geo:“ (leeres Auswahlfenster)
   const r = android.routeLink("Markt 1, 59368 Werne");

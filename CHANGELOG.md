@@ -1,5 +1,12 @@
 # Änderungen
 
+## 0.17.2 – 2026-09-28 (DEV)
+
+- KC-CLUB-KONTAKT: „WhatsApp“ und „🗺️ Route“ probieren zuerst den zuletzt erfolgreichen Weg. Öffnet sich nach 2 Sekunden
+  nichts, bleibt ein Fenster „Hat sich nichts geöffnet?“ stehen mit allen Wegen (App direkt, Android-Weg, Browser,
+  Karten-App auswählen) und „Nummer/Adresse kopieren“. Der Weg, bei dem sich die App wirklich öffnet, wird auf dem Handy gemerkt.
+- WhatsApp-Nummern im Format „+49 (0)…“ werden richtig umgesetzt.
+
 ## 0.17.1 – 2026-09-28 (DEV)
 
 - KC-CLUB-KONTAKT: „🗺️ Route“ öffnet auf Android jetzt direkt Google Maps mit der Routenplanung zur Adresse

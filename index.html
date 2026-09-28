@@ -511,6 +511,10 @@
   <div class="blatt-innen" style="max-height:92vh;overflow:auto"><h3>📡 Verbindung</h3><div id="vbInhalt" style="display:grid;gap:10px"></div>
     <button class="knopf" onclick="$('verbindungBlatt').classList.add('versteckt')">Schließen</button></div>
 </div>
+<div class="blatt versteckt" id="externBlatt" onclick="if(event.target===this)externZu()">
+  <div class="blatt-innen"><h3 id="exTitel"></h3><p class="hinweis" id="exText" style="margin:0"></p><div id="exKnoepfe" style="display:grid;gap:8px"></div>
+    <button class="knopf" onclick="externZu()">Schließen</button></div>
+</div>
 <div class="blatt versteckt" id="statusBlatt" onclick="if(event.target===this)this.classList.add('versteckt')">
   <div class="blatt-innen"><h3>Mein Status</h3><div class="liste" style="display:grid;gap:8px"></div>
     <div id="stExtra"><label class="feld">Bis (freiwillig)<input type="date" id="stBis"></label><label class="feld">Hinweis (freiwillig, z. B. „ab 18 Uhr erreichbar“)<input id="stHinweis" maxlength="120"></label></div>
@@ -547,7 +551,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.17.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.17.2"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2241,7 +2245,7 @@ async function fotoLoeschen() {
 let mitgliedId = null, MD = null;
 const KONTAKT_NAMEN = { handy: "📱 Handy", festnetz: "☎️ Festnetz", mail: "✉️ E-Mail", adresse: "🏠 Adresse" };
 const nurZiffern = (t) => String(t || "").replace(/[^\d+]/g, "");
-const waNummer = (t) => { let n = nurZiffern(t).replace(/^\+/, ""); if (n.startsWith("00")) n = n.slice(2); else if (n.startsWith("0")) n = "49" + n.slice(1); return n; };
+const waNummer = (t) => { let n = nurZiffern(t).replace(/^\+/, ""); if (n.startsWith("00")) n = n.slice(2); else if (n.startsWith("0")) n = "49" + n.slice(1); return n.replace(/^490/, "49"); };
 // WhatsApp/Route direkt in der jeweiligen App öffnen (KC-CLUB-KONTAKT). Kein neues Fenster: In der installierten App
 // wurde der Link sonst in einem Zwischenfenster geöffnet und sofort wieder geschlossen.
 const IST_ANDROID = /Android/i.test(navigator.userAgent), IST_IOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -2253,6 +2257,54 @@ const routeLink = (adr) => { const q = encodeURIComponent(adr);
   if (IST_ANDROID) return `intent://www.google.com/maps/dir/?api=1&destination=${q}#Intent;scheme=https;package=com.google.android.apps.maps;S.browser_fallback_url=${encodeURIComponent("https://www.google.com/maps/dir/?api=1&destination=" + q)};end`;
   return IST_IOS ? `https://maps.apple.com/?daddr=${q}` : `https://www.google.com/maps/dir/?api=1&destination=${q}`; };
 const adresseText = (a) => [a.strasse, [a.plz, a.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ");
+// Andere Apps öffnen (WhatsApp, Karten): Handys verhalten sich unterschiedlich – deshalb mehrere Wege.
+// Erster Versuch = der zuletzt erfolgreiche Weg; öffnet sich nach 2 Sekunden nichts, bleibt ein Fenster mit den übrigen Wegen stehen.
+// „Erfolgreich“ = die App ist in den Hintergrund gegangen (document.hidden) – dieser Weg wird auf diesem Handy gemerkt.
+const EXTERN_WEGE = {
+  whatsapp: (nr) => [
+    { k: "intent", t: "💬 WhatsApp öffnen", url: waLink(nr), nur: IST_ANDROID },
+    { k: "schema", t: "💬 WhatsApp-App direkt", url: `whatsapp://send?phone=${waNummer(nr)}` },
+    { k: "web", t: "🌐 Über wa.me (Browser)", url: `https://wa.me/${waNummer(nr)}`, neu: true },
+  ],
+  route: (adr) => [
+    { k: "intent", t: "🗺️ Google Maps öffnen", url: routeLink(adr), nur: IST_ANDROID },
+    { k: "apple", t: "🗺️ Apple Karten öffnen", url: routeLink(adr), nur: IST_IOS },
+    { k: "geo", t: "🗺️ Karten-App auswählen", url: `geo:0,0?q=${encodeURIComponent(adr)}`, nur: IST_ANDROID },
+    { k: "web", t: "🌐 Route im Browser", url: `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(adr)}`, neu: true },
+  ],
+};
+const externMerken = (art, k) => { try { localStorage.setItem("kc_club_extern_" + art, k); } catch {} };
+const externGemerkt = (art) => { try { return localStorage.getItem("kc_club_extern_" + art); } catch { return null; } };
+let externTimer = null;
+function externZu() { clearTimeout(externTimer); $("externBlatt").classList.add("versteckt"); } // von Hand geschlossen → nicht wieder aufgehen
+function externVersuch(art, weg, wege, wert) {
+  clearTimeout(externTimer);
+  let weg0 = false; const merke = () => { if (document.hidden) { weg0 = true; externMerken(art, weg.k); $("externBlatt").classList.add("versteckt"); } };
+  document.addEventListener("visibilitychange", merke);
+  try { if (weg.neu) window.open(weg.url, "_blank", "noopener"); else location.href = weg.url; } catch {}
+  externTimer = setTimeout(() => {
+    document.removeEventListener("visibilitychange", merke);
+    if (!weg0 && !document.hidden) externBlatt(art, wege, wert, weg.k);
+  }, 2000);
+}
+function extern(art, wert) {
+  if (!wert) return;
+  const g = externGemerkt(art), wege = EXTERN_WEGE[art](wert).filter((w) => w.nur !== false);
+  wege.sort((a, b) => (b.k === g) - (a.k === g));
+  externVersuch(art, wege[0], wege, wert);
+}
+function externBlatt(art, wege, wert, versucht) {
+  const was = art === "whatsapp" ? "WhatsApp" : "die Karten-App";
+  $("exTitel").textContent = "Hat sich nichts geöffnet?";
+  $("exText").textContent = `Dann probier bitte einen dieser Wege, um ${was} zu öffnen. Der Weg, der klappt, wird für dieses Handy gemerkt.`;
+  $("exKnoepfe").innerHTML = wege.map((w, i) => `<button class="knopf ${w.k === versucht ? "" : "haupt"}" data-i="${i}">${esc(w.t)}${w.k === versucht ? " (eben versucht)" : ""}</button>`).join("")
+    + `<button class="knopf" data-kopie="1">📋 ${art === "whatsapp" ? "Nummer" : "Adresse"} kopieren</button>`;
+  $("exKnoepfe").querySelectorAll("button").forEach((b) => b.onclick = async () => {
+    if (b.dataset.kopie) { try { await navigator.clipboard.writeText(wert); melde("📋 Kopiert: " + wert); } catch { melde(wert); } return; }
+    externVersuch(art, wege[Number(b.dataset.i)], wege, wert);
+  });
+  $("externBlatt").classList.remove("versteckt");
+}
 async function mitgliedOeffnen(pid, ausHistorie) {
   mitgliedId = pid; MD = null;
   $("mitgliedInhalt").innerHTML = '<div class="karte hinweis">Wird geladen …</div>';
@@ -2265,10 +2317,10 @@ function mitgliedZeigen() {
   const nurIch = (f) => fg && !fg[f] ? `<small class="hinweis"> · 🔒 ${m.selbst ? "nicht freigegeben – nur du siehst das" : "nicht freigegeben – nur für dich als Admin"}</small>` : "";
   const zeile = (f, wert, knoepfe) => `<div class="zeile"><div style="flex:1"><div class="hinweis" style="font-size:.85rem">${KONTAKT_NAMEN[f]}${nurIch(f)}</div><b>${esc(wert)}</b></div>${knoepfe}</div>`;
   const zeilen = [
-    k.handy ? zeile("handy", k.handy, `<a class="knopf klein" href="tel:${esc(nurZiffern(k.handy))}">📞</a><a class="knopf klein" href="${esc(waLink(k.handy))}">WhatsApp</a>`) : "",
+    k.handy ? zeile("handy", k.handy, `<a class="knopf klein" href="tel:${esc(nurZiffern(k.handy))}">📞</a><button class="knopf klein" onclick="extern('whatsapp', MD.kontakt.handy)">WhatsApp</button>`) : "",
     k.festnetz ? zeile("festnetz", k.festnetz, `<a class="knopf klein" href="tel:${esc(nurZiffern(k.festnetz))}">📞</a>`) : "",
     k.mail ? zeile("mail", k.mail, `<a class="knopf klein" href="mailto:${esc(k.mail)}">✉️</a>`) : "",
-    k.adresse ? zeile("adresse", adresseText(k.adresse), `<a class="knopf klein" href="${esc(routeLink(adresseText(k.adresse)))}">🗺️ Route</a>`) : "",
+    k.adresse ? zeile("adresse", adresseText(k.adresse), `<button class="knopf klein" onclick="extern('route', adresseText(MD.kontakt.adresse))">🗺️ Route</button>`) : "",
   ].join("");
   const leer = !zeilen ? `<p class="hinweis">${!m.darfKontakte ? "Kontaktdaten anderer Mitglieder sind für dich nicht freigeschaltet." : m.selbst ? "Für dich sind keine Kontaktdaten gespeichert." : `${esc(m.vorname)} hat noch keine Kontaktdaten freigegeben.`}</p>` : "";
   $("mitgliedInhalt").innerHTML = `
