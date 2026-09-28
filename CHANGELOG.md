@@ -1,5 +1,12 @@
 # Änderungen
 
+## 0.4.0 – 2026-09-28 (DEV)
+
+- Schnellzugriff: Register Verein / Mein Bereich / Programme per Wischen nach links/rechts wechselbar,
+  kleine Zahl am Register zeigt die Anzahl der Kacheln.
+- Kopf kompakter: „Hallo …“ unter den beiden Knöpfen, Status direkt unter „KÖCHECLUB WERNE“ (einzeilig).
+- Einstellungen: größere Klapp-Pfeile; Schloss je Bereich stellt ihn offen bzw. zu fest (🔒) oder löst ihn (🔓).
+
 ## 0.3.0 – 2026-09-28 (DEV)
 
 - KC-CLUB-BENACHRICHTIGUNG: in den Einstellungen je Bereich (Treffen & Erinnerungen, Nachrichten, Vorschläge,

@@ -1,10 +1,9 @@
 {
-  "version": "0.3.0",
+  "version": "0.4.0",
   "datum": "2026-09-28",
   "neu": [
-    "Einstellungen: je Bereich wählen – Push und/oder E-Mail; neu: Erinnerung an den eigenen Dienst am Vorabend",
-    "Kennzahlen oben antippen führt direkt in Nachrichten, Mitglieder und Termine",
-    "„Zurück“ am Handy geht eine Ansicht zurück statt die App zu schließen",
-    "Einstellungen auf- und zuklappbar, Kochmütze führt zur Internetseite (folgt)"
+    "Schnellzugriff: Register per Wischen wechseln, kleine Zahl zeigt die Anzahl der Kacheln",
+    "Kopf kompakter: „Hallo …“ unter den beiden Knöpfen, Status direkt unter KÖCHECLUB WERNE",
+    "Einstellungen: größere Klapp-Pfeile und Schloss zum Feststellen eines Bereichs"
   ]
 }

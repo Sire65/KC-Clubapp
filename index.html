@@ -33,13 +33,16 @@
   .logo { width: 54px; height: 54px; border-radius: 16px; background: rgba(255,255,255,.14); display: grid; place-items: center; flex: none; border: none; padding: 0; cursor: pointer; }
   .logo:active { transform: scale(.94); }
   .logo img { width: 40px; }
-  .marke-klein { font-size: .8rem; letter-spacing: .1em; font-weight: 800; opacity: .9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .marke-klein { font-size: .92rem; letter-spacing: .03em; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 4px; }
+  /* Gruß hängt unter den Knöpfen, ohne die Spalte zu verbreitern → KÖCHECLUB WERNE hat die volle Breite */
+  .kopfrechts { position: relative; flex: none; }
+  .gruss { position: absolute; right: 0; top: calc(100% + 6px); font-weight: 800; font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px; text-align: right; }
   .titel { font-size: 1.35rem; font-weight: 800; line-height: 1.15; }
   .statuschip { margin-top: 6px; border: none; border-radius: 12px; padding: 4px 10px; background: rgba(255,255,255,.18); color: #fff; font-weight: 700; font-size: .82rem; cursor: pointer; }
   .rund { width: 48px; height: 48px; border-radius: 50%; border: none; background: rgba(255,255,255,.16); color: #fff; font-size: 1.15rem; cursor: pointer; flex: none; }
   .rund:active { transform: scale(.94); }
-  .knopfreihe { margin-left: auto; display: flex; gap: 8px; margin-top: -4px; }
-  .info { margin-top: 16px; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.18); border-radius: 20px; padding: 16px; }
+  .knopfreihe { display: flex; gap: 8px; }
+  .info { margin-top: 26px; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.18); border-radius: 20px; padding: 16px; }
   .info h2 { margin: 0; font-size: 1.5rem; }
   .info .unter { opacity: .9; margin-top: 4px; }
   .kacheln3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
@@ -49,8 +52,12 @@
   /* ausklappbare Karten (Einstellungen) */
   details.karte > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 1.1rem; }
   details.karte > summary::-webkit-details-marker { display: none; }
-  details.karte > summary::after { content: "▾"; margin-left: auto; transition: transform .2s; color: var(--grau); }
-  details.karte:not([open]) > summary::after { transform: rotate(-90deg); }
+  details.karte .schloss { margin-left: auto; width: 42px; height: 42px; border: none; border-radius: 12px; background: var(--karte2); font-size: 1.15rem; cursor: pointer; flex: none; }
+  details.karte .schloss.zu { background: var(--gelbbg); outline: 2px solid var(--gold); }
+  details.karte .pfeil { width: 42px; height: 42px; display: grid; place-items: center; font-size: 1.7rem; line-height: 1; color: var(--rot); transition: transform .2s; flex: none; }
+  details.karte:not([open]) .pfeil { transform: rotate(-90deg); }
+  details.karte.fest .pfeil { opacity: .35; }
+  details.karte.fest > summary { cursor: default; }
   details.karte[open] > summary { margin-bottom: 8px; }
   .wahltabelle { width: 100%; border-collapse: collapse; }
   .wahltabelle th { font-size: .8rem; color: var(--grau); font-weight: 800; padding: 4px; }
@@ -66,6 +73,14 @@
   .register { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
   .register button { border: none; border-radius: 14px; padding: 11px 6px; background: var(--karte2); font-weight: 800; cursor: pointer; }
   .register button.an { background: var(--rot); color: #fff; }
+  .register .anz { display: inline-block; min-width: 20px; margin-left: 5px; padding: 0 6px; border-radius: 10px; font-size: .72rem; line-height: 18px; background: rgba(0,0,0,.08); vertical-align: 1px; }
+  .register button.an .anz { background: rgba(255,255,255,.25); }
+  .raster { touch-action: pan-y; }
+  .raster.rein-links { animation: reinLinks .22s ease-out; }
+  .raster.rein-rechts { animation: reinRechts .22s ease-out; }
+  @keyframes reinLinks { from { transform: translateX(40px); opacity: .3; } to { transform: none; opacity: 1; } }
+  @keyframes reinRechts { from { transform: translateX(-40px); opacity: .3; } to { transform: none; opacity: 1; } }
+  .wischhinweis { text-align: center; font-size: .78rem; color: var(--grau); margin-top: 6px; }
   .raster { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
   .kachel { position: relative; overflow: hidden; background: var(--karte); border: none; border-radius: var(--radius); padding: 16px; text-align: left; min-height: 124px; box-shadow: var(--schatten); cursor: pointer; }
   .kachel::after { content: ""; position: absolute; right: -24px; top: -24px; width: 88px; height: 88px; border-radius: 50%; background: radial-gradient(circle at 30% 70%, rgba(201,164,106,.28), rgba(116,21,33,.10)); }
@@ -198,22 +213,22 @@
     <div class="hero">
       <div class="kopfzeile">
         <button class="logo" title="Zur Internetseite des Köcheclubs" onclick="webseite()"><img src="kc-kochmuetze-weiss.webp" alt="Kochmütze"></button>
-        <div class="kopftext"><div class="marke-klein">KÖCHECLUB WERNE</div><div class="titel" id="begruessung">Köcheclub Werne</div><button class="statuschip" id="statusChip" onclick="statusBlatt()">🟢 verfügbar ▾</button></div>
-        <div class="knopfreihe">
-          <button class="rund" title="Hell/Dunkel" onclick="dunkelUmschalten()">🌙</button>
-          <button class="rund" title="Aktualisieren" onclick="neuLaden(true)">↻</button>
+        <div class="kopftext"><div class="marke-klein">KÖCHECLUB WERNE</div><button class="statuschip" id="statusChip" onclick="statusBlatt()">🟢 verfügbar ▾</button></div>
+        <div class="kopfrechts">
+          <div class="knopfreihe">
+            <button class="rund" title="Hell/Dunkel" onclick="dunkelUmschalten()">🌙</button>
+            <button class="rund" title="Aktualisieren" onclick="neuLaden(true)">↻</button>
+          </div>
+          <div class="gruss" id="begruessung">Hallo!</div>
         </div>
       </div>
       <div class="info" id="heroInfo"><h2>Einen Moment …</h2><div class="unter">Daten werden geladen.</div></div>
     </div>
     <div id="updateHinweis"></div>
     <div class="abschnitt"><h3>Schnellzugriff</h3><span class="marke" id="versionMarke">v–</span></div>
-    <div class="register" id="register">
-      <button data-r="verein" class="an" onclick="register('verein')">Verein</button>
-      <button data-r="mein" onclick="register('mein')">Mein Bereich</button>
-      <button data-r="programme" onclick="register('programme')">Programme</button>
-    </div>
+    <div class="register" id="register"></div>
     <div class="raster" id="raster"></div>
+    <div class="wischhinweis">‹ wischen für weitere Bereiche ›</div>
     <div class="karte"><h3>Heute wichtig</h3><div id="wichtig" class="hinweis">…</div></div>
   </section>
 
@@ -343,7 +358,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.3.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.4.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -420,7 +435,29 @@ const KACHELN = {
     { sym: "💻", t: "Freigegebene Programme", u: "Kasse, Schulungsversion …", bald: true },
   ],
 };
-function register(r) { reg = r; document.querySelectorAll("#register button").forEach((b) => b.classList.toggle("an", b.dataset.r === r)); kachelnZeigen(); }
+// Register mit kleiner Anzahl der Kacheln; per Wischen links/rechts wechselbar
+const REGISTER = [["verein", "Verein"], ["mein", "Mein Bereich"], ["programme", "Programme"]];
+function registerZeigen() {
+  $("register").innerHTML = REGISTER.map(([r, t]) => `<button data-r="${r}" class="${r === reg ? "an" : ""}" onclick="register('${r}')">${t}<span class="anz">${KACHELN[r].length}</span></button>`).join("");
+}
+function register(r, richtung) {
+  reg = r; registerZeigen(); kachelnZeigen();
+  if (richtung) { const ra = $("raster"); ra.classList.remove("rein-links", "rein-rechts"); void ra.offsetWidth; ra.classList.add(richtung > 0 ? "rein-links" : "rein-rechts"); }
+}
+function registerWischen(schritt) {
+  const i = REGISTER.findIndex(([r]) => r === reg), n = i + schritt;
+  if (n >= 0 && n < REGISTER.length) register(REGISTER[n][0], schritt);
+}
+(function wischenEinrichten() {
+  let x0 = null, y0 = 0;
+  const flaeche = () => [$("raster"), $("register")];
+  document.addEventListener("touchstart", (e) => { if (flaeche().some((f) => f.contains(e.target))) { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; } else x0 = null; }, { passive: true });
+  document.addEventListener("touchend", (e) => {
+    if (x0 === null) return;
+    const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0; x0 = null;
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) registerWischen(dx < 0 ? 1 : -1);
+  }, { passive: true });
+})();
 function kachelnZeigen() {
   $("raster").innerHTML = KACHELN[reg].map((k, i) => {
     const z = k.zahl ? k.zahl() : 0;
@@ -468,11 +505,34 @@ async function wahlSetzen(b) {
     if (push && pushMoeglich() && Notification.permission !== "granted") melde("Tipp: Schalte unten noch „Push auf diesem Handy“ ein.");
   } catch (e) { melde(e.message, true); wahlZeigen(); }
 }
-// Auf-/Zuklappen merken
+// Auf-/Zuklappen merken; Schloss 🔒 stellt den Bereich fest (bleibt offen bzw. zu), 🔓 löst ihn wieder
 function klappenMerken() {
+  const lies = (k) => { try { return localStorage.getItem("kc_club_" + k); } catch { return null; } };
+  const schreib = (k, v) => { try { localStorage.setItem("kc_club_" + k, v); } catch {} };
   document.querySelectorAll("details[data-klappe]").forEach((d) => {
-    try { const v = localStorage.getItem("kc_club_klappe_" + d.dataset.klappe); if (v !== null) d.open = v === "1"; } catch {}
-    d.addEventListener("toggle", () => { try { localStorage.setItem("kc_club_klappe_" + d.dataset.klappe, d.open ? "1" : "0"); } catch {} });
+    const name = d.dataset.klappe, s = d.querySelector("summary");
+    const v = lies("klappe_" + name); if (v !== null) d.open = v === "1";
+    s.insertAdjacentHTML("beforeend", '<button type="button" class="schloss" aria-label="Bereich feststellen"></button><span class="pfeil" aria-hidden="true">▾</span>');
+    const schloss = s.querySelector(".schloss");
+    const zeigeSchloss = () => {
+      const fest = lies("fest_" + name) === "1";
+      d.classList.toggle("fest", fest); schloss.classList.toggle("zu", fest);
+      schloss.textContent = fest ? "🔒" : "🔓";
+      schloss.title = fest ? "Festgestellt – antippen zum Lösen" : "Antippen, um den Bereich so festzustellen";
+    };
+    zeigeSchloss();
+    s.addEventListener("click", (e) => {
+      if (e.target.closest(".schloss")) {
+        e.preventDefault();
+        const fest = lies("fest_" + name) !== "1";
+        schreib("fest_" + name, fest ? "1" : "0"); zeigeSchloss();
+        melde(fest ? `🔒 Festgestellt – bleibt ${d.open ? "offen" : "zu"}` : "🔓 Gelöst – wieder auf- und zuklappbar");
+      } else if (lies("fest_" + name) === "1") {
+        e.preventDefault();
+        melde("🔒 Dieser Bereich ist festgestellt – zum Lösen das Schloss antippen.");
+      }
+    });
+    d.addEventListener("toggle", () => schreib("klappe_" + name, d.open ? "1" : "0"));
   });
 }
 function wichtigZeigen() {
@@ -493,7 +553,7 @@ async function neuLaden(vonHand) {
     $("statusChip").textContent = statusText(INIT.status) + " ▾";
     $("ichName").textContent = ICH.name + (ICH.admin ? " (Admin)" : ICH.vorstand ? " (Vorstand)" : "");
     $("neuTreffenKnopf").classList.toggle("versteckt", !ICH.vorstand);
-    heroZeigen(); kachelnZeigen(); wichtigZeigen(); zaehlerZeigen();
+    heroZeigen(); registerZeigen(); kachelnZeigen(); wichtigZeigen(); zaehlerZeigen();
     if (vonHand) { melde("Aktualisiert"); updatePruefen(false); }
   } catch (e) { melde(e.message, true); }
 }
@@ -997,7 +1057,7 @@ async function jetztAktualisieren() {
   if (k) { url.searchParams.delete("k"); history.replaceState(null, "", url.pathname + url.hash); }
   if (!KEY) { $("gesperrt").classList.remove("versteckt"); return; }
   $("app").classList.remove("versteckt");
-  klappenMerken();
+  klappenMerken(); registerZeigen(); kachelnZeigen();
   // Verlauf: unten ein „Basis“-Eintrag, darüber die Startseite → „Zurück“ bleibt in der App
   const sprung = location.hash;
   history.replaceState({ basis: true }, "", url.pathname);
