@@ -483,7 +483,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.14.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.14.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -508,8 +508,10 @@ function anwendenDesign() {
 function dunkelUmschalten() { einstellung("dunkel", !einst("dunkel", false)); }
 
 function melde(t, fehler) {
+  // Lange genug zum Lesen (je nach Textlänge, Fehler doppelt so lange); Antippen schließt die Meldung sofort.
   const m = document.createElement("div"); m.className = "meldung" + (fehler ? " fehler" : ""); m.textContent = t;
-  document.body.appendChild(m); setTimeout(() => m.remove(), fehler ? 5000 : 2600);
+  m.onclick = () => m.remove();
+  document.body.appendChild(m); setTimeout(() => m.remove(), Math.min(20000, (4000 + String(t).length * 70) * (fehler ? 2 : 1)));
 }
 async function api(action, daten = {}) {
   const r = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json", "x-club-token": KEY, "x-club-version": APP_VERSION }, body: JSON.stringify({ action, ...daten }) });
@@ -1795,6 +1797,15 @@ let mitgliedId = null, MD = null;
 const KONTAKT_NAMEN = { handy: "📱 Handy", festnetz: "☎️ Festnetz", mail: "✉️ E-Mail", adresse: "🏠 Adresse" };
 const nurZiffern = (t) => String(t || "").replace(/[^\d+]/g, "");
 const waNummer = (t) => { let n = nurZiffern(t).replace(/^\+/, ""); if (n.startsWith("00")) n = n.slice(2); else if (n.startsWith("0")) n = "49" + n.slice(1); return n; };
+// WhatsApp/Route direkt in der jeweiligen App öffnen (KC-CLUB-KONTAKT). Kein neues Fenster: In der installierten App
+// wurde der Link sonst in einem Zwischenfenster geöffnet und sofort wieder geschlossen.
+const IST_ANDROID = /Android/i.test(navigator.userAgent), IST_IOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+const waLink = (t) => { const n = waNummer(t);
+  if (IST_ANDROID) return `intent://send?phone=${n}#Intent;scheme=whatsapp;S.browser_fallback_url=${encodeURIComponent("https://wa.me/" + n)};end`;
+  return IST_IOS ? `whatsapp://send?phone=${n}` : `https://wa.me/${n}`; };
+const routeLink = (adr) => { const q = encodeURIComponent(adr);
+  if (IST_ANDROID) return `geo:0,0?q=${q}`;
+  return IST_IOS ? `https://maps.apple.com/?daddr=${q}` : `https://www.google.com/maps/dir/?api=1&destination=${q}`; };
 const adresseText = (a) => [a.strasse, [a.plz, a.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ");
 async function mitgliedOeffnen(pid, ausHistorie) {
   mitgliedId = pid; MD = null;
@@ -1808,10 +1819,10 @@ function mitgliedZeigen() {
   const nurIch = (f) => fg && !fg[f] ? `<small class="hinweis"> · 🔒 ${m.selbst ? "nicht freigegeben – nur du siehst das" : "nicht freigegeben – nur für dich als Admin"}</small>` : "";
   const zeile = (f, wert, knoepfe) => `<div class="zeile"><div style="flex:1"><div class="hinweis" style="font-size:.85rem">${KONTAKT_NAMEN[f]}${nurIch(f)}</div><b>${esc(wert)}</b></div>${knoepfe}</div>`;
   const zeilen = [
-    k.handy ? zeile("handy", k.handy, `<a class="knopf klein" href="tel:${esc(nurZiffern(k.handy))}">📞</a><a class="knopf klein" href="https://wa.me/${esc(waNummer(k.handy))}" target="_blank" rel="noopener">WhatsApp</a>`) : "",
+    k.handy ? zeile("handy", k.handy, `<a class="knopf klein" href="tel:${esc(nurZiffern(k.handy))}">📞</a><a class="knopf klein" href="${esc(waLink(k.handy))}">WhatsApp</a>`) : "",
     k.festnetz ? zeile("festnetz", k.festnetz, `<a class="knopf klein" href="tel:${esc(nurZiffern(k.festnetz))}">📞</a>`) : "",
     k.mail ? zeile("mail", k.mail, `<a class="knopf klein" href="mailto:${esc(k.mail)}">✉️</a>`) : "",
-    k.adresse ? zeile("adresse", adresseText(k.adresse), `<a class="knopf klein" href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(adresseText(k.adresse))}" target="_blank" rel="noopener">🗺️ Route</a>`) : "",
+    k.adresse ? zeile("adresse", adresseText(k.adresse), `<a class="knopf klein" href="${esc(routeLink(adresseText(k.adresse)))}">🗺️ Route</a>`) : "",
   ].join("");
   const leer = !zeilen ? `<p class="hinweis">${!m.darfKontakte ? "Kontaktdaten anderer Mitglieder sind für dich nicht freigeschaltet." : m.selbst ? "Für dich sind keine Kontaktdaten gespeichert." : `${esc(m.vorname)} hat noch keine Kontaktdaten freigegeben.`}</p>` : "";
   $("mitgliedInhalt").innerHTML = `

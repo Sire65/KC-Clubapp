@@ -324,4 +324,19 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   for (const tab of ["kc_club_terminumfragen", "kc_club_mitfahrt", "kc_club_notfall", "kc_club_kalender_abo"]) assert.ok(mig.includes(`alter table ${tab} enable row level security`), `RLS ${tab} fehlt`);
 }
 
+// 28. 0.14.1: WhatsApp/Route öffnen die App direkt (kein Zwischenfenster), Meldungen lange genug lesbar.
+{
+  assert.ok(!/href="https:\/\/wa\.me\/\$\{[^"]*" target="_blank"/.test(html), "WhatsApp-Knopf öffnet wieder ein Zwischenfenster");
+  assert.ok(/href="\$\{esc\(waLink\(k\.handy\)\)\}"/.test(html) && /href="\$\{esc\(routeLink\(/.test(html), "WhatsApp-/Route-Knopf nutzt nicht die App-Links");
+  const code = html.slice(html.indexOf("const nurZiffern"), html.indexOf("const adresseText"));
+  const mach = (ua) => new Function("navigator", code + ";return { waLink, routeLink };")({ userAgent: ua });
+  const android = mach("Mozilla/5.0 (Linux; Android 14)"), iphone = mach("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0)"), pc = mach("Mozilla/5.0 (X11; Linux)");
+  assert.ok(android.waLink("0171 123 45").startsWith("intent://send?phone=4917112345#Intent;scheme=whatsapp;"), "WhatsApp Android falsch");
+  assert.equal(iphone.waLink("+49 171 12345"), "whatsapp://send?phone=4917112345");
+  assert.equal(pc.waLink("0171 12345"), "https://wa.me/4917112345");
+  assert.equal(android.routeLink("Markt 1, 59368 Werne"), "geo:0,0?q=Markt%201%2C%2059368%20Werne");
+  assert.ok(iphone.routeLink("Markt 1").startsWith("https://maps.apple.com/?daddr="), "Route iPhone falsch");
+  assert.ok(/m\.onclick = \(\) => m\.remove\(\)/.test(html) && /Math\.min\(20000, \(4000 \+ String\(t\)\.length \* 70\)/.test(html), "Meldungen verschwinden zu schnell");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
