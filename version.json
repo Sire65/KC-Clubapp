@@ -1,9 +1,8 @@
 {
-  "version": "0.4.0",
+  "version": "0.5.0",
   "datum": "2026-09-28",
   "neu": [
-    "Schnellzugriff: Register per Wischen wechseln, kleine Zahl zeigt die Anzahl der Kacheln",
-    "Kopf kompakter: „Hallo …“ unter den beiden Knöpfen, Status direkt unter KÖCHECLUB WERNE",
-    "Einstellungen: größere Klapp-Pfeile und Schloss zum Feststellen eines Bereichs"
+    "Kachel „Update prüfen“ unter Programme mit Versionsnummer – findet sie etwas Neues, kann direkt aktualisiert werden",
+    "Die kleine Versionsanzeige neben „Schnellzugriff“ ist jetzt ein Knopf zum Update-Prüfen"
   ]
 }

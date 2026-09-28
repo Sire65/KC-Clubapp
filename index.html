@@ -225,7 +225,7 @@
       <div class="info" id="heroInfo"><h2>Einen Moment …</h2><div class="unter">Daten werden geladen.</div></div>
     </div>
     <div id="updateHinweis"></div>
-    <div class="abschnitt"><h3>Schnellzugriff</h3><span class="marke" id="versionMarke">v–</span></div>
+    <div class="abschnitt"><h3>Schnellzugriff</h3><button class="marke" id="versionMarke" style="border:none;cursor:pointer" title="Update prüfen" onclick="updateKachel()">v–</button></div>
     <div class="register" id="register"></div>
     <div class="raster" id="raster"></div>
     <div class="wischhinweis">‹ wischen für weitere Bereiche ›</div>
@@ -319,7 +319,7 @@
     <details class="karte" data-klappe="app">
       <summary>ℹ️ App</summary>
       <div class="zeile"><span>Version</span><b id="appVersion" style="margin-left:auto"></b></div><div class="zeile"><span>Angemeldet als</span><b id="ichName" style="margin-left:auto"></b></div>
-      <div class="knoepfe"><button class="knopf klein" onclick="updatePruefen(true)">Nach Update suchen</button></div>
+      <div class="knoepfe"><button class="knopf klein" onclick="updateKachel()">Nach Update suchen</button></div>
     </details>
   </section>
 </div>
@@ -358,7 +358,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.4.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.5.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -432,6 +432,7 @@ const KACHELN = {
     { sym: "⚙️", t: "Einstellungen", u: "Push, Ton, Schrift", v: "einstellungen" },
   ],
   programme: [
+    { sym: "🔄", t: "Update prüfen", u: () => NEUE_VERSION ? `Neu: v${NEUE_VERSION} – antippen` : `Installiert: v${APP_VERSION}`, aktion: "updateKachel()", zahl: () => NEUE_VERSION ? "neu" : 0 },
     { sym: "💻", t: "Freigegebene Programme", u: "Kasse, Schulungsversion …", bald: true },
   ],
 };
@@ -462,7 +463,7 @@ function kachelnZeigen() {
   $("raster").innerHTML = KACHELN[reg].map((k, i) => {
     const z = k.zahl ? k.zahl() : 0;
     return `<button class="kachel${k.bald ? " bald" : ""}" onclick="${k.bald ? `melde('„${k.t}“ kommt in einer der nächsten Versionen.')` : k.aktion || `zeige('${k.v}')`}">
-      <div class="sym">${k.sym}</div><b>${esc(k.t)}</b><small>${esc(k.u)}</small>${k.bald ? '<span class="zahl">bald</span>' : z ? `<span class="zahl">${z}</span>` : ""}</button>`;
+      <div class="sym">${k.sym}</div><b>${esc(k.t)}</b><small>${esc(typeof k.u === "function" ? k.u() : k.u)}</small>${k.bald ? '<span class="zahl">bald</span>' : z ? `<span class="zahl">${z}</span>` : ""}</button>`;
   }).join("");
 }
 // Kopf: oben das nächste Treffen (antippen → Termine), darunter drei Kennzahlen, jede führt in ihren Bereich
@@ -1035,13 +1036,27 @@ let installEreignis = null;
 window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); installEreignis = e; $("installKnopf").classList.remove("versteckt"); });
 async function installieren() { if (!installEreignis) return; installEreignis.prompt(); await installEreignis.userChoice.catch(() => {}); installEreignis = null; $("installKnopf").classList.add("versteckt"); }
 function versionNeuer(a, b) { const x = a.split(".").map(Number), y = b.split(".").map(Number); for (let i = 0; i < 3; i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); } return false; }
+let NEUE_VERSION = null; // Version auf GitHub, falls neuer als die installierte
 async function updatePruefen(vonHand) {
   try {
     const v = await (await fetch("version.json?x=" + Date.now(), { cache: "no-store" })).json();
-    if (versionNeuer(v.version, APP_VERSION)) {
+    NEUE_VERSION = versionNeuer(v.version, APP_VERSION) ? v.version : null;
+    if (NEUE_VERSION) {
       $("updateHinweis").innerHTML = `<div class="updatebalken">🆕 Neue Version ${esc(v.version)}${v.neu?.length ? ": " + esc(v.neu[0]) : ""}<button class="knopf haupt klein" style="margin-left:auto" onclick="jetztAktualisieren()">Jetzt aktualisieren</button></div>`;
-    } else if (vonHand) melde(`Du hast die neueste Version (${APP_VERSION}).`);
-  } catch {}
+    } else if (vonHand) melde(`✔ Du hast die neueste Version (${APP_VERSION}).`);
+    versionAnzeigen();
+  } catch { if (vonHand) melde("Update-Prüfung gerade nicht möglich – bitte Internet prüfen.", true); }
+}
+// Kachel „Update prüfen“ und kleiner Versions-Knopf: prüfen und – wenn es etwas Neues gibt – gleich anbieten
+async function updateKachel() {
+  melde("🔄 Suche nach Updates …");
+  await updatePruefen(true);
+  if (NEUE_VERSION && confirm(`Neue Version ${NEUE_VERSION} ist da (du hast ${APP_VERSION}).\n\nJetzt aktualisieren?`)) jetztAktualisieren();
+}
+function versionAnzeigen() {
+  $("versionMarke").textContent = NEUE_VERSION ? `🆕 v${NEUE_VERSION}` : `v${APP_VERSION} ↻`;
+  $("versionMarke").classList.toggle("gelb", !!NEUE_VERSION);
+  if (reg === "programme") kachelnZeigen();
 }
 async function jetztAktualisieren() {
   try { const reg = await navigator.serviceWorker.getRegistration(); await reg?.update(); reg?.waiting?.postMessage("jetzt-aktivieren"); } catch {}
@@ -1051,7 +1066,7 @@ async function jetztAktualisieren() {
 // ---------- Start der App ----------
 (function start() {
   anwendenDesign();
-  $("versionMarke").textContent = "v" + APP_VERSION; $("appVersion").textContent = APP_VERSION;
+  versionAnzeigen(); $("appVersion").textContent = APP_VERSION;
   const url = new URL(location.href), k = url.searchParams.get("k");
   try { if (k) localStorage.setItem("kc_club_key", k); KEY = k || localStorage.getItem("kc_club_key") || ""; } catch { KEY = k || ""; }
   if (k) { url.searchParams.delete("k"); history.replaceState(null, "", url.pathname + url.hash); }

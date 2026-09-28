@@ -100,4 +100,10 @@ assert.ok(/class="schloss"/.test(html) && /"fest_" \+ name/.test(html), "Schloss
 const rechts = html.slice(html.indexOf('<div class="kopfrechts">'), html.indexOf('<div class="info" id="heroInfo">'));
 assert.ok(rechts.indexOf('class="knopfreihe"') < rechts.indexOf('id="begruessung"'), "Gruß muss unter den Knöpfen stehen");
 
+// 15. 0.5.0: Kachel „Update prüfen“ unter Programme mit Versionsnummer, Versions-Knopf neben Schnellzugriff.
+const progr = html.slice(html.indexOf("  programme: ["), html.indexOf("],", html.indexOf("  programme: [")));
+assert.ok(/t: "Update prüfen"/.test(progr) && /aktion: "updateKachel\(\)"/.test(progr), "Kachel „Update prüfen“ fehlt unter Programme");
+assert.ok(/Installiert: v\$\{APP_VERSION\}/.test(progr), "Versionsnummer in der Kachel fehlt");
+assert.ok(/id="versionMarke"[^>]*onclick="updateKachel\(\)"/.test(html), "Versions-Knopf fehlt");
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

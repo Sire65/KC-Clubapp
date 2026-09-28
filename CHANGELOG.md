@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.5.0 – 2026-09-28 (DEV)
+
+- Kachel „🔄 Update prüfen“ unter Programme mit installierter Versionsnummer; findet sie eine neuere Version,
+  zeigt sie „neu“ und bietet das Aktualisieren direkt an.
+- Die Versionsanzeige neben „Schnellzugriff“ ist ein Knopf zum Update-Prüfen (🆕 bei neuer Version).
+
 ## 0.4.0 – 2026-09-28 (DEV)
 
 - Schnellzugriff: Register Verein / Mein Bereich / Programme per Wischen nach links/rechts wechselbar,
