@@ -28,20 +28,35 @@
 
   /* Kopf (Hero) */
   .hero { background: linear-gradient(135deg, #4d0c16 0%, var(--rot) 45%, var(--rot2) 75%, #b5705a 100%); color: #fff; border-radius: 26px; padding: 18px; box-shadow: 0 12px 30px rgba(116, 21, 33, .35); }
-  .kopfzeile { display: flex; align-items: center; gap: 12px; }
-  .logo { width: 54px; height: 54px; border-radius: 16px; background: rgba(255,255,255,.14); display: grid; place-items: center; flex: none; }
+  .kopfzeile { display: flex; align-items: flex-start; gap: 12px; }
+  .kopftext { flex: 1; min-width: 0; }
+  .logo { width: 54px; height: 54px; border-radius: 16px; background: rgba(255,255,255,.14); display: grid; place-items: center; flex: none; border: none; padding: 0; cursor: pointer; }
+  .logo:active { transform: scale(.94); }
   .logo img { width: 40px; }
-  .marke-klein { font-size: .72rem; letter-spacing: .12em; font-weight: 800; opacity: .85; }
+  .marke-klein { font-size: .8rem; letter-spacing: .1em; font-weight: 800; opacity: .9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .titel { font-size: 1.35rem; font-weight: 800; line-height: 1.15; }
   .statuschip { margin-top: 6px; border: none; border-radius: 12px; padding: 4px 10px; background: rgba(255,255,255,.18); color: #fff; font-weight: 700; font-size: .82rem; cursor: pointer; }
   .rund { width: 48px; height: 48px; border-radius: 50%; border: none; background: rgba(255,255,255,.16); color: #fff; font-size: 1.15rem; cursor: pointer; flex: none; }
   .rund:active { transform: scale(.94); }
-  .knopfreihe { margin-left: auto; display: flex; gap: 8px; }
+  .knopfreihe { margin-left: auto; display: flex; gap: 8px; margin-top: -4px; }
   .info { margin-top: 16px; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.18); border-radius: 20px; padding: 16px; }
   .info h2 { margin: 0; font-size: 1.5rem; }
   .info .unter { opacity: .9; margin-top: 4px; }
   .kacheln3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
-  .mini { background: rgba(255,255,255,.14); border-radius: 16px; padding: 12px; min-height: 70px; }
+  .mini { background: rgba(255,255,255,.14); border-radius: 16px; padding: 12px; min-height: 70px; border: none; color: #fff; text-align: left; font: inherit; cursor: pointer; }
+  .mini:active { transform: scale(.96); background: rgba(255,255,255,.22); }
+  .klick { cursor: pointer; }
+  /* ausklappbare Karten (Einstellungen) */
+  details.karte > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 1.1rem; }
+  details.karte > summary::-webkit-details-marker { display: none; }
+  details.karte > summary::after { content: "▾"; margin-left: auto; transition: transform .2s; color: var(--grau); }
+  details.karte:not([open]) > summary::after { transform: rotate(-90deg); }
+  details.karte[open] > summary { margin-bottom: 8px; }
+  .wahltabelle { width: 100%; border-collapse: collapse; }
+  .wahltabelle th { font-size: .8rem; color: var(--grau); font-weight: 800; padding: 4px; }
+  .wahltabelle td { padding: 10px 4px; border-top: 1px solid var(--linie); }
+  .wahltabelle td:not(:first-child), .wahltabelle th:not(:first-child) { text-align: center; width: 68px; }
+  .wahltabelle input { width: 26px; height: 26px; accent-color: var(--rot); }
   .mini b { display: block; font-size: 1.2rem; }
   .mini span { font-size: .72rem; letter-spacing: .06em; font-weight: 700; text-transform: uppercase; opacity: .9; }
 
@@ -182,10 +197,9 @@
   <section id="v-start">
     <div class="hero">
       <div class="kopfzeile">
-        <div class="logo"><img src="kc-kochmuetze-weiss.webp" alt="Kochmütze"></div>
-        <div><div class="marke-klein">KÖCHECLUB WERNE</div><div class="titel" id="begruessung">Köcheclub Werne</div><button class="statuschip" id="statusChip" onclick="statusBlatt()">🟢 verfügbar ▾</button></div>
+        <button class="logo" title="Zur Internetseite des Köcheclubs" onclick="webseite()"><img src="kc-kochmuetze-weiss.webp" alt="Kochmütze"></button>
+        <div class="kopftext"><div class="marke-klein">KÖCHECLUB WERNE</div><div class="titel" id="begruessung">Köcheclub Werne</div><button class="statuschip" id="statusChip" onclick="statusBlatt()">🟢 verfügbar ▾</button></div>
         <div class="knopfreihe">
-          <button class="rund" title="Einstellungen" onclick="zeige('einstellungen')">⚙️</button>
           <button class="rund" title="Hell/Dunkel" onclick="dunkelUmschalten()">🌙</button>
           <button class="rund" title="Aktualisieren" onclick="neuLaden(true)">↻</button>
         </div>
@@ -269,16 +283,29 @@
   <!-- EINSTELLUNGEN -->
   <section id="v-einstellungen" class="versteckt">
     <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>⚙️ Einstellungen</h2></div>
-    <div class="karte">
-      <div class="schalter"><div><b>🔔 Push-Benachrichtigungen</b><div class="hinweis" id="pushStatus">…</div></div><button class="knopf klein" id="pushKnopf" onclick="pushUmschalten()">Einschalten</button></div>
+    <details class="karte" data-klappe="benachrichtigung" open>
+      <summary>🔔 Benachrichtigungen</summary>
+      <p class="hinweis" style="margin:0 0 6px">Wobei möchtest du eine Nachricht aufs Handy (Push) oder eine E-Mail bekommen?</p>
+      <table class="wahltabelle"><thead><tr><th></th><th>📲 Push</th><th>✉️ E-Mail</th></tr></thead><tbody id="wahlTabelle"></tbody></table>
+      <p class="hinweis" style="font-size:.85rem" id="wahlHinweis">Nur Push: Kommt der Push nicht an, schicken wir automatisch eine E-Mail.</p>
+      <div class="schalter"><div><b>📲 Push auf diesem Handy</b><div class="hinweis" id="pushStatus">…</div></div><button class="knopf klein" id="pushKnopf" onclick="pushUmschalten()">Einschalten</button></div>
       <div class="schalter"><div><b>🔊 Warnton bei neuer Nachricht</b><div class="hinweis">Kurzer Ton, wenn die App offen ist</div></div><input type="checkbox" id="setTon" onchange="einstellung('ton', this.checked)"></div>
+      <div class="knoepfe"><button class="knopf klein" onclick="tonTest()">Ton testen</button><button class="knopf klein" onclick="pushTest()">Test-Push senden</button></div>
+    </details>
+    <details class="karte" data-klappe="darstellung">
+      <summary>🎨 Darstellung</summary>
       <div class="schalter"><div><b>🔠 Große Schrift</b></div><input type="checkbox" id="setGross" onchange="einstellung('gross', this.checked)"></div>
       <div class="schalter"><div><b>🌙 Dunkles Design</b></div><input type="checkbox" id="setDunkel" onchange="einstellung('dunkel', this.checked)"></div>
-      <div class="knoepfe"><button class="knopf klein" onclick="tonTest()">Ton testen</button><button class="knopf klein" onclick="pushTest()">Test-Push senden</button></div>
-    </div>
-    <div class="karte"><h3>📲 Auf den Startbildschirm</h3><p class="hinweis" id="installHinweis">Android: Menü ⋮ → „App installieren“ bzw. „Zum Startbildschirm hinzufügen“. iPhone: Teilen □↑ → „Zum Home-Bildschirm“.</p><button id="installKnopf" class="knopf haupt versteckt" onclick="installieren()">📲 Jetzt installieren</button></div>
-    <div class="karte"><h3>ℹ️ App</h3><div class="zeile"><span>Version</span><b id="appVersion" style="margin-left:auto"></b></div><div class="zeile"><span>Angemeldet als</span><b id="ichName" style="margin-left:auto"></b></div>
-      <div class="knoepfe"><button class="knopf klein" onclick="updatePruefen(true)">Nach Update suchen</button></div></div>
+    </details>
+    <details class="karte" data-klappe="install">
+      <summary>📲 Auf den Startbildschirm</summary>
+      <p class="hinweis" id="installHinweis">Android: Menü ⋮ → „App installieren“ bzw. „Zum Startbildschirm hinzufügen“. iPhone: Teilen □↑ → „Zum Home-Bildschirm“.</p><button id="installKnopf" class="knopf haupt versteckt" onclick="installieren()">📲 Jetzt installieren</button>
+    </details>
+    <details class="karte" data-klappe="app">
+      <summary>ℹ️ App</summary>
+      <div class="zeile"><span>Version</span><b id="appVersion" style="margin-left:auto"></b></div><div class="zeile"><span>Angemeldet als</span><b id="ichName" style="margin-left:auto"></b></div>
+      <div class="knoepfe"><button class="knopf klein" onclick="updatePruefen(true)">Nach Update suchen</button></div>
+    </details>
   </section>
 </div>
 
@@ -316,7 +343,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.2.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.3.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -401,15 +428,52 @@ function kachelnZeigen() {
       <div class="sym">${k.sym}</div><b>${esc(k.t)}</b><small>${esc(k.u)}</small>${k.bald ? '<span class="zahl">bald</span>' : z ? `<span class="zahl">${z}</span>` : ""}</button>`;
   }).join("");
 }
+// Kopf: oben das nächste Treffen (antippen → Termine), darunter drei Kennzahlen, jede führt in ihren Bereich
 function heroZeigen() {
-  const t = INIT?.naechstesTreffen;
-  if (!t) { $("heroInfo").innerHTML = `<h2>Kein Treffen geplant</h2><div class="unter">Sobald ein Köcheclub-Treffen ansteht, siehst du es hier.</div><div class="kacheln3"><div class="mini"><b>${INIT?.ungelesen || 0}</b><span>Neue Nachr.</span></div><div class="mini"><b>${INIT?.mitgliederAnzahl || "–"}</b><span>Mitglieder</span></div><div class="mini"><b>—</b><span>Nächstes Treffen</span></div></div>`; return; }
-  const tage = Math.ceil((new Date(t.beginn) - Date.now()) / 86400000);
-  const ort = t.ort || (t.gastgeber ? "bei " + t.gastgeber.name : "");
-  const meine = { ja: "✅ Ich komme", nein: "❌ Abgesagt", vielleicht: "❓ Vielleicht" }[t.meine] || "Noch offen";
-  $("heroInfo").innerHTML = `<h2>${esc(t.titel)}</h2><div class="unter">${esc(wann(t.beginn))}${ort ? " · " + esc(ort) : ""}</div>
-    <div class="kacheln3"><div class="mini"><b>${t.ja}</b><span>Zusagen</span></div><div class="mini" onclick="zeige('termine')" style="cursor:pointer"><b style="font-size:1rem">${meine}</b><span>Deine Antwort</span></div>
-    <div class="mini"><b>${tage <= 0 ? "Heute" : tage === 1 ? "Morgen" : tage + " Tage"}</b><span>bis zum Treffen</span></div></div>`;
+  const t = INIT?.naechstesTreffen, n = INIT?.ungelesen || 0;
+  let kopf, bisTreffen = "—";
+  if (t) {
+    const tage = Math.ceil((new Date(t.beginn) - Date.now()) / 86400000);
+    const ort = t.ort || (t.gastgeber ? "bei " + t.gastgeber.name : "");
+    const meine = { ja: "✅ Ich komme", nein: "❌ Abgesagt", vielleicht: "❓ Vielleicht" }[t.meine] || "❔ Bitte zu- oder absagen";
+    kopf = `<h2>${esc(t.titel)}</h2><div class="unter">${esc(wann(t.beginn))}${ort ? " · " + esc(ort) : ""}</div><div class="unter"><b>${meine}</b> · ✅ ${t.ja} Zusagen</div>`;
+    bisTreffen = tage <= 0 ? "Heute" : tage === 1 ? "Morgen" : `in ${tage} Tagen`;
+  } else kopf = `<h2>Kein Treffen geplant</h2><div class="unter">Sobald ein Köcheclub-Treffen ansteht, siehst du es hier.</div>`;
+  $("heroInfo").innerHTML = `<div class="klick" onclick="zeige('termine')">${kopf}</div>
+    <div class="kacheln3">
+      <button class="mini" onclick="zeige('nachrichten')"><b>${n}</b><span>Neue Nachr. ›</span></button>
+      <button class="mini" onclick="zeige('mitglieder')"><b>${INIT?.mitgliederAnzahl || "–"}</b><span>Mitglieder ›</span></button>
+      <button class="mini" onclick="zeige('termine')"><b style="font-size:1.05rem">${bisTreffen}</b><span>Nächstes Treffen ›</span></button>
+    </div>`;
+}
+// Internetseite des Köcheclubs (Platzhalter, bis die Seite online ist)
+const WEBSEITE_URL = "";
+function webseite() { if (WEBSEITE_URL) window.open(WEBSEITE_URL, "_blank"); else melde("🌐 Die Internetseite des Köcheclubs kommt bald – hier geht es dann direkt hin."); }
+
+// ---------- Benachrichtigungen je Bereich (Push / E-Mail) ----------
+const WAHL_BEREICHE = [["termine", "📅 Treffen & Erinnerungen"], ["nachrichten", "💬 Neue Nachrichten"], ["vorschlaege", "🗳️ Vorschläge & Abstimmungen"], ["dienste", "🗓️ Erinnerung an meinen Dienst (Vorabend)"]];
+function wahlZeigen() {
+  const w = INIT?.benachrichtigung || {};
+  $("wahlTabelle").innerHTML = WAHL_BEREICHE.map(([b, t]) => `<tr><td>${t}</td>
+    <td><input type="checkbox" ${w[b]?.push ? "checked" : ""} onchange="wahlSetzen('${b}')" id="w_${b}_push" aria-label="${t} per Push"></td>
+    <td><input type="checkbox" ${w[b]?.email ? "checked" : ""} onchange="wahlSetzen('${b}')" id="w_${b}_email" aria-label="${t} per E-Mail" ${INIT && !INIT.hatMail ? "disabled" : ""}></td></tr>`).join("");
+  $("wahlHinweis").textContent = INIT && !INIT.hatMail ? "⚠️ Für dich ist keine E-Mail-Adresse hinterlegt – bitte Hansi Bescheid geben." : "Nur Push angehakt: Kommt der Push nicht an, schicken wir automatisch eine E-Mail. Nichts angehakt: keine Benachrichtigung.";
+}
+async function wahlSetzen(b) {
+  const push = $(`w_${b}_push`).checked, email = $(`w_${b}_email`).checked;
+  try {
+    await api("benachrichtigung_setzen", { bereich: b, push, email });
+    INIT.benachrichtigung[b] = { push, email };
+    melde(push || email ? "Gespeichert ✔" : "Gespeichert – dafür bekommst du keine Benachrichtigung mehr");
+    if (push && pushMoeglich() && Notification.permission !== "granted") melde("Tipp: Schalte unten noch „Push auf diesem Handy“ ein.");
+  } catch (e) { melde(e.message, true); wahlZeigen(); }
+}
+// Auf-/Zuklappen merken
+function klappenMerken() {
+  document.querySelectorAll("details[data-klappe]").forEach((d) => {
+    try { const v = localStorage.getItem("kc_club_klappe_" + d.dataset.klappe); if (v !== null) d.open = v === "1"; } catch {}
+    d.addEventListener("toggle", () => { try { localStorage.setItem("kc_club_klappe_" + d.dataset.klappe, d.open ? "1" : "0"); } catch {} });
+  });
 }
 function wichtigZeigen() {
   const h = [];
@@ -442,7 +506,9 @@ function zaehlerZeigen() {
 }
 
 // ---------- Ansichten ----------
-function zeige(v) {
+// ausHistorie = true, wenn die Ansicht durch „Zurück“ im Browser/Handy kommt (dann keinen neuen Verlaufseintrag anlegen)
+function zeige(v, ausHistorie) {
+  const vorher = aktuelleAnsicht;
   aktuelleAnsicht = v;
   ["start", "termine", "vorschlaege", "dienste", "nachrichten", "chat", "neu", "mitglieder", "einstellungen"].forEach((x) => $("v-" + x).classList.toggle("versteckt", x !== v));
   document.querySelectorAll("#fuss button").forEach((b) => b.classList.toggle("an", b.dataset.v === v || (v === "chat" && b.dataset.v === "nachrichten") || (v === "neu" && b.dataset.v === "nachrichten")));
@@ -454,12 +520,32 @@ function zeige(v) {
   if (v === "dienste") dienstLaden();
   if (v === "nachrichten") unterhLaden();
   if (v === "mitglieder") mitgliederLaden();
-  if (v === "einstellungen") pushStatusZeigen();
+  if (v === "einstellungen") { pushStatusZeigen(); wahlZeigen(); }
   if (v === "start") neuLaden();
-  const hash = v === "start" ? "" : v === "chat" ? "" : "#" + v;
-  if (v !== "chat") history.replaceState(null, "", location.pathname + hash);
+  // KC-CLUB-ZURUECK: jede Ansicht bekommt einen Verlaufseintrag, damit „Zurück“ eine Ansicht zurückgeht statt die App zu schließen
+  const hash = v === "start" || v === "chat" ? "" : "#" + v;
+  if (!ausHistorie) {
+    const st = { v, id: v === "chat" ? chatId : null };
+    if (v === vorher && v !== "chat") history.replaceState(st, "", location.pathname + hash);
+    else history.pushState(st, "", location.pathname + hash);
+  }
   window.scrollTo(0, 0);
 }
+let letztesZurueck = 0;
+window.addEventListener("popstate", (e) => {
+  document.querySelectorAll(".blatt:not(.versteckt)").forEach((b) => b.classList.add("versteckt"));
+  const s = e.state || {};
+  if (s.basis) {
+    // ganz am Anfang angekommen: Startseite zeigen; erst das nächste „Zurück“ schließt die App
+    zeige("start", true);
+    if (Date.now() - letztesZurueck > 3000) melde("Zum Beenden nochmal auf „Zurück“ tippen");
+    letztesZurueck = Date.now();
+    return;
+  }
+  if (s.v === "chat" && s.id) chatOeffnen(s.id, true);
+  else if (s.v === "chat") zeige("nachrichten", true); // ungesendeter Entwurf lässt sich nicht wiederherstellen
+  else zeige(s.v || "start", true);
+});
 
 // ---------- Treffen ----------
 async function treffenLaden() {
@@ -699,9 +785,9 @@ async function unterhLaden() {
       || '<p class="hinweis">Noch keine Nachrichten. Tippe oben auf „＋ Neu“.</p>';
   } catch (e) { melde(e.message, true); }
 }
-async function chatOeffnen(id) {
-  chatId = id; zeige("chat"); chatId = id;
-  history.replaceState(null, "", location.pathname + "#nachricht=" + id);
+async function chatOeffnen(id, ausHistorie) {
+  chatId = id; zeige("chat", ausHistorie); chatId = id;
+  history.replaceState({ v: "chat", id }, "", location.pathname + "#nachricht=" + id);
   await chatLaden(true);
   chatTimer = setInterval(() => chatLaden(false), 10000);
 }
@@ -775,7 +861,7 @@ async function senden() {
     const daten = { text, anlagen: anlagen.map((a) => a.id) };
     const r = chatId ? await api("nachricht_senden", { id: chatId, ...daten }) : await api("nachricht_senden", { ...daten, ...neuEntwurf });
     $("text").value = ""; $("text").style.height = "auto"; anlagen = []; chipsZeigen(); neuEntwurf = null;
-    if (!chatId) { chatId = r.id; history.replaceState(null, "", location.pathname + "#nachricht=" + r.id); clearInterval(chatTimer); chatTimer = setInterval(() => chatLaden(false), 10000); }
+    if (!chatId) { chatId = r.id; history.replaceState({ v: "chat", id: r.id }, "", location.pathname + "#nachricht=" + r.id); clearInterval(chatTimer); chatTimer = setInterval(() => chatLaden(false), 10000); }
     await chatLaden(true);
   } catch (e) { melde(e.message, true); }
   $("sendenKnopf").disabled = false;
@@ -911,12 +997,17 @@ async function jetztAktualisieren() {
   if (k) { url.searchParams.delete("k"); history.replaceState(null, "", url.pathname + url.hash); }
   if (!KEY) { $("gesperrt").classList.remove("versteckt"); return; }
   $("app").classList.remove("versteckt");
+  klappenMerken();
+  // Verlauf: unten ein „Basis“-Eintrag, darüber die Startseite → „Zurück“ bleibt in der App
+  const sprung = location.hash;
+  history.replaceState({ basis: true }, "", url.pathname);
+  history.pushState({ v: "start" }, "", url.pathname);
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("sw.js").catch(() => {});
     navigator.serviceWorker.addEventListener("message", (e) => { if (e.data?.typ === "push") { neuLaden(); if (chatId) chatLaden(false); } });
   }
   neuLaden().then(() => {
-    const h = location.hash;
+    const h = sprung;
     if (h.startsWith("#nachricht=")) chatOeffnen(h.slice(11));
     else if (["#termine", "#vorschlaege", "#dienste", "#nachrichten", "#mitglieder", "#einstellungen"].includes(h)) zeige(h.slice(1));
   });

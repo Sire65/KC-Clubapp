@@ -1,9 +1,10 @@
 {
-  "version": "0.2.0",
+  "version": "0.3.0",
   "datum": "2026-09-28",
   "neu": [
-    "Dienstpläne: eigene Dienstzeiten und die der Mitglieder, die sie freigegeben haben – mehrere nebeneinander",
-    "Vorschläge: Themen für die nächste Sitzung vorschlagen und unterstützen, Abstimmungen offen oder geheim",
-    "Mitglieder ohne App bekommen Nachrichten und Einladungen per Mail"
+    "Einstellungen: je Bereich wählen – Push und/oder E-Mail; neu: Erinnerung an den eigenen Dienst am Vorabend",
+    "Kennzahlen oben antippen führt direkt in Nachrichten, Mitglieder und Termine",
+    "„Zurück“ am Handy geht eine Ansicht zurück statt die App zu schließen",
+    "Einstellungen auf- und zuklappbar, Kochmütze führt zur Internetseite (folgt)"
   ]
 }

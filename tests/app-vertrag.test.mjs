@@ -70,4 +70,27 @@ assert.ok(/\.filter\(\(id: string\) => erlaubt\.has\(id\)\)/.test(server), "gew�
 assert.ok(!/kc_dp_plan_sharing/.test(server), "Dienstplan-Freigabetabelle darf von der Club-App nicht verändert werden");
 assert.ok(/dpStand/.test(html) && /Stand des Dienstplans/.test(html), "Datenstand der Dienstzeiten wird nicht angezeigt");
 
+// 11. KC-CLUB-BENACHRICHTIGUNG: Auswahl je Bereich wird beim Versand beachtet; jede Kombination hat eine Regel.
+const mig3 = lies("supabase/migrations/20260928_kc_club_v03_benachrichtigung.sql");
+for (const k of ["club_nachricht", "club_treffen", "club_erinnerung", "club_vorschlag", "club_dienst"])
+  for (const s of ["_push", "_beide"]) assert.ok(mig3.includes(`'${k}${s}'`), `Regel ${k}${s} fehlt`);
+assert.ok(mig3.includes("'club_dienst_mail'") && mig3.includes("'club_dienst'"), "Dienst-Regeln fehlen");
+assert.ok(/x\.push && x\.email \? eventKey \+ "_beide" : x\.push \? eventKey \+ "_push" : x\.email \? eventKey \+ "_mail" : null/.test(server), "Auswahl Push/E-Mail wird nicht ausgewertet");
+assert.ok(/if \(!key\) continue;/.test(server), "„alles aus“ muss Versand unterdrücken");
+assert.ok(/routerSenden\("club_nachricht_push"/.test(server), "Test-Push muss unabhängig von der Auswahl als Push gehen");
+assert.ok(/id="wahlTabelle"/.test(html) && /benachrichtigung_setzen/.test(html), "Auswahltabelle fehlt");
+
+// 12. KC-CLUB-DIENSTERINNERUNG: nur wer eingeschaltet hat, höchstens einmal je Tag.
+assert.ok(/eq\("bereich", "dienste"\)\.or\("push\.eq\.true,email\.eq\.true"\)/.test(server), "Dienst-Erinnerung nur für Eingeschaltete");
+assert.ok(server.includes('from("kc_club_dienst_erinnerung").upsert({ person_id: pid, datum: morgen }, { onConflict: "person_id,datum", ignoreDuplicates: true })'), "Doppelversand-Sperre fehlt");
+
+// 13. KC-CLUB-ZURUECK + Kopf: Verlaufseinträge, Kennzahlen führen in Bereiche, kein Zahnrad im Kopf.
+assert.ok(/history\.replaceState\(\{ basis: true \}/.test(html) && /addEventListener\("popstate"/.test(html), "Zurück-Steuerung fehlt");
+assert.ok(/history\.pushState\(st,/.test(html), "Ansichten legen keinen Verlaufseintrag an");
+for (const z of ["nachrichten", "mitglieder", "termine"]) assert.ok(html.includes(`<button class="mini" onclick="zeige('${z}')">`), `Kennzahl → ${z} fehlt`);
+const kopfHtml = html.slice(html.indexOf('<section id="v-start">'), html.indexOf('id="heroInfo"'));
+assert.ok(!kopfHtml.includes("⚙️"), "Zahnrad gehört nicht mehr in den Kopf");
+assert.ok(/onclick="webseite\(\)"/.test(kopfHtml), "Kochmütze → Internetseite fehlt");
+assert.ok((html.match(/<details class="karte" data-klappe=/g) || []).length >= 4, "Einstellungen nicht ausklappbar");
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

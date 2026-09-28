@@ -4,14 +4,15 @@
 // Nutzt vorhandene Kerne: kc_core_people, kc_communication_threads/_thread_participants/_messages,
 // kc_communication_attachments (+ Bucket), kc_member_push_subscriptions, KC Communicator Router (Push/Mail über web.de).
 // Features: KC-CLUB-STATUS, KC-CLUB-ZUGANG, KC-CLUB-TREFFEN, KC-CLUB-NACHRICHTEN, KC-CLUB-ANLAGEN, KC-CLUB-PUSH, KC-CLUB-ADMIN,
-//           KC-CLUB-VORSCHLAG (0.2.0), KC-CLUB-OHNEAPP (0.2.0), KC-CLUB-DIENSTE (0.2.0)
+//           KC-CLUB-VORSCHLAG (0.2.0), KC-CLUB-OHNEAPP (0.2.0), KC-CLUB-DIENSTE (0.2.0),
+//           KC-CLUB-BENACHRICHTIGUNG (0.3.0), KC-CLUB-DIENSTERINNERUNG (0.3.0)
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.2.0";
+const SERVER_VERSION = "0.3.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -61,27 +62,49 @@ async function protokoll(person: string | null, aktion: string, details: Record<
 }
 
 // Versand über den KC Communicator (Push, sonst/zusätzlich Mail über web.de).
+async function routerSenden(eventKey: string, personIds: string[], vars: Record<string, unknown>, korrelation: string) {
+  const r = await fetch(`${SUPA}/functions/v1/kc-communication-router`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE}`, apikey: SERVICE },
+    body: JSON.stringify({ sourceProgram: "kc-club", eventKey, recipients: personIds.map((personId) => ({ personId })), variables: vars, correlationId: korrelation }),
+  });
+  const out = await r.json().catch(() => ({}));
+  return { gesendet: Number(out?.sent || 0), fehler: Number(out?.failed || 0) };
+}
+// KC-CLUB-BENACHRICHTIGUNG: Ereignis → Bereich, den das Mitglied in den Einstellungen steuert
+const BEREICH_VON: Record<string, string> = { club_treffen: "termine", club_erinnerung: "termine", club_nachricht: "nachrichten", club_vorschlag: "vorschlaege", club_dienst: "dienste" };
+const BEREICHE = ["termine", "nachrichten", "vorschlaege", "dienste"];
+// Anzeige-Standard, solange nichts gespeichert ist (Server nutzt dann die bisherige Standardregel)
+const STANDARD_WAHL: Record<string, { push: boolean; email: boolean }> = { termine: { push: true, email: true }, nachrichten: { push: true, email: false }, vorschlaege: { push: true, email: false }, dienste: { push: false, email: false } };
 // KC-CLUB-OHNEAPP: Wer die Club-App noch nie geöffnet hat, bekommt nur eine Mail (Regel <eventKey>_mail) –
 // ein Push über eine Anmeldung aus einem anderen Programm würde auf die gesperrte App führen.
 async function senden(eventKey: string, personIds: string[], vars: Record<string, unknown>, korrelation: string) {
   if (!personIds.length) return { gesendet: 0 };
-  const { data: zug } = await db.from("kc_club_zugang").select("person_id").eq("aktiv", true).not("zuletzt_gesehen", "is", null).in("person_id", personIds);
+  const [{ data: zug }, { data: wahl }] = await Promise.all([
+    db.from("kc_club_zugang").select("person_id").eq("aktiv", true).not("zuletzt_gesehen", "is", null).in("person_id", personIds),
+    db.from("kc_club_benachrichtigung").select("person_id,push,email").eq("bereich", BEREICH_VON[eventKey] ?? "-").in("person_id", personIds),
+  ]);
   const mitApp = new Set((zug ?? []).map((z: any) => z.person_id));
-  const ohneApp = personIds.filter((id) => !mitApp.has(id));
+  const w = new Map((wahl ?? []).map((x: any) => [x.person_id, x]));
   const hinweis = "\n\n(Die Köcheclub-App hast du noch nicht geöffnet – deinen persönlichen Link bekommst du von Hansi.)";
-  const teile = [
-    { key: eventKey, ids: [...mitApp], v: vars },
-    { key: eventKey + "_mail", ids: ohneApp, v: { ...vars, text: String(vars.text ?? "") + hinweis } },
-  ].filter((t) => t.ids.length);
+  // Gruppen je Regel; Mitglieder ohne App getrennt (sie bekommen den Hinweis auf den Link)
+  const gruppen = new Map<string, { key: string; ohne: boolean; ids: string[] }>();
+  for (const id of personIds) {
+    const ohne = !mitApp.has(id);
+    let key: string | null;
+    if (ohne) key = eventKey + "_mail";
+    else {
+      const x: any = w.get(id);
+      key = !x ? eventKey : x.push && x.email ? eventKey + "_beide" : x.push ? eventKey + "_push" : x.email ? eventKey + "_mail" : null;
+    }
+    if (!key) continue; // Mitglied hat für diesen Bereich alles ausgeschaltet
+    const g = gruppen.get(`${ohne}|${key}`) ?? { key, ohne, ids: [] };
+    g.ids.push(id); gruppen.set(`${ohne}|${key}`, g);
+  }
   let gesendet = 0, fehler = 0;
-  for (const t of teile) {
-    const r = await fetch(`${SUPA}/functions/v1/kc-communication-router`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE}`, apikey: SERVICE },
-      body: JSON.stringify({ sourceProgram: "kc-club", eventKey: t.key, recipients: t.ids.map((personId) => ({ personId })), variables: t.v, correlationId: korrelation }),
-    });
-    const out = await r.json().catch(() => ({}));
-    gesendet += Number(out?.sent || 0); fehler += Number(out?.failed || 0);
+  for (const g of gruppen.values()) {
+    const r = await routerSenden(g.key, g.ids, g.ohne ? { ...vars, text: String(vars.text ?? "") + hinweis } : vars, korrelation);
+    gesendet += r.gesendet; fehler += r.fehler;
   }
   return { gesendet, fehler };
 }
@@ -245,8 +268,31 @@ Deno.serve(async (req) => {
       const { data: abgelaufen } = await db.from("kc_club_vorschlaege").select("*").eq("status", "offen").lt("frist", jetzt());
       let beendet = 0;
       for (const v of abgelaufen ?? []) if (await vorschlagAbschliessen(v, null)) { beendet++; await protokoll(null, "vorschlag_frist_beendet", { vorschlag: v.id }); }
-      if (berlinStunde(new Date()) < 9) return json({ ok: true, erinnerungen: 0, beendet });
+      const stunde = berlinStunde(new Date());
       const morgen = berlinTag(new Date(Date.now() + 86400000));
+      // KC-CLUB-DIENSTERINNERUNG: am Vorabend ab 17 Uhr, nur wer es in den Einstellungen eingeschaltet hat
+      let dienst = 0;
+      if (stunde >= 17) {
+        const { data: an } = await db.from("kc_club_benachrichtigung").select("person_id").eq("bereich", "dienste").or("push.eq.true,email.eq.true");
+        const ids = (an ?? []).map((x: any) => x.person_id);
+        const { data: sch } = ids.length ? await db.from("kc_dp_plan_published").select("person_id,start_time,end_time,area")
+          .eq("org_id", ORG).eq("status", "published").eq("work_date", morgen).in("person_id", ids).order("start_time") : { data: [] as any[] };
+        const jePerson = new Map<string, any[]>();
+        (sch ?? []).forEach((s: any) => jePerson.set(s.person_id, [...(jePerson.get(s.person_id) ?? []), s]));
+        for (const [pid, liste] of jePerson) {
+          const { data: neu } = await db.from("kc_club_dienst_erinnerung").upsert({ person_id: pid, datum: morgen }, { onConflict: "person_id,datum", ignoreDuplicates: true }).select("person_id");
+          if (!neu?.length) continue;
+          const zeiten = liste.map((s: any) => `${String(s.start_time).slice(0, 5)}–${String(s.end_time).slice(0, 5)} Uhr${s.area ? " · " + s.area : ""}`);
+          await senden("club_dienst", [pid], {
+            titel: "🗓️ Morgen hast du Dienst", kurz: zeiten.join(", "),
+            betreff: `Köcheclub Werne – Erinnerung: morgen Dienst ${zeiten[0]}`,
+            text: `Hallo,\n\nkurze Erinnerung – morgen hast du Dienst:\n\n${zeiten.map((z) => "🗓️ " + z).join("\n")}\n\nDein Dienstplan in der Köcheclub-App: ${APP_URL}#dienste\n\nViele Grüße\nKöcheclub Werne`,
+            url: APP_URL + "#dienste",
+          }, `club-dienst:${pid}:${morgen}`);
+          dienst++;
+        }
+      }
+      if (stunde < 9) return json({ ok: true, erinnerungen: 0, beendet, dienst });
       const { data: ts } = await db.from("kc_club_treffen").select("*").eq("status", "geplant").is("erinnerung_gesendet_am", null)
         .gte("beginn", new Date().toISOString()).lte("beginn", new Date(Date.now() + 2 * 86400000).toISOString());
       let n = 0;
@@ -268,7 +314,7 @@ Deno.serve(async (req) => {
         await protokoll(null, "treffen_erinnerung", { treffen: t.id, empfaenger: ziel.length });
         n++;
       }
-      return json({ ok: true, erinnerungen: n, beendet });
+      return json({ ok: true, erinnerungen: n, beendet, dienst });
     }
 
     const ich = await anmelden(req);
@@ -295,7 +341,12 @@ Deno.serve(async (req) => {
         const { data: nd } = await db.from("kc_dp_plan_published").select("work_date,start_time,end_time,area").eq("org_id", ORG).eq("status", "published")
           .eq("person_id", ich.person_id).gte("work_date", berlinTag(new Date())).order("work_date").order("start_time").limit(1);
         const naechsterDienst = nd?.[0] ? { datum: nd[0].work_date, start: String(nd[0].start_time).slice(0, 5), ende: String(nd[0].end_time).slice(0, 5), bereich: nd[0].area } : null;
-        return json({ ich, status: meinStatus, server: SERVER_VERSION, ungelesen, offeneAbstimmungen, naechsterDienst, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null });
+        const [{ data: wahl }, { data: pm }] = await Promise.all([
+          db.from("kc_club_benachrichtigung").select("bereich,push,email").eq("person_id", ich.person_id),
+          db.from("kc_core_people").select("email").eq("person_id", ich.person_id).maybeSingle(),
+        ]);
+        const benachrichtigung = Object.fromEntries(BEREICHE.map((b) => { const x: any = (wahl ?? []).find((y: any) => y.bereich === b); return [b, x ? { push: x.push, email: x.email } : STANDARD_WAHL[b]]; }));
+        return json({ ich, status: meinStatus, server: SERVER_VERSION, ungelesen, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null });
       }
 
       case "mitglieder": {
@@ -489,6 +540,14 @@ Deno.serve(async (req) => {
         });
       }
 
+      case "benachrichtigung_setzen": {
+        const bereich = String(p.bereich || "");
+        if (!BEREICHE.includes(bereich)) throw new Fehler("Unbekannter Bereich.");
+        await db.from("kc_club_benachrichtigung").upsert({ person_id: ich.person_id, bereich, push: !!p.push, email: !!p.email, geaendert_am: jetzt() });
+        await protokoll(ich.person_id, "benachrichtigung_gesetzt", { bereich, push: !!p.push, email: !!p.email });
+        return json({ ok: true });
+      }
+
       case "dienst_freigabe": {
         await db.from("kc_club_freigaben").upsert({ person_id: ich.person_id, bereich: "dienstzeiten", erlaubt: !!p.erlaubt, geaendert_am: jetzt() });
         await protokoll(ich.person_id, "dienst_freigabe", { erlaubt: !!p.erlaubt });
@@ -658,7 +717,8 @@ Deno.serve(async (req) => {
         return json({ ok: true });
       }
       case "push_test": {
-        const v = await senden("club_nachricht", [ich.person_id], { titel: "🔔 Köcheclub Werne", kurz: `Hallo ${ich.vorname}, Push funktioniert!`, betreff: "Köcheclub Werne – Test", text: "Test", url: APP_URL }, `club-pushtest:${ich.person_id}:${Date.now()}`);
+        // bewusst ohne persönliche Auswahl: Test soll immer als Push gehen
+        const v = await routerSenden("club_nachricht_push", [ich.person_id], { titel: "🔔 Köcheclub Werne", kurz: `Hallo ${ich.vorname}, Push funktioniert!`, betreff: "Köcheclub Werne – Test", text: "Test", url: APP_URL }, `club-pushtest:${ich.person_id}:${Date.now()}`);
         return json({ ok: v.gesendet > 0, versand: v });
       }
 

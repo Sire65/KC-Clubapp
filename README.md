@@ -16,6 +16,8 @@ Farben Weinrot/Beige, Logo Kochmütze, große Knöpfe, ohne Ballast.
 | Einstellungen ⚙️ – Push, Warnton, große Schrift, Dunkel-Modus, Installieren, Update | ✅ |
 | Vorschläge nächste Sitzung – Themen (👍 unterstützen), Abstimmungen offen/geheim mit Frist | ✅ 0.2.0 |
 | Dienstpläne – eigene Zeiten, andere nur mit Freigabe, mehrere nebeneinander mit Zeitbalken | ✅ 0.2.0 |
+| Benachrichtigungen je Bereich (Push / E-Mail), Dienst-Erinnerung am Vorabend | ✅ 0.3.0 |
+| „Zurück“ bleibt in der App, Kennzahlen im Kopf führen in die Bereiche | ✅ 0.3.0 |
 | Protokolle | bald |
 | Freigegebene Programme | bald |
 

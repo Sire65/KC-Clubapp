@@ -1,5 +1,19 @@
 # Änderungen
 
+## 0.3.0 – 2026-09-28 (DEV)
+
+- KC-CLUB-BENACHRICHTIGUNG: in den Einstellungen je Bereich (Treffen & Erinnerungen, Nachrichten, Vorschläge,
+  Dienst-Erinnerung) Push und/oder E-Mail ankreuzen. Nur Push = Push, sonst automatisch E-Mail; beides = beides;
+  nichts = keine Benachrichtigung. Ohne Auswahl gilt die bisherige Standardregel. Test-Push geht immer als Push.
+- KC-CLUB-DIENSTERINNERUNG: Erinnerung am Vorabend (ab 17 Uhr) an die eigenen Dienste aus dem veröffentlichten
+  Sollplan – nur wer sie einschaltet, höchstens einmal je Tag.
+- Kopf: „KÖCHECLUB WERNE“ einzeilig, Zahnrad entfernt (Einstellungen unten unter „Mehr“), Knöpfe höher;
+  Kennzahlen antippbar (Neue Nachrichten → Kommunikation, Mitglieder → Mitglieder, Nächstes Treffen → Termine);
+  Kochmütze → Internetseite des Köcheclubs (Platzhalter bis zur Veröffentlichung).
+- KC-CLUB-ZURUECK: „Zurück“ im Browser/am Handy geht eine Ansicht zurück statt die App zu verlassen; auf der
+  Startseite erst beim zweiten „Zurück“ raus.
+- Einstellungen in aufklappbare Bereiche gegliedert (Zustand wird gemerkt).
+
 ## 0.2.0 – 2026-09-28 (DEV)
 
 - KC-CLUB-DIENSTE: Dienstpläne – eigene Dienstzeiten aus dem veröffentlichten Sollplan des Dienstplans (`kc_dp_plan_published`),
