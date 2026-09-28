@@ -1,10 +1,9 @@
 {
-  "version": "0.6.2",
+  "version": "0.8.0",
   "datum": "2026-09-28",
   "neu": [
-    "„Heute wichtig“ erinnert an die Zu- oder Absage erst eine Woche vor dem Treffen",
-    "Termine als Kalender: Monate und Jahre blättern, Treffen, eigene Dienste, Abstimmungs-Fristen und Geburtstage farbig markiert",
-    "Tag antippen zeigt alle Einträge – Treffen direkt zu- oder absagen, Geburtstagskind direkt anschreiben",
-    "„Heute wichtig“ zeigt, wer heute Geburtstag hat"
+    "Geburtstags-Push: 2 Tage vorher und am Tag – mit „Gratulieren“ direkt in den Chat",
+    "Veranstaltungen (z. B. Weihnachtsmarkt) im Kalender, auch über mehrere Tage",
+    "Einstellungen → Privatsphäre: „Meinen Geburtstag anzeigen (ohne Jahr)“"
   ]
 }

@@ -116,4 +116,31 @@ assert.ok(/\[\$\("kalGitter"\), kalBlaettern\]/.test(html), "Wischen im Kalender
 // 17. 0.6.2: Zu-/Absage-Hinweis in „Heute wichtig“ erst 7 Tage vor dem Treffen.
 assert.ok(/ZUSAGE_TAGE_VORHER = 7/.test(html) && /new Date\(t\.beginn\) - Date\.now\(\) <= ZUSAGE_TAGE_VORHER \* 86400000/.test(html), "Zusage-Hinweis muss auf 7 Tage vorher begrenzt sein");
 
+// 18. KC-CLUB-GEBURTSTAG-FREIGABE: nur freigegebene Geburtstage (eigener für sich selbst), Kästchen in den Einstellungen, Liste.
+assert.ok(/frei\.has\(m\.person_id\) \|\| m\.person_id === ich\.person_id/.test(server), "Geburtstage müssen auf Freigabe gefiltert sein");
+assert.ok(/case "geburtstag_freigabe"/.test(server) && /bereich: "geburtstag"/.test(server), "Aktion geburtstag_freigabe fehlt");
+for (const stelle of ['case "kalender"', 'case "treffen_liste"']) {
+  const abschnitt = server.slice(server.indexOf(stelle), server.indexOf("case ", server.indexOf(stelle) + 10));
+  assert.ok(/geburtstageSichtbar\(ich\)/.test(abschnitt), `${stelle} muss geburtstageSichtbar nutzen`);
+}
+assert.ok(/id="setGeburtstag"/.test(html) && /Meinen Geburtstag anzeigen \(ohne Jahr\)/.test(html), "Kästchen „Meinen Geburtstag anzeigen“ fehlt");
+assert.ok(/geburtstageListe\(geburtstage \|\| \[\], 30\)/.test(html), "Geburtstage in der Terminliste fehlen");
+const mig7 = lies("supabase/migrations/20260928_kc_club_v07_geburtstag_freigabe.sql");
+assert.ok(/'geburtstag'/.test(mig7), "Migration Geburtstag-Freigabe fehlt");
+
+// 19. 0.8.0: kein „Vorstand“ in der Oberfläche/den Meldungen, Geburtstags-Push, Veranstaltungen.
+assert.ok(!/Vorstand/.test(html), "Das Wort „Vorstand“ darf in der App nicht mehr vorkommen");
+assert.ok(!/new Fehler\("[^"]*Vorstand/.test(server), "Server-Meldungen dürfen „Vorstand“ nicht enthalten");
+assert.ok(/\["geburtstage", "🎂 Geburtstage \(2 Tage vorher und am Tag\)"\]/.test(html), "Einstellung Geburtstags-Push fehlt");
+assert.ok(/club_geburtstag: "geburtstage"/.test(server) && /#gratulieren=\$\{m\.person_id\}/.test(server), "Geburtstags-Push fehlt");
+assert.ok(/if \(!m\.birth_date \|\| !frei\.has\(m\.person_id\)\) continue;/.test(server), "Geburtstags-Push nur für freigegebene Geburtstage");
+assert.ok(/\.filter\(\(id\) => id !== m\.person_id && mitApp\.has\(id\)\)/.test(server), "Geburtstags-Push nur an Mitglieder mit App, nicht an das Geburtstagskind");
+assert.ok(/kc_club_geburtstag_hinweis"\)\.upsert/.test(server), "Doppelversand-Sperre Geburtstag fehlt");
+assert.ok(/h\.startsWith\("#gratulieren="\)\) gratulieren\(/.test(html), "Sprung „gratulieren“ aus dem Push fehlt");
+assert.ok(/\.eq\("art", "treffen"\)\.is\("erinnerung_gesendet_am", null\)/.test(server), "Vortags-Erinnerung nur für Club-Treffen");
+assert.ok(/offen && !va \? `<div class="antworten">/.test(html), "Veranstaltungen ohne Zu-/Absage");
+assert.ok(/t\.art === "veranstaltung" \? tag >= von && tag <= bis/.test(html), "Mehrtägige Veranstaltungen im Kalender fehlen");
+const mig8 = lies("supabase/migrations/20260928_kc_club_v08_geburtstag_push_veranstaltung.sql");
+for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_beide", "club_geburtstag_mail"]) assert.ok(mig8.includes(`'${k}'`), `Regel ${k} fehlt`);
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

@@ -5,14 +5,15 @@
 // kc_communication_attachments (+ Bucket), kc_member_push_subscriptions, KC Communicator Router (Push/Mail über web.de).
 // Features: KC-CLUB-STATUS, KC-CLUB-ZUGANG, KC-CLUB-TREFFEN, KC-CLUB-NACHRICHTEN, KC-CLUB-ANLAGEN, KC-CLUB-PUSH, KC-CLUB-ADMIN,
 //           KC-CLUB-VORSCHLAG (0.2.0), KC-CLUB-OHNEAPP (0.2.0), KC-CLUB-DIENSTE (0.2.0),
-//           KC-CLUB-BENACHRICHTIGUNG (0.3.0), KC-CLUB-DIENSTERINNERUNG (0.3.0), KC-CLUB-KALENDER (0.6.0)
+//           KC-CLUB-BENACHRICHTIGUNG (0.3.0), KC-CLUB-DIENSTERINNERUNG (0.3.0), KC-CLUB-KALENDER (0.6.0),
+//           KC-CLUB-GEBURTSTAG-FREIGABE (0.7.0), KC-CLUB-GEBURTSTAG-PUSH (0.8.0), KC-CLUB-VERANSTALTUNG (0.8.0)
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.6.0";
+const SERVER_VERSION = "0.8.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -73,10 +74,10 @@ async function routerSenden(eventKey: string, personIds: string[], vars: Record<
   return { gesendet: Number(out?.sent || 0), fehler: Number(out?.failed || 0) };
 }
 // KC-CLUB-BENACHRICHTIGUNG: Ereignis → Bereich, den das Mitglied in den Einstellungen steuert
-const BEREICH_VON: Record<string, string> = { club_treffen: "termine", club_erinnerung: "termine", club_nachricht: "nachrichten", club_vorschlag: "vorschlaege", club_dienst: "dienste" };
-const BEREICHE = ["termine", "nachrichten", "vorschlaege", "dienste"];
+const BEREICH_VON: Record<string, string> = { club_treffen: "termine", club_erinnerung: "termine", club_nachricht: "nachrichten", club_vorschlag: "vorschlaege", club_dienst: "dienste", club_geburtstag: "geburtstage" };
+const BEREICHE = ["termine", "nachrichten", "vorschlaege", "dienste", "geburtstage"];
 // Anzeige-Standard, solange nichts gespeichert ist (Server nutzt dann die bisherige Standardregel)
-const STANDARD_WAHL: Record<string, { push: boolean; email: boolean }> = { termine: { push: true, email: true }, nachrichten: { push: true, email: false }, vorschlaege: { push: true, email: false }, dienste: { push: false, email: false } };
+const STANDARD_WAHL: Record<string, { push: boolean; email: boolean }> = { termine: { push: true, email: true }, nachrichten: { push: true, email: false }, vorschlaege: { push: true, email: false }, dienste: { push: false, email: false }, geburtstage: { push: true, email: false } };
 // KC-CLUB-OHNEAPP: Wer die Club-App noch nie geöffnet hat, bekommt nur eine Mail (Regel <eventKey>_mail) –
 // ein Push über eine Anmeldung aus einem anderen Programm würde auf die gesperrte App führen.
 async function senden(eventKey: string, personIds: string[], vars: Record<string, unknown>, korrelation: string) {
@@ -125,7 +126,8 @@ async function anmelden(req: Request): Promise<Ich> {
   db.from("kc_club_zugang").update({ zuletzt_gesehen: jetzt(), app_version: txt(req.headers.get("x-club-version"), 20) || null }).eq("person_id", z.person_id).then(() => {});
   return { person_id: p.person_id, name: p.display_name, vorname: vorname(p), admin: !!r?.ist_admin, vorstand: !!(r?.ist_vorstand || r?.ist_admin), aemter: r?.aemter ?? [] };
 }
-const nurVorstand = (ich: Ich) => { if (!ich.vorstand) throw new Fehler("Das dürfen nur Vorstand und Admin.", 403); };
+// „vorstand“ ist intern das Recht, Treffen/Veranstaltungen/Abstimmungen anzulegen (im Club: Clubsprecher, Kassenwart, Admin)
+const nurVorstand = (ich: Ich) => { if (!ich.vorstand) throw new Fehler("Das dürfen nur Clubsprecher, Kassenwart und Admin.", 403); };
 const nurAdmin = (ich: Ich) => { if (!ich.admin) throw new Fehler("Das darf nur der Admin.", 403); };
 
 // ---------- Eigener Status ----------
@@ -139,11 +141,24 @@ async function statusMap(ids?: string[]) {
   return new Map((data ?? []).map((x: any) => [x.person_id, x.bis && x.bis < heute ? { status: "verfuegbar", hinweis: null, bis: null } : { status: x.status, hinweis: x.hinweis, bis: x.bis }]));
 }
 
+// ---------- Geburtstage (KC-CLUB-GEBURTSTAG-FREIGABE) ----------
+// Nur wer „Meinen Geburtstag anzeigen“ eingeschaltet hat (eigener immer für sich selbst); nur Tag/Monat, nie das Jahr.
+async function geburtstageSichtbar(ich: Ich) {
+  const [leute, { data: fr }] = await Promise.all([
+    aktiveMitglieder(),
+    db.from("kc_club_freigaben").select("person_id").eq("bereich", "geburtstag").eq("erlaubt", true),
+  ]);
+  const frei = new Set((fr ?? []).map((x: any) => x.person_id));
+  return leute.filter((m: any) => m.birth_date && (frei.has(m.person_id) || m.person_id === ich.person_id))
+    .map((m: any) => ({ person_id: m.person_id, name: m.display_name, vorname: vorname(m), md: String(m.birth_date).slice(5, 10) }));
+}
+
 // ---------- Treffen ----------
 async function treffenListe(ich: Ich, nurNaechstes = false, zeitraum?: { von: string; bis: string }) {
   let q = db.from("kc_club_treffen").select("*").order("beginn");
-  q = zeitraum ? q.gte("beginn", zeitraum.von).lt("beginn", zeitraum.bis).limit(100)
-    : nurNaechstes ? q.gte("beginn", new Date(Date.now() - 3 * 3600000).toISOString()).eq("status", "geplant").limit(1)
+  // Zeitraum: alles, was ihn berührt (auch mehrtägige Veranstaltungen, die vorher beginnen)
+  q = zeitraum ? q.lt("beginn", zeitraum.bis).or(`ende.gte.${zeitraum.von},and(ende.is.null,beginn.gte.${zeitraum.von})`).limit(100)
+    : nurNaechstes ? q.gte("beginn", new Date(Date.now() - 3 * 3600000).toISOString()).eq("status", "geplant").eq("art", "treffen").limit(1)
     : q.gte("beginn", new Date(Date.now() - 30 * 86400000).toISOString()).limit(60);
   const { data: treffen } = await q;
   const ids = (treffen ?? []).map((t: any) => t.id);
@@ -155,7 +170,7 @@ async function treffenListe(ich: Ich, nurNaechstes = false, zeitraum?: { von: st
       .sort((a: any, b: any) => a.name.localeCompare(b.name));
     const zahl = (a: string) => tn.filter((x: any) => x.antwort === a).length;
     return {
-      id: t.id, titel: t.titel, beginn: t.beginn, ende: t.ende, ort: t.ort, beschreibung: t.beschreibung, status: t.status,
+      id: t.id, titel: t.titel, beginn: t.beginn, ende: t.ende, ort: t.ort, beschreibung: t.beschreibung, status: t.status, art: t.art, ganztaegig: t.ganztaegig,
       gastgeber: t.gastgeber_person_id ? { person_id: t.gastgeber_person_id, name: leute.get(t.gastgeber_person_id)?.display_name } : null,
       teilnahme: tn, ja: zahl("ja"), nein: zahl("nein"), vielleicht: zahl("vielleicht"),
       meine: tn.find((x: any) => x.person_id === ich.person_id)?.antwort ?? null,
@@ -164,13 +179,14 @@ async function treffenListe(ich: Ich, nurNaechstes = false, zeitraum?: { von: st
 }
 function treffenText(t: any, gastgeber: string, anlass: "neu" | "geaendert" | "abgesagt") {
   const ort = t.ort || (gastgeber ? `bei ${gastgeber}` : "");
-  const kopf = anlass === "abgesagt" ? "das Köcheclub-Treffen fällt leider aus:" : anlass === "geaendert" ? "das Köcheclub-Treffen hat sich geändert:" : "hiermit lade ich dich herzlich zum Köcheclub-Treffen ein:";
+  const va = t.art === "veranstaltung"; // Veranstaltung (Aufbau, Markt …): keine Einladung, keine Zu-/Absage
+  const kopf = anlass === "abgesagt" ? (va ? "dieser Termin fällt leider aus:" : "das Köcheclub-Treffen fällt leider aus:") : anlass === "geaendert" ? (va ? "dieser Termin hat sich geändert:" : "das Köcheclub-Treffen hat sich geändert:") : (va ? "neuer Termin im Köcheclub:" : "hiermit lade ich dich herzlich zum Köcheclub-Treffen ein:");
   return {
     betreff: `Köcheclub Werne – ${anlass === "abgesagt" ? "abgesagt: " : anlass === "geaendert" ? "geändert: " : ""}${t.titel}, ${wann(t.beginn)}`,
     titel: anlass === "abgesagt" ? "❌ Treffen abgesagt" : "📅 " + t.titel,
-    kurz: `${wann(t.beginn)}${ort ? " – " + ort : ""}${anlass === "abgesagt" ? " fällt aus." : ". Bitte in der App zu- oder absagen."}`,
+    kurz: `${wann(t.beginn)}${ort ? " – " + ort : ""}${anlass === "abgesagt" ? " fällt aus." : va ? "" : ". Bitte in der App zu- oder absagen."}`,
     text: ["Hallo,", "", kopf, "", `📅 ${wann(t.beginn, true)}`, ort ? `📍 ${ort}` : "", t.beschreibung ? "\n" + t.beschreibung : "", "",
-      anlass === "abgesagt" ? "" : `Bitte sag in der Köcheclub-App zu oder ab: ${APP_URL}#termine`, "", "Viele Grüße", "Köcheclub Werne"]
+      anlass === "abgesagt" ? "" : va ? `Alle Termine in der Köcheclub-App: ${APP_URL}#termine` : `Bitte sag in der Köcheclub-App zu oder ab: ${APP_URL}#termine`, "", "Viele Grüße", "Köcheclub Werne"]
       .filter((z, i, a) => !(z === "" && a[i - 1] === "")).join("\n"),
     url: APP_URL + "#termine",
   };
@@ -295,7 +311,41 @@ Deno.serve(async (req) => {
         }
       }
       if (stunde < 9) return json({ ok: true, erinnerungen: 0, beendet, dienst });
-      const { data: ts } = await db.from("kc_club_treffen").select("*").eq("status", "geplant").is("erinnerung_gesendet_am", null)
+      // KC-CLUB-GEBURTSTAG-PUSH: 2 Tage vorher und am Tag – nur freigegebene Geburtstage, nur an Mitglieder mit geöffneter App
+      let geb = 0;
+      {
+        const heute = berlinTag(new Date()), in2 = berlinTag(new Date(Date.now() + 2 * 86400000));
+        const [leute, { data: fr }, { data: nutzer }] = await Promise.all([
+          aktiveMitglieder(),
+          db.from("kc_club_freigaben").select("person_id").eq("bereich", "geburtstag").eq("erlaubt", true),
+          db.from("kc_club_zugang").select("person_id").eq("aktiv", true).not("zuletzt_gesehen", "is", null),
+        ]);
+        const frei = new Set((fr ?? []).map((x: any) => x.person_id)), mitApp = new Set((nutzer ?? []).map((x: any) => x.person_id));
+        const trifft = (bd: string, tag: string) => { const md = bd.slice(5, 10), t = tag.slice(5), schalt = new Date(Date.UTC(+tag.slice(0, 4), 1, 29)).getUTCDate() === 29; return md === t || (!schalt && t === "02-28" && md === "02-29"); };
+        for (const m of leute as any[]) {
+          if (!m.birth_date || !frei.has(m.person_id)) continue;
+          for (const [art, tag] of [["heute", heute], ["vorher", in2]] as const) {
+            if (!trifft(String(m.birth_date), tag)) continue;
+            const { data: neu } = await db.from("kc_club_geburtstag_hinweis").upsert({ person_id: m.person_id, datum: tag, art }, { onConflict: "person_id,datum,art", ignoreDuplicates: true }).select("person_id");
+            if (!neu?.length) continue;
+            const ziel = leute.map((x) => x.person_id).filter((id) => id !== m.person_id && mitApp.has(id));
+            const wtag = fTag.format(new Date(tag + "T12:00:00Z"));
+            await senden("club_geburtstag", ziel, art === "heute" ? {
+              titel: `🎂 ${m.display_name} hat heute Geburtstag`, kurz: "Möchtest du gratulieren? Hier antippen.",
+              betreff: `Köcheclub Werne – ${m.display_name} hat heute Geburtstag`,
+              text: `Hallo,\n\nheute hat ${m.display_name} Geburtstag! 🎂\n\nGratulieren in der Köcheclub-App: ${APP_URL}#gratulieren=${m.person_id}\n\nViele Grüße\nKöcheclub Werne`,
+              url: `${APP_URL}#gratulieren=${m.person_id}`,
+            } : {
+              titel: `🎂 In 2 Tagen: ${vorname(m)} hat Geburtstag`, kurz: `${m.display_name} hat am ${wtag} Geburtstag.`,
+              betreff: `Köcheclub Werne – ${m.display_name} hat in 2 Tagen Geburtstag`,
+              text: `Hallo,\n\nkleine Erinnerung: ${m.display_name} hat übermorgen (${wtag}) Geburtstag. 🎂\n\nViele Grüße\nKöcheclub Werne`,
+              url: `${APP_URL}#termine`,
+            }, `club-geburtstag:${m.person_id}:${tag}:${art}`);
+            geb++;
+          }
+        }
+      }
+      const { data: ts } = await db.from("kc_club_treffen").select("*").eq("status", "geplant").eq("art", "treffen").is("erinnerung_gesendet_am", null)
         .gte("beginn", new Date().toISOString()).lte("beginn", new Date(Date.now() + 2 * 86400000).toISOString());
       let n = 0;
       for (const t of ts ?? []) {
@@ -316,7 +366,7 @@ Deno.serve(async (req) => {
         await protokoll(null, "treffen_erinnerung", { treffen: t.id, empfaenger: ziel.length });
         n++;
       }
-      return json({ ok: true, erinnerungen: n, beendet, dienst });
+      return json({ ok: true, erinnerungen: n, beendet, dienst, geb });
     }
 
     const ich = await anmelden(req);
@@ -347,12 +397,15 @@ Deno.serve(async (req) => {
           db.from("kc_club_benachrichtigung").select("bereich,push,email").eq("person_id", ich.person_id),
           db.from("kc_core_people").select("email").eq("person_id", ich.person_id).maybeSingle(),
         ]);
-        // Geburtstage heute (nur Tag/Monat; 29.02. wird in Nicht-Schaltjahren am 28.02. gefeiert)
+        // Geburtstage heute – nur freigegebene (nur Tag/Monat; 29.02. wird in Nicht-Schaltjahren am 28.02. gefeiert)
         const heuteMd = berlinTag(new Date()).slice(5), schalt = new Date(Number(berlinTag(new Date()).slice(0, 4)), 1, 29).getDate() === 29;
-        const geburtstageHeute = mitglieder.filter((m: any) => m.birth_date && (String(m.birth_date).slice(5, 10) === heuteMd || (!schalt && heuteMd === "02-28" && String(m.birth_date).slice(5, 10) === "02-29")))
-          .map((m: any) => ({ person_id: m.person_id, name: m.display_name, vorname: vorname(m) }));
+        const geb = await geburtstageSichtbar(ich);
+        const geburtstageHeute = geb.filter((g) => g.md === heuteMd || (!schalt && heuteMd === "02-28" && g.md === "02-29"))
+          .map((g) => ({ person_id: g.person_id, name: g.name, vorname: g.vorname }));
+        const { data: gf } = await db.from("kc_club_freigaben").select("erlaubt").eq("person_id", ich.person_id).eq("bereich", "geburtstag").maybeSingle();
+        const hatGeburtstag = !!(mitglieder.find((m: any) => m.person_id === ich.person_id) as any)?.birth_date;
         const benachrichtigung = Object.fromEntries(BEREICHE.map((b) => { const x: any = (wahl ?? []).find((y: any) => y.bereich === b); return [b, x ? { push: x.push, email: x.email } : STANDARD_WAHL[b]]; }));
-        return json({ ich, status: meinStatus, server: SERVER_VERSION, ungelesen, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null });
+        return json({ ich, status: meinStatus, server: SERVER_VERSION, ungelesen, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, hatGeburtstag, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null });
       }
 
       case "mitglieder": {
@@ -387,7 +440,10 @@ Deno.serve(async (req) => {
       }
 
       // ----- Treffen -----
-      case "treffen_liste": return json({ treffen: await treffenListe(ich) });
+      case "treffen_liste": {
+        const [treffen, geburtstage] = await Promise.all([treffenListe(ich), geburtstageSichtbar(ich)]);
+        return json({ treffen, geburtstage });
+      }
 
       case "treffen_speichern": {
         nurVorstand(ich);
@@ -396,7 +452,9 @@ Deno.serve(async (req) => {
         if (isNaN(beginn.getTime())) throw new Fehler("Bitte Datum und Uhrzeit angeben.");
         if (beginn.getTime() < Date.now() - 3600000) throw new Fehler("Das Treffen liegt in der Vergangenheit.");
         const zeile = { titel, beginn: beginn.toISOString(), ende: p.ende ? new Date(String(p.ende)).toISOString() : null, ort: txt(p.ort, 200) || null,
-          gastgeber_person_id: p.gastgeber_person_id ? String(p.gastgeber_person_id) : null, beschreibung: txt(p.beschreibung, 2000) || null, geaendert_am: jetzt() };
+          gastgeber_person_id: p.gastgeber_person_id ? String(p.gastgeber_person_id) : null, beschreibung: txt(p.beschreibung, 2000) || null, geaendert_am: jetzt(),
+          art: p.art === "veranstaltung" ? "veranstaltung" : "treffen", ganztaegig: p.art === "veranstaltung" && !!p.ganztaegig };
+        if (zeile.ende && zeile.ende < zeile.beginn) throw new Fehler("Das Ende liegt vor dem Beginn.");
         let t: any, anlass: "neu" | "geaendert" = "neu";
         if (p.id) {
           ({ data: t } = await db.from("kc_club_treffen").update({ ...zeile, erinnerung_gesendet_am: null }).eq("id", p.id).select().single());
@@ -457,7 +515,7 @@ Deno.serve(async (req) => {
           treffen_id: p.treffen_id ? String(p.treffen_id) : null, frist: art === "abstimmung" && frist ? frist.toISOString() : null, erstellt_von: ich.person_id,
         }).select().single();
         if (error || !v) throw new Fehler("Speichern fehlgeschlagen.", 500);
-        // Abstimmung → alle; Themenvorschlag → Vorstand
+        // Abstimmung → alle; Themenvorschlag → Clubsprecher/Kassenwart (Recht „Organisation“)
         let versand = null;
         if (p.benachrichtigen !== false) {
           const ziel = art === "abstimmung" ? (await aktiveMitglieder()).map((x) => x.person_id)
@@ -507,10 +565,10 @@ Deno.serve(async (req) => {
         const eigener = v.erstellt_von === ich.person_id;
         let versand = null;
         if (p.status === "zurueckgezogen") {
-          if (!ich.vorstand && !eigener) throw new Fehler("Das darf nur, wer den Vorschlag gemacht hat, oder der Vorstand.", 403);
+          if (!ich.vorstand && !eigener) throw new Fehler("Das darf nur, wer den Vorschlag gemacht hat, oder Clubsprecher/Kassenwart.", 403);
           await db.from("kc_club_vorschlaege").update({ status: "zurueckgezogen", abgeschlossen_am: jetzt(), abgeschlossen_von: ich.person_id }).eq("id", v.id);
         } else if (p.status === "abgeschlossen") {
-          if (!ich.vorstand && !(eigener && v.art === "thema")) throw new Fehler("Abstimmungen beendet der Vorstand.", 403);
+          if (!ich.vorstand && !(eigener && v.art === "thema")) throw new Fehler("Abstimmungen beenden Clubsprecher, Kassenwart oder Admin.", 403);
           versand = await vorschlagAbschliessen(v, ich.person_id);
         } else throw new Fehler("Unbekannter Status.");
         await protokoll(ich.person_id, "vorschlag_" + p.status, { vorschlag: v.id, versand });
@@ -553,13 +611,12 @@ Deno.serve(async (req) => {
         if (!von || !bis || bis < von || (new Date(bis).getTime() - new Date(von).getTime()) > 62 * 86400000) throw new Fehler("Ungültiger Zeitraum.");
         // Tagesgrenzen in deutscher Zeit (großzügig ±1 Tag, genaue Zuordnung macht die App)
         const zeitraum = { von: new Date(new Date(von).getTime() - 86400000).toISOString(), bis: new Date(new Date(bis).getTime() + 2 * 86400000).toISOString() };
-        const [treffen, { data: dienste }, { data: fristen }, { data: leute }] = await Promise.all([
+        const [treffen, { data: dienste }, { data: fristen }, geburtstage] = await Promise.all([
           treffenListe(ich, false, zeitraum),
           db.from("kc_dp_plan_published").select("work_date,start_time,end_time,area").eq("org_id", ORG).eq("status", "published")
             .eq("person_id", ich.person_id).gte("work_date", von).lte("work_date", bis).order("work_date").order("start_time"),
           db.from("kc_club_vorschlaege").select("id,titel,frist,status").eq("art", "abstimmung").neq("status", "zurueckgezogen").gte("frist", zeitraum.von).lt("frist", zeitraum.bis),
-          db.from("kc_core_people").select("person_id,display_name,given_name,preferred_name,birth_date").eq("active", true).eq("org_id", ORG)
-            .not("person_id", "like", "KC-P-TEST%").not("birth_date", "is", null),
+          geburtstageSichtbar(ich),
         ]);
         const tids = treffen.map((t: any) => t.id);
         const { data: themen } = tids.length ? await db.from("kc_club_vorschlaege").select("treffen_id,titel").eq("art", "thema").neq("status", "zurueckgezogen").in("treffen_id", tids) : { data: [] as any[] };
@@ -567,8 +624,8 @@ Deno.serve(async (req) => {
           treffen: treffen.map((t: any) => ({ ...t, themen: (themen ?? []).filter((x: any) => x.treffen_id === t.id).map((x: any) => x.titel) })),
           dienste: (dienste ?? []).map((s: any) => ({ datum: s.work_date, start: String(s.start_time).slice(0, 5), ende: String(s.end_time).slice(0, 5), bereich: s.area })),
           fristen: (fristen ?? []).map((v: any) => ({ id: v.id, titel: v.titel, frist: v.frist, offen: v.status === "offen" })),
-          // Datenschutz: nur Tag und Monat, kein Geburtsjahr
-          geburtstage: (leute ?? []).map((m: any) => ({ person_id: m.person_id, name: m.display_name, vorname: vorname(m), md: String(m.birth_date).slice(5, 10) })),
+          // Datenschutz: nur freigegebene, nur Tag und Monat, kein Geburtsjahr
+          geburtstage,
         });
       }
 
@@ -577,6 +634,12 @@ Deno.serve(async (req) => {
         if (!BEREICHE.includes(bereich)) throw new Fehler("Unbekannter Bereich.");
         await db.from("kc_club_benachrichtigung").upsert({ person_id: ich.person_id, bereich, push: !!p.push, email: !!p.email, geaendert_am: jetzt() });
         await protokoll(ich.person_id, "benachrichtigung_gesetzt", { bereich, push: !!p.push, email: !!p.email });
+        return json({ ok: true });
+      }
+
+      case "geburtstag_freigabe": {
+        await db.from("kc_club_freigaben").upsert({ person_id: ich.person_id, bereich: "geburtstag", erlaubt: !!p.erlaubt, geaendert_am: jetzt() });
+        await protokoll(ich.person_id, "geburtstag_freigabe", { erlaubt: !!p.erlaubt });
         return json({ ok: true });
       }
 

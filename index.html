@@ -38,12 +38,13 @@
   .ktag.geb { background: var(--lilabg); color: var(--lila); font-weight: 900; }
   .ktag.frist { background: var(--gelbbg); color: var(--gelb); font-weight: 900; }
   .ktag.dienst { background: var(--blaubg); color: var(--blau); font-weight: 900; }
+  .ktag.veranst { background: var(--gruenbg); color: var(--gruen); font-weight: 900; }
   .ktag.treffen { background: var(--rot); color: #fff; font-weight: 900; }
   .ktag.gewaehlt { box-shadow: 0 0 0 3px var(--text); }
   .ktag .punkte { display: flex; gap: 3px; margin-top: auto; margin-bottom: 6px; min-height: 6px; }
   .ktag .punkte i { width: 6px; height: 6px; border-radius: 50%; display: block; }
   .p-treffen { background: var(--rot); } .ktag.treffen .p-treffen { background: #fff; }
-  .p-dienst { background: var(--blau); } .p-frist { background: #d19a22; } .p-geb { background: var(--lila); }
+  .p-veranst { background: var(--gruen); } .p-dienst { background: var(--blau); } .p-frist { background: #d19a22; } .p-geb { background: var(--lila); }
   .legende { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 12px; font-size: .8rem; color: var(--grau); font-weight: 700; }
   .legende i { display: inline-block; width: 12px; height: 12px; border-radius: 4px; margin-right: 5px; vertical-align: -1px; }
   .keintrag { display: flex; gap: 10px; align-items: center; padding: 10px 0; border-top: 1px solid var(--linie); cursor: pointer; }
@@ -223,7 +224,7 @@
   .updatebalken { background: var(--gelbbg); color: var(--gelb); border-radius: 14px; padding: 12px; margin-top: 10px; display: flex; gap: 10px; align-items: center; font-weight: 700; }
   .schalter { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--linie); }
   .schalter:last-child { border-bottom: none; }
-  .schalter input { width: 26px; height: 26px; accent-color: var(--rot); }
+  .schalter input { flex: none; width: 26px; height: 26px; accent-color: var(--rot); }
   .blatt { position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 40; display: flex; align-items: flex-end; justify-content: center; }
   .blatt-innen { background: var(--karte); width: min(560px, 100%); border-radius: 22px 22px 0 0; padding: 18px 16px calc(18px + env(safe-area-inset-bottom)); display: grid; gap: 10px; }
   .blatt-innen h3 { margin: 0 0 4px; }
@@ -278,7 +279,7 @@
         <div class="wt"><span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span><span>Sa</span><span>So</span></div>
         <div class="tage" id="kalGitter"></div>
         <div class="legende">
-          <span><i style="background:var(--rot)"></i>Club-Treffen</span><span><i style="background:var(--blaubg);outline:1px solid var(--blau)"></i>mein Dienst</span>
+          <span><i style="background:var(--rot)"></i>Club-Treffen</span><span><i style="background:var(--gruenbg);outline:1px solid var(--gruen)"></i>🎪 Veranstaltung</span><span><i style="background:var(--blaubg);outline:1px solid var(--blau)"></i>mein Dienst</span>
           <span><i style="background:var(--gelbbg);outline:1px solid #d19a22"></i>Abstimmungs-Frist</span><span><i style="background:var(--lilabg);outline:1px solid var(--lila)"></i>🎂 Geburtstag</span>
           <span><i style="outline:2px solid var(--gold)"></i>heute</span>
         </div>
@@ -356,6 +357,10 @@
       <div class="schalter"><div><b>🔊 Warnton bei neuer Nachricht</b><div class="hinweis">Kurzer Ton, wenn die App offen ist</div></div><input type="checkbox" id="setTon" onchange="einstellung('ton', this.checked)"></div>
       <div class="knoepfe"><button class="knopf klein" onclick="tonTest()">Ton testen</button><button class="knopf klein" onclick="pushTest()">Test-Push senden</button></div>
     </details>
+    <details class="karte" data-klappe="privat">
+      <summary>🔒 Privatsphäre</summary>
+      <div class="schalter"><div><b>🎂 Meinen Geburtstag anzeigen (ohne Jahr)</b><div class="hinweis" id="gebHinweis">Andere sehen dann nur Tag und Monat – im Kalender, in der Terminliste und unter „Heute wichtig“.</div></div><input type="checkbox" id="setGeburtstag" onchange="geburtstagFreigabe(this.checked)"></div>
+    </details>
     <details class="karte" data-klappe="darstellung">
       <summary>🎨 Darstellung</summary>
       <div class="schalter"><div><b>🔠 Große Schrift</b></div><input type="checkbox" id="setGross" onchange="einstellung('gross', this.checked)"></div>
@@ -407,7 +412,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.6.2"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.8.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -542,7 +547,7 @@ const WEBSEITE_URL = "";
 function webseite() { if (WEBSEITE_URL) window.open(WEBSEITE_URL, "_blank"); else melde("🌐 Die Internetseite des Köcheclubs kommt bald – hier geht es dann direkt hin."); }
 
 // ---------- Benachrichtigungen je Bereich (Push / E-Mail) ----------
-const WAHL_BEREICHE = [["termine", "📅 Treffen & Erinnerungen"], ["nachrichten", "💬 Neue Nachrichten"], ["vorschlaege", "🗳️ Vorschläge & Abstimmungen"], ["dienste", "🗓️ Erinnerung an meinen Dienst (Vorabend)"]];
+const WAHL_BEREICHE = [["termine", "📅 Treffen & Erinnerungen"], ["nachrichten", "💬 Neue Nachrichten"], ["vorschlaege", "🗳️ Vorschläge & Abstimmungen"], ["dienste", "🗓️ Erinnerung an meinen Dienst (Vorabend)"], ["geburtstage", "🎂 Geburtstage (2 Tage vorher und am Tag)"]];
 function wahlZeigen() {
   const w = INIT?.benachrichtigung || {};
   $("wahlTabelle").innerHTML = WAHL_BEREICHE.map(([b, t]) => `<tr><td>${t}</td>
@@ -595,7 +600,7 @@ function wichtigZeigen() {
   if (INIT?.offeneAbstimmungen) h.push(`<div class="zeile" style="cursor:pointer" onclick="zeige('vorschlaege')">🗳️ <b>${INIT.offeneAbstimmungen === 1 ? "1 Abstimmung wartet" : INIT.offeneAbstimmungen + " Abstimmungen warten"}</b> auf deine Stimme<span style="margin-left:auto">›</span></div>`);
   for (const g of INIT?.geburtstageHeute || []) h.push(g.person_id === ICH?.person_id
     ? `<div class="zeile">🎂 <b>Alles Gute zum Geburtstag, ${esc(g.vorname)}!</b></div>`
-    : `<div class="zeile" style="cursor:pointer" onclick="direkt('${g.person_id}')">🎂 <b>${esc(g.name)}</b> hat heute Geburtstag<button class="knopf haupt klein" style="margin-left:auto">💬 Gratulieren</button></div>`);
+    : `<div class="zeile" style="cursor:pointer" onclick="gratulieren('${g.person_id}', true)">🎂 <b>${esc(g.name)}</b> hat heute Geburtstag<button class="knopf haupt klein" style="margin-left:auto">💬 Gratulieren</button></div>`);
   const nd = INIT?.naechsterDienst;
   if (nd) h.push(`<div class="zeile" style="cursor:pointer" onclick="dpNurIch()">🗓️ Nächster Dienst: <b>${nd.datum === heuteIso() ? "heute" : esc(fTagDp.format(new Date(nd.datum + "T12:00:00Z")))}, ${esc(nd.start)}–${esc(nd.ende)} Uhr</b>${nd.bereich ? " · " + esc(nd.bereich) : ""}<span style="margin-left:auto">›</span></div>`);
   // Zu-/Absage-Hinweis erst 7 Tage vor dem Treffen (vorher bleibt „Heute wichtig“ ruhig)
@@ -610,7 +615,7 @@ async function neuLaden(vonHand) {
     INIT = await api("init"); ICH = INIT.ich;
     $("begruessung").textContent = "Hallo " + ICH.vorname + "!";
     $("statusChip").textContent = statusText(INIT.status) + " ▾";
-    $("ichName").textContent = ICH.name + (ICH.admin ? " (Admin)" : ICH.vorstand ? " (Vorstand)" : "");
+    $("ichName").textContent = ICH.name + (ICH.aemter?.length ? ` (${ICH.aemter.join(", ")})` : ICH.admin ? " (Admin)" : "");
     $("neuTreffenKnopf").classList.toggle("versteckt", !ICH.vorstand);
     heroZeigen(); registerZeigen(); kachelnZeigen(); wichtigZeigen(); zaehlerZeigen();
     if (vonHand) { melde("Aktualisiert"); updatePruefen(false); }
@@ -639,7 +644,7 @@ function zeige(v, ausHistorie) {
   if (v === "dienste") dienstLaden();
   if (v === "nachrichten") unterhLaden();
   if (v === "mitglieder") mitgliederLaden();
-  if (v === "einstellungen") { pushStatusZeigen(); wahlZeigen(); }
+  if (v === "einstellungen") { pushStatusZeigen(); wahlZeigen(); geburtstagSchalterZeigen(); }
   if (v === "start") neuLaden();
   // KC-CLUB-ZURUECK: jede Ansicht bekommt einen Verlaufseintrag, damit „Zurück“ eine Ansicht zurückgeht statt die App zu schließen
   const hash = v === "start" || v === "chat" ? "" : "#" + v;
@@ -692,7 +697,11 @@ async function kalLaden() {
 // Einträge je Tag (YYYY-MM-DD) zusammenstellen
 function kalEintraege(tag) {
   const e = [];
-  for (const t of KAL.treffen) if (berlinIso(t.beginn) === tag) e.push({ art: "treffen", t });
+  // Treffen am Beginntag; Veranstaltungen an jedem Tag von Beginn bis Ende (mehrtägig, z. B. Weihnachtsmarkt)
+  for (const t of KAL.treffen) {
+    const von = berlinIso(t.beginn), bis = t.ende ? berlinIso(t.ende) : von;
+    if (t.art === "veranstaltung" ? tag >= von && tag <= bis : von === tag) e.push({ art: t.art === "veranstaltung" ? "veranst" : "treffen", t });
+  }
   for (const d of KAL.dienste) if (d.datum === tag) e.push({ art: "dienst", d });
   for (const f of KAL.fristen) if (berlinIso(f.frist) === tag) e.push({ art: "frist", f });
   const md = tag.slice(5), schalt = new Date(Date.UTC(+tag.slice(0, 4), 1, 29)).getUTCDate() === 29;
@@ -700,7 +709,7 @@ function kalEintraege(tag) {
   return e;
 }
 function kalZeichnen() {
-  const heute = heuteIso(), rang = ["treffen", "dienst", "frist", "geb"];
+  const heute = heuteIso(), rang = ["treffen", "veranst", "dienst", "frist", "geb"];
   const tage = [...Array(42)].map((_, i) => tagPlus(KAL.start, i));
   // letzte Woche weglassen, wenn sie ganz im Folgemonat liegt
   const sichtbar = +tage[35].slice(5, 7) - 1 !== kalM ? tage.slice(0, 35) : tage;
@@ -721,16 +730,40 @@ function kalTagZeigen() {
   const e = kalEintraege(kalTagWahl);
   const kopf = `<h3 style="margin:0 0 4px">${esc(fTagLang.format(new Date(kalTagWahl + "T12:00:00Z")))}</h3>`;
   if (!e.length) { $("kalTag").innerHTML = `<div class="karte">${kopf}<p class="hinweis" style="margin:6px 0 0">Keine Termine an diesem Tag.</p></div>`; return; }
-  const zeilen = e.filter((x) => x.art !== "treffen").map((x) => {
+  const zeilen = e.filter((x) => x.art !== "treffen" && x.art !== "veranst").map((x) => {
     if (x.art === "dienst") return `<div class="keintrag" onclick="dpNurIch()"><div class="farbe" style="background:var(--blau)"></div><div style="flex:1"><b>🗓️ Mein Dienst ${esc(x.d.start)}–${esc(x.d.ende)} Uhr</b><small>${esc(x.d.bereich || "Dienstplan")}</small></div><b style="color:var(--rot)">›</b></div>`;
     if (x.art === "frist") return `<div class="keintrag" onclick="zeige('vorschlaege')"><div class="farbe" style="background:#d19a22"></div><div style="flex:1"><b>🗳️ ${x.f.offen ? "Abstimmen bis" : "Abstimmung endete"} ${esc(fZeit.format(new Date(x.f.frist)))} Uhr</b><small>${esc(x.f.titel)}</small></div><b style="color:var(--rot)">›</b></div>`;
     const ich = x.g.person_id === ICH?.person_id;
-    return `<div class="keintrag"${ich ? "" : ` onclick="direkt('${x.g.person_id}')"`}><div class="farbe" style="background:var(--lila)"></div><div style="flex:1"><b>🎂 ${ich ? "Dein Geburtstag – alles Gute!" : esc(x.g.name) + " hat Geburtstag"}</b>${ich ? "" : "<small>💬 antippen zum Gratulieren</small>"}</div>${ich ? "" : '<b style="color:var(--rot)">›</b>'}</div>`;
+    return `<div class="keintrag"${ich ? "" : ` onclick="gratulieren('${x.g.person_id}', true)"`}><div class="farbe" style="background:var(--lila)"></div><div style="flex:1"><b>🎂 ${ich ? "Dein Geburtstag – alles Gute!" : esc(x.g.name) + " hat Geburtstag"}</b>${ich ? "" : "<small>💬 antippen zum Gratulieren</small>"}</div>${ich ? "" : '<b style="color:var(--rot)">›</b>'}</div>`;
   }).join("");
   // Treffen als volle Karte (mit Zu-/Absage), darunter die Tagesordnung
-  const treffen = e.filter((x) => x.art === "treffen").map((x) => treffenKarte(x.t, new Date(x.t.beginn) < Date.now() - 3 * 3600000)
+  const treffen = e.filter((x) => x.art === "treffen" || x.art === "veranst").map((x) => treffenKarte(x.t, new Date(x.t.ende || x.t.beginn) < Date.now() - 3 * 3600000)
     + (x.t.themen?.length ? `<div class="karte" style="margin-top:6px"><b>📋 Tagesordnung</b><div class="hinweis">${x.t.themen.map((th) => "• " + esc(th)).join("<br>")}</div></div>` : "")).join("");
   $("kalTag").innerHTML = (zeilen ? `<div class="karte">${kopf}${zeilen}</div>` : `<div class="karte" style="padding-bottom:4px">${kopf}</div>`) + treffen;
+}
+
+// ---------- Geburtstage: Liste der nächsten Tage + eigene Freigabe ----------
+function geburtstageListe(geb, tage) {
+  const heute = heuteIso(), n = [];
+  for (let i = 0; i < tage; i++) {
+    const tag = tagPlus(heute, i), md = tag.slice(5), schalt = new Date(Date.UTC(+tag.slice(0, 4), 1, 29)).getUTCDate() === 29;
+    for (const g of geb) if (g.md === md || (!schalt && md === "02-28" && g.md === "02-29")) n.push({ tag, g });
+  }
+  if (!n.length) return "";
+  return `<div class="karte"><h3>🎂 Geburtstage in den nächsten ${tage} Tagen</h3>${n.map(({ tag, g }) => {
+    const ich = g.person_id === ICH?.person_id, wann2 = tag === heute ? "heute" : tag === tagPlus(heute, 1) ? "morgen" : fTagDp.format(new Date(tag + "T12:00:00Z"));
+    return `<div class="keintrag"${ich ? "" : ` onclick="gratulieren('${g.person_id}', true)"`}><div class="farbe" style="background:var(--lila)"></div><div style="flex:1"><b>${esc(ich ? "Du" : g.name)}</b><small>${esc(wann2)}${!ich && tag === heute ? " · 💬 antippen zum Gratulieren" : ""}</small></div>${ich ? "🎉" : '<b style="color:var(--rot)">›</b>'}</div>`;
+  }).join("")}</div>`;
+}
+function geburtstagSchalterZeigen() {
+  const s = $("setGeburtstag"); if (!s || !INIT) return;
+  s.checked = !!INIT.geburtstagFreigabe; s.disabled = !INIT.hatGeburtstag;
+  $("gebHinweis").textContent = INIT.hatGeburtstag ? "Andere sehen dann nur Tag und Monat – im Kalender, in der Terminliste und unter „Heute wichtig“."
+    : "⚠️ Für dich ist kein Geburtstag hinterlegt – bitte Hansi Bescheid geben.";
+}
+async function geburtstagFreigabe(an) {
+  try { await api("geburtstag_freigabe", { erlaubt: an }); INIT.geburtstagFreigabe = an; melde(an ? "🎂 Dein Geburtstag wird angezeigt (ohne Jahr)." : "Dein Geburtstag wird nicht mehr angezeigt."); }
+  catch (e) { melde(e.message, true); $("setGeburtstag").checked = !an; }
 }
 
 // ---------- Treffen ----------
@@ -740,29 +773,41 @@ async function treffenLaden() {
   $("treffenListe").classList.toggle("versteckt", termineArt === "kalender");
   if (termineArt === "kalender") return kalLaden();
   try {
-    const { treffen } = await api("treffen_liste");
-    const kommend = treffen.filter((t) => new Date(t.beginn) > Date.now() - 3 * 3600000), vorbei = treffen.filter((t) => !kommend.includes(t)).reverse();
+    const { treffen, geburtstage } = await api("treffen_liste");
+    const kommend = treffen.filter((t) => new Date(t.ende || t.beginn) > Date.now() - 3 * 3600000), vorbei = treffen.filter((t) => !kommend.includes(t)).reverse();
     $("treffenListe").innerHTML = (kommend.map(treffenKarte).join("") || '<div class="karte hinweis">Zurzeit ist kein Treffen geplant.</div>')
+      + geburtstageListe(geburtstage || [], 30)
       + (vorbei.length ? `<div class="abschnitt"><h3>Vergangene Treffen</h3></div>` + vorbei.map((t) => treffenKarte(t, true)).join("") : "");
   } catch (e) { melde(e.message, true); }
+}
+// Zeitangabe: Uhrzeit von–bis, ganztägig oder mehrtägig (Veranstaltungen)
+function zeitText(t) {
+  const b = new Date(t.beginn), e = t.ende ? new Date(t.ende) : null;
+  const gleicherTag = e && berlinIso(t.beginn) === berlinIso(t.ende);
+  if (t.ganztaegig) return e && !gleicherTag ? `${fTag.format(b)} bis ${fTag.format(e)} (ganztägig)` : `${fTag.format(b)}, ganztägig`;
+  if (e && gleicherTag) return `${fTag.format(b)}, ${fZeit.format(b)}–${fZeit.format(e)} Uhr`;
+  if (e) return `${wann(t.beginn)} bis ${wann(t.ende)}`;
+  return wann(t.beginn);
 }
 function treffenKarte(t, vorbei) {
   const ort = t.ort || (t.gastgeber ? "bei " + t.gastgeber.name : "");
   const liste = (a, sym) => t.teilnahme.filter((x) => x.antwort === a).map((x) => esc(x.name) + (x.notiz ? ` <i class="hinweis">(${esc(x.notiz)})</i>` : "")).join(", ");
+  const va = t.art === "veranstaltung"; // Veranstaltung: ohne Zu-/Absage
   const offen = t.status === "geplant" && !vorbei;
-  return `<div class="karte treffen">
-    ${t.status === "abgesagt" ? '<span class="marke rot">❌ abgesagt</span>' : ""}
-    <div class="wann">${esc(t.titel)}</div><div>${esc(wann(t.beginn))}${ort ? " · 📍 " + esc(ort) : ""}</div>
+  const bearbeiten = { id: t.id, titel: t.titel, beginn: t.beginn, ende: t.ende, ort: t.ort, beschreibung: t.beschreibung, gastgeber: t.gastgeber?.person_id || "", art: t.art, ganztaegig: t.ganztaegig };
+  return `<div class="karte treffen"${va ? ' style="border-left:6px solid var(--gruen)"' : ""}>
+    ${t.status === "abgesagt" ? '<span class="marke rot">❌ abgesagt</span> ' : ""}${va ? '<span class="marke gruen">🎪 Veranstaltung</span>' : ""}
+    <div class="wann">${esc(t.titel)}</div><div>${esc(zeitText(t))}${ort ? " · 📍 " + esc(ort) : ""}</div>
     ${t.beschreibung ? `<p class="hinweis" style="white-space:pre-wrap">${esc(t.beschreibung)}</p>` : ""}
-    ${offen ? `<div class="antworten">
+    ${offen && !va ? `<div class="antworten">
       <button class="ja ${t.meine === "ja" ? "an" : ""}" onclick="antwort('${t.id}','ja')">✅ Ich komme</button>
       <button class="vielleicht ${t.meine === "vielleicht" ? "an" : ""}" onclick="antwort('${t.id}','vielleicht')">❓ Vielleicht</button>
       <button class="nein ${t.meine === "nein" ? "an" : ""}" onclick="antwort('${t.id}','nein')">❌ Kann nicht</button></div>` : ""}
-    <div class="namen">
+    ${va ? "" : `<div class="namen">
       <span class="marke gruen">✅ ${t.ja}</span> <span class="marke gelb">❓ ${t.vielleicht}</span> <span class="marke rot">❌ ${t.nein}</span>
       ${t.ja ? `<div>✅ ${liste("ja")}</div>` : ""}${t.vielleicht ? `<div>❓ ${liste("vielleicht")}</div>` : ""}${t.nein ? `<div>❌ ${liste("nein")}</div>` : ""}
-    </div>
-    ${ICH?.vorstand && offen ? `<div class="knoepfe"><button class="knopf klein" onclick='treffenForm(${JSON.stringify({ id: t.id, titel: t.titel, beginn: t.beginn, ort: t.ort, beschreibung: t.beschreibung, gastgeber: t.gastgeber?.person_id || "" }).replace(/'/g, "&#39;")})'>✏️ Ändern</button><button class="knopf klein" onclick="treffenAbsagen('${t.id}')">Absagen</button></div>` : ""}
+    </div>`}
+    ${ICH?.vorstand && offen ? `<div class="knoepfe"><button class="knopf klein" onclick='treffenForm(${JSON.stringify(bearbeiten).replace(/'/g, "&#39;")})'>✏️ Ändern</button><button class="knopf klein" onclick="treffenAbsagen('${t.id}', ${va})">Absagen</button></div>` : ""}
   </div>`;
 }
 async function antwort(id, a) {
@@ -772,18 +817,32 @@ async function antwort(id, a) {
 }
 async function treffenForm(t) {
   if (!MITGLIEDER) await mitgliederHolen();
-  const d = t?.beginn ? new Date(t.beginn) : null;
-  const datum = d ? new Intl.DateTimeFormat("sv-SE", { timeZone: TZ }).format(d) : "";
-  const zeit = d ? fZeit.format(d) : "18:00";
-  $("treffenForm").innerHTML = `<h3>${t?.id ? "Treffen ändern" : "Neues Treffen"}</h3>
-    <label class="feld">Titel<input id="tfTitel" value="${esc(t?.titel || "Köcheclub-Treffen")}"></label>
-    <div class="zwei"><label class="feld">Datum<input id="tfDatum" type="date" value="${datum}"></label><label class="feld">Uhrzeit<input id="tfZeit" type="time" value="${zeit}"></label></div>
-    <label class="feld">Gastgeber<select id="tfGast"><option value="">– niemand –</option>${MITGLIEDER.map((m) => `<option value="${m.person_id}" ${t?.gastgeber === m.person_id ? "selected" : ""}>${esc(m.name)}</option>`).join("")}</select></label>
-    <label class="feld">Ort (leer = beim Gastgeber)<input id="tfOrt" value="${esc(t?.ort || "")}"></label>
+  const tagIso = (iso) => new Intl.DateTimeFormat("sv-SE", { timeZone: TZ }).format(new Date(iso));
+  const art = t?.art || "treffen", ganz = !!t?.ganztaegig;
+  const datum = t?.beginn ? tagIso(t.beginn) : "", zeit = t?.beginn && !ganz ? fZeit.format(new Date(t.beginn)) : "18:00";
+  const bisDatum = t?.ende && tagIso(t.ende) !== datum ? tagIso(t.ende) : "", bisZeit = t?.ende && !ganz ? fZeit.format(new Date(t.ende)) : "";
+  $("treffenForm").innerHTML = `<h3>${t?.id ? "Termin ändern" : "Neuer Termin"}</h3>
+    <div class="artwahl"><button type="button" class="knopf ${art === "treffen" ? "haupt" : ""}" data-art="treffen" onclick="tfArtWahl('treffen')">👥 Club-Treffen</button><button type="button" class="knopf ${art === "veranstaltung" ? "haupt" : ""}" data-art="veranstaltung" onclick="tfArtWahl('veranstaltung')">🎪 Veranstaltung</button></div>
+    <input type="hidden" id="tfArt" value="${art}">
+    <label class="feld">Titel<input id="tfTitel" value="${esc(t?.titel || (art === "treffen" ? "Köcheclub-Treffen" : ""))}" placeholder="z. B. Aufbau Weihnachtsmarkt"></label>
+    <div class="zwei"><label class="feld">Datum<input id="tfDatum" type="date" value="${datum}"></label><label class="feld">von<input id="tfZeit" type="time" value="${zeit}"></label></div>
+    <div class="zwei"><label class="feld">bis Datum (mehrtägig)<input id="tfBisDatum" type="date" value="${bisDatum}"></label><label class="feld">bis Uhrzeit<input id="tfBisZeit" type="time" value="${bisZeit}"></label></div>
+    <label class="schalter" id="tfGanzZeile"><span>Ganztägig (ohne Uhrzeit)</span><input type="checkbox" id="tfGanz" ${ganz ? "checked" : ""}></label>
+    <label class="feld" id="tfGastZeile">Gastgeber<select id="tfGast"><option value="">– niemand –</option>${MITGLIEDER.map((m) => `<option value="${m.person_id}" ${t?.gastgeber === m.person_id ? "selected" : ""}>${esc(m.name)}</option>`).join("")}</select></label>
+    <label class="feld">Ort${art === "treffen" ? " (leer = beim Gastgeber)" : ""}<input id="tfOrt" value="${esc(t?.ort || "")}"></label>
     <label class="feld">Beschreibung / Tagesordnung<textarea id="tfBeschr" rows="3">${esc(t?.beschreibung || "")}</textarea></label>
-    <label class="schalter"><span>Alle Mitglieder benachrichtigen (Push/Mail)</span><input type="checkbox" id="tfInfo" checked></label>
+    <label class="schalter"><span>Alle Mitglieder benachrichtigen (Push/Mail)</span><input type="checkbox" id="tfInfo" ${art === "treffen" ? "checked" : ""}></label>
     <div class="knoepfe"><button class="knopf haupt" onclick="treffenSpeichern('${t?.id || ""}', this)">Speichern</button><button class="knopf" onclick="$('treffenForm').classList.add('versteckt')">Abbrechen</button></div>`;
+  tfArtWahl(art, true);
   $("treffenForm").classList.remove("versteckt"); window.scrollTo(0, 0);
+}
+// Art umschalten: Veranstaltung ohne Gastgeber, standardmäßig ohne Benachrichtigung, ganztägig möglich
+function tfArtWahl(art, start) {
+  $("tfArt").value = art;
+  document.querySelectorAll("#treffenForm .artwahl .knopf").forEach((k) => k.classList.toggle("haupt", k.dataset.art === art));
+  $("tfGastZeile").classList.toggle("versteckt", art !== "treffen");
+  $("tfGanzZeile").classList.toggle("versteckt", art !== "veranstaltung");
+  if (!start) $("tfInfo").checked = art === "treffen";
 }
 // Doppel-Tipp-Sperre: Knopf ist gesperrt, bis der Server geantwortet hat (sonst entstehen doppelte Einträge)
 async function einmal(knopf, arbeit) {
@@ -793,18 +852,23 @@ async function einmal(knopf, arbeit) {
   try { await arbeit(); } finally { if (knopf && knopf.isConnected) { knopf.disabled = false; knopf.textContent = text; } }
 }
 async function treffenSpeichern(id, knopf) {
-  const datum = $("tfDatum").value, zeit = $("tfZeit").value;
+  const art = $("tfArt").value, ganz = art === "veranstaltung" && $("tfGanz").checked;
+  const datum = $("tfDatum").value, zeit = ganz ? "00:00" : $("tfZeit").value;
   if (!datum || !zeit) return melde("Bitte Datum und Uhrzeit angeben.", true);
   const beginn = new Date(`${datum}T${zeit}:00`); // Gerätezeit = deutsche Zeit
+  const bisDatum = $("tfBisDatum").value, bisZeit = $("tfBisZeit").value;
+  const ende = ganz ? new Date(`${bisDatum || datum}T23:59:00`) : (bisDatum || bisZeit) ? new Date(`${bisDatum || datum}T${bisZeit || zeit}:00`) : null;
+  if (ende && ende < beginn) return melde("Das Ende liegt vor dem Beginn.", true);
   await einmal(knopf, async () => {
     try {
-      const r = await api("treffen_speichern", { id: id || undefined, titel: $("tfTitel").value, beginn: beginn.toISOString(), gastgeber_person_id: $("tfGast").value || null, ort: $("tfOrt").value, beschreibung: $("tfBeschr").value, benachrichtigen: $("tfInfo").checked });
+      const r = await api("treffen_speichern", { id: id || undefined, art, ganztaegig: ganz, titel: $("tfTitel").value, beginn: beginn.toISOString(), ende: ende ? ende.toISOString() : null,
+        gastgeber_person_id: art === "treffen" ? $("tfGast").value || null : null, ort: $("tfOrt").value, beschreibung: $("tfBeschr").value, benachrichtigen: $("tfInfo").checked });
       $("treffenForm").classList.add("versteckt"); melde(r.versand ? `Gespeichert – ${r.versand.gesendet} Mitglieder benachrichtigt` : "Gespeichert"); treffenLaden();
     } catch (e) { melde(e.message, true); }
   });
 }
-async function treffenAbsagen(id) {
-  if (!confirm("Treffen wirklich absagen? Alle Mitglieder werden benachrichtigt.")) return;
+async function treffenAbsagen(id, va) {
+  if (!confirm(`${va ? "Termin" : "Treffen"} wirklich absagen? Alle Mitglieder werden benachrichtigt.`)) return;
   try { await api("treffen_absagen", { id }); melde("Abgesagt – alle wurden benachrichtigt"); treffenLaden(); } catch (e) { melde(e.message, true); }
 }
 
@@ -876,7 +940,7 @@ function vorschlagForm(art) {
     ${vfArt === "abstimmung" ? `<label class="feld">Antworten (eine pro Zeile)<textarea id="vfOptionen" rows="3">Ja\nNein\nEnthaltung</textarea></label>
       <label class="schalter"><span><b>🔒 Geheime Abstimmung</b><br><small class="hinweis">Niemand sieht, wer wie gestimmt hat; Ergebnis erst am Ende</small></span><input type="checkbox" id="vfGeheim"></label>
       <div class="zwei"><label class="feld">Abstimmen bis (freiwillig)<input id="vfFristDatum" type="date"></label><label class="feld">Uhrzeit<input id="vfFristZeit" type="time" value="20:00"></label></div>` : ""}
-    <label class="schalter"><span>${vfArt === "abstimmung" ? "Alle Mitglieder benachrichtigen" : "Vorstand benachrichtigen"}</span><input type="checkbox" id="vfInfo" checked></label>
+    <label class="schalter"><span>${vfArt === "abstimmung" ? "Alle Mitglieder benachrichtigen" : "Clubsprecher & Kassenwart benachrichtigen"}</span><input type="checkbox" id="vfInfo" checked></label>
     <div class="knoepfe"><button class="knopf haupt" onclick="vorschlagSpeichern(this)">${vfArt === "abstimmung" ? "Abstimmung starten" : "Vorschlagen"}</button><button class="knopf" onclick="$('vorschlagForm').classList.add('versteckt')">Abbrechen</button></div>`;
   $("vorschlagForm").classList.remove("versteckt"); window.scrollTo(0, 0);
 }
@@ -1033,13 +1097,12 @@ function empfListe() {
   const q = $("empfSuche").value.toLowerCase();
   $("schnellEmpf").innerHTML = [
     ICH.vorstand ? `<button class="knopf klein ${empfWahl.alle ? "haupt" : ""}" onclick="empfWahl.alle=!empfWahl.alle;empfListe()">👥 Alle Mitglieder</button>` : "",
-    `<button class="knopf klein ${empfWahl.vorstand ? "haupt" : ""}" onclick="empfWahl.vorstand=!empfWahl.vorstand;empfListe()">⭐ Vorstand</button>`,
     ...AEMTER.map((a) => `<button class="knopf klein ${empfWahl.aemter.includes(a) ? "haupt" : ""}" onclick="amtWahl('${esc(a)}')">🎖️ ${esc(a)}</button>`),
   ].join("");
   $("empfListe").innerHTML = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && (!q || m.name.toLowerCase().includes(q))).map((m) => `<label>
     <input type="checkbox" ${empfWahl.personen.includes(m.person_id) ? "checked" : ""} onchange="personWahl('${m.person_id}', this.checked)">
-    <span>${esc(m.name)}${m.aemter?.length ? ` <span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}${m.vorstand ? ' <span class="marke gelb">Vorstand</span>' : ""}</span></label>`).join("");
-  const teile = [empfWahl.alle && "alle Mitglieder", empfWahl.vorstand && "Vorstand", ...empfWahl.aemter, ...empfWahl.personen.map((p) => MITGLIEDER.find((m) => m.person_id === p)?.name)].filter(Boolean);
+    <span>${esc(m.name)}${m.aemter?.length ? ` <span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}</span></label>`).join("");
+  const teile = [empfWahl.alle && "alle Mitglieder", ...empfWahl.aemter, ...empfWahl.personen.map((p) => MITGLIEDER.find((m) => m.person_id === p)?.name)].filter(Boolean);
   $("empfGewaehlt").textContent = teile.join(", ") || "niemand";
 }
 function amtWahl(a) { empfWahl.aemter = empfWahl.aemter.includes(a) ? empfWahl.aemter.filter((x) => x !== a) : [...empfWahl.aemter, a]; empfListe(); }
@@ -1103,13 +1166,23 @@ async function mitgliederLaden() {
     await mitgliederHolen();
     $("mitgliederListe").innerHTML = MITGLIEDER.map((m) => `<div class="zeile">
       <div class="avatar" style="width:40px;height:40px">${esc(initialen(m.name))}</div>
-      <div style="flex:1"><b>${esc(m.name)}</b>${m.vorstand ? ' <span class="marke gelb">Vorstand</span>' : ""}${m.aemter?.length ? ` <span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}
+      <div style="flex:1"><b>${esc(m.name)}</b>${m.aemter?.length ? ` <span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}
         <div class="hinweis" style="font-size:.85rem">${m.status ? esc(statusText(m.status)) : m.aktiv ? "🟢 verfügbar" : "⚪ noch nicht in der App"}${m.aktiv ? " · 📲 aktiv" : ""}</div>
         ${ICH.admin && (m.app || m.push || !m.mail) ? `<div class="hinweis" style="font-size:.85rem">${[m.app && m.zuletzt ? "zuletzt " + zeitKurz(m.zuletzt) : m.app ? "Link verschickt" : "", m.push ? "🔔 Push" : "", m.mail ? "" : "⚠️ keine Mail"].filter(Boolean).join(" · ")}</div>` : ""}</div>
       ${m.person_id !== ICH.person_id ? `<button class="knopf klein" onclick="direkt('${m.person_id}')">💬</button>` : ""}
       ${ICH.admin ? `<button class="knopf klein" onclick="linkTeilen('${m.person_id}')">🔗</button><button class="knopf klein" onclick="rolleBearbeiten('${m.person_id}')">🎖️</button>` : ""}</div>`).join("")
-      + (ICH.admin ? '<p class="hinweis">🔗 = persönlichen App-Link erzeugen und per WhatsApp schicken (ein neuer Link macht den alten ungültig). 🎖️ = Vorstand/Ämter.</p>' : "");
+      + (ICH.admin ? '<p class="hinweis">🔗 = persönlichen App-Link erzeugen und per WhatsApp schicken (ein neuer Link macht den alten ungültig). 🎖️ = Amt und Rechte.</p>' : "");
   } catch (e) { melde(e.message, true); }
+}
+// Gratulieren (aus dem Geburtstags-Push, Kalender, Liste oder „Heute wichtig“): Chat mit vorbereitetem Glückwunsch
+async function gratulieren(pid, ohneFrage) {
+  if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return melde(e.message, true); }
+  const m = MITGLIEDER.find((x) => x.person_id === pid);
+  if (!m || pid === ICH?.person_id) return;
+  if (!ohneFrage && !confirm(`🎂 ${m.name} hat heute Geburtstag.\n\nMöchtest du gratulieren?`)) return;
+  await direkt(pid);
+  $("text").value = `Alles Gute zum Geburtstag, ${m.vorname}! 🎂🥳`;
+  $("text").focus();
 }
 async function direkt(pid) {
   if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return melde(e.message, true); }
@@ -1129,7 +1202,8 @@ async function linkTeilen(pid) {
 }
 async function rolleBearbeiten(pid) {
   const m = MITGLIEDER.find((x) => x.person_id === pid);
-  const vorstand = confirm(`${m.name}: Gehört zum Vorstand?\n\nOK = ja, Abbrechen = nein`);
+  // intern „vorstand“ = Recht, Treffen/Veranstaltungen/Abstimmungen anzulegen
+  const vorstand = confirm(`${m.name}: Darf Treffen, Veranstaltungen und Abstimmungen anlegen?\n\nOK = ja, Abbrechen = nein`);
   const aemter = prompt(`Ämter von ${m.name} (mit Komma getrennt, z. B. Kassenwart, Clubsprecher – leer = keine):`, (m.aemter || []).join(", "));
   if (aemter === null) return;
   try { await api("rolle_setzen", { person_id: pid, vorstand, aemter: aemter.split(",").map((x) => x.trim()).filter(Boolean) }); MITGLIEDER = null; melde("Gespeichert"); mitgliederLaden(); } catch (e) { melde(e.message, true); }
@@ -1226,6 +1300,7 @@ async function jetztAktualisieren() {
   neuLaden().then(() => {
     const h = sprung;
     if (h.startsWith("#nachricht=")) chatOeffnen(h.slice(11));
+    else if (h.startsWith("#gratulieren=")) gratulieren(h.slice(13));
     else if (["#termine", "#vorschlaege", "#dienste", "#nachrichten", "#mitglieder", "#einstellungen"].includes(h)) zeige(h.slice(1));
   });
   updatePruefen(false);
