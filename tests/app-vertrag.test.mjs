@@ -372,4 +372,31 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(mig.includes("alter table kc_club_fotos enable row level security") && /revoke all on function kc_club_speicher_belegt\(\) from public, anon, authenticated/.test(mig), "Fotoalbum-Tabelle/Funktion nicht abgesichert");
 }
 
+// 30. 0.16.0: Verbindungs-LEDs (Status/Datenverkehr), Verbindungstest mit Rundinstrumenten, Wartung über die App-Registry.
+{
+  for (const a of ["ping", "wartung_setzen"]) assert.ok(aktionen.has(a), `Server-Aktion ${a} fehlt`);
+  assert.ok(/case "wartung_setzen": \{\s*nurAdmin\(ich\);/.test(server), "Wartung ohne Admin-Prüfung");
+  assert.ok(/from\("kc_core_app_registry"\)/.test(server) && /const APP_ID = "KC_CLUBAPP";/.test(server), "Wartung nicht über die Registry");
+  assert.ok(/Math\.min\(MAX_TESTDATEN,/.test(server) && /p\.last\.length/.test(server), "Testdaten nicht begrenzt");
+  // Status und Datenverkehr getrennt; Datenverkehr nur bei echten Anfragen (api/Supabase-Dateien)
+  assert.ok(/id="ledStatus"/.test(html) && /id="ledDaten"/.test(html), "LEDs fehlen");
+  const api = html.slice(html.indexOf("async function api("), html.indexOf("// ---------- Eigener Status"));
+  assert.ok(/vbStart\(\)/.test(api) && /vbEnde\(/.test(api), "api() meldet keinen Datenverkehr");
+  assert.ok(!/setInterval\([^)]*vbBlinken/.test(html) && !/setInterval\([^)]*vbDatenLed/.test(html), "Datenverkehrs-LED blinkt ohne echte Daten");
+  // UNKNOWN nie als OK: ohne Antwort grau, veraltet grau
+  const code = html.slice(html.indexOf("const VB_VERALTET_MS"), html.indexOf("function vbStatusLed"));
+  const f = new Function("navigator", "fZeit", code + ";return { VB, vbZustand };");
+  const z = f({ onLine: true }, { format: () => "12:00" });
+  z.VB.laufend = 0;
+  assert.equal(z.vbZustand()[0], "grau", "ohne Antwort nicht grau");
+  z.VB.letzteOk = Date.now(); assert.equal(z.vbZustand()[0], "gruen");
+  z.VB.wartung = { an: true }; assert.equal(z.vbZustand()[0], "blau"); z.VB.wartung = null;
+  z.VB.letzterFehler = Date.now() + 1; assert.equal(z.vbZustand()[0], "rot"); z.VB.letzterFehler = 0;
+  z.VB.letzteOk = Date.now() - 4 * 60000; assert.equal(z.vbZustand()[0], "grau", "veraltete Verbindung als OK angezeigt");
+  assert.equal(f({ onLine: false }, { format: () => "" }).vbZustand()[0], "rot", "offline nicht rot");
+  assert.ok(/function rundinstrument\(/.test(html) && /onclick="verbindungTesten\(\)"/.test(html), "Rundinstrumente/Testknopf fehlen");
+  const mig = lies("supabase/migrations/20260928_kc_club_v16_verbindung_wartung.sql");
+  assert.ok(/add column if not exists wartung boolean not null default false/.test(mig) && /'KC_CLUBAPP'/.test(mig), "Registry-Migration fehlt");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

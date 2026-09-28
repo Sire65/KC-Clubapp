@@ -244,6 +244,28 @@
   .blatt-innen h3 { margin: 0 0 4px; }
   .blatt-innen .knopf { padding: 16px; font-size: 1.05rem; text-align: left; }
   @media (max-width: 560px) { .titel { font-size: 1.12rem; } .rund { width: 42px; height: 42px; } .knopfreihe { gap: 6px; } .raster { grid-template-columns: 1fr 1fr; } .info h2 { font-size: 1.25rem; } }
+  /* Verbindungs-LEDs & Rundinstrumente (KC-CLUB-VERBINDUNG) */
+  .leds { width: 26px; height: 48px; border-radius: 13px; border: none; padding: 0; background: rgba(0,0,0,.28); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 9px; cursor: pointer; flex: none; }
+  .led { width: 11px; height: 11px; border-radius: 50%; display: inline-block; flex: none; background: #8d8d8d; box-shadow: inset 0 -1px 2px rgba(0,0,0,.45); }
+  .led.gruen { background: #3ddc6f; box-shadow: 0 0 6px 2px rgba(61,220,111,.7); }
+  .led.rot { background: #ff4545; box-shadow: 0 0 6px 2px rgba(255,69,69,.75); animation: ledPuls 1.2s infinite; }
+  .led.blau { background: #3aa0ff; box-shadow: 0 0 6px 2px rgba(58,160,255,.75); }
+  .led.grau { background: #a3a3a3; }
+  .led.daten { background: #5c4b1f; }
+  .led.daten.an { background: #ffcf3a; box-shadow: 0 0 6px 2px rgba(255,207,58,.8); }
+  .led.daten.flackern { animation: ledFlackern .16s steps(2) infinite; }
+  @keyframes ledFlackern { 50% { opacity: .2; } }
+  @keyframes ledPuls { 50% { opacity: .45; } }
+  .vb-status { display: flex; gap: 10px; align-items: center; }
+  .instrumente { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .instrument { text-align: center; }
+  .instrument svg { width: 100%; display: block; }
+  .i-wert { font-weight: 800; font-size: 1.05rem; margin-top: -6px; }
+  .i-titel { font-size: .78rem; color: var(--grau); }
+  .vb-tabelle { width: 100%; font-size: .9rem; border-collapse: collapse; }
+  .vb-tabelle td { padding: 5px 0; border-bottom: 1px solid var(--linie); }
+  .vb-tabelle td:last-child { text-align: right; font-weight: 700; }
+  @media (max-width: 560px) { .leds { height: 42px; } }
   /* Fotoalbum (KC-CLUB-FOTOALBUM) */
   .speicherbalken { height: 10px; border-radius: 6px; background: var(--karte2); overflow: hidden; margin: 8px 0 6px; }
   .speicherbalken i { display: block; height: 100%; background: var(--gruen); border-radius: 6px; }
@@ -282,6 +304,7 @@
         <div class="kopftext"><div class="marke-klein">KÖCHECLUB WERNE</div><button class="statuschip" id="statusChip" onclick="statusBlatt()">🟢 verfügbar ▾</button></div>
         <div class="kopfrechts">
           <div class="knopfreihe">
+            <button class="leds" id="leds" title="Verbindung zum Server" aria-label="Verbindung zum Server" onclick="verbindungBlatt()"><i class="led grau" id="ledStatus"></i><i class="led daten" id="ledDaten"></i></button>
             <button class="rund" title="Hell/Dunkel" onclick="dunkelUmschalten()">🌙</button>
             <button class="rund" title="Aktualisieren" onclick="neuLaden(true)">↻</button>
           </div>
@@ -482,6 +505,10 @@
     <button class="rund" title="Senden" id="sendenKnopf" onclick="senden()">➤</button>
   </div>
 </div>
+<div class="blatt versteckt" id="verbindungBlatt" onclick="if(event.target===this)this.classList.add('versteckt')">
+  <div class="blatt-innen" style="max-height:92vh;overflow:auto"><h3>📡 Verbindung zum Server</h3><div id="vbInhalt" style="display:grid;gap:10px"></div>
+    <button class="knopf" onclick="$('verbindungBlatt').classList.add('versteckt')">Schließen</button></div>
+</div>
 <div class="blatt versteckt" id="statusBlatt" onclick="if(event.target===this)this.classList.add('versteckt')">
   <div class="blatt-innen"><h3>Mein Status</h3><div class="liste" style="display:grid;gap:8px"></div>
     <div id="stExtra"><label class="feld">Bis (freiwillig)<input type="date" id="stBis"></label><label class="feld">Hinweis (freiwillig, z. B. „ab 18 Uhr erreichbar“)<input id="stHinweis" maxlength="120"></label></div>
@@ -518,7 +545,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.15.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.16.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -549,11 +576,132 @@ function melde(t, fehler) {
   document.body.appendChild(m); setTimeout(() => m.remove(), Math.min(20000, (4000 + String(t).length * 70) * (fehler ? 2 : 1)));
 }
 async function api(action, daten = {}) {
-  const r = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json", "x-club-token": KEY, "x-club-version": APP_VERSION }, body: JSON.stringify({ action, ...daten }) });
-  const j = await r.json().catch(() => ({}));
-  if (r.status === 401) { $("app").classList.add("versteckt"); $("gesperrt").classList.remove("versteckt"); throw new Error(j.error || "Kein Zugang"); }
-  if (!r.ok) throw new Error(j.error || "Fehler " + r.status);
+  // KC-CLUB-VERBINDUNG: jede Anfrage zählt für die LEDs (Datenverkehr + Status)
+  const t0 = performance.now(); vbStart();
+  let r;
+  try { r = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json", "x-club-token": KEY, "x-club-version": APP_VERSION }, body: JSON.stringify({ action, ...daten }) }); }
+  catch { vbEnde(false, 0, navigator.onLine ? "Server nicht erreichbar" : "Handy offline"); throw new Error(navigator.onLine ? "Keine Verbindung zum Server – bitte gleich nochmal versuchen." : "Keine Internetverbindung."); }
+  const j = await r.json().catch(() => null);
+  // Verbindungsfehler: Gateway (502–504) oder 5xx ohne Antwort des Programms; Fachfehler (z. B. 400/403) heißen „verbunden“
+  const leitungKaputt = (r.status >= 502 && r.status <= 504) || (r.status >= 500 && !j);
+  vbEnde(!leitungKaputt, performance.now() - t0, leitungKaputt ? "Serverfehler " + r.status : "");
+  if (!j && !leitungKaputt && r.ok) throw new Error("Unerwartete Antwort vom Server.");
+  if (r.status === 401) { $("app").classList.add("versteckt"); $("gesperrt").classList.remove("versteckt"); throw new Error(j?.error || "Kein Zugang"); }
+  if (!r.ok) throw new Error(j?.error || "Fehler " + r.status);
   return j;
+}
+
+// ---------- Verbindung zum Server (KC-CLUB-VERBINDUNG) ----------
+// Obere LED = Status (grün verbunden · rot keine Verbindung · blau Wartung · grau unbekannt/veraltet).
+// Untere LED = Datenverkehr: leuchtet nur, während wirklich Daten mit dem Server (Supabase) laufen.
+const SUPA_HOST = new URL(API).host;
+const VB_VERALTET_MS = 3 * 60 * 1000; // ohne erfolgreiche Antwort länger als 3 Minuten → „veraltet“ (nie als OK anzeigen)
+const VB = { letzteOk: 0, letzterFehler: 0, fehlerText: "", anfragen: 0, fehler: 0, laufend: 0, zeiten: [], server: null, wartung: null, update: false, bytes: 0, test: null };
+function vbStart() { VB.laufend++; vbDatenLed(); }
+function vbEnde(ok, ms, fehlerText) {
+  VB.laufend = Math.max(0, VB.laufend - 1); VB.anfragen++;
+  if (ok) { VB.letzteOk = Date.now(); VB.zeiten.push(Math.round(ms)); if (VB.zeiten.length > 20) VB.zeiten.shift(); }
+  else { VB.fehler++; VB.letzterFehler = Date.now(); VB.fehlerText = fehlerText || "keine Antwort"; }
+  vbBlinken(); vbStatusLed();
+}
+let vbBlinkTimer = null;
+function vbBlinken() { const l = $("ledDaten"); if (!l) return; l.classList.add("an"); clearTimeout(vbBlinkTimer); vbBlinkTimer = setTimeout(vbDatenLed, 140); }
+function vbDatenLed() { const l = $("ledDaten"); if (l) l.classList.toggle("an", VB.laufend > 0); if (l) l.classList.toggle("flackern", VB.laufend > 0); }
+function vbZustand() {
+  if (!navigator.onLine) return ["rot", "Keine Verbindung – das Handy ist offline"];
+  if (VB.update) return ["blau", "Wartung – die App wird gerade aktualisiert"];
+  if (VB.letzterFehler > VB.letzteOk) return ["rot", "Keine Verbindung zum Server" + (VB.fehlerText ? ` (${VB.fehlerText})` : "")];
+  if (VB.wartung?.an) return ["blau", "Wartung" + (VB.wartung.hinweis ? `: ${VB.wartung.hinweis}` : " – es kann kurz zu Unterbrechungen kommen")];
+  if (!VB.letzteOk) return ["grau", "Unbekannt – noch keine Antwort vom Server"];
+  if (Date.now() - VB.letzteOk > VB_VERALTET_MS) return ["grau", `Veraltet – letzte Antwort um ${fZeit.format(new Date(VB.letzteOk))} Uhr`];
+  return ["gruen", "Verbunden mit dem Server"];
+}
+function vbStatusLed() {
+  const l = $("ledStatus"); if (!l) return;
+  const [farbe, text] = vbZustand();
+  l.className = "led " + farbe; $("leds").title = text;
+  if (!$("verbindungBlatt").classList.contains("versteckt")) vbBlattZeigen();
+}
+// echte Datenübertragungen, die nicht über api() laufen (Fotos/Vorschauen aus dem Supabase-Speicher)
+try {
+  new PerformanceObserver((liste) => {
+    for (const e of liste.getEntries()) {
+      if (!e.name.includes(SUPA_HOST) || e.initiatorType === "fetch") continue;
+      VB.bytes += e.transferSize || 0; vbBlinken();
+    }
+  }).observe({ type: "resource", buffered: false });
+} catch {}
+addEventListener("online", vbStatusLed); addEventListener("offline", vbStatusLed);
+setInterval(vbStatusLed, 5000);
+
+// Rundinstrument (Halbkreis): wert = null → „–“ (nicht gemessen), Zeiger ausgeblendet
+function rundinstrument(titel, wert, max, einheit, zonen, dezimal = 0) {
+  const w = 150, h = 92, cx = 75, cy = 80, r = 60;
+  const pkt = (a) => [cx + r * Math.cos(Math.PI * (1 - a)), cy - r * Math.sin(Math.PI * (1 - a))];
+  const bogen = (a, b, farbe) => { const [x1, y1] = pkt(a), [x2, y2] = pkt(b); return `<path d="M${x1.toFixed(1)} ${y1.toFixed(1)} A${r} ${r} 0 0 1 ${x2.toFixed(1)} ${y2.toFixed(1)}" stroke="${farbe}" stroke-width="10" fill="none"/>`; };
+  let vorher = 0; const b = zonen.map(([bis, farbe]) => { const s = bogen(vorher / max, Math.min(bis, max) / max, farbe); vorher = Math.min(bis, max); return s; }).join("");
+  const a = wert == null ? null : Math.max(0, Math.min(1, wert / max));
+  const zeiger = a == null ? "" : (() => { const [x, y] = [cx + (r - 14) * Math.cos(Math.PI * (1 - a)), cy - (r - 14) * Math.sin(Math.PI * (1 - a))]; return `<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="var(--text)" stroke-width="3" stroke-linecap="round"/><circle cx="${cx}" cy="${cy}" r="5" fill="var(--text)"/>`; })();
+  const zahl = wert == null ? "–" : wert.toLocaleString("de-DE", { maximumFractionDigits: dezimal });
+  return `<div class="instrument"><svg viewBox="0 0 ${w} ${h}" role="img" aria-label="${esc(titel)}: ${zahl} ${einheit}">${b}${zeiger}</svg>
+    <div class="i-wert">${zahl}<small> ${einheit}</small></div><div class="i-titel">${esc(titel)}</div></div>`;
+}
+const mittel = (a) => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
+function verbindungBlatt() { vbBlattZeigen(); $("verbindungBlatt").classList.remove("versteckt"); }
+function vbBlattZeigen() {
+  const [farbe, text] = vbZustand(), t = VB.test, c = navigator.connection;
+  const antwort = t?.ping ?? (VB.zeiten.length ? Math.round(mittel(VB.zeiten)) : null);
+  $("vbInhalt").innerHTML = `
+    <div class="vb-status"><i class="led ${farbe}"></i><b>${esc(text)}</b></div>
+    <div class="instrumente">
+      ${rundinstrument(t?.ping != null ? "Antwortzeit (Test)" : "Antwortzeit (echt, Ø)", antwort, 2000, "ms", [[300, "#2e7d4f"], [1000, "#d19a22"], [2000, "#c0485a"]])}
+      ${rundinstrument("Download", t?.down ?? null, 50, "Mbit/s", [[2, "#c0485a"], [10, "#d19a22"], [50, "#2e7d4f"]], 1)}
+      ${rundinstrument("Upload", t?.up ?? null, 50, "Mbit/s", [[1, "#c0485a"], [5, "#d19a22"], [50, "#2e7d4f"]], 1)}
+    </div>
+    <div id="vbTestText" class="hinweis" style="text-align:center">${t?.zeit ? `Letzter Test: ${fZeit.format(new Date(t.zeit))} Uhr${t.db != null ? ` · Datenbank ${t.db} ms` : ""}` : "Download/Upload: bitte „Verbindung testen“ tippen."}</div>
+    <table class="vb-tabelle">
+      <tr><td>Letzte Antwort</td><td>${VB.letzteOk ? fZeit.format(new Date(VB.letzteOk)) + " Uhr" : "–"}</td></tr>
+      <tr><td>Anfragen / Fehler (seit App-Start)</td><td>${VB.anfragen} / ${VB.fehler}</td></tr>
+      ${VB.fehler ? `<tr><td>Letzter Fehler</td><td>${VB.letzterFehler ? fZeit.format(new Date(VB.letzterFehler)) + " Uhr · " : ""}${esc(VB.fehlerText)}</td></tr>` : ""}
+      <tr><td>Fotos/Dateien geladen</td><td>${VB.bytes ? mb(VB.bytes) : "–"}</td></tr>
+      <tr><td>Handy</td><td>${navigator.onLine ? "online" : "offline"}${c?.effectiveType ? ` · ${esc(String(c.effectiveType).toUpperCase())}` : ""}${c?.downlink ? ` · ca. ${c.downlink.toLocaleString("de-DE")} Mbit/s` : ""}</td></tr>
+      <tr><td>Version App / Server</td><td>${APP_VERSION} / ${esc(VB.server || INIT?.server || "–")}</td></tr>
+      ${VB.wartung?.an ? `<tr><td>Wartung seit</td><td>${VB.wartung.seit ? esc(zeitKurz(VB.wartung.seit)) + " Uhr" : "–"}</td></tr>` : ""}
+    </table>
+    <button class="knopf haupt" id="vbTestKnopf" onclick="verbindungTesten()" ${VB.test?.laeuft ? "disabled" : ""}>▶️ Verbindung testen</button>
+    ${ICH?.admin ? `<button class="knopf" onclick="wartungUmschalten()">${VB.wartung?.an ? "✅ Wartung beenden" : "🔧 Wartung ankündigen (LED blau)"}</button>` : ""}
+    <p class="hinweis" style="font-size:.85rem;margin:0">Obere LED: 🟢 verbunden · 🔴 keine Verbindung · 🔵 Wartung · ⚪ unbekannt/veraltet. Untere LED flackert nur, wenn gerade wirklich Daten übertragen werden.</p>`;
+}
+async function verbindungTesten() {
+  if (VB.test?.laeuft) return;
+  VB.test = { laeuft: true }; vbBlattZeigen();
+  const text = (t) => { const e = $("vbTestText"); if (e) e.textContent = t; };
+  try {
+    const zeiten = []; let db = null;
+    for (let i = 0; i < 5; i++) { text(`⏳ Antwortzeit messen … ${i + 1}/5`); const t0 = performance.now(); const r = await api("ping"); zeiten.push(performance.now() - t0); db = r.dbMs; VB.server = r.server; VB.wartung = r.wartung; }
+    const ping = Math.round(Math.min(...zeiten));
+    VB.test.ping = ping; VB.test.db = db; vbBlattZeigen(); text("⏳ Download messen …");
+    const DOWN = 1024 * 1024, UP = 512 * 1024;
+    let t0 = performance.now(); await api("ping", { groesse: DOWN });
+    VB.test.down = Math.round((DOWN * 8 / 1e6) / Math.max(0.05, (performance.now() - t0 - ping) / 1000) * 10) / 10; vbBlattZeigen(); text("⏳ Upload messen …");
+    const roh = new Uint8Array(UP * 3 / 4); for (let i = 0; i < roh.length; i += 65536) crypto.getRandomValues(roh.subarray(i, i + 65536));
+    const last = base64(roh.buffer).slice(0, UP);
+    t0 = performance.now(); const r = await api("ping", { last });
+    if (r.empfangen !== last.length) throw new Error("Upload unvollständig");
+    VB.test.up = Math.round((UP * 8 / 1e6) / Math.max(0.05, (performance.now() - t0 - ping) / 1000) * 10) / 10;
+    VB.test.zeit = Date.now(); VB.test.laeuft = false; vbBlattZeigen();
+    melde(`✔ Verbindung in Ordnung – ${ping} ms, ↓ ${VB.test.down.toLocaleString("de-DE")} / ↑ ${VB.test.up.toLocaleString("de-DE")} Mbit/s`);
+  } catch (e) {
+    VB.test.laeuft = false; VB.test.zeit = Date.now(); vbBlattZeigen(); text("❌ Test abgebrochen: " + e.message);
+    melde("Verbindungstest fehlgeschlagen: " + e.message, true);
+  }
+}
+async function wartungUmschalten() {
+  const an = !VB.wartung?.an;
+  const hinweis = an ? prompt("Wartung ankündigen – kurzer Hinweis für alle (freiwillig), z. B. „bis 20 Uhr“:", "") : null;
+  if (an && hinweis === null) return;
+  try { const r = await api("wartung_setzen", { an, hinweis }); VB.wartung = r.wartung; vbStatusLed(); vbBlattZeigen(); melde(an ? "🔵 Wartung angekündigt – alle sehen die blaue LED" : "🟢 Wartung beendet"); }
+  catch (e) { melde(e.message, true); }
 }
 
 // ---------- Eigener Status ----------
@@ -709,6 +857,7 @@ function klappenMerken() {
 }
 function wichtigZeigen() {
   const h = [];
+  if (INIT?.wartung?.an) h.push(`<div class="zeile" style="cursor:pointer" onclick="verbindungBlatt()">🔵 <b>Wartung</b>${INIT.wartung.hinweis ? " – " + esc(INIT.wartung.hinweis) : ": es kann kurz zu Unterbrechungen kommen"}<span style="margin-left:auto">›</span></div>`);
   if (INIT?.ungelesen) h.push(`<div class="zeile" style="cursor:pointer" onclick="zeige('nachrichten')">💬 <b>${INIT.ungelesen} neue Nachricht${INIT.ungelesen > 1 ? "en" : ""}</b><span style="margin-left:auto">›</span></div>`);
   if (INIT?.offeneAbstimmungen) h.push(`<div class="zeile" style="cursor:pointer" onclick="zeige('vorschlaege')">🗳️ <b>${INIT.offeneAbstimmungen === 1 ? "1 Abstimmung wartet" : INIT.offeneAbstimmungen + " Abstimmungen warten"}</b> auf deine Stimme<span style="margin-left:auto">›</span></div>`);
   for (const g of INIT?.geburtstageHeute || []) h.push(g.person_id === ICH?.person_id
@@ -732,6 +881,7 @@ function wichtigZeigen() {
 async function neuLaden(vonHand) {
   try {
     INIT = await api("init"); ICH = INIT.ich;
+    VB.wartung = INIT.wartung || null; VB.server = INIT.server || null; vbStatusLed();
     $("begruessung").textContent = "Hallo " + ICH.vorname + "!";
     $("statusChip").textContent = statusText(INIT.status) + " ▾";
     $("ichName").textContent = ICH.name + (ICH.aemter?.length ? ` (${ICH.aemter.join(", ")})` : ICH.admin ? " (Admin)" : "");
@@ -2235,6 +2385,7 @@ function versionAnzeigen() {
   if (reg === "programme") kachelnZeigen();
 }
 async function jetztAktualisieren() {
+  VB.update = true; vbStatusLed(); // blaue LED: Wartung/Update läuft
   try { const reg = await navigator.serviceWorker.getRegistration(); await reg?.update(); reg?.waiting?.postMessage("jetzt-aktivieren"); } catch {}
   setTimeout(() => location.reload(), 400);
 }
