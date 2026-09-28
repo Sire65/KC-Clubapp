@@ -551,7 +551,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.17.3"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.17.4"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2263,12 +2263,15 @@ const adresseText = (a) => [a.strasse, [a.plz, a.ort].filter(Boolean).join(" ")]
 const EXTERN_WEGE = {
   whatsapp: (nr) => [
     { k: "intent", t: "💬 WhatsApp öffnen", url: waLink(nr), nur: IST_ANDROID },
+    // gleiches Fenster: Seite bleibt stehen, dort „Chat starten“ antippen (auf manchen Handys blockiert Android den direkten Sprung)
+    { k: "hier", t: "💬 WhatsApp-Seite hier öffnen", url: `https://api.whatsapp.com/send?phone=${waNummer(nr)}` },
     { k: "schema", t: "💬 WhatsApp-App direkt", url: `whatsapp://send?phone=${waNummer(nr)}` },
     { k: "web", t: "🌐 Über wa.me (Browser)", url: `https://wa.me/${waNummer(nr)}`, neu: true },
   ],
   route: (adr) => [
     { k: "intent", t: "🗺️ Google Maps öffnen", url: routeLink(adr), nur: IST_ANDROID },
     { k: "apple", t: "🗺️ Apple Karten öffnen", url: routeLink(adr), nur: IST_IOS },
+    { k: "hier", t: "🗺️ Route hier anzeigen (Google Maps Webseite)", url: `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(adr)}` },
     { k: "geo", t: "🗺️ Karten-App auswählen", url: `geo:0,0?q=${encodeURIComponent(adr)}`, nur: IST_ANDROID },
     { k: "web", t: "🌐 Route im Browser", url: `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(adr)}`, neu: true },
   ],
@@ -2288,7 +2291,7 @@ function externVersuch(art, weg, wege, wert) {
     else if (m.versteckt_ms != null && m.zurueck_ms == null) m.zurueck_ms = Math.round(performance.now() - t0);
   };
   const blur = () => { if (m.blur_ms == null) m.blur_ms = Math.round(performance.now() - t0); };
-  const hide = () => { m.pagehide = true; };
+  const hide = () => { m.pagehide = true; if (weg.k === "hier") externMerken(art, weg.k); };
   document.addEventListener("visibilitychange", merke); addEventListener("blur", blur); addEventListener("pagehide", hide);
   try { if (weg.neu) { const w = window.open(weg.url, "_blank", "noopener"); m.fenster = w === null ? "null" : "objekt"; } else location.href = weg.url; } catch (e) { m.fehler = String(e?.message || e).slice(0, 150); }
   externTimer = setTimeout(() => {

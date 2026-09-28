@@ -1,5 +1,12 @@
 # Änderungen
 
+## 0.17.4 – 2026-09-28 (DEV)
+
+- KC-CLUB-KONTAKT: Messung auf Hansis Handy (installierte App, Android 10, Chrome 154) zeigte: direkte Sprünge in
+  WhatsApp/Maps (intent, whatsapp://, geo:) werden blockiert, das Browserfenster schließt sich sofort wieder.
+  Neuer Weg „… hier öffnen/anzeigen“: WhatsApp-Seite bzw. Google-Maps-Route im App-Fenster selbst (bleibt stehen,
+  „Zurück“ führt in die App). Wird gemerkt, wenn er gewählt wird.
+
 ## 0.17.3 – 2026-09-28 (DEV)
 
 - KC-CLUB-EXTERN-DIAGNOSE: Beim Öffnen von WhatsApp/Route misst die App, was auf dem Handy passiert (Weg, App in den
