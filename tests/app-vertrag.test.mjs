@@ -95,7 +95,7 @@ assert.ok((html.match(/<details class="karte" data-klappe=/g) || []).length >= 4
 
 // 14. 0.4.0: Register wischbar mit Anzahl, Schloss je Klappbereich, Gruß unter den Kopf-Knöpfen.
 assert.ok(/function registerWischen\(/.test(html) && /addEventListener\("touchend"/.test(html), "Wischen zwischen Registern fehlt");
-assert.ok(/<span class="anz">\$\{KACHELN\[r\]\.length\}<\/span>/.test(html), "Anzahl der Kacheln am Register fehlt");
+assert.ok(/<span class="anz">\$\{kacheln\(r\)\.length\}<\/span>/.test(html), "Anzahl der Kacheln am Register fehlt"); // ab 0.9.0: nur die Kacheln, die für mich gelten
 assert.ok(/class="schloss"/.test(html) && /"fest_" \+ name/.test(html), "Schloss zum Feststellen fehlt");
 const rechts = html.slice(html.indexOf('<div class="kopfrechts">'), html.indexOf('<div class="info" id="heroInfo">'));
 assert.ok(rechts.indexOf('class="knopfreihe"') < rechts.indexOf('id="begruessung"'), "Gruß muss unter den Knöpfen stehen");
@@ -159,6 +159,42 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   }
   assert.equal(Object.keys(feiertageNRW(2026)).length, 11, "NRW hat 11 gesetzliche Feiertage");
   assert.ok(/id="setFeiertage"/.test(html) && /einst\("feiertage", true\)/.test(html), "Schalter Feiertage NRW fehlt");
+}
+
+// 21. 0.9.0: Sitzungsprotokolle & Aufgaben (KC-CLUB-PROTOKOLLE, KC-CLUB-AUFGABEN).
+{
+  for (const a of ["protokolle_liste", "protokoll_vorlage", "protokoll_laden", "protokoll_speichern", "protokoll_anlage", "protokoll_veroeffentlichen",
+    "protokoll_korrigieren", "protokoll_loeschen", "protokoll_einwand", "einwand_erledigt", "aufgabe_speichern", "aufgabe_erledigt", "aufgabe_loeschen"])
+    assert.ok(aktionen.has(a), `Server-Aktion ${a} fehlt`);
+  // Leserecht aus der Rollen-Registry (Aushilfen nein), nicht hart codiert im Server
+  assert.ok(/protokolle: r \? r\.protokolle_lesen !== false : true/.test(server), "Protokoll-Recht aus kc_club_rollen fehlt");
+  assert.ok(!/["'`]Aushilfe/.test(server), "Server darf das Amt „Aushilfe“ nicht hart codieren");
+  assert.equal((server.match(/nurProtokolle\(ich\)/g) || []).length, 13, "jede Protokoll-/Aufgaben-Aktion prüft das Leserecht");
+  // 7 Tage Einspruch; genehmigt erst nach Fristablauf ohne offene Einwände
+  assert.ok(/const EINSPRUCH_TAGE = 7;/.test(server), "Einspruchsfrist 7 Tage fehlt");
+  assert.ok(/if \(offeneEinwaende > 0\) return "einwand";/.test(server), "offener Einwand darf nicht als genehmigt gelten");
+  // Entwürfe nur für Verfasser/Organisation; veröffentlichte Protokolle nicht löschbar; Korrektur sichert alte Fassung
+  assert.ok(/pr\.status === "entwurf" && !bearb\) throw/.test(server), "Entwurf für andere sichtbar");
+  assert.ok(/pr\.status !== "entwurf" \|\| pr\.version > 1\) throw/.test(server), "veröffentlichtes Protokoll löschbar");
+  assert.ok(/kc_club_sitzungsprotokoll_fassungen"\)\.upsert/.test(server), "alte Fassung wird nicht gesichert");
+  // Anlagen: nur eigene Uploads verknüpfen; Leser dürfen Protokoll-Anlagen öffnen
+  assert.ok(/kc_club_sitzungsprotokoll_anlagen"\)\.select\("protokoll_id"\)\.eq\("attachment_id", att\.id\)/.test(server), "anlage_url kennt Protokoll-Anlagen nicht");
+  // Aufgaben: erst beim Veröffentlichen mitteilen, Erinnerung am Vortag nur einmal
+  assert.ok(/if \(!pr \|\| pr\.status === "veroeffentlicht"\) await aufgabenMitteilen/.test(server), "Aufgaben aus Entwürfen würden zu früh verschickt");
+  assert.ok(/update\(\{ erinnert_am: jetzt\(\) \}\)\.eq\("id", x\.id\)\.is\("erinnert_am", null\)/.test(server), "Doppelversand-Sperre Aufgaben-Erinnerung fehlt");
+  assert.ok(/club_protokoll: "termine", club_aufgabe: "termine"/.test(server), "Benachrichtigungs-Bereich für Protokolle fehlt");
+  // App: Foto vom Blatt (Kamera), Galerie, Datei (Word/PDF) über den Dateimanager
+  assert.ok(/id="prKamera" accept="image\/\*" capture="environment"/.test(html), "Kamera für Protokoll fehlt");
+  assert.ok(/id="prDok" accept="[^"]*\.docx[^"]*application\/pdf/.test(html), "Word/PDF-Auswahl fehlt");
+  assert.ok(/async function anlageHochladen\(roh\)/.test(html) && /await anlageHochladen\(roh\)/.test(html), "gemeinsamer Upload-Helfer fehlt");
+  assert.ok(/nur: \(\) => ICH\?\.protokolle !== false/.test(html), "Protokoll-Kachel für Aushilfen sichtbar");
+  assert.ok(/h\.startsWith\("#protokoll="\)\) protokollOeffnen\(/.test(html), "Sprung zum Protokoll aus Push/Mail fehlt");
+  assert.ok(/einmal\(this, protokollVeroeffentlichen\)/.test(html), "Doppel-Tipp-Sperre beim Veröffentlichen fehlt");
+  assert.ok(!/Protokolle", u: "[^"]*", bald: true/.test(html), "Protokolle noch als „bald“ markiert");
+  const mig9 = lies("supabase/migrations/20260928_kc_club_v09_sitzungsprotokolle.sql");
+  for (const k of ["club_protokoll", "club_protokoll_push", "club_protokoll_beide", "club_protokoll_mail", "club_aufgabe", "club_aufgabe_push", "club_aufgabe_beide", "club_aufgabe_mail"])
+    assert.ok(mig9.includes(`'${k}'`), `Regel ${k} fehlt`);
+  assert.ok(/enable row level security/.test(mig9), "RLS fehlt");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

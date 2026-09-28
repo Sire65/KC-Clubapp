@@ -6,14 +6,15 @@
 // Features: KC-CLUB-STATUS, KC-CLUB-ZUGANG, KC-CLUB-TREFFEN, KC-CLUB-NACHRICHTEN, KC-CLUB-ANLAGEN, KC-CLUB-PUSH, KC-CLUB-ADMIN,
 //           KC-CLUB-VORSCHLAG (0.2.0), KC-CLUB-OHNEAPP (0.2.0), KC-CLUB-DIENSTE (0.2.0),
 //           KC-CLUB-BENACHRICHTIGUNG (0.3.0), KC-CLUB-DIENSTERINNERUNG (0.3.0), KC-CLUB-KALENDER (0.6.0),
-//           KC-CLUB-GEBURTSTAG-FREIGABE (0.7.0), KC-CLUB-GEBURTSTAG-PUSH (0.8.0), KC-CLUB-VERANSTALTUNG (0.8.0)
+//           KC-CLUB-GEBURTSTAG-FREIGABE (0.7.0), KC-CLUB-GEBURTSTAG-PUSH (0.8.0), KC-CLUB-VERANSTALTUNG (0.8.0),
+//           KC-CLUB-PROTOKOLLE (0.9.0), KC-CLUB-AUFGABEN (0.9.0)
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.8.0";
+const SERVER_VERSION = "0.9.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -74,7 +75,8 @@ async function routerSenden(eventKey: string, personIds: string[], vars: Record<
   return { gesendet: Number(out?.sent || 0), fehler: Number(out?.failed || 0) };
 }
 // KC-CLUB-BENACHRICHTIGUNG: Ereignis → Bereich, den das Mitglied in den Einstellungen steuert
-const BEREICH_VON: Record<string, string> = { club_treffen: "termine", club_erinnerung: "termine", club_nachricht: "nachrichten", club_vorschlag: "vorschlaege", club_dienst: "dienste", club_geburtstag: "geburtstage" };
+const BEREICH_VON: Record<string, string> = { club_treffen: "termine", club_erinnerung: "termine", club_nachricht: "nachrichten", club_vorschlag: "vorschlaege", club_dienst: "dienste", club_geburtstag: "geburtstage",
+  club_protokoll: "termine", club_aufgabe: "termine" };
 const BEREICHE = ["termine", "nachrichten", "vorschlaege", "dienste", "geburtstage"];
 // Anzeige-Standard, solange nichts gespeichert ist (Server nutzt dann die bisherige Standardregel)
 const STANDARD_WAHL: Record<string, { push: boolean; email: boolean }> = { termine: { push: true, email: true }, nachrichten: { push: true, email: false }, vorschlaege: { push: true, email: false }, dienste: { push: false, email: false }, geburtstage: { push: true, email: false } };
@@ -112,7 +114,7 @@ async function senden(eventKey: string, personIds: string[], vars: Record<string
 }
 
 // ---------- Anmeldung ----------
-type Ich = { person_id: string; name: string; vorname: string; admin: boolean; vorstand: boolean; aemter: string[] };
+type Ich = { person_id: string; name: string; vorname: string; admin: boolean; vorstand: boolean; aemter: string[]; protokolle: boolean };
 async function anmelden(req: Request): Promise<Ich> {
   const token = req.headers.get("x-club-token") ?? "";
   if (!/^[0-9a-f]{32,96}$/.test(token)) throw new Fehler("Kein Zugang – bitte den persönlichen Link neu öffnen.", 401);
@@ -124,7 +126,9 @@ async function anmelden(req: Request): Promise<Ich> {
   ]);
   if (!p?.active) throw new Fehler("Kein Zugang – bitte bei Hansi melden.", 401);
   db.from("kc_club_zugang").update({ zuletzt_gesehen: jetzt(), app_version: txt(req.headers.get("x-club-version"), 20) || null }).eq("person_id", z.person_id).then(() => {});
-  return { person_id: p.person_id, name: p.display_name, vorname: vorname(p), admin: !!r?.ist_admin, vorstand: !!(r?.ist_vorstand || r?.ist_admin), aemter: r?.aemter ?? [] };
+  return { person_id: p.person_id, name: p.display_name, vorname: vorname(p), admin: !!r?.ist_admin, vorstand: !!(r?.ist_vorstand || r?.ist_admin), aemter: r?.aemter ?? [],
+    // Sitzungsprotokolle: Recht aus der Rollen-Registry (Standard ja; Aushilfen nein)
+    protokolle: r ? r.protokolle_lesen !== false : true };
 }
 // „vorstand“ ist intern das Recht, Treffen/Veranstaltungen/Abstimmungen anzulegen (im Club: Clubsprecher, Kassenwart, Admin)
 const nurVorstand = (ich: Ich) => { if (!ich.vorstand) throw new Fehler("Das dürfen nur Clubsprecher, Kassenwart und Admin.", 403); };
@@ -239,10 +243,7 @@ async function vorschlagAbschliessen(v: any, von: string | null) {
     .eq("id", v.id).eq("status", "offen").select("id");
   if (!ok?.length) return null;
   if (v.art !== "abstimmung") return { gesendet: 0 };
-  const { data: s } = await db.from(v.geheim ? "kc_club_geheime_stimmen" : "kc_club_stimmen").select("wahl").eq("vorschlag_id", v.id);
-  const zaehl = new Map<string, number>();
-  (s ?? []).forEach((x: any) => x.wahl && zaehl.set(x.wahl, (zaehl.get(x.wahl) ?? 0) + 1));
-  const erg = v.optionen.map((o: string) => `${o}: ${zaehl.get(o) ?? 0}`).join(" · ");
+  const erg = await abstimmungsErgebnis(v);
   const ziel = (await aktiveMitglieder()).map((x) => x.person_id);
   return await senden("club_vorschlag", ziel, {
     titel: "🗳️ Ergebnis: " + v.titel, kurz: erg,
@@ -250,6 +251,62 @@ async function vorschlagAbschliessen(v: any, von: string | null) {
     text: `Hallo,\n\ndie Abstimmung „${v.titel}“ ist beendet.\n\nErgebnis: ${erg}\n\nDetails in der Köcheclub-App: ${APP_URL}#vorschlaege\n\nViele Grüße\nKöcheclub Werne`,
     url: APP_URL + "#vorschlaege",
   }, `club-ergebnis:${v.id}`);
+}
+
+async function abstimmungsErgebnis(v: any) {
+  const { data: s } = await db.from(v.geheim ? "kc_club_geheime_stimmen" : "kc_club_stimmen").select("wahl").eq("vorschlag_id", v.id);
+  const zaehl = new Map<string, number>();
+  (s ?? []).forEach((x: any) => x.wahl && zaehl.set(x.wahl, (zaehl.get(x.wahl) ?? 0) + 1));
+  return v.optionen.map((o: string) => `${o}: ${zaehl.get(o) ?? 0}`).join(" · ");
+}
+
+// ---------- Sitzungsprotokolle (KC-CLUB-PROTOKOLLE) & Aufgaben (KC-CLUB-AUFGABEN) ----------
+// Schreiben darf jedes Mitglied mit Leserecht (der Schriftführer wechselt); ändern: Verfasser oder Organisation.
+// Ablauf: Vorlage → Entwurf (Foto/Datei anhängen) → veröffentlichen → 7 Tage Einspruch → genehmigt.
+const EINSPRUCH_TAGE = 7;
+const nurProtokolle = (ich: Ich) => { if (!ich.protokolle) throw new Fehler("Protokolle sind nur für Mitglieder.", 403); };
+const darfBearbeiten = (ich: Ich, pr: any) => pr.verfasser === ich.person_id || ich.vorstand;
+async function protokollLeser(): Promise<string[]> {
+  const [leute, { data: r }] = await Promise.all([aktiveMitglieder(), db.from("kc_club_rollen").select("person_id").eq("protokolle_lesen", false)]);
+  const aus = new Set((r ?? []).map((x: any) => x.person_id));
+  return leute.map((m) => m.person_id).filter((id) => !aus.has(id));
+}
+async function protokollHolen(id: unknown) {
+  const { data } = await db.from("kc_club_sitzungsprotokolle").select("*").eq("id", String(id || "")).maybeSingle();
+  if (!data) throw new Fehler("Protokoll nicht gefunden.", 404);
+  return data;
+}
+function protokollStatus(pr: any, offeneEinwaende: number) {
+  if (pr.status === "entwurf") return "entwurf";
+  if (offeneEinwaende > 0) return "einwand";
+  return pr.einspruch_bis && pr.einspruch_bis > jetzt() ? "einspruch" : "genehmigt";
+}
+const tagText = (d: string) => fTag.format(new Date(d + "T12:00:00Z"));
+async function aufgabenMitteilen(aufgaben: any[], von: Ich, titel: string | null) {
+  // je Person eine Benachrichtigung; nur einmal (mitgeteilt_am)
+  const jePerson = new Map<string, any[]>();
+  for (const a of aufgaben) {
+    if (a.erledigt_am || a.mitgeteilt_am) continue;
+    const { data: ok } = await db.from("kc_club_aufgaben").update({ mitgeteilt_am: jetzt() }).eq("id", a.id).is("mitgeteilt_am", null).select("id");
+    if (!ok?.length || a.person_id === von.person_id) continue;
+    jePerson.set(a.person_id, [...(jePerson.get(a.person_id) ?? []), a]);
+  }
+  for (const [pid, liste] of jePerson) {
+    const zeilen = liste.map((a) => `📌 ${a.text}${a.faellig ? ` (bis ${tagText(a.faellig)})` : ""}`);
+    await senden("club_aufgabe", [pid], {
+      titel: liste.length === 1 ? "📌 Neue Aufgabe für dich" : `📌 ${liste.length} neue Aufgaben für dich`, kurz: liste.map((a) => a.text).join(" · ").slice(0, 150),
+      betreff: `Köcheclub Werne – ${liste.length === 1 ? "neue Aufgabe" : "neue Aufgaben"} für dich`,
+      text: `Hallo,\n\n${von.name} hat dir ${titel ? `im Protokoll „${titel}“ ` : ""}${liste.length === 1 ? "eine Aufgabe" : "Aufgaben"} eingetragen:\n\n${zeilen.join("\n")}\n\nAbhaken in der Köcheclub-App: ${APP_URL}#protokolle\n\nViele Grüße\nKöcheclub Werne`,
+      url: APP_URL + "#protokolle",
+    }, `club-aufgabe:${pid}:${liste.map((a) => a.id).join(",").slice(0, 80)}`);
+  }
+}
+async function aufgabeHolen(ich: Ich, id: unknown) {
+  const { data: a } = await db.from("kc_club_aufgaben").select("*").eq("id", String(id || "")).maybeSingle();
+  if (!a) throw new Fehler("Aufgabe nicht gefunden.", 404);
+  const pr = a.protokoll_id ? await protokollHolen(a.protokoll_id) : null;
+  const verwalten = ich.vorstand || a.erstellt_von === ich.person_id || (pr ? darfBearbeiten(ich, pr) : false);
+  return { a, pr, verwalten };
 }
 
 // ---------- Nachrichten ----------
@@ -345,6 +402,22 @@ Deno.serve(async (req) => {
           }
         }
       }
+      // KC-CLUB-AUFGABEN: Erinnerung am Tag vor der Fälligkeit (nur mitgeteilte Aufgaben, höchstens einmal)
+      let aufg = 0;
+      {
+        const { data: fa } = await db.from("kc_club_aufgaben").select("*").is("erledigt_am", null).is("erinnert_am", null).not("mitgeteilt_am", "is", null).eq("faellig", morgen);
+        for (const x of fa ?? []) {
+          const { data: ok } = await db.from("kc_club_aufgaben").update({ erinnert_am: jetzt() }).eq("id", x.id).is("erinnert_am", null).select("id");
+          if (!ok?.length) continue;
+          await senden("club_aufgabe", [x.person_id], {
+            titel: "📌 Aufgabe bis morgen", kurz: x.text,
+            betreff: `Köcheclub Werne – Erinnerung: Aufgabe bis morgen`,
+            text: `Hallo,\n\nkurze Erinnerung – bis morgen (${tagText(morgen)}) ist deine Aufgabe fällig:\n\n📌 ${x.text}\n\nErledigt? Abhaken in der Köcheclub-App: ${APP_URL}#protokolle\n\nViele Grüße\nKöcheclub Werne`,
+            url: APP_URL + "#protokolle",
+          }, `club-aufgabe-erinnerung:${x.id}`);
+          aufg++;
+        }
+      }
       const { data: ts } = await db.from("kc_club_treffen").select("*").eq("status", "geplant").eq("art", "treffen").is("erinnerung_gesendet_am", null)
         .gte("beginn", new Date().toISOString()).lte("beginn", new Date(Date.now() + 2 * 86400000).toISOString());
       let n = 0;
@@ -366,7 +439,7 @@ Deno.serve(async (req) => {
         await protokoll(null, "treffen_erinnerung", { treffen: t.id, empfaenger: ziel.length });
         n++;
       }
-      return json({ ok: true, erinnerungen: n, beendet, dienst, geb });
+      return json({ ok: true, erinnerungen: n, beendet, dienst, geb, aufg });
     }
 
     const ich = await anmelden(req);
@@ -404,8 +477,24 @@ Deno.serve(async (req) => {
           .map((g) => ({ person_id: g.person_id, name: g.name, vorname: g.vorname }));
         const { data: gf } = await db.from("kc_club_freigaben").select("erlaubt").eq("person_id", ich.person_id).eq("bereich", "geburtstag").maybeSingle();
         const hatGeburtstag = !!(mitglieder.find((m: any) => m.person_id === ich.person_id) as any)?.birth_date;
+        // KC-CLUB-AUFGABEN / KC-CLUB-PROTOKOLLE: meine offenen Aufgaben, ungelesene Protokolle
+        let meineAufgaben: any[] = [], protokolleUngelesen = 0;
+        if (ich.protokolle) {
+          const [{ data: au }, { data: pv }] = await Promise.all([
+            db.from("kc_club_aufgaben").select("id,text,faellig,protokoll_id").eq("person_id", ich.person_id).is("erledigt_am", null).order("faellig", { nullsFirst: false }).limit(30),
+            db.from("kc_club_sitzungsprotokolle").select("id,status,version").eq("status", "veroeffentlicht").gte("veroeffentlicht_am", new Date(Date.now() - 180 * 86400000).toISOString()),
+          ]);
+          const pids = [...new Set((au ?? []).map((x: any) => x.protokoll_id).filter(Boolean))];
+          const { data: ap } = pids.length ? await db.from("kc_club_sitzungsprotokolle").select("id,status,titel").in("id", pids) : { data: [] as any[] };
+          const apm = new Map((ap ?? []).map((x: any) => [x.id, x]));
+          meineAufgaben = (au ?? []).filter((x: any) => !x.protokoll_id || (apm.get(x.protokoll_id) as any)?.status === "veroeffentlicht")
+            .map((x: any) => ({ id: x.id, text: x.text, faellig: x.faellig, protokoll: x.protokoll_id ? (apm.get(x.protokoll_id) as any)?.titel : null }));
+          const vids = (pv ?? []).map((x: any) => x.id);
+          const { data: gl } = vids.length ? await db.from("kc_club_sitzungsprotokoll_gelesen").select("protokoll_id,version").eq("person_id", ich.person_id).in("protokoll_id", vids) : { data: [] as any[] };
+          protokolleUngelesen = (pv ?? []).filter((x: any) => !(gl ?? []).some((g: any) => g.protokoll_id === x.id && g.version >= x.version)).length;
+        }
         const benachrichtigung = Object.fromEntries(BEREICHE.map((b) => { const x: any = (wahl ?? []).find((y: any) => y.bereich === b); return [b, x ? { push: x.push, email: x.email } : STANDARD_WAHL[b]]; }));
-        return json({ ich, status: meinStatus, server: SERVER_VERSION, ungelesen, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, hatGeburtstag, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null });
+        return json({ ich, status: meinStatus, server: SERVER_VERSION, ungelesen, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, hatGeburtstag, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null });
       }
 
       case "mitglieder": {
@@ -425,7 +514,7 @@ Deno.serve(async (req) => {
             status: st.get(m.person_id) ?? null,
             // für alle nur grob: in den letzten 14 Tagen in der App gewesen (genaue Zeit nur für den Admin)
             aktiv: !!(z.get(m.person_id) as any)?.zuletzt_gesehen && Date.now() - new Date((z.get(m.person_id) as any).zuletzt_gesehen).getTime() < 14 * 86400000,
-            ...(ich.admin ? { app: !!(z.get(m.person_id) as any)?.aktiv, zuletzt: (z.get(m.person_id) as any)?.zuletzt_gesehen ?? null, push: ps.has(m.person_id), mail: !!m.email } : {}),
+            ...(ich.admin ? { protokolle: (r.get(m.person_id) as any)?.protokolle_lesen !== false, app: !!(z.get(m.person_id) as any)?.aktiv, zuletzt: (z.get(m.person_id) as any)?.zuletzt_gesehen ?? null, push: ps.has(m.person_id), mail: !!m.email } : {}),
           })),
         });
       }
@@ -757,6 +846,295 @@ Deno.serve(async (req) => {
         return json({ ok: true, id: threadId, versand });
       }
 
+      // ----- Sitzungsprotokolle (KC-CLUB-PROTOKOLLE) -----
+      case "protokolle_liste": {
+        nurProtokolle(ich);
+        const { data: alle } = await db.from("kc_club_sitzungsprotokolle")
+          .select("id,treffen_id,titel,datum,ort,status,version,verfasser,veroeffentlicht_am,einspruch_bis,geaendert_am").order("datum", { ascending: false }).limit(100);
+        const ids = (alle ?? []).map((x: any) => x.id);
+        const leer = { data: [] as any[] };
+        const [{ data: gel }, { data: ew }, { data: an }, { data: auf }, { data: tr }] = await Promise.all([
+          ids.length ? db.from("kc_club_sitzungsprotokoll_gelesen").select("protokoll_id,version").eq("person_id", ich.person_id).in("protokoll_id", ids) : Promise.resolve(leer),
+          ids.length ? db.from("kc_club_sitzungsprotokoll_einwaende").select("protokoll_id").is("erledigt_am", null).in("protokoll_id", ids) : Promise.resolve(leer),
+          ids.length ? db.from("kc_club_sitzungsprotokoll_anlagen").select("protokoll_id").in("protokoll_id", ids) : Promise.resolve(leer),
+          db.from("kc_club_aufgaben").select("*").is("erledigt_am", null).order("faellig", { nullsFirst: false }).limit(200),
+          db.from("kc_club_treffen").select("id,titel,beginn,ort").eq("art", "treffen").neq("status", "abgesagt")
+            .gte("beginn", new Date(Date.now() - 120 * 86400000).toISOString()).lte("beginn", jetzt()).order("beginn", { ascending: false }),
+        ]);
+        const zahl = (liste: any[] | null, id: string) => (liste ?? []).filter((x: any) => x.protokoll_id === id).length;
+        const prot = new Map((alle ?? []).map((x: any) => [x.id, x]));
+        // offene Aufgaben: aus veröffentlichten Protokollen, ohne Protokoll, oder aus Entwürfen, die ich bearbeiten darf
+        const aufgaben = (auf ?? []).filter((a: any) => { const pr: any = a.protokoll_id ? prot.get(a.protokoll_id) : null; return !pr || pr.status === "veroeffentlicht" || darfBearbeiten(ich, pr); });
+        const leute = await personen([...(alle ?? []).map((x: any) => x.verfasser), ...aufgaben.map((a: any) => a.person_id)]);
+        const mitProtokoll = new Set((alle ?? []).map((x: any) => x.treffen_id).filter(Boolean));
+        return json({
+          darfOrganisieren: ich.vorstand,
+          protokolle: (alle ?? []).map((pr: any) => {
+            const g: any = (gel ?? []).find((x: any) => x.protokoll_id === pr.id);
+            return {
+              id: pr.id, titel: pr.titel, datum: pr.datum, ort: pr.ort, version: pr.version, status: protokollStatus(pr, zahl(ew, pr.id)), einspruch_bis: pr.einspruch_bis,
+              verfasser: { person_id: pr.verfasser, name: leute.get(pr.verfasser)?.display_name || pr.verfasser }, eigen: pr.verfasser === ich.person_id,
+              darfBearbeiten: darfBearbeiten(ich, pr), gelesen: pr.status === "entwurf" || (!!g && g.version >= pr.version),
+              anlagen: zahl(an, pr.id), einwaende: zahl(ew, pr.id), aufgabenOffen: aufgaben.filter((a: any) => a.protokoll_id === pr.id).length,
+            };
+          }),
+          aufgaben: aufgaben.map((a: any) => ({ id: a.id, text: a.text, faellig: a.faellig, person_id: a.person_id, name: leute.get(a.person_id)?.display_name || a.person_id,
+            protokoll: a.protokoll_id ? { id: a.protokoll_id, titel: (prot.get(a.protokoll_id) as any)?.titel ?? "" } : null, meine: a.person_id === ich.person_id })),
+          treffenOhneProtokoll: (tr ?? []).filter((t: any) => !mitProtokoll.has(t.id)),
+        });
+      }
+
+      case "protokoll_vorlage": {
+        // Vorlage automatisch befüllen – getippt wird auf dem Handy fast nichts
+        nurProtokolle(ich);
+        const tid = p.treffen_id ? String(p.treffen_id) : null;
+        const zeile: any = { titel: txt(p.titel, 120) || "Sitzung des Köcheclubs", datum: berlinTag(new Date()), verfasser: ich.person_id };
+        if (tid) {
+          const { data: vorh } = await db.from("kc_club_sitzungsprotokolle").select("id").eq("treffen_id", tid).maybeSingle();
+          if (vorh) return json({ ok: true, id: vorh.id, vorhanden: true });
+          const { data: t } = await db.from("kc_club_treffen").select("*").eq("id", tid).maybeSingle();
+          if (!t) throw new Fehler("Treffen nicht gefunden.", 404);
+          const [{ data: teil }, { data: vs }] = await Promise.all([
+            db.from("kc_club_teilnahme").select("person_id,antwort").eq("treffen_id", tid),
+            db.from("kc_club_vorschlaege").select("*").eq("treffen_id", tid).neq("status", "zurueckgezogen").order("erstellt_am"),
+          ]);
+          const g = t.gastgeber_person_id ? (await personen([t.gastgeber_person_id])).get(t.gastgeber_person_id) : null;
+          const beschluesse: string[] = [];
+          for (const v of (vs ?? []).filter((x: any) => x.art === "abstimmung")) {
+            // geheime Abstimmungen erst nach Abschluss, nie mit Namen
+            beschluesse.push(v.status === "abgeschlossen" ? `${v.titel} – ${await abstimmungsErgebnis(v)}` : `${v.titel} – Abstimmung läuft noch`);
+          }
+          Object.assign(zeile, {
+            treffen_id: tid, titel: t.titel, datum: berlinTag(new Date(t.beginn)), ort: t.ort || (g ? `bei ${g.display_name}` : null),
+            anwesend: (teil ?? []).filter((x: any) => x.antwort === "ja").map((x: any) => x.person_id),
+            entschuldigt: (teil ?? []).filter((x: any) => x.antwort === "nein").map((x: any) => x.person_id),
+            tagesordnung: (vs ?? []).filter((x: any) => x.art === "thema").map((x: any) => x.titel), beschluesse,
+          });
+        }
+        const { data: neu, error } = await db.from("kc_club_sitzungsprotokolle").insert(zeile).select("id").single();
+        if (error || !neu) {
+          // gleichzeitig angelegt (Doppel-Tipp): vorhandenes öffnen
+          const { data: vorh } = tid ? await db.from("kc_club_sitzungsprotokolle").select("id").eq("treffen_id", tid).maybeSingle() : { data: null };
+          if (vorh) return json({ ok: true, id: vorh.id, vorhanden: true });
+          throw new Fehler("Protokoll konnte nicht angelegt werden.", 500);
+        }
+        await protokoll(ich.person_id, "sitzungsprotokoll_angelegt", { protokoll: neu.id, treffen: tid });
+        return json({ ok: true, id: neu.id });
+      }
+
+      case "protokoll_laden": {
+        nurProtokolle(ich);
+        const pr = await protokollHolen(p.id);
+        const bearb = darfBearbeiten(ich, pr);
+        if (pr.status === "entwurf" && !bearb) throw new Fehler("Dieses Protokoll wird gerade noch geschrieben.", 403);
+        const [{ data: pa }, { data: ew }, { data: auf }, { data: gel }, { data: fa }] = await Promise.all([
+          db.from("kc_club_sitzungsprotokoll_anlagen").select("attachment_id,reihenfolge").eq("protokoll_id", pr.id).order("reihenfolge"),
+          db.from("kc_club_sitzungsprotokoll_einwaende").select("*").eq("protokoll_id", pr.id).order("erstellt_am"),
+          db.from("kc_club_aufgaben").select("*").eq("protokoll_id", pr.id).order("erstellt_am"),
+          db.from("kc_club_sitzungsprotokoll_gelesen").select("person_id,version").eq("protokoll_id", pr.id),
+          db.from("kc_club_sitzungsprotokoll_fassungen").select("version,gesichert_am").eq("protokoll_id", pr.id).order("version"),
+        ]);
+        const aids = (pa ?? []).map((x: any) => x.attachment_id);
+        const { data: att } = aids.length ? await db.from("kc_communication_attachments").select("id,file_name,mime_type,size_bytes").in("id", aids) : { data: [] as any[] };
+        const leser = bearb && pr.status === "veroeffentlicht" ? await protokollLeser() : [];
+        const leute = await personen([pr.verfasser, ...pr.anwesend, ...pr.entschuldigt, ...(ew ?? []).map((x: any) => x.person_id), ...(auf ?? []).map((x: any) => x.person_id), ...leser]);
+        const name = (id: string) => leute.get(id)?.display_name || id;
+        if (pr.status === "veroeffentlicht" && !(gel ?? []).some((x: any) => x.person_id === ich.person_id && x.version >= pr.version))
+          await db.from("kc_club_sitzungsprotokoll_gelesen").upsert({ protokoll_id: pr.id, person_id: ich.person_id, version: pr.version, gelesen_am: jetzt() });
+        const aktuell = new Set((gel ?? []).filter((x: any) => x.version >= pr.version).map((x: any) => x.person_id));
+        aktuell.add(ich.person_id);
+        return json({
+          protokoll: {
+            id: pr.id, treffen_id: pr.treffen_id, titel: pr.titel, datum: pr.datum, ort: pr.ort, gaeste: pr.gaeste, kurzfassung: pr.kurzfassung,
+            tagesordnung: pr.tagesordnung, beschluesse: pr.beschluesse, version: pr.version, veroeffentlicht_am: pr.veroeffentlicht_am, einspruch_bis: pr.einspruch_bis,
+            status: protokollStatus(pr, (ew ?? []).filter((x: any) => !x.erledigt_am).length), roh: pr.status,
+            verfasser: { person_id: pr.verfasser, name: name(pr.verfasser) },
+            anwesend: pr.anwesend.map((id: string) => ({ person_id: id, name: name(id) })), entschuldigt: pr.entschuldigt.map((id: string) => ({ person_id: id, name: name(id) })),
+          },
+          anlagen: aids.map((id: string) => (att ?? []).find((y: any) => y.id === id)).filter(Boolean).map((y: any) => ({ id: y.id, name: y.file_name, mime: y.mime_type, groesse: y.size_bytes })),
+          einwaende: (ew ?? []).map((x: any) => ({ id: x.id, name: name(x.person_id), text: x.text, erstellt_am: x.erstellt_am, erledigt_am: x.erledigt_am, eigen: x.person_id === ich.person_id })),
+          aufgaben: (auf ?? []).map((a: any) => ({ id: a.id, person_id: a.person_id, name: name(a.person_id), text: a.text, faellig: a.faellig, erledigt_am: a.erledigt_am, meine: a.person_id === ich.person_id })),
+          // Lesestand nur für Verfasser/Organisation
+          gelesen: leser.length ? { von: leser.filter((id) => aktuell.has(id)).map(name).sort(), fehlt: leser.filter((id) => !aktuell.has(id)).map(name).sort() } : null,
+          fassungen: fa ?? [], darfBearbeiten: bearb, eigen: pr.verfasser === ich.person_id,
+          schreiber: bearb ? (await protokollLeser()) : [],
+        });
+      }
+
+      case "protokoll_speichern": {
+        nurProtokolle(ich);
+        const pr = await protokollHolen(p.id);
+        if (!darfBearbeiten(ich, pr)) throw new Fehler("Ändern darf nur, wer das Protokoll schreibt (oder Clubsprecher/Kassenwart).", 403);
+        if (pr.status !== "entwurf") throw new Fehler("Das Protokoll ist veröffentlicht – bitte erst „Korrigieren“ tippen.", 409);
+        const aktiv = new Set((await aktiveMitglieder()).map((m) => m.person_id));
+        const ids = (v: unknown) => [...new Set((Array.isArray(v) ? v : []).map(String))].filter((id) => aktiv.has(id)).slice(0, 60);
+        const zeilen = (v: unknown) => (Array.isArray(v) ? v : String(v ?? "").split("\n")).map((x: unknown) => txt(x, 300)).filter(Boolean).slice(0, 40);
+        const datum = /^\d{4}-\d{2}-\d{2}$/.test(String(p.datum || "")) ? String(p.datum) : pr.datum;
+        const anwesend = ids(p.anwesend);
+        const upd: any = {
+          titel: txt(p.titel, 120) || pr.titel, datum, ort: txt(p.ort, 200) || null, anwesend, entschuldigt: ids(p.entschuldigt).filter((id) => !anwesend.includes(id)),
+          gaeste: txt(p.gaeste, 300) || null, tagesordnung: zeilen(p.tagesordnung), beschluesse: zeilen(p.beschluesse), kurzfassung: txt(p.kurzfassung, 4000) || null, geaendert_am: jetzt(),
+        };
+        // Schriftführer wechseln (wer das Protokoll schreibt)
+        if (p.verfasser && String(p.verfasser) !== pr.verfasser) {
+          if (!(await protokollLeser()).includes(String(p.verfasser))) throw new Fehler("Diese Person kann keine Protokolle schreiben.");
+          upd.verfasser = String(p.verfasser);
+        }
+        await db.from("kc_club_sitzungsprotokolle").update(upd).eq("id", pr.id);
+        await protokoll(ich.person_id, "sitzungsprotokoll_gespeichert", { protokoll: pr.id, verfasser: upd.verfasser ?? pr.verfasser });
+        return json({ ok: true });
+      }
+
+      case "protokoll_anlage": {
+        nurProtokolle(ich);
+        const pr = await protokollHolen(p.id);
+        if (!darfBearbeiten(ich, pr)) throw new Fehler("Anhängen darf nur, wer das Protokoll schreibt.", 403);
+        if (pr.status !== "entwurf") throw new Fehler("Das Protokoll ist veröffentlicht – bitte erst „Korrigieren“ tippen.", 409);
+        const aid = String(p.attachment_id || "");
+        if (p.entfernen) await db.from("kc_club_sitzungsprotokoll_anlagen").delete().eq("protokoll_id", pr.id).eq("attachment_id", aid);
+        else {
+          const { data: att } = await db.from("kc_communication_attachments").select("id,object_path").eq("id", aid).maybeSingle();
+          if (!att || !String(att.object_path).startsWith(`club/${ich.person_id}/`)) throw new Fehler("Anlage nicht gefunden – bitte erneut anhängen.");
+          const { count } = await db.from("kc_club_sitzungsprotokoll_anlagen").select("attachment_id", { count: "exact", head: true }).eq("protokoll_id", pr.id);
+          if ((count ?? 0) >= 20) throw new Fehler("Höchstens 20 Anlagen je Protokoll.");
+          await db.from("kc_club_sitzungsprotokoll_anlagen").upsert({ protokoll_id: pr.id, attachment_id: aid, reihenfolge: count ?? 0 });
+        }
+        await db.from("kc_club_sitzungsprotokolle").update({ geaendert_am: jetzt() }).eq("id", pr.id);
+        await protokoll(ich.person_id, p.entfernen ? "sitzungsprotokoll_anlage_entfernt" : "sitzungsprotokoll_anlage", { protokoll: pr.id, anlage: aid });
+        return json({ ok: true });
+      }
+
+      case "protokoll_veroeffentlichen": {
+        nurProtokolle(ich);
+        const pr = await protokollHolen(p.id);
+        if (!darfBearbeiten(ich, pr)) throw new Fehler("Veröffentlichen darf nur, wer das Protokoll schreibt.", 403);
+        const { count } = await db.from("kc_club_sitzungsprotokoll_anlagen").select("attachment_id", { count: "exact", head: true }).eq("protokoll_id", pr.id);
+        if (!count && !pr.kurzfassung && !pr.beschluesse.length) throw new Fehler("Bitte zuerst ein Foto oder eine Datei vom Protokoll anhängen (oder eine Kurzfassung schreiben).");
+        const bis = new Date(Date.now() + EINSPRUCH_TAGE * 86400000).toISOString();
+        const { data: ok } = await db.from("kc_club_sitzungsprotokolle").update({ status: "veroeffentlicht", veroeffentlicht_am: jetzt(), einspruch_bis: bis, geaendert_am: jetzt() })
+          .eq("id", pr.id).eq("status", "entwurf").select("id");
+        if (!ok?.length) throw new Fehler("Das Protokoll ist schon veröffentlicht.", 409);
+        // neue Fassung nach Korrektur: bisherige Einwände gelten als bearbeitet
+        if (pr.version > 1) await db.from("kc_club_sitzungsprotokoll_einwaende").update({ erledigt_am: jetzt(), erledigt_von: ich.person_id }).eq("protokoll_id", pr.id).is("erledigt_am", null);
+        await db.from("kc_club_sitzungsprotokoll_gelesen").upsert({ protokoll_id: pr.id, person_id: ich.person_id, version: pr.version, gelesen_am: jetzt() });
+        const ziel = (await protokollLeser()).filter((id) => id !== ich.person_id);
+        const bisText = fTag.format(new Date(bis));
+        const versand = p.benachrichtigen === false ? null : await senden("club_protokoll", ziel, {
+          titel: `📝 Protokoll${pr.version > 1 ? " (korrigiert)" : ""}: ${pr.titel}`, kurz: `Bitte lesen – Einwände bis ${bisText} möglich.`,
+          betreff: `Köcheclub Werne – Protokoll${pr.version > 1 ? " (korrigierte Fassung)" : ""}: ${pr.titel} vom ${tagText(pr.datum)}`,
+          text: `Hallo,\n\n${ich.name} hat das Protokoll${pr.version > 1 ? " (korrigierte Fassung)" : ""} „${pr.titel}“ vom ${tagText(pr.datum)} veröffentlicht.\n\nBitte lesen. Wer etwas zu beanstanden hat, kann bis ${bisText} in der App einen Einwand schreiben – danach gilt das Protokoll als genehmigt.\n\nZum Protokoll: ${APP_URL}#protokoll=${pr.id}\n\nViele Grüße\nKöcheclub Werne`,
+          url: `${APP_URL}#protokoll=${pr.id}`,
+        }, `club-protokoll:${pr.id}:${pr.version}`);
+        const { data: auf } = await db.from("kc_club_aufgaben").select("*").eq("protokoll_id", pr.id);
+        await aufgabenMitteilen(auf ?? [], ich, pr.titel);
+        await protokoll(ich.person_id, "sitzungsprotokoll_veroeffentlicht", { protokoll: pr.id, version: pr.version, einspruch_bis: bis, versand });
+        return json({ ok: true, einspruch_bis: bis, versand });
+      }
+
+      case "protokoll_korrigieren": {
+        nurProtokolle(ich);
+        const pr = await protokollHolen(p.id);
+        if (!darfBearbeiten(ich, pr)) throw new Fehler("Korrigieren darf nur, wer das Protokoll schreibt (oder Clubsprecher/Kassenwart).", 403);
+        if (pr.status !== "veroeffentlicht") throw new Fehler("Das Protokoll ist noch ein Entwurf.", 409);
+        // alte Fassung bleibt erhalten
+        const { data: pa } = await db.from("kc_club_sitzungsprotokoll_anlagen").select("attachment_id").eq("protokoll_id", pr.id);
+        await db.from("kc_club_sitzungsprotokoll_fassungen").upsert({ protokoll_id: pr.id, version: pr.version, inhalt: { ...pr, anlagen: (pa ?? []).map((x: any) => x.attachment_id) } });
+        const { data: ok } = await db.from("kc_club_sitzungsprotokolle").update({ status: "entwurf", version: pr.version + 1, veroeffentlicht_am: null, einspruch_bis: null, geaendert_am: jetzt() })
+          .eq("id", pr.id).eq("version", pr.version).select("id");
+        if (!ok?.length) throw new Fehler("Das Protokoll wurde gerade geändert – bitte neu laden.", 409);
+        await protokoll(ich.person_id, "sitzungsprotokoll_korrektur", { protokoll: pr.id, alte_version: pr.version });
+        return json({ ok: true });
+      }
+
+      case "protokoll_loeschen": {
+        // nur ein noch nie veröffentlichter Entwurf (z. B. versehentlich angelegt)
+        nurProtokolle(ich);
+        const pr = await protokollHolen(p.id);
+        if (!darfBearbeiten(ich, pr)) throw new Fehler("Löschen darf nur, wer das Protokoll schreibt.", 403);
+        if (pr.status !== "entwurf" || pr.version > 1) throw new Fehler("Veröffentlichte Protokolle können nicht gelöscht werden – bitte „Korrigieren“ nutzen.", 409);
+        await db.from("kc_club_sitzungsprotokolle").delete().eq("id", pr.id).eq("status", "entwurf").eq("version", 1);
+        await protokoll(ich.person_id, "sitzungsprotokoll_entwurf_geloescht", { protokoll: pr.id, titel: pr.titel });
+        return json({ ok: true });
+      }
+
+      case "protokoll_einwand": {
+        nurProtokolle(ich);
+        const pr = await protokollHolen(p.id);
+        if (pr.status !== "veroeffentlicht") throw new Fehler("Das Protokoll ist noch nicht veröffentlicht.", 409);
+        if (!pr.einspruch_bis || pr.einspruch_bis < jetzt()) throw new Fehler("Die Einspruchsfrist ist abgelaufen – bitte direkt mit dem Verfasser sprechen.", 409);
+        const text = txt(p.text, 1000);
+        if (!text) throw new Fehler("Bitte kurz schreiben, was nicht stimmt.");
+        await db.from("kc_club_sitzungsprotokoll_einwaende").insert({ protokoll_id: pr.id, person_id: ich.person_id, text });
+        const { data: org } = await db.from("kc_club_rollen").select("person_id").eq("ist_vorstand", true);
+        const ziel = [...new Set([pr.verfasser, ...(org ?? []).map((r: any) => r.person_id)])].filter((id) => id !== ich.person_id);
+        const versand = await senden("club_protokoll", ziel, {
+          titel: `⚠️ Einwand zum Protokoll ${pr.titel}`, kurz: `${ich.name}: ${text}`.slice(0, 150),
+          betreff: `Köcheclub Werne – Einwand zum Protokoll: ${pr.titel}`,
+          text: `Hallo,\n\n${ich.name} hat einen Einwand zum Protokoll „${pr.titel}“ vom ${tagText(pr.datum)}:\n\n„${text}“\n\nAnsehen in der Köcheclub-App: ${APP_URL}#protokoll=${pr.id}\n\nViele Grüße\nKöcheclub Werne`,
+          url: `${APP_URL}#protokoll=${pr.id}`,
+        }, `club-einwand:${pr.id}:${Date.now()}`);
+        await protokoll(ich.person_id, "sitzungsprotokoll_einwand", { protokoll: pr.id, versand });
+        return json({ ok: true, versand });
+      }
+
+      case "einwand_erledigt": {
+        nurProtokolle(ich);
+        const { data: e } = await db.from("kc_club_sitzungsprotokoll_einwaende").select("*").eq("id", String(p.id || "")).maybeSingle();
+        if (!e) throw new Fehler("Einwand nicht gefunden.", 404);
+        const pr = await protokollHolen(e.protokoll_id);
+        if (!darfBearbeiten(ich, pr) && e.person_id !== ich.person_id) throw new Fehler("Das darf nur, wer das Protokoll schreibt.", 403);
+        await db.from("kc_club_sitzungsprotokoll_einwaende").update({ erledigt_am: jetzt(), erledigt_von: ich.person_id }).eq("id", e.id);
+        await protokoll(ich.person_id, "sitzungsprotokoll_einwand_erledigt", { protokoll: pr.id, einwand: e.id });
+        return json({ ok: true });
+      }
+
+      // ----- Aufgaben (KC-CLUB-AUFGABEN) -----
+      case "aufgabe_speichern": {
+        nurProtokolle(ich);
+        const text = txt(p.text, 300);
+        if (!text) throw new Fehler("Bitte eintragen, was zu tun ist.");
+        const person = String(p.person_id || "");
+        if (!(await aktiveMitglieder()).some((m) => m.person_id === person)) throw new Fehler("Bitte auswählen, wer die Aufgabe übernimmt.");
+        const faellig = /^\d{4}-\d{2}-\d{2}$/.test(String(p.faellig || "")) ? String(p.faellig) : null;
+        let a: any, pr: any = null;
+        if (p.id) {
+          const x = await aufgabeHolen(ich, p.id);
+          if (!x.verwalten) throw new Fehler("Ändern darf nur, wer die Aufgabe eingetragen hat.", 403);
+          pr = x.pr;
+          const neuePerson = person !== x.a.person_id;
+          ({ data: a } = await db.from("kc_club_aufgaben").update({ text, person_id: person, faellig, erinnert_am: null, ...(neuePerson ? { mitgeteilt_am: null } : {}) }).eq("id", x.a.id).select().single());
+        } else {
+          if (p.protokoll_id) {
+            pr = await protokollHolen(p.protokoll_id);
+            if (!darfBearbeiten(ich, pr)) throw new Fehler("Aufgaben im Protokoll trägt ein, wer es schreibt.", 403);
+          } else if (!ich.vorstand && person !== ich.person_id) throw new Fehler("Aufgaben für andere tragen Clubsprecher/Kassenwart ein.", 403);
+          ({ data: a } = await db.from("kc_club_aufgaben").insert({ protokoll_id: pr?.id ?? null, person_id: person, text, faellig, erstellt_von: ich.person_id }).select().single());
+        }
+        if (!a) throw new Fehler("Speichern fehlgeschlagen.", 500);
+        // mitteilen sofort – außer das Protokoll ist noch ein Entwurf (dann beim Veröffentlichen)
+        if (!pr || pr.status === "veroeffentlicht") await aufgabenMitteilen([a], ich, pr?.titel ?? null);
+        await protokoll(ich.person_id, p.id ? "aufgabe_geaendert" : "aufgabe_angelegt", { aufgabe: a.id, protokoll: pr?.id ?? null, fuer: person });
+        return json({ ok: true, id: a.id });
+      }
+
+      case "aufgabe_erledigt": {
+        nurProtokolle(ich);
+        const x = await aufgabeHolen(ich, p.id);
+        if (!x.verwalten && x.a.person_id !== ich.person_id) throw new Fehler("Abhaken darf, wer die Aufgabe hat oder eingetragen hat.", 403);
+        await db.from("kc_club_aufgaben").update({ erledigt_am: p.erledigt === false ? null : jetzt() }).eq("id", x.a.id);
+        await protokoll(ich.person_id, p.erledigt === false ? "aufgabe_wieder_offen" : "aufgabe_erledigt", { aufgabe: x.a.id });
+        return json({ ok: true });
+      }
+
+      case "aufgabe_loeschen": {
+        nurProtokolle(ich);
+        const x = await aufgabeHolen(ich, p.id);
+        if (!x.verwalten) throw new Fehler("Löschen darf nur, wer die Aufgabe eingetragen hat.", 403);
+        await db.from("kc_club_aufgaben").delete().eq("id", x.a.id);
+        await protokoll(ich.person_id, "aufgabe_geloescht", { aufgabe: x.a.id, text: x.a.text });
+        return json({ ok: true });
+      }
+
       // ----- Anlagen -----
       case "anlage_hochladen": {
         const name = txt(p.name, 150).replace(/[\\/]/g, "_") || "Anlage";
@@ -788,6 +1166,14 @@ Deno.serve(async (req) => {
           for (const m of msgs ?? []) {
             const { data: tp } = await db.from("kc_communication_thread_participants").select("thread_id").eq("thread_id", m.thread_id).eq("person_id", ich.person_id).maybeSingle();
             if (tp) { erlaubt = true; break; }
+          }
+        }
+        if (!erlaubt && ich.protokolle) {
+          // Anlage eines Sitzungsprotokolls: veröffentlicht → alle Leser; Entwurf → wer es bearbeiten darf
+          const { data: pa } = await db.from("kc_club_sitzungsprotokoll_anlagen").select("protokoll_id").eq("attachment_id", att.id);
+          for (const x of pa ?? []) {
+            const { data: pr } = await db.from("kc_club_sitzungsprotokolle").select("status,verfasser").eq("id", x.protokoll_id).maybeSingle();
+            if (pr && (pr.status === "veroeffentlicht" || darfBearbeiten(ich, pr))) { erlaubt = true; break; }
           }
         }
         if (!erlaubt) throw new Fehler("Anlage nicht gefunden.", 404);
@@ -832,8 +1218,9 @@ Deno.serve(async (req) => {
         nurAdmin(ich);
         const pid = String(p.person_id || "");
         const aemter = (Array.isArray(p.aemter) ? p.aemter : []).map((x: unknown) => txt(x, 40)).filter(Boolean).slice(0, 5);
-        await db.from("kc_club_rollen").upsert({ person_id: pid, ist_vorstand: !!p.vorstand, ...(pid === ich.person_id ? {} : { ist_admin: !!p.admin }), aemter, geaendert_am: jetzt() });
-        await protokoll(ich.person_id, "rolle_gesetzt", { fuer: pid, vorstand: !!p.vorstand, aemter });
+        await db.from("kc_club_rollen").upsert({ person_id: pid, ist_vorstand: !!p.vorstand, ...(pid === ich.person_id ? {} : { ist_admin: !!p.admin }), aemter,
+          ...(typeof p.protokolle === "boolean" ? { protokolle_lesen: p.protokolle } : {}), geaendert_am: jetzt() });
+        await protokoll(ich.person_id, "rolle_gesetzt", { fuer: pid, vorstand: !!p.vorstand, aemter, protokolle: p.protokolle ?? null });
         return json({ ok: true });
       }
 

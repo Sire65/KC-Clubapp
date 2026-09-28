@@ -205,6 +205,12 @@
   .eingabe .innen { max-width: 1100px; margin: 0 auto; display: flex; gap: 8px; align-items: flex-end; }
   .eingabe textarea { flex: 1; resize: none; max-height: 140px; padding: 12px; border-radius: 18px; border: 1px solid var(--linie); background: var(--karte); }
   .eingabe .rund { background: var(--rot); }
+  .anhaengen { display: grid; gap: 8px; }
+  .anhaengen .knopf { font-size: 1.05rem; padding: 16px; }
+  .prbild { margin-top: 10px; }
+  .prbild img { display: block; width: 100%; max-height: 70vh; object-fit: contain; border-radius: 12px; background: var(--karte2); cursor: zoom-in; min-height: 60px; }
+  .prbild .knopf { margin-top: 6px; }
+  details.prda summary { cursor: pointer; padding: 10px 0; }
   .chips { display: flex; gap: 6px; flex-wrap: wrap; max-width: 1100px; margin: 0 auto 6px; }
   .chip { background: var(--karte2); border: none; border-radius: 12px; padding: 6px 10px; font-weight: 700; }
   .wahlliste label { display: flex; align-items: center; gap: 10px; padding: 10px 4px; border-bottom: 1px solid var(--linie); }
@@ -295,6 +301,16 @@
     <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>🗳️ Vorschläge</h2><button class="knopf haupt klein" onclick="vorschlagForm()">＋ Neu</button></div>
     <div id="vorschlagForm" class="karte versteckt"></div>
     <div id="vorschlagListe"><div class="karte hinweis">Wird geladen …</div></div>
+  </section>
+
+  <!-- SITZUNGSPROTOKOLLE (KC-CLUB-PROTOKOLLE) -->
+  <section id="v-protokolle" class="versteckt">
+    <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>📄 Protokolle</h2><button class="knopf haupt klein" onclick="protokollNeu()">＋ Neu</button></div>
+    <div id="protokollListe"><div class="karte hinweis">Wird geladen …</div></div>
+  </section>
+  <section id="v-protokoll" class="versteckt">
+    <div class="kopf2"><button class="zurueck" onclick="zeige('protokolle')">‹</button><h2 id="prTitel">📄 Protokoll</h2></div>
+    <div id="protokollInhalt"></div>
   </section>
 
   <!-- DIENSTPLÄNE -->
@@ -403,6 +419,9 @@
 <input type="file" id="dateiKamera" accept="image/*" capture="environment" class="versteckt" onchange="dateienGewaehlt(this)">
 <input type="file" id="dateiBild" accept="image/*" multiple class="versteckt" onchange="dateienGewaehlt(this)">
 <input type="file" id="dateiDok" accept="application/pdf,image/*,.doc,.docx,.xls,.xlsx,.txt" multiple class="versteckt" onchange="dateienGewaehlt(this)">
+<input type="file" id="prKamera" accept="image/*" capture="environment" class="versteckt" onchange="protokollDateien(this)">
+<input type="file" id="prBild" accept="image/*" multiple class="versteckt" onchange="protokollDateien(this)">
+<input type="file" id="prDok" accept=".pdf,.doc,.docx,.odt,.rtf,.txt,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.oasis.opendocument.text,image/*" multiple class="versteckt" onchange="protokollDateien(this)">
 
 <nav class="fuss-leiste" id="fuss">
   <button data-v="start" class="an" onclick="zeige('start')"><span>🏠</span>Start</button>
@@ -414,7 +433,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.8.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.9.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -478,7 +497,7 @@ const KACHELN = {
     { sym: "💬", t: "Kommunikation", u: "Nachrichten & Anlagen", v: "nachrichten", zahl: () => INIT?.ungelesen || 0 },
     { sym: "👥", t: "Aktive Mitglieder", u: "Status · Ämter · Kontakt", v: "mitglieder" },
     { sym: "🗳️", t: "Vorschläge", u: "Themen & Abstimmungen", v: "vorschlaege", zahl: () => INIT?.offeneAbstimmungen || 0 },
-    { sym: "📄", t: "Protokolle", u: "Sitzungen & Beschlüsse", bald: true },
+    { sym: "📄", t: "Protokolle", u: "Sitzungen · Aufgaben", v: "protokolle", nur: () => ICH?.protokolle !== false, zahl: () => (INIT?.protokolleUngelesen || 0) + (INIT?.meineAufgaben?.length || 0) },
     { sym: "🗓️", t: "Dienstpläne", u: "Meine & freigegebene Zeiten", v: "dienste" },
   ],
   mein: [
@@ -492,10 +511,12 @@ const KACHELN = {
     { sym: "💻", t: "Freigegebene Programme", u: "Kasse, Schulungsversion …", bald: true },
   ],
 };
+// Kacheln, die für mich gelten (z. B. Protokolle nicht für Aushilfen)
+const kacheln = (r) => KACHELN[r].filter((k) => !k.nur || k.nur());
 // Register mit kleiner Anzahl der Kacheln; per Wischen links/rechts wechselbar
 const REGISTER = [["verein", "Verein"], ["mein", "Mein Bereich"], ["programme", "Programme"]];
 function registerZeigen() {
-  $("register").innerHTML = REGISTER.map(([r, t]) => `<button data-r="${r}" class="${r === reg ? "an" : ""}" onclick="register('${r}')">${t}<span class="anz">${KACHELN[r].length}</span></button>`).join("");
+  $("register").innerHTML = REGISTER.map(([r, t]) => `<button data-r="${r}" class="${r === reg ? "an" : ""}" onclick="register('${r}')">${t}<span class="anz">${kacheln(r).length}</span></button>`).join("");
 }
 function register(r, richtung) {
   reg = r; registerZeigen(); kachelnZeigen();
@@ -520,7 +541,7 @@ function registerWischen(schritt) {
   }, { passive: true });
 })();
 function kachelnZeigen() {
-  $("raster").innerHTML = KACHELN[reg].map((k, i) => {
+  $("raster").innerHTML = kacheln(reg).map((k, i) => {
     const z = k.zahl ? k.zahl() : 0;
     return `<button class="kachel${k.bald ? " bald" : ""}" onclick="${k.bald ? `melde('„${k.t}“ kommt in einer der nächsten Versionen.')` : k.aktion || `zeige('${k.v}')`}">
       <div class="sym">${k.sym}</div><b>${esc(k.t)}</b><small>${esc(typeof k.u === "function" ? k.u() : k.u)}</small>${k.bald ? '<span class="zahl">bald</span>' : z ? `<span class="zahl">${z}</span>` : ""}</button>`;
@@ -549,7 +570,7 @@ const WEBSEITE_URL = "";
 function webseite() { if (WEBSEITE_URL) window.open(WEBSEITE_URL, "_blank"); else melde("🌐 Die Internetseite des Köcheclubs kommt bald – hier geht es dann direkt hin."); }
 
 // ---------- Benachrichtigungen je Bereich (Push / E-Mail) ----------
-const WAHL_BEREICHE = [["termine", "📅 Treffen & Erinnerungen"], ["nachrichten", "💬 Neue Nachrichten"], ["vorschlaege", "🗳️ Vorschläge & Abstimmungen"], ["dienste", "🗓️ Erinnerung an meinen Dienst (Vorabend)"], ["geburtstage", "🎂 Geburtstage (2 Tage vorher und am Tag)"]];
+const WAHL_BEREICHE = [["termine", "📅 Treffen, Protokolle & Aufgaben"], ["nachrichten", "💬 Neue Nachrichten"], ["vorschlaege", "🗳️ Vorschläge & Abstimmungen"], ["dienste", "🗓️ Erinnerung an meinen Dienst (Vorabend)"], ["geburtstage", "🎂 Geburtstage (2 Tage vorher und am Tag)"]];
 function wahlZeigen() {
   const w = INIT?.benachrichtigung || {};
   $("wahlTabelle").innerHTML = WAHL_BEREICHE.map(([b, t]) => `<tr><td>${t}</td>
@@ -609,6 +630,11 @@ function wichtigZeigen() {
   const t = INIT?.naechstesTreffen, ZUSAGE_TAGE_VORHER = 7;
   if (t && !t.meine && new Date(t.beginn) - Date.now() <= ZUSAGE_TAGE_VORHER * 86400000)
     h.push(`<div class="zeile" style="cursor:pointer" onclick="zeige('termine')">📅 Bitte für <b>${esc(t.titel)}</b> am ${esc(wann(t.beginn))} zu- oder absagen<span style="margin-left:auto">›</span></div>`);
+  // KC-CLUB-AUFGABEN: eigene Aufgaben, die in 7 Tagen fällig oder überfällig sind; KC-CLUB-PROTOKOLLE: neue Protokolle
+  const in7 = tagPlus(heuteIso(), 7);
+  for (const a of (INIT?.meineAufgaben || []).filter((x) => x.faellig && x.faellig <= in7))
+    h.push(`<div class="zeile">📌 <span style="flex:1"><b>${esc(a.text)}</b> ${faelligText(a.faellig)}</span><button class="knopf klein" onclick="aufgabeErledigt('${a.id}', true)">✔ erledigt</button></div>`);
+  if (INIT?.protokolleUngelesen) h.push(`<div class="zeile" style="cursor:pointer" onclick="zeige('protokolle')">📄 <b>${INIT.protokolleUngelesen === 1 ? "1 neues Protokoll" : INIT.protokolleUngelesen + " neue Protokolle"}</b> zum Lesen<span style="margin-left:auto">›</span></div>`);
   if (pushMoeglich() && Notification.permission !== "granted") h.push(`<div class="zeile">🔔 Benachrichtigungen sind aus<button class="knopf haupt klein" style="margin-left:auto" onclick="pushEinschalten()">Einschalten</button></div>`);
   $("wichtig").innerHTML = h.join("") || "Alles erledigt 👍";
 }
@@ -636,22 +662,24 @@ function zaehlerZeigen() {
 function zeige(v, ausHistorie) {
   const vorher = aktuelleAnsicht;
   aktuelleAnsicht = v;
-  ["start", "termine", "vorschlaege", "dienste", "nachrichten", "chat", "neu", "mitglieder", "einstellungen"].forEach((x) => $("v-" + x).classList.toggle("versteckt", x !== v));
+  if (vorher === "protokoll" && v !== "protokoll" && prTimer) prSpeichernJetzt(false).catch(() => {}); // ungespeicherte Eingaben sichern
+  ["start", "termine", "vorschlaege", "protokolle", "protokoll", "dienste", "nachrichten", "chat", "neu", "mitglieder", "einstellungen"].forEach((x) => $("v-" + x).classList.toggle("versteckt", x !== v));
   document.querySelectorAll("#fuss button").forEach((b) => b.classList.toggle("an", b.dataset.v === v || (v === "chat" && b.dataset.v === "nachrichten") || (v === "neu" && b.dataset.v === "nachrichten")));
   $("eingabe").classList.toggle("versteckt", v !== "chat");
   clearInterval(chatTimer);
   if (v !== "chat") chatId = null;
   if (v === "termine") treffenLaden();
   if (v === "vorschlaege") { $("vorschlagForm").classList.add("versteckt"); vorschlaegeLaden(); }
+  if (v === "protokolle") protokolleLaden();
   if (v === "dienste") dienstLaden();
   if (v === "nachrichten") unterhLaden();
   if (v === "mitglieder") mitgliederLaden();
   if (v === "einstellungen") { pushStatusZeigen(); wahlZeigen(); geburtstagSchalterZeigen(); }
   if (v === "start") neuLaden();
   // KC-CLUB-ZURUECK: jede Ansicht bekommt einen Verlaufseintrag, damit „Zurück“ eine Ansicht zurückgeht statt die App zu schließen
-  const hash = v === "start" || v === "chat" ? "" : "#" + v;
+  const hash = v === "start" || v === "chat" ? "" : v === "protokoll" ? "#protokoll=" + prId : "#" + v;
   if (!ausHistorie) {
-    const st = { v, id: v === "chat" ? chatId : null };
+    const st = { v, id: v === "chat" ? chatId : v === "protokoll" ? prId : null };
     if (v === vorher && v !== "chat") history.replaceState(st, "", location.pathname + hash);
     else history.pushState(st, "", location.pathname + hash);
   }
@@ -669,6 +697,7 @@ window.addEventListener("popstate", (e) => {
     return;
   }
   if (s.v === "chat" && s.id) chatOeffnen(s.id, true);
+  else if (s.v === "protokoll" && s.id) protokollOeffnen(s.id, true);
   else if (s.v === "chat") zeige("nachrichten", true); // ungesendeter Entwurf lässt sich nicht wiederherstellen
   else zeige(s.v || "start", true);
 });
@@ -1165,18 +1194,253 @@ async function verkleinern(datei) {
   } catch { return datei; }
 }
 const base64 = (buf) => { let s = ""; const b = new Uint8Array(buf); for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode(...b.subarray(i, i + 0x8000)); return btoa(s); };
+// eine Datei hochladen (Bilder vorher verkleinert) – für Nachrichten und Protokolle
+async function anlageHochladen(roh) {
+  const d = await verkleinern(roh);
+  if (d.size > 8 * 1024 * 1024) throw new Error(`${roh.name} ist zu groß (höchstens 8 MB).`);
+  return await api("anlage_hochladen", { name: d.name, mime: d.type || "application/octet-stream", daten: base64(await d.arrayBuffer()) });
+}
 async function dateienGewaehlt(input) {
   for (const roh of [...input.files].slice(0, 10)) {
     const eintrag = { name: roh.name, laedt: true }; anlagen.push(eintrag); chipsZeigen();
     try {
-      const d = await verkleinern(roh);
-      if (d.size > 8 * 1024 * 1024) throw new Error(`${roh.name} ist zu groß (höchstens 8 MB).`);
-      const r = await api("anlage_hochladen", { name: d.name, mime: d.type || "application/octet-stream", daten: base64(await d.arrayBuffer()) });
+      const r = await anlageHochladen(roh);
       Object.assign(eintrag, { id: r.id, name: r.name, laedt: false });
     } catch (e) { anlagen.splice(anlagen.indexOf(eintrag), 1); melde(e.message, true); }
     chipsZeigen();
   }
   input.value = "";
+}
+
+// ---------- Sitzungsprotokolle (KC-CLUB-PROTOKOLLE) & Aufgaben (KC-CLUB-AUFGABEN) ----------
+// Getippt wird auf dem Handy fast nichts: Die Vorlage füllt die App aus dem Treffen (Datum, Ort, Zu-/Absagen,
+// Themen, Abstimmungen); das eigentliche Protokoll kommt als Foto vom Blatt oder als Datei (Word/PDF) dazu.
+let PR = null, prId = null, prTimer = null, prListe = null;
+const tagKurz = (d) => fTagDp.format(new Date(d + "T12:00:00Z"));
+const PR_STATUS = {
+  entwurf: '<span class="marke gelb">✍️ Entwurf</span>',
+  einspruch: (p) => `<span class="marke gelb">⏳ Einspruch bis ${esc(fKurz.format(new Date(p.einspruch_bis)))}</span>`,
+  einwand: '<span class="marke rot">⚠️ Einwand offen</span>',
+  genehmigt: '<span class="marke gruen">✔ genehmigt</span>',
+};
+const prStatusMarke = (p) => { const s = PR_STATUS[p.status]; return typeof s === "function" ? s(p) : s || ""; };
+function faelligText(f) {
+  if (!f) return "";
+  const h = heuteIso();
+  return f < h ? `<span class="marke rot">überfällig seit ${esc(tagKurz(f))}</span>` : f === h ? '<span class="marke gelb">heute fällig</span>' : `<span class="marke">bis ${esc(tagKurz(f))}</span>`;
+}
+async function protokolleLaden() {
+  if (ICH && ICH.protokolle === false) { $("protokollListe").innerHTML = '<div class="karte hinweis">Protokolle sind nur für Mitglieder.</div>'; return; }
+  try {
+    prListe = await api("protokolle_liste");
+    const { protokolle, aufgaben, treffenOhneProtokoll } = prListe;
+    const auf = aufgaben.length ? `<div class="karte"><h3>📌 Offene Aufgaben</h3>${aufgaben.map((a) => aufgabeZeile(a, a.meine || ICH.vorstand)).join("")}</div>` : "";
+    const neu = treffenOhneProtokoll.length ? `<div class="karte"><h3>✍️ Protokoll schreiben</h3><p class="hinweis" style="margin-top:0">Wer diesmal schreibt, tippt beim Treffen auf „Anlegen“ – Datum, Ort, wer da war und die Themen trägt die App schon ein.</p>
+      ${treffenOhneProtokoll.map((t) => `<div class="zeile"><div style="flex:1"><b>${esc(t.titel)}</b><div class="hinweis" style="font-size:.85rem">${esc(wann(t.beginn))}${t.ort ? " · " + esc(t.ort) : ""}</div></div>
+        <button class="knopf haupt klein" onclick="einmal(this, () => protokollAnlegen('${t.id}'))">＋ Anlegen</button></div>`).join("")}</div>` : "";
+    const suche = protokolle.length > 5 ? `<label class="feld" style="margin-top:12px"><input id="prSuche" placeholder="🔎 Protokoll suchen …" oninput="protokollFilter()"></label>` : "";
+    $("protokollListe").innerHTML = auf + neu + `<div class="abschnitt"><h3>📄 Protokolle</h3></div>` + suche
+      + (protokolle.map(protokollKarte).join("") || '<div class="karte hinweis">Noch keine Protokolle. Nach dem nächsten Treffen erscheint es oben unter „Protokoll schreiben“.</div>');
+  } catch (e) { melde(e.message, true); }
+}
+function protokollFilter() {
+  const q = $("prSuche").value.toLowerCase();
+  document.querySelectorAll("#protokollListe .prkarte").forEach((k) => k.classList.toggle("versteckt", !!q && !k.dataset.suche.includes(q)));
+}
+function protokollKarte(p) {
+  const offen = p.status !== "entwurf" || p.darfBearbeiten;
+  const info = [p.anlagen ? `📎 ${p.anlagen}` : "", p.aufgabenOffen ? `📌 ${p.aufgabenOffen} offen` : "", p.einwaende ? `⚠️ ${p.einwaende}` : ""].filter(Boolean).join(" · ");
+  return `<div class="karte prkarte" data-suche="${esc((p.titel + " " + (p.ort || "") + " " + p.datum).toLowerCase())}" ${offen ? `style="cursor:pointer" onclick="protokollOeffnen('${p.id}')"` : ""}>
+    ${prStatusMarke(p)}${!p.gelesen ? ' <span class="marke rot">🆕 neu</span>' : ""}${p.version > 1 ? ` <span class="marke">Fassung ${p.version}</span>` : ""}
+    <div style="font-size:1.12rem;font-weight:800;margin-top:6px">${esc(p.titel)}</div>
+    <div class="hinweis" style="font-size:.85rem">${esc(tagKurz(p.datum))}${p.ort ? " · " + esc(p.ort) : ""} · ${p.status === "entwurf" && !p.darfBearbeiten ? "wird geschrieben von " : "von "}${esc(p.verfasser.name)}${info ? " · " + info : ""}</div></div>`;
+}
+async function protokollAnlegen(treffenId) {
+  try { const r = await api("protokoll_vorlage", treffenId ? { treffen_id: treffenId } : { titel: prompt("Wofür ist das Protokoll? (z. B. Jahreshauptversammlung)", "Sitzung des Köcheclubs") || "" }); protokollOeffnen(r.id); }
+  catch (e) { melde(e.message, true); }
+}
+function protokollNeu() {
+  if (prListe?.treffenOhneProtokoll?.length) return melde("Tipp: Oben beim Treffen auf „＋ Anlegen“ tippen – dann ist die Vorlage schon ausgefüllt.");
+  if (confirm("Protokoll ohne Club-Treffen anlegen (z. B. für eine Sitzung, die nicht in der App steht)?")) protokollAnlegen(null);
+}
+async function protokollOeffnen(id, ausHistorie) {
+  prId = id; PR = null;
+  $("protokollInhalt").innerHTML = '<div class="karte hinweis">Wird geladen …</div>';
+  zeige("protokoll", ausHistorie);
+  try {
+    if (!MITGLIEDER) await mitgliederHolen();
+    PR = await api("protokoll_laden", { id });
+    if (PR.darfBearbeiten && PR.protokoll.roh === "entwurf") protokollFormular(); else protokollLesen();
+    neuLaden();
+  } catch (e) { $("protokollInhalt").innerHTML = `<div class="karte hinweis">${esc(e.message)}</div>`; }
+}
+const nameVon = (pid) => MITGLIEDER?.find((m) => m.person_id === pid)?.name || pid;
+function anlagenListe(bearbeiten) {
+  if (!PR.anlagen.length) return bearbeiten ? '<p class="hinweis">Noch nichts angehängt.</p>' : "";
+  return PR.anlagen.map((a) => /^image\//.test(a.mime)
+    ? `<div class="prbild"><img data-anlage="${a.id}" alt="${esc(a.name)}" onclick="anlageOeffnen('${a.id}')">${bearbeiten ? `<button class="knopf klein" onclick="protokollAnlageWeg('${a.id}')">✕ entfernen</button>` : ""}</div>`
+    : `<div class="zeile"><button class="anlage" style="flex:1;text-align:left" onclick="anlageOeffnen('${a.id}')">📄 ${esc(a.name)}</button>${bearbeiten ? `<button class="knopf klein" onclick="protokollAnlageWeg('${a.id}')">✕</button>` : ""}</div>`).join("");
+}
+function aufgabeZeile(a, darfAbhaken, darfLoeschen) {
+  return `<div class="zeile">${darfAbhaken ? `<button class="knopf klein ${a.erledigt_am ? "gruen" : ""}" title="erledigt" onclick="aufgabeErledigt('${a.id}', ${!a.erledigt_am})">${a.erledigt_am ? "✔" : "☐"}</button>` : `<span>${a.erledigt_am ? "✔" : "📌"}</span>`}
+    <div style="flex:1${a.erledigt_am ? ";text-decoration:line-through;opacity:.6" : ""}"><b>${esc(a.text)}</b>
+      <div class="hinweis" style="font-size:.85rem">${esc(a.name)} ${a.erledigt_am ? "" : faelligText(a.faellig)}${a.protokoll ? " · aus „" + esc(a.protokoll.titel) + "“" : ""}</div></div>
+    ${darfLoeschen ? `<button class="knopf klein" title="löschen" onclick="aufgabeLoeschen('${a.id}')">✕</button>` : ""}</div>`;
+}
+function protokollFormular() {
+  const p = PR.protokoll, da = new Set(p.anwesend.map((x) => x.person_id)), ent = new Set(p.entschuldigt.map((x) => x.person_id));
+  $("prTitel").textContent = "✍️ Protokoll schreiben";
+  $("protokollInhalt").innerHTML = `
+    <div class="karte">${prStatusMarke(p)}${p.version > 1 ? ` <span class="marke">Fassung ${p.version} (Korrektur)</span>` : ""}
+      <p class="hinweis" style="margin-bottom:0">So geht's: <b>1.</b> Vorlage kurz prüfen (ist schon ausgefüllt) · <b>2.</b> Foto vom Blatt oder Datei anhängen · <b>3.</b> Veröffentlichen. Alles wird automatisch gespeichert. <span id="prGespeichert"></span></p></div>
+    <div class="karte"><h3>1 · Vorlage</h3>
+      <label class="feld">Titel<input id="prT" maxlength="120" value="${esc(p.titel)}" oninput="prAendern()"></label>
+      <div class="zwei"><label class="feld">Datum<input id="prD" type="date" value="${esc(p.datum)}" onchange="prAendern()"></label><label class="feld">Ort<input id="prO" maxlength="200" value="${esc(p.ort || "")}" oninput="prAendern()"></label></div>
+      <label class="feld">Schriftführer (wer schreibt)<select id="prV" onchange="prAendern()">${PR.schreiber.map((id) => `<option value="${id}" ${id === p.verfasser.person_id ? "selected" : ""}>${esc(nameVon(id))}</option>`).join("")}</select></label>
+      <details class="prda" ${da.size || ent.size ? "" : "open"}><summary><b>👥 Anwesend <span id="prDaZahl">${da.size}</span> · entschuldigt <span id="prEntZahl">${ent.size}</span></b> <small class="hinweis">(antippen zum Ändern)</small></summary>
+        <table class="wahltabelle"><thead><tr><th></th><th>✅ da</th><th>🙋 entsch.</th></tr></thead><tbody>
+        ${MITGLIEDER.map((m) => `<tr><td>${esc(m.name)}</td><td><input type="checkbox" data-da="${m.person_id}" ${da.has(m.person_id) ? "checked" : ""} onchange="prDa(this, 'ent')"></td><td><input type="checkbox" data-ent="${m.person_id}" ${ent.has(m.person_id) ? "checked" : ""} onchange="prDa(this, 'da')"></td></tr>`).join("")}
+        </tbody></table></details>
+      <label class="feld">Gäste (freiwillig)<input id="prG" maxlength="300" value="${esc(p.gaeste || "")}" oninput="prAendern()"></label>
+      <label class="feld">Tagesordnung (ein Punkt pro Zeile)<textarea id="prTO" rows="3" oninput="prAendern()">${esc(p.tagesordnung.join("\n"))}</textarea></label>
+      <label class="feld">Beschlüsse (einer pro Zeile)<textarea id="prB" rows="3" oninput="prAendern()">${esc(p.beschluesse.join("\n"))}</textarea></label>
+    </div>
+    <div class="karte"><h3>2 · Protokoll anhängen</h3>
+      <div class="anhaengen">
+        <button class="knopf haupt" onclick="$('prKamera').click()">📷 Foto vom Blatt</button>
+        <button class="knopf" onclick="$('prBild').click()">🖼️ Foto aus der Galerie</button>
+        <button class="knopf" onclick="$('prDok').click()">📄 Datei (Word / PDF)</button>
+      </div>
+      <p class="hinweis" style="font-size:.85rem">Mehrere Seiten? Einfach nacheinander fotografieren. „Datei“ öffnet den Dateimanager von Handy oder Tablet.</p>
+      <div id="prAnlagen">${anlagenListe(true)}</div>
+      <details style="margin-top:10px"${p.kurzfassung ? " open" : ""}><summary><b>✏️ Kurzfassung tippen</b> <small class="hinweis">(freiwillig)</small></summary>
+        <label class="feld"><textarea id="prK" rows="5" oninput="prAendern()">${esc(p.kurzfassung || "")}</textarea></label></details>
+    </div>
+    <div class="karte"><h3>3 · Aufgaben <small class="hinweis">(wer macht was bis wann)</small></h3>
+      <div id="prAufgaben">${PR.aufgaben.map((a) => aufgabeZeile(a, true, true)).join("") || '<p class="hinweis">Noch keine Aufgaben.</p>'}</div>
+      <label class="feld">Wer?<select id="aufWer"><option value="">– bitte wählen –</option>${MITGLIEDER.map((m) => `<option value="${m.person_id}">${esc(m.name)}</option>`).join("")}</select></label>
+      <label class="feld">Was?<input id="aufWas" maxlength="300" placeholder="z. B. Glühwein bestellen"></label>
+      <div class="zwei"><label class="feld">Bis wann? (freiwillig)<input id="aufBis" type="date"></label><div style="display:flex;align-items:flex-end"><button class="knopf" style="width:100%" onclick="einmal(this, aufgabeHinzu)">＋ Aufgabe</button></div></div>
+      <p class="hinweis" style="font-size:.85rem">Die Aufgaben bekommen die Mitglieder beim Veröffentlichen mitgeteilt und am Tag vor „bis“ eine Erinnerung.</p>
+    </div>
+    <div class="knoepfe">
+      <button class="knopf haupt" onclick="einmal(this, protokollVeroeffentlichen)">📢 Veröffentlichen</button>
+      <button class="knopf" onclick="einmal(this, () => prSpeichernJetzt(true))">💾 Speichern</button>
+      ${p.version === 1 ? '<button class="knopf" onclick="protokollLoeschen()">🗑️ Entwurf löschen</button>' : ""}
+    </div>
+    <p class="hinweis" style="font-size:.85rem">Nach dem Veröffentlichen bekommen alle Mitglieder (ohne Aushilfen) Bescheid und haben ${7} Tage Zeit für Einwände – danach gilt das Protokoll als genehmigt.</p>`;
+  document.querySelectorAll("#prAnlagen img[data-anlage]").forEach(bildLaden);
+}
+function prDa(box, gegen) {
+  const pid = box.dataset.da || box.dataset.ent;
+  if (box.checked) { const g = document.querySelector(`[data-${gegen}="${pid}"]`); if (g) g.checked = false; }
+  $("prDaZahl").textContent = document.querySelectorAll("[data-da]:checked").length;
+  $("prEntZahl").textContent = document.querySelectorAll("[data-ent]:checked").length;
+  prAendern();
+}
+function prAendern() { clearTimeout(prTimer); $("prGespeichert").textContent = ""; prTimer = setTimeout(() => prSpeichernJetzt(false), 1200); }
+async function prSpeichernJetzt(vonHand) {
+  clearTimeout(prTimer); prTimer = null;
+  if (!PR || !$("prT")) return;
+  const daten = {
+    id: prId, titel: $("prT").value, datum: $("prD").value, ort: $("prO").value, verfasser: $("prV").value, gaeste: $("prG").value,
+    anwesend: [...document.querySelectorAll("[data-da]:checked")].map((x) => x.dataset.da), entschuldigt: [...document.querySelectorAll("[data-ent]:checked")].map((x) => x.dataset.ent),
+    tagesordnung: $("prTO").value.split("\n"), beschluesse: $("prB").value.split("\n"), kurzfassung: $("prK").value,
+  };
+  try {
+    await api("protokoll_speichern", daten);
+    if ($("prGespeichert")) $("prGespeichert").textContent = "✔ gespeichert";
+    if (vonHand) melde("Gespeichert ✔");
+    if (daten.verfasser !== PR.protokoll.verfasser.person_id) PR.protokoll.verfasser = { person_id: daten.verfasser, name: nameVon(daten.verfasser) };
+  } catch (e) { melde(e.message, true); throw e; }
+}
+async function prNeuLaden() {
+  PR = await api("protokoll_laden", { id: prId });
+  if ($("prAnlagen")) { $("prAnlagen").innerHTML = anlagenListe(true); document.querySelectorAll("#prAnlagen img[data-anlage]").forEach(bildLaden); }
+  if ($("prAufgaben")) $("prAufgaben").innerHTML = PR.aufgaben.map((a) => aufgabeZeile(a, true, true)).join("") || '<p class="hinweis">Noch keine Aufgaben.</p>';
+}
+async function protokollDateien(input) {
+  const dateien = [...input.files].slice(0, 10); input.value = "";
+  for (const roh of dateien) {
+    $("prAnlagen").insertAdjacentHTML("beforeend", `<p class="hinweis prlaedt">⏳ ${esc(roh.name)} wird hochgeladen …</p>`);
+    try { const r = await anlageHochladen(roh); await api("protokoll_anlage", { id: prId, attachment_id: r.id }); melde("📎 " + r.name + " angehängt"); }
+    catch (e) { melde(e.message, true); }
+  }
+  try { await prNeuLaden(); } catch (e) { melde(e.message, true); }
+}
+async function protokollAnlageWeg(aid) {
+  if (!confirm("Diese Anlage aus dem Protokoll entfernen?")) return;
+  try { await api("protokoll_anlage", { id: prId, attachment_id: aid, entfernen: true }); await prNeuLaden(); } catch (e) { melde(e.message, true); }
+}
+async function aufgabeHinzu() {
+  const person_id = $("aufWer").value, text = $("aufWas").value.trim();
+  if (!person_id || !text) return melde("Bitte „Wer?“ und „Was?“ ausfüllen.", true);
+  try { await api("aufgabe_speichern", { protokoll_id: prId, person_id, text, faellig: $("aufBis").value }); $("aufWas").value = ""; $("aufBis").value = ""; $("aufWer").value = ""; await prNeuLaden(); melde("Aufgabe eingetragen"); }
+  catch (e) { melde(e.message, true); }
+}
+async function aufgabeErledigt(id, erledigt) {
+  try {
+    await api("aufgabe_erledigt", { id, erledigt }); melde(erledigt ? "✔ Erledigt – danke!" : "Wieder offen");
+    if (aktuelleAnsicht === "protokoll") { if ($("prAufgaben")) await prNeuLaden(); else protokollOeffnen(prId, true); }
+    else if (aktuelleAnsicht === "protokolle") protokolleLaden();
+    neuLaden();
+  } catch (e) { melde(e.message, true); }
+}
+async function aufgabeLoeschen(id) {
+  if (!confirm("Aufgabe löschen?")) return;
+  try { await api("aufgabe_loeschen", { id }); await prNeuLaden(); } catch (e) { melde(e.message, true); }
+}
+async function protokollVeroeffentlichen() {
+  try { await prSpeichernJetzt(false); } catch { return; }
+  if (!PR.anlagen.length && !$("prK").value.trim() && !confirm("Es ist noch kein Foto und keine Datei angehängt. Trotzdem veröffentlichen?")) return;
+  if (!confirm("Protokoll jetzt veröffentlichen? Alle Mitglieder (ohne Aushilfen) bekommen Bescheid und haben 7 Tage Zeit für Einwände.")) return;
+  try { const r = await api("protokoll_veroeffentlichen", { id: prId }); melde(`📢 Veröffentlicht – Einwände bis ${fKurz.format(new Date(r.einspruch_bis))}`); protokollOeffnen(prId, true); }
+  catch (e) { melde(e.message, true); }
+}
+async function protokollLoeschen() {
+  if (!confirm("Diesen Entwurf wirklich löschen? Angehängte Fotos/Dateien werden aus dem Protokoll entfernt.")) return;
+  try { clearTimeout(prTimer); prTimer = null; await api("protokoll_loeschen", { id: prId }); PR = null; melde("Entwurf gelöscht"); zeige("protokolle"); } catch (e) { melde(e.message, true); }
+}
+function protokollLesen() {
+  const p = PR.protokoll, einspruchOffen = p.einspruch_bis && new Date(p.einspruch_bis) > new Date() && p.roh === "veroeffentlicht";
+  $("prTitel").textContent = "📄 Protokoll";
+  const liste = (a, tag) => a.length ? `<${tag} style="margin:4px 0 0;padding-left:22px">${a.map((x) => `<li>${esc(x)}</li>`).join("")}</${tag}>` : "";
+  const offeneEw = PR.einwaende.filter((e) => !e.erledigt_am);
+  $("protokollInhalt").innerHTML = `
+    <div class="karte">${prStatusMarke(p)}${p.version > 1 ? ` <span class="marke">Fassung ${p.version} (korrigiert)</span>` : ""}
+      <div style="font-size:1.2rem;font-weight:800;margin-top:6px">${esc(p.titel)}</div>
+      <div class="hinweis">${esc(tagKurz(p.datum))}${p.ort ? " · 📍 " + esc(p.ort) : ""} · geschrieben von ${esc(p.verfasser.name)}</div>
+      ${p.roh === "entwurf" ? '<p class="hinweis">✍️ Wird gerade noch geschrieben.</p>' : einspruchOffen ? `<p class="hinweis">Einwände sind bis <b>${esc(wann(p.einspruch_bis))}</b> möglich – danach gilt das Protokoll als genehmigt.</p>` : ""}
+      ${p.anwesend.length ? `<p style="margin:10px 0 0"><b>✅ Anwesend (${p.anwesend.length}):</b> ${esc(p.anwesend.map((x) => x.name).join(", "))}</p>` : ""}
+      ${p.entschuldigt.length ? `<p style="margin:6px 0 0"><b>🙋 Entschuldigt (${p.entschuldigt.length}):</b> ${esc(p.entschuldigt.map((x) => x.name).join(", "))}</p>` : ""}
+      ${p.gaeste ? `<p style="margin:6px 0 0"><b>Gäste:</b> ${esc(p.gaeste)}</p>` : ""}
+      ${p.tagesordnung.length ? `<p style="margin:10px 0 0"><b>Tagesordnung</b></p>${liste(p.tagesordnung, "ol")}` : ""}
+      ${p.beschluesse.length ? `<p style="margin:10px 0 0"><b>Beschlüsse</b></p>${liste(p.beschluesse, "ul")}` : ""}
+      ${p.kurzfassung ? `<p style="margin:10px 0 0"><b>Kurzfassung</b></p><p style="white-space:pre-wrap;margin:4px 0 0">${esc(p.kurzfassung)}</p>` : ""}
+    </div>
+    ${PR.anlagen.length ? `<div class="karte"><h3>📎 Das Protokoll</h3><p class="hinweis" style="margin-top:0;font-size:.85rem">Antippen zum Vergrößern bzw. Öffnen.</p>${anlagenListe(false)}</div>` : ""}
+    ${PR.aufgaben.length ? `<div class="karte"><h3>📌 Aufgaben</h3>${PR.aufgaben.map((a) => aufgabeZeile(a, a.meine || PR.darfBearbeiten)).join("")}</div>` : ""}
+    ${PR.einwaende.length || einspruchOffen ? `<div class="karte"><h3>⚠️ Einwände</h3>
+      ${PR.einwaende.map((e) => `<div class="zeile"><div style="flex:1${e.erledigt_am ? ";opacity:.6" : ""}"><b>${esc(e.name)}:</b> ${esc(e.text)}<div class="hinweis" style="font-size:.85rem">${esc(zeitKurz(e.erstellt_am))}${e.erledigt_am ? " · ✔ erledigt" : ""}</div></div>
+        ${!e.erledigt_am && (PR.darfBearbeiten || e.eigen) ? `<button class="knopf klein" onclick="einwandErledigt('${e.id}')">✔ erledigt</button>` : ""}</div>`).join("") || '<p class="hinweis" style="margin-top:0">Keine Einwände.</p>'}
+      ${einspruchOffen ? `<div class="knoepfe"><button class="knopf" onclick="einwandSchreiben()">⚠️ Einwand erheben</button></div>` : ""}</div>` : ""}
+    ${PR.gelesen ? `<div class="karte"><h3>👁️ Gelesen ${PR.gelesen.von.length} von ${PR.gelesen.von.length + PR.gelesen.fehlt.length}</h3>
+      ${PR.gelesen.fehlt.length ? `<p class="hinweis" style="margin:0">Noch nicht gelesen: ${esc(PR.gelesen.fehlt.join(", "))}</p>` : '<p class="hinweis" style="margin:0">Alle haben es gelesen 👍</p>'}</div>` : ""}
+    ${PR.darfBearbeiten && p.roh === "veroeffentlicht" ? `<div class="knoepfe"><button class="knopf" onclick="protokollKorrigieren()">✏️ Korrigieren (neue Fassung)</button></div>` : ""}
+    ${PR.fassungen.length ? `<p class="hinweis" style="font-size:.85rem">Frühere Fassungen: ${PR.fassungen.map((f) => `Fassung ${f.version} (gesichert ${esc(zeitKurz(f.gesichert_am))})`).join(", ")} – bleiben im Archiv erhalten.</p>` : ""}`;
+  document.querySelectorAll("#protokollInhalt img[data-anlage]").forEach(bildLaden);
+}
+async function einwandSchreiben() {
+  const text = prompt("Was stimmt im Protokoll nicht? (Der Schriftführer und Clubsprecher/Kassenwart bekommen Bescheid.)");
+  if (!text || !text.trim()) return;
+  try { await api("protokoll_einwand", { id: prId, text }); melde("Einwand gesendet"); protokollOeffnen(prId, true); } catch (e) { melde(e.message, true); }
+}
+async function einwandErledigt(id) {
+  try { await api("einwand_erledigt", { id }); protokollOeffnen(prId, true); } catch (e) { melde(e.message, true); }
+}
+async function protokollKorrigieren() {
+  if (!confirm("Protokoll korrigieren? Die jetzige Fassung bleibt im Archiv erhalten. Nach dem erneuten Veröffentlichen beginnen die 7 Tage Einspruch von vorn.")) return;
+  try { await api("protokoll_korrigieren", { id: prId }); protokollOeffnen(prId, true); } catch (e) { melde(e.message, true); }
 }
 
 // ---------- Mitglieder (+ Admin: Links und Ämter) ----------
@@ -1187,7 +1451,7 @@ async function mitgliederLaden() {
       <div class="avatar" style="width:40px;height:40px">${esc(initialen(m.name))}</div>
       <div style="flex:1"><b>${esc(m.name)}</b>${m.aemter?.length ? ` <span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}
         <div class="hinweis" style="font-size:.85rem">${m.status ? esc(statusText(m.status)) : m.aktiv ? "🟢 verfügbar" : "⚪ noch nicht in der App"}${m.aktiv ? " · 📲 aktiv" : ""}</div>
-        ${ICH.admin && (m.app || m.push || !m.mail) ? `<div class="hinweis" style="font-size:.85rem">${[m.app && m.zuletzt ? "zuletzt " + zeitKurz(m.zuletzt) : m.app ? "Link verschickt" : "", m.push ? "🔔 Push" : "", m.mail ? "" : "⚠️ keine Mail"].filter(Boolean).join(" · ")}</div>` : ""}</div>
+        ${ICH.admin && (m.app || m.push || !m.mail || m.protokolle === false) ? `<div class="hinweis" style="font-size:.85rem">${[m.app && m.zuletzt ? "zuletzt " + zeitKurz(m.zuletzt) : m.app ? "Link verschickt" : "", m.push ? "🔔 Push" : "", m.mail ? "" : "⚠️ keine Mail", m.protokolle === false ? "📄 ohne Protokolle" : ""].filter(Boolean).join(" · ")}</div>` : ""}</div>
       ${m.person_id !== ICH.person_id ? `<button class="knopf klein" onclick="direkt('${m.person_id}')">💬</button>` : ""}
       ${ICH.admin ? `<button class="knopf klein" onclick="linkTeilen('${m.person_id}')">🔗</button><button class="knopf klein" onclick="rolleBearbeiten('${m.person_id}')">🎖️</button>` : ""}</div>`).join("")
       + (ICH.admin ? '<p class="hinweis">🔗 = persönlichen App-Link erzeugen und per WhatsApp schicken (ein neuer Link macht den alten ungültig). 🎖️ = Amt und Rechte.</p>' : "");
@@ -1225,7 +1489,8 @@ async function rolleBearbeiten(pid) {
   const vorstand = confirm(`${m.name}: Darf Treffen, Veranstaltungen und Abstimmungen anlegen?\n\nOK = ja, Abbrechen = nein`);
   const aemter = prompt(`Ämter von ${m.name} (mit Komma getrennt, z. B. Kassenwart, Clubsprecher – leer = keine):`, (m.aemter || []).join(", "));
   if (aemter === null) return;
-  try { await api("rolle_setzen", { person_id: pid, vorstand, aemter: aemter.split(",").map((x) => x.trim()).filter(Boolean) }); MITGLIEDER = null; melde("Gespeichert"); mitgliederLaden(); } catch (e) { melde(e.message, true); }
+  const protokolle = confirm(`${m.name}: Darf Sitzungsprotokolle lesen und schreiben?\n\nOK = ja, Abbrechen = nein (z. B. Aushilfen)`);
+  try { await api("rolle_setzen", { person_id: pid, vorstand, protokolle, aemter: aemter.split(",").map((x) => x.trim()).filter(Boolean) }); MITGLIEDER = null; melde("Gespeichert"); mitgliederLaden(); } catch (e) { melde(e.message, true); }
 }
 
 // ---------- Push & Ton ----------
@@ -1320,7 +1585,8 @@ async function jetztAktualisieren() {
     const h = sprung;
     if (h.startsWith("#nachricht=")) chatOeffnen(h.slice(11));
     else if (h.startsWith("#gratulieren=")) gratulieren(h.slice(13));
-    else if (["#termine", "#vorschlaege", "#dienste", "#nachrichten", "#mitglieder", "#einstellungen"].includes(h)) zeige(h.slice(1));
+    else if (h.startsWith("#protokoll=")) protokollOeffnen(h.slice(11));
+    else if (["#termine", "#vorschlaege", "#protokolle", "#dienste", "#nachrichten", "#mitglieder", "#einstellungen"].includes(h)) zeige(h.slice(1));
   });
   updatePruefen(false);
   document.addEventListener("visibilitychange", () => { if (!document.hidden) { neuLaden(); updatePruefen(false); if (chatId) chatLaden(false); } });
