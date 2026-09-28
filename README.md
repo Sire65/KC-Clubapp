@@ -5,7 +5,7 @@ Farben Weinrot/Beige, Logo Kochmütze, große Knöpfe, ohne Ballast.
 
 **Adresse:** https://sire65.github.io/KC-Clubapp/ – Zugang nur über den persönlichen Link (`?k=…`), den Hansi in der App unter *Mitglieder → 🔗* erzeugt.
 
-## Bereiche (Version 0.1.0)
+## Bereiche (Version 0.2.0)
 
 | Bereich | Stand |
 |---|---|
@@ -14,10 +14,17 @@ Farben Weinrot/Beige, Logo Kochmütze, große Knöpfe, ohne Ballast.
 | Aktive Mitglieder mit Status | ✅ |
 | Eigener Status (verfügbar, beschäftigt, Urlaub, krank, abwesend – optional „bis“) | ✅ |
 | Einstellungen ⚙️ – Push, Warnton, große Schrift, Dunkel-Modus, Installieren, Update | ✅ |
-| Vorschläge nächste Sitzung (TOP, Abstimmungen) | bald |
+| Vorschläge nächste Sitzung – Themen (👍 unterstützen), Abstimmungen offen/geheim mit Frist | ✅ 0.2.0 |
+| Dienstpläne – eigene Zeiten, andere nur mit Freigabe, mehrere nebeneinander mit Zeitbalken | ✅ 0.2.0 |
 | Protokolle | bald |
-| Dienstpläne | bald |
 | Freigegebene Programme | bald |
+
+### Dienstpläne – Datenquelle
+
+Die App liest **nur** den veröffentlichten Sollplan `kc_dp_plan_published` (befüllt vom Dienstplan über `kc_dp_plan_publish`,
+„Sollplan veröffentlichen“). Die verschlüsselten Sync-Daten des Dienstplans werden nicht gelesen. Fremde Dienstzeiten sind nur
+sichtbar, wenn das Mitglied in der App „Meine Dienstzeiten für andere sichtbar“ eingeschaltet hat (`kc_club_freigaben`, Standard aus).
+Die Freigaben des Dienstplans selbst (`kc_dp_plan_sharing`: Kann/Wunsch/Bereitschaft) bleiben unberührt.
 
 ## Aufbau
 

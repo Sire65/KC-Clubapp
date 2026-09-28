@@ -1,7 +1,9 @@
 {
-  "version": "0.1.0",
+  "version": "0.2.0",
   "datum": "2026-09-28",
   "neu": [
-    "Erste Version der Köcheclub-App: Treffen mit Zu- und Absage, Nachrichten mit Push, Lesebestätigung und Anlagen"
+    "Dienstpläne: eigene Dienstzeiten und die der Mitglieder, die sie freigegeben haben – mehrere nebeneinander",
+    "Vorschläge: Themen für die nächste Sitzung vorschlagen und unterstützen, Abstimmungen offen oder geheim",
+    "Mitglieder ohne App bekommen Nachrichten und Einladungen per Mail"
   ]
 }

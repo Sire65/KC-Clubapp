@@ -91,6 +91,37 @@
   .antworten button.an.vielleicht { background: var(--gold); border-color: var(--gold); color: #fff; }
   .namen { margin-top: 10px; font-size: .92rem; line-height: 1.6; }
 
+  /* Vorschläge & Abstimmungen */
+  .wahl { display: grid; gap: 8px; margin-top: 12px; }
+  .wahl button { border: 2px solid var(--linie); background: var(--karte); border-radius: 14px; padding: 13px 14px; font-weight: 800; cursor: pointer; text-align: left; }
+  .wahl button.an { background: var(--rot); border-color: var(--rot); color: #fff; }
+  .balken { margin-top: 8px; }
+  .balken .kopf { display: flex; justify-content: space-between; font-weight: 700; font-size: .92rem; }
+  .balken .spur { height: 10px; border-radius: 6px; background: var(--karte2); overflow: hidden; margin-top: 3px; }
+  .balken .spur i { display: block; height: 100%; background: var(--rot); border-radius: 6px; }
+  .balken .wer { font-size: .82rem; color: var(--grau); margin-top: 2px; }
+  .artwahl { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  /* Dienstpläne */
+  .dpnav { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 16px 2px 4px; }
+  .dpnav b { text-align: center; flex: 1; }
+  .ptaste { border: 2px solid var(--linie); background: var(--karte); border-radius: 14px; padding: 9px 12px; font-weight: 800; cursor: pointer; }
+  .ptaste i { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
+  .ptaste.an { color: #fff; }
+  .tag { background: var(--karte); border-radius: var(--radius); padding: 12px 14px; box-shadow: var(--schatten); margin-top: 10px; }
+  .tag.heute { outline: 2px solid var(--gold); }
+  .tag.frei { padding: 10px 14px; color: var(--grau); }
+  .tag h4 { margin: 0 0 6px; display: flex; justify-content: space-between; gap: 8px; font-size: 1rem; }
+  .bahn { display: grid; grid-template-columns: 64px 1fr; gap: 8px; align-items: center; margin-top: 6px; }
+  .bahn .wer { font-size: .78rem; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .spur2 { position: relative; height: 30px; background: var(--karte2); border-radius: 8px; overflow: hidden; }
+  .spur2 .b { font-style: normal; position: absolute; top: 3px; bottom: 3px; border-radius: 6px; color: #fff; font-size: .72rem; font-weight: 800; display: flex; align-items: center; justify-content: center; white-space: nowrap; overflow: hidden; padding: 0 3px; }
+  .spur2 .g { position: absolute; top: 0; bottom: 0; background: rgba(201,164,106,.45); }
+  .skala { display: grid; grid-template-columns: 64px 1fr; gap: 8px; font-size: .68rem; color: var(--grau); margin-top: 2px; }
+  .skala .s { position: relative; height: 14px; }
+  .skala .s span { position: absolute; transform: translateX(-50%); }
+  .dpdetail { font-size: .85rem; margin-top: 8px; line-height: 1.5; }
+
   /* Nachrichten */
   .unterh { display: flex; gap: 12px; align-items: center; padding: 12px 4px; border-bottom: 1px solid var(--linie); cursor: pointer; }
   .avatar { width: 46px; height: 46px; border-radius: 50%; background: var(--rot); color: #fff; display: grid; place-items: center; font-weight: 800; flex: none; }
@@ -179,6 +210,30 @@
     <div id="treffenListe"></div>
   </section>
 
+  <!-- VORSCHLÄGE & ABSTIMMUNGEN -->
+  <section id="v-vorschlaege" class="versteckt">
+    <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>🗳️ Vorschläge</h2><button class="knopf haupt klein" onclick="vorschlagForm()">＋ Neu</button></div>
+    <div id="vorschlagForm" class="karte versteckt"></div>
+    <div id="vorschlagListe"><div class="karte hinweis">Wird geladen …</div></div>
+  </section>
+
+  <!-- DIENSTPLÄNE -->
+  <section id="v-dienste" class="versteckt">
+    <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>🗓️ Dienstpläne</h2></div>
+    <div class="karte">
+      <h3>Wen anzeigen?</h3>
+      <div class="knoepfe" id="dpPersonen"><span class="hinweis">Wird geladen …</span></div>
+      <p class="hinweis" style="font-size:.85rem;margin:8px 0 0">Tippe mehrere Namen an, um die Zeiten untereinander zu vergleichen. <span style="background:rgba(201,164,106,.45);border-radius:4px;padding:0 4px">Gold</span> = gleichzeitig im Dienst.</p>
+    </div>
+    <div class="dpnav"><button class="knopf klein" onclick="dpWoche(-1)">‹ Woche</button><b id="dpZeitraum"></b><button class="knopf klein" onclick="dpWoche(1)">Woche ›</button></div>
+    <div style="text-align:center"><button class="knopf klein" onclick="dpWoche(0)">Heute</button></div>
+    <div id="dpListe"></div>
+    <p class="hinweis" id="dpStand" style="font-size:.85rem"></p>
+    <div class="karte">
+      <div class="schalter" style="padding:0"><div><b>👁️ Meine Dienstzeiten für andere sichtbar</b><div class="hinweis" style="font-size:.85rem">Nur wenn du das einschaltest, sehen andere Mitglieder deine Zeiten. Du kannst es jederzeit wieder ausschalten.</div></div><input type="checkbox" id="dpFreigabe" onchange="dienstFreigabe(this.checked)"></div>
+    </div>
+  </section>
+
   <!-- NACHRICHTEN -->
   <section id="v-nachrichten" class="versteckt">
     <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>💬 Kommunikation</h2><button class="knopf haupt klein" onclick="neueNachricht()">＋ Neu</button></div>
@@ -261,7 +316,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.1.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.2.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -324,13 +379,13 @@ const KACHELN = {
     { sym: "📅", t: "Termine", u: "Treffen · Zu- & Absagen", v: "termine" },
     { sym: "💬", t: "Kommunikation", u: "Nachrichten & Anlagen", v: "nachrichten", zahl: () => INIT?.ungelesen || 0 },
     { sym: "👥", t: "Aktive Mitglieder", u: "Status · Ämter · Kontakt", v: "mitglieder" },
-    { sym: "🗳️", t: "Vorschläge", u: "Themen nächste Sitzung", bald: true },
+    { sym: "🗳️", t: "Vorschläge", u: "Themen & Abstimmungen", v: "vorschlaege", zahl: () => INIT?.offeneAbstimmungen || 0 },
     { sym: "📄", t: "Protokolle", u: "Sitzungen & Beschlüsse", bald: true },
-    { sym: "🗓️", t: "Dienstpläne", u: "Dienste & Einteilung", bald: true },
+    { sym: "🗓️", t: "Dienstpläne", u: "Meine & freigegebene Zeiten", v: "dienste" },
   ],
   mein: [
     { sym: "🟢", t: "Mein Status", u: "verfügbar, Urlaub …", aktion: "statusBlatt()" },
-    { sym: "🗓️", t: "Mein Dienstplan", u: "Meine Dienste", bald: true },
+    { sym: "🗓️", t: "Mein Dienstplan", u: "Meine Dienste", aktion: "dpNurIch()" },
     { sym: "🎓", t: "Meine Schulungen", u: "Zusammenfassungen", bald: true },
     { sym: "⚙️", t: "Einstellungen", u: "Push, Ton, Schrift", v: "einstellungen" },
   ],
@@ -359,6 +414,9 @@ function heroZeigen() {
 function wichtigZeigen() {
   const h = [];
   if (INIT?.ungelesen) h.push(`<div class="zeile" style="cursor:pointer" onclick="zeige('nachrichten')">💬 <b>${INIT.ungelesen} neue Nachricht${INIT.ungelesen > 1 ? "en" : ""}</b><span style="margin-left:auto">›</span></div>`);
+  if (INIT?.offeneAbstimmungen) h.push(`<div class="zeile" style="cursor:pointer" onclick="zeige('vorschlaege')">🗳️ <b>${INIT.offeneAbstimmungen === 1 ? "1 Abstimmung wartet" : INIT.offeneAbstimmungen + " Abstimmungen warten"}</b> auf deine Stimme<span style="margin-left:auto">›</span></div>`);
+  const nd = INIT?.naechsterDienst;
+  if (nd) h.push(`<div class="zeile" style="cursor:pointer" onclick="dpNurIch()">🗓️ Nächster Dienst: <b>${nd.datum === heuteIso() ? "heute" : esc(fTagDp.format(new Date(nd.datum + "T12:00:00Z")))}, ${esc(nd.start)}–${esc(nd.ende)} Uhr</b>${nd.bereich ? " · " + esc(nd.bereich) : ""}<span style="margin-left:auto">›</span></div>`);
   const t = INIT?.naechstesTreffen;
   if (t && !t.meine) h.push(`<div class="zeile" style="cursor:pointer" onclick="zeige('termine')">📅 Bitte für <b>${esc(t.titel)}</b> zu- oder absagen<span style="margin-left:auto">›</span></div>`);
   if (pushMoeglich() && Notification.permission !== "granted") h.push(`<div class="zeile">🔔 Benachrichtigungen sind aus<button class="knopf haupt klein" style="margin-left:auto" onclick="pushEinschalten()">Einschalten</button></div>`);
@@ -386,12 +444,14 @@ function zaehlerZeigen() {
 // ---------- Ansichten ----------
 function zeige(v) {
   aktuelleAnsicht = v;
-  ["start", "termine", "nachrichten", "chat", "neu", "mitglieder", "einstellungen"].forEach((x) => $("v-" + x).classList.toggle("versteckt", x !== v));
+  ["start", "termine", "vorschlaege", "dienste", "nachrichten", "chat", "neu", "mitglieder", "einstellungen"].forEach((x) => $("v-" + x).classList.toggle("versteckt", x !== v));
   document.querySelectorAll("#fuss button").forEach((b) => b.classList.toggle("an", b.dataset.v === v || (v === "chat" && b.dataset.v === "nachrichten") || (v === "neu" && b.dataset.v === "nachrichten")));
   $("eingabe").classList.toggle("versteckt", v !== "chat");
   clearInterval(chatTimer);
   if (v !== "chat") chatId = null;
   if (v === "termine") treffenLaden();
+  if (v === "vorschlaege") { $("vorschlagForm").classList.add("versteckt"); vorschlaegeLaden(); }
+  if (v === "dienste") dienstLaden();
   if (v === "nachrichten") unterhLaden();
   if (v === "mitglieder") mitgliederLaden();
   if (v === "einstellungen") pushStatusZeigen();
@@ -461,6 +521,171 @@ async function treffenSpeichern(id) {
 async function treffenAbsagen(id) {
   if (!confirm("Treffen wirklich absagen? Alle Mitglieder werden benachrichtigt.")) return;
   try { await api("treffen_absagen", { id }); melde("Abgesagt – alle wurden benachrichtigt"); treffenLaden(); } catch (e) { melde(e.message, true); }
+}
+
+// ---------- Vorschläge & Abstimmungen ----------
+let VORSCHLAG_TREFFEN = [];
+async function vorschlaegeLaden() {
+  try {
+    const { vorschlaege, treffen } = await api("vorschlaege_liste");
+    VORSCHLAG_TREFFEN = treffen;
+    const offen = vorschlaege.filter((v) => v.status === "offen"), fertig = vorschlaege.filter((v) => v.status !== "offen");
+    const abst = offen.filter((v) => v.art === "abstimmung"), themen = offen.filter((v) => v.art === "thema");
+    $("vorschlagListe").innerHTML =
+      (abst.length ? `<div class="abschnitt"><h3>🗳️ Abstimmungen</h3></div>` + abst.map(vorschlagKarte).join("") : "")
+      + `<div class="abschnitt"><h3>💡 Themen für die nächste Sitzung</h3></div>`
+      + (themen.map(vorschlagKarte).join("") || '<div class="karte hinweis">Noch keine Themen. Tippe oben auf „＋ Neu“, um etwas vorzuschlagen.</div>')
+      + (fertig.length ? `<div class="abschnitt"><h3>Erledigt</h3></div>` + fertig.map(vorschlagKarte).join("") : "");
+  } catch (e) { melde(e.message, true); }
+}
+function balken(v) {
+  if (!v.ergebnis) return `<p class="hinweis">🔒 Geheime Abstimmung – das Ergebnis erscheint, wenn sie beendet ist. ${v.stimmen} von ${v.berechtigt} haben abgestimmt.</p>`;
+  const summe = v.ergebnis.reduce((s, e) => s + e.anzahl, 0) || 1;
+  return v.ergebnis.map((e) => `<div class="balken"><div class="kopf"><span>${esc(e.option)}</span><span>${e.anzahl}</span></div>
+    <div class="spur"><i style="width:${Math.round((e.anzahl / summe) * 100)}%"></i></div>${e.namen?.length ? `<div class="wer">${esc(e.namen.join(", "))}</div>` : ""}</div>`).join("")
+    + `<p class="hinweis" style="font-size:.85rem">${v.stimmen} von ${v.berechtigt} haben abgestimmt${v.geheim ? " · 🔒 geheim" : ""}</p>`;
+}
+function vorschlagKarte(v) {
+  const offen = v.status === "offen";
+  const kopf = `${v.art === "abstimmung" ? `<span class="marke">🗳️ Abstimmung</span> <span class="marke">${v.geheim ? "🔒 geheim" : "👁️ offen"}</span>` : '<span class="marke">💡 Thema</span>'}
+    ${v.status === "abgeschlossen" ? ' <span class="marke gruen">✔ erledigt</span>' : v.status === "zurueckgezogen" ? ' <span class="marke rot">zurückgezogen</span>' : ""}
+    ${offen && v.frist ? ` <span class="marke gelb">⏳ bis ${esc(wann(v.frist))}</span>` : ""}`;
+  const unter = `<div class="hinweis" style="font-size:.85rem">von ${esc(v.von.name)} · ${esc(zeitKurz(v.erstellt_am))}${v.treffen ? " · für " + esc(v.treffen.titel) + " am " + esc(fKurz.format(new Date(v.treffen.beginn))) : ""}</div>`;
+  let mitte = "";
+  if (v.art === "thema") {
+    const e = v.ergebnis?.[0] || { anzahl: 0, namen: [] };
+    mitte = (offen ? `<div class="wahl"><button class="${v.meine ? "an" : ""}" onclick="stimme('${v.id}', ${v.meine ? "null" : "'dafuer'"})">👍 ${v.meine ? "Ich unterstütze das" : "Unterstützen"} · ${e.anzahl}</button></div>` : `<p><b>👍 ${e.anzahl}</b></p>`)
+      + (e.namen?.length ? `<div class="wer hinweis" style="font-size:.85rem;margin-top:6px">👍 ${esc(e.namen.join(", "))}</div>` : "");
+  } else {
+    const kannWaehlen = offen && !(v.geheim && v.abgestimmt);
+    mitte = (kannWaehlen ? `<div class="wahl">${v.optionen.map((o) => `<button class="${v.meine === o ? "an" : ""}" onclick='stimme("${v.id}", ${JSON.stringify(o).replace(/'/g, "&#39;")})'>${v.meine === o ? "✔ " : ""}${esc(o)}</button>`).join("")}</div>`
+      + (v.geheim ? '<p class="hinweis" style="font-size:.85rem">🔒 Geheim: Niemand sieht, wie du stimmst. Die Stimme kann danach nicht mehr geändert werden.</p>' : "") : "")
+      + (offen && v.geheim && v.abgestimmt ? '<p><span class="marke gruen">✔ Du hast abgestimmt</span></p>' : "")
+      + balken(v);
+  }
+  const knoepfe = [
+    v.darfAbschliessen ? `<button class="knopf klein" onclick="vorschlagStatus('${v.id}','abgeschlossen','${v.art}')">${v.art === "abstimmung" ? "🏁 Abstimmung beenden" : "✔ Erledigt / in Tagesordnung"}</button>` : "",
+    v.darfZurueckziehen ? `<button class="knopf klein" onclick="vorschlagStatus('${v.id}','zurueckgezogen')">Zurückziehen</button>` : "",
+  ].join("");
+  return `<div class="karte">${kopf}<div class="wann" style="font-size:1.12rem;font-weight:800;margin-top:6px">${esc(v.titel)}</div>${unter}
+    ${v.beschreibung ? `<p style="white-space:pre-wrap;margin:8px 0 0">${esc(v.beschreibung)}</p>` : ""}${mitte}${knoepfe ? `<div class="knoepfe">${knoepfe}</div>` : ""}</div>`;
+}
+async function stimme(id, wahl) {
+  try { await api("vorschlag_stimme", { id, wahl }); melde(wahl ? "Deine Stimme ist gespeichert 👍" : "Zurückgenommen"); vorschlaegeLaden(); neuLaden(); }
+  catch (e) { melde(e.message, true); }
+}
+async function vorschlagStatus(id, status, art) {
+  const frage = status === "zurueckgezogen" ? "Vorschlag wirklich zurückziehen?" : art === "abstimmung" ? "Abstimmung jetzt beenden? Alle bekommen das Ergebnis." : "Als erledigt markieren (z. B. in die Tagesordnung aufgenommen)?";
+  if (!confirm(frage)) return;
+  try { await api("vorschlag_status", { id, status }); melde("Gespeichert"); vorschlaegeLaden(); neuLaden(); } catch (e) { melde(e.message, true); }
+}
+let vfArt = "thema";
+function vorschlagForm(art) {
+  vfArt = art || "thema";
+  const t0 = VORSCHLAG_TREFFEN[0]?.id || "";
+  $("vorschlagForm").innerHTML = `<h3>Neuer Vorschlag</h3>
+    ${ICH.vorstand ? `<div class="artwahl"><button class="knopf ${vfArt === "thema" ? "haupt" : ""}" onclick="vorschlagForm('thema')">💡 Thema</button><button class="knopf ${vfArt === "abstimmung" ? "haupt" : ""}" onclick="vorschlagForm('abstimmung')">🗳️ Abstimmung</button></div>` : ""}
+    <label class="feld">${vfArt === "abstimmung" ? "Frage" : "Thema"}<input id="vfTitel" maxlength="150" placeholder="${vfArt === "abstimmung" ? "z. B. Sollen wir im Mai ein Grillfest machen?" : "z. B. Grillfest im Mai"}"></label>
+    <label class="feld">Beschreibung (freiwillig)<textarea id="vfBeschr" rows="3"></textarea></label>
+    <label class="feld">Für welches Treffen?<select id="vfTreffen"><option value="">– allgemein –</option>${VORSCHLAG_TREFFEN.map((t) => `<option value="${t.id}" ${t.id === t0 ? "selected" : ""}>${esc(t.titel)} · ${esc(wann(t.beginn))}</option>`).join("")}</select></label>
+    ${vfArt === "abstimmung" ? `<label class="feld">Antworten (eine pro Zeile)<textarea id="vfOptionen" rows="3">Ja\nNein\nEnthaltung</textarea></label>
+      <label class="schalter"><span><b>🔒 Geheime Abstimmung</b><br><small class="hinweis">Niemand sieht, wer wie gestimmt hat; Ergebnis erst am Ende</small></span><input type="checkbox" id="vfGeheim"></label>
+      <div class="zwei"><label class="feld">Abstimmen bis (freiwillig)<input id="vfFristDatum" type="date"></label><label class="feld">Uhrzeit<input id="vfFristZeit" type="time" value="20:00"></label></div>` : ""}
+    <label class="schalter"><span>${vfArt === "abstimmung" ? "Alle Mitglieder benachrichtigen" : "Vorstand benachrichtigen"}</span><input type="checkbox" id="vfInfo" checked></label>
+    <div class="knoepfe"><button class="knopf haupt" onclick="vorschlagSpeichern()">${vfArt === "abstimmung" ? "Abstimmung starten" : "Vorschlagen"}</button><button class="knopf" onclick="$('vorschlagForm').classList.add('versteckt')">Abbrechen</button></div>`;
+  $("vorschlagForm").classList.remove("versteckt"); window.scrollTo(0, 0);
+}
+async function vorschlagSpeichern() {
+  const daten = { art: vfArt, titel: $("vfTitel").value, beschreibung: $("vfBeschr").value, treffen_id: $("vfTreffen").value || null, benachrichtigen: $("vfInfo").checked };
+  if (vfArt === "abstimmung") {
+    daten.optionen = $("vfOptionen").value.split("\n").map((x) => x.trim()).filter(Boolean);
+    daten.geheim = $("vfGeheim").checked;
+    if ($("vfFristDatum").value) daten.frist = new Date(`${$("vfFristDatum").value}T${$("vfFristZeit").value || "20:00"}:00`).toISOString();
+  }
+  try {
+    const r = await api("vorschlag_speichern", daten);
+    $("vorschlagForm").classList.add("versteckt");
+    melde(r.versand ? `Gespeichert – ${r.versand.gesendet} benachrichtigt` : "Gespeichert"); vorschlaegeLaden();
+  } catch (e) { melde(e.message, true); }
+}
+
+// ---------- Dienstpläne (Sollplan aus dem Dienstplan; andere nur mit Freigabe) ----------
+const DP_FARBEN = ["#741521", "#1f5f99", "#2e7d4f", "#b86b00", "#7b3fa0", "#0f7c80", "#5d4037", "#c0485a"];
+const tagPlus = (iso, n) => { const d = new Date(iso + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+const heuteIso = () => new Intl.DateTimeFormat("sv-SE", { timeZone: TZ }).format(new Date());
+const montag = (iso) => { const wt = (new Date(iso + "T12:00:00Z").getUTCDay() + 6) % 7; return tagPlus(iso, -wt); };
+const fTagDp = new Intl.DateTimeFormat("de-DE", { timeZone: "UTC", weekday: "short", day: "2-digit", month: "2-digit" });
+const minuten = (hhmm) => { const [h, m] = String(hhmm || "0:0").split(":").map(Number); return h * 60 + (m || 0); };
+const hhmm = (min) => `${String(Math.floor(min / 60) % 24).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;
+let dpStart = null, dpWahl = null, DP = null;
+function dpNurIch() { dpWahl = ICH ? [ICH.person_id] : null; zeige("dienste"); }
+function dpWoche(n) { dpStart = n === 0 ? montag(heuteIso()) : tagPlus(dpStart, 7 * n); dienstLaden(); }
+function dpFarbe(pid) { const i = (DP?.personen || []).findIndex((p) => p.person_id === pid); return DP_FARBEN[Math.max(0, i) % DP_FARBEN.length]; }
+function dpPerson(pid) {
+  const w = new Set(dpWahl || []);
+  if (w.has(pid)) { if (w.size > 1) w.delete(pid); } else { if (w.size >= 8) return melde("Höchstens 8 Personen gleichzeitig.", true); w.add(pid); }
+  dpWahl = [...w]; dienstLaden();
+}
+async function dienstLaden() {
+  dpStart = dpStart || montag(heuteIso());
+  const bis = tagPlus(dpStart, 6);
+  $("dpZeitraum").textContent = `${fTagDp.format(new Date(dpStart + "T12:00:00Z"))} – ${fTagDp.format(new Date(bis + "T12:00:00Z"))}`;
+  try {
+    DP = await api("dienste", { von: dpStart, bis, personen: dpWahl || [] });
+    dpWahl = DP.gewaehlt;
+    $("dpFreigabe").checked = !!DP.freigabe;
+    // eigene Person zuerst, dann alphabetisch (Farben bleiben so stabil)
+    DP.personen.sort((a, b) => (b.ich - a.ich) || a.name.localeCompare(b.name));
+    $("dpPersonen").innerHTML = DP.personen.map((p) => {
+      const an = dpWahl.includes(p.person_id), f = dpFarbe(p.person_id);
+      return `<button class="ptaste${an ? " an" : ""}" style="${an ? `background:${f};border-color:${f}` : ""}" onclick="dpPerson('${p.person_id}')"><i style="background:${an ? "#fff" : f}"></i>${p.ich ? "Ich" : esc(p.name)}</button>`;
+    }).join("") + (DP.personen.length === 1 ? '<span class="hinweis" style="font-size:.85rem">Noch hat niemand sonst seine Dienstzeiten freigegeben.</span>' : "");
+    dpZeichnen();
+  } catch (e) { melde(e.message, true); }
+}
+function dpZeichnen() {
+  const tage = [...Array(7)].map((_, i) => tagPlus(dpStart, i)), heute = heuteIso();
+  // Schichten aufbereiten: über Mitternacht → bis 24:00 (mit Pfeil)
+  const sch = DP.dienste.map((d) => { const a = minuten(d.start), e0 = minuten(d.ende); return { ...d, a, e: e0 > a ? e0 : 1440, ueber: e0 <= a }; });
+  if (!sch.length) {
+    $("dpListe").innerHTML = `<div class="karte hinweis">${DP.stand ? "In dieser Woche sind keine Dienste eingetragen." : "Es ist noch kein Dienstplan veröffentlicht. Sobald im Dienstplan der Sollplan veröffentlicht wird, erscheinen die Zeiten hier automatisch."}</div>`;
+  } else {
+    // gemeinsame Skala für die ganze Woche (volle Stunden)
+    const lo = Math.floor(Math.min(...sch.map((s) => s.a)) / 60) * 60, hi = Math.ceil(Math.max(...sch.map((s) => s.e)) / 60) * 60;
+    const spanne = Math.max(60, hi - lo), pos = (m) => ((m - lo) / spanne) * 100;
+    const schritt = spanne > 720 ? 240 : spanne > 360 ? 120 : 60;
+    const skala = [...Array(Math.floor(spanne / schritt) + 1)].map((_, i) => lo + i * schritt).map((m) => `<span style="left:${pos(m)}%">${hhmm(m).slice(0, 2)}</span>`).join("");
+    const namen = new Map(DP.personen.map((p) => [p.person_id, p.ich ? "Ich" : p.vorname || p.name]));
+    $("dpListe").innerHTML = tage.map((t) => {
+      const heuteS = sch.filter((s) => s.datum === t);
+      const kopf = `${fTagDp.format(new Date(t + "T12:00:00Z"))}${t === heute ? " · Heute" : ""}`;
+      if (!heuteS.length) return `<div class="tag frei${t === heute ? " heute" : ""}"><b>${kopf}</b> – frei</div>`;
+      // Zeiten, in denen mindestens zwei Gewählte gleichzeitig Dienst haben
+      const grenzen = [...new Set(heuteS.flatMap((s) => [s.a, s.e]))].sort((x, y) => x - y), gemeinsam = [];
+      for (let i = 0; i < grenzen.length - 1; i++) {
+        const m = (grenzen[i] + grenzen[i + 1]) / 2;
+        if (new Set(heuteS.filter((s) => s.a <= m && s.e > m).map((s) => s.person_id)).size >= 2) {
+          const l = gemeinsam[gemeinsam.length - 1];
+          if (l && l[1] === grenzen[i]) l[1] = grenzen[i + 1]; else gemeinsam.push([grenzen[i], grenzen[i + 1]]);
+        }
+      }
+      const g = gemeinsam.map(([a, e]) => `<i class="g" style="left:${pos(a)}%;width:${pos(e) - pos(a)}%"></i>`).join("");
+      const bahnen = dpWahl.map((pid) => {
+        const f = dpFarbe(pid), eig = heuteS.filter((s) => s.person_id === pid);
+        return `<div class="bahn"><div class="wer" style="color:${f}">${esc(namen.get(pid) || pid)}</div><div class="spur2">${g}${eig.map((s) =>
+          `<i class="b" style="left:${pos(s.a)}%;width:${Math.max(4, pos(s.e) - pos(s.a))}%;background:${f}">${esc(s.start)}–${s.ueber ? esc(s.ende) + "→" : esc(s.ende)}</i>`).join("")}</div></div>`;
+      }).join("");
+      const detail = heuteS.map((s) => `<div><b style="color:${dpFarbe(s.person_id)}">●</b> ${esc(namen.get(s.person_id) || "")}: <b>${esc(s.start)}–${esc(s.ende)} Uhr</b>${s.ueber ? " (bis nächster Tag)" : ""}${s.pause ? ` · Pause ${s.pause} Min.` : ""}${s.bereich ? " · " + esc(s.bereich) : ""}${s.zone ? " · " + esc(s.zone) : ""}</div>`).join("");
+      return `<div class="tag${t === heute ? " heute" : ""}"><h4><span>${kopf}</span>${gemeinsam.length ? `<span class="marke gelb">🤝 ${gemeinsam.map(([a, e]) => hhmm(a) + "–" + hhmm(e)).join(", ")}</span>` : ""}</h4>
+        ${bahnen}<div class="skala"><div></div><div class="s">${skala}</div></div><div class="dpdetail">${detail}</div></div>`;
+    }).join("");
+  }
+  // Rule 11: Datenstand sichtbar machen
+  $("dpStand").textContent = DP.stand ? `Stand des Dienstplans: veröffentlicht ${zeitKurz(DP.stand)} Uhr` : "";
+}
+async function dienstFreigabe(an) {
+  try { await api("dienst_freigabe", { erlaubt: an }); melde(an ? "Andere Mitglieder können deine Dienstzeiten jetzt sehen." : "Deine Dienstzeiten sind nur noch für dich sichtbar."); }
+  catch (e) { melde(e.message, true); $("dpFreigabe").checked = !an; }
 }
 
 // ---------- Nachrichten ----------
@@ -693,7 +918,7 @@ async function jetztAktualisieren() {
   neuLaden().then(() => {
     const h = location.hash;
     if (h.startsWith("#nachricht=")) chatOeffnen(h.slice(11));
-    else if (["#termine", "#nachrichten", "#mitglieder", "#einstellungen"].includes(h)) zeige(h.slice(1));
+    else if (["#termine", "#vorschlaege", "#dienste", "#nachrichten", "#mitglieder", "#einstellungen"].includes(h)) zeige(h.slice(1));
   });
   updatePruefen(false);
   document.addEventListener("visibilitychange", () => { if (!document.hidden) { neuLaden(); updatePruefen(false); if (chatId) chatLaden(false); } });
