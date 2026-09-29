@@ -1,10 +1,16 @@
 {
-  "version": "0.49.0",
+  "version": "0.50.0",
   "datum": "2026-09-29",
   "neu": [
-    "🪞 Admin-Zentrale: Neon-Spiegel im Sparmodus (alle 6 Stunden) richtig bewertet und Knopf „Jetzt spiegeln – nur im Notfall“"
+    "🪞 Admin-Zentrale: Watchdog und Spiegel-Abdeckung – zeigt, wie viele Tabellen noch ohne Spiegel-Regel sind (mit Liste)"
   ],
   "verlauf": [
+    {
+      "version": "0.50.0",
+      "neu": [
+        "🪞 Admin-Zentrale: Watchdog und Spiegel-Abdeckung – zeigt, wie viele Tabellen noch ohne Spiegel-Regel sind (mit Liste)"
+      ]
+    },
     {
       "version": "0.49.0",
       "neu": [

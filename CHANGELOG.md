@@ -1,5 +1,15 @@
 # Änderungen
 
+## 0.50.0 – 2026-09-29 (DEV)
+
+- KC Core Spiegel (Migration 20260929_kc_core_mirror_sparmodus_abdeckung.sql, Admin-Freigabe Hansi): Watchdog wieder an
+  (alle 30 Min., nur Supabase), Quell-Prüfung stündlich; Frische-Fenster im Sparmodus = Takt + 30 Min. (6:30). Neue
+  Abdeckungs-Prüfung: Tabellen ohne Spiegel-Regel – Befund 118 von 195 (u. a. alle kc_club_*, Communicator-Nachrichten,
+  Termine, WM). Die „automatische Aufnahme“ im Watchdog war nur eine Meldung; der Worker legt in Neon keine Tabellen an,
+  das Backup hat eine feste Liste (36). Aufnahme neuer Tabellen braucht Einstufung (Datenschutz) + Neon-Tabelle + Regel.
+- KC-CLUB-ADMIN-SPIEGEL: Zeilen „Watchdog“ (grau, wenn > 90 Min. still) und „Abdeckung“ (gelb bei Tabellen ohne Regel,
+  Liste in Einzelheiten).
+
 ## 0.49.0 – 2026-09-29 (DEV)
 
 - Betrieb (Admin-Freigabe Hansi): Neon-Spiegel und Backup wieder aufgenommen – über den vorhandenen Sparmodus

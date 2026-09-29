@@ -1011,7 +1011,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.49.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.50.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2464,7 +2464,10 @@ function adminSpiegelFarben(sp) {
   const b = std(sp.backup.letztes);
   const backup = b <= BACKUP_OK_STD ? ["gruen", `letztes ${seitText(sp.backup.letztes)}`]
     : [b <= BACKUP_WARN_STD ? "gelb" : "rot", `letztes ${seitText(sp.backup.letztes)}${sp.backup.aktiv && !sp.pause ? "" : " · " + pauseText}`]; // globale Pause hält auch das Backup an
-  return { neon, backup };
+  const ab = sp.abdeckung, abdeckung = !ab ? ["grau", "unbekannt"] : ab.ohne === 0 ? ["gruen", `alle ${ab.tabellen} Tabellen erfasst`] : ["gelb", `${ab.ohne} von ${ab.tabellen} Tabellen ohne Spiegel-Regel`];
+  const w = sp.watchdog, wm = w ? (Date.now() - new Date(w.zeit)) / 60000 : Infinity;
+  const watchdog = !w ? ["grau", "noch nie gelaufen"] : wm > 90 ? ["grau", `keine Meldung seit ${seitText(w.zeit)}`] : [w.status === "ok" ? "gruen" : "gelb", `${w.status === "ok" ? "passt auf" : "meldet Probleme"} · ${seitText(w.zeit)}`];
+  return { neon, backup, abdeckung, watchdog };
 }
 function adminBalken(titel, belegt, grenze, warn, krit) {
   if (belegt == null) return `<div class="abalken">${lampe("grau")}<span>${titel}: unbekannt</span></div>`;
@@ -2483,7 +2486,7 @@ function infoAdmin() {
       ${zeile(sf, "Server", `v${r.server.version} · Datenbank ${r.server.dbMs} ms`)}
       ${zeile(cf, "Kommunikation", c.text)}
       ${r.programme.map((p) => { const [f, t] = adminProgrammFarbe(p); return zeile(f, p.name, t); }).join("")}
-      ${(() => { const sf2 = adminSpiegelFarben(r.spiegel); return zeile(sf2.neon[0], "Neon-Spiegel", sf2.neon[1]) + zeile(sf2.backup[0], "Backup", sf2.backup[1]); })()}
+      ${(() => { const sf2 = adminSpiegelFarben(r.spiegel); return zeile(sf2.neon[0], "Neon-Spiegel", sf2.neon[1]) + zeile(sf2.backup[0], "Backup", sf2.backup[1]) + zeile(sf2.watchdog[0], "Watchdog", sf2.watchdog[1]) + zeile(sf2.abdeckung[0], "Abdeckung", sf2.abdeckung[1]); })()}
       ${zeile(r.wartung?.an ? "gelb" : "gruen", "Wartung", r.wartung?.an ? "an" + (r.wartung.hinweis ? " – " + r.wartung.hinweis : "") : "aus")}
     </div>
     ${adminBalken("🗄️ Datenbank", r.datenbank.bytes, r.datenbank.grenze, r.datenbank.warnPct, r.datenbank.kritPct)}
@@ -2517,9 +2520,12 @@ function adminBlatt() {
     <b>🪞 Neon-Spiegel &amp; Backup</b>
     ${(() => { const sp = r.spiegel; if (!sp) return '<p class="hinweis" style="margin:0">Zustand gerade nicht abrufbar.</p>'; const f = adminSpiegelFarben(sp);
       return `<table class="todotab"><tr><td>${lampe(f.neon[0])} Spiegel Supabase → Neon</td><td>${esc(f.neon[1])}</td></tr><tr><td>${lampe(f.backup[0])} Tägliches Backup</td><td>${esc(f.backup[1])}</td></tr>
+        <tr><td>${lampe(f.watchdog[0])} Watchdog</td><td>${esc(f.watchdog[1])}</td></tr>
+        <tr><td>${lampe(f.abdeckung[0])} Abdeckung</td><td>${esc(f.abdeckung[1])}</td></tr>
         <tr><td>🧪 Letzter Wiederherstellungs-Test</td><td>${sp.backup.restoreTest ? esc(seitText(sp.backup.restoreTest)) + " · bestanden" : "–"}</td></tr>
         ${sp.compute ? `<tr><td>⚙️ Neon-Rechenzeit</td><td>${esc(sp.compute.modus === "maintenance" ? "Wartung/Sparmodus" : sp.compute.modus)}${sp.compute.bis ? " bis " + esc(fKurz.format(new Date(sp.compute.bis))) : ""}</td></tr>` : ""}</table>
         ${sp.pause ? `<p class="hinweis" style="margin:0">⏸️ ${esc(zeitKurz(sp.pause.zeit))}: ${esc(sp.pause.text)}</p>` : ""}
+        ${sp.abdeckung?.ohne ? `<details><summary class="hinweis">⚠️ ${sp.abdeckung.ohne} Tabellen ohne Spiegel-Regel anzeigen</summary><p class="hinweis" style="margin:4px 0 0;font-size:.78rem">${sp.abdeckung.liste.map(esc).join(", ")}</p></details>` : ""}
         <p class="hinweis" style="margin:0;font-size:.8rem">Regeln: ${sp.neon.regeln.map((x) => `${x.an ? "✅" : "⏸️"} ${esc(x.name)}`).join(" · ")}</p>
         <button class="knopf klein" onclick="adminSpiegeln()">🪞 Jetzt spiegeln – nur im Notfall</button>`; })()}
     <b>🗄️ Datenbank</b>

@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.49.0";
+const SERVER_VERSION = "0.50.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -603,11 +603,13 @@ const ADMIN_DB_GRENZE = 500 * 1024 * 1024;
 // Neon-Spiegel und Backup (0.48.0): liest nur die Protokolle des KC-Spiegels (kc_db_mirror_*, kc_neon_compute_policy) – steuert nichts
 async function adminSpiegel() {
   const letzter = (typ: string) => db.from("kc_db_mirror_runs").select("started_at,message").eq("run_type", typ).eq("status", "ok").order("started_at", { ascending: false }).limit(1).maybeSingle();
-  const [{ data: pol }, { data: compute }, { data: snap }, { data: backup }, { data: restore }, { data: pause }] = await Promise.all([
+  const [{ data: pol }, { data: compute }, { data: snap }, { data: backup }, { data: restore }, { data: pause }, { data: abdeckung }, { data: wd }] = await Promise.all([
     db.from("kc_db_mirror_policies").select("name,mode,target,enabled,lag_threshold_sec,updated_at"),
     db.from("kc_neon_compute_policy").select("mode,maintenance_until,updated_at").eq("id", "primary").maybeSingle(),
     letzter("snapshot"), letzter("backup"), letzter("restore_test"),
     db.from("kc_db_mirror_audit").select("happened_at,action,detail").or("action.ilike.%paus%,action.ilike.%resum%,action.ilike.%fortgesetzt%").order("happened_at", { ascending: false }).limit(1).maybeSingle(),
+    db.rpc("kc_db_mirror_abdeckung"),
+    db.from("kc_db_mirror_runs").select("started_at,status,message").eq("run_type", "watchdog").order("started_at", { ascending: false }).limit(1).maybeSingle(),
   ]);
   const p = pol ?? [], neon = p.filter((x: any) => x.target === "neon" && x.mode !== "realtime"), bk = p.filter((x: any) => x.mode === "backup");
   const aktivLag = neon.filter((x: any) => x.enabled).map((x: any) => Number(x.lag_threshold_sec) || 720);
@@ -617,6 +619,9 @@ async function adminSpiegel() {
       regeln: neon.map((x: any) => ({ name: x.name, an: !!x.enabled })) },
     backup: { aktiv: bk.some((x: any) => x.enabled), letztes: backup?.started_at ?? null, restoreTest: restore?.started_at ?? null },
     compute: compute ? { modus: compute.mode, bis: compute.maintenance_until } : null,
+    // Abdeckung: Tabellen ohne Spiegel-Regel (werden weder gespiegelt noch gesichert) + letzter Watchdog-Lauf
+    abdeckung: abdeckung ? { tabellen: abdeckung.tabellen, ohne: abdeckung.ohne_regel, liste: abdeckung.liste } : null,
+    watchdog: wd ? { zeit: wd.started_at, status: wd.status, text: wd.message } : null,
     pause: pause && /paus/i.test(pause.action) ? { zeit: pause.happened_at, text: pause.detail } : null,
   };
 } // kostenloser Supabase-Tarif (falls der System-Check keinen Wert liefert)

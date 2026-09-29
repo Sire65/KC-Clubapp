@@ -925,6 +925,13 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.equal(spar(3), "gruen"); assert.equal(spar(9), "gelb"); assert.equal(spar(20), "rot");
   assert.ok(aktionen.has("admin_spiegeln") && aufrufe.has("admin_spiegeln") && /case "admin_spiegeln": \{\s*nurAdmin\(ich\);/.test(server), "Notfall-Spiegel fehlt oder ungeschützt");
   assert.ok(/async function adminSpiegeln\(\) \{\s*if \(!confirm\(/.test(html), "Notfall-Spiegel ohne Rückfrage");
+  // 0.50.0: Abdeckung (Tabellen ohne Regel) und Watchdog – fehlende Tabellen nie grün, stummer Watchdog grau
+  const basis = { neon: { aktiv: true, lagSek: 23400, letzter: vor(1), regeln: [] }, backup: { aktiv: true, letztes: vor(3) } };
+  assert.equal(f({ ...basis, abdeckung: { tabellen: 195, ohne: 118, liste: [] } }).abdeckung[0], "gelb", "fehlende Tabellen nicht gemeldet");
+  assert.equal(f({ ...basis, abdeckung: { tabellen: 195, ohne: 0, liste: [] } }).abdeckung[0], "gruen");
+  assert.equal(f({ ...basis, watchdog: { zeit: vor(5), status: "ok" } }).watchdog[0], "grau", "Watchdog ohne Meldung seit 5 Std. nicht grau");
+  assert.equal(f({ ...basis, watchdog: { zeit: vor(0.2), status: "ok" } }).watchdog[0], "gruen");
+  assert.ok(/db\.rpc\("kc_db_mirror_abdeckung"\)/.test(server) && /kc_db_mirror_abdeckung_check/.test(lies("supabase/migrations/20260929_kc_core_mirror_sparmodus_abdeckung.sql")), "Abdeckungs-Prüfung fehlt");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
