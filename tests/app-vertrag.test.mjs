@@ -567,4 +567,20 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok((html.match(/onclick="appSchliessen\(\)"/g) || []).length >= 2 && /window\.close\(\)/.test(html), "Ausgangstür fehlt");
 }
 
+// 44. 0.25.0: Pinnwand – höchstens 3 Zettel je Person, 200 Zeichen, wichtig beim Öffnen, gelesen/erledigt nur für Verfasser
+{
+  for (const a of ["pinnwand", "pinnwand_anheften", "pinnwand_erledigt", "pinnwand_abnehmen"]) assert.ok(aktionen.has(a) && aufrufe.has(a), `Pinnwand-Aktion ${a} fehlt`);
+  assert.ok(/const PINNWAND_MAX = 3, PINNWAND_ZEICHEN = 200;/.test(server), "Grenzen fehlen");
+  const an = server.slice(server.indexOf('case "pinnwand_anheften"'), server.indexOf('case "pinnwand_erledigt"'));
+  assert.ok(/>= PINNWAND_MAX\) throw/.test(an) && /\.length > PINNWAND_ZEICHEN\) throw/.test(an) && /\.is\("entfernt_am", null\)/.test(an), "Server prüft 3 Zettel / 200 Zeichen nicht");
+  const li = server.slice(server.indexOf('case "pinnwand":'), server.indexOf('case "pinnwand_anheften"'));
+  assert.ok(/\.\.\.\(vonMir \|\| ich\.vorstand \? \{ leser:/.test(li), "Leserliste nicht auf Verfasser beschränkt");
+  assert.ok(/person_id\.eq\.\$\{ich\.person_id\},fuer\.eq\.alle,personen\.cs\./.test(server), "Sichtbarkeit (mich/alle/Personen) fehlt");
+  const ab = server.slice(server.indexOf('case "pinnwand_abnehmen"'), server.indexOf('case "pinnwand_abnehmen"') + 600);
+  assert.ok(/z\.person_id !== ich\.person_id && !ich\.vorstand\) throw/.test(ab), "Fremde dürfen Zettel abnehmen");
+  assert.ok(/id="v-pinnwand"/.test(html) && /id="pwZaehler"/.test(html) && /maxlength="200"/.test(html) && /\{ id: "pinnwand", sym: "📌"/.test(html), "Pinnwand-Oberfläche fehlt");
+  assert.ok(/if \(!PW\.startGeprueft\) \{ PW\.startGeprueft = true; pwStart\(\); \}/.test(html) && /PW\.zettel\.some\(pwOffen\)/.test(html), "Wichtige Zettel erscheinen nicht beim Öffnen");
+  assert.ok(/\.zettel::before/.test(html) && /rotate\(var\(--dreh/.test(html), "Zettel ohne Nadel/Schräge");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

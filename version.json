@@ -1,9 +1,9 @@
 {
-  "version": "0.24.0",
+  "version": "0.25.0",
   "datum": "2026-09-29",
   "neu": [
-    "🎨 Fertige Farbdesigns zum Auswählen (Mehr → Darstellung)",
-    "🌗 Tag/Nacht automatisch nach Helligkeit – oder immer Tag / immer Nacht",
-    "🚪 App schließen: Knopf unten auf der Startseite"
+    "📌 Pinnwand: gelbe Zettel für mich, für alle oder bestimmte Personen",
+    "❗ Wichtige Zettel erscheinen beim Öffnen der App",
+    "✓ erl. – der Verfasser sieht, wer wann gelesen und erledigt hat"
   ]
 }

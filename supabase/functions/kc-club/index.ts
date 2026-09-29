@@ -13,14 +13,14 @@
 //           KC-CLUB-COMMUNICATOR-STATUS (0.17.0), KC-CLUB-FEEDBACK (0.18.0),
 //           KC-CLUB-KACHELN (0.19.0), KC-CLUB-ZUGANG-SELBST (0.21.0),
 //           KC-CLUB-GRUPPEN, KC-CLUB-ZUSTELLWAHL (0.23.0)
-//           KC-CLUB-DESIGN (0.24.0)
+//           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0)
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.24.0";
+const SERVER_VERSION = "0.25.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -274,6 +274,14 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
     modus: ["auto", "tag", "nacht"].includes(w?.modus) ? w.modus : "auto",
   }),
 };
+// ----- KC-CLUB-PINNWAND (0.25.0): höchstens 3 Zettel je Person, je Zettel höchstens 200 Zeichen -----
+const PINNWAND_MAX = 3, PINNWAND_ZEICHEN = 200;
+async function pinnwandSichtbar(ich: Ich) {
+  const { data } = await db.from("kc_club_pinnwand").select("id,person_id,text,wichtig,fuer,personen,erstellt_am").is("entfernt_am", null)
+    .or(`person_id.eq.${ich.person_id},fuer.eq.alle,personen.cs.{${ich.person_id}}`)
+    .order("wichtig", { ascending: false }).order("erstellt_am", { ascending: false }).limit(100);
+  return data ?? [];
+}
 const MAX_TESTDATEN = 2 * 1024 * 1024; // Verbindungstest: höchstens 2 MB je Richtung
 async function wartungLesen() {
   const { data } = await db.from("kc_core_app_registry").select("wartung,wartung_hinweis,wartung_seit").eq("app_id", APP_ID).maybeSingle();
@@ -1534,6 +1542,69 @@ Köcheclub Werne`,
         if (g.erstellt_von === ich.person_id && (count ?? 0) > 1) throw new Fehler("Du hast die Gruppe angelegt – bitte erst die anderen entfernen oder die Gruppe behalten.", 409);
         await db.from("kc_communication_thread_participants").delete().eq("thread_id", g.thread_id).eq("person_id", ich.person_id);
         await protokoll(ich.person_id, "gruppe_verlassen", { gruppe: g.thread_id, name: g.name });
+        return json({ ok: true });
+      }
+
+      // ----- Pinnwand (KC-CLUB-PINNWAND) -----
+      case "pinnwand": {
+        const zettel = await pinnwandSichtbar(ich);
+        // „gesehen“ beim ersten Anzeigen erfassen (erste Zeit bleibt stehen); eigene Zettel zählen nicht
+        const fremd = zettel.filter((z: any) => z.person_id !== ich.person_id);
+        if (fremd.length) await db.from("kc_club_pinnwand_gelesen").upsert(fremd.map((z: any) => ({ zettel_id: z.id, person_id: ich.person_id })), { onConflict: "zettel_id,person_id", ignoreDuplicates: true });
+        const ids = zettel.map((z: any) => z.id);
+        const { data: gl } = ids.length ? await db.from("kc_club_pinnwand_gelesen").select("zettel_id,person_id,gesehen_am,erledigt_am").in("zettel_id", ids) : { data: [] };
+        const aktiv = await aktiveMitglieder();
+        const leute = await personen([...zettel.map((z: any) => z.person_id), ...zettel.flatMap((z: any) => z.personen || []), ...(gl ?? []).map((g: any) => g.person_id)]);
+        const nm = (id: string) => leute.get(id)?.display_name || aktiv.find((m) => m.person_id === id)?.display_name || id;
+        return json({ max: PINNWAND_MAX, zeichen: PINNWAND_ZEICHEN, zettel: zettel.map((z: any) => {
+          const vonMir = z.person_id === ich.person_id, meine = (gl ?? []).find((g: any) => g.zettel_id === z.id && g.person_id === ich.person_id);
+          const empf = z.fuer === "alle" ? aktiv.map((m) => m.person_id).filter((id) => id !== z.person_id) : z.fuer === "personen" ? (z.personen || []) : [];
+          const lese = (gl ?? []).filter((g: any) => g.zettel_id === z.id && g.person_id !== z.person_id);
+          return { id: z.id, text: z.text, wichtig: z.wichtig, fuer: z.fuer, erstellt_am: z.erstellt_am, vonMir,
+            von: { person_id: z.person_id, vorname: vorname(leute.get(z.person_id) ?? null) || nm(z.person_id) },
+            empfaenger: z.fuer === "personen" ? empf.map(nm) : [],
+            erledigt: z.fuer === "ich" ? null : meine?.erledigt_am ?? null,
+            // wer wann gelesen / erledigt hat: nur für den Verfasser (und Clubsprecher/Kassenwart/Admin)
+            ...(vonMir || ich.vorstand ? { leser: lese.map((g: any) => ({ name: nm(g.person_id), gesehen: g.gesehen_am, erledigt: g.erledigt_am })).sort((a: any, b: any) => String(a.gesehen).localeCompare(String(b.gesehen))),
+              offen: empf.filter((id: string) => !lese.some((g: any) => g.person_id === id)).map(nm).sort(), anzahl: empf.length } : {}) };
+        }), meine: zettel.filter((z: any) => z.person_id === ich.person_id).length });
+      }
+
+      case "pinnwand_anheften": {
+        const roh = String(p.text ?? "").trim();
+        if (!roh) throw new Fehler("Bitte einen kurzen Text schreiben.");
+        if ([...roh].length > PINNWAND_ZEICHEN) throw new Fehler(`Höchstens ${PINNWAND_ZEICHEN} Zeichen – bitte kürzer fassen.`);
+        const text = txt(roh, 400);
+        const fuer = ["ich", "alle", "personen"].includes(p.fuer) ? p.fuer : "";
+        if (!fuer) throw new Fehler("Bitte wählen: nur für mich, für alle oder für bestimmte Personen.");
+        let empf: string[] = [];
+        if (fuer === "personen") {
+          const aktiv = new Set((await aktiveMitglieder()).map((m) => m.person_id));
+          empf = ([...new Set((Array.isArray(p.personen) ? p.personen : []).map(String))] as string[]).filter((id) => aktiv.has(id) && id !== ich.person_id).slice(0, 60);
+          if (!empf.length) throw new Fehler("Bitte mindestens eine Person auswählen.");
+        }
+        const { count } = await db.from("kc_club_pinnwand").select("id", { count: "exact", head: true }).eq("person_id", ich.person_id).is("entfernt_am", null);
+        if ((count ?? 0) >= PINNWAND_MAX) throw new Fehler(`Du hast schon ${PINNWAND_MAX} Zettel an der Pinnwand – bitte erst einen abnehmen.`, 409);
+        const { data: z, error } = await db.from("kc_club_pinnwand").insert({ person_id: ich.person_id, text, wichtig: !!p.wichtig, fuer, personen: empf }).select("id").single();
+        if (error || !z) throw new Fehler("Zettel konnte nicht angeheftet werden.", 500);
+        await protokoll(ich.person_id, "pinnwand_angeheftet", { zettel: z.id, fuer, wichtig: !!p.wichtig, personen: empf.length, zeichen: [...text].length });
+        return json({ ok: true, id: z.id });
+      }
+
+      case "pinnwand_erledigt": {
+        const z = (await pinnwandSichtbar(ich)).find((x: any) => x.id === String(p.id));
+        if (!z) throw new Fehler("Zettel nicht gefunden (vielleicht schon abgenommen).", 404);
+        const erledigt_am = p.zurueck ? null : jetzt();
+        await db.from("kc_club_pinnwand_gelesen").upsert({ zettel_id: z.id, person_id: ich.person_id, erledigt_am }, { onConflict: "zettel_id,person_id" });
+        return json({ ok: true, erledigt: erledigt_am });
+      }
+
+      case "pinnwand_abnehmen": {
+        const { data: z } = await db.from("kc_club_pinnwand").select("id,person_id").eq("id", String(p.id)).is("entfernt_am", null).maybeSingle();
+        if (!z) throw new Fehler("Zettel nicht gefunden (vielleicht schon abgenommen).", 404);
+        if (z.person_id !== ich.person_id && !ich.vorstand) throw new Fehler("Abnehmen darf nur, wer den Zettel angeheftet hat.", 403);
+        await db.from("kc_club_pinnwand").update({ entfernt_am: jetzt(), entfernt_von: ich.person_id }).eq("id", z.id);
+        await protokoll(ich.person_id, "pinnwand_abgenommen", { zettel: z.id, fremd: z.person_id !== ich.person_id });
         return json({ ok: true });
       }
 
