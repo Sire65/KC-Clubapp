@@ -1,7 +1,8 @@
 {
-  "version": "0.27.0",
+  "version": "0.27.1",
   "datum": "2026-09-29",
   "neu": [
+    "🆕 Feedback: neu starten, alte Antworten löschen",
     "📅 Treffen anlegen: Titel und Ort per Auswahlliste",
     "🧩 Kacheln etwas kleiner – mehr auf einen Blick",
     "🗓️ Kalender kompakter"

@@ -719,7 +719,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.27.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.27.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2973,7 +2973,7 @@ function fbZeigen() {
   if (FB.schritt === 0) { // schon abgeschickt → Dank + ändern
     el.innerHTML = `<div class="karte"><h3 style="margin-top:0">🙏 Danke für dein Feedback!</h3>
       <p class="hinweis">Abgeschickt am ${esc(wann(FB.gesendet))}. Du kannst deine Antworten jederzeit ändern.</p>
-      <button class="knopf haupt" onclick="FB.schritt=1;fbZeigen()">✏️ Antworten ändern</button></div>`;
+      <div class="knoepfe"><button class="knopf haupt" onclick="FB.schritt=1;fbZeigen()">✏️ Antworten ändern</button><button class="knopf" onclick="fbNeu()">🆕 Neues Feedback starten</button></div></div>`;
     return;
   }
   const schritte = `<div class="fbschritte">${[1, 2, 3].map((i) => `<i class="${i <= FB.schritt ? "an" : ""}"></i>`).join("")}</div>
@@ -3013,6 +3013,15 @@ async function fbSenden() {
     melde("🙏 Danke! Dein Feedback ist angekommen.");
   } catch (e) { $("fbSenden").disabled = false; melde(e.message, true); }
 }
+// KC-CLUB-FEEDBACK-NEU: eigene Antworten löschen und neu anfangen / (Admin) neue Runde für alle – der Server sichert vorher eine Kopie
+async function fbNeu() {
+  if (!confirm("Neues Feedback starten?\n\nDeine bisherigen Antworten werden gelöscht und du fängst von vorn an.")) return;
+  try { await api("feedback_neu"); melde("🆕 Alte Antworten gelöscht – viel Spaß beim neuen Feedback!"); await fbLaden(); } catch (e) { melde(e.message, true); }
+}
+async function fbRundeNeu(anzahl) {
+  if (!confirm(`Neue Feedback-Runde für alle starten?\n\nAlle ${anzahl} bisherigen Antworten werden gelöscht (eine Sicherungskopie bleibt im Archiv). Die Auswertung beginnt wieder bei null.`)) return;
+  try { const r = await api("feedback_runde_neu"); melde(`🆕 Neue Runde gestartet – ${r.geloescht} alte Antworten gelöscht`); await fbAuswertung(); } catch (e) { melde(e.message, true); }
+}
 async function fbAuswertung() {
   const el = $("feedbackInhalt"); el.innerHTML = '<div class="karte hinweis">Auswertung wird geladen …</div>';
   try {
@@ -3020,7 +3029,7 @@ async function fbAuswertung() {
     const balken = (e, max) => `<div class="balken"><div class="kopf"><span>${esc(e.option)}</span><span>${e.anzahl}</span></div><div class="spur"><i style="width:${max ? Math.round(e.anzahl / max * 100) : 0}%"></i></div></div>`;
     el.innerHTML = `<div class="karte"><h3 style="margin-top:0">📊 Auswertung</h3>
         <p style="margin:0"><b>${r.antworten}</b> von ${r.mitglieder} Mitgliedern haben geantwortet.</p>
-        <button class="knopf" style="margin-top:10px" onclick="fbLaden()">‹ Zurück zum Fragebogen</button></div>`
+        <div class="knoepfe" style="margin-top:10px"><button class="knopf" onclick="fbLaden()">‹ Zurück zum Fragebogen</button><button class="knopf" onclick="fbRundeNeu(${r.antworten})">🆕 Neue Runde für alle starten</button></div></div>`
       + r.fragen.map((f) => { const max = f.beantwortet || 1;
         const liste = f.art === "mehr" ? [...f.ergebnis].sort((a, b) => b.anzahl - a.anzahl) : f.ergebnis;
         return `<div class="karte"><b>${esc(f.t)}</b><div class="hinweis" style="font-size:.85rem">${f.beantwortet} Antwort${f.beantwortet === 1 ? "" : "en"}</div>${liste.map((e) => balken(e, max)).join("")}</div>`; }).join("")

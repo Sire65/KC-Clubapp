@@ -13,14 +13,14 @@
 //           KC-CLUB-COMMUNICATOR-STATUS (0.17.0), KC-CLUB-FEEDBACK (0.18.0),
 //           KC-CLUB-KACHELN (0.19.0), KC-CLUB-ZUGANG-SELBST (0.21.0),
 //           KC-CLUB-GRUPPEN, KC-CLUB-ZUSTELLWAHL (0.23.0)
-//           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0), KC-CLUB-KACHELN-ZIEHEN (0.26.0)
+//           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0), KC-CLUB-KACHELN-ZIEHEN (0.26.0), KC-CLUB-FEEDBACK-NEU (0.27.1)
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.26.0";
+const SERVER_VERSION = "0.27.1";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -259,6 +259,20 @@ function feedbackPruefen(roh: unknown) {
     else if (Array.isArray(v)) { const l = [...new Set(v.filter((x) => typeof x === "string" && f.optionen.includes(x)))] as string[]; if (l.length) aus[f.id] = l; }
   }
   return aus;
+}
+// Antworten ins Archiv kopieren und erst dann löschen; schlägt die Kopie fehl, wird nichts gelöscht
+async function feedbackArchivieren(ich: Ich, grund: string, nurPerson: string | null) {
+  let q = db.from("kc_club_feedback").select("id,person_id,fragebogen,antworten,idee,mitteilung,anonym,erstellt_am,geaendert_am").eq("fragebogen", FEEDBACK_BOGEN);
+  if (nurPerson) q = q.eq("person_id", nurPerson);
+  const { data, error } = await q;
+  if (error) throw new Fehler("Feedback konnte nicht gelesen werden.", 500);
+  const rows = data ?? [];
+  if (!rows.length) return 0;
+  const { error: fa } = await db.from("kc_club_feedback_archiv").insert(rows.map((r: any) => ({ ...r, archiviert_von: ich.person_id, grund })));
+  if (fa) throw new Fehler("Sicherungskopie fehlgeschlagen – es wurde nichts gelöscht.", 500);
+  const { error: fd } = await db.from("kc_club_feedback").delete().in("id", rows.map((r: any) => r.id));
+  if (fd) throw new Fehler("Löschen fehlgeschlagen (Sicherungskopie ist vorhanden).", 500);
+  return rows.length;
 }
 // ----- KC-CLUB-KACHELN: persönliche Einstellungen der Oberfläche (je Mitglied, geräteübergreifend) -----
 // Erlaubte Schlüssel mit Prüfung; neue Einstellungen (z. B. Farben) kommen hier dazu.
@@ -2265,6 +2279,20 @@ Köcheclub Werne`,
         await protokoll(ich.person_id, "feedback_gesendet", { bogen: FEEDBACK_BOGEN, fragen: Object.keys(antworten).length, text: !!(idee || mitteilung) });
         return json({ ok: true });
       }
+      // KC-CLUB-FEEDBACK-NEU (0.27.1): alte Antworten löschen – vorher Kopie ins Archiv (Recovery-Punkt)
+      case "feedback_neu": {
+        const n = await feedbackArchivieren(ich, "neu_ausfuellen", ich.person_id);
+        await protokoll(ich.person_id, "feedback_neu", { archiviert: n });
+        return json({ ok: true, geloescht: n });
+      }
+
+      case "feedback_runde_neu": {
+        nurAdmin(ich);
+        const n = await feedbackArchivieren(ich, "neue_runde", null);
+        await protokoll(ich.person_id, "feedback_runde_neu", { archiviert: n, bogen: FEEDBACK_BOGEN });
+        return json({ ok: true, geloescht: n });
+      }
+
       case "feedback_auswertung": {
         nurAdmin(ich);
         const [{ data }, mitglieder] = await Promise.all([

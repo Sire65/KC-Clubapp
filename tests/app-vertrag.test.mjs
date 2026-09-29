@@ -603,4 +603,16 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/\.ktag \{ height: 44px;/.test(html) && /min-height: 100px/.test(html), "Kalender/Kacheln nicht verkleinert");
 }
 
+// 47. 0.27.1: Feedback neu starten (eigene Antworten) / neue Runde (nur Admin) – immer erst Kopie ins Archiv, dann löschen
+{
+  for (const a of ["feedback_neu", "feedback_runde_neu"]) assert.ok(aktionen.has(a) && aufrufe.has(a), `Feedback-Aktion ${a} fehlt`);
+  const rn = server.slice(server.indexOf('case "feedback_runde_neu"'), server.indexOf('case "feedback_auswertung"'));
+  assert.ok(/nurAdmin\(ich\)/.test(rn), "neue Runde nicht auf Admin beschränkt");
+  const fa = server.slice(server.indexOf("async function feedbackArchivieren"), server.indexOf("async function feedbackArchivieren") + 1400);
+  assert.ok(fa.indexOf('from("kc_club_feedback_archiv").insert') > 0 && fa.indexOf('from("kc_club_feedback_archiv").insert') < fa.indexOf(".delete()") && /if \(fa\) throw/.test(fa), "Löschen ohne vorherige Sicherungskopie");
+  const neu = server.slice(server.indexOf('case "feedback_neu"'), server.indexOf('case "feedback_runde_neu"'));
+  assert.ok(/feedbackArchivieren\(ich, "neu_ausfuellen", ich\.person_id\)/.test(neu), "Mitglied könnte fremdes Feedback löschen");
+  assert.ok(/onclick="fbNeu\(\)"/.test(html) && /fbRundeNeu\(/.test(html) && /confirm\(/.test(html.slice(html.indexOf("async function fbNeu"), html.indexOf("async function fbAuswertung"))), "Knöpfe/Rückfrage fehlen");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
