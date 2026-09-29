@@ -511,4 +511,10 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/: "verknuepfung";/.test(html) && /\["var\(--grau\)", "❔ Nicht erkennbar/.test(html), "unbekannt/Verknüpfung wird als OK angezeigt");
 }
 
+// 39. 0.20.1: persönlichen Link nur in die Zwischenablage (nie an den Server/Protokoll)
+{
+  const f = html.slice(html.indexOf("async function zugangKopieren"), html.indexOf("const APP_URL_CLUB"));
+  assert.ok(/navigator\.clipboard\.writeText\(link\)/.test(f) && !/daten: \{[^}]*link/.test(f) && !/KEY[^;]*api\(/.test(f), "Zugangslink würde übertragen");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

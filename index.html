@@ -528,6 +528,8 @@
       <summary>📲 App-Installation</summary>
       <div id="installStand"></div>
       <button id="installKnopf" class="knopf haupt versteckt" onclick="installieren()">📲 Jetzt als App installieren</button>
+      <button id="zugangKopieren" class="knopf haupt versteckt" onclick="zugangKopieren()">📋 Meinen persönlichen Link kopieren</button>
+      <p class="hinweis versteckt" id="zugangHinweis" style="margin:4px 0 10px">Zum Umziehen in Chrome: Link kopieren → Chrome öffnen → oben in die Adresszeile tippen, lange drücken → <b>Einfügen</b> → Enter. Dann dort wie unten installieren.<br>⚠️ Den Link <b>nicht weitergeben</b> – er ist dein persönlicher Zugang.</p>
       <div class="hinweis" id="installHinweis" style="line-height:1.55"><b>So wird die App richtig installiert (Android):</b><br>
         1. Das normale <b>Chrome</b> öffnen und oben <b>sire65.github.io/KC-Clubapp</b> eingeben.<br>
         2. Oben rechts <b>⋮</b> → <b>„App installieren“</b>. Steht dort nur „Zum Startbildschirm hinzufügen“: antippen und im Fenster <b>„Installieren“</b> wählen – <u>nicht</u> „Verknüpfung erstellen“.<br>
@@ -610,7 +612,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.20.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.20.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2840,8 +2842,18 @@ window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); inst
 window.addEventListener("appinstalled", () => { installEreignis = null; schonInstalliert = true; localStorage.setItem("kc_club_als_app", "1"); installStandZeigen(); melde("✅ Köcheclub ist als App installiert – bitte ab jetzt über das neue Symbol öffnen und das alte löschen."); });
 async function installieren() { if (!installEreignis) return; installEreignis.prompt(); await installEreignis.userChoice.catch(() => {}); installEreignis = null; $("installKnopf").classList.add("versteckt"); }
 (async () => { try { if (START_ART === "browser" && navigator.getInstalledRelatedApps) { schonInstalliert = (await navigator.getInstalledRelatedApps()).length > 0; installStandZeigen(); } } catch {} })();
+// Persönlichen Link kopieren (bleibt auf dem Handy – nur in die Zwischenablage), damit die App in Chrome geöffnet/installiert werden kann
+async function zugangKopieren() {
+  const link = APP_URL_CLUB + "?k=" + KEY;
+  try { await navigator.clipboard.writeText(link); melde("📋 Link kopiert – jetzt Chrome öffnen, oben lange drücken → Einfügen"); }
+  catch { prompt("Diesen Link kopieren (nicht weitergeben):", link); }
+  api("diagnose", { art: "start", daten: { zugang_kopiert: true, start: START_ART } }).catch(() => {});
+}
+const APP_URL_CLUB = location.origin + location.pathname.replace(/[^/]*$/, "");
 function installStandZeigen() {
   const el = $("installStand"); if (!el) return;
+  const umzug = START_ART !== "app" && !!KEY;
+  $("zugangKopieren").classList.toggle("versteckt", !umzug); $("zugangHinweis").classList.toggle("versteckt", !umzug);
   const [farbe, text] = START_ART === "app" ? ["var(--gruen)", "✅ Die App ist richtig installiert."]
     : START_ART === "verknuepfung" ? ["#b36b00", "⚠️ Die App ist nur als <b>Verknüpfung</b> angelegt. Dadurch können WhatsApp, Karten und die Galerie auf manchen Handys nicht aufgehen. Bitte wie unten beschrieben richtig installieren."]
     : START_ART === "browser" ? (schonInstalliert ? ["var(--gruen)", "✅ Die App ist installiert – bitte über das Köcheclub-Symbol öffnen."] : ["#b36b00", "ℹ️ Du bist gerade im Browser. " + (installEreignis ? "Tippe auf „Jetzt als App installieren“." : "Installiere die App wie unten beschrieben.")])
