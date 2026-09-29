@@ -10,14 +10,14 @@
 //           KC-CLUB-PROTOKOLLE (0.9.0), KC-CLUB-AUFGABEN (0.9.0), KC-CLUB-AKTIONEN (0.10.0), KC-CLUB-LOESCHEN (0.11.0),
 //           KC-CLUB-KONTAKT (0.13.0), KC-CLUB-TERMINFINDUNG, KC-CLUB-NACHFASSEN, KC-CLUB-MITFAHREN, KC-CLUB-NOTFALL, KC-CLUB-KALENDERABO (0.14.0),
 //           KC-CLUB-FOTOALBUM (0.15.0), KC-CLUB-VERBINDUNG (0.16.0),
-//           KC-CLUB-COMMUNICATOR-STATUS (0.17.0)
+//           KC-CLUB-COMMUNICATOR-STATUS (0.17.0), KC-CLUB-FEEDBACK (0.18.0)
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.17.3";
+const SERVER_VERSION = "0.18.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -195,6 +195,38 @@ const fotoDatum = (v: unknown) => { const d = String(v || ""); if (!/^\d{4}-\d{2
 // ---------- Verbindung & Wartung (KC-CLUB-VERBINDUNG) ----------
 // Wartungsmodus steht in der zentralen Programm-Registry (kc_core_app_registry, Eintrag KC_CLUBAPP).
 const APP_ID = "KC_CLUBAPP";
+
+// ----- KC-CLUB-FEEDBACK: Fragebogen (eine Stelle; neue Fragen → neue Bogen-Kennung, alte Antworten bleiben auswertbar) -----
+const FEEDBACK_BOGEN = "2026-1";
+type FbFrage = { id: string; schritt: 1 | 2; t: string; art: "eins" | "mehr"; optionen: string[] };
+const FEEDBACK_FRAGEN: FbFrage[] = [
+  { id: "gefallen", schritt: 1, art: "eins", t: "Gefällt dir die App?", optionen: ["👍 Ja", "🤏 Teils", "👎 Nein"] },
+  { id: "bedienung", schritt: 1, art: "eins", t: "Findest du sie bedienfreundlich?", optionen: ["Ja, einfach", "Geht so", "Nein, schwierig"] },
+  { id: "uebersicht", schritt: 1, art: "eins", t: "Ist sie übersichtlich?", optionen: ["Ja", "Geht so", "Nein, zu voll"] },
+  { id: "schrift", schritt: 1, art: "eins", t: "Ist die Schrift gut lesbar?", optionen: ["Ja", "Etwas zu klein", "Viel zu klein"] },
+  { id: "farben", schritt: 1, art: "eins", t: "Gefallen dir die Farben?", optionen: ["Ja", "Geht so", "Nein"] },
+  { id: "tempo", schritt: 1, art: "eins", t: "Ist die App schnell genug?", optionen: ["Ja", "Manchmal langsam", "Oft langsam"] },
+  { id: "nutzung", schritt: 1, art: "eins", t: "Wie oft nutzt du die App?", optionen: ["Täglich", "Mehrmals pro Woche", "Selten"] },
+  { id: "genutzt", schritt: 1, art: "mehr", t: "Was nutzt du am meisten? (mehrere möglich)",
+    optionen: ["📅 Termine", "💬 Nachrichten", "👥 Mitglieder", "🗳️ Vorschläge", "📄 Protokolle", "🗓️ Dienstpläne", "🧳 Aktionen", "📷 Fotoalbum"] },
+  { id: "probleme", schritt: 1, art: "mehr", t: "Hattest du schon Probleme? (mehrere möglich)",
+    optionen: ["✅ Keine Probleme", "🔑 Anmeldung / Link", "🔔 Benachrichtigungen kommen nicht", "💬 WhatsApp / Route öffnen", "📷 Fotos hochladen", "⏳ App lädt nicht / hängt", "🔍 Etwas nicht gefunden"] },
+  { id: "wuensche", schritt: 2, art: "mehr", t: "Welche Funktionen wünschst du dir noch? (mehrere möglich)",
+    optionen: ["🔀 Knöpfe/Kacheln selbst anordnen", "🎨 Farben selbst einstellen (auch dunkel)", "🔠 Größere Schrift & Knöpfe", "📆 Monatskalender-Ansicht",
+      "🍲 Rezepte-Sammlung vom Club", "🛒 Mitbring-/Einkaufsliste für Treffen", "📂 Dokumente (Satzung, Formulare)", "💶 Beiträge / Kasse einsehen",
+      "🔁 Dienste untereinander tauschen", "👥 Gruppen-Chats (z. B. Vorstand, Küche)", "🎤 Nachrichten per Sprache", "🖼️ Fotos als Diashow",
+      "🎂 Geburtstagsliste", "📴 Auch ohne Internet nutzbar", "🎓 Schulungsunterlagen"] },
+];
+const FB_TEXT_MAX = 2000;
+function feedbackPruefen(roh: unknown) {
+  const a = (roh && typeof roh === "object" ? roh : {}) as Record<string, unknown>, aus: Record<string, string | string[]> = {};
+  for (const f of FEEDBACK_FRAGEN) {
+    const v = a[f.id];
+    if (f.art === "eins") { if (typeof v === "string" && f.optionen.includes(v)) aus[f.id] = v; }
+    else if (Array.isArray(v)) { const l = [...new Set(v.filter((x) => typeof x === "string" && f.optionen.includes(x)))] as string[]; if (l.length) aus[f.id] = l; }
+  }
+  return aus;
+}
 const MAX_TESTDATEN = 2 * 1024 * 1024; // Verbindungstest: höchstens 2 MB je Richtung
 async function wartungLesen() {
   const { data } = await db.from("kc_core_app_registry").select("wartung,wartung_hinweis,wartung_seit").eq("app_id", APP_ID).maybeSingle();
@@ -1984,6 +2016,37 @@ Köcheclub Werne`,
         if (error) throw new Fehler("Wartungsmodus konnte nicht gespeichert werden.", 500);
         await protokoll(ich.person_id, an ? "wartung_an" : "wartung_aus", { hinweis: p.hinweis ?? null });
         return json({ ok: true, wartung: await wartungLesen() });
+      }
+
+      // ----- KC-CLUB-FEEDBACK -----
+      case "feedback_meins": {
+        const { data } = await db.from("kc_club_feedback").select("antworten,idee,mitteilung,anonym,geaendert_am").eq("person_id", ich.person_id).eq("fragebogen", FEEDBACK_BOGEN).maybeSingle();
+        return json({ bogen: FEEDBACK_BOGEN, fragen: FEEDBACK_FRAGEN, antwort: data ?? null });
+      }
+      case "feedback_senden": {
+        const antworten = feedbackPruefen(p.antworten), idee = txt(p.idee, FB_TEXT_MAX), mitteilung = txt(p.mitteilung, FB_TEXT_MAX);
+        if (!Object.keys(antworten).length && !idee && !mitteilung) throw new Fehler("Bitte beantworte mindestens eine Frage oder schreib etwas.");
+        const { error } = await db.from("kc_club_feedback").upsert({ person_id: ich.person_id, fragebogen: FEEDBACK_BOGEN, antworten, idee: idee || null, mitteilung: mitteilung || null,
+          anonym: !!p.anonym, geaendert_am: jetzt() }, { onConflict: "person_id,fragebogen" });
+        if (error) throw new Fehler("Feedback konnte nicht gespeichert werden.", 500);
+        await protokoll(ich.person_id, "feedback_gesendet", { bogen: FEEDBACK_BOGEN, fragen: Object.keys(antworten).length, text: !!(idee || mitteilung) });
+        return json({ ok: true });
+      }
+      case "feedback_auswertung": {
+        nurAdmin(ich);
+        const [{ data }, mitglieder] = await Promise.all([
+          db.from("kc_club_feedback").select("person_id,antworten,idee,mitteilung,anonym,geaendert_am").eq("fragebogen", FEEDBACK_BOGEN).not("person_id", "like", "KC-P-TEST%").order("geaendert_am", { ascending: false }),
+          aktiveMitglieder(),
+        ]);
+        const liste = data ?? [], leute = await personen(liste.filter((r: any) => !r.anonym).map((r: any) => r.person_id));
+        const fragen = FEEDBACK_FRAGEN.map((f) => {
+          const n = new Map(f.optionen.map((o) => [o, 0])); let beantwortet = 0;
+          for (const r of liste) { const v = (r as any).antworten?.[f.id]; const l = Array.isArray(v) ? v : v ? [v] : []; if (l.length) beantwortet++; for (const o of l) if (n.has(o)) n.set(o, n.get(o)! + 1); }
+          return { id: f.id, t: f.t, art: f.art, beantwortet, ergebnis: f.optionen.map((o) => ({ option: o, anzahl: n.get(o) })) };
+        });
+        // Freitexte: Name nur, wenn nicht „anonym“ gewählt
+        const texte = liste.filter((r: any) => r.idee || r.mitteilung).map((r: any) => ({ wer: r.anonym ? null : leute.get(r.person_id)?.display_name ?? r.person_id, zeit: r.geaendert_am, idee: r.idee, mitteilung: r.mitteilung }));
+        return json({ bogen: FEEDBACK_BOGEN, antworten: liste.length, mitglieder: mitglieder.length, fragen, texte });
       }
 
       // ----- Push -----

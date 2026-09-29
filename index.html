@@ -159,6 +159,16 @@
   .wahl { display: grid; gap: 8px; margin-top: 12px; }
   .wahl button { border: 2px solid var(--linie); background: var(--karte); border-radius: 14px; padding: 13px 14px; font-weight: 800; cursor: pointer; text-align: left; }
   .wahl button.an { background: var(--rot); border-color: var(--rot); color: #fff; }
+  /* Feedback (KC-CLUB-FEEDBACK) */
+  .fbfrage { margin-top: 14px; }
+  .fbfrage > b { display: block; margin-bottom: 8px; }
+  .fbopt { display: flex; flex-wrap: wrap; gap: 8px; }
+  .fbopt button { border: 2px solid var(--linie); background: var(--karte); border-radius: 22px; padding: 10px 14px; font-weight: 800; cursor: pointer; font-size: .95rem; text-align: left; }
+  .fbopt button.an { background: var(--rot); border-color: var(--rot); color: #fff; }
+  .fbschritte { display: flex; gap: 6px; margin: 4px 0 2px; }
+  .fbschritte i { flex: 1; height: 6px; border-radius: 4px; background: var(--karte2); }
+  .fbschritte i.an { background: var(--rot); }
+  .fbtext { white-space: pre-wrap; border-top: 1px solid var(--linie); padding-top: 8px; margin-top: 8px; }
   .balken { margin-top: 8px; }
   .balken .kopf { display: flex; justify-content: space-between; font-weight: 700; font-size: .92rem; }
   .balken .spur { height: 10px; border-radius: 6px; background: var(--karte2); overflow: hidden; margin-top: 3px; }
@@ -377,6 +387,12 @@
     <div id="fotoListe"><div class="karte hinweis">Wird geladen …</div></div>
   </section>
 
+  <!-- FEEDBACK (KC-CLUB-FEEDBACK) -->
+  <section id="v-feedback" class="versteckt">
+    <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>💭 Feedback</h2><button class="knopf klein versteckt" id="fbAuswertungKnopf" onclick="fbAuswertung()">📊 Auswertung</button></div>
+    <div id="feedbackInhalt"><div class="karte hinweis">Wird geladen …</div></div>
+  </section>
+
   <!-- MITGLIED-DETAILS (KC-CLUB-KONTAKT) -->
   <section id="v-mitglied" class="versteckt">
     <div class="kopf2"><button class="zurueck" onclick="zeige('mitglieder')">‹</button><h2>👤 Mitglied</h2></div>
@@ -559,7 +575,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.17.8"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.18.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -787,6 +803,7 @@ const KACHELN = {
     { sym: "🗓️", t: "Dienstpläne", u: "Meine & freigegebene Zeiten", v: "dienste" },
     { sym: "🧳", t: "Aktionen", u: "Ausflüge & Reisen", v: "aktionen" },
     { sym: "📷", t: "Fotoalbum", u: "Nach Thema & Datum", aktion: "faFilter={};faPapierkorb=false;zeige('fotos')" },
+    { sym: "💭", t: "Feedback", u: "Deine Meinung zur App", v: "feedback" },
   ],
   mein: [
     { sym: "🟢", t: "Mein Status", u: "verfügbar, Urlaub …", aktion: "statusBlatt()" },
@@ -956,7 +973,7 @@ function zeige(v, ausHistorie) {
   const vorher = aktuelleAnsicht;
   aktuelleAnsicht = v;
   if (vorher === "protokoll" && v !== "protokoll" && prTimer) prSpeichernJetzt(false).catch(() => {}); // ungespeicherte Eingaben sichern
-  ["start", "termine", "vorschlaege", "aktionen", "aktion", "fotos", "mitglied", "protokolle", "protokoll", "dienste", "nachrichten", "chat", "neu", "mitglieder", "einstellungen"].forEach((x) => $("v-" + x).classList.toggle("versteckt", x !== v));
+  ["start", "termine", "vorschlaege", "aktionen", "aktion", "fotos", "feedback", "mitglied", "protokolle", "protokoll", "dienste", "nachrichten", "chat", "neu", "mitglieder", "einstellungen"].forEach((x) => $("v-" + x).classList.toggle("versteckt", x !== v));
   document.querySelectorAll("#fuss button").forEach((b) => b.classList.toggle("an", b.dataset.v === v || (v === "chat" && b.dataset.v === "nachrichten") || (v === "neu" && b.dataset.v === "nachrichten")));
   $("eingabe").classList.toggle("versteckt", v !== "chat");
   clearInterval(chatTimer);
@@ -966,6 +983,7 @@ function zeige(v, ausHistorie) {
   if (v === "protokolle") protokolleLaden();
   if (v === "aktionen") aktionenLaden();
   if (v === "fotos") fotosLaden();
+  if (v === "feedback") fbLaden();
   if (v === "dienste") dienstLaden();
   if (v === "nachrichten") unterhLaden();
   if (v === "mitglieder") mitgliederLaden();
@@ -2247,6 +2265,82 @@ async function fotoLoeschen() {
   document.addEventListener("touchend", (e) => { if (x0 === null) return; const dx = e.changedTouches[0].clientX - x0; x0 = null; if (Math.abs(dx) > 50) fotoBlaettern(dx < 0 ? 1 : -1); }, { passive: true });
   document.addEventListener("keydown", (e) => { if ($("fotoBetrachter").classList.contains("versteckt")) return; if (e.key === "ArrowLeft") fotoBlaettern(-1); if (e.key === "ArrowRight") fotoBlaettern(1); if (e.key === "Escape") fotoSchliessen(); });
 })();
+
+// ---------- Feedback (KC-CLUB-FEEDBACK) ----------
+// Fragebogen kommt vom Server (eine Stelle). 3 Schritte: Bewertung zum Antippen → Wünsche → Freitext & Absenden.
+let FB = null;
+async function fbLaden() {
+  $("fbAuswertungKnopf").classList.toggle("versteckt", !ICH?.admin);
+  $("feedbackInhalt").innerHTML = '<div class="karte hinweis">Wird geladen …</div>';
+  try {
+    const r = await api("feedback_meins");
+    FB = { fragen: r.fragen, a: structuredClone(r.antwort?.antworten || {}), idee: r.antwort?.idee || "", mitteilung: r.antwort?.mitteilung || "", anonym: !!r.antwort?.anonym,
+      gesendet: r.antwort?.geaendert_am || null, schritt: r.antwort ? 0 : 1 };
+    fbZeigen();
+  } catch (e) { $("feedbackInhalt").innerHTML = `<div class="karte hinweis">${esc(e.message)}</div>`; }
+}
+function fbTexteMerken() { if (!FB || FB.schritt !== 3) return; FB.idee = $("fbIdee").value; FB.mitteilung = $("fbMitteilung").value; FB.anonym = $("fbAnonym").checked; }
+function fbZeigen() {
+  const el = $("feedbackInhalt");
+  if (FB.schritt === 0) { // schon abgeschickt → Dank + ändern
+    el.innerHTML = `<div class="karte"><h3 style="margin-top:0">🙏 Danke für dein Feedback!</h3>
+      <p class="hinweis">Abgeschickt am ${esc(wann(FB.gesendet))}. Du kannst deine Antworten jederzeit ändern.</p>
+      <button class="knopf haupt" onclick="FB.schritt=1;fbZeigen()">✏️ Antworten ändern</button></div>`;
+    return;
+  }
+  const schritte = `<div class="fbschritte">${[1, 2, 3].map((i) => `<i class="${i <= FB.schritt ? "an" : ""}"></i>`).join("")}</div>
+    <p class="hinweis" style="margin:4px 0 0">Schritt ${FB.schritt} von 3 · alles freiwillig, einfach antippen</p>`;
+  const frage = (f) => { const v = FB.a[f.id], an = (o) => (Array.isArray(v) ? v.includes(o) : v === o);
+    return `<div class="fbfrage"><b>${esc(f.t)}</b><div class="fbopt">${f.optionen.map((o, i) => `<button class="${an(o) ? "an" : ""}" onclick="fbWahl('${f.id}',${i})">${esc(o)}</button>`).join("")}</div></div>`; };
+  let inhalt = "";
+  if (FB.schritt === 1) inhalt = `<h3 style="margin:0">⭐ Wie findest du die App?</h3>${FB.fragen.filter((f) => f.schritt === 1).map(frage).join("")}`;
+  if (FB.schritt === 2) inhalt = `<h3 style="margin:0">💡 Was wünschst du dir?</h3>${FB.fragen.filter((f) => f.schritt === 2).map(frage).join("")}
+    <label class="feld" style="margin-top:14px">Eigene Idee für eine Funktion (freiwillig)<textarea id="fbIdeeS2" rows="3" maxlength="2000" placeholder="z. B. „Ich hätte gern …“">${esc(FB.idee)}</textarea></label>`;
+  if (FB.schritt === 3) inhalt = `<h3 style="margin:0">✍️ Was möchtest du mir noch mitteilen?</h3>
+    <label class="feld" style="margin-top:10px">Deine Nachricht (freiwillig)<textarea id="fbMitteilung" rows="5" maxlength="2000" placeholder="Lob, Kritik, Ideen – alles ist willkommen">${esc(FB.mitteilung)}</textarea></label>
+    <input type="hidden" id="fbIdee" value="${esc(FB.idee)}">
+    <label style="display:flex;gap:10px;align-items:center;margin-top:12px;font-weight:700"><input type="checkbox" id="fbAnonym" style="width:24px;height:24px;accent-color:var(--rot)" ${FB.anonym ? "checked" : ""}> Ohne meinen Namen auswerten</label>`;
+  const knoepfe = `<div style="display:grid;grid-template-columns:1fr 2fr;gap:8px;margin-top:16px">
+    ${FB.schritt > 1 ? `<button class="knopf" onclick="fbSchritt(-1)">‹ Zurück</button>` : `<span></span>`}
+    ${FB.schritt < 3 ? `<button class="knopf haupt" onclick="fbSchritt(1)">Weiter ›</button>` : `<button class="knopf haupt" id="fbSenden" onclick="fbSenden()">📨 Absenden</button>`}</div>`;
+  el.innerHTML = `<div class="karte">${schritte}</div><div class="karte">${inhalt}${knoepfe}</div>`;
+}
+function fbWahl(id, i) {
+  const f = FB.fragen.find((x) => x.id === id), o = f.optionen[i];
+  if (FB.schritt === 2) FB.idee = $("fbIdeeS2")?.value ?? FB.idee;
+  if (f.art === "eins") FB.a[id] = FB.a[id] === o ? undefined : o; // nochmal tippen = abwählen
+  else { const l = new Set(FB.a[id] || []); l.has(o) ? l.delete(o) : l.add(o); FB.a[id] = [...l]; }
+  const y = scrollY; fbZeigen(); scrollTo(0, y);
+}
+function fbSchritt(d) {
+  if (FB.schritt === 2) FB.idee = $("fbIdeeS2")?.value ?? FB.idee;
+  fbTexteMerken(); FB.schritt = Math.min(3, Math.max(1, FB.schritt + d)); fbZeigen(); scrollTo(0, 0);
+}
+async function fbSenden() {
+  fbTexteMerken();
+  $("fbSenden").disabled = true;
+  try {
+    await api("feedback_senden", { antworten: FB.a, idee: FB.idee, mitteilung: FB.mitteilung, anonym: FB.anonym });
+    FB.gesendet = new Date().toISOString(); FB.schritt = 0; fbZeigen(); scrollTo(0, 0);
+    melde("🙏 Danke! Dein Feedback ist angekommen.");
+  } catch (e) { $("fbSenden").disabled = false; melde(e.message, true); }
+}
+async function fbAuswertung() {
+  const el = $("feedbackInhalt"); el.innerHTML = '<div class="karte hinweis">Auswertung wird geladen …</div>';
+  try {
+    const r = await api("feedback_auswertung");
+    const balken = (e, max) => `<div class="balken"><div class="kopf"><span>${esc(e.option)}</span><span>${e.anzahl}</span></div><div class="spur"><i style="width:${max ? Math.round(e.anzahl / max * 100) : 0}%"></i></div></div>`;
+    el.innerHTML = `<div class="karte"><h3 style="margin-top:0">📊 Auswertung</h3>
+        <p style="margin:0"><b>${r.antworten}</b> von ${r.mitglieder} Mitgliedern haben geantwortet.</p>
+        <button class="knopf" style="margin-top:10px" onclick="fbLaden()">‹ Zurück zum Fragebogen</button></div>`
+      + r.fragen.map((f) => { const max = f.beantwortet || 1;
+        const liste = f.art === "mehr" ? [...f.ergebnis].sort((a, b) => b.anzahl - a.anzahl) : f.ergebnis;
+        return `<div class="karte"><b>${esc(f.t)}</b><div class="hinweis" style="font-size:.85rem">${f.beantwortet} Antwort${f.beantwortet === 1 ? "" : "en"}</div>${liste.map((e) => balken(e, max)).join("")}</div>`; }).join("")
+      + `<div class="karte"><b>✍️ Ideen & Mitteilungen (${r.texte.length})</b>${r.texte.length ? r.texte.map((t) => `<div class="fbtext"><div class="hinweis" style="font-size:.85rem">${esc(t.wer || "ohne Namen")} · ${esc(wann(t.zeit))}</div>
+          ${t.idee ? `<div>💡 ${esc(t.idee)}</div>` : ""}${t.mitteilung ? `<div>✍️ ${esc(t.mitteilung)}</div>` : ""}</div>`).join("") : '<p class="hinweis">Noch keine.</p>'}</div>`;
+    scrollTo(0, 0);
+  } catch (e) { el.innerHTML = `<div class="karte hinweis">${esc(e.message)}</div>`; }
+}
 
 // ---------- Mitglieder-Details (KC-CLUB-KONTAKT) ----------
 // Antippen in der Liste → Karte mit den Angaben, die das Mitglied freigegeben hat (Admin: alles), plus Knöpfe zum Anrufen usw.

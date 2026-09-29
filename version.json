@@ -1,10 +1,9 @@
 {
-  "version": "0.17.8",
+  "version": "0.18.0",
   "datum": "2026-09-29",
   "neu": [
-    "🗓️ Terminfindung: mehrere Termine zur Auswahl ankreuzen",
-    "❔ Erinnerung 3 Tage vorher, wer noch nicht zu- oder abgesagt hat",
-    "🚗 Mitfahrgelegenheiten bei Treffen und Aktionen",
-    "📲 Termine im Handy-Kalender · 🆘 Notfallkontakt"
+    "💭 Feedback: sag uns deine Meinung zur App – einfach antippen",
+    "💡 Wünsche für neue Funktionen auswählen",
+    "📋 WhatsApp: Nummer kopieren, falls sich WhatsApp nicht öffnet"
   ]
 }

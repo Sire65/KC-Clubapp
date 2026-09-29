@@ -452,4 +452,23 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.equal(waNr("0171 234567"), "+49171234567"); assert.equal(waNr("+49 (0)171 234567"), "+49171234567");
 }
 
+// 35. 0.18.0: Feedback-Kachel (Fragebogen vom Server, 3 Schritte, Auswertung nur Admin)
+{
+  assert.ok(/\{ sym: "💭", t: "Feedback", u: "Deine Meinung zur App", v: "feedback" \}/.test(html) && /id="v-feedback"/.test(html), "Feedback-Kachel fehlt");
+  assert.ok(/"fotos", "feedback", "mitglied"/.test(html) && /if \(v === "feedback"\) fbLaden\(\);/.test(html), "Feedback-Ansicht nicht eingebunden");
+  for (const a of ["feedback_meins", "feedback_senden", "feedback_auswertung"]) assert.ok(aktionen.has(a) && aufrufe.has(a), `Feedback-Aktion ${a} fehlt`);
+  const ausw = server.slice(server.indexOf('case "feedback_auswertung"'), server.indexOf('case "feedback_auswertung"') + 120);
+  assert.ok(/nurAdmin\(ich\)/.test(ausw), "Auswertung nicht auf Admin beschränkt");
+  assert.ok(/r\.anonym \? null/.test(server), "anonyme Antworten zeigen den Namen");
+  // Server nimmt nur Antworten aus dem Fragebogen an
+  // TypeScript-Anteile entfernen, dann Fragebogen + Prüfung wie im Server ausführen
+  const von = server.indexOf("const FEEDBACK_BOGEN"), bis = server.indexOf("\n}", server.indexOf("function feedbackPruefen")) + 2;
+  const js = server.slice(von, bis).replace(/type FbFrage = \{[^}]*\};/, "").replace(/: FbFrage\[\]/, "").replace("(roh: unknown)", "(roh)")
+    .replace(/ as Record<string, unknown>, aus: Record<string, string \| string\[\]> = \{\}/, ", aus = {}").replace(" as string[];", ";");
+  const fb = new Function(js + "return { FEEDBACK_FRAGEN, feedbackPruefen };")();
+  assert.ok(fb.FEEDBACK_FRAGEN.some((f) => f.schritt === 2 && f.optionen.some((o) => /anordnen/.test(o)) && f.optionen.some((o) => /Farben/.test(o))), "Wünsche Anordnen/Farben fehlen");
+  assert.deepEqual(fb.feedbackPruefen({ gefallen: "👍 Ja", bedienung: "Quatsch", wuensche: ["🎂 Geburtstagsliste", "X", "🎂 Geburtstagsliste"], fremd: "a" }),
+    { gefallen: "👍 Ja", wuensche: ["🎂 Geburtstagsliste"] });
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
