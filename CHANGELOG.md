@@ -1,5 +1,10 @@
 # Änderungen
 
+## 0.27.4 – 2026-09-29 (DEV)
+
+- KC-CLUB-INSTALLATION: Samsung-Handys – über den Samsung-Browser „Internet“ installierte App gilt als richtige App (keine falsche
+  „Verknüpfung“-Warnung, WhatsApp/Karten direkt). Installationsanleitung und Einladungstext um den Samsung-Weg ergänzt.
+
 ## 0.27.3 – 2026-09-29 (DEV)
 
 - Einladungstext beim 🔗 Link (Mitglieder, nur Admin): Installationsanleitung wie unter ⚙️ → App-Installation

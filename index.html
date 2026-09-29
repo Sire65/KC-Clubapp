@@ -631,6 +631,7 @@
         2. Oben rechts <b>⋮</b> → <b>„App installieren“</b>. Steht dort nur „Zum Startbildschirm hinzufügen“: antippen und im Fenster <b>„Installieren“</b> wählen – <u>nicht</u> „Verknüpfung erstellen“.<br>
         3. Fragt das Handy, ob Chrome etwas auf dem Startbildschirm anlegen darf: <b>„Zulassen“</b>.<br>
         4. Fertig, wenn „Köcheclub“ auch in der <b>App-Liste</b> des Handys steht. Danach das alte Symbol löschen (lange drücken → Entfernen) – deine Daten bleiben erhalten.<br>
+        <b>Samsung:</b> im Samsung-Browser „Internet“ unten ≡ → „Seite hinzufügen zu“ → „Startbildschirm“ – oder wie oben mit Chrome.<br>
         <b>iPhone:</b> in Safari Teilen □↑ → „Zum Home-Bildschirm“.<br>
         <span style="font-size:.85rem">Nur als richtige App klappen WhatsApp, Karten und „Teilen aus der Galerie → Köcheclub“ zuverlässig.</span></div>
     </details>
@@ -719,7 +720,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.27.3"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.27.4"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3284,7 +3285,7 @@ async function linkTeilen(pid) {
   try {
     const { link } = await api("link_erzeugen", { person_id: pid });
     // 0.27.3: Anleitung wie unter ⚙️ → App-Installation (richtige App statt Verknüpfung)
-    const text = `Hallo ${m.vorname}, hier ist dein persönlicher Link zur Köcheclub-App:\n${link}\n\nSo geht's (Android): Link in Chrome öffnen → oben rechts ⋮ → „App installieren“ (bzw. „Zum Startbildschirm hinzufügen“ → „Installieren“, nicht „Verknüpfung“). iPhone: in Safari Teilen □↑ → „Zum Home-Bildschirm“.\n\nBitte nicht weitergeben – der Link ist dein persönlicher Zugang. Viele Grüße, Hansi`;
+    const text = `Hallo ${m.vorname}, hier ist dein persönlicher Link zur Köcheclub-App:\n${link}\n\nSo geht's (Android): Link in Chrome öffnen → oben rechts ⋮ → „App installieren“ (bzw. „Zum Startbildschirm hinzufügen“ → „Installieren“, nicht „Verknüpfung“). Samsung-Browser „Internet“: unten ≡ → „Seite hinzufügen zu“ → „Startbildschirm“. iPhone: in Safari Teilen □↑ → „Zum Home-Bildschirm“.\n\nBitte nicht weitergeben – der Link ist dein persönlicher Zugang. Viele Grüße, Hansi`;
     if (confirm(`Link für ${m.name} erzeugt.\n\nOK = per WhatsApp schicken\nAbbrechen = in die Zwischenablage kopieren`)) window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank");
     else { try { await navigator.clipboard.writeText(text); melde("Text mit Link kopiert"); } catch { prompt("Zum Kopieren:", text); } }
     mitgliederLaden();
@@ -3349,7 +3350,9 @@ const START_ART = (() => {
     const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
     const webapk = /^android-app:\/\/org\.chromium\.webapk\./.test(document.referrer || "");
     if (webapk) localStorage.setItem("kc_club_als_app", "1");
-    const a = !standalone ? "browser" : webapk || !/Android/i.test(navigator.userAgent) || localStorage.getItem("kc_club_als_app") === "1" ? "app" : "verknuepfung";
+    // 0.27.4: Samsung Internet installiert Web-Apps ebenfalls als richtige App (nur ohne Chrome-Kennung im referrer)
+    const samsung = /SamsungBrowser/i.test(navigator.userAgent);
+    const a = !standalone ? "browser" : webapk || samsung || !/Android/i.test(navigator.userAgent) || localStorage.getItem("kc_club_als_app") === "1" ? "app" : "verknuepfung";
     sessionStorage.setItem("kc_club_start", a); return a;
   } catch { return "unbekannt"; }
 })();
