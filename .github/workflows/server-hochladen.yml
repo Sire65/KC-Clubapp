@@ -27,7 +27,7 @@ jobs:
       - run: node tests/app-vertrag.test.mjs
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: 2.118.0
       - name: Edge Function hochladen
         run: supabase functions deploy kc-club --project-ref "$PROJEKT" --no-verify-jwt --use-api
       - name: Prüfen, ob die neue Server-Version antwortet
