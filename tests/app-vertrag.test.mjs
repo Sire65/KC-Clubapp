@@ -436,6 +436,9 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 {
   assert.ok(/k: "teilen", t: "📤 Über „Teilen“ an WhatsApp/.test(html) && /k: "teilen", t: "📤 Adresse über „Teilen“ an Google Maps"/.test(html), "Teilen-Wege fehlen");
   assert.ok(/navigator\.share\(weg\.teilen\(\)\)/.test(html) && /id="karteTeilen"/.test(html), "Teilen wird nicht ausgelöst");
+  // 0.17.7: Ausweichwege in der App werden nicht als Standard gemerkt
+  const intern = html.slice(html.indexOf("if (weg.intern) {"), html.indexOf("if (weg.intern) {") + 200);
+  assert.ok(!/externMerken/.test(intern) && /if \(wege\.find\(\(w\) => w\.k === g\)\?\.intern\) g = null;/.test(html), "Ausweichweg wird als Standard gemerkt");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

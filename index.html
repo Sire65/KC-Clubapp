@@ -558,7 +558,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.17.6"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.17.7"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2305,10 +2305,12 @@ function externVersuch(art, weg, wege, wert) {
   // Messung für die Fehlersuche: wann die App in den Hintergrund geht / zurückkommt, ob sie den Fokus verliert
   const t0 = performance.now(), m = { art, weg: weg.k, versteckt_ms: null, zurueck_ms: null, blur_ms: null, pagehide: false, fehler: "",
     modus: matchMedia("(display-mode: standalone)").matches ? "standalone" : matchMedia("(display-mode: minimal-ui)").matches ? "minimal-ui" : "browser" };
-  if (weg.intern) { externMerken(art, weg.k); $("externBlatt").classList.add("versteckt"); weg.intern(); return; }
+  // Ausweichwege in der App (Club-Nachricht, Karte) werden nicht als Standard gemerkt – sonst käme WhatsApp nie mehr dran
+  if (weg.intern) { $("externBlatt").classList.add("versteckt"); api("diagnose", { art: "extern", daten: { ...m, erfolg: true } }).catch(() => {}); weg.intern(); return; }
   if (weg.teilen) {
     // Android-Teilen-Menü: das Handy fragt, welche App – wie beim Anrufen; gilt als gelungen, wenn eine App gewählt wurde
     $("externBlatt").classList.add("versteckt");
+    api("diagnose", { art: "extern", daten: { ...m, start: true } }).catch(() => {});
     navigator.share(weg.teilen()).then(() => { m.erfolg = true; externMerken(art, weg.k); }, (e) => { m.fehler = String(e?.name || e).slice(0, 60); if (e?.name !== "AbortError") externBlatt(art, wege, wert, weg.k); })
       .finally(() => api("diagnose", { art: "extern", daten: { ...m, erfolg: !!m.erfolg } }).catch(() => {}));
     return;
@@ -2336,7 +2338,8 @@ function externVersuch(art, weg, wege, wert) {
 }
 function extern(art, wert) {
   if (!wert) return;
-  const g = externGemerkt(art), wege = EXTERN_WEGE[art](wert).filter((w) => w.nur !== false);
+  const wege = EXTERN_WEGE[art](wert).filter((w) => w.nur !== false);
+  let g = externGemerkt(art); if (wege.find((w) => w.k === g)?.intern) g = null; // früher gemerkter Ausweichweg zählt nicht
   wege.sort((a, b) => (b.k === g) - (a.k === g));
   externVersuch(art, wege[0], wege, wert);
 }
