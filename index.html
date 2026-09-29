@@ -100,7 +100,17 @@
   .kopfrechts { position: relative; flex: none; }
   .gruss { position: absolute; right: 0; top: calc(100% + 6px); font-weight: 800; font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px; text-align: right; }
   .titel { font-size: 1.35rem; font-weight: 800; line-height: 1.15; }
+  /* KC-CLUB-STATUSFARBE (0.34.1): jeder Status hat seine Farbe (grün verfügbar, orange beschäftigt, blau Urlaub, lila krank, rot nicht erreichbar) */
+  .stmarke { display: inline-block; border-radius: 999px; padding: 2px 9px; font-weight: 800; border: 1.5px solid transparent; }
+  .st-verfuegbar { background: var(--gruenbg); color: var(--gruen); border-color: var(--gruen); }
+  .st-beschaeftigt { background: var(--gelbbg); color: var(--gelb); border-color: #e08a1e; }
+  .st-urlaub { background: var(--blaubg); color: var(--blau); border-color: var(--blau); }
+  .st-krank { background: var(--lilabg); color: var(--lila); border-color: var(--lila); }
+  .st-abwesend { background: var(--rotbg); color: #c62828; border-color: #c62828; }
+  .knopf.stmarke { padding: 8px 12px; }
   .statuschip { margin-top: 6px; border: none; border-radius: 12px; padding: 4px 10px; background: rgba(255,255,255,.18); color: #fff; font-weight: 700; font-size: .82rem; cursor: pointer; }
+  .statuschip.st-verfuegbar { background: var(--gruenbg); color: var(--gruen); } .statuschip.st-beschaeftigt { background: var(--gelbbg); color: var(--gelb); }
+  .statuschip.st-urlaub { background: var(--blaubg); color: var(--blau); } .statuschip.st-krank { background: var(--lilabg); color: var(--lila); } .statuschip.st-abwesend { background: var(--rotbg); color: #c62828; }
   .rund { width: 48px; height: 48px; border-radius: 50%; border: none; background: rgba(255,255,255,.16); color: #fff; font-size: 1.15rem; cursor: pointer; flex: none; }
   .rund:active { transform: scale(.94); }
   .knopfreihe { display: flex; gap: 8px; }
@@ -610,7 +620,7 @@
 
   <!-- MITGLIEDER -->
   <section id="v-mitglieder" class="versteckt">
-    <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>👥 Aktive Mitglieder</h2><button class="knopf klein" onclick="statusBlatt()">Mein Status</button></div>
+    <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>👥 Aktive Mitglieder</h2><button class="knopf klein stmarke st-verfuegbar" id="meinStatusKnopf" onclick="statusBlatt()">🟢 verfügbar ▾</button></div>
     <div class="karte" id="mitgliederListe"><span class="hinweis">Wird geladen …</span></div>
   </section>
 
@@ -800,7 +810,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.34.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.34.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -1507,6 +1517,14 @@ async function wartungUmschalten() {
 // ---------- Eigener Status ----------
 const STATUS = { verfuegbar: ["🟢", "verfügbar"], beschaeftigt: ["🟠", "beschäftigt"], urlaub: ["🏖️", "im Urlaub"], krank: ["🤒", "krank"], abwesend: ["🔴", "nicht erreichbar"] };
 const fDatumKurz = (d) => d ? d.split("-").reverse().slice(0, 2).join(".") + "." : "";
+const statusArt = (s) => (STATUS[s?.status] ? s.status : "verfuegbar");
+// kurze farbige Marke (ohne Hinweistext) für Knöpfe
+const statusKurz = (s) => { const x = STATUS[statusArt(s)]; return `${x[0]} ${x[1]}${s?.bis ? " bis " + fDatumKurz(s.bis) : ""}`; };
+function meinStatusZeigen() {
+  const s = INIT?.status, art = statusArt(s);
+  $("statusChip").textContent = statusText(s) + " ▾"; $("statusChip").className = "statuschip stmarke st-" + art;
+  if ($("meinStatusKnopf")) { $("meinStatusKnopf").textContent = statusKurz(s) + " ▾"; $("meinStatusKnopf").className = "knopf klein stmarke st-" + art; }
+}
 const statusText = (s) => { const x = STATUS[s?.status] || STATUS.verfuegbar; return `${x[0]} ${x[1]}${s?.bis ? " bis " + fDatumKurz(s.bis) : ""}${s?.hinweis ? " · " + s.hinweis : ""}`; };
 function statusBlatt() {
   const s = INIT?.status || {};
@@ -1521,7 +1539,7 @@ function statusBlatt2() {
   $("stExtra").classList.toggle("versteckt", statusWahl === "verfuegbar");
 }
 async function statusSpeichern() {
-  try { await api("status_setzen", { status: statusWahl, bis: $("stBis").value, hinweis: $("stHinweis").value }); $("statusBlatt").classList.add("versteckt"); melde("Status gespeichert"); MITGLIEDER = null; neuLaden(); }
+  try { await api("status_setzen", { status: statusWahl, bis: $("stBis").value, hinweis: $("stHinweis").value }); $("statusBlatt").classList.add("versteckt"); melde("Status gespeichert"); MITGLIEDER = null; await neuLaden(); if (aktuelleAnsicht === "mitglieder") mitgliederLaden(); }
   catch (e) { melde(e.message, true); }
 }
 
@@ -1826,7 +1844,7 @@ async function neuLaden(vonHand) {
     designUebernehmen(INIT.einstellungen?.design);
     VB.wartung = INIT.wartung || null; VB.server = INIT.server || null; vbCommSetzen(INIT.communicator || null);
     $("begruessung").textContent = "Hallo " + ICH.vorname + "!";
-    $("statusChip").textContent = statusText(INIT.status) + " ▾";
+    meinStatusZeigen();
     $("ichName").textContent = ICH.name + (ICH.aemter?.length ? ` (${ICH.aemter.join(", ")})` : ICH.admin ? " (Admin)" : "");
     $("neuTreffenKnopf").classList.toggle("versteckt", !ICH.vorstand);
     $("neuUmfrageKnopf").classList.toggle("versteckt", !ICH.vorstand);
@@ -2982,7 +3000,7 @@ async function mitgliederLaden() {
     $("mitgliederListe").innerHTML = MITGLIEDER.map((m) => `<div class="zeile">
       <div class="avatar" style="width:40px;height:40px;cursor:pointer" onclick="mitgliedOeffnen('${m.person_id}')">${esc(initialen(m.name))}${m.online ? '<i class="onpunkt" title="gerade online"></i>' : ""}</div>
       <div style="flex:1;cursor:pointer" onclick="mitgliedOeffnen('${m.person_id}')"><b>${esc(m.name)}</b>${wegIcons(m)} <span class="hinweis">›</span>${m.aemter?.length ? ` <span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}
-        <div class="hinweis" style="font-size:.85rem">${m.online ? '<b style="color:#1e8449">● online</b> · ' : ""}${m.status ? esc(statusText(m.status)) : m.aktiv ? "🟢 verfügbar" : "⚪ noch nicht in der App"}${m.aktiv ? " · 📲 aktiv" : ""}</div>
+        <div class="hinweis" style="font-size:.85rem">${m.online ? '<b style="color:#1e8449">● online</b> · ' : ""}${m.status || m.aktiv ? `<span class="stmarke st-${statusArt(m.status)}">${esc(m.status ? statusText(m.status) : "🟢 verfügbar")}</span>` : "⚪ noch nicht in der App"}${m.aktiv ? " · 📲 aktiv" : ""}</div>
         ${ICH.admin && (m.app || m.push || !m.mail || m.protokolle === false) ? `<div class="hinweis" style="font-size:.85rem">${[m.app && m.zuletzt ? "zuletzt " + zeitKurz(m.zuletzt) : m.app ? "Link verschickt" : "", m.push ? "🔔 Push" : "", m.mail ? "" : "⚠️ keine Mail", m.protokolle === false ? "📄 ohne Protokolle" : ""].filter(Boolean).join(" · ")}</div>` : ""}</div>
       ${m.online ? `<button class="knopf klein" title="Anklopfen – direkt schreiben" onclick="anklopfen('${m.person_id}')">👋</button>` : ""}${m.person_id !== ICH.person_id ? `<button class="knopf klein" onclick="direkt('${m.person_id}')">💬</button>` : ""}
       ${ICH.admin ? `<button class="knopf klein" onclick="linkTeilen('${m.person_id}')">🔗</button><button class="knopf klein" onclick="rolleBearbeiten('${m.person_id}')">🎖️</button>` : ""}</div>`).join("")

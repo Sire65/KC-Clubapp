@@ -1,11 +1,18 @@
 {
-  "version": "0.34.0",
+  "version": "0.34.1",
   "datum": "2026-09-29",
   "neu": [
+    "🟢 Status in Farbe: verfügbar grün, beschäftigt orange, Urlaub blau, krank lila, nicht erreichbar rot – oben bei „Mein Status“, auf der Startseite und in der Mitgliederliste",
     "🔔 Rückmeldung zum Push: unter deinen Nachrichten steht „🔔 angekommen“ bzw. „🔔 geöffnet“",
     "✉️ Und ob eine Mail rausgegangen ist"
   ],
   "verlauf": [
+    {
+      "version": "0.34.1",
+      "neu": [
+        "🟢 Status in Farbe: verfügbar grün, beschäftigt orange, Urlaub blau, krank lila, nicht erreichbar rot – oben bei „Mein Status“, auf der Startseite und in der Mitgliederliste"
+      ]
+    },
     {
       "version": "0.34.0",
       "neu": [

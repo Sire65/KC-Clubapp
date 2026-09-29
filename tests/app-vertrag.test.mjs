@@ -709,4 +709,11 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/function zustellText\(z\)/.test(html) && /🔔 geöffnet/.test(html), "Anzeige der Rückmeldung fehlt");
 }
 
+// 57. 0.34.1: Status farbig (Knopf „Mein Status“, Startseite, Mitgliederliste)
+{
+  for (const st of ["verfuegbar", "beschaeftigt", "urlaub", "krank", "abwesend"]) assert.ok(new RegExp(`\\.st-${st} \\{`).test(html), `Farbe für Status ${st} fehlt`);
+  assert.ok(/id="meinStatusKnopf"/.test(html) && /function meinStatusZeigen\(\)/.test(html) && /meinStatusZeigen\(\);/.test(html), "„Mein Status“ zeigt den Status nicht");
+  assert.ok(/<span class="stmarke st-\$\{statusArt\(m\.status\)\}">/.test(html), "Mitgliederliste zeigt den Status nicht farbig");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
