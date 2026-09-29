@@ -1,11 +1,18 @@
 {
-  "version": "0.39.0",
+  "version": "0.39.1",
   "datum": "2026-09-29",
   "neu": [
-    "🛠️ Admin: km-Satz für Erstattungen mit „gilt ab“-Datum einstellen (Voreinstellung 0,38 €)",
-    "🚗 Fahrten werden mit dem Satz berechnet, der am Tag der Fahrt galt"
+    "📷 Belege direkt mit der Kamera fotografieren oder 📁 als Datei (Foto/PDF) auswählen",
+    "✕ Falsch angehängte Belege wieder entfernen – bis zu 5 je Position"
   ],
   "verlauf": [
+    {
+      "version": "0.39.1",
+      "neu": [
+        "📷 Belege direkt mit der Kamera fotografieren oder 📁 als Datei (Foto/PDF) auswählen",
+        "✕ Falsch angehängte Belege wieder entfernen – bis zu 5 je Position"
+      ]
+    },
     {
       "version": "0.39.0",
       "neu": [

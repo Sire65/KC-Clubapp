@@ -776,4 +776,12 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/id="adminErstattung"/.test(html) && /if \(ICH\?\.admin\) \{ \$\("adminErstattung"\)/.test(html), "Admin-Bereich fehlt");
 }
 
+// 63. 0.39.1: Belege per Kamera oder Datei-Explorer, höchstens so viele wie der Server je Position annimmt
+{
+  assert.ok(/id="ersFoto" accept="image\/\*" capture="environment"/.test(html) && /id="ersDatei" accept="image\/\*,application\/pdf" multiple/.test(html), "Kamera/Datei-Auswahl für Belege fehlt");
+  const max = Number(/const BELEG_MAX = (\d+)/.exec(html)?.[1]), srv = Number(/x\.belege : \[\]\)\.map\(String\)\.slice\(0, (\d+)\)/.exec(server)?.[1]);
+  assert.ok(max > 0 && max === srv, "Beleg-Grenze App ≠ Server");
+  assert.ok(/ERS\.belege\.some\(\(b\) => b\.laedt\)/.test(html) && /function belegWeg\(/.test(html), "Belege: Warten aufs Hochladen/Entfernen fehlt");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

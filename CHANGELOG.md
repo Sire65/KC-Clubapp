@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.39.1 – 2026-09-29 (DEV)
+
+- KC-CLUB-BELEGFOTO (neu): Erstattung → Belege mit zwei Knöpfen: „📷 Foto aufnehmen“ (öffnet direkt die Kamera, capture=environment)
+  und „📁 Datei wählen“ (Datei-Explorer, Fotos oder PDF, mehrere auf einmal). Bis zu 5 Belege je Position (Grenze des Servers),
+  Ladeanzeige je Beleg, ✕ zum Entfernen; „Hinzufügen“ wartet, bis alle Belege hochgeladen sind. Nur App, kein Server-Update.
+
 ## 0.39.0 – 2026-09-29 (DEV)
 
 - KC-CLUB-KMSATZ (neu): ⚙️ Einstellungen → „🛠️ Admin: Erstattung (km-Satz)“ (nur Admin). Kilometerpauschale mit „gilt ab“-Datum
