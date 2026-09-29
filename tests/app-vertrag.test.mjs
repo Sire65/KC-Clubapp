@@ -634,4 +634,19 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/Weiter zu den Einstellungen/.test(html) && /begruessungFertig\(false\)">Schließen/.test(html), "Knöpfe fehlen");
 }
 
+// 50. 0.29.0: Online-Anzeige (Standard an, abschaltbar, wer sich verbirgt sieht auch andere nicht) + Anklopfen
+{
+  for (const a of ["online", "anklopfen", "anklopfen_antwort"]) assert.ok(aktionen.has(a) && aufrufe.has(a), `Online-Aktion ${a} fehlt`);
+  assert.ok(/online: \(w\) => \(\{ zeigen: w\?\.zeigen !== false \}\)/.test(server), "Einstellung „online“ fehlt oder Standard nicht an");
+  const on = server.slice(server.indexOf('case "online": {'), server.indexOf('case "anklopfen": {'));
+  assert.ok(/zeigen \? onlineJetzt\(\) : Promise\.resolve\(new Set/.test(on), "Wer sich verbirgt, sieht trotzdem andere");
+  assert.ok(/filter\(\(id: string\) => zeigen\.get\(id\) !== false\)/.test(server), "Verborgene erscheinen als online");
+  const aw = server.slice(server.indexOf('case "anklopfen_antwort"'), server.indexOf('case "anklopfen_antwort"') + 400);
+  assert.ok(/\.eq\("an", ich\.person_id\)/.test(aw), "Fremde könnten ein Anklopfen beantworten");
+  const ak = server.slice(server.indexOf('case "anklopfen": {'), server.indexOf('case "anklopfen_antwort"'));
+  assert.ok(/routerSenden\("club_nachricht_push"/.test(ak) && !/_mail"/.test(ak), "Anklopfen soll nur per Push gehen");
+  assert.ok(/id="setOnline"/.test(html) && /id="klopfBlatt"/.test(html) && /function chatTakt\(\)/.test(html) && /id="onlineLeiste"/.test(html), "Oberfläche für Online/Anklopfen fehlt");
+  assert.ok(/if \(ONL\.zeigen/.test(html) || /ONL\.zeigen && ONL\.liste\.length/.test(html), "Online-Leiste beachtet die eigene Einstellung nicht");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

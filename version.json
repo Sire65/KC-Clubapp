@@ -1,9 +1,9 @@
 {
-  "version": "0.28.0",
+  "version": "0.29.0",
   "datum": "2026-09-29",
   "neu": [
-    "👋 Begrüßung beim ersten Start mit drei Tipps – „Weiter“ führt direkt in die Einstellungen",
-    "📅 „Nächstes Treffen“ antippen → Kalender zeigt direkt den Tag",
-    "🔢 Register zeigen z. B. „8/10“, wenn Kacheln ausgeblendet sind"
+    "🟢 Sehen, wer gerade online ist (abschaltbar unter ⚙️ → Privatsphäre)",
+    "👋 Anklopfen: „Hansi klopft an – annehmen?“ und direkt schreiben",
+    "💬 Chat aktualisiert sich schneller, solange der andere online ist"
   ]
 }

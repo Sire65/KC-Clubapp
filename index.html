@@ -316,6 +316,12 @@
   .blatt-innen { background: var(--karte); width: min(560px, 100%); border-radius: 22px 22px 0 0; padding: 18px 16px calc(18px + env(safe-area-inset-bottom)); display: grid; gap: 10px; }
   .blatt-innen h3 { margin: 0 0 4px; }
   .begruessung { max-height: 92vh; overflow-y: auto; }
+  /* KC-CLUB-ONLINE: grüner Punkt, Online-Leiste, Anklopf-Fenster */
+  .onpunkt { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #2ecc71; box-shadow: 0 0 0 2px var(--karte), 0 0 6px #2ecc71; margin-right: 6px; vertical-align: middle; }
+  .avatar { position: relative; } .avatar .onpunkt { position: absolute; right: -2px; bottom: -2px; margin: 0; }
+  .onleiste { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 8px; }
+  .onleiste button { flex: none; border: 2px solid #2ecc71; background: var(--karte); color: var(--text); border-radius: 999px; padding: 7px 12px; font-weight: 800; cursor: pointer; }
+  .klopfen h3 { font-size: 1.25rem; } .klopfen .knopf { text-align: center; }
   .begruessung .bgtipp { display: flex; gap: 10px; align-items: flex-start; background: var(--karte2); border-radius: 14px; padding: 10px 12px; margin: 6px 0; }
   .begruessung .bgtipp b.nr { flex: none; width: 28px; height: 28px; border-radius: 50%; background: var(--rot); color: #fff; display: grid; place-items: center; }
   .begruessung .knopf { text-align: center; }
@@ -511,6 +517,7 @@
   <!-- NACHRICHTEN -->
   <section id="v-nachrichten" class="versteckt">
     <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>💬 Kommunikation</h2><button class="knopf klein" onclick="testAnMichStarten()" title="Nachricht an dich selbst – prüft Push und Mail">🧪 Test</button><button class="knopf klein" onclick="gruppeForm()">👥 Gruppe</button><button class="knopf haupt klein" onclick="neueNachricht()">＋ Neu</button></div>
+    <div id="onlineLeiste"></div>
     <div class="karte" id="unterhListe"><span class="hinweis">Wird geladen …</span></div>
   </section>
 
@@ -590,6 +597,7 @@
     <details class="karte" data-klappe="privat">
       <summary>🔒 Privatsphäre</summary>
       <div class="schalter"><div><b>🎂 Meinen Geburtstag anzeigen (ohne Jahr)</b><div class="hinweis" id="gebHinweis">Andere sehen dann nur Tag und Monat – im Kalender, in der Terminliste und unter „Heute wichtig“.</div></div><input type="checkbox" id="setGeburtstag" onchange="geburtstagFreigabe(this.checked)"></div>
+      <div class="schalter"><div><b>🟢 Anderen zeigen, wann ich online bin</b><div class="hinweis">Dann sehen andere einen grünen Punkt bei dir und können „anklopfen“. Ausgeschaltet siehst du auch selbst nicht, wer online ist.</div></div><input type="checkbox" id="setOnline" onchange="onlineZeigen(this.checked)"></div>
       <p class="hinweis" style="margin:14px 0 0"><b>Für andere Mitglieder sichtbar:</b> (Aushilfen sehen keine Kontaktdaten; Hansi als Admin sieht alles)</p>
       <div class="schalter"><div><b>📱 Meine Handynummer</b></div><input type="checkbox" id="setKontakt_handy" onchange="kontaktFreigabe('handy', this.checked)"></div>
       <div class="schalter"><div><b>☎️ Meine Festnetznummer</b></div><input type="checkbox" id="setKontakt_festnetz" onchange="kontaktFreigabe('festnetz', this.checked)"></div>
@@ -687,6 +695,12 @@
   <div class="blatt-innen"><h3 id="exTitel"></h3><p class="hinweis" id="exText" style="margin:0"></p><div id="exKnoepfe" style="display:grid;gap:8px"></div>
     <button class="knopf" onclick="externZu()">Schließen</button></div>
 </div>
+<!-- KC-CLUB-ONLINE: jemand klopft an -->
+<div class="blatt versteckt" id="klopfBlatt">
+  <div class="blatt-innen klopfen"><div id="klopfText"></div>
+    <button class="knopf haupt" onclick="klopfAntwort(true)">✅ Annehmen – jetzt schreiben</button>
+    <button class="knopf" onclick="klopfAntwort(false)">⏳ Später</button></div>
+</div>
 <!-- KC-CLUB-BEGRUESSUNG: einmal beim ersten Start je Mitglied -->
 <div class="blatt versteckt" id="begruessungBlatt">
   <div class="blatt-innen begruessung"><div id="begruessungText"></div>
@@ -730,7 +744,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.28.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.29.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -742,7 +756,7 @@ const wann = (iso) => `${fTag.format(new Date(iso))}, ${fZeit.format(new Date(is
 const zeitKurz = (iso) => { const d = new Date(iso), h = new Date(); return d.toDateString() === h.toDateString() ? fZeit.format(d) : fKurz.format(d) + " " + fZeit.format(d); };
 const initialen = (n) => String(n || "?").split(/\s+/).map((x) => x[0]).slice(0, 2).join("").toUpperCase();
 
-let KEY = "", ICH = null, INIT = null, MITGLIEDER = null, AEMTER = [], aktuelleAnsicht = "start", reg = "verein";
+let START_HASH = "", KEY = "", ICH = null, INIT = null, MITGLIEDER = null, AEMTER = [], aktuelleAnsicht = "start", reg = "verein";
 let chatId = null, chatTimer = null, empfWahl = { personen: [], aemter: [], alle: false, vorstand: false }, anlagen = [], letzteUngelesen = null;
 
 function einst(k, def) { try { const v = localStorage.getItem("kc_club_" + k); return v === null ? def : v === "1"; } catch { return def; } }
@@ -957,7 +971,7 @@ function begruessungPruefen() {
     ${tipp(1, installiert ? "✅ Richtig installiert – prima!" : "📲 Richtig installieren", installiert
       ? "Die App öffnest du ab jetzt einfach über ihr Symbol."
       : "Unter ⚙️ <b>Mehr → App-Installation</b> steht Schritt für Schritt, wie es geht. Dann öffnet sich die App wie jede andere über ihr Symbol, und WhatsApp, Karten und Fotos funktionieren zuverlässig.")}
-    ${tipp(2, "⚙️ Persönlich einrichten", "Ebenfalls unter ⚙️ <b>Mehr</b>: Benachrichtigungen, Farbdesign und Tag/Nacht, Schriftgröße – und was andere von dir sehen dürfen (Privatsphäre).")}
+    ${tipp(2, "⚙️ Persönlich einrichten", "Ebenfalls unter ⚙️ <b>Mehr</b>: Benachrichtigungen, Farbdesign und Tag/Nacht, Schriftgröße – und was andere von dir sehen dürfen (Privatsphäre). Wenn du online bist, sehen andere einen 🟢 und können bei dir „anklopfen“ – das lässt sich dort abschalten.")}
     ${tipp(3, "💭 Deine Meinung zählt", "Teste alles in Ruhe und sag mir über die Kachel <b>„Feedback“</b>, was dir gefällt und was noch besser werden kann.")}
     <p style="margin:10px 0 4px">Viel Spaß und liebe Grüße<br><b>Hansi</b></p>`;
   $("begruessungBlatt").classList.remove("versteckt");
@@ -972,6 +986,79 @@ function begruessungFertig(weiter) {
   // nicht installiert → zuerst „App-Installation“, sonst „Darstellung“ aufklappen und hinscrollen
   const ziel = document.querySelector(`#v-einstellungen details[data-klappe="${START_ART === "app" ? "darstellung" : "install"}"]`);
   if (ziel) { ziel.open = true; setTimeout(() => ziel.scrollIntoView({ behavior: "smooth", block: "start" }), 250); }
+}
+
+// ---------- KC-CLUB-ONLINE (0.29.0): wer ist online, Anklopfen, schneller Direkt-Chat ----------
+// Die App meldet sich alle 60 s beim Server (nur wenn sichtbar). Online = in den letzten 2½ Minuten da gewesen.
+let ONL = { zeigen: true, ids: new Set(), liste: [], erledigt: new Set(), wartet: null, timer: null, takt: 0 };
+async function onlinePing() {
+  if (!KEY || !ICH || document.hidden) return;
+  try {
+    const r = await api("online");
+    ONL.zeigen = r.zeigen; ONL.liste = r.online || []; ONL.ids = new Set(ONL.liste.map((x) => x.person_id));
+    if ($("setOnline")) $("setOnline").checked = r.zeigen;
+    onlineLeisteZeigen();
+    // jemand klopft bei mir an → Fenster (jedes Anklopfen nur einmal)
+    const k = (r.klopfen || []).find((x) => !ONL.erledigt.has(x.id));
+    if (k && $("klopfBlatt").classList.contains("versteckt")) klopfZeigen(k);
+    // Antwort auf mein Anklopfen
+    for (const a of r.antworten || []) {
+      if (ONL.erledigt.has("a" + a.id) || a.status === "offen") continue;
+      ONL.erledigt.add("a" + a.id);
+      if (ONL.wartet === a.id) { ONL.wartet = null; onlineTakt(); }
+      if (a.status === "angenommen" && a.thread) { melde(`✅ ${a.an.vorname} hat angenommen – schreibt los!`); try { navigator.vibrate?.(60); } catch {} chatOeffnen(a.thread); }
+      else if (a.status === "spaeter") melde(`⏳ ${a.an.vorname} hat gerade keine Zeit – schreib eine Nachricht, sie/er meldet sich.`);
+    }
+  } catch {}
+}
+// Takt: normal 60 s; während ich auf eine Antwort warte alle 4 s (höchstens 3 Minuten)
+function onlineTakt() {
+  clearInterval(ONL.timer);
+  ONL.timer = setInterval(onlinePing, ONL.wartet ? 4000 : 60000);
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden) onlinePing(); });
+function onlineLeisteZeigen() {
+  const el = $("onlineLeiste"); if (!el) return;
+  el.innerHTML = ONL.zeigen && ONL.liste.length ? `<div class="hinweis" style="margin:0 0 4px"><span class="onpunkt"></span><b>Gerade online</b> – antippen zum Anklopfen</div>
+    <div class="onleiste">${ONL.liste.map((x) => `<button onclick="anklopfen('${x.person_id}')">👋 ${esc(x.vorname)}</button>`).join("")}</div>` : "";
+}
+async function anklopfen(pid) {
+  const m = MITGLIEDER?.find((x) => x.person_id === pid) || ONL.liste.find((x) => x.person_id === pid);
+  const name = m?.vorname || m?.name || "";
+  if (!confirm(`Bei ${name} anklopfen?\n\n${name} bekommt sofort die Frage, ob ihr jetzt schreiben wollt.`)) return;
+  try {
+    const r = await api("anklopfen", { an: pid });
+    ONL.wartet = r.id; onlineTakt(); setTimeout(() => { if (ONL.wartet === r.id) { ONL.wartet = null; onlineTakt(); melde(`${name} hat (noch) nicht reagiert – du kannst ihr/ihm eine normale Nachricht schreiben.`); } }, 180000);
+    melde(`👋 Angeklopft bei ${name} – warte auf Antwort …`);
+  } catch (e) { melde(e.message, true); }
+}
+let KLOPF = null;
+function klopfZeigen(k) {
+  KLOPF = k; ONL.erledigt.add(k.id);
+  $("klopfText").innerHTML = `<h3>👋 ${esc(k.von.vorname)} klopft an</h3><p style="margin:0">${esc(k.von.name)} möchte gerade mit dir schreiben. Möchtest du das Gespräch annehmen?</p>`;
+  $("klopfBlatt").classList.remove("versteckt");
+  try { navigator.vibrate?.([80, 60, 80]); } catch {}
+}
+async function klopfAntwort(annehmen) {
+  $("klopfBlatt").classList.add("versteckt");
+  if (!KLOPF) return;
+  const k = KLOPF; KLOPF = null;
+  try { const r = await api("anklopfen_antwort", { id: k.id, annehmen }); if (annehmen && r.thread) chatOeffnen(r.thread); }
+  catch (e) { melde(e.message, true); }
+}
+// aus dem Push („… klopft an“) geöffnet: #anklopfen=<id>
+async function anklopfenAusLink(id) {
+  try { const r = await api("online"); const k = (r.klopfen || []).find((x) => x.id === id); if (k) klopfZeigen(k); else melde("Das Anklopfen ist schon vorbei – schreib einfach eine Nachricht."); } catch {}
+}
+async function onlineZeigen(an) {
+  try { await api("einstellung_setzen", { schluessel: "online", wert: { zeigen: an } }); melde(an ? "🟢 Andere sehen jetzt, wann du online bist" : "Online-Anzeige ausgeschaltet"); MITGLIEDER = null; onlinePing(); }
+  catch (e) { melde(e.message, true); }
+}
+// Chat: alle 4 s neu laden, wenn jemand aus dem Gespräch online ist – sonst alle 12 s
+function chatTakt() {
+  ONL.takt++;
+  const jemandDa = (CHAT?.teilnehmer || []).some((t) => t.person_id !== ICH?.person_id && ONL.ids.has(t.person_id));
+  if (jemandDa || ONL.takt % 3 === 0) chatLaden(false);
 }
 
 // ---------- KC-CLUB-SCHLIESSEN: Ausgangstür ----------
@@ -1481,6 +1568,7 @@ async function neuLaden(vonHand) {
     INIT = await api("init"); ICH = INIT.ich;
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln);
     const begruesst = begruessungPruefen();
+    if (!ONL.timer) { onlinePing(); onlineTakt(); const a = /#anklopfen=([0-9a-f-]{36})/.exec(START_HASH || ""); if (a) anklopfenAusLink(a[1]); }
     if (!PW.startGeprueft) { PW.startGeprueft = true; pwStart(begruesst); }
     designUebernehmen(INIT.einstellungen?.design);
     VB.wartung = INIT.wartung || null; VB.server = INIT.server || null; vbCommSetzen(INIT.communicator || null);
@@ -2004,7 +2092,7 @@ async function chatOeffnen(id, ausHistorie) {
   chatId = id; zeige("chat", ausHistorie); chatId = id;
   history.replaceState({ v: "chat", id }, "", location.pathname + "#nachricht=" + id);
   await chatLaden(true);
-  chatTimer = setInterval(() => chatLaden(false), 10000);
+  chatTimer = setInterval(chatTakt, 4000);
 }
 let chatStand = "";
 async function chatLaden(scrollen) {
@@ -2205,7 +2293,7 @@ async function senden() {
     const empfIds = chatId ? (CHAT?.teilnehmer || []).map((t) => t.person_id) : [...(neuEntwurf?.empfaenger?.personen || [])];
     $("text").value = ""; $("text").style.height = "auto"; anlagen = []; chipsZeigen(); neuEntwurf = null;
     if (ZW.whatsapp && text) whatsappWeitergeben(text, empfIds.filter((id) => id !== ICH.person_id));
-    if (!chatId) { chatId = r.id; history.replaceState({ v: "chat", id: r.id }, "", location.pathname + "#nachricht=" + r.id); clearInterval(chatTimer); chatTimer = setInterval(() => chatLaden(false), 10000); }
+    if (!chatId) { chatId = r.id; history.replaceState({ v: "chat", id: r.id }, "", location.pathname + "#nachricht=" + r.id); clearInterval(chatTimer); chatTimer = setInterval(chatTakt, 4000); }
     await chatLaden(true);
   } catch (e) { melde(e.message, true); }
   $("sendenKnopf").disabled = false;
@@ -2639,11 +2727,11 @@ async function mitgliederLaden() {
   try {
     await mitgliederHolen();
     $("mitgliederListe").innerHTML = MITGLIEDER.map((m) => `<div class="zeile">
-      <div class="avatar" style="width:40px;height:40px;cursor:pointer" onclick="mitgliedOeffnen('${m.person_id}')">${esc(initialen(m.name))}</div>
+      <div class="avatar" style="width:40px;height:40px;cursor:pointer" onclick="mitgliedOeffnen('${m.person_id}')">${esc(initialen(m.name))}${m.online ? '<i class="onpunkt" title="gerade online"></i>' : ""}</div>
       <div style="flex:1;cursor:pointer" onclick="mitgliedOeffnen('${m.person_id}')"><b>${esc(m.name)}</b>${wegIcons(m)} <span class="hinweis">›</span>${m.aemter?.length ? ` <span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}
-        <div class="hinweis" style="font-size:.85rem">${m.status ? esc(statusText(m.status)) : m.aktiv ? "🟢 verfügbar" : "⚪ noch nicht in der App"}${m.aktiv ? " · 📲 aktiv" : ""}</div>
+        <div class="hinweis" style="font-size:.85rem">${m.online ? '<b style="color:#1e8449">● online</b> · ' : ""}${m.status ? esc(statusText(m.status)) : m.aktiv ? "🟢 verfügbar" : "⚪ noch nicht in der App"}${m.aktiv ? " · 📲 aktiv" : ""}</div>
         ${ICH.admin && (m.app || m.push || !m.mail || m.protokolle === false) ? `<div class="hinweis" style="font-size:.85rem">${[m.app && m.zuletzt ? "zuletzt " + zeitKurz(m.zuletzt) : m.app ? "Link verschickt" : "", m.push ? "🔔 Push" : "", m.mail ? "" : "⚠️ keine Mail", m.protokolle === false ? "📄 ohne Protokolle" : ""].filter(Boolean).join(" · ")}</div>` : ""}</div>
-      ${m.person_id !== ICH.person_id ? `<button class="knopf klein" onclick="direkt('${m.person_id}')">💬</button>` : ""}
+      ${m.online ? `<button class="knopf klein" title="Anklopfen – direkt schreiben" onclick="anklopfen('${m.person_id}')">👋</button>` : ""}${m.person_id !== ICH.person_id ? `<button class="knopf klein" onclick="direkt('${m.person_id}')">💬</button>` : ""}
       ${ICH.admin ? `<button class="knopf klein" onclick="linkTeilen('${m.person_id}')">🔗</button><button class="knopf klein" onclick="rolleBearbeiten('${m.person_id}')">🎖️</button>` : ""}</div>`).join("")
       + '<p class="hinweis">Namen antippen für Details (Telefon, Adresse … sofern freigegeben).</p>'
       + (ICH.admin ? '<p class="hinweis">🔗 = persönlichen App-Link erzeugen und per WhatsApp schicken (ein neuer Link macht den alten ungültig). 🎖️ = Amt und Rechte.</p>' : "");
@@ -3264,7 +3352,8 @@ function mitgliedZeigen() {
     <div class="karte">${zeilen}${leer}</div>
     ${m.notfall ? `<div class="karte"><h3>🆘 Notfallkontakt</h3><div class="zeile"><div style="flex:1"><b>${esc(m.notfall.name || "–")}</b>${m.notfall.beziehung ? ` <span class="hinweis">(${esc(m.notfall.beziehung)})</span>` : ""}<div class="hinweis">${esc(m.notfall.telefon || "")}</div></div>${m.notfall.telefon ? `<a class="knopf klein" href="tel:${esc(nurZiffern(m.notfall.telefon))}">📞</a>` : ""}</div><p class="hinweis" style="font-size:.85rem;margin-bottom:0">🔒 Nur für ${m.selbst ? "dich und " : ""}Clubsprecher, Kassenwart und Admin sichtbar.</p></div>` : m.selbst ? '<p class="hinweis">🆘 Noch kein Notfallkontakt – eintragen unter ⚙️ Mehr → Privatsphäre.</p>' : ""}
     <div class="knoepfe">
-      ${m.selbst ? "" : `<button class="knopf haupt" onclick="direkt('${m.person_id}')">💬 Nachricht in der App</button>`}
+      ${!m.selbst && ONL.ids.has(m.person_id) ? `<button class="knopf haupt" onclick="anklopfen('${m.person_id}')">👋 Anklopfen – ist gerade online</button>` : ""}
+      ${m.selbst ? "" : `<button class="knopf ${ONL.ids.has(m.person_id) ? "" : "haupt"}" onclick="direkt('${m.person_id}')">💬 Nachricht in der App</button>`}
       ${zeilen ? '<button class="knopf" onclick="kontaktSpeichern()">📇 Ins Telefonbuch</button>' : ""}
     </div>
     ${m.selbst ? `<div class="karte"><h3>Deine Daten</h3>
@@ -3509,12 +3598,12 @@ async function jetztAktualisieren() {
   $("app").classList.remove("versteckt");
   klappenMerken(); registerZeigen(); kachelnZeigen();
   // Verlauf: unten ein „Basis“-Eintrag, darüber die Startseite → „Zurück“ bleibt in der App
-  const sprung = location.hash;
+  const sprung = location.hash; START_HASH = sprung;
   history.replaceState({ basis: true }, "", url.pathname);
   history.pushState({ v: "start" }, "", url.pathname);
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("sw.js").catch(() => {});
-    navigator.serviceWorker.addEventListener("message", (e) => { if (e.data?.typ === "push") { neuLaden(); if (chatId) chatLaden(false); } });
+    navigator.serviceWorker.addEventListener("message", (e) => { if (e.data?.typ === "push") { neuLaden(); onlinePing(); if (chatId) chatLaden(false); } });
   }
   // Messung: wie wurde die App gestartet (einmal je Sitzung) – zeigt, ob die Installation geklappt hat
   try { if (!sessionStorage.getItem("kc_club_start_gemeldet")) { sessionStorage.setItem("kc_club_start_gemeldet", "1"); setTimeout(() => api("diagnose", { art: "start", daten: { start: START_ART, referrer: (document.referrer || "").slice(0, 80) } }).catch(() => {}), 1500); } } catch {}

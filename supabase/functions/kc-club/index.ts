@@ -13,14 +13,14 @@
 //           KC-CLUB-COMMUNICATOR-STATUS (0.17.0), KC-CLUB-FEEDBACK (0.18.0),
 //           KC-CLUB-KACHELN (0.19.0), KC-CLUB-ZUGANG-SELBST (0.21.0),
 //           KC-CLUB-GRUPPEN, KC-CLUB-ZUSTELLWAHL (0.23.0)
-//           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0), KC-CLUB-KACHELN-ZIEHEN (0.26.0), KC-CLUB-FEEDBACK-NEU (0.27.1), KC-CLUB-BEGRUESSUNG (0.28.0)
+//           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0), KC-CLUB-KACHELN-ZIEHEN (0.26.0), KC-CLUB-FEEDBACK-NEU (0.27.1), KC-CLUB-BEGRUESSUNG (0.28.0), KC-CLUB-ONLINE (0.29.0)
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.28.0";
+const SERVER_VERSION = "0.29.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -142,6 +142,36 @@ async function sendenGewaehlt(eventKey: string, personIds: string[], wege: strin
   return { gesendet, fehler, wege: w };
 }
 const zustellwege = (v: unknown) => (Array.isArray(v) ? v : []).map(String).filter((x) => ZUSTELLWEGE.includes(x));
+
+// Vorhandenes Zweiergespräch (genau zwei Teilnehmer, ohne Betreff) zwischen a und b – sonst null
+async function zweierGespraech(a: string, b: string): Promise<string | null> {
+  const { data: a1 } = await db.from("kc_communication_thread_participants").select("thread_id").eq("person_id", a);
+  const { data: a2 } = await db.from("kc_communication_thread_participants").select("thread_id").eq("person_id", b);
+  const gemeinsam = (a1 ?? []).map((x: any) => x.thread_id).filter((id: string) => (a2 ?? []).some((y: any) => y.thread_id === id));
+  for (const id of gemeinsam) {
+    const { count } = await db.from("kc_communication_thread_participants").select("person_id", { count: "exact", head: true }).eq("thread_id", id);
+    const { data: th } = await db.from("kc_communication_threads").select("subject").eq("id", id).single();
+    if (count === 2 && !th?.subject) return id;
+  }
+  return null;
+}
+
+// ---------- KC-CLUB-ONLINE (0.29.0): wer ist gerade online + Anklopfen ----------
+// Online = in den letzten ONLINE_SEK Sekunden in der App (zuletzt_gesehen wird bei jedem Aufruf gesetzt; die App meldet sich
+// alle 60 s, solange sie offen ist). Einstellung „online“ (Standard: an). Wer sich verbirgt, sieht auch andere nicht.
+const ONLINE_SEK = 150, ANKLOPFEN_SEK = 180;
+async function onlineZeigenMap(ids?: string[]) {
+  let q = db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "online");
+  if (ids) q = q.in("person_id", ids);
+  const { data } = await q;
+  return new Map((data ?? []).map((x: any) => [x.person_id, x.wert?.zeigen !== false]));
+}
+async function onlineJetzt(): Promise<Set<string>> {
+  const seit = new Date(Date.now() - ONLINE_SEK * 1000).toISOString();
+  const { data } = await db.from("kc_club_zugang").select("person_id").eq("aktiv", true).gte("zuletzt_gesehen", seit).not("person_id", "like", "KC-P-TEST%");
+  const ids = (data ?? []).map((x: any) => x.person_id), zeigen = await onlineZeigenMap(ids);
+  return new Set(ids.filter((id: string) => zeigen.get(id) !== false));
+}
 
 // ---------- Gruppen (KC-CLUB-GRUPPEN) ----------
 const GRUPPEN_SYMBOLE = ["👥", "👨‍🍳", "🍳", "🎖️", "🧳", "🎉", "📋", "🍷", "⭐", "🏠"];
@@ -284,6 +314,8 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
       .filter(([r]) => KA_ID.test(r)).slice(0, 10).map(([r, l]) => [r, kaIds(l)])),
     aus: kaIds(w?.aus),
   }),
+  // KC-CLUB-ONLINE (0.29.0): anderen zeigen, wann ich online bin (Standard: an)
+  online: (w) => ({ zeigen: w?.zeigen !== false }),
   // KC-CLUB-BEGRUESSUNG (0.28.0): Begrüßung beim ersten Start einmal je Mitglied (geräteübergreifend)
   begruessung: (w) => ({ gesehen: !!w?.gesehen, am: new Date().toISOString() }),
   // KC-CLUB-DESIGN (0.24.0): fertiges Farbdesign + Tag/Nacht (automatisch, immer Tag, immer Nacht)
@@ -1030,12 +1062,13 @@ Köcheclub Werne`,
         const z = new Map((zug ?? []).map((x: any) => [x.person_id, x]));
         const ps = new Set((push ?? []).map((x: any) => x.person_id));
         const aemter = [...new Set((rollen ?? []).flatMap((x: any) => x.aemter || []))].sort();
+        const ichZeige = (await onlineZeigenMap([ich.person_id])).get(ich.person_id) !== false, on = ichZeige ? await onlineJetzt() : new Set<string>();
         return json({
-          aemter,
+          aemter, onlineSichtbar: ichZeige,
           mitglieder: leute.map((m) => ({
             person_id: m.person_id, name: m.display_name, vorname: vorname(m),
             vorstand: !!(r.get(m.person_id) as any)?.ist_vorstand, aemter: (r.get(m.person_id) as any)?.aemter ?? [], admin: !!(r.get(m.person_id) as any)?.ist_admin,
-            status: st.get(m.person_id) ?? null,
+            status: st.get(m.person_id) ?? null, online: on.has(m.person_id) && m.person_id !== ich.person_id,
             wege: { push: ps.has(m.person_id), mail: !!m.email, whatsapp: hatTel.has(m.person_id) && (ich.admin || m.person_id === ich.person_id || (ich.kontakte && handyFrei.has(m.person_id))) },
             // für alle nur grob: in den letzten 14 Tagen in der App gewesen (genaue Zeit nur für den Admin)
             aktiv: !!(z.get(m.person_id) as any)?.zuletzt_gesehen && Date.now() - new Date((z.get(m.person_id) as any).zuletzt_gesehen).getTime() < 14 * 86400000,
@@ -1415,16 +1448,7 @@ Köcheclub Werne`,
             }
           }
           // Zweiergespräch ohne Betreff: vorhandene Unterhaltung weiterführen
-          if (ziel.length === 1 && !betreff) {
-            const { data: a1 } = await db.from("kc_communication_thread_participants").select("thread_id").eq("person_id", ich.person_id);
-            const { data: a2 } = await db.from("kc_communication_thread_participants").select("thread_id").eq("person_id", ziel[0]);
-            const gemeinsam = (a1 ?? []).map((x: any) => x.thread_id).filter((id: string) => (a2 ?? []).some((y: any) => y.thread_id === id));
-            for (const id of gemeinsam) {
-              const { count } = await db.from("kc_communication_thread_participants").select("person_id", { count: "exact", head: true }).eq("thread_id", id);
-              const { data: th } = await db.from("kc_communication_threads").select("subject").eq("id", id).single();
-              if (count === 2 && !th?.subject) { threadId = id; break; }
-            }
-          }
+          if (ziel.length === 1 && !betreff) threadId = (await zweierGespraech(ich.person_id, ziel[0])) || "";
           if (!threadId) {
             const { data: th, error } = await db.from("kc_communication_threads").insert({ org_id: ORG, subject: betreff, created_by_person_id: ich.person_id }).select("id").single();
             if (error || !th) throw new Fehler("Unterhaltung konnte nicht angelegt werden.", 500);
@@ -1561,6 +1585,62 @@ Köcheclub Werne`,
         await db.from("kc_communication_thread_participants").delete().eq("thread_id", g.thread_id).eq("person_id", ich.person_id);
         await protokoll(ich.person_id, "gruppe_verlassen", { gruppe: g.thread_id, name: g.name });
         return json({ ok: true });
+      }
+
+      // ----- Online & Anklopfen (KC-CLUB-ONLINE) -----
+      case "online": {
+        const zeigen = (await onlineZeigenMap([ich.person_id])).get(ich.person_id) !== false;
+        const seit = new Date(Date.now() - ANKLOPFEN_SEK * 1000).toISOString();
+        const [on, { data: anMich }, { data: vonMir }] = await Promise.all([
+          zeigen ? onlineJetzt() : Promise.resolve(new Set<string>()),
+          db.from("kc_club_anklopfen").select("id,von,erstellt_am").eq("an", ich.person_id).eq("status", "offen").gte("erstellt_am", seit).order("erstellt_am", { ascending: false }).limit(3),
+          db.from("kc_club_anklopfen").select("id,an,status,thread_id,beantwortet_am").eq("von", ich.person_id).gte("erstellt_am", new Date(Date.now() - 600000).toISOString()),
+        ]);
+        on.delete(ich.person_id);
+        const leute = await personen([...on, ...(anMich ?? []).map((x: any) => x.von), ...(vonMir ?? []).map((x: any) => x.an)]);
+        const wer = (id: string) => ({ person_id: id, name: leute.get(id)?.display_name || id, vorname: vorname(leute.get(id) ?? null) || id });
+        return json({ zeigen, online: [...on].map(wer), klopfen: (anMich ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), zeit: x.erstellt_am })),
+          antworten: (vonMir ?? []).map((x: any) => ({ id: x.id, an: wer(x.an), status: x.status, thread: x.thread_id })) });
+      }
+
+      case "anklopfen": {
+        const an = String(p.an || "");
+        if (an === ich.person_id) throw new Fehler("Bei dir selbst kannst du nicht anklopfen 🙂");
+        if (!(await aktiveMitglieder()).some((m) => m.person_id === an)) throw new Fehler("Mitglied nicht gefunden.", 404);
+        // Bremse: ein offenes Anklopfen je Person reicht (innerhalb von 3 Minuten)
+        const { data: offen } = await db.from("kc_club_anklopfen").select("id").eq("von", ich.person_id).eq("an", an).eq("status", "offen").gte("erstellt_am", new Date(Date.now() - ANKLOPFEN_SEK * 1000).toISOString()).limit(1);
+        if (offen?.length) return json({ ok: true, id: offen[0].id, schon: true });
+        const { data: k, error } = await db.from("kc_club_anklopfen").insert({ von: ich.person_id, an }).select("id").single();
+        if (error || !k) throw new Fehler("Anklopfen hat nicht geklappt.", 500);
+        // Push (nur wer die App schon benutzt; keine Mail – Anklopfen ist nur jetzt sinnvoll)
+        const { data: zug } = await db.from("kc_club_zugang").select("person_id").eq("person_id", an).eq("aktiv", true).not("zuletzt_gesehen", "is", null);
+        let versand = { gesendet: 0, fehler: 0 };
+        if (zug?.length) versand = await routerSenden("club_nachricht_push", [an], {
+          titel: `👋 ${ich.vorname} klopft an`, kurz: "Möchtest du das Gespräch annehmen? Hier antippen.",
+          betreff: `${ich.vorname} klopft an`, text: `${ich.name} möchte kurz mit dir schreiben.`, url: `${APP_URL}#anklopfen=${k.id}`,
+        }, `club-anklopfen:${k.id}`);
+        await protokoll(ich.person_id, "angeklopft", { an, versand });
+        return json({ ok: true, id: k.id, push: versand.gesendet > 0 });
+      }
+
+      case "anklopfen_antwort": {
+        const { data: k } = await db.from("kc_club_anklopfen").select("*").eq("id", String(p.id || "")).eq("an", ich.person_id).maybeSingle();
+        if (!k) throw new Fehler("Anklopfen nicht gefunden.", 404);
+        if (k.status !== "offen") return json({ ok: true, status: k.status, thread: k.thread_id });
+        if (!p.annehmen) {
+          await db.from("kc_club_anklopfen").update({ status: "spaeter", beantwortet_am: jetzt() }).eq("id", k.id);
+          return json({ ok: true, status: "spaeter" });
+        }
+        let thread = await zweierGespraech(k.von, ich.person_id);
+        if (!thread) {
+          const { data: th, error } = await db.from("kc_communication_threads").insert({ org_id: ORG, subject: "", created_by_person_id: k.von }).select("id").single();
+          if (error || !th) throw new Fehler("Gespräch konnte nicht geöffnet werden.", 500);
+          thread = th.id as string;
+          await db.from("kc_communication_thread_participants").insert([k.von, ich.person_id].map((person_id) => ({ thread_id: thread, person_id })));
+        }
+        await db.from("kc_club_anklopfen").update({ status: "angenommen", beantwortet_am: jetzt(), thread_id: thread }).eq("id", k.id);
+        await protokoll(ich.person_id, "anklopfen_angenommen", { von: k.von });
+        return json({ ok: true, status: "angenommen", thread });
       }
 
       // ----- Pinnwand (KC-CLUB-PINNWAND) -----
