@@ -999,4 +999,21 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/gruppe uuid/.test(lies("supabase/migrations/20260929_kc_club_v53_aufgaben_gruppe.sql")), "Migration v53 fehlt");
 }
 
+// 75. KC-SPIEGEL-ALLE (29.09.2026, ohne App-Build): alle Tabellen mit Spiegel-Regel, Geheimnis-Spalten geschwärzt, Pakete statt fester Listen
+{
+  const m = lies("supabase/migrations/20260929_kc_core_mirror_alle_tabellen.sql"), n = lies("supabase/neon/20260929_neon_spiegel_alle_tabellen.sql");
+  assert.ok(/create table if not exists public\.kc_db_mirror_redaction/.test(m) && /enable row level security/.test(m), "Schwärzungs-Registry fehlt");
+  for (const [t, c] of [["kc_external_credentials", "secret"], ["kc_dp_sync_keys", "key_material"], ["kc_communication_push_devices", "auth_key"], ["kc_member_push_subscriptions", "subscription"]])
+    assert.ok(m.includes(`('${t}', '${c}'`), `Geheimnis ${t}.${c} nicht geschwärzt`);
+  assert.ok(/format\('null::%s as %I'/.test(m), "Schwärzung nicht typgleich (Prüfsumme)");
+  assert.ok(!/v_tables\[51:75\]/.test(m) && /c_max_tabellen constant int := 25/.test(m) && / z record;/.test(m), "Takt noch mit fester 75er-Grenze / Variablenkonflikt");
+  assert.ok(!/'expected_total',36/.test(m) && /'expected_total',v_total/.test(m), "Backup noch mit fester 36er-Liste");
+  assert.equal((n.match(/^create table if not exists/gm) || []).length, 117, "Neon-Zieltabellen unvollständig");
+  assert.ok(!/drop |delete from|truncate/i.test(n), "Neon-Skript darf nur anlegen");
+  const c = lies("supabase/migrations/20260929_kc_core_mirror_hash_collate_c.sql");
+  assert.equal((c.match(/collate "C"\)/g) || []).length, 10, "Prüfsumme noch abhängig von der Sortierregel");
+  assert.ok(/kc_communication_health_snapshots/.test(lies("supabase/migrations/20260929_kc_core_mirror_messwerte_ausnahme.sql")), "Ausnahme Messwerte fehlt");
+  assert.ok(/kc-neon-backup-verify', '15 0 \* \* \*'/.test(lies("supabase/migrations/20260929_kc_core_backup_spaltenreihenfolge.sql")), "Restore-Test nach dem Backup nicht eingeplant");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

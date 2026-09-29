@@ -1,5 +1,18 @@
 # Änderungen
 
+## KC Core Spiegel – 2026-09-29 (Datenbank, ohne App-Build)
+
+- KC-SPIEGEL-ALLE (Admin-Freigabe Hansi): alle 195 Tabellen haben eine Spiegel-Regel (vorher 118 ohne).
+  117 Neon-Zieltabellen neu angelegt (supabase/neon/…, nur CREATE); 188 Tabellen gespiegelt und geprüft identisch,
+  186 im verschlüsselten Tages-Backup (Restore-Lesetest bestanden).
+- Geheimnisse gehen nie nach Neon: Registry kc_db_mirror_redaction (Push-Adressen/-Schlüssel, externe Zugangsdaten,
+  Sync-Schlüsselmaterial, Kopplungscode, Quittier-Kennung) → als NULL gleichen Typs gespiegelt.
+- Sparmodus-Takt ohne 75er-Grenze (Pakete ≤25 Tabellen/≤8 MB), Tages-Backup ohne feste 36er-Liste (alle backup_enabled).
+- Fehler behoben: Prüfsumme hing von der Sortierregel ab (Supabase en_US, Neon C) → collate "C".
+- Bewusst nicht gespiegelt (Regel mit Begründung): kc_system_check_history (57 MB Messverlauf),
+  kc_communication_health_snapshots (Auslesen 7,5 s > 8-s-Grenze). Vorerst ohne Backup: 2 PC-Manager-Tabellen
+  (Spaltenreihenfolge in Neon abweichend, Neuaufbau nach Freigabe). Restore-Lesetest fest um 00:15 eingeplant.
+
 ## 0.53.0 – 2026-09-29 (DEV)
 
 - KC-CLUB-DRUCK (neu): Drucken / als PDF speichern über ein schmales Druckersymbol rechts in der Kopfzeile.
