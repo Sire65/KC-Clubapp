@@ -805,7 +805,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 65. 0.42.0: Info-Feld blätterbar (Registry, Pfeile, Punkte, Wischen) + Wetter (Adapter/Registry, nur Admin stellt ein, Rule 11)
 {
   const ids = [...html.slice(html.indexOf("const INFO_FELDER = ["), html.indexOf("];", html.indexOf("const INFO_FELDER = ["))).matchAll(/id: "([a-z]+)"/g)].map((m) => m[1]);
-  assert.deepEqual(ids, ["treffen", "wetter", "fuerdich"], "Info-Felder falsch");
+  assert.deepEqual(ids, ["treffen", "wetter", "fuerdich", "demnaechst", "fotos"], "Info-Felder falsch");
   assert.ok(/class="ipfeil"[^>]*onclick="infoBlaettern\(-1\)"/.test(html) && /onclick="infoBlaettern\(1\)"/.test(html) && /class="ipunkt\$\{i === INFO_I \? " an" : ""\}"/.test(html), "Pfeile/Punkte fehlen");
   assert.ok(/\[\$\("heroInfo"\), infoBlaettern\]/.test(html), "Wischen im Info-Feld fehlt");
   assert.ok(!/setInterval\([^)]*infoBlaettern/.test(html), "Info-Feld darf nicht automatisch blättern");
@@ -817,6 +817,20 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   const wa = new Function(html.slice(html.indexOf("const WETTER_CODES"), html.indexOf("const grad =")) + "return wetterArt;")();
   assert.equal(wa(0).szene, "sonne"); assert.equal(wa(63).szene, "regen"); assert.equal(wa(73).szene, "schnee"); assert.equal(wa(95).szene, "gewitter"); assert.equal(wa(45).szene, "nebel");
   assert.equal(wa(42).text, "Wetter unbekannt", "unbekannter Code wird als Wetter ausgegeben");
+}
+
+// 66. 0.43.0: Info-Karten „Demnächst“ (aus dem Kalender, sortiert, nur Zukunft) und „Neueste Fotos“ (schlanke Server-Aktion)
+{
+  assert.ok(aktionen.has("fotos_neueste") && aufrufe.has("fotos_neueste"), "fotos_neueste fehlt");
+  const fn = server.slice(server.indexOf('case "fotos_neueste"'), server.indexOf('case "fotos_liste"'));
+  assert.ok(/\.is\("geloescht_am", null\)/.test(fn) && /Math\.min\(6,/.test(fn) && /createSignedUrls\(pfade, 3600\)/.test(fn), "fotos_neueste: Papierkorb/Grenze/Links");
+  const src = html.slice(html.indexOf("function demnaechstListe"), html.indexOf("function infoDemnaechst"));
+  const heute = new Date().toISOString().slice(0, 10), plus = (n) => { const d = new Date(heute + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+  const liste = new Function("heuteIso", "tagPlus", "berlinIso", "fZeit", "DEMNAECHST_TAGE", src + "return demnaechstListe;")(() => heute, (i, n) => plus(n), (iso) => iso.slice(0, 10), { format: () => "19:00" }, 56)({
+    treffen: [{ beginn: plus(9) + "T17:00:00Z", titel: "Clubabend" }, { beginn: plus(3) + "T17:00:00Z", titel: "Abgesagt", status: "abgesagt" }],
+    dienste: [{ datum: plus(2), start: "10:00", bereich: "Bude" }], fristen: [{ frist: plus(5) + "T20:00:00Z", titel: "Grillfest", offen: true }, { frist: plus(4) + "T20:00:00Z", titel: "zu", offen: false }],
+    geburtstage: [{ md: plus(1).slice(5), name: "Klaus" }, { md: plus(-3).slice(5), name: "Vorbei" }], aktionen: [{ von: plus(-1), titel: "Reise läuft" }] });
+  assert.deepEqual(liste.map((x) => x.text), ["Reise läuft", "Klaus hat Geburtstag", "Mein Dienst · Bude", "Abstimmung endet: Grillfest", "Clubabend"], "Demnächst falsch sortiert/gefiltert");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

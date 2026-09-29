@@ -1,5 +1,14 @@
 # Änderungen
 
+## 0.43.0 – 2026-09-29 (DEV)
+
+- KC-CLUB-INFOFELD-DEMNAECHST (neu): 4. Karte im Info-Feld „🗓️ Demnächst“ – die nächsten 4 Einträge der kommenden 8 Wochen aus
+  der bestehenden Aktion „kalender“ (Treffen ohne abgesagte, Aktionen, freigegebene Geburtstage, eigene Dienste, offene
+  Abstimmungsfristen), sortiert; antippen springt im Kalender auf den Tag (zumTag). Kein neuer Server-Code.
+- KC-CLUB-INFOFELD-FOTOS (neu): 5. Karte „📷 Neueste Fotos“ – die 4 zuletzt hochgeladenen Fotos als Vorschau (neue, schlanke
+  Server-Aktion fotos_neueste statt der kompletten Fotoliste), antippen öffnet das Foto im Album.
+- Registry INFO_FELDER: Felder können eigene Daten laden (laden/neuMin) – erst wenn sie gezeigt werden, Fehler sichtbar.
+
 ## 0.42.0 – 2026-09-29 (DEV)
 
 - KC-CLUB-INFOFELD (neu): Das Info-Feld oben auf der Startseite ist blätterbar – ‹ › antippen, im Feld wischen oder einen der

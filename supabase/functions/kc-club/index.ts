@@ -13,14 +13,14 @@
 //           KC-CLUB-COMMUNICATOR-STATUS (0.17.0), KC-CLUB-FEEDBACK (0.18.0),
 //           KC-CLUB-KACHELN (0.19.0), KC-CLUB-ZUGANG-SELBST (0.21.0),
 //           KC-CLUB-GRUPPEN, KC-CLUB-ZUSTELLWAHL (0.23.0)
-//           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0), KC-CLUB-KACHELN-ZIEHEN (0.26.0), KC-CLUB-FEEDBACK-NEU (0.27.1), KC-CLUB-BEGRUESSUNG (0.28.0), KC-CLUB-ONLINE (0.29.0), KC-CLUB-ANRUF (0.31.0), KC-CLUB-VIDEO (0.32.0), KC-CLUB-QUITTUNG (0.34.0), KC-CLUB-TODO + KC-CLUB-REGISTER-ZIEHEN (0.36.0), KC-CLUB-SPRACHE + KC-CLUB-TODO-ZUSTAENDIG (0.37.0), KC-CLUB-ERSTATTUNG (0.38.0), KC-CLUB-KMSATZ (0.39.0), KC-CLUB-FEEDBACK-DAUERHAFT (0.40.0), KC-CLUB-INFOFELD + KC-CLUB-WETTER (0.42.0)
+//           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0), KC-CLUB-KACHELN-ZIEHEN (0.26.0), KC-CLUB-FEEDBACK-NEU (0.27.1), KC-CLUB-BEGRUESSUNG (0.28.0), KC-CLUB-ONLINE (0.29.0), KC-CLUB-ANRUF (0.31.0), KC-CLUB-VIDEO (0.32.0), KC-CLUB-QUITTUNG (0.34.0), KC-CLUB-TODO + KC-CLUB-REGISTER-ZIEHEN (0.36.0), KC-CLUB-SPRACHE + KC-CLUB-TODO-ZUSTAENDIG (0.37.0), KC-CLUB-ERSTATTUNG (0.38.0), KC-CLUB-KMSATZ (0.39.0), KC-CLUB-FEEDBACK-DAUERHAFT (0.40.0), KC-CLUB-INFOFELD + KC-CLUB-WETTER (0.42.0), KC-CLUB-INFOFELD-DEMNAECHST/-FOTOS (0.43.0)
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.42.0";
+const SERVER_VERSION = "0.43.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -2571,6 +2571,22 @@ Köcheclub Werne`,
       }
 
       // ----- Fotoalbum (KC-CLUB-FOTOALBUM) -----
+      // KC-CLUB-INFOFELD (0.43.0): die neuesten Fotos fürs Info-Feld – klein und schnell (nicht die ganze Liste)
+      case "fotos_neueste": {
+        const n = Math.min(6, Math.max(1, Math.round(Number(p.anzahl) || 4)));
+        const [{ data: fotos }, { count }] = await Promise.all([
+          db.from("kc_club_fotos").select("id,thema,datum,beschreibung,vorschau_id,attachment_id,hochgeladen_am").is("geloescht_am", null).order("hochgeladen_am", { ascending: false }).limit(n),
+          db.from("kc_club_fotos").select("id", { count: "exact", head: true }).is("geloescht_am", null),
+        ]);
+        const liste = fotos ?? [];
+        const { data: att } = liste.length ? await db.from("kc_communication_attachments").select("id,object_path").in("id", liste.map((f: any) => f.vorschau_id || f.attachment_id)) : { data: [] as any[] };
+        const pfad = new Map((att ?? []).map((a: any) => [a.id, a.object_path])), pfade = [...new Set([...pfad.values()])] as string[];
+        const { data: urls } = pfade.length ? await db.storage.from(BUCKET).createSignedUrls(pfade, 3600) : { data: [] as any[] };
+        const url = new Map((urls ?? []).map((u: any) => [u.path, u.signedUrl]));
+        return json({ anzahl: count ?? 0, fotos: liste.map((f: any) => ({ id: f.id, thema: f.thema, datum: f.datum, beschreibung: f.beschreibung, hochgeladen: f.hochgeladen_am,
+          vorschau: url.get(pfad.get(f.vorschau_id || f.attachment_id)) ?? null })) });
+      }
+
       case "fotos_liste": {
         const papierkorb = !!p.papierkorb && ich.admin;
         let q = db.from("kc_club_fotos").select("*");

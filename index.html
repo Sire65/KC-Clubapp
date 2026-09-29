@@ -132,6 +132,9 @@
   .ifzliste { display: grid; gap: 6px; margin-top: 10px; }
   .ifz { display: flex; gap: 10px; align-items: center; width: 100%; text-align: left; border: none; border-radius: 12px; padding: 8px 12px; background: rgba(255,255,255,.14); color: #fff; font: inherit; cursor: pointer; }
   .ifz .ifzt { flex: 1; min-width: 0; }
+  .ifotos { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 10px; }
+  .ifoto { padding: 0; border: none; border-radius: 10px; overflow: hidden; aspect-ratio: 1; background: rgba(255,255,255,.14); color: #fff; font-size: 1.4rem; cursor: pointer; }
+  .ifoto img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .wszene { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
   .winhalt { position: relative; z-index: 1; }
   .wkopf { display: flex; gap: 12px; align-items: center; }
@@ -936,7 +939,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.42.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.43.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -1715,7 +1718,7 @@ async function zugangAnfordern() {
 }
 // KC-CLUB-WARTEN (0.33.0): dauert eine Anfrage länger als 0,35 s, erscheint die drehende Kochmütze mit passendem Text.
 // Hintergrund-Abfragen (alle paar Sekunden/Minuten) zeigen sie nicht, damit nichts flackert.
-const WARTEN_STILL = new Set(["init", "online", "anruf_status", "diagnose", "unterhaltung", "unterhaltungen", "einstellung_setzen", "pinnwand", "kalender", "terminumfragen_liste", "communicator_status", "ping", "anruf_ende", "protokoll_speichern", "todo_erledigt", "todo_liste", "wetter"]);
+const WARTEN_STILL = new Set(["init", "online", "anruf_status", "diagnose", "unterhaltung", "unterhaltungen", "einstellung_setzen", "pinnwand", "kalender", "terminumfragen_liste", "communicator_status", "ping", "anruf_ende", "protokoll_speichern", "todo_erledigt", "todo_liste", "wetter", "fotos_neueste"]);
 const WARTEN_TEXT = { nachricht_senden: "Nachricht wird gesendet …", gruppe_anlegen: "Gruppe wird angelegt …", gruppe_aendern: "Wird gespeichert …", treffen_speichern: "Termin wird gespeichert …",
   pinnwand_anheften: "Zettel wird angeheftet …", feedback_senden: "Feedback wird gesendet …", anklopfen: "Es wird angeklopft …", anruf_start: "Anruf wird aufgebaut …", anlage_hochladen: "Wird hochgeladen …", erstattung_senden: "Antrag wird gesendet …", km_satz_setzen: "Wird gespeichert …", todo_zuweisen: "Wird zugewiesen …",
   link_erzeugen: "Link wird erzeugt …", todo_anlegen: "Wird eingetragen …", zugang_anfordern: "Mail wird gesendet …", foto_hochladen: "Foto wird hochgeladen …", test_an_mich: "Test wird gesendet …" };
@@ -2160,7 +2163,20 @@ const INFO_FELDER = [
   { id: "treffen", t: "Nächstes Treffen", html: () => infoTreffen() },
   { id: "wetter", t: "Wetter", html: () => infoWetter() },
   { id: "fuerdich", t: "Für dich", html: () => infoFuerDich() },
+  { id: "demnaechst", t: "Demnächst", html: () => infoDemnaechst(), laden: () => api("kalender", { von: heuteIso(), bis: tagPlus(heuteIso(), DEMNAECHST_TAGE) }), neuMin: 10 },
+  { id: "fotos", t: "Neueste Fotos", html: () => infoFotos(), laden: () => api("fotos_neueste", { anzahl: 4 }), neuMin: 20 },
 ];
+// Felder mit eigenen Daten laden erst, wenn sie gezeigt werden (und dann höchstens alle neuMin Minuten neu)
+const INFO_DATEN = {};
+async function infoDatenLaden(f) {
+  const d = INFO_DATEN[f.id] ||= { r: null, fehler: null, geholt: 0, laedt: false };
+  if (d.laedt || Date.now() - d.geholt < f.neuMin * 60000) return;
+  d.laedt = true;
+  try { d.r = await f.laden(); d.fehler = null; d.geholt = Date.now(); }
+  catch (e) { d.fehler = e.message; d.geholt = Date.now() - (f.neuMin - 1) * 60000; } // in 1 Minute neu versuchen
+  d.laedt = false;
+  if (INFO_FELDER[INFO_I]?.id === f.id) heroZeigen();
+}
 let INFO_I = (() => { try { return Math.max(0, INFO_FELDER.findIndex((f) => f.id === localStorage.getItem("kc_club_infofeld"))); } catch { return 0; } })();
 let infoLetztes = "";
 function heroZeigen(richtung) {
@@ -2173,6 +2189,7 @@ function heroZeigen(richtung) {
       <div class="ipunkte">${INFO_FELDER.map((x, i) => `<button class="ipunkt${i === INFO_I ? " an" : ""}" aria-label="${esc(x.t)}" title="${esc(x.t)}" onclick="infoGehe(${i})"></button>`).join("")}</div>
       <button class="ipfeil" aria-label="Nächstes Feld" onclick="infoBlaettern(1)">›</button></div>`;
   if (f.id === "wetter") { wetterSzene(); if (!WET.laedt && Date.now() - WET.geholt > WETTER_NEU_MIN * 60000) wetterLaden(); }
+  if (f.laden) infoDatenLaden(f);
 }
 function infoGehe(i, richtung) {
   const n = INFO_FELDER.length, neu = ((i % n) + n) % n;
@@ -2197,6 +2214,47 @@ function infoFuerDich() {
   if (!z.length) return `<h2>👍 Alles erledigt</h2><div class="unter">Gerade ist nichts Offenes für dich. Schön!</div>`;
   const MAX = 4;
   return `<h2>🔔 Für dich</h2><div class="ifzliste">${z.slice(0, MAX).join("")}</div>${z.length > MAX ? `<div class="unter" style="font-size:.85rem">+ ${z.length - MAX} weitere unten bei „Heute wichtig“</div>` : ""}`;
+}
+
+// Feld 4 (0.43.0): Demnächst – die nächsten Termine aus dem Kalender (Treffen, Aktionen, Geburtstage, meine Dienste, Abstimmungsfristen)
+const DEMNAECHST_TAGE = 56, DEMNAECHST_MAX = 4;
+function demnaechstListe(k) {
+  const heute = heuteIso(), bis = tagPlus(heute, DEMNAECHST_TAGE), e = [];
+  for (const t of k.treffen || []) if (t.status !== "abgesagt") e.push({ tag: berlinIso(t.beginn), zeit: fZeit.format(new Date(t.beginn)), sym: "📅", text: t.titel });
+  for (const a of k.aktionen || []) e.push({ tag: a.von < heute ? heute : a.von, sym: "🧳", text: a.titel });
+  for (const d of k.dienste || []) e.push({ tag: d.datum, zeit: d.start, sym: "🗓️", text: "Mein Dienst" + (d.bereich ? " · " + d.bereich : "") });
+  for (const v of k.fristen || []) if (v.offen) e.push({ tag: berlinIso(v.frist), sym: "🗳️", text: "Abstimmung endet: " + v.titel });
+  for (const g of k.geburtstage || []) { // nächster Geburtstag im Zeitraum (nur Tag/Monat)
+    for (const j of [heute.slice(0, 4), String(+heute.slice(0, 4) + 1)]) { const tag = `${j}-${g.md}`; if (tag >= heute && tag <= bis) { e.push({ tag, sym: "🎂", text: `${g.name} hat Geburtstag` }); break; } }
+  }
+  return e.filter((x) => x.tag >= heute && x.tag <= bis).sort((a, b) => (a.tag + (a.zeit || "")).localeCompare(b.tag + (b.zeit || "")));
+}
+function infoDemnaechst() {
+  const d = INFO_DATEN.demnaechst;
+  if (!d?.r) return `<h2>🗓️ Demnächst</h2><div class="unter">${d?.fehler ? "⚠️ " + esc(d.fehler) : "Wird geladen …"}</div>`;
+  const liste = demnaechstListe(d.r), heute = heuteIso(), morgen = tagPlus(heute, 1);
+  if (!liste.length) return `<h2>🗓️ Demnächst</h2><div class="unter">In den nächsten ${DEMNAECHST_TAGE / 7} Wochen steht nichts im Kalender.</div>`;
+  const wann = (x) => (x.tag === heute ? "Heute" : x.tag === morgen ? "Morgen" : fTagDp.format(new Date(x.tag + "T12:00:00Z"))) + (x.zeit ? ", " + x.zeit : "");
+  return `<h2>🗓️ Demnächst</h2><div class="ifzliste">${liste.slice(0, DEMNAECHST_MAX).map((x) => `<button class="ifz" onclick="zumTag('${x.tag}')"><span>${x.sym}</span><span class="ifzt"><b>${esc(wann(x))}</b> · ${esc(x.text)}</span><span>›</span></button>`).join("")}</div>${liste.length > DEMNAECHST_MAX ? `<button class="wlink" style="margin-top:8px" onclick="zumTag('${heute}')">+ ${liste.length - DEMNAECHST_MAX} weitere im Kalender ›</button>` : ""}`;
+}
+// Kalender auf einen Tag springen lassen (wie „Nächstes Treffen“)
+function zumTag(tag) { kalJ = +tag.slice(0, 4); kalM = +tag.slice(5, 7) - 1; kalTagWahl = tag; termineArt = "kalender"; zeige("termine"); setTimeout(() => $("kalTag")?.scrollIntoView({ behavior: "smooth", block: "center" }), 700); }
+// Feld 5 (0.43.0): die neuesten Fotos aus dem Fotoalbum – antippen öffnet das Foto
+function infoFotos() {
+  const d = INFO_DATEN.fotos;
+  if (!d?.r) return `<h2>📷 Neueste Fotos</h2><div class="unter">${d?.fehler ? "⚠️ " + esc(d.fehler) : "Wird geladen …"}</div>`;
+  const f = d.r.fotos || [];
+  if (!f.length) return `<h2>📷 Neueste Fotos</h2><div class="unter">Noch keine Fotos im Album.</div><button class="wlink" style="margin-top:10px" onclick="zeige('fotos')">📷 Erste Fotos hochladen ›</button>`;
+  const neu = f[0];
+  return `<h2>📷 Neueste Fotos</h2><div class="unter" style="font-size:.88rem">${esc(neu.thema || "Fotoalbum")}${neu.datum ? " · " + esc(fTagDe(neu.datum)) : ""}</div>
+    <div class="ifotos">${f.map((x) => x.vorschau ? `<button class="ifoto" aria-label="Foto ansehen" onclick="infoFotoOeffnen('${x.id}')"><img src="${esc(x.vorschau)}" alt="${esc(x.beschreibung || x.thema || "Foto")}" loading="lazy"></button>` : `<button class="ifoto leer" onclick="zeige('fotos')">📷</button>`).join("")}</div>
+    <button class="wlink" style="margin-top:8px" onclick="zeige('fotos')">Alle ${d.r.anzahl} Fotos ansehen ›</button>`;
+}
+async function infoFotoOeffnen(id) {
+  faFilter = {}; faPapierkorb = false; FA = null; zeige("fotos");
+  for (let i = 0; i < 40 && !FA; i++) await new Promise((r) => setTimeout(r, 150)); // warten, bis das Album geladen ist
+  const i = (FA?.fotos || []).findIndex((x) => x.id === id);
+  if (i >= 0) fotoAnsehen(i);
 }
 
 // ---------- KC-CLUB-WETTER (0.42.0): Feld 2 – Wetter mit Animation (Regen, Sonne, Schnee, Gewitter, Sturm, Nebel) ----------

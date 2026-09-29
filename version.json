@@ -1,12 +1,18 @@
 {
-  "version": "0.42.0",
+  "version": "0.43.0",
   "datum": "2026-09-29",
   "neu": [
-    "‹ › Das große Info-Feld oben lässt sich jetzt blättern – Pfeile antippen, wischen oder einen der leuchtenden Punkte",
-    "🌦️ Neues Wetter-Feld mit Animation (Sonne, Regen, Schnee, Gewitter, Sturm, Nebel), 3-Tage-Vorschau und Wetter beim nächsten Treffen",
-    "🔔 Neues Feld „Für dich“: alles Offene auf einen Blick, antippen führt direkt hin"
+    "🗓️ Neue Karte oben „Demnächst“: die nächsten Treffen, Aktionen, Geburtstage, deine Dienste und Abstimmungsfristen – antippen springt in den Kalender",
+    "📷 Neue Karte oben „Neueste Fotos“: die letzten 4 Bilder aus dem Fotoalbum – antippen öffnet das Foto"
   ],
   "verlauf": [
+    {
+      "version": "0.43.0",
+      "neu": [
+        "🗓️ Neue Karte oben „Demnächst“: die nächsten Treffen, Aktionen, Geburtstage, deine Dienste und Abstimmungsfristen – antippen springt in den Kalender",
+        "📷 Neue Karte oben „Neueste Fotos“: die letzten 4 Bilder aus dem Fotoalbum – antippen öffnet das Foto"
+      ]
+    },
     {
       "version": "0.42.0",
       "neu": [
