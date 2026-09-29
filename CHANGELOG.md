@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.26.3 – 2026-09-29 (DEV)
+
+- KC-CLUB-PC (neu): In der installierten App unter ⚙️ Mehr → 📲 App-Installation „💻 Auch am PC oder Tablet nutzen“ –
+  eigenen Link per „Teilen“/Mail an sich selbst schicken oder kopieren. Hinweis: nicht „Link verloren?“ nutzen, weil ein neuer
+  Link den bisherigen ersetzt (ein Zugang je Person).
+
 ## 0.26.2 – 2026-09-29 (DEV)
 
 - KC-CLUB-DESIGN: Schmuck-Kreis oben rechts auf den Kacheln je Design einstellbar („deko“); bei „Lagune“ Aqua → Gold wie im
