@@ -185,7 +185,8 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/update\(\{ erinnert_am: jetzt\(\) \}\)\.eq\("id", x\.id\)\.is\("erinnert_am", null\)/.test(server), "Doppelversand-Sperre Aufgaben-Erinnerung fehlt");
   assert.ok(/club_protokoll: "termine", club_aufgabe: "termine"/.test(server), "Benachrichtigungs-Bereich für Protokolle fehlt");
   // App: Foto vom Blatt (Kamera), Galerie, Datei (Word/PDF) über den Dateimanager
-  assert.ok(/id="prKamera" accept="image\/\*" capture="environment"/.test(html), "Kamera für Protokoll fehlt");
+  // (seit 0.19.2 Kamera in der App statt fremder Kamera-App – siehe 37)
+  assert.ok(html.includes("appKamera(protokollDateien)"), "Kamera für Protokoll fehlt");
   assert.ok(/id="prDok" accept="[^"]*\.docx[^"]*application\/pdf/.test(html), "Word/PDF-Auswahl fehlt");
   assert.ok(/async function anlageHochladen\(roh\)/.test(html) && /await anlageHochladen\(roh\)/.test(html), "gemeinsamer Upload-Helfer fehlt");
   assert.ok(/nur: \(\) => ICH\?\.protokolle !== false/.test(html), "Protokoll-Kachel für Aushilfen sichtbar");
@@ -477,6 +478,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   const anzahl = (html.slice(html.indexOf("const KACHELN = {"), html.indexOf("const kachelnAlle")).match(/\{ (id: "[^"]+", )?sym:/g) || []).length;
   assert.equal(ids.length, anzahl, "Kachel ohne feste id (Anordnung würde verrutschen)");
   assert.equal(new Set(ids).size, ids.length, "doppelte Kachel-id");
+  assert.ok(/b\(-sp, "▲", "nach oben"\) \+ b\(sp, "▼", "nach unten"\)/.test(html) && /id="kaAusHinweis"/.test(html), "▲▼ oder Hinweis auf ausgeblendete fehlt");
   assert.ok(/kaBearbeiten\(true, id\); \}, 600\)/.test(html) && /id="kachelLeiste"/.test(html), "lange drücken fehlt");
   assert.ok(aufrufe.has("einstellung_setzen") && /kacheln: \(w\) =>/.test(server) && server.includes("notfall: nf ?? null, einstellungen,"), "Server-Speicherung fehlt");
   // Reihenfolge/Ausblenden rechnen wie in der App
@@ -492,7 +494,9 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 {
   assert.ok(/async function appKamera\(weiter, vorne = false\)/.test(html) && /getUserMedia\(/.test(html) && /id="appKamera"/.test(html), "Kamera in der App fehlt");
   for (const w of ["appKamera(faGewaehlt)", "appKamera(protokollDateien)", "appKamera(dateienGewaehlt)"]) assert.ok(html.includes(w), `Kamera in der App fehlt bei ${w}`);
-  for (const w of ["dateiWahl('faGalerie', faGewaehlt)", "dateiWahl('faKamera', faGewaehlt)", "dateiWahl('prKamera', protokollDateien)", "dateiWahl('prBild', protokollDateien)", "dateiWahl(id, dateienGewaehlt)"]) assert.ok(html.includes(w), `Auswahl ohne Messung: ${w}`);
+  for (const w of ["dateiWahl('faGalerie', faGewaehlt)", "dateiWahl('prBild', protokollDateien)", "dateiWahl(id, dateienGewaehlt)"]) assert.ok(html.includes(w), `Auswahl ohne Messung: ${w}`);
+  // 0.19.2: nur noch zwei Wege – Galerie und Kamera (Kamera = in der App, keine fremde App)
+  assert.ok(!/Kamera in der App<\/button>/.test(html) && !/id="faKamera"|id="prKamera"|id="dateiKamera"/.test(html), "doppelte Kamera-Knöpfe");
   assert.ok(/melden\("nicht_geoeffnet"\); dateiWahlHilfe/.test(html), "kein Hinweis, wenn sich nichts öffnet");
 }
 

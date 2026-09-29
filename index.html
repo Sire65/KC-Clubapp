@@ -133,7 +133,9 @@
   .kachel .kstrg { position: absolute; left: 8px; right: 8px; bottom: 8px; display: flex; gap: 6px; z-index: 2; }
   .kachel .kstrg button { flex: 1; border: none; border-radius: 10px; padding: 8px 0; font-size: 1.05rem; font-weight: 800; background: var(--karte2); cursor: pointer; }
   .kachel .kstrg button:disabled { opacity: .35; }
-  .kachel .kstrg button.weg { background: #a51d1d; color: #fff; }
+  .kachel .kstrg button { padding: 9px 0; }
+  .kachel .kweg { position: absolute; right: 8px; top: 8px; z-index: 3; border: none; border-radius: 50%; width: 38px; height: 38px; font-size: 1.05rem; font-weight: 800; background: #a51d1d; color: #fff; cursor: pointer; }
+  .kaausgeblendet { display: block; margin: 10px auto 0; border: none; background: none; color: var(--grau); font-weight: 700; text-decoration: underline; cursor: pointer; }
   .kachel .kstrg button.ein { background: var(--gruen); color: #fff; }
   .kachelleiste { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; background: var(--karte); border-radius: var(--radius); box-shadow: var(--schatten); padding: 10px 12px; margin-bottom: 10px; }
   .kachelleiste p { margin: 0; flex: 1 1 100%; font-size: .9rem; }
@@ -349,9 +351,10 @@
     <div id="updateHinweis"></div>
     <div class="abschnitt"><h3>Schnellzugriff</h3><button class="marke" id="versionMarke" style="border:none;cursor:pointer" title="Update prüfen" onclick="updateKachel()">v–</button></div>
     <div class="register" id="register"></div>
-    <div class="kachelleiste versteckt" id="kachelLeiste"><p>✏️ <b>Kacheln anordnen:</b> mit ◀ ▶ verschieben, mit ✕ ausblenden, 👁️ blendet wieder ein.</p>
+    <div class="kachelleiste versteckt" id="kachelLeiste"><p>✏️ <b>Kacheln anordnen:</b> mit ◀ ▲ ▼ ▶ verschieben, mit ✕ ausblenden, 👁️ blendet wieder ein. Ausgeblendete bleiben hier blass an ihrem Platz.</p>
       <button class="knopf haupt klein" onclick="kaBearbeiten(false)">✅ Fertig</button><button class="knopf klein" onclick="kaStandard()">↺ Standard</button></div>
     <div class="raster" id="raster" oncontextmenu="return false"></div>
+    <div id="kaAusHinweis"></div>
     <div class="wischhinweis">‹ wischen für weitere Bereiche ›</div>
     <div class="karte"><h3>Heute wichtig</h3><div id="wichtig" class="hinweis">…</div></div>
   </section>
@@ -579,16 +582,13 @@
 </div>
 <div class="blatt versteckt" id="anlageBlatt" onclick="if(event.target===this)this.classList.add('versteckt')">
   <div class="blatt-innen"><h3>Anlage hinzufügen</h3>
-    <button class="knopf" onclick="anlageWahl('dateiKamera')">📷 Foto aufnehmen</button>
-    <button class="knopf" onclick="$('anlageBlatt').classList.add('versteckt');appKamera(dateienGewaehlt)">📸 Kamera in der App</button>
+    <button class="knopf" onclick="$('anlageBlatt').classList.add('versteckt');appKamera(dateienGewaehlt)">📷 Kamera</button>
     <button class="knopf" onclick="anlageWahl('dateiBild')">🖼️ Bild aus der Galerie</button>
     <button class="knopf" onclick="anlageWahl('dateiDok')">📄 Datei oder PDF</button>
     <button class="knopf" onclick="anlageMenue()">Abbrechen</button></div>
 </div>
-<input type="file" id="dateiKamera" accept="image/*" capture="environment" class="versteckt" onchange="dateienGewaehlt(this)">
 <input type="file" id="dateiBild" accept="image/*" multiple class="versteckt" onchange="dateienGewaehlt(this)">
 <input type="file" id="dateiDok" accept="application/pdf,image/*,.doc,.docx,.xls,.xlsx,.txt" multiple class="versteckt" onchange="dateienGewaehlt(this)">
-<input type="file" id="prKamera" accept="image/*" capture="environment" class="versteckt" onchange="protokollDateien(this)">
 <input type="file" id="prBild" accept="image/*" multiple class="versteckt" onchange="protokollDateien(this)">
 <input type="file" id="prDok" accept=".pdf,.doc,.docx,.odt,.rtf,.txt,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.oasis.opendocument.text,image/*" multiple class="versteckt" onchange="protokollDateien(this)">
 
@@ -602,7 +602,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.19.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.19.2"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -872,6 +872,8 @@ function kaBearbeiten(an, frisch) {
   if (!an) { clearTimeout(kaSpeicherTimer); kaSpeichern(); melde("✅ Startseite gespeichert"); }
   registerZeigen(); kachelnZeigen();
 }
+// Spalten im Kachelraster (Handy meist 2) – für ▲/▼ = eine Reihe nach oben/unten
+function kaSpalten() { try { return Math.max(1, getComputedStyle($("raster")).gridTemplateColumns.split(" ").filter(Boolean).length); } catch { return 2; } }
 function kaSchieben(id, d) {
   const liste = kaSortiert(reg).map((k) => k.id), i = liste.indexOf(id), j = i + d;
   if (i < 0 || j < 0 || j >= liste.length) return;
@@ -931,13 +933,18 @@ function registerWischen(schritt) {
 })();
 function kachelnZeigen() {
   if (kaBearb) {
-    const alle = kaSortiert(reg), sicht = alle.filter((k) => !KA.aus.includes(k.id)), aus = alle.filter((k) => KA.aus.includes(k.id));
-    $("raster").innerHTML = [...sicht, ...aus].map((k) => { const weg = KA.aus.includes(k.id), i = sicht.indexOf(k);
-      return `<div class="kachel bearb${weg ? " aus" : ""}${k.id === kaFrisch ? " frisch" : ""}" data-id="${k.id}"><div class="sym">${k.sym}</div><b>${esc(k.t)}</b><small>${weg ? "ausgeblendet" : esc(typeof k.u === "function" ? k.u() : k.u)}</small>
+    $("kaAusHinweis").innerHTML = "";
+    // 0.19.2: alle Kacheln an ihrem Platz (ausgeblendete blass), verschieben nach links/rechts und nach oben/unten (eine Reihe)
+    const alle = kaSortiert(reg), n = alle.length, sp = kaSpalten();
+    $("raster").innerHTML = alle.map((k, i) => { const weg = KA.aus.includes(k.id);
+      const b = (d, z, t) => `<button title="${t}" ${i + d < 0 || i + d >= n ? "disabled" : ""} onclick="kaSchieben('${k.id}',${d})">${z}</button>`;
+      return `<div class="kachel bearb${weg ? " aus" : ""}${k.id === kaFrisch ? " frisch" : ""}" data-id="${k.id}">${weg ? "" : `<button class="kweg" title="ausblenden" onclick="kaSichtbar('${k.id}',false)">✕</button>`}<div class="sym">${k.sym}</div><b>${esc(k.t)}</b><small>${weg ? "🙈 ausgeblendet" : esc(typeof k.u === "function" ? k.u() : k.u)}</small>
         <div class="kstrg">${weg ? `<button class="ein" onclick="kaSichtbar('${k.id}',true)">👁️ Einblenden</button>`
-          : `<button title="nach vorne" ${i === 0 ? "disabled" : ""} onclick="kaSchieben('${k.id}',-1)">◀</button><button title="nach hinten" ${i === sicht.length - 1 ? "disabled" : ""} onclick="kaSchieben('${k.id}',1)">▶</button><button class="weg" title="ausblenden" onclick="kaSichtbar('${k.id}',false)">✕</button>`}</div></div>`; }).join("");
+          : b(-1, "◀", "nach links") + (sp > 1 ? b(-sp, "▲", "nach oben") + b(sp, "▼", "nach unten") : "") + b(1, "▶", "nach rechts")}</div></div>`; }).join("");
     return;
   }
+  const ausN = kaSortiert(reg).length - kacheln(reg).length;
+  $("kaAusHinweis").innerHTML = ausN ? `<button class="kaausgeblendet" onclick="kaBearbeiten(true)">🙈 ${ausN} ausgeblendete Kachel${ausN > 1 ? "n" : ""} – anzeigen</button>` : "";
   $("raster").innerHTML = kacheln(reg).map((k, i) => {
     const z = k.zahl ? k.zahl() : 0;
     return `<button class="kachel${k.bald ? " bald" : ""}" data-id="${k.id}" onclick="${k.bald ? `melde('„${k.t}“ kommt in einer der nächsten Versionen.')` : k.aktion || `zeige('${k.v}')`}">
@@ -1672,11 +1679,10 @@ function dateiWahl(inputId, weiter) {
 let dwHinweis = null;
 function dateiWahlHilfe(inputId, weiter, warOffen) {
   dwHinweis = inputId;
-  const galerie = !/kamera/i.test(inputId);
   $("exTitel").textContent = warOffen ? "Kein Foto ausgewählt" : "Hat sich nichts geöffnet?";
-  $("exText").textContent = warOffen ? "Falls du abgebrochen hast, einfach nochmal versuchen. Hat es nicht geklappt, nimm die Kamera in der App."
-    : `Auf diesem Handy lässt sich die ${galerie ? "Galerie" : "Kamera-App"} aus der Club-App nicht öffnen. Die Kamera in der App funktioniert trotzdem.`;
-  $("exKnoepfe").innerHTML = `<button class="knopf haupt" data-a="kam">📸 Kamera in der App</button><button class="knopf" data-a="nochmal">🔁 Nochmal versuchen</button>`;
+  $("exText").textContent = warOffen ? "Falls du abgebrochen hast, einfach nochmal versuchen. Kam die Galerie gar nicht richtig hoch, nimm „📷 Kamera“."
+    : "Auf diesem Handy lässt sich die Galerie aus der Club-App leider nicht öffnen. Mit „📷 Kamera“ kannst du das Foto direkt aufnehmen.";
+  $("exKnoepfe").innerHTML = `<button class="knopf haupt" data-a="kam">📷 Kamera</button><button class="knopf" data-a="nochmal">🔁 Nochmal versuchen</button>`;
   $("exKnoepfe").querySelector('[data-a="kam"]').onclick = () => { externZu(); dwHinweis = null; appKamera(weiter); };
   $("exKnoepfe").querySelector('[data-a="nochmal"]').onclick = () => { externZu(); dateiWahl(inputId, weiter); };
   $("externBlatt").classList.remove("versteckt");
@@ -1903,9 +1909,8 @@ function protokollFormular() {
     </div>
     <div class="karte"><h3>2 · Protokoll anhängen</h3>
       <div class="anhaengen">
-        <button class="knopf haupt" onclick="dateiWahl('prKamera', protokollDateien)">📷 Foto vom Blatt</button>
+        <button class="knopf haupt" onclick="appKamera(protokollDateien)">📷 Foto vom Blatt (Kamera)</button>
         <button class="knopf" onclick="dateiWahl('prBild', protokollDateien)">🖼️ Foto aus der Galerie</button>
-        <button class="knopf" onclick="appKamera(protokollDateien)">📸 Kamera in der App</button>
         <button class="knopf" onclick="$('prDok').click()">📄 Datei (Word / PDF)</button>
       </div>
       <p class="hinweis" style="font-size:.85rem">Mehrere Seiten? Einfach nacheinander fotografieren. „Datei“ öffnet den Dateimanager von Handy oder Tablet.</p>
@@ -2276,8 +2281,8 @@ function anlassAuswahl(id, art, bid) {
 function fotoForm() {
   faDateien = [];
   $("fotoForm").innerHTML = `<h3>📷 Fotos hinzufügen</h3>
-    <div class="knoepfe" style="margin-top:0"><button class="knopf haupt" onclick="dateiWahl('faGalerie', faGewaehlt)">🖼️ Aus der Galerie</button><button class="knopf" onclick="dateiWahl('faKamera', faGewaehlt)">📷 Foto aufnehmen</button><button class="knopf" onclick="appKamera(faGewaehlt)">📸 Kamera in der App</button></div>
-    <input type="file" id="faGalerie" accept="image/*" multiple hidden onchange="faGewaehlt(this)"><input type="file" id="faKamera" accept="image/*" capture="environment" hidden onchange="faGewaehlt(this)">
+    <div class="knoepfe" style="margin-top:0"><button class="knopf haupt" onclick="dateiWahl('faGalerie', faGewaehlt)">🖼️ Aus der Galerie</button><button class="knopf haupt" onclick="appKamera(faGewaehlt)">📷 Kamera</button></div>
+    <input type="file" id="faGalerie" accept="image/*" multiple hidden onchange="faGewaehlt(this)">
     <div id="faAuswahl" class="hinweis" style="margin:8px 0">Noch keine Fotos gewählt (bis zu 50 auf einmal).</div>
     <label class="feld">Thema${themaAuswahl("faThema", faFilter.thema || "")}</label>
     <label class="feld">Anlass (freiwillig)${anlassAuswahl("faAnlass", faFilter.bezug_art, faFilter.bezug_id)}</label>
