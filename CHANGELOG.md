@@ -1,5 +1,10 @@
 # Änderungen
 
+## 0.27.3 – 2026-09-29 (DEV)
+
+- Einladungstext beim 🔗 Link (Mitglieder, nur Admin): Installationsanleitung wie unter ⚙️ → App-Installation
+  („App installieren“ statt nur „Zum Startbildschirm hinzufügen“, damit keine Verknüpfung entsteht; iPhone-Hinweis).
+
 ## 0.27.2 – 2026-09-29 (DEV)
 
 - KC-CLUB-ZUM-TREFFEN (neu): „Nächstes Treffen – in X Tagen“ (und das Treffen oben im Kopf) antippen öffnet Termine in der

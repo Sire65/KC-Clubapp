@@ -719,7 +719,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.27.2"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.27.3"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3283,7 +3283,8 @@ async function linkTeilen(pid) {
   if (m.app && !confirm(`${m.name} hat schon einen Link. Neuen erzeugen? Der alte funktioniert dann nicht mehr.`)) return;
   try {
     const { link } = await api("link_erzeugen", { person_id: pid });
-    const text = `Hallo ${m.vorname}, hier ist dein persönlicher Link zur Köcheclub-App: ${link}\n\nEinfach antippen und dann „Zum Startbildschirm hinzufügen“. Bitte nicht weitergeben. Viele Grüße, Hansi`;
+    // 0.27.3: Anleitung wie unter ⚙️ → App-Installation (richtige App statt Verknüpfung)
+    const text = `Hallo ${m.vorname}, hier ist dein persönlicher Link zur Köcheclub-App:\n${link}\n\nSo geht's (Android): Link in Chrome öffnen → oben rechts ⋮ → „App installieren“ (bzw. „Zum Startbildschirm hinzufügen“ → „Installieren“, nicht „Verknüpfung“). iPhone: in Safari Teilen □↑ → „Zum Home-Bildschirm“.\n\nBitte nicht weitergeben – der Link ist dein persönlicher Zugang. Viele Grüße, Hansi`;
     if (confirm(`Link für ${m.name} erzeugt.\n\nOK = per WhatsApp schicken\nAbbrechen = in die Zwischenablage kopieren`)) window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank");
     else { try { await navigator.clipboard.writeText(text); melde("Text mit Link kopiert"); } catch { prompt("Zum Kopieren:", text); } }
     mitgliederLaden();
