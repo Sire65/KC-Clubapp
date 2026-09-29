@@ -1,10 +1,16 @@
 {
-  "version": "0.48.0",
+  "version": "0.48.1",
   "datum": "2026-09-29",
   "neu": [
-    "🪞 Admin-Zentrale: Neon-Spiegel und tägliches Backup mit Lämpchen – pausiert, verzögert oder aktuell, letzter Wiederherstellungs-Test und Grund einer Pause"
+    "🪞 Admin-Zentrale: Backup zeigt jetzt auch „pausiert“, wenn alle Neon-Aufgaben angehalten sind"
   ],
   "verlauf": [
+    {
+      "version": "0.48.1",
+      "neu": [
+        "🪞 Admin-Zentrale: Backup zeigt jetzt auch „pausiert“, wenn alle Neon-Aufgaben angehalten sind"
+      ]
+    },
     {
       "version": "0.48.0",
       "neu": [

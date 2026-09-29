@@ -1,5 +1,10 @@
 # Änderungen
 
+## 0.48.1 – 2026-09-29 (DEV)
+
+- KC-CLUB-ADMIN-SPIEGEL: Backup-Zeile nennt die Pause auch, wenn die Backup-Regel noch „an“ ist, aber alle Neon-Jobs global
+  pausiert wurden (Live-Befund: Regel an, Cron seit 21.09. ausgesetzt). Nur App.
+
 ## 0.48.0 – 2026-09-29 (DEV)
 
 - KC-CLUB-ADMIN-SPIEGEL (neu): Admin-Zentrale zeigt „Neon-Spiegel“ und „Backup“ (nur lesend aus kc_db_mirror_policies/-runs/-audit
