@@ -1,5 +1,15 @@
 # Änderungen
 
+## 0.55.0 – 2026-09-29 (DEV)
+
+- KC-CLUB-NETZART (neu): Verbindungstest mit Netzart-Auswahl (📶 WLAN / 📱 Mobilfunk / ❔ weiß nicht), vorbelegt mit der
+  Erkennung des Handys (navigator.connection.type, nur Android teils) oder der letzten Wahl. Die letzten 6 Tests je Gerät
+  stehen als Tabelle nebeneinander (localStorage, reine Komfortfunktion); jedes Ergebnis geht zusätzlich als Diagnose
+  „verbindung“ ins Club-Protokoll (Netz, Antwortzeit, ↓/↑, Datenbankzeit). Zeile „Handy“ ehrlich beschriftet:
+  „Tempo-Klasse 4G“ statt „4G“ (effectiveType ist keine Netzart). Hinweis: Datenbankzeit misst der Server – netzunabhängig.
+- KC Core Spiegel: die zwei PC-Manager-Spiegeltabellen in Neon in Supabase-Spaltenreihenfolge neu aufgebaut (Freigabe
+  Hansi) → wieder im Tages-Backup, Restore-Lesetest 188/188 ok.
+
 ## 0.54.0 – 2026-09-29 (DEV)
 
 - KC-CLUB-TIPPT (neu): „schreibt …“ in Unterhaltungen. Beim Tippen meldet die App höchstens alle 3 s (Aktion tippen),

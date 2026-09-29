@@ -1035,4 +1035,16 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/adminBalken\("🪞 Neon-Spiegel", r\.spiegel\?\.groesse\?\.bytes \?\? null/.test(html) && /alt \? "grau"/.test(html) && /⚠️ veraltet/.test(html), "Neon-Balken/Veraltet-Markierung fehlt");
 }
 
+// 77. 0.55.0: Netzart beim Verbindungstest (KC-CLUB-NETZART) + Neon-Neuaufbau PC-Manager
+{
+  assert.ok(/const NETZARTEN = \{ wlan: "📶 WLAN", mobil: "📱 Mobilfunk", unbekannt: "❔ weiß nicht" \};/.test(html), "Netzarten-Registry fehlt");
+  assert.ok(/t === "wifi" \|\| t === "ethernet" \? "wlan" : t === "cellular" \? "mobil" : null/.test(html), "Erkennung Netzart fehlt");
+  assert.ok(/name="vbNetz"/.test(html) && /onchange="vbNetzWahl\('\$\{k\}'\)"/.test(html), "Auswahl im Verbindungsblatt fehlt");
+  assert.ok(/vbVerlaufMerken\(\{ zeit: VB\.test\.zeit, netz: VB\.test\.netz/.test(html) && /api\("diagnose", \{ art: "verbindung"/.test(html), "Ergebnis wird nicht gemerkt/gemeldet");
+  assert.ok(/Tempo-Klasse \$\{esc\(String\(c\.effectiveType\)/.test(html) && !/`\$\{c\?\.effectiveType \? ` · \$\{esc\(String\(c\.effectiveType\)\.toUpperCase\(\)\)\}` : ""\}/.test(html), "„4G“ wird noch als Netzart ausgegeben");
+  assert.ok(/try \{ localStorage\.setItem\("kc_club_vbtests"/.test(html), "Verlauf ohne try/catch");
+  const nb = lies("supabase/neon/20260929_neon_pcmanager_spaltenreihenfolge.sql");
+  assert.ok(nb.indexOf("rename to kc_manager_serving_materials_alt") < nb.indexOf("drop table public.kc_manager_serving_materials_alt"), "Neuaufbau ohne Rückfallpunkt");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

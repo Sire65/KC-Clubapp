@@ -1,11 +1,16 @@
 {
-  "version": "0.54.0",
+  "version": "0.55.0",
   "datum": "2026-09-29",
   "neu": [
-    "✍️ Nachrichten: Du siehst jetzt, wenn jemand auf der Gegenseite gerade schreibt – „Klaus schreibt …“ wie bei WhatsApp",
-    "🪞 Admin-Zentrale: Füllstand der Neon-Spiegeldatenbank als Balken (wie bei der Datenbank)"
+    "📶 Verbindungstest: vor dem Test „WLAN“ oder „Mobilfunk“ wählen (Android erkennt es teils selbst) – die letzten Tests stehen zum Vergleich nebeneinander"
   ],
   "verlauf": [
+    {
+      "version": "0.55.0",
+      "neu": [
+        "📶 Verbindungstest: vor dem Test „WLAN“ oder „Mobilfunk“ wählen (Android erkennt es teils selbst) – die letzten Tests stehen zum Vergleich nebeneinander"
+      ]
+    },
     {
       "version": "0.54.0",
       "neu": [

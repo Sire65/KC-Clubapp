@@ -1080,7 +1080,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "0.54.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.55.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -1953,6 +1953,15 @@ async function apiRoh(action, daten = {}) {
 // Untere LED = Datenverkehr: leuchtet nur, während wirklich Daten mit dem Server (Supabase) laufen.
 const SUPA_HOST = new URL(API).host;
 const VB_VERALTET_MS = 3 * 60 * 1000; // ohne erfolgreiche Antwort länger als 3 Minuten → „veraltet“ (nie als OK anzeigen)
+// KC-CLUB-NETZART (0.55.0): Netzart beim Verbindungstest. Der Browser verrät sie meist nicht (iPhone nie; Android nur teils über
+// navigator.connection.type) – daher Auswahl (vorbelegt: erkannt > zuletzt gewählt). effectiveType ist nur eine Tempo-Klasse, keine Netzart.
+const NETZARTEN = { wlan: "📶 WLAN", mobil: "📱 Mobilfunk", unbekannt: "❔ weiß nicht" };
+const VB_VERLAUF_MAX = 6;
+function netzErkannt() { const t = navigator.connection?.type; return t === "wifi" || t === "ethernet" ? "wlan" : t === "cellular" ? "mobil" : null; }
+function vbNetz() { if (VB.netz) return VB.netz; let l = null; try { l = localStorage.getItem("kc_club_netzart"); } catch {} return netzErkannt() || (NETZARTEN[l] ? l : "unbekannt"); }
+function vbNetzWahl(n) { VB.netz = n; try { localStorage.setItem("kc_club_netzart", n); } catch {} vbBlattZeigen(); }
+function vbVerlauf() { try { return JSON.parse(localStorage.getItem("kc_club_vbtests") || "[]").slice(0, VB_VERLAUF_MAX); } catch { return []; } }
+function vbVerlaufMerken(t) { try { localStorage.setItem("kc_club_vbtests", JSON.stringify([t, ...vbVerlauf()].slice(0, VB_VERLAUF_MAX))); } catch {} }
 const VB = { comm: null, commZeit: 0, letzteOk: 0, letzterFehler: 0, fehlerText: "", anfragen: 0, fehler: 0, laufend: 0, zeiten: [], server: null, wartung: null, update: false, bytes: 0, test: null };
 function vbStart() { VB.laufend++; vbDatenLed(); }
 function vbEnde(ok, ms, fehlerText) {
@@ -2049,17 +2058,23 @@ function vbBlattZeigen() {
       ${rundinstrument("Download", t?.down ?? null, 50, "Mbit/s", [[2, "#c0485a"], [10, "#d19a22"], [50, "#2e7d4f"]], 1)}
       ${rundinstrument("Upload", t?.up ?? null, 50, "Mbit/s", [[1, "#c0485a"], [5, "#d19a22"], [50, "#2e7d4f"]], 1)}
     </div>
-    <div id="vbTestText" class="hinweis" style="text-align:center">${t?.zeit ? `Letzter Test: ${fZeit.format(new Date(t.zeit))} Uhr${t.db != null ? ` · Datenbank ${t.db} ms` : ""}` : "Download/Upload: bitte „Verbindung testen“ tippen."}</div>
+    <div id="vbTestText" class="hinweis" style="text-align:center">${t?.zeit ? `Letzter Test${t.netz ? " (" + NETZARTEN[t.netz] + ")" : ""}: ${fZeit.format(new Date(t.zeit))} Uhr${t.db != null ? ` · Datenbank ${t.db} ms` : ""}` : "Download/Upload: bitte „Verbindung testen“ tippen."}</div>
     <table class="vb-tabelle">
       <tr><td>Letzte Antwort</td><td>${VB.letzteOk ? fZeit.format(new Date(VB.letzteOk)) + " Uhr" : "–"}</td></tr>
       <tr><td>Anfragen / Fehler (seit App-Start)</td><td>${VB.anfragen} / ${VB.fehler}</td></tr>
       ${VB.fehler ? `<tr><td>Letzter Fehler</td><td>${VB.letzterFehler ? fZeit.format(new Date(VB.letzterFehler)) + " Uhr · " : ""}${esc(VB.fehlerText)}</td></tr>` : ""}
       <tr><td>Fotos/Dateien geladen</td><td>${VB.bytes ? mb(VB.bytes) : "–"}</td></tr>
-      <tr><td>Handy</td><td>${navigator.onLine ? "online" : "offline"}${c?.effectiveType ? ` · ${esc(String(c.effectiveType).toUpperCase())}` : ""}${c?.downlink ? ` · ca. ${c.downlink.toLocaleString("de-DE")} Mbit/s` : ""}</td></tr>
+      <tr><td>Handy</td><td>${navigator.onLine ? "online" : "offline"}${netzErkannt() ? ` · ${NETZARTEN[netzErkannt()]} erkannt` : ""}${c?.effectiveType ? ` · Tempo-Klasse ${esc(String(c.effectiveType).toUpperCase())}` : ""}${c?.downlink ? ` · ca. ${c.downlink.toLocaleString("de-DE")} Mbit/s` : ""}</td></tr>
       <tr><td>Version App / Server</td><td>${APP_VERSION} / ${esc(VB.server || INIT?.server || "–")}</td></tr>
       ${VB.wartung?.an ? `<tr><td>Wartung seit</td><td>${VB.wartung.seit ? esc(zeitKurz(VB.wartung.seit)) + " Uhr" : "–"}</td></tr>` : ""}
     </table>
+    <b style="font-size:.9rem">Womit bist du gerade im Netz?${netzErkannt() ? ' <span class="hinweis" style="font-weight:normal">(vom Handy erkannt)</span>' : ""}</b>
+    <div class="dwahl" style="margin:4px 0 6px">${Object.entries(NETZARTEN).map(([k, t]) => `<label><input type="radio" name="vbNetz" value="${k}" ${vbNetz() === k ? "checked" : ""} onchange="vbNetzWahl('${k}')"> ${t}</label>`).join("")}</div>
     <button class="knopf haupt" id="vbTestKnopf" onclick="verbindungTesten()" ${VB.test?.laeuft ? "disabled" : ""}>▶️ Verbindung testen</button>
+    ${(() => { const v = vbVerlauf(); if (!v.length) return ""; const z = (x, e) => (x == null ? "–" : x.toLocaleString("de-DE") + e);
+      return `<b style="font-size:.9rem">Letzte Tests auf diesem Gerät</b><table class="vb-tabelle"><tr><td><b>Wann</b></td><td><b>Netz</b></td><td><b>Antwort</b></td><td><b>↓ / ↑ Mbit/s</b></td></tr>
+        ${v.map((t) => `<tr><td>${esc(zeitKurz(new Date(t.zeit).toISOString()))}</td><td>${NETZARTEN[t.netz] || "–"}</td><td>${z(t.ping, " ms")}</td><td>${z(t.down, "")} / ${z(t.up, "")}</td></tr>`).join("")}</table>
+        <p class="hinweis" style="font-size:.8rem;margin:0">WLAN und Mobilfunk unterscheiden sich bei Antwortzeit, Download und Upload. „Datenbank … ms“ misst der Server selbst – das ist bei beiden gleich.</p>`; })()}
     ${vbCommBlock()}
     ${ICH?.admin ? `<button class="knopf" onclick="wartungUmschalten()">${VB.wartung?.an ? "✅ Wartung beenden" : "🔧 Wartung ankündigen (LED blau)"}</button>` : ""}
     <p class="hinweis" style="font-size:.85rem;margin:0">Obere LED = Server (Supabase): 🟢 verbunden · 🔴 keine Verbindung · 🔵 Wartung · ⚪ unbekannt/veraltet.<br>Mittlere LED = KC Communicator: 🟢 läuft · 🟡 eingeschränkt · 🔴 Störung · 🔵 Versand pausiert · ⚪ unbekannt.<br>Untere LED flackert nur, wenn gerade wirklich Daten übertragen werden.</p>`;
@@ -2082,8 +2097,11 @@ async function verbindungTesten() {
     if (r.empfangen !== last.length) throw new Error("Upload unvollständig");
     VB.test.up = Math.round((UP * 8 / 1e6) / Math.max(0.05, (performance.now() - t0 - ping) / 1000) * 10) / 10;
     text("⏳ KC Communicator prüfen …"); await communicatorPruefen();
-    VB.test.zeit = Date.now(); VB.test.laeuft = false; vbBlattZeigen();
-    melde(`✔ Verbindung in Ordnung – ${ping} ms, ↓ ${VB.test.down.toLocaleString("de-DE")} / ↑ ${VB.test.up.toLocaleString("de-DE")} Mbit/s`);
+    VB.test.zeit = Date.now(); VB.test.laeuft = false; VB.test.netz = vbNetz();
+    vbVerlaufMerken({ zeit: VB.test.zeit, netz: VB.test.netz, ping, down: VB.test.down, up: VB.test.up, db: VB.test.db });
+    api("diagnose", { art: "verbindung", daten: { netz: VB.test.netz, erkannt: netzErkannt() || "", ping, down: VB.test.down, up: VB.test.up, db: VB.test.db ?? -1, tempo: navigator.connection?.effectiveType || "" } }).catch(() => {});
+    vbBlattZeigen();
+    melde(`✔ ${NETZARTEN[VB.test.netz]}: ${ping} ms, ↓ ${VB.test.down.toLocaleString("de-DE")} / ↑ ${VB.test.up.toLocaleString("de-DE")} Mbit/s`);
   } catch (e) {
     VB.test.laeuft = false; VB.test.zeit = Date.now(); vbBlattZeigen(); text("❌ Test abgebrochen: " + e.message);
     melde("Verbindungstest fehlgeschlagen: " + e.message, true);
