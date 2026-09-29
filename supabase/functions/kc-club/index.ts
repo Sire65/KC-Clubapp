@@ -10,14 +10,15 @@
 //           KC-CLUB-PROTOKOLLE (0.9.0), KC-CLUB-AUFGABEN (0.9.0), KC-CLUB-AKTIONEN (0.10.0), KC-CLUB-LOESCHEN (0.11.0),
 //           KC-CLUB-KONTAKT (0.13.0), KC-CLUB-TERMINFINDUNG, KC-CLUB-NACHFASSEN, KC-CLUB-MITFAHREN, KC-CLUB-NOTFALL, KC-CLUB-KALENDERABO (0.14.0),
 //           KC-CLUB-FOTOALBUM (0.15.0), KC-CLUB-VERBINDUNG (0.16.0),
-//           KC-CLUB-COMMUNICATOR-STATUS (0.17.0), KC-CLUB-FEEDBACK (0.18.0)
+//           KC-CLUB-COMMUNICATOR-STATUS (0.17.0), KC-CLUB-FEEDBACK (0.18.0),
+//           KC-CLUB-KACHELN (0.19.0)
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.18.0";
+const SERVER_VERSION = "0.19.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -227,6 +228,17 @@ function feedbackPruefen(roh: unknown) {
   }
   return aus;
 }
+// ----- KC-CLUB-KACHELN: persönliche Einstellungen der Oberfläche (je Mitglied, geräteübergreifend) -----
+// Erlaubte Schlüssel mit Prüfung; neue Einstellungen (z. B. Farben) kommen hier dazu.
+const KA_ID = /^[a-z0-9_-]{1,30}$/;
+const kaIds = (v: unknown) => [...new Set((Array.isArray(v) ? v : []).filter((x) => typeof x === "string" && KA_ID.test(x)))].slice(0, 50) as string[];
+const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
+  kacheln: (w) => ({
+    reihenfolge: Object.fromEntries(Object.entries(w?.reihenfolge && typeof w.reihenfolge === "object" ? w.reihenfolge : {})
+      .filter(([r]) => KA_ID.test(r)).slice(0, 10).map(([r, l]) => [r, kaIds(l)])),
+    aus: kaIds(w?.aus),
+  }),
+};
 const MAX_TESTDATEN = 2 * 1024 * 1024; // Verbindungstest: höchstens 2 MB je Richtung
 async function wartungLesen() {
   const { data } = await db.from("kc_core_app_registry").select("wartung,wartung_hinweis,wartung_seit").eq("app_id", APP_ID).maybeSingle();
@@ -904,15 +916,17 @@ Köcheclub Werne`,
           const beantwortet = new Set((ta ?? []).map((x: any) => (to ?? []).find((o: any) => o.id === x.option_id)?.umfrage_id));
           terminfindungOffen = (tu ?? []).filter((x: any) => !beantwortet.has(x.id)).map((x: any) => ({ id: x.id, titel: x.titel }));
         }
-        const [{ data: nf }, { data: kab }, wartung] = await Promise.all([
+        const [{ data: nf }, { data: kab }, wartung, { data: pe }] = await Promise.all([
           db.from("kc_club_notfall").select("name,telefon,beziehung").eq("person_id", ich.person_id).maybeSingle(),
           db.from("kc_club_kalender_abo").select("erstellt_am,zuletzt_abgerufen").eq("person_id", ich.person_id).maybeSingle(),
           wartungLesen(),
+          db.from("kc_club_person_einstellung").select("schluessel,wert").eq("person_id", ich.person_id),
         ]);
+        const einstellungen = Object.fromEntries((pe ?? []).map((x: any) => [x.schluessel, x.wert]));
         const communicator = await communicatorStatus(ich).catch(() => null);
         const kontaktFreigabe = Object.fromEntries(KONTAKT_FELDER.map((f) => [f, !!(kf ?? []).find((x: any) => x.bereich === "kontakt_" + f)?.erlaubt]));
         const benachrichtigung = Object.fromEntries(BEREICHE.map((b) => { const x: any = (wahl ?? []).find((y: any) => y.bereich === b); return [b, x ? { push: x.push, email: x.email } : STANDARD_WAHL[b]]; }));
-        return json({ ich, status: meinStatus, server: SERVER_VERSION, ungelesen, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, communicator, notfall: nf ?? null, kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null });
+        return json({ ich, status: meinStatus, server: SERVER_VERSION, ungelesen, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, communicator, notfall: nf ?? null, einstellungen, kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null });
       }
 
       case "mitglieder": {
@@ -2016,6 +2030,17 @@ Köcheclub Werne`,
         if (error) throw new Fehler("Wartungsmodus konnte nicht gespeichert werden.", 500);
         await protokoll(ich.person_id, an ? "wartung_an" : "wartung_aus", { hinweis: p.hinweis ?? null });
         return json({ ok: true, wartung: await wartungLesen() });
+      }
+
+      // ----- KC-CLUB-KACHELN: persönliche Einstellung speichern -----
+      case "einstellung_setzen": {
+        const schluessel = String(p.schluessel || "");
+        const pruefen = EINSTELLUNGEN[schluessel];
+        if (!pruefen) throw new Fehler("Unbekannte Einstellung.");
+        const wert = pruefen(p.wert);
+        const { error } = await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel, wert, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
+        if (error) throw new Fehler("Einstellung konnte nicht gespeichert werden.", 500);
+        return json({ ok: true, wert });
       }
 
       // ----- KC-CLUB-FEEDBACK -----

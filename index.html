@@ -123,6 +123,20 @@
   .kachel small { color: var(--grau); font-weight: 700; }
   .kachel .zahl { position: absolute; right: 12px; bottom: 12px; background: var(--rot); color: #fff; border-radius: 12px; padding: 2px 9px; font-weight: 800; font-size: .85rem; z-index: 1; }
   .kachel.bald { opacity: .55; }
+  /* KC-CLUB-KACHELN: eigene Anordnung (lange drücken → Bearbeiten) */
+  .kachel { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  .kachel.gedrueckt { transform: scale(.96); transition: transform .3s; }
+  .kachel.bearb { cursor: default; outline: 2px dashed var(--gold); outline-offset: -2px; padding-bottom: 58px; animation: wackeln .5s ease-in-out infinite alternate; }
+  .kachel.bearb.frisch { outline: 3px solid var(--rot); }
+  .kachel.bearb.aus { opacity: .45; animation: none; outline-style: dotted; }
+  @keyframes wackeln { from { transform: rotate(-.6deg); } to { transform: rotate(.6deg); } }
+  .kachel .kstrg { position: absolute; left: 8px; right: 8px; bottom: 8px; display: flex; gap: 6px; z-index: 2; }
+  .kachel .kstrg button { flex: 1; border: none; border-radius: 10px; padding: 8px 0; font-size: 1.05rem; font-weight: 800; background: var(--karte2); cursor: pointer; }
+  .kachel .kstrg button:disabled { opacity: .35; }
+  .kachel .kstrg button.weg { background: #a51d1d; color: #fff; }
+  .kachel .kstrg button.ein { background: var(--gruen); color: #fff; }
+  .kachelleiste { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; background: var(--karte); border-radius: var(--radius); box-shadow: var(--schatten); padding: 10px 12px; margin-bottom: 10px; }
+  .kachelleiste p { margin: 0; flex: 1 1 100%; font-size: .9rem; }
   .kachel.bald .zahl { background: var(--grau); }
 
   .karte { background: var(--karte); border-radius: var(--radius); padding: 16px; box-shadow: var(--schatten); margin-top: 12px; }
@@ -328,7 +342,9 @@
     <div id="updateHinweis"></div>
     <div class="abschnitt"><h3>Schnellzugriff</h3><button class="marke" id="versionMarke" style="border:none;cursor:pointer" title="Update prüfen" onclick="updateKachel()">v–</button></div>
     <div class="register" id="register"></div>
-    <div class="raster" id="raster"></div>
+    <div class="kachelleiste versteckt" id="kachelLeiste"><p>✏️ <b>Kacheln anordnen:</b> mit ◀ ▶ verschieben, mit ✕ ausblenden, 👁️ blendet wieder ein.</p>
+      <button class="knopf haupt klein" onclick="kaBearbeiten(false)">✅ Fertig</button><button class="knopf klein" onclick="kaStandard()">↺ Standard</button></div>
+    <div class="raster" id="raster" oncontextmenu="return false"></div>
     <div class="wischhinweis">‹ wischen für weitere Bereiche ›</div>
     <div class="karte"><h3>Heute wichtig</h3><div id="wichtig" class="hinweis">…</div></div>
   </section>
@@ -495,6 +511,7 @@
       <summary>🎨 Darstellung</summary>
       <div class="schalter"><div><b>🔠 Große Schrift</b></div><input type="checkbox" id="setGross" onchange="einstellung('gross', this.checked)"></div>
       <div class="schalter"><div><b>🌙 Dunkles Design</b></div><input type="checkbox" id="setDunkel" onchange="einstellung('dunkel', this.checked)"></div>
+      <div class="schalter"><div><b>🧩 Startseite anordnen</b><div class="hinweis">Kacheln verschieben oder ausblenden – oder auf der Startseite eine Kachel lange drücken</div></div><button class="knopf klein" onclick="zeige('start');kaBearbeiten(true)">Anordnen</button></div>
       <div class="schalter"><div><b>🇩🇪 Feiertage NRW im Kalender</b><div class="hinweis">Gesetzliche Feiertage in Nordrhein-Westfalen</div></div><input type="checkbox" id="setFeiertage" onchange="einstellung('feiertage', this.checked); if (KAL) kalZeichnen()"></div>
     </details>
     <details class="karte" data-klappe="install">
@@ -575,7 +592,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.18.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.19.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -795,30 +812,86 @@ async function statusSpeichern() {
 // ---------- Start ----------
 const KACHELN = {
   verein: [
-    { sym: "📅", t: "Termine", u: "Treffen · Zu- & Absagen", v: "termine" },
-    { sym: "💬", t: "Kommunikation", u: "Nachrichten & Anlagen", v: "nachrichten", zahl: () => INIT?.ungelesen || 0 },
-    { sym: "👥", t: "Aktive Mitglieder", u: "Status · Ämter · Kontakt", v: "mitglieder" },
-    { sym: "🗳️", t: "Vorschläge", u: "Themen & Abstimmungen", v: "vorschlaege", zahl: () => INIT?.offeneAbstimmungen || 0 },
-    { sym: "📄", t: "Protokolle", u: "Sitzungen · Aufgaben", v: "protokolle", nur: () => ICH?.protokolle !== false, zahl: () => (INIT?.protokolleUngelesen || 0) + (INIT?.meineAufgaben?.length || 0) },
-    { sym: "🗓️", t: "Dienstpläne", u: "Meine & freigegebene Zeiten", v: "dienste" },
-    { sym: "🧳", t: "Aktionen", u: "Ausflüge & Reisen", v: "aktionen" },
-    { sym: "📷", t: "Fotoalbum", u: "Nach Thema & Datum", aktion: "faFilter={};faPapierkorb=false;zeige('fotos')" },
-    { sym: "💭", t: "Feedback", u: "Deine Meinung zur App", v: "feedback" },
+    { id: "termine", sym: "📅", t: "Termine", u: "Treffen · Zu- & Absagen", v: "termine" },
+    { id: "kommunikation", sym: "💬", t: "Kommunikation", u: "Nachrichten & Anlagen", v: "nachrichten", zahl: () => INIT?.ungelesen || 0 },
+    { id: "mitglieder", sym: "👥", t: "Aktive Mitglieder", u: "Status · Ämter · Kontakt", v: "mitglieder" },
+    { id: "vorschlaege", sym: "🗳️", t: "Vorschläge", u: "Themen & Abstimmungen", v: "vorschlaege", zahl: () => INIT?.offeneAbstimmungen || 0 },
+    { id: "protokolle", sym: "📄", t: "Protokolle", u: "Sitzungen · Aufgaben", v: "protokolle", nur: () => ICH?.protokolle !== false, zahl: () => (INIT?.protokolleUngelesen || 0) + (INIT?.meineAufgaben?.length || 0) },
+    { id: "dienste", sym: "🗓️", t: "Dienstpläne", u: "Meine & freigegebene Zeiten", v: "dienste" },
+    { id: "aktionen", sym: "🧳", t: "Aktionen", u: "Ausflüge & Reisen", v: "aktionen" },
+    { id: "fotos", sym: "📷", t: "Fotoalbum", u: "Nach Thema & Datum", aktion: "faFilter={};faPapierkorb=false;zeige('fotos')" },
+    { id: "feedback", sym: "💭", t: "Feedback", u: "Deine Meinung zur App", v: "feedback" },
   ],
   mein: [
-    { sym: "🟢", t: "Mein Status", u: "verfügbar, Urlaub …", aktion: "statusBlatt()" },
-    { sym: "🗓️", t: "Mein Dienstplan", u: "Meine Dienste", aktion: "dpNurIch()" },
-    { sym: "🎓", t: "Meine Schulungen", u: "Zusammenfassungen", bald: true },
-    { sym: "⚙️", t: "Einstellungen", u: "Push, Ton, Schrift", v: "einstellungen" },
-    { sym: "🧪", t: "Test an mich", u: "Push & Mail ausprobieren", aktion: "testAnMichStarten()" },
+    { id: "status", sym: "🟢", t: "Mein Status", u: "verfügbar, Urlaub …", aktion: "statusBlatt()" },
+    { id: "meindienst", sym: "🗓️", t: "Mein Dienstplan", u: "Meine Dienste", aktion: "dpNurIch()" },
+    { id: "schulungen", sym: "🎓", t: "Meine Schulungen", u: "Zusammenfassungen", bald: true },
+    { id: "einstellungen", sym: "⚙️", t: "Einstellungen", u: "Push, Ton, Schrift", v: "einstellungen" },
+    { id: "test", sym: "🧪", t: "Test an mich", u: "Push & Mail ausprobieren", aktion: "testAnMichStarten()" },
   ],
   programme: [
-    { sym: "🔄", t: "Update prüfen", u: () => NEUE_VERSION ? `Neu: v${NEUE_VERSION} – antippen` : `Installiert: v${APP_VERSION}`, aktion: "updateKachel()", zahl: () => NEUE_VERSION ? "neu" : 0 },
-    { sym: "💻", t: "Freigegebene Programme", u: "Kasse, Schulungsversion …", bald: true },
+    { id: "update", sym: "🔄", t: "Update prüfen", u: () => NEUE_VERSION ? `Neu: v${NEUE_VERSION} – antippen` : `Installiert: v${APP_VERSION}`, aktion: "updateKachel()", zahl: () => NEUE_VERSION ? "neu" : 0 },
+    { id: "programme", sym: "💻", t: "Freigegebene Programme", u: "Kasse, Schulungsversion …", bald: true },
   ],
 };
 // Kacheln, die für mich gelten (z. B. Protokolle nicht für Aushilfen)
-const kacheln = (r) => KACHELN[r].filter((k) => !k.nur || k.nur());
+const kachelnAlle = (r) => KACHELN[r].filter((k) => !k.nur || k.nur());
+// KC-CLUB-KACHELN: eigene Reihenfolge + ausgeblendete Kacheln je Mitglied (Server-Einstellung „kacheln“, hier zwischengespeichert).
+// Neue Kacheln (noch nicht in der gespeicherten Reihenfolge) erscheinen hinten; ausgeblendete bleiben über „Anordnen“ erreichbar.
+let KA = { reihenfolge: {}, aus: [] }, kaBearb = false, kaFrisch = null;
+try { const x = JSON.parse(localStorage.getItem("kc_club_kacheln") || "null"); if (x) KA = { reihenfolge: x.reihenfolge || {}, aus: x.aus || [] }; } catch {}
+function kaSortiert(r) {
+  const ord = KA.reihenfolge[r] || [], pos = (k) => { const i = ord.indexOf(k.id); return i < 0 ? 1000 + KACHELN[r].indexOf(k) : i; };
+  return kachelnAlle(r).sort((a, b) => pos(a) - pos(b));
+}
+const kacheln = (r) => kaSortiert(r).filter((k) => !KA.aus.includes(k.id));
+function kaUebernehmen(wert) { // vom Server (init)
+  if (!wert || typeof wert !== "object") return;
+  KA = { reihenfolge: wert.reihenfolge || {}, aus: Array.isArray(wert.aus) ? wert.aus : [] };
+  try { localStorage.setItem("kc_club_kacheln", JSON.stringify(KA)); } catch {}
+}
+let kaSpeicherTimer = null;
+function kaSpeichern() {
+  try { localStorage.setItem("kc_club_kacheln", JSON.stringify(KA)); } catch {}
+  clearTimeout(kaSpeicherTimer);
+  kaSpeicherTimer = setTimeout(() => api("einstellung_setzen", { schluessel: "kacheln", wert: KA }).catch((e) => melde("Anordnung nur auf diesem Handy gespeichert: " + e.message, true)), 800);
+}
+function kaBearbeiten(an, frisch) {
+  kaBearb = an; kaFrisch = an ? frisch || null : null;
+  $("kachelLeiste").classList.toggle("versteckt", !an);
+  if (!an) { clearTimeout(kaSpeicherTimer); kaSpeichern(); melde("✅ Startseite gespeichert"); }
+  registerZeigen(); kachelnZeigen();
+}
+function kaSchieben(id, d) {
+  const liste = kaSortiert(reg).map((k) => k.id), i = liste.indexOf(id), j = i + d;
+  if (i < 0 || j < 0 || j >= liste.length) return;
+  [liste[i], liste[j]] = [liste[j], liste[i]];
+  KA.reihenfolge = { ...KA.reihenfolge, [reg]: liste }; kaFrisch = id; kaSpeichern(); kachelnZeigen();
+}
+function kaSichtbar(id, sichtbar) {
+  KA.aus = sichtbar ? KA.aus.filter((x) => x !== id) : [...new Set([...KA.aus, id])];
+  kaFrisch = id; kaSpeichern(); registerZeigen(); kachelnZeigen();
+  if (!sichtbar) melde("🙈 Ausgeblendet – mit 👁️ jederzeit wieder einblenden");
+}
+function kaStandard() {
+  if (!confirm("Alle Kacheln wieder in der ursprünglichen Reihenfolge und alle einblenden?")) return;
+  KA = { reihenfolge: {}, aus: [] }; kaSpeichern(); registerZeigen(); kachelnZeigen();
+}
+// Lange drücken (0,6 s) auf eine Kachel → Bearbeiten; der Fingertipp danach öffnet die Kachel nicht
+(function kaLangDruecken() {
+  let t = null, x0 = 0, y0 = 0, el = null, unterdruecken = false;
+  const ab = () => { clearTimeout(t); t = null; el?.classList.remove("gedrueckt"); el = null; };
+  document.addEventListener("pointerdown", (e) => {
+    unterdruecken = false;
+    const k = e.target.closest?.("#raster .kachel"); if (!k || kaBearb) return;
+    el = k; x0 = e.clientX; y0 = e.clientY; k.classList.add("gedrueckt");
+    t = setTimeout(() => { const id = el?.dataset.id; ab(); unterdruecken = true; try { navigator.vibrate?.(30); } catch {} kaBearbeiten(true, id); }, 600);
+  });
+  document.addEventListener("pointermove", (e) => { if (t && Math.hypot(e.clientX - x0, e.clientY - y0) > 12) ab(); });
+  // nur der Klick direkt nach dem Loslassen wird geschluckt (manche Handys schicken nach langem Drücken gar keinen)
+  ["pointerup", "pointercancel"].forEach((n) => document.addEventListener(n, () => { if (t) ab(); if (unterdruecken) setTimeout(() => { unterdruecken = false; }, 150); }));
+  document.addEventListener("click", (e) => { if (unterdruecken && e.target.closest?.("#raster")) { e.stopPropagation(); e.preventDefault(); } unterdruecken = false; }, true);
+})();
 // Register mit kleiner Anzahl der Kacheln; per Wischen links/rechts wechselbar
 const REGISTER = [["verein", "Verein"], ["mein", "Mein Bereich"], ["programme", "Programme"]];
 function registerZeigen() {
@@ -847,9 +920,17 @@ function registerWischen(schritt) {
   }, { passive: true });
 })();
 function kachelnZeigen() {
+  if (kaBearb) {
+    const alle = kaSortiert(reg), sicht = alle.filter((k) => !KA.aus.includes(k.id)), aus = alle.filter((k) => KA.aus.includes(k.id));
+    $("raster").innerHTML = [...sicht, ...aus].map((k) => { const weg = KA.aus.includes(k.id), i = sicht.indexOf(k);
+      return `<div class="kachel bearb${weg ? " aus" : ""}${k.id === kaFrisch ? " frisch" : ""}" data-id="${k.id}"><div class="sym">${k.sym}</div><b>${esc(k.t)}</b><small>${weg ? "ausgeblendet" : esc(typeof k.u === "function" ? k.u() : k.u)}</small>
+        <div class="kstrg">${weg ? `<button class="ein" onclick="kaSichtbar('${k.id}',true)">👁️ Einblenden</button>`
+          : `<button title="nach vorne" ${i === 0 ? "disabled" : ""} onclick="kaSchieben('${k.id}',-1)">◀</button><button title="nach hinten" ${i === sicht.length - 1 ? "disabled" : ""} onclick="kaSchieben('${k.id}',1)">▶</button><button class="weg" title="ausblenden" onclick="kaSichtbar('${k.id}',false)">✕</button>`}</div></div>`; }).join("");
+    return;
+  }
   $("raster").innerHTML = kacheln(reg).map((k, i) => {
     const z = k.zahl ? k.zahl() : 0;
-    return `<button class="kachel${k.bald ? " bald" : ""}" onclick="${k.bald ? `melde('„${k.t}“ kommt in einer der nächsten Versionen.')` : k.aktion || `zeige('${k.v}')`}">
+    return `<button class="kachel${k.bald ? " bald" : ""}" data-id="${k.id}" onclick="${k.bald ? `melde('„${k.t}“ kommt in einer der nächsten Versionen.')` : k.aktion || `zeige('${k.v}')`}">
       <div class="sym">${k.sym}</div><b>${esc(k.t)}</b><small>${esc(typeof k.u === "function" ? k.u() : k.u)}</small>${k.bald ? '<span class="zahl">bald</span>' : z ? `<span class="zahl">${z}</span>` : ""}</button>`;
   }).join("");
 }
@@ -949,6 +1030,7 @@ function wichtigZeigen() {
 async function neuLaden(vonHand) {
   try {
     INIT = await api("init"); ICH = INIT.ich;
+    if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln);
     VB.wartung = INIT.wartung || null; VB.server = INIT.server || null; vbCommSetzen(INIT.communicator || null);
     $("begruessung").textContent = "Hallo " + ICH.vorname + "!";
     $("statusChip").textContent = statusText(INIT.status) + " ▾";
@@ -970,6 +1052,7 @@ function zaehlerZeigen() {
 // ---------- Ansichten ----------
 // ausHistorie = true, wenn die Ansicht durch „Zurück“ im Browser/Handy kommt (dann keinen neuen Verlaufseintrag anlegen)
 function zeige(v, ausHistorie) {
+  if (kaBearb && v !== "start") kaBearbeiten(false); // Anordnen beim Verlassen der Startseite abschließen
   const vorher = aktuelleAnsicht;
   aktuelleAnsicht = v;
   if (vorher === "protokoll" && v !== "protokoll" && prTimer) prSpeichernJetzt(false).catch(() => {}); // ungespeicherte Eingaben sichern

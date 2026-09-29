@@ -454,7 +454,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 
 // 35. 0.18.0: Feedback-Kachel (Fragebogen vom Server, 3 Schritte, Auswertung nur Admin)
 {
-  assert.ok(/\{ sym: "💭", t: "Feedback", u: "Deine Meinung zur App", v: "feedback" \}/.test(html) && /id="v-feedback"/.test(html), "Feedback-Kachel fehlt");
+  assert.ok(/\{ id: "feedback", sym: "💭", t: "Feedback", u: "Deine Meinung zur App", v: "feedback" \}/.test(html) && /id="v-feedback"/.test(html), "Feedback-Kachel fehlt");
   assert.ok(/"fotos", "feedback", "mitglied"/.test(html) && /if \(v === "feedback"\) fbLaden\(\);/.test(html), "Feedback-Ansicht nicht eingebunden");
   for (const a of ["feedback_meins", "feedback_senden", "feedback_auswertung"]) assert.ok(aktionen.has(a) && aufrufe.has(a), `Feedback-Aktion ${a} fehlt`);
   const ausw = server.slice(server.indexOf('case "feedback_auswertung"'), server.indexOf('case "feedback_auswertung"') + 120);
@@ -469,6 +469,23 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(fb.FEEDBACK_FRAGEN.some((f) => f.schritt === 2 && f.optionen.some((o) => /anordnen/.test(o)) && f.optionen.some((o) => /Farben/.test(o))), "Wünsche Anordnen/Farben fehlen");
   assert.deepEqual(fb.feedbackPruefen({ gefallen: "👍 Ja", bedienung: "Quatsch", wuensche: ["🎂 Geburtstagsliste", "X", "🎂 Geburtstagsliste"], fremd: "a" }),
     { gefallen: "👍 Ja", wuensche: ["🎂 Geburtstagsliste"] });
+}
+
+// 36. 0.19.0: Startseite selbst anordnen (lange drücken → verschieben/ausblenden), Speicherung je Mitglied auf dem Server
+{
+  const ids = [...html.slice(html.indexOf("const KACHELN = {"), html.indexOf("const kachelnAlle")).matchAll(/\{ id: "([a-z0-9_-]+)", sym:/g)].map((m) => m[1]);
+  const anzahl = (html.slice(html.indexOf("const KACHELN = {"), html.indexOf("const kachelnAlle")).match(/\{ (id: "[^"]+", )?sym:/g) || []).length;
+  assert.equal(ids.length, anzahl, "Kachel ohne feste id (Anordnung würde verrutschen)");
+  assert.equal(new Set(ids).size, ids.length, "doppelte Kachel-id");
+  assert.ok(/kaBearbeiten\(true, id\); \}, 600\)/.test(html) && /id="kachelLeiste"/.test(html), "lange drücken fehlt");
+  assert.ok(aufrufe.has("einstellung_setzen") && /kacheln: \(w\) =>/.test(server) && server.includes("notfall: nf ?? null, einstellungen,"), "Server-Speicherung fehlt");
+  // Reihenfolge/Ausblenden rechnen wie in der App
+  const code = html.slice(html.indexOf("const kachelnAlle"), html.indexOf("function kaUebernehmen"));
+  const K = { verein: [{ id: "a" }, { id: "b" }, { id: "c" }, { id: "neu" }] };
+  const g = new Function("KACHELN", "localStorage", "ICH", code.replace("let KA =", "var KA =") + ";return { setze: (x) => { KA = x; }, kacheln, kaSortiert };")(K, { getItem: () => null }, {});
+  g.setze({ reihenfolge: { verein: ["c", "a", "b"] }, aus: ["a"] });
+  assert.deepEqual(g.kacheln("verein").map((k) => k.id), ["c", "b", "neu"], "Reihenfolge/Ausblenden falsch");
+  assert.deepEqual(g.kaSortiert("verein").map((k) => k.id), ["c", "a", "b", "neu"], "neue Kachel nicht hinten");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
