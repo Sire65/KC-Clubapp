@@ -78,6 +78,16 @@ async function wishInboxAck({id, revision, status, result}){ /* rpc kc_dp_wish_i
 ```
 Zeiten = Dezimalstunden (17.5 = 17:30), Typen = `KC_DP3_WISH_V1` (`src/core/wish-contract.js`): `available` Kann-Zeit, `preferred` Wunschzeit, `if_needed` Nur wenn nötig, `unavailable` Sperrzeit (`scope:'time'`) bzw. Sperrtag (`scope:'day'`).
 
+**Nachtrag Club-App 0.59.0 (Twinkey 1:1):** Die Club-App nutzt DP2s Twinkey unverändert. Einträge können deshalb zusätzlich
+die DP2-eigenen Felder tragen und müssen **unverändert** in den DP2-Wunsch übernommen werden:
+- `onlyIfNeeded: true` (nur wenn gesetzt),
+- `assistantDay: {standby, completed, completedSignature}` – Twinkeys Tagesstatus „Fertig“ (`src/ui/simple-wish-assistant.js:15-16, 303`).
+Sperrtag kommt wie in Twinkey mit dem Tagesrahmen (z. B. `start:11,end:23,scope:'day'`), nicht zwingend 0–24.
+**Achtung jsonb:** Supabase sortiert Objektschlüssel um (`{"end":13,"start":11}`, `{"slots":…,"answer":…}`). `completedSignature`
+ist ein Text und bleibt exakt. Damit „Fertig“ in DP2 erhalten bleibt, beim Übernehmen `assistantDay.standby` und `standby[date]`
+in der Schlüsselreihenfolge herstellen, die in `completedSignature` steht (die Club-App macht das genauso: `dp2-club/daten.js`,
+Funktionen `kanon`/`ordnen`). Ohne diese Umordnung zeigt DP2 den Tag als „In Bearbeitung“.
+
 **Übernahme je Eingang (ein Eingang = der vollständige aktuelle Club-App-Stand dieser Person):**
 1. Person prüfen: aktiv + `K.personPlanningAllowed(personId)` (falls vorhanden). Sonst `ack(…,'abgelehnt',{reason:'person_unbekannt'})`.
 2. Wunschphase prüfen (`K.state.wishPhase==='open'`, Plan nicht veröffentlicht – wie `src/core/mobile-wish-matrix.js:11-30`). Geschlossen → `ack(…,'abgelehnt',{reason:'wunschphase_geschlossen'})`.
