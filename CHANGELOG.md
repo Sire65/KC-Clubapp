@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.26.1 – 2026-09-29 (DEV)
+
+- KC-CLUB-DESIGN: sechstes Farbdesign „Lagune“ mit den Farben des Reiseassistenten (Navy #082F49, Türkis #0E7490,
+  Aqua #14B8A6, Gold #F4B860, Hintergrund #EEF7FB, Kopf-Verlauf #07415E → #0B7F93 → #22B8A6) plus Nacht-Variante.
+  Kontrast wie bei allen Designs im Test geprüft.
+
 ## 0.26.0 – 2026-09-29 (DEV)
 
 - KC-CLUB-KACHELN-ZIEHEN (neu): Kacheln per Ziehen & Ablegen anordnen. Auf der Startseite eine Kachel 0,6 s festhalten →

@@ -1,8 +1,8 @@
 {
-  "version": "0.26.0",
+  "version": "0.26.1",
   "datum": "2026-09-29",
   "neu": [
-    "✥ Kacheln anordnen per Ziehen: festhalten, schieben, loslassen",
-    "💭 Feedback: neue Wünsche, bereits Umgesetztes wird angezeigt"
+    "🎨 Neues Farbdesign „Lagune“ (Türkis/Aqua wie der Reiseassistent)",
+    "✥ Kacheln anordnen per Ziehen: festhalten, schieben, loslassen"
   ]
 }
