@@ -351,6 +351,7 @@
   .warten b { font-size: .95rem; color: var(--text); text-align: center; max-width: 220px; }
   @keyframes muetzeDreh { from { transform: rotateY(0deg) rotate(0deg); } to { transform: rotateY(360deg) rotate(0deg); } }
   @media (prefers-reduced-motion: reduce) { .warten .muetze { animation-duration: 3s; } }
+  .blase .zustellung { font-size: .72rem; opacity: .85; white-space: nowrap; }
   .onzeile { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--linie); }
   .onzeile:last-child { border-bottom: none; } .onzeile .knopf { padding: 10px 12px; font-size: .95rem; text-align: center; }
   .begruessung .bgtipp { display: flex; gap: 10px; align-items: flex-start; background: var(--karte2); border-radius: 14px; padding: 10px 12px; margin: 6px 0; }
@@ -799,7 +800,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.33.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.34.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -1283,6 +1284,13 @@ function anrufAufraeumen() {
   $("anrufSchirm").classList.add("versteckt"); RUF = null;
 }
 
+// KC-CLUB-QUITTUNG (0.34.0): Rückmeldung zum Push/zur Mail unter eigenen Nachrichten
+function zustellText(z) {
+  if (!z) return "";
+  const p = z.push === "geoeffnet" ? "🔔 geöffnet" : z.push === "angezeigt" ? "🔔 angekommen" : z.push === "gesendet" ? "🔔 verschickt" : "";
+  const t = [p, z.mail ? "✉️ Mail" : ""].filter(Boolean).join(" · ");
+  return t ? ` <span class="zustellung" title="Rückmeldung vom Handy des Empfängers">${t}</span>` : "";
+}
 // ---------- KC-CLUB-SCHLIESSEN: Ausgangstür ----------
 // Installierte App: window.close() beendet sie. Klappt das nicht (z. B. im Browser-Tab), kurze Anleitung statt stiller Nichtreaktion.
 function appSchliessen() {
@@ -2358,7 +2366,7 @@ async function chatLaden(scrollen) {
     $("chat").innerHTML = u.nachrichten.map((m) => `<div class="blase${m.eigen ? " eigen" : ""}">
       ${!m.eigen && andere.length > 1 ? `<div class="von">${esc(m.von)}</div>` : ""}${m.text === "📎" && m.anlagen.length ? "" : `<div class="txt">${esc(m.text)}</div>`}
       ${m.anlagen.map((a) => /^image\//.test(a.mime || "") ? `<img data-anlage="${a.id}" alt="${esc(a.name)}" onclick="anlageOeffnen('${a.id}')">` : `<div class="anlage" onclick="anlageOeffnen('${a.id}')">📄 ${esc(a.name)}</div>`).join("")}
-      <div class="fuss">${zeitKurz(m.zeit)}${m.eigen ? " " + (m.gelesenAlle ? '<b title="gelesen">✓✓</b>' : m.gelesenVon?.length ? `✓✓ ${m.gelesenVon.length}/${andere.length}` : "✓") : ""}${m.eigen || ICH.admin ? ` <button class="weg" title="Nachricht löschen" onclick="nachrichtLoeschen('${m.id}')">🗑️</button>` : ""}</div></div>`).join("")
+      <div class="fuss">${zeitKurz(m.zeit)}${m.eigen ? " " + (m.gelesenAlle ? '<b title="gelesen">✓✓</b>' : m.gelesenVon?.length ? `✓✓ ${m.gelesenVon.length}/${andere.length}` : "✓") + zustellText(m.zustellung) : ""}${m.eigen || ICH.admin ? ` <button class="weg" title="Nachricht löschen" onclick="nachrichtLoeschen('${m.id}')">🗑️</button>` : ""}</div></div>`).join("")
       || '<p class="hinweis">Schreib die erste Nachricht.</p>';
     document.querySelectorAll("img[data-anlage]").forEach(bildLaden);
     if (neuVonAnderen && einst("ton", true)) ton();

@@ -13,14 +13,14 @@
 //           KC-CLUB-COMMUNICATOR-STATUS (0.17.0), KC-CLUB-FEEDBACK (0.18.0),
 //           KC-CLUB-KACHELN (0.19.0), KC-CLUB-ZUGANG-SELBST (0.21.0),
 //           KC-CLUB-GRUPPEN, KC-CLUB-ZUSTELLWAHL (0.23.0)
-//           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0), KC-CLUB-KACHELN-ZIEHEN (0.26.0), KC-CLUB-FEEDBACK-NEU (0.27.1), KC-CLUB-BEGRUESSUNG (0.28.0), KC-CLUB-ONLINE (0.29.0), KC-CLUB-ANRUF (0.31.0), KC-CLUB-VIDEO (0.32.0)
+//           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0), KC-CLUB-KACHELN-ZIEHEN (0.26.0), KC-CLUB-FEEDBACK-NEU (0.27.1), KC-CLUB-BEGRUESSUNG (0.28.0), KC-CLUB-ONLINE (0.29.0), KC-CLUB-ANRUF (0.31.0), KC-CLUB-VIDEO (0.32.0), KC-CLUB-QUITTUNG (0.34.0)
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.32.1";
+const SERVER_VERSION = "0.34.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -1434,6 +1434,17 @@ Köcheclub Werne`,
         const { data: att } = aids.length ? await db.from("kc_communication_attachments").select("id,file_name,mime_type,size_bytes").in("id", aids) : { data: [] as any[] };
         const leute = await personen([...(tn ?? []).map((x: any) => x.person_id), ...(msgs ?? []).map((m: any) => m.sender_person_id)]);
         const andere = (tn ?? []).filter((x: any) => x.person_id !== ich.person_id);
+        // KC-CLUB-QUITTUNG (0.34.0): Zustellung meiner Nachrichten aus dem Communicator (Push angezeigt/geöffnet, Mail verschickt)
+        const eigeneIds = (msgs ?? []).filter((m: any) => m.sender_person_id === ich.person_id).slice(-60).map((m: any) => m.id);
+        const kor = eigeneIds.flatMap((mid: string) => [`club-nachricht:${mid}`, `club-nachricht:${mid}:push`]);
+        const { data: auftr } = kor.length ? await db.from("kc_communication_requests").select("correlation_id,channel,status").in("correlation_id", kor) : { data: [] };
+        const RANG: Record<string, number> = { sent: 1, delivered: 2, displayed: 3, opened: 4 };
+        const zustellung = (mid: string) => {
+          const a = (auftr ?? []).filter((x: any) => String(x.correlation_id).startsWith(`club-nachricht:${mid}`));
+          if (!a.length) return null;
+          const push = a.filter((x: any) => x.channel === "push").reduce((b: number, x: any) => Math.max(b, RANG[x.status] ?? 0), 0);
+          return { push: push >= 4 ? "geoeffnet" : push === 3 ? "angezeigt" : push >= 1 ? "gesendet" : null, mail: a.some((x: any) => x.channel === "email" && (RANG[x.status] ?? 0) >= 1) };
+        };
         const nachrichten = (msgs ?? []).map((m: any) => {
           const eigen = m.sender_person_id === ich.person_id;
           const gelesenVon = eigen ? andere.filter((x: any) => x.last_read_at && x.last_read_at >= m.created_at).map((x: any) => vorname(leute.get(x.person_id))) : [];
@@ -1441,7 +1452,7 @@ Köcheclub Werne`,
             id: m.id, eigen, von: eigen ? "Du" : leute.get(m.sender_person_id)?.display_name || m.sender_person_id, text: m.body, zeit: m.created_at,
             anlagen: (ma ?? []).filter((x: any) => x.message_id === m.id).map((x: any) => (att ?? []).find((y: any) => y.id === x.attachment_id)).filter(Boolean)
               .map((y: any) => ({ id: y.id, name: y.file_name, mime: y.mime_type, groesse: y.size_bytes })),
-            ...(eigen ? { gelesenVon, gelesenAlle: andere.length > 0 && gelesenVon.length === andere.length } : {}),
+            ...(eigen ? { gelesenVon, gelesenAlle: andere.length > 0 && gelesenVon.length === andere.length, zustellung: zustellung(m.id) } : {}),
           };
         });
         await db.from("kc_communication_thread_participants").update({ last_read_at: jetzt() }).eq("thread_id", id).eq("person_id", ich.person_id);

@@ -1,6 +1,6 @@
 // KC Club-App – Service Worker: Seite zuerst aus dem Netz (offline aus dem Speicher), Push-Benachrichtigungen, Update.
 // VERSION muss bei jeder neuen Version mit version.json und APP_VERSION in index.html übereinstimmen.
-const VERSION = "0.33.0";
+const VERSION = "0.34.0";
 const CACHE = "kc-club-" + VERSION;
 const DATEIEN = ["./", "index.html", "manifest.webmanifest", "kc-kochmuetze-weiss.webp", "icon-192.png", "icon-512.png"];
 
@@ -30,6 +30,14 @@ self.addEventListener("fetch", (e) => {
 });
 
 // Push vom KC Communicator: { title, body, data: { url } }
+// KC-CLUB-QUITTUNG (0.34.0): dem KC Communicator melden, dass der Push angezeigt bzw. geöffnet wurde
+// (Auftragsnummer kommt im Push mit; die eigene Push-Adresse ordnet die Meldung dem Empfänger zu). Fehler stören nie die Anzeige.
+const QUITTUNG_URL = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-communication-push-receipt";
+async function quittung(requestId, state) {
+  if (!requestId) return;
+  let endpoint = ""; try { endpoint = (await self.registration.pushManager.getSubscription())?.endpoint || ""; } catch {}
+  try { await fetch(QUITTUNG_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ requestId, state, endpoint }) }); } catch {}
+}
 self.addEventListener("push", (e) => {
   let d = {}; try { d = e.data ? e.data.json() : {}; } catch { d = { body: e.data ? e.data.text() : "" }; }
   const titel = d.title || "Köcheclub Werne";
@@ -39,14 +47,16 @@ self.addEventListener("push", (e) => {
     if (self.navigator.setAppBadge) try { await self.navigator.setAppBadge(); } catch {}
     await self.registration.showNotification(titel, {
       body: d.body || d.text || "", icon: "icon-192.png", badge: "icon-192.png", tag: d.data?.url || "kc-club",
-      renotify: true, silent: false, vibrate: [120, 60, 120], data: { url: d.data?.url || "./" },
+      renotify: true, silent: false, vibrate: [120, 60, 120], data: { url: d.data?.url || "./", requestId: d.data?.requestId || "" },
     });
+    await quittung(d.data?.requestId, "displayed");
   })());
 });
 self.addEventListener("notificationclick", (e) => {
   e.notification.close();
   const ziel = e.notification.data?.url || "./";
   e.waitUntil((async () => {
+    quittung(e.notification.data?.requestId, "opened");
     const fenster = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
     for (const c of fenster) { if ("focus" in c) { await c.navigate(ziel).catch(() => {}); return c.focus(); } }
     return self.clients.openWindow(ziel);

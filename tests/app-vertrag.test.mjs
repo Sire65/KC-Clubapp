@@ -700,4 +700,13 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/nachricht_senden: "Nachricht wird gesendet …"/.test(html), "Text beim Senden fehlt");
 }
 
+// 56. 0.34.0: Push-Quittung (angezeigt/geöffnet) aus der Club-App an den Communicator, Anzeige unter eigenen Nachrichten
+{
+  const sw = lies("sw.js");
+  assert.ok(/kc-communication-push-receipt/.test(sw) && /await quittung\(d\.data\?\.requestId, "displayed"\)/.test(sw) && /quittung\(e\.notification\.data\?\.requestId, "opened"\)/.test(sw), "Push-Quittung fehlt im Service Worker");
+  assert.ok(/requestId: d\.data\?\.requestId \|\| ""/.test(sw), "Auftragsnummer wird nicht an der Benachrichtigung gemerkt");
+  assert.ok(/zustellung: zustellung\(m\.id\)/.test(server) && /\.slice\(-60\)/.test(server), "Zustellung eigener Nachrichten fehlt");
+  assert.ok(/function zustellText\(z\)/.test(html) && /🔔 geöffnet/.test(html), "Anzeige der Rückmeldung fehlt");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
