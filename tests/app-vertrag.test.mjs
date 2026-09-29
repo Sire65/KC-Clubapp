@@ -692,4 +692,12 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(!/kc_member_push_subscriptions/.test(sn), "Standardversand (ohne Wahl) darf an Mitglieder ohne App nur mailen");
 }
 
+// 55. 0.33.0: drehende Kochmütze bei längeren Anfragen – nicht bei Hintergrund-Abfragen, immer wieder ausgeblendet
+{
+  assert.ok(/id="warten"/.test(html) && /kc-kochmuetze-weiss\.webp" alt=""><\/div><b id="wartenText">/.test(html), "Kochmütze fehlt");
+  assert.ok(/const warte = wartenStart\(action\);\s*try \{ return await apiRoh\(action, daten\); \} finally \{ if \(warte\) wartenEnde\(\); \}/.test(html), "Kochmütze wird bei Fehlern nicht ausgeblendet");
+  for (const a of ["online", "anruf_status", "unterhaltung", "protokoll_speichern", "init"]) assert.ok(new RegExp(`WARTEN_STILL = new Set\\([^)]*"${a}"`).test(html), `Hintergrund-Abfrage ${a} ließe die Mütze flackern`);
+  assert.ok(/nachricht_senden: "Nachricht wird gesendet …"/.test(html), "Text beim Senden fehlt");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
