@@ -1,5 +1,14 @@
 # Änderungen
 
+## KC DP2 ↔ Club-App: Wunsch-Eingang vorbereitet – 2026-09-29 (Datenbank, ohne App-Build)
+
+- KC-DP-WUNSCHEINGANG (neu, Freigabe Hansi): Supabase-Seite für Dienstwünsche aus der Club-App (Twinkey-Nachbau).
+  kc_dp_days_published + RPC kc_dp_days_publish (DP2 veröffentlicht Tage/Kernzeit/Bedarf als Snapshot),
+  kc_dp_wish_inbox + RPCs kc_dp_wish_inbox_pending/_ack (DP2 holt je Person den aktuellen Stand ab, Bestätigung nur für die
+  aktuelle Revision). Datenvertrag: KC_CLUBAPP liest Dienstplanung, liefert nur über den Eingang; KC_DP holt ab.
+  Spiegel-Regeln + Neon-Zieltabellen. Getestet mit simulierter DP2-Planungssitzung (zurückgerollt).
+- Auftrag für die DP2-Umsetzung (Codex): docs/DP2_CODEX_AUFTRAG_WUNSCHEINGANG.md.
+
 ## 0.58.0 – 2026-09-29 (DEV)
 
 - KC-CLUB-PINNWAND-DIREKT (neu, Wunsch Hansi): statt nur „Du hast ein neues Post-it …“ geht der Zettel selbst als Post-it-Fenster
