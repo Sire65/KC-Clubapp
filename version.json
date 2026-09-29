@@ -1,12 +1,9 @@
 {
-  "version": "0.27.4",
+  "version": "0.28.0",
   "datum": "2026-09-29",
   "neu": [
+    "👋 Begrüßung beim ersten Start mit drei Tipps – „Weiter“ führt direkt in die Einstellungen",
     "📅 „Nächstes Treffen“ antippen → Kalender zeigt direkt den Tag",
-    "🔢 Register zeigen z. B. „8/10“, wenn Kacheln ausgeblendet sind",
-    "🆕 Feedback: neu starten, alte Antworten löschen",
-    "📅 Treffen anlegen: Titel und Ort per Auswahlliste",
-    "🧩 Kacheln etwas kleiner – mehr auf einen Blick",
-    "🗓️ Kalender kompakter"
+    "🔢 Register zeigen z. B. „8/10“, wenn Kacheln ausgeblendet sind"
   ]
 }

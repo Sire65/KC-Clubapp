@@ -582,7 +582,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   const ab = server.slice(server.indexOf('case "pinnwand_abnehmen"'), server.indexOf('case "pinnwand_abnehmen"') + 600);
   assert.ok(/z\.person_id !== ich\.person_id && !ich\.vorstand\) throw/.test(ab), "Fremde dürfen Zettel abnehmen");
   assert.ok(/id="v-pinnwand"/.test(html) && /id="pwZaehler"/.test(html) && /maxlength="200"/.test(html) && /\{ id: "pinnwand", sym: "📌"/.test(html), "Pinnwand-Oberfläche fehlt");
-  assert.ok(/if \(!PW\.startGeprueft\) \{ PW\.startGeprueft = true; pwStart\(\); \}/.test(html) && /PW\.zettel\.some\(pwOffen\)/.test(html), "Wichtige Zettel erscheinen nicht beim Öffnen");
+  assert.ok(/if \(!PW\.startGeprueft\) \{ PW\.startGeprueft = true; pwStart\(begruesst\); \}/.test(html) && /PW\.zettel\.some\(pwOffen\)/.test(html), "Wichtige Zettel erscheinen nicht beim Öffnen");
   assert.ok(/\.zettel::before/.test(html) && /rotate\(var\(--dreh/.test(html), "Zettel ohne Nadel/Schräge");
 }
 
@@ -623,6 +623,15 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/kalTagWahl = tag; termineArt = "kalender";/.test(z) && /kalM = \+tag\.slice\(5, 7\) - 1/.test(z), "Sprung zum Treffen-Tag fehlt");
   assert.ok(/onclick="zumTreffen\(\)"><b style="font-size:1\.05rem">\$\{bisTreffen\}/.test(html), "Kachel „Nächstes Treffen“ springt nicht zum Tag");
   assert.ok(/da < alle \? `\$\{da\}\/\$\{alle\}` : da/.test(html), "Register zeigen nicht „sichtbar/gesamt“");
+}
+
+// 49. 0.28.0: Begrüßung beim ersten Start – einmal je Mitglied (Server + Gerät), „Weiter“ führt in die Einstellungen
+{
+  assert.ok(/begruessung: \(w\) => \(\{ gesehen: !!w\?\.gesehen/.test(server), "Server speichert die Begrüßung nicht");
+  const b = html.slice(html.indexOf("function begruessungPruefen()"), html.indexOf("// ---------- KC-CLUB-SCHLIESSEN"));
+  assert.ok(/INIT\?\.einstellungen\?\.begruessung\?\.gesehen\) return false/.test(b) && /localStorage\.setItem\("kc_club_begruesst_"/.test(b), "Begrüßung käme mehrfach");
+  assert.ok(/zeige\("einstellungen"\)/.test(b) && /data-klappe="\$\{START_ART === "app" \? "darstellung" : "install"\}"/.test(b), "„Weiter“ führt nicht in die Einstellungen");
+  assert.ok(/Weiter zu den Einstellungen/.test(html) && /begruessungFertig\(false\)">Schließen/.test(html), "Knöpfe fehlen");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

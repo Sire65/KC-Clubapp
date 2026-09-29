@@ -315,6 +315,10 @@
   .blatt { position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 40; display: flex; align-items: flex-end; justify-content: center; }
   .blatt-innen { background: var(--karte); width: min(560px, 100%); border-radius: 22px 22px 0 0; padding: 18px 16px calc(18px + env(safe-area-inset-bottom)); display: grid; gap: 10px; }
   .blatt-innen h3 { margin: 0 0 4px; }
+  .begruessung { max-height: 92vh; overflow-y: auto; }
+  .begruessung .bgtipp { display: flex; gap: 10px; align-items: flex-start; background: var(--karte2); border-radius: 14px; padding: 10px 12px; margin: 6px 0; }
+  .begruessung .bgtipp b.nr { flex: none; width: 28px; height: 28px; border-radius: 50%; background: var(--rot); color: #fff; display: grid; place-items: center; }
+  .begruessung .knopf { text-align: center; }
   .blatt-innen .knopf { padding: 16px; font-size: 1.05rem; text-align: left; }
   @media (max-width: 560px) { .titel { font-size: 1.12rem; } .rund { width: 42px; height: 42px; } .knopfreihe { gap: 6px; } .raster { grid-template-columns: 1fr 1fr; } .info h2 { font-size: 1.25rem; } }
   /* Verbindungs-LEDs & Rundinstrumente (KC-CLUB-VERBINDUNG) */
@@ -683,6 +687,12 @@
   <div class="blatt-innen"><h3 id="exTitel"></h3><p class="hinweis" id="exText" style="margin:0"></p><div id="exKnoepfe" style="display:grid;gap:8px"></div>
     <button class="knopf" onclick="externZu()">Schließen</button></div>
 </div>
+<!-- KC-CLUB-BEGRUESSUNG: einmal beim ersten Start je Mitglied -->
+<div class="blatt versteckt" id="begruessungBlatt">
+  <div class="blatt-innen begruessung"><div id="begruessungText"></div>
+    <button class="knopf haupt" onclick="begruessungFertig(true)">⚙️ Weiter zu den Einstellungen</button>
+    <button class="knopf" onclick="begruessungFertig(false)">Schließen</button></div>
+</div>
 <div class="blatt versteckt" id="statusBlatt" onclick="if(event.target===this)this.classList.add('versteckt')">
   <div class="blatt-innen"><h3>Mein Status</h3><div class="liste" style="display:grid;gap:8px"></div>
     <div id="stExtra"><label class="feld">Bis (freiwillig)<input type="date" id="stBis"></label><label class="feld">Hinweis (freiwillig, z. B. „ab 18 Uhr erreichbar“)<input id="stHinweis" maxlength="120"></label></div>
@@ -720,7 +730,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.27.4"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.28.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -863,9 +873,9 @@ function pwUebernehmen(r) {
   if (aktuelleAnsicht === "start" && !kaBearb) kachelnZeigen();
 }
 // Beim Öffnen der App: offene wichtige Zettel → Pinnwand zeigen
-async function pwStart() {
+async function pwStart(nurZaehlen) { // nurZaehlen: Begrüßung ist offen → Pinnwand nicht zusätzlich öffnen
   try { const r = await api("pinnwand"); pwUebernehmen(r);
-    if (PW.zettel.some(pwOffen) && aktuelleAnsicht === "start") { PW.wichtigStart = true; zeige("pinnwand"); }
+    if (!nurZaehlen && PW.zettel.some(pwOffen) && aktuelleAnsicht === "start") { PW.wichtigStart = true; zeige("pinnwand"); }
   } catch {}
 }
 async function pwLaden() {
@@ -931,6 +941,37 @@ async function pwErledigt(id, zurueck) {
 async function pwAbnehmen(id) {
   if (!confirm("Zettel von der Pinnwand abnehmen?")) return;
   try { await api("pinnwand_abnehmen", { id }); melde("🗑️ Abgenommen"); await pwLaden(); } catch (e) { melde(e.message, true); }
+}
+
+// ---------- KC-CLUB-BEGRUESSUNG (0.28.0): beim ersten Start einmal je Mitglied, danach nie wieder (auch nicht auf neuen Geräten) ----------
+let BG_GEZEIGT = false;
+function begruessungPruefen() {
+  if (BG_GEZEIGT || !ICH) return false;
+  let lokal = false; try { lokal = localStorage.getItem("kc_club_begruesst_" + ICH.person_id) === "1"; } catch {}
+  if (lokal || INIT?.einstellungen?.begruessung?.gesehen) return false;
+  BG_GEZEIGT = true;
+  const installiert = START_ART === "app";
+  const tipp = (nr, titel, text) => `<div class="bgtipp"><b class="nr">${nr}</b><div><b>${titel}</b><div class="hinweis" style="margin:2px 0 0">${text}</div></div></div>`;
+  $("begruessungText").innerHTML = `<h3 style="font-size:1.3rem">Hallo ${esc(ICH.vorname || ICH.name)}! 👋</h3>
+    <p style="margin:0 0 6px">Schön, dass du dabei bist – ich freue mich, dass du die <b>Köcheclub-App</b> ausprobierst. Drei kleine Tipps für den Start:</p>
+    ${tipp(1, installiert ? "✅ Richtig installiert – prima!" : "📲 Richtig installieren", installiert
+      ? "Die App öffnest du ab jetzt einfach über ihr Symbol."
+      : "Unter ⚙️ <b>Mehr → App-Installation</b> steht Schritt für Schritt, wie es geht. Dann öffnet sich die App wie jede andere über ihr Symbol, und WhatsApp, Karten und Fotos funktionieren zuverlässig.")}
+    ${tipp(2, "⚙️ Persönlich einrichten", "Ebenfalls unter ⚙️ <b>Mehr</b>: Benachrichtigungen, Farbdesign und Tag/Nacht, Schriftgröße – und was andere von dir sehen dürfen (Privatsphäre).")}
+    ${tipp(3, "💭 Deine Meinung zählt", "Teste alles in Ruhe und sag mir über die Kachel <b>„Feedback“</b>, was dir gefällt und was noch besser werden kann.")}
+    <p style="margin:10px 0 4px">Viel Spaß und liebe Grüße<br><b>Hansi</b></p>`;
+  $("begruessungBlatt").classList.remove("versteckt");
+  return true;
+}
+function begruessungFertig(weiter) {
+  $("begruessungBlatt").classList.add("versteckt");
+  try { localStorage.setItem("kc_club_begruesst_" + ICH.person_id, "1"); } catch {}
+  api("einstellung_setzen", { schluessel: "begruessung", wert: { gesehen: true } }).catch(() => {});
+  if (!weiter) return;
+  zeige("einstellungen");
+  // nicht installiert → zuerst „App-Installation“, sonst „Darstellung“ aufklappen und hinscrollen
+  const ziel = document.querySelector(`#v-einstellungen details[data-klappe="${START_ART === "app" ? "darstellung" : "install"}"]`);
+  if (ziel) { ziel.open = true; setTimeout(() => ziel.scrollIntoView({ behavior: "smooth", block: "start" }), 250); }
 }
 
 // ---------- KC-CLUB-SCHLIESSEN: Ausgangstür ----------
@@ -1439,7 +1480,8 @@ async function neuLaden(vonHand) {
   try {
     INIT = await api("init"); ICH = INIT.ich;
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln);
-    if (!PW.startGeprueft) { PW.startGeprueft = true; pwStart(); }
+    const begruesst = begruessungPruefen();
+    if (!PW.startGeprueft) { PW.startGeprueft = true; pwStart(begruesst); }
     designUebernehmen(INIT.einstellungen?.design);
     VB.wartung = INIT.wartung || null; VB.server = INIT.server || null; vbCommSetzen(INIT.communicator || null);
     $("begruessung").textContent = "Hallo " + ICH.vorname + "!";

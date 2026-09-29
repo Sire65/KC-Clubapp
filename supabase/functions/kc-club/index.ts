@@ -13,14 +13,14 @@
 //           KC-CLUB-COMMUNICATOR-STATUS (0.17.0), KC-CLUB-FEEDBACK (0.18.0),
 //           KC-CLUB-KACHELN (0.19.0), KC-CLUB-ZUGANG-SELBST (0.21.0),
 //           KC-CLUB-GRUPPEN, KC-CLUB-ZUSTELLWAHL (0.23.0)
-//           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0), KC-CLUB-KACHELN-ZIEHEN (0.26.0), KC-CLUB-FEEDBACK-NEU (0.27.1)
+//           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0), KC-CLUB-KACHELN-ZIEHEN (0.26.0), KC-CLUB-FEEDBACK-NEU (0.27.1), KC-CLUB-BEGRUESSUNG (0.28.0)
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.27.1";
+const SERVER_VERSION = "0.28.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -284,6 +284,8 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
       .filter(([r]) => KA_ID.test(r)).slice(0, 10).map(([r, l]) => [r, kaIds(l)])),
     aus: kaIds(w?.aus),
   }),
+  // KC-CLUB-BEGRUESSUNG (0.28.0): Begrüßung beim ersten Start einmal je Mitglied (geräteübergreifend)
+  begruessung: (w) => ({ gesehen: !!w?.gesehen, am: new Date().toISOString() }),
   // KC-CLUB-DESIGN (0.24.0): fertiges Farbdesign + Tag/Nacht (automatisch, immer Tag, immer Nacht)
   design: (w) => ({
     design: typeof w?.design === "string" && KA_ID.test(w.design) ? w.design : "klassik",
@@ -2279,7 +2281,7 @@ Köcheclub Werne`,
         await protokoll(ich.person_id, "feedback_gesendet", { bogen: FEEDBACK_BOGEN, fragen: Object.keys(antworten).length, text: !!(idee || mitteilung) });
         return json({ ok: true });
       }
-      // KC-CLUB-FEEDBACK-NEU (0.27.1): alte Antworten löschen – vorher Kopie ins Archiv (Recovery-Punkt)
+      // KC-CLUB-FEEDBACK-NEU (0.27.1), KC-CLUB-BEGRUESSUNG (0.28.0): alte Antworten löschen – vorher Kopie ins Archiv (Recovery-Punkt)
       case "feedback_neu": {
         const n = await feedbackArchivieren(ich, "neu_ausfuellen", ich.person_id);
         await protokoll(ich.person_id, "feedback_neu", { archiviert: n });
