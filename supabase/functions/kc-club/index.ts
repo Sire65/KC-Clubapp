@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.32.0";
+const SERVER_VERSION = "0.32.1";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -139,6 +139,13 @@ async function sendenGewaehlt(eventKey: string, personIds: string[], wege: strin
   let gesendet = 0, fehler = 0;
   if (mit.length) { const r = await routerSenden(key, mit, vars, korrelation); gesendet += r.gesendet; fehler += r.fehler; }
   if (ohne.length) { const r = await routerSenden(eventKey + "_mail", ohne, { ...vars, text: String(vars.text ?? "") + hinweis }, korrelation); gesendet += r.gesendet; fehler += r.fehler; }
+  // 0.32.1: Push ausdrücklich gewählt → auch Mitglieder ohne geöffnete Club-App, die schon ein aktives Push-Abo haben
+  // (z. B. von der früheren Push-Seite), bekommen den Push zusätzlich zur Mail. Der Text weist auf den persönlichen Link hin.
+  if (ohne.length && w.includes("push")) {
+    const { data: abo } = await db.from("kc_member_push_subscriptions").select("person_id").eq("active", true).in("person_id", ohne);
+    const mitAbo = [...new Set((abo ?? []).map((x: any) => x.person_id))] as string[];
+    if (mitAbo.length) { const r = await routerSenden(eventKey + "_push", mitAbo, { ...vars, kurz: String(vars.kurz ?? "") + " (Club-App: bitte deinen persönlichen Link öffnen)" }, korrelation + ":push"); gesendet += r.gesendet; fehler += r.fehler; }
+  }
   return { gesendet, fehler, wege: w };
 }
 const zustellwege = (v: unknown) => (Array.isArray(v) ? v : []).map(String).filter((x) => ZUSTELLWEGE.includes(x));

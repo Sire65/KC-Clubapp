@@ -1,12 +1,19 @@
 {
-  "version": "0.32.0",
+  "version": "0.32.1",
   "datum": "2026-09-29",
   "neu": [
+    "🔔 „Push“ gewählt: erreicht jetzt auch Mitglieder, die Push schon haben, aber die Club-App noch nicht geöffnet haben",
     "🎥 Neu (Test): Videoanruf direkt über die App – kostenlos, von Handy zu Handy",
     "🎥 Annehmen mit Bild oder nur mit Ton",
     "📷 Im Gespräch: Kamera aus/an und vorne/hinten wechseln"
   ],
   "verlauf": [
+    {
+      "version": "0.32.1",
+      "neu": [
+        "🔔 „Push“ gewählt: erreicht jetzt auch Mitglieder, die Push schon haben, aber die Club-App noch nicht geöffnet haben"
+      ]
+    },
     {
       "version": "0.32.0",
       "neu": [

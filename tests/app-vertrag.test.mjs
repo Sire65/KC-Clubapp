@@ -683,4 +683,13 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/\$\("anrufVideo"\)\.srcObject = null; \$\("anrufSelbst"\)\.srcObject = null;/.test(html), "Kamera bleibt nach dem Auflegen an");
 }
 
+// 54. 0.32.1: Push ausdrücklich gewählt → auch an Mitglieder ohne geöffnete App mit aktivem Push-Abo (zusätzlich zur Mail)
+{
+  const sg = server.slice(server.indexOf("async function sendenGewaehlt"), server.indexOf("const zustellwege"));
+  assert.ok(/if \(ohne\.length && w\.includes\("push"\)\)/.test(sg) && /kc_member_push_subscriptions"\)\.select\("person_id"\)\.eq\("active", true\)/.test(sg), "Push an Mitglieder mit Abo, aber ohne App fehlt");
+  assert.ok(/routerSenden\(eventKey \+ "_mail", ohne/.test(sg), "Mitglieder ohne App bekommen keine Mail mehr");
+  const sn = server.slice(server.indexOf("async function senden("), server.indexOf("async function sendenGewaehlt"));
+  assert.ok(!/kc_member_push_subscriptions/.test(sn), "Standardversand (ohne Wahl) darf an Mitglieder ohne App nur mailen");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
