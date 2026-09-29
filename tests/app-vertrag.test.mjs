@@ -753,14 +753,27 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 61. 0.38.0: Erstattung – Positionen geprüft und Summe im Server gerechnet, Empfänger aus Ämtern, BCC Antragsteller + Admin
 {
   for (const a of ["erstattung_meine", "erstattung_senden"]) assert.ok(aktionen.has(a) && aufrufe.has(a), `Erstattungs-Aktion ${a} fehlt`);
-  assert.ok(/kmSatz: 0\.30/.test(server) && /empfaenger: \{ an: "Kassenwart", cc: "Clubsprecher" \}/.test(server), "Pauschale/Empfänger nicht in der Registry");
+  assert.ok(/kmSatzStandard: 0\.38/.test(server) && /empfaenger: \{ an: "Kassenwart", cc: "Clubsprecher" \}/.test(server), "Pauschale/Empfänger nicht in der Registry");
   const es = server.slice(server.indexOf('case "erstattung_senden"'), server.indexOf("// ----- Pinnwand (KC-CLUB-PINNWAND)"));
   assert.ok(/const summe = Math\.round\(pos\.reduce/.test(es), "Summe kommt nicht vom Server");
   assert.ok(/startsWith\(`club\/\$\{ich\.person_id\}\/`\)/.test(es), "fremde Belege anhängbar");
   assert.ok(/const bcc = \[\.\.\.new Set\(\[ich\.person_id, \.\.\.admins\]\)\]/.test(es) && /\{ cc, bcc \}\)/.test(es), "BCC an Antragsteller/Admin fehlt");
-  assert.ok(/betrag: Math\.round\(km \* ERSTATTUNG\.kmSatz \* 100\) \/ 100/.test(server) && /betrag > 0 && betrag <= 5000/.test(server), "Beträge ungeprüft");
+  assert.ok(/betrag: Math\.round\(km \* satz \* 100\) \/ 100/.test(server) && /betrag > 0 && betrag <= 5000/.test(server), "Beträge ungeprüft");
   assert.ok(/\.\.\.\(kopie\?\.bcc\?\.length \? \{ bcc:/.test(server), "Router bekommt keine Kopien");
   assert.ok(/\{ id: "erstattung", sym: "💶"/.test(html) && /id="v-erstattung"/.test(html) && /comboFeld\("ersGrund"/.test(html), "Erstattungs-Oberfläche fehlt");
+}
+
+// 62. 0.39.0: km-Satz mit „gilt ab“ (nur Admin), Fahrt nimmt den Satz ihres Datums – gleiche Regel in App und Server
+{
+  for (const a of ["km_satz_setzen", "km_satz_loeschen"]) { assert.ok(aktionen.has(a) && aufrufe.has(a), `${a} fehlt`); assert.ok(/nurAdmin\(ich\)/.test(server.slice(server.indexOf(`case "${a}"`), server.indexOf(`case "${a}"`) + 120)), `${a} nicht nur für Admin`); }
+  const sf = server.slice(server.indexOf("const satzFuer"), server.indexOf("function erstattungPruefen"));
+  const satzFuer = new Function("ERSTATTUNG", sf.replace(/: KmSatz\[\]/, "").replace(/: string\)/, ")").replace("const satzFuer =", "return"))({ kmSatzStandard: 0.38 });
+  const S = [{ satz: 0.38, ab: "2026-01-01" }, { satz: 0.42, ab: "2026-10-01" }];
+  assert.equal(satzFuer(S, "2025-12-31"), 0.38); assert.equal(satzFuer(S, "2026-09-30"), 0.38); assert.equal(satzFuer(S, "2026-10-01"), 0.42);
+  const sa = html.slice(html.indexOf("const satzAm"), html.indexOf("\n", html.indexOf("const satzAm")));
+  const satzAm = new Function("ERS", sa.replace("const satzAm =", "return"))({ standard: 0.38, saetze: S });
+  for (const t of ["2025-12-31", "2026-09-30", "2026-10-01", "2027-05-05"]) assert.equal(satzAm(t), satzFuer(S, t), `App und Server rechnen am ${t} verschieden`);
+  assert.ok(/id="adminErstattung"/.test(html) && /if \(ICH\?\.admin\) \{ \$\("adminErstattung"\)/.test(html), "Admin-Bereich fehlt");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

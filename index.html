@@ -733,6 +733,13 @@
         <b>iPhone:</b> in <b>Safari</b> Teilen □↑ → „Zum Home-Bildschirm“ → „Hinzufügen“. Zeigt die neue App „Persönlicher Link nötig“: Link aus Mail/WhatsApp kopieren und dort bei „📋 Link einfügen“ einfügen.<br>
         <span style="font-size:.85rem">Nur als richtige App klappen WhatsApp, Karten und „Teilen aus der Galerie → Köcheclub“ zuverlässig.</span></div>
     </details>
+    <details class="karte versteckt" data-klappe="admin_erstattung" id="adminErstattung">
+      <summary>🛠️ Admin: Erstattung (km-Satz)</summary>
+      <p class="hinweis" style="margin-top:0">Kilometerpauschale für Fahrtkosten. Jede Fahrt wird mit dem Satz berechnet, der <b>am Tag der Fahrt</b> galt – ändert sich der Satz, bleiben ältere Fahrten beim alten Satz.</p>
+      <div id="kmSaetze"><p class="hinweis">Wird geladen …</p></div>
+      <div class="zwei"><label class="feld">Neuer Satz (€ je km)<input id="kmSatzNeu" inputmode="decimal" placeholder="z. B. 0,38"></label><label class="feld">gilt ab<input type="date" id="kmSatzAb"></label></div>
+      <button class="knopf haupt" onclick="kmSatzSpeichern()">💾 Satz speichern</button>
+    </details>
     <details class="karte" data-klappe="app">
       <summary>ℹ️ App-Info</summary>
       <div style="text-align:center;margin:6px 0 12px"><img src="icon-192.png" alt="" style="width:64px;height:64px;border-radius:16px"><div style="font-weight:800;font-size:1.15rem;margin-top:6px">Köcheclub Werne – Club-App</div>
@@ -858,7 +865,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.38.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.39.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -1471,12 +1478,14 @@ async function spracheAbspielen(knopf, id) {
 
 // ---------- KC-CLUB-ERSTATTUNG (0.38.0): Fahrtkosten, vorgestreckter Einkauf, sonstige Auslagen beantragen ----------
 // Positionen sammeln → Summe → Mail an Kassenwart (An) + Clubsprecher (CC); Antragsteller und Admin bekommen eine Blindkopie.
-let ERS = { pos: [], art: "fahrt", kmSatz: 0.3, gruende: [], arten: [], belege: [], auszahlung: "ueberweisung", geladen: false };
+let ERS = { pos: [], art: "fahrt", kmSatz: 0.38, saetze: [], gruende: [], arten: [], belege: [], auszahlung: "ueberweisung", geladen: false };
 const eur = (n) => (Math.round(n * 100) / 100).toFixed(2).replace(".", ",") + " €";
+// KC-CLUB-KMSATZ (0.39.0): Satz, der am Tag der Fahrt galt (gleiche Regel wie im Server)
+const satzAm = (datum) => { let s = ERS.standard ?? 0.38; for (const x of ERS.saetze || []) if (x.ab <= datum) s = x.satz; return s; };
 async function erstattungLaden() {
   try {
     const r = await api("erstattung_meine");
-    Object.assign(ERS, { kmSatz: r.kmSatz, gruende: r.gruende, arten: r.arten, geladen: true });
+    Object.assign(ERS, { kmSatz: r.kmSatz, standard: r.standard, saetze: r.saetze || [], gruende: r.gruende, arten: r.arten, geladen: true });
     if (!$("ersForm").innerHTML) erstattungArt("fahrt");
     $("ersMeine").innerHTML = r.antraege.length ? r.antraege.map((a) => `<div class="zeile"><div style="flex:1"><b>${eur(a.summe)}</b> · ${a.anzahl} Position${a.anzahl === 1 ? "" : "en"}<div class="hinweis" style="margin:0;font-size:.85rem">${esc(wann(a.zeit))} · ${a.auszahlung === "bar" ? "bar" : "Überweisung"}</div></div>
       <span class="stmarke ${a.status === "erstattet" ? "st-verfuegbar" : a.status === "abgelehnt" ? "st-abwesend" : "st-beschaeftigt"}">${a.status === "erstattet" ? "✅ erstattet" : a.status === "abgelehnt" ? "❌ abgelehnt" : "📨 eingereicht"}</span></div>`).join("")
@@ -1489,18 +1498,18 @@ function erstattungArt(art) {
   ERS.art = art; ERS.belege = [];
   document.querySelectorAll("#ersArt button").forEach((b) => b.classList.toggle("an", b.dataset.a === art));
   const heute = heuteIso(), beleg = `<label class="feld">Beleg (freiwillig)<input type="file" accept="image/*,application/pdf" onchange="erstattungBeleg(this)"></label><div class="chips" id="ersBelege"></div>`;
-  $("ersForm").innerHTML = `<label class="feld">Datum<input type="date" id="ersDatum" value="${heute}" max="${heute}"></label>` + (art === "fahrt"
+  $("ersForm").innerHTML = `<label class="feld">Datum<input type="date" id="ersDatum" value="${heute}" max="${heute}" oninput="if(ERS.art==='fahrt')erstattungVorschau()"></label>` + (art === "fahrt"
     ? `<label class="feld">Gefahrene Kilometer (hin und zurück)<input id="ersKm" inputmode="decimal" placeholder="z. B. 82" oninput="erstattungVorschau()"></label>
        ${comboFeld("ersGrund", "Grund der Fahrt", ERS.gruende, "", "– bitte wählen –", "✏️ Anderer Grund …", "z. B. Messebesuch")}
        <label class="feld">Ziel / Ort (freiwillig)<input id="ersZiel" maxlength="120" placeholder="z. B. Dortmund"></label>
-       <p class="hinweis" id="ersVorschau" style="margin:0">Pauschale: ${eur(ERS.kmSatz)} je km</p>`
+       <p class="hinweis" id="ersVorschau" style="margin:0">Pauschale: ${eur(satzAm(heute))} je km</p>`
     : `<label class="feld">Betrag in €<input id="ersBetrag" inputmode="decimal" placeholder="z. B. 23,90"></label>
        <label class="feld">${art === "einkauf" ? "Was wurde eingekauft?" : "Wofür war die Auslage?"}<input id="ersWas" maxlength="200" placeholder="${art === "einkauf" ? "z. B. Getränke für das Treffen" : "z. B. Parkgebühr"}"></label>
        ${art === "einkauf" ? `<label class="feld">Geschäft (freiwillig)<input id="ersGeschaeft" maxlength="120" placeholder="z. B. Edeka Werne"></label>` : ""}${beleg}`);
 }
 function erstattungVorschau() {
-  const km = Number(String($("ersKm")?.value || "").replace(",", "."));
-  $("ersVorschau").textContent = km > 0 ? `${String(km).replace(".", ",")} km × ${eur(ERS.kmSatz)} = ${eur(km * ERS.kmSatz)}` : `Pauschale: ${eur(ERS.kmSatz)} je km`;
+  const km = Number(String($("ersKm")?.value || "").replace(",", ".")), satz = satzAm($("ersDatum")?.value || heuteIso());
+  $("ersVorschau").textContent = km > 0 ? `${String(km).replace(".", ",")} km × ${eur(satz)} = ${eur(km * satz)}` : `Pauschale: ${eur(satz)} je km`;
 }
 async function erstattungBeleg(input) {
   const f = input.files?.[0]; if (!f) return;
@@ -1514,7 +1523,8 @@ function erstattungHinzu() {
     const km = Number(String($("ersKm").value).replace(",", ".")), grund = $("ersGrund").value.trim();
     if (!(km > 0)) return melde("Bitte die gefahrenen Kilometer angeben.", true);
     if (!grund) return melde("Bitte einen Grund wählen.", true);
-    p = { art: "fahrt", datum, km, grund, ziel: $("ersZiel").value.trim(), betrag: Math.round(km * ERS.kmSatz * 100) / 100, belege: [] };
+    const satz = satzAm(datum);
+    p = { art: "fahrt", datum, km, satz, grund, ziel: $("ersZiel").value.trim(), betrag: Math.round(km * satz * 100) / 100, belege: [] };
   } else {
     const betrag = Number(String($("ersBetrag").value).replace(",", ".")), was = $("ersWas").value.trim();
     if (!(betrag > 0)) return melde("Bitte einen Betrag angeben.", true);
@@ -1527,7 +1537,7 @@ function erstattungZeigen() {
   const d = (iso) => iso.split("-").reverse().join(".");
   const summe = ERS.pos.reduce((a, x) => a + x.betrag, 0);
   $("ersListe").innerHTML = ERS.pos.length ? `<table class="todotab">${ERS.pos.map((x, i) => `<tr><td class="kat">${x.art === "fahrt" ? "🚗" : x.art === "einkauf" ? "🛒" : "📦"}</td>
-      <td><div class="aufgabe">${x.art === "fahrt" ? `${String(x.km).replace(".", ",")} km – ${esc(x.grund)}` : esc(x.was)}</div><div class="meta">${d(x.datum)}${x.ziel ? " · " + esc(x.ziel) : ""}${x.geschaeft ? " · " + esc(x.geschaeft) : ""}${x.belege?.length ? " · 📎 Beleg" : ""}</div></td>
+      <td><div class="aufgabe">${x.art === "fahrt" ? `${String(x.km).replace(".", ",")} km – ${esc(x.grund)}` : esc(x.was)}</div>${x.art === "fahrt" ? `<div class="meta">${String(x.km).replace(".", ",")} km × ${eur(x.satz)}</div>` : ""}<div class="meta">${d(x.datum)}${x.ziel ? " · " + esc(x.ziel) : ""}${x.geschaeft ? " · " + esc(x.geschaeft) : ""}${x.belege?.length ? " · 📎 Beleg" : ""}</div></td>
       <td style="text-align:right;font-weight:800;white-space:nowrap">${eur(x.betrag)}</td><td style="width:34px"><button class="weg" onclick="ERS.pos.splice(${i},1);erstattungZeigen()">🗑️</button></td></tr>`).join("")}
       <tr><td></td><td><b>Summe</b></td><td style="text-align:right;font-weight:900;font-size:1.1rem;white-space:nowrap">${eur(summe)}</td><td></td></tr></table>`
     : '<p class="hinweis" style="margin:0">Noch keine Position – oben ausfüllen und „＋ Position hinzufügen“ tippen.</p>';
@@ -1540,11 +1550,34 @@ async function erstattungSenden() {
   const summe = ERS.pos.reduce((a, x) => a + x.betrag, 0);
   if (!confirm(`Erstattung über ${eur(summe)} beantragen?\n\nDer Antrag geht per Mail an Kassenwart und Clubsprecher. Du bekommst eine Kopie.`)) return;
   try {
-    const r = await api("erstattung_senden", { positionen: ERS.pos.map(({ belegNamen, ...x }) => x), auszahlung: ERS.auszahlung, bemerkung: $("ersBemerkung").value.trim() });
+    const r = await api("erstattung_senden", { positionen: ERS.pos.map(({ belegNamen, satz, ...x }) => x), auszahlung: ERS.auszahlung, bemerkung: $("ersBemerkung").value.trim() });
     ERS.pos = []; $("ersBemerkung").value = ""; erstattungZeigen();
     melde(`📨 Antrag über ${eur(r.summe)} verschickt an ${[...r.an, ...r.cc].join(" und ")} – du bekommst eine Kopie per Mail.`);
     erstattungLaden();
   } catch (e) { melde(e.message, true); }
+}
+
+// KC-CLUB-KMSATZ (0.39.0): Admin pflegt die Kilometerpauschale mit „gilt ab“
+async function kmSatzAdminLaden() {
+  try { const r = await api("erstattung_meine"); kmSaetzeZeigen(r.saetze || [], r.kmSatz); } catch (e) { $("kmSaetze").innerHTML = `<p class="hinweis">⚠️ ${esc(e.message)}</p>`; }
+  if (!$("kmSatzAb").value) $("kmSatzAb").value = heuteIso();
+}
+function kmSaetzeZeigen(saetze, aktuell) {
+  const heute = heuteIso(), d = (iso) => iso.split("-").reverse().join(".");
+  $("kmSaetze").innerHTML = `<p style="margin:0 0 6px">Aktuell gilt: <b style="font-size:1.15rem">${eur(aktuell)}</b> je km</p>` + (saetze.length
+    ? `<table class="todotab">${[...saetze].reverse().map((x) => `<tr><td><b>${eur(x.satz)}</b> je km</td><td>ab ${d(x.ab)}${x.ab > heute ? ' <span class="stmarke st-urlaub">künftig</span>' : ""}</td>
+      <td style="width:34px"><button class="weg" title="löschen" onclick="kmSatzLoeschen('${x.id}')">🗑️</button></td></tr>`).join("")}</table>`
+    : '<p class="hinweis">Noch kein Satz eingetragen – es gilt die Voreinstellung.</p>');
+}
+async function kmSatzSpeichern() {
+  const satz = $("kmSatzNeu").value.trim(), ab = $("kmSatzAb").value;
+  if (!satz || !ab) return melde("Bitte Satz und Datum angeben.", true);
+  if (!confirm(`${satz.replace(".", ",")} € je km ab ${ab.split("-").reverse().join(".")} speichern?\n\nGilt für alle Fahrten ab diesem Tag.`)) return;
+  try { const r = await api("km_satz_setzen", { satz, ab }); $("kmSatzNeu").value = ""; melde("💾 km-Satz gespeichert"); kmSatzAdminLaden(); } catch (e) { melde(e.message, true); }
+}
+async function kmSatzLoeschen(id) {
+  if (!confirm("Diesen km-Satz löschen?")) return;
+  try { await api("km_satz_loeschen", { id }); kmSatzAdminLaden(); } catch (e) { melde(e.message, true); }
 }
 
 // ---------- KC-CLUB-SCHLIESSEN: Ausgangstür ----------
@@ -1597,7 +1630,7 @@ async function zugangAnfordern() {
 // Hintergrund-Abfragen (alle paar Sekunden/Minuten) zeigen sie nicht, damit nichts flackert.
 const WARTEN_STILL = new Set(["init", "online", "anruf_status", "diagnose", "unterhaltung", "unterhaltungen", "einstellung_setzen", "pinnwand", "kalender", "terminumfragen_liste", "communicator_status", "ping", "anruf_ende", "protokoll_speichern", "todo_erledigt", "todo_liste"]);
 const WARTEN_TEXT = { nachricht_senden: "Nachricht wird gesendet …", gruppe_anlegen: "Gruppe wird angelegt …", gruppe_aendern: "Wird gespeichert …", treffen_speichern: "Termin wird gespeichert …",
-  pinnwand_anheften: "Zettel wird angeheftet …", feedback_senden: "Feedback wird gesendet …", anklopfen: "Es wird angeklopft …", anruf_start: "Anruf wird aufgebaut …", anlage_hochladen: "Wird hochgeladen …", erstattung_senden: "Antrag wird gesendet …", todo_zuweisen: "Wird zugewiesen …",
+  pinnwand_anheften: "Zettel wird angeheftet …", feedback_senden: "Feedback wird gesendet …", anklopfen: "Es wird angeklopft …", anruf_start: "Anruf wird aufgebaut …", anlage_hochladen: "Wird hochgeladen …", erstattung_senden: "Antrag wird gesendet …", km_satz_setzen: "Wird gespeichert …", todo_zuweisen: "Wird zugewiesen …",
   link_erzeugen: "Link wird erzeugt …", todo_anlegen: "Wird eingetragen …", zugang_anfordern: "Mail wird gesendet …", foto_hochladen: "Foto wird hochgeladen …", test_an_mich: "Test wird gesendet …" };
 let wartenZahl = 0, wartenTimer = null;
 function wartenStart(action) {
@@ -2181,7 +2214,7 @@ function zeige(v, ausHistorie) {
   if (v === "dienste") dienstLaden();
   if (v === "nachrichten") unterhLaden();
   if (v === "mitglieder") mitgliederLaden();
-  if (v === "einstellungen") { appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); }
+  if (v === "einstellungen") { if (ICH?.admin) { $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); }
   if (v === "start") neuLaden();
   // KC-CLUB-ZURUECK: jede Ansicht bekommt einen Verlaufseintrag, damit „Zurück“ eine Ansicht zurückgeht statt die App zu schließen
   const hash = v === "start" || v === "chat" ? "" : v === "protokoll" ? "#protokoll=" + prId : v === "aktion" ? "#aktion=" + aktionId : v === "mitglied" ? "#mitglied=" + mitgliedId : "#" + v;

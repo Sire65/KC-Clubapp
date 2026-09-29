@@ -1,12 +1,18 @@
 {
-  "version": "0.38.0",
+  "version": "0.39.0",
   "datum": "2026-09-29",
   "neu": [
-    "💶 Neu in „Mein Bereich“: Erstattung beantragen – Fahrtkosten (km × Pauschale), Einkauf vorgestreckt, sonstige Auslagen",
-    "📎 Belege als Foto anhängen, Summe wird automatisch gerechnet",
-    "📨 Geht per Mail an Kassenwart und Clubsprecher – du bekommst eine Kopie"
+    "🛠️ Admin: km-Satz für Erstattungen mit „gilt ab“-Datum einstellen (Voreinstellung 0,38 €)",
+    "🚗 Fahrten werden mit dem Satz berechnet, der am Tag der Fahrt galt"
   ],
   "verlauf": [
+    {
+      "version": "0.39.0",
+      "neu": [
+        "🛠️ Admin: km-Satz für Erstattungen mit „gilt ab“-Datum einstellen (Voreinstellung 0,38 €)",
+        "🚗 Fahrten werden mit dem Satz berechnet, der am Tag der Fahrt galt"
+      ]
+    },
     {
       "version": "0.38.0",
       "neu": [

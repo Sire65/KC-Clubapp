@@ -1,5 +1,12 @@
 # Änderungen
 
+## 0.39.0 – 2026-09-29 (DEV)
+
+- KC-CLUB-KMSATZ (neu): ⚙️ Einstellungen → „🛠️ Admin: Erstattung (km-Satz)“ (nur Admin). Kilometerpauschale mit „gilt ab“-Datum
+  eintragen, Liste aller Sätze (künftige markiert), löschen. Voreinstellung 0,38 € ab 01.01.2026. Jede Fahrt wird mit dem Satz
+  berechnet, der am Tag der Fahrt galt – in der Vorschau (App) und im Antrag (Server) nach derselben Regel; der Satz steht je Fahrt
+  in Mail und Antrag. Tabelle kc_club_km_satz (RLS).
+
 ## 0.38.0 – 2026-09-29 (DEV)
 
 - KC-CLUB-ERSTATTUNG (neu): Kachel „💶 Erstattung“ (Mein Bereich). Positionen sammeln: 🚗 Fahrtkosten (Datum, km, Grund aus

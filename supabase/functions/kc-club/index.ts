@@ -13,14 +13,14 @@
 //           KC-CLUB-COMMUNICATOR-STATUS (0.17.0), KC-CLUB-FEEDBACK (0.18.0),
 //           KC-CLUB-KACHELN (0.19.0), KC-CLUB-ZUGANG-SELBST (0.21.0),
 //           KC-CLUB-GRUPPEN, KC-CLUB-ZUSTELLWAHL (0.23.0)
-//           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0), KC-CLUB-KACHELN-ZIEHEN (0.26.0), KC-CLUB-FEEDBACK-NEU (0.27.1), KC-CLUB-BEGRUESSUNG (0.28.0), KC-CLUB-ONLINE (0.29.0), KC-CLUB-ANRUF (0.31.0), KC-CLUB-VIDEO (0.32.0), KC-CLUB-QUITTUNG (0.34.0), KC-CLUB-TODO + KC-CLUB-REGISTER-ZIEHEN (0.36.0), KC-CLUB-SPRACHE + KC-CLUB-TODO-ZUSTAENDIG (0.37.0), KC-CLUB-ERSTATTUNG (0.38.0)
+//           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0), KC-CLUB-KACHELN-ZIEHEN (0.26.0), KC-CLUB-FEEDBACK-NEU (0.27.1), KC-CLUB-BEGRUESSUNG (0.28.0), KC-CLUB-ONLINE (0.29.0), KC-CLUB-ANRUF (0.31.0), KC-CLUB-VIDEO (0.32.0), KC-CLUB-QUITTUNG (0.34.0), KC-CLUB-TODO + KC-CLUB-REGISTER-ZIEHEN (0.36.0), KC-CLUB-SPRACHE + KC-CLUB-TODO-ZUSTAENDIG (0.37.0), KC-CLUB-ERSTATTUNG (0.38.0), KC-CLUB-KMSATZ (0.39.0)
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.38.0";
+const SERVER_VERSION = "0.39.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -374,13 +374,20 @@ async function todoBenachrichtigen(ich: Ich, an: string, text: string, faellig: 
 }
 // ----- KC-CLUB-ERSTATTUNG (0.38.0): Fahrtkosten, vorgestreckter Einkauf, sonstige Auslagen (Registry) -----
 const ERSTATTUNG = {
-  kmSatz: 0.30, // € je gefahrenem km (Club-Pauschale – hier zentral änderbar)
+  kmSatzStandard: 0.38, // € je km, nur falls in kc_club_km_satz nichts eingetragen ist (0.39.0: Satz pflegt der Admin mit „gilt ab“)
   gruende: ["Kochen in Dortmund", "Fahrt zum Budendienst", "Einkaufsfahrt für den Club", "Club-Treffen / Sitzung", "Veranstaltung / Weihnachtsmarkt", "Schulung / Fortbildung", "Abholen / Liefern von Material"],
   arten: [{ id: "fahrt", sym: "🚗", name: "Fahrtkosten" }, { id: "einkauf", sym: "🛒", name: "Einkauf vorgestreckt" }, { id: "sonstiges", sym: "📦", name: "Sonstige Auslage" }],
   empfaenger: { an: "Kassenwart", cc: "Clubsprecher" }, // Ämter aus kc_club_rollen
 };
 const euro = (n: number) => n.toFixed(2).replace(".", ",") + " €";
-function erstattungPruefen(roh: unknown, ich: Ich) {
+// KC-CLUB-KMSATZ (0.39.0): Sätze mit „gilt ab“ – für eine Fahrt gilt der letzte Satz, dessen Datum nicht nach der Fahrt liegt
+type KmSatz = { id: string; satz: number; ab: string };
+async function kmSaetze(): Promise<KmSatz[]> {
+  const { data } = await db.from("kc_club_km_satz").select("id,satz,gilt_ab").order("gilt_ab", { ascending: true });
+  return (data ?? []).map((x: any) => ({ id: x.id, satz: Number(x.satz), ab: x.gilt_ab }));
+}
+const satzFuer = (saetze: KmSatz[], datum: string) => { let s = ERSTATTUNG.kmSatzStandard; for (const x of saetze) if (x.ab <= datum) s = x.satz; return s; };
+function erstattungPruefen(roh: unknown, ich: Ich, saetze: KmSatz[]) {
   const liste = (Array.isArray(roh) ? roh : []).slice(0, 20), pos: any[] = [], heute = Date.now();
   for (const x of liste as any[]) {
     const datum = /^\d{4}-\d{2}-\d{2}$/.test(String(x?.datum || "")) ? String(x.datum) : "";
@@ -390,7 +397,8 @@ function erstattungPruefen(roh: unknown, ich: Ich) {
       const km = Math.round(Number(x.km) * 10) / 10;
       if (!(km > 0 && km <= 3000)) throw new Fehler("Bitte die gefahrenen Kilometer angeben (1 bis 3000).");
       const grund = txt(x.grund, 120); if (!grund) throw new Fehler("Bitte den Grund der Fahrt angeben.");
-      pos.push({ art: "fahrt", datum, km, grund, ziel: txt(x.ziel, 120), betrag: Math.round(km * ERSTATTUNG.kmSatz * 100) / 100, belege: beleg });
+      const satz = satzFuer(saetze, datum);
+      pos.push({ art: "fahrt", datum, km, satz, grund, ziel: txt(x.ziel, 120), betrag: Math.round(km * satz * 100) / 100, belege: beleg });
     } else if (x?.art === "einkauf" || x?.art === "sonstiges") {
       const betrag = Math.round(Number(String(x.betrag).replace(",", ".")) * 100) / 100;
       if (!(betrag > 0 && betrag <= 5000)) throw new Fehler("Bitte einen Betrag zwischen 0,01 € und 5.000 € angeben.");
@@ -1840,12 +1848,33 @@ Köcheclub Werne`,
         const { data } = await db.from("kc_club_erstattung").select("id,positionen,summe,auszahlung,status,erstellt_am").eq("person_id", ich.person_id).order("erstellt_am", { ascending: false }).limit(20);
         const { data: rollen } = await db.from("kc_club_rollen").select("person_id,aemter");
         const hat = (amt: string) => (rollen ?? []).some((r: any) => (r.aemter || []).includes(amt));
-        return json({ kmSatz: ERSTATTUNG.kmSatz, gruende: ERSTATTUNG.gruende, arten: ERSTATTUNG.arten, empfaengerDa: hat(ERSTATTUNG.empfaenger.an) || hat(ERSTATTUNG.empfaenger.cc),
+        const saetze = await kmSaetze();
+        return json({ kmSatz: satzFuer(saetze, new Date().toISOString().slice(0, 10)), standard: ERSTATTUNG.kmSatzStandard, saetze, gruende: ERSTATTUNG.gruende, arten: ERSTATTUNG.arten, empfaengerDa: hat(ERSTATTUNG.empfaenger.an) || hat(ERSTATTUNG.empfaenger.cc),
           antraege: (data ?? []).map((a: any) => ({ id: a.id, summe: Number(a.summe), anzahl: (a.positionen || []).length, status: a.status, zeit: a.erstellt_am, auszahlung: a.auszahlung })) });
       }
 
+      // KC-CLUB-KMSATZ (0.39.0): Kilometerpauschale mit „gilt ab“ – nur Admin
+      case "km_satz_setzen": {
+        nurAdmin(ich);
+        const satz = Math.round(Number(String(p.satz ?? "").replace(",", ".")) * 100) / 100;
+        if (!(satz > 0 && satz <= 2)) throw new Fehler("Bitte einen Satz zwischen 0,01 € und 2,00 € je km angeben.");
+        const ab = /^\d{4}-\d{2}-\d{2}$/.test(String(p.ab || "")) ? String(p.ab) : "";
+        if (!ab) throw new Fehler("Bitte angeben, ab wann der Satz gilt.");
+        const { error } = await db.from("kc_club_km_satz").upsert({ satz, gilt_ab: ab, erstellt_von: ich.person_id, erstellt_am: jetzt() }, { onConflict: "gilt_ab" });
+        if (error) throw new Fehler("Satz konnte nicht gespeichert werden.", 500);
+        await protokoll(ich.person_id, "km_satz_gesetzt", { satz, ab });
+        return json({ ok: true, saetze: await kmSaetze() });
+      }
+
+      case "km_satz_loeschen": {
+        nurAdmin(ich);
+        await db.from("kc_club_km_satz").delete().eq("id", String(p.id || ""));
+        await protokoll(ich.person_id, "km_satz_geloescht", { id: String(p.id || "") });
+        return json({ ok: true, saetze: await kmSaetze() });
+      }
+
       case "erstattung_senden": {
-        const pos = erstattungPruefen(p.positionen, ich);
+        const saetze = await kmSaetze(), pos = erstattungPruefen(p.positionen, ich, saetze);
         // Belege: nur eigene, frisch hochgeladene Dateien
         const belege = [...new Set(pos.flatMap((x) => x.belege))] as string[];
         if (belege.length) {
@@ -1865,10 +1894,10 @@ Köcheclub Werne`,
         const bcc = [...new Set([ich.person_id, ...admins])].filter((id) => !an.includes(id) && !cc.includes(id));
         const d = (iso: string) => iso.split("-").reverse().join(".");
         const zeilen = pos.map((x, i) => x.art === "fahrt"
-          ? `${i + 1}. 🚗 Fahrtkosten ${d(x.datum)}: ${String(x.km).replace(".", ",")} km × ${euro(ERSTATTUNG.kmSatz)} = ${euro(x.betrag)}\n   Grund: ${x.grund}${x.ziel ? " · Ziel: " + x.ziel : ""}`
+          ? `${i + 1}. 🚗 Fahrtkosten ${d(x.datum)}: ${String(x.km).replace(".", ",")} km × ${euro(x.satz)} = ${euro(x.betrag)}\n   Grund: ${x.grund}${x.ziel ? " · Ziel: " + x.ziel : ""}`
           : `${i + 1}. ${x.art === "einkauf" ? "🛒 Einkauf vorgestreckt" : "📦 Sonstige Auslage"} ${d(x.datum)}: ${euro(x.betrag)}\n   ${x.was}${x.geschaeft ? " · " + x.geschaeft : ""}${x.belege.length ? " · Beleg anbei" : ""}`).join("\n\n");
-        const text = `Hallo,\n\n${ich.name} beantragt eine Erstattung über die Köcheclub-App:\n\n${zeilen}\n\n────────────\nSumme: ${euro(summe)}\nAuszahlung: ${auszahlung === "bar" ? "bar" : "per Überweisung"}${bemerkung ? "\nBemerkung: " + bemerkung : ""}\n\n(Kilometerpauschale ${euro(ERSTATTUNG.kmSatz)} je km. Belege, falls vorhanden, sind angehängt.)\n\nViele Grüße\nKöcheclub Werne`;
-        const { data: a, error } = await db.from("kc_club_erstattung").insert({ person_id: ich.person_id, positionen: pos, summe, km_satz: ERSTATTUNG.kmSatz, auszahlung, bemerkung: bemerkung || null }).select("id").single();
+        const text = `Hallo,\n\n${ich.name} beantragt eine Erstattung über die Köcheclub-App:\n\n${zeilen}\n\n────────────\nSumme: ${euro(summe)}\nAuszahlung: ${auszahlung === "bar" ? "bar" : "per Überweisung"}${bemerkung ? "\nBemerkung: " + bemerkung : ""}\n\n(Kilometerpauschale je nach Fahrtdatum laut Club-Einstellung. Belege, falls vorhanden, sind angehängt.)\n\nViele Grüße\nKöcheclub Werne`;
+        const { data: a, error } = await db.from("kc_club_erstattung").insert({ person_id: ich.person_id, positionen: pos, summe, km_satz: satzFuer(saetze, new Date().toISOString().slice(0, 10)), auszahlung, bemerkung: bemerkung || null }).select("id").single();
         if (error || !a) throw new Fehler("Antrag konnte nicht gespeichert werden.", 500);
         const versand = await routerSenden("club_nachricht_mail", an, {
           titel: `💶 Erstattung von ${ich.vorname}: ${euro(summe)}`, kurz: `${pos.length} Position${pos.length === 1 ? "" : "en"} · ${euro(summe)}`,
