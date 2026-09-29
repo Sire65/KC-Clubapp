@@ -336,6 +336,11 @@
   .anruf .rund2 { width: 72px; height: 72px; border-radius: 50%; border: none; font-size: 1.8rem; cursor: pointer; color: #fff; box-shadow: 0 6px 18px rgba(0,0,0,.3); }
   .anruf .rund2.gruen { background: #27ae60; } .anruf .rund2.rotk { background: #d32f2f; } .anruf .rund2.grau { background: rgba(255,255,255,.22); } .anruf .rund2.aus { background: #fff; color: #333; }
   .anruf small { opacity: .8; }
+  /* KC-CLUB-VIDEO: Bild des anderen bildschirmfüllend, eigenes Bild klein unten rechts */
+  .anruf video.fern { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: #000; z-index: -1; }
+  .anruf video.selbst { position: absolute; right: 14px; top: calc(16px + env(safe-area-inset-top)); width: 110px; height: 150px; object-fit: cover; border-radius: 14px; border: 2px solid #fff; background: #222; transform: scaleX(-1); box-shadow: 0 6px 18px rgba(0,0,0,.4); }
+  .anruf.mitbild { justify-content: flex-end; padding-bottom: 40px; background: #000; isolation: isolate; }
+  .anruf.mitbild .gross { display: none; } .anruf.mitbild h2, .anruf.mitbild .zustand { text-shadow: 0 1px 4px rgba(0,0,0,.8); }
   .mini .onmini.leer { background: rgba(255,255,255,.22); color: #fff; box-shadow: none; font-weight: 700; }
   .onzeile { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--linie); }
   .onzeile:last-child { border-bottom: none; } .onzeile .knopf { padding: 10px 12px; font-size: .95rem; text-align: center; }
@@ -720,6 +725,8 @@
   <div class="reihe" id="anrufKnoepfe"></div>
   <small>📞 Anruf über die Köcheclub-App (Test) · kostenlos, direkt von Handy zu Handy</small>
   <audio id="anrufTon" autoplay playsinline></audio>
+  <video id="anrufVideo" class="fern versteckt" autoplay playsinline muted></video>
+  <video id="anrufSelbst" class="selbst versteckt" autoplay playsinline muted></video>
 </div>
 <!-- KC-CLUB-NEUIGKEITEN: was ist neu in der Version -->
 <div class="blatt versteckt" id="neuBlatt" onclick="if(event.target===this)this.classList.add('versteckt')">
@@ -781,7 +788,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.31.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.32.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -1067,6 +1074,7 @@ function onlineBlatt() {
       <div style="flex:1"><b>${esc(x.name || x.vorname)}</b><div class="hinweis" style="font-size:.85rem;margin:0">gerade online</div></div>
       <button class="knopf haupt" onclick="$('onlineBlatt').classList.add('versteckt'); anklopfen('${x.person_id}')">👋 Anklopfen</button>
       <button class="knopf" title="Anrufen (Test)" onclick="$('onlineBlatt').classList.add('versteckt'); anrufen('${x.person_id}')">📞</button>
+      <button class="knopf" title="Videoanruf (Test)" onclick="$('onlineBlatt').classList.add('versteckt'); anrufen('${x.person_id}', true)">🎥</button>
       <button class="knopf" title="Nachricht schreiben" onclick="$('onlineBlatt').classList.add('versteckt'); direkt('${x.person_id}')">💬</button></div>`).join("")
     : '<p class="hinweis">Gerade ist niemand sonst online. Sobald jemand die App öffnet, erscheint hier ein 🟢 – dann kannst du anklopfen oder anrufen.</p>';
   $("onlineBlatt").classList.remove("versteckt");
@@ -1120,14 +1128,20 @@ function iceFertig(pc, ms = 3500) {
   return new Promise((ok) => { if (pc.iceGatheringState === "complete") return ok(); const t = setTimeout(ok, ms);
     pc.addEventListener("icegatheringstatechange", () => { if (pc.iceGatheringState === "complete") { clearTimeout(t); ok(); } }); });
 }
-async function anrufVerbindung() {
+async function anrufVerbindung(mitBild) {
   if (!navigator.mediaDevices?.getUserMedia || !window.RTCPeerConnection) throw new Error("Dieses Handy/dieser Browser kann keine App-Anrufe.");
   let strom;
-  try { strom = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true }, video: false }); }
-  catch { throw new Error("Bitte das Mikrofon erlauben (Chrome fragt danach) – sonst geht der Anruf nicht."); }
+  try { strom = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true },
+    video: mitBild ? { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } } : false }); }
+  catch { throw new Error(mitBild ? "Bitte Kamera und Mikrofon erlauben (Chrome fragt danach) – sonst geht der Videoanruf nicht." : "Bitte das Mikrofon erlauben (Chrome fragt danach) – sonst geht der Anruf nicht."); }
   const pc = new RTCPeerConnection({ iceServers: ICE });
   strom.getTracks().forEach((t) => pc.addTrack(t, strom));
-  pc.ontrack = (e) => { $("anrufTon").srcObject = e.streams[0]; $("anrufTon").play?.().catch(() => {}); };
+  // KC-CLUB-VIDEO: wer „nur mit Ton“ annimmt, empfängt das Bild trotzdem (der Video-Kanal kommt aus dem Angebot)
+  if (mitBild) { $("anrufSelbst").srcObject = strom; $("anrufSelbst").classList.remove("versteckt"); }
+  pc.ontrack = (e) => {
+    $("anrufTon").srcObject = e.streams[0]; $("anrufTon").play?.().catch(() => {});
+    if (e.track.kind === "video") { $("anrufVideo").srcObject = e.streams[0]; $("anrufVideo").classList.remove("versteckt"); $("anrufSchirm").classList.add("mitbild"); }
+  };
   pc.onconnectionstatechange = () => {
     if (!RUF || RUF.pc !== pc) return;
     if (pc.connectionState === "connected" && !RUF.verbunden) { RUF.verbunden = true; RUF.start = Date.now(); klangAus(); anrufUhr(); anrufKnoepfe("aktiv"); }
@@ -1155,9 +1169,10 @@ function anrufSchirm(gegen) {
 }
 function anrufKnoepfe(art) {
   $("anrufBild").classList.toggle("klingelt", art === "eingehend" || art === "rufe");
+  const video = RUF?.art === "video", kamera = !!RUF?.strom?.getVideoTracks().length;
   $("anrufKnoepfe").innerHTML = art === "eingehend"
-    ? `<button class="rund2 rotk" title="Ablehnen" onclick="anrufAuflegen()">✖</button><button class="rund2 gruen" title="Annehmen" onclick="anrufAnnehmen()">📞</button>`
-    : `<button class="rund2 grau" id="anrufStummKnopf" title="Stumm" onclick="anrufStumm()">🎙️</button><button class="rund2 rotk" title="Auflegen" onclick="anrufAuflegen()">✖</button>`;
+    ? `<button class="rund2 rotk" title="Ablehnen" onclick="anrufAuflegen()">✖</button><button class="rund2 gruen" title="${video ? "Nur mit Ton annehmen" : "Annehmen"}" onclick="anrufAnnehmen(false)">📞</button>${video ? `<button class="rund2 gruen" title="Mit Bild annehmen" onclick="anrufAnnehmen(true)">🎥</button>` : ""}`
+    : `<button class="rund2 grau" id="anrufStummKnopf" title="Stumm" onclick="anrufStumm()">🎙️</button>${kamera ? `<button class="rund2 grau" id="anrufKameraKnopf" title="Kamera aus/an" onclick="anrufKamera()">📷</button><button class="rund2 grau" title="Kamera wechseln" onclick="anrufKameraWechseln()">🔄</button>` : ""}<button class="rund2 rotk" title="Auflegen" onclick="anrufAuflegen()">✖</button>`;
 }
 function anrufUhr() {
   clearInterval(RUF.uhr);
@@ -1167,17 +1182,32 @@ function anrufStumm() {
   const t = RUF?.strom?.getAudioTracks()[0]; if (!t) return;
   t.enabled = !t.enabled; $("anrufStummKnopf").className = "rund2 " + (t.enabled ? "grau" : "aus"); $("anrufStummKnopf").textContent = t.enabled ? "🎙️" : "🔇";
 }
+// KC-CLUB-VIDEO: eigene Kamera aus/an und vorne/hinten
+function anrufKamera() {
+  const t = RUF?.strom?.getVideoTracks()[0]; if (!t) return;
+  t.enabled = !t.enabled; $("anrufKameraKnopf").className = "rund2 " + (t.enabled ? "grau" : "aus"); $("anrufSelbst").classList.toggle("versteckt", !t.enabled);
+}
+async function anrufKameraWechseln() {
+  const alt = RUF?.strom?.getVideoTracks()[0]; if (!alt || !RUF.pc) return;
+  RUF.hinten = !RUF.hinten;
+  try {
+    const neu = (await navigator.mediaDevices.getUserMedia({ video: { facingMode: RUF.hinten ? "environment" : "user", width: { ideal: 640 }, height: { ideal: 480 } } })).getVideoTracks()[0];
+    await RUF.pc.getSenders().find((x) => x.track?.kind === "video")?.replaceTrack(neu);
+    RUF.strom.removeTrack(alt); alt.stop(); RUF.strom.addTrack(neu);
+    $("anrufSelbst").srcObject = RUF.strom; $("anrufSelbst").style.transform = RUF.hinten ? "none" : "";
+  } catch { RUF.hinten = !RUF.hinten; melde("Kamera wechseln geht auf diesem Handy nicht.", true); }
+}
 // Ich rufe an
-async function anrufen(pid) {
+async function anrufen(pid, mitBild) {
   if (RUF) return melde("Es läuft schon ein Anruf.", true);
   const m = MITGLIEDER?.find((x) => x.person_id === pid) || ONL.liste.find((x) => x.person_id === pid) || { person_id: pid, name: "" };
-  RUF = { rolle: "rufer", gegen: m };
-  anrufSchirm(m); anrufKnoepfe("rufe"); anrufZustand("Mikrofon wird vorbereitet …");
+  RUF = { rolle: "rufer", gegen: m, art: mitBild ? "video" : "ton" };
+  anrufSchirm(m); anrufKnoepfe("rufe"); anrufZustand(mitBild ? "Kamera und Mikrofon werden vorbereitet …" : "Mikrofon wird vorbereitet …");
   try {
-    const { pc, strom } = await anrufVerbindung(); Object.assign(RUF, { pc, strom });
+    const { pc, strom } = await anrufVerbindung(mitBild); Object.assign(RUF, { pc, strom }); anrufKnoepfe("rufe");
     await pc.setLocalDescription(await pc.createOffer()); await iceFertig(pc);
-    const r = await api("anruf_start", { an: pid, angebot: pc.localDescription.sdp });
-    RUF.id = r.id; anrufZustand(`📞 Klingelt bei ${m.vorname || m.name} …`); klang("frei");
+    const r = await api("anruf_start", { an: pid, angebot: pc.localDescription.sdp, art: RUF.art });
+    RUF.id = r.id; anrufZustand(`${mitBild ? "🎥" : "📞"} Klingelt bei ${m.vorname || m.name} …`); klang("frei");
     RUF.poll = setInterval(anrufPruefen, 1500);
   } catch (e) { anrufAufraeumen(); melde(e.message, true); }
 }
@@ -1203,16 +1233,16 @@ async function anrufEingehend(id) {
   try {
     const r = await api("anruf_status", { id });
     if (r.ichRufe || r.status !== "klingelt") { if (r.status === "verpasst") melde(`Verpasster Anruf von ${r.gegenueber.vorname}.`); return; }
-    RUF = { id, rolle: "angerufen", gegen: r.gegenueber, angebot: r.angebot };
-    anrufSchirm(r.gegenueber); anrufKnoepfe("eingehend"); anrufZustand(`📞 ${r.gegenueber.vorname} ruft an …`); klang("klingeln");
+    RUF = { id, rolle: "angerufen", gegen: r.gegenueber, angebot: r.angebot, art: r.art || "ton" };
+    anrufSchirm(r.gegenueber); anrufKnoepfe("eingehend"); anrufZustand(RUF.art === "video" ? `🎥 ${r.gegenueber.vorname} ruft per Video an …` : `📞 ${r.gegenueber.vorname} ruft an …`); klang("klingeln");
     RUF.poll = setInterval(anrufPruefen, 2000);
   } catch {}
 }
-async function anrufAnnehmen() {
+async function anrufAnnehmen(mitBild) {
   if (!RUF || RUF.rolle !== "angerufen") return;
-  klangAus(); anrufKnoepfe("aktiv"); anrufZustand("🔗 Verbindung wird aufgebaut …");
+  klangAus(); anrufZustand("🔗 Verbindung wird aufgebaut …");
   try {
-    const { pc, strom } = await anrufVerbindung(); Object.assign(RUF, { pc, strom });
+    const { pc, strom } = await anrufVerbindung(!!mitBild && RUF.art === "video"); Object.assign(RUF, { pc, strom }); anrufKnoepfe("aktiv");
     await pc.setRemoteDescription({ type: "offer", sdp: RUF.angebot });
     await pc.setLocalDescription(await pc.createAnswer()); await iceFertig(pc);
     await api("anruf_annehmen", { id: RUF.id, antwort: pc.localDescription.sdp });
@@ -1237,7 +1267,9 @@ function anrufAufraeumen() {
   klangAus(); clearInterval(RUF.poll); clearInterval(RUF.uhr);
   try { RUF.strom?.getTracks().forEach((t) => t.stop()); } catch {}
   try { RUF.pc?.close(); } catch {}
-  $("anrufTon").srcObject = null; $("anrufSchirm").classList.add("versteckt"); RUF = null;
+  $("anrufTon").srcObject = null; $("anrufVideo").srcObject = null; $("anrufSelbst").srcObject = null;
+  $("anrufVideo").classList.add("versteckt"); $("anrufSelbst").classList.add("versteckt"); $("anrufSchirm").classList.remove("mitbild");
+  $("anrufSchirm").classList.add("versteckt"); RUF = null;
 }
 
 // ---------- KC-CLUB-SCHLIESSEN: Ausgangstür ----------
@@ -3532,7 +3564,7 @@ function mitgliedZeigen() {
     <div class="karte">${zeilen}${leer}</div>
     ${m.notfall ? `<div class="karte"><h3>🆘 Notfallkontakt</h3><div class="zeile"><div style="flex:1"><b>${esc(m.notfall.name || "–")}</b>${m.notfall.beziehung ? ` <span class="hinweis">(${esc(m.notfall.beziehung)})</span>` : ""}<div class="hinweis">${esc(m.notfall.telefon || "")}</div></div>${m.notfall.telefon ? `<a class="knopf klein" href="tel:${esc(nurZiffern(m.notfall.telefon))}">📞</a>` : ""}</div><p class="hinweis" style="font-size:.85rem;margin-bottom:0">🔒 Nur für ${m.selbst ? "dich und " : ""}Clubsprecher, Kassenwart und Admin sichtbar.</p></div>` : m.selbst ? '<p class="hinweis">🆘 Noch kein Notfallkontakt – eintragen unter ⚙️ Mehr → Privatsphäre.</p>' : ""}
     <div class="knoepfe">
-      ${!m.selbst && ONL.ids.has(m.person_id) ? `<button class="knopf haupt" onclick="anklopfen('${m.person_id}')">👋 Anklopfen – ist gerade online</button><button class="knopf" onclick="anrufen('${m.person_id}')">📞 Anrufen über die App (Test)</button>` : ""}
+      ${!m.selbst && ONL.ids.has(m.person_id) ? `<button class="knopf haupt" onclick="anklopfen('${m.person_id}')">👋 Anklopfen – ist gerade online</button><div class="knoepfe"><button class="knopf" onclick="anrufen('${m.person_id}')">📞 Anrufen (Test)</button><button class="knopf" onclick="anrufen('${m.person_id}', true)">🎥 Video (Test)</button></div>` : ""}
       ${m.selbst ? "" : `<button class="knopf ${ONL.ids.has(m.person_id) ? "" : "haupt"}" onclick="direkt('${m.person_id}')">💬 Nachricht in der App</button>`}
       ${zeilen ? '<button class="knopf" onclick="kontaktSpeichern()">📇 Ins Telefonbuch</button>' : ""}
     </div>

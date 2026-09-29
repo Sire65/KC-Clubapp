@@ -1,13 +1,20 @@
 {
-  "version": "0.31.1",
+  "version": "0.32.0",
   "datum": "2026-09-29",
   "neu": [
-    "🟢 Startseite zeigt immer den Online-Stand – auch „⚪ sonst keiner online“",
-    "📞 Neu (Test): Anrufen direkt über die App – kostenlos, von Handy zu Handy",
-    "📞 Bei jemandem, der online ist: „Anrufen“ – der andere sieht „… ruft an“ mit Annehmen/Ablehnen",
-    "🎙️ Während des Gesprächs: Stummschalten und Auflegen"
+    "🎥 Neu (Test): Videoanruf direkt über die App – kostenlos, von Handy zu Handy",
+    "🎥 Annehmen mit Bild oder nur mit Ton",
+    "📷 Im Gespräch: Kamera aus/an und vorne/hinten wechseln"
   ],
   "verlauf": [
+    {
+      "version": "0.32.0",
+      "neu": [
+        "🎥 Neu (Test): Videoanruf direkt über die App – kostenlos, von Handy zu Handy",
+        "🎥 Annehmen mit Bild oder nur mit Ton",
+        "📷 Im Gespräch: Kamera aus/an und vorne/hinten wechseln"
+      ]
+    },
     {
       "version": "0.31.1",
       "neu": [

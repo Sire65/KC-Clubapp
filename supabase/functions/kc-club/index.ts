@@ -13,14 +13,14 @@
 //           KC-CLUB-COMMUNICATOR-STATUS (0.17.0), KC-CLUB-FEEDBACK (0.18.0),
 //           KC-CLUB-KACHELN (0.19.0), KC-CLUB-ZUGANG-SELBST (0.21.0),
 //           KC-CLUB-GRUPPEN, KC-CLUB-ZUSTELLWAHL (0.23.0)
-//           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0), KC-CLUB-KACHELN-ZIEHEN (0.26.0), KC-CLUB-FEEDBACK-NEU (0.27.1), KC-CLUB-BEGRUESSUNG (0.28.0), KC-CLUB-ONLINE (0.29.0), KC-CLUB-ANRUF (0.31.0)
+//           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0), KC-CLUB-KACHELN-ZIEHEN (0.26.0), KC-CLUB-FEEDBACK-NEU (0.27.1), KC-CLUB-BEGRUESSUNG (0.28.0), KC-CLUB-ONLINE (0.29.0), KC-CLUB-ANRUF (0.31.0), KC-CLUB-VIDEO (0.32.0)
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.31.0";
+const SERVER_VERSION = "0.32.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -1669,15 +1669,16 @@ Köcheclub Werne`,
         const angebot = sdpText(p.angebot);
         // alte, noch klingelnde Anrufe von mir beenden (nur einer gleichzeitig)
         await db.from("kc_club_anruf").update({ status: "beendet", beendet_am: jetzt(), beendet_von: ich.person_id }).eq("von", ich.person_id).eq("status", "klingelt");
-        const { data: a, error } = await db.from("kc_club_anruf").insert({ von: ich.person_id, an, art: "ton", angebot }).select("id").single();
+        const art = p.art === "video" ? "video" : "ton"; // KC-CLUB-VIDEO (0.32.0)
+        const { data: a, error } = await db.from("kc_club_anruf").insert({ von: ich.person_id, an, art, angebot }).select("id").single();
         if (error || !a) throw new Fehler("Anruf konnte nicht gestartet werden.", 500);
         const { data: zug } = await db.from("kc_club_zugang").select("person_id").eq("person_id", an).eq("aktiv", true).not("zuletzt_gesehen", "is", null);
         let versand = { gesendet: 0, fehler: 0 };
         if (zug?.length) versand = await routerSenden("club_nachricht_push", [an], {
-          titel: `📞 ${ich.vorname} ruft an`, kurz: "Antippen zum Annehmen (Köcheclub-App).",
+          titel: art === "video" ? `🎥 ${ich.vorname} ruft per Video an` : `📞 ${ich.vorname} ruft an`, kurz: "Antippen zum Annehmen (Köcheclub-App).",
           betreff: `${ich.vorname} ruft an`, text: `${ich.name} ruft dich über die Köcheclub-App an.`, url: `${APP_URL}#anruf=${a.id}`,
         }, `club-anruf:${a.id}`);
-        await protokoll(ich.person_id, "anruf_gestartet", { an, versand });
+        await protokoll(ich.person_id, "anruf_gestartet", { an, art, versand });
         return json({ ok: true, id: a.id, push: versand.gesendet > 0 });
       }
 

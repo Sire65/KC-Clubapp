@@ -675,4 +675,12 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(!/turn:/.test(html), "kostenpflichtiger TURN-Server eingebaut (Zero-Cost)");
 }
 
+// 53. 0.32.0: Videoanruf (Test) – Art wird geprüft, Annehmen mit Bild oder nur Ton, Kamera aus/wechseln
+{
+  assert.ok(/const art = p\.art === "video" \? "video" : "ton";/.test(server), "Anruf-Art ungeprüft");
+  assert.ok(/onclick="anrufAnnehmen\(true\)">🎥/.test(html) && /onclick="anrufAnnehmen\(false\)">📞/.test(html), "Annehmen mit Bild/nur Ton fehlt");
+  assert.ok(/function anrufKameraWechseln\(\)/.test(html) && /replaceTrack\(neu\)/.test(html) && /id="anrufVideo"/.test(html) && /id="anrufSelbst"/.test(html), "Video-Oberfläche fehlt");
+  assert.ok(/\$\("anrufVideo"\)\.srcObject = null; \$\("anrufSelbst"\)\.srcObject = null;/.test(html), "Kamera bleibt nach dem Auflegen an");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
