@@ -1,7 +1,9 @@
 {
-  "version": "0.27.1",
+  "version": "0.27.2",
   "datum": "2026-09-29",
   "neu": [
+    "📅 „Nächstes Treffen“ antippen → Kalender zeigt direkt den Tag",
+    "🔢 Register zeigen z. B. „8/10“, wenn Kacheln ausgeblendet sind",
     "🆕 Feedback: neu starten, alte Antworten löschen",
     "📅 Treffen anlegen: Titel und Ort per Auswahlliste",
     "🧩 Kacheln etwas kleiner – mehr auf einen Blick",

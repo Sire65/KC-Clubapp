@@ -719,7 +719,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.27.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.27.2"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -1288,7 +1288,9 @@ setInterval(() => { if (!ZIEHEN) return; const h = innerHeight, y = ZIEHEN.y; co
 // Register mit kleiner Anzahl der Kacheln; per Wischen links/rechts wechselbar
 const REGISTER = [["verein", "Verein"], ["mein", "Mein Bereich"], ["programme", "Programme"]];
 function registerZeigen() {
-  $("register").innerHTML = REGISTER.map(([r, t]) => `<button data-r="${r}" class="${r === reg ? "an" : ""}" onclick="register('${r}')">${t}<span class="anz">${kacheln(r).length}</span></button>`).join("");
+  // Anzahl: „8/10“ = 8 sichtbar von 10 (2 ausgeblendet); ohne Ausgeblendete nur die Zahl
+  $("register").innerHTML = REGISTER.map(([r, t]) => { const da = kacheln(r).length, alle = kaSortiert(r).length;
+    return `<button data-r="${r}" class="${r === reg ? "an" : ""}" onclick="register('${r}')" title="${da < alle ? `${alle - da} ausgeblendet` : ""}">${t}<span class="anz">${da < alle ? `${da}/${alle}` : da}</span></button>`; }).join("");
 }
 function register(r, richtung) {
   reg = r; registerZeigen(); kachelnZeigen();
@@ -1345,11 +1347,11 @@ function heroZeigen() {
     kopf = `<h2>${esc(t.titel)}</h2><div class="unter">${esc(wann(t.beginn))}${ort ? " · " + esc(ort) : ""}</div><div class="unter"><b>${meine}</b> · ✅ ${t.ja} Zusagen</div>`;
     bisTreffen = tage <= 0 ? "Heute" : tage === 1 ? "Morgen" : `in ${tage} Tagen`;
   } else kopf = `<h2>Kein Treffen geplant</h2><div class="unter">Sobald ein Köcheclub-Treffen ansteht, siehst du es hier.</div>`;
-  $("heroInfo").innerHTML = `<div class="klick" onclick="zeige('termine')">${kopf}</div>
+  $("heroInfo").innerHTML = `<div class="klick" onclick="zumTreffen()">${kopf}</div>
     <div class="kacheln3">
       <button class="mini" onclick="zeige('nachrichten')"><b>${n}</b><span>Neue Nachr. ›</span></button>
       <button class="mini" onclick="zeige('mitglieder')"><b>${INIT?.mitgliederAnzahl || "–"}</b><span>Mitglieder ›</span></button>
-      <button class="mini" onclick="zeige('termine')"><b style="font-size:1.05rem">${bisTreffen}</b><span>Nächstes Treffen ›</span></button>
+      <button class="mini" onclick="zumTreffen()"><b style="font-size:1.05rem">${bisTreffen}</b><span>Nächstes Treffen ›</span></button>
     </div>`;
 }
 // Internetseite des Köcheclubs (Platzhalter, bis die Seite online ist)
@@ -1520,6 +1522,15 @@ const berlinIso = (iso) => new Intl.DateTimeFormat("sv-SE", { timeZone: TZ }).fo
 function termineModus(m) {
   termineArt = m; try { localStorage.setItem("kc_club_termine_modus", m); } catch {}
   treffenLaden();
+}
+// KC-CLUB-ZUM-TREFFEN (0.27.2): „Nächstes Treffen“ antippen → Kalender springt in den Monat, der Tag ist ausgewählt
+function zumTreffen() {
+  const t = INIT?.naechstesTreffen;
+  if (!t) return zeige("termine");
+  const tag = berlinIso(t.beginn);
+  kalJ = +tag.slice(0, 4); kalM = +tag.slice(5, 7) - 1; kalTagWahl = tag; termineArt = "kalender";
+  zeige("termine");
+  setTimeout(() => $("kalTag")?.scrollIntoView({ behavior: "smooth", block: "center" }), 700);
 }
 function kalHeute() { const h = heuteIso(); kalJ = +h.slice(0, 4); kalM = +h.slice(5, 7) - 1; kalTagWahl = h; kalLaden(); }
 function kalBlaettern(n) {

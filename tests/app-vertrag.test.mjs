@@ -87,7 +87,9 @@ assert.ok(server.includes('from("kc_club_dienst_erinnerung").upsert({ person_id:
 // 13. KC-CLUB-ZURUECK + Kopf: Verlaufseinträge, Kennzahlen führen in Bereiche, kein Zahnrad im Kopf.
 assert.ok(/history\.replaceState\(\{ basis: true \}/.test(html) && /addEventListener\("popstate"/.test(html), "Zurück-Steuerung fehlt");
 assert.ok(/history\.pushState\(st,/.test(html), "Ansichten legen keinen Verlaufseintrag an");
-for (const z of ["nachrichten", "mitglieder", "termine"]) assert.ok(html.includes(`<button class="mini" onclick="zeige('${z}')">`), `Kennzahl → ${z} fehlt`);
+for (const z of ["nachrichten", "mitglieder"]) assert.ok(html.includes(`<button class="mini" onclick="zeige('${z}')">`), `Kennzahl → ${z} fehlt`);
+// 0.27.2: „Nächstes Treffen“ führt über zumTreffen() in Termine (Kalender, Tag ausgewählt)
+assert.ok(html.includes(`<button class="mini" onclick="zumTreffen()">`) && /function zumTreffen\(\) \{[\s\S]{0,400}zeige\("termine"\)/.test(html), "Kennzahl → termine fehlt");
 const kopfHtml = html.slice(html.indexOf('<section id="v-start">'), html.indexOf('id="heroInfo"'));
 assert.ok(!kopfHtml.includes("⚙️"), "Zahnrad gehört nicht mehr in den Kopf");
 assert.ok(/onclick="webseite\(\)"/.test(kopfHtml), "Kochmütze → Internetseite fehlt");
@@ -95,7 +97,7 @@ assert.ok((html.match(/<details class="karte" data-klappe=/g) || []).length >= 4
 
 // 14. 0.4.0: Register wischbar mit Anzahl, Schloss je Klappbereich, Gruß unter den Kopf-Knöpfen.
 assert.ok(/function registerWischen\(/.test(html) && /addEventListener\("touchend"/.test(html), "Wischen zwischen Registern fehlt");
-assert.ok(/<span class="anz">\$\{kacheln\(r\)\.length\}<\/span>/.test(html), "Anzahl der Kacheln am Register fehlt"); // ab 0.9.0: nur die Kacheln, die für mich gelten
+assert.ok(/const da = kacheln\(r\)\.length, alle = kaSortiert\(r\)\.length;/.test(html) && /<span class="anz">\$\{da < alle/.test(html), "Anzahl der Kacheln am Register fehlt"); // ab 0.9.0: nur die Kacheln, die für mich gelten; ab 0.27.2 „sichtbar/gesamt“
 assert.ok(/class="schloss"/.test(html) && /"fest_" \+ name/.test(html), "Schloss zum Feststellen fehlt");
 const rechts = html.slice(html.indexOf('<div class="kopfrechts">'), html.indexOf('<div class="info" id="heroInfo">'));
 assert.ok(rechts.indexOf('class="knopfreihe"') < rechts.indexOf('id="begruessung"'), "Gruß muss unter den Knöpfen stehen");
@@ -613,6 +615,14 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   const neu = server.slice(server.indexOf('case "feedback_neu"'), server.indexOf('case "feedback_runde_neu"'));
   assert.ok(/feedbackArchivieren\(ich, "neu_ausfuellen", ich\.person_id\)/.test(neu), "Mitglied könnte fremdes Feedback löschen");
   assert.ok(/onclick="fbNeu\(\)"/.test(html) && /fbRundeNeu\(/.test(html) && /confirm\(/.test(html.slice(html.indexOf("async function fbNeu"), html.indexOf("async function fbAuswertung"))), "Knöpfe/Rückfrage fehlen");
+}
+
+// 48. 0.27.2: „Nächstes Treffen“ öffnet den Kalender im richtigen Monat mit ausgewähltem Tag
+{
+  const z = html.slice(html.indexOf("function zumTreffen()"), html.indexOf("function kalHeute()"));
+  assert.ok(/kalTagWahl = tag; termineArt = "kalender";/.test(z) && /kalM = \+tag\.slice\(5, 7\) - 1/.test(z), "Sprung zum Treffen-Tag fehlt");
+  assert.ok(/onclick="zumTreffen\(\)"><b style="font-size:1\.05rem">\$\{bisTreffen\}/.test(html), "Kachel „Nächstes Treffen“ springt nicht zum Tag");
+  assert.ok(/da < alle \? `\$\{da\}\/\$\{alle\}` : da/.test(html), "Register zeigen nicht „sichtbar/gesamt“");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
