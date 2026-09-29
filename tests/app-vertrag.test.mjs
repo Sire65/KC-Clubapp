@@ -975,7 +975,8 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   const pr = html.slice(html.indexOf("@media print {"), html.indexOf("@media print {") + 800);
   assert.ok(/body > \*:not\(#druck\) \{ display: none !important; \}/.test(pr) && /#druck \{ display: block !important;/.test(pr), "Druck zeigt die App statt der Druckseite");
   assert.ok(/#druck \{ display: none; \}/.test(html), "Druckseite am Bildschirm sichtbar");
-  assert.ok(/if \(!d\.optionen && !IST_IOS_APP\(\)\) return druckLos\(\);/.test(html), "ohne Auswahl sollte direkt gedruckt werden");
+  // 0.61.0 (Wunsch Hansi): ohne Auswahl direkt die Vorschau – gedruckt wird erst dort
+  assert.ok(/if \(!d\.optionen\) return druckVorschau\(\);/.test(html), "ohne Auswahl sollte direkt die Vorschau kommen");
   // Zeiträume des Kalenderdrucks
   const zeitraum = html.slice(html.indexOf("async function druckKalender(o)"), html.indexOf("const daten = await kalenderDaten(von, bis);"));
   const f = new Function("tagPlus", "montag", "kwVon", "dz", "fTagLang", "MONATE", "o", zeitraum.replace("async function druckKalender(o) {", "") + " return { von, bis, titel };");
@@ -1139,6 +1140,14 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/verborgen: m\.person_id !== ich\.person_id && \(!ichZeige \|\| zeigen\.get\(m\.person_id\) === false\)/.test(server) && /heute: ichZeige && /.test(server), "Online-Privatsphäre bei heute/verborgen nicht beachtet");
   assert.ok(/\.avatar\.k-unbekannt \{ background: transparent;[^}]*dashed/.test(html) && /return k \|\| \{ art: "unbekannt"/.test(html), "Unbekannt wird nicht als unbekannt gezeigt");
   assert.ok((html.match(/[{:] ?kreis\((m|\{|MITGLIEDER)/g) || []).length >= 4 && /kreisLegende\(\) \+ MITGLIEDER\.map/.test(html), "Kreise nicht in allen Listen / Legende fehlt");
+}
+
+// 83. 0.61.0: Druckvorschau vor jedem Ausdruck (KC-CLUB-DRUCKVORSCHAU)
+{
+  assert.ok(!/window\.print\(\)/.test(html.replace("function druckJetzt() { setTimeout(() => window.print(), 60); }", "")), "Gedruckt wird nur aus der Vorschau");
+  assert.ok(/onclick="druckJetzt\(\)">🖨️ Drucken \/ als PDF<\/button>/.test(html) && /id="druckVorschau"/.test(html) && /id="druckVorschauRahmen"/.test(html), "Vorschau mit Druckknopf fehlt");
+  assert.ok(/onclick="druckVorschau\(\)">👁️ Vorschau ansehen<\/button>/.test(html) && !/druckLos/.test(html), "Auswahlfenster druckt noch direkt");
+  assert.ok(/rahmen\.srcdoc = druckHtml\(true\)/.test(html) && /const html = druckHtml\(false\);/.test(html), "Vorschau/Teilen nicht aus derselben Druckseite");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

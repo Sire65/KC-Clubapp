@@ -1027,7 +1027,18 @@
     <button class="knopf" style="text-align:center" onclick="$('wetterBlatt').classList.add('versteckt')">Schließen</button></div>
 </div>
 <!-- KC-CLUB-DRUCK (0.53.0): Auswahlfenster vor dem Drucken + unsichtbare Druckseite (nur im Druck sichtbar) -->
-<div class="blatt versteckt" id="druckBlatt" onclick="if(event.target===this)druckZu()"><div class="blatt-innen" style="max-height:88vh;overflow-y:auto"><h3 id="druckTitel">🖨️ Drucken</h3><div id="druckOptionen"></div><p class="hinweis" id="druckHinweis" style="margin:8px 0"></p><button class="knopf haupt" style="text-align:center" onclick="druckLos()">🖨️ Drucken / als PDF speichern</button><button class="knopf versteckt" id="druckTeilen" style="text-align:center" onclick="druckTeilen()">📤 Druckseite teilen</button><button class="knopf" style="text-align:center" onclick="druckZu()">Abbrechen</button></div></div>
+<div class="blatt versteckt" id="druckBlatt" onclick="if(event.target===this)druckZu()"><div class="blatt-innen" style="max-height:88vh;overflow-y:auto"><h3 id="druckTitel">🖨️ Drucken</h3><div id="druckOptionen"></div><p class="hinweis" id="druckHinweis" style="margin:8px 0"></p><button class="knopf haupt" style="text-align:center" onclick="druckVorschau()">👁️ Vorschau ansehen</button><button class="knopf" style="text-align:center" onclick="druckZu()">Abbrechen</button></div></div>
+<!-- KC-CLUB-DRUCKVORSCHAU (0.61.0): so sieht der Ausdruck aus – gedruckt wird erst mit „🖨️ Drucken“ -->
+<div class="versteckt" id="druckVorschau" role="dialog" aria-modal="true" aria-labelledby="druckVorschauTitel" style="position:fixed;inset:0;z-index:2100;display:flex;flex-direction:column;background:#7d7d7d">
+  <div style="background:var(--karte);box-shadow:var(--schatten);padding:8px 12px;padding-top:max(8px,env(safe-area-inset-top))">
+    <div style="display:flex;align-items:center;gap:8px"><button class="knopf klein" style="min-height:44px" onclick="druckVorschauZu()">✕ Schließen</button>
+      <b id="druckVorschauTitel" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Vorschau</b><span class="marke">Vorschau</span></div>
+    <div class="knoepfe" style="margin-top:8px"><button class="knopf haupt" style="min-height:48px" onclick="druckJetzt()">🖨️ Drucken / als PDF</button>
+      <button class="knopf versteckt" id="druckVorschauTeilen" onclick="druckTeilen()">📤 Teilen</button>
+      <button class="knopf versteckt" id="druckVorschauAendern" onclick="druckVorschauAendern()">✏️ Auswahl ändern</button></div>
+    <p class="hinweis" id="druckVorschauHinweis" style="margin:6px 0 0;font-size:.85rem"></p></div>
+  <iframe id="druckVorschauRahmen" title="Druckvorschau" style="flex:1;border:0;width:100%;background:#7d7d7d"></iframe>
+</div>
 <!-- KC-CLUB-PERSONENWAHL (0.53.0): gemeinsames Häkchen-Fenster „Wer?“ (To-dos, Protokoll-Aufgaben) -->
 <div class="blatt versteckt" id="personenBlatt" onclick="if(event.target===this)this.classList.add('versteckt')">
   <div class="blatt-innen" style="max-height:85vh;overflow-y:auto"><h3 id="personenTitel">👉 Wer?</h3>
@@ -1100,7 +1111,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "0.60.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.61.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -4773,13 +4784,14 @@ const DRUCKARTEN = {
   protokoll: { bauen: () => druckProtokoll() },
   erstattung: { titel: "🖨️ Erstattungsantrag drucken", optionen: () => druckErstattungOptionen(), bauen: (o) => druckErstattung(o) },
 };
+// KC-CLUB-DRUCKVORSCHAU (0.61.0, Wunsch Hansi): jeder Ausdruck erst als Vorschau (A4-Blatt wie gedruckt), gedruckt wird erst
+// mit dem Knopf „🖨️ Drucken“ in der Vorschau. Mit Auswahl: Auswahlfenster → „Vorschau“; ohne Auswahl direkt die Vorschau.
 function druckStarten(art, param) {
   DRUCK = { art, param }; const d = DRUCKARTEN[art];
-  if (!d.optionen && !IST_IOS_APP()) return druckLos();
+  if (!d.optionen) return druckVorschau();
   $("druckTitel").textContent = d.titel || "🖨️ Drucken";
   $("druckOptionen").innerHTML = d.optionen ? d.optionen() : "";
   $("druckHinweis").textContent = IST_IOS_APP() ? "iPhone: Klappt das Drucken aus der App nicht, „📤 Druckseite teilen“ antippen und dort drucken oder als PDF sichern." : "Im Druckfenster kannst du auch „Als PDF speichern“ wählen.";
-  $("druckTeilen").classList.toggle("versteckt", !IST_IOS_APP());
   druckOptSicht(); $("druckBlatt").classList.remove("versteckt");
 }
 function druckZu() { $("druckBlatt").classList.add("versteckt"); }
@@ -4803,21 +4815,41 @@ async function druckSeiteBauen() {
     <div class="dfuss">Gedruckt am ${esc(wann(new Date().toISOString()))} von ${esc(ICH?.name || "")} · Köcheclub-App v${APP_VERSION}${s.fuss ? " · " + esc(s.fuss) : ""}</div>`;
   let st = $("druckSeitenformat"); if (!st) { st = document.createElement("style"); st.id = "druckSeitenformat"; document.head.appendChild(st); }
   st.textContent = `@page { size: A4 ${s.quer ? "landscape" : "portrait"}; }`;
-  DRUCK.titel = s.titel;
+  DRUCK.titel = s.titel; DRUCK.quer = !!s.quer;
   return true;
 }
-async function druckLos() {
-  try { if (!(await druckSeiteBauen())) return; } catch (e) { return melde(e.message, true); }
-  druckZu(); setTimeout(() => window.print(), 60);
+// Druckseite als eigenständiges HTML (Druck-CSS auf „immer“) – für die Vorschau und zum Teilen am iPhone
+function druckHtml(vorschau) {
+  const css = [...document.styleSheets].flatMap((sh) => { try { return [...sh.cssRules].map((r) => r.cssText); } catch { return []; } }).filter((t) => /#druck|@page/.test(t)).join("\n");
+  const blatt = DRUCK.quer ? "297mm" : "210mm";
+  // Vorschau: die Druckseite selbst als A4-Blatt (die Druckregel blendet alles außer #druck aus – kein Rahmen drumherum)
+  const extra = vorschau ? `html,body{background:#7d7d7d!important} body{margin:0;padding:10px 0} #druck{background:#fff;width:${blatt};min-height:${DRUCK.quer ? "210mm" : "297mm"};margin:0 auto;padding:12mm;box-sizing:border-box;box-shadow:0 4px 18px rgba(0,0,0,.45)}`
+    : "body{margin:12mm} .dkopf img{display:none}";
+  return `<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(DRUCK.titel)}</title>
+    <style>${css.replace(/@media print\s*\{/, "@media all {")} #druck{display:block!important} ${extra}</style></head><body>${$("druck").outerHTML}</body></html>`;
 }
+async function druckVorschau() {
+  try { if (!(await druckSeiteBauen())) return; } catch (e) { return melde(e.message, true); }
+  druckZu();
+  const v = $("druckVorschau"), rahmen = $("druckVorschauRahmen");
+  $("druckVorschauTitel").textContent = DRUCK.titel || "Vorschau";
+  $("druckVorschauAendern").classList.toggle("versteckt", !DRUCKARTEN[DRUCK.art].optionen);
+  $("druckVorschauTeilen").classList.toggle("versteckt", !IST_IOS_APP());
+  $("druckVorschauHinweis").textContent = IST_IOS_APP() ? "iPhone: Klappt das Drucken aus der App nicht, „📤 Teilen“ antippen und dort drucken oder als PDF sichern." : "Im Druckfenster kannst du auch „Als PDF speichern“ wählen.";
+  v.classList.remove("versteckt"); document.body.style.overflow = "hidden";
+  // A4-Blatt auf Bildschirmbreite verkleinern (1 mm ≈ 3,78 px)
+  const blattPx = (DRUCK.quer ? 297 : 210) * 3.78 + 20, zoom = Math.min(1, (rahmen.clientWidth || innerWidth) / blattPx);
+  rahmen.srcdoc = druckHtml(true).replace("</style>", `html{zoom:${zoom.toFixed(3)}}</style>`);
+}
+function druckVorschauZu() { $("druckVorschau").classList.add("versteckt"); $("druckVorschauRahmen").srcdoc = ""; document.body.style.overflow = ""; }
+function druckVorschauAendern() { druckVorschauZu(); druckStarten(DRUCK.art, DRUCK.param); }
+// erst hier wird gedruckt – die Druckseite (#druck) ist schon gebaut und entspricht der Vorschau
+function druckJetzt() { setTimeout(() => window.print(), 60); }
 // iPhone: Druckseite als eigenständige HTML-Datei teilen (dort drucken oder als PDF sichern)
 async function druckTeilen() {
-  try { if (!(await druckSeiteBauen())) return; } catch (e) { return melde(e.message, true); }
-  const css = [...document.styleSheets].flatMap((sh) => { try { return [...sh.cssRules].map((r) => r.cssText); } catch { return []; } }).filter((t) => /#druck|@page/.test(t)).join("\n");
-  const html = `<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(DRUCK.titel)}</title>
-    <style>${css.replace(/@media print\s*\{/, "@media all {")} body{margin:12mm} #druck{display:block!important} .dkopf img{display:none}</style></head><body>${$("druck").outerHTML}</body></html>`;
+  const html = druckHtml(false);
   const datei = new File([html], (DRUCK.titel || "Druck").replace(/[^\wäöüÄÖÜß.-]+/g, "_").slice(0, 60) + ".html", { type: "text/html" });
-  try { if (navigator.canShare?.({ files: [datei] })) { await navigator.share({ files: [datei], title: DRUCK.titel }); druckZu(); return; } } catch (e) { if (e?.name === "AbortError") return; }
+  try { if (navigator.canShare?.({ files: [datei] })) { await navigator.share({ files: [datei], title: DRUCK.titel }); return; } } catch (e) { if (e?.name === "AbortError") return; }
   melde("Teilen geht auf diesem Gerät nicht – bitte „Drucken“ versuchen.", true);
 }
 const dz = (iso) => fKurzJahr.format(new Date(iso.slice(0, 10) + "T12:00:00Z"));

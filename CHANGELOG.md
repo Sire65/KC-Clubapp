@@ -1,5 +1,13 @@
 # Änderungen
 
+## 0.61.0 – 2026-09-29 (DEV)
+
+- KC-CLUB-DRUCKVORSCHAU (neu, Wunsch Hansi): alle Ausdrucke (Termine/Kalender/To-dos, Treffen, Protokoll, Erstattung)
+  zeigen erst eine Vorschau – das A4-Blatt genau wie gedruckt (Hoch-/Querformat, auf Bildschirmbreite verkleinert).
+  Gedruckt wird erst mit „🖨️ Drucken / als PDF“ in der Vorschau; „✏️ Auswahl ändern“ (wo es eine Auswahl gibt), iPhone-App
+  „📤 Teilen“, „✕ Schließen“. Auswahlfenster: „👁️ Vorschau ansehen“ statt direkt drucken. Eine Druckseite (#druck) für
+  Vorschau, Druck und Teilen (druckHtml) – keine zweite Darstellung.
+
 ## KC-Spiegel: Fehlalarm „System Check ROT“ behoben – 2026-09-29 (Datenbank, ohne App-Build, Freigabe Hansi)
 
 - KC-SPIEGEL-AUFNAHMEFRIST: Watchdog und Quellprüfung gaben neuen Tabellen fest 30 Minuten; der Spiegel läuft aber nur noch im
