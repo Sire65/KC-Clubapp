@@ -13,14 +13,14 @@
 //           KC-CLUB-COMMUNICATOR-STATUS (0.17.0), KC-CLUB-FEEDBACK (0.18.0),
 //           KC-CLUB-KACHELN (0.19.0), KC-CLUB-ZUGANG-SELBST (0.21.0),
 //           KC-CLUB-GRUPPEN, KC-CLUB-ZUSTELLWAHL (0.23.0)
-//           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0), KC-CLUB-KACHELN-ZIEHEN (0.26.0), KC-CLUB-FEEDBACK-NEU (0.27.1), KC-CLUB-BEGRUESSUNG (0.28.0), KC-CLUB-ONLINE (0.29.0), KC-CLUB-ANRUF (0.31.0), KC-CLUB-VIDEO (0.32.0), KC-CLUB-QUITTUNG (0.34.0), KC-CLUB-TODO + KC-CLUB-REGISTER-ZIEHEN (0.36.0), KC-CLUB-SPRACHE + KC-CLUB-TODO-ZUSTAENDIG (0.37.0), KC-CLUB-ERSTATTUNG (0.38.0), KC-CLUB-KMSATZ (0.39.0), KC-CLUB-FEEDBACK-DAUERHAFT (0.40.0), KC-CLUB-INFOFELD + KC-CLUB-WETTER (0.42.0), KC-CLUB-INFOFELD-DEMNAECHST/-FOTOS (0.43.0), KC-CLUB-ZENTRALE (0.44.0), KC-CLUB-FOTO-META (0.45.0), KC-CLUB-WETTER-TAGE (0.46.0), KC-CLUB-ADMINLAGE (0.47.0), KC-CLUB-ADMIN-SPIEGEL (0.48.0)
+//           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0), KC-CLUB-KACHELN-ZIEHEN (0.26.0), KC-CLUB-FEEDBACK-NEU (0.27.1), KC-CLUB-BEGRUESSUNG (0.28.0), KC-CLUB-ONLINE (0.29.0), KC-CLUB-ANRUF (0.31.0), KC-CLUB-VIDEO (0.32.0), KC-CLUB-QUITTUNG (0.34.0), KC-CLUB-TODO + KC-CLUB-REGISTER-ZIEHEN (0.36.0), KC-CLUB-SPRACHE + KC-CLUB-TODO-ZUSTAENDIG (0.37.0), KC-CLUB-ERSTATTUNG (0.38.0), KC-CLUB-KMSATZ (0.39.0), KC-CLUB-FEEDBACK-DAUERHAFT (0.40.0), KC-CLUB-INFOFELD + KC-CLUB-WETTER (0.42.0), KC-CLUB-INFOFELD-DEMNAECHST/-FOTOS (0.43.0), KC-CLUB-ZENTRALE (0.44.0), KC-CLUB-FOTO-META (0.45.0), KC-CLUB-WETTER-TAGE (0.46.0), KC-CLUB-ADMINLAGE (0.47.0), KC-CLUB-ADMIN-SPIEGEL (0.48.0/0.49.0)
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.48.0";
+const SERVER_VERSION = "0.49.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -610,8 +610,10 @@ async function adminSpiegel() {
     db.from("kc_db_mirror_audit").select("happened_at,action,detail").or("action.ilike.%paus%,action.ilike.%resum%,action.ilike.%fortgesetzt%").order("happened_at", { ascending: false }).limit(1).maybeSingle(),
   ]);
   const p = pol ?? [], neon = p.filter((x: any) => x.target === "neon" && x.mode !== "realtime"), bk = p.filter((x: any) => x.mode === "backup");
+  const aktivLag = neon.filter((x: any) => x.enabled).map((x: any) => Number(x.lag_threshold_sec) || 720);
   return {
-    neon: { aktiv: neon.some((x: any) => x.enabled), lagSek: Math.min(...neon.map((x: any) => Number(x.lag_threshold_sec) || 720), 720), letzter: snap?.started_at ?? null,
+    // Verzögerungsgrenze der eingeschalteten Regel (Sparmodus: alle 6 Std. → 6,5 Std.); ohne eingeschaltete Regel 12 Min.
+    neon: { aktiv: aktivLag.length > 0, lagSek: aktivLag.length ? Math.min(...aktivLag) : 720, letzter: snap?.started_at ?? null,
       regeln: neon.map((x: any) => ({ name: x.name, an: !!x.enabled })) },
     backup: { aktiv: bk.some((x: any) => x.enabled), letztes: backup?.started_at ?? null, restoreTest: restore?.started_at ?? null },
     compute: compute ? { modus: compute.mode, bis: compute.maintenance_until } : null,
@@ -2843,6 +2845,15 @@ Köcheclub Werne`,
           programme: ADMIN_PROGRAMME.map((x, i) => { const h = (hb ?? []).find((y: any) => y.program_id === x.id);
             return { id: x.id, name: x.name, letzte: h?.received_at ?? null, version: h?.version ?? null, status: h?.status ?? null, datenstand: staende[i] }; }),
         });
+      }
+
+      // KC-CLUB-ADMIN-SPIEGEL (0.49.0): Notfall – Spiegel sofort anstoßen (vorhandener Sparmodus-Ablauf, beachtet Neon-Wartung)
+      case "admin_spiegeln": {
+        nurAdmin(ich);
+        const { data, error } = await db.rpc("kc_neon_low_compute_cycle");
+        if (error) throw new Fehler("Spiegel konnte nicht angestoßen werden.", 500);
+        await protokoll(ich.person_id, "admin_spiegel_notfall", { ergebnis: data });
+        return json({ ok: true, ergebnis: data });
       }
 
       case "communicator_status": {

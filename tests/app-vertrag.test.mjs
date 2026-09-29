@@ -920,6 +920,11 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.equal(gut.neon[0], "gruen"); assert.equal(gut.backup[0], "gruen");
   assert.equal(f({ neon: { aktiv: true, lagSek: 720, letzter: vor(5), regeln: [] }, backup: { aktiv: true, letztes: null } }).neon[0], "rot", "hängender Spiegel nicht rot");
   assert.equal(f(null).neon[0], "grau", "unbekannt nicht grau");
+  // 0.49.0: Sparmodus alle 6 Std. – 3 Std. alt ist aktuell, 9 Std. verzögert, 20 Std. hängt
+  const spar = (std) => f({ neon: { aktiv: true, lagSek: 23400, letzter: vor(std), regeln: [] }, backup: { aktiv: true, letztes: vor(3) } }).neon[0];
+  assert.equal(spar(3), "gruen"); assert.equal(spar(9), "gelb"); assert.equal(spar(20), "rot");
+  assert.ok(aktionen.has("admin_spiegeln") && aufrufe.has("admin_spiegeln") && /case "admin_spiegeln": \{\s*nurAdmin\(ich\);/.test(server), "Notfall-Spiegel fehlt oder ungeschützt");
+  assert.ok(/async function adminSpiegeln\(\) \{\s*if \(!confirm\(/.test(html), "Notfall-Spiegel ohne Rückfrage");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

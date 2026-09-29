@@ -1,5 +1,16 @@
 # Änderungen
 
+## 0.49.0 – 2026-09-29 (DEV)
+
+- Betrieb (Admin-Freigabe Hansi): Neon-Spiegel und Backup wieder aufgenommen – über den vorhandenen Sparmodus
+  (kc_neon_low_compute_cycle/-backup_cycle): Spiegel alle 6 Std. (Cron 44: 10 */6 * * *), Backup täglich 00:12 (Cron 45),
+  Neon-Wartung beendet, Aufräumen/Tagesverdichtung (15, 36) wieder an, Watchdog/5-Min-Spiegel/Quell-Check (17, 41, 14) bleiben
+  aus (kein Echtbetrieb, Neon-Rechenzeit sparen). Wiederherstellungspunkt und Freigabe im Spiegel-Audit (3588/3589).
+  Sofortlauf 29.09. 18:23: Backup 36/36 Tabellen; Spiegel 67/68 gleich – kc_core_app_registry abweichend, weil die in 0.x
+  (Migration v16, 28.09.) ergänzten Spalten wartung/wartung_hinweis/wartung_seit im Neon-Spiegel fehlten → dort ergänzt.
+- KC-CLUB-ADMIN-SPIEGEL: Verzögerungsgrenze aus der eingeschalteten Regel (Sparmodus 6,5 Std.; gelb bis doppelt, dann rot).
+  Neu: „🪞 Jetzt spiegeln – nur im Notfall“ (Server-Aktion admin_spiegeln, nur Admin, mit Rückfrage, protokolliert).
+
 ## 0.48.1 – 2026-09-29 (DEV)
 
 - KC-CLUB-ADMIN-SPIEGEL: Backup-Zeile nennt die Pause auch, wenn die Backup-Regel noch „an“ ist, aber alle Neon-Jobs global

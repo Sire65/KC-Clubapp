@@ -1011,7 +1011,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.48.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.49.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2460,7 +2460,7 @@ function adminSpiegelFarben(sp) {
   const bis = sp.compute?.bis && new Date(sp.compute.bis) > new Date() ? ` · Neon-Wartung bis ${datum(sp.compute.bis)}` : "";
   const neon = !sp.neon.aktiv ? ["gelb", pauseText + bis]
     : std(sp.neon.letzter) * 3600 <= sp.neon.lagSek ? ["gruen", `aktuell · ${seitText(sp.neon.letzter)}`]
-    : std(sp.neon.letzter) <= 1 ? ["gelb", `verzögert · ${seitText(sp.neon.letzter)}`] : ["rot", `hängt · letzter Abgleich ${seitText(sp.neon.letzter)}`];
+    : std(sp.neon.letzter) * 3600 <= sp.neon.lagSek * 2 ? ["gelb", `verzögert · ${seitText(sp.neon.letzter)}`] : ["rot", `hängt · letzter Abgleich ${seitText(sp.neon.letzter)}`];
   const b = std(sp.backup.letztes);
   const backup = b <= BACKUP_OK_STD ? ["gruen", `letztes ${seitText(sp.backup.letztes)}`]
     : [b <= BACKUP_WARN_STD ? "gelb" : "rot", `letztes ${seitText(sp.backup.letztes)}${sp.backup.aktiv && !sp.pause ? "" : " · " + pauseText}`]; // globale Pause hält auch das Backup an
@@ -2494,6 +2494,14 @@ function infoAdmin() {
       <span>🔔 <b>${m.pushAbos}</b> mit Push</span><span>🔄 <b>${m.alteVersion}</b> alte Version</span></div>
     <div class="knoepfe" style="margin-top:8px"><button class="wlink" onclick="adminBlatt()">📋 Einzelheiten ›</button><button class="wlink" onclick="INFO_DATEN.admin.geholt=0;infoDatenLaden(INFO_FELDER[INFO_I])">↻ Neu prüfen</button></div>`;
 }
+// Notfall: Spiegel sofort anstoßen (verbraucht Neon-Rechenzeit – daher mit Rückfrage)
+async function adminSpiegeln() {
+  if (!confirm("Spiegel Supabase → Neon jetzt sofort anstoßen?\n\nDas verbraucht Neon-Rechenzeit – bitte nur im Notfall. Normal läuft er alle 6 Stunden von selbst.")) return;
+  try { const r = await api("admin_spiegeln"); const e = r.ergebnis || {};
+    melde(e.status === "mirror_dispatched" ? `🪞 Spiegel angestoßen (${e.tables} Tabellen)` : e.status === "maintenance" ? "Neon ist gerade in Wartung – nichts gestartet." : "Nichts zu spiegeln.");
+    if (INFO_DATEN.admin) INFO_DATEN.admin.geholt = 0;
+  } catch (e) { melde(e.message, true); }
+}
 function adminBlatt() {
   const r = INFO_DATEN.admin?.r; if (!r) return;
   const c = r.communicator, b = c.bericht, m = r.mitglieder;
@@ -2512,7 +2520,8 @@ function adminBlatt() {
         <tr><td>🧪 Letzter Wiederherstellungs-Test</td><td>${sp.backup.restoreTest ? esc(seitText(sp.backup.restoreTest)) + " · bestanden" : "–"}</td></tr>
         ${sp.compute ? `<tr><td>⚙️ Neon-Rechenzeit</td><td>${esc(sp.compute.modus === "maintenance" ? "Wartung/Sparmodus" : sp.compute.modus)}${sp.compute.bis ? " bis " + esc(fKurz.format(new Date(sp.compute.bis))) : ""}</td></tr>` : ""}</table>
         ${sp.pause ? `<p class="hinweis" style="margin:0">⏸️ ${esc(zeitKurz(sp.pause.zeit))}: ${esc(sp.pause.text)}</p>` : ""}
-        <p class="hinweis" style="margin:0;font-size:.8rem">Regeln: ${sp.neon.regeln.map((x) => `${x.an ? "✅" : "⏸️"} ${esc(x.name)}`).join(" · ")}</p>`; })()}
+        <p class="hinweis" style="margin:0;font-size:.8rem">Regeln: ${sp.neon.regeln.map((x) => `${x.an ? "✅" : "⏸️"} ${esc(x.name)}`).join(" · ")}</p>
+        <button class="knopf klein" onclick="adminSpiegeln()">🪞 Jetzt spiegeln – nur im Notfall</button>`; })()}
     <b>🗄️ Datenbank</b>
     <p class="hinweis" style="margin:0">${r.datenbank.bytes != null ? `${mb(r.datenbank.bytes)} von ${mb(r.datenbank.grenze)} (kostenloser Tarif) · Warnung ab ${r.datenbank.warnPct} %, kritisch ab ${r.datenbank.kritPct} %` : "Größe gerade nicht abrufbar"}${r.datenbank.check ? ` · täglicher System-Check: ${esc(r.datenbank.check.status)} (${esc(seitText(r.datenbank.check.zeit))})` : ""}</p>
     <p class="hinweis" style="margin:0">📁 Dateien: ${mb(r.speicher.belegt)} von ${mb(r.speicher.grenze)} · Platz für ca. ${r.speicher.fotosMoeglich} weitere Fotos</p>`;
