@@ -147,7 +147,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 
 // 20. 0.8.1: Feiertage NRW – berechnet, abschaltbar.
 {
-  const code = html.slice(html.indexOf("const FEIERTAGE_CACHE"), html.indexOf("function kalEintraege(tag)"));
+  const code = html.slice(html.indexOf("const FEIERTAGE_CACHE"), html.indexOf("function kalEintraege(tag"));
   const tagPlus = (iso, n) => { const d = new Date(iso + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
   const feiertageNRW = new Function("tagPlus", code + ";return feiertageNRW;")(tagPlus);
   const erwartet = {
@@ -959,9 +959,44 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/zustaendig: zustaendige\[0\] \?\? null, zustaendige/.test(zw) && /t\.person_id !== ich\.person_id && !ich\.vorstand\) throw/.test(zw), "altes Feld nicht mitgeschrieben / Rechte");
   const src = server.slice(server.indexOf("const TODO_MAX_ZUSTAENDIGE"), server.indexOf("async function todoBenachrichtigen"));
   assert.ok(/\[\.\.\.new Set\(roh\)\]\.slice\(0, TODO_MAX_ZUSTAENDIGE\)/.test(src) && /ids\.some\(\(id\) => !aktiv\.has\(id\)\)/.test(src), "Zuständige nicht geprüft/begrenzt");
-  assert.ok(/id="todoWerBlatt"/.test(html) && /async function todoZuweisen\(id\) \{ return todoWerWaehlen\(id\); \}/.test(html) && !/Nummer eingeben/.test(html), "Auswahl per Häkchen fehlt");
+  assert.ok(/id="personenBlatt"/.test(html) && /async function todoZuweisen\(id\) \{ return todoWerWaehlen\(id\); \}/.test(html) && /function todoWerWaehlen\(id\)[\s\S]{0,600}personenWaehlen\(/.test(html) && !/Nummer eingeben/.test(html), "Auswahl per Häkchen fehlt");
   assert.ok(/zust\(x\)\.some\(\(z\) => z\.ich\)/.test(html), "Filter „Mir“ kennt nur einen Zuständigen");
   assert.ok(/zustaendige text\[\]/.test(lies("supabase/migrations/20260929_kc_club_v52_todo_mehrere.sql")), "Migration fehlt");
+}
+
+// 74. 0.53.0: Drucken (Kalender Tag/Woche/Monat/Jahr, To-do, Teilnehmerliste, Protokoll, Erstattung) + Protokoll-Aufgaben für mehrere
+{
+  for (const art of ["termine", "treffen", "protokoll", "erstattung"]) assert.ok(new RegExp(`\\b${art}: \\{[^\\n]*bauen:`).test(html), `Druckart ${art} fehlt`);
+  for (const id of ["druckTermine", "druckProtokoll", "druckErstattung"]) assert.ok(new RegExp(`class="druckknopf"[^>]*id="${id}"`).test(html), `Druckknopf ${id} fehlt`);
+  assert.ok(/druckKnopf\(`druckStarten\('treffen','\$\{t\.id\}'\)`, "klein"\)/.test(html), "Druckknopf an der Treffen-Karte fehlt");
+  assert.ok(/button\.druckknopf:empty"\)\.forEach\(\(b\) => \(b\.innerHTML = DRUCK_ICON\)\)/.test(html), "feste Druckknöpfe ohne Symbol");
+  assert.ok(/id="druckBlatt"/.test(html) && /<\/nav>\n<\/div>\n<!--[^\n]*-->\n<div id="druck"><\/div>\n\n<script>/.test(html), "Druckfenster/Druckseite fehlt");
+  const pr = html.slice(html.indexOf("@media print {"), html.indexOf("@media print {") + 800);
+  assert.ok(/body > \*:not\(#druck\) \{ display: none !important; \}/.test(pr) && /#druck \{ display: block !important;/.test(pr), "Druck zeigt die App statt der Druckseite");
+  assert.ok(/#druck \{ display: none; \}/.test(html), "Druckseite am Bildschirm sichtbar");
+  assert.ok(/if \(!d\.optionen && !IST_IOS_APP\(\)\) return druckLos\(\);/.test(html), "ohne Auswahl sollte direkt gedruckt werden");
+  // Zeiträume des Kalenderdrucks
+  const zeitraum = html.slice(html.indexOf("async function druckKalender(o)"), html.indexOf("const daten = await kalenderDaten(von, bis);"));
+  const f = new Function("tagPlus", "montag", "kwVon", "dz", "fTagLang", "MONATE", "o", zeitraum.replace("async function druckKalender(o) {", "") + " return { von, bis, titel };");
+  const tagPlus = (iso, n) => { const d = new Date(iso + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+  const montag = (iso) => tagPlus(iso, -((new Date(iso + "T12:00:00Z").getUTCDay() + 6) % 7));
+  const M = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
+  const r = (art, datum) => f(tagPlus, montag, () => 1, (x) => x, { format: () => "" }, M, { art, datum, inhalte: ["treffen"] });
+  assert.deepEqual([r("tag", "2026-10-07").von, r("tag", "2026-10-07").bis], ["2026-10-07", "2026-10-07"]);
+  assert.deepEqual([r("woche", "2026-10-07").von, r("woche", "2026-10-07").bis], ["2026-10-05", "2026-10-11"]);
+  assert.deepEqual([r("monat", "2026-02-10").von, r("monat", "2026-02-10").bis], ["2026-02-01", "2026-02-28"]);
+  assert.deepEqual([r("monat", "2026-12-24").von, r("monat", "2026-12-24").bis], ["2026-12-01", "2026-12-31"]);
+  assert.deepEqual([r("jahr", "2026-05-01").von, r("jahr", "2026-05-01").bis], ["2026-01-01", "2026-12-31"]);
+  assert.ok(/function kalEintraege\(tag, Q = KAL, mitFeiertagen = einst\("feiertage", true\)\)/.test(html) && !/KAL\.treffen\) \{/.test(html.slice(html.indexOf("function kalEintraege"), html.indexOf("function kalZeichnen"))), "kalEintraege nutzt nicht die übergebene Quelle");
+  assert.ok(/antraege: r\.antraege \|\| \[\]/.test(html), "gesendete Anträge nicht druckbar");
+  // Server: Anträge mit Positionen; Aufgaben für mehrere mit gemeinsamer Gruppe
+  assert.ok(/positionen: a\.positionen \|\| \[\], bemerkung: a\.bemerkung \?\? null/.test(server), "Antrags-Positionen fehlen");
+  const auf = server.slice(server.indexOf('case "aufgabe_speichern"'), server.indexOf('case "aufgabe_erledigt"'));
+  assert.ok(/p\.person_ids/.test(auf) && /\.slice\(0, 10\)/.test(auf) && /personen_\.some\(\(x\) => !aktiv\.has\(x\)\)/.test(auf), "Personen nicht geprüft/begrenzt");
+  assert.ok(/const gruppe = personen_\.length > 1 \? crypto\.randomUUID\(\) : null;/.test(auf) && /insert\(personen_\.map\(/.test(auf), "keine gemeinsame Gruppe");
+  assert.ok(/gruppe: a\.gruppe \?\? null/.test(server), "Gruppe wird nicht geliefert");
+  assert.ok(/person_ids: AUF_WER/.test(html) && /id="aufWer"/.test(html), "Protokoll-Aufgabe: Mehrfachauswahl fehlt");
+  assert.ok(/gruppe uuid/.test(lies("supabase/migrations/20260929_kc_club_v53_aufgaben_gruppe.sql")), "Migration v53 fehlt");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

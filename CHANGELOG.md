@@ -1,5 +1,19 @@
 # Änderungen
 
+## 0.53.0 – 2026-09-29 (DEV)
+
+- KC-CLUB-DRUCK (neu): Drucken / als PDF speichern über ein schmales Druckersymbol rechts in der Kopfzeile.
+  Termine: Auswahlfenster Tag / Woche / Monat (A4 quer) / Jahr / To-do-Liste, mit Datum und Häkchen, was drauf soll
+  (Treffen, Aktionen, Geburtstage, Dienste, Abstimmungen, Feiertage); To-do nach Zuständigen, Kategorie oder Fälligkeit.
+  Treffen-Karte: Teilnehmerliste mit Antworten, Spalte „da“ zum Abhaken und Mitfahrten. Protokoll: Kopf, Tagesordnung,
+  Beschlüsse, Aufgaben, Anlagen, Einwände, Unterschriftszeilen. Erstattung: aktueller Entwurf oder gesendete Anträge
+  (Server liefert jetzt Positionen/Bemerkung mit) inkl. Summe und Unterschriften. Druckbild über @media print (nur #druck),
+  Kopf mit Club-Logo, Fuß mit Seitenzahl. iPhone-App: zusätzlich „Druckseite teilen“. Kalender-Daten für längere
+  Zeiträume in 60-Tage-Stücken; kalEintraege(tag, Quelle, Feiertage) wiederverwendet (kein zweiter Kalender-Kern).
+- KC-CLUB-AUFGABEN-MEHRERE (neu): Protokoll-Aufgabe für mehrere Personen (bis 10) – je Person eine Zeile mit
+  gemeinsamer Gruppe (kc_club_aufgaben.gruppe, Migration v53), Anzeige „gemeinsam mit …“, im Druck eine Zeile.
+- KC-CLUB-PERSONENWAHL (neu): gemeinsames Häkchen-Fenster „Wer?“ für To-dos und Protokoll-Aufgaben.
+
 ## 0.52.0 – 2026-09-29 (DEV)
 
 - KC-CLUB-TODO-MEHRERE (neu): mehrere Zuständige je To-do (bis 10). Auswahl per Häkchen-Blatt beim Anlegen und beim Ändern

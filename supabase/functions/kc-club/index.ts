@@ -13,14 +13,14 @@
 //           KC-CLUB-COMMUNICATOR-STATUS (0.17.0), KC-CLUB-FEEDBACK (0.18.0),
 //           KC-CLUB-KACHELN (0.19.0), KC-CLUB-ZUGANG-SELBST (0.21.0),
 //           KC-CLUB-GRUPPEN, KC-CLUB-ZUSTELLWAHL (0.23.0)
-//           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0), KC-CLUB-KACHELN-ZIEHEN (0.26.0), KC-CLUB-FEEDBACK-NEU (0.27.1), KC-CLUB-BEGRUESSUNG (0.28.0), KC-CLUB-ONLINE (0.29.0), KC-CLUB-ANRUF (0.31.0), KC-CLUB-VIDEO (0.32.0), KC-CLUB-QUITTUNG (0.34.0), KC-CLUB-TODO + KC-CLUB-REGISTER-ZIEHEN (0.36.0), KC-CLUB-SPRACHE + KC-CLUB-TODO-ZUSTAENDIG (0.37.0), KC-CLUB-ERSTATTUNG (0.38.0), KC-CLUB-KMSATZ (0.39.0), KC-CLUB-FEEDBACK-DAUERHAFT (0.40.0), KC-CLUB-INFOFELD + KC-CLUB-WETTER (0.42.0), KC-CLUB-INFOFELD-DEMNAECHST/-FOTOS (0.43.0), KC-CLUB-ZENTRALE (0.44.0), KC-CLUB-FOTO-META (0.45.0), KC-CLUB-WETTER-TAGE (0.46.0), KC-CLUB-ADMINLAGE (0.47.0), KC-CLUB-ADMIN-SPIEGEL (0.48.0/0.49.0), KC-CLUB-TODO-MEHRERE (0.52.0)
+//           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0), KC-CLUB-KACHELN-ZIEHEN (0.26.0), KC-CLUB-FEEDBACK-NEU (0.27.1), KC-CLUB-BEGRUESSUNG (0.28.0), KC-CLUB-ONLINE (0.29.0), KC-CLUB-ANRUF (0.31.0), KC-CLUB-VIDEO (0.32.0), KC-CLUB-QUITTUNG (0.34.0), KC-CLUB-TODO + KC-CLUB-REGISTER-ZIEHEN (0.36.0), KC-CLUB-SPRACHE + KC-CLUB-TODO-ZUSTAENDIG (0.37.0), KC-CLUB-ERSTATTUNG (0.38.0), KC-CLUB-KMSATZ (0.39.0), KC-CLUB-FEEDBACK-DAUERHAFT (0.40.0), KC-CLUB-INFOFELD + KC-CLUB-WETTER (0.42.0), KC-CLUB-INFOFELD-DEMNAECHST/-FOTOS (0.43.0), KC-CLUB-ZENTRALE (0.44.0), KC-CLUB-FOTO-META (0.45.0), KC-CLUB-WETTER-TAGE (0.46.0), KC-CLUB-ADMINLAGE (0.47.0), KC-CLUB-ADMIN-SPIEGEL (0.48.0/0.49.0), KC-CLUB-TODO-MEHRERE (0.52.0), KC-CLUB-DRUCK + KC-CLUB-AUFGABEN-MEHRERE (0.53.0)
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.52.0";
+const SERVER_VERSION = "0.53.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -2013,12 +2013,14 @@ Köcheclub Werne`,
 
       // ----- Erstattung (KC-CLUB-ERSTATTUNG) -----
       case "erstattung_meine": {
-        const { data } = await db.from("kc_club_erstattung").select("id,positionen,summe,auszahlung,status,erstellt_am").eq("person_id", ich.person_id).order("erstellt_am", { ascending: false }).limit(20);
+        const { data } = await db.from("kc_club_erstattung").select("id,positionen,summe,auszahlung,bemerkung,status,erstellt_am").eq("person_id", ich.person_id).order("erstellt_am", { ascending: false }).limit(20);
         const { data: rollen } = await db.from("kc_club_rollen").select("person_id,aemter");
         const hat = (amt: string) => (rollen ?? []).some((r: any) => (r.aemter || []).includes(amt));
         const saetze = await kmSaetze();
         return json({ kmSatz: satzFuer(saetze, new Date().toISOString().slice(0, 10)), standard: ERSTATTUNG.kmSatzStandard, saetze, gruende: ERSTATTUNG.gruende, arten: ERSTATTUNG.arten, empfaengerDa: hat(ERSTATTUNG.empfaenger.an) || hat(ERSTATTUNG.empfaenger.cc),
-          antraege: (data ?? []).map((a: any) => ({ id: a.id, summe: Number(a.summe), anzahl: (a.positionen || []).length, status: a.status, zeit: a.erstellt_am, auszahlung: a.auszahlung })) });
+          // KC-CLUB-DRUCK (0.53.0): Positionen und Bemerkung mitliefern – eigener Antrag lässt sich später ausdrucken
+          antraege: (data ?? []).map((a: any) => ({ id: a.id, summe: Number(a.summe), anzahl: (a.positionen || []).length, status: a.status, zeit: a.erstellt_am, auszahlung: a.auszahlung,
+            positionen: a.positionen || [], bemerkung: a.bemerkung ?? null })) });
       }
 
       // KC-CLUB-KMSATZ (0.39.0): Kilometerpauschale mit „gilt ab“ – nur Admin
@@ -2368,7 +2370,7 @@ Köcheclub Werne`,
               anlagen: zahl(an, pr.id), einwaende: zahl(ew, pr.id), aufgabenOffen: aufgaben.filter((a: any) => a.protokoll_id === pr.id).length,
             };
           }),
-          aufgaben: aufgaben.map((a: any) => ({ id: a.id, text: a.text, faellig: a.faellig, person_id: a.person_id, name: leute.get(a.person_id)?.display_name || a.person_id,
+          aufgaben: aufgaben.map((a: any) => ({ id: a.id, text: a.text, faellig: a.faellig, person_id: a.person_id, gruppe: a.gruppe ?? null, name: leute.get(a.person_id)?.display_name || a.person_id,
             protokoll: a.protokoll_id ? { id: a.protokoll_id, titel: (prot.get(a.protokoll_id) as any)?.titel ?? "" } : null, meine: a.person_id === ich.person_id,
             verwalten: ich.vorstand || a.erstellt_von === ich.person_id || (a.protokoll_id && prot.get(a.protokoll_id) ? darfBearbeiten(ich, prot.get(a.protokoll_id)) : false) })),
           treffenOhneProtokoll: (tr ?? []).filter((t: any) => !mitProtokoll.has(t.id)),
@@ -2444,7 +2446,7 @@ Köcheclub Werne`,
           },
           anlagen: aids.map((id: string) => (att ?? []).find((y: any) => y.id === id)).filter(Boolean).map((y: any) => ({ id: y.id, name: y.file_name, mime: y.mime_type, groesse: y.size_bytes })),
           einwaende: (ew ?? []).map((x: any) => ({ id: x.id, name: name(x.person_id), text: x.text, erstellt_am: x.erstellt_am, erledigt_am: x.erledigt_am, eigen: x.person_id === ich.person_id })),
-          aufgaben: (auf ?? []).map((a: any) => ({ id: a.id, person_id: a.person_id, name: name(a.person_id), text: a.text, faellig: a.faellig, erledigt_am: a.erledigt_am, meine: a.person_id === ich.person_id,
+          aufgaben: (auf ?? []).map((a: any) => ({ id: a.id, person_id: a.person_id, gruppe: a.gruppe ?? null, name: name(a.person_id), text: a.text, faellig: a.faellig, erledigt_am: a.erledigt_am, meine: a.person_id === ich.person_id,
             verwalten: bearb || a.erstellt_von === ich.person_id })),
           // Lesestand nur für Verfasser/Organisation
           gelesen: leser.length ? { von: leser.filter((id) => aktuell.has(id)).map(name).sort(), fehlt: leser.filter((id) => !aktuell.has(id)).map(name).sort() } : null,
@@ -2601,8 +2603,12 @@ Köcheclub Werne`,
         nurProtokolle(ich);
         const text = txt(p.text, 300);
         if (!text) throw new Fehler("Bitte eintragen, was zu tun ist.");
-        const person = String(p.person_id || "");
-        if (!(await aktiveMitglieder()).some((m) => m.person_id === person)) throw new Fehler("Bitte auswählen, wer die Aufgabe übernimmt.");
+        // KC-CLUB-AUFGABEN-MEHRERE (0.53.0): neue Aufgabe für mehrere Personen (person_ids) → je Person eine Zeile, gemeinsame Gruppe
+        const aktiv = new Set((await aktiveMitglieder()).map((m) => m.person_id));
+        const personen_: string[] = [...new Set<string>((Array.isArray(p.person_ids) ? p.person_ids : [p.person_id]).map((x: unknown) => String(x || "")).filter(Boolean))].slice(0, 10);
+        if (!personen_.length || personen_.some((x) => !aktiv.has(x))) throw new Fehler("Bitte auswählen, wer die Aufgabe übernimmt.");
+        if (p.id && personen_.length > 1) throw new Fehler("Eine bestehende Aufgabe gehört einer Person – für weitere bitte eine neue Aufgabe eintragen.");
+        const person = personen_[0];
         const faellig = /^\d{4}-\d{2}-\d{2}$/.test(String(p.faellig || "")) ? String(p.faellig) : null;
         let a: any, pr: any = null;
         if (p.id) {
@@ -2615,14 +2621,17 @@ Köcheclub Werne`,
           if (p.protokoll_id) {
             pr = await protokollHolen(p.protokoll_id);
             if (!darfBearbeiten(ich, pr)) throw new Fehler("Aufgaben im Protokoll trägt ein, wer es schreibt.", 403);
-          } else if (!ich.vorstand && person !== ich.person_id) throw new Fehler("Aufgaben für andere tragen Clubsprecher/Kassenwart ein.", 403);
-          ({ data: a } = await db.from("kc_club_aufgaben").insert({ protokoll_id: pr?.id ?? null, person_id: person, text, faellig, erstellt_von: ich.person_id }).select().single());
+          } else if (!ich.vorstand && personen_.some((x) => x !== ich.person_id)) throw new Fehler("Aufgaben für andere tragen Clubsprecher/Kassenwart ein.", 403);
+          const gruppe = personen_.length > 1 ? crypto.randomUUID() : null;
+          const { data: neu } = await db.from("kc_club_aufgaben").insert(personen_.map((person_id) => ({ protokoll_id: pr?.id ?? null, person_id, text, faellig, erstellt_von: ich.person_id, gruppe }))).select();
+          a = neu?.[0] ?? null; if (a) a.alle = neu;
         }
         if (!a) throw new Fehler("Speichern fehlgeschlagen.", 500);
+        const zeilen = a.alle ?? [a];
         // mitteilen sofort – außer das Protokoll ist noch ein Entwurf (dann beim Veröffentlichen)
-        if (!pr || pr.status === "veroeffentlicht") await aufgabenMitteilen([a], ich, pr?.titel ?? null);
-        await protokoll(ich.person_id, p.id ? "aufgabe_geaendert" : "aufgabe_angelegt", { aufgabe: a.id, protokoll: pr?.id ?? null, fuer: person });
-        return json({ ok: true, id: a.id });
+        if (!pr || pr.status === "veroeffentlicht") await aufgabenMitteilen(zeilen, ich, pr?.titel ?? null);
+        await protokoll(ich.person_id, p.id ? "aufgabe_geaendert" : "aufgabe_angelegt", { aufgabe: a.id, protokoll: pr?.id ?? null, fuer: zeilen.map((x: any) => x.person_id), gruppe: a.gruppe ?? null });
+        return json({ ok: true, id: a.id, ids: zeilen.map((x: any) => x.id) });
       }
 
       case "aufgabe_erledigt": {

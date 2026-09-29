@@ -1,10 +1,18 @@
 {
-  "version": "0.52.0",
+  "version": "0.53.0",
   "datum": "2026-09-29",
   "neu": [
-    "👉 To-do: Mehrere Personen können für eine Aufgabe zuständig sein – per Häkchen auswählen, alle bekommen Bescheid"
+    "🖨️ Drucken: Kalender (Tag, Woche, Monat, Jahr), To-do-Liste, Teilnehmerliste eines Treffens, Sitzungsprotokoll und Erstattungsantrag – Druckersymbol rechts oben, auch „als PDF speichern“",
+    "👥 Protokoll-Aufgaben: Bei „Wer?“ jetzt mehrere Personen per Häkchen wählen – jede bekommt die Aufgabe und Bescheid"
   ],
   "verlauf": [
+    {
+      "version": "0.53.0",
+      "neu": [
+        "🖨️ Drucken: Kalender (Tag, Woche, Monat, Jahr), To-do-Liste, Teilnehmerliste eines Treffens, Sitzungsprotokoll und Erstattungsantrag – Druckersymbol rechts oben, auch „als PDF speichern“",
+        "👥 Protokoll-Aufgaben: Bei „Wer?“ jetzt mehrere Personen per Häkchen wählen – jede bekommt die Aufgabe und Bescheid"
+      ]
+    },
     {
       "version": "0.52.0",
       "neu": [

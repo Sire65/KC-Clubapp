@@ -439,6 +439,55 @@
   .fuss-leiste button.an { background: var(--karte2); color: var(--rot); }
   .fuss-leiste .zaehler { position: absolute; top: 2px; right: 18%; background: var(--rot); color: #fff; border-radius: 10px; font-size: .7rem; padding: 1px 6px; }
 
+  /* KC-CLUB-DRUCK (0.53.0): schmaler Druckknopf rechts, Auswahlfenster, Druckseite */
+  .druckknopf { flex: none; width: 40px; height: 40px; margin-left: auto; padding: 0; display: inline-grid; place-items: center; border: 1px solid var(--linie); border-radius: 10px; background: var(--karte); color: var(--text); cursor: pointer; box-shadow: var(--schatten); }
+  .druckknopf svg { width: 22px; height: 22px; }
+  .druckknopf:active { transform: scale(.94); }
+  .kopf2 .druckknopf { margin-left: 0; }
+  .druckknopf.klein { position: absolute; top: 10px; right: 10px; width: 34px; height: 34px; box-shadow: none; }
+  .druckknopf.klein svg { width: 19px; height: 19px; }
+  .karte.treffen { position: relative; }
+  .karte.treffen > .wann { padding-right: 40px; }
+  .dwahl { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 10px; }
+  .dwahl label, .dhaken label { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--linie); border-radius: 10px; background: var(--karte); cursor: pointer; }
+  .dwahl label:has(input:checked) { border-color: var(--rot); box-shadow: 0 0 0 1px var(--rot) inset; font-weight: 600; }
+  .dwahl.senkrecht { flex-direction: column; }
+  .dhaken { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 6px; margin: 6px 0 4px; }
+  #druck { display: none; }
+  @media print {
+    @page { size: A4; margin: 13mm 12mm 15mm; @bottom-right { content: "Seite " counter(page) " / " counter(pages); font: 8pt sans-serif; color: #666; } }
+    html, body { background: #fff !important; color: #000 !important; }
+    body > *:not(#druck) { display: none !important; }
+    #druck { display: block !important; font: 10.5pt/1.35 "Segoe UI", Roboto, Arial, sans-serif; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    #druck .dkopf { display: flex; align-items: center; gap: 10px; border-bottom: 2.5pt solid #741521; padding-bottom: 6pt; margin-bottom: 10pt; }
+    #druck .dkopf img { width: 38pt; height: 38pt; }
+    #druck .dkopf > div:first-of-type { flex: 1; }
+    #druck h1 { margin: 0; font-size: 17pt; color: #741521; }
+    #druck .unter { font-size: 10pt; color: #444; }
+    #druck .dklub { text-align: right; font-size: 9pt; color: #444; }
+    #druck h2 { font-size: 12pt; color: #741521; margin: 12pt 0 4pt; break-after: avoid; }
+    #druck table { width: 100%; border-collapse: collapse; margin: 4pt 0; }
+    #druck th, #druck td { border: .6pt solid #999; padding: 3pt 5pt; text-align: left; vertical-align: top; }
+    #druck thead th { background: #f1e7e2; }
+    #druck tr { break-inside: avoid; }
+    #druck tr.we td, #druck td.we { background: #f6f2ee; }
+    #druck td.ft { background: #fbe9ea; }
+    #druck td.aus { background: #fff; color: #bbb; }
+    #druck .dklein { font-size: 8.5pt; color: #333; }
+    #druck .dlegende { font-size: 8pt; color: #555; margin-top: 6pt; }
+    #druck table.dinfo th { width: 36mm; background: #f6f2ee; }
+    #druck table.dmonat { table-layout: fixed; }
+    #druck table.dmonat td { height: 24mm; padding: 2pt 3pt; overflow: hidden; }
+    #druck table.dmonat .dtag { font-weight: 700; font-size: 10pt; }
+    #druck table.dmonat .dklein { font-size: 7.5pt; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    #druck .djahr { columns: 2; column-gap: 8mm; }
+    #druck .djahrmonat { break-inside: avoid; margin-bottom: 6pt; }
+    #druck .djahrmonat h2 { margin-top: 0; }
+    #druck .kaestchen { display: inline-block; width: 9pt; height: 9pt; border: .8pt solid #000; }
+    #druck .unterschrift { display: flex; gap: 14mm; margin-top: 22mm; break-inside: avoid; }
+    #druck .unterschrift div { flex: 1; border-top: .8pt solid #000; padding-top: 3pt; font-size: 8.5pt; }
+    #druck .dfuss { margin-top: 12pt; border-top: .6pt solid #999; padding-top: 4pt; font-size: 8pt; color: #555; }
+  }
   .kopf2 { display: flex; align-items: center; gap: 10px; margin: 6px 0 4px; }
   .kopf2 h2 { margin: 0; font-size: 1.35rem; flex: 1; }
   .zurueck { width: 44px; height: 44px; border-radius: 50%; border: none; background: var(--karte); box-shadow: var(--schatten); font-size: 1.2rem; cursor: pointer; }
@@ -605,7 +654,7 @@
 
   <!-- TERMINE -->
   <section id="v-termine" class="versteckt">
-    <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>📅 Termine</h2><button id="neuUmfrageKnopf" class="knopf klein versteckt" onclick="umfrageForm()" title="Terminfindung: mehrere Termine zur Auswahl">🗓️ Umfrage</button><button id="neuTreffenKnopf" class="knopf haupt klein versteckt" onclick="treffenForm()">＋ Neu</button></div>
+    <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>📅 Termine</h2><button id="neuUmfrageKnopf" class="knopf klein versteckt" onclick="umfrageForm()" title="Terminfindung: mehrere Termine zur Auswahl">🗓️ Umfrage</button><button id="neuTreffenKnopf" class="knopf haupt klein versteckt" onclick="treffenForm()">＋ Neu</button><button type="button" class="druckknopf" title="Drucken: Kalender (Tag/Woche/Monat/Jahr) oder To-do-Liste" aria-label="Drucken" onclick="druckStarten('termine')" id="druckTermine"></button></div>
     <div class="umschalter modus3"><button data-m="liste" onclick="termineModus('liste')">☰ Liste</button><button data-m="kalender" onclick="termineModus('kalender')">🗓️ Kalender</button><button data-m="todo" onclick="termineModus('todo')">✅ To-do</button></div>
     <div id="todoBereich" class="versteckt"></div>
     <div id="treffenForm" class="karte versteckt"></div>
@@ -677,7 +726,7 @@
     <div id="protokollListe"><div class="karte hinweis">Wird geladen …</div></div>
   </section>
   <section id="v-protokoll" class="versteckt">
-    <div class="kopf2"><button class="zurueck" onclick="zeige('protokolle')">‹</button><h2 id="prTitel">📄 Protokoll</h2></div>
+    <div class="kopf2"><button class="zurueck" onclick="zeige('protokolle')">‹</button><h2 id="prTitel">📄 Protokoll</h2><button type="button" class="druckknopf" title="Protokoll drucken / als PDF" aria-label="Drucken" onclick="druckStarten('protokoll')" id="druckProtokoll"></button></div>
     <div id="protokollInhalt"></div>
   </section>
 
@@ -715,7 +764,7 @@
   <!-- GRUPPE ANLEGEN / BEARBEITEN (KC-CLUB-GRUPPEN) -->
   <!-- ERSTATTUNG (KC-CLUB-ERSTATTUNG) -->
   <section id="v-erstattung" class="versteckt">
-    <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>💶 Erstattung beantragen</h2></div>
+    <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>💶 Erstattung beantragen</h2><button type="button" class="druckknopf" title="Erstattungsantrag drucken / als PDF" aria-label="Drucken" onclick="druckStarten('erstattung')" id="druckErstattung"></button></div>
     <div id="ersHinweis"></div>
     <div class="karte todoform"><b>1. Was möchtest du erstattet haben?</b>
       <div class="umschalter modus3" id="ersArt" style="margin:0"><button data-a="fahrt" onclick="erstattungArt('fahrt')">🚗 Fahrt&shy;kosten</button><button data-a="einkauf" onclick="erstattungArt('einkauf')">🛒 Einkauf vorgestreckt</button><button data-a="sonstiges" onclick="erstattungArt('sonstiges')">📦 Sonstiges</button></div>
@@ -948,12 +997,14 @@
   <div class="blatt-innen" style="max-height:85vh;overflow-y:auto"><div id="wetterTagInhalt" style="display:grid;gap:10px"></div>
     <button class="knopf" style="text-align:center" onclick="$('wetterBlatt').classList.add('versteckt')">Schließen</button></div>
 </div>
-<!-- KC-CLUB-TODO-MEHRERE (0.52.0): Zuständige wählen -->
-<div class="blatt versteckt" id="todoWerBlatt" onclick="if(event.target===this)this.classList.add('versteckt')">
-  <div class="blatt-innen" style="max-height:85vh;overflow-y:auto"><h3 id="todoWerTitel">👉 Wer soll es machen?</h3>
-    <div class="hinweis" style="margin:0" id="todoWerZahl"></div>
-    <div class="wahlliste" id="todoWerListe"></div>
-    <button class="knopf haupt" style="text-align:center" onclick="todoWerFertig()">✅ Fertig</button></div>
+<!-- KC-CLUB-DRUCK (0.53.0): Auswahlfenster vor dem Drucken + unsichtbare Druckseite (nur im Druck sichtbar) -->
+<div class="blatt versteckt" id="druckBlatt" onclick="if(event.target===this)druckZu()"><div class="blatt-innen" style="max-height:88vh;overflow-y:auto"><h3 id="druckTitel">🖨️ Drucken</h3><div id="druckOptionen"></div><p class="hinweis" id="druckHinweis" style="margin:8px 0"></p><button class="knopf haupt" style="text-align:center" onclick="druckLos()">🖨️ Drucken / als PDF speichern</button><button class="knopf versteckt" id="druckTeilen" style="text-align:center" onclick="druckTeilen()">📤 Druckseite teilen</button><button class="knopf" style="text-align:center" onclick="druckZu()">Abbrechen</button></div></div>
+<!-- KC-CLUB-PERSONENWAHL (0.53.0): gemeinsames Häkchen-Fenster „Wer?“ (To-dos, Protokoll-Aufgaben) -->
+<div class="blatt versteckt" id="personenBlatt" onclick="if(event.target===this)this.classList.add('versteckt')">
+  <div class="blatt-innen" style="max-height:85vh;overflow-y:auto"><h3 id="personenTitel">👉 Wer?</h3>
+    <div class="hinweis" style="margin:0" id="personenZahl"></div>
+    <div class="wahlliste" id="personenListe"></div>
+    <button class="knopf haupt" style="text-align:center" onclick="personenFertig()">✅ Fertig</button></div>
 </div>
 <!-- KC-CLUB-ZENTRALE (0.44.0): Empfänger auswählen -->
 <div class="blatt versteckt" id="zeBlatt" onclick="if(event.target===this)zeBlattZu()">
@@ -1016,9 +1067,11 @@
   <button data-v="einstellungen" onclick="zeige('einstellungen')"><span>⚙️</span>Mehr</button>
 </nav>
 </div>
+<!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
+<div id="druck"></div>
 
 <script>
-const APP_VERSION = "0.52.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.53.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -1510,7 +1563,7 @@ function zustellText(z) {
   return t ? ` <span class="zustellung" title="Rückmeldung vom Handy des Empfängers">${t}</span>` : "";
 }
 // ---------- KC-CLUB-TODO (0.36.0): To-do-Liste unter Termine – nur für mich oder für alle, abhaken mit wer/wann ----------
-let TODO = { eintraege: [], kategorien: [], filter: "alle", erledigteZeigen: false, fuer: "ich", neuWer: [], werFuer: null, werAuswahl: [] };
+let TODO = { eintraege: [], kategorien: [], filter: "alle", erledigteZeigen: false, fuer: "ich", neuWer: [] };
 async function todoLaden() {
   if (!$("todoBereich").innerHTML) todoGeruest();
   try { const r = await api("todo_liste"); TODO.eintraege = r.eintraege || []; TODO.kategorien = r.kategorien || []; todoKategorienFuellen(); todoZeigen(); }
@@ -1532,30 +1585,35 @@ function todoGeruest() {
 async function todoWerFuellen() { if (!MITGLIEDER) try { await mitgliederHolen(); } catch {} todoWerKnopf(); }
 const todoNamen = (ids) => ids.map((id) => (id === ICH?.person_id ? "ich" : (MITGLIEDER?.find((m) => m.person_id === id)?.vorname || MITGLIEDER?.find((m) => m.person_id === id)?.name || "?"))).join(", ");
 function todoWerKnopf() { const k = $("todoWer"); if (k) k.textContent = TODO.neuWer.length ? `👉 ${todoNamen(TODO.neuWer)}` : "👉 Wer soll es machen? (offen)"; }
-// id = null → für den neuen Eintrag; sonst für einen bestehenden Eintrag
-async function todoWerWaehlen(id) {
+// KC-CLUB-PERSONENWAHL (0.53.0): ein Häkchen-Fenster für „Wer?“ – { titel, auswahl, max, leerText, fertig(ids) }
+let PW_AUSWAHL = null;
+async function personenWaehlen(opt) {
   if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return melde(e.message, true); }
-  TODO.werFuer = id;
-  TODO.werAuswahl = id ? [...((TODO.eintraege.find((x) => x.id === id)?.zustaendige || []).map((z) => z.person_id))] : [...TODO.neuWer];
-  $("todoWerTitel").textContent = id ? `👉 Wer soll es machen? – „${TODO.eintraege.find((x) => x.id === id)?.text || ""}“` : "👉 Wer soll es machen?";
-  todoWerListe(); $("todoWerBlatt").classList.remove("versteckt");
+  PW_AUSWAHL = { max: 10, leerText: "noch niemand", ...opt, ids: [...(opt.auswahl || [])] };
+  $("personenTitel").textContent = opt.titel || "👉 Wer?"; personenListe(); $("personenBlatt").classList.remove("versteckt");
 }
-function todoWerListe() {
+function personenListe() {
   const alle = [MITGLIEDER.find((m) => m.person_id === ICH.person_id) || { person_id: ICH.person_id, name: ICH.name }, ...MITGLIEDER.filter((m) => m.person_id !== ICH.person_id)];
-  $("todoWerListe").innerHTML = alle.map((m) => `<label><input type="checkbox" ${TODO.werAuswahl.includes(m.person_id) ? "checked" : ""} onchange="todoWerHaken('${m.person_id}', this.checked)">
+  $("personenListe").innerHTML = alle.map((m) => `<label><input type="checkbox" ${PW_AUSWAHL.ids.includes(m.person_id) ? "checked" : ""} onchange="personenHaken('${m.person_id}', this.checked)">
     <span style="flex:1">${m.person_id === ICH.person_id ? "ich selbst" : esc(m.name)}</span></label>`).join("");
-  $("todoWerZahl").textContent = TODO.werAuswahl.length ? `${TODO.werAuswahl.length} ausgewählt: ${todoNamen(TODO.werAuswahl)}` : "noch niemand – dann bleibt es offen";
+  $("personenZahl").textContent = PW_AUSWAHL.ids.length ? `${PW_AUSWAHL.ids.length} ausgewählt: ${todoNamen(PW_AUSWAHL.ids)}` : PW_AUSWAHL.leerText;
 }
-function todoWerHaken(pid, an) {
-  if (an && TODO.werAuswahl.length >= TODO_MAX_ZUSTAENDIGE) { melde(`Höchstens ${TODO_MAX_ZUSTAENDIGE} Zuständige.`, true); return todoWerListe(); }
-  TODO.werAuswahl = an ? [...new Set([...TODO.werAuswahl, pid])] : TODO.werAuswahl.filter((x) => x !== pid); todoWerListe();
+function personenHaken(pid, an) {
+  if (an && PW_AUSWAHL.ids.length >= PW_AUSWAHL.max) { melde(`Höchstens ${PW_AUSWAHL.max} Personen.`, true); return personenListe(); }
+  PW_AUSWAHL.ids = an ? [...new Set([...PW_AUSWAHL.ids, pid])] : PW_AUSWAHL.ids.filter((x) => x !== pid); personenListe();
+}
+function personenFertig() { $("personenBlatt").classList.add("versteckt"); const w = PW_AUSWAHL; PW_AUSWAHL = null; w?.fertig?.(w.ids); }
+// To-do: id = null → für den neuen Eintrag; sonst für einen bestehenden Eintrag
+function todoWerWaehlen(id) {
+  const x = id ? TODO.eintraege.find((y) => y.id === id) : null;
+  personenWaehlen({ titel: x ? `👉 Wer soll es machen? – „${x.text}“` : "👉 Wer soll es machen?", max: TODO_MAX_ZUSTAENDIGE, leerText: "noch niemand – dann bleibt es offen",
+    auswahl: x ? (x.zustaendige || []).map((z) => z.person_id) : TODO.neuWer, fertig: (ids) => todoWerFertig(id, ids) });
 }
 const TODO_MAX_ZUSTAENDIGE = 10;
-async function todoWerFertig() {
-  $("todoWerBlatt").classList.add("versteckt");
-  if (!TODO.werFuer) { TODO.neuWer = [...TODO.werAuswahl]; return todoWerKnopf(); }
-  try { const r = await api("todo_zuweisen", { id: TODO.werFuer, zustaendige: TODO.werAuswahl });
-    melde(TODO.werAuswahl.length ? `👉 Zuständig: ${todoNamen(TODO.werAuswahl)}${r.versand ? ` – ${r.versand.benachrichtigt} bekommen Bescheid` : ""}` : "👉 Niemand mehr zuständig – offen"); todoLaden(); }
+async function todoWerFertig(id, ids) {
+  if (!id) { TODO.neuWer = [...ids]; return todoWerKnopf(); }
+  try { const r = await api("todo_zuweisen", { id, zustaendige: ids });
+    melde(ids.length ? `👉 Zuständig: ${todoNamen(ids)}${r.versand ? ` – ${r.versand.benachrichtigt} bekommen Bescheid` : ""}` : "👉 Niemand mehr zuständig – offen"); todoLaden(); }
   catch (e) { melde(e.message, true); }
 }
 function todoKategorienFuellen() {
@@ -1658,7 +1716,7 @@ const satzAm = (datum) => { let s = ERS.standard ?? 0.38; for (const x of ERS.sa
 async function erstattungLaden() {
   try {
     const r = await api("erstattung_meine");
-    Object.assign(ERS, { kmSatz: r.kmSatz, standard: r.standard, saetze: r.saetze || [], gruende: r.gruende, arten: r.arten, geladen: true });
+    Object.assign(ERS, { kmSatz: r.kmSatz, standard: r.standard, saetze: r.saetze || [], gruende: r.gruende, arten: r.arten, antraege: r.antraege || [], geladen: true });
     if (!$("ersForm").innerHTML) erstattungArt("fahrt");
     $("ersMeine").innerHTML = r.antraege.length ? r.antraege.map((a) => `<div class="zeile"><div style="flex:1"><b>${eur(a.summe)}</b> · ${a.anzahl} Position${a.anzahl === 1 ? "" : "en"}<div class="hinweis" style="margin:0;font-size:.85rem">${esc(wann(a.zeit))} · ${a.auszahlung === "bar" ? "bar" : "Überweisung"}</div></div>
       <span class="stmarke ${a.status === "erstattet" ? "st-verfuegbar" : a.status === "abgelehnt" ? "st-abwesend" : "st-beschaeftigt"}">${a.status === "erstattet" ? "✅ erstattet" : a.status === "abgelehnt" ? "❌ abgelehnt" : "📨 eingereicht"}</span></div>`).join("")
@@ -2990,19 +3048,19 @@ function feiertageNRW(jahr) {
   ];
   return (FEIERTAGE_CACHE[jahr] = Object.fromEntries(liste));
 }
-function kalEintraege(tag) {
+function kalEintraege(tag, Q = KAL, mitFeiertagen = einst("feiertage", true)) { // 0.53.0: auch für den Druck (andere Quelle)
   const e = [];
-  if (einst("feiertage", true)) { const ft = feiertageNRW(+tag.slice(0, 4))[tag]; if (ft) e.push({ art: "feiertag", name: ft }); }
+  if (mitFeiertagen) { const ft = feiertageNRW(+tag.slice(0, 4))[tag]; if (ft) e.push({ art: "feiertag", name: ft }); }
   // Treffen am Beginntag; Veranstaltungen an jedem Tag von Beginn bis Ende (mehrtägig, z. B. Weihnachtsmarkt)
-  for (const t of KAL.treffen) {
+  for (const t of Q.treffen) {
     const von = berlinIso(t.beginn), bis = t.ende ? berlinIso(t.ende) : von;
     if (t.art === "veranstaltung" ? tag >= von && tag <= bis : von === tag) e.push({ art: t.art === "veranstaltung" ? "veranst" : "treffen", t });
   }
-  for (const a of KAL.aktionen || []) if (tag >= a.von && tag <= a.bis) e.push({ art: "aktion", a });
-  for (const d of KAL.dienste) if (d.datum === tag) e.push({ art: "dienst", d });
-  for (const f of KAL.fristen) if (berlinIso(f.frist) === tag) e.push({ art: "frist", f });
+  for (const a of Q.aktionen || []) if (tag >= a.von && tag <= a.bis) e.push({ art: "aktion", a });
+  for (const d of Q.dienste) if (d.datum === tag) e.push({ art: "dienst", d });
+  for (const f of Q.fristen) if (berlinIso(f.frist) === tag) e.push({ art: "frist", f });
   const md = tag.slice(5), schalt = new Date(Date.UTC(+tag.slice(0, 4), 1, 29)).getUTCDate() === 29;
-  for (const g of KAL.geburtstage) if (g.md === md || (!schalt && md === "02-28" && g.md === "02-29")) e.push({ art: "geb", g });
+  for (const g of Q.geburtstage) if (g.md === md || (!schalt && md === "02-28" && g.md === "02-29")) e.push({ art: "geb", g });
   return e;
 }
 function kalZeichnen() {
@@ -3102,7 +3160,7 @@ function treffenKarte(t, vorbei) {
   const bearbeiten = { id: t.id, titel: t.titel, beginn: t.beginn, ende: t.ende, ort: t.ort, beschreibung: t.beschreibung, gastgeber: t.gastgeber?.person_id || "", art: t.art, ganztaegig: t.ganztaegig };
   return `<div class="karte treffen"${va ? ' style="border-left:6px solid var(--gruen)"' : ""}>
     ${t.status === "abgesagt" ? '<span class="marke rot">❌ abgesagt</span> ' : ""}${va ? '<span class="marke gruen">🎪 Veranstaltung</span>' : ""}
-    <div class="wann">${esc(t.titel)}</div><div>${esc(zeitText(t))}${ort ? " · 📍 " + esc(ort) : ""}</div>
+    ${druckKnopf(`druckStarten('treffen','${t.id}')`, "klein")}<div class="wann">${esc(t.titel)}</div><div>${esc(zeitText(t))}${ort ? " · 📍 " + esc(ort) : ""}</div>
     ${t.beschreibung ? `<p class="hinweis" style="white-space:pre-wrap">${esc(t.beschreibung)}</p>` : ""}
     ${offen && !va ? `<div class="antworten">
       <button class="ja ${t.meine === "ja" ? "an" : ""}" onclick="antwort('${t.id}','ja')">✅ Ich komme</button>
@@ -3830,7 +3888,7 @@ async function protokolleLaden() {
   if (ICH && ICH.protokolle === false) { $("protokollListe").innerHTML = '<div class="karte hinweis">Protokolle sind nur für Mitglieder.</div>'; return; }
   try {
     prListe = await api("protokolle_liste");
-    const { protokolle, aufgaben, treffenOhneProtokoll } = prListe;
+    const { protokolle, aufgaben, treffenOhneProtokoll } = prListe; aufgabenMitGruppe(aufgaben);
     const auf = aufgaben.length ? `<div class="karte"><h3>📌 Offene Aufgaben</h3>${aufgaben.map((a) => aufgabeZeile(a, a.meine || ICH.vorstand, a.verwalten)).join("")}</div>` : "";
     const neu = treffenOhneProtokoll.length ? `<div class="karte"><h3>✍️ Protokoll schreiben</h3><p class="hinweis" style="margin-top:0">Wer diesmal schreibt, tippt beim Treffen auf „Anlegen“ – Datum, Ort, wer da war und die Themen trägt die App schon ein.</p>
       ${treffenOhneProtokoll.map((t) => `<div class="zeile"><div style="flex:1"><b>${esc(t.titel)}</b><div class="hinweis" style="font-size:.85rem">${esc(wann(t.beginn))}${t.ort ? " · " + esc(t.ort) : ""}</div></div>
@@ -3867,7 +3925,7 @@ async function protokollOeffnen(id, ausHistorie) {
   zeige("protokoll", ausHistorie);
   try {
     if (!MITGLIEDER) await mitgliederHolen();
-    PR = await api("protokoll_laden", { id });
+    PR = await api("protokoll_laden", { id }); aufgabenMitGruppe(PR.aufgaben || []);
     if (PR.darfBearbeiten && PR.protokoll.roh === "entwurf") protokollFormular(); else protokollLesen();
     neuLaden();
   } catch (e) { $("protokollInhalt").innerHTML = `<div class="karte hinweis">${esc(e.message)}</div>`; }
@@ -3882,7 +3940,7 @@ function anlagenListe(bearbeiten) {
 function aufgabeZeile(a, darfAbhaken, darfLoeschen) {
   return `<div class="zeile">${darfAbhaken ? `<button class="knopf klein ${a.erledigt_am ? "gruen" : ""}" title="erledigt" onclick="aufgabeErledigt('${a.id}', ${!a.erledigt_am})">${a.erledigt_am ? "✔" : "☐"}</button>` : `<span>${a.erledigt_am ? "✔" : "📌"}</span>`}
     <div style="flex:1${a.erledigt_am ? ";text-decoration:line-through;opacity:.6" : ""}"><b>${esc(a.text)}</b>
-      <div class="hinweis" style="font-size:.85rem">${esc(a.name)} ${a.erledigt_am ? "" : faelligText(a.faellig)}${a.protokoll ? " · aus „" + esc(a.protokoll.titel) + "“" : ""}</div></div>
+      <div class="hinweis" style="font-size:.85rem">${esc(a.name)}${a.mit?.length ? ` <span title="gemeinsame Aufgabe">· gemeinsam mit ${esc(a.mit.join(", "))}</span>` : ""} ${a.erledigt_am ? "" : faelligText(a.faellig)}${a.protokoll ? " · aus „" + esc(a.protokoll.titel) + "“" : ""}</div></div>
     ${darfLoeschen ? `<button class="knopf klein" title="löschen" onclick="aufgabeLoeschen('${a.id}')">✕</button>` : ""}</div>`;
 }
 function protokollFormular() {
@@ -3916,7 +3974,7 @@ function protokollFormular() {
     </div>
     <div class="karte"><h3>3 · Aufgaben <small class="hinweis">(wer macht was bis wann)</small></h3>
       <div id="prAufgaben">${PR.aufgaben.map((a) => aufgabeZeile(a, true, true)).join("") || '<p class="hinweis">Noch keine Aufgaben.</p>'}</div>
-      <label class="feld">Wer?<select id="aufWer"><option value="">– bitte wählen –</option>${MITGLIEDER.map((m) => `<option value="${m.person_id}">${esc(m.name)}</option>`).join("")}</select></label>
+      <div class="feld">Wer? <small class="hinweis">(auch mehrere)</small><button type="button" class="knopf todower" id="aufWer" style="width:100%;margin-top:5px" onclick="aufgabeWerWaehlen()">${AUF_WER.length ? "👉 " + esc(todoNamen(AUF_WER)) : "👉 bitte wählen"}</button></div>
       <label class="feld">Was?<input id="aufWas" maxlength="300" placeholder="z. B. Glühwein bestellen"></label>
       <div class="zwei"><label class="feld">Bis wann? (freiwillig)<input id="aufBis" type="date"></label><div style="display:flex;align-items:flex-end"><button class="knopf" style="width:100%" onclick="einmal(this, aufgabeHinzu)">＋ Aufgabe</button></div></div>
       <p class="hinweis" style="font-size:.85rem">Die Aufgaben bekommen die Mitglieder beim Veröffentlichen mitgeteilt und am Tag vor „bis“ eine Erinnerung.</p>
@@ -3953,7 +4011,7 @@ async function prSpeichernJetzt(vonHand) {
   } catch (e) { melde(e.message, true); throw e; }
 }
 async function prNeuLaden() {
-  PR = await api("protokoll_laden", { id: prId });
+  PR = await api("protokoll_laden", { id: prId }); aufgabenMitGruppe(PR.aufgaben || []);
   if ($("prAnlagen")) { $("prAnlagen").innerHTML = anlagenListe(true); document.querySelectorAll("#prAnlagen img[data-anlage]").forEach(bildLaden); }
   if ($("prAufgaben")) $("prAufgaben").innerHTML = PR.aufgaben.map((a) => aufgabeZeile(a, true, true)).join("") || '<p class="hinweis">Noch keine Aufgaben.</p>';
 }
@@ -3970,11 +4028,24 @@ async function protokollAnlageWeg(aid) {
   if (!confirm("Diese Anlage aus dem Protokoll entfernen?")) return;
   try { await api("protokoll_anlage", { id: prId, attachment_id: aid, entfernen: true }); await prNeuLaden(); } catch (e) { melde(e.message, true); }
 }
+// KC-CLUB-AUFGABEN-MEHRERE (0.53.0): „Wer?“ per Häkchen – bei mehreren bekommt jeder seine eigene (verknüpfte) Aufgabe
+let AUF_WER = [];
+function aufgabeWerWaehlen() {
+  personenWaehlen({ titel: "👉 Wer übernimmt die Aufgabe?", auswahl: AUF_WER, leerText: "bitte mindestens eine Person wählen",
+    fertig: (ids) => { AUF_WER = ids; $("aufWer").textContent = ids.length ? "👉 " + todoNamen(ids) : "👉 bitte wählen"; } });
+}
 async function aufgabeHinzu() {
-  const person_id = $("aufWer").value, text = $("aufWas").value.trim();
-  if (!person_id || !text) return melde("Bitte „Wer?“ und „Was?“ ausfüllen.", true);
-  try { await api("aufgabe_speichern", { protokoll_id: prId, person_id, text, faellig: $("aufBis").value }); $("aufWas").value = ""; $("aufBis").value = ""; $("aufWer").value = ""; await prNeuLaden(); melde("Aufgabe eingetragen"); }
+  const text = $("aufWas").value.trim();
+  if (!AUF_WER.length || !text) return melde("Bitte „Wer?“ und „Was?“ ausfüllen.", true);
+  try { await api("aufgabe_speichern", { protokoll_id: prId, person_ids: AUF_WER, text, faellig: $("aufBis").value });
+    const n = AUF_WER.length; AUF_WER = []; if ($("aufWer")) $("aufWer").textContent = "👉 bitte wählen"; $("aufWas").value = ""; $("aufBis").value = ""; await prNeuLaden(); melde(n > 1 ? `Aufgabe für ${n} Personen eingetragen` : "Aufgabe eingetragen"); }
   catch (e) { melde(e.message, true); }
+}
+// gemeinsame Aufgaben: bei jeder Zeile die anderen Beteiligten nennen
+function aufgabenMitGruppe(liste) {
+  const g = new Map(); for (const a of liste) if (a.gruppe) g.set(a.gruppe, [...(g.get(a.gruppe) || []), a]);
+  for (const a of liste) a.mit = a.gruppe ? (g.get(a.gruppe) || []).filter((x) => x.id !== a.id).map((x) => (x.name || "").split(" ")[0]) : [];
+  return liste;
 }
 async function aufgabeErledigt(id, erledigt) {
   try {
@@ -4484,6 +4555,221 @@ async function fotoLoeschen() {
   document.addEventListener("touchend", (e) => { if (x0 === null) return; const dx = e.changedTouches[0].clientX - x0; x0 = null; if (Math.abs(dx) > 50) fotoBlaettern(dx < 0 ? 1 : -1); }, { passive: true });
   document.addEventListener("keydown", (e) => { if ($("fotoBetrachter").classList.contains("versteckt")) return; if (e.key === "ArrowLeft") fotoBlaettern(-1); if (e.key === "ArrowRight") fotoBlaettern(1); if (e.key === "Escape") fotoSchliessen(); });
 })();
+
+// ---------- KC-CLUB-DRUCK (0.53.0): Drucken / als PDF speichern ----------
+// Schmaler Knopf mit Drucker-Symbol rechts. Wo es etwas zu wählen gibt, öffnet sich erst ein Auswahlfenster, sonst direkt der
+// Druckdialog (dort auch „Als PDF speichern“). Die Druckseite (#druck) ist ein eigenes A4-Blatt im Clubstil; auf dem Bildschirm
+// unsichtbar. iPhone-App vom Startbildschirm kann oft nicht drucken → „Druckseite teilen“ (HTML-Datei, dort drucken/als PDF).
+const DRUCK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"/><rect x="2.5" y="9" width="19" height="8" rx="2"/><path d="M6 14h12v7H6z"/><circle cx="17.6" cy="12" r=".7" fill="currentColor" stroke="none"/></svg>';
+document.querySelectorAll("button.druckknopf:empty").forEach((b) => (b.innerHTML = DRUCK_ICON)); // feste Knöpfe in den Kopfzeilen
+const druckKnopf = (klick, klasse = "") => `<button type="button" class="druckknopf ${klasse}" title="Drucken / als PDF speichern" aria-label="Drucken" onclick="${klick}">${DRUCK_ICON}</button>`;
+const IST_IOS_APP = () => IST_IOS && (navigator.standalone === true || matchMedia("(display-mode: standalone)").matches);
+let DRUCK = null; // { art, param }
+const DRUCK_INHALTE = [["treffen", "🍽️ Treffen & Veranstaltungen"], ["aktion", "🧳 Aktionen & Ausflüge"], ["geb", "🎂 Geburtstage"], ["dienst", "🗓️ Meine Dienste"], ["frist", "🗳️ Abstimmungen"], ["feiertag", "🇩🇪 Feiertage"]];
+const DRUCKARTEN = {
+  termine: { titel: "🖨️ Termine drucken", optionen: () => druckTermineOptionen(), bauen: (o) => (o.art === "todo" ? druckTodo(o) : druckKalender(o)) },
+  treffen: { bauen: (o, id) => druckTreffen(id) },
+  protokoll: { bauen: () => druckProtokoll() },
+  erstattung: { titel: "🖨️ Erstattungsantrag drucken", optionen: () => druckErstattungOptionen(), bauen: (o) => druckErstattung(o) },
+};
+function druckStarten(art, param) {
+  DRUCK = { art, param }; const d = DRUCKARTEN[art];
+  if (!d.optionen && !IST_IOS_APP()) return druckLos();
+  $("druckTitel").textContent = d.titel || "🖨️ Drucken";
+  $("druckOptionen").innerHTML = d.optionen ? d.optionen() : "";
+  $("druckHinweis").textContent = IST_IOS_APP() ? "iPhone: Klappt das Drucken aus der App nicht, „📤 Druckseite teilen“ antippen und dort drucken oder als PDF sichern." : "Im Druckfenster kannst du auch „Als PDF speichern“ wählen.";
+  $("druckTeilen").classList.toggle("versteckt", !IST_IOS_APP());
+  druckOptSicht(); $("druckBlatt").classList.remove("versteckt");
+}
+function druckZu() { $("druckBlatt").classList.add("versteckt"); }
+function druckOptSicht() {
+  const art = document.querySelector('input[name="dArt"]:checked')?.value;
+  if ($("dKal")) $("dKal").classList.toggle("versteckt", art === "todo");
+  if ($("dTodo")) $("dTodo").classList.toggle("versteckt", art !== "todo");
+}
+function druckOptionenLesen() {
+  return { art: document.querySelector('input[name="dArt"]:checked')?.value, datum: $("dDatum")?.value || heuteIso(),
+    inhalte: [...document.querySelectorAll("[data-inhalt]")].filter((x) => x.checked).map((x) => x.dataset.inhalt),
+    todoFilter: $("dTodoFilter")?.value, todoGruppe: $("dTodoGruppe")?.value, todoErledigte: !!$("dTodoErl")?.checked,
+    antrag: document.querySelector('input[name="dAntrag"]:checked')?.value };
+}
+async function druckSeiteBauen() {
+  const d = DRUCKARTEN[DRUCK.art], o = druckOptionenLesen();
+  const s = await d.bauen(o, DRUCK.param); if (!s) return false;
+  $("druck").innerHTML = `<div class="dkopf"><img src="icon-192.png" alt=""><div><h1>${esc(s.titel)}</h1>${s.unter ? `<div class="unter">${esc(s.unter)}</div>` : ""}</div>
+      <div class="dklub"><b>Köcheclub Werne</b><br>${esc(fKurzJahr.format(new Date()))}</div></div>
+    ${s.html}
+    <div class="dfuss">Gedruckt am ${esc(wann(new Date().toISOString()))} von ${esc(ICH?.name || "")} · Köcheclub-App v${APP_VERSION}${s.fuss ? " · " + esc(s.fuss) : ""}</div>`;
+  let st = $("druckSeitenformat"); if (!st) { st = document.createElement("style"); st.id = "druckSeitenformat"; document.head.appendChild(st); }
+  st.textContent = `@page { size: A4 ${s.quer ? "landscape" : "portrait"}; }`;
+  DRUCK.titel = s.titel;
+  return true;
+}
+async function druckLos() {
+  try { if (!(await druckSeiteBauen())) return; } catch (e) { return melde(e.message, true); }
+  druckZu(); setTimeout(() => window.print(), 60);
+}
+// iPhone: Druckseite als eigenständige HTML-Datei teilen (dort drucken oder als PDF sichern)
+async function druckTeilen() {
+  try { if (!(await druckSeiteBauen())) return; } catch (e) { return melde(e.message, true); }
+  const css = [...document.styleSheets].flatMap((sh) => { try { return [...sh.cssRules].map((r) => r.cssText); } catch { return []; } }).filter((t) => /#druck|@page/.test(t)).join("\n");
+  const html = `<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(DRUCK.titel)}</title>
+    <style>${css.replace(/@media print\s*\{/, "@media all {")} body{margin:12mm} #druck{display:block!important} .dkopf img{display:none}</style></head><body>${$("druck").outerHTML}</body></html>`;
+  const datei = new File([html], (DRUCK.titel || "Druck").replace(/[^\wäöüÄÖÜß.-]+/g, "_").slice(0, 60) + ".html", { type: "text/html" });
+  try { if (navigator.canShare?.({ files: [datei] })) { await navigator.share({ files: [datei], title: DRUCK.titel }); druckZu(); return; } } catch (e) { if (e?.name === "AbortError") return; }
+  melde("Teilen geht auf diesem Gerät nicht – bitte „Drucken“ versuchen.", true);
+}
+const dz = (iso) => fKurzJahr.format(new Date(iso.slice(0, 10) + "T12:00:00Z"));
+const dWt = new Intl.DateTimeFormat("de-DE", { timeZone: "UTC", weekday: "short" });
+const kwVon = (iso) => { const d = new Date(iso + "T12:00:00Z"), t = (d.getUTCDay() + 6) % 7; d.setUTCDate(d.getUTCDate() - t + 3); const j = new Date(Date.UTC(d.getUTCFullYear(), 0, 4)); return 1 + Math.round(((d - j) / 86400000 - 3 + ((j.getUTCDay() + 6) % 7)) / 7); };
+// ---- Termine: Kalender (Tag/Woche/Monat/Jahr) oder To-do-Liste ----
+function druckTermineOptionen() {
+  const art = termineArt === "todo" ? "todo" : termineArt === "kalender" && kalTagWahl ? "tag" : "monat";
+  return `<b>Was drucken?</b><div class="dwahl">${[["tag", "📄 Tag"], ["woche", "🗓️ Woche"], ["monat", "📅 Monat"], ["jahr", "📆 Jahr"], ["todo", "✅ To-do-Liste"]]
+      .map(([v, t]) => `<label><input type="radio" name="dArt" value="${v}" ${v === art ? "checked" : ""} onchange="druckOptSicht()"> ${t}</label>`).join("")}</div>
+    <div id="dKal"><label class="feld">Datum <small class="hinweis">(der Tag / die Woche / der Monat / das Jahr, in dem es liegt)</small><input type="date" id="dDatum" value="${kalTagWahl || heuteIso()}"></label>
+      <b style="display:block;margin-top:10px">Was soll drauf?</b><div class="dhaken">${DRUCK_INHALTE.map(([k, t]) => `<label><input type="checkbox" data-inhalt="${k}" ${k === "feiertag" && !einst("feiertage", true) ? "" : "checked"}> ${t}</label>`).join("")}</div></div>
+    <div id="dTodo"><label class="feld">Welche Aufgaben?<select id="dTodoFilter"><option value="alle">Alle</option><option value="mir">👉 Mir zugewiesen</option><option value="ich">👤 Nur meine</option><option value="gemeinsam">👥 Für alle</option></select></label>
+      <label class="feld">Geordnet nach<select id="dTodoGruppe"><option value="wer">Zuständigen</option><option value="kategorie">Kategorie</option><option value="faellig">Fälligkeit</option></select></label>
+      <label class="schalter" style="margin-top:8px"><span>Erledigte mitdrucken</span><input type="checkbox" id="dTodoErl"></label></div>`;
+}
+async function kalenderDaten(von, bis) {
+  const d = { treffen: [], aktionen: [], dienste: [], fristen: [], geburtstage: [] }, ids = new Set();
+  for (let a = von; a <= bis; a = tagPlus(a, 60)) {
+    const e = tagPlus(a, 59) < bis ? tagPlus(a, 59) : bis, r = await api("kalender", { von: a, bis: e }, { warten: true });
+    for (const k of ["treffen", "aktionen", "fristen"]) for (const x of r[k] || []) if (!ids.has(k + x.id)) { ids.add(k + x.id); d[k].push(x); }
+    for (const x of r.dienste || []) if (!ids.has("d" + x.datum + x.start)) { ids.add("d" + x.datum + x.start); d.dienste.push(x); }
+    d.geburtstage = r.geburtstage || d.geburtstage;
+  }
+  return d;
+}
+function druckEintrag(x, lang) {
+  if (x.art === "treffen" || x.art === "veranst") {
+    const t = x.t, b = new Date(t.beginn), e = t.ende ? new Date(t.ende) : null, gleich = e && berlinIso(t.beginn) === berlinIso(t.ende);
+    const zeit = t.ganztaegig ? "ganztägig" : fZeit.format(b) + (gleich ? "–" + fZeit.format(e) : "");
+    const ort = t.ort || (t.gastgeber ? "bei " + t.gastgeber.name : "");
+    return { zeit, text: `${x.art === "veranst" ? "🎪" : "🍽️"} ${t.titel}${t.status === "abgesagt" ? " (abgesagt)" : ""}`,
+      info: [ort && "📍 " + ort, lang && t.beschreibung, lang && x.art === "treffen" && `✅ ${t.ja} · ❓ ${t.vielleicht} · ❌ ${t.nein}`,
+        lang && x.art === "treffen" && t.ja && "Zusagen: " + t.teilnahme.filter((y) => y.antwort === "ja").map((y) => y.name).join(", ")].filter(Boolean).join(" · ") };
+  }
+  if (x.art === "aktion") return { zeit: "", text: `🧳 ${x.a.titel}`, info: [x.a.veranstalter, x.a.von !== x.a.bis && `${dz(x.a.von)} – ${dz(x.a.bis)}`].filter(Boolean).join(" · ") };
+  if (x.art === "dienst") return { zeit: `${x.d.start}–${x.d.ende}`, text: "🗓️ Mein Dienst", info: x.d.bereich || "" };
+  if (x.art === "frist") return { zeit: fZeit.format(new Date(x.f.frist)), text: `🗳️ Abstimmung endet: ${x.f.titel}`, info: "" };
+  if (x.art === "geb") return { zeit: "", text: `🎂 ${x.g.name}`, info: "" };
+  return { zeit: "", text: `🇩🇪 ${x.name}`, info: "Feiertag" };
+}
+async function druckKalender(o) {
+  const tag = o.datum, j = +tag.slice(0, 4), m = +tag.slice(5, 7);
+  let von, bis, titel, unter = "";
+  if (o.art === "tag") { von = bis = tag; titel = "Tageskalender"; unter = fTagLang.format(new Date(tag + "T12:00:00Z")) + " " + j; }
+  else if (o.art === "woche") { von = montag(tag); bis = tagPlus(von, 6); titel = `Wochenkalender – KW ${kwVon(von)}`; unter = `${dz(von)} bis ${dz(bis)}`; }
+  else if (o.art === "monat") { von = `${j}-${String(m).padStart(2, "0")}-01`; bis = tagPlus(`${m === 12 ? j + 1 : j}-${String(m === 12 ? 1 : m + 1).padStart(2, "0")}-01`, -1); titel = `Monatskalender – ${MONATE[m - 1]} ${j}`; }
+  else { von = `${j}-01-01`; bis = `${j}-12-31`; titel = `Jahresübersicht ${j}`; }
+  if (!o.inhalte.length) throw new Error("Bitte mindestens einen Inhalt ankreuzen.");
+  const daten = await kalenderDaten(von, bis);
+  const eintr = (t) => kalEintraege(t, daten, o.inhalte.includes("feiertag")).filter((x) => o.inhalte.includes(x.art === "veranst" ? "treffen" : x.art));
+  const tage = []; for (let t = von; t <= bis; t = tagPlus(t, 1)) tage.push(t);
+  const legende = `<p class="dlegende">${DRUCK_INHALTE.filter(([k]) => o.inhalte.includes(k)).map(([, t]) => t).join(" · ")}</p>`;
+  if (o.art === "tag") {
+    const e = eintr(tag).map((x) => druckEintrag(x, true));
+    return { titel, unter, html: e.length ? `<table><thead><tr><th style="width:22mm">Zeit</th><th>Termin</th></tr></thead><tbody>${e.map((x) => `<tr><td>${esc(x.zeit || "–")}</td><td><b>${esc(x.text)}</b>${x.info ? `<div class="dklein">${esc(x.info)}</div>` : ""}</td></tr>`).join("")}</tbody></table>`
+      : '<p>An diesem Tag stehen keine Termine im Kalender.</p>' };
+  }
+  if (o.art === "woche") return { titel, unter, html: `<table><thead><tr><th style="width:30mm">Tag</th><th>Termine</th></tr></thead><tbody>${tage.map((t, i) => { const e = eintr(t).map((x) => druckEintrag(x, false));
+      return `<tr class="${i >= 5 ? "we" : ""}"><td><b>${esc(dWt.format(new Date(t + "T12:00:00Z")))}</b> ${esc(dz(t).slice(0, 6))}</td><td style="height:22mm">${e.map((x) => `<div><b>${esc(x.zeit ? x.zeit + " " : "")}</b>${esc(x.text)}${x.info ? ` <span class="dklein">– ${esc(x.info)}</span>` : ""}</div>`).join("")}</td></tr>`; }).join("")}</tbody></table>${legende}` };
+  if (o.art === "monat") {
+    const start = montag(von), wochen = []; for (let t = start; t <= bis; t = tagPlus(t, 7)) wochen.push(t);
+    return { titel, quer: true, html: `<table class="dmonat"><thead><tr>${["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"].map((w) => `<th>${w}</th>`).join("")}</tr></thead><tbody>${wochen.map((w) => `<tr>${[0, 1, 2, 3, 4, 5, 6].map((i) => {
+      const t = tagPlus(w, i), drin = t >= von && t <= bis, e = drin ? eintr(t).map((x) => druckEintrag(x, false)) : [], ft = e.some((x) => x.info === "Feiertag");
+      return `<td class="${!drin ? "aus" : ""} ${i >= 5 ? "we" : ""} ${ft ? "ft" : ""}"><div class="dtag">${+t.slice(8)}</div>${e.slice(0, 5).map((x) => `<div class="dklein">${esc((x.zeit ? x.zeit.split("–")[0] + " " : "") + x.text)}</div>`).join("")}${e.length > 5 ? `<div class="dklein">+ ${e.length - 5} weitere</div>` : ""}</td>`; }).join("")}</tr>`).join("")}</tbody></table>${legende}` };
+  }
+  const monate = MONATE.map((name, mi) => { const e = tage.filter((t) => +t.slice(5, 7) === mi + 1).flatMap((t) => eintr(t).filter((x) => x.art !== "dienst" || o.inhalte.includes("dienst")).map((x) => ({ t, ...druckEintrag(x, false) })));
+    return `<div class="djahrmonat"><h2>${name}</h2>${e.length ? e.map((x) => `<div class="dklein"><b>${esc(dWt.format(new Date(x.t + "T12:00:00Z")))} ${esc(dz(x.t).slice(0, 6))}</b> ${esc(x.text)}</div>`).join("") : '<div class="dklein">–</div>'}</div>`; });
+  return { titel, html: `<div class="djahr">${monate.join("")}</div>${legende}` };
+}
+async function druckTodo(o) {
+  if (!TODO.eintraege.length) { const r = await api("todo_liste", {}, { warten: true }); TODO.eintraege = r.eintraege || []; TODO.kategorien = r.kategorien || TODO.kategorien; }
+  const kat = (id) => TODO.kategorien.find((k) => k.id === id) || { sym: "📝", name: "Sonstiges" };
+  const zust = (x) => (x.zustaendige?.length ? x.zustaendige : x.zustaendig ? [x.zustaendig] : []);
+  let l = TODO.eintraege.filter((x) => (o.todoErledigte || !x.erledigt) && (o.todoFilter === "alle" || (o.todoFilter === "mir" ? zust(x).some((z) => z.ich) : o.todoFilter === "ich" ? x.fuer === "ich" : x.fuer === "alle")));
+  if (!l.length) throw new Error("Keine Aufgaben für diese Auswahl.");
+  const gruppen = new Map(), schl = (x) => (o.todoGruppe === "kategorie" ? `${kat(x.kategorie).sym} ${kat(x.kategorie).name}` : o.todoGruppe === "faellig" ? (x.faellig ? (x.faellig < heuteIso() ? "⚠️ überfällig" : "fällig bis " + dz(x.faellig)) : "ohne Termin") : zust(x).length ? "👉 " + zust(x).map((z) => z.vorname).join(", ") : "👉 noch offen – niemand zugewiesen");
+  for (const x of [...l].sort((a, b) => (a.faellig || "9999").localeCompare(b.faellig || "9999"))) gruppen.set(schl(x), [...(gruppen.get(schl(x)) || []), x]);
+  const namen = { alle: "alle Aufgaben", mir: "mir zugewiesen", ich: "nur meine", gemeinsam: "für alle" };
+  return { titel: "To-do-Liste", unter: `${namen[o.todoFilter]} · ${l.length} Aufgabe${l.length === 1 ? "" : "n"}${o.todoErledigte ? " (mit erledigten)" : ""}`,
+    html: [...gruppen].map(([g, xs]) => `<h2>${esc(g)}</h2><table><thead><tr><th style="width:9mm">✓</th><th>Aufgabe</th><th style="width:38mm">Zuständig</th><th style="width:22mm">bis</th><th style="width:28mm">Kategorie</th></tr></thead><tbody>
+      ${xs.map((x) => `<tr><td>${x.erledigt ? "☑" : '<span class="kaestchen"></span>'}</td><td>${esc(x.text)}${x.fuer === "alle" ? ' <span class="dklein">(für alle)</span>' : ""}${x.erledigt ? `<div class="dklein">erledigt ${esc(x.erledigtVon || "")}</div>` : ""}</td>
+        <td>${esc(zust(x).map((z) => z.vorname).join(", ") || "–")}</td><td>${x.faellig ? esc(dz(x.faellig)) : "–"}</td><td>${esc(kat(x.kategorie).sym + " " + kat(x.kategorie).name)}</td></tr>`).join("")}</tbody></table>`).join("") };
+}
+// ---- Treffen: Teilnehmerliste (mit Spalte zum Abhaken) ----
+async function druckTreffen(id) {
+  const t = TREFFEN_IDX.get(id); if (!t) throw new Error("Treffen nicht gefunden.");
+  if (!MITGLIEDER) await mitgliederHolen();
+  const ort = t.ort || (t.gastgeber ? "bei " + t.gastgeber.name : ""), va = t.art === "veranstaltung";
+  const antwort = { ja: "✅ kommt", vielleicht: "❓ vielleicht", nein: "❌ kann nicht" };
+  const tn = new Map(t.teilnahme.map((x) => [x.person_id, x]));
+  const reihen = [...MITGLIEDER].sort((a, b) => { const r = (p) => ({ ja: 0, vielleicht: 1, nein: 3 })[tn.get(p.person_id)?.antwort] ?? 2; return r(a) - r(b) || a.name.localeCompare(b.name); });
+  const mf = t.mitfahrten || [];
+  return { titel: va ? t.titel : `Teilnehmerliste – ${t.titel}`, unter: `${zeitText(t)}${ort ? " · " + ort : ""}`,
+    html: `${t.beschreibung ? `<p style="white-space:pre-wrap">${esc(t.beschreibung)}</p>` : ""}
+      ${va ? "" : `<p><b>✅ ${t.ja} Zusagen · ❓ ${t.vielleicht} vielleicht · ❌ ${t.nein} Absagen · ${reihen.length - t.teilnahme.length} ohne Antwort</b></p>
+      <table><thead><tr><th style="width:8mm">#</th><th>Name</th><th style="width:32mm">Antwort</th><th>Notiz</th><th style="width:14mm">da</th></tr></thead><tbody>
+      ${reihen.map((m, i) => { const x = tn.get(m.person_id); return `<tr><td>${i + 1}</td><td>${esc(m.name)}</td><td>${x ? antwort[x.antwort] || "–" : '<span class="dklein">keine Antwort</span>'}</td><td>${esc(x?.notiz || "")}</td><td><span class="kaestchen"></span></td></tr>`; }).join("")}</tbody></table>`}
+      ${mf.length ? `<h2>🚗 Mitfahrten</h2><table><thead><tr><th>Fahrer</th><th>Treffpunkt</th><th>Mitfahrer</th><th style="width:16mm">frei</th></tr></thead><tbody>${mf.map((f) => `<tr><td>${esc(f.fahrer.name)}</td><td>${esc(f.treffpunkt || "–")}${f.notiz ? `<div class="dklein">${esc(f.notiz)}</div>` : ""}</td><td>${esc(f.mitfahrer.join(", ") || "–")}</td><td>${f.frei}</td></tr>`).join("")}</tbody></table>` : ""}` };
+}
+// ---- Sitzungsprotokoll ----
+function druckProtokoll() {
+  if (!PR?.protokoll) throw new Error("Protokoll nicht geladen.");
+  const p = PR.protokoll, liste = (a, tag) => (a.length ? `<${tag}>${a.map((x) => `<li>${esc(x)}</li>`).join("")}</${tag}>` : "<p>–</p>");
+  const status = p.roh === "entwurf" ? "Entwurf" : p.einspruch_bis && new Date(p.einspruch_bis) > new Date() ? `veröffentlicht – Einwände bis ${wann(p.einspruch_bis)}` : "veröffentlicht und genehmigt";
+  return { titel: p.titel, unter: `Sitzungsprotokoll · ${dz(p.datum)}${p.ort ? " · " + p.ort : ""}`, fuss: `Fassung ${p.version} · ${status}`,
+    html: `<table class="dinfo"><tbody><tr><th style="width:36mm">Datum</th><td>${esc(fDatumLang.format(new Date(p.datum + "T12:00:00Z")))}</td></tr>${p.ort ? `<tr><th>Ort</th><td>${esc(p.ort)}</td></tr>` : ""}
+        <tr><th>Schriftführer</th><td>${esc(p.verfasser.name)}</td></tr><tr><th>Anwesend (${p.anwesend.length})</th><td>${esc(p.anwesend.map((x) => x.name).join(", ") || "–")}</td></tr>
+        ${p.entschuldigt.length ? `<tr><th>Entschuldigt</th><td>${esc(p.entschuldigt.map((x) => x.name).join(", "))}</td></tr>` : ""}${p.gaeste ? `<tr><th>Gäste</th><td>${esc(p.gaeste)}</td></tr>` : ""}
+        <tr><th>Stand</th><td>Fassung ${p.version} · ${esc(status)}</td></tr></tbody></table>
+      <h2>Tagesordnung</h2>${liste(p.tagesordnung, "ol")}<h2>Beschlüsse</h2>${liste(p.beschluesse, "ul")}
+      ${p.kurzfassung ? `<h2>Kurzfassung</h2><p style="white-space:pre-wrap">${esc(p.kurzfassung)}</p>` : ""}
+      ${PR.aufgaben.length ? `<h2>Aufgaben</h2><table><thead><tr><th style="width:9mm">✓</th><th>Aufgabe</th><th style="width:44mm">Wer</th><th style="width:22mm">bis</th></tr></thead><tbody>${druckAufgabenZeilen(PR.aufgaben)}</tbody></table>` : ""}
+      ${PR.anlagen.length ? `<h2>Anlagen</h2><ul>${PR.anlagen.map((a) => `<li>${esc(a.name)}</li>`).join("")}</ul>` : ""}
+      ${PR.einwaende.length ? `<h2>Einwände</h2><ul>${PR.einwaende.map((e) => `<li><b>${esc(e.name)}:</b> ${esc(e.text)}${e.erledigt_am ? " (erledigt)" : ""}</li>`).join("")}</ul>` : ""}
+      <div class="unterschrift"><div>Datum, Unterschrift Schriftführer</div><div>Datum, Unterschrift Clubsprecher</div></div>` };
+}
+// gemeinsame Aufgaben (Gruppe) als eine Zeile mit allen Namen
+function druckAufgabenZeilen(liste) {
+  const gesehen = new Set(), z = [];
+  for (const a of liste) {
+    if (a.gruppe && gesehen.has(a.gruppe)) continue; if (a.gruppe) gesehen.add(a.gruppe);
+    const alle = a.gruppe ? liste.filter((x) => x.gruppe === a.gruppe) : [a];
+    z.push(`<tr><td>${alle.every((x) => x.erledigt_am) ? "☑" : '<span class="kaestchen"></span>'}</td><td>${esc(a.text)}</td><td>${alle.map((x) => esc(x.name) + (x.erledigt_am && alle.length > 1 ? " ✓" : "")).join(", ")}</td><td>${a.faellig ? esc(dz(a.faellig)) : "–"}</td></tr>`);
+  }
+  return z.join("");
+}
+// ---- Erstattungsantrag ----
+function druckErstattungOptionen() {
+  const opt = [...(ERS.pos.length ? [["entwurf", `📝 Aktueller Antrag (noch nicht gesendet) – ${ERS.pos.length} Position${ERS.pos.length === 1 ? "" : "en"}, ${eur(ERS.pos.reduce((a, x) => a + x.betrag, 0))}`]] : []),
+    ...(ERS.antraege || []).map((a) => [a.id, `📨 Antrag vom ${zeitKurz(a.zeit)} – ${eur(a.summe)} (${a.status})`])];
+  if (!opt.length) return '<p class="hinweis">Noch kein Antrag vorhanden – erst Positionen hinzufügen.</p>';
+  return `<b>Welchen Antrag?</b><div class="dwahl senkrecht">${opt.map(([v, t], i) => `<label><input type="radio" name="dAntrag" value="${v}" ${i ? "" : "checked"}> ${esc(t)}</label>`).join("")}</div>`;
+}
+function druckErstattung(o) {
+  if (!o.antrag) throw new Error("Bitte einen Antrag wählen.");
+  const a = o.antrag === "entwurf" ? { positionen: ERS.pos, auszahlung: ERS.auszahlung, bemerkung: $("ersBemerkung")?.value || "", zeit: null, status: "Entwurf – noch nicht gesendet" }
+    : (ERS.antraege || []).find((x) => x.id === o.antrag);
+  if (!a) throw new Error("Antrag nicht gefunden.");
+  const pos = a.positionen || [], summe = pos.reduce((s, x) => s + Number(x.betrag || 0), 0);
+  const art = (x) => (x.art === "fahrt" ? "🚗 Fahrtkosten" : x.art === "einkauf" ? "🛒 Einkauf vorgestreckt" : "📦 Sonstige Auslage");
+  const was = (x) => (x.art === "fahrt" ? `${String(x.km).replace(".", ",")} km × ${eur(x.satz)} – ${x.grund || ""}${x.ziel ? " (" + x.ziel + ")" : ""}` : `${x.was || ""}${x.geschaeft ? " · " + x.geschaeft : ""}`);
+  const belege = pos.reduce((n, x) => n + ((x.belege || []).length), 0);
+  return { titel: "Antrag auf Erstattung", unter: `${ICH.name} · ${a.zeit ? "eingereicht " + wann(a.zeit) : "Entwurf"}`,
+    html: `<table class="dinfo"><tbody><tr><th style="width:40mm">Antragsteller</th><td>${esc(ICH.name)}</td></tr><tr><th>Datum</th><td>${esc(a.zeit ? fKurzJahr.format(new Date(a.zeit)) : fKurzJahr.format(new Date()))}</td></tr>
+        <tr><th>Status</th><td>${esc(a.status || "")}</td></tr><tr><th>Auszahlung</th><td>${a.auszahlung === "bar" ? "bar" : "per Überweisung"}</td></tr></tbody></table>
+      <h2>Positionen</h2><table><thead><tr><th style="width:8mm">#</th><th style="width:22mm">Datum</th><th style="width:38mm">Art</th><th>Beschreibung</th><th style="width:14mm">Beleg</th><th style="width:24mm;text-align:right">Betrag</th></tr></thead><tbody>
+      ${pos.map((x, i) => `<tr><td>${i + 1}</td><td>${esc(dz(x.datum))}</td><td>${art(x)}</td><td>${esc(was(x))}</td><td>${(x.belege || []).length ? "ja (" + x.belege.length + ")" : "–"}</td><td style="text-align:right">${esc(eur(Number(x.betrag)))}</td></tr>`).join("")}
+      <tr><td colspan="5" style="text-align:right"><b>Summe</b></td><td style="text-align:right"><b>${esc(eur(summe))}</b></td></tr></tbody></table>
+      ${a.bemerkung ? `<p><b>Bemerkung:</b> ${esc(a.bemerkung)}</p>` : ""}
+      <p class="dklein">${belege ? `Belege: ${belege} (liegen der Antrags-Mail bei bzw. im Original beifügen).` : "Keine Belege angehängt."} Fahrtkosten mit dem km-Satz, der am Tag der Fahrt galt.</p>
+      <div class="unterschrift"><div>Datum, Unterschrift Antragsteller</div><div>Geprüft / ausgezahlt am – Kassenwart</div></div>` };
+}
 
 // ---------- Feedback (KC-CLUB-FEEDBACK) ----------
 // Fragebogen kommt vom Server (eine Stelle). 3 Schritte: Bewertung zum Antippen → Wünsche → Freitext & Absenden.
