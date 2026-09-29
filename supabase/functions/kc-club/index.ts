@@ -13,14 +13,14 @@
 //           KC-CLUB-COMMUNICATOR-STATUS (0.17.0), KC-CLUB-FEEDBACK (0.18.0),
 //           KC-CLUB-KACHELN (0.19.0), KC-CLUB-ZUGANG-SELBST (0.21.0),
 //           KC-CLUB-GRUPPEN, KC-CLUB-ZUSTELLWAHL (0.23.0)
-//           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0), KC-CLUB-KACHELN-ZIEHEN (0.26.0), KC-CLUB-FEEDBACK-NEU (0.27.1), KC-CLUB-BEGRUESSUNG (0.28.0), KC-CLUB-ONLINE (0.29.0), KC-CLUB-ANRUF (0.31.0), KC-CLUB-VIDEO (0.32.0), KC-CLUB-QUITTUNG (0.34.0)
+//           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0), KC-CLUB-KACHELN-ZIEHEN (0.26.0), KC-CLUB-FEEDBACK-NEU (0.27.1), KC-CLUB-BEGRUESSUNG (0.28.0), KC-CLUB-ONLINE (0.29.0), KC-CLUB-ANRUF (0.31.0), KC-CLUB-VIDEO (0.32.0), KC-CLUB-QUITTUNG (0.34.0), KC-CLUB-TODO + KC-CLUB-REGISTER-ZIEHEN (0.36.0)
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.34.0";
+const SERVER_VERSION = "0.36.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -336,6 +336,8 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
     reihenfolge: Object.fromEntries(Object.entries(w?.reihenfolge && typeof w.reihenfolge === "object" ? w.reihenfolge : {})
       .filter(([r]) => KA_ID.test(r)).slice(0, 10).map(([r, l]) => [r, kaIds(l)])),
     aus: kaIds(w?.aus),
+    // KC-CLUB-REGISTER-ZIEHEN (0.36.0): eigene Reihenfolge der Register (Verein, Mein Bereich, Programme)
+    register: kaIds(w?.register).slice(0, 10),
   }),
   // KC-CLUB-ONLINE (0.29.0): anderen zeigen, wann ich online bin (Standard: an)
   online: (w) => ({ zeigen: w?.zeigen !== false }),
@@ -347,6 +349,11 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
     modus: ["auto", "tag", "nacht"].includes(w?.modus) ? w.modus : "auto",
   }),
 };
+// ----- KC-CLUB-TODO (0.36.0): Kategorien der To-do-Liste (Registry – neue Kategorie = neuer Eintrag) -----
+const TODO_KATEGORIEN = [
+  { id: "einkaufen", sym: "🛒", name: "Einkaufen" }, { id: "bestellung", sym: "📦", name: "Bestellung" }, { id: "erledigen", sym: "🧹", name: "Erledigen" },
+  { id: "anrufen", sym: "📞", name: "Anrufen" }, { id: "vorbereiten", sym: "🍳", name: "Vorbereiten" }, { id: "sonstiges", sym: "📝", name: "Sonstiges" },
+];
 // ----- KC-CLUB-PINNWAND (0.25.0): höchstens 3 Zettel je Person, je Zettel höchstens 200 Zeichen -----
 const PINNWAND_MAX = 3, PINNWAND_ZEICHEN = 200;
 async function pinnwandSichtbar(ich: Ich) {
@@ -1726,6 +1733,44 @@ Köcheclub Werne`,
           return json({ ok: true, status });
         }
         return json({ ok: true, status: a.status });
+      }
+
+      // ----- To-do-Liste (KC-CLUB-TODO) -----
+      case "todo_liste": {
+        const { data } = await db.from("kc_club_todo").select("id,person_id,text,kategorie,fuer,faellig,erstellt_am,erledigt_am,erledigt_von").is("entfernt_am", null)
+          .or(`person_id.eq.${ich.person_id},fuer.eq.alle`).order("erstellt_am", { ascending: true }).limit(300);
+        const leute = await personen([...(data ?? []).map((x: any) => x.person_id), ...(data ?? []).map((x: any) => x.erledigt_von).filter(Boolean)]);
+        const vn = (id: string) => vorname(leute.get(id) ?? null) || id;
+        return json({ kategorien: TODO_KATEGORIEN, eintraege: (data ?? []).map((x: any) => ({ id: x.id, text: x.text, kategorie: x.kategorie, fuer: x.fuer, faellig: x.faellig,
+          vonMir: x.person_id === ich.person_id, von: vn(x.person_id), erledigt: x.erledigt_am, erledigtVon: x.erledigt_von ? vn(x.erledigt_von) : null,
+          darfLoeschen: x.person_id === ich.person_id || ich.vorstand })) });
+      }
+
+      case "todo_anlegen": {
+        const text = txt(p.text, 200);
+        if (!text) throw new Fehler("Bitte kurz aufschreiben, was zu tun ist.");
+        const kategorie = TODO_KATEGORIEN.some((k) => k.id === p.kategorie) ? String(p.kategorie) : "sonstiges";
+        const faellig = /^\d{4}-\d{2}-\d{2}$/.test(String(p.faellig || "")) ? String(p.faellig) : null;
+        const { count } = await db.from("kc_club_todo").select("id", { count: "exact", head: true }).eq("person_id", ich.person_id).is("entfernt_am", null).is("erledigt_am", null);
+        if ((count ?? 0) >= 100) throw new Fehler("Du hast schon 100 offene Einträge – bitte erst etwas abhaken oder löschen.", 409);
+        const { data: t, error } = await db.from("kc_club_todo").insert({ person_id: ich.person_id, text, kategorie, fuer: p.fuer === "alle" ? "alle" : "ich", faellig }).select("id").single();
+        if (error || !t) throw new Fehler("Eintrag konnte nicht gespeichert werden.", 500);
+        return json({ ok: true, id: t.id });
+      }
+
+      case "todo_erledigt": {
+        const { data: t } = await db.from("kc_club_todo").select("id,person_id,fuer").eq("id", String(p.id || "")).is("entfernt_am", null).maybeSingle();
+        if (!t || (t.person_id !== ich.person_id && t.fuer !== "alle")) throw new Fehler("Eintrag nicht gefunden.", 404);
+        await db.from("kc_club_todo").update(p.erledigt ? { erledigt_am: jetzt(), erledigt_von: ich.person_id } : { erledigt_am: null, erledigt_von: null }).eq("id", t.id);
+        return json({ ok: true });
+      }
+
+      case "todo_loeschen": {
+        const { data: t } = await db.from("kc_club_todo").select("id,person_id").eq("id", String(p.id || "")).is("entfernt_am", null).maybeSingle();
+        if (!t) throw new Fehler("Eintrag nicht gefunden.", 404);
+        if (t.person_id !== ich.person_id && !ich.vorstand) throw new Fehler("Löschen darf nur, wer den Eintrag angelegt hat.", 403);
+        await db.from("kc_club_todo").update({ entfernt_am: jetzt() }).eq("id", t.id);
+        return json({ ok: true });
       }
 
       // ----- Pinnwand (KC-CLUB-PINNWAND) -----

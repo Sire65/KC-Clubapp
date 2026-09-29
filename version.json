@@ -1,12 +1,18 @@
 {
-  "version": "0.35.0",
+  "version": "0.36.0",
   "datum": "2026-09-29",
   "neu": [
-    "🔑 Alter oder ungültiger Link: die App sagt es klar und zeigt, wie man einen neuen anfordert",
-    "📋 Neu: „Link einfügen“ – Link aus Mail/WhatsApp kopieren und einfügen (hilft besonders beim iPhone)",
-    "🍏 iPhone: Home-Bildschirm-App startet direkt mit dem persönlichen Link"
+    "✅ Neu unter Termine: To-do-Liste – Einträge nur für mich oder für alle, mit Kategorie (🛒 Einkaufen, 📦 Bestellung …), Fälligkeit und Häkchen",
+    "↔️ Register „Verein · Mein Bereich · Programme“ per Ziehen umsortieren: festhalten, schieben, loslassen"
   ],
   "verlauf": [
+    {
+      "version": "0.36.0",
+      "neu": [
+        "✅ Neu unter Termine: To-do-Liste – Einträge nur für mich oder für alle, mit Kategorie (🛒 Einkaufen, 📦 Bestellung …), Fälligkeit und Häkchen",
+        "↔️ Register „Verein · Mein Bereich · Programme“ per Ziehen umsortieren: festhalten, schieben, loslassen"
+      ]
+    },
     {
       "version": "0.35.0",
       "neu": [

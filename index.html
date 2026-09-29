@@ -170,6 +170,20 @@
   /* KC-CLUB-KACHELN-ZIEHEN: festgehaltene Kachel schwebt unter dem Finger, Pfeile in alle 4 Richtungen, freier Platz gestrichelt */
   .kachel.geist { animation: none !important; transform: scale(1.06) rotate(-1.5deg); box-shadow: 0 18px 40px rgba(0,0,0,.35); outline: 3px solid var(--rot) !important; opacity: .96; }
   .kachel.platzhalter { opacity: .25; animation: none; outline: 3px dashed var(--rot) !important; }
+  .register button.zieht { outline: 3px solid var(--rot); transform: scale(1.08); box-shadow: 0 8px 20px rgba(0,0,0,.25); z-index: 2; position: relative; }
+  .register button { touch-action: pan-y; }
+  /* KC-CLUB-TODO: Tabelle mit Häkchen */
+  .todotab { width: 100%; border-collapse: collapse; }
+  .todotab td { padding: 9px 4px; border-bottom: 1px solid var(--linie); vertical-align: middle; }
+  .todotab tr:last-child td { border-bottom: none; }
+  .todotab input[type=checkbox] { width: 26px; height: 26px; accent-color: var(--gruen); }
+  .todotab .aufgabe { font-weight: 700; } .todotab .meta { font-size: .78rem; color: var(--grau); margin-top: 2px; }
+  .todotab tr.fertig .aufgabe { text-decoration: line-through; opacity: .55; }
+  .todotab .kat { font-size: 1.3rem; text-align: center; width: 34px; }
+  .todotab .weg { border: none; background: none; font-size: 1.1rem; cursor: pointer; }
+  .todotab .spaet { color: #c62828; font-weight: 800; }
+  .todoform { display: grid; gap: 8px; }
+  .todoform input, .todoform select { padding: 11px 12px; border-radius: 12px; border: 1px solid var(--linie); background: var(--karte2); color: var(--text); font-size: 1rem; font-family: inherit; } .todoform .reihe { display: flex; gap: 8px; flex-wrap: wrap; } .todoform select, .todoform input[type=date] { flex: 1; min-width: 130px; }
   .kpfeil4 { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
   .kpfeil4 i { position: absolute; width: 34px; height: 34px; border-radius: 50%; background: var(--rot); color: #fff; font-style: normal; font-weight: 900; display: grid; place-items: center; font-size: .95rem; box-shadow: 0 2px 6px rgba(0,0,0,.3); }
   .kpfeil4 i:nth-child(1) { top: 4px; left: 50%; margin-left: -17px; } .kpfeil4 i:nth-child(2) { left: 4px; top: 50%; margin-top: -17px; }
@@ -472,7 +486,8 @@
   <!-- TERMINE -->
   <section id="v-termine" class="versteckt">
     <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>📅 Termine</h2><button id="neuUmfrageKnopf" class="knopf klein versteckt" onclick="umfrageForm()" title="Terminfindung: mehrere Termine zur Auswahl">🗓️ Umfrage</button><button id="neuTreffenKnopf" class="knopf haupt klein versteckt" onclick="treffenForm()">＋ Neu</button></div>
-    <div class="umschalter"><button data-m="liste" onclick="termineModus('liste')">☰ Liste</button><button data-m="kalender" onclick="termineModus('kalender')">🗓️ Kalender</button></div>
+    <div class="umschalter modus3"><button data-m="liste" onclick="termineModus('liste')">☰ Liste</button><button data-m="kalender" onclick="termineModus('kalender')">🗓️ Kalender</button><button data-m="todo" onclick="termineModus('todo')">✅ To-do</button></div>
+    <div id="todoBereich" class="versteckt"></div>
     <div id="treffenForm" class="karte versteckt"></div>
     <div id="terminumfrageForm" class="karte versteckt"></div>
     <div id="terminfindung"></div>
@@ -816,7 +831,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.35.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.36.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -1307,6 +1322,57 @@ function zustellText(z) {
   const t = [p, z.mail ? "✉️ Mail" : ""].filter(Boolean).join(" · ");
   return t ? ` <span class="zustellung" title="Rückmeldung vom Handy des Empfängers">${t}</span>` : "";
 }
+// ---------- KC-CLUB-TODO (0.36.0): To-do-Liste unter Termine – nur für mich oder für alle, abhaken mit wer/wann ----------
+let TODO = { eintraege: [], kategorien: [], filter: "alle", erledigteZeigen: false, fuer: "ich" };
+async function todoLaden() {
+  if (!$("todoBereich").innerHTML) todoGeruest();
+  try { const r = await api("todo_liste"); TODO.eintraege = r.eintraege || []; TODO.kategorien = r.kategorien || []; todoKategorienFuellen(); todoZeigen(); }
+  catch (e) { $("todoTabelle").innerHTML = `<p class="hinweis">⚠️ ${esc(e.message)}</p>`; }
+}
+function todoGeruest() {
+  $("todoBereich").innerHTML = `<div class="karte todoform">
+      <input id="todoText" maxlength="200" placeholder="Was ist zu tun? z. B. Getränke einkaufen" onkeydown="if(event.key==='Enter')todoAnlegen()">
+      <div class="reihe"><select id="todoKat"></select><input type="date" id="todoFaellig" title="fällig am (freiwillig)"></div>
+      <div class="umschalter" id="todoFuer" style="margin:0"><button data-f="ich" onclick="todoFuer('ich')">👤 Nur für mich</button><button data-f="alle" onclick="todoFuer('alle')">👥 Für alle</button></div>
+      <button class="knopf haupt" onclick="todoAnlegen()">＋ Eintragen</button></div>
+    <div class="umschalter modus3" id="todoFilter"><button data-f="alle" onclick="todoFilter('alle')">Alle</button><button data-f="ich" onclick="todoFilter('ich')">👤 Meine</button><button data-f="gemeinsam" onclick="todoFilter('gemeinsam')">👥 Für alle</button></div>
+    <div class="karte"><div id="todoTabelle"><p class="hinweis">Wird geladen …</p></div>
+      <label class="schalter" style="margin-top:8px"><span>Erledigte anzeigen</span><input type="checkbox" id="todoErledigte" onchange="TODO.erledigteZeigen=this.checked;todoZeigen()"></label></div>`;
+  todoFuer(TODO.fuer); todoFilter(TODO.filter);
+}
+function todoKategorienFuellen() {
+  const sel = $("todoKat"); if (!sel || sel.options.length) return;
+  sel.innerHTML = TODO.kategorien.map((k) => `<option value="${k.id}" ${k.id === "sonstiges" ? "selected" : ""}>${k.sym} ${esc(k.name)}</option>`).join("");
+}
+function todoFuer(f) { TODO.fuer = f; document.querySelectorAll("#todoFuer button").forEach((b) => b.classList.toggle("an", b.dataset.f === f)); }
+function todoFilter(f) { TODO.filter = f; document.querySelectorAll("#todoFilter button").forEach((b) => b.classList.toggle("an", b.dataset.f === f)); if (TODO.eintraege.length || $("todoTabelle")) todoZeigen(); }
+function todoZeigen() {
+  const heute = heuteIso(), kat = (id) => TODO.kategorien.find((k) => k.id === id) || { sym: "📝", name: "" };
+  let liste = TODO.eintraege.filter((x) => TODO.filter === "alle" || (TODO.filter === "ich" ? x.fuer === "ich" : x.fuer === "alle"));
+  const offen = liste.filter((x) => !x.erledigt).sort((a, b) => (a.faellig || "9999").localeCompare(b.faellig || "9999"));
+  const fertig = liste.filter((x) => x.erledigt).sort((a, b) => String(b.erledigt).localeCompare(String(a.erledigt)));
+  const zeilen = [...offen, ...(TODO.erledigteZeigen ? fertig : [])];
+  $("todoTabelle").innerHTML = zeilen.length ? `<table class="todotab">${zeilen.map((x) => { const k = kat(x.kategorie), spaet = !x.erledigt && x.faellig && x.faellig < heute;
+    return `<tr class="${x.erledigt ? "fertig" : ""}"><td style="width:34px"><input type="checkbox" ${x.erledigt ? "checked" : ""} onchange="todoHaken('${x.id}', this.checked)" aria-label="erledigt"></td>
+      <td><div class="aufgabe">${esc(x.text)}</div><div class="meta">${x.fuer === "alle" ? "👥 für alle" : "👤 nur für mich"}${x.vonMir ? "" : " · von " + esc(x.von)}${x.faellig ? ` · <span class="${spaet ? "spaet" : ""}">fällig ${esc(fDatumKurz(x.faellig))}${spaet ? " – überfällig" : ""}</span>` : ""}${x.erledigt ? ` · ✓ ${esc(x.erledigtVon || "")} ${esc(zeitKurz(x.erledigt))}` : ""}</div></td>
+      <td class="kat" title="${esc(k.name)}">${k.sym}</td><td style="width:34px">${x.darfLoeschen ? `<button class="weg" title="löschen" onclick="todoLoeschen('${x.id}')">🗑️</button>` : ""}</td></tr>`; }).join("")}</table>`
+    : `<p class="hinweis" style="margin:0">${offen.length || !fertig.length ? "Nichts zu tun 🎉 – oben einen Eintrag hinzufügen." : `Alles erledigt 🎉 (${fertig.length} erledigte ausgeblendet)`}</p>`;
+  if (!TODO.erledigteZeigen && fertig.length && offen.length) $("todoTabelle").insertAdjacentHTML("beforeend", `<p class="hinweis" style="margin:8px 0 0">✓ ${fertig.length} erledigt (ausgeblendet)</p>`);
+}
+async function todoAnlegen() {
+  const text = $("todoText").value.trim(); if (!text) return melde("Bitte kurz aufschreiben, was zu tun ist.", true);
+  try { await api("todo_anlegen", { text, kategorie: $("todoKat").value, fuer: TODO.fuer, faellig: $("todoFaellig").value || null }); $("todoText").value = ""; $("todoFaellig").value = ""; melde("✅ Eingetragen"); await todoLaden(); $("todoText").focus(); }
+  catch (e) { melde(e.message, true); }
+}
+async function todoHaken(id, erledigt) {
+  const x = TODO.eintraege.find((y) => y.id === id); if (x) { x.erledigt = erledigt ? new Date().toISOString() : null; x.erledigtVon = erledigt ? ICH.vorname : null; todoZeigen(); }
+  try { await api("todo_erledigt", { id, erledigt }); } catch (e) { melde(e.message, true); todoLaden(); }
+}
+async function todoLoeschen(id) {
+  if (!confirm("Eintrag löschen?")) return;
+  try { await api("todo_loeschen", { id }); await todoLaden(); } catch (e) { melde(e.message, true); }
+}
+
 // ---------- KC-CLUB-SCHLIESSEN: Ausgangstür ----------
 // Installierte App: window.close() beendet sie. Klappt das nicht (z. B. im Browser-Tab), kurze Anleitung statt stiller Nichtreaktion.
 function appSchliessen() {
@@ -1355,10 +1421,10 @@ async function zugangAnfordern() {
 }
 // KC-CLUB-WARTEN (0.33.0): dauert eine Anfrage länger als 0,35 s, erscheint die drehende Kochmütze mit passendem Text.
 // Hintergrund-Abfragen (alle paar Sekunden/Minuten) zeigen sie nicht, damit nichts flackert.
-const WARTEN_STILL = new Set(["init", "online", "anruf_status", "diagnose", "unterhaltung", "unterhaltungen", "einstellung_setzen", "pinnwand", "kalender", "terminumfragen_liste", "communicator_status", "ping", "anruf_ende", "protokoll_speichern"]);
+const WARTEN_STILL = new Set(["init", "online", "anruf_status", "diagnose", "unterhaltung", "unterhaltungen", "einstellung_setzen", "pinnwand", "kalender", "terminumfragen_liste", "communicator_status", "ping", "anruf_ende", "protokoll_speichern", "todo_erledigt", "todo_liste"]);
 const WARTEN_TEXT = { nachricht_senden: "Nachricht wird gesendet …", gruppe_anlegen: "Gruppe wird angelegt …", gruppe_aendern: "Wird gespeichert …", treffen_speichern: "Termin wird gespeichert …",
   pinnwand_anheften: "Zettel wird angeheftet …", feedback_senden: "Feedback wird gesendet …", anklopfen: "Es wird angeklopft …", anruf_start: "Anruf wird aufgebaut …",
-  link_erzeugen: "Link wird erzeugt …", zugang_anfordern: "Mail wird gesendet …", foto_hochladen: "Foto wird hochgeladen …", test_an_mich: "Test wird gesendet …" };
+  link_erzeugen: "Link wird erzeugt …", todo_anlegen: "Wird eingetragen …", zugang_anfordern: "Mail wird gesendet …", foto_hochladen: "Foto wird hochgeladen …", test_an_mich: "Test wird gesendet …" };
 let wartenZahl = 0, wartenTimer = null;
 function wartenStart(action) {
   if (WARTEN_STILL.has(action)) return false;
@@ -1600,8 +1666,8 @@ const KACHELN = {
 const kachelnAlle = (r) => KACHELN[r].filter((k) => !k.nur || k.nur());
 // KC-CLUB-KACHELN: eigene Reihenfolge + ausgeblendete Kacheln je Mitglied (Server-Einstellung „kacheln“, hier zwischengespeichert).
 // Neue Kacheln (noch nicht in der gespeicherten Reihenfolge) erscheinen hinten; ausgeblendete bleiben über „Anordnen“ erreichbar.
-let KA = { reihenfolge: {}, aus: [] }, kaBearb = false, kaFrisch = null;
-try { const x = JSON.parse(localStorage.getItem("kc_club_kacheln") || "null"); if (x) KA = { reihenfolge: x.reihenfolge || {}, aus: x.aus || [] }; } catch {}
+let KA = { reihenfolge: {}, aus: [], register: [] }, kaBearb = false, kaFrisch = null;
+try { const x = JSON.parse(localStorage.getItem("kc_club_kacheln") || "null"); if (x) KA = { reihenfolge: x.reihenfolge || {}, aus: x.aus || [], register: Array.isArray(x.register) ? x.register : [] }; } catch {}
 function kaSortiert(r) {
   const ord = KA.reihenfolge[r] || [], pos = (k) => { const i = ord.indexOf(k.id); return i < 0 ? 1000 + KACHELN[r].indexOf(k) : i; };
   return kachelnAlle(r).sort((a, b) => pos(a) - pos(b));
@@ -1609,7 +1675,7 @@ function kaSortiert(r) {
 const kacheln = (r) => kaSortiert(r).filter((k) => !KA.aus.includes(k.id));
 function kaUebernehmen(wert) { // vom Server (init)
   if (!wert || typeof wert !== "object") return;
-  KA = { reihenfolge: wert.reihenfolge || {}, aus: Array.isArray(wert.aus) ? wert.aus : [] };
+  KA = { reihenfolge: wert.reihenfolge || {}, aus: Array.isArray(wert.aus) ? wert.aus : [], register: Array.isArray(wert.register) ? wert.register : [] };
   try { localStorage.setItem("kc_club_kacheln", JSON.stringify(KA)); } catch {}
 }
 let kaSpeicherTimer = null;
@@ -1639,7 +1705,7 @@ function kaSichtbar(id, sichtbar) {
 }
 function kaStandard() {
   if (!confirm("Alle Kacheln wieder in der ursprünglichen Reihenfolge und alle einblenden?")) return;
-  KA = { reihenfolge: {}, aus: [] }; kaSpeichern(); registerZeigen(); kachelnZeigen();
+  KA = { reihenfolge: {}, aus: [], register: [] }; kaSpeichern(); registerZeigen(); kachelnZeigen();
 }
 // Lange drücken (0,6 s) auf eine Kachel → Bearbeiten; der Fingertipp danach öffnet die Kachel nicht
 (function kaLangDruecken() {
@@ -1711,10 +1777,40 @@ setInterval(() => { if (!ZIEHEN) return; const h = innerHeight, y = ZIEHEN.y; co
   // während des Ziehens darf die Seite nicht mitscrollen
   document.addEventListener("touchmove", (e) => { if (ZIEHEN && e.cancelable) e.preventDefault(); }, { passive: false });
 })();
+// Register festhalten (0,45 s) → mit dem Finger nach links/rechts schieben → loslassen = neue Reihenfolge (gespeichert wie die Kacheln)
+let REGZ = null, regZogGerade = false;
+(function registerZiehen() {
+  let t = null, x0 = 0, y0 = 0;
+  document.addEventListener("pointerdown", (e) => {
+    const b = e.target.closest?.("#register button"); if (!b || REGZ) return;
+    x0 = e.clientX; y0 = e.clientY;
+    t = setTimeout(() => { t = null; REGZ = { el: b }; regZogGerade = true; b.classList.add("zieht"); try { navigator.vibrate?.(25); } catch {} melde("↔️ Register verschieben: nach links oder rechts ziehen, dann loslassen"); }, 450);
+  });
+  document.addEventListener("pointermove", (e) => {
+    if (t && Math.hypot(e.clientX - x0, e.clientY - y0) > 10) { clearTimeout(t); t = null; }
+    if (!REGZ) return;
+    const ziel = [...$("register").children].find((k) => { if (k === REGZ.el) return false; const r = k.getBoundingClientRect(); return e.clientX >= r.left && e.clientX <= r.right; });
+    if (ziel) { const kids = [...$("register").children]; $("register").insertBefore(REGZ.el, kids.indexOf(REGZ.el) > kids.indexOf(ziel) ? ziel : ziel.nextSibling); }
+  });
+  const ende = () => {
+    clearTimeout(t); t = null; if (!REGZ) return;
+    REGZ.el.classList.remove("zieht"); REGZ = null;
+    const neu = [...$("register").children].map((k) => k.dataset.r);
+    if (neu.join() !== REGISTER.map((r) => r[0]).join()) { KA.register = neu; kaSpeichern(); melde("✅ Reihenfolge der Register gespeichert"); }
+    registerZeigen(); setTimeout(() => { regZogGerade = false; }, 200);
+  };
+  document.addEventListener("pointerup", ende); document.addEventListener("pointercancel", ende);
+  document.addEventListener("click", (e) => { if (regZogGerade && e.target.closest?.("#register")) { e.stopPropagation(); e.preventDefault(); } }, true);
+  document.addEventListener("touchmove", (e) => { if (REGZ && e.cancelable) e.preventDefault(); }, { passive: false });
+})();
 // Register mit kleiner Anzahl der Kacheln; per Wischen links/rechts wechselbar
-const REGISTER = [["verein", "Verein"], ["mein", "Mein Bereich"], ["programme", "Programme"]];
+const REGISTER_ALLE = [["verein", "Verein"], ["mein", "Mein Bereich"], ["programme", "Programme"]];
+// KC-CLUB-REGISTER-ZIEHEN (0.36.0): eigene Reihenfolge der Register (festhalten und nach links/rechts ziehen)
+const registerReihe = () => { const o = KA.register || []; const pos = (r) => { const i = o.indexOf(r[0]); return i < 0 ? 100 + REGISTER_ALLE.indexOf(r) : i; }; return [...REGISTER_ALLE].sort((a, b) => pos(a) - pos(b)); };
+let REGISTER = registerReihe();
 function registerZeigen() {
   // Anzahl: „8/10“ = 8 sichtbar von 10 (2 ausgeblendet); ohne Ausgeblendete nur die Zahl
+  REGISTER = registerReihe();
   $("register").innerHTML = REGISTER.map(([r, t]) => { const da = kacheln(r).length, alle = kaSortiert(r).length;
     return `<button data-r="${r}" class="${r === reg ? "an" : ""}" onclick="register('${r}')" title="${da < alle ? `${alle - da} ausgeblendet` : ""}">${t}<span class="anz">${da < alle ? `${da}/${alle}` : da}</span></button>`; }).join("");
 }
@@ -1736,7 +1832,7 @@ function registerWischen(schritt) {
   }, { passive: true });
   document.addEventListener("touchend", (e) => {
     if (!ziel) return;
-    if (ZIEHEN || zogGerade) { ziel = null; return; } // Kachel wurde gezogen, nicht gewischt
+    if (ZIEHEN || zogGerade || REGZ || regZogGerade) { ziel = null; return; } // Kachel/Register wurde gezogen, nicht gewischt
     const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0, f = ziel; ziel = null;
     if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) f(dx < 0 ? 1 : -1);
   }, { passive: true });
@@ -2068,9 +2164,12 @@ async function geburtstagFreigabe(an) {
 
 // ---------- Treffen ----------
 async function treffenLaden() {
-  document.querySelectorAll("#v-termine .umschalter button").forEach((b) => b.classList.toggle("an", b.dataset.m === termineArt));
+  document.querySelectorAll("#v-termine > .umschalter button").forEach((b) => b.classList.toggle("an", b.dataset.m === termineArt));
   $("kalender").classList.toggle("versteckt", termineArt !== "kalender");
-  $("treffenListe").classList.toggle("versteckt", termineArt === "kalender");
+  $("treffenListe").classList.toggle("versteckt", termineArt !== "liste");
+  $("todoBereich").classList.toggle("versteckt", termineArt !== "todo");
+  $("terminfindung").classList.toggle("versteckt", termineArt === "todo");
+  if (termineArt === "todo") return todoLaden();
   terminfindungLaden();
   if (termineArt === "kalender") return kalLaden();
   try {

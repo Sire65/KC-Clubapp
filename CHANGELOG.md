@@ -1,5 +1,14 @@
 # Änderungen
 
+## 0.36.0 – 2026-09-29 (DEV)
+
+- KC-CLUB-TODO (neu): Termine → dritter Reiter „✅ To-do“. Eintrag mit Text (max. 200), Kategorie (🛒 Einkaufen, 📦 Bestellung,
+  🧹 Erledigen, 📞 Anrufen, 🍳 Vorbereiten, 📝 Sonstiges – Registry im Server), optional fällig am, „👤 nur für mich“ oder
+  „👥 für alle“. Tabelle mit Häkchen (✓ wer/wann), überfällige rot, Filter Alle/Meine/Für alle, Erledigte ein-/ausblenden.
+  Gemeinsame Einträge darf jeder abhaken; löschen nur Ersteller oder Clubsprecher/Kassenwart/Admin. Tabelle kc_club_todo (RLS).
+- KC-CLUB-REGISTER-ZIEHEN (neu): Register „Verein · Mein Bereich · Programme“ 0,45 s festhalten, nach links/rechts ziehen,
+  loslassen – Reihenfolge wird wie die Kachel-Anordnung je Mitglied gespeichert („↺ Standard“ setzt sie zurück).
+
 ## 0.35.0 – 2026-09-29 (DEV)
 
 - KC-CLUB-LINK-HILFE (neu): Wird die App mit einem alten/ungültigen Link geöffnet, zeigt die Sperrseite rot „⚠️ Dieser Link

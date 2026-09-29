@@ -590,7 +590,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 {
   assert.ok(/function kaZiehenStart\(/.test(html) && /function kaZiehenEnde\(/.test(html) && /kaBearbeiten\(true, id\);[\s\S]{0,400}kaZiehenStart\(id, x0, y0\); \}, 600\)/.test(html), "Ziehen nach langem Drücken fehlt");
   assert.ok(/class="kpfeil4"><i>▲<\/i><i>◀<\/i><i>▶<\/i><i>▼<\/i>/.test(html), "Pfeile in 4 Richtungen fehlen");
-  assert.ok(/if \(ZIEHEN && e\.cancelable\) e\.preventDefault\(\); \}, \{ passive: false \}/.test(html) && /if \(ZIEHEN \|\| zogGerade\) \{ ziel = null; return; \}/.test(html), "Ziehen scrollt/wischt mit");
+  assert.ok(/if \(ZIEHEN && e\.cancelable\) e\.preventDefault\(\); \}, \{ passive: false \}/.test(html) && /if \(ZIEHEN \|\| zogGerade( \|\| REGZ \|\| regZogGerade)?\) \{ ziel = null; return; \}/.test(html), "Ziehen scrollt/wischt mit");
   assert.ok(/onclick="kaSchieben\(/.test(html), "Pfeil-Knöpfe als Alternative entfernt");
   const w = server.slice(server.indexOf('{ id: "wuensche"'), server.indexOf("const FEEDBACK_UMGESETZT"));
   for (const x of ["Farben selbst", "Gruppen-Chats", "selbst anordnen", "Monatskalender"]) assert.ok(!w.includes(x), `Wunsch „${x}“ ist schon umgesetzt`);
@@ -723,6 +723,18 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/\[\?&\]k=\(\[0-9a-f\]\{32,96\}\)/.test(code) && /localStorage\.setItem\("kc_club_key"/.test(code), "Link einfügen erkennt den Schlüssel nicht");
   assert.ok(/function iosStartMitSchluessel\(\)/.test(html) && /if \(!IST_IOS \|\| !KEY \|\| START_ART === "app"\) return;/.test(html) && /iosStartMitSchluessel\(\);/.test(html), "iPhone-Start mit Schlüssel fehlt");
   assert.ok(/Die Seite zeigt dann „Link verloren\?“ – dort deine E-Mail-Adresse eingeben/.test(html), "Einladung erklärt das Neu-Anfordern nicht");
+}
+
+// 59. 0.36.0: To-do-Liste (nur ich/für alle, abhaken, löschen nur Ersteller/Clubleitung) + Register per Ziehen umsortieren
+{
+  for (const a of ["todo_liste", "todo_anlegen", "todo_erledigt", "todo_loeschen"]) assert.ok(aktionen.has(a) && aufrufe.has(a), `To-do-Aktion ${a} fehlt`);
+  assert.ok(/\.or\(`person_id\.eq\.\$\{ich\.person_id\},fuer\.eq\.alle`\)/.test(server), "To-do: fremde private Einträge sichtbar");
+  const er = server.slice(server.indexOf('case "todo_erledigt"'), server.indexOf('case "todo_loeschen"'));
+  assert.ok(/t\.person_id !== ich\.person_id && t\.fuer !== "alle"\)\) throw/.test(er), "Fremde private Einträge abhakbar");
+  const lo = server.slice(server.indexOf('case "todo_loeschen"'), server.indexOf('case "todo_loeschen"') + 500);
+  assert.ok(/t\.person_id !== ich\.person_id && !ich\.vorstand\) throw/.test(lo), "Fremde dürfen löschen");
+  assert.ok(/register: kaIds\(w\?\.register\)/.test(server) && /const registerReihe = /.test(html) && /function registerZiehen\(\)/.test(html), "Register-Reihenfolge fehlt");
+  assert.ok(/data-m="todo" onclick="termineModus\('todo'\)"/.test(html) && /class="todotab"/.test(html), "To-do-Reiter fehlt");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
