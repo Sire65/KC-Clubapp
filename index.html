@@ -514,6 +514,7 @@
 <div class="blatt versteckt" id="karteBlatt" onclick="if(event.target===this)this.classList.add('versteckt')">
   <div class="blatt-innen"><h3>🗺️ <span id="karteTitel"></span></h3>
     <iframe id="karteRahmen" title="Karte" style="width:100%;height:55vh;border:0;border-radius:14px" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+    <button class="knopf haupt" id="karteTeilen" onclick="navigator.share({ text: $('karteTitel').textContent }).catch(() => {})">📤 An Google Maps senden (Teilen)</button>
     <button class="knopf" onclick="navigator.clipboard?.writeText($('karteTitel').textContent).then(() => melde('📋 Adresse kopiert – in Google Maps einfügen'), () => melde($('karteTitel').textContent))">📋 Adresse kopieren</button>
     <button class="knopf" onclick="$('karteBlatt').classList.add('versteckt');$('karteRahmen').src='about:blank'">Schließen</button></div>
 </div>
@@ -557,7 +558,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.17.5"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.17.6"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2269,6 +2270,7 @@ const adresseText = (a) => [a.strasse, [a.plz, a.ort].filter(Boolean).join(" ")]
 const EXTERN_WEGE = {
   whatsapp: (nr) => [
     { k: "intent", t: "💬 WhatsApp öffnen", url: waLink(nr), nur: IST_ANDROID },
+    { k: "teilen", t: "📤 Über „Teilen“ an WhatsApp (dort Chat wählen)", teilen: () => ({ text: `Hallo ${MD?.vorname || ""}! (Nummer: ${nr})`.trim() }), nur: !!navigator.share },
     // gleiches Fenster: Seite bleibt stehen, dort „Chat starten“ antippen (auf manchen Handys blockiert Android den direkten Sprung)
     { k: "hier", t: "💬 WhatsApp-Seite hier öffnen", url: `https://api.whatsapp.com/send?phone=${waNummer(nr)}` },
     { k: "schema", t: "💬 WhatsApp-App direkt", url: `whatsapp://send?phone=${waNummer(nr)}` },
@@ -2278,6 +2280,7 @@ const EXTERN_WEGE = {
   route: (adr) => [
     // bleibt sicher in der App: Karte mit der Adresse (Google-Maps-Einbettung, kostenlos, ohne Schlüssel)
     { k: "karte", t: "🗺️ Karte hier in der App zeigen", intern: () => karteZeigen(adr) },
+    { k: "teilen", t: "📤 Adresse über „Teilen“ an Google Maps", teilen: () => ({ text: adr }), nur: !!navigator.share },
     { k: "intent", t: "🗺️ Google Maps öffnen", url: routeLink(adr), nur: IST_ANDROID },
     { k: "apple", t: "🗺️ Apple Karten öffnen", url: routeLink(adr), nur: IST_IOS },
     { k: "hier", t: "🗺️ Route hier anzeigen (Google Maps Webseite)", url: `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(adr)}` },
@@ -2293,6 +2296,7 @@ let externTimer = null;
 function karteZeigen(adr) {
   $("karteTitel").textContent = adr;
   $("karteRahmen").src = `https://maps.google.com/maps?q=${encodeURIComponent(adr)}&z=15&output=embed`;
+  $("karteTeilen").classList.toggle("versteckt", !navigator.share);
   $("karteBlatt").classList.remove("versteckt");
 }
 function externZu() { clearTimeout(externTimer); $("externBlatt").classList.add("versteckt"); } // von Hand geschlossen → nicht wieder aufgehen
@@ -2302,6 +2306,13 @@ function externVersuch(art, weg, wege, wert) {
   const t0 = performance.now(), m = { art, weg: weg.k, versteckt_ms: null, zurueck_ms: null, blur_ms: null, pagehide: false, fehler: "",
     modus: matchMedia("(display-mode: standalone)").matches ? "standalone" : matchMedia("(display-mode: minimal-ui)").matches ? "minimal-ui" : "browser" };
   if (weg.intern) { externMerken(art, weg.k); $("externBlatt").classList.add("versteckt"); weg.intern(); return; }
+  if (weg.teilen) {
+    // Android-Teilen-Menü: das Handy fragt, welche App – wie beim Anrufen; gilt als gelungen, wenn eine App gewählt wurde
+    $("externBlatt").classList.add("versteckt");
+    navigator.share(weg.teilen()).then(() => { m.erfolg = true; externMerken(art, weg.k); }, (e) => { m.fehler = String(e?.name || e).slice(0, 60); if (e?.name !== "AbortError") externBlatt(art, wege, wert, weg.k); })
+      .finally(() => api("diagnose", { art: "extern", daten: { ...m, erfolg: !!m.erfolg } }).catch(() => {}));
+    return;
+  }
   let weg0 = false;
   const merke = () => {
     if (document.hidden) { if (m.versteckt_ms == null) m.versteckt_ms = Math.round(performance.now() - t0); weg0 = true; $("externBlatt").classList.add("versteckt"); }

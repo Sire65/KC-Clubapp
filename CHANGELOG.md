@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.17.6 – 2026-09-29 (DEV)
+
+- KC-CLUB-KONTAKT: Auf Hansis Handy funktioniert nur, was über eine Android-Auswahl läuft (Anrufen → Telefon/FritzFon).
+  Neuer Weg über das Teilen-Menü: „📤 Über ‚Teilen‘ an WhatsApp“ (dort Chat wählen) und „📤 Adresse über ‚Teilen‘ an Google Maps“,
+  auch als Knopf im Kartenfenster. Wird gemessen und bei Erfolg gemerkt.
+
 ## 0.17.5 – 2026-09-29 (DEV)
 
 - KC-CLUB-KONTAKT: Messung ergab – auf manchen Android-Handys startet WhatsApp/der Browser kurz und schließt sofort wieder.

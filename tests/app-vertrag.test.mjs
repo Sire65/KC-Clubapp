@@ -432,4 +432,10 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/k: "clubapp", t: "💬 Stattdessen Nachricht in der Club-App", intern:/.test(html), "Club-Nachricht als Weg fehlt");
 }
 
+// 33. 0.17.6: Teilen-Menü als Weg (Android-Auswahl wie beim Anrufen)
+{
+  assert.ok(/k: "teilen", t: "📤 Über „Teilen“ an WhatsApp/.test(html) && /k: "teilen", t: "📤 Adresse über „Teilen“ an Google Maps"/.test(html), "Teilen-Wege fehlen");
+  assert.ok(/navigator\.share\(weg\.teilen\(\)\)/.test(html) && /id="karteTeilen"/.test(html), "Teilen wird nicht ausgelöst");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
