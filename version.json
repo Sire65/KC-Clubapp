@@ -1,12 +1,20 @@
 {
-  "version": "0.30.0",
+  "version": "0.31.0",
   "datum": "2026-09-29",
   "neu": [
-    "🆕 Nach jedem Update zeigt ein kleines Fenster, was neu ist",
-    "🟢 Startseite zeigt, wie viele gerade online sind",
-    "🟢 „3 online“ antippen → Liste mit 👋 Anklopfen und 💬 Schreiben"
+    "📞 Neu (Test): Anrufen direkt über die App – kostenlos, von Handy zu Handy",
+    "📞 Bei jemandem, der online ist: „Anrufen“ – der andere sieht „… ruft an“ mit Annehmen/Ablehnen",
+    "🎙️ Während des Gesprächs: Stummschalten und Auflegen"
   ],
   "verlauf": [
+    {
+      "version": "0.31.0",
+      "neu": [
+        "📞 Neu (Test): Anrufen direkt über die App – kostenlos, von Handy zu Handy",
+        "📞 Bei jemandem, der online ist: „Anrufen“ – der andere sieht „… ruft an“ mit Annehmen/Ablehnen",
+        "🎙️ Während des Gesprächs: Stummschalten und Auflegen"
+      ]
+    },
     {
       "version": "0.30.0",
       "neu": [

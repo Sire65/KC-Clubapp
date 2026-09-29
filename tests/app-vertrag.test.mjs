@@ -659,7 +659,20 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/if \(NEUE_VERSION\) updateFenster\(\);/.test(html) && /onclick="updateFenster\(\)">Was ist neu\?/.test(html), "Update zeigt kein Neuigkeiten-Fenster");
   assert.ok(/nachUpdatePruefen\(begruesst\)/.test(html) && /kc_club_version_gesehen/.test(html), "Neuigkeiten nach automatischem Update fehlen");
   assert.ok(/🟢 \$\{ONL\.liste\.length\} online/.test(html), "Startseite zeigt nicht, wie viele online sind");
-  assert.ok(/onclick="event\.stopPropagation\(\); onlineBlatt\(\)"/.test(html) && /function onlineBlatt\(\)[\s\S]{0,900}anklopfen\('\$\{x\.person_id\}'\)[\s\S]{0,200}direkt\('\$\{x\.person_id\}'\)/.test(html), "„online“ antippen zeigt keine Liste mit Direktkontakt");
+  assert.ok(/onclick="event\.stopPropagation\(\); onlineBlatt\(\)"/.test(html) && /function onlineBlatt\(\)[\s\S]{0,900}anklopfen\('\$\{x\.person_id\}'\)[\s\S]{0,500}direkt\('\$\{x\.person_id\}'\)/.test(html), "„online“ antippen zeigt keine Liste mit Direktkontakt");
+}
+
+// 52. 0.31.0: Anruf per Ton (Test) – nur Anrufer/Angerufener sehen den Anruf, SDP nur an die Gegenseite, Klingeln begrenzt
+{
+  for (const a of ["anruf_start", "anruf_status", "anruf_annehmen", "anruf_ende"]) assert.ok(aktionen.has(a) && aufrufe.has(a), `Anruf-Aktion ${a} fehlt`);
+  const ah = server.slice(server.indexOf("async function anrufHolen"), server.indexOf("async function anrufHolen") + 700);
+  assert.ok(/a\.von !== ich\.person_id && a\.an !== ich\.person_id\)\) throw/.test(ah) && /ANRUF_KLINGEL_SEK \* 1000/.test(ah), "Anruf für Fremde sichtbar oder klingelt endlos");
+  assert.ok(/\.\.\.\(ichRufe \? \{ antwort: a\.antwort \} : \{ angebot: a\.angebot \}\)/.test(server), "Verbindungsdaten gehen an die falsche Seite");
+  const an = server.slice(server.indexOf('case "anruf_annehmen"'), server.indexOf('case "anruf_ende"'));
+  assert.ok(/if \(a\.an !== ich\.person_id\) throw/.test(an), "Anrufer könnte selbst annehmen");
+  assert.ok(/SDP_MAX = 20000/.test(server) && /startsWith\("v=0"\)/.test(server), "Verbindungsdaten ungeprüft");
+  assert.ok(/id="anrufSchirm"/.test(html) && /function anrufFehlgeschlagen\(\)/.test(html) && /getUserMedia\(\{ audio:/.test(html) && /stun:stun\.l\.google\.com:19302/.test(html), "Anruf-Oberfläche fehlt");
+  assert.ok(!/turn:/.test(html), "kostenpflichtiger TURN-Server eingebaut (Zero-Cost)");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

@@ -326,6 +326,16 @@
   .neuigkeiten ul { margin: 4px 0 10px; padding-left: 20px; } .neuigkeiten li { margin: 4px 0; }
   .neuigkeiten .vkopf { font-weight: 900; color: var(--rot); margin-top: 6px; }
   .mini .onmini { display: inline-block; margin-top: 6px; padding: 4px 9px; border-radius: 999px; background: #2ecc71; color: #06301a; font-size: .8rem; font-weight: 900; text-transform: none; letter-spacing: 0; box-shadow: 0 0 8px rgba(46,204,113,.7); }
+  /* KC-CLUB-ANRUF: Vollbild während eines Anrufs */
+  .anruf { position: fixed; inset: 0; z-index: 70; background: linear-gradient(160deg, var(--hero1), var(--rot) 55%, var(--hero4)); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 24px; text-align: center; }
+  .anruf .gross { width: 120px; height: 120px; border-radius: 50%; background: rgba(255,255,255,.18); display: grid; place-items: center; font-size: 2.6rem; font-weight: 900; }
+  .anruf .gross.klingelt { animation: puls 1.2s ease-in-out infinite; }
+  @keyframes puls { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,255,255,.45); } 50% { box-shadow: 0 0 0 22px rgba(255,255,255,0); } }
+  .anruf h2 { margin: 0; font-size: 1.6rem; } .anruf .zustand { font-size: 1.05rem; opacity: .92; min-height: 1.4em; }
+  .anruf .reihe { display: flex; gap: 22px; margin-top: 26px; }
+  .anruf .rund2 { width: 72px; height: 72px; border-radius: 50%; border: none; font-size: 1.8rem; cursor: pointer; color: #fff; box-shadow: 0 6px 18px rgba(0,0,0,.3); }
+  .anruf .rund2.gruen { background: #27ae60; } .anruf .rund2.rotk { background: #d32f2f; } .anruf .rund2.grau { background: rgba(255,255,255,.22); } .anruf .rund2.aus { background: #fff; color: #333; }
+  .anruf small { opacity: .8; }
   .onzeile { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--linie); }
   .onzeile:last-child { border-bottom: none; } .onzeile .knopf { padding: 10px 12px; font-size: .95rem; text-align: center; }
   .begruessung .bgtipp { display: flex; gap: 10px; align-items: flex-start; background: var(--karte2); border-radius: 14px; padding: 10px 12px; margin: 6px 0; }
@@ -701,6 +711,15 @@
   <div class="blatt-innen"><h3 id="exTitel"></h3><p class="hinweis" id="exText" style="margin:0"></p><div id="exKnoepfe" style="display:grid;gap:8px"></div>
     <button class="knopf" onclick="externZu()">Schließen</button></div>
 </div>
+<!-- KC-CLUB-ANRUF (Test): Anruf-Bildschirm -->
+<div class="anruf versteckt" id="anrufSchirm">
+  <div class="gross" id="anrufBild">?</div>
+  <h2 id="anrufName"></h2>
+  <div class="zustand" id="anrufZustand"></div>
+  <div class="reihe" id="anrufKnoepfe"></div>
+  <small>📞 Anruf über die Köcheclub-App (Test) · kostenlos, direkt von Handy zu Handy</small>
+  <audio id="anrufTon" autoplay playsinline></audio>
+</div>
 <!-- KC-CLUB-NEUIGKEITEN: was ist neu in der Version -->
 <div class="blatt versteckt" id="neuBlatt" onclick="if(event.target===this)this.classList.add('versteckt')">
   <div class="blatt-innen neuigkeiten"><div id="neuText"></div>
@@ -761,7 +780,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.30.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.31.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -1016,6 +1035,8 @@ async function onlinePing() {
     if ($("setOnline")) $("setOnline").checked = r.zeigen;
     onlineLeisteZeigen(); if (INIT) heroZeigen();
     // jemand klopft bei mir an → Fenster (jedes Anklopfen nur einmal)
+    const ruf = (r.anrufe || []).find((x) => !ONL.erledigt.has("r" + x.id));
+    if (ruf && !RUF) { ONL.erledigt.add("r" + ruf.id); anrufEingehend(ruf.id); }
     const k = (r.klopfen || []).find((x) => !ONL.erledigt.has(x.id));
     if (k && $("klopfBlatt").classList.contains("versteckt")) klopfZeigen(k);
     // Antwort auf mein Anklopfen
@@ -1044,6 +1065,7 @@ function onlineBlatt() {
   $("onlineListe").innerHTML = ONL.liste.length ? ONL.liste.map((x) => `<div class="onzeile"><div class="avatar" style="width:40px;height:40px">${esc(initialen(x.name || x.vorname))}<i class="onpunkt"></i></div>
       <div style="flex:1"><b>${esc(x.name || x.vorname)}</b><div class="hinweis" style="font-size:.85rem;margin:0">gerade online</div></div>
       <button class="knopf haupt" onclick="$('onlineBlatt').classList.add('versteckt'); anklopfen('${x.person_id}')">👋 Anklopfen</button>
+      <button class="knopf" title="Anrufen (Test)" onclick="$('onlineBlatt').classList.add('versteckt'); anrufen('${x.person_id}')">📞</button>
       <button class="knopf" title="Nachricht schreiben" onclick="$('onlineBlatt').classList.add('versteckt'); direkt('${x.person_id}')">💬</button></div>`).join("")
     : '<p class="hinweis">Gerade ist niemand sonst online.</p>';
   $("onlineBlatt").classList.remove("versteckt");
@@ -1085,6 +1107,136 @@ function chatTakt() {
   ONL.takt++;
   const jemandDa = (CHAT?.teilnehmer || []).some((t) => t.person_id !== ICH?.person_id && ONL.ids.has(t.person_id));
   if (jemandDa || ONL.takt % 3 === 0) chatLaden(false);
+}
+
+// ---------- KC-CLUB-ANRUF (0.31.0, Test): Sprechen per Ton, direkt App zu App (WebRTC) ----------
+// Aufbau: Anrufer schickt sein „Angebot“ (SDP) über unseren Server, der Angerufene seine „Antwort“; danach läuft die Sprache
+// direkt zwischen den Handys. Kostenlose öffentliche STUN-Server helfen, den Weg durchs Heimnetz zu finden. Klappt das nicht
+// (manche Mobilfunknetze), sagt die App es ehrlich und bietet Nachricht/Anruf übers Telefon an.
+const ICE = [{ urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] }];
+let RUF = null; // { id, pc, strom, rolle, poll, uhr, start, gegen, verbunden, klang }
+function iceFertig(pc, ms = 3500) {
+  return new Promise((ok) => { if (pc.iceGatheringState === "complete") return ok(); const t = setTimeout(ok, ms);
+    pc.addEventListener("icegatheringstatechange", () => { if (pc.iceGatheringState === "complete") { clearTimeout(t); ok(); } }); });
+}
+async function anrufVerbindung() {
+  if (!navigator.mediaDevices?.getUserMedia || !window.RTCPeerConnection) throw new Error("Dieses Handy/dieser Browser kann keine App-Anrufe.");
+  let strom;
+  try { strom = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true }, video: false }); }
+  catch { throw new Error("Bitte das Mikrofon erlauben (Chrome fragt danach) – sonst geht der Anruf nicht."); }
+  const pc = new RTCPeerConnection({ iceServers: ICE });
+  strom.getTracks().forEach((t) => pc.addTrack(t, strom));
+  pc.ontrack = (e) => { $("anrufTon").srcObject = e.streams[0]; $("anrufTon").play?.().catch(() => {}); };
+  pc.onconnectionstatechange = () => {
+    if (!RUF || RUF.pc !== pc) return;
+    if (pc.connectionState === "connected" && !RUF.verbunden) { RUF.verbunden = true; RUF.start = Date.now(); klangAus(); anrufUhr(); anrufKnoepfe("aktiv"); }
+    if (pc.connectionState === "failed") anrufFehlgeschlagen();
+    if (pc.connectionState === "disconnected") anrufZustand("⚠️ Verbindung wackelt …");
+  };
+  return { pc, strom };
+}
+// kleiner Klingel-/Freiton über die Lautsprecher (ohne Audiodatei); Vibration dazu
+function klang(art) {
+  klangAus();
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)(), an = [];
+    const ton = () => { const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = art === "klingeln" ? 880 : 425; g.gain.value = art === "klingeln" ? 0.18 : 0.08;
+      o.connect(g).connect(ctx.destination); o.start(); o.stop(ctx.currentTime + (art === "klingeln" ? 0.35 : 1)); an.push(o); };
+    ton(); const t = setInterval(() => { ton(); if (art === "klingeln") { setTimeout(ton, 450); try { navigator.vibrate?.([300, 150, 300]); } catch {} } }, art === "klingeln" ? 1800 : 4000);
+    RUF && (RUF.klang = { ctx, t });
+  } catch {}
+}
+function klangAus() { if (RUF?.klang) { clearInterval(RUF.klang.t); try { RUF.klang.ctx.close(); } catch {} RUF.klang = null; } try { navigator.vibrate?.(0); } catch {} }
+function anrufZustand(t) { $("anrufZustand").textContent = t; }
+function anrufSchirm(gegen) {
+  $("anrufBild").textContent = initialen(gegen.name || gegen.vorname); $("anrufName").textContent = gegen.name || gegen.vorname;
+  $("anrufSchirm").classList.remove("versteckt");
+}
+function anrufKnoepfe(art) {
+  $("anrufBild").classList.toggle("klingelt", art === "eingehend" || art === "rufe");
+  $("anrufKnoepfe").innerHTML = art === "eingehend"
+    ? `<button class="rund2 rotk" title="Ablehnen" onclick="anrufAuflegen()">✖</button><button class="rund2 gruen" title="Annehmen" onclick="anrufAnnehmen()">📞</button>`
+    : `<button class="rund2 grau" id="anrufStummKnopf" title="Stumm" onclick="anrufStumm()">🎙️</button><button class="rund2 rotk" title="Auflegen" onclick="anrufAuflegen()">✖</button>`;
+}
+function anrufUhr() {
+  clearInterval(RUF.uhr);
+  RUF.uhr = setInterval(() => { if (!RUF?.start) return; const s = Math.floor((Date.now() - RUF.start) / 1000); anrufZustand(`🟢 Verbunden · ${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`); }, 1000);
+}
+function anrufStumm() {
+  const t = RUF?.strom?.getAudioTracks()[0]; if (!t) return;
+  t.enabled = !t.enabled; $("anrufStummKnopf").className = "rund2 " + (t.enabled ? "grau" : "aus"); $("anrufStummKnopf").textContent = t.enabled ? "🎙️" : "🔇";
+}
+// Ich rufe an
+async function anrufen(pid) {
+  if (RUF) return melde("Es läuft schon ein Anruf.", true);
+  const m = MITGLIEDER?.find((x) => x.person_id === pid) || ONL.liste.find((x) => x.person_id === pid) || { person_id: pid, name: "" };
+  RUF = { rolle: "rufer", gegen: m };
+  anrufSchirm(m); anrufKnoepfe("rufe"); anrufZustand("Mikrofon wird vorbereitet …");
+  try {
+    const { pc, strom } = await anrufVerbindung(); Object.assign(RUF, { pc, strom });
+    await pc.setLocalDescription(await pc.createOffer()); await iceFertig(pc);
+    const r = await api("anruf_start", { an: pid, angebot: pc.localDescription.sdp });
+    RUF.id = r.id; anrufZustand(`📞 Klingelt bei ${m.vorname || m.name} …`); klang("frei");
+    RUF.poll = setInterval(anrufPruefen, 1500);
+  } catch (e) { anrufAufraeumen(); melde(e.message, true); }
+}
+// Status abfragen: Anrufer wartet auf Antwort; beide merken, wenn der andere auflegt
+async function anrufPruefen() {
+  if (!RUF?.id || RUF.pruefe) return; RUF.pruefe = true;
+  try {
+    const r = await api("anruf_status", { id: RUF.id });
+    if (!RUF) return;
+    if (RUF.rolle === "rufer" && r.status === "angenommen" && r.antwort && !RUF.pc.remoteDescription) {
+      klangAus(); anrufZustand("🔗 Verbindung wird aufgebaut …"); anrufKnoepfe("aktiv");
+      await RUF.pc.setRemoteDescription({ type: "answer", sdp: r.antwort });
+      clearInterval(RUF.poll); RUF.poll = setInterval(anrufPruefen, 3000);
+      setTimeout(() => { if (RUF && !RUF.verbunden) anrufFehlgeschlagen(); }, 15000);
+    }
+    const ende = { abgelehnt: `${RUF.gegen.vorname || RUF.gegen.name || "Er/sie"} hat gerade keine Zeit.`, verpasst: RUF.rolle === "rufer" ? `${RUF.gegen.vorname || RUF.gegen.name} hat nicht abgenommen.` : "Anruf verpasst.", beendet: "Anruf beendet." }[r.status];
+    if (ende) { anrufAufraeumen(); melde(ende); }
+  } catch {} finally { if (RUF) RUF.pruefe = false; }
+}
+// Es ruft jemand an (aus dem Online-Takt oder aus dem Push-Link)
+async function anrufEingehend(id) {
+  if (RUF) return;
+  try {
+    const r = await api("anruf_status", { id });
+    if (r.ichRufe || r.status !== "klingelt") { if (r.status === "verpasst") melde(`Verpasster Anruf von ${r.gegenueber.vorname}.`); return; }
+    RUF = { id, rolle: "angerufen", gegen: r.gegenueber, angebot: r.angebot };
+    anrufSchirm(r.gegenueber); anrufKnoepfe("eingehend"); anrufZustand(`📞 ${r.gegenueber.vorname} ruft an …`); klang("klingeln");
+    RUF.poll = setInterval(anrufPruefen, 2000);
+  } catch {}
+}
+async function anrufAnnehmen() {
+  if (!RUF || RUF.rolle !== "angerufen") return;
+  klangAus(); anrufKnoepfe("aktiv"); anrufZustand("🔗 Verbindung wird aufgebaut …");
+  try {
+    const { pc, strom } = await anrufVerbindung(); Object.assign(RUF, { pc, strom });
+    await pc.setRemoteDescription({ type: "offer", sdp: RUF.angebot });
+    await pc.setLocalDescription(await pc.createAnswer()); await iceFertig(pc);
+    await api("anruf_annehmen", { id: RUF.id, antwort: pc.localDescription.sdp });
+    clearInterval(RUF.poll); RUF.poll = setInterval(anrufPruefen, 3000);
+    setTimeout(() => { if (RUF && !RUF.verbunden) anrufFehlgeschlagen(); }, 15000);
+  } catch (e) { const id = RUF?.id; anrufAufraeumen(); if (id) api("anruf_ende", { id }).catch(() => {}); melde(e.message, true); }
+}
+function anrufFehlgeschlagen() {
+  if (!RUF) return; const g = RUF.gegen, id = RUF.id;
+  api("diagnose", { art: "anruf", daten: { verbunden: false, rolle: RUF.rolle, ice: RUF.pc?.iceConnectionState || "" } }).catch(() => {});
+  anrufAufraeumen(); if (id) api("anruf_ende", { id }).catch(() => {});
+  if (confirm(`Die Verbindung zu ${g.vorname || g.name} ließ sich nicht aufbauen – das passiert in manchen Mobilfunknetzen.\n\nStattdessen eine Nachricht schreiben?`)) direkt(g.person_id);
+}
+async function anrufAuflegen() {
+  if (!RUF) return; const id = RUF.id, verbunden = !!RUF.verbunden, dauer = RUF.start ? Math.round((Date.now() - RUF.start) / 1000) : 0, rolle = RUF.rolle;
+  anrufAufraeumen();
+  if (id) { api("anruf_ende", { id, verbunden }).catch(() => {}); if (verbunden) api("diagnose", { art: "anruf", daten: { verbunden: true, dauer, rolle } }).catch(() => {}); }
+  if (verbunden) melde(`📞 Aufgelegt · ${Math.floor(dauer / 60)}:${String(dauer % 60).padStart(2, "0")}`);
+}
+function anrufAufraeumen() {
+  if (!RUF) return;
+  klangAus(); clearInterval(RUF.poll); clearInterval(RUF.uhr);
+  try { RUF.strom?.getTracks().forEach((t) => t.stop()); } catch {}
+  try { RUF.pc?.close(); } catch {}
+  $("anrufTon").srcObject = null; $("anrufSchirm").classList.add("versteckt"); RUF = null;
 }
 
 // ---------- KC-CLUB-SCHLIESSEN: Ausgangstür ----------
@@ -1595,7 +1747,7 @@ async function neuLaden(vonHand) {
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln);
     const begruesst = begruessungPruefen();
     if (!ONL.timer) nachUpdatePruefen(begruesst);
-    if (!ONL.timer) { onlinePing(); onlineTakt(); const a = /#anklopfen=([0-9a-f-]{36})/.exec(START_HASH || ""); if (a) anklopfenAusLink(a[1]); }
+    if (!ONL.timer) { onlinePing(); onlineTakt(); const a = /#anklopfen=([0-9a-f-]{36})/.exec(START_HASH || ""); if (a) anklopfenAusLink(a[1]); const c = /#anruf=([0-9a-f-]{36})/.exec(START_HASH || ""); if (c) { ONL.erledigt.add("r" + c[1]); anrufEingehend(c[1]); } }
     if (!PW.startGeprueft) { PW.startGeprueft = true; pwStart(begruesst); }
     designUebernehmen(INIT.einstellungen?.design);
     VB.wartung = INIT.wartung || null; VB.server = INIT.server || null; vbCommSetzen(INIT.communicator || null);
@@ -3379,7 +3531,7 @@ function mitgliedZeigen() {
     <div class="karte">${zeilen}${leer}</div>
     ${m.notfall ? `<div class="karte"><h3>🆘 Notfallkontakt</h3><div class="zeile"><div style="flex:1"><b>${esc(m.notfall.name || "–")}</b>${m.notfall.beziehung ? ` <span class="hinweis">(${esc(m.notfall.beziehung)})</span>` : ""}<div class="hinweis">${esc(m.notfall.telefon || "")}</div></div>${m.notfall.telefon ? `<a class="knopf klein" href="tel:${esc(nurZiffern(m.notfall.telefon))}">📞</a>` : ""}</div><p class="hinweis" style="font-size:.85rem;margin-bottom:0">🔒 Nur für ${m.selbst ? "dich und " : ""}Clubsprecher, Kassenwart und Admin sichtbar.</p></div>` : m.selbst ? '<p class="hinweis">🆘 Noch kein Notfallkontakt – eintragen unter ⚙️ Mehr → Privatsphäre.</p>' : ""}
     <div class="knoepfe">
-      ${!m.selbst && ONL.ids.has(m.person_id) ? `<button class="knopf haupt" onclick="anklopfen('${m.person_id}')">👋 Anklopfen – ist gerade online</button>` : ""}
+      ${!m.selbst && ONL.ids.has(m.person_id) ? `<button class="knopf haupt" onclick="anklopfen('${m.person_id}')">👋 Anklopfen – ist gerade online</button><button class="knopf" onclick="anrufen('${m.person_id}')">📞 Anrufen über die App (Test)</button>` : ""}
       ${m.selbst ? "" : `<button class="knopf ${ONL.ids.has(m.person_id) ? "" : "haupt"}" onclick="direkt('${m.person_id}')">💬 Nachricht in der App</button>`}
       ${zeilen ? '<button class="knopf" onclick="kontaktSpeichern()">📇 Ins Telefonbuch</button>' : ""}
     </div>

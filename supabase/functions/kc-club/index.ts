@@ -13,14 +13,14 @@
 //           KC-CLUB-COMMUNICATOR-STATUS (0.17.0), KC-CLUB-FEEDBACK (0.18.0),
 //           KC-CLUB-KACHELN (0.19.0), KC-CLUB-ZUGANG-SELBST (0.21.0),
 //           KC-CLUB-GRUPPEN, KC-CLUB-ZUSTELLWAHL (0.23.0)
-//           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0), KC-CLUB-KACHELN-ZIEHEN (0.26.0), KC-CLUB-FEEDBACK-NEU (0.27.1), KC-CLUB-BEGRUESSUNG (0.28.0), KC-CLUB-ONLINE (0.29.0)
+//           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0), KC-CLUB-KACHELN-ZIEHEN (0.26.0), KC-CLUB-FEEDBACK-NEU (0.27.1), KC-CLUB-BEGRUESSUNG (0.28.0), KC-CLUB-ONLINE (0.29.0), KC-CLUB-ANRUF (0.31.0)
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.29.0";
+const SERVER_VERSION = "0.31.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -171,6 +171,22 @@ async function onlineJetzt(): Promise<Set<string>> {
   const { data } = await db.from("kc_club_zugang").select("person_id").eq("aktiv", true).gte("zuletzt_gesehen", seit).not("person_id", "like", "KC-P-TEST%");
   const ids = (data ?? []).map((x: any) => x.person_id), zeigen = await onlineZeigenMap(ids);
   return new Set(ids.filter((id: string) => zeigen.get(id) !== false));
+}
+
+// ---------- KC-CLUB-ANRUF (0.31.0, Test): Sprechen per Ton, App zu App (WebRTC) ----------
+// Der Server vermittelt nur Angebot/Antwort (SDP-Text, max. 20 kB); Sprache läuft direkt zwischen den Handys.
+// Klingeln höchstens ANRUF_KLINGEL_SEK; nur Anrufer und Angerufener sehen den Anruf.
+const ANRUF_KLINGEL_SEK = 45, SDP_MAX = 20000;
+const sdpText = (v: unknown) => { const t = String(v ?? ""); if (!t.startsWith("v=0") || t.length > SDP_MAX) throw new Fehler("Verbindungsdaten ungültig."); return t; };
+async function anrufHolen(ich: Ich, id: unknown) {
+  const { data: a } = await db.from("kc_club_anruf").select("*").eq("id", String(id || "")).maybeSingle();
+  if (!a || (a.von !== ich.person_id && a.an !== ich.person_id)) throw new Fehler("Anruf nicht gefunden.", 404);
+  // Klingeln abgelaufen → verpasst
+  if (a.status === "klingelt" && Date.now() - new Date(a.erstellt_am).getTime() > ANRUF_KLINGEL_SEK * 1000) {
+    await db.from("kc_club_anruf").update({ status: "verpasst", beendet_am: jetzt() }).eq("id", a.id).eq("status", "klingelt");
+    a.status = "verpasst";
+  }
+  return a;
 }
 
 // ---------- Gruppen (KC-CLUB-GRUPPEN) ----------
@@ -1596,11 +1612,13 @@ Köcheclub Werne`,
           db.from("kc_club_anklopfen").select("id,von,erstellt_am").eq("an", ich.person_id).eq("status", "offen").gte("erstellt_am", seit).order("erstellt_am", { ascending: false }).limit(3),
           db.from("kc_club_anklopfen").select("id,an,status,thread_id,beantwortet_am").eq("von", ich.person_id).gte("erstellt_am", new Date(Date.now() - 600000).toISOString()),
         ]);
+        const { data: rufe } = await db.from("kc_club_anruf").select("id,von,art,erstellt_am").eq("an", ich.person_id).eq("status", "klingelt").gte("erstellt_am", new Date(Date.now() - ANRUF_KLINGEL_SEK * 1000).toISOString()).limit(1);
         on.delete(ich.person_id);
-        const leute = await personen([...on, ...(anMich ?? []).map((x: any) => x.von), ...(vonMir ?? []).map((x: any) => x.an)]);
+        const leute = await personen([...on, ...(anMich ?? []).map((x: any) => x.von), ...(vonMir ?? []).map((x: any) => x.an), ...(rufe ?? []).map((x: any) => x.von)]);
         const wer = (id: string) => ({ person_id: id, name: leute.get(id)?.display_name || id, vorname: vorname(leute.get(id) ?? null) || id });
         return json({ zeigen, online: [...on].map(wer), klopfen: (anMich ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), zeit: x.erstellt_am })),
-          antworten: (vonMir ?? []).map((x: any) => ({ id: x.id, an: wer(x.an), status: x.status, thread: x.thread_id })) });
+          antworten: (vonMir ?? []).map((x: any) => ({ id: x.id, an: wer(x.an), status: x.status, thread: x.thread_id })),
+          anrufe: (rufe ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), art: x.art, zeit: x.erstellt_am })) });
       }
 
       case "anklopfen": {
@@ -1641,6 +1659,54 @@ Köcheclub Werne`,
         await db.from("kc_club_anklopfen").update({ status: "angenommen", beantwortet_am: jetzt(), thread_id: thread }).eq("id", k.id);
         await protokoll(ich.person_id, "anklopfen_angenommen", { von: k.von });
         return json({ ok: true, status: "angenommen", thread });
+      }
+
+      // ----- Anruf per Ton (KC-CLUB-ANRUF, Test) -----
+      case "anruf_start": {
+        const an = String(p.an || "");
+        if (an === ich.person_id) throw new Fehler("Dich selbst kannst du nicht anrufen 🙂");
+        if (!(await aktiveMitglieder()).some((m) => m.person_id === an)) throw new Fehler("Mitglied nicht gefunden.", 404);
+        const angebot = sdpText(p.angebot);
+        // alte, noch klingelnde Anrufe von mir beenden (nur einer gleichzeitig)
+        await db.from("kc_club_anruf").update({ status: "beendet", beendet_am: jetzt(), beendet_von: ich.person_id }).eq("von", ich.person_id).eq("status", "klingelt");
+        const { data: a, error } = await db.from("kc_club_anruf").insert({ von: ich.person_id, an, art: "ton", angebot }).select("id").single();
+        if (error || !a) throw new Fehler("Anruf konnte nicht gestartet werden.", 500);
+        const { data: zug } = await db.from("kc_club_zugang").select("person_id").eq("person_id", an).eq("aktiv", true).not("zuletzt_gesehen", "is", null);
+        let versand = { gesendet: 0, fehler: 0 };
+        if (zug?.length) versand = await routerSenden("club_nachricht_push", [an], {
+          titel: `📞 ${ich.vorname} ruft an`, kurz: "Antippen zum Annehmen (Köcheclub-App).",
+          betreff: `${ich.vorname} ruft an`, text: `${ich.name} ruft dich über die Köcheclub-App an.`, url: `${APP_URL}#anruf=${a.id}`,
+        }, `club-anruf:${a.id}`);
+        await protokoll(ich.person_id, "anruf_gestartet", { an, versand });
+        return json({ ok: true, id: a.id, push: versand.gesendet > 0 });
+      }
+
+      case "anruf_status": {
+        const a = await anrufHolen(ich, p.id), ichRufe = a.von === ich.person_id;
+        const leute = await personen([a.von, a.an]), gegen = ichRufe ? a.an : a.von;
+        return json({ id: a.id, status: a.status, ichRufe, art: a.art, erstellt_am: a.erstellt_am,
+          gegenueber: { person_id: gegen, name: leute.get(gegen)?.display_name || gegen, vorname: vorname(leute.get(gegen) ?? null) || gegen },
+          // SDP nur an die jeweils andere Seite
+          ...(ichRufe ? { antwort: a.antwort } : { angebot: a.angebot }) });
+      }
+
+      case "anruf_annehmen": {
+        const a = await anrufHolen(ich, p.id);
+        if (a.an !== ich.person_id) throw new Fehler("Nur der Angerufene kann annehmen.", 403);
+        if (a.status !== "klingelt") throw new Fehler(a.status === "verpasst" ? "Der Anruf ist schon vorbei." : "Der Anruf wurde schon beendet.", 409);
+        await db.from("kc_club_anruf").update({ status: "angenommen", antwort: sdpText(p.antwort), angenommen_am: jetzt() }).eq("id", a.id);
+        return json({ ok: true });
+      }
+
+      case "anruf_ende": {
+        const a = await anrufHolen(ich, p.id);
+        if (["klingelt", "angenommen"].includes(a.status)) {
+          const status = a.status === "klingelt" ? (a.an === ich.person_id ? "abgelehnt" : "verpasst") : "beendet";
+          await db.from("kc_club_anruf").update({ status, beendet_am: jetzt(), beendet_von: ich.person_id }).eq("id", a.id);
+          if (a.status === "angenommen") await protokoll(ich.person_id, "anruf_beendet", { dauer_s: a.angenommen_am ? Math.round((Date.now() - new Date(a.angenommen_am).getTime()) / 1000) : 0, verbunden: !!p.verbunden });
+          return json({ ok: true, status });
+        }
+        return json({ ok: true, status: a.status });
       }
 
       // ----- Pinnwand (KC-CLUB-PINNWAND) -----
