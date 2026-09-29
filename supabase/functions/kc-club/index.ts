@@ -11,14 +11,15 @@
 //           KC-CLUB-KONTAKT (0.13.0), KC-CLUB-TERMINFINDUNG, KC-CLUB-NACHFASSEN, KC-CLUB-MITFAHREN, KC-CLUB-NOTFALL, KC-CLUB-KALENDERABO (0.14.0),
 //           KC-CLUB-FOTOALBUM (0.15.0), KC-CLUB-VERBINDUNG (0.16.0),
 //           KC-CLUB-COMMUNICATOR-STATUS (0.17.0), KC-CLUB-FEEDBACK (0.18.0),
-//           KC-CLUB-KACHELN (0.19.0), KC-CLUB-ZUGANG-SELBST (0.21.0)
+//           KC-CLUB-KACHELN (0.19.0), KC-CLUB-ZUGANG-SELBST (0.21.0),
+//           KC-CLUB-GRUPPEN, KC-CLUB-ZUSTELLWAHL (0.23.0)
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.21.0";
+const SERVER_VERSION = "0.23.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -120,6 +121,34 @@ async function senden(eventKey: string, personIds: string[], vars: Record<string
     gesendet += r.gesendet; fehler += r.fehler;
   }
   return { gesendet, fehler };
+}
+
+// KC-CLUB-ZUSTELLWAHL: Absender wählt ausdrücklich, wie benachrichtigt wird (🔔 Push und/oder ✉️ E-Mail).
+// Leer = wie jedes Mitglied es eingestellt hat (senden). Wer die App noch nie geöffnet hat, bekommt immer eine Mail.
+const ZUSTELLWEGE = ["push", "email"];
+async function sendenGewaehlt(eventKey: string, personIds: string[], wege: string[], vars: Record<string, unknown>, korrelation: string) {
+  const w = [...new Set(wege.filter((x) => ZUSTELLWEGE.includes(x)))];
+  if (!w.length) return await senden(eventKey, personIds, vars, korrelation);
+  if (!personIds.length) return { gesendet: 0 };
+  const { data: zug } = await db.from("kc_club_zugang").select("person_id").eq("aktiv", true).not("zuletzt_gesehen", "is", null).in("person_id", personIds);
+  const mitApp = new Set((zug ?? []).map((z: any) => z.person_id));
+  const key = w.length === 2 ? eventKey + "_beide" : w[0] === "push" ? eventKey + "_push" : eventKey + "_mail";
+  const hinweis = "\n\n(Die Köcheclub-App hast du noch nicht geöffnet – deinen persönlichen Link bekommst du von Hansi.)";
+  const mit = personIds.filter((id) => mitApp.has(id)), ohne = personIds.filter((id) => !mitApp.has(id));
+  let gesendet = 0, fehler = 0;
+  if (mit.length) { const r = await routerSenden(key, mit, vars, korrelation); gesendet += r.gesendet; fehler += r.fehler; }
+  if (ohne.length) { const r = await routerSenden(eventKey + "_mail", ohne, { ...vars, text: String(vars.text ?? "") + hinweis }, korrelation); gesendet += r.gesendet; fehler += r.fehler; }
+  return { gesendet, fehler, wege: w };
+}
+const zustellwege = (v: unknown) => (Array.isArray(v) ? v : []).map(String).filter((x) => ZUSTELLWEGE.includes(x));
+
+// ---------- Gruppen (KC-CLUB-GRUPPEN) ----------
+const GRUPPEN_SYMBOLE = ["👥", "👨‍🍳", "🍳", "🎖️", "🧳", "🎉", "📋", "🍷", "⭐", "🏠"];
+async function gruppeHolen(ich: Ich, id: unknown) {
+  const tid = String(id || "");
+  const { data: g } = await db.from("kc_club_gruppen").select("*").eq("thread_id", tid).maybeSingle();
+  if (!g) throw new Fehler("Gruppe nicht gefunden.", 404);
+  return { g, darfVerwalten: g.erstellt_von === ich.person_id || ich.vorstand };
 }
 
 // ---------- Dateien (KC-CLUB-ANLAGEN) ----------
@@ -957,10 +986,14 @@ Köcheclub Werne`,
       }
 
       case "mitglieder": {
-        const [leute, { data: rollen }, { data: zug }, { data: push }, st] = await Promise.all([
+        const [leute, { data: rollen }, { data: zug }, { data: push }, st, { data: tel }, { data: hfr }] = await Promise.all([
           aktiveMitglieder(), db.from("kc_club_rollen").select("*"), db.from("kc_club_zugang").select("person_id,aktiv,zuletzt_gesehen"),
           db.from("kc_member_push_subscriptions").select("person_id").eq("active", true), statusMap(),
+          db.from("kc_core_people").select("person_id").eq("active", true).eq("org_id", ORG).not("phone", "is", null).neq("phone", ""),
+          db.from("kc_club_freigaben").select("person_id").eq("bereich", "kontakt_handy").eq("erlaubt", true),
         ]);
+        // KC-CLUB-ZUSTELLWAHL: wie ist jemand erreichbar? (nur ja/nein – keine Nummern/Adressen)
+        const hatTel = new Set((tel ?? []).map((x: any) => x.person_id)), handyFrei = new Set((hfr ?? []).map((x: any) => x.person_id));
         const r = new Map((rollen ?? []).map((x: any) => [x.person_id, x]));
         const z = new Map((zug ?? []).map((x: any) => [x.person_id, x]));
         const ps = new Set((push ?? []).map((x: any) => x.person_id));
@@ -971,6 +1004,7 @@ Köcheclub Werne`,
             person_id: m.person_id, name: m.display_name, vorname: vorname(m),
             vorstand: !!(r.get(m.person_id) as any)?.ist_vorstand, aemter: (r.get(m.person_id) as any)?.aemter ?? [], admin: !!(r.get(m.person_id) as any)?.ist_admin,
             status: st.get(m.person_id) ?? null,
+            wege: { push: ps.has(m.person_id), mail: !!m.email, whatsapp: hatTel.has(m.person_id) && (ich.admin || m.person_id === ich.person_id || (ich.kontakte && handyFrei.has(m.person_id))) },
             // für alle nur grob: in den letzten 14 Tagen in der App gewesen (genaue Zeit nur für den Admin)
             aktiv: !!(z.get(m.person_id) as any)?.zuletzt_gesehen && Date.now() - new Date((z.get(m.person_id) as any).zuletzt_gesehen).getTime() < 14 * 86400000,
             ...(ich.admin ? { kontakte: (r.get(m.person_id) as any)?.kontakte_sehen !== false, protokolle: (r.get(m.person_id) as any)?.protokolle_lesen !== false, app: !!(z.get(m.person_id) as any)?.aktiv, zuletzt: (z.get(m.person_id) as any)?.zuletzt_gesehen ?? null, push: ps.has(m.person_id), mail: !!m.email } : {}),
@@ -1281,12 +1315,15 @@ Köcheclub Werne`,
         ]);
         const leute = await personen([...(tn ?? []).map((x: any) => x.person_id), ...(msgs ?? []).map((m: any) => m.sender_person_id)]);
         const gelesen = new Map((meine ?? []).map((x: any) => [x.thread_id, x.last_read_at]));
+        const { data: gr } = await db.from("kc_club_gruppen").select("thread_id,name,symbol").in("thread_id", ids);
+        const gruppe = new Map((gr ?? []).map((g: any) => [g.thread_id, g]));
         const liste = (th ?? []).map((t: any) => {
           const m = (msgs ?? []).filter((x: any) => x.thread_id === t.id);
           const lr = gelesen.get(t.id);
           const andere = (tn ?? []).filter((x: any) => x.thread_id === t.id && x.person_id !== ich.person_id).map((x: any) => leute.get(x.person_id)?.display_name || x.person_id);
           return {
             id: t.id, betreff: t.subject, teilnehmer: andere, anzahl: andere.length + 1,
+            gruppe: gruppe.has(t.id) ? { name: (gruppe.get(t.id) as any).name, symbol: (gruppe.get(t.id) as any).symbol } : null,
             letzte: m[0] ? { von: m[0].sender_person_id === ich.person_id ? "Du" : vorname(leute.get(m[0].sender_person_id)), text: String(m[0].body).slice(0, 120), zeit: m[0].created_at } : null,
             ungelesen: m.filter((x: any) => x.sender_person_id !== ich.person_id && (!lr || x.created_at > lr)).length,
             aktualisiert: m[0]?.created_at || t.updated_at,
@@ -1320,7 +1357,9 @@ Köcheclub Werne`,
           };
         });
         await db.from("kc_communication_thread_participants").update({ last_read_at: jetzt() }).eq("thread_id", id).eq("person_id", ich.person_id);
-        return json({ id, betreff: t?.subject ?? "", teilnehmer: (tn ?? []).map((x: any) => ({ person_id: x.person_id, name: leute.get(x.person_id)?.display_name || x.person_id })), nachrichten });
+        const { data: gr } = await db.from("kc_club_gruppen").select("*").eq("thread_id", id).maybeSingle();
+        return json({ id, betreff: t?.subject ?? "",
+          gruppe: gr ? { name: gr.name, symbol: gr.symbol, erstellt_von: gr.erstellt_von, darfVerwalten: gr.erstellt_von === ich.person_id || ich.vorstand } : null, teilnehmer: (tn ?? []).map((x: any) => ({ person_id: x.person_id, name: leute.get(x.person_id)?.display_name || x.person_id })), nachrichten });
       }
 
       case "nachricht_senden": {
@@ -1383,13 +1422,15 @@ Köcheclub Werne`,
           const { count } = await db.from("kc_communication_thread_participants").select("person_id", { count: "exact", head: true }).eq("thread_id", threadId);
           if (count === 1) ziel.push(ich.person_id); // Test-Unterhaltung nur mit mir
         }
-        const versand = await senden("club_nachricht", ziel, {
-          titel: `💬 ${ich.name}`, kurz: th?.subject ? `Neue Nachricht in „${th.subject}“` : "Neue Nachricht im Köcheclub",
+        const wege = zustellwege(p.wege);
+        const { data: grp } = await db.from("kc_club_gruppen").select("name,symbol").eq("thread_id", threadId).maybeSingle();
+        const versand = await sendenGewaehlt("club_nachricht", ziel, wege, {
+          titel: grp ? `${grp.symbol} ${grp.name}: ${ich.vorname}` : `💬 ${ich.name}`, kurz: th?.subject ? `Neue Nachricht in „${th.subject}“` : "Neue Nachricht im Köcheclub",
           betreff: `Köcheclub Werne – neue Nachricht von ${ich.name}${th?.subject ? ": " + th.subject : ""}`,
           text: `Hallo,\n\n${ich.name} hat dir im Köcheclub geschrieben${th?.subject ? ` („${th.subject}“)` : ""}:\n\n${text}${anlagen.length ? `\n\n📎 ${anlagen.length} Anlage(n) – in der App ansehen.` : ""}\n\nAntworten in der Köcheclub-App: ${APP_URL}#nachricht=${threadId}\n\nViele Grüße\nKöcheclub Werne`,
           url: `${APP_URL}#nachricht=${threadId}`,
         }, `club-nachricht:${m.id}`);
-        await protokoll(ich.person_id, "nachricht_gesendet", { thread: threadId, neu, empfaenger: ziel.length, anlagen: anlagen.length, versand });
+        await protokoll(ich.person_id, "nachricht_gesendet", { thread: threadId, neu, empfaenger: ziel.length, anlagen: anlagen.length, wege, versand });
         return json({ ok: true, id: threadId, versand });
       }
 
@@ -1426,6 +1467,67 @@ Köcheclub Werne`,
         ]);
         await geloescht(ich, "unterhaltung", { unterhaltung: t, teilnehmer: tn ?? [], nachrichten: msgs ?? [] });
         await db.from("kc_communication_threads").delete().eq("id", id);
+        return json({ ok: true });
+      }
+
+      // ----- Gruppen (KC-CLUB-GRUPPEN) -----
+      case "gruppe_anlegen": {
+        const name = txt(p.name, 60);
+        if (!name) throw new Fehler("Bitte einen Namen für die Gruppe eingeben (z. B. „Küchenteam“).");
+        const symbol = GRUPPEN_SYMBOLE.includes(String(p.symbol)) ? String(p.symbol) : "👥";
+        const aktiv = new Set((await aktiveMitglieder()).map((m) => m.person_id));
+        const mitglieder = ([...new Set((Array.isArray(p.personen) ? p.personen : []).map(String))] as string[]).filter((id) => aktiv.has(id) && id !== ich.person_id).slice(0, 60);
+        if (!mitglieder.length) throw new Fehler("Bitte mindestens ein Mitglied für die Gruppe auswählen.");
+        const { data: th, error } = await db.from("kc_communication_threads").insert({ org_id: ORG, subject: name, created_by_person_id: ich.person_id }).select("id").single();
+        if (error || !th) throw new Fehler("Gruppe konnte nicht angelegt werden.", 500);
+        await db.from("kc_communication_thread_participants").insert([ich.person_id, ...mitglieder].map((person_id) => ({ thread_id: th.id, person_id })));
+        await db.from("kc_club_gruppen").insert({ thread_id: th.id, name, symbol, erstellt_von: ich.person_id });
+        const versand = await sendenGewaehlt("club_nachricht", mitglieder, zustellwege(p.wege), {
+          titel: `${symbol} Neue Gruppe: ${name}`, kurz: `${ich.name} hat dich zur Gruppe „${name}“ hinzugefügt.`,
+          betreff: `Köcheclub Werne – neue Gruppe „${name}“`,
+          text: `Hallo,\n\n${ich.name} hat dich zur Gruppe „${name}“ in der Köcheclub-App hinzugefügt.\n\nZur Gruppe: ${APP_URL}#nachricht=${th.id}\n\nViele Grüße\nKöcheclub Werne`,
+          url: `${APP_URL}#nachricht=${th.id}`,
+        }, `club-gruppe-neu:${th.id}`);
+        await protokoll(ich.person_id, "gruppe_angelegt", { gruppe: th.id, name, mitglieder: mitglieder.length, versand });
+        return json({ ok: true, id: th.id });
+      }
+
+      case "gruppe_aendern": {
+        const { g, darfVerwalten } = await gruppeHolen(ich, p.id);
+        if (!darfVerwalten) throw new Fehler("Die Gruppe verwaltet, wer sie angelegt hat (oder Clubsprecher/Kassenwart).", 403);
+        const upd: Record<string, unknown> = { geaendert_am: jetzt() };
+        if (p.name !== undefined) { const n = txt(p.name, 60); if (!n) throw new Fehler("Bitte einen Namen eingeben."); upd.name = n; await db.from("kc_communication_threads").update({ subject: n }).eq("id", g.thread_id); }
+        if (p.symbol !== undefined && GRUPPEN_SYMBOLE.includes(String(p.symbol))) upd.symbol = String(p.symbol);
+        const aktiv = new Set((await aktiveMitglieder()).map((m) => m.person_id));
+        const hinzu = ([...new Set((Array.isArray(p.hinzu) ? p.hinzu : []).map(String))] as string[]).filter((id) => aktiv.has(id)).slice(0, 60);
+        const weg = ([...new Set((Array.isArray(p.weg) ? p.weg : []).map(String))] as string[]).filter((id) => id !== g.erstellt_von);
+        await db.from("kc_club_gruppen").update(upd).eq("thread_id", g.thread_id);
+        let neu: string[] = [];
+        if (hinzu.length) {
+          const { data: da } = await db.from("kc_communication_thread_participants").select("person_id").eq("thread_id", g.thread_id).in("person_id", hinzu);
+          const schon = new Set((da ?? []).map((x: any) => x.person_id));
+          neu = hinzu.filter((id) => !schon.has(id));
+          if (neu.length) await db.from("kc_communication_thread_participants").insert(neu.map((person_id) => ({ thread_id: g.thread_id, person_id })));
+        }
+        if (weg.length) await db.from("kc_communication_thread_participants").delete().eq("thread_id", g.thread_id).in("person_id", weg);
+        const name = String(upd.name ?? g.name), symbol = String(upd.symbol ?? g.symbol);
+        if (neu.length) await senden("club_nachricht", neu, {
+          titel: `${symbol} Gruppe: ${name}`, kurz: `${ich.name} hat dich zur Gruppe „${name}“ hinzugefügt.`,
+          betreff: `Köcheclub Werne – Gruppe „${name}“`,
+          text: `Hallo,\n\n${ich.name} hat dich zur Gruppe „${name}“ in der Köcheclub-App hinzugefügt.\n\nZur Gruppe: ${APP_URL}#nachricht=${g.thread_id}\n\nViele Grüße\nKöcheclub Werne`,
+          url: `${APP_URL}#nachricht=${g.thread_id}`,
+        }, `club-gruppe-dazu:${g.thread_id}:${Date.now()}`);
+        await protokoll(ich.person_id, "gruppe_geaendert", { gruppe: g.thread_id, vorher: { name: g.name, symbol: g.symbol }, hinzu: neu, weg });
+        return json({ ok: true });
+      }
+
+      case "gruppe_verlassen": {
+        const { g } = await gruppeHolen(ich, p.id);
+        await binTeilnehmer(g.thread_id, ich.person_id);
+        const { count } = await db.from("kc_communication_thread_participants").select("person_id", { count: "exact", head: true }).eq("thread_id", g.thread_id);
+        if (g.erstellt_von === ich.person_id && (count ?? 0) > 1) throw new Fehler("Du hast die Gruppe angelegt – bitte erst die anderen entfernen oder die Gruppe behalten.", 409);
+        await db.from("kc_communication_thread_participants").delete().eq("thread_id", g.thread_id).eq("person_id", ich.person_id);
+        await protokoll(ich.person_id, "gruppe_verlassen", { gruppe: g.thread_id, name: g.name });
         return json({ ok: true });
       }
 

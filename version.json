@@ -1,9 +1,9 @@
 {
-  "version": "0.22.0",
+  "version": "0.23.0",
   "datum": "2026-09-29",
   "neu": [
-    "🧭 Route: Google Maps öffnet direkt (installierte App)",
-    "ℹ️ App-Info mit Handy, Browser und Version – „Infos kopieren“ für Hilfe",
-    "✉️ Link verloren? Neuen Link per Mail anfordern"
+    "👥 Gruppen-Chats: eigene Gruppen mit Name und Symbol",
+    "🔔 ✉️ 🟢 Beim Schreiben wählen: Push, E-Mail und/oder WhatsApp",
+    "Symbole zeigen, wie jemand erreichbar ist"
   ]
 }

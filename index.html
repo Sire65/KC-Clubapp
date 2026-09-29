@@ -218,7 +218,17 @@
   .unterh .mitte { flex: 1; min-width: 0; }
   .unterh .mitte div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .punkt { background: var(--rot); color: #fff; border-radius: 12px; padding: 2px 9px; font-weight: 800; font-size: .85rem; }
-  .chat { display: flex; flex-direction: column; gap: 6px; padding: 8px 0 120px; }
+  .chat { display: flex; flex-direction: column; gap: 6px; padding: 8px 0 160px; }
+  /* KC-CLUB-ZUSTELLWAHL: Symbole für Erreichbarkeit und Auswahl, wie benachrichtigt wird */
+  .wege { display: inline-flex; gap: 3px; margin-left: 6px; font-size: .95rem; vertical-align: middle; }
+  .wege i { font-style: normal; }
+  .wege i.nein { opacity: .22; filter: grayscale(1); }
+  .zustell { max-width: 1100px; margin: 0 auto 6px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; font-size: .85rem; color: var(--grau); font-weight: 700; }
+  .zustell button { border: 2px solid var(--linie); background: var(--karte); border-radius: 16px; padding: 4px 10px; font-weight: 800; cursor: pointer; font-size: .9rem; }
+  .zustell button.an { background: var(--rot); border-color: var(--rot); color: #fff; }
+  .symbolwahl { display: flex; flex-wrap: wrap; gap: 6px; }
+  .symbolwahl button { border: 2px solid var(--linie); background: var(--karte); border-radius: 12px; width: 46px; height: 46px; font-size: 1.4rem; cursor: pointer; }
+  .symbolwahl button.an { border-color: var(--rot); background: var(--karte2); }
   .blase { max-width: 82%; padding: 9px 12px; border-radius: 16px; background: var(--karte); box-shadow: var(--schatten); word-wrap: break-word; }
   .blase .txt { white-space: pre-wrap; }
   .blase.eigen { align-self: flex-end; background: var(--rot); color: #fff; border-bottom-right-radius: 4px; }
@@ -458,15 +468,30 @@
 
   <!-- NACHRICHTEN -->
   <section id="v-nachrichten" class="versteckt">
-    <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>💬 Kommunikation</h2><button class="knopf klein" onclick="testAnMichStarten()" title="Nachricht an dich selbst – prüft Push und Mail">🧪 Test</button><button class="knopf haupt klein" onclick="neueNachricht()">＋ Neu</button></div>
+    <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>💬 Kommunikation</h2><button class="knopf klein" onclick="testAnMichStarten()" title="Nachricht an dich selbst – prüft Push und Mail">🧪 Test</button><button class="knopf klein" onclick="gruppeForm()">👥 Gruppe</button><button class="knopf haupt klein" onclick="neueNachricht()">＋ Neu</button></div>
     <div class="karte" id="unterhListe"><span class="hinweis">Wird geladen …</span></div>
   </section>
 
   <!-- UNTERHALTUNG -->
   <section id="v-chat" class="versteckt">
-    <div class="kopf2"><button class="zurueck" onclick="zeige('nachrichten')">‹</button><h2 id="chatTitel">…</h2><button class="rund" id="chatMenueKnopf" title="Unterhaltung löschen" onclick="chatMenue()">🗑️</button></div>
-    <div class="hinweis" id="chatTeilnehmer" style="margin-left:54px"></div>
+    <div class="kopf2"><button class="zurueck" onclick="zeige('nachrichten')">‹</button><h2 id="chatTitel">…</h2><button class="rund" id="chatMenueKnopf" title="Mehr" onclick="chatMenue()">⋮</button></div>
+    <div class="hinweis" id="chatTeilnehmer" style="margin-left:54px;cursor:pointer" onclick="if(CHAT?.gruppe)chatMenue()"></div>
     <div class="chat" id="chat"></div>
+  </section>
+
+  <!-- GRUPPE ANLEGEN / BEARBEITEN (KC-CLUB-GRUPPEN) -->
+  <section id="v-gruppe" class="versteckt">
+    <div class="kopf2"><button class="zurueck" onclick="GR?.id ? chatOeffnen(GR.id) : zeige('nachrichten')">‹</button><h2 id="grTitel">👥 Neue Gruppe</h2></div>
+    <div class="karte">
+      <label class="feld">Name der Gruppe<input id="grName" maxlength="60" placeholder="z. B. Küchenteam, Grillabend, Weihnachtsmarkt"></label>
+      <div class="hinweis" style="margin:8px 0 6px">Symbol</div><div class="symbolwahl" id="grSymbole"></div>
+    </div>
+    <div class="karte"><h3 style="margin-top:0">Wer ist dabei?</h3>
+      <label class="feld">Name suchen<input id="grSuche" placeholder="🔍 z. B. Anne" oninput="grListe()"></label>
+      <div class="hinweis" style="font-size:.85rem">🔔 Push · ✉️ E-Mail · 🟢 WhatsApp – blass = nicht erreichbar</div>
+      <div class="wahlliste" id="grListe"></div></div>
+    <div class="karte"><div class="hinweis">Dabei: <b id="grGewaehlt">nur du</b></div>
+      <div class="knoepfe"><button class="knopf haupt" id="grKnopf" onclick="gruppeSpeichern()">👥 Gruppe anlegen</button></div></div>
   </section>
 
   <!-- NEUE NACHRICHT -->
@@ -564,6 +589,7 @@
   <div class="fb-info" id="fbInfo"></div>
 </div>
 <div class="eingabe versteckt" id="eingabe">
+  <div class="zustell" id="zustell"></div>
   <div class="chips" id="anlagenChips"></div>
   <div class="innen">
     <button class="rund" title="Anlage" onclick="anlageMenue()">📎</button>
@@ -594,7 +620,10 @@
     <button class="knopf haupt" onclick="statusSpeichern()">Speichern</button><button class="knopf" onclick="$('statusBlatt').classList.add('versteckt')">Abbrechen</button></div>
 </div>
 <div class="blatt versteckt" id="chatBlatt" onclick="if(event.target===this)this.classList.add('versteckt')">
-  <div class="blatt-innen"><h3>Unterhaltung entfernen</h3>
+  <div class="blatt-innen"><h3 id="chatBlattTitel">Unterhaltung</h3>
+    <div id="chatGruppeInfo" class="hinweis versteckt" style="margin:0 4px 8px"></div>
+    <button class="knopf haupt versteckt" id="chatGruppeBearb" onclick="$('chatBlatt').classList.add('versteckt');gruppeForm(CHAT)">✏️ Gruppe bearbeiten (Name, Mitglieder)</button>
+    <button class="knopf versteckt" id="chatGruppeRaus" onclick="gruppeVerlassen()">🚪 Gruppe verlassen</button>
     <button class="knopf" onclick="unterhaltungWeg(false)">🙈 Nur bei mir entfernen</button>
     <p class="hinweis" style="margin:0 4px 6px;font-size:.85rem">Die anderen behalten sie. Schreibt jemand wieder, erscheint sie erneut.</p>
     <button class="knopf haupt versteckt" id="chatAllesLoeschen" onclick="unterhaltungWeg(true)">🗑️ Für alle löschen (Admin)</button>
@@ -622,7 +651,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.22.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.23.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -1110,7 +1139,7 @@ function zeige(v, ausHistorie) {
   const vorher = aktuelleAnsicht;
   aktuelleAnsicht = v;
   if (vorher === "protokoll" && v !== "protokoll" && prTimer) prSpeichernJetzt(false).catch(() => {}); // ungespeicherte Eingaben sichern
-  ["start", "termine", "vorschlaege", "aktionen", "aktion", "fotos", "feedback", "mitglied", "protokolle", "protokoll", "dienste", "nachrichten", "chat", "neu", "mitglieder", "einstellungen"].forEach((x) => $("v-" + x).classList.toggle("versteckt", x !== v));
+  ["start", "termine", "vorschlaege", "aktionen", "aktion", "fotos", "feedback", "gruppe", "mitglied", "protokolle", "protokoll", "dienste", "nachrichten", "chat", "neu", "mitglieder", "einstellungen"].forEach((x) => $("v-" + x).classList.toggle("versteckt", x !== v));
   document.querySelectorAll("#fuss button").forEach((b) => b.classList.toggle("an", b.dataset.v === v || (v === "chat" && b.dataset.v === "nachrichten") || (v === "neu" && b.dataset.v === "nachrichten")));
   $("eingabe").classList.toggle("versteckt", v !== "chat");
   clearInterval(chatTimer);
@@ -1564,13 +1593,14 @@ async function unterhLaden() {
   try {
     const { unterhaltungen } = await api("unterhaltungen");
     $("unterhListe").innerHTML = unterhaltungen.map((u) => `<div class="unterh" onclick="chatOeffnen('${u.id}')">
-      <div class="avatar">${u.anzahl > 2 ? "👥" : esc(initialen(u.teilnehmer[0]))}</div>
-      <div class="mitte"><div><b>${esc(u.betreff || u.teilnehmer.join(", "))}</b></div><div class="hinweis">${u.letzte ? esc(u.letzte.von + ": " + u.letzte.text) : "Noch keine Nachricht"}</div></div>
+      <div class="avatar">${u.gruppe ? esc(u.gruppe.symbol) : u.anzahl > 2 ? "👥" : esc(initialen(u.teilnehmer[0]))}</div>
+      <div class="mitte"><div><b>${esc(u.gruppe?.name || u.betreff || u.teilnehmer.join(", "))}</b>${u.gruppe ? ` <span class="hinweis" style="font-size:.8rem">· ${u.anzahl} Mitgl.</span>` : ""}</div><div class="hinweis">${u.letzte ? esc(u.letzte.von + ": " + u.letzte.text) : "Noch keine Nachricht"}</div></div>
       <div style="text-align:right"><div class="hinweis" style="font-size:.8rem">${u.letzte ? zeitKurz(u.letzte.zeit) : ""}</div>${u.ungelesen ? `<span class="punkt">${u.ungelesen}</span>` : ""}</div></div>`).join("")
       || '<p class="hinweis">Noch keine Nachrichten. Tippe oben auf „＋ Neu“.</p>';
   } catch (e) { melde(e.message, true); }
 }
 async function chatOeffnen(id, ausHistorie) {
+  if (id !== chatId) ZW = { push: false, email: false, whatsapp: false };
   chatId = id; zeige("chat", ausHistorie); chatId = id;
   history.replaceState({ v: "chat", id }, "", location.pathname + "#nachricht=" + id);
   await chatLaden(true);
@@ -1581,11 +1611,13 @@ async function chatLaden(scrollen) {
   if (!chatId) return;
   try {
     const u = await api("unterhaltung", { id: chatId });
+    CHAT = u;
     const andere = u.teilnehmer.filter((x) => x.person_id !== ICH.person_id);
-    $("chatTitel").textContent = u.betreff || andere.map((x) => x.name).join(", ");
+    $("chatTitel").textContent = u.gruppe ? `${u.gruppe.symbol} ${u.gruppe.name}` : u.betreff || andere.map((x) => x.name).join(", ");
+    zustellZeigen();
     let st = "";
     if (andere.length === 1) { if (!MITGLIEDER) await mitgliederHolen().catch(() => {}); const m = MITGLIEDER?.find((x) => x.person_id === andere[0].person_id); if (m?.status) st = statusText(m.status); }
-    $("chatTeilnehmer").textContent = !andere.length ? "Nur du (Test-Unterhaltung)" : u.betreff || andere.length > 1 ? "Mit: " + andere.map((x) => x.name).join(", ") : st;
+    $("chatTeilnehmer").textContent = !andere.length ? "Nur du (Test-Unterhaltung)" : u.gruppe ? `👥 ${andere.length + 1} Mitglieder: Du, ${andere.map((x) => x.name.split(" ")[0]).join(", ")} ›` : u.betreff || andere.length > 1 ? "Mit: " + andere.map((x) => x.name).join(", ") : st;
     const stand = JSON.stringify(u.nachrichten.map((m) => [m.id, m.gelesenVon?.length]));
     if (stand === chatStand && !scrollen) return;
     const neuVonAnderen = chatStand && u.nachrichten.length && !u.nachrichten[u.nachrichten.length - 1].eigen && stand !== chatStand;
@@ -1605,7 +1637,16 @@ async function nachrichtLoeschen(id) {
   if (!confirm("Diese Nachricht für alle löschen?")) return;
   try { await api("nachricht_loeschen", { id }); chatStand = ""; melde("🗑️ Gelöscht"); chatLaden(false); } catch (e) { melde(e.message, true); }
 }
-function chatMenue() { $("chatAllesLoeschen").classList.toggle("versteckt", !ICH?.admin || !chatId); $("chatBlatt").classList.remove("versteckt"); }
+function chatMenue() {
+  const g = chatId && CHAT?.id === chatId ? CHAT.gruppe : null;
+  $("chatBlattTitel").textContent = g ? `${g.symbol} ${g.name}` : "Unterhaltung";
+  $("chatGruppeInfo").classList.toggle("versteckt", !g);
+  if (g) $("chatGruppeInfo").innerHTML = "<b>Mitglieder:</b> " + CHAT.teilnehmer.map((t) => esc(t.person_id === ICH.person_id ? "Du" : t.name) + (t.person_id === g.erstellt_von ? " (angelegt)" : "")).join(", ");
+  $("chatGruppeBearb").classList.toggle("versteckt", !g?.darfVerwalten);
+  $("chatGruppeRaus").classList.toggle("versteckt", !g);
+  $("chatAllesLoeschen").classList.toggle("versteckt", !ICH?.admin || !chatId);
+  $("chatBlatt").classList.remove("versteckt");
+}
 async function unterhaltungWeg(fuerAlle) {
   $("chatBlatt").classList.add("versteckt");
   if (!chatId) return zeige("nachrichten"); // noch nicht gesendeter Entwurf
@@ -1642,7 +1683,7 @@ function empfListe() {
   ].join("");
   $("empfListe").innerHTML = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && (!q || m.name.toLowerCase().includes(q))).map((m) => `<label>
     <input type="checkbox" ${empfWahl.personen.includes(m.person_id) ? "checked" : ""} onchange="personWahl('${m.person_id}', this.checked)">
-    <span>${esc(m.name)}${m.aemter?.length ? ` <span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}</span></label>`).join("");
+    <span style="flex:1">${esc(m.name)}${m.aemter?.length ? ` <span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}</span>${wegIcons(m)}</label>`).join("");
   $("empfGewaehlt").textContent = empfTest() ? "nur du selbst (Test)" : (empfWahl.personen.map((p) => MITGLIEDER.find((m) => m.person_id === p)?.name).filter(Boolean).join(", ") || "niemand");
 }
 function gruppeWahl(a) {
@@ -1655,6 +1696,7 @@ function gruppeWahl(a) {
 }
 // Direkt: Nachricht an mich selbst schreiben (kommt als Push/Mail so, wie unter Einstellungen → Benachrichtigungen eingestellt)
 async function testAnMichStarten() {
+  ZW = { push: false, email: false, whatsapp: false }; CHAT = null; setTimeout(zustellZeigen, 0);
   if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return melde(e.message, true); }
   empfWahl = { personen: [ICH.person_id], aemter: [], alle: false, vorstand: false };
   neuEntwurf = { empfaenger: { ...empfWahl }, betreff: "🧪 Test an mich" };
@@ -1671,6 +1713,7 @@ function testAnMich() {
 function personWahl(p, an) { const ohneIch = empfWahl.personen.filter((x) => x !== ICH.person_id); empfWahl.personen = an ? [...new Set([...ohneIch, p])] : ohneIch.filter((x) => x !== p); empfListe(); }
 let neuEntwurf = null;
 function neuWeiter() {
+  ZW = { push: false, email: false, whatsapp: false }; CHAT = null; zustellZeigen();
   if (!empfWahl.alle && !empfWahl.vorstand && !empfWahl.aemter.length && !empfWahl.personen.length) return melde("Bitte mindestens einen Empfänger wählen.", true);
   neuEntwurf = { empfaenger: { ...empfWahl }, betreff: $("neuBetreff").value };
   chatId = null; zeige("chat"); chatStand = "";
@@ -1679,14 +1722,89 @@ function neuWeiter() {
   $("chat").innerHTML = '<p class="hinweis">Schreib die erste Nachricht und tippe auf ➤.</p>';
   $("text").focus();
 }
+// ---------- KC-CLUB-ZUSTELLWAHL: wie benachrichtigen? 🔔 Push · ✉️ E-Mail · 🟢 WhatsApp ----------
+// Nichts gewählt = so, wie jedes Mitglied es eingestellt hat. WhatsApp geht nicht über einen Dienst (kostenlos, keine API):
+// nach dem Senden wird der Text an WhatsApp übergeben – bei einer Person direkt an ihren Chat, sonst über „Teilen“ (Gruppe wählen).
+let ZW = { push: false, email: false, whatsapp: false }, CHAT = null;
+const wegIcons = (m) => { const w = m?.wege || {}; return `<span class="wege" title="🔔 Push · ✉️ E-Mail · 🟢 WhatsApp"><i class="${w.push ? "" : "nein"}">🔔</i><i class="${w.mail ? "" : "nein"}">✉️</i><i class="${w.whatsapp ? "" : "nein"}">🟢</i></span>`; };
+function zustellZeigen() {
+  const b = (k, t) => `<button class="${ZW[k] ? "an" : ""}" onclick="ZW.${k}=!ZW.${k};zustellZeigen()">${t}</button>`;
+  $("zustell").innerHTML = `<span>Benachrichtigen:</span>${b("push", "🔔 Push")}${b("email", "✉️ E-Mail")}${b("whatsapp", "🟢 WhatsApp")}<span style="font-weight:600">${ZW.push || ZW.email ? "" : "· wie eingestellt"}</span>`;
+}
+async function whatsappWeitergeben(text, ids) {
+  const nachricht = `${text}\n\n– ${ICH.vorname} (Köcheclub-App)`;
+  try {
+    if (ids.length === 1) {
+      const m = MITGLIEDER?.find((x) => x.person_id === ids[0]);
+      if (m?.wege?.whatsapp) {
+        const d = await api("mitglied_details", { person_id: ids[0] });
+        if (d.kontakt?.handy) {
+          const n = waNummer(d.kontakt.handy), t = encodeURIComponent(nachricht);
+          location.href = IST_ANDROID ? `intent://send?phone=${n}&text=${t}#Intent;scheme=whatsapp;S.browser_fallback_url=${encodeURIComponent(`https://wa.me/${n}?text=${t}`)};end` : `https://wa.me/${n}?text=${t}`;
+          return;
+        }
+      }
+    }
+    if (navigator.share) { await navigator.share({ text: nachricht }); return; }
+    await navigator.clipboard.writeText(nachricht); melde("📋 Text kopiert – in WhatsApp einfügen");
+  } catch (e) { if (e?.name !== "AbortError") melde("WhatsApp: " + (e.message || e), true); }
+}
+
+// ---------- Gruppen (KC-CLUB-GRUPPEN) ----------
+const GR_SYMBOLE = ["👥", "👨‍🍳", "🍳", "🎖️", "🧳", "🎉", "📋", "🍷", "⭐", "🏠"];
+let GR = null; // { id?, name, symbol, personen[], vorher[] }
+async function gruppeForm(chat) {
+  if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return melde(e.message, true); }
+  const personen = chat ? chat.teilnehmer.map((t) => t.person_id).filter((id) => id !== ICH.person_id) : [];
+  GR = { id: chat?.id || null, name: chat?.gruppe?.name || "", symbol: chat?.gruppe?.symbol || "👥", personen, vorher: [...personen], ersteller: chat?.gruppe?.erstellt_von || ICH.person_id };
+  $("grTitel").textContent = GR.id ? "✏️ Gruppe bearbeiten" : "👥 Neue Gruppe";
+  $("grKnopf").textContent = GR.id ? "💾 Speichern" : "👥 Gruppe anlegen";
+  $("grName").value = GR.name; $("grSuche").value = "";
+  zeige("gruppe"); grSymbole(); grListe();
+}
+function grSymbole() { $("grSymbole").innerHTML = GR_SYMBOLE.map((x) => `<button class="${x === GR.symbol ? "an" : ""}" onclick="GR.symbol='${x}';grSymbole()">${x}</button>`).join(""); }
+function grListe() {
+  const q = $("grSuche").value.toLowerCase();
+  $("grListe").innerHTML = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && (!q || m.name.toLowerCase().includes(q))).map((m) => {
+    const fest = m.person_id === GR.ersteller && GR.id;
+    return `<label><input type="checkbox" ${GR.personen.includes(m.person_id) ? "checked" : ""} ${fest ? "disabled" : ""} onchange="grWahl('${m.person_id}', this.checked)">
+      <span style="flex:1">${esc(m.name)}${fest ? ' <span class="marke">angelegt</span>' : ""}</span>${wegIcons(m)}</label>`; }).join("");
+  const namen = GR.personen.map((p) => MITGLIEDER.find((m) => m.person_id === p)?.name.split(" ")[0]).filter(Boolean);
+  $("grGewaehlt").textContent = "Du" + (namen.length ? ", " + namen.join(", ") : "") + ` (${namen.length + 1})`;
+}
+function grWahl(p, an) { GR.personen = an ? [...new Set([...GR.personen, p])] : GR.personen.filter((x) => x !== p); grListe(); }
+async function gruppeSpeichern() {
+  const name = $("grName").value.trim();
+  if (!name) return melde("Bitte einen Namen für die Gruppe eingeben.", true);
+  if (!GR.personen.length) return melde("Bitte mindestens ein Mitglied auswählen.", true);
+  $("grKnopf").disabled = true;
+  try {
+    if (GR.id) {
+      await api("gruppe_aendern", { id: GR.id, name, symbol: GR.symbol, hinzu: GR.personen.filter((p) => !GR.vorher.includes(p)), weg: GR.vorher.filter((p) => !GR.personen.includes(p)) });
+      melde("✅ Gruppe gespeichert"); chatOeffnen(GR.id);
+    } else {
+      const r = await api("gruppe_anlegen", { name, symbol: GR.symbol, personen: GR.personen });
+      melde(`✅ Gruppe „${name}“ angelegt – die Mitglieder wurden benachrichtigt`); chatOeffnen(r.id);
+    }
+  } catch (e) { melde(e.message, true); }
+  $("grKnopf").disabled = false;
+}
+async function gruppeVerlassen() {
+  $("chatBlatt").classList.add("versteckt");
+  if (!CHAT?.gruppe || !confirm(`Die Gruppe „${CHAT.gruppe.name}“ verlassen? Du bekommst dann keine Nachrichten mehr daraus.`)) return;
+  try { await api("gruppe_verlassen", { id: CHAT.id }); melde("🚪 Gruppe verlassen"); zeige("nachrichten"); neuLaden(); } catch (e) { melde(e.message, true); }
+}
+
 async function senden() {
   const text = $("text").value.trim();
   if (!text && !anlagen.length) return;
   $("sendenKnopf").disabled = true;
   try {
-    const daten = { text, anlagen: anlagen.map((a) => a.id) };
+    const daten = { text, anlagen: anlagen.map((a) => a.id), wege: ["push", "email"].filter((w) => ZW[w]) };
     const r = chatId ? await api("nachricht_senden", { id: chatId, ...daten }) : await api("nachricht_senden", { ...daten, ...neuEntwurf });
+    const empfIds = chatId ? (CHAT?.teilnehmer || []).map((t) => t.person_id) : [...(neuEntwurf?.empfaenger?.personen || [])];
     $("text").value = ""; $("text").style.height = "auto"; anlagen = []; chipsZeigen(); neuEntwurf = null;
+    if (ZW.whatsapp && text) whatsappWeitergeben(text, empfIds.filter((id) => id !== ICH.person_id));
     if (!chatId) { chatId = r.id; history.replaceState({ v: "chat", id: r.id }, "", location.pathname + "#nachricht=" + r.id); clearInterval(chatTimer); chatTimer = setInterval(() => chatLaden(false), 10000); }
     await chatLaden(true);
   } catch (e) { melde(e.message, true); }
@@ -2122,7 +2240,7 @@ async function mitgliederLaden() {
     await mitgliederHolen();
     $("mitgliederListe").innerHTML = MITGLIEDER.map((m) => `<div class="zeile">
       <div class="avatar" style="width:40px;height:40px;cursor:pointer" onclick="mitgliedOeffnen('${m.person_id}')">${esc(initialen(m.name))}</div>
-      <div style="flex:1;cursor:pointer" onclick="mitgliedOeffnen('${m.person_id}')"><b>${esc(m.name)}</b> <span class="hinweis">›</span>${m.aemter?.length ? ` <span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}
+      <div style="flex:1;cursor:pointer" onclick="mitgliedOeffnen('${m.person_id}')"><b>${esc(m.name)}</b>${wegIcons(m)} <span class="hinweis">›</span>${m.aemter?.length ? ` <span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}
         <div class="hinweis" style="font-size:.85rem">${m.status ? esc(statusText(m.status)) : m.aktiv ? "🟢 verfügbar" : "⚪ noch nicht in der App"}${m.aktiv ? " · 📲 aktiv" : ""}</div>
         ${ICH.admin && (m.app || m.push || !m.mail || m.protokolle === false) ? `<div class="hinweis" style="font-size:.85rem">${[m.app && m.zuletzt ? "zuletzt " + zeitKurz(m.zuletzt) : m.app ? "Link verschickt" : "", m.push ? "🔔 Push" : "", m.mail ? "" : "⚠️ keine Mail", m.protokolle === false ? "📄 ohne Protokolle" : ""].filter(Boolean).join(" · ")}</div>` : ""}</div>
       ${m.person_id !== ICH.person_id ? `<button class="knopf klein" onclick="direkt('${m.person_id}')">💬</button>` : ""}
@@ -2789,6 +2907,7 @@ async function gratulieren(pid, ohneFrage) {
   $("text").focus();
 }
 async function direkt(pid) {
+  ZW = { push: false, email: false, whatsapp: false }; CHAT = null; setTimeout(zustellZeigen, 0);
   if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return melde(e.message, true); }
   empfWahl = { personen: [pid], aemter: [], alle: false, vorstand: false }; $("neuBetreff").value = ""; neuEntwurf = { empfaenger: { ...empfWahl }, betreff: "" };
   chatId = null; zeige("chat"); chatStand = ""; const m = MITGLIEDER.find((x) => x.person_id === pid);

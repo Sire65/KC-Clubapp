@@ -456,7 +456,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 35. 0.18.0: Feedback-Kachel (Fragebogen vom Server, 3 Schritte, Auswertung nur Admin)
 {
   assert.ok(/\{ id: "feedback", sym: "💭", t: "Feedback", u: "Deine Meinung zur App", v: "feedback" \}/.test(html) && /id="v-feedback"/.test(html), "Feedback-Kachel fehlt");
-  assert.ok(/"fotos", "feedback", "mitglied"/.test(html) && /if \(v === "feedback"\) fbLaden\(\);/.test(html), "Feedback-Ansicht nicht eingebunden");
+  assert.ok(/"fotos", "feedback", "gruppe", "mitglied"/.test(html) && /if \(v === "feedback"\) fbLaden\(\);/.test(html), "Feedback-Ansicht nicht eingebunden");
   for (const a of ["feedback_meins", "feedback_senden", "feedback_auswertung"]) assert.ok(aktionen.has(a) && aufrufe.has(a), `Feedback-Aktion ${a} fehlt`);
   const ausw = server.slice(server.indexOf('case "feedback_auswertung"'), server.indexOf('case "feedback_auswertung"') + 120);
   assert.ok(/nurAdmin\(ich\)/.test(ausw), "Auswertung nicht auf Admin beschränkt");
@@ -532,6 +532,16 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/Entwicklung &amp; Design: <b>Hans-Joachim Koch<\/b>/.test(html) && /async function appInfoDaten\(\)/.test(html), "App-Info fehlt");
   const k = html.slice(html.indexOf("async function appInfoKopieren"), html.indexOf("// Persönlichen Link kopieren"));
   assert.ok(!/KEY/.test(k) && !/KEY/.test(html.slice(html.indexOf("async function appInfoDaten"), html.indexOf("async function appInfoZeigen"))), "App-Info enthält den Zugang");
+}
+
+// 42. 0.23.0: Gruppen-Chats und Zustellwahl (Push/E-Mail/WhatsApp)
+{
+  for (const a of ["gruppe_anlegen", "gruppe_aendern", "gruppe_verlassen"]) assert.ok(aktionen.has(a) && aufrufe.has(a), `Gruppen-Aktion ${a} fehlt`);
+  const ae = server.slice(server.indexOf('case "gruppe_aendern"'), server.indexOf('case "gruppe_verlassen"'));
+  assert.ok(/if \(!darfVerwalten\) throw/.test(ae) && /\.filter\(\(id\) => id !== g\.erstellt_von\)/.test(ae), "Gruppe darf von jedem geändert werden / Ersteller entfernbar");
+  assert.ok(/async function sendenGewaehlt/.test(server) && /const wege = zustellwege\(p\.wege\);/.test(server) && /eventKey \+ "_mail", ohne/.test(server), "Zustellwahl fehlt (oder Mitglieder ohne App ohne Mail)");
+  assert.ok(/wege: \{ push: ps\.has/.test(server) && !/wege: \{[^}]*phone/.test(server), "Erreichbarkeit fehlt oder verrät Nummern");
+  assert.ok(/const wegIcons = /.test(html) && /id="zustell"/.test(html) && /whatsappWeitergeben\(text,/.test(html) && /id="v-gruppe"/.test(html), "Oberfläche für Gruppen/Zustellwahl fehlt");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
