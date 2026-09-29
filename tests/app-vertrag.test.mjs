@@ -792,4 +792,14 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/ERS\.belege\.some\(\(b\) => b\.laedt\)/.test(html) && /function belegWeg\(/.test(html), "Belege: Warten aufs Hochladen/Entfernen fehlt");
 }
 
+// 64. 0.41.0: Chatliste – einmal tippen = auswählen (entfernen), doppelt tippen = öffnen; Entfernen nur für mich
+{
+  assert.ok(/onclick="unterhTipp\('\$\{u\.id\}'\)"/.test(html) && !/class="unterh" onclick="chatOeffnen/.test(html), "Chatliste öffnet noch beim ersten Tippen");
+  const tipp = html.slice(html.indexOf("function unterhTipp"), html.indexOf("function unterhZeichnen"));
+  assert.ok(/jetzt - lt\.t < DOPPELTIPP_MS/.test(tipp) && /return chatOeffnen\(id\)/.test(tipp), "Doppeltippen öffnet nicht");
+  const weg = html.slice(html.indexOf("async function unterhEntfernen"), html.indexOf("async function unterhEntfernen") + 900);
+  assert.ok(/if \(!confirm\(/.test(weg) && /fuerAlle \? "unterhaltung_loeschen" : "unterhaltung_ausblenden"/.test(weg), "Entfernen ohne Rückfrage");
+  assert.ok(/ICH\?\.admin \? `<button class="knopf klein" onclick="unterhEntfernen\('\$\{u\.id\}', true\)"/.test(html), "„Für alle löschen“ nicht auf Admin beschränkt");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

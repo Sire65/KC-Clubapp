@@ -1,11 +1,18 @@
 {
-  "version": "0.40.0",
+  "version": "0.41.0",
   "datum": "2026-09-29",
   "neu": [
-    "🧪 Hinweis im Feedback: Die Club-App ist noch eine Beta-Version – Funktionen und Ansichten können sich noch ändern",
-    "💭 Neue Feedback-Frage: „Ich halte die Club-App für sinnvoll und werde sie dauerhaft einsetzen“ – Ja / Vielleicht / Nein, bei Nein mit kurzer Begründung"
+    "💬 Nachrichten-Übersicht: einmal tippen wählt eine Unterhaltung aus – dann „Öffnen“ oder „🗑️ Aus meiner Liste“ entfernen",
+    "👆👆 Doppelt tippen öffnet die Unterhaltung direkt"
   ],
   "verlauf": [
+    {
+      "version": "0.41.0",
+      "neu": [
+        "💬 Nachrichten-Übersicht: einmal tippen wählt eine Unterhaltung aus – dann „Öffnen“ oder „🗑️ Aus meiner Liste“ entfernen",
+        "👆👆 Doppelt tippen öffnet die Unterhaltung direkt"
+      ]
+    },
     {
       "version": "0.40.0",
       "neu": [

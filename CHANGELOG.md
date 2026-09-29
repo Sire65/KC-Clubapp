@@ -1,5 +1,12 @@
 # Änderungen
 
+## 0.41.0 – 2026-09-29 (DEV)
+
+- KC-CLUB-CHATLISTE (neu): Nachrichten-Übersicht – einmal tippen wählt eine Unterhaltung aus (goldener Rahmen) und zeigt
+  „💬 Öffnen“ und „🗑️ Aus meiner Liste“ (Admin zusätzlich „⚠️ Für alle löschen“ mit Sicherung). Doppelt tippen (< 400 ms) öffnet
+  direkt. „Aus meiner Liste“ nutzt die bestehende Server-Aktion unterhaltung_ausblenden (nur für mich; schreibt jemand wieder,
+  erscheint die Unterhaltung erneut) – mit Rückfrage. Nur App, kein Server-Update.
+
 ## 0.40.0 – 2026-09-29 (DEV)
 
 - KC-CLUB-FEEDBACK-DAUERHAFT (neu): Fragebogen Schritt 1 um „Ich halte die Club-App für sinnvoll und werde sie dauerhaft einsetzen.“

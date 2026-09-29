@@ -285,6 +285,10 @@
   .unterh { display: flex; gap: 12px; align-items: center; padding: 12px 4px; border-bottom: 1px solid var(--linie); cursor: pointer; }
   .avatar { width: 46px; height: 46px; border-radius: 50%; background: var(--rot); color: #fff; display: grid; place-items: center; font-weight: 800; flex: none; }
   .unterh .mitte { flex: 1; min-width: 0; }
+  .unterh.gewaehlt { background: var(--karte2); border-radius: 14px; outline: 2px solid var(--gold); outline-offset: -2px; }
+  .uhaktion { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 4px 12px; border-bottom: 1px solid var(--linie); }
+  .uhaktion button { flex: 1 1 120px; }
+  .uhtipp { margin: 0 0 4px; font-size: .82rem; }
   .unterh .mitte div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .punkt { background: var(--rot); color: #fff; border-radius: 12px; padding: 2px 9px; font-weight: 800; font-size: .85rem; }
   .chat { display: flex; flex-direction: column; gap: 6px; padding: 8px 0 160px; }
@@ -871,7 +875,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.40.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.41.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2708,11 +2712,44 @@ async function dienstFreigabe(an) {
 async function unterhLaden() {
   try {
     const { unterhaltungen } = await api("unterhaltungen");
-    $("unterhListe").innerHTML = unterhaltungen.map((u) => `<div class="unterh" onclick="chatOeffnen('${u.id}')">
+    UH.liste = unterhaltungen; if (!unterhaltungen.some((u) => u.id === UH.wahl)) UH.wahl = null;
+    $("unterhListe").innerHTML = (unterhaltungen.length ? '<p class="hinweis uhtipp">Einmal tippen = auswählen (🗑️ entfernen) · doppelt tippen = öffnen</p>' : "") + unterhaltungen.map((u) => `<div class="unterh${u.id === UH.wahl ? " gewaehlt" : ""}" data-id="${u.id}" onclick="unterhTipp('${u.id}')">
       <div class="avatar">${u.gruppe ? esc(u.gruppe.symbol) : u.anzahl > 2 ? "👥" : esc(initialen(u.teilnehmer[0]))}</div>
       <div class="mitte"><div><b>${esc(u.gruppe?.name || u.betreff || u.teilnehmer.join(", "))}</b>${u.gruppe ? ` <span class="hinweis" style="font-size:.8rem">· ${u.anzahl} Mitgl.</span>` : ""}</div><div class="hinweis">${u.letzte ? esc(u.letzte.von + ": " + u.letzte.text) : "Noch keine Nachricht"}</div></div>
-      <div style="text-align:right"><div class="hinweis" style="font-size:.8rem">${u.letzte ? zeitKurz(u.letzte.zeit) : ""}</div>${u.ungelesen ? `<span class="punkt">${u.ungelesen}</span>` : ""}</div></div>`).join("")
+      <div style="text-align:right"><div class="hinweis" style="font-size:.8rem">${u.letzte ? zeitKurz(u.letzte.zeit) : ""}</div>${u.ungelesen ? `<span class="punkt">${u.ungelesen}</span>` : ""}</div></div>${u.id === UH.wahl ? unterhAktionen(u) : ""}`).join("")
       || '<p class="hinweis">Noch keine Nachrichten. Tippe oben auf „＋ Neu“.</p>';
+  } catch (e) { melde(e.message, true); }
+}
+// KC-CLUB-CHATLISTE (0.41.0): einmal tippen wählt die Unterhaltung aus (Öffnen / aus Liste entfernen), doppelt tippen öffnet sie.
+// „Entfernen“ blendet nur für mich aus (Server: unterhaltung_ausblenden) – schreibt jemand wieder, erscheint sie erneut.
+// Für alle löschen bleibt Admin-Sache (unterhaltung_loeschen mit Sicherung).
+const UH = { liste: [], wahl: null, letzterTipp: { id: null, t: 0 } };
+const DOPPELTIPP_MS = 400;
+const unterhName = (u) => u.gruppe?.name || u.betreff || u.teilnehmer.join(", ");
+function unterhAktionen(u) {
+  return `<div class="uhaktion" onclick="event.stopPropagation()"><button class="knopf haupt klein" onclick="chatOeffnen('${u.id}')">💬 Öffnen</button>
+    <button class="knopf klein" onclick="unterhEntfernen('${u.id}', false)">🗑️ Aus meiner Liste</button>${ICH?.admin ? `<button class="knopf klein" onclick="unterhEntfernen('${u.id}', true)">⚠️ Für alle löschen</button>` : ""}</div>`;
+}
+function unterhTipp(id) {
+  const jetzt = Date.now(), lt = UH.letzterTipp;
+  UH.letzterTipp = { id, t: jetzt };
+  if (lt.id === id && jetzt - lt.t < DOPPELTIPP_MS) { UH.letzterTipp = { id: null, t: 0 }; return chatOeffnen(id); }
+  UH.wahl = UH.wahl === id ? null : id; // nochmal (langsam) tippen = Auswahl aufheben
+  unterhZeichnen();
+}
+function unterhZeichnen() {
+  document.querySelectorAll("#unterhListe .unterh").forEach((el) => el.classList.toggle("gewaehlt", el.dataset.id === UH.wahl));
+  document.querySelectorAll("#unterhListe .uhaktion").forEach((el) => el.remove());
+  const u = UH.liste.find((x) => x.id === UH.wahl), el = u && document.querySelector(`#unterhListe .unterh[data-id="${u.id}"]`);
+  if (el) el.insertAdjacentHTML("afterend", unterhAktionen(u));
+}
+async function unterhEntfernen(id, fuerAlle) {
+  const u = UH.liste.find((x) => x.id === id), name = u ? unterhName(u) : "diese Unterhaltung";
+  if (!confirm(fuerAlle ? `„${name}“ mit allen Nachrichten für ALLE Teilnehmer endgültig löschen?\nEine Sicherung bleibt im Änderungsprotokoll.`
+    : `„${name}“ aus deiner Liste entfernen?\n\nDie anderen behalten die Unterhaltung. Schreibt jemand wieder, erscheint sie bei dir erneut.`)) return;
+  try {
+    await api(fuerAlle ? "unterhaltung_loeschen" : "unterhaltung_ausblenden", { id });
+    melde(fuerAlle ? "🗑️ Für alle gelöscht" : "🙈 Aus deiner Liste entfernt"); UH.wahl = null; await unterhLaden();
   } catch (e) { melde(e.message, true); }
 }
 async function chatOeffnen(id, ausHistorie) {
