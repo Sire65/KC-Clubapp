@@ -1,5 +1,14 @@
 # Änderungen
 
+## 0.48.0 – 2026-09-29 (DEV)
+
+- KC-CLUB-ADMIN-SPIEGEL (neu): Admin-Zentrale zeigt „Neon-Spiegel“ und „Backup“ (nur lesend aus kc_db_mirror_policies/-runs/-audit
+  und kc_neon_compute_policy). Spiegel: grün nur, wenn eingeschaltet und letzter Abgleich innerhalb der Verzögerungsgrenze; gelb
+  bei Pause (mit Datum und Neon-Wartung „bis“) oder bis 1 Std. Verzögerung; rot, wenn er hängt. Backup: grün ≤ 26 Std., gelb
+  ≤ 72 Std., sonst rot. Einzelheiten: letzter Wiederherstellungs-Test, Neon-Rechenzeit-Modus, Pausen-Grund, Regeln.
+- Befund bei Einbau (29.09.): Spiegel seit 20.09. und alle Neon-Jobs inkl. Tagesbackup seit 21.09. bewusst pausiert
+  (Neon-Rechenbudget bis Monatsreset, Wartung bis 01.10.) – wird jetzt sichtbar statt still.
+
 ## 0.47.0 – 2026-09-29 (DEV)
 
 - KC-CLUB-ADMINLAGE (neu): 7. Info-Karte „🛡️ Admin-Zentrale“, nur für Admin sichtbar (Registry-Feld nur(); Server-Aktion

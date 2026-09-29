@@ -906,4 +906,20 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/kc_club_db_groesse/.test(lies("supabase/migrations/20260929_kc_club_v47_db_groesse.sql")) && /revoke all on function kc_club_db_groesse\(\) from public, anon, authenticated/.test(lies("supabase/migrations/20260929_kc_club_v47_db_groesse.sql")), "DB-Größe-Funktion offen");
 }
 
+// 71. 0.48.0: Admin – Neon-Spiegel und Backup (nur lesen); pausiert nie grün, altes Backup rot
+{
+  const sp = server.slice(server.indexOf("async function adminSpiegel"), server.indexOf("// ---------- Anmeldung ----------"));
+  assert.ok(/from\("kc_db_mirror_policies"\)/.test(sp) && /from\("kc_neon_compute_policy"\)/.test(sp) && !/\.(update|insert|delete|upsert)\(/.test(sp), "Spiegel-Prüfung liest nicht nur");
+  const src = html.slice(html.indexOf("const BACKUP_OK_STD"), html.indexOf("function adminBalken"));
+  const f = new Function("seitText", "fKurz", src + "return adminSpiegelFarben;")(() => "vor …", { format: () => "20.09." });
+  const vor = (std) => new Date(Date.now() - std * 3600000).toISOString();
+  const pausiert = f({ neon: { aktiv: false, lagSek: 720, letzter: vor(200), regeln: [] }, backup: { aktiv: false, letztes: vor(200) }, pause: { zeit: vor(220), text: "x" }, compute: { modus: "maintenance", bis: new Date(Date.now() + 86400000).toISOString() } });
+  assert.equal(pausiert.neon[0], "gelb", "pausierter Spiegel nicht gelb"); assert.ok(/pausiert/.test(pausiert.neon[1]) && /Wartung bis/.test(pausiert.neon[1]));
+  assert.equal(pausiert.backup[0], "rot", "Backup vor 8 Tagen nicht rot");
+  const gut = f({ neon: { aktiv: true, lagSek: 720, letzter: vor(0.05), regeln: [] }, backup: { aktiv: true, letztes: vor(3) }, pause: null, compute: null });
+  assert.equal(gut.neon[0], "gruen"); assert.equal(gut.backup[0], "gruen");
+  assert.equal(f({ neon: { aktiv: true, lagSek: 720, letzter: vor(5), regeln: [] }, backup: { aktiv: true, letztes: null } }).neon[0], "rot", "hängender Spiegel nicht rot");
+  assert.equal(f(null).neon[0], "grau", "unbekannt nicht grau");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

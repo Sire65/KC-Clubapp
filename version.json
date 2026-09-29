@@ -1,11 +1,16 @@
 {
-  "version": "0.47.0",
+  "version": "0.48.0",
   "datum": "2026-09-29",
   "neu": [
-    "🛡️ Neue Karte oben nur für den Admin: Admin-Zentrale – Server, Kommunikation, KC Verwaltung, KC Dienstplan, System-Check, KICC, Wartung mit Lämpchen",
-    "🗄️ Datenbank- und Dateispeicher-Füllstand mit Balken, Mitglieder-Zahlen (mit Zugang, online, heute, nie angemeldet, Push, alte Version) und „📋 Einzelheiten“"
+    "🪞 Admin-Zentrale: Neon-Spiegel und tägliches Backup mit Lämpchen – pausiert, verzögert oder aktuell, letzter Wiederherstellungs-Test und Grund einer Pause"
   ],
   "verlauf": [
+    {
+      "version": "0.48.0",
+      "neu": [
+        "🪞 Admin-Zentrale: Neon-Spiegel und tägliches Backup mit Lämpchen – pausiert, verzögert oder aktuell, letzter Wiederherstellungs-Test und Grund einer Pause"
+      ]
+    },
     {
       "version": "0.47.0",
       "neu": [

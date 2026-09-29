@@ -13,14 +13,14 @@
 //           KC-CLUB-COMMUNICATOR-STATUS (0.17.0), KC-CLUB-FEEDBACK (0.18.0),
 //           KC-CLUB-KACHELN (0.19.0), KC-CLUB-ZUGANG-SELBST (0.21.0),
 //           KC-CLUB-GRUPPEN, KC-CLUB-ZUSTELLWAHL (0.23.0)
-//           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0), KC-CLUB-KACHELN-ZIEHEN (0.26.0), KC-CLUB-FEEDBACK-NEU (0.27.1), KC-CLUB-BEGRUESSUNG (0.28.0), KC-CLUB-ONLINE (0.29.0), KC-CLUB-ANRUF (0.31.0), KC-CLUB-VIDEO (0.32.0), KC-CLUB-QUITTUNG (0.34.0), KC-CLUB-TODO + KC-CLUB-REGISTER-ZIEHEN (0.36.0), KC-CLUB-SPRACHE + KC-CLUB-TODO-ZUSTAENDIG (0.37.0), KC-CLUB-ERSTATTUNG (0.38.0), KC-CLUB-KMSATZ (0.39.0), KC-CLUB-FEEDBACK-DAUERHAFT (0.40.0), KC-CLUB-INFOFELD + KC-CLUB-WETTER (0.42.0), KC-CLUB-INFOFELD-DEMNAECHST/-FOTOS (0.43.0), KC-CLUB-ZENTRALE (0.44.0), KC-CLUB-FOTO-META (0.45.0), KC-CLUB-WETTER-TAGE (0.46.0), KC-CLUB-ADMINLAGE (0.47.0)
+//           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0), KC-CLUB-KACHELN-ZIEHEN (0.26.0), KC-CLUB-FEEDBACK-NEU (0.27.1), KC-CLUB-BEGRUESSUNG (0.28.0), KC-CLUB-ONLINE (0.29.0), KC-CLUB-ANRUF (0.31.0), KC-CLUB-VIDEO (0.32.0), KC-CLUB-QUITTUNG (0.34.0), KC-CLUB-TODO + KC-CLUB-REGISTER-ZIEHEN (0.36.0), KC-CLUB-SPRACHE + KC-CLUB-TODO-ZUSTAENDIG (0.37.0), KC-CLUB-ERSTATTUNG (0.38.0), KC-CLUB-KMSATZ (0.39.0), KC-CLUB-FEEDBACK-DAUERHAFT (0.40.0), KC-CLUB-INFOFELD + KC-CLUB-WETTER (0.42.0), KC-CLUB-INFOFELD-DEMNAECHST/-FOTOS (0.43.0), KC-CLUB-ZENTRALE (0.44.0), KC-CLUB-FOTO-META (0.45.0), KC-CLUB-WETTER-TAGE (0.46.0), KC-CLUB-ADMINLAGE (0.47.0), KC-CLUB-ADMIN-SPIEGEL (0.48.0)
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.47.0";
+const SERVER_VERSION = "0.48.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -599,7 +599,25 @@ const ADMIN_PROGRAMME: { id: string; name: string; stand?: () => Promise<string 
   { id: "kc-system-check", name: "KC System-Check" },
   { id: "kicc", name: "KICC Kontrollzentrum" },
 ];
-const ADMIN_DB_GRENZE = 500 * 1024 * 1024; // kostenloser Supabase-Tarif (falls der System-Check keinen Wert liefert)
+const ADMIN_DB_GRENZE = 500 * 1024 * 1024;
+// Neon-Spiegel und Backup (0.48.0): liest nur die Protokolle des KC-Spiegels (kc_db_mirror_*, kc_neon_compute_policy) – steuert nichts
+async function adminSpiegel() {
+  const letzter = (typ: string) => db.from("kc_db_mirror_runs").select("started_at,message").eq("run_type", typ).eq("status", "ok").order("started_at", { ascending: false }).limit(1).maybeSingle();
+  const [{ data: pol }, { data: compute }, { data: snap }, { data: backup }, { data: restore }, { data: pause }] = await Promise.all([
+    db.from("kc_db_mirror_policies").select("name,mode,target,enabled,lag_threshold_sec,updated_at"),
+    db.from("kc_neon_compute_policy").select("mode,maintenance_until,updated_at").eq("id", "primary").maybeSingle(),
+    letzter("snapshot"), letzter("backup"), letzter("restore_test"),
+    db.from("kc_db_mirror_audit").select("happened_at,action,detail").or("action.ilike.%paus%,action.ilike.%resum%,action.ilike.%fortgesetzt%").order("happened_at", { ascending: false }).limit(1).maybeSingle(),
+  ]);
+  const p = pol ?? [], neon = p.filter((x: any) => x.target === "neon" && x.mode !== "realtime"), bk = p.filter((x: any) => x.mode === "backup");
+  return {
+    neon: { aktiv: neon.some((x: any) => x.enabled), lagSek: Math.min(...neon.map((x: any) => Number(x.lag_threshold_sec) || 720), 720), letzter: snap?.started_at ?? null,
+      regeln: neon.map((x: any) => ({ name: x.name, an: !!x.enabled })) },
+    backup: { aktiv: bk.some((x: any) => x.enabled), letztes: backup?.started_at ?? null, restoreTest: restore?.started_at ?? null },
+    compute: compute ? { modus: compute.mode, bis: compute.maintenance_until } : null,
+    pause: pause && /paus/i.test(pause.action) ? { zeit: pause.happened_at, text: pause.detail } : null,
+  };
+} // kostenloser Supabase-Tarif (falls der System-Check keinen Wert liefert)
 
 // ---------- Anmeldung ----------
 type Ich = { person_id: string; name: string; vorname: string; admin: boolean; vorstand: boolean; aemter: string[]; protokolle: boolean; kontakte: boolean };
@@ -2804,6 +2822,7 @@ Köcheclub Werne`,
           Promise.all(ADMIN_PROGRAMME.map((x) => (x.stand ? x.stand().catch(() => null) : Promise.resolve(null)))),
           wartungLesen(),
         ]);
+        const spiegel = await adminSpiegel().catch((e) => { console.error("adminSpiegel", String(e)); return null; });
         const namen = new Map(leute.map((x) => [x.person_id, x.display_name])), aktivIds = new Set(leute.map((x) => x.person_id));
         const mz = (zug ?? []).filter((x: any) => x.aktiv && aktivIds.has(x.person_id));
         const alter = (x: any) => (x.zuletzt_gesehen ? Date.now() - new Date(x.zuletzt_gesehen).getTime() : Infinity);
@@ -2812,7 +2831,7 @@ Köcheclub Werne`,
           zeit: jetzt(), server: { version: SERVER_VERSION, dbMs, ok: !dbFehler },
           datenbank: { bytes: dbFehler ? null : Number(dbBytes), grenze: Number(health?.free_db_reference_bytes) || ADMIN_DB_GRENZE,
             warnPct: health?.warning_threshold_pct ?? 75, kritPct: health?.critical_threshold_pct ?? 90, check: health ? { status: health.status, zeit: health.last_check_at } : null },
-          speicher, wartung,
+          speicher, wartung, spiegel,
           communicator: { farbe: comm.farbe, text: comm.text, erreichbar: comm.erreichbar, push: comm.push.zustand, email: comm.email.zustand, club: comm.club, bericht: comm.bericht },
           mitglieder: {
             gesamt: leute.length, mitZugang: mz.length, ohneZugang: leute.length - mz.length, nieAngemeldet: mz.filter((x: any) => !x.zuletzt_gesehen).length,

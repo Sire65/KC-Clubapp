@@ -1011,7 +1011,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.47.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.48.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2451,6 +2451,21 @@ function adminProgrammFarbe(p) {
   if (min <= ADMIN_ALT_TAGE * 1440) return ["gelb", `zuletzt ${seitText(p.letzte)}`];
   return ["grau", `keine aktuelle Meldung (${seitText(p.letzte)})`];
 }
+// Neon-Spiegel/Backup: pausiert = gelb (nie grün), zu alt = rot, unbekannt = grau
+const BACKUP_OK_STD = 26, BACKUP_WARN_STD = 72;
+function adminSpiegelFarben(sp) {
+  if (!sp) return { neon: ["grau", "Zustand unbekannt"], backup: ["grau", "Zustand unbekannt"] };
+  const std = (iso) => (iso ? (Date.now() - new Date(iso)) / 3600000 : Infinity), datum = (iso) => fKurz.format(new Date(iso));
+  const pauseText = sp.pause ? `pausiert seit ${datum(sp.pause.zeit)}` : "ausgeschaltet";
+  const bis = sp.compute?.bis && new Date(sp.compute.bis) > new Date() ? ` · Neon-Wartung bis ${datum(sp.compute.bis)}` : "";
+  const neon = !sp.neon.aktiv ? ["gelb", pauseText + bis]
+    : std(sp.neon.letzter) * 3600 <= sp.neon.lagSek ? ["gruen", `aktuell · ${seitText(sp.neon.letzter)}`]
+    : std(sp.neon.letzter) <= 1 ? ["gelb", `verzögert · ${seitText(sp.neon.letzter)}`] : ["rot", `hängt · letzter Abgleich ${seitText(sp.neon.letzter)}`];
+  const b = std(sp.backup.letztes);
+  const backup = b <= BACKUP_OK_STD ? ["gruen", `letztes ${seitText(sp.backup.letztes)}`]
+    : [b <= BACKUP_WARN_STD ? "gelb" : "rot", `letztes ${seitText(sp.backup.letztes)}${sp.backup.aktiv ? "" : " · " + pauseText}`];
+  return { neon, backup };
+}
 function adminBalken(titel, belegt, grenze, warn, krit) {
   if (belegt == null) return `<div class="abalken">${lampe("grau")}<span>${titel}: unbekannt</span></div>`;
   const pct = Math.round((belegt / grenze) * 1000) / 10, f = pct >= krit ? "rot" : pct >= warn ? "gelb" : "gruen";
@@ -2468,6 +2483,7 @@ function infoAdmin() {
       ${zeile(sf, "Server", `v${r.server.version} · Datenbank ${r.server.dbMs} ms`)}
       ${zeile(cf, "Kommunikation", c.text)}
       ${r.programme.map((p) => { const [f, t] = adminProgrammFarbe(p); return zeile(f, p.name, t); }).join("")}
+      ${(() => { const sf2 = adminSpiegelFarben(r.spiegel); return zeile(sf2.neon[0], "Neon-Spiegel", sf2.neon[1]) + zeile(sf2.backup[0], "Backup", sf2.backup[1]); })()}
       ${zeile(r.wartung?.an ? "gelb" : "gruen", "Wartung", r.wartung?.an ? "an" + (r.wartung.hinweis ? " – " + r.wartung.hinweis : "") : "aus")}
     </div>
     ${adminBalken("🗄️ Datenbank", r.datenbank.bytes, r.datenbank.grenze, r.datenbank.warnPct, r.datenbank.kritPct)}
@@ -2490,6 +2506,13 @@ function adminBlatt() {
     <p class="hinweis" style="margin:0">Club-App letzte 7 Tage: ${c.club.gesendet} zugestellt · ${c.club.offen} offen · ${c.club.fehler} Fehler (${c.club.fehler24} in 24 Std.)${b ? ` · Erfolgsquote ${String(b.erfolg).replace(".", ",")} % · Warteschlange ${b.warteschlange}` : ""}</p>
     <b>🖥️ KC-Programme</b>
     <table class="todotab">${r.programme.map((p) => { const [f, t] = adminProgrammFarbe(p); return `<tr><td>${lampe(f)} ${esc(p.name)}</td><td>${esc(t)}${p.version ? ` · v${esc(p.version)}` : ""}</td><td class="hinweis">${p.datenstand ? "Daten: " + esc(zeitKurz(p.datenstand)) : ""}</td></tr>`; }).join("")}</table>
+    <b>🪞 Neon-Spiegel &amp; Backup</b>
+    ${(() => { const sp = r.spiegel; if (!sp) return '<p class="hinweis" style="margin:0">Zustand gerade nicht abrufbar.</p>'; const f = adminSpiegelFarben(sp);
+      return `<table class="todotab"><tr><td>${lampe(f.neon[0])} Spiegel Supabase → Neon</td><td>${esc(f.neon[1])}</td></tr><tr><td>${lampe(f.backup[0])} Tägliches Backup</td><td>${esc(f.backup[1])}</td></tr>
+        <tr><td>🧪 Letzter Wiederherstellungs-Test</td><td>${sp.backup.restoreTest ? esc(seitText(sp.backup.restoreTest)) + " · bestanden" : "–"}</td></tr>
+        ${sp.compute ? `<tr><td>⚙️ Neon-Rechenzeit</td><td>${esc(sp.compute.modus === "maintenance" ? "Wartung/Sparmodus" : sp.compute.modus)}${sp.compute.bis ? " bis " + esc(fKurz.format(new Date(sp.compute.bis))) : ""}</td></tr>` : ""}</table>
+        ${sp.pause ? `<p class="hinweis" style="margin:0">⏸️ ${esc(zeitKurz(sp.pause.zeit))}: ${esc(sp.pause.text)}</p>` : ""}
+        <p class="hinweis" style="margin:0;font-size:.8rem">Regeln: ${sp.neon.regeln.map((x) => `${x.an ? "✅" : "⏸️"} ${esc(x.name)}`).join(" · ")}</p>`; })()}
     <b>🗄️ Datenbank</b>
     <p class="hinweis" style="margin:0">${r.datenbank.bytes != null ? `${mb(r.datenbank.bytes)} von ${mb(r.datenbank.grenze)} (kostenloser Tarif) · Warnung ab ${r.datenbank.warnPct} %, kritisch ab ${r.datenbank.kritPct} %` : "Größe gerade nicht abrufbar"}${r.datenbank.check ? ` · täglicher System-Check: ${esc(r.datenbank.check.status)} (${esc(seitText(r.datenbank.check.zeit))})` : ""}</p>
     <p class="hinweis" style="margin:0">📁 Dateien: ${mb(r.speicher.belegt)} von ${mb(r.speicher.grenze)} · Platz für ca. ${r.speicher.fotosMoeglich} weitere Fotos</p>`;
