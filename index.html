@@ -161,8 +161,19 @@
   .wkopf { display: flex; gap: 12px; align-items: center; }
   .wsym { font-size: 2.6rem; line-height: 1; filter: drop-shadow(0 2px 6px rgba(0,0,0,.25)); }
   .wtemp { font-size: 2rem; font-weight: 800; line-height: 1; }
-  .wtage { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
-  .wtag { display: grid; justify-items: center; gap: 1px; padding: 6px 4px; border-radius: 12px; background: rgba(255,255,255,.14); font-size: .85rem; }
+  .wtage { display: flex; gap: 6px; margin-top: 10px; overflow-x: auto; scrollbar-width: none; scroll-snap-type: x proximity; padding-bottom: 2px; }
+  .wtage::-webkit-scrollbar { display: none; }
+  .wtag { flex: 0 0 66px; scroll-snap-align: start; display: grid; justify-items: center; gap: 1px; padding: 6px 2px; border-radius: 12px; border: 2px solid transparent; background: rgba(255,255,255,.14); color: #fff; font: inherit; font-size: .8rem; cursor: pointer; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: pan-x; }
+  .wtag.an { background: rgba(255,255,255,.3); border-color: #ffe7a3; box-shadow: 0 0 10px rgba(255,221,130,.55); }
+  .wtipp { font-size: .72rem; opacity: .75; margin-top: 3px; }
+  .wmin { font-size: 1.1rem; font-weight: 700; opacity: .85; }
+  .wzurueck { padding: 1px 8px; margin-left: 4px; font-size: .78rem; }
+  .wdetails { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .wdz { display: grid; grid-template-columns: auto 1fr; column-gap: 8px; align-items: center; padding: 8px 10px; border-radius: 12px; background: var(--karte2); }
+  .wdz span { grid-row: span 2; font-size: 1.3rem; } .wdz small { color: var(--grau); }
+  .wstunden { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+  .wstunden div { display: grid; justify-items: center; gap: 1px; padding: 6px 2px; border-radius: 12px; background: var(--karte2); font-size: .85rem; }
+  .wstunden b { font-size: 1.3rem; font-weight: 400; } .wstunden small { color: var(--grau); font-size: .72rem; }
   .wtag b { font-size: 1.4rem; font-weight: 400; } .wtag small { opacity: .85; }
   .wtreffen { display: block; width: 100%; margin-top: 8px; text-align: left; border: none; border-radius: 12px; padding: 7px 12px; background: rgba(255,255,255,.18); color: #fff; font: inherit; font-size: .9rem; cursor: pointer; }
   .wfuss { display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-top: 8px; font-size: .78rem; opacity: .9; }
@@ -297,7 +308,7 @@
   .knopf:disabled { opacity: .5; }
   .knoepfe { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
   label.feld { display: block; margin-top: 10px; font-weight: 700; font-size: .92rem; }
-  .feld input, .feld select, .feld textarea { display: block; width: 100%; margin-top: 5px; padding: 12px; border: 1px solid var(--linie); border-radius: 12px; background: var(--bg); }
+  .feld input, .feld select, .feld textarea { display: block; width: 100%; margin-top: 5px; padding: 12px; border: 1px solid var(--linie); border-radius: 12px; background: var(--bg); color: var(--text); } /* 0.46.0: Textfarbe immer passend zum Feld-Hintergrund (sonst z. B. weiß auf hell in der Foto-Großansicht) */
   .zwei { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .marke { display: inline-block; font-size: .78rem; font-weight: 800; padding: 3px 9px; border-radius: 10px; background: var(--karte2); }
   .marke.gruen { background: var(--gruenbg); color: var(--gruen); }
@@ -916,6 +927,11 @@
     <button class="knopf haupt" id="neuUpdateKnopf" onclick="jetztAktualisieren()">🔄 Jetzt aktualisieren</button>
     <button class="knopf" onclick="$('neuBlatt').classList.add('versteckt')" id="neuZuKnopf">Später</button></div>
 </div>
+<!-- KC-CLUB-WETTER-TAGE (0.46.0): Wetter-Details eines Tages (Tag im Wetter-Feld lange drücken) -->
+<div class="blatt versteckt" id="wetterBlatt" onclick="if(event.target===this)this.classList.add('versteckt')">
+  <div class="blatt-innen" style="max-height:85vh;overflow-y:auto"><div id="wetterTagInhalt" style="display:grid;gap:10px"></div>
+    <button class="knopf" style="text-align:center" onclick="$('wetterBlatt').classList.add('versteckt')">Schließen</button></div>
+</div>
 <!-- KC-CLUB-ZENTRALE (0.44.0): Empfänger auswählen -->
 <div class="blatt versteckt" id="zeBlatt" onclick="if(event.target===this)zeBlattZu()">
   <div class="blatt-innen" style="max-height:85vh;overflow-y:auto"><h3>👥 An wen?</h3>
@@ -979,7 +995,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.45.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.46.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2165,7 +2181,7 @@ function registerWischen(schritt) {
   let x0 = null, y0 = 0, ziel = null;
   const flaechen = () => [[$("heroInfo"), infoBlaettern], [$("raster"), registerWischen], [$("register"), registerWischen], [$("kalGitter"), kalBlaettern]];
   document.addEventListener("touchstart", (e) => {
-    const f = flaechen().find(([el]) => el && el.contains(e.target));
+    const f = e.target.closest?.(".wtage") ? null : flaechen().find(([el]) => el && el.contains(e.target)); // Wetter-Tagesleiste scrollt selbst
     ziel = f ? f[1] : null; if (ziel) { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }
   }, { passive: true });
   document.addEventListener("touchend", (e) => {
@@ -2438,7 +2454,7 @@ async function infoFotoOeffnen(id) {
 
 // ---------- KC-CLUB-WETTER (0.42.0): Feld 2 – Wetter mit Animation (Regen, Sonne, Schnee, Gewitter, Sturm, Nebel) ----------
 // Daten holt der Server (Ort und Wetter-App stellt der Admin ein). Alte Daten werden als „veraltet“ markiert, fehlende nie als Wetter gezeigt.
-const WET = { r: null, geholt: 0, laedt: false };
+const WET = { r: null, geholt: 0, laedt: false, tag: 0 }; // tag = gewählter Tag (0 = heute/jetzt)
 const WETTER_NEU_MIN = 30, WETTER_VERALTET_MIN = 180, STURM_KMH = 62, WIND_HINWEIS_KMH = 40;
 // WMO-Wettercodes → [von, bis, Symbol Tag, Symbol Nacht, Text, Animation]
 const WETTER_CODES = [
@@ -2464,24 +2480,80 @@ function infoWetter() {
   const r = WET.r;
   if (!r) return `<h2>🌦️ Wetter</h2><div class="unter">Wird geladen …</div>`;
   if (!r.daten) return `<h2>❔ Wetter gerade nicht verfügbar</h2><div class="unter">${esc(r.fehler || "Keine Wetterdaten")} – wir versuchen es gleich noch einmal.</div>`;
-  const d = r.daten, j = d.jetzt, a = wetterArt(j.code, j.tag), alt = Date.now() - new Date(r.stand) > WETTER_VERALTET_MIN * 60000;
-  const sturm = j.boeen >= STURM_KMH ? " · 💨 Sturm" : "";
-  const tage = d.tage.slice(0, 3).map((t, i) => `<div class="wtag"><span>${i === 0 ? "Heute" : i === 1 ? "Morgen" : fWtag.format(new Date(t.datum + "T12:00:00Z"))}</span><b>${wetterArt(t.code).sym}</b><span>${grad(t.max)} / ${grad(t.min)}</span>${t.regenWkt != null ? `<small>☔ ${t.regenWkt} %</small>` : ""}</div>`).join("");
+  const d = r.daten, j = d.jetzt, alt = Date.now() - new Date(r.stand) > WETTER_VERALTET_MIN * 60000;
+  if (WET.tag >= d.tage.length) WET.tag = 0;
+  const tr = INIT?.naechstesTreffen, treffenTag = tr ? isoBerlin(new Date(tr.beginn)) : null;
+  // KC-CLUB-WETTER-TAGE (0.46.0): Tag antippen → große Anzeige (und Animation) zeigt diesen Tag; lange drücken → Details
+  const tage = d.tage.slice(0, WETTER_TAGE_LEISTE).map((t, i) => `<button class="wtag${i === WET.tag ? " an" : ""}" onpointerdown="wtDruck(event, ${i})" onpointermove="wtBewegt(event)" onpointerup="wtLos(${i})" onpointercancel="wtLos(${i}, true)" onpointerleave="wtLos(${i}, true)" oncontextmenu="return false" aria-label="${esc(wetterTagName(i, t.datum))}: ${esc(wetterArt(t.code).text)}">
+      <span>${esc(wetterTagKurz(i, t.datum))}${t.datum === treffenTag ? " 📅" : ""}</span><b>${wetterArt(t.code).sym}</b><span>${grad(t.max)} / ${grad(t.min)}</span>${t.regenWkt != null ? `<small>☔ ${t.regenWkt} %</small>` : ""}</button>`).join("");
+  let kopf, zeile2, szene;
+  if (WET.tag === 0) {
+    const a = wetterArt(j.code, j.tag);
+    kopf = `<span class="wsym">${a.sym}</span><div><div class="wtemp">${grad(j.temp)}</div><div class="unter">${esc(a.text)}${j.boeen >= STURM_KMH ? " · 💨 Sturm" : ""}</div></div>`;
+    zeile2 = `📍 ${esc(r.ort.name)} · gefühlt ${grad(j.gefuehlt)} · 💨 ${Math.round(j.wind)} km/h${j.boeen >= WIND_HINWEIS_KMH ? ` (Böen ${Math.round(j.boeen)})` : ""}`;
+    szene = `szene-${a.szene}${j.boeen >= STURM_KMH ? " sturm" : ""}${j.tag ? "" : " nacht"}`;
+  } else {
+    const t = d.tage[WET.tag], a = wetterArt(t.code, true);
+    kopf = `<span class="wsym">${a.sym}</span><div><div class="wtemp">${grad(t.max)}<small class="wmin"> / ${grad(t.min)}</small></div><div class="unter">${esc(wetterTagName(WET.tag, t.datum))}: ${esc(a.text)}${(t.boeenMax ?? 0) >= STURM_KMH ? " · 💨 Sturm" : ""}</div></div>`;
+    zeile2 = `📍 ${esc(r.ort.name)}${t.regenWkt != null ? ` · ☔ ${t.regenWkt} %` : ""}${t.regenMm ? ` (${String(t.regenMm).replace(".", ",")} mm)` : ""}${t.windMax != null ? ` · 💨 bis ${Math.round(t.windMax)} km/h` : ""} <button class="wlink wzurueck" onclick="wetterTagWahl(0)">↩ jetzt</button>`;
+    szene = `szene-${a.szene}${(t.boeenMax ?? 0) >= STURM_KMH ? " sturm" : ""}`;
+  }
   let treffen = "";
-  const tr = INIT?.naechstesTreffen;
   if (tr) {
-    const tag = isoBerlin(new Date(tr.beginn)), w = d.tage.find((x) => x.datum === tag);
-    treffen = w ? `<button class="wtreffen" onclick="zumTreffen()">📅 Beim Treffen (${esc(fWtag.format(new Date(tag + "T12:00:00Z")))} ${tag.slice(8, 10)}.${tag.slice(5, 7)}.): <b>${wetterArt(w.code).sym} ${grad(w.max)} / ${grad(w.min)}</b>${w.regenWkt != null ? ` · ☔ ${w.regenWkt} %` : ""} ›</button>`
+    const w = d.tage.find((x) => x.datum === treffenTag);
+    treffen = w ? `<button class="wtreffen" onclick="zumTreffen()">📅 Beim Treffen (${esc(fWtag.format(new Date(treffenTag + "T12:00:00Z")))} ${treffenTag.slice(8, 10)}.${treffenTag.slice(5, 7)}.): <b>${wetterArt(w.code).sym} ${grad(w.max)} / ${grad(w.min)}</b>${w.regenWkt != null ? ` · ☔ ${w.regenWkt} %` : ""} ›</button>`
       : `<div class="unter" style="font-size:.85rem">📅 Wetter zum nächsten Treffen gibt es etwa 2 Wochen vorher.</div>`;
   }
-  return `<div class="wszene szene-${a.szene}${j.boeen >= STURM_KMH ? " sturm" : ""}${j.tag ? "" : " nacht"}" aria-hidden="true"></div>
+  return `<div class="wszene ${szene}" aria-hidden="true"></div>
     <div class="winhalt">
-      <div class="wkopf"><span class="wsym">${a.sym}</span><div><div class="wtemp">${grad(j.temp)}</div><div class="unter">${esc(a.text)}${sturm}</div></div></div>
-      <div class="unter">📍 ${esc(r.ort.name)} · gefühlt ${grad(j.gefuehlt)} · 💨 ${Math.round(j.wind)} km/h${j.boeen >= WIND_HINWEIS_KMH ? ` (Böen ${Math.round(j.boeen)})` : ""}</div>
-      <div class="wtage">${tage}</div>${treffen}
+      <div class="wkopf">${kopf}</div>
+      <div class="unter">${zeile2}</div>
+      <div class="wtage">${tage}</div><div class="wtipp">Tag antippen = anzeigen · lange drücken = Details</div>${treffen}
       <div class="wfuss"><span class="${alt ? "wveraltet" : ""}">${alt ? "⚠️ veraltet · " : ""}Stand ${esc(zeitKurz(r.stand))} Uhr · ${esc(r.quelle.name)}</span>
         <button class="wlink" onclick="wetterApp()">${esc(r.app.name)} ›</button></div>
     </div>`;
+}
+const WETTER_TAGE_LEISTE = 7, LANG_DRUECKEN_MS = 550;
+const wetterTagKurz = (i, datum) => (i === 0 ? "Heute" : i === 1 ? "Morgen" : fWtag.format(new Date(datum + "T12:00:00Z")));
+const wetterTagName = (i, datum) => (i === 0 ? "Heute" : i === 1 ? "Morgen" : fDatumLang.format(new Date(datum + "T12:00:00Z")));
+let WT_DRUCK = null;
+function wtDruck(e, i) {
+  clearTimeout(WT_DRUCK?.timer);
+  WT_DRUCK = { i, x: e.clientX, y: e.clientY, lang: false, timer: setTimeout(() => { if (!WT_DRUCK) return; WT_DRUCK.lang = true; try { navigator.vibrate?.(15); } catch {} wetterTagDetails(i); }, LANG_DRUECKEN_MS) };
+}
+function wtBewegt(e) { if (WT_DRUCK && Math.hypot(e.clientX - WT_DRUCK.x, e.clientY - WT_DRUCK.y) > 12) { clearTimeout(WT_DRUCK.timer); WT_DRUCK = null; } } // gewischt/gescrollt, nicht getippt
+function wtLos(i, abbruch) {
+  if (!WT_DRUCK) return;
+  clearTimeout(WT_DRUCK.timer); const w = WT_DRUCK; WT_DRUCK = null;
+  if (!abbruch && !w.lang && w.i === i) wetterTagWahl(i);
+}
+function wetterTagWahl(i) {
+  const sl = document.querySelector("#infoFeld .wtage")?.scrollLeft || 0;
+  WET.tag = i; heroZeigen(0);
+  const leiste = document.querySelector("#infoFeld .wtage"); if (leiste) leiste.scrollLeft = sl;
+}
+function wetterTagDetails(i) {
+  const r = WET.r, t = r?.daten?.tage?.[i]; if (!t) return;
+  const a = wetterArt(t.code, true), z = (v, einheit = "") => (v == null ? "–" : `${String(Math.round(v * 10) / 10).replace(".", ",")}${einheit}`);
+  const uvText = (u) => (u == null ? "" : u < 3 ? " (niedrig)" : u < 6 ? " (mittel)" : u < 8 ? " (hoch)" : " (sehr hoch)");
+  const tr = INIT?.naechstesTreffen, istTreffen = tr && isoBerlin(new Date(tr.beginn)) === t.datum;
+  const zeile = (sym, titel, wert) => `<div class="wdz"><span>${sym}</span><small>${titel}</small><b>${wert}</b></div>`;
+  $("wetterTagInhalt").innerHTML = `<h3 style="margin:0">${a.sym} ${esc(wetterTagName(i, t.datum))}</h3>
+    <p class="hinweis" style="margin:0">${esc(a.text)} · 📍 ${esc(r.ort.name)}${i < 2 ? " · " + esc(fDatumLang.format(new Date(t.datum + "T12:00:00Z"))) : ""}</p>
+    ${istTreffen ? `<div class="hinweis" style="margin:0;padding:8px 12px;border-radius:12px;background:var(--gelbbg);color:var(--text)">📅 An diesem Tag: <b>${esc(tr.titel)}</b> um ${esc(fZeit.format(new Date(tr.beginn)))} Uhr</div>` : ""}
+    <div class="wdetails">
+      ${zeile("🌡️", "Höchst / Tiefst", `${grad(t.max)} / ${grad(t.min)}`)}
+      ${zeile("☔", "Regen", `${t.regenWkt == null ? "–" : t.regenWkt + " %"}${t.regenMm != null ? ` · ${z(t.regenMm, " mm")}` : ""}`)}
+      ${zeile("💨", "Wind / Böen", `bis ${z(t.windMax)} / ${z(t.boeenMax, " km/h")}`)}
+      ${zeile("☀️", "Sonnenschein", z(t.sonneStd, " Std."))}
+      ${zeile("🌅", "Sonne auf / unter", `${t.sonnenauf || "–"} / ${t.sonnenunter || "–"}`)}
+      ${zeile("🔆", "UV-Index", t.uv == null ? "–" : z(t.uv) + uvText(t.uv))}
+    </div>
+    ${t.stunden?.length ? `<b style="margin-top:4px">Im Tagesverlauf</b><div class="wstunden">${t.stunden.map((h) => `<div><small>${esc(h.zeit)}</small><b>${wetterArt(h.code, h.tag).sym}</b><span>${grad(h.temp)}</span>${h.regenWkt != null ? `<small>☔ ${h.regenWkt} %</small>` : ""}</div>`).join("")}</div>`
+      : `<p class="hinweis" style="margin:0">Den Verlauf über den Tag gibt es für die nächsten ${WETTER_TAGE_LEISTE} Tage.</p>`}
+    <p class="hinweis" style="margin:0;font-size:.8rem">Stand ${esc(zeitKurz(r.stand))} Uhr · ${esc(r.quelle.name)}</p>
+    <button class="knopf" style="text-align:center" onclick="wetterApp()">🌐 Mehr bei ${esc(r.app.name)}</button>`;
+  $("wetterBlatt").classList.remove("versteckt");
 }
 function wetterApp() { const u = WET.r?.app?.url; if (u) window.open(u, "_blank", "noopener"); }
 // Animation: Elemente zufällig verteilt; bei „weniger Bewegung“ (Systemeinstellung) steht alles still

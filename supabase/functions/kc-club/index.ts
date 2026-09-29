@@ -13,14 +13,14 @@
 //           KC-CLUB-COMMUNICATOR-STATUS (0.17.0), KC-CLUB-FEEDBACK (0.18.0),
 //           KC-CLUB-KACHELN (0.19.0), KC-CLUB-ZUGANG-SELBST (0.21.0),
 //           KC-CLUB-GRUPPEN, KC-CLUB-ZUSTELLWAHL (0.23.0)
-//           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0), KC-CLUB-KACHELN-ZIEHEN (0.26.0), KC-CLUB-FEEDBACK-NEU (0.27.1), KC-CLUB-BEGRUESSUNG (0.28.0), KC-CLUB-ONLINE (0.29.0), KC-CLUB-ANRUF (0.31.0), KC-CLUB-VIDEO (0.32.0), KC-CLUB-QUITTUNG (0.34.0), KC-CLUB-TODO + KC-CLUB-REGISTER-ZIEHEN (0.36.0), KC-CLUB-SPRACHE + KC-CLUB-TODO-ZUSTAENDIG (0.37.0), KC-CLUB-ERSTATTUNG (0.38.0), KC-CLUB-KMSATZ (0.39.0), KC-CLUB-FEEDBACK-DAUERHAFT (0.40.0), KC-CLUB-INFOFELD + KC-CLUB-WETTER (0.42.0), KC-CLUB-INFOFELD-DEMNAECHST/-FOTOS (0.43.0), KC-CLUB-ZENTRALE (0.44.0), KC-CLUB-FOTO-META (0.45.0)
+//           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0), KC-CLUB-KACHELN-ZIEHEN (0.26.0), KC-CLUB-FEEDBACK-NEU (0.27.1), KC-CLUB-BEGRUESSUNG (0.28.0), KC-CLUB-ONLINE (0.29.0), KC-CLUB-ANRUF (0.31.0), KC-CLUB-VIDEO (0.32.0), KC-CLUB-QUITTUNG (0.34.0), KC-CLUB-TODO + KC-CLUB-REGISTER-ZIEHEN (0.36.0), KC-CLUB-SPRACHE + KC-CLUB-TODO-ZUSTAENDIG (0.37.0), KC-CLUB-ERSTATTUNG (0.38.0), KC-CLUB-KMSATZ (0.39.0), KC-CLUB-FEEDBACK-DAUERHAFT (0.40.0), KC-CLUB-INFOFELD + KC-CLUB-WETTER (0.42.0), KC-CLUB-INFOFELD-DEMNAECHST/-FOTOS (0.43.0), KC-CLUB-ZENTRALE (0.44.0), KC-CLUB-FOTO-META (0.45.0), KC-CLUB-WETTER-TAGE (0.46.0)
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.45.0";
+const SERVER_VERSION = "0.46.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -431,7 +431,10 @@ type KmSatz = { id: string; satz: number; ab: string };
 // Der Server holt das Wetter (Mitglieder-Handys sprechen nicht mit fremden Diensten) und merkt es sich 30 Minuten.
 type WetterOrt = { name: string; lat: number; lon: number; region: string };
 type WetterDaten = { jetzt: { temp: number; gefuehlt: number; code: number; wind: number; boeen: number; regen: number; tag: boolean };
-  tage: { datum: string; code: number; max: number; min: number; regenWkt: number | null; sonnenauf: string; sonnenunter: string }[] };
+  tage: { datum: string; code: number; max: number; min: number; regenWkt: number | null; sonnenauf: string; sonnenunter: string;
+    regenMm?: number | null; windMax?: number | null; boeenMax?: number | null; uv?: number | null; sonneStd?: number | null;
+    stunden?: { zeit: string; code: number; temp: number; regenWkt: number | null; tag: boolean }[] }[] };
+const WETTER_STUNDEN = [6, 9, 12, 15, 18, 21], WETTER_STUNDEN_TAGE = 7; // Tagesdetails: alle 3 Stunden, für die nächsten 7 Tage
 const WETTER = { standardOrt: { name: "Werne", lat: 51.6639, lon: 7.6337, region: "Nordrhein-Westfalen" } as WetterOrt,
   standardQuelle: "open-meteo", standardApp: "wetteronline", cacheMin: 30, zeitzone: "Europe/Berlin" };
 const WETTER_QUELLEN: Record<string, { name: string; hinweis: string; holen: (o: WetterOrt) => Promise<WetterDaten>; suchen: (q: string) => Promise<WetterOrt[]> }> = {
@@ -439,14 +442,22 @@ const WETTER_QUELLEN: Record<string, { name: string; hinweis: string; holen: (o:
     name: "Open-Meteo", hinweis: "kostenlos, ohne Anmeldung, Daten u. a. vom Deutschen Wetterdienst",
     holen: async (o) => {
       const u = `https://api.open-meteo.com/v1/forecast?latitude=${o.lat}&longitude=${o.lon}&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,wind_gusts_10m,precipitation,is_day`
-        + `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset&timezone=${encodeURIComponent(WETTER.zeitzone)}&forecast_days=16`;
+        + `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset,precipitation_sum,wind_speed_10m_max,wind_gusts_10m_max,uv_index_max,sunshine_duration`
+        + `&hourly=temperature_2m,weather_code,precipitation_probability,is_day&timezone=${encodeURIComponent(WETTER.zeitzone)}&forecast_days=16`;
       const r = await fetch(u, { signal: AbortSignal.timeout(8000) });
       if (!r.ok) throw new Error("Open-Meteo " + r.status);
-      const d = await r.json(), c = d.current ?? {}, t = d.daily ?? {};
+      const d = await r.json(), c = d.current ?? {}, t = d.daily ?? {}, h = d.hourly ?? {};
+      const zahlOd = (v: unknown) => (v === null || v === undefined || !Number.isFinite(Number(v)) ? null : Number(v));
+      const stunden = (datum: string) => (h.time ?? []).map((zeit: string, i: number) => ({ zeit, i }))
+        .filter((x: any) => x.zeit.startsWith(datum) && WETTER_STUNDEN.includes(Number(x.zeit.slice(11, 13))))
+        .map(({ zeit, i }: any) => ({ zeit: zeit.slice(11, 16), code: Number(h.weather_code[i]), temp: Number(h.temperature_2m[i]), regenWkt: zahlOd(h.precipitation_probability?.[i]), tag: h.is_day?.[i] === 1 }));
       return {
         jetzt: { temp: Number(c.temperature_2m), gefuehlt: Number(c.apparent_temperature), code: Number(c.weather_code), wind: Number(c.wind_speed_10m), boeen: Number(c.wind_gusts_10m), regen: Number(c.precipitation ?? 0), tag: c.is_day === 1 },
         tage: (t.time ?? []).map((datum: string, i: number) => ({ datum, code: Number(t.weather_code[i]), max: Number(t.temperature_2m_max[i]), min: Number(t.temperature_2m_min[i]),
-          regenWkt: t.precipitation_probability_max?.[i] ?? null, sonnenauf: String(t.sunrise?.[i] ?? "").slice(11, 16), sonnenunter: String(t.sunset?.[i] ?? "").slice(11, 16) })),
+          regenWkt: t.precipitation_probability_max?.[i] ?? null, sonnenauf: String(t.sunrise?.[i] ?? "").slice(11, 16), sonnenunter: String(t.sunset?.[i] ?? "").slice(11, 16),
+          regenMm: zahlOd(t.precipitation_sum?.[i]), windMax: zahlOd(t.wind_speed_10m_max?.[i]), boeenMax: zahlOd(t.wind_gusts_10m_max?.[i]), uv: zahlOd(t.uv_index_max?.[i]),
+          sonneStd: zahlOd(t.sunshine_duration?.[i]) === null ? null : Math.round(Number(t.sunshine_duration[i]) / 360) / 10,
+          ...(i < WETTER_STUNDEN_TAGE ? { stunden: stunden(datum) } : {}) })),
       };
     },
     suchen: async (q) => {

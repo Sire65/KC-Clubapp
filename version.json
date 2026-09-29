@@ -1,11 +1,20 @@
 {
-  "version": "0.45.0",
+  "version": "0.46.0",
   "datum": "2026-09-29",
   "neu": [
-    "ℹ️ Fotoalbum: Foto antippen (oder ℹ️ Details) zeigt, wann und wo es gemacht wurde – mit Karte, Handy/Kamera, Belichtung, Bildgröße und wer es hochgeladen hat",
-    "📍 Beim Hochladen wählbar, ob der Aufnahmeort mitgespeichert wird; wer das Foto hochgeladen hat, kann den Ort später entfernen"
+    "🌦️ Wetter: 7 Tage zum Durchschieben – Tag antippen zeigt ihn groß (mit passender Animation), „↩ jetzt“ springt zurück",
+    "👆 Tag lange drücken: alle Details – Höchst/Tiefst, Regen in % und mm, Wind und Böen, Sonnenstunden, Sonnenauf-/untergang, UV-Index und Verlauf über den Tag",
+    "🔤 Foto ändern: Schrift in den Eingabefeldern wieder gut lesbar"
   ],
   "verlauf": [
+    {
+      "version": "0.46.0",
+      "neu": [
+        "🌦️ Wetter: 7 Tage zum Durchschieben – Tag antippen zeigt ihn groß (mit passender Animation), „↩ jetzt“ springt zurück",
+        "👆 Tag lange drücken: alle Details – Höchst/Tiefst, Regen in % und mm, Wind und Böen, Sonnenstunden, Sonnenauf-/untergang, UV-Index und Verlauf über den Tag",
+        "🔤 Foto ändern: Schrift in den Eingabefeldern wieder gut lesbar"
+      ]
+    },
     {
       "version": "0.45.0",
       "neu": [

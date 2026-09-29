@@ -1,5 +1,15 @@
 # Änderungen
 
+## 0.46.0 – 2026-09-29 (DEV)
+
+- KC-CLUB-WETTER-TAGE (neu): Wetter-Feld mit 7 Tagen in einer Leiste zum Schieben (Tag des Treffens mit 📅). Tag antippen →
+  große Anzeige zeigt diesen Tag (Symbol, Höchst/Tiefst, Regen %/mm, Wind; Animation passend zum Tag), „↩ jetzt“ zurück.
+  Tag lange drücken (550 ms, kurzes Vibrieren) → Blatt mit Tagesdetails: Höchst/Tiefst, Regen, Wind/Böen, Sonnenstunden,
+  Sonnenauf-/untergang, UV-Index mit Einstufung, Verlauf 6–21 Uhr alle 3 Stunden (7 Tage), Hinweis auf das Treffen.
+  Wischen in der Tagesleiste blättert nicht das Info-Feld. Server: Open-Meteo-Adapter liefert zusätzlich Tageswerte und Stunden.
+- Fehler behoben: In der Foto-Großansicht („✏️ Ändern“) war die Schrift in den Feldern weiß auf hellem Grund. Ursache: Felder
+  erbten die Textfarbe der Umgebung – jetzt haben alle Eingabefelder die Textfarbe passend zu ihrem Hintergrund (Tag/Nacht).
+
 ## 0.45.0 – 2026-09-29 (DEV)
 
 - KC-CLUB-FOTO-META (neu): Foto in der Großansicht antippen (oder „ℹ️ Details“) → Aufnahmezeit, Ort (Ortsname + Karte

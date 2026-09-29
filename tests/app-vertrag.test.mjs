@@ -881,4 +881,15 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/onclick="fotoDetails\(\)"/.test(html) && /id="faOrt" checked/.test(html) && /mitOrt: \$\("faOrt"\)\?\.checked !== false/.test(html), "Details/Ort-Erlaubnis fehlen in der App");
 }
 
+// 69. 0.46.0: Wetter-Tage – antippen wechselt die Anzeige, lange drücken zeigt Tagesdetails (Server liefert Stunden + Tageswerte)
+{
+  assert.ok(/precipitation_sum,wind_speed_10m_max,wind_gusts_10m_max,uv_index_max,sunshine_duration/.test(server) && /&hourly=temperature_2m,weather_code,precipitation_probability,is_day/.test(server), "Tagesdetails werden nicht abgerufen");
+  assert.ok(/const WETTER_STUNDEN = \[6, 9, 12, 15, 18, 21\], WETTER_STUNDEN_TAGE = 7/.test(server), "Stunden-Auswahl fehlt");
+  const w = html.slice(html.indexOf("function infoWetter"), html.indexOf("function wetterApp"));
+  assert.ok(/onpointerdown="wtDruck\(event, \$\{i\}\)"/.test(w) && /onpointerup="wtLos\(\$\{i\}\)"/.test(w), "Tag antippen/lange drücken fehlt");
+  assert.ok(/if \(WET\.tag === 0\)/.test(w) && /wetterTagWahl\(0\)/.test(w), "gewählter Tag ändert die Anzeige nicht / kein Zurück");
+  assert.ok(/WT_DRUCK\.lang = true;[^\n]*wetterTagDetails\(i\)/.test(w) && /if \(!abbruch && !w\.lang && w\.i === i\) wetterTagWahl\(i\)/.test(w), "Lange drücken löst zusätzlich den Tipp aus");
+  assert.ok(/id="wetterBlatt"/.test(html) && /e\.target\.closest\?\.\("\.wtage"\) \? null/.test(html), "Detailblatt fehlt / Tagesleiste blättert das Info-Feld");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
