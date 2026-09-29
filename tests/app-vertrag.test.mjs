@@ -424,4 +424,12 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   f.VB.commZeit = Date.now() - 4 * 60000; assert.equal(f.vbCommZustand()[0], "grau", "veralteter Communicator-Stand als OK");
 }
 
+// 32. 0.17.5: kurzes Aufblitzen ist kein Erfolg; sichere Wege in der App (Karte, Club-Nachricht)
+{
+  assert.ok(/const EXTERN_ERFOLG_MS = 3000;/.test(html) && /m\.zurueck_ms - m\.versteckt_ms < EXTERN_ERFOLG_MS/.test(html), "Aufblitzen wird als Erfolg gewertet");
+  assert.ok(/"kc_club_weg_" \+ art/.test(html), "alter, falscher Speicher wird weiter benutzt");
+  assert.ok(/k: "karte", t: "🗺️ Karte hier in der App zeigen", intern:/.test(html) && /output=embed/.test(html) && /id="karteBlatt"/.test(html), "Karte in der App fehlt");
+  assert.ok(/k: "clubapp", t: "💬 Stattdessen Nachricht in der Club-App", intern:/.test(html), "Club-Nachricht als Weg fehlt");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

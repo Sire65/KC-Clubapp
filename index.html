@@ -511,6 +511,12 @@
   <div class="blatt-innen" style="max-height:92vh;overflow:auto"><h3>📡 Verbindung</h3><div id="vbInhalt" style="display:grid;gap:10px"></div>
     <button class="knopf" onclick="$('verbindungBlatt').classList.add('versteckt')">Schließen</button></div>
 </div>
+<div class="blatt versteckt" id="karteBlatt" onclick="if(event.target===this)this.classList.add('versteckt')">
+  <div class="blatt-innen"><h3>🗺️ <span id="karteTitel"></span></h3>
+    <iframe id="karteRahmen" title="Karte" style="width:100%;height:55vh;border:0;border-radius:14px" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+    <button class="knopf" onclick="navigator.clipboard?.writeText($('karteTitel').textContent).then(() => melde('📋 Adresse kopiert – in Google Maps einfügen'), () => melde($('karteTitel').textContent))">📋 Adresse kopieren</button>
+    <button class="knopf" onclick="$('karteBlatt').classList.add('versteckt');$('karteRahmen').src='about:blank'">Schließen</button></div>
+</div>
 <div class="blatt versteckt" id="externBlatt" onclick="if(event.target===this)externZu()">
   <div class="blatt-innen"><h3 id="exTitel"></h3><p class="hinweis" id="exText" style="margin:0"></p><div id="exKnoepfe" style="display:grid;gap:8px"></div>
     <button class="knopf" onclick="externZu()">Schließen</button></div>
@@ -551,7 +557,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.17.4"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.17.5"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2267,8 +2273,11 @@ const EXTERN_WEGE = {
     { k: "hier", t: "💬 WhatsApp-Seite hier öffnen", url: `https://api.whatsapp.com/send?phone=${waNummer(nr)}` },
     { k: "schema", t: "💬 WhatsApp-App direkt", url: `whatsapp://send?phone=${waNummer(nr)}` },
     { k: "web", t: "🌐 Über wa.me (Browser)", url: `https://wa.me/${waNummer(nr)}`, neu: true },
+    { k: "clubapp", t: "💬 Stattdessen Nachricht in der Club-App", intern: () => { externZu(); direkt(MD.person_id); } },
   ],
   route: (adr) => [
+    // bleibt sicher in der App: Karte mit der Adresse (Google-Maps-Einbettung, kostenlos, ohne Schlüssel)
+    { k: "karte", t: "🗺️ Karte hier in der App zeigen", intern: () => karteZeigen(adr) },
     { k: "intent", t: "🗺️ Google Maps öffnen", url: routeLink(adr), nur: IST_ANDROID },
     { k: "apple", t: "🗺️ Apple Karten öffnen", url: routeLink(adr), nur: IST_IOS },
     { k: "hier", t: "🗺️ Route hier anzeigen (Google Maps Webseite)", url: `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(adr)}` },
@@ -2276,22 +2285,35 @@ const EXTERN_WEGE = {
     { k: "web", t: "🌐 Route im Browser", url: `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(adr)}`, neu: true },
   ],
 };
-const externMerken = (art, k) => { try { localStorage.setItem("kc_club_extern_" + art, k); } catch {} };
-const externGemerkt = (art) => { try { return localStorage.getItem("kc_club_extern_" + art); } catch { return null; } };
+// Schlüssel „kc_club_weg_“ (0.17.5): der alte Speicher hielt kurzes Aufblitzen fälschlich für Erfolg
+const EXTERN_ERFOLG_MS = 3000; // nur wenn die andere App mindestens so lange vorne bleibt, gilt der Weg als gelungen
+const externMerken = (art, k) => { try { localStorage.setItem("kc_club_weg_" + art, k); } catch {} };
+const externGemerkt = (art) => { try { return localStorage.getItem("kc_club_weg_" + art); } catch { return null; } };
 let externTimer = null;
+function karteZeigen(adr) {
+  $("karteTitel").textContent = adr;
+  $("karteRahmen").src = `https://maps.google.com/maps?q=${encodeURIComponent(adr)}&z=15&output=embed`;
+  $("karteBlatt").classList.remove("versteckt");
+}
 function externZu() { clearTimeout(externTimer); $("externBlatt").classList.add("versteckt"); } // von Hand geschlossen → nicht wieder aufgehen
 function externVersuch(art, weg, wege, wert) {
   clearTimeout(externTimer);
   // Messung für die Fehlersuche: wann die App in den Hintergrund geht / zurückkommt, ob sie den Fokus verliert
   const t0 = performance.now(), m = { art, weg: weg.k, versteckt_ms: null, zurueck_ms: null, blur_ms: null, pagehide: false, fehler: "",
     modus: matchMedia("(display-mode: standalone)").matches ? "standalone" : matchMedia("(display-mode: minimal-ui)").matches ? "minimal-ui" : "browser" };
+  if (weg.intern) { externMerken(art, weg.k); $("externBlatt").classList.add("versteckt"); weg.intern(); return; }
   let weg0 = false;
   const merke = () => {
-    if (document.hidden) { if (m.versteckt_ms == null) m.versteckt_ms = Math.round(performance.now() - t0); weg0 = true; externMerken(art, weg.k); $("externBlatt").classList.add("versteckt"); }
-    else if (m.versteckt_ms != null && m.zurueck_ms == null) m.zurueck_ms = Math.round(performance.now() - t0);
+    if (document.hidden) { if (m.versteckt_ms == null) m.versteckt_ms = Math.round(performance.now() - t0); weg0 = true; $("externBlatt").classList.add("versteckt"); }
+    else if (m.versteckt_ms != null && m.zurueck_ms == null) {
+      m.zurueck_ms = Math.round(performance.now() - t0);
+      // schnell wieder da (andere App ging gleich wieder zu) → nicht geklappt, sofort die anderen Wege zeigen
+      if (m.zurueck_ms - m.versteckt_ms < EXTERN_ERFOLG_MS) { weg0 = false; clearTimeout(externTimer); document.removeEventListener("visibilitychange", merke); externBlatt(art, wege, wert, weg.k); }
+      else externMerken(art, weg.k);
+    }
   };
   const blur = () => { if (m.blur_ms == null) m.blur_ms = Math.round(performance.now() - t0); };
-  const hide = () => { m.pagehide = true; if (weg.k === "hier") externMerken(art, weg.k); };
+  const hide = () => { m.pagehide = true; };
   document.addEventListener("visibilitychange", merke); addEventListener("blur", blur); addEventListener("pagehide", hide);
   try { if (weg.neu) { const w = window.open(weg.url, "_blank", "noopener"); m.fenster = w === null ? "null" : "objekt"; } else location.href = weg.url; } catch (e) { m.fehler = String(e?.message || e).slice(0, 150); }
   externTimer = setTimeout(() => {
