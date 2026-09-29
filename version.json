@@ -1,9 +1,9 @@
 {
-  "version": "0.19.2",
+  "version": "0.20.0",
   "datum": "2026-09-29",
   "neu": [
-    "🧩 Startseite selbst anordnen: Kachel lange drücken",
-    "🙈 Kacheln ausblenden, 👁️ wieder einblenden",
-    "💭 Feedback: sag uns deine Meinung zur App"
+    "📲 Hilfe zum richtigen Installieren der App (Einstellungen → App-Installation)",
+    "🖼️ Fotos aus der Galerie teilen → „Köcheclub“ (installierte App)",
+    "🧩 Startseite selbst anordnen: Kachel lange drücken"
   ]
 }

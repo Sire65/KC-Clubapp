@@ -525,8 +525,16 @@
       <div class="schalter"><div><b>🇩🇪 Feiertage NRW im Kalender</b><div class="hinweis">Gesetzliche Feiertage in Nordrhein-Westfalen</div></div><input type="checkbox" id="setFeiertage" onchange="einstellung('feiertage', this.checked); if (KAL) kalZeichnen()"></div>
     </details>
     <details class="karte" data-klappe="install">
-      <summary>📲 Auf den Startbildschirm</summary>
-      <p class="hinweis" id="installHinweis">Android: Menü ⋮ → „App installieren“ bzw. „Zum Startbildschirm hinzufügen“. iPhone: Teilen □↑ → „Zum Home-Bildschirm“.</p><button id="installKnopf" class="knopf haupt versteckt" onclick="installieren()">📲 Jetzt installieren</button>
+      <summary>📲 App-Installation</summary>
+      <div id="installStand"></div>
+      <button id="installKnopf" class="knopf haupt versteckt" onclick="installieren()">📲 Jetzt als App installieren</button>
+      <div class="hinweis" id="installHinweis" style="line-height:1.55"><b>So wird die App richtig installiert (Android):</b><br>
+        1. Das normale <b>Chrome</b> öffnen und oben <b>sire65.github.io/KC-Clubapp</b> eingeben.<br>
+        2. Oben rechts <b>⋮</b> → <b>„App installieren“</b>. Steht dort nur „Zum Startbildschirm hinzufügen“: antippen und im Fenster <b>„Installieren“</b> wählen – <u>nicht</u> „Verknüpfung erstellen“.<br>
+        3. Fragt das Handy, ob Chrome etwas auf dem Startbildschirm anlegen darf: <b>„Zulassen“</b>.<br>
+        4. Fertig, wenn „Köcheclub“ auch in der <b>App-Liste</b> des Handys steht. Danach das alte Symbol löschen (lange drücken → Entfernen) – deine Daten bleiben erhalten.<br>
+        <b>iPhone:</b> in Safari Teilen □↑ → „Zum Home-Bildschirm“.<br>
+        <span style="font-size:.85rem">Nur als richtige App klappen WhatsApp, Karten und „Teilen aus der Galerie → Köcheclub“ zuverlässig.</span></div>
     </details>
     <details class="karte" data-klappe="app">
       <summary>ℹ️ App</summary>
@@ -602,7 +610,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.19.2"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.20.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -1021,8 +1029,13 @@ function klappenMerken() {
     d.addEventListener("toggle", () => schreib("klappe_" + name, d.open ? "1" : "0"));
   });
 }
+function installHilfe() {
+  if (START_ART === "browser" && installEreignis) return installieren();
+  zeige("einstellungen"); const d = document.querySelector('details[data-klappe="install"]'); if (d) { d.open = true; setTimeout(() => d.scrollIntoView({ block: "start", behavior: "smooth" }), 100); }
+}
 function wichtigZeigen() {
   const h = [];
+  if (START_ART === "verknuepfung" || (START_ART === "browser" && installEreignis)) h.push(`<div class="zeile" style="cursor:pointer" onclick="installHilfe()">📲 <b>${START_ART === "browser" ? "Köcheclub als App installieren" : "App richtig installieren"}</b> – dann klappen WhatsApp & Galerie<span style="margin-left:auto">›</span></div>`);
   if (INIT?.wartung?.an) h.push(`<div class="zeile" style="cursor:pointer" onclick="verbindungBlatt()">🔵 <b>Wartung</b>${INIT.wartung.hinweis ? " – " + esc(INIT.wartung.hinweis) : ": es kann kurz zu Unterbrechungen kommen"}<span style="margin-left:auto">›</span></div>`);
   if (INIT?.ungelesen) h.push(`<div class="zeile" style="cursor:pointer" onclick="zeige('nachrichten')">💬 <b>${INIT.ungelesen} neue Nachricht${INIT.ungelesen > 1 ? "en" : ""}</b><span style="margin-left:auto">›</span></div>`);
   if (INIT?.offeneAbstimmungen) h.push(`<div class="zeile" style="cursor:pointer" onclick="zeige('vorschlaege')">🗳️ <b>${INIT.offeneAbstimmungen === 1 ? "1 Abstimmung wartet" : INIT.offeneAbstimmungen + " Abstimmungen warten"}</b> auf deine Stimme<span style="margin-left:auto">›</span></div>`);
@@ -1087,7 +1100,7 @@ function zeige(v, ausHistorie) {
   if (v === "dienste") dienstLaden();
   if (v === "nachrichten") unterhLaden();
   if (v === "mitglieder") mitgliederLaden();
-  if (v === "einstellungen") { pushStatusZeigen(); wahlZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); }
+  if (v === "einstellungen") { installStandZeigen(); pushStatusZeigen(); wahlZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); }
   if (v === "start") neuLaden();
   // KC-CLUB-ZURUECK: jede Ansicht bekommt einen Verlaufseintrag, damit „Zurück“ eine Ansicht zurückgeht statt die App zu schließen
   const hash = v === "start" || v === "chat" ? "" : v === "protokoll" ? "#protokoll=" + prId : v === "aktion" ? "#aktion=" + aktionId : v === "mitglied" ? "#mitglied=" + mitgliedId : "#" + v;
@@ -1656,6 +1669,25 @@ async function senden() {
   $("sendenKnopf").disabled = false;
 }
 
+// ---------- Fotos über „Teilen“ aus der Galerie (KC-CLUB-TEILEN) ----------
+// Der Service Worker legt geteilte Fotos kurz im Speicher ab und öffnet die App mit #geteilt.
+async function geteiltEmpfangen() {
+  let dateien = [], info = {};
+  try {
+    const c = await caches.open("kcclub-geteilt");
+    info = await (await c.match("geteilt/info"))?.json() || {};
+    for (let i = 0; i < (info.anzahl || 0); i++) {
+      const r = await c.match(`geteilt/${i}`); if (!r) continue;
+      dateien.push(new File([await r.blob()], decodeURIComponent(r.headers.get("x-name") || `Foto_${i + 1}.jpg`), { type: r.headers.get("content-type") || "image/jpeg" }));
+    }
+    await caches.delete("kcclub-geteilt");
+  } catch {}
+  api("diagnose", { art: "teilen", daten: { anzahl: dateien.length } }).catch(() => {});
+  if (!dateien.length) return melde("Es sind keine Fotos angekommen – bitte nochmal aus der Galerie teilen.", true);
+  faFilter = {}; faPapierkorb = false; faGeteilt = dateien; zeige("fotos"); // Formular öffnet sich nach dem Laden des Albums
+  melde(`📥 ${dateien.length} Foto${dateien.length > 1 ? "s" : ""} aus der Galerie – Thema wählen und „Hochladen“ tippen`);
+}
+
 // ---------- Datei-/Fotoauswahl (KC-CLUB-KAMERA) ----------
 // Galerie/Kamera laufen über fremde Apps. Manche Handys (Xiaomi + Chrome) lassen die aus der App nicht aufgehen –
 // dann erscheint ein Hinweis mit der Kamera in der App (ohne fremde App). Gemessen wird nur, ob sich etwas geöffnet hat.
@@ -1681,7 +1713,7 @@ function dateiWahlHilfe(inputId, weiter, warOffen) {
   dwHinweis = inputId;
   $("exTitel").textContent = warOffen ? "Kein Foto ausgewählt" : "Hat sich nichts geöffnet?";
   $("exText").textContent = warOffen ? "Falls du abgebrochen hast, einfach nochmal versuchen. Kam die Galerie gar nicht richtig hoch, nimm „📷 Kamera“."
-    : "Auf diesem Handy lässt sich die Galerie aus der Club-App leider nicht öffnen. Mit „📷 Kamera“ kannst du das Foto direkt aufnehmen.";
+    : "Auf diesem Handy lässt sich die Galerie aus der Club-App leider nicht öffnen. Mit „📷 Kamera“ kannst du das Foto direkt aufnehmen." + (START_ART === "app" ? " Oder in der Galerie das Foto → Teilen → „Köcheclub“." : " Tipp: App richtig installieren (Einstellungen → App-Installation), dann geht auch Galerie → Teilen → „Köcheclub“.");
   $("exKnoepfe").innerHTML = `<button class="knopf haupt" data-a="kam">📷 Kamera</button><button class="knopf" data-a="nochmal">🔁 Nochmal versuchen</button>`;
   $("exKnoepfe").querySelector('[data-a="kam"]').onclick = () => { externZu(); dwHinweis = null; appKamera(weiter); };
   $("exKnoepfe").querySelector('[data-a="nochmal"]').onclick = () => { externZu(); dateiWahl(inputId, weiter); };
@@ -2227,9 +2259,11 @@ const mb = (b) => (b / 1024 / 1024).toLocaleString("de-DE", { maximumFractionDig
 const anlassText = (x) => x ? `${x.art === "aktion" ? "🧳" : "📅"} ${x.titel}${x.datum ? " · " + fTagDe(x.datum) : ""}` : "";
 const anlassVon = (f) => f.bezug_art ? (FA?.anlaesse || []).find((x) => x.art === f.bezug_art && x.id === f.bezug_id) : null;
 function fotosFuer(art, id) { faFilter = { bezug_art: art, bezug_id: id }; faPapierkorb = false; zeige("fotos"); }
+let faGeteilt = null; // KC-CLUB-TEILEN: aus der Galerie geteilte Fotos, die ins Hochlade-Formular sollen
 async function fotosLaden(formBehalten) {
   if (!formBehalten) $("fotoForm").classList.add("versteckt");
-  try { FA = await api("fotos_liste", { ...faFilter, papierkorb: faPapierkorb }); fotosZeigen(); }
+  try { FA = await api("fotos_liste", { ...faFilter, papierkorb: faPapierkorb }); fotosZeigen();
+    if (faGeteilt) { const d = faGeteilt; faGeteilt = null; fotoForm(); faGewaehlt({ files: d, value: "" }); } }
   catch (e) { $("fotoListe").innerHTML = `<div class="karte hinweis">${esc(e.message)}</div>`; }
 }
 function fotosZeigen() {
@@ -2788,9 +2822,32 @@ function ton() {
 function tonTest() { ton(); }
 
 // ---------- Installation & Update ----------
-let installEreignis = null;
-window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); installEreignis = e; $("installKnopf").classList.remove("versteckt"); });
+// KC-CLUB-INSTALLATION: Wie läuft die App? „app“ = richtig installiert (Android: WebAPK – Start mit Referrer android-app://org.chromium.webapk…,
+// iPhone: vom Home-Bildschirm), „verknuepfung“ = nur Chrome-Verknüpfung (dort sperren manche Handys WhatsApp/Galerie), „browser“ = im Browser.
+// Einmal als App erkannt → gemerkt (Start aus Benachrichtigungen hat keinen Referrer). Unsicher wird nie als „app“ gemeldet.
+const START_ART = (() => {
+  try {
+    const s = sessionStorage.getItem("kc_club_start"); if (s) return s;
+    const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+    const webapk = /^android-app:\/\/org\.chromium\.webapk\./.test(document.referrer || "");
+    if (webapk) localStorage.setItem("kc_club_als_app", "1");
+    const a = !standalone ? "browser" : webapk || !/Android/i.test(navigator.userAgent) || localStorage.getItem("kc_club_als_app") === "1" ? "app" : "verknuepfung";
+    sessionStorage.setItem("kc_club_start", a); return a;
+  } catch { return "unbekannt"; }
+})();
+let installEreignis = null, schonInstalliert = false;
+window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); installEreignis = e; $("installKnopf").classList.remove("versteckt"); installStandZeigen(); if (INIT) wichtigZeigen(); });
+window.addEventListener("appinstalled", () => { installEreignis = null; schonInstalliert = true; localStorage.setItem("kc_club_als_app", "1"); installStandZeigen(); melde("✅ Köcheclub ist als App installiert – bitte ab jetzt über das neue Symbol öffnen und das alte löschen."); });
 async function installieren() { if (!installEreignis) return; installEreignis.prompt(); await installEreignis.userChoice.catch(() => {}); installEreignis = null; $("installKnopf").classList.add("versteckt"); }
+(async () => { try { if (START_ART === "browser" && navigator.getInstalledRelatedApps) { schonInstalliert = (await navigator.getInstalledRelatedApps()).length > 0; installStandZeigen(); } } catch {} })();
+function installStandZeigen() {
+  const el = $("installStand"); if (!el) return;
+  const [farbe, text] = START_ART === "app" ? ["var(--gruen)", "✅ Die App ist richtig installiert."]
+    : START_ART === "verknuepfung" ? ["#b36b00", "⚠️ Die App ist nur als <b>Verknüpfung</b> angelegt. Dadurch können WhatsApp, Karten und die Galerie auf manchen Handys nicht aufgehen. Bitte wie unten beschrieben richtig installieren."]
+    : START_ART === "browser" ? (schonInstalliert ? ["var(--gruen)", "✅ Die App ist installiert – bitte über das Köcheclub-Symbol öffnen."] : ["#b36b00", "ℹ️ Du bist gerade im Browser. " + (installEreignis ? "Tippe auf „Jetzt als App installieren“." : "Installiere die App wie unten beschrieben.")])
+    : ["var(--grau)", "❔ Nicht erkennbar, wie die App gestartet wurde."];
+  el.innerHTML = `<p style="margin:4px 0 10px;font-weight:700;color:${farbe}">${text}</p>`;
+}
 function versionNeuer(a, b) { const x = a.split(".").map(Number), y = b.split(".").map(Number); for (let i = 0; i < 3; i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); } return false; }
 let NEUE_VERSION = null; // Version auf GitHub, falls neuer als die installierte
 async function updatePruefen(vonHand) {
@@ -2838,6 +2895,8 @@ async function jetztAktualisieren() {
     navigator.serviceWorker.register("sw.js").catch(() => {});
     navigator.serviceWorker.addEventListener("message", (e) => { if (e.data?.typ === "push") { neuLaden(); if (chatId) chatLaden(false); } });
   }
+  // Messung: wie wurde die App gestartet (einmal je Sitzung) – zeigt, ob die Installation geklappt hat
+  try { if (!sessionStorage.getItem("kc_club_start_gemeldet")) { sessionStorage.setItem("kc_club_start_gemeldet", "1"); setTimeout(() => api("diagnose", { art: "start", daten: { start: START_ART, referrer: (document.referrer || "").slice(0, 80) } }).catch(() => {}), 1500); } } catch {}
   neuLaden().then(() => {
     const h = sprung;
     if (h.startsWith("#nachricht=")) chatOeffnen(h.slice(11));
@@ -2845,6 +2904,7 @@ async function jetztAktualisieren() {
     else if (h.startsWith("#protokoll=")) protokollOeffnen(h.slice(11));
     else if (h.startsWith("#aktion=")) aktionOeffnen(decodeURIComponent(h.slice(8)));
     else if (h.startsWith("#mitglied=")) mitgliedOeffnen(decodeURIComponent(h.slice(10)));
+    else if (h === "#geteilt") geteiltEmpfangen();
     else if (["#termine", "#vorschlaege", "#aktionen", "#fotos", "#protokolle", "#dienste", "#nachrichten", "#mitglieder", "#einstellungen"].includes(h)) zeige(h.slice(1));
   });
   updatePruefen(false);

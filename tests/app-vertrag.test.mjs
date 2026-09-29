@@ -500,4 +500,15 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/melden\("nicht_geoeffnet"\); dateiWahlHilfe/.test(html), "kein Hinweis, wenn sich nichts öffnet");
 }
 
+// 38. 0.20.0: Installation erkennen/erklären, Fotos per „Teilen“ aus der Galerie empfangen
+{
+  assert.ok(manifest.share_target?.method === "POST" && manifest.share_target.params.files?.[0]?.name === "fotos" && manifest.share_target.action === "./teilen", "share_target fehlt");
+  assert.ok(/url\.pathname\.endsWith\("\/teilen"\)/.test(sw) && /const GETEILT = "kcclub-geteilt"/.test(sw), "Service Worker nimmt Geteiltes nicht an");
+  assert.ok(!/const GETEILT = "kc-club-/.test(sw), "Geteilt-Speicher würde beim Update gelöscht");
+  assert.ok(/else if \(h === "#geteilt"\) geteiltEmpfangen\(\);/.test(html) && /caches\.open\("kcclub-geteilt"\)/.test(html), "App holt geteilte Fotos nicht ab");
+  assert.ok(/const START_ART = /.test(html) && /org\\\.chromium\\\.webapk/.test(html) && /id="installStand"/.test(html), "Installations-Erkennung fehlt");
+  // Unsicher darf nie als installiert gelten: Android-Vollbild ohne WebAPK-Kennung = Verknüpfung
+  assert.ok(/: "verknuepfung";/.test(html) && /\["var\(--grau\)", "❔ Nicht erkennbar/.test(html), "unbekannt/Verknüpfung wird als OK angezeigt");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
