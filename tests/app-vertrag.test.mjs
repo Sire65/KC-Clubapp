@@ -467,7 +467,8 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   const js = server.slice(von, bis).replace(/type FbFrage = \{[^}]*\};/, "").replace(/: FbFrage\[\]/, "").replace("(roh: unknown)", "(roh)")
     .replace(/ as Record<string, unknown>, aus: Record<string, string \| string\[\]> = \{\}/, ", aus = {}").replace(" as string[];", ";");
   const fb = new Function(js + "return { FEEDBACK_FRAGEN, feedbackPruefen };")();
-  assert.ok(fb.FEEDBACK_FRAGEN.some((f) => f.schritt === 2 && f.optionen.some((o) => /anordnen/.test(o)) && f.optionen.some((o) => /Farben/.test(o))), "Wünsche Anordnen/Farben fehlen");
+  // 0.26.0: Anordnen/Farben sind umgesetzt → stehen nicht mehr als Wunsch, sondern unter „Schon umgesetzt“
+  assert.ok(fb.FEEDBACK_FRAGEN.some((f) => f.schritt === 2 && f.optionen.length >= 8) && /anordnen/.test(server.slice(server.indexOf("const FEEDBACK_UMGESETZT"), server.indexOf("const FEEDBACK_UMGESETZT") + 300)), "Wunschliste oder „Schon umgesetzt“ fehlt");
   assert.deepEqual(fb.feedbackPruefen({ gefallen: "👍 Ja", bedienung: "Quatsch", wuensche: ["🎂 Geburtstagsliste", "X", "🎂 Geburtstagsliste"], fremd: "a" }),
     { gefallen: "👍 Ja", wuensche: ["🎂 Geburtstagsliste"] });
 }
@@ -479,7 +480,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.equal(ids.length, anzahl, "Kachel ohne feste id (Anordnung würde verrutschen)");
   assert.equal(new Set(ids).size, ids.length, "doppelte Kachel-id");
   assert.ok(/b\(-sp, "▲", "nach oben"\) \+ b\(sp, "▼", "nach unten"\)/.test(html) && /id="kaAusHinweis"/.test(html), "▲▼ oder Hinweis auf ausgeblendete fehlt");
-  assert.ok(/kaBearbeiten\(true, id\); \}, 600\)/.test(html) && /id="kachelLeiste"/.test(html), "lange drücken fehlt");
+  assert.ok(/kaBearbeiten\(true, id\);[\s\S]{0,400}kaZiehenStart\(id, x0, y0\); \}, 600\)/.test(html) && /id="kachelLeiste"/.test(html), "lange drücken fehlt");
   assert.ok(aufrufe.has("einstellung_setzen") && /kacheln: \(w\) =>/.test(server) && server.includes("notfall: nf ?? null, einstellungen,"), "Server-Speicherung fehlt");
   // Reihenfolge/Ausblenden rechnen wie in der App
   const code = html.slice(html.indexOf("const kachelnAlle"), html.indexOf("function kaUebernehmen"));
@@ -581,6 +582,17 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/id="v-pinnwand"/.test(html) && /id="pwZaehler"/.test(html) && /maxlength="200"/.test(html) && /\{ id: "pinnwand", sym: "📌"/.test(html), "Pinnwand-Oberfläche fehlt");
   assert.ok(/if \(!PW\.startGeprueft\) \{ PW\.startGeprueft = true; pwStart\(\); \}/.test(html) && /PW\.zettel\.some\(pwOffen\)/.test(html), "Wichtige Zettel erscheinen nicht beim Öffnen");
   assert.ok(/\.zettel::before/.test(html) && /rotate\(var\(--dreh/.test(html), "Zettel ohne Nadel/Schräge");
+}
+
+// 45. 0.26.0: Kacheln per Ziehen & Ablegen, Feedback-Wünsche ohne schon Umgesetztes
+{
+  assert.ok(/function kaZiehenStart\(/.test(html) && /function kaZiehenEnde\(/.test(html) && /kaBearbeiten\(true, id\);[\s\S]{0,400}kaZiehenStart\(id, x0, y0\); \}, 600\)/.test(html), "Ziehen nach langem Drücken fehlt");
+  assert.ok(/class="kpfeil4"><i>▲<\/i><i>◀<\/i><i>▶<\/i><i>▼<\/i>/.test(html), "Pfeile in 4 Richtungen fehlen");
+  assert.ok(/if \(ZIEHEN && e\.cancelable\) e\.preventDefault\(\); \}, \{ passive: false \}/.test(html) && /if \(ZIEHEN \|\| zogGerade\) \{ ziel = null; return; \}/.test(html), "Ziehen scrollt/wischt mit");
+  assert.ok(/onclick="kaSchieben\(/.test(html), "Pfeil-Knöpfe als Alternative entfernt");
+  const w = server.slice(server.indexOf('{ id: "wuensche"'), server.indexOf("const FEEDBACK_UMGESETZT"));
+  for (const x of ["Farben selbst", "Gruppen-Chats", "selbst anordnen", "Monatskalender"]) assert.ok(!w.includes(x), `Wunsch „${x}“ ist schon umgesetzt`);
+  assert.ok(/umgesetzt: FEEDBACK_UMGESETZT/.test(server) && /Schon umgesetzt/.test(html), "„Schon umgesetzt“ fehlt");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

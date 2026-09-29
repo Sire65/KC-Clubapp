@@ -156,6 +156,14 @@
   .kachel.gedrueckt { transform: scale(.96); transition: transform .3s; }
   .kachel.bearb { cursor: default; outline: 2px dashed var(--gold); outline-offset: -2px; padding-bottom: 58px; animation: wackeln .5s ease-in-out infinite alternate; }
   .kachel.bearb.frisch { outline: 3px solid var(--rot); }
+  /* KC-CLUB-KACHELN-ZIEHEN: festgehaltene Kachel schwebt unter dem Finger, Pfeile in alle 4 Richtungen, freier Platz gestrichelt */
+  .kachel.geist { animation: none !important; transform: scale(1.06) rotate(-1.5deg); box-shadow: 0 18px 40px rgba(0,0,0,.35); outline: 3px solid var(--rot) !important; opacity: .96; }
+  .kachel.platzhalter { opacity: .25; animation: none; outline: 3px dashed var(--rot) !important; }
+  .kpfeil4 { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
+  .kpfeil4 i { position: absolute; width: 34px; height: 34px; border-radius: 50%; background: var(--rot); color: #fff; font-style: normal; font-weight: 900; display: grid; place-items: center; font-size: .95rem; box-shadow: 0 2px 6px rgba(0,0,0,.3); }
+  .kpfeil4 i:nth-child(1) { top: 4px; left: 50%; margin-left: -17px; } .kpfeil4 i:nth-child(2) { left: 4px; top: 50%; margin-top: -17px; }
+  .kpfeil4 i:nth-child(3) { right: 4px; top: 50%; margin-top: -17px; } .kpfeil4 i:nth-child(4) { bottom: 4px; left: 50%; margin-left: -17px; }
+  .kpfeil4 b { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 1.6rem; color: var(--rot); }
   .kachel.bearb.aus { opacity: .45; animation: none; outline-style: dotted; }
   @keyframes wackeln { from { transform: rotate(-.6deg); } to { transform: rotate(.6deg); } }
   .kachel .kstrg { position: absolute; left: 8px; right: 8px; bottom: 8px; display: flex; gap: 6px; z-index: 2; }
@@ -393,7 +401,7 @@
     <div id="updateHinweis"></div>
     <div class="abschnitt"><h3>Schnellzugriff</h3><button class="marke" id="versionMarke" style="border:none;cursor:pointer" title="Update prüfen" onclick="updateKachel()">v–</button></div>
     <div class="register" id="register"></div>
-    <div class="kachelleiste versteckt" id="kachelLeiste"><p>✏️ <b>Kacheln anordnen:</b> mit ◀ ▲ ▼ ▶ verschieben, mit ✕ ausblenden, 👁️ blendet wieder ein. Ausgeblendete bleiben hier blass an ihrem Platz.</p>
+    <div class="kachelleiste versteckt" id="kachelLeiste"><p>✏️ <b>Kacheln anordnen:</b> Kachel <b>kurz festhalten</b>, an den neuen Platz <b>ziehen</b> und loslassen (oder ◀ ▲ ▼ ▶ antippen). ✕ blendet aus, 👁️ wieder ein. Ausgeblendete bleiben hier blass an ihrem Platz.</p>
       <button class="knopf haupt klein" onclick="kaBearbeiten(false)">✅ Fertig</button><button class="knopf klein" onclick="kaStandard()">↺ Standard</button></div>
     <div class="raster" id="raster" oncontextmenu="return false"></div>
     <div id="kaAusHinweis"></div>
@@ -706,7 +714,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.25.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.26.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -1204,12 +1212,67 @@ function kaStandard() {
     unterdruecken = false;
     const k = e.target.closest?.("#raster .kachel"); if (!k || kaBearb) return;
     el = k; x0 = e.clientX; y0 = e.clientY; k.classList.add("gedrueckt");
-    t = setTimeout(() => { const id = el?.dataset.id; ab(); unterdruecken = true; try { navigator.vibrate?.(30); } catch {} kaBearbeiten(true, id); }, 600);
+    t = setTimeout(() => { const id = el?.dataset.id, alt = el?.getBoundingClientRect().top; ab(); unterdruecken = true; try { navigator.vibrate?.(30); } catch {} kaBearbeiten(true, id);
+      // „Anordnen“ blendet oben die Leiste ein → Seite so nachrücken, dass die Kachel unter dem Finger bleibt
+      const neu = document.querySelector(`#raster .kachel[data-id="${id}"]`)?.getBoundingClientRect().top;
+      if (alt != null && neu != null) scrollBy(0, neu - alt);
+      kaZiehenStart(id, x0, y0); }, 600);
   });
   document.addEventListener("pointermove", (e) => { if (t && Math.hypot(e.clientX - x0, e.clientY - y0) > 12) ab(); });
   // nur der Klick direkt nach dem Loslassen wird geschluckt (manche Handys schicken nach langem Drücken gar keinen)
   ["pointerup", "pointercancel"].forEach((n) => document.addEventListener(n, () => { if (t) ab(); if (unterdruecken) setTimeout(() => { unterdruecken = false; }, 150); }));
   document.addEventListener("click", (e) => { if (unterdruecken && e.target.closest?.("#raster")) { e.stopPropagation(); e.preventDefault(); } unterdruecken = false; }, true);
+})();
+// ---------- KC-CLUB-KACHELN-ZIEHEN (0.26.0): Kachel festhalten → Pfeile ✥ → ziehen → loslassen ----------
+// Normal: 0,6 s lange drücken öffnet „Anordnen“ und die Kachel hängt sofort am Finger. Im Anordnen-Modus reichen 0,3 s.
+// Wer vor Ablauf der Zeit den Finger bewegt, scrollt ganz normal. Die Pfeil-Knöpfe ◀ ▲ ▼ ▶ bleiben als Alternative.
+let ZIEHEN = null, zogGerade = false;
+function kaZiehenStart(id, x, y) {
+  const el = document.querySelector(`#raster .kachel[data-id="${id}"]`);
+  if (!el || el.classList.contains("aus")) return;
+  const r = el.getBoundingClientRect(), geist = el.cloneNode(true);
+  geist.classList.add("geist"); geist.classList.remove("frisch");
+  geist.style.cssText = `position:fixed;left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;z-index:60;pointer-events:none;margin:0`;
+  geist.insertAdjacentHTML("beforeend", '<div class="kpfeil4"><i>▲</i><i>◀</i><i>▶</i><i>▼</i><b>✥</b></div>');
+  document.body.appendChild(geist); el.classList.add("platzhalter");
+  // Griffpunkt innerhalb der Kachel (falls die Seite nicht weit genug nachrücken konnte: Kachel mittig unter den Finger)
+  const imBereich = (v, max) => (v >= 10 && v <= max - 10 ? v : max / 2);
+  ZIEHEN = { id, el, geist, dx: imBereich(x - r.left, r.width), dy: imBereich(y - r.top, r.height), x, y }; zogGerade = true;
+  geist.style.left = x - ZIEHEN.dx + "px"; geist.style.top = y - ZIEHEN.dy + "px";
+  try { navigator.vibrate?.(20); } catch {}
+}
+function kaZiehenBewegen(x, y) {
+  const z = ZIEHEN; z.x = x; z.y = y;
+  z.geist.style.left = x - z.dx + "px"; z.geist.style.top = y - z.dy + "px";
+  // Kachel unter dem Finger suchen und den freien Platz dorthin verschieben
+  const ziel = [...$("raster").children].find((k) => { if (k === z.el) return false; const r = k.getBoundingClientRect(); return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom; });
+  if (ziel) { const kids = [...$("raster").children], vor = kids.indexOf(z.el) > kids.indexOf(ziel); $("raster").insertBefore(z.el, vor ? ziel : ziel.nextSibling); }
+}
+function kaZiehenEnde() {
+  const z = ZIEHEN; ZIEHEN = null; if (!z) return;
+  z.geist.remove(); z.el.classList.remove("platzhalter");
+  const neu = [...$("raster").children].map((k) => k.dataset.id).filter(Boolean);
+  if (neu.join() !== kaSortiert(reg).map((k) => k.id).join()) { KA.reihenfolge = { ...KA.reihenfolge, [reg]: neu }; kaSpeichern(); }
+  kaFrisch = z.id; kachelnZeigen();
+  setTimeout(() => { zogGerade = false; }, 150);
+}
+// Rand erreicht → Seite läuft mit
+setInterval(() => { if (!ZIEHEN) return; const h = innerHeight, y = ZIEHEN.y; const d = y < 90 ? -12 : y > h - 140 ? 12 : 0; if (d) { scrollBy(0, d); kaZiehenBewegen(ZIEHEN.x, ZIEHEN.y); } }, 30);
+(function kaZiehenEinrichten() {
+  let t = null, x0 = 0, y0 = 0;
+  document.addEventListener("pointerdown", (e) => {
+    if (!kaBearb || ZIEHEN || e.target.closest?.("button")) return;
+    const k = e.target.closest?.("#raster .kachel.bearb"); if (!k || k.classList.contains("aus")) return;
+    x0 = e.clientX; y0 = e.clientY;
+    t = setTimeout(() => { t = null; kaZiehenStart(k.dataset.id, x0, y0); }, 300);
+  });
+  document.addEventListener("pointermove", (e) => {
+    if (t && Math.hypot(e.clientX - x0, e.clientY - y0) > 10) { clearTimeout(t); t = null; }
+    if (ZIEHEN) kaZiehenBewegen(e.clientX, e.clientY);
+  });
+  ["pointerup", "pointercancel"].forEach((n) => document.addEventListener(n, () => { clearTimeout(t); t = null; if (ZIEHEN) kaZiehenEnde(); }));
+  // während des Ziehens darf die Seite nicht mitscrollen
+  document.addEventListener("touchmove", (e) => { if (ZIEHEN && e.cancelable) e.preventDefault(); }, { passive: false });
 })();
 // Register mit kleiner Anzahl der Kacheln; per Wischen links/rechts wechselbar
 const REGISTER = [["verein", "Verein"], ["mein", "Mein Bereich"], ["programme", "Programme"]];
@@ -1234,11 +1297,13 @@ function registerWischen(schritt) {
   }, { passive: true });
   document.addEventListener("touchend", (e) => {
     if (!ziel) return;
+    if (ZIEHEN || zogGerade) { ziel = null; return; } // Kachel wurde gezogen, nicht gewischt
     const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0, f = ziel; ziel = null;
     if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) f(dx < 0 ? 1 : -1);
   }, { passive: true });
 })();
 function kachelnZeigen() {
+  if (ZIEHEN) return; // nicht neu zeichnen, während eine Kachel am Finger hängt
   if (kaBearb) {
     $("kaAusHinweis").innerHTML = "";
     // 0.19.2: alle Kacheln an ihrem Platz (ausgeblendete blass), verschieben nach links/rechts und nach oben/unten (eine Reihe)
@@ -2865,7 +2930,7 @@ async function fbLaden() {
   $("feedbackInhalt").innerHTML = '<div class="karte hinweis">Wird geladen …</div>';
   try {
     const r = await api("feedback_meins");
-    FB = { fragen: r.fragen, a: structuredClone(r.antwort?.antworten || {}), idee: r.antwort?.idee || "", mitteilung: r.antwort?.mitteilung || "", anonym: !!r.antwort?.anonym,
+    FB = { fragen: r.fragen, umgesetzt: r.umgesetzt || [], a: structuredClone(r.antwort?.antworten || {}), idee: r.antwort?.idee || "", mitteilung: r.antwort?.mitteilung || "", anonym: !!r.antwort?.anonym,
       gesendet: r.antwort?.geaendert_am || null, schritt: r.antwort ? 0 : 1 };
     fbZeigen();
   } catch (e) { $("feedbackInhalt").innerHTML = `<div class="karte hinweis">${esc(e.message)}</div>`; }
@@ -2885,7 +2950,7 @@ function fbZeigen() {
     return `<div class="fbfrage"><b>${esc(f.t)}</b><div class="fbopt">${f.optionen.map((o, i) => `<button class="${an(o) ? "an" : ""}" onclick="fbWahl('${f.id}',${i})">${esc(o)}</button>`).join("")}</div></div>`; };
   let inhalt = "";
   if (FB.schritt === 1) inhalt = `<h3 style="margin:0">⭐ Wie findest du die App?</h3>${FB.fragen.filter((f) => f.schritt === 1).map(frage).join("")}`;
-  if (FB.schritt === 2) inhalt = `<h3 style="margin:0">💡 Was wünschst du dir?</h3>${FB.fragen.filter((f) => f.schritt === 2).map(frage).join("")}
+  if (FB.schritt === 2) inhalt = `<h3 style="margin:0">💡 Was wünschst du dir?</h3>${FB.umgesetzt?.length ? `<div class="hinweis" style="margin:8px 0 0;padding:10px 12px;border-radius:12px;background:var(--gruenbg);color:var(--text)"><b>✅ Schon umgesetzt – danke für eure Wünsche:</b><br>${FB.umgesetzt.map(esc).join(" · ")}</div>` : ""}${FB.fragen.filter((f) => f.schritt === 2).map(frage).join("")}
     <label class="feld" style="margin-top:14px">Eigene Idee für eine Funktion (freiwillig)<textarea id="fbIdeeS2" rows="3" maxlength="2000" placeholder="z. B. „Ich hätte gern …“">${esc(FB.idee)}</textarea></label>`;
   if (FB.schritt === 3) inhalt = `<h3 style="margin:0">✍️ Was möchtest du mir noch mitteilen?</h3>
     <label class="feld" style="margin-top:10px">Deine Nachricht (freiwillig)<textarea id="fbMitteilung" rows="5" maxlength="2000" placeholder="Lob, Kritik, Ideen – alles ist willkommen">${esc(FB.mitteilung)}</textarea></label>

@@ -1,9 +1,8 @@
 {
-  "version": "0.25.0",
+  "version": "0.26.0",
   "datum": "2026-09-29",
   "neu": [
-    "📌 Pinnwand: gelbe Zettel für mich, für alle oder bestimmte Personen",
-    "❗ Wichtige Zettel erscheinen beim Öffnen der App",
-    "✓ erl. – der Verfasser sieht, wer wann gelesen und erledigt hat"
+    "✥ Kacheln anordnen per Ziehen: festhalten, schieben, loslassen",
+    "💭 Feedback: neue Wünsche, bereits Umgesetztes wird angezeigt"
   ]
 }

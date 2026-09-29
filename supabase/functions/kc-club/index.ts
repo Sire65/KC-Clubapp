@@ -13,14 +13,14 @@
 //           KC-CLUB-COMMUNICATOR-STATUS (0.17.0), KC-CLUB-FEEDBACK (0.18.0),
 //           KC-CLUB-KACHELN (0.19.0), KC-CLUB-ZUGANG-SELBST (0.21.0),
 //           KC-CLUB-GRUPPEN, KC-CLUB-ZUSTELLWAHL (0.23.0)
-//           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0)
+//           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0), KC-CLUB-KACHELN-ZIEHEN (0.26.0)
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.25.0";
+const SERVER_VERSION = "0.26.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -235,19 +235,21 @@ const FEEDBACK_FRAGEN: FbFrage[] = [
   { id: "bedienung", schritt: 1, art: "eins", t: "Findest du sie bedienfreundlich?", optionen: ["Ja, einfach", "Geht so", "Nein, schwierig"] },
   { id: "uebersicht", schritt: 1, art: "eins", t: "Ist sie übersichtlich?", optionen: ["Ja", "Geht so", "Nein, zu voll"] },
   { id: "schrift", schritt: 1, art: "eins", t: "Ist die Schrift gut lesbar?", optionen: ["Ja", "Etwas zu klein", "Viel zu klein"] },
-  { id: "farben", schritt: 1, art: "eins", t: "Gefallen dir die Farben?", optionen: ["Ja", "Geht so", "Nein"] },
+  { id: "farben", schritt: 1, art: "eins", t: "Gefallen dir die Farbdesigns? (⚙️ Mehr → Darstellung)", optionen: ["Ja", "Geht so", "Nein"] },
   { id: "tempo", schritt: 1, art: "eins", t: "Ist die App schnell genug?", optionen: ["Ja", "Manchmal langsam", "Oft langsam"] },
   { id: "nutzung", schritt: 1, art: "eins", t: "Wie oft nutzt du die App?", optionen: ["Täglich", "Mehrmals pro Woche", "Selten"] },
   { id: "genutzt", schritt: 1, art: "mehr", t: "Was nutzt du am meisten? (mehrere möglich)",
-    optionen: ["📅 Termine", "💬 Nachrichten", "👥 Mitglieder", "🗳️ Vorschläge", "📄 Protokolle", "🗓️ Dienstpläne", "🧳 Aktionen", "📷 Fotoalbum"] },
+    optionen: ["📅 Termine", "💬 Nachrichten", "👥 Mitglieder", "🗳️ Vorschläge", "📄 Protokolle", "🗓️ Dienstpläne", "🧳 Aktionen", "📷 Fotoalbum", "📌 Pinnwand", "👥 Gruppen-Chats"] },
   { id: "probleme", schritt: 1, art: "mehr", t: "Hattest du schon Probleme? (mehrere möglich)",
     optionen: ["✅ Keine Probleme", "🔑 Anmeldung / Link", "🔔 Benachrichtigungen kommen nicht", "💬 WhatsApp / Route öffnen", "📷 Fotos hochladen", "⏳ App lädt nicht / hängt", "🔍 Etwas nicht gefunden"] },
   { id: "wuensche", schritt: 2, art: "mehr", t: "Welche Funktionen wünschst du dir noch? (mehrere möglich)",
-    optionen: ["🔀 Knöpfe/Kacheln selbst anordnen", "🎨 Farben selbst einstellen (auch dunkel)", "🔠 Größere Schrift & Knöpfe", "📆 Monatskalender-Ansicht",
-      "🍲 Rezepte-Sammlung vom Club", "🛒 Mitbring-/Einkaufsliste für Treffen", "📂 Dokumente (Satzung, Formulare)", "💶 Beiträge / Kasse einsehen",
-      "🔁 Dienste untereinander tauschen", "👥 Gruppen-Chats (z. B. Vorstand, Küche)", "🎤 Nachrichten per Sprache", "🖼️ Fotos als Diashow",
-      "🎂 Geburtstagsliste", "📴 Auch ohne Internet nutzbar", "🎓 Schulungsunterlagen"] },
+    optionen: ["🍲 Rezepte-Sammlung vom Club", "🛒 Mitbring-/Einkaufsliste für Treffen", "📂 Dokumente (Satzung, Formulare)", "💶 Beiträge / Kasse einsehen",
+      "🔁 Dienste untereinander tauschen", "🎤 Nachrichten per Sprache", "🖼️ Fotos als Diashow", "🎂 Geburtstagsliste", "📴 Auch ohne Internet nutzbar",
+      "🎓 Schulungsunterlagen", "🚗 Fahrgemeinschaften zu Treffen & Ausflügen", "✅ Aufgabenliste für Veranstaltungen", "📰 Club-Neuigkeiten / Rundbrief"] },
 ];
+// Wünsche aus dem Fragebogen, die inzwischen gebaut sind – die App zeigt sie als „✅ Schon umgesetzt“ (0.26.0)
+const FEEDBACK_UMGESETZT = ["🔀 Kacheln selbst anordnen (lange drücken & ziehen)", "🎨 Farbdesigns mit Tag-/Nachtmodus", "🔠 Große Schrift",
+  "📆 Monatskalender", "👥 Gruppen-Chats", "📌 Pinnwand"];
 const FB_TEXT_MAX = 2000;
 function feedbackPruefen(roh: unknown) {
   const a = (roh && typeof roh === "object" ? roh : {}) as Record<string, unknown>, aus: Record<string, string | string[]> = {};
@@ -2252,7 +2254,7 @@ Köcheclub Werne`,
       // ----- KC-CLUB-FEEDBACK -----
       case "feedback_meins": {
         const { data } = await db.from("kc_club_feedback").select("antworten,idee,mitteilung,anonym,geaendert_am").eq("person_id", ich.person_id).eq("fragebogen", FEEDBACK_BOGEN).maybeSingle();
-        return json({ bogen: FEEDBACK_BOGEN, fragen: FEEDBACK_FRAGEN, antwort: data ?? null });
+        return json({ bogen: FEEDBACK_BOGEN, fragen: FEEDBACK_FRAGEN, umgesetzt: FEEDBACK_UMGESETZT, antwort: data ?? null });
       }
       case "feedback_senden": {
         const antworten = feedbackPruefen(p.antworten), idee = txt(p.idee, FB_TEXT_MAX), mitteilung = txt(p.mitteilung, FB_TEXT_MAX);
