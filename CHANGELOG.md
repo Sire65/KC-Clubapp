@@ -1,5 +1,12 @@
 # Änderungen
 
+## 0.52.0 – 2026-09-29 (DEV)
+
+- KC-CLUB-TODO-MEHRERE (neu): mehrere Zuständige je To-do (bis 10). Auswahl per Häkchen-Blatt beim Anlegen und beim Ändern
+  (ersetzt die Nummern-Eingabe), Anzeige „👉 du, Klaus, Dieter“ (antippen = ändern), Filter „👉 Mir“ für alle Zuständigen.
+  Jeder Zuständige sieht und kann abhaken; Bescheid geht beim Anlegen an alle (außer mir) und beim Ändern nur an neu
+  Hinzugekommene. Spalte kc_club_todo.zustaendige (text[], GIN-Index); altes Feld zustaendig bleibt (erster Eintrag).
+
 ## 0.51.0 – 2026-09-29 (DEV)
 
 - KC-CLUB-WARTEN: WARTEN_STILL unterdrückte die Kochmütze auch, wenn das Mitglied selbst etwas antippt. Jetzt:

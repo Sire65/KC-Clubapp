@@ -13,14 +13,14 @@
 //           KC-CLUB-COMMUNICATOR-STATUS (0.17.0), KC-CLUB-FEEDBACK (0.18.0),
 //           KC-CLUB-KACHELN (0.19.0), KC-CLUB-ZUGANG-SELBST (0.21.0),
 //           KC-CLUB-GRUPPEN, KC-CLUB-ZUSTELLWAHL (0.23.0)
-//           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0), KC-CLUB-KACHELN-ZIEHEN (0.26.0), KC-CLUB-FEEDBACK-NEU (0.27.1), KC-CLUB-BEGRUESSUNG (0.28.0), KC-CLUB-ONLINE (0.29.0), KC-CLUB-ANRUF (0.31.0), KC-CLUB-VIDEO (0.32.0), KC-CLUB-QUITTUNG (0.34.0), KC-CLUB-TODO + KC-CLUB-REGISTER-ZIEHEN (0.36.0), KC-CLUB-SPRACHE + KC-CLUB-TODO-ZUSTAENDIG (0.37.0), KC-CLUB-ERSTATTUNG (0.38.0), KC-CLUB-KMSATZ (0.39.0), KC-CLUB-FEEDBACK-DAUERHAFT (0.40.0), KC-CLUB-INFOFELD + KC-CLUB-WETTER (0.42.0), KC-CLUB-INFOFELD-DEMNAECHST/-FOTOS (0.43.0), KC-CLUB-ZENTRALE (0.44.0), KC-CLUB-FOTO-META (0.45.0), KC-CLUB-WETTER-TAGE (0.46.0), KC-CLUB-ADMINLAGE (0.47.0), KC-CLUB-ADMIN-SPIEGEL (0.48.0/0.49.0)
+//           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0), KC-CLUB-KACHELN-ZIEHEN (0.26.0), KC-CLUB-FEEDBACK-NEU (0.27.1), KC-CLUB-BEGRUESSUNG (0.28.0), KC-CLUB-ONLINE (0.29.0), KC-CLUB-ANRUF (0.31.0), KC-CLUB-VIDEO (0.32.0), KC-CLUB-QUITTUNG (0.34.0), KC-CLUB-TODO + KC-CLUB-REGISTER-ZIEHEN (0.36.0), KC-CLUB-SPRACHE + KC-CLUB-TODO-ZUSTAENDIG (0.37.0), KC-CLUB-ERSTATTUNG (0.38.0), KC-CLUB-KMSATZ (0.39.0), KC-CLUB-FEEDBACK-DAUERHAFT (0.40.0), KC-CLUB-INFOFELD + KC-CLUB-WETTER (0.42.0), KC-CLUB-INFOFELD-DEMNAECHST/-FOTOS (0.43.0), KC-CLUB-ZENTRALE (0.44.0), KC-CLUB-FOTO-META (0.45.0), KC-CLUB-WETTER-TAGE (0.46.0), KC-CLUB-ADMINLAGE (0.47.0), KC-CLUB-ADMIN-SPIEGEL (0.48.0/0.49.0), KC-CLUB-TODO-MEHRERE (0.52.0)
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.50.0";
+const SERVER_VERSION = "0.52.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -405,6 +405,16 @@ async function todoZustaendig(v: unknown): Promise<string | null> {
   const id = String(v || ""); if (!id) return null;
   if (!(await aktiveMitglieder()).some((m) => m.person_id === id)) throw new Fehler("Mitglied nicht gefunden.", 404);
   return id;
+}
+// KC-CLUB-TODO-MEHRERE (0.52.0): mehrere Zuständige (Liste oder einzelne ID wie bisher), höchstens TODO_MAX_ZUSTAENDIGE
+const TODO_MAX_ZUSTAENDIGE = 10;
+async function todoZustaendige(v: unknown): Promise<string[]> {
+  const roh = (Array.isArray(v) ? v : v ? [v] : []).map((x) => String(x || "")).filter(Boolean);
+  const ids = [...new Set(roh)].slice(0, TODO_MAX_ZUSTAENDIGE);
+  if (!ids.length) return [];
+  const aktiv = new Set((await aktiveMitglieder()).map((m) => m.person_id));
+  if (ids.some((id) => !aktiv.has(id))) throw new Fehler("Mitglied nicht gefunden.", 404);
+  return ids;
 }
 async function todoBenachrichtigen(ich: Ich, an: string, text: string, faellig: string | null, id: string) {
   const bis = faellig ? ` – bis ${faellig.split("-").reverse().join(".")}` : "";
@@ -1941,15 +1951,18 @@ Köcheclub Werne`,
 
       // ----- To-do-Liste (KC-CLUB-TODO) -----
       case "todo_liste": {
-        const { data } = await db.from("kc_club_todo").select("id,person_id,text,kategorie,fuer,faellig,erstellt_am,erledigt_am,erledigt_von,zustaendig").is("entfernt_am", null)
-          .or(`person_id.eq.${ich.person_id},fuer.eq.alle,zustaendig.eq.${ich.person_id}`).order("erstellt_am", { ascending: true }).limit(300);
-        const leute = await personen([...(data ?? []).map((x: any) => x.person_id), ...(data ?? []).map((x: any) => x.erledigt_von).filter(Boolean), ...(data ?? []).map((x: any) => x.zustaendig).filter(Boolean)]);
+        const { data } = await db.from("kc_club_todo").select("id,person_id,text,kategorie,fuer,faellig,erstellt_am,erledigt_am,erledigt_von,zustaendig,zustaendige").is("entfernt_am", null)
+          .or(`person_id.eq.${ich.person_id},fuer.eq.alle,zustaendig.eq.${ich.person_id},zustaendige.cs.{${ich.person_id}}`).order("erstellt_am", { ascending: true }).limit(300);
+        const zust = (x: any): string[] => (x.zustaendige?.length ? x.zustaendige : x.zustaendig ? [x.zustaendig] : []);
+        const leute = await personen([...(data ?? []).map((x: any) => x.person_id), ...(data ?? []).map((x: any) => x.erledigt_von).filter(Boolean), ...(data ?? []).flatMap(zust)]);
         const vn = (id: string) => vorname(leute.get(id) ?? null) || id;
         return json({ kategorien: TODO_KATEGORIEN, eintraege: (data ?? []).map((x: any) => ({ id: x.id, text: x.text, kategorie: x.kategorie, fuer: x.fuer, faellig: x.faellig,
           vonMir: x.person_id === ich.person_id, von: vn(x.person_id), erledigt: x.erledigt_am, erledigtVon: x.erledigt_von ? vn(x.erledigt_von) : null,
           darfLoeschen: x.person_id === ich.person_id || ich.vorstand,
           // KC-CLUB-TODO-ZUSTAENDIG (0.37.0): wer soll es machen
           zustaendig: x.zustaendig ? { person_id: x.zustaendig, vorname: vn(x.zustaendig), ich: x.zustaendig === ich.person_id } : null,
+          // KC-CLUB-TODO-MEHRERE (0.52.0): alle Zuständigen
+          zustaendige: zust(x).map((id) => ({ person_id: id, vorname: vn(id), ich: id === ich.person_id })),
           darfZuweisen: x.person_id === ich.person_id || ich.vorstand })) });
       }
 
@@ -1960,28 +1973,34 @@ Köcheclub Werne`,
         const faellig = /^\d{4}-\d{2}-\d{2}$/.test(String(p.faellig || "")) ? String(p.faellig) : null;
         const { count } = await db.from("kc_club_todo").select("id", { count: "exact", head: true }).eq("person_id", ich.person_id).is("entfernt_am", null).is("erledigt_am", null);
         if ((count ?? 0) >= 100) throw new Fehler("Du hast schon 100 offene Einträge – bitte erst etwas abhaken oder löschen.", 409);
-        const zustaendig = await todoZustaendig(p.zustaendig);
-        const { data: t, error } = await db.from("kc_club_todo").insert({ person_id: ich.person_id, text, kategorie, fuer: p.fuer === "alle" ? "alle" : "ich", faellig, zustaendig }).select("id").single();
+        const zustaendige = await todoZustaendige(p.zustaendige ?? p.zustaendig);
+        const { data: t, error } = await db.from("kc_club_todo").insert({ person_id: ich.person_id, text, kategorie, fuer: p.fuer === "alle" ? "alle" : "ich", faellig,
+          zustaendig: zustaendige[0] ?? null, zustaendige }).select("id").single();
         if (error || !t) throw new Fehler("Eintrag konnte nicht gespeichert werden.", 500);
-        const versand = zustaendig && zustaendig !== ich.person_id ? await todoBenachrichtigen(ich, zustaendig, text, faellig, t.id) : null;
-        return json({ ok: true, id: t.id, versand });
+        const benachrichtigt: string[] = [];
+        for (const an of zustaendige.filter((id) => id !== ich.person_id)) { await todoBenachrichtigen(ich, an, text, faellig, t.id); benachrichtigt.push(an); }
+        return json({ ok: true, id: t.id, versand: benachrichtigt.length ? { benachrichtigt: benachrichtigt.length } : null });
       }
 
       case "todo_erledigt": {
-        const { data: t } = await db.from("kc_club_todo").select("id,person_id,fuer,zustaendig").eq("id", String(p.id || "")).is("entfernt_am", null).maybeSingle();
-        if (!t || (t.person_id !== ich.person_id && t.fuer !== "alle" && t.zustaendig !== ich.person_id)) throw new Fehler("Eintrag nicht gefunden.", 404);
+        const { data: t } = await db.from("kc_club_todo").select("id,person_id,fuer,zustaendig,zustaendige").eq("id", String(p.id || "")).is("entfernt_am", null).maybeSingle();
+        if (!t || (t.person_id !== ich.person_id && t.fuer !== "alle" && t.zustaendig !== ich.person_id && !(t.zustaendige ?? []).includes(ich.person_id))) throw new Fehler("Eintrag nicht gefunden.", 404);
         await db.from("kc_club_todo").update(p.erledigt ? { erledigt_am: jetzt(), erledigt_von: ich.person_id } : { erledigt_am: null, erledigt_von: null }).eq("id", t.id);
         return json({ ok: true });
       }
 
       case "todo_zuweisen": {
-        const { data: t } = await db.from("kc_club_todo").select("id,person_id,text,faellig,zustaendig").eq("id", String(p.id || "")).is("entfernt_am", null).maybeSingle();
+        const { data: t } = await db.from("kc_club_todo").select("id,person_id,text,faellig,zustaendig,zustaendige").eq("id", String(p.id || "")).is("entfernt_am", null).maybeSingle();
         if (!t) throw new Fehler("Eintrag nicht gefunden.", 404);
         if (t.person_id !== ich.person_id && !ich.vorstand) throw new Fehler("Zuweisen darf nur, wer den Eintrag angelegt hat.", 403);
-        const zustaendig = await todoZustaendig(p.zustaendig);
-        await db.from("kc_club_todo").update({ zustaendig }).eq("id", t.id);
-        const versand = zustaendig && zustaendig !== ich.person_id && zustaendig !== t.zustaendig ? await todoBenachrichtigen(ich, zustaendig, t.text, t.faellig, t.id) : null;
-        return json({ ok: true, versand });
+        const vorher: string[] = t.zustaendige?.length ? t.zustaendige : t.zustaendig ? [t.zustaendig] : [];
+        const zustaendige = await todoZustaendige(p.zustaendige ?? p.zustaendig);
+        await db.from("kc_club_todo").update({ zustaendig: zustaendige[0] ?? null, zustaendige }).eq("id", t.id);
+        // Bescheid nur an neu Hinzugekommene (nicht an mich, nicht an bisherige)
+        const neu = zustaendige.filter((id) => id !== ich.person_id && !vorher.includes(id));
+        for (const an of neu) await todoBenachrichtigen(ich, an, t.text, t.faellig, t.id);
+        await protokoll(ich.person_id, "todo_zustaendige", { todo: t.id, vorher, nachher: zustaendige });
+        return json({ ok: true, versand: neu.length ? { benachrichtigt: neu.length } : null });
       }
 
       case "todo_loeschen": {

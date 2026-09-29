@@ -279,7 +279,7 @@
   .todotab .kat { font-size: 1.3rem; text-align: center; width: 34px; }
   .todotab .weg { border: none; background: none; font-size: 1.1rem; cursor: pointer; }
   .todotab .spaet { color: #c62828; font-weight: 800; }
-  .todoform { display: grid; gap: 8px; }
+  .todoform { display: grid; gap: 8px; } .todoform .todower { text-align: left; font-weight: 600; }
   .todoform input, .todoform select { padding: 11px 12px; border-radius: 12px; border: 1px solid var(--linie); background: var(--karte2); color: var(--text); font-size: 1rem; font-family: inherit; } .todoform .reihe { display: flex; gap: 8px; flex-wrap: wrap; } .todoform select, .todoform input[type=date] { flex: 1; min-width: 130px; }
   /* KC-CLUB-SPRACHE */
   .aufnahme { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--karte2); border-radius: 14px; margin: 0 0 6px; }
@@ -948,6 +948,13 @@
   <div class="blatt-innen" style="max-height:85vh;overflow-y:auto"><div id="wetterTagInhalt" style="display:grid;gap:10px"></div>
     <button class="knopf" style="text-align:center" onclick="$('wetterBlatt').classList.add('versteckt')">Schließen</button></div>
 </div>
+<!-- KC-CLUB-TODO-MEHRERE (0.52.0): Zuständige wählen -->
+<div class="blatt versteckt" id="todoWerBlatt" onclick="if(event.target===this)this.classList.add('versteckt')">
+  <div class="blatt-innen" style="max-height:85vh;overflow-y:auto"><h3 id="todoWerTitel">👉 Wer soll es machen?</h3>
+    <div class="hinweis" style="margin:0" id="todoWerZahl"></div>
+    <div class="wahlliste" id="todoWerListe"></div>
+    <button class="knopf haupt" style="text-align:center" onclick="todoWerFertig()">✅ Fertig</button></div>
+</div>
 <!-- KC-CLUB-ZENTRALE (0.44.0): Empfänger auswählen -->
 <div class="blatt versteckt" id="zeBlatt" onclick="if(event.target===this)zeBlattZu()">
   <div class="blatt-innen" style="max-height:85vh;overflow-y:auto"><h3>👥 An wen?</h3>
@@ -1011,7 +1018,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.51.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.52.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -1503,7 +1510,7 @@ function zustellText(z) {
   return t ? ` <span class="zustellung" title="Rückmeldung vom Handy des Empfängers">${t}</span>` : "";
 }
 // ---------- KC-CLUB-TODO (0.36.0): To-do-Liste unter Termine – nur für mich oder für alle, abhaken mit wer/wann ----------
-let TODO = { eintraege: [], kategorien: [], filter: "alle", erledigteZeigen: false, fuer: "ich" };
+let TODO = { eintraege: [], kategorien: [], filter: "alle", erledigteZeigen: false, fuer: "ich", neuWer: [], werFuer: null, werAuswahl: [] };
 async function todoLaden() {
   if (!$("todoBereich").innerHTML) todoGeruest();
   try { const r = await api("todo_liste"); TODO.eintraege = r.eintraege || []; TODO.kategorien = r.kategorien || []; todoKategorienFuellen(); todoZeigen(); }
@@ -1513,7 +1520,7 @@ function todoGeruest() {
   $("todoBereich").innerHTML = `<div class="karte todoform">
       <input id="todoText" maxlength="200" placeholder="Was ist zu tun? z. B. Getränke einkaufen" onkeydown="if(event.key==='Enter')todoAnlegen()">
       <div class="reihe"><select id="todoKat"></select><input type="date" id="todoFaellig" title="fällig am (freiwillig)"></div>
-      <select id="todoWer" title="Wer soll es machen?"><option value="">👉 Wer soll es machen? (offen)</option></select>
+      <button type="button" class="knopf todower" id="todoWer" onclick="todoWerWaehlen(null)">👉 Wer soll es machen? (offen)</button>
       <div class="umschalter" id="todoFuer" style="margin:0"><button data-f="ich" onclick="todoFuer('ich')">👤 Nur für mich</button><button data-f="alle" onclick="todoFuer('alle')">👥 Für alle</button></div>
       <button class="knopf haupt" onclick="todoAnlegen()">＋ Eintragen</button></div>
     <div class="umschalter" id="todoFilter" style="grid-template-columns:repeat(4,1fr)"><button data-f="alle" onclick="todoFilter('alle')">Alle</button><button data-f="mir" onclick="todoFilter('mir')">👉 Mir</button><button data-f="ich" onclick="todoFilter('ich')">👤 Meine</button><button data-f="gemeinsam" onclick="todoFilter('gemeinsam')">👥 Für alle</button></div>
@@ -1521,10 +1528,35 @@ function todoGeruest() {
       <label class="schalter" style="margin-top:8px"><span>Erledigte anzeigen</span><input type="checkbox" id="todoErledigte" onchange="TODO.erledigteZeigen=this.checked;todoZeigen()"></label></div>`;
   todoFuer(TODO.fuer); todoFilter(TODO.filter);
 }
-async function todoWerFuellen() {
-  const sel = $("todoWer"); if (!sel || sel.options.length > 1) return;
-  if (!MITGLIEDER) try { await mitgliederHolen(); } catch { return; }
-  sel.insertAdjacentHTML("beforeend", `<option value="${ICH.person_id}">👉 ich selbst</option>` + MITGLIEDER.filter((m) => m.person_id !== ICH.person_id).map((m) => `<option value="${m.person_id}">👉 ${esc(m.name)}</option>`).join(""));
+// KC-CLUB-TODO-MEHRERE (0.52.0): „Wer soll es machen?“ – mehrere per Häkchen (statt einer Auswahl/Nummern-Eingabe)
+async function todoWerFuellen() { if (!MITGLIEDER) try { await mitgliederHolen(); } catch {} todoWerKnopf(); }
+const todoNamen = (ids) => ids.map((id) => (id === ICH?.person_id ? "ich" : (MITGLIEDER?.find((m) => m.person_id === id)?.vorname || MITGLIEDER?.find((m) => m.person_id === id)?.name || "?"))).join(", ");
+function todoWerKnopf() { const k = $("todoWer"); if (k) k.textContent = TODO.neuWer.length ? `👉 ${todoNamen(TODO.neuWer)}` : "👉 Wer soll es machen? (offen)"; }
+// id = null → für den neuen Eintrag; sonst für einen bestehenden Eintrag
+async function todoWerWaehlen(id) {
+  if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return melde(e.message, true); }
+  TODO.werFuer = id;
+  TODO.werAuswahl = id ? [...((TODO.eintraege.find((x) => x.id === id)?.zustaendige || []).map((z) => z.person_id))] : [...TODO.neuWer];
+  $("todoWerTitel").textContent = id ? `👉 Wer soll es machen? – „${TODO.eintraege.find((x) => x.id === id)?.text || ""}“` : "👉 Wer soll es machen?";
+  todoWerListe(); $("todoWerBlatt").classList.remove("versteckt");
+}
+function todoWerListe() {
+  const alle = [MITGLIEDER.find((m) => m.person_id === ICH.person_id) || { person_id: ICH.person_id, name: ICH.name }, ...MITGLIEDER.filter((m) => m.person_id !== ICH.person_id)];
+  $("todoWerListe").innerHTML = alle.map((m) => `<label><input type="checkbox" ${TODO.werAuswahl.includes(m.person_id) ? "checked" : ""} onchange="todoWerHaken('${m.person_id}', this.checked)">
+    <span style="flex:1">${m.person_id === ICH.person_id ? "ich selbst" : esc(m.name)}</span></label>`).join("");
+  $("todoWerZahl").textContent = TODO.werAuswahl.length ? `${TODO.werAuswahl.length} ausgewählt: ${todoNamen(TODO.werAuswahl)}` : "noch niemand – dann bleibt es offen";
+}
+function todoWerHaken(pid, an) {
+  if (an && TODO.werAuswahl.length >= TODO_MAX_ZUSTAENDIGE) { melde(`Höchstens ${TODO_MAX_ZUSTAENDIGE} Zuständige.`, true); return todoWerListe(); }
+  TODO.werAuswahl = an ? [...new Set([...TODO.werAuswahl, pid])] : TODO.werAuswahl.filter((x) => x !== pid); todoWerListe();
+}
+const TODO_MAX_ZUSTAENDIGE = 10;
+async function todoWerFertig() {
+  $("todoWerBlatt").classList.add("versteckt");
+  if (!TODO.werFuer) { TODO.neuWer = [...TODO.werAuswahl]; return todoWerKnopf(); }
+  try { const r = await api("todo_zuweisen", { id: TODO.werFuer, zustaendige: TODO.werAuswahl });
+    melde(TODO.werAuswahl.length ? `👉 Zuständig: ${todoNamen(TODO.werAuswahl)}${r.versand ? ` – ${r.versand.benachrichtigt} bekommen Bescheid` : ""}` : "👉 Niemand mehr zuständig – offen"); todoLaden(); }
+  catch (e) { melde(e.message, true); }
 }
 function todoKategorienFuellen() {
   todoWerFuellen();
@@ -1535,35 +1567,30 @@ function todoFuer(f) { TODO.fuer = f; document.querySelectorAll("#todoFuer butto
 function todoFilter(f) { TODO.filter = f; document.querySelectorAll("#todoFilter button").forEach((b) => b.classList.toggle("an", b.dataset.f === f)); if (TODO.eintraege.length || $("todoTabelle")) todoZeigen(); }
 function todoZeigen() {
   const heute = heuteIso(), kat = (id) => TODO.kategorien.find((k) => k.id === id) || { sym: "📝", name: "" };
-  let liste = TODO.eintraege.filter((x) => TODO.filter === "alle" || (TODO.filter === "mir" ? x.zustaendig?.ich : TODO.filter === "ich" ? x.fuer === "ich" : x.fuer === "alle"));
+  const zust = (x) => (x.zustaendige?.length ? x.zustaendige : x.zustaendig ? [x.zustaendig] : []);
+  let liste = TODO.eintraege.filter((x) => TODO.filter === "alle" || (TODO.filter === "mir" ? zust(x).some((z) => z.ich) : TODO.filter === "ich" ? x.fuer === "ich" : x.fuer === "alle"));
   const offen = liste.filter((x) => !x.erledigt).sort((a, b) => (a.faellig || "9999").localeCompare(b.faellig || "9999"));
   const fertig = liste.filter((x) => x.erledigt).sort((a, b) => String(b.erledigt).localeCompare(String(a.erledigt)));
   const zeilen = [...offen, ...(TODO.erledigteZeigen ? fertig : [])];
   $("todoTabelle").innerHTML = zeilen.length ? `<table class="todotab">${zeilen.map((x) => { const k = kat(x.kategorie), spaet = !x.erledigt && x.faellig && x.faellig < heute;
     return `<tr class="${x.erledigt ? "fertig" : ""}"><td style="width:34px"><input type="checkbox" ${x.erledigt ? "checked" : ""} onchange="todoHaken('${x.id}', this.checked)" aria-label="erledigt"></td>
-      <td><div class="aufgabe">${esc(x.text)}</div><div class="meta">${x.zustaendig ? `<b style="${x.zustaendig.ich ? "color:var(--rot)" : ""}">👉 ${x.zustaendig.ich ? "du" : esc(x.zustaendig.vorname)}</b> · ` : x.darfZuweisen && !x.erledigt ? `<a href="#" onclick="event.preventDefault();todoZuweisen('${x.id}')">👉 zuweisen</a> · ` : ""}${x.fuer === "alle" ? "👥 für alle" : x.vonMir ? "👤 nur für mich" : "👤 privat"}${x.vonMir ? "" : " · von " + esc(x.von)}${x.faellig ? ` · <span class="${spaet ? "spaet" : ""}">fällig ${esc(fDatumKurz(x.faellig))}${spaet ? " – überfällig" : ""}</span>` : ""}${x.erledigt ? ` · ✓ ${esc(x.erledigtVon || "")} ${esc(zeitKurz(x.erledigt))}` : ""}</div></td>
+      <td><div class="aufgabe">${esc(x.text)}</div><div class="meta">${zust(x).length ? `<b ${x.darfZuweisen && !x.erledigt ? `role="button" style="cursor:pointer;${zust(x).some((z) => z.ich) ? "color:var(--rot)" : ""}" title="Zuständige ändern" onclick="todoZuweisen('${x.id}')"` : `style="${zust(x).some((z) => z.ich) ? "color:var(--rot)" : ""}"`}>👉 ${zust(x).map((z) => (z.ich ? "du" : esc(z.vorname))).join(", ")}</b> · ` : x.darfZuweisen && !x.erledigt ? `<a href="#" onclick="event.preventDefault();todoZuweisen('${x.id}')">👉 zuweisen</a> · ` : ""}${x.fuer === "alle" ? "👥 für alle" : x.vonMir ? "👤 nur für mich" : "👤 privat"}${x.vonMir ? "" : " · von " + esc(x.von)}${x.faellig ? ` · <span class="${spaet ? "spaet" : ""}">fällig ${esc(fDatumKurz(x.faellig))}${spaet ? " – überfällig" : ""}</span>` : ""}${x.erledigt ? ` · ✓ ${esc(x.erledigtVon || "")} ${esc(zeitKurz(x.erledigt))}` : ""}</div></td>
       <td class="kat" title="${esc(k.name)}">${k.sym}</td><td style="width:34px">${x.darfLoeschen ? `<button class="weg" title="löschen" onclick="todoLoeschen('${x.id}')">🗑️</button>` : ""}</td></tr>`; }).join("")}</table>`
     : `<p class="hinweis" style="margin:0">${offen.length || !fertig.length ? "Nichts zu tun 🎉 – oben einen Eintrag hinzufügen." : `Alles erledigt 🎉 (${fertig.length} erledigte ausgeblendet)`}</p>`;
   if (!TODO.erledigteZeigen && fertig.length && offen.length) $("todoTabelle").insertAdjacentHTML("beforeend", `<p class="hinweis" style="margin:8px 0 0">✓ ${fertig.length} erledigt (ausgeblendet)</p>`);
 }
 async function todoAnlegen() {
   const text = $("todoText").value.trim(); if (!text) return melde("Bitte kurz aufschreiben, was zu tun ist.", true);
-  try { const wer = $("todoWer").selectedOptions[0]?.textContent.replace("👉 ", "") || "";
-    const r = await api("todo_anlegen", { text, kategorie: $("todoKat").value, fuer: TODO.fuer, faellig: $("todoFaellig").value || null, zustaendig: $("todoWer").value || null });
-    $("todoText").value = ""; $("todoFaellig").value = ""; $("todoWer").value = ""; melde(r.versand ? `✅ Eingetragen – ${wer} bekommt Bescheid` : "✅ Eingetragen"); await todoLaden(); $("todoText").focus(); }
+  try { const wer = todoNamen(TODO.neuWer.filter((id) => id !== ICH.person_id));
+    const r = await api("todo_anlegen", { text, kategorie: $("todoKat").value, fuer: TODO.fuer, faellig: $("todoFaellig").value || null, zustaendige: TODO.neuWer });
+    $("todoText").value = ""; $("todoFaellig").value = ""; TODO.neuWer = []; todoWerKnopf(); melde(r.versand ? `✅ Eingetragen – ${wer} ${r.versand.benachrichtigt > 1 ? "bekommen" : "bekommt"} Bescheid` : "✅ Eingetragen"); await todoLaden(); $("todoText").focus(); }
   catch (e) { melde(e.message, true); }
 }
 async function todoHaken(id, erledigt) {
   const x = TODO.eintraege.find((y) => y.id === id); if (x) { x.erledigt = erledigt ? new Date().toISOString() : null; x.erledigtVon = erledigt ? ICH.vorname : null; todoZeigen(); }
   try { await api("todo_erledigt", { id, erledigt }); } catch (e) { melde(e.message, true); todoLaden(); }
 }
-async function todoZuweisen(id) {
-  if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return melde(e.message, true); }
-  const namen = MITGLIEDER.map((m, i) => `${i + 1} = ${m.name}`).join("\n");
-  const w = prompt(`Wer soll es machen? Nummer eingeben:\n\n${namen}`); if (!w) return;
-  const m = MITGLIEDER[Number(w) - 1]; if (!m) return melde("Diese Nummer gibt es nicht.", true);
-  try { const r = await api("todo_zuweisen", { id, zustaendig: m.person_id }); melde(`👉 ${m.vorname || m.name} ist zuständig${r.versand ? " und bekommt Bescheid" : ""}`); todoLaden(); } catch (e) { melde(e.message, true); }
-}
+async function todoZuweisen(id) { return todoWerWaehlen(id); } // 0.52.0: Häkchen-Liste statt Nummern-Eingabe, mehrere möglich
 async function todoLoeschen(id) {
   if (!confirm("Eintrag löschen?")) return;
   try { await api("todo_loeschen", { id }); await todoLaden(); } catch (e) { melde(e.message, true); }

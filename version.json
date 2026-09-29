@@ -1,10 +1,16 @@
 {
-  "version": "0.51.0",
+  "version": "0.52.0",
   "datum": "2026-09-29",
   "neu": [
-    "👨‍🍳 Die drehende Kochmütze erscheint jetzt auch beim Aktualisieren, beim Wetter, in der Admin-Zentrale, beim Öffnen von Kalender, Nachrichten, Pinnwand und den Info-Karten"
+    "👉 To-do: Mehrere Personen können für eine Aufgabe zuständig sein – per Häkchen auswählen, alle bekommen Bescheid"
   ],
   "verlauf": [
+    {
+      "version": "0.52.0",
+      "neu": [
+        "👉 To-do: Mehrere Personen können für eine Aufgabe zuständig sein – per Häkchen auswählen, alle bekommen Bescheid"
+      ]
+    },
     {
       "version": "0.51.0",
       "neu": [
