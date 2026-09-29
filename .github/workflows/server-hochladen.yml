@@ -1,0 +1,43 @@
+# KC-CLUB-SERVER-DEPLOY: lädt die Edge Function „kc-club“ automatisch zu Supabase hoch,
+# sobald sich der Server-Code auf main ändert (oder per Hand über „Run workflow“).
+# Schlüssel: Repository-Secret SUPABASE_ACCESS_TOKEN (nur Edge Functions lesen/schreiben, nur dieses Projekt,
+# läuft Ende September 2027 ab – rechtzeitig erneuern). Kostenlos: GitHub Actions + Supabase CLI.
+name: Server hochladen
+on:
+  push:
+    branches: [main]
+    paths:
+      - "supabase/functions/kc-club/**"
+  workflow_dispatch:
+concurrency:
+  group: server-hochladen
+  cancel-in-progress: false
+jobs:
+  hochladen:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      PROJEKT: ptblnpiroqftcvlsrhac
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      # erst die Tests – ein roter Test verhindert das Hochladen
+      - run: node tests/app-vertrag.test.mjs
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Edge Function hochladen
+        run: supabase functions deploy kc-club --project-ref "$PROJEKT" --no-verify-jwt --use-api
+      - name: Prüfen, ob die neue Server-Version antwortet
+        run: |
+          soll=$(grep -oP 'const SERVER_VERSION = "\K[^"]+' supabase/functions/kc-club/index.ts)
+          for i in 1 2 3 4 5 6; do
+            antwort=$(curl -s -X POST "https://$PROJEKT.supabase.co/functions/v1/kc-club" -H "content-type: application/json" -d '{"action":"version"}' || true)
+            echo "Antwort: $antwort"
+            # ohne Zugang antwortet der Server mit einer Fehlermeldung – Hauptsache, er läuft
+            if echo "$antwort" | grep -q '"error"\|"ok"'; then echo "Server antwortet (Soll-Version $soll)"; exit 0; fi
+            sleep 10
+          done
+          echo "Server antwortet nicht"; exit 1
