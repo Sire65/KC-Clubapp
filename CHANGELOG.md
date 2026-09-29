@@ -1,5 +1,18 @@
 # Änderungen
 
+## 0.44.0 – 2026-09-29 (DEV)
+
+- KC-CLUB-ZENTRALE (neu): 6. Info-Karte „📡 Kommunikationszentrale“. Digitale Anzeige (Uhr, online, ungelesen, Push-Zustand,
+  Laufschrift der letzten Nachrichten), „Wer?“ (👥 Alle, 🟢 Online, ✖ Keiner, ☰ Auswahl mit Ämtern, Chat-Gruppen und einzelnen
+  Mitgliedern samt Online-Punkt und Status), Schaltpult 📞 Anrufen (online: App-Anruf, sonst freigegebene Telefonnummer),
+  🎥 Video, ✊ Anklopfen, 🎤 Sprachnachricht, 💬 Chat; Kurznachricht mit zusätzlich 🔔 Push / ✉️ E-Mail / 🟢 WhatsApp.
+  Nicht mögliche Knöpfe sind blass und sagen beim Antippen warum. Ab 5 Empfängern Rückfrage. Nutzt ausschließlich vorhandene
+  Wege (nachricht_senden, anrufen, anklopfen, spracheStart, whatsappWeitergeben) – kein Parallel-Weg.
+- Beschluss Admin: alle Mitglieder dürfen alle anschreiben/anrufen/anklopfen – Server-Schalter KOMMUNIKATION.alleDarfJeder
+  (vorher „Alle“ nur Clubleitung); „👥 Alle Mitglieder“ im normalen „＋ Neu“ jetzt für alle sichtbar.
+- KC-CLUB-INFOFELD: ⚙️ → Darstellung „🪧 Info-Feld oben beim Start“ (zuletzt gezeigte oder feste Karte, gespeichert je Mitglied,
+  Einstellung „infofeld“). Pfeile jetzt mittig links/rechts auf dem Rahmen, Punkte direkt unter dem Feld (Steuerzeile entfällt).
+
 ## 0.43.0 – 2026-09-29 (DEV)
 
 - KC-CLUB-INFOFELD-DEMNAECHST (neu): 4. Karte im Info-Feld „🗓️ Demnächst“ – die nächsten 4 Einträge der kommenden 8 Wochen aus

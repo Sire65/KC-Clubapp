@@ -805,8 +805,8 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 65. 0.42.0: Info-Feld blätterbar (Registry, Pfeile, Punkte, Wischen) + Wetter (Adapter/Registry, nur Admin stellt ein, Rule 11)
 {
   const ids = [...html.slice(html.indexOf("const INFO_FELDER = ["), html.indexOf("];", html.indexOf("const INFO_FELDER = ["))).matchAll(/id: "([a-z]+)"/g)].map((m) => m[1]);
-  assert.deepEqual(ids, ["treffen", "wetter", "fuerdich", "demnaechst", "fotos"], "Info-Felder falsch");
-  assert.ok(/class="ipfeil"[^>]*onclick="infoBlaettern\(-1\)"/.test(html) && /onclick="infoBlaettern\(1\)"/.test(html) && /class="ipunkt\$\{i === INFO_I \? " an" : ""\}"/.test(html), "Pfeile/Punkte fehlen");
+  assert.deepEqual(ids, ["treffen", "wetter", "fuerdich", "demnaechst", "fotos", "zentrale"], "Info-Felder falsch");
+  assert.ok(/class="ipfeil links"[^>]*onclick="infoBlaettern\(-1\)"/.test(html) && /onclick="infoBlaettern\(1\)"/.test(html) && /class="ipunkt\$\{i === INFO_I \? " an" : ""\}"/.test(html), "Pfeile/Punkte fehlen");
   assert.ok(/\[\$\("heroInfo"\), infoBlaettern\]/.test(html), "Wischen im Info-Feld fehlt");
   assert.ok(!/setInterval\([^)]*infoBlaettern/.test(html), "Info-Feld darf nicht automatisch blättern");
   for (const a of ["wetter", "wetter_konfig", "wetter_ort_suchen", "wetter_setzen"]) assert.ok(aktionen.has(a) && aufrufe.has(a), `${a} fehlt`);
@@ -831,6 +831,20 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
     dienste: [{ datum: plus(2), start: "10:00", bereich: "Bude" }], fristen: [{ frist: plus(5) + "T20:00:00Z", titel: "Grillfest", offen: true }, { frist: plus(4) + "T20:00:00Z", titel: "zu", offen: false }],
     geburtstage: [{ md: plus(1).slice(5), name: "Klaus" }, { md: plus(-3).slice(5), name: "Vorbei" }], aktionen: [{ von: plus(-1), titel: "Reise läuft" }] });
   assert.deepEqual(liste.map((x) => x.text), ["Reise läuft", "Klaus hat Geburtstag", "Mein Dienst · Bude", "Abstimmung endet: Grillfest", "Clubabend"], "Demnächst falsch sortiert/gefiltert");
+}
+
+// 67. 0.44.0: Kommunikationszentrale als Info-Karte, Start-Karte wählbar, „Alle“ darf jeder (eine Stelle), Pfeile am Rahmen
+{
+  assert.ok(/const KOMMUNIKATION = \{ alleDarfJeder: true \}/.test(server) && /if \(!KOMMUNIKATION\.alleDarfJeder\) nurVorstand\(ich\)/.test(server), "„Alle“-Recht nicht an einer Stelle");
+  assert.ok(/infofeld: \(w\) => \(\{ start:/.test(server) && /id="setInfoStart"/.test(html) && /infoStartUebernehmen\(INIT\.einstellungen\?\.infofeld\)/.test(html), "Start-Karte nicht einstellbar");
+  const z = html.slice(html.indexOf("function infoZentrale"), html.indexOf("let zeUhrTimer"));
+  for (const k of ["📞", "🎥", "✊", "🎤", "💬"]) assert.ok(z.includes(`knopf("${k}"`), `Zentrale: Knopf ${k} fehlt`);
+  for (const w of ["push", "email", "whatsapp"]) assert.ok(z.includes(`weg("${w}"`), `Zentrale: Weg ${w} fehlt`);
+  assert.ok(/zeWahl\('alle'\)/.test(z) && /zeWahl\('online'\)/.test(z) && /zeWahl\('keiner'\)/.test(z) && /zeBlatt\(\)/.test(z), "Zentrale: Auswahl Alle/Online/Keiner/Auswahl fehlt");
+  const zs = html.slice(html.indexOf("async function zeSenden"), html.indexOf("// Feld 4 (0.43.0)"));
+  assert.ok(/api\("nachricht_senden"/.test(zs) && /n >= ZE_RUECKFRAGE_AB && !confirm/.test(zs), "Zentrale sendet nicht über den vorhandenen Weg oder ohne Rückfrage");
+  assert.ok(/\.ipfeil\.links \{ left: -17px; \}/.test(html) && /id="infoPunkte"/.test(html) && !/class="inav"/.test(html), "Pfeile nicht am Rahmen / Punkte nicht unter dem Feld");
+  assert.ok(/chip\("\*", "👥 Alle Mitglieder"\)/.test(html) && !/ICH\.vorstand \? chip\("\*"/.test(html), "„Alle Mitglieder“ nicht für alle");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

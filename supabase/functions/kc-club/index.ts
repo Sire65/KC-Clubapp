@@ -13,14 +13,14 @@
 //           KC-CLUB-COMMUNICATOR-STATUS (0.17.0), KC-CLUB-FEEDBACK (0.18.0),
 //           KC-CLUB-KACHELN (0.19.0), KC-CLUB-ZUGANG-SELBST (0.21.0),
 //           KC-CLUB-GRUPPEN, KC-CLUB-ZUSTELLWAHL (0.23.0)
-//           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0), KC-CLUB-KACHELN-ZIEHEN (0.26.0), KC-CLUB-FEEDBACK-NEU (0.27.1), KC-CLUB-BEGRUESSUNG (0.28.0), KC-CLUB-ONLINE (0.29.0), KC-CLUB-ANRUF (0.31.0), KC-CLUB-VIDEO (0.32.0), KC-CLUB-QUITTUNG (0.34.0), KC-CLUB-TODO + KC-CLUB-REGISTER-ZIEHEN (0.36.0), KC-CLUB-SPRACHE + KC-CLUB-TODO-ZUSTAENDIG (0.37.0), KC-CLUB-ERSTATTUNG (0.38.0), KC-CLUB-KMSATZ (0.39.0), KC-CLUB-FEEDBACK-DAUERHAFT (0.40.0), KC-CLUB-INFOFELD + KC-CLUB-WETTER (0.42.0), KC-CLUB-INFOFELD-DEMNAECHST/-FOTOS (0.43.0)
+//           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0), KC-CLUB-KACHELN-ZIEHEN (0.26.0), KC-CLUB-FEEDBACK-NEU (0.27.1), KC-CLUB-BEGRUESSUNG (0.28.0), KC-CLUB-ONLINE (0.29.0), KC-CLUB-ANRUF (0.31.0), KC-CLUB-VIDEO (0.32.0), KC-CLUB-QUITTUNG (0.34.0), KC-CLUB-TODO + KC-CLUB-REGISTER-ZIEHEN (0.36.0), KC-CLUB-SPRACHE + KC-CLUB-TODO-ZUSTAENDIG (0.37.0), KC-CLUB-ERSTATTUNG (0.38.0), KC-CLUB-KMSATZ (0.39.0), KC-CLUB-FEEDBACK-DAUERHAFT (0.40.0), KC-CLUB-INFOFELD + KC-CLUB-WETTER (0.42.0), KC-CLUB-INFOFELD-DEMNAECHST/-FOTOS (0.43.0), KC-CLUB-ZENTRALE (0.44.0)
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.43.0";
+const SERVER_VERSION = "0.44.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -348,6 +348,8 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
     // KC-CLUB-REGISTER-ZIEHEN (0.36.0): eigene Reihenfolge der Register (Verein, Mein Bereich, Programme)
     register: kaIds(w?.register).slice(0, 10),
   }),
+  // KC-CLUB-INFOFELD (0.44.0): welche Karte oben beim Start erscheint („zuletzt“ = die zuletzt gezeigte)
+  infofeld: (w) => ({ start: typeof w?.start === "string" && KA_ID.test(w.start) ? w.start : "zuletzt" }),
   // KC-CLUB-ONLINE (0.29.0): anderen zeigen, wann ich online bin (Standard: an)
   online: (w) => ({ zeigen: w?.zeigen !== false }),
   // KC-CLUB-BEGRUESSUNG (0.28.0): Begrüßung beim ersten Start einmal je Mitglied (geräteübergreifend)
@@ -920,9 +922,12 @@ async function binTeilnehmer(threadId: string, person: string) {
   const { data } = await db.from("kc_communication_thread_participants").select("thread_id").eq("thread_id", threadId).eq("person_id", person).maybeSingle();
   if (!data) throw new Fehler("Unterhaltung nicht gefunden.", 404);
 }
+// KC-CLUB-ZENTRALE (0.44.0): Wer darf wen erreichen? Beschluss Admin 29.09.2026: alle Mitglieder dürfen alle anschreiben,
+// anrufen und anklopfen (vorher „Alle“ nur Clubleitung). Umschaltbar an dieser einen Stelle.
+const KOMMUNIKATION = { alleDarfJeder: true };
 async function empfaengerAufloesen(ich: Ich, e: any): Promise<string[]> {
   const ids = new Set<string>((Array.isArray(e?.personen) ? e.personen : []).map(String));
-  if (e?.alle) { nurVorstand(ich); (await aktiveMitglieder()).forEach((p) => ids.add(p.person_id)); }
+  if (e?.alle) { if (!KOMMUNIKATION.alleDarfJeder) nurVorstand(ich); (await aktiveMitglieder()).forEach((p) => ids.add(p.person_id)); }
   const aemter = (Array.isArray(e?.aemter) ? e.aemter : []).map(String);
   if (aemter.length) {
     const { data } = await db.from("kc_club_rollen").select("person_id,aemter").overlaps("aemter", aemter);

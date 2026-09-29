@@ -1,11 +1,22 @@
 {
-  "version": "0.43.0",
+  "version": "0.44.0",
   "datum": "2026-09-29",
   "neu": [
-    "🗓️ Neue Karte oben „Demnächst“: die nächsten Treffen, Aktionen, Geburtstage, deine Dienste und Abstimmungsfristen – antippen springt in den Kalender",
-    "📷 Neue Karte oben „Neueste Fotos“: die letzten 4 Bilder aus dem Fotoalbum – antippen öffnet das Foto"
+    "📡 Neue Karte oben: Kommunikationszentrale – digitale Anzeige, Empfänger wählen (Alle, Online, Ämter, Gruppen, einzeln) und Schaltpult: Anrufen, Video, Anklopfen, Sprachnachricht, Chat, Nachricht per Push/E-Mail/WhatsApp",
+    "👥 Alle Mitglieder dürfen jetzt alle anschreiben, anrufen und anklopfen",
+    "🪧 ⚙️ Darstellung: wählbar, welche Karte oben beim Start erscheint",
+    "‹ › Pfeile sitzen jetzt mittig am Rand des Info-Felds, die Punkte direkt darunter – mehr Platz"
   ],
   "verlauf": [
+    {
+      "version": "0.44.0",
+      "neu": [
+        "📡 Neue Karte oben: Kommunikationszentrale – digitale Anzeige, Empfänger wählen (Alle, Online, Ämter, Gruppen, einzeln) und Schaltpult: Anrufen, Video, Anklopfen, Sprachnachricht, Chat, Nachricht per Push/E-Mail/WhatsApp",
+        "👥 Alle Mitglieder dürfen jetzt alle anschreiben, anrufen und anklopfen",
+        "🪧 ⚙️ Darstellung: wählbar, welche Karte oben beim Start erscheint",
+        "‹ › Pfeile sitzen jetzt mittig am Rand des Info-Felds, die Punkte direkt darunter – mehr Platz"
+      ]
+    },
     {
       "version": "0.43.0",
       "neu": [
