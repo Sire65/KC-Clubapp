@@ -16,12 +16,23 @@
     --bg: #f5eee3; --karte: #ffffff; --karte2: #efe5d6; --text: #2b1a1c; --grau: #7b6b66; --linie: #e4d7c4;
     --gruen: #2e7d4f; --gruenbg: #e3f2e8; --gelb: #9a6b00; --gelbbg: #fbf0d6; --rotbg: #fbe3e3; --schatten: 0 6px 18px rgba(80, 30, 20, .10);
     --radius: 18px; --fs: 16px;
+    --hero1: #4d0c16; --hero4: #b5705a; --heroschatten: rgba(116, 21, 33, .35);
     --blau: #1f5f99; --blaubg: #e3edf7; --lila: #7b3fa0; --lilabg: #f1e6f7; --tuerkis: #0e7c86; --tuerkisbg: #dcf1f3;
   }
   :root.dunkel { --bg: #1b1415; --karte: #2a2021; --karte2: #33282a; --text: #f4e9e4; --grau: #b9a8a3; --linie: #45393a; --gruenbg: #1f3a2a; --gelbbg: #3a2f17; --rotbg: #4a2126; --schatten: 0 6px 18px rgba(0,0,0,.35); --blau: #8cbbe8; --blaubg: #1d2c3d; --lila: #cfa3e8; --lilabg: #33203d; --tuerkis: #6fd0d8; --tuerkisbg: #173338; }
   /* Kalender (KC-CLUB-KALENDER) */
   .umschalter { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: var(--karte2); padding: 5px; border-radius: 16px; margin: 4px 0 12px; }
   .umschalter button { border: none; border-radius: 12px; padding: 10px; font-weight: 800; background: none; cursor: pointer; }
+  /* KC-CLUB-DESIGN: Auswahl der fertigen Farbdesigns + Tag/Nacht */
+  .designwahl { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin: 8px 0 12px; }
+  .designwahl button { border: 2px solid var(--linie); background: var(--karte); color: var(--text); border-radius: 16px; padding: 8px; cursor: pointer; text-align: left; font-weight: 800; font-size: .9rem; }
+  .designwahl button.an { border-color: var(--rot); box-shadow: 0 0 0 2px var(--rot); }
+  .designwahl .vorschau { display: block; height: 58px; border-radius: 11px; margin-bottom: 6px; position: relative; overflow: hidden; }
+  .designwahl .vorschau i { position: absolute; border-radius: 6px; }
+  .modus3 { grid-template-columns: 1fr 1fr 1fr; }
+  /* Nachts: Akzent als Schrift auf dunklem Grund in der helleren Variante, damit er lesbar bleibt */
+  :root.dunkel .umschalter button.an, :root.dunkel .fuss-leiste button.an, :root.dunkel details.karte .pfeil, :root.dunkel .kalnav .pf { color: var(--rot3); }
+  .tuer { display: block; width: 100%; margin: 14px 0 4px; padding: 14px; border-radius: 16px; border: 2px solid var(--linie); background: var(--karte); color: var(--text); font-weight: 800; font-size: 1rem; cursor: pointer; }
   .umschalter button.an { background: var(--karte); box-shadow: var(--schatten); color: var(--rot); }
   .kalnav { display: flex; align-items: center; gap: 6px; }
   .kalnav .pf { width: 42px; height: 42px; border-radius: 12px; border: none; background: var(--karte2); font-weight: 900; font-size: 1.1rem; color: var(--rot); cursor: pointer; flex: none; }
@@ -61,7 +72,7 @@
   .versteckt { display: none !important; }
 
   /* Kopf (Hero) */
-  .hero { background: linear-gradient(135deg, #4d0c16 0%, var(--rot) 45%, var(--rot2) 75%, #b5705a 100%); color: #fff; border-radius: 26px; padding: 18px; box-shadow: 0 12px 30px rgba(116, 21, 33, .35); }
+  .hero { background: linear-gradient(135deg, var(--hero1) 0%, var(--rot) 45%, var(--rot2) 75%, var(--hero4) 100%); color: #fff; border-radius: 26px; padding: 18px; box-shadow: 0 12px 30px var(--heroschatten); }
   .kopfzeile { display: flex; align-items: flex-start; gap: 12px; }
   .kopftext { flex: 1; min-width: 0; }
   .logo { width: 54px; height: 54px; border-radius: 16px; background: rgba(255,255,255,.14); display: grid; place-items: center; flex: none; border: none; padding: 0; cursor: pointer; }
@@ -117,7 +128,7 @@
   .wischhinweis { text-align: center; font-size: .78rem; color: var(--grau); margin-top: 6px; }
   .raster { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
   .kachel { position: relative; overflow: hidden; background: var(--karte); border: none; border-radius: var(--radius); padding: 16px; text-align: left; min-height: 124px; box-shadow: var(--schatten); cursor: pointer; }
-  .kachel::after { content: ""; position: absolute; right: -24px; top: -24px; width: 88px; height: 88px; border-radius: 50%; background: radial-gradient(circle at 30% 70%, rgba(201,164,106,.28), rgba(116,21,33,.10)); }
+  .kachel::after { content: ""; position: absolute; right: -24px; top: -24px; width: 88px; height: 88px; border-radius: 50%; background: radial-gradient(circle at 30% 70%, color-mix(in srgb, var(--gold) 28%, transparent), color-mix(in srgb, var(--rot) 10%, transparent)); }
   .kachel .sym { font-size: 2rem; line-height: 1; }
   .kachel b { display: block; font-size: 1.1rem; margin-top: 10px; }
   .kachel small { color: var(--grau); font-weight: 700; }
@@ -354,7 +365,7 @@
         <div class="kopfrechts">
           <div class="knopfreihe">
             <button class="leds" id="leds" title="Verbindung zum Server" aria-label="Verbindung zum Server" onclick="verbindungBlatt()"><i class="led grau" id="ledStatus"></i><i class="led grau" id="ledComm"></i><i class="led daten" id="ledDaten"></i></button>
-            <button class="rund" title="Hell/Dunkel" onclick="dunkelUmschalten()">🌙</button>
+            <button class="rund" id="modusKnopf" title="Tag/Nacht umschalten" onclick="dunkelUmschalten()">🌙</button>
             <button class="rund" title="Aktualisieren" onclick="neuLaden(true)">↻</button>
           </div>
           <div class="gruss" id="begruessung">Hallo!</div>
@@ -371,6 +382,7 @@
     <div id="kaAusHinweis"></div>
     <div class="wischhinweis">‹ wischen für weitere Bereiche ›</div>
     <div class="karte"><h3>Heute wichtig</h3><div id="wichtig" class="hinweis">…</div></div>
+    <button class="tuer" onclick="appSchliessen()">🚪 App schließen</button>
   </section>
 
   <!-- TERMINE -->
@@ -549,7 +561,12 @@
     <details class="karte" data-klappe="darstellung">
       <summary>🎨 Darstellung</summary>
       <div class="schalter"><div><b>🔠 Große Schrift</b></div><input type="checkbox" id="setGross" onchange="einstellung('gross', this.checked)"></div>
-      <div class="schalter"><div><b>🌙 Dunkles Design</b></div><input type="checkbox" id="setDunkel" onchange="einstellung('dunkel', this.checked)"></div>
+      <div style="margin-top:8px"><b>🌗 Tag- und Nachtmodus</b></div>
+      <div class="umschalter modus3" id="modusWahl"><button data-m="auto" onclick="modusWaehlen('auto')">🔄 Automatisch</button><button data-m="tag" onclick="modusWaehlen('tag')">☀️ Immer Tag</button><button data-m="nacht" onclick="modusWaehlen('nacht')">🌙 Immer Nacht</button></div>
+      <p class="hinweis" id="modusInfo" style="margin-top:-4px"></p>
+      <div><b>🎨 Farbdesign</b><div class="hinweis">Antippen – die App färbt sich sofort um</div></div>
+      <div class="designwahl" id="designWahl"></div>
+      <button class="knopf klein" onclick="designStandard()">↺ Standard wiederherstellen</button>
       <div class="schalter"><div><b>🧩 Startseite anordnen</b><div class="hinweis">Kacheln verschieben oder ausblenden – oder auf der Startseite eine Kachel lange drücken</div></div><button class="knopf klein" onclick="zeige('start');kaBearbeiten(true)">Anordnen</button></div>
       <div class="schalter"><div><b>🇩🇪 Feiertage NRW im Kalender</b><div class="hinweis">Gesetzliche Feiertage in Nordrhein-Westfalen</div></div><input type="checkbox" id="setFeiertage" onchange="einstellung('feiertage', this.checked); if (KAL) kalZeichnen()"></div>
     </details>
@@ -577,6 +594,7 @@
       <p class="hinweis" style="font-size:.85rem;margin-bottom:0">„Infos kopieren“ hilft bei Fragen und Fehlern: einfach in eine Nachricht an Hansi einfügen. Es wird kein Zugangslink kopiert.<br>
         © 2026 Köcheclub Werne · Entwicklung &amp; Design Hans-Joachim Koch · kostenlos und werbefrei · Daten nur für Clubmitglieder mit persönlichem Link.</p>
     </details>
+    <button class="tuer" onclick="appSchliessen()">🚪 App schließen</button>
   </section>
 </div>
 
@@ -651,7 +669,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.23.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.24.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -668,12 +686,120 @@ let chatId = null, chatTimer = null, empfWahl = { personen: [], aemter: [], alle
 
 function einst(k, def) { try { const v = localStorage.getItem("kc_club_" + k); return v === null ? def : v === "1"; } catch { return def; } }
 function einstellung(k, an) { try { localStorage.setItem("kc_club_" + k, an ? "1" : "0"); } catch {} anwendenDesign(); }
-function anwendenDesign() {
-  document.documentElement.classList.toggle("dunkel", einst("dunkel", false));
-  document.documentElement.classList.toggle("gross", einst("gross", false));
-  $("setDunkel").checked = einst("dunkel", false); $("setFeiertage").checked = einst("feiertage", true); $("setGross").checked = einst("gross", false); $("setTon").checked = einst("ton", true);
+// ---------- KC-CLUB-DESIGN: fertige Farbdesigns (je mit Tag- und Nacht-Variante) ----------
+// Nur die Grundfarben wechseln; Status-/Warnfarben (grün = OK, rot = Störung, gelb = Hinweis) bleiben in jedem Design gleich.
+// Neues Design = neuer Eintrag hier (Registry), sonst nichts.
+const DESIGNS = [
+  { id: "klassik", name: "Köcheclub Klassik",
+    tag: { rot: "#741521", rot2: "#9b2536", rot3: "#c0485a", gold: "#c9a46a", hero1: "#4d0c16", hero4: "#b5705a", bg: "#f5eee3", karte: "#ffffff", karte2: "#efe5d6", linie: "#e4d7c4", text: "#2b1a1c", grau: "#7b6b66" },
+    nacht: { rot: "#741521", rot2: "#9b2536", rot3: "#c0485a", gold: "#c9a46a", hero1: "#4d0c16", hero4: "#b5705a", bg: "#1b1415", karte: "#2a2021", karte2: "#33282a", linie: "#45393a", text: "#f4e9e4", grau: "#b9a8a3" } },
+  { id: "kuechengruen", name: "Küchengrün",
+    tag: { rot: "#2f5d3a", rot2: "#3f7a4c", rot3: "#5c9a68", gold: "#c9a46a", hero1: "#1b3522", hero4: "#8a9a5b", bg: "#eef2ea", karte: "#ffffff", karte2: "#e2eadb", linie: "#d3dfcb", text: "#1d2a1f", grau: "#5f6d5f" },
+    nacht: { rot: "#2f6b40", rot2: "#3f7a4c", rot3: "#5c9a68", gold: "#c9a46a", hero1: "#12261a", hero4: "#6f7f45", bg: "#121a14", karte: "#1d2820", karte2: "#25322a", linie: "#34443a", text: "#e8f0e8", grau: "#a9b8aa" } },
+  { id: "nordsee", name: "Nordsee",
+    tag: { rot: "#1d4e7a", rot2: "#2a6a9e", rot3: "#4f8fc0", gold: "#e0b85c", hero1: "#0f2c47", hero4: "#5a9bb8", bg: "#edf2f7", karte: "#ffffff", karte2: "#dfe8f1", linie: "#cfdbe7", text: "#16222e", grau: "#5b6b7a" },
+    nacht: { rot: "#245d91", rot2: "#2a6a9e", rot3: "#4f8fc0", gold: "#e0b85c", hero1: "#0b2238", hero4: "#3f7f9c", bg: "#0f161d", karte: "#1a242e", karte2: "#223040", linie: "#2f3f50", text: "#e6eef6", grau: "#a3b3c3" } },
+  { id: "schiefer", name: "Schiefer",
+    tag: { rot: "#37424d", rot2: "#4b5866", rot3: "#6d7b89", gold: "#c9a46a", hero1: "#1f262d", hero4: "#7d8a96", bg: "#f0f1f2", karte: "#ffffff", karte2: "#e3e6e9", linie: "#d4d8dc", text: "#1c2126", grau: "#626b74" },
+    nacht: { rot: "#56626f", rot2: "#4b5866", rot3: "#6d7b89", gold: "#c9a46a", hero1: "#1a2026", hero4: "#5e6a75", bg: "#141719", karte: "#1f2327", karte2: "#292e33", linie: "#3a4046", text: "#eceff1", grau: "#a8b0b7" } },
+  { id: "kontrast", name: "Großer Kontrast",
+    tag: { rot: "#000000", rot2: "#1a1a1a", rot3: "#333333", gold: "#ffd400", hero1: "#000000", hero4: "#2a2a2a", bg: "#ffffff", karte: "#ffffff", karte2: "#eeeeee", linie: "#555555", text: "#000000", grau: "#333333" },
+    nacht: { rot: "#0044aa", rot2: "#0055cc", rot3: "#3377dd", gold: "#ffd400", hero1: "#000000", hero4: "#003380", bg: "#000000", karte: "#111111", karte2: "#1e1e1e", linie: "#888888", text: "#ffffff", grau: "#e0e0e0" } },
+];
+// Gewählt: Design + Modus (auto = nach Helligkeit: Lichtsensor, falls das Handy ihn freigibt, sonst Sonnenauf-/-untergang in Werne)
+let DS = { design: "klassik", modus: "auto" }, dsGeaendert = 0, LICHT_NACHT = null;
+try {
+  const x = JSON.parse(localStorage.getItem("kc_club_design") || "null");
+  if (x) DS = { design: x.design || "klassik", modus: x.modus || "auto" };
+  else { const alt = localStorage.getItem("kc_club_dunkel"); DS.modus = alt === "1" ? "nacht" : alt === "0" ? "tag" : "auto"; } // bisheriger Schalter „Dunkles Design“
+} catch {}
+// Sonnenauf- und -untergang für Werne (51,66° N · 7,63° O), NOAA-Näherung, auf wenige Minuten genau
+function sonne(d = new Date()) {
+  const rad = Math.PI / 180, lat = 51.66 * rad, lon = 7.63;
+  const n = Math.floor((Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) - Date.UTC(d.getUTCFullYear(), 0, 0)) / 864e5);
+  const g = 2 * Math.PI / 365 * (n - 1);
+  const zgl = 229.18 * (0.000075 + 0.001868 * Math.cos(g) - 0.032077 * Math.sin(g) - 0.014615 * Math.cos(2 * g) - 0.040849 * Math.sin(2 * g));
+  const dekl = 0.006918 - 0.399912 * Math.cos(g) + 0.070257 * Math.sin(g) - 0.006758 * Math.cos(2 * g) + 0.000907 * Math.sin(2 * g) - 0.002697 * Math.cos(3 * g) + 0.00148 * Math.sin(3 * g);
+  const ha = Math.acos(Math.cos(90.833 * rad) / (Math.cos(lat) * Math.cos(dekl)) - Math.tan(lat) * Math.tan(dekl)) / rad;
+  const mitte = 720 - 4 * lon - zgl, t0 = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+  return { auf: new Date(t0 + (mitte - 4 * ha) * 6e4), unter: new Date(t0 + (mitte + 4 * ha) * 6e4) };
 }
-function dunkelUmschalten() { einstellung("dunkel", !einst("dunkel", false)); }
+function istNacht() {
+  if (DS.modus === "nacht") return true;
+  if (DS.modus === "tag") return false;
+  if (LICHT_NACHT !== null) return LICHT_NACHT;
+  const j = new Date(), s = sonne(j); return j < s.auf || j > s.unter;
+}
+// Lichtsensor: nur wenn der Browser ihn anbietet (bei Chrome meist gesperrt) – dann mit Abstand zwischen Ein/Aus, damit nichts flackert
+let lichtSensor = null;
+function lichtSensorStarten() {
+  if (lichtSensor || DS.modus !== "auto" || !("AmbientLightSensor" in window)) return;
+  try {
+    lichtSensor = new AmbientLightSensor({ frequency: 0.2 });
+    lichtSensor.addEventListener("reading", () => {
+      const lx = lichtSensor.illuminance, vorher = LICHT_NACHT;
+      LICHT_NACHT = vorher === null ? lx < 15 : vorher ? !(lx > 50) : lx < 10;
+      if (vorher !== LICHT_NACHT) anwendenDesign();
+    });
+    lichtSensor.addEventListener("error", () => { LICHT_NACHT = null; lichtSensor = null; });
+    lichtSensor.start();
+  } catch { lichtSensor = null; }
+}
+const designAktuell = () => DESIGNS.find((d) => d.id === DS.design) || DESIGNS[0];
+function anwendenDesign() {
+  const nacht = istNacht(), f = designAktuell()[nacht ? "nacht" : "tag"], w = document.documentElement;
+  w.classList.toggle("dunkel", nacht);
+  w.classList.toggle("gross", einst("gross", false));
+  for (const [k, v] of Object.entries(f)) w.style.setProperty("--" + k, v);
+  w.style.setProperty("--heroschatten", f.rot + "59");
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", nacht ? f.bg : f.rot);
+  if ($("modusKnopf")) $("modusKnopf").textContent = nacht ? "☀️" : "🌙";
+  $("setFeiertage").checked = einst("feiertage", true); $("setGross").checked = einst("gross", false); $("setTon").checked = einst("ton", true);
+  designWahlZeigen();
+}
+function designWahlZeigen() {
+  if (!$("designWahl")) return;
+  const nacht = istNacht();
+  $("designWahl").innerHTML = DESIGNS.map((d) => { const f = d[nacht ? "nacht" : "tag"];
+    return `<button class="${d.id === DS.design ? "an" : ""}" onclick="designWaehlen('${d.id}')"><span class="vorschau" style="background:${f.bg}">`
+      + `<i style="left:0;right:0;top:0;height:24px;border-radius:0;background:linear-gradient(135deg,${f.hero1},${f.rot},${f.hero4})"></i>`
+      + `<i style="left:8px;top:30px;width:44px;height:22px;background:${f.karte};border:1px solid ${f.linie}"></i><i style="left:58px;top:30px;width:44px;height:22px;background:${f.rot}"></i><i style="right:8px;top:34px;width:14px;height:14px;border-radius:50%;background:${f.gold}"></i>`
+      + `</span>${d.id === DS.design ? "✓ " : ""}${esc(d.name)}</button>`; }).join("");
+  document.querySelectorAll("#modusWahl button").forEach((b) => b.classList.toggle("an", b.dataset.m === DS.modus));
+  const s = sonne(), z = (d) => fZeit.format(d);
+  $("modusInfo").textContent = DS.modus !== "auto" ? "" : `Gerade: ${nacht ? "🌙 Nacht" : "☀️ Tag"} – ` + (LICHT_NACHT !== null ? "nach dem Lichtsensor des Handys." : `nach Sonnenstand in Werne (heute hell von ${z(s.auf)} bis ${z(s.unter)} Uhr).`);
+}
+let dsTimer = null;
+function designSpeichern() {
+  dsGeaendert = Date.now();
+  try { localStorage.setItem("kc_club_design", JSON.stringify(DS)); } catch {}
+  anwendenDesign(); lichtSensorStarten();
+  clearTimeout(dsTimer);
+  dsTimer = setTimeout(() => { if (KEY) api("einstellung_setzen", { schluessel: "design", wert: DS }).catch((e) => melde("Design nur auf diesem Handy gespeichert: " + e.message, true)); }, 800);
+}
+function designWaehlen(id) { DS = { ...DS, design: id }; designSpeichern(); }
+function modusWaehlen(m) { DS = { ...DS, modus: m }; designSpeichern(); }
+function designStandard() { DS = { design: "klassik", modus: "auto" }; designSpeichern(); melde("↺ Standard: Köcheclub Klassik, Tag/Nacht automatisch"); }
+function designUebernehmen(wert) { // vom Server (init) – eine gerade eben getroffene Auswahl auf diesem Handy hat Vorrang
+  if (!wert || typeof wert !== "object" || Date.now() - dsGeaendert < 10000) return;
+  const neu = { design: DESIGNS.some((d) => d.id === wert.design) ? wert.design : "klassik", modus: ["auto", "tag", "nacht"].includes(wert.modus) ? wert.modus : "auto" };
+  if (neu.design === DS.design && neu.modus === DS.modus) return;
+  DS = neu; try { localStorage.setItem("kc_club_design", JSON.stringify(DS)); } catch {} anwendenDesign(); lichtSensorStarten();
+}
+// Mond/Sonne in der Kopfzeile: schaltet fest auf das Gegenteil; „Automatisch“ gibt es unter ⚙️ → Darstellung
+function dunkelUmschalten() {
+  const nacht = !istNacht(); DS = { ...DS, modus: nacht ? "nacht" : "tag" }; designSpeichern();
+  melde((nacht ? "🌙 Immer Nacht" : "☀️ Immer Tag") + " – Automatik unter ⚙️ Mehr → Darstellung");
+}
+setInterval(() => { if (DS.modus === "auto") anwendenDesign(); }, 60000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden && DS.modus === "auto") anwendenDesign(); });
+
+// ---------- KC-CLUB-SCHLIESSEN: Ausgangstür ----------
+// Installierte App: window.close() beendet sie. Klappt das nicht (z. B. im Browser-Tab), kurze Anleitung statt stiller Nichtreaktion.
+function appSchliessen() {
+  try { window.close(); } catch {}
+  setTimeout(() => { if (!document.hidden) melde("Dieses Fenster lässt sich nicht selbst schließen. So geht's: zweimal „Zurück“ tippen – oder unten vom Rand nach oben wischen und die Köcheclub-App wegwischen."); }, 400);
+}
 
 function melde(t, fehler) {
   // Lange genug zum Lesen (je nach Textlänge, Fehler doppelt so lange); Antippen schließt die Meldung sofort.
@@ -1114,6 +1240,7 @@ async function neuLaden(vonHand) {
   try {
     INIT = await api("init"); ICH = INIT.ich;
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln);
+    designUebernehmen(INIT.einstellungen?.design);
     VB.wartung = INIT.wartung || null; VB.server = INIT.server || null; vbCommSetzen(INIT.communicator || null);
     $("begruessung").textContent = "Hallo " + ICH.vorname + "!";
     $("statusChip").textContent = statusText(INIT.status) + " ▾";
@@ -2530,7 +2657,7 @@ async function fotosHochladen() {
     }
   }
   knopf.disabled = false; faDateien = [];
-  $("faFortschritt").innerHTML = fehler.length ? `<div style="color:var(--rot)">⚠️ Nicht hochgeladen:<br>${fehler.map(esc).join("<br>")}</div>` : "";
+  $("faFortschritt").innerHTML = fehler.length ? `<div style="color:#c62828">⚠️ Nicht hochgeladen:<br>${fehler.map(esc).join("<br>")}</div>` : "";
   melde(ok ? `✔ ${ok} Foto${ok > 1 ? "s" : ""} im Album${fehler.length ? ` – ${fehler.length} fehlgeschlagen` : ""}` : "Es wurde kein Foto hochgeladen.", !ok);
   if (ok) await fotosLaden(fehler.length > 0);
 }
@@ -3080,7 +3207,7 @@ async function jetztAktualisieren() {
 
 // ---------- Start der App ----------
 (function start() {
-  anwendenDesign();
+  anwendenDesign(); lichtSensorStarten();
   versionAnzeigen(); $("appVersion").textContent = APP_VERSION;
   const url = new URL(location.href), k = url.searchParams.get("k");
   try { if (k) localStorage.setItem("kc_club_key", k); KEY = k || localStorage.getItem("kc_club_key") || ""; } catch { KEY = k || ""; }

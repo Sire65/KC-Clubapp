@@ -13,13 +13,14 @@
 //           KC-CLUB-COMMUNICATOR-STATUS (0.17.0), KC-CLUB-FEEDBACK (0.18.0),
 //           KC-CLUB-KACHELN (0.19.0), KC-CLUB-ZUGANG-SELBST (0.21.0),
 //           KC-CLUB-GRUPPEN, KC-CLUB-ZUSTELLWAHL (0.23.0)
+//           KC-CLUB-DESIGN (0.24.0)
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.23.0";
+const SERVER_VERSION = "0.24.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -266,6 +267,11 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
     reihenfolge: Object.fromEntries(Object.entries(w?.reihenfolge && typeof w.reihenfolge === "object" ? w.reihenfolge : {})
       .filter(([r]) => KA_ID.test(r)).slice(0, 10).map(([r, l]) => [r, kaIds(l)])),
     aus: kaIds(w?.aus),
+  }),
+  // KC-CLUB-DESIGN (0.24.0): fertiges Farbdesign + Tag/Nacht (automatisch, immer Tag, immer Nacht)
+  design: (w) => ({
+    design: typeof w?.design === "string" && KA_ID.test(w.design) ? w.design : "klassik",
+    modus: ["auto", "tag", "nacht"].includes(w?.modus) ? w.modus : "auto",
   }),
 };
 const MAX_TESTDATEN = 2 * 1024 * 1024; // Verbindungstest: höchstens 2 MB je Richtung

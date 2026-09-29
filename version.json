@@ -1,9 +1,9 @@
 {
-  "version": "0.23.0",
+  "version": "0.24.0",
   "datum": "2026-09-29",
   "neu": [
-    "👥 Gruppen-Chats: eigene Gruppen mit Name und Symbol",
-    "🔔 ✉️ 🟢 Beim Schreiben wählen: Push, E-Mail und/oder WhatsApp",
-    "Symbole zeigen, wie jemand erreichbar ist"
+    "🎨 Fertige Farbdesigns zum Auswählen (Mehr → Darstellung)",
+    "🌗 Tag/Nacht automatisch nach Helligkeit – oder immer Tag / immer Nacht",
+    "🚪 App schließen: Knopf unten auf der Startseite"
   ]
 }

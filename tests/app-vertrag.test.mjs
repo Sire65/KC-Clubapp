@@ -544,4 +544,27 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/const wegIcons = /.test(html) && /id="zustell"/.test(html) && /whatsappWeitergeben\(text,/.test(html) && /id="v-gruppe"/.test(html), "Oberfläche für Gruppen/Zustellwahl fehlt");
 }
 
+// 43. 0.24.0: fertige Farbdesigns (Tag/Nacht), Automatik, Standard, Ausgangstür
+{
+  const roh = html.slice(html.indexOf("const DESIGNS = ["), html.indexOf("];", html.indexOf("const DESIGNS = [")) + 2).replace("const DESIGNS =", "return");
+  const designs = new Function(roh)();
+  assert.ok(designs.length >= 5 && designs[0].id === "klassik", "Designs fehlen oder Standard ist nicht Klassik");
+  const hell = (h) => { const c = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
+  const kontrast = (a, b) => { const [x, y] = [hell(a), hell(b)].sort((m, n) => n - m); return (x + 0.05) / (y + 0.05); };
+  const schluessel = Object.keys(designs[0].tag).sort().join();
+  for (const d of designs) for (const art of ["tag", "nacht"]) {
+    const f = d[art];
+    assert.equal(Object.keys(f).sort().join(), schluessel, `${d.id}/${art}: Farben unvollständig`);
+    assert.ok(!("gruen" in f || "gelb" in f || "rotbg" in f), `${d.id}: Statusfarben dürfen sich nicht ändern`);
+    assert.ok(kontrast(f.text, f.bg) >= 7 && kontrast(f.text, f.karte) >= 7, `${d.id}/${art}: Schrift schlecht lesbar`);
+    assert.ok(kontrast("#ffffff", f.rot) >= 4.5, `${d.id}/${art}: weiße Schrift auf Knöpfen schlecht lesbar`);
+    assert.ok(kontrast(f.grau, f.karte) >= 4.5, `${d.id}/${art}: Hinweistext schlecht lesbar`);
+  }
+  assert.ok(/id="modusWahl"/.test(html) && /modusWaehlen\('auto'\)/.test(html) && /modusWaehlen\('tag'\)/.test(html) && /modusWaehlen\('nacht'\)/.test(html), "Tag/Nacht-Auswahl fehlt");
+  assert.ok(/function sonne\(/.test(html) && /AmbientLightSensor/.test(html) && /designStandard\(\)/.test(html), "Automatik oder Standard-Knopf fehlt");
+  assert.ok(/design: \(w\) => \(\{/.test(server) && /\["auto", "tag", "nacht"\]\.includes\(w\?\.modus\)/.test(server), "Server speichert das Design nicht geprüft");
+  assert.ok(/designUebernehmen\(INIT\.einstellungen\?\.design\)/.test(html), "Design wird nicht vom Server übernommen");
+  assert.ok((html.match(/onclick="appSchliessen\(\)"/g) || []).length >= 2 && /window\.close\(\)/.test(html), "Ausgangstür fehlt");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
