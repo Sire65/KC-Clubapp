@@ -441,4 +441,15 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(!/externMerken/.test(intern) && /if \(wege\.find\(\(w\) => w\.k === g\)\?\.intern\) g = null;/.test(html), "Ausweichweg wird als Standard gemerkt");
 }
 
+// 34. 0.17.8: sicherer Kopier-Weg für Handys, die keine andere App offen lassen
+{
+  assert.ok(/k: "kopieren", t: "📋 Nummer kopieren und in WhatsApp einfügen", kopieren: true/.test(html) && /async function waKopierHilfe\(nr\)/.test(html), "Kopier-Weg fehlt");
+  assert.ok(/if \(weg\.kopieren\) \{ clearTimeout\(externTimer\); externMerken\(art, weg\.k\); waKopierHilfe\(wert\); return; \}/.test(html), "Kopier-Weg wird nicht ausgeführt/gemerkt");
+  assert.equal((html.match(/externGescheitert\(art, wege\);/g) || []).length, 2, "gescheiterter Weg schaltet nicht auf Kopieren um");
+  assert.ok(!/then\(\(\) => \{ m\.erfolg = true; externMerken/.test(html) && /if \(g === "teilen"\) g = null;/.test(html), "Teilen wird weiter als Standard gemerkt");
+  assert.ok(/id="karteKopiert"/.test(html) && /navigator\.clipboard\?\.writeText\(adr\)/.test(html), "Adresse wird bei der Karte nicht kopiert");
+  const waNr = new Function(html.slice(html.indexOf("const nurZiffern"), html.indexOf("// WhatsApp/Route direkt")) + "return (t) => '+' + waNummer(t);")();
+  assert.equal(waNr("0171 234567"), "+49171234567"); assert.equal(waNr("+49 (0)171 234567"), "+49171234567");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

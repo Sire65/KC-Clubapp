@@ -514,6 +514,7 @@
 <div class="blatt versteckt" id="karteBlatt" onclick="if(event.target===this)this.classList.add('versteckt')">
   <div class="blatt-innen"><h3>🗺️ <span id="karteTitel"></span></h3>
     <iframe id="karteRahmen" title="Karte" style="width:100%;height:55vh;border:0;border-radius:14px" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+    <p class="hinweis versteckt" id="karteKopiert" style="margin:0">Adresse ist kopiert: Google Maps öffnen, oben ins Suchfeld tippen, lange drücken → Einfügen.</p>
     <button class="knopf haupt" id="karteTeilen" onclick="navigator.share({ text: $('karteTitel').textContent }).catch(() => {})">📤 An Google Maps senden (Teilen)</button>
     <button class="knopf" onclick="navigator.clipboard?.writeText($('karteTitel').textContent).then(() => melde('📋 Adresse kopiert – in Google Maps einfügen'), () => melde($('karteTitel').textContent))">📋 Adresse kopieren</button>
     <button class="knopf" onclick="$('karteBlatt').classList.add('versteckt');$('karteRahmen').src='about:blank'">Schließen</button></div>
@@ -558,7 +559,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.17.7"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.17.8"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2275,6 +2276,9 @@ const EXTERN_WEGE = {
     { k: "hier", t: "💬 WhatsApp-Seite hier öffnen", url: `https://api.whatsapp.com/send?phone=${waNummer(nr)}` },
     { k: "schema", t: "💬 WhatsApp-App direkt", url: `whatsapp://send?phone=${waNummer(nr)}` },
     { k: "web", t: "🌐 Über wa.me (Browser)", url: `https://wa.me/${waNummer(nr)}`, neu: true },
+    // 0.17.8: sicherer Weg auf Handys, die keine andere App öffnen lassen (Xiaomi + Chrome): Nummer kopieren, selbst einfügen.
+    // Wird automatisch zum Standard, sobald auf diesem Handy ein direkter Weg gescheitert ist.
+    { k: "kopieren", t: "📋 Nummer kopieren und in WhatsApp einfügen", kopieren: true },
     { k: "clubapp", t: "💬 Stattdessen Nachricht in der Club-App", intern: () => { externZu(); direkt(MD.person_id); } },
   ],
   route: (adr) => [
@@ -2295,10 +2299,31 @@ const externGemerkt = (art) => { try { return localStorage.getItem("kc_club_weg_
 let externTimer = null;
 function karteZeigen(adr) {
   $("karteTitel").textContent = adr;
+  // 0.17.8: Adresse gleich mitkopieren – dort, wo Google Maps nicht aus der App startet, einfach in Maps einfügen
+  navigator.clipboard?.writeText(adr).then(() => { $("karteKopiert").classList.remove("versteckt"); melde("📋 Adresse kopiert – in Google Maps oben ins Suchfeld einfügen"); }, () => {});
+  $("karteKopiert").classList.add("versteckt");
   $("karteRahmen").src = `https://maps.google.com/maps?q=${encodeURIComponent(adr)}&z=15&output=embed`;
   $("karteTeilen").classList.toggle("versteckt", !navigator.share);
   $("karteBlatt").classList.remove("versteckt");
 }
+const waAnzeige = (t) => "+" + waNummer(t);
+// Nummer kopieren + Schritt-für-Schritt-Hinweis (KC-CLUB-KONTAKT 0.17.8). Kopieren braucht den Fingertipp → direkt im Klick aufrufen.
+async function waKopierHilfe(nr) {
+  const n = waAnzeige(nr); let ok = false;
+  try { await navigator.clipboard.writeText(n); ok = true; } catch {}
+  const name = [MD?.vorname, MD?.nachname].filter(Boolean).join(" ");
+  $("exTitel").textContent = ok ? "📋 Nummer kopiert" : "📋 Nummer";
+  $("exText").innerHTML = `<b style="font-size:1.2rem">${esc(n)}</b><br>${ok ? "ist kopiert." : "bitte merken oder lange drücken zum Kopieren."} So geht es weiter:<br>
+    1. WhatsApp öffnen (über den Startbildschirm).<br>2. Unten rechts auf das grüne Symbol „Neuer Chat“ tippen.<br>
+    3. Oben ins Suchfeld tippen, lange drücken → <b>Einfügen</b>${name ? ` – oder einfach „${esc(name)}“ eingeben` : ""}.<br>4. Auf den Treffer bzw. „Chatten mit …“ tippen.`;
+  $("exKnoepfe").innerHTML = `<button class="knopf" data-a="club">💬 Stattdessen Nachricht in der Club-App</button><button class="knopf" data-a="andere">🔁 Andere Wege versuchen</button>`;
+  $("exKnoepfe").querySelector('[data-a="club"]').onclick = () => { externZu(); direkt(MD.person_id); };
+  $("exKnoepfe").querySelector('[data-a="andere"]').onclick = () => { const wege = EXTERN_WEGE.whatsapp(nr).filter((w) => w.nur !== false && !w.kopieren); externBlatt("whatsapp", wege, nr, "kopieren"); };
+  $("externBlatt").classList.remove("versteckt");
+  api("diagnose", { art: "extern", daten: { art: "whatsapp", weg: "kopieren", kopiert: ok, erfolg: ok } }).catch(() => {});
+}
+// Ist ein direkter Weg gescheitert, wird auf diesem Handy ab jetzt der sichere Kopier-Weg zuerst genommen (automatisch, ohne Einstellung)
+const externGescheitert = (art, wege) => { const k = wege.find((w) => w.kopieren); if (k) externMerken(art, k.k); };
 function externZu() { clearTimeout(externTimer); $("externBlatt").classList.add("versteckt"); } // von Hand geschlossen → nicht wieder aufgehen
 function externVersuch(art, weg, wege, wert) {
   clearTimeout(externTimer);
@@ -2306,12 +2331,13 @@ function externVersuch(art, weg, wege, wert) {
   const t0 = performance.now(), m = { art, weg: weg.k, versteckt_ms: null, zurueck_ms: null, blur_ms: null, pagehide: false, fehler: "",
     modus: matchMedia("(display-mode: standalone)").matches ? "standalone" : matchMedia("(display-mode: minimal-ui)").matches ? "minimal-ui" : "browser" };
   // Ausweichwege in der App (Club-Nachricht, Karte) werden nicht als Standard gemerkt – sonst käme WhatsApp nie mehr dran
+  if (weg.kopieren) { clearTimeout(externTimer); externMerken(art, weg.k); waKopierHilfe(wert); return; }
   if (weg.intern) { $("externBlatt").classList.add("versteckt"); api("diagnose", { art: "extern", daten: { ...m, erfolg: true } }).catch(() => {}); weg.intern(); return; }
   if (weg.teilen) {
     // Android-Teilen-Menü: das Handy fragt, welche App – wie beim Anrufen; gilt als gelungen, wenn eine App gewählt wurde
     $("externBlatt").classList.add("versteckt");
     api("diagnose", { art: "extern", daten: { ...m, start: true } }).catch(() => {});
-    navigator.share(weg.teilen()).then(() => { m.erfolg = true; externMerken(art, weg.k); }, (e) => { m.fehler = String(e?.name || e).slice(0, 60); if (e?.name !== "AbortError") externBlatt(art, wege, wert, weg.k); })
+    navigator.share(weg.teilen()).then(() => { m.erfolg = true; }, (e) => { m.fehler = String(e?.name || e).slice(0, 60); if (e?.name !== "AbortError") externBlatt(art, wege, wert, weg.k); })
       .finally(() => api("diagnose", { art: "extern", daten: { ...m, erfolg: !!m.erfolg } }).catch(() => {}));
     return;
   }
@@ -2321,7 +2347,7 @@ function externVersuch(art, weg, wege, wert) {
     else if (m.versteckt_ms != null && m.zurueck_ms == null) {
       m.zurueck_ms = Math.round(performance.now() - t0);
       // schnell wieder da (andere App ging gleich wieder zu) → nicht geklappt, sofort die anderen Wege zeigen
-      if (m.zurueck_ms - m.versteckt_ms < EXTERN_ERFOLG_MS) { weg0 = false; clearTimeout(externTimer); document.removeEventListener("visibilitychange", merke); externBlatt(art, wege, wert, weg.k); }
+      if (m.zurueck_ms - m.versteckt_ms < EXTERN_ERFOLG_MS) { weg0 = false; clearTimeout(externTimer); document.removeEventListener("visibilitychange", merke); externGescheitert(art, wege); externBlatt(art, wege, wert, weg.k); }
       else externMerken(art, weg.k);
     }
   };
@@ -2331,7 +2357,7 @@ function externVersuch(art, weg, wege, wert) {
   try { if (weg.neu) { const w = window.open(weg.url, "_blank", "noopener"); m.fenster = w === null ? "null" : "objekt"; } else location.href = weg.url; } catch (e) { m.fehler = String(e?.message || e).slice(0, 150); }
   externTimer = setTimeout(() => {
     document.removeEventListener("visibilitychange", merke);
-    if (!weg0 && !document.hidden) externBlatt(art, wege, wert, weg.k);
+    if (!weg0 && !document.hidden) { externGescheitert(art, wege); externBlatt(art, wege, wert, weg.k); }
   }, 2000);
   // nach 6 s melden (auch wenn der Nutzer zurückgekommen ist)
   setTimeout(() => { removeEventListener("blur", blur); removeEventListener("pagehide", hide); api("diagnose", { art: "extern", daten: { ...m, erfolg: weg0 } }).catch(() => {}); }, 6000);
@@ -2340,6 +2366,7 @@ function extern(art, wert) {
   if (!wert) return;
   const wege = EXTERN_WEGE[art](wert).filter((w) => w.nur !== false);
   let g = externGemerkt(art); if (wege.find((w) => w.k === g)?.intern) g = null; // früher gemerkter Ausweichweg zählt nicht
+  if (g === "teilen") g = null; // 0.17.8: „geteilt“ hieß auf manchen Handys nicht, dass WhatsApp offen blieb
   wege.sort((a, b) => (b.k === g) - (a.k === g));
   externVersuch(art, wege[0], wege, wert);
 }
@@ -2347,8 +2374,9 @@ function externBlatt(art, wege, wert, versucht) {
   const was = art === "whatsapp" ? "WhatsApp" : "die Karten-App";
   $("exTitel").textContent = "Hat sich nichts geöffnet?";
   $("exText").textContent = `Dann probier bitte einen dieser Wege, um ${was} zu öffnen. Der Weg, der klappt, wird für dieses Handy gemerkt.`;
+  wege = [...wege].sort((a, b) => !!b.kopieren - !!a.kopieren);
   $("exKnoepfe").innerHTML = wege.map((w, i) => `<button class="knopf ${w.k === versucht ? "" : "haupt"}" data-i="${i}">${esc(w.t)}${w.k === versucht ? " (eben versucht)" : ""}</button>`).join("")
-    + `<button class="knopf" data-kopie="1">📋 ${art === "whatsapp" ? "Nummer" : "Adresse"} kopieren</button>`;
+    + (wege.some((w) => w.kopieren) ? "" : `<button class="knopf" data-kopie="1">📋 ${art === "whatsapp" ? "Nummer" : "Adresse"} kopieren</button>`);
   $("exKnoepfe").querySelectorAll("button").forEach((b) => b.onclick = async () => {
     if (b.dataset.kopie) { try { await navigator.clipboard.writeText(wert); melde("📋 Kopiert: " + wert); } catch { melde(wert); } return; }
     externVersuch(art, wege[Number(b.dataset.i)], wege, wert);
