@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<base href="dp2/"><!-- DP2-Dateien verweisen relativ auf assets/… – so bleiben sie unverändert -->
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self'; connect-src 'self' https://ptblnpiroqftcvlsrhac.supabase.co; form-action 'none'; object-src 'none'; frame-src 'none'">
+<title>Dienstwünsche · Köcheclub Werne</title>
+<!-- KC-CLUB-DIENSTWUNSCH (0.59.0): Twinkey aus KC DP2 – dieselbe Seite wie DP2s twinkey-test.html. Code/Stile/Bilder/Töne
+     liegen UNVERÄNDERT in dp2/ (Nachweis dp2/QUELLE.json). Nur Daten (dp2-club/daten.js) und Start (dp2-club/start.js)
+     kommen aus der Club-App: Tage/Kernzeit von DP2, eigener Wunschstand aus dem Wunsch-Eingang (Supabase). -->
+<style>.ux-userchip{display:none!important}
+#dwLaden{position:fixed;inset:0;display:grid;place-items:center;font:600 1.05rem system-ui,sans-serif;color:#5a2a1c;background:#fff8ee;z-index:99;text-align:center;padding:24px}
+#dwLaden img{width:84px;height:auto;display:block;margin:0 auto 12px;animation:dwDreh 1.4s linear infinite}
+@keyframes dwDreh{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){#dwLaden img{animation:none}}</style>
+</head>
+<body>
+<div id="dwLaden" role="status"><div><img src="../kc-kochmuetze-weiss.webp" alt="" style="filter:invert(.2) sepia(1) hue-rotate(-30deg)">Twinkey wird geladen …</div></div>
+<div id="kcdpUxRoot"></div>
+<script src="../dp2-club/lader.js?v=0.59.0"></script>
+</body>
+</html>

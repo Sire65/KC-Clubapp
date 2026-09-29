@@ -67,7 +67,8 @@ assert.ok(/from\("kc_dp_plan_published"\)[\s\S]{0,200}\.eq\("status", "published
 assert.ok(!/kc_dp_sync_operations|kc_dp_entity_versions/.test(server), "verschlüsselte Dienstplan-Sync-Daten dürfen nicht gelesen werden");
 assert.ok(/m\.person_id === ich\.person_id \|\| freigegeben\.has\(m\.person_id\)/.test(server), "Freigabe-Filter für fremde Dienstzeiten fehlt");
 assert.ok(/\.filter\(\(id: string\) => erlaubt\.has\(id\)\)/.test(server), "gewählte Personen werden nicht gegen die Freigabe geprüft");
-assert.ok(!/kc_dp_plan_sharing/.test(server), "Dienstplan-Freigabetabelle darf von der Club-App nicht verändert werden");
+// 0.59.0: Lesen erlaubt (Twinkey zeigt DP2-Freigaben), Schreiben weiterhin verboten
+assert.ok(!/from\("kc_dp_plan_sharing"\)\s*\.(insert|update|upsert|delete)\(/.test(server) && (server.match(/kc_dp_plan_sharing/g) || []).length === 1, "Dienstplan-Freigabetabelle darf von der Club-App nicht verändert werden");
 assert.ok(/dpStand/.test(html) && /Stand des Dienstplans/.test(html), "Datenstand der Dienstzeiten wird nicht angezeigt");
 
 // 11. KC-CLUB-BENACHRICHTIGUNG: Auswahl je Bereich wird beim Versand beachtet; jede Kombination hat eine Regel.
@@ -1093,6 +1094,32 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/api\("pinnwand_gesehen", \{ ids: liste\.map\(\(z\) => z\.id\) \}\)/.test(html) && /\$\{esc\(z\.text \|\| ""\)\}/.test(html), "Gelesen/Text im Fenster fehlt");
   const st = html.slice(html.indexOf("async function pwStart("), html.indexOf("async function pwStart(") + 900);
   assert.ok(st.indexOf('api("pinnwand_neu")') > 0 && st.indexOf('api("pinnwand_neu")') < st.indexOf('api("pinnwand")'), "App-Start zeigt neue Zettel nicht vor dem Markieren");
+}
+
+// 81. 0.59.0: Dienstwünsche mit Twinkey aus DP2 – unverändert (KC-CLUB-DIENSTWUNSCH)
+{
+  const { createHash } = await import("node:crypto");
+  const q = JSON.parse(lies("dp2/QUELLE.json"));
+  assert.ok(q.repository === "Sire65/dp3" && /^[0-9a-f]{40}$/.test(q.commit) && q.dp2Version, "Herkunft der DP2-Dateien fehlt");
+  const dateien = Object.entries(q.dateien);
+  assert.ok(dateien.length > 50 && q.reihenfolge.every((f) => q.dateien[f]), "Dateiliste unvollständig");
+  for (const [f, h] of dateien) assert.equal(createHash("sha256").update(fs.readFileSync(new URL("../dp2/" + f, import.meta.url))).digest("hex"), h, `DP2-Datei verändert: ${f}`);
+  assert.ok(!q.reihenfolge.some((f) => /twinkey-test-(data|boot)\.js$/.test(f)), "DP2-Beispieldaten dürfen nicht geladen werden");
+  const seite = lies("dienstwunsch.html"), lader = lies("dp2-club/lader.js"), daten = lies("dp2-club/daten.js");
+  assert.ok(/<base href="dp2\/">/.test(seite) && /script-src 'self';/.test(seite) && !/<script>/.test(seite) && /id="kcdpUxRoot"/.test(seite), "Seite: Basis/CSP/Wurzel fehlt");
+  assert.ok(/if \(f === "src\/core\/model\.js"\) reihe\.push\("\.\.\/dp2-club\/daten\.js/.test(lader) && /if \(f === "src\/ui\/original-brand\.js"\) reihe\.push\("\.\.\/dp2-club\/start\.js/.test(lader), "Ladereihenfolge wie DP2 fehlt");
+  assert.ok(/APP_VERSION = "([^"]+)"/.exec(lader)[1] === appV && seite.includes(`lader.js?v=${appV}`), "Lader-Version passt nicht");
+  assert.ok(/K\.persistAll = async/.test(daten) && /KC_CLUB_DW_API\("dienstwunsch_speichern", s\)/.test(daten) && /if \(j === zuletzt\) return true;/.test(daten), "Speichern nur bei Änderung fehlt");
+  assert.ok(/completedSignature/.test(daten) && /vorlagen\.has\(kanon\(x\)\)/.test(daten), "Twinkey-Tagesstatus geht beim Neuladen verloren");
+  const sp = server.slice(server.indexOf('case "dienstwunsch_speichern"'), server.indexOf('return json({ ok: true, revision: r.data.revision'));
+  assert.ok(/if \(phase\?\.status !== "open"\) throw new Fehler\([^)]*409\)/.test(sp), "Speichern bei geschlossener Wunschphase möglich");
+  assert.ok(/DW\.typen\.includes\(e\.wishType\)/.test(sp) && /!\(e\.end > e\.start\)/.test(sp) && /e\.scope === "day" && e\.wishType !== "unavailable"/.test(sp) && /DW\.maxEintraege/.test(sp), "Prüfung der Einträge fehlt");
+  assert.ok(/source: "club_app", status: "offen"/.test(sp) && /revision: alt\.revision \+ 1/.test(sp) && /protokoll\(ich\.person_id, "dienstwunsch_gespeichert"/.test(sp), "Eingang/Revision/Protokoll fehlt");
+  assert.ok(/typen: \["available", "preferred", "if_needed", "unavailable"\]/.test(server), "Wunscharten nicht wie DP2");
+  const mig = lies("supabase/migrations/20260929_kc_dp_wunsch_eingang_v1.sql");
+  assert.ok(/kc_dp_wish_inbox_ack/.test(mig) && /kc_dp_days_publish/.test(mig) && /'KC_CLUBAPP'/.test(mig), "Datenbankvertrag fehlt");
+  assert.ok(/\{ id: "dienstwunsch", sym: "📝", t: "Dienstwünsche"[^}]*aktion: "dwOeffnen\(\)" \}/.test(html) && /src="dienstwunsch\.html\?v=\$\{APP_VERSION\}"/.test(html), "Kachel/Fenster fehlt");
+  assert.ok(/if \(e\.origin !== location\.origin/.test(html) && /e\.data === "dienstwunsch-zu"/.test(html) && /else if \(h === "#dienstwunsch"\) dwOeffnen\(\);/.test(html), "Nachrichten aus dem Fenster ungeprüft / Sprung fehlt");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

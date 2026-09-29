@@ -1,5 +1,22 @@
 # Änderungen
 
+## 0.59.0 – 2026-09-29 (DEV)
+
+- KC-CLUB-DIENSTWUNSCH (neu, Wunsch Hansi): Dienstwünsche in der Club-App mit **Twinkey aus KC DP2 – 1:1**. Neue Kachel
+  „📝 Dienstwünsche“ (Mein Bereich, Sprung #dienstwunsch) öffnet dienstwunsch.html im Vollbild („← Zurück zur Club-App“).
+  Die Seite lädt genau die Dateien von DP2s eigener Twinkey-Seite (twinkey-test.html) **unverändert** aus dp2/ – gleicher
+  Aufbau, Ablauf, Logik, Bedienung, Bilder und Sprachdateien. Herkunft/Hashes: dp2/QUELLE.json (Sire65/dp3, DP2 0.20.0);
+  Übernahme per tools/dp2-twinkey-uebernehmen.mjs, der Vertragstest prüft jede Datei gegen den Hash.
+- Nur zwei Club-Dateien stehen dort, wo DP2 seine Beispieldaten/seinen Start lädt: dp2-club/daten.js (Tage/Kernzeit/Bedarf
+  aus kc_dp_days_published, bis DP2 veröffentlicht: DP2s Grundeinstellung; eigener Stand aus dem Wunsch-Eingang;
+  freigegebene Kollegen; eigener Sollplan) und dp2-club/start.js (identisch zu DP2s Start). dp2-club/lader.js lädt in DP2s
+  Reihenfolge. Speichern (K.persistAll) legt den Stand über die neue Server-Aktion dienstwunsch_speichern in
+  kc_dp_wish_inbox (Revision +1, Status offen); DP2 holt ab (Auftrag docs/DP2_CODEX_AUFTRAG_WUNSCHEINGANG.md).
+- Server: dienstwunsch_laden / dienstwunsch_speichern (nur bei offener Wunschphase, Prüfung Tag/Art/Zeit/Zone, Sperrtag nur
+  ganztägig, Bereitschaft; Twinkey-Tagesstatus „Fertig“ und „Nur wenn nötig“ werden unverändert mitgeführt). Die
+  Schlüsselreihenfolge von DP2s Tagesstatus wird beim Laden aus DP2s eigener Signatur wiederhergestellt (jsonb sortiert um).
+- Bekannte Grenze: Wünsche, die Kollegen direkt in DP2 eintragen, sieht der Club erst, wenn DP2 sie teilt.
+
 ## KC DP2 ↔ Club-App: Wunsch-Eingang vorbereitet – 2026-09-29 (Datenbank, ohne App-Build)
 
 - KC-DP-WUNSCHEINGANG (neu, Freigabe Hansi): Supabase-Seite für Dienstwünsche aus der Club-App (Twinkey-Nachbau).

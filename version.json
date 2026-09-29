@@ -1,10 +1,16 @@
 {
-  "version": "0.58.0",
+  "version": "0.59.0",
   "datum": "2026-09-29",
   "neu": [
-    "📌 Neue Post-its gehen direkt in der App auf – mit Text und Absender, „✓ Gelesen“ meldet es dem Absender (auch wenn der Zettel kam, während die App zu war)"
+    "📝 Neu: Dienstwünsche mit Twinkey – genau wie in DP2 (Kann-Zeit, Wunschzeit, Sperren, Nur wenn nötig, Bereitschaft). Gespeichert wird im Club, DP2 übernimmt die Wünsche automatisch"
   ],
   "verlauf": [
+    {
+      "version": "0.59.0",
+      "neu": [
+        "📝 Neu: Dienstwünsche mit Twinkey – genau wie in DP2 (Kann-Zeit, Wunschzeit, Sperren, Nur wenn nötig, Bereitschaft). Gespeichert wird im Club, DP2 übernimmt die Wünsche automatisch"
+      ]
+    },
     {
       "version": "0.58.0",
       "neu": [

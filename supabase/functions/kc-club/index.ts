@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.58.0";
+const SERVER_VERSION = "0.59.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -618,6 +618,9 @@ const ADMIN_PROGRAMME: { id: string; name: string; stand?: () => Promise<string 
   { id: "kicc", name: "KICC Kontrollzentrum" },
 ];
 const ADMIN_DB_GRENZE = 500 * 1024 * 1024;
+// KC-CLUB-DIENSTWUNSCH (0.59.0): Veranstaltung/Vertrag des DP2-Wunsch-Eingangs (DP2 ist Eigentümer; Club-App liefert nur an)
+const DW = { vertrag: "KC_DP_WISH_INBOX_V1", projekt: "KC_DP", veranstaltung: "KC-WM-2026", name: "Weihnachtsmarkt Werne 2026",
+  typen: ["available", "preferred", "if_needed", "unavailable"], zonen: ["V", "H", "B", "Z"], maxEintraege: 400 };
 const NEON_GRENZE = 512 * 1024 * 1024; // Neon kostenlos: 0,5 GB Speicher je Projekt
 // Neon-Spiegel und Backup (0.48.0): liest nur die Protokolle des KC-Spiegels (kc_db_mirror_*, kc_neon_compute_policy) – steuert nichts
 async function adminSpiegel() {
@@ -1531,6 +1534,75 @@ Köcheclub Werne`,
       }
 
       // ----- Dienstzeiten aus dem Dienstplan (nur veröffentlichter Sollplan) -----
+      // ----- KC-CLUB-DIENSTWUNSCH (0.59.0): Twinkey aus DP2 in der Club-App – Daten laden / Wunschstand in den Eingang legen -----
+      case "dienstwunsch_laden": {
+        const [{ data: phase }, { data: tage }, { data: meine }, { data: geteilt }, { data: freigaben }, { data: schichten }, { data: verz }] = await Promise.all([
+          db.from("kc_dp_wish_phase_settings").select("status,close_at,deadline_date").eq("org_id", ORG).eq("project_id", DW.projekt).maybeSingle(),
+          db.from("kc_dp_days_published").select("work_date,day_type,day_start,day_end,core_start,core_end,pre_open_minutes,demand,program,label,published_at")
+            .eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("status", "published").order("work_date"),
+          db.from("kc_dp_wish_inbox").select("revision,status,entries,standby,comment,share_with_colleagues,submitted_at,taken_at,result")
+            .eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("person_id", ich.person_id).eq("source", "club_app").maybeSingle(),
+          db.from("kc_dp_wish_inbox").select("person_id,entries").eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("share_with_colleagues", true).neq("person_id", ich.person_id),
+          db.from("kc_dp_plan_sharing").select("person_id,plan_kind,allow_view,allow_copy").eq("org_id", ORG),
+          db.from("kc_dp_plan_published").select("source_shift_id,work_date,start_time,end_time,break_minutes,zone,area,published_at")
+            .eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("person_id", ich.person_id).eq("status", "published"),
+          db.from("kc_core_operational_directory").select("person_id,display_name,active").eq("org_id", ORG).eq("person_id", ich.person_id).maybeSingle(),
+        ]);
+        // Freigaben „Kollegen dürfen meine Zeiten sehen/übernehmen“: DP2-Tabelle + was Mitglieder in der Club-App gewählt haben
+        const kollegen = (geteilt ?? []).map((x: any) => ({ personId: x.person_id, entries: (x.entries ?? []).filter((e: any) => ["available", "if_needed", "preferred"].includes(e.wishType)) }));
+        const teilen = [...(freigaben ?? [])];
+        for (const k of kollegen) for (const art of ["can", "wish", "standby"]) if (!teilen.some((r: any) => r.person_id === k.personId && r.plan_kind === art))
+          teilen.push({ person_id: k.personId, plan_kind: art, allow_view: true, allow_copy: true });
+        return json({ vertrag: DW.vertrag, veranstaltung: DW.veranstaltung, name: DW.name,
+          ich: { personId: ich.person_id, name: ich.name, imDienstplan: !!verz?.active },
+          wunschphase: phase ? { status: phase.status, bis: phase.close_at, frist: phase.deadline_date } : null,
+          tage: tage ?? [], meine: meine ?? null, kollegen, teilen, schichten: schichten ?? [] });
+      }
+
+      case "dienstwunsch_speichern": {
+        const { data: phase } = await db.from("kc_dp_wish_phase_settings").select("status").eq("org_id", ORG).eq("project_id", DW.projekt).maybeSingle();
+        if (phase?.status !== "open") throw new Fehler("Die Wunschphase ist geschlossen – Wünsche können gerade nicht geändert werden.", 409);
+        const { data: tage } = await db.from("kc_dp_days_published").select("work_date").eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("status", "published");
+        const erlaubt = new Set((tage ?? []).map((t: any) => t.work_date));
+        const zahl = (v: unknown) => { const n = Number(v); return Number.isFinite(n) && n >= 0 && n <= 24 ? Math.round(n * 100) / 100 : null; };
+        const roh = Array.isArray(p.entries) ? p.entries : [];
+        if (roh.length > DW.maxEintraege) throw new Fehler("Zu viele Einträge.", 400);
+        // Bereitschaft wie DP2 (answer yes/no/offen, Zeitfenster) – für standby je Tag und assistantDay.standby je Wunsch
+        const bereitschaft = (b: any) => ({ answer: b?.answer === "yes" ? "yes" : b?.answer === "no" ? "no" : null,
+          slots: (Array.isArray(b?.slots) ? b.slots : []).slice(0, 10).map((x: any) => ({ start: zahl(x?.start), end: zahl(x?.end),
+            ...(DW.zonen.includes(String(x?.wishZone)) ? { wishZone: x.wishZone } : {}), ...(typeof x?.reserve === "boolean" ? { reserve: x.reserve } : {}) })) }); // nur Felder, die DP2 gesetzt hat
+        const entries = roh.map((e: any) => {
+          const w: Record<string, unknown> = { date: String(e?.date ?? ""), start: zahl(e?.start), end: zahl(e?.end), wishType: String(e?.wishType ?? ""),
+            wishZone: DW.zonen.includes(String(e?.wishZone)) ? String(e.wishZone) : "B", scope: e?.scope === "day" ? "day" : "time", comment: txt(e?.comment, 300) };
+          if (e?.onlyIfNeeded === true) w.onlyIfNeeded = true;
+          // Twinkey-Tagesstatus („Fertig“) unverändert mitführen, damit DP2 und Club denselben Stand zeigen
+          const a = e?.assistantDay;
+          if (a && typeof a === "object") w.assistantDay = { completed: a.completed === true,
+            completedSignature: typeof a.completedSignature === "string" ? a.completedSignature.slice(0, 8000) : null,
+            ...(a.standby && typeof a.standby === "object" ? { standby: bereitschaft(a.standby) } : {}) };
+          return w as any;
+        });
+        for (const e of entries) {
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(e.date) || (erlaubt.size && !erlaubt.has(e.date))) throw new Fehler(`Tag ${e.date} gehört nicht zur Veranstaltung.`, 400);
+          if (!DW.typen.includes(e.wishType) || e.start === null || e.end === null || !(e.end > e.start)) throw new Fehler(`Ungültige Zeit am ${e.date}.`, 400);
+          if (e.scope === "day" && e.wishType !== "unavailable") throw new Fehler("Ganztägig geht nur als Sperrtag.", 400);
+        }
+        const standby: Record<string, unknown> = {};
+        for (const [tag, b] of Object.entries(p.standby && typeof p.standby === "object" ? p.standby : {}).slice(0, 60) as [string, any][]) {
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(tag)) continue;
+          standby[tag] = bereitschaft(b);
+        }
+        const teilen = typeof p.teilen === "boolean" ? p.teilen : null;
+        const { data: alt } = await db.from("kc_dp_wish_inbox").select("id,revision").eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("person_id", ich.person_id).eq("source", "club_app").maybeSingle();
+        const zeile = { org_id: ORG, event_id: DW.veranstaltung, person_id: ich.person_id, source: "club_app", status: "offen", entries, standby,
+          comment: txt(p.comment, 500) || null, share_with_colleagues: teilen, submitted_at: jetzt(), updated_at: jetzt() };
+        const r = alt ? await db.from("kc_dp_wish_inbox").update({ ...zeile, revision: alt.revision + 1 }).eq("id", alt.id).select("revision").single()
+          : await db.from("kc_dp_wish_inbox").insert({ ...zeile, revision: 1 }).select("revision").single();
+        if (r.error) throw new Fehler("Wünsche konnten nicht gespeichert werden.", 500);
+        await protokoll(ich.person_id, "dienstwunsch_gespeichert", { eintraege: entries.length, bereitschaftTage: Object.keys(standby).length, revision: r.data.revision });
+        return json({ ok: true, revision: r.data.revision, status: "offen" });
+      }
+
       case "dienste": {
         const datum = (s: unknown) => /^\d{4}-\d{2}-\d{2}$/.test(String(s || "")) ? String(s) : null;
         const von = datum(p.von) ?? berlinTag(new Date());
