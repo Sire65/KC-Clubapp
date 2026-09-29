@@ -703,7 +703,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 55. 0.33.0: drehende Kochmütze bei längeren Anfragen – nicht bei Hintergrund-Abfragen, immer wieder ausgeblendet
 {
   assert.ok(/id="warten"/.test(html) && /kc-kochmuetze-weiss\.webp" alt=""><\/div><b id="wartenText">/.test(html), "Kochmütze fehlt");
-  assert.ok(/const warte = wartenStart\(action\);\s*try \{ return await apiRoh\(action, daten\); \} finally \{ if \(warte\) wartenEnde\(\); \}/.test(html), "Kochmütze wird bei Fehlern nicht ausgeblendet");
+  assert.ok(/const warte = wartenStart\(action, opt\.warten\);\s*try \{ return await apiRoh\(action, daten\); \} finally \{ if \(warte\) wartenEnde\(\); \}/.test(html), "Kochmütze wird bei Fehlern nicht ausgeblendet");
   for (const a of ["online", "anruf_status", "unterhaltung", "protokoll_speichern", "init"]) assert.ok(new RegExp(`WARTEN_STILL = new Set\\([^)]*"${a}"`).test(html), `Hintergrund-Abfrage ${a} ließe die Mütze flackern`);
   assert.ok(/nachricht_senden: "Nachricht wird gesendet …"/.test(html), "Text beim Senden fehlt");
 }
@@ -920,6 +920,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.equal(gut.neon[0], "gruen"); assert.equal(gut.backup[0], "gruen");
   assert.equal(f({ neon: { aktiv: true, lagSek: 720, letzter: vor(5), regeln: [] }, backup: { aktiv: true, letztes: null } }).neon[0], "rot", "hängender Spiegel nicht rot");
   assert.equal(f(null).neon[0], "grau", "unbekannt nicht grau");
+  for (const k of ["neon", "backup", "abdeckung", "watchdog"]) assert.equal(f(null)[k]?.[0], "grau", `Spiegel unbekannt: ${k} fehlt/nicht grau (Absturz der Admin-Karte)`);
   // 0.49.0: Sparmodus alle 6 Std. – 3 Std. alt ist aktuell, 9 Std. verzögert, 20 Std. hängt
   const spar = (std) => f({ neon: { aktiv: true, lagSek: 23400, letzter: vor(std), regeln: [] }, backup: { aktiv: true, letztes: vor(3) } }).neon[0];
   assert.equal(spar(3), "gruen"); assert.equal(spar(9), "gelb"); assert.equal(spar(20), "rot");
@@ -932,6 +933,20 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.equal(f({ ...basis, watchdog: { zeit: vor(5), status: "ok" } }).watchdog[0], "grau", "Watchdog ohne Meldung seit 5 Std. nicht grau");
   assert.equal(f({ ...basis, watchdog: { zeit: vor(0.2), status: "ok" } }).watchdog[0], "gruen");
   assert.ok(/db\.rpc\("kc_db_mirror_abdeckung"\)/.test(server) && /kc_db_mirror_abdeckung_check/.test(lies("supabase/migrations/20260929_kc_core_mirror_sparmodus_abdeckung.sql")), "Abdeckungs-Prüfung fehlt");
+}
+
+// 72. 0.51.0: Kochmütze auch bei „stillen“ Abfragen, wenn das Mitglied selbst etwas antippt (Hintergrund bleibt still)
+{
+  assert.ok(/function wartenStart\(action, erzwingen\) \{\s*if \(WARTEN_STILL\.has\(action\) && !erzwingen\) return false;/.test(html), "Erzwingen der Kochmütze fehlt");
+  assert.ok(/async function api\(action, daten = \{\}, opt = \{\}\) \{\s*const warte = wartenStart\(action, opt\.warten\);/.test(html), "api reicht warten nicht durch");
+  assert.ok(/api\("init", \{\}, \{ warten: !!vonHand \}\)/.test(html), "Aktualisieren ohne Kochmütze");
+  assert.ok(/api\("wetter", \{\}, \{ warten: !!sichtbar \}\)/.test(html) && /wetterLaden\(erzwingen\)/.test(html), "Wetter ohne Kochmütze");
+  assert.ok(/infoDatenLaden\(f, erzwingen\)/.test(html) && /const warte = sichtbar && wartenStart\(f\.id, true\)/.test(html) && /finally \{ if \(warte\) wartenEnde\(\); \}/.test(html), "Info-Karten ohne Kochmütze");
+  assert.ok(/infoDatenLaden\(INFO_FELDER\[INFO_I\], true\)/.test(html), "Admin „Neu prüfen“ ohne Kochmütze");
+  for (const a of ["pinnwand", "unterhaltungen", "kalender"]) assert.ok(new RegExp(`api\\("${a}"[^)]*\\{ warten: true \\}\\)`).test(html), `${a}: Öffnen ohne Kochmütze`);
+  // Hintergrund-Takt bleibt still: online-Ping ohne warten
+  assert.ok(/const r = await api\("online"\);/.test(html), "Online-Takt zeigt Kochmütze");
+  for (const k of ["init", "wetter", "admin_lage", "admin", "fotos", "demnaechst"]) assert.ok(new RegExp(`\\b${k}: "`).test(html.slice(html.indexOf("const WARTEN_TEXT"), html.indexOf("let wartenZahl"))), `Warte-Text für ${k} fehlt`);
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

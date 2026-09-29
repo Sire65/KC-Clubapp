@@ -1,5 +1,16 @@
 # Änderungen
 
+## 0.51.0 – 2026-09-29 (DEV)
+
+- KC-CLUB-WARTEN: WARTEN_STILL unterdrückte die Kochmütze auch, wenn das Mitglied selbst etwas antippt. Jetzt:
+  api(action, daten, { warten: true }) erzwingt sie – bei ↻ Aktualisieren, Wetter (Karte öffnen, Ort geändert), Admin-Zentrale
+  („Neu prüfen“, Karte öffnen), Info-Karten (Demnächst, Fotos, Zentrale), Kalender, Nachrichten, Pinnwand, Foto-Ort.
+  Hintergrund-Takt (online, Nachladen) bleibt still. Neue Warte-Texte.
+- Fehler behoben: Admin-Karte stürzte ab, wenn der Spiegel-Zustand nicht abrufbar war (Watchdog/Abdeckung fehlten → jetzt grau).
+- KC-TERMINE-DEPLOY (neu): Workflow „Termin-Programm hochladen“ lädt kc-termine aus Sire65/KC-Besuchsprotokoll
+  (Stand in .github/deploy/kc-termine.ref, erst Test, dann Upload, dann Prüfung) – Quellcode bleibt im Besuchsprotokoll.
+  Erster Einsatz: Besuchsprotokoll 1.3.9 (Erinnerung nach Terminänderung zuverlässig).
+
 ## 0.50.0 – 2026-09-29 (DEV)
 
 - KC Core Spiegel (Migration 20260929_kc_core_mirror_sparmodus_abdeckung.sql, Admin-Freigabe Hansi): Watchdog wieder an

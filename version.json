@@ -1,10 +1,16 @@
 {
-  "version": "0.50.0",
+  "version": "0.51.0",
   "datum": "2026-09-29",
   "neu": [
-    "🪞 Admin-Zentrale: Watchdog und Spiegel-Abdeckung – zeigt, wie viele Tabellen noch ohne Spiegel-Regel sind (mit Liste)"
+    "👨‍🍳 Die drehende Kochmütze erscheint jetzt auch beim Aktualisieren, beim Wetter, in der Admin-Zentrale, beim Öffnen von Kalender, Nachrichten, Pinnwand und den Info-Karten"
   ],
   "verlauf": [
+    {
+      "version": "0.51.0",
+      "neu": [
+        "👨‍🍳 Die drehende Kochmütze erscheint jetzt auch beim Aktualisieren, beim Wetter, in der Admin-Zentrale, beim Öffnen von Kalender, Nachrichten, Pinnwand und den Info-Karten"
+      ]
+    },
     {
       "version": "0.50.0",
       "neu": [
