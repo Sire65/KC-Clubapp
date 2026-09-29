@@ -391,14 +391,9 @@
   /* KC-CLUB-TIPPT (0.54.0): „schreibt …“ mit drei hüpfenden Punkten */
   .tippt { display: block; font-size: .88rem; color: var(--gruen, #2e7d4f); font-style: italic; padding: 2px 6px 4px; }
   .entwurf { margin: 4px 0 0; padding: 6px 10px; border-radius: 12px; background: var(--karte); color: var(--text); box-shadow: var(--schatten); font-size: .9rem; font-style: italic; word-wrap: break-word; max-height: 4.6em; overflow: hidden; }
-  /* KC-CLUB-PINNWAND-LIVE (0.57.0): Einblendung „Du hast ein neues … Post-it von … bekommen“ */
-  .pwbanner { position: fixed; left: 12px; right: 12px; top: calc(10px + env(safe-area-inset-top)); z-index: 60; display: flex; align-items: center; gap: 10px;
-    background: #fff7c2; color: #3b2f00; border-radius: 14px; padding: 12px 14px; box-shadow: 0 8px 28px rgba(0,0,0,.25); animation: pwRein .35s ease-out; max-width: 560px; margin: 0 auto; }
-  .pwbanner.wichtig { background: #ffe0e0; color: #5a0d15; border: 2px solid #c0485a; }
-  .pwbanner b { flex: 1; font-size: .98rem; }
-  .pwbanner button { border: 0; border-radius: 10px; padding: 8px 12px; font-weight: 700; cursor: pointer; background: rgba(0,0,0,.08); color: inherit; }
-  @keyframes pwRein { from { transform: translateY(-120%); opacity: 0; } to { transform: none; opacity: 1; } }
-  @media (prefers-reduced-motion: reduce) { .pwbanner { animation: none; } }
+  /* KC-CLUB-PINNWAND-DIREKT (0.58.0): neuer Zettel geht als Post-it-Fenster auf */
+  .pwfenster-zettel { display: grid; gap: 22px; padding: 18px 10px 8px; }
+  .pwfenster-zettel .zettel { font-size: 1.1rem; }
   .punkte3 { display: inline-flex; gap: 3px; background: var(--karte); border-radius: 12px; padding: 6px 9px; box-shadow: var(--schatten); }
   .punkte3 i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .35; animation: tippHuepf 1.2s infinite ease-in-out; }
   .punkte3 i:nth-child(2) { animation-delay: .15s; } .punkte3 i:nth-child(3) { animation-delay: .3s; }
@@ -1091,7 +1086,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "0.57.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.58.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -1235,8 +1230,13 @@ function pwUebernehmen(r) {
 }
 // Beim Öffnen der App: offene wichtige Zettel → Pinnwand zeigen
 async function pwStart(nurZaehlen) { // nurZaehlen: Begrüßung ist offen → Pinnwand nicht zusätzlich öffnen
+  // 0.58.0: Zettel, die gekommen sind, während die App zu war, gehen direkt als Post-it-Fenster auf
+  let gezeigt = false;
+  if (!nurZaehlen) try { const n = (await api("pinnwand_neu")).neu || [];
+    if (n.length) { n.forEach((z) => PW_GEMELDET.add(z.id)); try { localStorage.setItem("kc_club_pw_gemeldet", JSON.stringify([...PW_GEMELDET].slice(-PW_GEMELDET_MAX))); } catch {}
+      pwFenster(n); gezeigt = true; } } catch {}
   try { const r = await api("pinnwand"); pwUebernehmen(r);
-    if (!nurZaehlen && PW.zettel.some(pwOffen) && aktuelleAnsicht === "start") { PW.wichtigStart = true; zeige("pinnwand"); }
+    if (!gezeigt && !nurZaehlen && PW.zettel.some(pwOffen) && aktuelleAnsicht === "start") { PW.wichtigStart = true; zeige("pinnwand"); }
   } catch {}
 }
 // KC-CLUB-PINNWAND-LIVE (0.57.0): bei geöffneter App alle PW_LIVE_MS nach neuen Zetteln schauen (Aktion pinnwand_neu markiert
@@ -1250,21 +1250,30 @@ async function pwLive() {
   if (!neu.length) return;
   neu.forEach((z) => PW_GEMELDET.add(z.id));
   try { localStorage.setItem("kc_club_pw_gemeldet", JSON.stringify([...PW_GEMELDET].slice(-PW_GEMELDET_MAX))); } catch {}
-  pwBanner(neu);
+  pwFenster(neu);
   if (einst("ton", true)) ton();
   PW.offen = Math.max(PW.offen, (r.neu || []).length);
   if (aktuelleAnsicht === "pinnwand") pwLaden(); else if (aktuelleAnsicht === "start" && !kaBearb) kachelnZeigen();
 }
-function pwBanner(neu) {
-  document.querySelector(".pwbanner")?.remove();
-  const z = neu.find((x) => x.wichtig) || neu[0], weitere = neu.length - 1;
-  const b = document.createElement("div"); b.className = "pwbanner" + (z.wichtig ? " wichtig" : ""); b.setAttribute("role", "alert");
-  b.innerHTML = `<span style="font-size:1.6rem">📌</span><b>${esc(z.hinweis)}${weitere ? ` <small>(+ ${weitere} weitere${weitere === 1 ? "s" : ""})</small>` : ""}</b>
-    <button type="button">Ansehen</button><button type="button" aria-label="Schließen">✕</button>`;
-  const [ansehen, zu] = b.querySelectorAll("button");
-  ansehen.onclick = () => { b.remove(); zeige("pinnwand"); };
-  zu.onclick = () => b.remove();
-  document.body.appendChild(b); setTimeout(() => b.remove(), z.wichtig ? 30000 : 15000);
+// KC-CLUB-PINNWAND-DIREKT (0.58.0): der neue Zettel selbst geht in der App auf (Absender, Text, wichtig) – „✓ Gelesen“ meldet
+// dem Absender „gesehen“, „Zur Pinnwand“ öffnet die Wand (auch das zählt als gesehen).
+function pwFenster(neu) {
+  document.getElementById("pwFenster")?.remove();
+  const liste = [...neu].sort((a, b) => (b.wichtig ? 1 : 0) - (a.wichtig ? 1 : 0)).slice(0, 5);
+  const f = document.createElement("div"); f.id = "pwFenster"; f.className = "blatt"; f.setAttribute("role", "dialog"); f.setAttribute("aria-modal", "true");
+  f.innerHTML = `<div class="blatt-innen" style="max-height:88vh;overflow-y:auto">
+    <h3 style="margin:0">📌 ${esc(liste.length === 1 ? liste[0].hinweis : `Du hast ${neu.length} neue Post-its bekommen`)}</h3>
+    <div class="pwfenster-zettel">${liste.map((z) => `<div class="zettel${z.wichtig ? " wichtig" : ""}" style="--dreh:${pwDreh(z.id)}deg">
+      ${z.wichtig ? '<span class="zwichtig">❗ WICHTIG</span>' : ""}<div class="ztext">${esc(z.text || "")}</div>
+      <div class="zfuss">von ${esc(z.von)}${z.privat ? " · nur für dich" : ""}${z.zeit ? " · " + esc(zeitKurz(z.zeit)) : ""}</div></div>`).join("")}</div>
+    ${neu.length > liste.length ? `<p class="hinweis" style="margin:0">… und ${neu.length - liste.length} weitere an der Pinnwand</p>` : ""}
+    <button class="knopf haupt" style="text-align:center" data-k="gelesen">✓ Gelesen</button>
+    <button class="knopf" style="text-align:center" data-k="wand">📌 Zur Pinnwand</button></div>`;
+  const zu = () => f.remove();
+  f.querySelector('[data-k="gelesen"]').onclick = () => { zu(); api("pinnwand_gesehen", { ids: liste.map((z) => z.id) }).catch(() => {}); };
+  f.querySelector('[data-k="wand"]').onclick = () => { zu(); zeige("pinnwand"); };
+  f.onclick = (e) => { if (e.target === f) zu(); };
+  document.body.appendChild(f);
 }
 async function pwLaden() {
   try { pwUebernehmen(await api("pinnwand", {}, { warten: true })); } catch (e) { $("pwWand").innerHTML = `<div class="leer">⚠️ ${esc(e.message)}</div>`; return; }
@@ -1957,7 +1966,7 @@ async function zugangAnfordern() {
 }
 // KC-CLUB-WARTEN (0.33.0): dauert eine Anfrage länger als 0,35 s, erscheint die drehende Kochmütze mit passendem Text.
 // Hintergrund-Abfragen (alle paar Sekunden/Minuten) zeigen sie nicht, damit nichts flackert.
-const WARTEN_STILL = new Set(["init", "online", "anruf_status", "diagnose", "unterhaltung", "unterhaltungen", "einstellung_setzen", "pinnwand", "kalender", "terminumfragen_liste", "communicator_status", "ping", "anruf_ende", "protokoll_speichern", "todo_erledigt", "todo_liste", "wetter", "fotos_neueste", "admin_lage", "tippen", "pinnwand_neu"]);
+const WARTEN_STILL = new Set(["init", "online", "anruf_status", "diagnose", "unterhaltung", "unterhaltungen", "einstellung_setzen", "pinnwand", "kalender", "terminumfragen_liste", "communicator_status", "ping", "anruf_ende", "protokoll_speichern", "todo_erledigt", "todo_liste", "wetter", "fotos_neueste", "admin_lage", "tippen", "pinnwand_neu", "pinnwand_gesehen"]);
 const WARTEN_TEXT = { nachricht_senden: "Nachricht wird gesendet …", gruppe_anlegen: "Gruppe wird angelegt …", gruppe_aendern: "Wird gespeichert …", treffen_speichern: "Termin wird gespeichert …",
   pinnwand_anheften: "Zettel wird angeheftet …", feedback_senden: "Feedback wird gesendet …", anklopfen: "Es wird angeklopft …", anruf_start: "Anruf wird aufgebaut …", anlage_hochladen: "Wird hochgeladen …", erstattung_senden: "Antrag wird gesendet …", km_satz_setzen: "Wird gespeichert …", todo_zuweisen: "Wird zugewiesen …",
   link_erzeugen: "Link wird erzeugt …", todo_anlegen: "Wird eingetragen …", zugang_anfordern: "Mail wird gesendet …", foto_hochladen: "Foto wird hochgeladen …", test_an_mich: "Test wird gesendet …",

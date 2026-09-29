@@ -1068,7 +1068,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 
 // 79. 0.57.0: Pinnwand live + Push (KC-CLUB-PINNWAND-LIVE)
 {
-  const neu = server.slice(server.indexOf('case "pinnwand_neu"'), server.indexOf('case "pinnwand_erledigt"'));
+  const neu = server.slice(server.indexOf('case "pinnwand_neu"'), server.indexOf('case "pinnwand_gesehen"'));
   assert.ok(neu.length > 50 && !/pinnwand_gelesen"\)\.upsert/.test(neu) && !/\.insert\(|\.update\(/.test(neu), "Live-Abfrage darf nichts als gesehen markieren");
   assert.ok(/const pinnwandPrivat = \(z: \{ fuer: string; personen\?: string\[\] \| null \}\) => z\.fuer === "personen" && \(z\.personen \?\? \[\]\)\.length === 1;/.test(server), "„privat“ nur bei genau einem Empfänger");
   const h = new Function("von", "privat", "wichtig", "return `Du hast ein neues ${wichtig ? \"wichtiges \" : \"\"}${privat ? \"privates \" : \"\"}Post-it von ${von} bekommen`;");
@@ -1080,8 +1080,19 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/club_pinnwand: "pinnwand"/.test(server) && /"geburtstage", "pinnwand"\]/.test(server) && /pinnwand: \{ push: true, email: false \}/.test(server), "Bereich Pinnwand fehlt");
   const mig = lies("supabase/migrations/20260929_kc_club_v58_pinnwand_push.sql");
   assert.ok(/'club_pinnwand','Club-App – Pinnwand \(nur Push\)', array\['push'\]/.test(mig) && /'pinnwand'\]\)\);/.test(mig), "Regeln/Bereich in der Datenbank fehlen");
-  assert.ok(/setInterval\(pwLive, PW_LIVE_MS\)/.test(html) && /api\("pinnwand_neu"\)/.test(html) && /"pinnwand_neu"\]\);/.test(html) && /\["pinnwand", "📌 Neue Post-its an der Pinnwand"\]/.test(html), "App: Live-Abfrage/Einstellung fehlt");
+  assert.ok(/setInterval\(pwLive, PW_LIVE_MS\)/.test(html) && /api\("pinnwand_neu"\)/.test(html) && /"pinnwand_neu"(, "[a-z_]+")*\]\);/.test(html) && /\["pinnwand", "📌 Neue Post-its an der Pinnwand"\]/.test(html), "App: Live-Abfrage/Einstellung fehlt");
   assert.ok(/else if \(h === "#pinnwand"\) zeige\("pinnwand"\);/.test(html), "Push-Sprung zur Pinnwand fehlt");
+}
+
+// 80. 0.58.0: Zettel geht direkt als Post-it-Fenster auf (KC-CLUB-PINNWAND-DIREKT)
+{
+  const g = server.slice(server.indexOf('case "pinnwand_gesehen"'), server.indexOf('case "pinnwand_erledigt"'));
+  assert.ok(/pinnwandSichtbar\(ich\)\)\.filter\(\(x: any\) => ids\.has\(x\.id\) && x\.person_id !== ich\.person_id\)/.test(g) && /\.slice\(0, 20\)/.test(g), "gesehen nur für sichtbare fremde Zettel");
+  assert.ok(/text: z\.text, zeit: z\.erstellt_am/.test(server), "pinnwand_neu liefert den Text nicht");
+  assert.ok(/function pwFenster\(neu\)/.test(html) && /pwFenster\(neu\);/.test(html) && !/pwBanner/.test(html), "Fenster statt Banner fehlt");
+  assert.ok(/api\("pinnwand_gesehen", \{ ids: liste\.map\(\(z\) => z\.id\) \}\)/.test(html) && /\$\{esc\(z\.text \|\| ""\)\}/.test(html), "Gelesen/Text im Fenster fehlt");
+  const st = html.slice(html.indexOf("async function pwStart("), html.indexOf("async function pwStart(") + 900);
+  assert.ok(st.indexOf('api("pinnwand_neu")') > 0 && st.indexOf('api("pinnwand_neu")') < st.indexOf('api("pinnwand")'), "App-Start zeigt neue Zettel nicht vor dem Markieren");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

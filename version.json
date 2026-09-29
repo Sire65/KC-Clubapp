@@ -1,10 +1,16 @@
 {
-  "version": "0.57.0",
+  "version": "0.58.0",
   "datum": "2026-09-29",
   "neu": [
-    "📌 Pinnwand live: Neue Post-its erscheinen sofort in der offenen App („Du hast ein neues Post-it von … bekommen“) und kommen als Push – ein- und ausschaltbar unter Benachrichtigungen"
+    "📌 Neue Post-its gehen direkt in der App auf – mit Text und Absender, „✓ Gelesen“ meldet es dem Absender (auch wenn der Zettel kam, während die App zu war)"
   ],
   "verlauf": [
+    {
+      "version": "0.58.0",
+      "neu": [
+        "📌 Neue Post-its gehen direkt in der App auf – mit Text und Absender, „✓ Gelesen“ meldet es dem Absender (auch wenn der Zettel kam, während die App zu war)"
+      ]
+    },
     {
       "version": "0.57.0",
       "neu": [

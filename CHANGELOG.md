@@ -1,5 +1,13 @@
 # Änderungen
 
+## 0.58.0 – 2026-09-29 (DEV)
+
+- KC-CLUB-PINNWAND-DIREKT (neu, Wunsch Hansi): statt nur „Du hast ein neues Post-it …“ geht der Zettel selbst als Post-it-Fenster
+  auf (Überschrift mit dem Hinweis, Text, Absender, „nur für dich“, Zeit; wichtig rot; bis 5 Zettel). „✓ Gelesen“ erfasst
+  „gesehen“ über die neue Aktion pinnwand_gesehen (nur sichtbare fremde Zettel), „📌 Zur Pinnwand“ öffnet die Wand.
+  Auch beim App-Start: Zettel, die bei geschlossener App kamen, gehen zuerst als Fenster auf (vorher wurde nur die Wand geöffnet).
+  pinnwand_neu liefert dafür Text und Zeit; das Banner aus 0.57.0 entfällt.
+
 ## 0.57.0 – 2026-09-29 (DEV)
 
 - KC-CLUB-PINNWAND-LIVE (neu): neue Post-its bei geöffneter App alle 45 s (und beim Zurückkehren in die App) über die reine

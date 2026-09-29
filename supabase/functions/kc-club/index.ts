@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.57.0";
+const SERVER_VERSION = "0.58.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -2246,7 +2246,14 @@ Köcheclub Werne`,
         const neu = fremd.filter((z: any) => !gesehen.has(z.id)).slice(0, 10);
         const leute = await personen(neu.map((z: any) => z.person_id));
         return json({ neu: neu.map((z: any) => { const von = vorname(leute.get(z.person_id)) || "jemandem";
-          return { id: z.id, von, wichtig: !!z.wichtig, privat: pinnwandPrivat(z), hinweis: pinnwandHinweis(von, pinnwandPrivat(z), !!z.wichtig) }; }) });
+          return { id: z.id, von, wichtig: !!z.wichtig, privat: pinnwandPrivat(z), hinweis: pinnwandHinweis(von, pinnwandPrivat(z), !!z.wichtig), text: z.text, zeit: z.erstellt_am }; }) });
+      }
+      // KC-CLUB-PINNWAND-DIREKT (0.58.0): der Zettel wurde im Post-it-Fenster angezeigt → als gesehen erfassen (nur sichtbare fremde Zettel)
+      case "pinnwand_gesehen": {
+        const ids = new Set((Array.isArray(p.ids) ? p.ids : []).map(String).slice(0, 20));
+        const z = (await pinnwandSichtbar(ich)).filter((x: any) => ids.has(x.id) && x.person_id !== ich.person_id);
+        if (z.length) await db.from("kc_club_pinnwand_gelesen").upsert(z.map((x: any) => ({ zettel_id: x.id, person_id: ich.person_id })), { onConflict: "zettel_id,person_id", ignoreDuplicates: true });
+        return json({ ok: true, gesehen: z.length });
       }
 
       case "pinnwand_erledigt": {
