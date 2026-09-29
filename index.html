@@ -321,10 +321,16 @@
   .avatar { position: relative; } .avatar .onpunkt { position: absolute; right: -2px; bottom: -2px; margin: 0; }
   .onleiste { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 8px; }
   .onleiste button { flex: none; border: 2px solid #2ecc71; background: var(--karte); color: var(--text); border-radius: 999px; padding: 7px 12px; font-weight: 800; cursor: pointer; }
-  .klopfen h3 { font-size: 1.25rem; } .klopfen .knopf { text-align: center; }
+  .klopfen h3 { font-size: 1.25rem; } .blatt-innen.klopfen .knopf { text-align: center; }
+  .neuigkeiten { max-height: 88vh; overflow-y: auto; } .blatt-innen.neuigkeiten .knopf { text-align: center; }
+  .neuigkeiten ul { margin: 4px 0 10px; padding-left: 20px; } .neuigkeiten li { margin: 4px 0; }
+  .neuigkeiten .vkopf { font-weight: 900; color: var(--rot); margin-top: 6px; }
+  .mini .onmini { display: inline-block; margin-top: 6px; padding: 4px 9px; border-radius: 999px; background: #2ecc71; color: #06301a; font-size: .8rem; font-weight: 900; text-transform: none; letter-spacing: 0; box-shadow: 0 0 8px rgba(46,204,113,.7); }
+  .onzeile { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--linie); }
+  .onzeile:last-child { border-bottom: none; } .onzeile .knopf { padding: 10px 12px; font-size: .95rem; text-align: center; }
   .begruessung .bgtipp { display: flex; gap: 10px; align-items: flex-start; background: var(--karte2); border-radius: 14px; padding: 10px 12px; margin: 6px 0; }
   .begruessung .bgtipp b.nr { flex: none; width: 28px; height: 28px; border-radius: 50%; background: var(--rot); color: #fff; display: grid; place-items: center; }
-  .begruessung .knopf { text-align: center; }
+  .blatt-innen.begruessung .knopf { text-align: center; }
   .blatt-innen .knopf { padding: 16px; font-size: 1.05rem; text-align: left; }
   @media (max-width: 560px) { .titel { font-size: 1.12rem; } .rund { width: 42px; height: 42px; } .knopfreihe { gap: 6px; } .raster { grid-template-columns: 1fr 1fr; } .info h2 { font-size: 1.25rem; } }
   /* Verbindungs-LEDs & Rundinstrumente (KC-CLUB-VERBINDUNG) */
@@ -695,6 +701,17 @@
   <div class="blatt-innen"><h3 id="exTitel"></h3><p class="hinweis" id="exText" style="margin:0"></p><div id="exKnoepfe" style="display:grid;gap:8px"></div>
     <button class="knopf" onclick="externZu()">Schließen</button></div>
 </div>
+<!-- KC-CLUB-NEUIGKEITEN: was ist neu in der Version -->
+<div class="blatt versteckt" id="neuBlatt" onclick="if(event.target===this)this.classList.add('versteckt')">
+  <div class="blatt-innen neuigkeiten"><div id="neuText"></div>
+    <button class="knopf haupt" id="neuUpdateKnopf" onclick="jetztAktualisieren()">🔄 Jetzt aktualisieren</button>
+    <button class="knopf" onclick="$('neuBlatt').classList.add('versteckt')" id="neuZuKnopf">Später</button></div>
+</div>
+<!-- KC-CLUB-ONLINE: wer ist gerade online (von der Startseite) -->
+<div class="blatt versteckt" id="onlineBlatt" onclick="if(event.target===this)this.classList.add('versteckt')">
+  <div class="blatt-innen" style="max-height:80vh;overflow-y:auto"><h3>🟢 Gerade online</h3><div id="onlineListe"></div>
+    <button class="knopf" style="text-align:center" onclick="$('onlineBlatt').classList.add('versteckt')">Schließen</button></div>
+</div>
 <!-- KC-CLUB-ONLINE: jemand klopft an -->
 <div class="blatt versteckt" id="klopfBlatt">
   <div class="blatt-innen klopfen"><div id="klopfText"></div>
@@ -744,7 +761,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.29.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.30.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -997,7 +1014,7 @@ async function onlinePing() {
     const r = await api("online");
     ONL.zeigen = r.zeigen; ONL.liste = r.online || []; ONL.ids = new Set(ONL.liste.map((x) => x.person_id));
     if ($("setOnline")) $("setOnline").checked = r.zeigen;
-    onlineLeisteZeigen();
+    onlineLeisteZeigen(); if (INIT) heroZeigen();
     // jemand klopft bei mir an → Fenster (jedes Anklopfen nur einmal)
     const k = (r.klopfen || []).find((x) => !ONL.erledigt.has(x.id));
     if (k && $("klopfBlatt").classList.contains("versteckt")) klopfZeigen(k);
@@ -1021,6 +1038,15 @@ function onlineLeisteZeigen() {
   const el = $("onlineLeiste"); if (!el) return;
   el.innerHTML = ONL.zeigen && ONL.liste.length ? `<div class="hinweis" style="margin:0 0 4px"><span class="onpunkt"></span><b>Gerade online</b> – antippen zum Anklopfen</div>
     <div class="onleiste">${ONL.liste.map((x) => `<button onclick="anklopfen('${x.person_id}')">👋 ${esc(x.vorname)}</button>`).join("")}</div>` : "";
+}
+// Startseite „🟢 3 online“ → Liste mit Direktkontakt (👋 anklopfen oder 💬 gleich schreiben)
+function onlineBlatt() {
+  $("onlineListe").innerHTML = ONL.liste.length ? ONL.liste.map((x) => `<div class="onzeile"><div class="avatar" style="width:40px;height:40px">${esc(initialen(x.name || x.vorname))}<i class="onpunkt"></i></div>
+      <div style="flex:1"><b>${esc(x.name || x.vorname)}</b><div class="hinweis" style="font-size:.85rem;margin:0">gerade online</div></div>
+      <button class="knopf haupt" onclick="$('onlineBlatt').classList.add('versteckt'); anklopfen('${x.person_id}')">👋 Anklopfen</button>
+      <button class="knopf" title="Nachricht schreiben" onclick="$('onlineBlatt').classList.add('versteckt'); direkt('${x.person_id}')">💬</button></div>`).join("")
+    : '<p class="hinweis">Gerade ist niemand sonst online.</p>';
+  $("onlineBlatt").classList.remove("versteckt");
 }
 async function anklopfen(pid) {
   const m = MITGLIEDER?.find((x) => x.person_id === pid) || ONL.liste.find((x) => x.person_id === pid);
@@ -1479,7 +1505,7 @@ function heroZeigen() {
   $("heroInfo").innerHTML = `<div class="klick" onclick="zumTreffen()">${kopf}</div>
     <div class="kacheln3">
       <button class="mini" onclick="zeige('nachrichten')"><b>${n}</b><span>Neue Nachr. ›</span></button>
-      <button class="mini" onclick="zeige('mitglieder')"><b>${INIT?.mitgliederAnzahl || "–"}</b><span>Mitglieder ›</span></button>
+      <button class="mini" onclick="zeige('mitglieder')"><b>${INIT?.mitgliederAnzahl || "–"}</b><span>Mitglieder ›</span>${ONL.zeigen && ONL.liste.length ? `<span class="onmini" role="button" onclick="event.stopPropagation(); onlineBlatt()">🟢 ${ONL.liste.length} online ›</span>` : ""}</button>
       <button class="mini" onclick="zumTreffen()"><b style="font-size:1.05rem">${bisTreffen}</b><span>Nächstes Treffen ›</span></button>
     </div>`;
 }
@@ -1568,6 +1594,7 @@ async function neuLaden(vonHand) {
     INIT = await api("init"); ICH = INIT.ich;
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln);
     const begruesst = begruessungPruefen();
+    if (!ONL.timer) nachUpdatePruefen(begruesst);
     if (!ONL.timer) { onlinePing(); onlineTakt(); const a = /#anklopfen=([0-9a-f-]{36})/.exec(START_HASH || ""); if (a) anklopfenAusLink(a[1]); }
     if (!PW.startGeprueft) { PW.startGeprueft = true; pwStart(begruesst); }
     designUebernehmen(INIT.einstellungen?.design);
@@ -3559,13 +3586,38 @@ function installStandZeigen() {
   el.innerHTML = `<p style="margin:4px 0 10px;font-weight:700;color:${farbe}">${text}</p>`;
 }
 function versionNeuer(a, b) { const x = a.split(".").map(Number), y = b.split(".").map(Number); for (let i = 0; i < 3; i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); } return false; }
-let NEUE_VERSION = null; // Version auf GitHub, falls neuer als die installierte
+let NEUE_VERSION = null, VERSION_INFO = null; // Version auf GitHub, falls neuer als die installierte
+// KC-CLUB-NEUIGKEITEN (0.30.0): Änderungen aller Versionen neuer als „seit“ (bis einschließlich „bis“), neueste zuerst
+function neuigkeitenSeit(v, seit, bis) {
+  const liste = (v?.verlauf || []).filter((e) => versionNeuer(e.version, seit) && !versionNeuer(e.version, bis));
+  return liste.length ? liste : v?.neu?.length ? [{ version: v.version, neu: v.neu }] : [];
+}
+function neuigkeitenZeigen(titel, eintraege, mitUpdate) {
+  $("neuText").innerHTML = `<h3 style="font-size:1.25rem">${titel}</h3>` + (eintraege.length
+    ? eintraege.map((e, i) => `${eintraege.length > 1 ? `<div class="vkopf">Version ${esc(e.version)}</div>` : ""}<ul>${e.neu.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>`).join("")
+    : '<p class="hinweis">Kleine Verbesserungen und Fehlerbehebungen.</p>');
+  $("neuUpdateKnopf").classList.toggle("versteckt", !mitUpdate);
+  $("neuZuKnopf").textContent = mitUpdate ? "Später" : "👍 Alles klar";
+  $("neuBlatt").classList.remove("versteckt");
+}
+// Vor dem Update: was bringt die neue Version?
+function updateFenster() {
+  if (!NEUE_VERSION) return;
+  neuigkeitenZeigen(`🆕 Neu in Version ${esc(NEUE_VERSION)}`, neuigkeitenSeit(VERSION_INFO, APP_VERSION, NEUE_VERSION), true);
+}
+// Nach einem Update (auch automatisch): einmal zeigen, was seit der zuletzt benutzten Version neu ist
+async function nachUpdatePruefen(begruesst) {
+  let alt = null; try { alt = localStorage.getItem("kc_club_version_gesehen"); localStorage.setItem("kc_club_version_gesehen", APP_VERSION); } catch {}
+  if (!alt || begruesst || !versionNeuer(APP_VERSION, alt)) return; // erste Nutzung oder nichts Neues
+  try { const v = VERSION_INFO || await (await fetch("version.json?x=" + Date.now(), { cache: "no-store" })).json(); VERSION_INFO = VERSION_INFO || v;
+    neuigkeitenZeigen(`✅ Aktualisiert auf Version ${esc(APP_VERSION)} – das ist neu`, neuigkeitenSeit(v, alt, APP_VERSION), false); } catch {}
+}
 async function updatePruefen(vonHand) {
   try {
     const v = await (await fetch("version.json?x=" + Date.now(), { cache: "no-store" })).json();
-    NEUE_VERSION = versionNeuer(v.version, APP_VERSION) ? v.version : null;
+    VERSION_INFO = v; NEUE_VERSION = versionNeuer(v.version, APP_VERSION) ? v.version : null;
     if (NEUE_VERSION) {
-      $("updateHinweis").innerHTML = `<div class="updatebalken">🆕 Neue Version ${esc(v.version)}${v.neu?.length ? ": " + esc(v.neu[0]) : ""}<button class="knopf haupt klein" style="margin-left:auto" onclick="jetztAktualisieren()">Jetzt aktualisieren</button></div>`;
+      $("updateHinweis").innerHTML = `<div class="updatebalken">🆕 Neue Version ${esc(v.version)}${v.neu?.length ? ": " + esc(v.neu[0]) : ""}<button class="knopf haupt klein" style="margin-left:auto" onclick="updateFenster()">Was ist neu?</button></div>`;
     } else if (vonHand) melde(`✔ Du hast die neueste Version (${APP_VERSION}).`);
     versionAnzeigen();
   } catch { if (vonHand) melde("Update-Prüfung gerade nicht möglich – bitte Internet prüfen.", true); }
@@ -3574,7 +3626,7 @@ async function updatePruefen(vonHand) {
 async function updateKachel() {
   melde("🔄 Suche nach Updates …");
   await updatePruefen(true);
-  if (NEUE_VERSION && confirm(`Neue Version ${NEUE_VERSION} ist da (du hast ${APP_VERSION}).\n\nJetzt aktualisieren?`)) jetztAktualisieren();
+  if (NEUE_VERSION) updateFenster();
 }
 function versionAnzeigen() {
   $("versionMarke").textContent = NEUE_VERSION ? `🆕 v${NEUE_VERSION}` : `v${APP_VERSION} ↻`;

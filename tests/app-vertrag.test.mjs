@@ -649,4 +649,17 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/if \(ONL\.zeigen/.test(html) || /ONL\.zeigen && ONL\.liste\.length/.test(html), "Online-Leiste beachtet die eigene Einstellung nicht");
 }
 
+// 51. 0.30.0: „Neu in Version …“ vor und nach dem Update (alle übersprungenen Versionen), 🟢 X online auf der Startseite
+{
+  const vj = JSON.parse(lies("version.json"));
+  assert.ok(Array.isArray(vj.verlauf) && vj.verlauf[0].version === vj.version && vj.verlauf.every((e) => e.version && e.neu?.length), "version.json: Verlauf fehlt oder passt nicht zur Version");
+  const code = html.slice(html.indexOf("function neuigkeitenSeit"), html.indexOf("function neuigkeitenZeigen"));
+  const neuigkeitenSeit = new Function("versionNeuer", code + "return neuigkeitenSeit;")((a, b) => { const x = a.split(".").map(Number), y = b.split(".").map(Number); for (let i = 0; i < 3; i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); return false; });
+  assert.deepEqual(neuigkeitenSeit(vj, "0.27.2", "0.29.0").map((e) => e.version), ["0.29.0", "0.28.0", "0.27.4"], "Übersprungene Versionen fehlen");
+  assert.ok(/if \(NEUE_VERSION\) updateFenster\(\);/.test(html) && /onclick="updateFenster\(\)">Was ist neu\?/.test(html), "Update zeigt kein Neuigkeiten-Fenster");
+  assert.ok(/nachUpdatePruefen\(begruesst\)/.test(html) && /kc_club_version_gesehen/.test(html), "Neuigkeiten nach automatischem Update fehlen");
+  assert.ok(/🟢 \$\{ONL\.liste\.length\} online/.test(html), "Startseite zeigt nicht, wie viele online sind");
+  assert.ok(/onclick="event\.stopPropagation\(\); onlineBlatt\(\)"/.test(html) && /function onlineBlatt\(\)[\s\S]{0,900}anklopfen\('\$\{x\.person_id\}'\)[\s\S]{0,200}direkt\('\$\{x\.person_id\}'\)/.test(html), "„online“ antippen zeigt keine Liste mit Direktkontakt");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
