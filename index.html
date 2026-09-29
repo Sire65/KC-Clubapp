@@ -388,6 +388,13 @@
   .uhtipp { margin: 0 0 4px; font-size: .82rem; }
   .unterh .mitte div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .punkt { background: var(--rot); color: #fff; border-radius: 12px; padding: 2px 9px; font-weight: 800; font-size: .85rem; }
+  /* KC-CLUB-TIPPT (0.54.0): „schreibt …“ mit drei hüpfenden Punkten */
+  .tippt { display: flex; align-items: center; gap: 8px; font-size: .88rem; color: var(--gruen, #2e7d4f); font-style: italic; padding: 2px 6px 4px; }
+  .punkte3 { display: inline-flex; gap: 3px; background: var(--karte); border-radius: 12px; padding: 6px 9px; box-shadow: var(--schatten); }
+  .punkte3 i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .35; animation: tippHuepf 1.2s infinite ease-in-out; }
+  .punkte3 i:nth-child(2) { animation-delay: .15s; } .punkte3 i:nth-child(3) { animation-delay: .3s; }
+  @keyframes tippHuepf { 0%, 60%, 100% { transform: translateY(0); opacity: .35; } 30% { transform: translateY(-4px); opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .punkte3 i { animation: none; opacity: .8; } }
   .chat { display: flex; flex-direction: column; gap: 6px; padding: 8px 0 160px; }
   /* KC-CLUB-ZUSTELLWAHL: Symbole für Erreichbarkeit und Auswahl, wie benachrichtigt wird */
   .wege { display: inline-flex; gap: 3px; margin-left: 6px; font-size: .95rem; vertical-align: middle; }
@@ -939,6 +946,8 @@
   <div class="fb-info" id="fbInfo"></div>
 </div>
 <div class="eingabe versteckt" id="eingabe">
+  <!-- KC-CLUB-TIPPT (0.54.0): „Klaus schreibt …“ -->
+  <div class="tippt versteckt" id="tipptAnzeige" aria-live="polite"></div>
   <div class="zustell" id="zustell"></div>
   <div class="chips" id="anlagenChips"></div>
   <!-- KC-CLUB-SPRACHE: Aufnahme-Leiste -->
@@ -947,7 +956,7 @@
   <div class="innen">
     <button class="rund" title="Anlage" onclick="anlageMenue()">📎</button>
     <button class="rund" title="Sprachnachricht aufnehmen" id="mikroKnopf" onclick="spracheStart()">🎤</button>
-    <textarea id="text" rows="1" placeholder="Nachricht schreiben …" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
+    <textarea id="text" rows="1" placeholder="Nachricht schreiben …" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';tippenMelden()"></textarea>
     <button class="rund" title="Senden" id="sendenKnopf" onclick="senden()">➤</button>
   </div>
 </div>
@@ -1071,7 +1080,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "0.53.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.54.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -1395,10 +1404,31 @@ async function onlineZeigen(an) {
   catch (e) { melde(e.message, true); }
 }
 // Chat: alle 4 s neu laden, wenn jemand aus dem Gespräch online ist – sonst alle 12 s
+// 2-s-Takt (0.54.0): schreibt gerade jemand → jedes Mal; jemand online → alle 4 s; sonst alle 12 s (wie bisher)
+const CHAT_TAKT_MS = 2000;
 function chatTakt() {
   ONL.takt++;
+  if (chatTakt.laeuft) return;
   const jemandDa = (CHAT?.teilnehmer || []).some((t) => t.person_id !== ICH?.person_id && ONL.ids.has(t.person_id));
-  if (jemandDa || ONL.takt % 3 === 0) chatLaden(false);
+  if (!(CHAT?.tippt?.length || (jemandDa && ONL.takt % 2 === 0) || ONL.takt % 6 === 0)) return;
+  chatTakt.laeuft = true; chatLaden(false).finally(() => { chatTakt.laeuft = false; });
+}
+// KC-CLUB-TIPPT (0.54.0): beim Tippen höchstens alle 3 s „ich schreibe“ melden, Feld leer → sofort aus.
+// Wer die Online-Anzeige ausgeschaltet hat (Privatsphäre), meldet auch kein „schreibt …“.
+let TIPP = { zuletzt: 0, id: null };
+function tippenMelden() {
+  if (!chatId || !ONL.zeigen) return;
+  if (!$("text").value.trim()) return tippenAus();
+  if (TIPP.id === chatId && Date.now() - TIPP.zuletzt < 3000) return;
+  TIPP = { zuletzt: Date.now(), id: chatId }; api("tippen", { id: chatId }).catch(() => {});
+}
+function tippenAus() { if (TIPP.id) api("tippen", { id: TIPP.id, aus: true }).catch(() => {}); TIPP = { zuletzt: 0, id: null }; }
+function tipptZeigen(namen) {
+  const e = $("tipptAnzeige"); if (!e) return;
+  if (!namen.length) { e.classList.add("versteckt"); e.innerHTML = ""; return; }
+  const wer = namen.length === 1 ? namen[0] : namen.length === 2 ? `${namen[0]} und ${namen[1]}` : `${namen.length} Personen`;
+  e.innerHTML = `<span class="punkte3"><i></i><i></i><i></i></span><span>${esc(wer)} ${namen.length > 1 ? "schreiben" : "schreibt"} …</span>`;
+  e.classList.remove("versteckt");
 }
 
 // ---------- KC-CLUB-ANRUF (0.31.0, Test): Sprechen per Ton, direkt App zu App (WebRTC) ----------
@@ -1875,7 +1905,7 @@ async function zugangAnfordern() {
 }
 // KC-CLUB-WARTEN (0.33.0): dauert eine Anfrage länger als 0,35 s, erscheint die drehende Kochmütze mit passendem Text.
 // Hintergrund-Abfragen (alle paar Sekunden/Minuten) zeigen sie nicht, damit nichts flackert.
-const WARTEN_STILL = new Set(["init", "online", "anruf_status", "diagnose", "unterhaltung", "unterhaltungen", "einstellung_setzen", "pinnwand", "kalender", "terminumfragen_liste", "communicator_status", "ping", "anruf_ende", "protokoll_speichern", "todo_erledigt", "todo_liste", "wetter", "fotos_neueste", "admin_lage"]);
+const WARTEN_STILL = new Set(["init", "online", "anruf_status", "diagnose", "unterhaltung", "unterhaltungen", "einstellung_setzen", "pinnwand", "kalender", "terminumfragen_liste", "communicator_status", "ping", "anruf_ende", "protokoll_speichern", "todo_erledigt", "todo_liste", "wetter", "fotos_neueste", "admin_lage", "tippen"]);
 const WARTEN_TEXT = { nachricht_senden: "Nachricht wird gesendet …", gruppe_anlegen: "Gruppe wird angelegt …", gruppe_aendern: "Wird gespeichert …", treffen_speichern: "Termin wird gespeichert …",
   pinnwand_anheften: "Zettel wird angeheftet …", feedback_senden: "Feedback wird gesendet …", anklopfen: "Es wird angeklopft …", anruf_start: "Anruf wird aufgebaut …", anlage_hochladen: "Wird hochgeladen …", erstattung_senden: "Antrag wird gesendet …", km_satz_setzen: "Wird gespeichert …", todo_zuweisen: "Wird zugewiesen …",
   link_erzeugen: "Link wird erzeugt …", todo_anlegen: "Wird eingetragen …", zugang_anfordern: "Mail wird gesendet …", foto_hochladen: "Foto wird hochgeladen …", test_an_mich: "Test wird gesendet …",
@@ -2563,10 +2593,12 @@ function adminSpiegelFarben(sp) {
   const watchdog = !w ? ["grau", "noch nie gelaufen"] : wm > 90 ? ["grau", `keine Meldung seit ${seitText(w.zeit)}`] : [w.status === "ok" ? "gruen" : "gelb", `${w.status === "ok" ? "passt auf" : "meldet Probleme"} · ${seitText(w.zeit)}`];
   return { neon, backup, abdeckung, watchdog };
 }
-function adminBalken(titel, belegt, grenze, warn, krit) {
+// stand/altStd (0.54.0): Messzeitpunkt – älter als altStd Stunden → graue Lampe und „⚠️ veraltet“ (UNKNOWN/alt nie als OK)
+function adminBalken(titel, belegt, grenze, warn, krit, stand = null, altStd = 13) {
   if (belegt == null) return `<div class="abalken">${lampe("grau")}<span>${titel}: unbekannt</span></div>`;
-  const pct = Math.round((belegt / grenze) * 1000) / 10, f = pct >= krit ? "rot" : pct >= warn ? "gelb" : "gruen";
-  return `<div class="abalken">${lampe(f)}<span>${titel}</span><b>${mb(belegt)} / ${mb(grenze)}</b><div class="aspur"><i class="${f}" style="width:${Math.min(100, pct)}%"></i></div><small>${String(pct).replace(".", ",")} % belegt · ${mb(Math.max(0, grenze - belegt))} frei</small></div>`;
+  const pct = Math.round((belegt / grenze) * 1000) / 10, alt = stand && Date.now() - new Date(stand) > altStd * 3600000;
+  const f = alt ? "grau" : pct >= krit ? "rot" : pct >= warn ? "gelb" : "gruen";
+  return `<div class="abalken">${lampe(f)}<span>${titel}</span><b>${mb(belegt)} / ${mb(grenze)}</b><div class="aspur"><i class="${f}" style="width:${Math.min(100, pct)}%"></i></div><small>${String(pct).replace(".", ",")} % belegt · ${mb(Math.max(0, grenze - belegt))} frei${stand ? ` · gemessen ${esc(seitText(stand))}${alt ? " ⚠️ veraltet" : ""}` : ""}</small></div>`;
 }
 function infoAdmin() {
   const d = INFO_DATEN.admin;
@@ -2584,6 +2616,7 @@ function infoAdmin() {
       ${zeile(r.wartung?.an ? "gelb" : "gruen", "Wartung", r.wartung?.an ? "an" + (r.wartung.hinweis ? " – " + r.wartung.hinweis : "") : "aus")}
     </div>
     ${adminBalken("🗄️ Datenbank", r.datenbank.bytes, r.datenbank.grenze, r.datenbank.warnPct, r.datenbank.kritPct)}
+    ${adminBalken("🪞 Neon-Spiegel", r.spiegel?.groesse?.bytes ?? null, r.spiegel?.groesse?.grenze || 512 * 1048576, r.datenbank.warnPct, r.datenbank.kritPct, r.spiegel?.groesse?.zeit)}
     ${adminBalken("📁 Dateien/Fotos", r.speicher.belegt, r.speicher.grenze, 80, 95)}
     <div class="azahlen">
       <span>👥 <b>${m.gesamt}</b> Mitglieder</span><span>🔑 <b>${m.mitZugang}</b> mit Zugang</span><span>🟢 <b>${m.online}</b> online</span>
@@ -2616,6 +2649,7 @@ function adminBlatt() {
       return `<table class="todotab"><tr><td>${lampe(f.neon[0])} Spiegel Supabase → Neon</td><td>${esc(f.neon[1])}</td></tr><tr><td>${lampe(f.backup[0])} Tägliches Backup</td><td>${esc(f.backup[1])}</td></tr>
         <tr><td>${lampe(f.watchdog[0])} Watchdog</td><td>${esc(f.watchdog[1])}</td></tr>
         <tr><td>${lampe(f.abdeckung[0])} Abdeckung</td><td>${esc(f.abdeckung[1])}</td></tr>
+        <tr><td>🗄️ Neon-Speicher</td><td>${sp.groesse?.bytes ? `${mb(sp.groesse.bytes)} von ${mb(sp.groesse.grenze)} (kostenloser Tarif) · gemessen ${esc(seitText(sp.groesse.zeit))}` : "noch nicht gemessen (misst der nächste Spiegellauf)"}</td></tr>
         <tr><td>🧪 Letzter Wiederherstellungs-Test</td><td>${sp.backup.restoreTest ? esc(seitText(sp.backup.restoreTest)) + " · bestanden" : "–"}</td></tr>
         ${sp.compute ? `<tr><td>⚙️ Neon-Rechenzeit</td><td>${esc(sp.compute.modus === "maintenance" ? "Wartung/Sparmodus" : sp.compute.modus)}${sp.compute.bis ? " bis " + esc(fKurz.format(new Date(sp.compute.bis))) : ""}</td></tr>` : ""}</table>
         ${sp.pause ? `<p class="hinweis" style="margin:0">⏸️ ${esc(zeitKurz(sp.pause.zeit))}: ${esc(sp.pause.text)}</p>` : ""}
@@ -2955,6 +2989,8 @@ function zeige(v, ausHistorie) {
   document.querySelectorAll("#fuss button").forEach((b) => b.classList.toggle("an", b.dataset.v === v || (v === "chat" && b.dataset.v === "nachrichten") || (v === "neu" && b.dataset.v === "nachrichten")));
   $("eingabe").classList.toggle("versteckt", v !== "chat");
   clearInterval(chatTimer);
+  if (v !== "chat" && TIPP.id) tippenAus(); // Unterhaltung verlassen → „schreibt …“ sofort beenden
+  if (v !== "chat") tipptZeigen([]);
   if (v !== "chat") chatId = null;
   if (v === "termine") treffenLaden();
   if (v === "vorschlaege") { $("vorschlagForm").classList.add("versteckt"); vorschlaegeLaden(); }
@@ -3484,7 +3520,7 @@ async function chatOeffnen(id, ausHistorie) {
   chatId = id; zeige("chat", ausHistorie); chatId = id;
   history.replaceState({ v: "chat", id }, "", location.pathname + "#nachricht=" + id);
   await chatLaden(true);
-  chatTimer = setInterval(chatTakt, 4000);
+  chatTimer = setInterval(chatTakt, CHAT_TAKT_MS);
 }
 let chatStand = "";
 async function chatLaden(scrollen) {
@@ -3498,6 +3534,8 @@ async function chatLaden(scrollen) {
     let st = "";
     if (andere.length === 1) { if (!MITGLIEDER) await mitgliederHolen().catch(() => {}); const m = MITGLIEDER?.find((x) => x.person_id === andere[0].person_id); if (m?.status) st = statusText(m.status); }
     $("chatTeilnehmer").textContent = !andere.length ? "Nur du (Test-Unterhaltung)" : u.gruppe ? `👥 ${andere.length + 1} Mitglieder: Du, ${andere.map((x) => x.name.split(" ")[0]).join(", ")} ›` : u.betreff || andere.length > 1 ? "Mit: " + andere.map((x) => x.name).join(", ") : st;
+    tipptZeigen(u.tippt || []);
+    if (u.tippt?.length && andere.length === 1) $("chatTeilnehmer").textContent = "✍️ schreibt …";
     const stand = JSON.stringify(u.nachrichten.map((m) => [m.id, m.gelesenVon?.length]));
     if (stand === chatStand && !scrollen) return;
     const neuVonAnderen = chatStand && u.nachrichten.length && !u.nachrichten[u.nachrichten.length - 1].eigen && stand !== chatStand;
@@ -3683,9 +3721,9 @@ async function senden() {
     const daten = { text, anlagen: anlagen.map((a) => a.id), wege: ["push", "email"].filter((w) => ZW[w]) };
     const r = chatId ? await api("nachricht_senden", { id: chatId, ...daten }) : await api("nachricht_senden", { ...daten, ...neuEntwurf });
     const empfIds = chatId ? (CHAT?.teilnehmer || []).map((t) => t.person_id) : [...(neuEntwurf?.empfaenger?.personen || [])];
-    $("text").value = ""; $("text").style.height = "auto"; anlagen = []; chipsZeigen(); neuEntwurf = null;
+    $("text").value = ""; $("text").style.height = "auto"; anlagen = []; chipsZeigen(); neuEntwurf = null; TIPP = { zuletzt: 0, id: null }; // Server beendet „schreibt …“
     if (ZW.whatsapp && text) whatsappWeitergeben(text, empfIds.filter((id) => id !== ICH.person_id));
-    if (!chatId) { chatId = r.id; history.replaceState({ v: "chat", id: r.id }, "", location.pathname + "#nachricht=" + r.id); clearInterval(chatTimer); chatTimer = setInterval(chatTakt, 4000); }
+    if (!chatId) { chatId = r.id; history.replaceState({ v: "chat", id: r.id }, "", location.pathname + "#nachricht=" + r.id); clearInterval(chatTimer); chatTimer = setInterval(chatTakt, CHAT_TAKT_MS); }
     await chatLaden(true);
   } catch (e) { melde(e.message, true); }
   $("sendenKnopf").disabled = false;

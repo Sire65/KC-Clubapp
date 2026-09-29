@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.53.0";
+const SERVER_VERSION = "0.54.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -169,6 +169,8 @@ async function zweierGespraech(a: string, b: string): Promise<string | null> {
 // Online = in den letzten ONLINE_SEK Sekunden in der App (zuletzt_gesehen wird bei jedem Aufruf gesetzt; die App meldet sich
 // alle 60 s, solange sie offen ist). Einstellung „online“ (Standard: an). Wer sich verbirgt, sieht auch andere nicht.
 const ONLINE_SEK = 150, ANKLOPFEN_SEK = 180;
+// KC-CLUB-TIPPT (0.54.0): „schreibt …“ – die App meldet beim Tippen alle paar Sekunden, das Zeichen gilt TIPPT_SEK lang
+const TIPPT_SEK = 6;
 async function onlineZeigenMap(ids?: string[]) {
   let q = db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "online");
   if (ids) q = q.in("person_id", ids);
@@ -610,16 +612,19 @@ const ADMIN_PROGRAMME: { id: string; name: string; stand?: () => Promise<string 
   { id: "kicc", name: "KICC Kontrollzentrum" },
 ];
 const ADMIN_DB_GRENZE = 500 * 1024 * 1024;
+const NEON_GRENZE = 512 * 1024 * 1024; // Neon kostenlos: 0,5 GB Speicher je Projekt
 // Neon-Spiegel und Backup (0.48.0): liest nur die Protokolle des KC-Spiegels (kc_db_mirror_*, kc_neon_compute_policy) – steuert nichts
 async function adminSpiegel() {
   const letzter = (typ: string) => db.from("kc_db_mirror_runs").select("started_at,message").eq("run_type", typ).eq("status", "ok").order("started_at", { ascending: false }).limit(1).maybeSingle();
-  const [{ data: pol }, { data: compute }, { data: snap }, { data: backup }, { data: restore }, { data: pause }, { data: abdeckung }, { data: wd }] = await Promise.all([
+  const [{ data: pol }, { data: compute }, { data: snap }, { data: backup }, { data: restore }, { data: pause }, { data: abdeckung }, { data: wd }, { data: ng }] = await Promise.all([
     db.from("kc_db_mirror_policies").select("name,mode,target,enabled,lag_threshold_sec,updated_at"),
     db.from("kc_neon_compute_policy").select("mode,maintenance_until,updated_at").eq("id", "primary").maybeSingle(),
     letzter("snapshot"), letzter("backup"), letzter("restore_test"),
     db.from("kc_db_mirror_audit").select("happened_at,action,detail").or("action.ilike.%paus%,action.ilike.%resum%,action.ilike.%fortgesetzt%").order("happened_at", { ascending: false }).limit(1).maybeSingle(),
     db.rpc("kc_db_mirror_abdeckung"),
     db.from("kc_db_mirror_runs").select("started_at,status,message").eq("run_type", "watchdog").order("started_at", { ascending: false }).limit(1).maybeSingle(),
+    // KC-CLUB-NEON-GROESSE (0.54.0): misst der Spiegel-Worker nebenbei, wenn er ohnehin mit Neon verbunden ist (keine Extra-Rechenzeit)
+    db.from("kc_db_mirror_runs").select("started_at,metrics").eq("run_type", "neon_groesse").eq("status", "ok").order("started_at", { ascending: false }).limit(1).maybeSingle(),
   ]);
   const p = pol ?? [], neon = p.filter((x: any) => x.target === "neon" && x.mode !== "realtime"), bk = p.filter((x: any) => x.mode === "backup");
   const aktivLag = neon.filter((x: any) => x.enabled).map((x: any) => Number(x.lag_threshold_sec) || 720);
@@ -632,6 +637,7 @@ async function adminSpiegel() {
     // Abdeckung: Tabellen ohne Spiegel-Regel (werden weder gespiegelt noch gesichert) + letzter Watchdog-Lauf
     abdeckung: abdeckung ? { tabellen: abdeckung.tabellen, ohne: abdeckung.ohne_regel, liste: abdeckung.liste } : null,
     watchdog: wd ? { zeit: wd.started_at, status: wd.status, text: wd.message } : null,
+    groesse: ng ? { bytes: Number(ng.metrics?.bytes) || null, zeit: ng.started_at, grenze: NEON_GRENZE } : null,
     pause: pause && /paus/i.test(pause.action) ? { zeit: pause.happened_at, text: pause.detail } : null,
   };
 } // kostenloser Supabase-Tarif (falls der System-Check keinen Wert liefert)
@@ -1677,9 +1683,22 @@ Köcheclub Werne`,
           };
         });
         await db.from("kc_communication_thread_participants").update({ last_read_at: jetzt() }).eq("thread_id", id).eq("person_id", ich.person_id);
-        const { data: gr } = await db.from("kc_club_gruppen").select("*").eq("thread_id", id).maybeSingle();
-        return json({ id, betreff: t?.subject ?? "",
+        const [{ data: gr }, { data: tippen }] = await Promise.all([
+          db.from("kc_club_gruppen").select("*").eq("thread_id", id).maybeSingle(),
+          db.from("kc_club_tippen").select("person_id").eq("thread_id", id).neq("person_id", ich.person_id).gt("bis", jetzt()),
+        ]);
+        const tippt = (tippen ?? []).map((x: any) => vorname(leute.get(x.person_id)) || x.person_id);
+        return json({ id, betreff: t?.subject ?? "", tippt,
           gruppe: gr ? { name: gr.name, symbol: gr.symbol, erstellt_von: gr.erstellt_von, darfVerwalten: gr.erstellt_von === ich.person_id || ich.vorstand } : null, teilnehmer: (tn ?? []).map((x: any) => ({ person_id: x.person_id, name: leute.get(x.person_id)?.display_name || x.person_id })), nachrichten });
+      }
+
+      // KC-CLUB-TIPPT (0.54.0): ich tippe gerade (aus: true = Feld geleert/verlassen). Nur Teilnehmer der Unterhaltung.
+      case "tippen": {
+        const id = String(p.id || "");
+        await binTeilnehmer(id, ich.person_id);
+        if (p.aus) await db.from("kc_club_tippen").delete().eq("thread_id", id).eq("person_id", ich.person_id);
+        else await db.from("kc_club_tippen").upsert({ thread_id: id, person_id: ich.person_id, bis: new Date(Date.now() + TIPPT_SEK * 1000).toISOString() });
+        return json({ ok: true });
       }
 
       case "nachricht_senden": {
@@ -1718,6 +1737,7 @@ Köcheclub Werne`,
             throw new Fehler("Anlage nicht gefunden – bitte erneut anhängen.");
         }
         const { data: m, error: me } = await db.from("kc_communication_messages").insert({ thread_id: threadId, sender_person_id: ich.person_id, body: text || "📎" }).select("id,created_at").single();
+        db.from("kc_club_tippen").delete().eq("thread_id", threadId).eq("person_id", ich.person_id).then(() => {}); // „schreibt …“ endet mit dem Senden
         if (me || !m) throw new Fehler("Nachricht konnte nicht gespeichert werden.", 500);
         if (anlagen.length) await db.from("kc_communication_message_attachments").insert(anlagen.map((attachment_id: string) => ({ message_id: m.id, attachment_id, hochgeladen_von_person_id: ich.person_id })));
         await Promise.all([

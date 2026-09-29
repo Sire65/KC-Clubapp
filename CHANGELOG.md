@@ -1,5 +1,16 @@
 # Änderungen
 
+## 0.54.0 – 2026-09-29 (DEV)
+
+- KC-CLUB-TIPPT (neu): „schreibt …“ in Unterhaltungen. Beim Tippen meldet die App höchstens alle 3 s (Aktion tippen),
+  das Zeichen gilt 6 s (kc_club_tippen, Migration v54, stündliches Aufräumen, Spiegel-Regel „nicht spiegeln“).
+  Anzeige über dem Eingabefeld mit hüpfenden Punkten, im Einzel-Chat zusätzlich in der Kopfzeile; in Gruppen mit Namen.
+  Senden, Feld leeren oder Chat verlassen beendet es sofort. Wer die Online-Anzeige ausgeschaltet hat, meldet kein „schreibt …“.
+  Chat-Takt 2 s: schreibt jemand → jedes Mal, jemand online → 4 s, sonst 12 s (wie bisher); keine überlappenden Abrufe.
+- KC-CLUB-NEON-GROESSE (neu): Admin-Zentrale zeigt den Neon-Füllstand (von 0,5 GB) als Balken mit Messzeit; älter als
+  13 Std. → grau „⚠️ veraltet“. Gemessen vom Spiegel-Worker nur, wenn er ohnehin mit Neon verbunden ist (keine Extra-
+  Rechenzeit, höchstens alle 30 Min.). Quelltext kc-db-mirror-worker jetzt im Repository (supabase/functions/).
+
 ## KC Core Spiegel – 2026-09-29 (Datenbank, ohne App-Build)
 
 - KC-SPIEGEL-ALLE (Admin-Freigabe Hansi): alle 195 Tabellen haben eine Spiegel-Regel (vorher 118 ohne).

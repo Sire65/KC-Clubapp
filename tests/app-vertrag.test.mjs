@@ -1016,4 +1016,23 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/kc-neon-backup-verify', '15 0 \* \* \*'/.test(lies("supabase/migrations/20260929_kc_core_backup_spaltenreihenfolge.sql")), "Restore-Test nach dem Backup nicht eingeplant");
 }
 
+// 76. 0.54.0: „schreibt …“ (KC-CLUB-TIPPT) und Neon-Füllstand (KC-CLUB-NEON-GROESSE)
+{
+  const ti = server.slice(server.indexOf('case "tippen"'), server.indexOf('case "nachricht_senden"'));
+  assert.ok(/await binTeilnehmer\(id, ich\.person_id\)/.test(ti) && /TIPPT_SEK \* 1000/.test(ti) && /p\.aus/.test(ti), "tippen: Teilnehmer-Prüfung/Ablauf fehlt");
+  assert.ok(/\.neq\("person_id", ich\.person_id\)\.gt\("bis", jetzt\(\)\)/.test(server) && /betreff: t\?\.subject \?\? "", tippt,/.test(server), "unterhaltung liefert tippt nicht (oder mich selbst)");
+  assert.ok(/kc_club_tippen"\)\.delete\(\)\.eq\("thread_id", threadId\)/.test(server), "Senden beendet „schreibt …“ nicht");
+  assert.ok(/if \(!chatId \|\| !ONL\.zeigen\) return;/.test(html) && /Date\.now\(\) - TIPP\.zuletzt < 3000/.test(html), "Tipp-Meldung ohne Privatsphäre/Drosselung");
+  assert.ok(/tippenMelden\(\)"><\/textarea>/.test(html) && /id="tipptAnzeige"/.test(html) && /"tippen"\]\);/.test(html), "Anzeige/Eingabe/WARTEN_STILL fehlt");
+  assert.ok(/tipptZeigen\(u\.tippt \|\| \[\]\);\n    if \(u\.tippt\?\.length && andere\.length === 1\)[^\n]*\n    const stand = /.test(html), "Anzeige muss vor dem frühen Ausstieg aktualisiert werden");
+  assert.ok(/if \(chatTakt\.laeuft\) return;/.test(html) && !/setInterval\(chatTakt, 4000\)/.test(html), "Chat-Takt überlappt / alter Takt");
+  assert.ok(/if \(v !== "chat" && TIPP\.id\) tippenAus\(\);/.test(html), "Verlassen beendet „schreibt …“ nicht");
+  assert.ok(/mirror_enabled, backup_enabled, note, updated_at\)\nvalues \('kc_club_tippen', 'Club-App', 'sensitive', false, false, false/.test(lies("supabase/migrations/20260929_kc_club_v54_tippen.sql")), "Spiegel-Regel für kc_club_tippen fehlt");
+  // Neon-Größe
+  assert.ok(/eq\("run_type", "neon_groesse"\)\.eq\("status", "ok"\)/.test(server) && /groesse: ng \? \{ bytes:/.test(server) && /const NEON_GRENZE = 512 \* 1024 \* 1024;/.test(server), "Server liefert Neon-Größe nicht");
+  const w = lies("supabase/functions/kc-db-mirror-worker/index.ts");
+  assert.ok(/if\(neon\)\{try\{/.test(w) && /pg_database_size\(current_database\(\)\)/.test(w) && /30\*60000/.test(w), "Worker misst Neon-Größe nicht (nur bei offener Verbindung, gedrosselt)");
+  assert.ok(/adminBalken\("🪞 Neon-Spiegel", r\.spiegel\?\.groesse\?\.bytes \?\? null/.test(html) && /alt \? "grau"/.test(html) && /⚠️ veraltet/.test(html), "Neon-Balken/Veraltet-Markierung fehlt");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

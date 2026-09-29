@@ -1,11 +1,18 @@
 {
-  "version": "0.53.0",
+  "version": "0.54.0",
   "datum": "2026-09-29",
   "neu": [
-    "🖨️ Drucken: Kalender (Tag, Woche, Monat, Jahr), To-do-Liste, Teilnehmerliste eines Treffens, Sitzungsprotokoll und Erstattungsantrag – Druckersymbol rechts oben, auch „als PDF speichern“",
-    "👥 Protokoll-Aufgaben: Bei „Wer?“ jetzt mehrere Personen per Häkchen wählen – jede bekommt die Aufgabe und Bescheid"
+    "✍️ Nachrichten: Du siehst jetzt, wenn jemand auf der Gegenseite gerade schreibt – „Klaus schreibt …“ wie bei WhatsApp",
+    "🪞 Admin-Zentrale: Füllstand der Neon-Spiegeldatenbank als Balken (wie bei der Datenbank)"
   ],
   "verlauf": [
+    {
+      "version": "0.54.0",
+      "neu": [
+        "✍️ Nachrichten: Du siehst jetzt, wenn jemand auf der Gegenseite gerade schreibt – „Klaus schreibt …“ wie bei WhatsApp",
+        "🪞 Admin-Zentrale: Füllstand der Neon-Spiegeldatenbank als Balken (wie bei der Datenbank)"
+      ]
+    },
     {
       "version": "0.53.0",
       "neu": [
