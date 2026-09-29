@@ -391,6 +391,14 @@
   /* KC-CLUB-TIPPT (0.54.0): „schreibt …“ mit drei hüpfenden Punkten */
   .tippt { display: block; font-size: .88rem; color: var(--gruen, #2e7d4f); font-style: italic; padding: 2px 6px 4px; }
   .entwurf { margin: 4px 0 0; padding: 6px 10px; border-radius: 12px; background: var(--karte); color: var(--text); box-shadow: var(--schatten); font-size: .9rem; font-style: italic; word-wrap: break-word; max-height: 4.6em; overflow: hidden; }
+  /* KC-CLUB-PINNWAND-LIVE (0.57.0): Einblendung „Du hast ein neues … Post-it von … bekommen“ */
+  .pwbanner { position: fixed; left: 12px; right: 12px; top: calc(10px + env(safe-area-inset-top)); z-index: 60; display: flex; align-items: center; gap: 10px;
+    background: #fff7c2; color: #3b2f00; border-radius: 14px; padding: 12px 14px; box-shadow: 0 8px 28px rgba(0,0,0,.25); animation: pwRein .35s ease-out; max-width: 560px; margin: 0 auto; }
+  .pwbanner.wichtig { background: #ffe0e0; color: #5a0d15; border: 2px solid #c0485a; }
+  .pwbanner b { flex: 1; font-size: .98rem; }
+  .pwbanner button { border: 0; border-radius: 10px; padding: 8px 12px; font-weight: 700; cursor: pointer; background: rgba(0,0,0,.08); color: inherit; }
+  @keyframes pwRein { from { transform: translateY(-120%); opacity: 0; } to { transform: none; opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .pwbanner { animation: none; } }
   .punkte3 { display: inline-flex; gap: 3px; background: var(--karte); border-radius: 12px; padding: 6px 9px; box-shadow: var(--schatten); }
   .punkte3 i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .35; animation: tippHuepf 1.2s infinite ease-in-out; }
   .punkte3 i:nth-child(2) { animation-delay: .15s; } .punkte3 i:nth-child(3) { animation-delay: .3s; }
@@ -1083,7 +1091,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "0.56.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.57.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -1230,6 +1238,33 @@ async function pwStart(nurZaehlen) { // nurZaehlen: Begrüßung ist offen → Pi
   try { const r = await api("pinnwand"); pwUebernehmen(r);
     if (!nurZaehlen && PW.zettel.some(pwOffen) && aktuelleAnsicht === "start") { PW.wichtigStart = true; zeige("pinnwand"); }
   } catch {}
+}
+// KC-CLUB-PINNWAND-LIVE (0.57.0): bei geöffneter App alle PW_LIVE_MS nach neuen Zetteln schauen (Aktion pinnwand_neu markiert
+// nichts als gesehen). Jeder Zettel wird nur einmal eingeblendet (gemerkt je Gerät, reine Komfortfunktion).
+const PW_LIVE_MS = 45000, PW_GEMELDET_MAX = 200;
+const PW_GEMELDET = new Set((() => { try { return JSON.parse(localStorage.getItem("kc_club_pw_gemeldet") || "[]"); } catch { return []; } })());
+async function pwLive() {
+  if (document.hidden || !ICH) return;
+  let r; try { r = await api("pinnwand_neu"); } catch { return; }
+  const neu = (r.neu || []).filter((z) => !PW_GEMELDET.has(z.id));
+  if (!neu.length) return;
+  neu.forEach((z) => PW_GEMELDET.add(z.id));
+  try { localStorage.setItem("kc_club_pw_gemeldet", JSON.stringify([...PW_GEMELDET].slice(-PW_GEMELDET_MAX))); } catch {}
+  pwBanner(neu);
+  if (einst("ton", true)) ton();
+  PW.offen = Math.max(PW.offen, (r.neu || []).length);
+  if (aktuelleAnsicht === "pinnwand") pwLaden(); else if (aktuelleAnsicht === "start" && !kaBearb) kachelnZeigen();
+}
+function pwBanner(neu) {
+  document.querySelector(".pwbanner")?.remove();
+  const z = neu.find((x) => x.wichtig) || neu[0], weitere = neu.length - 1;
+  const b = document.createElement("div"); b.className = "pwbanner" + (z.wichtig ? " wichtig" : ""); b.setAttribute("role", "alert");
+  b.innerHTML = `<span style="font-size:1.6rem">📌</span><b>${esc(z.hinweis)}${weitere ? ` <small>(+ ${weitere} weitere${weitere === 1 ? "s" : ""})</small>` : ""}</b>
+    <button type="button">Ansehen</button><button type="button" aria-label="Schließen">✕</button>`;
+  const [ansehen, zu] = b.querySelectorAll("button");
+  ansehen.onclick = () => { b.remove(); zeige("pinnwand"); };
+  zu.onclick = () => b.remove();
+  document.body.appendChild(b); setTimeout(() => b.remove(), z.wichtig ? 30000 : 15000);
 }
 async function pwLaden() {
   try { pwUebernehmen(await api("pinnwand", {}, { warten: true })); } catch (e) { $("pwWand").innerHTML = `<div class="leer">⚠️ ${esc(e.message)}</div>`; return; }
@@ -1922,7 +1957,7 @@ async function zugangAnfordern() {
 }
 // KC-CLUB-WARTEN (0.33.0): dauert eine Anfrage länger als 0,35 s, erscheint die drehende Kochmütze mit passendem Text.
 // Hintergrund-Abfragen (alle paar Sekunden/Minuten) zeigen sie nicht, damit nichts flackert.
-const WARTEN_STILL = new Set(["init", "online", "anruf_status", "diagnose", "unterhaltung", "unterhaltungen", "einstellung_setzen", "pinnwand", "kalender", "terminumfragen_liste", "communicator_status", "ping", "anruf_ende", "protokoll_speichern", "todo_erledigt", "todo_liste", "wetter", "fotos_neueste", "admin_lage", "tippen"]);
+const WARTEN_STILL = new Set(["init", "online", "anruf_status", "diagnose", "unterhaltung", "unterhaltungen", "einstellung_setzen", "pinnwand", "kalender", "terminumfragen_liste", "communicator_status", "ping", "anruf_ende", "protokoll_speichern", "todo_erledigt", "todo_liste", "wetter", "fotos_neueste", "admin_lage", "tippen", "pinnwand_neu"]);
 const WARTEN_TEXT = { nachricht_senden: "Nachricht wird gesendet …", gruppe_anlegen: "Gruppe wird angelegt …", gruppe_aendern: "Wird gespeichert …", treffen_speichern: "Termin wird gespeichert …",
   pinnwand_anheften: "Zettel wird angeheftet …", feedback_senden: "Feedback wird gesendet …", anklopfen: "Es wird angeklopft …", anruf_start: "Anruf wird aufgebaut …", anlage_hochladen: "Wird hochgeladen …", erstattung_senden: "Antrag wird gesendet …", km_satz_setzen: "Wird gespeichert …", todo_zuweisen: "Wird zugewiesen …",
   link_erzeugen: "Link wird erzeugt …", todo_anlegen: "Wird eingetragen …", zugang_anfordern: "Mail wird gesendet …", foto_hochladen: "Foto wird hochgeladen …", test_an_mich: "Test wird gesendet …",
@@ -2911,7 +2946,7 @@ const WEBSEITE_URL = "";
 function webseite() { if (WEBSEITE_URL) window.open(WEBSEITE_URL, "_blank"); else melde("🌐 Die Internetseite des Köcheclubs kommt bald – hier geht es dann direkt hin."); }
 
 // ---------- Benachrichtigungen je Bereich (Push / E-Mail) ----------
-const WAHL_BEREICHE = [["termine", "📅 Treffen, Protokolle & Aufgaben"], ["nachrichten", "💬 Neue Nachrichten"], ["vorschlaege", "🗳️ Vorschläge & Abstimmungen"], ["dienste", "🗓️ Erinnerung an meinen Dienst (Vorabend)"], ["geburtstage", "🎂 Geburtstage (2 Tage vorher und am Tag)"]];
+const WAHL_BEREICHE = [["termine", "📅 Treffen, Protokolle & Aufgaben"], ["nachrichten", "💬 Neue Nachrichten"], ["vorschlaege", "🗳️ Vorschläge & Abstimmungen"], ["dienste", "🗓️ Erinnerung an meinen Dienst (Vorabend)"], ["geburtstage", "🎂 Geburtstage (2 Tage vorher und am Tag)"], ["pinnwand", "📌 Neue Post-its an der Pinnwand"]];
 function wahlZeigen() {
   const w = INIT?.benachrichtigung || {};
   $("wahlTabelle").innerHTML = WAHL_BEREICHE.map(([b, t]) => `<tr><td>${t}</td>
@@ -5403,11 +5438,13 @@ async function jetztAktualisieren() {
     else if (h.startsWith("#mitglied=")) mitgliedOeffnen(decodeURIComponent(h.slice(10)));
     else if (h === "#geteilt") geteiltEmpfangen();
     else if (h === "#todo") { termineArt = "todo"; zeige("termine"); }
+    else if (h === "#pinnwand") zeige("pinnwand");
     else if (["#termine", "#vorschlaege", "#aktionen", "#fotos", "#protokolle", "#dienste", "#nachrichten", "#mitglieder", "#einstellungen"].includes(h)) zeige(h.slice(1));
   });
   updatePruefen(false);
-  document.addEventListener("visibilitychange", () => { if (!document.hidden) { neuLaden(); updatePruefen(false); if (chatId) chatLaden(false); } });
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) { neuLaden(); updatePruefen(false); if (chatId) chatLaden(false); setTimeout(pwLive, 1500); } });
   setInterval(() => { if (!document.hidden && aktuelleAnsicht !== "chat") neuLaden(); }, 60000);
+  setInterval(pwLive, PW_LIVE_MS); // KC-CLUB-PINNWAND-LIVE: auch im Chat
 })();
 </script>
 </body>

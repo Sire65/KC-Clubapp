@@ -1,5 +1,15 @@
 # Änderungen
 
+## 0.57.0 – 2026-09-29 (DEV)
+
+- KC-CLUB-PINNWAND-LIVE (neu): neue Post-its bei geöffneter App alle 45 s (und beim Zurückkehren in die App) über die reine
+  Lese-Aktion pinnwand_neu – markiert nichts als gesehen (die „gelesen“-Anzeige bleibt ehrlich). Einblendung oben
+  „📌 Du hast ein neues (wichtiges) (privates) Post-it von X bekommen“ mit „Ansehen“, wichtig in Rot, mit Ton; jeder Zettel nur
+  einmal je Gerät. „privat“ nur, wenn der Zettel für genau diese eine Person ist.
+- Push beim Anheften an alle Empfänger mit geöffneter App (wichtig und unwichtig), gleicher Text; neuer Bereich „📌 Pinnwand“
+  unter Benachrichtigungen (Standard: nur Push – ohne Push-Abo keine Mail je Zettel). Regeln club_pinnwand* (Migration v58),
+  Korrelation club-pinnwand:<id> (Communicator verhindert Doppelversand). Push öffnet direkt die Pinnwand (#pinnwand).
+
 ## 0.56.1 – 2026-09-29 (DEV)
 
 - KC-CLUB-ANMELDECACHE Teil 2: Messung aus der EU zeigte, dass der Instanz-Speicher selten trifft (Supabase verteilt auf

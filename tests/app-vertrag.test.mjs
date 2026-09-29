@@ -1023,7 +1023,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/\.neq\("person_id", ich\.person_id\)\.gt\("bis", jetzt\(\)\)/.test(server) && /betreff: t\?\.subject \?\? "", tippt,/.test(server), "unterhaltung liefert tippt nicht (oder mich selbst)");
   assert.ok(/kc_club_tippen"\)\.delete\(\)\.eq\("thread_id", threadId\)/.test(server), "Senden beendet „schreibt …“ nicht");
   assert.ok(/if \(!chatId \|\| !ONL\.zeigen\) return;/.test(html) && /abstand = live \? 1000 : 3000/.test(html) && /Date\.now\(\) - TIPP\.zuletzt < abstand/.test(html), "Tipp-Meldung ohne Privatsphäre/Drosselung");
-  assert.ok(/tippenMelden\(\)"><\/textarea>/.test(html) && /id="tipptAnzeige"/.test(html) && /"tippen"\]\);/.test(html), "Anzeige/Eingabe/WARTEN_STILL fehlt");
+  assert.ok(/tippenMelden\(\)"><\/textarea>/.test(html) && /id="tipptAnzeige"/.test(html) && /"tippen"(, "[a-z_]+")*\]\);/.test(html), "Anzeige/Eingabe/WARTEN_STILL fehlt");
   assert.ok(/tipptZeigen\(u\.tippt \|\| \[\], u\.entwurf \|\| \[\]\);\n    if \(u\.tippt\?\.length && andere\.length === 1\)[^\n]*\n    const stand = /.test(html), "Anzeige muss vor dem frühen Ausstieg aktualisiert werden");
   assert.ok(/if \(chatTakt\.laeuft\) return;/.test(html) && !/setInterval\(chatTakt, 4000\)/.test(html), "Chat-Takt überlappt / alter Takt");
   assert.ok(/if \(v !== "chat" && TIPP\.id\) tippenAus\(\);/.test(html), "Verlassen beendet „schreibt …“ nicht");
@@ -1064,6 +1064,24 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/entwurf = \(tippen \?\? \[\]\)\.filter\(\(x: any\) => x\.text\)/.test(server) && /tippt, entwurf,/.test(server), "Entwurf wird nicht geliefert");
   assert.ok(/\.\.\.\(live \? \{ text:/.test(html) && /id="setLiveTippen"/.test(html) && /id="liveHinweis"/.test(html), "App: Entwurf nur bei eingeschaltetem Live-Tippen / Hinweis fehlt");
   assert.ok(/'\*\/5 \* \* \* \*', \$\$delete from public\.kc_club_tippen where bis < now\(\)\$\$/.test(lies("supabase/migrations/20260929_kc_club_v56_live_tippen.sql")), "Entwürfe bleiben zu lange liegen");
+}
+
+// 79. 0.57.0: Pinnwand live + Push (KC-CLUB-PINNWAND-LIVE)
+{
+  const neu = server.slice(server.indexOf('case "pinnwand_neu"'), server.indexOf('case "pinnwand_erledigt"'));
+  assert.ok(neu.length > 50 && !/pinnwand_gelesen"\)\.upsert/.test(neu) && !/\.insert\(|\.update\(/.test(neu), "Live-Abfrage darf nichts als gesehen markieren");
+  assert.ok(/const pinnwandPrivat = \(z: \{ fuer: string; personen\?: string\[\] \| null \}\) => z\.fuer === "personen" && \(z\.personen \?\? \[\]\)\.length === 1;/.test(server), "„privat“ nur bei genau einem Empfänger");
+  const h = new Function("von", "privat", "wichtig", "return `Du hast ein neues ${wichtig ? \"wichtiges \" : \"\"}${privat ? \"privates \" : \"\"}Post-it von ${von} bekommen`;");
+  assert.ok(server.includes("`Du hast ein neues ${wichtig ? \"wichtiges \" : \"\"}${privat ? \"privates \" : \"\"}Post-it von ${von} bekommen`"), "Hinweistext geändert");
+  assert.equal(h("Klaus", true, false), "Du hast ein neues privates Post-it von Klaus bekommen");
+  assert.equal(h("Klaus", false, false), "Du hast ein neues Post-it von Klaus bekommen");
+  const an = server.slice(server.indexOf('case "pinnwand_anheften"'), server.indexOf('case "pinnwand_neu"'));
+  assert.ok(/senden\("club_pinnwand", an,/.test(an) && /club-pinnwand:\$\{z\.id\}/.test(an) && /not\("zuletzt_gesehen", "is", null\)/.test(an), "Push beim Anheften fehlt / auch an Mitglieder ohne App");
+  assert.ok(/club_pinnwand: "pinnwand"/.test(server) && /"geburtstage", "pinnwand"\]/.test(server) && /pinnwand: \{ push: true, email: false \}/.test(server), "Bereich Pinnwand fehlt");
+  const mig = lies("supabase/migrations/20260929_kc_club_v58_pinnwand_push.sql");
+  assert.ok(/'club_pinnwand','Club-App – Pinnwand \(nur Push\)', array\['push'\]/.test(mig) && /'pinnwand'\]\)\);/.test(mig), "Regeln/Bereich in der Datenbank fehlen");
+  assert.ok(/setInterval\(pwLive, PW_LIVE_MS\)/.test(html) && /api\("pinnwand_neu"\)/.test(html) && /"pinnwand_neu"\]\);/.test(html) && /\["pinnwand", "📌 Neue Post-its an der Pinnwand"\]/.test(html), "App: Live-Abfrage/Einstellung fehlt");
+  assert.ok(/else if \(h === "#pinnwand"\) zeige\("pinnwand"\);/.test(html), "Push-Sprung zur Pinnwand fehlt");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

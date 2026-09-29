@@ -1,10 +1,16 @@
 {
-  "version": "0.56.1",
+  "version": "0.57.0",
   "datum": "2026-09-29",
   "neu": [
-    "⚡ Noch etwas schneller: Die Anmeldung braucht nur noch einen statt zwei Datenbank-Schritte"
+    "📌 Pinnwand live: Neue Post-its erscheinen sofort in der offenen App („Du hast ein neues Post-it von … bekommen“) und kommen als Push – ein- und ausschaltbar unter Benachrichtigungen"
   ],
   "verlauf": [
+    {
+      "version": "0.57.0",
+      "neu": [
+        "📌 Pinnwand live: Neue Post-its erscheinen sofort in der offenen App („Du hast ein neues Post-it von … bekommen“) und kommen als Push – ein- und ausschaltbar unter Benachrichtigungen"
+      ]
+    },
     {
       "version": "0.56.1",
       "neu": [

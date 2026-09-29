@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.56.1";
+const SERVER_VERSION = "0.57.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -89,10 +89,10 @@ async function routerSenden(eventKey: string, personIds: string[], vars: Record<
 }
 // KC-CLUB-BENACHRICHTIGUNG: Ereignis → Bereich, den das Mitglied in den Einstellungen steuert
 const BEREICH_VON: Record<string, string> = { club_treffen: "termine", club_erinnerung: "termine", club_nachricht: "nachrichten", club_vorschlag: "vorschlaege", club_dienst: "dienste", club_geburtstag: "geburtstage",
-  club_protokoll: "termine", club_aufgabe: "termine" };
-const BEREICHE = ["termine", "nachrichten", "vorschlaege", "dienste", "geburtstage"];
+  club_protokoll: "termine", club_aufgabe: "termine", club_pinnwand: "pinnwand" };
+const BEREICHE = ["termine", "nachrichten", "vorschlaege", "dienste", "geburtstage", "pinnwand"];
 // Anzeige-Standard, solange nichts gespeichert ist (Server nutzt dann die bisherige Standardregel)
-const STANDARD_WAHL: Record<string, { push: boolean; email: boolean }> = { termine: { push: true, email: true }, nachrichten: { push: true, email: false }, vorschlaege: { push: true, email: false }, dienste: { push: false, email: false }, geburtstage: { push: true, email: false } };
+const STANDARD_WAHL: Record<string, { push: boolean; email: boolean }> = { termine: { push: true, email: true }, nachrichten: { push: true, email: false }, vorschlaege: { push: true, email: false }, dienste: { push: false, email: false }, geburtstage: { push: true, email: false }, pinnwand: { push: true, email: false } };
 // KC-CLUB-OHNEAPP: Wer die Club-App noch nie geöffnet hat, bekommt nur eine Mail (Regel <eventKey>_mail) –
 // ein Push über eine Anmeldung aus einem anderen Programm würde auf die gesperrte App führen.
 async function senden(eventKey: string, personIds: string[], vars: Record<string, unknown>, korrelation: string) {
@@ -536,6 +536,10 @@ function erstattungPruefen(roh: unknown, ich: Ich, saetze: KmSatz[]) {
 }
 // ----- KC-CLUB-PINNWAND (0.25.0): höchstens 3 Zettel je Person, je Zettel höchstens 200 Zeichen -----
 const PINNWAND_MAX = 3, PINNWAND_ZEICHEN = 200;
+// KC-CLUB-PINNWAND-LIVE (0.57.0): eine Formulierung für Push und Einblendung. „privat“ nur, wenn der Zettel wirklich nur
+// für diese eine Person ist (für bestimmte Personen, genau ein Empfänger) – bei „für alle“ oder mehreren Empfängern ohne „privat“.
+const pinnwandPrivat = (z: { fuer: string; personen?: string[] | null }) => z.fuer === "personen" && (z.personen ?? []).length === 1;
+const pinnwandHinweis = (von: string, privat: boolean, wichtig: boolean) => `Du hast ein neues ${wichtig ? "wichtiges " : ""}${privat ? "privates " : ""}Post-it von ${von} bekommen`;
 async function pinnwandSichtbar(ich: Ich) {
   const { data } = await db.from("kc_club_pinnwand").select("id,person_id,text,wichtig,fuer,personen,erstellt_am").is("entfernt_am", null)
     .or(`person_id.eq.${ich.person_id},fuer.eq.alle,personen.cs.{${ich.person_id}}`)
@@ -2217,8 +2221,32 @@ Köcheclub Werne`,
         if ((count ?? 0) >= PINNWAND_MAX) throw new Fehler(`Du hast schon ${PINNWAND_MAX} Zettel an der Pinnwand – bitte erst einen abnehmen.`, 409);
         const { data: z, error } = await db.from("kc_club_pinnwand").insert({ person_id: ich.person_id, text, wichtig: !!p.wichtig, fuer, personen: empf }).select("id").single();
         if (error || !z) throw new Fehler("Zettel konnte nicht angeheftet werden.", 500);
-        await protokoll(ich.person_id, "pinnwand_angeheftet", { zettel: z.id, fuer, wichtig: !!p.wichtig, personen: empf.length, zeichen: [...text].length });
-        return json({ ok: true, id: z.id });
+        // Push an alle Empfänger, die die App schon geöffnet haben (Bereich „pinnwand“, jedes Mitglied steuert es selbst)
+        const ziel = fuer === "alle" ? (await aktiveMitglieder()).map((m) => m.person_id).filter((id) => id !== ich.person_id) : empf;
+        let versand: any = { gesendet: 0 };
+        if (ziel.length) {
+          const { data: mitApp } = await db.from("kc_club_zugang").select("person_id").eq("aktiv", true).not("zuletzt_gesehen", "is", null).in("person_id", ziel);
+          const an = (mitApp ?? []).map((x: any) => x.person_id);
+          const kopf = pinnwandHinweis(ich.vorname, pinnwandPrivat({ fuer, personen: empf }), !!p.wichtig);
+          if (an.length) versand = await senden("club_pinnwand", an, { titel: `📌 ${kopf}`, kurz: text, betreff: `Köcheclub Werne – ${kopf}`,
+            text: `Hallo,\n\n${kopf}:\n\n„${text}“\n\nAnsehen in der Köcheclub-App: ${APP_URL}#pinnwand\n\nViele Grüße\nKöcheclub Werne`, url: `${APP_URL}#pinnwand` }, `club-pinnwand:${z.id}`)
+              .catch((e) => { console.error("pinnwand push", String(e)); return { gesendet: 0, fehler: an.length }; });
+        }
+        await protokoll(ich.person_id, "pinnwand_angeheftet", { zettel: z.id, fuer, wichtig: !!p.wichtig, personen: empf.length, zeichen: [...text].length, versand });
+        return json({ ok: true, id: z.id, versand });
+      }
+
+      // KC-CLUB-PINNWAND-LIVE (0.57.0): nur lesen – neue, von mir noch nicht gesehene fremde Zettel (markiert NICHTS als gesehen;
+      // „gesehen“ setzt weiterhin nur das Öffnen der Pinnwand). Für die Einblendung „Du hast ein neues … Post-it von … bekommen“.
+      case "pinnwand_neu": {
+        const fremd = (await pinnwandSichtbar(ich)).filter((z: any) => z.person_id !== ich.person_id);
+        if (!fremd.length) return json({ neu: [] });
+        const { data: gl } = await db.from("kc_club_pinnwand_gelesen").select("zettel_id").eq("person_id", ich.person_id).in("zettel_id", fremd.map((z: any) => z.id));
+        const gesehen = new Set((gl ?? []).map((g: any) => g.zettel_id));
+        const neu = fremd.filter((z: any) => !gesehen.has(z.id)).slice(0, 10);
+        const leute = await personen(neu.map((z: any) => z.person_id));
+        return json({ neu: neu.map((z: any) => { const von = vorname(leute.get(z.person_id)) || "jemandem";
+          return { id: z.id, von, wichtig: !!z.wichtig, privat: pinnwandPrivat(z), hinweis: pinnwandHinweis(von, pinnwandPrivat(z), !!z.wichtig) }; }) });
       }
 
       case "pinnwand_erledigt": {
