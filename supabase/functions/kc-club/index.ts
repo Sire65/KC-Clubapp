@@ -13,14 +13,14 @@
 //           KC-CLUB-COMMUNICATOR-STATUS (0.17.0), KC-CLUB-FEEDBACK (0.18.0),
 //           KC-CLUB-KACHELN (0.19.0), KC-CLUB-ZUGANG-SELBST (0.21.0),
 //           KC-CLUB-GRUPPEN, KC-CLUB-ZUSTELLWAHL (0.23.0)
-//           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0), KC-CLUB-KACHELN-ZIEHEN (0.26.0), KC-CLUB-FEEDBACK-NEU (0.27.1), KC-CLUB-BEGRUESSUNG (0.28.0), KC-CLUB-ONLINE (0.29.0), KC-CLUB-ANRUF (0.31.0), KC-CLUB-VIDEO (0.32.0), KC-CLUB-QUITTUNG (0.34.0), KC-CLUB-TODO + KC-CLUB-REGISTER-ZIEHEN (0.36.0), KC-CLUB-SPRACHE + KC-CLUB-TODO-ZUSTAENDIG (0.37.0)
+//           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0), KC-CLUB-KACHELN-ZIEHEN (0.26.0), KC-CLUB-FEEDBACK-NEU (0.27.1), KC-CLUB-BEGRUESSUNG (0.28.0), KC-CLUB-ONLINE (0.29.0), KC-CLUB-ANRUF (0.31.0), KC-CLUB-VIDEO (0.32.0), KC-CLUB-QUITTUNG (0.34.0), KC-CLUB-TODO + KC-CLUB-REGISTER-ZIEHEN (0.36.0), KC-CLUB-SPRACHE + KC-CLUB-TODO-ZUSTAENDIG (0.37.0), KC-CLUB-ERSTATTUNG (0.38.0)
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.37.0";
+const SERVER_VERSION = "0.38.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -76,11 +76,13 @@ async function geloescht(ich: { person_id: string }, was: string, sicherung: Rec
 }
 
 // Versand über den KC Communicator (Push, sonst/zusätzlich Mail über web.de).
-async function routerSenden(eventKey: string, personIds: string[], vars: Record<string, unknown>, korrelation: string) {
+async function routerSenden(eventKey: string, personIds: string[], vars: Record<string, unknown>, korrelation: string, kopie?: { cc?: string[]; bcc?: string[] }) {
   const r = await fetch(`${SUPA}/functions/v1/kc-communication-router`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE}`, apikey: SERVICE },
-    body: JSON.stringify({ sourceProgram: "kc-club", eventKey, recipients: personIds.map((personId) => ({ personId })), variables: vars, correlationId: korrelation }),
+    body: JSON.stringify({ sourceProgram: "kc-club", eventKey, recipients: personIds.map((personId) => ({ personId })), variables: vars, correlationId: korrelation,
+      // 0.38.0: Kopien (Mitgliedsnummern) – der Communicator löst sie zu Mail-Adressen auf
+      ...(kopie?.cc?.length ? { cc: kopie.cc.map((personId) => ({ personId })) } : {}), ...(kopie?.bcc?.length ? { bcc: kopie.bcc.map((personId) => ({ personId })) } : {}) }),
   });
   const out = await r.json().catch(() => ({}));
   return { gesendet: Number(out?.sent || 0), fehler: Number(out?.failed || 0) };
@@ -369,6 +371,35 @@ async function todoBenachrichtigen(ich: Ich, an: string, text: string, faellig: 
   }, `club-todo:${id}:${an}`);
   await protokoll(ich.person_id, "todo_zugewiesen", { an, versand: r });
   return r;
+}
+// ----- KC-CLUB-ERSTATTUNG (0.38.0): Fahrtkosten, vorgestreckter Einkauf, sonstige Auslagen (Registry) -----
+const ERSTATTUNG = {
+  kmSatz: 0.30, // € je gefahrenem km (Club-Pauschale – hier zentral änderbar)
+  gruende: ["Kochen in Dortmund", "Fahrt zum Budendienst", "Einkaufsfahrt für den Club", "Club-Treffen / Sitzung", "Veranstaltung / Weihnachtsmarkt", "Schulung / Fortbildung", "Abholen / Liefern von Material"],
+  arten: [{ id: "fahrt", sym: "🚗", name: "Fahrtkosten" }, { id: "einkauf", sym: "🛒", name: "Einkauf vorgestreckt" }, { id: "sonstiges", sym: "📦", name: "Sonstige Auslage" }],
+  empfaenger: { an: "Kassenwart", cc: "Clubsprecher" }, // Ämter aus kc_club_rollen
+};
+const euro = (n: number) => n.toFixed(2).replace(".", ",") + " €";
+function erstattungPruefen(roh: unknown, ich: Ich) {
+  const liste = (Array.isArray(roh) ? roh : []).slice(0, 20), pos: any[] = [], heute = Date.now();
+  for (const x of liste as any[]) {
+    const datum = /^\d{4}-\d{2}-\d{2}$/.test(String(x?.datum || "")) ? String(x.datum) : "";
+    if (!datum || new Date(datum + "T00:00:00Z").getTime() > heute + 86400000) throw new Fehler("Bitte bei jeder Position ein gültiges Datum angeben (nicht in der Zukunft).");
+    const beleg = (Array.isArray(x?.belege) ? x.belege : []).map(String).slice(0, 5);
+    if (x?.art === "fahrt") {
+      const km = Math.round(Number(x.km) * 10) / 10;
+      if (!(km > 0 && km <= 3000)) throw new Fehler("Bitte die gefahrenen Kilometer angeben (1 bis 3000).");
+      const grund = txt(x.grund, 120); if (!grund) throw new Fehler("Bitte den Grund der Fahrt angeben.");
+      pos.push({ art: "fahrt", datum, km, grund, ziel: txt(x.ziel, 120), betrag: Math.round(km * ERSTATTUNG.kmSatz * 100) / 100, belege: beleg });
+    } else if (x?.art === "einkauf" || x?.art === "sonstiges") {
+      const betrag = Math.round(Number(String(x.betrag).replace(",", ".")) * 100) / 100;
+      if (!(betrag > 0 && betrag <= 5000)) throw new Fehler("Bitte einen Betrag zwischen 0,01 € und 5.000 € angeben.");
+      const was = txt(x.was, 200); if (!was) throw new Fehler(x.art === "einkauf" ? "Bitte angeben, was eingekauft wurde." : "Bitte die Auslage kurz beschreiben.");
+      pos.push({ art: x.art, datum, betrag, was, geschaeft: txt(x.geschaeft, 120), belege: beleg });
+    } else throw new Fehler("Unbekannte Art der Erstattung.");
+  }
+  if (!pos.length) throw new Fehler("Bitte mindestens eine Position hinzufügen.");
+  return pos;
 }
 // ----- KC-CLUB-PINNWAND (0.25.0): höchstens 3 Zettel je Person, je Zettel höchstens 200 Zeichen -----
 const PINNWAND_MAX = 3, PINNWAND_ZEICHEN = 200;
@@ -1802,6 +1833,52 @@ Köcheclub Werne`,
         if (t.person_id !== ich.person_id && !ich.vorstand) throw new Fehler("Löschen darf nur, wer den Eintrag angelegt hat.", 403);
         await db.from("kc_club_todo").update({ entfernt_am: jetzt() }).eq("id", t.id);
         return json({ ok: true });
+      }
+
+      // ----- Erstattung (KC-CLUB-ERSTATTUNG) -----
+      case "erstattung_meine": {
+        const { data } = await db.from("kc_club_erstattung").select("id,positionen,summe,auszahlung,status,erstellt_am").eq("person_id", ich.person_id).order("erstellt_am", { ascending: false }).limit(20);
+        const { data: rollen } = await db.from("kc_club_rollen").select("person_id,aemter");
+        const hat = (amt: string) => (rollen ?? []).some((r: any) => (r.aemter || []).includes(amt));
+        return json({ kmSatz: ERSTATTUNG.kmSatz, gruende: ERSTATTUNG.gruende, arten: ERSTATTUNG.arten, empfaengerDa: hat(ERSTATTUNG.empfaenger.an) || hat(ERSTATTUNG.empfaenger.cc),
+          antraege: (data ?? []).map((a: any) => ({ id: a.id, summe: Number(a.summe), anzahl: (a.positionen || []).length, status: a.status, zeit: a.erstellt_am, auszahlung: a.auszahlung })) });
+      }
+
+      case "erstattung_senden": {
+        const pos = erstattungPruefen(p.positionen, ich);
+        // Belege: nur eigene, frisch hochgeladene Dateien
+        const belege = [...new Set(pos.flatMap((x) => x.belege))] as string[];
+        if (belege.length) {
+          const { data: att } = await db.from("kc_communication_attachments").select("id,object_path").in("id", belege);
+          if ((att ?? []).length !== belege.length || (att ?? []).some((x: any) => !String(x.object_path).startsWith(`club/${ich.person_id}/`))) throw new Fehler("Beleg nicht gefunden – bitte erneut anhängen.");
+        }
+        const summe = Math.round(pos.reduce((a, x) => a + x.betrag, 0) * 100) / 100;
+        const auszahlung = p.auszahlung === "bar" ? "bar" : "ueberweisung", bemerkung = txt(p.bemerkung, 1000);
+        // Empfänger aus den Ämtern: An = Kassenwart (sonst Clubsprecher), CC = Clubsprecher, BCC = Antragsteller + Admin
+        const [{ data: rollen }, aktiv] = await Promise.all([db.from("kc_club_rollen").select("person_id,aemter,ist_admin"), aktiveMitglieder()]);
+        const aktivIds = new Set(aktiv.map((m) => m.person_id)), mitAmt = (amt: string) => (rollen ?? []).filter((r: any) => (r.aemter || []).includes(amt) && aktivIds.has(r.person_id)).map((r: any) => r.person_id);
+        let an: string[] = mitAmt(ERSTATTUNG.empfaenger.an), cc: string[] = mitAmt(ERSTATTUNG.empfaenger.cc);
+        if (!an.length) { an = cc; cc = []; }
+        if (!an.length) throw new Fehler("Es ist noch kein Kassenwart oder Clubsprecher eingetragen – bitte bei Hansi melden.", 409);
+        cc = cc.filter((id) => !an.includes(id));
+        const admins = (rollen ?? []).filter((r: any) => r.ist_admin && aktivIds.has(r.person_id)).map((r: any) => r.person_id);
+        const bcc = [...new Set([ich.person_id, ...admins])].filter((id) => !an.includes(id) && !cc.includes(id));
+        const d = (iso: string) => iso.split("-").reverse().join(".");
+        const zeilen = pos.map((x, i) => x.art === "fahrt"
+          ? `${i + 1}. 🚗 Fahrtkosten ${d(x.datum)}: ${String(x.km).replace(".", ",")} km × ${euro(ERSTATTUNG.kmSatz)} = ${euro(x.betrag)}\n   Grund: ${x.grund}${x.ziel ? " · Ziel: " + x.ziel : ""}`
+          : `${i + 1}. ${x.art === "einkauf" ? "🛒 Einkauf vorgestreckt" : "📦 Sonstige Auslage"} ${d(x.datum)}: ${euro(x.betrag)}\n   ${x.was}${x.geschaeft ? " · " + x.geschaeft : ""}${x.belege.length ? " · Beleg anbei" : ""}`).join("\n\n");
+        const text = `Hallo,\n\n${ich.name} beantragt eine Erstattung über die Köcheclub-App:\n\n${zeilen}\n\n────────────\nSumme: ${euro(summe)}\nAuszahlung: ${auszahlung === "bar" ? "bar" : "per Überweisung"}${bemerkung ? "\nBemerkung: " + bemerkung : ""}\n\n(Kilometerpauschale ${euro(ERSTATTUNG.kmSatz)} je km. Belege, falls vorhanden, sind angehängt.)\n\nViele Grüße\nKöcheclub Werne`;
+        const { data: a, error } = await db.from("kc_club_erstattung").insert({ person_id: ich.person_id, positionen: pos, summe, km_satz: ERSTATTUNG.kmSatz, auszahlung, bemerkung: bemerkung || null }).select("id").single();
+        if (error || !a) throw new Fehler("Antrag konnte nicht gespeichert werden.", 500);
+        const versand = await routerSenden("club_nachricht_mail", an, {
+          titel: `💶 Erstattung von ${ich.vorname}: ${euro(summe)}`, kurz: `${pos.length} Position${pos.length === 1 ? "" : "en"} · ${euro(summe)}`,
+          betreff: `Köcheclub Werne – Erstattungsantrag ${ich.name}: ${euro(summe)}`, text, url: APP_URL, attachmentIds: belege,
+        }, `club-erstattung:${a.id}`, { cc, bcc });
+        await db.from("kc_club_erstattung").update({ versand: { an, cc, bcc: bcc.length, ...versand } }).eq("id", a.id);
+        await protokoll(ich.person_id, "erstattung_beantragt", { antrag: a.id, summe, positionen: pos.length, versand });
+        if (!versand.gesendet) throw new Fehler("Der Antrag ist gespeichert, aber die Mail konnte nicht verschickt werden – bitte später nochmal versuchen oder Hansi Bescheid geben.", 502);
+        const leute = await personen([...an, ...cc]);
+        return json({ ok: true, id: a.id, summe, an: an.map((id) => leute.get(id)?.display_name || id), cc: cc.map((id) => leute.get(id)?.display_name || id) });
       }
 
       // ----- Pinnwand (KC-CLUB-PINNWAND) -----

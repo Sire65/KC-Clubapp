@@ -750,4 +750,17 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/senden\("club_aufgabe", \[an\]/.test(server), "Zuständige bekommen keinen Bescheid");
 }
 
+// 61. 0.38.0: Erstattung – Positionen geprüft und Summe im Server gerechnet, Empfänger aus Ämtern, BCC Antragsteller + Admin
+{
+  for (const a of ["erstattung_meine", "erstattung_senden"]) assert.ok(aktionen.has(a) && aufrufe.has(a), `Erstattungs-Aktion ${a} fehlt`);
+  assert.ok(/kmSatz: 0\.30/.test(server) && /empfaenger: \{ an: "Kassenwart", cc: "Clubsprecher" \}/.test(server), "Pauschale/Empfänger nicht in der Registry");
+  const es = server.slice(server.indexOf('case "erstattung_senden"'), server.indexOf("// ----- Pinnwand (KC-CLUB-PINNWAND)"));
+  assert.ok(/const summe = Math\.round\(pos\.reduce/.test(es), "Summe kommt nicht vom Server");
+  assert.ok(/startsWith\(`club\/\$\{ich\.person_id\}\/`\)/.test(es), "fremde Belege anhängbar");
+  assert.ok(/const bcc = \[\.\.\.new Set\(\[ich\.person_id, \.\.\.admins\]\)\]/.test(es) && /\{ cc, bcc \}\)/.test(es), "BCC an Antragsteller/Admin fehlt");
+  assert.ok(/betrag: Math\.round\(km \* ERSTATTUNG\.kmSatz \* 100\) \/ 100/.test(server) && /betrag > 0 && betrag <= 5000/.test(server), "Beträge ungeprüft");
+  assert.ok(/\.\.\.\(kopie\?\.bcc\?\.length \? \{ bcc:/.test(server), "Router bekommt keine Kopien");
+  assert.ok(/\{ id: "erstattung", sym: "💶"/.test(html) && /id="v-erstattung"/.test(html) && /comboFeld\("ersGrund"/.test(html), "Erstattungs-Oberfläche fehlt");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

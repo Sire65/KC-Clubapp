@@ -1,5 +1,14 @@
 # Änderungen
 
+## 0.38.0 – 2026-09-29 (DEV)
+
+- KC-CLUB-ERSTATTUNG (neu): Kachel „💶 Erstattung“ (Mein Bereich). Positionen sammeln: 🚗 Fahrtkosten (Datum, km, Grund aus
+  Auswahlliste – Kochen in Dortmund, Fahrt zum Budendienst, Einkaufsfahrt … oder eigener Grund –, Ziel; Betrag = km × Pauschale
+  0,30 €/km aus der Registry), 🛒 Einkauf vorgestreckt (Datum, Betrag, was, Geschäft, Beleg-Foto/PDF) und 📦 Sonstige Auslage.
+  Summe, Auszahlung (Überweisung/bar), Bemerkung. Versand als eine Mail über den Communicator: An = Kassenwart, CC = Clubsprecher
+  (aus den Ämtern), BCC = Antragsteller + Admin; Belege als Mail-Anhang. Server prüft alle Angaben und rechnet die Summe selbst.
+  „📋 Meine Anträge“ mit Status. Tabelle kc_club_erstattung (RLS). routerSenden kann jetzt CC/BCC (Mitgliedsnummern).
+
 ## 0.37.0 – 2026-09-29 (DEV)
 
 - KC-CLUB-SPRACHE (neu): 🎤 im Chat – Aufnahme (MediaRecorder, Opus/M4A, ~32 kbit/s, max. 3 Minuten) mit roter Aufnahme-Leiste

@@ -1,12 +1,20 @@
 {
-  "version": "0.37.0",
+  "version": "0.38.0",
   "datum": "2026-09-29",
   "neu": [
-    "🎤 Sprachnachrichten: im Chat auf 🎤 tippen, sprechen, ➤ senden – an eine Person, eine Gruppe oder alle",
-    "▶️ Sprachnachrichten direkt im Chat anhören",
-    "👉 To-do: festlegen, wer es machen soll – die Person bekommt Bescheid, Filter „👉 Mir“"
+    "💶 Neu in „Mein Bereich“: Erstattung beantragen – Fahrtkosten (km × Pauschale), Einkauf vorgestreckt, sonstige Auslagen",
+    "📎 Belege als Foto anhängen, Summe wird automatisch gerechnet",
+    "📨 Geht per Mail an Kassenwart und Clubsprecher – du bekommst eine Kopie"
   ],
   "verlauf": [
+    {
+      "version": "0.38.0",
+      "neu": [
+        "💶 Neu in „Mein Bereich“: Erstattung beantragen – Fahrtkosten (km × Pauschale), Einkauf vorgestreckt, sonstige Auslagen",
+        "📎 Belege als Foto anhängen, Summe wird automatisch gerechnet",
+        "📨 Geht per Mail an Kassenwart und Clubsprecher – du bekommst eine Kopie"
+      ]
+    },
     {
       "version": "0.37.0",
       "neu": [
