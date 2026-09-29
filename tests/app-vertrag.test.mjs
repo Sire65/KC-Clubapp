@@ -804,8 +804,8 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 
 // 65. 0.42.0: Info-Feld blätterbar (Registry, Pfeile, Punkte, Wischen) + Wetter (Adapter/Registry, nur Admin stellt ein, Rule 11)
 {
-  const ids = [...html.slice(html.indexOf("const INFO_FELDER = ["), html.indexOf("];", html.indexOf("const INFO_FELDER = ["))).matchAll(/id: "([a-z]+)"/g)].map((m) => m[1]);
-  assert.deepEqual(ids, ["treffen", "wetter", "fuerdich", "demnaechst", "fotos", "zentrale"], "Info-Felder falsch");
+  const ids = [...html.slice(html.indexOf("const INFO_ALLE = ["), html.indexOf("];", html.indexOf("const INFO_ALLE = ["))).matchAll(/id: "([a-z]+)"/g)].map((m) => m[1]);
+  assert.deepEqual(ids, ["treffen", "wetter", "fuerdich", "demnaechst", "fotos", "zentrale", "admin"], "Info-Felder falsch");
   assert.ok(/class="ipfeil links"[^>]*onclick="infoBlaettern\(-1\)"/.test(html) && /onclick="infoBlaettern\(1\)"/.test(html) && /class="ipunkt\$\{i === INFO_I \? " an" : ""\}"/.test(html), "Pfeile/Punkte fehlen");
   assert.ok(/\[\$\("heroInfo"\), infoBlaettern\]/.test(html), "Wischen im Info-Feld fehlt");
   assert.ok(!/setInterval\([^)]*infoBlaettern/.test(html), "Info-Feld darf nicht automatisch blättern");
@@ -890,6 +890,20 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/if \(WET\.tag === 0\)/.test(w) && /wetterTagWahl\(0\)/.test(w), "gewählter Tag ändert die Anzeige nicht / kein Zurück");
   assert.ok(/WT_DRUCK\.lang = true;[^\n]*wetterTagDetails\(i\)/.test(w) && /if \(!abbruch && !w\.lang && w\.i === i\) wetterTagWahl\(i\)/.test(w), "Lange drücken löst zusätzlich den Tipp aus");
   assert.ok(/id="wetterBlatt"/.test(html) && /e\.target\.closest\?\.\("\.wtage"\) \? null/.test(html), "Detailblatt fehlt / Tagesleiste blättert das Info-Feld");
+}
+
+// 70. 0.47.0: Admin-Zentrale – nur Admin (Server und Karte), Programme aus Registry, unbekannt/alt nie grün
+{
+  assert.ok(aktionen.has("admin_lage") && aufrufe.has("admin_lage"), "admin_lage fehlt");
+  assert.ok(/case "admin_lage": \{\s*nurAdmin\(ich\);/.test(server), "Admin-Lage ohne Rechteprüfung");
+  assert.ok(/const ADMIN_PROGRAMME: /.test(server) && /id: "kc-pc-manager"/.test(server) && /id: "kc-dp2"/.test(server) && /from\("kicc_program_heartbeats"\)/.test(server), "Programme nicht über Registry/Lebenszeichen");
+  assert.ok(/id: "admin", [^\n]*nur: \(\) => !!ICH\?\.admin/.test(html) && /INFO_FELDER = INFO_ALLE\.filter\(\(f\) => !f\.nur \|\| f\.nur\(\)\)/.test(html), "Admin-Karte nicht auf Admin beschränkt");
+  const src = html.slice(html.indexOf("const ADMIN_LAEUFT_MIN"), html.indexOf("function adminBalken"));
+  const farbe = new Function(src + "return adminProgrammFarbe;")();
+  const vor = (min) => new Date(Date.now() - min * 60000).toISOString();
+  assert.equal(farbe({ letzte: null })[0], "grau"); assert.equal(farbe({ letzte: vor(5), status: "ok" })[0], "gruen");
+  assert.equal(farbe({ letzte: vor(3 * 1440) })[0], "gelb"); assert.equal(farbe({ letzte: vor(30 * 1440) })[0], "grau", "uraltes Lebenszeichen als OK");
+  assert.ok(/kc_club_db_groesse/.test(lies("supabase/migrations/20260929_kc_club_v47_db_groesse.sql")) && /revoke all on function kc_club_db_groesse\(\) from public, anon, authenticated/.test(lies("supabase/migrations/20260929_kc_club_v47_db_groesse.sql")), "DB-Größe-Funktion offen");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

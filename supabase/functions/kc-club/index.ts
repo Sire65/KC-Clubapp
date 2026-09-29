@@ -13,14 +13,14 @@
 //           KC-CLUB-COMMUNICATOR-STATUS (0.17.0), KC-CLUB-FEEDBACK (0.18.0),
 //           KC-CLUB-KACHELN (0.19.0), KC-CLUB-ZUGANG-SELBST (0.21.0),
 //           KC-CLUB-GRUPPEN, KC-CLUB-ZUSTELLWAHL (0.23.0)
-//           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0), KC-CLUB-KACHELN-ZIEHEN (0.26.0), KC-CLUB-FEEDBACK-NEU (0.27.1), KC-CLUB-BEGRUESSUNG (0.28.0), KC-CLUB-ONLINE (0.29.0), KC-CLUB-ANRUF (0.31.0), KC-CLUB-VIDEO (0.32.0), KC-CLUB-QUITTUNG (0.34.0), KC-CLUB-TODO + KC-CLUB-REGISTER-ZIEHEN (0.36.0), KC-CLUB-SPRACHE + KC-CLUB-TODO-ZUSTAENDIG (0.37.0), KC-CLUB-ERSTATTUNG (0.38.0), KC-CLUB-KMSATZ (0.39.0), KC-CLUB-FEEDBACK-DAUERHAFT (0.40.0), KC-CLUB-INFOFELD + KC-CLUB-WETTER (0.42.0), KC-CLUB-INFOFELD-DEMNAECHST/-FOTOS (0.43.0), KC-CLUB-ZENTRALE (0.44.0), KC-CLUB-FOTO-META (0.45.0), KC-CLUB-WETTER-TAGE (0.46.0)
+//           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0), KC-CLUB-KACHELN-ZIEHEN (0.26.0), KC-CLUB-FEEDBACK-NEU (0.27.1), KC-CLUB-BEGRUESSUNG (0.28.0), KC-CLUB-ONLINE (0.29.0), KC-CLUB-ANRUF (0.31.0), KC-CLUB-VIDEO (0.32.0), KC-CLUB-QUITTUNG (0.34.0), KC-CLUB-TODO + KC-CLUB-REGISTER-ZIEHEN (0.36.0), KC-CLUB-SPRACHE + KC-CLUB-TODO-ZUSTAENDIG (0.37.0), KC-CLUB-ERSTATTUNG (0.38.0), KC-CLUB-KMSATZ (0.39.0), KC-CLUB-FEEDBACK-DAUERHAFT (0.40.0), KC-CLUB-INFOFELD + KC-CLUB-WETTER (0.42.0), KC-CLUB-INFOFELD-DEMNAECHST/-FOTOS (0.43.0), KC-CLUB-ZENTRALE (0.44.0), KC-CLUB-FOTO-META (0.45.0), KC-CLUB-WETTER-TAGE (0.46.0), KC-CLUB-ADMINLAGE (0.47.0)
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.46.0";
+const SERVER_VERSION = "0.47.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -590,6 +590,16 @@ async function communicatorStatus(ich: Ich, erreichbarkeit = false) {
     bericht: bericht ? { zeit: bericht.created_at, erfolg: Number(bericht.success_rate), pushMs: Math.round(Number(bericht.avg_push_ms) || 0) || null, mailMs: Math.round(Number(bericht.avg_email_ms) || 0) || null,
       warteschlange: (bericht.queued ?? 0) + (bericht.retrying ?? 0), fehler: bericht.failed ?? 0, geraete: bericht.active_devices ?? null } : null };
 }
+
+// ----- KC-CLUB-ADMINLAGE (0.47.0): Admin-Kommandozentrale – KC-Programme über ihr Lebenszeichen (kicc_program_heartbeats)
+// und ihren Datenstand. Neue Programme = neuer Eintrag hier. Die App bewertet das Alter (läuft / zuletzt vor … / keine Meldung).
+const ADMIN_PROGRAMME: { id: string; name: string; stand?: () => Promise<string | null> }[] = [
+  { id: "kc-pc-manager", name: "KC Verwaltung (PC-Manager)", stand: async () => (await db.from("kc_manager_state_sections").select("updated_at").eq("org_id", ORG).order("updated_at", { ascending: false }).limit(1).maybeSingle()).data?.updated_at ?? null },
+  { id: "kc-dp2", name: "KC Dienstplan", stand: async () => (await db.from("kc_dp_plan_published").select("updated_at").eq("org_id", ORG).order("updated_at", { ascending: false }).limit(1).maybeSingle()).data?.updated_at ?? null },
+  { id: "kc-system-check", name: "KC System-Check" },
+  { id: "kicc", name: "KICC Kontrollzentrum" },
+];
+const ADMIN_DB_GRENZE = 500 * 1024 * 1024; // kostenloser Supabase-Tarif (falls der System-Check keinen Wert liefert)
 
 // ---------- Anmeldung ----------
 type Ich = { person_id: string; name: string; vorname: string; admin: boolean; vorstand: boolean; aemter: string[]; protokolle: boolean; kontakte: boolean };
@@ -2778,6 +2788,42 @@ Köcheclub Werne`,
         for (const [k, v] of Object.entries(d).slice(0, 20)) sauber[txt(k, 30)] = typeof v === "number" || typeof v === "boolean" ? v : txt(v, 200);
         await protokoll(ich.person_id, "diagnose_" + (txt(p.art, 20).replace(/[^a-z_]/g, "") || "allg"), { ...sauber, ua: txt(req.headers.get("user-agent"), 200), version: txt(req.headers.get("x-club-version"), 20) });
         return json({ ok: true });
+      }
+
+      case "admin_lage": {
+        nurAdmin(ich);
+        const t0 = Date.now();
+        const { data: dbBytes, error: dbFehler } = await db.rpc("kc_club_db_groesse");
+        const dbMs = Date.now() - t0;
+        const [{ data: health }, speicher, comm, leute, { data: zug }, { data: push }, { data: hb }, staende, wartung] = await Promise.all([
+          db.from("kc_core_system_health").select("status,last_check_at,database_bytes,free_db_reference_bytes,warning_threshold_pct,critical_threshold_pct").limit(1).maybeSingle(),
+          speicherStand(), communicatorStatus(ich, true), aktiveMitglieder(),
+          db.from("kc_club_zugang").select("person_id,aktiv,zuletzt_gesehen,app_version").not("person_id", "like", "KC-P-TEST%"),
+          db.from("kc_member_push_subscriptions").select("person_id").eq("active", true),
+          db.from("kicc_program_heartbeats").select("program_id,received_at,version,status").in("program_id", ADMIN_PROGRAMME.map((x) => x.id)).order("received_at", { ascending: false }).limit(400),
+          Promise.all(ADMIN_PROGRAMME.map((x) => (x.stand ? x.stand().catch(() => null) : Promise.resolve(null)))),
+          wartungLesen(),
+        ]);
+        const namen = new Map(leute.map((x) => [x.person_id, x.display_name])), aktivIds = new Set(leute.map((x) => x.person_id));
+        const mz = (zug ?? []).filter((x: any) => x.aktiv && aktivIds.has(x.person_id));
+        const alter = (x: any) => (x.zuletzt_gesehen ? Date.now() - new Date(x.zuletzt_gesehen).getTime() : Infinity);
+        const pushIds = new Set((push ?? []).map((x: any) => x.person_id));
+        return json({
+          zeit: jetzt(), server: { version: SERVER_VERSION, dbMs, ok: !dbFehler },
+          datenbank: { bytes: dbFehler ? null : Number(dbBytes), grenze: Number(health?.free_db_reference_bytes) || ADMIN_DB_GRENZE,
+            warnPct: health?.warning_threshold_pct ?? 75, kritPct: health?.critical_threshold_pct ?? 90, check: health ? { status: health.status, zeit: health.last_check_at } : null },
+          speicher, wartung,
+          communicator: { farbe: comm.farbe, text: comm.text, erreichbar: comm.erreichbar, push: comm.push.zustand, email: comm.email.zustand, club: comm.club, bericht: comm.bericht },
+          mitglieder: {
+            gesamt: leute.length, mitZugang: mz.length, ohneZugang: leute.length - mz.length, nieAngemeldet: mz.filter((x: any) => !x.zuletzt_gesehen).length,
+            online: mz.filter((x: any) => alter(x) < ONLINE_SEK * 1000).length, heute: mz.filter((x: any) => alter(x) < 86400000).length, woche: mz.filter((x: any) => alter(x) < 7 * 86400000).length,
+            pushAbos: leute.filter((x) => pushIds.has(x.person_id)).length, alteVersion: mz.filter((x: any) => x.zuletzt_gesehen && x.app_version && x.app_version !== SERVER_VERSION).length,
+            zuletzt: mz.filter((x: any) => x.zuletzt_gesehen).sort((a: any, b: any) => alter(a) - alter(b)).slice(0, 8)
+              .map((x: any) => ({ name: namen.get(x.person_id) ?? x.person_id, zuletzt: x.zuletzt_gesehen, version: x.app_version ?? null, online: alter(x) < ONLINE_SEK * 1000 })),
+          },
+          programme: ADMIN_PROGRAMME.map((x, i) => { const h = (hb ?? []).find((y: any) => y.program_id === x.id);
+            return { id: x.id, name: x.name, letzte: h?.received_at ?? null, version: h?.version ?? null, status: h?.status ?? null, datenstand: staende[i] }; }),
+        });
       }
 
       case "communicator_status": {

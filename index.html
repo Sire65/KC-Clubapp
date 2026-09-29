@@ -139,6 +139,17 @@
   .zticker { overflow: hidden; white-space: nowrap; margin-top: 4px; font-size: .8rem; color: #b8ffcf; border-top: 1px dashed #2b4a37; padding-top: 4px; }
   .zticker span { display: inline-block; padding-left: 100%; animation: zlauf 22s linear infinite; }
   @keyframes zlauf { to { transform: translateX(-100%); } }
+  .adisplay { background: #0d1410; border: 1px solid #2b4a37; border-radius: 12px; padding: 8px 10px; font-family: "Courier New", ui-monospace, monospace; color: #b8ffcf; box-shadow: inset 0 0 18px rgba(0,0,0,.6); display: grid; gap: 3px; font-size: .78rem; }
+  .adisplay .zdkopf { color: #7dffa8; text-shadow: 0 0 6px rgba(80,255,150,.55); margin-bottom: 2px; }
+  .azeile { display: grid; grid-template-columns: auto auto 1fr; gap: 6px; align-items: center; } .azeile span { text-align: right; opacity: .9; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .alampe { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: #666; flex: none; }
+  .alampe.gruen { background: #3ee07a; box-shadow: 0 0 6px #3ee07a; } .alampe.gelb { background: #ffc94d; box-shadow: 0 0 6px #ffc94d; }
+  .alampe.rot { background: #ff5a5a; box-shadow: 0 0 6px #ff5a5a; } .alampe.grau { background: #7b7b7b; }
+  .abalken { display: grid; grid-template-columns: auto 1fr auto; gap: 2px 8px; align-items: center; margin-top: 8px; font-size: .85rem; }
+  .abalken .aspur { grid-column: 1 / -1; height: 8px; border-radius: 4px; background: rgba(255,255,255,.18); overflow: hidden; }
+  .aspur i { display: block; height: 100%; border-radius: 4px; } .aspur i.gruen { background: #3ee07a; } .aspur i.gelb { background: #ffc94d; } .aspur i.rot { background: #ff5a5a; }
+  .abalken small { grid-column: 1 / -1; opacity: .8; font-size: .75rem; }
+  .azahlen { display: grid; grid-template-columns: repeat(2, 1fr); gap: 3px 10px; margin-top: 8px; font-size: .82rem; }
   .zwer { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
   .zchip, .zweg { border: 1px solid rgba(255,255,255,.35); background: rgba(255,255,255,.12); color: #fff; border-radius: 999px; padding: 5px 11px; font: inherit; font-size: .88rem; font-weight: 700; cursor: pointer; }
   .zweg.an { background: #ffe7a3; color: #4a2a00; border-color: #ffe7a3; }
@@ -927,6 +938,11 @@
     <button class="knopf haupt" id="neuUpdateKnopf" onclick="jetztAktualisieren()">🔄 Jetzt aktualisieren</button>
     <button class="knopf" onclick="$('neuBlatt').classList.add('versteckt')" id="neuZuKnopf">Später</button></div>
 </div>
+<!-- KC-CLUB-ADMINLAGE (0.47.0): Einzelheiten der Admin-Zentrale -->
+<div class="blatt versteckt" id="adminBlatt" onclick="if(event.target===this)this.classList.add('versteckt')">
+  <div class="blatt-innen" style="max-height:88vh;overflow-y:auto"><div id="adminBlattInhalt" style="display:grid;gap:8px"></div>
+    <button class="knopf" style="text-align:center" onclick="$('adminBlatt').classList.add('versteckt')">Schließen</button></div>
+</div>
 <!-- KC-CLUB-WETTER-TAGE (0.46.0): Wetter-Details eines Tages (Tag im Wetter-Feld lange drücken) -->
 <div class="blatt versteckt" id="wetterBlatt" onclick="if(event.target===this)this.classList.add('versteckt')">
   <div class="blatt-innen" style="max-height:85vh;overflow-y:auto"><div id="wetterTagInhalt" style="display:grid;gap:10px"></div>
@@ -995,7 +1011,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.46.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.47.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -1774,7 +1790,7 @@ async function zugangAnfordern() {
 }
 // KC-CLUB-WARTEN (0.33.0): dauert eine Anfrage länger als 0,35 s, erscheint die drehende Kochmütze mit passendem Text.
 // Hintergrund-Abfragen (alle paar Sekunden/Minuten) zeigen sie nicht, damit nichts flackert.
-const WARTEN_STILL = new Set(["init", "online", "anruf_status", "diagnose", "unterhaltung", "unterhaltungen", "einstellung_setzen", "pinnwand", "kalender", "terminumfragen_liste", "communicator_status", "ping", "anruf_ende", "protokoll_speichern", "todo_erledigt", "todo_liste", "wetter", "fotos_neueste"]);
+const WARTEN_STILL = new Set(["init", "online", "anruf_status", "diagnose", "unterhaltung", "unterhaltungen", "einstellung_setzen", "pinnwand", "kalender", "terminumfragen_liste", "communicator_status", "ping", "anruf_ende", "protokoll_speichern", "todo_erledigt", "todo_liste", "wetter", "fotos_neueste", "admin_lage"]);
 const WARTEN_TEXT = { nachricht_senden: "Nachricht wird gesendet …", gruppe_anlegen: "Gruppe wird angelegt …", gruppe_aendern: "Wird gespeichert …", treffen_speichern: "Termin wird gespeichert …",
   pinnwand_anheften: "Zettel wird angeheftet …", feedback_senden: "Feedback wird gesendet …", anklopfen: "Es wird angeklopft …", anruf_start: "Anruf wird aufgebaut …", anlage_hochladen: "Wird hochgeladen …", erstattung_senden: "Antrag wird gesendet …", km_satz_setzen: "Wird gespeichert …", todo_zuweisen: "Wird zugewiesen …",
   link_erzeugen: "Link wird erzeugt …", todo_anlegen: "Wird eingetragen …", zugang_anfordern: "Mail wird gesendet …", foto_hochladen: "Foto wird hochgeladen …", test_an_mich: "Test wird gesendet …" };
@@ -2215,14 +2231,24 @@ function kachelnZeigen() {
 // ---------- KC-CLUB-INFOFELD (0.42.0): Info-Feld oben zum Blättern ----------
 // ‹ › antippen, im Feld wischen oder einen Punkt antippen. Felder kommen aus der Registry; die App merkt sich das zuletzt gezeigte.
 // Kein automatisches Weiterblättern (in Ruhe lesen). Neue Felder = neuer Eintrag hier.
-const INFO_FELDER = [
+const INFO_ALLE = [
   { id: "treffen", t: "Nächstes Treffen", html: () => infoTreffen() },
   { id: "wetter", t: "Wetter", html: () => infoWetter() },
   { id: "fuerdich", t: "Für dich", html: () => infoFuerDich() },
   { id: "demnaechst", t: "Demnächst", html: () => infoDemnaechst(), laden: () => api("kalender", { von: heuteIso(), bis: tagPlus(heuteIso(), DEMNAECHST_TAGE) }), neuMin: 10 },
   { id: "fotos", t: "Neueste Fotos", html: () => infoFotos(), laden: () => api("fotos_neueste", { anzahl: 4 }), neuMin: 20 },
   { id: "zentrale", t: "Kommunikationszentrale", html: () => infoZentrale(), laden: () => api("unterhaltungen"), neuMin: 1 },
+  { id: "admin", t: "Admin-Zentrale", html: () => infoAdmin(), laden: () => api("admin_lage"), neuMin: 2, nur: () => !!ICH?.admin },
 ];
+// sichtbare Karten (manche nur für bestimmte Rollen, z. B. die Admin-Zentrale) – nach jedem Laden neu bestimmt
+let INFO_FELDER = INFO_ALLE.filter((f) => !f.nur), infoFelderGeladen = false;
+function infoFelderAktualisieren() {
+  const aktuell = INFO_FELDER[INFO_I]?.id;
+  let gemerkt = null; try { gemerkt = localStorage.getItem("kc_club_infofeld"); } catch {}
+  INFO_FELDER = INFO_ALLE.filter((f) => !f.nur || f.nur());
+  INFO_I = Math.max(0, INFO_FELDER.findIndex((f) => f.id === (infoFelderGeladen ? aktuell : gemerkt || aktuell)));
+  infoFelderGeladen = true;
+}
 // Felder mit eigenen Daten laden erst, wenn sie gezeigt werden (und dann höchstens alle neuMin Minuten neu)
 const INFO_DATEN = {};
 async function infoDatenLaden(f) {
@@ -2409,6 +2435,65 @@ async function zeSenden() {
     if (INFO_DATEN.zentrale) INFO_DATEN.zentrale.geholt = 0;
     $("zeText")?.blur(); heroZeigen(0);
   } catch (e) { melde(e.message, true); }
+}
+
+// ---------- KC-CLUB-ADMINLAGE (0.47.0): Feld 7 (nur Admin) – Admin-Kommandozentrale ----------
+// Server, Datenbank, Dateispeicher, Communicator, KC-Programme (Lebenszeichen + Datenstand), Wartung, Mitglieder/Anmeldungen.
+// Lämpchen: grün = läuft, gelb = eingeschränkt/älter, rot = Störung, grau = keine aktuelle Meldung (nie als OK gezeigt).
+const ADMIN_LAEUFT_MIN = 60, ADMIN_ALT_TAGE = 7;
+const seitText = (iso) => { if (!iso) return "nie"; const m = Math.round((Date.now() - new Date(iso)) / 60000);
+  return m < 2 ? "gerade eben" : m < 60 ? `vor ${m} Min.` : m < 1440 ? `vor ${Math.round(m / 60)} Std.` : `vor ${Math.round(m / 1440)} Tag${Math.round(m / 1440) === 1 ? "" : "en"}`; };
+const lampe = (f) => `<i class="alampe ${f}"></i>`;
+function adminProgrammFarbe(p) {
+  if (!p.letzte) return ["grau", "noch nie gemeldet"];
+  const min = (Date.now() - new Date(p.letzte)) / 60000;
+  if (min <= ADMIN_LAEUFT_MIN) return [p.status && !/ok|healthy|running|online/i.test(p.status) ? "gelb" : "gruen", `läuft · ${seitText(p.letzte)}`];
+  if (min <= ADMIN_ALT_TAGE * 1440) return ["gelb", `zuletzt ${seitText(p.letzte)}`];
+  return ["grau", `keine aktuelle Meldung (${seitText(p.letzte)})`];
+}
+function adminBalken(titel, belegt, grenze, warn, krit) {
+  if (belegt == null) return `<div class="abalken">${lampe("grau")}<span>${titel}: unbekannt</span></div>`;
+  const pct = Math.round((belegt / grenze) * 1000) / 10, f = pct >= krit ? "rot" : pct >= warn ? "gelb" : "gruen";
+  return `<div class="abalken">${lampe(f)}<span>${titel}</span><b>${mb(belegt)} / ${mb(grenze)}</b><div class="aspur"><i class="${f}" style="width:${Math.min(100, pct)}%"></i></div><small>${String(pct).replace(".", ",")} % belegt · ${mb(Math.max(0, grenze - belegt))} frei</small></div>`;
+}
+function infoAdmin() {
+  const d = INFO_DATEN.admin;
+  if (!d?.r) return `<h2>🛡️ Admin-Zentrale</h2><div class="unter">${d?.fehler ? "⚠️ " + esc(d.fehler) : "Wird geladen …"}</div>`;
+  const r = d.r, m = r.mitglieder, c = r.communicator, alt = Date.now() - new Date(r.zeit) > 10 * 60000;
+  const sf = !r.server.ok ? "rot" : r.server.dbMs > 1500 ? "gelb" : "gruen";
+  const cf = { gruen: "gruen", gelb: "gelb", rot: "rot", blau: "gelb", grau: "grau" }[c.farbe] || "grau";
+  const zeile = (f, name, text) => `<div class="azeile">${lampe(f)}<b>${esc(name)}</b><span>${esc(text)}</span></div>`;
+  return `<div class="adisplay">
+      <div class="zdkopf"><span>🛡️ ADMIN-ZENTRALE</span><span class="${alt ? "wveraltet" : "zuhr"}">${alt ? "⚠️ " : ""}${esc(fZeit.format(new Date(r.zeit)))}</span></div>
+      ${zeile(sf, "Server", `v${r.server.version} · Datenbank ${r.server.dbMs} ms`)}
+      ${zeile(cf, "Kommunikation", c.text)}
+      ${r.programme.map((p) => { const [f, t] = adminProgrammFarbe(p); return zeile(f, p.name, t); }).join("")}
+      ${zeile(r.wartung?.an ? "gelb" : "gruen", "Wartung", r.wartung?.an ? "an" + (r.wartung.hinweis ? " – " + r.wartung.hinweis : "") : "aus")}
+    </div>
+    ${adminBalken("🗄️ Datenbank", r.datenbank.bytes, r.datenbank.grenze, r.datenbank.warnPct, r.datenbank.kritPct)}
+    ${adminBalken("📁 Dateien/Fotos", r.speicher.belegt, r.speicher.grenze, 80, 95)}
+    <div class="azahlen">
+      <span>👥 <b>${m.gesamt}</b> Mitglieder</span><span>🔑 <b>${m.mitZugang}</b> mit Zugang</span><span>🟢 <b>${m.online}</b> online</span>
+      <span>📅 <b>${m.heute}</b> heute</span><span>🗓️ <b>${m.woche}</b> in 7 Tagen</span><span>⏳ <b>${m.nieAngemeldet}</b> nie angemeldet</span>
+      <span>🔔 <b>${m.pushAbos}</b> mit Push</span><span>🔄 <b>${m.alteVersion}</b> alte Version</span></div>
+    <div class="knoepfe" style="margin-top:8px"><button class="wlink" onclick="adminBlatt()">📋 Einzelheiten ›</button><button class="wlink" onclick="INFO_DATEN.admin.geholt=0;infoDatenLaden(INFO_FELDER[INFO_I])">↻ Neu prüfen</button></div>`;
+}
+function adminBlatt() {
+  const r = INFO_DATEN.admin?.r; if (!r) return;
+  const c = r.communicator, b = c.bericht, m = r.mitglieder;
+  $("adminBlattInhalt").innerHTML = `<h3 style="margin:0">🛡️ Admin-Zentrale – Einzelheiten</h3><p class="hinweis" style="margin:0">Stand ${esc(zeitKurz(r.zeit))} Uhr</p>
+    <b>👥 Zuletzt in der App</b>
+    <table class="todotab">${m.zuletzt.map((x) => `<tr><td>${x.online ? "🟢" : "⚪"} ${esc(x.name)}</td><td>${esc(seitText(x.zuletzt))}</td><td class="hinweis">${x.version ? "v" + esc(x.version) : "–"}</td></tr>`).join("") || '<tr><td class="hinweis">Noch niemand</td></tr>'}</table>
+    <p class="hinweis" style="margin:0">${m.ohneZugang} Mitglieder haben noch keinen persönlichen Link · ${m.nieAngemeldet} haben ihn, waren aber noch nie in der App.</p>
+    <b>📡 Kommunikation</b>
+    <p style="margin:0">${esc(c.text)}<br><span class="hinweis">Push: ${esc(c.push || "–")} · E-Mail: ${esc(c.email || "–")}${c.erreichbar ? ` · Antwort ${c.erreichbar.ms ?? "–"} ms` : ""}</span></p>
+    <p class="hinweis" style="margin:0">Club-App letzte 7 Tage: ${c.club.gesendet} zugestellt · ${c.club.offen} offen · ${c.club.fehler} Fehler (${c.club.fehler24} in 24 Std.)${b ? ` · Erfolgsquote ${String(b.erfolg).replace(".", ",")} % · Warteschlange ${b.warteschlange}` : ""}</p>
+    <b>🖥️ KC-Programme</b>
+    <table class="todotab">${r.programme.map((p) => { const [f, t] = adminProgrammFarbe(p); return `<tr><td>${lampe(f)} ${esc(p.name)}</td><td>${esc(t)}${p.version ? ` · v${esc(p.version)}` : ""}</td><td class="hinweis">${p.datenstand ? "Daten: " + esc(zeitKurz(p.datenstand)) : ""}</td></tr>`; }).join("")}</table>
+    <b>🗄️ Datenbank</b>
+    <p class="hinweis" style="margin:0">${r.datenbank.bytes != null ? `${mb(r.datenbank.bytes)} von ${mb(r.datenbank.grenze)} (kostenloser Tarif) · Warnung ab ${r.datenbank.warnPct} %, kritisch ab ${r.datenbank.kritPct} %` : "Größe gerade nicht abrufbar"}${r.datenbank.check ? ` · täglicher System-Check: ${esc(r.datenbank.check.status)} (${esc(seitText(r.datenbank.check.zeit))})` : ""}</p>
+    <p class="hinweis" style="margin:0">📁 Dateien: ${mb(r.speicher.belegt)} von ${mb(r.speicher.grenze)} · Platz für ca. ${r.speicher.fotosMoeglich} weitere Fotos</p>`;
+  $("adminBlatt").classList.remove("versteckt");
 }
 
 // Feld 4 (0.43.0): Demnächst – die nächsten Termine aus dem Kalender (Treffen, Aktionen, Geburtstage, meine Dienste, Abstimmungsfristen)
@@ -2708,7 +2793,7 @@ async function neuLaden(vonHand) {
     if (!ONL.timer) nachUpdatePruefen(begruesst);
     if (!ONL.timer) { onlinePing(); onlineTakt(); const a = /#anklopfen=([0-9a-f-]{36})/.exec(START_HASH || ""); if (a) anklopfenAusLink(a[1]); const c = /#anruf=([0-9a-f-]{36})/.exec(START_HASH || ""); if (c) { ONL.erledigt.add("r" + c[1]); anrufEingehend(c[1]); } }
     if (!PW.startGeprueft) { PW.startGeprueft = true; pwStart(begruesst); }
-    designUebernehmen(INIT.einstellungen?.design); infoStartUebernehmen(INIT.einstellungen?.infofeld);
+    designUebernehmen(INIT.einstellungen?.design); infoFelderAktualisieren(); infoStartUebernehmen(INIT.einstellungen?.infofeld);
     VB.wartung = INIT.wartung || null; VB.server = INIT.server || null; vbCommSetzen(INIT.communicator || null);
     $("begruessung").textContent = "Hallo " + ICH.vorname + "!";
     meinStatusZeigen();

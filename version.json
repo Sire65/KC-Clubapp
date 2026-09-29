@@ -1,12 +1,18 @@
 {
-  "version": "0.46.0",
+  "version": "0.47.0",
   "datum": "2026-09-29",
   "neu": [
-    "🌦️ Wetter: 7 Tage zum Durchschieben – Tag antippen zeigt ihn groß (mit passender Animation), „↩ jetzt“ springt zurück",
-    "👆 Tag lange drücken: alle Details – Höchst/Tiefst, Regen in % und mm, Wind und Böen, Sonnenstunden, Sonnenauf-/untergang, UV-Index und Verlauf über den Tag",
-    "🔤 Foto ändern: Schrift in den Eingabefeldern wieder gut lesbar"
+    "🛡️ Neue Karte oben nur für den Admin: Admin-Zentrale – Server, Kommunikation, KC Verwaltung, KC Dienstplan, System-Check, KICC, Wartung mit Lämpchen",
+    "🗄️ Datenbank- und Dateispeicher-Füllstand mit Balken, Mitglieder-Zahlen (mit Zugang, online, heute, nie angemeldet, Push, alte Version) und „📋 Einzelheiten“"
   ],
   "verlauf": [
+    {
+      "version": "0.47.0",
+      "neu": [
+        "🛡️ Neue Karte oben nur für den Admin: Admin-Zentrale – Server, Kommunikation, KC Verwaltung, KC Dienstplan, System-Check, KICC, Wartung mit Lämpchen",
+        "🗄️ Datenbank- und Dateispeicher-Füllstand mit Balken, Mitglieder-Zahlen (mit Zugang, online, heute, nie angemeldet, Push, alte Version) und „📋 Einzelheiten“"
+      ]
+    },
     {
       "version": "0.46.0",
       "neu": [

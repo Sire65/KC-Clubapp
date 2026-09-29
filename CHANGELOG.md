@@ -1,5 +1,16 @@
 # Änderungen
 
+## 0.47.0 – 2026-09-29 (DEV)
+
+- KC-CLUB-ADMINLAGE (neu): 7. Info-Karte „🛡️ Admin-Zentrale“, nur für Admin sichtbar (Registry-Feld nur(); Server-Aktion
+  admin_lage mit nurAdmin). Leuchtanzeige mit Lämpchen: Server (Version, Datenbank-Antwortzeit), Kommunikation (bestehender
+  communicatorStatus), KC-Programme aus Registry ADMIN_PROGRAMME über ihr Lebenszeichen (kicc_program_heartbeats) + Datenstand
+  (KC Verwaltung/PC-Manager, KC Dienstplan, KC System-Check, KICC), Wartung. Grün nur bei frischer Meldung (≤ 60 Min.), gelb bis
+  7 Tage, sonst grau „keine aktuelle Meldung“ (Rule 11). Füllstand Datenbank (live, Grenze/Schwellen aus kc_core_system_health)
+  und Dateispeicher als Balken. Mitglieder: gesamt, mit Zugang, online, heute, 7 Tage, nie angemeldet, mit Push, alte App-Version.
+  „📋 Einzelheiten“: zuletzt aktive Mitglieder mit App-Version, Communicator-Zahlen, Programm-Versionen, System-Check.
+  Neue Funktion kc_club_db_groesse() (nur Service-Rolle).
+
 ## 0.46.0 – 2026-09-29 (DEV)
 
 - KC-CLUB-WETTER-TAGE (neu): Wetter-Feld mit 7 Tagen in einer Leiste zum Schieben (Tag des Treffens mit 📅). Tag antippen →
