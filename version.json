@@ -1,11 +1,18 @@
 {
-  "version": "0.39.1",
+  "version": "0.40.0",
   "datum": "2026-09-29",
   "neu": [
-    "📷 Belege direkt mit der Kamera fotografieren oder 📁 als Datei (Foto/PDF) auswählen",
-    "✕ Falsch angehängte Belege wieder entfernen – bis zu 5 je Position"
+    "🧪 Hinweis im Feedback: Die Club-App ist noch eine Beta-Version – Funktionen und Ansichten können sich noch ändern",
+    "💭 Neue Feedback-Frage: „Ich halte die Club-App für sinnvoll und werde sie dauerhaft einsetzen“ – Ja / Vielleicht / Nein, bei Nein mit kurzer Begründung"
   ],
   "verlauf": [
+    {
+      "version": "0.40.0",
+      "neu": [
+        "🧪 Hinweis im Feedback: Die Club-App ist noch eine Beta-Version – Funktionen und Ansichten können sich noch ändern",
+        "💭 Neue Feedback-Frage: „Ich halte die Club-App für sinnvoll und werde sie dauerhaft einsetzen“ – Ja / Vielleicht / Nein, bei Nein mit kurzer Begründung"
+      ]
+    },
     {
       "version": "0.39.1",
       "neu": [

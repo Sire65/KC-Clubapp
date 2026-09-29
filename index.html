@@ -243,6 +243,8 @@
   .wahl button { border: 2px solid var(--linie); background: var(--karte); border-radius: 14px; padding: 13px 14px; font-weight: 800; cursor: pointer; text-align: left; }
   .wahl button.an { background: var(--rot); border-color: var(--rot); color: #fff; }
   /* Feedback (KC-CLUB-FEEDBACK) */
+  .karte.beta { background: var(--gelbbg); border-left: 5px solid var(--gold); font-size: .92rem; }
+  .fbgrund { margin-top: 10px; }
   .fbfrage { margin-top: 14px; }
   .fbfrage > b { display: block; margin-bottom: 8px; }
   .fbopt { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -550,6 +552,7 @@
   <!-- FEEDBACK (KC-CLUB-FEEDBACK) -->
   <section id="v-feedback" class="versteckt">
     <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>💭 Feedback</h2><button class="knopf klein versteckt" id="fbAuswertungKnopf" onclick="fbAuswertung()">📊 Auswertung</button></div>
+    <div class="karte beta"><b>🧪 Beta-Version</b><br>Die Club-App ist noch in der Testphase: Nicht alle Funktionen sind komplett getestet, und Funktionen oder Ansichten können sich noch ändern. Deshalb ist Hansi auf euer Feedback angewiesen – danke fürs Mitmachen!</div>
     <div id="feedbackInhalt"><div class="karte hinweis">Wird geladen …</div></div>
   </section>
 
@@ -868,7 +871,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.39.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.40.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3746,7 +3749,8 @@ function fbZeigen() {
   const schritte = `<div class="fbschritte">${[1, 2, 3].map((i) => `<i class="${i <= FB.schritt ? "an" : ""}"></i>`).join("")}</div>
     <p class="hinweis" style="margin:4px 0 0">Schritt ${FB.schritt} von 3 · alles freiwillig, einfach antippen</p>`;
   const frage = (f) => { const v = FB.a[f.id], an = (o) => (Array.isArray(v) ? v.includes(o) : v === o);
-    return `<div class="fbfrage"><b>${esc(f.t)}</b><div class="fbopt">${f.optionen.map((o, i) => `<button class="${an(o) ? "an" : ""}" onclick="fbWahl('${f.id}',${i})">${esc(o)}</button>`).join("")}</div></div>`; };
+    const grund = f.grund && f.grund.bei.includes(v) ? `<label class="feld fbgrund">${esc(f.grund.t)}${f.grund.pflicht.includes(v) ? " *" : " (freiwillig)"}<textarea id="fbGrund_${f.id}" rows="3" maxlength="500" placeholder="z. B. „Ich nutze lieber …, weil …“">${esc(FB.a[f.id + "_grund"] || "")}</textarea></label>` : "";
+    return `<div class="fbfrage"><b>${esc(f.t)}</b><div class="fbopt">${f.optionen.map((o, i) => `<button class="${an(o) ? "an" : ""}" onclick="fbWahl('${f.id}',${i})">${esc(o)}</button>`).join("")}</div>${grund}</div>`; };
   let inhalt = "";
   if (FB.schritt === 1) inhalt = `<h3 style="margin:0">⭐ Wie findest du die App?</h3>${FB.fragen.filter((f) => f.schritt === 1).map(frage).join("")}`;
   if (FB.schritt === 2) inhalt = `<h3 style="margin:0">💡 Was wünschst du dir?</h3>${FB.umgesetzt?.length ? `<div class="hinweis" style="margin:8px 0 0;padding:10px 12px;border-radius:12px;background:var(--gruenbg);color:var(--text)"><b>✅ Schon umgesetzt – danke für eure Wünsche:</b><br>${FB.umgesetzt.map(esc).join(" · ")}</div>` : ""}${FB.fragen.filter((f) => f.schritt === 2).map(frage).join("")}
@@ -3760,7 +3764,11 @@ function fbZeigen() {
     ${FB.schritt < 3 ? `<button class="knopf haupt" onclick="fbSchritt(1)">Weiter ›</button>` : `<button class="knopf haupt" id="fbSenden" onclick="fbSenden()">📨 Absenden</button>`}</div>`;
   el.innerHTML = `<div class="karte">${schritte}</div><div class="karte">${inhalt}${knoepfe}</div>`;
 }
+// KC-CLUB-FEEDBACK-DAUERHAFT: Begründungstexte vor jedem Neuzeichnen übernehmen; bei „Nein“ ist die Begründung Pflicht
+function fbGruendeMerken() { for (const f of FB?.fragen || []) { const t = $("fbGrund_" + f.id); if (t) FB.a[f.id + "_grund"] = t.value; } }
+function fbGrundFehlt() { return (FB.fragen || []).find((f) => f.schritt === FB.schritt && f.grund?.pflicht.includes(FB.a[f.id]) && !String(FB.a[f.id + "_grund"] || "").trim()); }
 function fbWahl(id, i) {
+  fbGruendeMerken();
   const f = FB.fragen.find((x) => x.id === id), o = f.optionen[i];
   if (FB.schritt === 2) FB.idee = $("fbIdeeS2")?.value ?? FB.idee;
   if (f.art === "eins") FB.a[id] = FB.a[id] === o ? undefined : o; // nochmal tippen = abwählen
@@ -3769,10 +3777,15 @@ function fbWahl(id, i) {
 }
 function fbSchritt(d) {
   if (FB.schritt === 2) FB.idee = $("fbIdeeS2")?.value ?? FB.idee;
+  fbGruendeMerken();
+  const fehlt = d > 0 && fbGrundFehlt();
+  if (fehlt) { melde("Bitte kurz schreiben, warum nicht – das hilft Hansi sehr.", true); $("fbGrund_" + fehlt.id)?.focus(); return; }
   fbTexteMerken(); FB.schritt = Math.min(3, Math.max(1, FB.schritt + d)); fbZeigen(); scrollTo(0, 0);
 }
 async function fbSenden() {
   fbTexteMerken();
+  const fehlt = FB.fragen.find((f) => f.grund?.pflicht.includes(FB.a[f.id]) && !String(FB.a[f.id + "_grund"] || "").trim());
+  if (fehlt) { FB.schritt = fehlt.schritt; fbZeigen(); melde("Bitte kurz schreiben, warum nicht – das hilft Hansi sehr.", true); return; }
   $("fbSenden").disabled = true;
   try {
     await api("feedback_senden", { antworten: FB.a, idee: FB.idee, mitteilung: FB.mitteilung, anonym: FB.anonym });
@@ -3800,6 +3813,7 @@ async function fbAuswertung() {
       + r.fragen.map((f) => { const max = f.beantwortet || 1;
         const liste = f.art === "mehr" ? [...f.ergebnis].sort((a, b) => b.anzahl - a.anzahl) : f.ergebnis;
         return `<div class="karte"><b>${esc(f.t)}</b><div class="hinweis" style="font-size:.85rem">${f.beantwortet} Antwort${f.beantwortet === 1 ? "" : "en"}</div>${liste.map((e) => balken(e, max)).join("")}</div>`; }).join("")
+      + (r.gruende || []).filter((g) => g.liste.length).map((g) => `<div class="karte"><b>💬 Begründungen: ${esc(g.t)} (${g.liste.length})</b>${g.liste.map((t) => `<div class="fbtext"><div class="hinweis" style="font-size:.85rem">${esc(t.antwort)} · ${esc(t.wer || "ohne Namen")} · ${esc(wann(t.zeit))}</div><div>${esc(t.text)}</div></div>`).join("")}</div>`).join("")
       + `<div class="karte"><b>✍️ Ideen & Mitteilungen (${r.texte.length})</b>${r.texte.length ? r.texte.map((t) => `<div class="fbtext"><div class="hinweis" style="font-size:.85rem">${esc(t.wer || "ohne Namen")} · ${esc(wann(t.zeit))}</div>
           ${t.idee ? `<div>💡 ${esc(t.idee)}</div>` : ""}${t.mitteilung ? `<div>✍️ ${esc(t.mitteilung)}</div>` : ""}</div>`).join("") : '<p class="hinweis">Noch keine.</p>'}</div>`;
     scrollTo(0, 0);

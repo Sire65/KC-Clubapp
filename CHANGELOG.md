@@ -1,5 +1,14 @@
 # Änderungen
 
+## 0.40.0 – 2026-09-29 (DEV)
+
+- KC-CLUB-FEEDBACK-DAUERHAFT (neu): Fragebogen Schritt 1 um „Ich halte die Club-App für sinnvoll und werde sie dauerhaft einsetzen.“
+  (👍 Ja / 🤔 Vielleicht / 👎 Nein) ergänzt. Bei „Nein“ fragt die App Pflicht-Begründung ab („Warum nicht? Gib doch einen hilfreichen
+  Kommentar ab …“), bei „Vielleicht“ freiwillig. Registry-Feld `grund` an der Frage (bei/pflicht/t); Server übernimmt den Text nur zur
+  passenden Antwort (max. 500 Zeichen) als antworten["<id>_grund"]. Auswertung (Admin) zeigt die Begründungen, anonym ohne Namen.
+  Bogen bleibt 2026-1 (reine Ergänzung, alte Antworten gültig).
+- Beta-Hinweis oben im Feedback: noch nicht alles komplett getestet, Funktionen/Ansichten können sich ändern, Feedback erwünscht.
+
 ## 0.39.1 – 2026-09-29 (DEV)
 
 - KC-CLUB-BELEGFOTO (neu): Erstattung → Belege mit zwei Knöpfen: „📷 Foto aufnehmen“ (öffnet direkt die Kamera, capture=environment)

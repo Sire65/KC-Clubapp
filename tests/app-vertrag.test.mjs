@@ -467,12 +467,20 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   // TypeScript-Anteile entfernen, dann Fragebogen + Prüfung wie im Server ausführen
   const von = server.indexOf("const FEEDBACK_BOGEN"), bis = server.indexOf("\n}", server.indexOf("function feedbackPruefen")) + 2;
   const js = server.slice(von, bis).replace(/type FbFrage = \{[^}]*\};/, "").replace(/: FbFrage\[\]/, "").replace("(roh: unknown)", "(roh)")
-    .replace(/ as Record<string, unknown>, aus: Record<string, string \| string\[\]> = \{\}/, ", aus = {}").replace(" as string[];", ";");
-  const fb = new Function(js + "return { FEEDBACK_FRAGEN, feedbackPruefen };")();
+    .replace(/ as Record<string, unknown>, aus: Record<string, string \| string\[\]> = \{\}/, ", aus = {}").replace(" as string[];", ";").replace(/ as string\)/g, ")");
+  const fb = new Function("FB_GRUND_MAX", js + "return { FEEDBACK_FRAGEN, feedbackPruefen };")(Number(/const FB_GRUND_MAX = (\d+)/.exec(server)[1]));
   // 0.26.0: Anordnen/Farben sind umgesetzt → stehen nicht mehr als Wunsch, sondern unter „Schon umgesetzt“
   assert.ok(fb.FEEDBACK_FRAGEN.some((f) => f.schritt === 2 && f.optionen.length >= 8) && /anordnen/.test(server.slice(server.indexOf("const FEEDBACK_UMGESETZT"), server.indexOf("const FEEDBACK_UMGESETZT") + 300)), "Wunschliste oder „Schon umgesetzt“ fehlt");
   assert.deepEqual(fb.feedbackPruefen({ gefallen: "👍 Ja", bedienung: "Quatsch", wuensche: ["🎂 Geburtstagsliste", "X", "🎂 Geburtstagsliste"], fremd: "a" }),
     { gefallen: "👍 Ja", wuensche: ["🎂 Geburtstagsliste"] });
+  // 0.40.0: Begründung nur zur passenden Antwort, gekürzt
+  assert.deepEqual(fb.feedbackPruefen({ dauerhaft: "👎 Nein", dauerhaft_grund: "  zu viele Apps  " }), { dauerhaft: "👎 Nein", dauerhaft_grund: "zu viele Apps" });
+  assert.deepEqual(fb.feedbackPruefen({ dauerhaft: "👍 Ja", dauerhaft_grund: "egal" }), { dauerhaft: "👍 Ja" });
+  assert.equal(fb.feedbackPruefen({ dauerhaft: "🤔 Vielleicht", dauerhaft_grund: "x".repeat(900) }).dauerhaft_grund.length, 500);
+  const dh = fb.FEEDBACK_FRAGEN.find((f) => f.id === "dauerhaft");
+  assert.ok(dh && dh.grund.pflicht.includes("👎 Nein") && /Warum nicht\?/.test(dh.grund.t), "Frage „dauerhaft einsetzen“ mit Begründung fehlt");
+  assert.ok(/function fbGrundFehlt\(/.test(html) && /class="karte beta"/.test(html) && /Beta-Version/.test(html), "Pflicht-Begründung oder Beta-Hinweis fehlt in der App");
+  assert.ok(/gruende \}\);/.test(server) && /r\.anonym \? null : leute\.get\(r\.person_id\)\?\.display_name \?\? r\.person_id, zeit: r\.geaendert_am, antwort/.test(server), "Begründungen fehlen in der Auswertung oder zeigen anonyme Namen");
 }
 
 // 36. 0.19.0: Startseite selbst anordnen (lange drücken → verschieben/ausblenden), Speicherung je Mitglied auf dem Server

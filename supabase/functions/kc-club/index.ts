@@ -13,14 +13,14 @@
 //           KC-CLUB-COMMUNICATOR-STATUS (0.17.0), KC-CLUB-FEEDBACK (0.18.0),
 //           KC-CLUB-KACHELN (0.19.0), KC-CLUB-ZUGANG-SELBST (0.21.0),
 //           KC-CLUB-GRUPPEN, KC-CLUB-ZUSTELLWAHL (0.23.0)
-//           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0), KC-CLUB-KACHELN-ZIEHEN (0.26.0), KC-CLUB-FEEDBACK-NEU (0.27.1), KC-CLUB-BEGRUESSUNG (0.28.0), KC-CLUB-ONLINE (0.29.0), KC-CLUB-ANRUF (0.31.0), KC-CLUB-VIDEO (0.32.0), KC-CLUB-QUITTUNG (0.34.0), KC-CLUB-TODO + KC-CLUB-REGISTER-ZIEHEN (0.36.0), KC-CLUB-SPRACHE + KC-CLUB-TODO-ZUSTAENDIG (0.37.0), KC-CLUB-ERSTATTUNG (0.38.0), KC-CLUB-KMSATZ (0.39.0)
+//           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0), KC-CLUB-KACHELN-ZIEHEN (0.26.0), KC-CLUB-FEEDBACK-NEU (0.27.1), KC-CLUB-BEGRUESSUNG (0.28.0), KC-CLUB-ONLINE (0.29.0), KC-CLUB-ANRUF (0.31.0), KC-CLUB-VIDEO (0.32.0), KC-CLUB-QUITTUNG (0.34.0), KC-CLUB-TODO + KC-CLUB-REGISTER-ZIEHEN (0.36.0), KC-CLUB-SPRACHE + KC-CLUB-TODO-ZUSTAENDIG (0.37.0), KC-CLUB-ERSTATTUNG (0.38.0), KC-CLUB-KMSATZ (0.39.0), KC-CLUB-FEEDBACK-DAUERHAFT (0.40.0)
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.39.0";
+const SERVER_VERSION = "0.40.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -283,8 +283,11 @@ const fotoDatum = (v: unknown) => { const d = String(v || ""); if (!/^\d{4}-\d{2
 const APP_ID = "KC_CLUBAPP";
 
 // ----- KC-CLUB-FEEDBACK: Fragebogen (eine Stelle; neue Fragen → neue Bogen-Kennung, alte Antworten bleiben auswertbar) -----
-const FEEDBACK_BOGEN = "2026-1";
-type FbFrage = { id: string; schritt: 1 | 2; t: string; art: "eins" | "mehr"; optionen: string[] };
+// KC-CLUB-FEEDBACK-DAUERHAFT (0.40.0): zu bestimmten Antworten fragt die App nach dem Warum (Text landet in antworten["<id>_grund"])
+type FbGrund = { bei: string[]; pflicht: string[]; t: string };
+const FB_GRUND_MAX = 500;
+const FEEDBACK_BOGEN = "2026-1"; // neue Frage ist nur eine Ergänzung → alte Antworten bleiben gültig, Bogen bleibt
+type FbFrage = { id: string; schritt: 1 | 2; t: string; art: "eins" | "mehr"; optionen: string[]; grund?: FbGrund };
 const FEEDBACK_FRAGEN: FbFrage[] = [
   { id: "gefallen", schritt: 1, art: "eins", t: "Gefällt dir die App?", optionen: ["👍 Ja", "🤏 Teils", "👎 Nein"] },
   { id: "bedienung", schritt: 1, art: "eins", t: "Findest du sie bedienfreundlich?", optionen: ["Ja, einfach", "Geht so", "Nein, schwierig"] },
@@ -297,6 +300,8 @@ const FEEDBACK_FRAGEN: FbFrage[] = [
     optionen: ["📅 Termine", "💬 Nachrichten", "👥 Mitglieder", "🗳️ Vorschläge", "📄 Protokolle", "🗓️ Dienstpläne", "🧳 Aktionen", "📷 Fotoalbum", "📌 Pinnwand", "👥 Gruppen-Chats"] },
   { id: "probleme", schritt: 1, art: "mehr", t: "Hattest du schon Probleme? (mehrere möglich)",
     optionen: ["✅ Keine Probleme", "🔑 Anmeldung / Link", "🔔 Benachrichtigungen kommen nicht", "💬 WhatsApp / Route öffnen", "📷 Fotos hochladen", "⏳ App lädt nicht / hängt", "🔍 Etwas nicht gefunden"] },
+  { id: "dauerhaft", schritt: 1, art: "eins", t: "Ich halte die Club-App für sinnvoll und werde sie dauerhaft einsetzen.", optionen: ["👍 Ja", "🤔 Vielleicht", "👎 Nein"],
+    grund: { bei: ["🤔 Vielleicht", "👎 Nein"], pflicht: ["👎 Nein"], t: "Warum nicht? Gib doch einen hilfreichen Kommentar ab – was müsste anders sein?" } },
   { id: "wuensche", schritt: 2, art: "mehr", t: "Welche Funktionen wünschst du dir noch? (mehrere möglich)",
     optionen: ["🍲 Rezepte-Sammlung vom Club", "🛒 Mitbring-/Einkaufsliste für Treffen", "📂 Dokumente (Satzung, Formulare)", "💶 Beiträge / Kasse einsehen",
       "🔁 Dienste untereinander tauschen", "🎤 Nachrichten per Sprache", "🖼️ Fotos als Diashow", "🎂 Geburtstagsliste", "📴 Auch ohne Internet nutzbar",
@@ -311,6 +316,8 @@ function feedbackPruefen(roh: unknown) {
   for (const f of FEEDBACK_FRAGEN) {
     const v = a[f.id];
     if (f.art === "eins") { if (typeof v === "string" && f.optionen.includes(v)) aus[f.id] = v; }
+    const g = a[`${f.id}_grund`];
+    if (f.grund && typeof aus[f.id] === "string" && f.grund.bei.includes(aus[f.id] as string) && typeof g === "string" && g.trim()) aus[`${f.id}_grund`] = g.trim().slice(0, FB_GRUND_MAX);
     else if (Array.isArray(v)) { const l = [...new Set(v.filter((x) => typeof x === "string" && f.optionen.includes(x)))] as string[]; if (l.length) aus[f.id] = l; }
   }
   return aus;
@@ -2655,8 +2662,11 @@ Köcheclub Werne`,
           return { id: f.id, t: f.t, art: f.art, beantwortet, ergebnis: f.optionen.map((o) => ({ option: o, anzahl: n.get(o) })) };
         });
         // Freitexte: Name nur, wenn nicht „anonym“ gewählt
+        // Begründungen zu Fragen mit „Warum?“ (z. B. „Nein, werde sie nicht dauerhaft nutzen“) – ebenfalls ohne Namen, wenn anonym
+        const gruende = FEEDBACK_FRAGEN.filter((f) => f.grund).map((f) => ({ id: f.id, t: f.t, liste: liste.filter((r: any) => r.antworten?.[`${f.id}_grund`])
+          .map((r: any) => ({ wer: r.anonym ? null : leute.get(r.person_id)?.display_name ?? r.person_id, zeit: r.geaendert_am, antwort: r.antworten[f.id], text: r.antworten[`${f.id}_grund`] })) }));
         const texte = liste.filter((r: any) => r.idee || r.mitteilung).map((r: any) => ({ wer: r.anonym ? null : leute.get(r.person_id)?.display_name ?? r.person_id, zeit: r.geaendert_am, idee: r.idee, mitteilung: r.mitteilung }));
-        return json({ bogen: FEEDBACK_BOGEN, antworten: liste.length, mitglieder: mitglieder.length, fragen, texte });
+        return json({ bogen: FEEDBACK_BOGEN, antworten: liste.length, mitglieder: mitglieder.length, fragen, texte, gruende });
       }
 
       // ----- Push -----
