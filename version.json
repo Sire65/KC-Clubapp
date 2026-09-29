@@ -1,12 +1,19 @@
 {
-  "version": "0.31.0",
+  "version": "0.31.1",
   "datum": "2026-09-29",
   "neu": [
+    "🟢 Startseite zeigt immer den Online-Stand – auch „⚪ sonst keiner online“",
     "📞 Neu (Test): Anrufen direkt über die App – kostenlos, von Handy zu Handy",
     "📞 Bei jemandem, der online ist: „Anrufen“ – der andere sieht „… ruft an“ mit Annehmen/Ablehnen",
     "🎙️ Während des Gesprächs: Stummschalten und Auflegen"
   ],
   "verlauf": [
+    {
+      "version": "0.31.1",
+      "neu": [
+        "🟢 Startseite zeigt immer den Online-Stand – auch „⚪ sonst keiner online“"
+      ]
+    },
     {
       "version": "0.31.0",
       "neu": [

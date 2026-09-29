@@ -336,6 +336,7 @@
   .anruf .rund2 { width: 72px; height: 72px; border-radius: 50%; border: none; font-size: 1.8rem; cursor: pointer; color: #fff; box-shadow: 0 6px 18px rgba(0,0,0,.3); }
   .anruf .rund2.gruen { background: #27ae60; } .anruf .rund2.rotk { background: #d32f2f; } .anruf .rund2.grau { background: rgba(255,255,255,.22); } .anruf .rund2.aus { background: #fff; color: #333; }
   .anruf small { opacity: .8; }
+  .mini .onmini.leer { background: rgba(255,255,255,.22); color: #fff; box-shadow: none; font-weight: 700; }
   .onzeile { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--linie); }
   .onzeile:last-child { border-bottom: none; } .onzeile .knopf { padding: 10px 12px; font-size: .95rem; text-align: center; }
   .begruessung .bgtipp { display: flex; gap: 10px; align-items: flex-start; background: var(--karte2); border-radius: 14px; padding: 10px 12px; margin: 6px 0; }
@@ -780,7 +781,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.31.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.31.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -1067,7 +1068,7 @@ function onlineBlatt() {
       <button class="knopf haupt" onclick="$('onlineBlatt').classList.add('versteckt'); anklopfen('${x.person_id}')">👋 Anklopfen</button>
       <button class="knopf" title="Anrufen (Test)" onclick="$('onlineBlatt').classList.add('versteckt'); anrufen('${x.person_id}')">📞</button>
       <button class="knopf" title="Nachricht schreiben" onclick="$('onlineBlatt').classList.add('versteckt'); direkt('${x.person_id}')">💬</button></div>`).join("")
-    : '<p class="hinweis">Gerade ist niemand sonst online.</p>';
+    : '<p class="hinweis">Gerade ist niemand sonst online. Sobald jemand die App öffnet, erscheint hier ein 🟢 – dann kannst du anklopfen oder anrufen.</p>';
   $("onlineBlatt").classList.remove("versteckt");
 }
 async function anklopfen(pid) {
@@ -1657,7 +1658,7 @@ function heroZeigen() {
   $("heroInfo").innerHTML = `<div class="klick" onclick="zumTreffen()">${kopf}</div>
     <div class="kacheln3">
       <button class="mini" onclick="zeige('nachrichten')"><b>${n}</b><span>Neue Nachr. ›</span></button>
-      <button class="mini" onclick="zeige('mitglieder')"><b>${INIT?.mitgliederAnzahl || "–"}</b><span>Mitglieder ›</span>${ONL.zeigen && ONL.liste.length ? `<span class="onmini" role="button" onclick="event.stopPropagation(); onlineBlatt()">🟢 ${ONL.liste.length} online ›</span>` : ""}</button>
+      <button class="mini" onclick="zeige('mitglieder')"><b>${INIT?.mitgliederAnzahl || "–"}</b><span>Mitglieder ›</span>${ONL.zeigen ? `<span class="onmini${ONL.liste.length ? "" : " leer"}" role="button" onclick="event.stopPropagation(); onlineBlatt()">${ONL.liste.length ? `🟢 ${ONL.liste.length} online ›` : "⚪ sonst keiner online"}</span>` : ""}</button>
       <button class="mini" onclick="zumTreffen()"><b style="font-size:1.05rem">${bisTreffen}</b><span>Nächstes Treffen ›</span></button>
     </div>`;
 }

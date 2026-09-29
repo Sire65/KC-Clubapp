@@ -1,5 +1,10 @@
 # Änderungen
 
+## 0.31.1 – 2026-09-29 (DEV)
+
+- KC-CLUB-ONLINE: Kennzahl „Mitglieder“ zeigt den Online-Stand immer (sofern die eigene Online-Anzeige an ist):
+  „🟢 3 online ›“ oder blass „⚪ sonst keiner online“ – antippen öffnet die Liste bzw. einen Hinweis.
+
 ## 0.31.0 – 2026-09-29 (DEV)
 
 - KC-CLUB-ANRUF (neu, Test): 📞 Sprechen per Ton direkt über die App (WebRTC, Handy zu Handy, kostenlos). „📞 Anrufen“ in
