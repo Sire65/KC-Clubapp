@@ -1,5 +1,10 @@
 # Änderungen
 
+## 0.26.2 – 2026-09-29 (DEV)
+
+- KC-CLUB-DESIGN: Schmuck-Kreis oben rechts auf den Kacheln je Design einstellbar („deko“); bei „Lagune“ Aqua → Gold wie im
+  Reiseassistenten statt Pfirsich. Andere Designs unverändert.
+
 ## 0.26.1 – 2026-09-29 (DEV)
 
 - KC-CLUB-DESIGN: sechstes Farbdesign „Lagune“ mit den Farben des Reiseassistenten (Navy #082F49, Türkis #0E7490,

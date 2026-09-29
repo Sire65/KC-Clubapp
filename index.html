@@ -145,7 +145,7 @@
   .wischhinweis { text-align: center; font-size: .78rem; color: var(--grau); margin-top: 6px; }
   .raster { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
   .kachel { position: relative; overflow: hidden; background: var(--karte); border: none; border-radius: var(--radius); padding: 16px; text-align: left; min-height: 124px; box-shadow: var(--schatten); cursor: pointer; }
-  .kachel::after { content: ""; position: absolute; right: -24px; top: -24px; width: 88px; height: 88px; border-radius: 50%; background: radial-gradient(circle at 30% 70%, color-mix(in srgb, var(--gold) 28%, transparent), color-mix(in srgb, var(--rot) 10%, transparent)); }
+  .kachel::after { content: ""; position: absolute; right: -24px; top: -24px; width: 88px; height: 88px; border-radius: 50%; background: radial-gradient(circle at 30% 70%, color-mix(in srgb, var(--deko1, var(--gold)) 28%, transparent), color-mix(in srgb, var(--deko2, var(--rot)) 10%, transparent)); }
   .kachel .sym { font-size: 2rem; line-height: 1; }
   .kachel b { display: block; font-size: 1.1rem; margin-top: 10px; }
   .kachel small { color: var(--grau); font-weight: 700; }
@@ -714,7 +714,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.26.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.26.2"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -748,7 +748,7 @@ const DESIGNS = [
     tag: { rot: "#37424d", rot2: "#4b5866", rot3: "#6d7b89", gold: "#c9a46a", hero1: "#1f262d", hero4: "#7d8a96", bg: "#f0f1f2", karte: "#ffffff", karte2: "#e3e6e9", linie: "#d4d8dc", text: "#1c2126", grau: "#626b74" },
     nacht: { rot: "#56626f", rot2: "#4b5866", rot3: "#6d7b89", gold: "#c9a46a", hero1: "#1a2026", hero4: "#5e6a75", bg: "#141719", karte: "#1f2327", karte2: "#292e33", linie: "#3a4046", text: "#eceff1", grau: "#a8b0b7" } },
   // Farben aus dem Reiseassistenten (V11.4.0): Navy #082F49, Türkis #0E7490, Aqua #14B8A6, Gold #F4B860, Kopf-Verlauf #07415E → #0B7F93 → #22B8A6
-  { id: "lagune", name: "Lagune",
+  { id: "lagune", name: "Lagune", deko: ["#14B8A6", "#F4B860"], // Kachel-Ecke oben rechts: Aqua → Gold wie im Reiseassistenten
     tag: { rot: "#0E7490", rot2: "#0B7F93", rot3: "#14B8A6", gold: "#F4B860", hero1: "#07415E", hero4: "#22B8A6", bg: "#EEF7FB", karte: "#ffffff", karte2: "#e1eff6", linie: "#cfe3ec", text: "#102330", grau: "#667985" },
     nacht: { rot: "#0E7490", rot2: "#0B7F93", rot3: "#2dd4bf", gold: "#F4B860", hero1: "#082F49", hero4: "#14B8A6", bg: "#06141c", karte: "#0f2430", karte2: "#16303d", linie: "#23414f", text: "#e6f3f8", grau: "#9fb6c2" } },
   { id: "kontrast", name: "Großer Kontrast",
@@ -801,6 +801,8 @@ function anwendenDesign() {
   w.classList.toggle("gross", einst("gross", false));
   for (const [k, v] of Object.entries(f)) w.style.setProperty("--" + k, v);
   w.style.setProperty("--heroschatten", f.rot + "59");
+  // Schmuck-Kreis oben rechts auf den Kacheln: eigene Farben je Design, sonst Gold/Akzent
+  const d = designAktuell(); w.style.setProperty("--deko1", d.deko?.[0] || f.gold); w.style.setProperty("--deko2", d.deko?.[1] || f.rot);
   document.querySelector('meta[name="theme-color"]')?.setAttribute("content", nacht ? f.bg : f.rot);
   if ($("modusKnopf")) $("modusKnopf").textContent = nacht ? "☀️" : "🌙";
   $("setFeiertage").checked = einst("feiertage", true); $("setGross").checked = einst("gross", false); $("setTon").checked = einst("ton", true);
