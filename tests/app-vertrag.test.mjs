@@ -595,4 +595,12 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/umgesetzt: FEEDBACK_UMGESETZT/.test(server) && /Schon umgesetzt/.test(html), "„Schon umgesetzt“ fehlt");
 }
 
+// 46. 0.27.0: Treffen mit Auswahllisten (Titel/Ort, gemerkte Orte), kleinere Kacheln, kompakter Kalender
+{
+  assert.ok(/function comboFeld\(/.test(html) && /comboFeld\("tfTitel"/.test(html) && /comboFeld\("tfOrt", "Ort", \[\.\.\.ORT_VORSCHLAEGE, \.\.\.TR_ORTE\]/.test(html), "Auswahllisten fehlen");
+  assert.ok(/const ORT_VORSCHLAEGE = \["Garten", "Hütte bei Anne"\]/.test(html) && /orteMerken\(treffen\)/.test(html), "Orte werden nicht gemerkt");
+  assert.ok(/ort: \$\("tfOrt"\)\.value/.test(html) && /titel: \$\("tfTitel"\)\.value/.test(html), "Speichern liest die Felder nicht mehr");
+  assert.ok(/\.ktag \{ height: 44px;/.test(html) && /min-height: 100px/.test(html), "Kalender/Kacheln nicht verkleinert");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

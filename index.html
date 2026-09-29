@@ -52,14 +52,14 @@
   .tuer { display: block; width: 100%; margin: 14px 0 4px; padding: 14px; border-radius: 16px; border: 2px solid var(--linie); background: var(--karte); color: var(--text); font-weight: 800; font-size: 1rem; cursor: pointer; }
   .umschalter button.an { background: var(--karte); box-shadow: var(--schatten); color: var(--rot); }
   .kalnav { display: flex; align-items: center; gap: 6px; }
-  .kalnav .pf { width: 42px; height: 42px; border-radius: 12px; border: none; background: var(--karte2); font-weight: 900; font-size: 1.1rem; color: var(--rot); cursor: pointer; flex: none; }
+  .kalnav .pf { width: 38px; height: 38px; border-radius: 12px; border: none; background: var(--karte2); font-weight: 900; font-size: 1.1rem; color: var(--rot); cursor: pointer; flex: none; }
   .kalnav .mitte { flex: 1; text-align: center; border: none; background: none; cursor: pointer; }
-  .kalnav .monat { font-size: 1.3rem; font-weight: 900; }
+  .kalnav .monat { font-size: 1.15rem; font-weight: 900; }
   .kalnav .jahr { font-size: .9rem; color: var(--grau); font-weight: 800; }
-  .wt { display: grid; grid-template-columns: repeat(7, 1fr); margin-top: 12px; font-size: .75rem; font-weight: 800; color: var(--grau); text-align: center; }
+  .wt { display: grid; grid-template-columns: repeat(7, 1fr); margin-top: 8px; font-size: .75rem; font-weight: 800; color: var(--grau); text-align: center; }
   .wt span:nth-child(n+6) { color: var(--rot2); }
-  .tage { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 6px; touch-action: pan-y; }
-  .ktag { aspect-ratio: 1 / 1.05; border-radius: 12px; border: none; background: none; display: flex; flex-direction: column; align-items: center; padding: 6px 0 0; font-size: 1rem; cursor: pointer; color: var(--text); }
+  .tage { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin-top: 4px; touch-action: pan-y; }
+  .ktag { height: 44px; border-radius: 10px; border: none; background: none; display: flex; flex-direction: column; align-items: center; padding: 5px 0 0; font-size: .95rem; cursor: pointer; color: var(--text); }
   .ktag.aus { color: var(--grau); opacity: .45; }
   .ktag.we { color: var(--rot2); }
   .ktag.heute { outline: 2px solid var(--gold); font-weight: 800; }
@@ -71,7 +71,7 @@
   .ktag.aktion { background: var(--tuerkisbg); color: var(--tuerkis); font-weight: 900; }
   .ktag.treffen { background: var(--rot); color: #fff; font-weight: 900; }
   .ktag.gewaehlt { box-shadow: 0 0 0 3px var(--text); }
-  .ktag .punkte { display: flex; gap: 3px; margin-top: auto; margin-bottom: 6px; min-height: 6px; }
+  .ktag .punkte { display: flex; gap: 3px; margin-top: auto; margin-bottom: 4px; min-height: 6px; }
   .ktag .punkte i { width: 6px; height: 6px; border-radius: 50%; display: block; }
   .p-treffen { background: var(--rot); } .ktag.treffen .p-treffen { background: #fff; }
   .p-feiertag { background: var(--rot3); } .p-veranst { background: var(--gruen); } .p-aktion { background: var(--tuerkis); } .p-dienst { background: var(--blau); } .p-frist { background: #d19a22; } .p-geb { background: var(--lila); }
@@ -143,12 +143,13 @@
   @keyframes reinLinks { from { transform: translateX(40px); opacity: .3; } to { transform: none; opacity: 1; } }
   @keyframes reinRechts { from { transform: translateX(-40px); opacity: .3; } to { transform: none; opacity: 1; } }
   .wischhinweis { text-align: center; font-size: .78rem; color: var(--grau); margin-top: 6px; }
-  .raster { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
-  .kachel { position: relative; overflow: hidden; background: var(--karte); border: none; border-radius: var(--radius); padding: 16px; text-align: left; min-height: 124px; box-shadow: var(--schatten); cursor: pointer; }
-  .kachel::after { content: ""; position: absolute; right: -24px; top: -24px; width: 88px; height: 88px; border-radius: 50%; background: radial-gradient(circle at 30% 70%, color-mix(in srgb, var(--deko1, var(--gold)) 28%, transparent), color-mix(in srgb, var(--deko2, var(--rot)) 10%, transparent)); }
-  .kachel .sym { font-size: 2rem; line-height: 1; }
-  .kachel b { display: block; font-size: 1.1rem; margin-top: 10px; }
-  .kachel small { color: var(--grau); font-weight: 700; }
+  .raster { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 9px; }
+  .kachel { position: relative; overflow: hidden; background: var(--karte); border: none; border-radius: var(--radius); padding: 16px; text-align: left; min-height: 100px; box-shadow: var(--schatten); cursor: pointer; }
+  .kachel:not(.bearb) { padding: 12px 13px; }
+  .kachel::after { content: ""; position: absolute; right: -24px; top: -24px; width: 72px; height: 72px; border-radius: 50%; background: radial-gradient(circle at 30% 70%, color-mix(in srgb, var(--deko1, var(--gold)) 28%, transparent), color-mix(in srgb, var(--deko2, var(--rot)) 10%, transparent)); }
+  .kachel .sym { font-size: 1.65rem; line-height: 1; }
+  .kachel b { display: block; font-size: 1.02rem; margin-top: 7px; }
+  .kachel small { color: var(--grau); font-weight: 700; font-size: .82rem; }
   .kachel .zahl { position: absolute; right: 12px; bottom: 12px; background: var(--rot); color: #fff; border-radius: 12px; padding: 2px 9px; font-weight: 800; font-size: .85rem; z-index: 1; }
   .kachel.bald { opacity: .55; }
   /* KC-CLUB-KACHELN: eigene Anordnung (lange drücken → Bearbeiten) */
@@ -718,7 +719,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.26.3"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.27.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -1633,7 +1634,7 @@ async function treffenLaden() {
   terminfindungLaden();
   if (termineArt === "kalender") return kalLaden();
   try {
-    const { treffen, geburtstage } = await api("treffen_liste");
+    const { treffen, geburtstage } = await api("treffen_liste"); orteMerken(treffen);
     const kommend = treffen.filter((t) => new Date(t.ende || t.beginn) > Date.now() - 3 * 3600000), vorbei = treffen.filter((t) => !kommend.includes(t)).reverse();
     $("treffenListe").innerHTML = (kommend.map(treffenKarte).join("") || '<div class="karte hinweis">Zurzeit ist kein Treffen geplant.</div>')
       + geburtstageListe(geburtstage || [], 30)
@@ -1678,8 +1679,29 @@ async function antwort(id, a) {
   if (a !== "ja") notiz = prompt(a === "nein" ? "Kurzer Grund (freiwillig):" : "Kurze Notiz (freiwillig):", "") ?? "";
   try { await api("treffen_antwort", { id, antwort: a, notiz }); melde(a === "ja" ? "Schön, dass du kommst!" : "Gespeichert"); treffenLaden(); } catch (e) { melde(e.message, true); }
 }
+// KC-CLUB-TREFFEN-AUSWAHL (0.27.0): Titel und Ort per Auswahlliste; bisher benutzte Orte kommen automatisch dazu
+const TITEL_VORSCHLAEGE = ["Köcheclub-Treffen", "Kochabend", "Grillabend", "Weihnachtsfeier", "Jahreshauptversammlung", "Sitzung Clubleitung", "Ausflug", "Aufbau Weihnachtsmarkt"];
+const ORT_VORSCHLAEGE = ["Garten", "Hütte bei Anne"];
+let TR_ORTE = [];
+function orteMerken(treffen) {
+  const n = new Set([...ORT_VORSCHLAEGE, ...TR_ORTE]);
+  TR_ORTE = [...new Set([...TR_ORTE, ...(treffen || []).map((t) => String(t.ort || "").trim()).filter((o) => o && !n.has(o))])].slice(0, 30);
+}
+// Auswahlliste mit „Eigener Eintrag …“ – der Wert steht immer im Feld mit der id (so bleibt das Speichern unverändert)
+function comboFeld(id, titel, optionen, wert, leer, eigen, platzhalter) {
+  const liste = [...new Set(optionen.filter(Boolean))], frei = !!wert && !liste.includes(wert);
+  return `<label class="feld">${titel}<select id="${id}Wahl" onchange="comboWahl('${id}')"><option value="">${esc(leer)}</option>`
+    + liste.map((o) => `<option ${o === wert ? "selected" : ""}>${esc(o)}</option>`).join("")
+    + `<option value="__eigen" ${frei ? "selected" : ""}>${esc(eigen)}</option></select>`
+    + `<input id="${id}" value="${esc(wert)}" placeholder="${esc(platzhalter)}" class="${frei ? "" : "versteckt"}" style="margin-top:6px"></label>`;
+}
+function comboWahl(id) {
+  const w = $(id + "Wahl").value, f = $(id);
+  if (w === "__eigen") { f.classList.remove("versteckt"); f.value = ""; f.focus(); } else { f.classList.add("versteckt"); f.value = w; }
+}
 async function treffenForm(t) {
   if (!MITGLIEDER) await mitgliederHolen();
+  if (!TR_ORTE.length) try { orteMerken((await api("treffen_liste")).treffen); } catch {}
   const tagIso = (iso) => new Intl.DateTimeFormat("sv-SE", { timeZone: TZ }).format(new Date(iso));
   const art = t?.art || "treffen", ganz = !!t?.ganztaegig;
   const datum = t?.beginn ? tagIso(t.beginn) : "", zeit = t?.beginn && !ganz ? fZeit.format(new Date(t.beginn)) : "18:00";
@@ -1687,12 +1709,12 @@ async function treffenForm(t) {
   $("treffenForm").innerHTML = `<h3>${t?.id ? "Termin ändern" : "Neuer Termin"}</h3>
     <div class="artwahl"><button type="button" class="knopf ${art === "treffen" ? "haupt" : ""}" data-art="treffen" onclick="tfArtWahl('treffen')">👥 Club-Treffen</button><button type="button" class="knopf ${art === "veranstaltung" ? "haupt" : ""}" data-art="veranstaltung" onclick="tfArtWahl('veranstaltung')">🎪 Veranstaltung</button></div>
     <input type="hidden" id="tfArt" value="${art}">
-    <label class="feld">Titel<input id="tfTitel" value="${esc(t?.titel || (art === "treffen" ? "Köcheclub-Treffen" : ""))}" placeholder="z. B. Aufbau Weihnachtsmarkt"></label>
+    ${comboFeld("tfTitel", "Titel", TITEL_VORSCHLAEGE, t?.titel || (art === "treffen" ? "Köcheclub-Treffen" : ""), "– bitte wählen –", "✏️ Eigener Titel …", "z. B. Aufbau Weihnachtsmarkt")}
     <div class="zwei"><label class="feld">Datum<input id="tfDatum" type="date" value="${datum}"></label><label class="feld">von<input id="tfZeit" type="time" value="${zeit}"></label></div>
     <div class="zwei"><label class="feld">bis Datum (mehrtägig)<input id="tfBisDatum" type="date" value="${bisDatum}"></label><label class="feld">bis Uhrzeit<input id="tfBisZeit" type="time" value="${bisZeit}"></label></div>
     <label class="schalter" id="tfGanzZeile"><span>Ganztägig (ohne Uhrzeit)</span><input type="checkbox" id="tfGanz" ${ganz ? "checked" : ""}></label>
     <label class="feld" id="tfGastZeile">Gastgeber<select id="tfGast"><option value="">– niemand –</option>${MITGLIEDER.map((m) => `<option value="${m.person_id}" ${t?.gastgeber === m.person_id ? "selected" : ""}>${esc(m.name)}</option>`).join("")}</select></label>
-    <label class="feld">Ort${art === "treffen" ? " (leer = beim Gastgeber)" : ""}<input id="tfOrt" value="${esc(t?.ort || "")}"></label>
+    ${comboFeld("tfOrt", "Ort", [...ORT_VORSCHLAEGE, ...TR_ORTE], t?.ort || "", "🏠 beim Gastgeber / noch offen", "✏️ Anderer Ort …", "z. B. Grillhütte am See")}
     <label class="feld">Beschreibung / Tagesordnung<textarea id="tfBeschr" rows="3">${esc(t?.beschreibung || "")}</textarea></label>
     <label class="schalter"><span>Alle Mitglieder benachrichtigen (Push/Mail)</span><input type="checkbox" id="tfInfo" ${art === "treffen" ? "checked" : ""}></label>
     <div class="knoepfe"><button class="knopf haupt" onclick="treffenSpeichern('${t?.id || ""}', this)">Speichern</button><button class="knopf" onclick="$('treffenForm').classList.add('versteckt')">Abbrechen</button></div>`;

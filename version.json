@@ -1,8 +1,9 @@
 {
-  "version": "0.26.3",
+  "version": "0.27.0",
   "datum": "2026-09-29",
   "neu": [
-    "🎨 Neues Farbdesign „Lagune“ (Türkis/Aqua wie der Reiseassistent)",
-    "✥ Kacheln anordnen per Ziehen: festhalten, schieben, loslassen"
+    "📅 Treffen anlegen: Titel und Ort per Auswahlliste",
+    "🧩 Kacheln etwas kleiner – mehr auf einen Blick",
+    "🗓️ Kalender kompakter"
   ]
 }
