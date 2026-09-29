@@ -37,6 +37,11 @@
   .zettel { position: relative; background: #fff27a; color: #2b2410; padding: 22px 12px 10px; border-radius: 2px; box-shadow: 2px 6px 10px rgba(0,0,0,.28); font-size: .98rem; line-height: 1.35; transform: rotate(var(--dreh, -1.5deg)); overflow-wrap: break-word; hyphens: auto; }
   .zettel::before { content: ""; position: absolute; top: -7px; left: 50%; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #ff8a8a, #c62828 60%, #7f1010); box-shadow: 1px 3px 3px rgba(0,0,0,.4); }
   .zettel.wichtig { background: #ffd94a; outline: 3px solid #c62828; }
+  /* KC-CLUB-PINNWAND-FARBEN (0.60.0): 1 gelb · 2 rosé · 3 hellgrün · 4 hellblau – wie echte Post-its, „wichtig“ behält Rand und Nadel */
+  .zettel.f1 { background: #fff27a; } .zettel.f2 { background: #ffb8d1; } .zettel.f3 { background: #c6f2a2; } .zettel.f4 { background: #aeddf7; }
+  .zettel .zknoepfe button.antw { background: #fff; }
+  .zettelpunkt { width: 16px; height: 16px; border-radius: 3px; flex: none; box-shadow: 1px 1px 2px rgba(0,0,0,.3); }
+  .zettelpunkt.f1 { background: #fff27a; } .zettelpunkt.f2 { background: #ffb8d1; } .zettelpunkt.f3 { background: #c6f2a2; } .zettelpunkt.f4 { background: #aeddf7; }
   .zettel.wichtig::before { background: radial-gradient(circle at 35% 35%, #ffb3b3, #d50000 60%, #7f0000); width: 18px; height: 18px; margin-left: -9px; }
   .zettel .zwichtig { position: absolute; top: 4px; right: 6px; font-size: .7rem; font-weight: 900; color: #b71c1c; }
   .zettel .ztext { white-space: pre-wrap; font-weight: 700; }
@@ -515,6 +520,13 @@
   /* KC-CLUB-ONLINE: grüner Punkt, Online-Leiste, Anklopf-Fenster */
   .onpunkt { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #2ecc71; box-shadow: 0 0 0 2px var(--karte), 0 0 6px #2ecc71; margin-right: 6px; vertical-align: middle; }
   .avatar { position: relative; } .avatar .onpunkt { position: absolute; right: -2px; bottom: -2px; margin: 0; }
+  /* KC-CLUB-KREISE (0.60.0): ganzer Namenskreis farbig nach Zustand (Registry KREIS_ARTEN) */
+  .avatar.k-neutral { background: #8d6e63; }
+  .avatar.k-online { background: #1e8449; } .avatar.k-heute { background: #2471a3; } .avatar.k-weg { background: #d68910; }
+  .avatar.k-fehler { background: #c0392b; } .avatar.k-selten { background: #95a5a6; }
+  .avatar.k-unbekannt { background: transparent; color: var(--grau); border: 2px dashed #95a5a6; }
+  .kreislegende { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: .82rem; margin: 4px 0 10px; }
+  .kreislegende span { display: inline-flex; align-items: center; gap: 5px; } .kreislegende i { width: 14px; height: 14px; border-radius: 50%; display: inline-block; }
   .onleiste { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 8px; }
   .onleiste button { flex: none; border: 2px solid #2ecc71; background: var(--karte); color: var(--text); border-radius: 999px; padding: 7px 12px; font-weight: 800; cursor: pointer; }
   .klopfen h3 { font-size: 1.25rem; } .blatt-innen.klopfen .knopf { text-align: center; }
@@ -795,6 +807,8 @@
     <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>📌 Pinnwand</h2><button class="knopf haupt klein" id="pwNeuKnopf" onclick="pwForm(true)">＋ Zettel</button></div>
     <div id="pwHinweis"></div>
     <div id="pwForm" class="karte versteckt">
+      <div id="pwAntwortAn" class="hinweis versteckt" style="margin:0 0 8px"></div>
+      <div id="pwVoll" class="hinweis versteckt" style="margin:0 0 8px;border:2px solid #d68910;border-radius:10px;padding:8px"></div>
       <label class="feld">Kurze Nachricht<textarea id="pwText" rows="3" maxlength="200" placeholder="z. B. Schürzen bitte bis Freitag abgeben" oninput="pwZaehlen()"></textarea></label>
       <div class="zaehler200" id="pwZaehler">0/200</div>
       <div class="hinweis" style="margin:8px 0 4px">Wichtigkeit</div>
@@ -807,7 +821,7 @@
       <div class="knoepfe"><button class="knopf haupt" id="pwSpeichernKnopf" onclick="pwAnheften()">📌 Anheften</button><button class="knopf" onclick="pwForm(false)">Abbrechen</button></div>
     </div>
     <div class="kork" id="pwWand"><div class="leer">Einen Moment …</div></div>
-    <p class="hinweis" style="margin-top:12px">Jeder darf höchstens <b>3 Zettel</b> gleichzeitig anheften, je höchstens <b>200 Zeichen</b>. „✓ erl.“ zeigt dem Verfasser, dass du es gelesen und erledigt hast.</p>
+    <p class="hinweis" style="margin-top:12px">Jeder darf höchstens <b><span id="pwMaxText">4</span> Zettel</b> gleichzeitig anheften – der 1. gelb, der 2. rosé, der 3. hellgrün, der 4. hellblau, je höchstens <b>200 Zeichen</b>. „✓ erl.“ zeigt dem Verfasser, dass du es gelesen und erledigt hast.</p>
   </section>
 
   <section id="v-gruppe" class="versteckt">
@@ -1086,7 +1100,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "0.59.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.60.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -1097,6 +1111,24 @@ const fKurz = new Intl.DateTimeFormat("de-DE", { timeZone: TZ, day: "2-digit", m
 const wann = (iso) => `${fTag.format(new Date(iso))}, ${fZeit.format(new Date(iso))} Uhr`;
 const zeitKurz = (iso) => { const d = new Date(iso), h = new Date(); return d.toDateString() === h.toDateString() ? fZeit.format(d) : fKurz.format(d) + " " + fZeit.format(d); };
 const initialen = (n) => String(n || "?").split(/\s+/).map((x) => x[0]).slice(0, 2).join("").toUpperCase();
+// ---------- KC-CLUB-KREISE (0.60.0): Namenskreis ganz farbig nach Zustand – eine Registry für alle Listen ----------
+// Reihenfolge = Vorrang. „fehler“ nur für den Admin (Server liefert fehler nur ihm). Unbekannt wird nie als OK gezeigt.
+const KREIS_ARTEN = [
+  { art: "fehler", text: "Fehler: Nachrichten kommen nicht an", farbe: "#c0392b", nurAdmin: true, gilt: (m) => ICH?.admin && !!m.fehler, info: (m) => m.fehler },
+  { art: "online", text: "gerade online", farbe: "#1e8449", gilt: (m) => !!m.online },
+  { art: "unbekannt", text: "unbekannt (online-Anzeige verborgen)", farbe: "transparent", gilt: (m) => !!m.verborgen },
+  { art: "weg", text: "abwesend (Urlaub, krank, …)", farbe: "#d68910", gilt: (m) => !!m.status && statusArt(m.status) !== "verfuegbar" },
+  { art: "heute", text: "heute in der App", farbe: "#2471a3", gilt: (m) => !!m.heute },
+  { art: "selten", text: "länger nicht oder noch nie in der App", farbe: "#95a5a6", gilt: () => true },
+];
+function kreisArt(m) { const k = m ? KREIS_ARTEN.find((x) => (!x.nurAdmin || ICH?.admin) && x.gilt(m)) : null; return k || { art: "unbekannt", text: "unbekannt" }; }
+// Kreis-HTML: m = Mitglied aus MITGLIEDER (oder Online-Liste), groesse in px, extra = zusätzliche Attribute
+function kreis(m, name, groesse = 40, extra = "") {
+  const k = kreisArt(m), titel = k.info ? `${k.text} – ${k.info(m)}` : k.text;
+  return `<div class="avatar k-${k.art}" style="width:${groesse}px;height:${groesse}px${groesse > 60 ? ";font-size:1.6rem;margin:0 auto" : ""}${extra.includes("onclick") ? ";cursor:pointer" : ""}" title="${esc(titel)}" aria-label="${esc((name || "") + ": " + titel)}" ${extra}>${esc(initialen(name))}</div>`;
+}
+const kreisLegende = () => `<div class="kreislegende">${KREIS_ARTEN.filter((k) => !k.nurAdmin || ICH?.admin).map((k) =>
+  `<span><i class="avatar k-${k.art}" style="width:14px;height:14px;${k.art === "unbekannt" ? "border-width:1px" : ""}"></i>${esc(k.text)}</span>`).join("")}</div>`;
 
 let START_HASH = "", KEY = "", ICH = null, INIT = null, MITGLIEDER = null, AEMTER = [], aktuelleAnsicht = "start", reg = "verein";
 let chatId = null, chatTimer = null, empfWahl = { personen: [], aemter: [], alle: false, vorstand: false }, anlagen = [], letzteUngelesen = null;
@@ -1217,14 +1249,16 @@ function dunkelUmschalten() {
 setInterval(() => { if (DS.modus === "auto") anwendenDesign(); }, 60000);
 document.addEventListener("visibilitychange", () => { if (!document.hidden && DS.modus === "auto") anwendenDesign(); });
 
-// ---------- KC-CLUB-PINNWAND: gelbe Zettel (max. 3 je Person, max. 200 Zeichen) ----------
-let PW = { zettel: [], offen: 0, meine: 0, max: 3, zeichen: 200, startGeprueft: false, form: { wichtig: false, fuer: "", personen: [] }, wichtigStart: false };
+// ---------- KC-CLUB-PINNWAND: Post-its (max. PW.max je Person vom Server, max. 200 Zeichen) ----------
+let PW = { zettel: [], offen: 0, meine: 0, max: 4, zeichen: 200, startGeprueft: false, form: { wichtig: false, fuer: "", personen: [] }, wichtigStart: false };
+// KC-CLUB-PINNWAND-FARBEN (0.60.0): Farbe 1–4 kommt fest vom Server (gelb, rosé, hellgrün, hellblau)
+const pwFarbe = (z) => " f" + ([1, 2, 3, 4].includes(Number(z.farbe)) ? Number(z.farbe) : 1);
 const pwFuerText = (z) => z.fuer === "ich" ? "nur für mich" : z.fuer === "alle" ? "für alle" : "für " + z.empfaenger.map((n) => n.split(" ")[0]).join(", ");
 // leicht schräg – je Zettel immer gleich (aus der ID), damit nichts beim Neuladen wackelt
 const pwDreh = (id) => { let h = 0; for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) | 0; return ((Math.abs(h) % 7) - 3) * 0.8 + (h % 2 ? 0.4 : -0.4); };
 const pwOffen = (z) => z.wichtig && !z.erledigt && (!z.vonMir || z.fuer === "ich");
 function pwUebernehmen(r) {
-  PW.zettel = r.zettel || []; PW.meine = r.meine || 0; PW.max = r.max || 3; PW.zeichen = r.zeichen || 200;
+  PW.zettel = r.zettel || []; PW.meine = r.meine || 0; PW.max = r.max || 4; PW.zeichen = r.zeichen || 200;
   PW.offen = PW.zettel.filter((z) => !z.vonMir && !z.erledigt).length;
   if (aktuelleAnsicht === "start" && !kaBearb) kachelnZeigen();
 }
@@ -1263,15 +1297,19 @@ function pwFenster(neu) {
   const f = document.createElement("div"); f.id = "pwFenster"; f.className = "blatt"; f.setAttribute("role", "dialog"); f.setAttribute("aria-modal", "true");
   f.innerHTML = `<div class="blatt-innen" style="max-height:88vh;overflow-y:auto">
     <h3 style="margin:0">📌 ${esc(liste.length === 1 ? liste[0].hinweis : `Du hast ${neu.length} neue Post-its bekommen`)}</h3>
-    <div class="pwfenster-zettel">${liste.map((z) => `<div class="zettel${z.wichtig ? " wichtig" : ""}" style="--dreh:${pwDreh(z.id)}deg">
+    <div class="pwfenster-zettel">${liste.map((z, i) => `<div class="zettel${z.wichtig ? " wichtig" : ""}${pwFarbe(z)}" style="--dreh:${pwDreh(z.id)}deg">
       ${z.wichtig ? '<span class="zwichtig">❗ WICHTIG</span>' : ""}<div class="ztext">${esc(z.text || "")}</div>
-      <div class="zfuss">von ${esc(z.von)}${z.privat ? " · nur für dich" : ""}${z.zeit ? " · " + esc(zeitKurz(z.zeit)) : ""}</div></div>`).join("")}</div>
+      <div class="zfuss">von ${esc(z.von)}${z.privat ? " · nur für dich" : ""}${z.zeit ? " · " + esc(zeitKurz(z.zeit)) : ""}</div>
+      ${z.vonId ? `<div class="zknoepfe"><button class="antw" data-antw="${i}">✍️ Antworten</button></div>` : ""}</div>`).join("")}</div>
     ${neu.length > liste.length ? `<p class="hinweis" style="margin:0">… und ${neu.length - liste.length} weitere an der Pinnwand</p>` : ""}
     <button class="knopf haupt" style="text-align:center" data-k="gelesen">✓ Gelesen</button>
     <button class="knopf" style="text-align:center" data-k="wand">📌 Zur Pinnwand</button></div>`;
   const zu = () => f.remove();
   f.querySelector('[data-k="gelesen"]').onclick = () => { zu(); api("pinnwand_gesehen", { ids: liste.map((z) => z.id) }).catch(() => {}); };
   f.querySelector('[data-k="wand"]').onclick = () => { zu(); zeige("pinnwand"); };
+  // KC-CLUB-PINNWAND-ANTWORT (0.60.0): gelesen melden und sofort ein Gegen-Post-it schreiben (Empfänger vorausgewählt, änderbar)
+  f.querySelectorAll("[data-antw]").forEach((b) => b.onclick = () => { const z = liste[Number(b.dataset.antw)]; zu();
+    api("pinnwand_gesehen", { ids: liste.map((x) => x.id) }).catch(() => {}); pwAntworten(z.id, z.vonId, z.von); });
   f.onclick = (e) => { if (e.target === f) zu(); };
   document.body.appendChild(f);
 }
@@ -1282,27 +1320,47 @@ async function pwLaden() {
 function pwZeigen() {
   const wichtigOffen = PW.zettel.filter(pwOffen).length;
   $("pwHinweis").innerHTML = PW.wichtigStart && wichtigOffen ? `<div class="karte" style="border:2px solid #c62828"><b>❗ ${wichtigOffen === 1 ? "Ein wichtiger Zettel" : wichtigOffen + " wichtige Zettel"} für dich.</b> Bitte lesen und mit „✓ erl.“ abhaken.</div>` : "";
-  $("pwNeuKnopf").disabled = PW.meine >= PW.max;
-  $("pwNeuKnopf").textContent = PW.meine >= PW.max ? `3/3 Zettel` : "＋ Zettel";
+  $("pwNeuKnopf").disabled = false; // bei vollen Zetteln öffnet das Formular mit „einen abnehmen“
+  $("pwNeuKnopf").textContent = PW.meine >= PW.max ? `${PW.max}/${PW.max} Zettel` : "＋ Zettel";
+  $("pwMaxText").textContent = PW.max;
   if (!PW.zettel.length) return ($("pwWand").innerHTML = `<div class="leer">Noch keine Zettel an der Pinnwand.<br>Mit „＋ Zettel“ einen anheften.</div>`);
   $("pwWand").innerHTML = PW.zettel.map((z) => {
     const knoepfe = [];
+    if (!z.vonMir) knoepfe.push(`<button class="antw" onclick="pwAntworten('${z.id}','${esc(z.von.person_id)}','${esc(z.von.vorname).replace(/'/g, "")}')">✍️ Antworten</button>`);
     if (!z.vonMir) knoepfe.push(z.erledigt ? `<button class="erl" onclick="pwErledigt('${z.id}', true)">✓ erl. ${zeitKurz(z.erledigt)}</button>` : `<button onclick="pwErledigt('${z.id}')">✓ erl.</button>`);
     if (z.vonMir || ICH?.vorstand) knoepfe.push(`<button onclick="pwAbnehmen('${z.id}')">🗑️ abnehmen</button>`);
     const leser = z.leser && z.fuer !== "ich" ? `<details><summary>👁️ gelesen ${z.leser.length}/${z.anzahl} · ✓ erl. ${z.leser.filter((l) => l.erledigt).length}</summary>`
       + z.leser.map((l) => `<div>${esc(l.name.split(" ")[0])}: gesehen ${zeitKurz(l.gesehen)}${l.erledigt ? ` · ✓ ${zeitKurz(l.erledigt)}` : ""}</div>`).join("")
       + (z.offen?.length ? `<div style="margin-top:4px">Noch nicht gesehen: ${z.offen.map((n) => esc(n.split(" ")[0])).join(", ")}</div>` : "") + `</details>` : "";
-    return `<div class="zettel${z.wichtig ? " wichtig" : ""}${z.erledigt ? " erledigt" : ""}" style="--dreh:${pwDreh(z.id)}deg">`
+    return `<div class="zettel${z.wichtig ? " wichtig" : ""}${pwFarbe(z)}${z.erledigt ? " erledigt" : ""}" style="--dreh:${pwDreh(z.id)}deg">`
       + (z.wichtig ? `<span class="zwichtig">❗ WICHTIG</span>` : "")
       + `<div class="ztext">${esc(z.text)}</div><div class="zfuss">${z.vonMir ? "von mir" : "von " + esc(z.von.vorname)} · ${zeitKurz(z.erstellt_am)} · ${esc(pwFuerText(z))}</div>`
       + leser + (knoepfe.length ? `<div class="zknoepfe">${knoepfe.join("")}</div>` : "") + `</div>`; }).join("");
 }
-function pwForm(an) {
-  if (an && PW.meine >= PW.max) return melde(`Du hast schon ${PW.max} Zettel angeheftet – bitte erst einen abnehmen.`, true);
+function pwForm(an, antwort) {
   $("pwForm").classList.toggle("versteckt", !an);
   if (!an) return;
-  PW.form = { wichtig: false, fuer: "", personen: [] }; $("pwText").value = ""; $("pwSuche").value = "";
-  pwZaehlen(); pwWichtig(false); pwFuer(""); $("pwText").focus();
+  PW.form = { wichtig: false, fuer: "", personen: [], antwortAuf: antwort?.id || null }; $("pwText").value = ""; $("pwSuche").value = "";
+  $("pwAntwortAn").innerHTML = antwort ? `↩️ Antwort an <b>${esc(antwort.name)}</b> – vorausgewählt nur für ${esc(antwort.name)} (privat). Für alle? Unten „👥 Für alle“ tippen.` : "";
+  $("pwAntwortAn").classList.toggle("versteckt", !antwort);
+  pwVoll(); pwZaehlen(); pwWichtig(false);
+  if (antwort) { PW.form.personen = [antwort.personId]; pwFuer("personen"); } else pwFuer("");
+  $("pwText").focus();
+}
+// alle Plätze belegt: eigene Zettel direkt im Formular zeigen, einer lässt sich abnehmen – ohne Umweg über die Wand
+function pwVoll() {
+  const voll = PW.meine >= PW.max, eigene = PW.zettel.filter((z) => z.vonMir);
+  $("pwVoll").classList.toggle("versteckt", !voll);
+  $("pwSpeichernKnopf").disabled = voll;
+  if (voll) $("pwVoll").innerHTML = `<b>Du hast schon ${PW.max} Zettel hängen.</b> Nimm einen ab, dann kannst du anheften:`
+    + eigene.map((z) => `<div class="zeile"><span class="zettelpunkt${pwFarbe(z)}"></span><span style="flex:1">${esc(String(z.text).slice(0, 60))}${String(z.text).length > 60 ? " …" : ""}</span><button class="knopf klein" onclick="pwAbnehmen('${z.id}', true)">🗑️ abnehmen</button></div>`).join("");
+}
+// KC-CLUB-PINNWAND-ANTWORT (0.60.0): aus dem Post-it-Fenster oder von der Wand direkt ins Formular
+async function pwAntworten(id, personId, name) {
+  if (aktuelleAnsicht !== "pinnwand") zeige("pinnwand");
+  try { pwUebernehmen(await api("pinnwand", {}, { warten: true })); pwZeigen(); } catch {}
+  pwForm(true, { id, personId, name: String(name || "").split(" ")[0] || "Absender" });
+  $("pwForm").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 function pwZaehlen() {
   const n = [...$("pwText").value].length, max = PW.zeichen, el = $("pwZaehler");
@@ -1329,15 +1387,16 @@ async function pwAnheften() {
   if (!PW.form.fuer) return melde("Bitte wählen: nur für mich, für alle oder bestimmte Personen.", true);
   if (PW.form.fuer === "personen" && !PW.form.personen.length) return melde("Bitte mindestens eine Person auswählen.", true);
   $("pwSpeichernKnopf").disabled = true;
-  try { await api("pinnwand_anheften", { text, wichtig: PW.form.wichtig, fuer: PW.form.fuer, personen: PW.form.personen }); melde("📌 Angeheftet"); pwForm(false); await pwLaden(); }
+  try { await api("pinnwand_anheften", { text, wichtig: PW.form.wichtig, fuer: PW.form.fuer, personen: PW.form.personen, ...(PW.form.antwortAuf ? { antwort_auf: PW.form.antwortAuf } : {}) });
+    melde(PW.form.antwortAuf ? "📌 Antwort angeheftet" : "📌 Angeheftet"); pwForm(false); await pwLaden(); }
   catch (e) { melde(e.message, true); } finally { $("pwSpeichernKnopf").disabled = false; }
 }
 async function pwErledigt(id, zurueck) {
   try { await api("pinnwand_erledigt", { id, zurueck: !!zurueck }); await pwLaden(); if (!zurueck) melde("✓ Erledigt – der Verfasser sieht es"); } catch (e) { melde(e.message, true); }
 }
-async function pwAbnehmen(id) {
+async function pwAbnehmen(id, ausFormular) {
   if (!confirm("Zettel von der Pinnwand abnehmen?")) return;
-  try { await api("pinnwand_abnehmen", { id }); melde("🗑️ Abgenommen"); await pwLaden(); } catch (e) { melde(e.message, true); }
+  try { await api("pinnwand_abnehmen", { id }); melde("🗑️ Abgenommen"); await pwLaden(); if (ausFormular) pwVoll(); } catch (e) { melde(e.message, true); }
 }
 
 // ---------- KC-CLUB-BEGRUESSUNG (0.28.0): beim ersten Start einmal je Mitglied, danach nie wieder (auch nicht auf neuen Geräten) ----------
@@ -1409,7 +1468,7 @@ function onlineLeisteZeigen() {
 }
 // Startseite „🟢 3 online“ → Liste mit Direktkontakt (👋 anklopfen oder 💬 gleich schreiben)
 function onlineBlatt() {
-  $("onlineListe").innerHTML = ONL.liste.length ? ONL.liste.map((x) => `<div class="onzeile"><div class="avatar" style="width:40px;height:40px">${esc(initialen(x.name || x.vorname))}<i class="onpunkt"></i></div>
+  $("onlineListe").innerHTML = ONL.liste.length ? ONL.liste.map((x) => `<div class="onzeile">${kreis({ ...(MITGLIEDER?.find((m) => m.person_id === x.person_id) || {}), online: true }, x.name || x.vorname, 40)}
       <div style="flex:1"><b>${esc(x.name || x.vorname)}</b><div class="hinweis" style="font-size:.85rem;margin:0">gerade online</div></div>
       <button class="knopf haupt" onclick="$('onlineBlatt').classList.add('versteckt'); anklopfen('${x.person_id}')">👋 Anklopfen</button>
       <button class="knopf" title="Anrufen (Test)" onclick="$('onlineBlatt').classList.add('versteckt'); anrufen('${x.person_id}')">📞</button>
@@ -3577,8 +3636,10 @@ async function unterhLaden() {
   try {
     const { unterhaltungen } = await api("unterhaltungen", {}, { warten: true });
     UH.liste = unterhaltungen; if (!unterhaltungen.some((u) => u.id === UH.wahl)) UH.wahl = null;
+    // KC-CLUB-KREISE: Zustandsfarben brauchen die Mitgliederliste – einmal nachladen, dann neu zeichnen
+    if (!MITGLIEDER && !UH.kreiseGeholt) { UH.kreiseGeholt = true; mitgliederHolen().then(() => { if (aktuelleAnsicht === "nachrichten") unterhLaden(); }).catch(() => {}); }
     $("unterhListe").innerHTML = (unterhaltungen.length ? '<p class="hinweis uhtipp">Einmal tippen = auswählen (🗑️ entfernen) · doppelt tippen = öffnen</p>' : "") + unterhaltungen.map((u) => `<div class="unterh${u.id === UH.wahl ? " gewaehlt" : ""}" data-id="${u.id}" onclick="unterhTipp('${u.id}')">
-      <div class="avatar">${u.gruppe ? esc(u.gruppe.symbol) : u.anzahl > 2 ? "👥" : esc(initialen(u.teilnehmer[0]))}</div>
+      ${u.gruppe || u.anzahl > 2 ? `<div class="avatar k-neutral">${u.gruppe ? esc(u.gruppe.symbol) : "👥"}</div>` : kreis(MITGLIEDER?.find((m) => m.name === u.teilnehmer[0]) || null, u.teilnehmer[0], 46)}
       <div class="mitte"><div><b>${esc(u.gruppe?.name || u.betreff || u.teilnehmer.join(", "))}</b>${u.gruppe ? ` <span class="hinweis" style="font-size:.8rem">· ${u.anzahl} Mitgl.</span>` : ""}</div><div class="hinweis">${u.letzte ? esc(u.letzte.von + ": " + u.letzte.text) : "Noch keine Nachricht"}</div></div>
       <div style="text-align:right"><div class="hinweis" style="font-size:.8rem">${u.letzte ? zeitKurz(u.letzte.zeit) : ""}</div>${u.ungelesen ? `<span class="punkt">${u.ungelesen}</span>` : ""}</div></div>${u.id === UH.wahl ? unterhAktionen(u) : ""}`).join("")
       || '<p class="hinweis">Noch keine Nachrichten. Tippe oben auf „＋ Neu“.</p>';
@@ -4271,8 +4332,8 @@ async function protokollKorrigieren() {
 async function mitgliederLaden() {
   try {
     await mitgliederHolen();
-    $("mitgliederListe").innerHTML = MITGLIEDER.map((m) => `<div class="zeile">
-      <div class="avatar" style="width:40px;height:40px;cursor:pointer" onclick="mitgliedOeffnen('${m.person_id}')">${esc(initialen(m.name))}${m.online ? '<i class="onpunkt" title="gerade online"></i>' : ""}</div>
+    $("mitgliederListe").innerHTML = kreisLegende() + MITGLIEDER.map((m) => `<div class="zeile">
+      ${kreis(m, m.name, 40, `onclick="mitgliedOeffnen('${m.person_id}')"`)}
       <div style="flex:1;cursor:pointer" onclick="mitgliedOeffnen('${m.person_id}')"><b>${esc(m.name)}</b>${wegIcons(m)} <span class="hinweis">›</span>${m.aemter?.length ? ` <span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}
         <div class="hinweis" style="font-size:.85rem">${m.online ? '<b style="color:#1e8449">● online</b> · ' : ""}${m.status || m.aktiv ? `<span class="stmarke st-${statusArt(m.status)}">${esc(m.status ? statusText(m.status) : "🟢 verfügbar")}</span>` : "⚪ noch nicht in der App"}${m.aktiv ? " · 📲 aktiv" : ""}</div>
         ${ICH.admin && (m.app || m.push || !m.mail || m.protokolle === false) ? `<div class="hinweis" style="font-size:.85rem">${[m.app && m.zuletzt ? "zuletzt " + zeitKurz(m.zuletzt) : m.app ? "Link verschickt" : "", m.push ? "🔔 Push" : "", m.mail ? "" : "⚠️ keine Mail", m.protokolle === false ? "📄 ohne Protokolle" : ""].filter(Boolean).join(" · ")}</div>` : ""}</div>
@@ -5170,7 +5231,7 @@ function mitgliedZeigen() {
   const leer = !zeilen ? `<p class="hinweis">${!m.darfKontakte ? "Kontaktdaten anderer Mitglieder sind für dich nicht freigeschaltet." : m.selbst ? "Für dich sind keine Kontaktdaten gespeichert." : `${esc(m.vorname)} hat noch keine Kontaktdaten freigegeben.`}</p>` : "";
   $("mitgliedInhalt").innerHTML = `
     <div class="karte" style="text-align:center">
-      <div class="avatar" style="width:72px;height:72px;font-size:1.6rem;margin:0 auto">${esc(initialen(m.name))}</div>
+      ${kreis(MITGLIEDER?.find((x) => x.person_id === mitgliedId) || null, m.name, 72)}
       <div style="font-size:1.3rem;font-weight:800;margin-top:8px">${esc(m.name)}</div>
       ${m.aemter?.length ? `<div style="margin-top:4px">${m.aemter.map((a) => `<span class="marke">${esc(a)}</span>`).join(" ")}</div>` : ""}
       <div class="hinweis" style="margin-top:4px">${m.status ? esc(statusText(m.status)) : ""}${m.geburtstag ? ` · 🎂 ${esc(m.geburtstag.slice(3) + "." + m.geburtstag.slice(0, 2) + ".")}` : ""}</div>

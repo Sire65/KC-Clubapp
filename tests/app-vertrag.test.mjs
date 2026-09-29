@@ -582,7 +582,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 44. 0.25.0: Pinnwand – höchstens 3 Zettel je Person, 200 Zeichen, wichtig beim Öffnen, gelesen/erledigt nur für Verfasser
 {
   for (const a of ["pinnwand", "pinnwand_anheften", "pinnwand_erledigt", "pinnwand_abnehmen"]) assert.ok(aktionen.has(a) && aufrufe.has(a), `Pinnwand-Aktion ${a} fehlt`);
-  assert.ok(/const PINNWAND_MAX = 3, PINNWAND_ZEICHEN = 200;/.test(server), "Grenzen fehlen");
+  assert.ok(/const PINNWAND_MAX = 4, PINNWAND_ZEICHEN = 200;/.test(server), "Grenzen fehlen"); // 0.60.0: 4 statt 3 (Freigabe Hansi)
   const an = server.slice(server.indexOf('case "pinnwand_anheften"'), server.indexOf('case "pinnwand_erledigt"'));
   assert.ok(/>= PINNWAND_MAX\) throw/.test(an) && /\.length > PINNWAND_ZEICHEN\) throw/.test(an) && /\.is\("entfernt_am", null\)/.test(an), "Server prüft 3 Zettel / 200 Zeichen nicht");
   const li = server.slice(server.indexOf('case "pinnwand":'), server.indexOf('case "pinnwand_anheften"'));
@@ -1120,6 +1120,25 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/kc_dp_wish_inbox_ack/.test(mig) && /kc_dp_days_publish/.test(mig) && /'KC_CLUBAPP'/.test(mig), "Datenbankvertrag fehlt");
   assert.ok(/\{ id: "dienstwunsch", sym: "📝", t: "Dienstwünsche"[^}]*aktion: "dwOeffnen\(\)" \}/.test(html) && /src="dienstwunsch\.html\?v=\$\{APP_VERSION\}"/.test(html), "Kachel/Fenster fehlt");
   assert.ok(/if \(e\.origin !== location\.origin/.test(html) && /e\.data === "dienstwunsch-zu"/.test(html) && /else if \(h === "#dienstwunsch"\) dwOeffnen\(\);/.test(html), "Nachrichten aus dem Fenster ungeprüft / Sprung fehlt");
+}
+
+// 82. 0.60.0: Post-it antworten, 4 Farben, farbige Namenskreise (KC-CLUB-PINNWAND-ANTWORT / -FARBEN / KC-CLUB-KREISE)
+{
+  const an = server.slice(server.indexOf('case "pinnwand_anheften"'), server.indexOf('case "pinnwand_neu"'));
+  assert.ok(/const farbe = \[1, 2, 3, 4\]\.find\(\(n\) => !belegt\.has\(n\)\)/.test(an) && /personen: empf, farbe \}/.test(an) && /23505/.test(an), "Feste Farbe / kleinste freie fehlt");
+  const mig = lies("supabase/migrations/20260929_kc_club_v60_pinnwand_farben.sql");
+  assert.ok(/check \(farbe between 1 and 4\)/.test(mig) && /unique index if not exists kc_club_pinnwand_farbe_frei on public\.kc_club_pinnwand \(person_id, farbe\) where entfernt_am is null/.test(mig), "Datenbank schützt Farben nicht");
+  assert.ok(/add column if not exists farbe smallint/.test(lies("supabase/neon/20260929_neon_pinnwand_farbe.sql")), "Neon-Spiegelspalte fehlt");
+  assert.ok(/\.zettel\.f1 \{ background: #fff27a; \} \.zettel\.f2 \{ background: #ffb8d1; \} \.zettel\.f3 \{ background: #c6f2a2; \} \.zettel\.f4 \{ background: #aeddf7; \}/.test(html), "Post-it-Farben gelb/rosé/hellgrün/hellblau fehlen");
+  assert.ok(/vonId: z\.person_id, farbe: z\.farbe \?\? 1/.test(server) && /data-antw=/.test(html) && /pwAntworten\(z\.id, z\.vonId, z\.von\)/.test(html), "Antworten im Post-it-Fenster fehlt");
+  assert.ok(/if \(antwort\) \{ PW\.form\.personen = \[antwort\.personId\]; pwFuer\("personen"\); \}/.test(html) && /id="pwFuer"[\s\S]{0,200}data-f="alle"/.test(html), "Antwort: privat vorausgewählt / „für alle“ wählbar");
+  assert.ok(/function pwVoll\(\)/.test(html) && /pwAbnehmen\('\$\{z\.id\}', true\)/.test(html), "Volle Plätze: Abnehmen im Formular fehlt");
+  // Kreise: Registry, Rot nur Admin (Server liefert fehler nur im Admin-Zweig), Unbekannt nie OK
+  assert.ok(/const KREIS_ARTEN = \[/.test(html) && /art: "fehler"[^\n]*nurAdmin: true, gilt: \(m\) => ICH\?\.admin && !!m\.fehler/.test(html), "Rot nicht auf Admin beschränkt");
+  assert.ok(/\.\.\.\(ich\.admin \? \{[^\n]*fehler: fehler\.get\(m\.person_id\) \?\? null \}/.test(server) && /if \(ich\.admin\) \{\s*const \{ data: fx \}/.test(server), "Server gibt Fehler an Nicht-Admins");
+  assert.ok(/verborgen: m\.person_id !== ich\.person_id && \(!ichZeige \|\| zeigen\.get\(m\.person_id\) === false\)/.test(server) && /heute: ichZeige && /.test(server), "Online-Privatsphäre bei heute/verborgen nicht beachtet");
+  assert.ok(/\.avatar\.k-unbekannt \{ background: transparent;[^}]*dashed/.test(html) && /return k \|\| \{ art: "unbekannt"/.test(html), "Unbekannt wird nicht als unbekannt gezeigt");
+  assert.ok((html.match(/[{:] ?kreis\((m|\{|MITGLIEDER)/g) || []).length >= 4 && /kreisLegende\(\) \+ MITGLIEDER\.map/.test(html), "Kreise nicht in allen Listen / Legende fehlt");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

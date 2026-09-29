@@ -1,5 +1,21 @@
 # Änderungen
 
+## 0.60.0 – 2026-09-29 (DEV)
+
+- KC-CLUB-PINNWAND-ANTWORT (neu, Wunsch Hansi): im Post-it-Fenster und an jedem fremden Zettel „✍️ Antworten“ – meldet
+  „gesehen“ und öffnet sofort das Schreibfeld, Empfänger = Absender (privat) vorausgewählt, „👥 Für alle“ wählbar.
+  Sind alle eigenen Plätze belegt, zeigt das Formular die eigenen Zettel zum Abnehmen (kein Umweg über die Wand).
+  pinnwand_neu liefert dafür vonId; antwort_auf nur fürs Protokoll.
+- KC-CLUB-PINNWAND-FARBEN (neu): 4 statt 3 Zettel je Person (PINNWAND_MAX, am Server geprüft). Feste Farbe je Zettel
+  (Spalte kc_club_pinnwand.farbe 1–4: gelb, rosé, hellgrün, hellblau), neuer Zettel = kleinste freie Farbe, kein Nachrücken;
+  eindeutiger Teilindex (person_id, farbe) gegen Doppelvergabe. „Wichtig“ behält roten Rand und Nadel. Migration v60,
+  Neon-Spiegelspalte ergänzt (nur hinzugefügt).
+- KC-CLUB-KREISE (neu): Namenskreise ganz farbig nach Zustand (Registry KREIS_ARTEN, eine Stelle für Mitgliederliste,
+  Online-Liste, Mitgliedskarte, Einzel-Unterhaltungen): grün online · blau heute in der App · orange abwesend (Status) ·
+  grau länger nicht/nie · gestrichelt unbekannt (online-Anzeige verborgen – nie als OK) · rot Zustellfehler **nur für den
+  Admin** (fehlgeschlagene Push/Mail der letzten 7 Tage oder weder Push noch Mail). Legende in der Mitgliederliste.
+  „heute“/„verborgen“ folgen der Online-Privatsphäre (wer sich verbirgt, sieht auch andere nicht).
+
 ## 0.59.0 – 2026-09-29 (DEV)
 
 - KC-CLUB-DIENSTWUNSCH (neu, Wunsch Hansi): Dienstwünsche in der Club-App mit **Twinkey aus KC DP2 – 1:1**. Neue Kachel

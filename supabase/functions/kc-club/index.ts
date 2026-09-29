@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.59.0";
+const SERVER_VERSION = "0.60.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -534,14 +534,16 @@ function erstattungPruefen(roh: unknown, ich: Ich, saetze: KmSatz[]) {
   if (!pos.length) throw new Fehler("Bitte mindestens eine Position hinzufügen.");
   return pos;
 }
-// ----- KC-CLUB-PINNWAND (0.25.0): höchstens 3 Zettel je Person, je Zettel höchstens 200 Zeichen -----
-const PINNWAND_MAX = 3, PINNWAND_ZEICHEN = 200;
+// ----- KC-CLUB-PINNWAND (0.25.0): höchstens PINNWAND_MAX Zettel je Person, je Zettel höchstens 200 Zeichen -----
+// KC-CLUB-PINNWAND-FARBEN (0.60.0): 4 statt 3; jeder Zettel behält seine Farbe 1–4 (gelb, rosé, hellgrün, hellblau), ein neuer
+// bekommt die kleinste freie – abgenommene Zettel machen ihre Farbe frei, die anderen rücken nicht nach.
+const PINNWAND_MAX = 4, PINNWAND_ZEICHEN = 200;
 // KC-CLUB-PINNWAND-LIVE (0.57.0): eine Formulierung für Push und Einblendung. „privat“ nur, wenn der Zettel wirklich nur
 // für diese eine Person ist (für bestimmte Personen, genau ein Empfänger) – bei „für alle“ oder mehreren Empfängern ohne „privat“.
 const pinnwandPrivat = (z: { fuer: string; personen?: string[] | null }) => z.fuer === "personen" && (z.personen ?? []).length === 1;
 const pinnwandHinweis = (von: string, privat: boolean, wichtig: boolean) => `Du hast ein neues ${wichtig ? "wichtiges " : ""}${privat ? "privates " : ""}Post-it von ${von} bekommen`;
 async function pinnwandSichtbar(ich: Ich) {
-  const { data } = await db.from("kc_club_pinnwand").select("id,person_id,text,wichtig,fuer,personen,erstellt_am").is("entfernt_am", null)
+  const { data } = await db.from("kc_club_pinnwand").select("id,person_id,text,wichtig,fuer,personen,erstellt_am,farbe").is("entfernt_am", null)
     .or(`person_id.eq.${ich.person_id},fuer.eq.alle,personen.cs.{${ich.person_id}}`)
     .order("wichtig", { ascending: false }).order("erstellt_am", { ascending: false }).limit(100);
   return data ?? [];
@@ -1348,16 +1350,32 @@ Köcheclub Werne`,
         const ps = new Set((push ?? []).map((x: any) => x.person_id));
         const aemter = [...new Set((rollen ?? []).flatMap((x: any) => x.aemter || []))].sort();
         const ichZeige = (await onlineZeigenMap([ich.person_id])).get(ich.person_id) !== false, on = ichZeige ? await onlineJetzt() : new Set<string>();
+        // KC-CLUB-KREISE (0.60.0): Farbe der Namenskreise. „heute da“ und „verborgen“ folgen derselben Regel wie online
+        // (wer sich verbirgt, sieht auch andere nicht). Zustellfehler (rot) nur für den Admin.
+        const zeigen = await onlineZeigenMap(), tag = (d: string | Date) => new Date(d).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }), heute = tag(new Date());
+        const fehler = new Map<string, string>();
+        if (ich.admin) {
+          const { data: fx } = await db.from("kc_communication_requests").select("recipient_refs,channel,status,created_at").eq("source_program", "kc-club")
+            .in("status", COMM_FEHLER).gte("created_at", new Date(Date.now() - 7 * 86400000).toISOString()).limit(500);
+          const perMail = new Map(leute.filter((m) => m.email).map((m) => [String(m.email).toLowerCase(), m.person_id]));
+          for (const x of fx ?? []) for (const r of (Array.isArray(x.recipient_refs) ? x.recipient_refs : []) as any[]) {
+            const id = r?.personId ?? perMail.get(String(r?.email ?? "").toLowerCase());
+            if (id && !fehler.has(id)) fehler.set(id, x.channel === "push" ? "Push kam nicht an (letzte 7 Tage)" : "E-Mail kam nicht an (letzte 7 Tage)");
+          }
+          for (const m of leute) if (!ps.has(m.person_id) && !m.email && !fehler.has(m.person_id)) fehler.set(m.person_id, "Nicht erreichbar: kein Push und keine E-Mail");
+        }
         return json({
           aemter, onlineSichtbar: ichZeige,
           mitglieder: leute.map((m) => ({
             person_id: m.person_id, name: m.display_name, vorname: vorname(m),
             vorstand: !!(r.get(m.person_id) as any)?.ist_vorstand, aemter: (r.get(m.person_id) as any)?.aemter ?? [], admin: !!(r.get(m.person_id) as any)?.ist_admin,
             status: st.get(m.person_id) ?? null, online: on.has(m.person_id) && m.person_id !== ich.person_id,
+            verborgen: m.person_id !== ich.person_id && (!ichZeige || zeigen.get(m.person_id) === false),
+            heute: ichZeige && (zeigen.get(m.person_id) !== false || m.person_id === ich.person_id) && !!(z.get(m.person_id) as any)?.zuletzt_gesehen && tag((z.get(m.person_id) as any).zuletzt_gesehen) === heute,
             wege: { push: ps.has(m.person_id), mail: !!m.email, whatsapp: hatTel.has(m.person_id) && (ich.admin || m.person_id === ich.person_id || (ich.kontakte && handyFrei.has(m.person_id))) },
             // für alle nur grob: in den letzten 14 Tagen in der App gewesen (genaue Zeit nur für den Admin)
             aktiv: !!(z.get(m.person_id) as any)?.zuletzt_gesehen && Date.now() - new Date((z.get(m.person_id) as any).zuletzt_gesehen).getTime() < 14 * 86400000,
-            ...(ich.admin ? { kontakte: (r.get(m.person_id) as any)?.kontakte_sehen !== false, protokolle: (r.get(m.person_id) as any)?.protokolle_lesen !== false, app: !!(z.get(m.person_id) as any)?.aktiv, zuletzt: (z.get(m.person_id) as any)?.zuletzt_gesehen ?? null, push: ps.has(m.person_id), mail: !!m.email } : {}),
+            ...(ich.admin ? { kontakte: (r.get(m.person_id) as any)?.kontakte_sehen !== false, protokolle: (r.get(m.person_id) as any)?.protokolle_lesen !== false, app: !!(z.get(m.person_id) as any)?.aktiv, zuletzt: (z.get(m.person_id) as any)?.zuletzt_gesehen ?? null, push: ps.has(m.person_id), mail: !!m.email, fehler: fehler.get(m.person_id) ?? null } : {}),
           })),
         });
       }
@@ -2266,7 +2284,7 @@ Köcheclub Werne`,
           const vonMir = z.person_id === ich.person_id, meine = (gl ?? []).find((g: any) => g.zettel_id === z.id && g.person_id === ich.person_id);
           const empf = z.fuer === "alle" ? aktiv.map((m) => m.person_id).filter((id) => id !== z.person_id) : z.fuer === "personen" ? (z.personen || []) : [];
           const lese = (gl ?? []).filter((g: any) => g.zettel_id === z.id && g.person_id !== z.person_id);
-          return { id: z.id, text: z.text, wichtig: z.wichtig, fuer: z.fuer, erstellt_am: z.erstellt_am, vonMir,
+          return { id: z.id, text: z.text, wichtig: z.wichtig, fuer: z.fuer, erstellt_am: z.erstellt_am, vonMir, farbe: z.farbe ?? 1,
             von: { person_id: z.person_id, vorname: vorname(leute.get(z.person_id) ?? null) || nm(z.person_id) },
             empfaenger: z.fuer === "personen" ? empf.map(nm) : [],
             erledigt: z.fuer === "ich" ? null : meine?.erledigt_am ?? null,
@@ -2289,9 +2307,13 @@ Köcheclub Werne`,
           empf = ([...new Set((Array.isArray(p.personen) ? p.personen : []).map(String))] as string[]).filter((id) => aktiv.has(id) && id !== ich.person_id).slice(0, 60);
           if (!empf.length) throw new Fehler("Bitte mindestens eine Person auswählen.");
         }
-        const { count } = await db.from("kc_club_pinnwand").select("id", { count: "exact", head: true }).eq("person_id", ich.person_id).is("entfernt_am", null);
-        if ((count ?? 0) >= PINNWAND_MAX) throw new Fehler(`Du hast schon ${PINNWAND_MAX} Zettel an der Pinnwand – bitte erst einen abnehmen.`, 409);
-        const { data: z, error } = await db.from("kc_club_pinnwand").insert({ person_id: ich.person_id, text, wichtig: !!p.wichtig, fuer, personen: empf }).select("id").single();
+        const { data: haengt } = await db.from("kc_club_pinnwand").select("farbe").eq("person_id", ich.person_id).is("entfernt_am", null);
+        if ((haengt ?? []).length >= PINNWAND_MAX) throw new Fehler(`Du hast schon ${PINNWAND_MAX} Zettel an der Pinnwand – bitte erst einen abnehmen.`, 409);
+        const belegt = new Set((haengt ?? []).map((x: any) => x.farbe));
+        const farbe = [1, 2, 3, 4].find((n) => !belegt.has(n)) ?? 1;
+        const antwortAuf = p.antwort_auf ? String(p.antwort_auf).slice(0, 40) : null; // nur fürs Protokoll
+        const { data: z, error } = await db.from("kc_club_pinnwand").insert({ person_id: ich.person_id, text, wichtig: !!p.wichtig, fuer, personen: empf, farbe }).select("id").single();
+        if (error?.code === "23505") throw new Fehler("Gerade wurde schon ein Zettel angeheftet – bitte kurz neu laden.", 409);
         if (error || !z) throw new Fehler("Zettel konnte nicht angeheftet werden.", 500);
         // Push an alle Empfänger, die die App schon geöffnet haben (Bereich „pinnwand“, jedes Mitglied steuert es selbst)
         const ziel = fuer === "alle" ? (await aktiveMitglieder()).map((m) => m.person_id).filter((id) => id !== ich.person_id) : empf;
@@ -2304,8 +2326,8 @@ Köcheclub Werne`,
             text: `Hallo,\n\n${kopf}:\n\n„${text}“\n\nAnsehen in der Köcheclub-App: ${APP_URL}#pinnwand\n\nViele Grüße\nKöcheclub Werne`, url: `${APP_URL}#pinnwand` }, `club-pinnwand:${z.id}`)
               .catch((e) => { console.error("pinnwand push", String(e)); return { gesendet: 0, fehler: an.length }; });
         }
-        await protokoll(ich.person_id, "pinnwand_angeheftet", { zettel: z.id, fuer, wichtig: !!p.wichtig, personen: empf.length, zeichen: [...text].length, versand });
-        return json({ ok: true, id: z.id, versand });
+        await protokoll(ich.person_id, "pinnwand_angeheftet", { zettel: z.id, fuer, wichtig: !!p.wichtig, personen: empf.length, zeichen: [...text].length, versand, farbe, ...(antwortAuf ? { antwortAuf } : {}) });
+        return json({ ok: true, id: z.id, farbe, versand });
       }
 
       // KC-CLUB-PINNWAND-LIVE (0.57.0): nur lesen – neue, von mir noch nicht gesehene fremde Zettel (markiert NICHTS als gesehen;
@@ -2318,7 +2340,7 @@ Köcheclub Werne`,
         const neu = fremd.filter((z: any) => !gesehen.has(z.id)).slice(0, 10);
         const leute = await personen(neu.map((z: any) => z.person_id));
         return json({ neu: neu.map((z: any) => { const von = vorname(leute.get(z.person_id)) || "jemandem";
-          return { id: z.id, von, wichtig: !!z.wichtig, privat: pinnwandPrivat(z), hinweis: pinnwandHinweis(von, pinnwandPrivat(z), !!z.wichtig), text: z.text, zeit: z.erstellt_am }; }) });
+          return { id: z.id, von, vonId: z.person_id, farbe: z.farbe ?? 1, wichtig: !!z.wichtig, privat: pinnwandPrivat(z), hinweis: pinnwandHinweis(von, pinnwandPrivat(z), !!z.wichtig), text: z.text, zeit: z.erstellt_am }; }) });
       }
       // KC-CLUB-PINNWAND-DIREKT (0.58.0): der Zettel wurde im Post-it-Fenster angezeigt → als gesehen erfassen (nur sichtbare fremde Zettel)
       case "pinnwand_gesehen": {

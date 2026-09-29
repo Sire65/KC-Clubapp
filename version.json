@@ -1,10 +1,20 @@
 {
-  "version": "0.59.0",
+  "version": "0.60.0",
   "datum": "2026-09-29",
   "neu": [
-    "📝 Neu: Dienstwünsche mit Twinkey – genau wie in DP2 (Kann-Zeit, Wunschzeit, Sperren, Nur wenn nötig, Bereitschaft). Gespeichert wird im Club, DP2 übernimmt die Wünsche automatisch"
+    "✍️ Auf ein Post-it direkt antworten – gleich im Post-it-Fenster, privat oder für alle",
+    "📌 Jetzt 4 Post-its je Person, in echten Farben: gelb, rosé, hellgrün, hellblau",
+    "🟢 Namenskreise zeigen farbig, wer online ist, heute da war oder abwesend ist"
   ],
   "verlauf": [
+    {
+      "version": "0.60.0",
+      "neu": [
+        "✍️ Auf ein Post-it direkt antworten – gleich im Post-it-Fenster, privat oder für alle",
+        "📌 Jetzt 4 Post-its je Person, in echten Farben: gelb, rosé, hellgrün, hellblau",
+        "🟢 Namenskreise zeigen farbig, wer online ist, heute da war oder abwesend ist"
+      ]
+    },
     {
       "version": "0.59.0",
       "neu": [
