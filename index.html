@@ -301,6 +301,13 @@
   .fotokachel { position: relative; aspect-ratio: 1; border: none; padding: 0; border-radius: 8px; overflow: hidden; background: var(--karte2); cursor: pointer; font-size: 1.6rem; }
   .fotokachel img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .fotokachel .fk-marke { position: absolute; right: 4px; bottom: 4px; background: rgba(0,0,0,.6); border-radius: 10px; padding: 2px 6px; font-size: 1rem; }
+  /* KC-CLUB-KAMERA: Kamera in der App (ohne fremde Kamera-App) */
+  .appkamera { position: fixed; inset: 0; background: #000; z-index: 60; display: flex; flex-direction: column; }
+  .appkamera video { flex: 1; min-height: 0; width: 100%; object-fit: contain; background: #000; }
+  .appkamera .ak-leiste { display: flex; justify-content: space-around; align-items: center; padding: 14px 10px calc(16px + env(safe-area-inset-bottom)); gap: 10px; }
+  .appkamera .ak-leiste button { border: none; border-radius: 50%; width: 56px; height: 56px; font-size: 1.5rem; background: rgba(255,255,255,.18); color: #fff; cursor: pointer; }
+  .appkamera .ak-leiste button.ausloeser { width: 78px; height: 78px; background: #fff; border: 6px solid rgba(255,255,255,.4); background-clip: padding-box; }
+  .appkamera .ak-info { color: #fff; text-align: center; padding: calc(10px + env(safe-area-inset-top)) 12px 6px; font-weight: 700; }
   .fotobetrachter { position: fixed; inset: 0; background: #000; z-index: 45; display: flex; flex-direction: column; color: #fff; }
   .fotobetrachter img { flex: 1; min-height: 0; width: 100%; object-fit: contain; touch-action: pan-y pinch-zoom; }
   .fb-kopf { display: flex; justify-content: space-between; align-items: center; padding: calc(8px + env(safe-area-inset-top)) 12px 8px; }
@@ -526,6 +533,8 @@
   </section>
 </div>
 
+<div class="appkamera versteckt" id="appKamera"><div class="ak-info" id="akInfo">📷 Kamera</div><video id="akVideo" playsinline muted autoplay></video>
+  <div class="ak-leiste"><button title="Schließen" onclick="appKameraZu()">✕</button><button class="ausloeser" title="Foto aufnehmen" onclick="appKameraAusloesen()"></button><button title="Kamera wechseln" onclick="appKameraWechseln()">🔄</button></div></div>
 <div class="fotobetrachter versteckt" id="fotoBetrachter">
   <div class="fb-kopf"><button onclick="fotoSchliessen()" title="Schließen">✕</button><span id="fbZaehler"></span><span style="width:44px"></span></div>
   <img id="fbBild" alt="Foto">
@@ -571,6 +580,7 @@
 <div class="blatt versteckt" id="anlageBlatt" onclick="if(event.target===this)this.classList.add('versteckt')">
   <div class="blatt-innen"><h3>Anlage hinzufügen</h3>
     <button class="knopf" onclick="anlageWahl('dateiKamera')">📷 Foto aufnehmen</button>
+    <button class="knopf" onclick="$('anlageBlatt').classList.add('versteckt');appKamera(dateienGewaehlt)">📸 Kamera in der App</button>
     <button class="knopf" onclick="anlageWahl('dateiBild')">🖼️ Bild aus der Galerie</button>
     <button class="knopf" onclick="anlageWahl('dateiDok')">📄 Datei oder PDF</button>
     <button class="knopf" onclick="anlageMenue()">Abbrechen</button></div>
@@ -592,7 +602,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.19.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.19.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -1639,9 +1649,76 @@ async function senden() {
   $("sendenKnopf").disabled = false;
 }
 
+// ---------- Datei-/Fotoauswahl (KC-CLUB-KAMERA) ----------
+// Galerie/Kamera laufen über fremde Apps. Manche Handys (Xiaomi + Chrome) lassen die aus der App nicht aufgehen –
+// dann erscheint ein Hinweis mit der Kamera in der App (ohne fremde App). Gemessen wird nur, ob sich etwas geöffnet hat.
+function dateiWahl(inputId, weiter) {
+  const inp = $(inputId), t0 = performance.now(), m = { art: "datei", weg: inputId, versteckt: false, blur: false, gewaehlt: false };
+  const ms = () => Math.round(performance.now() - t0);
+  const aufraeumen = () => { document.removeEventListener("visibilitychange", vis); removeEventListener("blur", bl); removeEventListener("focus", zurueck); clearTimeout(timer); };
+  const melden = (ergebnis, extra = {}) => { api("diagnose", { art: "datei", daten: { ...m, ergebnis, ms: ms(), ...extra } }).catch(() => {}); };
+  const pruefen = () => setTimeout(() => { if (!m.gewaehlt) { aufraeumen(); melden(m.versteckt || m.blur ? "zurueck_ohne_datei" : "nicht_geoeffnet"); dateiWahlHilfe(inputId, weiter, m.versteckt || m.blur); } }, 900);
+  const vis = () => { if (document.hidden) m.versteckt = true; else if (m.versteckt) pruefen(); };
+  const bl = () => { m.blur = true; };
+  const zurueck = () => { if (m.blur && !m.versteckt) pruefen(); };
+  document.addEventListener("visibilitychange", vis); addEventListener("blur", bl); addEventListener("focus", zurueck);
+  // Auswahl kommt manchmal erst nach dem Zurückkehren an → Hinweis dann wieder schließen; alter Empfänger wird ersetzt
+  inp.onchange = () => { m.gewaehlt = true; aufraeumen(); if (dwHinweis === inputId) externZu();
+    melden("gewaehlt", { anzahl: inp.files.length, typen: [...new Set([...inp.files].map((f) => f.type || "?"))].join(",").slice(0, 60) }); weiter(inp); };
+  inp.click();
+  // ging gar nichts auf (weder anderes Fenster noch Auswahl) → nach 2,5 s Hinweis
+  const timer = setTimeout(() => { if (!m.gewaehlt && !m.versteckt && !m.blur) { aufraeumen(); melden("nicht_geoeffnet"); dateiWahlHilfe(inputId, weiter, false); } }, 2500);
+}
+let dwHinweis = null;
+function dateiWahlHilfe(inputId, weiter, warOffen) {
+  dwHinweis = inputId;
+  const galerie = !/kamera/i.test(inputId);
+  $("exTitel").textContent = warOffen ? "Kein Foto ausgewählt" : "Hat sich nichts geöffnet?";
+  $("exText").textContent = warOffen ? "Falls du abgebrochen hast, einfach nochmal versuchen. Hat es nicht geklappt, nimm die Kamera in der App."
+    : `Auf diesem Handy lässt sich die ${galerie ? "Galerie" : "Kamera-App"} aus der Club-App nicht öffnen. Die Kamera in der App funktioniert trotzdem.`;
+  $("exKnoepfe").innerHTML = `<button class="knopf haupt" data-a="kam">📸 Kamera in der App</button><button class="knopf" data-a="nochmal">🔁 Nochmal versuchen</button>`;
+  $("exKnoepfe").querySelector('[data-a="kam"]').onclick = () => { externZu(); dwHinweis = null; appKamera(weiter); };
+  $("exKnoepfe").querySelector('[data-a="nochmal"]').onclick = () => { externZu(); dateiWahl(inputId, weiter); };
+  $("externBlatt").classList.remove("versteckt");
+}
+let AK = null; // { strom, weiter, vorne }
+async function appKamera(weiter, vorne = false) {
+  if (!navigator.mediaDevices?.getUserMedia) return melde("Dieses Handy erlaubt keine Kamera in der App.", true);
+  AK?.strom?.getTracks().forEach((t) => t.stop());
+  AK = { weiter, vorne, strom: null };
+  $("akInfo").textContent = "📷 Kamera wird gestartet …"; $("appKamera").classList.remove("versteckt");
+  try {
+    AK.strom = await navigator.mediaDevices.getUserMedia({ video: { facingMode: vorne ? "user" : { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1440 } }, audio: false });
+    $("akVideo").srcObject = AK.strom; await $("akVideo").play().catch(() => {});
+    $("akInfo").textContent = "📷 Zum Aufnehmen den weißen Knopf antippen";
+    api("diagnose", { art: "datei", daten: { art: "datei", weg: "appkamera", ergebnis: "kamera_an" } }).catch(() => {});
+  } catch (e) {
+    appKameraZu();
+    api("diagnose", { art: "datei", daten: { art: "datei", weg: "appkamera", ergebnis: "fehler", fehler: String(e?.name || e).slice(0, 60) } }).catch(() => {});
+    melde(e?.name === "NotAllowedError" ? "Die Kamera ist für die App nicht erlaubt – beim Nachfragen bitte „Zulassen“ tippen (oder in Chrome: ⋮ → Einstellungen → Website-Einstellungen → Kamera)." : "Kamera konnte nicht gestartet werden: " + (e?.message || e), true);
+  }
+}
+function appKameraZu() {
+  AK?.strom?.getTracks().forEach((t) => t.stop());
+  $("akVideo").srcObject = null; $("appKamera").classList.add("versteckt"); AK = null;
+}
+function appKameraWechseln() { if (AK) appKamera(AK.weiter, !AK.vorne); }
+async function appKameraAusloesen() {
+  const v = $("akVideo"); if (!AK || !v.videoWidth) return;
+  const c = document.createElement("canvas"); c.width = v.videoWidth; c.height = v.videoHeight;
+  c.getContext("2d").drawImage(v, 0, 0);
+  const blob = await new Promise((r) => c.toBlob(r, "image/jpeg", 0.9));
+  if (!blob) return melde("Foto konnte nicht erstellt werden.", true);
+  const jetzt = new Date(), name = `Foto_${jetzt.toISOString().slice(0, 19).replace(/[-:T]/g, "")}.jpg`;
+  const datei = new File([blob], name, { type: "image/jpeg", lastModified: jetzt.getTime() }), weiter = AK.weiter;
+  try { navigator.vibrate?.(40); } catch {}
+  appKameraZu();
+  weiter({ files: [datei], value: "" });
+}
+
 // ---------- Anlagen ----------
 function anlageMenue() { $("anlageBlatt").classList.toggle("versteckt"); }
-function anlageWahl(id) { $("anlageBlatt").classList.add("versteckt"); $(id).click(); }
+function anlageWahl(id) { $("anlageBlatt").classList.add("versteckt"); dateiWahl(id, dateienGewaehlt); }
 function chipsZeigen() { $("anlagenChips").innerHTML = anlagen.map((a, i) => `<button class="chip" onclick="anlagen.splice(${i},1);chipsZeigen()">${a.laedt ? "⏳" : "📎"} ${esc(a.name)} ✕</button>`).join(""); }
 async function verkleinern(datei, max = 1600, qualitaet = 0.82) {
   if (!/^image\/(jpeg|png|webp|heic|heif)/.test(datei.type)) return datei;
@@ -1826,8 +1903,9 @@ function protokollFormular() {
     </div>
     <div class="karte"><h3>2 · Protokoll anhängen</h3>
       <div class="anhaengen">
-        <button class="knopf haupt" onclick="$('prKamera').click()">📷 Foto vom Blatt</button>
-        <button class="knopf" onclick="$('prBild').click()">🖼️ Foto aus der Galerie</button>
+        <button class="knopf haupt" onclick="dateiWahl('prKamera', protokollDateien)">📷 Foto vom Blatt</button>
+        <button class="knopf" onclick="dateiWahl('prBild', protokollDateien)">🖼️ Foto aus der Galerie</button>
+        <button class="knopf" onclick="appKamera(protokollDateien)">📸 Kamera in der App</button>
         <button class="knopf" onclick="$('prDok').click()">📄 Datei (Word / PDF)</button>
       </div>
       <p class="hinweis" style="font-size:.85rem">Mehrere Seiten? Einfach nacheinander fotografieren. „Datei“ öffnet den Dateimanager von Handy oder Tablet.</p>
@@ -2198,7 +2276,7 @@ function anlassAuswahl(id, art, bid) {
 function fotoForm() {
   faDateien = [];
   $("fotoForm").innerHTML = `<h3>📷 Fotos hinzufügen</h3>
-    <div class="knoepfe" style="margin-top:0"><button class="knopf haupt" onclick="$('faGalerie').click()">🖼️ Aus der Galerie</button><button class="knopf" onclick="$('faKamera').click()">📷 Foto aufnehmen</button></div>
+    <div class="knoepfe" style="margin-top:0"><button class="knopf haupt" onclick="dateiWahl('faGalerie', faGewaehlt)">🖼️ Aus der Galerie</button><button class="knopf" onclick="dateiWahl('faKamera', faGewaehlt)">📷 Foto aufnehmen</button><button class="knopf" onclick="appKamera(faGewaehlt)">📸 Kamera in der App</button></div>
     <input type="file" id="faGalerie" accept="image/*" multiple hidden onchange="faGewaehlt(this)"><input type="file" id="faKamera" accept="image/*" capture="environment" hidden onchange="faGewaehlt(this)">
     <div id="faAuswahl" class="hinweis" style="margin:8px 0">Noch keine Fotos gewählt (bis zu 50 auf einmal).</div>
     <label class="feld">Thema${themaAuswahl("faThema", faFilter.thema || "")}</label>

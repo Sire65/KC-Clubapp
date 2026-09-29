@@ -488,4 +488,12 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.deepEqual(g.kaSortiert("verein").map((k) => k.id), ["c", "a", "b", "neu"], "neue Kachel nicht hinten");
 }
 
+// 37. 0.19.1: Kamera in der App (ohne fremde App) + Messung/Hinweis, wenn Galerie/Kamera nicht aufgehen
+{
+  assert.ok(/async function appKamera\(weiter, vorne = false\)/.test(html) && /getUserMedia\(/.test(html) && /id="appKamera"/.test(html), "Kamera in der App fehlt");
+  for (const w of ["appKamera(faGewaehlt)", "appKamera(protokollDateien)", "appKamera(dateienGewaehlt)"]) assert.ok(html.includes(w), `Kamera in der App fehlt bei ${w}`);
+  for (const w of ["dateiWahl('faGalerie', faGewaehlt)", "dateiWahl('faKamera', faGewaehlt)", "dateiWahl('prKamera', protokollDateien)", "dateiWahl('prBild', protokollDateien)", "dateiWahl(id, dateienGewaehlt)"]) assert.ok(html.includes(w), `Auswahl ohne Messung: ${w}`);
+  assert.ok(/melden\("nicht_geoeffnet"\); dateiWahlHilfe/.test(html), "kein Hinweis, wenn sich nichts öffnet");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
