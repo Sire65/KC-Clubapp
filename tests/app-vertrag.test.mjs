@@ -716,4 +716,13 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/<span class="stmarke st-\$\{statusArt\(m\.status\)\}">/.test(html), "Mitgliederliste zeigt den Status nicht farbig");
 }
 
+// 58. 0.35.0: ungültiger Link klar erklärt, Link einfügen (iPhone), iPhone-Start mit Schlüssel, Einladung mit Neu-anfordern-Weg
+{
+  assert.ok(/id="linkUngueltig"/.test(html) && /\$\("linkUngueltig"\)\.classList\.remove\("versteckt"\)/.test(html), "Hinweis „Link gilt nicht mehr“ fehlt");
+  const code = html.slice(html.indexOf("function linkUebernehmen(text)"), html.indexOf("async function linkAusZwischenablage"));
+  assert.ok(/\[\?&\]k=\(\[0-9a-f\]\{32,96\}\)/.test(code) && /localStorage\.setItem\("kc_club_key"/.test(code), "Link einfügen erkennt den Schlüssel nicht");
+  assert.ok(/function iosStartMitSchluessel\(\)/.test(html) && /if \(!IST_IOS \|\| !KEY \|\| START_ART === "app"\) return;/.test(html) && /iosStartMitSchluessel\(\);/.test(html), "iPhone-Start mit Schlüssel fehlt");
+  assert.ok(/Die Seite zeigt dann „Link verloren\?“ – dort deine E-Mail-Adresse eingeben/.test(html), "Einladung erklärt das Neu-Anfordern nicht");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

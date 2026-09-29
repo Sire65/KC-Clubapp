@@ -425,11 +425,17 @@
 <body>
 <div id="gesperrt" class="seite versteckt">
   <div class="hero"><div class="kopfzeile"><div class="logo"><img src="kc-kochmuetze-weiss.webp" alt=""></div><div><div class="marke-klein">KÖCHECLUB WERNE</div><div class="titel">Willkommen</div></div></div></div>
-  <div class="karte"><h3>🔑 Persönlicher Link nötig</h3><p>Bitte öffne die App über deinen <b>persönlichen Link</b>, den du von Hansi bekommen hast (per WhatsApp oder Mail). Danach kannst du sie auf den Startbildschirm legen.</p></div>
+  <div class="karte versteckt" id="linkUngueltig" style="border:2px solid #c62828"><h3 style="color:#c62828">⚠️ Dieser Link gilt nicht mehr</h3><p style="margin:0">Es wurde inzwischen ein <b>neuerer Link</b> für dich verschickt – oder der Link ist unvollständig. Kein Problem: unten bei <b>„Link verloren?“</b> deine E-Mail-Adresse eingeben, dann kommt sofort ein neuer, gültiger Link.</p></div>
+  <div class="karte"><h3>🔑 Persönlicher Link nötig</h3><p>Bitte öffne die App über deinen <b>persönlichen Link</b>, den du von Hansi bekommen hast (per WhatsApp oder Mail). Danach kannst du sie auf den Startbildschirm legen.</p>
+    <p class="hinweis" style="margin:0"><b>Link funktioniert nicht?</b> Dann nimm immer den <b>neuesten</b> Link – oder fordere unten einfach einen neuen an.</p></div>
   <div class="karte"><h3>✉️ Link verloren?</h3><p style="margin-top:0">Gib die E-Mail-Adresse ein, die im Club hinterlegt ist. Wir schicken dir sofort einen neuen persönlichen Link.</p>
     <label class="feld">Deine E-Mail-Adresse<input type="email" id="zaMail" autocomplete="email" inputmode="email" placeholder="name@web.de"></label>
     <button class="knopf haupt" id="zaKnopf" onclick="zugangAnfordern()">🔗 Neuen Link per Mail schicken</button>
     <p class="hinweis" id="zaAntwort" style="margin-bottom:0"></p></div>
+  <!-- KC-CLUB-LINK-EINFUEGEN (0.35.0): v. a. iPhone – die Home-Bildschirm-App kennt den Link aus Safari nicht -->
+  <div class="karte"><h3>📋 Link einfügen</h3><p style="margin-top:0">Du hast den Link in einer Mail oder WhatsApp, aber die App öffnet sich nicht damit (z. B. auf dem <b>iPhone</b> vom Home-Bildschirm)? Link dort <b>lange drücken → Kopieren</b>, dann hier einfügen:</p>
+    <label class="feld">Dein persönlicher Link<input id="linkEinfuegen" inputmode="url" autocomplete="off" placeholder="https://sire65.github.io/KC-Clubapp/?k=…"></label>
+    <div class="knoepfe"><button class="knopf haupt" onclick="linkUebernehmen()">✅ Link übernehmen</button><button class="knopf" onclick="linkAusZwischenablage()">📋 Aus Zwischenablage</button></div></div>
 </div>
 
 <div id="app" class="versteckt">
@@ -686,7 +692,7 @@
         3. Fragt das Handy, ob Chrome etwas auf dem Startbildschirm anlegen darf: <b>„Zulassen“</b>.<br>
         4. Fertig, wenn „Köcheclub“ auch in der <b>App-Liste</b> des Handys steht. Danach das alte Symbol löschen (lange drücken → Entfernen) – deine Daten bleiben erhalten.<br>
         <b>Samsung:</b> im Samsung-Browser „Internet“ unten ≡ → „Seite hinzufügen zu“ → „Startbildschirm“ – oder wie oben mit Chrome.<br>
-        <b>iPhone:</b> in Safari Teilen □↑ → „Zum Home-Bildschirm“.<br>
+        <b>iPhone:</b> in <b>Safari</b> Teilen □↑ → „Zum Home-Bildschirm“ → „Hinzufügen“. Zeigt die neue App „Persönlicher Link nötig“: Link aus Mail/WhatsApp kopieren und dort bei „📋 Link einfügen“ einfügen.<br>
         <span style="font-size:.85rem">Nur als richtige App klappen WhatsApp, Karten und „Teilen aus der Galerie → Köcheclub“ zuverlässig.</span></div>
     </details>
     <details class="karte" data-klappe="app">
@@ -810,7 +816,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.34.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.35.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -1315,6 +1321,27 @@ function melde(t, fehler) {
   document.body.appendChild(m); setTimeout(() => m.remove(), Math.min(20000, (4000 + String(t).length * 70) * (fehler ? 2 : 1)));
 }
 // KC-CLUB-ZUGANG-SELBST: neuen persönlichen Link per Mail anfordern (ohne Anmeldung; der Link geht nur an die hinterlegte Adresse)
+// KC-CLUB-LINK-EINFUEGEN: persönlichen Link (oder nur den Schlüssel) einfügen → merken und App starten
+function linkUebernehmen(text) {
+  const t = String(text ?? $("linkEinfuegen").value).trim();
+  const k = (/[?&]k=([0-9a-f]{32,96})/i.exec(t) || /^([0-9a-f]{32,96})$/i.exec(t) || [])[1];
+  if (!k) return melde("Das sieht nicht wie ein persönlicher Link aus. Bitte den ganzen Link aus der Mail/WhatsApp kopieren.", true);
+  try { localStorage.setItem("kc_club_key", k.toLowerCase()); } catch {}
+  location.href = location.pathname + "?k=" + k.toLowerCase();
+}
+async function linkAusZwischenablage() {
+  try { const t = await navigator.clipboard.readText(); $("linkEinfuegen").value = t; linkUebernehmen(t); }
+  catch { melde("Bitte in das Feld tippen, lange drücken und „Einfügen“ wählen.", true); $("linkEinfuegen").focus(); }
+}
+// iPhone/iPad: „Zum Home-Bildschirm“ übernimmt den Speicher aus Safari nicht → Start-Adresse mit dem persönlichen Schlüssel
+function iosStartMitSchluessel() {
+  if (!IST_IOS || !KEY || START_ART === "app") return;
+  try {
+    const m = { name: "Köcheclub Werne", short_name: "Köcheclub", start_url: APP_URL_CLUB + "?k=" + KEY, scope: APP_URL_CLUB, display: "standalone",
+      background_color: "#f5eee3", theme_color: "#741521", icons: [{ src: APP_URL_CLUB + "icon-192.png", sizes: "192x192", type: "image/png" }, { src: APP_URL_CLUB + "icon-512.png", sizes: "512x512", type: "image/png" }] };
+    document.querySelector('link[rel="manifest"]').setAttribute("href", "data:application/manifest+json," + encodeURIComponent(JSON.stringify(m)));
+  } catch {}
+}
 async function zugangAnfordern() {
   const mail = $("zaMail").value.trim();
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)) return ($("zaAntwort").textContent = "Bitte eine gültige E-Mail-Adresse eingeben.");
@@ -1359,7 +1386,7 @@ async function apiRoh(action, daten = {}) {
   const leitungKaputt = (r.status >= 502 && r.status <= 504) || (r.status >= 500 && !j);
   vbEnde(!leitungKaputt, performance.now() - t0, leitungKaputt ? "Serverfehler " + r.status : "");
   if (!j && !leitungKaputt && r.ok) throw new Error("Unerwartete Antwort vom Server.");
-  if (r.status === 401) { $("app").classList.add("versteckt"); $("gesperrt").classList.remove("versteckt"); throw new Error(j?.error || "Kein Zugang"); }
+  if (r.status === 401) { $("app").classList.add("versteckt"); $("gesperrt").classList.remove("versteckt"); $("linkUngueltig").classList.remove("versteckt"); throw new Error(j?.error || "Kein Zugang"); }
   if (!r.ok) throw new Error(j?.error || "Fehler " + r.status);
   return j;
 }
@@ -3687,7 +3714,7 @@ async function linkTeilen(pid) {
   try {
     const { link } = await api("link_erzeugen", { person_id: pid });
     // 0.27.3: Anleitung wie unter ⚙️ → App-Installation (richtige App statt Verknüpfung)
-    const text = `Hallo ${m.vorname}, hier ist dein persönlicher Link zur Köcheclub-App:\n${link}\n\nSo geht's (Android): Link in Chrome öffnen → oben rechts ⋮ → „App installieren“ (bzw. „Zum Startbildschirm hinzufügen“ → „Installieren“, nicht „Verknüpfung“). Samsung-Browser „Internet“: unten ≡ → „Seite hinzufügen zu“ → „Startbildschirm“. iPhone: in Safari Teilen □↑ → „Zum Home-Bildschirm“.\n\nBitte nicht weitergeben – der Link ist dein persönlicher Zugang. Viele Grüße, Hansi`;
+    const text = `Hallo ${m.vorname}, hier ist dein persönlicher Link zur Köcheclub-App:\n${link}\n\nSo geht's (Android): Link in Chrome öffnen → oben rechts ⋮ → „App installieren“ (bzw. „Zum Startbildschirm hinzufügen“ → „Installieren“, nicht „Verknüpfung“). Samsung-Browser „Internet“: unten ≡ → „Seite hinzufügen zu“ → „Startbildschirm“.\niPhone: den Link in *Safari* öffnen → unten Teilen □↑ → „Zum Home-Bildschirm“ → „Hinzufügen“. Danach die App über das neue Symbol öffnen.\n\nFunktioniert der Link nicht (z. B. weil es einen neueren gibt)? Die Seite zeigt dann „Link verloren?“ – dort deine E-Mail-Adresse eingeben, der neue Link kommt sofort per Mail.\n\nBitte nicht weitergeben – der Link ist dein persönlicher Zugang. Viele Grüße, Hansi`;
     if (confirm(`Link für ${m.name} erzeugt.\n\nOK = per WhatsApp schicken\nAbbrechen = in die Zwischenablage kopieren`)) window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank");
     else { try { await navigator.clipboard.writeText(text); melde("Text mit Link kopiert"); } catch { prompt("Zum Kopieren:", text); } }
     mitgliederLaden();
@@ -3892,6 +3919,7 @@ async function jetztAktualisieren() {
   if (k) { url.searchParams.delete("k"); history.replaceState(null, "", url.pathname + url.hash); }
   if (!KEY) { $("gesperrt").classList.remove("versteckt"); return; }
   $("app").classList.remove("versteckt");
+  iosStartMitSchluessel();
   klappenMerken(); registerZeigen(); kachelnZeigen();
   // Verlauf: unten ein „Basis“-Eintrag, darüber die Startseite → „Zurück“ bleibt in der App
   const sprung = location.hash; START_HASH = sprung;

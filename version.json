@@ -1,12 +1,20 @@
 {
-  "version": "0.34.1",
+  "version": "0.35.0",
   "datum": "2026-09-29",
   "neu": [
-    "🟢 Status in Farbe: verfügbar grün, beschäftigt orange, Urlaub blau, krank lila, nicht erreichbar rot – oben bei „Mein Status“, auf der Startseite und in der Mitgliederliste",
-    "🔔 Rückmeldung zum Push: unter deinen Nachrichten steht „🔔 angekommen“ bzw. „🔔 geöffnet“",
-    "✉️ Und ob eine Mail rausgegangen ist"
+    "🔑 Alter oder ungültiger Link: die App sagt es klar und zeigt, wie man einen neuen anfordert",
+    "📋 Neu: „Link einfügen“ – Link aus Mail/WhatsApp kopieren und einfügen (hilft besonders beim iPhone)",
+    "🍏 iPhone: Home-Bildschirm-App startet direkt mit dem persönlichen Link"
   ],
   "verlauf": [
+    {
+      "version": "0.35.0",
+      "neu": [
+        "🔑 Alter oder ungültiger Link: die App sagt es klar und zeigt, wie man einen neuen anfordert",
+        "📋 Neu: „Link einfügen“ – Link aus Mail/WhatsApp kopieren und einfügen (hilft besonders beim iPhone)",
+        "🍏 iPhone: Home-Bildschirm-App startet direkt mit dem persönlichen Link"
+      ]
+    },
     {
       "version": "0.34.1",
       "neu": [
