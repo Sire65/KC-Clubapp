@@ -526,4 +526,12 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/zugangAnfordern\(\)/.test(html) && !/"x-club-token": KEY[^\n]*zugang_anfordern/.test(html), "Anfordern in der App fehlt");
 }
 
+// 41. 0.22.0: Route direkt in Google Maps (installierte App), App-Info ohne Zugangsdaten
+{
+  assert.ok(/START_ART === "app" && IST_ANDROID \? \[\{ k: "intent", t: "🧭 Route in Google Maps"/.test(html) && /id="karteMaps"/.test(html), "Route direkt fehlt");
+  assert.ok(/Entwicklung &amp; Design: <b>Hans-Joachim Koch<\/b>/.test(html) && /async function appInfoDaten\(\)/.test(html), "App-Info fehlt");
+  const k = html.slice(html.indexOf("async function appInfoKopieren"), html.indexOf("// Persönlichen Link kopieren"));
+  assert.ok(!/KEY/.test(k) && !/KEY/.test(html.slice(html.indexOf("async function appInfoDaten"), html.indexOf("async function appInfoZeigen"))), "App-Info enthält den Zugang");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

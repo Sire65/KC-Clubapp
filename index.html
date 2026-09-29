@@ -543,9 +543,14 @@
         <span style="font-size:.85rem">Nur als richtige App klappen WhatsApp, Karten und „Teilen aus der Galerie → Köcheclub“ zuverlässig.</span></div>
     </details>
     <details class="karte" data-klappe="app">
-      <summary>ℹ️ App</summary>
-      <div class="zeile"><span>Version</span><b id="appVersion" style="margin-left:auto"></b></div><div class="zeile"><span>Angemeldet als</span><b id="ichName" style="margin-left:auto"></b></div>
-      <div class="knoepfe"><button class="knopf klein" onclick="updateKachel()">Nach Update suchen</button></div>
+      <summary>ℹ️ App-Info</summary>
+      <div style="text-align:center;margin:6px 0 12px"><img src="icon-192.png" alt="" style="width:64px;height:64px;border-radius:16px"><div style="font-weight:800;font-size:1.15rem;margin-top:6px">Köcheclub Werne – Club-App</div>
+        <div class="hinweis" style="margin:2px 0 0">Entwicklung &amp; Design: <b>Hans-Joachim Koch</b></div></div>
+      <div class="zeile"><span>Version</span><b id="appVersion" style="margin-left:auto"></b></div><div class="zeile"><span>Angemeldet als</span><b id="ichName" style="margin-left:auto;text-align:right"></b></div>
+      <div id="appInfo"></div>
+      <div class="knoepfe"><button class="knopf klein" onclick="updateKachel()">Nach Update suchen</button><button class="knopf klein" onclick="appInfoKopieren()">📋 Infos kopieren</button></div>
+      <p class="hinweis" style="font-size:.85rem;margin-bottom:0">„Infos kopieren“ hilft bei Fragen und Fehlern: einfach in eine Nachricht an Hansi einfügen. Es wird kein Zugangslink kopiert.<br>
+        © 2026 Köcheclub Werne · Entwicklung &amp; Design Hans-Joachim Koch · kostenlos und werbefrei · Daten nur für Clubmitglieder mit persönlichem Link.</p>
     </details>
   </section>
 </div>
@@ -574,7 +579,8 @@
   <div class="blatt-innen"><h3>🗺️ <span id="karteTitel"></span></h3>
     <iframe id="karteRahmen" title="Karte" style="width:100%;height:55vh;border:0;border-radius:14px" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
     <p class="hinweis versteckt" id="karteKopiert" style="margin:0">Adresse ist kopiert: Google Maps öffnen, oben ins Suchfeld tippen, lange drücken → Einfügen.</p>
-    <button class="knopf haupt" id="karteTeilen" onclick="navigator.share({ text: $('karteTitel').textContent }).catch(() => {})">📤 An Google Maps senden (Teilen)</button>
+    <button class="knopf haupt" id="karteMaps" onclick="routeInMaps()">🧭 Route in Google Maps starten</button>
+    <button class="knopf" id="karteTeilen" onclick="navigator.share({ text: $('karteTitel').textContent }).catch(() => {})">📤 An Google Maps senden (Teilen)</button>
     <button class="knopf" onclick="navigator.clipboard?.writeText($('karteTitel').textContent).then(() => melde('📋 Adresse kopiert – in Google Maps einfügen'), () => melde($('karteTitel').textContent))">📋 Adresse kopieren</button>
     <button class="knopf" onclick="$('karteBlatt').classList.add('versteckt');$('karteRahmen').src='about:blank'">Schließen</button></div>
 </div>
@@ -616,7 +622,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.21.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.22.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -1118,7 +1124,7 @@ function zeige(v, ausHistorie) {
   if (v === "dienste") dienstLaden();
   if (v === "nachrichten") unterhLaden();
   if (v === "mitglieder") mitgliederLaden();
-  if (v === "einstellungen") { installStandZeigen(); pushStatusZeigen(); wahlZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); }
+  if (v === "einstellungen") { appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); }
   if (v === "start") neuLaden();
   // KC-CLUB-ZURUECK: jede Ansicht bekommt einen Verlaufseintrag, damit „Zurück“ eine Ansicht zurückgeht statt die App zu schließen
   const hash = v === "start" || v === "chat" ? "" : v === "protokoll" ? "#protokoll=" + prId : v === "aktion" ? "#aktion=" + aktionId : v === "mitglied" ? "#mitglied=" + mitgliedId : "#" + v;
@@ -2594,10 +2600,11 @@ const EXTERN_WEGE = {
     { k: "clubapp", t: "💬 Stattdessen Nachricht in der Club-App", intern: () => { externZu(); direkt(MD.person_id); } },
   ],
   route: (adr) => [
-    // bleibt sicher in der App: Karte mit der Adresse (Google-Maps-Einbettung, kostenlos, ohne Schlüssel)
+    // 0.22.0: richtig installierte App → Google Maps direkt (Route); sonst zuerst die Karte in der App (bleibt sicher in der App)
+    ...(START_ART === "app" && IST_ANDROID ? [{ k: "intent", t: "🧭 Route in Google Maps", url: routeLink(adr) }] : []),
     { k: "karte", t: "🗺️ Karte hier in der App zeigen", intern: () => karteZeigen(adr) },
     { k: "teilen", t: "📤 Adresse über „Teilen“ an Google Maps", teilen: () => ({ text: adr }), nur: !!navigator.share },
-    { k: "intent", t: "🗺️ Google Maps öffnen", url: routeLink(adr), nur: IST_ANDROID },
+    { k: "intent", t: "🗺️ Google Maps öffnen", url: routeLink(adr), nur: IST_ANDROID && START_ART !== "app" },
     { k: "apple", t: "🗺️ Apple Karten öffnen", url: routeLink(adr), nur: IST_IOS },
     { k: "hier", t: "🗺️ Route hier anzeigen (Google Maps Webseite)", url: `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(adr)}` },
     { k: "geo", t: "🗺️ Karten-App auswählen", url: `geo:0,0?q=${encodeURIComponent(adr)}`, nur: IST_ANDROID },
@@ -2609,6 +2616,12 @@ const EXTERN_ERFOLG_MS = 3000; // nur wenn die andere App mindestens so lange vo
 const externMerken = (art, k) => { try { localStorage.setItem("kc_club_weg_" + art, k); } catch {} };
 const externGemerkt = (art) => { try { return localStorage.getItem("kc_club_weg_" + art); } catch { return null; } };
 let externTimer = null;
+function routeInMaps() {
+  const adr = $("karteTitel").textContent, wege = EXTERN_WEGE.route(adr).filter((w) => w.nur !== false);
+  const w = wege.find((x) => x.k === "intent") || { k: "intent", t: "Google Maps", url: routeLink(adr) };
+  $("karteBlatt").classList.add("versteckt"); $("karteRahmen").src = "about:blank";
+  externVersuch("route", w, wege, adr);
+}
 function karteZeigen(adr) {
   $("karteTitel").textContent = adr;
   // 0.17.8: Adresse gleich mitkopieren – dort, wo Google Maps nicht aus der App startet, einfach in Maps einfügen
@@ -2616,6 +2629,7 @@ function karteZeigen(adr) {
   $("karteKopiert").classList.add("versteckt");
   $("karteRahmen").src = `https://maps.google.com/maps?q=${encodeURIComponent(adr)}&z=15&output=embed`;
   $("karteTeilen").classList.toggle("versteckt", !navigator.share);
+  $("karteMaps").classList.toggle("versteckt", !IST_ANDROID && !IST_IOS);
   $("karteBlatt").classList.remove("versteckt");
 }
 const waAnzeige = (t) => "+" + waNummer(t);
@@ -2858,6 +2872,46 @@ window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); inst
 window.addEventListener("appinstalled", () => { installEreignis = null; schonInstalliert = true; localStorage.setItem("kc_club_als_app", "1"); installStandZeigen(); melde("✅ Köcheclub ist als App installiert – bitte ab jetzt über das neue Symbol öffnen und das alte löschen."); });
 async function installieren() { if (!installEreignis) return; installEreignis.prompt(); await installEreignis.userChoice.catch(() => {}); installEreignis = null; $("installKnopf").classList.add("versteckt"); }
 (async () => { try { if (START_ART === "browser" && navigator.getInstalledRelatedApps) { schonInstalliert = (await navigator.getInstalledRelatedApps()).length > 0; installStandZeigen(); } } catch {} })();
+// ---------- App-Info (KC-CLUB-APPINFO): Programm, Handy, Browser – für Hilfe und Fehlersuche (ohne Zugangsdaten) ----------
+let APPINFO = [];
+async function appInfoDaten() {
+  const ua = navigator.userAgent, z = [];
+  let modell = "", android = (/Android ([\d.]+)/.exec(ua) || [])[1] || "", browser = "";
+  try {
+    const h = await navigator.userAgentData?.getHighEntropyValues?.(["model", "platformVersion", "fullVersionList"]);
+    if (h?.model) modell = h.model;
+    if (h?.platformVersion && /Android/i.test(ua)) android = h.platformVersion;
+    const b = (h?.fullVersionList || []).find((x) => /Chrome|Edge|Opera|Samsung/i.test(x.brand) && !/Not/i.test(x.brand));
+    if (b) browser = `${b.brand} ${b.version}`;
+  } catch {}
+  if (!browser) { const m = /(SamsungBrowser|Edg|OPR|Firefox|CriOS|Chrome|Version)\/([\d.]+)/.exec(ua); browser = m ? `${{ Edg: "Edge", OPR: "Opera", CriOS: "Chrome (iPhone)", Version: "Safari" }[m[1]] || m[1]} ${m[2]}` : "unbekannt"; }
+  const system = /Android/i.test(ua) ? `Android ${android}` : /iPhone|iPad/.test(ua) ? `iOS ${((/OS ([\d_]+)/.exec(ua) || [])[1] || "").replace(/_/g, ".")}` : navigator.platform || "unbekannt";
+  const art = { app: "✅ richtig installierte App", verknuepfung: "⚠️ nur Verknüpfung", browser: "im Browser", unbekannt: "❔ nicht erkennbar" }[START_ART] || START_ART;
+  let speicher = "–";
+  try { const e = await navigator.storage?.estimate?.(); if (e?.usage != null) speicher = `${(e.usage / 1048576).toLocaleString("de-DE", { maximumFractionDigits: 1 })} MB belegt`; } catch {}
+  let kamera = "–";
+  try { const r = await navigator.permissions?.query({ name: "camera" }); kamera = { granted: "erlaubt", denied: "gesperrt", prompt: "wird gefragt" }[r?.state] || "–"; } catch {}
+  const push = !("Notification" in window) ? "nicht möglich" : { granted: "erlaubt", denied: "gesperrt", default: "noch nicht gefragt" }[Notification.permission] || "–";
+  const netz = navigator.onLine ? `online${navigator.connection?.effectiveType ? " (" + navigator.connection.effectiveType.toUpperCase() + ")" : ""}` : "offline";
+  z.push(["📦 App-Version", APP_VERSION], ["🖥️ Server-Version", INIT?.server || "–"], ["📲 Läuft als", art],
+    ["📱 Handy", modell || "(Modell wird vom Browser nicht verraten)"], ["⚙️ System", system], ["🌐 Browser", browser],
+    ["🔲 Bildschirm", `${screen.width} × ${screen.height} (Faktor ${devicePixelRatio})`], ["🗣️ Sprache / Zeitzone", `${navigator.language} · ${Intl.DateTimeFormat().resolvedOptions().timeZone}`],
+    ["📶 Verbindung", netz], ["🔔 Benachrichtigungen", push], ["📷 Kamera", kamera], ["💾 Speicher auf dem Handy", speicher],
+    ["🛠️ Hintergrunddienst", navigator.serviceWorker?.controller ? "aktiv (offline nutzbar)" : "nicht aktiv"],
+    ["🧰 Technik", "Web-App (PWA) · Daten: Supabase · Benachrichtigungen: KC Communicator · Seite: GitHub Pages"]);
+  return z;
+}
+async function appInfoZeigen() {
+  const el = $("appInfo"); if (!el) return;
+  APPINFO = await appInfoDaten();
+  el.innerHTML = APPINFO.filter(([k]) => !/App-Version/.test(k)).map(([k, v]) => `<div class="zeile" style="gap:10px"><span style="flex:0 0 auto">${esc(k)}</span><b style="margin-left:auto;text-align:right;overflow-wrap:anywhere">${esc(v)}</b></div>`).join("");
+}
+async function appInfoKopieren() {
+  if (!APPINFO.length) APPINFO = await appInfoDaten();
+  const text = ["Köcheclub-App – Info", `Angemeldet als: ${ICH?.name || "–"}`, ...APPINFO.map(([k, v]) => `${k.replace(/^\S+\s/, "")}: ${v}`), `Stand: ${new Date().toLocaleString("de-DE")}`].join("\n");
+  try { await navigator.clipboard.writeText(text); melde("📋 App-Infos kopiert – z. B. in eine Nachricht an Hansi einfügen"); } catch { prompt("App-Infos:", text); }
+}
+
 // Persönlichen Link kopieren (bleibt auf dem Handy – nur in die Zwischenablage), damit die App in Chrome geöffnet/installiert werden kann
 async function zugangKopieren() {
   const link = APP_URL_CLUB + "?k=" + KEY;
