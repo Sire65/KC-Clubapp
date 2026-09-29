@@ -524,6 +524,13 @@
   .fb-info .knopf.haupt { background: var(--rot); }
   .fb-info .feld { color: #fff; }
   .fb-klein { font-size: .85rem; opacity: .75; }
+  .fb-details { position: absolute; left: 0; right: 0; bottom: 0; z-index: 3; max-height: 72vh; overflow: auto; background: rgba(18,18,18,.97); padding: 12px 16px calc(16px + env(safe-area-inset-bottom)); border-radius: 18px 18px 0 0; display: grid; gap: 10px; box-shadow: 0 -8px 24px rgba(0,0,0,.5); }
+  .fbd-kopf { display: flex; justify-content: space-between; align-items: center; } .fbd-kopf button { background: none; border: none; color: #fff; font-size: 1.3rem; cursor: pointer; }
+  .fbd { display: flex; gap: 12px; align-items: flex-start; } .fbd-sym { font-size: 1.3rem; width: 28px; text-align: center; }
+  .fbd small { opacity: .7; } .fbd-leer { opacity: .6; font-style: italic; }
+  .fbd-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+  .fbd-links a, .fbd-links button { color: #fff; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.25); border-radius: 10px; padding: 5px 10px; font: inherit; font-size: .88rem; text-decoration: none; cursor: pointer; }
+  #fbBild { cursor: zoom-in; }
 </style>
 </head>
 <body>
@@ -855,7 +862,8 @@
   <div class="ak-leiste"><button title="Schließen" onclick="appKameraZu()">✕</button><button class="ausloeser" title="Foto aufnehmen" onclick="appKameraAusloesen()"></button><button title="Kamera wechseln" onclick="appKameraWechseln()">🔄</button></div></div>
 <div class="fotobetrachter versteckt" id="fotoBetrachter">
   <div class="fb-kopf"><button onclick="fotoSchliessen()" title="Schließen">✕</button><span id="fbZaehler"></span><span style="width:44px"></span></div>
-  <img id="fbBild" alt="Foto">
+  <img id="fbBild" alt="Foto – antippen für Details" onclick="fotoDetails()">
+  <div class="fb-details versteckt" id="fbDetails"></div>
   <button class="fb-pf links" onclick="fotoBlaettern(-1)" title="Vorheriges Foto">‹</button><button class="fb-pf rechts" onclick="fotoBlaettern(1)" title="Nächstes Foto">›</button>
   <div class="fb-info" id="fbInfo"></div>
 </div>
@@ -971,7 +979,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.44.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.45.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -4047,6 +4055,7 @@ function fotoForm() {
     <label class="feld">Anlass (freiwillig)${anlassAuswahl("faAnlass", faFilter.bezug_art, faFilter.bezug_id)}</label>
     <label class="feld">Datum (leer = Aufnahmedatum aus dem Foto)<input type="date" id="faDatum"></label>
     <label class="feld">Beschreibung (freiwillig)<input id="faBeschr" maxlength="300" placeholder="z. B. Hauptgang beim Clubabend"></label>
+    <label style="display:flex;gap:10px;align-items:center;margin-top:10px;font-weight:700"><input type="checkbox" id="faOrt" checked style="width:22px;height:22px;accent-color:var(--rot)"> 📍 Aufnahmeort mitspeichern (falls das Handy ihn im Foto gespeichert hat)</label>
     <div id="faFortschritt" class="hinweis"></div>
     <div class="knoepfe"><button class="knopf haupt" id="faKnopf" onclick="fotosHochladen()">⬆️ Hochladen</button><button class="knopf" onclick="$('fotoForm').classList.add('versteckt')">Abbrechen</button></div>
     <p class="hinweis" style="font-size:.85rem;margin-bottom:0">Die Fotos werden vor dem Hochladen verkleinert (ca. 250 KB) – auf dem Handy sieht man keinen Unterschied, aber es passen viel mehr ins Album. Alle Clubmitglieder mit App können die Fotos sehen.</p>`;
@@ -4059,35 +4068,51 @@ function faGewaehlt(input) {
   $("faAuswahl").innerHTML = faDateien.length ? `<b>${faDateien.length} Foto${faDateien.length > 1 ? "s" : ""} gewählt</b> <button class="knopf klein" onclick="faDateien=[];$('faAuswahl').textContent='Noch keine Fotos gewählt.'">✕ leeren</button>` : "Noch keine Fotos gewählt.";
 }
 // Aufnahmedatum aus den JPEG-Bilddaten (EXIF DateTimeOriginal); null, wenn nicht vorhanden
-async function exifDatum(datei) {
+// KC-CLUB-FOTO-META (0.45.0): Aufnahmedaten (EXIF) aus dem Original lesen – vor dem Verkleinern, das sie entfernt.
+// Nur JPEG (Handy-Fotos); fehlt etwas, bleibt es einfach weg (nie geraten).
+async function exifLesen(datei) {
+  const m = { datei: datei.name, groesse: datei.size, typ: datei.type };
   try {
     const b = new DataView(await datei.slice(0, 256 * 1024).arrayBuffer());
-    if (b.byteLength < 4 || b.getUint16(0) !== 0xffd8) return null;
+    if (b.byteLength < 4 || b.getUint16(0) !== 0xffd8) return m;
     let o = 2;
     while (o + 10 < b.byteLength) {
       const marker = b.getUint16(o), len = b.getUint16(o + 2);
-      if ((marker & 0xff00) !== 0xff00) return null;
+      if ((marker & 0xff00) !== 0xff00) break;
       if (marker === 0xffe1 && b.getUint32(o + 4) === 0x45786966) {
         const t = o + 10, le = b.getUint16(t) === 0x4949;
-        const u16 = (p) => b.getUint16(t + p, le), u32 = (p) => b.getUint32(t + p, le);
-        const eintrag = (ifd, id) => { const n = u16(ifd); for (let i = 0; i < n; i++) { const e = ifd + 2 + i * 12; if (u16(e) === id) return e; } return null; };
-        const ifd0 = u32(4), exif = eintrag(ifd0, 0x8769), kandidaten = [];
-        if (exif !== null) { const ex = u32(exif + 8); kandidaten.push(eintrag(ex, 0x9003), eintrag(ex, 0x9004)); }
-        kandidaten.push(eintrag(ifd0, 0x0132));
-        for (const e of kandidaten) {
-          if (e === null) continue;
-          let s = ""; const off = u32(e + 8);
-          for (let i = 0; i < 10; i++) s += String.fromCharCode(b.getUint8(t + off + i));
-          const m = /^(\d{4}):(\d{2}):(\d{2})$/.exec(s);
-          if (m && m[1] !== "0000") return `${m[1]}-${m[2]}-${m[3]}`;
-        }
-        return null;
+        const u16 = (p) => b.getUint16(t + p, le), u32 = (p) => b.getUint32(t + p, le), i32 = (p) => b.getInt32(t + p, le);
+        const tags = (ifd) => { const r = {}, n = u16(ifd); for (let i = 0; i < n; i++) { const e = ifd + 2 + i * 12; r[u16(e)] = e; } return r; };
+        const BYTES = { 1: 1, 2: 1, 3: 2, 4: 4, 5: 8, 7: 1, 9: 4, 10: 8 };
+        const typ = (e) => u16(e + 2), anz = (e) => u32(e + 4), wo = (e) => ((BYTES[typ(e)] || 1) * anz(e) <= 4 ? e + 8 : u32(e + 8));
+        const text = (e) => { if (e == null) return ""; let s = ""; const p = wo(e); for (let i = 0; i < Math.min(anz(e), 120); i++) { const c = b.getUint8(t + p + i); if (!c) break; s += String.fromCharCode(c); } return s.trim(); };
+        const zahl = (e, i = 0) => { if (e == null) return undefined; const ty = typ(e), p = wo(e);
+          if (ty === 3) return u16(p + i * 2); if (ty === 4) return u32(p + i * 4);
+          if (ty === 5 || ty === 10) { const z = ty === 5 ? u32(p + i * 8) : i32(p + i * 8), n = ty === 5 ? u32(p + i * 8 + 4) : i32(p + i * 8 + 4); return n ? z / n : undefined; }
+          return undefined; };
+        const i0 = tags(u32(4)), ex = i0[0x8769] != null ? tags(u32(i0[0x8769] + 8)) : {}, gp = i0[0x8825] != null ? tags(u32(i0[0x8825] + 8)) : {};
+        const zeit = [ex[0x9003], ex[0x9004], i0[0x0132]].map(text).find((x) => /^\d{4}:\d{2}:\d{2} \d{2}:\d{2}/.test(x) && !x.startsWith("0000"));
+        if (zeit) m.aufnahme = zeit.slice(0, 10).replace(/:/g, "-") + "T" + zeit.slice(11, 19);
+        const hersteller = text(i0[0x010f]), modell = text(i0[0x0110]);
+        if (modell) m.kamera = !hersteller || modell.toLowerCase().startsWith(hersteller.toLowerCase()) ? modell : `${hersteller} ${modell}`;
+        if (text(ex[0xa434])) m.objektiv = text(ex[0xa434]);
+        m.breite = zahl(ex[0xa002]); m.hoehe = zahl(ex[0xa003]);
+        const bl = zahl(ex[0x829d]); if (bl) m.blende = Math.round(bl * 10) / 10;
+        const bel = zahl(ex[0x829a]); if (bel) m.belichtung = bel >= 1 ? String(Math.round(bel * 10) / 10) : "1/" + Math.round(1 / bel);
+        m.iso = zahl(ex[0x8827]); const bw = zahl(ex[0x920a]); if (bw) m.brennweite = Math.round(bw * 10) / 10;
+        const blitz = zahl(ex[0x9209]); if (blitz !== undefined) m.blitz = (blitz & 1) === 1;
+        const grad = (e) => (e == null ? undefined : zahl(e, 0) + zahl(e, 1) / 60 + zahl(e, 2) / 3600);
+        const lat = grad(gp[2]), lon = grad(gp[4]);
+        if (Number.isFinite(lat) && Number.isFinite(lon)) m.gps = { lat: text(gp[1]) === "S" ? -lat : lat, lon: text(gp[3]) === "W" ? -lon : lon, hoehe: zahl(gp[6]) };
+        break;
       }
       o += 2 + len;
     }
   } catch {}
-  return null;
+  for (const k of Object.keys(m)) if (m[k] === undefined || Number.isNaN(m[k]) || m[k] === "") delete m[k];
+  return m;
 }
+async function exifDatum(datei) { return (await exifLesen(datei)).aufnahme?.slice(0, 10) || null; }
 async function fotosHochladen() {
   if (!faDateien.length) return melde("Bitte zuerst Fotos auswählen.", true);
   const thema = $("faThema").value === "__neu" ? "" : $("faThema").value, beschreibung = $("faBeschr").value.trim(), festDatum = $("faDatum").value;
@@ -4102,10 +4127,12 @@ async function fotosHochladen() {
       const bild = await verkleinern(roh, 1600, 0.82), klein = await verkleinern(roh, 360, 0.7);
       if (!/^image\/(jpeg|png|webp)$/.test(bild.type)) throw new Error("Format wird nicht unterstützt (bitte als JPG speichern)");
       if (bild.size > 8 * 1024 * 1024) throw new Error("zu groß");
-      const datum = festDatum || (await exifDatum(roh)) || anlass?.datum || tagVon(roh.lastModified || Date.now());
+      const meta = await exifLesen(roh);
+      const datum = festDatum || meta.aufnahme?.slice(0, 10) || anlass?.datum || tagVon(roh.lastModified || Date.now());
       await api("foto_hochladen", { name: bild.name, mime: bild.type, daten: base64(await bild.arrayBuffer()),
         vorschau: klein.type === "image/jpeg" && klein !== roh ? base64(await klein.arrayBuffer()) : null,
-        thema, beschreibung, datum: datum > heuteIso() ? heuteIso() : datum, bezug_art: bezug_art || null, bezug_id: bezug_art ? bezug_id : null });
+        thema, beschreibung, datum: datum > heuteIso() ? heuteIso() : datum, bezug_art: bezug_art || null, bezug_id: bezug_art ? bezug_id : null,
+        meta, mitOrt: $("faOrt")?.checked !== false });
       ok++;
     } catch (e) {
       fehler.push(`${roh.name}: ${e.message}`);
@@ -4129,17 +4156,53 @@ async function fotoAnsehen(i, blaettern) {
   const an = anlassVon(f);
   $("fbInfo").innerHTML = `<div><b>${esc(f.thema || "Ohne Thema")}</b> · ${esc(fTagDe(f.datum))}${an ? `<br><span onclick="fotoSchliessen();faFilterSetzen('bezug','${esc(an.art + "|" + an.id)}')" style="text-decoration:underline;cursor:pointer">${esc(anlassText(an))}</span>` : ""}</div>
     ${f.beschreibung ? `<div>${esc(f.beschreibung)}</div>` : ""}<div class="fb-klein">📤 ${esc(f.von.name)}</div>
-    <div class="knoepfe"><button class="knopf klein" onclick="fotoSpeichern()">⬇️ Speichern</button>${navigator.share ? '<button class="knopf klein" onclick="fotoTeilen()">📤 Teilen</button>' : ""}
+    <div class="knoepfe"><button class="knopf klein" onclick="fotoDetails()">ℹ️ Details</button><button class="knopf klein" onclick="fotoSpeichern()">⬇️ Speichern</button>${navigator.share ? '<button class="knopf klein" onclick="fotoTeilen()">📤 Teilen</button>' : ""}
       ${f.darfAendern ? '<button class="knopf klein" onclick="fotoAendernForm()">✏️ Ändern</button><button class="knopf klein" onclick="fotoLoeschen()">🗑️ Löschen</button>' : ""}</div>`;
+  if (!$("fbDetails").classList.contains("versteckt")) fotoDetails(true);
   try {
     if (!faUrl.has(f.id)) faUrl.set(f.id, (await api("foto_oeffnen", { id: f.id })).url);
     if (faIndex === i) $("fbBild").src = faUrl.get(f.id);
   } catch (e) { melde(e.message, true); }
 }
+// KC-CLUB-FOTO-META (0.45.0): Foto antippen (oder ℹ️) → Aufnahmedaten: wann, wo, Kamera, Belichtung, Größe, wer hochgeladen hat
+function fotoDetails(an) {
+  const el = $("fbDetails"), f = FA?.fotos?.[faIndex]; if (!f) return;
+  const zeigen = an ?? el.classList.contains("versteckt");
+  el.classList.toggle("versteckt", !zeigen); if (!zeigen) return;
+  el.innerHTML = fotoDetailsHtml(f);
+  if (f.meta?.gps && !f.meta.ort && !f.ortFehler) fotoOrtLaden(f);
+}
+function fotoDetailsHtml(f) {
+  const m = f.meta || {}, z = (sym, titel, wert) => `<div class="fbd"><span class="fbd-sym">${sym}</span><div><small>${titel}</small><div>${wert}</div></div></div>`;
+  const unbekannt = (t) => `<span class="fbd-leer">${t}</span>`;
+  const aufn = m.aufnahme ? `${esc(fDatumLang.format(new Date(m.aufnahme.slice(0, 10) + "T12:00:00Z")))}, ${esc(m.aufnahme.slice(11, 16))} Uhr` : unbekannt("unbekannt – im Foto war keine Aufnahmezeit gespeichert");
+  const g = m.gps, karte = g ? `<div class="fbd-links"><a href="https://www.openstreetmap.org/?mlat=${g.lat}&mlon=${g.lon}#map=17/${g.lat}/${g.lon}" target="_blank" rel="noopener">🗺️ Karte</a><a href="https://www.google.com/maps?q=${g.lat},${g.lon}" target="_blank" rel="noopener">📍 Google Maps</a>${f.darfAendern ? `<button onclick="fotoOrtEntfernen()">🚫 Ort entfernen</button>` : ""}</div>` : "";
+  const ort = g ? (m.ort ? esc(m.ort) : f.ortFehler ? `${unbekannt(esc(f.ortFehler))}<br>${g.lat.toFixed(4)}, ${g.lon.toFixed(4)}` : `<span id="fbdOrt">wird ermittelt …</span>`) + (g.hoehe != null ? ` <small>(${Math.round(g.hoehe)} m ü. NN)</small>` : "") + karte
+    : unbekannt("kein Aufnahmeort gespeichert");
+  const technik = [m.blende ? `f/${String(m.blende).replace(".", ",")}` : "", m.belichtung ? `${m.belichtung.replace(".", ",")} s` : "", m.iso ? `ISO ${m.iso}` : "", m.brennweite ? `${String(m.brennweite).replace(".", ",")} mm` : "", m.blitz !== undefined ? (m.blitz ? "⚡ mit Blitz" : "ohne Blitz") : ""].filter(Boolean).join(" · ");
+  const bild = [m.breite && m.hoehe ? `${m.breite} × ${m.hoehe} Pixel (${(m.breite * m.hoehe / 1e6).toFixed(1).replace(".", ",")} MP)` : "", m.groesse ? `Original ${mb(m.groesse)}` : "", m.datei ? esc(m.datei) : ""].filter(Boolean).join(" · ");
+  return `<div class="fbd-kopf"><b>ℹ️ Foto-Details</b><button onclick="fotoDetails(false)" aria-label="Details schließen">✕</button></div>
+    ${z("📅", "Aufgenommen", aufn + (m.aufnahme && m.aufnahme.slice(0, 10) !== f.datum ? `<br><small>im Album einsortiert unter ${esc(fTagDe(f.datum))}</small>` : ""))}
+    ${z("📍", "Ort", ort)}
+    ${z("📱", "Kamera / Handy", m.kamera ? esc(m.kamera) + (m.objektiv ? `<br><small>${esc(m.objektiv)}</small>` : "") : unbekannt("unbekannt"))}
+    ${technik ? z("⚙️", "Aufnahme", esc(technik)) : ""}
+    ${bild ? z("🖼️", "Bild", bild) : ""}
+    ${z("📤", "Hochgeladen", `${esc(f.von?.name || "")}${f.hochgeladen ? ", " + esc(wann(f.hochgeladen)) : ""}`)}
+    ${f.meta ? "" : '<p class="fb-klein" style="margin:4px 0 0">Dieses Foto wurde vor Version 0.45 hochgeladen – damals wurden noch keine Aufnahmedaten gespeichert.</p>'}`;
+}
+async function fotoOrtLaden(f) {
+  try { const r = await api("foto_ort", { id: f.id }); f.meta = r.meta; if (r.fehler) f.ortFehler = r.fehler; }
+  catch (e) { f.ortFehler = e.message; }
+  if (FA?.fotos?.[faIndex]?.id === f.id && !$("fbDetails").classList.contains("versteckt")) $("fbDetails").innerHTML = fotoDetailsHtml(f);
+}
+async function fotoOrtEntfernen() {
+  const f = FA?.fotos?.[faIndex]; if (!f || !confirm("Den Aufnahmeort bei diesem Foto für alle entfernen?\n\nDas lässt sich nicht rückgängig machen.")) return;
+  try { const r = await api("foto_ort", { id: f.id, entfernen: true }); f.meta = r.meta; melde("🚫 Ort entfernt"); fotoDetails(true); } catch (e) { melde(e.message, true); }
+}
 function fotoBlaettern(r) { const n = faIndex + r; if (FA && n >= 0 && n < FA.fotos.length) fotoAnsehen(n, true); }
 function fotoSchliessen(ausHistorie) {
   if ($("fotoBetrachter").classList.contains("versteckt")) return;
-  $("fotoBetrachter").classList.add("versteckt"); $("fbBild").src = "";
+  $("fotoBetrachter").classList.add("versteckt"); $("fbBild").src = ""; $("fbDetails").classList.add("versteckt");
   if (!ausHistorie) { faZurueck = true; history.back(); }
 }
 async function fotoSpeichern() {

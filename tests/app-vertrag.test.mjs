@@ -369,7 +369,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/faFilterSetzen\('thema'/.test(html) && /faFilterSetzen\('jahr'/.test(html) && /faFilterSetzen\('bezug'/.test(html), "Filter fehlen");
   assert.ok(/if \(faZurueck\) \{ faZurueck = false; return; \}/.test(html) && /fotoSchliessen\(true\)/.test(html), "Zurück schließt die Großansicht nicht");
   // EXIF-Datum aus einem kleinen JPEG mit DateTimeOriginal lesen
-  const code = html.slice(html.indexOf("async function exifDatum"), html.indexOf("async function fotosHochladen"));
+  const code = html.slice(html.indexOf("async function exifLesen"), html.indexOf("async function fotosHochladen"));
   const exifDatum = new Function(code + ";return exifDatum;")();
   const tiff = [0x4d, 0x4d, 0, 42, 0, 0, 0, 8, 0, 1, 0x87, 0x69, 0, 4, 0, 0, 0, 1, 0, 0, 0, 26, 0, 0, 0, 0, 0, 1, 0x90, 0x03, 0, 2, 0, 0, 0, 20, 0, 0, 0, 44, 0, 0, 0, 0,
     ...[..."2027:05:11 18:30:00"].map((c) => c.charCodeAt(0)), 0];
@@ -845,6 +845,40 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/api\("nachricht_senden"/.test(zs) && /n >= ZE_RUECKFRAGE_AB && !confirm/.test(zs), "Zentrale sendet nicht über den vorhandenen Weg oder ohne Rückfrage");
   assert.ok(/\.ipfeil\.links \{ left: -17px; \}/.test(html) && /id="infoPunkte"/.test(html) && !/class="inav"/.test(html), "Pfeile nicht am Rahmen / Punkte nicht unter dem Feld");
   assert.ok(/chip\("\*", "👥 Alle Mitglieder"\)/.test(html) && !/ICH\.vorstand \? chip\("\*"/.test(html), "„Alle Mitglieder“ nicht für alle");
+}
+
+// 68. 0.45.0: Foto-Details – EXIF aus dem Original (Zeit, Kamera, Belichtung, Größe, GPS), Ort nur mit Erlaubnis, Server begrenzt
+{
+  const code = html.slice(html.indexOf("async function exifLesen"), html.indexOf("async function fotosHochladen"));
+  const exifLesen = new Function(code + ";return exifLesen;")();
+  const w16 = (v) => [(v >> 8) & 255, v & 255], w32 = (v) => [(v >>> 24) & 255, (v >> 16) & 255, (v >> 8) & 255, v & 255];
+  const ascii = (s) => [...[...s].map((c) => c.charCodeAt(0)), 0], rat = (...p) => p.flatMap(([z, n]) => [...w32(z), ...w32(n)]);
+  function tiff(ifd0, exif, gps) {
+    const len = (n) => 2 + n * 12 + 4, oE = 8 + len(ifd0.length + 2), oG = oE + len(exif.length); let daten = oG + len(gps.length); const teil = [];
+    const baue = (es) => { const out = [...w16(es.length)]; for (const [tag, typ, anz, wert] of es) { out.push(...w16(tag), ...w16(typ), ...w32(anz)); if (wert.length <= 4) out.push(...wert, ...Array(4 - wert.length).fill(0)); else { out.push(...w32(daten)); teil.push(...wert); daten += wert.length; } } out.push(0, 0, 0, 0); return out; };
+    const e0 = baue([...ifd0, [0x8769, 4, 1, w32(oE)], [0x8825, 4, 1, w32(oG)]]), eE = baue(exif), eG = baue(gps);
+    return [0x4d, 0x4d, 0, 42, ...w32(8), ...e0, ...eE, ...eG, ...teil];
+  }
+  const ti = tiff([[0x010f, 2, 8, ascii("samsung")], [0x0110, 2, 9, ascii("SM-S911B")]],
+    [[0x9003, 2, 20, ascii("2026:09:26 18:42:07")], [0x829d, 5, 1, rat([18, 10])], [0x829a, 5, 1, rat([1, 120])], [0x8827, 3, 1, w16(100)], [0x920a, 5, 1, rat([54, 10])], [0x9209, 3, 1, w16(0)], [0xa002, 4, 1, w32(4000)], [0xa003, 4, 1, w32(3000)]],
+    [[1, 2, 2, ascii("N")], [2, 5, 3, rat([51, 1], [39, 1], [5220, 100])], [3, 2, 2, ascii("E")], [4, 5, 3, rat([7, 1], [38, 1], [312, 100])]]);
+  const jpg = new File([new Uint8Array([0xff, 0xd8, 0xff, 0xe1, ...w16(8 + ti.length), 0x45, 0x78, 0x69, 0x66, 0, 0, ...ti, 0xff, 0xd9])], "IMG_1.jpg", { type: "image/jpeg" });
+  const m = await exifLesen(jpg);
+  assert.equal(m.aufnahme, "2026-09-26T18:42:07"); assert.equal(m.kamera, "samsung SM-S911B");
+  assert.equal(m.blende, 1.8); assert.equal(m.belichtung, "1/120"); assert.equal(m.iso, 100); assert.equal(m.brennweite, 5.4); assert.equal(m.blitz, false);
+  assert.equal(m.breite, 4000); assert.equal(m.hoehe, 3000); assert.equal(m.datei, "IMG_1.jpg");
+  assert.ok(Math.abs(m.gps.lat - 51.6645) < 1e-6 && Math.abs(m.gps.lon - 7.6342) < 1e-6, "GPS falsch gelesen");
+  assert.deepEqual(Object.keys(await exifLesen(new File([new Uint8Array([1, 2, 3])], "x.png", { type: "image/png" }))).sort(), ["datei", "groesse", "typ"], "ohne EXIF wird etwas erfunden");
+  // Server: Ort nur mit Erlaubnis, gerundet; Unsinn fliegt raus
+  const sf = server.slice(server.indexOf("function fotoMetaPruefen"), server.indexOf("// Ortsname zu GPS-Daten"));
+  const fmp = new Function("txt", sf.replace("(roh: any, mitOrt: boolean)", "(roh, mitOrt)").replace("(v: unknown, min: number, max: number)", "(v, min, max)").replace(": Record<string, unknown>", "") + "return fotoMetaPruefen;")((v, n) => String(v ?? "").trim().slice(0, n));
+  const roh = { ...m, gps: { lat: 51.664512, lon: 7.634187 }, iso: -5, belichtung: "<b>" };
+  assert.deepEqual(fmp(roh, true).gps, { lat: 51.6645, lon: 7.6342 }); assert.equal(fmp(roh, false).gps, undefined, "Ort gespeichert, obwohl nicht erlaubt");
+  assert.equal(fmp(roh, true).iso, undefined); assert.equal(fmp(roh, true).belichtung, undefined);
+  assert.ok(aktionen.has("foto_ort") && aufrufe.has("foto_ort"), "foto_ort fehlt");
+  const fo = server.slice(server.indexOf('case "foto_ort"'), server.indexOf('case "foto_aendern"'));
+  assert.ok(/if \(!darfFotoAendern\(ich, f\)\) throw/.test(fo) && /1100/.test(fo) && /"User-Agent"/.test(server), "Ort entfernen ungeschützt / Nominatim-Regeln");
+  assert.ok(/onclick="fotoDetails\(\)"/.test(html) && /id="faOrt" checked/.test(html) && /mitOrt: \$\("faOrt"\)\?\.checked !== false/.test(html), "Details/Ort-Erlaubnis fehlen in der App");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

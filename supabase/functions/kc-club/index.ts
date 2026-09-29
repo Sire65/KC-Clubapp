@@ -13,14 +13,14 @@
 //           KC-CLUB-COMMUNICATOR-STATUS (0.17.0), KC-CLUB-FEEDBACK (0.18.0),
 //           KC-CLUB-KACHELN (0.19.0), KC-CLUB-ZUGANG-SELBST (0.21.0),
 //           KC-CLUB-GRUPPEN, KC-CLUB-ZUSTELLWAHL (0.23.0)
-//           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0), KC-CLUB-KACHELN-ZIEHEN (0.26.0), KC-CLUB-FEEDBACK-NEU (0.27.1), KC-CLUB-BEGRUESSUNG (0.28.0), KC-CLUB-ONLINE (0.29.0), KC-CLUB-ANRUF (0.31.0), KC-CLUB-VIDEO (0.32.0), KC-CLUB-QUITTUNG (0.34.0), KC-CLUB-TODO + KC-CLUB-REGISTER-ZIEHEN (0.36.0), KC-CLUB-SPRACHE + KC-CLUB-TODO-ZUSTAENDIG (0.37.0), KC-CLUB-ERSTATTUNG (0.38.0), KC-CLUB-KMSATZ (0.39.0), KC-CLUB-FEEDBACK-DAUERHAFT (0.40.0), KC-CLUB-INFOFELD + KC-CLUB-WETTER (0.42.0), KC-CLUB-INFOFELD-DEMNAECHST/-FOTOS (0.43.0), KC-CLUB-ZENTRALE (0.44.0)
+//           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0), KC-CLUB-KACHELN-ZIEHEN (0.26.0), KC-CLUB-FEEDBACK-NEU (0.27.1), KC-CLUB-BEGRUESSUNG (0.28.0), KC-CLUB-ONLINE (0.29.0), KC-CLUB-ANRUF (0.31.0), KC-CLUB-VIDEO (0.32.0), KC-CLUB-QUITTUNG (0.34.0), KC-CLUB-TODO + KC-CLUB-REGISTER-ZIEHEN (0.36.0), KC-CLUB-SPRACHE + KC-CLUB-TODO-ZUSTAENDIG (0.37.0), KC-CLUB-ERSTATTUNG (0.38.0), KC-CLUB-KMSATZ (0.39.0), KC-CLUB-FEEDBACK-DAUERHAFT (0.40.0), KC-CLUB-INFOFELD + KC-CLUB-WETTER (0.42.0), KC-CLUB-INFOFELD-DEMNAECHST/-FOTOS (0.43.0), KC-CLUB-ZENTRALE (0.44.0), KC-CLUB-FOTO-META (0.45.0)
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.44.0";
+const SERVER_VERSION = "0.45.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -252,6 +252,41 @@ async function speicherStand() {
     fotosMoeglich: Math.max(0, Math.floor((SPEICHER_GRENZE * FOTO_STOPP - belegt) / FOTO_SCHNITT)) };
 }
 const darfFotoAendern = (ich: Ich, f: any) => f.hochgeladen_von === ich.person_id || ich.vorstand;
+// ----- KC-CLUB-FOTO-META (0.45.0): Aufnahmedaten eines Fotos (von der App aus dem Original gelesen) prüfen und begrenzen -----
+function fotoMetaPruefen(roh: any, mitOrt: boolean) {
+  if (!roh || typeof roh !== "object") return null;
+  const zahl = (v: unknown, min: number, max: number) => { const n = Number(v); return Number.isFinite(n) && n >= min && n <= max ? n : undefined; };
+  const m: Record<string, unknown> = {
+    aufnahme: /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/.test(String(roh.aufnahme || "")) ? String(roh.aufnahme) : undefined,
+    kamera: txt(roh.kamera, 80) || undefined, objektiv: txt(roh.objektiv, 80) || undefined,
+    breite: zahl(roh.breite, 1, 100000), hoehe: zahl(roh.hoehe, 1, 100000),
+    blende: zahl(roh.blende, 0.5, 64), belichtung: /^(1\/\d{1,5}|\d{1,3}(\.\d{1,2})?)$/.test(String(roh.belichtung || "")) ? String(roh.belichtung) : undefined,
+    iso: zahl(roh.iso, 1, 1000000), brennweite: zahl(roh.brennweite, 0.1, 5000), blitz: typeof roh.blitz === "boolean" ? roh.blitz : undefined,
+    datei: txt(roh.datei, 120) || undefined, groesse: zahl(roh.groesse, 1, 500 * 1024 * 1024), typ: txt(roh.typ, 40) || undefined,
+  };
+  // Ort nur, wenn der Hochladende es erlaubt hat; auf ~10 m gerundet
+  const lat = zahl(roh.gps?.lat, -90, 90), lon = zahl(roh.gps?.lon, -180, 180);
+  if (mitOrt && lat !== undefined && lon !== undefined && !(lat === 0 && lon === 0)) {
+    const hoehe = zahl(roh.gps?.hoehe, -500, 9000);
+    m.gps = { lat: Math.round(lat * 1e4) / 1e4, lon: Math.round(lon * 1e4) / 1e4, ...(hoehe !== undefined ? { hoehe: Math.round(hoehe) } : {}) };
+  }
+  for (const k of Object.keys(m)) if (m[k] === undefined) delete m[k];
+  return Object.keys(m).length ? m : null;
+}
+// Ortsname zu GPS-Daten (Adapter, kostenlos: OpenStreetMap/Nominatim, höchstens 1 Anfrage je Sekunde, Ergebnis wird gemerkt)
+const ORTSNAMEN: Record<string, (lat: number, lon: number) => Promise<string | null>> = {
+  nominatim: async (lat, lon) => {
+    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=17&accept-language=de`,
+      { headers: { "User-Agent": "KC-Clubapp (Koecheclub Werne, sire65.github.io/KC-Clubapp)" }, signal: AbortSignal.timeout(8000) });
+    if (!r.ok) throw new Error("Nominatim " + r.status);
+    const d = await r.json(), a = d.address ?? {};
+    const ort = a.town || a.city || a.village || a.hamlet || a.municipality || "";
+    const teile = [d.name && d.name !== a.road ? d.name : "", a.road || "", a.suburb && a.suburb !== ort ? a.suburb : "", ort, a.country_code && a.country_code !== "de" ? a.country : ""];
+    return [...new Set(teile.filter(Boolean))].join(", ") || d.display_name || null;
+  },
+};
+const ORTSNAME_QUELLE = "nominatim";
+let ortsnameZuletzt = 0;
 async function fotoHolen(id: unknown) {
   const { data: f } = await db.from("kc_club_fotos").select("*").eq("id", String(id || "")).maybeSingle();
   if (!f) throw new Fehler("Foto nicht gefunden.", 404);
@@ -2622,6 +2657,7 @@ Köcheclub Werne`,
             id: f.id, thema: f.thema, datum: f.datum, beschreibung: f.beschreibung, bezug_art: f.bezug_art, bezug_id: f.bezug_id,
             von: { person_id: f.hochgeladen_von, name: leute.get(f.hochgeladen_von)?.display_name ?? "" },
             vorschau: url.get(pfad.get(f.vorschau_id || f.attachment_id)) ?? null, darfAendern: darfFotoAendern(ich, f),
+            meta: f.meta ?? null, hochgeladen: f.hochgeladen_am,
             ...(papierkorb ? { geloescht_am: f.geloescht_am, endgueltig_am: new Date(new Date(f.geloescht_am).getTime() + PAPIERKORB_TAGE * 86400000).toISOString() } : {}),
           })),
           themen: alleThemen.map((t) => ({ thema: t, anzahl: themen.get(t) ?? 0 })).sort((a, b) => b.anzahl - a.anzahl || a.thema.localeCompare(b.thema)),
@@ -2643,6 +2679,7 @@ Köcheclub Werne`,
           const { data: f, error } = await db.from("kc_club_fotos").insert({
             attachment_id: bild.id, vorschau_id: vorschau?.id ?? null, thema: txt(p.thema, 60), datum, ...bezug,
             beschreibung: txt(p.beschreibung, 300), groesse: bild.groesse + (vorschau?.groesse ?? 0), hochgeladen_von: ich.person_id,
+            meta: fotoMetaPruefen(p.meta, p.mitOrt !== false),
           }).select("id").single();
           if (error || !f) throw new Fehler("Foto konnte nicht gespeichert werden.", 500);
           await protokoll(ich.person_id, "foto_hochgeladen", { foto: f.id, groesse: bild.groesse + (vorschau?.groesse ?? 0) });
@@ -2658,6 +2695,25 @@ Köcheclub Werne`,
         const { data: su } = await db.storage.from(att.bucket).createSignedUrl(att.object_path, 3600, p.herunterladen ? { download: att.file_name } : undefined);
         if (!su?.signedUrl) throw new Fehler("Foto kann gerade nicht geöffnet werden.", 500);
         return json({ url: su.signedUrl, name: att.file_name });
+      }
+
+      // KC-CLUB-FOTO-META (0.45.0): Ortsname ermitteln (einmal, dann gemerkt) oder den Ort entfernen (nur wer ändern darf)
+      case "foto_ort": {
+        const f = await fotoHolen(p.id), meta = { ...(f.meta ?? {}) };
+        if (p.entfernen) {
+          if (!darfFotoAendern(ich, f)) throw new Fehler("Den Ort entfernen darf nur, wer das Foto hochgeladen hat.", 403);
+          delete meta.gps; delete meta.ort;
+          await db.from("kc_club_fotos").update({ meta: Object.keys(meta).length ? meta : null }).eq("id", f.id);
+          await protokoll(ich.person_id, "foto_ort_entfernt", { foto: f.id });
+          return json({ ok: true, meta: Object.keys(meta).length ? meta : null });
+        }
+        if (!meta.gps || meta.ort) return json({ meta: f.meta ?? null });
+        if (Date.now() - ortsnameZuletzt < 1100) await new Promise((r) => setTimeout(r, 1100)); // Nutzungsregel: max. 1 Anfrage/s
+        ortsnameZuletzt = Date.now();
+        try { meta.ort = await ORTSNAMEN[ORTSNAME_QUELLE](meta.gps.lat, meta.gps.lon); }
+        catch (e) { console.error("foto_ort", String(e)); return json({ meta: f.meta, fehler: "Ortsname gerade nicht abrufbar" }); }
+        if (meta.ort) await db.from("kc_club_fotos").update({ meta }).eq("id", f.id);
+        return json({ meta });
       }
 
       case "foto_aendern": {

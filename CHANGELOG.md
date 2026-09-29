@@ -1,5 +1,15 @@
 # Änderungen
 
+## 0.45.0 – 2026-09-29 (DEV)
+
+- KC-CLUB-FOTO-META (neu): Foto in der Großansicht antippen (oder „ℹ️ Details“) → Aufnahmezeit, Ort (Ortsname + Karte
+  OpenStreetMap/Google Maps, Höhe), Kamera/Handy, Objektiv, Blende/Belichtung/ISO/Brennweite/Blitz, Pixel/MP, Originalgröße,
+  Dateiname, wer wann hochgeladen hat. Fehlendes steht als „unbekannt“ da (nie geraten); alte Fotos ohne Daten mit Hinweis.
+  EXIF wird in der App aus dem Original gelesen (exifLesen, ersetzt den Datums-Teil von exifDatum – gleiches Ergebnis), weil das
+  Verkleinern EXIF entfernt. Hochladen: „📍 Aufnahmeort mitspeichern“ (Standard an); GPS auf ~10 m gerundet. Ortsname über
+  Adapter ORTSNAMEN (Nominatim/OpenStreetMap, kostenlos, max. 1 Anfrage/s, einmal ermittelt und gemerkt) – Aktion foto_ort,
+  „🚫 Ort entfernen“ nur für Hochladende/Clubleitung. Spalte kc_club_fotos.meta (jsonb).
+
 ## 0.44.0 – 2026-09-29 (DEV)
 
 - KC-CLUB-ZENTRALE (neu): 6. Info-Karte „📡 Kommunikationszentrale“. Digitale Anzeige (Uhr, online, ungelesen, Push-Zustand,

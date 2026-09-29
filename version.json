@@ -1,13 +1,18 @@
 {
-  "version": "0.44.0",
+  "version": "0.45.0",
   "datum": "2026-09-29",
   "neu": [
-    "📡 Neue Karte oben: Kommunikationszentrale – digitale Anzeige, Empfänger wählen (Alle, Online, Ämter, Gruppen, einzeln) und Schaltpult: Anrufen, Video, Anklopfen, Sprachnachricht, Chat, Nachricht per Push/E-Mail/WhatsApp",
-    "👥 Alle Mitglieder dürfen jetzt alle anschreiben, anrufen und anklopfen",
-    "🪧 ⚙️ Darstellung: wählbar, welche Karte oben beim Start erscheint",
-    "‹ › Pfeile sitzen jetzt mittig am Rand des Info-Felds, die Punkte direkt darunter – mehr Platz"
+    "ℹ️ Fotoalbum: Foto antippen (oder ℹ️ Details) zeigt, wann und wo es gemacht wurde – mit Karte, Handy/Kamera, Belichtung, Bildgröße und wer es hochgeladen hat",
+    "📍 Beim Hochladen wählbar, ob der Aufnahmeort mitgespeichert wird; wer das Foto hochgeladen hat, kann den Ort später entfernen"
   ],
   "verlauf": [
+    {
+      "version": "0.45.0",
+      "neu": [
+        "ℹ️ Fotoalbum: Foto antippen (oder ℹ️ Details) zeigt, wann und wo es gemacht wurde – mit Karte, Handy/Kamera, Belichtung, Bildgröße und wer es hochgeladen hat",
+        "📍 Beim Hochladen wählbar, ob der Aufnahmeort mitgespeichert wird; wer das Foto hochgeladen hat, kann den Ort später entfernen"
+      ]
+    },
     {
       "version": "0.44.0",
       "neu": [
