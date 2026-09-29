@@ -802,4 +802,21 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/ICH\?\.admin \? `<button class="knopf klein" onclick="unterhEntfernen\('\$\{u\.id\}', true\)"/.test(html), "„Für alle löschen“ nicht auf Admin beschränkt");
 }
 
+// 65. 0.42.0: Info-Feld blätterbar (Registry, Pfeile, Punkte, Wischen) + Wetter (Adapter/Registry, nur Admin stellt ein, Rule 11)
+{
+  const ids = [...html.slice(html.indexOf("const INFO_FELDER = ["), html.indexOf("];", html.indexOf("const INFO_FELDER = ["))).matchAll(/id: "([a-z]+)"/g)].map((m) => m[1]);
+  assert.deepEqual(ids, ["treffen", "wetter", "fuerdich"], "Info-Felder falsch");
+  assert.ok(/class="ipfeil"[^>]*onclick="infoBlaettern\(-1\)"/.test(html) && /onclick="infoBlaettern\(1\)"/.test(html) && /class="ipunkt\$\{i === INFO_I \? " an" : ""\}"/.test(html), "Pfeile/Punkte fehlen");
+  assert.ok(/\[\$\("heroInfo"\), infoBlaettern\]/.test(html), "Wischen im Info-Feld fehlt");
+  assert.ok(!/setInterval\([^)]*infoBlaettern/.test(html), "Info-Feld darf nicht automatisch blättern");
+  for (const a of ["wetter", "wetter_konfig", "wetter_ort_suchen", "wetter_setzen"]) assert.ok(aktionen.has(a) && aufrufe.has(a), `${a} fehlt`);
+  for (const a of ["wetter_konfig", "wetter_ort_suchen", "wetter_setzen"]) assert.ok(/nurAdmin\(ich\)/.test(server.slice(server.indexOf(`case "${a}"`), server.indexOf(`case "${a}"`) + 80)), `${a} nicht nur für Admin`);
+  assert.ok(/const WETTER_QUELLEN: Record</.test(server) && /const WETTER_APPS: Record</.test(server) && !/api\.open-meteo\.com/.test(html), "Wetter nicht über Registry/Server");
+  assert.ok(/if \(!r\.daten\) return `<h2>❔ Wetter gerade nicht verfügbar/.test(html) && /WETTER_VERALTET_MIN/.test(html) && /⚠️ veraltet/.test(html), "Rule 11: fehlendes/veraltetes Wetter nicht markiert");
+  assert.ok(/prefers-reduced-motion: reduce\) \{ \.wszene/.test(html), "Animation ohne Rücksicht auf „weniger Bewegung“");
+  const wa = new Function(html.slice(html.indexOf("const WETTER_CODES"), html.indexOf("const grad =")) + "return wetterArt;")();
+  assert.equal(wa(0).szene, "sonne"); assert.equal(wa(63).szene, "regen"); assert.equal(wa(73).szene, "schnee"); assert.equal(wa(95).szene, "gewitter"); assert.equal(wa(45).szene, "nebel");
+  assert.equal(wa(42).text, "Wetter unbekannt", "unbekannter Code wird als Wetter ausgegeben");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

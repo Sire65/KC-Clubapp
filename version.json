@@ -1,11 +1,20 @@
 {
-  "version": "0.41.0",
+  "version": "0.42.0",
   "datum": "2026-09-29",
   "neu": [
-    "💬 Nachrichten-Übersicht: einmal tippen wählt eine Unterhaltung aus – dann „Öffnen“ oder „🗑️ Aus meiner Liste“ entfernen",
-    "👆👆 Doppelt tippen öffnet die Unterhaltung direkt"
+    "‹ › Das große Info-Feld oben lässt sich jetzt blättern – Pfeile antippen, wischen oder einen der leuchtenden Punkte",
+    "🌦️ Neues Wetter-Feld mit Animation (Sonne, Regen, Schnee, Gewitter, Sturm, Nebel), 3-Tage-Vorschau und Wetter beim nächsten Treffen",
+    "🔔 Neues Feld „Für dich“: alles Offene auf einen Blick, antippen führt direkt hin"
   ],
   "verlauf": [
+    {
+      "version": "0.42.0",
+      "neu": [
+        "‹ › Das große Info-Feld oben lässt sich jetzt blättern – Pfeile antippen, wischen oder einen der leuchtenden Punkte",
+        "🌦️ Neues Wetter-Feld mit Animation (Sonne, Regen, Schnee, Gewitter, Sturm, Nebel), 3-Tage-Vorschau und Wetter beim nächsten Treffen",
+        "🔔 Neues Feld „Für dich“: alles Offene auf einen Blick, antippen führt direkt hin"
+      ]
+    },
     {
       "version": "0.41.0",
       "neu": [

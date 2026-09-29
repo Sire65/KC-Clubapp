@@ -118,6 +118,57 @@
   .info h2 { margin: 0; font-size: 1.5rem; }
   .info .unter { opacity: .9; margin-top: 4px; }
   .kacheln3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
+  /* KC-CLUB-INFOFELD + KC-CLUB-WETTER (0.42.0) */
+  .info { position: relative; overflow: hidden; }
+  .ifeld { min-height: 164px; }
+  .ifeld.rein-r { animation: ireinR .28s ease-out; } .ifeld.rein-l { animation: ireinL .28s ease-out; }
+  @keyframes ireinR { from { opacity: 0; transform: translateX(34px); } } @keyframes ireinL { from { opacity: 0; transform: translateX(-34px); } }
+  .inav { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
+  .ipfeil { width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,255,255,.35); background: rgba(255,255,255,.14); color: #fff; font-size: 1.5rem; font-weight: 800; line-height: 1; cursor: pointer; }
+  .ipunkte { display: flex; gap: 4px; }
+  .ipunkt { width: 26px; height: 26px; border: none; background: none; padding: 0; cursor: pointer; display: grid; place-items: center; }
+  .ipunkt::after { content: ""; width: 9px; height: 9px; border-radius: 5px; background: rgba(255,255,255,.35); transition: all .25s; }
+  .ipunkt.an::after { width: 22px; background: #ffe7a3; box-shadow: 0 0 6px 2px rgba(255,221,130,.85), 0 0 14px 4px rgba(255,200,90,.45); }
+  .ifzliste { display: grid; gap: 6px; margin-top: 10px; }
+  .ifz { display: flex; gap: 10px; align-items: center; width: 100%; text-align: left; border: none; border-radius: 12px; padding: 8px 12px; background: rgba(255,255,255,.14); color: #fff; font: inherit; cursor: pointer; }
+  .ifz .ifzt { flex: 1; min-width: 0; }
+  .wszene { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+  .winhalt { position: relative; z-index: 1; }
+  .wkopf { display: flex; gap: 12px; align-items: center; }
+  .wsym { font-size: 2.6rem; line-height: 1; filter: drop-shadow(0 2px 6px rgba(0,0,0,.25)); }
+  .wtemp { font-size: 2rem; font-weight: 800; line-height: 1; }
+  .wtage { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+  .wtag { display: grid; justify-items: center; gap: 1px; padding: 6px 4px; border-radius: 12px; background: rgba(255,255,255,.14); font-size: .85rem; }
+  .wtag b { font-size: 1.4rem; font-weight: 400; } .wtag small { opacity: .85; }
+  .wtreffen { display: block; width: 100%; margin-top: 8px; text-align: left; border: none; border-radius: 12px; padding: 7px 12px; background: rgba(255,255,255,.18); color: #fff; font: inherit; font-size: .9rem; cursor: pointer; }
+  .wfuss { display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-top: 8px; font-size: .78rem; opacity: .9; }
+  .wveraltet { background: #ffcc80; color: #4a2a00; padding: 1px 8px; border-radius: 8px; font-weight: 700; }
+  .wlink { border: 1px solid rgba(255,255,255,.4); background: rgba(255,255,255,.12); color: #fff; border-radius: 10px; padding: 4px 10px; font: inherit; font-weight: 700; cursor: pointer; }
+  .wsonne { position: absolute; top: -34px; right: -34px; width: 140px; height: 140px; border-radius: 50%; background: radial-gradient(circle, #ffe27a 0 26%, rgba(255,214,90,.55) 27% 36%, transparent 37%); }
+  .wsonne::before { content: ""; position: absolute; inset: -18px; border-radius: 50%; background: repeating-conic-gradient(rgba(255,226,122,.4) 0 7deg, transparent 7deg 22deg);
+    -webkit-mask: radial-gradient(circle, transparent 0 36%, #000 38% 62%, transparent 70%); mask: radial-gradient(circle, transparent 0 36%, #000 38% 62%, transparent 70%); animation: wdreh 28s linear infinite; }
+  @keyframes wdreh { to { transform: rotate(360deg); } }
+  .wmond { position: absolute; top: 12px; right: 26px; width: 44px; height: 44px; border-radius: 50%; box-shadow: -11px 7px 0 0 #f6eecb; }
+  .wstern { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: #fff; animation: wfunkel 3.2s ease-in-out infinite; }
+  @keyframes wfunkel { 50% { opacity: .2; } }
+  .wwolke { position: absolute; left: -40%; width: 120px; height: 36px; border-radius: 40px; background: rgba(255,255,255,.26); animation: wzieh 50s linear infinite; }
+  .wwolke::before, .wwolke::after { content: ""; position: absolute; border-radius: 50%; background: inherit; }
+  .wwolke::before { width: 52px; height: 52px; left: 18px; top: -26px; } .wwolke::after { width: 40px; height: 40px; left: 58px; top: -18px; }
+  .wwolke.dunkel { background: rgba(40,40,55,.30); }
+  @keyframes wzieh { to { left: 110%; } }
+  .wtropfen { position: absolute; top: -24px; width: 2px; height: 18px; border-radius: 2px; background: linear-gradient(transparent, rgba(205,228,255,.9)); animation: wfall .7s linear infinite; }
+  .wtropfen.fein { height: 10px; opacity: .7; }
+  @keyframes wfall { to { transform: translate(-14px, 340px); } }
+  .wflocke { position: absolute; top: -10px; border-radius: 50%; background: #fff; opacity: .9; animation: wschnee 7s linear infinite; }
+  @keyframes wschnee { 0% { transform: translate(0, 0); } 33% { transform: translate(14px, 110px); } 66% { transform: translate(-10px, 220px); } 100% { transform: translate(8px, 340px); } }
+  .wblitz { position: absolute; inset: 0; animation: wblitz 6s infinite; }
+  @keyframes wblitz { 0%, 86%, 89%, 91%, 100% { background: transparent; } 87% { background: rgba(255,255,255,.55); } 90% { background: rgba(255,255,255,.35); } }
+  .wnebel { position: absolute; left: -30%; width: 160%; height: 26px; border-radius: 20px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.26), transparent); animation: wnebel 14s ease-in-out infinite alternate; }
+  @keyframes wnebel { from { transform: translateX(-18%); } to { transform: translateX(18%); } }
+  .wwind { position: absolute; left: -30%; width: 80px; height: 2px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.7), transparent); animation: wwind 1.5s linear infinite; }
+  @keyframes wwind { to { left: 115%; } }
+  @media (prefers-reduced-motion: reduce) { .wszene *, .wszene *::before, .ifeld { animation: none !important; } .wtropfen, .wflocke, .wwind, .wblitz { display: none; } }
+  .wortliste { display: grid; gap: 6px; margin-top: 8px; } .wortliste .wort { text-align: left; }
   .mini { background: rgba(255,255,255,.14); border-radius: 16px; padding: 12px; min-height: 70px; border: none; color: #fff; text-align: left; font: inherit; cursor: pointer; }
   .mini:active { transform: scale(.96); background: rgba(255,255,255,.22); }
   .klick { cursor: pointer; }
@@ -750,6 +801,16 @@
       <div class="zwei"><label class="feld">Neuer Satz (€ je km)<input id="kmSatzNeu" inputmode="decimal" placeholder="z. B. 0,38"></label><label class="feld">gilt ab<input type="date" id="kmSatzAb"></label></div>
       <button class="knopf haupt" onclick="kmSatzSpeichern()">💾 Satz speichern</button>
     </details>
+    <details class="karte versteckt" data-klappe="admin_wetter" id="adminWetter">
+      <summary>🛠️ Admin: Wetter (Ort &amp; Wetter-App)</summary>
+      <p class="hinweis" style="margin-top:0">Das Wetter steht oben auf der Startseite im Info-Feld (mit ‹ › blättern). Die Einstellung gilt für alle Mitglieder.</p>
+      <div id="wetterAktuell"><p class="hinweis">Wird geladen …</p></div>
+      <label class="feld">Anderen Ort suchen<input id="wetterOrtQ" maxlength="60" placeholder="z. B. Werne, Dortmund, Lüdinghausen" onkeydown="if(event.key==='Enter')wetterOrtSuchen()"></label>
+      <button class="knopf" onclick="wetterOrtSuchen()">🔍 Ort suchen</button>
+      <div id="wetterOrte" class="wortliste"></div>
+      <label class="feld">Wetter-App zum Weiterlesen (beim Antippen)<select id="wetterApp" onchange="wetterSetzen({ app: this.value })"></select></label>
+      <label class="feld">Datenquelle<select id="wetterQuelle" onchange="wetterSetzen({ quelle: this.value })"></select></label>
+    </details>
     <details class="karte" data-klappe="app">
       <summary>ℹ️ App-Info</summary>
       <div style="text-align:center;margin:6px 0 12px"><img src="icon-192.png" alt="" style="width:64px;height:64px;border-radius:16px"><div style="font-weight:800;font-size:1.15rem;margin-top:6px">Köcheclub Werne – Club-App</div>
@@ -875,7 +936,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.41.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.42.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -1654,7 +1715,7 @@ async function zugangAnfordern() {
 }
 // KC-CLUB-WARTEN (0.33.0): dauert eine Anfrage länger als 0,35 s, erscheint die drehende Kochmütze mit passendem Text.
 // Hintergrund-Abfragen (alle paar Sekunden/Minuten) zeigen sie nicht, damit nichts flackert.
-const WARTEN_STILL = new Set(["init", "online", "anruf_status", "diagnose", "unterhaltung", "unterhaltungen", "einstellung_setzen", "pinnwand", "kalender", "terminumfragen_liste", "communicator_status", "ping", "anruf_ende", "protokoll_speichern", "todo_erledigt", "todo_liste"]);
+const WARTEN_STILL = new Set(["init", "online", "anruf_status", "diagnose", "unterhaltung", "unterhaltungen", "einstellung_setzen", "pinnwand", "kalender", "terminumfragen_liste", "communicator_status", "ping", "anruf_ende", "protokoll_speichern", "todo_erledigt", "todo_liste", "wetter"]);
 const WARTEN_TEXT = { nachricht_senden: "Nachricht wird gesendet …", gruppe_anlegen: "Gruppe wird angelegt …", gruppe_aendern: "Wird gespeichert …", treffen_speichern: "Termin wird gespeichert …",
   pinnwand_anheften: "Zettel wird angeheftet …", feedback_senden: "Feedback wird gesendet …", anklopfen: "Es wird angeklopft …", anruf_start: "Anruf wird aufgebaut …", anlage_hochladen: "Wird hochgeladen …", erstattung_senden: "Antrag wird gesendet …", km_satz_setzen: "Wird gespeichert …", todo_zuweisen: "Wird zugewiesen …",
   link_erzeugen: "Link wird erzeugt …", todo_anlegen: "Wird eingetragen …", zugang_anfordern: "Mail wird gesendet …", foto_hochladen: "Foto wird hochgeladen …", test_an_mich: "Test wird gesendet …" };
@@ -2056,10 +2117,10 @@ function registerWischen(schritt) {
   const i = REGISTER.findIndex(([r]) => r === reg), n = i + schritt;
   if (n >= 0 && n < REGISTER.length) register(REGISTER[n][0], schritt);
 }
-// Wischen links/rechts: Register auf der Startseite, Monate im Kalender
+// Wischen links/rechts: Info-Feld oben (nur im Feld), Register auf der Startseite, Monate im Kalender
 (function wischenEinrichten() {
   let x0 = null, y0 = 0, ziel = null;
-  const flaechen = () => [[$("raster"), registerWischen], [$("register"), registerWischen], [$("kalGitter"), kalBlaettern]];
+  const flaechen = () => [[$("heroInfo"), infoBlaettern], [$("raster"), registerWischen], [$("register"), registerWischen], [$("kalGitter"), kalBlaettern]];
   document.addEventListener("touchstart", (e) => {
     const f = flaechen().find(([el]) => el && el.contains(e.target));
     ziel = f ? f[1] : null; if (ziel) { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }
@@ -2092,8 +2153,148 @@ function kachelnZeigen() {
       <div class="sym">${k.sym}</div><b>${esc(k.t)}</b><small>${esc(typeof k.u === "function" ? k.u() : k.u)}</small>${k.bald ? '<span class="zahl">bald</span>' : z ? `<span class="zahl">${z}</span>` : ""}</button>`;
   }).join("");
 }
-// Kopf: oben das nächste Treffen (antippen → Termine), darunter drei Kennzahlen, jede führt in ihren Bereich
-function heroZeigen() {
+// ---------- KC-CLUB-INFOFELD (0.42.0): Info-Feld oben zum Blättern ----------
+// ‹ › antippen, im Feld wischen oder einen Punkt antippen. Felder kommen aus der Registry; die App merkt sich das zuletzt gezeigte.
+// Kein automatisches Weiterblättern (in Ruhe lesen). Neue Felder = neuer Eintrag hier.
+const INFO_FELDER = [
+  { id: "treffen", t: "Nächstes Treffen", html: () => infoTreffen() },
+  { id: "wetter", t: "Wetter", html: () => infoWetter() },
+  { id: "fuerdich", t: "Für dich", html: () => infoFuerDich() },
+];
+let INFO_I = (() => { try { return Math.max(0, INFO_FELDER.findIndex((f) => f.id === localStorage.getItem("kc_club_infofeld"))); } catch { return 0; } })();
+let infoLetztes = "";
+function heroZeigen(richtung) {
+  const f = INFO_FELDER[INFO_I] || INFO_FELDER[0], inhalt = f.html();
+  // gleicher Inhalt → nicht neu zeichnen (sonst springen Wetter-Animationen bei jedem Online-Takt neu an)
+  if (!richtung && $("infoFeld") && infoLetztes === f.id + inhalt) return;
+  infoLetztes = f.id + inhalt;
+  $("heroInfo").innerHTML = `<div class="ifeld ifeld-${f.id}${richtung ? (richtung > 0 ? " rein-r" : " rein-l") : ""}" id="infoFeld" data-id="${f.id}">${inhalt}</div>
+    <div class="inav"><button class="ipfeil" aria-label="Vorheriges Feld" onclick="infoBlaettern(-1)">‹</button>
+      <div class="ipunkte">${INFO_FELDER.map((x, i) => `<button class="ipunkt${i === INFO_I ? " an" : ""}" aria-label="${esc(x.t)}" title="${esc(x.t)}" onclick="infoGehe(${i})"></button>`).join("")}</div>
+      <button class="ipfeil" aria-label="Nächstes Feld" onclick="infoBlaettern(1)">›</button></div>`;
+  if (f.id === "wetter") { wetterSzene(); if (!WET.laedt && Date.now() - WET.geholt > WETTER_NEU_MIN * 60000) wetterLaden(); }
+}
+function infoGehe(i, richtung) {
+  const n = INFO_FELDER.length, neu = ((i % n) + n) % n;
+  if (!richtung) richtung = neu >= INFO_I ? 1 : -1;
+  INFO_I = neu; try { localStorage.setItem("kc_club_infofeld", INFO_FELDER[neu].id); } catch {}
+  heroZeigen(richtung);
+}
+function infoBlaettern(d) { infoGehe(INFO_I + d, d); }
+// Feld 3: alles, was mich gerade betrifft – jede Zeile führt direkt hin (die Karte „Heute wichtig“ unten bleibt ausführlich)
+function infoFuerDich() {
+  const z = [], t = INIT?.naechstesTreffen, zeile = (sym, text, klick) => `<button class="ifz" onclick="${klick}"><span>${sym}</span><span class="ifzt">${text}</span><span>›</span></button>`;
+  if (INIT?.ungelesen) z.push(zeile("💬", `<b>${INIT.ungelesen}</b> neue Nachricht${INIT.ungelesen > 1 ? "en" : ""}`, "zeige('nachrichten')"));
+  if (t && !t.meine) z.push(zeile("📅", `Bitte für <b>${esc(t.titel)}</b> zu- oder absagen`, "zumTreffen()"));
+  if (INIT?.offeneAbstimmungen) z.push(zeile("🗳️", `<b>${INIT.offeneAbstimmungen}</b> Abstimmung${INIT.offeneAbstimmungen > 1 ? "en warten" : " wartet"} auf dich`, "zeige('vorschlaege')"));
+  if ((INIT?.terminfindungOffen || []).length) z.push(zeile("🗓️", "Bitte Termine ankreuzen", "zeige('termine')"));
+  if (INIT?.protokolleUngelesen) z.push(zeile("📄", `<b>${INIT.protokolleUngelesen}</b> neue${INIT.protokolleUngelesen > 1 ? "" : "s"} Protokoll${INIT.protokolleUngelesen > 1 ? "e" : ""}`, "zeige('protokolle')"));
+  const auf = (INIT?.meineAufgaben || []).length;
+  if (auf) z.push(zeile("📌", `<b>${auf}</b> offene Aufgabe${auf > 1 ? "n" : ""}`, "$('wichtig').scrollIntoView({behavior:'smooth',block:'center'})"));
+  const nd = INIT?.naechsterDienst;
+  if (nd) z.push(zeile("🗓️", `Nächster Dienst: <b>${nd.datum === heuteIso() ? "heute" : esc(fTagDp.format(new Date(nd.datum + "T12:00:00Z")))}, ${esc(nd.start)} Uhr</b>`, "dpNurIch()"));
+  for (const g of (INIT?.geburtstageHeute || []).filter((x) => x.person_id !== ICH?.person_id)) z.push(zeile("🎂", `<b>${esc(g.name)}</b> hat heute Geburtstag`, `gratulieren('${g.person_id}', true)`));
+  if (!z.length) return `<h2>👍 Alles erledigt</h2><div class="unter">Gerade ist nichts Offenes für dich. Schön!</div>`;
+  const MAX = 4;
+  return `<h2>🔔 Für dich</h2><div class="ifzliste">${z.slice(0, MAX).join("")}</div>${z.length > MAX ? `<div class="unter" style="font-size:.85rem">+ ${z.length - MAX} weitere unten bei „Heute wichtig“</div>` : ""}`;
+}
+
+// ---------- KC-CLUB-WETTER (0.42.0): Feld 2 – Wetter mit Animation (Regen, Sonne, Schnee, Gewitter, Sturm, Nebel) ----------
+// Daten holt der Server (Ort und Wetter-App stellt der Admin ein). Alte Daten werden als „veraltet“ markiert, fehlende nie als Wetter gezeigt.
+const WET = { r: null, geholt: 0, laedt: false };
+const WETTER_NEU_MIN = 30, WETTER_VERALTET_MIN = 180, STURM_KMH = 62, WIND_HINWEIS_KMH = 40;
+// WMO-Wettercodes → [von, bis, Symbol Tag, Symbol Nacht, Text, Animation]
+const WETTER_CODES = [
+  [0, 0, "☀️", "🌙", "Klar", "sonne"], [1, 1, "🌤️", "🌙", "Überwiegend klar", "sonne"], [2, 2, "⛅", "☁️", "Teils bewölkt", "wolkig"], [3, 3, "☁️", "☁️", "Bedeckt", "bedeckt"],
+  [45, 48, "🌫️", "🌫️", "Nebel", "nebel"], [51, 55, "🌦️", "🌧️", "Nieselregen", "niesel"], [56, 57, "🌧️", "🌧️", "Gefrierender Niesel", "niesel"],
+  [61, 61, "🌦️", "🌧️", "Leichter Regen", "niesel"], [63, 65, "🌧️", "🌧️", "Regen", "regen"], [66, 67, "🌧️", "🌧️", "Gefrierender Regen", "regen"],
+  [71, 73, "🌨️", "🌨️", "Schneefall", "schnee"], [75, 75, "❄️", "❄️", "Starker Schneefall", "schnee"], [77, 77, "🌨️", "🌨️", "Schneegriesel", "schnee"],
+  [80, 81, "🌦️", "🌧️", "Regenschauer", "regen"], [82, 82, "🌧️", "🌧️", "Starke Regenschauer", "regen"], [85, 86, "🌨️", "🌨️", "Schneeschauer", "schnee"],
+  [95, 95, "⛈️", "⛈️", "Gewitter", "gewitter"], [96, 99, "⛈️", "⛈️", "Gewitter mit Hagel", "gewitter"],
+];
+const wetterArt = (code, tag = true) => { const x = WETTER_CODES.find(([a, b]) => code >= a && code <= b); return x ? { sym: tag ? x[2] : x[3], text: x[4], szene: x[5] } : { sym: "❔", text: "Wetter unbekannt", szene: "" }; };
+const grad = (n) => Number.isFinite(n) ? `${Math.round(n)}°` : "–";
+const isoBerlin = (d) => new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Berlin" }).format(d);
+const fWtag = new Intl.DateTimeFormat("de-DE", { weekday: "short", timeZone: "UTC" });
+async function wetterLaden() {
+  WET.laedt = true;
+  try { WET.r = await api("wetter"); WET.geholt = Date.now(); }
+  catch (e) { WET.r = { daten: null, fehler: e.message }; WET.geholt = Date.now() - (WETTER_NEU_MIN - 2) * 60000; } // in 2 Minuten neu versuchen
+  WET.laedt = false;
+  if (INFO_FELDER[INFO_I]?.id === "wetter") heroZeigen();
+}
+function infoWetter() {
+  const r = WET.r;
+  if (!r) return `<h2>🌦️ Wetter</h2><div class="unter">Wird geladen …</div>`;
+  if (!r.daten) return `<h2>❔ Wetter gerade nicht verfügbar</h2><div class="unter">${esc(r.fehler || "Keine Wetterdaten")} – wir versuchen es gleich noch einmal.</div>`;
+  const d = r.daten, j = d.jetzt, a = wetterArt(j.code, j.tag), alt = Date.now() - new Date(r.stand) > WETTER_VERALTET_MIN * 60000;
+  const sturm = j.boeen >= STURM_KMH ? " · 💨 Sturm" : "";
+  const tage = d.tage.slice(0, 3).map((t, i) => `<div class="wtag"><span>${i === 0 ? "Heute" : i === 1 ? "Morgen" : fWtag.format(new Date(t.datum + "T12:00:00Z"))}</span><b>${wetterArt(t.code).sym}</b><span>${grad(t.max)} / ${grad(t.min)}</span>${t.regenWkt != null ? `<small>☔ ${t.regenWkt} %</small>` : ""}</div>`).join("");
+  let treffen = "";
+  const tr = INIT?.naechstesTreffen;
+  if (tr) {
+    const tag = isoBerlin(new Date(tr.beginn)), w = d.tage.find((x) => x.datum === tag);
+    treffen = w ? `<button class="wtreffen" onclick="zumTreffen()">📅 Beim Treffen (${esc(fWtag.format(new Date(tag + "T12:00:00Z")))} ${tag.slice(8, 10)}.${tag.slice(5, 7)}.): <b>${wetterArt(w.code).sym} ${grad(w.max)} / ${grad(w.min)}</b>${w.regenWkt != null ? ` · ☔ ${w.regenWkt} %` : ""} ›</button>`
+      : `<div class="unter" style="font-size:.85rem">📅 Wetter zum nächsten Treffen gibt es etwa 2 Wochen vorher.</div>`;
+  }
+  return `<div class="wszene szene-${a.szene}${j.boeen >= STURM_KMH ? " sturm" : ""}${j.tag ? "" : " nacht"}" aria-hidden="true"></div>
+    <div class="winhalt">
+      <div class="wkopf"><span class="wsym">${a.sym}</span><div><div class="wtemp">${grad(j.temp)}</div><div class="unter">${esc(a.text)}${sturm}</div></div></div>
+      <div class="unter">📍 ${esc(r.ort.name)} · gefühlt ${grad(j.gefuehlt)} · 💨 ${Math.round(j.wind)} km/h${j.boeen >= WIND_HINWEIS_KMH ? ` (Böen ${Math.round(j.boeen)})` : ""}</div>
+      <div class="wtage">${tage}</div>${treffen}
+      <div class="wfuss"><span class="${alt ? "wveraltet" : ""}">${alt ? "⚠️ veraltet · " : ""}Stand ${esc(zeitKurz(r.stand))} Uhr · ${esc(r.quelle.name)}</span>
+        <button class="wlink" onclick="wetterApp()">${esc(r.app.name)} ›</button></div>
+    </div>`;
+}
+function wetterApp() { const u = WET.r?.app?.url; if (u) window.open(u, "_blank", "noopener"); }
+// Animation: Elemente zufällig verteilt; bei „weniger Bewegung“ (Systemeinstellung) steht alles still
+function wetterSzene() {
+  const el = document.querySelector("#infoFeld .wszene"); if (!el || el.childElementCount) return;
+  const zufall = (a, b) => (a + Math.random() * (b - a)).toFixed(2);
+  const viele = (n, f) => Array.from({ length: n }, (_, i) => f(i)).join("");
+  const wolken = (n, dunkel) => viele(n, (i) => `<i class="wwolke${dunkel ? " dunkel" : ""}" style="top:${zufall(-6, 38)}%;animation-duration:${zufall(38, 70)}s;animation-delay:-${zufall(0, 60)}s;transform:scale(${zufall(.7, 1.3)})"></i>`);
+  const tropfen = (n, fein) => viele(n, () => `<i class="wtropfen${fein ? " fein" : ""}" style="left:${zufall(-5, 105)}%;animation-duration:${zufall(fein ? .9 : .55, fein ? 1.4 : .85)}s;animation-delay:-${zufall(0, 2)}s"></i>`);
+  const art = [...el.classList].find((k) => k.startsWith("szene-"))?.slice(6), nacht = el.classList.contains("nacht");
+  const himmel = nacht ? `<i class="wmond"></i>${viele(10, () => `<i class="wstern" style="left:${zufall(2, 96)}%;top:${zufall(4, 60)}%;animation-delay:-${zufall(0, 4)}s"></i>`)}` : `<i class="wsonne"></i>`;
+  let h = "";
+  if (art === "sonne") h = himmel;
+  else if (art === "wolkig") h = himmel + wolken(2);
+  else if (art === "bedeckt") h = wolken(4);
+  else if (art === "nebel") h = viele(4, (i) => `<i class="wnebel" style="top:${18 + i * 20}%;animation-duration:${zufall(10, 18)}s;animation-delay:-${zufall(0, 10)}s"></i>`);
+  else if (art === "niesel") h = wolken(3) + tropfen(16, true);
+  else if (art === "regen") h = wolken(3, true) + tropfen(34);
+  else if (art === "schnee") h = wolken(2) + viele(28, () => `<i class="wflocke" style="left:${zufall(-5, 100)}%;width:${zufall(3, 7)}px;height:auto;aspect-ratio:1;animation-duration:${zufall(5, 10)}s;animation-delay:-${zufall(0, 10)}s"></i>`);
+  else if (art === "gewitter") h = wolken(4, true) + tropfen(34) + `<i class="wblitz"></i>`;
+  if (el.classList.contains("sturm")) h += viele(9, () => `<i class="wwind" style="top:${zufall(5, 90)}%;animation-duration:${zufall(1.1, 2)}s;animation-delay:-${zufall(0, 2)}s"></i>`);
+  el.innerHTML = h;
+}
+// Admin: Ort (Suche statt Freitext) und Wetter-App/Datenquelle aus der Registry des Servers
+let WETTER_ORTE = [];
+async function wetterAdminLaden() {
+  try {
+    const k = await api("wetter_konfig");
+    $("wetterAktuell").innerHTML = `<p style="margin:0 0 6px">Angezeigter Ort: <b>${esc(k.ort.name)}</b>${k.ort.region ? ` <span class="hinweis">(${esc(k.ort.region)})</span>` : ""}</p>`;
+    $("wetterApp").innerHTML = k.apps.map((a) => `<option value="${a.id}" ${a.id === k.app ? "selected" : ""}>${esc(a.name)}</option>`).join("");
+    $("wetterQuelle").innerHTML = k.quellen.map((q) => `<option value="${q.id}" ${q.id === k.quelle ? "selected" : ""}>${esc(q.name)} – ${esc(q.hinweis)}</option>`).join("");
+  } catch (e) { $("wetterAktuell").innerHTML = `<p class="hinweis">⚠️ ${esc(e.message)}</p>`; }
+}
+async function wetterOrtSuchen() {
+  const q = $("wetterOrtQ").value.trim(); if (q.length < 2) return melde("Bitte mindestens 2 Buchstaben eingeben.", true);
+  try {
+    WETTER_ORTE = (await api("wetter_ort_suchen", { q })).orte || [];
+    $("wetterOrte").innerHTML = WETTER_ORTE.length ? WETTER_ORTE.map((o, i) => `<button class="knopf klein wort" onclick="wetterOrtWahl(${i})">📍 <b>${esc(o.name)}</b> <span class="hinweis">${esc(o.region)}</span></button>`).join("")
+      : '<p class="hinweis">Kein Ort gefunden – anders schreiben?</p>';
+  } catch (e) { melde(e.message, true); }
+}
+function wetterOrtWahl(i) { const o = WETTER_ORTE[i]; if (o && confirm(`Wetter für „${o.name}“${o.region ? " (" + o.region + ")" : ""} anzeigen?\n\nGilt für alle Mitglieder.`)) wetterSetzen({ ort: o }); }
+async function wetterSetzen(teil) {
+  try {
+    await api("wetter_setzen", teil); melde("💾 Wetter-Einstellung gespeichert");
+    $("wetterOrte").innerHTML = ""; $("wetterOrtQ").value = ""; WET.geholt = 0; infoLetztes = ""; wetterAdminLaden(); wetterLaden();
+  } catch (e) { melde(e.message, true); wetterAdminLaden(); }
+}
+// Feld 1: das nächste Treffen (antippen → Termine), darunter drei Kennzahlen, jede führt in ihren Bereich
+function infoTreffen() {
   const t = INIT?.naechstesTreffen, n = INIT?.ungelesen || 0;
   let kopf, bisTreffen = "—";
   if (t) {
@@ -2103,7 +2304,7 @@ function heroZeigen() {
     kopf = `<h2>${esc(t.titel)}</h2><div class="unter">${esc(wann(t.beginn))}${ort ? " · " + esc(ort) : ""}</div><div class="unter"><b>${meine}</b> · ✅ ${t.ja} Zusagen</div>`;
     bisTreffen = tage <= 0 ? "Heute" : tage === 1 ? "Morgen" : `in ${tage} Tagen`;
   } else kopf = `<h2>Kein Treffen geplant</h2><div class="unter">Sobald ein Köcheclub-Treffen ansteht, siehst du es hier.</div>`;
-  $("heroInfo").innerHTML = `<div class="klick" onclick="zumTreffen()">${kopf}</div>
+  return `<div class="klick" onclick="zumTreffen()">${kopf}</div>
     <div class="kacheln3">
       <button class="mini" onclick="zeige('nachrichten')"><b>${n}</b><span>Neue Nachr. ›</span></button>
       <button class="mini" onclick="zeige('mitglieder')"><b>${INIT?.mitgliederAnzahl || "–"}</b><span>Mitglieder ›</span>${ONL.zeigen ? `<span class="onmini${ONL.liste.length ? "" : " leer"}" role="button" onclick="event.stopPropagation(); onlineBlatt()">${ONL.liste.length ? `🟢 ${ONL.liste.length} online ›` : "⚪ keiner online"}</span>` : ""}</button>
@@ -2240,7 +2441,7 @@ function zeige(v, ausHistorie) {
   if (v === "dienste") dienstLaden();
   if (v === "nachrichten") unterhLaden();
   if (v === "mitglieder") mitgliederLaden();
-  if (v === "einstellungen") { if (ICH?.admin) { $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); }
+  if (v === "einstellungen") { if (ICH?.admin) { $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); }
   if (v === "start") neuLaden();
   // KC-CLUB-ZURUECK: jede Ansicht bekommt einen Verlaufseintrag, damit „Zurück“ eine Ansicht zurückgeht statt die App zu schließen
   const hash = v === "start" || v === "chat" ? "" : v === "protokoll" ? "#protokoll=" + prId : v === "aktion" ? "#aktion=" + aktionId : v === "mitglied" ? "#mitglied=" + mitgliedId : "#" + v;

@@ -13,14 +13,14 @@
 //           KC-CLUB-COMMUNICATOR-STATUS (0.17.0), KC-CLUB-FEEDBACK (0.18.0),
 //           KC-CLUB-KACHELN (0.19.0), KC-CLUB-ZUGANG-SELBST (0.21.0),
 //           KC-CLUB-GRUPPEN, KC-CLUB-ZUSTELLWAHL (0.23.0)
-//           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0), KC-CLUB-KACHELN-ZIEHEN (0.26.0), KC-CLUB-FEEDBACK-NEU (0.27.1), KC-CLUB-BEGRUESSUNG (0.28.0), KC-CLUB-ONLINE (0.29.0), KC-CLUB-ANRUF (0.31.0), KC-CLUB-VIDEO (0.32.0), KC-CLUB-QUITTUNG (0.34.0), KC-CLUB-TODO + KC-CLUB-REGISTER-ZIEHEN (0.36.0), KC-CLUB-SPRACHE + KC-CLUB-TODO-ZUSTAENDIG (0.37.0), KC-CLUB-ERSTATTUNG (0.38.0), KC-CLUB-KMSATZ (0.39.0), KC-CLUB-FEEDBACK-DAUERHAFT (0.40.0)
+//           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0), KC-CLUB-KACHELN-ZIEHEN (0.26.0), KC-CLUB-FEEDBACK-NEU (0.27.1), KC-CLUB-BEGRUESSUNG (0.28.0), KC-CLUB-ONLINE (0.29.0), KC-CLUB-ANRUF (0.31.0), KC-CLUB-VIDEO (0.32.0), KC-CLUB-QUITTUNG (0.34.0), KC-CLUB-TODO + KC-CLUB-REGISTER-ZIEHEN (0.36.0), KC-CLUB-SPRACHE + KC-CLUB-TODO-ZUSTAENDIG (0.37.0), KC-CLUB-ERSTATTUNG (0.38.0), KC-CLUB-KMSATZ (0.39.0), KC-CLUB-FEEDBACK-DAUERHAFT (0.40.0), KC-CLUB-INFOFELD + KC-CLUB-WETTER (0.42.0)
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.40.0";
+const SERVER_VERSION = "0.42.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -389,6 +389,62 @@ const ERSTATTUNG = {
 const euro = (n: number) => n.toFixed(2).replace(".", ",") + " €";
 // KC-CLUB-KMSATZ (0.39.0): Sätze mit „gilt ab“ – für eine Fahrt gilt der letzte Satz, dessen Datum nicht nach der Fahrt liegt
 type KmSatz = { id: string; satz: number; ab: string };
+// ----- KC-CLUB-WETTER (0.42.0): Wetter im Info-Feld der Startseite. Datenquelle und Wetter-App über Registry + Adapter,
+// Ort und App stellt der Admin ein (kc_club_konfig „wetter“). Kostenlos: Open-Meteo braucht keinen Schlüssel.
+// Der Server holt das Wetter (Mitglieder-Handys sprechen nicht mit fremden Diensten) und merkt es sich 30 Minuten.
+type WetterOrt = { name: string; lat: number; lon: number; region: string };
+type WetterDaten = { jetzt: { temp: number; gefuehlt: number; code: number; wind: number; boeen: number; regen: number; tag: boolean };
+  tage: { datum: string; code: number; max: number; min: number; regenWkt: number | null; sonnenauf: string; sonnenunter: string }[] };
+const WETTER = { standardOrt: { name: "Werne", lat: 51.6639, lon: 7.6337, region: "Nordrhein-Westfalen" } as WetterOrt,
+  standardQuelle: "open-meteo", standardApp: "wetteronline", cacheMin: 30, zeitzone: "Europe/Berlin" };
+const WETTER_QUELLEN: Record<string, { name: string; hinweis: string; holen: (o: WetterOrt) => Promise<WetterDaten>; suchen: (q: string) => Promise<WetterOrt[]> }> = {
+  "open-meteo": {
+    name: "Open-Meteo", hinweis: "kostenlos, ohne Anmeldung, Daten u. a. vom Deutschen Wetterdienst",
+    holen: async (o) => {
+      const u = `https://api.open-meteo.com/v1/forecast?latitude=${o.lat}&longitude=${o.lon}&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,wind_gusts_10m,precipitation,is_day`
+        + `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset&timezone=${encodeURIComponent(WETTER.zeitzone)}&forecast_days=16`;
+      const r = await fetch(u, { signal: AbortSignal.timeout(8000) });
+      if (!r.ok) throw new Error("Open-Meteo " + r.status);
+      const d = await r.json(), c = d.current ?? {}, t = d.daily ?? {};
+      return {
+        jetzt: { temp: Number(c.temperature_2m), gefuehlt: Number(c.apparent_temperature), code: Number(c.weather_code), wind: Number(c.wind_speed_10m), boeen: Number(c.wind_gusts_10m), regen: Number(c.precipitation ?? 0), tag: c.is_day === 1 },
+        tage: (t.time ?? []).map((datum: string, i: number) => ({ datum, code: Number(t.weather_code[i]), max: Number(t.temperature_2m_max[i]), min: Number(t.temperature_2m_min[i]),
+          regenWkt: t.precipitation_probability_max?.[i] ?? null, sonnenauf: String(t.sunrise?.[i] ?? "").slice(11, 16), sonnenunter: String(t.sunset?.[i] ?? "").slice(11, 16) })),
+      };
+    },
+    suchen: async (q) => {
+      const r = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=8&language=de`, { signal: AbortSignal.timeout(8000) });
+      if (!r.ok) throw new Error("Ortssuche " + r.status);
+      return ((await r.json()).results ?? []).map((x: any) => ({ name: String(x.name), lat: Number(x.latitude), lon: Number(x.longitude),
+        region: [x.admin3 || x.admin2, x.admin1, x.country_code !== "DE" ? x.country : ""].filter(Boolean).join(", ") }));
+    },
+  },
+};
+// Wetter-Apps/-Seiten zum Weiterlesen (Link beim Antippen); {ort} = Ortsname, {slug} = Ortsname für Adressen, {lat}/{lon}
+const WETTER_APPS: Record<string, { name: string; url: string }> = {
+  wetteronline: { name: "WetterOnline", url: "https://www.wetteronline.de/wetter/{slug}" },
+  windy: { name: "Windy (Wetterkarte)", url: "https://www.windy.com/{lat}/{lon}?{lat},{lon},10" },
+  dwd: { name: "DWD Unwetterwarnungen", url: "https://www.dwd.de/DE/wetter/warnungen/warnWetter_node.html" },
+  google: { name: "Google Wetter", url: "https://www.google.com/search?q=Wetter+{ort}" },
+};
+const wetterSlug = (n: string) => n.toLowerCase().replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+function wetterAppLink(appId: string, o: WetterOrt) {
+  const a = WETTER_APPS[appId] ?? WETTER_APPS[WETTER.standardApp];
+  return { id: WETTER_APPS[appId] ? appId : WETTER.standardApp, name: a.name, url: a.url.replaceAll("{slug}", wetterSlug(o.name)).replaceAll("{ort}", encodeURIComponent(o.name))
+    .replaceAll("{lat}", o.lat.toFixed(3)).replaceAll("{lon}", o.lon.toFixed(3)) };
+}
+function wetterOrtPruefen(roh: any): WetterOrt {
+  const o = { name: txt(roh?.name, 80), lat: Number(roh?.lat), lon: Number(roh?.lon), region: txt(roh?.region, 120) };
+  if (!o.name || !(o.lat >= -90 && o.lat <= 90) || !(o.lon >= -180 && o.lon <= 180)) throw new Fehler("Bitte einen Ort aus der Suche auswählen.");
+  return o;
+}
+async function wetterKonfig() {
+  const { data } = await db.from("kc_club_konfig").select("wert,geaendert_am").eq("schluessel", "wetter").maybeSingle();
+  const w = data?.wert ?? {};
+  let ort = WETTER.standardOrt; try { if (w.ort) ort = wetterOrtPruefen(w.ort); } catch { /* Voreinstellung */ }
+  return { ort, quelle: WETTER_QUELLEN[w.quelle] ? String(w.quelle) : WETTER.standardQuelle, app: WETTER_APPS[w.app] ? String(w.app) : WETTER.standardApp, geaendert: data?.geaendert_am ?? null };
+}
+const wetterCache = new Map<string, { zeit: number; daten: WetterDaten }>();
 async function kmSaetze(): Promise<KmSatz[]> {
   const { data } = await db.from("kc_club_km_satz").select("id,satz,gilt_ab").order("gilt_ab", { ascending: true });
   return (data ?? []).map((x: any) => ({ id: x.id, satz: Number(x.satz), ab: x.gilt_ab }));
@@ -1878,6 +1934,45 @@ Köcheclub Werne`,
         await db.from("kc_club_km_satz").delete().eq("id", String(p.id || ""));
         await protokoll(ich.person_id, "km_satz_geloescht", { id: String(p.id || "") });
         return json({ ok: true, saetze: await kmSaetze() });
+      }
+
+      // ----- KC-CLUB-WETTER (0.42.0) -----
+      case "wetter": {
+        const k = await wetterKonfig(), q = WETTER_QUELLEN[k.quelle], schl = `${k.quelle}:${k.ort.lat},${k.ort.lon}`;
+        let c = wetterCache.get(schl), fehler: string | null = null;
+        if (!c || Date.now() - c.zeit > WETTER.cacheMin * 60000) {
+          try { c = { zeit: Date.now(), daten: await q.holen(k.ort) }; wetterCache.set(schl, c); }
+          catch (e) { fehler = "Wetterdienst gerade nicht erreichbar"; console.error("wetter", String(e)); }
+        }
+        // Rule 11: „stand“ ist der Abrufzeitpunkt – die App markiert alte Daten; ohne Daten kein Schein-Wetter
+        return json({ ort: k.ort, quelle: { id: k.quelle, name: q.name }, app: wetterAppLink(k.app, k.ort), stand: c ? new Date(c.zeit).toISOString() : null, daten: c?.daten ?? null, fehler });
+      }
+
+      case "wetter_konfig": {
+        nurAdmin(ich);
+        const k = await wetterKonfig();
+        return json({ ...k, quellen: Object.entries(WETTER_QUELLEN).map(([id, x]) => ({ id, name: x.name, hinweis: x.hinweis })),
+          apps: Object.entries(WETTER_APPS).map(([id, x]) => ({ id, name: x.name })), link: wetterAppLink(k.app, k.ort).url });
+      }
+
+      case "wetter_ort_suchen": {
+        nurAdmin(ich);
+        const q = txt(p.q, 60); if (q.length < 2) throw new Fehler("Bitte mindestens 2 Buchstaben eingeben.");
+        const k = await wetterKonfig(), quelle = WETTER_QUELLEN[String(p.quelle || k.quelle)] ?? WETTER_QUELLEN[k.quelle];
+        try { return json({ orte: await quelle.suchen(q) }); } catch { throw new Fehler("Ortssuche gerade nicht erreichbar – bitte später noch einmal.", 502); }
+      }
+
+      case "wetter_setzen": {
+        nurAdmin(ich);
+        const alt = await wetterKonfig();
+        const ort = p.ort ? wetterOrtPruefen(p.ort) : alt.ort;
+        const quelle = p.quelle ? String(p.quelle) : alt.quelle, app = p.app ? String(p.app) : alt.app;
+        if (!WETTER_QUELLEN[quelle]) throw new Fehler("Unbekannte Wetter-Datenquelle.");
+        if (!WETTER_APPS[app]) throw new Fehler("Unbekannte Wetter-App.");
+        const { error } = await db.from("kc_club_konfig").upsert({ schluessel: "wetter", wert: { ort, quelle, app }, geaendert_von: ich.person_id, geaendert_am: jetzt() });
+        if (error) throw new Fehler("Wetter-Einstellung konnte nicht gespeichert werden.", 500);
+        await protokoll(ich.person_id, "wetter_gesetzt", { vorher: { ort: alt.ort.name, quelle: alt.quelle, app: alt.app }, nachher: { ort: ort.name, quelle, app } });
+        return json({ ok: true });
       }
 
       case "erstattung_senden": {

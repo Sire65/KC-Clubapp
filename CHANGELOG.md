@@ -1,5 +1,19 @@
 # Änderungen
 
+## 0.42.0 – 2026-09-29 (DEV)
+
+- KC-CLUB-INFOFELD (neu): Das Info-Feld oben auf der Startseite ist blätterbar – ‹ › antippen, im Feld wischen oder einen der
+  leuchtenden Punkte (aktuelles Feld leuchtet). Felder aus der Registry INFO_FELDER: 📅 Nächstes Treffen (bisheriger Inhalt
+  unverändert), 🌦️ Wetter, 🔔 Für dich (Offenes: Nachrichten, Zusage, Abstimmungen, Terminfindung, Protokolle, Aufgaben, Dienst,
+  Geburtstage – antippen führt hin; „Heute wichtig“ unten bleibt). Kein automatisches Weiterblättern; letztes Feld wird gemerkt.
+  Gleicher Inhalt wird nicht neu gezeichnet (Online-Takt).
+- KC-CLUB-WETTER (neu): Wetter-Feld mit Animation je Wetterlage (Sonne/Mond+Sterne, Wolken, Nebel, Niesel, Regen, Schnee,
+  Gewitter mit Blitz, Sturm-Böen ab 62 km/h), Temperatur, gefühlt, Wind, 3-Tage-Vorschau, Wetter am Tag des nächsten Treffens,
+  „Stand“ mit ⚠️ veraltet ab 3 h, ohne Daten klarer Hinweis statt Schein-Wetter. „bei reduzierter Bewegung“ stehen Animationen still.
+  Server: Registry WETTER_QUELLEN (Adapter Open-Meteo – kostenlos, ohne Schlüssel) und WETTER_APPS (WetterOnline, Windy, DWD,
+  Google); Abruf nur über den Server, 30 Minuten Zwischenspeicher. Admin (⚙️ → „🛠️ Admin: Wetter“): Ort per Suche wählen
+  (keine Freitext-Koordinaten), Wetter-App und Datenquelle als Auswahl; Änderungen im Protokoll. Neue Tabelle kc_club_konfig (RLS).
+
 ## 0.41.0 – 2026-09-29 (DEV)
 
 - KC-CLUB-CHATLISTE (neu): Nachrichten-Übersicht – einmal tippen wählt eine Unterhaltung aus (goldener Rahmen) und zeigt
