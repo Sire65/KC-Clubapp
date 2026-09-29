@@ -1022,9 +1022,9 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/await binTeilnehmer\(id, ich\.person_id\)/.test(ti) && /TIPPT_SEK \* 1000/.test(ti) && /p\.aus/.test(ti), "tippen: Teilnehmer-Prüfung/Ablauf fehlt");
   assert.ok(/\.neq\("person_id", ich\.person_id\)\.gt\("bis", jetzt\(\)\)/.test(server) && /betreff: t\?\.subject \?\? "", tippt,/.test(server), "unterhaltung liefert tippt nicht (oder mich selbst)");
   assert.ok(/kc_club_tippen"\)\.delete\(\)\.eq\("thread_id", threadId\)/.test(server), "Senden beendet „schreibt …“ nicht");
-  assert.ok(/if \(!chatId \|\| !ONL\.zeigen\) return;/.test(html) && /Date\.now\(\) - TIPP\.zuletzt < 3000/.test(html), "Tipp-Meldung ohne Privatsphäre/Drosselung");
+  assert.ok(/if \(!chatId \|\| !ONL\.zeigen\) return;/.test(html) && /abstand = live \? 1000 : 3000/.test(html) && /Date\.now\(\) - TIPP\.zuletzt < abstand/.test(html), "Tipp-Meldung ohne Privatsphäre/Drosselung");
   assert.ok(/tippenMelden\(\)"><\/textarea>/.test(html) && /id="tipptAnzeige"/.test(html) && /"tippen"\]\);/.test(html), "Anzeige/Eingabe/WARTEN_STILL fehlt");
-  assert.ok(/tipptZeigen\(u\.tippt \|\| \[\]\);\n    if \(u\.tippt\?\.length && andere\.length === 1\)[^\n]*\n    const stand = /.test(html), "Anzeige muss vor dem frühen Ausstieg aktualisiert werden");
+  assert.ok(/tipptZeigen\(u\.tippt \|\| \[\], u\.entwurf \|\| \[\]\);\n    if \(u\.tippt\?\.length && andere\.length === 1\)[^\n]*\n    const stand = /.test(html), "Anzeige muss vor dem frühen Ausstieg aktualisiert werden");
   assert.ok(/if \(chatTakt\.laeuft\) return;/.test(html) && !/setInterval\(chatTakt, 4000\)/.test(html), "Chat-Takt überlappt / alter Takt");
   assert.ok(/if \(v !== "chat" && TIPP\.id\) tippenAus\(\);/.test(html), "Verlassen beendet „schreibt …“ nicht");
   assert.ok(/mirror_enabled, backup_enabled, note, updated_at\)\nvalues \('kc_club_tippen', 'Club-App', 'sensitive', false, false, false/.test(lies("supabase/migrations/20260929_kc_club_v54_tippen.sql")), "Spiegel-Regel für kc_club_tippen fehlt");
@@ -1045,6 +1045,23 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/try \{ localStorage\.setItem\("kc_club_vbtests"/.test(html), "Verlauf ohne try/catch");
   const nb = lies("supabase/neon/20260929_neon_pcmanager_spaltenreihenfolge.sql");
   assert.ok(nb.indexOf("rename to kc_manager_serving_materials_alt") < nb.indexOf("drop table public.kc_manager_serving_materials_alt"), "Neuaufbau ohne Rückfallpunkt");
+}
+
+// 78. 0.56.0: Anmelde-Zwischenspeicher (KC-CLUB-ANMELDECACHE) + freiwilliges Live-Tippen (KC-CLUB-LIVETIPPEN)
+{
+  const an = server.slice(server.indexOf("const ANMELDUNG_CACHE_MS"), server.indexOf("// „vorstand“ ist intern"));
+  assert.ok(/const ANMELDUNG_CACHE_MS = 60_000, ZULETZT_TAKT_MS = 30_000/.test(an) && /ANMELDUNGEN\.get\(hash\)/.test(an) && !/ANMELDUNGEN\.(get|set)\(token/.test(an), "Speicher nicht über den Token-Hash");
+  assert.ok(/c\.bis > jetztMs/.test(an) && /return \{ \.\.\.c\.ich, aemter: \[\.\.\.c\.ich\.aemter\] \}/.test(an), "abgelaufene Einträge / geteiltes Objekt");
+  assert.ok(/if \(!z\?\.aktiv\) throw/.test(an) && /if \(!p\?\.active\) throw/.test(an), "Datenbank-Prüfung beim Nachladen fehlt");
+  assert.equal((server.match(/anmeldungenVergessen\(\);/g) || []).length, 3, "Zugang/Rollen ändern leert den Speicher nicht");
+  assert.ok(/serverMs: Date\.now\(\) - t0Anfrage/.test(server) && /Server gesamt \$\{t\.srv\} ms/.test(html), "Server-Zeit im Verbindungstest fehlt");
+  // Live-Tippen
+  assert.ok(/live_tippen: \(w\) => \(\{ an: w\?\.an === true \}\)/.test(server), "Einstellung nicht standardmäßig aus");
+  const ti = server.slice(server.indexOf('case "tippen"'), server.indexOf('case "nachricht_senden"'));
+  assert.ok(/eq\("schluessel", "live_tippen"\)/.test(ti) && /e\?\.wert\?\.an === true\) text = /.test(ti) && /slice\(-LIVE_TIPPEN_ZEICHEN\)/.test(ti), "Server speichert Entwurf ohne Zustimmung/Begrenzung");
+  assert.ok(/entwurf = \(tippen \?\? \[\]\)\.filter\(\(x: any\) => x\.text\)/.test(server) && /tippt, entwurf,/.test(server), "Entwurf wird nicht geliefert");
+  assert.ok(/\.\.\.\(live \? \{ text:/.test(html) && /id="setLiveTippen"/.test(html) && /id="liveHinweis"/.test(html), "App: Entwurf nur bei eingeschaltetem Live-Tippen / Hinweis fehlt");
+  assert.ok(/'\*\/5 \* \* \* \*', \$\$delete from public\.kc_club_tippen where bis < now\(\)\$\$/.test(lies("supabase/migrations/20260929_kc_club_v56_live_tippen.sql")), "Entwürfe bleiben zu lange liegen");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

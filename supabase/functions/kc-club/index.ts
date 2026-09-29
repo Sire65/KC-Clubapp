@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.55.0";
+const SERVER_VERSION = "0.56.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -170,7 +170,7 @@ async function zweierGespraech(a: string, b: string): Promise<string | null> {
 // alle 60 s, solange sie offen ist). Einstellung „online“ (Standard: an). Wer sich verbirgt, sieht auch andere nicht.
 const ONLINE_SEK = 150, ANKLOPFEN_SEK = 180;
 // KC-CLUB-TIPPT (0.54.0): „schreibt …“ – die App meldet beim Tippen alle paar Sekunden, das Zeichen gilt TIPPT_SEK lang
-const TIPPT_SEK = 6;
+const TIPPT_SEK = 6, LIVE_TIPPEN_ZEICHEN = 300;
 async function onlineZeigenMap(ids?: string[]) {
   let q = db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "online");
   if (ids) q = q.in("person_id", ids);
@@ -389,6 +389,8 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
   infofeld: (w) => ({ start: typeof w?.start === "string" && KA_ID.test(w.start) ? w.start : "zuletzt" }),
   // KC-CLUB-ONLINE (0.29.0): anderen zeigen, wann ich online bin (Standard: an)
   online: (w) => ({ zeigen: w?.zeigen !== false }),
+  // KC-CLUB-LIVETIPPEN (0.56.0): andere sehen live, was ich in einer Unterhaltung tippe (Standard: aus – freiwillig)
+  live_tippen: (w) => ({ an: w?.an === true }),
   // KC-CLUB-BEGRUESSUNG (0.28.0): Begrüßung beim ersten Start einmal je Mitglied (geräteübergreifend)
   begruessung: (w) => ({ gesehen: !!w?.gesehen, am: new Date().toISOString() }),
   // KC-CLUB-DESIGN (0.24.0): fertiges Farbdesign + Tag/Nacht (automatisch, immer Tag, immer Nacht)
@@ -644,17 +646,39 @@ async function adminSpiegel() {
 
 // ---------- Anmeldung ----------
 type Ich = { person_id: string; name: string; vorname: string; admin: boolean; vorstand: boolean; aemter: string[]; protokolle: boolean; kontakte: boolean };
+// KC-CLUB-ANMELDECACHE (0.56.0): geprüfte Anmeldung je Server-Instanz ANMELDUNG_CACHE_MS lang merken (spart je Anfrage
+// 2 Datenbank-Runden). Schlüssel = SHA-256 des Tokens (nie das Token selbst). Rollen-/Zugangsänderungen leeren den Speicher
+// dieser Instanz sofort; andere Instanzen übernehmen sie spätestens nach ANMELDUNG_CACHE_MS. „zuletzt gesehen“ höchstens
+// alle ZULETZT_TAKT_MS schreiben (Online-Anzeige rechnet mit ONLINE_SEK = 150 s).
+const ANMELDUNG_CACHE_MS = 60_000, ZULETZT_TAKT_MS = 30_000, ANMELDUNG_CACHE_MAX = 300;
+const ANMELDUNGEN = new Map<string, { ich: Ich; bis: number; gesehen: number; version: string | null }>();
+const anmeldungenVergessen = () => ANMELDUNGEN.clear();
 async function anmelden(req: Request): Promise<Ich> {
   const token = req.headers.get("x-club-token") ?? "";
   if (!/^[0-9a-f]{32,96}$/.test(token)) throw new Fehler("Kein Zugang – bitte den persönlichen Link neu öffnen.", 401);
-  const { data: z } = await db.from("kc_club_zugang").select("person_id,aktiv").eq("token_hash", await sha256(token)).maybeSingle();
+  const hash = await sha256(token), jetztMs = Date.now(), version = txt(req.headers.get("x-club-version"), 20) || null;
+  const c = ANMELDUNGEN.get(hash);
+  if (c && c.bis > jetztMs) {
+    if (jetztMs - c.gesehen > ZULETZT_TAKT_MS || c.version !== version) {
+      c.gesehen = jetztMs; c.version = version;
+      db.from("kc_club_zugang").update({ zuletzt_gesehen: jetzt(), app_version: version }).eq("person_id", c.ich.person_id).then(() => {});
+    }
+    return { ...c.ich, aemter: [...c.ich.aemter] };
+  }
+  const ich = await anmeldenDb(hash, version);
+  if (ANMELDUNGEN.size >= ANMELDUNG_CACHE_MAX) for (const [k, v] of ANMELDUNGEN) if (v.bis <= jetztMs) ANMELDUNGEN.delete(k);
+  if (ANMELDUNGEN.size < ANMELDUNG_CACHE_MAX) ANMELDUNGEN.set(hash, { ich: { ...ich, aemter: [...ich.aemter] }, bis: jetztMs + ANMELDUNG_CACHE_MS, gesehen: jetztMs, version });
+  return ich;
+}
+async function anmeldenDb(hash: string, version: string | null): Promise<Ich> {
+  const { data: z } = await db.from("kc_club_zugang").select("person_id,aktiv").eq("token_hash", hash).maybeSingle();
   if (!z?.aktiv) throw new Fehler("Kein Zugang – bitte den persönlichen Link neu öffnen.", 401);
   const [{ data: p }, { data: r }] = await Promise.all([
     db.from("kc_core_people").select("person_id,display_name,given_name,preferred_name,active").eq("person_id", z.person_id).maybeSingle(),
     db.from("kc_club_rollen").select("*").eq("person_id", z.person_id).maybeSingle(),
   ]);
   if (!p?.active) throw new Fehler("Kein Zugang – bitte bei Hansi melden.", 401);
-  db.from("kc_club_zugang").update({ zuletzt_gesehen: jetzt(), app_version: txt(req.headers.get("x-club-version"), 20) || null }).eq("person_id", z.person_id).then(() => {});
+  db.from("kc_club_zugang").update({ zuletzt_gesehen: jetzt(), app_version: version }).eq("person_id", z.person_id).then(() => {});
   return { person_id: p.person_id, name: p.display_name, vorname: vorname(p), admin: !!r?.ist_admin, vorstand: !!(r?.ist_vorstand || r?.ist_admin), aemter: r?.aemter ?? [],
     // Sitzungsprotokolle: Recht aus der Rollen-Registry (Standard ja; Aushilfen nein)
     protokolle: r ? r.protokolle_lesen !== false : true,
@@ -1046,6 +1070,7 @@ Deno.serve(async (req) => {
     try { return await kalenderIcs(k); } catch (e) { console.error(e); return new Response("Fehler", { status: 500 }); }
   }
   if (req.method !== "POST") return json({ error: "POST erwartet" }, 405);
+  const t0Anfrage = Date.now(); // KC-CLUB-ANMELDECACHE: Server-Zeit im ping zurückmelden
   let p: any; try { p = await req.json(); } catch { return json({ error: "Ungültige Anfrage" }, 400); }
   const a = String(p?.action || "");
   try {
@@ -1213,7 +1238,7 @@ Köcheclub Werne`,
       const { count: kuerzlich } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("aktion", "zugang_angefordert").eq("person_id", pe.person_id).gte("zeit", seit15);
       if ((kuerzlich ?? 0) > 0) return json({ ok: true, text });
       const token = zufall();
-      await db.from("kc_club_zugang").upsert({ person_id: pe.person_id, token_hash: await sha256(token), aktiv: true, erstellt_am: jetzt(), erstellt_von: pe.person_id });
+      await db.from("kc_club_zugang").upsert({ person_id: pe.person_id, token_hash: await sha256(token), aktiv: true, erstellt_am: jetzt(), erstellt_von: pe.person_id }); anmeldungenVergessen(); // KC-CLUB-ANMELDECACHE: Änderung sofort wirksam
       const link = `${APP_URL}?k=${token}`;
       const versand = await routerSenden("club_nachricht_mail", [pe.person_id], {
         titel: "🔑 Dein Link zur Köcheclub-App", kurz: "Hier ist dein neuer persönlicher Link.",
@@ -1225,7 +1250,9 @@ Köcheclub Werne`,
       return json({ ok: true, text });
     }
 
+    const tAnm = Date.now();
     const ich = await anmelden(req);
+    const anmeldungMs = Date.now() - tAnm;
 
     switch (a) {
       case "init": {
@@ -1685,10 +1712,12 @@ Köcheclub Werne`,
         await db.from("kc_communication_thread_participants").update({ last_read_at: jetzt() }).eq("thread_id", id).eq("person_id", ich.person_id);
         const [{ data: gr }, { data: tippen }] = await Promise.all([
           db.from("kc_club_gruppen").select("*").eq("thread_id", id).maybeSingle(),
-          db.from("kc_club_tippen").select("person_id").eq("thread_id", id).neq("person_id", ich.person_id).gt("bis", jetzt()),
+          db.from("kc_club_tippen").select("person_id,text").eq("thread_id", id).neq("person_id", ich.person_id).gt("bis", jetzt()),
         ]);
         const tippt = (tippen ?? []).map((x: any) => vorname(leute.get(x.person_id)) || x.person_id);
-        return json({ id, betreff: t?.subject ?? "", tippt,
+        // KC-CLUB-LIVETIPPEN: Entwurf nur von denen, die es freiwillig eingeschaltet haben (Server speichert sonst keinen Text)
+        const entwurf = (tippen ?? []).filter((x: any) => x.text).map((x: any) => ({ name: vorname(leute.get(x.person_id)) || x.person_id, text: x.text }));
+        return json({ id, betreff: t?.subject ?? "", tippt, entwurf,
           gruppe: gr ? { name: gr.name, symbol: gr.symbol, erstellt_von: gr.erstellt_von, darfVerwalten: gr.erstellt_von === ich.person_id || ich.vorstand } : null, teilnehmer: (tn ?? []).map((x: any) => ({ person_id: x.person_id, name: leute.get(x.person_id)?.display_name || x.person_id })), nachrichten });
       }
 
@@ -1696,8 +1725,14 @@ Köcheclub Werne`,
       case "tippen": {
         const id = String(p.id || "");
         await binTeilnehmer(id, ich.person_id);
-        if (p.aus) await db.from("kc_club_tippen").delete().eq("thread_id", id).eq("person_id", ich.person_id);
-        else await db.from("kc_club_tippen").upsert({ thread_id: id, person_id: ich.person_id, bis: new Date(Date.now() + TIPPT_SEK * 1000).toISOString() });
+        if (p.aus) { await db.from("kc_club_tippen").delete().eq("thread_id", id).eq("person_id", ich.person_id); return json({ ok: true }); }
+        // KC-CLUB-LIVETIPPEN (0.56.0): Entwurfstext nur, wenn ich es selbst eingeschaltet habe (sonst nur „schreibt …“)
+        let text: string | null = null;
+        if (typeof p.text === "string" && p.text.trim()) {
+          const { data: e } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "live_tippen").maybeSingle();
+          if (e?.wert?.an === true) text = [...p.text].slice(-LIVE_TIPPEN_ZEICHEN).join("");
+        }
+        await db.from("kc_club_tippen").upsert({ thread_id: id, person_id: ich.person_id, bis: new Date(Date.now() + TIPPT_SEK * 1000).toISOString(), text });
         return json({ ok: true });
       }
 
@@ -2851,7 +2886,7 @@ Köcheclub Werne`,
         const groesse = Math.min(MAX_TESTDATEN, Math.max(0, Math.round(Number(p.groesse) || 0)));
         const last = typeof p.last === "string" ? p.last.length : 0;
         if (last > MAX_TESTDATEN * 1.1) throw new Fehler("Testdaten zu groß.");
-        return json({ ok: true, server: SERVER_VERSION, zeit: jetzt(), dbMs, wartung, empfangen: last, ...(groesse ? { daten: testDaten(groesse) } : {}) });
+        return json({ ok: true, server: SERVER_VERSION, zeit: jetzt(), dbMs, anmeldungMs, serverMs: Date.now() - t0Anfrage, wartung, empfangen: last, ...(groesse ? { daten: testDaten(groesse) } : {}) });
       }
 
       // Fehlersuche (KC-CLUB-EXTERN-DIAGNOSE): was beim Öffnen anderer Apps auf dem Handy passiert – nur technische Angaben, ins Änderungsprotokoll
@@ -3009,7 +3044,7 @@ Köcheclub Werne`,
         const { data: pe } = await db.from("kc_core_people").select("person_id,active").eq("person_id", pid).maybeSingle();
         if (!pe?.active) throw new Fehler("Mitglied nicht gefunden.", 404);
         const token = zufall();
-        await db.from("kc_club_zugang").upsert({ person_id: pid, token_hash: await sha256(token), aktiv: true, erstellt_am: jetzt(), erstellt_von: ich.person_id });
+        await db.from("kc_club_zugang").upsert({ person_id: pid, token_hash: await sha256(token), aktiv: true, erstellt_am: jetzt(), erstellt_von: ich.person_id }); anmeldungenVergessen(); // KC-CLUB-ANMELDECACHE: Änderung sofort wirksam
         await protokoll(ich.person_id, "link_erzeugt", { fuer: pid });
         return json({ ok: true, link: `${APP_URL}?k=${token}` });
       }
@@ -3019,6 +3054,7 @@ Köcheclub Werne`,
         const aemter = (Array.isArray(p.aemter) ? p.aemter : []).map((x: unknown) => txt(x, 40)).filter(Boolean).slice(0, 5);
         await db.from("kc_club_rollen").upsert({ person_id: pid, ist_vorstand: !!p.vorstand, ...(pid === ich.person_id ? {} : { ist_admin: !!p.admin }), aemter,
           ...(typeof p.protokolle === "boolean" ? { protokolle_lesen: p.protokolle } : {}), ...(typeof p.kontakte === "boolean" ? { kontakte_sehen: p.kontakte } : {}), geaendert_am: jetzt() });
+        anmeldungenVergessen(); // KC-CLUB-ANMELDECACHE: neue Rolle sofort wirksam
         await protokoll(ich.person_id, "rolle_gesetzt", { fuer: pid, vorstand: !!p.vorstand, aemter, protokolle: p.protokolle ?? null });
         return json({ ok: true });
       }

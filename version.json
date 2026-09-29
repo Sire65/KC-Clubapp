@@ -1,10 +1,18 @@
 {
-  "version": "0.55.0",
+  "version": "0.56.0",
   "datum": "2026-09-29",
   "neu": [
-    "📶 Verbindungstest: vor dem Test „WLAN“ oder „Mobilfunk“ wählen (Android erkennt es teils selbst) – die letzten Tests stehen zum Vergleich nebeneinander"
+    "⚡ Schneller: Der Server merkt sich deine Anmeldung kurz – jede Aktion antwortet dadurch spürbar flotter",
+    "👁️ Nachrichten: Wer möchte, kann andere live mitlesen lassen, was er gerade tippt (⚙️ Mehr → Privatsphäre, Standard aus)"
   ],
   "verlauf": [
+    {
+      "version": "0.56.0",
+      "neu": [
+        "⚡ Schneller: Der Server merkt sich deine Anmeldung kurz – jede Aktion antwortet dadurch spürbar flotter",
+        "👁️ Nachrichten: Wer möchte, kann andere live mitlesen lassen, was er gerade tippt (⚙️ Mehr → Privatsphäre, Standard aus)"
+      ]
+    },
     {
       "version": "0.55.0",
       "neu": [

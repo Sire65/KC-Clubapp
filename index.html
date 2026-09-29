@@ -389,7 +389,8 @@
   .unterh .mitte div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .punkt { background: var(--rot); color: #fff; border-radius: 12px; padding: 2px 9px; font-weight: 800; font-size: .85rem; }
   /* KC-CLUB-TIPPT (0.54.0): „schreibt …“ mit drei hüpfenden Punkten */
-  .tippt { display: flex; align-items: center; gap: 8px; font-size: .88rem; color: var(--gruen, #2e7d4f); font-style: italic; padding: 2px 6px 4px; }
+  .tippt { display: block; font-size: .88rem; color: var(--gruen, #2e7d4f); font-style: italic; padding: 2px 6px 4px; }
+  .entwurf { margin: 4px 0 0; padding: 6px 10px; border-radius: 12px; background: var(--karte); color: var(--text); box-shadow: var(--schatten); font-size: .9rem; font-style: italic; word-wrap: break-word; max-height: 4.6em; overflow: hidden; }
   .punkte3 { display: inline-flex; gap: 3px; background: var(--karte); border-radius: 12px; padding: 6px 9px; box-shadow: var(--schatten); }
   .punkte3 i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .35; animation: tippHuepf 1.2s infinite ease-in-out; }
   .punkte3 i:nth-child(2) { animation-delay: .15s; } .punkte3 i:nth-child(3) { animation-delay: .3s; }
@@ -855,6 +856,7 @@
       <summary>🔒 Privatsphäre</summary>
       <div class="schalter"><div><b>🎂 Meinen Geburtstag anzeigen (ohne Jahr)</b><div class="hinweis" id="gebHinweis">Andere sehen dann nur Tag und Monat – im Kalender, in der Terminliste und unter „Heute wichtig“.</div></div><input type="checkbox" id="setGeburtstag" onchange="geburtstagFreigabe(this.checked)"></div>
       <div class="schalter"><div><b>🟢 Anderen zeigen, wann ich online bin</b><div class="hinweis">Dann sehen andere einen grünen Punkt bei dir und können „anklopfen“. Ausgeschaltet siehst du auch selbst nicht, wer online ist.</div></div><input type="checkbox" id="setOnline" onchange="onlineZeigen(this.checked)"></div>
+      <div class="schalter"><div><b>👁️ Andere sehen live, was ich tippe</b><div class="hinweis">In Unterhaltungen sehen die anderen deinen Text schon beim Schreiben – auch, was du wieder löschst. Nicht gesendete Entwürfe werden nicht gespeichert und nach wenigen Sekunden verworfen. Standard: aus.</div></div><input type="checkbox" id="setLiveTippen" onchange="liveTippenSetzen(this.checked)"></div>
       <p class="hinweis" style="margin:14px 0 0"><b>Für andere Mitglieder sichtbar:</b> (Aushilfen sehen keine Kontaktdaten; Hansi als Admin sieht alles)</p>
       <div class="schalter"><div><b>📱 Meine Handynummer</b></div><input type="checkbox" id="setKontakt_handy" onchange="kontaktFreigabe('handy', this.checked)"></div>
       <div class="schalter"><div><b>☎️ Meine Festnetznummer</b></div><input type="checkbox" id="setKontakt_festnetz" onchange="kontaktFreigabe('festnetz', this.checked)"></div>
@@ -948,6 +950,7 @@
 <div class="eingabe versteckt" id="eingabe">
   <!-- KC-CLUB-TIPPT (0.54.0): „Klaus schreibt …“ -->
   <div class="tippt versteckt" id="tipptAnzeige" aria-live="polite"></div>
+  <div class="hinweis versteckt" id="liveHinweis" style="font-size:.78rem;margin:0 6px 4px">👁️ Live-Tippen ist an – die anderen sehen, was du schreibst (⚙️ Mehr → Privatsphäre)</div>
   <div class="zustell" id="zustell"></div>
   <div class="chips" id="anlagenChips"></div>
   <!-- KC-CLUB-SPRACHE: Aufnahme-Leiste -->
@@ -1080,7 +1083,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "0.55.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.56.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -1415,19 +1418,33 @@ function chatTakt() {
 }
 // KC-CLUB-TIPPT (0.54.0): beim Tippen höchstens alle 3 s „ich schreibe“ melden, Feld leer → sofort aus.
 // Wer die Online-Anzeige ausgeschaltet hat (Privatsphäre), meldet auch kein „schreibt …“.
-let TIPP = { zuletzt: 0, id: null };
+// KC-CLUB-LIVETIPPEN (0.56.0): wer es selbst einschaltet, schickt den Entwurf mit (höchstens 1× je Sekunde, letzter Stand kommt nach)
+const LIVE_TIPPEN_ZEICHEN = 300, LIVE_ANZEIGE_ZEICHEN = 140;
+const liveTippen = () => !!INIT?.einstellungen?.live_tippen?.an;
+let TIPP = { zuletzt: 0, id: null, nach: null };
 function tippenMelden() {
   if (!chatId || !ONL.zeigen) return;
-  if (!$("text").value.trim()) return tippenAus();
-  if (TIPP.id === chatId && Date.now() - TIPP.zuletzt < 3000) return;
-  TIPP = { zuletzt: Date.now(), id: chatId }; api("tippen", { id: chatId }).catch(() => {});
+  const text = $("text").value;
+  if (!text.trim()) return tippenAus();
+  const live = liveTippen(), abstand = live ? 1000 : 3000;
+  clearTimeout(TIPP.nach);
+  if (TIPP.id === chatId && Date.now() - TIPP.zuletzt < abstand) { if (live) TIPP.nach = setTimeout(tippenMelden, abstand); return; }
+  TIPP = { zuletzt: Date.now(), id: chatId, nach: null };
+  api("tippen", { id: chatId, ...(live ? { text: [...text].slice(-LIVE_TIPPEN_ZEICHEN).join("") } : {}) }).catch(() => {});
 }
-function tippenAus() { if (TIPP.id) api("tippen", { id: TIPP.id, aus: true }).catch(() => {}); TIPP = { zuletzt: 0, id: null }; }
-function tipptZeigen(namen) {
+function tippenAus() { clearTimeout(TIPP.nach); if (TIPP.id) api("tippen", { id: TIPP.id, aus: true }).catch(() => {}); TIPP = { zuletzt: 0, id: null, nach: null }; }
+async function liveTippenSetzen(an) {
+  try { await api("einstellung_setzen", { schluessel: "live_tippen", wert: { an } }); if (INIT?.einstellungen) INIT.einstellungen.live_tippen = { an };
+    melde(an ? "👁️ Live-Tippen an – andere sehen in Unterhaltungen, was du tippst" : "Live-Tippen aus – andere sehen nur noch „schreibt …“"); }
+  catch (e) { melde(e.message, true); if ($("setLiveTippen")) $("setLiveTippen").checked = !an; }
+}
+function tipptZeigen(namen, entwurf = []) {
   const e = $("tipptAnzeige"); if (!e) return;
   if (!namen.length) { e.classList.add("versteckt"); e.innerHTML = ""; return; }
+  const kurz = (t) => { const z = [...t]; return z.length > LIVE_ANZEIGE_ZEICHEN ? "…" + z.slice(-LIVE_ANZEIGE_ZEICHEN).join("") : t; };
+  const entwuerfe = entwurf.map((x) => `<div class="entwurf">✍️ <b>${esc(x.name)}:</b> ${esc(kurz(x.text))}</div>`).join("");
   const wer = namen.length === 1 ? namen[0] : namen.length === 2 ? `${namen[0]} und ${namen[1]}` : `${namen.length} Personen`;
-  e.innerHTML = `<span class="punkte3"><i></i><i></i><i></i></span><span>${esc(wer)} ${namen.length > 1 ? "schreiben" : "schreibt"} …</span>`;
+  e.innerHTML = `<div style="display:flex;align-items:center;gap:8px"><span class="punkte3"><i></i><i></i><i></i></span><span>${esc(wer)} ${namen.length > 1 ? "schreiben" : "schreibt"} …</span></div>${entwuerfe}`;
   e.classList.remove("versteckt");
 }
 
@@ -2058,7 +2075,7 @@ function vbBlattZeigen() {
       ${rundinstrument("Download", t?.down ?? null, 50, "Mbit/s", [[2, "#c0485a"], [10, "#d19a22"], [50, "#2e7d4f"]], 1)}
       ${rundinstrument("Upload", t?.up ?? null, 50, "Mbit/s", [[1, "#c0485a"], [5, "#d19a22"], [50, "#2e7d4f"]], 1)}
     </div>
-    <div id="vbTestText" class="hinweis" style="text-align:center">${t?.zeit ? `Letzter Test${t.netz ? " (" + NETZARTEN[t.netz] + ")" : ""}: ${fZeit.format(new Date(t.zeit))} Uhr${t.db != null ? ` · Datenbank ${t.db} ms` : ""}` : "Download/Upload: bitte „Verbindung testen“ tippen."}</div>
+    <div id="vbTestText" class="hinweis" style="text-align:center">${t?.zeit ? `Letzter Test${t.netz ? " (" + NETZARTEN[t.netz] + ")" : ""}: ${fZeit.format(new Date(t.zeit))} Uhr${t.db != null ? ` · Datenbank ${t.db} ms` : ""}${t.srv != null ? ` · Server gesamt ${t.srv} ms` : ""}` : "Download/Upload: bitte „Verbindung testen“ tippen."}</div>
     <table class="vb-tabelle">
       <tr><td>Letzte Antwort</td><td>${VB.letzteOk ? fZeit.format(new Date(VB.letzteOk)) + " Uhr" : "–"}</td></tr>
       <tr><td>Anfragen / Fehler (seit App-Start)</td><td>${VB.anfragen} / ${VB.fehler}</td></tr>
@@ -2084,10 +2101,10 @@ async function verbindungTesten() {
   VB.test = { laeuft: true }; vbBlattZeigen();
   const text = (t) => { const e = $("vbTestText"); if (e) e.textContent = t; };
   try {
-    const zeiten = []; let db = null;
-    for (let i = 0; i < 5; i++) { text(`⏳ Antwortzeit messen … ${i + 1}/5`); const t0 = performance.now(); const r = await api("ping"); zeiten.push(performance.now() - t0); db = r.dbMs; VB.server = r.server; VB.wartung = r.wartung; }
+    const zeiten = [], srv = []; let db = null;
+    for (let i = 0; i < 5; i++) { text(`⏳ Antwortzeit messen … ${i + 1}/5`); const t0 = performance.now(); const r = await api("ping"); zeiten.push(performance.now() - t0); db = r.dbMs; if (r.serverMs != null) srv.push(r.serverMs); VB.server = r.server; VB.wartung = r.wartung; }
     const ping = Math.round(Math.min(...zeiten));
-    VB.test.ping = ping; VB.test.db = db; vbBlattZeigen(); text("⏳ Download messen …");
+    VB.test.ping = ping; VB.test.db = db; VB.test.srv = srv.length ? Math.min(...srv) : null; // 0.56.0: reine Server-Zeit (Rest = Übertragung) vbBlattZeigen(); text("⏳ Download messen …");
     const DOWN = 1024 * 1024, UP = 512 * 1024;
     let t0 = performance.now(); await api("ping", { groesse: DOWN });
     VB.test.down = Math.round((DOWN * 8 / 1e6) / Math.max(0.05, (performance.now() - t0 - ping) / 1000) * 10) / 10; vbBlattZeigen(); text("⏳ Upload messen …");
@@ -2099,7 +2116,7 @@ async function verbindungTesten() {
     text("⏳ KC Communicator prüfen …"); await communicatorPruefen();
     VB.test.zeit = Date.now(); VB.test.laeuft = false; VB.test.netz = vbNetz();
     vbVerlaufMerken({ zeit: VB.test.zeit, netz: VB.test.netz, ping, down: VB.test.down, up: VB.test.up, db: VB.test.db });
-    api("diagnose", { art: "verbindung", daten: { netz: VB.test.netz, erkannt: netzErkannt() || "", ping, down: VB.test.down, up: VB.test.up, db: VB.test.db ?? -1, tempo: navigator.connection?.effectiveType || "" } }).catch(() => {});
+    api("diagnose", { art: "verbindung", daten: { netz: VB.test.netz, erkannt: netzErkannt() || "", ping, down: VB.test.down, up: VB.test.up, db: VB.test.db ?? -1, srv: VB.test.srv ?? -1, tempo: navigator.connection?.effectiveType || "" } }).catch(() => {});
     vbBlattZeigen();
     melde(`✔ ${NETZARTEN[VB.test.netz]}: ${ping} ms, ↓ ${VB.test.down.toLocaleString("de-DE")} / ↑ ${VB.test.up.toLocaleString("de-DE")} Mbit/s`);
   } catch (e) {
@@ -2973,6 +2990,7 @@ async function neuLaden(vonHand) {
   try {
     INIT = await api("init", {}, { warten: !!vonHand }); ICH = INIT.ich;
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln);
+    if ($("setLiveTippen")) $("setLiveTippen").checked = liveTippen();
     const begruesst = begruessungPruefen();
     if (!ONL.timer) nachUpdatePruefen(begruesst);
     if (!ONL.timer) { onlinePing(); onlineTakt(); const a = /#anklopfen=([0-9a-f-]{36})/.exec(START_HASH || ""); if (a) anklopfenAusLink(a[1]); const c = /#anruf=([0-9a-f-]{36})/.exec(START_HASH || ""); if (c) { ONL.erledigt.add("r" + c[1]); anrufEingehend(c[1]); } }
@@ -3539,6 +3557,7 @@ async function chatOeffnen(id, ausHistorie) {
   history.replaceState({ v: "chat", id }, "", location.pathname + "#nachricht=" + id);
   await chatLaden(true);
   chatTimer = setInterval(chatTakt, CHAT_TAKT_MS);
+  $("liveHinweis").classList.toggle("versteckt", !liveTippen() || !ONL.zeigen);
 }
 let chatStand = "";
 async function chatLaden(scrollen) {
@@ -3552,7 +3571,7 @@ async function chatLaden(scrollen) {
     let st = "";
     if (andere.length === 1) { if (!MITGLIEDER) await mitgliederHolen().catch(() => {}); const m = MITGLIEDER?.find((x) => x.person_id === andere[0].person_id); if (m?.status) st = statusText(m.status); }
     $("chatTeilnehmer").textContent = !andere.length ? "Nur du (Test-Unterhaltung)" : u.gruppe ? `👥 ${andere.length + 1} Mitglieder: Du, ${andere.map((x) => x.name.split(" ")[0]).join(", ")} ›` : u.betreff || andere.length > 1 ? "Mit: " + andere.map((x) => x.name).join(", ") : st;
-    tipptZeigen(u.tippt || []);
+    tipptZeigen(u.tippt || [], u.entwurf || []);
     if (u.tippt?.length && andere.length === 1) $("chatTeilnehmer").textContent = "✍️ schreibt …";
     const stand = JSON.stringify(u.nachrichten.map((m) => [m.id, m.gelesenVon?.length]));
     if (stand === chatStand && !scrollen) return;
@@ -3739,7 +3758,7 @@ async function senden() {
     const daten = { text, anlagen: anlagen.map((a) => a.id), wege: ["push", "email"].filter((w) => ZW[w]) };
     const r = chatId ? await api("nachricht_senden", { id: chatId, ...daten }) : await api("nachricht_senden", { ...daten, ...neuEntwurf });
     const empfIds = chatId ? (CHAT?.teilnehmer || []).map((t) => t.person_id) : [...(neuEntwurf?.empfaenger?.personen || [])];
-    $("text").value = ""; $("text").style.height = "auto"; anlagen = []; chipsZeigen(); neuEntwurf = null; TIPP = { zuletzt: 0, id: null }; // Server beendet „schreibt …“
+    $("text").value = ""; $("text").style.height = "auto"; anlagen = []; chipsZeigen(); neuEntwurf = null; clearTimeout(TIPP.nach); TIPP = { zuletzt: 0, id: null, nach: null }; // Server beendet „schreibt …“
     if (ZW.whatsapp && text) whatsappWeitergeben(text, empfIds.filter((id) => id !== ICH.person_id));
     if (!chatId) { chatId = r.id; history.replaceState({ v: "chat", id: r.id }, "", location.pathname + "#nachricht=" + r.id); clearInterval(chatTimer); chatTimer = setInterval(chatTakt, CHAT_TAKT_MS); }
     await chatLaden(true);

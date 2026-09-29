@@ -1,5 +1,16 @@
 # Änderungen
 
+## 0.56.0 – 2026-09-29 (DEV)
+
+- KC-CLUB-ANMELDECACHE (neu): geprüfte Anmeldung je Server-Instanz 60 s im Speicher (Schlüssel = SHA-256 des Tokens),
+  spart je Anfrage zwei Datenbank-Runden. Zugang/Rollen ändern leert den Speicher sofort (andere Instanzen ≤ 60 s).
+  „zuletzt gesehen“ höchstens alle 30 s schreiben (Online-Anzeige 150 s bleibt korrekt). ping liefert serverMs/anmeldungMs;
+  der Verbindungstest zeigt „Server gesamt … ms“ (Rest der Antwortzeit = Übertragung).
+- KC-CLUB-LIVETIPPEN (neu, freiwillig): Einstellung „👁️ Andere sehen live, was ich tippe“ (Privatsphäre, Standard aus).
+  Nur dann schickt die App den Entwurf (≤ 300 Zeichen, höchstens 1×/s, letzter Stand kommt nach) und der Server speichert
+  ihn – nur für Teilnehmer der Unterhaltung sichtbar (letzte 140 Zeichen), nur in der flüchtigen Tabelle kc_club_tippen
+  (nie gespiegelt/gesichert, Aufräumen alle 5 Min., Migration v56). Wer es an hat, sieht im Chat einen Hinweis.
+
 ## 0.55.0 – 2026-09-29 (DEV)
 
 - KC-CLUB-NETZART (neu): Verbindungstest mit Netzart-Auswahl (📶 WLAN / 📱 Mobilfunk / ❔ weiß nicht), vorbelegt mit der
