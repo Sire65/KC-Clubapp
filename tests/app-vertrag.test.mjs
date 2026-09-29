@@ -517,4 +517,13 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/navigator\.clipboard\.writeText\(link\)/.test(f) && !/daten: \{[^}]*link/.test(f) && !/KEY[^;]*api\(/.test(f), "Zugangslink würde übertragen");
 }
 
+// 40. 0.21.0: Link verloren → neuer Link nur per Mail an die hinterlegte Adresse, vor der Anmeldung, mit Bremse
+{
+  const z = server.slice(server.indexOf('if (a === "zugang_anfordern")'), server.indexOf("const ich = await anmelden(req);"));
+  assert.ok(z.length > 100 && server.indexOf('if (a === "zugang_anfordern")') < server.indexOf("const ich = await anmelden(req);"), "Anfordern fehlt oder braucht Anmeldung");
+  assert.ok(/routerSenden\("club_nachricht_mail", \[pe\.person_id\]/.test(z) && !/json\(\{[^}]*link/.test(z), "Link würde nicht nur per Mail gehen");
+  assert.ok(/gesamt \?\? 0\) >= 20/.test(z) && /kuerzlich \?\? 0\) > 0/.test(z) && /KC-P-TEST/.test(z), "Bremse/Testsperre fehlt");
+  assert.ok(/zugangAnfordern\(\)/.test(html) && !/"x-club-token": KEY[^\n]*zugang_anfordern/.test(html), "Anfordern in der App fehlt");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

@@ -327,6 +327,10 @@
 <div id="gesperrt" class="seite versteckt">
   <div class="hero"><div class="kopfzeile"><div class="logo"><img src="kc-kochmuetze-weiss.webp" alt=""></div><div><div class="marke-klein">KÖCHECLUB WERNE</div><div class="titel">Willkommen</div></div></div></div>
   <div class="karte"><h3>🔑 Persönlicher Link nötig</h3><p>Bitte öffne die App über deinen <b>persönlichen Link</b>, den du von Hansi bekommen hast (per WhatsApp oder Mail). Danach kannst du sie auf den Startbildschirm legen.</p></div>
+  <div class="karte"><h3>✉️ Link verloren?</h3><p style="margin-top:0">Gib die E-Mail-Adresse ein, die im Club hinterlegt ist. Wir schicken dir sofort einen neuen persönlichen Link.</p>
+    <label class="feld">Deine E-Mail-Adresse<input type="email" id="zaMail" autocomplete="email" inputmode="email" placeholder="name@web.de"></label>
+    <button class="knopf haupt" id="zaKnopf" onclick="zugangAnfordern()">🔗 Neuen Link per Mail schicken</button>
+    <p class="hinweis" id="zaAntwort" style="margin-bottom:0"></p></div>
 </div>
 
 <div id="app" class="versteckt">
@@ -612,7 +616,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.20.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.21.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -641,6 +645,18 @@ function melde(t, fehler) {
   const m = document.createElement("div"); m.className = "meldung" + (fehler ? " fehler" : ""); m.textContent = t;
   m.onclick = () => m.remove();
   document.body.appendChild(m); setTimeout(() => m.remove(), Math.min(20000, (4000 + String(t).length * 70) * (fehler ? 2 : 1)));
+}
+// KC-CLUB-ZUGANG-SELBST: neuen persönlichen Link per Mail anfordern (ohne Anmeldung; der Link geht nur an die hinterlegte Adresse)
+async function zugangAnfordern() {
+  const mail = $("zaMail").value.trim();
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)) return ($("zaAntwort").textContent = "Bitte eine gültige E-Mail-Adresse eingeben.");
+  $("zaKnopf").disabled = true; $("zaAntwort").textContent = "⏳ Wird gesendet …";
+  try {
+    const r = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json", "x-club-version": APP_VERSION }, body: JSON.stringify({ action: "zugang_anfordern", email: mail }) });
+    const j = await r.json().catch(() => ({}));
+    $("zaAntwort").innerHTML = r.ok ? "✅ " + esc(j.text || "Wenn die Adresse bei uns hinterlegt ist, kommt gleich eine Mail mit deinem Link.") + "<br>Bitte den Link in der Mail antippen (im Browser Chrome öffnen)." : "⚠️ " + esc(j.error || "Fehler " + r.status);
+  } catch { $("zaAntwort").textContent = "⚠️ Keine Verbindung – bitte gleich nochmal versuchen."; }
+  setTimeout(() => { $("zaKnopf").disabled = false; }, 20000);
 }
 async function api(action, daten = {}) {
   // KC-CLUB-VERBINDUNG: jede Anfrage zählt für die LEDs (Datenverkehr + Status)

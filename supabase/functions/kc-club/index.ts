@@ -11,14 +11,14 @@
 //           KC-CLUB-KONTAKT (0.13.0), KC-CLUB-TERMINFINDUNG, KC-CLUB-NACHFASSEN, KC-CLUB-MITFAHREN, KC-CLUB-NOTFALL, KC-CLUB-KALENDERABO (0.14.0),
 //           KC-CLUB-FOTOALBUM (0.15.0), KC-CLUB-VERBINDUNG (0.16.0),
 //           KC-CLUB-COMMUNICATOR-STATUS (0.17.0), KC-CLUB-FEEDBACK (0.18.0),
-//           KC-CLUB-KACHELN (0.19.0)
+//           KC-CLUB-KACHELN (0.19.0), KC-CLUB-ZUGANG-SELBST (0.21.0)
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.19.0";
+const SERVER_VERSION = "0.21.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -853,6 +853,33 @@ Köcheclub Werne`,
         if (fotosEntfernt) await protokoll(null, "fotos_endgueltig_entfernt", { anzahl: fotosEntfernt });
       }
       return json({ ok: true, erinnerungen: n, beendet, dienst, geb, aufg, nachfass, fotosEntfernt });
+    }
+
+    // ----- KC-CLUB-ZUGANG-SELBST: Link verloren → neuen Link an die hinterlegte Mail-Adresse (ohne Anmeldung) -----
+    // Antwort immer gleich (verrät nicht, ob die Adresse existiert); höchstens 1× je 15 Min. je Person, 20× je Stunde insgesamt.
+    if (a === "zugang_anfordern") {
+      const mail = txt(p.email, 200).toLowerCase();
+      const text = "Wenn die Adresse bei uns hinterlegt ist, kommt gleich eine Mail mit deinem neuen Link.";
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)) throw new Fehler("Bitte eine gültige E-Mail-Adresse eingeben.");
+      const seit15 = new Date(Date.now() - 15 * 60000).toISOString(), seit60 = new Date(Date.now() - 3600000).toISOString();
+      const { count: gesamt } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("aktion", "zugang_angefordert").gte("zeit", seit60);
+      if ((gesamt ?? 0) >= 20) return json({ ok: true, text });
+      const { data: leute } = await db.from("kc_core_people").select("person_id,email,active,org_id").eq("active", true).eq("org_id", ORG).ilike("email", mail);
+      const pe = (leute ?? []).find((x: any) => String(x.email || "").trim().toLowerCase() === mail);
+      if (!pe || String(pe.person_id).startsWith("KC-P-TEST")) { await protokoll(null, "zugang_angefordert", { treffer: false }); return json({ ok: true, text }); }
+      const { count: kuerzlich } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("aktion", "zugang_angefordert").eq("person_id", pe.person_id).gte("zeit", seit15);
+      if ((kuerzlich ?? 0) > 0) return json({ ok: true, text });
+      const token = zufall();
+      await db.from("kc_club_zugang").upsert({ person_id: pe.person_id, token_hash: await sha256(token), aktiv: true, erstellt_am: jetzt(), erstellt_von: pe.person_id });
+      const link = `${APP_URL}?k=${token}`;
+      const versand = await routerSenden("club_nachricht_mail", [pe.person_id], {
+        titel: "🔑 Dein Link zur Köcheclub-App", kurz: "Hier ist dein neuer persönlicher Link.",
+        betreff: "Köcheclub Werne – dein persönlicher Link zur App",
+        text: `Hallo,\n\nhier ist dein neuer persönlicher Link zur Köcheclub-App:\n\n${link}\n\nBitte antippen (am besten im Browser Chrome öffnen). Danach kannst du die App über ⋮ → „App installieren“ auf den Startbildschirm legen.\n\nDer Link ist nur für dich – bitte nicht weitergeben. Ein früherer Link gilt ab jetzt nicht mehr.\nDu hast keinen neuen Link angefordert? Dann bitte kurz Hansi Bescheid geben.\n\nViele Grüße\nKöcheclub Werne`,
+        url: link,
+      }, `club-zugang:${pe.person_id}:${Date.now()}`);
+      await protokoll(pe.person_id, "zugang_angefordert", { treffer: true, versand });
+      return json({ ok: true, text });
     }
 
     const ich = await anmelden(req);

@@ -1,5 +1,13 @@
 # Änderungen
 
+## 0.21.0 – 2026-09-29 (DEV)
+
+- KC-CLUB-ZUGANG-SELBST (neu): „Link verloren?“ auf der Seite „Persönlicher Link nötig“ – E-Mail-Adresse eingeben, der
+  Server schickt über den KC Communicator (Regel club_nachricht_mail) einen neuen persönlichen Link an die im Club
+  hinterlegte Adresse. Antwort verrät nicht, ob die Adresse existiert; höchstens 1× je 15 Min. je Person und 20× je Stunde
+  insgesamt; nur aktive Mitglieder, keine Testzugänge; Protokoll „zugang_angefordert“. Der alte Link wird ungültig.
+  Anlass: Hansi hatte die Verknüpfung gelöscht und kam nicht mehr in die App.
+
 ## 0.20.1 – 2026-09-29 (DEV)
 
 - KC-CLUB-INSTALLATION: Die Verknüpfung auf Hansis Handy hat einen eigenen Speicher – in Chrome fehlte deshalb der
