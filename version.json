@@ -1,11 +1,20 @@
 {
-  "version": "0.36.0",
+  "version": "0.37.0",
   "datum": "2026-09-29",
   "neu": [
-    "✅ Neu unter Termine: To-do-Liste – Einträge nur für mich oder für alle, mit Kategorie (🛒 Einkaufen, 📦 Bestellung …), Fälligkeit und Häkchen",
-    "↔️ Register „Verein · Mein Bereich · Programme“ per Ziehen umsortieren: festhalten, schieben, loslassen"
+    "🎤 Sprachnachrichten: im Chat auf 🎤 tippen, sprechen, ➤ senden – an eine Person, eine Gruppe oder alle",
+    "▶️ Sprachnachrichten direkt im Chat anhören",
+    "👉 To-do: festlegen, wer es machen soll – die Person bekommt Bescheid, Filter „👉 Mir“"
   ],
   "verlauf": [
+    {
+      "version": "0.37.0",
+      "neu": [
+        "🎤 Sprachnachrichten: im Chat auf 🎤 tippen, sprechen, ➤ senden – an eine Person, eine Gruppe oder alle",
+        "▶️ Sprachnachrichten direkt im Chat anhören",
+        "👉 To-do: festlegen, wer es machen soll – die Person bekommt Bescheid, Filter „👉 Mir“"
+      ]
+    },
     {
       "version": "0.36.0",
       "neu": [

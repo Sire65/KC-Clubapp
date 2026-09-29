@@ -728,13 +728,26 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 59. 0.36.0: To-do-Liste (nur ich/für alle, abhaken, löschen nur Ersteller/Clubleitung) + Register per Ziehen umsortieren
 {
   for (const a of ["todo_liste", "todo_anlegen", "todo_erledigt", "todo_loeschen"]) assert.ok(aktionen.has(a) && aufrufe.has(a), `To-do-Aktion ${a} fehlt`);
-  assert.ok(/\.or\(`person_id\.eq\.\$\{ich\.person_id\},fuer\.eq\.alle`\)/.test(server), "To-do: fremde private Einträge sichtbar");
+  assert.ok(/\.or\(`person_id\.eq\.\$\{ich\.person_id\},fuer\.eq\.alle(,zustaendig\.eq\.\$\{ich\.person_id\})?`\)/.test(server), "To-do: fremde private Einträge sichtbar");
   const er = server.slice(server.indexOf('case "todo_erledigt"'), server.indexOf('case "todo_loeschen"'));
-  assert.ok(/t\.person_id !== ich\.person_id && t\.fuer !== "alle"\)\) throw/.test(er), "Fremde private Einträge abhakbar");
+  assert.ok(/t\.person_id !== ich\.person_id && t\.fuer !== "alle"( && t\.zustaendig !== ich\.person_id)?\)\) throw/.test(er), "Fremde private Einträge abhakbar");
   const lo = server.slice(server.indexOf('case "todo_loeschen"'), server.indexOf('case "todo_loeschen"') + 500);
   assert.ok(/t\.person_id !== ich\.person_id && !ich\.vorstand\) throw/.test(lo), "Fremde dürfen löschen");
   assert.ok(/register: kaIds\(w\?\.register\)/.test(server) && /const registerReihe = /.test(html) && /function registerZiehen\(\)/.test(html), "Register-Reihenfolge fehlt");
   assert.ok(/data-m="todo" onclick="termineModus\('todo'\)"/.test(html) && /class="todotab"/.test(html), "To-do-Reiter fehlt");
+}
+
+// 60. 0.37.0: Sprachnachrichten (Aufnahme → Anhang → gleiche Empfänger) + To-do „wer soll es machen“
+{
+  assert.ok(/id="mikroKnopf"/.test(html) && /function spracheStart\(\)/.test(html) && /new MediaRecorder\(/.test(html) && /if \(s >= 180\)/.test(html), "Sprachnachricht-Aufnahme fehlt oder unbegrenzt");
+  assert.ok(/const r = await anlageHochladen\(datei\);[\s\S]{0,300}await senden\(\);/.test(html), "Sprachnachricht geht nicht über den normalen Versand");
+  assert.ok(/\/\^audio\\\/\/\.test\(a\.mime/.test(html) && /function spracheAbspielen\(/.test(html), "Abspielen im Chat fehlt");
+  assert.ok(/s\.strom\.getTracks\(\)\.forEach\(\(t\) => t\.stop\(\)\)/.test(html), "Mikrofon bleibt nach der Aufnahme an");
+  assert.ok(aktionen.has("todo_zuweisen") && aufrufe.has("todo_zuweisen"), "todo_zuweisen fehlt");
+  assert.ok(/fuer\.eq\.alle,zustaendig\.eq\.\$\{ich\.person_id\}/.test(server) && /t\.zustaendig !== ich\.person_id\)\) throw/.test(server), "Zuständige sehen/abhaken ihre Aufgabe nicht");
+  const zw = server.slice(server.indexOf('case "todo_zuweisen"'), server.indexOf('case "todo_loeschen"'));
+  assert.ok(/t\.person_id !== ich\.person_id && !ich\.vorstand\) throw/.test(zw), "Fremde dürfen zuweisen");
+  assert.ok(/senden\("club_aufgabe", \[an\]/.test(server), "Zuständige bekommen keinen Bescheid");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

@@ -184,6 +184,12 @@
   .todotab .spaet { color: #c62828; font-weight: 800; }
   .todoform { display: grid; gap: 8px; }
   .todoform input, .todoform select { padding: 11px 12px; border-radius: 12px; border: 1px solid var(--linie); background: var(--karte2); color: var(--text); font-size: 1rem; font-family: inherit; } .todoform .reihe { display: flex; gap: 8px; flex-wrap: wrap; } .todoform select, .todoform input[type=date] { flex: 1; min-width: 130px; }
+  /* KC-CLUB-SPRACHE */
+  .aufnahme { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--karte2); border-radius: 14px; margin: 0 0 6px; }
+  .aufnahme .rec { color: #d32f2f; font-size: 1.2rem; animation: blinken 1s steps(2) infinite; } @keyframes blinken { 50% { opacity: .2; } }
+  .sprache button { border: none; border-radius: 12px; padding: 8px 12px; font-weight: 800; background: rgba(255,255,255,.25); color: inherit; cursor: pointer; }
+  .blase:not(.eigen) .sprache button { background: var(--karte2); }
+  .sprache audio { width: 230px; max-width: 100%; height: 40px; }
   .kpfeil4 { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
   .kpfeil4 i { position: absolute; width: 34px; height: 34px; border-radius: 50%; background: var(--rot); color: #fff; font-style: normal; font-weight: 900; display: grid; place-items: center; font-size: .95rem; box-shadow: 0 2px 6px rgba(0,0,0,.3); }
   .kpfeil4 i:nth-child(1) { top: 4px; left: 50%; margin-left: -17px; } .kpfeil4 i:nth-child(2) { left: 4px; top: 50%; margin-top: -17px; }
@@ -735,8 +741,12 @@
 <div class="eingabe versteckt" id="eingabe">
   <div class="zustell" id="zustell"></div>
   <div class="chips" id="anlagenChips"></div>
+  <!-- KC-CLUB-SPRACHE: Aufnahme-Leiste -->
+  <div class="aufnahme versteckt" id="aufnahmeLeiste"><span class="rec">●</span><b id="aufnahmeZeit">0:00</b><span class="hinweis" style="margin:0;flex:1">Aufnahme läuft …</span>
+    <button class="knopf klein" onclick="spracheAbbrechen()">✖ Verwerfen</button><button class="knopf haupt klein" onclick="spracheSenden()">➤ Senden</button></div>
   <div class="innen">
     <button class="rund" title="Anlage" onclick="anlageMenue()">📎</button>
+    <button class="rund" title="Sprachnachricht aufnehmen" id="mikroKnopf" onclick="spracheStart()">🎤</button>
     <textarea id="text" rows="1" placeholder="Nachricht schreiben …" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
     <button class="rund" title="Senden" id="sendenKnopf" onclick="senden()">➤</button>
   </div>
@@ -831,7 +841,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.36.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.37.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -1333,14 +1343,21 @@ function todoGeruest() {
   $("todoBereich").innerHTML = `<div class="karte todoform">
       <input id="todoText" maxlength="200" placeholder="Was ist zu tun? z. B. Getränke einkaufen" onkeydown="if(event.key==='Enter')todoAnlegen()">
       <div class="reihe"><select id="todoKat"></select><input type="date" id="todoFaellig" title="fällig am (freiwillig)"></div>
+      <select id="todoWer" title="Wer soll es machen?"><option value="">👉 Wer soll es machen? (offen)</option></select>
       <div class="umschalter" id="todoFuer" style="margin:0"><button data-f="ich" onclick="todoFuer('ich')">👤 Nur für mich</button><button data-f="alle" onclick="todoFuer('alle')">👥 Für alle</button></div>
       <button class="knopf haupt" onclick="todoAnlegen()">＋ Eintragen</button></div>
-    <div class="umschalter modus3" id="todoFilter"><button data-f="alle" onclick="todoFilter('alle')">Alle</button><button data-f="ich" onclick="todoFilter('ich')">👤 Meine</button><button data-f="gemeinsam" onclick="todoFilter('gemeinsam')">👥 Für alle</button></div>
+    <div class="umschalter" id="todoFilter" style="grid-template-columns:repeat(4,1fr)"><button data-f="alle" onclick="todoFilter('alle')">Alle</button><button data-f="mir" onclick="todoFilter('mir')">👉 Mir</button><button data-f="ich" onclick="todoFilter('ich')">👤 Meine</button><button data-f="gemeinsam" onclick="todoFilter('gemeinsam')">👥 Für alle</button></div>
     <div class="karte"><div id="todoTabelle"><p class="hinweis">Wird geladen …</p></div>
       <label class="schalter" style="margin-top:8px"><span>Erledigte anzeigen</span><input type="checkbox" id="todoErledigte" onchange="TODO.erledigteZeigen=this.checked;todoZeigen()"></label></div>`;
   todoFuer(TODO.fuer); todoFilter(TODO.filter);
 }
+async function todoWerFuellen() {
+  const sel = $("todoWer"); if (!sel || sel.options.length > 1) return;
+  if (!MITGLIEDER) try { await mitgliederHolen(); } catch { return; }
+  sel.insertAdjacentHTML("beforeend", `<option value="${ICH.person_id}">👉 ich selbst</option>` + MITGLIEDER.filter((m) => m.person_id !== ICH.person_id).map((m) => `<option value="${m.person_id}">👉 ${esc(m.name)}</option>`).join(""));
+}
 function todoKategorienFuellen() {
+  todoWerFuellen();
   const sel = $("todoKat"); if (!sel || sel.options.length) return;
   sel.innerHTML = TODO.kategorien.map((k) => `<option value="${k.id}" ${k.id === "sonstiges" ? "selected" : ""}>${k.sym} ${esc(k.name)}</option>`).join("");
 }
@@ -1348,29 +1365,91 @@ function todoFuer(f) { TODO.fuer = f; document.querySelectorAll("#todoFuer butto
 function todoFilter(f) { TODO.filter = f; document.querySelectorAll("#todoFilter button").forEach((b) => b.classList.toggle("an", b.dataset.f === f)); if (TODO.eintraege.length || $("todoTabelle")) todoZeigen(); }
 function todoZeigen() {
   const heute = heuteIso(), kat = (id) => TODO.kategorien.find((k) => k.id === id) || { sym: "📝", name: "" };
-  let liste = TODO.eintraege.filter((x) => TODO.filter === "alle" || (TODO.filter === "ich" ? x.fuer === "ich" : x.fuer === "alle"));
+  let liste = TODO.eintraege.filter((x) => TODO.filter === "alle" || (TODO.filter === "mir" ? x.zustaendig?.ich : TODO.filter === "ich" ? x.fuer === "ich" : x.fuer === "alle"));
   const offen = liste.filter((x) => !x.erledigt).sort((a, b) => (a.faellig || "9999").localeCompare(b.faellig || "9999"));
   const fertig = liste.filter((x) => x.erledigt).sort((a, b) => String(b.erledigt).localeCompare(String(a.erledigt)));
   const zeilen = [...offen, ...(TODO.erledigteZeigen ? fertig : [])];
   $("todoTabelle").innerHTML = zeilen.length ? `<table class="todotab">${zeilen.map((x) => { const k = kat(x.kategorie), spaet = !x.erledigt && x.faellig && x.faellig < heute;
     return `<tr class="${x.erledigt ? "fertig" : ""}"><td style="width:34px"><input type="checkbox" ${x.erledigt ? "checked" : ""} onchange="todoHaken('${x.id}', this.checked)" aria-label="erledigt"></td>
-      <td><div class="aufgabe">${esc(x.text)}</div><div class="meta">${x.fuer === "alle" ? "👥 für alle" : "👤 nur für mich"}${x.vonMir ? "" : " · von " + esc(x.von)}${x.faellig ? ` · <span class="${spaet ? "spaet" : ""}">fällig ${esc(fDatumKurz(x.faellig))}${spaet ? " – überfällig" : ""}</span>` : ""}${x.erledigt ? ` · ✓ ${esc(x.erledigtVon || "")} ${esc(zeitKurz(x.erledigt))}` : ""}</div></td>
+      <td><div class="aufgabe">${esc(x.text)}</div><div class="meta">${x.zustaendig ? `<b style="${x.zustaendig.ich ? "color:var(--rot)" : ""}">👉 ${x.zustaendig.ich ? "du" : esc(x.zustaendig.vorname)}</b> · ` : x.darfZuweisen && !x.erledigt ? `<a href="#" onclick="event.preventDefault();todoZuweisen('${x.id}')">👉 zuweisen</a> · ` : ""}${x.fuer === "alle" ? "👥 für alle" : x.vonMir ? "👤 nur für mich" : "👤 privat"}${x.vonMir ? "" : " · von " + esc(x.von)}${x.faellig ? ` · <span class="${spaet ? "spaet" : ""}">fällig ${esc(fDatumKurz(x.faellig))}${spaet ? " – überfällig" : ""}</span>` : ""}${x.erledigt ? ` · ✓ ${esc(x.erledigtVon || "")} ${esc(zeitKurz(x.erledigt))}` : ""}</div></td>
       <td class="kat" title="${esc(k.name)}">${k.sym}</td><td style="width:34px">${x.darfLoeschen ? `<button class="weg" title="löschen" onclick="todoLoeschen('${x.id}')">🗑️</button>` : ""}</td></tr>`; }).join("")}</table>`
     : `<p class="hinweis" style="margin:0">${offen.length || !fertig.length ? "Nichts zu tun 🎉 – oben einen Eintrag hinzufügen." : `Alles erledigt 🎉 (${fertig.length} erledigte ausgeblendet)`}</p>`;
   if (!TODO.erledigteZeigen && fertig.length && offen.length) $("todoTabelle").insertAdjacentHTML("beforeend", `<p class="hinweis" style="margin:8px 0 0">✓ ${fertig.length} erledigt (ausgeblendet)</p>`);
 }
 async function todoAnlegen() {
   const text = $("todoText").value.trim(); if (!text) return melde("Bitte kurz aufschreiben, was zu tun ist.", true);
-  try { await api("todo_anlegen", { text, kategorie: $("todoKat").value, fuer: TODO.fuer, faellig: $("todoFaellig").value || null }); $("todoText").value = ""; $("todoFaellig").value = ""; melde("✅ Eingetragen"); await todoLaden(); $("todoText").focus(); }
+  try { const wer = $("todoWer").selectedOptions[0]?.textContent.replace("👉 ", "") || "";
+    const r = await api("todo_anlegen", { text, kategorie: $("todoKat").value, fuer: TODO.fuer, faellig: $("todoFaellig").value || null, zustaendig: $("todoWer").value || null });
+    $("todoText").value = ""; $("todoFaellig").value = ""; $("todoWer").value = ""; melde(r.versand ? `✅ Eingetragen – ${wer} bekommt Bescheid` : "✅ Eingetragen"); await todoLaden(); $("todoText").focus(); }
   catch (e) { melde(e.message, true); }
 }
 async function todoHaken(id, erledigt) {
   const x = TODO.eintraege.find((y) => y.id === id); if (x) { x.erledigt = erledigt ? new Date().toISOString() : null; x.erledigtVon = erledigt ? ICH.vorname : null; todoZeigen(); }
   try { await api("todo_erledigt", { id, erledigt }); } catch (e) { melde(e.message, true); todoLaden(); }
 }
+async function todoZuweisen(id) {
+  if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return melde(e.message, true); }
+  const namen = MITGLIEDER.map((m, i) => `${i + 1} = ${m.name}`).join("\n");
+  const w = prompt(`Wer soll es machen? Nummer eingeben:\n\n${namen}`); if (!w) return;
+  const m = MITGLIEDER[Number(w) - 1]; if (!m) return melde("Diese Nummer gibt es nicht.", true);
+  try { const r = await api("todo_zuweisen", { id, zustaendig: m.person_id }); melde(`👉 ${m.vorname || m.name} ist zuständig${r.versand ? " und bekommt Bescheid" : ""}`); todoLaden(); } catch (e) { melde(e.message, true); }
+}
 async function todoLoeschen(id) {
   if (!confirm("Eintrag löschen?")) return;
   try { await api("todo_loeschen", { id }); await todoLaden(); } catch (e) { melde(e.message, true); }
+}
+
+// ---------- KC-CLUB-SPRACHE (0.37.0): Sprachnachricht aufnehmen und senden (höchstens 3 Minuten) ----------
+// Aufnahme im Handy (MediaRecorder), dann wie ein normaler Anhang an dieselben Empfänger wie jede Nachricht (Person, Gruppe, alle).
+let SPR = null; // { rec, strom, teile, start, uhr }
+function spracheFormat() {
+  for (const t of ["audio/webm;codecs=opus", "audio/mp4", "audio/ogg;codecs=opus", "audio/webm"]) if (window.MediaRecorder?.isTypeSupported?.(t)) return t;
+  return "";
+}
+async function spracheStart() {
+  if (SPR) return;
+  if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) return melde("Dieses Handy/dieser Browser kann keine Sprachnachrichten aufnehmen.", true);
+  let strom;
+  try { strom = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); }
+  catch { return melde("Bitte das Mikrofon erlauben (Chrome fragt danach) – sonst geht die Aufnahme nicht.", true); }
+  const typ = spracheFormat(), rec = new MediaRecorder(strom, typ ? { mimeType: typ, audioBitsPerSecond: 32000 } : undefined);
+  SPR = { rec, strom, teile: [], start: Date.now(), typ: rec.mimeType || typ || "audio/webm" };
+  rec.ondataavailable = (e) => { if (e.data?.size) SPR?.teile.push(e.data); };
+  rec.start(1000);
+  $("aufnahmeLeiste").classList.remove("versteckt"); $("mikroKnopf").classList.add("versteckt");
+  try { navigator.vibrate?.(30); } catch {}
+  SPR.uhr = setInterval(() => { if (!SPR) return; const s = Math.floor((Date.now() - SPR.start) / 1000); $("aufnahmeZeit").textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; if (s >= 180) { melde("⏱️ Höchstens 3 Minuten – die Aufnahme wird jetzt gesendet."); spracheSenden(); } }, 500);
+}
+function spracheBeenden() {
+  return new Promise((ok) => {
+    if (!SPR) return ok(null);
+    const s = SPR; clearInterval(s.uhr); SPR = null;
+    $("aufnahmeLeiste").classList.add("versteckt"); $("mikroKnopf").classList.remove("versteckt");
+    s.rec.onstop = () => { s.strom.getTracks().forEach((t) => t.stop()); ok(s); };
+    try { s.rec.stop(); } catch { s.strom.getTracks().forEach((t) => t.stop()); ok(s); }
+  });
+}
+async function spracheAbbrechen() { await spracheBeenden(); melde("🗑️ Aufnahme verworfen"); }
+async function spracheSenden() {
+  const s = await spracheBeenden(); if (!s) return;
+  const sek = Math.max(1, Math.round((Date.now() - s.start) / 1000));
+  if (!s.teile.length) return melde("Die Aufnahme ist leer – bitte nochmal versuchen.", true);
+  const typ = s.typ.split(";")[0], endung = typ.includes("mp4") ? "m4a" : typ.includes("ogg") ? "ogg" : "webm";
+  const datei = new File(s.teile, `Sprachnachricht-${new Date().toISOString().slice(11, 19).replace(/:/g, "")}.${endung}`, { type: typ });
+  try {
+    const r = await anlageHochladen(datei);
+    anlagen = [...anlagen, { id: r.id, name: r.name, laedt: false }]; chipsZeigen();
+    const alt = $("text").value; $("text").value = (alt ? alt + "\n" : "") + `🎤 Sprachnachricht (${Math.floor(sek / 60)}:${String(sek % 60).padStart(2, "0")})`;
+    await senden();
+  } catch (e) { melde(e.message, true); }
+}
+async function spracheAbspielen(knopf, id) {
+  try {
+    knopf.disabled = true; knopf.textContent = "⏳ lädt …";
+    const url = (await api("anlage_url", { id })).url;
+    const a = document.createElement("audio"); a.controls = true; a.src = url; a.preload = "auto";
+    knopf.replaceWith(a); a.play().catch(() => {});
+  } catch (e) { knopf.disabled = false; knopf.textContent = "▶️ Sprachnachricht anhören"; melde(e.message, true); }
 }
 
 // ---------- KC-CLUB-SCHLIESSEN: Ausgangstür ----------
@@ -1423,7 +1502,7 @@ async function zugangAnfordern() {
 // Hintergrund-Abfragen (alle paar Sekunden/Minuten) zeigen sie nicht, damit nichts flackert.
 const WARTEN_STILL = new Set(["init", "online", "anruf_status", "diagnose", "unterhaltung", "unterhaltungen", "einstellung_setzen", "pinnwand", "kalender", "terminumfragen_liste", "communicator_status", "ping", "anruf_ende", "protokoll_speichern", "todo_erledigt", "todo_liste"]);
 const WARTEN_TEXT = { nachricht_senden: "Nachricht wird gesendet …", gruppe_anlegen: "Gruppe wird angelegt …", gruppe_aendern: "Wird gespeichert …", treffen_speichern: "Termin wird gespeichert …",
-  pinnwand_anheften: "Zettel wird angeheftet …", feedback_senden: "Feedback wird gesendet …", anklopfen: "Es wird angeklopft …", anruf_start: "Anruf wird aufgebaut …",
+  pinnwand_anheften: "Zettel wird angeheftet …", feedback_senden: "Feedback wird gesendet …", anklopfen: "Es wird angeklopft …", anruf_start: "Anruf wird aufgebaut …", anlage_hochladen: "Wird hochgeladen …", todo_zuweisen: "Wird zugewiesen …",
   link_erzeugen: "Link wird erzeugt …", todo_anlegen: "Wird eingetragen …", zugang_anfordern: "Mail wird gesendet …", foto_hochladen: "Foto wird hochgeladen …", test_an_mich: "Test wird gesendet …" };
 let wartenZahl = 0, wartenTimer = null;
 function wartenStart(action) {
@@ -2509,7 +2588,7 @@ async function chatLaden(scrollen) {
     chatStand = stand;
     $("chat").innerHTML = u.nachrichten.map((m) => `<div class="blase${m.eigen ? " eigen" : ""}">
       ${!m.eigen && andere.length > 1 ? `<div class="von">${esc(m.von)}</div>` : ""}${m.text === "📎" && m.anlagen.length ? "" : `<div class="txt">${esc(m.text)}</div>`}
-      ${m.anlagen.map((a) => /^image\//.test(a.mime || "") ? `<img data-anlage="${a.id}" alt="${esc(a.name)}" onclick="anlageOeffnen('${a.id}')">` : `<div class="anlage" onclick="anlageOeffnen('${a.id}')">📄 ${esc(a.name)}</div>`).join("")}
+      ${m.anlagen.map((a) => /^image\//.test(a.mime || "") ? `<img data-anlage="${a.id}" alt="${esc(a.name)}" onclick="anlageOeffnen('${a.id}')">` : /^audio\//.test(a.mime || "") ? `<div class="sprache" data-sprache="${a.id}"><button onclick="spracheAbspielen(this, '${a.id}')">▶️ Sprachnachricht anhören</button></div>` : `<div class="anlage" onclick="anlageOeffnen('${a.id}')">📄 ${esc(a.name)}</div>`).join("")}
       <div class="fuss">${zeitKurz(m.zeit)}${m.eigen ? " " + (m.gelesenAlle ? '<b title="gelesen">✓✓</b>' : m.gelesenVon?.length ? `✓✓ ${m.gelesenVon.length}/${andere.length}` : "✓") + zustellText(m.zustellung) : ""}${m.eigen || ICH.admin ? ` <button class="weg" title="Nachricht löschen" onclick="nachrichtLoeschen('${m.id}')">🗑️</button>` : ""}</div></div>`).join("")
       || '<p class="hinweis">Schreib die erste Nachricht.</p>';
     document.querySelectorAll("img[data-anlage]").forEach(bildLaden);
@@ -4038,6 +4117,7 @@ async function jetztAktualisieren() {
     else if (h.startsWith("#aktion=")) aktionOeffnen(decodeURIComponent(h.slice(8)));
     else if (h.startsWith("#mitglied=")) mitgliedOeffnen(decodeURIComponent(h.slice(10)));
     else if (h === "#geteilt") geteiltEmpfangen();
+    else if (h === "#todo") { termineArt = "todo"; zeige("termine"); }
     else if (["#termine", "#vorschlaege", "#aktionen", "#fotos", "#protokolle", "#dienste", "#nachrichten", "#mitglieder", "#einstellungen"].includes(h)) zeige(h.slice(1));
   });
   updatePruefen(false);

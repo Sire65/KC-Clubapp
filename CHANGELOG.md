@@ -1,5 +1,15 @@
 # Änderungen
 
+## 0.37.0 – 2026-09-29 (DEV)
+
+- KC-CLUB-SPRACHE (neu): 🎤 im Chat – Aufnahme (MediaRecorder, Opus/M4A, ~32 kbit/s, max. 3 Minuten) mit roter Aufnahme-Leiste
+  (Zeit, ✖ Verwerfen, ➤ Senden). Die Aufnahme wird wie ein Anhang hochgeladen und als Nachricht „🎤 Sprachnachricht (0:12)“ an
+  dieselben Empfänger geschickt wie jede Nachricht (Person, Gruppe, alle; Push/Mail/WhatsApp wie gewählt). Im Chat „▶️ Sprachnachricht
+  anhören“ – Datei wird erst beim Antippen geladen. Mikrofon wird nach der Aufnahme sofort freigegeben.
+- KC-CLUB-TODO-ZUSTAENDIG (neu): „👉 Wer soll es machen?“ beim Eintragen (oder später „👉 zuweisen“ durch Ersteller/Clubleitung).
+  Die zuständige Person bekommt Bescheid (Bereich „Termine“, wie Protokoll-Aufgaben), sieht den Eintrag auch wenn er privat ist
+  und darf ihn abhaken. Filter „👉 Mir“. Spalte zustaendig in kc_club_todo.
+
 ## 0.36.0 – 2026-09-29 (DEV)
 
 - KC-CLUB-TODO (neu): Termine → dritter Reiter „✅ To-do“. Eintrag mit Text (max. 200), Kategorie (🛒 Einkaufen, 📦 Bestellung,
