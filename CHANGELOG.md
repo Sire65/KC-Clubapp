@@ -1,5 +1,14 @@
 # Änderungen
 
+## KC-Spiegel: Fehlalarm „System Check ROT“ behoben – 2026-09-29 (Datenbank, ohne App-Build, Freigabe Hansi)
+
+- KC-SPIEGEL-AUFNAHMEFRIST: Watchdog und Quellprüfung gaben neuen Tabellen fest 30 Minuten; der Spiegel läuft aber nur noch im
+  sparsamen 6-h-Takt (5-Minuten-Nachlauf seit 20.09. aus) → jede neue Tabelle (heute kc_dp_wish_inbox, kc_dp_days_published)
+  galt bis zum nächsten Lauf als Problem, System Check ROT. Aufnahmefrist jetzt = Frischefenster (390 min), Texte angepasst.
+- kc_system_check_snapshot: „betroffen“ = Problemtabellen des letzten Watchdog-Laufs statt „5 älteste Läufe > 65 min“
+  (nannte gesunde Tabellen und übersah nie gespiegelte).
+- Wiederherstellungspunkt: alte Fassungen als *_vor_aufnahmefrist (nur intern ausführbar). Kein Spiegel-/Neon-Lauf ausgelöst.
+
 ## 0.60.0 – 2026-09-29 (DEV)
 
 - KC-CLUB-PINNWAND-ANTWORT (neu, Wunsch Hansi): im Post-it-Fenster und an jedem fremden Zettel „✍️ Antworten“ – meldet
