@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.56.1 – 2026-09-29 (DEV)
+
+- KC-CLUB-ANMELDECACHE Teil 2: Messung aus der EU zeigte, dass der Instanz-Speicher selten trifft (Supabase verteilt auf
+  wechselnde Instanzen) → Fix an der Quelle: Anmeldung in einer Datenbank-Runde (RPC kc_club_anmeldung, Migration v57:
+  Token-Hash prüfen, „zuletzt gesehen“ setzen, Person + Rollen liefern). ping meldet Instanz und Speicher-Treffer.
+
 ## 0.56.0 – 2026-09-29 (DEV)
 
 - KC-CLUB-ANMELDECACHE (neu): geprüfte Anmeldung je Server-Instanz 60 s im Speicher (Schlüssel = SHA-256 des Tokens),

@@ -1,11 +1,16 @@
 {
-  "version": "0.56.0",
+  "version": "0.56.1",
   "datum": "2026-09-29",
   "neu": [
-    "⚡ Schneller: Der Server merkt sich deine Anmeldung kurz – jede Aktion antwortet dadurch spürbar flotter",
-    "👁️ Nachrichten: Wer möchte, kann andere live mitlesen lassen, was er gerade tippt (⚙️ Mehr → Privatsphäre, Standard aus)"
+    "⚡ Noch etwas schneller: Die Anmeldung braucht nur noch einen statt zwei Datenbank-Schritte"
   ],
   "verlauf": [
+    {
+      "version": "0.56.1",
+      "neu": [
+        "⚡ Noch etwas schneller: Die Anmeldung braucht nur noch einen statt zwei Datenbank-Schritte"
+      ]
+    },
     {
       "version": "0.56.0",
       "neu": [

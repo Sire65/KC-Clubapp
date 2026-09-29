@@ -1052,7 +1052,9 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   const an = server.slice(server.indexOf("const ANMELDUNG_CACHE_MS"), server.indexOf("// „vorstand“ ist intern"));
   assert.ok(/const ANMELDUNG_CACHE_MS = 60_000, ZULETZT_TAKT_MS = 30_000/.test(an) && /ANMELDUNGEN\.get\(hash\)/.test(an) && !/ANMELDUNGEN\.(get|set)\(token/.test(an), "Speicher nicht über den Token-Hash");
   assert.ok(/c\.bis > jetztMs/.test(an) && /return \{ \.\.\.c\.ich, aemter: \[\.\.\.c\.ich\.aemter\] \}/.test(an), "abgelaufene Einträge / geteiltes Objekt");
-  assert.ok(/if \(!z\?\.aktiv\) throw/.test(an) && /if \(!p\?\.active\) throw/.test(an), "Datenbank-Prüfung beim Nachladen fehlt");
+  assert.ok(/db\.rpc\("kc_club_anmeldung", \{ p_hash: hash, p_version: version \}\)/.test(an) && /if \(!a\) throw new Fehler\("Kein Zugang/.test(an) && /if \(!p\?\.active\) throw/.test(an), "Datenbank-Prüfung beim Nachladen fehlt");
+  const rpc = lies("supabase/migrations/20260929_kc_club_v57_anmeldung_rpc.sql");
+  assert.ok(/where token_hash = p_hash and aktiv/.test(rpc) && /revoke all on function public\.kc_club_anmeldung\(text, text\) from public, anon, authenticated;/.test(rpc), "Anmelde-RPC prüft nicht aktiv / ist öffentlich");
   assert.equal((server.match(/anmeldungenVergessen\(\);/g) || []).length, 3, "Zugang/Rollen ändern leert den Speicher nicht");
   assert.ok(/serverMs: Date\.now\(\) - t0Anfrage/.test(server) && /Server gesamt \$\{t\.srv\} ms/.test(html), "Server-Zeit im Verbindungstest fehlt");
   // Live-Tippen

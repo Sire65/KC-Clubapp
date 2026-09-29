@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.56.0";
+const SERVER_VERSION = "0.56.1";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -653,6 +653,7 @@ type Ich = { person_id: string; name: string; vorname: string; admin: boolean; v
 const ANMELDUNG_CACHE_MS = 60_000, ZULETZT_TAKT_MS = 30_000, ANMELDUNG_CACHE_MAX = 300;
 const ANMELDUNGEN = new Map<string, { ich: Ich; bis: number; gesehen: number; version: string | null }>();
 const anmeldungenVergessen = () => ANMELDUNGEN.clear();
+const INSTANZ = crypto.randomUUID().slice(0, 8); let ANMELDUNG_TREFFER = false; // Messung: welche Instanz, Speicher getroffen?
 async function anmelden(req: Request): Promise<Ich> {
   const token = req.headers.get("x-club-token") ?? "";
   if (!/^[0-9a-f]{32,96}$/.test(token)) throw new Fehler("Kein Zugang – bitte den persönlichen Link neu öffnen.", 401);
@@ -663,22 +664,22 @@ async function anmelden(req: Request): Promise<Ich> {
       c.gesehen = jetztMs; c.version = version;
       db.from("kc_club_zugang").update({ zuletzt_gesehen: jetzt(), app_version: version }).eq("person_id", c.ich.person_id).then(() => {});
     }
+    ANMELDUNG_TREFFER = true;
     return { ...c.ich, aemter: [...c.ich.aemter] };
   }
+  ANMELDUNG_TREFFER = false;
   const ich = await anmeldenDb(hash, version);
   if (ANMELDUNGEN.size >= ANMELDUNG_CACHE_MAX) for (const [k, v] of ANMELDUNGEN) if (v.bis <= jetztMs) ANMELDUNGEN.delete(k);
   if (ANMELDUNGEN.size < ANMELDUNG_CACHE_MAX) ANMELDUNGEN.set(hash, { ich: { ...ich, aemter: [...ich.aemter] }, bis: jetztMs + ANMELDUNG_CACHE_MS, gesehen: jetztMs, version });
   return ich;
 }
 async function anmeldenDb(hash: string, version: string | null): Promise<Ich> {
-  const { data: z } = await db.from("kc_club_zugang").select("person_id,aktiv").eq("token_hash", hash).maybeSingle();
-  if (!z?.aktiv) throw new Fehler("Kein Zugang – bitte den persönlichen Link neu öffnen.", 401);
-  const [{ data: p }, { data: r }] = await Promise.all([
-    db.from("kc_core_people").select("person_id,display_name,given_name,preferred_name,active").eq("person_id", z.person_id).maybeSingle(),
-    db.from("kc_club_rollen").select("*").eq("person_id", z.person_id).maybeSingle(),
-  ]);
+  // 0.56.1: eine Datenbank-Runde (kc_club_anmeldung: Token-Hash prüfen, „zuletzt gesehen“ setzen, Person + Rollen liefern)
+  const { data: a, error } = await db.rpc("kc_club_anmeldung", { p_hash: hash, p_version: version });
+  if (error) throw new Fehler("Anmeldung gerade nicht möglich – bitte gleich noch einmal versuchen.", 503);
+  if (!a) throw new Fehler("Kein Zugang – bitte den persönlichen Link neu öffnen.", 401);
+  const p = a.person, r = a.rollen;
   if (!p?.active) throw new Fehler("Kein Zugang – bitte bei Hansi melden.", 401);
-  db.from("kc_club_zugang").update({ zuletzt_gesehen: jetzt(), app_version: version }).eq("person_id", z.person_id).then(() => {});
   return { person_id: p.person_id, name: p.display_name, vorname: vorname(p), admin: !!r?.ist_admin, vorstand: !!(r?.ist_vorstand || r?.ist_admin), aemter: r?.aemter ?? [],
     // Sitzungsprotokolle: Recht aus der Rollen-Registry (Standard ja; Aushilfen nein)
     protokolle: r ? r.protokolle_lesen !== false : true,
@@ -2886,7 +2887,7 @@ Köcheclub Werne`,
         const groesse = Math.min(MAX_TESTDATEN, Math.max(0, Math.round(Number(p.groesse) || 0)));
         const last = typeof p.last === "string" ? p.last.length : 0;
         if (last > MAX_TESTDATEN * 1.1) throw new Fehler("Testdaten zu groß.");
-        return json({ ok: true, server: SERVER_VERSION, zeit: jetzt(), dbMs, anmeldungMs, serverMs: Date.now() - t0Anfrage, wartung, empfangen: last, ...(groesse ? { daten: testDaten(groesse) } : {}) });
+        return json({ ok: true, server: SERVER_VERSION, zeit: jetzt(), dbMs, anmeldungMs, serverMs: Date.now() - t0Anfrage, instanz: INSTANZ, speicher: ANMELDUNG_TREFFER, wartung, empfangen: last, ...(groesse ? { daten: testDaten(groesse) } : {}) });
       }
 
       // Fehlersuche (KC-CLUB-EXTERN-DIAGNOSE): was beim Öffnen anderer Apps auf dem Handy passiert – nur technische Angaben, ins Änderungsprotokoll
