@@ -1452,4 +1452,11 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/Number\.isSafeInteger\(p\.verkehr\) && p\.verkehr >= 0 \? p\.verkehr : null/.test(lz) && /trafficTx: verkehr/.test(lz) && /sourceId: "kc-clubapp"/.test(lz), "Server gibt Zähler als trafficTx weiter");
 }
 
+// 111. 0.90.0: Antwort auf einen Termin zurücknehmen (KC-CLUB-ANTWORT-ZURUECK)
+{
+  const ta = server.slice(server.indexOf('case "treffen_antwort"'), server.indexOf('case "vorschlaege_liste"'));
+  assert.ok(/\["ja", "nein", "vielleicht", "keine"\]/.test(ta) && /if \(antwort === "keine"\) await db\.from\("kc_club_teilnahme"\)\.delete\(\)\.eq\("treffen_id", t\.id\)\.eq\("person_id", ich\.person_id\)/.test(ta) && /if \(antwort !== "ja"\) await db\.from\("kc_club_mitfahrt_suche"\)\.delete\(\)/.test(ta), "Server: zurücknehmen löscht nur die eigene Zeile");
+  assert.ok(/if \(bisher && bisher === a\) \{ if \(!confirm\(/.test(html) && /a = "keine";/.test(html) && /if \(a === "nein" \|\| a === "keine"\)/.test(html) && /Nochmal auf deine Antwort tippen = zurücknehmen/.test(html), "App: nochmal tippen nimmt zurück, Platzfrage");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.89.0";
+const SERVER_VERSION = "0.90.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -1543,10 +1543,12 @@ Köcheclub Werne`,
 
       case "treffen_antwort": {
         const antwort = String(p.antwort || "");
-        if (!["ja", "nein", "vielleicht"].includes(antwort)) throw new Fehler("Bitte zusagen, absagen oder vielleicht wählen.");
+        // KC-CLUB-ANTWORT-ZURUECK (0.90.0): "keine" nimmt die eigene Antwort zurück (Zeile weg = wieder ohne Antwort)
+        if (!["ja", "nein", "vielleicht", "keine"].includes(antwort)) throw new Fehler("Bitte zusagen, absagen oder vielleicht wählen.");
         const { data: t } = await db.from("kc_club_treffen").select("id,status,beginn").eq("id", p.id).maybeSingle();
         if (!t || t.status !== "geplant") throw new Fehler("Dieses Treffen ist nicht mehr offen.", 409);
-        await db.from("kc_club_teilnahme").upsert({ treffen_id: t.id, person_id: ich.person_id, antwort, notiz: txt(p.notiz, 300) || null, geaendert_am: jetzt() });
+        if (antwort === "keine") await db.from("kc_club_teilnahme").delete().eq("treffen_id", t.id).eq("person_id", ich.person_id);
+        else await db.from("kc_club_teilnahme").upsert({ treffen_id: t.id, person_id: ich.person_id, antwort, notiz: txt(p.notiz, 300) || null, geaendert_am: jetzt() });
         if (antwort !== "ja") await db.from("kc_club_mitfahrt_suche").delete().eq("bezug_art", "treffen").eq("bezug_id", t.id).eq("person_id", ich.person_id); // KC-CLUB-MITFAHRT-SUCHE
         await protokoll(ich.person_id, "treffen_antwort", { treffen: t.id, antwort });
         return json({ ok: true, treffen: (await treffenListe(ich)).find((x: any) => x.id === t.id) });

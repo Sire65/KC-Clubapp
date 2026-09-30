@@ -1,5 +1,12 @@
 # Änderungen
 
+## 0.90.0 – 2026-09-30 (DEV)
+
+- KC-CLUB-ANTWORT-ZURUECK (Fund Hansi): Eine Antwort auf einen Termin ließ sich nur wechseln, nicht zurücknehmen. Jetzt:
+  nochmal auf die eigene (farbige) Antwort tippen → Rückfrage → Antwort weg (treffen_antwort mit antwort "keine" löscht die
+  Zeile in kc_club_teilnahme, eine offene Mitfahr-Suche entfällt). Wie bei „Kann nicht“ fragt die App, ob ein gebuchter Platz
+  frei werden bzw. die eigene Fahrt abgesagt werden soll. Hinweiszeile unter den Knöpfen, sobald man geantwortet hat.
+
 ## 0.89.0 – 2026-09-30 (DEV)
 
 - KC-CLUB-DATENSTROM (Wunsch Hansi: „Im KC Check sieht man die Bewegung der Club-App nicht“): Die Route „KC Club-App →

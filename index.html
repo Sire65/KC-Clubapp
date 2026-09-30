@@ -1327,7 +1327,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "0.89.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.90.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -4258,7 +4258,7 @@ function treffenKarte(t, vorbei) {
     ${offen && !va ? `<div class="antworten">
       <button class="ja ${t.meine === "ja" ? "an" : ""}" onclick="antwort('${t.id}','ja')">✅ Ich komme</button>
       <button class="vielleicht ${t.meine === "vielleicht" ? "an" : ""}" onclick="antwort('${t.id}','vielleicht')">❓ Vielleicht</button>
-      <button class="nein ${t.meine === "nein" ? "an" : ""}" onclick="antwort('${t.id}','nein')">❌ Kann nicht</button></div>` : ""}
+      <button class="nein ${t.meine === "nein" ? "an" : ""}" onclick="antwort('${t.id}','nein')">❌ Kann nicht</button></div>${t.meine ? '<p class="hinweis" style="margin:4px 0 0;text-align:center">Nochmal auf deine Antwort tippen = zurücknehmen</p>' : ""}` : ""}
     ${va ? "" : `<div class="namen">
       <span class="marke gruen">✅ ${t.ja}</span> <span class="marke gelb">❓ ${t.vielleicht}</span> <span class="marke rot">❌ ${t.nein}</span>
       ${t.ja ? `<div>✅ ${liste("ja")}</div>` : ""}${t.vielleicht ? `<div>❓ ${liste("vielleicht")}</div>` : ""}${t.nein ? `<div>❌ ${liste("nein")}</div>` : ""}
@@ -4270,11 +4270,14 @@ function treffenKarte(t, vorbei) {
 }
 async function antwort(id, a) {
   let notiz = "";
-  if (a !== "ja") notiz = prompt(a === "nein" ? "Kurzer Grund (freiwillig):" : "Kurze Notiz (freiwillig):", "") ?? "";
+  // KC-CLUB-ANTWORT-ZURUECK (0.90.0, Fund Hansi): nochmal auf die eigene Antwort tippen nimmt sie zurück („keine Antwort“)
+  const bisher = TREFFEN_IDX.get(id)?.meine, wort = { ja: "Ich komme", vielleicht: "Vielleicht", nein: "Kann nicht" };
+  if (bisher && bisher === a) { if (!confirm(`Deine Antwort „${wort[a]}“ zurücknehmen?\n\nDanach stehst du bei diesem Termin wieder ohne Antwort.`)) return; a = "keine"; }
+  else if (a !== "ja") notiz = prompt(a === "nein" ? "Kurzer Grund (freiwillig):" : "Kurze Notiz (freiwillig):", "") ?? "";
   try {
-    await api("treffen_antwort", { id, antwort: a, notiz }); melde(a === "ja" ? "Schön, dass du kommst!" : "Gespeichert");
+    await api("treffen_antwort", { id, antwort: a, notiz }); melde(a === "ja" ? "Schön, dass du kommst!" : a === "keine" ? "Antwort zurückgenommen" : "Gespeichert");
     // KC-CLUB-MITFAHRT-SUCHE (0.87.0): bei Absage nachfragen, ob der gebuchte Platz / die eigene Fahrt frei wird (Suche entfällt automatisch)
-    if (a === "nein") {
+    if (a === "nein" || a === "keine") {
       const mf = TREFFEN_IDX.get(id)?.mitfahrten || [], gebucht = mf.find((m) => m.dabei), eigen = mf.find((m) => m.eigen);
       if (gebucht && confirm(`Du hast einen Platz bei ${gebucht.fahrer.name} gebucht.\n\nSoll ich den gebuchten Platz wieder freigeben?`)) {
         await api("mitfahrt_platz", { id: gebucht.id, dabei: false }).then(() => melde("🚗 Platz freigegeben – der Fahrer weiß Bescheid"), (e) => melde(e.message, true)); }
