@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.61.0";
+const SERVER_VERSION = "0.62.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -391,6 +391,8 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
   online: (w) => ({ zeigen: w?.zeigen !== false }),
   // KC-CLUB-LIVETIPPEN (0.56.0): andere sehen live, was ich in einer Unterhaltung tippe (Standard: aus – freiwillig)
   live_tippen: (w) => ({ an: w?.an === true }),
+  // KC-CLUB-ANSICHT (0.62.0): einfache oder erweiterte Ansicht – beim ersten Start einmal gefragt, jederzeit umschaltbar
+  ansicht: (w) => ({ art: w?.art === "erweitert" ? "erweitert" : "einfach", gewaehlt: w?.gewaehlt === true, am: new Date().toISOString() }),
   // KC-CLUB-BEGRUESSUNG (0.28.0): Begrüßung beim ersten Start einmal je Mitglied (geräteübergreifend)
   begruessung: (w) => ({ gesehen: !!w?.gesehen, am: new Date().toISOString() }),
   // KC-CLUB-DESIGN (0.24.0): fertiges Farbdesign + Tag/Nacht (automatisch, immer Tag, immer Nacht)
@@ -1353,8 +1355,11 @@ Köcheclub Werne`,
         // KC-CLUB-KREISE (0.60.0): Farbe der Namenskreise. „heute da“ und „verborgen“ folgen derselben Regel wie online
         // (wer sich verbirgt, sieht auch andere nicht). Zustellfehler (rot) nur für den Admin.
         const zeigen = await onlineZeigenMap(), tag = (d: string | Date) => new Date(d).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }), heute = tag(new Date());
-        const fehler = new Map<string, string>();
+        const fehler = new Map<string, string>(), ansicht = new Map<string, string>();
         if (ich.admin) {
+          // KC-CLUB-ANSICHT: wer nutzt welche Ansicht (nur für den Admin – zeigt, ob die einfache Ansicht angenommen wird)
+          const { data: an } = await db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "ansicht");
+          for (const x of an ?? []) if ((x as any).wert?.gewaehlt) ansicht.set((x as any).person_id, (x as any).wert.art === "erweitert" ? "erweitert" : "einfach");
           const { data: fx } = await db.from("kc_communication_requests").select("recipient_refs,channel,status,created_at").eq("source_program", "kc-club")
             .in("status", COMM_FEHLER).gte("created_at", new Date(Date.now() - 7 * 86400000).toISOString()).limit(500);
           const perMail = new Map(leute.filter((m) => m.email).map((m) => [String(m.email).toLowerCase(), m.person_id]));
@@ -1375,7 +1380,7 @@ Köcheclub Werne`,
             wege: { push: ps.has(m.person_id), mail: !!m.email, whatsapp: hatTel.has(m.person_id) && (ich.admin || m.person_id === ich.person_id || (ich.kontakte && handyFrei.has(m.person_id))) },
             // für alle nur grob: in den letzten 14 Tagen in der App gewesen (genaue Zeit nur für den Admin)
             aktiv: !!(z.get(m.person_id) as any)?.zuletzt_gesehen && Date.now() - new Date((z.get(m.person_id) as any).zuletzt_gesehen).getTime() < 14 * 86400000,
-            ...(ich.admin ? { kontakte: (r.get(m.person_id) as any)?.kontakte_sehen !== false, protokolle: (r.get(m.person_id) as any)?.protokolle_lesen !== false, app: !!(z.get(m.person_id) as any)?.aktiv, zuletzt: (z.get(m.person_id) as any)?.zuletzt_gesehen ?? null, push: ps.has(m.person_id), mail: !!m.email, fehler: fehler.get(m.person_id) ?? null } : {}),
+            ...(ich.admin ? { kontakte: (r.get(m.person_id) as any)?.kontakte_sehen !== false, protokolle: (r.get(m.person_id) as any)?.protokolle_lesen !== false, app: !!(z.get(m.person_id) as any)?.aktiv, zuletzt: (z.get(m.person_id) as any)?.zuletzt_gesehen ?? null, push: ps.has(m.person_id), mail: !!m.email, fehler: fehler.get(m.person_id) ?? null, ansicht: ansicht.get(m.person_id) ?? null } : {}),
           })),
         });
       }

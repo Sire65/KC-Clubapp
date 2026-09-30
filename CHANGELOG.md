@@ -1,5 +1,20 @@
 # Änderungen
 
+## 0.62.0 – 2026-09-30 (DEV)
+
+- KC-CLUB-ANSICHT (neu, Wunsch Hansi nach Mitglieder-Rückmeldung „extremer Tobak“): beim ersten Start genau eine Frage
+  „Wie möchtest du starten? 🟢 Einfach (empfohlen) / 🔧 Erweitert – jederzeit umschaltbar“ (auch für Mitglieder, die schon
+  drin waren; Antippen daneben = Einfach). Wahl je Mitglied geräteübergreifend (Server-Einstellung „ansicht“).
+  Einfach: 5 große Kacheln (Termine, Nachrichten, Pinnwand, Mein Dienst, Mitglieder), oben nur „Nächstes Treffen“ ohne
+  Blättern, keine Register/Anordnen/Online-Leiste; Einstellungen nur „Das Wichtigste“: „Wie möchtest du Neuigkeiten
+  bekommen? 📱 Handy / ✉️ E-Mail / beides“ (setzt alle Bereiche gleich), große Schrift, Ansicht, Kurzanleitung, Feedback,
+  App-Installation. iPhone in Chrome bzw. nicht auf dem Home-Bildschirm: „Aufs Handy“ gesperrt mit klarem Safari-Hinweis.
+  Umschalter unten auf der Startseite und in den Einstellungen. Nichts entfernt – „Erweitert“ zeigt alles wie bisher
+  (inkl. der drei Start-Tipps). Dienstwünsche kommen in „Einfach“ erst, wenn DP2 die Wünsche abholt (DIENSTWUNSCH_EINFACH).
+  Admin sieht in der Mitgliederliste, wer welche Ansicht nutzt.
+- KC-CLUB-KURZANLEITUNG (neu): „Köcheclub-App in 3 Schritten“ (Link öffnen · auf den Startbildschirm – iPhone/Android ·
+  loslegen) als Druckseite mit Vorschau (⚙️ Mehr → Kurzanleitung), auch als PDF zum Verteilen.
+
 ## 0.61.0 – 2026-09-29 (DEV)
 
 - KC-CLUB-DRUCKVORSCHAU (neu, Wunsch Hansi): alle Ausdrucke (Termine/Kalender/To-dos, Treffen, Protokoll, Erstattung)

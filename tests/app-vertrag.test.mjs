@@ -496,7 +496,8 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   // Reihenfolge/Ausblenden rechnen wie in der App
   const code = html.slice(html.indexOf("const kachelnAlle"), html.indexOf("function kaUebernehmen"));
   const K = { verein: [{ id: "a" }, { id: "b" }, { id: "c" }, { id: "neu" }] };
-  const g = new Function("KACHELN", "localStorage", "ICH", code.replace("let KA =", "var KA =") + ";return { setze: (x) => { KA = x; }, kacheln, kaSortiert };")(K, { getItem: () => null }, {});
+  // 0.62.0: gerechnet wird die erweiterte Ansicht (einfach() = false) – die einfache prüft Test 84
+  const g = new Function("KACHELN", "localStorage", "ICH", "einfach", code.replace("let KA =", "var KA =") + ";return { setze: (x) => { KA = x; }, kacheln, kaSortiert };")(K, { getItem: () => null }, {}, () => false);
   g.setze({ reihenfolge: { verein: ["c", "a", "b"] }, aus: ["a"] });
   assert.deepEqual(g.kacheln("verein").map((k) => k.id), ["c", "b", "neu"], "Reihenfolge/Ausblenden falsch");
   assert.deepEqual(g.kaSortiert("verein").map((k) => k.id), ["c", "a", "b", "neu"], "neue Kachel nicht hinten");
@@ -1136,7 +1137,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/function pwVoll\(\)/.test(html) && /pwAbnehmen\('\$\{z\.id\}', true\)/.test(html), "Volle Plätze: Abnehmen im Formular fehlt");
   // Kreise: Registry, Rot nur Admin (Server liefert fehler nur im Admin-Zweig), Unbekannt nie OK
   assert.ok(/const KREIS_ARTEN = \[/.test(html) && /art: "fehler"[^\n]*nurAdmin: true, gilt: \(m\) => ICH\?\.admin && !!m\.fehler/.test(html), "Rot nicht auf Admin beschränkt");
-  assert.ok(/\.\.\.\(ich\.admin \? \{[^\n]*fehler: fehler\.get\(m\.person_id\) \?\? null \}/.test(server) && /if \(ich\.admin\) \{\s*const \{ data: fx \}/.test(server), "Server gibt Fehler an Nicht-Admins");
+  assert.ok(/\.\.\.\(ich\.admin \? \{[^\n]*fehler: fehler\.get\(m\.person_id\) \?\? null[,}]/.test(server) && /if \(ich\.admin\) \{[\s\S]{0,600}const \{ data: fx \}/.test(server), "Server gibt Fehler an Nicht-Admins");
   assert.ok(/verborgen: m\.person_id !== ich\.person_id && \(!ichZeige \|\| zeigen\.get\(m\.person_id\) === false\)/.test(server) && /heute: ichZeige && /.test(server), "Online-Privatsphäre bei heute/verborgen nicht beachtet");
   assert.ok(/\.avatar\.k-unbekannt \{ background: transparent;[^}]*dashed/.test(html) && /return k \|\| \{ art: "unbekannt"/.test(html), "Unbekannt wird nicht als unbekannt gezeigt");
   assert.ok((html.match(/[{:] ?kreis\((m|\{|MITGLIEDER)/g) || []).length >= 4 && /kreisLegende\(\) \+ MITGLIEDER\.map/.test(html), "Kreise nicht in allen Listen / Legende fehlt");
@@ -1148,6 +1149,22 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/onclick="druckJetzt\(\)">🖨️ Drucken \/ als PDF<\/button>/.test(html) && /id="druckVorschau"/.test(html) && /id="druckVorschauRahmen"/.test(html), "Vorschau mit Druckknopf fehlt");
   assert.ok(/onclick="druckVorschau\(\)">👁️ Vorschau ansehen<\/button>/.test(html) && !/druckLos/.test(html), "Auswahlfenster druckt noch direkt");
   assert.ok(/rahmen\.srcdoc = druckHtml\(true\)/.test(html) && /const html = druckHtml\(false\);/.test(html), "Vorschau/Teilen nicht aus derselben Druckseite");
+}
+
+// 84. 0.62.0: einfache/erweiterte Ansicht + Kurzanleitung (KC-CLUB-ANSICHT / KC-CLUB-KURZANLEITUNG)
+{
+  assert.ok(/ansicht: \(w\) => \(\{ art: w\?\.art === "erweitert" \? "erweitert" : "einfach", gewaehlt: w\?\.gewaehlt === true/.test(server), "Server speichert die Ansicht nicht (Standard einfach)");
+  assert.ok(/ansicht: ansicht\.get\(m\.person_id\) \?\? null \} : \{\}\)/.test(server), "Ansicht je Mitglied nur für den Admin");
+  assert.ok(/const begruesst = ansichtPruefen\(\) \|\| begruessungPruefen\(\);/.test(html) && /INIT\?\.einstellungen\?\.ansicht\?\.gewaehlt\) return false/.test(html), "Frage beim Start fehlt / käme mehrfach");
+  assert.ok(/id="ansichtBlatt" onclick="if\(event\.target===this\)ansichtSetzen\('einfach', true\)"/.test(html) && /Du kannst jederzeit umschalten/.test(html), "Überspringen = einfach / Umschalt-Hinweis fehlt");
+  assert.ok(/const EINFACH_KACHELN = \["termine", "kommunikation", "pinnwand", "meindienst", "mitglieder"\];/.test(html) && /const kacheln = \(r\) => einfach\(\) \? einfachKacheln\(\) : kaSortiert/.test(html), "Einfache Startseite fehlt");
+  const alle = [...html.matchAll(/\{ id: "([a-z]+)", sym:/g)].map((m) => m[1]);
+  for (const id of ["termine", "kommunikation", "pinnwand", "meindienst", "mitglieder"]) assert.ok(alle.includes(id), `Kachel ${id} fehlt in der Registry`);
+  assert.ok(/id="ansichtKnopf"[^>]*onclick="ansichtWechseln\(\)"/.test(html) && /onclick="ansichtSetzen\('einfach'\)"/.test(html) && /onclick="ansichtSetzen\('erweitert'\)"/.test(html), "Umschalter fehlt");
+  assert.ok(/body\.einfach #v-einstellungen details\[data-klappe\]:not\(\[data-einfach\]\) \{ display: none; \}/.test(html) && /data-klappe="install" data-einfach/.test(html), "Einstellungen der einfachen Ansicht");
+  assert.ok(/function neuWahlSetzen\(art\)/.test(html) && /for \(const \[b\] of WAHL_BEREICHE\)/.test(html) && /CriOS\|FxiOS/.test(html), "Neuigkeiten-Frage / Safari-Hinweis fehlt");
+  assert.ok(/const DIENSTWUNSCH_EINFACH = false;/.test(html), "Dienstwünsche erst nach DP2-Umbau in „Einfach“");
+  assert.ok(/anleitung: \{ bauen: \(\) => druckAnleitung\(\) \}/.test(html) && /Köcheclub-App in 3 Schritten/.test(html) && /onclick="druckStarten\('anleitung'\)"/.test(html), "Kurzanleitung fehlt");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

@@ -1,10 +1,18 @@
 {
-  "version": "0.61.0",
+  "version": "0.62.0",
   "datum": "2026-09-29",
   "neu": [
-    "🖨️ Jeder Ausdruck zeigt jetzt erst eine Vorschau – gedruckt wird erst mit dem Knopf „Drucken“"
+    "🟢 Neu: Einfache Ansicht – nur das Wichtigste mit großen Knöpfen. Beim Start wählst du einmal „Einfach“ oder „Erweitert“, umschalten geht jederzeit unten auf der Startseite",
+    "📄 Kurzanleitung „Köcheclub-App in 3 Schritten“ zum Ansehen und Ausdrucken (⚙️ Mehr)"
   ],
   "verlauf": [
+    {
+      "version": "0.62.0",
+      "neu": [
+        "🟢 Neu: Einfache Ansicht – nur das Wichtigste mit großen Knöpfen. Beim Start wählst du einmal „Einfach“ oder „Erweitert“, umschalten geht jederzeit unten auf der Startseite",
+        "📄 Kurzanleitung „Köcheclub-App in 3 Schritten“ zum Ansehen und Ausdrucken (⚙️ Mehr)"
+      ]
+    },
     {
       "version": "0.61.0",
       "neu": [
