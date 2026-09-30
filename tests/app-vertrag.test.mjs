@@ -1673,3 +1673,12 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/function arRuecken\(/.test(html) && /class="ar-register"/.test(html) && /class="schild"><span class="jahr">/.test(html), "App: Ordnerrücken mit Jahreszahl / Register fehlt");
   assert.ok(/id="arSuche"/.test(html) && /AR\.jahr=this\.value/.test(html) && /chip\("vorstand", "🔒 Nur Clubleitung"\)/.test(html), "App: Suche/Filter fehlt");
 }
+
+// 128. 1.3.0: Gruppen löschen (KC-CLUB-GRUPPE-LOESCHEN)
+{
+  const f = server.slice(server.indexOf('case "gruppe_loeschen"'), server.indexOf('case "gruppe_verlassen"'));
+  assert.ok(/const \{ g, darfVerwalten \} = await gruppeHolen\(ich, p\.id\);\s*if \(!darfVerwalten\) throw/.test(f), "Löschen nur für Verwalter der Gruppe");
+  assert.ok(f.indexOf('await geloescht(ich, "gruppe"') > 0 && f.indexOf('await geloescht(ich, "gruppe"') < f.indexOf('.delete()'), "Sicherung vor dem Löschen");
+  assert.ok(/id="chatGruppeWeg" onclick="gruppeLoeschen\(\)"/.test(html) && /\$\("chatGruppeWeg"\)\.classList\.toggle\("versteckt", !g\?\.darfVerwalten\)/.test(html), "App: Knopf Gruppe löschen fehlt");
+  assert.ok(/async function gruppeLoeschen\(\)[\s\S]{0,300}confirm\(/.test(html), "App: Rückfrage vor dem Löschen fehlt");
+}

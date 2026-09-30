@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.2.0";
+const SERVER_VERSION = "1.3.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -2915,6 +2915,29 @@ Köcheclub Werne`,
           url: `${APP_URL}#nachricht=${g.thread_id}`,
         }, `club-gruppe-dazu:${g.thread_id}:${Date.now()}`);
         await protokoll(ich.person_id, "gruppe_geaendert", { gruppe: g.thread_id, vorher: { name: g.name, symbol: g.symbol }, hinzu: neu, weg });
+        return json({ ok: true });
+      }
+
+      // KC-CLUB-GRUPPE-LOESCHEN (1.3.0, Wunsch Hansi „Angelegte Gruppen müssen löschbar sein“): für alle auflösen –
+      // wer die Gruppe angelegt hat oder Clubsprecher/Kassenwart/Admin; vollständige Sicherung im Änderungsprotokoll vorher
+      case "gruppe_loeschen": {
+        const { g, darfVerwalten } = await gruppeHolen(ich, p.id);
+        if (!darfVerwalten) throw new Fehler("Löschen darf, wer die Gruppe angelegt hat (oder Clubsprecher/Kassenwart).", 403);
+        const [{ data: t }, { data: tn }, { data: msgs }] = await Promise.all([
+          db.from("kc_communication_threads").select("*").eq("id", g.thread_id).single(),
+          db.from("kc_communication_thread_participants").select("*").eq("thread_id", g.thread_id),
+          db.from("kc_communication_messages").select("*").eq("thread_id", g.thread_id).order("created_at").limit(2000),
+        ]);
+        await geloescht(ich, "gruppe", { gruppe: g, unterhaltung: t, teilnehmer: tn ?? [], nachrichten: msgs ?? [] });
+        const { error } = await db.from("kc_communication_threads").delete().eq("id", g.thread_id); // Teilnehmer, Nachrichten, Gruppe: ON DELETE CASCADE
+        if (error) throw new Fehler("Gruppe konnte nicht gelöscht werden.", 500);
+        const andere = (tn ?? []).map((x: any) => x.person_id).filter((id: string) => id !== ich.person_id);
+        if (andere.length) await senden("club_nachricht", andere, {
+          titel: `${g.symbol} Gruppe aufgelöst: ${g.name}`, kurz: `${ich.name} hat die Gruppe „${g.name}“ gelöscht.`,
+          betreff: `Köcheclub Werne – Gruppe „${g.name}“ aufgelöst`,
+          text: `Hallo,\n\n${ich.name} hat die Gruppe „${g.name}“ in der Köcheclub-App gelöscht. Sie steht nicht mehr in deinen Nachrichten.\n\nViele Grüße\nKöcheclub Werne`,
+          url: `${APP_URL}#nachrichten`,
+        }, `club-gruppe-weg:${g.thread_id}`).catch((e) => console.error("gruppe_loeschen senden", String(e)));
         return json({ ok: true });
       }
 

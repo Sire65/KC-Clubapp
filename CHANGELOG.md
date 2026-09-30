@@ -1,5 +1,12 @@
 # Änderungen
 
+## 1.3.0 – 2026-09-30 (DEV)
+
+- KC-CLUB-GRUPPE-LOESCHEN (Wunsch Hansi: „Angelegte Gruppen müssen löschbar sein“): im ⋮-Menü einer Gruppe
+  „🗑️ Gruppe löschen (für alle)“ für die, die die Gruppe verwalten dürfen (angelegt von mir, Clubsprecher, Kassenwart,
+  Admin). Vorher vollständige Sicherung (Gruppe, Teilnehmer, Nachrichten) im Änderungsprotokoll; die anderen
+  Mitglieder bekommen einen kurzen Hinweis. Server 1.3.0. Test 128.
+
 ## 1.2.0 – 2026-09-30 (DEV)
 
 - KC-CLUB-ARCHIV (Wunsch Hansi: „Kachel Archiv … wie verschiedene Ordner mit Register, Jahreszahl drauf und Inhalt“):

@@ -1542,6 +1542,7 @@
     <div id="chatGruppeInfo" class="hinweis versteckt" style="margin:0 4px 8px"></div>
     <button class="knopf haupt versteckt" id="chatGruppeBearb" onclick="$('chatBlatt').classList.add('versteckt');gruppeForm(CHAT)">✏️ Gruppe bearbeiten (Name, Mitglieder)</button>
     <button class="knopf versteckt" id="chatGruppeRaus" onclick="gruppeVerlassen()">🚪 Gruppe verlassen</button>
+    <button class="knopf versteckt" id="chatGruppeWeg" onclick="gruppeLoeschen()">🗑️ Gruppe löschen (für alle)</button>
     <button class="knopf" onclick="unterhaltungWeg(false)">🙈 Nur bei mir entfernen</button>
     <p class="hinweis" style="margin:0 4px 6px;font-size:.85rem">Die anderen behalten sie. Schreibt jemand wieder, erscheint sie erneut.</p>
     <button class="knopf haupt versteckt" id="chatAllesLoeschen" onclick="unterhaltungWeg(true)">🗑️ Für alle löschen (Admin)</button>
@@ -1571,7 +1572,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.2.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.3.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -5176,7 +5177,8 @@ function chatMenue() {
   if (g) $("chatGruppeInfo").innerHTML = "<b>Mitglieder:</b> " + CHAT.teilnehmer.map((t) => esc(t.person_id === ICH.person_id ? "Du" : t.name) + (t.person_id === g.erstellt_von ? " (angelegt)" : "")).join(", ");
   $("chatGruppeBearb").classList.toggle("versteckt", !g?.darfVerwalten);
   $("chatGruppeRaus").classList.toggle("versteckt", !g);
-  $("chatAllesLoeschen").classList.toggle("versteckt", !ICH?.admin || !chatId);
+  $("chatGruppeWeg").classList.toggle("versteckt", !g?.darfVerwalten); // KC-CLUB-GRUPPE-LOESCHEN
+  $("chatAllesLoeschen").classList.toggle("versteckt", !ICH?.admin || !chatId || !!g?.darfVerwalten);
   $("chatBlatt").classList.remove("versteckt");
 }
 async function unterhaltungWeg(fuerAlle) {
@@ -5321,6 +5323,13 @@ async function gruppeSpeichern() {
     }
   } catch (e) { melde(e.message, true); }
   $("grKnopf").disabled = false;
+}
+// KC-CLUB-GRUPPE-LOESCHEN (1.3.0): Gruppe für alle auflösen (angelegt von mir oder Clubsprecher/Kassenwart/Admin)
+async function gruppeLoeschen() {
+  $("chatBlatt").classList.add("versteckt");
+  const g = CHAT?.gruppe; if (!g || !chatId) return;
+  if (!confirm(`Die Gruppe „${g.name}“ für ALLE löschen?\n\nAlle Nachrichten darin verschwinden bei allen ${CHAT.teilnehmer.length} Mitgliedern. Die anderen bekommen einen kurzen Hinweis.`)) return;
+  try { await api("gruppe_loeschen", { id: chatId }); melde(`🗑️ Gruppe „${g.name}“ gelöscht`); zeige("nachrichten"); neuLaden(); } catch (e) { melde(e.message, true); }
 }
 async function gruppeVerlassen() {
   $("chatBlatt").classList.add("versteckt");
