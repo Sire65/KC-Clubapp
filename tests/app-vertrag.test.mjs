@@ -1540,3 +1540,13 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/fpProblemMelden\(\)/.test(html) && /onclick="fpAdmin\(\)"/.test(html), "Problem melden / Admin-Knopf fehlt");
   assert.ok(/fpNeu\("alte_version"/.test(html) && /Jetzt aktualisieren<\/button>/.test(html), "alte Version: protokollieren + direkt aktualisieren");
 }
+
+// 117. 0.94.0: Nachricht antippen → Info-Fenster (KC-CLUB-NACHRICHT-INFO)
+{
+  const f = server.slice(server.indexOf('case "nachricht_details"'), server.indexOf('case "nachricht_details"') + 3200);
+  assert.ok(/await binTeilnehmer\(m\.thread_id, ich\.person_id\)/.test(f), "Details nur für Teilnehmer der Unterhaltung");
+  assert.ok(/darfWege = eigen \|\| ich\.admin/.test(f) && /if \(darfWege\)/.test(f), "Zustellwege nur für Absender/Admin");
+  assert.ok(!/email: x\.email|x\?\.email \}/.test(f) && /"E-Mail-Empfänger"/.test(f), "Mail-Adressen dürfen nicht herausgegeben werden");
+  assert.ok(/nachrichtInfo\('\$\{m\.id\}'\)/.test(html) && /closest\('button,img,a,audio,video,\.sprache'\)/.test(html), "Antippen öffnet Info (nicht bei Bild/Knopf)");
+  assert.ok(/function nachrichtInfo\(/.test(html) && /NI_SCHRITT/.test(html) && /meldet ein Postfach nicht zurück/.test(html), "Info-Fenster fehlt");
+}

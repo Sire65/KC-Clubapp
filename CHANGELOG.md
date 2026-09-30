@@ -1,5 +1,15 @@
 # Änderungen
 
+## 0.94.0 – 2026-09-30 (DEV)
+
+- KC-CLUB-NACHRICHT-INFO (Wunsch Hansi: „wenn man auf eine geschriebene Nachricht klickt, Info-Fenster mit Details – wann,
+  womit rausgegangen, angekommen, bestätigt“). Nachricht antippen (nicht auf Bild/Knopf) → Fenster mit: geschrieben um;
+  je Empfänger gelesen in der App ja/nein (zuletzt geöffnet); für Absender und Admin je Zustellweg (🔔 Push / ✉️ E-Mail)
+  an wen, Stand und Verlauf mit Sekunden (in Auftrag gegeben → wird verschickt → verschickt über web.de/Push-Dienst →
+  angezeigt → geöffnet), Fehler, Versuche, nächster Versuch, aufgegeben. Hinweis, dass Mail-Öffnen nicht zurückgemeldet wird.
+  Mail-Adressen werden nie angezeigt, nur Namen. Quelle: kc_communication_requests / delivery_events (Communicator).
+  Neue Server-Aktion nachricht_details (nur Teilnehmer der Unterhaltung). Server 0.94.0. Test 117.
+
 ## 0.93.0 – 2026-09-30 (DEV)
 
 - KC-CLUB-FEHLERPROTOKOLL (Auftrag Hansi nach Fund bei Marianne – 6× in Chrome auf dem iPhone geöffnet, alte Version 0.69,

@@ -834,6 +834,14 @@
   .fp-schritte { margin: 4px 0; padding-left: 22px; display: grid; gap: 6px; }
   .fp-zeile { padding: 6px 0; border-bottom: 1px solid var(--linie); }
   .fp-rot { background: rgba(198,40,40,.12); border-radius: 8px; padding: 6px; }
+  /* KC-CLUB-NACHRICHT-INFO (0.94.0) */
+  .blase { cursor: pointer; }
+  .ni-zeile { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 4px 0; border-bottom: 1px solid var(--linie); }
+  .ni-weg { display: grid; gap: 4px; }
+  .ni-status { font-weight: 800; }
+  .ni-verlauf { margin: 2px 0 0; padding-left: 20px; display: grid; gap: 3px; }
+  .ni-verlauf li span.hinweis { margin-left: 6px; font-size: .8rem; }
+  .ni-fehler { color: #c62828; font-weight: 700; }
 </style>
 </head>
 <body>
@@ -1445,7 +1453,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "0.93.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.94.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -4750,7 +4758,7 @@ async function chatLaden(scrollen) {
     if (stand === chatStand && !scrollen) return;
     const neuVonAnderen = chatStand && u.nachrichten.length && !u.nachrichten[u.nachrichten.length - 1].eigen && stand !== chatStand;
     chatStand = stand;
-    $("chat").innerHTML = u.nachrichten.map((m) => `<div class="blase${m.eigen ? " eigen" : ""}">
+    $("chat").innerHTML = u.nachrichten.map((m) => `<div class="blase${m.eigen ? " eigen" : ""}" title="Antippen für Details" onclick="if(!event.target.closest('button,img,a,audio,video,.sprache'))nachrichtInfo('${m.id}')">
       ${!m.eigen && andere.length > 1 ? `<div class="von">${esc(m.von)}</div>` : ""}${m.text === "📎" && m.anlagen.length ? "" : `<div class="txt">${esc(m.text)}</div>`}
       ${m.anlagen.map((a) => /^image\//.test(a.mime || "") ? `<img data-anlage="${a.id}" alt="${esc(a.name)}" onclick="anlageOeffnen('${a.id}')">` : /^audio\//.test(a.mime || "") ? `<div class="sprache" data-sprache="${a.id}"><button onclick="spracheAbspielen(this, '${a.id}')">▶️ Sprachnachricht anhören</button></div>` : `<div class="anlage" onclick="anlageOeffnen('${a.id}')">📄 ${esc(a.name)}</div>`).join("")}
       <div class="fuss">${zeitKurz(m.zeit)}${m.eigen ? " " + (m.gelesenAlle ? '<b title="gelesen">✓✓</b>' : m.gelesenVon?.length ? `✓✓ ${m.gelesenVon.length}/${andere.length}` : "✓") + zustellText(m.zustellung) : ""}${m.eigen || ICH.admin ? ` <button class="weg" title="Nachricht löschen" onclick="nachrichtLoeschen('${m.id}')">🗑️</button>` : ""}</div></div>`).join("")
@@ -4760,6 +4768,48 @@ async function chatLaden(scrollen) {
     if (scrollen || neuVonAnderen) setTimeout(() => window.scrollTo(0, document.body.scrollHeight), 50);
   } catch (e) { melde(e.message, true); }
 }
+// ---------- KC-CLUB-NACHRICHT-INFO (0.94.0): Nachricht antippen → wann, auf welchem Weg raus, angekommen, gelesen ----------
+const NI_KANAL = { push: "🔔 Push aufs Handy", email: "✉️ E-Mail", sms: "💬 SMS", whatsapp: "🟢 WhatsApp" };
+const NI_SCHRITT = {
+  queued: "⏳ in der Warteschlange", processing: "⚙️ wird verschickt", sent: "📤 verschickt", delivered: "📥 angekommen",
+  displayed: "👀 auf dem Handy angezeigt", opened: "👆 angetippt / geöffnet", failed: "❌ fehlgeschlagen", retry: "🔁 neuer Versuch geplant", dead_letter: "🛑 aufgegeben",
+};
+const NI_ANBIETER = { webde: "über web.de", "web-push": "über den Push-Dienst", client: "vom Handy gemeldet" };
+function niZeit(iso) { if (!iso) return "–"; const d = new Date(iso); return `${fTag.format(d)}, ${fZeit.format(d)}:${String(d.getSeconds()).padStart(2, "0")} Uhr`; }
+function niStatusText(w) {
+  if (w.aufgegeben) return "🛑 aufgegeben – ist nicht angekommen";
+  if (w.status === "opened") return "👆 geöffnet";
+  if (w.status === "displayed") return "👀 auf dem Handy angezeigt";
+  if (w.status === "delivered") return "📥 angekommen";
+  if (w.status === "sent") return w.kanal === "email" ? "📤 vom Mail-Server angenommen" : "📤 verschickt";
+  if (w.status === "failed") return "❌ fehlgeschlagen";
+  return "⏳ " + (w.status || "unterwegs");
+}
+async function nachrichtInfo(id) {
+  let r; try { r = await api("nachricht_details", { id }, { warten: true }); } catch (e) { return melde(e.message, true); }
+  document.getElementById("niFenster")?.remove();
+  const f = document.createElement("div"); f.id = "niFenster"; f.className = "blatt"; f.setAttribute("role", "dialog"); f.setAttribute("aria-modal", "true");
+  const gel = r.empfaenger.filter((e) => e.gelesen).length;
+  const empf = r.empfaenger.map((e) => `<div class="ni-zeile"><span>${e.gelesen ? "✓✓" : "✓"} <b>${esc(e.name)}</b></span><span class="hinweis">${e.gelesen ? "in der App gelesen" + (e.zuletztGeoeffnet ? ` (zuletzt geöffnet ${esc(niZeit(e.zuletztGeoeffnet))})` : "") : "in der App noch nicht gelesen"}</span></div>`).join("");
+  const wege = !r.wegeSichtbar ? "" : !r.wege.length
+    ? `<p class="hinweis" style="margin:0">Kein Push und keine E-Mail verschickt – die Nachricht steht nur in der App (z. B. weil der Empfänger Benachrichtigungen für Nachrichten ausgeschaltet hat oder gerade in der Unterhaltung war).</p>`
+    : r.wege.map((w) => `<div class="karte innen ni-weg">
+        <div><b>${NI_KANAL[w.kanal] || esc(w.kanal)}</b> an ${esc(w.an.join(", "))}</div>
+        <div class="ni-status">${niStatusText(w)}</div>
+        <ol class="ni-verlauf">${[{ typ: "erstellt", zeit: w.erstellt }, ...w.ereignisse].map((e) => `<li><span>${e.typ === "erstellt" ? "📝 in Auftrag gegeben" : NI_SCHRITT[e.typ] || esc(e.typ)}${e.anbieter && NI_ANBIETER[e.anbieter] ? " " + NI_ANBIETER[e.anbieter] : ""}</span><span class="hinweis">${esc(niZeit(e.zeit))}</span></li>`).join("")}</ol>
+        ${w.fehler ? `<div class="ni-fehler">⚠️ ${esc(w.fehler)}</div>` : ""}
+        ${w.versuche > 1 ? `<div class="hinweis">${w.versuche} Versuche</div>` : ""}${w.naechsterVersuch ? `<div class="hinweis">Nächster Versuch: ${esc(niZeit(w.naechsterVersuch))}</div>` : ""}
+        ${w.kanal === "email" && !w.aufgegeben && w.status === "sent" ? `<div class="hinweis" style="font-size:.8rem">Ob die Mail geöffnet wurde, meldet ein Postfach nicht zurück.</div>` : ""}</div>`).join("");
+  f.innerHTML = `<div class="blatt-innen" style="max-height:88vh;overflow-y:auto">
+    <h3>ℹ️ Nachricht – Einzelheiten</h3>
+    <div class="ni-zeile"><span>✍️ Geschrieben ${r.eigen ? "von dir" : "von " + esc(r.von)}</span><span class="hinweis">${esc(niZeit(r.zeit))}</span></div>
+    <b>👥 Empfänger${r.empfaenger.length > 1 ? ` – ${gel} von ${r.empfaenger.length} gelesen` : ""}</b>${empf || '<p class="hinweis" style="margin:0">Nur du (Test-Unterhaltung)</p>'}
+    ${r.wegeSichtbar ? `<b>🚚 Zustellung</b>${wege}` : ""}
+    <button class="knopf" onclick="document.getElementById('niFenster').remove()">Schließen</button></div>`;
+  f.onclick = (e) => { if (e.target === f) f.remove(); };
+  document.body.appendChild(f);
+}
+
 // KC-CLUB-LOESCHEN: eigene Nachricht für alle löschen; Unterhaltung nur für mich entfernen oder (Admin) für alle löschen
 async function nachrichtLoeschen(id) {
   if (!confirm("Diese Nachricht für alle löschen?")) return;

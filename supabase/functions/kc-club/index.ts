@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.93.0";
+const SERVER_VERSION = "0.94.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -1835,6 +1835,40 @@ Köcheclub Werne`,
         return json({ standorte: liste.map((x: any) => ({ id: x.id, vonMir: x.person_id === ich.person_id, von: { person_id: x.person_id, name: name(x.person_id) },
           lat: x.lat, lon: x.lon, genauigkeit: x.genauigkeit, aktualisiert_am: x.aktualisiert_am, bis: x.bis,
           ...(x.person_id === ich.person_id ? { an: x.empfaenger.map(name) } : {}) })) });
+      }
+
+      // ----- KC-CLUB-NACHRICHT-INFO (0.94.0): Details zu einer Nachricht – wann, auf welchem Weg raus, angekommen, gelesen -----
+      // Teilnehmer sehen Zeit und Lesestand; die Zustellwege (Push/Mail mit Zeiten, Fehlern, Versuchen) nur der Absender und der Admin.
+      // Mail-Adressen werden nie gezeigt – nur der Name des Empfängers.
+      case "nachricht_details": {
+        const mid = String(p.id || "");
+        const { data: m } = await db.from("kc_communication_messages").select("id,thread_id,sender_person_id,created_at").eq("id", mid).maybeSingle();
+        if (!m) throw new Fehler("Nachricht nicht gefunden.", 404);
+        await binTeilnehmer(m.thread_id, ich.person_id);
+        const { data: tn } = await db.from("kc_communication_thread_participants").select("person_id,last_read_at").eq("thread_id", m.thread_id);
+        const leute = await personen([m.sender_person_id, ...(tn ?? []).map((x: any) => x.person_id)]);
+        const name = (id: string) => leute.get(id)?.display_name || "Mitglied";
+        const eigen = m.sender_person_id === ich.person_id, darfWege = eigen || ich.admin;
+        const empfaenger = (tn ?? []).filter((x: any) => x.person_id !== m.sender_person_id).map((x: any) => ({
+          person_id: x.person_id, name: name(x.person_id), gelesen: !!(x.last_read_at && x.last_read_at >= m.created_at), zuletztGeoeffnet: x.last_read_at || null,
+        })).sort((a: any, b: any) => a.name.localeCompare(b.name, "de"));
+        let wege: any[] = [];
+        if (darfWege) {
+          const { data: req } = await db.from("kc_communication_requests").select("id,channel,status,recipient_refs,created_at,sent_at,error_code,error_message,attempt_count,next_attempt_at,dead_lettered_at")
+            .like("correlation_id", `club-nachricht:${mid}%`).order("created_at");
+          const rids = (req ?? []).map((r: any) => r.id);
+          const { data: ev } = rids.length ? await db.from("kc_communication_delivery_events").select("request_id,event_type,provider,created_at").in("request_id", rids).order("created_at") : { data: [] as any[] };
+          const perMail = new Map<string, string>();
+          for (const [id, pe] of leute) if (pe.email) perMail.set(String(pe.email).trim().toLowerCase(), id);
+          wege = (req ?? []).map((r: any) => ({
+            kanal: r.channel, status: r.status,
+            an: (Array.isArray(r.recipient_refs) ? r.recipient_refs : []).map((x: any) => x?.personId ? name(x.personId) : x?.email ? (perMail.has(String(x.email).toLowerCase()) ? name(perMail.get(String(x.email).toLowerCase())!) : "E-Mail-Empfänger") : "?"),
+            erstellt: r.created_at, gesendet: r.sent_at, fehler: txt(r.error_message || r.error_code, 200) || null, versuche: r.attempt_count ?? 0,
+            naechsterVersuch: r.status !== "sent" && r.next_attempt_at ? r.next_attempt_at : null, aufgegeben: r.dead_lettered_at,
+            ereignisse: (ev ?? []).filter((e: any) => e.request_id === r.id).map((e: any) => ({ typ: e.event_type, anbieter: e.provider, zeit: e.created_at })),
+          }));
+        }
+        return json({ id: m.id, zeit: m.created_at, von: eigen ? "Du" : name(m.sender_person_id), eigen, empfaenger, wege, wegeSichtbar: darfWege });
       }
 
       // ----- KC-CLUB-FEHLERPROTOKOLL (0.93.0) -----
