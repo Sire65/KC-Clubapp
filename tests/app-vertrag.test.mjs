@@ -1225,11 +1225,11 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 
 // 91. 0.70.0: Tipps nach und nach statt vieler Fragen beim Einstieg (KC-CLUB-EINSTIEG)
 {
-  assert.ok(/einstieg: \(w\) => \(\{ schritte:/.test(server) && /\["farbe", "privat", "erweitert"(, "feedback")?\]\.includes\(k\)/.test(server) && /\["ja", "nein", "spaeter"\]\.includes/.test(server), "Server prüft die Einstiegs-Antworten nicht");
+  assert.ok(/einstieg: \(w\) => \(\{ schritte:/.test(server) && /\["farbe", "privat", "erweitert"(, "feedback")?(, "geraete")?\]\.includes\(k\)/.test(server) && /\["ja", "nein", "spaeter"\]\.includes/.test(server), "Server prüft die Einstiegs-Antworten nicht");
   // 0.71.0: Nutzungstage (verschiedene Tage mit App-Start, Europe/Berlin) statt Starts
   assert.ok(/eq\("aktion", "diagnose_start"\)/.test(server) && /einstieg: \{ tage: new Set\(\(starts\.data \?\? \[\]\)\.map\(\(x: any\) => new Date\(x\.zeit\)\.toLocaleDateString\("sv-SE", \{ timeZone: "Europe\/Berlin" \}\)\)\)\.size/.test(server), "Nutzungstage/erster Start fehlen");
   const code = html.slice(html.indexOf("const EINSTIEG_ABSTAND_TAGE"), html.indexOf("function einstiegMerken"));
-  assert.ok(/const EINSTIEG_ABSTAND_TAGE = 1;/.test(code) && /const EINSTIEG_STANDARD = \{ aktiv: true, farbeTage: 3, privatTage: 3, erweitertTage: 14, spaeterTage: 3, feedbackTage: 28 \};/.test(code) && /tageSeit\(x\.am\) < EINSTIEG_ABSTAND_TAGE\)\) return false/.test(code), "höchstens ein Tipp je Tag");
+  assert.ok(/const EINSTIEG_ABSTAND_TAGE = 1;/.test(code) && /const EINSTIEG_STANDARD = \{ aktiv: true, farbeTage: 3, privatTage: 3, erweitertTage: 14, spaeterTage: 3, feedbackTage: 28(, geraeteTage: 21)? \};/.test(code) && /tageSeit\(x\.am\) < EINSTIEG_ABSTAND_TAGE\)\) return false/.test(code), "höchstens ein Tipp je Tag");
   for (const id of ["farbe", "privat", "erweitert"]) assert.ok(code.includes(`{ id: "${id}"`), `Schritt ${id} fehlt`);
   assert.ok(/id: "farbe", faellig: \(e, s\) => e\.tage >= eiF\(\)\.farbeTage/.test(code) && /id: "erweitert", faellig: \(e\) => einfach\(\) && tageSeit\(e\.ersterStart\) >= eiF\(\)\.erweitertTage/.test(code), "Zeitpunkte der Tipps");
   assert.ok(/ansichtSetzen\("erweitert"\); setTimeout\(\(\) => einstiegHinweis\(\), 400\)/.test(code) && /Zurück zur einfachen Ansicht kommst du jederzeit/.test(html), "Hinweis zum Zurückschalten fehlt");
@@ -1257,7 +1257,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 {
   const fs = server.slice(server.indexOf('case "einstieg_fristen_setzen"'), server.indexOf('case "wetter_setzen"'));
   assert.ok(/nurAdmin\(ich\);/.test(fs) && /protokoll\(ich\.person_id, "einstieg_fristen_gesetzt"/.test(fs), "nur Admin / Protokoll");
-  assert.ok(/EINSTIEG_GRENZEN = \{ farbeTage: \[1, 20\], privatTage: \[1, 30\], erweitertTage: \[1, 90\], spaeterTage: \[1, 30\], feedbackTage: \[1, 180\] \}/.test(server) && /fristen: eiFristen \}/.test(server), "Grenzen / Übergabe an die App");
+  assert.ok(/EINSTIEG_GRENZEN = \{ farbeTage: \[1, 20\], privatTage: \[1, 30\], erweitertTage: \[1, 90\], spaeterTage: \[1, 30\], feedbackTage: \[1, 180\](, geraeteTage: \[1, 120\])? \}/.test(server) && /fristen: eiFristen[,}]/.test(server), "Grenzen / Übergabe an die App");
   assert.ok(/data-klappe="admin_einstieg"/.test(html.slice(html.indexOf('id="adminBereich"'), html.indexOf('data-klappe="app"'))) && /id="eiAktiv"/.test(html), "Admin-Klappbereich fehlt");
   assert.ok(/!eiF\(\)\.aktiv \|\|/.test(html) && /tageSeit\(s\[x\.id\]\.am\) >= eiF\(\)\.spaeterTage/.test(html), "Ausschalter / „Später“-Frist nicht wirksam");
 }
@@ -1277,7 +1277,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   for (const d of doks) if (d[4]) assert.ok(fs2.existsSync(new URL("../" + d[4], import.meta.url)) && /^dokumente\/[\w.-]+\.pdf$/.test(d[4]), `PDF fehlt: ${d[4]}`);
   assert.ok(/\{ id: "dokumente", sym: "📚", t: "Meine Dokumente"[^}]*v: "dokumente" \}/.test(html) && /id="v-dokumente"/.test(html) && /\["start", "dokumente",/.test(html) && /if \(v === "dokumente"\) dokumenteZeigen\(\);/.test(html), "Kachel/Ansicht fehlt");
   assert.ok(/id: "feedback", faellig: \(e\) => !e\.feedbackAbgegeben && tageSeit\(e\.ersterStart\) >= eiF\(\)\.feedbackTage/.test(html) && /ja: \(\) => zeige\("feedback"\)/.test(html), "Feedback-Tipp fehlt");
-  assert.ok(/from\("kc_club_feedback"\)\.select\("person_id", \{ count: "exact", head: true \}\)\.eq\("person_id", ich\.person_id\)/.test(server) && /feedbackAbgegeben: \(fbAnzahl \?\? 0\) > 0/.test(server) && /"erweitert", "feedback"\]\.includes\(k\)/.test(server), "Server prüft abgegebenes Feedback nicht");
+  assert.ok(/from\("kc_club_feedback"\)\.select\("person_id", \{ count: "exact", head: true \}\)\.eq\("person_id", ich\.person_id\)/.test(server) && /feedbackAbgegeben: \(fbAnzahl \?\? 0\) > 0/.test(server) && /"erweitert", "feedback"(, "geraete")?\]\.includes\(k\)/.test(server), "Server prüft abgegebenes Feedback nicht");
 }
 
 // 95. 0.74.0: eigener Wetterort je Mitglied (KC-CLUB-WETTERORT)
@@ -1322,6 +1322,20 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   await run([{ s: 503 }, { s: 503 }]).then(() => assert.fail("zweimal 503 muss Fehler sein"), (e) => assert.ok(/kurz nicht erreichbar/.test(e.message) && aufrufe === 2, "höchstens ein Wiederholversuch / Meldung"));
   await run([{ s: 502 }, { s: 200, j: {} }]).then(() => assert.fail("502 darf nicht wiederholt werden"), () => assert.equal(aufrufe, 1, "502 wiederholt"));
   await run([{ s: 503, j: { error: "Wartung" } }]).then(() => assert.fail(), (e) => assert.ok(e.message === "Wartung" && aufrufe === 1, "Programm-503 (mit Meldung) wiederholt"));
+}
+
+// 98. 0.77.0: Linkschutz + Tablet/PC-Tipp (KC-CLUB-LINKSCHUTZ / KC-CLUB-GERAETE-TIPP)
+{
+  const mig = lies("supabase/migrations/20260930_kc_club_zugangslinks_schwaerzen.sql");
+  assert.ok(/create or replace function public\.kc_club_zugangslinks_schwaerzen\(\)/.test(mig) && /'\?k=\[entfernt\]'/.test(mig) && /cron\.schedule\('kc-club-zugangslinks-schwaerzen', '\*\/15 \* \* \* \*'/.test(mig), "Schwärzung/Zeitplan fehlt");
+  assert.ok(/status in \('sent',/.test(mig) && /values \('kc_communication_requests', 'variables'/.test(mig) && /r\.muster is not null/.test(mig), "nur fertige Mails / Spiegel-Muster");
+  const za = server.slice(server.indexOf('if (a === "zugang_anfordern")'), server.indexOf("const tAnm = Date.now();"));
+  assert.ok(/db\.rpc\("kc_club_zugangslinks_schwaerzen"\)/.test(za), "„Link verloren?“ schwärzt nicht");
+  const lm = server.slice(server.indexOf('case "zugang_link_mailen"'), server.indexOf('case "pinnwand_fristen_setzen"'));
+  assert.ok(/req\.headers\.get\("x-club-token"\)/.test(lm) && /eq\("person_id", ich\.person_id\)/.test(lm) && /seit15/.test(lm) && /db\.rpc\("kc_club_zugangslinks_schwaerzen"\)/.test(lm) && !/zufall\(\)/.test(lm), "Link-Mail: nur eigener Link an eigene Adresse, Sperre, Schwärzung, kein neuer Schlüssel");
+  assert.ok(!/protokoll\([^;]*schluessel/.test(lm) && !/protokoll\([^;]*[{,]\s*(link|url)\b/.test(lm), "Link darf nicht ins Protokoll");
+  assert.ok(/id: "geraete", faellig: \(e\) => !!e\.mailMaske && tageSeit\(e\.ersterStart\) >= eiF\(\)\.geraeteTage/.test(html) && /api\("zugang_link_mailen"/.test(html) && /id="eiGeraeteTage"/.test(html), "Tablet/PC-Tipp fehlt");
+  assert.ok(/mailMaske: pm\?\.email \? String\(pm\.email\)\.replace\(/.test(server), "Adresse nur teilweise");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

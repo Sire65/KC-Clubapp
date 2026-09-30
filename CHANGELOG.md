@@ -1,5 +1,19 @@
 # Änderungen
 
+## 0.77.0 – 2026-09-30 (DEV)
+
+- KC-CLUB-LINKSCHUTZ (Sicherheit, Freigabe Hansi): persönliche App-Links lagen im Klartext im Mail-Speicher des
+  Communicators (kc_communication_requests.variables, 4 Einträge aus „Link verloren?“, 3 gültig) und im Neon-Spiegel.
+  Migration 20260930_kc_club_zugangslinks_schwaerzen: kc_club_zugangslinks_schwaerzen() ersetzt den Schlüssel in fertig
+  versendeten Mails durch „?k=[entfernt]“ (Club-Server ruft sie direkt nach jedem Link-Versand auf, Zeitplan alle 15 Min.);
+  Schwärzungs-Verzeichnis des Spiegels kann jetzt Muster (nur der passende Teil wird ersetzt) – Regel für
+  kc_communication_requests.variables. Die 4 Einträge sind geschwärzt; Neon übernimmt das beim nächsten Spiegellauf.
+  Links nicht erneuert (Wunsch Hansi). Wiederherstellungspunkt: kc_db_mirror_snapshot_vor_linkschutz.
+- KC-CLUB-GERAETE-TIPP (neu): Einstiegs-Tipp nach geraeteTage (Std. 21) Tagen „💻 Die Club-App gibt es auch für Tablet und PC“
+  – „Ja, Link per E-Mail schicken“ → neue Aktion zugang_link_mailen: eigener (bestehender) Link an die eigene hinterlegte
+  Adresse, höchstens 1× je 15 Min., Schlüssel danach im Mail-Speicher geschwärzt. Nur mit hinterlegter Adresse (angezeigt
+  als „h…@web.de“). Frist in den Admin-Einstellungen (1–120 Tage).
+
 ## 0.76.0 – 2026-09-30 (DEV)
 
 - KC-CLUB-AUSSETZER (Fehlerbehebung, Meldung Hansi „Fehler 503“ um 08:27): Supabase hatte für eine einzelne Anfrage keinen

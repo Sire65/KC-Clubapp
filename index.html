@@ -1031,7 +1031,8 @@
         <label class="feld">🔒 Voreinstellungs-Tipp … Tage nach dem Farb-Tipp<input id="eiPrivatTage" type="number" inputmode="numeric" min="1" max="30"></label></div>
       <div class="zwei"><label class="feld">🔧 Tipp „erweiterte Ansicht“ nach … Tagen Nutzung<input id="eiErweitertTage" type="number" inputmode="numeric" min="1" max="90"></label>
         <label class="feld">⏳ „Später“ fragt wieder nach … Tagen<input id="eiSpaeterTage" type="number" inputmode="numeric" min="1" max="30"></label></div>
-      <div class="zwei"><label class="feld">💭 Feedback-Frage nach … Tagen Nutzung (nur ohne Feedback)<input id="eiFeedbackTage" type="number" inputmode="numeric" min="1" max="180"></label><span></span></div>
+      <div class="zwei"><label class="feld">💭 Feedback-Frage nach … Tagen Nutzung (nur ohne Feedback)<input id="eiFeedbackTage" type="number" inputmode="numeric" min="1" max="180"></label>
+        <label class="feld">💻 Tablet/PC-Tipp nach … Tagen Nutzung (Link per E-Mail)<input id="eiGeraeteTage" type="number" inputmode="numeric" min="1" max="120"></label></div>
       <p class="hinweis" id="eiStand" style="margin:0 0 8px"></p>
       <button class="knopf haupt" onclick="einstiegFristenSpeichern()">💾 Speichern</button>
     </details>
@@ -1239,7 +1240,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "0.76.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.77.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -1742,7 +1743,7 @@ async function neuWahlSetzen(art) {
 // „Nein, danke“ nie wieder. Antworten stehen in der Server-Einstellung „einstieg“ (geräteübergreifend).
 const EINSTIEG_ABSTAND_TAGE = 1;
 // KC-CLUB-EINSTIEG-FRISTEN (0.71.0): Zahlen stellt der Admin ein (⚙️ → Admin-Einstellungen); ohne Serverwert die Standards
-const EINSTIEG_STANDARD = { aktiv: true, farbeTage: 3, privatTage: 3, erweitertTage: 14, spaeterTage: 3, feedbackTage: 28 };
+const EINSTIEG_STANDARD = { aktiv: true, farbeTage: 3, privatTage: 3, erweitertTage: 14, spaeterTage: 3, feedbackTage: 28, geraeteTage: 21 };
 const eiF = () => ({ ...EINSTIEG_STANDARD, ...(INIT?.einstieg?.fristen || {}) });
 const tageSeit = (iso) => (iso ? (Date.now() - new Date(iso).getTime()) / 86400000 : 0);
 const EINSTIEG_SCHRITTE = [
@@ -1756,6 +1757,14 @@ const EINSTIEG_SCHRITTE = [
   { id: "erweitert", faellig: (e) => einfach() && tageSeit(e.ersterStart) >= eiF().erweitertTage,
     text: () => `<h3 style="margin-top:0">🔧 Möchtest du einmal die erweiterte Ansicht einschalten?</h3><p style="margin:0">Dann hast du weitere Möglichkeiten in der App – zum Beispiel Fotoalbum, Vorschläge, Protokolle und Aktionen.</p>`,
     ja: () => { ansichtSetzen("erweitert"); setTimeout(() => einstiegHinweis(), 400); } },
+  // KC-CLUB-GERAETE-TIPP (0.77.0): nach 3 Wochen – Club-App auch auf Tablet/PC; „Ja“ mailt den eigenen Link an die hinterlegte Adresse
+  { id: "geraete", faellig: (e) => !!e.mailMaske && tageSeit(e.ersterStart) >= eiF().geraeteTage,
+    text: () => `<h3 style="margin-top:0">💻 Tipp: Die Club-App gibt es auch für Tablet und PC.</h3>
+      <p style="margin:0 0 6px">Möchtest du sie dort auch nutzen? Dann schicke ich dir deinen persönlichen Link per E-Mail an <b>${esc(INIT.einstieg.mailMaske)}</b>. Öffne die Mail auf dem Tablet oder PC und tippe auf den Link – fertig.</p>
+      <p style="margin:0 0 6px">Deine Einstellungen kommen mit (Ansicht, Farbe, Benachrichtigungen). Nur Schriftgröße und Ton stellst du auf jedem Gerät selbst ein.</p>
+      <p style="margin:0">⚠️ Den Link bitte nicht weitergeben – er gehört nur dir.</p>`,
+    jaText: "Ja, Link per E-Mail schicken",
+    ja: async () => { try { const r = await api("zugang_link_mailen", {}, { warten: true }); melde(r.ok ? `📧 Die Mail ist unterwegs an ${INIT.einstieg.mailMaske} – auch im Spam-Ordner nachsehen` : "Die Mail konnte gerade nicht verschickt werden – bitte später unter ⚙️ Mehr → App-Installation versuchen.", !r.ok); } catch (e) { melde(e.message, true); } } },
   // KC-CLUB-EINSTIEG-FEEDBACK (0.73.0): nach 4 Wochen Nutzung – nur, wer noch kein Feedback abgegeben hat
   { id: "feedback", faellig: (e) => !e.feedbackAbgegeben && tageSeit(e.ersterStart) >= eiF().feedbackTage,
     text: () => `<h3 style="margin-top:0">💭 Möchtest du jetzt dein Feedback abgeben?</h3><p style="margin:0">Deine Meinung hilft, die App weiterzuentwickeln – was gefällt dir, was ist zu kompliziert, was fehlt dir?</p>`,
@@ -1770,7 +1779,7 @@ function einstiegPruefen() {
   const offen = (x) => !s[x.id] || (s[x.id].antwort === "spaeter" && tageSeit(s[x.id].am) >= eiF().spaeterTage);
   const schritt = EINSTIEG_SCHRITTE.find((x) => !erledigt[x.id] && offen(x) && x.faellig(e, s, erledigt));
   if (!schritt) return false;
-  $("tippText").innerHTML = schritt.text();
+  $("tippText").innerHTML = schritt.text(); $("tippJa").textContent = schritt.jaText || "Ja, gern";
   const antwort = (a) => { $("tippBlatt").classList.add("versteckt"); einstiegMerken(schritt.id, a); if (a === "ja") schritt.ja(); };
   $("tippJa").onclick = () => antwort("ja"); $("tippSpaeter").onclick = () => antwort("spaeter"); $("tippNein").onclick = () => antwort("nein");
   $("tippBlatt").classList.remove("versteckt");
@@ -1784,13 +1793,13 @@ function einstiegMerken(id, antwort) {
 }
 function einstiegFristenZeigen() {
   const f = eiF(); $("eiAktiv").checked = f.aktiv !== false;
-  $("eiFarbeTage").value = f.farbeTage; $("eiPrivatTage").value = f.privatTage; $("eiErweitertTage").value = f.erweitertTage; $("eiSpaeterTage").value = f.spaeterTage; $("eiFeedbackTage").value = f.feedbackTage;
-  $("eiStand").textContent = f.geaendertAm ? `Zuletzt geändert: ${wann(f.geaendertAm)}` : "Noch die Grundeinstellung (3. Nutzungstag · 3 Tage · 14 Tage · 3 Tage · Feedback nach 28 Tagen).";
+  $("eiFarbeTage").value = f.farbeTage; $("eiPrivatTage").value = f.privatTage; $("eiErweitertTage").value = f.erweitertTage; $("eiSpaeterTage").value = f.spaeterTage; $("eiFeedbackTage").value = f.feedbackTage; $("eiGeraeteTage").value = f.geraeteTage;
+  $("eiStand").textContent = f.geaendertAm ? `Zuletzt geändert: ${wann(f.geaendertAm)}` : "Noch die Grundeinstellung (3. Nutzungstag · 3 Tage · 14 Tage · 3 Tage · Feedback nach 28 · Tablet/PC nach 21 Tagen).";
 }
 async function einstiegFristenSpeichern() {
-  const w = { aktiv: $("eiAktiv").checked, farbeTage: Number($("eiFarbeTage").value), privatTage: Number($("eiPrivatTage").value), erweitertTage: Number($("eiErweitertTage").value), spaeterTage: Number($("eiSpaeterTage").value), feedbackTage: Number($("eiFeedbackTage").value) };
+  const w = { aktiv: $("eiAktiv").checked, farbeTage: Number($("eiFarbeTage").value), privatTage: Number($("eiPrivatTage").value), erweitertTage: Number($("eiErweitertTage").value), spaeterTage: Number($("eiSpaeterTage").value), feedbackTage: Number($("eiFeedbackTage").value), geraeteTage: Number($("eiGeraeteTage").value) };
   try { const r = await api("einstieg_fristen_setzen", w);
-    INIT.einstieg = { ...(INIT.einstieg || {}), fristen: { aktiv: r.aktiv, farbeTage: r.farbeTage, privatTage: r.privatTage, erweitertTage: r.erweitertTage, spaeterTage: r.spaeterTage, feedbackTage: r.feedbackTage, geaendertAm: new Date().toISOString() } };
+    INIT.einstieg = { ...(INIT.einstieg || {}), fristen: { aktiv: r.aktiv, farbeTage: r.farbeTage, privatTage: r.privatTage, erweitertTage: r.erweitertTage, spaeterTage: r.spaeterTage, feedbackTage: r.feedbackTage, geraeteTage: r.geraeteTage, geaendertAm: new Date().toISOString() } };
     einstiegFristenZeigen(); melde(r.aktiv ? "💾 Gespeichert – gilt beim nächsten Öffnen der App" : "💾 Gespeichert – Tipps sind ausgeschaltet"); }
   catch (e) { melde(e.message, true); einstiegFristenZeigen(); }
 }
