@@ -1,5 +1,13 @@
 # Änderungen
 
+## 0.71.0 – 2026-09-30 (DEV)
+
+- KC-CLUB-EINSTIEG-FRISTEN (neu, Wunsch Hansi): in ⚙️ → Admin-Einstellungen → „💡 Einstieg: Tipps nach und nach“ (Klappbereich
+  mit Schloss): Tipps an/aus, Farb-Tipp ab dem … Öffnen (1–20, Std. 3), Voreinstellungs-Tipp … Tage danach (1–30, Std. 3),
+  Tipp erweiterte Ansicht nach … Tagen (1–90, Std. 14), „Später“ fragt wieder nach … Tagen (1–30, Std. 3).
+  kc_club_konfig „einstieg“, Aktion einstieg_fristen_setzen nur Admin mit Protokoll vorher/nachher; init liefert die Werte.
+  0.70.0 wurde nicht einzeln veröffentlicht (Mitglied war gerade in der App) und geht mit 0.71.0 raus.
+
 ## 0.70.0 – 2026-09-30 (DEV)
 
 - KC-CLUB-EINSTIEG (neu, Wunsch Hansi): Einsteiger nicht mit Fragen überfordern – vernünftige Voreinstellungen, danach Tipps

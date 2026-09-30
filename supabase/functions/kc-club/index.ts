@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.70.0";
+const SERVER_VERSION = "0.71.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -558,6 +558,16 @@ async function pinnwandFristen() {
     const n = Math.round(Number(w[k])), [lo, hi] = PINNWAND_FRISTEN_GRENZEN[k];
     return Number.isFinite(n) && n >= lo && n <= hi ? n : PINNWAND_FRISTEN_STANDARD[k]; };
   return { erinnernTage: zahl("erinnernTage"), pauseTage: zahl("pauseTage"), geaendertAm: data?.geaendert_am ?? null };
+}
+// KC-CLUB-EINSTIEG-FRISTEN (0.71.0): Zeitpunkte der Einstiegs-Tipps – vom Admin einstellbar (kc_club_konfig „einstieg“)
+const EINSTIEG_STANDARD = { aktiv: true, farbeStarts: 3, privatTage: 3, erweitertTage: 14, spaeterTage: 3 };
+const EINSTIEG_GRENZEN = { farbeStarts: [1, 20], privatTage: [1, 30], erweitertTage: [1, 90], spaeterTage: [1, 30] } as const;
+async function einstiegFristen() {
+  const { data } = await db.from("kc_club_konfig").select("wert,geaendert_am").eq("schluessel", "einstieg").maybeSingle();
+  const w: any = data?.wert ?? {}, zahl = (k: keyof typeof EINSTIEG_GRENZEN) => {
+    const n = Math.round(Number(w[k])), [lo, hi] = EINSTIEG_GRENZEN[k];
+    return Number.isFinite(n) && n >= lo && n <= hi ? n : EINSTIEG_STANDARD[k]; };
+  return { aktiv: w.aktiv !== false, farbeStarts: zahl("farbeStarts"), privatTage: zahl("privatTage"), erweitertTage: zahl("erweitertTage"), spaeterTage: zahl("spaeterTage"), geaendertAm: data?.geaendert_am ?? null };
 }
 const pinnwandPrivat = (z: { fuer: string; personen?: string[] | null }) => z.fuer === "personen" && (z.personen ?? []).length === 1;
 const pinnwandHinweis = (von: string, privat: boolean, wichtig: boolean) => `Du hast ein neues ${wichtig ? "wichtiges " : ""}${privat ? "privates " : ""}Post-it von ${von} bekommen`;
@@ -1342,7 +1352,7 @@ Köcheclub Werne`,
           const beantwortet = new Set((ta ?? []).map((x: any) => (to ?? []).find((o: any) => o.id === x.option_id)?.umfrage_id));
           terminfindungOffen = (tu ?? []).filter((x: any) => !beantwortet.has(x.id)).map((x: any) => ({ id: x.id, titel: x.titel }));
         }
-        const [{ data: nf }, { data: kab }, wartung, { data: pe }, pwFristen, starts] = await Promise.all([
+        const [{ data: nf }, { data: kab }, wartung, { data: pe }, pwFristen, starts, eiFristen] = await Promise.all([
           db.from("kc_club_notfall").select("name,telefon,beziehung").eq("person_id", ich.person_id).maybeSingle(),
           db.from("kc_club_kalender_abo").select("erstellt_am,zuletzt_abgerufen").eq("person_id", ich.person_id).maybeSingle(),
           wartungLesen(),
@@ -1350,13 +1360,14 @@ Köcheclub Werne`,
           pinnwandFristen().catch(() => ({ ...PINNWAND_FRISTEN_STANDARD, geaendertAm: null })),
           // KC-CLUB-EINSTIEG: wie oft die App geöffnet wurde (einmal je Sitzung als diagnose_start erfasst) und seit wann
           db.from("kc_club_protokoll").select("zeit", { count: "exact" }).eq("person_id", ich.person_id).eq("aktion", "diagnose_start").order("zeit").limit(1),
+          einstiegFristen().catch(() => ({ ...EINSTIEG_STANDARD, geaendertAm: null })),
         ]);
         const einstellungen = Object.fromEntries((pe ?? []).map((x: any) => [x.schluessel, x.wert]));
         const communicator = await communicatorStatus(ich).catch(() => null);
         const kontaktFreigabe = Object.fromEntries(KONTAKT_FELDER.map((f) => [f, !!(kf ?? []).find((x: any) => x.bereich === "kontakt_" + f)?.erlaubt]));
         const benachrichtigung = Object.fromEntries(BEREICHE.map((b) => { const x: any = (wahl ?? []).find((y: any) => y.bereich === b); return [b, x ? { push: x.push, email: x.email } : STANDARD_WAHL[b]]; }));
         return json({ ich, status: meinStatus, server: SERVER_VERSION, ungelesen, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, communicator, notfall: nf ?? null, einstellungen, kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen,
-          einstieg: { starts: starts.count ?? 0, ersterStart: starts.data?.[0]?.zeit ?? null } });
+          einstieg: { starts: starts.count ?? 0, ersterStart: starts.data?.[0]?.zeit ?? null, fristen: eiFristen } });
       }
 
       case "mitglieder": {
@@ -2256,6 +2267,22 @@ Köcheclub Werne`,
         const { error } = await db.from("kc_club_konfig").upsert({ schluessel: "pinnwand", wert: neu, geaendert_von: ich.person_id, geaendert_am: jetzt() });
         if (error) throw new Fehler("Fristen konnten nicht gespeichert werden.", 500);
         await protokoll(ich.person_id, "pinnwand_fristen_gesetzt", { vorher: { erinnernTage: alt.erinnernTage, pauseTage: alt.pauseTage }, nachher: neu });
+        return json({ ok: true, ...neu });
+      }
+
+      case "einstieg_fristen_setzen": {
+        nurAdmin(ich);
+        const alt = await einstiegFristen(), neu: Record<string, unknown> = { aktiv: p.aktiv === undefined ? alt.aktiv : p.aktiv !== false };
+        const namen: Record<string, string> = { farbeStarts: "Farb-Tipp ab dem … Öffnen", privatTage: "Voreinstellungs-Tipp nach … Tagen", erweitertTage: "Tipp erweiterte Ansicht nach … Tagen", spaeterTage: "„Später“ fragt wieder nach … Tagen" };
+        for (const k of Object.keys(EINSTIEG_GRENZEN) as (keyof typeof EINSTIEG_GRENZEN)[]) {
+          const n = Math.round(Number(p[k] ?? alt[k])), [lo, hi] = EINSTIEG_GRENZEN[k];
+          if (!Number.isFinite(n) || n < lo || n > hi) throw new Fehler(`${namen[k]}: bitte ${lo} bis ${hi}.`);
+          neu[k] = n;
+        }
+        const { error } = await db.from("kc_club_konfig").upsert({ schluessel: "einstieg", wert: neu, geaendert_von: ich.person_id, geaendert_am: jetzt() });
+        if (error) throw new Fehler("Einstellung konnte nicht gespeichert werden.", 500);
+        const { geaendertAm: _g, ...vorher } = alt;
+        await protokoll(ich.person_id, "einstieg_fristen_gesetzt", { vorher, nachher: neu });
         return json({ ok: true, ...neu });
       }
 
