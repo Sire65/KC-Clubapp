@@ -1,5 +1,15 @@
 # Änderungen
 
+## 0.83.0 – 2026-09-30 (DEV)
+
+- KC-CLUB-PROGRAMME (Wunsch Hansi): Kachel „💻 Freigegebene Programme“ ist nicht mehr „bald“, sondern öffnet die Ansicht
+  v-programme. Registry PROGRAMME (id, sym, t, u, url) – erster Eintrag „🧾 Kassen-Schulung“ →
+  https://sire65.github.io/Kasse/schulung/ (öffentliche Schulungsseite, kein persönlicher Link). Öffnen über extOeffnen()
+  (gemeinsam mit dokOeffnen, ohne opener). In „Club-App auf einen Blick“ erscheint die Gruppe „💻 Programme“.
+- KC-CLUB-DOKUMENTE: „Schnellanleitung Bilderrechner“ hinterlegt – dokumente/Kurzanleitung_Bilderrechner_V3.pdf
+  (Bilderrechner – Kurzanleitung Version 3, 23 Seiten, Stand 28.09.2026, von Hansi; geprüft: keine persönlichen Daten,
+  keine eingebetteten Skripte).
+
 ## 0.82.0 – 2026-09-30 (DEV)
 
 - KC-CLUB-KONFERENZ (Wunsch Hansi, Stufe 2): Konferenz bis 4 Personen, zuerst nur Ton, kostenlos direkt von Handy zu Handy

@@ -905,6 +905,13 @@
     <div class="raster" id="dokRaster"></div>
   </section>
 
+  <!-- KC-CLUB-PROGRAMME (0.83.0): freigegebene Programme (Registry PROGRAMME) -->
+  <section id="v-programme" class="versteckt">
+    <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>💻 Freigegebene Programme</h2></div>
+    <p class="hinweis" style="margin:0 2px 10px">Antippen öffnet das Programm in einem neuen Fenster. Tipp fürs Tablet: dort über <b>⋮</b> bzw. <b>Teilen □↑</b> „Zum Startbildschirm hinzufügen“ – dann startet es wie eine App.</p>
+    <div class="raster" id="progRaster"></div>
+  </section>
+
   <!-- KC-CLUB-UEBERBLICK (0.79.0, Wunsch Hansi): die Club-App auf einen Blick – Bereiche aus KACHELN, Neuestes aus version.json -->
   <section id="v-ueberblick" class="versteckt">
     <div class="kopf2"><button class="zurueck" onclick="zeige('dokumente')">‹</button><h2>🗺️ Club-App auf einen Blick</h2></div>
@@ -1301,7 +1308,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "0.82.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.83.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2982,7 +2989,7 @@ window.addEventListener("message", (e) => {
 const DOKUMENTE = [
   { id: "ueberblick", sym: "🗺️", t: "Club-App auf einen Blick", u: "Alle Bereiche & das Neueste", v: "ueberblick" },
   { id: "anleitung-club-app", sym: "📲", t: "Anleitung Club-App", u: "In 3 Schritten zur App", datei: "dokumente/Koecheclub-App_Kurzanleitung.pdf" },
-  { id: "bilderrechner", sym: "🧮", t: "Schnellanleitung Bilderrechner", u: "Schritt für Schritt", datei: null },
+  { id: "bilderrechner", sym: "🧮", t: "Schnellanleitung Bilderrechner", u: "Kurzanleitung V3 · 23 Seiten", datei: "dokumente/Kurzanleitung_Bilderrechner_V3.pdf" },
 ];
 function dokumenteZeigen() {
   const da = (d) => !!(d.datei || d.v);
@@ -2993,15 +3000,23 @@ function dokOeffnen(id) {
   const d = DOKUMENTE.find((x) => x.id === id); if (!d) return;
   if (d.v) return zeige(d.v);
   if (!d.datei) return melde(`„${d.t}“ kommt bald.`);
-  const url = new URL(d.datei + "?v=" + APP_VERSION, location.href).href;
-  // ohne „noopener“-Option (sonst liefert window.open immer null); Rückverweis danach selbst kappen
-  const w = window.open(url, "_blank"); if (w) w.opener = null; else location.href = url; // Popup gesperrt → im selben Fenster
+  extOeffnen(new URL(d.datei + "?v=" + APP_VERSION, location.href).href);
 }
+// ohne „noopener“-Option (sonst liefert window.open immer null); Rückverweis danach selbst kappen
+function extOeffnen(url) { const w = window.open(url, "_blank"); if (w) w.opener = null; else location.href = url; } // Popup gesperrt → im selben Fenster
+// KC-CLUB-PROGRAMME (0.83.0, Wunsch Hansi): freigegebene KC-Programme als Kacheln – Registry, neue Programme nur hier eintragen
+const PROGRAMME = [
+  { id: "kasse-schulung", sym: "🧾", t: "Kassen-Schulung", u: "Bilderrechner interaktiv üben", url: "https://sire65.github.io/Kasse/schulung/" },
+];
+function programmeZeigen() {
+  $("progRaster").innerHTML = PROGRAMME.map((p) => `<button class="kachel" onclick="programmOeffnen('${p.id}')"><div class="sym">${p.sym}</div><b>${esc(p.t)}</b><small>${esc(p.u)}</small></button>`).join("");
+}
+function programmOeffnen(id) { const p = PROGRAMME.find((x) => x.id === id); if (p) extOeffnen(p.url); }
 
 // ---- KC-CLUB-UEBERBLICK (0.79.0, Wunsch Hansi): „Unsere Club-App auf einen Blick“ – aktualisiert sich selbst:
 // Bereiche kommen aus der Kachel-Registry (KACHELN: fertige, für mich freigegebene), Neuigkeiten aus version.json (verlauf).
 // Fest ist nur der kurze Einleitungstext (UE_TEXT). Admin-Neuerungen sehen nur Admins.
-const UE_GRUPPEN = [["verein", "🏠 Im Verein"], ["mein", "🙋 Für mich"]], UE_AUSGELASSEN = ["test", "update"], UE_VERSIONEN = 8;
+const UE_GRUPPEN = [["verein", "🏠 Im Verein"], ["mein", "🙋 Für mich"], ["programme", "💻 Programme"]], UE_AUSGELASSEN = ["test", "update"], UE_VERSIONEN = 8;
 const UE_TEXT = {
   beta: ["Noch nicht alle Funktionen sind komplett getestet", "Funktionen, Ansichten usw. können sich noch ändern", "Deshalb ist Hansi auf euer Feedback angewiesen: 💭 Feedback-Kachel"],
   warum: ["Alles an einem Ort statt verstreut in WhatsApp, Mails und auf Zetteln", "Termine und Zusagen auf einen Blick, ohne ständiges Nachfragen", "Kostenlos, keine Werbung, kein App-Store nötig",
@@ -3066,7 +3081,7 @@ const KACHELN = {
   ],
   programme: [
     { id: "update", sym: "🔄", t: "Update prüfen", u: () => NEUE_VERSION ? `Neu: v${NEUE_VERSION} – antippen` : `Installiert: v${APP_VERSION}`, aktion: "updateKachel()", zahl: () => NEUE_VERSION ? "neu" : 0 },
-    { id: "programme", sym: "💻", t: "Freigegebene Programme", u: "Kasse, Schulungsversion …", bald: true },
+    { id: "programme", sym: "💻", t: "Freigegebene Programme", u: "Kassen-Schulung …", v: "programme" },
   ],
 };
 // Kacheln, die für mich gelten (z. B. Protokolle nicht für Aushilfen)
@@ -3949,7 +3964,7 @@ function zeige(v, ausHistorie) {
   const vorher = aktuelleAnsicht;
   aktuelleAnsicht = v;
   if (vorher === "protokoll" && v !== "protokoll" && prTimer) prSpeichernJetzt(false).catch(() => {}); // ungespeicherte Eingaben sichern
-  ["start", "dokumente", "termine", "vorschlaege", "aktionen", "aktion", "fotos", "feedback", "gruppe", "mitglied", "protokolle", "protokoll", "dienste", "nachrichten", "chat", "neu", "mitglieder", "einstellungen", "pinnwand", "erstattung", "ueberblick"].forEach((x) => $("v-" + x).classList.toggle("versteckt", x !== v));
+  ["start", "dokumente", "termine", "vorschlaege", "aktionen", "aktion", "fotos", "feedback", "gruppe", "mitglied", "protokolle", "protokoll", "dienste", "nachrichten", "chat", "neu", "mitglieder", "einstellungen", "pinnwand", "erstattung", "ueberblick", "programme"].forEach((x) => $("v-" + x).classList.toggle("versteckt", x !== v));
   document.querySelectorAll("#fuss button").forEach((b) => b.classList.toggle("an", b.dataset.v === v || (v === "chat" && b.dataset.v === "nachrichten") || (v === "neu" && b.dataset.v === "nachrichten")));
   $("eingabe").classList.toggle("versteckt", v !== "chat");
   clearInterval(chatTimer);
@@ -3964,6 +3979,7 @@ function zeige(v, ausHistorie) {
   if (v === "feedback") fbLaden();
   if (v === "dokumente") dokumenteZeigen();
   if (v === "ueberblick") ueberblickZeigen();
+  if (v === "programme") programmeZeigen();
   if (v === "pinnwand") { pwForm(false); pwLaden(); }
   if (v === "erstattung") erstattungLaden();
   if (v === "dienste") dienstLaden();

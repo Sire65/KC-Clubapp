@@ -1347,7 +1347,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 
 // 100. 0.79.0: Club-App auf einen Blick – aktualisiert sich selbst (KC-CLUB-UEBERBLICK)
 {
-  assert.ok(/id="v-ueberblick"/.test(html) && /"erstattung", "ueberblick"\]\.forEach/.test(html) && /if \(v === "ueberblick"\) ueberblickZeigen\(\)/.test(html), "Ansicht/Routing fehlt");
+  assert.ok(/id="v-ueberblick"/.test(html) && /"erstattung", "ueberblick"(, "programme")?\]\.forEach/.test(html) && /if \(v === "ueberblick"\) ueberblickZeigen\(\)/.test(html), "Ansicht/Routing fehlt");
   assert.ok(/\{ id: "ueberblick",[^}]*v: "ueberblick" \}/.test(html) && /if \(d\.v\) return zeige\(d\.v\)/.test(html), "Eintrag unter Meine Dokumente fehlt");
   const ue = html.slice(html.indexOf("function ueberblickHtml("), html.indexOf("async function ueberblickLaden()"));
   assert.ok(/kachelnAlle\(r\)/.test(ue) && /ueNeuigkeiten\(v\)/.test(ue), "Inhalt muss aus Registry + version.json kommen");
@@ -1391,6 +1391,13 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/p\.art === "video" && !konferenz \? "video" : "ton"/.test(server), "Konferenz nur Ton");
   assert.ok(/function konfTakt\(\)/.test(html) && /ich > t\.person_id/.test(html) && /api\("konferenz_bein"/.test(html) && /onclick="zweitDazu\(\)"/.test(html) && /onclick="konfWahl\(\)"/.test(html), "App: Takt, Querverbindung, Dazuholen, ➕");
   assert.ok(/const konfBeine = RUF\.konf \? \[\.\.\.RUF\.konf\.beine\.keys\(\)\]/.test(html), "Auflegen beendet alle eigenen Verbindungen");
+}
+
+// 104. 0.83.0: Freigegebene Programme + Bilderrechner-Anleitung (KC-CLUB-PROGRAMME)
+{
+  assert.ok(/\{ id: "programme", sym: "💻", t: "Freigegebene Programme", u: "[^"]*", v: "programme" \}/.test(html) && /id="v-programme"/.test(html) && /"ueberblick", "programme"\]\.forEach/.test(html), "Kachel/Ansicht Programme");
+  assert.ok(/const PROGRAMME = \[\s*\{ id: "kasse-schulung",[^}]*url: "https:\/\/sire65\.github\.io\/Kasse\/schulung\/" \}/.test(html), "Kassen-Schulung in der Registry");
+  assert.ok(/datei: "dokumente\/Kurzanleitung_Bilderrechner_V3\.pdf"/.test(html) && fs.existsSync(new URL("../dokumente/Kurzanleitung_Bilderrechner_V3.pdf", import.meta.url)), "Bilderrechner-PDF fehlt");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

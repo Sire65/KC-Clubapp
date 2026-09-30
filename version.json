@@ -1,10 +1,18 @@
 {
-  "version": "0.82.0",
+  "version": "0.83.0",
   "datum": "2026-09-30",
   "neu": [
-    "👥 Neu: Konferenz zu dritt (bis 4 Personen, nur Ton) – im Gespräch mit ➕ jemanden dazuholen oder einen zweiten Anruf mit „➕ Dazuholen“ in die Konferenz nehmen"
+    "💻 „Freigegebene Programme“ ist offen: 🧾 Kassen-Schulung – den Bilderrechner interaktiv üben",
+    "🧮 Unter 📚 Meine Dokumente: Schnellanleitung Bilderrechner (Kurzanleitung Version 3) zum Ansehen und Ausdrucken"
   ],
   "verlauf": [
+    {
+      "version": "0.83.0",
+      "neu": [
+        "💻 „Freigegebene Programme“ ist offen: 🧾 Kassen-Schulung – den Bilderrechner interaktiv üben",
+        "🧮 Unter 📚 Meine Dokumente: Schnellanleitung Bilderrechner (Kurzanleitung Version 3) zum Ansehen und Ausdrucken"
+      ]
+    },
     {
       "version": "0.82.0",
       "neu": [
