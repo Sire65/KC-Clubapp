@@ -901,6 +901,9 @@
   <!-- MITGLIEDER -->
   <section id="v-mitglieder" class="versteckt">
     <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>👥 Aktive Mitglieder</h2><button class="knopf klein stmarke st-verfuegbar" id="meinStatusKnopf" onclick="statusBlatt()">🟢 verfügbar ▾</button></div>
+    <!-- KC-CLUB-ONLINEFILTER (0.72.0): alle oder nur gerade online -->
+    <div style="display:flex;justify-content:flex-end;margin:0 0 8px"><div class="umschalter" id="mgFilter" style="margin:0;min-width:230px">
+      <button data-f="alle" onclick="mgFilterSetzen('alle')">👥 Alle</button><button data-f="online" onclick="mgFilterSetzen('online')">🟢 Nur online</button></div></div>
     <div class="karte" id="mitgliederListe"><span class="hinweis">Wird geladen …</span></div>
   </section>
 
@@ -1212,7 +1215,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "0.71.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.72.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -4082,7 +4085,8 @@ async function bildLaden(img) {
 }
 async function anlageOeffnen(id) { try { const r = await api("anlage_url", { id }); window.open(r.url, "_blank"); } catch (e) { melde(e.message, true); } }
 
-async function mitgliederHolen() { const r = await api("mitglieder"); MITGLIEDER = r.mitglieder; AEMTER = r.aemter; return r; }
+let ONLINE_SICHTBAR = true; // KC-CLUB-ONLINEFILTER: sehe ich überhaupt, wer online ist? (Server: onlineSichtbar)
+async function mitgliederHolen() { const r = await api("mitglieder"); MITGLIEDER = r.mitglieder; AEMTER = r.aemter; ONLINE_SICHTBAR = r.onlineSichtbar !== false; return r; }
 async function neueNachricht() {
   if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return melde(e.message, true); }
   empfWahl = { personen: [], aemter: [], alle: false, vorstand: false }; $("neuBetreff").value = ""; $("empfSuche").value = "";
@@ -4669,10 +4673,20 @@ async function protokollKorrigieren() {
 }
 
 // ---------- Mitglieder (+ Admin: Links und Ämter) ----------
+// KC-CLUB-ONLINEFILTER (0.72.0, Wunsch Hansi): Umschalter „Alle | Nur online“ (je Gerät gemerkt). Wer die eigene
+// Online-Anzeige verborgen hat, sieht auch andere nicht online – dann ist der Filter gesperrt (nie eine falsche leere Liste).
+let MG_FILTER = (() => { try { return localStorage.getItem("kc_club_mg_filter") === "online" ? "online" : "alle"; } catch { return "alle"; } })();
+function mgFilterSetzen(f) { MG_FILTER = f === "online" ? "online" : "alle"; try { localStorage.setItem("kc_club_mg_filter", MG_FILTER); } catch {} mitgliederZeichnen(); }
 async function mitgliederLaden() {
+  try { await mitgliederHolen(); mitgliederZeichnen(); } catch (e) { melde(e.message, true); }
+}
+function mitgliederZeichnen() {
   try {
-    await mitgliederHolen();
-    $("mitgliederListe").innerHTML = kreisLegende() + MITGLIEDER.map((m) => `<div class="zeile">
+    const sichtbar = ONLINE_SICHTBAR !== false, anzahl = MITGLIEDER.filter((m) => m.online).length, nurOnline = MG_FILTER === "online" && sichtbar;
+    document.querySelectorAll("#mgFilter button").forEach((b) => { b.classList.toggle("an", b.dataset.f === (nurOnline ? "online" : "alle")); if (b.dataset.f === "online") { b.disabled = !sichtbar; b.textContent = `🟢 Nur online${sichtbar ? ` (${anzahl})` : ""}`; b.title = sichtbar ? "" : "Du hast deine Online-Anzeige verborgen – dann siehst du auch andere nicht online (⚙️ → Privatsphäre)"; } });
+    const liste = nurOnline ? MITGLIEDER.filter((m) => m.online) : MITGLIEDER;
+    if (nurOnline && !liste.length) { $("mitgliederListe").innerHTML = `<div class="leer">Gerade ist niemand online.<br><button class="knopf klein" style="margin-top:8px" onclick="mgFilterSetzen('alle')">👥 Alle anzeigen</button></div>`; return; }
+    $("mitgliederListe").innerHTML = kreisLegende() + liste.map((m) => `<div class="zeile">
       ${kreis(m, m.name, 40, `onclick="mitgliedOeffnen('${m.person_id}')"`)}
       <div style="flex:1;cursor:pointer" onclick="mitgliedOeffnen('${m.person_id}')"><b>${esc(m.name)}</b>${wegIcons(m)} <span class="hinweis">›</span>${m.aemter?.length ? ` <span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}
         <div class="hinweis" style="font-size:.85rem">${m.online ? '<b style="color:#1e8449">● online</b> · ' : ""}${m.status || m.aktiv ? `<span class="stmarke st-${statusArt(m.status)}">${esc(m.status ? statusText(m.status) : "🟢 verfügbar")}</span>` : "⚪ noch nicht in der App"}${m.aktiv ? " · 📲 aktiv" : ""}</div>

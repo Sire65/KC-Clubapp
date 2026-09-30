@@ -1,10 +1,16 @@
 {
-  "version": "0.71.0",
+  "version": "0.72.0",
   "datum": "2026-09-29",
   "neu": [
-    "💡 Die App fragt nicht mehr alles auf einmal: ab dem 3. Nutzungstag ein Tipp zur Lieblingsfarbe, ein paar Tage später zu deinen Voreinstellungen, nach 2 Wochen zur erweiterten Ansicht – „Ja“ führt direkt hin"
+    "🟢 Mitgliederliste: oben rechts „Alle | Nur online“ – zeigt auf Wunsch nur, wer gerade in der App ist"
   ],
   "verlauf": [
+    {
+      "version": "0.72.0",
+      "neu": [
+        "🟢 Mitgliederliste: oben rechts „Alle | Nur online“ – zeigt auf Wunsch nur, wer gerade in der App ist"
+      ]
+    },
     {
       "version": "0.71.0",
       "neu": [

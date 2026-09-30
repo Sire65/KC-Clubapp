@@ -1,5 +1,12 @@
 # Änderungen
 
+## 0.72.0 – 2026-09-30 (DEV)
+
+- KC-CLUB-ONLINEFILTER (neu, Wunsch Hansi): in der Mitgliederliste oben rechts (unter dem Status-Knopf) der Umschalter
+  „👥 Alle | 🟢 Nur online (n)“; Wahl je Gerät gemerkt. Niemand online → Hinweis mit „Alle anzeigen“. Wer die eigene
+  Online-Anzeige verborgen hat, sieht auch andere nicht online – dann ist „Nur online“ gesperrt (keine falsche leere Liste).
+  Liste neu gezeichnet ohne erneutes Laden (mitgliederZeichnen).
+
 ## 0.71.0 – 2026-09-30 (DEV)
 
 - KC-CLUB-EINSTIEG-FRISTEN (neu, Wunsch Hansi): in ⚙️ → Admin-Einstellungen → „💡 Einstieg: Tipps nach und nach“ (Klappbereich
