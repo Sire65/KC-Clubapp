@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.69.0";
+const SERVER_VERSION = "0.70.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -394,6 +394,10 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
   // KC-CLUB-PINNWAND-ERINNERUNG (0.64.0): „hängen lassen“ je eigenem Zettel – wann frühestens wieder erinnern (höchstens 20)
   pinnwand_erinnert: (w) => ({ bis: Object.fromEntries(Object.entries(w?.bis && typeof w.bis === "object" ? w.bis : {})
     .filter(([id, d]) => /^[0-9a-f-]{36}$/.test(id) && typeof d === "string" && !isNaN(Date.parse(d))).slice(-20)) }),
+  // KC-CLUB-EINSTIEG (0.70.0): Tipps nach und nach (Farbe, Privatsphäre, erweiterte Ansicht) – je Schritt Antwort + Zeitpunkt
+  einstieg: (w) => ({ schritte: Object.fromEntries(Object.entries(w?.schritte && typeof w.schritte === "object" ? w.schritte : {})
+    .filter(([k, v]: [string, any]) => ["farbe", "privat", "erweitert"].includes(k) && ["ja", "nein", "spaeter"].includes(v?.antwort) && !isNaN(Date.parse(v?.am)))
+    .map(([k, v]: [string, any]) => [k, { antwort: v.antwort, am: new Date(v.am).toISOString() }])) }),
   // KC-CLUB-ANSICHT (0.62.0): einfache oder erweiterte Ansicht – beim ersten Start einmal gefragt, jederzeit umschaltbar
   ansicht: (w) => ({ art: w?.art === "erweitert" ? "erweitert" : "einfach", gewaehlt: w?.gewaehlt === true, am: new Date().toISOString() }),
   // KC-CLUB-BEGRUESSUNG (0.28.0): Begrüßung beim ersten Start einmal je Mitglied (geräteübergreifend)
@@ -1338,18 +1342,21 @@ Köcheclub Werne`,
           const beantwortet = new Set((ta ?? []).map((x: any) => (to ?? []).find((o: any) => o.id === x.option_id)?.umfrage_id));
           terminfindungOffen = (tu ?? []).filter((x: any) => !beantwortet.has(x.id)).map((x: any) => ({ id: x.id, titel: x.titel }));
         }
-        const [{ data: nf }, { data: kab }, wartung, { data: pe }, pwFristen] = await Promise.all([
+        const [{ data: nf }, { data: kab }, wartung, { data: pe }, pwFristen, starts] = await Promise.all([
           db.from("kc_club_notfall").select("name,telefon,beziehung").eq("person_id", ich.person_id).maybeSingle(),
           db.from("kc_club_kalender_abo").select("erstellt_am,zuletzt_abgerufen").eq("person_id", ich.person_id).maybeSingle(),
           wartungLesen(),
           db.from("kc_club_person_einstellung").select("schluessel,wert").eq("person_id", ich.person_id),
           pinnwandFristen().catch(() => ({ ...PINNWAND_FRISTEN_STANDARD, geaendertAm: null })),
+          // KC-CLUB-EINSTIEG: wie oft die App geöffnet wurde (einmal je Sitzung als diagnose_start erfasst) und seit wann
+          db.from("kc_club_protokoll").select("zeit", { count: "exact" }).eq("person_id", ich.person_id).eq("aktion", "diagnose_start").order("zeit").limit(1),
         ]);
         const einstellungen = Object.fromEntries((pe ?? []).map((x: any) => [x.schluessel, x.wert]));
         const communicator = await communicatorStatus(ich).catch(() => null);
         const kontaktFreigabe = Object.fromEntries(KONTAKT_FELDER.map((f) => [f, !!(kf ?? []).find((x: any) => x.bereich === "kontakt_" + f)?.erlaubt]));
         const benachrichtigung = Object.fromEntries(BEREICHE.map((b) => { const x: any = (wahl ?? []).find((y: any) => y.bereich === b); return [b, x ? { push: x.push, email: x.email } : STANDARD_WAHL[b]]; }));
-        return json({ ich, status: meinStatus, server: SERVER_VERSION, ungelesen, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, communicator, notfall: nf ?? null, einstellungen, kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen });
+        return json({ ich, status: meinStatus, server: SERVER_VERSION, ungelesen, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, communicator, notfall: nf ?? null, einstellungen, kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen,
+          einstieg: { starts: starts.count ?? 0, ersterStart: starts.data?.[0]?.zeit ?? null } });
       }
 
       case "mitglieder": {

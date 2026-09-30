@@ -558,6 +558,10 @@
   #versionMarke { white-space: nowrap; flex: none; }
   .ansichtname.ein { color: #1e8449; } .ansichtname.erw { color: var(--rot); }
   body.einfach .ansichtname.erw, body:not(.einfach) .ansichtname.ein { display: none; }
+  /* KC-CLUB-EINSTIEG: „dort ist es“ – kurz aufleuchten */
+  .hervor { outline: 3px solid #1e8449 !important; outline-offset: 3px; border-radius: 12px; animation: hervor 0.9s ease-in-out 3; }
+  @keyframes hervor { 50% { outline-color: transparent; } }
+  @media (prefers-reduced-motion: reduce) { .hervor { animation: none; } }
   .ansichtwahl { display: grid; gap: 10px; margin: 10px 0; }
   .ansichtwahl button { text-align: left; border: 2px solid var(--linie); border-radius: 16px; background: var(--karte); padding: 14px; cursor: pointer; font: inherit; color: inherit; display: flex; gap: 12px; align-items: center; }
   .ansichtwahl button.empfohlen { border-color: #1e8449; }
@@ -909,6 +913,7 @@
       <div><b>📬 Wie möchtest du Neuigkeiten bekommen?</b></div>
       <div class="neuwahl" id="neuWahl"></div>
       <p class="hinweis" id="neuWahlHinweis" style="margin:6px 0 10px"></p>
+      <div id="farbeE"><b>🎨 Lieblingsfarbe</b><div class="hinweis">Antippen – die App färbt sich sofort um</div><div class="designwahl" id="designWahlE"></div></div>
       <div class="schalter"><div><b>🔠 Große Schrift</b></div><input type="checkbox" id="setGrossE" onchange="einstellung('gross', this.checked); if ($('setGross')) $('setGross').checked = this.checked"></div>
       <div class="schalter"><div><b>🟢 Einfache Ansicht</b><div class="hinweis">Ausschalten zeigt alle Funktionen – du kannst jederzeit zurück.</div></div><button class="knopf klein" onclick="ansichtSetzen('erweitert')">🔧 Alle Funktionen</button></div>
       <div class="schalter"><div><b>📄 Kurzanleitung</b><div class="hinweis">Die App in 3 Schritten – zum Ansehen oder Ausdrucken</div></div><button class="knopf klein" onclick="druckStarten('anleitung')">Ansehen</button></div>
@@ -923,7 +928,7 @@
       <div class="schalter"><div><b>🔊 Warnton bei neuer Nachricht</b><div class="hinweis">Kurzer Ton, wenn die App offen ist</div></div><input type="checkbox" id="setTon" onchange="einstellung('ton', this.checked)"></div>
       <div class="knoepfe"><button class="knopf klein" onclick="tonTest()">Ton testen</button><button class="knopf klein" onclick="pushTest()">Test-Push senden</button></div>
     </details>
-    <details class="karte" data-klappe="privat">
+    <details class="karte" data-klappe="privat" data-einfach>
       <summary>🔒 Privatsphäre</summary>
       <div class="schalter"><div><b>🎂 Meinen Geburtstag anzeigen (ohne Jahr)</b><div class="hinweis" id="gebHinweis">Andere sehen dann nur Tag und Monat – im Kalender, in der Terminliste und unter „Heute wichtig“.</div></div><input type="checkbox" id="setGeburtstag" onchange="geburtstagFreigabe(this.checked)"></div>
       <div class="schalter"><div><b>🟢 Anderen zeigen, wann ich online bin</b><div class="hinweis">Dann sehen andere einen grünen Punkt bei dir und können „anklopfen“. Ausgeschaltet siehst du auch selbst nicht, wer online ist.</div></div><input type="checkbox" id="setOnline" onchange="onlineZeigen(this.checked)"></div>
@@ -1144,6 +1149,13 @@
     </div>
     <p class="hinweis" style="margin:0;text-align:center">Du kannst jederzeit umschalten – unten auf der Startseite.</p></div>
 </div>
+<!-- KC-CLUB-EINSTIEG (0.70.0): Tipps nach und nach – höchstens einer je Start -->
+<div class="blatt versteckt" id="tippBlatt">
+  <div class="blatt-innen"><div id="tippText"></div>
+    <button class="knopf haupt" style="text-align:center" id="tippJa">Ja, gern</button>
+    <button class="knopf" style="text-align:center" id="tippSpaeter">Später</button>
+    <button class="knopf" style="text-align:center" id="tippNein">Nein, danke</button></div>
+</div>
 <!-- KC-CLUB-BEGRUESSUNG: einmal beim ersten Start je Mitglied -->
 <div class="blatt versteckt" id="begruessungBlatt">
   <div class="blatt-innen begruessung"><div id="begruessungText"></div>
@@ -1189,7 +1201,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "0.69.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.70.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -1306,6 +1318,7 @@ function anwendenDesign() {
 }
 function designWahlZeigen() {
   if (!$("designWahl")) return;
+  queueMicrotask(() => { if ($("designWahlE")) $("designWahlE").innerHTML = $("designWahl").innerHTML; }); // gleiche Farbwahl in „Das Wichtigste“
   const nacht = istNacht();
   $("designWahl").innerHTML = DESIGNS.map((d) => { const f = d[nacht ? "nacht" : "tag"];
     return `<button class="${d.id === DS.design ? "an" : ""}" onclick="designWaehlen('${d.id}')"><span class="vorschau" style="background:${f.bg}">`
@@ -1369,7 +1382,7 @@ async function pwStart(nurZaehlen) { // nurZaehlen: Begrüßung ist offen → Pi
       pwFenster(n); gezeigt = true; } } catch {}
   try { const r = await api("pinnwand"); pwUebernehmen(r);
     if (!gezeigt && !nurZaehlen && PW.zettel.some(pwOffen) && aktuelleAnsicht === "start") { PW.wichtigStart = true; zeige("pinnwand"); gezeigt = true; }
-    if (!gezeigt && !nurZaehlen) pwErinnern();
+    if (!gezeigt && !nurZaehlen && !pwErinnern()) einstiegPruefen();
   } catch {}
 }
 // KC-CLUB-PINNWAND-LIVE (0.57.0): bei geöffneter App alle PW_LIVE_MS nach neuen Zetteln schauen (Aktion pinnwand_neu markiert
@@ -1430,11 +1443,11 @@ async function pwFristenSpeichern() {
 }
 function pwErinnern() {
   const { erinnernTage: PW_ERINNERN_TAGE, pauseTage: PW_ERINNERN_PAUSE_TAGE } = pwFristen();
-  if (document.getElementById("pwFenster") || document.querySelector(".blatt:not(.versteckt)")) return; // nie über ein anderes Fenster
+  if (document.getElementById("pwFenster") || document.querySelector(".blatt:not(.versteckt)")) return true; // nie über ein anderes Fenster (dann auch kein Tipp)
   const bis = INIT?.einstellungen?.pinnwand_erinnert?.bis || {}, jetzt = Date.now();
   const alt = PW.zettel.filter((z) => z.vonMir && jetzt - new Date(z.erstellt_am).getTime() >= PW_ERINNERN_TAGE * 86400000 && !(bis[z.id] && new Date(bis[z.id]).getTime() > jetzt))
     .sort((a, b) => String(a.erstellt_am).localeCompare(String(b.erstellt_am)));
-  if (!alt.length) return;
+  if (!alt.length) return false;
   const f = document.createElement("div"); f.id = "pwFenster"; f.className = "blatt"; f.setAttribute("role", "dialog"); f.setAttribute("aria-modal", "true");
   const tag = (z) => fKurz.format(new Date(z.erstellt_am));
   const zeichnen = (liste) => {
@@ -1462,6 +1475,7 @@ function pwErinnern() {
   };
   zeichnen(alt);
   document.body.appendChild(f);
+  return true;
 }
 async function pwLaden() {
   try { pwUebernehmen(await api("pinnwand", {}, { warten: true })); } catch (e) { $("pwWand").innerHTML = `<div class="leer">⚠️ ${esc(e.message)}</div>`; return; }
@@ -1668,6 +1682,63 @@ async function neuWahlSetzen(art) {
     melde("Gespeichert ✔");
   } catch (e) { melde(e.message, true); }
   neuWahlZeigen();
+}
+
+// ---------- KC-CLUB-EINSTIEG (0.70.0, Wunsch Hansi): nicht alles auf einmal fragen – Tipps nach und nach ----------
+// Beim Start gelten vernünftige Voreinstellungen. Später kommt höchstens EIN Tipp je Start und höchstens einer je
+// EINSTIEG_ABSTAND_TAGE: (1) Lieblingsfarbe nach ein paar Starts, (2) Voreinstellungen/Privatsphäre ein paar Tage danach,
+// (3) nach 2 Wochen die erweiterte Ansicht. „Ja“ führt direkt hin, „Später“ fragt nach EINSTIEG_SPAETER_TAGE wieder,
+// „Nein, danke“ nie wieder. Antworten stehen in der Server-Einstellung „einstieg“ (geräteübergreifend).
+const EINSTIEG_ABSTAND_TAGE = 1, EINSTIEG_SPAETER_TAGE = 3;
+const tageSeit = (iso) => (iso ? (Date.now() - new Date(iso).getTime()) / 86400000 : 0);
+const EINSTIEG_SCHRITTE = [
+  { id: "farbe", faellig: (e, s) => e.starts >= 3,
+    text: () => `<h3 style="margin-top:0">🎨 Möchtest du deine Lieblingsfarbe einstellen?</h3><p style="margin:0">Die App gibt es in mehreren Farben. Antippen genügt – du siehst es sofort.</p>`,
+    ja: () => einstiegHin(einfach() ? "einfach" : "darstellung", einfach() ? "farbeE" : "designWahl") },
+  // ein paar Tage nach der Farb-Frage (oder, wer die Farbe schon selbst gewählt hat, ein paar Tage nach dem ersten Start)
+  { id: "privat", faellig: (e, s, erl) => e.starts >= 5 && (s.farbe ? s.farbe.antwort !== "spaeter" && tageSeit(s.farbe.am) >= 3 : erl.farbe && tageSeit(e.ersterStart) >= 3),
+    text: () => `<h3 style="margin-top:0">🔒 Möchtest du deine Voreinstellungen ansehen?</h3><p style="margin:0">Zum Beispiel, ob andere Mitglieder deine <b>Handynummer</b>, deinen <b>Geburtstag</b> oder deine Adresse sehen dürfen. Bisher ist das alles zu – du entscheidest.</p>`,
+    ja: () => einstiegHin("privat") },
+  { id: "erweitert", faellig: (e) => einfach() && tageSeit(e.ersterStart) >= 14,
+    text: () => `<h3 style="margin-top:0">🔧 Möchtest du einmal die erweiterte Ansicht einschalten?</h3><p style="margin:0">Dann hast du weitere Möglichkeiten in der App – zum Beispiel Fotoalbum, Vorschläge, Protokolle und Aktionen.</p>`,
+    ja: () => { ansichtSetzen("erweitert"); setTimeout(() => einstiegHinweis(), 400); } },
+];
+function einstiegPruefen() {
+  if (!INIT?.einstieg || document.querySelector(".blatt:not(.versteckt)") || document.getElementById("pwFenster")) return false;
+  const e = INIT.einstieg, s = INIT.einstellungen?.einstieg?.schritte || {};
+  if (Object.values(s).some((x) => tageSeit(x.am) < EINSTIEG_ABSTAND_TAGE)) return false; // höchstens ein Tipp je Tag
+  // schon selbst erledigt → nicht mehr fragen (Farbe gewählt bzw. erweiterte Ansicht an)
+  const erledigt = { farbe: !!INIT.einstellungen?.design?.design && INIT.einstellungen.design.design !== "klassik", erweitert: !einfach() };
+  const offen = (x) => !s[x.id] || (s[x.id].antwort === "spaeter" && tageSeit(s[x.id].am) >= EINSTIEG_SPAETER_TAGE);
+  const schritt = EINSTIEG_SCHRITTE.find((x) => !erledigt[x.id] && offen(x) && x.faellig(e, s, erledigt));
+  if (!schritt) return false;
+  $("tippText").innerHTML = schritt.text();
+  const antwort = (a) => { $("tippBlatt").classList.add("versteckt"); einstiegMerken(schritt.id, a); if (a === "ja") schritt.ja(); };
+  $("tippJa").onclick = () => antwort("ja"); $("tippSpaeter").onclick = () => antwort("spaeter"); $("tippNein").onclick = () => antwort("nein");
+  $("tippBlatt").classList.remove("versteckt");
+  return true;
+}
+function einstiegMerken(id, antwort) {
+  const schritte = { ...(INIT.einstellungen?.einstieg?.schritte || {}), [id]: { antwort, am: new Date().toISOString() } };
+  INIT.einstellungen = { ...(INIT.einstellungen || {}), einstieg: { schritte } };
+  api("einstellung_setzen", { schluessel: "einstieg", wert: { schritte } }).catch(() => {});
+  if (antwort === "spaeter") melde(`👍 Ich frage in ${EINSTIEG_SPAETER_TAGE} Tagen noch einmal`);
+}
+// „Ja“ führt direkt hin: Einstellungen öffnen, Bereich aufklappen, hinscrollen und kurz hervorheben
+function einstiegHin(klappe, zielId) {
+  zeige("einstellungen");
+  const d = document.querySelector(`#v-einstellungen details[data-klappe="${klappe}"]`); if (d) d.open = true;
+  setTimeout(() => { const z = (zielId && $(zielId)) || d; if (!z) return; z.scrollIntoView({ behavior: "smooth", block: "center" });
+    z.classList.add("hervor"); setTimeout(() => z.classList.remove("hervor"), 2600); }, 300);
+}
+// nach dem Umschalten auf „erweitert“: wie komme ich zurück?
+function einstiegHinweis() {
+  $("tippText").innerHTML = `<h3 style="margin-top:0">🔧 Die erweiterte Ansicht ist an</h3><p style="margin:0 0 6px">Jetzt siehst du alle Funktionen. Zurück zur einfachen Ansicht kommst du jederzeit:</p>
+    <p style="margin:0">• oben bei <b>Schnellzugriff</b> auf <b style="color:var(--rot)">(Erweiterte Ansicht)</b> tippen, oder<br>• ganz unten auf der Startseite <b>„🟢 Einfache Ansicht“</b>.</p>`;
+  $("tippJa").textContent = "👍 Alles klar"; $("tippSpaeter").classList.add("versteckt"); $("tippNein").classList.add("versteckt");
+  $("tippJa").onclick = () => { $("tippBlatt").classList.add("versteckt"); $("tippJa").textContent = "Ja, gern"; $("tippSpaeter").classList.remove("versteckt"); $("tippNein").classList.remove("versteckt"); };
+  $("tippBlatt").classList.remove("versteckt");
+  document.querySelector(".ansichtname.erw")?.classList.add("hervor"); setTimeout(() => document.querySelector(".ansichtname.erw")?.classList.remove("hervor"), 4000);
 }
 
 // ---------- KC-CLUB-ONLINE (0.29.0): wer ist online, Anklopfen, schneller Direkt-Chat ----------

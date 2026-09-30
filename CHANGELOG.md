@@ -1,5 +1,18 @@
 # Änderungen
 
+## 0.70.0 – 2026-09-30 (DEV)
+
+- KC-CLUB-EINSTIEG (neu, Wunsch Hansi): Einsteiger nicht mit Fragen überfordern – vernünftige Voreinstellungen, danach Tipps
+  nach und nach (höchstens einer je Start und je Tag, nie über anderen Fenstern; Registry EINSTIEG_SCHRITTE):
+  1. ab dem 3. Start „🎨 Möchtest du deine Lieblingsfarbe einstellen?“ → Farbwahl (neu auch in „Das Wichtigste“),
+  2. ein paar (3) Tage danach „🔒 Möchtest du deine Voreinstellungen ansehen?“ (Handynummer, Geburtstag …) → Privatsphäre
+     (jetzt auch in der einfachen Ansicht),
+  3. nach 14 Tagen in der einfachen Ansicht „🔧 Möchtest du einmal die erweiterte Ansicht einschalten?“ → schaltet um und
+     erklärt den Rückweg („(Erweiterte Ansicht)“ oben antippen oder „🟢 Einfache Ansicht“ unten).
+  „Ja“ führt hin und hebt die Stelle hervor, „Später“ fragt nach 3 Tagen wieder, „Nein, danke“ nie wieder. Schon selbst
+  Erledigtes (Farbe gewählt, erweitert an) wird nicht gefragt. Starts = diagnose_start (einmal je Sitzung), Antworten in
+  der Server-Einstellung „einstieg“.
+
 ## 0.69.0 – 2026-09-30 (DEV)
 
 - KC-CLUB-ANSICHT-NAME (Erweiterung, Wunsch Hansi): der Ansichtsname hinter „Schnellzugriff“ ist ein Knopf – Antippen

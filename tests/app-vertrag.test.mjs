@@ -1181,7 +1181,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 {
   assert.ok(/pinnwand_erinnert: \(w\) => \(\{ bis: Object\.fromEntries/.test(server) && /\/\^\[0-9a-f-\]\{36\}\$\/\.test\(id\)/.test(server), "Server speichert „hängen lassen“ nicht geprüft");
   // 0.65.0: Fristen vom Admin (Server), ohne Wert 3 / 7 Tage
-  assert.ok(/const PW_FRISTEN_STANDARD = \{ erinnernTage: 3, pauseTage: 7 \};/.test(html) && /if \(!gezeigt && !nurZaehlen\) pwErinnern\(\);/.test(html), "Erinnerung beim Start fehlt");
+  assert.ok(/const PW_FRISTEN_STANDARD = \{ erinnernTage: 3, pauseTage: 7 \};/.test(html) && /if \(!gezeigt && !nurZaehlen && !pwErinnern\(\)\) einstiegPruefen\(\);/.test(html), "Erinnerung beim Start fehlt");
   const e = html.slice(html.indexOf("function pwErinnern()"), html.indexOf("async function pwLaden()"));
   assert.ok(/z\.vonMir && jetzt - new Date\(z\.erstellt_am\)\.getTime\(\) >= PW_ERINNERN_TAGE \* 86400000/.test(e) && /bis\[z\.id\]/.test(e), "nur eigene, alte, nicht zurückgestellte Zettel");
   assert.ok(/hängt noch an der Pinnwand\./.test(e) && /Möchtest du \$\{liste\.length === 1 \? "es" : "sie"\} abnehmen\?/.test(e) && /api\("pinnwand_abnehmen"/.test(e), "Text/Abnehmen fehlt");
@@ -1196,7 +1196,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/document\.querySelectorAll\("details\[data-klappe\]"\)/.test(html) && /details\.karte:not\(\[open\]\) > summary \.pfeil/.test(html), "Schloss/Pfeil je Bereich");
   const fs = server.slice(server.indexOf('case "pinnwand_fristen_setzen"'), server.indexOf('case "wetter_setzen"'));
   assert.ok(/nurAdmin\(ich\);/.test(fs) && /protokoll\(ich\.person_id, "pinnwand_fristen_gesetzt"/.test(fs) && /PINNWAND_FRISTEN_GRENZEN = \{ erinnernTage: \[1, 30\], pauseTage: \[1, 60\] \}/.test(server), "Fristen: nur Admin, Grenzen, Protokoll");
-  assert.ok(/pinnwandFristen: pwFristen \}\);/.test(server) && /const pwFristen = \(\) => \(\{ \.\.\.PW_FRISTEN_STANDARD, \.\.\.\(INIT\?\.pinnwandFristen \|\| \{\}\) \}\);/.test(html), "Fristen kommen nicht vom Server");
+  assert.ok(/pinnwandFristen: pwFristen[,}]/.test(server) && /const pwFristen = \(\) => \(\{ \.\.\.PW_FRISTEN_STANDARD, \.\.\.\(INIT\?\.pinnwandFristen \|\| \{\}\) \}\);/.test(html), "Fristen kommen nicht vom Server");
 }
 
 // 88. 0.66.0: aktive Ansicht hinter „Schnellzugriff“ (KC-CLUB-ANSICHT-NAME)
@@ -1220,6 +1220,35 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.deepEqual(folge, ["tag", "nacht", "auto", "tag"], "Reihenfolge A → T → N stimmt nicht");
   g.setze("unbekannt"); g.tipp(); assert.equal(g.modus(), "auto", "unbekannter Modus → Automatik");
   assert.equal(gesetzt.length, 5, "Einstellung wird nicht gespeichert");
+}
+
+// 91. 0.70.0: Tipps nach und nach statt vieler Fragen beim Einstieg (KC-CLUB-EINSTIEG)
+{
+  assert.ok(/einstieg: \(w\) => \(\{ schritte:/.test(server) && /\["farbe", "privat", "erweitert"\]\.includes\(k\)/.test(server) && /\["ja", "nein", "spaeter"\]\.includes/.test(server), "Server prüft die Einstiegs-Antworten nicht");
+  assert.ok(/eq\("aktion", "diagnose_start"\)/.test(server) && /einstieg: \{ starts: starts\.count \?\? 0, ersterStart:/.test(server), "Starts/erster Start fehlen");
+  const code = html.slice(html.indexOf("const EINSTIEG_ABSTAND_TAGE"), html.indexOf("function einstiegMerken"));
+  assert.ok(/const EINSTIEG_ABSTAND_TAGE = 1, EINSTIEG_SPAETER_TAGE = 3;/.test(code) && /tageSeit\(x\.am\) < EINSTIEG_ABSTAND_TAGE\)\) return false/.test(code), "höchstens ein Tipp je Tag");
+  for (const id of ["farbe", "privat", "erweitert"]) assert.ok(code.includes(`{ id: "${id}"`), `Schritt ${id} fehlt`);
+  assert.ok(/id: "farbe", faellig: \(e, s\) => e\.starts >= 3/.test(code) && /id: "erweitert", faellig: \(e\) => einfach\(\) && tageSeit\(e\.ersterStart\) >= 14/.test(code), "Zeitpunkte der Tipps");
+  assert.ok(/ansichtSetzen\("erweitert"\); setTimeout\(\(\) => einstiegHinweis\(\), 400\)/.test(code) && /Zurück zur einfachen Ansicht kommst du jederzeit/.test(html), "Hinweis zum Zurückschalten fehlt");
+  assert.ok(/data-klappe="privat" data-einfach/.test(html) && /id="designWahlE"/.test(html), "Ziel der Tipps in der einfachen Ansicht nicht erreichbar");
+  // Reihenfolge/Bedingungen nachrechnen
+  const lauf = (einst, schritte, istEinfach = true, design = null) => {
+    const f = new Function("INIT", "einfach", "document", "$", "ansichtSetzen", "einstiegHin", "einstiegHinweis", code + "; return EINSTIEG_SCHRITTE;");
+    const S = f({}, () => istEinfach, {}, () => ({}), () => {}, () => {}, () => {});
+    const tageSeit = (iso) => (iso ? (Date.now() - new Date(iso).getTime()) / 86400000 : 0);
+    const erl = { farbe: !!design && design !== "klassik", erweitert: !istEinfach };
+    const offen = (x) => !schritte[x.id] || (schritte[x.id].antwort === "spaeter" && tageSeit(schritte[x.id].am) >= 3);
+    return S.find((x) => !erl[x.id] && offen(x) && x.faellig(einst, schritte, erl))?.id || null;
+  };
+  const vor = (tage) => new Date(Date.now() - tage * 86400000).toISOString();
+  assert.equal(lauf({ starts: 1, ersterStart: vor(0) }, {}), null, "beim ersten Start kein Tipp");
+  assert.equal(lauf({ starts: 3, ersterStart: vor(1) }, {}), "farbe", "nach 3 Starts Farbe");
+  assert.equal(lauf({ starts: 6, ersterStart: vor(4) }, { farbe: { antwort: "ja", am: vor(1) } }), null, "Privatsphäre erst ein paar Tage nach der Farbe");
+  assert.equal(lauf({ starts: 6, ersterStart: vor(6) }, { farbe: { antwort: "nein", am: vor(3) } }), "privat", "Privatsphäre ein paar Tage später");
+  assert.equal(lauf({ starts: 6, ersterStart: vor(6) }, {}, true, "wald"), "privat", "Farbe selbst gewählt → trotzdem weiter");
+  assert.equal(lauf({ starts: 9, ersterStart: vor(15) }, { farbe: { antwort: "ja", am: vor(10) }, privat: { antwort: "nein", am: vor(5) } }), "erweitert", "nach 2 Wochen erweitert");
+  assert.equal(lauf({ starts: 9, ersterStart: vor(15) }, { farbe: { antwort: "ja", am: vor(10) }, privat: { antwort: "nein", am: vor(5) } }, false), null, "schon erweitert → nicht fragen");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
