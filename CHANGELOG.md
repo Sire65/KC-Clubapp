@@ -1,5 +1,9 @@
 # Änderungen
 
+## 0.99.2 – 2026-09-30 (DEV)
+
+- Text (Wunsch Hansi): Hinweissatz zur Nutzungsstatistik unter ⚙️ Mehr → Privatsphäre entfernt. Keine Funktionsänderung.
+
 ## 0.99.1 – 2026-09-30 (DEV)
 
 - Texte (Wunsch Hansi): Update-Beschreibung für 0.93.0 (Fehlerprotokoll) und 0.99.0 (Nutzungsstatistik) lautet für die

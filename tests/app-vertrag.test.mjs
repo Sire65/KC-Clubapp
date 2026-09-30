@@ -1625,5 +1625,5 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(f && !/protokoll\(|ich\.person_id/.test(f), "Beim Zählen darf nicht gespeichert werden, wer");
   assert.ok(/NUTZUNG_BEREICHE\.has/.test(f) && /Math\.min\(200/.test(f), "nur bekannte Bereiche, gedeckelt");
   assert.ok(/case "nutzung_statistik": \{\s*nurAdmin\(ich\)/.test(server), "Statistik nur für den Admin");
-  assert.ok(/nzZaehlen\(v\)/.test(html) && /function nzAdmin\(/.test(html) && /zählt <b>ohne Namen<\/b>/.test(html), "App: Zählen/Ansicht/Hinweis fehlt");
+  assert.ok(/nzZaehlen\(v\)/.test(html) && /function nzAdmin\(/.test(html), "App: Zählen/Ansicht fehlt"); // 0.99.2: Hinweissatz auf Wunsch entfernt
 }

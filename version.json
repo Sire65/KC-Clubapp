@@ -1,10 +1,16 @@
 {
-  "version": "0.99.1",
+  "version": "0.99.2",
   "datum": "2026-09-30",
   "neu": [
     "🔧 Kleine Systemverbesserung"
   ],
   "verlauf": [
+    {
+      "version": "0.99.2",
+      "neu": [
+        "🔧 Kleine Systemverbesserung"
+      ]
+    },
     {
       "version": "0.99.1",
       "neu": [
