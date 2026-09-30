@@ -1,11 +1,20 @@
 {
-  "version": "0.80.0",
+  "version": "0.81.0",
   "datum": "2026-09-30",
   "neu": [
-    "📞 Ruft ihr euch gleichzeitig an, werdet ihr jetzt direkt verbunden – vorher sah keiner von beiden „Annehmen“ (auch bei Video)",
-    "🔔 Ohne Push-Benachrichtigung sieht die App jetzt alle 15 Sekunden nach Anrufen – vorher konnte ein Anruf durchrutschen"
+    "💬 Anruf ablehnen mit kurzer Antwort: „Bin gerade beschäftigt“, „Ich melde mich gleich“ … oder eigener Text – der Anrufer sieht sie sofort",
+    "📞 Ruft jemand an, während du telefonierst, siehst du es oben: „Auflegen & annehmen“, „Ablehnen“ oder kurz antworten",
+    "📵 Verpasste Anrufe werden beim nächsten Öffnen angezeigt – mit „Zurückrufen“"
   ],
   "verlauf": [
+    {
+      "version": "0.81.0",
+      "neu": [
+        "💬 Anruf ablehnen mit kurzer Antwort: „Bin gerade beschäftigt“, „Ich melde mich gleich“ … oder eigener Text – der Anrufer sieht sie sofort",
+        "📞 Ruft jemand an, während du telefonierst, siehst du es oben: „Auflegen & annehmen“, „Ablehnen“ oder kurz antworten",
+        "📵 Verpasste Anrufe werden beim nächsten Öffnen angezeigt – mit „Zurückrufen“"
+      ]
+    },
     {
       "version": "0.80.0",
       "neu": [

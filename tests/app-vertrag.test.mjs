@@ -677,7 +677,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   for (const a of ["anruf_start", "anruf_status", "anruf_annehmen", "anruf_ende"]) assert.ok(aktionen.has(a) && aufrufe.has(a), `Anruf-Aktion ${a} fehlt`);
   const ah = server.slice(server.indexOf("async function anrufHolen"), server.indexOf("async function anrufHolen") + 700);
   assert.ok(/a\.von !== ich\.person_id && a\.an !== ich\.person_id\)\) throw/.test(ah) && /ANRUF_KLINGEL_SEK \* 1000/.test(ah), "Anruf für Fremde sichtbar oder klingelt endlos");
-  assert.ok(/\.\.\.\(ichRufe \? \{ antwort: a\.antwort \} : \{ angebot: a\.angebot \}\)/.test(server), "Verbindungsdaten gehen an die falsche Seite");
+  assert.ok(/\.\.\.\(ichRufe \? \{ antwort: a\.antwort(, kurzantwort: a\.kurzantwort \?\? null)? \} : \{ angebot: a\.angebot \}\)/.test(server), "Verbindungsdaten gehen an die falsche Seite");
   const an = server.slice(server.indexOf('case "anruf_annehmen"'), server.indexOf('case "anruf_ende"'));
   assert.ok(/if \(a\.an !== ich\.person_id\) throw/.test(an), "Anrufer könnte selbst annehmen");
   assert.ok(/SDP_MAX = 20000/.test(server) && /startsWith\("v=0"\)/.test(server), "Verbindungsdaten ungeprüft");
@@ -1285,7 +1285,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/wetterort: \(w\) => \(\{ ort: w\?\.ort \? wetterOrtPruefen\(w\.ort\) : null \}\)/.test(server), "Server prüft den eigenen Ort nicht");
   const wc = server.slice(server.indexOf('case "wetter": {'), server.indexOf('case "wetter_konfig"'));
   assert.ok(/eq\("person_id", ich\.person_id\)\.eq\("schluessel", "wetterort"\)/.test(wc) && /schl = `\$\{k\.quelle\}:\$\{k\.ort\.lat\},\$\{k\.ort\.lon\}`/.test(wc) && /eigenerOrt: eigen/.test(wc), "eigener Ort wird nicht benutzt / Zwischenspeicher nicht je Ort");
-  const su = server.slice(server.indexOf('case "wetter_ort_suchen"'), server.indexOf('case "pinnwand_fristen_setzen"'));
+  const suA = server.indexOf('case "wetter_ort_suchen"'), su = server.slice(suA, server.indexOf('      case "', suA + 10));
   assert.ok(!/nurAdmin/.test(su) && /ich\.admin && WETTER_QUELLEN\[/.test(su), "Suche für Mitglieder / Datenquelle nur Admin");
   for (const o of ["Werne", "Unna", "Bergkamen", "Kamen"]) assert.ok(html.includes(`{ name: "${o}", lat:`), `Ort ${o} fehlt in der Schnellauswahl`);
   assert.ok(/id="meinWetterort"/.test(html) && /api\("einstellung_setzen", \{ schluessel: "wetterort", wert \}\)/.test(html) && /meinWetterortZeigen\(\);/.test(html), "Auswahl in den Einstellungen fehlt");
@@ -1362,6 +1362,21 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/if \(r\.gegenanruf\) \{ anrufAufraeumen\(\); return gegenanrufAnnehmen\(r\.gegenanruf, mitBild\); \}/.test(html), "App: Gegenanruf annehmen");
   assert.ok(/RUF\.gegen\?\.person_id === ruf\.von\?\.person_id && ICH\?\.person_id > ruf\.von\.person_id/.test(html), "Fallback: feste Regel, wer nachgibt");
   assert.ok(/ONL\.wartet \? 4000 : PUSH_AKTIV \? 60000 : 15000/.test(html) && html.indexOf("let PUSH_AKTIV") < html.indexOf("let ONL ="), "Takt ohne Push 15 s (vor Nutzung deklariert)");
+}
+
+// 102. 0.81.0: Anrufe – Kurzantwort, zweiter Anruf, verpasst (KC-CLUB-ANRUF-KURZANTWORT / -ZWEIT / -VERPASST)
+{
+  const mig = lies("supabase/migrations/20260930_kc_club_anruf_kurzantwort.sql");
+  assert.ok(/add column if not exists kurzantwort text/.test(mig) && /add column if not exists verpasst_gesehen_am timestamptz/.test(mig) && !/drop column|delete from|truncate/i.test(mig), "Migration nur additiv");
+  const aw = server.slice(server.indexOf('case "anruf_antwort"'), server.indexOf('case "anruf_verpasst_gesehen"'));
+  assert.ok(/a\.an !== ich\.person_id/.test(aw) && /status: "abgelehnt"/.test(aw) && /zweierGespraech\(ich\.person_id, a\.von\)/.test(aw) && /senden\("club_nachricht", \[a\.von\]/.test(aw), "Kurzantwort: nur Angerufener, ablehnen, Nachricht an Anrufer");
+  assert.ok(/kurzantwort: a\.kurzantwort \?\? null \} : \{ angebot: a\.angebot \}/.test(server), "Kurzantwort nur an den Anrufer");
+  assert.ok(/schluessel", "anruf_antworten"/.test(server) && /case "anruf_antworten_setzen": \{\s*nurAdmin\(ich\)/.test(server) && /anrufAntworten: anrufAntw/.test(server), "Schnellantworten als Admin-Registry");
+  assert.ok(/verpasst: verp\.map/.test(server) && /is\("verpasst_gesehen_am", null\)/.test(server), "verpasste Anrufe");
+  assert.ok(/anrufAntwortBereich\(art === "eingehend"\)/.test(html) && /api\("anruf_antwort", \{ id, text \}\)/.test(html), "App: mit Text ablehnen");
+  assert.ok(/else if \(ruf && RUF && !ZWEIT && ruf\.id !== RUF\.id && !\(RUF\.rolle === "rufer"/.test(html) && /function zweitAnnehmen\(\)/.test(html) && /if \(ZWEIT\) \{ const z = ZWEIT; zweitWeg\(\); setTimeout\(\(\) => anrufEingehend\(z\.id\)/.test(html), "App: zweiter Anruf");
+  assert.ok(/id="verpasstBlatt"/.test(html) && /api\("anruf_verpasst_gesehen"/.test(html) && /id="anrufAntwortenFeld"/.test(html), "App: verpasst + Admin");
+  assert.ok(!/prompt\(/.test(html.slice(html.indexOf("KC-CLUB-ANRUF-KURZANTWORT (0.81.0): mit Text"), html.indexOf("KC-CLUB-GEGENANRUF (0.80.0): Wer selbst"))), "eigener Text ohne prompt()");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

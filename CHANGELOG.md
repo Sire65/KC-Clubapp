@@ -1,5 +1,23 @@
 # Änderungen
 
+## 0.81.0 – 2026-09-30 (DEV)
+
+- KC-CLUB-ANRUF-KURZANTWORT (Wunsch Hansi, Stufe 1): Beim Klingeln „💬 Mit Text ablehnen“ – Kacheln mit Schnellantworten
+  plus eigener Text. Server anruf_antwort: Anruf abgelehnt, Text in kc_club_anruf.kurzantwort (neue Spalte, Migration
+  20260930_kc_club_anruf_kurzantwort), zusätzlich als Nachricht „📞 Zu deinem Anruf: …“ in die Zweier-Unterhaltung
+  (Benachrichtigung nach den Einstellungen des Anrufers). Der Anrufer sieht die Antwort 6 s im Anrufbildschirm (anruf_status
+  liefert kurzantwort nur an ihn). Texte als Registry kc_club_konfig „anruf_antworten“, im Admin-Bereich „📞 Anrufe:
+  Schnellantworten“ einstellbar (anruf_antworten_setzen, höchstens 8 × 60 Zeichen), Grundeinstellung 5 Texte.
+- KC-CLUB-ANRUF-ZWEIT: Ruft während eines Gesprächs jemand anderes an, erscheint oben ein Hinweis mit Anklopf-Ton:
+  „Auflegen & annehmen“, „Ablehnen“, „💬 Antwort“. Endet das Gespräch, während der zweite noch klingelt, wird er normal
+  zum Annehmen angezeigt. (Gleichzeitiges Anrufen derselben zwei Personen bleibt bei KC-CLUB-GEGENANRUF.)
+- KC-CLUB-ANRUF-VERPASST: online liefert verpasste Anrufe der letzten 24 h (nicht angenommen, nicht selbst abgelehnt,
+  nicht gesehen, kein späteres Gespräch mit derselben Person); Fenster „📞 Verpasster Anruf“ mit „Zurückrufen“,
+  anruf_verpasst_gesehen setzt verpasst_gesehen_am (neue Spalte).
+- Neon-Spiegel: die zwei neuen Spalten werden erst gespiegelt, wenn sie in Neon angelegt sind (jsonb_populate_recordset
+  übernimmt nur vorhandene Spalten – kein Fehler).
+- Stufe 2 (Konferenz zu dritt, zuerst nur Ton) folgt als eigene Version.
+
 ## 0.80.0 – 2026-09-30 (DEV)
 
 - KC-CLUB-GEGENANRUF (Fehler, gemeldet von Hansi: „Annehmen fehlt auf der Gegenseite“): Riefen sich zwei Mitglieder

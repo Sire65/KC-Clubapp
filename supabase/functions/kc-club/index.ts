@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.80.0";
+const SERVER_VERSION = "0.81.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -198,6 +198,15 @@ async function anrufHolen(ich: Ich, id: unknown) {
     a.status = "verpasst";
   }
   return a;
+}
+
+// KC-CLUB-ANRUF-KURZANTWORT (0.81.0): Schnellantworten beim Ablehnen – vom Admin einstellbar (kc_club_konfig „anruf_antworten“)
+const ANRUF_ANTWORTEN_STANDARD = ["⏳ Bin gerade beschäftigt", "📞 Ich melde mich gleich", "🔁 Versuch es bitte später nochmal", "📅 Ich melde mich morgen", "🚗 Bin unterwegs"];
+const ANRUF_ANTWORTEN_MAX = 8, ANRUF_ANTWORT_ZEICHEN = 60, ANRUF_EIGEN_ZEICHEN = 160;
+async function anrufAntworten() {
+  const { data } = await db.from("kc_club_konfig").select("wert,geaendert_am").eq("schluessel", "anruf_antworten").maybeSingle();
+  const texte = Array.isArray((data?.wert as any)?.texte) ? (data!.wert as any).texte.map((x: unknown) => txt(x, ANRUF_ANTWORT_ZEICHEN)).filter(Boolean).slice(0, ANRUF_ANTWORTEN_MAX) : [];
+  return { texte: texte.length ? texte : ANRUF_ANTWORTEN_STANDARD, geaendertAm: data?.geaendert_am ?? null };
 }
 
 // ---------- Gruppen (KC-CLUB-GRUPPEN) ----------
@@ -1355,7 +1364,7 @@ Köcheclub Werne`,
           const beantwortet = new Set((ta ?? []).map((x: any) => (to ?? []).find((o: any) => o.id === x.option_id)?.umfrage_id));
           terminfindungOffen = (tu ?? []).filter((x: any) => !beantwortet.has(x.id)).map((x: any) => ({ id: x.id, titel: x.titel }));
         }
-        const [{ data: nf }, { data: kab }, wartung, { data: pe }, pwFristen, starts, eiFristen, { count: fbAnzahl }] = await Promise.all([
+        const [{ data: nf }, { data: kab }, wartung, { data: pe }, pwFristen, starts, eiFristen, { count: fbAnzahl }, anrufAntw] = await Promise.all([
           db.from("kc_club_notfall").select("name,telefon,beziehung").eq("person_id", ich.person_id).maybeSingle(),
           db.from("kc_club_kalender_abo").select("erstellt_am,zuletzt_abgerufen").eq("person_id", ich.person_id).maybeSingle(),
           wartungLesen(),
@@ -1367,12 +1376,13 @@ Köcheclub Werne`,
           einstiegFristen().catch(() => ({ ...EINSTIEG_STANDARD, geaendertAm: null })),
           // KC-CLUB-EINSTIEG-FEEDBACK (0.73.0): schon Feedback abgegeben? Dann nicht mehr danach fragen
           db.from("kc_club_feedback").select("person_id", { count: "exact", head: true }).eq("person_id", ich.person_id),
+          anrufAntworten().catch(() => ({ texte: ANRUF_ANTWORTEN_STANDARD, geaendertAm: null })),
         ]);
         const einstellungen = Object.fromEntries((pe ?? []).map((x: any) => [x.schluessel, x.wert]));
         const communicator = await communicatorStatus(ich).catch(() => null);
         const kontaktFreigabe = Object.fromEntries(KONTAKT_FELDER.map((f) => [f, !!(kf ?? []).find((x: any) => x.bereich === "kontakt_" + f)?.erlaubt]));
         const benachrichtigung = Object.fromEntries(BEREICHE.map((b) => { const x: any = (wahl ?? []).find((y: any) => y.bereich === b); return [b, x ? { push: x.push, email: x.email } : STANDARD_WAHL[b]]; }));
-        return json({ ich, status: meinStatus, server: SERVER_VERSION, ungelesen, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, communicator, notfall: nf ?? null, einstellungen, kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen,
+        return json({ ich, status: meinStatus, server: SERVER_VERSION, ungelesen, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, communicator, notfall: nf ?? null, einstellungen, kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
             // KC-CLUB-GERAETE-TIPP: wohin der Link ginge – nur teilweise (z. B. „h…@web.de“)
@@ -2047,11 +2057,22 @@ Köcheclub Werne`,
           db.from("kc_club_anklopfen").select("id,von,erstellt_am").eq("an", ich.person_id).eq("status", "offen").gte("erstellt_am", seit).order("erstellt_am", { ascending: false }).limit(3),
           db.from("kc_club_anklopfen").select("id,an,status,thread_id,beantwortet_am").eq("von", ich.person_id).gte("erstellt_am", new Date(Date.now() - 600000).toISOString()),
         ]);
-        const { data: rufe } = await db.from("kc_club_anruf").select("id,von,art,erstellt_am").eq("an", ich.person_id).eq("status", "klingelt").gte("erstellt_am", new Date(Date.now() - ANRUF_KLINGEL_SEK * 1000).toISOString()).limit(1);
+        const { data: rufe } = await db.from("kc_club_anruf").select("id,von,art,erstellt_am").eq("an", ich.person_id).eq("status", "klingelt").gte("erstellt_am", new Date(Date.now() - ANRUF_KLINGEL_SEK * 1000).toISOString()).order("erstellt_am", { ascending: false }).limit(1);
+        // KC-CLUB-ANRUF-VERPASST (0.81.0): nicht angenommen, nicht selbst abgelehnt, Hinweis noch nicht gesehen (letzte 24 h).
+        // Nicht melden, wenn wir danach doch miteinander telefoniert haben (z. B. nach gleichzeitigem Anrufen).
+        const klingelEnde = new Date(Date.now() - ANRUF_KLINGEL_SEK * 1000).toISOString();
+        const { data: verp0 } = await db.from("kc_club_anruf").select("id,von,art,erstellt_am").eq("an", ich.person_id).is("angenommen_am", null).is("verpasst_gesehen_am", null)
+          .gte("erstellt_am", new Date(Date.now() - 86400000).toISOString()).or(`status.eq.verpasst,and(status.eq.klingelt,erstellt_am.lt."${klingelEnde}")`).order("erstellt_am", { ascending: false }).limit(5);
+        let verp: any[] = verp0 ?? [];
+        if (verp.length) {
+          const { data: spaeter } = await db.from("kc_club_anruf").select("von,an,angenommen_am").not("angenommen_am", "is", null).gte("angenommen_am", verp[verp.length - 1].erstellt_am)
+            .or(`von.eq.${ich.person_id},an.eq.${ich.person_id}`);
+          verp = verp.filter((v) => !(spaeter ?? []).some((s: any) => [s.von, s.an].includes(v.von) && s.angenommen_am > v.erstellt_am));
+        }
         on.delete(ich.person_id);
-        const leute = await personen([...on, ...(anMich ?? []).map((x: any) => x.von), ...(vonMir ?? []).map((x: any) => x.an), ...(rufe ?? []).map((x: any) => x.von)]);
+        const leute = await personen([...on, ...(anMich ?? []).map((x: any) => x.von), ...(vonMir ?? []).map((x: any) => x.an), ...(rufe ?? []).map((x: any) => x.von), ...verp.map((x: any) => x.von)]);
         const wer = (id: string) => ({ person_id: id, name: leute.get(id)?.display_name || id, vorname: vorname(leute.get(id) ?? null) || id });
-        return json({ zeigen, online: [...on].map(wer), klopfen: (anMich ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), zeit: x.erstellt_am })),
+        return json({ zeigen, verpasst: verp.map((x: any) => ({ id: x.id, von: wer(x.von), art: x.art, zeit: x.erstellt_am })), online: [...on].map(wer), klopfen: (anMich ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), zeit: x.erstellt_am })),
           antworten: (vonMir ?? []).map((x: any) => ({ id: x.id, an: wer(x.an), status: x.status, thread: x.thread_id })),
           anrufe: (rufe ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), art: x.art, zeit: x.erstellt_am })) });
       }
@@ -2128,7 +2149,7 @@ Köcheclub Werne`,
         return json({ id: a.id, status: a.status, ichRufe, art: a.art, erstellt_am: a.erstellt_am,
           gegenueber: { person_id: gegen, name: leute.get(gegen)?.display_name || gegen, vorname: vorname(leute.get(gegen) ?? null) || gegen },
           // SDP nur an die jeweils andere Seite
-          ...(ichRufe ? { antwort: a.antwort } : { angebot: a.angebot }) });
+          ...(ichRufe ? { antwort: a.antwort, kurzantwort: a.kurzantwort ?? null } : { angebot: a.angebot }) });
       }
 
       case "anruf_annehmen": {
@@ -2136,6 +2157,48 @@ Köcheclub Werne`,
         if (a.an !== ich.person_id) throw new Fehler("Nur der Angerufene kann annehmen.", 403);
         if (a.status !== "klingelt") throw new Fehler(a.status === "verpasst" ? "Der Anruf ist schon vorbei." : "Der Anruf wurde schon beendet.", 409);
         await db.from("kc_club_anruf").update({ status: "angenommen", antwort: sdpText(p.antwort), angenommen_am: jetzt() }).eq("id", a.id);
+        return json({ ok: true });
+      }
+
+      // KC-CLUB-ANRUF-KURZANTWORT (0.81.0): Anruf ablehnen (oder verpassten beantworten) und dem Anrufer kurz schreiben.
+      // Die Antwort steht sofort in seinem Anrufbildschirm und zusätzlich als Nachricht in eurer Unterhaltung.
+      case "anruf_antwort": {
+        const a = await anrufHolen(ich, p.id);
+        if (a.an !== ich.person_id) throw new Fehler("Nur der Angerufene kann antworten.", 403);
+        if (a.angenommen_am) throw new Fehler("Der Anruf wurde schon angenommen.", 409);
+        const text = txt(p.text, ANRUF_EIGEN_ZEICHEN);
+        if (!text) throw new Fehler("Bitte eine Antwort wählen oder schreiben.");
+        await db.from("kc_club_anruf").update({ kurzantwort: text, verpasst_gesehen_am: jetzt(),
+          ...(a.status === "klingelt" ? { status: "abgelehnt", beendet_am: jetzt(), beendet_von: ich.person_id } : {}) }).eq("id", a.id);
+        // als Nachricht in die Zweier-Unterhaltung (anlegen, falls es noch keine gibt)
+        let threadId = await zweierGespraech(ich.person_id, a.von);
+        if (!threadId) {
+          const { data: th } = await db.from("kc_communication_threads").insert({ org_id: ORG, subject: "", created_by_person_id: ich.person_id }).select("id").single();
+          if (th) { threadId = th.id; await db.from("kc_communication_thread_participants").insert([ich.person_id, a.von].map((person_id) => ({ thread_id: th.id, person_id }))); }
+        }
+        let versand = { gesendet: 0, fehler: 0 } as any;
+        if (threadId) {
+          const body = `📞 Zu deinem Anruf: ${text}`;
+          const { data: m } = await db.from("kc_communication_messages").insert({ thread_id: threadId, sender_person_id: ich.person_id, body }).select("id,created_at").single();
+          await Promise.all([
+            db.from("kc_communication_thread_participants").update({ hidden_at: null }).eq("thread_id", threadId).not("hidden_at", "is", null),
+            db.from("kc_communication_threads").update({ updated_at: jetzt() }).eq("id", threadId),
+            m ? db.from("kc_communication_thread_participants").update({ last_read_at: m.created_at }).eq("thread_id", threadId).eq("person_id", ich.person_id) : Promise.resolve(),
+          ]);
+          if (m) versand = await senden("club_nachricht", [a.von], {
+            titel: `💬 ${ich.name}`, kurz: text, betreff: `Köcheclub Werne – ${ich.name} zu deinem Anruf`,
+            text: `Hallo,\n\n${ich.name} konnte deinen Anruf gerade nicht annehmen und schreibt:\n\n${text}\n\nIn der Köcheclub-App: ${APP_URL}#nachricht=${threadId}\n\nViele Grüße\nKöcheclub Werne`,
+            url: `${APP_URL}#nachricht=${threadId}`,
+          }, `club-anruf-antwort:${a.id}`);
+        }
+        await protokoll(ich.person_id, "anruf_kurzantwort", { anruf: a.id, an: a.von, versand });
+        return json({ ok: true, thread: threadId });
+      }
+
+      // KC-CLUB-ANRUF-VERPASST (0.81.0): Hinweis „Verpasster Anruf“ gesehen
+      case "anruf_verpasst_gesehen": {
+        const ids = (Array.isArray(p.ids) ? p.ids : []).map(String).slice(0, 20);
+        if (ids.length) await db.from("kc_club_anruf").update({ verpasst_gesehen_am: jetzt() }).eq("an", ich.person_id).in("id", ids).is("verpasst_gesehen_am", null);
         return json({ ok: true });
       }
 
@@ -2295,6 +2358,19 @@ Köcheclub Werne`,
         await db.rpc("kc_club_zugangslinks_schwaerzen").then(() => {}, () => {});
         await protokoll(ich.person_id, "zugang_link_gemailt", { versand });
         return json({ ok: (versand.gesendet ?? 0) > 0, versand });
+      }
+
+      // KC-CLUB-ANRUF-KURZANTWORT (0.81.0): Schnellantworten für alle einstellen (Admin)
+      case "anruf_antworten_setzen": {
+        nurAdmin(ich);
+        const alt = await anrufAntworten();
+        const texte = (Array.isArray(p.texte) ? p.texte : []).map((x: unknown) => txt(x, ANRUF_ANTWORT_ZEICHEN)).filter(Boolean);
+        if (!texte.length) throw new Fehler("Bitte mindestens eine Antwort eintragen.");
+        if (texte.length > ANRUF_ANTWORTEN_MAX) throw new Fehler(`Höchstens ${ANRUF_ANTWORTEN_MAX} Antworten.`);
+        const { error } = await db.from("kc_club_konfig").upsert({ schluessel: "anruf_antworten", wert: { texte }, geaendert_von: ich.person_id, geaendert_am: jetzt() });
+        if (error) throw new Fehler("Antworten konnten nicht gespeichert werden.", 500);
+        await protokoll(ich.person_id, "anruf_antworten_gesetzt", { vorher: alt.texte, nachher: texte });
+        return json({ ok: true, texte });
       }
 
       case "pinnwand_fristen_setzen": {
