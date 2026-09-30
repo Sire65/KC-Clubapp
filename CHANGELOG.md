@@ -1,5 +1,10 @@
 # Änderungen
 
+## 0.68.0 – 2026-09-30 (DEV)
+
+- KC-CLUB-MODUS-REIHUM (Wunsch Hansi): Tipp auf Sonne/Mond schaltet reihum A (Automatik) → T (immer Tag) → N (immer Nacht);
+  vorher nur Tag/Nacht fest, Automatik nur in ⚙️ → Darstellung (dort weiter wählbar). Hinweis nennt die neue Einstellung.
+
 ## 0.67.0 – 2026-09-30 (DEV)
 
 - KC-CLUB-MODUS-ANZEIGE (neu, Wunsch Hansi): kleines Schild am Sonne/Mond-Knopf oben – A = Automatik, T = immer Tag,

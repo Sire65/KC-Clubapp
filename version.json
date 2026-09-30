@@ -1,10 +1,16 @@
 {
-  "version": "0.67.0",
+  "version": "0.68.0",
   "datum": "2026-09-29",
   "neu": [
-    "🌙 Am Sonne/Mond-Knopf oben zeigt ein kleines A, T oder N, was eingestellt ist: Automatik, immer Tag oder immer Nacht"
+    "🌙 Der Sonne/Mond-Knopf schaltet jetzt reihum: A Automatik → T immer Tag → N immer Nacht"
   ],
   "verlauf": [
+    {
+      "version": "0.68.0",
+      "neu": [
+        "🌙 Der Sonne/Mond-Knopf schaltet jetzt reihum: A Automatik → T immer Tag → N immer Nacht"
+      ]
+    },
     {
       "version": "0.67.0",
       "neu": [

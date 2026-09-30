@@ -1210,4 +1210,15 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/const MODUS_ZEICHEN = \{ auto: \["A", "Automatik"\], tag: \["T", "Immer Tag"\], nacht: \["N", "Immer Nacht"\] \}/.test(html) && /<span class="modusbuchstabe" aria-hidden="true">\$\{mz\[0\]\}<\/span>/.test(html), "A/T/N-Anzeige fehlt");
 }
 
+// 90. 0.68.0: Tag/Nacht-Knopf reihum A → T → N (KC-CLUB-MODUS-REIHUM)
+{
+  const code = html.slice(html.indexOf("const MODUS_REIHE"), html.indexOf("setInterval(() => { if (DS.modus === \"auto\")"));
+  const gesetzt = [];
+  const g = new Function("designSpeichern", "melde", "istNacht", "let DS = { modus: 'auto' };" + code + "; return { tipp: dunkelUmschalten, modus: () => DS.modus, setze: (m) => { DS = { modus: m }; } };")(() => gesetzt.push(1), () => {}, () => false);
+  const folge = []; for (let i = 0; i < 4; i++) { g.tipp(); folge.push(g.modus()); }
+  assert.deepEqual(folge, ["tag", "nacht", "auto", "tag"], "Reihenfolge A → T → N stimmt nicht");
+  g.setze("unbekannt"); g.tipp(); assert.equal(g.modus(), "auto", "unbekannter Modus → Automatik");
+  assert.equal(gesetzt.length, 5, "Einstellung wird nicht gespeichert");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
