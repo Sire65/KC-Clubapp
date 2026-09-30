@@ -1266,7 +1266,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "0.79.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.80.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -1848,6 +1848,7 @@ function einstiegHinweis() {
 
 // ---------- KC-CLUB-ONLINE (0.29.0): wer ist online, Anklopfen, schneller Direkt-Chat ----------
 // Die App meldet sich alle 60 s beim Server (nur wenn sichtbar). Online = in den letzten 2½ Minuten da gewesen.
+let PUSH_AKTIV = false; // KC-CLUB-ANRUF-TAKT (0.80.0): dieses Gerät bekommt Push → Online-Takt darf langsamer sein
 let ONL = { zeigen: true, ids: new Set(), liste: [], erledigt: new Set(), wartet: null, timer: null, takt: 0 };
 async function onlinePing() {
   if (!KEY || !ICH || document.hidden) return;
@@ -1859,6 +1860,13 @@ async function onlinePing() {
     // jemand klopft bei mir an → Fenster (jedes Anklopfen nur einmal)
     const ruf = (r.anrufe || []).find((x) => !ONL.erledigt.has("r" + x.id));
     if (ruf && !RUF) { ONL.erledigt.add("r" + ruf.id); anrufEingehend(ruf.id); }
+    // KC-CLUB-GEGENANRUF (0.80.0): wir rufen uns gerade gegenseitig an – die höhere Mitgliedsnummer gibt ihren Anruf auf
+    // und nimmt den anderen an; die andere Seite klingelt einfach weiter. So sieht nie keiner ein „Annehmen“.
+    else if (ruf && RUF?.rolle === "rufer" && !RUF.verbunden && !RUF.pc?.remoteDescription && RUF.gegen?.person_id === ruf.von?.person_id && ICH?.person_id > ruf.von.person_id) {
+      ONL.erledigt.add("r" + ruf.id); const meiner = RUF.id, mitBild = RUF.art === "video";
+      anrufAufraeumen(); if (meiner) api("anruf_ende", { id: meiner }).catch(() => {});
+      gegenanrufAnnehmen(ruf.id, mitBild);
+    }
     const k = (r.klopfen || []).find((x) => !ONL.erledigt.has(x.id));
     if (k && $("klopfBlatt").classList.contains("versteckt")) klopfZeigen(k);
     // Antwort auf mein Anklopfen
@@ -1874,7 +1882,9 @@ async function onlinePing() {
 // Takt: normal 60 s; während ich auf eine Antwort warte alle 4 s (höchstens 3 Minuten)
 function onlineTakt() {
   clearInterval(ONL.timer);
-  ONL.timer = setInterval(onlinePing, ONL.wartet ? 4000 : 60000);
+  // KC-CLUB-ANRUF-TAKT (0.80.0): ohne Push erfährt die App von einem Anruf nur über diesen Takt – ein Anruf klingelt 45 s,
+  // darum dann alle 15 s nachsehen (mit Push weckt der Push die offene App sofort, 60 s reichen).
+  ONL.timer = setInterval(onlinePing, ONL.wartet ? 4000 : PUSH_AKTIV ? 60000 : 15000);
 }
 document.addEventListener("visibilitychange", () => { if (!document.hidden) onlinePing(); });
 function onlineLeisteZeigen() {
@@ -2056,6 +2066,7 @@ async function anrufen(pid, mitBild) {
     const { pc, strom } = await anrufVerbindung(mitBild); Object.assign(RUF, { pc, strom }); anrufKnoepfe("rufe");
     await pc.setLocalDescription(await pc.createOffer()); await iceFertig(pc);
     const r = await api("anruf_start", { an: pid, angebot: pc.localDescription.sdp, art: RUF.art });
+    if (r.gegenanruf) { anrufAufraeumen(); return gegenanrufAnnehmen(r.gegenanruf, mitBild); }
     RUF.id = r.id; anrufZustand(`${mitBild ? "🎥" : "📞"} Klingelt bei ${m.vorname || m.name} …`); klang("frei");
     RUF.poll = setInterval(anrufPruefen, 1500);
   } catch (e) { anrufAufraeumen(); melde(e.message, true); }
@@ -2086,6 +2097,13 @@ async function anrufEingehend(id) {
     anrufSchirm(r.gegenueber); anrufKnoepfe("eingehend"); anrufZustand(RUF.art === "video" ? `🎥 ${r.gegenueber.vorname} ruft per Video an …` : `📞 ${r.gegenueber.vorname} ruft an …`); klang("klingeln");
     RUF.poll = setInterval(anrufPruefen, 2000);
   } catch {}
+}
+// KC-CLUB-GEGENANRUF (0.80.0): Wer selbst anrufen wollte, nimmt den gleichzeitigen Anruf der Gegenseite direkt an
+async function gegenanrufAnnehmen(id, mitBild) {
+  await anrufEingehend(id);
+  if (RUF?.id !== id || RUF.rolle !== "angerufen") return;
+  melde(`${RUF.gegen.vorname || RUF.gegen.name} hat dich gleichzeitig angerufen – ihr werdet verbunden.`);
+  anrufAnnehmen(mitBild);
 }
 async function anrufAnnehmen(mitBild) {
   if (!RUF || RUF.rolle !== "angerufen") return;
@@ -3649,7 +3667,7 @@ async function neuLaden(vonHand) {
     ansichtUebernehmen(INIT.einstellungen?.ansicht);
     const begruesst = ansichtPruefen() || begruessungPruefen();
     if (!ONL.timer) nachUpdatePruefen(begruesst);
-    if (!ONL.timer) { onlinePing(); onlineTakt(); const a = /#anklopfen=([0-9a-f-]{36})/.exec(START_HASH || ""); if (a) anklopfenAusLink(a[1]); const c = /#anruf=([0-9a-f-]{36})/.exec(START_HASH || ""); if (c) { ONL.erledigt.add("r" + c[1]); anrufEingehend(c[1]); } }
+    if (!ONL.timer) { onlinePing(); onlineTakt(); pushAktivPruefen(); const a = /#anklopfen=([0-9a-f-]{36})/.exec(START_HASH || ""); if (a) anklopfenAusLink(a[1]); const c = /#anruf=([0-9a-f-]{36})/.exec(START_HASH || ""); if (c) { ONL.erledigt.add("r" + c[1]); anrufEingehend(c[1]); } }
     if (!PW.startGeprueft) { PW.startGeprueft = true; pwStart(begruesst); }
     designUebernehmen(INIT.einstellungen?.design); infoFelderAktualisieren(); infoStartUebernehmen(INIT.einstellungen?.infofeld); ansichtInfo();
     VB.wartung = INIT.wartung || null; VB.server = INIT.server || null; vbCommSetzen(INIT.communicator || null);
@@ -5909,11 +5927,18 @@ async function rolleBearbeiten(pid) {
 
 // ---------- Push & Ton ----------
 const pushMoeglich = () => "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+// KC-CLUB-ANRUF-TAKT (0.80.0): Push-Stand merken; ändert er sich, Online-Takt neu setzen
+async function pushAktivPruefen() {
+  let an = false;
+  try { an = pushMoeglich() && Notification.permission === "granted" && !!(await (await navigator.serviceWorker.ready).pushManager.getSubscription()); } catch {}
+  if (an !== PUSH_AKTIV) { PUSH_AKTIV = an; if (ONL.timer) onlineTakt(); }
+}
 function b64url(s) { const p = "=".repeat((4 - (s.length % 4)) % 4), b = atob((s + p).replace(/-/g, "+").replace(/_/g, "/")); return Uint8Array.from(b, (c) => c.charCodeAt(0)); }
 async function pushStatusZeigen() {
   if (!pushMoeglich()) { $("pushStatus").textContent = "Auf diesem Gerät nicht möglich (iPhone: erst auf den Home-Bildschirm legen)."; $("pushKnopf").disabled = true; return; }
   const reg = await navigator.serviceWorker.ready, sub = await reg.pushManager.getSubscription();
   const an = sub && Notification.permission === "granted";
+  pushAktivPruefen();
   $("pushStatus").textContent = an ? "Eingeschaltet ✅" : Notification.permission === "denied" ? "Im Browser blockiert – bitte in den Handy-Einstellungen erlauben." : "Ausgeschaltet";
   $("pushKnopf").textContent = an ? "Ausschalten" : "Einschalten";
 }

@@ -1355,4 +1355,13 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/ueberblick: \{ bauen: \(\) => druckUeberblick\(\) \}/.test(html) && /ueberblickHtml\(await ueberblickLaden\(\), true\)/.test(html), "Druck aus derselben Quelle");
 }
 
+// 101. 0.80.0: gleichzeitige Anrufe + Anruf-Takt ohne Push (KC-CLUB-GEGENANRUF / KC-CLUB-ANRUF-TAKT)
+{
+  const st = server.slice(server.indexOf('case "anruf_start"'), server.indexOf('case "anruf_status"'));
+  assert.ok(/eq\("von", an\)\.eq\("an", ich\.person_id\)\.eq\("status", "klingelt"\)/.test(st) && /gegenanruf: gegen\[0\]\.id/.test(st) && st.indexOf("gegenanruf") < st.indexOf('from("kc_club_anruf").insert'), "Server: Gegenanruf vor dem Anlegen prüfen");
+  assert.ok(/if \(r\.gegenanruf\) \{ anrufAufraeumen\(\); return gegenanrufAnnehmen\(r\.gegenanruf, mitBild\); \}/.test(html), "App: Gegenanruf annehmen");
+  assert.ok(/RUF\.gegen\?\.person_id === ruf\.von\?\.person_id && ICH\?\.person_id > ruf\.von\.person_id/.test(html), "Fallback: feste Regel, wer nachgibt");
+  assert.ok(/ONL\.wartet \? 4000 : PUSH_AKTIV \? 60000 : 15000/.test(html) && html.indexOf("let PUSH_AKTIV") < html.indexOf("let ONL ="), "Takt ohne Push 15 s (vor Nutzung deklariert)");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

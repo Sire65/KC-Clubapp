@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.79.0";
+const SERVER_VERSION = "0.80.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -2104,6 +2104,11 @@ Köcheclub Werne`,
         const angebot = sdpText(p.angebot);
         // alte, noch klingelnde Anrufe von mir beenden (nur einer gleichzeitig)
         await db.from("kc_club_anruf").update({ status: "beendet", beendet_am: jetzt(), beendet_von: ich.person_id }).eq("von", ich.person_id).eq("status", "klingelt");
+        // KC-CLUB-GEGENANRUF (0.80.0): ruft mich die Gegenseite gerade selbst an, keinen zweiten Anruf anlegen –
+        // sonst warten beide auf ihren eigenen Anruf, und keiner sieht „Annehmen“. Die App nimmt stattdessen den der Gegenseite an.
+        const { data: gegen } = await db.from("kc_club_anruf").select("id").eq("von", an).eq("an", ich.person_id).eq("status", "klingelt")
+          .gte("erstellt_am", new Date(Date.now() - ANRUF_KLINGEL_SEK * 1000).toISOString()).order("erstellt_am", { ascending: false }).limit(1);
+        if (gegen?.length) { await protokoll(ich.person_id, "anruf_gegenanruf", { an, anruf: gegen[0].id }); return json({ ok: true, gegenanruf: gegen[0].id }); }
         const art = p.art === "video" ? "video" : "ton"; // KC-CLUB-VIDEO (0.32.0)
         const { data: a, error } = await db.from("kc_club_anruf").insert({ von: ich.person_id, an, art, angebot }).select("id").single();
         if (error || !a) throw new Fehler("Anruf konnte nicht gestartet werden.", 500);

@@ -1,5 +1,18 @@
 # Änderungen
 
+## 0.80.0 – 2026-09-30 (DEV)
+
+- KC-CLUB-GEGENANRUF (Fehler, gemeldet von Hansi: „Annehmen fehlt auf der Gegenseite“): Riefen sich zwei Mitglieder
+  gleichzeitig an (30.09. 12:32, Hansi ↔ Klaus, 3 s Abstand), wartete jede App auf ihren eigenen Anruf und ignorierte den
+  eingehenden (anrufEingehend bricht ab, solange RUF läuft) – keiner sah „Annehmen“, beide Anrufe „verpasst“.
+  Server anruf_start: klingelt schon ein Anruf der Gegenseite an mich, wird kein zweiter angelegt, sondern
+  { gegenanruf: id } zurückgegeben; die App nimmt ihn direkt an (gegenanrufAnnehmen, Ton/Video wie gewählt).
+  Fallback bei exakt gleichzeitigem Anlegen: im Online-Takt gibt die höhere Mitgliedsnummer ihren Anruf auf und nimmt den
+  anderen an. Gilt für Ton und Video.
+- KC-CLUB-ANRUF-TAKT: Ohne Push erfuhr die offene App von einem Anruf nur über den 60-s-Online-Takt, ein Anruf klingelt aber
+  nur 45 s – er konnte ganz durchrutschen. Ohne aktiven Push jetzt alle 15 s (PUSH_AKTIV, pushAktivPruefen); mit Push bleibt
+  es bei 60 s, weil der Push die offene App sofort weckt.
+
 ## 0.79.0 – 2026-09-30 (DEV)
 
 - KC-CLUB-UEBERBLICK (Wunsch Hansi): neue Ansicht „🗺️ Club-App auf einen Blick“ (📚 Meine Dokumente, auch in der einfachen

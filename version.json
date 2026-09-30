@@ -1,10 +1,18 @@
 {
-  "version": "0.79.0",
+  "version": "0.80.0",
   "datum": "2026-09-30",
   "neu": [
-    "🗺️ Neu unter 📚 Meine Dokumente: „Club-App auf einen Blick“ – alle Bereiche und alle Neuigkeiten, immer aktuell, auch zum Ausdrucken"
+    "📞 Ruft ihr euch gleichzeitig an, werdet ihr jetzt direkt verbunden – vorher sah keiner von beiden „Annehmen“ (auch bei Video)",
+    "🔔 Ohne Push-Benachrichtigung sieht die App jetzt alle 15 Sekunden nach Anrufen – vorher konnte ein Anruf durchrutschen"
   ],
   "verlauf": [
+    {
+      "version": "0.80.0",
+      "neu": [
+        "📞 Ruft ihr euch gleichzeitig an, werdet ihr jetzt direkt verbunden – vorher sah keiner von beiden „Annehmen“ (auch bei Video)",
+        "🔔 Ohne Push-Benachrichtigung sieht die App jetzt alle 15 Sekunden nach Anrufen – vorher konnte ein Anruf durchrutschen"
+      ]
+    },
     {
       "version": "0.79.0",
       "neu": [
