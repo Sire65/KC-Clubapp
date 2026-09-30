@@ -551,6 +551,11 @@
   details.karte.innen { box-shadow: none; border: 1px solid var(--linie); margin: 8px 0 0; }
   details.karte.innen > summary { font-size: 1rem; }
   body:not(.einfach) #v-einstellungen details[data-klappe="einfach"] { display: none; }
+  /* KC-CLUB-ANSICHT-NAME (0.66.0): hinter „Schnellzugriff“ klein und farbig, welche Ansicht gerade aktiv ist */
+  .ansichtname { font-size: .66rem; font-weight: 700; margin-left: 2px; vertical-align: middle; white-space: nowrap; }
+  #versionMarke { white-space: nowrap; flex: none; }
+  .ansichtname.ein { color: #1e8449; } .ansichtname.erw { color: var(--rot); }
+  body.einfach .ansichtname.erw, body:not(.einfach) .ansichtname.ein { display: none; }
   .ansichtwahl { display: grid; gap: 10px; margin: 10px 0; }
   .ansichtwahl button { text-align: left; border: 2px solid var(--linie); border-radius: 16px; background: var(--karte); padding: 14px; cursor: pointer; font: inherit; color: inherit; display: flex; gap: 12px; align-items: center; }
   .ansichtwahl button.empfohlen { border-color: #1e8449; }
@@ -699,7 +704,7 @@
       <div class="ipunkte" id="infoPunkte"></div>
     </div>
     <div id="updateHinweis"></div>
-    <div class="abschnitt"><h3>Schnellzugriff</h3><button class="marke" id="versionMarke" style="border:none;cursor:pointer" title="Update prüfen" onclick="updateKachel()">v–</button></div>
+    <div class="abschnitt"><h3>Schnellzugriff <span class="ansichtname ein">(Einfache Ansicht)</span><span class="ansichtname erw">(Erweiterte Ansicht)</span></h3><button class="marke" id="versionMarke" style="border:none;cursor:pointer" title="Update prüfen" onclick="updateKachel()">v–</button></div>
     <div class="register" id="register"></div>
     <div class="kachelleiste versteckt" id="kachelLeiste"><p>✏️ <b>Kacheln anordnen:</b> Kachel <b>kurz festhalten</b>, an den neuen Platz <b>ziehen</b> und loslassen (oder ◀ ▲ ▼ ▶ antippen). ✕ blendet aus, 👁️ wieder ein. Ausgeblendete bleiben hier blass an ihrem Platz.</p>
       <button class="knopf haupt klein" onclick="kaBearbeiten(false)">✅ Fertig</button><button class="knopf klein" onclick="kaStandard()">↺ Standard</button></div>
@@ -1182,7 +1187,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "0.65.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.66.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);

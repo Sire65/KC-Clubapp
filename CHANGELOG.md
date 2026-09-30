@@ -1,5 +1,10 @@
 # Änderungen
 
+## 0.66.0 – 2026-09-30 (DEV)
+
+- KC-CLUB-ANSICHT-NAME (neu, Wunsch Hansi): hinter „Schnellzugriff“ klein und farbig die aktive Ansicht –
+  „(Einfache Ansicht)“ grün bzw. „(Erweiterte Ansicht)“ clubrot; umgeschaltet nur per CSS über body.einfach.
+
 ## 0.65.0 – 2026-09-30 (DEV)
 
 - KC-CLUB-ADMIN-EINSTELLUNGEN (neu, Wunsch Hansi): alle Admin-Einstellungen in einem Klappbereich „🛠️ Admin-Einstellungen“

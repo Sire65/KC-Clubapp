@@ -1199,4 +1199,10 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/pinnwandFristen: pwFristen \}\);/.test(server) && /const pwFristen = \(\) => \(\{ \.\.\.PW_FRISTEN_STANDARD, \.\.\.\(INIT\?\.pinnwandFristen \|\| \{\}\) \}\);/.test(html), "Fristen kommen nicht vom Server");
 }
 
+// 88. 0.66.0: aktive Ansicht hinter „Schnellzugriff“ (KC-CLUB-ANSICHT-NAME)
+{
+  assert.ok(/<h3>Schnellzugriff <span class="ansichtname ein">\(Einfache Ansicht\)<\/span><span class="ansichtname erw">\(Erweiterte Ansicht\)<\/span><\/h3>/.test(html), "Ansichtsname fehlt");
+  assert.ok(/body\.einfach \.ansichtname\.erw, body:not\(\.einfach\) \.ansichtname\.ein \{ display: none; \}/.test(html), "zeigt nicht nur die aktive Ansicht");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
