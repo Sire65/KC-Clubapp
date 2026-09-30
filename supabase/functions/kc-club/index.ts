@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.97.0";
+const SERVER_VERSION = "0.98.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -93,6 +93,30 @@ const BEREICH_VON: Record<string, string> = { club_treffen: "termine", club_erin
 const BEREICHE = ["termine", "nachrichten", "vorschlaege", "dienste", "geburtstage", "pinnwand"];
 // Anzeige-Standard, solange nichts gespeichert ist (Server nutzt dann die bisherige Standardregel)
 const STANDARD_WAHL: Record<string, { push: boolean; email: boolean }> = { termine: { push: true, email: true }, nachrichten: { push: true, email: false }, vorschlaege: { push: true, email: false }, dienste: { push: false, email: false }, geburtstage: { push: true, email: false }, pinnwand: { push: true, email: false } };
+// ---------- KC-CLUB-RUHEZEIT (0.98.0): „Nicht stören“ ----------
+// Wer „Nicht stören“ eingeschaltet hat, bekommt in dieser Zeit keinen Push. Mail geht weiter (stört nachts nicht).
+// Was dabei ausfällt, wird gezählt; nach dem Ende der Ruhezeit schickt die Wartung EINE Sammelmeldung.
+// Anrufe/Anklopfen laufen nicht über senden() und kommen deshalb immer durch; @Erwähnungen, wenn so eingestellt.
+const minutenBerlin = (d = new Date()) => { const [h, m] = new Intl.DateTimeFormat("en-GB", { timeZone: TZ, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(d).split(":").map(Number); return h * 60 + m; };
+const hhmm = (x: string) => Number(x.slice(0, 2)) * 60 + Number(x.slice(3, 5));
+function inRuhezeit(r: any, jetztMin = minutenBerlin()) {
+  if (!r?.an) return false;
+  const v = hhmm(r.von), b = hhmm(r.bis);
+  return v === b ? false : v < b ? jetztMin >= v && jetztMin < b : jetztMin >= v || jetztMin < b;
+}
+async function ruhendePersonen(ids: string[], erwaehnung = false): Promise<Set<string>> {
+  if (!ids.length) return new Set();
+  const { data } = await db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "ruhezeit").in("person_id", ids);
+  return new Set((data ?? []).filter((x: any) => inRuhezeit(x.wert) && !(erwaehnung && x.wert?.erwaehnung)).map((x: any) => x.person_id));
+}
+async function ruhezeitVerpasst(ids: string[], titel: string) {
+  for (const id of ids) {
+    const { data } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", id).eq("schluessel", "ruhezeit_verpasst").maybeSingle();
+    const w: any = data?.wert || { anzahl: 0, titel: [] };
+    await db.from("kc_club_person_einstellung").upsert({ person_id: id, schluessel: "ruhezeit_verpasst", wert: { anzahl: (w.anzahl || 0) + 1, titel: [txt(titel, 80), ...(w.titel || [])].slice(0, 5) }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
+  }
+}
+
 // KC-CLUB-OHNEAPP: Wer die Club-App noch nie geöffnet hat, bekommt nur eine Mail (Regel <eventKey>_mail) –
 // ein Push über eine Anmeldung aus einem anderen Programm würde auf die gesperrte App führen.
 async function senden(eventKey: string, personIds: string[], vars: Record<string, unknown>, korrelation: string) {
@@ -104,6 +128,7 @@ async function senden(eventKey: string, personIds: string[], vars: Record<string
   const mitApp = new Set((zug ?? []).map((z: any) => z.person_id));
   const w = new Map((wahl ?? []).map((x: any) => [x.person_id, x]));
   const hinweis = "\n\n(Die Köcheclub-App hast du noch nicht geöffnet – deinen persönlichen Link bekommst du von Hansi.)";
+  const ruhe = await ruhendePersonen(personIds.filter((id) => mitApp.has(id))), verpasst: string[] = []; // KC-CLUB-RUHEZEIT
   // Gruppen je Regel; Mitglieder ohne App getrennt (sie bekommen den Hinweis auf den Link)
   const gruppen = new Map<string, { key: string; ohne: boolean; ids: string[] }>();
   for (const id of personIds) {
@@ -113,6 +138,8 @@ async function senden(eventKey: string, personIds: string[], vars: Record<string
     else {
       const x: any = w.get(id);
       key = !x ? eventKey : x.push && x.email ? eventKey + "_beide" : x.push ? eventKey + "_push" : x.email ? eventKey + "_mail" : null;
+      // Ruhezeit: Push fällt weg, Mail bleibt; ohne Mail wird die Meldung für die Sammelmeldung gezählt
+      if (key && ruhe.has(id) && key !== eventKey + "_mail") { if (key === eventKey + "_beide") key = eventKey + "_mail"; else { verpasst.push(id); key = null; } }
     }
     if (!key) continue; // Mitglied hat für diesen Bereich alles ausgeschaltet
     const g = gruppen.get(`${ohne}|${key}`) ?? { key, ohne, ids: [] };
@@ -123,16 +150,27 @@ async function senden(eventKey: string, personIds: string[], vars: Record<string
     const r = await routerSenden(g.key, g.ids, g.ohne ? { ...vars, text: String(vars.text ?? "") + hinweis } : vars, korrelation);
     gesendet += r.gesendet; fehler += r.fehler;
   }
-  return { gesendet, fehler };
+  if (verpasst.length) await ruhezeitVerpasst(verpasst, String(vars.titel ?? vars.kurz ?? "Meldung"));
+  return { gesendet, fehler, ruhezeit: verpasst.length };
 }
 
 // KC-CLUB-ZUSTELLWAHL: Absender wählt ausdrücklich, wie benachrichtigt wird (🔔 Push und/oder ✉️ E-Mail).
 // Leer = wie jedes Mitglied es eingestellt hat (senden). Wer die App noch nie geöffnet hat, bekommt immer eine Mail.
 const ZUSTELLWEGE = ["push", "email"];
-async function sendenGewaehlt(eventKey: string, personIds: string[], wege: string[], vars: Record<string, unknown>, korrelation: string) {
+async function sendenGewaehlt(eventKey: string, personIds: string[], wege: string[], vars: Record<string, unknown>, korrelation: string, opt: { erwaehnung?: boolean } = {}) {
   const w = [...new Set(wege.filter((x) => ZUSTELLWEGE.includes(x)))];
   if (!w.length) return await senden(eventKey, personIds, vars, korrelation);
   if (!personIds.length) return { gesendet: 0 };
+  // KC-CLUB-RUHEZEIT: wer gerade „Nicht stören“ hat, bekommt keinen Push – Mail, wenn gewählt; sonst später gesammelt
+  if (w.includes("push")) {
+    const ruhe = await ruhendePersonen(personIds, !!opt.erwaehnung);
+    if (ruhe.size) {
+      const still = personIds.filter((id) => ruhe.has(id)); personIds = personIds.filter((id) => !ruhe.has(id));
+      if (w.includes("email")) await routerSenden(eventKey + "_mail", still, vars, korrelation + ":ruhe");
+      else await ruhezeitVerpasst(still, String(vars.titel ?? vars.kurz ?? "Meldung"));
+      if (!personIds.length) return { gesendet: 0, ruhezeit: still.length };
+    }
+  }
   const { data: zug } = await db.from("kc_club_zugang").select("person_id").eq("aktiv", true).not("zuletzt_gesehen", "is", null).in("person_id", personIds);
   const mitApp = new Set((zug ?? []).map((z: any) => z.person_id));
   const key = w.length === 2 ? eventKey + "_beide" : w[0] === "push" ? eventKey + "_push" : eventKey + "_mail";
@@ -415,6 +453,11 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
   online: (w) => ({ zeigen: w?.zeigen !== false }),
   // KC-CLUB-LIVETIPPEN (0.56.0): andere sehen live, was ich in einer Unterhaltung tippe (Standard: aus – freiwillig)
   live_tippen: (w) => ({ an: w?.an === true }),
+  // KC-CLUB-RUHEZEIT (0.98.0): „Nicht stören“ – in diesem Zeitraum kein Push (Anrufe kommen weiter durch)
+  ruhezeit: (w) => {
+    const zeit = (x: unknown, std: string) => /^([01]\d|2[0-3]):[0-5]\d$/.test(String(x)) ? String(x) : std;
+    return { an: w?.an === true, von: zeit(w?.von, "22:00"), bis: zeit(w?.bis, "07:00"), erwaehnung: w?.erwaehnung !== false };
+  },
   // KC-CLUB-PINNWAND-ERINNERUNG (0.64.0): „hängen lassen“ je eigenem Zettel – wann frühestens wieder erinnern (höchstens 20)
   pinnwand_erinnert: (w) => ({ bis: Object.fromEntries(Object.entries(w?.bis && typeof w.bis === "object" ? w.bis : {})
     .filter(([id, d]) => /^[0-9a-f-]{36}$/.test(id) && typeof d === "string" && !isNaN(Date.parse(d))).slice(-20)) }),
@@ -1417,6 +1460,24 @@ Köcheclub Werne`,
           anfr++;
         }
       }
+      // KC-CLUB-RUHEZEIT (0.98.0): nach „Nicht stören“ EINE Sammelmeldung mit dem, was ausgefallen ist
+      let ruheMeldungen = 0;
+      {
+        const { data: vp } = await db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "ruhezeit_verpasst");
+        const offen = (vp ?? []).filter((x: any) => (x.wert?.anzahl || 0) > 0);
+        if (offen.length) {
+          const { data: rz } = await db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "ruhezeit").in("person_id", offen.map((x: any) => x.person_id));
+          const ruht = new Set((rz ?? []).filter((x: any) => inRuhezeit(x.wert)).map((x: any) => x.person_id));
+          for (const x of offen) {
+            if (ruht.has(x.person_id)) continue;
+            await db.from("kc_club_person_einstellung").delete().eq("person_id", x.person_id).eq("schluessel", "ruhezeit_verpasst");
+            const n = x.wert.anzahl, t = (x.wert.titel || []).slice(0, 3).join(" · ");
+            await routerSenden("club_nachricht_push", [x.person_id], { titel: `🌅 Während „Nicht stören“: ${n} ${n === 1 ? "Meldung" : "Meldungen"}`, kurz: t || "Alles in der Köcheclub-App",
+              betreff: "Köcheclub Werne – verpasste Meldungen", text: `Während „Nicht stören“ kamen ${n} Meldungen: ${t}\n\n${APP_URL}`, url: APP_URL }, `club-ruhezeit:${x.person_id}:${Date.now()}`);
+            ruheMeldungen++;
+          }
+        }
+      }
       // KC-CLUB-STANDORT (0.92.0): abgelaufene Freigaben löschen – Koordinaten nicht länger als nötig speichern
       const { data: stWeg } = await db.from("kc_club_standort_live").delete().lt("bis", jetzt()).select("id");
       // KC-CLUB-FOTOALBUM: Papierkorb nach 30 Tagen endgültig leeren (Dateien entfernen → Speicher wird frei)
@@ -1431,7 +1492,7 @@ Köcheclub Werne`,
         }
         if (fotosEntfernt) await protokoll(null, "fotos_endgueltig_entfernt", { anzahl: fotosEntfernt });
       }
-      return json({ ok: true, erinnerungen: n, beendet, dienst, geb, aufg, nachfass, fotosEntfernt, anfragenErinnert: anfr, standorteGeloescht: (stWeg ?? []).length });
+      return json({ ok: true, erinnerungen: n, beendet, dienst, geb, aufg, nachfass, fotosEntfernt, anfragenErinnert: anfr, standorteGeloescht: (stWeg ?? []).length, ruheMeldungen });
     }
 
     // ----- KC-CLUB-ZUGANG-SELBST: Link verloren → neuen Link an die hinterlegte Mail-Adresse (ohne Anmeldung) -----
@@ -2343,10 +2404,19 @@ Köcheclub Werne`,
             await db.from("kc_communication_thread_participants").insert([ich.person_id, ...ziel].map((person_id) => ({ thread_id: threadId, person_id })));
           }
         }
-        // Anlagen: nur eigene, noch nicht verknüpfte
+        // Anlagen: nur eigene, noch nicht verknüpfte – beim Weiterleiten (KC-CLUB-WEITERLEITEN 0.98.0) auch die der
+        // Quell-Nachricht, sofern ich Teilnehmer ihrer Unterhaltung bin
+        let weiterVon: any = null;
+        if (p.weiterleiten_von) {
+          const { data: q } = await db.from("kc_communication_messages").select("id,thread_id,sender_person_id").eq("id", String(p.weiterleiten_von)).maybeSingle();
+          if (!q) throw new Fehler("Die weitergeleitete Nachricht gibt es nicht mehr.", 404);
+          await binTeilnehmer(q.thread_id, ich.person_id); weiterVon = q;
+        }
         if (anlagen.length) {
           const { data: att } = await db.from("kc_communication_attachments").select("id,object_path").in("id", anlagen);
-          if ((att ?? []).length !== anlagen.length || (att ?? []).some((x: any) => !String(x.object_path).startsWith(`club/${ich.person_id}/`)))
+          const { data: qa } = weiterVon ? await db.from("kc_communication_message_attachments").select("attachment_id").eq("message_id", weiterVon.id) : { data: [] as any[] };
+          const ausQuelle = new Set((qa ?? []).map((x: any) => x.attachment_id));
+          if ((att ?? []).length !== anlagen.length || (att ?? []).some((x: any) => !String(x.object_path).startsWith(`club/${ich.person_id}/`) && !ausQuelle.has(x.id)))
             throw new Fehler("Anlage nicht gefunden – bitte erneut anhängen.");
         }
         // KC-CLUB-ANTWORT (0.97.0): Antwort auf eine Nachricht derselben Unterhaltung (vorhandene Spalte reply_to_message_id)
@@ -2387,7 +2457,7 @@ Köcheclub Werne`,
             betreff: `Köcheclub Werne – ${ich.name} hat dich erwähnt${grp ? " in " + grp.name : ""}`,
             text: `Hallo,\n\n${ich.name} hat dich${grp ? ` in der Gruppe „${grp.name}“` : ""} erwähnt:\n\n${text}\n\nAntworten in der Köcheclub-App: ${APP_URL}#nachricht=${threadId}\n\nViele Grüße\nKöcheclub Werne`,
             url: `${APP_URL}#nachricht=${threadId}`,
-          }, `club-nachricht:${m.id}:erwaehnt`);
+          }, `club-nachricht:${m.id}:erwaehnt`, { erwaehnung: true });
           for (let i = ziel.length - 1; i >= 0; i--) if (erwaehnt.includes(ziel[i])) ziel.splice(i, 1);
         }
         const versand = await sendenGewaehlt("club_nachricht", ziel, wege, {
@@ -2396,7 +2466,7 @@ Köcheclub Werne`,
           text: `Hallo,\n\n${ich.name} hat dir im Köcheclub geschrieben${th?.subject ? ` („${th.subject}“)` : ""}:\n\n${text}${anlagen.length ? `\n\n📎 ${anlagen.length} Anlage(n) – in der App ansehen.` : ""}\n\nAntworten in der Köcheclub-App: ${APP_URL}#nachricht=${threadId}\n\nViele Grüße\nKöcheclub Werne`,
           url: `${APP_URL}#nachricht=${threadId}`,
         }, `club-nachricht:${m.id}`);
-        await protokoll(ich.person_id, "nachricht_gesendet", { thread: threadId, neu, empfaenger: ziel.length, anlagen: anlagen.length, wege, versand, antwort: !!antwortAuf, erwaehnt: erwaehnt.length, versandErw });
+        await protokoll(ich.person_id, weiterVon ? "nachricht_weitergeleitet" : "nachricht_gesendet", { thread: threadId, neu, empfaenger: ziel.length, anlagen: anlagen.length, wege, versand, antwort: !!antwortAuf, erwaehnt: erwaehnt.length, versandErw, ...(weiterVon ? { von_nachricht: weiterVon.id } : {}) });
         return json({ ok: true, id: threadId, versand });
       }
 
@@ -3930,6 +4000,20 @@ Köcheclub Werne`,
         }, { onConflict: "endpoint" });
         if (error) throw new Fehler("Push konnte nicht gespeichert werden.", 500);
         await protokoll(ich.person_id, "push_angemeldet", {});
+        return json({ ok: true });
+      }
+      // ----- KC-CLUB-GERAETE (0.98.0): welche Geräte bekommen meine Push-Meldungen? (nur eigene) -----
+      case "geraete_liste": {
+        const { data } = await db.from("kc_member_push_subscriptions").select("id,endpoint,user_agent,quelle,created_at,updated_at,last_success_at,last_error")
+          .eq("person_id", ich.person_id).eq("active", true).order("updated_at", { ascending: false });
+        const eigen = String(p.endpoint || "");
+        return json({ geraete: (data ?? []).map((x: any) => ({ id: x.id, ua: txt(x.user_agent, 300), quelle: x.quelle, seit: x.created_at, zuletztAngemeldet: x.updated_at,
+          zuletztZugestellt: x.last_success_at, fehler: txt(x.last_error, 160) || null, diesesGeraet: !!eigen && x.endpoint === eigen })) });
+      }
+      case "geraet_entfernen": {
+        const { data } = await db.from("kc_member_push_subscriptions").update({ active: false, updated_at: jetzt() }).eq("person_id", ich.person_id).eq("id", String(p.id || "")).select("id");
+        if (!data?.length) throw new Fehler("Gerät nicht gefunden.", 404);
+        await protokoll(ich.person_id, "geraet_entfernt", {});
         return json({ ok: true });
       }
       case "push_abmelden": {

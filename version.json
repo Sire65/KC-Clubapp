@@ -1,12 +1,20 @@
 {
-  "version": "0.97.0",
+  "version": "0.98.0",
   "datum": "2026-09-30",
   "neu": [
-    "👍 Reaktionen: Nachricht antippen → 👍 ❤️ 😂 😮 😢 🙏 – erscheint klein unter der Nachricht, nochmal tippen nimmt sie weg",
-    "↩️ Auf eine bestimmte Nachricht antworten: Nachricht antippen → „Antworten“ – sie steht dann als Zitat über deiner Antwort",
-    "📣 @Erwähnen in Gruppen: „@“ tippen und Namen wählen – wer erwähnt wird, bekommt eine eigene Meldung aufs Handy"
+    "↪️ Nachricht weiterleiten: Nachricht antippen → „Weiterleiten“ → Unterhaltung oder Mitglied wählen – Fotos und Anhänge gehen mit",
+    "🌙 Nicht stören: unter ⚙️ Mehr → Benachrichtigungen z. B. 22–7 Uhr kein Push; Anrufe kommen trotzdem durch, danach eine Sammelmeldung",
+    "📱 Meine Geräte: sehen, welche Handys/Tablets deine Push-Meldungen bekommen – ein altes Gerät mit einem Tipp entfernen"
   ],
   "verlauf": [
+    {
+      "version": "0.98.0",
+      "neu": [
+        "↪️ Nachricht weiterleiten: Nachricht antippen → „Weiterleiten“ → Unterhaltung oder Mitglied wählen – Fotos und Anhänge gehen mit",
+        "🌙 Nicht stören: unter ⚙️ Mehr → Benachrichtigungen z. B. 22–7 Uhr kein Push; Anrufe kommen trotzdem durch, danach eine Sammelmeldung",
+        "📱 Meine Geräte: sehen, welche Handys/Tablets deine Push-Meldungen bekommen – ein altes Gerät mit einem Tipp entfernen"
+      ]
+    },
     {
       "version": "0.97.0",
       "neu": [

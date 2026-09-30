@@ -1,5 +1,20 @@
 # Änderungen
 
+## 0.98.0 – 2026-09-30 (DEV)
+
+Vorschlag „Weiterleiten/Umleiten“, Punkte 1, 5 und 3 (Freigabe Hansi):
+- KC-CLUB-WEITERLEITEN: Nachricht antippen → „↪️ Weiterleiten“ → letzte Unterhaltungen oder Mitglied (Suche). Text mit Vermerk
+  „↪️ Weitergeleitet von …“, Anhänge gehen mit. Server: nachricht_senden nimmt weiterleiten_von; Anhänge der Quell-Nachricht
+  sind nur erlaubt, wenn man Teilnehmer ihrer Unterhaltung ist. Protokoll „nachricht_weitergeleitet“.
+- KC-CLUB-RUHEZEIT: ⚙️ Mehr → Benachrichtigungen → „🌙 Nicht stören“ von/bis (Standard 22–7 Uhr), „📣 @Erwähnungen trotzdem“.
+  In der Zeit kein Push: „Push + Mail“ → nur Mail; nur Push → gezählt; nach dem Ende schickt die Wartung EINE Sammelmeldung
+  „🌅 Während Nicht stören: n Meldungen“. Anrufe/Anklopfen laufen nicht über senden() und kommen immer durch. Gilt in
+  senden() und sendenGewaehlt() (zentral), Einstellung ruhezeit / Zähler ruhezeit_verpasst in kc_club_person_einstellung.
+- KC-CLUB-GERAETE: „📱 Meine Geräte“ listet die eigenen aktiven Push-Geräte (Art, Browser, seit, zuletzt zugestellt, Fehler,
+  „dieses Gerät“) mit „Entfernen“ (setzt das Abo inaktiv; beim eigenen Gerät wird es auch im Browser abgemeldet).
+  Aktionen geraete_liste / geraet_entfernen (nur eigene Geräte).
+- Server 0.98.0. Test 122. Keine Datenbank-Änderung.
+
 ## 0.97.0 – 2026-09-30 (DEV)
 
 WhatsApp-Vergleich, die drei wichtigsten Punkte (Freigabe Hansi):

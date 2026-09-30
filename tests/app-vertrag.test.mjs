@@ -1592,3 +1592,19 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/function naErwPruefen\(/.test(html) && /id="erwVorschlag"/.test(html) && /erwaehnt: naErwaehnteIds\(text\)/.test(html), "@Erwähnen fehlt");
   assert.ok(/function naText\(t\) \{[^\n]*\n\s*return esc\(t\)/.test(html), "Nachrichtentext muss weiter sicher (esc) ausgegeben werden");
 }
+
+// 122. 0.98.0: Weiterleiten, Nicht stören, Meine Geräte
+{
+  assert.ok(/if \(p\.weiterleiten_von\)[\s\S]{0,300}await binTeilnehmer\(q\.thread_id, ich\.person_id\)/.test(server) && /!ausQuelle\.has\(x\.id\)/.test(server), "Weiterleiten: Anhänge nur aus sichtbarer Quell-Nachricht");
+  assert.ok(/function weiterleitenBlatt\(/.test(html) && /weiterleiten_von: m\.id/.test(html) && /↪️ Weitergeleitet/.test(html), "Weiterleiten in der App fehlt");
+  assert.ok(/ruhezeit: \(w\) =>/.test(server) && /function inRuhezeit\(/.test(server) && /const ruhe = await ruhendePersonen\(personIds\.filter/.test(server) && /await ruhendePersonen\(personIds, !!opt\.erwaehnung\)/.test(server), "Ruhezeit muss in senden() und sendenGewaehlt() gelten");
+  assert.ok(/club-ruhezeit:/.test(server) && /ruhezeit_verpasst/.test(server), "Sammelmeldung nach der Ruhezeit fehlt");
+  assert.ok(!/async function routerSenden[\s\S]{0,400}ruhendePersonen/.test(server), "Ruhezeit darf Anrufe (routerSenden direkt) nicht blockieren");
+  assert.ok(/\{ erwaehnung: true \}\)/.test(server), "@Erwähnungen dürfen die Ruhezeit (wenn eingestellt) durchbrechen");
+  assert.ok(/id="ruheAn"/.test(html) && /function ruheSpeichern\(/.test(html), "Einstellung Nicht stören fehlt");
+  assert.ok(/case "geraet_entfernen":[\s\S]{0,300}\.eq\("person_id", ich\.person_id\)/.test(server) && /function geraeteBlatt\(/.test(html), "Meine Geräte: nur eigene entfernen");
+}
+{
+  const einfach = html.slice(html.indexOf('data-klappe="einfach" data-einfach'), html.indexOf('data-klappe="einfach" data-einfach') + 2500);
+  assert.ok(/id="ruheAnE"/.test(einfach) && /geraeteBlatt\(\)/.test(einfach), "Nicht stören / Meine Geräte auch in der einfachen Ansicht");
+}

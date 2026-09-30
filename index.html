@@ -884,6 +884,12 @@
   .antwort-leiste button { border: 0; background: none; font-size: 1.1rem; cursor: pointer; padding: 6px; }
   .erw-vorschlag { max-width: 1100px; margin: 0 auto 6px; display: flex; flex-wrap: wrap; gap: 6px; }
   .erw-vorschlag button { border: 1px solid var(--linie); background: var(--karte); border-radius: 14px; padding: 6px 10px; font-weight: 700; cursor: pointer; }
+  /* KC-CLUB-WEITERLEITEN / -RUHEZEIT / -GERAETE (0.98.0) */
+  .wl-liste { display: grid; gap: 6px; }
+  .wl-liste .knopf { text-align: left; padding: 12px 14px; }
+  .ge-zeile { display: grid; gap: 4px; }
+  .ge-dieses { box-shadow: 0 0 0 2px var(--gruen, #2fbf5b); }
+  .ruhe-zeiten input:disabled { opacity: .5; }
 </style>
 </head>
 <body>
@@ -1161,6 +1167,9 @@
       <div><b>📬 Wie möchtest du Neuigkeiten bekommen?</b></div>
       <div class="neuwahl" id="neuWahl"></div>
       <p class="hinweis" id="neuWahlHinweis" style="margin:6px 0 10px"></p>
+      <!-- KC-CLUB-RUHEZEIT / -GERAETE (0.98.0) auch in der einfachen Ansicht -->
+      <div class="schalter"><div><b>🌙 Nicht stören</b><div class="hinweis" id="ruheHinweisE">nachts kein Push</div></div><input type="checkbox" id="ruheAnE" onchange="ruheSchnell(this.checked)"></div>
+      <div class="knoepfe" style="margin:0 0 10px"><button class="knopf klein" onclick="geraeteBlatt()">📱 Meine Geräte</button></div>
       <div id="farbeE"><b>🎨 Lieblingsfarbe</b><div class="hinweis">Antippen – die App färbt sich sofort um</div><div class="designwahl" id="designWahlE"></div></div>
       <div class="schalter"><div><b>🔠 Große Schrift</b></div><input type="checkbox" id="setGrossE" onchange="einstellung('gross', this.checked); if ($('setGross')) $('setGross').checked = this.checked"></div>
       <div class="schalter"><div><b>🟢 Einfache Ansicht</b><div class="hinweis">Ausschalten zeigt alle Funktionen – du kannst jederzeit zurück.</div></div><button class="knopf klein" onclick="ansichtSetzen('erweitert')">🔧 Alle Funktionen</button></div>
@@ -1174,7 +1183,11 @@
       <p class="hinweis" style="font-size:.85rem" id="wahlHinweis">Nur Push: Kommt der Push nicht an, schicken wir automatisch eine E-Mail.</p>
       <div class="schalter"><div><b>📲 Push auf diesem Handy</b><div class="hinweis" id="pushStatus">…</div></div><button class="knopf klein" id="pushKnopf" onclick="pushUmschalten()">Einschalten</button></div>
       <div class="schalter"><div><b>🔊 Warnton bei neuer Nachricht</b><div class="hinweis">Kurzer Ton, wenn die App offen ist</div></div><input type="checkbox" id="setTon" onchange="einstellung('ton', this.checked)"></div>
-      <div class="knoepfe"><button class="knopf klein" onclick="tonTest()">Ton testen</button><button class="knopf klein" onclick="pushTest()">Test-Push senden</button></div>
+      <div class="knoepfe"><button class="knopf klein" onclick="tonTest()">Ton testen</button><button class="knopf klein" onclick="pushTest()">Test-Push senden</button><button class="knopf klein" onclick="geraeteBlatt()">📱 Meine Geräte</button></div>
+      <!-- KC-CLUB-RUHEZEIT (0.98.0) -->
+      <div class="schalter" style="margin-top:10px"><div><b>🌙 Nicht stören</b><div class="hinweis" id="ruheHinweis">In dieser Zeit kein Push. Anrufe kommen trotzdem durch, danach eine Sammelmeldung.</div></div><input type="checkbox" id="ruheAn" onchange="ruheSpeichern()"></div>
+      <div class="zwei ruhe-zeiten"><label class="feld">von<input type="time" id="ruheVon" value="22:00" onchange="ruheSpeichern()"></label><label class="feld">bis<input type="time" id="ruheBis" value="07:00" onchange="ruheSpeichern()"></label></div>
+      <div class="schalter"><div><b>📣 @Erwähnungen trotzdem melden</b><div class="hinweis">Wenn dich jemand mit @ direkt anspricht</div></div><input type="checkbox" id="ruheErw" checked onchange="ruheSpeichern()"></div>
     </details>
     <details class="karte" data-klappe="privat" data-einfach>
       <summary>🔒 Privatsphäre</summary>
@@ -1501,7 +1514,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "0.97.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.98.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -4266,7 +4279,7 @@ function zeige(v, ausHistorie) {
   if (v === "dienste") dienstLaden();
   if (v === "nachrichten") unterhLaden();
   if (v === "mitglieder") mitgliederLaden();
-  if (v === "einstellungen") { infoStartZeigen(); if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); }
+  if (v === "einstellungen") { infoStartZeigen(); ruheZeigen(); if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); }
   if (v === "start") neuLaden();
   // KC-CLUB-ZURUECK: jede Ansicht bekommt einen Verlaufseintrag, damit „Zurück“ eine Ansicht zurückgeht statt die App zu schließen
   const hash = v === "start" || v === "chat" ? "" : v === "protokoll" ? "#protokoll=" + prId : v === "aktion" ? "#aktion=" + aktionId : v === "mitglied" ? "#mitglied=" + mitgliedId : "#" + v;
@@ -4865,6 +4878,7 @@ function nachrichtMenue(id) {
     <div class="na-schnell">${NA_SCHNELL.map((e) => `<button type="button" class="${meine === e ? "an" : ""}" aria-label="Mit ${e} reagieren" onclick="reagieren('${id}','${e}');document.getElementById('naMenue').remove()">${e}</button>`).join("")}</div>
     ${meine ? `<p class="hinweis" style="margin:0;text-align:center">Deine Reaktion: ${meine} – nochmal antippen nimmt sie weg</p>` : ""}
     <button class="knopf" onclick="document.getElementById('naMenue').remove();naAntworten('${id}')">↩️ Antworten</button>
+    <button class="knopf" onclick="document.getElementById('naMenue').remove();weiterleitenBlatt('${id}')">↪️ Weiterleiten</button>
     <button class="knopf" onclick="document.getElementById('naMenue').remove();nachrichtInfo('${id}')">ℹ️ Details – wann gesendet, angekommen, gelesen</button>
     <button class="knopf" onclick="document.getElementById('naMenue').remove()">Abbrechen</button></div>`;
   f.onclick = (e) => { if (e.target === f) f.remove(); };
@@ -4904,6 +4918,92 @@ function naErwWaehlen(pid) {
   NA.erw.set(vn, pid); $("erwVorschlag").classList.add("versteckt");
 }
 function naErwaehnteIds(text) { return [...NA.erw.entries()].filter(([vn]) => new RegExp("(^|\\s)@" + vn.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "(?![\\wÄÖÜäöüß])").test(text)).map(([, id]) => id); }
+
+// ---------- KC-CLUB-WEITERLEITEN / -RUHEZEIT / -GERAETE (0.98.0) ----------
+// ↪️ Weiterleiten: Nachricht antippen → „Weiterleiten“ → Unterhaltung oder Mitglied wählen. Text bekommt den Vermerk
+// „↪️ Weitergeleitet von …“, Fotos/Anhänge gehen mit (der Server prüft, dass ich die Quell-Nachricht sehen darf).
+const WL = { quelle: null, liste: [] };
+async function weiterleitenBlatt(id) {
+  const m = NA.nachrichten.get(id); if (!m) return;
+  WL.quelle = m;
+  try { await zeMitglieder(); WL.liste = ((await api("unterhaltungen")).unterhaltungen || []).slice(0, 12); } catch (e) { return melde(e.message, true); }
+  document.getElementById("wlFenster")?.remove();
+  const f = document.createElement("div"); f.id = "wlFenster"; f.className = "blatt"; f.setAttribute("role", "dialog"); f.setAttribute("aria-modal", "true");
+  f.innerHTML = `<div class="blatt-innen" style="max-height:88vh;overflow-y:auto">
+    <h3>↪️ Weiterleiten an …</h3>
+    <div class="na-vorschau">${esc(m.eigen ? "Du" : m.von)}: ${esc(String(m.text || "📎").slice(0, 120))}${m.anlagen?.length ? ` · 📎 ${m.anlagen.length}` : ""}</div>
+    <input id="wlSuche" type="search" placeholder="🔍 Name suchen …" oninput="wlListe()">
+    <div id="wlListe" class="wl-liste"></div>
+    <button class="knopf" onclick="document.getElementById('wlFenster').remove()">Abbrechen</button></div>`;
+  f.onclick = (e) => { if (e.target === f) f.remove(); };
+  document.body.appendChild(f); wlListe();
+}
+function wlListe() {
+  const q = ($("wlSuche")?.value || "").toLowerCase();
+  const unt = WL.liste.filter((u) => u.id !== chatId).map((u) => ({ art: "t", id: u.id, name: u.gruppe ? `${u.gruppe.symbol} ${u.gruppe.name}` : (u.teilnehmer || []).join(", ") || u.betreff || "Unterhaltung" }))
+    .filter((x) => !q || x.name.toLowerCase().includes(q));
+  const leute = (MITGLIEDER || []).filter((m) => m.person_id !== ICH.person_id && (!q || m.name.toLowerCase().includes(q))).map((m) => ({ art: "p", id: m.person_id, name: m.name }));
+  $("wlListe").innerHTML = (unt.length ? `<div class="hinweis">Letzte Unterhaltungen</div>` + unt.map((x) => `<button class="knopf" onclick="weiterleiten('${x.art}','${x.id}')">💬 ${esc(x.name)}</button>`).join("") : "")
+    + (leute.length ? `<div class="hinweis" style="margin-top:6px">Mitglieder</div>` + leute.map((x) => `<button class="knopf" onclick="weiterleiten('${x.art}','${x.id}')">👤 ${esc(x.name)}</button>`).join("") : "");
+}
+async function weiterleiten(art, id) {
+  const m = WL.quelle; if (!m) return;
+  const kopf = `↪️ Weitergeleitet${m.eigen ? "" : " von " + m.von.split(" ")[0]}:`, text = m.text && m.text !== "📎" ? `${kopf}\n${m.text}` : kopf;
+  const daten = { text, anlagen: (m.anlagen || []).map((a) => a.id), weiterleiten_von: m.id, wege: [] };
+  try {
+    const r = art === "t" ? await api("nachricht_senden", { id, ...daten }) : await api("nachricht_senden", { ...daten, empfaenger: { personen: [id], aemter: [], alle: false, vorstand: false }, betreff: "" });
+    document.getElementById("wlFenster")?.remove();
+    melde("↪️ Weitergeleitet");
+    WL.zuletzt = r.id;
+  } catch (e) { melde(e.message, true); }
+}
+// 🌙 Nicht stören
+function ruheZeigen() {
+  const r = INIT?.einstellungen?.ruhezeit || { an: false, von: "22:00", bis: "07:00", erwaehnung: true };
+  if (!$("ruheAn")) return;
+  if ($("ruheAnE")) { $("ruheAnE").checked = !!r.an; $("ruheHinweisE").textContent = `${r.von}–${r.bis} Uhr kein Push (Anrufe kommen durch)`; }
+  $("ruheAn").checked = !!r.an; $("ruheVon").value = r.von; $("ruheBis").value = r.bis; $("ruheErw").checked = r.erwaehnung !== false;
+  document.querySelectorAll(".ruhe-zeiten input, #ruheErw").forEach((x) => { x.disabled = !r.an; });
+  $("ruheHinweis").textContent = r.an ? `Von ${r.von} bis ${r.bis} Uhr kein Push. Anrufe kommen trotzdem durch; danach eine Sammelmeldung, was du verpasst hast.`
+    : "In dieser Zeit kein Push. Anrufe kommen trotzdem durch, danach eine Sammelmeldung.";
+}
+function ruheSchnell(an) { $("ruheAn").checked = an; ruheSpeichern(); }
+async function ruheSpeichern() {
+  const wert = { an: $("ruheAn").checked, von: $("ruheVon").value || "22:00", bis: $("ruheBis").value || "07:00", erwaehnung: $("ruheErw").checked };
+  try { const r = await api("einstellung_setzen", { schluessel: "ruhezeit", wert }); INIT.einstellungen = { ...(INIT.einstellungen || {}), ruhezeit: r.wert }; ruheZeigen();
+    melde(r.wert.an ? `🌙 Nicht stören: ${r.wert.von}–${r.wert.bis} Uhr` : "🔔 Nicht stören ist aus"); }
+  catch (e) { melde(e.message, true); ruheZeigen(); }
+}
+// 📱 Meine Geräte
+function geraetName(ua) {
+  const sys = /iPhone/.test(ua) ? "📱 iPhone" : /iPad/.test(ua) || (/Macintosh/.test(ua) && /Mobile/.test(ua)) ? "📱 iPad" : /Android/.test(ua) ? (/Mobile/.test(ua) ? "📱 Android-Handy" : "📱 Android-Tablet") + ((/Android ([\d.]+)/.exec(ua) || [])[1] ? " " + /Android ([\d.]+)/.exec(ua)[1] : "")
+    : /Windows/.test(ua) ? "💻 Windows-PC" : /Macintosh/.test(ua) ? "💻 Mac" : /Linux/.test(ua) ? "💻 Linux" : "❔ Gerät";
+  const br = /SamsungBrowser/.test(ua) ? "Samsung Internet" : /Edg\//.test(ua) ? "Edge" : /Firefox|FxiOS/.test(ua) ? "Firefox" : /CriOS|Chrome/.test(ua) ? "Chrome" : /Safari/.test(ua) ? "Safari" : "";
+  return sys + (br ? " · " + br : "");
+}
+async function geraeteBlatt() {
+  let eigen = ""; try { eigen = (await (await navigator.serviceWorker.ready).pushManager.getSubscription())?.endpoint || ""; } catch {}
+  let r; try { r = await api("geraete_liste", { endpoint: eigen }, { warten: true }); } catch (e) { return melde(e.message, true); }
+  document.getElementById("geFenster")?.remove();
+  const f = document.createElement("div"); f.id = "geFenster"; f.className = "blatt"; f.setAttribute("role", "dialog"); f.setAttribute("aria-modal", "true");
+  f.innerHTML = `<div class="blatt-innen" style="max-height:88vh;overflow-y:auto">
+    <h3>📱 Meine Geräte mit Push</h3>
+    <p class="hinweis" style="margin:0">Alle diese Geräte bekommen deine Push-Meldungen. Ein altes Handy kannst du hier entfernen.</p>
+    ${r.geraete.length ? r.geraete.map((g) => `<div class="karte innen ge-zeile${g.diesesGeraet ? " ge-dieses" : ""}">
+        <div><b>${esc(geraetName(g.ua))}</b>${g.diesesGeraet ? ' <span class="marke gruen">dieses Gerät</span>' : ""}</div>
+        <div class="hinweis">angemeldet seit ${esc(fKurz.format(new Date(g.seit)))}${g.zuletztZugestellt ? ` · zuletzt zugestellt ${esc(zeitKurz(g.zuletztZugestellt))}` : ""}</div>
+        ${g.fehler ? `<div class="ni-fehler">⚠️ ${esc(g.fehler)}</div>` : ""}
+        <button class="knopf klein" onclick="geraetEntfernen('${g.id}', ${g.diesesGeraet})">🗑️ Entfernen</button></div>`).join("")
+      : '<p class="hinweis">Noch kein Gerät mit Push angemeldet. Schalte oben „📲 Push auf diesem Handy“ ein.</p>'}
+    <button class="knopf" onclick="document.getElementById('geFenster').remove()">Schließen</button></div>`;
+  f.onclick = (e) => { if (e.target === f) f.remove(); };
+  document.body.appendChild(f);
+}
+async function geraetEntfernen(id, dieses) {
+  if (!confirm(dieses ? "Dieses Gerät bekommt dann keine Push-Meldungen mehr. Entfernen?" : "Dieses Gerät bekommt dann keine Push-Meldungen mehr. Entfernen?")) return;
+  try { await api("geraet_entfernen", { id }); melde("🗑️ Gerät entfernt"); if (dieses) try { await (await (await navigator.serviceWorker.ready).pushManager.getSubscription())?.unsubscribe(); } catch {} geraeteBlatt(); pushStatusZeigen?.(); }
+  catch (e) { melde(e.message, true); }
+}
 
 // ---------- KC-CLUB-EMOJI (0.95.0): Emojis in Nachrichten – übersichtlich in wenigen Gruppen ----------
 // Bewusst eine überschaubare Auswahl (je Gruppe 24) statt tausender Zeichen; alle weiteren gehen wie gewohnt über die
