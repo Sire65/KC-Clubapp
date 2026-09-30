@@ -1347,7 +1347,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 
 // 100. 0.79.0: Club-App auf einen Blick – aktualisiert sich selbst (KC-CLUB-UEBERBLICK)
 {
-  assert.ok(/id="v-ueberblick"/.test(html) && /"erstattung", "ueberblick"(, "programme")?\]\.forEach/.test(html) && /if \(v === "ueberblick"\) ueberblickZeigen\(\)/.test(html), "Ansicht/Routing fehlt");
+  assert.ok(/id="v-ueberblick"/.test(html) && /"erstattung", "ueberblick"(, "[a-z]+")*\]\.forEach/ /* 0.92.0: weitere Ansichten (z. B. standort) erlaubt */.test(html) && /if \(v === "ueberblick"\) ueberblickZeigen\(\)/.test(html), "Ansicht/Routing fehlt");
   assert.ok(/\{ id: "ueberblick",[^}]*v: "ueberblick" \}/.test(html) && /if \(d\.v\) return zeige\(d\.v\)/.test(html), "Eintrag unter Meine Dokumente fehlt");
   const ue = html.slice(html.indexOf("function ueberblickHtml("), html.indexOf("async function ueberblickLaden()"));
   assert.ok(/kachelnAlle\(r\)/.test(ue) && /ueNeuigkeiten\(v\)/.test(ue), "Inhalt muss aus Registry + version.json kommen");
@@ -1395,7 +1395,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 
 // 104. 0.83.0: Freigegebene Programme + Bilderrechner-Anleitung (KC-CLUB-PROGRAMME)
 {
-  assert.ok(/\{ id: "programme", sym: "💻", t: "Freigegebene Programme", u: "[^"]*", v: "programme" \}/.test(html) && /id="v-programme"/.test(html) && /"ueberblick", "programme"\]\.forEach/.test(html), "Kachel/Ansicht Programme");
+  assert.ok(/\{ id: "programme", sym: "💻", t: "Freigegebene Programme", u: "[^"]*", v: "programme" \}/.test(html) && /id="v-programme"/.test(html) && /"ueberblick", "programme"(, "[a-z]+")*\]\.forEach/.test(html), "Kachel/Ansicht Programme");
   assert.ok(/const PROGRAMME = \[\s*\{ id: "kasse-schulung",[^}]*url: "https:\/\/sire65\.github\.io\/Kasse\/schulung\/" \}/.test(html), "Kassen-Schulung in der Registry");
   assert.ok(/datei: "dokumente\/Kurzanleitung_Bilderrechner_V3\.pdf"/.test(html) && fs.existsSync(new URL("../dokumente/Kurzanleitung_Bilderrechner_V3.pdf", import.meta.url)), "Bilderrechner-PDF fehlt");
 }
@@ -1479,4 +1479,44 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/\$\("pwNeuKnopf"\)\.innerHTML = `＋ Zettel <span class="pwStand/.test(html), "Pinnwand-Knopf heißt nicht immer „＋ Zettel“");
   assert.ok(!/\$\("pwNeuKnopf"\)\.textContent = PW\.meine >= PW\.max \? `\$\{PW\.max\}\/\$\{PW\.max\} Zettel`/.test(html), "alter Knopftext „4/4 Zettel“ ist noch da");
   assert.ok(/<div id="pwVollHinweis"><\/div>/.test(html) && /Für einen neuen erst einen eigenen abnehmen/.test(html), "Erklärung bei vollen Plätzen fehlt");
+}
+
+// 113. 0.92.0: Terminanfrage – jeder an jeden, mehrere oder Gruppe (KC-CLUB-TERMINANFRAGE)
+{
+  const mig = lies("supabase/migrations/20260930_kc_club_v92_terminanfrage_standort.sql");
+  assert.ok(/create table if not exists kc_club_terminanfragen/.test(mig) && /create table if not exists kc_club_terminanfrage_empfaenger/.test(mig), "Tabellen Terminanfrage fehlen");
+  assert.ok(/alter table kc_club_terminanfragen enable row level security/.test(mig) && /alter table kc_club_terminanfrage_empfaenger enable row level security/.test(mig), "RLS Terminanfrage fehlt");
+  const fall = (name) => server.slice(server.indexOf(`case "${name}"`), server.indexOf("case \"", server.indexOf(`case "${name}"`) + 10));
+  assert.ok(!/nurVorstand/.test(fall("terminanfrage_senden")), "Terminanfrage muss für jedes Mitglied gehen");
+  assert.ok(/zielPersonen\(ich, p\.an\)/.test(fall("terminanfrage_senden")), "Empfänger (Personen/Gruppe) werden nicht aufgelöst");
+  assert.ok(/binTeilnehmer\(gruppe, ich\.person_id\)/.test(server), "Gruppe nur, wenn man selbst drin ist");
+  assert.ok(/erstellt_von !== ich\.person_id\) throw/.test(fall("terminanfrage_absagen")), "Absagen nur durch den Absender");
+  assert.ok(/\.eq\("person_id", ich\.person_id\)\.maybeSingle\(\)/.test(fall("terminanfrage_antwort")), "Antworten nur als Empfänger");
+  // private Anfragen nie in der Treffen-Tabelle (sonst sähen alle sie)
+  assert.ok(!/from\("kc_club_treffen"\)\.insert[^;]*anlass/.test(server), "Anfrage darf nicht in kc_club_treffen landen");
+  assert.ok(/anfragen: anfragen\.filter/.test(server) && /UID:anfrage-/.test(server), "Kalender/Kalender-Abo ohne Anfragen");
+  assert.ok(/club-terminanfrage-erinnerung/.test(server) && /club-terminanfrage-nachfass/.test(server), "Erinnerung am Vortag fehlt");
+  assert.ok(/id="neuAnfrageKnopf"/.test(html) && /function taForm\(/.test(html) && /function taAntwort\(/.test(html), "App: Anfrage-Formular/Antwort fehlt");
+  assert.ok(/knopf\("📨", "Termin"/.test(html), "Kommunikationszentrale: Knopf Termin fehlt");
+  assert.ok(/"keine" : w/.test(html), "Antwort zurücknehmen (nochmal tippen) fehlt");
+}
+
+// 114. 0.92.0: Standort teilen – einmal oder live, nur an Gewählte, begrenzt, löschbar (KC-CLUB-STANDORT)
+{
+  const mig = lies("supabase/migrations/20260930_kc_club_v92_terminanfrage_standort.sql");
+  assert.ok(/create table if not exists kc_club_standort_live/.test(mig) && /alter table kc_club_standort_live enable row level security/.test(mig), "Tabelle/RLS Standort fehlt");
+  assert.ok(/const STANDORT_MAX_MIN = 480;/.test(server), "Höchstdauer 8 Std. fehlt");
+  const liste = server.slice(server.indexOf('case "standort_liste"'), server.indexOf('case "standort_liste"') + 900);
+  assert.ok(/\.gt\("bis", jetzt\(\)\)/.test(liste) && /empfaenger\.cs\./.test(liste), "Standort-Liste: nur laufende und nur für Empfänger");
+  assert.ok(/case "standort_ende": \{\s*await db\.from\("kc_club_standort_live"\)\.delete\(\)/.test(server), "Beenden muss sofort löschen");
+  assert.ok(/from\("kc_club_standort_live"\)\.delete\(\)\.lt\("bis", jetzt\(\)\)/.test(server), "Wartung löscht abgelaufene Standorte nicht");
+  assert.ok(!/protokoll\([^)]*standort[^)]*lat/.test(server), "Koordinaten dürfen nicht ins Protokoll");
+  assert.ok(/knopf\("📍", "Standort"/.test(html) && /id="v-standort"/.test(html) && /function stBeenden\(/.test(html) && /id = "stBalken"/.test(html), "App: Standort-Knopf/Ansicht/Balken fehlt");
+  assert.ok(/openstreetmap\.org/.test(html) && !/maps\.googleapis|api\.mapbox/.test(html), "Karte muss kostenlos (OpenStreetMap) sein");
+  assert.ok(/h === "#standort"/.test(html), "Sprungziel #standort fehlt");
+}
+
+// 115. 0.92.0: Warte-Anzeige kennt die neuen Aktionen, Hintergrund-Abfragen bleiben still
+{
+  assert.ok(/WARTEN_STILL = new Set\(\["standort_update", "standort_liste", "terminanfragen_liste"/.test(html), "Hintergrund-Abfragen würden flackern");
 }

@@ -172,7 +172,7 @@
   .zchip, .zweg { border: 1px solid rgba(255,255,255,.35); background: rgba(255,255,255,.12); color: #fff; border-radius: 999px; padding: 5px 11px; font: inherit; font-size: .88rem; font-weight: 700; cursor: pointer; }
   .zweg.an { background: #ffe7a3; color: #4a2a00; border-color: #ffe7a3; }
   .zgewaehlt { margin-top: 6px; font-size: .9rem; opacity: .95; }
-  .zpult { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 8px; }
+  .zpult { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px; }
   .zknopf { display: grid; justify-items: center; gap: 2px; padding: 8px 2px; border: 1px solid rgba(255,255,255,.3); border-radius: 12px; background: rgba(255,255,255,.16); color: #fff; font: inherit; font-size: .72rem; font-weight: 700; cursor: pointer; }
   .zknopf b { font-size: 1.35rem; font-weight: 400; }
   .zknopf.aus { opacity: .38; }
@@ -731,6 +731,21 @@
   #pwNeuKnopf .pwStand { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: rgba(255,255,255,.22); font-size: .78em; font-weight: 800; vertical-align: 1px; }
   #pwNeuKnopf .pwStand.voll { background: #f6c343; color: #3b2a00; }
   .pwVollZeile { margin: 0 0 10px; border: 2px solid #d68910; border-radius: 10px; padding: 8px 10px; }
+  /* KC-CLUB-TERMINANFRAGE / KC-CLUB-STANDORT (0.92.0) */
+  .p-anfrage { background: var(--gold); } .ktag.anfrage { outline: 2px solid var(--gold); outline-offset: -2px; }
+  .ta-antw { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 8px; }
+  .ta-antw .knopf { text-align: center; padding-left: 4px; padding-right: 4px; }
+  .ta-empf { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+  .ta-empf .knopf { flex: 0 0 auto; }
+  .ta-liste { max-height: 38vh; overflow-y: auto; border: 1px solid var(--linie, rgba(128,128,128,.3)); border-radius: 10px; padding: 4px 8px; }
+  .ta-liste label { display: flex; align-items: center; gap: 10px; padding: 8px 4px; text-align: left; }
+  .ta-liste input[type="checkbox"] { flex: 0 0 22px; width: 22px; height: 22px; min-height: 0; margin: 0; padding: 0; }
+  .ta-markiert { box-shadow: 0 0 0 3px var(--gold); }
+  .st-karte iframe { width: 100%; height: 240px; border: 0; border-radius: 12px; margin-top: 8px; background: #ddd; }
+  .st-alt { opacity: .6; }
+  #stBalken { position: fixed; left: 50%; transform: translateX(-50%); top: calc(8px + env(safe-area-inset-top)); z-index: 45; background: #b3261e; color: #fff; border-radius: 999px;
+    padding: 6px 8px 6px 14px; display: flex; align-items: center; gap: 10px; box-shadow: 0 6px 18px rgba(0,0,0,.3); font-weight: 700; font-size: .9rem; max-width: calc(100% - 24px); }
+  #stBalken button { background: #fff; color: #b3261e; border: 0; border-radius: 999px; padding: 6px 12px; font-weight: 900; }
 </style>
 </head>
 <body>
@@ -785,11 +800,13 @@
 
   <!-- TERMINE -->
   <section id="v-termine" class="versteckt">
-    <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>📅 Termine</h2><button id="neuUmfrageKnopf" class="knopf klein versteckt" onclick="umfrageForm()" title="Terminfindung: mehrere Termine zur Auswahl">🗓️ Umfrage</button><button id="neuTreffenKnopf" class="knopf haupt klein versteckt" onclick="treffenForm()">＋ Neu</button><button type="button" class="druckknopf" title="Drucken: Kalender (Tag/Woche/Monat/Jahr) oder To-do-Liste" aria-label="Drucken" onclick="druckStarten('termine')" id="druckTermine"></button></div>
+    <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>📅 Termine</h2><button id="neuAnfrageKnopf" class="knopf klein" onclick="taForm()" title="Terminanfrage an einzelne Mitglieder, mehrere oder eine Gruppe">📨 Anfrage</button><button id="neuUmfrageKnopf" class="knopf klein versteckt" onclick="umfrageForm()" title="Terminfindung: mehrere Termine zur Auswahl">🗓️ Umfrage</button><button id="neuTreffenKnopf" class="knopf haupt klein versteckt" onclick="treffenForm()">＋ Neu</button><button type="button" class="druckknopf" title="Drucken: Kalender (Tag/Woche/Monat/Jahr) oder To-do-Liste" aria-label="Drucken" onclick="druckStarten('termine')" id="druckTermine"></button></div>
     <div class="umschalter modus3"><button data-m="liste" onclick="termineModus('liste')">☰ Liste</button><button data-m="kalender" onclick="termineModus('kalender')">🗓️ Kalender</button><button data-m="todo" onclick="termineModus('todo')">✅ To-do</button></div>
     <div id="todoBereich" class="versteckt"></div>
     <div id="treffenForm" class="karte versteckt"></div>
     <div id="terminumfrageForm" class="karte versteckt"></div>
+    <div id="terminanfrageForm" class="karte versteckt"></div>
+    <div id="terminanfragen"></div>
     <div id="terminfindung"></div>
     <div id="kalender" class="versteckt">
       <div class="karte">
@@ -930,6 +947,13 @@
     <div class="kopf2"><button class="zurueck" onclick="zeige('dokumente')">‹</button><h2>🗺️ Club-App auf einen Blick</h2></div>
     <div class="knoepfe" style="margin:0 2px 10px"><button class="knopf klein" onclick="druckStarten('ueberblick')">🖨️ Drucken</button></div>
     <div id="ueInhalt"><p class="hinweis">Lädt …</p></div>
+  </section>
+
+  <!-- KC-CLUB-STANDORT (0.92.0) -->
+  <section id="v-standort" class="versteckt">
+    <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>📍 Standorte</h2><button class="knopf klein" onclick="stBlatt()">📍 Teilen</button></div>
+    <div id="stListe"></div>
+    <p class="hinweis">Hier siehst du, wer gerade den Standort mit dir teilt. Die Karte kommt von OpenStreetMap. Geteilte Standorte verschwinden automatisch, wenn die Zeit abgelaufen ist oder die Person das Teilen beendet.</p>
   </section>
 
   <section id="v-pinnwand" class="versteckt">
@@ -1332,7 +1356,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "0.91.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.92.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2800,8 +2824,8 @@ async function zugangAnfordern() {
 }
 // KC-CLUB-WARTEN (0.33.0): dauert eine Anfrage länger als 0,35 s, erscheint die drehende Kochmütze mit passendem Text.
 // Hintergrund-Abfragen (alle paar Sekunden/Minuten) zeigen sie nicht, damit nichts flackert.
-const WARTEN_STILL = new Set(["init", "online", "anruf_status", "diagnose", "unterhaltung", "unterhaltungen", "einstellung_setzen", "pinnwand", "kalender", "terminumfragen_liste", "communicator_status", "ping", "anruf_ende", "protokoll_speichern", "todo_erledigt", "todo_liste", "wetter", "fotos_neueste", "admin_lage", "tippen", "pinnwand_neu", "pinnwand_gesehen"]);
-const WARTEN_TEXT = { nachricht_senden: "Nachricht wird gesendet …", gruppe_anlegen: "Gruppe wird angelegt …", gruppe_aendern: "Wird gespeichert …", treffen_speichern: "Termin wird gespeichert …",
+const WARTEN_STILL = new Set(["standort_update", "standort_liste", "terminanfragen_liste", "init", "online", "anruf_status", "diagnose", "unterhaltung", "unterhaltungen", "einstellung_setzen", "pinnwand", "kalender", "terminumfragen_liste", "communicator_status", "ping", "anruf_ende", "protokoll_speichern", "todo_erledigt", "todo_liste", "wetter", "fotos_neueste", "admin_lage", "tippen", "pinnwand_neu", "pinnwand_gesehen"]);
+const WARTEN_TEXT = { standort_ort: "Standort wird bestimmt …", standort_start: "Standort wird geteilt …", standort_ende: "Wird beendet …", terminanfrage_senden: "Anfrage wird gesendet …", terminanfrage_antwort: "Antwort wird gemeldet …", terminanfrage_absagen: "Wird abgesagt …", nachricht_senden: "Nachricht wird gesendet …", gruppe_anlegen: "Gruppe wird angelegt …", gruppe_aendern: "Wird gespeichert …", treffen_speichern: "Termin wird gespeichert …",
   pinnwand_anheften: "Zettel wird angeheftet …", feedback_senden: "Feedback wird gesendet …", anklopfen: "Es wird angeklopft …", anruf_start: "Anruf wird aufgebaut …", anlage_hochladen: "Wird hochgeladen …", erstattung_senden: "Antrag wird gesendet …", km_satz_setzen: "Wird gespeichert …", todo_zuweisen: "Wird zugewiesen …",
   link_erzeugen: "Link wird erzeugt …", todo_anlegen: "Wird eingetragen …", zugang_anfordern: "Mail wird gesendet …", foto_hochladen: "Foto wird hochgeladen …", test_an_mich: "Test wird gesendet …",
   init: "Wird aktualisiert …", wetter: "Wetter wird abgefragt …", admin_lage: "Server, Datenbank und Verbindungen werden geprüft …", kalender: "Termine werden geladen …",
@@ -3496,7 +3520,10 @@ function infoZentrale() {
       ${knopf("🎥", "Video", !eine ? nurEine : online ? "" : nichtOnline, `anrufen('${pid}', true)`)}
       ${knopf("✊", "Anklopfen", !eine ? nurEine : online ? "" : nichtOnline, `anklopfen('${pid}')`)}
       ${knopf("🎤", "Sprache", leer ? "Bitte oben auswählen, an wen" : "", "zeChat(true)")}
-      ${knopf("💬", "Chat", leer ? "Bitte oben auswählen, an wen" : "", "zeChat(false)")}</div>
+      ${knopf("💬", "Chat", leer ? "Bitte oben auswählen, an wen" : "", "zeChat(false)")}
+      ${knopf("📍", "Standort", leer ? "Bitte oben auswählen, an wen" : "", "stBlatt(true)")}
+      ${knopf("📨", "Termin", leer ? "Bitte oben auswählen, an wen" : "", "taAusZentrale()")}</div>
+    ${ST.fremde ? `<button class="wlink" style="margin-top:6px" onclick="zeige('standort')">📍 ${ST.fremde === 1 ? "1 Person teilt" : ST.fremde + " teilen"} den Standort mit dir ›</button>` : ""}
     <div class="zwege"><span>zusätzlich:</span>${weg("push", "🔔", "Push")}${weg("email", "✉️", "E-Mail")}${weg("whatsapp", "🟢", "WhatsApp")}</div>
     <div class="zsenden"><input id="zeText" maxlength="4000" placeholder="Kurze Nachricht an ${esc(zeWerText())} …" value="${esc(ZE.text)}" oninput="ZE.text=this.value" onkeydown="if(event.key==='Enter')zeSenden()" aria-label="Nachricht">
       <button class="zsendknopf" onclick="zeSenden()" aria-label="Senden">📨</button></div>
@@ -3689,6 +3716,7 @@ function demnaechstListe(k) {
   for (const a of k.aktionen || []) e.push({ tag: a.von < heute ? heute : a.von, sym: "🧳", text: a.titel });
   for (const d of k.dienste || []) e.push({ tag: d.datum, zeit: d.start, sym: "🗓️", text: "Mein Dienst" + (d.bereich ? " · " + d.bereich : "") });
   for (const v of k.fristen || []) if (v.offen) e.push({ tag: berlinIso(v.frist), sym: "🗳️", text: "Abstimmung endet: " + v.titel });
+  for (const x of k.anfragen || []) e.push({ tag: berlinIso(x.beginn), zeit: fZeit.format(new Date(x.beginn)), sym: "📨", text: x.anlass + (x.vonMir ? "" : " (" + x.von.vorname + ")") });
   for (const g of k.geburtstage || []) { // nächster Geburtstag im Zeitraum (nur Tag/Monat)
     for (const j of [heute.slice(0, 4), String(+heute.slice(0, 4) + 1)]) { const tag = `${j}-${g.md}`; if (tag >= heute && tag <= bis) { e.push({ tag, sym: "🎂", text: `${g.name} hat Geburtstag` }); break; } }
   }
@@ -4050,7 +4078,7 @@ function zeige(v, ausHistorie) {
   const vorher = aktuelleAnsicht;
   aktuelleAnsicht = v;
   if (vorher === "protokoll" && v !== "protokoll" && prTimer) prSpeichernJetzt(false).catch(() => {}); // ungespeicherte Eingaben sichern
-  ["start", "dokumente", "termine", "vorschlaege", "aktionen", "aktion", "fotos", "feedback", "gruppe", "mitglied", "protokolle", "protokoll", "dienste", "nachrichten", "chat", "neu", "mitglieder", "einstellungen", "pinnwand", "erstattung", "ueberblick", "programme"].forEach((x) => $("v-" + x).classList.toggle("versteckt", x !== v));
+  ["start", "dokumente", "termine", "vorschlaege", "aktionen", "aktion", "fotos", "feedback", "gruppe", "mitglied", "protokolle", "protokoll", "dienste", "nachrichten", "chat", "neu", "mitglieder", "einstellungen", "pinnwand", "erstattung", "ueberblick", "programme", "standort"].forEach((x) => $("v-" + x).classList.toggle("versteckt", x !== v));
   document.querySelectorAll("#fuss button").forEach((b) => b.classList.toggle("an", b.dataset.v === v || (v === "chat" && b.dataset.v === "nachrichten") || (v === "neu" && b.dataset.v === "nachrichten")));
   $("eingabe").classList.toggle("versteckt", v !== "chat");
   clearInterval(chatTimer);
@@ -4067,6 +4095,7 @@ function zeige(v, ausHistorie) {
   if (v === "ueberblick") ueberblickZeigen();
   if (v === "programme") programmeZeigen();
   if (v === "pinnwand") { pwForm(false); pwLaden(); }
+  if (v === "standort") stLaden(); else stAnsichtStopp();
   if (v === "erstattung") erstattungLaden();
   if (v === "dienste") dienstLaden();
   if (v === "nachrichten") unterhLaden();
@@ -4163,12 +4192,13 @@ function kalEintraege(tag, Q = KAL, mitFeiertagen = einst("feiertage", true)) { 
   for (const a of Q.aktionen || []) if (tag >= a.von && tag <= a.bis) e.push({ art: "aktion", a });
   for (const d of Q.dienste) if (d.datum === tag) e.push({ art: "dienst", d });
   for (const f of Q.fristen) if (berlinIso(f.frist) === tag) e.push({ art: "frist", f });
+  for (const x of Q.anfragen || []) if (berlinIso(x.beginn) === tag) e.push({ art: "anfrage", x }); // KC-CLUB-TERMINANFRAGE
   const md = tag.slice(5), schalt = new Date(Date.UTC(+tag.slice(0, 4), 1, 29)).getUTCDate() === 29;
   for (const g of Q.geburtstage) if (g.md === md || (!schalt && md === "02-28" && g.md === "02-29")) e.push({ art: "geb", g });
   return e;
 }
 function kalZeichnen() {
-  const heute = heuteIso(), rang = ["treffen", "aktion", "veranst", "dienst", "feiertag", "frist", "geb"];
+  const heute = heuteIso(), rang = ["treffen", "anfrage", "aktion", "veranst", "dienst", "feiertag", "frist", "geb"];
   const tage = [...Array(42)].map((_, i) => tagPlus(KAL.start, i));
   // letzte Woche weglassen, wenn sie ganz im Folgemonat liegt
   const sichtbar = +tage[35].slice(5, 7) - 1 !== kalM ? tage.slice(0, 35) : tage;
@@ -4190,6 +4220,7 @@ function kalTagZeigen() {
   const kopf = `<h3 style="margin:0 0 4px">${esc(fTagLang.format(new Date(kalTagWahl + "T12:00:00Z")))}</h3>`;
   if (!e.length) { $("kalTag").innerHTML = `<div class="karte">${kopf}<p class="hinweis" style="margin:6px 0 0">Keine Termine an diesem Tag.</p></div>`; return; }
   const zeilen = e.filter((x) => x.art !== "treffen" && x.art !== "veranst").map((x) => {
+    if (x.art === "anfrage") return `<div class="keintrag" onclick="taZeigen('${x.x.id}')"><div class="farbe" style="background:var(--gold)"></div><div style="flex:1"><b>📨 ${esc(fZeit.format(new Date(x.x.beginn)))} ${esc(x.x.anlass)}</b><small>${x.x.vonMir ? "deine Anfrage" : "von " + esc(x.x.von.vorname)}${x.x.ort ? " · 📍 " + esc(x.x.ort) : ""}${x.x.meine ? " · " + TA_ANTW[x.x.meine] : ""}</small></div></div>`;
     if (x.art === "feiertag") return `<div class="keintrag"><div class="farbe" style="background:var(--rot3)"></div><div style="flex:1"><b>🇩🇪 Feiertag: ${esc(x.name)}</b><small>gesetzlicher Feiertag in NRW</small></div></div>`;
     if (x.art === "aktion") { const n = Math.round((new Date(kalTagWahl + "T12:00:00Z") - new Date(x.a.von + "T12:00:00Z")) / 86400000) + 1, ges = Math.round((new Date(x.a.bis + "T12:00:00Z") - new Date(x.a.von + "T12:00:00Z")) / 86400000) + 1;
       return `<div class="keintrag" onclick="aktionOeffnen('${esc(x.a.id)}')"><div class="farbe" style="background:var(--tuerkis)"></div><div style="flex:1"><b>${aktionSymbol(x.a)} ${esc(x.a.titel)}</b><small>${ges > 1 ? `Tag ${n} von ${ges}` : "Aktion"}${x.a.veranstalter ? " · " + esc(x.a.veranstalter) : ""}</small></div><b style="color:var(--rot)">›</b></div>`; }
@@ -4235,8 +4266,9 @@ async function treffenLaden() {
   $("treffenListe").classList.toggle("versteckt", termineArt !== "liste");
   $("todoBereich").classList.toggle("versteckt", termineArt !== "todo");
   $("terminfindung").classList.toggle("versteckt", termineArt === "todo");
+  $("terminanfragen").classList.toggle("versteckt", termineArt === "todo");
   if (termineArt === "todo") return todoLaden();
-  terminfindungLaden();
+  terminfindungLaden(); taLaden();
   if (termineArt === "kalender") return kalLaden();
   try {
     const { treffen, geburtstage } = await api("treffen_liste"); orteMerken(treffen);
@@ -5276,6 +5308,225 @@ function mitgliederZeichnen() {
       + (ICH.admin ? '<p class="hinweis">🔗 = persönlichen App-Link erzeugen und per WhatsApp schicken (ein neuer Link macht den alten ungültig). 🎖️ = Amt und Rechte.</p>' : "");
   } catch (e) { melde(e.message, true); }
 }
+// ---------- KC-CLUB-TERMINANFRAGE (0.92.0) ----------
+// Jedes Mitglied fragt Einzelne, mehrere oder eine Gruppe an: Anlass, Datum/Uhrzeit, Ort, Notiz – Antwort Ja / Vielleicht / Nein.
+// Nochmal auf die eigene Antwort tippen nimmt sie zurück (wie bei Treffen). Der Absender kann absagen.
+const TA_ANLAESSE = ["Treffen", "Einkauf", "Vorbereitung", "Kochen", "Besprechung", "Fahrt", "Aufbau / Abbau"];
+const TA_ANTW = { ja: "✅ Ja", vielleicht: "🤔 Vielleicht", nein: "❌ Nein" };
+const TA = { liste: [], wahl: { personen: [], gruppe: null }, gruppen: [], markiert: null };
+async function taLaden() {
+  try { TA.liste = (await api("terminanfragen_liste")).anfragen || []; } catch (e) { $("terminanfragen").innerHTML = ""; return; }
+  const kommend = TA.liste.filter((a) => new Date(a.ende || a.beginn) > Date.now() - 3 * 3600000);
+  $("terminanfragen").innerHTML = kommend.map(taKarte).join("");
+  if (TA.markiert) { const k = document.getElementById("ta-" + TA.markiert); if (k) { k.classList.add("ta-markiert"); k.scrollIntoView({ behavior: "smooth", block: "center" }); } TA.markiert = null; }
+}
+function taZeigen(id) { TA.markiert = id; termineArt = "liste"; if (aktuelleAnsicht === "termine") treffenLaden(); else zeige("termine"); }
+function taKarte(a) {
+  const n = (w) => a.empfaenger.filter((e) => e.antwort === w).length, offen = a.empfaenger.filter((e) => !e.antwort).length;
+  const ab = a.status === "abgesagt";
+  const k = (w) => `<button class="knopf klein${a.meine === w ? " haupt" : ""}" onclick="taAntwort('${a.id}', '${a.meine === w ? "keine" : w}')">${TA_ANTW[w]}</button>`;
+  const wer = a.empfaenger.map((e) => `<div>${e.antwort ? TA_ANTW[e.antwort].split(" ")[0] : "⏳"} ${esc(e.name)}${e.notiz ? ` <span class="hinweis">– „${esc(e.notiz)}“</span>` : ""}</div>`).join("");
+  return `<div class="karte" id="ta-${a.id}" style="border-left:6px solid var(--gold)${ab ? ";opacity:.65" : ""}">
+    <span class="marke gelb">📨 Terminanfrage</span>${ab ? ' <span class="marke">🚫 abgesagt</span>' : a.frist ? ` <span class="marke">⏳ Antwort bis ${esc(wann(a.frist))}</span>` : ""}
+    <div style="font-size:1.12rem;font-weight:800;margin-top:6px">${esc(a.anlass)}</div>
+    <div>📅 <b>${esc(wann(a.beginn))}</b>${a.ende ? ` – ${esc(fZeit.format(new Date(a.ende)))} Uhr` : ""}</div>
+    ${a.ort ? `<div>📍 ${esc(a.ort)}</div>` : ""}
+    <div class="hinweis" style="font-size:.85rem">${a.vonMir ? "Deine Anfrage" : "von " + esc(a.von.name)} · an ${a.empfaenger.length === 1 ? esc(a.empfaenger[0].name) : a.empfaenger.length + " Mitglieder"}</div>
+    ${a.notiz ? `<p class="hinweis" style="white-space:pre-wrap;margin:6px 0 0">📝 ${esc(a.notiz)}</p>` : ""}
+    ${!a.vonMir && !ab ? `<div class="ta-antw">${k("ja")}${k("vielleicht")}${k("nein")}</div>
+      ${a.meine ? `<div class="hinweis" style="font-size:.8rem;margin-top:4px">Nochmal auf deine Antwort tippen nimmt sie zurück.${a.meineNotiz ? ` Deine Notiz: „${esc(a.meineNotiz)}“` : ""}</div>` : ""}` : ""}
+    <details style="margin-top:8px"${a.vonMir ? " open" : ""}><summary class="hinweis">✅ ${n("ja")} · 🤔 ${n("vielleicht")} · ❌ ${n("nein")} · ⏳ ${offen} offen</summary>${wer}</details>
+    ${a.vonMir && !ab ? `<div class="knoepfe"><button class="knopf klein" onclick="taAbsagen('${a.id}')">🚫 Absagen</button></div>` : ""}</div>`;
+}
+async function taAntwort(id, antwort) {
+  let notiz = "";
+  if (antwort === "nein" || antwort === "vielleicht") {
+    const r = prompt(antwort === "nein" ? "Kurze Begründung (freiwillig), z. B. „Bin im Urlaub“:" : "Kurze Notiz (freiwillig), z. B. „Erst ab 18 Uhr“:", "");
+    if (r === null) return; notiz = r.trim().slice(0, 300);
+  }
+  try { await api("terminanfrage_antwort", { id, antwort, notiz }); melde(antwort === "keine" ? "↩️ Antwort zurückgenommen" : `${TA_ANTW[antwort]} – ist gemeldet`); TA.markiert = id; await taLaden(); neuLaden(); }
+  catch (e) { melde(e.message, true); }
+}
+async function taAbsagen(id) {
+  const grund = prompt("Anfrage absagen? Alle, die nicht schon Nein gesagt haben, bekommen Bescheid.\n\nGrund (freiwillig):", "");
+  if (grund === null) return;
+  try { await api("terminanfrage_absagen", { id, grund: grund.trim() }); melde("🚫 Abgesagt – Bescheid ist raus"); await taLaden(); } catch (e) { melde(e.message, true); }
+}
+async function taGruppen() {
+  if (TA.gruppen.length) return TA.gruppen;
+  try { TA.gruppen = ((await api("unterhaltungen")).unterhaltungen || []).filter((u) => u.gruppe).map((u) => ({ id: u.id, name: u.gruppe.name, symbol: u.gruppe.symbol, anzahl: u.anzahl })); } catch {}
+  return TA.gruppen;
+}
+function taAusZentrale() { taForm({ personen: ZE.gruppe ? [] : [...ZE.personen], gruppe: ZE.gruppe ? { ...ZE.gruppe } : null }); }
+async function taForm(vorwahl) {
+  try { await zeMitglieder(); } catch (e) { return melde(e.message, true); }
+  await taGruppen();
+  if (!TR_ORTE.length) try { orteMerken((await api("treffen_liste")).treffen); } catch {}
+  TA.wahl = { personen: [...(vorwahl?.personen || [])], gruppe: vorwahl?.gruppe || null };
+  if (aktuelleAnsicht !== "termine") { termineArt = "liste"; zeige("termine"); }
+  const morgen = tagPlus(heuteIso(), 1);
+  $("terminanfrageForm").innerHTML = `<h3>📨 Terminanfrage</h3>
+    <p class="hinweis" style="margin-top:0">An eine Person, mehrere oder eine Gruppe – sie antworten mit Ja, Vielleicht oder Nein.</p>
+    <div class="feld">An wen?<div class="ta-empf" id="taGruppen"></div><input id="taSuche" type="search" placeholder="🔍 Name suchen …" oninput="taEmpfListe()" style="margin:4px 0 6px"><div class="ta-liste wahlliste" id="taListe"></div><div class="hinweis" id="taWer" style="margin-top:4px"></div></div>
+    ${comboFeld("taAnlass", "Anlass", TA_ANLAESSE, "", "– bitte wählen –", "✏️ Eigener Anlass …", "z. B. Glühwein holen")}
+    <div class="zwei"><label class="feld">Datum<input id="taDatum" type="date" value="${morgen}" min="${heuteIso()}"></label><label class="feld">Uhrzeit<input id="taZeit" type="time" value="18:00"></label></div>
+    <div class="zwei"><label class="feld">bis (freiwillig)<input id="taBis" type="time"></label><label class="feld">Antwort bis (freiwillig)<input id="taFrist" type="date" min="${heuteIso()}"></label></div>
+    ${comboFeld("taOrt", "Ort", [...ORT_VORSCHLAEGE, ...TR_ORTE], "", "– noch offen –", "✏️ Anderer Ort …", "z. B. Parkplatz Markt")}
+    <label class="feld">Notiz (freiwillig)<textarea id="taNotiz" rows="2" maxlength="1000" placeholder="z. B. Bitte Schürze mitbringen"></textarea></label>
+    <div class="knoepfe"><button class="knopf haupt" onclick="einmal(this, taSenden)">📨 Anfrage senden</button><button class="knopf" onclick="$('terminanfrageForm').classList.add('versteckt')">Abbrechen</button></div>`;
+  taEmpfListe();
+  $("terminanfrageForm").classList.remove("versteckt"); $("treffenForm").classList.add("versteckt"); $("terminumfrageForm").classList.add("versteckt");
+  $("terminanfrageForm").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+function taWerText() {
+  if (TA.wahl.gruppe) return `${TA.wahl.gruppe.symbol} Gruppe ${TA.wahl.gruppe.name}`;
+  const n = TA.wahl.personen.length;
+  return !n ? "noch niemand gewählt" : n <= 3 ? TA.wahl.personen.map(zeName).join(", ") : `${n} Mitglieder`;
+}
+function taEmpfListe() {
+  const q = ($("taSuche")?.value || "").toLowerCase();
+  $("taGruppen").innerHTML = TA.gruppen.map((g) => `<button type="button" class="knopf klein ${TA.wahl.gruppe?.id === g.id ? "haupt" : ""}" onclick="taGruppe('${g.id}')">${esc(g.symbol)} ${esc(g.name)} <small>(${g.anzahl})</small></button>`).join("")
+    + `<button type="button" class="knopf klein" onclick="taAlle()">👥 Alle</button><button type="button" class="knopf klein" onclick="TA.wahl={personen:[],gruppe:null};taEmpfListe()">✖ Keiner</button>`;
+  $("taListe").innerHTML = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && (!q || m.name.toLowerCase().includes(q))).map((m) => `<label>
+    <input type="checkbox" ${!TA.wahl.gruppe && TA.wahl.personen.includes(m.person_id) ? "checked" : ""} onchange="taPerson('${m.person_id}', this.checked)"><span style="flex:1">${esc(m.name)}</span></label>`).join("");
+  $("taWer").innerHTML = `An: <b>${esc(taWerText())}</b>`;
+}
+function taPerson(pid, an) { if (TA.wahl.gruppe) TA.wahl = { personen: [], gruppe: null }; TA.wahl.personen = an ? [...new Set([...TA.wahl.personen, pid])] : TA.wahl.personen.filter((x) => x !== pid); taEmpfListe(); }
+function taGruppe(id) { const g = TA.gruppen.find((x) => x.id === id); TA.wahl = { personen: [], gruppe: TA.wahl.gruppe?.id === id ? null : g }; taEmpfListe(); }
+function taAlle() { TA.wahl = { personen: MITGLIEDER.filter((m) => m.person_id !== ICH.person_id).map((m) => m.person_id), gruppe: null }; taEmpfListe(); }
+function taZeitpunkt(datum, zeit) { // deutsche Ortszeit → ISO (Sommer-/Winterzeit richtig)
+  const probe = new Date(`${datum}T${zeit}:00Z`);
+  const versatz = new Date(probe.toLocaleString("en-US", { timeZone: TZ })) - new Date(probe.toLocaleString("en-US", { timeZone: "UTC" }));
+  return new Date(probe.getTime() - versatz).toISOString();
+}
+async function taSenden() {
+  const anlass = $("taAnlass").value.trim(), datum = $("taDatum").value, zeit = $("taZeit").value || "00:00", bis = $("taBis").value, frist = $("taFrist").value;
+  if (!TA.wahl.gruppe && !TA.wahl.personen.length) return melde("Bitte oben auswählen, wen du anfragen möchtest.", true);
+  if (!anlass) return melde("Bitte einen Anlass wählen oder eintragen.", true);
+  if (!datum) return melde("Bitte ein Datum wählen.", true);
+  const beginn = taZeitpunkt(datum, zeit), ende = bis ? taZeitpunkt(datum, bis) : null;
+  if (ende && ende < beginn) return melde("„bis“ liegt vor der Uhrzeit.", true);
+  const n = TA.wahl.gruppe ? TA.wahl.gruppe.anzahl : TA.wahl.personen.length;
+  if (n >= ZE_RUECKFRAGE_AB && !confirm(`Anfrage wirklich an ${taWerText()} senden?`)) return;
+  try {
+    const r = await api("terminanfrage_senden", { an: TA.wahl.gruppe ? { gruppe: TA.wahl.gruppe.id } : { personen: TA.wahl.personen }, anlass, beginn, ende,
+      ort: $("taOrt").value.trim(), notiz: $("taNotiz").value.trim(), frist: frist ? taZeitpunkt(frist, "23:59") : null });
+    $("terminanfrageForm").classList.add("versteckt");
+    melde(`📨 Anfrage an ${r.empfaenger} ${r.empfaenger === 1 ? "Mitglied" : "Mitglieder"} gesendet`);
+    TA.markiert = r.id; taLaden();
+  } catch (e) { melde(e.message, true); }
+}
+
+// ---------- KC-CLUB-STANDORT (0.92.0) ----------
+// 📍 in der Kommunikationszentrale (an die dort Gewählten) oder unter „📍 Standorte“:
+// „Einmal senden“ = normale Nachricht mit Kartenlink (OpenStreetMap, kostenlos). „Live teilen“ = 15 Min / 1 Std / bis ich
+// beende (höchstens 8 Std); nur solange die App offen ist (Handys orten Web-Apps im Hintergrund nicht). Roter Balken oben
+// zeigt, dass geteilt wird, mit „Beenden“. Beenden löscht den Standort sofort, abgelaufene löscht der Server.
+const ST = { eigen: null, watch: null, letzteMeldung: 0, letzte: null, fremde: 0, timer: null, wahl: null };
+const ST_MELDEN_MS = 20000;
+const stKarte = (lat, lon) => `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=17/${lat}/${lon}`;
+function stPosition() {
+  return new Promise((ok, nein) => {
+    if (!navigator.geolocation) return nein(new Error("Dieses Gerät kann keinen Standort bestimmen."));
+    navigator.geolocation.getCurrentPosition((p) => ok(p), (e) => nein(new Error(e.code === 1 ? "Standort nicht erlaubt – bitte in den Einstellungen des Handys/Browsers für diese App erlauben." : "Standort konnte nicht bestimmt werden – bitte draußen oder mit WLAN noch einmal versuchen.")),
+      { enableHighAccuracy: true, timeout: 20000, maximumAge: 15000 });
+  });
+}
+async function stPositionWarten() { const w = wartenStart("standort_ort", true); try { return await stPosition(); } finally { if (w) wartenEnde(); } }
+function stWahlText(w) { return w.gruppe ? `${w.gruppe.symbol} ${w.gruppe.name}` : w.personen.length <= 3 ? w.personen.map(zeVorname).join(", ") : `${w.personen.length} Mitglieder`; }
+async function stBlatt(ausZentrale) {
+  let w = ausZentrale ? { personen: ZE.gruppe ? [] : [...ZE.personen], gruppe: ZE.gruppe ? { ...ZE.gruppe } : null } : null;
+  if (!w || (!w.gruppe && !w.personen.length)) { melde("Bitte in der Kommunikationszentrale oben auswählen, mit wem du den Standort teilen möchtest."); zeige("start"); return; }
+  ST.wahl = w;
+  document.getElementById("stFenster")?.remove();
+  const f = document.createElement("div"); f.id = "stFenster"; f.className = "blatt"; f.setAttribute("role", "dialog"); f.setAttribute("aria-modal", "true");
+  f.innerHTML = `<div class="blatt-innen">
+    <h3>📍 Standort teilen</h3><div>An: <b>${esc(stWahlText(w))}</b></div>
+    <button class="knopf haupt" onclick="stEinmal()">📍 Jetzt einmal senden</button>
+    <div class="hinweis" style="margin:4px 0 0">Live teilen – dein Punkt wandert mit, solange die App offen ist:</div>
+    <div class="knoepfe"><button class="knopf" onclick="stLive(15)">🔴 15 Min</button><button class="knopf" onclick="stLive(60)">🔴 1 Std</button><button class="knopf" onclick="stLive(480)">🔴 bis ich beende</button></div>
+    <p class="hinweis" style="margin:0">„bis ich beende“ endet spätestens nach 8 Stunden. Geteilt wird nur mit den Gewählten.</p>
+    <button class="knopf" onclick="document.getElementById('stFenster').remove()">Abbrechen</button></div>`;
+  f.onclick = (e) => { if (e.target === f) f.remove(); };
+  document.body.appendChild(f);
+}
+async function stEinmal() {
+  const w = ST.wahl; document.getElementById("stFenster")?.remove();
+  try {
+    const pos = await stPositionWarten();
+    const lat = pos.coords.latitude.toFixed(6), lon = pos.coords.longitude.toFixed(6), gen = Math.round(pos.coords.accuracy || 0);
+    const text = `📍 Mein Standort (${fZeit.format(new Date())} Uhr${gen ? `, ± ${gen} m` : ""}):\n${stKarte(lat, lon)}`;
+    await api("nachricht_senden", w.gruppe ? { id: w.gruppe.id, text } : { empfaenger: { personen: w.personen, aemter: [], alle: false, vorstand: false }, text });
+    melde(`📍 Standort an ${stWahlText(w)} gesendet`);
+  } catch (e) { melde(e.message, true); }
+}
+async function stLive(minuten) {
+  const w = ST.wahl; document.getElementById("stFenster")?.remove();
+  try {
+    const pos = await stPositionWarten();
+    const r = await api("standort_start", { an: w.gruppe ? { gruppe: w.gruppe.id } : { personen: w.personen }, minuten, lat: pos.coords.latitude, lon: pos.coords.longitude, genauigkeit: pos.coords.accuracy });
+    ST.eigen = { id: r.id, bis: r.bis, an: stWahlText(w) }; ST.letzteMeldung = Date.now();
+    try { localStorage.setItem("kc_club_standort_eigen", JSON.stringify(ST.eigen)); } catch {}
+    stVerfolgen(); melde(`🔴 Du teilst deinen Standort mit ${ST.eigen.an}`);
+  } catch (e) { melde(e.message, true); }
+}
+function stVerfolgen() {
+  stBalken();
+  if (!ST.eigen || ST.watch !== null || !navigator.geolocation) return;
+  ST.watch = navigator.geolocation.watchPosition((p) => { ST.letzte = p; stMelden(false); }, () => {}, { enableHighAccuracy: true, maximumAge: 10000 });
+  clearInterval(ST.timer); ST.timer = setInterval(() => { stBalken(); stMelden(false); }, 15000);
+}
+async function stMelden(sofort) {
+  if (!ST.eigen) return;
+  if (new Date(ST.eigen.bis) <= Date.now()) return stAus("⏱️ Standort teilen ist abgelaufen");
+  if (!ST.letzte || (!sofort && Date.now() - ST.letzteMeldung < ST_MELDEN_MS)) return;
+  ST.letzteMeldung = Date.now();
+  try { const r = await api("standort_update", { id: ST.eigen.id, lat: ST.letzte.coords.latitude, lon: ST.letzte.coords.longitude, genauigkeit: ST.letzte.coords.accuracy });
+    if (r.beendet) stAus("Standort teilen ist beendet"); } catch {}
+}
+function stAus(meldung) {
+  if (ST.watch !== null) { try { navigator.geolocation.clearWatch(ST.watch); } catch {} ST.watch = null; }
+  clearInterval(ST.timer); ST.timer = null; ST.eigen = null; ST.letzte = null;
+  try { localStorage.removeItem("kc_club_standort_eigen"); } catch {}
+  document.getElementById("stBalken")?.remove();
+  if (meldung) melde(meldung);
+  if (aktuelleAnsicht === "standort") stLaden();
+}
+async function stBeenden() {
+  try { await api("standort_ende"); } catch (e) { return melde(e.message, true); }
+  stAus("📍 Standort teilen beendet – dein Standort ist gelöscht");
+}
+function stBalken() {
+  if (!ST.eigen) return document.getElementById("stBalken")?.remove();
+  let b = document.getElementById("stBalken");
+  if (!b) { b = document.createElement("div"); b.id = "stBalken"; b.setAttribute("role", "status"); document.body.appendChild(b); }
+  b.innerHTML = `<span>🔴 Du teilst deinen Standort · bis ${esc(fZeit.format(new Date(ST.eigen.bis)))}</span><button onclick="stBeenden()">Beenden</button>`;
+}
+function stAlter(iso) { const m = Math.round((Date.now() - new Date(iso)) / 60000); return m < 1 ? "gerade eben" : m === 1 ? "vor 1 Min" : m < 60 ? `vor ${m} Min` : `um ${fZeit.format(new Date(iso))} Uhr`; }
+async function stLaden(still) {
+  let liste = [];
+  try { liste = (await api("standort_liste", {}, still ? {} : { warten: true })).standorte || []; } catch (e) { if (!still) $("stListe").innerHTML = `<div class="karte">⚠️ ${esc(e.message)}</div>`; return; }
+  ST.fremde = liste.filter((x) => !x.vonMir).length;
+  const eigen = liste.find((x) => x.vonMir);
+  $("stListe").innerHTML = (eigen ? `<div class="karte"><b>🔴 Du teilst deinen Standort</b> mit ${esc(eigen.an.join(", "))} – bis ${esc(fZeit.format(new Date(eigen.bis)))} Uhr
+      <div class="knoepfe"><button class="knopf" onclick="stBeenden()">⏹️ Beenden</button></div></div>` : "")
+    + (liste.filter((x) => !x.vonMir).map((x) => { const alt = Date.now() - new Date(x.aktualisiert_am) > 5 * 60000, d = 0.004;
+      return `<div class="karte st-karte"><b>📍 ${esc(x.von.name)}</b>
+        <div class="hinweis${alt ? " st-alt" : ""}">aktualisiert ${esc(stAlter(x.aktualisiert_am))}${alt ? " – ⚠️ veraltet (App beim anderen vermutlich zu)" : ""}${x.genauigkeit ? ` · ± ${Math.round(x.genauigkeit)} m` : ""} · bis ${esc(fZeit.format(new Date(x.bis)))} Uhr</div>
+        <iframe loading="lazy" title="Karte ${esc(x.von.name)}" src="https://www.openstreetmap.org/export/embed.html?bbox=${x.lon - d},${x.lat - d * 0.6},${x.lon + d},${x.lat + d * 0.6}&layer=mapnik&marker=${x.lat},${x.lon}"></iframe>
+        <div class="knoepfe"><a class="knopf" href="${stKarte(x.lat, x.lon)}" target="_blank" rel="noopener">🗺️ Große Karte</a><a class="knopf" href="https://www.openstreetmap.org/directions?route=%3B${x.lat}%2C${x.lon}" target="_blank" rel="noopener">🧭 Weg dorthin</a></div></div>`; }).join("")
+      || (eigen ? "" : `<div class="karte hinweis">Gerade teilt niemand den Standort mit dir.</div>`));
+  clearInterval(stAnsichtTimer); stAnsichtTimer = setInterval(() => { if (!document.hidden) stLaden(true); }, 30000);
+}
+let stAnsichtTimer = null;
+function stAnsichtStopp() { clearInterval(stAnsichtTimer); stAnsichtTimer = null; }
+// Beim Start: laufende eigene Freigabe fortsetzen (z. B. nach Neuladen) und zählen, wer mit mir teilt
+async function stStart() {
+  try { const e = JSON.parse(localStorage.getItem("kc_club_standort_eigen") || "null"); if (e && new Date(e.bis) > Date.now()) { ST.eigen = e; stVerfolgen(); } else localStorage.removeItem("kc_club_standort_eigen"); } catch {}
+  try { const l = (await api("standort_liste")).standorte || []; ST.fremde = l.filter((x) => !x.vonMir).length;
+    if (ST.eigen && !l.some((x) => x.vonMir)) stAus(); } catch {}
+}
+
 // ---------- Terminfindung (KC-CLUB-TERMINFINDUNG) ----------
 let UMFRAGEN = [];
 async function terminfindungLaden() {
@@ -6558,11 +6809,13 @@ async function jetztAktualisieren() {
     else if (h === "#geteilt") geteiltEmpfangen();
     else if (h === "#todo") { termineArt = "todo"; zeige("termine"); }
     else if (h === "#pinnwand") zeige("pinnwand");
+    else if (h === "#standort") zeige("standort");
     else if (h === "#dienstwunsch") dwOeffnen();
     else if (["#termine", "#vorschlaege", "#aktionen", "#fotos", "#protokolle", "#dienste", "#nachrichten", "#mitglieder", "#einstellungen"].includes(h)) zeige(h.slice(1));
   });
   updatePruefen(false);
-  document.addEventListener("visibilitychange", () => { if (!document.hidden) { neuLaden(); updatePruefen(false); if (chatId) chatLaden(false); setTimeout(pwLive, 1500); } });
+  setTimeout(stStart, 2500); // KC-CLUB-STANDORT
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) { if (ST.eigen) stMelden(true); neuLaden(); updatePruefen(false); if (chatId) chatLaden(false); setTimeout(pwLive, 1500); } });
   setInterval(() => { if (!document.hidden && aktuelleAnsicht !== "chat") neuLaden(); }, 60000);
   setInterval(pwLive, PW_LIVE_MS); // KC-CLUB-PINNWAND-LIVE: auch im Chat
 })();

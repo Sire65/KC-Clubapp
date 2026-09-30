@@ -1,10 +1,18 @@
 {
-  "version": "0.91.0",
+  "version": "0.92.0",
   "datum": "2026-09-30",
   "neu": [
-    "📌 Pinnwand: Der Knopf heißt immer „＋ Zettel“ – der Stand (z. B. 4/4) steht klein daneben, und bei vollen Plätzen steht dabei, was zu tun ist"
+    "📨 Terminanfrage: Jeder kann einzelne Mitglieder, mehrere oder eine Gruppe anfragen – mit Anlass, Datum, Uhrzeit und Ort; Antwort Ja, Vielleicht oder Nein (Termine → „📨 Anfrage“ oder Kommunikationszentrale → 📨 Termin)",
+    "📍 Standort teilen in der Kommunikationszentrale: einmal senden oder live für 15 Min, 1 Std oder bis du beendest – nur an die Gewählten, roter Balken zeigt, dass du teilst"
   ],
   "verlauf": [
+    {
+      "version": "0.92.0",
+      "neu": [
+        "📨 Terminanfrage: Jeder kann einzelne Mitglieder, mehrere oder eine Gruppe anfragen – mit Anlass, Datum, Uhrzeit und Ort; Antwort Ja, Vielleicht oder Nein (Termine → „📨 Anfrage“ oder Kommunikationszentrale → 📨 Termin)",
+        "📍 Standort teilen in der Kommunikationszentrale: einmal senden oder live für 15 Min, 1 Std oder bis du beendest – nur an die Gewählten, roter Balken zeigt, dass du teilst"
+      ]
+    },
     {
       "version": "0.91.0",
       "neu": [

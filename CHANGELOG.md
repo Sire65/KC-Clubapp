@@ -1,5 +1,26 @@
 # Änderungen
 
+## 0.92.0 – 2026-09-30 (DEV)
+
+- KC-CLUB-TERMINANFRAGE (Wunsch Hansi: „Terminanfrage an Mitglied senden mit Datum, Zeit, Anlass, Ort, ja, nein, vielleicht –
+  jeder an jeden oder mehrere oder Gruppe“). Vorher gab es nur Treffen und Terminfindung – beide nur für die Clubleitung
+  und immer an alle. Neu: Termine → „📨 Anfrage“ bzw. Kommunikationszentrale → 📨 Termin (übernimmt die dort Gewählten).
+  Empfänger antworten ✅ Ja / 🤔 Vielleicht / ❌ Nein (mit freiwilliger Notiz, nochmal tippen nimmt zurück), der Absender
+  bekommt jede Antwort als Push/Mail und kann absagen. Anfragen stehen im Kalender (goldener Punkt), unter „Demnächst“ und
+  im Kalender-Abo (eigene und zugesagte). Erinnerung am Vortag an Zugesagte, „bitte noch antworten“ an Offene.
+  Eigene Tabellen kc_club_terminanfragen / kc_club_terminanfrage_empfaenger – bewusst NICHT kc_club_treffen, damit eine
+  private Anfrage nie in Liste, Kalender-Abo oder „Demnächst“ aller Mitglieder erscheint. Grenzen: 100 Empfänger je
+  Anfrage, 30 Anfragen je Person und Tag.
+- KC-CLUB-STANDORT: 📍 in der Kommunikationszentrale – „Jetzt einmal senden“ (normale Nachricht mit OpenStreetMap-Link,
+  keine neue Tabelle) oder live teilen für 15 Min / 1 Std / bis ich beende (höchstens 8 Std). Nur an die Gewählten, je
+  Person eine laufende Freigabe, roter Balken oben mit „Beenden“ (löscht sofort). Ansicht „📍 Standorte“ (#standort) mit
+  Karte, „aktualisiert vor … Min“, ab 5 Min als veraltet markiert. Live nur, solange die App offen ist (Web-Apps werden im
+  Hintergrund nicht geortet). Abgelaufene Standorte löscht die Wartung; im Protokoll stehen nie Koordinaten.
+  Kostenlos: Karten von OpenStreetMap, kein Kartendienst mit Schlüssel. Tabelle kc_club_standort_live.
+- Migration 20260930_kc_club_v92_terminanfrage_standort (nur neue Tabellen, RLS an, Zugriff nur über kc-club).
+  Die neuen Tabellen sind absichtlich (noch) nicht im Neon-Spiegel; Standorte sollen nie gespiegelt werden.
+- Server 0.92.0. Tests 113–115.
+
 ## 0.91.0 – 2026-09-30 (DEV)
 
 - KC-CLUB-PINNWAND-KNOPF (Fund Hansi: „das Schild 4/4 verdeckt den ＋-Knopf, man weiß nicht, was man da machen soll“):
