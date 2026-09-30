@@ -1157,9 +1157,9 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/ansicht: ansicht\.get\(m\.person_id\) \?\? null \} : \{\}\)/.test(server), "Ansicht je Mitglied nur für den Admin");
   assert.ok(/const begruesst = ansichtPruefen\(\) \|\| begruessungPruefen\(\);/.test(html) && /INIT\?\.einstellungen\?\.ansicht\?\.gewaehlt\) return false/.test(html), "Frage beim Start fehlt / käme mehrfach");
   assert.ok(/id="ansichtBlatt" onclick="if\(event\.target===this\)ansichtSetzen\('einfach', true\)"/.test(html) && /Du kannst jederzeit umschalten/.test(html), "Überspringen = einfach / Umschalt-Hinweis fehlt");
-  assert.ok(/const EINFACH_KACHELN = \["termine", "kommunikation", "pinnwand", "meindienst", "mitglieder"\];/.test(html) && /const kacheln = \(r\) => einfach\(\) \? einfachKacheln\(\) : kaSortiert/.test(html), "Einfache Startseite fehlt");
+  assert.ok(/const EINFACH_KACHELN = \["termine", "kommunikation", "pinnwand", "meindienst", "mitglieder"(, "dokumente")?\];/.test(html) && /const kacheln = \(r\) => einfach\(\) \? einfachKacheln\(\) : kaSortiert/.test(html), "Einfache Startseite fehlt");
   const alle = [...html.matchAll(/\{ id: "([a-z]+)", sym:/g)].map((m) => m[1]);
-  for (const id of ["termine", "kommunikation", "pinnwand", "meindienst", "mitglieder"]) assert.ok(alle.includes(id), `Kachel ${id} fehlt in der Registry`);
+  for (const id of ["termine", "kommunikation", "pinnwand", "meindienst", "mitglieder", "dokumente"]) assert.ok(alle.includes(id), `Kachel ${id} fehlt in der Registry`);
   assert.ok(/id="ansichtKnopf"[^>]*onclick="ansichtWechseln\(\)"/.test(html) && /onclick="ansichtSetzen\('einfach'\)"/.test(html) && /onclick="ansichtSetzen\('erweitert'\)"/.test(html), "Umschalter fehlt");
   assert.ok(/body\.einfach #v-einstellungen > details\[data-klappe\]:not\(\[data-einfach\]\) \{ display: none; \}/.test(html) && /data-klappe="install" data-einfach/.test(html), "Einstellungen der einfachen Ansicht");
   assert.ok(/function neuWahlSetzen\(art\)/.test(html) && /for \(const \[b\] of WAHL_BEREICHE\)/.test(html) && /CriOS\|FxiOS/.test(html), "Neuigkeiten-Frage / Safari-Hinweis fehlt");
@@ -1224,11 +1224,11 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 
 // 91. 0.70.0: Tipps nach und nach statt vieler Fragen beim Einstieg (KC-CLUB-EINSTIEG)
 {
-  assert.ok(/einstieg: \(w\) => \(\{ schritte:/.test(server) && /\["farbe", "privat", "erweitert"\]\.includes\(k\)/.test(server) && /\["ja", "nein", "spaeter"\]\.includes/.test(server), "Server prüft die Einstiegs-Antworten nicht");
+  assert.ok(/einstieg: \(w\) => \(\{ schritte:/.test(server) && /\["farbe", "privat", "erweitert"(, "feedback")?\]\.includes\(k\)/.test(server) && /\["ja", "nein", "spaeter"\]\.includes/.test(server), "Server prüft die Einstiegs-Antworten nicht");
   // 0.71.0: Nutzungstage (verschiedene Tage mit App-Start, Europe/Berlin) statt Starts
   assert.ok(/eq\("aktion", "diagnose_start"\)/.test(server) && /einstieg: \{ tage: new Set\(\(starts\.data \?\? \[\]\)\.map\(\(x: any\) => new Date\(x\.zeit\)\.toLocaleDateString\("sv-SE", \{ timeZone: "Europe\/Berlin" \}\)\)\)\.size/.test(server), "Nutzungstage/erster Start fehlen");
   const code = html.slice(html.indexOf("const EINSTIEG_ABSTAND_TAGE"), html.indexOf("function einstiegMerken"));
-  assert.ok(/const EINSTIEG_ABSTAND_TAGE = 1;/.test(code) && /const EINSTIEG_STANDARD = \{ aktiv: true, farbeTage: 3, privatTage: 3, erweitertTage: 14, spaeterTage: 3 \};/.test(code) && /tageSeit\(x\.am\) < EINSTIEG_ABSTAND_TAGE\)\) return false/.test(code), "höchstens ein Tipp je Tag");
+  assert.ok(/const EINSTIEG_ABSTAND_TAGE = 1;/.test(code) && /const EINSTIEG_STANDARD = \{ aktiv: true, farbeTage: 3, privatTage: 3, erweitertTage: 14, spaeterTage: 3, feedbackTage: 28 \};/.test(code) && /tageSeit\(x\.am\) < EINSTIEG_ABSTAND_TAGE\)\) return false/.test(code), "höchstens ein Tipp je Tag");
   for (const id of ["farbe", "privat", "erweitert"]) assert.ok(code.includes(`{ id: "${id}"`), `Schritt ${id} fehlt`);
   assert.ok(/id: "farbe", faellig: \(e, s\) => e\.tage >= eiF\(\)\.farbeTage/.test(code) && /id: "erweitert", faellig: \(e\) => einfach\(\) && tageSeit\(e\.ersterStart\) >= eiF\(\)\.erweitertTage/.test(code), "Zeitpunkte der Tipps");
   assert.ok(/ansichtSetzen\("erweitert"\); setTimeout\(\(\) => einstiegHinweis\(\), 400\)/.test(code) && /Zurück zur einfachen Ansicht kommst du jederzeit/.test(html), "Hinweis zum Zurückschalten fehlt");
@@ -1256,7 +1256,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 {
   const fs = server.slice(server.indexOf('case "einstieg_fristen_setzen"'), server.indexOf('case "wetter_setzen"'));
   assert.ok(/nurAdmin\(ich\);/.test(fs) && /protokoll\(ich\.person_id, "einstieg_fristen_gesetzt"/.test(fs), "nur Admin / Protokoll");
-  assert.ok(/EINSTIEG_GRENZEN = \{ farbeTage: \[1, 20\], privatTage: \[1, 30\], erweitertTage: \[1, 90\], spaeterTage: \[1, 30\] \}/.test(server) && /fristen: eiFristen \}/.test(server), "Grenzen / Übergabe an die App");
+  assert.ok(/EINSTIEG_GRENZEN = \{ farbeTage: \[1, 20\], privatTage: \[1, 30\], erweitertTage: \[1, 90\], spaeterTage: \[1, 30\], feedbackTage: \[1, 180\] \}/.test(server) && /fristen: eiFristen \}/.test(server), "Grenzen / Übergabe an die App");
   assert.ok(/data-klappe="admin_einstieg"/.test(html.slice(html.indexOf('id="adminBereich"'), html.indexOf('data-klappe="app"'))) && /id="eiAktiv"/.test(html), "Admin-Klappbereich fehlt");
   assert.ok(/!eiF\(\)\.aktiv \|\|/.test(html) && /tageSeit\(s\[x\.id\]\.am\) >= eiF\(\)\.spaeterTage/.test(html), "Ausschalter / „Später“-Frist nicht wirksam");
 }
@@ -1266,6 +1266,17 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/id="mgFilter"/.test(html) && /onclick="mgFilterSetzen\('alle'\)">👥 Alle<\/button><button data-f="online" onclick="mgFilterSetzen\('online'\)">/.test(html), "Umschalter fehlt");
   assert.ok(/nurOnline = MG_FILTER === "online" && sichtbar/.test(html) && /MITGLIEDER\.filter\(\(m\) => m\.online\)/.test(html) && /ONLINE_SICHTBAR = r\.onlineSichtbar !== false/.test(html), "Filter / Online-Privatsphäre");
   assert.ok(/Gerade ist niemand online\./.test(html), "leere Liste ohne Hinweis");
+}
+
+// 94. 0.73.0: Meine Dokumente + Feedback-Frage nach 4 Wochen (KC-CLUB-DOKUMENTE / KC-CLUB-EINSTIEG-FEEDBACK)
+{
+  const fs2 = await import("node:fs");
+  const doks = [...html.matchAll(/\{ id: "([a-z0-9-]+)", sym: "[^"]+", t: "([^"]+)", u: "[^"]*", datei: (null|"([^"]+)") \}/g)];
+  assert.ok(doks.length >= 2 && doks.some((d) => d[2] === "Anleitung Club-App"), "Dokumente-Registry fehlt");
+  for (const d of doks) if (d[4]) assert.ok(fs2.existsSync(new URL("../" + d[4], import.meta.url)) && /^dokumente\/[\w.-]+\.pdf$/.test(d[4]), `PDF fehlt: ${d[4]}`);
+  assert.ok(/\{ id: "dokumente", sym: "📚", t: "Meine Dokumente"[^}]*v: "dokumente" \}/.test(html) && /id="v-dokumente"/.test(html) && /\["start", "dokumente",/.test(html) && /if \(v === "dokumente"\) dokumenteZeigen\(\);/.test(html), "Kachel/Ansicht fehlt");
+  assert.ok(/id: "feedback", faellig: \(e\) => !e\.feedbackAbgegeben && tageSeit\(e\.ersterStart\) >= eiF\(\)\.feedbackTage/.test(html) && /ja: \(\) => zeige\("feedback"\)/.test(html), "Feedback-Tipp fehlt");
+  assert.ok(/from\("kc_club_feedback"\)\.select\("person_id", \{ count: "exact", head: true \}\)\.eq\("person_id", ich\.person_id\)/.test(server) && /feedbackAbgegeben: \(fbAnzahl \?\? 0\) > 0/.test(server) && /"erweitert", "feedback"\]\.includes\(k\)/.test(server), "Server prüft abgegebenes Feedback nicht");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

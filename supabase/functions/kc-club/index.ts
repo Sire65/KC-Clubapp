@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.72.0";
+const SERVER_VERSION = "0.73.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -396,7 +396,7 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
     .filter(([id, d]) => /^[0-9a-f-]{36}$/.test(id) && typeof d === "string" && !isNaN(Date.parse(d))).slice(-20)) }),
   // KC-CLUB-EINSTIEG (0.70.0): Tipps nach und nach (Farbe, Privatsphäre, erweiterte Ansicht) – je Schritt Antwort + Zeitpunkt
   einstieg: (w) => ({ schritte: Object.fromEntries(Object.entries(w?.schritte && typeof w.schritte === "object" ? w.schritte : {})
-    .filter(([k, v]: [string, any]) => ["farbe", "privat", "erweitert"].includes(k) && ["ja", "nein", "spaeter"].includes(v?.antwort) && !isNaN(Date.parse(v?.am)))
+    .filter(([k, v]: [string, any]) => ["farbe", "privat", "erweitert", "feedback"].includes(k) && ["ja", "nein", "spaeter"].includes(v?.antwort) && !isNaN(Date.parse(v?.am)))
     .map(([k, v]: [string, any]) => [k, { antwort: v.antwort, am: new Date(v.am).toISOString() }])) }),
   // KC-CLUB-ANSICHT (0.62.0): einfache oder erweiterte Ansicht – beim ersten Start einmal gefragt, jederzeit umschaltbar
   ansicht: (w) => ({ art: w?.art === "erweitert" ? "erweitert" : "einfach", gewaehlt: w?.gewaehlt === true, am: new Date().toISOString() }),
@@ -560,14 +560,14 @@ async function pinnwandFristen() {
   return { erinnernTage: zahl("erinnernTage"), pauseTage: zahl("pauseTage"), geaendertAm: data?.geaendert_am ?? null };
 }
 // KC-CLUB-EINSTIEG-FRISTEN (0.71.0): Zeitpunkte der Einstiegs-Tipps – vom Admin einstellbar (kc_club_konfig „einstieg“)
-const EINSTIEG_STANDARD = { aktiv: true, farbeTage: 3, privatTage: 3, erweitertTage: 14, spaeterTage: 3 };
-const EINSTIEG_GRENZEN = { farbeTage: [1, 20], privatTage: [1, 30], erweitertTage: [1, 90], spaeterTage: [1, 30] } as const;
+const EINSTIEG_STANDARD = { aktiv: true, farbeTage: 3, privatTage: 3, erweitertTage: 14, spaeterTage: 3, feedbackTage: 28 };
+const EINSTIEG_GRENZEN = { farbeTage: [1, 20], privatTage: [1, 30], erweitertTage: [1, 90], spaeterTage: [1, 30], feedbackTage: [1, 180] } as const;
 async function einstiegFristen() {
   const { data } = await db.from("kc_club_konfig").select("wert,geaendert_am").eq("schluessel", "einstieg").maybeSingle();
   const w: any = data?.wert ?? {}, zahl = (k: keyof typeof EINSTIEG_GRENZEN) => {
     const n = Math.round(Number(w[k])), [lo, hi] = EINSTIEG_GRENZEN[k];
     return Number.isFinite(n) && n >= lo && n <= hi ? n : EINSTIEG_STANDARD[k]; };
-  return { aktiv: w.aktiv !== false, farbeTage: zahl("farbeTage"), privatTage: zahl("privatTage"), erweitertTage: zahl("erweitertTage"), spaeterTage: zahl("spaeterTage"), geaendertAm: data?.geaendert_am ?? null };
+  return { aktiv: w.aktiv !== false, farbeTage: zahl("farbeTage"), privatTage: zahl("privatTage"), erweitertTage: zahl("erweitertTage"), spaeterTage: zahl("spaeterTage"), feedbackTage: zahl("feedbackTage"), geaendertAm: data?.geaendert_am ?? null };
 }
 const pinnwandPrivat = (z: { fuer: string; personen?: string[] | null }) => z.fuer === "personen" && (z.personen ?? []).length === 1;
 const pinnwandHinweis = (von: string, privat: boolean, wichtig: boolean) => `Du hast ein neues ${wichtig ? "wichtiges " : ""}${privat ? "privates " : ""}Post-it von ${von} bekommen`;
@@ -1352,7 +1352,7 @@ Köcheclub Werne`,
           const beantwortet = new Set((ta ?? []).map((x: any) => (to ?? []).find((o: any) => o.id === x.option_id)?.umfrage_id));
           terminfindungOffen = (tu ?? []).filter((x: any) => !beantwortet.has(x.id)).map((x: any) => ({ id: x.id, titel: x.titel }));
         }
-        const [{ data: nf }, { data: kab }, wartung, { data: pe }, pwFristen, starts, eiFristen] = await Promise.all([
+        const [{ data: nf }, { data: kab }, wartung, { data: pe }, pwFristen, starts, eiFristen, { count: fbAnzahl }] = await Promise.all([
           db.from("kc_club_notfall").select("name,telefon,beziehung").eq("person_id", ich.person_id).maybeSingle(),
           db.from("kc_club_kalender_abo").select("erstellt_am,zuletzt_abgerufen").eq("person_id", ich.person_id).maybeSingle(),
           wartungLesen(),
@@ -1362,6 +1362,8 @@ Köcheclub Werne`,
           // Tage statt Starts, damit mehrfaches Öffnen am ersten Tag nicht schon Tipps auslöst
           db.from("kc_club_protokoll").select("zeit").eq("person_id", ich.person_id).eq("aktion", "diagnose_start").order("zeit").limit(1000),
           einstiegFristen().catch(() => ({ ...EINSTIEG_STANDARD, geaendertAm: null })),
+          // KC-CLUB-EINSTIEG-FEEDBACK (0.73.0): schon Feedback abgegeben? Dann nicht mehr danach fragen
+          db.from("kc_club_feedback").select("person_id", { count: "exact", head: true }).eq("person_id", ich.person_id),
         ]);
         const einstellungen = Object.fromEntries((pe ?? []).map((x: any) => [x.schluessel, x.wert]));
         const communicator = await communicatorStatus(ich).catch(() => null);
@@ -1369,7 +1371,7 @@ Köcheclub Werne`,
         const benachrichtigung = Object.fromEntries(BEREICHE.map((b) => { const x: any = (wahl ?? []).find((y: any) => y.bereich === b); return [b, x ? { push: x.push, email: x.email } : STANDARD_WAHL[b]]; }));
         return json({ ich, status: meinStatus, server: SERVER_VERSION, ungelesen, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, communicator, notfall: nf ?? null, einstellungen, kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen,
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
-            ersterStart: starts.data?.[0]?.zeit ?? null, fristen: eiFristen } });
+            ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen } });
       }
 
       case "mitglieder": {
@@ -2275,7 +2277,7 @@ Köcheclub Werne`,
       case "einstieg_fristen_setzen": {
         nurAdmin(ich);
         const alt = await einstiegFristen(), neu: Record<string, unknown> = { aktiv: p.aktiv === undefined ? alt.aktiv : p.aktiv !== false };
-        const namen: Record<string, string> = { farbeTage: "Farb-Tipp ab dem … Nutzungstag", privatTage: "Voreinstellungs-Tipp nach … Tagen", erweitertTage: "Tipp erweiterte Ansicht nach … Tagen", spaeterTage: "„Später“ fragt wieder nach … Tagen" };
+        const namen: Record<string, string> = { farbeTage: "Farb-Tipp ab dem … Nutzungstag", privatTage: "Voreinstellungs-Tipp nach … Tagen", erweitertTage: "Tipp erweiterte Ansicht nach … Tagen", spaeterTage: "„Später“ fragt wieder nach … Tagen", feedbackTage: "Feedback-Frage nach … Tagen" };
         for (const k of Object.keys(EINSTIEG_GRENZEN) as (keyof typeof EINSTIEG_GRENZEN)[]) {
           const n = Math.round(Number(p[k] ?? alt[k])), [lo, hi] = EINSTIEG_GRENZEN[k];
           if (!Number.isFinite(n) || n < lo || n > hi) throw new Fehler(`${namen[k]}: bitte ${lo} bis ${hi}.`);

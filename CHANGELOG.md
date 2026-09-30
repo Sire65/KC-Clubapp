@@ -1,5 +1,16 @@
 # Änderungen
 
+## 0.73.0 – 2026-09-30 (DEV)
+
+- KC-CLUB-DOKUMENTE (neu, Wunsch Hansi): Kachel „📚 Meine Dokumente“ (Mein Bereich und einfache Ansicht) mit Unterkacheln aus
+  der Registry DOKUMENTE: „📲 Anleitung Club-App“ (dokumente/Koecheclub-App_Kurzanleitung.pdf) und „🧮 Schnellanleitung
+  Bilderrechner“ (kommt bald – PDF fehlt noch). Antippen öffnet das PDF im PDF-Betrachter des Geräts (ansehen, drucken,
+  teilen). Weitere Anleitungen: PDF nach dokumente/ + Eintrag. Nur Anleitungen – die Dateien sind über die Adresse öffentlich.
+  Kurzanleitung nennt jetzt „📚 Meine Dokumente“ (sechs Knöpfe in der einfachen Ansicht).
+- KC-CLUB-EINSTIEG-FEEDBACK (neu): vierter Tipp nach feedbackTage (Std. 28) Tagen Nutzung „💭 Möchtest du jetzt dein Feedback
+  abgeben? Deine Meinung hilft, die App weiterzuentwickeln“ → Feedback-Seite; nur wenn noch kein Feedback abgegeben wurde
+  (init: einstieg.feedbackAbgegeben aus kc_club_feedback). Frist in den Admin-Einstellungen (1–180 Tage).
+
 ## 0.72.0 – 2026-09-30 (DEV)
 
 - KC-CLUB-ONLINEFILTER (neu, Wunsch Hansi): in der Mitgliederliste oben rechts (unter dem Status-Knopf) der Umschalter

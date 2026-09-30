@@ -1,10 +1,18 @@
 {
-  "version": "0.72.0",
+  "version": "0.73.0",
   "datum": "2026-09-29",
   "neu": [
-    "🟢 Mitgliederliste: oben rechts „Alle | Nur online“ – zeigt auf Wunsch nur, wer gerade in der App ist"
+    "📚 Neue Kachel „Meine Dokumente“ mit Anleitungen zum Ansehen und Ausdrucken (z. B. Anleitung Club-App)",
+    "💭 Nach 4 Wochen fragt die App einmal nach deinem Feedback – nur, wenn du noch keins abgegeben hast"
   ],
   "verlauf": [
+    {
+      "version": "0.73.0",
+      "neu": [
+        "📚 Neue Kachel „Meine Dokumente“ mit Anleitungen zum Ansehen und Ausdrucken (z. B. Anleitung Club-App)",
+        "💭 Nach 4 Wochen fragt die App einmal nach deinem Feedback – nur, wenn du noch keins abgegeben hast"
+      ]
+    },
     {
       "version": "0.72.0",
       "neu": [

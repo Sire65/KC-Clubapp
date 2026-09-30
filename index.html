@@ -850,6 +850,13 @@
   </section>
 
   <!-- PINNWAND (KC-CLUB-PINNWAND) -->
+  <!-- KC-CLUB-DOKUMENTE (0.73.0): Anleitungen als PDF – ansehen und ausdrucken; neue Dokumente = Eintrag in DOKUMENTE -->
+  <section id="v-dokumente" class="versteckt">
+    <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>📚 Meine Dokumente</h2></div>
+    <p class="hinweis" style="margin:0 2px 10px">Antippen zum Ansehen. Im geöffneten Dokument kannst du es über <b>Teilen □↑</b> bzw. <b>⋮</b> ausdrucken oder speichern.</p>
+    <div class="raster" id="dokRaster"></div>
+  </section>
+
   <section id="v-pinnwand" class="versteckt">
     <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>📌 Pinnwand</h2><button class="knopf haupt klein" id="pwNeuKnopf" onclick="pwForm(true)">＋ Zettel</button></div>
     <div id="pwHinweis"></div>
@@ -1008,6 +1015,7 @@
         <label class="feld">🔒 Voreinstellungs-Tipp … Tage nach dem Farb-Tipp<input id="eiPrivatTage" type="number" inputmode="numeric" min="1" max="30"></label></div>
       <div class="zwei"><label class="feld">🔧 Tipp „erweiterte Ansicht“ nach … Tagen Nutzung<input id="eiErweitertTage" type="number" inputmode="numeric" min="1" max="90"></label>
         <label class="feld">⏳ „Später“ fragt wieder nach … Tagen<input id="eiSpaeterTage" type="number" inputmode="numeric" min="1" max="30"></label></div>
+      <div class="zwei"><label class="feld">💭 Feedback-Frage nach … Tagen Nutzung (nur ohne Feedback)<input id="eiFeedbackTage" type="number" inputmode="numeric" min="1" max="180"></label><span></span></div>
       <p class="hinweis" id="eiStand" style="margin:0 0 8px"></p>
       <button class="knopf haupt" onclick="einstiegFristenSpeichern()">💾 Speichern</button>
     </details>
@@ -1215,7 +1223,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "0.72.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.73.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -1613,7 +1621,7 @@ function begruessungFertig(weiter) {
 // Beim ersten Start (auch für Mitglieder, die schon drin waren) genau eine Frage; die Wahl gilt geräteübergreifend
 // (Server-Einstellung „ansicht“), umschaltbar unten auf der Startseite und in den Einstellungen. Einfach = 5 große Kacheln,
 // oben nur „Nächstes Treffen“, Einstellungen mit drei Dingen. Es wird nichts gelöscht – die erweiterte Ansicht zeigt alles.
-const EINFACH_KACHELN = ["termine", "kommunikation", "pinnwand", "meindienst", "mitglieder"];
+const EINFACH_KACHELN = ["termine", "kommunikation", "pinnwand", "meindienst", "mitglieder", "dokumente"];
 // Dienstwünsche kommen in die einfache Ansicht erst, wenn DP2 die Wünsche abholt (Codex-Umbau) – dann nur in der Wunschphase
 const DIENSTWUNSCH_EINFACH = false;
 let ANSICHT = (() => { try { return localStorage.getItem("kc_club_ansicht") === "erweitert" ? "erweitert" : "einfach"; } catch { return "einfach"; } })();
@@ -1700,12 +1708,12 @@ async function neuWahlSetzen(art) {
 
 // ---------- KC-CLUB-EINSTIEG (0.70.0, Wunsch Hansi): nicht alles auf einmal fragen – Tipps nach und nach ----------
 // Beim Start gelten vernünftige Voreinstellungen. Später kommt höchstens EIN Tipp je Start und höchstens einer je
-// EINSTIEG_ABSTAND_TAGE: (1) Lieblingsfarbe ab dem 3. Nutzungstag (Tage, nicht Starts), (2) Voreinstellungen/Privatsphäre ein paar Tage danach,
+// EINSTIEG_ABSTAND_TAGE: (1) Lieblingsfarbe ab dem 3. Nutzungstag (Tage, nicht Starts), (4) nach 4 Wochen Feedback, (2) Voreinstellungen/Privatsphäre ein paar Tage danach,
 // (3) nach 2 Wochen die erweiterte Ansicht. „Ja“ führt direkt hin, „Später“ fragt nach eiF().spaeterTage wieder (alle Zahlen: Admin-Einstellungen),
 // „Nein, danke“ nie wieder. Antworten stehen in der Server-Einstellung „einstieg“ (geräteübergreifend).
 const EINSTIEG_ABSTAND_TAGE = 1;
 // KC-CLUB-EINSTIEG-FRISTEN (0.71.0): Zahlen stellt der Admin ein (⚙️ → Admin-Einstellungen); ohne Serverwert die Standards
-const EINSTIEG_STANDARD = { aktiv: true, farbeTage: 3, privatTage: 3, erweitertTage: 14, spaeterTage: 3 };
+const EINSTIEG_STANDARD = { aktiv: true, farbeTage: 3, privatTage: 3, erweitertTage: 14, spaeterTage: 3, feedbackTage: 28 };
 const eiF = () => ({ ...EINSTIEG_STANDARD, ...(INIT?.einstieg?.fristen || {}) });
 const tageSeit = (iso) => (iso ? (Date.now() - new Date(iso).getTime()) / 86400000 : 0);
 const EINSTIEG_SCHRITTE = [
@@ -1719,13 +1727,17 @@ const EINSTIEG_SCHRITTE = [
   { id: "erweitert", faellig: (e) => einfach() && tageSeit(e.ersterStart) >= eiF().erweitertTage,
     text: () => `<h3 style="margin-top:0">🔧 Möchtest du einmal die erweiterte Ansicht einschalten?</h3><p style="margin:0">Dann hast du weitere Möglichkeiten in der App – zum Beispiel Fotoalbum, Vorschläge, Protokolle und Aktionen.</p>`,
     ja: () => { ansichtSetzen("erweitert"); setTimeout(() => einstiegHinweis(), 400); } },
+  // KC-CLUB-EINSTIEG-FEEDBACK (0.73.0): nach 4 Wochen Nutzung – nur, wer noch kein Feedback abgegeben hat
+  { id: "feedback", faellig: (e) => !e.feedbackAbgegeben && tageSeit(e.ersterStart) >= eiF().feedbackTage,
+    text: () => `<h3 style="margin-top:0">💭 Möchtest du jetzt dein Feedback abgeben?</h3><p style="margin:0">Deine Meinung hilft, die App weiterzuentwickeln – was gefällt dir, was ist zu kompliziert, was fehlt dir?</p>`,
+    ja: () => zeige("feedback") },
 ];
 function einstiegPruefen() {
   if (!INIT?.einstieg || !eiF().aktiv || document.querySelector(".blatt:not(.versteckt)") || document.getElementById("pwFenster")) return false;
   const e = INIT.einstieg, s = INIT.einstellungen?.einstieg?.schritte || {};
   if (Object.values(s).some((x) => tageSeit(x.am) < EINSTIEG_ABSTAND_TAGE)) return false; // höchstens ein Tipp je Tag
   // schon selbst erledigt → nicht mehr fragen (Farbe gewählt bzw. erweiterte Ansicht an)
-  const erledigt = { farbe: !!INIT.einstellungen?.design?.design && INIT.einstellungen.design.design !== "klassik", erweitert: !einfach() };
+  const erledigt = { farbe: !!INIT.einstellungen?.design?.design && INIT.einstellungen.design.design !== "klassik", erweitert: !einfach(), feedback: !!e.feedbackAbgegeben };
   const offen = (x) => !s[x.id] || (s[x.id].antwort === "spaeter" && tageSeit(s[x.id].am) >= eiF().spaeterTage);
   const schritt = EINSTIEG_SCHRITTE.find((x) => !erledigt[x.id] && offen(x) && x.faellig(e, s, erledigt));
   if (!schritt) return false;
@@ -1743,13 +1755,13 @@ function einstiegMerken(id, antwort) {
 }
 function einstiegFristenZeigen() {
   const f = eiF(); $("eiAktiv").checked = f.aktiv !== false;
-  $("eiFarbeTage").value = f.farbeTage; $("eiPrivatTage").value = f.privatTage; $("eiErweitertTage").value = f.erweitertTage; $("eiSpaeterTage").value = f.spaeterTage;
-  $("eiStand").textContent = f.geaendertAm ? `Zuletzt geändert: ${wann(f.geaendertAm)}` : "Noch die Grundeinstellung (3. Nutzungstag · 3 Tage · 14 Tage · 3 Tage).";
+  $("eiFarbeTage").value = f.farbeTage; $("eiPrivatTage").value = f.privatTage; $("eiErweitertTage").value = f.erweitertTage; $("eiSpaeterTage").value = f.spaeterTage; $("eiFeedbackTage").value = f.feedbackTage;
+  $("eiStand").textContent = f.geaendertAm ? `Zuletzt geändert: ${wann(f.geaendertAm)}` : "Noch die Grundeinstellung (3. Nutzungstag · 3 Tage · 14 Tage · 3 Tage · Feedback nach 28 Tagen).";
 }
 async function einstiegFristenSpeichern() {
-  const w = { aktiv: $("eiAktiv").checked, farbeTage: Number($("eiFarbeTage").value), privatTage: Number($("eiPrivatTage").value), erweitertTage: Number($("eiErweitertTage").value), spaeterTage: Number($("eiSpaeterTage").value) };
+  const w = { aktiv: $("eiAktiv").checked, farbeTage: Number($("eiFarbeTage").value), privatTage: Number($("eiPrivatTage").value), erweitertTage: Number($("eiErweitertTage").value), spaeterTage: Number($("eiSpaeterTage").value), feedbackTage: Number($("eiFeedbackTage").value) };
   try { const r = await api("einstieg_fristen_setzen", w);
-    INIT.einstieg = { ...(INIT.einstieg || {}), fristen: { aktiv: r.aktiv, farbeTage: r.farbeTage, privatTage: r.privatTage, erweitertTage: r.erweitertTage, spaeterTage: r.spaeterTage, geaendertAm: new Date().toISOString() } };
+    INIT.einstieg = { ...(INIT.einstieg || {}), fristen: { aktiv: r.aktiv, farbeTage: r.farbeTage, privatTage: r.privatTage, erweitertTage: r.erweitertTage, spaeterTage: r.spaeterTage, feedbackTage: r.feedbackTage, geaendertAm: new Date().toISOString() } };
     einstiegFristenZeigen(); melde(r.aktiv ? "💾 Gespeichert – gilt beim nächsten Öffnen der App" : "💾 Gespeichert – Tipps sind ausgeschaltet"); }
   catch (e) { melde(e.message, true); einstiegFristenZeigen(); }
 }
@@ -2624,6 +2636,25 @@ window.addEventListener("message", (e) => {
   else if (e.data === "dienstwunsch-gespeichert") melde("✓ Dienstwünsche gespeichert – DP2 übernimmt sie");
 });
 
+// ---------- KC-CLUB-DOKUMENTE (0.73.0): „Meine Dokumente“ – Unterkacheln je Anleitung (PDF unter dokumente/) ----------
+// Neues Dokument: PDF nach dokumente/ legen und hier eintragen (datei: null = „kommt bald“). Die PDFs öffnet der
+// PDF-Betrachter des Handys – dort ansehen, drucken, teilen. Nur Anleitungen (öffentlich erreichbar, keine Mitgliederdaten).
+const DOKUMENTE = [
+  { id: "anleitung-club-app", sym: "📲", t: "Anleitung Club-App", u: "In 3 Schritten zur App", datei: "dokumente/Koecheclub-App_Kurzanleitung.pdf" },
+  { id: "bilderrechner", sym: "🧮", t: "Schnellanleitung Bilderrechner", u: "Schritt für Schritt", datei: null },
+];
+function dokumenteZeigen() {
+  $("dokRaster").innerHTML = DOKUMENTE.map((d) => `<button class="kachel${d.datei ? "" : " bald"}" onclick="dokOeffnen('${d.id}')">
+    <div class="sym">${d.sym}</div><b>${esc(d.t)}</b><small>${esc(d.u)}</small>${d.datei ? "" : '<span class="zahl">bald</span>'}</button>`).join("");
+}
+function dokOeffnen(id) {
+  const d = DOKUMENTE.find((x) => x.id === id); if (!d) return;
+  if (!d.datei) return melde(`„${d.t}“ kommt bald.`);
+  const url = new URL(d.datei + "?v=" + APP_VERSION, location.href).href;
+  // ohne „noopener“-Option (sonst liefert window.open immer null); Rückverweis danach selbst kappen
+  const w = window.open(url, "_blank"); if (w) w.opener = null; else location.href = url; // Popup gesperrt → im selben Fenster
+}
+
 // ---------- Start ----------
 const KACHELN = {
   verein: [
@@ -2642,6 +2673,7 @@ const KACHELN = {
     { id: "status", sym: "🟢", t: "Mein Status", u: "verfügbar, Urlaub …", aktion: "statusBlatt()" },
     { id: "meindienst", sym: "🗓️", t: "Mein Dienstplan", u: "Meine Dienste", aktion: "dpNurIch()" },
     { id: "dienstwunsch", sym: "📝", t: "Dienstwünsche", u: "Mit Twinkey · Weihnachtsmarkt", aktion: "dwOeffnen()" },
+    { id: "dokumente", sym: "📚", t: "Meine Dokumente", u: "Anleitungen zum Ansehen & Drucken", v: "dokumente" },
     { id: "erstattung", sym: "💶", t: "Erstattung", u: "Fahrtkosten & Auslagen", v: "erstattung" },
     { id: "schulungen", sym: "🎓", t: "Meine Schulungen", u: "Zusammenfassungen", bald: true },
     { id: "einstellungen", sym: "⚙️", t: "Einstellungen", u: "Push, Ton, Schrift", v: "einstellungen" },
@@ -3488,7 +3520,7 @@ function zeige(v, ausHistorie) {
   const vorher = aktuelleAnsicht;
   aktuelleAnsicht = v;
   if (vorher === "protokoll" && v !== "protokoll" && prTimer) prSpeichernJetzt(false).catch(() => {}); // ungespeicherte Eingaben sichern
-  ["start", "termine", "vorschlaege", "aktionen", "aktion", "fotos", "feedback", "gruppe", "mitglied", "protokolle", "protokoll", "dienste", "nachrichten", "chat", "neu", "mitglieder", "einstellungen", "pinnwand", "erstattung"].forEach((x) => $("v-" + x).classList.toggle("versteckt", x !== v));
+  ["start", "dokumente", "termine", "vorschlaege", "aktionen", "aktion", "fotos", "feedback", "gruppe", "mitglied", "protokolle", "protokoll", "dienste", "nachrichten", "chat", "neu", "mitglieder", "einstellungen", "pinnwand", "erstattung"].forEach((x) => $("v-" + x).classList.toggle("versteckt", x !== v));
   document.querySelectorAll("#fuss button").forEach((b) => b.classList.toggle("an", b.dataset.v === v || (v === "chat" && b.dataset.v === "nachrichten") || (v === "neu" && b.dataset.v === "nachrichten")));
   $("eingabe").classList.toggle("versteckt", v !== "chat");
   clearInterval(chatTimer);
@@ -3501,6 +3533,7 @@ function zeige(v, ausHistorie) {
   if (v === "aktionen") aktionenLaden();
   if (v === "fotos") fotosLaden();
   if (v === "feedback") fbLaden();
+  if (v === "dokumente") dokumenteZeigen();
   if (v === "pinnwand") { pwForm(false); pwLaden(); }
   if (v === "erstattung") erstattungLaden();
   if (v === "dienste") dienstLaden();
@@ -5138,11 +5171,12 @@ function druckAnleitung() {
       <div class="anl-zwei"><div><b class="kopf">🍎 iPhone</b>Den Link in <b>Safari</b> öffnen (nicht Chrome).<br>Unten ${k("Teilen □↑")} antippen<br>→ ${k("Zum Home-Bildschirm")}<br>→ ${k("Hinzufügen")}</div>
         <div><b class="kopf">🤖 Android</b>Den Link in <b>Chrome</b> öffnen.<br>Oben rechts ${k("⋮")} antippen<br>→ ${k("App installieren")}<br>→ ${k("Installieren")}</div></div>`)
     + schritt(3, "✅ Loslegen", `<p>Die App über das neue Symbol öffnen. Beim ersten Start fragt sie: <b>„Wie möchtest du starten?“</b> – wähle <b>🟢 Einfach</b>.</p>
-      <p>Dann siehst du nur die fünf wichtigsten Knöpfe:</p>
-      <div class="anl-kacheln"><span>📅 Termine</span><span>💬 Nachrichten</span><span>📌 Pinnwand</span><span>🗓️ Mein Dienst</span><span>👥 Mitglieder</span></div>`)
+      <p>Dann siehst du nur die wichtigsten Knöpfe:</p>
+      <div class="anl-kacheln"><span>📅 Termine</span><span>💬 Nachrichten</span><span>📌 Pinnwand</span><span>🗓️ Mein Dienst</span><span>👥 Mitglieder</span><span>📚 Meine Dokumente</span></div>`)
     + `<ul class="anl-tipps">
       <li><b>Nachrichten aufs Handy oder per E-Mail?</b> Unten ${k("⚙️ Mehr")} → „Wie möchtest du Neuigkeiten bekommen?“</li>
       <li><b>Alle Funktionen sehen?</b> Ganz unten auf der Startseite ${k("🔧 Mehr Funktionen anzeigen")} – zurück jederzeit mit ${k("🟢 Einfache Ansicht")}.</li>
+      <li><b>Diese Anleitung wiederfinden?</b> In der App unter ${k("📚 Meine Dokumente")}.</li>
       <li><b>Hilfe?</b> Einfach Hansi fragen – oder in der App über ${k("💭 Feedback")} schreiben.</li></ul>`;
   return { titel: "Köcheclub-App in 3 Schritten", unter: "Kurzanleitung für den leichten Start", html };
 }
