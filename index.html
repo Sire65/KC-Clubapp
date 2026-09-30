@@ -1001,7 +1001,7 @@
       <summary>💡 Einstieg: Tipps nach und nach</summary>
       <p class="hinweis" style="margin-top:0">Neue Mitglieder werden nicht mit Fragen überhäuft – die App gibt Tipps nach und nach (höchstens einer pro Tag). Gilt für alle Mitglieder.</p>
       <div class="schalter"><div><b>Tipps anzeigen</b><div class="hinweis">Aus = keine Tipps mehr (bereits gegebene Antworten bleiben gespeichert)</div></div><input type="checkbox" id="eiAktiv"></div>
-      <div class="zwei"><label class="feld">🎨 Farb-Tipp ab dem … Öffnen der App<input id="eiFarbeStarts" type="number" inputmode="numeric" min="1" max="20"></label>
+      <div class="zwei"><label class="feld">🎨 Farb-Tipp ab dem … Nutzungstag<input id="eiFarbeTage" type="number" inputmode="numeric" min="1" max="20"></label>
         <label class="feld">🔒 Voreinstellungs-Tipp … Tage nach dem Farb-Tipp<input id="eiPrivatTage" type="number" inputmode="numeric" min="1" max="30"></label></div>
       <div class="zwei"><label class="feld">🔧 Tipp „erweiterte Ansicht“ nach … Tagen Nutzung<input id="eiErweitertTage" type="number" inputmode="numeric" min="1" max="90"></label>
         <label class="feld">⏳ „Später“ fragt wieder nach … Tagen<input id="eiSpaeterTage" type="number" inputmode="numeric" min="1" max="30"></label></div>
@@ -1697,20 +1697,20 @@ async function neuWahlSetzen(art) {
 
 // ---------- KC-CLUB-EINSTIEG (0.70.0, Wunsch Hansi): nicht alles auf einmal fragen – Tipps nach und nach ----------
 // Beim Start gelten vernünftige Voreinstellungen. Später kommt höchstens EIN Tipp je Start und höchstens einer je
-// EINSTIEG_ABSTAND_TAGE: (1) Lieblingsfarbe nach ein paar Starts, (2) Voreinstellungen/Privatsphäre ein paar Tage danach,
+// EINSTIEG_ABSTAND_TAGE: (1) Lieblingsfarbe ab dem 3. Nutzungstag (Tage, nicht Starts), (2) Voreinstellungen/Privatsphäre ein paar Tage danach,
 // (3) nach 2 Wochen die erweiterte Ansicht. „Ja“ führt direkt hin, „Später“ fragt nach eiF().spaeterTage wieder (alle Zahlen: Admin-Einstellungen),
 // „Nein, danke“ nie wieder. Antworten stehen in der Server-Einstellung „einstieg“ (geräteübergreifend).
 const EINSTIEG_ABSTAND_TAGE = 1;
 // KC-CLUB-EINSTIEG-FRISTEN (0.71.0): Zahlen stellt der Admin ein (⚙️ → Admin-Einstellungen); ohne Serverwert die Standards
-const EINSTIEG_STANDARD = { aktiv: true, farbeStarts: 3, privatTage: 3, erweitertTage: 14, spaeterTage: 3 };
+const EINSTIEG_STANDARD = { aktiv: true, farbeTage: 3, privatTage: 3, erweitertTage: 14, spaeterTage: 3 };
 const eiF = () => ({ ...EINSTIEG_STANDARD, ...(INIT?.einstieg?.fristen || {}) });
 const tageSeit = (iso) => (iso ? (Date.now() - new Date(iso).getTime()) / 86400000 : 0);
 const EINSTIEG_SCHRITTE = [
-  { id: "farbe", faellig: (e, s) => e.starts >= eiF().farbeStarts,
+  { id: "farbe", faellig: (e, s) => e.tage >= eiF().farbeTage,
     text: () => `<h3 style="margin-top:0">🎨 Möchtest du deine Lieblingsfarbe einstellen?</h3><p style="margin:0">Die App gibt es in mehreren Farben. Antippen genügt – du siehst es sofort.</p>`,
     ja: () => einstiegHin(einfach() ? "einfach" : "darstellung", einfach() ? "farbeE" : "designWahl") },
   // ein paar Tage nach der Farb-Frage (oder, wer die Farbe schon selbst gewählt hat, ein paar Tage nach dem ersten Start)
-  { id: "privat", faellig: (e, s, erl) => e.starts >= eiF().farbeStarts && (s.farbe ? s.farbe.antwort !== "spaeter" && tageSeit(s.farbe.am) >= eiF().privatTage : erl.farbe && tageSeit(e.ersterStart) >= eiF().privatTage),
+  { id: "privat", faellig: (e, s, erl) => e.tage >= eiF().farbeTage && (s.farbe ? s.farbe.antwort !== "spaeter" && tageSeit(s.farbe.am) >= eiF().privatTage : erl.farbe && tageSeit(e.ersterStart) >= eiF().privatTage),
     text: () => `<h3 style="margin-top:0">🔒 Möchtest du deine Voreinstellungen ansehen?</h3><p style="margin:0">Zum Beispiel, ob andere Mitglieder deine <b>Handynummer</b>, deinen <b>Geburtstag</b> oder deine Adresse sehen dürfen. Bisher ist das alles zu – du entscheidest.</p>`,
     ja: () => einstiegHin("privat") },
   { id: "erweitert", faellig: (e) => einfach() && tageSeit(e.ersterStart) >= eiF().erweitertTage,
@@ -1740,13 +1740,13 @@ function einstiegMerken(id, antwort) {
 }
 function einstiegFristenZeigen() {
   const f = eiF(); $("eiAktiv").checked = f.aktiv !== false;
-  $("eiFarbeStarts").value = f.farbeStarts; $("eiPrivatTage").value = f.privatTage; $("eiErweitertTage").value = f.erweitertTage; $("eiSpaeterTage").value = f.spaeterTage;
-  $("eiStand").textContent = f.geaendertAm ? `Zuletzt geändert: ${wann(f.geaendertAm)}` : "Noch die Grundeinstellung (3 Starts · 3 Tage · 14 Tage · 3 Tage).";
+  $("eiFarbeTage").value = f.farbeTage; $("eiPrivatTage").value = f.privatTage; $("eiErweitertTage").value = f.erweitertTage; $("eiSpaeterTage").value = f.spaeterTage;
+  $("eiStand").textContent = f.geaendertAm ? `Zuletzt geändert: ${wann(f.geaendertAm)}` : "Noch die Grundeinstellung (3. Nutzungstag · 3 Tage · 14 Tage · 3 Tage).";
 }
 async function einstiegFristenSpeichern() {
-  const w = { aktiv: $("eiAktiv").checked, farbeStarts: Number($("eiFarbeStarts").value), privatTage: Number($("eiPrivatTage").value), erweitertTage: Number($("eiErweitertTage").value), spaeterTage: Number($("eiSpaeterTage").value) };
+  const w = { aktiv: $("eiAktiv").checked, farbeTage: Number($("eiFarbeTage").value), privatTage: Number($("eiPrivatTage").value), erweitertTage: Number($("eiErweitertTage").value), spaeterTage: Number($("eiSpaeterTage").value) };
   try { const r = await api("einstieg_fristen_setzen", w);
-    INIT.einstieg = { ...(INIT.einstieg || {}), fristen: { aktiv: r.aktiv, farbeStarts: r.farbeStarts, privatTage: r.privatTage, erweitertTage: r.erweitertTage, spaeterTage: r.spaeterTage, geaendertAm: new Date().toISOString() } };
+    INIT.einstieg = { ...(INIT.einstieg || {}), fristen: { aktiv: r.aktiv, farbeTage: r.farbeTage, privatTage: r.privatTage, erweitertTage: r.erweitertTage, spaeterTage: r.spaeterTage, geaendertAm: new Date().toISOString() } };
     einstiegFristenZeigen(); melde(r.aktiv ? "💾 Gespeichert – gilt beim nächsten Öffnen der App" : "💾 Gespeichert – Tipps sind ausgeschaltet"); }
   catch (e) { melde(e.message, true); einstiegFristenZeigen(); }
 }

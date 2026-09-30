@@ -3,16 +3,18 @@
 ## 0.71.0 – 2026-09-30 (DEV)
 
 - KC-CLUB-EINSTIEG-FRISTEN (neu, Wunsch Hansi): in ⚙️ → Admin-Einstellungen → „💡 Einstieg: Tipps nach und nach“ (Klappbereich
-  mit Schloss): Tipps an/aus, Farb-Tipp ab dem … Öffnen (1–20, Std. 3), Voreinstellungs-Tipp … Tage danach (1–30, Std. 3),
+  mit Schloss): Tipps an/aus, Farb-Tipp ab dem … Nutzungstag (1–20, Std. 3), Voreinstellungs-Tipp … Tage danach (1–30, Std. 3),
   Tipp erweiterte Ansicht nach … Tagen (1–90, Std. 14), „Später“ fragt wieder nach … Tagen (1–30, Std. 3).
   kc_club_konfig „einstieg“, Aktion einstieg_fristen_setzen nur Admin mit Protokoll vorher/nachher; init liefert die Werte.
-  0.70.0 wurde nicht einzeln veröffentlicht (Mitglied war gerade in der App) und geht mit 0.71.0 raus.
+  Gezählt werden **Nutzungstage** (verschiedene Tage mit App-Start, Europe/Berlin) statt Starts – ein neues Mitglied hatte am
+  ersten Morgen durch mehrfaches Öffnen schon 7 „Starts“ und hätte sofort den ersten Tipp bekommen.
+  0.70.0 wurde nicht einzeln veröffentlicht und geht mit 0.71.0 raus.
 
 ## 0.70.0 – 2026-09-30 (DEV)
 
 - KC-CLUB-EINSTIEG (neu, Wunsch Hansi): Einsteiger nicht mit Fragen überfordern – vernünftige Voreinstellungen, danach Tipps
   nach und nach (höchstens einer je Start und je Tag, nie über anderen Fenstern; Registry EINSTIEG_SCHRITTE):
-  1. ab dem 3. Start „🎨 Möchtest du deine Lieblingsfarbe einstellen?“ → Farbwahl (neu auch in „Das Wichtigste“),
+  1. ab dem 3. Nutzungstag (siehe 0.71.0) „🎨 Möchtest du deine Lieblingsfarbe einstellen?“ → Farbwahl (neu auch in „Das Wichtigste“),
   2. ein paar (3) Tage danach „🔒 Möchtest du deine Voreinstellungen ansehen?“ (Handynummer, Geburtstag …) → Privatsphäre
      (jetzt auch in der einfachen Ansicht),
   3. nach 14 Tagen in der einfachen Ansicht „🔧 Möchtest du einmal die erweiterte Ansicht einschalten?“ → schaltet um und

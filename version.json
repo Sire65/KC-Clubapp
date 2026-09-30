@@ -2,13 +2,13 @@
   "version": "0.71.0",
   "datum": "2026-09-29",
   "neu": [
-    "🛠️ Admin: Die Zeitpunkte der Einstiegs-Tipps (und ein Aus-Schalter) sind in den Admin-Einstellungen einstellbar"
+    "💡 Die App fragt nicht mehr alles auf einmal: ab dem 3. Nutzungstag ein Tipp zur Lieblingsfarbe, ein paar Tage später zu deinen Voreinstellungen, nach 2 Wochen zur erweiterten Ansicht – „Ja“ führt direkt hin"
   ],
   "verlauf": [
     {
       "version": "0.71.0",
       "neu": [
-        "🛠️ Admin: Die Zeitpunkte der Einstiegs-Tipps (und ein Aus-Schalter) sind in den Admin-Einstellungen einstellbar"
+        "💡 Die App fragt nicht mehr alles auf einmal: ab dem 3. Nutzungstag ein Tipp zur Lieblingsfarbe, ein paar Tage später zu deinen Voreinstellungen, nach 2 Wochen zur erweiterten Ansicht – „Ja“ führt direkt hin"
       ]
     },
     {

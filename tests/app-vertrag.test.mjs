@@ -1225,11 +1225,12 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 91. 0.70.0: Tipps nach und nach statt vieler Fragen beim Einstieg (KC-CLUB-EINSTIEG)
 {
   assert.ok(/einstieg: \(w\) => \(\{ schritte:/.test(server) && /\["farbe", "privat", "erweitert"\]\.includes\(k\)/.test(server) && /\["ja", "nein", "spaeter"\]\.includes/.test(server), "Server prüft die Einstiegs-Antworten nicht");
-  assert.ok(/eq\("aktion", "diagnose_start"\)/.test(server) && /einstieg: \{ starts: starts\.count \?\? 0, ersterStart:/.test(server), "Starts/erster Start fehlen");
+  // 0.71.0: Nutzungstage (verschiedene Tage mit App-Start, Europe/Berlin) statt Starts
+  assert.ok(/eq\("aktion", "diagnose_start"\)/.test(server) && /einstieg: \{ tage: new Set\(\(starts\.data \?\? \[\]\)\.map\(\(x: any\) => new Date\(x\.zeit\)\.toLocaleDateString\("sv-SE", \{ timeZone: "Europe\/Berlin" \}\)\)\)\.size/.test(server), "Nutzungstage/erster Start fehlen");
   const code = html.slice(html.indexOf("const EINSTIEG_ABSTAND_TAGE"), html.indexOf("function einstiegMerken"));
-  assert.ok(/const EINSTIEG_ABSTAND_TAGE = 1;/.test(code) && /const EINSTIEG_STANDARD = \{ aktiv: true, farbeStarts: 3, privatTage: 3, erweitertTage: 14, spaeterTage: 3 \};/.test(code) && /tageSeit\(x\.am\) < EINSTIEG_ABSTAND_TAGE\)\) return false/.test(code), "höchstens ein Tipp je Tag");
+  assert.ok(/const EINSTIEG_ABSTAND_TAGE = 1;/.test(code) && /const EINSTIEG_STANDARD = \{ aktiv: true, farbeTage: 3, privatTage: 3, erweitertTage: 14, spaeterTage: 3 \};/.test(code) && /tageSeit\(x\.am\) < EINSTIEG_ABSTAND_TAGE\)\) return false/.test(code), "höchstens ein Tipp je Tag");
   for (const id of ["farbe", "privat", "erweitert"]) assert.ok(code.includes(`{ id: "${id}"`), `Schritt ${id} fehlt`);
-  assert.ok(/id: "farbe", faellig: \(e, s\) => e\.starts >= eiF\(\)\.farbeStarts/.test(code) && /id: "erweitert", faellig: \(e\) => einfach\(\) && tageSeit\(e\.ersterStart\) >= eiF\(\)\.erweitertTage/.test(code), "Zeitpunkte der Tipps");
+  assert.ok(/id: "farbe", faellig: \(e, s\) => e\.tage >= eiF\(\)\.farbeTage/.test(code) && /id: "erweitert", faellig: \(e\) => einfach\(\) && tageSeit\(e\.ersterStart\) >= eiF\(\)\.erweitertTage/.test(code), "Zeitpunkte der Tipps");
   assert.ok(/ansichtSetzen\("erweitert"\); setTimeout\(\(\) => einstiegHinweis\(\), 400\)/.test(code) && /Zurück zur einfachen Ansicht kommst du jederzeit/.test(html), "Hinweis zum Zurückschalten fehlt");
   assert.ok(/data-klappe="privat" data-einfach/.test(html) && /id="designWahlE"/.test(html), "Ziel der Tipps in der einfachen Ansicht nicht erreichbar");
   // Reihenfolge/Bedingungen nachrechnen
@@ -1242,20 +1243,20 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
     return S.find((x) => !erl[x.id] && offen(x) && x.faellig(einst, schritte, erl))?.id || null;
   };
   const vor = (tage) => new Date(Date.now() - tage * 86400000).toISOString();
-  assert.equal(lauf({ starts: 1, ersterStart: vor(0) }, {}), null, "beim ersten Start kein Tipp");
-  assert.equal(lauf({ starts: 3, ersterStart: vor(1) }, {}), "farbe", "nach 3 Starts Farbe");
-  assert.equal(lauf({ starts: 6, ersterStart: vor(4) }, { farbe: { antwort: "ja", am: vor(1) } }), null, "Privatsphäre erst ein paar Tage nach der Farbe");
-  assert.equal(lauf({ starts: 6, ersterStart: vor(6) }, { farbe: { antwort: "nein", am: vor(3) } }), "privat", "Privatsphäre ein paar Tage später");
-  assert.equal(lauf({ starts: 6, ersterStart: vor(6) }, {}, true, "wald"), "privat", "Farbe selbst gewählt → trotzdem weiter");
-  assert.equal(lauf({ starts: 9, ersterStart: vor(15) }, { farbe: { antwort: "ja", am: vor(10) }, privat: { antwort: "nein", am: vor(5) } }), "erweitert", "nach 2 Wochen erweitert");
-  assert.equal(lauf({ starts: 9, ersterStart: vor(15) }, { farbe: { antwort: "ja", am: vor(10) }, privat: { antwort: "nein", am: vor(5) } }, false), null, "schon erweitert → nicht fragen");
+  assert.equal(lauf({ tage: 1, ersterStart: vor(0) }, {}), null, "am ersten Nutzungstag kein Tipp");
+  assert.equal(lauf({ tage: 3, ersterStart: vor(1) }, {}), "farbe", "ab dem 3. Nutzungstag Farbe");
+  assert.equal(lauf({ tage: 6, ersterStart: vor(4) }, { farbe: { antwort: "ja", am: vor(1) } }), null, "Privatsphäre erst ein paar Tage nach der Farbe");
+  assert.equal(lauf({ tage: 6, ersterStart: vor(6) }, { farbe: { antwort: "nein", am: vor(3) } }), "privat", "Privatsphäre ein paar Tage später");
+  assert.equal(lauf({ tage: 6, ersterStart: vor(6) }, {}, true, "wald"), "privat", "Farbe selbst gewählt → trotzdem weiter");
+  assert.equal(lauf({ tage: 9, ersterStart: vor(15) }, { farbe: { antwort: "ja", am: vor(10) }, privat: { antwort: "nein", am: vor(5) } }), "erweitert", "nach 2 Wochen erweitert");
+  assert.equal(lauf({ tage: 9, ersterStart: vor(15) }, { farbe: { antwort: "ja", am: vor(10) }, privat: { antwort: "nein", am: vor(5) } }, false), null, "schon erweitert → nicht fragen");
 }
 
 // 92. 0.71.0: Einstiegs-Tipps vom Admin einstellbar (KC-CLUB-EINSTIEG-FRISTEN)
 {
   const fs = server.slice(server.indexOf('case "einstieg_fristen_setzen"'), server.indexOf('case "wetter_setzen"'));
   assert.ok(/nurAdmin\(ich\);/.test(fs) && /protokoll\(ich\.person_id, "einstieg_fristen_gesetzt"/.test(fs), "nur Admin / Protokoll");
-  assert.ok(/EINSTIEG_GRENZEN = \{ farbeStarts: \[1, 20\], privatTage: \[1, 30\], erweitertTage: \[1, 90\], spaeterTage: \[1, 30\] \}/.test(server) && /fristen: eiFristen \}/.test(server), "Grenzen / Übergabe an die App");
+  assert.ok(/EINSTIEG_GRENZEN = \{ farbeTage: \[1, 20\], privatTage: \[1, 30\], erweitertTage: \[1, 90\], spaeterTage: \[1, 30\] \}/.test(server) && /fristen: eiFristen \}/.test(server), "Grenzen / Übergabe an die App");
   assert.ok(/data-klappe="admin_einstieg"/.test(html.slice(html.indexOf('id="adminBereich"'), html.indexOf('data-klappe="app"'))) && /id="eiAktiv"/.test(html), "Admin-Klappbereich fehlt");
   assert.ok(/!eiF\(\)\.aktiv \|\|/.test(html) && /tageSeit\(s\[x\.id\]\.am\) >= eiF\(\)\.spaeterTage/.test(html), "Ausschalter / „Später“-Frist nicht wirksam");
 }
