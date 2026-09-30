@@ -1,5 +1,15 @@
 # Änderungen
 
+## 0.75.0 – 2026-09-30 (DEV)
+
+- KC-CLUB-DESIGN-DISKO/REGENBOGEN (neu, Wunsch Hansi): zwei Farbdesigns in der Registry DESIGNS (Tag + Nacht).
+  „Disko“: Kopf-Verlauf Nachtlila → Violett → Pink → Türkis, Knöpfe Magenta, Kachel-Ecke Türkis/Pink, mit
+  KC-CLUB-DESIGN-SCHWARZLICHT (Neon-Schein um Kopfbereich, Kacheln, Schildchen und aktive Knöpfe; nachts UV-Hintergrund und
+  leuchtende Kachel-Titel; ohne Bewegung). „Regenbogen“: Kopf-Verlauf Rot → Orange → Gelb → Grün → Blau → Violett,
+  Knöpfe Violett, weiße Kopfschrift mit Schatten (Gelb/Orange sonst schwer lesbar). Neue optionale Design-Felder
+  verlauf (Tag/Nacht), heroSchrift, schwarzlicht; bestehende Designs unverändert. Kontraste geprüft (Knöpfe ≥ 5,6:1,
+  Text ≥ 16:1).
+
 ## 0.74.0 – 2026-09-30 (DEV)
 
 - KC-CLUB-WETTERORT (neu, Wunsch Hansi): eigener Wetterort je Mitglied – ⚙️ → Darstellung „🌦️ Wetter für“: Club-Vorgabe

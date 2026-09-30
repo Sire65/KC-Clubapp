@@ -1291,4 +1291,23 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/id="meinWetterort"/.test(html) && /api\("einstellung_setzen", \{ schluessel: "wetterort", wert \}\)/.test(html) && /meinWetterortZeigen\(\);/.test(html), "Auswahl in den Einstellungen fehlt");
 }
 
+// 96. 0.75.0: Designs Disko (Schwarzlicht) und Regenbogen (KC-CLUB-DESIGN-DISKO/REGENBOGEN)
+{
+  const ds = html.slice(html.indexOf("const DESIGNS = ["), html.indexOf("// Gewählt: Design + Modus"));
+  const D = new Function(ds.replace("const DESIGNS =", "return"))();
+  const ids = D.map((d) => d.id);
+  for (const id of ["klassik", "kuechengruen", "nordsee", "schiefer", "lagune", "kontrast", "disko", "regenbogen"]) assert.ok(ids.includes(id), `Design ${id} fehlt`);
+  assert.equal(new Set(ids).size, ids.length, "doppelte Design-id");
+  const L = (h) => { const c = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255).map((x) => (x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4)); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
+  const k = (a, b) => { const [x, y] = [L(a), L(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+  for (const id of ["disko", "regenbogen"]) { const d = D.find((x) => x.id === id);
+    for (const m of ["tag", "nacht"]) { const f = d[m];
+      for (const key of ["rot", "rot2", "rot3", "gold", "hero1", "hero4", "bg", "karte", "karte2", "linie", "text", "grau"]) assert.ok(/^#[0-9a-fA-F]{6}$/.test(f[key]), `${id}.${m}.${key} fehlt`);
+      assert.ok(k("#ffffff", f.rot) >= 4.5, `${id} ${m}: weiße Schrift auf Knopf zu schwach`);
+      assert.ok(k(f.text, f.bg) >= 7 && k(f.grau, f.karte) >= 4.5, `${id} ${m}: Text schlecht lesbar`);
+      assert.ok(/^linear-gradient\(/.test(d.verlauf[m]), `${id} ${m}: Verlauf fehlt`); } }
+  assert.ok(D.find((x) => x.id === "disko").schwarzlicht === true && /w\.classList\.toggle\("schwarzlicht", !!dv\.schwarzlicht\)/.test(html) && /:root\.schwarzlicht \.kachel \{ box-shadow:/.test(html), "Schwarzlicht fehlt");
+  assert.ok(/var\(--heroverlauf, linear-gradient\(135deg, var\(--hero1\)/.test(html) && /w\.style\.removeProperty\("--heroverlauf"\)/.test(html), "Standard-Verlauf der anderen Designs geändert");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

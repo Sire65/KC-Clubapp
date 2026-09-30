@@ -97,7 +97,7 @@
   .versteckt { display: none !important; }
 
   /* Kopf (Hero) */
-  .hero { background: linear-gradient(135deg, var(--hero1) 0%, var(--rot) 45%, var(--rot2) 75%, var(--hero4) 100%); color: #fff; border-radius: 26px; padding: 18px; box-shadow: 0 12px 30px var(--heroschatten); }
+  .hero { background: var(--heroverlauf, linear-gradient(135deg, var(--hero1) 0%, var(--rot) 45%, var(--rot2) 75%, var(--hero4) 100%)); color: #fff; border-radius: 26px; padding: 18px; box-shadow: 0 12px 30px var(--heroschatten); }
   .kopfzeile { display: flex; align-items: flex-start; gap: 12px; }
   .kopftext { flex: 1; min-width: 0; }
   .logo { width: 54px; height: 54px; border-radius: 16px; background: rgba(255,255,255,.14); display: grid; place-items: center; flex: none; border: none; padding: 0; cursor: pointer; }
@@ -574,6 +574,18 @@
   .ansichtwahl b { font-size: 1.1rem; } .ansichtwahl small { display: block; color: var(--grau); margin-top: 2px; }
   .neuwahl { display: grid; gap: 8px; } .neuwahl button { text-align: left; min-height: 52px; font-size: 1.02rem; }
   .neuwahl button.an { outline: 3px solid #1e8449; }
+  :root.heroschrift .hero { text-shadow: 0 1px 3px rgba(0,0,0,.55); }
+  /* KC-CLUB-DESIGN-SCHWARZLICHT (0.75.0): Disko – Neon-Schein wie unter UV-Licht (ohne Bewegung, Schrift bleibt lesbar) */
+  :root.schwarzlicht .hero { box-shadow: 0 0 0 1px rgba(255,43,214,.55), 0 0 22px rgba(255,43,214,.45), 0 0 44px rgba(0,229,255,.25); }
+  :root.schwarzlicht .hero h2, :root.schwarzlicht .gruss { text-shadow: 0 0 6px rgba(255,43,214,.9), 0 0 14px rgba(0,229,255,.55); }
+  :root.schwarzlicht .kachel { box-shadow: 0 0 0 1px rgba(0,229,255,.45), 0 0 12px rgba(255,43,214,.22); }
+  :root.schwarzlicht .abschnitt h3 { text-shadow: 0 0 8px rgba(255,43,214,.45); }
+  :root.schwarzlicht .zahl, :root.schwarzlicht .fuss-leiste .zaehler { box-shadow: 0 0 8px #ff2bd6, 0 0 2px #fff; }
+  :root.schwarzlicht .register button.an, :root.schwarzlicht .knopf.haupt { box-shadow: 0 0 10px rgba(255,43,214,.7), 0 0 20px rgba(0,229,255,.3); }
+  :root.schwarzlicht .fuss-leiste button.an { box-shadow: 0 0 12px rgba(0,229,255,.55); }
+  :root.schwarzlicht.dunkel body { background: radial-gradient(ellipse at 20% 0%, rgba(123,31,162,.35), transparent 55%), radial-gradient(ellipse at 90% 60%, rgba(0,229,255,.12), transparent 50%), var(--bg); background-attachment: fixed; }
+  :root.schwarzlicht.dunkel .kachel b, :root.schwarzlicht.dunkel .abschnitt h3 { color: #fff; text-shadow: 0 0 6px rgba(255,43,214,.75), 0 0 12px rgba(0,229,255,.4); }
+  :root.schwarzlicht.dunkel .kachel { box-shadow: 0 0 0 1px rgba(0,229,255,.6), 0 0 16px rgba(255,43,214,.35), inset 0 0 18px rgba(123,31,162,.25); }
   .kreislegende { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: .82rem; margin: 4px 0 10px; }
   .kreislegende span { display: inline-flex; align-items: center; gap: 5px; } .kreislegende i { width: 14px; height: 14px; border-radius: 50%; display: inline-block; }
   .onleiste { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 8px; }
@@ -1227,7 +1239,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "0.74.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.75.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -1282,6 +1294,16 @@ const DESIGNS = [
   { id: "lagune", name: "Lagune", deko: ["#14B8A6", "#F4B860"], // Kachel-Ecke oben rechts: Aqua → Gold wie im Reiseassistenten
     tag: { rot: "#0E7490", rot2: "#0B7F93", rot3: "#14B8A6", gold: "#F4B860", hero1: "#07415E", hero4: "#22B8A6", bg: "#EEF7FB", karte: "#ffffff", karte2: "#e1eff6", linie: "#cfe3ec", text: "#102330", grau: "#667985" },
     nacht: { rot: "#0E7490", rot2: "#0B7F93", rot3: "#2dd4bf", gold: "#F4B860", hero1: "#082F49", hero4: "#14B8A6", bg: "#06141c", karte: "#0f2430", karte2: "#16303d", linie: "#23414f", text: "#e6f3f8", grau: "#9fb6c2" } },
+  // KC-CLUB-DESIGN-DISKO/REGENBOGEN (0.75.0, Wunsch Hansi): optionales „verlauf“ je Tag/Nacht ersetzt den Kopf-Verlauf,
+  // „heroSchrift“ gibt der weißen Schrift oben einen Schatten (lesbar auf hellen Verlaufsstellen)
+  { id: "disko", name: "Disko", deko: ["#00e5ff", "#ff2bd6"], schwarzlicht: true,
+    verlauf: { tag: "linear-gradient(135deg, #1a0033 0%, #5b1a9e 35%, #b0127d 70%, #00a8c6 100%)", nacht: "linear-gradient(135deg, #0a0014 0%, #3d0f73 35%, #a0106f 70%, #0090aa 100%)" },
+    tag: { rot: "#b0127d", rot2: "#7b1fa2", rot3: "#d6249f", gold: "#00bcd4", hero1: "#1a0033", hero4: "#00a8c6", bg: "#f6f0fb", karte: "#ffffff", karte2: "#ece1f6", linie: "#dccbee", text: "#1f1030", grau: "#6c5b7b" },
+    nacht: { rot: "#c2168a", rot2: "#8e24aa", rot3: "#ff2bd6", gold: "#00e5ff", hero1: "#0a0014", hero4: "#0090aa", bg: "#0c0714", karte: "#1a1026", karte2: "#241634", linie: "#3a2552", text: "#f3e9ff", grau: "#b8a6cc" } },
+  { id: "regenbogen", name: "Regenbogen", deko: ["#f9a825", "#1e88e5"], heroSchrift: true,
+    verlauf: { tag: "linear-gradient(120deg, #c62828 0%, #ef6c00 18%, #f9a825 34%, #2e7d32 52%, #1565c0 72%, #6a1b9a 100%)", nacht: "linear-gradient(120deg, #8e1c1c 0%, #b45309 18%, #a16207 34%, #1f5f28 52%, #0f4c8a 72%, #4a126b 100%)" },
+    tag: { rot: "#6a1b9a", rot2: "#1565c0", rot3: "#2e7d32", gold: "#f9a825", hero1: "#c62828", hero4: "#6a1b9a", bg: "#fbf8ff", karte: "#ffffff", karte2: "#efe9f7", linie: "#e0d6ee", text: "#1d1626", grau: "#6b6178" },
+    nacht: { rot: "#7b2cbf", rot2: "#1565c0", rot3: "#43a047", gold: "#fbc02d", hero1: "#8e1c1c", hero4: "#4a126b", bg: "#12101a", karte: "#1d1a27", karte2: "#272335", linie: "#3a3450", text: "#f1ecf8", grau: "#b3aac4" } },
   { id: "kontrast", name: "Großer Kontrast",
     tag: { rot: "#000000", rot2: "#1a1a1a", rot3: "#333333", gold: "#ffd400", hero1: "#000000", hero4: "#2a2a2a", bg: "#ffffff", karte: "#ffffff", karte2: "#eeeeee", linie: "#555555", text: "#000000", grau: "#333333" },
     nacht: { rot: "#0044aa", rot2: "#0055cc", rot3: "#3377dd", gold: "#ffd400", hero1: "#000000", hero4: "#003380", bg: "#000000", karte: "#111111", karte2: "#1e1e1e", linie: "#888888", text: "#ffffff", grau: "#e0e0e0" } },
@@ -1330,6 +1352,9 @@ function anwendenDesign() {
   const nacht = istNacht(), f = designAktuell()[nacht ? "nacht" : "tag"], w = document.documentElement;
   w.classList.toggle("dunkel", nacht);
   w.classList.toggle("gross", einst("gross", false));
+  // eigener Kopf-Verlauf (Disko, Regenbogen) – sonst der Standard-Verlauf aus hero1/rot/rot2/hero4
+  const dv = designAktuell(); if (dv.verlauf) w.style.setProperty("--heroverlauf", dv.verlauf[nacht ? "nacht" : "tag"]); else w.style.removeProperty("--heroverlauf");
+  w.classList.toggle("heroschrift", !!dv.heroSchrift); w.classList.toggle("schwarzlicht", !!dv.schwarzlicht);
   for (const [k, v] of Object.entries(f)) w.style.setProperty("--" + k, v);
   w.style.setProperty("--heroschatten", f.rot + "59");
   // Schmuck-Kreis oben rechts auf den Kacheln: eigene Farben je Design, sonst Gold/Akzent
@@ -1348,7 +1373,7 @@ function designWahlZeigen() {
   const nacht = istNacht();
   $("designWahl").innerHTML = DESIGNS.map((d) => { const f = d[nacht ? "nacht" : "tag"];
     return `<button class="${d.id === DS.design ? "an" : ""}" onclick="designWaehlen('${d.id}')"><span class="vorschau" style="background:${f.bg}">`
-      + `<i style="left:0;right:0;top:0;height:24px;border-radius:0;background:linear-gradient(135deg,${f.hero1},${f.rot},${f.hero4})"></i>`
+      + `<i style="left:0;right:0;top:0;height:24px;border-radius:0;background:${d.verlauf ? d.verlauf[nacht ? "nacht" : "tag"] : `linear-gradient(135deg,${f.hero1},${f.rot},${f.hero4})`}"></i>`
       + `<i style="left:8px;top:30px;width:44px;height:22px;background:${f.karte};border:1px solid ${f.linie}"></i><i style="left:58px;top:30px;width:44px;height:22px;background:${f.rot}"></i><i style="right:8px;top:34px;width:14px;height:14px;border-radius:50%;background:${f.gold}"></i>`
       + `</span>${d.id === DS.design ? "✓ " : ""}${esc(d.name)}</button>`; }).join("");
   document.querySelectorAll("#modusWahl button").forEach((b) => b.classList.toggle("an", b.dataset.m === DS.modus));

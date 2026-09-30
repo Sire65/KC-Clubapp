@@ -1,10 +1,16 @@
 {
-  "version": "0.74.0",
+  "version": "0.75.0",
   "datum": "2026-09-29",
   "neu": [
-    "🌦️ Eigener Wetterort: unter ⚙️ Mehr → Darstellung „Wetter für“ z. B. Werne, Unna, Bergkamen, Kamen … oder jeden anderen Ort suchen"
+    "🪩 Zwei neue Farbdesigns: „Disko“ mit Schwarzlicht-Leuchten und „Regenbogen“ – unter ⚙️ Mehr → Darstellung bzw. „Lieblingsfarbe“"
   ],
   "verlauf": [
+    {
+      "version": "0.75.0",
+      "neu": [
+        "🪩 Zwei neue Farbdesigns: „Disko“ mit Schwarzlicht-Leuchten und „Regenbogen“ – unter ⚙️ Mehr → Darstellung bzw. „Lieblingsfarbe“"
+      ]
+    },
     {
       "version": "0.74.0",
       "neu": [
