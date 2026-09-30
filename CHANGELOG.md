@@ -1,5 +1,10 @@
 # Änderungen
 
+## 0.69.0 – 2026-09-30 (DEV)
+
+- KC-CLUB-ANSICHT-NAME (Erweiterung, Wunsch Hansi): der Ansichtsname hinter „Schnellzugriff“ ist ein Knopf – Antippen
+  schaltet auf die jeweils andere Ansicht (ansichtWechseln, gespeichert wie der Umschalter unten).
+
 ## 0.68.0 – 2026-09-30 (DEV)
 
 - KC-CLUB-MODUS-REIHUM (Wunsch Hansi): Tipp auf Sonne/Mond schaltet reihum A (Automatik) → T (immer Tag) → N (immer Nacht);

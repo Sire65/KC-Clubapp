@@ -1,10 +1,16 @@
 {
-  "version": "0.68.0",
+  "version": "0.69.0",
   "datum": "2026-09-29",
   "neu": [
-    "🌙 Der Sonne/Mond-Knopf schaltet jetzt reihum: A Automatik → T immer Tag → N immer Nacht"
+    "🟢 „(Einfache Ansicht)“ bzw. „(Erweiterte Ansicht)“ hinter „Schnellzugriff“ antippen – schaltet sofort auf die andere Ansicht"
   ],
   "verlauf": [
+    {
+      "version": "0.69.0",
+      "neu": [
+        "🟢 „(Einfache Ansicht)“ bzw. „(Erweiterte Ansicht)“ hinter „Schnellzugriff“ antippen – schaltet sofort auf die andere Ansicht"
+      ]
+    },
     {
       "version": "0.68.0",
       "neu": [

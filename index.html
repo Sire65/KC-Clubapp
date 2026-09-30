@@ -554,7 +554,7 @@
   details.karte.innen > summary { font-size: 1rem; }
   body:not(.einfach) #v-einstellungen details[data-klappe="einfach"] { display: none; }
   /* KC-CLUB-ANSICHT-NAME (0.66.0): hinter „Schnellzugriff“ klein und farbig, welche Ansicht gerade aktiv ist */
-  .ansichtname { font-size: .66rem; font-weight: 700; margin-left: 2px; vertical-align: middle; white-space: nowrap; }
+  .ansichtname { font-size: .66rem; font-weight: 700; margin-left: 2px; vertical-align: middle; white-space: nowrap; border: none; background: none; padding: 6px 2px; font-family: inherit; cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; }
   #versionMarke { white-space: nowrap; flex: none; }
   .ansichtname.ein { color: #1e8449; } .ansichtname.erw { color: var(--rot); }
   body.einfach .ansichtname.erw, body:not(.einfach) .ansichtname.ein { display: none; }
@@ -706,7 +706,7 @@
       <div class="ipunkte" id="infoPunkte"></div>
     </div>
     <div id="updateHinweis"></div>
-    <div class="abschnitt"><h3>Schnellzugriff <span class="ansichtname ein">(Einfache Ansicht)</span><span class="ansichtname erw">(Erweiterte Ansicht)</span></h3><button class="marke" id="versionMarke" style="border:none;cursor:pointer" title="Update prüfen" onclick="updateKachel()">v–</button></div>
+    <div class="abschnitt"><h3>Schnellzugriff <button type="button" class="ansichtname ein" onclick="ansichtWechseln()" title="Antippen: zur erweiterten Ansicht wechseln">(Einfache Ansicht)</button><button type="button" class="ansichtname erw" onclick="ansichtWechseln()" title="Antippen: zur einfachen Ansicht wechseln">(Erweiterte Ansicht)</button></h3><button class="marke" id="versionMarke" style="border:none;cursor:pointer" title="Update prüfen" onclick="updateKachel()">v–</button></div>
     <div class="register" id="register"></div>
     <div class="kachelleiste versteckt" id="kachelLeiste"><p>✏️ <b>Kacheln anordnen:</b> Kachel <b>kurz festhalten</b>, an den neuen Platz <b>ziehen</b> und loslassen (oder ◀ ▲ ▼ ▶ antippen). ✕ blendet aus, 👁️ wieder ein. Ausgeblendete bleiben hier blass an ihrem Platz.</p>
       <button class="knopf haupt klein" onclick="kaBearbeiten(false)">✅ Fertig</button><button class="knopf klein" onclick="kaStandard()">↺ Standard</button></div>
@@ -1189,7 +1189,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "0.68.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.69.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
