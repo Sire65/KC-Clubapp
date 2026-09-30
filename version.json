@@ -1,10 +1,16 @@
 {
-  "version": "0.99.2",
+  "version": "1.0.0",
   "datum": "2026-09-30",
   "neu": [
-    "🔧 Kleine Systemverbesserung"
+    "🔒 Private Termine: Unter Termine → „＋ Neu“ mit Häkchen „Privat“ – nur du siehst den Eintrag, im Kalender, unter „Demnächst“ und in deinem Kalender-Abo, auf Wunsch mit Erinnerung"
   ],
   "verlauf": [
+    {
+      "version": "1.0.0",
+      "neu": [
+        "🔒 Private Termine: Unter Termine → „＋ Neu“ mit Häkchen „Privat“ – nur du siehst den Eintrag, im Kalender, unter „Demnächst“ und in deinem Kalender-Abo, auf Wunsch mit Erinnerung"
+      ]
+    },
     {
       "version": "0.99.2",
       "neu": [

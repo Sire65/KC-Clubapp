@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.99.0";
+const SERVER_VERSION = "1.0.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -1169,6 +1169,15 @@ async function kalenderIcs(token: string) {
     if (x.ort) z.push(`LOCATION:${icsText(x.ort)}`);
     z.push(`DESCRIPTION:${icsText((x.notiz ? x.notiz + "\n\n" : "") + APP_URL + "#termine")}`, `STATUS:${x.status === "abgesagt" ? "CANCELLED" : x.meine === "vielleicht" ? "TENTATIVE" : "CONFIRMED"}`, "END:VEVENT");
   }
+  // KC-CLUB-PRIVATTERMIN (1.0.0): eigene private Einträge im eigenen Abo
+  for (const x of await privatListe(ich, new Date(Date.now() - 60 * 86400000).toISOString(), new Date(Date.now() + 500 * 86400000).toISOString())) {
+    z.push("BEGIN:VEVENT", `UID:privat-${x.id}@koecheclub-werne`, `DTSTAMP:${stamp}`, `SUMMARY:${icsText("🔒 " + x.titel)}`, "CLASS:PRIVATE");
+    if (x.ganztaegig) z.push(`DTSTART;VALUE=DATE:${icsTag(berlinTag(new Date(x.beginn)))}`, `DTEND;VALUE=DATE:${icsTag(tagDanach(berlinTag(new Date(x.ende || x.beginn))))}`);
+    else z.push(`DTSTART:${icsZeit(x.beginn)}`, `DTEND:${icsZeit(x.ende || new Date(new Date(x.beginn).getTime() + 3600000).toISOString())}`);
+    if (x.ort) z.push(`LOCATION:${icsText(x.ort)}`);
+    if (x.notiz) z.push(`DESCRIPTION:${icsText(x.notiz)}`);
+    z.push("END:VEVENT");
+  }
   const jahr = Number(berlinTag(new Date()).slice(0, 4));
   for (const g of geb) {
     if (g.person_id === ich.person_id) continue;
@@ -1282,6 +1291,13 @@ function fpSauber(d: any): Record<string, unknown> {
   return out;
 }
 const fpArt = (x: unknown) => txt(x, 24).toLowerCase().replace(/[^a-z_]/g, "") || "allg";
+
+// KC-CLUB-PRIVATTERMIN (1.0.0): persönliche Einträge – immer nur die eigenen (person_id = ich)
+async function privatListe(ich: Ich, von: string, bis?: string) {
+  let q = db.from("kc_club_privattermine").select("id,titel,beginn,ende,ganztaegig,ort,notiz,erinnerung_min").eq("person_id", ich.person_id).gte("beginn", von).order("beginn").limit(300);
+  if (bis) q = q.lte("beginn", bis);
+  const { data } = await q; return data ?? [];
+}
 
 // KC-CLUB-NUTZUNG (0.99.0): nur diese Bereiche werden gezählt (Ansichten der App)
 const NUTZUNG_BEREICHE = new Set(["start", "termine", "nachrichten", "chat", "neu", "pinnwand", "fotos", "mitglieder", "mitglied", "einstellungen", "dienste",
@@ -1464,6 +1480,23 @@ Köcheclub Werne`,
           anfr++;
         }
       }
+      // KC-CLUB-PRIVATTERMIN (1.0.0): Erinnerung an private Einträge (nur an die Person selbst)
+      let privErinnert = 0;
+      {
+        const { data: pe } = await db.from("kc_club_privattermine").select("id,person_id,titel,beginn,ort,erinnerung_min,ganztaegig").gt("erinnerung_min", 0).is("erinnert_am", null)
+          .gte("beginn", new Date(Date.now() - 3600000).toISOString()).lte("beginn", new Date(Date.now() + 2 * 86400000 + 3600000).toISOString());
+        for (const x of pe ?? []) {
+          if (new Date(x.beginn).getTime() - x.erinnerung_min * 60000 > Date.now()) continue;
+          const { data: ok } = await db.from("kc_club_privattermine").update({ erinnert_am: jetzt() }).eq("id", x.id).is("erinnert_am", null).select("id");
+          if (!ok?.length) continue;
+          await senden("club_erinnerung", [x.person_id], {
+            titel: `⏰ ${x.titel}`, kurz: `${x.ganztaegig ? fTag.format(new Date(x.beginn)) + " (ganztägig)" : wann(x.beginn)}${x.ort ? " – " + x.ort : ""}`,
+            betreff: `Köcheclub-App – Erinnerung: ${x.titel}`, text: `Erinnerung an deinen privaten Termin:\n\n🔒 ${x.titel}\n📅 ${x.ganztaegig ? fTagLang.format(new Date(x.beginn)) + " (ganztägig)" : wann(x.beginn, true)}${x.ort ? "\n📍 " + x.ort : ""}\n\n${APP_URL}#termine`,
+            url: APP_URL + "#termine",
+          }, `club-privat:${x.id}:${x.beginn}`);
+          privErinnert++;
+        }
+      }
       // KC-CLUB-RUHEZEIT (0.98.0): nach „Nicht stören“ EINE Sammelmeldung mit dem, was ausgefallen ist
       let ruheMeldungen = 0;
       {
@@ -1496,7 +1529,7 @@ Köcheclub Werne`,
         }
         if (fotosEntfernt) await protokoll(null, "fotos_endgueltig_entfernt", { anzahl: fotosEntfernt });
       }
-      return json({ ok: true, erinnerungen: n, beendet, dienst, geb, aufg, nachfass, fotosEntfernt, anfragenErinnert: anfr, standorteGeloescht: (stWeg ?? []).length, ruheMeldungen });
+      return json({ ok: true, erinnerungen: n, beendet, dienst, geb, aufg, nachfass, fotosEntfernt, anfragenErinnert: anfr, standorteGeloescht: (stWeg ?? []).length, ruheMeldungen, privErinnert });
     }
 
     // ----- KC-CLUB-ZUGANG-SELBST: Link verloren → neuen Link an die hinterlegte Mail-Adresse (ohne Anmeldung) -----
@@ -2181,7 +2214,7 @@ Köcheclub Werne`,
         if (!von || !bis || bis < von || (new Date(bis).getTime() - new Date(von).getTime()) > 62 * 86400000) throw new Fehler("Ungültiger Zeitraum.");
         // Tagesgrenzen in deutscher Zeit (großzügig ±1 Tag, genaue Zuordnung macht die App)
         const zeitraum = { von: new Date(new Date(von).getTime() - 86400000).toISOString(), bis: new Date(new Date(bis).getTime() + 2 * 86400000).toISOString() };
-        const [treffen, { data: dienste }, { data: fristen }, geburtstage, akt, anfragen] = await Promise.all([
+        const [treffen, { data: dienste }, { data: fristen }, geburtstage, akt, anfragen, privat] = await Promise.all([
           treffenListe(ich, false, zeitraum),
           db.from("kc_dp_plan_published").select("work_date,start_time,end_time,area").eq("org_id", ORG).eq("status", "published")
             .eq("person_id", ich.person_id).gte("work_date", von).lte("work_date", bis).order("work_date").order("start_time"),
@@ -2189,6 +2222,7 @@ Köcheclub Werne`,
           geburtstageSichtbar(ich),
           aktionenRoh(),
           terminanfragenListe(ich, zeitraum), // KC-CLUB-TERMINANFRAGE (0.92.0)
+          privatListe(ich, zeitraum.von, zeitraum.bis), // KC-CLUB-PRIVATTERMIN (1.0.0) – nur meine
         ]);
         const tids = treffen.map((t: any) => t.id);
         const { data: themen } = tids.length ? await db.from("kc_club_vorschlaege").select("treffen_id,titel").eq("art", "thema").neq("status", "zurueckgezogen").in("treffen_id", tids) : { data: [] as any[] };
@@ -2203,6 +2237,7 @@ Köcheclub Werne`,
             .map((a: any) => ({ id: String(a.id), titel: txt(a.activity, 200) || "Aktion", veranstalter: txt(a.organizer, 120) || null, von: a.dateFrom, bis: a.dateTo || a.dateFrom })),
           // KC-CLUB-TERMINANFRAGE: eigene und empfangene, abgelehnte (Nein) nicht
           anfragen: anfragen.filter((x: any) => x.status !== "abgesagt" && (x.vonMir || x.meine !== "nein")),
+          privat,
         });
       }
 
@@ -2472,6 +2507,39 @@ Köcheclub Werne`,
         }, `club-nachricht:${m.id}`);
         await protokoll(ich.person_id, weiterVon ? "nachricht_weitergeleitet" : "nachricht_gesendet", { thread: threadId, neu, empfaenger: ziel.length, anlagen: anlagen.length, wege, versand, antwort: !!antwortAuf, erwaehnt: erwaehnt.length, versandErw, ...(weiterVon ? { von_nachricht: weiterVon.id } : {}) });
         return json({ ok: true, id: threadId, versand });
+      }
+
+      // ----- KC-CLUB-PRIVATTERMIN (1.0.0): nur für mich sichtbar – jeder darf, jeder nur seine eigenen -----
+      case "privattermin_speichern": {
+        const titel = txt(p.titel, 120);
+        if (!titel) throw new Fehler("Bitte einen Titel eingeben.");
+        const beginn = new Date(String(p.beginn || ""));
+        if (isNaN(beginn.getTime())) throw new Fehler("Bitte Datum und Uhrzeit angeben.");
+        const ende = p.ende ? new Date(String(p.ende)) : null;
+        if (ende && (isNaN(ende.getTime()) || ende < beginn)) throw new Fehler("Das Ende liegt vor dem Beginn.");
+        const erinnerung = [0, 15, 30, 60, 120, 1440, 2880].includes(Number(p.erinnerung_min)) ? Number(p.erinnerung_min) : 0;
+        const zeile = { titel, beginn: beginn.toISOString(), ende: ende ? ende.toISOString() : null, ganztaegig: !!p.ganztaegig, ort: txt(p.ort, 200) || null,
+          notiz: txt(p.notiz, 1000) || null, erinnerung_min: erinnerung, erinnert_am: null, geaendert_am: jetzt() };
+        let id = String(p.id || "");
+        if (id) {
+          const { data } = await db.from("kc_club_privattermine").update(zeile).eq("id", id).eq("person_id", ich.person_id).select("id");
+          if (!data?.length) throw new Fehler("Eintrag nicht gefunden.", 404);
+        } else {
+          const { count } = await db.from("kc_club_privattermine").select("id", { count: "exact", head: true }).eq("person_id", ich.person_id).gte("beginn", jetzt());
+          if ((count ?? 0) >= 500) throw new Fehler("Du hast schon sehr viele private Einträge – bitte alte löschen.");
+          const { data, error } = await db.from("kc_club_privattermine").insert({ ...zeile, person_id: ich.person_id }).select("id").single();
+          if (error || !data) throw new Fehler("Speichern fehlgeschlagen.", 500);
+          id = data.id;
+        }
+        return json({ ok: true, id }); // bewusst kein Protokoll mit Inhalt – privat
+      }
+      case "privattermin_loeschen": {
+        const { data } = await db.from("kc_club_privattermine").delete().eq("id", String(p.id || "")).eq("person_id", ich.person_id).select("id");
+        if (!data?.length) throw new Fehler("Eintrag nicht gefunden.", 404);
+        return json({ ok: true });
+      }
+      case "privattermine_liste": {
+        return json({ privat: await privatListe(ich, new Date(Date.now() - 6 * 3600000).toISOString(), new Date(Date.now() + 60 * 86400000).toISOString()) });
       }
 
       // ----- KC-CLUB-NUTZUNG (0.99.0): Statistik OHNE Namen – nur Tag + Bereich + Anzahl. Wer meldet, wird NICHT gespeichert

@@ -1627,3 +1627,17 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/case "nutzung_statistik": \{\s*nurAdmin\(ich\)/.test(server), "Statistik nur für den Admin");
   assert.ok(/nzZaehlen\(v\)/.test(html) && /function nzAdmin\(/.test(html), "App: Zählen/Ansicht fehlt"); // 0.99.2: Hinweissatz auf Wunsch entfernt
 }
+
+// 125. 1.0.0: private Kalendereinträge (KC-CLUB-PRIVATTERMIN)
+{
+  const mig = lies("supabase/migrations/20260930_kc_club_v100_privattermine.sql");
+  assert.ok(/create table if not exists kc_club_privattermine/.test(mig) && /enable row level security/.test(mig), "Tabelle/RLS private Termine fehlt");
+  const f = (n) => server.slice(server.indexOf(`case "${n}"`), server.indexOf("case \"", server.indexOf(`case "${n}"`) + 10));
+  assert.ok(/\.eq\("person_id", ich\.person_id\)/.test(f("privattermin_speichern")) && /person_id: ich\.person_id/.test(f("privattermin_speichern")), "Speichern nur eigene");
+  assert.ok(/\.eq\("person_id", ich\.person_id\)/.test(f("privattermin_loeschen")), "Löschen nur eigene");
+  assert.ok(!/nurVorstand/.test(f("privattermin_speichern")) && !/protokoll\(/.test(f("privattermin_speichern")), "jeder darf, ohne Inhalts-Protokoll");
+  assert.ok(/\.eq\("person_id", ich\.person_id\)\.gte\("beginn", von\)/.test(server), "Liste nur eigene Einträge");
+  assert.ok(/privatListe\(ich, zeitraum\.von, zeitraum\.bis\)/.test(server) && /UID:privat-/.test(server) && /club-privat:/.test(server), "Kalender/Abo/Erinnerung fehlt");
+  assert.ok(/onclick="neuTermin\(\)"/.test(html) && /function privatForm\(/.test(html) && /🔒 Privat<\/b> – nur ich sehe diesen Termin/.test(html), "App: Neu mit Häkchen Privat fehlt");
+  assert.ok(/\$\("neuTreffenKnopf"\)\.classList\.remove\("versteckt"\)/.test(html), "„＋ Neu“ muss für alle sichtbar sein");
+}

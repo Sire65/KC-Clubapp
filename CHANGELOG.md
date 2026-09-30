@@ -1,5 +1,16 @@
 # Änderungen
 
+## 1.0.0 – 2026-09-30 (DEV)
+
+- KC-CLUB-PRIVATTERMIN (Wunsch Hansi: „Privateintrag im Kalender – Neu und dann Häkchen privat“): „＋ Neu“ in Termine jetzt für
+  alle. Mitglieder legen private Einträge an (Häkchen „🔒 Privat“ fest gesetzt, Hinweis auf „📨 Anfrage“); die Clubleitung
+  wechselt per Häkchen zwischen Club-Termin (bisheriges Formular, unverändert) und privatem Eintrag. Felder: Titel, Datum,
+  Uhrzeit, bis (auch mehrtägig), ganztägig, Ort, Notiz, Erinnerung (15 Min … 2 Tage vorher). Sichtbar NUR für die Person
+  selbst: Liste „🔒 Meine privaten Termine“, Kalender (blau-grauer Punkt), „Demnächst“, eigenes Kalender-Abo (CLASS:PRIVATE).
+  Erinnerung über die Wartung an die Person selbst (nach ihren Benachrichtigungs-Einstellungen, Ruhezeit gilt).
+  Server-Aktionen privattermin_speichern / _loeschen / privattermine_liste – jeweils nur eigene (person_id = ich); kein
+  Protokolleintrag mit Inhalt. Tabelle kc_club_privattermine (Migration v100, angewendet). Server 1.0.0. Test 125.
+
 ## 0.99.2 – 2026-09-30 (DEV)
 
 - Text (Wunsch Hansi): Hinweissatz zur Nutzungsstatistik unter ⚙️ Mehr → Privatsphäre entfernt. Keine Funktionsänderung.
