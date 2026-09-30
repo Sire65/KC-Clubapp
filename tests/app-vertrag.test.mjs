@@ -1459,4 +1459,17 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/if \(bisher && bisher === a\) \{ if \(!confirm\(/.test(html) && /a = "keine";/.test(html) && /if \(a === "nein" \|\| a === "keine"\)/.test(html) && /Nochmal auf deine Antwort tippen = zurücknehmen/.test(html), "App: nochmal tippen nimmt zurück, Platzfrage");
 }
 
+// 112. DB: Kollegenfreigabe beim Übernehmen + Übernahmebeleg (KC-DP-WUNSCH-FREIGABE)
+{
+  const mig = lies("supabase/migrations/20260930_kc_dp_wunsch_eingang_freigabe.sql");
+  const ack = mig.slice(mig.indexOf("create or replace function public.kc_dp_wish_inbox_ack"), mig.indexOf("create or replace function public.kc_dp_wish_inbox_receipt"));
+  const beleg = mig.slice(mig.indexOf("create or replace function public.kc_dp_wish_inbox_receipt"));
+  assert.ok(/returning org_id, person_id, share_with_colleagues into v_org, v_person, v_share/.test(ack) && /select v_org, v_person, k, v_share, false/.test(ack), "Freigabe nur für die Person aus dem Eingang");
+  assert.ok(/if v_n = 1 and p_status = 'uebernommen' and v_share is not null then/.test(ack), "Freigabe nur bei erfolgreicher Übernahme mit Angabe");
+  assert.ok(/allow_copy = case when excluded\.allow_view then public\.kc_dp_plan_sharing\.allow_copy else false end/.test(ack), "Nein schaltet Kopieren ab");
+  for (const f of [ack, beleg]) assert.ok(/m\.role in \('admin', 'planner', 'duty_manager'\)/.test(f) && /raise exception 'Keine aktive dp2-Planungsberechtigung'/.test(f), "Rollenprüfung fehlt");
+  assert.ok(/stable\s+security definer/.test(beleg) && !/\b(insert|update|delete)\b/i.test(beleg.replace(/comment on[\s\S]*$/, "")), "Beleg nur lesend");
+  assert.ok(/revoke all on function public\.kc_dp_wish_inbox_ack\(uuid, integer, text, jsonb\) from public, anon;/.test(mig) && /revoke all on function public\.kc_dp_wish_inbox_receipt\(uuid\) from public, anon;/.test(mig), "Rechte nicht eingeschränkt");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

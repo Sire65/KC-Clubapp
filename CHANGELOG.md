@@ -1,5 +1,13 @@
 # Änderungen
 
+## DB – 2026-09-30 (ohne App-Build)
+
+- KC-DP-WUNSCH-FREIGABE (Freigabe Hansi, Übergabe aus DP2 Build 250 RC): kc_dp_wish_inbox_ack speichert bei erfolgreicher,
+  revisionsgleicher Übernahme die Kollegenfreigabe aus dem Eingang (nur inbox.org_id + inbox.person_id, nur wenn angegeben;
+  Nein schaltet auch Kopieren ab) im selben Vorgang wie die Quittierung; Rückgabe zusätzlich sharingApplied.
+  Neu: kc_dp_wish_inbox_receipt (lesender Übernahmebeleg inkl. takenByMe) für verlorene ACK-Antworten. Migration
+  20260930_kc_dp_wunsch_eingang_freigabe; Rückweg: ack-Fassung aus 20260929_kc_dp_wunsch_eingang_v1.
+
 ## 0.90.0 – 2026-09-30 (DEV)
 
 - KC-CLUB-ANTWORT-ZURUECK (Fund Hansi): Eine Antwort auf einen Termin ließ sich nur wechseln, nicht zurücknehmen. Jetzt:
