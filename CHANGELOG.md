@@ -1,5 +1,17 @@
 # Änderungen
 
+## 0.84.0 – 2026-09-30 (DEV)
+
+- KC-CLUB-HEARTBEAT (Wunsch Hansi): Lebenszeichen wie die anderen KC-Programme. Die App meldet jede Minute (nur wenn
+  sichtbar) über ihren eigenen Server (neue Aktion „lebenszeichen“, angemeldet mit dem Club-Link); der Server baut den
+  Umschlag im KICC-Format (kicc.remote-program-heartbeat.v1 / kicc.program-heartbeat.v1, programId „kc-clubapp“, Gerät =
+  Zufalls-ID, frische Nonce) und reicht ihn an den gemeinsamen Empfänger kicc-program-heartbeat weiter – Erlaubt-Liste,
+  Nonce, Frische, Takt und Ablage in kicc_program_heartbeats bleiben dort (kein eigener Kern, kein Direktschreiben).
+  So bleibt die App ohne Supabase-Schlüssel im Browser (Vertragstest 3). Sichtbar im KC System Check unter „Lebenszeichen
+  der Programme“ (appMatches KC_CLUBAPP ↔ „clubapp“). Herz ♥ in der Kopfzeile blinkt bei jedem angekommenen Lebenszeichen
+  kurz rot, blass bei Fehler; Tipp → die letzten 15 mit Zeit, Stand und Antwortzeit (nur im Gerät).
+  Voraussetzung: „kc-clubapp“ in der Erlaubt-Liste von kicc-program-heartbeat (Quelle: KC-System-Check).
+
 ## 0.83.0 – 2026-09-30 (DEV)
 
 - KC-CLUB-PROGRAMME (Wunsch Hansi): Kachel „💻 Freigegebene Programme“ ist nicht mehr „bald“, sondern öffnet die Ansicht

@@ -124,6 +124,14 @@
   #modusKnopf .modusbuchstabe { position: absolute; right: -3px; bottom: -3px; min-width: 17px; height: 17px; border-radius: 9px; background: #fff; color: #741521; font: 800 .66rem/17px system-ui, sans-serif; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,.35); }
   .rund:active { transform: scale(.94); }
   .knopfreihe { display: flex; gap: 8px; }
+  /* KC-CLUB-HEARTBEAT (0.84.0): Lebenszeichen-Herz wie in den anderen KC-Programmen – blinkt bei jedem Herzschlag kurz rot */
+  .herz { align-self: center; background: none; border: none; padding: 0 2px; cursor: pointer; font-size: 1.3rem; line-height: 1; color: rgba(255,255,255,.55); text-shadow: 0 1px 2px rgba(0,0,0,.35); transition: color .3s; }
+  .herz.schlag { animation: herzschlag .8s ease-out; }
+  .herz.fehlt { color: rgba(255,255,255,.3); }
+  @keyframes herzschlag { 0% { transform: scale(1); } 25% { transform: scale(1.4); color: #ff2340; text-shadow: 0 0 6px #fff, 0 0 12px rgba(255,35,64,.95); } 100% { transform: scale(1); } }
+  @media (prefers-reduced-motion: reduce) { @keyframes herzschlag { 0%, 100% { color: rgba(255,255,255,.55); } 30% { color: #ff2340; text-shadow: 0 0 6px #fff; } } }
+  .herz-tabelle { width: 100%; border-collapse: collapse; font-size: .95rem; } .herz-tabelle th, .herz-tabelle td { text-align: left; padding: 5px 6px; border-bottom: 1px solid rgba(0,0,0,.08); }
+  .herz-tabelle .ok { color: var(--gruen); font-weight: 700; } .herz-tabelle .weg { color: #c62828; font-weight: 700; }
   .info { margin-top: 26px; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.18); border-radius: 20px; padding: 16px; }
   .info h2 { margin: 0; font-size: 1.5rem; }
   .info .unter { opacity: .9; margin-top: 4px; }
@@ -748,6 +756,7 @@
         <div class="kopfrechts">
           <div class="knopfreihe">
             <button class="leds" id="leds" title="Verbindung zum Server" aria-label="Verbindung zum Server" onclick="verbindungBlatt()"><i class="led grau" id="ledStatus"></i><i class="led grau" id="ledComm"></i><i class="led daten" id="ledDaten"></i></button>
+            <button class="herz" id="herzKnopf" title="Lebenszeichen – antippen: die letzten 15" aria-label="Lebenszeichen, antippen für die letzten 15" onclick="herzListe()">♥</button>
             <button class="rund" id="modusKnopf" title="Tag/Nacht umschalten" onclick="dunkelUmschalten()">🌙</button>
             <button class="rund" title="Aktualisieren" onclick="neuLaden(true)">↻</button>
           </div>
@@ -1237,6 +1246,11 @@
   <div class="blatt-innen" style="max-height:80vh;overflow-y:auto"><div id="konfWahlText"></div>
     <button class="knopf" onclick="$('konfWahlBlatt').classList.add('versteckt')">Abbrechen</button></div>
 </div>
+<!-- KC-CLUB-HEARTBEAT (0.84.0): die letzten 15 Lebenszeichen -->
+<div class="blatt versteckt" id="herzBlatt" onclick="if(event.target===this)this.classList.add('versteckt')">
+  <div class="blatt-innen" style="max-height:85vh;overflow-y:auto"><div id="herzText"></div>
+    <button class="knopf" onclick="$('herzBlatt').classList.add('versteckt')">👍 OK</button></div>
+</div>
 <!-- KC-CLUB-ANRUF-VERPASST (0.81.0) -->
 <div class="blatt versteckt" id="verpasstBlatt">
   <div class="blatt-innen"><div id="verpasstText"></div>
@@ -1308,7 +1322,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "0.83.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.84.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2325,6 +2339,51 @@ async function zweitDazu() {
     await api("anruf_annehmen", { id: z.id, antwort: bein.pc.localDescription.sdp });
     melde(`👥 ${z.von.vorname || z.von.name} kommt in die Konferenz`); konfTakt();
   } catch (e) { melde(e.message, true); if (RUF?.konf?.beine.has(z.id)) konfBeinWeg(z.id, true); }
+}
+// ---- KC-CLUB-HEARTBEAT (0.84.0): Lebenszeichen wie die anderen KC-Programme. Die App meldet alle 60 s über ihren eigenen
+// Server (Aktion „lebenszeichen“, angemeldet mit dem Club-Link – kein Schlüssel im Browser); der Server reicht es im
+// KICC-Format an kicc-program-heartbeat weiter → kicc_program_heartbeats, sichtbar im KC System Check.
+// Nur Technik: Programm, Gerät (Zufalls-ID), Version, Status – keine Namen oder Inhalte.
+const HERZ = { takt: 60, max: 15, lager: "kc_club_herz_v1", geraetLager: "kc-clubapp.instance.id.v1" };
+let HB = null;
+function herzGeraet() {
+  try { let id = localStorage.getItem(HERZ.geraetLager); if (!id) { id = "browser-" + (crypto.randomUUID?.() || Math.random().toString(36).slice(2)); localStorage.setItem(HERZ.geraetLager, id); } return id; }
+  catch { return "browser"; }
+}
+function herzListeLesen() { try { const l = JSON.parse(localStorage.getItem(HERZ.lager) || "[]"); return Array.isArray(l) ? l : []; } catch { return []; } }
+function herzMerken(e) { const l = [...herzListeLesen(), e].slice(-HERZ.max); try { localStorage.setItem(HERZ.lager, JSON.stringify(l)); } catch {} }
+function herzSchlag(ok) {
+  const h = $("herzKnopf"); if (!h) return;
+  h.classList.toggle("fehlt", !ok); h.classList.remove("schlag"); void h.offsetWidth; if (ok) h.classList.add("schlag");
+  const l = herzListeLesen().at(-1);
+  h.title = l ? `Lebenszeichen ${l.ok ? "ok" : "fehlt – " + l.grund} · ${new Date(l.zeit).toLocaleTimeString("de-DE")} · antippen: die letzten 15` : "Lebenszeichen – noch keins gesendet";
+}
+async function herzSenden() {
+  if (!KEY || !ICH) return;
+  const t0 = performance.now();
+  try {
+    const r = await apiRoh("lebenszeichen", { geraet: herzGeraet(), sichtbar: document.visibilityState !== "hidden" });
+    const ms = Math.round(performance.now() - t0);
+    herzMerken({ zeit: new Date().toISOString(), ok: !!r.ok, ms, grund: r.ok ? "" : String(r.grund || "nicht angenommen").slice(0, 60) }); herzSchlag(!!r.ok);
+  } catch (e) { herzMerken({ zeit: new Date().toISOString(), ok: false, ms: Math.round(performance.now() - t0), grund: String(e.message || e).slice(0, 60) }); herzSchlag(false); }
+  // ein fehlendes Lebenszeichen darf die App nie stören – kein Fehlerfenster, nur das blasse Herz
+}
+function herzStarten() {
+  if (HB) return;
+  HB = setInterval(() => { if (document.visibilityState !== "hidden") herzSenden(); }, HERZ.takt * 1000);
+  setTimeout(herzSenden, 5000);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) herzSenden(); });
+}
+function herzListe() {
+  const l = herzListeLesen();
+  const heute = new Date().toDateString(), zeitText = (z) => { const d = new Date(z); return (d.toDateString() === heute ? "" : d.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" }) + " ") + d.toLocaleTimeString("de-DE"); };
+  const zeile = (e) => `<tr><td style="white-space:nowrap">${esc(zeitText(e.zeit))}</td>
+    <td class="${e.ok ? "ok" : "weg"}">${e.ok ? "● angekommen" : "● fehlt – " + esc(e.grund || "")}</td><td>${Number.isFinite(e.ms) ? e.ms + " ms" : ""}</td></tr>`;
+  $("herzText").innerHTML = `<h3 style="margin-top:0">♥ Lebenszeichen – die letzten ${HERZ.max}</h3>
+    <p class="hinweis" style="margin-top:0">Jede Minute meldet die App dem KC System Check „ich laufe“ – nur Technik, keine Namen oder Inhalte. Das Herz blinkt bei jedem Lebenszeichen kurz rot.</p>`
+    + (l.length ? `<table class="herz-tabelle"><tr><th>Zeit</th><th>Stand</th><th>Antwort</th></tr>${[...l].reverse().map(zeile).join("")}</table>` : '<p class="hinweis">Noch kein Lebenszeichen gesendet – das erste kommt wenige Sekunden nach dem Start.</p>')
+    + `<p class="hinweis" style="margin:8px 0 0">Programm: kc-clubapp · Gerät: ${esc(herzGeraet().slice(0, 16))} · Version ${esc(APP_VERSION)}</p>`;
+  $("herzBlatt").classList.remove("versteckt");
 }
 // ---- KC-CLUB-ANRUF-VERPASST (0.81.0): „Verpasster Anruf“ mit Zurückrufen ----
 let VERPASST = [];
@@ -3936,7 +3995,7 @@ async function neuLaden(vonHand) {
     ansichtUebernehmen(INIT.einstellungen?.ansicht);
     const begruesst = ansichtPruefen() || begruessungPruefen();
     if (!ONL.timer) nachUpdatePruefen(begruesst);
-    if (!ONL.timer) { onlinePing(); onlineTakt(); pushAktivPruefen(); const a = /#anklopfen=([0-9a-f-]{36})/.exec(START_HASH || ""); if (a) anklopfenAusLink(a[1]); const c = /#anruf=([0-9a-f-]{36})/.exec(START_HASH || ""); if (c) { ONL.erledigt.add("r" + c[1]); anrufEingehend(c[1]); } }
+    if (!ONL.timer) { onlinePing(); onlineTakt(); pushAktivPruefen(); herzStarten(); const a = /#anklopfen=([0-9a-f-]{36})/.exec(START_HASH || ""); if (a) anklopfenAusLink(a[1]); const c = /#anruf=([0-9a-f-]{36})/.exec(START_HASH || ""); if (c) { ONL.erledigt.add("r" + c[1]); anrufEingehend(c[1]); } }
     if (!PW.startGeprueft) { PW.startGeprueft = true; pwStart(begruesst); }
     designUebernehmen(INIT.einstellungen?.design); infoFelderAktualisieren(); infoStartUebernehmen(INIT.einstellungen?.infofeld); ansichtInfo();
     VB.wartung = INIT.wartung || null; VB.server = INIT.server || null; vbCommSetzen(INIT.communicator || null);

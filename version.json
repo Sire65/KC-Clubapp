@@ -1,11 +1,16 @@
 {
-  "version": "0.83.0",
+  "version": "0.84.0",
   "datum": "2026-09-30",
   "neu": [
-    "💻 „Freigegebene Programme“ ist offen: 🧾 Kassen-Schulung – den Bilderrechner interaktiv üben",
-    "🧮 Unter 📚 Meine Dokumente: Schnellanleitung Bilderrechner (Kurzanleitung Version 3) zum Ansehen und Ausdrucken"
+    "♥ Lebenszeichen wie in den anderen KC-Programmen: Das Herz oben blinkt bei jedem Herzschlag kurz rot – antippen zeigt die letzten 15"
   ],
   "verlauf": [
+    {
+      "version": "0.84.0",
+      "neu": [
+        "♥ Lebenszeichen wie in den anderen KC-Programmen: Das Herz oben blinkt bei jedem Herzschlag kurz rot – antippen zeigt die letzten 15"
+      ]
+    },
     {
       "version": "0.83.0",
       "neu": [

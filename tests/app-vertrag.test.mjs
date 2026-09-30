@@ -1400,4 +1400,13 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/datei: "dokumente\/Kurzanleitung_Bilderrechner_V3\.pdf"/.test(html) && fs.existsSync(new URL("../dokumente/Kurzanleitung_Bilderrechner_V3.pdf", import.meta.url)), "Bilderrechner-PDF fehlt");
 }
 
+// 105. 0.84.0: Lebenszeichen (KC-CLUB-HEARTBEAT) – über den eigenen Server an den gemeinsamen KICC-Empfänger, kein Schlüssel im Browser
+{
+  const lz = server.slice(server.indexOf('case "lebenszeichen"'), server.indexOf('case "anruf_verpasst_gesehen"'));
+  assert.ok(/programId: "kc-clubapp"/.test(lz) && /schema: "kicc\.remote-program-heartbeat\.v1"/.test(lz) && /nonce: crypto\.randomUUID\(\)/.test(lz) && /functions\/v1\/kicc-program-heartbeat/.test(lz), "Weiterleitung im KICC-Format fehlt");
+  assert.ok(!/kicc_program_heartbeats/.test(lz), "nicht an der Prüfung des Empfängers vorbei direkt in die Tabelle schreiben");
+  assert.ok(/apiRoh\("lebenszeichen", \{ geraet: herzGeraet\(\), sichtbar:/.test(html) && /id="herzKnopf"/.test(html) && /max: 15/.test(html) && /@keyframes herzschlag/.test(html), "Herz / letzte 15");
+  assert.ok(/if \(document\.visibilityState !== "hidden"\) herzSenden\(\)/.test(html), "nur senden, wenn die App sichtbar ist");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
