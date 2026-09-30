@@ -1,10 +1,16 @@
 {
-  "version": "0.95.0",
+  "version": "0.95.1",
   "datum": "2026-09-30",
   "neu": [
-    "😊 Emojis in Nachrichten: neuer Knopf neben dem Schreibfeld – übersichtlich in Gruppen (Gesichter, Hände, Herzen, Essen & Trinken, Feiern, Unterwegs, Zeichen), deine zuletzt benutzten ganz vorne"
+    "🔧 Kein falscher Hinweis „Klappt etwas nicht?“ mehr nach „Jetzt aktualisieren“ – das Neuladen durchs Update zählt nicht als mehrfaches Öffnen"
   ],
   "verlauf": [
+    {
+      "version": "0.95.1",
+      "neu": [
+        "🔧 Kein falscher Hinweis „Klappt etwas nicht?“ mehr nach „Jetzt aktualisieren“ – das Neuladen durchs Update zählt nicht als mehrfaches Öffnen"
+      ]
+    },
     {
       "version": "0.95.0",
       "neu": [

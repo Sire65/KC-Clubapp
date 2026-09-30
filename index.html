@@ -60,7 +60,9 @@
   // Mehrfach geöffnet in kurzer Zeit? (Zeichen für „geht nicht richtig auf“)
   try {
     var st = JSON.parse(localStorage.getItem("kc_club_starts") || "[]"), jetzt = Date.now();
-    st = st.filter(function (x) { return jetzt - x < 600000; }); st.push(jetzt); localStorage.setItem("kc_club_starts", JSON.stringify(st.slice(-10)));
+    // Neustart durch „Jetzt aktualisieren“ zählt nicht als erneutes Öffnen (0.95.1, Fund bei Steven: Fehlalarm nach Update)
+    var durchUpdate = localStorage.getItem("kc_club_neustart_update"); localStorage.removeItem("kc_club_neustart_update");
+    st = st.filter(function (x) { return jetzt - x < 600000; }); if (!durchUpdate) st.push(jetzt); localStorage.setItem("kc_club_starts", JSON.stringify(st.slice(-10)));
     if (st.length >= 3) { window.KCFP.mehrfach = st.length; neu("mehrfachstart", { text: st.length + "× in 10 Minuten geöffnet" }); }
   } catch (e) {}
   if (!speicherOk) neu("speicher", { text: "Speicher gesperrt (privater Modus?) – App kann sich nichts merken" });
@@ -1466,7 +1468,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "0.95.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.95.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -6980,6 +6982,7 @@ function versionAnzeigen() {
 }
 async function jetztAktualisieren() {
   VB.update = true; vbStatusLed(); // blaue LED: Wartung/Update läuft
+  try { localStorage.setItem("kc_club_neustart_update", "1"); } catch {} // KC-CLUB-FEHLERPROTOKOLL: kein Fehlalarm „mehrfach geöffnet“
   try { const reg = await navigator.serviceWorker.getRegistration(); await reg?.update(); reg?.waiting?.postMessage("jetzt-aktivieren"); } catch {}
   setTimeout(() => location.reload(), 400);
 }

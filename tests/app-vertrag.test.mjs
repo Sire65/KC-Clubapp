@@ -1559,3 +1559,8 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/function emoEinfuegen\(/.test(html) && /selectionStart/.test(html) && /kc_club_emoji_zuletzt/.test(html), "Einfügen an der Schreibstelle / Zuletzt fehlt");
   assert.ok(/async function senden\(\) \{\s*emoUmschalten\(false\)/.test(html), "Senden schließt die Auswahl nicht");
 }
+
+// 119. 0.95.1: Neustart durch Update ist kein „mehrfach geöffnet“
+{
+  assert.ok(/localStorage\.setItem\("kc_club_neustart_update", "1"\)/.test(html) && /if \(!durchUpdate\) st\.push\(jetzt\)/.test(html), "Update-Neustart zählt als Mehrfachstart (Fehlalarm)");
+}

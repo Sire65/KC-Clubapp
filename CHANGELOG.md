@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.95.1 – 2026-09-30 (DEV)
+
+- KC-CLUB-FEHLERPROTOKOLL, Fehlalarm behoben (Fund im Protokoll bei Steven): Nach „Jetzt aktualisieren“ zählte das Neuladen als
+  weiteres Öffnen → „3× in 10 Minuten“ → Hinweis „Klappt etwas nicht?“, obwohl alles lief. jetztAktualisieren() setzt jetzt
+  einen Merker, der Fehlerfänger zählt diesen einen Neustart nicht mit. Test 119.
+
 ## 0.95.0 – 2026-09-30 (DEV)
 
 - KC-CLUB-EMOJI (Wunsch Hansi: „Emojis in die Nachrichten – gut angeordnet, nicht zu unübersichtlich“): 😊-Knopf neben dem
