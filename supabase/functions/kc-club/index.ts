@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.63.0";
+const SERVER_VERSION = "0.64.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -391,6 +391,9 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
   online: (w) => ({ zeigen: w?.zeigen !== false }),
   // KC-CLUB-LIVETIPPEN (0.56.0): andere sehen live, was ich in einer Unterhaltung tippe (Standard: aus – freiwillig)
   live_tippen: (w) => ({ an: w?.an === true }),
+  // KC-CLUB-PINNWAND-ERINNERUNG (0.64.0): „hängen lassen“ je eigenem Zettel – wann frühestens wieder erinnern (höchstens 20)
+  pinnwand_erinnert: (w) => ({ bis: Object.fromEntries(Object.entries(w?.bis && typeof w.bis === "object" ? w.bis : {})
+    .filter(([id, d]) => /^[0-9a-f-]{36}$/.test(id) && typeof d === "string" && !isNaN(Date.parse(d))).slice(-20)) }),
   // KC-CLUB-ANSICHT (0.62.0): einfache oder erweiterte Ansicht – beim ersten Start einmal gefragt, jederzeit umschaltbar
   ansicht: (w) => ({ art: w?.art === "erweitert" ? "erweitert" : "einfach", gewaehlt: w?.gewaehlt === true, am: new Date().toISOString() }),
   // KC-CLUB-BEGRUESSUNG (0.28.0): Begrüßung beim ersten Start einmal je Mitglied (geräteübergreifend)

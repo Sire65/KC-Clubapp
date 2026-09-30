@@ -1,5 +1,13 @@
 # Änderungen
 
+## 0.64.0 – 2026-09-30 (DEV)
+
+- KC-CLUB-PINNWAND-ERINNERUNG (neu, Wunsch Hansi): beim Öffnen der App Fenster „📌 Dein Post-it vom 29.09. hängt noch an der
+  Pinnwand. Möchtest du es abnehmen?“ für eigene Zettel, die seit PW_ERINNERN_TAGE (3) hängen – je Zettel „🗑️ Abnehmen“,
+  „📌 Hängen lassen“ fragt für diese Zettel frühestens nach PW_ERINNERN_PAUSE_TAGE (7) wieder (Server-Einstellung
+  „pinnwand_erinnert“, geräteübergreifend, abgenommene werden vergessen). Nie über Startfrage, Begrüßung oder neuem
+  Post-it-Fenster.
+
 ## 0.63.0 – 2026-09-30 (DEV)
 
 - KC-CLUB-PINNWAND-NAME (neu, Wunsch Hansi): oben auf jedem Zettel „von Hansi / angepinnt am 29.09. 20:32“ (Wand und

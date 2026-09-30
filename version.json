@@ -1,10 +1,16 @@
 {
-  "version": "0.63.0",
+  "version": "0.64.0",
   "datum": "2026-09-29",
   "neu": [
-    "📌 Auf jedem Post-it steht jetzt oben, von wem es ist und wann es angepinnt wurde – und „✍️ Antworten“ ist gut sichtbar"
+    "📌 Erinnerung beim Öffnen: „Dein Post-it vom … hängt noch an der Pinnwand. Möchtest du es abnehmen?“ (nach 3 Tagen, „Hängen lassen“ fragt erst nach 7 Tagen wieder)"
   ],
   "verlauf": [
+    {
+      "version": "0.64.0",
+      "neu": [
+        "📌 Erinnerung beim Öffnen: „Dein Post-it vom … hängt noch an der Pinnwand. Möchtest du es abnehmen?“ (nach 3 Tagen, „Hängen lassen“ fragt erst nach 7 Tagen wieder)"
+      ]
+    },
     {
       "version": "0.63.0",
       "neu": [

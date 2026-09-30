@@ -1177,4 +1177,14 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/const PINNWAND_MAX = 4,/.test(server), "Grenze geändert");
 }
 
+// 86. 0.64.0: Erinnerung an eigene alte Zettel beim Öffnen (KC-CLUB-PINNWAND-ERINNERUNG)
+{
+  assert.ok(/pinnwand_erinnert: \(w\) => \(\{ bis: Object\.fromEntries/.test(server) && /\/\^\[0-9a-f-\]\{36\}\$\/\.test\(id\)/.test(server), "Server speichert „hängen lassen“ nicht geprüft");
+  assert.ok(/const PW_ERINNERN_TAGE = 3, PW_ERINNERN_PAUSE_TAGE = 7;/.test(html) && /if \(!gezeigt && !nurZaehlen\) pwErinnern\(\);/.test(html), "Erinnerung beim Start fehlt");
+  const e = html.slice(html.indexOf("function pwErinnern()"), html.indexOf("async function pwLaden()"));
+  assert.ok(/z\.vonMir && jetzt - new Date\(z\.erstellt_am\)\.getTime\(\) >= PW_ERINNERN_TAGE \* 86400000/.test(e) && /bis\[z\.id\]/.test(e), "nur eigene, alte, nicht zurückgestellte Zettel");
+  assert.ok(/hängt noch an der Pinnwand\./.test(e) && /Möchtest du \$\{liste\.length === 1 \? "es" : "sie"\} abnehmen\?/.test(e) && /api\("pinnwand_abnehmen"/.test(e), "Text/Abnehmen fehlt");
+  assert.ok(/document\.querySelector\("\.blatt:not\(\.versteckt\)"\)\) return/.test(e), "Erinnerung könnte über anderen Fenstern aufgehen");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

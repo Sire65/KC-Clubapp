@@ -1167,7 +1167,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "0.63.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.64.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -1340,7 +1340,8 @@ async function pwStart(nurZaehlen) { // nurZaehlen: Begrüßung ist offen → Pi
     if (n.length) { n.forEach((z) => PW_GEMELDET.add(z.id)); try { localStorage.setItem("kc_club_pw_gemeldet", JSON.stringify([...PW_GEMELDET].slice(-PW_GEMELDET_MAX))); } catch {}
       pwFenster(n); gezeigt = true; } } catch {}
   try { const r = await api("pinnwand"); pwUebernehmen(r);
-    if (!gezeigt && !nurZaehlen && PW.zettel.some(pwOffen) && aktuelleAnsicht === "start") { PW.wichtigStart = true; zeige("pinnwand"); }
+    if (!gezeigt && !nurZaehlen && PW.zettel.some(pwOffen) && aktuelleAnsicht === "start") { PW.wichtigStart = true; zeige("pinnwand"); gezeigt = true; }
+    if (!gezeigt && !nurZaehlen) pwErinnern();
   } catch {}
 }
 // KC-CLUB-PINNWAND-LIVE (0.57.0): bei geöffneter App alle PW_LIVE_MS nach neuen Zetteln schauen (Aktion pinnwand_neu markiert
@@ -1381,6 +1382,43 @@ function pwFenster(neu) {
   f.querySelectorAll("[data-antw]").forEach((b) => b.onclick = () => { const z = liste[Number(b.dataset.antw)]; zu();
     api("pinnwand_gesehen", { ids: liste.map((x) => x.id) }).catch(() => {}); pwAntworten(z.id, z.vonId, z.von); });
   f.onclick = (e) => { if (e.target === f) zu(); };
+  document.body.appendChild(f);
+}
+// KC-CLUB-PINNWAND-ERINNERUNG (0.64.0): beim Öffnen der App an eigene Zettel erinnern, die seit PW_ERINNERN_TAGE hängen –
+// „Hängen lassen“ fragt für diese Zettel frühestens nach PW_ERINNERN_PAUSE_TAGE wieder (Server-Einstellung, gilt auf allen Geräten)
+const PW_ERINNERN_TAGE = 3, PW_ERINNERN_PAUSE_TAGE = 7;
+function pwErinnern() {
+  if (document.getElementById("pwFenster") || document.querySelector(".blatt:not(.versteckt)")) return; // nie über ein anderes Fenster
+  const bis = INIT?.einstellungen?.pinnwand_erinnert?.bis || {}, jetzt = Date.now();
+  const alt = PW.zettel.filter((z) => z.vonMir && jetzt - new Date(z.erstellt_am).getTime() >= PW_ERINNERN_TAGE * 86400000 && !(bis[z.id] && new Date(bis[z.id]).getTime() > jetzt))
+    .sort((a, b) => String(a.erstellt_am).localeCompare(String(b.erstellt_am)));
+  if (!alt.length) return;
+  const f = document.createElement("div"); f.id = "pwFenster"; f.className = "blatt"; f.setAttribute("role", "dialog"); f.setAttribute("aria-modal", "true");
+  const tag = (z) => fKurz.format(new Date(z.erstellt_am));
+  const zeichnen = (liste) => {
+    f.innerHTML = `<div class="blatt-innen" style="max-height:88vh;overflow-y:auto">
+      <h3 style="margin:0">📌 ${liste.length === 1 ? `Dein Post-it vom ${esc(tag(liste[0]))} hängt noch an der Pinnwand.` : `Deine ${liste.length} Post-its hängen noch an der Pinnwand.`}</h3>
+      <p style="margin:0">Möchtest du ${liste.length === 1 ? "es" : "sie"} abnehmen?</p>
+      <div class="pwfenster-zettel">${liste.map((z) => `<div class="zettel${z.wichtig ? " wichtig" : ""}${pwFarbe(z)}" style="--dreh:${pwDreh(z.id)}deg">
+        ${z.wichtig ? '<span class="zwichtig">❗ WICHTIG</span>' : ""}${pwKopf(ICH?.vorname || "mir", z.erstellt_am)}<div class="ztext">${esc(z.text)}</div>
+        <div class="zfuss">${esc(pwFuerText(z))}</div><div class="zknoepfe"><button class="antw" data-weg="${z.id}">🗑️ Abnehmen</button></div></div>`).join("")}</div>
+      <button class="knopf" style="text-align:center" data-k="lassen">📌 ${liste.length === 1 ? "Hängen lassen" : "Alle hängen lassen"}</button></div>`;
+    f.querySelectorAll("[data-weg]").forEach((b) => b.onclick = async () => {
+      b.disabled = true;
+      try { await api("pinnwand_abnehmen", { id: b.dataset.weg }); melde("🗑️ Abgenommen"); PW.zettel = PW.zettel.filter((z) => z.id !== b.dataset.weg); PW.meine = Math.max(0, PW.meine - 1);
+        const rest = liste.filter((z) => z.id !== b.dataset.weg); if (rest.length) zeichnen(rest); else f.remove(); if (aktuelleAnsicht === "pinnwand") pwLaden(); }
+      catch (e) { b.disabled = false; melde(e.message, true); } });
+    f.querySelector('[data-k="lassen"]').onclick = () => {
+      f.remove();
+      const neu = { ...bis }, spaeter = new Date(jetzt + PW_ERINNERN_PAUSE_TAGE * 86400000).toISOString();
+      for (const z of liste) neu[z.id] = spaeter;
+      for (const id of Object.keys(neu)) if (!PW.zettel.some((z) => z.id === id)) delete neu[id]; // abgenommene vergessen
+      INIT.einstellungen = { ...(INIT.einstellungen || {}), pinnwand_erinnert: { bis: neu } };
+      api("einstellung_setzen", { schluessel: "pinnwand_erinnert", wert: { bis: neu } }).catch(() => {});
+      melde(`📌 Bleibt hängen – ich erinnere dich in ${PW_ERINNERN_PAUSE_TAGE} Tagen wieder`);
+    };
+  };
+  zeichnen(alt);
   document.body.appendChild(f);
 }
 async function pwLaden() {
