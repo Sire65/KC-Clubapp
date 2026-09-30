@@ -1,10 +1,16 @@
 {
-  "version": "0.78.0",
+  "version": "0.79.0",
   "datum": "2026-09-30",
   "neu": [
-    "📧 Unter ⚙️ Mehr → App-Installation: mit einem Tipp den eigenen Link per E-Mail schicken – für Tablet, iPad und PC"
+    "🗺️ Neu unter 📚 Meine Dokumente: „Club-App auf einen Blick“ – alle Bereiche und alle Neuigkeiten, immer aktuell, auch zum Ausdrucken"
   ],
   "verlauf": [
+    {
+      "version": "0.79.0",
+      "neu": [
+        "🗺️ Neu unter 📚 Meine Dokumente: „Club-App auf einen Blick“ – alle Bereiche und alle Neuigkeiten, immer aktuell, auch zum Ausdrucken"
+      ]
+    },
     {
       "version": "0.78.0",
       "neu": [

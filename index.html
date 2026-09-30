@@ -475,6 +475,21 @@
   .dwahl.senkrecht { flex-direction: column; }
   .dhaken { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 6px; margin: 6px 0 4px; }
   #druck { display: none; }
+  /* KC-CLUB-UEBERBLICK (0.79.0) */
+  .ue-einl { margin: 0 2px 12px; color: var(--grau); }
+  .ue-kasten { background: var(--karte); border-radius: var(--radius); box-shadow: var(--schatten); padding: 14px 16px; margin-bottom: 12px; }
+  .ue-kasten h3 { margin: 0 0 8px; font-size: 1.1rem; }
+  .ue-kasten ul { margin: 0; padding-left: 20px; display: grid; gap: 3px; }
+  .ue-beta { border: 1.5px solid #b98f52; }
+  .ue-neukasten { border: 1.5px solid var(--gruen); }
+  .ue-version { font-weight: 700; font-size: .85rem; color: var(--gruen); margin: 10px 0 3px; }
+  .ue-version:first-child { margin-top: 0; }
+  .ue-aelter { margin-top: 10px; } .ue-aelter summary { cursor: pointer; font-weight: 700; }
+  .ue-gruppe { margin: 10px 0 6px; font-size: .95rem; }
+  .ue-liste { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
+  .ue-bereich { display: flex; gap: 10px; align-items: flex-start; min-width: 0; }
+  .ue-sym { font-size: 1.4rem; line-height: 1.2; }
+  .ue-bereich small { display: block; color: var(--grau); }
   @media print {
     @page { size: A4; margin: 13mm 12mm 15mm; @bottom-right { content: "Seite " counter(page) " / " counter(pages); font: 8pt sans-serif; color: #666; } }
     html, body { background: #fff !important; color: #000 !important; }
@@ -509,6 +524,10 @@
     #druck .unterschrift div { flex: 1; border-top: .8pt solid #000; padding-top: 3pt; font-size: 8.5pt; }
     #druck .dfuss { margin-top: 12pt; border-top: .6pt solid #999; padding-top: 4pt; font-size: 8pt; color: #555; }
     /* KC-CLUB-KURZANLEITUNG (0.62.0): große Schritte mit Bildern */
+    #druck .ue-einl { margin: 0 0 8pt; } #druck .ue-kasten { border: 1pt solid #b98f52; border-radius: 6pt; padding: 6pt 10pt; margin: 0 0 8pt; break-inside: avoid-page; }
+    #druck .ue-kasten h3 { margin: 0 0 4pt; color: #741521; font-size: 12pt; } #druck .ue-version { font-weight: 700; margin: 5pt 0 2pt; color: #2f6b3a; }
+    #druck .ue-liste { display: grid; grid-template-columns: 1fr 1fr; gap: 3pt 12pt; } #druck .ue-bereich { display: flex; gap: 6pt; break-inside: avoid; } #druck .ue-bereich small { display: block; color: #555; }
+    #druck .ue-gruppe { margin: 6pt 0 3pt; } #druck .ue-kasten ul { margin: 0; padding-left: 14pt; }
     #druck .anl-schritt { display: flex; gap: 10pt; align-items: flex-start; border: 1.2pt solid #741521; border-radius: 8pt; padding: 8pt 10pt; margin: 0 0 8pt; break-inside: avoid; }
     #druck .anl-nr { flex: none; width: 26pt; height: 26pt; border-radius: 50%; background: #741521; color: #fff; font: 800 15pt/26pt sans-serif; text-align: center; }
     #druck .anl-schritt h2 { margin: 0 0 3pt; font-size: 14pt; color: #741521; }
@@ -870,6 +889,13 @@
     <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>📚 Meine Dokumente</h2></div>
     <p class="hinweis" style="margin:0 2px 10px">Antippen zum Ansehen. Im geöffneten Dokument kannst du es über <b>Teilen □↑</b> bzw. <b>⋮</b> ausdrucken oder speichern.</p>
     <div class="raster" id="dokRaster"></div>
+  </section>
+
+  <!-- KC-CLUB-UEBERBLICK (0.79.0, Wunsch Hansi): die Club-App auf einen Blick – Bereiche aus KACHELN, Neuestes aus version.json -->
+  <section id="v-ueberblick" class="versteckt">
+    <div class="kopf2"><button class="zurueck" onclick="zeige('dokumente')">‹</button><h2>🗺️ Club-App auf einen Blick</h2></div>
+    <div class="knoepfe" style="margin:0 2px 10px"><button class="knopf klein" onclick="druckStarten('ueberblick')">🖨️ Drucken</button></div>
+    <div id="ueInhalt"><p class="hinweis">Lädt …</p></div>
   </section>
 
   <section id="v-pinnwand" class="versteckt">
@@ -1240,7 +1266,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "0.78.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.79.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2682,20 +2708,65 @@ window.addEventListener("message", (e) => {
 // Neues Dokument: PDF nach dokumente/ legen und hier eintragen (datei: null = „kommt bald“). Die PDFs öffnet der
 // PDF-Betrachter des Handys – dort ansehen, drucken, teilen. Nur Anleitungen (öffentlich erreichbar, keine Mitgliederdaten).
 const DOKUMENTE = [
+  { id: "ueberblick", sym: "🗺️", t: "Club-App auf einen Blick", u: "Alle Bereiche & das Neueste", v: "ueberblick" },
   { id: "anleitung-club-app", sym: "📲", t: "Anleitung Club-App", u: "In 3 Schritten zur App", datei: "dokumente/Koecheclub-App_Kurzanleitung.pdf" },
   { id: "bilderrechner", sym: "🧮", t: "Schnellanleitung Bilderrechner", u: "Schritt für Schritt", datei: null },
 ];
 function dokumenteZeigen() {
-  $("dokRaster").innerHTML = DOKUMENTE.map((d) => `<button class="kachel${d.datei ? "" : " bald"}" onclick="dokOeffnen('${d.id}')">
-    <div class="sym">${d.sym}</div><b>${esc(d.t)}</b><small>${esc(d.u)}</small>${d.datei ? "" : '<span class="zahl">bald</span>'}</button>`).join("");
+  const da = (d) => !!(d.datei || d.v);
+  $("dokRaster").innerHTML = DOKUMENTE.map((d) => `<button class="kachel${da(d) ? "" : " bald"}" onclick="dokOeffnen('${d.id}')">
+    <div class="sym">${d.sym}</div><b>${esc(d.t)}</b><small>${esc(d.u)}</small>${da(d) ? "" : '<span class="zahl">bald</span>'}</button>`).join("");
 }
 function dokOeffnen(id) {
   const d = DOKUMENTE.find((x) => x.id === id); if (!d) return;
+  if (d.v) return zeige(d.v);
   if (!d.datei) return melde(`„${d.t}“ kommt bald.`);
   const url = new URL(d.datei + "?v=" + APP_VERSION, location.href).href;
   // ohne „noopener“-Option (sonst liefert window.open immer null); Rückverweis danach selbst kappen
   const w = window.open(url, "_blank"); if (w) w.opener = null; else location.href = url; // Popup gesperrt → im selben Fenster
 }
+
+// ---- KC-CLUB-UEBERBLICK (0.79.0, Wunsch Hansi): „Unsere Club-App auf einen Blick“ – aktualisiert sich selbst:
+// Bereiche kommen aus der Kachel-Registry (KACHELN: fertige, für mich freigegebene), Neuigkeiten aus version.json (verlauf).
+// Fest ist nur der kurze Einleitungstext (UE_TEXT). Admin-Neuerungen sehen nur Admins.
+const UE_GRUPPEN = [["verein", "🏠 Im Verein"], ["mein", "🙋 Für mich"]], UE_AUSGELASSEN = ["test", "update"], UE_VERSIONEN = 8;
+const UE_TEXT = {
+  beta: ["Noch nicht alle Funktionen sind komplett getestet", "Funktionen, Ansichten usw. können sich noch ändern", "Deshalb ist Hansi auf euer Feedback angewiesen: 💭 Feedback-Kachel"],
+  warum: ["Alles an einem Ort statt verstreut in WhatsApp, Mails und auf Zetteln", "Termine und Zusagen auf einen Blick, ohne ständiges Nachfragen", "Kostenlos, keine Werbung, kein App-Store nötig",
+    "Clubdaten bleiben im Club: Zugang nur über den persönlichen Link", "Von uns mitgestaltet: Wünsche aus dem Feedback werden eingebaut"],
+};
+function ueNeuigkeiten(v) {
+  const alle = v?.verlauf?.length ? v.verlauf : v?.neu?.length ? [{ version: v.version, neu: v.neu }] : [];
+  const fuerMich = (x) => ICH?.admin || !/admin/i.test(x); // Admin-Neuerungen nur für Admins
+  return alle.filter((e) => !versionNeuer(e.version, APP_VERSION)).map((e) => ({ version: e.version, neu: (e.neu || []).filter(fuerMich) })).filter((e) => e.neu.length);
+}
+function ueberblickHtml(v, druck) {
+  const txt = (x) => typeof x === "function" ? x() : x, li = (xs) => `<ul>${xs.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>`;
+  const versionen = (es) => es.map((e) => `<div class="ue-version">Version ${esc(e.version)}</div>${li(e.neu)}`).join("");
+  const neu = ueNeuigkeiten(v), zuerst = neu.slice(0, UE_VERSIONEN), aelter = neu.slice(UE_VERSIONEN);
+  const neuHtml = !neu.length ? '<p class="hinweis">Die Neuigkeiten konnten gerade nicht geladen werden – bitte später noch einmal öffnen.</p>'
+    : versionen(zuerst) + (aelter.length && !druck ? `<details class="ue-aelter"><summary>Ältere Neuigkeiten (${aelter.length} Versionen)</summary>${versionen(aelter)}</details>` : "");
+  const bereich = (k) => `<div class="ue-bereich"><span class="ue-sym">${k.sym}</span><div><b>${esc(k.t)}</b><small>${esc(txt(k.u))}</small></div></div>`;
+  const bald = [];
+  const bereiche = UE_GRUPPEN.map(([r, titel]) => {
+    const ks = kachelnAlle(r).filter((k) => !UE_AUSGELASSEN.includes(k.id));
+    ks.filter((k) => k.bald).forEach((k) => bald.push(k));
+    const fertig = ks.filter((k) => !k.bald);
+    return fertig.length ? `<h4 class="ue-gruppe">${titel}</h4><div class="ue-liste">${fertig.map(bereich).join("")}</div>` : "";
+  }).join("");
+  return `<p class="ue-einl">Gebaut von Hansi für uns alle. Hier steht kurz, warum es die App gibt, was sie kann und was zuletzt dazugekommen ist. <b>Stand: Version ${esc(APP_VERSION)}</b></p>
+    <div class="ue-kasten ue-beta"><h3>🧪 Noch Beta-Version</h3>${li(UE_TEXT.beta)}</div>
+    <div class="ue-kasten ue-neukasten"><h3>🆕 Das ist neu</h3>${neuHtml}</div>
+    <div class="ue-kasten"><h3>💡 Warum Hansi die App gebaut hat</h3>${li(UE_TEXT.warum)}</div>
+    <div class="ue-kasten"><h3>📱 Das kann die Club-App</h3>${bereiche}${bald.length ? `<p class="hinweis" style="margin:8px 0 0">Kommt bald: ${bald.map((k) => esc(k.sym + " " + k.t)).join(" · ")}</p>` : ""}</div>
+    <p class="hinweis" style="margin:10px 2px 0">Fragen zur App? Einfach Hansi ansprechen.</p>`;
+}
+async function ueberblickLaden() {
+  if (!VERSION_INFO) { try { VERSION_INFO = await (await fetch("version.json?x=" + Date.now(), { cache: "no-store" })).json(); } catch {} }
+  return VERSION_INFO;
+}
+async function ueberblickZeigen() { $("ueInhalt").innerHTML = ueberblickHtml(await ueberblickLaden()); }
+async function druckUeberblick() { return { titel: "Unsere Club-App auf einen Blick", unter: `Stand: Version ${APP_VERSION}`, html: ueberblickHtml(await ueberblickLaden(), true) }; }
 
 // ---------- Start ----------
 const KACHELN = {
@@ -3606,7 +3677,7 @@ function zeige(v, ausHistorie) {
   const vorher = aktuelleAnsicht;
   aktuelleAnsicht = v;
   if (vorher === "protokoll" && v !== "protokoll" && prTimer) prSpeichernJetzt(false).catch(() => {}); // ungespeicherte Eingaben sichern
-  ["start", "dokumente", "termine", "vorschlaege", "aktionen", "aktion", "fotos", "feedback", "gruppe", "mitglied", "protokolle", "protokoll", "dienste", "nachrichten", "chat", "neu", "mitglieder", "einstellungen", "pinnwand", "erstattung"].forEach((x) => $("v-" + x).classList.toggle("versteckt", x !== v));
+  ["start", "dokumente", "termine", "vorschlaege", "aktionen", "aktion", "fotos", "feedback", "gruppe", "mitglied", "protokolle", "protokoll", "dienste", "nachrichten", "chat", "neu", "mitglieder", "einstellungen", "pinnwand", "erstattung", "ueberblick"].forEach((x) => $("v-" + x).classList.toggle("versteckt", x !== v));
   document.querySelectorAll("#fuss button").forEach((b) => b.classList.toggle("an", b.dataset.v === v || (v === "chat" && b.dataset.v === "nachrichten") || (v === "neu" && b.dataset.v === "nachrichten")));
   $("eingabe").classList.toggle("versteckt", v !== "chat");
   clearInterval(chatTimer);
@@ -3620,6 +3691,7 @@ function zeige(v, ausHistorie) {
   if (v === "fotos") fotosLaden();
   if (v === "feedback") fbLaden();
   if (v === "dokumente") dokumenteZeigen();
+  if (v === "ueberblick") ueberblickZeigen();
   if (v === "pinnwand") { pwForm(false); pwLaden(); }
   if (v === "erstattung") erstattungLaden();
   if (v === "dienste") dienstLaden();
@@ -5246,6 +5318,7 @@ const DRUCKARTEN = {
   protokoll: { bauen: () => druckProtokoll() },
   erstattung: { titel: "🖨️ Erstattungsantrag drucken", optionen: () => druckErstattungOptionen(), bauen: (o) => druckErstattung(o) },
   anleitung: { bauen: () => druckAnleitung() },
+  ueberblick: { bauen: () => druckUeberblick() },
 };
 // ---- KC-CLUB-KURZANLEITUNG (0.62.0): die App in 3 Schritten – für Einsteiger, zum Ausdrucken oder Verschicken ----
 function druckAnleitung() {

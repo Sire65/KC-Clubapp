@@ -1345,4 +1345,14 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/\$\("zugangMailKnopf"\)\.classList\.toggle\("versteckt", !INIT\?\.einstieg\?\.mailMaske\)/.test(html), "Knopf nur mit hinterlegter Adresse");
 }
 
+// 100. 0.79.0: Club-App auf einen Blick – aktualisiert sich selbst (KC-CLUB-UEBERBLICK)
+{
+  assert.ok(/id="v-ueberblick"/.test(html) && /"erstattung", "ueberblick"\]\.forEach/.test(html) && /if \(v === "ueberblick"\) ueberblickZeigen\(\)/.test(html), "Ansicht/Routing fehlt");
+  assert.ok(/\{ id: "ueberblick",[^}]*v: "ueberblick" \}/.test(html) && /if \(d\.v\) return zeige\(d\.v\)/.test(html), "Eintrag unter Meine Dokumente fehlt");
+  const ue = html.slice(html.indexOf("function ueberblickHtml("), html.indexOf("async function ueberblickLaden()"));
+  assert.ok(/kachelnAlle\(r\)/.test(ue) && /ueNeuigkeiten\(v\)/.test(ue), "Inhalt muss aus Registry + version.json kommen");
+  assert.ok(/ICH\?\.admin \|\| !\/admin\/i\.test\(x\)/.test(html) && /!versionNeuer\(e\.version, APP_VERSION\)/.test(html), "Admin-Neuerungen / künftige Versionen ausblenden");
+  assert.ok(/ueberblick: \{ bauen: \(\) => druckUeberblick\(\) \}/.test(html) && /ueberblickHtml\(await ueberblickLaden\(\), true\)/.test(html), "Druck aus derselben Quelle");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

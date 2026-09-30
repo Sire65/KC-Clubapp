@@ -1,5 +1,14 @@
 # Änderungen
 
+## 0.79.0 – 2026-09-30 (DEV)
+
+- KC-CLUB-UEBERBLICK (Wunsch Hansi): neue Ansicht „🗺️ Club-App auf einen Blick“ (📚 Meine Dokumente, auch in der einfachen
+  Ansicht). Aktualisiert sich selbst: Bereiche aus der Kachel-Registry KACHELN (fertige, für mich freigegebene; „bald“-Kacheln
+  als „Kommt bald“), Neuigkeiten aus version.json (neueste 8 Versionen, ältere aufklappbar, nur bis zur installierten Version,
+  Admin-Neuerungen nur für Admins). Fester Text nur Einleitung/Beta/Warum (UE_TEXT). Drucken mit Vorschau über DRUCKARTEN
+  „ueberblick“ aus derselben Quelle. DOKUMENTE-Einträge können jetzt statt einer PDF eine App-Ansicht (v) öffnen.
+  Die öffentliche Übersichtsseite (Artifact) ist auf Stand 0.78 gebracht.
+
 ## 0.78.0 – 2026-09-30 (DEV)
 
 - KC-CLUB-LINK-MAIL (Wunsch Hansi, iPad): unter ⚙️ Mehr → App-Installation → „💻 Auch am PC oder Tablet nutzen“ neuer
