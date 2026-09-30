@@ -1,11 +1,16 @@
 {
-  "version": "0.87.0",
+  "version": "0.88.0",
   "datum": "2026-09-30",
   "neu": [
-    "🚗 Mitfahren bei allen Terminen: „🙋 Ich suche eine Mitfahrgelegenheit“ und „🚗 Ich biete eine Mitfahrgelegenheit“ – nach „Ich komme“",
-    "🪑 Platz mit einem Tipp buchen und wieder freigeben – wer absagt, wird gefragt, ob der gebuchte Platz frei werden soll"
+    "♥ Lebenszeichen: kein rotes „rate_limited“ mehr, wenn man schnell in die App zurückkehrt"
   ],
   "verlauf": [
+    {
+      "version": "0.88.0",
+      "neu": [
+        "♥ Lebenszeichen: kein rotes „rate_limited“ mehr, wenn man schnell in die App zurückkehrt"
+      ]
+    },
     {
       "version": "0.87.0",
       "neu": [

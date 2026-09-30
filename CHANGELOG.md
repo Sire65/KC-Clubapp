@@ -1,5 +1,12 @@
 # Änderungen
 
+## 0.88.0 – 2026-09-30 (DEV)
+
+- KC-CLUB-HERZ-ABSTAND (Fund Hansi): In der Lebenszeichen-Liste stand „fehlt – rate_limited“, 2 s nach einem angekommenen
+  Lebenszeichen. Ursache: Rückkehr in die App (visibilitychange) und Minutentakt schickten kurz nacheinander; der Empfänger
+  kicc-program-heartbeat nimmt je Gerät höchstens eins pro 5 s an. herzSenden hält jetzt 20 s Mindestabstand und schickt nie
+  zwei gleichzeitig. Empfänger und Server unverändert.
+
 ## 0.87.0 – 2026-09-30 (DEV)
 
 - KC-CLUB-MITFAHRT-SUCHE (Wunsch Hansi): Mitfahren bei allen Terminen ausgebaut. Neu „🙋 Ich suche eine Mitfahrgelegenheit“

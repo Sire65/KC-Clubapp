@@ -1439,4 +1439,10 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/Ich suche eine Mitfahrgelegenheit/.test(html) && /Ich biete eine Mitfahrgelegenheit/.test(html) && /Soll ich den gebuchten Platz wieder freigeben\?/.test(html), "Knöpfe + Frage bei Absage");
 }
 
+// 109. 0.88.0: Lebenszeichen mit Mindestabstand (KC-CLUB-HERZ-ABSTAND)
+{
+  const hz = html.slice(html.indexOf("async function herzSenden()"), html.indexOf("function herzStarten()"));
+  assert.ok(/abstand: 20/.test(html) && /herzSenden\.laeuft \|\| jetzt - \(herzSenden\.zuletzt \|\| 0\) < HERZ\.abstand \* 1000\) return/.test(hz) && /finally \{ herzSenden\.laeuft = false; \}/.test(hz), "Mindestabstand fehlt");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
