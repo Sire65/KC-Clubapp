@@ -842,6 +842,16 @@
   .ni-verlauf { margin: 2px 0 0; padding-left: 20px; display: grid; gap: 3px; }
   .ni-verlauf li span.hinweis { margin-left: 6px; font-size: .8rem; }
   .ni-fehler { color: #c62828; font-weight: 700; }
+  /* KC-CLUB-EMOJI (0.95.0) */
+  .eingabe .emo-knopf { background: var(--karte2, var(--karte)); font-size: 1.25rem; }
+  .emo-feld { max-width: 1100px; margin: 0 auto 8px; background: var(--karte); border: 1px solid var(--linie); border-radius: 16px; box-shadow: var(--schatten); padding: 6px; }
+  .emo-reiter { display: flex; gap: 2px; border-bottom: 1px solid var(--linie); padding-bottom: 4px; margin-bottom: 4px; }
+  .emo-reiter button { flex: 1 1 0; min-width: 0; background: none; border: 0; border-radius: 10px; font-size: 1.2rem; padding: 6px 0; cursor: pointer; opacity: .6; }
+  .emo-reiter button.an { opacity: 1; background: var(--karte2, rgba(128,128,128,.18)); }
+  .emo-reiter .emo-zu { flex: 0 0 38px; opacity: .8; font-size: 1rem; }
+  .emo-gitter { display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px; max-height: 168px; overflow-y: auto; }
+  .emo-gitter button { background: none; border: 0; border-radius: 10px; font-size: 1.55rem; line-height: 1; padding: 7px 0; cursor: pointer; }
+  .emo-gitter button:active { background: var(--karte2, rgba(128,128,128,.2)); transform: scale(1.15); }
 </style>
 </head>
 <body>
@@ -1272,13 +1282,16 @@
   <div class="hinweis versteckt" id="liveHinweis" style="font-size:.78rem;margin:0 6px 4px">👁️ Live-Tippen ist an – die anderen sehen, was du schreibst (⚙️ Mehr → Privatsphäre)</div>
   <div class="zustell" id="zustell"></div>
   <div class="chips" id="anlagenChips"></div>
+  <!-- KC-CLUB-EMOJI (0.95.0): kompakte Emoji-Auswahl über der Eingabe -->
+  <div class="emo-feld versteckt" id="emoFeld" role="dialog" aria-label="Emoji auswählen"><div class="emo-reiter" id="emoReiter"></div><div class="emo-gitter" id="emoGitter"></div></div>
   <!-- KC-CLUB-SPRACHE: Aufnahme-Leiste -->
   <div class="aufnahme versteckt" id="aufnahmeLeiste"><span class="rec">●</span><b id="aufnahmeZeit">0:00</b><span class="hinweis" style="margin:0;flex:1">Aufnahme läuft …</span>
     <button class="knopf klein" onclick="spracheAbbrechen()">✖ Verwerfen</button><button class="knopf haupt klein" onclick="spracheSenden()">➤ Senden</button></div>
   <div class="innen">
     <button class="rund" title="Anlage" onclick="anlageMenue()">📎</button>
     <button class="rund" title="Sprachnachricht aufnehmen" id="mikroKnopf" onclick="spracheStart()">🎤</button>
-    <textarea id="text" rows="1" placeholder="Nachricht schreiben …" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';tippenMelden()"></textarea>
+    <button class="rund emo-knopf" title="Emoji einfügen" id="emoKnopf" aria-expanded="false" onclick="emoUmschalten()">😊</button>
+    <textarea id="text" rows="1" placeholder="Schreiben …" onblur="emoStelleMerken()" onkeyup="emoStelleMerken()" onclick="emoStelleMerken()" oninput="emoStelleMerken();this.style.height='auto';this.style.height=this.scrollHeight+'px';tippenMelden()"></textarea>
     <button class="rund" title="Senden" id="sendenKnopf" onclick="senden()">➤</button>
   </div>
 </div>
@@ -1453,7 +1466,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "0.94.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.95.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -4768,6 +4781,53 @@ async function chatLaden(scrollen) {
     if (scrollen || neuVonAnderen) setTimeout(() => window.scrollTo(0, document.body.scrollHeight), 50);
   } catch (e) { melde(e.message, true); }
 }
+// ---------- KC-CLUB-EMOJI (0.95.0): Emojis in Nachrichten – übersichtlich in wenigen Gruppen ----------
+// Bewusst eine überschaubare Auswahl (je Gruppe 24) statt tausender Zeichen; alle weiteren gehen wie gewohnt über die
+// Handy-Tastatur. „Zuletzt“ merkt sich die eigenen Lieblinge auf dem Gerät. Tippen fügt an der Schreibstelle ein.
+const EMO_GRUPPEN = [
+  { sym: "🕘", name: "Zuletzt", liste: null },
+  { sym: "😀", name: "Gesichter", liste: "😀 😃 😄 😁 😆 😅 😂 🤣 😊 🙂 😉 😍 🥰 😘 😋 😎 🤗 🤔 😐 🙄 😴 😢 😭 😮".split(" ") },
+  { sym: "👍", name: "Hände", liste: "👍 👎 👌 ✌️ 🤞 👏 🙌 🙏 💪 👋 🤝 ✋ 👉 👈 ☝️ 👇 🫶 🤙 ✍️ 🖐️ 👊 🤲 🫡 💅".split(" ") },
+  { sym: "❤️", name: "Herzen", liste: "❤️ 🧡 💛 💚 💙 💜 🤎 🖤 🤍 💕 💞 💓 💗 💖 💘 💝 ❣️ 💔 💯 ✨ ⭐ 🌟 🔥 🌈".split(" ") },
+  { sym: "🍲", name: "Essen & Trinken", liste: "🍲 🥘 🍝 🍕 🍖 🍗 🥩 🌭 🍔 🥗 🥔 🥕 🧅 🧄 🍞 🧀 🥚 🍰 🎂 🍪 ☕ 🍷 🍺 🥂".split(" ") },
+  { sym: "🎉", name: "Feiern", liste: "🎉 🎊 🥳 🎁 🎈 🎄 🎅 🤶 ⛄ ❄️ 🎃 🐣 🌷 ☀️ 🌧️ ⛅ 🎶 🎵 📸 🏆 🥇 🍀 🌻 🌹".split(" ") },
+  { sym: "🚗", name: "Unterwegs", liste: "🚗 🚌 🚲 🚶 🏃 ✈️ 🚆 🏠 🏡 🏪 📍 🗺️ ⏰ ⌛ 📅 📞 📱 💬 ✉️ 📦 🛒 💶 🔑 🧳".split(" ") },
+  { sym: "✅", name: "Zeichen", liste: "✅ ❌ ❓ ❗ ⚠️ 🆗 🆕 🔔 🔕 ➡️ ⬅️ ⬆️ ⬇️ 🔁 ➕ ➖ 👀 💡 📌 📎 ✏️ 🗓️ ⏳ 🙋".split(" ") },
+];
+const EMO_ZULETZT_MAX = 16;
+let emoGruppe = 1;
+function emoZuletzt() { try { return JSON.parse(localStorage.getItem("kc_club_emoji_zuletzt") || "[]").slice(0, EMO_ZULETZT_MAX); } catch { return []; } }
+function emoUmschalten(an) {
+  const f = $("emoFeld"), offen = an ?? f.classList.contains("versteckt");
+  f.classList.toggle("versteckt", !offen); $("emoKnopf").setAttribute("aria-expanded", String(offen));
+  if (offen) { emoGruppe = emoZuletzt().length ? 0 : 1; emoZeichnen(); } // startet mit „Zuletzt“, sonst Gesichter
+}
+function emoZeichnen() {
+  const zul = emoZuletzt();
+  $("emoReiter").innerHTML = EMO_GRUPPEN.map((g, i) => (i === 0 && !zul.length) ? "" :
+    `<button type="button" class="${i === emoGruppe ? "an" : ""}" title="${esc(g.name)}" aria-label="${esc(g.name)}" onclick="emoGruppe=${i};emoZeichnen()">${g.sym}</button>`).join("")
+    + `<button type="button" class="emo-zu" title="Schließen" aria-label="Emoji-Auswahl schließen" onclick="emoUmschalten(false)">✕</button>`;
+  const liste = emoGruppe === 0 ? zul : EMO_GRUPPEN[emoGruppe].liste;
+  $("emoGitter").innerHTML = liste.map((e) => `<button type="button" onclick="emoEinfuegen('${e}')">${e}</button>`).join("");
+}
+// Schreibstelle merken: beim Antippen der Emoji-Knöpfe verliert das Feld den Fokus, manche Browser setzen die Stelle dann zurück
+let emoStelle = null;
+function emoStelleMerken() { const t = $("text"); if (t) emoStelle = [t.selectionStart ?? t.value.length, t.selectionEnd ?? t.value.length, t.value]; }
+function emoEinfuegen(e) {
+  const t = $("text");
+  let [a, b] = emoStelle && emoStelle[2] === t.value ? emoStelle : [t.selectionStart ?? t.value.length, t.selectionEnd ?? t.value.length];
+  if (document.activeElement === t) { a = t.selectionStart; b = t.selectionEnd; }
+  t.value = t.value.slice(0, a) + e + t.value.slice(b);
+  const pos = a + e.length; t.setSelectionRange?.(pos, pos); emoStelle = [pos, pos, t.value];
+  t.style.height = "auto"; t.style.height = t.scrollHeight + "px";
+  try { const z = [e, ...emoZuletzt().filter((x) => x !== e)].slice(0, EMO_ZULETZT_MAX); localStorage.setItem("kc_club_emoji_zuletzt", JSON.stringify(z)); } catch {}
+  if (emoGruppe === 0) emoZeichnen();
+  tippenMelden?.();
+}
+// Tippen außerhalb schließt die Auswahl
+// (Knöpfe im Feld werden beim Umschalten neu gezeichnet – ein so entfernter Knopf zählt nicht als „daneben“.)
+document.addEventListener("click", (ev) => { const f = $("emoFeld"); if (f && !f.classList.contains("versteckt") && ev.target.isConnected && !ev.target.closest("#emoFeld,#emoKnopf")) emoUmschalten(false); });
+
 // ---------- KC-CLUB-NACHRICHT-INFO (0.94.0): Nachricht antippen → wann, auf welchem Weg raus, angekommen, gelesen ----------
 const NI_KANAL = { push: "🔔 Push aufs Handy", email: "✉️ E-Mail", sms: "💬 SMS", whatsapp: "🟢 WhatsApp" };
 const NI_SCHRITT = {
@@ -4975,6 +5035,7 @@ async function gruppeVerlassen() {
 }
 
 async function senden() {
+  emoUmschalten(false); // KC-CLUB-EMOJI
   const text = $("text").value.trim();
   if (!text && !anlagen.length) return;
   $("sendenKnopf").disabled = true;

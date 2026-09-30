@@ -1550,3 +1550,12 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/nachrichtInfo\('\$\{m\.id\}'\)/.test(html) && /closest\('button,img,a,audio,video,\.sprache'\)/.test(html), "Antippen öffnet Info (nicht bei Bild/Knopf)");
   assert.ok(/function nachrichtInfo\(/.test(html) && /NI_SCHRITT/.test(html) && /meldet ein Postfach nicht zurück/.test(html), "Info-Fenster fehlt");
 }
+
+// 118. 0.95.0: Emoji-Auswahl im Chat (KC-CLUB-EMOJI)
+{
+  assert.ok(/id="emoKnopf"[^>]*onclick="emoUmschalten\(\)"/.test(html) && /id="emoFeld"/.test(html), "Emoji-Knopf/Feld fehlt");
+  const gr = [...html.matchAll(/\{ sym: "[^"]+", name: "([^"]+)", liste: "([^"]+)"\.split\(" "\) \}/g)];
+  assert.ok(gr.length === 7 && gr.every((g) => g[2].split(" ").length === 24), "7 Gruppen mit je 24 Emojis erwartet (übersichtlich)");
+  assert.ok(/function emoEinfuegen\(/.test(html) && /selectionStart/.test(html) && /kc_club_emoji_zuletzt/.test(html), "Einfügen an der Schreibstelle / Zuletzt fehlt");
+  assert.ok(/async function senden\(\) \{\s*emoUmschalten\(false\)/.test(html), "Senden schließt die Auswahl nicht");
+}

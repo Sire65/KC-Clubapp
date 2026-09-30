@@ -1,10 +1,16 @@
 {
-  "version": "0.94.0",
+  "version": "0.95.0",
   "datum": "2026-09-30",
   "neu": [
-    "ℹ️ Nachricht antippen zeigt die Einzelheiten: wann geschrieben, auf welchem Weg (Push/E-Mail) wann rausgegangen, angekommen, auf dem Handy angezeigt, geöffnet und wer sie in der App gelesen hat"
+    "😊 Emojis in Nachrichten: neuer Knopf neben dem Schreibfeld – übersichtlich in Gruppen (Gesichter, Hände, Herzen, Essen & Trinken, Feiern, Unterwegs, Zeichen), deine zuletzt benutzten ganz vorne"
   ],
   "verlauf": [
+    {
+      "version": "0.95.0",
+      "neu": [
+        "😊 Emojis in Nachrichten: neuer Knopf neben dem Schreibfeld – übersichtlich in Gruppen (Gesichter, Hände, Herzen, Essen & Trinken, Feiern, Unterwegs, Zeichen), deine zuletzt benutzten ganz vorne"
+      ]
+    },
     {
       "version": "0.94.0",
       "neu": [

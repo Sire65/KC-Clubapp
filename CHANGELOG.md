@@ -1,5 +1,13 @@
 # Änderungen
 
+## 0.95.0 – 2026-09-30 (DEV)
+
+- KC-CLUB-EMOJI (Wunsch Hansi: „Emojis in die Nachrichten – gut angeordnet, nicht zu unübersichtlich“): 😊-Knopf neben dem
+  Schreibfeld im Chat öffnet eine kompakte Auswahl direkt über der Eingabe: oben 7 Reiter (🕘 Zuletzt, 😀 Gesichter,
+  👍 Hände, ❤️ Herzen, 🍲 Essen & Trinken, 🎉 Feiern, 🚗 Unterwegs, ✅ Zeichen), darunter je 24 Emojis in 8 Spalten.
+  Tippen fügt an der Schreibstelle ein, das Feld bleibt offen; ✕, Senden oder Tippen daneben schließt es. „Zuletzt“
+  merkt sich die 16 zuletzt benutzten auf dem Gerät. Alle anderen Emojis weiter über die Handy-Tastatur. Test 118.
+
 ## 0.94.0 – 2026-09-30 (DEV)
 
 - KC-CLUB-NACHRICHT-INFO (Wunsch Hansi: „wenn man auf eine geschriebene Nachricht klickt, Info-Fenster mit Details – wann,
