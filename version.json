@@ -1,10 +1,16 @@
 {
-  "version": "0.88.0",
+  "version": "0.89.0",
   "datum": "2026-09-30",
   "neu": [
-    "♥ Lebenszeichen: kein rotes „rate_limited“ mehr, wenn man schnell in die App zurückkehrt"
+    "📡 KC System Check: die Linie „KC Club-App → Supabase“ zeigt jetzt echte Datenbewegung der App"
   ],
   "verlauf": [
+    {
+      "version": "0.89.0",
+      "neu": [
+        "📡 KC System Check: die Linie „KC Club-App → Supabase“ zeigt jetzt echte Datenbewegung der App"
+      ]
+    },
     {
       "version": "0.88.0",
       "neu": [

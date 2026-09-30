@@ -1445,4 +1445,11 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/abstand: 20/.test(html) && /herzSenden\.laeuft \|\| jetzt - \(herzSenden\.zuletzt \|\| 0\) < HERZ\.abstand \* 1000\) return/.test(hz) && /finally \{ herzSenden\.laeuft = false; \}/.test(hz), "Mindestabstand fehlt");
 }
 
+// 110. 0.89.0: Datenstrom der Club-App im KC System Check (KC-CLUB-DATENSTROM)
+{
+  assert.ok(/if \(action !== "lebenszeichen"\) verkehrZaehlen\(\);/.test(html) && /function verkehrStand\(\)/.test(html) && /verkehr: verkehrStand\(\)/.test(html), "App zählt Datenabrufe (ohne Lebenszeichen) und meldet den Stand");
+  const lz = server.slice(server.indexOf('case "lebenszeichen"'), server.indexOf('case "lebenszeichen"') + 2500);
+  assert.ok(/Number\.isSafeInteger\(p\.verkehr\) && p\.verkehr >= 0 \? p\.verkehr : null/.test(lz) && /trafficTx: verkehr/.test(lz) && /sourceId: "kc-clubapp"/.test(lz), "Server gibt Zähler als trafficTx weiter");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

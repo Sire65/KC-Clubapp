@@ -1327,7 +1327,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "0.88.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.89.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2371,7 +2371,7 @@ async function herzSenden() {
   herzSenden.laeuft = true; herzSenden.zuletzt = jetzt;
   const t0 = performance.now();
   try {
-    const r = await apiRoh("lebenszeichen", { geraet: herzGeraet(), sichtbar: document.visibilityState !== "hidden" });
+    const r = await apiRoh("lebenszeichen", { geraet: herzGeraet(), sichtbar: document.visibilityState !== "hidden", verkehr: verkehrStand() });
     const ms = Math.round(performance.now() - t0);
     herzMerken({ zeit: new Date().toISOString(), ok: !!r.ok, ms, grund: r.ok ? "" : String(r.grund || "nicht angenommen").slice(0, 60) }); herzSchlag(!!r.ok);
   } catch (e) { herzMerken({ zeit: new Date().toISOString(), ok: false, ms: Math.round(performance.now() - t0), grund: String(e.message || e).slice(0, 60) }); herzSchlag(false); }
@@ -2390,7 +2390,7 @@ function herzListe() {
   const zeile = (e) => `<tr><td style="white-space:nowrap">${esc(zeitText(e.zeit))}</td>
     <td class="${e.ok ? "ok" : "weg"}">${e.ok ? "● angekommen" : "● fehlt – " + esc(e.grund || "")}</td><td>${Number.isFinite(e.ms) ? e.ms + " ms" : ""}</td></tr>`;
   $("herzText").innerHTML = `<h3 style="margin-top:0">♥ Lebenszeichen – die letzten ${HERZ.max}</h3>
-    <p class="hinweis" style="margin-top:0">Jede Minute meldet die App dem KC System Check „ich laufe“ – nur Technik, keine Namen oder Inhalte. Das Herz blinkt bei jedem Lebenszeichen kurz rot.</p>`
+    <p class="hinweis" style="margin-top:0">Jede Minute meldet die App dem KC System Check „ich laufe“ und wie viele Datenabrufe sie bisher gemacht hat – nur Technik, keine Namen oder Inhalte. Das Herz blinkt bei jedem Lebenszeichen kurz rot.</p>`
     + (l.length ? `<table class="herz-tabelle"><tr><th>Zeit</th><th>Stand</th><th>Antwort</th></tr>${[...l].reverse().map(zeile).join("")}</table>` : '<p class="hinweis">Noch kein Lebenszeichen gesendet – das erste kommt wenige Sekunden nach dem Start.</p>')
     + `<p class="hinweis" style="margin:8px 0 0">Programm: kc-clubapp · Gerät: ${esc(herzGeraet().slice(0, 16))} · Version ${esc(APP_VERSION)}</p>`;
   $("herzBlatt").classList.remove("versteckt");
@@ -2818,11 +2818,17 @@ async function api(action, daten = {}, opt = {}) {
 // KC-CLUB-AUSSETZER (0.76.0): 503 ohne Antwort unseres Programms = Supabase hatte kurz keinen freien Server (die Anfrage
 // hat unseren Code nie erreicht) → einmal still wiederholen. Andere Fehler nicht wiederholen (sonst evtl. doppelt gesendet).
 const AUSSETZER_PAUSE_MS = 800;
+const VERKEHR_LAGER = "kc_club_verkehr_v1";
+// KC-CLUB-DATENSTROM (0.89.0): echter Zähler der Datenabrufe dieses Geräts (jede beantwortete Anfrage an den Club-Server,
+// das Lebenszeichen selbst zählt nicht). Er steigt nur und reist mit dem Lebenszeichen als trafficTx mit; der KC System Check
+// zeigt auf der Linie „KC Club-App → Supabase“ nur dann Bewegung, wenn der Zähler zwischen zwei Lebenszeichen gestiegen ist.
+function verkehrStand() { try { const n = Number(localStorage.getItem(VERKEHR_LAGER)); return Number.isSafeInteger(n) && n >= 0 ? n : 0; } catch { return 0; } }
+function verkehrZaehlen() { try { localStorage.setItem(VERKEHR_LAGER, String(verkehrStand() + 1)); } catch {} }
 async function apiRoh(action, daten = {}, zweiterVersuch = false) {
   // KC-CLUB-VERBINDUNG: jede Anfrage zählt für die LEDs (Datenverkehr + Status)
   const t0 = performance.now(); vbStart();
   let r;
-  try { r = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json", "x-club-token": KEY, "x-club-version": APP_VERSION }, body: JSON.stringify({ action, ...daten }) }); }
+  try { r = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json", "x-club-token": KEY, "x-club-version": APP_VERSION }, body: JSON.stringify({ action, ...daten }) }); if (action !== "lebenszeichen") verkehrZaehlen(); }
   catch { vbEnde(false, 0, navigator.onLine ? "Server nicht erreichbar" : "Handy offline"); throw new Error(navigator.onLine ? "Keine Verbindung zum Server – bitte gleich nochmal versuchen." : "Keine Internetverbindung."); }
   const j = await r.json().catch(() => null);
   if (r.status === 503 && !j?.error && !zweiterVersuch) { vbEnde(true, performance.now() - t0, ""); await new Promise((ok) => setTimeout(ok, AUSSETZER_PAUSE_MS)); return apiRoh(action, daten, true); }

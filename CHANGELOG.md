@@ -1,5 +1,14 @@
 # Änderungen
 
+## 0.89.0 – 2026-09-30 (DEV)
+
+- KC-CLUB-DATENSTROM (Wunsch Hansi: „Im KC Check sieht man die Bewegung der Club-App nicht“): Die Route „KC Club-App →
+  Supabase“ im KC System Check (flow-live-v4) bewegt sich nur bei positiver Differenz von traffic_tx zwischen zwei
+  Lebenszeichen – die App schickte bisher trafficTx null. Jetzt zählt die App jede beantwortete Anfrage an den Club-Server
+  (ohne das Lebenszeichen selbst) als steigenden Zähler je Gerät (localStorage kc_club_verkehr_v1) und schickt ihn mit dem
+  Lebenszeichen; der Server gibt ihn als trafficTx weiter und meldet sourceId „kc-clubapp“ statt der Geräte-ID (Gerät bleibt
+  instanceId). Echte Telemetrie, keine Animation ohne Messung. Empfänger und KC System Check unverändert.
+
 ## 0.88.0 – 2026-09-30 (DEV)
 
 - KC-CLUB-HERZ-ABSTAND (Fund Hansi): In der Lebenszeichen-Liste stand „fehlt – rate_limited“, 2 s nach einem angekommenen

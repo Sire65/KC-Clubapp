@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.87.0";
+const SERVER_VERSION = "0.89.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -2298,9 +2298,12 @@ Köcheclub Werne`,
         const geraet = String(p.geraet || "");
         if (!/^[A-Za-z0-9._:-]{6,120}$/.test(geraet)) throw new Fehler("Gerät unbekannt.");
         const zeit = new Date().toISOString(), version = txt(req.headers.get("x-club-version"), 20) || null, hinten = p.sichtbar === false;
-        const umschlag = { schema: "kicc.remote-program-heartbeat.v1", nonce: crypto.randomUUID(), sentAt: zeit, authState: "AUTHENTICATED", sourceId: geraet,
+        // KC-CLUB-DATENSTROM (0.89.0): Zählerstand der Datenabrufe des Geräts (nur steigend, nur Zahl) → trafficTx; sourceId =
+        // Programm, damit der KC System Check die Linie „KC Club-App → Supabase“ zuordnet (das Gerät steht in instanceId).
+        const verkehr = Number.isSafeInteger(p.verkehr) && p.verkehr >= 0 ? p.verkehr : null;
+        const umschlag = { schema: "kicc.remote-program-heartbeat.v1", nonce: crypto.randomUUID(), sentAt: zeit, authState: "AUTHENTICATED", sourceId: "kc-clubapp",
           heartbeat: { schema: "kicc.program-heartbeat.v1", programId: "kc-clubapp", instanceId: geraet, deviceId: `program:kc-clubapp:${geraet}`, name: "KC Club-App",
-            deviceType: "PROGRAM", version, build: version, status: hinten ? "DEGRADED" : "ONLINE", measuredAt: zeit, latencyMs: null, trafficRx: null, trafficTx: null,
+            deviceType: "PROGRAM", version, build: version, status: hinten ? "DEGRADED" : "ONLINE", measuredAt: zeit, latencyMs: null, trafficRx: null, trafficTx: verkehr,
             queueDepth: 0, errorCount: 0, source: "KC_PROGRAM_SELF_HEARTBEAT", trust: "SELF_REPORTED", message: hinten ? "KC Club-App im Hintergrund" : "KC Club-App aktiv" } };
         try {
           const r = await fetch(`${SUPA}/functions/v1/kicc-program-heartbeat`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE}`, apikey: SERVICE }, body: JSON.stringify(umschlag) });
