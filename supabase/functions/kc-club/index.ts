@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.1.0";
+const SERVER_VERSION = "1.2.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -871,6 +871,115 @@ function treffenText(t: any, gastgeber: string, anlass: "neu" | "geaendert" | "a
   };
 }
 
+// ---------- Archiv (KC-CLUB-ARCHIV, 1.2.0) ----------
+// Aktenordner mit Registern und Jahreszahl. Ordner „nur Vorstand“ sehen Clubsprecher, Kassenwart und Admin (Recht „vorstand“).
+// Anlegen/Hochladen/Ändern/Löschen: Clubsprecher und Admin (Wunsch Hansi 30.09.2026). Dateien liegen im Anlagen-Kern.
+// Der automatische Teil wird nur gelesen (vergangene Treffen, Protokolle, Abstimmungen, Aktionen, Pinnwand, Anhänge, Dienste).
+const ARCHIV_ARTEN: Record<string, { t: string; sym: string; register: string[]; vorstand?: boolean }> = {
+  satzung: { t: "Satzung & Recht", sym: "📜", register: ["Satzung", "Geschäftsordnung", "Vereinsregister", "Sonstiges"] },
+  versammlung: { t: "Versammlungen", sym: "🏛️", register: ["Einladung", "Protokoll", "Anwesenheit", "Anlagen"] },
+  vertraege: { t: "Verträge & Versicherungen", sym: "🤝", register: ["Verträge", "Versicherungen", "Genehmigungen", "Sonstiges"], vorstand: true },
+  finanzen: { t: "Finanzen", sym: "💶", register: ["Kassenbericht", "Kassenprüfung", "Belege", "Sonstiges"], vorstand: true },
+  presse: { t: "Presse", sym: "📰", register: ["Zeitung", "Internet", "Sonstiges"] },
+  chronik: { t: "Chronik", sym: "📖", register: ["Chronik", "Urkunden", "Ehrungen", "Sonstiges"] },
+  sonstiges: { t: "Sonstiges", sym: "🗂️", register: ["Allgemein"] },
+};
+const ARCHIV_DATEITYPEN = /^(application\/pdf|image\/(jpeg|png|webp)|text\/plain|application\/msword|application\/vnd\.ms-excel|application\/vnd\.openxmlformats-officedocument\.(wordprocessingml\.document|spreadsheetml\.sheet))$/;
+const ARCHIV_STOPP = 0.98; // Speicher: Archiv nimmt bis 98 % an (Fotos stoppen schon bei 95 %)
+const darfArchivPflegen = (ich: Ich) => ich.admin || ich.aemter.includes("Clubsprecher");
+const nurArchivPflege = (ich: Ich) => { if (!darfArchivPflegen(ich)) throw new Fehler("Das Archiv pflegen Clubsprecher und Admin.", 403); };
+const darfOrdnerSehen = (ich: Ich, o: any) => !o.nur_vorstand || ich.vorstand;
+function archivRegister(roh: unknown, art: string): string[] {
+  const liste = (Array.isArray(roh) ? roh : []).map((x) => txt(x, 30)).filter(Boolean);
+  const eindeutig = [...new Set(liste)].slice(0, 12);
+  return eindeutig.length ? eindeutig : [...(ARCHIV_ARTEN[art]?.register ?? ["Allgemein"])];
+}
+const archivDatum = (v: unknown) => /^\d{4}-\d{2}-\d{2}$/.test(String(v || "")) && !isNaN(Date.parse(String(v))) ? String(v) : null;
+const archivStichworte = (v: unknown) => [...new Set((Array.isArray(v) ? v : String(v || "").split(/[,;]/)).map((x) => txt(x, 30)).filter(Boolean))].slice(0, 10);
+async function archivOrdnerHolen(ich: Ich, id: unknown, geloeschteAuch = false) {
+  const { data: o } = await db.from("kc_club_archiv_ordner").select("*").eq("id", String(id || "")).maybeSingle();
+  if (!o || !darfOrdnerSehen(ich, o) || (o.geloescht_am && !geloeschteAuch)) throw new Fehler("Ordner nicht gefunden.", 404);
+  return o;
+}
+async function archivDokHolen(ich: Ich, id: unknown) {
+  const { data: d } = await db.from("kc_club_archiv_dokumente").select("*").eq("id", String(id || "")).maybeSingle();
+  if (!d) throw new Fehler("Dokument nicht gefunden.", 404);
+  const o = await archivOrdnerHolen(ich, d.ordner_id, true);
+  return { d, o };
+}
+// Automatischer Teil: alles, was vorbei ist – nur das, was ich auch sonst sehen darf
+async function archivAuto(ich: Ich) {
+  const heute = berlinTag(new Date()), leer = { data: [] as any[] };
+  const e: any[] = [];
+  const sicher = async (f: () => Promise<void>) => { try { await f(); } catch (x) { console.error("archivAuto", String(x)); } };
+  await Promise.all([
+    sicher(async () => {
+      const { data: tr } = await db.from("kc_club_treffen").select("id,titel,beginn,ort,art").neq("status", "abgesagt").lt("beginn", jetzt()).order("beginn", { ascending: false }).limit(1000);
+      const ids = (tr ?? []).map((t: any) => t.id);
+      const { data: tn } = ids.length ? await db.from("kc_club_teilnahme").select("treffen_id").eq("antwort", "ja").in("treffen_id", ids) : leer;
+      for (const t of tr ?? []) {
+        const n = (tn ?? []).filter((x: any) => x.treffen_id === t.id).length;
+        e.push({ art: "treffen", id: t.id, titel: t.titel, datum: berlinTag(new Date(t.beginn)), text: [t.art === "veranstaltung" ? "🎪 Veranstaltung" : "", t.ort ? "📍 " + t.ort : "", t.art === "veranstaltung" ? "" : `${n} dabei`].filter(Boolean).join(" · ") });
+      }
+    }),
+    sicher(async () => {
+      if (!ich.protokolle) return;
+      const { data: pr } = await db.from("kc_club_sitzungsprotokolle").select("id,titel,datum,ort").eq("status", "veroeffentlicht").order("datum", { ascending: false }).limit(500);
+      for (const x of pr ?? []) e.push({ art: "protokoll", id: x.id, titel: x.titel, datum: x.datum, text: x.ort ? "📍 " + x.ort : "" });
+    }),
+    sicher(async () => {
+      const { data: vs } = await db.from("kc_club_vorschlaege").select("id,titel,optionen,geheim,abgeschlossen_am,erstellt_am").eq("art", "abstimmung").eq("status", "abgeschlossen").order("abgeschlossen_am", { ascending: false }).limit(300);
+      const ids = (vs ?? []).map((v: any) => v.id);
+      const [{ data: st }, { data: geh }] = ids.length ? await Promise.all([
+        db.from("kc_club_stimmen").select("vorschlag_id,wahl").in("vorschlag_id", ids), db.from("kc_club_geheime_stimmen").select("vorschlag_id,wahl").in("vorschlag_id", ids),
+      ]) : [leer, leer];
+      for (const v of vs ?? []) {
+        const s = (v.geheim ? geh : st) ?? [];
+        const erg = (v.optionen ?? []).map((o: string) => `${o}: ${s.filter((x: any) => x.vorschlag_id === v.id && x.wahl === o).length}`).join(" · ");
+        e.push({ art: "abstimmung", id: v.id, titel: v.titel, datum: berlinTag(new Date(v.abgeschlossen_am || v.erstellt_am)), text: (v.geheim ? "🔒 " : "") + erg });
+      }
+    }),
+    sicher(async () => {
+      const { liste } = await aktionenRoh();
+      for (const a of liste) if (String(a.dateTo || a.dateFrom) < heute) e.push({ art: "aktion", id: String(a.id), titel: txt(a.activity, 200) || "Aktion", datum: a.dateFrom, text: a.dateTo && a.dateTo !== a.dateFrom ? "bis " + fTag.format(new Date(a.dateTo + "T12:00:00Z")) : "" });
+    }),
+    sicher(async () => {
+      const { data: pw } = await db.from("kc_club_pinnwand").select("id,text,erstellt_am,person_id").not("entfernt_am", "is", null)
+        .or(`person_id.eq.${ich.person_id},fuer.eq.alle,personen.cs.{${ich.person_id}}`).order("erstellt_am", { ascending: false }).limit(300);
+      const leute = await personen((pw ?? []).map((z: any) => z.person_id));
+      for (const z of pw ?? []) e.push({ art: "pinnwand", id: z.id, titel: txt(z.text, 80), datum: berlinTag(new Date(z.erstellt_am)), text: "von " + (vorname(leute.get(z.person_id) ?? null) || "?"), voll: z.text });
+    }),
+    sicher(async () => {
+      // Anhänge nur aus Unterhaltungen, in denen ich dabei bin (wie anlage_url)
+      const { data: meine } = await db.from("kc_communication_thread_participants").select("thread_id").eq("person_id", ich.person_id);
+      const tids = new Set((meine ?? []).map((x: any) => x.thread_id));
+      if (!tids.size) return;
+      const { data: ma } = await db.from("kc_communication_message_attachments").select("message_id,attachment_id").limit(3000);
+      const mids = [...new Set((ma ?? []).map((x: any) => x.message_id))];
+      const msgs: any[] = [];
+      for (let i = 0; i < mids.length; i += 200) { const { data } = await db.from("kc_communication_messages").select("id,thread_id,created_at").in("id", mids.slice(i, i + 200)); msgs.push(...(data ?? [])); }
+      const mm = new Map(msgs.filter((m) => tids.has(m.thread_id)).map((m) => [m.id, m]));
+      const paare = (ma ?? []).filter((x: any) => mm.has(x.message_id));
+      if (!paare.length) return;
+      const aids = [...new Set(paare.map((x: any) => x.attachment_id))];
+      const atts: any[] = [];
+      for (let i = 0; i < aids.length; i += 200) { const { data } = await db.from("kc_communication_attachments").select("id,file_name,mime_type,size_bytes").in("id", aids.slice(i, i + 200)); atts.push(...(data ?? [])); }
+      const { data: th } = await db.from("kc_communication_threads").select("id,subject").in("id", [...new Set(msgs.map((m) => m.thread_id))].filter((t) => tids.has(t)));
+      const betreff = new Map((th ?? []).map((t: any) => [t.id, t.subject]));
+      const am = new Map(atts.map((a) => [a.id, a]));
+      for (const x of paare) {
+        const a = am.get(x.attachment_id), m: any = mm.get(x.message_id);
+        if (a) e.push({ art: "anhang", id: a.id, titel: a.file_name, datum: berlinTag(new Date(m.created_at)), text: "💬 " + (betreff.get(m.thread_id) || "Unterhaltung"), mime: a.mime_type, groesse: a.size_bytes, chat: m.thread_id });
+      }
+    }),
+    sicher(async () => {
+      const { data: dp } = await db.from("kc_dp_plan_published").select("event_id,work_date,start_time,end_time,area").eq("person_id", ich.person_id).lt("work_date", heute).order("work_date", { ascending: false }).limit(500);
+      for (const d of dp ?? []) e.push({ art: "dienst", id: `${d.event_id}:${d.work_date}:${d.start_time}`, titel: txt(d.event_id, 80) || "Dienst", datum: d.work_date, text: `${String(d.start_time || "").slice(0, 5)}–${String(d.end_time || "").slice(0, 5)} Uhr${d.area ? " · " + d.area : ""}` });
+    }),
+  ]);
+  return e.filter((x) => x.datum).sort((a, b) => String(b.datum).localeCompare(String(a.datum)));
+}
+
 // ---------- Vorschläge & Abstimmungen (KC-CLUB-VORSCHLAG) ----------
 const STANDARD_OPTIONEN = ["Ja", "Nein", "Enthaltung"];
 async function vorschlaegeListe(ich: Ich) {
@@ -1370,7 +1479,7 @@ async function privatListe(ich: Ich, von: string, bis?: string) {
 
 // KC-CLUB-NUTZUNG (0.99.0): nur diese Bereiche werden gezählt (Ansichten der App)
 const NUTZUNG_BEREICHE = new Set(["start", "termine", "nachrichten", "chat", "neu", "pinnwand", "fotos", "mitglieder", "mitglied", "einstellungen", "dienste",
-  "aktionen", "aktion", "protokolle", "protokoll", "vorschlaege", "dokumente", "standort", "erstattung", "feedback", "programme", "ueberblick", "gruppe"]);
+  "aktionen", "aktion", "protokolle", "protokoll", "vorschlaege", "dokumente", "standort", "erstattung", "feedback", "programme", "ueberblick", "gruppe", "archiv"]);
 
 // ---------- Hauptprogramm ----------
 Deno.serve(async (req) => {
@@ -1613,7 +1722,26 @@ Köcheclub Werne`,
         }
         if (fotosEntfernt) await protokoll(null, "fotos_endgueltig_entfernt", { anzahl: fotosEntfernt });
       }
-      return json({ ok: true, erinnerungen: n, beendet, dienst, geb, aufg, nachfass, fotosEntfernt, anfragenErinnert: anfr, standorteGeloescht: (stWeg ?? []).length, ruheMeldungen, privErinnert });
+      // KC-CLUB-ARCHIV: Papierkorb nach 30 Tagen endgültig leeren (Dokumente, dann leere gelöschte Ordner)
+      let archivEntfernt = 0;
+      {
+        const alt = new Date(Date.now() - PAPIERKORB_TAGE * 86400000).toISOString();
+        const { data: altOrdner } = await db.from("kc_club_archiv_ordner").select("id").lt("geloescht_am", alt).limit(50);
+        const aoIds = (altOrdner ?? []).map((o: any) => o.id);
+        const [{ data: d1 }, { data: d2 }] = await Promise.all([
+          db.from("kc_club_archiv_dokumente").select("id,attachment_id").lt("geloescht_am", alt).limit(200),
+          aoIds.length ? db.from("kc_club_archiv_dokumente").select("id,attachment_id").in("ordner_id", aoIds).limit(500) : Promise.resolve({ data: [] as any[] }),
+        ]);
+        const weg = new Map([...(d1 ?? []), ...(d2 ?? [])].map((d: any) => [d.id, d]));
+        for (const d of weg.values()) {
+          await db.from("kc_club_archiv_dokumente").delete().eq("id", d.id);
+          await dateienEntfernen([d.attachment_id]);
+          archivEntfernt++;
+        }
+        if (aoIds.length) await db.from("kc_club_archiv_ordner").delete().in("id", aoIds);
+        if (archivEntfernt || aoIds.length) await protokoll(null, "archiv_endgueltig_entfernt", { dokumente: archivEntfernt, ordner: aoIds.length });
+      }
+      return json({ ok: true, erinnerungen: n, beendet, dienst, geb, aufg, nachfass, fotosEntfernt, archivEntfernt, anfragenErinnert: anfr, standorteGeloescht: (stWeg ?? []).length, ruheMeldungen, privErinnert });
     }
 
     // ----- KC-CLUB-ZUGANG-SELBST: Link verloren → neuen Link an die hinterlegte Mail-Adresse (ohne Anmeldung) -----
@@ -3917,6 +4045,14 @@ Köcheclub Werne`,
             if (pr && (pr.status === "veroeffentlicht" || darfBearbeiten(ich, pr))) { erlaubt = true; break; }
           }
         }
+        if (!erlaubt) {
+          // KC-CLUB-ARCHIV: Dokument in einem Ordner, den ich sehen darf (auch im Papierkorb nur für die Pflege)
+          const { data: ad } = await db.from("kc_club_archiv_dokumente").select("ordner_id,geloescht_am").eq("attachment_id", att.id);
+          for (const x of ad ?? []) {
+            const { data: o } = await db.from("kc_club_archiv_ordner").select("nur_vorstand,geloescht_am").eq("id", x.ordner_id).maybeSingle();
+            if (o && darfOrdnerSehen(ich, o) && ((!x.geloescht_am && !o.geloescht_am) || darfArchivPflegen(ich))) { erlaubt = true; break; }
+          }
+        }
         if (!erlaubt) throw new Fehler("Anlage nicht gefunden.", 404);
         const { data: s } = await db.storage.from(att.bucket).createSignedUrl(att.object_path, 600, p.herunterladen ? { download: att.file_name } : undefined);
         if (!s?.signedUrl) throw new Fehler("Anlage kann gerade nicht geöffnet werden.", 500);
@@ -4058,6 +4194,133 @@ Köcheclub Werne`,
         const f = await fotoHolen(p.id);
         await db.from("kc_club_fotos").update({ geloescht_am: null, geloescht_von: null }).eq("id", f.id);
         await protokoll(ich.person_id, "foto_wiederhergestellt", { foto: f.id });
+        return json({ ok: true });
+      }
+
+      // ----- Archiv (KC-CLUB-ARCHIV, 1.2.0) -----
+      case "archiv_liste": {
+        const [{ data: or }, auto] = await Promise.all([
+          db.from("kc_club_archiv_ordner").select("*").is("geloescht_am", null).order("jahr", { ascending: false }).order("titel"),
+          archivAuto(ich),
+        ]);
+        const ordner = (or ?? []).filter((o: any) => darfOrdnerSehen(ich, o));
+        const oids = ordner.map((o: any) => o.id);
+        const { data: dk } = oids.length ? await db.from("kc_club_archiv_dokumente").select("*").is("geloescht_am", null).in("ordner_id", oids).order("datum", { ascending: false, nullsFirst: false }) : { data: [] as any[] };
+        const leute = await personen((dk ?? []).map((d: any) => d.hochgeladen_von));
+        return json({
+          darf: darfArchivPflegen(ich), vorstand: ich.vorstand, arten: ARCHIV_ARTEN, papierkorbTage: PAPIERKORB_TAGE,
+          ordner: ordner.map((o: any) => ({ id: o.id, art: o.art, jahr: o.jahr, titel: o.titel, farbe: o.farbe, register: o.register, nur_vorstand: o.nur_vorstand,
+            anzahl: (dk ?? []).filter((d: any) => d.ordner_id === o.id).length })),
+          dokumente: (dk ?? []).map((d: any) => ({ id: d.id, ordner_id: d.ordner_id, register: d.register, titel: d.titel, datum: d.datum, stichworte: d.stichworte,
+            name: d.datei_name, mime: d.mime, groesse: d.groesse, datei: d.attachment_id, von: leute.get(d.hochgeladen_von)?.display_name || d.hochgeladen_von, am: d.hochgeladen_am })),
+          auto,
+        });
+      }
+
+      case "archiv_ordner_speichern": {
+        nurArchivPflege(ich);
+        const art = String(p.art || "");
+        if (!ARCHIV_ARTEN[art]) throw new Fehler("Bitte eine Art für den Ordner wählen.");
+        const jahr = Math.round(Number(p.jahr));
+        if (!(jahr >= 1950 && jahr <= new Date().getFullYear() + 1)) throw new Fehler("Bitte ein gültiges Jahr wählen.");
+        const werte = { art, jahr, titel: txt(p.titel, 60) || ARCHIV_ARTEN[art].t, farbe: Math.min(8, Math.max(1, Math.round(Number(p.farbe)) || 1)),
+          register: archivRegister(p.register, art), nur_vorstand: !!p.nur_vorstand, geaendert_am: jetzt() };
+        if (p.id) {
+          const o = await archivOrdnerHolen(ich, p.id);
+          await db.from("kc_club_archiv_ordner").update(werte).eq("id", o.id);
+          // Dokumente in einem entfernten Register → ins erste Register (nichts geht verloren)
+          const { data: weg } = await db.from("kc_club_archiv_dokumente").select("id,register").eq("ordner_id", o.id);
+          const fehlt = (weg ?? []).filter((d: any) => !werte.register.includes(d.register)).map((d: any) => d.id);
+          if (fehlt.length) await db.from("kc_club_archiv_dokumente").update({ register: werte.register[0] }).in("id", fehlt);
+          await protokoll(ich.person_id, "archiv_ordner_geaendert", { ordner: o.id, vorher: { art: o.art, jahr: o.jahr, titel: o.titel, register: o.register, nur_vorstand: o.nur_vorstand }, umgehaengt: fehlt.length });
+          return json({ ok: true, id: o.id });
+        }
+        const { data: neu, error } = await db.from("kc_club_archiv_ordner").insert({ ...werte, erstellt_von: ich.person_id }).select("id").single();
+        if (error || !neu) throw new Fehler("Ordner konnte nicht angelegt werden.", 500);
+        await protokoll(ich.person_id, "archiv_ordner_angelegt", { ordner: neu.id, art, jahr, titel: werte.titel, nur_vorstand: werte.nur_vorstand });
+        return json({ ok: true, id: neu.id });
+      }
+
+      case "archiv_ordner_loeschen": {
+        // Papierkorb: Ordner samt Inhalt 30 Tage wiederherstellbar, danach entfernt die Wartung alles endgültig
+        nurArchivPflege(ich);
+        const o = await archivOrdnerHolen(ich, p.id);
+        await geloescht(ich, "archiv_ordner", { ordner: o });
+        await db.from("kc_club_archiv_ordner").update({ geloescht_am: jetzt(), geloescht_von: ich.person_id }).eq("id", o.id);
+        return json({ ok: true, papierkorbTage: PAPIERKORB_TAGE });
+      }
+
+      case "archiv_hochladen": {
+        nurArchivPflege(ich);
+        const o = await archivOrdnerHolen(ich, p.ordner_id);
+        const sp = await speicherStand();
+        if (sp.belegt >= SPEICHER_GRENZE * ARCHIV_STOPP) throw new Fehler("Der kostenlose Speicher ist voll – bitte zuerst Altes löschen oder Hansi Bescheid geben.", 507);
+        const datei = await dateiAblegen(ich, p.name, p.mime, p.daten, ARCHIV_DATEITYPEN);
+        try {
+          const register = o.register.includes(String(p.register)) ? String(p.register) : o.register[0] ?? null;
+          const { data: d, error } = await db.from("kc_club_archiv_dokumente").insert({
+            ordner_id: o.id, register, titel: txt(p.titel, 120) || datei.name, datum: archivDatum(p.datum), stichworte: archivStichworte(p.stichworte),
+            attachment_id: datei.id, datei_name: datei.name, mime: txt(p.mime, 100), groesse: datei.groesse, hochgeladen_von: ich.person_id,
+          }).select("id").single();
+          if (error || !d) throw new Fehler("Dokument konnte nicht gespeichert werden.", 500);
+          await protokoll(ich.person_id, "archiv_hochgeladen", { dokument: d.id, ordner: o.id, register, groesse: datei.groesse });
+          return json({ ok: true, id: d.id });
+        } catch (e) { await dateienEntfernen([datei.id]); throw e; }
+      }
+
+      case "archiv_aendern": {
+        nurArchivPflege(ich);
+        const { d } = await archivDokHolen(ich, p.id);
+        if (d.geloescht_am) throw new Fehler("Das Dokument liegt im Papierkorb.", 409);
+        const ziel = p.ordner_id && p.ordner_id !== d.ordner_id ? await archivOrdnerHolen(ich, p.ordner_id) : await archivOrdnerHolen(ich, d.ordner_id);
+        const upd: Record<string, unknown> = { ordner_id: ziel.id, geaendert_am: jetzt() };
+        if (p.titel !== undefined) upd.titel = txt(p.titel, 120) || d.titel;
+        if (p.datum !== undefined) upd.datum = archivDatum(p.datum);
+        if (p.stichworte !== undefined) upd.stichworte = archivStichworte(p.stichworte);
+        const reg = p.register !== undefined ? String(p.register) : d.register;
+        upd.register = ziel.register.includes(reg) ? reg : ziel.register[0] ?? null;
+        await db.from("kc_club_archiv_dokumente").update(upd).eq("id", d.id);
+        await protokoll(ich.person_id, "archiv_geaendert", { dokument: d.id, vorher: { ordner: d.ordner_id, register: d.register, titel: d.titel, datum: d.datum, stichworte: d.stichworte } });
+        return json({ ok: true });
+      }
+
+      case "archiv_loeschen": {
+        nurArchivPflege(ich);
+        const { d } = await archivDokHolen(ich, p.id);
+        if (d.geloescht_am) return json({ ok: true });
+        await geloescht(ich, "archiv_dokument", { dokument: d });
+        await db.from("kc_club_archiv_dokumente").update({ geloescht_am: jetzt(), geloescht_von: ich.person_id }).eq("id", d.id);
+        return json({ ok: true, papierkorbTage: PAPIERKORB_TAGE });
+      }
+
+      case "archiv_papierkorb": {
+        nurArchivPflege(ich);
+        const grenze = (t: string) => new Date(new Date(t).getTime() + PAPIERKORB_TAGE * 86400000).toISOString();
+        const [{ data: or }, { data: dk }] = await Promise.all([
+          db.from("kc_club_archiv_ordner").select("id,art,jahr,titel,nur_vorstand,geloescht_am").not("geloescht_am", "is", null).order("geloescht_am", { ascending: false }),
+          db.from("kc_club_archiv_dokumente").select("id,ordner_id,titel,datum,geloescht_am").not("geloescht_am", "is", null).order("geloescht_am", { ascending: false }),
+        ]);
+        const { data: alleOrdner } = await db.from("kc_club_archiv_ordner").select("id,titel,jahr,nur_vorstand,geloescht_am");
+        const om = new Map((alleOrdner ?? []).map((o: any) => [o.id, o]));
+        return json({
+          ordner: (or ?? []).filter((o: any) => darfOrdnerSehen(ich, o)).map((o: any) => ({ ...o, endgueltig_am: grenze(o.geloescht_am) })),
+          dokumente: (dk ?? []).filter((d: any) => { const o: any = om.get(d.ordner_id); return o && darfOrdnerSehen(ich, o) && !o.geloescht_am; })
+            .map((d: any) => { const o: any = om.get(d.ordner_id); return { ...d, ordner: `${o.titel} ${o.jahr}`, endgueltig_am: grenze(d.geloescht_am) }; }),
+        });
+      }
+
+      case "archiv_wiederherstellen": {
+        nurArchivPflege(ich);
+        if (p.ordner) {
+          const o = await archivOrdnerHolen(ich, p.ordner, true);
+          await db.from("kc_club_archiv_ordner").update({ geloescht_am: null, geloescht_von: null }).eq("id", o.id);
+          await protokoll(ich.person_id, "archiv_ordner_wiederhergestellt", { ordner: o.id });
+        } else {
+          const { d, o } = await archivDokHolen(ich, p.id);
+          if (o.geloescht_am) throw new Fehler("Zuerst den Ordner wiederherstellen.", 409);
+          await db.from("kc_club_archiv_dokumente").update({ geloescht_am: null, geloescht_von: null }).eq("id", d.id);
+          await protokoll(ich.person_id, "archiv_wiederhergestellt", { dokument: d.id });
+        }
         return json({ ok: true });
       }
 

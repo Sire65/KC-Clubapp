@@ -1,10 +1,16 @@
 {
-  "version": "1.1.0",
+  "version": "1.2.0",
   "datum": "2026-09-30",
   "neu": [
-    "🔁 Termine wiederholen: täglich, werktags, wöchentlich, alle 2 Wochen, monatlich (auch „jeden 1. Freitag“) oder jährlich – bei privaten Terminen und (für die Clubleitung) als Terminreihe"
+    "🗄️ Neues Archiv: Aktenordner mit Jahreszahl und Registern – „Vereinsleben“ füllt sich von selbst (vergangene Treffen, Protokolle, Abstimmungen, Aktionen …), Vereinsunterlagen legen Clubsprecher und Admin ab; Suche und Filter nach Jahr und Art"
   ],
   "verlauf": [
+    {
+      "version": "1.2.0",
+      "neu": [
+        "🗄️ Neues Archiv: Aktenordner mit Jahreszahl und Registern – „Vereinsleben“ füllt sich von selbst (vergangene Treffen, Protokolle, Abstimmungen, Aktionen …), Vereinsunterlagen legen Clubsprecher und Admin ab; Suche und Filter nach Jahr und Art"
+      ]
+    },
     {
       "version": "1.1.0",
       "neu": [

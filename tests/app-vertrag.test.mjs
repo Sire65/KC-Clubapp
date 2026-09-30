@@ -1654,3 +1654,22 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/function wdhFelder\(/.test(html) && /wiederholung: \$\("ptWdh"\)\.value/.test(html) && /wiederholung: \$\("tfWdh"\)\.value/.test(html), "App: Auswahl Wiederholen fehlt");
   assert.ok(/function privatLoeschenReihe\(/.test(html), "App: nur diesen / ganze Reihe löschen fehlt");
 }
+
+// 127. 1.2.0: Archiv mit Ordnern, Registern und Jahreszahl (KC-CLUB-ARCHIV)
+{
+  const mig = lies("supabase/migrations/20260930_kc_club_v120_archiv.sql");
+  assert.ok(/create table if not exists kc_club_archiv_ordner/.test(mig) && /create table if not exists kc_club_archiv_dokumente/.test(mig), "Archiv-Tabellen fehlen");
+  assert.ok((mig.match(/enable row level security/g) || []).length === 2 && !/create policy/i.test(mig), "RLS an, keine Policies");
+  assert.ok(/const darfArchivPflegen = \(ich: Ich\) => ich\.admin \|\| ich\.aemter\.includes\("Clubsprecher"\)/.test(server), "Pflegen: nur Clubsprecher und Admin");
+  assert.ok(/const darfOrdnerSehen = \(ich: Ich, o: any\) => !o\.nur_vorstand \|\| ich\.vorstand/.test(server), "Vorstandsordner nur für Clubsprecher/Kassenwart/Admin");
+  const f = (n) => server.slice(server.indexOf(`case "${n}"`), server.indexOf("case \"", server.indexOf(`case "${n}"`) + 10));
+  for (const n of ["archiv_ordner_speichern", "archiv_ordner_loeschen", "archiv_hochladen", "archiv_aendern", "archiv_loeschen", "archiv_papierkorb", "archiv_wiederherstellen"])
+    assert.ok(/nurArchivPflege\(ich\)/.test(f(n)), `${n}: Rechteprüfung fehlt`);
+  assert.ok(/filter\(\(o: any\) => darfOrdnerSehen\(ich, o\)\)/.test(f("archiv_liste")), "Liste muss Vorstandsordner filtern");
+  assert.ok(/KC-CLUB-ARCHIV: Dokument in einem Ordner, den ich sehen darf/.test(server), "anlage_url: Archiv-Dokumente fehlen");
+  assert.ok(/kc_club_archiv_ordner"\)\.update\(\{ geloescht_am: jetzt\(\)/.test(server) && /archiv_endgueltig_entfernt/.test(server), "Papierkorb/Wartung fehlt");
+  assert.ok(/async function archivAuto\(ich: Ich\)/.test(server) && /if \(!ich\.protokolle\) return;/.test(server.slice(server.indexOf("async function archivAuto"))), "Automatischer Teil: Protokolle nur mit Recht");
+  assert.ok(/\{ id: "archiv", sym: "🗄️", t: "Archiv"/.test(html) && /id="v-archiv"/.test(html) && /"standort", "archiv"\]\.forEach/.test(html), "App: Kachel/Ansicht fehlt");
+  assert.ok(/function arRuecken\(/.test(html) && /class="ar-register"/.test(html) && /class="schild"><span class="jahr">/.test(html), "App: Ordnerrücken mit Jahreszahl / Register fehlt");
+  assert.ok(/id="arSuche"/.test(html) && /AR\.jahr=this\.value/.test(html) && /chip\("vorstand", "🔒 Nur Clubleitung"\)/.test(html), "App: Suche/Filter fehlt");
+}

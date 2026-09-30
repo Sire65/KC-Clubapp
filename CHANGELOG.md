@@ -1,5 +1,21 @@
 # Änderungen
 
+## 1.2.0 – 2026-09-30 (DEV)
+
+- KC-CLUB-ARCHIV (Wunsch Hansi: „Kachel Archiv … wie verschiedene Ordner mit Register, Jahreszahl drauf und Inhalt“):
+  Kachel 🗄️ Archiv (Reihe „Verein“, hinter Protokolle). Regal je Jahr mit Aktenordner-Rücken (Farbe, Jahreszahl, Inhalt),
+  im Ordner Register-Reiter.
+  - Automatisch „🤖 Vereinsleben JJJJ“ (nur lesen, nichts doppelt gespeichert): vergangene Treffen (mit Anzahl dabei),
+    veröffentlichte Protokolle (nur mit Protokoll-Recht), beendete Abstimmungen mit Ergebnis, vergangene Aktionen,
+    erledigte Pinnwand-Zettel (nur eigene/an mich/an alle), Anhänge aus meinen Unterhaltungen, meine vergangenen Dienste.
+  - Von Hand: Ordner mit Art (Satzung & Recht, Versammlungen, Verträge & Versicherungen, Finanzen, Presse, Chronik,
+    Sonstiges – je mit Standard-Registern, änderbar), Jahr, Beschriftung, Farbe, „🔒 nur Vorstand“ (Clubsprecher,
+    Kassenwart, Admin). Dokumente: PDF/Foto/Word/Excel bis 8 MB, „Papier fotografieren“ (verkleinert), Titel, Datum,
+    Register, Stichworte; verschieben in anderen Ordner. Pflegen dürfen Clubsprecher und Admin (Server prüft).
+  - Suche über Titel/Stichworte/Inhalt, Filter Jahr + Art (gemerkt). Papierkorb 30 Tage, danach entfernt die Wartung
+    Dateien und Zeilen. Dateien im Anlagen-Kern; anlage_url prüft die Ordner-Sichtbarkeit.
+  Migration v120 (kc_club_archiv_ordner, kc_club_archiv_dokumente; angewendet). Server 1.2.0. Test 127.
+
 ## 1.1.0 – 2026-09-30 (DEV)
 
 - KC-CLUB-WIEDERHOLUNG (Wunsch Hansi: „Wiederholen fehlt bei Terminen – täglich, wöchentlich, jährlich usw.“):
