@@ -783,7 +783,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   const sa = html.slice(html.indexOf("const satzAm"), html.indexOf("\n", html.indexOf("const satzAm")));
   const satzAm = new Function("ERS", sa.replace("const satzAm =", "return"))({ standard: 0.38, saetze: S });
   for (const t of ["2025-12-31", "2026-09-30", "2026-10-01", "2027-05-05"]) assert.equal(satzAm(t), satzFuer(S, t), `App und Server rechnen am ${t} verschieden`);
-  assert.ok(/id="adminErstattung"/.test(html) && /if \(ICH\?\.admin\) \{ \$\("adminErstattung"\)/.test(html), "Admin-Bereich fehlt");
+  assert.ok(/id="adminErstattung"/.test(html) && /if \(ICH\?\.admin\) \{[^\n]{0,160}\$\("adminErstattung"\)\.classList\.remove/.test(html), "Admin-Bereich fehlt");
 }
 
 // 63. 0.39.1: Belege per Kamera oder Datei-Explorer, höchstens so viele wie der Server je Position annimmt
@@ -1161,7 +1161,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   const alle = [...html.matchAll(/\{ id: "([a-z]+)", sym:/g)].map((m) => m[1]);
   for (const id of ["termine", "kommunikation", "pinnwand", "meindienst", "mitglieder"]) assert.ok(alle.includes(id), `Kachel ${id} fehlt in der Registry`);
   assert.ok(/id="ansichtKnopf"[^>]*onclick="ansichtWechseln\(\)"/.test(html) && /onclick="ansichtSetzen\('einfach'\)"/.test(html) && /onclick="ansichtSetzen\('erweitert'\)"/.test(html), "Umschalter fehlt");
-  assert.ok(/body\.einfach #v-einstellungen details\[data-klappe\]:not\(\[data-einfach\]\) \{ display: none; \}/.test(html) && /data-klappe="install" data-einfach/.test(html), "Einstellungen der einfachen Ansicht");
+  assert.ok(/body\.einfach #v-einstellungen > details\[data-klappe\]:not\(\[data-einfach\]\) \{ display: none; \}/.test(html) && /data-klappe="install" data-einfach/.test(html), "Einstellungen der einfachen Ansicht");
   assert.ok(/function neuWahlSetzen\(art\)/.test(html) && /for \(const \[b\] of WAHL_BEREICHE\)/.test(html) && /CriOS\|FxiOS/.test(html), "Neuigkeiten-Frage / Safari-Hinweis fehlt");
   assert.ok(/const DIENSTWUNSCH_EINFACH = false;/.test(html), "Dienstwünsche erst nach DP2-Umbau in „Einfach“");
   assert.ok(/anleitung: \{ bauen: \(\) => druckAnleitung\(\) \}/.test(html) && /Köcheclub-App in 3 Schritten/.test(html) && /onclick="druckStarten\('anleitung'\)"/.test(html), "Kurzanleitung fehlt");
@@ -1180,11 +1180,23 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 86. 0.64.0: Erinnerung an eigene alte Zettel beim Öffnen (KC-CLUB-PINNWAND-ERINNERUNG)
 {
   assert.ok(/pinnwand_erinnert: \(w\) => \(\{ bis: Object\.fromEntries/.test(server) && /\/\^\[0-9a-f-\]\{36\}\$\/\.test\(id\)/.test(server), "Server speichert „hängen lassen“ nicht geprüft");
-  assert.ok(/const PW_ERINNERN_TAGE = 3, PW_ERINNERN_PAUSE_TAGE = 7;/.test(html) && /if \(!gezeigt && !nurZaehlen\) pwErinnern\(\);/.test(html), "Erinnerung beim Start fehlt");
+  // 0.65.0: Fristen vom Admin (Server), ohne Wert 3 / 7 Tage
+  assert.ok(/const PW_FRISTEN_STANDARD = \{ erinnernTage: 3, pauseTage: 7 \};/.test(html) && /if \(!gezeigt && !nurZaehlen\) pwErinnern\(\);/.test(html), "Erinnerung beim Start fehlt");
   const e = html.slice(html.indexOf("function pwErinnern()"), html.indexOf("async function pwLaden()"));
   assert.ok(/z\.vonMir && jetzt - new Date\(z\.erstellt_am\)\.getTime\(\) >= PW_ERINNERN_TAGE \* 86400000/.test(e) && /bis\[z\.id\]/.test(e), "nur eigene, alte, nicht zurückgestellte Zettel");
   assert.ok(/hängt noch an der Pinnwand\./.test(e) && /Möchtest du \$\{liste\.length === 1 \? "es" : "sie"\} abnehmen\?/.test(e) && /api\("pinnwand_abnehmen"/.test(e), "Text/Abnehmen fehlt");
   assert.ok(/document\.querySelector\("\.blatt:not\(\.versteckt\)"\)\) return/.test(e), "Erinnerung könnte über anderen Fenstern aufgehen");
+}
+
+// 87. 0.65.0: Admin-Einstellungen als Klappbereich mit Schloss + Pinnwand-Fristen (KC-CLUB-ADMIN-EINSTELLUNGEN / -PINNWAND-FRISTEN)
+{
+  const bereich = html.slice(html.indexOf('id="adminBereich"'), html.indexOf('data-klappe="app"'));
+  for (const k of ["admin_pinnwand", "admin_erstattung", "admin_wetter"]) assert.ok(bereich.includes(`data-klappe="${k}"`), `Admin-Klappbereich ${k} fehlt im Admin-Bereich`);
+  assert.ok(/<details class="karte versteckt" data-klappe="admin" data-einfach id="adminBereich">/.test(html) && /\$\("adminBereich"\)\.classList\.remove\("versteckt"\)/.test(html), "Admin-Bereich (auch einfach, nur Admin) fehlt");
+  assert.ok(/document\.querySelectorAll\("details\[data-klappe\]"\)/.test(html) && /details\.karte:not\(\[open\]\) > summary \.pfeil/.test(html), "Schloss/Pfeil je Bereich");
+  const fs = server.slice(server.indexOf('case "pinnwand_fristen_setzen"'), server.indexOf('case "wetter_setzen"'));
+  assert.ok(/nurAdmin\(ich\);/.test(fs) && /protokoll\(ich\.person_id, "pinnwand_fristen_gesetzt"/.test(fs) && /PINNWAND_FRISTEN_GRENZEN = \{ erinnernTage: \[1, 30\], pauseTage: \[1, 60\] \}/.test(server), "Fristen: nur Admin, Grenzen, Protokoll");
+  assert.ok(/pinnwandFristen: pwFristen \}\);/.test(server) && /const pwFristen = \(\) => \(\{ \.\.\.PW_FRISTEN_STANDARD, \.\.\.\(INIT\?\.pinnwandFristen \|\| \{\}\) \}\);/.test(html), "Fristen kommen nicht vom Server");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

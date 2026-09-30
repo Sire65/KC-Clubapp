@@ -1,5 +1,14 @@
 # Änderungen
 
+## 0.65.0 – 2026-09-30 (DEV)
+
+- KC-CLUB-ADMIN-EINSTELLUNGEN (neu, Wunsch Hansi): alle Admin-Einstellungen in einem Klappbereich „🛠️ Admin-Einstellungen“
+  (mit Schloss), darin je Thema ein Klappbereich mit eigenem Schloss: 📌 Pinnwand, Erstattung (km-Satz), Wetter. Nur für den
+  Admin, auch in der einfachen Ansicht sichtbar. Pfeil/Schloss-Regeln gelten je Bereich (verschachtelt korrekt).
+- KC-CLUB-PINNWAND-FRISTEN (neu): „Erinnern nach“ (1–30 Tage) und „‚Hängen lassen‘ fragt wieder nach“ (1–60 Tage) stellt der
+  Admin ein (kc_club_konfig „pinnwand“, Aktion pinnwand_fristen_setzen nur Admin, Protokoll vorher/nachher). Alle Apps
+  bekommen die Fristen mit init (pinnwandFristen); ohne Wert 3 / 7 Tage wie bisher.
+
 ## 0.64.0 – 2026-09-30 (DEV)
 
 - KC-CLUB-PINNWAND-ERINNERUNG (neu, Wunsch Hansi): beim Öffnen der App Fenster „📌 Dein Post-it vom 29.09. hängt noch an der

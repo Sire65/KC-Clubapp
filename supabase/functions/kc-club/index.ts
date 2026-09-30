@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.64.0";
+const SERVER_VERSION = "0.65.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -545,6 +545,16 @@ function erstattungPruefen(roh: unknown, ich: Ich, saetze: KmSatz[]) {
 const PINNWAND_MAX = 4, PINNWAND_ZEICHEN = 200;
 // KC-CLUB-PINNWAND-LIVE (0.57.0): eine Formulierung für Push und Einblendung. „privat“ nur, wenn der Zettel wirklich nur
 // für diese eine Person ist (für bestimmte Personen, genau ein Empfänger) – bei „für alle“ oder mehreren Empfängern ohne „privat“.
+// KC-CLUB-PINNWAND-FRISTEN (0.65.0): Erinnerung an eigene Zettel – vom Admin einstellbar (kc_club_konfig „pinnwand“)
+const PINNWAND_FRISTEN_STANDARD = { erinnernTage: 3, pauseTage: 7 };
+const PINNWAND_FRISTEN_GRENZEN = { erinnernTage: [1, 30], pauseTage: [1, 60] } as const;
+async function pinnwandFristen() {
+  const { data } = await db.from("kc_club_konfig").select("wert,geaendert_am").eq("schluessel", "pinnwand").maybeSingle();
+  const w: any = data?.wert ?? {}, zahl = (k: keyof typeof PINNWAND_FRISTEN_GRENZEN) => {
+    const n = Math.round(Number(w[k])), [lo, hi] = PINNWAND_FRISTEN_GRENZEN[k];
+    return Number.isFinite(n) && n >= lo && n <= hi ? n : PINNWAND_FRISTEN_STANDARD[k]; };
+  return { erinnernTage: zahl("erinnernTage"), pauseTage: zahl("pauseTage"), geaendertAm: data?.geaendert_am ?? null };
+}
 const pinnwandPrivat = (z: { fuer: string; personen?: string[] | null }) => z.fuer === "personen" && (z.personen ?? []).length === 1;
 const pinnwandHinweis = (von: string, privat: boolean, wichtig: boolean) => `Du hast ein neues ${wichtig ? "wichtiges " : ""}${privat ? "privates " : ""}Post-it von ${von} bekommen`;
 async function pinnwandSichtbar(ich: Ich) {
@@ -1328,17 +1338,18 @@ Köcheclub Werne`,
           const beantwortet = new Set((ta ?? []).map((x: any) => (to ?? []).find((o: any) => o.id === x.option_id)?.umfrage_id));
           terminfindungOffen = (tu ?? []).filter((x: any) => !beantwortet.has(x.id)).map((x: any) => ({ id: x.id, titel: x.titel }));
         }
-        const [{ data: nf }, { data: kab }, wartung, { data: pe }] = await Promise.all([
+        const [{ data: nf }, { data: kab }, wartung, { data: pe }, pwFristen] = await Promise.all([
           db.from("kc_club_notfall").select("name,telefon,beziehung").eq("person_id", ich.person_id).maybeSingle(),
           db.from("kc_club_kalender_abo").select("erstellt_am,zuletzt_abgerufen").eq("person_id", ich.person_id).maybeSingle(),
           wartungLesen(),
           db.from("kc_club_person_einstellung").select("schluessel,wert").eq("person_id", ich.person_id),
+          pinnwandFristen().catch(() => ({ ...PINNWAND_FRISTEN_STANDARD, geaendertAm: null })),
         ]);
         const einstellungen = Object.fromEntries((pe ?? []).map((x: any) => [x.schluessel, x.wert]));
         const communicator = await communicatorStatus(ich).catch(() => null);
         const kontaktFreigabe = Object.fromEntries(KONTAKT_FELDER.map((f) => [f, !!(kf ?? []).find((x: any) => x.bereich === "kontakt_" + f)?.erlaubt]));
         const benachrichtigung = Object.fromEntries(BEREICHE.map((b) => { const x: any = (wahl ?? []).find((y: any) => y.bereich === b); return [b, x ? { push: x.push, email: x.email } : STANDARD_WAHL[b]]; }));
-        return json({ ich, status: meinStatus, server: SERVER_VERSION, ungelesen, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, communicator, notfall: nf ?? null, einstellungen, kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null });
+        return json({ ich, status: meinStatus, server: SERVER_VERSION, ungelesen, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, communicator, notfall: nf ?? null, einstellungen, kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen });
       }
 
       case "mitglieder": {
@@ -2225,6 +2236,20 @@ Köcheclub Werne`,
         const q = txt(p.q, 60); if (q.length < 2) throw new Fehler("Bitte mindestens 2 Buchstaben eingeben.");
         const k = await wetterKonfig(), quelle = WETTER_QUELLEN[String(p.quelle || k.quelle)] ?? WETTER_QUELLEN[k.quelle];
         try { return json({ orte: await quelle.suchen(q) }); } catch { throw new Fehler("Ortssuche gerade nicht erreichbar – bitte später noch einmal.", 502); }
+      }
+
+      case "pinnwand_fristen_setzen": {
+        nurAdmin(ich);
+        const alt = await pinnwandFristen(), neu: Record<string, number> = {};
+        for (const k of Object.keys(PINNWAND_FRISTEN_GRENZEN) as (keyof typeof PINNWAND_FRISTEN_GRENZEN)[]) {
+          const n = Math.round(Number(p[k] ?? alt[k])), [lo, hi] = PINNWAND_FRISTEN_GRENZEN[k];
+          if (!Number.isFinite(n) || n < lo || n > hi) throw new Fehler(k === "erinnernTage" ? `Erinnern nach: bitte ${lo} bis ${hi} Tage.` : `Wieder fragen nach: bitte ${lo} bis ${hi} Tage.`);
+          neu[k] = n;
+        }
+        const { error } = await db.from("kc_club_konfig").upsert({ schluessel: "pinnwand", wert: neu, geaendert_von: ich.person_id, geaendert_am: jetzt() });
+        if (error) throw new Fehler("Fristen konnten nicht gespeichert werden.", 500);
+        await protokoll(ich.person_id, "pinnwand_fristen_gesetzt", { vorher: { erinnernTage: alt.erinnernTage, pauseTage: alt.pauseTage }, nachher: neu });
+        return json({ ok: true, ...neu });
       }
 
       case "wetter_setzen": {
