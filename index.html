@@ -863,6 +863,27 @@
   .emo-gitter { display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px; max-height: 168px; overflow-y: auto; }
   .emo-gitter button { background: none; border: 0; border-radius: 10px; font-size: 1.55rem; line-height: 1; padding: 7px 0; cursor: pointer; }
   .emo-gitter button:active { background: var(--karte2, rgba(128,128,128,.2)); transform: scale(1.15); }
+  /* KC-CLUB-REAKTION / -ANTWORT / -ERWAEHNUNG (0.97.0) */
+  .blase .zitat, .antwort-leiste .zitat { display: grid; gap: 1px; border-left: 3px solid var(--gold, #d4a017); background: rgba(0,0,0,.14); border-radius: 8px; padding: 4px 8px; margin: 2px 0 6px; font-size: .85rem; cursor: pointer; }
+  .blase .zitat span, .antwort-leiste .zitat span { opacity: .85; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .blase .erw, .blase.eigen .erw { font-weight: 800; background: rgba(255,210,80,.28); border-radius: 5px; padding: 0 2px; }
+  .blase.erwaehnt-mich { box-shadow: 0 0 0 2px var(--gold, #d4a017), var(--schatten); }
+  .blase.aufblitzen { animation: aufblitzen 1.5s ease; }
+  @keyframes aufblitzen { 30% { box-shadow: 0 0 0 4px var(--gold, #d4a017); } }
+  .reaktionen { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0 -2px; }
+  .reaktionen button { border: 1px solid var(--linie); background: var(--bg); color: var(--text, inherit); border-radius: 12px; padding: 1px 7px; font-size: .95rem; cursor: pointer; }
+  .reaktionen button.meine { border-color: var(--gold, #d4a017); background: rgba(212,160,23,.2); }
+  .reaktionen button b { font-size: .75rem; }
+  .na-menue { gap: 8px; }
+  .na-vorschau { font-size: .9rem; opacity: .8; max-height: 3.6em; overflow: hidden; }
+  .na-schnell { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+  .na-schnell button { font-size: 1.8rem; border: 0; background: var(--karte2, rgba(128,128,128,.15)); border-radius: 14px; padding: 8px 0; cursor: pointer; }
+  .na-schnell button.an { box-shadow: 0 0 0 2px var(--gold, #d4a017); }
+  .antwort-leiste { max-width: 1100px; margin: 0 auto 6px; display: flex; gap: 6px; align-items: center; }
+  .antwort-leiste .zitat { flex: 1; margin: 0; min-width: 0; }
+  .antwort-leiste button { border: 0; background: none; font-size: 1.1rem; cursor: pointer; padding: 6px; }
+  .erw-vorschlag { max-width: 1100px; margin: 0 auto 6px; display: flex; flex-wrap: wrap; gap: 6px; }
+  .erw-vorschlag button { border: 1px solid var(--linie); background: var(--karte); border-radius: 14px; padding: 6px 10px; font-weight: 700; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -1293,6 +1314,9 @@
   <div class="hinweis versteckt" id="liveHinweis" style="font-size:.78rem;margin:0 6px 4px">👁️ Live-Tippen ist an – die anderen sehen, was du schreibst (⚙️ Mehr → Privatsphäre)</div>
   <div class="zustell" id="zustell"></div>
   <div class="chips" id="anlagenChips"></div>
+  <!-- KC-CLUB-ANTWORT / -ERWAEHNUNG (0.97.0) -->
+  <div class="antwort-leiste versteckt" id="antwortLeiste"></div>
+  <div class="erw-vorschlag versteckt" id="erwVorschlag" role="listbox" aria-label="Mitglied erwähnen"></div>
   <!-- KC-CLUB-EMOJI (0.95.0): kompakte Emoji-Auswahl über der Eingabe -->
   <div class="emo-feld versteckt" id="emoFeld" role="dialog" aria-label="Emoji auswählen"><div class="emo-reiter" id="emoReiter"></div><div class="emo-gitter" id="emoGitter"></div></div>
   <!-- KC-CLUB-SPRACHE: Aufnahme-Leiste -->
@@ -1302,7 +1326,7 @@
     <button class="rund" title="Anlage" onclick="anlageMenue()">📎</button>
     <button class="rund" title="Sprachnachricht aufnehmen" id="mikroKnopf" onclick="spracheStart()">🎤</button>
     <button class="rund emo-knopf" title="Emoji einfügen" id="emoKnopf" aria-expanded="false" onclick="emoUmschalten()">😊</button>
-    <textarea id="text" rows="1" placeholder="Schreiben …" onblur="emoStelleMerken()" onkeyup="emoStelleMerken()" onclick="emoStelleMerken()" oninput="emoStelleMerken();this.style.height='auto';this.style.height=this.scrollHeight+'px';tippenMelden()"></textarea>
+    <textarea id="text" rows="1" placeholder="Schreiben …" onblur="emoStelleMerken()" onkeyup="emoStelleMerken()" onclick="emoStelleMerken()" oninput="emoStelleMerken();naErwPruefen();this.style.height='auto';this.style.height=this.scrollHeight+'px';tippenMelden()"></textarea>
     <button class="rund" title="Senden" id="sendenKnopf" onclick="senden()">➤</button>
   </div>
 </div>
@@ -1477,7 +1501,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "0.96.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.97.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -4774,6 +4798,7 @@ async function unterhEntfernen(id, fuerAlle) {
   } catch (e) { melde(e.message, true); }
 }
 async function chatOeffnen(id, ausHistorie) {
+  if (id !== chatId) { naAntwortWeg(); NA.erw.clear(); } // KC-CLUB-ANTWORT: Antwort/Erwähnung gehört zum vorigen Chat
   if (id !== chatId) ZW = { push: false, email: false, whatsapp: false };
   chatId = id; zeige("chat", ausHistorie); chatId = id;
   history.replaceState({ v: "chat", id }, "", location.pathname + "#nachricht=" + id);
@@ -4795,20 +4820,91 @@ async function chatLaden(scrollen) {
     $("chatTeilnehmer").textContent = !andere.length ? "Nur du (Test-Unterhaltung)" : u.gruppe ? `👥 ${andere.length + 1} Mitglieder: Du, ${andere.map((x) => x.name.split(" ")[0]).join(", ")} ›` : u.betreff || andere.length > 1 ? "Mit: " + andere.map((x) => x.name).join(", ") : st;
     tipptZeigen(u.tippt || [], u.entwurf || []);
     if (u.tippt?.length && andere.length === 1) $("chatTeilnehmer").textContent = "✍️ schreibt …";
-    const stand = JSON.stringify(u.nachrichten.map((m) => [m.id, m.gelesenVon?.length]));
+    const stand = JSON.stringify(u.nachrichten.map((m) => [m.id, m.gelesenVon?.length, (m.reaktionen || []).map((x) => x.emoji + x.anzahl).join("")]));
+    if (NA.antwort && !u.nachrichten.some((m) => m.id === NA.antwort.id)) naAntwortWeg(); // Antwort gehört zu einem anderen Chat
     if (stand === chatStand && !scrollen) return;
     const neuVonAnderen = chatStand && u.nachrichten.length && !u.nachrichten[u.nachrichten.length - 1].eigen && stand !== chatStand;
     chatStand = stand;
-    $("chat").innerHTML = u.nachrichten.map((m) => `<div class="blase${m.eigen ? " eigen" : ""}" title="Antippen für Details" onclick="if(!event.target.closest('button,img,a,audio,video,.sprache'))nachrichtInfo('${m.id}')">
-      ${!m.eigen && andere.length > 1 ? `<div class="von">${esc(m.von)}</div>` : ""}${m.text === "📎" && m.anlagen.length ? "" : `<div class="txt">${esc(m.text)}</div>`}
+    NA.nachrichten = new Map(u.nachrichten.map((m) => [m.id, m]));
+    $("chat").innerHTML = u.nachrichten.map((m) => `<div class="blase${m.eigen ? " eigen" : ""}${m.erwaehntMich ? " erwaehnt-mich" : ""}" id="msg-${m.id}" title="Antippen: reagieren, antworten, Details" onclick="if(!event.target.closest('button,img,a,audio,video,.sprache,.zitat'))nachrichtMenue('${m.id}')">
+      ${!m.eigen && andere.length > 1 ? `<div class="von">${esc(m.von)}</div>` : ""}${m.antwortAuf ? `<div class="zitat" onclick="zuNachricht('${m.antwortAuf.id}')"><b>${esc(m.antwortAuf.von)}</b><span>${esc(m.antwortAuf.text)}</span></div>` : ""}${m.text === "📎" && m.anlagen.length ? "" : `<div class="txt">${naText(m.text)}</div>`}
       ${m.anlagen.map((a) => /^image\//.test(a.mime || "") ? `<img data-anlage="${a.id}" alt="${esc(a.name)}" onclick="anlageOeffnen('${a.id}')">` : /^audio\//.test(a.mime || "") ? `<div class="sprache" data-sprache="${a.id}"><button onclick="spracheAbspielen(this, '${a.id}')">▶️ Sprachnachricht anhören</button></div>` : `<div class="anlage" onclick="anlageOeffnen('${a.id}')">📄 ${esc(a.name)}</div>`).join("")}
       <div class="fuss">${zeitKurz(m.zeit)}${m.eigen ? " " + (m.gelesenAlle ? '<b title="gelesen">✓✓</b>' : m.gelesenVon?.length ? `✓✓ ${m.gelesenVon.length}/${andere.length}` : "✓") + zustellText(m.zustellung) : ""}${m.eigen || ICH.admin ? ` <button class="weg" title="Nachricht löschen" onclick="nachrichtLoeschen('${m.id}')">🗑️</button>` : ""}</div></div>`).join("")
       || '<p class="hinweis">Schreib die erste Nachricht.</p>';
     document.querySelectorAll("img[data-anlage]").forEach(bildLaden);
+    naReaktionenZeigen(u.nachrichten);
     if (neuVonAnderen && einst("ton", true)) ton();
     if (scrollen || neuVonAnderen) setTimeout(() => window.scrollTo(0, document.body.scrollHeight), 50);
   } catch (e) { melde(e.message, true); }
 }
+// ---------- KC-CLUB-REAKTION / -ANTWORT / -ERWAEHNUNG (0.97.0) ----------
+// Nachricht antippen → kleines Menü: 6 Schnell-Reaktionen, „↩️ Antworten“, „ℹ️ Details“. Reaktionen stehen als kleine Chips
+// unter der Nachricht (antippen = eigene setzen/entfernen). Antworten zeigt die Bezugsnachricht als Zitat oben in der Blase.
+// In Gruppen schlägt „@“ beim Tippen die Mitglieder der Unterhaltung vor; Erwähnte bekommen eine eigene Meldung.
+const NA = { nachrichten: new Map(), antwort: null, erw: new Map() };
+const NA_SCHNELL = ["👍", "❤️", "😂", "😮", "😢", "🙏"];
+function naText(t) { // Text sicher ausgeben, @Namen hervorheben
+  return esc(t).replace(/(^|\s)@([A-Za-zÄÖÜäöüß][\wÄÖÜäöüß-]*)/g, (x, v, n) => `${v}<span class="erw">@${n}</span>`);
+}
+function naReaktionenZeigen(liste) {
+  for (const m of liste) {
+    if (!m.reaktionen?.length) continue;
+    const el = document.getElementById("msg-" + m.id); if (!el) continue;
+    const r = document.createElement("div"); r.className = "reaktionen";
+    r.innerHTML = m.reaktionen.map((x) => `<button type="button" class="${x.meine ? "meine" : ""}" title="${esc(x.namen.join(", "))}" onclick="reagieren('${m.id}','${x.emoji}')">${x.emoji}${x.anzahl > 1 ? ` <b>${x.anzahl}</b>` : ""}</button>`).join("");
+    el.appendChild(r);
+  }
+}
+function nachrichtMenue(id) {
+  const m = NA.nachrichten.get(id); if (!m) return;
+  document.getElementById("naMenue")?.remove();
+  const meine = (m.reaktionen || []).find((x) => x.meine)?.emoji;
+  const f = document.createElement("div"); f.id = "naMenue"; f.className = "blatt"; f.setAttribute("role", "dialog"); f.setAttribute("aria-modal", "true");
+  f.innerHTML = `<div class="blatt-innen na-menue">
+    <div class="na-vorschau">${m.eigen ? "Du" : esc(m.von)}: ${esc(String(m.text || "").slice(0, 120))}</div>
+    <div class="na-schnell">${NA_SCHNELL.map((e) => `<button type="button" class="${meine === e ? "an" : ""}" aria-label="Mit ${e} reagieren" onclick="reagieren('${id}','${e}');document.getElementById('naMenue').remove()">${e}</button>`).join("")}</div>
+    ${meine ? `<p class="hinweis" style="margin:0;text-align:center">Deine Reaktion: ${meine} – nochmal antippen nimmt sie weg</p>` : ""}
+    <button class="knopf" onclick="document.getElementById('naMenue').remove();naAntworten('${id}')">↩️ Antworten</button>
+    <button class="knopf" onclick="document.getElementById('naMenue').remove();nachrichtInfo('${id}')">ℹ️ Details – wann gesendet, angekommen, gelesen</button>
+    <button class="knopf" onclick="document.getElementById('naMenue').remove()">Abbrechen</button></div>`;
+  f.onclick = (e) => { if (e.target === f) f.remove(); };
+  document.body.appendChild(f);
+}
+async function reagieren(id, emoji) {
+  try { await api("reaktion_setzen", { id, emoji }); chatStand = ""; await chatLaden(false); } catch (e) { melde(e.message, true); }
+}
+function naAntworten(id) {
+  const m = NA.nachrichten.get(id); if (!m) return;
+  NA.antwort = { id, von: m.eigen ? "dich" : m.von.split(" ")[0], text: String(m.text || "📎").slice(0, 90) };
+  $("antwortLeiste").innerHTML = `<div class="zitat"><b>↩️ Antwort an ${esc(NA.antwort.von)}</b><span>${esc(NA.antwort.text)}</span></div><button type="button" aria-label="Antwort abbrechen" onclick="naAntwortWeg()">✕</button>`;
+  $("antwortLeiste").classList.remove("versteckt"); $("text").focus();
+}
+function naAntwortWeg() { NA.antwort = null; $("antwortLeiste")?.classList.add("versteckt"); }
+function zuNachricht(id) {
+  const el = document.getElementById("msg-" + id);
+  if (!el) return melde("Die Nachricht, auf die geantwortet wurde, gibt es nicht mehr.");
+  el.scrollIntoView({ behavior: "smooth", block: "center" }); el.classList.add("aufblitzen"); setTimeout(() => el.classList.remove("aufblitzen"), 1600);
+}
+// @-Vorschläge: nur in Unterhaltungen mit mehreren anderen (in Zweiergesprächen überflüssig)
+function naKandidaten() { return (CHAT?.teilnehmer || []).filter((t) => t.person_id !== ICH?.person_id); }
+function naErwPruefen() {
+  const box = $("erwVorschlag"), t = $("text"); if (!box || !t) return;
+  const vor = t.value.slice(0, t.selectionStart ?? t.value.length), m = /(^|\s)@([\wÄÖÜäöüß-]*)$/.exec(vor);
+  const kand = naKandidaten();
+  if (!m || !chatId || kand.length < 2) { box.classList.add("versteckt"); return; }
+  const q = m[2].toLowerCase(), treffer = kand.filter((k) => k.name.toLowerCase().split(" ").some((w) => w.startsWith(q))).slice(0, 6);
+  if (!treffer.length) { box.classList.add("versteckt"); return; }
+  box.innerHTML = treffer.map((k) => `<button type="button" role="option" onclick="naErwWaehlen('${k.person_id}')">@${esc(k.name)}</button>`).join("");
+  box.classList.remove("versteckt");
+}
+function naErwWaehlen(pid) {
+  const k = naKandidaten().find((x) => x.person_id === pid); if (!k) return;
+  const t = $("text"), pos = t.selectionStart ?? t.value.length, vor = t.value.slice(0, pos).replace(/@([\wÄÖÜäöüß-]*)$/, ""), vn = k.name.split(" ")[0];
+  t.value = vor + "@" + vn + " " + t.value.slice(pos); const neu = (vor + "@" + vn + " ").length; t.setSelectionRange(neu, neu); t.focus();
+  NA.erw.set(vn, pid); $("erwVorschlag").classList.add("versteckt");
+}
+function naErwaehnteIds(text) { return [...NA.erw.entries()].filter(([vn]) => new RegExp("(^|\\s)@" + vn.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "(?![\\wÄÖÜäöüß])").test(text)).map(([, id]) => id); }
+
 // ---------- KC-CLUB-EMOJI (0.95.0): Emojis in Nachrichten – übersichtlich in wenigen Gruppen ----------
 // Bewusst eine überschaubare Auswahl (je Gruppe 24) statt tausender Zeichen; alle weiteren gehen wie gewohnt über die
 // Handy-Tastatur. „Zuletzt“ merkt sich die eigenen Lieblinge auf dem Gerät. Tippen fügt an der Schreibstelle ein.
@@ -5068,10 +5164,11 @@ async function senden() {
   if (!text && !anlagen.length) return;
   $("sendenKnopf").disabled = true;
   try {
-    const daten = { text, anlagen: anlagen.map((a) => a.id), wege: ["push", "email"].filter((w) => ZW[w]) };
+    const daten = { text, anlagen: anlagen.map((a) => a.id), wege: ["push", "email"].filter((w) => ZW[w]),
+      ...(NA.antwort && chatId ? { antwort_auf: NA.antwort.id } : {}), ...(chatId ? { erwaehnt: naErwaehnteIds(text) } : {}) }; // KC-CLUB-ANTWORT / -ERWAEHNUNG
     const r = chatId ? await api("nachricht_senden", { id: chatId, ...daten }) : await api("nachricht_senden", { ...daten, ...neuEntwurf });
     const empfIds = chatId ? (CHAT?.teilnehmer || []).map((t) => t.person_id) : [...(neuEntwurf?.empfaenger?.personen || [])];
-    $("text").value = ""; $("text").style.height = "auto"; anlagen = []; chipsZeigen(); neuEntwurf = null; clearTimeout(TIPP.nach); TIPP = { zuletzt: 0, id: null, nach: null }; // Server beendet „schreibt …“
+    $("text").value = ""; $("text").style.height = "auto"; anlagen = []; chipsZeigen(); neuEntwurf = null; naAntwortWeg(); NA.erw.clear(); clearTimeout(TIPP.nach); TIPP = { zuletzt: 0, id: null, nach: null }; // Server beendet „schreibt …“
     if (ZW.whatsapp && text) whatsappWeitergeben(text, empfIds.filter((id) => id !== ICH.person_id));
     if (!chatId) { chatId = r.id; history.replaceState({ v: "chat", id: r.id }, "", location.pathname + "#nachricht=" + r.id); clearInterval(chatTimer); chatTimer = setInterval(chatTakt, CHAT_TAKT_MS); }
     await chatLaden(true);

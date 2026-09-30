@@ -1,5 +1,22 @@
 # Änderungen
 
+## 0.97.0 – 2026-09-30 (DEV)
+
+WhatsApp-Vergleich, die drei wichtigsten Punkte (Freigabe Hansi):
+- KC-CLUB-REAKTION: Nachricht antippen → kleines Menü mit 6 Schnell-Reaktionen (👍 ❤️ 😂 😮 😢 🙏), „↩️ Antworten“ und
+  „ℹ️ Details“ (vorher öffnete Antippen direkt die Details – jetzt einen Schritt darunter). Je Person eine Reaktion je
+  Nachricht, gleiche nochmal = weg, andere = ersetzt. Chips unter der Nachricht mit Anzahl, Namen beim Draufhalten, eigene
+  hervorgehoben, antippen setzt/entfernt. Autor bekommt bei neuer Reaktion eine Meldung (Bereich Nachrichten, nach seinen
+  Einstellungen). Tabelle kc_club_reaktionen, Aktion reaktion_setzen.
+- KC-CLUB-ANTWORT: „Antworten“ zeigt über dem Schreibfeld „↩️ Antwort an …“ (✕ bricht ab); die gesendete Nachricht trägt
+  oben ein Zitat, antippen springt zur Bezugsnachricht (leuchtet kurz auf). Nutzt die vorhandene Communicator-Spalte
+  kc_communication_messages.reply_to_message_id (nur Nachrichten derselben Unterhaltung), keine neue Tabelle.
+- KC-CLUB-ERWAEHNUNG: in Unterhaltungen mit mehreren anderen schlägt „@“ beim Tippen die Teilnehmer vor; @Namen werden in
+  der Nachricht hervorgehoben, Nachrichten, in denen ich erwähnt bin, bekommen einen goldenen Rahmen. Erwähnte bekommen statt
+  der normalen eine eigene Meldung „📣 … hat dich erwähnt“ – immer aufs Handy (ohne App: Mail). Nur Teilnehmer der
+  Unterhaltung. Tabelle kc_club_erwaehnungen.
+- Migration 20260930_kc_club_v97 (nur neue Tabellen, angewendet). Server 0.97.0. Test 121.
+
 ## 0.96.0 – 2026-09-30 (DEV)
 
 - KC-CLUB-ONLINE-LED (Wunsch Hansi: „unter die 3 LEDs eine weitere, grün wenn jemand online ist – sonst sieht man es nicht,

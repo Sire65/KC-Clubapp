@@ -1547,7 +1547,8 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/await binTeilnehmer\(m\.thread_id, ich\.person_id\)/.test(f), "Details nur für Teilnehmer der Unterhaltung");
   assert.ok(/darfWege = eigen \|\| ich\.admin/.test(f) && /if \(darfWege\)/.test(f), "Zustellwege nur für Absender/Admin");
   assert.ok(!/email: x\.email|x\?\.email \}/.test(f) && /"E-Mail-Empfänger"/.test(f), "Mail-Adressen dürfen nicht herausgegeben werden");
-  assert.ok(/nachrichtInfo\('\$\{m\.id\}'\)/.test(html) && /closest\('button,img,a,audio,video,\.sprache'\)/.test(html), "Antippen öffnet Info (nicht bei Bild/Knopf)");
+  // 0.97.0: Antippen öffnet das Nachrichten-Menü, „ℹ️ Details“ darin öffnet das Info-Fenster
+  assert.ok(/nachrichtMenue\('\$\{m\.id\}'\)/.test(html) && /closest\('button,img,a,audio,video,\.sprache[^']*'\)/.test(html) && /nachrichtInfo\('\$\{id\}'\)">ℹ️ Details/.test(html), "Antippen → Menü → Details (nicht bei Bild/Knopf)");
   assert.ok(/function nachrichtInfo\(/.test(html) && /NI_SCHRITT/.test(html) && /meldet ein Postfach nicht zurück/.test(html), "Info-Fenster fehlt");
 }
 
@@ -1574,4 +1575,20 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
 }
 {
   assert.ok(/<i class="online-punkt versteckt" id="fussOnline"/.test(html) && /fu\.classList\.toggle\("versteckt", !an\)/.test(html), "Online-Punkt in der unteren Leiste (jede Ansicht) fehlt");
+}
+
+// 121. 0.97.0: Reaktionen, Antworten mit Zitat, @Erwähnungen (WhatsApp-Vergleich ⭐⭐⭐)
+{
+  const mig = lies("supabase/migrations/20260930_kc_club_v97_reaktionen_erwaehnungen.sql");
+  assert.ok(/create table if not exists kc_club_reaktionen/.test(mig) && /primary key \(message_id, person_id\)/.test(mig) && /on delete cascade/.test(mig), "Tabelle Reaktionen (eine je Person) fehlt");
+  assert.ok(/create table if not exists kc_club_erwaehnungen/.test(mig) && /enable row level security/.test(mig), "Tabelle Erwähnungen/RLS fehlt");
+  const rk = server.slice(server.indexOf('case "reaktion_setzen"'), server.indexOf('case "nachricht_loeschen"'));
+  assert.ok(/await binTeilnehmer\(m\.thread_id, ich\.person_id\)/.test(rk) && /alt\?\.emoji === emoji/.test(rk), "Reaktion: nur Teilnehmer, gleiche nochmal = weg");
+  assert.ok(/reply_to_message_id: antwortAuf/.test(server) && /b\.thread_id === threadId/.test(server), "Antwort nur auf Nachricht derselben Unterhaltung (vorhandene Spalte nutzen)");
+  assert.ok(/filter\(\(id\) => id !== ich\.person_id && tnIds\.has\(id\)\)/.test(server) && /club-nachricht:\$\{m\.id\}:erwaehnt/.test(server), "Erwähnung: nur Teilnehmer, eigene Meldung");
+  assert.ok(/reaktionen: reaktionen\(m\.id\)/.test(server) && /antwortAuf: bezug \?/.test(server) && /erwaehntMich:/.test(server), "Unterhaltung liefert Reaktionen/Zitat/Erwähnung nicht");
+  assert.ok(/nachrichtMenue\('\$\{m\.id\}'\)/.test(html) && /const NA_SCHNELL = \["👍", "❤️", "😂", "😮", "😢", "🙏"\]/.test(html), "Menü mit Schnell-Reaktionen fehlt");
+  assert.ok(/function naAntworten\(/.test(html) && /id="antwortLeiste"/.test(html) && /antwort_auf: NA\.antwort\.id/.test(html), "Antworten fehlt");
+  assert.ok(/function naErwPruefen\(/.test(html) && /id="erwVorschlag"/.test(html) && /erwaehnt: naErwaehnteIds\(text\)/.test(html), "@Erwähnen fehlt");
+  assert.ok(/function naText\(t\) \{[^\n]*\n\s*return esc\(t\)/.test(html), "Nachrichtentext muss weiter sicher (esc) ausgegeben werden");
 }

@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.94.0";
+const SERVER_VERSION = "0.97.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -2238,7 +2238,7 @@ Köcheclub Werne`,
         const [{ data: t }, { data: tn }, { data: msgs }] = await Promise.all([
           db.from("kc_communication_threads").select("id,subject").eq("id", id).single(),
           db.from("kc_communication_thread_participants").select("person_id,last_read_at").eq("thread_id", id),
-          db.from("kc_communication_messages").select("id,sender_person_id,body,created_at").eq("thread_id", id).order("created_at").limit(500),
+          db.from("kc_communication_messages").select("id,sender_person_id,body,created_at,reply_to_message_id").eq("thread_id", id).order("created_at").limit(500),
         ]);
         const mids = (msgs ?? []).map((m: any) => m.id);
         const { data: ma } = mids.length ? await db.from("kc_communication_message_attachments").select("message_id,attachment_id").in("message_id", mids) : { data: [] as any[] };
@@ -2257,14 +2257,34 @@ Köcheclub Werne`,
           const push = a.filter((x: any) => x.channel === "push").reduce((b: number, x: any) => Math.max(b, RANG[x.status] ?? 0), 0);
           return { push: push >= 4 ? "geoeffnet" : push === 3 ? "angezeigt" : push >= 1 ? "gesendet" : null, mail: a.some((x: any) => x.channel === "email" && (RANG[x.status] ?? 0) >= 1) };
         };
+        // KC-CLUB-REAKTION / -ANTWORT / -ERWAEHNUNG (0.97.0)
+        const [{ data: rk }, { data: ew }] = mids.length ? await Promise.all([
+          db.from("kc_club_reaktionen").select("message_id,person_id,emoji").in("message_id", mids),
+          db.from("kc_club_erwaehnungen").select("message_id,person_id").in("message_id", mids),
+        ]) : [{ data: [] as any[] }, { data: [] as any[] }];
+        const rkLeute = await personen([...(rk ?? []).map((x: any) => x.person_id), ...(ew ?? []).map((x: any) => x.person_id)]);
+        const nachMid = new Map((msgs ?? []).map((m: any) => [m.id, m]));
+        const reaktionen = (mid: string) => {
+          const g = new Map<string, { emoji: string; namen: string[]; meine: boolean }>();
+          for (const x of (rk ?? []).filter((y: any) => y.message_id === mid)) {
+            const e = g.get(x.emoji) ?? { emoji: x.emoji, namen: [], meine: false };
+            e.namen.push(x.person_id === ich.person_id ? "Du" : vorname(rkLeute.get(x.person_id)) || "?"); if (x.person_id === ich.person_id) e.meine = true; g.set(x.emoji, e);
+          }
+          return [...g.values()].map((e) => ({ ...e, anzahl: e.namen.length })).sort((a, b) => b.anzahl - a.anzahl);
+        };
         const nachrichten = (msgs ?? []).map((m: any) => {
           const eigen = m.sender_person_id === ich.person_id;
+          const bezug: any = m.reply_to_message_id ? nachMid.get(m.reply_to_message_id) : null;
+          const erw = (ew ?? []).filter((x: any) => x.message_id === m.id);
           const gelesenVon = eigen ? andere.filter((x: any) => x.last_read_at && x.last_read_at >= m.created_at).map((x: any) => vorname(leute.get(x.person_id))) : [];
           return {
             id: m.id, eigen, von: eigen ? "Du" : leute.get(m.sender_person_id)?.display_name || m.sender_person_id, text: m.body, zeit: m.created_at,
             anlagen: (ma ?? []).filter((x: any) => x.message_id === m.id).map((x: any) => (att ?? []).find((y: any) => y.id === x.attachment_id)).filter(Boolean)
               .map((y: any) => ({ id: y.id, name: y.file_name, mime: y.mime_type, groesse: y.size_bytes })),
             ...(eigen ? { gelesenVon, gelesenAlle: andere.length > 0 && gelesenVon.length === andere.length, zustellung: zustellung(m.id) } : {}),
+            reaktionen: reaktionen(m.id),
+            antwortAuf: bezug ? { id: bezug.id, von: bezug.sender_person_id === ich.person_id ? "Du" : vorname(leute.get(bezug.sender_person_id)) || "?", text: txt(bezug.body, 90) } : null,
+            erwaehnt: erw.map((x: any) => x.person_id === ich.person_id ? "dich" : vorname(rkLeute.get(x.person_id)) || "?"), erwaehntMich: erw.some((x: any) => x.person_id === ich.person_id),
           };
         });
         await db.from("kc_communication_thread_participants").update({ last_read_at: jetzt() }).eq("thread_id", id).eq("person_id", ich.person_id);
@@ -2329,7 +2349,13 @@ Köcheclub Werne`,
           if ((att ?? []).length !== anlagen.length || (att ?? []).some((x: any) => !String(x.object_path).startsWith(`club/${ich.person_id}/`)))
             throw new Fehler("Anlage nicht gefunden – bitte erneut anhängen.");
         }
-        const { data: m, error: me } = await db.from("kc_communication_messages").insert({ thread_id: threadId, sender_person_id: ich.person_id, body: text || "📎" }).select("id,created_at").single();
+        // KC-CLUB-ANTWORT (0.97.0): Antwort auf eine Nachricht derselben Unterhaltung (vorhandene Spalte reply_to_message_id)
+        let antwortAuf: string | null = null;
+        if (p.antwort_auf) {
+          const { data: b } = await db.from("kc_communication_messages").select("id,thread_id").eq("id", String(p.antwort_auf)).maybeSingle();
+          if (b && b.thread_id === threadId) antwortAuf = b.id;
+        }
+        const { data: m, error: me } = await db.from("kc_communication_messages").insert({ thread_id: threadId, sender_person_id: ich.person_id, body: text || "📎", reply_to_message_id: antwortAuf }).select("id,created_at").single();
         db.from("kc_club_tippen").delete().eq("thread_id", threadId).eq("person_id", ich.person_id).then(() => {}); // „schreibt …“ endet mit dem Senden
         if (me || !m) throw new Fehler("Nachricht konnte nicht gespeichert werden.", 500);
         if (anlagen.length) await db.from("kc_communication_message_attachments").insert(anlagen.map((attachment_id: string) => ({ message_id: m.id, attachment_id, hochgeladen_von_person_id: ich.person_id })));
@@ -2348,14 +2374,54 @@ Köcheclub Werne`,
         }
         const wege = zustellwege(p.wege);
         const { data: grp } = await db.from("kc_club_gruppen").select("name,symbol").eq("thread_id", threadId).maybeSingle();
+        // KC-CLUB-ERWAEHNUNG (0.97.0): @Erwähnte (nur Teilnehmer dieser Unterhaltung) bekommen eine eigene, deutliche Meldung –
+        // immer aufs Handy (bzw. Mail, wenn sie die App noch nie geöffnet haben), statt der normalen Nachrichten-Meldung.
+        const { data: alleTn } = await db.from("kc_communication_thread_participants").select("person_id").eq("thread_id", threadId);
+        const tnIds = new Set((alleTn ?? []).map((x: any) => x.person_id));
+        const erwaehnt = [...new Set((Array.isArray(p.erwaehnt) ? p.erwaehnt : []).map(String))].filter((id) => id !== ich.person_id && tnIds.has(id)).slice(0, 50);
+        let versandErw: any = null;
+        if (erwaehnt.length) {
+          await db.from("kc_club_erwaehnungen").insert(erwaehnt.map((person_id) => ({ message_id: m.id, person_id })));
+          versandErw = await sendenGewaehlt("club_nachricht", erwaehnt, ["push"], {
+            titel: `📣 ${ich.vorname} hat dich erwähnt${grp ? ` – ${grp.symbol} ${grp.name}` : ""}`, kurz: txt(text, 140) || "Neue Nachricht",
+            betreff: `Köcheclub Werne – ${ich.name} hat dich erwähnt${grp ? " in " + grp.name : ""}`,
+            text: `Hallo,\n\n${ich.name} hat dich${grp ? ` in der Gruppe „${grp.name}“` : ""} erwähnt:\n\n${text}\n\nAntworten in der Köcheclub-App: ${APP_URL}#nachricht=${threadId}\n\nViele Grüße\nKöcheclub Werne`,
+            url: `${APP_URL}#nachricht=${threadId}`,
+          }, `club-nachricht:${m.id}:erwaehnt`);
+          for (let i = ziel.length - 1; i >= 0; i--) if (erwaehnt.includes(ziel[i])) ziel.splice(i, 1);
+        }
         const versand = await sendenGewaehlt("club_nachricht", ziel, wege, {
           titel: grp ? `${grp.symbol} ${grp.name}: ${ich.vorname}` : `💬 ${ich.name}`, kurz: th?.subject ? `Neue Nachricht in „${th.subject}“` : "Neue Nachricht im Köcheclub",
           betreff: `Köcheclub Werne – neue Nachricht von ${ich.name}${th?.subject ? ": " + th.subject : ""}`,
           text: `Hallo,\n\n${ich.name} hat dir im Köcheclub geschrieben${th?.subject ? ` („${th.subject}“)` : ""}:\n\n${text}${anlagen.length ? `\n\n📎 ${anlagen.length} Anlage(n) – in der App ansehen.` : ""}\n\nAntworten in der Köcheclub-App: ${APP_URL}#nachricht=${threadId}\n\nViele Grüße\nKöcheclub Werne`,
           url: `${APP_URL}#nachricht=${threadId}`,
         }, `club-nachricht:${m.id}`);
-        await protokoll(ich.person_id, "nachricht_gesendet", { thread: threadId, neu, empfaenger: ziel.length, anlagen: anlagen.length, wege, versand });
+        await protokoll(ich.person_id, "nachricht_gesendet", { thread: threadId, neu, empfaenger: ziel.length, anlagen: anlagen.length, wege, versand, antwort: !!antwortAuf, erwaehnt: erwaehnt.length, versandErw });
         return json({ ok: true, id: threadId, versand });
+      }
+
+      // ----- KC-CLUB-REAKTION (0.97.0): je Person eine Reaktion je Nachricht; gleiche nochmal = weg; Autor bekommt Bescheid -----
+      case "reaktion_setzen": {
+        const { data: m } = await db.from("kc_communication_messages").select("id,thread_id,sender_person_id,body").eq("id", String(p.id || "")).maybeSingle();
+        if (!m) throw new Fehler("Nachricht nicht gefunden.", 404);
+        await binTeilnehmer(m.thread_id, ich.person_id);
+        const emoji = txt(p.emoji, 16);
+        const { data: alt } = await db.from("kc_club_reaktionen").select("emoji").eq("message_id", m.id).eq("person_id", ich.person_id).maybeSingle();
+        if (!emoji || alt?.emoji === emoji) {
+          await db.from("kc_club_reaktionen").delete().eq("message_id", m.id).eq("person_id", ich.person_id);
+          return json({ ok: true, emoji: null });
+        }
+        if (!/\p{Extended_Pictographic}|[\u2600-\u27BF]/u.test(emoji)) throw new Fehler("Bitte ein Emoji wählen.");
+        await db.from("kc_club_reaktionen").upsert({ message_id: m.id, person_id: ich.person_id, emoji, zeit: jetzt() });
+        if (m.sender_person_id !== ich.person_id && !alt) {
+          await senden("club_nachricht", [m.sender_person_id], {
+            titel: `${emoji} ${ich.vorname} hat reagiert`, kurz: `auf: „${txt(m.body, 80)}“`,
+            betreff: `Köcheclub Werne – ${ich.name} hat auf deine Nachricht reagiert`,
+            text: `Hallo,\n\n${ich.name} hat mit ${emoji} auf deine Nachricht reagiert:\n\n„${txt(m.body, 300)}“\n\n${APP_URL}#nachricht=${m.thread_id}\n\nViele Grüße\nKöcheclub Werne`,
+            url: `${APP_URL}#nachricht=${m.thread_id}`,
+          }, `club-reaktion:${m.id}:${ich.person_id}`).catch(() => null);
+        }
+        return json({ ok: true, emoji });
       }
 
       case "nachricht_loeschen": {

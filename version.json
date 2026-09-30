@@ -1,11 +1,20 @@
 {
-  "version": "0.96.0",
+  "version": "0.97.0",
   "datum": "2026-09-30",
   "neu": [
-    "🟢 Neue vierte LED oben unter den drei Verbindungs-LEDs: leuchtet grün, sobald jemand anderes online ist. Antippen zeigt, wer gerade da ist",
-    "🟢 Zusätzlich in jeder Ansicht: grüner Punkt mit Anzahl auf „👥 Mitglieder“ in der unteren Leiste"
+    "👍 Reaktionen: Nachricht antippen → 👍 ❤️ 😂 😮 😢 🙏 – erscheint klein unter der Nachricht, nochmal tippen nimmt sie weg",
+    "↩️ Auf eine bestimmte Nachricht antworten: Nachricht antippen → „Antworten“ – sie steht dann als Zitat über deiner Antwort",
+    "📣 @Erwähnen in Gruppen: „@“ tippen und Namen wählen – wer erwähnt wird, bekommt eine eigene Meldung aufs Handy"
   ],
   "verlauf": [
+    {
+      "version": "0.97.0",
+      "neu": [
+        "👍 Reaktionen: Nachricht antippen → 👍 ❤️ 😂 😮 😢 🙏 – erscheint klein unter der Nachricht, nochmal tippen nimmt sie weg",
+        "↩️ Auf eine bestimmte Nachricht antworten: Nachricht antippen → „Antworten“ – sie steht dann als Zitat über deiner Antwort",
+        "📣 @Erwähnen in Gruppen: „@“ tippen und Namen wählen – wer erwähnt wird, bekommt eine eigene Meldung aufs Handy"
+      ]
+    },
     {
       "version": "0.96.0",
       "neu": [
