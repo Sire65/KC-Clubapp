@@ -999,8 +999,8 @@
       <button id="zugangKopieren" class="knopf haupt versteckt" onclick="zugangKopieren()">📋 Meinen persönlichen Link kopieren</button>
       <!-- KC-CLUB-PC (0.26.3): denselben Link auf PC/Tablet nutzen – „Link verloren?“ würde den Handy-Link ersetzen -->
       <div id="pcZugang" class="versteckt" style="margin:10px 0"><b>💻 Auch am PC oder Tablet nutzen</b>
-        <p class="hinweis" style="margin:4px 0 8px">Schick dir deinen Link selbst (z. B. per Mail) und öffne ihn am PC in Chrome oder Edge. Dort lässt sich die App auch installieren (Symbol ⊕ rechts in der Adresszeile). <b>Nicht „Link verloren?“ benutzen</b> – ein neuer Link macht den alten ungültig.</p>
-        <div class="knoepfe"><button class="knopf klein" onclick="zugangSenden()">📤 Link an mich schicken</button><button class="knopf klein" onclick="zugangKopieren()">📋 Link kopieren</button></div></div>
+        <p class="hinweis" style="margin:4px 0 8px">Schick dir deinen Link selbst (z. B. per Mail) und öffne ihn am PC in Chrome oder Edge. Dort lässt sich die App auch installieren (Symbol ⊕ rechts in der Adresszeile). <b>iPad:</b> den Link in <b>Safari</b> öffnen → Teilen □↑ → „Zum Home-Bildschirm“. <b>Nicht „Link verloren?“ benutzen</b> – ein neuer Link macht den alten ungültig.</p>
+        <div class="knoepfe"><button id="zugangMailKnopf" class="knopf klein versteckt" onclick="zugangMailen()">📧 Per E-Mail an mich</button><button class="knopf klein" onclick="zugangSenden()">📤 Link an mich schicken</button><button class="knopf klein" onclick="zugangKopieren()">📋 Link kopieren</button></div></div>
       <p class="hinweis versteckt" id="zugangHinweis" style="margin:4px 0 10px">Zum Umziehen in Chrome: Link kopieren → Chrome öffnen → oben in die Adresszeile tippen, lange drücken → <b>Einfügen</b> → Enter. Dann dort wie unten installieren.<br>⚠️ Den Link <b>nicht weitergeben</b> – er ist dein persönlicher Zugang.</p>
       <div class="hinweis" id="installHinweis" style="line-height:1.55"><b>So wird die App richtig installiert (Android):</b><br>
         1. Das normale <b>Chrome</b> öffnen und oben <b>sire65.github.io/KC-Clubapp</b> eingeben.<br>
@@ -1240,7 +1240,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "0.77.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.78.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -1764,7 +1764,7 @@ const EINSTIEG_SCHRITTE = [
       <p style="margin:0 0 6px">Deine Einstellungen kommen mit (Ansicht, Farbe, Benachrichtigungen). Nur Schriftgröße und Ton stellst du auf jedem Gerät selbst ein.</p>
       <p style="margin:0">⚠️ Den Link bitte nicht weitergeben – er gehört nur dir.</p>`,
     jaText: "Ja, Link per E-Mail schicken",
-    ja: async () => { try { const r = await api("zugang_link_mailen", {}, { warten: true }); melde(r.ok ? `📧 Die Mail ist unterwegs an ${INIT.einstieg.mailMaske} – auch im Spam-Ordner nachsehen` : "Die Mail konnte gerade nicht verschickt werden – bitte später unter ⚙️ Mehr → App-Installation versuchen.", !r.ok); } catch (e) { melde(e.message, true); } } },
+    ja: () => zugangMailen() },
   // KC-CLUB-EINSTIEG-FEEDBACK (0.73.0): nach 4 Wochen Nutzung – nur, wer noch kein Feedback abgegeben hat
   { id: "feedback", faellig: (e) => !e.feedbackAbgegeben && tageSeit(e.ersterStart) >= eiF().feedbackTage,
     text: () => `<h3 style="margin-top:0">💭 Möchtest du jetzt dein Feedback abgeben?</h3><p style="margin:0">Deine Meinung hilft, die App weiterzuentwickeln – was gefällt dir, was ist zu kompliziert, was fehlt dir?</p>`,
@@ -5941,6 +5941,10 @@ async function zugangKopieren() {
   api("diagnose", { art: "start", daten: { zugang_kopiert: true, start: START_ART } }).catch(() => {});
 }
 // Link für den eigenen PC: über „Teilen“ (Mail, Notizen …) oder als Mail an mich
+// KC-CLUB-LINK-MAIL (0.78.0): eigenen Link mit einem Tipp an die eigene Club-Adresse schicken – gleicher Weg wie der Tablet/PC-Tipp, kein neuer Schlüssel
+async function zugangMailen() {
+  try { const r = await api("zugang_link_mailen", {}, { warten: true }); melde(r.ok ? `📧 Die Mail ist unterwegs an ${INIT?.einstieg?.mailMaske || "deine Adresse"} – auch im Spam-Ordner nachsehen` : "Die Mail konnte gerade nicht verschickt werden – bitte später unter ⚙️ Mehr → App-Installation versuchen.", !r.ok); } catch (e) { melde(e.message, true); }
+}
 async function zugangSenden() {
   const link = APP_URL_CLUB + "?k=" + KEY, text = "Mein persönlicher Link zur Köcheclub-App (nicht weitergeben):\n" + link;
   api("diagnose", { art: "start", daten: { zugang_pc: true, start: START_ART } }).catch(() => {});
@@ -5953,6 +5957,7 @@ function installStandZeigen() {
   const umzug = START_ART !== "app" && !!KEY;
   $("zugangKopieren").classList.toggle("versteckt", !umzug); $("zugangHinweis").classList.toggle("versteckt", !umzug);
   $("pcZugang").classList.toggle("versteckt", umzug || !KEY);
+  $("zugangMailKnopf").classList.toggle("versteckt", !INIT?.einstieg?.mailMaske);
   const [farbe, text] = START_ART === "app" ? ["var(--gruen)", "✅ Die App ist richtig installiert."]
     : START_ART === "verknuepfung" ? ["#b36b00", "⚠️ Die App ist nur als <b>Verknüpfung</b> angelegt. Dadurch können WhatsApp, Karten und die Galerie auf manchen Handys nicht aufgehen. Bitte wie unten beschrieben richtig installieren."]
     : START_ART === "browser" ? (schonInstalliert ? ["var(--gruen)", "✅ Die App ist installiert – bitte über das Köcheclub-Symbol öffnen."] : ["#b36b00", "ℹ️ Du bist gerade im Browser. " + (installEreignis ? "Tippe auf „Jetzt als App installieren“." : "Installiere die App wie unten beschrieben.")])

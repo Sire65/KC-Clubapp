@@ -1,5 +1,13 @@
 # Änderungen
 
+## 0.78.0 – 2026-09-30 (DEV)
+
+- KC-CLUB-LINK-MAIL (Wunsch Hansi, iPad): unter ⚙️ Mehr → App-Installation → „💻 Auch am PC oder Tablet nutzen“ neuer
+  Knopf „📧 Per E-Mail an mich“ – schickt den eigenen, bestehenden Link an die eigene hinterlegte Adresse (Server-Aktion
+  zugang_link_mailen aus 0.77.0: kein neuer Schlüssel, 15-Min.-Sperre, Link wird nach dem Versand geschwärzt). Nur sichtbar,
+  wenn eine Adresse hinterlegt ist. Tablet/PC-Tipp und Knopf nutzen dieselbe Funktion zugangMailen(). Hinweis ergänzt:
+  iPad → Safari → Teilen → „Zum Home-Bildschirm“.
+
 ## 0.77.0 – 2026-09-30 (DEV)
 
 - KC-CLUB-LINKSCHUTZ (Sicherheit, Freigabe Hansi): persönliche App-Links lagen im Klartext im Mail-Speicher des

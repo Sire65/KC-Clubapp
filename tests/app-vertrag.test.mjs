@@ -1338,4 +1338,11 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/mailMaske: pm\?\.email \? String\(pm\.email\)\.replace\(/.test(server), "Adresse nur teilweise");
 }
 
+// 99. 0.78.0: eigener Link per E-Mail aus den Einstellungen (KC-CLUB-LINK-MAIL)
+{
+  assert.ok(/id="zugangMailKnopf"[^>]*onclick="zugangMailen\(\)"/.test(html) && /async function zugangMailen\(\) \{\s*try \{ const r = await api\("zugang_link_mailen"/.test(html), "Knopf „Per E-Mail an mich“ fehlt");
+  assert.ok(/id: "geraete"[\s\S]{0,1200}ja: \(\) => zugangMailen\(\)/.test(html) && (html.match(/api\("zugang_link_mailen"/g) || []).length === 1, "Tipp und Knopf müssen denselben Weg nutzen");
+  assert.ok(/\$\("zugangMailKnopf"\)\.classList\.toggle\("versteckt", !INIT\?\.einstieg\?\.mailMaske\)/.test(html), "Knopf nur mit hinterlegter Adresse");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

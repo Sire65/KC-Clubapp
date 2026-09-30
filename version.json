@@ -1,11 +1,16 @@
 {
-  "version": "0.77.0",
-  "datum": "2026-09-29",
+  "version": "0.78.0",
+  "datum": "2026-09-30",
   "neu": [
-    "💻 Nach 3 Wochen ein Tipp: Die Club-App auch auf Tablet und PC nutzen – dein Link kommt auf Wunsch per E-Mail",
-    "🔒 Persönliche Links werden nicht mehr im Klartext gespeichert"
+    "📧 Unter ⚙️ Mehr → App-Installation: mit einem Tipp den eigenen Link per E-Mail schicken – für Tablet, iPad und PC"
   ],
   "verlauf": [
+    {
+      "version": "0.78.0",
+      "neu": [
+        "📧 Unter ⚙️ Mehr → App-Installation: mit einem Tipp den eigenen Link per E-Mail schicken – für Tablet, iPad und PC"
+      ]
+    },
     {
       "version": "0.77.0",
       "neu": [
