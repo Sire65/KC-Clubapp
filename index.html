@@ -1322,7 +1322,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "0.84.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.85.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3633,7 +3633,7 @@ function adminBlatt() {
     <p class="hinweis" style="margin:0">${m.ohneZugang} Mitglieder haben noch keinen persönlichen Link · ${m.nieAngemeldet} haben ihn, waren aber noch nie in der App.</p>
     <b>📡 Kommunikation</b>
     <p style="margin:0">${esc(c.text)}<br><span class="hinweis">Push: ${esc(c.push || "–")} · E-Mail: ${esc(c.email || "–")}${c.erreichbar ? ` · Antwort ${c.erreichbar.ms ?? "–"} ms` : ""}</span></p>
-    <p class="hinweis" style="margin:0">Club-App letzte 7 Tage: ${c.club.gesendet} zugestellt · ${c.club.offen} offen · ${c.club.fehler} Fehler (${c.club.fehler24} in 24 Std.)${b ? ` · Erfolgsquote ${String(b.erfolg).replace(".", ",")} % · Warteschlange ${b.warteschlange}` : ""}</p>
+    <p class="hinweis" style="margin:0">Club-App letzte 7 Tage: ${c.club.gesendet} zugestellt · ${c.club.offen} offen · ${c.club.fehler} Fehler (${c.club.fehler24} Störung in 24 Std.${c.club.ohneWeg24 ? ` · ${c.club.ohneWeg24}× Empfänger ohne Push/Adresse – keine Störung` : ""})${b ? ` · Erfolgsquote ${String(b.erfolg).replace(".", ",")} % · Warteschlange ${b.warteschlange}` : ""}</p>
     <b>🖥️ KC-Programme</b>
     <table class="todotab">${r.programme.map((p) => { const [f, t] = adminProgrammFarbe(p); return `<tr><td>${lampe(f)} ${esc(p.name)}</td><td>${esc(t)}${p.version ? ` · v${esc(p.version)}` : ""}</td><td class="hinweis">${p.datenstand ? "Daten: " + esc(zeitKurz(p.datenstand)) : ""}</td></tr>`; }).join("")}</table>
     <b>🪞 Neon-Spiegel &amp; Backup</b>

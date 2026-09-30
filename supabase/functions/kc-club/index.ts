@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.84.0";
+const SERVER_VERSION = "0.85.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -622,24 +622,31 @@ const COMM_BERICHT_VERALTET_MIN = 15;
 const COMM_OK = ["sent", "displayed", "opened", "delivered", "acknowledged"];
 const COMM_OFFEN = ["queued", "pending", "processing", "retry_scheduled", "scheduled"];
 const COMM_FEHLER = ["failed", "dead_lettered", "error"];
+// KC-CLUB-LED-EMPFAENGER (0.85.0): Fehler auf Empfängerseite (kein Push-Gerät, keine Adresse) sind keine Störung des Versands –
+// dieselbe Liste wie im KC Communicator (kc-communication-router/-dispatch „empfaengerFehler“). Sie färben die LED nicht.
+const COMM_EMPFAENGER_FEHLER = /^(PUSH_NO_ACTIVE_SUBSCRIPTION|PUSH_SUBSCRIPTION_NOT_FOUND|PUSH_USER_RECIPIENT_MISSING|EMAIL_RECIPIENT_MISSING)/;
+const commSystemFehler = (x: any) => COMM_FEHLER.includes(x.status) && !COMM_EMPFAENGER_FEHLER.test(String(x.error_code || ""));
 async function communicatorStatus(ich: Ich, erreichbarkeit = false) {
-  const seit7 = new Date(Date.now() - 7 * 86400000).toISOString();
-  const [{ data: st }, { data: wege }, { data: bericht }, { data: auftr }, erreichbar] = await Promise.all([
+  const seit7 = new Date(Date.now() - 7 * 86400000).toISOString(), seit24 = new Date(Date.now() - 86400000).toISOString();
+  const [{ data: st }, { data: wege }, { data: bericht }, { data: auftr }, erreichbar, { data: alle24 }] = await Promise.all([
     db.from("kc_communication_settings").select("enabled,dispatch_enabled").eq("id", "global").maybeSingle(),
     db.from("kc_communication_provider_routes").select("channel,provider_id,role,enabled,health_status,last_success_at,last_failure_at,consecutive_failures").eq("enabled", true).in("channel", ["push", "email"]),
     db.from("kc_communication_health_snapshots").select("created_at,success_rate,avg_push_ms,avg_email_ms,queued,retrying,failed,active_devices").order("created_at", { ascending: false }).limit(1).maybeSingle(),
-    db.from("kc_communication_requests").select("status,channel,sent_at,created_at").eq("source_program", "kc-club").gte("created_at", seit7).order("created_at", { ascending: false }).limit(500),
+    db.from("kc_communication_requests").select("status,channel,sent_at,created_at,error_code").eq("source_program", "kc-club").gte("created_at", seit7).order("created_at", { ascending: false }).limit(500),
     erreichbarkeit ? (async () => {
       const t0 = Date.now();
       try { const r = await fetch(`${SUPA}/functions/v1/kc-communication-router`, { method: "OPTIONS", signal: AbortSignal.timeout(4000) }); return { ok: r.status < 500, ms: Date.now() - t0 }; }
       catch { return { ok: false, ms: null }; }
     })() : Promise.resolve(null),
+    // fehlgeschlagene Aufträge aller Programme (24 h) – ersetzt den Zähler „failed“ des Zustandsberichts, der Empfängerfehler mitzählt
+    db.from("kc_communication_requests").select("status,error_code").in("status", COMM_FEHLER).gte("created_at", seit24).limit(500),
   ]);
   const liste = auftr ?? [];
+  const systemFehler24 = (alle24 ?? []).filter(commSystemFehler).length;
   const zahl = (arr: string[]) => liste.filter((x: any) => arr.includes(x.status)).length;
-  const seit24 = new Date(Date.now() - 86400000).toISOString();
   const club = { gesendet: zahl(COMM_OK), offen: zahl(COMM_OFFEN), fehler: zahl(COMM_FEHLER),
-    fehler24: liste.filter((x: any) => COMM_FEHLER.includes(x.status) && x.created_at >= seit24).length,
+    fehler24: liste.filter((x: any) => commSystemFehler(x) && x.created_at >= seit24).length,
+    ohneWeg24: liste.filter((x: any) => COMM_FEHLER.includes(x.status) && !commSystemFehler(x) && x.created_at >= seit24).length,
     letzte: liste.find((x: any) => COMM_OK.includes(x.status))?.sent_at ?? null };
   const kanal = (k: string) => {
     const w = (wege ?? []).filter((x: any) => x.channel === k);
@@ -657,7 +664,7 @@ async function communicatorStatus(ich: Ich, erreichbarkeit = false) {
   else if (!st.dispatch_enabled) { farbe = "blau"; text = "Versand pausiert (Wartung) – Benachrichtigungen werden gesammelt und später verschickt"; }
   else if (push.zustand === "stoerung" && email.zustand === "stoerung") { farbe = "rot"; text = "Störung: weder Push noch E-Mail kommen an"; }
   else if (alterMin == null || alterMin > COMM_BERICHT_VERALTET_MIN) { farbe = "grau"; text = alterMin == null ? "Kein Zustandsbericht vorhanden" : `Zustandsbericht veraltet (${Math.round(alterMin)} Min. alt)`; }
-  else if (push.zustand === "stoerung" || email.zustand === "stoerung" || (bericht?.failed ?? 0) > 0 || club.fehler24 > 0 || Number(bericht?.success_rate ?? 100) < 90) {
+  else if (push.zustand === "stoerung" || email.zustand === "stoerung" || systemFehler24 > 0 || club.fehler24 > 0 || Number(bericht?.success_rate ?? 100) < 90) {
     farbe = "gelb"; text = push.zustand === "stoerung" ? "Eingeschränkt: Push gestört – es geht per E-Mail raus" : email.zustand === "stoerung" ? "Eingeschränkt: E-Mail gestört – Push läuft" : "Eingeschränkt: einzelne Benachrichtigungen fehlgeschlagen";
   }
   else { farbe = "gruen"; text = "KC Communicator läuft – Push und E-Mail werden zugestellt"; }

@@ -1,5 +1,15 @@
 # Änderungen
 
+## 0.85.0 – 2026-09-30 (DEV)
+
+- KC-CLUB-LED-EMPFAENGER (Fehlalarm, Freigabe Hansi): Die Communicator-LED war seit 30.09. 10:20 gelb, weil ein Anklopf-Push
+  an Klaus mit PUSH_NO_ACTIVE_SUBSCRIPTION scheiterte (er schaltete Push 2 Min. später ein) – ein Fehler auf Empfängerseite,
+  keine Störung. Empfängerfehler (dieselbe Liste wie kc-communication router/dispatch „empfaengerFehler“) zählen nicht mehr:
+  club.fehler24 nur Systemfehler; statt „failed“ aus dem Zustandsbericht (zählt Empfängerfehler mit) werden die fehlgeschlagenen
+  Aufträge aller Programme der letzten 24 h ohne Empfängerfehler gezählt. Neu club.ohneWeg24 nur zur Anzeige im
+  Verbindungsfenster („… Empfänger ohne Push/Adresse – keine Störung“). Echte Störungen (Weg gestört, Systemfehler,
+  Erfolgsquote < 90 %, Bericht veraltet → grau) bleiben unverändert.
+
 ## 0.84.0 – 2026-09-30 (DEV)
 
 - KC-CLUB-HEARTBEAT (Wunsch Hansi): Lebenszeichen wie die anderen KC-Programme. Die App meldet jede Minute (nur wenn

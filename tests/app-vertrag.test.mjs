@@ -1409,4 +1409,14 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/if \(document\.visibilityState !== "hidden"\) herzSenden\(\)/.test(html), "nur senden, wenn die App sichtbar ist");
 }
 
+// 106. 0.85.0: Empfängerfehler färben die Versand-LED nicht (KC-CLUB-LED-EMPFAENGER)
+{
+  assert.ok(/const COMM_EMPFAENGER_FEHLER = \/\^\(PUSH_NO_ACTIVE_SUBSCRIPTION\|PUSH_SUBSCRIPTION_NOT_FOUND\|PUSH_USER_RECIPIENT_MISSING\|EMAIL_RECIPIENT_MISSING\)\//.test(server), "Liste wie im Communicator");
+  const cs = server.slice(server.indexOf("async function communicatorStatus"), server.indexOf("// ----- KC-CLUB-ADMINLAGE (0.47.0)"));
+  assert.ok(!/bericht\?\.failed \?\? 0\) > 0/.test(cs) && /systemFehler24 > 0 \|\| club\.fehler24 > 0/.test(cs) && /fehler24: liste\.filter\(\(x: any\) => commSystemFehler\(x\)/.test(cs), "nur Systemfehler zählen");
+  assert.ok(/push\.zustand === "stoerung" \|\| email\.zustand === "stoerung"/.test(cs) && /Number\(bericht\?\.success_rate \?\? 100\) < 90/.test(cs), "echte Störungen bleiben gelb");
+  const f = (s, c) => /^(failed|dead_lettered|error)$/.test(s) && !/^(PUSH_NO_ACTIVE_SUBSCRIPTION|PUSH_SUBSCRIPTION_NOT_FOUND|PUSH_USER_RECIPIENT_MISSING|EMAIL_RECIPIENT_MISSING)/.test(c || "");
+  assert.ok(!f("failed", "PUSH_NO_ACTIVE_SUBSCRIPTION") && f("failed", "PUSH_ALL_FAILED:410") && f("dead_lettered", null) && !f("sent", null), "Beispiele");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

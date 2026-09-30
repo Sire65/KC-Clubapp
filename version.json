@@ -1,10 +1,16 @@
 {
-  "version": "0.84.0",
+  "version": "0.85.0",
   "datum": "2026-09-30",
   "neu": [
-    "♥ Lebenszeichen wie in den anderen KC-Programmen: Das Herz oben blinkt bei jedem Herzschlag kurz rot – antippen zeigt die letzten 15"
+    "🟢 Die Versand-LED (zweite LED oben) wird nicht mehr gelb, nur weil ein Empfänger kein Push eingeschaltet hat – sie zeigt nur echte Störungen"
   ],
   "verlauf": [
+    {
+      "version": "0.85.0",
+      "neu": [
+        "🟢 Die Versand-LED (zweite LED oben) wird nicht mehr gelb, nur weil ein Empfänger kein Push eingeschaltet hat – sie zeigt nur echte Störungen"
+      ]
+    },
     {
       "version": "0.84.0",
       "neu": [
