@@ -1,5 +1,10 @@
 # Änderungen
 
+## 0.67.0 – 2026-09-30 (DEV)
+
+- KC-CLUB-MODUS-ANZEIGE (neu, Wunsch Hansi): kleines Schild am Sonne/Mond-Knopf oben – A = Automatik, T = immer Tag,
+  N = immer Nacht (Voreinstellung aus DS.modus); Titel/Bildschirmleser nennen die Einstellung. Bedienung unverändert.
+
 ## 0.66.0 – 2026-09-30 (DEV)
 
 - KC-CLUB-ANSICHT-NAME (neu, Wunsch Hansi): hinter „Schnellzugriff“ klein und farbig die aktive Ansicht –

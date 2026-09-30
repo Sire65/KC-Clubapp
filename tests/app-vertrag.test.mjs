@@ -1205,4 +1205,9 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/body\.einfach \.ansichtname\.erw, body:not\(\.einfach\) \.ansichtname\.ein \{ display: none; \}/.test(html), "zeigt nicht nur die aktive Ansicht");
 }
 
+// 89. 0.67.0: A/T/N am Tag/Nacht-Knopf (KC-CLUB-MODUS-ANZEIGE)
+{
+  assert.ok(/const MODUS_ZEICHEN = \{ auto: \["A", "Automatik"\], tag: \["T", "Immer Tag"\], nacht: \["N", "Immer Nacht"\] \}/.test(html) && /<span class="modusbuchstabe" aria-hidden="true">\$\{mz\[0\]\}<\/span>/.test(html), "A/T/N-Anzeige fehlt");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
