@@ -1,10 +1,16 @@
 {
-  "version": "0.75.0",
+  "version": "0.76.0",
   "datum": "2026-09-29",
   "neu": [
-    "🪩 Zwei neue Farbdesigns: „Disko“ mit Schwarzlicht-Leuchten und „Regenbogen“ – unter ⚙️ Mehr → Darstellung bzw. „Lieblingsfarbe“"
+    "🔧 Kurze Aussetzer des Servers (Meldung „Fehler 503“) fängt die App jetzt selbst ab und versucht es still noch einmal"
   ],
   "verlauf": [
+    {
+      "version": "0.76.0",
+      "neu": [
+        "🔧 Kurze Aussetzer des Servers (Meldung „Fehler 503“) fängt die App jetzt selbst ab und versucht es still noch einmal"
+      ]
+    },
     {
       "version": "0.75.0",
       "neu": [

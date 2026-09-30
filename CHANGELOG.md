@@ -1,5 +1,12 @@
 # Änderungen
 
+## 0.76.0 – 2026-09-30 (DEV)
+
+- KC-CLUB-AUSSETZER (Fehlerbehebung, Meldung Hansi „Fehler 503“ um 08:27): Supabase hatte für eine einzelne Anfrage keinen
+  freien Server (Protokoll: 503 ohne Funktions-Kennung, 1 von 114 Anfragen, keine Überlast). Die App wiederholt eine solche
+  503-Antwort ohne Programmantwort einmal still nach 0,8 s – sie hat unseren Code nie erreicht, also nichts doppelt. 502/504
+  werden nicht wiederholt (könnten schon ausgeführt sein). Bleibt es beim Fehler, verständliche Meldung statt „Fehler 503“.
+
 ## 0.75.0 – 2026-09-30 (DEV)
 
 - KC-CLUB-DESIGN-DISKO/REGENBOGEN (neu, Wunsch Hansi): zwei Farbdesigns in der Registry DESIGNS (Tag + Nacht).

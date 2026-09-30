@@ -1310,4 +1310,18 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/var\(--heroverlauf, linear-gradient\(135deg, var\(--hero1\)/.test(html) && /w\.style\.removeProperty\("--heroverlauf"\)/.test(html), "Standard-Verlauf der anderen Designs geändert");
 }
 
+// 97. 0.76.0: kurzer Supabase-Aussetzer (503) wird einmal still wiederholt (KC-CLUB-AUSSETZER)
+{
+  const code = html.slice(html.indexOf("const AUSSETZER_PAUSE_MS"), html.indexOf("// ---------- Verbindung zum Server (KC-CLUB-VERBINDUNG)"));
+  let aufrufe = 0; const antworten = [];
+  const setze = (liste) => { antworten.length = 0; antworten.push(...liste); aufrufe = 0; };
+  const fetchT = async () => { aufrufe++; const a = antworten.shift(); return { status: a.s, ok: a.s < 300, json: async () => { if (a.j === undefined) throw 0; return a.j; } }; };
+  const run = (liste) => { setze(liste); return new Function("fetch", "performance", "vbStart", "vbEnde", "API", "KEY", "APP_VERSION", "$", "setTimeout", code + "; return apiRoh('init');")(fetchT, { now: () => 0 }, () => {}, () => {}, "x", "k", "v", () => ({ classList: { add() {}, remove() {} } }), (f) => f()); };
+  const ok1 = await run([{ s: 503 }, { s: 200, j: { ok: 1 } }]);
+  assert.ok(ok1.ok === 1 && aufrufe === 2, "503 ohne Antwort wird nicht wiederholt");
+  await run([{ s: 503 }, { s: 503 }]).then(() => assert.fail("zweimal 503 muss Fehler sein"), (e) => assert.ok(/kurz nicht erreichbar/.test(e.message) && aufrufe === 2, "höchstens ein Wiederholversuch / Meldung"));
+  await run([{ s: 502 }, { s: 200, j: {} }]).then(() => assert.fail("502 darf nicht wiederholt werden"), () => assert.equal(aufrufe, 1, "502 wiederholt"));
+  await run([{ s: 503, j: { error: "Wartung" } }]).then(() => assert.fail(), (e) => assert.ok(e.message === "Wartung" && aufrufe === 1, "Programm-503 (mit Meldung) wiederholt"));
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

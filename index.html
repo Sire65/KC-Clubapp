@@ -1239,7 +1239,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "0.75.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.76.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2432,19 +2432,23 @@ async function api(action, daten = {}, opt = {}) {
   const warte = wartenStart(action, opt.warten);
   try { return await apiRoh(action, daten); } finally { if (warte) wartenEnde(); }
 }
-async function apiRoh(action, daten = {}) {
+// KC-CLUB-AUSSETZER (0.76.0): 503 ohne Antwort unseres Programms = Supabase hatte kurz keinen freien Server (die Anfrage
+// hat unseren Code nie erreicht) → einmal still wiederholen. Andere Fehler nicht wiederholen (sonst evtl. doppelt gesendet).
+const AUSSETZER_PAUSE_MS = 800;
+async function apiRoh(action, daten = {}, zweiterVersuch = false) {
   // KC-CLUB-VERBINDUNG: jede Anfrage zählt für die LEDs (Datenverkehr + Status)
   const t0 = performance.now(); vbStart();
   let r;
   try { r = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json", "x-club-token": KEY, "x-club-version": APP_VERSION }, body: JSON.stringify({ action, ...daten }) }); }
   catch { vbEnde(false, 0, navigator.onLine ? "Server nicht erreichbar" : "Handy offline"); throw new Error(navigator.onLine ? "Keine Verbindung zum Server – bitte gleich nochmal versuchen." : "Keine Internetverbindung."); }
   const j = await r.json().catch(() => null);
+  if (r.status === 503 && !j?.error && !zweiterVersuch) { vbEnde(true, performance.now() - t0, ""); await new Promise((ok) => setTimeout(ok, AUSSETZER_PAUSE_MS)); return apiRoh(action, daten, true); }
   // Verbindungsfehler: Gateway (502–504) oder 5xx ohne Antwort des Programms; Fachfehler (z. B. 400/403) heißen „verbunden“
   const leitungKaputt = (r.status >= 502 && r.status <= 504) || (r.status >= 500 && !j);
   vbEnde(!leitungKaputt, performance.now() - t0, leitungKaputt ? "Serverfehler " + r.status : "");
   if (!j && !leitungKaputt && r.ok) throw new Error("Unerwartete Antwort vom Server.");
   if (r.status === 401) { $("app").classList.add("versteckt"); $("gesperrt").classList.remove("versteckt"); $("linkUngueltig").classList.remove("versteckt"); throw new Error(j?.error || "Kein Zugang"); }
-  if (!r.ok) throw new Error(j?.error || "Fehler " + r.status);
+  if (!r.ok) throw new Error(j?.error || (leitungKaputt ? "Der Server ist gerade kurz nicht erreichbar – bitte gleich nochmal versuchen." : "Fehler " + r.status));
   return j;
 }
 
