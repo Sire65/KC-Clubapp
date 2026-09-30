@@ -1,12 +1,16 @@
 {
-  "version": "0.98.0",
+  "version": "0.98.1",
   "datum": "2026-09-30",
   "neu": [
-    "↪️ Nachricht weiterleiten: Nachricht antippen → „Weiterleiten“ → Unterhaltung oder Mitglied wählen – Fotos und Anhänge gehen mit",
-    "🌙 Nicht stören: unter ⚙️ Mehr → Benachrichtigungen z. B. 22–7 Uhr kein Push; Anrufe kommen trotzdem durch, danach eine Sammelmeldung",
-    "📱 Meine Geräte: sehen, welche Handys/Tablets deine Push-Meldungen bekommen – ein altes Gerät mit einem Tipp entfernen"
+    "🔧 Hinweis „Klappt etwas nicht?“ kommt nur noch, wenn der Start wirklich hakt – nicht mehr, wenn man zwischendurch in eine andere App wechselt"
   ],
   "verlauf": [
+    {
+      "version": "0.98.1",
+      "neu": [
+        "🔧 Hinweis „Klappt etwas nicht?“ kommt nur noch, wenn der Start wirklich hakt – nicht mehr, wenn man zwischendurch in eine andere App wechselt"
+      ]
+    },
     {
       "version": "0.98.0",
       "neu": [

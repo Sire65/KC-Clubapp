@@ -1,5 +1,12 @@
 # Änderungen
 
+## 0.98.1 – 2026-09-30 (DEV)
+
+- KC-CLUB-FEHLERPROTOKOLL, zweiter Fehlalarm behoben (Fund im Protokoll bei Frank: 3 Nachrichten geschrieben, trotzdem
+  „Klappt etwas nicht?“ – Android lädt die App beim Wechsel in eine andere App oft komplett neu). Läuft die App nach der
+  Anmeldung 30 s ordentlich, wird der Zähler für „mehrmals geöffnet“ geleert; es zählen nur noch Starts, die nicht
+  richtig durchlaufen. Test 123.
+
 ## 0.98.0 – 2026-09-30 (DEV)
 
 Vorschlag „Weiterleiten/Umleiten“, Punkte 1, 5 und 3 (Freigabe Hansi):

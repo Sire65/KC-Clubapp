@@ -1608,3 +1608,8 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   const einfach = html.slice(html.indexOf('data-klappe="einfach" data-einfach'), html.indexOf('data-klappe="einfach" data-einfach') + 2500);
   assert.ok(/id="ruheAnE"/.test(einfach) && /geraeteBlatt\(\)/.test(einfach), "Nicht stören / Meine Geräte auch in der einfachen Ansicht");
 }
+
+// 123. 0.98.1: normaler Betrieb (30 s nach Anmeldung) setzt den Mehrfachstart-Zähler zurück
+{
+  assert.ok(/setTimeout\(\(\) => \{ try \{ localStorage\.setItem\("kc_club_starts", "\[\]"\); \} catch \{\} \}, 30000\)/.test(html), "Mehrfachstart-Zähler wird bei normalem Betrieb nicht zurückgesetzt (Fehlalarm)");
+}

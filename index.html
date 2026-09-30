@@ -1514,7 +1514,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "0.98.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.98.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -7239,6 +7239,9 @@ function fpNachAnmeldung() {
       push: "Notification" in window ? Notification.permission : "nicht_moeglich", speicher: KCFP.speicherOk, sw: "serviceWorker" in navigator,
       bildschirm: `${screen.width}x${screen.height}`, sprache: navigator.language, netz: navigator.connection?.effectiveType || "", ms: dauer }); } } catch {}
   setTimeout(() => { KCFP.senden(true); fpHinweisPruefen(); }, 2500);
+  // 0.98.1 (Fund bei Frank: Fehlalarm, obwohl er gerade schrieb – Android lädt die App beim App-Wechsel oft neu):
+  // Läuft die App nach der Anmeldung 30 s ordentlich, zählt das als „klappt“ → Zähler für „mehrmals geöffnet“ auf null.
+  setTimeout(() => { try { localStorage.setItem("kc_club_starts", "[]"); } catch {} }, 30000);
 }
 function fpOhneLink() {
   fpNeu($("linkUngueltig") && !$("linkUngueltig").classList.contains("versteckt") ? "link_ungueltig" : "ohne_link", { browser: fpBrowser(), system: fpSystem(), start: START_ART, text: "App ohne gültigen persönlichen Link geöffnet" });
