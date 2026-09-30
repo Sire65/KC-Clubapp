@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.92.0";
+const SERVER_VERSION = "0.93.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -1222,6 +1222,24 @@ function koordinaten(p: any) {
   return { lat: Math.round(lat * 1e6) / 1e6, lon: Math.round(lon * 1e6) / 1e6, genauigkeit: gen != null && Number.isFinite(gen) ? Math.min(Math.max(0, gen), 100000) : null };
 }
 
+
+// ---------- KC-CLUB-FEHLERPROTOKOLL (0.93.0) ----------
+// Die App schreibt jede Kleinigkeit mit, die beim Start oder in der Bedienung schiefgeht (Skriptfehler, Serverantworten,
+// Start hängt, alte Version, falscher Browser …). Einträge werden auf dem Gerät gesammelt und gebündelt geschickt –
+// nach der Anmeldung mit Namen, vorher (Link fehlt/ungültig) anonym mit Geräte-Kennung. Nie Zugangsdaten oder Inhalte.
+const FP_MAX_JE_SENDUNG = 25, FP_ANONYM_JE_STUNDE = 150, FP_GERAET_JE_STUNDE = 40;
+function fpSauber(d: any): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  if (!d || typeof d !== "object") return out;
+  for (const [k, v] of Object.entries(d).slice(0, 25)) {
+    const key = txt(k, 30).replace(/[^A-Za-z0-9_]/g, "");
+    if (!key || /token|key|schluessel|passwort|password/i.test(key)) continue;
+    out[key] = typeof v === "number" || typeof v === "boolean" ? v : txt(typeof v === "object" ? JSON.stringify(v) : v, 400).replace(/[?&]k=[0-9a-f]{16,}/gi, "?k=…");
+  }
+  return out;
+}
+const fpArt = (x: unknown) => txt(x, 24).toLowerCase().replace(/[^a-z_]/g, "") || "allg";
+
 // ---------- Hauptprogramm ----------
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
@@ -1442,6 +1460,43 @@ Köcheclub Werne`,
       await db.rpc("kc_club_zugangslinks_schwaerzen").then(() => {}, () => {}); // KC-CLUB-LINKSCHUTZ: Schlüssel nicht im Mail-Speicher lassen
       await protokoll(pe.person_id, "zugang_angefordert", { treffer: true, versand });
       return json({ ok: true, text });
+    }
+
+    // ----- KC-CLUB-FEHLERPROTOKOLL (0.93.0): Fehler VOR der Anmeldung (Link fehlt/ungültig) – anonym, mit Geräte-Kennung -----
+    if (a === "fehler_anonym") {
+      const geraet = txt(p.geraet, 40).replace(/[^A-Za-z0-9-]/g, "");
+      const liste = (Array.isArray(p.eintraege) ? p.eintraege : []).slice(0, FP_MAX_JE_SENDUNG);
+      if (!geraet || !liste.length) return json({ ok: true, gespeichert: 0 });
+      const seit = new Date(Date.now() - 3600000).toISOString();
+      const [{ count: gesamt }, { count: vomGeraet }] = await Promise.all([
+        db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).like("aktion", "fehler_anonym%").gte("zeit", seit),
+        db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).like("aktion", "fehler_anonym%").eq("details->>geraet", geraet).gte("zeit", seit),
+      ]);
+      const platz = Math.max(0, Math.min(FP_ANONYM_JE_STUNDE - (gesamt ?? 0), FP_GERAET_JE_STUNDE - (vomGeraet ?? 0), liste.length));
+      if (!platz) return json({ ok: true, gespeichert: 0 });
+      const ua = txt(req.headers.get("user-agent"), 200), version = txt(req.headers.get("x-club-version"), 20);
+      const neu = liste.slice(0, platz);
+      // App startet gar nicht / Hilferuf ohne Anmeldung → Admins sofort Bescheid geben (höchstens 1× am Tag je Gerät)
+      const alarm = neu.find((e: any) => ["start_kaputt", "hilferuf_anonym"].includes(fpArt(e?.art)));
+      let schonGemeldet = true;
+      if (alarm) {
+        const { count: c } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("aktion", "fehler_anonym_admin_benachrichtigt")
+          .eq("details->>geraet", geraet).gte("zeit", new Date(Date.now() - 86400000).toISOString());
+        schonGemeldet = (c ?? 0) > 0;
+      }
+      await db.from("kc_club_protokoll").insert(neu.map((e: any) => ({ person_id: null, aktion: "fehler_anonym_" + fpArt(e?.art), details: { ...fpSauber(e), geraet, ua, version } })));
+      if (alarm && !schonGemeldet) {
+        await db.from("kc_club_protokoll").insert({ person_id: null, aktion: "fehler_anonym_admin_benachrichtigt", details: { geraet } });
+        const { data: admins } = await db.from("kc_club_rollen").select("person_id").eq("ist_admin", true);
+        const was = fpArt(alarm.art) === "start_kaputt" ? "Die Club-App startet bei jemandem gar nicht" : "Jemand meldet ohne Anmeldung ein Problem";
+        await senden("club_nachricht", (admins ?? []).map((x: any) => x.person_id), {
+          titel: "🆘 " + was, kurz: `${txt(alarm.text, 120)} · Gerät ${geraet}`,
+          betreff: `Köcheclub-App: ${was}`,
+          text: `Hallo,\n\n${was}.\n\n${txt(alarm.text, 300)}\nGerät-Kennung: ${geraet}\nHandy/Browser: ${ua}\nApp-Version: ${version || "?"}\n\nEinzelheiten: Admin-Zentrale → 🩺 Fehlerprotokoll\n${APP_URL}\n\nViele Grüße\nKöcheclub-App`,
+          url: APP_URL,
+        }, `club-fehler-alarm:${geraet}:${berlinTag(new Date())}`).catch(() => null);
+      }
+      return json({ ok: true, gespeichert: platz });
     }
 
     const tAnm = Date.now();
@@ -1780,6 +1835,48 @@ Köcheclub Werne`,
         return json({ standorte: liste.map((x: any) => ({ id: x.id, vonMir: x.person_id === ich.person_id, von: { person_id: x.person_id, name: name(x.person_id) },
           lat: x.lat, lon: x.lon, genauigkeit: x.genauigkeit, aktualisiert_am: x.aktualisiert_am, bis: x.bis,
           ...(x.person_id === ich.person_id ? { an: x.empfaenger.map(name) } : {}) })) });
+      }
+
+      // ----- KC-CLUB-FEHLERPROTOKOLL (0.93.0) -----
+      case "fehler_melden": {
+        const liste = (Array.isArray(p.eintraege) ? p.eintraege : []).slice(0, FP_MAX_JE_SENDUNG);
+        if (!liste.length) return json({ ok: true, gespeichert: 0 });
+        const { count } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("person_id", ich.person_id).like("aktion", "fehler_%").gte("zeit", new Date(Date.now() - 3600000).toISOString());
+        const platz = Math.max(0, Math.min(200 - (count ?? 0), liste.length));
+        if (!platz) return json({ ok: true, gespeichert: 0 });
+        const ua = txt(req.headers.get("user-agent"), 200), version = txt(req.headers.get("x-club-version"), 20);
+        await db.from("kc_club_protokoll").insert(liste.slice(0, platz).map((e: any) => ({ person_id: ich.person_id, aktion: "fehler_" + fpArt(e?.art), details: { ...fpSauber(e), ua, version } })));
+        return json({ ok: true, gespeichert: platz });
+      }
+
+      case "hilfe_anfordern": {
+        const { count } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("person_id", ich.person_id).eq("aktion", "hilferuf").gte("zeit", new Date(Date.now() - 3600000).toISOString());
+        if ((count ?? 0) >= 3) throw new Fehler("Deine Meldung ist schon angekommen – Hansi meldet sich bei dir.", 429);
+        const text = txt(p.text, 600), info = fpSauber(p.info);
+        await protokoll(ich.person_id, "hilferuf", { text, ...info, ua: txt(req.headers.get("user-agent"), 200), version: txt(req.headers.get("x-club-version"), 20) });
+        const { data: admins } = await db.from("kc_club_rollen").select("person_id").eq("ist_admin", true);
+        const ziel = (admins ?? []).map((x: any) => x.person_id).filter((id: string) => id !== ich.person_id);
+        const versand = ziel.length ? await senden("club_nachricht", ziel, {
+          titel: `🆘 ${ich.name} braucht Hilfe mit der App`, kurz: text || "Problem gemeldet – Einzelheiten im Fehlerprotokoll",
+          betreff: `Köcheclub-App: ${ich.name} meldet ein Problem`,
+          text: `Hallo,\n\n${ich.name} hat in der Club-App „Problem melden“ getippt.\n\n${text ? "Nachricht: " + text + "\n\n" : ""}Gerät: ${info.system ?? "?"} · ${info.browser ?? "?"} · läuft als ${info.start ?? "?"} · App ${txt(req.headers.get("x-club-version"), 20)}\n\nAlle Einzelheiten: Admin-Zentrale → 🩺 Fehlerprotokoll\n${APP_URL}\n\nViele Grüße\nKöcheclub-App`,
+          url: APP_URL,
+        }, `club-hilfe:${ich.person_id}:${Date.now()}`) : null;
+        return json({ ok: true, versand });
+      }
+
+      case "fehlerprotokoll": {
+        nurAdmin(ich);
+        const tage = Math.min(14, Math.max(1, Math.round(Number(p.tage) || 2)));
+        const seit = new Date(Date.now() - tage * 86400000).toISOString();
+        let q = db.from("kc_club_protokoll").select("zeit,person_id,aktion,details").gte("zeit", seit)
+          .or("aktion.like.fehler_%,aktion.eq.hilferuf,aktion.eq.diagnose_start,aktion.eq.zugang_angefordert")
+          .order("zeit", { ascending: false }).limit(600);
+        if (p.person_id) q = q.eq("person_id", String(p.person_id));
+        const { data } = await q;
+        const leute = await personen((data ?? []).map((x: any) => x.person_id).filter(Boolean));
+        return json({ tage, eintraege: (data ?? []).map((x: any) => ({ zeit: x.zeit, person_id: x.person_id, name: x.person_id ? (leute.get(x.person_id)?.display_name || x.person_id) : null,
+          aktion: x.aktion, details: x.details })) });
       }
 
       // ----- Vorschläge & Abstimmungen -----

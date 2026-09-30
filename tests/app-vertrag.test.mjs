@@ -705,7 +705,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 55. 0.33.0: drehende Kochmütze bei längeren Anfragen – nicht bei Hintergrund-Abfragen, immer wieder ausgeblendet
 {
   assert.ok(/id="warten"/.test(html) && /kc-kochmuetze-weiss\.webp" alt=""><\/div><b id="wartenText">/.test(html), "Kochmütze fehlt");
-  assert.ok(/const warte = wartenStart\(action, opt\.warten\);\s*try \{ return await apiRoh\(action, daten\); \} finally \{ if \(warte\) wartenEnde\(\); \}/.test(html), "Kochmütze wird bei Fehlern nicht ausgeblendet");
+  assert.ok(/const warte = wartenStart\(action, opt\.warten\);\s*try \{ return await apiRoh\(action, daten\); \}\s*(catch \(e\) \{[^}]*\}[^\n]*\n\s*)?finally \{ if \(warte\) wartenEnde\(\); \}/ /* 0.93.0: catch nur zum Protokollieren, wirft weiter */.test(html), "Kochmütze wird bei Fehlern nicht ausgeblendet");
   for (const a of ["online", "anruf_status", "unterhaltung", "protokoll_speichern", "init"]) assert.ok(new RegExp(`WARTEN_STILL = new Set\\([^)]*"${a}"`).test(html), `Hintergrund-Abfrage ${a} ließe die Mütze flackern`);
   assert.ok(/nachricht_senden: "Nachricht wird gesendet …"/.test(html), "Text beim Senden fehlt");
 }
@@ -1519,4 +1519,24 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
 // 115. 0.92.0: Warte-Anzeige kennt die neuen Aktionen, Hintergrund-Abfragen bleiben still
 {
   assert.ok(/WARTEN_STILL = new Set\(\["standort_update", "standort_liste", "terminanfragen_liste"/.test(html), "Hintergrund-Abfragen würden flackern");
+}
+
+// 116. 0.93.0: Fehlerprotokoll – Fänger ganz oben (ES5), anonym + angemeldet, Hilfe-Schritte, Problem melden, Admin-Ansicht
+{
+  const kopf = html.slice(0, html.indexOf("</head>"));
+  const fp = (/<script>\s*\/\* KC-CLUB-FEHLERPROTOKOLL[\s\S]*?<\/script>/.exec(kopf) || [""])[0];
+  assert.ok(fp, "Fehlerfänger muss im <head> vor der App stehen");
+  assert.ok(html.indexOf("KC-CLUB-FEHLERPROTOKOLL (0.93.0) – läuft VOR") < html.indexOf('const API = "https://'), "Fehlerfänger muss vor dem App-Skript laufen");
+  assert.ok(!/=>|\blet\b|\bconst\b|`/.test(fp.replace(/\/\*[\s\S]*?\*\//g, "")), "Fehlerfänger muss altes JavaScript (ES5) sein, sonst läuft er auf alten Geräten nicht");
+  assert.ok(/window\.onerror/.test(fp) && /unhandledrejection/.test(fp) && /addEventListener\("error"[\s\S]*?, true\)/.test(fp), "Fehlerarten fehlen");
+  assert.ok(/mehrfachstart/.test(fp) && /start_haengt/.test(fp) && /start_kaputt/.test(fp) && /speicher/.test(fp), "Start-Beobachtung fehlt");
+  assert.ok(/fehler_anonym/.test(fp) && /fehler_melden/.test(fp), "anonym/angemeldet senden fehlt");
+  assert.ok(/if \(a === "fehler_anonym"\)/.test(server) && server.indexOf('if (a === "fehler_anonym")') < server.indexOf("const ich = await anmelden(req);"), "anonyme Meldung muss vor der Anmeldung angenommen werden");
+  assert.ok(/FP_ANONYM_JE_STUNDE/.test(server) && /FP_GERAET_JE_STUNDE/.test(server), "Grenzen gegen Missbrauch fehlen");
+  assert.ok(/token\|key\|schluessel\|passwort/.test(server) && /\[\?&\]k=/.test(server), "Zugangsdaten müssen herausgefiltert werden");
+  assert.ok(/case "hilfe_anfordern"/.test(server) && /case "fehlerprotokoll": \{\s*nurAdmin\(ich\)/.test(server), "Hilfe/Adminansicht auf dem Server fehlt");
+  assert.ok(/catch \(e\) \{ fpApiFehler\(action, e\); throw e; \}/.test(html), "Serverfehler werden nicht protokolliert");
+  assert.ok(/id: "ios_fremd"/.test(html) && /Bitte in Safari öffnen/.test(html) && /id: "inapp"/.test(html) && /id: "privat"/.test(html) && /id: "mehrfach"/.test(html), "Hilfe-Schritte fehlen");
+  assert.ok(/fpProblemMelden\(\)/.test(html) && /onclick="fpAdmin\(\)"/.test(html), "Problem melden / Admin-Knopf fehlt");
+  assert.ok(/fpNeu\("alte_version"/.test(html) && /Jetzt aktualisieren<\/button>/.test(html), "alte Version: protokollieren + direkt aktualisieren");
 }

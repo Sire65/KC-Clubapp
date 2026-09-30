@@ -2,6 +2,90 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
+<script>
+/* KC-CLUB-FEHLERPROTOKOLL (0.93.0) – läuft VOR der eigentlichen App, bewusst altes, einfaches JavaScript (ES5):
+   So wird auch dann noch mitgeschrieben, wenn die App auf einem alten Handy gar nicht erst startet.
+   Sammelt jede Kleinigkeit (Skriptfehler, nicht geladene Dateien, Start hängt, mehrfaches Öffnen) auf dem Gerät und
+   schickt sie gebündelt an den Club-Server – angemeldet mit Namen, sonst anonym mit Geräte-Kennung. Nie Zugangsdaten. */
+(function () {
+  var API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club", S = "kc_club_fp", START = Date.now();
+  var mem = [], speicherOk = true, zuletzt = {};
+  try { localStorage.setItem("kc_club_fp_test", "1"); localStorage.removeItem("kc_club_fp_test"); } catch (e) { speicherOk = false; }
+  function lies() { if (!speicherOk) return mem.slice(); try { return JSON.parse(localStorage.getItem(S) || "[]"); } catch (e) { return []; } }
+  function schreib(l) { l = l.slice(-60); if (!speicherOk) { mem = l; return; } try { localStorage.setItem(S, JSON.stringify(l)); } catch (e) { mem = l; } }
+  function geraet() {
+    var g = null; try { g = localStorage.getItem("kc_club_geraet"); } catch (e) {}
+    if (!g) { g = "G-" + Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4); try { localStorage.setItem("kc_club_geraet", g); } catch (e) {} }
+    return g;
+  }
+  function kurz(x, n) { x = String(x == null ? "" : x); return x.length > n ? x.slice(0, n) + "…" : x; }
+  function neu(art, daten) {
+    daten = daten || {};
+    var sig = art + "|" + (daten.text || "") + "|" + (daten.aktion || ""), t = Date.now();
+    if (zuletzt[sig] && t - zuletzt[sig] < 30000) return; // gleiche Meldung höchstens alle 30 s
+    zuletzt[sig] = t;
+    var e = { art: art, z: new Date().toISOString(), online: navigator.onLine, sekSeitStart: Math.round((t - START) / 1000) };
+    for (var k in daten) if (Object.prototype.hasOwnProperty.call(daten, k)) e[k] = typeof daten[k] === "string" ? kurz(daten[k], 300) : daten[k];
+    if (window.KCFP && window.KCFP.sicht) e.sicht = window.KCFP.sicht;
+    var l = lies(); l.push(e); schreib(l);
+  }
+  function schluessel() {
+    try { var m = /[?&]k=([0-9a-fA-F]{16,})/.exec(location.search); if (m) return m[1]; return localStorage.getItem("kc_club_key") || ""; } catch (e) { return ""; }
+  }
+  var sendetGerade = false;
+  function senden(sofort) {
+    var l = lies(); if (!l.length || sendetGerade) return;
+    if (!navigator.onLine && !sofort) return;
+    var k = window.KCFP.angemeldet ? schluessel() : "", teil = l.slice(0, 25);
+    var body = JSON.stringify(k ? { action: "fehler_melden", eintraege: teil } : { action: "fehler_anonym", geraet: geraet(), eintraege: teil });
+    var fertig = function (ok) { sendetGerade = false; if (ok) { var rest = lies().slice(teil.length); schreib(rest); if (rest.length) setTimeout(senden, 1500); } };
+    sendetGerade = true;
+    try {
+      var h = { "Content-Type": "application/json", "x-club-version": window.KCFP.version || "" }; if (k) h["x-club-token"] = k;
+      if (window.fetch) fetch(API, { method: "POST", headers: h, body: body, keepalive: true }).then(function (r) { fertig(r.ok); }, function () { fertig(false); });
+      else { var x = new XMLHttpRequest(); x.open("POST", API); for (var n in h) x.setRequestHeader(n, h[n]); x.onload = function () { fertig(x.status < 300); }; x.onerror = function () { fertig(false); }; x.send(body); }
+    } catch (e) { sendetGerade = false; }
+  }
+  window.KCFP = { neu: neu, senden: senden, lies: lies, geraet: geraet, startOk: false, angemeldet: false, sicht: "", version: "", speicherOk: speicherOk, mehrfach: 0, start: START };
+  window.onerror = function (msg, quelle, zeile, spalte, err) {
+    neu("skript", { text: String(err && err.message || msg), datei: String(quelle || "").split("/").pop().split("?")[0], zeile: zeile || 0, spalte: spalte || 0,
+      stapel: err && err.stack ? kurz(String(err.stack).split("\n").slice(0, 3).join(" | "), 280) : "" });
+  };
+  window.addEventListener("unhandledrejection", function (ev) { var r = ev && ev.reason; neu("versprechen", { text: String(r && r.message || r) }); });
+  // Dateien, die nicht laden (Skript, Stil, Bild) – z. B. schlechtes Netz oder alter Zwischenspeicher
+  window.addEventListener("error", function (ev) {
+    var t = ev && ev.target; if (!t || t === window || !t.tagName) return;
+    neu("laden", { text: t.tagName.toLowerCase() + " nicht geladen: " + String(t.src || t.href || "").split("/").pop().split("?")[0] });
+  }, true);
+  // Mehrfach geöffnet in kurzer Zeit? (Zeichen für „geht nicht richtig auf“)
+  try {
+    var st = JSON.parse(localStorage.getItem("kc_club_starts") || "[]"), jetzt = Date.now();
+    st = st.filter(function (x) { return jetzt - x < 600000; }); st.push(jetzt); localStorage.setItem("kc_club_starts", JSON.stringify(st.slice(-10)));
+    if (st.length >= 3) { window.KCFP.mehrfach = st.length; neu("mehrfachstart", { text: st.length + "× in 10 Minuten geöffnet" }); }
+  } catch (e) {}
+  if (!speicherOk) neu("speicher", { text: "Speicher gesperrt (privater Modus?) – App kann sich nichts merken" });
+  // Start-Wächter: nach 12 s noch nicht fertig → mitschreiben; ist die App gar nicht angelaufen, einfache Hilfe anzeigen
+  setTimeout(function () {
+    if (window.KCFP.startOk) return;
+    var appDa = typeof window.zeige === "function";
+    neu(appDa ? "start_haengt" : "start_kaputt", { text: appDa ? "nach 12 s noch nicht angemeldet" : "App-Programm ist gar nicht angelaufen", bildschirm: screen.width + "x" + screen.height });
+    senden(true);
+    if (!appDa) {
+      var ua = navigator.userAgent, ios = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+      var tipp = ios && /CriOS|FxiOS|EdgiOS|OPiOS/.test(ua) ? "Du hast die App in einem anderen Browser als Safari geöffnet. Auf iPhone und iPad bitte den Link in <b>Safari</b> öffnen."
+        : ios ? "Bitte prüfe, ob dein iPhone/iPad auf dem neuesten Stand ist (Einstellungen → Allgemein → Softwareupdate)."
+        : "Bitte öffne den Link in <b>Google Chrome</b> und prüfe, ob der Browser auf dem neuesten Stand ist.";
+      var d = document.createElement("div");
+      d.setAttribute("style", "position:fixed;left:0;right:0;top:0;bottom:0;z-index:99999;background:#f5eee3;color:#222;font:18px/1.45 Arial,sans-serif;padding:24px;overflow:auto");
+      d.innerHTML = "<h2 style='color:#741521;margin-top:0'>Die Club-App startet auf diesem Gerät nicht richtig</h2><p>" + tipp + "</p><p>Der Fehler wurde automatisch an Hansi gemeldet – er sieht, woran es liegt, und kann dir helfen.</p>"
+        + "<p><button style='font-size:18px;padding:12px 18px;border-radius:12px;border:0;background:#741521;color:#fff' onclick='location.reload()'>Nochmal versuchen</button></p>";
+      document.body ? document.body.appendChild(d) : document.addEventListener("DOMContentLoaded", function () { document.body.appendChild(d); });
+    }
+  }, 12000);
+  setInterval(function () { senden(false); }, 60000);
+  document.addEventListener("visibilitychange", function () { if (document.hidden) senden(false); });
+})();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#741521">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -746,6 +830,10 @@
   #stBalken { position: fixed; left: 50%; transform: translateX(-50%); top: calc(8px + env(safe-area-inset-top)); z-index: 45; background: #b3261e; color: #fff; border-radius: 999px;
     padding: 6px 8px 6px 14px; display: flex; align-items: center; gap: 10px; box-shadow: 0 6px 18px rgba(0,0,0,.3); font-weight: 700; font-size: .9rem; max-width: calc(100% - 24px); }
   #stBalken button { background: #fff; color: #b3261e; border: 0; border-radius: 999px; padding: 6px 12px; font-weight: 900; }
+  /* KC-CLUB-FEHLERPROTOKOLL (0.93.0) */
+  .fp-schritte { margin: 4px 0; padding-left: 22px; display: grid; gap: 6px; }
+  .fp-zeile { padding: 6px 0; border-bottom: 1px solid var(--linie); }
+  .fp-rot { background: rgba(198,40,40,.12); border-radius: 8px; padding: 6px; }
 </style>
 </head>
 <body>
@@ -1100,6 +1188,7 @@
          auch in der einfachen Ansicht sichtbar (nur für den Admin) -->
     <details class="karte versteckt" data-klappe="admin" data-einfach id="adminBereich">
     <summary>🛠️ Admin-Einstellungen</summary>
+    <button class="knopf" onclick="fpAdmin()">🩺 Fehlerprotokoll &amp; Startprobleme der Mitglieder</button>
     <details class="karte innen" data-klappe="admin_pinnwand" id="adminPinnwand">
       <summary>📌 Pinnwand: Erinnerung an alte Zettel</summary>
       <p class="hinweis" style="margin-top:0">Beim Öffnen der App fragt sie: „Dein Post-it vom … hängt noch an der Pinnwand. Möchtest du es abnehmen?“ – gilt für alle Mitglieder.</p>
@@ -1152,7 +1241,7 @@
         <div class="hinweis" style="margin:2px 0 0">Entwicklung &amp; Design: <b>Hans-Joachim Koch</b></div></div>
       <div class="zeile"><span>Version</span><b id="appVersion" style="margin-left:auto"></b></div><div class="zeile"><span>Angemeldet als</span><b id="ichName" style="margin-left:auto;text-align:right"></b></div>
       <div id="appInfo"></div>
-      <div class="knoepfe"><button class="knopf klein" onclick="updateKachel()">Nach Update suchen</button><button class="knopf klein" onclick="appInfoKopieren()">📋 Infos kopieren</button></div>
+      <div class="knoepfe"><button class="knopf klein" onclick="updateKachel()">Nach Update suchen</button><button class="knopf klein" onclick="appInfoKopieren()">📋 Infos kopieren</button><button class="knopf klein" onclick="fpProblemMelden()">🆘 Problem melden</button></div>
       <p class="hinweis" style="font-size:.85rem;margin-bottom:0">„Infos kopieren“ hilft bei Fragen und Fehlern: einfach in eine Nachricht an Hansi einfügen. Es wird kein Zugangslink kopiert.<br>
         © 2026 Köcheclub Werne · Entwicklung &amp; Design Hans-Joachim Koch · kostenlos und werbefrei · Daten nur für Clubmitglieder mit persönlichem Link.</p>
     </details>
@@ -1356,7 +1445,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "0.92.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.93.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2848,7 +2937,9 @@ function wartenEnde() {
 }
 async function api(action, daten = {}, opt = {}) {
   const warte = wartenStart(action, opt.warten);
-  try { return await apiRoh(action, daten); } finally { if (warte) wartenEnde(); }
+  try { return await apiRoh(action, daten); }
+  catch (e) { fpApiFehler(action, e); throw e; } // KC-CLUB-FEHLERPROTOKOLL
+  finally { if (warte) wartenEnde(); }
 }
 // KC-CLUB-AUSSETZER (0.76.0): 503 ohne Antwort unseres Programms = Supabase hatte kurz keinen freien Server (die Anfrage
 // hat unseren Code nie erreicht) → einmal still wiederholen. Andere Fehler nicht wiederholen (sonst evtl. doppelt gesendet).
@@ -3682,6 +3773,7 @@ function adminBlatt() {
   const r = INFO_DATEN.admin?.r; if (!r) return;
   const c = r.communicator, b = c.bericht, m = r.mitglieder;
   $("adminBlattInhalt").innerHTML = `<h3 style="margin:0">🛡️ Admin-Zentrale – Einzelheiten</h3><p class="hinweis" style="margin:0">Stand ${esc(zeitKurz(r.zeit))} Uhr</p>
+    <button class="knopf" onclick="fpAdmin()">🩺 Fehlerprotokoll &amp; Startprobleme der Mitglieder</button>
     <b>👥 Zuletzt in der App</b>
     <table class="todotab">${m.zuletzt.map((x) => `<tr><td>${x.online ? "🟢" : "⚪"} ${esc(x.name)}</td><td>${esc(seitText(x.zuletzt))}</td><td class="hinweis">${x.version ? "v" + esc(x.version) : "–"}</td></tr>`).join("") || '<tr><td class="hinweis">Noch niemand</td></tr>'}</table>
     <p class="hinweis" style="margin:0">${m.ohneZugang} Mitglieder haben noch keinen persönlichen Link · ${m.nieAngemeldet} haben ihn, waren aber noch nie in der App.</p>
@@ -4045,6 +4137,7 @@ function wichtigZeigen() {
 async function neuLaden(vonHand) {
   try {
     INIT = await api("init", {}, { warten: !!vonHand }); ICH = INIT.ich;
+    fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln);
     if ($("setLiveTippen")) $("setLiveTippen").checked = liveTippen();
     ansichtUebernehmen(INIT.einstellungen?.ansicht);
@@ -4076,7 +4169,7 @@ function zaehlerZeigen() {
 function zeige(v, ausHistorie) {
   if (kaBearb && v !== "start") kaBearbeiten(false); // Anordnen beim Verlassen der Startseite abschließen
   const vorher = aktuelleAnsicht;
-  aktuelleAnsicht = v;
+  aktuelleAnsicht = v; if (window.KCFP) KCFP.sicht = v;
   if (vorher === "protokoll" && v !== "protokoll" && prTimer) prSpeichernJetzt(false).catch(() => {}); // ungespeicherte Eingaben sichern
   ["start", "dokumente", "termine", "vorschlaege", "aktionen", "aktion", "fotos", "feedback", "gruppe", "mitglied", "protokolle", "protokoll", "dienste", "nachrichten", "chat", "neu", "mitglieder", "einstellungen", "pinnwand", "erstattung", "ueberblick", "programme", "standort"].forEach((x) => $("v-" + x).classList.toggle("versteckt", x !== v));
   document.querySelectorAll("#fuss button").forEach((b) => b.classList.toggle("an", b.dataset.v === v || (v === "chat" && b.dataset.v === "nachrichten") || (v === "neu" && b.dataset.v === "nachrichten")));
@@ -6756,7 +6849,9 @@ async function updatePruefen(vonHand) {
     const v = await (await fetch("version.json?x=" + Date.now(), { cache: "no-store" })).json();
     VERSION_INFO = v; NEUE_VERSION = versionNeuer(v.version, APP_VERSION) ? v.version : null;
     if (NEUE_VERSION) {
-      $("updateHinweis").innerHTML = `<div class="updatebalken">🆕 Neue Version ${esc(v.version)}${v.neu?.length ? ": " + esc(v.neu[0]) : ""}<button class="knopf haupt klein" style="margin-left:auto" onclick="updateFenster()">Was ist neu?</button></div>`;
+      // KC-CLUB-FEHLERPROTOKOLL (0.93.0): alte Version mitschreiben und „Jetzt aktualisieren“ direkt anbieten (Fund: Mitglied lief auf 0.69)
+      fpNeu("alte_version", { hat: APP_VERSION, neu: v.version, text: `läuft noch auf ${APP_VERSION}, aktuell ist ${v.version}` });
+      $("updateHinweis").innerHTML = `<div class="updatebalken">🆕 Neue Version ${esc(v.version)} – du hast noch ${esc(APP_VERSION)}${v.neu?.length ? ": " + esc(v.neu[0]) : ""}<button class="knopf haupt klein" style="margin-left:auto" onclick="fpNeu('update_getippt',{hat:APP_VERSION});jetztAktualisieren()">🔄 Jetzt aktualisieren</button><button class="knopf klein" onclick="updateFenster()">Was ist neu?</button></div>`;
     } else if (vonHand) melde(`✔ Du hast die neueste Version (${APP_VERSION}).`);
     versionAnzeigen();
   } catch { if (vonHand) melde("Update-Prüfung gerade nicht möglich – bitte Internet prüfen.", true); }
@@ -6778,6 +6873,140 @@ async function jetztAktualisieren() {
   setTimeout(() => location.reload(), 400);
 }
 
+// ---------- KC-CLUB-FEHLERPROTOKOLL (0.93.0) ----------
+// Der Fehlerfänger (window.KCFP) steht ganz oben im <head> und läuft auch, wenn die App selbst nicht startet. Hier hängt die
+// App ihre eigenen Beobachtungen an (Serveranfragen, alte Version, Gerät/Browser) und zeigt verständliche Hilfe-Schritte.
+const fpNeu = (art, d) => { try { window.KCFP?.neu(art, d); } catch {} };
+const FP_LEISE = new Set(["lebenszeichen", "tippen", "anruf_status", "ping", "online", "standort_update", "fehler_melden", "diagnose"]);
+function fpApiFehler(action, e) {
+  if (FP_LEISE.has(action)) return;
+  fpNeu(navigator.onLine ? "api" : "offline", { aktion: action, text: String(e?.message || e) });
+}
+const FP_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+function fpBrowser() {
+  const ua = navigator.userAgent;
+  if (/CriOS/.test(ua)) return "Chrome"; if (/FxiOS|Firefox/.test(ua)) return "Firefox"; if (/EdgiOS|Edg\//.test(ua)) return "Edge";
+  if (/OPiOS|OPR/.test(ua)) return "Opera"; if (/SamsungBrowser/.test(ua)) return "Samsung Internet"; if (/; wv\)/.test(ua)) return "eingebauter Browser";
+  if (/FBAN|FBAV/.test(ua)) return "Facebook"; if (/Instagram/.test(ua)) return "Instagram";
+  if (FP_IOS && /Safari/.test(ua)) return "Safari"; if (/Chrome/.test(ua)) return "Chrome"; return "unbekannt";
+}
+function fpSystem() { const ua = navigator.userAgent; return /Android ([\d.]+)/.test(ua) ? "Android " + /Android ([\d.]+)/.exec(ua)[1] : FP_IOS ? "iOS " + ((/OS ([\d_]+)/.exec(ua) || [])[1] || "?").replace(/_/g, ".") : navigator.platform || "?"; }
+let fpAngemeldet = false;
+function fpNachAnmeldung() {
+  if (fpAngemeldet || !window.KCFP) return;
+  fpAngemeldet = true; KCFP.angemeldet = true; KCFP.startOk = true; KCFP.version = APP_VERSION;
+  const dauer = Date.now() - KCFP.start;
+  if (dauer > 6000) fpNeu("start_langsam", { ms: dauer, text: `Start dauerte ${Math.round(dauer / 1000)} s` });
+  try { if (!sessionStorage.getItem("kc_club_fp_umgebung")) { sessionStorage.setItem("kc_club_fp_umgebung", "1");
+    fpNeu("umgebung", { system: fpSystem(), browser: fpBrowser(), start: START_ART, standalone: matchMedia("(display-mode: standalone)").matches || navigator.standalone === true,
+      push: "Notification" in window ? Notification.permission : "nicht_moeglich", speicher: KCFP.speicherOk, sw: "serviceWorker" in navigator,
+      bildschirm: `${screen.width}x${screen.height}`, sprache: navigator.language, netz: navigator.connection?.effectiveType || "", ms: dauer }); } } catch {}
+  setTimeout(() => { KCFP.senden(true); fpHinweisPruefen(); }, 2500);
+}
+function fpOhneLink() {
+  fpNeu($("linkUngueltig") && !$("linkUngueltig").classList.contains("versteckt") ? "link_ungueltig" : "ohne_link", { browser: fpBrowser(), system: fpSystem(), start: START_ART, text: "App ohne gültigen persönlichen Link geöffnet" });
+  window.KCFP?.senden(true); setTimeout(fpHinweisPruefen, 800);
+}
+// Verständliche Hilfe-Schritte statt Fehlermeldungen – je Hinweis höchstens einmal am Tag
+const FP_HINWEISE = [
+  { id: "ios_fremd", wenn: () => FP_IOS && /CriOS|FxiOS|EdgiOS|OPiOS/.test(navigator.userAgent),
+    titel: "📱 Bitte in Safari öffnen", text: () => `Du hast die Club-App in <b>${fpBrowser()}</b> geöffnet. Auf iPhone und iPad funktioniert sie nur in <b>Safari</b> richtig – nur dort kannst du sie auf den Home-Bildschirm legen und Benachrichtigungen bekommen.`,
+    schritte: ["Unten auf <b>„🔗 Meinen Link kopieren“</b> tippen", "<b>Safari</b> öffnen (blaues Kompass-Symbol)", "Oben in die Adresszeile tippen, gedrückt halten → <b>„Einsetzen und öffnen“</b>", "Dann Teilen □↑ → <b>„Zum Home-Bildschirm“</b> → „Hinzufügen“ – ab jetzt immer über das neue Symbol öffnen"], link: true },
+  { id: "inapp", wenn: () => /; wv\)|FBAN|FBAV|Instagram|Line\//.test(navigator.userAgent),
+    titel: "🌐 Bitte im richtigen Browser öffnen", text: () => "Die App läuft gerade in einem <b>eingebauten Mini-Browser</b> (z. B. direkt aus WhatsApp oder Facebook). Dort funktionieren Anmeldung, Fotos und Benachrichtigungen oft nicht.",
+    schritte: () => FP_IOS ? ["Unten oder oben auf <b>„In Safari öffnen“</b> (Kompass-Symbol) tippen", "Falls es das nicht gibt: „🔗 Meinen Link kopieren“ und in Safari einfügen"] : ["Oben rechts auf <b>⋮</b> tippen", "<b>„In Chrome öffnen“</b> bzw. „Im Browser öffnen“ wählen"], link: true },
+  { id: "android_fremd", wenn: () => /Android/.test(navigator.userAgent) && /Firefox|OPR|DuckDuckGo|YaBrowser|UCBrowser/.test(navigator.userAgent),
+    titel: "🌐 Tipp: Chrome nehmen", text: () => `Du nutzt gerade <b>${fpBrowser()}</b>. Am zuverlässigsten läuft die Club-App auf Android in <b>Google Chrome</b> (oder Samsung Internet).`,
+    schritte: ["„🔗 Meinen Link kopieren“ tippen", "Chrome öffnen, Link oben einfügen", "Menü ⋮ → <b>„App installieren“</b>"], link: true },
+  { id: "privat", wenn: () => window.KCFP && !KCFP.speicherOk,
+    titel: "🔒 Privater Modus erkannt", text: () => "Dein Browser läuft im <b>privaten Modus</b>. Dann vergisst die App beim Schließen alles – auch deinen Zugang – und du musst jedes Mal neu starten.",
+    schritte: ["Privates Fenster schließen", "Deinen persönlichen Link in einem <b>normalen</b> Fenster öffnen"], link: true },
+  { id: "mehrfach", wenn: () => (window.KCFP?.mehrfach || 0) >= 3,
+    titel: "🤔 Klappt etwas nicht?", text: () => "Du hast die App gerade mehrmals hintereinander geöffnet. Falls etwas hakt, hilft meistens einer dieser Schritte:",
+    schritte: () => [!navigator.onLine ? "📶 <b>Internet ist gerade aus</b> – WLAN oder mobile Daten einschalten" : "📶 Internet prüfen – WLAN oder mobile Daten an?",
+      NEUE_VERSION ? "🔄 Oben <b>„Jetzt aktualisieren“</b> tippen – du hast noch eine ältere Version" : "🔄 App ganz schließen und neu öffnen",
+      FP_IOS && START_ART !== "app" ? "📱 Auf dem iPhone die App am besten über das Symbol auf dem Home-Bildschirm öffnen" : "📱 Die App über das Köcheclub-Symbol öffnen, nicht über einen alten Link",
+      "🆘 Geht es immer noch nicht? <b>„Problem melden“</b> – Hansi sieht dann genau, woran es liegt"], melden: true },
+];
+function fpHinweisPruefen() {
+  if (document.getElementById("fpFenster")) return;
+  const h = FP_HINWEISE.find((x) => { try { return x.wenn(); } catch { return false; } });
+  if (!h) return;
+  const heute = new Date().toISOString().slice(0, 10);
+  try { if (localStorage.getItem("kc_club_hinweis_" + h.id) === heute) return; localStorage.setItem("kc_club_hinweis_" + h.id, heute); } catch {}
+  fpNeu("hinweis", { id: h.id, browser: fpBrowser(), system: fpSystem(), start: START_ART, text: "Hilfe gezeigt: " + h.titel });
+  const schritte = typeof h.schritte === "function" ? h.schritte() : h.schritte;
+  const f = document.createElement("div"); f.id = "fpFenster"; f.className = "blatt"; f.setAttribute("role", "dialog"); f.setAttribute("aria-modal", "true");
+  f.innerHTML = `<div class="blatt-innen" style="max-height:88vh;overflow-y:auto">
+    <h3>${h.titel}</h3><p style="margin:0">${h.text()}</p>
+    <ol class="fp-schritte">${schritte.map((x) => `<li>${x}</li>`).join("")}</ol>
+    ${h.link && KEY ? `<button class="knopf haupt" onclick="fpLinkKopieren()">🔗 Meinen Link kopieren</button>` : ""}
+    ${h.melden ? `<button class="knopf" onclick="document.getElementById('fpFenster').remove();fpProblemMelden()">🆘 Problem melden</button>` : ""}
+    <button class="knopf" onclick="document.getElementById('fpFenster').remove()">Verstanden</button></div>`;
+  document.body.appendChild(f);
+}
+async function fpLinkKopieren() {
+  const link = APP_URL_CLUB + "?k=" + KEY;
+  let ok = false; try { await navigator.clipboard.writeText(link); ok = true; } catch {}
+  if (!ok) { try { const t = document.createElement("textarea"); t.value = link; document.body.appendChild(t); t.select(); ok = document.execCommand("copy"); t.remove(); } catch {} }
+  fpNeu("link_kopiert", { ok });
+  melde(ok ? "🔗 Dein Link ist kopiert – jetzt in Safari/Chrome oben einfügen" : "Kopieren ging nicht – bitte den Link aus deiner Mail/WhatsApp nehmen", !ok);
+}
+async function fpProblemMelden() {
+  const text = prompt("Was klappt nicht? (freiwillig, ein paar Worte reichen)\n\nHansi bekommt eine Nachricht und sieht automatisch, welches Handy, welcher Browser und welche Version du hast.", "");
+  if (text === null) return;
+  try { window.KCFP?.senden(true); } catch {}
+  if (!INIT) { fpNeu("hilferuf_anonym", { text: text.trim(), browser: fpBrowser(), system: fpSystem() }); window.KCFP?.senden(true); return melde("🆘 Deine Meldung ist unterwegs – Hansi meldet sich."); }
+  try { await api("hilfe_anfordern", { text: text.trim(), info: { system: fpSystem(), browser: fpBrowser(), start: START_ART, speicher: !!window.KCFP?.speicherOk,
+    push: "Notification" in window ? Notification.permission : "nicht_moeglich", online: navigator.onLine, bildschirm: `${screen.width}x${screen.height}`, sicht: aktuelleAnsicht } });
+    melde("🆘 Danke – Hansi hat deine Meldung bekommen und meldet sich."); }
+  catch (e) { melde(e.message, true); }
+}
+// ---- Admin: Fehlerprotokoll ansehen ----
+const FP_ARTEN = {
+  skript: ["🐞", "Programmfehler", "Fehler im App-Programm – bitte an Claude/Hansi weitergeben"],
+  versprechen: ["🐞", "Programmfehler im Hintergrund", "meist harmlos, bei Häufung weitergeben"],
+  laden: ["📦", "Datei nicht geladen", "schlechtes Netz oder alter Zwischenspeicher – App neu laden/aktualisieren"],
+  api: ["🔌", "Server-Anfrage ging schief", "Text zeigt den Grund"],
+  offline: ["📵", "Handy war offline", "Internet war aus – nichts zu tun"],
+  start_haengt: ["⏳", "Start hängt", "Netz sehr langsam oder Server nicht erreichbar"],
+  start_kaputt: ["💥", "App startet gar nicht", "Browser zu alt oder falscher Browser – Mitglied anrufen"],
+  start_langsam: ["🐢", "Start langsam", "schwaches Netz"],
+  mehrfachstart: ["🔁", "Mehrmals kurz hintereinander geöffnet", "Zeichen für „geht nicht auf“ – Hilfe wurde angeboten"],
+  speicher: ["🔒", "Speicher gesperrt (privater Modus)", "App vergisst den Zugang – normal öffnen"],
+  alte_version: ["🕰️", "Alte App-Version", "„Jetzt aktualisieren“ wurde angeboten"],
+  update_getippt: ["🔄", "Aktualisieren getippt", ""],
+  umgebung: ["📱", "Gerät & Browser", ""],
+  ohne_link: ["🔑", "Ohne persönlichen Link geöffnet", "Link neu schicken"],
+  link_ungueltig: ["🔑", "Link ungültig", "neuen Link schicken"],
+  sw: ["💾", "Offline-Speicher nicht eingerichtet", "privater Modus oder sehr alter Browser"],
+  hinweis: ["💡", "Hilfe-Hinweis gezeigt", ""],
+  link_kopiert: ["🔗", "Link kopiert (für Safari/Chrome)", ""],
+  hilferuf: ["🆘", "PROBLEM GEMELDET", "bitte melden"],
+  hilferuf_anonym: ["🆘", "Problem gemeldet (ohne Anmeldung)", "Gerät-Kennung vergleichen"],
+  diagnose_start: ["▶️", "App geöffnet", ""],
+  zugang_angefordert: ["✉️", "Neuen Link angefordert", ""],
+};
+function fpArtVon(aktion) { return String(aktion).replace(/^fehler_anonym_/, "").replace(/^fehler_/, ""); }
+let FP_ADMIN = { tage: 2, person: "" };
+async function fpAdmin(tage) {
+  if (tage) FP_ADMIN.tage = tage;
+  let r; try { r = await api("fehlerprotokoll", { tage: FP_ADMIN.tage }, { warten: true }); } catch (e) { return melde(e.message, true); }
+  const nurStarts = (x) => x.aktion === "diagnose_start";
+  const gruppen = new Map();
+  for (const x of r.eintraege) { const k = x.name || `anonym ${x.details?.geraet || ""}`; if (!gruppen.has(k)) gruppen.set(k, []); gruppen.get(k).push(x); }
+  const zeile = (x) => { const art = fpArtVon(x.aktion), [sym, name, tun] = FP_ARTEN[art] || ["•", art, ""], d = x.details || {};
+    const info = [d.text, d.aktion ? "bei „" + d.aktion + "“" : "", d.browser, d.system, d.start ? "läuft als " + d.start : "", d.version ? "v" + d.version : "", d.datei ? d.datei + ":" + d.zeile : ""].filter(Boolean).join(" · ");
+    return `<div class="fp-zeile${art === "hilferuf" ? " fp-rot" : ""}"><span class="hinweis">${esc(fKurz.format(new Date(x.zeit)) + " " + fZeit.format(new Date(x.zeit)))}</span> ${sym} <b>${esc(name)}</b>${info ? `<div class="hinweis">${esc(info)}</div>` : ""}${tun ? `<div class="hinweis" style="font-style:italic">→ ${esc(tun)}</div>` : ""}</div>`; };
+  const karten = [...gruppen.entries()].map(([name, liste]) => { const probleme = liste.filter((x) => !nurStarts(x) && !/umgebung|hinweis|update_getippt|link_kopiert/.test(x.aktion));
+    return `<details class="karte innen"${probleme.length ? " open" : ""}><summary><b>${esc(name)}</b> – ${probleme.length ? `<span style="color:#c62828">${probleme.length} Auffälligkeit${probleme.length === 1 ? "" : "en"}</span>` : "✅ unauffällig"} · ${liste.filter(nurStarts).length}× geöffnet</summary>${liste.map(zeile).join("")}</details>`; }).join("");
+  $("adminBlattInhalt").innerHTML = `<h3 style="margin:0">🩺 Fehlerprotokoll</h3>
+    <p class="hinweis" style="margin:0">Alles, was bei den Mitgliedern beim Starten oder Bedienen schiefging – mit Gerät, Browser und Version. Nur Technik, keine Inhalte.</p>
+    <div class="knoepfe">${[1, 2, 7, 14].map((t) => `<button class="knopf klein${FP_ADMIN.tage === t ? " haupt" : ""}" onclick="fpAdmin(${t})">${t === 1 ? "24 Std." : t + " Tage"}</button>`).join("")}${INFO_DATEN.admin?.r ? `<button class="knopf klein" onclick="adminBlatt()">‹ Admin-Zentrale</button>` : ""}</div>
+    ${karten || '<p class="hinweis">Keine Einträge in diesem Zeitraum.</p>'}`;
+  $("adminBlatt").classList.remove("versteckt");
+}
+
 // ---------- Start der App ----------
 (function start() {
   anwendenDesign(); lichtSensorStarten();
@@ -6785,7 +7014,8 @@ async function jetztAktualisieren() {
   const url = new URL(location.href), k = url.searchParams.get("k");
   try { if (k) localStorage.setItem("kc_club_key", k); KEY = k || localStorage.getItem("kc_club_key") || ""; } catch { KEY = k || ""; }
   if (k) { url.searchParams.delete("k"); history.replaceState(null, "", url.pathname + url.hash); }
-  if (!KEY) { $("gesperrt").classList.remove("versteckt"); return; }
+  if (window.KCFP) KCFP.version = APP_VERSION;
+  if (!KEY) { $("gesperrt").classList.remove("versteckt"); fpOhneLink(); return; }
   $("app").classList.remove("versteckt");
   iosStartMitSchluessel();
   klappenMerken(); registerZeigen(); kachelnZeigen();
@@ -6794,7 +7024,7 @@ async function jetztAktualisieren() {
   history.replaceState({ basis: true }, "", url.pathname);
   history.pushState({ v: "start" }, "", url.pathname);
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("sw.js").catch(() => {});
+    navigator.serviceWorker.register("sw.js").catch((e) => fpNeu("sw", { text: "Offline-Speicher (Service Worker) nicht eingerichtet: " + (e?.message || e) }));
     navigator.serviceWorker.addEventListener("message", (e) => { if (e.data?.typ === "push") { neuLaden(); onlinePing(); if (chatId) chatLaden(false); } });
   }
   // Messung: wie wurde die App gestartet (einmal je Sitzung) – zeigt, ob die Installation geklappt hat

@@ -1,5 +1,30 @@
 # Änderungen
 
+## 0.93.0 – 2026-09-30 (DEV)
+
+- KC-CLUB-FEHLERPROTOKOLL (Auftrag Hansi nach Fund bei Marianne – 6× in Chrome auf dem iPhone geöffnet, alte Version 0.69,
+  keine Fehlermeldung gespeichert: „jede Kleinigkeit ins Protokoll … gezielte Hilfeschritte, keine unverständlichen Meldungen“).
+  - Fehlerfänger als eigenes ES5-Skript ganz oben im <head>: läuft auch, wenn die App auf einem alten Gerät gar nicht startet.
+    Schreibt mit: Skriptfehler (Datei/Zeile/Stapel), unbehandelte Fehler, nicht geladene Dateien, mehrfaches Öffnen (≥3 in
+    10 Min), gesperrter Speicher (privater Modus), Start hängt (12 s) bzw. App-Programm gar nicht angelaufen (dann einfache
+    Hilfe-Seite mit „Nochmal versuchen“). Sammelt auf dem Gerät (max. 60), schickt gebündelt (25 je Sendung, jede Minute,
+    beim Verlassen, nach der Anmeldung sofort) – angemeldet mit Namen (fehler_melden), sonst anonym mit Geräte-Kennung
+    (fehler_anonym, max. 40/Std. je Gerät, 150/Std. gesamt). Gleiche Meldung höchstens alle 30 s. Nie Zugangsdaten:
+    Server filtert Schlüssel-Felder und ?k=… aus allen Texten.
+  - App ergänzt: jede fehlgeschlagene Serveranfrage (außer Hintergrund-Takt) bzw. „offline“, alte Version, Service Worker
+    nicht eingerichtet, Start langsam (>6 s), ohne/ungültiger Link, einmal je Sitzung Gerät & Browser (System, Browser,
+    installiert?, Push-Erlaubnis, Speicher, Bildschirm, Sprache, Netz).
+  - Hilfe-Schritte statt Fehlermeldungen (je Hinweis höchstens 1× am Tag, wird mitprotokolliert): iPhone/iPad in Chrome/
+    Firefox/Edge/Opera → „Bitte in Safari öffnen“ mit „🔗 Meinen Link kopieren“ und Schritten bis zum Home-Bildschirm;
+    eingebauter Mini-Browser (WhatsApp/Facebook/Instagram) → im richtigen Browser öffnen; Android mit Firefox u. a. → Chrome;
+    privater Modus; mehrfaches Öffnen → „Klappt etwas nicht?“ mit Checkliste und „Problem melden“.
+  - 🆘 „Problem melden“ (App-Info und Hilfe-Fenster): Admins bekommen Push/Mail mit Gerät, Browser, Version (hilfe_anfordern,
+    max. 3/Std.).
+  - Alte Version: Hinweis oben jetzt mit „🔄 Jetzt aktualisieren“ direkt (vorher nur „Was ist neu?“).
+  - Admin: „🩺 Fehlerprotokoll & Startprobleme“ (Admin-Zentrale und Admin-Einstellungen) – je Mitglied Auffälligkeiten,
+    verständlich übersetzt mit „→ was tun“, 24 Std. / 2 / 7 / 14 Tage (Aktion fehlerprotokoll, nur Admin).
+- Server 0.93.0. Test 116.
+
 ## 0.92.0 – 2026-09-30 (DEV)
 
 - KC-CLUB-TERMINANFRAGE (Wunsch Hansi: „Terminanfrage an Mitglied senden mit Datum, Zeit, Anlass, Ort, ja, nein, vielleicht –

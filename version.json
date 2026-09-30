@@ -1,11 +1,22 @@
 {
-  "version": "0.92.0",
+  "version": "0.93.0",
   "datum": "2026-09-30",
   "neu": [
-    "📨 Terminanfrage: Jeder kann einzelne Mitglieder, mehrere oder eine Gruppe anfragen – mit Anlass, Datum, Uhrzeit und Ort; Antwort Ja, Vielleicht oder Nein (Termine → „📨 Anfrage“ oder Kommunikationszentrale → 📨 Termin)",
-    "📍 Standort teilen in der Kommunikationszentrale: einmal senden oder live für 15 Min, 1 Std oder bis du beendest – nur an die Gewählten, roter Balken zeigt, dass du teilst"
+    "🩺 Fehlerprotokoll: Klappt beim Starten oder Bedienen etwas nicht, merkt sich die App das (Gerät, Browser, Version, Fehler) – so kann Hansi gezielt helfen. Keine Inhalte, keine Zugangsdaten",
+    "💡 Verständliche Hilfe statt Fehlermeldungen: z. B. „Bitte in Safari öffnen“ auf iPhone/iPad, Mini-Browser aus WhatsApp, privater Modus, App hängt – mit Schritt-für-Schritt-Anleitung",
+    "🆘 „Problem melden“ unter ⚙️ Mehr → App-Info – Hansi bekommt sofort Bescheid",
+    "🔄 Alte Version? Der Hinweis oben hat jetzt direkt „Jetzt aktualisieren“"
   ],
   "verlauf": [
+    {
+      "version": "0.93.0",
+      "neu": [
+        "🩺 Fehlerprotokoll: Klappt beim Starten oder Bedienen etwas nicht, merkt sich die App das (Gerät, Browser, Version, Fehler) – so kann Hansi gezielt helfen. Keine Inhalte, keine Zugangsdaten",
+        "💡 Verständliche Hilfe statt Fehlermeldungen: z. B. „Bitte in Safari öffnen“ auf iPhone/iPad, Mini-Browser aus WhatsApp, privater Modus, App hängt – mit Schritt-für-Schritt-Anleitung",
+        "🆘 „Problem melden“ unter ⚙️ Mehr → App-Info – Hansi bekommt sofort Bescheid",
+        "🔄 Alte Version? Der Hinweis oben hat jetzt direkt „Jetzt aktualisieren“"
+      ]
+    },
     {
       "version": "0.92.0",
       "neu": [
