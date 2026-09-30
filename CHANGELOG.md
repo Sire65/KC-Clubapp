@@ -1,5 +1,15 @@
 # Änderungen
 
+## 0.86.0 – 2026-09-30 (DEV)
+
+- KC-CLUB-KALENDER-WAHL (Wunsch Hansi): Kalender-Abo (nur einseitig Club → Kalender, bewusst keine Rück-Synchronisation)
+  mit Knöpfen „➕ In Google Kalender“ (calendar.google.com/calendar/r?cid=webcal:…) und „➕ In Outlook“
+  (outlook.live.com/calendar/0/addfromweb?url=…); Hinweis für PC/Outlook-Programm bleibt. Einzelner Termin:
+  „📲 In meinen Kalender“ öffnet eine Auswahl – Google (render?action=TEMPLATE), Outlook (deeplink/compose) oder
+  Handy-Kalender (.ics wie bisher); ganztägige Termine korrekt als Datum. Öffnen über extOeffnen.
+- Fehlerbehebung Terminliste (seit 0.1.0): kommend.map(treffenKarte) gab den Listenindex als „vorbei“ weiter – ab dem
+  zweiten anstehenden Treffen fehlten Zu-/Absage, Mitfahren und „In meinen Kalender“. Jetzt map((t) => treffenKarte(t)).
+
 ## 0.85.0 – 2026-09-30 (DEV)
 
 - KC-CLUB-LED-EMPFAENGER (Fehlalarm, Freigabe Hansi): Die Communicator-LED war seit 30.09. 10:20 gelb, weil ein Anklopf-Push

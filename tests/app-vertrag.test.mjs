@@ -1419,4 +1419,12 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(!f("failed", "PUSH_NO_ACTIVE_SUBSCRIPTION") && f("failed", "PUSH_ALL_FAILED:410") && f("dead_lettered", null) && !f("sent", null), "Beispiele");
 }
 
+// 107. 0.86.0: Kalender-Auswahl + Terminliste (KC-CLUB-KALENDER-WAHL)
+{
+  assert.ok(!/\.map\(treffenKarte\)/.test(html), "treffenKarte nie direkt an map übergeben (Index würde „vorbei“)");
+  assert.ok(/function kalGoogle\(id\)/.test(html) && /calendar\.google\.com\/calendar\/render\?/.test(html) && /function kalOutlook\(id\)/.test(html) && /outlook\.live\.com\/calendar\/0\/deeplink\/compose\?/.test(html) && /function kalIcs\(id\)/.test(html), "Auswahl Google/Outlook/Handy");
+  assert.ok(/calendar\.google\.com\/calendar\/r\?cid=/.test(html) && /outlook\.live\.com\/calendar\/0\/addfromweb\?url=/.test(html), "Abo-Knöpfe Google/Outlook");
+  assert.ok(/id="kalWahlBlatt"/.test(html), "Auswahlfenster fehlt");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

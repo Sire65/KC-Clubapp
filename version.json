@@ -1,10 +1,20 @@
 {
-  "version": "0.85.0",
+  "version": "0.86.0",
   "datum": "2026-09-30",
   "neu": [
-    "🟢 Die Versand-LED (zweite LED oben) wird nicht mehr gelb, nur weil ein Empfänger kein Push eingeschaltet hat – sie zeigt nur echte Störungen"
+    "📅 Kalender-Abo jetzt mit Knöpfen „In Google Kalender“ und „In Outlook“ – kein Link-Kopieren mehr",
+    "📲 „In meinen Kalender“ bei jedem Termin: wahlweise Google, Outlook oder Handy-Kalender",
+    "🔧 Terminliste: Auch beim zweiten und jedem weiteren Treffen gibt es jetzt „Ich komme / Vielleicht / Kann nicht“"
   ],
   "verlauf": [
+    {
+      "version": "0.86.0",
+      "neu": [
+        "📅 Kalender-Abo jetzt mit Knöpfen „In Google Kalender“ und „In Outlook“ – kein Link-Kopieren mehr",
+        "📲 „In meinen Kalender“ bei jedem Termin: wahlweise Google, Outlook oder Handy-Kalender",
+        "🔧 Terminliste: Auch beim zweiten und jedem weiteren Treffen gibt es jetzt „Ich komme / Vielleicht / Kann nicht“"
+      ]
+    },
     {
       "version": "0.85.0",
       "neu": [

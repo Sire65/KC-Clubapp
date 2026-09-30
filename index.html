@@ -1246,6 +1246,11 @@
   <div class="blatt-innen" style="max-height:80vh;overflow-y:auto"><div id="konfWahlText"></div>
     <button class="knopf" onclick="$('konfWahlBlatt').classList.add('versteckt')">Abbrechen</button></div>
 </div>
+<!-- KC-CLUB-KALENDER-WAHL (0.86.0) -->
+<div class="blatt versteckt" id="kalWahlBlatt" onclick="if(event.target===this)this.classList.add('versteckt')">
+  <div class="blatt-innen"><div id="kalWahlText"></div>
+    <button class="knopf" onclick="$('kalWahlBlatt').classList.add('versteckt')">Abbrechen</button></div>
+</div>
 <!-- KC-CLUB-HEARTBEAT (0.84.0): die letzten 15 Lebenszeichen -->
 <div class="blatt versteckt" id="herzBlatt" onclick="if(event.target===this)this.classList.add('versteckt')">
   <div class="blatt-innen" style="max-height:85vh;overflow-y:auto"><div id="herzText"></div>
@@ -1322,7 +1327,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "0.85.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.86.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -4214,7 +4219,7 @@ async function treffenLaden() {
   try {
     const { treffen, geburtstage } = await api("treffen_liste"); orteMerken(treffen);
     const kommend = treffen.filter((t) => new Date(t.ende || t.beginn) > Date.now() - 3 * 3600000), vorbei = treffen.filter((t) => !kommend.includes(t)).reverse();
-    $("treffenListe").innerHTML = (kommend.map(treffenKarte).join("") || '<div class="karte hinweis">Zurzeit ist kein Treffen geplant.</div>')
+    $("treffenListe").innerHTML = (kommend.map((t) => treffenKarte(t)).join("") || '<div class="karte hinweis">Zurzeit ist kein Treffen geplant.</div>')
       + geburtstageListe(geburtstage || [], 30)
       + (vorbei.length ? `<div class="abschnitt"><h3>Vergangene Treffen</h3></div>` + vorbei.map((t) => treffenKarte(t, true)).join("") : "");
   } catch (e) { melde(e.message, true); }
@@ -5341,16 +5346,42 @@ async function mitfahrtLoeschen(id, art) {
 // ---------- Handy-Kalender (KC-CLUB-KALENDERABO) ----------
 // Einzeltermin: .ics-Datei – öffnet sich auf jedem Handy im Kalender
 const TREFFEN_IDX = new Map();
+// KC-CLUB-KALENDER-WAHL (0.86.0, Wunsch Hansi): einzelnen Termin in Google, Outlook oder den Handy-Kalender (.ics) übernehmen
+function terminKalDaten(id) {
+  const t = TREFFEN_IDX.get(id); if (!t) return null;
+  const ende = t.ende || (t.ganztaegig ? t.beginn : new Date(new Date(t.beginn).getTime() + 3 * 3600000).toISOString());
+  return { t, ende, text: (t.beschreibung ? t.beschreibung + "\n\n" : "") + "Köcheclub-App: " + location.origin + location.pathname + "#termine" };
+}
 function inKalender(id) {
-  const t = TREFFEN_IDX.get(id); if (!t) return;
+  const d = terminKalDaten(id); if (!d) return;
+  $("kalWahlText").innerHTML = `<h3 style="margin-top:0">📲 In meinen Kalender</h3><p class="hinweis" style="margin-top:0"><b>${esc(d.t.titel)}</b><br>${esc(zeitText(d.t))}</p>
+    <div class="konf-wahl"><button class="knopf" onclick="kalGoogle('${id}')">🟦 Google Kalender</button><button class="knopf" onclick="kalOutlook('${id}')">🟦 Outlook</button>
+    <button class="knopf" onclick="kalIcs('${id}')">📱 Handy-Kalender (iPhone, Samsung …)</button></div>`;
+  $("kalWahlBlatt").classList.remove("versteckt");
+}
+const kalZu = () => $("kalWahlBlatt").classList.add("versteckt");
+function kalGoogle(id) {
+  const { t, ende, text } = terminKalDaten(id) || {}; if (!t) return;
+  const z = (iso) => new Date(iso).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, ""), tag = (iso) => berlinIso(iso).replace(/-/g, "");
+  const dates = t.ganztaegig ? `${tag(t.beginn)}/${tagPlus(berlinIso(ende), 1).replace(/-/g, "")}` : `${z(t.beginn)}/${z(ende)}`;
+  kalZu(); extOeffnen("https://calendar.google.com/calendar/render?" + new URLSearchParams({ action: "TEMPLATE", text: t.titel, dates, details: text, location: t.ort || "" }));
+}
+function kalOutlook(id) {
+  const { t, ende, text } = terminKalDaten(id) || {}; if (!t) return;
+  const p = { path: "/calendar/action/compose", rru: "addevent", subject: t.titel, body: text, location: t.ort || "",
+    startdt: t.ganztaegig ? berlinIso(t.beginn) : new Date(t.beginn).toISOString(), enddt: t.ganztaegig ? tagPlus(berlinIso(ende), 1) : new Date(ende).toISOString(), allday: t.ganztaegig ? "true" : "false" };
+  kalZu(); extOeffnen("https://outlook.live.com/calendar/0/deeplink/compose?" + new URLSearchParams(p));
+}
+function kalIcs(id) {
+  const { t, ende } = terminKalDaten(id) || {}; if (!t) return;
   const z = (iso) => new Date(iso).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, ""), e = (s) => String(s || "").replace(/[\;,]/g, (c) => "\\" + c).replace(/\n/g, "\\n");
   const tag = (iso) => berlinIso(iso).replace(/-/g, ""), danach = (iso) => tagPlus(berlinIso(iso), 1).replace(/-/g, "");
   const ics = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Koecheclub Werne//Club-App//DE", "BEGIN:VEVENT", `UID:treffen-${t.id}@koecheclub-werne`, `DTSTAMP:${z(new Date().toISOString())}`,
-    `SUMMARY:${e(t.titel)}`, ...(t.ganztaegig ? [`DTSTART;VALUE=DATE:${tag(t.beginn)}`, `DTEND;VALUE=DATE:${danach(t.ende || t.beginn)}`] : [`DTSTART:${z(t.beginn)}`, `DTEND:${z(t.ende || new Date(new Date(t.beginn).getTime() + 3 * 3600000).toISOString())}`]),
+    `SUMMARY:${e(t.titel)}`, ...(t.ganztaegig ? [`DTSTART;VALUE=DATE:${tag(t.beginn)}`, `DTEND;VALUE=DATE:${danach(ende)}`] : [`DTSTART:${z(t.beginn)}`, `DTEND:${z(ende)}`]),
     ...(t.ort ? [`LOCATION:${e(t.ort)}`] : []), `DESCRIPTION:${e((t.beschreibung ? t.beschreibung + "\n\n" : "") + location.origin + location.pathname + "#termine")}`, "END:VEVENT", "END:VCALENDAR"].join("\r\n");
   const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([ics], { type: "text/calendar" })); a.download = t.titel.replace(/[^\wäöüÄÖÜß ]/g, "") + ".ics";
   document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
-  melde("📲 Termin-Datei erstellt – antippen, dann „Zum Kalender hinzufügen“");
+  kalZu(); melde("📲 Termin-Datei erstellt – antippen, dann „Zum Kalender hinzufügen“");
 }
 // Abo: alle Termine automatisch und immer aktuell im Handy-Kalender
 function kalenderAboZeigen(url) {
@@ -5358,7 +5389,10 @@ function kalenderAboZeigen(url) {
   $("kalAboInfo").innerHTML = url ? `<div class="karte" style="background:var(--karte2)">
       <p style="margin-top:0"><b>📱 iPhone:</b> einfach antippen – fertig.</p>
       <a class="knopf haupt" href="${esc(url.replace(/^https:/, "webcal:"))}">📅 Kalender jetzt abonnieren</a>
-      <p><b>🤖 Android (Google Kalender):</b> Link kopieren, dann einmalig am PC unter <i>calendar.google.com</i> → „Weitere Kalender ＋“ → „Per URL“ einfügen. Danach erscheinen die Termine auch auf dem Handy.</p>
+      <p style="margin-bottom:6px"><b>Google oder Outlook:</b> antippen, anmelden (falls gefragt), „Hinzufügen“ bestätigen – danach erscheinen die Termine auch auf dem Handy.</p>
+      <div class="knoepfe"><button class="knopf" onclick='extOeffnen("https://calendar.google.com/calendar/r?cid=" + encodeURIComponent(${JSON.stringify(url).replace(/'/g, "&#39;")}.replace(/^https:/, "webcal:")))'>➕ In Google Kalender</button>
+        <button class="knopf" onclick='extOeffnen("https://outlook.live.com/calendar/0/addfromweb?url=" + encodeURIComponent(${JSON.stringify(url).replace(/'/g, "&#39;")}) + "&name=" + encodeURIComponent("Köcheclub Werne"))'>➕ In Outlook</button></div>
+      <p class="hinweis" style="font-size:.85rem">Klappt es bei Google nicht (manche Handys): Link kopieren und einmalig am PC unter <i>calendar.google.com</i> → „Weitere Kalender ＋“ → „Per URL“ einfügen. Outlook am PC (Programm): oben „Kalender jetzt abonnieren“.</p>
       <button class="knopf" onclick="navigator.clipboard.writeText(${JSON.stringify(url).replace(/"/g, "&quot;")}).then(() => melde('📋 Link kopiert'), () => prompt('Link:', ${JSON.stringify(url).replace(/"/g, "&quot;")}))">📋 Link kopieren</button>
       <p class="hinweis" style="font-size:.85rem">Den Link bitte nicht weitergeben – er zeigt deine Club-Termine.</p></div>`
     : a ? `<p class="hinweis">✅ Kalender verbunden seit ${esc(zeitKurz(a.erstellt_am))}${a.zuletzt_abgerufen ? ` · zuletzt aktualisiert ${esc(zeitKurz(a.zuletzt_abgerufen))}` : " · noch nicht abgerufen"}.</p>` : "";
