@@ -1203,7 +1203,7 @@
       <div class="schalter"><div><b>🟢 Anderen zeigen, wann ich online bin</b><div class="hinweis">Dann sehen andere einen grünen Punkt bei dir und können „anklopfen“. Ausgeschaltet siehst du auch selbst nicht, wer online ist.</div></div><input type="checkbox" id="setOnline" onchange="onlineZeigen(this.checked)"></div>
       <div class="schalter"><div><b>👁️ Andere sehen live, was ich tippe</b><div class="hinweis">In Unterhaltungen sehen die anderen deinen Text schon beim Schreiben – auch, was du wieder löschst. Nicht gesendete Entwürfe werden nicht gespeichert und nach wenigen Sekunden verworfen. Standard: aus.</div></div><input type="checkbox" id="setLiveTippen" onchange="liveTippenSetzen(this.checked)"></div>
       <p class="hinweis" style="margin:10px 0 0">📊 Die App zählt <b>ohne Namen</b>, wie oft die einzelnen Bereiche geöffnet werden (z. B. „Termine 14× am 30.09.“). Wer etwas geöffnet hat, wird nicht gespeichert.</p>
-      <p class="hinweis" style="margin:14px 0 0"><b>Für andere Mitglieder sichtbar:</b> (Aushilfen sehen keine Kontaktdaten; Hansi als Admin sieht alles)</p>
+      <p class="hinweis" style="margin:14px 0 0"><b>Für andere Mitglieder sichtbar:</b> (Aushilfen sehen keine Kontaktdaten)</p>
       <div class="schalter"><div><b>📱 Meine Handynummer</b></div><input type="checkbox" id="setKontakt_handy" onchange="kontaktFreigabe('handy', this.checked)"></div>
       <div class="schalter"><div><b>☎️ Meine Festnetznummer</b></div><input type="checkbox" id="setKontakt_festnetz" onchange="kontaktFreigabe('festnetz', this.checked)"></div>
       <div class="schalter"><div><b>✉️ Meine E-Mail-Adresse</b></div><input type="checkbox" id="setKontakt_mail" onchange="kontaktFreigabe('mail', this.checked)"></div>
@@ -1524,7 +1524,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "0.99.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.99.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);

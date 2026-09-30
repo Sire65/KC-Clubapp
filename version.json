@@ -1,14 +1,20 @@
 {
-  "version": "0.99.0",
+  "version": "0.99.1",
   "datum": "2026-09-30",
   "neu": [
-    "📊 Die App zählt jetzt ohne Namen, wie oft die Bereiche geöffnet werden – so sieht der Club, was genutzt wird. Wer etwas geöffnet hat, wird nie gespeichert (siehe ⚙️ Mehr → Privatsphäre)"
+    "🔧 Kleine Systemverbesserung"
   ],
   "verlauf": [
     {
+      "version": "0.99.1",
+      "neu": [
+        "🔧 Kleine Systemverbesserung"
+      ]
+    },
+    {
       "version": "0.99.0",
       "neu": [
-        "📊 Die App zählt jetzt ohne Namen, wie oft die Bereiche geöffnet werden – so sieht der Club, was genutzt wird. Wer etwas geöffnet hat, wird nie gespeichert (siehe ⚙️ Mehr → Privatsphäre)"
+        "🔧 Kleine Systemverbesserung"
       ]
     },
     {
@@ -61,7 +67,7 @@
     {
       "version": "0.93.0",
       "neu": [
-        "🩺 Fehlerprotokoll: Klappt beim Starten oder Bedienen etwas nicht, merkt sich die App das (Gerät, Browser, Version, Fehler) – so kann Hansi gezielt helfen. Keine Inhalte, keine Zugangsdaten",
+        "🔧 Kleine Systemverbesserung",
         "💡 Verständliche Hilfe statt Fehlermeldungen: z. B. „Bitte in Safari öffnen“ auf iPhone/iPad, Mini-Browser aus WhatsApp, privater Modus, App hängt – mit Schritt-für-Schritt-Anleitung",
         "🆘 „Problem melden“ unter ⚙️ Mehr → App-Info – Hansi bekommt sofort Bescheid",
         "🔄 Alte Version? Der Hinweis oben hat jetzt direkt „Jetzt aktualisieren“"
