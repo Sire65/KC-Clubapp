@@ -39,7 +39,10 @@
   .zettel.wichtig { background: #ffd94a; outline: 3px solid #c62828; }
   /* KC-CLUB-PINNWAND-FARBEN (0.60.0): 1 gelb · 2 rosé · 3 hellgrün · 4 hellblau – wie echte Post-its, „wichtig“ behält Rand und Nadel */
   .zettel.f1 { background: #fff27a; } .zettel.f2 { background: #ffb8d1; } .zettel.f3 { background: #c6f2a2; } .zettel.f4 { background: #aeddf7; }
-  .zettel .zknoepfe button.antw { background: #fff; }
+  /* KC-CLUB-PINNWAND-NAME (0.63.0): oben auf dem Zettel „von Hansi · angepinnt am …“; „Antworten“ deutlich sichtbar */
+  .zettel .zkopf { font-size: .76rem; line-height: 1.3; margin: 0 0 6px; color: #3d3110; }
+  .zettel .zkopf b { font-size: .95rem; }
+  .zettel .zknoepfe button.antw { background: #741521; color: #fff; border-color: #741521; font-size: .88rem; padding: 7px 12px; }
   .zettelpunkt { width: 16px; height: 16px; border-radius: 3px; flex: none; box-shadow: 1px 1px 2px rgba(0,0,0,.3); }
   .zettelpunkt.f1 { background: #fff27a; } .zettelpunkt.f2 { background: #ffb8d1; } .zettelpunkt.f3 { background: #c6f2a2; } .zettelpunkt.f4 { background: #aeddf7; }
   .zettel.wichtig::before { background: radial-gradient(circle at 35% 35%, #ffb3b3, #d50000 60%, #7f0000); width: 18px; height: 18px; margin-left: -9px; }
@@ -1164,7 +1167,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "0.62.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.63.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -1316,6 +1319,9 @@ document.addEventListener("visibilitychange", () => { if (!document.hidden && DS
 // ---------- KC-CLUB-PINNWAND: Post-its (max. PW.max je Person vom Server, max. 200 Zeichen) ----------
 let PW = { zettel: [], offen: 0, meine: 0, max: 4, zeichen: 200, startGeprueft: false, form: { wichtig: false, fuer: "", personen: [] }, wichtigStart: false };
 // KC-CLUB-PINNWAND-FARBEN (0.60.0): Farbe 1–4 kommt fest vom Server (gelb, rosé, hellgrün, hellblau)
+// Kopfzeile jedes Zettels: wer und wann (für eigene Zettel der eigene Vorname)
+const pwAngepinnt = (iso) => { const d = new Date(iso); return `angepinnt am ${fKurz.format(d)} ${fZeit.format(d)}`; };
+const pwKopf = (name, iso) => `<div class="zkopf">von <b>${esc(name || "?")}</b>${iso ? "<br>" + esc(pwAngepinnt(iso)) : ""}</div>`;
 const pwFarbe = (z) => " f" + ([1, 2, 3, 4].includes(Number(z.farbe)) ? Number(z.farbe) : 1);
 const pwFuerText = (z) => z.fuer === "ich" ? "nur für mich" : z.fuer === "alle" ? "für alle" : "für " + z.empfaenger.map((n) => n.split(" ")[0]).join(", ");
 // leicht schräg – je Zettel immer gleich (aus der ID), damit nichts beim Neuladen wackelt
@@ -1362,8 +1368,8 @@ function pwFenster(neu) {
   f.innerHTML = `<div class="blatt-innen" style="max-height:88vh;overflow-y:auto">
     <h3 style="margin:0">📌 ${esc(liste.length === 1 ? liste[0].hinweis : `Du hast ${neu.length} neue Post-its bekommen`)}</h3>
     <div class="pwfenster-zettel">${liste.map((z, i) => `<div class="zettel${z.wichtig ? " wichtig" : ""}${pwFarbe(z)}" style="--dreh:${pwDreh(z.id)}deg">
-      ${z.wichtig ? '<span class="zwichtig">❗ WICHTIG</span>' : ""}<div class="ztext">${esc(z.text || "")}</div>
-      <div class="zfuss">von ${esc(z.von)}${z.privat ? " · nur für dich" : ""}${z.zeit ? " · " + esc(zeitKurz(z.zeit)) : ""}</div>
+      ${z.wichtig ? '<span class="zwichtig">❗ WICHTIG</span>' : ""}${pwKopf(z.von, z.zeit)}<div class="ztext">${esc(z.text || "")}</div>
+      ${z.privat ? '<div class="zfuss">nur für dich</div>' : ""}
       ${z.vonId ? `<div class="zknoepfe"><button class="antw" data-antw="${i}">✍️ Antworten</button></div>` : ""}</div>`).join("")}</div>
     ${neu.length > liste.length ? `<p class="hinweis" style="margin:0">… und ${neu.length - liste.length} weitere an der Pinnwand</p>` : ""}
     <button class="knopf haupt" style="text-align:center" data-k="gelesen">✓ Gelesen</button>
@@ -1398,7 +1404,8 @@ function pwZeigen() {
       + (z.offen?.length ? `<div style="margin-top:4px">Noch nicht gesehen: ${z.offen.map((n) => esc(n.split(" ")[0])).join(", ")}</div>` : "") + `</details>` : "";
     return `<div class="zettel${z.wichtig ? " wichtig" : ""}${pwFarbe(z)}${z.erledigt ? " erledigt" : ""}" style="--dreh:${pwDreh(z.id)}deg">`
       + (z.wichtig ? `<span class="zwichtig">❗ WICHTIG</span>` : "")
-      + `<div class="ztext">${esc(z.text)}</div><div class="zfuss">${z.vonMir ? "von mir" : "von " + esc(z.von.vorname)} · ${zeitKurz(z.erstellt_am)} · ${esc(pwFuerText(z))}</div>`
+      + pwKopf(z.vonMir ? ICH?.vorname || "mir" : z.von.vorname, z.erstellt_am)
+      + `<div class="ztext">${esc(z.text)}</div><div class="zfuss">${esc(pwFuerText(z))}</div>`
       + leser + (knoepfe.length ? `<div class="zknoepfe">${knoepfe.join("")}</div>` : "") + `</div>`; }).join("");
 }
 function pwForm(an, antwort) {

@@ -1,11 +1,16 @@
 {
-  "version": "0.62.0",
+  "version": "0.63.0",
   "datum": "2026-09-29",
   "neu": [
-    "🟢 Neu: Einfache Ansicht – nur das Wichtigste mit großen Knöpfen. Beim Start wählst du einmal „Einfach“ oder „Erweitert“, umschalten geht jederzeit unten auf der Startseite",
-    "📄 Kurzanleitung „Köcheclub-App in 3 Schritten“ zum Ansehen und Ausdrucken (⚙️ Mehr)"
+    "📌 Auf jedem Post-it steht jetzt oben, von wem es ist und wann es angepinnt wurde – und „✍️ Antworten“ ist gut sichtbar"
   ],
   "verlauf": [
+    {
+      "version": "0.63.0",
+      "neu": [
+        "📌 Auf jedem Post-it steht jetzt oben, von wem es ist und wann es angepinnt wurde – und „✍️ Antworten“ ist gut sichtbar"
+      ]
+    },
     {
       "version": "0.62.0",
       "neu": [

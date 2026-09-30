@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.63.0 – 2026-09-30 (DEV)
+
+- KC-CLUB-PINNWAND-NAME (neu, Wunsch Hansi): oben auf jedem Zettel „von Hansi / angepinnt am 29.09. 20:32“ (Wand und
+  Post-it-Fenster; eigene Zettel mit dem eigenen Vornamen), unten nur noch „für …“. „✍️ Antworten“ an fremden Zetteln als
+  erster, deutlich farbiger Knopf. Grenze unverändert: 4 eigene Zettel je Person, die Wand zeigt alle, die einen betreffen.
+
 ## 0.62.0 – 2026-09-30 (DEV)
 
 - KC-CLUB-ANSICHT (neu, Wunsch Hansi nach Mitglieder-Rückmeldung „extremer Tobak“): beim ersten Start genau eine Frage

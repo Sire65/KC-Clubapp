@@ -1167,4 +1167,14 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/anleitung: \{ bauen: \(\) => druckAnleitung\(\) \}/.test(html) && /Köcheclub-App in 3 Schritten/.test(html) && /onclick="druckStarten\('anleitung'\)"/.test(html), "Kurzanleitung fehlt");
 }
 
+// 85. 0.63.0: Name/Zeit oben auf dem Zettel, Antworten sichtbar (KC-CLUB-PINNWAND-NAME)
+{
+  assert.ok(/const pwKopf = \(name, iso\) => `<div class="zkopf">von <b>/.test(html) && /angepinnt am \$\{fKurz\.format\(d\)\}/.test(html), "Kopfzeile „von … angepinnt am …“ fehlt");
+  assert.ok(/pwKopf\(z\.vonMir \? ICH\?\.vorname \|\| "mir" : z\.von\.vorname, z\.erstellt_am\)/.test(html) && /\$\{pwKopf\(z\.von, z\.zeit\)\}/.test(html), "Name fehlt auf Wand oder im Fenster");
+  const w = html.slice(html.indexOf("const knoepfe = [];"), html.indexOf("function pwForm("));
+  assert.ok(w.indexOf("✍️ Antworten") > 0 && w.indexOf("✍️ Antworten") < w.indexOf("✓ erl."), "Antworten nicht als erster Knopf an fremden Zetteln");
+  assert.ok(/\.zettel \.zknoepfe button\.antw \{ background: #741521; color: #fff;/.test(html), "Antworten-Knopf nicht hervorgehoben");
+  assert.ok(/const PINNWAND_MAX = 4,/.test(server), "Grenze geändert");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
