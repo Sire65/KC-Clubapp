@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.0.0";
+const SERVER_VERSION = "1.1.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -1170,7 +1170,24 @@ async function kalenderIcs(token: string) {
     z.push(`DESCRIPTION:${icsText((x.notiz ? x.notiz + "\n\n" : "") + APP_URL + "#termine")}`, `STATUS:${x.status === "abgesagt" ? "CANCELLED" : x.meine === "vielleicht" ? "TENTATIVE" : "CONFIRMED"}`, "END:VEVENT");
   }
   // KC-CLUB-PRIVATTERMIN (1.0.0): eigene private Einträge im eigenen Abo
-  for (const x of await privatListe(ich, new Date(Date.now() - 60 * 86400000).toISOString(), new Date(Date.now() + 500 * 86400000).toISOString())) {
+  const { data: pReihen } = await db.from("kc_club_privattermine").select("*").eq("person_id", ich.person_id).neq("wiederholung", "keine").limit(200);
+  const lokal = (iso: string) => { const t = berlinTeile(new Date(iso)); return `${t.y}${String(t.m).padStart(2, "0")}${String(t.d).padStart(2, "0")}T${String(t.h).padStart(2, "0")}${String(t.mi).padStart(2, "0")}00`; };
+  for (const r of pReihen ?? []) {
+    const t0 = berlinTeile(new Date(r.beginn)), wt = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"][new Date(Date.UTC(t0.y, t0.m - 1, t0.d)).getUTCDay()];
+    const nth = t0.d + 7 > new Date(Date.UTC(t0.y, t0.m, 0)).getUTCDate() ? -1 : Math.ceil(t0.d / 7);
+    const rr = { taeglich: "FREQ=DAILY", werktags: "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR", woechentlich: "FREQ=WEEKLY", zweiwoechentlich: "FREQ=WEEKLY;INTERVAL=2",
+      monatlich: "FREQ=MONTHLY", monatlich_wochentag: `FREQ=MONTHLY;BYDAY=${nth}${wt}`, jaehrlich: "FREQ=YEARLY" }[r.wiederholung as string];
+    if (!rr) continue;
+    z.push("BEGIN:VEVENT", `UID:privat-${r.id}@koecheclub-werne`, `DTSTAMP:${stamp}`, `SUMMARY:${icsText("🔒 " + r.titel)}`, "CLASS:PRIVATE");
+    if (r.ganztaegig) z.push(`DTSTART;VALUE=DATE:${icsTag(berlinTag(new Date(r.beginn)))}`, `DTEND;VALUE=DATE:${icsTag(tagDanach(berlinTag(new Date(r.beginn))))}`);
+    else z.push(`DTSTART;TZID=Europe/Berlin:${lokal(r.beginn)}`, `DTEND;TZID=Europe/Berlin:${lokal(r.ende || new Date(new Date(r.beginn).getTime() + 3600000).toISOString())}`);
+    z.push(`RRULE:${rr}${r.wiederholung_bis ? ";UNTIL=" + String(r.wiederholung_bis).replace(/-/g, "") + "T225959Z" : ""}`);
+    for (const a of r.ausnahmen || []) z.push(r.ganztaegig ? `EXDATE;VALUE=DATE:${String(a).replace(/-/g, "")}` : `EXDATE;TZID=Europe/Berlin:${String(a).replace(/-/g, "")}T${lokal(r.beginn).slice(9)}`);
+    if (r.ort) z.push(`LOCATION:${icsText(r.ort)}`);
+    if (r.notiz) z.push(`DESCRIPTION:${icsText(r.notiz)}`);
+    z.push("END:VEVENT");
+  }
+  for (const x of (await privatListe(ich, new Date(Date.now() - 60 * 86400000).toISOString(), new Date(Date.now() + 500 * 86400000).toISOString())).filter((x: any) => !x.serienBeginn)) {
     z.push("BEGIN:VEVENT", `UID:privat-${x.id}@koecheclub-werne`, `DTSTAMP:${stamp}`, `SUMMARY:${icsText("🔒 " + x.titel)}`, "CLASS:PRIVATE");
     if (x.ganztaegig) z.push(`DTSTART;VALUE=DATE:${icsTag(berlinTag(new Date(x.beginn)))}`, `DTEND;VALUE=DATE:${icsTag(tagDanach(berlinTag(new Date(x.ende || x.beginn))))}`);
     else z.push(`DTSTART:${icsZeit(x.beginn)}`, `DTEND:${icsZeit(x.ende || new Date(new Date(x.beginn).getTime() + 3600000).toISOString())}`);
@@ -1292,11 +1309,63 @@ function fpSauber(d: any): Record<string, unknown> {
 }
 const fpArt = (x: unknown) => txt(x, 24).toLowerCase().replace(/[^a-z_]/g, "") || "allg";
 
+// ---------- KC-CLUB-WIEDERHOLUNG (1.1.0): Termine wiederholen – immer in deutscher Ortszeit (18:00 bleibt 18:00, auch nach der Zeitumstellung) ----------
+const WDH = ["keine", "taeglich", "werktags", "woechentlich", "zweiwoechentlich", "monatlich", "monatlich_wochentag", "jaehrlich"];
+const WDH_TEXT: Record<string, string> = { taeglich: "täglich", werktags: "werktags (Mo–Fr)", woechentlich: "wöchentlich", zweiwoechentlich: "alle 2 Wochen",
+  monatlich: "monatlich", monatlich_wochentag: "monatlich am gleichen Wochentag", jaehrlich: "jährlich" };
+function berlinTeile(d: Date) {
+  const f = new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(d);
+  const g = (t: string) => Number(f.find((x) => x.type === t)?.value);
+  return { y: g("year"), m: g("month"), d: g("day"), h: g("hour"), mi: g("minute") };
+}
+function berlinZuUtc(y: number, m: number, d: number, h: number, mi: number) {
+  const probe = Date.UTC(y, m - 1, d, h, mi), t = berlinTeile(new Date(probe));
+  return new Date(probe - (Date.UTC(t.y, t.m - 1, t.d, t.h, t.mi) - probe));
+}
+// Alle Termine einer Reihe zwischen von und bis (ISO-Zeiten der Beginne), höchstens max
+function wiederholungen(beginnIso: string, regel: string, von: Date, bis: Date, grenze?: string | null, ausnahmen: string[] = [], max = 400): string[] {
+  const s0 = berlinTeile(new Date(beginnIso)), aus = new Set(ausnahmen.map(String)), out: string[] = [];
+  const ende = grenze ? berlinZuUtc(Number(grenze.slice(0, 4)), Number(grenze.slice(5, 7)), Number(grenze.slice(8, 10)), 23, 59) : null;
+  const tagZahl = (y: number, m: number) => new Date(Date.UTC(y, m, 0)).getUTCDate();
+  const nterWochentag = Math.ceil(s0.d / 7), wtag = new Date(Date.UTC(s0.y, s0.m - 1, s0.d)).getUTCDay(), letzter = s0.d + 7 > tagZahl(s0.y, s0.m);
+  for (let k = 0, n = 0; k < 6000 && n < max; k++) {
+    let y = s0.y, m = s0.m, d = s0.d;
+    if (regel === "taeglich" || regel === "werktags") { const t = new Date(Date.UTC(s0.y, s0.m - 1, s0.d + k)); y = t.getUTCFullYear(); m = t.getUTCMonth() + 1; d = t.getUTCDate();
+      if (regel === "werktags" && [0, 6].includes(t.getUTCDay())) continue; }
+    else if (regel === "woechentlich" || regel === "zweiwoechentlich") { const t = new Date(Date.UTC(s0.y, s0.m - 1, s0.d + k * (regel === "woechentlich" ? 7 : 14))); y = t.getUTCFullYear(); m = t.getUTCMonth() + 1; d = t.getUTCDate(); }
+    else if (regel === "monatlich" || regel === "monatlich_wochentag") {
+      const t = new Date(Date.UTC(s0.y, s0.m - 1 + k, 1)); y = t.getUTCFullYear(); m = t.getUTCMonth() + 1;
+      if (regel === "monatlich") d = Math.min(s0.d, tagZahl(y, m));
+      else { const erster = (wtag - new Date(Date.UTC(y, m - 1, 1)).getUTCDay() + 7) % 7 + 1; d = erster + 7 * (nterWochentag - 1);
+        if (letzter || d > tagZahl(y, m)) { d = erster; while (d + 7 <= tagZahl(y, m)) d += 7; } }
+    }
+    else if (regel === "jaehrlich") { y = s0.y + k; d = Math.min(s0.d, tagZahl(y, s0.m)); }
+    else { if (k > 0) break; }
+    const t = berlinZuUtc(y, m, d, s0.h, s0.mi);
+    if (t > bis || (ende && t > ende)) break;
+    const tag = `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    if (t >= von && !aus.has(tag)) { out.push(t.toISOString()); n++; }
+  }
+  return out;
+}
+
 // KC-CLUB-PRIVATTERMIN (1.0.0): persönliche Einträge – immer nur die eigenen (person_id = ich)
 async function privatListe(ich: Ich, von: string, bis?: string) {
-  let q = db.from("kc_club_privattermine").select("id,titel,beginn,ende,ganztaegig,ort,notiz,erinnerung_min").eq("person_id", ich.person_id).gte("beginn", von).order("beginn").limit(300);
+  const felder = "id,titel,beginn,ende,ganztaegig,ort,notiz,erinnerung_min,wiederholung,wiederholung_bis,ausnahmen";
+  const bisD = bis ? new Date(bis) : new Date(Date.now() + 500 * 86400000);
+  let q = db.from("kc_club_privattermine").select(felder).eq("person_id", ich.person_id).eq("wiederholung", "keine").gte("beginn", von).order("beginn").limit(300);
   if (bis) q = q.lte("beginn", bis);
-  const { data } = await q; return data ?? [];
+  const [{ data: einzel }, { data: reihen }] = await Promise.all([q,
+    db.from("kc_club_privattermine").select(felder).eq("person_id", ich.person_id).neq("wiederholung", "keine").lte("beginn", bisD.toISOString())
+      .or(`wiederholung_bis.is.null,wiederholung_bis.gte.${von.slice(0, 10)}`).limit(200)]);
+  const out: any[] = [...(einzel ?? [])];
+  // KC-CLUB-WIEDERHOLUNG (1.1.0): Reihen im Zeitraum ausrechnen; id bleibt die der Reihe, serienBeginn für „Ändern“
+  for (const r of reihen ?? []) {
+    const dauer = r.ende ? new Date(r.ende).getTime() - new Date(r.beginn).getTime() : 0;
+    for (const b of wiederholungen(r.beginn, r.wiederholung, new Date(von), bisD, r.wiederholung_bis, r.ausnahmen || [], 400))
+      out.push({ ...r, beginn: b, ende: r.ende ? new Date(new Date(b).getTime() + dauer).toISOString() : null, serienBeginn: r.beginn, serienEnde: r.ende });
+  }
+  return out.sort((a, b) => String(a.beginn).localeCompare(String(b.beginn))).slice(0, 600);
 }
 
 // KC-CLUB-NUTZUNG (0.99.0): nur diese Bereiche werden gezählt (Ansichten der App)
@@ -1494,6 +1563,21 @@ Köcheclub Werne`,
             betreff: `Köcheclub-App – Erinnerung: ${x.titel}`, text: `Erinnerung an deinen privaten Termin:\n\n🔒 ${x.titel}\n📅 ${x.ganztaegig ? fTagLang.format(new Date(x.beginn)) + " (ganztägig)" : wann(x.beginn, true)}${x.ort ? "\n📍 " + x.ort : ""}\n\n${APP_URL}#termine`,
             url: APP_URL + "#termine",
           }, `club-privat:${x.id}:${x.beginn}`);
+          privErinnert++;
+        }
+        // KC-CLUB-WIEDERHOLUNG: Reihen – nächsten fälligen Termin erinnern, erinnert_bis merkt sich, bis wohin schon erinnert wurde
+        const { data: pr } = await db.from("kc_club_privattermine").select("*").gt("erinnerung_min", 0).neq("wiederholung", "keine").limit(500);
+        for (const r of pr ?? []) {
+          const faellig = wiederholungen(r.beginn, r.wiederholung, new Date(Date.now() - 3600000), new Date(Date.now() + r.erinnerung_min * 60000 + 60000), r.wiederholung_bis, r.ausnahmen || [], 5)
+            .filter((b) => new Date(b).getTime() - r.erinnerung_min * 60000 <= Date.now() && (!r.erinnert_bis || b > r.erinnert_bis));
+          const b = faellig[faellig.length - 1]; if (!b) continue;
+          const { data: ok } = await db.from("kc_club_privattermine").update({ erinnert_bis: b }).eq("id", r.id).or(`erinnert_bis.is.null,erinnert_bis.lt.${b}`).select("id");
+          if (!ok?.length) continue;
+          await senden("club_erinnerung", [r.person_id], {
+            titel: `⏰ ${r.titel}`, kurz: `${r.ganztaegig ? fTag.format(new Date(b)) + " (ganztägig)" : wann(b)}${r.ort ? " – " + r.ort : ""}`,
+            betreff: `Köcheclub-App – Erinnerung: ${r.titel}`, text: `Erinnerung an deinen privaten Termin:\n\n🔒 ${r.titel} (🔁 ${WDH_TEXT[r.wiederholung] || ""})\n📅 ${r.ganztaegig ? fTagLang.format(new Date(b)) + " (ganztägig)" : wann(b, true)}${r.ort ? "\n📍 " + r.ort : ""}\n\n${APP_URL}#termine`,
+            url: APP_URL + "#termine",
+          }, `club-privat:${r.id}:${b}`);
           privErinnert++;
         }
       }
@@ -1758,6 +1842,31 @@ Köcheclub Werne`,
           art: p.art === "veranstaltung" ? "veranstaltung" : "treffen", ganztaegig: p.art === "veranstaltung" && !!p.ganztaegig };
         if (zeile.ende && zeile.ende < zeile.beginn) throw new Fehler("Das Ende liegt vor dem Beginn.");
         let t: any, anlass: "neu" | "geaendert" = "neu";
+        // KC-CLUB-WIEDERHOLUNG (1.1.0): neue Terminreihe = viele einzelne Treffen (jedes mit eigenen Zu-/Absagen), EINE Sammel-Einladung
+        const wdh = !p.id && WDH.includes(String(p.wiederholung)) && p.wiederholung !== "keine" ? String(p.wiederholung) : null;
+        if (wdh) {
+          const bisTag = /^\d{4}-\d{2}-\d{2}$/.test(String(p.wiederholung_bis || "")) ? String(p.wiederholung_bis) : null;
+          if (!bisTag) throw new Fehler("Bitte angeben, bis wann die Terminreihe laufen soll.");
+          if (new Date(bisTag).getTime() - beginn.getTime() > 400 * 86400000) throw new Fehler("Eine Terminreihe darf höchstens ein Jahr lang sein.");
+          const beginne = wiederholungen(beginn.toISOString(), wdh, new Date(beginn.getTime() - 1000), new Date(bisTag + "T23:59:59Z"), bisTag, [], 60);
+          if (beginne.length < 2) throw new Fehler("Bis zu diesem Datum gibt es nur einen Termin – bitte das Ende später wählen.");
+          const dauer = zeile.ende ? new Date(zeile.ende).getTime() - beginn.getTime() : 0;
+          const { data: reihe, error: re } = await db.from("kc_club_treffen").insert(beginne.map((b) => ({ ...zeile, beginn: b, ende: zeile.ende ? new Date(new Date(b).getTime() + dauer).toISOString() : null, erstellt_von: ich.person_id }))).select();
+          if (re || !reihe?.length) throw new Fehler("Speichern fehlgeschlagen.", 500);
+          let versand = null;
+          if (p.benachrichtigen !== false) {
+            const ziel = (await aktiveMitglieder()).map((x) => x.person_id).filter((id) => id !== ich.person_id);
+            const liste = reihe.slice(0, 6).map((x: any) => "📅 " + wann(x.beginn, true)).join("\n") + (reihe.length > 6 ? `\n… und ${reihe.length - 6} weitere` : "");
+            versand = await senden("club_treffen", ziel, {
+              titel: `📅 Neue Terminreihe: ${titel}`, kurz: `${WDH_TEXT[wdh]} – ${reihe.length} Termine ab ${wann(reihe[0].beginn)}`,
+              betreff: `Köcheclub Werne – neue Terminreihe: ${titel} (${WDH_TEXT[wdh]})`,
+              text: `Hallo,\n\nes gibt eine neue Terminreihe „${titel}“ (${WDH_TEXT[wdh]}, ${reihe.length} Termine):\n\n${liste}${zeile.ort ? "\n\n📍 " + zeile.ort : ""}\n\nZu- und absagen kannst du für jeden Termin einzeln in der Köcheclub-App: ${APP_URL}#termine\n\nViele Grüße\nKöcheclub Werne`,
+              url: APP_URL + "#termine",
+            }, `club-treffen-reihe:${reihe[0].id}`);
+          }
+          await protokoll(ich.person_id, "treffen_reihe_angelegt", { anzahl: reihe.length, wiederholung: wdh, titel, versand });
+          return json({ ok: true, id: reihe[0].id, anzahl: reihe.length, versand });
+        }
         if (p.id) {
           ({ data: t } = await db.from("kc_club_treffen").update({ ...zeile, erinnerung_gesendet_am: null }).eq("id", p.id).select().single());
           anlass = "geaendert";
@@ -2518,8 +2627,12 @@ Köcheclub Werne`,
         const ende = p.ende ? new Date(String(p.ende)) : null;
         if (ende && (isNaN(ende.getTime()) || ende < beginn)) throw new Fehler("Das Ende liegt vor dem Beginn.");
         const erinnerung = [0, 15, 30, 60, 120, 1440, 2880].includes(Number(p.erinnerung_min)) ? Number(p.erinnerung_min) : 0;
+        const wiederholung = WDH.includes(String(p.wiederholung)) ? String(p.wiederholung) : "keine";
+        const wBis = /^\d{4}-\d{2}-\d{2}$/.test(String(p.wiederholung_bis || "")) ? String(p.wiederholung_bis) : null;
+        if (wBis && wBis < berlinTag(beginn)) throw new Fehler("„Wiederholen bis“ liegt vor dem ersten Termin.");
         const zeile = { titel, beginn: beginn.toISOString(), ende: ende ? ende.toISOString() : null, ganztaegig: !!p.ganztaegig, ort: txt(p.ort, 200) || null,
-          notiz: txt(p.notiz, 1000) || null, erinnerung_min: erinnerung, erinnert_am: null, geaendert_am: jetzt() };
+          notiz: txt(p.notiz, 1000) || null, erinnerung_min: erinnerung, erinnert_am: null, erinnert_bis: null, geaendert_am: jetzt(),
+          wiederholung, wiederholung_bis: wiederholung === "keine" ? null : wBis };
         let id = String(p.id || "");
         if (id) {
           const { data } = await db.from("kc_club_privattermine").update(zeile).eq("id", id).eq("person_id", ich.person_id).select("id");
@@ -2534,6 +2647,13 @@ Köcheclub Werne`,
         return json({ ok: true, id }); // bewusst kein Protokoll mit Inhalt – privat
       }
       case "privattermin_loeschen": {
+        // KC-CLUB-WIEDERHOLUNG: nur_tag = nur diesen einen Termin der Reihe weglassen (Ausnahme), sonst ganze Reihe/Eintrag löschen
+        if (/^\d{4}-\d{2}-\d{2}$/.test(String(p.nur_tag || ""))) {
+          const { data: r } = await db.from("kc_club_privattermine").select("ausnahmen").eq("id", String(p.id || "")).eq("person_id", ich.person_id).maybeSingle();
+          if (!r) throw new Fehler("Eintrag nicht gefunden.", 404);
+          await db.from("kc_club_privattermine").update({ ausnahmen: [...new Set([...(r.ausnahmen || []), String(p.nur_tag)])], geaendert_am: jetzt() }).eq("id", String(p.id)).eq("person_id", ich.person_id);
+          return json({ ok: true, nurEiner: true });
+        }
         const { data } = await db.from("kc_club_privattermine").delete().eq("id", String(p.id || "")).eq("person_id", ich.person_id).select("id");
         if (!data?.length) throw new Fehler("Eintrag nicht gefunden.", 404);
         return json({ ok: true });

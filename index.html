@@ -1529,7 +1529,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.0.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.1.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -4418,7 +4418,7 @@ function kalTagZeigen() {
   const kopf = `<h3 style="margin:0 0 4px">${esc(fTagLang.format(new Date(kalTagWahl + "T12:00:00Z")))}</h3>`;
   if (!e.length) { $("kalTag").innerHTML = `<div class="karte">${kopf}<p class="hinweis" style="margin:6px 0 0">Keine Termine an diesem Tag.</p></div>`; return; }
   const zeilen = e.filter((x) => x.art !== "treffen" && x.art !== "veranst").map((x) => {
-    if (x.art === "privat") return `<div class="keintrag" onclick="privatForm(PT.nachId('${x.x.id}'))"><div class="farbe" style="background:#5b7fa6"></div><div style="flex:1"><b>🔒 ${x.x.ganztaegig ? "" : esc(fZeit.format(new Date(x.x.beginn))) + " "}${esc(x.x.titel)}</b><small>privat – nur du siehst das${x.x.ort ? " · 📍 " + esc(x.x.ort) : ""}${x.x.erinnerung_min ? " · ⏰" : ""}</small></div></div>`;
+    if (x.art === "privat") return `<div class="keintrag" onclick="privatForm(PT.nachId('${x.x.id}'),'${kalTagWahl}')"><div class="farbe" style="background:#5b7fa6"></div><div style="flex:1"><b>🔒 ${x.x.ganztaegig ? "" : esc(fZeit.format(new Date(x.x.beginn))) + " "}${esc(x.x.titel)}</b><small>privat – nur du siehst das${x.x.wiederholung && x.x.wiederholung !== "keine" ? " · 🔁 " + esc(WDH_KURZ[x.x.wiederholung]) : ""}${x.x.ort ? " · 📍 " + esc(x.x.ort) : ""}${x.x.erinnerung_min ? " · ⏰" : ""}</small></div></div>`;
     if (x.art === "anfrage") return `<div class="keintrag" onclick="taZeigen('${x.x.id}')"><div class="farbe" style="background:var(--gold)"></div><div style="flex:1"><b>📨 ${esc(fZeit.format(new Date(x.x.beginn)))} ${esc(x.x.anlass)}</b><small>${x.x.vonMir ? "deine Anfrage" : "von " + esc(x.x.von.vorname)}${x.x.ort ? " · 📍 " + esc(x.x.ort) : ""}${x.x.meine ? " · " + TA_ANTW[x.x.meine] : ""}</small></div></div>`;
     if (x.art === "feiertag") return `<div class="keintrag"><div class="farbe" style="background:var(--rot3)"></div><div style="flex:1"><b>🇩🇪 Feiertag: ${esc(x.name)}</b><small>gesetzlicher Feiertag in NRW</small></div></div>`;
     if (x.art === "aktion") { const n = Math.round((new Date(kalTagWahl + "T12:00:00Z") - new Date(x.a.von + "T12:00:00Z")) / 86400000) + 1, ges = Math.round((new Date(x.a.bis + "T12:00:00Z") - new Date(x.a.von + "T12:00:00Z")) / 86400000) + 1;
@@ -4567,6 +4567,7 @@ async function treffenForm(t) {
     <label class="schalter" id="tfGanzZeile"><span>Ganztägig (ohne Uhrzeit)</span><input type="checkbox" id="tfGanz" ${ganz ? "checked" : ""}></label>
     <label class="feld" id="tfGastZeile">Gastgeber<select id="tfGast"><option value="">– niemand –</option>${MITGLIEDER.map((m) => `<option value="${m.person_id}" ${t?.gastgeber === m.person_id ? "selected" : ""}>${esc(m.name)}</option>`).join("")}</select></label>
     ${comboFeld("tfOrt", "Ort", [...ORT_VORSCHLAEGE, ...TR_ORTE], t?.ort || "", "🏠 beim Gastgeber / noch offen", "✏️ Anderer Ort …", "z. B. Grillhütte am See")}
+    ${t?.id ? "" : wdhFelder("tf", "keine", "", true) + `<p class="hinweis" style="margin:0">🔁 Eine Terminreihe legt jeden Termin einzeln an (eigene Zu-/Absagen). Die Mitglieder bekommen eine Sammel-Einladung.</p>`}
     <label class="feld">Beschreibung / Tagesordnung<textarea id="tfBeschr" rows="3">${esc(t?.beschreibung || "")}</textarea></label>
     <label class="schalter"><span>Alle Mitglieder benachrichtigen (Push/Mail)</span><input type="checkbox" id="tfInfo" ${art === "treffen" ? "checked" : ""}></label>
     <div class="knoepfe"><button class="knopf haupt" onclick="treffenSpeichern('${t?.id || ""}', this)">Speichern</button><button class="knopf" onclick="$('treffenForm').classList.add('versteckt')">Abbrechen</button></div>`;
@@ -4599,7 +4600,9 @@ async function treffenSpeichern(id, knopf) {
   await einmal(knopf, async () => {
     try {
       const r = await api("treffen_speichern", { id: id || undefined, art, ganztaegig: ganz, titel: $("tfTitel").value, beginn: beginn.toISOString(), ende: ende ? ende.toISOString() : null,
-        gastgeber_person_id: art === "treffen" ? $("tfGast").value || null : null, ort: $("tfOrt").value, beschreibung: $("tfBeschr").value, benachrichtigen: $("tfInfo").checked });
+        gastgeber_person_id: art === "treffen" ? $("tfGast").value || null : null, ort: $("tfOrt").value, beschreibung: $("tfBeschr").value, benachrichtigen: $("tfInfo").checked,
+        ...(!id && $("tfWdh") && $("tfWdh").value !== "keine" ? { wiederholung: $("tfWdh").value, wiederholung_bis: $("tfWdhBis").value || null } : {}) });
+      if (r.anzahl) { $("treffenForm").classList.add("versteckt"); melde(`🔁 Terminreihe mit ${r.anzahl} Terminen angelegt${r.versand ? ` – ${r.versand.gesendet} Mitglieder benachrichtigt` : ""}`); treffenLaden(); return; }
       $("treffenForm").classList.add("versteckt"); melde(r.versand ? `Gespeichert – ${r.versand.gesendet} Mitglieder benachrichtigt` : "Gespeichert"); treffenLaden();
     } catch (e) { melde(e.message, true); }
   });
@@ -5759,6 +5762,14 @@ function mitgliederZeichnen() {
       + (ICH.admin ? '<p class="hinweis">🔗 = persönlichen App-Link erzeugen und per WhatsApp schicken (ein neuer Link macht den alten ungültig). 🎖️ = Amt und Rechte.</p>' : "");
   } catch (e) { melde(e.message, true); }
 }
+// KC-CLUB-WIEDERHOLUNG (1.1.0): Auswahl „🔁 Wiederholen“ für private Termine und Club-Terminreihen
+const WDH_WAHL = [["keine", "nicht wiederholen"], ["taeglich", "täglich"], ["werktags", "werktags (Mo–Fr)"], ["woechentlich", "wöchentlich"], ["zweiwoechentlich", "alle 2 Wochen"],
+  ["monatlich", "monatlich (gleicher Tag)"], ["monatlich_wochentag", "monatlich (z. B. jeden 1. Freitag)"], ["jaehrlich", "jährlich"]];
+const WDH_KURZ = Object.fromEntries(WDH_WAHL);
+function wdhFelder(pre, wert, bis, pflichtBis) {
+  return `<div class="zwei"><label class="feld">🔁 Wiederholen<select id="${pre}Wdh" onchange="$('${pre}WdhBisZeile').classList.toggle('versteckt', this.value==='keine')">${WDH_WAHL.map(([k, t]) => `<option value="${k}" ${k === (wert || "keine") ? "selected" : ""}>${t}</option>`).join("")}</select></label>
+    <label class="feld ${!wert || wert === "keine" ? "versteckt" : ""}" id="${pre}WdhBisZeile">bis${pflichtBis ? "" : " (freiwillig)"}<input id="${pre}WdhBis" type="date" value="${bis || ""}"></label></div>`;
+}
 // ---------- KC-CLUB-PRIVATTERMIN (1.0.0): private Kalendereinträge – nur ich sehe sie ----------
 // „＋ Neu“ in Termine: Mitglieder legen private Einträge an; die Clubleitung wählt per Häkchen „🔒 Privat“ zwischen
 // Club-Termin (für alle) und privatem Eintrag. Private Einträge: Kalender, „Demnächst“, eigenes Kalender-Abo, Erinnerung.
@@ -5775,11 +5786,13 @@ async function ptLaden() {
   liste.forEach((x) => PT.map.set(x.id, x));
   const zeig = liste.filter((x) => new Date(x.ende || x.beginn) > Date.now() - 3 * 3600000).slice(0, 8);
   $("privattermine").innerHTML = zeig.length ? `<div class="karte pt-karte"><b>🔒 Meine privaten Termine</b> <span class="hinweis" style="font-size:.8rem">nur du siehst sie</span>
-    ${zeig.map((x) => `<div class="keintrag" onclick="privatForm(PT.nachId('${x.id}'))"><div class="farbe" style="background:#5b7fa6"></div><div style="flex:1"><b>${esc(x.titel)}</b>
+    ${zeig.map((x) => `<div class="keintrag" onclick="privatForm(PT.nachId('${x.id}'),'${berlinIso(x.beginn)}')"><div class="farbe" style="background:#5b7fa6"></div><div style="flex:1"><b>${x.wiederholung && x.wiederholung !== "keine" ? "🔁 " : ""}${esc(x.titel)}</b>
       <small>${esc(x.ganztaegig ? fTag.format(new Date(x.beginn)) + " · ganztägig" : wann(x.beginn))}${x.ort ? " · 📍 " + esc(x.ort) : ""}${x.erinnerung_min ? " · ⏰" : ""}</small></div></div>`).join("")}</div>` : "";
 }
-function privatForm(x) {
+function privatForm(x, vorkommen) {
   x = x || {};
+  PT.vorkommen = vorkommen || (x.beginn ? berlinIso(x.beginn) : null);
+  if (x.serienBeginn) x = { ...x, beginn: x.serienBeginn, ende: x.serienEnde }; // Reihe: Formular zeigt den ersten Termin
   const tagIso = (iso) => new Intl.DateTimeFormat("sv-SE", { timeZone: TZ }).format(new Date(iso));
   const datum = x.beginn ? tagIso(x.beginn) : x._datum || tagPlus(heuteIso(), 1), zeit = x.beginn && !x.ganztaegig ? fZeit.format(new Date(x.beginn)) : x._zeit || "18:00";
   const bis = x.ende && !x.ganztaegig ? fZeit.format(new Date(x.ende)) : "", bisDatum = x.ende && tagIso(x.ende) !== datum ? tagIso(x.ende) : "";
@@ -5793,9 +5806,11 @@ function privatForm(x) {
     <label class="schalter"><span>Ganztägig (ohne Uhrzeit)</span><input type="checkbox" id="ptGanz" ${x.ganztaegig ? "checked" : ""} onchange="$('ptZeit').disabled=$('ptBis').disabled=this.checked"></label>
     <label class="feld">Ort (freiwillig)<input id="ptOrt" maxlength="200" value="${esc(x.ort || "")}"></label>
     <label class="feld">Notiz (freiwillig)<textarea id="ptNotiz" rows="2" maxlength="1000">${esc(x.notiz || "")}</textarea></label>
+    ${wdhFelder("pt", x.wiederholung, x.wiederholung_bis, false)}
+    ${x.wiederholung && x.wiederholung !== "keine" ? `<p class="hinweis" style="margin:0">🔁 Das ist eine Terminreihe – Änderungen gelten für alle Termine der Reihe.</p>` : ""}
     <label class="feld">⏰ Erinnerung<select id="ptErinnerung">${PT_ERINNERUNG.map(([m, t]) => `<option value="${m}" ${Number(x.erinnerung_min || 0) === m ? "selected" : ""}>${t}</option>`).join("")}</select></label>
     <div class="knoepfe"><button class="knopf haupt" onclick="einmal(this, () => privatSpeichern('${x.id || ""}'))">Speichern</button>
-      ${x.id ? `<button class="knopf" onclick="privatLoeschen('${x.id}')">🗑️ Löschen</button>` : ""}
+      ${x.id ? `<button class="knopf" onclick="privatLoeschen('${x.id}', ${x.wiederholung && x.wiederholung !== "keine" ? "true" : "false"})">🗑️ Löschen</button>` : ""}
       <button class="knopf" onclick="$('treffenForm').classList.add('versteckt')">Abbrechen</button></div>`;
   if (x.ganztaegig) { $("ptZeit").disabled = $("ptBis").disabled = true; }
   $("treffenForm").classList.remove("versteckt"); $("terminanfrageForm")?.classList.add("versteckt"); $("terminumfrageForm")?.classList.add("versteckt");
@@ -5809,13 +5824,31 @@ async function privatSpeichern(id) {
   const beginn = taZeitpunkt(datum, zeit), ende = ganz ? (bisDatum !== datum ? taZeitpunkt(bisDatum, "23:59") : null) : (bisZeit || bisDatum !== datum) ? taZeitpunkt(bisDatum, bisZeit || zeit) : null;
   if (ende && ende < beginn) return melde("Das Ende liegt vor dem Beginn.", true);
   try {
-    await api("privattermin_speichern", { id: id || undefined, titel, beginn, ende, ganztaegig: ganz, ort: $("ptOrt").value.trim(), notiz: $("ptNotiz").value.trim(), erinnerung_min: Number($("ptErinnerung").value) });
+    await api("privattermin_speichern", { id: id || undefined, titel, beginn, ende, ganztaegig: ganz, ort: $("ptOrt").value.trim(), notiz: $("ptNotiz").value.trim(), erinnerung_min: Number($("ptErinnerung").value),
+      wiederholung: $("ptWdh").value, wiederholung_bis: $("ptWdh").value !== "keine" ? $("ptWdhBis").value || null : null });
     $("treffenForm").classList.add("versteckt"); melde("🔒 Privater Termin gespeichert – nur du siehst ihn"); treffenLaden();
   } catch (e) { melde(e.message, true); }
 }
-async function privatLoeschen(id) {
+async function privatLoeschen(id, reihe) {
+  if (reihe && PT.vorkommen) return privatLoeschenReihe(id);
   if (!confirm("Diesen privaten Termin löschen?")) return;
   try { await api("privattermin_loeschen", { id }); PT.map.delete(id); $("treffenForm").classList.add("versteckt"); melde("🗑️ Gelöscht"); treffenLaden(); } catch (e) { melde(e.message, true); }
+}
+// Reihe: nur diesen einen Termin oder die ganze Reihe?
+function privatLoeschenReihe(id) {
+  document.getElementById("ptLoeschFenster")?.remove();
+  const tag = PT.vorkommen, f = document.createElement("div"); f.id = "ptLoeschFenster"; f.className = "blatt";
+  f.innerHTML = `<div class="blatt-innen"><h3>🗑️ Termin aus einer Reihe löschen</h3>
+    <button class="knopf" onclick="privatLoeschenTun('${id}','${tag}')">Nur den Termin am ${esc(fTag.format(new Date(tag + "T12:00:00Z")))}</button>
+    <button class="knopf" onclick="privatLoeschenTun('${id}','')">🔁 Die ganze Reihe</button>
+    <button class="knopf" onclick="document.getElementById('ptLoeschFenster').remove()">Abbrechen</button></div>`;
+  f.onclick = (e) => { if (e.target === f) f.remove(); };
+  document.body.appendChild(f);
+}
+async function privatLoeschenTun(id, tag) {
+  document.getElementById("ptLoeschFenster")?.remove();
+  try { await api("privattermin_loeschen", { id, ...(tag ? { nur_tag: tag } : {}) }); if (!tag) PT.map.delete(id); $("treffenForm").classList.add("versteckt");
+    melde(tag ? "🗑️ Dieser eine Termin ist gelöscht – die Reihe bleibt" : "🗑️ Ganze Reihe gelöscht"); treffenLaden(); } catch (e) { melde(e.message, true); }
 }
 
 // ---------- KC-CLUB-TERMINANFRAGE (0.92.0) ----------

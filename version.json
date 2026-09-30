@@ -1,10 +1,16 @@
 {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "datum": "2026-09-30",
   "neu": [
-    "🔒 Private Termine: Unter Termine → „＋ Neu“ mit Häkchen „Privat“ – nur du siehst den Eintrag, im Kalender, unter „Demnächst“ und in deinem Kalender-Abo, auf Wunsch mit Erinnerung"
+    "🔁 Termine wiederholen: täglich, werktags, wöchentlich, alle 2 Wochen, monatlich (auch „jeden 1. Freitag“) oder jährlich – bei privaten Terminen und (für die Clubleitung) als Terminreihe"
   ],
   "verlauf": [
+    {
+      "version": "1.1.0",
+      "neu": [
+        "🔁 Termine wiederholen: täglich, werktags, wöchentlich, alle 2 Wochen, monatlich (auch „jeden 1. Freitag“) oder jährlich – bei privaten Terminen und (für die Clubleitung) als Terminreihe"
+      ]
+    },
     {
       "version": "1.0.0",
       "neu": [

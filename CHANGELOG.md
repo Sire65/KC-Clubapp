@@ -1,5 +1,18 @@
 # Änderungen
 
+## 1.1.0 – 2026-09-30 (DEV)
+
+- KC-CLUB-WIEDERHOLUNG (Wunsch Hansi: „Wiederholen fehlt bei Terminen – täglich, wöchentlich, jährlich usw.“):
+  Auswahl täglich / werktags (Mo–Fr) / wöchentlich / alle 2 Wochen / monatlich (gleicher Tag; 31. → Monatsletzter) /
+  monatlich am gleichen Wochentag („jeden 1. Freitag“, „letzter Mittwoch“) / jährlich (29.02. → 28.02.), optional „bis“.
+  Immer in deutscher Ortszeit (18:00 bleibt 18:00 über die Zeitumstellung).
+  - Private Termine: echte Reihe (eine Zeile; der Server rechnet die Termine je Zeitraum aus). Löschen fragt „nur diesen
+    Termin“ (Ausnahme) oder „ganze Reihe“; Ändern gilt für die ganze Reihe. Kalender-Abo mit RRULE/EXDATE (TZID
+    Europe/Berlin). Erinnerung je Termin der Reihe (erinnert_bis).
+  - Club-Termine (Clubleitung, beim Anlegen): Terminreihe = einzelne Treffen mit eigenen Zu-/Absagen, „bis“ Pflicht,
+    höchstens 1 Jahr / 60 Termine, EINE Sammel-Einladung an alle statt vieler Einzelmeldungen.
+  Migration v101 (4 Spalten an kc_club_privattermine, angewendet). Server 1.1.0. Test 126.
+
 ## 1.0.0 – 2026-09-30 (DEV)
 
 - KC-CLUB-PRIVATTERMIN (Wunsch Hansi: „Privateintrag im Kalender – Neu und dann Häkchen privat“): „＋ Neu“ in Termine jetzt für

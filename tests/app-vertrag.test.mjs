@@ -1636,8 +1636,21 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/\.eq\("person_id", ich\.person_id\)/.test(f("privattermin_speichern")) && /person_id: ich\.person_id/.test(f("privattermin_speichern")), "Speichern nur eigene");
   assert.ok(/\.eq\("person_id", ich\.person_id\)/.test(f("privattermin_loeschen")), "Löschen nur eigene");
   assert.ok(!/nurVorstand/.test(f("privattermin_speichern")) && !/protokoll\(/.test(f("privattermin_speichern")), "jeder darf, ohne Inhalts-Protokoll");
-  assert.ok(/\.eq\("person_id", ich\.person_id\)\.gte\("beginn", von\)/.test(server), "Liste nur eigene Einträge");
+  { const pl = server.slice(server.indexOf("async function privatListe("), server.indexOf("async function privatListe(") + 1400);
+    assert.ok((pl.match(/from\("kc_club_privattermine"\)\.select\(felder\)\.eq\("person_id", ich\.person_id\)/g) || []).length === 2, "Liste nur eigene Einträge (Einzel und Reihen)"); }
   assert.ok(/privatListe\(ich, zeitraum\.von, zeitraum\.bis\)/.test(server) && /UID:privat-/.test(server) && /club-privat:/.test(server), "Kalender/Abo/Erinnerung fehlt");
   assert.ok(/onclick="neuTermin\(\)"/.test(html) && /function privatForm\(/.test(html) && /🔒 Privat<\/b> – nur ich sehe diesen Termin/.test(html), "App: Neu mit Häkchen Privat fehlt");
   assert.ok(/\$\("neuTreffenKnopf"\)\.classList\.remove\("versteckt"\)/.test(html), "„＋ Neu“ muss für alle sichtbar sein");
+}
+
+// 126. 1.1.0: Termine wiederholen (KC-CLUB-WIEDERHOLUNG)
+{
+  const mig = lies("supabase/migrations/20260930_kc_club_v101_wiederholung.sql");
+  assert.ok(/add column if not exists wiederholung text/.test(mig) && /ausnahmen date\[\]/.test(mig) && /erinnert_bis/.test(mig), "Spalten für Wiederholung fehlen");
+  assert.ok(/function wiederholungen\(/.test(server) && /function berlinZuUtc\(/.test(server), "Wiederholungs-Rechnung (Ortszeit) fehlt");
+  assert.ok(/privatListe[\s\S]{0,1500}wiederholungen\(r\.beginn/.test(server), "Reihen werden in der Liste nicht ausgerechnet");
+  assert.ok(/nur_tag/.test(server) && /RRULE:/.test(server) && /EXDATE/.test(server), "Nur-diesen-Termin / Kalender-Abo-Regel fehlt");
+  assert.ok(/const wdh = !p\.id && WDH\.includes/.test(server) && /club-treffen-reihe:/.test(server) && /höchstens ein Jahr/.test(server), "Club-Terminreihe mit Sammel-Einladung fehlt");
+  assert.ok(/function wdhFelder\(/.test(html) && /wiederholung: \$\("ptWdh"\)\.value/.test(html) && /wiederholung: \$\("tfWdh"\)\.value/.test(html), "App: Auswahl Wiederholen fehlt");
+  assert.ok(/function privatLoeschenReihe\(/.test(html), "App: nur diesen / ganze Reihe löschen fehlt");
 }
