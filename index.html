@@ -890,6 +890,14 @@
   .ge-zeile { display: grid; gap: 4px; }
   .ge-dieses { box-shadow: 0 0 0 2px var(--gruen, #2fbf5b); }
   .ruhe-zeiten input:disabled { opacity: .5; }
+  /* KC-CLUB-NUTZUNG (0.99.0) */
+  .nz-zeile { display: grid; grid-template-columns: 12em minmax(0, 1fr) 2.8em; gap: 8px; align-items: center; font-size: .92rem; }
+  .nz-zeile span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .nz-zeile b { text-align: right; }
+  .nz-balken { height: 10px; background: var(--karte2, rgba(128,128,128,.2)); border-radius: 6px; overflow: hidden; }
+  .nz-balken i { display: block; height: 100%; background: var(--rot); border-radius: 6px; }
+  .nz-tage { display: flex; align-items: flex-end; gap: 2px; height: 60px; padding: 4px 0; border-bottom: 1px solid var(--linie); }
+  .nz-tage div { flex: 1; height: 100%; display: flex; align-items: flex-end; }
+  .nz-tage i { display: block; width: 100%; min-height: 2px; background: var(--gold, #d4a017); border-radius: 3px 3px 0 0; }
 </style>
 </head>
 <body>
@@ -1194,6 +1202,7 @@
       <div class="schalter"><div><b>🎂 Meinen Geburtstag anzeigen (ohne Jahr)</b><div class="hinweis" id="gebHinweis">Andere sehen dann nur Tag und Monat – im Kalender, in der Terminliste und unter „Heute wichtig“.</div></div><input type="checkbox" id="setGeburtstag" onchange="geburtstagFreigabe(this.checked)"></div>
       <div class="schalter"><div><b>🟢 Anderen zeigen, wann ich online bin</b><div class="hinweis">Dann sehen andere einen grünen Punkt bei dir und können „anklopfen“. Ausgeschaltet siehst du auch selbst nicht, wer online ist.</div></div><input type="checkbox" id="setOnline" onchange="onlineZeigen(this.checked)"></div>
       <div class="schalter"><div><b>👁️ Andere sehen live, was ich tippe</b><div class="hinweis">In Unterhaltungen sehen die anderen deinen Text schon beim Schreiben – auch, was du wieder löschst. Nicht gesendete Entwürfe werden nicht gespeichert und nach wenigen Sekunden verworfen. Standard: aus.</div></div><input type="checkbox" id="setLiveTippen" onchange="liveTippenSetzen(this.checked)"></div>
+      <p class="hinweis" style="margin:10px 0 0">📊 Die App zählt <b>ohne Namen</b>, wie oft die einzelnen Bereiche geöffnet werden (z. B. „Termine 14× am 30.09.“). Wer etwas geöffnet hat, wird nicht gespeichert.</p>
       <p class="hinweis" style="margin:14px 0 0"><b>Für andere Mitglieder sichtbar:</b> (Aushilfen sehen keine Kontaktdaten; Hansi als Admin sieht alles)</p>
       <div class="schalter"><div><b>📱 Meine Handynummer</b></div><input type="checkbox" id="setKontakt_handy" onchange="kontaktFreigabe('handy', this.checked)"></div>
       <div class="schalter"><div><b>☎️ Meine Festnetznummer</b></div><input type="checkbox" id="setKontakt_festnetz" onchange="kontaktFreigabe('festnetz', this.checked)"></div>
@@ -1252,6 +1261,7 @@
     <details class="karte versteckt" data-klappe="admin" data-einfach id="adminBereich">
     <summary>🛠️ Admin-Einstellungen</summary>
     <button class="knopf" onclick="fpAdmin()">🩺 Fehlerprotokoll &amp; Startprobleme der Mitglieder</button>
+    <button class="knopf" onclick="nzAdmin()">📊 Nutzung der App – ohne Namen</button>
     <details class="karte innen" data-klappe="admin_pinnwand" id="adminPinnwand">
       <summary>📌 Pinnwand: Erinnerung an alte Zettel</summary>
       <p class="hinweis" style="margin-top:0">Beim Öffnen der App fragt sie: „Dein Post-it vom … hängt noch an der Pinnwand. Möchtest du es abnehmen?“ – gilt für alle Mitglieder.</p>
@@ -1514,7 +1524,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "0.98.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.99.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2999,7 +3009,7 @@ async function zugangAnfordern() {
 }
 // KC-CLUB-WARTEN (0.33.0): dauert eine Anfrage länger als 0,35 s, erscheint die drehende Kochmütze mit passendem Text.
 // Hintergrund-Abfragen (alle paar Sekunden/Minuten) zeigen sie nicht, damit nichts flackert.
-const WARTEN_STILL = new Set(["standort_update", "standort_liste", "terminanfragen_liste", "init", "online", "anruf_status", "diagnose", "unterhaltung", "unterhaltungen", "einstellung_setzen", "pinnwand", "kalender", "terminumfragen_liste", "communicator_status", "ping", "anruf_ende", "protokoll_speichern", "todo_erledigt", "todo_liste", "wetter", "fotos_neueste", "admin_lage", "tippen", "pinnwand_neu", "pinnwand_gesehen"]);
+const WARTEN_STILL = new Set(["nutzung_melden", "standort_update", "standort_liste", "terminanfragen_liste", "init", "online", "anruf_status", "diagnose", "unterhaltung", "unterhaltungen", "einstellung_setzen", "pinnwand", "kalender", "terminumfragen_liste", "communicator_status", "ping", "anruf_ende", "protokoll_speichern", "todo_erledigt", "todo_liste", "wetter", "fotos_neueste", "admin_lage", "tippen", "pinnwand_neu", "pinnwand_gesehen"]);
 const WARTEN_TEXT = { standort_ort: "Standort wird bestimmt …", standort_start: "Standort wird geteilt …", standort_ende: "Wird beendet …", terminanfrage_senden: "Anfrage wird gesendet …", terminanfrage_antwort: "Antwort wird gemeldet …", terminanfrage_absagen: "Wird abgesagt …", nachricht_senden: "Nachricht wird gesendet …", gruppe_anlegen: "Gruppe wird angelegt …", gruppe_aendern: "Wird gespeichert …", treffen_speichern: "Termin wird gespeichert …",
   pinnwand_anheften: "Zettel wird angeheftet …", feedback_senden: "Feedback wird gesendet …", anklopfen: "Es wird angeklopft …", anruf_start: "Anruf wird aufgebaut …", anlage_hochladen: "Wird hochgeladen …", erstattung_senden: "Antrag wird gesendet …", km_satz_setzen: "Wird gespeichert …", todo_zuweisen: "Wird zugewiesen …",
   link_erzeugen: "Link wird erzeugt …", todo_anlegen: "Wird eingetragen …", zugang_anfordern: "Mail wird gesendet …", foto_hochladen: "Foto wird hochgeladen …", test_an_mich: "Test wird gesendet …",
@@ -3860,6 +3870,7 @@ function adminBlatt() {
   const c = r.communicator, b = c.bericht, m = r.mitglieder;
   $("adminBlattInhalt").innerHTML = `<h3 style="margin:0">🛡️ Admin-Zentrale – Einzelheiten</h3><p class="hinweis" style="margin:0">Stand ${esc(zeitKurz(r.zeit))} Uhr</p>
     <button class="knopf" onclick="fpAdmin()">🩺 Fehlerprotokoll &amp; Startprobleme der Mitglieder</button>
+    <button class="knopf" onclick="nzAdmin()">📊 Nutzung der App – ohne Namen</button>
     <b>👥 Zuletzt in der App</b>
     <table class="todotab">${m.zuletzt.map((x) => `<tr><td>${x.online ? "🟢" : "⚪"} ${esc(x.name)}</td><td>${esc(seitText(x.zuletzt))}</td><td class="hinweis">${x.version ? "v" + esc(x.version) : "–"}</td></tr>`).join("") || '<tr><td class="hinweis">Noch niemand</td></tr>'}</table>
     <p class="hinweis" style="margin:0">${m.ohneZugang} Mitglieder haben noch keinen persönlichen Link · ${m.nieAngemeldet} haben ihn, waren aber noch nie in der App.</p>
@@ -4256,6 +4267,7 @@ function zeige(v, ausHistorie) {
   if (kaBearb && v !== "start") kaBearbeiten(false); // Anordnen beim Verlassen der Startseite abschließen
   const vorher = aktuelleAnsicht;
   aktuelleAnsicht = v; if (window.KCFP) KCFP.sicht = v;
+  nzZaehlen(v); // KC-CLUB-NUTZUNG: nur „Bereich geöffnet“, ohne Namen
   if (vorher === "protokoll" && v !== "protokoll" && prTimer) prSpeichernJetzt(false).catch(() => {}); // ungespeicherte Eingaben sichern
   ["start", "dokumente", "termine", "vorschlaege", "aktionen", "aktion", "fotos", "feedback", "gruppe", "mitglied", "protokolle", "protokoll", "dienste", "nachrichten", "chat", "neu", "mitglieder", "einstellungen", "pinnwand", "erstattung", "ueberblick", "programme", "standort"].forEach((x) => $("v-" + x).classList.toggle("versteckt", x !== v));
   document.querySelectorAll("#fuss button").forEach((b) => b.classList.toggle("an", b.dataset.v === v || (v === "chat" && b.dataset.v === "nachrichten") || (v === "neu" && b.dataset.v === "nachrichten")));
@@ -7210,11 +7222,49 @@ async function jetztAktualisieren() {
   setTimeout(() => location.reload(), 400);
 }
 
+// ---------- KC-CLUB-NUTZUNG (0.99.0): Nutzungsstatistik OHNE Namen ----------
+// Gezählt wird nur, wie oft ein Bereich geöffnet wird – auf dem Gerät gesammelt, alle 2 Minuten gebündelt geschickt.
+// Der Server speichert nur Tag + Bereich + Anzahl, nie wer. (Hinweis dazu unter ⚙️ Mehr → Privatsphäre.)
+const NZ_TAKT_MS = 120000;
+let nzPuffer = (() => { try { return JSON.parse(localStorage.getItem("kc_club_nutzung") || "{}"); } catch { return {}; } })();
+function nzZaehlen(v) { if (!v) return; nzPuffer[v] = (nzPuffer[v] || 0) + 1; try { localStorage.setItem("kc_club_nutzung", JSON.stringify(nzPuffer)); } catch {} }
+async function nzSenden() {
+  if (!INIT || !Object.keys(nzPuffer).length) return;
+  const z = nzPuffer; nzPuffer = {}; try { localStorage.setItem("kc_club_nutzung", "{}"); } catch {}
+  try { await api("nutzung_melden", { zaehler: z }); } catch { for (const [k, n] of Object.entries(z)) nzPuffer[k] = (nzPuffer[k] || 0) + n; try { localStorage.setItem("kc_club_nutzung", JSON.stringify(nzPuffer)); } catch {} }
+}
+setInterval(nzSenden, NZ_TAKT_MS);
+document.addEventListener("visibilitychange", () => { if (document.hidden) nzSenden(); });
+const NZ_NAMEN = { start: "🏠 Startseite", termine: "📅 Termine", nachrichten: "💬 Nachrichten (Liste)", chat: "💬 Unterhaltung geöffnet", neu: "✍️ Neue Nachricht",
+  pinnwand: "📌 Pinnwand", fotos: "📷 Fotoalbum", mitglieder: "👥 Mitglieder", mitglied: "👤 Mitglied angesehen", einstellungen: "⚙️ Einstellungen", dienste: "🗓️ Dienstpläne",
+  aktionen: "🧳 Aktionen", aktion: "🧳 Aktion angesehen", protokolle: "📋 Protokolle", protokoll: "📋 Protokoll angesehen", vorschlaege: "🗳️ Vorschläge", dokumente: "📚 Dokumente",
+  standort: "📍 Standorte", erstattung: "💶 Erstattung", feedback: "💭 Feedback", programme: "💻 Programme", ueberblick: "🗺️ Überblick", gruppe: "👥 Gruppe" };
+let NZ_TAGE = 7;
+async function nzAdmin(tage) {
+  if (tage) NZ_TAGE = tage;
+  let r; try { r = await api("nutzung_statistik", { tage: NZ_TAGE }, { warten: true }); } catch (e) { return melde(e.message, true); }
+  const summe = new Map(); for (const z of r.zeilen) summe.set(z.bereich, (summe.get(z.bereich) || 0) + z.anzahl);
+  const liste = [...summe.entries()].sort((a, b) => b[1] - a[1]), max = Math.max(1, ...liste.map((x) => x[1])), gesamt = liste.reduce((a, x) => a + x[1], 0);
+  const tageMap = new Map(); for (const z of r.zeilen) tageMap.set(z.tag, (tageMap.get(z.tag) || 0) + z.anzahl);
+  const tagListe = []; for (let i = r.tage - 1; i >= 0; i--) { const t = new Intl.DateTimeFormat("sv-SE", { timeZone: TZ }).format(new Date(Date.now() - i * 86400000)); tagListe.push([t, tageMap.get(t) || 0]); }
+  const tmax = Math.max(1, ...tagListe.map((x) => x[1]));
+  const ungenutzt = Object.keys(NZ_NAMEN).filter((b) => !summe.has(b) && !["neu", "mitglied", "aktion", "protokoll", "gruppe"].includes(b));
+  $("adminBlattInhalt").innerHTML = `<h3 style="margin:0">📊 Nutzung – ohne Namen</h3>
+    <p class="hinweis" style="margin:0">Wie oft die Bereiche geöffnet wurden. Es wird nie gespeichert, wer – nur Tag, Bereich und Anzahl.</p>
+    <div class="knoepfe">${[7, 30, 90].map((t) => `<button class="knopf klein${r.tage === t ? " haupt" : ""}" onclick="nzAdmin(${t})">${t} Tage</button>`).join("")}${INFO_DATEN.admin?.r ? `<button class="knopf klein" onclick="adminBlatt()">‹ Admin-Zentrale</button>` : ""}</div>
+    <b>Insgesamt ${gesamt} Öffnungen in ${r.tage} Tagen</b>
+    <div class="nz-tage" title="Öffnungen je Tag">${tagListe.map(([t, n]) => `<div title="${esc(t.slice(8) + "." + t.slice(5, 7) + ".: " + n)}"><i style="height:${Math.round(n / tmax * 100)}%"></i></div>`).join("")}</div>
+    ${liste.length ? liste.map(([b, n]) => `<div class="nz-zeile"><span>${esc(NZ_NAMEN[b] || b)}</span><div class="nz-balken"><i style="width:${Math.round(n / max * 100)}%"></i></div><b>${n}</b></div>`).join("")
+      : '<p class="hinweis">Noch keine Zahlen – die Statistik füllt sich, sobald die Mitglieder die neue Version nutzen.</p>'}
+    ${liste.length && ungenutzt.length ? `<p class="hinweis" style="margin:6px 0 0">Nicht geöffnet in diesem Zeitraum: ${ungenutzt.map((b) => esc(NZ_NAMEN[b])).join(", ")}</p>` : ""}`;
+  $("adminBlatt").classList.remove("versteckt");
+}
+
 // ---------- KC-CLUB-FEHLERPROTOKOLL (0.93.0) ----------
 // Der Fehlerfänger (window.KCFP) steht ganz oben im <head> und läuft auch, wenn die App selbst nicht startet. Hier hängt die
 // App ihre eigenen Beobachtungen an (Serveranfragen, alte Version, Gerät/Browser) und zeigt verständliche Hilfe-Schritte.
 const fpNeu = (art, d) => { try { window.KCFP?.neu(art, d); } catch {} };
-const FP_LEISE = new Set(["lebenszeichen", "tippen", "anruf_status", "ping", "online", "standort_update", "fehler_melden", "diagnose"]);
+const FP_LEISE = new Set(["nutzung_melden", "lebenszeichen", "tippen", "anruf_status", "ping", "online", "standort_update", "fehler_melden", "diagnose"]);
 function fpApiFehler(action, e) {
   if (FP_LEISE.has(action)) return;
   fpNeu(navigator.onLine ? "api" : "offline", { aktion: action, text: String(e?.message || e) });

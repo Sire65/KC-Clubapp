@@ -1518,7 +1518,8 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
 
 // 115. 0.92.0: Warte-Anzeige kennt die neuen Aktionen, Hintergrund-Abfragen bleiben still
 {
-  assert.ok(/WARTEN_STILL = new Set\(\["standort_update", "standort_liste", "terminanfragen_liste"/.test(html), "Hintergrund-Abfragen würden flackern");
+  const still = /WARTEN_STILL = new Set\(\[([^\]]*)\]/.exec(html)?.[1] || "";
+  assert.ok(["standort_update", "standort_liste", "terminanfragen_liste"].every((x) => still.includes(`"${x}"`)), "Hintergrund-Abfragen würden flackern");
 }
 
 // 116. 0.93.0: Fehlerprotokoll – Fänger ganz oben (ES5), anonym + angemeldet, Hilfe-Schritte, Problem melden, Admin-Ansicht
@@ -1612,4 +1613,17 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
 // 123. 0.98.1: normaler Betrieb (30 s nach Anmeldung) setzt den Mehrfachstart-Zähler zurück
 {
   assert.ok(/setTimeout\(\(\) => \{ try \{ localStorage\.setItem\("kc_club_starts", "\[\]"\); \} catch \{\} \}, 30000\)/.test(html), "Mehrfachstart-Zähler wird bei normalem Betrieb nicht zurückgesetzt (Fehlalarm)");
+}
+
+// 124. 0.99.0: Nutzungsstatistik ohne Namen (KC-CLUB-NUTZUNG)
+{
+  const mig = lies("supabase/migrations/20260930_kc_club_v99_nutzung_ohne_namen.sql");
+  const tab = /create table if not exists kc_club_nutzung \(([\s\S]*?)\);/.exec(mig)?.[1] || "";
+  assert.ok(tab && !/person|geraet|user|ip/i.test(tab), "Tabelle darf keine Person/Gerät enthalten");
+  assert.ok(/revoke all on function kc_club_nutzung_zaehlen[^;]*from public, anon, authenticated/.test(mig), "Zählen nur über den Server");
+  const f = server.slice(server.indexOf('case "nutzung_melden"'), server.indexOf('case "nutzung_statistik"'));
+  assert.ok(f && !/protokoll\(|ich\.person_id/.test(f), "Beim Zählen darf nicht gespeichert werden, wer");
+  assert.ok(/NUTZUNG_BEREICHE\.has/.test(f) && /Math\.min\(200/.test(f), "nur bekannte Bereiche, gedeckelt");
+  assert.ok(/case "nutzung_statistik": \{\s*nurAdmin\(ich\)/.test(server), "Statistik nur für den Admin");
+  assert.ok(/nzZaehlen\(v\)/.test(html) && /function nzAdmin\(/.test(html) && /zählt <b>ohne Namen<\/b>/.test(html), "App: Zählen/Ansicht/Hinweis fehlt");
 }

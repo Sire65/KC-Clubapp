@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.98.0";
+const SERVER_VERSION = "0.99.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -1283,6 +1283,10 @@ function fpSauber(d: any): Record<string, unknown> {
 }
 const fpArt = (x: unknown) => txt(x, 24).toLowerCase().replace(/[^a-z_]/g, "") || "allg";
 
+// KC-CLUB-NUTZUNG (0.99.0): nur diese Bereiche werden gezählt (Ansichten der App)
+const NUTZUNG_BEREICHE = new Set(["start", "termine", "nachrichten", "chat", "neu", "pinnwand", "fotos", "mitglieder", "mitglied", "einstellungen", "dienste",
+  "aktionen", "aktion", "protokolle", "protokoll", "vorschlaege", "dokumente", "standort", "erstattung", "feedback", "programme", "ueberblick", "gruppe"]);
+
 // ---------- Hauptprogramm ----------
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
@@ -2468,6 +2472,23 @@ Köcheclub Werne`,
         }, `club-nachricht:${m.id}`);
         await protokoll(ich.person_id, weiterVon ? "nachricht_weitergeleitet" : "nachricht_gesendet", { thread: threadId, neu, empfaenger: ziel.length, anlagen: anlagen.length, wege, versand, antwort: !!antwortAuf, erwaehnt: erwaehnt.length, versandErw, ...(weiterVon ? { von_nachricht: weiterVon.id } : {}) });
         return json({ ok: true, id: threadId, versand });
+      }
+
+      // ----- KC-CLUB-NUTZUNG (0.99.0): Statistik OHNE Namen – nur Tag + Bereich + Anzahl. Wer meldet, wird NICHT gespeichert
+      // (kein protokoll(), keine Person, kein Gerät). Nur bekannte Bereiche, gedeckelt gegen Ausreißer.
+      case "nutzung_melden": {
+        const z = (p.zaehler && typeof p.zaehler === "object") ? p.zaehler : {};
+        const paare = Object.entries(z).filter(([b, n]) => NUTZUNG_BEREICHE.has(String(b)) && Number.isFinite(Number(n)) && Number(n) > 0).slice(0, 40)
+          .map(([b, n]) => [String(b), Math.min(200, Math.round(Number(n)))] as [string, number]);
+        if (paare.length) await db.rpc("kc_club_nutzung_zaehlen", { p_tag: berlinTag(new Date()), p_bereiche: paare.map((x) => x[0]), p_anzahlen: paare.map((x) => x[1]) });
+        return json({ ok: true });
+      }
+      case "nutzung_statistik": {
+        nurAdmin(ich);
+        const tage = Math.min(90, Math.max(1, Math.round(Number(p.tage) || 7)));
+        const von = berlinTag(new Date(Date.now() - (tage - 1) * 86400000));
+        const { data } = await db.from("kc_club_nutzung").select("tag,bereich,anzahl").gte("tag", von).order("tag");
+        return json({ tage, von, zeilen: data ?? [] });
       }
 
       // ----- KC-CLUB-REAKTION (0.97.0): je Person eine Reaktion je Nachricht; gleiche nochmal = weg; Autor bekommt Bescheid -----

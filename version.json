@@ -1,10 +1,16 @@
 {
-  "version": "0.98.1",
+  "version": "0.99.0",
   "datum": "2026-09-30",
   "neu": [
-    "🔧 Hinweis „Klappt etwas nicht?“ kommt nur noch, wenn der Start wirklich hakt – nicht mehr, wenn man zwischendurch in eine andere App wechselt"
+    "📊 Die App zählt jetzt ohne Namen, wie oft die Bereiche geöffnet werden – so sieht der Club, was genutzt wird. Wer etwas geöffnet hat, wird nie gespeichert (siehe ⚙️ Mehr → Privatsphäre)"
   ],
   "verlauf": [
+    {
+      "version": "0.99.0",
+      "neu": [
+        "📊 Die App zählt jetzt ohne Namen, wie oft die Bereiche geöffnet werden – so sieht der Club, was genutzt wird. Wer etwas geöffnet hat, wird nie gespeichert (siehe ⚙️ Mehr → Privatsphäre)"
+      ]
+    },
     {
       "version": "0.98.1",
       "neu": [

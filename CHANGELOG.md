@@ -1,5 +1,15 @@
 # Änderungen
 
+## 0.99.0 – 2026-09-30 (DEV)
+
+- KC-CLUB-NUTZUNG (Freigabe Hansi: „Statistik ohne Namen“, statt Ansichten je Mitglied mitzuschreiben): jede geöffnete
+  Ansicht zählt +1 auf dem Gerät, gebündelt alle 2 Min. bzw. beim Verlassen (nutzung_melden). Der Server addiert nur
+  Tag + Bereich + Anzahl (RPC kc_club_nutzung_zaehlen, nur mit Server-Schlüssel ausführbar) – kein Protokoll-Eintrag,
+  keine Person, kein Gerät, keine Uhrzeit. Nur bekannte Bereiche, je Meldung höchstens 200.
+  Admin: „📊 Nutzung der App – ohne Namen“ (Admin-Zentrale / Admin-Einstellungen): 7 / 30 / 90 Tage, Öffnungen je Tag als
+  Säulen, je Bereich als Balken, „nicht geöffnet“-Liste. Transparenz-Satz unter ⚙️ Mehr → Privatsphäre.
+  Migration 20260930_kc_club_v99 (Tabelle kc_club_nutzung + Zählfunktion, angewendet). Server 0.99.0. Test 124.
+
 ## 0.98.1 – 2026-09-30 (DEV)
 
 - KC-CLUB-FEHLERPROTOKOLL, zweiter Fehlalarm behoben (Fund im Protokoll bei Frank: 3 Nachrichten geschrieben, trotzdem
