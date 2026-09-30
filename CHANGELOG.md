@@ -1,5 +1,16 @@
 # Änderungen
 
+## 0.87.0 – 2026-09-30 (DEV)
+
+- KC-CLUB-MITFAHRT-SUCHE (Wunsch Hansi): Mitfahren bei allen Terminen ausgebaut. Neu „🙋 Ich suche eine Mitfahrgelegenheit“
+  (Tabelle kc_club_mitfahrt_suche, Migration 20260930_kc_club_mitfahrt_suche, RLS ohne Richtlinien; Spiegel-/Sicherungsregel
+  vorerst aus – Neon-Tabelle fehlt noch). Fahrer mit freien Plätzen bekommen Bescheid, wenn jemand sucht; Suchende bekommen
+  Bescheid bei einem neuen Angebot. „🚗 Ich biete eine Mitfahrgelegenheit“ (bisher „Ich fahre und nehme mit“), Platz buchen
+  „🚗 Platz buchen“ / „✔ Platz gebucht · freigeben“ mit Anzeige der freien Plätze. Bei Treffen erst nach „✅ Ich komme“
+  (Server mitfahrtErlaubt, App-Hinweis); Veranstaltungen und Aktionen ohne Zusage. Wer bucht oder selbst fährt, sucht nicht mehr.
+  Absage („Kann nicht“): Frage „Soll ich den gebuchten Platz wieder freigeben?“ bzw. ob die eigene Fahrt abgesagt werden soll;
+  eine offene Suche entfällt automatisch (treffen_antwort).
+
 ## 0.86.0 – 2026-09-30 (DEV)
 
 - KC-CLUB-KALENDER-WAHL (Wunsch Hansi): Kalender-Abo (nur einseitig Club → Kalender, bewusst keine Rück-Synchronisation)

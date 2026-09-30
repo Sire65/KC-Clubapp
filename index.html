@@ -1327,7 +1327,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "0.86.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.87.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -4252,7 +4252,7 @@ function treffenKarte(t, vorbei) {
       <span class="marke gruen">✅ ${t.ja}</span> <span class="marke gelb">❓ ${t.vielleicht}</span> <span class="marke rot">❌ ${t.nein}</span>
       ${t.ja ? `<div>✅ ${liste("ja")}</div>` : ""}${t.vielleicht ? `<div>❓ ${liste("vielleicht")}</div>` : ""}${t.nein ? `<div>❌ ${liste("nein")}</div>` : ""}
     </div>`}
-    ${mitfahrtBlock("treffen", t.id, t.mitfahrten || [], offen)}
+    ${mitfahrtBlock("treffen", t.id, t.mitfahrten || [], offen, t.mitfahrtSuche || [], va || t.meine === "ja")}
     ${offen ? `<div class="knoepfe"><button class="knopf klein" onclick="inKalender('${t.id}')">📲 In meinen Kalender</button></div>` : ""}
     ${ICH?.vorstand ? `<div class="knoepfe">${offen ? `<button class="knopf klein" onclick='treffenForm(${JSON.stringify(bearbeiten).replace(/'/g, "&#39;")})'>✏️ Ändern</button><button class="knopf klein" onclick="treffenAbsagen('${t.id}', ${va})">Absagen</button>` : ""}<button class="knopf klein" onclick="treffenLoeschen('${t.id}', ${va})">🗑️ Löschen</button></div>` : ""}
   </div>`;
@@ -4260,7 +4260,18 @@ function treffenKarte(t, vorbei) {
 async function antwort(id, a) {
   let notiz = "";
   if (a !== "ja") notiz = prompt(a === "nein" ? "Kurzer Grund (freiwillig):" : "Kurze Notiz (freiwillig):", "") ?? "";
-  try { await api("treffen_antwort", { id, antwort: a, notiz }); melde(a === "ja" ? "Schön, dass du kommst!" : "Gespeichert"); treffenLaden(); } catch (e) { melde(e.message, true); }
+  try {
+    await api("treffen_antwort", { id, antwort: a, notiz }); melde(a === "ja" ? "Schön, dass du kommst!" : "Gespeichert");
+    // KC-CLUB-MITFAHRT-SUCHE (0.87.0): bei Absage nachfragen, ob der gebuchte Platz / die eigene Fahrt frei wird (Suche entfällt automatisch)
+    if (a === "nein") {
+      const mf = TREFFEN_IDX.get(id)?.mitfahrten || [], gebucht = mf.find((m) => m.dabei), eigen = mf.find((m) => m.eigen);
+      if (gebucht && confirm(`Du hast einen Platz bei ${gebucht.fahrer.name} gebucht.\n\nSoll ich den gebuchten Platz wieder freigeben?`)) {
+        await api("mitfahrt_platz", { id: gebucht.id, dabei: false }).then(() => melde("🚗 Platz freigegeben – der Fahrer weiß Bescheid"), (e) => melde(e.message, true)); }
+      if (eigen && confirm(`Du bietest eine Mitfahrgelegenheit an${eigen.mitfahrer.length ? ` (${eigen.mitfahrer.length} fahren mit)` : ""}.\n\nSoll ich sie absagen? Mitfahrer bekommen Bescheid.`)) {
+        await api("mitfahrt_loeschen", { id: eigen.id }).then(() => melde("🚗 Mitfahrgelegenheit abgesagt"), (e) => melde(e.message, true)); }
+    }
+    treffenLaden();
+  } catch (e) { melde(e.message, true); }
 }
 // KC-CLUB-TREFFEN-AUSWAHL (0.27.0): Titel und Ort per Auswahlliste; bisher benutzte Orte kommen automatisch dazu
 const TITEL_VORSCHLAEGE = ["Köcheclub-Treffen", "Kochabend", "Grillabend", "Weihnachtsfeier", "Jahreshauptversammlung", "Sitzung Clubleitung", "Ausflug", "Aufbau Weihnachtsmarkt"];
@@ -4931,7 +4942,7 @@ async function aktionOeffnen(id, ausHistorie) {
   const a = AKTIONEN.find((x) => x.id === id);
   if (!a) return zeige("aktionen", ausHistorie);
   zeige("aktion", ausHistorie);
-  $("aktionInhalt").innerHTML = aktionKarte(a) + `<div class="karte">${mitfahrtBlock("aktion", a.id, a.mitfahrten || [], a.bis >= heuteIso())}</div>` + `<button class="knopf" style="width:100%;margin-top:12px" onclick="fotosFuer('aktion', '${esc(a.id)}')">📷 Fotos zu dieser Aktion</button>` + `<p class="hinweis" style="font-size:.85rem">Die Angaben kommen aus dem KC Manager${AKTIONEN_STAND ? ` (Stand ${esc(zeitKurz(AKTIONEN_STAND))})` : " – Stand unbekannt"}.</p>`;
+  $("aktionInhalt").innerHTML = aktionKarte(a) + `<div class="karte">${mitfahrtBlock("aktion", a.id, a.mitfahrten || [], a.bis >= heuteIso(), a.mitfahrtSuche || [], true)}</div>` + `<button class="knopf" style="width:100%;margin-top:12px" onclick="fotosFuer('aktion', '${esc(a.id)}')">📷 Fotos zu dieser Aktion</button>` + `<p class="hinweis" style="font-size:.85rem">Die Angaben kommen aus dem KC Manager${AKTIONEN_STAND ? ` (Stand ${esc(zeitKurz(AKTIONEN_STAND))})` : " – Stand unbekannt"}.</p>`;
 }
 function aktionKarte(a) {
   const heute = heuteIso(), tage = Math.round((new Date(a.von + "T12:00:00Z") - new Date(heute + "T12:00:00Z")) / 86400000);
@@ -5316,16 +5327,28 @@ async function umfrageSpeichern() {
 }
 
 // ---------- Mitfahrgelegenheiten (KC-CLUB-MITFAHREN) ----------
-function mitfahrtBlock(art, bezugId, liste, offen) {
-  if (!offen && !liste.length) return "";
+// KC-CLUB-MITFAHREN + KC-CLUB-MITFAHRT-SUCHE (0.87.0): suchen, anbieten, Platz buchen/freigeben – bei Treffen erst nach „Ich komme“ (darf)
+function mitfahrtBlock(art, bezugId, liste, offen, suche = [], darf = true) {
+  if (!offen && !liste.length && !suche.length) return "";
+  const aktiv = offen && darf, ichFahre = liste.some((m) => m.eigen), ichDabei = liste.some((m) => m.dabei), ichSuche = suche.some((s) => s.eigen);
   const zeilen = liste.map((m) => `<div class="zeile"><div style="flex:1"><b>🚗 ${esc(m.fahrer.name)}</b> <span class="marke${m.frei ? " gruen" : ""}">${m.frei ? `${m.frei} von ${m.plaetze} frei` : "voll"}</span>
       <div class="hinweis" style="font-size:.85rem">${m.treffpunkt ? "📍 " + esc(m.treffpunkt) + " · " : ""}${m.mitfahrer.length ? "Mit: " + esc(m.mitfahrer.join(", ")) : "noch niemand"}${m.notiz ? " · " + esc(m.notiz) : ""}</div></div>
-      ${offen && !m.eigen ? (m.dabei ? `<button class="knopf klein gruen" onclick="mitfahrtPlatz('${m.id}', false)">✔ dabei</button>` : m.frei ? `<button class="knopf klein" onclick="mitfahrtPlatz('${m.id}', true)">Mitfahren</button>` : "") : ""}
+      ${aktiv && !m.eigen ? (m.dabei ? `<button class="knopf klein gruen" title="Platz wieder freigeben" onclick="mitfahrtPlatz('${m.id}', false)">✔ Platz gebucht · freigeben</button>` : m.frei && !ichDabei ? `<button class="knopf klein" onclick="mitfahrtPlatz('${m.id}', true)">🚗 Platz buchen</button>` : "") : ""}
       ${m.eigen && offen ? `<button class="knopf klein" title="ändern" onclick="mitfahrtAnbieten('${art}', '${esc(bezugId)}', ${m.plaetze}, ${JSON.stringify(m.treffpunkt || "").replace(/"/g, "&quot;")})">✏️</button>` : ""}
       ${m.darfLoeschen ? `<button class="knopf klein" title="löschen" onclick="mitfahrtLoeschen('${m.id}', '${art}')">🗑️</button>` : ""}</div>`).join("");
-  const eigene = liste.some((m) => m.eigen);
-  return `<div style="margin-top:10px;border-top:1px solid var(--linie);padding-top:8px"><b>🚗 Mitfahren</b>${zeilen || '<p class="hinweis" style="margin:4px 0">Noch keine Mitfahrgelegenheit.</p>'}
-    ${offen && !eigene ? `<div class="knoepfe"><button class="knopf klein" onclick="mitfahrtAnbieten('${art}', '${esc(bezugId)}')">🚗 Ich fahre und nehme mit</button></div>` : ""}</div>`;
+  const suchZeile = suche.length ? `<div class="hinweis" style="margin:6px 0 2px">🙋 <b>Sucht eine Mitfahrgelegenheit:</b> ${suche.map((s) => esc(s.name) + (s.notiz ? ` <i>(${esc(s.notiz)})</i>` : "")).join(", ")}</div>` : "";
+  const knoepfe = aktiv ? [
+    !ichFahre && !ichDabei ? (ichSuche ? `<button class="knopf klein gruen" onclick="mitfahrtSuchen('${art}', '${esc(bezugId)}', false)">✔ Du suchst · zurücknehmen</button>`
+      : `<button class="knopf klein" onclick="mitfahrtSuchen('${art}', '${esc(bezugId)}', true)">🙋 Ich suche eine Mitfahrgelegenheit</button>`) : "",
+    !ichFahre && !ichDabei ? `<button class="knopf klein" onclick="mitfahrtAnbieten('${art}', '${esc(bezugId)}')">🚗 Ich biete eine Mitfahrgelegenheit</button>` : "",
+  ].filter(Boolean).join("") : "";
+  return `<div style="margin-top:10px;border-top:1px solid var(--linie);padding-top:8px"><b>🚗 Mitfahren</b>${zeilen || '<p class="hinweis" style="margin:4px 0">Noch keine Mitfahrgelegenheit.</p>'}${suchZeile}
+    ${knoepfe ? `<div class="knoepfe">${knoepfe}</div>` : ""}
+    ${offen && !darf ? '<p class="hinweis" style="margin:6px 0 0;font-size:.85rem">Sag zuerst „✅ Ich komme“ – dann kannst du eine Mitfahrgelegenheit suchen, anbieten oder einen Platz buchen.</p>' : ""}</div>`;
+}
+async function mitfahrtSuchen(art, bezugId, an) {
+  try { const r = await api("mitfahrt_suchen", { bezug_art: art, bezug_id: bezugId, an }); melde(an ? `🙋 Eingetragen${r.fahrerBenachrichtigt ? ` – ${r.fahrerBenachrichtigt === 1 ? "ein Fahrer weiß" : r.fahrerBenachrichtigt + " Fahrer wissen"} Bescheid` : " – wer eine Fahrt anbietet, bekommt Bescheid"}` : "Suche zurückgenommen"); mitfahrtNeuLaden(art); }
+  catch (e) { melde(e.message, true); }
 }
 async function mitfahrtNeuLaden(art) { if (art === "aktion") { AKTIONEN = null; aktionOeffnen(aktionId, true); } else treffenLaden(); }
 async function mitfahrtAnbieten(art, bezugId, plaetze, treffpunkt) {

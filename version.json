@@ -1,12 +1,18 @@
 {
-  "version": "0.86.0",
+  "version": "0.87.0",
   "datum": "2026-09-30",
   "neu": [
-    "📅 Kalender-Abo jetzt mit Knöpfen „In Google Kalender“ und „In Outlook“ – kein Link-Kopieren mehr",
-    "📲 „In meinen Kalender“ bei jedem Termin: wahlweise Google, Outlook oder Handy-Kalender",
-    "🔧 Terminliste: Auch beim zweiten und jedem weiteren Treffen gibt es jetzt „Ich komme / Vielleicht / Kann nicht“"
+    "🚗 Mitfahren bei allen Terminen: „🙋 Ich suche eine Mitfahrgelegenheit“ und „🚗 Ich biete eine Mitfahrgelegenheit“ – nach „Ich komme“",
+    "🪑 Platz mit einem Tipp buchen und wieder freigeben – wer absagt, wird gefragt, ob der gebuchte Platz frei werden soll"
   ],
   "verlauf": [
+    {
+      "version": "0.87.0",
+      "neu": [
+        "🚗 Mitfahren bei allen Terminen: „🙋 Ich suche eine Mitfahrgelegenheit“ und „🚗 Ich biete eine Mitfahrgelegenheit“ – nach „Ich komme“",
+        "🪑 Platz mit einem Tipp buchen und wieder freigeben – wer absagt, wird gefragt, ob der gebuchte Platz frei werden soll"
+      ]
+    },
     {
       "version": "0.86.0",
       "neu": [

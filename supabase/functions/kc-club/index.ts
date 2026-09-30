@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.86.0";
+const SERVER_VERSION = "0.87.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -794,9 +794,10 @@ async function treffenListe(ich: Ich, nurNaechstes = false, zeitraum?: { von: st
   const { data: treffen } = await q;
   const ids = (treffen ?? []).map((t: any) => t.id);
   const { data: teil } = ids.length ? await db.from("kc_club_teilnahme").select("*").in("treffen_id", ids) : { data: [] as any[] };
-  const [leute, mitfahrten] = await Promise.all([
+  const [leute, mitfahrten, suche] = await Promise.all([
     personen([...(teil ?? []).map((x: any) => x.person_id), ...(treffen ?? []).map((t: any) => t.gastgeber_person_id)]),
     nurNaechstes ? Promise.resolve(new Map<string, any[]>()) : mitfahrtenZu(ich, "treffen", ids),
+    nurNaechstes ? Promise.resolve(new Map<string, any[]>()) : suchendeZu(ich, "treffen", ids),
   ]);
   return (treffen ?? []).map((t: any) => {
     const tn = (teil ?? []).filter((x: any) => x.treffen_id === t.id)
@@ -808,7 +809,7 @@ async function treffenListe(ich: Ich, nurNaechstes = false, zeitraum?: { von: st
       gastgeber: t.gastgeber_person_id ? { person_id: t.gastgeber_person_id, name: leute.get(t.gastgeber_person_id)?.display_name } : null,
       teilnahme: tn, ja: zahl("ja"), nein: zahl("nein"), vielleicht: zahl("vielleicht"),
       meine: tn.find((x: any) => x.person_id === ich.person_id)?.antwort ?? null,
-      mitfahrten: mitfahrten.get(t.id) ?? [],
+      mitfahrten: mitfahrten.get(t.id) ?? [], mitfahrtSuche: suche.get(t.id) ?? [],
     };
   });
 }
@@ -989,7 +990,8 @@ async function aktionenLesen(ich: Ich) {
     };
   }).sort((x: any, y: any) => String(x.von).localeCompare(String(y.von)));
   const mf = await mitfahrtenZu(ich, "aktion", aktionen.map((a: any) => a.id));
-  for (const a of aktionen as any[]) a.mitfahrten = mf.get(a.id) ?? [];
+  const su = await suchendeZu(ich, "aktion", aktionen.map((a: any) => String(a.id)));
+  for (const a of aktionen as any[]) { a.mitfahrten = mf.get(a.id) ?? []; a.mitfahrtSuche = su.get(String(a.id)) ?? []; }
   return { aktionen, stand };
 }
 
@@ -1022,6 +1024,24 @@ async function mitfahrtenZu(ich: Ich, art: "treffen" | "aktion", ids: string[]) 
     }]);
   }
   return aus;
+}
+// KC-CLUB-MITFAHRT-SUCHE (0.87.0): wer zu einem Termin/einer Aktion eine Mitfahrgelegenheit sucht
+async function suchendeZu(ich: Ich, art: "treffen" | "aktion", ids: string[]) {
+  const aus = new Map<string, any[]>();
+  if (!ids.length) return aus;
+  const { data: s } = await db.from("kc_club_mitfahrt_suche").select("bezug_id,person_id,notiz").eq("bezug_art", art).in("bezug_id", ids).order("erstellt_am");
+  const leute = await personen((s ?? []).map((x: any) => x.person_id));
+  for (const x of s ?? []) aus.set(x.bezug_id, [...(aus.get(x.bezug_id) ?? []), { person_id: x.person_id, name: leute.get(x.person_id)?.display_name || x.person_id, notiz: x.notiz, eigen: x.person_id === ich.person_id }]);
+  return aus;
+}
+// Mitfahren (suchen, anbieten, Platz buchen) bei Treffen nur nach Zusage („Ich komme“); Veranstaltungen/Aktionen ohne Zusage
+async function mitfahrtErlaubt(ich: Ich, art: string, bid: string) {
+  if (art !== "treffen") return;
+  const { data: t } = await db.from("kc_club_treffen").select("art,status").eq("id", bid).maybeSingle();
+  if (!t || t.status !== "geplant") throw new Fehler("Dieser Termin ist nicht mehr offen.", 409);
+  if (t.art === "veranstaltung") return;
+  const { data: tn } = await db.from("kc_club_teilnahme").select("antwort").eq("treffen_id", bid).eq("person_id", ich.person_id).maybeSingle();
+  if (tn?.antwort !== "ja") throw new Fehler("Bitte zuerst „✅ Ich komme“ antippen – dann kannst du mitfahren oder eine Fahrt anbieten.", 409);
 }
 async function mitfahrtBezugTitel(art: string, id: string) {
   if (art === "treffen") {
@@ -1527,6 +1547,7 @@ Köcheclub Werne`,
         const { data: t } = await db.from("kc_club_treffen").select("id,status,beginn").eq("id", p.id).maybeSingle();
         if (!t || t.status !== "geplant") throw new Fehler("Dieses Treffen ist nicht mehr offen.", 409);
         await db.from("kc_club_teilnahme").upsert({ treffen_id: t.id, person_id: ich.person_id, antwort, notiz: txt(p.notiz, 300) || null, geaendert_am: jetzt() });
+        if (antwort !== "ja") await db.from("kc_club_mitfahrt_suche").delete().eq("bezug_art", "treffen").eq("bezug_id", t.id).eq("person_id", ich.person_id); // KC-CLUB-MITFAHRT-SUCHE
         await protokoll(ich.person_id, "treffen_antwort", { treffen: t.id, antwort });
         return json({ ok: true, treffen: (await treffenListe(ich)).find((x: any) => x.id === t.id) });
       }
@@ -2726,13 +2747,27 @@ Köcheclub Werne`,
         const art = p.bezug_art === "aktion" ? "aktion" : "treffen", bid = String(p.bezug_id || "");
         const titel = await mitfahrtBezugTitel(art, bid);
         if (!titel) throw new Fehler("Termin nicht gefunden.", 404);
+        await mitfahrtErlaubt(ich, art, bid);
         const plaetze = Math.round(Number(p.plaetze));
         if (!(plaetze >= 1 && plaetze <= 8)) throw new Fehler("Bitte 1 bis 8 freie Plätze angeben.");
         const zeile = { plaetze, treffpunkt: txt(p.treffpunkt, 150) || null, notiz: txt(p.notiz, 300) || null };
         const { data: vorh } = await db.from("kc_club_mitfahrt").select("id").eq("bezug_art", art).eq("bezug_id", bid).eq("fahrer", ich.person_id).maybeSingle();
         if (vorh) await db.from("kc_club_mitfahrt").update(zeile).eq("id", vorh.id);
         else await db.from("kc_club_mitfahrt").insert({ ...zeile, bezug_art: art, bezug_id: bid, fahrer: ich.person_id });
-        await protokoll(ich.person_id, "mitfahrt_angeboten", { bezug_art: art, bezug_id: bid, plaetze });
+        // KC-CLUB-MITFAHRT-SUCHE: wer fährt, sucht nicht mehr; neue Fahrt → Suchende bekommen Bescheid
+        await db.from("kc_club_mitfahrt_suche").delete().eq("bezug_art", art).eq("bezug_id", bid).eq("person_id", ich.person_id);
+        let versandSuche = null;
+        if (!vorh) {
+          const { data: su } = await db.from("kc_club_mitfahrt_suche").select("person_id").eq("bezug_art", art).eq("bezug_id", bid);
+          const ziel = (su ?? []).map((x: any) => x.person_id).filter((id: string) => id !== ich.person_id);
+          if (ziel.length) versandSuche = await senden("club_treffen", ziel, {
+            titel: "🚗 Mitfahrgelegenheit gefunden", kurz: `${ich.name} bietet ${plaetze} ${plaetze === 1 ? "Platz" : "Plätze"} an: ${titel}`,
+            betreff: `Köcheclub Werne – Mitfahrgelegenheit: ${titel}`,
+            text: `Hallo,\n\ndu suchst eine Mitfahrgelegenheit – ${ich.name} fährt zu „${titel}“ und hat ${plaetze} ${plaetze === 1 ? "freien Platz" : "freie Plätze"}${zeile.treffpunkt ? ` (Treffpunkt: ${zeile.treffpunkt})` : ""}.\n\nPlatz buchen in der Köcheclub-App: ${APP_URL}${art === "aktion" ? "#aktion=" + bid : "#termine"}\n\nViele Grüße\nKöcheclub Werne`,
+            url: APP_URL + (art === "aktion" ? "#aktion=" + bid : "#termine"),
+          }, `club-mitfahrt-angebot:${art}:${bid}:${ich.person_id}`);
+        }
+        await protokoll(ich.person_id, "mitfahrt_angeboten", { bezug_art: art, bezug_id: bid, plaetze, versandSuche });
         return json({ ok: true });
       }
 
@@ -2744,9 +2779,11 @@ Köcheclub Werne`,
         if (p.dabei === false) {
           await db.from("kc_club_mitfahrt_platz").delete().eq("mitfahrt_id", m.id).eq("person_id", ich.person_id);
         } else {
+          await mitfahrtErlaubt(ich, m.bezug_art, m.bezug_id);
           const { count } = await db.from("kc_club_mitfahrt_platz").select("person_id", { count: "exact", head: true }).eq("mitfahrt_id", m.id);
           if ((count ?? 0) >= m.plaetze) throw new Fehler("Leider sind schon alle Plätze vergeben.", 409);
           await db.from("kc_club_mitfahrt_platz").upsert({ mitfahrt_id: m.id, person_id: ich.person_id });
+          await db.from("kc_club_mitfahrt_suche").delete().eq("bezug_art", m.bezug_art).eq("bezug_id", m.bezug_id).eq("person_id", ich.person_id); // gefunden
         }
         const versand = await senden("club_treffen", [m.fahrer], {
           titel: p.dabei === false ? "🚗 Mitfahrt abgesagt" : "🚗 Neue Mitfahrt", kurz: `${ich.name} ${p.dabei === false ? "fährt doch nicht mit" : "fährt bei dir mit"}: ${titel}`,
@@ -2756,6 +2793,34 @@ Köcheclub Werne`,
         }, `club-mitfahrt:${m.id}:${ich.person_id}:${Date.now()}`);
         await protokoll(ich.person_id, p.dabei === false ? "mitfahrt_abgesagt" : "mitfahrt_zugesagt", { mitfahrt: m.id, versand });
         return json({ ok: true });
+      }
+
+      // KC-CLUB-MITFAHRT-SUCHE (0.87.0): „Ich suche eine Mitfahrgelegenheit“ an/aus – Fahrer mit freien Plätzen bekommen Bescheid
+      case "mitfahrt_suchen": {
+        const art = p.bezug_art === "aktion" ? "aktion" : "treffen", bid = String(p.bezug_id || "");
+        const titel = await mitfahrtBezugTitel(art, bid);
+        if (!titel) throw new Fehler("Termin nicht gefunden.", 404);
+        if (p.an === false) {
+          await db.from("kc_club_mitfahrt_suche").delete().eq("bezug_art", art).eq("bezug_id", bid).eq("person_id", ich.person_id);
+          await protokoll(ich.person_id, "mitfahrt_suche_beendet", { bezug_art: art, bezug_id: bid });
+          return json({ ok: true });
+        }
+        await mitfahrtErlaubt(ich, art, bid);
+        const { data: eigene } = await db.from("kc_club_mitfahrt").select("id").eq("bezug_art", art).eq("bezug_id", bid).eq("fahrer", ich.person_id).maybeSingle();
+        if (eigene) throw new Fehler("Du bietest selbst eine Fahrt an.", 409);
+        const { error } = await db.from("kc_club_mitfahrt_suche").upsert({ bezug_art: art, bezug_id: bid, person_id: ich.person_id, notiz: txt(p.notiz, 200) || null });
+        if (error) throw new Fehler("Konnte nicht gespeichert werden.", 500);
+        const { data: mf } = await db.from("kc_club_mitfahrt").select("id,fahrer,plaetze").eq("bezug_art", art).eq("bezug_id", bid);
+        const { data: pl } = (mf ?? []).length ? await db.from("kc_club_mitfahrt_platz").select("mitfahrt_id").in("mitfahrt_id", (mf ?? []).map((m: any) => m.id)) : { data: [] as any[] };
+        const fahrer = (mf ?? []).filter((m: any) => (pl ?? []).filter((x: any) => x.mitfahrt_id === m.id).length < m.plaetze).map((m: any) => m.fahrer).filter((id: string) => id !== ich.person_id);
+        const versand = fahrer.length ? await senden("club_treffen", fahrer, {
+          titel: "🙋 Sucht Mitfahrgelegenheit", kurz: `${ich.name} sucht eine Mitfahrgelegenheit: ${titel}`,
+          betreff: `Köcheclub Werne – ${ich.name} sucht eine Mitfahrgelegenheit`,
+          text: `Hallo,\n\n${ich.name} sucht eine Mitfahrgelegenheit zu „${titel}“ – du hast noch freie Plätze.\n\nIn der Köcheclub-App: ${APP_URL}${art === "aktion" ? "#aktion=" + bid : "#termine"}\n\nViele Grüße\nKöcheclub Werne`,
+          url: APP_URL + (art === "aktion" ? "#aktion=" + bid : "#termine"),
+        }, `club-mitfahrt-suche:${art}:${bid}:${ich.person_id}`) : null;
+        await protokoll(ich.person_id, "mitfahrt_gesucht", { bezug_art: art, bezug_id: bid, versand });
+        return json({ ok: true, fahrerBenachrichtigt: fahrer.length });
       }
 
       case "mitfahrt_loeschen": {

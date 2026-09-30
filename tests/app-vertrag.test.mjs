@@ -1427,4 +1427,16 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/id="kalWahlBlatt"/.test(html), "Auswahlfenster fehlt");
 }
 
+// 108. 0.87.0: Mitfahrgelegenheit suchen/anbieten/buchen (KC-CLUB-MITFAHRT-SUCHE)
+{
+  const mig = lies("supabase/migrations/20260930_kc_club_mitfahrt_suche.sql");
+  assert.ok(/create table if not exists public\.kc_club_mitfahrt_suche/.test(mig) && /enable row level security/.test(mig) && /kc_db_mirror_table_rules/.test(mig), "Tabelle mit RLS + Spiegelregel");
+  assert.ok(/case "mitfahrt_suchen"/.test(server) && /async function mitfahrtErlaubt/.test(server) && /tn\?\.antwort !== "ja"/.test(server), "Suche + Zusage-Pflicht");
+  const pl = server.slice(server.indexOf('case "mitfahrt_platz"'), server.indexOf('case "mitfahrt_suchen"'));
+  assert.ok(/await mitfahrtErlaubt\(ich, m\.bezug_art, m\.bezug_id\)/.test(pl) && /kc_club_mitfahrt_suche"\)\.delete\(\)/.test(pl), "Buchen nur nach Zusage, Suche entfällt");
+  assert.ok(/if \(antwort !== "ja"\) await db\.from\("kc_club_mitfahrt_suche"\)\.delete\(\)/.test(server), "Absage beendet Suche");
+  assert.ok(/mitfahrtBlock\("treffen", t\.id, t\.mitfahrten \|\| \[\], offen, t\.mitfahrtSuche \|\| \[\], va \|\| t\.meine === "ja"\)/.test(html), "Treffen: erst nach Zusage");
+  assert.ok(/Ich suche eine Mitfahrgelegenheit/.test(html) && /Ich biete eine Mitfahrgelegenheit/.test(html) && /Soll ich den gebuchten Platz wieder freigeben\?/.test(html), "Knöpfe + Frage bei Absage");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
