@@ -1564,3 +1564,14 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
 {
   assert.ok(/localStorage\.setItem\("kc_club_neustart_update", "1"\)/.test(html) && /if \(!durchUpdate\) st\.push\(jetzt\)/.test(html), "Update-Neustart zählt als Mehrfachstart (Fehlalarm)");
 }
+
+// 120. 0.96.0: vierte LED „jemand online“ (KC-CLUB-ONLINE-LED), die drei Verbindungs-LEDs bleiben
+{
+  assert.ok(/<i class="led grau" id="ledStatus"><\/i><i class="led grau" id="ledComm"><\/i><i class="led daten" id="ledDaten"><\/i><i class="led-trenner"[^>]*><\/i><i class="led grau led-online" id="ledOnline"/.test(html), "vierte LED unter den drei vorhandenen fehlt");
+  assert.ok(/event\.stopPropagation\(\);onlineBlatt\(\)/.test(html), "Antippen muss „Gerade online“ öffnen, nicht das Verbindungsfenster");
+  assert.ok(/const an = ONL\.zeigen && frisch && n > 0;/.test(html) && /ONL\.stand = Date\.now\(\)/.test(html), "LED darf nur bei frischem Stand grün sein");
+  assert.ok(/function onlineLeisteZeigen\(\) \{\s*onlineLedZeigen\(\);/.test(html), "LED wird bei jedem Online-Abgleich aktualisiert");
+}
+{
+  assert.ok(/<i class="online-punkt versteckt" id="fussOnline"/.test(html) && /fu\.classList\.toggle\("versteckt", !an\)/.test(html), "Online-Punkt in der unteren Leiste (jede Ansicht) fehlt");
+}

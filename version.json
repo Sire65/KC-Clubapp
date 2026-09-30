@@ -1,10 +1,18 @@
 {
-  "version": "0.95.1",
+  "version": "0.96.0",
   "datum": "2026-09-30",
   "neu": [
-    "🔧 Kein falscher Hinweis „Klappt etwas nicht?“ mehr nach „Jetzt aktualisieren“ – das Neuladen durchs Update zählt nicht als mehrfaches Öffnen"
+    "🟢 Neue vierte LED oben unter den drei Verbindungs-LEDs: leuchtet grün, sobald jemand anderes online ist. Antippen zeigt, wer gerade da ist",
+    "🟢 Zusätzlich in jeder Ansicht: grüner Punkt mit Anzahl auf „👥 Mitglieder“ in der unteren Leiste"
   ],
   "verlauf": [
+    {
+      "version": "0.96.0",
+      "neu": [
+        "🟢 Neue vierte LED oben unter den drei Verbindungs-LEDs: leuchtet grün, sobald jemand anderes online ist. Antippen zeigt, wer gerade da ist",
+        "🟢 Zusätzlich in jeder Ansicht: grüner Punkt mit Anzahl auf „👥 Mitglieder“ in der unteren Leiste"
+      ]
+    },
     {
       "version": "0.95.1",
       "neu": [

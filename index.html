@@ -779,6 +779,15 @@
   .vb-tabelle td { padding: 5px 0; border-bottom: 1px solid var(--linie); }
   .vb-tabelle td:last-child { text-align: right; font-weight: 700; }
   @media (max-width: 560px) { .leds { height: 42px; gap: 4px; } .led { width: 9px; height: 9px; } }
+  /* KC-CLUB-ONLINE-LED (0.96.0): vierte LED unter den drei Verbindungs-LEDs */
+  .leds { height: auto; min-height: 48px; padding: 7px 0; }
+  .led-trenner { width: 12px; height: 2px; border-radius: 1px; background: rgba(255,255,255,.35); flex: none; }
+  .led-online { cursor: pointer; }
+  .fuss-leiste .online-punkt { position: absolute; top: 2px; right: 16%; min-width: 16px; height: 16px; box-sizing: border-box; padding: 0 4px; border-radius: 9px;
+    background: #2fbf5b; color: #fff; font-size: .68rem; font-weight: 900; font-style: normal; line-height: 16px; text-align: center; box-shadow: 0 0 6px 1px rgba(61,220,111,.7); }
+  .led-online.gruen { background: #3ddc6f; box-shadow: 0 0 7px 3px rgba(61,220,111,.8); animation: ledAtmen 2.4s ease-in-out infinite; }
+  @keyframes ledAtmen { 50% { box-shadow: 0 0 3px 1px rgba(61,220,111,.5); } }
+  @media (max-width: 560px) { .leds { min-height: 42px; padding: 6px 0; } }
   /* Fotoalbum (KC-CLUB-FOTOALBUM) */
   .speicherbalken { height: 10px; border-radius: 6px; background: var(--karte2); overflow: hidden; margin: 8px 0 6px; }
   .speicherbalken i { display: block; height: 100%; background: var(--gruen); border-radius: 6px; }
@@ -882,7 +891,7 @@
         <div class="kopftext"><div class="marke-klein">KÖCHECLUB WERNE</div><button class="statuschip" id="statusChip" onclick="statusBlatt()">🟢 verfügbar ▾</button></div>
         <div class="kopfrechts">
           <div class="knopfreihe">
-            <button class="leds" id="leds" title="Verbindung zum Server" aria-label="Verbindung zum Server" onclick="verbindungBlatt()"><i class="led grau" id="ledStatus"></i><i class="led grau" id="ledComm"></i><i class="led daten" id="ledDaten"></i></button>
+            <button class="leds" id="leds" title="Verbindung zum Server" aria-label="Verbindung zum Server" onclick="verbindungBlatt()"><i class="led grau" id="ledStatus"></i><i class="led grau" id="ledComm"></i><i class="led daten" id="ledDaten"></i><i class="led-trenner" aria-hidden="true"></i><i class="led grau led-online" id="ledOnline" role="button" tabindex="0" title="Wer ist gerade online?" aria-label="Wer ist gerade online?" onclick="event.stopPropagation();onlineBlatt()"></i></button>
             <button class="herz" id="herzKnopf" title="Lebenszeichen – antippen: die letzten 15" aria-label="Lebenszeichen, antippen für die letzten 15" onclick="herzListe()">♥</button>
             <button class="rund" id="modusKnopf" title="Tag/Nacht umschalten" onclick="dunkelUmschalten()">🌙</button>
             <button class="rund" title="Aktualisieren" onclick="neuLaden(true)">↻</button>
@@ -1460,7 +1469,7 @@
   <button data-v="start" class="an" onclick="zeige('start')"><span>🏠</span>Start</button>
   <button data-v="termine" onclick="zeige('termine')"><span>📅</span>Termine</button>
   <button data-v="nachrichten" onclick="zeige('nachrichten')"><span>💬</span>Nachrichten<i class="zaehler versteckt" id="fussZaehler"></i></button>
-  <button data-v="mitglieder" onclick="zeige('mitglieder')"><span>👥</span>Mitglieder</button>
+  <button data-v="mitglieder" onclick="zeige('mitglieder')"><span>👥</span>Mitglieder<i class="online-punkt versteckt" id="fussOnline" title="gerade online"></i></button>
   <button data-v="einstellungen" onclick="zeige('einstellungen')"><span>⚙️</span>Mehr</button>
 </nav>
 </div>
@@ -1468,7 +1477,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "0.95.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.96.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2062,7 +2071,7 @@ async function onlinePing() {
   if (!KEY || !ICH || document.hidden) return;
   try {
     const r = await api("online");
-    ONL.zeigen = r.zeigen; ONL.liste = r.online || []; ONL.ids = new Set(ONL.liste.map((x) => x.person_id));
+    ONL.zeigen = r.zeigen; ONL.liste = r.online || []; ONL.ids = new Set(ONL.liste.map((x) => x.person_id)); ONL.stand = Date.now();
     if ($("setOnline")) $("setOnline").checked = r.zeigen;
     onlineLeisteZeigen(); if (INIT) heroZeigen();
     // jemand klopft bei mir an → Fenster (jedes Anklopfen nur einmal)
@@ -2099,7 +2108,24 @@ function onlineTakt() {
   ONL.timer = setInterval(onlinePing, ONL.wartet ? 4000 : PUSH_AKTIV ? 60000 : 15000);
 }
 document.addEventListener("visibilitychange", () => { if (!document.hidden) onlinePing(); });
+// KC-CLUB-ONLINE-LED (0.96.0): vierte LED oben unter den drei Verbindungs-LEDs – grün, sobald jemand anderes online ist,
+// damit man es in jeder Ansicht sieht (die Anzeige auf der Startseite bleibt wie sie ist). Grau = niemand online,
+// Online-Anzeige ausgeschaltet oder Stand älter als 3 Minuten (UNKNOWN nie als OK). Antippen: Liste „Gerade online“.
+function onlineLedZeigen() {
+  const led = $("ledOnline"); if (!led) return;
+  const frisch = ONL.stand && Date.now() - ONL.stand < 3 * 60 * 1000, n = ONL.liste.length;
+  const an = ONL.zeigen && frisch && n > 0;
+  led.classList.toggle("gruen", an); led.classList.toggle("grau", !an);
+  led.title = !ONL.zeigen ? "Online-Anzeige ist bei dir ausgeschaltet (⚙️ → Privatsphäre)" : !frisch ? "Online-Stand unbekannt (keine aktuelle Verbindung)"
+    : n ? `${n === 1 ? (ONL.liste[0].vorname || "1 Person") + " ist" : n + " sind"} gerade online – antippen` : "Gerade ist sonst niemand online";
+  led.setAttribute("aria-label", led.title);
+  // dieselbe Anzeige in JEDER Ansicht: grüner Punkt mit Anzahl auf „Mitglieder“ in der unteren Leiste
+  const fu = $("fussOnline");
+  if (fu) { fu.classList.toggle("versteckt", !an); fu.textContent = an ? String(n) : ""; fu.title = led.title; }
+}
+setInterval(onlineLedZeigen, 30000);
 function onlineLeisteZeigen() {
+  onlineLedZeigen();
   const el = $("onlineLeiste"); if (!el) return;
   el.innerHTML = ONL.zeigen && ONL.liste.length ? `<div class="hinweis" style="margin:0 0 4px"><span class="onpunkt"></span><b>Gerade online</b> – antippen zum Anklopfen</div>
     <div class="onleiste">${ONL.liste.map((x) => `<button onclick="anklopfen('${x.person_id}')">👋 ${esc(x.vorname)}</button>`).join("")}</div>` : "";

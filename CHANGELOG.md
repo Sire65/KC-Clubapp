@@ -1,5 +1,15 @@
 # Änderungen
 
+## 0.96.0 – 2026-09-30 (DEV)
+
+- KC-CLUB-ONLINE-LED (Wunsch Hansi: „unter die 3 LEDs eine weitere, grün wenn jemand online ist – sonst sieht man es nicht,
+  wenn man andere Fenster aufhat; die andere Anzeige muss so bleiben“): vierte LED in derselben Leiste, durch einen kleinen
+  Strich abgesetzt. Grün (sanft pulsierend) = mindestens eine andere Person online; grau = niemand, Online-Anzeige
+  ausgeschaltet oder Stand älter als 3 Minuten (unbekannt wird nie als OK gezeigt). Antippen öffnet „Gerade online“
+  (Anklopfen, Anruf, Nachricht); die drei Verbindungs-LEDs öffnen wie bisher das Verbindungsfenster. Die Online-Anzeige
+  auf der Startseite ist unverändert. Weil die LED-Leiste nur auf der Startseite steht, zeigt zusätzlich die untere Leiste in
+  JEDER Ansicht einen grünen Punkt mit Anzahl auf „👥 Mitglieder“. Test 120.
+
 ## 0.95.1 – 2026-09-30 (DEV)
 
 - KC-CLUB-FEHLERPROTOKOLL, Fehlalarm behoben (Fund im Protokoll bei Steven): Nach „Jetzt aktualisieren“ zählte das Neuladen als
