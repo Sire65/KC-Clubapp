@@ -1,10 +1,16 @@
 {
-  "version": "0.90.0",
+  "version": "0.91.0",
   "datum": "2026-09-30",
   "neu": [
-    "↩️ Termine: Zusage, Vielleicht oder Absage lässt sich zurücknehmen – einfach nochmal auf die eigene Antwort tippen"
+    "📌 Pinnwand: Der Knopf heißt immer „＋ Zettel“ – der Stand (z. B. 4/4) steht klein daneben, und bei vollen Plätzen steht dabei, was zu tun ist"
   ],
   "verlauf": [
+    {
+      "version": "0.91.0",
+      "neu": [
+        "📌 Pinnwand: Der Knopf heißt immer „＋ Zettel“ – der Stand (z. B. 4/4) steht klein daneben, und bei vollen Plätzen steht dabei, was zu tun ist"
+      ]
+    },
     {
       "version": "0.90.0",
       "neu": [

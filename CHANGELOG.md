@@ -1,5 +1,12 @@
 # Änderungen
 
+## 0.91.0 – 2026-09-30 (DEV)
+
+- KC-CLUB-PINNWAND-KNOPF (Fund Hansi: „das Schild 4/4 verdeckt den ＋-Knopf, man weiß nicht, was man da machen soll“):
+  Bei vier hängenden Zetteln wurde aus „＋ Zettel“ der Text „4/4 Zettel“. Jetzt heißt der Knopf immer „＋ Zettel“, der
+  Stand (z. B. 1/4, 4/4) steht klein im Knopf; bei vollen Plätzen erklärt eine Zeile unter dem Kopf, dass erst ein eigener
+  Zettel abgenommen werden muss. Das Formular mit „einen abnehmen“ bleibt unverändert. Test 112.
+
 ## DB – 2026-09-30 (ohne App-Build)
 
 - KC-DP-WUNSCH-FREIGABE (Freigabe Hansi, Übergabe aus DP2 Build 250 RC): kc_dp_wish_inbox_ack speichert bei erfolgreicher,

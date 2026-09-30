@@ -1473,3 +1473,10 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
+
+// 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
+{
+  assert.ok(/\$\("pwNeuKnopf"\)\.innerHTML = `＋ Zettel <span class="pwStand/.test(html), "Pinnwand-Knopf heißt nicht immer „＋ Zettel“");
+  assert.ok(!/\$\("pwNeuKnopf"\)\.textContent = PW\.meine >= PW\.max \? `\$\{PW\.max\}\/\$\{PW\.max\} Zettel`/.test(html), "alter Knopftext „4/4 Zettel“ ist noch da");
+  assert.ok(/<div id="pwVollHinweis"><\/div>/.test(html) && /Für einen neuen erst einen eigenen abnehmen/.test(html), "Erklärung bei vollen Plätzen fehlt");
+}
