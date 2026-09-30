@@ -812,7 +812,8 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/\[\$\("heroInfo"\), infoBlaettern\]/.test(html), "Wischen im Info-Feld fehlt");
   assert.ok(!/setInterval\([^)]*infoBlaettern/.test(html), "Info-Feld darf nicht automatisch blättern");
   for (const a of ["wetter", "wetter_konfig", "wetter_ort_suchen", "wetter_setzen"]) assert.ok(aktionen.has(a) && aufrufe.has(a), `${a} fehlt`);
-  for (const a of ["wetter_konfig", "wetter_ort_suchen", "wetter_setzen"]) assert.ok(/nurAdmin\(ich\)/.test(server.slice(server.indexOf(`case "${a}"`), server.indexOf(`case "${a}"`) + 80)), `${a} nicht nur für Admin`);
+  // 0.74.0: wetter_ort_suchen auch für Mitglieder (eigener Wetterort, Test 95) – Konfig und Club-Vorgabe bleiben Admin
+  for (const a of ["wetter_konfig", "wetter_setzen"]) assert.ok(/nurAdmin\(ich\)/.test(server.slice(server.indexOf(`case "${a}"`), server.indexOf(`case "${a}"`) + 80)), `${a} nicht nur für Admin`);
   assert.ok(/const WETTER_QUELLEN: Record</.test(server) && /const WETTER_APPS: Record</.test(server) && !/api\.open-meteo\.com/.test(html), "Wetter nicht über Registry/Server");
   assert.ok(/if \(!r\.daten\) return `<h2>❔ Wetter gerade nicht verfügbar/.test(html) && /WETTER_VERALTET_MIN/.test(html) && /⚠️ veraltet/.test(html), "Rule 11: fehlendes/veraltetes Wetter nicht markiert");
   assert.ok(/prefers-reduced-motion: reduce\) \{ \.wszene/.test(html), "Animation ohne Rücksicht auf „weniger Bewegung“");
@@ -1277,6 +1278,17 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/\{ id: "dokumente", sym: "📚", t: "Meine Dokumente"[^}]*v: "dokumente" \}/.test(html) && /id="v-dokumente"/.test(html) && /\["start", "dokumente",/.test(html) && /if \(v === "dokumente"\) dokumenteZeigen\(\);/.test(html), "Kachel/Ansicht fehlt");
   assert.ok(/id: "feedback", faellig: \(e\) => !e\.feedbackAbgegeben && tageSeit\(e\.ersterStart\) >= eiF\(\)\.feedbackTage/.test(html) && /ja: \(\) => zeige\("feedback"\)/.test(html), "Feedback-Tipp fehlt");
   assert.ok(/from\("kc_club_feedback"\)\.select\("person_id", \{ count: "exact", head: true \}\)\.eq\("person_id", ich\.person_id\)/.test(server) && /feedbackAbgegeben: \(fbAnzahl \?\? 0\) > 0/.test(server) && /"erweitert", "feedback"\]\.includes\(k\)/.test(server), "Server prüft abgegebenes Feedback nicht");
+}
+
+// 95. 0.74.0: eigener Wetterort je Mitglied (KC-CLUB-WETTERORT)
+{
+  assert.ok(/wetterort: \(w\) => \(\{ ort: w\?\.ort \? wetterOrtPruefen\(w\.ort\) : null \}\)/.test(server), "Server prüft den eigenen Ort nicht");
+  const wc = server.slice(server.indexOf('case "wetter": {'), server.indexOf('case "wetter_konfig"'));
+  assert.ok(/eq\("person_id", ich\.person_id\)\.eq\("schluessel", "wetterort"\)/.test(wc) && /schl = `\$\{k\.quelle\}:\$\{k\.ort\.lat\},\$\{k\.ort\.lon\}`/.test(wc) && /eigenerOrt: eigen/.test(wc), "eigener Ort wird nicht benutzt / Zwischenspeicher nicht je Ort");
+  const su = server.slice(server.indexOf('case "wetter_ort_suchen"'), server.indexOf('case "pinnwand_fristen_setzen"'));
+  assert.ok(!/nurAdmin/.test(su) && /ich\.admin && WETTER_QUELLEN\[/.test(su), "Suche für Mitglieder / Datenquelle nur Admin");
+  for (const o of ["Werne", "Unna", "Bergkamen", "Kamen"]) assert.ok(html.includes(`{ name: "${o}", lat:`), `Ort ${o} fehlt in der Schnellauswahl`);
+  assert.ok(/id="meinWetterort"/.test(html) && /api\("einstellung_setzen", \{ schluessel: "wetterort", wert \}\)/.test(html) && /meinWetterortZeigen\(\);/.test(html), "Auswahl in den Einstellungen fehlt");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.73.0";
+const SERVER_VERSION = "0.74.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -398,6 +398,8 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
   einstieg: (w) => ({ schritte: Object.fromEntries(Object.entries(w?.schritte && typeof w.schritte === "object" ? w.schritte : {})
     .filter(([k, v]: [string, any]) => ["farbe", "privat", "erweitert", "feedback"].includes(k) && ["ja", "nein", "spaeter"].includes(v?.antwort) && !isNaN(Date.parse(v?.am)))
     .map(([k, v]: [string, any]) => [k, { antwort: v.antwort, am: new Date(v.am).toISOString() }])) }),
+  // KC-CLUB-WETTERORT (0.74.0): eigener Wetterort je Mitglied (null = Club-Vorgabe des Admins)
+  wetterort: (w) => ({ ort: w?.ort ? wetterOrtPruefen(w.ort) : null }),
   // KC-CLUB-ANSICHT (0.62.0): einfache oder erweiterte Ansicht – beim ersten Start einmal gefragt, jederzeit umschaltbar
   ansicht: (w) => ({ art: w?.art === "erweitert" ? "erweitert" : "einfach", gewaehlt: w?.gewaehlt === true, am: new Date().toISOString() }),
   // KC-CLUB-BEGRUESSUNG (0.28.0): Begrüßung beim ersten Start einmal je Mitglied (geräteübergreifend)
@@ -2236,14 +2238,18 @@ Köcheclub Werne`,
 
       // ----- KC-CLUB-WETTER (0.42.0) -----
       case "wetter": {
-        const k = await wetterKonfig(), q = WETTER_QUELLEN[k.quelle], schl = `${k.quelle}:${k.ort.lat},${k.ort.lon}`;
+        const k = await wetterKonfig();
+        // KC-CLUB-WETTERORT: eigener Ort des Mitglieds vor der Club-Vorgabe (Zwischenspeicher je Ort)
+        const { data: eo } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "wetterort").maybeSingle();
+        let eigen = false; try { if ((eo as any)?.wert?.ort) { k.ort = wetterOrtPruefen((eo as any).wert.ort); eigen = true; } } catch { /* Club-Vorgabe */ }
+        const q = WETTER_QUELLEN[k.quelle], schl = `${k.quelle}:${k.ort.lat},${k.ort.lon}`;
         let c = wetterCache.get(schl), fehler: string | null = null;
         if (!c || Date.now() - c.zeit > WETTER.cacheMin * 60000) {
           try { c = { zeit: Date.now(), daten: await q.holen(k.ort) }; wetterCache.set(schl, c); }
           catch (e) { fehler = "Wetterdienst gerade nicht erreichbar"; console.error("wetter", String(e)); }
         }
         // Rule 11: „stand“ ist der Abrufzeitpunkt – die App markiert alte Daten; ohne Daten kein Schein-Wetter
-        return json({ ort: k.ort, quelle: { id: k.quelle, name: q.name }, app: wetterAppLink(k.app, k.ort), stand: c ? new Date(c.zeit).toISOString() : null, daten: c?.daten ?? null, fehler });
+        return json({ ort: k.ort, eigenerOrt: eigen, quelle: { id: k.quelle, name: q.name }, app: wetterAppLink(k.app, k.ort), stand: c ? new Date(c.zeit).toISOString() : null, daten: c?.daten ?? null, fehler });
       }
 
       case "wetter_konfig": {
@@ -2254,9 +2260,9 @@ Köcheclub Werne`,
       }
 
       case "wetter_ort_suchen": {
-        nurAdmin(ich);
+        // 0.74.0: auch Mitglieder suchen (eigener Wetterort); eine andere Datenquelle wählt nur der Admin
         const q = txt(p.q, 60); if (q.length < 2) throw new Fehler("Bitte mindestens 2 Buchstaben eingeben.");
-        const k = await wetterKonfig(), quelle = WETTER_QUELLEN[String(p.quelle || k.quelle)] ?? WETTER_QUELLEN[k.quelle];
+        const k = await wetterKonfig(), quelle = (ich.admin && WETTER_QUELLEN[String(p.quelle || "")]) || WETTER_QUELLEN[k.quelle];
         try { return json({ orte: await quelle.suchen(q) }); } catch { throw new Fehler("Ortssuche gerade nicht erreichbar – bitte später noch einmal.", 502); }
       }
 

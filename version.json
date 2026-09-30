@@ -1,11 +1,16 @@
 {
-  "version": "0.73.0",
+  "version": "0.74.0",
   "datum": "2026-09-29",
   "neu": [
-    "📚 Neue Kachel „Meine Dokumente“ mit Anleitungen zum Ansehen und Ausdrucken (z. B. Anleitung Club-App)",
-    "💭 Nach 4 Wochen fragt die App einmal nach deinem Feedback – nur, wenn du noch keins abgegeben hast"
+    "🌦️ Eigener Wetterort: unter ⚙️ Mehr → Darstellung „Wetter für“ z. B. Werne, Unna, Bergkamen, Kamen … oder jeden anderen Ort suchen"
   ],
   "verlauf": [
+    {
+      "version": "0.74.0",
+      "neu": [
+        "🌦️ Eigener Wetterort: unter ⚙️ Mehr → Darstellung „Wetter für“ z. B. Werne, Unna, Bergkamen, Kamen … oder jeden anderen Ort suchen"
+      ]
+    },
     {
       "version": "0.73.0",
       "neu": [

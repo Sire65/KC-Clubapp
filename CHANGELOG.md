@@ -1,5 +1,14 @@
 # Änderungen
 
+## 0.74.0 – 2026-09-30 (DEV)
+
+- KC-CLUB-WETTERORT (neu, Wunsch Hansi): eigener Wetterort je Mitglied – ⚙️ → Darstellung „🌦️ Wetter für“: Club-Vorgabe
+  (vom Admin) oder Schnellauswahl aus der Umgebung (Registry WETTER_ORTE_NAH: Werne, Unna, Bergkamen, Kamen, Lünen, Hamm,
+  Selm, Nordkirchen, Ascheberg, Bönen, Lüdinghausen, Dortmund) oder „🔍 Anderen Ort suchen“. Server-Einstellung „wetterort“
+  (geprüft mit wetterOrtPruefen), die Aktion wetter nimmt den eigenen Ort vor der Club-Vorgabe (eigenerOrt im Ergebnis,
+  Zwischenspeicher je Ort). wetter_ort_suchen jetzt für alle Mitglieder (Datenquelle wählt nur der Admin).
+  Nur in der erweiterten Ansicht, weil die einfache Ansicht kein Wetter zeigt.
+
 ## 0.73.0 – 2026-09-30 (DEV)
 
 - KC-CLUB-DOKUMENTE (neu, Wunsch Hansi): Kachel „📚 Meine Dokumente“ (Mein Bereich und einfache Ansicht) mit Unterkacheln aus

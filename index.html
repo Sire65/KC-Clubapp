@@ -562,6 +562,9 @@
   .hervor { outline: 3px solid #1e8449 !important; outline-offset: 3px; border-radius: 12px; animation: hervor 0.9s ease-in-out 3; }
   @keyframes hervor { 50% { outline-color: transparent; } }
   @media (prefers-reduced-motion: reduce) { .hervor { animation: none; } }
+  /* KC-CLUB-WETTERORT */
+  .wortwahl { margin: 4px 0 12px; } .wortwahl select { width: 100%; padding: 10px; border-radius: 12px; border: 1px solid var(--linie); background: var(--bg); font: inherit; color: inherit; }
+  .wortwahl .wsuche { display: flex; gap: 6px; margin-top: 6px; } .wortwahl .wsuche input { flex: 1; min-width: 0; padding: 10px; border-radius: 12px; border: 1px solid var(--linie); background: var(--bg); font: inherit; color: inherit; }
   .ansichtwahl { display: grid; gap: 10px; margin: 10px 0; }
   .ansichtwahl button { text-align: left; border: 2px solid var(--linie); border-radius: 16px; background: var(--karte); padding: 14px; cursor: pointer; font: inherit; color: inherit; display: flex; gap: 12px; align-items: center; }
   .ansichtwahl button.empfohlen { border-color: #1e8449; }
@@ -970,6 +973,7 @@
       <div><b>🎨 Farbdesign</b><div class="hinweis">Antippen – die App färbt sich sofort um</div></div>
       <div class="designwahl" id="designWahl"></div>
       <button class="knopf klein" onclick="designStandard()">↺ Standard wiederherstellen</button>
+      <div class="wortwahl" id="meinWetterort"></div>
       <div class="schalter"><div><b>🪧 Info-Feld oben beim Start</b><div class="hinweis">Welche Karte zuerst erscheint – z. B. Nr. 1 oder die Kommunikationszentrale</div></div><select id="setInfoStart" onchange="infoStartSetzen(this.value)" style="max-width:48%"></select></div>
       <div class="schalter"><div><b>🟢 Einfache Ansicht</b><div class="hinweis">Nur das Wichtigste mit großen Knöpfen – jederzeit umschaltbar</div></div><button class="knopf klein" onclick="ansichtSetzen('einfach')">Einschalten</button></div>
       <div class="schalter"><div><b>📄 Kurzanleitung</b><div class="hinweis">Die App in 3 Schritten – zum Ansehen oder Ausdrucken</div></div><button class="knopf klein" onclick="druckStarten('anleitung')">Ansehen</button></div>
@@ -1028,7 +1032,7 @@
     </details>
     <details class="karte innen" data-klappe="admin_wetter" id="adminWetter">
       <summary>🌦️ Wetter (Ort &amp; Wetter-App)</summary>
-      <p class="hinweis" style="margin-top:0">Das Wetter steht oben auf der Startseite im Info-Feld (mit ‹ › blättern). Die Einstellung gilt für alle Mitglieder.</p>
+      <p class="hinweis" style="margin-top:0">Das Wetter steht oben auf der Startseite im Info-Feld (mit ‹ › blättern). Das ist die <b>Club-Vorgabe</b> – jedes Mitglied kann unter Darstellung „🌦️ Wetter für“ einen eigenen Ort wählen.</p>
       <div id="wetterAktuell"><p class="hinweis">Wird geladen …</p></div>
       <label class="feld">Anderen Ort suchen<input id="wetterOrtQ" maxlength="60" placeholder="z. B. Werne, Dortmund, Lüdinghausen" onkeydown="if(event.key==='Enter')wetterOrtSuchen()"></label>
       <button class="knopf" onclick="wetterOrtSuchen()">🔍 Ort suchen</button>
@@ -1223,7 +1227,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "0.73.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.74.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3371,6 +3375,50 @@ async function wetterAdminLaden() {
     $("wetterQuelle").innerHTML = k.quellen.map((q) => `<option value="${q.id}" ${q.id === k.quelle ? "selected" : ""}>${esc(q.name)} – ${esc(q.hinweis)}</option>`).join("");
   } catch (e) { $("wetterAktuell").innerHTML = `<p class="hinweis">⚠️ ${esc(e.message)}</p>`; }
 }
+// ---------- KC-CLUB-WETTERORT (0.74.0, Wunsch Hansi): eigener Wetterort je Mitglied ----------
+// Schnellauswahl aus der Umgebung (Registry) + Suche nach jedem anderen Ort. „Club-Vorgabe“ = Ort, den der Admin einstellt.
+const WETTER_ORTE_NAH = [
+  { name: "Werne", lat: 51.6667, lon: 7.6333 }, { name: "Unna", lat: 51.5347, lon: 7.6889 }, { name: "Bergkamen", lat: 51.6158, lon: 7.6440 },
+  { name: "Kamen", lat: 51.5917, lon: 7.6653 }, { name: "Lünen", lat: 51.6167, lon: 7.5167 }, { name: "Hamm", lat: 51.6806, lon: 7.8200 },
+  { name: "Selm", lat: 51.6958, lon: 7.4767 }, { name: "Nordkirchen", lat: 51.7383, lon: 7.5256 }, { name: "Ascheberg", lat: 51.7889, lon: 7.6200 },
+  { name: "Bönen", lat: 51.6000, lon: 7.7667 }, { name: "Lüdinghausen", lat: 51.7680, lon: 7.4430 }, { name: "Dortmund", lat: 51.5136, lon: 7.4653 },
+].map((o) => ({ ...o, region: "Nordrhein-Westfalen" }));
+let MWO_TREFFER = [];
+const meinWetterort = () => INIT?.einstellungen?.wetterort?.ort || null;
+function meinWetterortZeigen() {
+  const o = meinWetterort(), nah = WETTER_ORTE_NAH.some((x) => o && x.name === o.name && Math.abs(x.lat - o.lat) < 0.01);
+  const html = (sfx) => `<b>🌦️ Wetter für</b><div class="hinweis">Welcher Ort oben im Wetter angezeigt wird – nur für dich</div>
+    <select onchange="meinWetterortWahl(this.value, '${sfx}')" aria-label="Wetterort">
+      <option value="" ${o ? "" : "selected"}>Club-Vorgabe${WET.r?.ort && !WET.r?.eigenerOrt ? ` (${esc(WET.r.ort.name)})` : ""}</option>
+      ${WETTER_ORTE_NAH.map((x, i) => `<option value="n${i}" ${o && nah && x.name === o.name ? "selected" : ""}>${esc(x.name)}</option>`).join("")}
+      ${o && !nah ? `<option value="eigen" selected>${esc(o.name)}</option>` : ""}
+      <option value="suchen">🔍 Anderen Ort suchen …</option></select>
+    <div class="wsuche versteckt" id="mwoSuche${sfx}"><input id="mwoQ${sfx}" maxlength="60" placeholder="z. B. Olfen, Münster" onkeydown="if(event.key==='Enter')meinWetterortSuchen('${sfx}')"><button class="knopf klein" onclick="meinWetterortSuchen('${sfx}')">🔍</button></div>
+    <div class="wortliste" id="mwoTreffer${sfx}"></div>`;
+  if ($("meinWetterort")) $("meinWetterort").innerHTML = html("");
+}
+function meinWetterortWahl(v, sfx) {
+  if (v === "suchen") { $("mwoSuche" + sfx).classList.remove("versteckt"); $("mwoQ" + sfx).focus(); return; }
+  if (v === "eigen") return;
+  meinWetterortSetzen(v === "" ? null : WETTER_ORTE_NAH[Number(v.slice(1))] || null);
+}
+async function meinWetterortSuchen(sfx) {
+  const q = $("mwoQ" + sfx).value.trim(); if (q.length < 2) return melde("Bitte mindestens 2 Buchstaben eingeben.", true);
+  try {
+    MWO_TREFFER = (await api("wetter_ort_suchen", { q })).orte || [];
+    $("mwoTreffer" + sfx).innerHTML = MWO_TREFFER.length ? MWO_TREFFER.map((o, i) => `<button class="knopf klein wort" onclick="meinWetterortSetzen(MWO_TREFFER[${i}])">📍 <b>${esc(o.name)}</b> <span class="hinweis">${esc(o.region || "")}</span></button>`).join("")
+      : '<p class="hinweis">Kein Ort gefunden – anders schreiben?</p>';
+  } catch (e) { melde(e.message, true); }
+}
+async function meinWetterortSetzen(ort) {
+  const wert = { ort: ort ? { name: ort.name, lat: ort.lat, lon: ort.lon, region: ort.region || "" } : null };
+  try {
+    const r = await api("einstellung_setzen", { schluessel: "wetterort", wert });
+    INIT.einstellungen = { ...(INIT.einstellungen || {}), wetterort: r.wert ?? wert };
+    melde(ort ? `🌦️ Wetter jetzt für ${ort.name}` : "🌦️ Wetter wieder nach Club-Vorgabe");
+    WET.geholt = 0; await wetterLaden(false).catch(() => {}); meinWetterortZeigen(); heroZeigen(0);
+  } catch (e) { melde(e.message, true); meinWetterortZeigen(); }
+}
 async function wetterOrtSuchen() {
   const q = $("wetterOrtQ").value.trim(); if (q.length < 2) return melde("Bitte mindestens 2 Buchstaben eingeben.", true);
   try {
@@ -3379,7 +3427,7 @@ async function wetterOrtSuchen() {
       : '<p class="hinweis">Kein Ort gefunden – anders schreiben?</p>';
   } catch (e) { melde(e.message, true); }
 }
-function wetterOrtWahl(i) { const o = WETTER_ORTE[i]; if (o && confirm(`Wetter für „${o.name}“${o.region ? " (" + o.region + ")" : ""} anzeigen?\n\nGilt für alle Mitglieder.`)) wetterSetzen({ ort: o }); }
+function wetterOrtWahl(i) { const o = WETTER_ORTE[i]; if (o && confirm(`Wetter für „${o.name}“${o.region ? " (" + o.region + ")" : ""} als Club-Vorgabe?\n\nGilt für alle Mitglieder ohne eigenen Wetterort.`)) wetterSetzen({ ort: o }); }
 async function wetterSetzen(teil) {
   try {
     await api("wetter_setzen", teil); melde("💾 Wetter-Einstellung gespeichert");
@@ -3539,7 +3587,7 @@ function zeige(v, ausHistorie) {
   if (v === "dienste") dienstLaden();
   if (v === "nachrichten") unterhLaden();
   if (v === "mitglieder") mitgliederLaden();
-  if (v === "einstellungen") { infoStartZeigen(); if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); neuWahlZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); }
+  if (v === "einstellungen") { infoStartZeigen(); if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); }
   if (v === "start") neuLaden();
   // KC-CLUB-ZURUECK: jede Ansicht bekommt einen Verlaufseintrag, damit „Zurück“ eine Ansicht zurückgeht statt die App zu schließen
   const hash = v === "start" || v === "chat" ? "" : v === "protokoll" ? "#protokoll=" + prId : v === "aktion" ? "#aktion=" + aktionId : v === "mitglied" ? "#mitglied=" + mitgliedId : "#" + v;
