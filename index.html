@@ -634,6 +634,8 @@
   .anruf-zweit b { font-size: 1.1rem; } .anruf-zweit .zk { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
   .anruf-zweit .zk button { border: none; border-radius: 999px; padding: 9px 14px; font: inherit; font-weight: 800; cursor: pointer; background: rgba(255,255,255,.22); color: #fff; }
   .anruf-zweit .zk .ja { background: #27ae60; } .anruf-zweit .zk .nein { background: #d32f2f; }
+  .anruf-konf { display: grid; gap: 4px; font-size: .95rem; } .anruf-konf:empty { display: none; }
+  .konf-wahl { display: grid; gap: 8px; margin: 0 0 10px; } .konf-wahl .knopf { text-align: left; }
   .verpasst-zeile { display: flex; gap: 10px; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--linie, #eee); }
   .verpasst-zeile small { display: block; color: var(--grau); }
   /* KC-CLUB-VIDEO: Bild des anderen bildschirmfüllend, eigenes Bild klein unten rechts */
@@ -1162,6 +1164,7 @@
   <div class="gross" id="anrufBild">?</div>
   <h2 id="anrufName"></h2>
   <div class="zustand" id="anrufZustand"></div>
+  <div class="anruf-konf" id="anrufKonf"></div>
   <div class="reihe" id="anrufKnoepfe"></div>
   <!-- KC-CLUB-ANRUF-KURZANTWORT (0.81.0): mit Text ablehnen · KC-CLUB-ANRUF-ZWEIT: zweiter Anruf während eines Gesprächs -->
   <div class="anruf-antworten versteckt" id="anrufAntworten"></div>
@@ -1222,6 +1225,11 @@
     <button class="knopf" style="text-align:center" onclick="$('onlineBlatt').classList.add('versteckt')">Schließen</button></div>
 </div>
 <!-- KC-CLUB-ONLINE: jemand klopft an -->
+<!-- KC-CLUB-KONFERENZ (0.82.0): wen dazuholen -->
+<div class="blatt versteckt" id="konfWahlBlatt" style="z-index:90" onclick="if(event.target===this)this.classList.add('versteckt')">
+  <div class="blatt-innen" style="max-height:80vh;overflow-y:auto"><div id="konfWahlText"></div>
+    <button class="knopf" onclick="$('konfWahlBlatt').classList.add('versteckt')">Abbrechen</button></div>
+</div>
 <!-- KC-CLUB-ANRUF-VERPASST (0.81.0) -->
 <div class="blatt versteckt" id="verpasstBlatt">
   <div class="blatt-innen"><div id="verpasstText"></div>
@@ -1293,7 +1301,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "0.81.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "0.82.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2035,8 +2043,9 @@ async function anrufVerbindung(mitBild) {
   pc.onconnectionstatechange = () => {
     if (!RUF || RUF.pc !== pc) return;
     if (pc.connectionState === "connected" && !RUF.verbunden) { RUF.verbunden = true; RUF.start = Date.now(); klangAus(); anrufUhr(); anrufKnoepfe("aktiv"); }
-    if (pc.connectionState === "failed") anrufFehlgeschlagen();
-    if (pc.connectionState === "disconnected") anrufZustand("⚠️ Verbindung wackelt …");
+    if (pc.connectionState === "connected" && RUF.konf) { const h = RUF.konf.beine.get(RUF.id); if (h) h.verbunden = true; konfAnzeigen(); } // KC-CLUB-KONFERENZ: Hauptverbindung steht
+    if (pc.connectionState === "failed") { if (RUF.konf) konfBeinWeg(RUF.id, true); else anrufFehlgeschlagen(); }
+    if (pc.connectionState === "disconnected" && !RUF.konf) anrufZustand("⚠️ Verbindung wackelt …");
   };
   return { pc, strom };
 }
@@ -2063,11 +2072,12 @@ function anrufKnoepfe(art) {
   const video = RUF?.art === "video", kamera = !!RUF?.strom?.getVideoTracks().length;
   $("anrufKnoepfe").innerHTML = art === "eingehend"
     ? `<button class="rund2 rotk" title="Ablehnen" onclick="anrufAuflegen()">✖</button><button class="rund2 gruen" title="${video ? "Nur mit Ton annehmen" : "Annehmen"}" onclick="anrufAnnehmen(false)">📞</button>${video ? `<button class="rund2 gruen" title="Mit Bild annehmen" onclick="anrufAnnehmen(true)">🎥</button>` : ""}`
-    : `<button class="rund2 grau" id="anrufStummKnopf" title="Stumm" onclick="anrufStumm()">🎙️</button>${kamera ? `<button class="rund2 grau" id="anrufKameraKnopf" title="Kamera aus/an" onclick="anrufKamera()">📷</button><button class="rund2 grau" title="Kamera wechseln" onclick="anrufKameraWechseln()">🔄</button>` : ""}<button class="rund2 rotk" title="Auflegen" onclick="anrufAuflegen()">✖</button>`;
+    : `<button class="rund2 grau" id="anrufStummKnopf" title="Stumm" onclick="anrufStumm()">🎙️</button>${!kamera && RUF?.art === "ton" && art === "aktiv" ? `<button class="rund2 grau" title="Jemanden dazuholen (Konferenz)" onclick="konfWahl()">➕</button>` : ""}${kamera ? `<button class="rund2 grau" id="anrufKameraKnopf" title="Kamera aus/an" onclick="anrufKamera()">📷</button><button class="rund2 grau" title="Kamera wechseln" onclick="anrufKameraWechseln()">🔄</button>` : ""}<button class="rund2 rotk" title="Auflegen" onclick="anrufAuflegen()">✖</button>`;
 }
 function anrufUhr() {
   clearInterval(RUF.uhr);
-  RUF.uhr = setInterval(() => { if (!RUF?.start) return; const s = Math.floor((Date.now() - RUF.start) / 1000); anrufZustand(`🟢 Verbunden · ${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`); }, 1000);
+  RUF.uhr = setInterval(() => { if (!RUF?.start) return; const s = Math.floor((Date.now() - RUF.start) / 1000); const zeit = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+    anrufZustand(RUF.konf ? `👥 Konferenz · ${Math.max(2, (RUF.konf.teilnehmer || []).length)} Personen · ${zeit}` : `🟢 Verbunden · ${zeit}`); }, 1000);
 }
 function anrufStumm() {
   const t = RUF?.strom?.getAudioTracks()[0]; if (!t) return;
@@ -2115,6 +2125,8 @@ async function anrufPruefen() {
       clearInterval(RUF.poll); RUF.poll = setInterval(anrufPruefen, 3000);
       setTimeout(() => { if (RUF && !RUF.verbunden) anrufFehlgeschlagen(); }, 15000);
     }
+    // KC-CLUB-KONFERENZ (0.82.0): unser Gespräch ist jetzt Teil einer Konferenz → ab hier übernimmt der Konferenz-Takt
+    if (r.konferenz && !RUF.konf && RUF.pc?.remoteDescription && r.status === "angenommen") { konfStart(r.konferenz); return; }
     // KC-CLUB-ANRUF-KURZANTWORT (0.81.0): Antwort des Angerufenen ein paar Sekunden im Anrufbildschirm zeigen
     if (RUF.rolle === "rufer" && r.status === "abgelehnt" && r.kurzantwort) {
       const g = r.gegenueber || RUF.gegen; klangAus(); clearInterval(RUF.poll); $("anrufBild").classList.remove("klingelt");
@@ -2131,8 +2143,9 @@ async function anrufEingehend(id) {
   try {
     const r = await api("anruf_status", { id });
     if (r.ichRufe || r.status !== "klingelt") { if (r.status === "verpasst") melde(`Verpasster Anruf von ${r.gegenueber.vorname}.`); return; }
-    RUF = { id, rolle: "angerufen", gegen: r.gegenueber, angebot: r.angebot, art: r.art || "ton" };
-    anrufSchirm(r.gegenueber); anrufKnoepfe("eingehend"); anrufZustand(RUF.art === "video" ? `🎥 ${r.gegenueber.vorname} ruft per Video an …` : `📞 ${r.gegenueber.vorname} ruft an …`); klang("klingeln");
+    RUF = { id, rolle: "angerufen", gegen: r.gegenueber, angebot: r.angebot, art: r.art || "ton", konferenzId: r.konferenz || null };
+    anrufSchirm(r.gegenueber); anrufKnoepfe("eingehend");
+    anrufZustand(RUF.konferenzId ? `👥 ${r.gegenueber.vorname} holt dich in eine Konferenz …` : RUF.art === "video" ? `🎥 ${r.gegenueber.vorname} ruft per Video an …` : `📞 ${r.gegenueber.vorname} ruft an …`); klang("klingeln");
     RUF.poll = setInterval(anrufPruefen, 2000);
   } catch {}
 }
@@ -2163,7 +2176,7 @@ function zweitZeigen(ruf) { ZWEIT = ruf; ONL.erledigt.add("r" + ruf.id); zweitMa
 function zweitMalen(offen) {
   const el = $("anrufZweit"); if (!ZWEIT) { el.classList.add("versteckt"); el.innerHTML = ""; return; }
   el.innerHTML = `<b>${ZWEIT.art === "video" ? "🎥" : "📞"} ${esc(ZWEIT.von.vorname || ZWEIT.von.name)} ruft an …</b>
-    <div class="zk"><button class="ja" onclick="zweitAnnehmen()">Auflegen & annehmen</button><button class="nein" onclick="zweitAblehnen()">Ablehnen</button><button onclick="zweitMalen(true)">💬 Antwort</button></div>`
+    <div class="zk">${RUF?.verbunden && RUF.art === "ton" && ZWEIT.art === "ton" && !RUF.strom?.getVideoTracks().length ? `<button class="ja" onclick="zweitDazu()">➕ Dazuholen (Konferenz)</button>` : ""}<button class="ja" onclick="zweitAnnehmen()">Auflegen & annehmen</button><button class="nein" onclick="zweitAblehnen()">Ablehnen</button><button onclick="zweitMalen(true)">💬 Antwort</button></div>`
     + (offen ? `<div class="anruf-antworten">${antwortKachelnHtml("zweitMitText", "zweitEigen")}</div>` : "");
   el.classList.remove("versteckt");
 }
@@ -2180,6 +2193,131 @@ async function zweitMitText(i) {
   const z = ZWEIT; if (!z) return; const text = antwortText(i, "zweitEigen"); if (!text) return melde("Bitte kurz etwas schreiben.", true);
   zweitWeg();
   try { await api("anruf_antwort", { id: z.id, text }); melde(`💬 An ${z.von.vorname || z.von.name} geschickt: „${text}“`); } catch (e) { melde(e.message, true); }
+}
+// ---- KC-CLUB-KONFERENZ (0.82.0): Konferenz bis 4 Personen, nur Ton. Jedes Handy verbindet sich direkt mit jedem anderen:
+// RUF.konf.beine = meine Verbindungen (Bein-ID → { pc, gegen, audio }); der Takt (2 s) holt den Stand, nimmt Querverbindungen
+// an, baut fehlende auf (die kleinere Mitgliedsnummer ruft) und baut beendete ab. Das Mikrofon (RUF.strom) teilen sich alle.
+function konfStart(k) {
+  if (!RUF || RUF.konf) return;
+  clearInterval(RUF.poll); RUF.poll = null;
+  RUF.konf = { id: k, beine: new Map(), baue: new Set(), teilnehmer: [], eingeladen: [], max: 4 };
+  if (RUF.id && RUF.pc) RUF.konf.beine.set(RUF.id, { id: RUF.id, pc: RUF.pc, gegen: RUF.gegen, audio: $("anrufTon"), haupt: true, verbunden: !!RUF.verbunden });
+  $("anrufBild").textContent = "👥";
+  RUF.konf.takt = setInterval(konfTakt, 2000); konfTakt();
+}
+function konfPc(gegen) {
+  const pc = new RTCPeerConnection({ iceServers: ICE });
+  RUF.strom.getAudioTracks().forEach((t) => pc.addTrack(t, RUF.strom));
+  const audio = document.createElement("audio"); audio.autoplay = true; audio.setAttribute("playsinline", ""); audio.className = "konf-ton"; $("anrufSchirm").appendChild(audio);
+  const bein = { pc, gegen, audio };
+  pc.ontrack = (e) => { audio.srcObject = e.streams[0]; audio.play?.().catch(() => {}); };
+  pc.onconnectionstatechange = () => {
+    if (pc.connectionState === "connected") { bein.verbunden = true; if (RUF && !RUF.verbunden) { RUF.verbunden = true; RUF.start = Date.now(); anrufUhr(); } konfAnzeigen(); }
+    if (pc.connectionState === "failed" && bein.id) konfBeinWeg(bein.id, true);
+  };
+  return bein;
+}
+const konfBeinSteht = (b) => !!b && (b.verbunden || b.pc?.connectionState === "connected");
+function konfBeinWeg(id, beenden) {
+  const K = RUF?.konf, b = K?.beine.get(id); if (!b) return;
+  K.beine.delete(id);
+  try { b.pc.close(); } catch {}
+  if (b.haupt) $("anrufTon").srcObject = null; else b.audio?.remove();
+  if (beenden) api("anruf_ende", { id }).catch(() => {});
+  konfAnzeigen();
+}
+async function konfTakt() {
+  const K = RUF?.konf; if (!K || K.laeuft) return; K.laeuft = true;
+  try {
+    const r = await api("konferenz_status", { konferenz: K.id });
+    if (RUF?.konf !== K) return;
+    if (!r.dabei) { anrufAufraeumen(); melde("👥 Konferenz beendet."); return; }
+    const ich = ICH.person_id, aktiv = new Set(r.beine.map((b) => b.id));
+    for (const [id, b] of [...K.beine]) if (b.id && !aktiv.has(id)) {
+      konfBeinWeg(id);
+      if (b.einladung && !konfBeinSteht(b)) melde(`${b.gegen?.vorname || b.gegen?.name || "Die Person"} ist nicht dazugekommen.`);
+    }
+    for (const b of r.beine) {
+      const lokal = K.beine.get(b.id);
+      if (!lokal && b.an === ich && b.status === "klingelt" && b.auto && b.angebot) konfAntworten(b, r);
+      if (lokal && b.von === ich && b.status === "angenommen" && b.antwort && !lokal.pc.remoteDescription) lokal.pc.setRemoteDescription({ type: "answer", sdp: b.antwort }).catch(() => {});
+    }
+    // fehlende Querverbindung zu einem Teilnehmer: die kleinere Mitgliedsnummer baut sie auf
+    for (const t of r.teilnehmer) {
+      if (t.person_id === ich || ich > t.person_id || K.baue.has(t.person_id)) continue;
+      if (r.beine.some((b) => (b.von === ich && b.an === t.person_id) || (b.an === ich && b.von === t.person_id))) continue;
+      konfAnrufen(t);
+    }
+    K.teilnehmer = r.teilnehmer; K.eingeladen = r.eingeladen; K.max = r.max || 4; konfAnzeigen();
+    if (!K.beine.size && !K.baue.size) { anrufAufraeumen(); melde("👥 Konferenz beendet."); }
+  } catch {} finally { K.laeuft = false; }
+}
+async function konfAntworten(b, r) {
+  const K = RUF.konf, gegen = r.teilnehmer.find((t) => t.person_id === b.von) || { person_id: b.von, name: "" };
+  const bein = konfPc(gegen); bein.id = b.id; K.beine.set(b.id, bein);
+  try {
+    await bein.pc.setRemoteDescription({ type: "offer", sdp: b.angebot });
+    await bein.pc.setLocalDescription(await bein.pc.createAnswer()); await iceFertig(bein.pc);
+    await api("anruf_annehmen", { id: b.id, antwort: bein.pc.localDescription.sdp });
+  } catch { konfBeinWeg(b.id, true); }
+}
+async function konfAnrufen(t) {
+  const K = RUF.konf; K.baue.add(t.person_id);
+  const bein = konfPc(t), weg = () => { try { bein.pc.close(); bein.audio.remove(); } catch {} };
+  try {
+    await bein.pc.setLocalDescription(await bein.pc.createOffer()); await iceFertig(bein.pc);
+    if (RUF?.konf !== K) return weg();
+    const r = await api("konferenz_bein", { konferenz: K.id, an: t.person_id, angebot: bein.pc.localDescription.sdp });
+    if (r.schonDa || RUF?.konf !== K) weg(); else { bein.id = r.id; K.beine.set(r.id, bein); }
+  } catch { weg(); } finally { K.baue.delete(t.person_id); }
+}
+function konfAnzeigen() {
+  const K = RUF?.konf; if (!K) return;
+  const andere = (K.teilnehmer || []).filter((t) => t.person_id !== ICH.person_id);
+  const verbunden = (pid) => [...K.beine.values()].some((b) => b.gegen?.person_id === pid && konfBeinSteht(b));
+  $("anrufName").textContent = andere.length ? andere.map((t) => t.vorname || t.name).join(", ") : RUF.gegen?.name || "Konferenz";
+  $("anrufKonf").innerHTML = andere.map((t) => `<div>${verbunden(t.person_id) ? "🟢" : "🔗"} ${esc(t.name || t.vorname)}${verbunden(t.person_id) ? "" : " – verbindet …"}</div>`).join("")
+    + (K.eingeladen || []).map((t) => `<div>📨 ${esc(t.name || t.vorname)} wird angerufen …</div>`).join("");
+}
+// ➕ während eines Gesprächs jemanden anrufen und dazuholen
+function konfDrin() { const K = RUF?.konf; return new Set([ICH.person_id, RUF?.gegen?.person_id, ...(K?.teilnehmer || []).map((t) => t.person_id), ...(K?.eingeladen || []).map((t) => t.person_id), ...[...(K?.beine.values() || [])].map((b) => b.gegen?.person_id)].filter(Boolean)); }
+function konfWahl() {
+  if (!RUF?.verbunden) return melde("Erst verbinden, dann dazuholen.", true);
+  if (RUF.art !== "ton" || RUF.strom?.getVideoTracks().length) return melde("Konferenz geht zurzeit nur mit Ton.", true);
+  const drin = konfDrin(); if (drin.size >= (RUF.konf?.max || 4)) return melde("Eine Konferenz geht mit höchstens 4 Personen.", true);
+  const online = ONL.liste || [], alle = [...online, ...(MITGLIEDER || []).filter((m) => !online.some((o) => o.person_id === m.person_id))].filter((m) => !drin.has(m.person_id));
+  $("konfWahlText").innerHTML = `<h3 style="margin-top:0">➕ Wen dazuholen?</h3><p class="hinweis" style="margin-top:0">Konferenz mit bis zu 4 Personen, nur mit Ton.</p><div class="konf-wahl">`
+    + (alle.length ? alle.map((m) => `<button class="knopf" onclick="konfEinladen('${esc(m.person_id)}')">${ONL.ids.has(m.person_id) ? "🟢 " : "📞 "}${esc(m.name || m.vorname)}</button>`).join("") : '<p class="hinweis">Mitglieder werden geladen …</p>') + "</div>";
+  $("konfWahlBlatt").classList.remove("versteckt");
+  if (!MITGLIEDER) mitgliederHolen().then(() => { if (!$("konfWahlBlatt").classList.contains("versteckt")) konfWahl(); }).catch(() => {});
+}
+const konfLaufend = () => RUF?.konf ? ([...RUF.konf.beine.values()].find((b) => konfBeinSteht(b) && b.id)?.id || RUF.id) : RUF?.id;
+async function konfEinladen(pid) {
+  $("konfWahlBlatt").classList.add("versteckt");
+  if (!RUF?.strom) return;
+  const m = [...(ONL.liste || []), ...(MITGLIEDER || [])].find((x) => x.person_id === pid) || { person_id: pid, name: "" };
+  const bein = konfPc(m); bein.einladung = true;
+  try {
+    await bein.pc.setLocalDescription(await bein.pc.createOffer()); await iceFertig(bein.pc);
+    const r = await api("anruf_start", { an: pid, angebot: bein.pc.localDescription.sdp, art: "ton", konferenz_mit: konfLaufend() });
+    if (!RUF) { bein.pc.close(); return; }
+    bein.id = r.id; if (!RUF.konf) konfStart(r.konferenz); RUF.konf.beine.set(r.id, bein);
+    melde(`📞 ${m.vorname || m.name} wird dazugeholt …`); konfTakt();
+  } catch (e) { try { bein.pc.close(); bein.audio.remove(); } catch {} melde(e.message, true); }
+}
+// zweiter Anruf während des Gesprächs → in die Konferenz nehmen
+async function zweitDazu() {
+  const z = ZWEIT; if (!z || !RUF) return; zweitWeg();
+  try {
+    const r = await api("konferenz_dazu", { laufend: konfLaufend(), neu: z.id });
+    const st = await api("anruf_status", { id: z.id }); if (!st.angebot || st.status !== "klingelt") throw new Error("Der Anruf ist schon vorbei.");
+    if (!RUF) return; if (!RUF.konf) konfStart(r.konferenz);
+    const bein = konfPc(z.von); bein.id = z.id; RUF.konf.beine.set(z.id, bein);
+    await bein.pc.setRemoteDescription({ type: "offer", sdp: st.angebot });
+    await bein.pc.setLocalDescription(await bein.pc.createAnswer()); await iceFertig(bein.pc);
+    await api("anruf_annehmen", { id: z.id, antwort: bein.pc.localDescription.sdp });
+    melde(`👥 ${z.von.vorname || z.von.name} kommt in die Konferenz`); konfTakt();
+  } catch (e) { melde(e.message, true); if (RUF?.konf?.beine.has(z.id)) konfBeinWeg(z.id, true); }
 }
 // ---- KC-CLUB-ANRUF-VERPASST (0.81.0): „Verpasster Anruf“ mit Zurückrufen ----
 let VERPASST = [];
@@ -2223,6 +2361,7 @@ async function anrufAnnehmen(mitBild) {
     await pc.setLocalDescription(await pc.createAnswer()); await iceFertig(pc);
     await api("anruf_annehmen", { id: RUF.id, antwort: pc.localDescription.sdp });
     clearInterval(RUF.poll); RUF.poll = setInterval(anrufPruefen, 3000);
+    if (RUF.konferenzId) konfStart(RUF.konferenzId); // KC-CLUB-KONFERENZ: Einladung angenommen
     setTimeout(() => { if (RUF && !RUF.verbunden) anrufFehlgeschlagen(); }, 15000);
   } catch (e) { const id = RUF?.id; anrufAufraeumen(); if (id) api("anruf_ende", { id }).catch(() => {}); melde(e.message, true); }
 }
@@ -2234,12 +2373,16 @@ function anrufFehlgeschlagen() {
 }
 async function anrufAuflegen() {
   if (!RUF) return; const id = RUF.id, verbunden = !!RUF.verbunden, dauer = RUF.start ? Math.round((Date.now() - RUF.start) / 1000) : 0, rolle = RUF.rolle;
+  const konfBeine = RUF.konf ? [...RUF.konf.beine.keys()].filter((x) => x !== id) : []; // KC-CLUB-KONFERENZ: alle meine Verbindungen beenden
   anrufAufraeumen();
+  konfBeine.forEach((b) => api("anruf_ende", { id: b, verbunden: true }).catch(() => {}));
   if (id) { api("anruf_ende", { id, verbunden }).catch(() => {}); if (verbunden) api("diagnose", { art: "anruf", daten: { verbunden: true, dauer, rolle } }).catch(() => {}); }
   if (verbunden) melde(`📞 Aufgelegt · ${Math.floor(dauer / 60)}:${String(dauer % 60).padStart(2, "0")}`);
 }
 function anrufAufraeumen() {
   if (!RUF) return;
+  if (RUF.konf) { clearInterval(RUF.konf.takt); for (const b of RUF.konf.beine.values()) { try { b.pc.close(); } catch {} } RUF.konf = null; }
+  document.querySelectorAll("#anrufSchirm .konf-ton").forEach((a) => a.remove()); $("anrufKonf").innerHTML = ""; $("konfWahlBlatt").classList.add("versteckt");
   klangAus(); clearInterval(RUF.poll); clearInterval(RUF.uhr);
   try { RUF.strom?.getTracks().forEach((t) => t.stop()); } catch {}
   try { RUF.pc?.close(); } catch {}

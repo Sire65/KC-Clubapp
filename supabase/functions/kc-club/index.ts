@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "0.81.0";
+const SERVER_VERSION = "0.82.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -198,6 +198,21 @@ async function anrufHolen(ich: Ich, id: unknown) {
     a.status = "verpasst";
   }
   return a;
+}
+
+// KC-CLUB-KONFERENZ (0.82.0): Konferenz = alle Beine (kc_club_anruf) mit derselben konferenz_id. Teilnehmer = wer in einem
+// angenommenen Bein steckt; Eingeladene = klingelnde, nicht automatische Beine. Jedes Handy verbindet sich direkt mit jedem
+// anderen (bis KONFERENZ_MAX Personen, nur Ton) – die Querverbindungen („automatisch“) bauen die Apps selbst auf.
+const KONFERENZ_MAX = 4;
+async function konferenzBeine(k: string) {
+  const { data } = await db.from("kc_club_anruf").select("id,von,an,status,angebot,antwort,automatisch,erstellt_am,angenommen_am,kurzantwort").eq("konferenz_id", k).in("status", ["klingelt", "angenommen"]);
+  const grenze = Date.now() - ANRUF_KLINGEL_SEK * 1000, alt = (data ?? []).filter((b: any) => b.status === "klingelt" && new Date(b.erstellt_am).getTime() < grenze);
+  if (alt.length) await db.from("kc_club_anruf").update({ status: "verpasst", beendet_am: jetzt() }).in("id", alt.map((b: any) => b.id)).eq("status", "klingelt");
+  const beine = (data ?? []).filter((b: any) => !alt.includes(b));
+  const teilnehmer = new Set<string>(), eingeladen = new Set<string>();
+  for (const b of beine) if (b.status === "angenommen") { teilnehmer.add(b.von); teilnehmer.add(b.an); }
+  for (const b of beine) if (b.status === "klingelt" && !b.automatisch && !teilnehmer.has(b.an)) eingeladen.add(b.an);
+  return { beine, teilnehmer, eingeladen };
 }
 
 // KC-CLUB-ANRUF-KURZANTWORT (0.81.0): Schnellantworten beim Ablehnen – vom Admin einstellbar (kc_club_konfig „anruf_antworten“)
@@ -2057,11 +2072,11 @@ Köcheclub Werne`,
           db.from("kc_club_anklopfen").select("id,von,erstellt_am").eq("an", ich.person_id).eq("status", "offen").gte("erstellt_am", seit).order("erstellt_am", { ascending: false }).limit(3),
           db.from("kc_club_anklopfen").select("id,an,status,thread_id,beantwortet_am").eq("von", ich.person_id).gte("erstellt_am", new Date(Date.now() - 600000).toISOString()),
         ]);
-        const { data: rufe } = await db.from("kc_club_anruf").select("id,von,art,erstellt_am").eq("an", ich.person_id).eq("status", "klingelt").gte("erstellt_am", new Date(Date.now() - ANRUF_KLINGEL_SEK * 1000).toISOString()).order("erstellt_am", { ascending: false }).limit(1);
+        const { data: rufe } = await db.from("kc_club_anruf").select("id,von,art,erstellt_am").eq("an", ich.person_id).eq("status", "klingelt").eq("automatisch", false).gte("erstellt_am", new Date(Date.now() - ANRUF_KLINGEL_SEK * 1000).toISOString()).order("erstellt_am", { ascending: false }).limit(1);
         // KC-CLUB-ANRUF-VERPASST (0.81.0): nicht angenommen, nicht selbst abgelehnt, Hinweis noch nicht gesehen (letzte 24 h).
         // Nicht melden, wenn wir danach doch miteinander telefoniert haben (z. B. nach gleichzeitigem Anrufen).
         const klingelEnde = new Date(Date.now() - ANRUF_KLINGEL_SEK * 1000).toISOString();
-        const { data: verp0 } = await db.from("kc_club_anruf").select("id,von,art,erstellt_am").eq("an", ich.person_id).is("angenommen_am", null).is("verpasst_gesehen_am", null)
+        const { data: verp0 } = await db.from("kc_club_anruf").select("id,von,art,erstellt_am").eq("an", ich.person_id).eq("automatisch", false).is("angenommen_am", null).is("verpasst_gesehen_am", null)
           .gte("erstellt_am", new Date(Date.now() - 86400000).toISOString()).or(`status.eq.verpasst,and(status.eq.klingelt,erstellt_am.lt."${klingelEnde}")`).order("erstellt_am", { ascending: false }).limit(5);
         let verp: any[] = verp0 ?? [];
         if (verp.length) {
@@ -2124,29 +2139,40 @@ Köcheclub Werne`,
         if (!(await aktiveMitglieder()).some((m) => m.person_id === an)) throw new Fehler("Mitglied nicht gefunden.", 404);
         const angebot = sdpText(p.angebot);
         // alte, noch klingelnde Anrufe von mir beenden (nur einer gleichzeitig)
-        await db.from("kc_club_anruf").update({ status: "beendet", beendet_am: jetzt(), beendet_von: ich.person_id }).eq("von", ich.person_id).eq("status", "klingelt");
+        // KC-CLUB-KONFERENZ (0.82.0): aus einem laufenden Gespräch jemanden dazuholen → Einladung gehört zur Konferenz
+        let konferenz: string | null = null;
+        if (p.konferenz_mit) {
+          const a0 = await anrufHolen(ich, p.konferenz_mit);
+          if (a0.status !== "angenommen") throw new Fehler("Dazuholen geht nur während eines Gesprächs.", 409);
+          const kid: string = a0.konferenz_id || crypto.randomUUID(); konferenz = kid;
+          const k = await konferenzBeine(kid); k.teilnehmer.add(a0.von); k.teilnehmer.add(a0.an);
+          if (k.teilnehmer.has(an) || k.eingeladen.has(an)) throw new Fehler("Ist schon in der Konferenz.", 409);
+          if (k.teilnehmer.size + k.eingeladen.size >= KONFERENZ_MAX) throw new Fehler(`Eine Konferenz geht mit höchstens ${KONFERENZ_MAX} Personen.`, 409);
+          if (!a0.konferenz_id) await db.from("kc_club_anruf").update({ konferenz_id: konferenz }).eq("id", a0.id);
+        }
+        await db.from("kc_club_anruf").update({ status: "beendet", beendet_am: jetzt(), beendet_von: ich.person_id }).eq("von", ich.person_id).eq("status", "klingelt").eq("automatisch", false);
         // KC-CLUB-GEGENANRUF (0.80.0): ruft mich die Gegenseite gerade selbst an, keinen zweiten Anruf anlegen –
         // sonst warten beide auf ihren eigenen Anruf, und keiner sieht „Annehmen“. Die App nimmt stattdessen den der Gegenseite an.
-        const { data: gegen } = await db.from("kc_club_anruf").select("id").eq("von", an).eq("an", ich.person_id).eq("status", "klingelt")
+        const { data: gegen } = konferenz ? { data: [] as any[] } : await db.from("kc_club_anruf").select("id").eq("von", an).eq("an", ich.person_id).eq("status", "klingelt").eq("automatisch", false)
           .gte("erstellt_am", new Date(Date.now() - ANRUF_KLINGEL_SEK * 1000).toISOString()).order("erstellt_am", { ascending: false }).limit(1);
         if (gegen?.length) { await protokoll(ich.person_id, "anruf_gegenanruf", { an, anruf: gegen[0].id }); return json({ ok: true, gegenanruf: gegen[0].id }); }
-        const art = p.art === "video" ? "video" : "ton"; // KC-CLUB-VIDEO (0.32.0)
-        const { data: a, error } = await db.from("kc_club_anruf").insert({ von: ich.person_id, an, art, angebot }).select("id").single();
+        const art = p.art === "video" && !konferenz ? "video" : "ton"; // KC-CLUB-VIDEO (0.32.0) · Konferenz nur mit Ton
+        const { data: a, error } = await db.from("kc_club_anruf").insert({ von: ich.person_id, an, art, angebot, konferenz_id: konferenz }).select("id").single();
         if (error || !a) throw new Fehler("Anruf konnte nicht gestartet werden.", 500);
         const { data: zug } = await db.from("kc_club_zugang").select("person_id").eq("person_id", an).eq("aktiv", true).not("zuletzt_gesehen", "is", null);
         let versand = { gesendet: 0, fehler: 0 };
         if (zug?.length) versand = await routerSenden("club_nachricht_push", [an], {
-          titel: art === "video" ? `🎥 ${ich.vorname} ruft per Video an` : `📞 ${ich.vorname} ruft an`, kurz: "Antippen zum Annehmen (Köcheclub-App).",
+          titel: konferenz ? `👥 ${ich.vorname} holt dich in eine Konferenz` : art === "video" ? `🎥 ${ich.vorname} ruft per Video an` : `📞 ${ich.vorname} ruft an`, kurz: "Antippen zum Annehmen (Köcheclub-App).",
           betreff: `${ich.vorname} ruft an`, text: `${ich.name} ruft dich über die Köcheclub-App an.`, url: `${APP_URL}#anruf=${a.id}`,
         }, `club-anruf:${a.id}`);
-        await protokoll(ich.person_id, "anruf_gestartet", { an, art, versand });
-        return json({ ok: true, id: a.id, push: versand.gesendet > 0 });
+        await protokoll(ich.person_id, "anruf_gestartet", { an, art, versand, ...(konferenz ? { konferenz } : {}) });
+        return json({ ok: true, id: a.id, push: versand.gesendet > 0, konferenz });
       }
 
       case "anruf_status": {
         const a = await anrufHolen(ich, p.id), ichRufe = a.von === ich.person_id;
         const leute = await personen([a.von, a.an]), gegen = ichRufe ? a.an : a.von;
-        return json({ id: a.id, status: a.status, ichRufe, art: a.art, erstellt_am: a.erstellt_am,
+        return json({ id: a.id, status: a.status, ichRufe, art: a.art, erstellt_am: a.erstellt_am, konferenz: a.konferenz_id ?? null,
           gegenueber: { person_id: gegen, name: leute.get(gegen)?.display_name || gegen, vorname: vorname(leute.get(gegen) ?? null) || gegen },
           // SDP nur an die jeweils andere Seite
           ...(ichRufe ? { antwort: a.antwort, kurzantwort: a.kurzantwort ?? null } : { angebot: a.angebot }) });
@@ -2193,6 +2219,48 @@ Köcheclub Werne`,
         }
         await protokoll(ich.person_id, "anruf_kurzantwort", { anruf: a.id, an: a.von, versand });
         return json({ ok: true, thread: threadId });
+      }
+
+      // KC-CLUB-KONFERENZ (0.82.0): klingelnden Anruf in das laufende Gespräch dazunehmen (statt auflegen)
+      case "konferenz_dazu": {
+        const a0 = await anrufHolen(ich, p.laufend), n = await anrufHolen(ich, p.neu);
+        if (a0.status !== "angenommen") throw new Fehler("Dazunehmen geht nur während eines Gesprächs.", 409);
+        if (n.an !== ich.person_id || n.status !== "klingelt" || n.automatisch) throw new Fehler("Der Anruf ist schon vorbei.", 409);
+        if (n.art !== "ton") throw new Fehler("Konferenz geht zurzeit nur mit Ton – bitte als Videoanruf einzeln annehmen.", 409);
+        if (n.konferenz_id && n.konferenz_id !== a0.konferenz_id) throw new Fehler("Das ist eine Einladung in eine andere Konferenz – bitte erst auflegen.", 409);
+        const konferenz = a0.konferenz_id || crypto.randomUUID();
+        const k = await konferenzBeine(konferenz); k.teilnehmer.add(a0.von); k.teilnehmer.add(a0.an); k.teilnehmer.add(n.von);
+        if (k.teilnehmer.size + k.eingeladen.size > KONFERENZ_MAX) throw new Fehler(`Eine Konferenz geht mit höchstens ${KONFERENZ_MAX} Personen.`, 409);
+        await db.from("kc_club_anruf").update({ konferenz_id: konferenz }).in("id", [a0.id, n.id]);
+        await protokoll(ich.person_id, "konferenz_dazu", { konferenz, dazu: n.von });
+        return json({ ok: true, konferenz });
+      }
+
+      // KC-CLUB-KONFERENZ (0.82.0): Stand der Konferenz – Teilnehmer, Eingeladene und meine Beine (Verbindungsdaten nur an die jeweils andere Seite)
+      case "konferenz_status": {
+        const konferenz = String(p.konferenz || "");
+        if (!/^[0-9a-f-]{36}$/.test(konferenz)) throw new Fehler("Konferenz nicht gefunden.", 404);
+        const k = await konferenzBeine(konferenz);
+        const meine = k.beine.filter((b: any) => b.von === ich.person_id || b.an === ich.person_id);
+        if (!k.teilnehmer.has(ich.person_id) && !meine.length) return json({ dabei: false });
+        const leute = await personen([...k.teilnehmer, ...k.eingeladen]);
+        const wer = (id: string) => ({ person_id: id, name: leute.get(id)?.display_name || id, vorname: vorname(leute.get(id) ?? null) || id });
+        return json({ dabei: true, konferenz, max: KONFERENZ_MAX, teilnehmer: [...k.teilnehmer].map(wer), eingeladen: [...k.eingeladen].map(wer),
+          beine: meine.map((b: any) => ({ id: b.id, von: b.von, an: b.an, status: b.status, auto: b.automatisch,
+            ...(b.an === ich.person_id && b.status === "klingelt" ? { angebot: b.angebot } : {}),
+            ...(b.von === ich.person_id && b.status === "angenommen" ? { antwort: b.antwort } : {}) })) });
+      }
+
+      // KC-CLUB-KONFERENZ (0.82.0): Querverbindung zu einem anderen Teilnehmer (klingelt nicht – die andere App nimmt selbst an)
+      case "konferenz_bein": {
+        const konferenz = String(p.konferenz || ""), an = String(p.an || "");
+        const k = await konferenzBeine(konferenz);
+        if (!k.teilnehmer.has(ich.person_id) || !k.teilnehmer.has(an) || an === ich.person_id) throw new Fehler("Nicht in dieser Konferenz.", 403);
+        const da = k.beine.find((b: any) => (b.von === ich.person_id && b.an === an) || (b.von === an && b.an === ich.person_id));
+        if (da) return json({ ok: true, id: da.id, schonDa: true });
+        const { data: b, error } = await db.from("kc_club_anruf").insert({ von: ich.person_id, an, art: "ton", angebot: sdpText(p.angebot), konferenz_id: konferenz, automatisch: true }).select("id").single();
+        if (error || !b) throw new Fehler("Verbindung konnte nicht angelegt werden.", 500);
+        return json({ ok: true, id: b.id });
       }
 
       // KC-CLUB-ANRUF-VERPASST (0.81.0): Hinweis „Verpasster Anruf“ gesehen

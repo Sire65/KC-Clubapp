@@ -687,7 +687,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 
 // 53. 0.32.0: Videoanruf (Test) – Art wird geprüft, Annehmen mit Bild oder nur Ton, Kamera aus/wechseln
 {
-  assert.ok(/const art = p\.art === "video" \? "video" : "ton";/.test(server), "Anruf-Art ungeprüft");
+  assert.ok(/const art = p\.art === "video"( && !konferenz)? \? "video" : "ton";/.test(server), "Anruf-Art ungeprüft");
   assert.ok(/onclick="anrufAnnehmen\(true\)">🎥/.test(html) && /onclick="anrufAnnehmen\(false\)">📞/.test(html), "Annehmen mit Bild/nur Ton fehlt");
   assert.ok(/function anrufKameraWechseln\(\)/.test(html) && /replaceTrack\(neu\)/.test(html) && /id="anrufVideo"/.test(html) && /id="anrufSelbst"/.test(html), "Video-Oberfläche fehlt");
   assert.ok(/\$\("anrufVideo"\)\.srcObject = null; \$\("anrufSelbst"\)\.srcObject = null;/.test(html), "Kamera bleibt nach dem Auflegen an");
@@ -1377,6 +1377,20 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/else if \(ruf && RUF && !ZWEIT && ruf\.id !== RUF\.id && !\(RUF\.rolle === "rufer"/.test(html) && /function zweitAnnehmen\(\)/.test(html) && /if \(ZWEIT\) \{ const z = ZWEIT; zweitWeg\(\); setTimeout\(\(\) => anrufEingehend\(z\.id\)/.test(html), "App: zweiter Anruf");
   assert.ok(/id="verpasstBlatt"/.test(html) && /api\("anruf_verpasst_gesehen"/.test(html) && /id="anrufAntwortenFeld"/.test(html), "App: verpasst + Admin");
   assert.ok(!/prompt\(/.test(html.slice(html.indexOf("KC-CLUB-ANRUF-KURZANTWORT (0.81.0): mit Text"), html.indexOf("KC-CLUB-GEGENANRUF (0.80.0): Wer selbst"))), "eigener Text ohne prompt()");
+}
+
+// 103. 0.82.0: Konferenz (KC-CLUB-KONFERENZ)
+{
+  const mig = lies("supabase/migrations/20260930_kc_club_anruf_konferenz.sql");
+  assert.ok(/add column if not exists konferenz_id uuid/.test(mig) && /add column if not exists automatisch boolean not null default false/.test(mig) && !/drop column|delete from|truncate/i.test(mig), "Migration nur additiv");
+  assert.ok(/const KONFERENZ_MAX = 4;/.test(server) && /case "konferenz_dazu"/.test(server) && /case "konferenz_status"/.test(server) && /case "konferenz_bein"/.test(server), "Konferenz-Aktionen");
+  const ks = server.slice(server.indexOf('case "konferenz_status"'), server.indexOf('case "konferenz_bein"'));
+  assert.ok(/b\.an === ich\.person_id && b\.status === "klingelt" \? \{ angebot/.test(ks) && /b\.von === ich\.person_id && b\.status === "angenommen" \? \{ antwort/.test(ks) && /return json\(\{ dabei: false \}\)/.test(ks), "Verbindungsdaten nur an die andere Seite / nur Teilnehmer");
+  assert.ok(/\.eq\("status", "klingelt"\)\.eq\("automatisch", false\)\.gte/.test(server) && /eq\("an", ich\.person_id\)\.eq\("automatisch", false\)\.is\("angenommen_am", null\)/.test(server), "automatische Verbindungen klingeln nie / nie verpasst");
+  assert.ok(/eq\("von", ich\.person_id\)\.eq\("status", "klingelt"\)\.eq\("automatisch", false\);/.test(server), "eigener neuer Anruf beendet keine Konferenz-Verbindungen");
+  assert.ok(/p\.art === "video" && !konferenz \? "video" : "ton"/.test(server), "Konferenz nur Ton");
+  assert.ok(/function konfTakt\(\)/.test(html) && /ich > t\.person_id/.test(html) && /api\("konferenz_bein"/.test(html) && /onclick="zweitDazu\(\)"/.test(html) && /onclick="konfWahl\(\)"/.test(html), "App: Takt, Querverbindung, Dazuholen, ➕");
+  assert.ok(/const konfBeine = RUF\.konf \? \[\.\.\.RUF\.konf\.beine\.keys\(\)\]/.test(html), "Auflegen beendet alle eigenen Verbindungen");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

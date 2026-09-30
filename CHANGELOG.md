@@ -1,5 +1,17 @@
 # Änderungen
 
+## 0.82.0 – 2026-09-30 (DEV)
+
+- KC-CLUB-KONFERENZ (Wunsch Hansi, Stufe 2): Konferenz bis 4 Personen, zuerst nur Ton, kostenlos direkt von Handy zu Handy
+  (jeder mit jedem). Zwei Wege: im Gespräch „➕“ → Mitglied wählen (anruf_start mit konferenz_mit; der Eingeladene sieht
+  „👥 … holt dich in eine Konferenz“) oder beim zweiten Anruf „➕ Dazuholen (Konferenz)“ (konferenz_dazu).
+  Datenmodell: jede Verbindung bleibt eine Zeile in kc_club_anruf; neue Spalten konferenz_id und automatisch (Migration
+  20260930_kc_club_anruf_konferenz, nur additiv). Querverbindungen zwischen Teilnehmern baut die App selbst auf
+  (konferenz_status alle 2 s, konferenz_bein; die kleinere Mitgliedsnummer ruft, die andere App nimmt ohne Klingeln an).
+  Automatische Verbindungen klingeln nie, erscheinen nicht als verpasst und werden beim nächsten eigenen Anruf nicht beendet.
+  Legt jemand auf, bleiben die anderen verbunden. Verbindungsdaten (SDP) nur an die jeweils andere Seite.
+  Geprüft mit drei echten App-Fenstern (simulierter Server, simuliertes Mikrofon): Zusammenführen, Einladen, Auflegen eines Teilnehmers.
+
 ## 0.81.0 – 2026-09-30 (DEV)
 
 - KC-CLUB-ANRUF-KURZANTWORT (Wunsch Hansi, Stufe 1): Beim Klingeln „💬 Mit Text ablehnen“ – Kacheln mit Schnellantworten

@@ -1,12 +1,16 @@
 {
-  "version": "0.81.0",
+  "version": "0.82.0",
   "datum": "2026-09-30",
   "neu": [
-    "💬 Anruf ablehnen mit kurzer Antwort: „Bin gerade beschäftigt“, „Ich melde mich gleich“ … oder eigener Text – der Anrufer sieht sie sofort",
-    "📞 Ruft jemand an, während du telefonierst, siehst du es oben: „Auflegen & annehmen“, „Ablehnen“ oder kurz antworten",
-    "📵 Verpasste Anrufe werden beim nächsten Öffnen angezeigt – mit „Zurückrufen“"
+    "👥 Neu: Konferenz zu dritt (bis 4 Personen, nur Ton) – im Gespräch mit ➕ jemanden dazuholen oder einen zweiten Anruf mit „➕ Dazuholen“ in die Konferenz nehmen"
   ],
   "verlauf": [
+    {
+      "version": "0.82.0",
+      "neu": [
+        "👥 Neu: Konferenz zu dritt (bis 4 Personen, nur Ton) – im Gespräch mit ➕ jemanden dazuholen oder einen zweiten Anruf mit „➕ Dazuholen“ in die Konferenz nehmen"
+      ]
+    },
     {
       "version": "0.81.0",
       "neu": [
