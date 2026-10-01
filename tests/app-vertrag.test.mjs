@@ -1926,6 +1926,15 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/<div class="summe"><span>Zusammen<\/span>/.test(html), "Summe sichtbar");
 }
 
+// 169. 1.23.1: kleine Kacheln + großes Info-Fenster (KC-CLUB-MINIKACHELN)
+{
+  assert.ok(/\.mini-kacheln \{ display: grid; grid-template-columns: repeat\(auto-fill, minmax\(150px, 1fr\)\)/.test(html), "Kacheln nebeneinander");
+  assert.ok(/<div class="mini-kacheln">\$\{spenden\.map\(spendeKachel\)\.join\(""\)\}<\/div>/.test(html) && /onclick="vorschlagInfo\('\$\{v\.id\}'\)"/.test(html), "Spenden als Kacheln → Info");
+  assert.ok(/blattAuf\("vorschlagInfo", `<div class="info-gross">\$\{vorschlagKarte\(v\)\}/.test(html) && /blattAuf\("leihInfo", `<div class="info-gross">\$\{leihKarte\(a,/.test(html), "Info-Fenster mit voller Karte und Knöpfen");
+  assert.ok(/leihKachel\(a, true\)/.test(html) && /leihKachel\(a, false\)/.test(html) && /map\(bestandKachel\)/.test(html), "Ausleihen + Bestand als Kacheln");
+  assert.ok(/\.info-gross \{ font-size: 1\.12rem; \}/.test(html), "große Schrift im Info-Fenster");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

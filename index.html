@@ -593,6 +593,20 @@
   .hl-editzeile { display: grid; grid-template-columns: auto 1fr auto auto; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--linie); }
   .hl-editzeile .hl-sym { font-size: 1.4rem; }
   .hl-editzeile.aus { opacity: .5; }
+  /* KC-CLUB-MINIKACHELN (1.23.1, Wunsch Hansi): kleine Kacheln nebeneinander, Antippen → großes Info-Fenster */
+  .mini-kacheln { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin: 0 0 10px; }
+  .mini-kachel { background: var(--karte); color: var(--text); border: 2px solid transparent; border-radius: 16px; padding: 10px; box-shadow: var(--schatten); text-align: left; cursor: pointer; display: grid; gap: 3px; align-content: start; font: inherit; min-width: 0; }
+  .mini-kachel .mk-sym { font-size: 1.6rem; line-height: 1.1; }
+  .mini-kachel .mk-titel { font-weight: 800; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+  .mini-kachel .mk-unter { font-size: .82rem; color: var(--grau); line-height: 1.25; overflow-wrap: anywhere; }
+  .mini-kachel .mk-gross { font-weight: 800; font-size: 1.05rem; }
+  .mini-kachel .marke { justify-self: start; }
+  .mini-kachel.mk-offen { border-color: var(--gelb); }
+  .info-gross { font-size: 1.12rem; }
+  .info-gross .karte { box-shadow: none; padding: 4px 2px; margin: 0; }
+  .info-gross .hl-titel, .info-gross .wann { font-size: 1.3rem !important; }
+  .info-gross .hinweis { font-size: 1rem !important; }
+  .info-gross .knoepfe .knopf { font-size: 1.05rem; padding: 14px 16px; }
   /* KC-CLUB-SPENDE (1.23.0) */
   .sp-projekt { background: var(--karte2); border-radius: 14px; padding: 10px; margin: 8px 0; }
   .sp-projekt .hl-chips .chip:not(.an) { background: var(--karte); }
@@ -1870,7 +1884,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.23.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.23.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -5319,11 +5333,13 @@ async function vorschlaegeLaden() {
   try {
     const { vorschlaege, treffen, spenden: spCfg } = await api("vorschlaege_liste");
     VORSCHLAG_TREFFEN = treffen; if (spCfg) VORSCHLAG_SPENDEN = spCfg;
+    VORSCHLAG_MAP = new Map(vorschlaege.map((v) => [v.id, v]));
+    if (document.getElementById("vorschlagInfo")) vorschlagInfo(document.getElementById("vorschlagInfo").dataset.id); // offenes Info-Fenster auffrischen
     const offen = vorschlaege.filter((v) => v.status === "offen"), fertig = vorschlaege.filter((v) => v.status !== "offen");
     const abst = offen.filter((v) => v.art === "abstimmung"), themen = offen.filter((v) => v.art === "thema"), spenden = offen.filter((v) => v.art === "spende");
     $("vorschlagListe").innerHTML =
       (abst.length ? `<div class="abschnitt"><h3>🗳️ Abstimmungen</h3></div>` + abst.map(vorschlagKarte).join("") : "")
-      + (spenden.length ? `<div class="abschnitt"><h3>💝 Spendenprojekte für die nächste Sitzung</h3></div>` + spenden.map(vorschlagKarte).join("") : "")
+      + (spenden.length ? `<div class="abschnitt"><h3>💝 Spendenprojekte für die nächste Sitzung</h3></div><div class="mini-kacheln">${spenden.map(spendeKachel).join("")}</div>` : "")
       + `<div class="abschnitt"><h3>💡 Themen für die nächste Sitzung</h3></div>`
       + (themen.map(vorschlagKarte).join("") || '<div class="karte hinweis">Noch keine Themen. Tippe oben auf „＋ Neu“, um etwas vorzuschlagen.</div>')
       + (fertig.length ? `<div class="abschnitt"><h3>Erledigt</h3></div>` + fertig.map(vorschlagKarte).join("") : "");
@@ -5375,7 +5391,21 @@ async function vorschlagLoeschen(id) {
   if (!confirm("Diesen Vorschlag bzw. diese Abstimmung endgültig löschen?\n\nAlle Stimmen gehen mit verloren. Es wird niemand benachrichtigt.\nEine Sicherung bleibt im Änderungsprotokoll.")) return;
   try { await api("vorschlag_loeschen", { id }); melde("🗑️ Gelöscht"); vorschlaegeLaden(); neuLaden(); } catch (e) { melde(e.message, true); }
 }
-let vfArt = "thema", VF_SP = [];
+let vfArt = "thema", VF_SP = [], VORSCHLAG_MAP = new Map();
+// KC-CLUB-MINIKACHELN (1.23.1): Spendenprojekt als kleine Kachel – Antippen öffnet alle Einzelheiten groß
+function spendeKachel(v) {
+  const sp = v.spenden || [], e = v.ergebnis?.[0]?.anzahl || 0;
+  return `<button class="mini-kachel" onclick="vorschlagInfo('${v.id}')"><span class="mk-sym">💝</span>
+    <span class="mk-titel">${esc(sp[0]?.empfaenger || "Spende")}${sp.length > 1 ? ` <small>+${sp.length - 1} weitere</small>` : ""}</span>
+    <span class="mk-gross">${esc(spEuro(v.summe ?? sp.reduce((s, x) => s + Number(x.betrag || 0), 0)))}</span>
+    <span class="mk-unter">👍 ${e}${v.meine ? " · auch von dir" : ""} · von ${esc(v.von?.name || "?")}</span></button>`;
+}
+function vorschlagInfo(id) {
+  const v = VORSCHLAG_MAP.get(id);
+  if (!v) { document.getElementById("vorschlagInfo")?.remove(); return; }
+  const f = blattAuf("vorschlagInfo", `<div class="info-gross">${vorschlagKarte(v)}</div><button class="knopf" style="text-align:center" onclick="$('vorschlagInfo').remove()">Schließen</button>`);
+  f.dataset.id = id;
+}
 // KC-CLUB-SPENDE (1.23.0): Spendenprojekte – Empfänger und Betrag per Kachel, Tippen nur für Neues
 const spEuro = (n) => new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: Number.isInteger(Number(n)) ? 0 : 2 }).format(Number(n) || 0);
 function spendenListeHtml(v) {
@@ -5456,6 +5486,7 @@ async function hlLaden() {
   try {
     if (HL.tab === "helfen") HL.hilfe = await api("hilfe_liste"); else HL.leihen = await api("leihen_liste");
     hlZeigen();
+    const li = document.getElementById("leihInfo"); if (li && HL.tab === "leihen") leihInfo(li.dataset.id);
   } catch (e) { $("hlInhalt").innerHTML = `<div class="karte hinweis">${esc(e.message)}</div>`; }
 }
 // Kachel-Reihe: ein Wert aus einer Liste [{w, t}]
@@ -5606,6 +5637,36 @@ function leihKarte(a, leitung) {
     ${leitung && a.status === "angefragt" && a.eigen ? '<div class="hinweis" style="font-size:.85rem">Über deine eigene Anfrage entscheidet jemand anderes aus der Clubleitung.</div>' : ""}
     ${kn.length ? `<div class="knoepfe">${kn.join("")}</div>` : ""}</div>`;
 }
+// KC-CLUB-MINIKACHELN (1.23.1): Ausleihen und Bestand als kleine Kacheln – Antippen öffnet alle Einzelheiten groß
+function leihKachel(a, leitung) {
+  const d = HL.leihen, sym = a.positionen[0]?.sym || "📦", farbe = a.status === "genehmigt" || a.status === "zurueck" ? "gruen" : a.status === "abgelehnt" || a.status === "storniert" ? "rot" : a.status === "angefragt" ? "gelb" : "";
+  const was = a.positionen.length === 1 ? `${a.positionen[0].anzahl} × ${a.positionen[0].name}` : a.positionen.map((p) => `${p.anzahl}× ${p.name}`).join(", ");
+  return `<button class="mini-kachel${leitung && a.status === "angefragt" && !a.eigen ? " mk-offen" : ""}" onclick="leihInfo('${a.id}')"><span class="mk-sym">${esc(sym)}</span>
+    <span class="mk-titel">${esc(was)}</span><span class="mk-unter">📤 ${esc(hlTagName(a.abholung))}${a.rueckgabe !== a.abholung ? ` → 📥 ${esc(hlTagName(a.rueckgabe))}` : ""}</span>
+    ${leitung ? `<span class="mk-unter">${esc(a.eigen ? "Du" : a.wer)}</span>` : ""}<span class="marke ${farbe}">${esc(d.status?.[a.status] || a.status)}</span></button>`;
+}
+function leihInfo(id) {
+  const a = HL.leihen?.ausleihen.find((x) => x.id === id);
+  if (!a) { document.getElementById("leihInfo")?.remove(); return; }
+  const f = blattAuf("leihInfo", `<div class="info-gross">${leihKarte(a, !!HL.leihen.darfEntscheiden)}</div><button class="knopf" style="text-align:center" onclick="$('leihInfo').remove()">Schließen</button>`);
+  f.dataset.id = id;
+}
+function bestandKachel(g) {
+  const h = heuteIso(), { frei } = leihFrei(g.id, h, h);
+  return `<button class="mini-kachel" onclick="bestandInfo('${g.id}')"><span class="mk-sym">${esc(g.sym)}</span><span class="mk-titel">${esc(g.name)}</span>
+    <span class="mk-unter">${g.anzahl} im Verein · heute ${frei} frei</span></button>`;
+}
+function bestandInfo(id) {
+  const d = HL.leihen, g = d?.gegenstaende.find((x) => x.id === id); if (!g) return;
+  const h = heuteIso(), { frei } = leihFrei(g.id, h, h);
+  const termine = (d.belegungen || []).filter((b) => b.positionen.some((p) => p.id === id)).sort((a, b) => a.von.localeCompare(b.von)).slice(0, 8)
+    .map((b) => `<li>${esc(hlTagName(b.von))}${b.bis !== b.von ? " – " + esc(hlTagName(b.bis)) : ""}: <b>${b.positionen.filter((p) => p.id === id).reduce((s, p) => s + p.anzahl, 0)}</b> ${b.belegt ? "vergeben" : "angefragt"}</li>`).join("");
+  blattAuf("bestandInfo", `<div class="info-gross"><div style="font-size:3rem;line-height:1">${esc(g.sym)}</div><h3 style="font-size:1.4rem">${esc(g.name)}</h3>
+    <p style="margin:0">Im Verein: <b>${g.anzahl}</b> · heute frei: <b>${frei}</b></p>
+    ${termine ? `<p style="margin:10px 0 4px"><b>Schon eingeplant:</b></p><ul style="margin:0;padding-left:20px">${termine}</ul>` : '<p class="hinweis">Gerade nichts eingeplant.</p>'}</div>
+    <button class="knopf haupt" style="text-align:center" onclick="$('bestandInfo').remove();leihNeu();HL.form.menge['${g.id}']=Math.min(1, leihFrei('${g.id}', HL.form.abholung, HL.form.rueckgabe).frei);hlZeigen()">📦 ${esc(g.name)} ausleihen</button>
+    <button class="knopf" style="text-align:center" onclick="$('bestandInfo').remove()">Schließen</button>`);
+}
 function leihListeHtml() {
   const d = HL.leihen; if (!d) return '<div class="karte hinweis">Wird geladen …</div>';
   const meine = d.ausleihen.filter((a) => a.eigen).sort((a, b) => b.erstellt_am.localeCompare(a.erstellt_am));
@@ -5614,14 +5675,15 @@ function leihListeHtml() {
     const anfr = d.ausleihen.filter((a) => a.status === "angefragt").sort((a, b) => a.abholung.localeCompare(b.abholung));
     const lauf = d.ausleihen.filter((a) => a.status === "genehmigt" || a.status === "abgeholt").sort((a, b) => a.abholung.localeCompare(b.abholung));
     const fertig = d.ausleihen.filter((a) => !["angefragt", "genehmigt", "abgeholt"].includes(a.status)).sort((a, b) => b.erstellt_am.localeCompare(a.erstellt_am)).slice(0, 20);
-    html += `<div class="abschnitt"><h3>📨 Offene Anfragen${anfr.length ? ` (${anfr.length})` : ""}</h3></div>${anfr.map((a) => leihKarte(a, true)).join("") || '<div class="karte hinweis">Keine offenen Anfragen.</div>'}
-      <div class="abschnitt"><h3>📦 Verliehen / zugesagt</h3></div>${lauf.map((a) => leihKarte(a, true)).join("") || '<div class="karte hinweis">Gerade ist nichts verliehen.</div>'}
-      ${fertig.length ? `<details class="karte"><summary><b>Erledigt (${fertig.length})</b></summary>${fertig.map((a) => leihKarte(a, true)).join("")}</details>` : ""}
+    const kacheln = (l) => `<div class="mini-kacheln">${l.map((a) => leihKachel(a, true)).join("")}</div>`;
+    html += `<div class="abschnitt"><h3>📨 Offene Anfragen${anfr.length ? ` (${anfr.length})` : ""}</h3></div>${anfr.length ? kacheln(anfr) : '<div class="karte hinweis">Keine offenen Anfragen.</div>'}
+      <div class="abschnitt"><h3>📦 Verliehen / zugesagt</h3></div>${lauf.length ? kacheln(lauf) : '<div class="karte hinweis">Gerade ist nichts verliehen.</div>'}
+      ${fertig.length ? `<details class="karte"><summary><b>Erledigt (${fertig.length})</b></summary>${kacheln(fertig)}</details>` : ""}
       <button class="knopf" style="width:100%;margin-top:10px" onclick="HL.edit=true;hlZeigen()">⚙️ Gegenstände & Anzahl pflegen</button>`;
   } else {
-    html += `<div class="abschnitt"><h3>Meine Ausleihen</h3></div>${meine.map((a) => leihKarte(a, false)).join("") || '<div class="karte hinweis">Du hast noch nichts ausgeliehen.</div>'}`;
+    html += `<div class="abschnitt"><h3>Meine Ausleihen</h3></div>${meine.length ? `<div class="mini-kacheln">${meine.map((a) => leihKachel(a, false)).join("")}</div>` : '<div class="karte hinweis">Du hast noch nichts ausgeliehen.</div>'}`;
   }
-  html += `<div class="abschnitt"><h3>Das kann man ausleihen</h3></div><div class="karte hl-bestand">${d.gegenstaende.filter((g) => g.aktiv).map((g) => `<span>${esc(g.sym)} ${esc(g.name)} <b>${g.anzahl}</b></span>`).join("")}</div>`;
+  html += `<div class="abschnitt"><h3>Das kann man ausleihen</h3></div><div class="mini-kacheln">${d.gegenstaende.filter((g) => g.aktiv).map(bestandKachel).join("")}</div>`;
   return html;
 }
 async function leihEntscheiden(id, wahl, knopf, grund) {

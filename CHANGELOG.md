@@ -1,5 +1,13 @@
 # Änderungen
 
+## 1.23.1 – 2026-10-01 (DEV)
+
+- KC-CLUB-MINIKACHELN (Wunsch Hansi „kleine Kacheln nebeneinander, anklicken → Info-Fenster groß und lesbar“):
+  offene Spendenprojekte (Vorschläge), Ausleihen (offen/verliehen/erledigt/meine) und der Bestand erscheinen als kleine
+  Kacheln im Raster. Antippen öffnet ein Blatt mit der vollständigen Karte in großer Schrift samt allen Knöpfen
+  (unterstützen, genehmigen, ablehnen, abgeholt, zurück, stornieren); nach einer Aktion frischt sich das Blatt selbst auf.
+  Bestand-Kachel: Anzahl, heute frei, eingeplante Zeiträume (ohne Namen) und „ausleihen“ mit vorgewähltem Gegenstand.
+
 ## 1.23.0 – 2026-10-01 (DEV)
 
 - KC-CLUB-HELFEN (Wunsch Hansi „Wer kann helfen … nicht viel tippen, Auswahl als Kacheln“): Hilfe-Aufruf mit Kacheln für
