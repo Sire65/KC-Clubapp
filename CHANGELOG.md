@@ -1,5 +1,17 @@
 # Änderungen
 
+## 1.9.0 – 2026-10-01 (DEV)
+
+- KC-CLUB-BEARBEITEN (Wunsch Hansi, wie WhatsApp): eigene Nachricht mit Text bis 15 Minuten nach dem Senden ändern
+  (Antipp-Menü „✏️ Bearbeiten“). Neue Aktion nachricht_bearbeiten (nur Absender, auch Admin nicht bei fremden); Kennzeichen
+  in neuer Tabelle kc_club_nachricht_bearbeitet (Kern-Tabelle kc_communication_messages ohne neue Spalte). Kein neuer
+  Push/keine Mail; Protokoll ohne Text. Blase zeigt „bearbeitet“.
+- KC-CLUB-STUMM (Wunsch Hansi): Unterhaltung stummschalten (⋮ → 8 Stunden / 1 Woche / immer, „Wieder laut“). Server
+  schickt Stummgeschalteten keinen Push und keine Mail (@Erwähnung kommt trotzdem); kein Ton in der App (init liefert
+  ungelesenLaut). 🔕 an Chat-Titel und in der Liste. Einstellung „stumm“ (geräteübergreifend).
+- KC-CLUB-CHATSUCHE (Wunsch Hansi): 🔍 oben im Chat – sucht in Text und Absender der Nachrichten dieses Gesprächs
+  (Umlaut-tolerant, ab 2 Zeichen), Treffer markiert, „x von y“, ▲▼/Enter springt. Schließt beim Verlassen/Wechseln.
+
 ## 1.8.3 – 2026-10-01 (DEV)
 
 - KC-CLUB-NA-SEITE (Wunsch Hansi, wie WhatsApp): neben jeder Nachricht (fremde rechts, eigene links) ein gebogener Pfeil

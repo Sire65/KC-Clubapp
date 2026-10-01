@@ -1,11 +1,20 @@
 {
-  "version": "1.8.3",
+  "version": "1.9.0",
   "datum": "2026-10-01",
   "neu": [
-    "↪️ Neben jeder Nachricht: gebogener Pfeil zum sofortigen Weiterleiten oder Kopieren – wie bei WhatsApp",
-    "ℹ️ Blaues i neben jeder Nachricht: wer sie geschrieben, bekommen und gelesen hat"
+    "✏️ Vertippt? Eigene Nachricht antippen → „Bearbeiten“ (bis 15 Minuten nach dem Senden)",
+    "🔕 Einzelne Chats stummschalten: im Chat oben ⋮ → 8 Stunden, 1 Woche oder immer",
+    "🔍 Neue Lupe oben im Chat: Wörter nur in diesem Gespräch suchen, mit ▲▼ von Treffer zu Treffer"
   ],
   "verlauf": [
+    {
+      "version": "1.9.0",
+      "neu": [
+        "✏️ Vertippt? Eigene Nachricht antippen → „Bearbeiten“ (bis 15 Minuten nach dem Senden)",
+        "🔕 Einzelne Chats stummschalten: im Chat oben ⋮ → 8 Stunden, 1 Woche oder immer",
+        "🔍 Neue Lupe oben im Chat: Wörter nur in diesem Gespräch suchen, mit ▲▼ von Treffer zu Treffer"
+      ]
+    },
     {
       "version": "1.8.3",
       "neu": [

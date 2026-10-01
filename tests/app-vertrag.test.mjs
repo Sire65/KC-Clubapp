@@ -1571,6 +1571,21 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/\.na-seite \.na-info \{ background: #1e88e5/.test(html), "i ist blau");
 }
 
+// 138. 1.9.0: Bearbeiten, Stummschalten, Suche im Chat
+{
+  const nb = server.slice(server.indexOf('case "nachricht_bearbeiten"'), server.indexOf('case "nachricht_ausblenden"'));
+  assert.ok(/m\.sender_person_id !== ich\.person_id\) throw/.test(nb) && /BEARBEITEN_MIN \* 60000\) throw/.test(nb), "Bearbeiten: nur eigene, nur 15 Min.");
+  assert.ok(!/sendenGewaehlt|routerSenden/.test(nb) && /protokoll\(ich\.person_id, "nachricht_bearbeitet", \{ nachricht: m\.id, thread: m\.thread_id \}\)/.test(nb), "Bearbeiten: keine Benachrichtigung, Protokoll ohne Text");
+  const mig = lies("supabase/migrations/20261001_kc_club_v190_nachricht_bearbeitet.sql");
+  assert.ok(/create table if not exists kc_club_nachricht_bearbeitet/.test(mig) && /enable row level security/.test(mig) && !/alter table kc_communication_messages/.test(mig), "Migration: eigene Tabelle, Kern-Tabelle unverändert");
+  const ns = server.slice(server.indexOf('case "nachricht_senden"'), server.indexOf('case "privattermin_speichern"'));
+  assert.ok(ns.indexOf("stummFuer(") > 0 && ns.indexOf("stummFuer(") < ns.indexOf('sendenGewaehlt("club_nachricht", ziel'), "Stumm: vor dem Versand herausfiltern");
+  assert.ok(ns.indexOf("versandErw = await sendenGewaehlt") < ns.indexOf("stummFuer("), "Stumm: @Erwähnung kommt trotzdem");
+  assert.ok(/stumm: \(w\) =>/.test(server) && /ungelesenLaut/.test(server) && /const laut = INIT\?\.ungelesenLaut \?\? n/.test(html), "Stumm: Einstellung + kein Ton");
+  assert.ok(/id="chatSuchKnopf"[^>]*onclick="chatSucheAuf\(\)"/.test(html) && /function chatSucheJetzt\(neu\)/.test(html) && /suNorm\(`\$\{m\.text \|\| ""\} \$\{m\.von \|\| ""\}`\)/.test(html), "Chat-Suche (Umlaut-tolerant)");
+  assert.ok(/naBearbeiten\('\$\{id\}'\)">✏️ Bearbeiten/.test(html) && /class="bearb"/.test(html), "App: Bearbeiten im Menü + Kennzeichen");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

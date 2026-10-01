@@ -345,6 +345,14 @@
   .na-seite .na-pfeil { background: var(--karte); color: var(--grau); } .na-seite .na-pfeil svg { width: 17px; height: 17px; fill: currentColor; }
   .na-seite .na-info { background: #1e88e5; color: #fff; font: italic 700 15px/1 Georgia, serif; }
   .blase.wischt .na-seite { display: none; }
+  /* KC-CLUB-BEARBEITEN / KC-CLUB-CHATSUCHE (1.9.0) */
+  .fuss .bearb { font-style: italic; opacity: .8; margin-right: 4px; }
+  #chatSuchLeiste { display: flex; gap: 6px; align-items: center; margin: 0 0 8px; position: sticky; top: 0; z-index: 5; background: var(--hinter, var(--karte)); padding: 6px 0; }
+  #chatSuchLeiste input { flex: 1; min-width: 0; padding: 9px 11px; border-radius: 12px; border: 1px solid var(--linie); font-size: 1rem; background: var(--karte); color: inherit; }
+  #chatSuchLeiste button { border: none; background: var(--karte); color: inherit; border-radius: 10px; padding: 8px 10px; cursor: pointer; box-shadow: var(--schatten); }
+  #chatSuchZahl { font-size: .8rem; color: var(--grau); white-space: nowrap; }
+  .blase.su-treffer { outline: 2px solid #f1c40f; } .blase.su-aktuell { outline: 3px solid #e67e22; }
+  .stumm-wahl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 4px 0 8px; } .stumm-wahl .knopf { text-align: center; padding: 10px 4px; }
   /* KC-CLUB-SOS (1.6.0) */
   .kachel.sos { background: #c0392b; color: #fff; } .kachel.sos small { color: #ffe3df; }
   .karte.sos-warn { background: #c0392b; color: #fff; } .karte.sos-warn b { color: #fff; }
@@ -1193,7 +1201,8 @@
 
   <!-- UNTERHALTUNG -->
   <section id="v-chat" class="versteckt">
-    <div class="kopf2"><button class="zurueck" onclick="zeige('nachrichten')">‹</button><h2 id="chatTitel">…</h2><button class="rund" id="chatMenueKnopf" title="Mehr" onclick="chatMenue()">⋮</button></div>
+    <div class="kopf2"><button class="zurueck" onclick="zeige('nachrichten')">‹</button><h2 id="chatTitel">…</h2><button class="rund" id="chatSuchKnopf" title="Im Chat suchen" aria-label="Im Chat suchen" onclick="chatSucheAuf()">🔍</button><button class="rund" id="chatMenueKnopf" title="Mehr" onclick="chatMenue()">⋮</button></div>
+    <div id="chatSuchLeiste" class="versteckt"><input id="chatSuchFeld" type="search" placeholder="Im Chat suchen …" autocomplete="off" oninput="chatSucheJetzt(true)" onkeydown="if(event.key==='Enter'){event.preventDefault();chatSucheSpringen(1)}"><span id="chatSuchZahl"></span><button title="vorheriger Treffer" onclick="chatSucheSpringen(-1)">▲</button><button title="nächster Treffer" onclick="chatSucheSpringen(1)">▼</button><button title="Suche schließen" onclick="chatSucheZu()">✕</button></div>
     <div class="hinweis" id="chatTeilnehmer" style="margin-left:54px;cursor:pointer" onclick="if(CHAT?.gruppe)chatMenue()"></div>
     <div class="chat" id="chat"></div>
   </section>
@@ -1668,6 +1677,7 @@
     <button class="knopf haupt versteckt" id="chatGruppeBearb" onclick="$('chatBlatt').classList.add('versteckt');gruppeForm(CHAT)">✏️ Gruppe bearbeiten (Name, Mitglieder)</button>
     <button class="knopf versteckt" id="chatGruppeRaus" onclick="gruppeVerlassen()">🚪 Gruppe verlassen</button>
     <button class="knopf versteckt" id="chatGruppeWeg" onclick="gruppeLoeschen()">🗑️ Gruppe löschen (für alle)</button>
+    <div id="chatStummBereich"></div>
     <button class="knopf" onclick="unterhaltungWeg(false)">🙈 Nur bei mir entfernen</button>
     <p class="hinweis" style="margin:0 4px 6px;font-size:.85rem">Die anderen behalten sie. Schreibt jemand wieder, erscheint sie erneut.</p>
     <button class="knopf haupt versteckt" id="chatAllesLoeschen" onclick="unterhaltungWeg(true)">🗑️ Für alle löschen (Admin)</button>
@@ -1697,7 +1707,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.8.3"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.9.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2296,6 +2306,8 @@ const TIPPS = [
   { id: "reaktion", sym: "👍", t: "Auf Nachrichten reagieren", x: "Tippe eine Nachricht an – dann kannst du mit 👍 ❤️ 😂 … reagieren, antworten oder weiterleiten.", testen: () => zeige("nachrichten") },
   { id: "erwaehnung", sym: "📣", t: "Jemanden direkt ansprechen", x: "Schreib in einer Gruppe <b>@</b> und den Namen – die Person bekommt dann sicher Bescheid.", testen: () => zeige("nachrichten") },
   { id: "sos", sym: "🆘", t: "Für den Notfall: die rote SOS-Kachel", x: "Dort findest du die wichtigsten Notrufnummern und erreichst Mitglieder schnell. Trag auch deinen eigenen Notfallkontakt ein.", testen: () => sosStart() },
+  { id: "bearbeiten", sym: "✏️", t: "Vertippt? Nachricht bearbeiten", x: "Eigene Nachricht antippen → „✏️ Bearbeiten“ – bis 15 Minuten nach dem Senden. Die anderen sehen dann „bearbeitet“.", testen: () => zeige("nachrichten") },
+  { id: "stumm", sym: "🔕", t: "Einzelne Chats stummschalten", x: "Im Chat oben auf ⋮ → „🔕 Stummschalten“ (8 Stunden, 1 Woche oder immer). Kein Push, keine Mail – @Erwähnungen kommen trotzdem. Mit 🔍 oben im Chat suchst du nur in diesem Gespräch.", testen: () => zeige("nachrichten") },
   { id: "schnellstart", sym: "⚡", t: "Schnellstart: deine 8 Lieblings-Symbole", x: "In der erweiterten Ansicht oben im farbigen Feld – nach rechts blättern bis „⚡ Schnellstart“. Ein Tipp, und du schreibst, siehst den nächsten Termin oder machst einen Zettel. Welche Symbole, bestimmst du unter ⚙️.", testen: () => suEinstellung("ssWahl") },
   { id: "anklopfen", sym: "👋", t: "Anklopfen: kurz antworten statt annehmen", x: "Klopft jemand an, tippst du einfach „Bin beschäftigt“ oder „Melde mich später“ – der andere sieht es sofort. Anklopfen und Anklopfton stellst du unter ⚙️ → Privatsphäre ein.", testen: () => suEinstellung("setAnklopfen") },
   { id: "notfallpass", sym: "🪪", t: "Dein Notfallpass im SOS-Bereich", x: "Allergien, Medikamente, Blutgruppe – freiwillig und nur auf deinem Handy gespeichert. Und „📍 Wo bin ich?“ zeigt dir im Notfall die Adresse zum Vorlesen.", testen: () => { sosStart(); nfpBearbeiten(); } },
@@ -4599,8 +4611,10 @@ function zaehlerZeigen() {
   const n = INIT?.ungelesen || 0;
   $("fussZaehler").textContent = n; $("fussZaehler").classList.toggle("versteckt", !n);
   try { n ? navigator.setAppBadge?.(n) : navigator.clearAppBadge?.(); } catch {}
-  if (letzteUngelesen !== null && n > letzteUngelesen && einst("ton", true)) ton();
-  letzteUngelesen = n;
+  // KC-CLUB-STUMM (1.9.0): Ton nur für neue Nachrichten aus nicht stummgeschalteten Unterhaltungen
+  const laut = INIT?.ungelesenLaut ?? n;
+  if (letzteUngelesen !== null && laut > letzteUngelesen && einst("ton", true)) ton();
+  letzteUngelesen = laut;
 }
 
 // ---------- Ansichten ----------
@@ -4608,6 +4622,7 @@ function zaehlerZeigen() {
 function zeige(v, ausHistorie) {
   if (kaBearb && v !== "start") kaBearbeiten(false); // Anordnen beim Verlassen der Startseite abschließen
   const vorher = aktuelleAnsicht;
+  if (v !== "chat" && typeof CS !== "undefined" && CS.offen) chatSucheZu();
   aktuelleAnsicht = v; if (window.KCFP) KCFP.sicht = v;
   nzZaehlen(v); // KC-CLUB-NUTZUNG: nur „Bereich geöffnet“, ohne Namen
   if (vorher === "protokoll" && v !== "protokoll" && prTimer) prSpeichernJetzt(false).catch(() => {}); // ungespeicherte Eingaben sichern
@@ -5139,7 +5154,7 @@ async function unterhLaden() {
     if (!MITGLIEDER && !UH.kreiseGeholt) { UH.kreiseGeholt = true; mitgliederHolen().then(() => { if (aktuelleAnsicht === "nachrichten") unterhLaden(); }).catch(() => {}); }
     $("unterhListe").innerHTML = (unterhaltungen.length ? '<p class="hinweis uhtipp">Einmal tippen = auswählen (🗑️ entfernen) · doppelt tippen = öffnen</p>' : "") + unterhaltungen.map((u) => `<div class="unterh${u.id === UH.wahl ? " gewaehlt" : ""}" data-id="${u.id}" onclick="unterhTipp('${u.id}')">
       ${u.gruppe || u.anzahl > 2 ? `<div class="avatar k-neutral">${u.gruppe ? esc(u.gruppe.symbol) : "👥"}</div>` : kreis(MITGLIEDER?.find((m) => m.name === u.teilnehmer[0]) || null, u.teilnehmer[0], 46)}
-      <div class="mitte"><div><b>${esc(u.gruppe?.name || u.betreff || u.teilnehmer.join(", "))}</b>${u.gruppe ? ` <span class="hinweis" style="font-size:.8rem">· ${u.anzahl} Mitgl.</span>` : ""}</div><div class="hinweis">${u.letzte ? esc(u.letzte.von + ": " + u.letzte.text) : "Noch keine Nachricht"}</div></div>
+      <div class="mitte"><div><b>${esc(u.gruppe?.name || u.betreff || u.teilnehmer.join(", "))}</b>${stummAn(u.id) ? ' <span title="stummgeschaltet">🔕</span>' : ""}${u.gruppe ? ` <span class="hinweis" style="font-size:.8rem">· ${u.anzahl} Mitgl.</span>` : ""}</div><div class="hinweis">${u.letzte ? esc(u.letzte.von + ": " + u.letzte.text) : "Noch keine Nachricht"}</div></div>
       <div style="text-align:right"><div class="hinweis" style="font-size:.8rem">${u.letzte ? zeitKurz(u.letzte.zeit) : ""}</div>${u.ungelesen ? `<span class="punkt">${u.ungelesen}</span>` : ""}</div></div>${u.id === UH.wahl ? unterhAktionen(u) : ""}`).join("")
       || '<p class="hinweis">Noch keine Nachrichten. Tippe oben auf „＋ Neu“.</p>';
   } catch (e) { melde(e.message, true); }
@@ -5179,6 +5194,7 @@ async function unterhEntfernen(id, fuerAlle) {
 async function chatOeffnen(id, ausHistorie) {
   if (id !== chatId) { naAntwortWeg(); NA.erw.clear(); } // KC-CLUB-ANTWORT: Antwort/Erwähnung gehört zum vorigen Chat
   if (id !== chatId) ZW = { push: false, email: false, whatsapp: false };
+  if (id !== chatId && CS.offen) chatSucheZu(); // KC-CLUB-CHATSUCHE: Suche gehört zum vorigen Chat
   chatId = id; zeige("chat", ausHistorie); chatId = id;
   history.replaceState({ v: "chat", id }, "", location.pathname + "#nachricht=" + id);
   await chatLaden(true);
@@ -5192,7 +5208,7 @@ async function chatLaden(scrollen) {
     const u = await api("unterhaltung", { id: chatId });
     CHAT = u;
     const andere = u.teilnehmer.filter((x) => x.person_id !== ICH.person_id);
-    $("chatTitel").textContent = u.gruppe ? `${u.gruppe.symbol} ${u.gruppe.name}` : u.betreff || andere.map((x) => x.name).join(", ");
+    $("chatTitel").textContent = (u.gruppe ? `${u.gruppe.symbol} ${u.gruppe.name}` : u.betreff || andere.map((x) => x.name).join(", ")) + (stummAn(chatId) ? " 🔕" : "");
     zustellZeigen();
     let st = "";
     if (andere.length === 1) { if (!MITGLIEDER) await mitgliederHolen().catch(() => {}); const m = MITGLIEDER?.find((x) => x.person_id === andere[0].person_id); if (m?.status) st = statusText(m.status); }
@@ -5209,12 +5225,13 @@ async function chatLaden(scrollen) {
       ${!m.eigen && andere.length > 1 ? `<div class="von">${esc(m.von)}</div>` : ""}${m.antwortAuf ? `<div class="zitat" onclick="zuNachricht('${m.antwortAuf.id}')"><b>${esc(m.antwortAuf.von)}</b><span>${esc(m.antwortAuf.text)}</span></div>` : ""}${m.text === "📎" && m.anlagen.length ? "" : `<div class="txt">${naText(m.text)}</div>`}
       ${m.anlagen.map((a) => /^image\//.test(a.mime || "") ? `<img data-anlage="${a.id}" alt="${esc(a.name)}" onclick="anlageOeffnen('${a.id}')">` : /^audio\//.test(a.mime || "") ? `<div class="sprache" data-sprache="${a.id}"><button onclick="spracheAbspielen(this, '${a.id}')">▶️ Sprachnachricht anhören</button></div>` : `<div class="anlage" onclick="anlageOeffnen('${a.id}')">📄 ${esc(a.name)}</div>`).join("")}
       <div class="na-seite"><button class="na-pfeil" title="Weiterleiten oder kopieren" aria-label="Weiterleiten oder kopieren" onclick="naPfeilMenue('${m.id}')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4.5l7.5 7.5-7.5 7.5v-4.3c-5.2 0-8.8 1.7-11.4 5.3 1-5.2 4.1-10.3 11.4-11.3V4.5z"/></svg></button><button class="na-info" title="Info: wer geschrieben, bekommen und gelesen hat" aria-label="Info zur Nachricht" onclick="nachrichtInfo('${m.id}')">i</button></div>
-      <div class="fuss">${zeitKurz(m.zeit)}${m.eigen ? " " + (m.gelesenAlle ? '<b title="gelesen">✓✓</b>' : m.gelesenVon?.length ? `✓✓ ${m.gelesenVon.length}/${andere.length}` : "✓") + zustellText(m.zustellung) : ""}${m.eigen || ICH.admin ? ` <button class="weg" title="Nachricht löschen" onclick="nachrichtLoeschen('${m.id}')">🗑️</button>` : ""}</div></div>`).join("")
+      <div class="fuss">${m.bearbeitet ? '<span class="bearb" title="nachträglich geändert">bearbeitet</span>' : ""}${zeitKurz(m.zeit)}${m.eigen ? " " + (m.gelesenAlle ? '<b title="gelesen">✓✓</b>' : m.gelesenVon?.length ? `✓✓ ${m.gelesenVon.length}/${andere.length}` : "✓") + zustellText(m.zustellung) : ""}${m.eigen || ICH.admin ? ` <button class="weg" title="Nachricht löschen" onclick="nachrichtLoeschen('${m.id}')">🗑️</button>` : ""}</div></div>`).join("")
       || '<p class="hinweis">Schreib die erste Nachricht.</p>';
     document.querySelectorAll("img[data-anlage]").forEach(bildLaden);
     naWischenEinrichten();
     naReaktionenZeigen(u.nachrichten);
-    if (neuVonAnderen && einst("ton", true)) ton();
+    if (CS.offen) chatSucheJetzt(false); // KC-CLUB-CHATSUCHE: Markierung nach dem Neuzeichnen behalten
+    if (neuVonAnderen && einst("ton", true) && !stummAn(chatId)) ton();
     if (scrollen || neuVonAnderen) setTimeout(() => window.scrollTo(0, document.body.scrollHeight), 50);
   } catch (e) { melde(e.message, true); }
 }
@@ -5246,6 +5263,7 @@ function nachrichtMenue(id) {
     <div class="na-schnell">${NA_SCHNELL.map((e) => `<button type="button" class="${meine === e ? "an" : ""}" aria-label="Mit ${e} reagieren" onclick="reagieren('${id}','${e}');document.getElementById('naMenue').remove()">${e}</button>`).join("")}</div>
     ${meine ? `<p class="hinweis" style="margin:0;text-align:center">Deine Reaktion: ${meine} – nochmal antippen nimmt sie weg</p>` : ""}
     <button class="knopf" onclick="document.getElementById('naMenue').remove();naAntworten('${id}')">↩️ Antworten</button>
+    ${m.bearbeitbarBis && Date.parse(m.bearbeitbarBis) > Date.now() ? `<button class="knopf" onclick="document.getElementById('naMenue').remove();naBearbeiten('${id}')">✏️ Bearbeiten</button>` : ""}
     ${m.text ? `<button class="knopf" onclick="document.getElementById('naMenue').remove();naKopieren('${id}')">📋 Kopieren</button>` : ""}
     <button class="knopf" onclick="document.getElementById('naMenue').remove();weiterleitenBlatt('${id}')">↪️ Weiterleiten</button>
     <button class="knopf" onclick="document.getElementById('naMenue').remove();nachrichtInfo('${id}')">ℹ️ Details – wann gesendet, angekommen, gelesen</button>
@@ -5254,6 +5272,83 @@ function nachrichtMenue(id) {
   f.onclick = (e) => { if (e.target === f) f.remove(); };
   document.body.appendChild(f);
 }
+// ---------- KC-CLUB-BEARBEITEN (1.9.0, Wunsch Hansi – wie WhatsApp): eigene Nachricht bis 15 Min. nach dem Senden ändern ----------
+function naBearbeiten(id) {
+  const m = NA.nachrichten.get(id); if (!m) return;
+  document.getElementById("naMenue")?.remove();
+  const f = document.createElement("div"); f.id = "naMenue"; f.className = "blatt"; f.setAttribute("role", "dialog"); f.setAttribute("aria-modal", "true");
+  const rest = Math.max(1, Math.round((Date.parse(m.bearbeitbarBis) - Date.now()) / 60000));
+  f.innerHTML = `<div class="blatt-innen na-menue"><h3 style="margin:0">✏️ Nachricht bearbeiten</h3>
+    <textarea id="naBearbText" maxlength="4000" style="width:100%;min-height:110px;box-sizing:border-box;padding:10px;border-radius:12px;border:1px solid var(--linie);font:inherit;background:var(--karte);color:inherit"></textarea>
+    <p class="hinweis" style="margin:0">Noch ${rest} Min. möglich. Die anderen sehen danach „bearbeitet“ – es kommt keine neue Benachrichtigung.</p>
+    <button class="knopf haupt" onclick="naBearbeitenSpeichern('${id}')">💾 Speichern</button>
+    <button class="knopf" onclick="document.getElementById('naMenue').remove()">Abbrechen</button></div>`;
+  f.onclick = (e) => { if (e.target === f) f.remove(); };
+  document.body.appendChild(f);
+  const ta = $("naBearbText"); ta.value = m.text || ""; ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length);
+}
+async function naBearbeitenSpeichern(id) {
+  const text = $("naBearbText")?.value.trim() || "";
+  if (!text) return melde("Bitte einen Text eingeben – zum Entfernen „Löschen“ benutzen.", true);
+  try { await api("nachricht_bearbeiten", { id, text }); document.getElementById("naMenue")?.remove(); melde("✏️ Geändert"); chatStand = ""; await chatLaden(false); }
+  catch (e) { melde(e.message, true); }
+}
+
+// ---------- KC-CLUB-STUMM (1.9.0, Wunsch Hansi): einzelne Unterhaltungen stummschalten – kein Push, keine Mail, kein Ton ----------
+// @Erwähnungen kommen trotzdem (wie WhatsApp). Einstellung „stumm“ geräteübergreifend; Dauer-Registry STUMM_DAUER.
+const STUMM_DAUER = [{ id: "8h", t: "8 Stunden", ms: 8 * 3600000 }, { id: "1w", t: "1 Woche", ms: 7 * 86400000 }, { id: "immer", t: "Immer" }];
+const stummStand = () => ({ threads: {}, ...(INIT?.einstellungen?.stumm || {}) });
+function stummAn(id) { const b = stummStand().threads?.[id]; return !!id && (b === "immer" || (typeof b === "string" && Date.parse(b) > Date.now())); }
+function stummBereichZeigen() {
+  const el = $("chatStummBereich"); if (!el) return;
+  if (!chatId) { el.innerHTML = ""; return; }
+  const b = stummStand().threads[chatId];
+  el.innerHTML = stummAn(chatId)
+    ? `<button class="knopf haupt" onclick="stummSetzen(null)">🔔 Wieder laut schalten</button><p class="hinweis" style="margin:0 4px 6px;font-size:.85rem">🔕 Stumm ${b === "immer" ? "für immer" : "bis " + esc(new Date(b).toLocaleString("de-DE", { weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })) + " Uhr"}. @Erwähnungen kommen trotzdem.</p>`
+    : `<p style="margin:4px 4px 2px"><b>🔕 Stummschalten</b> <span class="hinweis" style="font-size:.85rem">– kein Push, keine Mail, kein Ton</span></p>
+       <div class="stumm-wahl">${STUMM_DAUER.map((d) => `<button class="knopf" onclick="stummSetzen('${d.id}')">${esc(d.t)}</button>`).join("")}</div>`;
+}
+async function stummSetzen(dauer) {
+  if (!chatId) return;
+  const threads = { ...stummStand().threads }, d = STUMM_DAUER.find((x) => x.id === dauer);
+  if (!d) delete threads[chatId]; else threads[chatId] = d.id === "immer" ? "immer" : new Date(Date.now() + d.ms).toISOString();
+  const w = { threads };
+  if (INIT) INIT.einstellungen = { ...(INIT.einstellungen || {}), stumm: w };
+  $("chatBlatt").classList.add("versteckt");
+  try { await api("einstellung_setzen", { schluessel: "stumm", wert: w }); melde(d ? `🔕 Stumm – ${d.id === "immer" ? "für immer" : "für " + d.t}` : "🔔 Wieder laut"); }
+  catch (e) { melde(e.message, true); }
+  chatStand = ""; chatLaden(false);
+}
+
+// ---------- KC-CLUB-CHATSUCHE (1.9.0, Wunsch Hansi): Lupe im Chat – findet Wörter nur in diesem Gespräch ----------
+// Sucht in den geladenen Nachrichten (Text + Absender), Umlaut-tolerant wie die große Suche; ▲▼ springt zwischen Treffern.
+const CS = { offen: false, treffer: [], i: -1 };
+function chatSucheAuf() { CS.offen = true; $("chatSuchLeiste").classList.remove("versteckt"); $("chatSuchFeld").focus(); chatSucheJetzt(true); }
+function chatSucheZu() {
+  CS.offen = false; CS.treffer = []; CS.i = -1; $("chatSuchFeld").value = ""; $("chatSuchLeiste").classList.add("versteckt");
+  document.querySelectorAll("#chat .blase.su-treffer, #chat .blase.su-aktuell").forEach((b) => b.classList.remove("su-treffer", "su-aktuell"));
+}
+function chatSucheJetzt(neu) {
+  const q = suNorm($("chatSuchFeld").value.trim()), alt = CS.treffer[CS.i];
+  document.querySelectorAll("#chat .blase").forEach((b) => b.classList.remove("su-treffer", "su-aktuell"));
+  CS.treffer = q.length < 2 ? [] : [...document.querySelectorAll("#chat .blase")].filter((b) => { const m = NA.nachrichten.get(b.dataset.id); return m && suNorm(`${m.text || ""} ${m.von || ""}`).includes(q); }).map((b) => b.dataset.id);
+  CS.treffer.forEach((id) => document.querySelector(`.blase[data-id="${id}"]`)?.classList.add("su-treffer"));
+  CS.i = neu ? CS.treffer.length - 1 : Math.max(0, CS.treffer.indexOf(alt)); // neu: beim neuesten Treffer anfangen
+  $("chatSuchZahl").textContent = q.length < 2 ? "" : CS.treffer.length ? `${CS.i + 1} von ${CS.treffer.length}` : "keine Treffer";
+  if (CS.treffer.length) chatSucheZeigen(neu);
+}
+function chatSucheSpringen(r) {
+  if (!CS.treffer.length) return;
+  CS.i = (CS.i + r + CS.treffer.length) % CS.treffer.length;
+  $("chatSuchZahl").textContent = `${CS.i + 1} von ${CS.treffer.length}`;
+  chatSucheZeigen(true);
+}
+function chatSucheZeigen(scrollen) {
+  document.querySelectorAll("#chat .blase.su-aktuell").forEach((b) => b.classList.remove("su-aktuell"));
+  const b = document.querySelector(`.blase[data-id="${CS.treffer[CS.i]}"]`); if (!b) return;
+  b.classList.add("su-aktuell"); if (scrollen) b.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
 // KC-CLUB-NA-SEITE (1.8.3, Wunsch Hansi – wie WhatsApp): gebogener Pfeil neben der Nachricht → sofort weiterleiten oder kopieren
 function naPfeilMenue(id) {
   const m = NA.nachrichten.get(id); if (!m) return;
@@ -5713,6 +5808,7 @@ function chatMenue() {
   $("chatGruppeRaus").classList.toggle("versteckt", !g);
   $("chatGruppeWeg").classList.toggle("versteckt", !g?.darfVerwalten); // KC-CLUB-GRUPPE-LOESCHEN
   $("chatAllesLoeschen").classList.toggle("versteckt", !ICH?.admin || !chatId || !!g?.darfVerwalten);
+  stummBereichZeigen();
   $("chatBlatt").classList.remove("versteckt");
 }
 async function unterhaltungWeg(fuerAlle) {
@@ -8296,6 +8392,7 @@ function suAppListe() {
     ["👀", "Ansicht wechseln (einfach/erweitert)", "ansicht einfach erweitert kacheln", () => ansichtWechseln()], ["🧪", "Test an mich", "test push mail ausprobieren", () => testAnMichStarten()],
     ["🆘", "Problem melden", "problem fehler hilfe melden", () => fpProblemMelden()], ["👥", "Wer ist online?", "online wer", () => onlineBlatt()],
     ["📍", "Standort teilen", "standort teilen wo bin ich", () => stBlatt()],
+    ["🔕", "Chat stummschalten", "stumm stummschalten leise chat gruppe", () => { melde("Im Chat oben auf ⋮ tippen → 🔕 Stummschalten"); zeige("nachrichten"); }],
     ["⚡", "Schnellstart-Symbole auswählen", "schnellstart symbole schnell kachel", ein("ssWahl")], ["👋", "Anklopfen erlauben / Anklopfton", "anklopfen klopfen ton klingel", ein("setAnklopfen")],
     ["🆘", "Wo bin ich? (SOS)", "wo bin ich adresse standort notfall sos", () => sosStart()], ["🪪", "Mein Notfallpass", "notfallpass allergien medikamente blutgruppe notfall", () => { sosStart(); nfpBearbeiten(); }],
   ].map(([sym, t, w, fn]) => ({ sym, t, w, fn }));

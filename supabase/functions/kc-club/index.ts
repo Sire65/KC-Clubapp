@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.8.0";
+const SERVER_VERSION = "1.9.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -215,6 +215,15 @@ async function onlineZeigenMap(ids?: string[]) {
   const { data } = await q;
   return new Map((data ?? []).map((x: any) => [x.person_id, x.wert?.zeigen !== false]));
 }
+// KC-CLUB-STUMM (1.9.0): wer hat diese Unterhaltung gerade stummgeschaltet? („immer“ oder bis Zeitpunkt in der Zukunft)
+const stummJetzt = (wert: any, threadId: string) => { const b = wert?.threads?.[threadId]; return b === "immer" || (typeof b === "string" && Date.parse(b) > Date.now()); };
+async function stummFuer(ids: string[], threadId: string) {
+  if (!ids.length) return new Set<string>();
+  const { data } = await db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "stumm").in("person_id", ids);
+  return new Set((data ?? []).filter((x: any) => stummJetzt(x.wert, threadId)).map((x: any) => x.person_id as string));
+}
+// KC-CLUB-BEARBEITEN (1.9.0): eigene Nachricht bis zu 15 Minuten nach dem Senden ändern (wie WhatsApp)
+const BEARBEITEN_MIN = 15;
 // KC-CLUB-ANKLOPFEN-ERLAUBEN (1.8.0): wer Anklopfen ausgeschaltet hat (Standard: erlaubt)
 async function anklopfenErlaubtMap(ids: string[]) {
   if (!ids.length) return new Map<string, boolean>();
@@ -501,6 +510,10 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
   infofeld: (w) => ({ start: typeof w?.start === "string" && KA_ID.test(w.start) ? w.start : "zuletzt" }),
   // KC-CLUB-ONLINE (0.29.0): anderen zeigen, wann ich online bin (Standard: an)
   online: (w) => ({ zeigen: w?.zeigen !== false }),
+  // KC-CLUB-STUMM (1.9.0): Unterhaltungen stummschalten – je Unterhaltung „immer“ oder bis Zeitpunkt (höchstens 200)
+  stumm: (w) => ({ threads: Object.fromEntries(Object.entries(w?.threads && typeof w.threads === "object" ? w.threads : {})
+    .filter(([id, b]) => /^[0-9a-f-]{36}$/.test(id) && (b === "immer" || (typeof b === "string" && !isNaN(Date.parse(b)) && Date.parse(b) > Date.now())))
+    .slice(0, 200).map(([id, b]) => [id, b === "immer" ? "immer" : new Date(String(b)).toISOString()])) }),
   // KC-CLUB-ANKLOPFEN-ERLAUBEN (1.8.0): darf man bei mir anklopfen (Standard: ja) + welcher Anklopfton (Registry in der App)
   anklopfen: (w) => ({ erlaubt: w?.erlaubt !== false, ton: typeof w?.ton === "string" && /^[a-z]{1,15}$/.test(w.ton) ? w.ton : "klopf" }),
   // KC-CLUB-SCHNELLSTART (1.8.0): große Kachel mit Symbolen (nur erweiterte Ansicht) – an/aus und eigene Auswahl (höchstens 8,
@@ -1987,11 +2000,13 @@ Köcheclub Werne`,
           db.from("kc_communication_thread_participants").select("thread_id,last_read_at").eq("person_id", ich.person_id).is("hidden_at", null),
           aktiveMitglieder(),
         ]);
-        let ungelesen = 0;
+        let ungelesen = 0, ungelesenLaut = 0;
+        const { data: stummE } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "stumm").maybeSingle();
         for (const t of teil ?? []) {
           let q = db.from("kc_communication_messages").select("id", { count: "exact", head: true }).eq("thread_id", t.thread_id).neq("sender_person_id", ich.person_id);
           if (t.last_read_at) q = q.gt("created_at", t.last_read_at);
           const { count } = await q; ungelesen += count ?? 0;
+          if (!stummJetzt(stummE?.wert, t.thread_id)) ungelesenLaut += count ?? 0; // KC-CLUB-STUMM: stumme Chats ohne Ton
         }
         const { data: pk } = await db.rpc("kc_communication_get_server_secret", { p_name: "kc_communication_vapid_public_key" });
         const meinStatus = (await statusMap([ich.person_id])).get(ich.person_id) ?? { status: "verfuegbar", hinweis: null, bis: null };
@@ -2057,7 +2072,7 @@ Köcheclub Werne`,
         const communicator = await communicatorStatus(ich).catch(() => null);
         const kontaktFreigabe = Object.fromEntries(KONTAKT_FELDER.map((f) => [f, !!(kf ?? []).find((x: any) => x.bereich === "kontakt_" + f)?.erlaubt]));
         const benachrichtigung = Object.fromEntries(BEREICHE.map((b) => { const x: any = (wahl ?? []).find((y: any) => y.bereich === b); return [b, x ? { push: x.push, email: x.email } : STANDARD_WAHL[b]]; }));
-        return json({ ich, status: meinStatus, server: SERVER_VERSION, ungelesen, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, communicator, notfall: nf ?? null, einstellungen, kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
+        return json({ ich, status: meinStatus, server: SERVER_VERSION, ungelesen, ungelesenLaut, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, communicator, notfall: nf ?? null, einstellungen, kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
             // KC-CLUB-GERAETE-TIPP: wohin der Link ginge – nur teilweise (z. B. „h…@web.de“)
@@ -2822,6 +2837,9 @@ Köcheclub Werne`,
           db.from("kc_club_erwaehnungen").select("message_id,person_id").in("message_id", mids),
         ]) : [{ data: [] as any[] }, { data: [] as any[] }];
         const rkLeute = await personen([...(rk ?? []).map((x: any) => x.person_id), ...(ew ?? []).map((x: any) => x.person_id)]);
+        // KC-CLUB-BEARBEITEN (1.9.0): Kennzeichen „bearbeitet“
+        const { data: bearb } = mids.length ? await db.from("kc_club_nachricht_bearbeitet").select("message_id,bearbeitet_am").in("message_id", mids) : { data: [] as any[] };
+        const bearbMap = new Map((bearb ?? []).map((x: any) => [x.message_id, x.bearbeitet_am]));
         const nachMid = new Map((msgs ?? []).map((m: any) => [m.id, m]));
         const reaktionen = (mid: string) => {
           const g = new Map<string, { emoji: string; namen: string[]; meine: boolean }>();
@@ -2844,6 +2862,8 @@ Köcheclub Werne`,
             reaktionen: reaktionen(m.id),
             antwortAuf: bezug ? { id: bezug.id, von: bezug.sender_person_id === ich.person_id ? "Du" : vorname(leute.get(bezug.sender_person_id)) || "?", text: txt(bezug.body, 90) } : null,
             erwaehnt: erw.map((x: any) => x.person_id === ich.person_id ? "dich" : vorname(rkLeute.get(x.person_id)) || "?"), erwaehntMich: erw.some((x: any) => x.person_id === ich.person_id),
+            bearbeitet: bearbMap.get(m.id) ?? null,
+            ...(eigen && m.body !== "📎" && Date.now() - Date.parse(m.created_at) < BEARBEITEN_MIN * 60000 ? { bearbeitbarBis: new Date(Date.parse(m.created_at) + BEARBEITEN_MIN * 60000).toISOString() } : {}),
           };
         });
         await db.from("kc_communication_thread_participants").update({ last_read_at: jetzt() }).eq("thread_id", id).eq("person_id", ich.person_id);
@@ -2958,13 +2978,16 @@ Köcheclub Werne`,
           }, `club-nachricht:${m.id}:erwaehnt`, { erwaehnung: true });
           for (let i = ziel.length - 1; i >= 0; i--) if (erwaehnt.includes(ziel[i])) ziel.splice(i, 1);
         }
+        // KC-CLUB-STUMM (1.9.0): wer diese Unterhaltung stummgeschaltet hat, bekommt keinen Push/keine Mail (@Erwähnung kommt trotzdem)
+        const stumm = await stummFuer(ziel.filter((x: string) => x !== ich.person_id), threadId);
+        for (let i = ziel.length - 1; i >= 0; i--) if (stumm.has(ziel[i])) ziel.splice(i, 1);
         const versand = await sendenGewaehlt("club_nachricht", ziel, wege, {
           titel: grp ? `${grp.symbol} ${grp.name}: ${ich.vorname}` : `💬 ${ich.name}`, kurz: th?.subject ? `Neue Nachricht in „${th.subject}“` : "Neue Nachricht im Köcheclub",
           betreff: `Köcheclub Werne – neue Nachricht von ${ich.name}${th?.subject ? ": " + th.subject : ""}`,
           text: `Hallo,\n\n${ich.name} hat dir im Köcheclub geschrieben${th?.subject ? ` („${th.subject}“)` : ""}:\n\n${text}${anlagen.length ? `\n\n📎 ${anlagen.length} Anlage(n) – in der App ansehen.` : ""}\n\nAntworten in der Köcheclub-App: ${APP_URL}#nachricht=${threadId}\n\nViele Grüße\nKöcheclub Werne`,
           url: `${APP_URL}#nachricht=${threadId}`,
         }, `club-nachricht:${m.id}`);
-        await protokoll(ich.person_id, weiterVon ? "nachricht_weitergeleitet" : "nachricht_gesendet", { thread: threadId, neu, empfaenger: ziel.length, anlagen: anlagen.length, wege, versand, antwort: !!antwortAuf, erwaehnt: erwaehnt.length, versandErw, ...(weiterVon ? { von_nachricht: weiterVon.id } : {}) });
+        await protokoll(ich.person_id, weiterVon ? "nachricht_weitergeleitet" : "nachricht_gesendet", { thread: threadId, neu, empfaenger: ziel.length, stumm: stumm.size, anlagen: anlagen.length, wege, versand, antwort: !!antwortAuf, erwaehnt: erwaehnt.length, versandErw, ...(weiterVon ? { von_nachricht: weiterVon.id } : {}) });
         return json({ ok: true, id: threadId, versand });
       }
 
@@ -3063,6 +3086,26 @@ Köcheclub Werne`,
         await geloescht(ich, "nachricht", { nachricht: m, anlagen: (ma ?? []).map((x: any) => x.attachment_id) });
         await db.from("kc_communication_messages").delete().eq("id", m.id);
         return json({ ok: true });
+      }
+
+      case "nachricht_bearbeiten": {
+        // KC-CLUB-BEARBEITEN (1.9.0): nur eigene Nachrichten mit Text, bis BEARBEITEN_MIN Minuten nach dem Senden.
+        // Kein neuer Push/keine neue Mail (wie WhatsApp); im Protokoll steht nur, DASS bearbeitet wurde – nicht der Text.
+        const text = txt(p.text, 4000);
+        if (!text) throw new Fehler("Bitte einen Text eingeben – zum Entfernen „Löschen“ benutzen.");
+        const { data: m } = await db.from("kc_communication_messages").select("id,thread_id,sender_person_id,body,created_at").eq("id", String(p.id || "")).maybeSingle();
+        if (!m) throw new Fehler("Nachricht nicht gefunden.", 404);
+        await binTeilnehmer(m.thread_id, ich.person_id);
+        if (m.sender_person_id !== ich.person_id) throw new Fehler("Du kannst nur deine eigenen Nachrichten bearbeiten.", 403);
+        if (m.body === "📎") throw new Fehler("Nachrichten nur mit Anlage haben keinen Text zum Bearbeiten.");
+        if (Date.now() - Date.parse(m.created_at) > BEARBEITEN_MIN * 60000) throw new Fehler(`Bearbeiten geht nur ${BEARBEITEN_MIN} Minuten nach dem Senden.`, 409);
+        if (text === m.body) return json({ ok: true, unveraendert: true });
+        const { error } = await db.from("kc_communication_messages").update({ body: text }).eq("id", m.id).eq("sender_person_id", ich.person_id);
+        if (error) throw new Fehler("Konnte nicht gespeichert werden.", 500);
+        const am = jetzt();
+        await db.from("kc_club_nachricht_bearbeitet").upsert({ message_id: m.id, bearbeitet_am: am }, { onConflict: "message_id" });
+        await protokoll(ich.person_id, "nachricht_bearbeitet", { nachricht: m.id, thread: m.thread_id });
+        return json({ ok: true, bearbeitet: am });
       }
 
       case "nachricht_ausblenden": {
