@@ -1,5 +1,16 @@
 # Änderungen
 
+## 1.18.0 – 2026-10-01 (DEV)
+
+- KC-CLUB-ARCHIV-ABLAGE (Wunsch Hansi): gemeinsame Rückfrage „🗄️ Auch in deinen Archiv-Ordner legen?“ mit Auswahl
+  Ordner (nur eigene, besitzer = ich) und Register (Vorschlag je Anlass aus der Registry ARCHIV_ABLAGE_ARTEN). Erster Anlass:
+  Erstattungsantrag (Kilometer, Einkauf, Auslagen) – erst NACH erfolgreichem Versand an den Kassenwart. Abgelegt werden der
+  Antrag als gut lesbares Bild (Positionen, Summe, Auszahlung, Empfänger) und jeder Beleg (Foto verkleinert / PDF), Register
+  „Rechnungen“. Dateien entstehen erst bei „Ja“; die Beleg-Dateien bleiben bis dahin nur im Speicher des Geräts. Kein neuer
+  Serverweg (archiv_liste + archiv_hochladen). Archiv nicht erreichbar → Frage entfällt, der Antrag ist trotzdem verschickt.
+- KC-CLUB-SI-MUETZE (Wunsch Hansi): Sicherheits-Check zeigt während der Prüfung statt der drehenden Sanduhr die originale
+  Kochmütze, die in alle Richtungen wirbelt (waagerecht, senkrecht, diagonal, flach). Bei „Bewegung reduzieren“ langsam.
+
 ## 1.17.2 – 2026-10-01 (DEV)
 
 - KC-CLUB-DIENSTWUNSCH: DP2 auf Build 253 RC übernommen (dp3 `d50ed58`, Zweig codex/club-app-interface, Freigabe Hansi) –

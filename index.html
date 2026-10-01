@@ -365,7 +365,26 @@
   .si-liste { list-style: none; margin: 0; padding: 0; } .si-liste li { display: grid; grid-template-columns: 30px 1fr auto; gap: 8px; align-items: center; padding: 10px 2px; border-bottom: 1px solid var(--linie); }
   .si-liste li:last-child { border-bottom: none; } .si-liste .sym { font-size: 1.25rem; text-align: center; } .si-liste small { display: block; color: var(--grau); font-size: .8rem; }
   .si-liste .st { font-weight: 800; font-size: .85rem; white-space: nowrap; } .si-liste .st::before { content: ""; display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--st); margin-right: 5px; }
-  .si-dreht { display: inline-block; animation: wdreh 1s linear infinite; }
+  /* KC-CLUB-SI-MUETZE (1.18.0, Wunsch Hansi): statt Sanduhr wirbelt die originale Kochmütze in alle Richtungen –
+     waagerecht, senkrecht, diagonal und flach im Kreis (3D-Drehung um wechselnde Achsen) */
+  .si-muetze { display: inline-grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; flex: none; background: linear-gradient(135deg, var(--hero1), var(--rot)); animation: siWirbel 3.2s linear infinite; }
+  .si-muetze img { width: 34px; height: 34px; object-fit: contain; }
+  .si-muetze.klein { width: 26px; height: 26px; vertical-align: middle; animation-duration: 2.4s; } .si-muetze.klein img { width: 17px; height: 17px; }
+  @keyframes siWirbel {
+    0% { transform: perspective(300px) rotate3d(0, 1, 0, 0deg); }
+    16% { transform: perspective(300px) rotate3d(0, 1, 0, 360deg); }
+    17% { transform: perspective(300px) rotate3d(1, 0, 0, 0deg); }
+    33% { transform: perspective(300px) rotate3d(1, 0, 0, 360deg); }
+    34% { transform: perspective(300px) rotate3d(1, 1, 0, 0deg); }
+    50% { transform: perspective(300px) rotate3d(1, 1, 0, 360deg); }
+    51% { transform: perspective(300px) rotate3d(1, -1, 0, 0deg); }
+    67% { transform: perspective(300px) rotate3d(1, -1, 0, 360deg); }
+    68% { transform: perspective(300px) rotate3d(0, 0, 1, 0deg); }
+    84% { transform: perspective(300px) rotate3d(0, 0, 1, 360deg); }
+    85% { transform: perspective(300px) rotate3d(1, 1, 1, 0deg); }
+    100% { transform: perspective(300px) rotate3d(1, 1, 1, 360deg); }
+  }
+  @media (prefers-reduced-motion: reduce) { .si-muetze { animation-duration: 9s; } }
   /* KC-CLUB-ANHEFTEN / -CHATUMFRAGE / -KONTAKT / -MERKEN (1.10.0) */
   #chatAngeheftet { display: flex; flex-direction: column; gap: 4px; margin: 0 0 8px; }
   .pin-zeile { text-align: left; border: none; border-left: 4px solid var(--rot); border-radius: 10px; background: var(--karte); color: inherit; padding: 8px 10px; cursor: pointer; box-shadow: var(--schatten); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: .9rem; }
@@ -1766,7 +1785,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.17.2"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.18.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3374,7 +3393,7 @@ async function erstattungBeleg(input) {
   for (const f of [...(input.files || [])]) {
     if (ERS.belege.length >= BELEG_MAX) { melde(`Höchstens ${BELEG_MAX} Belege je Position.`, true); break; }
     if (!/^image\//.test(f.type) && !/\.pdf$/i.test(f.name) && f.type !== "application/pdf") { melde(`${f.name}: bitte ein Foto oder eine PDF-Datei wählen.`, true); continue; }
-    const b = { name: f.name || "Foto.jpg", laedt: true }; ERS.belege.push(b); belegeZeigen();
+    const b = { name: f.name || "Foto.jpg", laedt: true, datei: f }; ERS.belege.push(b); belegeZeigen(); // datei: nur im Speicher, für die Archiv-Ablage (1.18.0)
     try { const r = await anlageHochladen(f); Object.assign(b, { id: r.id, name: r.name, laedt: false }); melde("📎 Beleg angehängt"); }
     catch (e) { ERS.belege.splice(ERS.belege.indexOf(b), 1); melde(e.message, true); }
     belegeZeigen();
@@ -3395,7 +3414,7 @@ function erstattungHinzu() {
     const betrag = Number(String($("ersBetrag").value).replace(",", ".")), was = $("ersWas").value.trim();
     if (!(betrag > 0)) return melde("Bitte einen Betrag angeben.", true);
     if (!was) return melde(ERS.art === "einkauf" ? "Bitte angeben, was eingekauft wurde." : "Bitte kurz beschreiben, wofür.", true);
-    p = { art: ERS.art, datum, betrag: Math.round(betrag * 100) / 100, was, geschaeft: $("ersGeschaeft")?.value.trim() || "", belege: ERS.belege.map((b) => b.id), belegNamen: ERS.belege.map((b) => b.name) };
+    p = { art: ERS.art, datum, betrag: Math.round(betrag * 100) / 100, was, geschaeft: $("ersGeschaeft")?.value.trim() || "", belege: ERS.belege.map((b) => b.id), belegNamen: ERS.belege.map((b) => b.name), belegDateien: ERS.belege.map((b) => b.datei) };
   }
   ERS.pos.push(p); erstattungArt(ERS.art); erstattungZeigen(); melde("➕ Position hinzugefügt");
 }
@@ -3416,11 +3435,37 @@ async function erstattungSenden() {
   const summe = ERS.pos.reduce((a, x) => a + x.betrag, 0);
   if (!confirm(`Erstattung über ${eur(summe)} beantragen?\n\nDer Antrag geht per Mail an Kassenwart und Clubsprecher. Du bekommst eine Kopie.`)) return;
   try {
-    const r = await api("erstattung_senden", { positionen: ERS.pos.map(({ belegNamen, satz, ...x }) => x), auszahlung: ERS.auszahlung, bemerkung: $("ersBemerkung").value.trim() });
+    const kopie = { pos: ERS.pos.slice(), auszahlung: ERS.auszahlung, bemerkung: $("ersBemerkung").value.trim() };
+    const r = await api("erstattung_senden", { positionen: ERS.pos.map(({ belegNamen, belegDateien, satz, ...x }) => x), auszahlung: ERS.auszahlung, bemerkung: kopie.bemerkung });
     ERS.pos = []; $("ersBemerkung").value = ""; erstattungZeigen();
     melde(`📨 Antrag über ${eur(r.summe)} verschickt an ${[...r.an, ...r.cc].join(" und ")} – du bekommst eine Kopie per Mail.`);
     erstattungLaden();
+    erstattungAblageFragen(kopie, r); // KC-CLUB-ARCHIV-ABLAGE (1.18.0): erst nach erfolgreichem Versand
   } catch (e) { melde(e.message, true); }
+}
+
+// KC-CLUB-ARCHIV-ABLAGE (1.18.0): gesendeten Antrag (als Bild) + Belege auf Wunsch in den eigenen Archiv-Ordner legen
+function erstattungAblageFragen(k, r) {
+  const heute = heuteIso(), dz = (iso) => iso.split("-").reverse().join(".");
+  const belege = k.pos.flatMap((x) => (x.belegDateien || []).map((datei, i) => ({ datei, x, i }))).filter((b) => b.datei);
+  const summe = r.summe ?? k.pos.reduce((a, x) => a + x.betrag, 0);
+  archivAblageFragen("erstattung", {
+    titel: `Erstattungsantrag ${eur(summe)} (${dz(heute)})`, datum: heute,
+    hinweis: belege.length ? `mit ${belege.length} ${belege.length === 1 ? "Beleg" : "Belegen"}` : "",
+    dateien: async () => {
+      const zeilen = [["Antragsteller", ICH?.name || ""], ["Eingereicht am", dz(heute)], ["Empfänger", [...(r.an || []), ...(r.cc || [])].join(", ")],
+        ...k.pos.map((x, i) => [`Position ${i + 1} · ${x.art === "fahrt" ? "Fahrtkosten" : x.art === "einkauf" ? "Einkauf vorgestreckt" : "Sonstige Auslage"} · ${dz(x.datum)}`,
+          x.art === "fahrt" ? `${String(x.km).replace(".", ",")} km × ${eur(x.satz)} = ${eur(x.betrag)}\nGrund: ${x.grund}${x.ziel ? " · Ziel: " + x.ziel : ""}` : `${eur(x.betrag)} – ${x.was}${x.geschaeft ? " · " + x.geschaeft : ""}${(x.belege || []).length ? " · Beleg anbei" : ""}`]),
+        ["Summe", eur(summe)], ["Auszahlung", k.auszahlung === "bar" ? "bar" : "per Überweisung"], ...(k.bemerkung ? [["Bemerkung", k.bemerkung]] : [])];
+      const bild = await ablageBild({ kopf: "Antrag auf Erstattung", zeilen, fuss: `Gesendet am ${dz(heute)} über die Köcheclub-App` });
+      const aus = [{ titel: `Erstattungsantrag ${eur(summe)} (${dz(heute)})`, name: `Erstattungsantrag-${heute}.png`, mime: "image/png", blob: bild, stichworte: "Antrag" }];
+      for (const b of belege) {
+        const d = /^image\//.test(b.datei.type) ? await verkleinern(b.datei, 2200, 0.85) : b.datei;
+        aus.push({ titel: `Beleg: ${(b.x.was || b.x.grund || "Erstattung").slice(0, 80)} (${dz(b.x.datum)})`, name: d.name || b.datei.name, mime: d.type || "application/pdf", blob: d, stichworte: "Beleg" });
+      }
+      return aus;
+    },
+  });
 }
 
 // KC-CLUB-KMSATZ (0.39.0): Admin pflegt die Kilometerpauschale mit „gilt ab“
@@ -5574,13 +5619,13 @@ function sicherheitZeigen(schritt) {
   const werte = SICHERHEIT_PRUEFUNGEN.map((p) => (r ? p.wert(r) : null));
   const schlecht = werte.filter((w) => w === false).length, offen = werte.filter((w) => w == null).length;
   const kopf = !fertig
-    ? `<div class="si-ergebnis si-offen"><span class="gross si-dreht">⏳</span><div><b>Prüfung läuft …</b><span class="hinweis">${Math.min(schritt ?? 0, n)} von ${n} Punkten geprüft</span></div></div>`
+    ? `<div class="si-ergebnis si-offen"><span class="si-muetze" role="img" aria-label="Prüfung läuft"><img src="kc-kochmuetze-weiss.webp" alt=""></span><div><b>Prüfung läuft …</b><span class="hinweis">${Math.min(schritt ?? 0, n)} von ${n} Punkten geprüft</span></div></div>`
     : !schlecht && !offen
       ? `<div class="si-ergebnis si-gut"><span class="gross">✅</span><div><b>Alle Systeme laufen einwandfrei</b><span class="hinweis">Deine Daten sind geschützt und gesichert · geprüft ${esc(SI.zeit)} Uhr</span></div></div>`
       : `<div class="si-ergebnis ${schlecht ? "si-schlecht" : "si-mittel"}"><span class="gross">⚠️</span><div><b>${schlecht + offen} ${schlecht + offen === 1 ? "Punkt ist" : "Punkte sind"} gerade nicht bestätigt</b><span class="hinweis">Bitte in ein paar Minuten noch einmal prüfen. Bleibt es so, gib Hansi kurz Bescheid. · ${esc(SI.zeit || "")} Uhr</span></div></div>`;
   const liste = SICHERHEIT_PRUEFUNGEN.map((p, i) => {
     const sichtbar = r && i < (schritt ?? 0), w = werte[i];
-    const st = !sichtbar ? '<span class="st si-offen"><span class="si-dreht">⏳</span></span>' : `<span class="st ${siKlasse(w)}">${w === true ? (p.fest ? "immer an" : "OK") : w === false ? "Achtung" : "nicht geprüft"}</span>`;
+    const st = !sichtbar ? '<span class="st si-offen"><span class="si-muetze klein"><img src="kc-kochmuetze-weiss.webp" alt=""></span></span>' : `<span class="st ${siKlasse(w)}">${w === true ? (p.fest ? "immer an" : "OK") : w === false ? "Achtung" : "nicht geprüft"}</span>`;
     return `<li><span class="sym">${p.sym}</span><span>${esc(p.t)}${sichtbar && p.info(r) ? `<small>${esc(p.info(r))}</small>` : ""}</span>${st}</li>`;
   }).join("");
   $("siInhalt").innerHTML = `${kopf}<div class="si-uhren">${SI_UHREN.map((u) => siUhr(u, fertig ? r : null)).join("")}</div>
@@ -8707,6 +8752,80 @@ async function arDokSpeichern(id) {
 async function arDokLoeschen(id) {
   if (!confirm(`Dieses Dokument in den Papierkorb legen?\n\nEs lässt sich ${AR.daten.papierkorbTage} Tage lang wiederherstellen.`)) return;
   try { await api("archiv_loeschen", { id }); arBlattZu(); melde("🗑️ Im Papierkorb"); await arLaden(); } catch (e) { melde(e.message, true); }
+}
+// ---------- KC-CLUB-ARCHIV-ABLAGE (1.18.0, Wunsch Hansi): gemeinsame Rückfrage „Auch in deinen Archiv-Ordner legen?“ ----------
+// Wird nach einer erledigten Aktion angeboten (zuerst: Erstattungsantrag an den Kassenwart). Ziel sind nur eigene Ordner
+// (besitzer = ich), Ordner und Register per Auswahl (kein Freitext). Die Dateien entstehen erst bei „Ja“ – sonst geht nichts raus.
+// Kein neuer Serverweg: archiv_liste + archiv_hochladen (Rechte, 50-MB-Grenze, Dateityp prüft der Server). Neue Anlässe = Eintrag hier.
+const ARCHIV_ABLAGE_ARTEN = {
+  erstattung: { sym: "💶", register: ["Rechnungen", "Sonstiges"], stichworte: "Erstattung" },
+};
+let ABL = null;
+const ablZu = () => { document.getElementById("ablageBlatt")?.remove(); ABL = null; };
+async function archivAblageFragen(art, { titel, datum, hinweis, dateien }) {
+  const a = ARCHIV_ABLAGE_ARTEN[art]; if (!a) return;
+  let d; try { d = await api("archiv_liste"); } catch { return; } // Archiv gerade nicht erreichbar → Frage entfällt, Hauptaktion ist erledigt
+  const ordner = nfpEigeneOrdner(d); if (!ordner.length) return;
+  const jahr = Number(String(datum || heuteIso()).slice(0, 4)), vor = ordner.find((o) => o.jahr === jahr) || ordner[0];
+  ABL = { a, d, titel, datum: datum || heuteIso(), dateien };
+  blattAuf("ablageBlatt", `<h3 style="margin-top:0">🗄️ Auch in deinen Archiv-Ordner legen?</h3>
+    <p style="margin:0 0 8px">${a.sym} <b>${esc(titel)}</b>${hinweis ? `<br><span class="hinweis">${esc(hinweis)}</span>` : ""}</p>
+    <label class="feld">Ordner<select id="ablOrdner" onchange="ablRegister()">${ordner.map((o) => `<option value="${esc(o.id)}"${o.id === vor.id ? " selected" : ""}>👤 Mein Ordner ${esc(String(o.jahr))}</option>`).join("")}</select></label>
+    <label class="feld">Register<select id="ablReg"></select></label>
+    <p class="hinweis">🔒 Deinen Ordner siehst nur du (und wem du ihn selbst freigibst).</p>
+    <button class="knopf haupt" style="text-align:center" onclick="einmal(this, ablAblegen)">🗄️ Ja, ablegen</button>
+    <button class="knopf" style="text-align:center" onclick="ablZu()">Nein, danke</button>`);
+  ablRegister();
+}
+function ablRegister() {
+  const o = nfpEigeneOrdner(ABL?.d).find((x) => x.id === $("ablOrdner")?.value); if (!o) return;
+  const reg = o.register?.length ? o.register : (ABL.d.register || ["Sonstiges"]), vor = ABL.a.register.find((r) => reg.includes(r)) || reg[0];
+  $("ablReg").innerHTML = reg.map((r) => `<option${r === vor ? " selected" : ""}>${esc(r)}</option>`).join("");
+}
+async function ablAblegen() {
+  if (!ABL) return;
+  const ordner_id = $("ablOrdner").value, register = $("ablReg").value, { a } = ABL;
+  let ok = 0, fehler = "";
+  try {
+    for (const f of await ABL.dateien()) {
+      try {
+        await api("archiv_hochladen", { ordner_id, register, titel: f.titel, datum: ABL.datum, stichworte: [a.stichworte, f.stichworte].filter(Boolean).join(", "),
+          name: f.name, mime: f.mime, daten: base64(await f.blob.arrayBuffer()) }, { warten: true });
+        ok++;
+      } catch (e) { fehler = e.message; if (/voll/i.test(e.message)) break; } // Speicher voll → Rest gar nicht erst versuchen
+    }
+  } catch (e) { fehler = e.message; }
+  ablZu(); AR.daten = null;
+  if (fehler) melde(ok ? `🗄️ ${ok} Datei(en) abgelegt – Rest nicht: ${fehler}` : fehler, true);
+  else melde(`🗄️ Im Archiv abgelegt (Register „${register}“)`);
+}
+// Bild eines Blattes (gut lesbar, Hochformat) für die Ablage – nur Text, keine Emojis (Schrift fehlt auf manchen Geräten)
+function ablageBild({ kopf, zeilen, fuss }) {
+  const B = 1000, R = 48, c = document.createElement("canvas"), g = c.getContext("2d");
+  const KLEIN = "28px sans-serif", GROSS = "bold 34px sans-serif";
+  const umbrechen = (text) => {
+    g.font = GROSS; const aus = [];
+    for (const absatz of String(text).split("\n")) {
+      let z = "";
+      for (const w of absatz.split(" ")) { const t = z ? z + " " + w : w; if (g.measureText(t).width > B - 2 * R - 20 && z) { aus.push(z); z = w; } else z = t; }
+      aus.push(z);
+    }
+    return aus;
+  };
+  const bloecke = zeilen.map(([t, w]) => ({ t, w: umbrechen(w) }));
+  const H = 180 + bloecke.reduce((s, b) => s + 42 + b.w.length * 44 + 22, 0) + 90;
+  c.width = B; c.height = H;
+  g.fillStyle = "#ffffff"; g.fillRect(0, 0, B, H);
+  g.strokeStyle = "#7a1e2c"; g.lineWidth = 8; g.strokeRect(12, 12, B - 24, H - 24);
+  g.fillStyle = "#7a1e2c"; g.font = "bold 50px sans-serif"; g.fillText(kopf, R, 100);
+  let y = 180;
+  for (const b of bloecke) {
+    g.fillStyle = "#666666"; g.font = KLEIN; g.fillText(b.t, R, y); y += 42;
+    g.fillStyle = "#111111"; g.font = GROSS; for (const z of b.w) { g.fillText(z, R, y); y += 44; }
+    g.strokeStyle = "#dddddd"; g.lineWidth = 2; g.beginPath(); g.moveTo(R, y - 18); g.lineTo(B - R, y - 18); g.stroke(); y += 22;
+  }
+  g.fillStyle = "#666666"; g.font = KLEIN; g.fillText(fuss, R, H - 50);
+  return new Promise((ok, nein) => c.toBlob((b) => (b ? ok(b) : nein(new Error("Bild konnte nicht erstellt werden."))), "image/png"));
 }
 // ----- KC-CLUB-ARCHIV-PERSOENLICH (1.5.0): eigener Ordner, Freigaben auf Zeit, Prüfung von Einreichungen -----
 function arEigenForm(o) {

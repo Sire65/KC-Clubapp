@@ -1,10 +1,18 @@
 {
-  "version": "1.17.2",
+  "version": "1.18.0",
   "datum": "2026-10-01",
   "neu": [
-    "🖨️ Dienstwunsch: „Meine Unterlagen“ druckt jetzt die persönliche Papiermatrix mit QR-Code und Original-Kochmütze (DP2 Build 253 RC)"
+    "🗄️ Erstattung: Nach dem Senden an den Kassenwart fragt die App, ob Antrag und Belege auch in deinen Archiv-Ordner sollen",
+    "🛡️ Sicherheits-Check: Während der Prüfung wirbelt die Köcheclub-Kochmütze statt der Sanduhr"
   ],
   "verlauf": [
+    {
+      "version": "1.18.0",
+      "neu": [
+        "🗄️ Erstattung: Nach dem Senden an den Kassenwart fragt die App, ob Antrag und Belege auch in deinen Archiv-Ordner sollen",
+        "🛡️ Sicherheits-Check: Während der Prüfung wirbelt die Köcheclub-Kochmütze statt der Sanduhr"
+      ]
+    },
     {
       "version": "1.17.2",
       "neu": [

@@ -1705,6 +1705,20 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/kc-original-kochmuetze\.png/.test(lies("dp2/src/adapters/pdf.js")) && Object.keys(q.dateien).includes("assets/kc-original-kochmuetze.png"), "Original-Kochmütze für die Papiermatrix mitgeliefert");
 }
 
+// 150. 1.18.0: Archiv-Ablage nach Erstattung + wirbelnde Kochmütze im Sicherheits-Check
+{
+  const f = html.slice(html.indexOf("// ---------- KC-CLUB-ARCHIV-ABLAGE"), html.indexOf("// ----- KC-CLUB-ARCHIV-PERSOENLICH"));
+  assert.ok(/const ARCHIV_ABLAGE_ARTEN = \{\s*erstattung: \{ sym: "💶", register: \["Rechnungen", "Sonstiges"\]/.test(f), "Registry der Ablage-Anlässe");
+  assert.deepEqual([...f.matchAll(/api\("(\w+)"/g)].map((m) => m[1]), ["archiv_liste", "archiv_hochladen"], "nur vorhandene Archiv-Wege");
+  assert.ok(/const ordner = nfpEigeneOrdner\(d\)/.test(f) && /<select id="ablOrdner"/.test(f) && /<select id="ablReg">/.test(f), "nur eigene Ordner, Auswahl statt Freitext");
+  assert.ok(/onclick="einmal\(this, ablAblegen\)">🗄️ Ja, ablegen/.test(f) && /onclick="ablZu\(\)">Nein, danke/.test(f), "Rückfrage mit Ja/Nein");
+  const s = html.slice(html.indexOf("async function erstattungSenden()"), html.indexOf("// KC-CLUB-KMSATZ (0.39.0): Admin"));
+  assert.ok(s.indexOf('api("erstattung_senden"') < s.indexOf("erstattungAblageFragen(kopie, r)"), "Ablage erst nach erfolgreichem Versand");
+  assert.ok(/positionen: ERS\.pos\.map\(\(\{ belegNamen, belegDateien, satz, \.\.\.x \}\) => x\)/.test(s), "Beleg-Dateien gehen nicht mit dem Antrag an den Server");
+  assert.ok(/\.si-muetze \{[^}]*animation: siWirbel/.test(html) && /rotate3d\(1, 1, 0, 360deg\)/.test(html) && /rotate3d\(1, -1, 0, 360deg\)/.test(html), "Kochmütze wirbelt auch diagonal");
+  assert.ok(/<span class="si-muetze" role="img" aria-label="Prüfung läuft"><img src="kc-kochmuetze-weiss\.webp"/.test(html) && !/si-dreht/.test(html), "Sicherheits-Check: Mütze statt Sanduhr");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
