@@ -1,5 +1,17 @@
 # Änderungen
 
+## 1.10.0 – 2026-10-01 (DEV)
+
+- KC-CLUB-ANHEFTEN (Wunsch Hansi, wie WhatsApp): Nachricht antippen → „📌 Oben anheften“ / „Lösen“; bis zu 3 je
+  Unterhaltung (die älteste fällt heraus), Leiste oben im Chat springt zur Nachricht. Aktion nachricht_anheften.
+- KC-CLUB-MERKEN: „⭐ Merken“ – eigene Merkliste (nur für mich) unter 💬 → ⭐, antippen öffnet Chat und springt hin.
+  Aktionen nachricht_merken, gemerkte_nachrichten (nur aus Unterhaltungen, in denen ich noch bin).
+- KC-CLUB-CHATUMFRAGE: 📎 → „📊 Abstimmung“ – Frage + 2–8 Antworten, einfach oder mehrfach; Stimmen mit Namen und Balken,
+  nochmal tippen nimmt die Stimme zurück. nachricht_senden mit umfrage, Aktion chat_umfrage_stimmen. Nicht bearbeitbar.
+- KC-CLUB-KONTAKT: 📎 → „👤 Kontakt teilen“ – Karte mit „📇 Kontakt ansehen“ (vorhandene Mitglieder-Ansicht mit ihren
+  Freigaberegeln) und „💬 Schreiben“. Gespeichert wird nur die Person, keine Telefonnummer/Mail.
+- Migration 20261001_kc_club_v1100_nachrichten_extras (5 neue Tabellen, Kern-Tabelle unverändert, RLS, Spiegel).
+
 ## 1.9.0 – 2026-10-01 (DEV)
 
 - KC-CLUB-BEARBEITEN (Wunsch Hansi, wie WhatsApp): eigene Nachricht mit Text bis 15 Minuten nach dem Senden ändern

@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.9.0";
+const SERVER_VERSION = "1.10.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -2840,6 +2840,27 @@ Köcheclub Werne`,
         // KC-CLUB-BEARBEITEN (1.9.0): Kennzeichen „bearbeitet“
         const { data: bearb } = mids.length ? await db.from("kc_club_nachricht_bearbeitet").select("message_id,bearbeitet_am").in("message_id", mids) : { data: [] as any[] };
         const bearbMap = new Map((bearb ?? []).map((x: any) => [x.message_id, x.bearbeitet_am]));
+        // KC-CLUB-ANHEFTEN / -MERKEN / -CHATUMFRAGE / -KONTAKT (1.10.0)
+        const leer = { data: [] as any[] };
+        const [{ data: pins }, { data: gem }, { data: umf }, { data: stim }, { data: kon }] = mids.length ? await Promise.all([
+          db.from("kc_club_angeheftet").select("message_id,am").eq("thread_id", id).order("am", { ascending: false }),
+          db.from("kc_club_gemerkt").select("message_id").eq("person_id", ich.person_id).in("message_id", mids),
+          db.from("kc_club_chat_umfrage").select("message_id,frage,optionen,mehrfach").in("message_id", mids),
+          db.from("kc_club_chat_stimme").select("message_id,person_id,option").in("message_id", mids),
+          db.from("kc_club_chat_kontakt").select("message_id,person_id").in("message_id", mids),
+        ]) : [leer, leer, leer, leer, leer];
+        const midSet = new Set(mids), pinIds = (pins ?? []).map((x: any) => x.message_id).filter((x: string) => midSet.has(x)).slice(0, 3);
+        const gemSet = new Set((gem ?? []).map((x: any) => x.message_id));
+        const xLeute = await personen([...(stim ?? []).map((x: any) => x.person_id), ...(kon ?? []).map((x: any) => x.person_id)]);
+        const umfrageVon = (mid: string) => {
+          const u: any = (umf ?? []).find((x: any) => x.message_id === mid); if (!u) return null;
+          const st = (stim ?? []).filter((x: any) => x.message_id === mid);
+          return { frage: u.frage, mehrfach: u.mehrfach, gesamt: new Set(st.map((x: any) => x.person_id)).size,
+            optionen: (u.optionen as string[]).map((t, i) => { const s2 = st.filter((x: any) => x.option === i);
+              return { text: t, stimmen: s2.length, meine: s2.some((x: any) => x.person_id === ich.person_id),
+                namen: s2.map((x: any) => x.person_id === ich.person_id ? "Du" : vorname(xLeute.get(x.person_id)) || "?") }; }) };
+        };
+        const kontaktVon = (mid: string) => { const k: any = (kon ?? []).find((x: any) => x.message_id === mid); return k ? { person_id: k.person_id, name: xLeute.get(k.person_id)?.display_name || "Mitglied" } : null; };
         const nachMid = new Map((msgs ?? []).map((m: any) => [m.id, m]));
         const reaktionen = (mid: string) => {
           const g = new Map<string, { emoji: string; namen: string[]; meine: boolean }>();
@@ -2863,7 +2884,8 @@ Köcheclub Werne`,
             antwortAuf: bezug ? { id: bezug.id, von: bezug.sender_person_id === ich.person_id ? "Du" : vorname(leute.get(bezug.sender_person_id)) || "?", text: txt(bezug.body, 90) } : null,
             erwaehnt: erw.map((x: any) => x.person_id === ich.person_id ? "dich" : vorname(rkLeute.get(x.person_id)) || "?"), erwaehntMich: erw.some((x: any) => x.person_id === ich.person_id),
             bearbeitet: bearbMap.get(m.id) ?? null,
-            ...(eigen && m.body !== "📎" && Date.now() - Date.parse(m.created_at) < BEARBEITEN_MIN * 60000 ? { bearbeitbarBis: new Date(Date.parse(m.created_at) + BEARBEITEN_MIN * 60000).toISOString() } : {}),
+            gemerkt: gemSet.has(m.id), angeheftet: pinIds.includes(m.id), umfrage: umfrageVon(m.id), kontakt: kontaktVon(m.id),
+            ...(eigen && m.body !== "📎" && !(umf ?? []).some((x: any) => x.message_id === m.id) && !(kon ?? []).some((x: any) => x.message_id === m.id) && Date.now() - Date.parse(m.created_at) < BEARBEITEN_MIN * 60000 ? { bearbeitbarBis: new Date(Date.parse(m.created_at) + BEARBEITEN_MIN * 60000).toISOString() } : {}),
           };
         });
         await db.from("kc_communication_thread_participants").update({ last_read_at: jetzt() }).eq("thread_id", id).eq("person_id", ich.person_id);
@@ -2874,7 +2896,8 @@ Köcheclub Werne`,
         const tippt = (tippen ?? []).map((x: any) => vorname(leute.get(x.person_id)) || x.person_id);
         // KC-CLUB-LIVETIPPEN: Entwurf nur von denen, die es freiwillig eingeschaltet haben (Server speichert sonst keinen Text)
         const entwurf = (tippen ?? []).filter((x: any) => x.text).map((x: any) => ({ name: vorname(leute.get(x.person_id)) || x.person_id, text: x.text }));
-        return json({ id, betreff: t?.subject ?? "", tippt, entwurf,
+        const angeheftet = pinIds.map((pid: string) => { const m: any = nachMid.get(pid); return { id: pid, von: m.sender_person_id === ich.person_id ? "Du" : vorname(leute.get(m.sender_person_id)) || "?", text: txt(m.body, 90) }; });
+        return json({ id, betreff: t?.subject ?? "", tippt, entwurf, angeheftet,
           gruppe: gr ? { name: gr.name, symbol: gr.symbol, erstellt_von: gr.erstellt_von, darfVerwalten: gr.erstellt_von === ich.person_id || ich.vorstand } : null, teilnehmer: (tn ?? []).map((x: any) => ({ person_id: x.person_id, name: leute.get(x.person_id)?.display_name || x.person_id })), nachrichten });
       }
 
@@ -2894,8 +2917,23 @@ Köcheclub Werne`,
       }
 
       case "nachricht_senden": {
-        const text = txt(p.text, 4000);
+        let text = txt(p.text, 4000);
         const anlagen = (Array.isArray(p.anlagen) ? p.anlagen : []).map(String).slice(0, 10);
+        // KC-CLUB-CHATUMFRAGE / KC-CLUB-KONTAKT (1.10.0): Abstimmung bzw. Kontaktkarte als Nachricht (Text = Kurzform für
+        // Vorschau, Push, Mail und Suche). Die Kontaktkarte speichert nur die Person – keine Telefonnummer, keine Mail.
+        let umfrage: { frage: string; optionen: string[]; mehrfach: boolean } | null = null, kontaktPid: string | null = null;
+        if (p.umfrage) {
+          const frage = txt(p.umfrage.frage, 200);
+          const optionen = [...new Set((Array.isArray(p.umfrage.optionen) ? p.umfrage.optionen : []).map((o: unknown) => txt(o, 80)).filter(Boolean))].slice(0, 8) as string[];
+          if (!frage) throw new Fehler("Bitte eine Frage eingeben.");
+          if (optionen.length < 2) throw new Fehler("Bitte mindestens zwei verschiedene Antworten eingeben.");
+          umfrage = { frage, optionen, mehrfach: !!p.umfrage.mehrfach };
+          text = `📊 ${frage}`;
+        } else if (p.kontakt) {
+          const k = (await aktiveMitglieder()).find((x) => x.person_id === String(p.kontakt));
+          if (!k) throw new Fehler("Mitglied nicht gefunden.", 404);
+          kontaktPid = k.person_id; text = `👤 Kontakt: ${k.display_name}`;
+        }
         if (!text && !anlagen.length) throw new Fehler("Bitte eine Nachricht schreiben oder eine Anlage anhängen.");
         let threadId = String(p.id || ""), neu = false;
         if (threadId) await binTeilnehmer(threadId, ich.person_id);
@@ -2947,6 +2985,11 @@ Köcheclub Werne`,
         db.from("kc_club_tippen").delete().eq("thread_id", threadId).eq("person_id", ich.person_id).then(() => {}); // „schreibt …“ endet mit dem Senden
         if (me || !m) throw new Fehler("Nachricht konnte nicht gespeichert werden.", 500);
         if (anlagen.length) await db.from("kc_communication_message_attachments").insert(anlagen.map((attachment_id: string) => ({ message_id: m.id, attachment_id, hochgeladen_von_person_id: ich.person_id })));
+        if (umfrage || kontaktPid) {
+          const { error: ze } = umfrage ? await db.from("kc_club_chat_umfrage").insert({ message_id: m.id, ...umfrage, erstellt_von: ich.person_id })
+            : await db.from("kc_club_chat_kontakt").insert({ message_id: m.id, person_id: kontaktPid });
+          if (ze) { await db.from("kc_communication_messages").delete().eq("id", m.id); throw new Fehler(umfrage ? "Abstimmung konnte nicht gespeichert werden." : "Kontakt konnte nicht gesendet werden.", 500); }
+        }
         await Promise.all([
           // neue Nachricht: wer die Unterhaltung ausgeblendet hatte, sieht sie wieder (wie bei WhatsApp)
           db.from("kc_communication_thread_participants").update({ hidden_at: null }).eq("thread_id", threadId).not("hidden_at", "is", null),
@@ -2987,7 +3030,7 @@ Köcheclub Werne`,
           text: `Hallo,\n\n${ich.name} hat dir im Köcheclub geschrieben${th?.subject ? ` („${th.subject}“)` : ""}:\n\n${text}${anlagen.length ? `\n\n📎 ${anlagen.length} Anlage(n) – in der App ansehen.` : ""}\n\nAntworten in der Köcheclub-App: ${APP_URL}#nachricht=${threadId}\n\nViele Grüße\nKöcheclub Werne`,
           url: `${APP_URL}#nachricht=${threadId}`,
         }, `club-nachricht:${m.id}`);
-        await protokoll(ich.person_id, weiterVon ? "nachricht_weitergeleitet" : "nachricht_gesendet", { thread: threadId, neu, empfaenger: ziel.length, stumm: stumm.size, anlagen: anlagen.length, wege, versand, antwort: !!antwortAuf, erwaehnt: erwaehnt.length, versandErw, ...(weiterVon ? { von_nachricht: weiterVon.id } : {}) });
+        await protokoll(ich.person_id, weiterVon ? "nachricht_weitergeleitet" : "nachricht_gesendet", { thread: threadId, neu, empfaenger: ziel.length, stumm: stumm.size, umfrage: !!umfrage, kontakt: !!kontaktPid, anlagen: anlagen.length, wege, versand, antwort: !!antwortAuf, erwaehnt: erwaehnt.length, versandErw, ...(weiterVon ? { von_nachricht: weiterVon.id } : {}) });
         return json({ ok: true, id: threadId, versand });
       }
 
@@ -3098,6 +3141,11 @@ Köcheclub Werne`,
         await binTeilnehmer(m.thread_id, ich.person_id);
         if (m.sender_person_id !== ich.person_id) throw new Fehler("Du kannst nur deine eigenen Nachrichten bearbeiten.", 403);
         if (m.body === "📎") throw new Fehler("Nachrichten nur mit Anlage haben keinen Text zum Bearbeiten.");
+        const [{ data: uf }, { data: kk }] = await Promise.all([
+          db.from("kc_club_chat_umfrage").select("message_id").eq("message_id", m.id).maybeSingle(),
+          db.from("kc_club_chat_kontakt").select("message_id").eq("message_id", m.id).maybeSingle(),
+        ]);
+        if (uf || kk) throw new Fehler("Abstimmungen und Kontaktkarten lassen sich nicht bearbeiten.");
         if (Date.now() - Date.parse(m.created_at) > BEARBEITEN_MIN * 60000) throw new Fehler(`Bearbeiten geht nur ${BEARBEITEN_MIN} Minuten nach dem Senden.`, 409);
         if (text === m.body) return json({ ok: true, unveraendert: true });
         const { error } = await db.from("kc_communication_messages").update({ body: text }).eq("id", m.id).eq("sender_person_id", ich.person_id);
@@ -3106,6 +3154,72 @@ Köcheclub Werne`,
         await db.from("kc_club_nachricht_bearbeitet").upsert({ message_id: m.id, bearbeitet_am: am }, { onConflict: "message_id" });
         await protokoll(ich.person_id, "nachricht_bearbeitet", { nachricht: m.id, thread: m.thread_id });
         return json({ ok: true, bearbeitet: am });
+      }
+
+      // ----- KC-CLUB-ANHEFTEN (1.10.0): Nachricht oben im Chat anheften – höchstens 3, jeder Teilnehmer darf -----
+      case "nachricht_anheften": {
+        const { data: m } = await db.from("kc_communication_messages").select("id,thread_id").eq("id", String(p.id || "")).maybeSingle();
+        if (!m) throw new Fehler("Nachricht nicht gefunden.", 404);
+        await binTeilnehmer(m.thread_id, ich.person_id);
+        if (!p.an) { await db.from("kc_club_angeheftet").delete().eq("message_id", m.id); await protokoll(ich.person_id, "nachricht_geloest", { nachricht: m.id, thread: m.thread_id }); return json({ ok: true }); }
+        await db.from("kc_club_angeheftet").upsert({ message_id: m.id, thread_id: m.thread_id, von: ich.person_id, am: jetzt() }, { onConflict: "message_id" });
+        const { data: alle } = await db.from("kc_club_angeheftet").select("message_id").eq("thread_id", m.thread_id).order("am", { ascending: false });
+        const zuViel = (alle ?? []).slice(3).map((x: any) => x.message_id);
+        if (zuViel.length) await db.from("kc_club_angeheftet").delete().in("message_id", zuViel); // älteste fällt heraus
+        await protokoll(ich.person_id, "nachricht_angeheftet", { nachricht: m.id, thread: m.thread_id });
+        return json({ ok: true, ersetzt: zuViel.length });
+      }
+
+      // ----- KC-CLUB-MERKEN (1.10.0): eigene Merkliste – nur für mich -----
+      case "nachricht_merken": {
+        const { data: m } = await db.from("kc_communication_messages").select("id,thread_id").eq("id", String(p.id || "")).maybeSingle();
+        if (!m) throw new Fehler("Nachricht nicht gefunden.", 404);
+        await binTeilnehmer(m.thread_id, ich.person_id);
+        if (p.an) await db.from("kc_club_gemerkt").upsert({ person_id: ich.person_id, message_id: m.id, am: jetzt() }, { onConflict: "person_id,message_id" });
+        else await db.from("kc_club_gemerkt").delete().eq("person_id", ich.person_id).eq("message_id", m.id);
+        return json({ ok: true });
+      }
+      case "gemerkte_nachrichten": {
+        const { data: gm } = await db.from("kc_club_gemerkt").select("message_id,am").eq("person_id", ich.person_id).order("am", { ascending: false }).limit(200);
+        const ids = (gm ?? []).map((x: any) => x.message_id);
+        if (!ids.length) return json({ liste: [] });
+        const [{ data: ms }, { data: meineTn }, { data: weg }] = await Promise.all([
+          db.from("kc_communication_messages").select("id,thread_id,sender_person_id,body,created_at").in("id", ids),
+          db.from("kc_communication_thread_participants").select("thread_id").eq("person_id", ich.person_id),
+          db.from("kc_communication_message_hidden").select("message_id").eq("person_id", ich.person_id).in("message_id", ids),
+        ]);
+        const darf = new Set((meineTn ?? []).map((x: any) => x.thread_id)), versteckt = new Set((weg ?? []).map((x: any) => x.message_id));
+        const sichtbar = (ms ?? []).filter((x: any) => darf.has(x.thread_id) && !versteckt.has(x.id));
+        const tids = [...new Set(sichtbar.map((x: any) => x.thread_id))];
+        const [{ data: th }, { data: gr }, { data: tn }] = tids.length ? await Promise.all([
+          db.from("kc_communication_threads").select("id,subject").in("id", tids),
+          db.from("kc_club_gruppen").select("thread_id,name,symbol").in("thread_id", tids),
+          db.from("kc_communication_thread_participants").select("thread_id,person_id").in("thread_id", tids).neq("person_id", ich.person_id),
+        ]) : [{ data: [] as any[] }, { data: [] as any[] }, { data: [] as any[] }];
+        const leute = await personen([...sichtbar.map((x: any) => x.sender_person_id), ...(tn ?? []).map((x: any) => x.person_id)]);
+        const chatName = (tid: string) => { const g: any = (gr ?? []).find((x: any) => x.thread_id === tid); if (g) return `${g.symbol} ${g.name}`;
+          const t: any = (th ?? []).find((x: any) => x.id === tid); if (t?.subject) return t.subject;
+          return (tn ?? []).filter((x: any) => x.thread_id === tid).map((x: any) => leute.get(x.person_id)?.display_name || "?").join(", ") || "Nur du"; };
+        const am = new Map((gm ?? []).map((x: any) => [x.message_id, x.am]));
+        return json({ liste: sichtbar.sort((a: any, b: any) => String(am.get(b.id)).localeCompare(String(am.get(a.id)))).map((x: any) => ({
+          id: x.id, thread: x.thread_id, chat: chatName(x.thread_id), von: x.sender_person_id === ich.person_id ? "Du" : leute.get(x.sender_person_id)?.display_name || "?",
+          text: txt(x.body, 300), zeit: x.created_at })) });
+      }
+
+      // ----- KC-CLUB-CHATUMFRAGE (1.10.0): abstimmen (ersetzt meine bisherigen Stimmen; leer = Stimme zurücknehmen) -----
+      case "chat_umfrage_stimmen": {
+        const { data: u } = await db.from("kc_club_chat_umfrage").select("message_id,optionen,mehrfach").eq("message_id", String(p.id || "")).maybeSingle();
+        if (!u) throw new Fehler("Abstimmung nicht gefunden.", 404);
+        const { data: m } = await db.from("kc_communication_messages").select("thread_id").eq("id", u.message_id).single();
+        await binTeilnehmer(m.thread_id, ich.person_id);
+        let wahl = [...new Set<number>((Array.isArray(p.optionen) ? p.optionen : []).map(Number))].filter((i: number) => Number.isInteger(i) && i >= 0 && i < (u.optionen as unknown[]).length);
+        if (!u.mehrfach) wahl = wahl.slice(0, 1);
+        await db.from("kc_club_chat_stimme").delete().eq("message_id", u.message_id).eq("person_id", ich.person_id);
+        if (wahl.length) {
+          const { error } = await db.from("kc_club_chat_stimme").insert(wahl.map((option) => ({ message_id: u.message_id, person_id: ich.person_id, option })));
+          if (error) throw new Fehler("Stimme konnte nicht gespeichert werden.", 500);
+        }
+        return json({ ok: true });
       }
 
       case "nachricht_ausblenden": {

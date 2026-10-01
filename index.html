@@ -352,6 +352,18 @@
   #chatSuchLeiste button { border: none; background: var(--karte); color: inherit; border-radius: 10px; padding: 8px 10px; cursor: pointer; box-shadow: var(--schatten); }
   #chatSuchZahl { font-size: .8rem; color: var(--grau); white-space: nowrap; }
   .blase.su-treffer { outline: 2px solid #f1c40f; } .blase.su-aktuell { outline: 3px solid #e67e22; }
+  /* KC-CLUB-ANHEFTEN / -CHATUMFRAGE / -KONTAKT / -MERKEN (1.10.0) */
+  #chatAngeheftet { display: flex; flex-direction: column; gap: 4px; margin: 0 0 8px; }
+  .pin-zeile { text-align: left; border: none; border-left: 4px solid var(--rot); border-radius: 10px; background: var(--karte); color: inherit; padding: 8px 10px; cursor: pointer; box-shadow: var(--schatten); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: .9rem; }
+  .cu { min-width: 220px; } .cu .hinweis { font-size: .8rem; margin: 2px 0 6px; } .blase.eigen .cu .hinweis { color: #ffe3df; }
+  .cu-opt { position: relative; display: grid; grid-template-columns: 22px 1fr auto; align-items: center; gap: 6px; width: 100%; text-align: left; margin: 4px 0; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--linie); background: var(--karte2, rgba(0,0,0,.04)); color: var(--text, inherit); cursor: pointer; overflow: hidden; font: inherit; }
+  .cu-opt.meine { border-color: var(--rot); font-weight: 700; } .cu-kreuz { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--grau); display: grid; place-items: center; font-size: .75rem; }
+  .cu-opt.meine .cu-kreuz { border-color: var(--rot); background: var(--rot); color: #fff; } .cu-zahl { font-weight: 700; }
+  .cu-balken { position: absolute; left: 0; bottom: 0; height: 3px; background: var(--rot); } .cu-opt small { grid-column: 2 / 4; font-size: .75rem; color: var(--grau); }
+  .ck { min-width: 200px; } .ck-kopf { font-size: 1.05rem; margin-bottom: 6px; }
+  .blase.eigen .ck .knopf { background: #fff; color: var(--rot); }
+  .gm-zeile { display: block; width: 100%; text-align: left; border: none; border-bottom: 1px solid var(--linie); background: none; color: inherit; padding: 10px 2px; cursor: pointer; font: inherit; }
+  .gm-zeile small { display: block; color: var(--grau); } .kw-liste { max-height: 50vh; overflow-y: auto; }
   .stumm-wahl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 4px 0 8px; } .stumm-wahl .knopf { text-align: center; padding: 10px 4px; }
   /* KC-CLUB-SOS (1.6.0) */
   .kachel.sos { background: #c0392b; color: #fff; } .kachel.sos small { color: #ffe3df; }
@@ -1194,7 +1206,7 @@
 
   <!-- NACHRICHTEN -->
   <section id="v-nachrichten" class="versteckt">
-    <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>💬 Kommunikation</h2><button class="knopf klein" onclick="testAnMichStarten()" title="Nachricht an dich selbst – prüft Push und Mail">🧪 Test</button><button class="knopf klein" onclick="gruppeForm()">👥 Gruppe</button><button class="knopf haupt klein" onclick="neueNachricht()">＋ Neu</button></div>
+    <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>💬 Kommunikation</h2><button class="knopf klein" onclick="testAnMichStarten()" title="Nachricht an dich selbst – prüft Push und Mail">🧪 Test</button><button class="knopf klein" onclick="gruppeForm()">👥 Gruppe</button><button class="knopf klein" onclick="gemerktZeigen()" title="Gemerkte Nachrichten">⭐</button><button class="knopf haupt klein" onclick="neueNachricht()">＋ Neu</button></div>
     <div id="onlineLeiste"></div>
     <div class="karte" id="unterhListe"><span class="hinweis">Wird geladen …</span></div>
   </section>
@@ -1204,6 +1216,7 @@
     <div class="kopf2"><button class="zurueck" onclick="zeige('nachrichten')">‹</button><h2 id="chatTitel">…</h2><button class="rund" id="chatSuchKnopf" title="Im Chat suchen" aria-label="Im Chat suchen" onclick="chatSucheAuf()">🔍</button><button class="rund" id="chatMenueKnopf" title="Mehr" onclick="chatMenue()">⋮</button></div>
     <div id="chatSuchLeiste" class="versteckt"><input id="chatSuchFeld" type="search" placeholder="Im Chat suchen …" autocomplete="off" oninput="chatSucheJetzt(true)" onkeydown="if(event.key==='Enter'){event.preventDefault();chatSucheSpringen(1)}"><span id="chatSuchZahl"></span><button title="vorheriger Treffer" onclick="chatSucheSpringen(-1)">▲</button><button title="nächster Treffer" onclick="chatSucheSpringen(1)">▼</button><button title="Suche schließen" onclick="chatSucheZu()">✕</button></div>
     <div class="hinweis" id="chatTeilnehmer" style="margin-left:54px;cursor:pointer" onclick="if(CHAT?.gruppe)chatMenue()"></div>
+    <div id="chatAngeheftet"></div>
     <div class="chat" id="chat"></div>
   </section>
 
@@ -1688,6 +1701,8 @@
     <button class="knopf" onclick="$('anlageBlatt').classList.add('versteckt');appKamera(dateienGewaehlt)">📷 Kamera</button>
     <button class="knopf" onclick="anlageWahl('dateiBild')">🖼️ Bild aus der Galerie</button>
     <button class="knopf" onclick="anlageWahl('dateiDok')">📄 Datei oder PDF</button>
+    <button class="knopf" onclick="anlageMenue();cuForm()">📊 Abstimmung</button>
+    <button class="knopf" onclick="anlageMenue();kontaktWahl()">👤 Kontakt teilen</button>
     <button class="knopf" onclick="anlageMenue()">Abbrechen</button></div>
 </div>
 <input type="file" id="dateiBild" accept="image/*" multiple class="versteckt" onchange="dateienGewaehlt(this)">
@@ -1707,7 +1722,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.9.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.10.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -5213,6 +5228,7 @@ async function chatLaden(scrollen) {
     let st = "";
     if (andere.length === 1) { if (!MITGLIEDER) await mitgliederHolen().catch(() => {}); const m = MITGLIEDER?.find((x) => x.person_id === andere[0].person_id); if (m?.status) st = statusText(m.status); }
     $("chatTeilnehmer").textContent = !andere.length ? "Nur du (Test-Unterhaltung)" : u.gruppe ? `👥 ${andere.length + 1} Mitglieder: Du, ${andere.map((x) => x.name.split(" ")[0]).join(", ")} ›` : u.betreff || andere.length > 1 ? "Mit: " + andere.map((x) => x.name).join(", ") : st;
+    $("chatAngeheftet").innerHTML = (u.angeheftet || []).map((a) => `<button class="pin-zeile" onclick="zuNachricht('${a.id}')">📌 <b>${esc(a.von)}:</b> ${esc(a.text)}</button>`).join(""); // KC-CLUB-ANHEFTEN
     tipptZeigen(u.tippt || [], u.entwurf || []);
     if (u.tippt?.length && andere.length === 1) $("chatTeilnehmer").textContent = "✍️ schreibt …";
     const stand = JSON.stringify(u.nachrichten.map((m) => [m.id, m.gelesenVon?.length, (m.reaktionen || []).map((x) => x.emoji + x.anzahl).join("")]));
@@ -5222,10 +5238,10 @@ async function chatLaden(scrollen) {
     chatStand = stand;
     NA.nachrichten = new Map(u.nachrichten.map((m) => [m.id, m]));
     $("chat").innerHTML = u.nachrichten.map((m) => `<div data-id="${m.id}" class="blase${m.eigen ? " eigen" : ""}${m.erwaehntMich ? " erwaehnt-mich" : ""}" id="msg-${m.id}" title="Antippen: reagieren, antworten, Details" onclick="if(!event.target.closest('button,img,a,audio,video,.sprache,.zitat'))nachrichtMenue('${m.id}')">
-      ${!m.eigen && andere.length > 1 ? `<div class="von">${esc(m.von)}</div>` : ""}${m.antwortAuf ? `<div class="zitat" onclick="zuNachricht('${m.antwortAuf.id}')"><b>${esc(m.antwortAuf.von)}</b><span>${esc(m.antwortAuf.text)}</span></div>` : ""}${m.text === "📎" && m.anlagen.length ? "" : `<div class="txt">${naText(m.text)}</div>`}
+      ${!m.eigen && andere.length > 1 ? `<div class="von">${esc(m.von)}</div>` : ""}${m.antwortAuf ? `<div class="zitat" onclick="zuNachricht('${m.antwortAuf.id}')"><b>${esc(m.antwortAuf.von)}</b><span>${esc(m.antwortAuf.text)}</span></div>` : ""}${m.umfrage ? umfrageHtml(m) : m.kontakt ? kontaktKarteHtml(m) : m.text === "📎" && m.anlagen.length ? "" : `<div class="txt">${naText(m.text)}</div>`}
       ${m.anlagen.map((a) => /^image\//.test(a.mime || "") ? `<img data-anlage="${a.id}" alt="${esc(a.name)}" onclick="anlageOeffnen('${a.id}')">` : /^audio\//.test(a.mime || "") ? `<div class="sprache" data-sprache="${a.id}"><button onclick="spracheAbspielen(this, '${a.id}')">▶️ Sprachnachricht anhören</button></div>` : `<div class="anlage" onclick="anlageOeffnen('${a.id}')">📄 ${esc(a.name)}</div>`).join("")}
       <div class="na-seite"><button class="na-pfeil" title="Weiterleiten oder kopieren" aria-label="Weiterleiten oder kopieren" onclick="naPfeilMenue('${m.id}')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4.5l7.5 7.5-7.5 7.5v-4.3c-5.2 0-8.8 1.7-11.4 5.3 1-5.2 4.1-10.3 11.4-11.3V4.5z"/></svg></button><button class="na-info" title="Info: wer geschrieben, bekommen und gelesen hat" aria-label="Info zur Nachricht" onclick="nachrichtInfo('${m.id}')">i</button></div>
-      <div class="fuss">${m.bearbeitet ? '<span class="bearb" title="nachträglich geändert">bearbeitet</span>' : ""}${zeitKurz(m.zeit)}${m.eigen ? " " + (m.gelesenAlle ? '<b title="gelesen">✓✓</b>' : m.gelesenVon?.length ? `✓✓ ${m.gelesenVon.length}/${andere.length}` : "✓") + zustellText(m.zustellung) : ""}${m.eigen || ICH.admin ? ` <button class="weg" title="Nachricht löschen" onclick="nachrichtLoeschen('${m.id}')">🗑️</button>` : ""}</div></div>`).join("")
+      <div class="fuss">${m.angeheftet ? '<span title="oben angeheftet">📌</span> ' : ""}${m.gemerkt ? '<span title="gemerkt">⭐</span> ' : ""}${m.bearbeitet ? '<span class="bearb" title="nachträglich geändert">bearbeitet</span>' : ""}${zeitKurz(m.zeit)}${m.eigen ? " " + (m.gelesenAlle ? '<b title="gelesen">✓✓</b>' : m.gelesenVon?.length ? `✓✓ ${m.gelesenVon.length}/${andere.length}` : "✓") + zustellText(m.zustellung) : ""}${m.eigen || ICH.admin ? ` <button class="weg" title="Nachricht löschen" onclick="nachrichtLoeschen('${m.id}')">🗑️</button>` : ""}</div></div>`).join("")
       || '<p class="hinweis">Schreib die erste Nachricht.</p>';
     document.querySelectorAll("img[data-anlage]").forEach(bildLaden);
     naWischenEinrichten();
@@ -5263,6 +5279,8 @@ function nachrichtMenue(id) {
     <div class="na-schnell">${NA_SCHNELL.map((e) => `<button type="button" class="${meine === e ? "an" : ""}" aria-label="Mit ${e} reagieren" onclick="reagieren('${id}','${e}');document.getElementById('naMenue').remove()">${e}</button>`).join("")}</div>
     ${meine ? `<p class="hinweis" style="margin:0;text-align:center">Deine Reaktion: ${meine} – nochmal antippen nimmt sie weg</p>` : ""}
     <button class="knopf" onclick="document.getElementById('naMenue').remove();naAntworten('${id}')">↩️ Antworten</button>
+    <button class="knopf" onclick="document.getElementById('naMenue').remove();naAnheften('${id}', ${!m.angeheftet})">${m.angeheftet ? "📌 Lösen (nicht mehr oben)" : "📌 Oben anheften"}</button>
+    <button class="knopf" onclick="document.getElementById('naMenue').remove();naMerken('${id}', ${!m.gemerkt})">${m.gemerkt ? "⭐ Nicht mehr merken" : "⭐ Merken"}</button>
     ${m.bearbeitbarBis && Date.parse(m.bearbeitbarBis) > Date.now() ? `<button class="knopf" onclick="document.getElementById('naMenue').remove();naBearbeiten('${id}')">✏️ Bearbeiten</button>` : ""}
     ${m.text ? `<button class="knopf" onclick="document.getElementById('naMenue').remove();naKopieren('${id}')">📋 Kopieren</button>` : ""}
     <button class="knopf" onclick="document.getElementById('naMenue').remove();weiterleitenBlatt('${id}')">↪️ Weiterleiten</button>
@@ -5272,6 +5290,94 @@ function nachrichtMenue(id) {
   f.onclick = (e) => { if (e.target === f) f.remove(); };
   document.body.appendChild(f);
 }
+// ---------- KC-CLUB-ANHEFTEN / -MERKEN / -CHATUMFRAGE / -KONTAKT (1.10.0, Wunsch Hansi – wie WhatsApp) ----------
+function blattAuf(id, html) {
+  document.getElementById(id)?.remove();
+  const f = document.createElement("div"); f.id = id; f.className = "blatt"; f.setAttribute("role", "dialog"); f.setAttribute("aria-modal", "true");
+  f.innerHTML = `<div class="blatt-innen" style="max-height:88vh;overflow-y:auto">${html}</div>`;
+  f.onclick = (e) => { if (e.target === f) f.remove(); };
+  document.body.appendChild(f); return f;
+}
+async function naAnheften(id, an) {
+  try { const r = await api("nachricht_anheften", { id, an }); melde(an ? `📌 Oben angeheftet${r.ersetzt ? " – die älteste angeheftete ist herausgefallen (höchstens 3)" : ""}` : "📌 Gelöst"); chatStand = ""; await chatLaden(false); }
+  catch (e) { melde(e.message, true); }
+}
+async function naMerken(id, an) {
+  try { await api("nachricht_merken", { id, an }); melde(an ? "⭐ Gemerkt – zu finden unter 💬 → ⭐" : "Nicht mehr gemerkt"); chatStand = ""; await chatLaden(false); }
+  catch (e) { melde(e.message, true); }
+}
+async function gemerktZeigen() {
+  let r; try { r = await api("gemerkte_nachrichten", {}, { warten: true }); } catch (e) { return melde(e.message, true); }
+  blattAuf("gmFenster", `<h3 style="margin-top:0">⭐ Gemerkte Nachrichten</h3>
+    ${r.liste.length ? r.liste.map((x) => `<button class="gm-zeile" onclick="gemerktOeffnen('${x.thread}','${x.id}')"><small>${esc(x.chat)} · ${esc(x.von)} · ${esc(zeitKurz(x.zeit))}</small>${esc(x.text)}</button>`).join("")
+      : '<p class="hinweis">Noch nichts gemerkt. Nachricht antippen → „⭐ Merken“.</p>'}
+    <button class="knopf" style="margin-top:8px" onclick="document.getElementById('gmFenster').remove()">Schließen</button>`);
+}
+async function gemerktOeffnen(thread, id) {
+  document.getElementById("gmFenster")?.remove();
+  await chatOeffnen(thread); setTimeout(() => zuNachricht(id), 600);
+}
+function umfrageHtml(m) {
+  const u = m.umfrage;
+  return `<div class="cu"><b>📊 ${esc(u.frage)}</b><div class="hinweis">${u.mehrfach ? "Mehrere Antworten möglich" : "Eine Antwort wählen"} · ${u.gesamt} ${u.gesamt === 1 ? "Stimme" : "Stimmen"}</div>
+    ${u.optionen.map((o, i) => `<button type="button" class="cu-opt${o.meine ? " meine" : ""}" onclick="cuStimmen('${m.id}', ${i})"><span class="cu-kreuz">${o.meine ? "✓" : ""}</span><span>${esc(o.text)}</span><span class="cu-zahl">${o.stimmen}</span>${o.namen.length ? `<small>${esc(o.namen.join(", "))}</small>` : ""}<span class="cu-balken" style="width:${u.gesamt ? Math.round(o.stimmen / u.gesamt * 100) : 0}%"></span></button>`).join("")}</div>`;
+}
+async function cuStimmen(id, i) {
+  const u = NA.nachrichten.get(id)?.umfrage; if (!u) return;
+  const meine = u.optionen.map((o, j) => (o.meine ? j : -1)).filter((j) => j >= 0);
+  const neu = u.mehrfach ? (meine.includes(i) ? meine.filter((j) => j !== i) : [...meine, i]) : (meine.length === 1 && meine[0] === i ? [] : [i]);
+  try { await api("chat_umfrage_stimmen", { id, optionen: neu }); chatStand = ""; await chatLaden(false); } catch (e) { melde(e.message, true); }
+}
+const cuFeld = (i) => `<input class="cu-ant" maxlength="80" placeholder="Antwort ${i + 1}" style="width:100%;box-sizing:border-box;padding:10px;margin:4px 0;border-radius:10px;border:1px solid var(--linie);font:inherit;background:var(--karte);color:inherit">`;
+function cuAntwortDazu() {
+  const n = document.querySelectorAll(".cu-ant").length;
+  if (n >= 8) return melde("Höchstens 8 Antworten.", true);
+  $("cuAntworten").insertAdjacentHTML("beforeend", cuFeld(n)); document.querySelectorAll(".cu-ant")[n].focus();
+}
+function cuForm() {
+  if (!chatId) return melde("Bitte zuerst die Unterhaltung beginnen (erste Nachricht senden) – dann geht die Abstimmung.", true);
+  blattAuf("cuFenster", `<h3 style="margin-top:0">📊 Kurze Abstimmung</h3>
+    <label class="feld">Frage<input id="cuFrage" maxlength="200" placeholder="z. B. Wer kommt zum Grillen?"></label>
+    <div id="cuAntworten">${[0, 1, 2].map(cuFeld).join("")}</div>
+    <button class="knopf klein" onclick="cuAntwortDazu()">＋ Antwort</button>
+    <label style="display:flex;gap:10px;align-items:center;margin:10px 0"><input type="checkbox" id="cuMehrfach" style="width:22px;height:22px"> Mehrere Antworten erlauben</label>
+    <button class="knopf haupt" onclick="cuSenden()">📤 Abstimmung senden</button>
+    <button class="knopf" onclick="document.getElementById('cuFenster').remove()">Abbrechen</button>`);
+  $("cuFrage").value = "Wer kommt?"; [...document.querySelectorAll(".cu-ant")].forEach((x, i) => (x.value = ["Ja", "Nein", "Vielleicht"][i] || ""));
+  $("cuFrage").select();
+}
+async function cuSenden() {
+  const frage = $("cuFrage").value.trim(), optionen = [...document.querySelectorAll(".cu-ant")].map((x) => x.value.trim()).filter(Boolean);
+  if (!frage) return melde("Bitte eine Frage eingeben.", true);
+  if (new Set(optionen).size < 2) return melde("Bitte mindestens zwei verschiedene Antworten eingeben.", true);
+  try { await api("nachricht_senden", { id: chatId, umfrage: { frage, optionen, mehrfach: $("cuMehrfach").checked }, wege: ["push", "email"].filter((w) => ZW[w]) });
+    document.getElementById("cuFenster")?.remove(); melde("📊 Abstimmung gesendet"); await chatLaden(true); }
+  catch (e) { melde(e.message, true); }
+}
+function kontaktKarteHtml(m) {
+  const k = m.kontakt;
+  return `<div class="ck"><div class="ck-kopf">👤 <b>${esc(k.name)}</b></div><div class="knoepfe" style="margin:0"><button class="knopf klein" onclick="mitgliedOeffnen('${k.person_id}')">📇 Kontakt ansehen</button>${k.person_id !== ICH?.person_id ? `<button class="knopf klein" onclick="direkt('${k.person_id}')">💬 Schreiben</button>` : ""}</div></div>`;
+}
+async function kontaktWahl() {
+  if (!chatId) return melde("Bitte zuerst die Unterhaltung beginnen (erste Nachricht senden) – dann geht „Kontakt teilen“.", true);
+  if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return melde(e.message, true); }
+  blattAuf("kwFenster", `<h3 style="margin-top:0">👤 Kontakt teilen</h3>
+    <p class="hinweis" style="margin:0 0 6px">Die anderen sehen nur, was das Mitglied selbst für andere freigegeben hat.</p>
+    <input id="kwSuche" type="search" placeholder="🔍 Name suchen …" autocomplete="off" oninput="kontaktListe()" style="width:100%;box-sizing:border-box;padding:10px;border-radius:12px;border:1px solid var(--linie);font:inherit;background:var(--karte);color:inherit">
+    <div class="kw-liste" id="kwListe"></div>
+    <button class="knopf" style="margin-top:8px" onclick="document.getElementById('kwFenster').remove()">Abbrechen</button>`);
+  kontaktListe();
+}
+function kontaktListe() {
+  const q = suNorm($("kwSuche")?.value || "");
+  $("kwListe").innerHTML = MITGLIEDER.filter((m) => !q || suNorm(m.name).includes(q)).map((m) => `<button class="gm-zeile" onclick="kontaktSenden('${m.person_id}')">👤 ${esc(m.name)}</button>`).join("") || '<p class="hinweis">Niemand gefunden.</p>';
+}
+async function kontaktSenden(pid) {
+  try { await api("nachricht_senden", { id: chatId, kontakt: pid, wege: ["push", "email"].filter((w) => ZW[w]) });
+    document.getElementById("kwFenster")?.remove(); melde("👤 Kontakt gesendet"); await chatLaden(true); }
+  catch (e) { melde(e.message, true); }
+}
+
 // ---------- KC-CLUB-BEARBEITEN (1.9.0, Wunsch Hansi – wie WhatsApp): eigene Nachricht bis 15 Min. nach dem Senden ändern ----------
 function naBearbeiten(id) {
   const m = NA.nachrichten.get(id); if (!m) return;
@@ -8392,6 +8498,8 @@ function suAppListe() {
     ["👀", "Ansicht wechseln (einfach/erweitert)", "ansicht einfach erweitert kacheln", () => ansichtWechseln()], ["🧪", "Test an mich", "test push mail ausprobieren", () => testAnMichStarten()],
     ["🆘", "Problem melden", "problem fehler hilfe melden", () => fpProblemMelden()], ["👥", "Wer ist online?", "online wer", () => onlineBlatt()],
     ["📍", "Standort teilen", "standort teilen wo bin ich", () => stBlatt()],
+    ["⭐", "Gemerkte Nachrichten", "gemerkt merken stern favorit", () => { zeige("nachrichten"); gemerktZeigen(); }],
+    ["📊", "Abstimmung im Chat", "abstimmung umfrage chat wer kommt", () => { melde("Im Chat auf 📎 tippen → „📊 Abstimmung“"); zeige("nachrichten"); }],
     ["🔕", "Chat stummschalten", "stumm stummschalten leise chat gruppe", () => { melde("Im Chat oben auf ⋮ tippen → 🔕 Stummschalten"); zeige("nachrichten"); }],
     ["⚡", "Schnellstart-Symbole auswählen", "schnellstart symbole schnell kachel", ein("ssWahl")], ["👋", "Anklopfen erlauben / Anklopfton", "anklopfen klopfen ton klingel", ein("setAnklopfen")],
     ["🆘", "Wo bin ich? (SOS)", "wo bin ich adresse standort notfall sos", () => sosStart()], ["🪪", "Mein Notfallpass", "notfallpass allergien medikamente blutgruppe notfall", () => { sosStart(); nfpBearbeiten(); }],

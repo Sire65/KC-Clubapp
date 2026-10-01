@@ -1586,6 +1586,23 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/naBearbeiten\('\$\{id\}'\)">✏️ Bearbeiten/.test(html) && /class="bearb"/.test(html), "App: Bearbeiten im Menü + Kennzeichen");
 }
 
+// 139. 1.10.0: Anheften, Merken, Abstimmung im Chat, Kontakt teilen
+{
+  const mig = lies("supabase/migrations/20261001_kc_club_v1100_nachrichten_extras.sql");
+  for (const t of ["kc_club_angeheftet", "kc_club_gemerkt", "kc_club_chat_umfrage", "kc_club_chat_stimme", "kc_club_chat_kontakt"])
+    assert.ok(new RegExp(`create table if not exists ${t}`).test(mig) && new RegExp(`alter table ${t} enable row level security`).test(mig), "Tabelle + RLS: " + t);
+  assert.ok(!/alter table kc_communication_messages/.test(mig) && !/phone|email|telefon/.test(mig.slice(mig.indexOf("create table if not exists kc_club_chat_kontakt"), mig.indexOf("alter table kc_club_angeheftet"))), "Kern-Tabelle unverändert, Kontaktkarte ohne Kontaktdaten");
+  const ah = server.slice(server.indexOf('case "nachricht_anheften"'), server.indexOf('case "nachricht_merken"'));
+  assert.ok(/binTeilnehmer\(m\.thread_id, ich\.person_id\)/.test(ah) && /\.slice\(3\)/.test(ah), "Anheften: nur Teilnehmer, höchstens 3");
+  const gm = server.slice(server.indexOf('case "gemerkte_nachrichten"'), server.indexOf('case "chat_umfrage_stimmen"'));
+  assert.ok(/eq\("person_id", ich\.person_id\)/.test(gm) && /darf\.has\(x\.thread_id\) && !versteckt\.has\(x\.id\)/.test(gm), "Merken: nur eigene, nur aus eigenen Chats");
+  const st = server.slice(server.indexOf('case "chat_umfrage_stimmen"'), server.indexOf('case "nachricht_ausblenden"'));
+  assert.ok(/binTeilnehmer\(m\.thread_id, ich\.person_id\)/.test(st) && /if \(!u\.mehrfach\) wahl = wahl\.slice\(0, 1\)/.test(st), "Abstimmen: nur Teilnehmer, Einfachwahl");
+  assert.ok(/Abstimmungen und Kontaktkarten lassen sich nicht bearbeiten/.test(server), "Abstimmung/Kontakt nicht bearbeitbar");
+  assert.ok(/onclick="mitgliedOeffnen\('\$\{k\.person_id\}'\)">📇 Kontakt ansehen/.test(html), "Kontaktkarte nutzt vorhandene Mitglieder-Ansicht (Freigaben)");
+  assert.ok(/anlageMenue\(\);cuForm\(\)">📊 Abstimmung/.test(html) && /anlageMenue\(\);kontaktWahl\(\)">👤 Kontakt teilen/.test(html) && /onclick="gemerktZeigen\(\)"/.test(html) && /id="chatAngeheftet"/.test(html), "App: Einstiege vorhanden");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
