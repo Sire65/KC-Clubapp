@@ -1,5 +1,13 @@
 # Änderungen
 
+## 1.4.1 – 2026-10-01 (DEV)
+
+- KC-CLUB-ARCHIV-SUCHE (Wunsch Hansi: „Bau die Suche im Archiv auch als Live-Suche“): Regal-Suche wie die globale
+  Suche – ab 2 Buchstaben, Umlaut-tolerant (gleiche Vereinheitlichung suNorm), alle Wörter müssen vorkommen (Titel,
+  Stichworte, Register, Dateiname, Ordner, Jahr), Treffer markiert, Ergebnis gruppiert (Ordner · Dokumente ·
+  Vereinsleben) mit Zahl; Esc leert. Neu: „In diesem Ordner suchen“ (ab 4 Einträgen, im gewählten Register).
+  Fix: Markierung teilt den Text vor dem Escapen (vorher konnte z. B. „am“ in „&amp;“ markiert werden). Test 130.
+
 ## 1.4.0 – 2026-10-01 (DEV)
 
 - KC-CLUB-SUCHE (Wunsch Hansi: globale Live-Suche ab 2 Buchstaben + erweiterte Suche; „Lupe als kleines Symbol, keine

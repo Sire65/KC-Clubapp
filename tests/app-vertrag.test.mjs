@@ -1696,3 +1696,11 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/class="su-klein" id="suLupe" onclick="sucheAuf\(\)"[^>]*>🔍/.test(html) && /suLupenEinbauen\(\);/.test(html) && !/id: "suche"/.test(html), "App: kleine Lupe (keine Kachel)");
   assert.ok(/SU\.timer = setTimeout\(suJetzt, 300\)/.test(html) && /function suFilterZeigen\(/.test(html) && /Wo suchen\?/.test(html), "App: Live-Suche/Filter fehlt");
 }
+
+// 130. 1.4.1: Archiv-Suche live (KC-CLUB-ARCHIV-SUCHE)
+{
+  assert.ok(/if \(arSuchLang\(q\)\) return arSuchErgebnis\(q\);/.test(html) && /const arSuchLang = \(q\) => suNorm\(q\)\.replace\(\/\\s\/g, ""\)\.length >= 2;/.test(html), "Archiv: Live-Suche ab 2 Buchstaben");
+  assert.ok(/function arPasstAlle\(q, \.\.\.felder\) \{ const n = suNorm\(/.test(html), "Archiv: Umlaut-tolerant wie globale Suche");
+  assert.ok(/id="arOrdnerSuche"[^>]*oninput="AR\.ordnerSuche=this\.value;arOrdnerListe\(\)"/.test(html), "Archiv: Suche im Ordner fehlt");
+  assert.ok(/t\.split\(muster\)\.map\(\(teil, i\) => i % 2 \? `<mark>\$\{esc\(teil\)\}<\/mark>` : esc\(teil\)\)/.test(html), "Markierung muss vor dem Escapen teilen");
+}

@@ -830,6 +830,9 @@
   .su-erw { text-align: center; background: var(--karte2); border-radius: 12px; padding: 10px; }
   /* KC-CLUB-ARCHIV (1.2.0): Regal mit Aktenordnern, innen Register-Reiter */
   .ar-filter { display: grid; gap: 8px; }
+  .ar-ordnersuche { display: block; width: 100%; box-sizing: border-box; margin-top: 10px; padding: 11px 12px; border: 1px solid var(--linie); border-radius: 12px; background: var(--karte); color: var(--text); font-size: 1rem; font-family: inherit; }
+  .ar-dok mark { background: #ffe58a; color: #2b1a1c; border-radius: 3px; padding: 0 1px; }
+  .ar-mini { display: grid; place-items: center; width: 34px; height: 44px; border-radius: 4px; background: var(--of); box-shadow: inset -4px 0 0 rgba(0,0,0,.18); font-size: 1.05rem !important; }
   .ar-filter input[type=search] { width: 100%; box-sizing: border-box; padding: 12px; border: 1px solid var(--linie); border-radius: 12px; background: var(--bg); color: var(--text); font-size: 1rem; font-family: inherit; }
   .ar-zeile { display: flex; gap: 8px; align-items: end; flex-wrap: wrap; }
   .ar-zeile .feld { margin: 0; flex: 1 1 140px; }
@@ -1609,7 +1612,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.4.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.4.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -7457,7 +7460,7 @@ function arZeigen() {
   const alle = arAlleOrdner(), jahre = [...new Set(alle.map((o) => o.jahr))].sort((a, b) => b - a);
   const chip = (wert, text) => `<button class="chip ${AR.art === wert ? "an" : ""}" onclick="AR.art='${wert}';arFilterMerken();arZeigen()">${text}</button>`;
   const kopf = `<div class="karte ar-filter">
-      <input id="arSuche" type="search" placeholder="🔍 Suchen: Titel, Stichwort, Inhalt …" value="${esc(AR.suche)}" oninput="AR.suche=this.value;arListeZeigen()">
+      <input id="arSuche" type="search" placeholder="🔍 Suchen: Titel, Stichwort, Inhalt …" value="${esc(AR.suche)}" oninput="AR.suche=this.value;arListeZeigen()" onkeydown="if(event.key==='Escape'){this.value='';AR.suche='';arListeZeigen()}" autocomplete="off" enterkeyhint="search">
       <div class="ar-zeile"><label class="feld">Jahr<select onchange="AR.jahr=this.value;arFilterMerken();arZeigen()"><option value="">Alle Jahre</option>${jahre.map((j) => `<option ${String(j) === AR.jahr ? "selected" : ""}>${j}</option>`).join("")}</select></label>
         ${d.darf ? `<div class="knoepfe"><button class="knopf klein haupt" onclick="arOrdnerForm()">＋ Ordner</button><button class="knopf klein" onclick="AR.korb=true;arZeigen()">🗑️ Papierkorb</button></div>` : ""}</div>
       <div class="chips ar-chips">${chip("", "Alle")}${chip("auto", "🤖 Vereinsleben")}${Object.entries(d.arten).map(([k, a]) => chip(k, a.sym + " " + esc(a.t))).join("")}${d.vorstand ? chip("vorstand", "🔒 Nur Clubleitung") : ""}</div>
@@ -7466,8 +7469,8 @@ function arZeigen() {
   arListeZeigen();
 }
 function arListeZeigen() {
-  const d = AR.daten, q = AR.suche.trim().toLowerCase();
-  if (q) return arSuchErgebnis(q);
+  const d = AR.daten, q = AR.suche;
+  if (arSuchLang(q)) return arSuchErgebnis(q);
   const ordner = arAlleOrdner().filter(arPasst), jahre = [...new Set(ordner.map((o) => o.jahr))].sort((a, b) => b - a);
   if (!ordner.length) {
     $("arListe").innerHTML = `<div class="karte hinweis">${AR.jahr || AR.art ? "Für diese Auswahl gibt es keinen Ordner. <button class=\"knopf klein\" onclick=\"AR.jahr='';AR.art='';arFilterMerken();arZeigen()\">✕ Filter zurücksetzen</button>" : "Noch nichts im Archiv." + (d.darf ? " Tippe oben auf „＋ Ordner“." : "")}</div>`;
@@ -7485,7 +7488,7 @@ function arRuecken(o) {
     <span class="anz">${n} ${n === 1 ? "Eintrag" : "Einträge"}</span><span class="loch"></span></button>`;
 }
 function arOrdnerOeffnen(id) {
-  AR.ordner = id; AR.register = ""; AR.suche = "";
+  AR.ordner = id; AR.register = ""; AR.suche = ""; AR.ordnerSuche = "";
   history.pushState({ v: "archiv", id }, "", location.pathname + "#archiv");
   arZeigen(); window.scrollTo(0, 0);
 }
@@ -7509,36 +7512,60 @@ function arOrdnerZeigen() {
   const art = o.auto ? "automatisch aus der App" : (d.arten[o.art]?.t || "");
   $("arInhalt").innerHTML = `<div class="ar-kopf" style="--of:${arFarbe(o)}"><span class="sym">${arSym(o)}</span><div><b>${esc(o.titel)} ${o.jahr}</b><div class="klein">${esc(art)}${o.nur_vorstand ? " · 🔒 nur Clubleitung" : ""}</div></div></div>
     ${!o.auto && d.darf ? `<div class="knoepfe" style="margin:8px 0"><button class="knopf klein haupt" onclick="arDokForm()">＋ Dokument</button><button class="knopf klein" onclick="arOrdnerForm('${o.id}')">✏️ Ordner</button><button class="knopf klein" onclick="arOrdnerLoeschen('${o.id}')">🗑️ Ordner</button></div>` : ""}
+    ${eintraege.length > 3 ? `<input id="arOrdnerSuche" class="ar-ordnersuche" type="search" autocomplete="off" enterkeyhint="search" placeholder="🔍 In diesem Ordner suchen …" value="${esc(AR.ordnerSuche || "")}" oninput="AR.ordnerSuche=this.value;arOrdnerListe()" onkeydown="if(event.key==='Escape'){this.value='';AR.ordnerSuche='';arOrdnerListe()}">` : ""}
     <div class="ar-register">${[["", "Alle", eintraege.length], ...reg.map((r) => [r, r, eintraege.filter((x) => x.register === r).length])].map(([w, t, n], i) => `<button class="${AR.register === w ? "an" : ""}" style="--rf:${i ? AR_FARBEN[(i - 1) % AR_FARBEN.length] : "var(--grau)"}" onclick="AR.register=${esc(JSON.stringify(w))};arZeigen()">${esc(t)} <small>${n}</small></button>`).join("")}</div>
-    <div class="ar-blatt">${sichtbar.map((x) => arZeile(x, o.auto)).join("") || `<p class="hinweis" style="margin:6px">${o.auto ? "Hier ist nichts." : d.darf ? "Noch leer – tippe auf „＋ Dokument“." : "Noch leer."}</p>`}</div>`;
+    <div class="ar-blatt" id="arOrdnerListe"></div>`;
+  arOrdnerListe();
+}
+// KC-CLUB-ARCHIV-SUCHE: Live-Filter im geöffneten Ordner (im gewählten Register; ab 2 Buchstaben)
+function arOrdnerListe() {
+  const o = arOrdnerAktuell(), d = AR.daten; if (!o || !$("arOrdnerListe")) return;
+  const q = AR.ordnerSuche || "", suchen = arSuchLang(q), m = suchen ? suMusterFuer(arWoerter(q)) : null;
+  const liste = arEintraege(o).filter((x) => (!AR.register || x.register === AR.register)
+    && (!suchen || (o.auto ? arPasstAlle(q, x.titel, x.text, x.voll) : arPasstAlle(q, x.titel, x.name, x.register, x.stichworte || []))));
+  $("arOrdnerListe").innerHTML = (suchen ? `<p class="hinweis ar-zahl" style="margin:4px 6px">${liste.length} Treffer${AR.register ? ` im Register „${esc(AR.register)}“ <button class="knopf klein" onclick="AR.register='';arZeigen()">in allen suchen</button>` : ""}</p>` : "")
+    + (liste.map((x) => arZeile(x, o.auto, false, m)).join("") || `<p class="hinweis" style="margin:6px">${suchen ? "Nichts gefunden." : o.auto ? "Hier ist nichts." : d.darf ? "Noch leer – tippe auf „＋ Dokument“." : "Noch leer."}</p>`);
 }
 function arDateiSym(mime) { return /pdf/.test(mime || "") ? "📕" : /^image\//.test(mime || "") ? "🖼️" : /word/.test(mime || "") ? "📝" : /excel|sheet/.test(mime || "") ? "📊" : "📄"; }
 const arGroesse = (b) => !b ? "" : b > 1048576 ? (b / 1048576).toFixed(1).replace(".", ",") + " MB" : Math.max(1, Math.round(b / 1024)) + " KB";
 const arTag = (d) => d ? fTagDe(String(d).slice(0, 10)) : "";
-function arZeile(x, auto, mitOrt) {
+function arZeile(x, auto, mitOrt, m) {
+  const mk = (t) => suMarkiert(t, m); // KC-CLUB-ARCHIV-SUCHE: Treffer markieren
   if (auto) {
     const [sym] = AR_AUTO[x.art];
     const klick = x.art === "protokoll" ? `protokollOeffnen('${x.id}')` : x.art === "aktion" ? `aktionOeffnen(${esc(JSON.stringify(x.id))})` : x.art === "anhang" ? `arAnlage('${x.id}')` : "";
     return `<div class="ar-dok${klick ? " klickbar" : ""}" ${klick ? `onclick="${klick}"` : ""}><span class="sym">${x.art === "anhang" ? arDateiSym(x.mime) : sym}</span>
-      <div><b>${esc(x.titel)}</b><div class="hinweis">${esc(arTag(x.datum))}${x.text ? " · " + esc(x.text) : ""}${x.art === "anhang" && x.groesse ? " · " + arGroesse(x.groesse) : ""}${mitOrt ? " · 🤖 Vereinsleben " + arJahr(x.datum) : ""}</div>
-      ${x.voll && x.voll !== x.titel ? `<div class="ar-voll">${esc(x.voll)}</div>` : ""}</div>${klick ? '<span class="pfeil">›</span>' : ""}</div>`;
+      <div><b>${mk(x.titel)}</b><div class="hinweis">${esc(arTag(x.datum))}${x.text ? " · " + mk(x.text) : ""}${x.art === "anhang" && x.groesse ? " · " + arGroesse(x.groesse) : ""}${mitOrt ? " · 🤖 Vereinsleben " + arJahr(x.datum) : ""}</div>
+      ${x.voll && x.voll !== x.titel ? `<div class="ar-voll">${mk(x.voll)}</div>` : ""}</div>${klick ? '<span class="pfeil">›</span>' : ""}</div>`;
   }
   const o = AR.daten.ordner.find((y) => y.id === x.ordner_id);
   return `<div class="ar-dok klickbar" onclick="arAnlage('${x.id}', true)"><span class="sym">${arDateiSym(x.mime)}</span>
-    <div><b>${esc(x.titel)}</b><div class="hinweis">${[arTag(x.datum), x.register, arGroesse(x.groesse)].filter(Boolean).map(esc).join(" · ")}${mitOrt && o ? ` · ${esc(o.titel)} ${o.jahr}` : ""}</div>
-    ${x.stichworte?.length ? `<div class="ar-stichworte">${x.stichworte.map((s) => `<span>#${esc(s)}</span>`).join("")}</div>` : ""}</div>
+    <div><b>${mk(x.titel)}</b><div class="hinweis">${[arTag(x.datum), x.register, arGroesse(x.groesse)].filter(Boolean).map(mk).join(" · ")}${mitOrt && o ? ` · ${mk(o.titel)} ${o.jahr}` : ""}</div>
+    ${x.name && m && suPasstText(x.name, AR.suche) && !suPasstText(x.titel, AR.suche) ? `<div class="hinweis">📎 ${mk(x.name)}</div>` : ""}
+    ${x.stichworte?.length ? `<div class="ar-stichworte">${x.stichworte.map((s) => `<span>#${mk(s)}</span>`).join("")}</div>` : ""}</div>
     ${AR.daten.darf ? `<button class="knopf klein" onclick="event.stopPropagation();arDokForm('${x.id}')" title="Ändern">✏️</button>` : '<span class="pfeil">›</span>'}</div>`;
 }
 async function arAnlage(id, archivDok) {
   const datei = archivDok ? AR.daten.dokumente.find((x) => x.id === id)?.datei : id;
   try { extOeffnen((await api("anlage_url", { id: datei })).url); } catch (e) { melde(e.message, true); }
 }
+// KC-CLUB-ARCHIV-SUCHE (1.4.1): Live-Suche wie die globale Suche – ab 2 Buchstaben, Umlaut-tolerant (ä=a=ae, ß=ss),
+// alle Wörter müssen vorkommen (egal wo: Titel, Stichwort, Register, Dateiname, Ordner), Treffer markiert
+const arWoerter = (q) => String(q || "").trim().split(/\s+/).filter(Boolean);
+function suPasstText(text, q) { const n = suNorm(text); return arWoerter(q).some((w) => n.includes(suNorm(w))); }
+function arPasstAlle(q, ...felder) { const n = suNorm(felder.flat().filter(Boolean).join(" ")); return arWoerter(q).every((w) => n.includes(suNorm(w))); }
+const arSuchLang = (q) => suNorm(q).replace(/\s/g, "").length >= 2;
 function arSuchErgebnis(q) {
-  const d = AR.daten, treffer = (t) => t && String(t).toLowerCase().includes(q);
+  const d = AR.daten, m = suMusterFuer(arWoerter(q));
   const ordner = new Map(d.ordner.map((o) => [o.id, o]));
-  const doks = d.dokumente.filter((x) => { const o = ordner.get(x.ordner_id); return o && arPasst(o) && [x.titel, x.name, x.register, ...(x.stichworte || []), o.titel].some(treffer); });
-  const auto = AR.art && AR.art !== "auto" ? [] : d.auto.filter((x) => (!AR.jahr || arJahr(x.datum) === AR.jahr) && [x.titel, x.text, x.voll].some(treffer));
-  $("arListe").innerHTML = `<p class="hinweis">${doks.length + auto.length} Treffer</p><div class="ar-blatt">${[...doks.map((x) => arZeile(x, false, true)), ...auto.map((x) => arZeile(x, true, true))].join("") || '<p class="hinweis" style="margin:6px">Nichts gefunden.</p>'}</div>`;
+  const oTreffer = d.ordner.filter((o) => arPasst(o) && arPasstAlle(q, o.titel, String(o.jahr), d.arten[o.art]?.t, o.register));
+  const doks = d.dokumente.filter((x) => { const o = ordner.get(x.ordner_id); return o && arPasst(o) && arPasstAlle(q, x.titel, x.name, x.register, x.stichworte || [], o.titel, String(o.jahr)); });
+  const auto = AR.art && AR.art !== "auto" && AR.art !== "" ? [] : d.auto.filter((x) => (!AR.jahr || arJahr(x.datum) === AR.jahr) && arPasstAlle(q, x.titel, x.text, x.voll, AR_AUTO[x.art]?.[1]));
+  const n = oTreffer.length + doks.length + auto.length;
+  $("arListe").innerHTML = `<p class="hinweis ar-zahl">${n ? `<b>${n}</b> Treffer für „${esc(q.trim())}“` : `Nichts gefunden für „${esc(q.trim())}“.${AR.jahr || AR.art ? " Es sind Filter gesetzt – <button class=\"knopf klein\" onclick=\"AR.jahr='';AR.art='';arFilterMerken();arZeigen()\">✕ Filter zurücksetzen</button>" : ""}`}</p>`
+    + (oTreffer.length ? `<div class="su-titel"><b>🗄️ Ordner</b><small>${oTreffer.length}</small></div><div class="ar-blatt">${oTreffer.map((o) => `<div class="ar-dok klickbar" onclick="arOrdnerOeffnen('${o.id}')"><span class="sym ar-mini" style="--of:${arFarbe(o)}">${arSym(o)}</span><div><b>${suMarkiert(o.titel, m)} ${o.jahr}</b><div class="hinweis">${esc(d.arten[o.art]?.t || "")} · ${o.anzahl} ${o.anzahl === 1 ? "Eintrag" : "Einträge"}${o.nur_vorstand ? " · 🔒" : ""}</div></div><span class="pfeil">›</span></div>`).join("")}</div>` : "")
+    + (doks.length ? `<div class="su-titel" style="margin-top:12px"><b>📄 Dokumente</b><small>${doks.length}</small></div><div class="ar-blatt">${doks.map((x) => arZeile(x, false, true, m)).join("")}</div>` : "")
+    + (auto.length ? `<div class="su-titel" style="margin-top:12px"><b>🤖 Vereinsleben</b><small>${auto.length}</small></div><div class="ar-blatt">${auto.map((x) => arZeile(x, true, true, m)).join("")}</div>` : "");
 }
 // ----- Ordner anlegen / ändern -----
 function arBlatt(html) {
@@ -7695,11 +7722,15 @@ const suNorm = (t) => String(t ?? "").toLowerCase().replace(/[äöüéèêàáâ
   .replace(/ß/g, "ss").replace(/ae/g, "a").replace(/oe/g, "o").replace(/ue/g, "u");
 function suWoerter() { return SU.genau ? [SU.q.trim()] : SU.q.trim().split(/\s+/).filter(Boolean); }
 // Treffer im Text markieren (Umlaut-tolerant)
-function suMuster() {
-  const teile = suWoerter().map((w) => suNorm(w).replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/a/g, "(?:a|ä|ae)").replace(/o/g, "(?:o|ö|oe)").replace(/u/g, "(?:u|ü|ue)").replace(/ss/g, "(?:ss|ß)")).filter(Boolean);
+function suMuster() { return suMusterFuer(suWoerter()); }
+function suMusterFuer(woerter) {
+  const teile = woerter.map((w) => suNorm(w).replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/a/g, "(?:a|ä|ae)").replace(/o/g, "(?:o|ö|oe)").replace(/u/g, "(?:u|ü|ue)").replace(/ss/g, "(?:ss|ß)")).filter(Boolean);
   try { return teile.length ? new RegExp("(" + teile.join("|") + ")", "gi") : null; } catch { return null; }
 }
-function suMarkiert(text, muster) { const t = esc(text || ""); return muster ? t.replace(muster, "<mark>$1</mark>") : t; }
+function suMarkiert(text, muster) {
+  const t = String(text ?? ""); if (!muster) return esc(t);
+  muster.lastIndex = 0; return t.split(muster).map((teil, i) => i % 2 ? `<mark>${esc(teil)}</mark>` : esc(teil)).join("");
+}
 // Ausschnitt rund um den ersten Treffer
 function suAusschnitt(text, muster, n = 110) {
   const t = String(text || "").replace(/\s+/g, " ").trim(); if (!t) return "";

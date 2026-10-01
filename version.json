@@ -1,10 +1,16 @@
 {
-  "version": "1.4.0",
+  "version": "1.4.1",
   "datum": "2026-09-30",
   "neu": [
-    "🔍 Suche: kleine Lupe oben – ab 2 Buchstaben erscheinen sofort Treffer aus Mitgliedern, Nachrichten, Terminen, Pinnwand, Protokollen, Archiv und mehr; ⚙️ Filter für die erweiterte Suche (wo, wann, von wem)"
+    "🔍 Archiv: Suche jetzt live wie die große Suche – ab 2 Buchstaben, Umlaute egal, Treffer markiert, findet auch Ordner; neu auch „In diesem Ordner suchen“"
   ],
   "verlauf": [
+    {
+      "version": "1.4.1",
+      "neu": [
+        "🔍 Archiv: Suche jetzt live wie die große Suche – ab 2 Buchstaben, Umlaute egal, Treffer markiert, findet auch Ordner; neu auch „In diesem Ordner suchen“"
+      ]
+    },
     {
       "version": "1.4.0",
       "neu": [
