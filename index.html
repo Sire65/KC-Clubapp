@@ -948,6 +948,10 @@
   .ordner .jahr { font-size: 1.35rem; font-weight: 900; line-height: 1; }
   .ordner .name { font-size: .72rem; font-weight: 700; line-height: 1.15; overflow-wrap: break-word; -webkit-hyphens: auto; hyphens: auto; }
   .ordner .anz { font-size: .74rem; opacity: .92; }
+  /* KC-CLUB-ARCHIV-MUETZE (1.17.1, Wunsch Hansi): originale Köcheclub-Kochmütze als Aufdruck auf jedem Ordnerrücken */
+  .ordner .muetze { margin-top: auto; width: 50px; height: 50px; object-fit: contain; opacity: .95; filter: drop-shadow(0 1px 1px rgba(0,0,0,.35)); pointer-events: none; }
+  .ordner .muetze + .loch { margin-top: 4px; }
+  .ar-kopf .muetze { width: 46px; height: 46px; flex: none; object-fit: contain; margin-left: auto; opacity: .95; }
   .ordner .loch { margin-top: auto; width: 24px; height: 24px; border-radius: 50%; background: rgba(0,0,0,.28); box-shadow: inset 0 2px 3px rgba(0,0,0,.4); }
   .ordner .schloss { position: absolute; top: 4px; right: 6px; font-size: .9rem; }
   .ordner .ar-frei { position: absolute; top: 4px; left: 6px; font-size: .9rem; }
@@ -1762,7 +1766,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.17.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.17.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -8505,7 +8509,7 @@ function arRuecken(o) {
   return `<button class="ordner" style="--of:${arFarbe(o)}" onclick="arOrdnerOeffnen('${o.id}')" title="${esc(o.titel)} ${o.jahr}">
     ${o.nur_vorstand ? '<span class="schloss">🔒</span>' : ""}${o.eigen && o.pruefung ? `<span class="schloss" title="wartet auf deine Prüfung">⏳${o.pruefung}</span>` : ""}${o.eigen && o.freigaben?.length ? '<span class="ar-frei" title="freigegeben">🔓</span>' : ""}<span class="sym">${arSym(o)}</span>
     <span class="schild"><span class="jahr">${o.jahr}</span><span class="name">${esc(o.titel)}</span></span>
-    <span class="anz">${geteilt ? "bis " + arBisKurz(o) : `${n} ${n === 1 ? "Eintrag" : "Einträge"}`}</span><span class="loch"></span></button>`;
+    <span class="anz">${geteilt ? "bis " + arBisKurz(o) : `${n} ${n === 1 ? "Eintrag" : "Einträge"}`}</span><img class="muetze" src="kc-kochmuetze-weiss.webp" alt=""><span class="loch"></span></button>`;
 }
 const arBisText = (iso) => new Date(iso).toLocaleString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) + " Uhr";
 const arBisKurz = (o) => { const b = (o.geteilt || []).map((f) => f.bis).sort().pop(); return b ? new Date(b).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" }) : ""; };
@@ -8540,7 +8544,7 @@ function arOrdnerZeigen() {
   const sichtbar = eintraege.filter((x) => !AR.register || x.register === AR.register);
   const art = o.auto ? "automatisch aus der App" : o.eigen ? "Dein persönlicher Ordner · nur du siehst ihn"
     : o.besitzer ? `freigegeben bis ${arBisText((o.geteilt || []).map((f) => f.bis).sort().pop())} · ${arDarfHinein(o) ? "ansehen + hineinlegen (zur Prüfung)" : "nur ansehen"}` : (d.arten[o.art]?.t || "");
-  $("arInhalt").innerHTML = `<div class="ar-kopf" style="--of:${arFarbe(o)}"><span class="sym">${arSym(o)}</span><div><b>${esc(o.titel)} ${o.jahr}</b><div class="klein">${esc(art)}${o.nur_vorstand ? " · 🔒 nur Clubleitung" : ""}</div></div></div>
+  $("arInhalt").innerHTML = `<div class="ar-kopf" style="--of:${arFarbe(o)}"><span class="sym">${arSym(o)}</span><div><b>${esc(o.titel)} ${o.jahr}</b><div class="klein">${esc(art)}${o.nur_vorstand ? " · 🔒 nur Clubleitung" : ""}</div></div><img class="muetze" src="kc-kochmuetze-weiss.webp" alt=""></div>
     ${o.eigen ? `<div class="knoepfe" style="margin:8px 0"><button class="knopf klein haupt" onclick="arDokForm()">＋ Dokument</button><button class="knopf klein" onclick="arFreigabeForm('${o.id}')">🔓 Freigeben</button><button class="knopf klein" onclick="arOrdnerForm('${o.id}')">✏️ Register</button><button class="knopf klein" onclick="arOrdnerLoeschen('${o.id}')">🗑️ Ordner</button></div>
         ${o.pruefung ? `<div class="karte hinweis" style="border:2px solid #d68910">⏳ <b>${o.pruefung} ${o.pruefung === 1 ? "Dokument wartet" : "Dokumente warten"} auf deine Prüfung</b> – unten annehmen oder ablehnen.</div>` : ""}${arFreigabenListe(o)}`
       : o.besitzer ? (arDarfHinein(o) ? `<div class="knoepfe" style="margin:8px 0"><button class="knopf klein haupt" onclick="arDokForm()">📥 Dokument hineinlegen</button></div><p class="hinweis" style="margin:0 4px 8px">Was du hineinlegst, sieht ${esc(o.titel)} erst nach Prüfung – angenommen oder abgelehnt bekommst du Bescheid.</p>` : "")

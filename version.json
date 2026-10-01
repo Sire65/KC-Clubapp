@@ -1,10 +1,16 @@
 {
-  "version": "1.17.0",
+  "version": "1.17.1",
   "datum": "2026-10-01",
   "neu": [
-    "🗄️ Notfallpass: Im SOS-Bereich gibt es jetzt „In mein Archiv kopieren“ – du wählst Ordner und Register, der Pass wird als Bild abgelegt"
+    "🗄️ Archiv: Jeder Ordner trägt jetzt die Köcheclub-Kochmütze auf dem Rücken"
   ],
   "verlauf": [
+    {
+      "version": "1.17.1",
+      "neu": [
+        "🗄️ Archiv: Jeder Ordner trägt jetzt die Köcheclub-Kochmütze auf dem Rücken"
+      ]
+    },
     {
       "version": "1.17.0",
       "neu": [

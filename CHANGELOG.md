@@ -1,5 +1,11 @@
 # Änderungen
 
+## 1.17.1 – 2026-10-01 (DEV)
+
+- KC-CLUB-ARCHIV-MUETZE (Wunsch Hansi): originale Köcheclub-Kochmütze (kc-kochmuetze-weiss.webp, schon im Offline-Speicher)
+  als Aufdruck auf jedem Ordnerrücken im Archiv-Regal (über dem Griffloch) und im Kopf eines geöffneten Ordners.
+  Nur Darstellung, keine Funktionsänderung.
+
 ## 1.17.0 – 2026-10-01 (DEV)
 
 - KC-CLUB-NOTFALLPASS-ARCHIV (Wunsch Hansi): Notfallpass-Anzeige hat „🗄️ In mein Archiv kopieren“. Vorher deutlicher

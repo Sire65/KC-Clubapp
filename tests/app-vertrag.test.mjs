@@ -1687,6 +1687,14 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(!/localStorage\.(setItem|removeItem)/.test(f), "Pass auf dem Gerät bleibt unverändert");
 }
 
+// 148. 1.17.1: Kochmütze auf dem Archiv-Ordner (KC-CLUB-ARCHIV-MUETZE)
+{
+  const r = html.slice(html.indexOf("function arRuecken(o)"), html.indexOf("const arBisText"));
+  assert.ok(/<img class="muetze" src="kc-kochmuetze-weiss\.webp" alt=""><span class="loch"><\/span><\/button>/.test(r), "Kochmütze auf jedem Ordnerrücken");
+  assert.ok(/<div class="ar-kopf"[\s\S]{0,400}<img class="muetze" src="kc-kochmuetze-weiss\.webp" alt="">/.test(html), "Kochmütze im Ordnerkopf");
+  assert.ok(/"kc-kochmuetze-weiss\.webp"/.test(lies("sw.js")), "Bild im Offline-Speicher");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
