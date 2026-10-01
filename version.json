@@ -1,10 +1,16 @@
 {
-  "version": "1.13.0",
+  "version": "1.14.0",
   "datum": "2026-10-01",
   "neu": [
-    "🧑‍🍳 Dienstwünsche (Twinkey): Knöpfe, die gerade nicht passen, sind grau und sagen kurz warum – z. B. „Noch keine eigenen Dienste freigegeben“ (DP2 Build 251)"
+    "🛡️ Neu im Reiter Programme: Sicherheits-Check – prüft Verschlüsselung, Zugriffsschutz, Sicherungen und Überwachung und zeigt die Antwortzeiten"
   ],
   "verlauf": [
+    {
+      "version": "1.14.0",
+      "neu": [
+        "🛡️ Neu im Reiter Programme: Sicherheits-Check – prüft Verschlüsselung, Zugriffsschutz, Sicherungen und Überwachung und zeigt die Antwortzeiten"
+      ]
+    },
     {
       "version": "1.13.0",
       "neu": [

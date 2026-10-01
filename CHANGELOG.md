@@ -1,5 +1,16 @@
 # Änderungen
 
+## 1.14.0 – 2026-10-01 (DEV)
+
+- KC-CLUB-SICHERHEIT (Wunsch Hansi): Kachel „🛡️ Sicherheits-Check“ im Reiter Programme. Prüfreihe mit 11 echten Prüfungen
+  (Registry SICHERHEIT_PRUEFUNGEN): verschlüsselte Verbindung, persönlicher Zugang, Server erreichbar, Daten-Speicher
+  antwortet, verschlüsselte Speicherung (fest eingebaut), Zugriffsschutz auf allen Tabellen (RLS), Sicherungskopie im
+  zweiten Speicher aktuell (< 8 Std.), nächtliche Sicherung (< 30 Std.), Wiederherstellung getestet (< 8 Tage, kein Fehler
+  danach), Überwachung aktiv (< 2 Std.), App-Version aktuell. Zwei Rundinstrumente (Antwortzeit App↔Server, Daten-Speicher;
+  schnell/normal/langsam immer mit Wort). „Alle Systeme laufen einwandfrei“ nur, wenn jede Zeile OK ist; Unbekanntes =
+  „nicht geprüft“ (Regel 11). Keine Datenbank-/Anbieternamen. Neue Aktion sicherheit_pruefen + SQL-Funktion
+  kc_club_sicherheit_status (nur Server).
+
 ## 1.13.0 – 2026-10-01 (DEV)
 
 - KC-CLUB-DIENSTWUNSCH: DP2-Twinkey auf Build 251 RC übernommen (Sire65/dp3, Branch codex/club-app-interface, Commit

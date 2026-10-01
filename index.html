@@ -352,6 +352,20 @@
   #chatSuchLeiste button { border: none; background: var(--karte); color: inherit; border-radius: 10px; padding: 8px 10px; cursor: pointer; box-shadow: var(--schatten); }
   #chatSuchZahl { font-size: .8rem; color: var(--grau); white-space: nowrap; }
   .blase.su-treffer { outline: 2px solid #f1c40f; } .blase.su-aktuell { outline: 3px solid #e67e22; }
+  /* KC-CLUB-SICHERHEIT (1.14.0): Statusfarben immer mit Symbol + Wort (nie Farbe allein), Zahlen in Textfarbe */
+  .si-gut { --st: #0ca30c; } .si-mittel { --st: #b7800b; } .si-schlecht { --st: #d03b3b; } .si-offen { --st: var(--grau); }
+  .si-ergebnis { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: var(--radius); border: 2px solid var(--st); background: var(--karte); }
+  .si-ergebnis .gross { font-size: 2rem; } .si-ergebnis b { font-size: 1.1rem; display: block; }
+  .si-uhren { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0; }
+  .si-uhr { text-align: center; padding: 8px 6px 10px; } .si-uhr svg { width: 100%; max-width: 150px; height: auto; display: block; margin: 0 auto; }
+  .si-uhr .spur { fill: none; stroke: var(--linie); stroke-width: 11; stroke-linecap: round; }
+  .si-uhr .wert { fill: none; stroke: var(--st); stroke-width: 11; stroke-linecap: round; transition: stroke-dashoffset .9s ease; }
+  .si-uhr .zahl { font-size: 1.35rem; font-weight: 800; margin-top: -6px; } .si-uhr .zahl small { font-size: .75rem; font-weight: 600; color: var(--grau); }
+  .si-uhr .wort { font-size: .82rem; font-weight: 700; } .si-uhr .titel { font-size: .8rem; color: var(--grau); margin-top: 2px; }
+  .si-liste { list-style: none; margin: 0; padding: 0; } .si-liste li { display: grid; grid-template-columns: 30px 1fr auto; gap: 8px; align-items: center; padding: 10px 2px; border-bottom: 1px solid var(--linie); }
+  .si-liste li:last-child { border-bottom: none; } .si-liste .sym { font-size: 1.25rem; text-align: center; } .si-liste small { display: block; color: var(--grau); font-size: .8rem; }
+  .si-liste .st { font-weight: 800; font-size: .85rem; white-space: nowrap; } .si-liste .st::before { content: ""; display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--st); margin-right: 5px; }
+  .si-dreht { display: inline-block; animation: wdreh 1s linear infinite; }
   /* KC-CLUB-ANHEFTEN / -CHATUMFRAGE / -KONTAKT / -MERKEN (1.10.0) */
   #chatAngeheftet { display: flex; flex-direction: column; gap: 4px; margin: 0 0 8px; }
   .pin-zeile { text-align: left; border: none; border-left: 4px solid var(--rot); border-radius: 10px; background: var(--karte); color: inherit; padding: 8px 10px; cursor: pointer; box-shadow: var(--schatten); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: .9rem; }
@@ -1271,6 +1285,12 @@
   </section>
 
   <!-- KC-CLUB-PROGRAMME (0.83.0): freigegebene Programme (Registry PROGRAMME) -->
+  <!-- KC-CLUB-SICHERHEIT (1.14.0) -->
+  <section id="v-sicherheit" class="versteckt">
+    <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>🛡️ Sicherheits-Check</h2></div>
+    <div id="siInhalt"></div>
+  </section>
+
   <section id="v-programme" class="versteckt">
     <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>💻 Freigegebene Programme</h2></div>
     <p class="hinweis" style="margin:0 2px 10px">Antippen öffnet das Programm in einem neuen Fenster. Tipp fürs Tablet: dort über <b>⋮</b> bzw. <b>Teilen □↑</b> „Zum Startbildschirm hinzufügen“ – dann startet es wie eine App.</p>
@@ -1742,7 +1762,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.13.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.14.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3843,6 +3863,8 @@ const KACHELN = {
   programme: [
     { id: "update", sym: "🔄", t: "Update prüfen", u: () => NEUE_VERSION ? `Neu: v${NEUE_VERSION} – antippen` : `Installiert: v${APP_VERSION}`, aktion: "updateKachel()", zahl: () => NEUE_VERSION ? "neu" : 0 },
     { id: "programme", sym: "💻", t: "Freigegebene Programme", u: "Kassen-Schulung …", v: "programme" },
+    // KC-CLUB-SICHERHEIT (1.14.0, Wunsch Hansi): Prüfreihe „ist alles sicher und läuft?“ für alle Mitglieder
+    { id: "sicherheit", sym: "🛡️", t: "Sicherheits-Check", u: "Läuft alles sicher? Jetzt prüfen", aktion: "sicherheitStart()" },
   ],
 };
 // Kacheln, die für mich gelten (z. B. Protokolle nicht für Aushilfen)
@@ -4748,7 +4770,7 @@ function zeige(v, ausHistorie) {
   aktuelleAnsicht = v; if (window.KCFP) KCFP.sicht = v;
   nzZaehlen(v); // KC-CLUB-NUTZUNG: nur „Bereich geöffnet“, ohne Namen
   if (vorher === "protokoll" && v !== "protokoll" && prTimer) prSpeichernJetzt(false).catch(() => {}); // ungespeicherte Eingaben sichern
-  ["start", "dokumente", "termine", "vorschlaege", "aktionen", "aktion", "fotos", "feedback", "gruppe", "mitglied", "protokolle", "protokoll", "dienste", "nachrichten", "chat", "neu", "mitglieder", "einstellungen", "pinnwand", "erstattung", "ueberblick", "programme", "standort", "archiv", "sos"].forEach((x) => $("v-" + x).classList.toggle("versteckt", x !== v));
+  ["start", "dokumente", "termine", "vorschlaege", "aktionen", "aktion", "fotos", "feedback", "gruppe", "mitglied", "protokolle", "protokoll", "dienste", "nachrichten", "chat", "neu", "mitglieder", "einstellungen", "pinnwand", "erstattung", "ueberblick", "programme", "standort", "archiv", "sos", "sicherheit"].forEach((x) => $("v-" + x).classList.toggle("versteckt", x !== v));
   document.querySelectorAll("#fuss button").forEach((b) => b.classList.toggle("an", b.dataset.v === v || (v === "chat" && b.dataset.v === "nachrichten") || (v === "neu" && b.dataset.v === "nachrichten")));
   $("eingabe").classList.toggle("versteckt", v !== "chat");
   document.body.classList.toggle("im-chat", v === "chat"); // KC-CLUB-SUCHE: Lupe nicht über dem Senden-Knopf
@@ -5497,6 +5519,74 @@ async function kontaktSenden(pid) {
   try { await api("nachricht_senden", { id: chatId, kontakt: pid, wege: ["push", "email"].filter((w) => ZW[w]) });
     document.getElementById("kwFenster")?.remove(); melde("👤 Kontakt gesendet"); await chatLaden(true); }
   catch (e) { melde(e.message, true); }
+}
+
+// ---------- KC-CLUB-SICHERHEIT (1.14.0, Wunsch Hansi): Sicherheits-Check – zeigt Mitgliedern, dass alles läuft und geschützt ist ----------
+// Jede Zeile ist eine echte Prüfung (App oder Server). Keine Namen von Datenbanken/Anbietern. Regel 11: Was sich nicht prüfen
+// lässt, steht als „nicht geprüft“ da – nie als OK. „Alle Systeme laufen einwandfrei“ nur, wenn wirklich jede Zeile OK ist.
+// Registry SICHERHEIT_PRUEFUNGEN: neue Prüfung = neuer Eintrag (wert(r) liefert true/false/null, info(r) den Zusatztext).
+const siZeit = (min) => min == null ? "" : min < 60 ? `vor ${Math.max(1, Math.round(min))} Min.` : min < 48 * 60 ? `vor ${Math.round(min / 60)} Std.` : `vor ${Math.round(min / 1440)} Tagen`;
+const SICHERHEIT_PRUEFUNGEN = [
+  { id: "verbindung", sym: "🔐", t: "Verbindung verschlüsselt", wert: () => location.protocol === "https:", info: () => location.protocol === "https:" ? "Alles, was du sendest, ist auf dem Weg geschützt" : "Seite nicht über eine geschützte Verbindung geöffnet" },
+  { id: "zugang", sym: "🔑", t: "Dein persönlicher Zugang ist gültig", wert: (r) => r.zugang, info: (r) => r.zugang ? "Nur mit deinem eigenen Link" : "" },
+  { id: "server", sym: "🛰️", t: "Server erreichbar", wert: (r) => r.serverMs != null, info: (r) => r.serverMs != null ? `Antwort in ${r.serverMs} ms` : "" },
+  { id: "datenbank", sym: "🗄️", t: "Daten-Speicher antwortet", wert: (r) => r.s ? r.s.dbMs != null : null, info: (r) => r.s?.dbMs != null ? `Antwort in ${r.s.dbMs} ms` : "" },
+  { id: "verschluesselt", sym: "🔒", t: "Daten verschlüsselt gespeichert", fest: true, wert: (r) => r.s ? r.s.dbMs != null : null, info: () => "Fest eingebaut – lässt sich nicht abschalten" },
+  { id: "schutz", sym: "🧱", t: "Zugriffsschutz auf allen Daten", wert: (r) => r.s?.schutz ?? null, info: () => "Jeder sieht nur, was er sehen darf" },
+  { id: "spiegel", sym: "🪞", t: "Sicherungskopie in zweitem Speicher aktuell", wert: (r) => r.s?.spiegel ?? null, info: (r) => r.s?.spiegelMin != null ? `Abgeglichen ${siZeit(r.s.spiegelMin)}` : "" },
+  { id: "sicherung", sym: "💾", t: "Nächtliche Datensicherung", wert: (r) => r.s?.sicherung ?? null, info: (r) => r.s?.sicherungAm ? `Zuletzt ${new Date(r.s.sicherungAm).toLocaleString("de-DE", { weekday: "short", hour: "2-digit", minute: "2-digit" })} Uhr` : "" },
+  { id: "wiederherstellung", sym: "♻️", t: "Wiederherstellung erfolgreich getestet", wert: (r) => r.s?.wiederherstellung ?? null, info: () => "Die Sicherung wird regelmäßig zur Probe zurückgespielt" },
+  { id: "ueberwachung", sym: "👁️", t: "Überwachung rund um die Uhr aktiv", wert: (r) => r.s?.ueberwachung ?? null, info: (r) => r.s?.ueberwachungMin != null ? `Letzte Kontrolle ${siZeit(r.s.ueberwachungMin)}` : "" },
+  { id: "version", sym: "🔄", t: "App auf dem neuesten Stand", wert: (r) => r.neueste == null ? null : r.neueste === APP_VERSION, info: (r) => r.neueste && r.neueste !== APP_VERSION ? `Neu: v${r.neueste} – unter Programme → Update` : `v${APP_VERSION}` },
+];
+// Rundinstrumente: Grenzen je Messung (ms) – schnell / normal / langsam, immer mit Wort (nicht nur Farbe)
+const SI_UHREN = [
+  { id: "server", t: "App ↔ Server", max: 2000, gut: 700, mittel: 1500, wert: (r) => r.serverMs },
+  { id: "datenbank", t: "Daten-Speicher", max: 1000, gut: 300, mittel: 700, wert: (r) => r.s?.dbMs ?? null },
+];
+let SI = { laeuft: false, r: null, zeit: null };
+function sicherheitStart() { zeige("sicherheit"); if (!SI.laeuft) sicherheitPruefen(); }
+function siKlasse(ok) { return ok === true ? "si-gut" : ok === false ? "si-schlecht" : "si-offen"; }
+function siUhr(u, r) {
+  const v = r ? u.wert(r) : null, anteil = v == null ? 0 : Math.min(1, v / u.max), laenge = Math.PI * 50;
+  const kl = v == null ? "si-offen" : v <= u.gut ? "si-gut" : v <= u.mittel ? "si-mittel" : "si-schlecht";
+  const wort = v == null ? (r ? "nicht gemessen" : "…") : v <= u.gut ? "✓ schnell" : v <= u.mittel ? "◐ normal" : "⚠ langsam";
+  return `<div class="karte si-uhr ${kl}" role="img" aria-label="${esc(u.t)}: ${v == null ? "nicht gemessen" : v + " Millisekunden, " + wort.replace(/^\S+ /, "")}">
+    <svg viewBox="0 0 120 68" aria-hidden="true"><path class="spur" d="M10 60 A50 50 0 0 1 110 60"/><path class="wert" d="M10 60 A50 50 0 0 1 110 60" stroke-dasharray="${laenge}" stroke-dashoffset="${laenge * (1 - anteil)}"/></svg>
+    <div class="zahl">${v == null ? "–" : v}<small> ms</small></div><div class="wort">${wort}</div><div class="titel">${esc(u.t)}</div></div>`;
+}
+function sicherheitZeigen(schritt) {
+  const r = SI.r, n = SICHERHEIT_PRUEFUNGEN.length, fertig = r && schritt >= n;
+  const werte = SICHERHEIT_PRUEFUNGEN.map((p) => (r ? p.wert(r) : null));
+  const schlecht = werte.filter((w) => w === false).length, offen = werte.filter((w) => w == null).length;
+  const kopf = !fertig
+    ? `<div class="si-ergebnis si-offen"><span class="gross si-dreht">⏳</span><div><b>Prüfung läuft …</b><span class="hinweis">${Math.min(schritt ?? 0, n)} von ${n} Punkten geprüft</span></div></div>`
+    : !schlecht && !offen
+      ? `<div class="si-ergebnis si-gut"><span class="gross">✅</span><div><b>Alle Systeme laufen einwandfrei</b><span class="hinweis">Deine Daten sind geschützt und gesichert · geprüft ${esc(SI.zeit)} Uhr</span></div></div>`
+      : `<div class="si-ergebnis ${schlecht ? "si-schlecht" : "si-mittel"}"><span class="gross">⚠️</span><div><b>${schlecht + offen} ${schlecht + offen === 1 ? "Punkt ist" : "Punkte sind"} gerade nicht bestätigt</b><span class="hinweis">Bitte in ein paar Minuten noch einmal prüfen. Bleibt es so, gib Hansi kurz Bescheid. · ${esc(SI.zeit || "")} Uhr</span></div></div>`;
+  const liste = SICHERHEIT_PRUEFUNGEN.map((p, i) => {
+    const sichtbar = r && i < (schritt ?? 0), w = werte[i];
+    const st = !sichtbar ? '<span class="st si-offen"><span class="si-dreht">⏳</span></span>' : `<span class="st ${siKlasse(w)}">${w === true ? (p.fest ? "immer an" : "OK") : w === false ? "Achtung" : "nicht geprüft"}</span>`;
+    return `<li><span class="sym">${p.sym}</span><span>${esc(p.t)}${sichtbar && p.info(r) ? `<small>${esc(p.info(r))}</small>` : ""}</span>${st}</li>`;
+  }).join("");
+  $("siInhalt").innerHTML = `${kopf}<div class="si-uhren">${SI_UHREN.map((u) => siUhr(u, fertig ? r : null)).join("")}</div>
+    <div class="karte"><ul class="si-liste">${liste}</ul></div>
+    <button class="knopf haupt" style="margin-top:12px" ${SI.laeuft ? "disabled" : ""} onclick="sicherheitPruefen()">🔍 ${SI.r ? "Erneut prüfen" : "Jetzt prüfen"}</button>
+    <p class="hinweis" style="margin-top:8px">Die Prüfung schaut nur nach – sie verändert nichts und verrät keine Daten.</p>`;
+}
+async function sicherheitPruefen() {
+  if (SI.laeuft) return;
+  SI = { laeuft: true, r: null, zeit: null }; sicherheitZeigen(0);
+  const r = { zugang: null, serverMs: null, s: null, neueste: null };
+  const t0 = performance.now();
+  try { r.s = await api("sicherheit_pruefen", {}, { warten: false }); r.serverMs = Math.round(performance.now() - t0); r.zugang = true; }
+  catch (e) { r.zugang = /zugang|link|berechtig/i.test(e.message) ? false : null; }
+  try { r.neueste = (await (await fetch("version.json?t=" + Date.now(), { cache: "no-store" })).json()).version || null; } catch {}
+  SI.r = r; SI.zeit = new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+  for (let i = 1; i <= SICHERHEIT_PRUEFUNGEN.length; i++) { if (aktuelleAnsicht !== "sicherheit") break; sicherheitZeigen(i); await new Promise((ok) => setTimeout(ok, 180)); }
+  SI.laeuft = false; sicherheitZeigen(SICHERHEIT_PRUEFUNGEN.length);
+  const alleOk = SICHERHEIT_PRUEFUNGEN.every((p) => p.wert(r) === true);
+  try { navigator.vibrate?.(alleOk ? 40 : [60, 60, 60]); } catch {}
 }
 
 // ---------- KC-CLUB-BEARBEITEN (1.9.0, Wunsch Hansi – wie WhatsApp): eigene Nachricht bis 15 Min. nach dem Senden ändern ----------
@@ -8628,6 +8718,7 @@ function suAppListe() {
     ["📍", "Standort teilen", "standort teilen wo bin ich", () => stBlatt()],
     ["⭐", "Gemerkte Nachrichten", "gemerkt merken stern favorit", () => { zeige("nachrichten"); gemerktZeigen(); }],
     ["📊", "Abstimmung im Chat", "abstimmung umfrage chat wer kommt", () => { melde("Im Chat auf 📎 tippen → „📊 Abstimmung“"); zeige("nachrichten"); }],
+    ["🛡️", "Sicherheits-Check", "sicherheit sicher datenschutz verschlüsselung sicherung prüfen test", () => sicherheitStart()],
     ["🔕", "Chat stummschalten", "stumm stummschalten leise chat gruppe", () => { melde("Im Chat oben auf ⋮ tippen → 🔕 Stummschalten"); zeige("nachrichten"); }],
     ["⚡", "Schnellstart-Symbole auswählen", "schnellstart symbole schnell kachel", ein("ssWahl")], ["👋", "Anklopfen erlauben / Anklopfton", "anklopfen klopfen ton klingel", ein("setAnklopfen")],
     ["🆘", "Wo bin ich? (SOS)", "wo bin ich adresse standort notfall sos", () => sosStart()], ["🪪", "Mein Notfallpass", "notfallpass allergien medikamente blutgruppe notfall", () => { sosStart(); nfpBearbeiten(); }],

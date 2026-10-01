@@ -1634,6 +1634,18 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/status: "confirmed", source: "club_app"/.test(d) && /K\.wishes = \[\.\.\.\(D\.meine\?\.entries \|\| \[\]\)\.map/.test(d), "Eingangs-Angaben (auch Status offen) zählen in DP2 als eigene aktive Wünsche");
 }
 
+// 143. 1.14.0: Sicherheits-Check (KC-CLUB-SICHERHEIT)
+{
+  const mig = lies("supabase/migrations/20261001_kc_club_v1140_sicherheit.sql");
+  assert.ok(/revoke all on function public\.kc_club_sicherheit_status\(\) from public, anon, authenticated/.test(mig) && /grant execute on function public\.kc_club_sicherheit_status\(\) to service_role/.test(mig), "SQL-Funktion nur für den Server");
+  const sp = server.slice(server.indexOf('case "sicherheit_pruefen"'), server.indexOf('case "nachricht_ausblenden"'));
+  assert.ok(/if \(error \|\| !s0\)[^\n]*schutz: null, spiegel: null/.test(sp) && /typeof min === "number" \? min <= grenze : null/.test(sp), "Server: fehlende Werte = null (nie OK)");
+  assert.ok(!/supabase|neon|postgres|backblaze|amazon|aws/i.test(html.slice(html.indexOf("const SICHERHEIT_PRUEFUNGEN"), html.indexOf("const SI_UHREN"))), "Keine Datenbank-/Anbieternamen in der Prüfreihe");
+  assert.ok(/!schlecht && !offen\n      \? `<div class="si-ergebnis si-gut"><span class="gross">✅<\/span><div><b>Alle Systeme laufen einwandfrei/.test(html), "„Alle Systeme laufen einwandfrei“ nur wenn nichts schlecht und nichts offen");
+  assert.ok(/w === false \? "Achtung" : "nicht geprüft"/.test(html), "Unbekannt wird als „nicht geprüft“ angezeigt");
+  assert.ok(/\{ id: "sicherheit", sym: "🛡️", t: "Sicherheits-Check"/.test(html) && /"sos", "sicherheit"\]\.forEach/.test(html), "Kachel im Reiter Programme + Ansicht");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

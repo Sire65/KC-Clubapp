@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.13.0";
+const SERVER_VERSION = "1.14.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -3225,6 +3225,24 @@ Köcheclub Werne`,
           if (error) throw new Fehler("Stimme konnte nicht gespeichert werden.", 500);
         }
         return json({ ok: true });
+      }
+
+      // ----- KC-CLUB-SICHERHEIT (1.14.0): Sicherheits-Check für alle Mitglieder – nur Ja/Nein + Zeitabstände, keine Namen -----
+      // Regel 11: fehlt ein Wert, kommt null (App: „nicht geprüft“) – nie ein erfundenes OK.
+      case "sicherheit_pruefen": {
+        const t0 = performance.now();
+        const { data: s0, error } = await db.rpc("kc_club_sicherheit_status");
+        const dbMs = Math.round(performance.now() - t0);
+        if (error || !s0) { console.error("sicherheit", error?.message); return json({ dbMs: null, schutz: null, spiegel: null, sicherung: null, wiederherstellung: null, ueberwachung: null }); }
+        const s1: any = s0, frisch = (min: unknown, grenze: number) => (typeof min === "number" ? min <= grenze : null);
+        return json({
+          dbMs,
+          schutz: typeof s1.ohne_schutz === "number" && s1.tabellen > 0 ? s1.ohne_schutz === 0 : null,
+          spiegel: frisch(s1.spiegel_min, 8 * 60), spiegelMin: s1.spiegel_min ?? null,           // Spiegel läuft alle paar Stunden
+          sicherung: frisch(s1.sicherung_min, 30 * 60), sicherungAm: s1.sicherung_am ?? null,      // nächtlich
+          wiederherstellung: s1.wiederherstellung_min == null ? null : frisch(s1.wiederherstellung_min, 8 * 24 * 60) && !s1.wiederherstellung_fehler_danach,
+          ueberwachung: frisch(s1.ueberwachung_min, 120), ueberwachungMin: s1.ueberwachung_min ?? null, // alle 30 Minuten
+        });
       }
 
       case "nachricht_ausblenden": {
