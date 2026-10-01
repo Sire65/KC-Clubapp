@@ -1,5 +1,16 @@
 # Änderungen
 
+## 1.13.0 – 2026-10-01 (DEV)
+
+- KC-CLUB-DIENSTWUNSCH: DP2-Twinkey auf Build 251 RC übernommen (Sire65/dp3, Branch codex/club-app-interface, Commit
+  f893f5d, 0.20.0-build251) mit tools/dp2-twinkey-uebernehmen.mjs – unverändert, Prüfsummen in dp2/QUELLE.json.
+  Neu: src/ui/member-button-logic.js (Button-Logik: eigene Daten, Berechtigung, Wunschphase, gültige Eingaben; gesperrte
+  Knöpfe grau, nicht anklickbar, mit kurzem Grund), Ergänzungen in auth.js, role-ux.js, simple-wish-assistant.js,
+  wish-assistant.js, mobile-wish-matrix.js. Club-App-Seite: Einträge aus dem Wunsch-Eingang mit Status „offen“ zählen
+  als vorhandene eigene Angaben (daten.js liefert sie DP2 als aktive Wünsche) – „offen“ heißt nur „Übernahme durch DP2
+  noch nicht bestätigt“. Browserprüfung 320/768/1280 px: mit offenen Angaben, ohne Angaben, Phase geschlossen (mit/ohne).
+  Offen (DP2/Codex): zentrale Verarbeitung der Kollegenfreigabe, Live-Handtest.
+
 ## 1.12.0 – 2026-10-01 (DEV)
 
 - KC-CLUB-RUHIGE-EINGABE (Wunsch Hansi): Leiste „Benachrichtigen: Push/E-Mail/WhatsApp“ nur noch auf Wunsch über ein

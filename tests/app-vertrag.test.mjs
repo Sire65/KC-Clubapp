@@ -1626,6 +1626,14 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/m\.umfrage\?\.optionen\.map\(\(o\) => o\.stimmen/.test(html) && /NA\.idStand !== idStand/.test(html), "Neuzeichnen bei Stimmen/Bearbeitung, Ton nur bei neuen Nachrichten");
 }
 
+// 142. 1.13.0: DP2 Build 251 Button-Logik (unverändert übernommen) + offene Club-App-Angaben zählen als eigene Daten
+{
+  const q = JSON.parse(lies("dp2/QUELLE.json"));
+  assert.ok(q.commit.startsWith("f893f5d") && q.dp2Version === "0.20.0-build251" && q.reihenfolge.includes("src/ui/member-button-logic.js"), "DP2 Build 251 mit Button-Logik übernommen");
+  const d = lies("dp2-club/daten.js");
+  assert.ok(/status: "confirmed", source: "club_app"/.test(d) && /K\.wishes = \[\.\.\.\(D\.meine\?\.entries \|\| \[\]\)\.map/.test(d), "Eingangs-Angaben (auch Status offen) zählen in DP2 als eigene aktive Wünsche");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

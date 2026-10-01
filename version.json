@@ -1,14 +1,16 @@
 {
-  "version": "1.12.0",
+  "version": "1.13.0",
   "datum": "2026-10-01",
   "neu": [
-    "🔔 Ruhigere Eingabe: Push/E-Mail/WhatsApp-Auswahl jetzt hinter dem kleinen 🔔 im Schreibfeld",
-    "⬇ Beim Öffnen eines Chats springt die App zur Linie „Neue Nachrichten“",
-    "📝 Halb geschriebene Nachrichten bleiben je Chat erhalten",
-    "⬇️ Knopf zur neuesten Nachricht, wenn du weit nach oben gescrollt hast – die App reißt dich beim Lesen nicht mehr nach unten",
-    "🎤 Sprachnachrichten schneller anhören: 1× / 1,5× / 2×"
+    "🧑‍🍳 Dienstwünsche (Twinkey): Knöpfe, die gerade nicht passen, sind grau und sagen kurz warum – z. B. „Noch keine eigenen Dienste freigegeben“ (DP2 Build 251)"
   ],
   "verlauf": [
+    {
+      "version": "1.13.0",
+      "neu": [
+        "🧑‍🍳 Dienstwünsche (Twinkey): Knöpfe, die gerade nicht passen, sind grau und sagen kurz warum – z. B. „Noch keine eigenen Dienste freigegeben“ (DP2 Build 251)"
+      ]
+    },
     {
       "version": "1.12.0",
       "neu": [
