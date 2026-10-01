@@ -1,5 +1,15 @@
 # Änderungen
 
+## DB/Spiegel – 2026-10-01 (ohne App-Build)
+
+- KC-SPIEGEL-AUTO (Freigabe Hansi „1 ja, 2 ja“): Neue Tabellen kommen automatisch in den Neon-Spiegel. Die Abdeckungsprüfung
+  (alle 30 Min.) legt für Tabellen ohne Regel selbst eine an (gespiegelt + gesichert, im 6-h-Lauf); Tabellen mit Spalten, die
+  nach Geheimnis oder Standort aussehen, werden angemeldet, aber nicht gespiegelt („AUTO-HALT“, WARNING bis zur Admin-Freigabe).
+  Der Spiegel-Arbeiter (v26) legt fehlende Neon-Tabellen und -Spalten vor dem Kopieren additiv an (nie löschen, nie Typ ändern;
+  Datenschutz-Tabellen mit fester Spaltenliste: nur melden). Neu: kc_db_mirror_spalten (nur service_role). Erste Anwendung:
+  8 Tabellen aus Club-App 0.92–1.4.1 und kc_club_mitfahrt_suche gespiegelt; kc_club_standort_live bewusst nicht (GPS).
+  Migration 20261001_kc_core_spiegel_auto_aufnahme; Rückweg: kc_db_mirror_abdeckung_check_vor_autoaufnahme.
+
 ## 1.4.1 – 2026-10-01 (DEV)
 
 - KC-CLUB-ARCHIV-SUCHE (Wunsch Hansi: „Bau die Suche im Archiv auch als Live-Suche“): Regal-Suche wie die globale

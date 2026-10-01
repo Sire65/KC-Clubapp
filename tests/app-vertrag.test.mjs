@@ -1472,6 +1472,22 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/revoke all on function public\.kc_dp_wish_inbox_ack\(uuid, integer, text, jsonb\) from public, anon;/.test(mig) && /revoke all on function public\.kc_dp_wish_inbox_receipt\(uuid\) from public, anon;/.test(mig), "Rechte nicht eingeschränkt");
 }
 
+// 113. DB/Spiegel: neue Tabellen und Spalten automatisch in den Neon-Spiegel (KC-SPIEGEL-AUTO)
+{
+  const mig = lies("supabase/migrations/20261001_kc_core_spiegel_auto_aufnahme.sql");
+  const w = lies("supabase/functions/kc-db-mirror-worker/index.ts");
+  assert.ok(/_vor_autoaufnahme\(/.test(mig), "Wiederherstellungspunkt fehlt");
+  assert.ok(/create or replace function public\.kc_db_mirror_spalten/.test(mig) && /revoke all on function public\.kc_db_mirror_spalten\(text\) from public, anon, authenticated;/.test(mig) && /grant execute on function public\.kc_db_mirror_spalten\(text\) to service_role;/.test(mig), "Spaltenliste nur für den Arbeiter");
+  assert.ok(/token\|secret\|geheim\|passw/.test(mig) && /latitude\|longitude\|gps\|standort/.test(mig) && /'AUTO-HALT %s: wartet auf Admin-Freigabe/.test(mig) && /values \(t, v_bereich, 'sensitive', false, false, false,/.test(mig), "Verdächtige Spalten → nicht spiegeln, Freigabe nötig");
+  assert.ok(/values \(t, v_bereich, 'sensitive', false, true, true,/.test(mig) && /insert into public\.kc_neon_resume_tables \(table_name\) values \(t\)/.test(mig), "Unauffällige Tabelle → gespiegelt + im 6-h-Lauf");
+  assert.ok(/when cardinality\(v_wartet\) > 0 then format\('Spiegel-Abdeckung WARNING/.test(mig), "Wartende Tabellen bleiben sichtbar (WARNING)");
+  assert.ok(/'kc_club_standort_live', 'Club-App', 'sensitive', false, false, false/.test(mig), "Standort live bewusst nicht gespiegelt");
+  assert.ok(/const schemaAbgleich=async\(table:string\)/.test(w) && /create table if not exists \$\{q\}/.test(w) && /alter table \$\{q\} add column if not exists/.test(w), "Arbeiter legt Tabelle/Spalten an");
+  assert.ok(!/drop (table|column)|alter column|alter table [^`]*type /i.test(w), "Arbeiter löscht oder ändert nie");
+  assert.ok(/if\(redactedTables\.has\(table\)\)\{fehlend\.push\(s\.name\);continue\}/.test(w), "Datenschutz-Tabellen: neue Spalten nur melden");
+  assert.ok(/const schema=await schemaAbgleich\(table\);/.test(w.slice(w.indexOf("try{\n        const schema"))), "Abgleich vor dem Kopieren");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

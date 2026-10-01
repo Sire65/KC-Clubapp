@@ -28,6 +28,23 @@ Deno.serve(async(req)=>{
   const batchId=crypto.randomUUID(); const batchTotal=requested.length;
   const syncP=async()=>{const {data,error}=await sb.from("kc_core_people").select("org_id,person_id,active,updated_at");if(error)throw new Error("person refs unavailable");for(const r of data??[])await getNeon().unsafe('insert into public.kc_mirror_person_refs(org_id,person_id,active,source_updated_at,mirrored_at) values ($1,$2,$3,$4::timestamptz,now()) on conflict (org_id,person_id) do update set active=excluded.active,source_updated_at=excluded.source_updated_at,mirrored_at=now()',[r.org_id,r.person_id,r.active,r.updated_at]);};
   const syncU=async()=>{for(const s of ["kc_core_user_links","kc_dp_memberships","kc_manager_memberships"]){const {data,error}=await sb.from(s).select("org_id,user_id,active");if(error)throw new Error("user refs unavailable");for(const r of data??[])await getNeon().unsafe('insert into public.kc_mirror_user_refs(org_id,user_id,active,mirrored_at) values ($1,$2::uuid,$3,now()) on conflict (org_id,user_id) do update set active=excluded.active,mirrored_at=now()',[r.org_id,r.user_id,r.active]);}};
+  // KC-SPIEGEL-AUTO (01.10.2026, Freigabe Hansi): fehlende Neon-Tabelle bzw. fehlende Spalten vor dem Kopieren anlegen –
+  // nur additiv (nie löschen, nie Typ ändern). Abweichende Typen werden nur gemeldet (metrics.schema_sync.type_mismatch).
+  // Spalten und Typen liefert Supabase (kc_db_mirror_spalten, Reihenfolge wie dort → gleicher Prüf-Hash).
+  const typSicher=(t:string)=>/^[a-z0-9 _(),\[\]"]+$/i.test(t)&&!/--|;/.test(t);
+  const schemaAbgleich=async(table:string)=>{
+    const {data:spalten,error}=await sb.rpc("kc_db_mirror_spalten",{p_table_name:table});
+    if(error||!Array.isArray(spalten)||!spalten.length)throw new Error("source columns unavailable");
+    for(const s of spalten){qi(String(s.name));if(!typSicher(String(s.type)))throw new Error(`unsafe column type: ${s.type}`)}
+    const ziel=await getNeon().unsafe(`select a.attname as name, format_type(a.atttypid,a.atttypmod) as type from pg_attribute a join pg_class c on c.oid=a.attrelid join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relname=$1 and a.attnum>0 and not a.attisdropped order by a.attnum`,[table]);
+    // Datenschutz-Tabellen mit fester Spaltenliste in kc_db_mirror_snapshot (redactedTables): neue Spalten dort nur melden –
+    // der Snapshot liefert sie nicht, eine ergänzte Neon-Spalte würde die Prüfsumme brechen.
+    const q=`"public".${qi(table)}`,neu:string[]=[],abweichend:string[]=[],fehlend:string[]=[];let angelegt=false;
+    if(!ziel.length){await getNeon().unsafe(`create table if not exists ${q} (${spalten.map((s:any)=>`${qi(s.name)} ${s.type}`).join(", ")})`);angelegt=true}
+    else{const vorhanden=new Map(ziel.map((z:any)=>[String(z.name),String(z.type)]));for(const s of spalten){if(!vorhanden.has(s.name)){if(redactedTables.has(table)){fehlend.push(s.name);continue}await getNeon().unsafe(`alter table ${q} add column if not exists ${qi(s.name)} ${s.type}`);neu.push(s.name)}else if(vorhanden.get(s.name)!==s.type)abweichend.push(`${s.name}: ${vorhanden.get(s.name)} ≠ ${s.type}`)}}
+    if(angelegt||neu.length)await sb.from("kc_db_mirror_audit").insert({severity:"info",action:"mirror_schema_auto",detail:angelegt?`Neon-Tabelle ${table} automatisch angelegt (${spalten.length} Spalten)`:`Neon-Tabelle ${table}: Spalten ergänzt (${neu.join(", ")})`,metadata:{table,created:angelegt,columns_added:neu,batch_id:batchId}});
+    return {created:angelegt,columns_added:neu,type_mismatch:abweichend,not_added_privacy:fehlend};
+  };
   try{
     for(let i=0;i<requested.length;i++){
       const table=requested[i];
@@ -54,6 +71,7 @@ Deno.serve(async(req)=>{
       const runningMetrics={table,batch_id:batchId,batch_index:i+1,batch_total:batchTotal,payload_bytes:bytes,privacy_redacted:redactedTables.has(table),write_mode:table==="kc_core_organizations"?"upsert":"replace",hash_mode:hashMode};
       const {data:runRow,error:runErr}=await sb.from("kc_db_mirror_runs").insert({run_type:"snapshot",status:"running",started_at:started,source_rows:Number(sc),mismatch_count:0,message:`${table}: transfer running`,metrics:runningMetrics}).select("id").single();const runId=runErr?null:runRow?.id;
       try{
+        const schema=await schemaAbgleich(table);if(schema.created||schema.columns_added.length||schema.type_mismatch.length||schema.not_added_privacy.length)(runningMetrics as any).schema_sync=schema;
         await getNeon().begin(async tx=>{if(table==="kc_core_organizations"){if(sc!=="0")await tx.unsafe(`insert into ${q}(org_id,name,active,created_at,updated_at) select x.org_id,x.name,x.active,x.created_at,x.updated_at from jsonb_populate_recordset(null::${q},(($1::jsonb #>> '{}')::jsonb)) x on conflict(org_id) do update set name=excluded.name,active=excluded.active,created_at=excluded.created_at,updated_at=excluded.updated_at`,[payload])}else{await tx.unsafe(`delete from ${q}`);if(sc!=="0")await tx.unsafe(`insert into ${q} overriding system value select x.* from jsonb_populate_recordset(null::${q},(($1::jsonb #>> '{}')::jsonb)) x`,[payload])}});
         const verifySql=stableHashTables.has(table)?`select count(*)::bigint row_count,md5(coalesce(string_agg(md5(to_jsonb(t)::text),'' order by md5(to_jsonb(t)::text) collate "C"),'')) content_hash from ${q} t`:`select count(*)::bigint row_count,md5(coalesce(string_agg(row_to_json(t)::text,'' order by row_to_json(t)::text),'')) content_hash from ${q} t`;
         const v=await getNeon().unsafe(verifySql);const tc=String(v[0]?.row_count??"0"),th=String(v[0]?.content_hash??""),ok=sc===tc&&sh===th,endMs=Date.now(),durationMs=Math.max(1,endMs-startMs),bps=Math.round(bytes/(durationMs/1000));
