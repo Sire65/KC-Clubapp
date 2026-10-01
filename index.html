@@ -330,6 +330,27 @@
   details.karte .pfeil { width: 42px; height: 42px; display: grid; place-items: center; font-size: 1.7rem; line-height: 1; color: var(--rot); transition: transform .2s; flex: none; }
   details.karte:not([open]) > summary .pfeil { transform: rotate(-90deg); }
   details.karte.fest > summary .pfeil { opacity: .35; }
+  /* KC-CLUB-KLAPPE-UNTEN (1.6.0) */
+  details.karte > .klappe-unten { display: block; margin: 12px auto 0; padding: 8px 18px; border: none; border-radius: 20px; background: var(--karte2); font-weight: 800; cursor: pointer; }
+  /* KC-CLUB-WISCHEN (1.6.0) */
+  .blase.wischt { position: relative; }
+  .blase[data-wisch="antworten"]::before { content: "↩️"; position: absolute; left: -34px; top: 50%; transform: translateY(-50%); font-size: 1.3rem; }
+  .blase[data-wisch="loeschen"]::after { content: "🗑️"; position: absolute; right: -34px; top: 50%; transform: translateY(-50%); font-size: 1.3rem; }
+  #chat { overflow-x: hidden; }
+  /* KC-CLUB-SOS (1.6.0) */
+  .kachel.sos { background: #c0392b; color: #fff; } .kachel.sos small { color: #ffe3df; }
+  .karte.sos-warn { background: #c0392b; color: #fff; } .karte.sos-warn b { color: #fff; }
+  #sosSuche { width: 100%; box-sizing: border-box; padding: 11px 12px; border-radius: 12px; border: 1px solid var(--linie); font-size: 1rem; background: var(--karte); color: inherit; margin-bottom: 8px; }
+  .sos-nummern { display: grid; gap: 8px; margin: 10px 0; }
+  .sos-nr { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; border: 2px solid #c0392b; border-radius: var(--radius); background: var(--karte); padding: 10px 12px; cursor: pointer; color: inherit; }
+  .sos-nr.haupt { background: #fdecea; } .sos-nr .sym { font-size: 1.6rem; } .sos-nr .ruf { margin-left: auto; font-size: 1.4rem; }
+  .sos-nr .txt { display: flex; flex-direction: column; } .sos-nr .txt b { font-size: 1.25rem; color: #c0392b; } .sos-nr .txt small { color: var(--grau); }
+  .sos-mitglied { border-bottom: 1px solid var(--linie); } .sos-mitglied:last-child { border-bottom: none; }
+  .sos-name { display: flex; align-items: center; gap: 8px; width: 100%; background: none; border: none; padding: 10px 2px; text-align: left; cursor: pointer; color: inherit; font-size: 1rem; }
+  .sos-name small { color: var(--grau); font-size: .8rem; } .sos-name span { margin-left: auto; color: var(--grau); }
+  .sos-detail { padding: 0 2px 10px; } .sos-detail .knoepfe a { text-decoration: none; }
+  .sos-nf { margin-top: 8px; padding: 8px; border-radius: 10px; background: #fdecea; }
+  .tdt-kopf { font-size: .8rem; font-weight: 800; color: var(--gold); text-transform: uppercase; letter-spacing: .05em; }
   details.karte.fest > summary { cursor: default; }
   details.karte[open] > summary { margin-bottom: 8px; }
   .wahltabelle { width: 100%; border-collapse: collapse; }
@@ -1197,6 +1218,12 @@
   </section>
 
   <!-- KC-CLUB-STANDORT (0.92.0) -->
+  <!-- KC-CLUB-SOS (1.6.0): Notrufnummern + Kontakte im Notfall -->
+  <section id="v-sos" class="versteckt">
+    <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>🆘 SOS – Notfall</h2></div>
+    <div id="sosInhalt"></div>
+  </section>
+
   <section id="v-standort" class="versteckt">
     <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>📍 Standorte</h2><button class="knopf klein" onclick="stBlatt()">📍 Teilen</button></div>
     <div id="stListe"></div>
@@ -1276,6 +1303,7 @@
       <div id="farbeE"><b>🎨 Lieblingsfarbe</b><div class="hinweis">Antippen – die App färbt sich sofort um</div><div class="designwahl" id="designWahlE"></div></div>
       <div class="schalter"><div><b>🔠 Große Schrift</b></div><input type="checkbox" id="setGrossE" onchange="einstellung('gross', this.checked); if ($('setGross')) $('setGross').checked = this.checked"></div>
       <div class="schalter"><div><b>🟢 Einfache Ansicht</b><div class="hinweis">Ausschalten zeigt alle Funktionen – du kannst jederzeit zurück.</div></div><button class="knopf klein" onclick="ansichtSetzen('erweitert')">🔧 Alle Funktionen</button></div>
+      <div class="schalter"><div><b>💡 Tipp des Tages</b><div class="hinweis">Beim Öffnen ab und zu ein kurzer Tipp zu neuen Funktionen</div></div><input type="checkbox" id="setTipps" checked onchange="tippSchalter(this.checked)"></div>
       <div class="schalter"><div><b>📄 Kurzanleitung</b><div class="hinweis">Die App in 3 Schritten – zum Ansehen oder Ausdrucken</div></div><button class="knopf klein" onclick="druckStarten('anleitung')">Ansehen</button></div>
       <div class="schalter"><div><b>💭 Feedback</b><div class="hinweis">Was gefällt dir, was ist zu kompliziert? Schreib es Hansi.</div></div><button class="knopf klein" onclick="zeige('feedback')">Schreiben</button></div>
     </details>
@@ -1573,6 +1601,13 @@
     <button class="knopf" style="text-align:center" id="tippSpaeter">Später</button>
     <button class="knopf" style="text-align:center" id="tippNein">Nein, danke</button></div>
 </div>
+<!-- KC-CLUB-TIPP (1.6.0): Tipp des Tages – höchstens einer je Tag -->
+<div class="blatt versteckt" id="tdtBlatt">
+  <div class="blatt-innen"><div id="tdtText"></div>
+    <button class="knopf haupt" style="text-align:center" id="tdtTesten">👉 Jetzt ausprobieren</button>
+    <div class="zwei"><button class="knopf" style="text-align:center" id="tdtKenne">✔ Kenne ich</button><button class="knopf" style="text-align:center" id="tdtSpaeter">⏰ Später</button></div>
+    <button class="knopf klein" style="text-align:center;margin-top:6px" id="tdtAus">🔕 Keine Tipps mehr anzeigen</button></div>
+</div>
 <!-- KC-CLUB-BEGRUESSUNG: einmal beim ersten Start je Mitglied -->
 <div class="blatt versteckt" id="begruessungBlatt">
   <div class="blatt-innen begruessung"><div id="begruessungText"></div>
@@ -1619,7 +1654,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.5.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.6.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -1813,7 +1848,7 @@ async function pwStart(nurZaehlen) { // nurZaehlen: Begrüßung ist offen → Pi
       pwFenster(n); gezeigt = true; } } catch {}
   try { const r = await api("pinnwand"); pwUebernehmen(r);
     if (!gezeigt && !nurZaehlen && PW.zettel.some(pwOffen) && aktuelleAnsicht === "start") { PW.wichtigStart = true; zeige("pinnwand"); gezeigt = true; }
-    if (!gezeigt && !nurZaehlen && !pwErinnern()) einstiegPruefen();
+    if (!gezeigt && !nurZaehlen && !pwErinnern() && !einstiegPruefen()) tippDesTages();
   } catch {}
 }
 // KC-CLUB-PINNWAND-LIVE (0.57.0): bei geöffneter App alle PW_LIVE_MS nach neuen Zetteln schauen (Aktion pinnwand_neu markiert
@@ -2036,7 +2071,7 @@ function begruessungFertig(weiter) {
 // Beim ersten Start (auch für Mitglieder, die schon drin waren) genau eine Frage; die Wahl gilt geräteübergreifend
 // (Server-Einstellung „ansicht“), umschaltbar unten auf der Startseite und in den Einstellungen. Einfach = 5 große Kacheln,
 // oben nur „Nächstes Treffen“, Einstellungen mit drei Dingen. Es wird nichts gelöscht – die erweiterte Ansicht zeigt alles.
-const EINFACH_KACHELN = ["termine", "kommunikation", "pinnwand", "meindienst", "mitglieder", "dokumente"];
+const EINFACH_KACHELN = ["termine", "kommunikation", "pinnwand", "meindienst", "mitglieder", "dokumente", "sos"];
 // Dienstwünsche kommen in die einfache Ansicht erst, wenn DP2 die Wünsche abholt (Codex-Umbau) – dann nur in der Wunschphase
 const DIENSTWUNSCH_EINFACH = false;
 let ANSICHT = (() => { try { return localStorage.getItem("kc_club_ansicht") === "erweitert" ? "erweitert" : "einfach"; } catch { return "einfach"; } })();
@@ -2204,6 +2239,52 @@ function einstiegHinweis() {
   $("tippBlatt").classList.remove("versteckt");
   document.querySelector(".ansichtname.erw")?.classList.add("hervor"); setTimeout(() => document.querySelector(".ansichtname.erw")?.classList.remove("hervor"), 4000);
 }
+
+// ---------- KC-CLUB-TIPP (1.6.0, Wunsch Hansi): Tipp des Tages beim Öffnen – höchstens einer je Tag ----------
+// Registry TIPPS: neue Tipps einfach hier ergänzen (nur: wann der Tipp passt; testen: führt direkt hin).
+// „Kenne ich“ = nie wieder dieser Tipp, „Später“ = frühestens in TIPP_SPAETER_TAGE wieder, „Keine Tipps mehr“ = aus
+// (⚙️ Einstellungen → „💡 Tipp des Tages“, Standard an). Gespeichert in der Server-Einstellung „tipps“ (geräteübergreifend).
+const TIPP_SPAETER_TAGE = 3;
+const TIPPS = [
+  { id: "archiv_ordner", sym: "👤", t: "Kennst du schon deinen eigenen Archiv-Ordner?", x: "Im Archiv hast du einen persönlichen Ordner mit Registern – nur du siehst ihn. Mit 🔓 kannst du anderen etwas auf Zeit freigeben.", testen: () => arStart() },
+  { id: "wischen", sym: "👉", t: "In Nachrichten kannst du jetzt wischen", x: "Eine Nachricht <b>nach rechts</b> wischen = antworten. <b>Nach links</b> wischen = löschen (mit Rückfrage).", testen: () => zeige("nachrichten") },
+  { id: "emoji", sym: "😊", t: "Weißt du schon, dass du Emojis in deine Nachrichten setzen kannst?", x: "Im Chat neben dem Schreibfeld gibt es eine kleine Emoji-Auswahl.", testen: () => zeige("nachrichten") },
+  { id: "reaktion", sym: "👍", t: "Auf Nachrichten reagieren", x: "Tippe eine Nachricht an – dann kannst du mit 👍 ❤️ 😂 … reagieren, antworten oder weiterleiten.", testen: () => zeige("nachrichten") },
+  { id: "erwaehnung", sym: "📣", t: "Jemanden direkt ansprechen", x: "Schreib in einer Gruppe <b>@</b> und den Namen – die Person bekommt dann sicher Bescheid.", testen: () => zeige("nachrichten") },
+  { id: "sos", sym: "🆘", t: "Für den Notfall: die rote SOS-Kachel", x: "Dort findest du die wichtigsten Notrufnummern und erreichst Mitglieder schnell. Trag auch deinen eigenen Notfallkontakt ein.", testen: () => sosStart() },
+  { id: "lupe", sym: "🔍", t: "Alles finden mit der Lupe", x: "Mit der kleinen Lupe suchst du in Nachrichten, Terminen, Archiv, Pinnwand und mehr – schon ab 2 Buchstaben.", testen: () => sucheAuf() },
+  { id: "ruhe", sym: "🌙", t: "Nachts Ruhe mit „Nicht stören“", x: "In den Einstellungen kannst du einen Zeitraum ohne Push einstellen – Anrufe kommen trotzdem durch.", testen: () => einstiegHin("benachrichtigung", "ruheVon") },
+  { id: "antwort_zurueck", sym: "↩️", t: "Termin-Antwort zurücknehmen", x: "Bei einem Termin nochmal auf deine farbige Antwort tippen – dann ist sie zurückgenommen.", testen: () => zeige("termine") },
+  { id: "mitfahren", sym: "🚗", t: "Mitfahrgelegenheit suchen oder anbieten", x: "Nach „✅ Ich komme“ kannst du bei jedem Termin eine Mitfahrt suchen oder anbieten und Plätze buchen.", testen: () => zeige("termine") },
+  { id: "kalender", sym: "📆", t: "Termine im eigenen Kalender", x: "Die Club-Termine kannst du in Google- oder Outlook-Kalender übernehmen – automatisch aktuell.", testen: () => einstiegHin("handykalender") },
+  { id: "klappe", sym: "🔒", t: "Bereiche festhalten", x: "In den Einstellungen kannst du jeden Bereich mit dem Schloss offen oder zu feststellen. Lange Bereiche klappst du jetzt auch unten mit „▴ Zuklappen“ zu.", testen: () => zeige("einstellungen") },
+  { id: "private_termine", sym: "🗓️", t: "Eigene private Termine", x: "Unter Termine kannst du mit „＋ Neu“ auch private Einträge anlegen – nur du siehst sie.", testen: () => zeige("termine") },
+];
+const tippStand = () => ({ an: true, bekannt: {}, spaeter: {}, zuletzt: null, ...(INIT?.einstellungen?.tipps || {}) });
+function tippSpeichern(neu) {
+  const w = { ...tippStand(), ...neu };
+  INIT.einstellungen = { ...(INIT.einstellungen || {}), tipps: w };
+  api("einstellung_setzen", { schluessel: "tipps", wert: w }).catch(() => {});
+}
+function tippDesTages() {
+  const st = tippStand();
+  if (!st.an || !INIT || document.querySelector(".blatt:not(.versteckt)") || aktuelleAnsicht !== "start") return false;
+  const heute = heuteIso();
+  if (st.zuletzt && new Date(st.zuletzt).toLocaleDateString("sv-SE", { timeZone: TZ }) === heute) return false; // einer je Tag
+  const tipp = TIPPS.find((x) => !st.bekannt[x.id] && (!st.spaeter[x.id] || tageSeit(st.spaeter[x.id]) >= TIPP_SPAETER_TAGE) && (!x.nur || x.nur()));
+  if (!tipp) return false;
+  tippSpeichern({ zuletzt: new Date().toISOString() });
+  $("tdtText").innerHTML = `<div class="tdt-kopf">💡 Tipp des Tages</div><h3 style="margin:4px 0 6px">${tipp.sym} ${tipp.t}</h3><p style="margin:0 0 4px">${tipp.x}</p>`;
+  const zu = () => $("tdtBlatt").classList.add("versteckt");
+  $("tdtTesten").onclick = () => { zu(); tippSpeichern({ spaeter: { ...tippStand().spaeter, [tipp.id]: new Date().toISOString() } }); tipp.testen(); };
+  $("tdtKenne").onclick = () => { zu(); tippSpeichern({ bekannt: { ...tippStand().bekannt, [tipp.id]: new Date().toISOString() } }); melde("👍 Alles klar – dieser Tipp kommt nicht wieder"); };
+  $("tdtSpaeter").onclick = () => { zu(); tippSpeichern({ spaeter: { ...tippStand().spaeter, [tipp.id]: new Date().toISOString() } }); melde(`⏰ Ich erinnere dich in ${TIPP_SPAETER_TAGE} Tagen`); };
+  $("tdtAus").onclick = () => { zu(); tippSpeichern({ an: false }); melde("🔕 Keine Tipps mehr – einschalten kannst du sie unter ⚙️ Einstellungen"); };
+  $("tdtBlatt").classList.remove("versteckt");
+  return true;
+}
+function tippSchalterZeigen() { if ($("setTipps")) $("setTipps").checked = tippStand().an; }
+function tippSchalter(an) { tippSpeichern({ an, ...(an ? { zuletzt: null } : {}) }); melde(an ? "💡 Tipp des Tages ist an" : "🔕 Tipp des Tages ist aus"); }
 
 // ---------- KC-CLUB-ONLINE (0.29.0): wer ist online, Anklopfen, schneller Direkt-Chat ----------
 // Die App meldet sich alle 60 s beim Server (nur wenn sichtbar). Online = in den letzten 2½ Minuten da gewesen.
@@ -3451,6 +3532,8 @@ async function druckUeberblick() { return { titel: "Unsere Club-App auf einen Bl
 const KACHELN = {
   verein: [
     { id: "termine", sym: "📅", t: "Termine", u: "Treffen · Zu- & Absagen", v: "termine" },
+    // KC-CLUB-SOS (1.6.0, Wunsch Hansi): rote Notfall-Kachel – Notrufnummern + Kontakte der Mitglieder
+    { id: "sos", sym: "🆘", t: "SOS – Notfall", u: "Notruf · Kontakte im Notfall", aktion: "sosStart()", klasse: "sos" },
     { id: "kommunikation", sym: "💬", t: "Kommunikation", u: "Nachrichten & Anlagen", v: "nachrichten", zahl: () => INIT?.ungelesen || 0 },
     { id: "mitglieder", sym: "👥", t: "Aktive Mitglieder", u: "Status · Ämter · Kontakt", v: "mitglieder" },
     { id: "vorschlaege", sym: "🗳️", t: "Vorschläge", u: "Themen & Abstimmungen", v: "vorschlaege", zahl: () => INIT?.offeneAbstimmungen || 0 },
@@ -3671,7 +3754,7 @@ function kachelnZeigen() {
   $("kaAusHinweis").innerHTML = ausN ? `<button class="kaausgeblendet" onclick="kaBearbeiten(true)">🙈 ${ausN} ausgeblendete Kachel${ausN > 1 ? "n" : ""} – anzeigen</button>` : "";
   $("raster").innerHTML = kacheln(reg).map((k, i) => {
     const z = k.zahl ? k.zahl() : 0;
-    return `<button class="kachel${k.bald ? " bald" : ""}" data-id="${k.id}" onclick="${k.bald ? `melde('„${k.t}“ kommt in einer der nächsten Versionen.')` : k.aktion || `zeige('${k.v}')`}">
+    return `<button class="kachel${k.bald ? " bald" : ""}${k.klasse ? " " + k.klasse : ""}" data-id="${k.id}" onclick="${k.bald ? `melde('„${k.t}“ kommt in einer der nächsten Versionen.')` : k.aktion || `zeige('${k.v}')`}">
       <div class="sym">${k.sym}</div><b>${esc(k.t)}</b><small>${esc(typeof k.u === "function" ? k.u() : k.u)}</small>${k.bald ? '<span class="zahl">bald</span>' : z ? `<span class="zahl">${z}</span>` : ""}</button>`;
   }).join("");
 }
@@ -4298,6 +4381,14 @@ function klappenMerken() {
       }
     });
     d.addEventListener("toggle", () => schreib("klappe_" + name, d.open ? "1" : "0"));
+    // KC-CLUB-KLAPPE-UNTEN (1.6.0, Wunsch Hansi): bei langen Bereichen auch unten zuklappen – ohne nach oben zu scrollen
+    if (!d.classList.contains("innen")) {
+      d.insertAdjacentHTML("beforeend", '<button type="button" class="klappe-unten" aria-label="Bereich zuklappen">▴ Zuklappen</button>');
+      d.querySelector(":scope > .klappe-unten").addEventListener("click", () => {
+        if (lies("fest_" + name) === "1") return melde("🔒 Dieser Bereich ist festgestellt – zum Lösen oben das Schloss antippen.");
+        d.open = false; s.scrollIntoView({ block: "start", behavior: "smooth" });
+      });
+    }
   });
 }
 function installHilfe() {
@@ -4366,7 +4457,7 @@ function zeige(v, ausHistorie) {
   aktuelleAnsicht = v; if (window.KCFP) KCFP.sicht = v;
   nzZaehlen(v); // KC-CLUB-NUTZUNG: nur „Bereich geöffnet“, ohne Namen
   if (vorher === "protokoll" && v !== "protokoll" && prTimer) prSpeichernJetzt(false).catch(() => {}); // ungespeicherte Eingaben sichern
-  ["start", "dokumente", "termine", "vorschlaege", "aktionen", "aktion", "fotos", "feedback", "gruppe", "mitglied", "protokolle", "protokoll", "dienste", "nachrichten", "chat", "neu", "mitglieder", "einstellungen", "pinnwand", "erstattung", "ueberblick", "programme", "standort", "archiv"].forEach((x) => $("v-" + x).classList.toggle("versteckt", x !== v));
+  ["start", "dokumente", "termine", "vorschlaege", "aktionen", "aktion", "fotos", "feedback", "gruppe", "mitglied", "protokolle", "protokoll", "dienste", "nachrichten", "chat", "neu", "mitglieder", "einstellungen", "pinnwand", "erstattung", "ueberblick", "programme", "standort", "archiv", "sos"].forEach((x) => $("v-" + x).classList.toggle("versteckt", x !== v));
   document.querySelectorAll("#fuss button").forEach((b) => b.classList.toggle("an", b.dataset.v === v || (v === "chat" && b.dataset.v === "nachrichten") || (v === "neu" && b.dataset.v === "nachrichten")));
   $("eingabe").classList.toggle("versteckt", v !== "chat");
   document.body.classList.toggle("im-chat", v === "chat"); // KC-CLUB-SUCHE: Lupe nicht über dem Senden-Knopf
@@ -4390,7 +4481,7 @@ function zeige(v, ausHistorie) {
   if (v === "dienste") dienstLaden();
   if (v === "nachrichten") unterhLaden();
   if (v === "mitglieder") mitgliederLaden();
-  if (v === "einstellungen") { infoStartZeigen(); ruheZeigen(); if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); }
+  if (v === "einstellungen") { infoStartZeigen(); tippSchalterZeigen(); ruheZeigen(); if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); }
   if (v === "start") neuLaden();
   // KC-CLUB-ZURUECK: jede Ansicht bekommt einen Verlaufseintrag, damit „Zurück“ eine Ansicht zurückgeht statt die App zu schließen
   const hash = v === "start" || v === "chat" ? "" : v === "protokoll" ? "#protokoll=" + prId : v === "aktion" ? "#aktion=" + aktionId : v === "mitglied" ? "#mitglied=" + mitgliedId : "#" + v;
@@ -4960,12 +5051,13 @@ async function chatLaden(scrollen) {
     const neuVonAnderen = chatStand && u.nachrichten.length && !u.nachrichten[u.nachrichten.length - 1].eigen && stand !== chatStand;
     chatStand = stand;
     NA.nachrichten = new Map(u.nachrichten.map((m) => [m.id, m]));
-    $("chat").innerHTML = u.nachrichten.map((m) => `<div class="blase${m.eigen ? " eigen" : ""}${m.erwaehntMich ? " erwaehnt-mich" : ""}" id="msg-${m.id}" title="Antippen: reagieren, antworten, Details" onclick="if(!event.target.closest('button,img,a,audio,video,.sprache,.zitat'))nachrichtMenue('${m.id}')">
+    $("chat").innerHTML = u.nachrichten.map((m) => `<div data-id="${m.id}" class="blase${m.eigen ? " eigen" : ""}${m.erwaehntMich ? " erwaehnt-mich" : ""}" id="msg-${m.id}" title="Antippen: reagieren, antworten, Details" onclick="if(!event.target.closest('button,img,a,audio,video,.sprache,.zitat'))nachrichtMenue('${m.id}')">
       ${!m.eigen && andere.length > 1 ? `<div class="von">${esc(m.von)}</div>` : ""}${m.antwortAuf ? `<div class="zitat" onclick="zuNachricht('${m.antwortAuf.id}')"><b>${esc(m.antwortAuf.von)}</b><span>${esc(m.antwortAuf.text)}</span></div>` : ""}${m.text === "📎" && m.anlagen.length ? "" : `<div class="txt">${naText(m.text)}</div>`}
       ${m.anlagen.map((a) => /^image\//.test(a.mime || "") ? `<img data-anlage="${a.id}" alt="${esc(a.name)}" onclick="anlageOeffnen('${a.id}')">` : /^audio\//.test(a.mime || "") ? `<div class="sprache" data-sprache="${a.id}"><button onclick="spracheAbspielen(this, '${a.id}')">▶️ Sprachnachricht anhören</button></div>` : `<div class="anlage" onclick="anlageOeffnen('${a.id}')">📄 ${esc(a.name)}</div>`).join("")}
       <div class="fuss">${zeitKurz(m.zeit)}${m.eigen ? " " + (m.gelesenAlle ? '<b title="gelesen">✓✓</b>' : m.gelesenVon?.length ? `✓✓ ${m.gelesenVon.length}/${andere.length}` : "✓") + zustellText(m.zustellung) : ""}${m.eigen || ICH.admin ? ` <button class="weg" title="Nachricht löschen" onclick="nachrichtLoeschen('${m.id}')">🗑️</button>` : ""}</div></div>`).join("")
       || '<p class="hinweis">Schreib die erste Nachricht.</p>';
     document.querySelectorAll("img[data-anlage]").forEach(bildLaden);
+    naWischenEinrichten();
     naReaktionenZeigen(u.nachrichten);
     if (neuVonAnderen && einst("ton", true)) ton();
     if (scrollen || neuVonAnderen) setTimeout(() => window.scrollTo(0, document.body.scrollHeight), 50);
@@ -5001,6 +5093,7 @@ function nachrichtMenue(id) {
     <button class="knopf" onclick="document.getElementById('naMenue').remove();naAntworten('${id}')">↩️ Antworten</button>
     <button class="knopf" onclick="document.getElementById('naMenue').remove();weiterleitenBlatt('${id}')">↪️ Weiterleiten</button>
     <button class="knopf" onclick="document.getElementById('naMenue').remove();nachrichtInfo('${id}')">ℹ️ Details – wann gesendet, angekommen, gelesen</button>
+    <button class="knopf" onclick="document.getElementById('naMenue').remove();naLoeschenFragen('${id}')">🗑️ Löschen</button>
     <button class="knopf" onclick="document.getElementById('naMenue').remove()">Abbrechen</button></div>`;
   f.onclick = (e) => { if (e.target === f) f.remove(); };
   document.body.appendChild(f);
@@ -5215,6 +5308,115 @@ async function nachrichtInfo(id) {
   document.body.appendChild(f);
 }
 
+// ---------- KC-CLUB-SOS (1.6.0, Wunsch Hansi): Notrufnummern und Kontakte im Notfall ----------
+// Jede Notrufnummer wird erst nach einer deutlichen Rückfrage („das ist ein ECHTER Anruf“) gewählt – nie direkt per Link.
+// Kontakte: nur, was ein Mitglied selbst freigegeben hat; Notfallkontakte sieht wie bisher nur die Clubleitung.
+const NOTRUFE = [
+  { nr: "112", anzeige: "112", t: "Feuerwehr & Rettungsdienst", u: "Lebensgefahr, Unfall, Feuer", sym: "🚑", haupt: true },
+  { nr: "110", anzeige: "110", t: "Polizei", u: "Gefahr, Straftat, Unfall mit Verletzten", sym: "🚓", haupt: true },
+  { nr: "116117", anzeige: "116 117", t: "Ärztlicher Bereitschaftsdienst", u: "nicht lebensbedrohlich, außerhalb der Sprechzeiten", sym: "🩺" },
+  { nr: "022819240", anzeige: "0228 19240", t: "Giftnotruf NRW (Bonn)", u: "Vergiftung – rund um die Uhr", sym: "☠️" },
+  { nr: "08000022833", anzeige: "0800 00 22 8 33", t: "Apotheken-Notdienst", u: "nächste geöffnete Apotheke", sym: "💊" },
+  { nr: "08001110111", anzeige: "0800 111 0 111", t: "Telefonseelsorge", u: "kostenlos, rund um die Uhr", sym: "🤝" },
+  { nr: "116116", anzeige: "116 116", t: "Sperr-Notruf", u: "Bank- und Kreditkarten sperren", sym: "💳" },
+];
+let SOS = { daten: null, suche: "", offen: null };
+function sosStart() { SOS.suche = ""; SOS.offen = null; zeige("sos"); sosZeigen(); sosLaden(); }
+async function sosLaden() { try { SOS.daten = await api("sos_kontakte"); sosZeigen(); } catch (e) { SOS.daten = { fehler: e.message }; sosZeigen(); } }
+function sosAnrufen(nr) {
+  const n = NOTRUFE.find((x) => x.nr === nr); if (!n) return;
+  if (!confirm(`⚠️ ECHTER ANRUF – KEIN TEST\n\nDein Telefon wählt jetzt wirklich ${n.anzeige}\n(${n.t}).\n\nNur im echten Notfall. Jetzt anrufen?`)) return;
+  location.href = "tel:" + n.nr;
+}
+const sosNummer = (t) => String(t || "").replace(/[^\d+]/g, "");
+function sosWhatsapp(t) { let n = sosNummer(t); if (n.startsWith("+")) n = n.slice(1); else if (n.startsWith("00")) n = n.slice(2); else if (n.startsWith("0")) n = "49" + n.slice(1); return "https://wa.me/" + n; }
+function sosKnoepfe(k) {
+  const b = (href, text, extern) => `<a class="knopf klein" href="${esc(href)}"${extern ? ' target="_blank" rel="noopener"' : ""}>${text}</a>`;
+  return [k.handy ? b("tel:" + sosNummer(k.handy), "📞 Handy") + b("sms:" + sosNummer(k.handy), "💬 SMS") + b(sosWhatsapp(k.handy), "🟢 WhatsApp", true) : "",
+    k.festnetz ? b("tel:" + sosNummer(k.festnetz), "☎️ Festnetz") : "", k.mail ? b("mailto:" + k.mail, "✉️ E-Mail") : ""].join("");
+}
+function sosZeigen() {
+  if (!$("sosInhalt")) return;
+  const d = SOS.daten, nf = INIT?.notfall;
+  const notrufe = `<div class="karte sos-warn"><b>🚨 Bei Lebensgefahr sofort 112 anrufen.</b><div class="hinweis" style="color:inherit;opacity:.9">Beim Antippen fragt die App einmal nach – dann wird wirklich gewählt.</div></div>
+    <div class="sos-nummern">${NOTRUFE.map((n) => `<button class="sos-nr${n.haupt ? " haupt" : ""}" onclick="sosAnrufen('${n.nr}')"><span class="sym">${n.sym}</span>
+      <span class="txt"><b>${esc(n.anzeige)}</b><span>${esc(n.t)}</span><small>${esc(n.u)}</small></span><span class="ruf">📞</span></button>`).join("")}</div>`;
+  const eigen = nf ? "" : `<div class="karte hinweis">🆘 Du hast noch keinen eigenen Notfallkontakt hinterlegt. <button class="knopf klein" onclick="einstiegHin('privat','nfName')">Jetzt eintragen</button></div>`;
+  let kontakte;
+  if (!d) kontakte = '<p class="hinweis">Kontakte werden geladen …</p>';
+  else if (d.fehler) kontakte = `<div class="karte hinweis">⚠️ ${esc(d.fehler)}</div>`;
+  else {
+    const q = suNorm(SOS.suche), liste = d.mitglieder.filter((m) => !m.selbst && (!q || suNorm(m.name).includes(q)));
+    const leitung = d.mitglieder.filter((m) => m.leitung && !m.selbst);
+    const zeile = (m) => {
+      const offen = SOS.offen === m.id, k = m.kontakt || {}, hat = k.handy || k.festnetz || k.mail;
+      return `<div class="sos-mitglied${offen ? " offen" : ""}"><button class="sos-name" onclick="SOS.offen=SOS.offen==='${m.id}'?null:'${m.id}';sosZeigen()"><b>${esc(m.name)}</b>${m.aemter?.length ? `<small>${esc(m.aemter.join(" · "))}</small>` : ""}<span>${offen ? "▴" : "▾"}</span></button>
+        ${offen ? `<div class="sos-detail">${hat ? `<div class="knoepfe">${sosKnoepfe(k)}</div>` : '<p class="hinweis" style="margin:0">Keine freigegebenen Kontaktdaten.</p>'}
+          ${d.siehtNotfall ? (m.notfall ? `<div class="sos-nf"><b>🆘 Notfallkontakt: ${esc(m.notfall.name || "–")}</b>${m.notfall.beziehung ? ` <span class="hinweis">(${esc(m.notfall.beziehung)})</span>` : ""}
+              ${m.notfall.telefon ? `<div class="knoepfe">${sosKnoepfe({ handy: m.notfall.telefon })}</div>` : ""}</div>` : '<p class="hinweis" style="margin:6px 0 0">Kein Notfallkontakt hinterlegt.</p>')
+            : '<p class="hinweis" style="margin:6px 0 0">🔒 Den Notfallkontakt sieht nur die Clubleitung (Clubsprecher, Kassenwart, Admin) – bitte dort anrufen.</p>'}</div>` : ""}</div>`;
+    };
+    kontakte = (leitung.length && !d.siehtNotfall ? `<h3 style="margin:16px 4px 6px">⭐ Clubleitung</h3><div class="karte">${leitung.map(zeile).join("")}</div>` : "")
+      + `<h3 style="margin:16px 4px 6px">👥 Mitglieder im Notfall erreichen</h3>
+      <input id="sosSuche" type="search" placeholder="🔍 Name suchen …" autocomplete="off" value="${esc(SOS.suche)}" oninput="SOS.suche=this.value;sosZeigen();$('sosSuche').focus();$('sosSuche').setSelectionRange(this.value.length,this.value.length)">
+      <div class="karte">${liste.map(zeile).join("") || '<p class="hinweis">Niemand gefunden.</p>'}</div>`;
+  }
+  $("sosInhalt").innerHTML = notrufe + eigen + kontakte;
+}
+
+// ---------- KC-CLUB-WISCHEN (1.6.0, Wunsch Hansi – wie WhatsApp): Nachricht nach rechts wischen = antworten,
+// nach links wischen = löschen (mit Sicherheitsabfrage: eigene „für alle“ oder „nur für mich“, fremde „nur für mich“).
+// Nur waagerechtes Wischen zählt; senkrechtes Scrollen bleibt unberührt. Am PC: Nachricht antippen → 🗑️ Löschen.
+const NA_WISCH = 64;
+function naWischenEinrichten() {
+  const chat = $("chat"); if (!chat || chat.dataset.wischen) return; chat.dataset.wischen = "1";
+  let b = null, x0 = 0, y0 = 0, dx = 0, waagerecht = null;
+  chat.addEventListener("touchstart", (e) => {
+    const z = e.target.closest(".blase[data-id]"); if (!z || e.touches.length !== 1 || e.target.closest("audio,video,input")) { b = null; return; }
+    b = z; x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; dx = 0; waagerecht = null;
+  }, { passive: true });
+  chat.addEventListener("touchmove", (e) => {
+    if (!b) return;
+    const mx = e.touches[0].clientX - x0, my = e.touches[0].clientY - y0;
+    if (waagerecht === null && (Math.abs(mx) > 10 || Math.abs(my) > 10)) waagerecht = Math.abs(mx) > Math.abs(my) * 1.3;
+    if (!waagerecht) return;
+    e.preventDefault();
+    dx = Math.max(-110, Math.min(110, mx));
+    b.style.transform = `translateX(${dx}px)`; b.classList.add("wischt");
+    b.dataset.wisch = dx > NA_WISCH ? "antworten" : dx < -NA_WISCH ? "loeschen" : "";
+  }, { passive: false });
+  const ende = () => {
+    if (!b) return;
+    const z = b, id = z.dataset.id, was = z.dataset.wisch; b = null;
+    z.style.transition = "transform .18s"; z.style.transform = ""; z.dataset.wisch = "";
+    setTimeout(() => { z.style.transition = ""; z.classList.remove("wischt"); }, 200);
+    if (was === "antworten") { navigator.vibrate?.(15); naAntworten(id); }
+    else if (was === "loeschen") { navigator.vibrate?.(15); naLoeschenFragen(id); }
+  };
+  chat.addEventListener("touchend", ende); chat.addEventListener("touchcancel", ende);
+  // ein Wisch soll nicht zusätzlich das Menü (Antippen) öffnen
+  chat.addEventListener("click", (e) => { if (Math.abs(dx) > 10) { e.stopPropagation(); e.preventDefault(); dx = 0; } }, true);
+}
+function naLoeschenFragen(id) {
+  const m = NA.nachrichten.get(id); if (!m) return;
+  document.getElementById("naLoeschen")?.remove();
+  const fuerAlle = m.eigen || ICH?.admin;
+  const f = document.createElement("div"); f.id = "naLoeschen"; f.className = "blatt"; f.setAttribute("role", "dialog"); f.setAttribute("aria-modal", "true");
+  f.innerHTML = `<div class="blatt-innen">
+    <h3 style="margin-top:0">🗑️ Nachricht löschen?</h3>
+    <div class="na-vorschau">${m.eigen ? "Du" : esc(m.von)}: ${esc(String(m.text || "📎").slice(0, 120))}</div>
+    ${fuerAlle ? `<button class="knopf haupt" onclick="naLoeschen('${id}', true)">🗑️ Für alle löschen</button>` : ""}
+    <button class="knopf${fuerAlle ? "" : " haupt"}" onclick="naLoeschen('${id}', false)">🙈 Nur für mich löschen</button>
+    <p class="hinweis" style="margin:2px 0 6px">${fuerAlle ? "„Für alle“ entfernt sie bei allen. „Nur für mich“: die anderen sehen sie weiter." : "Die anderen sehen die Nachricht weiter."}</p>
+    <button class="knopf" onclick="document.getElementById('naLoeschen').remove()">Abbrechen</button></div>`;
+  f.onclick = (e) => { if (e.target === f) f.remove(); };
+  document.body.appendChild(f);
+}
+async function naLoeschen(id, fuerAlle) {
+  document.getElementById("naLoeschen")?.remove();
+  try { await api(fuerAlle ? "nachricht_loeschen" : "nachricht_ausblenden", { id }); chatStand = ""; melde(fuerAlle ? "🗑️ Für alle gelöscht" : "🙈 Für dich gelöscht"); chatLaden(false); }
+  catch (e) { melde(e.message, true); }
+}
 // KC-CLUB-LOESCHEN: eigene Nachricht für alle löschen; Unterhaltung nur für mich entfernen oder (Admin) für alle löschen
 async function nachrichtLoeschen(id) {
   if (!confirm("Diese Nachricht für alle löschen?")) return;

@@ -1,5 +1,21 @@
 # Änderungen
 
+## 1.6.0 – 2026-10-01 (DEV)
+
+- KC-CLUB-KLAPPE-UNTEN (Wunsch Hansi): Jeder Klappbereich (details[data-klappe], außer inneren Admin-Bereichen) hat unten
+  „▴ Zuklappen“ – klappt zu und springt zur Überschrift; festgestellte Bereiche (🔒) bleiben wie sie sind.
+- KC-CLUB-WISCHEN (Wunsch Hansi, wie WhatsApp): Nachricht nach rechts wischen = antworten, nach links = löschen mit
+  Rückfrage: eigene (Admin: jede) „für alle“ oder „nur für mich“, fremde „nur für mich“ (neue Aktion nachricht_ausblenden →
+  kc_communication_message_hidden; „unterhaltung“ lässt diese weg). Nur waagerechtes Wischen zählt. Im Antipp-Menü neu „🗑️ Löschen“.
+- KC-CLUB-SOS (Wunsch Hansi): rote Kachel „SOS – Notfall“ (auch in der einfachen Ansicht). Notrufnummern als Registry NOTRUFE
+  (112, 110, 116 117, Giftnotruf NRW, Apotheken-Notdienst, Telefonseelsorge, Sperr-Notruf) – Wählen nur nach deutlicher
+  Rückfrage „ECHTER ANRUF – KEIN TEST“, nie direkt per Link. Mitglieder im Notfall erreichen (Anruf, SMS, WhatsApp, Festnetz,
+  E-Mail) – nur freigegebene Angaben (gleiche Regeln wie „Mitglied ansehen“); Notfallkontakte unverändert nur für die
+  Clubleitung, alle anderen sehen die Clubleitung oben. Neue Aktion sos_kontakte (protokolliert „sos_geoeffnet“).
+- KC-CLUB-TIPP (Wunsch Hansi): Tipp des Tages beim Öffnen (höchstens einer je Tag, nach dem Einstiegs-Tipp, Registry TIPPS):
+  „👉 Jetzt ausprobieren“ führt hin, „✔ Kenne ich“, „⏰ Später“ (3 Tage), „🔕 Keine Tipps mehr“. Schalter unter ⚙️ → „Das
+  Wichtigste“ (Standard an). Server-Einstellung „tipps“ (geräteübergreifend).
+
 ## 1.5.1 – 2026-10-01 (DEV)
 
 - KC-CLUB-ARCHIV-PERSOENLICH (Live-Test): Wer eine gültige Freigabe nur für ein Register/Dokument hat und etwas anderes öffnen

@@ -1158,7 +1158,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/ansicht: ansicht\.get\(m\.person_id\) \?\? null \} : \{\}\)/.test(server), "Ansicht je Mitglied nur für den Admin");
   assert.ok(/const begruesst = ansichtPruefen\(\) \|\| begruessungPruefen\(\);/.test(html) && /INIT\?\.einstellungen\?\.ansicht\?\.gewaehlt\) return false/.test(html), "Frage beim Start fehlt / käme mehrfach");
   assert.ok(/id="ansichtBlatt" onclick="if\(event\.target===this\)ansichtSetzen\('einfach', true\)"/.test(html) && /Du kannst jederzeit umschalten/.test(html), "Überspringen = einfach / Umschalt-Hinweis fehlt");
-  assert.ok(/const EINFACH_KACHELN = \["termine", "kommunikation", "pinnwand", "meindienst", "mitglieder"(, "dokumente")?\];/.test(html) && /const kacheln = \(r\) => einfach\(\) \? einfachKacheln\(\) : kaSortiert/.test(html), "Einfache Startseite fehlt");
+  assert.ok(/const EINFACH_KACHELN = \["termine", "kommunikation", "pinnwand", "meindienst", "mitglieder"(, "dokumente")?(, "sos")?\];/.test(html) && /const kacheln = \(r\) => einfach\(\) \? einfachKacheln\(\) : kaSortiert/.test(html), "Einfache Startseite fehlt");
   const alle = [...html.matchAll(/\{ id: "([a-z]+)", sym:/g)].map((m) => m[1]);
   for (const id of ["termine", "kommunikation", "pinnwand", "meindienst", "mitglieder", "dokumente"]) assert.ok(alle.includes(id), `Kachel ${id} fehlt in der Registry`);
   assert.ok(/id="ansichtKnopf"[^>]*onclick="ansichtWechseln\(\)"/.test(html) && /onclick="ansichtSetzen\('einfach'\)"/.test(html) && /onclick="ansichtSetzen\('erweitert'\)"/.test(html), "Umschalter fehlt");
@@ -1182,7 +1182,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 {
   assert.ok(/pinnwand_erinnert: \(w\) => \(\{ bis: Object\.fromEntries/.test(server) && /\/\^\[0-9a-f-\]\{36\}\$\/\.test\(id\)/.test(server), "Server speichert „hängen lassen“ nicht geprüft");
   // 0.65.0: Fristen vom Admin (Server), ohne Wert 3 / 7 Tage
-  assert.ok(/const PW_FRISTEN_STANDARD = \{ erinnernTage: 3, pauseTage: 7 \};/.test(html) && /if \(!gezeigt && !nurZaehlen && !pwErinnern\(\)\) einstiegPruefen\(\);/.test(html), "Erinnerung beim Start fehlt");
+  assert.ok(/const PW_FRISTEN_STANDARD = \{ erinnernTage: 3, pauseTage: 7 \};/.test(html) && /if \(!gezeigt && !nurZaehlen && !pwErinnern\(\)( && !einstiegPruefen\(\)\) tippDesTages\(\);|\) einstiegPruefen\(\);)/.test(html), "Erinnerung beim Start fehlt");
   const e = html.slice(html.indexOf("function pwErinnern()"), html.indexOf("async function pwLaden()"));
   assert.ok(/z\.vonMir && jetzt - new Date\(z\.erstellt_am\)\.getTime\(\) >= PW_ERINNERN_TAGE \* 86400000/.test(e) && /bis\[z\.id\]/.test(e), "nur eigene, alte, nicht zurückgestellte Zettel");
   assert.ok(/hängt noch an der Pinnwand\./.test(e) && /Möchtest du \$\{liste\.length === 1 \? "es" : "sie"\} abnehmen\?/.test(e) && /api\("pinnwand_abnehmen"/.test(e), "Text/Abnehmen fehlt");
@@ -1508,6 +1508,20 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/function arFreigabeForm/.test(html) && /function arPruefung/.test(html) && /👤 Mein Ordner/.test(html) && /🤝 Mit mir geteilt/.test(html), "Oberfläche");
 }
 
+// 133. 1.6.0: Klappbereiche unten zu, Wischen im Chat, SOS-Kachel, Tipp des Tages
+{
+  assert.ok(/class="klappe-unten"/.test(html) && /d\.open = false; s\.scrollIntoView/.test(html), "Zuklappen unten fehlt");
+  assert.ok(/function naWischenEinrichten\(\)/.test(html) && /naAntworten\(id\)/.test(html.slice(html.indexOf("function naWischenEinrichten"))) && /naLoeschenFragen\(id\)/.test(html.slice(html.indexOf("function naWischenEinrichten"))), "Wischen: rechts antworten, links löschen");
+  assert.ok(/Nur für mich löschen/.test(html) && /case "nachricht_ausblenden"/.test(server) && /kc_communication_message_hidden/.test(server.slice(server.indexOf('case "unterhaltung"'), server.indexOf('case "unterhaltung"') + 2500)), "Für mich löschen + ausgeblendet");
+  const sos = html.slice(html.indexOf("function sosAnrufen"), html.indexOf("function sosAnrufen") + 600);
+  assert.ok(/ECHTER ANRUF – KEIN TEST/.test(sos) && /if \(!confirm\(/.test(sos), "Notruf nur nach Sicherheitsabfrage");
+  assert.ok(!/href="tel:(112|110)/.test(html) && /nr: "112"/.test(html) && /nr: "110"/.test(html), "Notruf nie als direkter Link");
+  assert.ok(/id: "sos", sym: "🆘"/.test(html) && /klasse: "sos"/.test(html) && /"sos"\];/.test(html) && /\.kachel\.sos \{ background: #c0392b/.test(html), "Rote SOS-Kachel (auch einfache Ansicht)");
+  const sk = server.slice(server.indexOf('case "sos_kontakte"'), server.indexOf('case "geburtstag_freigabe"'));
+  assert.ok(/ich\.vorstand \? db\.from\("kc_club_notfall"\)/.test(sk) && /ich\.kontakte && frei\(m\.person_id, f\)/.test(sk), "SOS: nur freigegebene Kontakte, Notfallkontakte nur Clubleitung");
+  assert.ok(/const TIPPS = \[/.test(html) && /function tippDesTages\(\)/.test(html) && /Keine Tipps mehr anzeigen/.test(html) && /id="setTipps" checked/.test(html) && /tipps: \(w\) =>/.test(server), "Tipp des Tages + Schalter (Standard an)");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
@@ -1710,7 +1724,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/KC-CLUB-ARCHIV: Dokument in einem Ordner, den ich sehen darf/.test(server), "anlage_url: Archiv-Dokumente fehlen");
   assert.ok(/kc_club_archiv_ordner"\)\.update\(\{ geloescht_am: jetzt\(\)/.test(server) && /archiv_endgueltig_entfernt/.test(server), "Papierkorb/Wartung fehlt");
   assert.ok(/async function archivAuto\(ich: Ich\)/.test(server) && /if \(!ich\.protokolle\) return;/.test(server.slice(server.indexOf("async function archivAuto"))), "Automatischer Teil: Protokolle nur mit Recht");
-  assert.ok(/\{ id: "archiv", sym: "🗄️", t: "Archiv"/.test(html) && /id="v-archiv"/.test(html) && /"standort", "archiv"\]\.forEach/.test(html), "App: Kachel/Ansicht fehlt");
+  assert.ok(/\{ id: "archiv", sym: "🗄️", t: "Archiv"/.test(html) && /id="v-archiv"/.test(html) && /"standort", "archiv"(, "[a-z]+")*\]\.forEach/.test(html), "App: Kachel/Ansicht fehlt");
   assert.ok(/function arRuecken\(/.test(html) && /class="ar-register"/.test(html) && /class="schild"><span class="jahr">/.test(html), "App: Ordnerrücken mit Jahreszahl / Register fehlt");
   assert.ok(/id="arSuche"/.test(html) && /AR\.jahr=this\.value/.test(html) && /chip\("vorstand", "🔒 Nur Clubleitung"\)/.test(html), "App: Suche/Filter fehlt");
 }

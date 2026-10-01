@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.5.1";
+const SERVER_VERSION = "1.6.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -462,6 +462,12 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
   pinnwand_erinnert: (w) => ({ bis: Object.fromEntries(Object.entries(w?.bis && typeof w.bis === "object" ? w.bis : {})
     .filter(([id, d]) => /^[0-9a-f-]{36}$/.test(id) && typeof d === "string" && !isNaN(Date.parse(d))).slice(-20)) }),
   // KC-CLUB-EINSTIEG (0.70.0): Tipps nach und nach (Farbe, Privatsphäre, erweiterte Ansicht) – je Schritt Antwort + Zeitpunkt
+  // KC-CLUB-TIPP (1.6.0): Tipp des Tages – an/aus (Standard an), „kenne ich“ und „später“ je Tipp, zuletzt gezeigt (höchstens 1× am Tag)
+  tipps: (w) => {
+    const liste = (x: any) => Object.fromEntries(Object.entries(x && typeof x === "object" ? x : {})
+      .filter(([k, v]) => /^[a-z0-9_-]{1,30}$/.test(k) && !isNaN(Date.parse(String(v)))).slice(0, 80).map(([k, v]) => [k, new Date(String(v)).toISOString()]));
+    return { an: w?.an !== false, bekannt: liste(w?.bekannt), spaeter: liste(w?.spaeter), zuletzt: !isNaN(Date.parse(String(w?.zuletzt))) ? new Date(String(w.zuletzt)).toISOString() : null };
+  },
   einstieg: (w) => ({ schritte: Object.fromEntries(Object.entries(w?.schritte && typeof w.schritte === "object" ? w.schritte : {})
     .filter(([k, v]: [string, any]) => ["farbe", "privat", "erweitert", "feedback", "geraete"].includes(k) && ["ja", "nein", "spaeter"].includes(v?.antwort) && !isNaN(Date.parse(v?.am)))
     .map(([k, v]: [string, any]) => [k, { antwort: v.antwort, am: new Date(v.am).toISOString() }])) }),
@@ -2633,6 +2639,38 @@ Köcheclub Werne`,
         });
       }
 
+      case "sos_kontakte": {
+        // KC-CLUB-SOS (1.6.0): Kontaktangaben der aktiven Mitglieder – nur was das Mitglied freigegeben hat (bzw. Admin/man selbst),
+        // Notfallkontakte wie bisher nur für die Clubleitung (Clubsprecher, Kassenwart, Admin) und für sich selbst.
+        const leute = await aktiveMitglieder();
+        const ids = leute.map((m) => m.person_id);
+        const [{ data: pe }, { data: fr }, { data: rollen }, { data: nf }, { data: mg }] = await Promise.all([
+          db.from("kc_core_people").select("person_id,phone,email").in("person_id", ids),
+          db.from("kc_club_freigaben").select("person_id,bereich,erlaubt").in("person_id", ids).like("bereich", "kontakt_%"),
+          db.from("kc_club_rollen").select("person_id,aemter,ist_admin,ist_vorstand").in("person_id", ids),
+          ich.vorstand ? db.from("kc_club_notfall").select("person_id,name,telefon,beziehung").in("person_id", ids) : db.from("kc_club_notfall").select("person_id,name,telefon,beziehung").eq("person_id", ich.person_id),
+          db.from(AKTIONEN_QUELLE.tabelle).select("payload").eq("org_id", ORG).eq("section_key", AKTIONEN_QUELLE.mitglieder).maybeSingle(),
+        ]);
+        const pm = new Map((pe ?? []).map((x: any) => [x.person_id, x])), rm = new Map((rollen ?? []).map((x: any) => [x.person_id, x])), nm = new Map((nf ?? []).map((x: any) => [x.person_id, x]));
+        const mgl: any[] = Array.isArray(mg?.payload?.data) ? mg.payload.data : [];
+        const festnetzVon = (p2: any) => { const k = namensSchluessel(p2.given_name || p2.display_name.split(" ")[0], p2.family_name || p2.display_name.split(" ").slice(-1)[0]);
+          return txt(mgl.find((x: any) => namensSchluessel(x.firstName, x.lastName) === k)?.phone, 40) || null; };
+        const frei = (pid: string, f: string) => !!(fr ?? []).find((x: any) => x.person_id === pid && x.bereich === "kontakt_" + f)?.erlaubt;
+        const liste = leute.map((m) => {
+          const selbst = m.person_id === ich.person_id, darf = (f: string) => selbst || ich.admin || (ich.kontakte && frei(m.person_id, f));
+          const r: any = rm.get(m.person_id) || {}, x: any = pm.get(m.person_id) || {};
+          const kontakt: Record<string, string> = {};
+          if (darf("handy") && x.phone) kontakt.handy = txt(x.phone, 40);
+          if (darf("festnetz")) { const f = festnetzVon(m); if (f) kontakt.festnetz = f; }
+          if (darf("mail") && x.email) kontakt.mail = txt(x.email, 120);
+          const n: any = nm.get(m.person_id);
+          return { id: m.person_id, name: m.display_name, selbst, aemter: r.aemter ?? [], leitung: !!(r.ist_vorstand || r.ist_admin), kontakt,
+            notfall: n ? { name: txt(n.name, 120), telefon: txt(n.telefon, 40), beziehung: txt(n.beziehung, 60) } : null };
+        });
+        await protokoll(ich.person_id, "sos_geoeffnet", { notfallkontakte: ich.vorstand });
+        return json({ mitglieder: liste, siehtNotfall: ich.vorstand });
+      }
+
       case "geburtstag_freigabe": {
         await db.from("kc_club_freigaben").upsert({ person_id: ich.person_id, bereich: "geburtstag", erlaubt: !!p.erlaubt, geaendert_am: jetzt() });
         await protokoll(ich.person_id, "geburtstag_freigabe", { erlaubt: !!p.erlaubt });
@@ -2677,11 +2715,16 @@ Köcheclub Werne`,
       case "unterhaltung": {
         const id = String(p.id || "");
         await binTeilnehmer(id, ich.person_id);
-        const [{ data: t }, { data: tn }, { data: msgs }] = await Promise.all([
+        const [{ data: t }, { data: tn }, { data: msgsRoh }] = await Promise.all([
           db.from("kc_communication_threads").select("id,subject").eq("id", id).single(),
           db.from("kc_communication_thread_participants").select("person_id,last_read_at").eq("thread_id", id),
           db.from("kc_communication_messages").select("id,sender_person_id,body,created_at,reply_to_message_id").eq("thread_id", id).order("created_at").limit(500),
         ]);
+        // KC-CLUB-WISCHEN (1.6.0): „nur für mich gelöscht“ (kc_communication_message_hidden) nicht anzeigen
+        const alleIds = (msgsRoh ?? []).map((m: any) => m.id);
+        const { data: weg } = alleIds.length ? await db.from("kc_communication_message_hidden").select("message_id").eq("person_id", ich.person_id).in("message_id", alleIds) : { data: [] as any[] };
+        const wegIds = new Set((weg ?? []).map((x: any) => x.message_id));
+        const msgs = (msgsRoh ?? []).filter((m: any) => !wegIds.has(m.id));
         const mids = (msgs ?? []).map((m: any) => m.id);
         const { data: ma } = mids.length ? await db.from("kc_communication_message_attachments").select("message_id,attachment_id").in("message_id", mids) : { data: [] as any[] };
         const aids = (ma ?? []).map((x: any) => x.attachment_id);
@@ -2945,6 +2988,17 @@ Köcheclub Werne`,
         const { data: ma } = await db.from("kc_communication_message_attachments").select("attachment_id").eq("message_id", m.id);
         await geloescht(ich, "nachricht", { nachricht: m, anlagen: (ma ?? []).map((x: any) => x.attachment_id) });
         await db.from("kc_communication_messages").delete().eq("id", m.id);
+        return json({ ok: true });
+      }
+
+      case "nachricht_ausblenden": {
+        // KC-CLUB-WISCHEN (1.6.0): Nachricht nur für mich löschen (wie WhatsApp „Für mich löschen“) – die anderen sehen sie weiter
+        const { data: m } = await db.from("kc_communication_messages").select("id,thread_id").eq("id", String(p.id || "")).maybeSingle();
+        if (!m) throw new Fehler("Nachricht nicht gefunden.", 404);
+        await binTeilnehmer(m.thread_id, ich.person_id);
+        const { error } = await db.from("kc_communication_message_hidden").upsert({ person_id: ich.person_id, message_id: m.id, hidden_at: jetzt() }, { onConflict: "person_id,message_id" });
+        if (error) throw new Fehler("Konnte nicht gelöscht werden.", 500);
+        await protokoll(ich.person_id, "nachricht_fuer_mich_geloescht", { nachricht: m.id });
         return json({ ok: true });
       }
 

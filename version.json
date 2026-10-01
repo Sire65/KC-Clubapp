@@ -1,10 +1,22 @@
 {
-  "version": "1.5.1",
+  "version": "1.6.0",
   "datum": "2026-09-30",
   "neu": [
-    "🗄️ Archiv: klarere Hinweise bei Freigaben und besser bedienbare Auswahl im Freigabe-Fenster"
+    "🆘 Neue rote SOS-Kachel: wichtige Notrufnummern (mit Sicherheitsabfrage) und Mitglieder im Notfall schnell erreichen",
+    "👉 Nachrichten wie bei WhatsApp: nach rechts wischen = antworten, nach links wischen = löschen (für alle oder nur für dich)",
+    "💡 Tipp des Tages beim Öffnen – abschaltbar unter ⚙️ Einstellungen",
+    "▴ Einstellungen: lange Bereiche jetzt auch unten zuklappen"
   ],
   "verlauf": [
+    {
+      "version": "1.6.0",
+      "neu": [
+        "🆘 Neue rote SOS-Kachel: wichtige Notrufnummern (mit Sicherheitsabfrage) und Mitglieder im Notfall schnell erreichen",
+        "👉 Nachrichten wie bei WhatsApp: nach rechts wischen = antworten, nach links wischen = löschen (für alle oder nur für dich)",
+        "💡 Tipp des Tages beim Öffnen – abschaltbar unter ⚙️ Einstellungen",
+        "▴ Einstellungen: lange Bereiche jetzt auch unten zuklappen"
+      ]
+    },
     {
       "version": "1.5.1",
       "neu": [
