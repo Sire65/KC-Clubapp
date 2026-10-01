@@ -1,5 +1,13 @@
 # Änderungen
 
+## 1.22.1 – 2026-10-01 (DEV)
+
+- KC-CLUB-SICHERHEIT-ZUSTELLUNG (Wunsch Hansi „der Bericht muss mich erreichen“): Sicherheits-Check-Bericht geht immer per
+  Push UND E-Mail an den Admin (sendenGewaehlt, unabhängig von der persönlichen Benachrichtigungs-Einstellung).
+- KC-CLUB-SICHERHEIT-ARCHIV: jeder Bericht zusätzlich als Textdatei im Vereinsordner „Admin <Jahr>“ (art sonstiges, nur
+  Clubleitung, Farbe 8), Register „Sicherheitscheck“; Ordner und Register entstehen beim ersten Bericht von selbst.
+  Fehler beim Ablegen stoppen die Meldung nicht (Antwort „abgelegt: false“, Serverprotokoll).
+
 ## 1.22.0 – 2026-10-01 (DEV)
 
 - KC-CLUB-TEILEN-ALLES (Wunsch Hansi „WhatsApp-Nachrichten in den Club-Chat“, Weg 1 – kostenlos, ohne Meta): „Teilen →

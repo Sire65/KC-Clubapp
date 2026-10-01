@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.22.0";
+const SERVER_VERSION = "1.22.1";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -1024,6 +1024,37 @@ function darfDokSehen(ich: Ich, o: any, d: any, freigaben: any[]) {
   if (o.besitzer === ich.person_id) return true;
   if (d.status === "pruefung") return d.hochgeladen_von === ich.person_id;
   return freigaben.some((f) => f.ordner_id === o.id && freigabeDeckt(f, d));
+}
+// KC-CLUB-SICHERHEIT-ARCHIV (1.22.1): Vereinsordner „Admin <Jahr>“ (art sonstiges, nur Clubleitung) – entsteht beim ersten Bericht
+const ADMIN_ORDNER = { art: "sonstiges", titel: "Admin", farbe: 8, register: ["Sicherheitscheck", "Sonstiges"] };
+async function adminOrdner(jahr: number, register: string) {
+  const { data: da } = await db.from("kc_club_archiv_ordner").select("id,register").is("besitzer", null).eq("art", ADMIN_ORDNER.art).eq("titel", ADMIN_ORDNER.titel)
+    .eq("jahr", jahr).is("geloescht_am", null).order("erstellt_am").limit(1).maybeSingle();
+  if (da) {
+    if (!(da.register || []).includes(register)) await db.from("kc_club_archiv_ordner").update({ register: [register, ...(da.register || [])], geaendert_am: jetzt() }).eq("id", da.id);
+    return da.id as string;
+  }
+  const [admin] = await adminIds();
+  const { data: neu, error } = await db.from("kc_club_archiv_ordner").insert({ art: ADMIN_ORDNER.art, jahr, titel: ADMIN_ORDNER.titel, farbe: ADMIN_ORDNER.farbe,
+    register: ADMIN_ORDNER.register, nur_vorstand: true, erstellt_von: admin }).select("id").single();
+  if (error || !neu) throw new Error("Admin-Ordner konnte nicht angelegt werden");
+  await protokoll(null, "archiv_ordner_angelegt", { ordner: neu.id, art: ADMIN_ORDNER.art, jahr, titel: ADMIN_ORDNER.titel, nur_vorstand: true, automatisch: true });
+  return neu.id as string;
+}
+async function sicherheitAblegen(ich: Ich, zeilen: string[], probleme: number, ms: number | null, notiz: string, version: string) {
+  const heute = berlinTag(new Date()), zeit = new Intl.DateTimeFormat("de-DE", { timeZone: TZ, hour: "2-digit", minute: "2-digit" }).format(new Date());
+  const ordner = await adminOrdner(Number(heute.slice(0, 4)), "Sicherheitscheck");
+  const text = `Köcheclub-App – Sicherheits-Check\n${ich.name} · ${heute.split("-").reverse().join(".")} ${zeit} Uhr\nErgebnis: ${probleme ? `${probleme} Punkt(e) nicht bestätigt` : "alles in Ordnung"}\n────────────────────\n\n${zeilen.join("\n")}\n\nAntwortzeit beim Mitglied: ${ms ?? "?"} ms · App ${version || "?"}${notiz ? `\nNotiz: ${notiz}` : ""}\n\n(Der Server hat beim Absenden selbst neu geprüft.)\n`;
+  const bytes = new TextEncoder().encode("\ufeff" + text);
+  let b = ""; for (const x of bytes) b += String.fromCharCode(x);
+  const name = `Sicherheitscheck-${heute}-${ich.vorname || "Mitglied"}.txt`.replace(/[^\w.\-äöüÄÖÜß]/g, "_");
+  const datei = await dateiAblegen(ich, name, "text/plain", btoa(b), ARCHIV_DATEITYPEN);
+  try {
+    const { error } = await db.from("kc_club_archiv_dokumente").insert({ ordner_id: ordner, register: "Sicherheitscheck",
+      titel: `Sicherheits-Check ${ich.name} – ${probleme ? `${probleme} offen` : "alles OK"}`.slice(0, 120), datum: heute, stichworte: archivStichworte(`Sicherheitscheck, ${ich.vorname || ich.name}`),
+      attachment_id: datei.id, datei_name: datei.name, mime: "text/plain", groesse: datei.groesse, hochgeladen_von: ich.person_id, status: "ok" });
+    if (error) throw new Error(error.message);
+  } catch (e) { await dateienEntfernen([datei.id]); throw e; }
 }
 async function adminIds(): Promise<string[]> {
   const { data } = await db.from("kc_club_rollen").select("person_id").eq("ist_admin", true);
@@ -3307,7 +3338,8 @@ Köcheclub Werne`,
         const notiz = txt(p.notiz, 300);
         await protokoll(ich.person_id, "fehler_sicherheit", { probleme, punkte: Object.fromEntries(punkte), serverMs: ms, version: txt(req.headers.get("x-club-version"), 20), notiz });
         const ziel = await adminIds();
-        const versand = ziel.length ? await senden("club_nachricht", ziel, {
+        // KC-CLUB-SICHERHEIT-ZUSTELLUNG (1.22.1, Wunsch Hansi „der Bericht muss mich erreichen“): immer Push UND E-Mail an den Admin
+        const versand = ziel.length ? await sendenGewaehlt("club_nachricht", ziel, ["push", "email"], {
           titel: probleme ? `🛡️ Sicherheits-Check: ${probleme} Punkt${probleme === 1 ? "" : "e"} nicht bestätigt` : "🛡️ Sicherheits-Check: alles in Ordnung",
           kurz: `${ich.name} hat das Prüfergebnis geschickt${probleme ? " – bitte ansehen" : ""}`,
           betreff: `Köcheclub-App: Sicherheits-Check von ${ich.name}${probleme ? ` – ${probleme} Punkt${probleme === 1 ? "" : "e"} offen` : " – alles OK"}`,
@@ -3328,7 +3360,11 @@ Viele Grüße
 Köcheclub-App`,
           url: APP_URL,
         }, `club-sicherheit:${ich.person_id}:${Date.now()}`) : null;
-        return json({ ok: true, probleme, versand });
+        // KC-CLUB-SICHERHEIT-ARCHIV (1.22.1): zusätzlich als Textdatei in den Vereinsordner „Admin <Jahr>“, Register „Sicherheitscheck“
+        // (nur Clubleitung). Fehler beim Ablegen stoppen die Meldung nie – der Bericht ist dann trotzdem verschickt.
+        const abgelegt = await sicherheitAblegen(ich, punkte.map(([t, v]) => `${zeichen(v)} ${t}`), probleme, ms, notiz, txt(req.headers.get("x-club-version"), 20))
+          .then(() => true).catch((e) => { console.error("sicherheit ablegen", String(e)); return false; });
+        return json({ ok: true, probleme, versand, abgelegt });
       }
 
       case "nachricht_ausblenden": {

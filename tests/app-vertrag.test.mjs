@@ -1577,7 +1577,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 
 // 138. 1.9.0: Bearbeiten, Stummschalten, Suche im Chat
 {
-  const nb = server.slice(server.indexOf('case "nachricht_bearbeiten"'), server.indexOf('case "nachricht_ausblenden"'));
+  const nb = server.slice(server.indexOf('case "nachricht_bearbeiten"'), server.indexOf('case "', server.indexOf('case "nachricht_bearbeiten"') + 10)); // 1.22.1: nur dieser Abschnitt
   assert.ok(/m\.sender_person_id !== ich\.person_id\) throw/.test(nb) && /BEARBEITEN_MIN \* 60000\) throw/.test(nb), "Bearbeiten: nur eigene, nur 15 Min.");
   assert.ok(!/sendenGewaehlt|routerSenden/.test(nb) && /protokoll\(ich\.person_id, "nachricht_bearbeitet", \{ nachricht: m\.id, thread: m\.thread_id \}\)/.test(nb), "Bearbeiten: keine Benachrichtigung, Protokoll ohne Text");
   const mig = lies("supabase/migrations/20261001_kc_club_v190_nachricht_bearbeitet.sql");
@@ -1856,6 +1856,15 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   const f = html.slice(html.indexOf("async function teilenInChat("), html.indexOf("function teilenArchiv("));
   assert.ok(!/api\("nachricht_senden"/.test(f) && /melde\("📥 Eingefügt – prüfen und mit ➤ senden"\)/.test(f), "nichts wird ungefragt gesendet");
   assert.ok(/<button class="mini\$\{n \? " mini-neu" : ""\}" onclick="zeige\('nachrichten'\)">/.test(html) && /\.mini\.mini-neu \{ background: linear-gradient\(135deg, #f39c12/.test(html), "Neue Nachr. orange");
+}
+
+// 164. 1.22.1: Sicherheits-Bericht erreicht den Admin sicher + Ablage „Admin <Jahr>“ (KC-CLUB-SICHERHEIT-ZUSTELLUNG/-ARCHIV)
+{
+  const f = server.slice(server.indexOf('case "sicherheit_melden"'), server.indexOf('return json({ ok: true, probleme, versand, abgelegt });'));
+  assert.ok(/sendenGewaehlt\("club_nachricht", ziel, \["push", "email"\], \{/.test(f), "immer Push und E-Mail");
+  assert.ok(/await sicherheitAblegen\(ich,[\s\S]{0,200}\.catch\(\(e\) => \{ console\.error\("sicherheit ablegen"/.test(f), "Ablage stoppt die Meldung nicht");
+  assert.ok(/const ADMIN_ORDNER = \{ art: "sonstiges", titel: "Admin", farbe: 8, register: \["Sicherheitscheck", "Sonstiges"\] \}/.test(server) && /nur_vorstand: true, erstellt_von: admin/.test(server), "Ordner Admin (nur Clubleitung)");
+  assert.ok(/register: "Sicherheitscheck",/.test(server) && /dateiAblegen\(ich, name, "text\/plain", btoa\(b\), ARCHIV_DATEITYPEN\)/.test(server), "Register + Textdatei");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
