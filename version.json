@@ -1,10 +1,22 @@
 {
-  "version": "1.18.2",
+  "version": "1.19.0",
   "datum": "2026-10-01",
   "neu": [
-    "🔒 Dienstwunsch: Die Übernahme deiner Wünsche in den Dienstplan ist jetzt gegen doppeltes Eintragen abgesichert, wenn zwei Planer-PCs gleichzeitig arbeiten (Vorbereitung DP2 Build 255)"
+    "🗄️ Archiv: Chats, Dateien aus Nachrichten, Fotos und Protokolle lassen sich in deinen Ordner legen – beim Löschen oder Verlassen eines Chats fragt die App vorher",
+    "🗑️ Archiv: Dokumente direkt löschen, Register löschen, Papierkorb endgültig leeren (Speicher wird sofort frei)",
+    "🛡️ Sicherheits-Check: Die Kochmütze dreht sich jetzt ruhig und gleichmäßig",
+    "⏩ Startseite: Doppelpfeil « » unter den Pfeilen oben – springt sofort zur ersten bzw. letzten Karte"
   ],
   "verlauf": [
+    {
+      "version": "1.19.0",
+      "neu": [
+        "🗄️ Archiv: Chats, Dateien aus Nachrichten, Fotos und Protokolle lassen sich in deinen Ordner legen – beim Löschen oder Verlassen eines Chats fragt die App vorher",
+        "🗑️ Archiv: Dokumente direkt löschen, Register löschen, Papierkorb endgültig leeren (Speicher wird sofort frei)",
+        "🛡️ Sicherheits-Check: Die Kochmütze dreht sich jetzt ruhig und gleichmäßig",
+        "⏩ Startseite: Doppelpfeil « » unter den Pfeilen oben – springt sofort zur ersten bzw. letzten Karte"
+      ]
+    },
     {
       "version": "1.18.2",
       "neu": [

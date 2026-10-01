@@ -808,7 +808,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 {
   const ids = [...html.slice(html.indexOf("const INFO_ALLE = ["), html.indexOf("];", html.indexOf("const INFO_ALLE = ["))).matchAll(/id: "([a-z]+)"/g)].map((m) => m[1]);
   assert.deepEqual(ids, ["treffen", "schnellstart", "wetter", "fuerdich", "demnaechst", "fotos", "zentrale", "admin"], "Info-Felder falsch (1.8.1: + schnellstart)");
-  assert.ok(/class="ipfeil links"[^>]*onclick="infoBlaettern\(-1\)"/.test(html) && /onclick="infoBlaettern\(1\)"/.test(html) && /class="ipunkt\$\{i === INFO_I \? " an" : ""\}"/.test(html), "Pfeile/Punkte fehlen");
+  assert.ok(/class="ipfeil links( mit-sprung)?"[^>]*onclick="infoBlaettern\(-1\)"/.test(html) && /onclick="infoBlaettern\(1\)"/.test(html) && /class="ipunkt\$\{i === INFO_I \? " an" : ""\}"/.test(html), "Pfeile/Punkte fehlen");
   assert.ok(/\[\$\("heroInfo"\), infoBlaettern\]/.test(html), "Wischen im Info-Feld fehlt");
   assert.ok(!/setInterval\([^)]*infoBlaettern/.test(html), "Info-Feld darf nicht automatisch blättern");
   for (const a of ["wetter", "wetter_konfig", "wetter_ort_suchen", "wetter_setzen"]) assert.ok(aktionen.has(a) && aufrufe.has(a), `${a} fehlt`);
@@ -1709,14 +1709,50 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 {
   const f = html.slice(html.indexOf("// ---------- KC-CLUB-ARCHIV-ABLAGE"), html.indexOf("// ----- KC-CLUB-ARCHIV-PERSOENLICH"));
   assert.ok(/const ARCHIV_ABLAGE_ARTEN = \{\s*erstattung: \{ sym: "💶", register: \["Rechnungen", "Sonstiges"\]/.test(f), "Registry der Ablage-Anlässe");
-  assert.deepEqual([...f.matchAll(/api\("(\w+)"/g)].map((m) => m[1]), ["archiv_liste", "archiv_hochladen"], "nur vorhandene Archiv-Wege");
+  // 1.19.0: dazu nur lesende, vorhandene Wege für Dateien aus Nachrichten/Protokollen (anlage_url) und Fotos (foto_oeffnen)
+  assert.ok([...f.matchAll(/api\("(\w+)"/g)].every((m) => ["archiv_liste", "archiv_hochladen", "anlage_url", "foto_oeffnen"].includes(m[1])), "nur vorhandene Archiv-/Lese-Wege");
   assert.ok(/const ordner = nfpEigeneOrdner\(d\)/.test(f) && /<select id="ablOrdner"/.test(f) && /<select id="ablReg">/.test(f), "nur eigene Ordner, Auswahl statt Freitext");
-  assert.ok(/onclick="einmal\(this, ablAblegen\)">🗄️ Ja, ablegen/.test(f) && /onclick="ablZu\(\)">Nein, danke/.test(f), "Rückfrage mit Ja/Nein");
+  assert.ok(/onclick="einmal\(this, ablAblegen\)">🗄️ \$\{esc\(ja \|\| "Ja, ablegen"\)\}/.test(f) && /onclick="ablNein\(\)">\$\{esc\(nein \|\| "Nein, danke"\)\}/.test(f), "Rückfrage mit Ja/Nein (1.19.0: Texte je Anlass)");
   const s = html.slice(html.indexOf("async function erstattungSenden()"), html.indexOf("// KC-CLUB-KMSATZ (0.39.0): Admin"));
   assert.ok(s.indexOf('api("erstattung_senden"') < s.indexOf("erstattungAblageFragen(kopie, r)"), "Ablage erst nach erfolgreichem Versand");
   assert.ok(/positionen: ERS\.pos\.map\(\(\{ belegNamen, belegDateien, satz, \.\.\.x \}\) => x\)/.test(s), "Beleg-Dateien gehen nicht mit dem Antrag an den Server");
-  assert.ok(/\.si-muetze \{[^}]*animation: siWirbel/.test(html) && /rotate3d\(1, 1, 0, 360deg\)/.test(html) && /rotate3d\(1, -1, 0, 360deg\)/.test(html), "Kochmütze wirbelt auch diagonal");
-  assert.ok(/<span class="si-muetze" role="img" aria-label="Prüfung läuft"><img src="kc-kochmuetze-weiss\.webp"/.test(html) && !/si-dreht/.test(html), "Sicherheits-Check: Mütze statt Sanduhr");
+  // 1.19.0 (Hinweis Hansi „hakt, zu unruhig“): zwei Ebenen statt Achsen-Sprünge, langsamer, Phase läuft beim Neuzeichnen weiter
+  assert.ok(/\.si-muetze \{[^}]*animation: siAchse 14s linear infinite; animation-delay: var\(--si2/.test(html) && /\.si-muetze > span \{[^}]*animation: siKippen 5s linear infinite; animation-delay: var\(--si1/.test(html), "Kochmütze: Kippen + wandernde Achse, ruhig");
+  assert.ok(!/siWirbel|rotate3d/.test(html), "keine harten Achsen-Sprünge mehr");
+  // Hinweis Hansi „obere Mütze ruckelt“: Bereiche statt Komplett-Neuzeichnen – laufende Mützen bleiben unangetastet
+  assert.ok(/if \(\$\("siKopf"\)\.dataset\.key !== kopfKey\)/.test(html) && /if \(lis\[i\]\.dataset\.key !== z\.key\)/.test(html), "Sicherheits-Check: nur Geändertes neu zeichnen");
+  assert.ok(/const siMuetze = [\s\S]{0,120}performance\.now\(\)[\s\S]{0,120}--si1:-\$\{\(t % 5\)/.test(html) && /\$\{siMuetze\("", "Prüfung läuft"\)\}/.test(html) && !/si-dreht/.test(html), "Sicherheits-Check: Mütze statt Sanduhr, ohne Neustart");
+}
+
+// 153. 1.19.0: Doppelpfeil im Kopfbereich – « erste, » letzte Karte (KC-CLUB-INFO-SPRUNG)
+{
+  assert.ok(/aria-label="Zur ersten Karte"[^>]*onclick="infoSpringen\(-1\)">«/.test(html) && /aria-label="Zur letzten Karte"[^>]*onclick="infoSpringen\(1\)">»/.test(html), "Doppelpfeile fehlen");
+  assert.ok(/function infoSpringen\(d\) \{ if \(einfach\(\)\) return; const ziel = d < 0 \? 0 : INFO_FELDER\.length - 1;/.test(html), "Sprung zur ersten/letzten Karte");
+  assert.ok(/body\.einfach #infoPunkte, body\.einfach \.ipfeil/.test(html), "einfache Ansicht: Pfeile aus");
+}
+
+// 154. 1.19.0: Chats/Dateien/Fotos/Protokolle ins Archiv, Frage vor dem Löschen, Löschen im Archiv (KC-CLUB-ARCHIV-ABLAGE, KC-CLUB-ARCHIV-LOESCHEN)
+{
+  for (const k of ["chat", "anlage", "foto", "protokoll"]) assert.ok(new RegExp(`\\n  ${k}: \\{ sym:`).test(html), `Ablage-Anlass ${k} fehlt`);
+  assert.ok(/onclick="chatInsArchiv\(\)">🗄️ Chat in mein Archiv legen/.test(html), "Chat-Menü: selbst ablegen");
+  for (const f of ["unterhaltungWeg", "gruppeLoeschen", "gruppeVerlassen"]) {
+    const t = html.slice(html.indexOf(`async function ${f}(`), html.indexOf(`async function ${f}(`) + 700);
+    assert.ok(/if \(!gefragt && await chatAblageFragen\(\{ frage: "Vorher in dein persönliches Archiv ablegen\?"/.test(t) || /!gefragt && await chatAblageFragen\(\{ frage: "Vorher in dein persönliches Archiv ablegen\?"/.test(t), `${f}: vorher fragen`);
+    assert.ok(t.indexOf("chatAblageFragen") < t.indexOf("api("), `${f}: erst fragen, dann ausführen`);
+  }
+  const ab = html.slice(html.indexOf("async function ablAblegen()"), html.indexOf("// ----- 1.19.0: Chat als Textdatei"));
+  assert.ok(/if \(fehler\) \{[\s\S]*if \(danach && confirm\(/.test(ab), "Ablage fehlgeschlagen → Löschen nur nach Rückfrage");
+  assert.ok(/if \(!ARCHIV_TYP_OK\(f\.mime\)\) \{ uebersprungen\+\+; continue; \}/.test(ab), "nicht erlaubte Dateitypen überspringen");
+  assert.ok(/naAnlagenArchiv\(id, "Wichtig\? Die Datei auch in dein Archiv legen\?"\)/.test(html), "Merken mit Datei → fragen");
+  assert.ok(/onclick="fotoInsArchiv\(\)">🗄️ Archiv/.test(html) && /onclick="protokollInsArchiv\(\)">🗄️ In mein Archiv legen/.test(html), "Foto/Protokoll-Knöpfe");
+  assert.ok(/const textDatei = \(text\) => new Blob\(\["\\ufeff" \+ text\], \{ type: "text\/plain" \}\)/.test(html), "Text als UTF-8 mit BOM");
+  assert.ok(/onclick="event\.stopPropagation\(\);arDokLoeschen\('\$\{x\.id\}'\)" title="Löschen"/.test(html), "🗑️ direkt am Dokument");
+  assert.ok(/function arRegisterLoeschen\(\)/.test(html) && /if \(!rest\.length\) return melde\(/.test(html), "Register löschen, letztes bleibt");
+  assert.ok(/api\("archiv_endgueltig", was\)/.test(html) && /ENDGÜLTIG löschen\?/.test(html) && /❌ Papierkorb leeren/.test(html), "App: endgültig löschen mit Rückfrage");
+  const e = server.slice(server.indexOf('case "archiv_endgueltig"'), server.indexOf('case "ping"'));
+  assert.ok(/archivOrdnerHolen\(ich, p\.ordner, true, "pflegen"\)/.test(e) && /archivDokHolen\(ich, p\.id, "pflegen"\)/.test(e), "Server: gleiche Rechte wie Wiederherstellen");
+  assert.ok(/if \(!o\.geloescht_am\) throw/.test(e) && /if \(!d\.geloescht_am\) throw/.test(e), "Server: nur aus dem Papierkorb");
+  assert.ok(e.indexOf("await geloescht(ich") < e.indexOf(".delete()") && /protokoll\(ich\.person_id, "archiv_dokument_endgueltig"/.test(e), "Server: Sicherung + Protokoll");
 }
 
 // 151. 1.18.1: DP2 Build 254 RC (dp3 3945960) – Meine Angaben ausdrucken (PDF mit QR, Abfrage, Vorschau) + Sperrtag ohne V/H/B
@@ -1961,7 +1997,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/const \{ g, darfVerwalten \} = await gruppeHolen\(ich, p\.id\);\s*if \(!darfVerwalten\) throw/.test(f), "Löschen nur für Verwalter der Gruppe");
   assert.ok(f.indexOf('await geloescht(ich, "gruppe"') > 0 && f.indexOf('await geloescht(ich, "gruppe"') < f.indexOf('.delete()'), "Sicherung vor dem Löschen");
   assert.ok(/id="chatGruppeWeg" onclick="gruppeLoeschen\(\)"/.test(html) && /\$\("chatGruppeWeg"\)\.classList\.toggle\("versteckt", !g\?\.darfVerwalten\)/.test(html), "App: Knopf Gruppe löschen fehlt");
-  assert.ok(/async function gruppeLoeschen\(\)[\s\S]{0,300}confirm\(/.test(html), "App: Rückfrage vor dem Löschen fehlt");
+  assert.ok(/async function gruppeLoeschen\((gefragt)?\)[\s\S]{0,700}confirm\(/.test(html), "App: Rückfrage vor dem Löschen fehlt");
 }
 
 // 129. 1.4.0: globale Suche (KC-CLUB-SUCHE)

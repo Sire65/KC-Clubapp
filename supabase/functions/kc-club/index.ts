@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.18.2";
+const SERVER_VERSION = "1.19.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -5049,6 +5049,30 @@ Köcheclub-App`,
           await db.from("kc_club_archiv_dokumente").update({ geloescht_am: null, geloescht_von: null }).eq("id", d.id);
           await protokoll(ich.person_id, "archiv_wiederhergestellt", { dokument: d.id });
         }
+        return json({ ok: true });
+      }
+
+      case "archiv_endgueltig": {
+        // KC-CLUB-ARCHIV-ENDGUELTIG (1.19.0, Wunsch Hansi): aus dem Papierkorb sofort endgültig entfernen – macht den Speicher
+        // (persönlich 50 MB) gleich frei statt nach 30 Tagen. Nur was schon im Papierkorb liegt; gleiche Rechte wie Wiederherstellen.
+        // Kritische Aktion: Rückfrage in der App, Metadaten-Sicherung (geloescht), Protokoll. Die Datei selbst ist danach weg.
+        if (p.ordner) {
+          const o = await archivOrdnerHolen(ich, p.ordner, true, "pflegen");
+          if (!o.geloescht_am) throw new Fehler("Der Ordner liegt nicht im Papierkorb – bitte zuerst löschen.", 409);
+          const { data: dd } = await db.from("kc_club_archiv_dokumente").select("*").eq("ordner_id", o.id);
+          await geloescht(ich, "archiv_ordner_endgueltig", { ordner: o, dokumente: dd ?? [] });
+          if ((dd ?? []).length) await db.from("kc_club_archiv_dokumente").delete().eq("ordner_id", o.id);
+          await dateienEntfernen((dd ?? []).map((d: any) => d.attachment_id));
+          await db.from("kc_club_archiv_ordner").delete().eq("id", o.id);
+          await protokoll(ich.person_id, "archiv_ordner_endgueltig", { ordner: o.id, dokumente: (dd ?? []).length });
+          return json({ ok: true, dokumente: (dd ?? []).length });
+        }
+        const { d, o } = await archivDokHolen(ich, p.id, "pflegen");
+        if (!d.geloescht_am) throw new Fehler("Das Dokument liegt nicht im Papierkorb – bitte zuerst löschen.", 409);
+        await geloescht(ich, "archiv_dokument_endgueltig", { dokument: d });
+        await db.from("kc_club_archiv_dokumente").delete().eq("id", d.id);
+        await dateienEntfernen([d.attachment_id]);
+        await protokoll(ich.person_id, "archiv_dokument_endgueltig", { dokument: d.id, ordner: o.id, groesse: d.groesse });
         return json({ ok: true });
       }
 

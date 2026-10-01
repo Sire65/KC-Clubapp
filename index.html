@@ -229,6 +229,9 @@
   @keyframes ireinR { from { opacity: 0; transform: translateX(34px); } } @keyframes ireinL { from { opacity: 0; transform: translateX(-34px); } }
   .ipfeil { position: absolute; top: 50%; z-index: 2; width: 32px; height: 32px; margin-top: -16px; border-radius: 50%; border: 1px solid rgba(255,255,255,.45); background: rgba(90,15,25,.72); color: #fff; font-size: 1.3rem; font-weight: 800; line-height: 1; padding: 0 0 2px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,.25); }
   .ipfeil.links { left: -17px; } .ipfeil.rechts { right: -17px; }
+  /* KC-CLUB-INFO-SPRUNG (1.19.0, Wunsch Hansi): Doppelpfeil unter dem einfachen Pfeil – « zur ersten, » zur letzten Karte.
+     Beide Pfeile zusammen mittig: einfacher Pfeil etwas höher, Doppelpfeil direkt darunter */
+  .ipfeil.mit-sprung { margin-top: -36px; } .ipfeil.sprung { margin-top: 4px; font-size: 1.15rem; letter-spacing: -1px; }
   .ipunkte { display: flex; justify-content: center; gap: 2px; margin: 4px 0 -10px; }
   .ipunkt { width: 22px; height: 18px; border: none; background: none; padding: 0; cursor: pointer; display: grid; place-items: center; }
   .ipunkt::after { content: ""; width: 8px; height: 8px; border-radius: 4px; background: rgba(255,255,255,.35); transition: all .25s; }
@@ -365,26 +368,17 @@
   .si-liste { list-style: none; margin: 0; padding: 0; } .si-liste li { display: grid; grid-template-columns: 30px 1fr auto; gap: 8px; align-items: center; padding: 10px 2px; border-bottom: 1px solid var(--linie); }
   .si-liste li:last-child { border-bottom: none; } .si-liste .sym { font-size: 1.25rem; text-align: center; } .si-liste small { display: block; color: var(--grau); font-size: .8rem; }
   .si-liste .st { font-weight: 800; font-size: .85rem; white-space: nowrap; } .si-liste .st::before { content: ""; display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--st); margin-right: 5px; }
-  /* KC-CLUB-SI-MUETZE (1.18.0, Wunsch Hansi): statt Sanduhr wirbelt die originale Kochmütze in alle Richtungen –
-     waagerecht, senkrecht, diagonal und flach im Kreis (3D-Drehung um wechselnde Achsen) */
-  .si-muetze { display: inline-grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; flex: none; background: linear-gradient(135deg, var(--hero1), var(--rot)); animation: siWirbel 3.2s linear infinite; }
+  /* KC-CLUB-SI-MUETZE (1.18.0, Wunsch Hansi; 1.19.0 ruhiger): statt Sanduhr dreht sich die originale Kochmütze in alle Richtungen.
+     Zwei Ebenen statt Achsen-Sprüngen: innen kippt die Mütze gleichmäßig (rotateY), außen wandert diese Kippachse langsam einmal
+     im Kreis (rotate) – so wird aus waagerecht nach und nach diagonal, senkrecht, diagonal … fließend, ohne Ruckeln.
+     Die Phase (--si1/--si2) setzt die App beim Neuzeichnen fort, damit die Drehung bei jedem Prüfschritt nicht neu anfängt. */
+  .si-muetze { display: inline-grid; place-items: center; width: 52px; height: 52px; flex: none; animation: siAchse 14s linear infinite; animation-delay: var(--si2, 0s); }
+  .si-muetze > span { display: grid; place-items: center; width: 100%; height: 100%; border-radius: 50%; background: linear-gradient(135deg, var(--hero1), var(--rot)); animation: siKippen 5s linear infinite; animation-delay: var(--si1, 0s); }
   .si-muetze img { width: 34px; height: 34px; object-fit: contain; }
-  .si-muetze.klein { width: 26px; height: 26px; vertical-align: middle; animation-duration: 2.4s; } .si-muetze.klein img { width: 17px; height: 17px; }
-  @keyframes siWirbel {
-    0% { transform: perspective(300px) rotate3d(0, 1, 0, 0deg); }
-    16% { transform: perspective(300px) rotate3d(0, 1, 0, 360deg); }
-    17% { transform: perspective(300px) rotate3d(1, 0, 0, 0deg); }
-    33% { transform: perspective(300px) rotate3d(1, 0, 0, 360deg); }
-    34% { transform: perspective(300px) rotate3d(1, 1, 0, 0deg); }
-    50% { transform: perspective(300px) rotate3d(1, 1, 0, 360deg); }
-    51% { transform: perspective(300px) rotate3d(1, -1, 0, 0deg); }
-    67% { transform: perspective(300px) rotate3d(1, -1, 0, 360deg); }
-    68% { transform: perspective(300px) rotate3d(0, 0, 1, 0deg); }
-    84% { transform: perspective(300px) rotate3d(0, 0, 1, 360deg); }
-    85% { transform: perspective(300px) rotate3d(1, 1, 1, 0deg); }
-    100% { transform: perspective(300px) rotate3d(1, 1, 1, 360deg); }
-  }
-  @media (prefers-reduced-motion: reduce) { .si-muetze { animation-duration: 9s; } }
+  .si-muetze.klein { width: 26px; height: 26px; vertical-align: middle; } .si-muetze.klein img { width: 17px; height: 17px; }
+  @keyframes siAchse { to { transform: rotate(360deg); } }
+  @keyframes siKippen { from { transform: perspective(240px) rotateY(0deg); } to { transform: perspective(240px) rotateY(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .si-muetze, .si-muetze > span { animation-duration: 20s; } }
   /* KC-CLUB-ANHEFTEN / -CHATUMFRAGE / -KONTAKT / -MERKEN (1.10.0) */
   #chatAngeheftet { display: flex; flex-direction: column; gap: 4px; margin: 0 0 8px; }
   .pin-zeile { text-align: left; border: none; border-left: 4px solid var(--rot); border-radius: 10px; background: var(--karte); color: inherit; padding: 8px 10px; cursor: pointer; box-shadow: var(--schatten); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: .9rem; }
@@ -970,6 +964,7 @@
   /* KC-CLUB-ARCHIV-MUETZE (1.17.1, Wunsch Hansi): originale Köcheclub-Kochmütze als Aufdruck auf jedem Ordnerrücken */
   .ordner .muetze { margin-top: auto; width: 50px; height: 50px; object-fit: contain; opacity: .95; filter: drop-shadow(0 1px 1px rgba(0,0,0,.35)); pointer-events: none; }
   .ordner .muetze + .loch { margin-top: 4px; }
+  .ar-dok-knoepfe { display: flex; gap: 4px; flex: none; } /* 1.19.0: ✏️ 🗑️ bzw. ♻️ ❌ nebeneinander */
   .ar-kopf .muetze { width: 46px; height: 46px; flex: none; object-fit: contain; margin-left: auto; opacity: .95; }
   .ordner .loch { margin-top: auto; width: 24px; height: 24px; border-radius: 50%; background: rgba(0,0,0,.28); box-shadow: inset 0 2px 3px rgba(0,0,0,.4); }
   .ordner .schloss { position: absolute; top: 4px; right: 6px; font-size: .9rem; }
@@ -1754,6 +1749,7 @@
     <button class="knopf versteckt" id="chatGruppeRaus" onclick="gruppeVerlassen()">🚪 Gruppe verlassen</button>
     <button class="knopf versteckt" id="chatGruppeWeg" onclick="gruppeLoeschen()">🗑️ Gruppe löschen (für alle)</button>
     <div id="chatStummBereich"></div>
+    <button class="knopf" onclick="chatInsArchiv()">🗄️ Chat in mein Archiv legen</button>
     <button class="knopf" onclick="unterhaltungWeg(false)">🙈 Nur bei mir entfernen</button>
     <p class="hinweis" style="margin:0 4px 6px;font-size:.85rem">Die anderen behalten sie. Schreibt jemand wieder, erscheint sie erneut.</p>
     <button class="knopf haupt versteckt" id="chatAllesLoeschen" onclick="unterhaltungWeg(true)">🗑️ Für alle löschen (Admin)</button>
@@ -1785,7 +1781,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.18.2"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.19.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -4171,7 +4167,8 @@ function heroZeigen(richtung) {
   if (!erzwingen && document.activeElement?.id === "zeText") return; // beim Tippen in der Zentrale nicht neu zeichnen
   infoLetztes = f.id + inhalt;
   $("heroInfo").innerHTML = `<div class="ifeld ifeld-${f.id}${richtung ? (richtung > 0 ? " rein-r" : " rein-l") : ""}" id="infoFeld" data-id="${f.id}">${inhalt}</div>
-    <button class="ipfeil links" aria-label="Vorheriges Feld" onclick="infoBlaettern(-1)">‹</button><button class="ipfeil rechts" aria-label="Nächstes Feld" onclick="infoBlaettern(1)">›</button>`;
+    <button class="ipfeil links mit-sprung" aria-label="Vorheriges Feld" onclick="infoBlaettern(-1)">‹</button><button class="ipfeil rechts mit-sprung" aria-label="Nächstes Feld" onclick="infoBlaettern(1)">›</button>
+    <button class="ipfeil links sprung" aria-label="Zur ersten Karte" title="Zur ersten Karte" onclick="infoSpringen(-1)">«</button><button class="ipfeil rechts sprung" aria-label="Zur letzten Karte" title="Zur letzten Karte" onclick="infoSpringen(1)">»</button>`;
   // 0.44.0: Pfeile mittig auf dem Rahmen, Punkte direkt unter dem Feld (keine eigene Steuerzeile mehr)
   $("infoPunkte").innerHTML = INFO_FELDER.map((x, i) => `<button class="ipunkt${i === INFO_I ? " an" : ""}" aria-label="${esc(x.t)}" title="${esc(x.t)}" onclick="infoGehe(${i})"></button>`).join("");
   if (f.id === "wetter") { wetterSzene(); if (!WET.laedt && Date.now() - WET.geholt > WETTER_NEU_MIN * 60000) wetterLaden(erzwingen); }
@@ -4200,6 +4197,8 @@ function infoGehe(i, richtung) {
   heroZeigen(richtung);
 }
 function infoBlaettern(d) { if (einfach()) return; infoGehe(INFO_I + d, d); } // einfache Ansicht: nur „Nächstes Treffen“
+// KC-CLUB-INFO-SPRUNG (1.19.0): « sofort zur ersten, » sofort zur letzten Karte (schon dort → nichts tun)
+function infoSpringen(d) { if (einfach()) return; const ziel = d < 0 ? 0 : INFO_FELDER.length - 1; if (ziel !== INFO_I) infoGehe(ziel, d); }
 // Feld 3: alles, was mich gerade betrifft – jede Zeile führt direkt hin (die Karte „Heute wichtig“ unten bleibt ausführlich)
 function infoFuerDich() {
   const z = [], t = INIT?.naechstesTreffen, zeile = (sym, text, klick) => `<button class="ifz" onclick="${klick}"><span>${sym}</span><span class="ifzt">${text}</span><span>›</span></button>`;
@@ -5486,6 +5485,7 @@ function nachrichtMenue(id) {
     ${m.bearbeitbarBis && Date.parse(m.bearbeitbarBis) > Date.now() ? `<button class="knopf" onclick="document.getElementById('naMenue').remove();naBearbeiten('${id}')">✏️ Bearbeiten</button>` : ""}
     ${m.text ? `<button class="knopf" onclick="document.getElementById('naMenue').remove();naKopieren('${id}')">📋 Kopieren</button>` : ""}
     <button class="knopf" onclick="document.getElementById('naMenue').remove();weiterleitenBlatt('${id}')">↪️ Weiterleiten</button>
+    ${(m.anlagen || []).some((a) => ARCHIV_TYP_OK(a.mime)) ? `<button class="knopf" onclick="document.getElementById('naMenue').remove();naAnlagenArchiv('${id}')">🗄️ Datei in mein Archiv</button>` : ""}
     <button class="knopf" onclick="document.getElementById('naMenue').remove();nachrichtInfo('${id}')">ℹ️ Details – wann gesendet, angekommen, gelesen</button>
     <button class="knopf" onclick="document.getElementById('naMenue').remove();naLoeschenFragen('${id}')">🗑️ Löschen</button>
     <button class="knopf" onclick="document.getElementById('naMenue').remove()">Abbrechen</button></div>`;
@@ -5505,7 +5505,12 @@ async function naAnheften(id, an) {
   catch (e) { melde(e.message, true); }
 }
 async function naMerken(id, an) {
-  try { await api("nachricht_merken", { id, an }); melde(an ? "⭐ Gemerkt – zu finden unter 💬 → ⭐" : "Nicht mehr gemerkt"); chatStand = ""; await chatLaden(false); }
+  try {
+    await api("nachricht_merken", { id, an }); melde(an ? "⭐ Gemerkt – zu finden unter 💬 → ⭐" : "Nicht mehr gemerkt"); chatStand = "";
+    // 1.19.0: wichtige Nachricht mit Datei → anbieten, die Datei auch ins Archiv zu legen
+    if (an && (NA.nachrichten.get(id)?.anlagen || []).some((a) => ARCHIV_TYP_OK(a.mime))) naAnlagenArchiv(id, "Wichtig? Die Datei auch in dein Archiv legen?");
+    await chatLaden(false);
+  }
   catch (e) { melde(e.message, true); }
 }
 async function gemerktZeigen() {
@@ -5580,6 +5585,9 @@ async function kontaktSenden(pid) {
   catch (e) { melde(e.message, true); }
 }
 
+// KC-CLUB-SI-MUETZE (1.19.0): Mütze mit fortgesetzter Phase (negative Verzögerung = „läuft schon so lange“) – kein Neustart beim Neuzeichnen
+const siMuetze = (klasse = "", label = "") => { const t = performance.now() / 1000;
+  return `<span class="si-muetze ${klasse}" style="--si1:-${(t % 5).toFixed(2)}s;--si2:-${(t % 14).toFixed(2)}s"${label ? ` role="img" aria-label="${label}"` : ' aria-hidden="true"'}><span><img src="kc-kochmuetze-weiss.webp" alt=""></span></span>`; };
 // ---------- KC-CLUB-SICHERHEIT (1.14.0, Wunsch Hansi): Sicherheits-Check – zeigt Mitgliedern, dass alles läuft und geschützt ist ----------
 // Jede Zeile ist eine echte Prüfung (App oder Server). Keine Namen von Datenbanken/Anbietern. Regel 11: Was sich nicht prüfen
 // lässt, steht als „nicht geprüft“ da – nie als OK. „Alle Systeme laufen einwandfrei“ nur, wenn wirklich jede Zeile OK ist.
@@ -5619,18 +5627,27 @@ function sicherheitZeigen(schritt) {
   const werte = SICHERHEIT_PRUEFUNGEN.map((p) => (r ? p.wert(r) : null));
   const schlecht = werte.filter((w) => w === false).length, offen = werte.filter((w) => w == null).length;
   const kopf = !fertig
-    ? `<div class="si-ergebnis si-offen"><span class="si-muetze" role="img" aria-label="Prüfung läuft"><img src="kc-kochmuetze-weiss.webp" alt=""></span><div><b>Prüfung läuft …</b><span class="hinweis">${Math.min(schritt ?? 0, n)} von ${n} Punkten geprüft</span></div></div>`
+    ? `<div class="si-ergebnis si-offen">${siMuetze("", "Prüfung läuft")}<div><b>Prüfung läuft …</b><span class="hinweis">${Math.min(schritt ?? 0, n)} von ${n} Punkten geprüft</span></div></div>`
     : !schlecht && !offen
       ? `<div class="si-ergebnis si-gut"><span class="gross">✅</span><div><b>Alle Systeme laufen einwandfrei</b><span class="hinweis">Deine Daten sind geschützt und gesichert · geprüft ${esc(SI.zeit)} Uhr</span></div></div>`
       : `<div class="si-ergebnis ${schlecht ? "si-schlecht" : "si-mittel"}"><span class="gross">⚠️</span><div><b>${schlecht + offen} ${schlecht + offen === 1 ? "Punkt ist" : "Punkte sind"} gerade nicht bestätigt</b><span class="hinweis">Bitte in ein paar Minuten noch einmal prüfen. Bleibt es so, gib Hansi kurz Bescheid. · ${esc(SI.zeit || "")} Uhr</span></div></div>`;
-  const liste = SICHERHEIT_PRUEFUNGEN.map((p, i) => {
-    const sichtbar = r && i < (schritt ?? 0), w = werte[i];
-    const st = !sichtbar ? '<span class="st si-offen"><span class="si-muetze klein"><img src="kc-kochmuetze-weiss.webp" alt=""></span></span>' : `<span class="st ${siKlasse(w)}">${w === true ? (p.fest ? "immer an" : "OK") : w === false ? "Achtung" : "nicht geprüft"}</span>`;
-    return `<li><span class="sym">${p.sym}</span><span>${esc(p.t)}${sichtbar && p.info(r) ? `<small>${esc(p.info(r))}</small>` : ""}</span>${st}</li>`;
-  }).join("");
-  $("siInhalt").innerHTML = `${kopf}<div class="si-uhren">${SI_UHREN.map((u) => siUhr(u, fertig ? r : null)).join("")}</div>
-    <div class="karte"><ul class="si-liste">${liste}</ul></div>
-    <button class="knopf ${fertig && (schlecht || offen) ? "" : "haupt"}" style="margin-top:12px" ${SI.laeuft ? "disabled" : ""} onclick="sicherheitPruefen()">🔍 ${SI.r ? "Erneut prüfen" : "Jetzt prüfen"}</button>
+  // KC-CLUB-SI-MUETZE (1.19.0, Hinweis Hansi „obere Mütze ruckelt“): nicht mehr alles neu zeichnen – Kopf, Uhren, Liste und Knöpfe
+  // sind eigene Bereiche; während der Prüfung ändert sich nur der Zähler und die Zeilen, die fertig geworden sind. Die laufenden
+  // Mützen bleiben unangetastet und drehen ungestört weiter.
+  const zeilen = SICHERHEIT_PRUEFUNGEN.map((p, i) => {
+    const sichtbar = r && i < (schritt ?? 0), w = werte[i], info = sichtbar ? p.info(r) : "";
+    const st = !sichtbar ? `<span class="st si-offen">${siMuetze("klein")}</span>` : `<span class="st ${siKlasse(w)}">${w === true ? (p.fest ? "immer an" : "OK") : w === false ? "Achtung" : "nicht geprüft"}</span>`;
+    return { key: sichtbar ? `${w}|${info}` : "laeuft", html: `<li><span class="sym">${p.sym}</span><span>${esc(p.t)}${info ? `<small>${esc(info)}</small>` : ""}</span>${st}</li>` };
+  });
+  if (!$("siKopf")) $("siInhalt").innerHTML = '<div id="siKopf"></div><div class="si-uhren" id="siUhren"></div><div class="karte"><ul class="si-liste" id="siListe"></ul></div><div id="siKnoepfe"></div>';
+  const kopfKey = fertig ? `fertig|${schlecht}|${offen}|${SI.zeit}` : "laeuft";
+  if ($("siKopf").dataset.key !== kopfKey) { $("siKopf").innerHTML = kopf; $("siKopf").dataset.key = kopfKey; }
+  else if (!fertig) { const z = $("siKopf").querySelector(".hinweis"); if (z) z.textContent = `${Math.min(schritt ?? 0, n)} von ${n} Punkten geprüft`; }
+  $("siUhren").innerHTML = SI_UHREN.map((u) => siUhr(u, fertig ? r : null)).join("");
+  const lis = $("siListe").children;
+  if (lis.length !== zeilen.length) { $("siListe").innerHTML = zeilen.map((z) => z.html).join(""); [...$("siListe").children].forEach((li, i) => (li.dataset.key = zeilen[i].key)); }
+  else zeilen.forEach((z, i) => { if (lis[i].dataset.key !== z.key) { lis[i].outerHTML = z.html; $("siListe").children[i].dataset.key = z.key; } });
+  $("siKnoepfe").innerHTML = `<button class="knopf ${fertig && (schlecht || offen) ? "" : "haupt"}" style="margin-top:12px" ${SI.laeuft ? "disabled" : ""} onclick="sicherheitPruefen()">🔍 ${SI.r ? "Erneut prüfen" : "Jetzt prüfen"}</button>
     ${fertig ? `<button class="knopf ${schlecht || offen ? "haupt" : ""}" style="margin-top:8px" onclick="sicherheitMelden()">📨 Ergebnis an Hansi (Admin) senden</button>` : ""}
     <p class="hinweis" style="margin-top:8px">Die Prüfung schaut nur nach – sie verändert nichts und verrät keine Daten.</p>`;
 }
@@ -6278,9 +6295,11 @@ function chatMenue() {
   stummBereichZeigen();
   $("chatBlatt").classList.remove("versteckt");
 }
-async function unterhaltungWeg(fuerAlle) {
+async function unterhaltungWeg(fuerAlle, gefragt) {
   $("chatBlatt").classList.add("versteckt");
   if (!chatId) return zeige("nachrichten"); // noch nicht gesendeter Entwurf
+  // KC-CLUB-ARCHIV-ABLAGE (1.19.0): vor dem Entfernen/Löschen anbieten, den Chat ins persönliche Archiv zu legen
+  if (!gefragt && await chatAblageFragen({ frage: "Vorher in dein persönliches Archiv ablegen?", ja: "Ja, ablegen – dann weiter", nein: "Nein, nur weiter", danach: () => unterhaltungWeg(fuerAlle, true) })) return;
   if (fuerAlle && !confirm("Unterhaltung mit allen Nachrichten für ALLE Teilnehmer endgültig löschen?\nEine Sicherung bleibt im Änderungsprotokoll.")) return;
   try { await api(fuerAlle ? "unterhaltung_loeschen" : "unterhaltung_ausblenden", { id: chatId }); melde(fuerAlle ? "🗑️ Für alle gelöscht" : "🙈 Aus deiner Liste entfernt"); zeige("nachrichten"); neuLaden(); }
   catch (e) { melde(e.message, true); }
@@ -6428,14 +6447,16 @@ async function gruppeSpeichern() {
   $("grKnopf").disabled = false;
 }
 // KC-CLUB-GRUPPE-LOESCHEN (1.3.0): Gruppe für alle auflösen (angelegt von mir oder Clubsprecher/Kassenwart/Admin)
-async function gruppeLoeschen() {
+async function gruppeLoeschen(gefragt) {
   $("chatBlatt").classList.add("versteckt");
   const g = CHAT?.gruppe; if (!g || !chatId) return;
+  if (!gefragt && await chatAblageFragen({ frage: "Vorher in dein persönliches Archiv ablegen?", ja: "Ja, ablegen – dann weiter", nein: "Nein, nur weiter", danach: () => gruppeLoeschen(true) })) return; // 1.19.0
   if (!confirm(`Die Gruppe „${g.name}“ für ALLE löschen?\n\nAlle Nachrichten darin verschwinden bei allen ${CHAT.teilnehmer.length} Mitgliedern. Die anderen bekommen einen kurzen Hinweis.`)) return;
   try { await api("gruppe_loeschen", { id: chatId }); melde(`🗑️ Gruppe „${g.name}“ gelöscht`); zeige("nachrichten"); neuLaden(); } catch (e) { melde(e.message, true); }
 }
-async function gruppeVerlassen() {
+async function gruppeVerlassen(gefragt) {
   $("chatBlatt").classList.add("versteckt");
+  if (CHAT?.gruppe && !gefragt && await chatAblageFragen({ frage: "Vorher in dein persönliches Archiv ablegen?", ja: "Ja, ablegen – dann weiter", nein: "Nein, nur weiter", danach: () => gruppeVerlassen(true) })) return; // 1.19.0
   if (!CHAT?.gruppe || !confirm(`Die Gruppe „${CHAT.gruppe.name}“ verlassen? Du bekommst dann keine Nachrichten mehr daraus.`)) return;
   try { await api("gruppe_verlassen", { id: CHAT.id }); melde("🚪 Gruppe verlassen"); zeige("nachrichten"); neuLaden(); } catch (e) { melde(e.message, true); }
 }
@@ -6867,6 +6888,7 @@ function protokollLesen() {
       ${p.kurzfassung ? `<p style="margin:10px 0 0"><b>Kurzfassung</b></p><p style="white-space:pre-wrap;margin:4px 0 0">${esc(p.kurzfassung)}</p>` : ""}
     </div>
     ${PR.anlagen.length ? `<div class="karte"><h3>📎 Das Protokoll</h3><p class="hinweis" style="margin-top:0;font-size:.85rem">Antippen zum Vergrößern bzw. Öffnen.</p>${anlagenListe(false)}</div>` : ""}
+    ${p.roh !== "entwurf" ? '<div class="knoepfe" style="margin:0 0 10px"><button class="knopf klein" onclick="protokollInsArchiv()">🗄️ In mein Archiv legen</button></div>' : ""}
     ${PR.aufgaben.length ? `<div class="karte"><h3>📌 Aufgaben</h3>${PR.aufgaben.map((a) => aufgabeZeile(a, a.meine || PR.darfBearbeiten, a.verwalten)).join("")}</div>` : ""}
     ${PR.einwaende.length || einspruchOffen ? `<div class="karte"><h3>⚠️ Einwände</h3>
       ${PR.einwaende.map((e) => `<div class="zeile"><div style="flex:1${e.erledigt_am ? ";opacity:.6" : ""}"><b>${esc(e.name)}:</b> ${esc(e.text)}<div class="hinweis" style="font-size:.85rem">${esc(zeitKurz(e.erstellt_am))}${e.erledigt_am ? " · ✔ erledigt" : ""}</div></div>
@@ -7585,7 +7607,7 @@ async function fotoAnsehen(i, blaettern) {
   const an = anlassVon(f);
   $("fbInfo").innerHTML = `<div><b>${esc(f.thema || "Ohne Thema")}</b> · ${esc(fTagDe(f.datum))}${an ? `<br><span onclick="fotoSchliessen();faFilterSetzen('bezug','${esc(an.art + "|" + an.id)}')" style="text-decoration:underline;cursor:pointer">${esc(anlassText(an))}</span>` : ""}</div>
     ${f.beschreibung ? `<div>${esc(f.beschreibung)}</div>` : ""}<div class="fb-klein">📤 ${esc(f.von.name)}</div>
-    <div class="knoepfe"><button class="knopf klein" onclick="fotoDetails()">ℹ️ Details</button><button class="knopf klein" onclick="fotoSpeichern()">⬇️ Speichern</button>${navigator.share ? '<button class="knopf klein" onclick="fotoTeilen()">📤 Teilen</button>' : ""}
+    <div class="knoepfe"><button class="knopf klein" onclick="fotoDetails()">ℹ️ Details</button><button class="knopf klein" onclick="fotoSpeichern()">⬇️ Speichern</button><button class="knopf klein" onclick="fotoInsArchiv()">🗄️ Archiv</button>${navigator.share ? '<button class="knopf klein" onclick="fotoTeilen()">📤 Teilen</button>' : ""}
       ${f.darfAendern ? '<button class="knopf klein" onclick="fotoAendernForm()">✏️ Ändern</button><button class="knopf klein" onclick="fotoLoeschen()">🗑️ Löschen</button>' : ""}</div>`;
   if (!$("fbDetails").classList.contains("versteckt")) fotoDetails(true);
   try {
@@ -8596,8 +8618,40 @@ function arOrdnerZeigen() {
       : !o.auto && d.darf ? `<div class="knoepfe" style="margin:8px 0"><button class="knopf klein haupt" onclick="arDokForm()">＋ Dokument</button><button class="knopf klein" onclick="arOrdnerForm('${o.id}')">✏️ Ordner</button><button class="knopf klein" onclick="arOrdnerLoeschen('${o.id}')">🗑️ Ordner</button></div>` : ""}
     ${eintraege.length > 3 ? `<input id="arOrdnerSuche" class="ar-ordnersuche" type="search" autocomplete="off" enterkeyhint="search" placeholder="🔍 In diesem Ordner suchen …" value="${esc(AR.ordnerSuche || "")}" oninput="AR.ordnerSuche=this.value;arOrdnerListe()" onkeydown="if(event.key==='Escape'){this.value='';AR.ordnerSuche='';arOrdnerListe()}">` : ""}
     <div class="ar-register">${[["", "Alle", eintraege.length], ...reg.map((r) => [r, r, eintraege.filter((x) => x.register === r).length])].map(([w, t, n], i) => `<button class="${AR.register === w ? "an" : ""}" style="--rf:${i ? AR_FARBEN[(i - 1) % AR_FARBEN.length] : "var(--grau)"}" onclick="AR.register=${esc(JSON.stringify(w))};arZeigen()">${esc(t)} <small>${n}</small></button>`).join("")}</div>
+    ${AR.register && (o.eigen || (!o.besitzer && !o.auto && d.darf)) ? `<div class="knoepfe" style="margin:6px 0 0;justify-content:flex-end"><button class="knopf klein" onclick="arRegisterLoeschen()">🗑️ Register „${esc(AR.register)}“ löschen</button></div>` : ""}
     <div class="ar-blatt" id="arOrdnerListe"></div>`;
   arOrdnerListe();
+}
+// KC-CLUB-ARCHIV-LOESCHEN (1.19.0, Wunsch Hansi): Register direkt löschen – Inhalt wahlweise in ein anderes Register oder mit in den Papierkorb
+function arRegisterLoeschen() {
+  const o = arOrdnerAktuell(), r = AR.register; if (!o || !r) return;
+  const rest = o.register.filter((x) => x !== r), drin = AR.daten.dokumente.filter((x) => x.ordner_id === o.id && x.register === r && x.status !== "pruefung");
+  if (!rest.length) return melde("Das letzte Register kann nicht gelöscht werden – lösche stattdessen den Ordner oder lege vorher ein neues Register an (✏️).", true);
+  arBlatt(`<h3>🗑️ Register „${esc(r)}“ löschen?</h3>
+    ${drin.length ? `<p>Darin ${drin.length === 1 ? "liegt 1 Dokument" : `liegen ${drin.length} Dokumente`}. Was soll damit passieren?</p>
+      <div class="dwahl senkrecht"><label><input type="radio" name="arRegWeg" value="verschieben" checked> 📑 In ein anderes Register verschieben:</label></div>
+      <label class="feld" style="margin:4px 0 10px 28px"><select id="arRegZiel" onchange="document.querySelector('input[name=arRegWeg][value=verschieben]').checked=true">${rest.map((x) => `<option>${esc(x)}</option>`).join("")}</select></label>
+      <div class="dwahl senkrecht"><label><input type="radio" name="arRegWeg" value="papierkorb"> 🗑️ Mit in den Papierkorb (${AR.daten.papierkorbTage} Tage wiederherstellbar)</label></div>` : '<p class="hinweis">Das Register ist leer.</p>'}
+    <div class="knoepfe"><button class="knopf haupt" onclick="einmal(this, () => arRegisterWeg('${o.id}', ${esc(JSON.stringify(r))}))">🗑️ Register löschen</button><button class="knopf" onclick="arBlattZu()">Abbrechen</button></div>`);
+}
+async function arRegisterWeg(oid, r) {
+  const o = AR.daten.ordner.find((x) => x.id === oid); if (!o) return;
+  const rest = o.register.filter((x) => x !== r), drin = AR.daten.dokumente.filter((x) => x.ordner_id === o.id && x.register === r && x.status !== "pruefung");
+  const weg = document.querySelector('input[name="arRegWeg"]:checked')?.value || "verschieben", ziel = $("arRegZiel")?.value || rest[0];
+  try {
+    for (const x of drin) await api(weg === "papierkorb" ? "archiv_loeschen" : "archiv_aendern", weg === "papierkorb" ? { id: x.id } : { id: x.id, register: ziel });
+    await api("archiv_ordner_speichern", o.besitzer ? { id: o.id, register: rest, farbe: o.farbe } : { id: o.id, art: o.art, jahr: o.jahr, titel: o.titel, farbe: o.farbe, register: rest, nur_vorstand: o.nur_vorstand });
+    arBlattZu(); AR.register = ""; melde(`🗑️ Register „${r}“ gelöscht${drin.length ? (weg === "papierkorb" ? ` – ${drin.length} Dokument(e) im Papierkorb` : ` – Inhalt liegt jetzt in „${ziel}“`) : ""}`); await arLaden();
+  } catch (e) { melde(e.message, true); await arLaden(); }
+}
+async function arEndgueltig(was, titel) {
+  if (!confirm(`„${titel}“ jetzt ENDGÜLTIG löschen?\n\nDas lässt sich nicht rückgängig machen. Der Speicherplatz wird sofort frei.`)) return;
+  try { await api("archiv_endgueltig", was); melde("❌ Endgültig gelöscht – Speicher frei"); await arLaden(); arKorbZeigen(); } catch (e) { melde(e.message, true); }
+}
+async function arKorbLeeren(liste) {
+  if (!liste.length || !confirm(`Den ganzen Papierkorb (${liste.length} ${liste.length === 1 ? "Eintrag" : "Einträge"}) ENDGÜLTIG leeren?\n\nDas lässt sich nicht rückgängig machen.`)) return;
+  let n = 0; for (const w of liste) { try { await api("archiv_endgueltig", w); n++; } catch (e) { melde(e.message, true); } }
+  melde(`❌ ${n} endgültig gelöscht – Speicher frei`); await arLaden(); arKorbZeigen();
 }
 // KC-CLUB-ARCHIV-SUCHE: Live-Filter im geöffneten Ordner (im gewählten Register; ab 2 Buchstaben)
 function arOrdnerListe() {
@@ -8628,7 +8682,7 @@ function arZeile(x, auto, mitOrt, m) {
     ${pruef && !o?.eigen && x.vonIch ? `<div class="knoepfe" style="margin:6px 0 0"><button class="knopf klein" onclick="event.stopPropagation();arEinreichungZurueck('${x.id}')">↩ Zurückziehen</button></div>` : ""}
     ${x.name && m && suPasstText(x.name, AR.suche) && !suPasstText(x.titel, AR.suche) ? `<div class="hinweis">📎 ${mk(x.name)}</div>` : ""}
     ${x.stichworte?.length ? `<div class="ar-stichworte">${x.stichworte.map((s) => `<span>#${mk(s)}</span>`).join("")}</div>` : ""}</div>
-    ${darfAendern ? `<button class="knopf klein" onclick="event.stopPropagation();arDokForm('${x.id}')" title="Ändern">✏️</button>` : '<span class="pfeil">›</span>'}</div>`;
+    ${darfAendern ? `<span class="ar-dok-knoepfe"><button class="knopf klein" onclick="event.stopPropagation();arDokForm('${x.id}')" title="Ändern" aria-label="Ändern">✏️</button><button class="knopf klein" onclick="event.stopPropagation();arDokLoeschen('${x.id}')" title="Löschen" aria-label="Löschen">🗑️</button></span>` : '<span class="pfeil">›</span>'}</div>`;
 }
 async function arAnlage(id, archivDok) {
   const datei = archivDok ? AR.daten.dokumente.find((x) => x.id === id)?.datei : id;
@@ -8759,24 +8813,45 @@ async function arDokLoeschen(id) {
 // Kein neuer Serverweg: archiv_liste + archiv_hochladen (Rechte, 50-MB-Grenze, Dateityp prüft der Server). Neue Anlässe = Eintrag hier.
 const ARCHIV_ABLAGE_ARTEN = {
   erstattung: { sym: "💶", register: ["Rechnungen", "Sonstiges"], stichworte: "Erstattung" },
+  // 1.19.0 (Wunsch Hansi „alles einbauen“): Chats, Dateien aus Nachrichten, Fotos, Protokolle
+  chat: { sym: "💬", register: ["Chats", "Sonstiges"], stichworte: "Chat" },
+  anlage: { sym: "📎", register: ["Sonstiges"], stichworte: "aus Nachricht" },
+  foto: { sym: "📷", register: ["Fotos", "Sonstiges"], stichworte: "Foto" },
+  protokoll: { sym: "📝", register: ["Protokolle", "Sonstiges"], stichworte: "Protokoll" },
 };
+// Dateitypen, die das Archiv annimmt (gleiche Liste wie ARCHIV_DATEITYPEN im Server) – anderes (z. B. Sprachnachrichten) wird übersprungen
+const ARCHIV_TYP_OK = (mime) => /^(application\/pdf|image\/(jpeg|png|webp)|text\/plain|application\/msword|application\/vnd\.ms-excel|application\/vnd\.openxmlformats-officedocument\.(wordprocessingml\.document|spreadsheetml\.sheet))$/.test(String(mime || ""));
+// Datei einer Nachricht/eines Protokolls holen (nur was man ohnehin öffnen darf – der Server prüft bei anlage_url)
+async function anlageAlsDatei(a) {
+  const r = await api("anlage_url", { id: a.id }), blob = await (await fetch(r.url)).blob();
+  return { blob, mime: a.mime || blob.type, name: a.name || "Datei" };
+}
+// Textdatei (UTF-8 mit BOM, damit Umlaute auf jedem Gerät richtig erscheinen)
+const textDatei = (text) => new Blob(["\ufeff" + text], { type: "text/plain" });
+const zeitDe = (iso) => new Date(iso).toLocaleString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 let ABL = null;
 const ablZu = () => { document.getElementById("ablageBlatt")?.remove(); ABL = null; };
-async function archivAblageFragen(art, { titel, datum, hinweis, dateien }) {
-  const a = ARCHIV_ABLAGE_ARTEN[art]; if (!a) return;
-  let d; try { d = await api("archiv_liste"); } catch { return; } // Archiv gerade nicht erreichbar → Frage entfällt, Hauptaktion ist erledigt
-  const ordner = nfpEigeneOrdner(d); if (!ordner.length) return;
+// 1.19.0: optional frage (Überschrift), ja/nein (Knopftexte), wahl {text, an} (Kästchen, z. B. „Dateien mit ablegen“),
+// danach() läuft nach „Ja“ (erfolgreich abgelegt) und nach „Nein“ – z. B. das eigentliche Löschen. Rückgabe: wurde gefragt?
+async function archivAblageFragen(art, { titel, datum, hinweis, dateien, frage, ja, nein, wahl, danach }) {
+  const a = ARCHIV_ABLAGE_ARTEN[art]; if (!a) return false;
+  let d; try { d = await api("archiv_liste"); } catch { return false; } // Archiv gerade nicht erreichbar → Frage entfällt, Hauptaktion ist erledigt
+  const ordner = nfpEigeneOrdner(d); if (!ordner.length) return false;
   const jahr = Number(String(datum || heuteIso()).slice(0, 4)), vor = ordner.find((o) => o.jahr === jahr) || ordner[0];
-  ABL = { a, d, titel, datum: datum || heuteIso(), dateien };
-  blattAuf("ablageBlatt", `<h3 style="margin-top:0">🗄️ Auch in deinen Archiv-Ordner legen?</h3>
+  ABL = { a, d, titel, datum: datum || heuteIso(), dateien, danach };
+  blattAuf("ablageBlatt", `<h3 style="margin-top:0">🗄️ ${esc(frage || "Auch in deinen Archiv-Ordner legen?")}</h3>
     <p style="margin:0 0 8px">${a.sym} <b>${esc(titel)}</b>${hinweis ? `<br><span class="hinweis">${esc(hinweis)}</span>` : ""}</p>
     <label class="feld">Ordner<select id="ablOrdner" onchange="ablRegister()">${ordner.map((o) => `<option value="${esc(o.id)}"${o.id === vor.id ? " selected" : ""}>👤 Mein Ordner ${esc(String(o.jahr))}</option>`).join("")}</select></label>
     <label class="feld">Register<select id="ablReg"></select></label>
+    ${wahl ? `<label class="schalter"><span>${esc(wahl.text)}</span><input type="checkbox" id="ablWahl"${wahl.an !== false ? " checked" : ""}></label>` : ""}
     <p class="hinweis">🔒 Deinen Ordner siehst nur du (und wem du ihn selbst freigibst).</p>
-    <button class="knopf haupt" style="text-align:center" onclick="einmal(this, ablAblegen)">🗄️ Ja, ablegen</button>
-    <button class="knopf" style="text-align:center" onclick="ablZu()">Nein, danke</button>`);
+    <button class="knopf haupt" style="text-align:center" onclick="einmal(this, ablAblegen)">🗄️ ${esc(ja || "Ja, ablegen")}</button>
+    <button class="knopf" style="text-align:center" onclick="ablNein()">${esc(nein || "Nein, danke")}</button>
+    ${danach ? '<button class="knopf" style="text-align:center" onclick="ablZu()">Abbrechen</button>' : ""}`);
   ablRegister();
+  return true;
 }
+function ablNein() { const weiter = ABL?.danach; ablZu(); weiter?.(); }
 function ablRegister() {
   const o = nfpEigeneOrdner(ABL?.d).find((x) => x.id === $("ablOrdner")?.value); if (!o) return;
   const reg = o.register?.length ? o.register : (ABL.d.register || ["Sonstiges"]), vor = ABL.a.register.find((r) => reg.includes(r)) || reg[0];
@@ -8784,10 +8859,11 @@ function ablRegister() {
 }
 async function ablAblegen() {
   if (!ABL) return;
-  const ordner_id = $("ablOrdner").value, register = $("ablReg").value, { a } = ABL;
-  let ok = 0, fehler = "";
+  const ordner_id = $("ablOrdner").value, register = $("ablReg").value, { a, danach } = ABL, wahlAn = !!$("ablWahl")?.checked;
+  let ok = 0, fehler = "", uebersprungen = 0;
   try {
-    for (const f of await ABL.dateien()) {
+    for (const f of await ABL.dateien(wahlAn)) {
+      if (!ARCHIV_TYP_OK(f.mime)) { uebersprungen++; continue; }
       try {
         await api("archiv_hochladen", { ordner_id, register, titel: f.titel, datum: ABL.datum, stichworte: [a.stichworte, f.stichworte].filter(Boolean).join(", "),
           name: f.name, mime: f.mime, daten: base64(await f.blob.arrayBuffer()) }, { warten: true });
@@ -8796,8 +8872,77 @@ async function ablAblegen() {
     }
   } catch (e) { fehler = e.message; }
   ablZu(); AR.daten = null;
-  if (fehler) melde(ok ? `🗄️ ${ok} Datei(en) abgelegt – Rest nicht: ${fehler}` : fehler, true);
-  else melde(`🗄️ Im Archiv abgelegt (Register „${register}“)`);
+  const nicht = uebersprungen ? ` · ${uebersprungen} nicht möglich (z. B. Sprachnachricht)` : "";
+  if (fehler) {
+    // Ablage hat nicht (ganz) geklappt → das „danach“ (z. B. Löschen) NICHT stillschweigend ausführen
+    melde(ok ? `🗄️ ${ok} Datei(en) abgelegt – Rest nicht: ${fehler}` : fehler, true);
+    if (danach && confirm(`Die Ablage im Archiv hat nicht ganz geklappt:\n${fehler}\n\nTrotzdem weitermachen?`)) danach();
+    return;
+  }
+  melde(`🗄️ Im Archiv abgelegt (Register „${register}“)${nicht}`);
+  danach?.();
+}
+// ----- 1.19.0: Chat als Textdatei (Verlauf) + auf Wunsch seine Dateien ablegen -----
+function chatName() { const u = CHAT; if (!u) return "Chat"; const andere = (u.teilnehmer || []).filter((x) => x.person_id !== ICH?.person_id); return u.gruppe ? u.gruppe.name : u.betreff || andere.map((x) => x.name).join(", ") || "Chat"; }
+function chatVerlaufText() {
+  const u = CHAT, msgs = u?.nachrichten || [];
+  const zeilen = msgs.map((m) => {
+    const wer = m.eigen ? ICH?.name || "Ich" : m.von, inhalt = m.umfrage ? `📊 Abstimmung: ${m.umfrage.frage || ""}` : m.kontakt ? `👤 Kontakt: ${m.kontakt.name || ""}` : m.text === "📎" ? "" : String(m.text || "");
+    const dateien = (m.anlagen || []).map((a) => `   📎 ${a.name}${/^audio\//.test(a.mime || "") ? " (Sprachnachricht)" : ""}`).join("\n");
+    return `${zeitDe(m.zeit)} · ${wer}:${inhalt ? " " + inhalt.replace(/\n/g, "\n   ") : ""}${dateien ? "\n" + dateien : ""}`;
+  });
+  return [`Köcheclub-App – Chat „${chatName()}“`, `Teilnehmer: ${(u?.teilnehmer || []).map((t) => t.name).join(", ")}`,
+    `Abgelegt am ${zeitDe(new Date().toISOString())} von ${ICH.name}${msgs.length >= 500 ? " (die letzten 500 Nachrichten)" : ""}`, "────────────────────", "", ...zeilen, ""].join("\n");
+}
+function chatAnlagen() { return (CHAT?.nachrichten || []).flatMap((m) => (m.anlagen || []).filter((a) => ARCHIV_TYP_OK(a.mime))); }
+function chatAblageFragen(extra = {}) {
+  if (!CHAT?.nachrichten?.length) return Promise.resolve(false);
+  const n = CHAT.nachrichten.length, dateien = chatAnlagen(), heute = heuteIso();
+  return archivAblageFragen("chat", {
+    titel: `Chat „${chatName()}“ (${heute.split("-").reverse().join(".")})`, datum: heute, hinweis: `${n} Nachricht${n === 1 ? "" : "en"}${dateien.length ? ` · ${dateien.length} Datei${dateien.length === 1 ? "" : "en"}/Fotos` : ""}`,
+    wahl: dateien.length ? { text: `📎 Dateien und Fotos mit ablegen (${dateien.length})` } : null,
+    dateien: async (mitDateien) => {
+      const aus = [{ titel: `Chat „${chatName()}“ (${heute.split("-").reverse().join(".")})`, name: `Chat-${chatName().replace(/[^\wäöüÄÖÜß -]+/g, "").trim().slice(0, 40) || "Verlauf"}-${heute}.txt`, mime: "text/plain", blob: textDatei(chatVerlaufText()), stichworte: "Verlauf" }];
+      if (mitDateien) for (const a of dateien) { const f = await anlageAlsDatei(a); aus.push({ titel: `${a.name} (aus Chat „${chatName()}“)`.slice(0, 120), name: f.name, mime: f.mime, blob: f.blob, stichworte: "Datei" }); }
+      return aus;
+    },
+    ...extra,
+  });
+}
+function chatInsArchiv() { $("chatBlatt").classList.add("versteckt"); chatAblageFragen({ frage: "Diesen Chat in deinen Archiv-Ordner legen?" }); }
+// ----- 1.19.0: Dateien einer einzelnen Nachricht -----
+function naAnlagenArchiv(id, frage) {
+  const m = NA.nachrichten.get(id), liste = (m?.anlagen || []).filter((a) => ARCHIV_TYP_OK(a.mime)); if (!liste.length) return;
+  archivAblageFragen("anlage", { frage, titel: liste.length === 1 ? liste[0].name : `${liste.length} Dateien aus einer Nachricht`, datum: String(m.zeit || "").slice(0, 10) || heuteIso(),
+    hinweis: `von ${m.eigen ? "dir" : m.von} · ${zeitDe(m.zeit)}`,
+    dateien: async () => { const aus = []; for (const a of liste) { const f = await anlageAlsDatei(a); aus.push({ titel: `${a.name} (von ${m.eigen ? ICH.name : m.von})`.slice(0, 120), name: f.name, mime: f.mime, blob: f.blob }); } return aus; } });
+}
+// ----- 1.19.0: Foto aus dem Fotoalbum -----
+function fotoInsArchiv() {
+  const f = FA?.fotos?.[faIndex]; if (!f) return;
+  const titel = [f.thema || "Foto", fTagDe(f.datum)].join(" · ");
+  archivAblageFragen("foto", { titel, datum: f.datum, hinweis: f.beschreibung || "",
+    dateien: async () => { const blob = await (await fetch(faUrl.get(f.id) || (await api("foto_oeffnen", { id: f.id })).url)).blob();
+      return [{ titel, name: `koecheclub-${f.datum}.jpg`, mime: blob.type || "image/jpeg", blob, stichworte: f.thema || "" }]; } });
+}
+// ----- 1.19.0: Protokoll (Text als Datei + auf Wunsch die Protokoll-Dateien/Fotos) -----
+function protokollText(p) {
+  const l = (t, a) => a?.length ? [`${t}:`, ...a.map((x, i) => `  ${i + 1}. ${typeof x === "string" ? x : x.name}`), ""] : [];
+  return [`Köcheclub Werne – Protokoll`, p.titel, `${tagKurz(p.datum)}${p.ort ? " · " + p.ort : ""} · geschrieben von ${p.verfasser?.name || ""}${p.version > 1 ? ` · Fassung ${p.version}` : ""}`, "────────────────────", "",
+    ...(p.anwesend?.length ? [`Anwesend (${p.anwesend.length}): ${p.anwesend.map((x) => x.name).join(", ")}`] : []), ...(p.entschuldigt?.length ? [`Entschuldigt: ${p.entschuldigt.map((x) => x.name).join(", ")}`] : []),
+    ...(p.gaeste ? [`Gäste: ${p.gaeste}`] : []), "", ...l("Tagesordnung", p.tagesordnung), ...l("Beschlüsse", p.beschluesse), ...(p.kurzfassung ? ["Kurzfassung:", p.kurzfassung, ""] : []),
+    ...l("Anlagen", PR.anlagen), `Abgelegt am ${zeitDe(new Date().toISOString())} von ${ICH.name}`, ""].join("\n");
+}
+function protokollInsArchiv() {
+  const p = PR?.protokoll; if (!p) return;
+  const dateien = (PR.anlagen || []).filter((a) => ARCHIV_TYP_OK(a.mime)), titel = `Protokoll ${p.titel} (${tagKurz(p.datum)})`.slice(0, 120);
+  archivAblageFragen("protokoll", { titel, datum: String(p.datum || "").slice(0, 10) || heuteIso(),
+    wahl: dateien.length ? { text: `📎 Protokoll-Dateien/Fotos mit ablegen (${dateien.length})` } : null,
+    dateien: async (mitDateien) => {
+      const aus = [{ titel, name: `Protokoll-${String(p.datum || "").slice(0, 10)}.txt`, mime: "text/plain", blob: textDatei(protokollText(p)), stichworte: "Text" }];
+      if (mitDateien) for (const a of dateien) { const f = await anlageAlsDatei(a); aus.push({ titel: `${a.name} (Protokoll ${p.titel})`.slice(0, 120), name: f.name, mime: f.mime, blob: f.blob, stichworte: "Anlage" }); }
+      return aus;
+    } });
 }
 // Bild eines Blattes (gut lesbar, Hochformat) für die Ablage – nur Text, keine Emojis (Schrift fehlt auf manchen Geräten)
 function ablageBild({ kopf, zeilen, fuss }) {
@@ -8903,9 +9048,13 @@ async function arKorbZeigen() {
   try {
     const k = await api("archiv_papierkorb");
     const bis = (x) => `endgültig weg am ${fTagDe(x.endgueltig_am.slice(0, 10))}`;
-    $("arInhalt").innerHTML = `<p class="hinweis">Gelöschtes wird ${AR.daten.papierkorbTage} Tage nach dem Löschen endgültig entfernt. ♻️ holt es zurück.</p>
-      <div class="ar-blatt">${[...k.ordner.map((o) => `<div class="ar-dok"><span class="sym">🗄️</span><div><b>Ordner ${esc(o.titel)} ${o.jahr}</b><div class="hinweis">${bis(o)}</div></div><button class="knopf klein" onclick="arWiederher({ordner:'${o.id}'})">♻️</button></div>`),
-        ...k.dokumente.map((x) => `<div class="ar-dok"><span class="sym">📄</span><div><b>${esc(x.titel)}</b><div class="hinweis">${esc(x.ordner)} · ${bis(x)}</div></div><button class="knopf klein" onclick="arWiederher({id:'${x.id}'})">♻️</button></div>`)].join("")
+    // 1.19.0: ❌ endgültig löschen (einzeln oder alles) – macht den Speicher sofort frei
+    const alle = [...k.ordner.map((o) => ({ ordner: o.id })), ...k.dokumente.map((x) => ({ id: x.id }))];
+    AR.korbAlle = alle;
+    $("arInhalt").innerHTML = `<p class="hinweis">Gelöschtes wird ${AR.daten.papierkorbTage} Tage nach dem Löschen endgültig entfernt. ♻️ holt es zurück, ❌ löscht sofort endgültig (Speicher wird frei).</p>
+      ${alle.length ? '<div class="knoepfe" style="margin:0 0 8px"><button class="knopf klein" onclick="arKorbLeeren(AR.korbAlle)">❌ Papierkorb leeren</button></div>' : ""}
+      <div class="ar-blatt">${[...k.ordner.map((o) => `<div class="ar-dok"><span class="sym">🗄️</span><div><b>Ordner ${esc(o.titel)} ${o.jahr}</b><div class="hinweis">${bis(o)}</div></div><span class="ar-dok-knoepfe"><button class="knopf klein" title="Wiederherstellen" onclick="arWiederher({ordner:'${o.id}'})">♻️</button><button class="knopf klein" title="Endgültig löschen" onclick="arEndgueltig({ordner:'${o.id}'}, ${esc(JSON.stringify("Ordner " + o.titel + " " + o.jahr))})">❌</button></span></div>`),
+        ...k.dokumente.map((x) => `<div class="ar-dok"><span class="sym">📄</span><div><b>${esc(x.titel)}</b><div class="hinweis">${esc(x.ordner)} · ${bis(x)}</div></div><span class="ar-dok-knoepfe"><button class="knopf klein" title="Wiederherstellen" onclick="arWiederher({id:'${x.id}'})">♻️</button><button class="knopf klein" title="Endgültig löschen" onclick="arEndgueltig({id:'${x.id}'}, ${esc(JSON.stringify(x.titel))})">❌</button></span></div>`)].join("")
         || '<p class="hinweis" style="margin:6px">Der Papierkorb ist leer.</p>'}</div>`;
   } catch (e) { melde(e.message, true); }
 }

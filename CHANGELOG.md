@@ -1,5 +1,26 @@
 # Änderungen
 
+## 1.19.0 – 2026-10-01 (DEV)
+
+- KC-CLUB-ARCHIV-ABLAGE (Wunsch Hansi „alles einbauen“): neue Anlässe in der Registry ARCHIV_ABLAGE_ARTEN –
+  💬 Chat (Verlauf als Textdatei UTF-8, auf Wunsch mit allen Dateien/Fotos; Chat-Menü „🗄️ Chat in mein Archiv legen“),
+  📎 Dateien einer Nachricht (Nachrichtenmenü; beim ⭐ Merken einer Nachricht mit Datei fragt die App), 📷 Foto aus dem Album,
+  📝 Protokoll (Text + auf Wunsch Protokoll-Dateien). Vor „Nur bei mir entfernen“, „Für alle löschen“, „Gruppe löschen“ und
+  „Gruppe verlassen“ fragt die App „Vorher in dein persönliches Archiv ablegen?“ (Ja → ablegen, dann weiter · Nein → weiter ·
+  Abbrechen). Klappt die Ablage nicht, wird erst nach Rückfrage gelöscht. Dateitypen, die das Archiv nicht annimmt
+  (Sprachnachrichten), werden übersprungen und genannt. Weiter kein neuer Serverweg für die Ablage.
+- KC-CLUB-ARCHIV-LOESCHEN: 🗑️ direkt an jedem Dokument (eigene Ordner bzw. Archivpflege), „🗑️ Register … löschen“ im
+  gewählten Register (Inhalt verschieben oder mit in den Papierkorb; das letzte Register bleibt), im Papierkorb ❌ endgültig
+  löschen und „❌ Papierkorb leeren“. Server: neue Aktion archiv_endgueltig – nur für Einträge im Papierkorb, gleiche Rechte
+  wie Wiederherstellen, Metadaten-Sicherung (geloescht) + Protokoll; der Speicher (persönlich 50 MB) wird sofort frei.
+- KC-CLUB-INFO-SPRUNG (Wunsch Hansi): im farbigen Kopfbereich unter dem einfachen Pfeil ‹ bzw. › je ein Doppelpfeil –
+  « springt sofort zur ersten, » sofort zur letzten Karte. Einfache Ansicht unverändert (dort keine Pfeile).
+- KC-CLUB-SI-MUETZE (Hinweis Hansi „hakt, wackelt, zu unruhig“): Ursache 1 – die Anzeige wurde bei jedem Prüfschritt neu
+  gezeichnet und die Drehung begann von vorn; jetzt läuft die Phase weiter (negative Verzögerung aus der Uhrzeit). Ursache 2 –
+  harte Achsen-Sprünge; jetzt zwei Ebenen: Mütze kippt gleichmäßig (5 s), die Kippachse wandert langsam im Kreis (14 s) –
+  waagerecht → diagonal → senkrecht fließend. Nachtrag (Hinweis Hansi „obere Mütze ruckelt“): Der Sicherheits-Check zeichnet
+  nicht mehr alles neu – Kopf, Uhren, Liste und Knöpfe sind eigene Bereiche; während der Prüfung ändern sich nur der Zähler
+  und fertig gewordene Zeilen, die laufenden Mützen bleiben unangetastet (gemessen: gleichmäßig, keine Sprünge).
 ## 1.18.2 – 2026-10-01 (DEV)
 
 - KC-DP-WUNSCH-SPERRE (Freigabe Hansi „Claude macht die DB, Codex das Programm“): Reservierung je Wunsch-Eingang gegen zwei
