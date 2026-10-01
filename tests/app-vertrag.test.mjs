@@ -1535,7 +1535,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/photon: async \(lat, lon, genau\)/.test(server) && /const ORTSNAME_QUELLEN = \["photon", "nominatim"\]/.test(server), "1.7.1: Photon zuerst, Nominatim als Ausweichweg");
   assert.ok(/typeof genau === "number" && a\.housenumber/.test(server) && /oder Nachbarhaus Nr\./.test(server), "1.7.2: Nachbarhäuser im GPS-Umkreis");
   assert.ok(/function sosWoBinIch\(\)/.test(html) && /api\("sos_ort", \{ lat: w\.lat, lon: w\.lon, genau: w\.genau \}/.test(html) && /notrufe \+ sosWoKarte\(\) \+ nfpKarte\(\)/.test(html), "App: Wo bin ich im SOS-Bereich");
-  const nfp = html.slice(html.indexOf("// ---------- KC-CLUB-NOTFALLPASS"), html.indexOf("// ---------- KC-CLUB-WISCHEN"));
+  const nfp = html.slice(html.indexOf("// ---------- KC-CLUB-NOTFALLPASS"), html.indexOf("// ---------- KC-CLUB-NOTFALLPASS-ARCHIV")); // 1.17.0: Kopie ins Archiv nur auf ausdrücklichen Wunsch (Abschnitt 147)
   assert.ok(/const NFP_FELDER = \[/.test(nfp) && /"kc_club_notfallpass_" \+ \(ICH\?\.person_id/.test(nfp), "Notfallpass: Registry + Speicher je Person");
   assert.ok(!/api\(/.test(nfp), "Notfallpass: Gesundheitsdaten nie an den Server");
   assert.ok(/confirm\("Notfallpass auf diesem Gerät löschen\?"\)/.test(nfp) && /id="nfpBlatt"/.test(html), "Notfallpass: Löschen mit Rückfrage, Blatt vorhanden");
@@ -1670,6 +1670,21 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 {
   assert.ok(JSON.parse(lies("dp2/QUELLE.json")).commit.startsWith("c0d279a"), "Nachtrag c0d279a übernommen");
   assert.ok(/quelle\.dp2Version \+ "-" \+ String\(quelle\.commit \|\| ""\)\.slice\(0, 7\)/.test(lies("dp2-club/lader.js")), "Cache-Schlüssel mit Commit");
+}
+
+// 147. 1.17.0: Notfallpass ins eigene Archiv kopieren (KC-CLUB-NOTFALLPASS-ARCHIV)
+{
+  const f = html.slice(html.indexOf("async function nfpArchivWahl()"), html.indexOf("async function nfpArchivKopieren()") + 1200);
+  assert.ok(/onclick="nfpArchivWahl\(\)">🗄️ In mein Archiv kopieren/.test(html), "Knopf in der Notfallpass-Anzeige fehlt");
+  assert.ok(/if \(!confirm\("🗄️ Notfallpass ins Archiv kopieren\?[^"]*Server[^"]*Spiegel[^"]*Sicherungen/.test(f), "Warnhinweis Server/Spiegel/Sicherung vor dem Kopieren");
+  assert.ok(f.indexOf("confirm(") < f.indexOf('api("archiv_liste")'), "erst Rückfrage, dann Server");
+  assert.ok(/const nfpEigeneOrdner = \(d\) => \(d\?\.ordner \|\| \[\]\)\.filter\(\(o\) => o\.besitzer && o\.eigen\)/.test(html), "nur eigene Ordner als Ziel");
+  assert.ok(/<select id="nfpArOrdner"/.test(f) && /<select id="nfpArReg">/.test(f), "Ordner und Register per Auswahl (kein Freitext)");
+  assert.ok(/api\("archiv_hochladen", \{ ordner_id, titel: `Notfallpass \(Stand \$\{stand\}\)`[\s\S]{0,200}mime: "image\/png"/.test(f), "vorhandener Upload-Weg als PNG");
+  assert.ok(!/case "notfallpass/.test(server), "kein eigener Serverweg");
+  const ar = html.slice(html.indexOf("// ---------- KC-CLUB-NOTFALLPASS-ARCHIV"), html.indexOf("// ---------- KC-CLUB-WISCHEN"));
+  assert.deepEqual([...ar.matchAll(/api\("(\w+)"/g)].map((m) => m[1]), ["archiv_liste", "archiv_hochladen"], "Archiv-Kopie: nur Liste + Upload, sonst nichts an den Server");
+  assert.ok(!/localStorage\.(setItem|removeItem)/.test(f), "Pass auf dem Gerät bleibt unverändert");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

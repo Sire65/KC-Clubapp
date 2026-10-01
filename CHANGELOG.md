@@ -1,5 +1,15 @@
 # Änderungen
 
+## 1.17.0 – 2026-10-01 (DEV)
+
+- KC-CLUB-NOTFALLPASS-ARCHIV (Wunsch Hansi): Notfallpass-Anzeige hat „🗄️ In mein Archiv kopieren“. Vorher deutlicher
+  Hinweis: Bisher nur auf dem Handy – die Kopie liegt danach auch auf dem Server, im Spiegel und in Sicherungen, sichtbar
+  nur für den Besitzer (und wem er den Ordner freigibt). Auswahl nur eigener Ordner (besitzer = ich) und deren Register
+  (Vorschlag „Gesundheit“/„Sonstiges“, kein Freitext). Abgelegt wird ein gut lesbares PNG (nur ausgefüllte Angaben,
+  Notfallkontakt, Stand). Liegt schon ein Notfallpass im Ordner, wird darauf hingewiesen (alter bleibt, löschen im Archiv).
+  Kein neuer Serverweg: archiv_liste + archiv_hochladen (Rechte, 50-MB-Grenze, Dateityp prüft der Server). Der Pass auf
+  dem Gerät bleibt unverändert.
+
 ## 1.16.1 – 2026-10-01 (DEV)
 
 - KC-CLUB-DIENSTWUNSCH: Nachtrag zu DP2 Build 251 RC übernommen (dp3 c0d279a, docs/CLAUDE-BUTTON-LOGIK-NACHTRAG.md):

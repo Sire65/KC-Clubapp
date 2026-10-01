@@ -1762,7 +1762,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.16.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.17.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -6051,6 +6051,7 @@ function nfpZeigen() {
       <div class="nfp-zeile"><small>Name</small><b>${esc(ICH?.name || "")}</b></div>${zeilen}
       ${nf?.name || nf?.telefon ? `<div class="nfp-zeile"><small>Notfallkontakt${nf.beziehung ? " (" + esc(nf.beziehung) + ")" : ""}</small><b>${esc(nf.name || "")}${nf.telefon ? " · " + esc(nf.telefon) : ""}</b></div>` : ""}</div>
     <p class="hinweis">Stand: ${esc(d.stand ? new Date(d.stand).toLocaleDateString("de-DE") : "–")}</p>
+    <button class="knopf" style="text-align:center" onclick="nfpArchivWahl()">🗄️ In mein Archiv kopieren</button>
     <button class="knopf" style="text-align:center" onclick="nfpZu()">Schließen</button>`;
   $("nfpBlatt").classList.remove("versteckt");
 }
@@ -6081,6 +6082,81 @@ function nfpLoeschen() {
   if (!confirm("Notfallpass auf diesem Gerät löschen?")) return;
   try { localStorage.removeItem(nfpSchluessel()); } catch {}
   nfpZu(); melde("Notfallpass gelöscht"); sosZeigen();
+}
+
+// ---------- KC-CLUB-NOTFALLPASS-ARCHIV (1.17.0, Wunsch Hansi): Notfallpass als Bild in den EIGENEN Archiv-Ordner kopieren ----------
+// Nur auf ausdrücklichen Wunsch (Warnhinweis: danach liegt die Kopie auch auf dem Server, im Spiegel und in Sicherungen).
+// Ziel sind nur eigene Ordner (besitzer = ich); das Register wird gewählt (kein Freitext). Der Pass auf dem Handy bleibt unverändert.
+// Kein neuer Serverweg: archiv_liste + archiv_hochladen (Rechte, 50-MB-Grenze und Dateityp prüft der Server wie bei jedem Upload).
+const NFP_ARCHIV_REGISTER_VORSCHLAG = ["Gesundheit", "Sonstiges"];
+let NFP_AR = null;
+const nfpEigeneOrdner = (d) => (d?.ordner || []).filter((o) => o.besitzer && o.eigen).sort((a, b) => b.jahr - a.jahr);
+function nfpStandText(d) { return new Date(d?.stand || Date.now()).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" }); }
+async function nfpArchivWahl() {
+  const d = nfpLesen(); if (!nfpGefuellt(d)) return melde("Der Notfallpass ist noch leer.", true);
+  if (!confirm("🗄️ Notfallpass ins Archiv kopieren?\n\nBisher liegt dein Notfallpass nur auf diesem Handy.\nDie Kopie wird in deinem persönlichen Ordner gespeichert – also auch auf dem Vereins-Server, in der Spiegel-Datenbank und in Sicherungen.\n\nSehen kann sie nur du (und wem du deinen Ordner selbst freigibst).\n\nWeiter?")) return;
+  $("nfpInhalt").innerHTML = '<p class="hinweis">Lädt deine Ordner …</p>';
+  try { NFP_AR = await api("archiv_liste"); } catch (e) { melde(e.message, true); return nfpZeigen(); }
+  const ordner = nfpEigeneOrdner(NFP_AR);
+  if (!ordner.length) { melde("Dein persönlicher Ordner ist nicht verfügbar (liegt er im Papierkorb?).", true); return nfpZeigen(); }
+  $("nfpInhalt").innerHTML = `<h3 style="margin-top:0">🗄️ In mein Archiv kopieren</h3>
+    <label class="feld">Ordner<select id="nfpArOrdner" onchange="nfpArRegister()">${ordner.map((o) => `<option value="${esc(o.id)}">👤 Mein Ordner ${esc(String(o.jahr))}</option>`).join("")}</select></label>
+    <label class="feld">Register<select id="nfpArReg"></select></label>
+    <p class="hinweis" id="nfpArSchon"></p>
+    <p class="hinweis">Gespeichert wird ein Bild des Passes (Stand ${esc(nfpStandText(d))}). Ändert sich etwas, einfach erneut kopieren.</p>
+    <button class="knopf haupt" style="text-align:center" onclick="einmal(this, nfpArchivKopieren)">🗄️ Jetzt kopieren</button>
+    <button class="knopf" style="text-align:center" onclick="nfpZeigen()">Abbrechen</button>`;
+  nfpArRegister();
+}
+function nfpArRegister() {
+  const o = nfpEigeneOrdner(NFP_AR).find((x) => x.id === $("nfpArOrdner").value); if (!o) return;
+  const reg = o.register?.length ? o.register : (NFP_AR.register || ["Sonstiges"]);
+  const vor = NFP_ARCHIV_REGISTER_VORSCHLAG.find((r) => reg.includes(r)) || reg[0];
+  $("nfpArReg").innerHTML = reg.map((r) => `<option${r === vor ? " selected" : ""}>${esc(r)}</option>`).join("");
+  const schon = (NFP_AR.dokumente || []).filter((x) => x.ordner_id === o.id && /notfallpass/i.test(x.titel || "")).length;
+  $("nfpArSchon").textContent = schon ? `ℹ️ In diesem Ordner liegt schon ${schon === 1 ? "ein Notfallpass" : schon + " Notfallpässe"}. Der alte bleibt liegen – du kannst ihn im Archiv löschen.` : "";
+}
+function nfpBild(d) {
+  // gut lesbares Hochformat-Bild (wie die Anzeige im SOS-Bereich), nur Angaben die ausgefüllt sind
+  const B = 1000, R = 48, nf = INIT?.notfall, c = document.createElement("canvas"), g = c.getContext("2d");
+  const zeilen = [["Name", ICH?.name || ""], ...NFP_FELDER.filter((f) => String(d[f.k] || "").trim()).map((f) => [f.t, nfpWert(f, String(d[f.k]).trim())])];
+  if (nf?.name || nf?.telefon) zeilen.push([`Notfallkontakt${nf.beziehung ? " (" + nf.beziehung + ")" : ""}`, `${nf.name || ""}${nf.telefon ? " · " + nf.telefon : ""}`]);
+  const umbrechen = (text, schrift) => {
+    g.font = schrift; const aus = [];
+    for (const absatz of String(text).split("\n")) {
+      let z = "";
+      for (const w of absatz.split(" ")) { const t = z ? z + " " + w : w; if (g.measureText(t).width > B - 2 * R - 20 && z) { aus.push(z); z = w; } else z = t; }
+      aus.push(z);
+    }
+    return aus;
+  };
+  const KLEIN = "28px sans-serif", GROSS = "bold 38px sans-serif";
+  const bloecke = zeilen.map(([t, w]) => ({ t, w: umbrechen(w, GROSS) }));
+  const H = 190 + bloecke.reduce((s, b) => s + 44 + b.w.length * 48 + 22, 0) + 90;
+  c.width = B; c.height = H;
+  g.fillStyle = "#ffffff"; g.fillRect(0, 0, B, H);
+  g.strokeStyle = "#c0392b"; g.lineWidth = 10; g.strokeRect(14, 14, B - 28, H - 28);
+  g.fillStyle = "#c0392b"; g.font = "bold 60px sans-serif"; g.fillText("NOTFALLPASS", R, 110);
+  let y = 190;
+  for (const b of bloecke) {
+    g.fillStyle = "#666666"; g.font = KLEIN; g.fillText(b.t, R, y); y += 44;
+    g.fillStyle = "#111111"; g.font = GROSS; for (const z of b.w) { g.fillText(z, R, y); y += 48; }
+    g.strokeStyle = "#dddddd"; g.lineWidth = 2; g.beginPath(); g.moveTo(R, y - 20); g.lineTo(B - R, y - 20); g.stroke(); y += 22;
+  }
+  g.fillStyle = "#666666"; g.font = KLEIN; g.fillText(`Stand: ${nfpStandText(d)} · Köcheclub-App`, R, H - 50);
+  return new Promise((ok, nein) => c.toBlob((b) => (b ? ok(b) : nein(new Error("Bild konnte nicht erstellt werden."))), "image/png"));
+}
+async function nfpArchivKopieren() {
+  const d = nfpLesen(), ordner_id = $("nfpArOrdner")?.value, register = $("nfpArReg")?.value;
+  if (!nfpGefuellt(d) || !ordner_id) return;
+  try {
+    const bild = await nfpBild(d), stand = nfpStandText(d);
+    await api("archiv_hochladen", { ordner_id, titel: `Notfallpass (Stand ${stand})`, datum: new Date().toISOString().slice(0, 10), register, stichworte: "Notfallpass, Gesundheit",
+      name: `Notfallpass-${stand.replace(/\./g, "-")}.png`, mime: "image/png", daten: base64(await bild.arrayBuffer()) }, { warten: true });
+    nfpZu(); melde(`🗄️ Notfallpass liegt jetzt in deinem Ordner (Register „${register}“)`);
+    AR.daten = null;
+    if (confirm(`Der Notfallpass liegt jetzt in deinem Ordner, Register „${register}“.\n\nArchiv jetzt öffnen?`)) { AR.ziel = ordner_id; arStart(); }
+  } catch (e) { melde(e.message, true); }
 }
 
 // ---------- KC-CLUB-WISCHEN (1.6.0, Wunsch Hansi – wie WhatsApp): Nachricht nach rechts wischen = antworten,

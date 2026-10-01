@@ -1,10 +1,16 @@
 {
-  "version": "1.16.1",
+  "version": "1.17.0",
   "datum": "2026-10-01",
   "neu": [
-    "🧑‍🍳 Dienstwünsche: Ist „Weiter“ noch grau, steht jetzt dabei warum – z. B. „Bitte zuerst eine Aufgabe wählen.“"
+    "🗄️ Notfallpass: Im SOS-Bereich gibt es jetzt „In mein Archiv kopieren“ – du wählst Ordner und Register, der Pass wird als Bild abgelegt"
   ],
   "verlauf": [
+    {
+      "version": "1.17.0",
+      "neu": [
+        "🗄️ Notfallpass: Im SOS-Bereich gibt es jetzt „In mein Archiv kopieren“ – du wählst Ordner und Register, der Pass wird als Bild abgelegt"
+      ]
+    },
     {
       "version": "1.16.1",
       "neu": [
