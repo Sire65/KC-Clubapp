@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.4.0";
+const SERVER_VERSION = "1.5.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -896,16 +896,106 @@ function archivRegister(roh: unknown, art: string): string[] {
 }
 const archivDatum = (v: unknown) => /^\d{4}-\d{2}-\d{2}$/.test(String(v || "")) && !isNaN(Date.parse(String(v))) ? String(v) : null;
 const archivStichworte = (v: unknown) => [...new Set((Array.isArray(v) ? v : String(v || "").split(/[,;]/)).map((x) => txt(x, 30)).filter(Boolean))].slice(0, 10);
-async function archivOrdnerHolen(ich: Ich, id: unknown, geloeschteAuch = false) {
-  const { data: o } = await db.from("kc_club_archiv_ordner").select("*").eq("id", String(id || "")).maybeSingle();
-  if (!o || !darfOrdnerSehen(ich, o) || (o.geloescht_am && !geloeschteAuch)) throw new Fehler("Ordner nicht gefunden.", 404);
-  return o;
+// ----- KC-CLUB-ARCHIV-PERSOENLICH (1.5.0): eigene Ordner je Mitglied und Jahr, Zugriff nur Besitzer + gültige Freigaben -----
+// Auch Admin und Clubsprecher kommen NICHT hinein (Entscheidung Hansi). Fremdversuch → Protokoll + Meldung an Besitzer und Admins.
+const PERSOENLICH_REGISTER = ["Urkunden", "Schulungen", "Rechnungen", "Fotos", "Sonstiges"];
+const PERSOENLICH_GRENZE = 50 * 1024 * 1024; // je Mitglied (kostenloser Speicher ist begrenzt)
+const FREIGABE_MAX_TAGE = 365;
+type ArchivRecht = "lesen" | "pflegen" | "hochladen";
+async function meineGruppenIds(pid: string): Promise<string[]> {
+  const { data } = await db.from("kc_communication_thread_participants").select("thread_id").eq("person_id", pid);
+  return (data ?? []).map((x: any) => x.thread_id);
 }
-async function archivDokHolen(ich: Ich, id: unknown) {
+// gültige Freigaben für mich (optional nur bestimmte Ordner); abgelaufen/beendet zählt nicht
+async function archivFreigabenFuer(pid: string, ordnerIds?: string[], auchAbgelaufen = false) {
+  const gr = await meineGruppenIds(pid);
+  let q = db.from("kc_club_archiv_freigaben").select("*").or(gr.length ? `an_person.eq.${pid},an_gruppe.in.(${gr.join(",")})` : `an_person.eq.${pid}`);
+  if (ordnerIds) { if (!ordnerIds.length) return []; q = q.in("ordner_id", ordnerIds); }
+  if (!auchAbgelaufen) q = q.is("beendet_am", null).gt("bis", jetzt());
+  const { data } = await q;
+  return (data ?? []) as any[];
+}
+const freigabeDeckt = (f: any, d: any) => (!f.dokument_id || f.dokument_id === d.id) && (!f.register || f.register === d.register);
+function darfDokSehen(ich: Ich, o: any, d: any, freigaben: any[]) {
+  if (!o.besitzer) return darfOrdnerSehen(ich, o);
+  if (o.besitzer === ich.person_id) return true;
+  if (d.status === "pruefung") return d.hochgeladen_von === ich.person_id;
+  return freigaben.some((f) => f.ordner_id === o.id && freigabeDeckt(f, d));
+}
+async function adminIds(): Promise<string[]> {
+  const { data } = await db.from("kc_club_rollen").select("person_id").eq("ist_admin", true);
+  return (data ?? []).map((x: any) => x.person_id);
+}
+async function archivFremdversuch(ich: Ich, o: any, was: string) {
+  // je Person und Ordner höchstens eine Meldung pro Stunde (Protokoll immer)
+  const { count } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("aktion", "archiv_fremdzugriff")
+    .eq("person_id", ich.person_id).gte("zeit", new Date(Date.now() - 3600_000).toISOString()).contains("details", { ordner: o.id });
+  await protokoll(ich.person_id, "archiv_fremdzugriff", { ordner: o.id, besitzer: o.besitzer, jahr: o.jahr, was });
+  if (count) return;
+  const b = (await personen([o.besitzer])).get(o.besitzer), bName = b?.display_name || "ein Mitglied", zeit = wann(jetzt());
+  const url = `${APP_URL}#archiv`;
+  await senden("club_nachricht", [o.besitzer], {
+    titel: "🔐 Zugriffsversuch auf deinen Ordner", kurz: `${ich.name} wollte ${was} in deinem Ordner ${o.jahr} öffnen – abgewiesen.`,
+    betreff: "Köcheclub Werne – Zugriffsversuch auf deinen persönlichen Ordner",
+    text: `Hallo ${vorname(b)},\n\n${ich.name} hat am ${zeit} versucht, ${was} in deinem persönlichen Archiv-Ordner ${o.jahr} zu öffnen.\nDer Zugriff wurde abgewiesen – es wurde nichts angezeigt.\n\nWenn das so gewollt war, kannst du im Archiv eine Freigabe auf Zeit erteilen.\n${url}\n\nViele Grüße\nKöcheclub-App`,
+    url,
+  }, `club-archiv-fremd:${o.id}:${ich.person_id}:${Date.now()}`).catch(() => null);
+  const admins = (await adminIds()).filter((x) => x !== o.besitzer && x !== ich.person_id);
+  if (admins.length) await senden("club_nachricht", admins, {
+    titel: "🔐 Zugriffsversuch im Archiv", kurz: `${ich.name} → persönlicher Ordner ${o.jahr} von ${bName} – abgewiesen.`,
+    betreff: "Köcheclub-App: Zugriffsversuch auf einen persönlichen Ordner",
+    text: `Hallo,\n\n${ich.name} hat am ${zeit} versucht, ${was} im persönlichen Archiv-Ordner ${o.jahr} von ${bName} zu öffnen.\nDer Zugriff wurde abgewiesen. ${bName} wurde ebenfalls benachrichtigt.\n\nViele Grüße\nKöcheclub-App`,
+    url: APP_URL,
+  }, `club-archiv-fremd-admin:${o.id}:${ich.person_id}:${Date.now()}`).catch(() => null);
+}
+async function archivKeinZugriff(ich: Ich, o: any, was: string): Promise<never> {
+  // abgelaufene/zurückgenommene Freigabe → nur Hinweis, kein Alarm
+  const alt = await archivFreigabenFuer(ich.person_id, [o.id], true);
+  if (alt.length) throw new Fehler("Deine Freigabe für diesen Ordner ist abgelaufen oder wurde beendet.", 403);
+  await archivFremdversuch(ich, o, was);
+  throw new Fehler("Das ist ein persönlicher Ordner – kein Zugriff. Der Besitzer wurde informiert.", 403);
+}
+async function archivOrdnerHolen(ich: Ich, id: unknown, geloeschteAuch = false, recht: ArchivRecht = "lesen") {
+  const { data: o } = await db.from("kc_club_archiv_ordner").select("*").eq("id", String(id || "")).maybeSingle();
+  if (!o) throw new Fehler("Ordner nicht gefunden.", 404);
+  if (o.besitzer) {
+    if (o.besitzer === ich.person_id) {
+      if (o.geloescht_am && !geloeschteAuch) throw new Fehler("Ordner nicht gefunden.", 404);
+      return { ...o, _eigen: true, _freigaben: [] as any[] };
+    }
+    const fr = o.geloescht_am ? [] : await archivFreigabenFuer(ich.person_id, [o.id]);
+    if (!fr.length) return await archivKeinZugriff(ich, o, "den Ordner");
+    if (recht === "pflegen") throw new Fehler("Das kann nur der Besitzer des Ordners.", 403);
+    if (recht === "hochladen" && !fr.some((f) => f.hochladen && !f.dokument_id)) throw new Fehler("Für diesen Ordner hast du nur eine Freigabe zum Ansehen.", 403);
+    return { ...o, _eigen: false, _freigaben: fr };
+  }
+  if (!darfOrdnerSehen(ich, o) || (o.geloescht_am && !geloeschteAuch)) throw new Fehler("Ordner nicht gefunden.", 404);
+  if (recht !== "lesen") nurArchivPflege(ich);
+  return { ...o, _eigen: false, _freigaben: [] as any[] };
+}
+async function archivDokHolen(ich: Ich, id: unknown, recht: ArchivRecht = "lesen") {
   const { data: d } = await db.from("kc_club_archiv_dokumente").select("*").eq("id", String(id || "")).maybeSingle();
   if (!d) throw new Fehler("Dokument nicht gefunden.", 404);
-  const o = await archivOrdnerHolen(ich, d.ordner_id, true);
+  // Einreicher darf seine noch nicht geprüfte Einreichung zurückziehen
+  const eigeneEinreichung = d.status === "pruefung" && d.hochgeladen_von === ich.person_id;
+  const o = await archivOrdnerHolen(ich, d.ordner_id, true, eigeneEinreichung ? "lesen" : recht);
+  if (o.besitzer && !darfDokSehen(ich, o, d, o._freigaben)) return await archivKeinZugriff(ich, o, "ein Dokument");
   return { d, o };
+}
+async function archivEigenerOrdner(ich: Ich, jahr: number) {
+  const { data: da } = await db.from("kc_club_archiv_ordner").select("id").eq("besitzer", ich.person_id).eq("jahr", jahr).maybeSingle();
+  if (da) return da.id as string;
+  const { data: neu } = await db.from("kc_club_archiv_ordner").insert({ art: "persoenlich", besitzer: ich.person_id, jahr, titel: ich.name, farbe: 6,
+    register: PERSOENLICH_REGISTER, erstellt_von: ich.person_id }).select("id").maybeSingle();
+  if (neu) await protokoll(ich.person_id, "archiv_eigener_ordner_angelegt", { ordner: neu.id, jahr });
+  return neu?.id as string | undefined;
+}
+async function archivBelegtVon(pid: string) {
+  const { data: oo } = await db.from("kc_club_archiv_ordner").select("id").eq("besitzer", pid);
+  const ids = (oo ?? []).map((x: any) => x.id);
+  if (!ids.length) return 0;
+  const { data: dd } = await db.from("kc_club_archiv_dokumente").select("groesse").in("ordner_id", ids);
+  return (dd ?? []).reduce((s: number, x: any) => s + Number(x.groesse || 0), 0);
 }
 // Automatischer Teil: alles, was vorbei ist – nur das, was ich auch sonst sehen darf
 async function archivAuto(ich: Ich) {
@@ -4084,11 +4174,20 @@ Köcheclub Werne`,
         }
         if (!erlaubt) {
           // KC-CLUB-ARCHIV: Dokument in einem Ordner, den ich sehen darf (auch im Papierkorb nur für die Pflege)
-          const { data: ad } = await db.from("kc_club_archiv_dokumente").select("ordner_id,geloescht_am").eq("attachment_id", att.id);
+          // KC-CLUB-ARCHIV-PERSOENLICH (1.5.0): persönliche Ordner nur Besitzer bzw. gültige Freigabe; sonst Fremdversuch-Meldung
+          const { data: ad } = await db.from("kc_club_archiv_dokumente").select("id,ordner_id,register,status,hochgeladen_von,geloescht_am").eq("attachment_id", att.id);
+          let fremd: any = null;
           for (const x of ad ?? []) {
-            const { data: o } = await db.from("kc_club_archiv_ordner").select("nur_vorstand,geloescht_am").eq("id", x.ordner_id).maybeSingle();
-            if (o && darfOrdnerSehen(ich, o) && ((!x.geloescht_am && !o.geloescht_am) || darfArchivPflegen(ich))) { erlaubt = true; break; }
+            const { data: o } = await db.from("kc_club_archiv_ordner").select("id,besitzer,jahr,nur_vorstand,geloescht_am").eq("id", x.ordner_id).maybeSingle();
+            if (!o) continue;
+            if (o.besitzer) {
+              const eigen = o.besitzer === ich.person_id;
+              const fr = eigen || x.geloescht_am || o.geloescht_am ? [] : await archivFreigabenFuer(ich.person_id, [o.id]);
+              if (eigen || (!x.geloescht_am && !o.geloescht_am && darfDokSehen(ich, o, x, fr))) { erlaubt = true; break; }
+              fremd = o;
+            } else if (darfOrdnerSehen(ich, o) && ((!x.geloescht_am && !o.geloescht_am) || darfArchivPflegen(ich))) { erlaubt = true; break; }
           }
+          if (!erlaubt && fremd) await archivKeinZugriff(ich, fremd, "ein Dokument");
         }
         if (!erlaubt) throw new Fehler("Anlage nicht gefunden.", 404);
         const { data: s } = await db.storage.from(att.bucket).createSignedUrl(att.object_path, 600, p.herunterladen ? { download: att.file_name } : undefined);
@@ -4296,25 +4395,84 @@ Köcheclub Werne`,
 
       // ----- Archiv (KC-CLUB-ARCHIV, 1.2.0) -----
       case "archiv_liste": {
-        const [{ data: or }, auto] = await Promise.all([
+        // KC-CLUB-ARCHIV-PERSOENLICH (1.5.0): eigener Ordner des laufenden Jahres entsteht beim ersten Öffnen von selbst
+        await archivEigenerOrdner(ich, Number(berlinTag(new Date()).slice(0, 4))).catch((e) => console.error("eigener Ordner", String(e)));
+        const [{ data: or }, auto, fr] = await Promise.all([
           db.from("kc_club_archiv_ordner").select("*").is("geloescht_am", null).order("jahr", { ascending: false }).order("titel"),
           archivAuto(ich),
+          archivFreigabenFuer(ich.person_id),
         ]);
-        const ordner = (or ?? []).filter((o: any) => darfOrdnerSehen(ich, o));
-        const oids = ordner.map((o: any) => o.id);
-        const { data: dk } = oids.length ? await db.from("kc_club_archiv_dokumente").select("*").is("geloescht_am", null).in("ordner_id", oids).order("datum", { ascending: false, nullsFirst: false }) : { data: [] as any[] };
-        const leute = await personen((dk ?? []).map((d: any) => d.hochgeladen_von));
+        const geteiltIds = new Set(fr.map((f: any) => f.ordner_id));
+        const ordner = (or ?? []).filter((o: any) => o.besitzer ? (o.besitzer === ich.person_id || geteiltIds.has(o.id)) : darfOrdnerSehen(ich, o));
+        const oids = ordner.map((o: any) => o.id), om = new Map(ordner.map((o: any) => [o.id, o]));
+        const { data: dkRoh } = oids.length ? await db.from("kc_club_archiv_dokumente").select("*").is("geloescht_am", null).in("ordner_id", oids).order("datum", { ascending: false, nullsFirst: false }) : { data: [] as any[] };
+        const dk = (dkRoh ?? []).filter((d: any) => darfDokSehen(ich, om.get(d.ordner_id), d, fr));
+        // Freigaben meiner eigenen Ordner (zum Verwalten) + Namen für Anzeige
+        const eigeneIds = ordner.filter((o: any) => o.besitzer === ich.person_id).map((o: any) => o.id);
+        const { data: meineFr } = eigeneIds.length ? await db.from("kc_club_archiv_freigaben").select("*").in("ordner_id", eigeneIds).is("beendet_am", null).gt("bis", jetzt()).order("bis") : { data: [] as any[] };
+        const grIds = [...new Set([...(meineFr ?? []), ...fr].map((f: any) => f.an_gruppe).filter(Boolean))];
+        const [{ data: grNamen }, meineGr, aktiv] = await Promise.all([
+          grIds.length ? db.from("kc_club_gruppen").select("thread_id,name,symbol").in("thread_id", grIds) : Promise.resolve({ data: [] as any[] }),
+          meineGruppenIds(ich.person_id).then(async (ids) => ids.length ? (await db.from("kc_club_gruppen").select("thread_id,name,symbol").in("thread_id", ids)).data ?? [] : []),
+          aktiveMitglieder(),
+        ]);
+        const gm = new Map([...(grNamen ?? []), ...meineGr].map((g: any) => [g.thread_id, `${g.symbol || "👥"} ${g.name}`]));
+        const leute = await personen([...dk.map((d: any) => d.hochgeladen_von), ...ordner.map((o: any) => o.besitzer).filter(Boolean), ...(meineFr ?? []).map((f: any) => f.an_person).filter(Boolean)]);
+        const fAnzeige = (f: any) => ({ id: f.id, register: f.register, dokument: f.dokument_id, hochladen: f.hochladen, bis: f.bis,
+          an: f.an_person ? (leute.get(f.an_person)?.display_name || f.an_person) : (gm.get(f.an_gruppe) || "Gruppe"), gruppe: !!f.an_gruppe });
+        // Admin: nur dass es persönliche Ordner gibt und wie voll sie sind – nie der Inhalt
+        let persoenlich: any[] | undefined;
+        if (ich.admin) {
+          const { data: alleP } = await db.from("kc_club_archiv_ordner").select("id,besitzer,jahr").not("besitzer", "is", null).is("geloescht_am", null);
+          const pIds = (alleP ?? []).map((o: any) => o.id);
+          const { data: pDok } = pIds.length ? await db.from("kc_club_archiv_dokumente").select("ordner_id,groesse").in("ordner_id", pIds).is("geloescht_am", null) : { data: [] as any[] };
+          const pl = await personen((alleP ?? []).map((o: any) => o.besitzer));
+          persoenlich = (alleP ?? []).map((o: any) => { const x = (pDok ?? []).filter((d: any) => d.ordner_id === o.id); return { name: pl.get(o.besitzer)?.display_name || o.besitzer, jahr: o.jahr, anzahl: x.length, groesse: x.reduce((s: number, d: any) => s + Number(d.groesse || 0), 0) }; })
+            .sort((a: any, b: any) => a.name.localeCompare(b.name) || b.jahr - a.jahr);
+        }
         return json({
-          darf: darfArchivPflegen(ich), vorstand: ich.vorstand, arten: ARCHIV_ARTEN, papierkorbTage: PAPIERKORB_TAGE,
-          ordner: ordner.map((o: any) => ({ id: o.id, art: o.art, jahr: o.jahr, titel: o.titel, farbe: o.farbe, register: o.register, nur_vorstand: o.nur_vorstand,
-            anzahl: (dk ?? []).filter((d: any) => d.ordner_id === o.id).length })),
-          dokumente: (dk ?? []).map((d: any) => ({ id: d.id, ordner_id: d.ordner_id, register: d.register, titel: d.titel, datum: d.datum, stichworte: d.stichworte,
-            name: d.datei_name, mime: d.mime, groesse: d.groesse, datei: d.attachment_id, von: leute.get(d.hochgeladen_von)?.display_name || d.hochgeladen_von, am: d.hochgeladen_am })),
-          auto,
+          darf: darfArchivPflegen(ich), vorstand: ich.vorstand, ich: ich.person_id, arten: ARCHIV_ARTEN, papierkorbTage: PAPIERKORB_TAGE,
+          speicher: { belegt: await archivBelegtVon(ich.person_id), grenze: PERSOENLICH_GRENZE }, register: PERSOENLICH_REGISTER, freigabeMaxTage: FREIGABE_MAX_TAGE,
+          personen: aktiv.filter((m) => m.person_id !== ich.person_id).map((m) => ({ id: m.person_id, name: m.display_name })),
+          gruppen: meineGr.map((g: any) => ({ id: g.thread_id, name: `${g.symbol || "👥"} ${g.name}` })),
+          ordner: ordner.map((o: any) => {
+            const eigen = o.besitzer === ich.person_id, inhalt = dk.filter((d: any) => d.ordner_id === o.id);
+            return { id: o.id, art: o.art, jahr: o.jahr, titel: o.besitzer ? (leute.get(o.besitzer)?.display_name || o.titel) : o.titel, farbe: o.farbe, register: o.register, nur_vorstand: o.nur_vorstand,
+              besitzer: o.besitzer || null, eigen, anzahl: inhalt.filter((d: any) => d.status === "ok").length, pruefung: inhalt.filter((d: any) => d.status === "pruefung").length,
+              freigaben: eigen ? (meineFr ?? []).filter((f: any) => f.ordner_id === o.id).map(fAnzeige) : undefined,
+              geteilt: !eigen && o.besitzer ? fr.filter((f: any) => f.ordner_id === o.id).map(fAnzeige) : undefined };
+          }),
+          dokumente: dk.map((d: any) => ({ id: d.id, ordner_id: d.ordner_id, register: d.register, titel: d.titel, datum: d.datum, stichworte: d.stichworte, status: d.status,
+            name: d.datei_name, mime: d.mime, groesse: d.groesse, datei: d.attachment_id, von: leute.get(d.hochgeladen_von)?.display_name || d.hochgeladen_von, vonIch: d.hochgeladen_von === ich.person_id, am: d.hochgeladen_am })),
+          auto, persoenlich,
         });
       }
 
+      case "archiv_mein_ordner": {
+        // weiteres Jahr für den eigenen Ordner (z. B. Unterlagen aus dem Vorjahr)
+        const jahr = Math.round(Number(p.jahr));
+        if (!(jahr >= 1950 && jahr <= new Date().getFullYear() + 1)) throw new Fehler("Bitte ein gültiges Jahr wählen.");
+        const id = await archivEigenerOrdner(ich, jahr);
+        if (!id) throw new Fehler("Ordner konnte nicht angelegt werden.", 500);
+        const { data: o } = await db.from("kc_club_archiv_ordner").select("geloescht_am").eq("id", id).single();
+        if (o?.geloescht_am) throw new Fehler(`Dein Ordner ${jahr} liegt im Papierkorb – dort mit ♻️ zurückholen.`, 409);
+        return json({ ok: true, id });
+      }
+
       case "archiv_ordner_speichern": {
+        if (p.id) {
+          const o = await archivOrdnerHolen(ich, p.id, false, "pflegen");
+          if (o.besitzer) {
+            // eigener Ordner: Jahr und Beschriftung (Name) bleiben fest – Register und Farbe frei
+            const register = archivRegister(p.register, "sonstiges"), farbe = Math.min(8, Math.max(1, Math.round(Number(p.farbe)) || 6));
+            await db.from("kc_club_archiv_ordner").update({ register: register.length ? register : PERSOENLICH_REGISTER, farbe, geaendert_am: jetzt() }).eq("id", o.id);
+            const { data: weg } = await db.from("kc_club_archiv_dokumente").select("id,register").eq("ordner_id", o.id);
+            const fehlt = (weg ?? []).filter((d: any) => !register.includes(d.register)).map((d: any) => d.id);
+            if (fehlt.length) await db.from("kc_club_archiv_dokumente").update({ register: register[0] }).in("id", fehlt);
+            await protokoll(ich.person_id, "archiv_eigener_ordner_geaendert", { ordner: o.id, umgehaengt: fehlt.length });
+            return json({ ok: true, id: o.id });
+          }
+        }
         nurArchivPflege(ich);
         const art = String(p.art || "");
         if (!ARCHIV_ARTEN[art]) throw new Fehler("Bitte eine Art für den Ordner wählen.");
@@ -4323,7 +4481,7 @@ Köcheclub Werne`,
         const werte = { art, jahr, titel: txt(p.titel, 60) || ARCHIV_ARTEN[art].t, farbe: Math.min(8, Math.max(1, Math.round(Number(p.farbe)) || 1)),
           register: archivRegister(p.register, art), nur_vorstand: !!p.nur_vorstand, geaendert_am: jetzt() };
         if (p.id) {
-          const o = await archivOrdnerHolen(ich, p.id);
+          const o = await archivOrdnerHolen(ich, p.id, false, "pflegen");
           await db.from("kc_club_archiv_ordner").update(werte).eq("id", o.id);
           // Dokumente in einem entfernten Register → ins erste Register (nichts geht verloren)
           const { data: weg } = await db.from("kc_club_archiv_dokumente").select("id,register").eq("ordner_id", o.id);
@@ -4340,36 +4498,129 @@ Köcheclub Werne`,
 
       case "archiv_ordner_loeschen": {
         // Papierkorb: Ordner samt Inhalt 30 Tage wiederherstellbar, danach entfernt die Wartung alles endgültig
-        nurArchivPflege(ich);
-        const o = await archivOrdnerHolen(ich, p.id);
+        const o = await archivOrdnerHolen(ich, p.id, false, "pflegen");
         await geloescht(ich, "archiv_ordner", { ordner: o });
         await db.from("kc_club_archiv_ordner").update({ geloescht_am: jetzt(), geloescht_von: ich.person_id }).eq("id", o.id);
+        if (o.besitzer) await db.from("kc_club_archiv_freigaben").update({ beendet_am: jetzt() }).eq("ordner_id", o.id).is("beendet_am", null);
         return json({ ok: true, papierkorbTage: PAPIERKORB_TAGE });
       }
 
       case "archiv_hochladen": {
-        nurArchivPflege(ich);
-        const o = await archivOrdnerHolen(ich, p.ordner_id);
+        const o = await archivOrdnerHolen(ich, p.ordner_id, false, "hochladen");
+        const einreichung = !!o.besitzer && !o._eigen;
+        if (o.besitzer && (await archivBelegtVon(o.besitzer)) >= PERSOENLICH_GRENZE)
+          throw new Fehler(einreichung ? "Der Ordner ist voll (50 MB) – bitte dem Besitzer Bescheid geben." : "Dein persönlicher Speicher ist voll (50 MB) – bitte zuerst Altes löschen.", 507);
         const sp = await speicherStand();
         if (sp.belegt >= SPEICHER_GRENZE * ARCHIV_STOPP) throw new Fehler("Der kostenlose Speicher ist voll – bitte zuerst Altes löschen oder Hansi Bescheid geben.", 507);
         const datei = await dateiAblegen(ich, p.name, p.mime, p.daten, ARCHIV_DATEITYPEN);
         try {
-          const register = o.register.includes(String(p.register)) ? String(p.register) : o.register[0] ?? null;
+          // Einreichung: nur in das freigegebene Register (bei Register-Freigabe), Status „zur Prüfung“
+          const erlaubteReg = einreichung ? o._freigaben.filter((f: any) => f.hochladen && !f.dokument_id).map((f: any) => f.register) : [];
+          let register = o.register.includes(String(p.register)) ? String(p.register) : o.register[0] ?? null;
+          if (einreichung && !erlaubteReg.includes(null) && !erlaubteReg.includes(register)) register = erlaubteReg[0];
           const { data: d, error } = await db.from("kc_club_archiv_dokumente").insert({
             ordner_id: o.id, register, titel: txt(p.titel, 120) || datei.name, datum: archivDatum(p.datum), stichworte: archivStichworte(p.stichworte),
             attachment_id: datei.id, datei_name: datei.name, mime: txt(p.mime, 100), groesse: datei.groesse, hochgeladen_von: ich.person_id,
+            status: einreichung ? "pruefung" : "ok",
           }).select("id").single();
           if (error || !d) throw new Fehler("Dokument konnte nicht gespeichert werden.", 500);
-          await protokoll(ich.person_id, "archiv_hochgeladen", { dokument: d.id, ordner: o.id, register, groesse: datei.groesse });
-          return json({ ok: true, id: d.id });
+          await protokoll(ich.person_id, einreichung ? "archiv_eingereicht" : "archiv_hochgeladen", { dokument: d.id, ordner: o.id, register, groesse: datei.groesse });
+          if (einreichung) {
+            const b = (await personen([o.besitzer])).get(o.besitzer), titel = txt(p.titel, 120) || datei.name, url = `${APP_URL}#archiv`;
+            await senden("club_nachricht", [o.besitzer], {
+              titel: "📥 Neues Dokument zur Prüfung", kurz: `${ich.name}: „${titel}“ in deinem Ordner ${o.jahr} – annehmen oder ablehnen`,
+              betreff: "Köcheclub Werne – ein Dokument wartet auf deine Prüfung",
+              text: `Hallo ${vorname(b)},\n\n${ich.name} hat „${titel}“ in deinen persönlichen Ordner ${o.jahr}${register ? ` (Register ${register})` : ""} gelegt.\nEs ist erst sichtbar, wenn du es annimmst. Du kannst es auch ablehnen – dann wird es gelöscht.\n\n${url}\n\nViele Grüße\nKöcheclub-App`,
+              url,
+            }, `club-archiv-pruefung:${d.id}`).catch(() => null);
+          }
+          return json({ ok: true, id: d.id, pruefung: einreichung });
         } catch (e) { await dateienEntfernen([datei.id]); throw e; }
       }
 
+      case "archiv_pruefung": {
+        // Besitzer entscheidet über eine Einreichung: annehmen (sichtbar wie alles andere) oder ablehnen (wird gelöscht)
+        const { d, o } = await archivDokHolen(ich, p.id, "pflegen");
+        if (!o.besitzer || !o._eigen) throw new Fehler("Das kann nur der Besitzer des Ordners.", 403);
+        if (d.status !== "pruefung") return json({ ok: true, schon: true });
+        const ja = p.annehmen === true, url = `${APP_URL}#archiv`;
+        if (ja) await db.from("kc_club_archiv_dokumente").update({ status: "ok", geaendert_am: jetzt() }).eq("id", d.id);
+        else {
+          await geloescht(ich, "archiv_einreichung", { dokument: d });
+          await db.from("kc_club_archiv_dokumente").delete().eq("id", d.id);
+          await dateienEntfernen([d.attachment_id]);
+        }
+        await protokoll(ich.person_id, ja ? "archiv_einreichung_angenommen" : "archiv_einreichung_abgelehnt", { dokument: d.id, ordner: o.id, von: d.hochgeladen_von });
+        if (d.hochgeladen_von !== ich.person_id) await senden("club_nachricht", [d.hochgeladen_von], {
+          titel: ja ? "✅ Dokument angenommen" : "✖ Dokument abgelehnt", kurz: `${ich.name} hat „${txt(d.titel, 80)}“ ${ja ? "angenommen" : "abgelehnt"}.`,
+          betreff: `Köcheclub Werne – dein Dokument wurde ${ja ? "angenommen" : "abgelehnt"}`,
+          text: `Hallo,\n\n${ich.name} hat dein Dokument „${txt(d.titel, 120)}“ ${ja ? "angenommen – es liegt jetzt in seinem/ihrem Ordner" : "abgelehnt – es wurde gelöscht"}.\n\n${url}\n\nViele Grüße\nKöcheclub-App`,
+          url,
+        }, `club-archiv-entscheid:${d.id}`).catch(() => null);
+        return json({ ok: true, angenommen: ja });
+      }
+
+      case "archiv_freigeben": {
+        // Freigabe auf Zeit: ganzer Ordner / ein Register / ein Dokument – an Personen und/oder Gruppen
+        const o = await archivOrdnerHolen(ich, p.ordner_id, false, "pflegen");
+        if (!o.besitzer || !o._eigen) throw new Fehler("Freigeben kann man nur den eigenen Ordner.", 403);
+        let register: string | null = null, dokument: string | null = null;
+        if (p.dokument_id) {
+          const { data: d } = await db.from("kc_club_archiv_dokumente").select("id,ordner_id,status,titel").eq("id", String(p.dokument_id)).maybeSingle();
+          if (!d || d.ordner_id !== o.id || d.status !== "ok") throw new Fehler("Dokument nicht gefunden.", 404);
+          dokument = d.id;
+        } else if (p.register) {
+          if (!o.register.includes(String(p.register))) throw new Fehler("Dieses Register gibt es im Ordner nicht.");
+          register = String(p.register);
+        }
+        const bis = new Date(String(p.bis || ""));
+        if (isNaN(bis.getTime()) || bis.getTime() < Date.now() + 15 * 60_000) throw new Fehler("Bitte ein Ende in der Zukunft wählen.");
+        if (bis.getTime() > Date.now() + FREIGABE_MAX_TAGE * 86400_000) throw new Fehler(`Höchstens ${FREIGABE_MAX_TAGE} Tage – eine Freigabe „für immer“ gibt es nicht.`);
+        const hochladen = !dokument && p.hochladen === true;
+        const aktiv = new Set((await aktiveMitglieder()).map((m) => m.person_id));
+        const leute = [...new Set<string>((Array.isArray(p.personen) ? p.personen : []).map((x: unknown) => String(x)))].filter((x) => aktiv.has(x) && x !== ich.person_id).slice(0, 40);
+        const meineGr = new Set(await meineGruppenIds(ich.person_id));
+        const { data: grOk } = meineGr.size ? await db.from("kc_club_gruppen").select("thread_id,name,symbol").in("thread_id", [...meineGr]) : { data: [] as any[] };
+        const gruppen = [...new Set<string>((Array.isArray(p.gruppen) ? p.gruppen : []).map((x: unknown) => String(x)))].filter((g) => (grOk ?? []).some((x: any) => x.thread_id === g)).slice(0, 10);
+        if (!leute.length && !gruppen.length) throw new Fehler("Bitte mindestens eine Person oder Gruppe wählen.");
+        const zeilen = [...leute.map((x) => ({ an_person: x })), ...gruppen.map((g) => ({ an_gruppe: g }))]
+          .map((z) => ({ ...z, ordner_id: o.id, register, dokument_id: dokument, hochladen, bis: bis.toISOString(), erstellt_von: ich.person_id }));
+        const { error } = await db.from("kc_club_archiv_freigaben").insert(zeilen);
+        if (error) throw new Fehler("Freigabe konnte nicht gespeichert werden.", 500);
+        await protokoll(ich.person_id, "archiv_freigegeben", { ordner: o.id, register, dokument, hochladen, bis: bis.toISOString(), personen: leute, gruppen });
+        // Benachrichtigen: Personen + Mitglieder der Gruppen (ohne mich)
+        const { data: tp } = gruppen.length ? await db.from("kc_communication_thread_participants").select("person_id").in("thread_id", gruppen) : { data: [] as any[] };
+        const ziel = [...new Set([...leute, ...(tp ?? []).map((x: any) => x.person_id)])].filter((x) => x !== ich.person_id && aktiv.has(x));
+        let wasText = `meinen Ordner ${o.jahr}`;
+        if (register) wasText = `das Register „${register}“ in meinem Ordner ${o.jahr}`;
+        if (dokument) { const { data: d } = await db.from("kc_club_archiv_dokumente").select("titel").eq("id", dokument).single(); wasText = `das Dokument „${txt(d?.titel, 80)}“ aus meinem Ordner ${o.jahr}`; }
+        const bisText = wann(bis.toISOString()), url = `${APP_URL}#archiv`;
+        const versand = ziel.length ? await senden("club_nachricht", ziel, {
+          titel: `🔓 ${ich.vorname} hat dir etwas freigegeben`, kurz: `${wasText} – bis ${bisText}${hochladen ? " · du darfst auch etwas hineinlegen" : ""}`,
+          betreff: `Köcheclub Werne – ${ich.name} hat dir etwas im Archiv freigegeben`,
+          text: `Hallo,\n\n${ich.name} hat dir ${wasText} freigegeben – bis ${bisText}.\n${hochladen ? "Du darfst auch Dokumente hineinlegen; sie werden erst nach Prüfung sichtbar.\n" : ""}\nDu findest es im Archiv unter „🤝 Mit mir geteilt“.\n${url}\n\nViele Grüße\nKöcheclub-App`,
+          url,
+        }, `club-archiv-freigabe:${o.id}:${Date.now()}`).catch(() => null) : null;
+        return json({ ok: true, anzahl: zeilen.length, benachrichtigt: ziel.length, versand });
+      }
+
+      case "archiv_freigabe_beenden": {
+        const { data: f } = await db.from("kc_club_archiv_freigaben").select("*").eq("id", String(p.id || "")).maybeSingle();
+        if (!f) throw new Fehler("Freigabe nicht gefunden.", 404);
+        const o = await archivOrdnerHolen(ich, f.ordner_id, true, "pflegen");
+        if (!o._eigen) throw new Fehler("Das kann nur der Besitzer des Ordners.", 403);
+        await db.from("kc_club_archiv_freigaben").update({ beendet_am: jetzt() }).eq("id", f.id).is("beendet_am", null);
+        await protokoll(ich.person_id, "archiv_freigabe_beendet", { freigabe: f.id, ordner: o.id });
+        return json({ ok: true });
+      }
+
       case "archiv_aendern": {
-        nurArchivPflege(ich);
-        const { d } = await archivDokHolen(ich, p.id);
+        const { d, o: quelle } = await archivDokHolen(ich, p.id, "pflegen");
         if (d.geloescht_am) throw new Fehler("Das Dokument liegt im Papierkorb.", 409);
-        const ziel = p.ordner_id && p.ordner_id !== d.ordner_id ? await archivOrdnerHolen(ich, p.ordner_id) : await archivOrdnerHolen(ich, d.ordner_id);
+        if (d.status === "pruefung") throw new Fehler("Bitte zuerst annehmen oder ablehnen.", 409);
+        const ziel = p.ordner_id && p.ordner_id !== d.ordner_id ? await archivOrdnerHolen(ich, p.ordner_id, false, "pflegen") : quelle;
+        // nie zwischen persönlichem und Vereins-Archiv (oder fremden Ordnern) verschieben
+        if ((ziel.besitzer || null) !== (quelle.besitzer || null)) throw new Fehler("Dokumente bleiben im eigenen Bereich – zwischen persönlichem Ordner und Vereinsarchiv wird nicht verschoben.");
         const upd: Record<string, unknown> = { ordner_id: ziel.id, geaendert_am: jetzt() };
         if (p.titel !== undefined) upd.titel = txt(p.titel, 120) || d.titel;
         if (p.datum !== undefined) upd.datum = archivDatum(p.datum);
@@ -4382,8 +4633,17 @@ Köcheclub Werne`,
       }
 
       case "archiv_loeschen": {
-        nurArchivPflege(ich);
-        const { d } = await archivDokHolen(ich, p.id);
+        const { d, o } = await archivDokHolen(ich, p.id, "pflegen");
+        if (d.status === "pruefung" && d.hochgeladen_von === ich.person_id && !o._eigen) {
+          // Einreicher zieht seine noch nicht geprüfte Einreichung zurück → sofort weg
+          await geloescht(ich, "archiv_einreichung", { dokument: d });
+          await db.from("kc_club_archiv_dokumente").delete().eq("id", d.id);
+          await dateienEntfernen([d.attachment_id]);
+          await protokoll(ich.person_id, "archiv_einreichung_zurueckgezogen", { dokument: d.id, ordner: o.id });
+          return json({ ok: true });
+        }
+        if (!o.besitzer) nurArchivPflege(ich);
+        else if (!o._eigen) throw new Fehler("Das kann nur der Besitzer des Ordners.", 403);
         if (d.geloescht_am) return json({ ok: true });
         await geloescht(ich, "archiv_dokument", { dokument: d });
         await db.from("kc_club_archiv_dokumente").update({ geloescht_am: jetzt(), geloescht_von: ich.person_id }).eq("id", d.id);
@@ -4391,29 +4651,30 @@ Köcheclub Werne`,
       }
 
       case "archiv_papierkorb": {
-        nurArchivPflege(ich);
+        // Vereinsordner: Clubsprecher/Admin · persönliche Ordner: nur der Besitzer
+        const pflege = darfArchivPflegen(ich);
         const grenze = (t: string) => new Date(new Date(t).getTime() + PAPIERKORB_TAGE * 86400000).toISOString();
         const [{ data: or }, { data: dk }] = await Promise.all([
-          db.from("kc_club_archiv_ordner").select("id,art,jahr,titel,nur_vorstand,geloescht_am").not("geloescht_am", "is", null).order("geloescht_am", { ascending: false }),
+          db.from("kc_club_archiv_ordner").select("id,art,jahr,titel,nur_vorstand,besitzer,geloescht_am").not("geloescht_am", "is", null).order("geloescht_am", { ascending: false }),
           db.from("kc_club_archiv_dokumente").select("id,ordner_id,titel,datum,geloescht_am").not("geloescht_am", "is", null).order("geloescht_am", { ascending: false }),
         ]);
-        const { data: alleOrdner } = await db.from("kc_club_archiv_ordner").select("id,titel,jahr,nur_vorstand,geloescht_am");
+        const { data: alleOrdner } = await db.from("kc_club_archiv_ordner").select("id,titel,jahr,nur_vorstand,besitzer,geloescht_am");
         const om = new Map((alleOrdner ?? []).map((o: any) => [o.id, o]));
+        const meins = (o: any) => o.besitzer ? o.besitzer === ich.person_id : pflege && darfOrdnerSehen(ich, o);
         return json({
-          ordner: (or ?? []).filter((o: any) => darfOrdnerSehen(ich, o)).map((o: any) => ({ ...o, endgueltig_am: grenze(o.geloescht_am) })),
-          dokumente: (dk ?? []).filter((d: any) => { const o: any = om.get(d.ordner_id); return o && darfOrdnerSehen(ich, o) && !o.geloescht_am; })
-            .map((d: any) => { const o: any = om.get(d.ordner_id); return { ...d, ordner: `${o.titel} ${o.jahr}`, endgueltig_am: grenze(d.geloescht_am) }; }),
+          ordner: (or ?? []).filter(meins).map((o: any) => ({ ...o, titel: o.besitzer ? "👤 Mein Ordner" : o.titel, endgueltig_am: grenze(o.geloescht_am) })),
+          dokumente: (dk ?? []).filter((d: any) => { const o: any = om.get(d.ordner_id); return o && meins(o) && !o.geloescht_am; })
+            .map((d: any) => { const o: any = om.get(d.ordner_id); return { ...d, ordner: `${o.besitzer ? "👤 Mein Ordner" : o.titel} ${o.jahr}`, endgueltig_am: grenze(d.geloescht_am) }; }),
         });
       }
 
       case "archiv_wiederherstellen": {
-        nurArchivPflege(ich);
         if (p.ordner) {
-          const o = await archivOrdnerHolen(ich, p.ordner, true);
+          const o = await archivOrdnerHolen(ich, p.ordner, true, "pflegen");
           await db.from("kc_club_archiv_ordner").update({ geloescht_am: null, geloescht_von: null }).eq("id", o.id);
           await protokoll(ich.person_id, "archiv_ordner_wiederhergestellt", { ordner: o.id });
         } else {
-          const { d, o } = await archivDokHolen(ich, p.id);
+          const { d, o } = await archivDokHolen(ich, p.id, "pflegen");
           if (o.geloescht_am) throw new Fehler("Zuerst den Ordner wiederherstellen.", 409);
           await db.from("kc_club_archiv_dokumente").update({ geloescht_am: null, geloescht_von: null }).eq("id", d.id);
           await protokoll(ich.person_id, "archiv_wiederhergestellt", { dokument: d.id });

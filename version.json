@@ -1,10 +1,18 @@
 {
-  "version": "1.4.1",
+  "version": "1.5.0",
   "datum": "2026-09-30",
   "neu": [
-    "🔍 Archiv: Suche jetzt live wie die große Suche – ab 2 Buchstaben, Umlaute egal, Treffer markiert, findet auch Ordner; neu auch „In diesem Ordner suchen“"
+    "👤 Archiv: dein eigener Ordner je Jahr (Jahr + Name auf dem Rücken) mit Registern – nur du siehst ihn",
+    "🔓 Freigeben auf Zeit: ganzen Ordner, ein Register oder ein Dokument für Personen oder Gruppen – auf Wunsch dürfen sie etwas hineinlegen, du nimmst an oder lehnst ab"
   ],
   "verlauf": [
+    {
+      "version": "1.5.0",
+      "neu": [
+        "👤 Archiv: dein eigener Ordner je Jahr (Jahr + Name auf dem Rücken) mit Registern – nur du siehst ihn",
+        "🔓 Freigeben auf Zeit: ganzen Ordner, ein Register oder ein Dokument für Personen oder Gruppen – auf Wunsch dürfen sie etwas hineinlegen, du nimmst an oder lehnst ab"
+      ]
+    },
     {
       "version": "1.4.1",
       "neu": [

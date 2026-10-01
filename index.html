@@ -850,6 +850,11 @@
   .ordner .anz { font-size: .74rem; opacity: .92; }
   .ordner .loch { margin-top: auto; width: 24px; height: 24px; border-radius: 50%; background: rgba(0,0,0,.28); box-shadow: inset 0 2px 3px rgba(0,0,0,.4); }
   .ordner .schloss { position: absolute; top: 4px; right: 6px; font-size: .9rem; }
+  .ordner .ar-frei { position: absolute; top: 4px; left: 6px; font-size: .9rem; }
+  .ar-pers { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .fr-personen { max-height: 220px; overflow-y: auto; border: 1px solid var(--linie); border-radius: 10px; padding: 4px 8px; margin-top: 6px; }
+  .fr-person { display: flex; gap: 8px; align-items: center; padding: 6px 2px; border-bottom: 1px solid var(--linie); }
+  .fr-person:last-child { border-bottom: none; }
   .ar-kopf { display: flex; gap: 12px; align-items: center; background: var(--of); color: #fff; border-radius: var(--radius); padding: 12px 14px; box-shadow: var(--schatten); }
   .ar-kopf .sym { font-size: 1.8rem; } .ar-kopf b { font-size: 1.15rem; } .ar-kopf .klein { font-size: .85rem; opacity: .9; }
   .ar-register { display: flex; gap: 4px; overflow-x: auto; margin-top: 12px; padding: 0 4px; }
@@ -1612,7 +1617,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.4.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.5.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -7444,7 +7449,7 @@ function arAlleOrdner() {
   return [...jahre.map(arAutoOrdner), ...d.ordner];
 }
 const arFarbe = (o) => o.auto ? "#6b5b53" : AR_FARBEN[(o.farbe || 1) - 1] || AR_FARBEN[0];
-const arSym = (o) => o.auto ? "🤖" : AR.daten.arten[o.art]?.sym || "🗂️";
+const arSym = (o) => o.auto ? "🤖" : o.besitzer ? (o.eigen ? "👤" : "🤝") : AR.daten.arten[o.art]?.sym || "🗂️";
 function arPasst(o) {
   if (AR.jahr && String(o.jahr) !== AR.jahr) return false;
   if (AR.art === "auto") return !!o.auto;
@@ -7462,7 +7467,7 @@ function arZeigen() {
   const kopf = `<div class="karte ar-filter">
       <input id="arSuche" type="search" placeholder="🔍 Suchen: Titel, Stichwort, Inhalt …" value="${esc(AR.suche)}" oninput="AR.suche=this.value;arListeZeigen()" onkeydown="if(event.key==='Escape'){this.value='';AR.suche='';arListeZeigen()}" autocomplete="off" enterkeyhint="search">
       <div class="ar-zeile"><label class="feld">Jahr<select onchange="AR.jahr=this.value;arFilterMerken();arZeigen()"><option value="">Alle Jahre</option>${jahre.map((j) => `<option ${String(j) === AR.jahr ? "selected" : ""}>${j}</option>`).join("")}</select></label>
-        ${d.darf ? `<div class="knoepfe"><button class="knopf klein haupt" onclick="arOrdnerForm()">＋ Ordner</button><button class="knopf klein" onclick="AR.korb=true;arZeigen()">🗑️ Papierkorb</button></div>` : ""}</div>
+        <div class="knoepfe">${d.darf ? `<button class="knopf klein haupt" onclick="arOrdnerForm()">＋ Ordner</button>` : ""}<button class="knopf klein" onclick="AR.korb=true;arZeigen()">🗑️ Papierkorb</button></div></div>
       <div class="chips ar-chips">${chip("", "Alle")}${chip("auto", "🤖 Vereinsleben")}${Object.entries(d.arten).map(([k, a]) => chip(k, a.sym + " " + esc(a.t))).join("")}${d.vorstand ? chip("vorstand", "🔒 Nur Clubleitung") : ""}</div>
     </div><div id="arListe"></div>`;
   $("arInhalt").innerHTML = kopf;
@@ -7471,21 +7476,37 @@ function arZeigen() {
 function arListeZeigen() {
   const d = AR.daten, q = AR.suche;
   if (arSuchLang(q)) return arSuchErgebnis(q);
-  const ordner = arAlleOrdner().filter(arPasst), jahre = [...new Set(ordner.map((o) => o.jahr))].sort((a, b) => b - a);
-  if (!ordner.length) {
-    $("arListe").innerHTML = `<div class="karte hinweis">${AR.jahr || AR.art ? "Für diese Auswahl gibt es keinen Ordner. <button class=\"knopf klein\" onclick=\"AR.jahr='';AR.art='';arFilterMerken();arZeigen()\">✕ Filter zurücksetzen</button>" : "Noch nichts im Archiv." + (d.darf ? " Tippe oben auf „＋ Ordner“." : "")}</div>`;
-    return;
-  }
-  $("arListe").innerHTML = jahre.map((j) => `<div class="abschnitt"><h3>${j}</h3></div><div class="regal">${ordner.filter((o) => o.jahr === j).sort((a, b) => (b.auto ? 1 : 0) - (a.auto ? 1 : 0) || a.titel.localeCompare(b.titel)).map(arRuecken).join("")}</div>`).join("")
-    + `<p class="hinweis" style="margin-top:14px">🤖 <b>Vereinsleben</b> füllt sich von selbst mit dem, was vorbei ist.${d.darf ? "" : " Unterlagen legen Clubsprecher und Admin ab."}</p>`;
+  // KC-CLUB-ARCHIV-PERSOENLICH (1.5.0): eigene Ordner (Rücken: Jahr + Name) und „Mit mir geteilt“ immer oben
+  const eigene = d.ordner.filter((o) => o.eigen).sort((a, b) => b.jahr - a.jahr), geteilt = d.ordner.filter((o) => o.besitzer && !o.eigen);
+  const sp = d.speicher || { belegt: 0, grenze: 1 };
+  const pers = `<div class="abschnitt ar-pers"><h3>👤 Mein Ordner</h3><button class="knopf klein" onclick="arNeuesJahr()">＋ weiteres Jahr</button></div>
+      <div class="regal">${eigene.map(arRuecken).join("")}</div>
+      <p class="hinweis" style="margin:2px 6px 10px">🔒 Nur du siehst deine Ordner – auch der Admin nicht. Mit 🔓 kannst du anderen etwas auf Zeit freigeben. Belegt: ${arGroesse(sp.belegt) || "0 KB"} von ${arGroesse(sp.grenze)}.</p>`
+    + (geteilt.length ? `<div class="abschnitt"><h3>🤝 Mit mir geteilt</h3></div><div class="regal">${geteilt.map(arRuecken).join("")}</div>` : "");
+  const ordner = arAlleOrdner().filter((o) => !o.besitzer && arPasst(o)), jahre = [...new Set(ordner.map((o) => o.jahr))].sort((a, b) => b - a);
+  const verein = !ordner.length
+    ? `<div class="karte hinweis">${AR.jahr || AR.art ? "Für diese Auswahl gibt es keinen Vereinsordner. <button class=\"knopf klein\" onclick=\"AR.jahr='';AR.art='';arFilterMerken();arZeigen()\">✕ Filter zurücksetzen</button>" : "Im Vereinsarchiv ist noch nichts." + (d.darf ? " Tippe oben auf „＋ Ordner“." : "")}</div>`
+    : jahre.map((j) => `<div class="abschnitt"><h3>${j}</h3></div><div class="regal">${ordner.filter((o) => o.jahr === j).sort((a, b) => (b.auto ? 1 : 0) - (a.auto ? 1 : 0) || a.titel.localeCompare(b.titel)).map(arRuecken).join("")}</div>`).join("")
+      + `<p class="hinweis" style="margin-top:14px">🤖 <b>Vereinsleben</b> füllt sich von selbst mit dem, was vorbei ist.${d.darf ? "" : " Unterlagen legen Clubsprecher und Admin ab."}</p>`;
+  const adminSicht = d.persoenlich?.length ? `<details class="karte" style="margin-top:12px"><summary><b>👤 Persönliche Ordner der Mitglieder (${d.persoenlich.length})</b> – nur Übersicht, kein Inhalt</summary>
+      ${d.persoenlich.map((x) => `<div class="ar-dok"><span class="sym">👤</span><div><b>${esc(x.name)} ${x.jahr}</b><div class="hinweis">${x.anzahl} ${x.anzahl === 1 ? "Dokument" : "Dokumente"} · ${arGroesse(x.groesse) || "0 KB"}</div></div><span></span></div>`).join("")}</details>` : "";
+  $("arListe").innerHTML = pers + `<div class="abschnitt"><h3>🗄️ Vereinsarchiv</h3></div>` + verein + adminSicht;
 }
 function arAnzahl(o) { return o.auto ? AR.daten.auto.filter((x) => arJahr(x.datum) === String(o.jahr)).length : o.anzahl; }
 function arRuecken(o) {
-  const n = arAnzahl(o);
+  const n = arAnzahl(o), geteilt = o.besitzer && !o.eigen;
   return `<button class="ordner" style="--of:${arFarbe(o)}" onclick="arOrdnerOeffnen('${o.id}')" title="${esc(o.titel)} ${o.jahr}">
-    ${o.nur_vorstand ? '<span class="schloss">🔒</span>' : ""}<span class="sym">${arSym(o)}</span>
+    ${o.nur_vorstand ? '<span class="schloss">🔒</span>' : ""}${o.eigen && o.pruefung ? `<span class="schloss" title="wartet auf deine Prüfung">⏳${o.pruefung}</span>` : ""}${o.eigen && o.freigaben?.length ? '<span class="ar-frei" title="freigegeben">🔓</span>' : ""}<span class="sym">${arSym(o)}</span>
     <span class="schild"><span class="jahr">${o.jahr}</span><span class="name">${esc(o.titel)}</span></span>
-    <span class="anz">${n} ${n === 1 ? "Eintrag" : "Einträge"}</span><span class="loch"></span></button>`;
+    <span class="anz">${geteilt ? "bis " + arBisKurz(o) : `${n} ${n === 1 ? "Eintrag" : "Einträge"}`}</span><span class="loch"></span></button>`;
+}
+const arBisText = (iso) => new Date(iso).toLocaleString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) + " Uhr";
+const arBisKurz = (o) => { const b = (o.geteilt || []).map((f) => f.bis).sort().pop(); return b ? new Date(b).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" }) : ""; };
+const arDarfHinein = (o) => !!o.geteilt?.some((f) => f.hochladen && !f.dokument);
+// Register, die ein Freigabe-Empfänger sieht bzw. in die er hineinlegen darf (null = alle)
+function arFreiRegister(o, nurHochladen) {
+  const fr = (o.geteilt || []).filter((f) => !nurHochladen || (f.hochladen && !f.dokument));
+  return fr.some((f) => !f.register && !f.dokument) ? o.register : [...new Set(fr.map((f) => f.register).filter(Boolean))];
 }
 function arOrdnerOeffnen(id) {
   AR.ordner = id; AR.register = ""; AR.suche = ""; AR.ordnerSuche = "";
@@ -7506,12 +7527,17 @@ function arOrdnerZeigen() {
   const o = arOrdnerAktuell(), d = AR.daten;
   if (!o) { AR.ordner = null; return arZeigen(); }
   const eintraege = arEintraege(o);
-  const reg = o.auto ? o.register.filter((r) => eintraege.some((x) => x.register === r)) : o.register;
+  const reg = o.auto ? o.register.filter((r) => eintraege.some((x) => x.register === r))
+    : o.besitzer && !o.eigen ? o.register.filter((r) => arFreiRegister(o).includes(r) || eintraege.some((x) => x.register === r)) : o.register;
   if (AR.register && !reg.includes(AR.register)) AR.register = "";
   const sichtbar = eintraege.filter((x) => !AR.register || x.register === AR.register);
-  const art = o.auto ? "automatisch aus der App" : (d.arten[o.art]?.t || "");
+  const art = o.auto ? "automatisch aus der App" : o.eigen ? "Dein persönlicher Ordner · nur du siehst ihn"
+    : o.besitzer ? `freigegeben bis ${arBisText((o.geteilt || []).map((f) => f.bis).sort().pop())} · ${arDarfHinein(o) ? "ansehen + hineinlegen (zur Prüfung)" : "nur ansehen"}` : (d.arten[o.art]?.t || "");
   $("arInhalt").innerHTML = `<div class="ar-kopf" style="--of:${arFarbe(o)}"><span class="sym">${arSym(o)}</span><div><b>${esc(o.titel)} ${o.jahr}</b><div class="klein">${esc(art)}${o.nur_vorstand ? " · 🔒 nur Clubleitung" : ""}</div></div></div>
-    ${!o.auto && d.darf ? `<div class="knoepfe" style="margin:8px 0"><button class="knopf klein haupt" onclick="arDokForm()">＋ Dokument</button><button class="knopf klein" onclick="arOrdnerForm('${o.id}')">✏️ Ordner</button><button class="knopf klein" onclick="arOrdnerLoeschen('${o.id}')">🗑️ Ordner</button></div>` : ""}
+    ${o.eigen ? `<div class="knoepfe" style="margin:8px 0"><button class="knopf klein haupt" onclick="arDokForm()">＋ Dokument</button><button class="knopf klein" onclick="arFreigabeForm('${o.id}')">🔓 Freigeben</button><button class="knopf klein" onclick="arOrdnerForm('${o.id}')">✏️ Register</button><button class="knopf klein" onclick="arOrdnerLoeschen('${o.id}')">🗑️ Ordner</button></div>
+        ${o.pruefung ? `<div class="karte hinweis" style="border:2px solid #d68910">⏳ <b>${o.pruefung} ${o.pruefung === 1 ? "Dokument wartet" : "Dokumente warten"} auf deine Prüfung</b> – unten annehmen oder ablehnen.</div>` : ""}${arFreigabenListe(o)}`
+      : o.besitzer ? (arDarfHinein(o) ? `<div class="knoepfe" style="margin:8px 0"><button class="knopf klein haupt" onclick="arDokForm()">📥 Dokument hineinlegen</button></div><p class="hinweis" style="margin:0 4px 8px">Was du hineinlegst, sieht ${esc(o.titel)} erst nach Prüfung – angenommen oder abgelehnt bekommst du Bescheid.</p>` : "")
+      : !o.auto && d.darf ? `<div class="knoepfe" style="margin:8px 0"><button class="knopf klein haupt" onclick="arDokForm()">＋ Dokument</button><button class="knopf klein" onclick="arOrdnerForm('${o.id}')">✏️ Ordner</button><button class="knopf klein" onclick="arOrdnerLoeschen('${o.id}')">🗑️ Ordner</button></div>` : ""}
     ${eintraege.length > 3 ? `<input id="arOrdnerSuche" class="ar-ordnersuche" type="search" autocomplete="off" enterkeyhint="search" placeholder="🔍 In diesem Ordner suchen …" value="${esc(AR.ordnerSuche || "")}" oninput="AR.ordnerSuche=this.value;arOrdnerListe()" onkeydown="if(event.key==='Escape'){this.value='';AR.ordnerSuche='';arOrdnerListe()}">` : ""}
     <div class="ar-register">${[["", "Alle", eintraege.length], ...reg.map((r) => [r, r, eintraege.filter((x) => x.register === r).length])].map(([w, t, n], i) => `<button class="${AR.register === w ? "an" : ""}" style="--rf:${i ? AR_FARBEN[(i - 1) % AR_FARBEN.length] : "var(--grau)"}" onclick="AR.register=${esc(JSON.stringify(w))};arZeigen()">${esc(t)} <small>${n}</small></button>`).join("")}</div>
     <div class="ar-blatt" id="arOrdnerListe"></div>`;
@@ -7524,7 +7550,7 @@ function arOrdnerListe() {
   const liste = arEintraege(o).filter((x) => (!AR.register || x.register === AR.register)
     && (!suchen || (o.auto ? arPasstAlle(q, x.titel, x.text, x.voll) : arPasstAlle(q, x.titel, x.name, x.register, x.stichworte || []))));
   $("arOrdnerListe").innerHTML = (suchen ? `<p class="hinweis ar-zahl" style="margin:4px 6px">${liste.length} Treffer${AR.register ? ` im Register „${esc(AR.register)}“ <button class="knopf klein" onclick="AR.register='';arZeigen()">in allen suchen</button>` : ""}</p>` : "")
-    + (liste.map((x) => arZeile(x, o.auto, false, m)).join("") || `<p class="hinweis" style="margin:6px">${suchen ? "Nichts gefunden." : o.auto ? "Hier ist nichts." : d.darf ? "Noch leer – tippe auf „＋ Dokument“." : "Noch leer."}</p>`);
+    + (liste.sort((a, b) => (b.status === "pruefung") - (a.status === "pruefung")).map((x) => arZeile(x, o.auto, false, m)).join("") || `<p class="hinweis" style="margin:6px">${suchen ? "Nichts gefunden." : o.auto ? "Hier ist nichts." : o.eigen || (!o.besitzer && d.darf) ? "Noch leer – tippe auf „＋ Dokument“." : "Noch leer."}</p>`);
 }
 function arDateiSym(mime) { return /pdf/.test(mime || "") ? "📕" : /^image\//.test(mime || "") ? "🖼️" : /word/.test(mime || "") ? "📝" : /excel|sheet/.test(mime || "") ? "📊" : "📄"; }
 const arGroesse = (b) => !b ? "" : b > 1048576 ? (b / 1048576).toFixed(1).replace(".", ",") + " MB" : Math.max(1, Math.round(b / 1024)) + " KB";
@@ -7538,12 +7564,15 @@ function arZeile(x, auto, mitOrt, m) {
       <div><b>${mk(x.titel)}</b><div class="hinweis">${esc(arTag(x.datum))}${x.text ? " · " + mk(x.text) : ""}${x.art === "anhang" && x.groesse ? " · " + arGroesse(x.groesse) : ""}${mitOrt ? " · 🤖 Vereinsleben " + arJahr(x.datum) : ""}</div>
       ${x.voll && x.voll !== x.titel ? `<div class="ar-voll">${mk(x.voll)}</div>` : ""}</div>${klick ? '<span class="pfeil">›</span>' : ""}</div>`;
   }
-  const o = AR.daten.ordner.find((y) => y.id === x.ordner_id);
+  const o = AR.daten.ordner.find((y) => y.id === x.ordner_id), pruef = x.status === "pruefung";
+  const darfAendern = !pruef && (o?.eigen || (!o?.besitzer && AR.daten.darf));
   return `<div class="ar-dok klickbar" onclick="arAnlage('${x.id}', true)"><span class="sym">${arDateiSym(x.mime)}</span>
-    <div><b>${mk(x.titel)}</b><div class="hinweis">${[arTag(x.datum), x.register, arGroesse(x.groesse)].filter(Boolean).map(mk).join(" · ")}${mitOrt && o ? ` · ${mk(o.titel)} ${o.jahr}` : ""}</div>
+    <div>${pruef ? `<span class="marke gelb">⏳ ${o?.eigen ? "zur Prüfung · von " + esc(x.von) : "wartet auf Prüfung"}</span><br>` : ""}<b>${mk(x.titel)}</b><div class="hinweis">${[arTag(x.datum), x.register, arGroesse(x.groesse)].filter(Boolean).map(mk).join(" · ")}${mitOrt && o ? ` · ${o.besitzer ? (o.eigen ? "👤 Mein Ordner" : "🤝 " + mk(o.titel)) : mk(o.titel)} ${o.jahr}` : ""}</div>
+    ${pruef && o?.eigen ? `<div class="knoepfe" style="margin:6px 0 0"><button class="knopf klein haupt" onclick="event.stopPropagation();einmal(this, () => arPruefung('${x.id}', true))">✔ Annehmen</button><button class="knopf klein" onclick="event.stopPropagation();einmal(this, () => arPruefung('${x.id}', false))">✖ Ablehnen</button></div>` : ""}
+    ${pruef && !o?.eigen && x.vonIch ? `<div class="knoepfe" style="margin:6px 0 0"><button class="knopf klein" onclick="event.stopPropagation();arEinreichungZurueck('${x.id}')">↩ Zurückziehen</button></div>` : ""}
     ${x.name && m && suPasstText(x.name, AR.suche) && !suPasstText(x.titel, AR.suche) ? `<div class="hinweis">📎 ${mk(x.name)}</div>` : ""}
     ${x.stichworte?.length ? `<div class="ar-stichworte">${x.stichworte.map((s) => `<span>#${mk(s)}</span>`).join("")}</div>` : ""}</div>
-    ${AR.daten.darf ? `<button class="knopf klein" onclick="event.stopPropagation();arDokForm('${x.id}')" title="Ändern">✏️</button>` : '<span class="pfeil">›</span>'}</div>`;
+    ${darfAendern ? `<button class="knopf klein" onclick="event.stopPropagation();arDokForm('${x.id}')" title="Ändern">✏️</button>` : '<span class="pfeil">›</span>'}</div>`;
 }
 async function arAnlage(id, archivDok) {
   const datei = archivDok ? AR.daten.dokumente.find((x) => x.id === id)?.datei : id;
@@ -7579,6 +7608,7 @@ const arBlattZu = () => document.getElementById("arFenster")?.remove();
 let arReg = [];
 function arOrdnerForm(id) {
   const d = AR.daten, o = id ? d.ordner.find((x) => x.id === id) : null, jahrJetzt = new Date().getFullYear();
+  if (o?.besitzer) return arEigenForm(o);
   const art = o?.art || "versammlung";
   arReg = o ? [...o.register] : [...d.arten[art].register];
   arBlatt(`<h3>${o ? "✏️ Ordner ändern" : "🗄️ Neuer Ordner"}</h3>
@@ -7620,7 +7650,9 @@ function arDokForm(id) {
   if (!o) return;
   AR.datei = null;
   const regWahl = (ord, wert) => (ord.register.length ? ord.register : ["Allgemein"]).map((r) => `<option ${r === wert ? "selected" : ""}>${esc(r)}</option>`).join("");
-  arBlatt(`<h3>${x ? "✏️ Dokument ändern" : "📥 Dokument ablegen"}</h3>
+  const hinein = !x && o.besitzer && !o.eigen, regListe = hinein ? arFreiRegister(o, true) : o.register;
+  const ordnerWahl = d.ordner.filter((y) => (y.besitzer || null) === (o.besitzer || null) && (!o.besitzer || y.eigen));
+  arBlatt(`<h3>${x ? "✏️ Dokument ändern" : hinein ? `📥 In den Ordner von ${esc(o.titel)} legen` : "📥 Dokument ablegen"}</h3>${hinein ? '<p class="hinweis" style="margin:0 0 6px">Erst sichtbar, wenn es angenommen wird.</p>' : ""}
     ${x ? `<p class="hinweis" style="margin:0">${arDateiSym(x.mime)} ${esc(x.name || "")} · ${arGroesse(x.groesse)} · abgelegt von ${esc(x.von)}</p>` : `
     <div class="knoepfe"><button class="knopf" onclick="$('arDateiEin').click()">📄 Datei wählen</button><button class="knopf" onclick="$('arKameraEin').click()">📷 Papier fotografieren</button></div>
     <input type="file" id="arDateiEin" class="versteckt" accept="application/pdf,image/*,.doc,.docx,.xls,.xlsx,.txt" onchange="arDateiGewaehlt(this)">
@@ -7628,8 +7660,8 @@ function arDokForm(id) {
     <p class="hinweis" id="arDateiName" style="margin:0">Noch keine Datei gewählt (PDF, Foto, Word, Excel – höchstens 8 MB).</p>`}
     <label class="feld">Titel<input id="arDokTitel" maxlength="120" value="${esc(x?.titel || "")}" placeholder="z. B. Satzung Fassung 2024"></label>
     <div class="zwei"><label class="feld">Datum des Dokuments<input id="arDokDatum" type="date" value="${x ? x.datum || "" : heuteIso()}"></label>
-      <label class="feld">Register<select id="arDokReg">${regWahl(o, x?.register || AR.register || o.register[0])}</select></label></div>
-    ${x ? `<label class="feld">Ordner<select id="arDokOrdner" onchange="arDokOrdnerWechsel(this.value)">${d.ordner.map((y) => `<option value="${y.id}" ${y.id === o.id ? "selected" : ""}>${esc(y.titel)} ${y.jahr}${y.nur_vorstand ? " 🔒" : ""}</option>`).join("")}</select></label>` : ""}
+      <label class="feld">Register<select id="arDokReg">${regWahl({ register: regListe }, x?.register || (regListe.includes(AR.register) ? AR.register : regListe[0]))}</select></label></div>
+    ${x ? `<label class="feld">Ordner<select id="arDokOrdner" onchange="arDokOrdnerWechsel(this.value)">${ordnerWahl.map((y) => `<option value="${y.id}" ${y.id === o.id ? "selected" : ""}>${esc(y.titel)} ${y.jahr}${y.nur_vorstand ? " 🔒" : ""}</option>`).join("")}</select></label>` : ""}
     <label class="feld">Stichworte (freiwillig, mit Komma trennen)<input id="arDokStich" maxlength="200" value="${esc((x?.stichworte || []).join(", "))}" placeholder="z. B. Gemeinde, Weihnachtsmarkt"></label>
     <div class="knoepfe"><button class="knopf haupt" onclick="einmal(this, () => arDokSpeichern('${x?.id || ""}'))">${x ? "Speichern" : "📥 Ablegen"}</button>
       ${x ? `<button class="knopf" onclick="arDokLoeschen('${x.id}')">🗑️ Löschen</button>` : ""}<button class="knopf" onclick="arBlattZu()">Abbrechen</button></div>`);
@@ -7654,8 +7686,9 @@ async function arDokSpeichern(id) {
     else {
       if (!AR.datei) return melde("Bitte zuerst eine Datei wählen oder ein Foto machen.", true);
       const d = AR.datei;
-      await api("archiv_hochladen", { ordner_id: AR.ordner, ...werte, name: d.name, mime: d.type || "application/octet-stream", daten: base64(await d.arrayBuffer()) }, { warten: true });
+      const r = await api("archiv_hochladen", { ordner_id: AR.ordner, ...werte, name: d.name, mime: d.type || "application/octet-stream", daten: base64(await d.arrayBuffer()) }, { warten: true });
       AR.datei = null;
+      if (r.pruefung) { arBlattZu(); melde("📥 Hineingelegt – wartet auf Prüfung durch den Besitzer"); return await arLaden(); }
     }
     arBlattZu(); melde(id ? "✔ Gespeichert" : "📥 Abgelegt"); await arLaden();
   } catch (e) { melde(e.message, true); }
@@ -7663,6 +7696,76 @@ async function arDokSpeichern(id) {
 async function arDokLoeschen(id) {
   if (!confirm(`Dieses Dokument in den Papierkorb legen?\n\nEs lässt sich ${AR.daten.papierkorbTage} Tage lang wiederherstellen.`)) return;
   try { await api("archiv_loeschen", { id }); arBlattZu(); melde("🗑️ Im Papierkorb"); await arLaden(); } catch (e) { melde(e.message, true); }
+}
+// ----- KC-CLUB-ARCHIV-PERSOENLICH (1.5.0): eigener Ordner, Freigaben auf Zeit, Prüfung von Einreichungen -----
+function arEigenForm(o) {
+  arReg = [...o.register];
+  arBlatt(`<h3>✏️ Mein Ordner ${o.jahr}</h3><p class="hinweis" style="margin:0 0 6px">Jahr und Name auf dem Rücken bleiben fest.</p>
+    <div class="feld">Farbe des Ordners<div class="ar-farben">${AR_FARBEN.map((c, i) => `<button type="button" class="${(o.farbe || 6) === i + 1 ? "an" : ""}" style="background:${c}" data-f="${i + 1}" onclick="document.querySelectorAll('.ar-farben button').forEach((b)=>b.classList.toggle('an',b===this))" aria-label="Farbe ${i + 1}"></button>`).join("")}</div></div>
+    <div class="feld">Register (Reiter im Ordner)<div class="chips" id="arRegChips"></div>
+      <div class="ar-zeile"><input id="arRegNeu" maxlength="30" placeholder="weiteres Register, z. B. Zeugnisse" onkeydown="if(event.key==='Enter')arRegDazu()"><button class="knopf klein" onclick="arRegDazu()">＋</button></div></div>
+    <div class="knoepfe"><button class="knopf haupt" onclick="einmal(this, () => arEigenSpeichern('${o.id}'))">Speichern</button><button class="knopf" onclick="arBlattZu()">Abbrechen</button></div>`);
+  arRegZeigen();
+}
+async function arEigenSpeichern(id) {
+  const f = document.querySelector(".ar-farben button.an");
+  const weg = AR.daten.dokumente.filter((x) => x.ordner_id === id && !arReg.includes(x.register)).length;
+  if (weg && !confirm(`${weg} Dokument(e) liegen in einem Register, das du entfernt hast. Sie kommen ins Register „${arReg[0] || "Urkunden"}“. Weiter?`)) return;
+  try { await api("archiv_ordner_speichern", { id, register: arReg, farbe: Number(f?.dataset.f || 6) }); arBlattZu(); melde("✔ Ordner geändert"); await arLaden(); } catch (e) { melde(e.message, true); }
+}
+async function arNeuesJahr() {
+  const j = prompt("Für welches Jahr soll ein weiterer eigener Ordner angelegt werden?", String(new Date().getFullYear() - 1));
+  if (j === null) return;
+  try { const r = await api("archiv_mein_ordner", { jahr: Number(j) }); await arLaden(); arOrdnerOeffnen(r.id); } catch (e) { melde(e.message, true); }
+}
+function arFreigabenListe(o) {
+  if (!o.freigaben?.length) return "";
+  const was = (f) => f.dokument ? "📄 " + (AR.daten.dokumente.find((x) => x.id === f.dokument)?.titel || "Dokument") : f.register ? `📑 Register „${f.register}“` : "🗂️ ganzer Ordner";
+  return `<div class="karte" style="margin:0 0 10px"><b>🔓 Aktive Freigaben</b>${o.freigaben.map((f) => `<div class="ar-dok"><span class="sym">${f.gruppe ? "👥" : "👤"}</span>
+      <div><b>${esc(f.an)}</b><div class="hinweis">${esc(was(f))} · bis ${arBisText(f.bis)}${f.hochladen ? " · darf hineinlegen" : ""}</div></div>
+      <button class="knopf klein" onclick="arFreigabeBeenden('${f.id}')">Beenden</button></div>`).join("")}</div>`;
+}
+function arFreigabeForm(oid) {
+  const d = AR.daten, o = d.ordner.find((x) => x.id === oid); if (!o) return;
+  const doks = d.dokumente.filter((x) => x.ordner_id === oid && x.status !== "pruefung");
+  const tag = (n) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10);
+  arBlatt(`<h3>🔓 Freigeben – Mein Ordner ${o.jahr}</h3>
+    <label class="feld">Was?<select id="frWas" onchange="arFrWas()"><option value="o">🗂️ ganzer Ordner</option>${o.register.map((r) => `<option value="r:${esc(r)}">📑 Register „${esc(r)}“</option>`).join("")}${doks.map((x) => `<option value="d:${x.id}">📄 ${esc(x.titel)}</option>`).join("")}</select></label>
+    <div class="feld">Für wen?
+      ${d.gruppen?.length ? `<div class="chips" style="margin:4px 0">${d.gruppen.map((g) => `<label class="chip"><input type="checkbox" class="frGr" value="${g.id}"> ${esc(g.name)}</label>`).join("")}</div>` : ""}
+      <input id="frSuche" type="search" placeholder="🔍 Person suchen …" autocomplete="off" oninput="arFrFilter(this.value)">
+      <div id="frPersonen" class="fr-personen">${(d.personen || []).map((m) => `<label class="fr-person" data-n="${esc(suNorm(m.name))}"><input type="checkbox" class="frPe" value="${esc(m.id)}"> ${esc(m.name)}</label>`).join("")}</div></div>
+    <div class="zwei"><label class="feld">Wie lange?<select id="frDauer" onchange="$('frDatumFeld').classList.toggle('versteckt', this.value !== 'datum')"><option value="1">1 Tag</option><option value="7" selected>1 Woche</option><option value="30">1 Monat</option><option value="90">3 Monate</option><option value="datum">bis Datum …</option></select></label>
+      <label class="feld versteckt" id="frDatumFeld">bis einschließlich<input id="frDatum" type="date" min="${tag(1)}" max="${tag(d.freigabeMaxTage || 365)}"></label></div>
+    <label class="schalter"><span><b>📥 Darf auch etwas hineinlegen</b> – zur Prüfung: du bekommst Bescheid und nimmst an oder lehnst ab</span><input type="checkbox" id="frHoch"></label>
+    <p class="hinweis" style="margin:4px 0">Die Freigabe endet von selbst. Vorher beenden kannst du sie jederzeit im Ordner.</p>
+    <div class="knoepfe"><button class="knopf haupt" onclick="einmal(this, () => arFreigabeSpeichern('${oid}'))">🔓 Freigeben</button><button class="knopf" onclick="arBlattZu()">Abbrechen</button></div>`);
+}
+function arFrWas() { const dok = $("frWas").value.startsWith("d:"); $("frHoch").disabled = dok; if (dok) $("frHoch").checked = false; }
+function arFrFilter(q) { const n = suNorm(q); document.querySelectorAll("#frPersonen .fr-person").forEach((el) => el.classList.toggle("versteckt", !!n && !el.dataset.n.includes(n))); }
+async function arFreigabeSpeichern(oid) {
+  const w = $("frWas").value, personen = [...document.querySelectorAll(".frPe:checked")].map((x) => x.value), gruppen = [...document.querySelectorAll(".frGr:checked")].map((x) => x.value);
+  if (!personen.length && !gruppen.length) return melde("Bitte mindestens eine Person oder Gruppe wählen.", true);
+  const dv = $("frDauer").value; let bis;
+  if (dv === "datum") { const t = $("frDatum").value; if (!t) return melde("Bitte ein Datum wählen.", true); bis = new Date(t + "T23:59:00"); }
+  else bis = new Date(Date.now() + Number(dv) * 86400000);
+  try {
+    const r = await api("archiv_freigeben", { ordner_id: oid, register: w.startsWith("r:") ? w.slice(2) : undefined, dokument_id: w.startsWith("d:") ? w.slice(2) : undefined,
+      personen, gruppen, bis: bis.toISOString(), hochladen: $("frHoch").checked });
+    arBlattZu(); melde(`🔓 Freigegeben – ${r.benachrichtigt} ${r.benachrichtigt === 1 ? "Person" : "Personen"} benachrichtigt`); await arLaden();
+  } catch (e) { melde(e.message, true); }
+}
+async function arFreigabeBeenden(id) {
+  if (!confirm("Diese Freigabe jetzt beenden?")) return;
+  try { await api("archiv_freigabe_beenden", { id }); melde("🔒 Freigabe beendet"); await arLaden(); } catch (e) { melde(e.message, true); }
+}
+async function arPruefung(id, annehmen) {
+  if (!annehmen && !confirm("Dieses Dokument ablehnen? Es wird gelöscht und der Absender bekommt Bescheid.")) return;
+  try { await api("archiv_pruefung", { id, annehmen }); melde(annehmen ? "✔ Angenommen" : "✖ Abgelehnt und gelöscht"); await arLaden(); } catch (e) { melde(e.message, true); }
+}
+async function arEinreichungZurueck(id) {
+  if (!confirm("Deine Einreichung zurückziehen? Sie wird gelöscht.")) return;
+  try { await api("archiv_loeschen", { id }); melde("↩ Zurückgezogen"); await arLaden(); } catch (e) { melde(e.message, true); }
 }
 // ----- Papierkorb -----
 async function arKorbZeigen() {

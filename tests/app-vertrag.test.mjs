@@ -1459,7 +1459,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/if \(bisher && bisher === a\) \{ if \(!confirm\(/.test(html) && /a = "keine";/.test(html) && /if \(a === "nein" \|\| a === "keine"\)/.test(html) && /Nochmal auf deine Antwort tippen = zurücknehmen/.test(html), "App: nochmal tippen nimmt zurück, Platzfrage");
 }
 
-// 112. DB: Kollegenfreigabe beim Übernehmen + Übernahmebeleg (KC-DP-WUNSCH-FREIGABE)
+// 130. DB: Kollegenfreigabe beim Übernehmen + Übernahmebeleg (KC-DP-WUNSCH-FREIGABE)
 {
   const mig = lies("supabase/migrations/20260930_kc_dp_wunsch_eingang_freigabe.sql");
   const ack = mig.slice(mig.indexOf("create or replace function public.kc_dp_wish_inbox_ack"), mig.indexOf("create or replace function public.kc_dp_wish_inbox_receipt"));
@@ -1472,7 +1472,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/revoke all on function public\.kc_dp_wish_inbox_ack\(uuid, integer, text, jsonb\) from public, anon;/.test(mig) && /revoke all on function public\.kc_dp_wish_inbox_receipt\(uuid\) from public, anon;/.test(mig), "Rechte nicht eingeschränkt");
 }
 
-// 113. DB/Spiegel: neue Tabellen und Spalten automatisch in den Neon-Spiegel (KC-SPIEGEL-AUTO)
+// 131. DB/Spiegel: neue Tabellen und Spalten automatisch in den Neon-Spiegel (KC-SPIEGEL-AUTO)
 {
   const mig = lies("supabase/migrations/20261001_kc_core_spiegel_auto_aufnahme.sql");
   const w = lies("supabase/functions/kc-db-mirror-worker/index.ts");
@@ -1486,6 +1486,25 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(!/drop (table|column)|alter column|alter table [^`]*type /i.test(w), "Arbeiter löscht oder ändert nie");
   assert.ok(/if\(redactedTables\.has\(table\)\)\{fehlend\.push\(s\.name\);continue\}/.test(w), "Datenschutz-Tabellen: neue Spalten nur melden");
   assert.ok(/const schema=await schemaAbgleich\(table\);/.test(w.slice(w.indexOf("try{\n        const schema"))), "Abgleich vor dem Kopieren");
+}
+
+// 132. 1.5.0: persönliche Archiv-Ordner mit Freigabe auf Zeit (KC-CLUB-ARCHIV-PERSOENLICH)
+{
+  const mig = lies("supabase/migrations/20261001_kc_club_v150_persoenliche_ordner.sql");
+  assert.ok(/add column if not exists besitzer text references kc_core_people/.test(mig) && /create table if not exists kc_club_archiv_freigaben/.test(mig) && /alter table kc_club_archiv_freigaben enable row level security/.test(mig), "Tabellen/Spalten");
+  assert.ok(/bis timestamptz not null/.test(mig) && /\(an_person is null\) <> \(an_gruppe is null\)/.test(mig), "Freigabe immer befristet, genau ein Empfänger");
+  assert.ok(/o\.besitzer is null or o\.besitzer = p_person/.test(mig) && /f\.bis > now\(\)/.test(mig), "Suche respektiert persönliche Ordner");
+  const ho = server.slice(server.indexOf("async function archivOrdnerHolen"), server.indexOf("async function archivDokHolen"));
+  assert.ok(/if \(o\.besitzer\) \{/.test(ho) && /o\.besitzer === ich\.person_id/.test(ho) && /archivKeinZugriff\(ich, o, "den Ordner"\)/.test(ho) && !/ich\.admin/.test(ho), "Nur Besitzer + Freigabe – kein Admin-Zugriff");
+  assert.ok(/async function archivFremdversuch/.test(server) && /"archiv_fremdzugriff"/.test(server) && /await adminIds\(\)/.test(server.slice(server.indexOf("async function archivFremdversuch"))), "Fremdversuch → Besitzer + Admins");
+  assert.ok(/Deine Freigabe für diesen Ordner ist abgelaufen/.test(server), "Abgelaufene Freigabe: Hinweis statt Alarm");
+  const au = server.slice(server.indexOf('case "anlage_url"'), server.indexOf('case "anlage_url"') + 4000);
+  assert.ok(/darfDokSehen\(ich, o, x, fr\)/.test(au) && /archivKeinZugriff\(ich, fremd, "ein Dokument"\)/.test(au), "Datei-Link geschützt");
+  assert.ok(/case "archiv_freigeben"/.test(server) && /FREIGABE_MAX_TAGE \* 86400_000/.test(server) && /case "archiv_freigabe_beenden"/.test(server), "Freigabe auf Zeit");
+  const hl = server.slice(server.indexOf('case "archiv_hochladen"'), server.indexOf('case "archiv_pruefung"'));
+  assert.ok(/status: einreichung \? "pruefung" : "ok"/.test(hl) && /Neues Dokument zur Prüfung/.test(hl) && /PERSOENLICH_GRENZE/.test(hl), "Einreichung zur Prüfung + Bescheid + 50 MB");
+  assert.ok(/case "archiv_pruefung"/.test(server) && /archiv_einreichung_abgelehnt/.test(server) && /dateienEntfernen\(\[d\.attachment_id\]\)/.test(server), "Annehmen/Ablehnen");
+  assert.ok(/function arFreigabeForm/.test(html) && /function arPruefung/.test(html) && /👤 Mein Ordner/.test(html) && /🤝 Mit mir geteilt/.test(html), "Oberfläche");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
@@ -1679,9 +1698,14 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/const darfArchivPflegen = \(ich: Ich\) => ich\.admin \|\| ich\.aemter\.includes\("Clubsprecher"\)/.test(server), "Pflegen: nur Clubsprecher und Admin");
   assert.ok(/const darfOrdnerSehen = \(ich: Ich, o: any\) => !o\.nur_vorstand \|\| ich\.vorstand/.test(server), "Vorstandsordner nur für Clubsprecher/Kassenwart/Admin");
   const f = (n) => server.slice(server.indexOf(`case "${n}"`), server.indexOf("case \"", server.indexOf(`case "${n}"`) + 10));
-  for (const n of ["archiv_ordner_speichern", "archiv_ordner_loeschen", "archiv_hochladen", "archiv_aendern", "archiv_loeschen", "archiv_papierkorb", "archiv_wiederherstellen"])
-    assert.ok(/nurArchivPflege\(ich\)/.test(f(n)), `${n}: Rechteprüfung fehlt`);
-  assert.ok(/filter\(\(o: any\) => darfOrdnerSehen\(ich, o\)\)/.test(f("archiv_liste")), "Liste muss Vorstandsordner filtern");
+  // 1.5.0 (KC-CLUB-ARCHIV-PERSOENLICH): Pflege-Prüfung für Vereinsordner zentral in archivOrdnerHolen(…, "pflegen"/"hochladen")
+  // (persönliche Ordner: nur der Besitzer) – jede Aktion prüft entweder selbst oder über diese Funktion.
+  const holen = server.slice(server.indexOf("async function archivOrdnerHolen"), server.indexOf("async function archivDokHolen"));
+  assert.ok(/if \(recht !== "lesen"\) nurArchivPflege\(ich\);/.test(holen), "archivOrdnerHolen: Pflege-Prüfung für Vereinsordner fehlt");
+  for (const n of ["archiv_ordner_speichern", "archiv_ordner_loeschen", "archiv_hochladen", "archiv_aendern", "archiv_loeschen", "archiv_wiederherstellen"])
+    assert.ok(/nurArchivPflege\(ich\)/.test(f(n)) || /archiv(Ordner|Dok)Holen\([^)]*"(pflegen|hochladen)"\)/.test(f(n)), `${n}: Rechteprüfung fehlt`);
+  assert.ok(/const meins = \(o: any\) => o\.besitzer \? o\.besitzer === ich\.person_id : pflege && darfOrdnerSehen\(ich, o\)/.test(f("archiv_papierkorb")), "archiv_papierkorb: Rechteprüfung fehlt");
+  assert.ok(/: darfOrdnerSehen\(ich, o\)\)/.test(f("archiv_liste")), "Liste muss Vorstandsordner filtern");
   assert.ok(/KC-CLUB-ARCHIV: Dokument in einem Ordner, den ich sehen darf/.test(server), "anlage_url: Archiv-Dokumente fehlen");
   assert.ok(/kc_club_archiv_ordner"\)\.update\(\{ geloescht_am: jetzt\(\)/.test(server) && /archiv_endgueltig_entfernt/.test(server), "Papierkorb/Wartung fehlt");
   assert.ok(/async function archivAuto\(ich: Ich\)/.test(server) && /if \(!ich\.protokolle\) return;/.test(server.slice(server.indexOf("async function archivAuto"))), "Automatischer Teil: Protokolle nur mit Recht");

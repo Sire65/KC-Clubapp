@@ -1,5 +1,19 @@
 # Änderungen
 
+## 1.5.0 – 2026-10-01 (DEV)
+
+- KC-CLUB-ARCHIV-PERSOENLICH (Wunsch Hansi): Im Archiv hat jedes Mitglied eigene Ordner je Jahr (Rücken: Jahr oben, Name
+  darunter) mit Registern (Urkunden, Schulungen, Rechnungen, Fotos, Sonstiges – frei änderbar). Der Ordner des laufenden Jahres
+  entsteht beim ersten Öffnen; „＋ weiteres Jahr“ legt ältere an. Zugriff nur der Besitzer – auch Admin und Clubsprecher nicht
+  (Entscheidung Hansi); der Admin sieht nur eine Übersicht (Name, Jahr, Anzahl, Größe). Fremdversuch (Ordner, Dokument oder
+  Datei-Link) → abgewiesen, Protokoll „archiv_fremdzugriff“, Meldung an Besitzer und Admins (höchstens 1× pro Stunde je
+  Person/Ordner); abgelaufene Freigabe → nur Hinweis. Freigabe auf Zeit (1 Tag … 365 Tage, nie unbefristet) für Personen
+  und/oder Gruppen: ganzer Ordner, Register oder einzelnes Dokument; optional „hineinlegen zur Prüfung“ – der Besitzer bekommt
+  Bescheid und nimmt an oder lehnt ab (abgelehnt = gelöscht, Absender wird informiert; Einreicher kann zurückziehen).
+  50 MB je Mitglied. Globale Suche zeigt persönliche Dokumente nur im Rahmen dieser Rechte. Neue Tabelle
+  kc_club_archiv_freigaben, Spalten kc_club_archiv_ordner.besitzer und kc_club_archiv_dokumente.status
+  (Migration 20261001_kc_club_v150_persoenliche_ordner).
+
 ## DB/Spiegel – 2026-10-01 (ohne App-Build)
 
 - KC-SPIEGEL-AUTO (Freigabe Hansi „1 ja, 2 ja“): Neue Tabellen kommen automatisch in den Neon-Spiegel. Die Abdeckungsprüfung
