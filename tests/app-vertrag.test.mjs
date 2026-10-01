@@ -1027,7 +1027,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/\.neq\("person_id", ich\.person_id\)\.gt\("bis", jetzt\(\)\)/.test(server) && /betreff: t\?\.subject \?\? "", tippt,/.test(server), "unterhaltung liefert tippt nicht (oder mich selbst)");
   assert.ok(/kc_club_tippen"\)\.delete\(\)\.eq\("thread_id", threadId\)/.test(server), "Senden beendet „schreibt …“ nicht");
   assert.ok(/if \(!chatId \|\| !ONL\.zeigen\) return;/.test(html) && /abstand = live \? 1000 : 3000/.test(html) && /Date\.now\(\) - TIPP\.zuletzt < abstand/.test(html), "Tipp-Meldung ohne Privatsphäre/Drosselung");
-  assert.ok(/tippenMelden\(\)"><\/textarea>/.test(html) && /id="tipptAnzeige"/.test(html) && /"tippen"(, "[a-z_]+")*\]\);/.test(html), "Anzeige/Eingabe/WARTEN_STILL fehlt");
+  assert.ok(/tippenMelden\(\)(;entwurfMerken\(\))?"><\/textarea>/.test(html) && /id="tipptAnzeige"/.test(html) && /"tippen"(, "[a-z_]+")*\]\);/.test(html), "Anzeige/Eingabe/WARTEN_STILL fehlt");
   assert.ok(/tipptZeigen\(u\.tippt \|\| \[\], u\.entwurf \|\| \[\](, u\.spricht \|\| \[\])?\);( chatAbstand\(\);)?\n    if \(u\.tippt\?\.length && andere\.length === 1\)[^\n]*\n    const stand = /.test(html), "Anzeige muss vor dem frühen Ausstieg aktualisiert werden");
   assert.ok(/if \(chatTakt\.laeuft\) return;/.test(html) && !/setInterval\(chatTakt, 4000\)/.test(html), "Chat-Takt überlappt / alter Takt");
   assert.ok(/if \(v !== "chat" && TIPP\.id\) tippenAus\(\);/.test(html), "Verlassen beendet „schreibt …“ nicht");
@@ -1613,6 +1613,17 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/function sprichtMelden\(\) \{\n  if \(!SPR \|\| !chatId \|\| !ONL\.zeigen\) return;/.test(html) && /getByteTimeDomainData/.test(html) && /osziStopp\(\); if \(s\.meldeId\) api\("tippen", \{ id: s\.meldeId, aus: true \}\)/.test(html), "App: melden nur bei Online-Status, echtes Oszilloskop, Ende meldet ab");
   const mig = lies("supabase/migrations/20261001_kc_club_v1110_spricht.sql");
   assert.ok(/add column if not exists art text not null default 'text'/.test(mig), "Migration additiv");
+}
+
+// 141. 1.12.0: ruhige Eingabe, Neue-Nachrichten-Linie, Entwurf, ⬇️, Sprachtempo
+{
+  assert.ok(/<div class="zustell versteckt" id="zustell"><\/div>/.test(html) && /id="zustellKnopf"[^>]*onclick="zustellUmschalten\(\)">🔔/.test(html), "Benachrichtigen-Leiste hinter 🔔");
+  assert.ok(/gelesenBis = \(tn \?\? \[\]\)\.find\(\(x: any\) => x\.person_id === ich\.person_id\)\?\.last_read_at/.test(server) && server.indexOf("const gelesenBis") > server.indexOf('update({ last_read_at: jetzt() }).eq("thread_id", id)'), "Server: Lesestand vor dem Öffnen (aus der vorher geladenen Liste)");
+  assert.ok(/class="neu-trenner" id="neuTrenner"/.test(html) && /NA\.trennerSprung = !!NA\.trennerVor/.test(html), "Linie + Sprung");
+  assert.ok(/function entwurfMerken\(\)/.test(html) && /tippenMelden\(\);entwurfMerken\(\)"/.test(html) && /if \(chatId\) entwurfWeg\(chatId\)/.test(html), "Entwurf merken/löschen");
+  assert.ok(/neuVonAnderen && !weitOben\(\)/.test(html) && /id="nachUnten"/.test(html), "⬇️ + kein Herunterreißen");
+  assert.ok(/const SPRACH_TEMPI = \[1, 1\.5, 2\]/.test(html) && /a\.playbackRate = t/.test(html), "Sprachtempo");
+  assert.ok(/m\.umfrage\?\.optionen\.map\(\(o\) => o\.stimmen/.test(html) && /NA\.idStand !== idStand/.test(html), "Neuzeichnen bei Stimmen/Bearbeitung, Ton nur bei neuen Nachrichten");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

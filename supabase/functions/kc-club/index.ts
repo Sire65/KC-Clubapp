@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.11.0";
+const SERVER_VERSION = "1.12.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -2898,7 +2898,9 @@ Köcheclub Werne`,
         // KC-CLUB-LIVETIPPEN: Entwurf nur von denen, die es freiwillig eingeschaltet haben (Server speichert sonst keinen Text)
         const entwurf = (tippen ?? []).filter((x: any) => x.text).map((x: any) => ({ name: vorname(leute.get(x.person_id)) || x.person_id, text: x.text }));
         const angeheftet = pinIds.map((pid: string) => { const m: any = nachMid.get(pid); return { id: pid, von: m.sender_person_id === ich.person_id ? "Du" : vorname(leute.get(m.sender_person_id)) || "?", text: txt(m.body, 90) }; });
-        return json({ id, betreff: t?.subject ?? "", tippt, entwurf, spricht, angeheftet,
+        // KC-CLUB-NEU-LINIE (1.12.0): bis wann hatte ich gelesen (vor diesem Öffnen) – für die Linie „Neue Nachrichten“
+        const gelesenBis = (tn ?? []).find((x: any) => x.person_id === ich.person_id)?.last_read_at ?? null;
+        return json({ id, betreff: t?.subject ?? "", tippt, entwurf, spricht, angeheftet, gelesenBis,
           gruppe: gr ? { name: gr.name, symbol: gr.symbol, erstellt_von: gr.erstellt_von, darfVerwalten: gr.erstellt_von === ich.person_id || ich.vorstand } : null, teilnehmer: (tn ?? []).map((x: any) => ({ person_id: x.person_id, name: leute.get(x.person_id)?.display_name || x.person_id })), nachrichten });
       }
 

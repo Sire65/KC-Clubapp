@@ -1,5 +1,19 @@
 # Änderungen
 
+## 1.12.0 – 2026-10-01 (DEV)
+
+- KC-CLUB-RUHIGE-EINGABE (Wunsch Hansi): Leiste „Benachrichtigen: Push/E-Mail/WhatsApp“ nur noch auf Wunsch über ein
+  kleines 🔔 im Eingabefeld; 🔔 leuchtet, wenn etwas Besonderes gewählt ist. Nach dem Senden/Chatwechsel wieder zu.
+- KC-CLUB-NEU-LINIE: beim Öffnen eines Chats Linie „⬇ Neue Nachrichten“ über der ersten ungelesenen Nachricht anderer,
+  die App springt dorthin (Server liefert gelesenBis = Lesestand vor dem Öffnen).
+- KC-CLUB-ENTWURF: halb geschriebener Text je Chat auf dem Gerät gemerkt (localStorage je Person, höchstens 50 Chats),
+  beim Senden gelöscht.
+- KC-CLUB-NACH-UNTEN: ⬇️-Knopf, wenn man > 500 px nach oben gescrollt hat (mit Punkt bei neuer Nachricht); neue Nachrichten
+  reißen beim Lesen älterer nicht mehr nach unten.
+- KC-CLUB-SPRACHTEMPO: Sprachnachrichten mit 1× / 1,5× / 2× abspielen (Wahl auf dem Gerät gemerkt).
+- Behoben: Stimmen, Bearbeitungen, Anheften/Merken anderer werden jetzt beim regelmäßigen Nachladen sichtbar (Neuzeichnen
+  auch bei diesen Änderungen); Ton nur bei wirklich neuen Nachrichten.
+
 ## 1.11.0 – 2026-10-01 (DEV)
 
 - KC-CLUB-CHAT-ABSTAND (Hinweis Hansi): Abstand unter der letzten Nachricht = gemessene Höhe des Eingabebereichs + Luft

@@ -1,12 +1,24 @@
 {
-  "version": "1.11.0",
+  "version": "1.12.0",
   "datum": "2026-10-01",
   "neu": [
-    "💬 „schreibt …“ jetzt größer und deutlicher – die Punkte laufen als Welle",
-    "🎤 Nimmt jemand eine Sprachnachricht auf, siehst du das mit einer Oszilloskop-Welle; bei deiner eigenen Aufnahme zeigt die Welle deine Stimme",
-    "↕️ Die letzte Nachricht stößt nicht mehr unten an die Eingabe"
+    "🔔 Ruhigere Eingabe: Push/E-Mail/WhatsApp-Auswahl jetzt hinter dem kleinen 🔔 im Schreibfeld",
+    "⬇ Beim Öffnen eines Chats springt die App zur Linie „Neue Nachrichten“",
+    "📝 Halb geschriebene Nachrichten bleiben je Chat erhalten",
+    "⬇️ Knopf zur neuesten Nachricht, wenn du weit nach oben gescrollt hast – die App reißt dich beim Lesen nicht mehr nach unten",
+    "🎤 Sprachnachrichten schneller anhören: 1× / 1,5× / 2×"
   ],
   "verlauf": [
+    {
+      "version": "1.12.0",
+      "neu": [
+        "🔔 Ruhigere Eingabe: Push/E-Mail/WhatsApp-Auswahl jetzt hinter dem kleinen 🔔 im Schreibfeld",
+        "⬇ Beim Öffnen eines Chats springt die App zur Linie „Neue Nachrichten“",
+        "📝 Halb geschriebene Nachrichten bleiben je Chat erhalten",
+        "⬇️ Knopf zur neuesten Nachricht, wenn du weit nach oben gescrollt hast – die App reißt dich beim Lesen nicht mehr nach unten",
+        "🎤 Sprachnachrichten schneller anhören: 1× / 1,5× / 2×"
+      ]
+    },
     {
       "version": "1.11.0",
       "neu": [
