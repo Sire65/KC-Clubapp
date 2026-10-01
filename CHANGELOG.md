@@ -1,5 +1,21 @@
 # Änderungen
 
+## 1.8.0 – 2026-10-01 (DEV)
+
+- KC-CLUB-SCHNELLSTART (Wunsch Hansi): große Kachel „⚡ Schnellstart“ oben auf der Startseite – nur in der erweiterten Ansicht.
+  8 Symbole ohne lange Texte, jedes startet direkt die Funktion (Schreiben, nächster Termin, neuer Zettel, Foto hochladen,
+  Standort, mein Dienst, Suche, SOS). Registry SCHNELL (16 Einträge, mit Rechte-Bezug „kachel“); jedes Mitglied wählt unter
+  ⚙️ → „⚡ Schnellstart“ bis zu 8 aus (Reihenfolge = Antipp-Reihenfolge), an/aus, Grundeinstellung. Server-Einstellung
+  „schnellstart“ (geräteübergreifend).
+- KC-CLUB-ANKLOPFEN-ERLAUBEN (Wunsch Hansi): ⚙️ → Privatsphäre „👋 Anklopfen erlauben“ (Standard an). Aus: Server lehnt
+  Anklopfen ab (409 mit Hinweis), Online-Liste zeigt 🔕 statt 👋 (antippen = Nachricht schreiben). Einstellung „anklopfen“.
+- KC-CLUB-ANKLOPFEN-ANTWORT (Wunsch Hansi): Im Anklopf-Fenster Kurzantwort-Kacheln (Server-Registry KLOPF_ANTWORTEN:
+  beschäftigt, melde mich später, ruf mich an, schreib mir, unterwegs, am Herd) – antippen beendet das Anklopfen sofort,
+  der Anklopfende sieht den Text. Neue Spalte kc_club_anklopfen.antwort (Migration 20261001_kc_club_v180_anklopfen_antwort).
+  „Annehmen“ und „⏳ Später“ bleiben unverändert.
+- KC-CLUB-ANKLOPFTON (Wunsch Hansi): Anklopfton wählbar (Registry KLOPF_TOENE: Holz-Klopfen, Ding-Dong, Gong, Glöckchen,
+  kein Ton) mit „▶ Testton“ unter ⚙️ → Privatsphäre; im Gerät erzeugt (Web Audio, keine Dateien), spielt beim Anklopfen.
+
 ## 1.7.2 – 2026-10-01 (DEV)
 
 - KC-CLUB-SOS-WO (Live-Test Hansi: Hausnummer vom Nachbarhaus): Die App schickt die GPS-Genauigkeit mit; Photon nennt

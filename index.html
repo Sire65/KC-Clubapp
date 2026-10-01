@@ -730,6 +730,19 @@
   .onleiste { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 8px; }
   .onleiste button { flex: none; border: 2px solid #2ecc71; background: var(--karte); color: var(--text); border-radius: 999px; padding: 7px 12px; font-weight: 800; cursor: pointer; }
   .klopfen h3 { font-size: 1.25rem; } .blatt-innen.klopfen .knopf { text-align: center; }
+  /* KC-CLUB-ANKLOPFEN-ANTWORT (1.8.0) */
+  .klopf-kacheln { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; }
+  .klopf-kacheln button { border: 1px solid var(--linie); border-radius: var(--radius); background: var(--karte); color: inherit; padding: 12px 8px; font-size: .95rem; font-weight: 600; cursor: pointer; }
+  /* KC-CLUB-SCHNELLSTART (1.8.0) */
+  .schnell { padding: 10px 12px 12px; } .schnell-kopf { display: flex; align-items: center; justify-content: space-between; font-weight: 700; margin-bottom: 6px; }
+  .schnell-kopf button { background: none; border: none; font-size: 1.1rem; cursor: pointer; color: inherit; }
+  .schnell-raster { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .schnell-raster button { display: flex; flex-direction: column; align-items: center; gap: 2px; border: none; border-radius: 14px; background: var(--hinter, rgba(0,0,0,.04)); color: inherit; padding: 10px 2px 8px; cursor: pointer; }
+  .schnell-raster span { font-size: 1.9rem; line-height: 1.1; } .schnell-raster small { font-size: .78rem; font-weight: 600; }
+  .ss-wahl { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 8px 0; }
+  .ss-wahl button { position: relative; border: 2px solid var(--linie); border-radius: 12px; background: var(--karte); color: inherit; padding: 8px 2px; cursor: pointer; font-size: .75rem; }
+  .ss-wahl button span { display: block; font-size: 1.5rem; } .ss-wahl button.an { border-color: var(--rot); }
+  .ss-wahl button i { position: absolute; top: 2px; right: 5px; font-style: normal; font-weight: 700; color: var(--rot); }
   .neuigkeiten { max-height: 88vh; overflow-y: auto; } .blatt-innen.neuigkeiten .knopf { text-align: center; }
   .neuigkeiten ul { margin: 4px 0 10px; padding-left: 20px; } .neuigkeiten li { margin: 4px 0; }
   .neuigkeiten .vkopf { font-weight: 900; color: var(--rot); margin-top: 6px; }
@@ -1051,6 +1064,7 @@
       <div class="ipunkte" id="infoPunkte"></div>
     </div>
     <div id="updateHinweis"></div>
+    <div id="schnellstart"></div>
     <div class="abschnitt"><h3>Schnellzugriff <button type="button" class="ansichtname ein" onclick="ansichtWechseln()" title="Antippen: zur erweiterten Ansicht wechseln">(Einfache Ansicht)</button><button type="button" class="ansichtname erw" onclick="ansichtWechseln()" title="Antippen: zur einfachen Ansicht wechseln">(Erweiterte Ansicht)</button></h3><button class="marke" id="versionMarke" style="border:none;cursor:pointer" title="Update prüfen" onclick="updateKachel()">v–</button></div>
     <div class="register" id="register"></div>
     <div class="kachelleiste versteckt" id="kachelLeiste"><p>✏️ <b>Kacheln anordnen:</b> Kachel <b>kurz festhalten</b>, an den neuen Platz <b>ziehen</b> und loslassen (oder ◀ ▲ ▼ ▶ antippen). ✕ blendet aus, 👁️ wieder ein. Ausgeblendete bleiben hier blass an ihrem Platz.</p>
@@ -1312,6 +1326,14 @@
       <div class="schalter"><div><b>📄 Kurzanleitung</b><div class="hinweis">Die App in 3 Schritten – zum Ansehen oder Ausdrucken</div></div><button class="knopf klein" onclick="druckStarten('anleitung')">Ansehen</button></div>
       <div class="schalter"><div><b>💭 Feedback</b><div class="hinweis">Was gefällt dir, was ist zu kompliziert? Schreib es Hansi.</div></div><button class="knopf klein" onclick="zeige('feedback')">Schreiben</button></div>
     </details>
+    <!-- KC-CLUB-SCHNELLSTART (1.8.0): nur erweiterte Ansicht -->
+    <details class="karte" data-klappe="schnellstart">
+      <summary>⚡ Schnellstart</summary>
+      <div class="schalter"><div><b>⚡ Schnellstart-Kachel auf der Startseite</b><div class="hinweis">Große Kachel mit Symbolen – ein Tipp, und es geht sofort los.</div></div><input type="checkbox" id="ssAn" checked onchange="schnellSetzen({ an: this.checked })"></div>
+      <p class="hinweis" style="margin:8px 0 0">Bis zu 8 Symbole antippen – die Reihenfolge ist die Reihenfolge des Antippens. Nochmal tippen = entfernen.</p>
+      <div class="ss-wahl" id="ssWahl"></div>
+      <div class="knoepfe"><button class="knopf klein" onclick="schnellSetzen({ ids: null })">↺ Grundeinstellung</button></div>
+    </details>
     <details class="karte" data-klappe="benachrichtigung" open>
       <summary>🔔 Benachrichtigungen</summary>
       <p class="hinweis" style="margin:0 0 6px">Wobei möchtest du eine Nachricht aufs Handy (Push) oder eine E-Mail bekommen?</p>
@@ -1329,6 +1351,9 @@
       <summary>🔒 Privatsphäre</summary>
       <div class="schalter"><div><b>🎂 Meinen Geburtstag anzeigen (ohne Jahr)</b><div class="hinweis" id="gebHinweis">Andere sehen dann nur Tag und Monat – im Kalender, in der Terminliste und unter „Heute wichtig“.</div></div><input type="checkbox" id="setGeburtstag" onchange="geburtstagFreigabe(this.checked)"></div>
       <div class="schalter"><div><b>🟢 Anderen zeigen, wann ich online bin</b><div class="hinweis">Dann sehen andere einen grünen Punkt bei dir und können „anklopfen“. Ausgeschaltet siehst du auch selbst nicht, wer online ist.</div></div><input type="checkbox" id="setOnline" onchange="onlineZeigen(this.checked)"></div>
+      <!-- KC-CLUB-ANKLOPFEN-ERLAUBEN (1.8.0) -->
+      <div class="schalter"><div><b>👋 Anklopfen erlauben</b><div class="hinweis">Andere dürfen bei dir anklopfen, wenn du online bist. Aus: Sie sehen 🔕 und schreiben dir stattdessen eine Nachricht.</div></div><input type="checkbox" id="setAnklopfen" checked onchange="anklopfenSetzen({ erlaubt: this.checked })"></div>
+      <div class="zwei"><label class="feld">🔔 Anklopfton<select id="setKlopfTon" onchange="anklopfenSetzen({ ton: this.value })"></select></label><button class="knopf klein" style="align-self:end" onclick="klopfTonSpielen($('setKlopfTon').value)">▶ Testton</button></div>
       <div class="schalter"><div><b>👁️ Andere sehen live, was ich tippe</b><div class="hinweis">In Unterhaltungen sehen die anderen deinen Text schon beim Schreiben – auch, was du wieder löschst. Nicht gesendete Entwürfe werden nicht gespeichert und nach wenigen Sekunden verworfen. Standard: aus.</div></div><input type="checkbox" id="setLiveTippen" onchange="liveTippenSetzen(this.checked)"></div>
       <p class="hinweis" style="margin:14px 0 0"><b>Für andere Mitglieder sichtbar:</b> (Aushilfen sehen keine Kontaktdaten)</p>
       <div class="schalter"><div><b>📱 Meine Handynummer</b></div><input type="checkbox" id="setKontakt_handy" onchange="kontaktFreigabe('handy', this.checked)"></div>
@@ -1588,6 +1613,7 @@
 <div class="blatt versteckt" id="klopfBlatt">
   <div class="blatt-innen klopfen"><div id="klopfText"></div>
     <button class="knopf haupt" onclick="klopfAntwort(true)">✅ Annehmen – jetzt schreiben</button>
+    <div class="klopf-kacheln" id="klopfKacheln"></div>
     <button class="knopf" onclick="klopfAntwort(false)">⏳ Später</button></div>
 </div>
 <!-- KC-CLUB-ANSICHT (0.62.0): beim ersten Start genau eine Frage – einfach oder erweitert -->
@@ -1663,7 +1689,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.7.2"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.8.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2262,6 +2288,8 @@ const TIPPS = [
   { id: "reaktion", sym: "👍", t: "Auf Nachrichten reagieren", x: "Tippe eine Nachricht an – dann kannst du mit 👍 ❤️ 😂 … reagieren, antworten oder weiterleiten.", testen: () => zeige("nachrichten") },
   { id: "erwaehnung", sym: "📣", t: "Jemanden direkt ansprechen", x: "Schreib in einer Gruppe <b>@</b> und den Namen – die Person bekommt dann sicher Bescheid.", testen: () => zeige("nachrichten") },
   { id: "sos", sym: "🆘", t: "Für den Notfall: die rote SOS-Kachel", x: "Dort findest du die wichtigsten Notrufnummern und erreichst Mitglieder schnell. Trag auch deinen eigenen Notfallkontakt ein.", testen: () => sosStart() },
+  { id: "schnellstart", sym: "⚡", t: "Schnellstart: deine 8 Lieblings-Symbole", x: "In der erweiterten Ansicht oben auf der Startseite – ein Tipp, und du schreibst, siehst den nächsten Termin oder machst einen Zettel. Welche Symbole, bestimmst du unter ⚙️.", testen: () => suEinstellung("ssWahl") },
+  { id: "anklopfen", sym: "👋", t: "Anklopfen: kurz antworten statt annehmen", x: "Klopft jemand an, tippst du einfach „Bin beschäftigt“ oder „Melde mich später“ – der andere sieht es sofort. Anklopfen und Anklopfton stellst du unter ⚙️ → Privatsphäre ein.", testen: () => suEinstellung("setAnklopfen") },
   { id: "notfallpass", sym: "🪪", t: "Dein Notfallpass im SOS-Bereich", x: "Allergien, Medikamente, Blutgruppe – freiwillig und nur auf deinem Handy gespeichert. Und „📍 Wo bin ich?“ zeigt dir im Notfall die Adresse zum Vorlesen.", testen: () => { sosStart(); nfpBearbeiten(); } },
   { id: "lupe", sym: "🔍", t: "Alles finden mit der Lupe", x: "Mit der kleinen Lupe suchst du in Nachrichten, Terminen, Archiv, Pinnwand und mehr – schon ab 2 Buchstaben.", testen: () => sucheAuf() },
   { id: "ruhe", sym: "🌙", t: "Nachts Ruhe mit „Nicht stören“", x: "In den Einstellungen kannst du einen Zeitraum ohne Push einstellen – Anrufe kommen trotzdem durch.", testen: () => einstiegHin("benachrichtigung", "ruheVon") },
@@ -2323,13 +2351,14 @@ async function onlinePing() {
     if (ZWEIT && !(r.anrufe || []).some((x) => x.id === ZWEIT.id)) zweitWeg(); // hat aufgegeben
     if (!RUF) verpasstZeigen((r.verpasst || []).filter((v) => !ONL.erledigt.has("v" + v.id)));
     const k = (r.klopfen || []).find((x) => !ONL.erledigt.has(x.id));
-    if (k && $("klopfBlatt").classList.contains("versteckt")) klopfZeigen(k);
+    if (k && $("klopfBlatt").classList.contains("versteckt")) klopfZeigen(k, r.klopfAntworten);
     // Antwort auf mein Anklopfen
     for (const a of r.antworten || []) {
       if (ONL.erledigt.has("a" + a.id) || a.status === "offen") continue;
       ONL.erledigt.add("a" + a.id);
       if (ONL.wartet === a.id) { ONL.wartet = null; onlineTakt(); }
       if (a.status === "angenommen" && a.thread) { melde(`✅ ${a.an.vorname} hat angenommen – schreibt los!`); try { navigator.vibrate?.(60); } catch {} chatOeffnen(a.thread); }
+      else if (a.status === "spaeter" && a.antwort) { melde(`👋 ${a.an.vorname}: „${a.antwort}“`); try { navigator.vibrate?.(60); } catch {} }
       else if (a.status === "spaeter") melde(`⏳ ${a.an.vorname} hat gerade keine Zeit – schreib eine Nachricht, sie/er meldet sich.`);
     }
   } catch {}
@@ -2362,13 +2391,13 @@ function onlineLeisteZeigen() {
   onlineLedZeigen();
   const el = $("onlineLeiste"); if (!el) return;
   el.innerHTML = ONL.zeigen && ONL.liste.length ? `<div class="hinweis" style="margin:0 0 4px"><span class="onpunkt"></span><b>Gerade online</b> – antippen zum Anklopfen</div>
-    <div class="onleiste">${ONL.liste.map((x) => `<button onclick="anklopfen('${x.person_id}')">👋 ${esc(x.vorname)}</button>`).join("")}</div>` : "";
+    <div class="onleiste">${ONL.liste.map((x) => x.klopfbar === false ? `<button title="Anklopfen ausgeschaltet – Nachricht schreiben" onclick="direkt('${x.person_id}')">🔕 ${esc(x.vorname)}</button>` : `<button onclick="anklopfen('${x.person_id}')">👋 ${esc(x.vorname)}</button>`).join("")}</div>` : "";
 }
 // Startseite „🟢 3 online“ → Liste mit Direktkontakt (👋 anklopfen oder 💬 gleich schreiben)
 function onlineBlatt() {
   $("onlineListe").innerHTML = ONL.liste.length ? ONL.liste.map((x) => `<div class="onzeile">${kreis({ ...(MITGLIEDER?.find((m) => m.person_id === x.person_id) || {}), online: true }, x.name || x.vorname, 40)}
       <div style="flex:1"><b>${esc(x.name || x.vorname)}</b><div class="hinweis" style="font-size:.85rem;margin:0">gerade online</div></div>
-      <button class="knopf haupt" onclick="$('onlineBlatt').classList.add('versteckt'); anklopfen('${x.person_id}')">👋 Anklopfen</button>
+      ${x.klopfbar === false ? `<button class="knopf" disabled title="Anklopfen ausgeschaltet">🔕</button>` : `<button class="knopf haupt" onclick="$('onlineBlatt').classList.add('versteckt'); anklopfen('${x.person_id}')">👋 Anklopfen</button>`}
       <button class="knopf" title="Anrufen (Test)" onclick="$('onlineBlatt').classList.add('versteckt'); anrufen('${x.person_id}')">📞</button>
       <button class="knopf" title="Videoanruf (Test)" onclick="$('onlineBlatt').classList.add('versteckt'); anrufen('${x.person_id}', true)">🎥</button>
       <button class="knopf" title="Nachricht schreiben" onclick="$('onlineBlatt').classList.add('versteckt'); direkt('${x.person_id}')">💬</button></div>`).join("")
@@ -2378,6 +2407,7 @@ function onlineBlatt() {
 async function anklopfen(pid) {
   const m = MITGLIEDER?.find((x) => x.person_id === pid) || ONL.liste.find((x) => x.person_id === pid);
   const name = m?.vorname || m?.name || "";
+  if (ONL.liste.find((x) => x.person_id === pid)?.klopfbar === false) return melde(`🔕 ${name} hat Anklopfen ausgeschaltet – schreib einfach eine Nachricht.`);
   if (!confirm(`Bei ${name} anklopfen?\n\n${name} bekommt sofort die Frage, ob ihr jetzt schreiben wollt.`)) return;
   try {
     const r = await api("anklopfen", { an: pid });
@@ -2386,12 +2416,116 @@ async function anklopfen(pid) {
   } catch (e) { melde(e.message, true); }
 }
 let KLOPF = null;
-function klopfZeigen(k) {
+function klopfZeigen(k, antworten) {
   KLOPF = k; ONL.erledigt.add(k.id);
   $("klopfText").innerHTML = `<h3>👋 ${esc(k.von.vorname)} klopft an</h3><p style="margin:0">${esc(k.von.name)} möchte gerade mit dir schreiben. Möchtest du das Gespräch annehmen?</p>`;
+  // KC-CLUB-ANKLOPFEN-ANTWORT (1.8.0): Kurzantworten aus der Server-Registry – antippen beendet das Anklopfen sofort
+  $("klopfKacheln").innerHTML = (antworten || []).map((a) => `<button onclick="klopfKurz('${esc(a.id)}', this.textContent)">${esc(a.text)}</button>`).join("");
   $("klopfBlatt").classList.remove("versteckt");
-  try { navigator.vibrate?.([80, 60, 80]); } catch {}
+  klopfTonSpielen(klopfStand().ton);
 }
+async function klopfKurz(antwort, text) {
+  $("klopfBlatt").classList.add("versteckt");
+  if (!KLOPF) return;
+  const k = KLOPF; KLOPF = null;
+  try { await api("anklopfen_antwort", { id: k.id, annehmen: false, antwort }); melde(`✔ ${k.von.vorname} sieht: „${text}“`); }
+  catch (e) { melde(e.message, true); }
+}
+// ---------- KC-CLUB-ANKLOPFEN-ERLAUBEN + Anklopfton (1.8.0, Wunsch Hansi) ----------
+// Töne werden im Gerät erzeugt (Web Audio) – keine Tondateien, nichts zu laden. Neue Töne = neuer Eintrag hier.
+const KLOPF_TOENE = [
+  { id: "klopf", t: "🚪 Anklopfen (Holz)", n: [[150, 0, .09, "triangle", .7], [95, 0, .12, "sine", .5], [150, .2, .09, "triangle", .7], [95, .2, .12, "sine", .5], [150, .4, .09, "triangle", .7], [95, .4, .12, "sine", .5]] },
+  { id: "dingdong", t: "🔔 Ding-Dong", n: [[784, 0, .7, "sine", .35], [622, .5, 1.1, "sine", .35]] },
+  { id: "gong", t: "🥁 Gong", n: [[196, 0, 2.2, "sine", .45], [392, 0, 1.6, "sine", .12], [587, 0, 1.0, "sine", .06]] },
+  { id: "glocke", t: "🛎️ Glöckchen", n: [[1568, 0, .8, "sine", .25], [2093, 0, .5, "sine", .08], [1568, .3, .8, "sine", .25], [2093, .3, .5, "sine", .08]] },
+  { id: "aus", t: "🔕 Kein Ton (nur Vibration)", n: [] },
+];
+const klopfStand = () => ({ erlaubt: true, ton: "klopf", ...(INIT?.einstellungen?.anklopfen || {}) });
+function klopfTonSpielen(id) {
+  try { navigator.vibrate?.([120, 80, 120]); } catch {}
+  const t = KLOPF_TOENE.find((x) => x.id === id) || KLOPF_TOENE[0];
+  if (!t.n.length) return;
+  try {
+    audio = audio || new (window.AudioContext || window.webkitAudioContext)(); audio.resume?.();
+    const jetzt = audio.currentTime + .02;
+    for (const [f, ab, dauer, art, laut] of t.n) {
+      const o = audio.createOscillator(), g = audio.createGain(); o.type = art; o.frequency.value = f;
+      g.gain.setValueAtTime(.0001, jetzt + ab); g.gain.exponentialRampToValueAtTime(laut, jetzt + ab + .01); g.gain.exponentialRampToValueAtTime(.0001, jetzt + ab + dauer);
+      o.connect(g).connect(audio.destination); o.start(jetzt + ab); o.stop(jetzt + ab + dauer + .05);
+    }
+  } catch {}
+}
+function anklopfenZeigen() {
+  const w = klopfStand();
+  if ($("setAnklopfen")) $("setAnklopfen").checked = w.erlaubt !== false;
+  if ($("setKlopfTon")) $("setKlopfTon").innerHTML = KLOPF_TOENE.map((x) => `<option value="${x.id}"${x.id === w.ton ? " selected" : ""}>${esc(x.t)}</option>`).join("");
+}
+async function anklopfenSetzen(teil) {
+  const w = { ...klopfStand(), ...teil };
+  if (INIT) INIT.einstellungen = { ...(INIT.einstellungen || {}), anklopfen: w };
+  try { await api("einstellung_setzen", { schluessel: "anklopfen", wert: w }); melde("erlaubt" in teil ? (w.erlaubt ? "👋 Anklopfen ist erlaubt" : "🔕 Anklopfen ausgeschaltet") : "🔔 Anklopfton gespeichert"); }
+  catch (e) { melde(e.message, true); }
+  if ("ton" in teil) klopfTonSpielen(w.ton);
+}
+
+// ---------- KC-CLUB-SCHNELLSTART (1.8.0, Wunsch Hansi): große Kachel mit Symbolen für alle, die die App schon kennen ----------
+// Nur erweiterte Ansicht. Jedes Symbol startet direkt die Funktion (nicht nur den Bereich). Registry SCHNELL; „kachel“ = nur
+// zeigen, wenn das Mitglied die zugehörige Kachel überhaupt hat (Rechte). Auswahl je Mitglied (höchstens 8) unter ⚙️.
+const SCHNELL = [
+  { id: "schreiben", sym: "✉️", t: "Schreiben", los: () => neueNachricht() },
+  { id: "termin", sym: "📅", t: "Termin", los: () => zumTreffen() },
+  { id: "zettel", sym: "📌", t: "Zettel", los: () => { zeige("pinnwand"); pwForm(true); } },
+  { id: "foto", sym: "📷", t: "Foto", kachel: "fotos", los: () => { faFilter = {}; faPapierkorb = false; zeige("fotos"); fotoForm(); } },
+  { id: "standort", sym: "📍", t: "Standort", los: () => zeige("standort") },
+  { id: "dienst", sym: "🗓️", t: "Dienst", kachel: "meindienst", los: () => dpNurIch() },
+  { id: "suchen", sym: "🔍", t: "Suchen", los: () => sucheAuf() },
+  { id: "sos", sym: "🆘", t: "SOS", los: () => sosStart() },
+  { id: "status", sym: "🟢", t: "Status", kachel: "status", los: () => statusBlatt() },
+  { id: "erstattung", sym: "💶", t: "Erstattung", kachel: "erstattung", los: () => zeige("erstattung") },
+  { id: "mitfahrt", sym: "🚗", t: "Mitfahrt", los: () => zumTreffen() },
+  { id: "vorschlaege", sym: "🗳️", t: "Vorschläge", kachel: "vorschlaege", los: () => zeige("vorschlaege") },
+  { id: "mitglieder", sym: "👥", t: "Mitglieder", los: () => zeige("mitglieder") },
+  { id: "online", sym: "👋", t: "Online", los: () => onlineBlatt() },
+  { id: "wobinich", sym: "🧭", t: "Wo bin ich", los: () => { sosStart(); sosWoBinIch(); } },
+  { id: "notfallpass", sym: "🪪", t: "Notfallpass", los: () => { sosStart(); nfpZeigenOderAusfuellen(); } },
+];
+const SCHNELL_STANDARD = ["schreiben", "termin", "zettel", "foto", "standort", "dienst", "suchen", "sos"];
+const schnellStand = () => ({ an: true, ids: null, ...(INIT?.einstellungen?.schnellstart || {}) });
+const kachelDa = (id) => Object.keys(KACHELN).some((r) => kachelnAlle(r).some((k) => k.id === id));
+const schnellMoeglich = () => SCHNELL.filter((x) => !x.kachel || kachelDa(x.kachel));
+function schnellAuswahl() {
+  const ids = schnellStand().ids || SCHNELL_STANDARD, da = schnellMoeglich();
+  return ids.map((id) => da.find((x) => x.id === id)).filter(Boolean).slice(0, 8);
+}
+function schnellZeigen() {
+  const el = $("schnellstart"); if (!el) return;
+  const liste = schnellAuswahl();
+  if (einfach() || !schnellStand().an || !liste.length) { el.innerHTML = ""; return; }
+  el.innerHTML = `<div class="karte schnell"><div class="schnell-kopf"><span>⚡ Schnellstart</span><button title="Symbole auswählen" onclick="suEinstellung('ssWahl')">✏️</button></div>
+    <div class="schnell-raster">${liste.map((x) => `<button onclick="schnellLos('${x.id}')"><span>${x.sym}</span><small>${esc(x.t)}</small></button>`).join("")}</div></div>`;
+}
+function schnellLos(id) { const x = SCHNELL.find((y) => y.id === id); if (x) try { x.los(); } catch (e) { melde(e.message, true); } }
+function schnellWahlZeigen() {
+  const st = schnellStand(), ids = st.ids || SCHNELL_STANDARD;
+  if ($("ssAn")) $("ssAn").checked = st.an !== false;
+  if ($("ssWahl")) $("ssWahl").innerHTML = schnellMoeglich().map((x) => { const i = ids.indexOf(x.id);
+    return `<button class="${i >= 0 ? "an" : ""}" onclick="schnellUmschalten('${x.id}')">${i >= 0 ? `<i>${i + 1}</i>` : ""}<span>${x.sym}</span>${esc(x.t)}</button>`; }).join("");
+}
+function schnellUmschalten(id) {
+  const ids = [...(schnellStand().ids || SCHNELL_STANDARD)];
+  const i = ids.indexOf(id);
+  if (i >= 0) ids.splice(i, 1); else if (ids.length >= 8) return melde("Höchstens 8 Symbole – erst eines abwählen.", true); else ids.push(id);
+  schnellSetzen({ ids });
+}
+async function schnellSetzen(teil) {
+  const w = { ...schnellStand(), ...teil };
+  if (INIT) INIT.einstellungen = { ...(INIT.einstellungen || {}), schnellstart: w };
+  schnellWahlZeigen(); schnellZeigen();
+  try { await api("einstellung_setzen", { schluessel: "schnellstart", wert: w }); if ("an" in teil) melde(w.an ? "⚡ Schnellstart ist an" : "Schnellstart ausgeblendet"); }
+  catch (e) { melde(e.message, true); }
+}
+function nfpZeigenOderAusfuellen() { if (nfpGefuellt(nfpLesen())) nfpZeigen(); else nfpBearbeiten(); }
+
 async function klopfAntwort(annehmen) {
   $("klopfBlatt").classList.add("versteckt");
   if (!KLOPF) return;
@@ -3761,6 +3895,7 @@ function kachelnZeigen() {
           : b(-1, "◀", "nach links") + (sp > 1 ? b(-sp, "▲", "nach oben") + b(sp, "▼", "nach unten") : "") + b(1, "▶", "nach rechts")}</div></div>`; }).join("");
     return;
   }
+  schnellZeigen(); // KC-CLUB-SCHNELLSTART (1.8.0)
   const ausN = kaSortiert(reg).length - kacheln(reg).length;
   $("kaAusHinweis").innerHTML = ausN ? `<button class="kaausgeblendet" onclick="kaBearbeiten(true)">🙈 ${ausN} ausgeblendete Kachel${ausN > 1 ? "n" : ""} – anzeigen</button>` : "";
   $("raster").innerHTML = kacheln(reg).map((k, i) => {
@@ -4492,7 +4627,7 @@ function zeige(v, ausHistorie) {
   if (v === "dienste") dienstLaden();
   if (v === "nachrichten") unterhLaden();
   if (v === "mitglieder") mitgliederLaden();
-  if (v === "einstellungen") { infoStartZeigen(); tippSchalterZeigen(); ruheZeigen(); if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); }
+  if (v === "einstellungen") { infoStartZeigen(); tippSchalterZeigen(); ruheZeigen(); if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); anklopfenZeigen(); schnellWahlZeigen(); }
   if (v === "start") neuLaden();
   // KC-CLUB-ZURUECK: jede Ansicht bekommt einen Verlaufseintrag, damit „Zurück“ eine Ansicht zurückgeht statt die App zu schließen
   const hash = v === "start" || v === "chat" ? "" : v === "protokoll" ? "#protokoll=" + prId : v === "aktion" ? "#aktion=" + aktionId : v === "mitglied" ? "#mitglied=" + mitgliedId : "#" + v;
@@ -8124,6 +8259,7 @@ function suAppListe() {
     ["👀", "Ansicht wechseln (einfach/erweitert)", "ansicht einfach erweitert kacheln", () => ansichtWechseln()], ["🧪", "Test an mich", "test push mail ausprobieren", () => testAnMichStarten()],
     ["🆘", "Problem melden", "problem fehler hilfe melden", () => fpProblemMelden()], ["👥", "Wer ist online?", "online wer", () => onlineBlatt()],
     ["📍", "Standort teilen", "standort teilen wo bin ich", () => stBlatt()],
+    ["⚡", "Schnellstart-Symbole auswählen", "schnellstart symbole schnell kachel", ein("ssWahl")], ["👋", "Anklopfen erlauben / Anklopfton", "anklopfen klopfen ton klingel", ein("setAnklopfen")],
     ["🆘", "Wo bin ich? (SOS)", "wo bin ich adresse standort notfall sos", () => sosStart()], ["🪪", "Mein Notfallpass", "notfallpass allergien medikamente blutgruppe notfall", () => { sosStart(); nfpBearbeiten(); }],
   ].map(([sym, t, w, fn]) => ({ sym, t, w, fn }));
   const kach = Object.values(KACHELN).flat().filter((k) => !k.bald && (!k.nur || k.nur()))

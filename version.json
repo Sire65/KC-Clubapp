@@ -1,10 +1,20 @@
 {
-  "version": "1.7.2",
+  "version": "1.8.0",
   "datum": "2026-10-01",
   "neu": [
-    "📍 SOS „Wo bin ich?“: Liegt das GPS ein Haus daneben, nennt die App auch die Nachbarhäuser"
+    "⚡ Neu in der erweiterten Ansicht: Schnellstart-Kachel mit deinen 8 Lieblings-Symbolen – unter ⚙️ selbst auswählen",
+    "👋 Anklopfen: kurz antworten mit „Bin beschäftigt“, „Melde mich später“ … – der andere sieht es sofort",
+    "🔔 Eigener Anklopfton (mit Testton) und Anklopfen erlauben ja/nein unter ⚙️ → Privatsphäre"
   ],
   "verlauf": [
+    {
+      "version": "1.8.0",
+      "neu": [
+        "⚡ Neu in der erweiterten Ansicht: Schnellstart-Kachel mit deinen 8 Lieblings-Symbolen – unter ⚙️ selbst auswählen",
+        "👋 Anklopfen: kurz antworten mit „Bin beschäftigt“, „Melde mich später“ … – der andere sieht es sofort",
+        "🔔 Eigener Anklopfton (mit Testton) und Anklopfen erlauben ja/nein unter ⚙️ → Privatsphäre"
+      ]
+    },
     {
       "version": "1.7.2",
       "neu": [

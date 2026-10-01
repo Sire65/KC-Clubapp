@@ -1537,6 +1537,24 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/confirm\("Notfallpass auf diesem Gerät löschen\?"\)/.test(nfp) && /id="nfpBlatt"/.test(html), "Notfallpass: Löschen mit Rückfrage, Blatt vorhanden");
 }
 
+// 135. 1.8.0: Schnellstart, Anklopfen erlauben, Kurzantworten, Anklopfton
+{
+  assert.ok(/const SCHNELL = \[/.test(html) && /const SCHNELL_STANDARD = \["schreiben", "termin", "zettel", "foto", "standort", "dienst", "suchen", "sos"\]/.test(html), "Schnellstart: Registry + 8 Grund-Symbole");
+  assert.ok(/if \(einfach\(\) \|\| !schnellStand\(\)\.an/.test(html) && /schnellZeigen\(\); \/\/ KC-CLUB-SCHNELLSTART/.test(html), "Schnellstart nur in der erweiterten Ansicht");
+  assert.ok(/ids\.length >= 8\) return melde/.test(html) && /schnellstart: \(w\) =>[\s\S]{0,250}\.slice\(0, 8\)/.test(server), "Schnellstart: höchstens 8 (App + Server)");
+  assert.ok(/!x\.kachel \|\| kachelDa\(x\.kachel\)/.test(html), "Schnellstart: nur Symbole, für die das Mitglied Rechte hat");
+  const ak = server.slice(server.indexOf('case "anklopfen":'), server.indexOf('case "anklopfen_antwort"'));
+  assert.ok(/anklopfenErlaubtMap\(\[an\]\)\)\.get\(an\) === false/.test(ak) && ak.indexOf("anklopfenErlaubtMap") < ak.indexOf('.insert('), "Anklopfen aus: Server lehnt vor dem Anlegen ab");
+  assert.ok(/anklopfen: \(w\) => \(\{ erlaubt: w\?\.erlaubt !== false/.test(server) && /id="setAnklopfen" checked/.test(html), "Anklopfen erlauben (Standard an)");
+  const aa = server.slice(server.indexOf('case "anklopfen_antwort"'), server.indexOf('case "anruf_start"'));
+  assert.ok(/KLOPF_ANTWORTEN\[p\.antwort\]/.test(aa) && /status: "spaeter"/.test(aa), "Kurzantwort nur aus der Registry, beendet das Anklopfen");
+  assert.ok(/const KLOPF_ANTWORTEN: Record<string, string> = \{/.test(server) && /antwort: x\.antwort \?\? null/.test(server), "Kurzantwort an den Anklopfenden");
+  const mig = lies("supabase/migrations/20261001_kc_club_v180_anklopfen_antwort.sql");
+  assert.ok(/add column if not exists antwort text/.test(mig) && /char_length\(antwort\) <= 80/.test(mig), "Migration Spalte antwort");
+  assert.ok(/function klopfKurz\(/.test(html) && /id="klopfKacheln"/.test(html) && /onclick="klopfAntwort\(false\)">⏳ Später/.test(html), "App: Kurzantwort-Kacheln, „Später“ bleibt");
+  assert.ok(/const KLOPF_TOENE = \[/.test(html) && /id="setKlopfTon"/.test(html) && /▶ Testton/.test(html) && /klopfTonSpielen\(klopfStand\(\)\.ton\)/.test(html), "Anklopfton wählbar mit Testton, spielt beim Anklopfen");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

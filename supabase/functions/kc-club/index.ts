@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.7.2";
+const SERVER_VERSION = "1.8.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -215,6 +215,17 @@ async function onlineZeigenMap(ids?: string[]) {
   const { data } = await q;
   return new Map((data ?? []).map((x: any) => [x.person_id, x.wert?.zeigen !== false]));
 }
+// KC-CLUB-ANKLOPFEN-ERLAUBEN (1.8.0): wer Anklopfen ausgeschaltet hat (Standard: erlaubt)
+async function anklopfenErlaubtMap(ids: string[]) {
+  if (!ids.length) return new Map<string, boolean>();
+  const { data } = await db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "anklopfen").in("person_id", ids);
+  return new Map((data ?? []).map((x: any) => [x.person_id as string, x.wert?.erlaubt !== false]));
+}
+// KC-CLUB-ANKLOPFEN-ANTWORT (1.8.0): Kurzantworten im Anklopf-Fenster – beendet das Anklopfen sofort, der andere sieht den Text
+const KLOPF_ANTWORTEN: Record<string, string> = {
+  beschaeftigt: "⏳ Bin gerade beschäftigt", spaeter: "🔁 Melde mich später", anrufen: "📞 Ruf mich kurz an",
+  schreiben: "💬 Schreib mir lieber", unterwegs: "🚗 Bin unterwegs", kochen: "🍳 Stehe gerade am Herd",
+};
 async function onlineJetzt(): Promise<Set<string>> {
   const seit = new Date(Date.now() - ONLINE_SEK * 1000).toISOString();
   const { data } = await db.from("kc_club_zugang").select("person_id").eq("aktiv", true).gte("zuletzt_gesehen", seit).not("person_id", "like", "KC-P-TEST%");
@@ -490,6 +501,12 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
   infofeld: (w) => ({ start: typeof w?.start === "string" && KA_ID.test(w.start) ? w.start : "zuletzt" }),
   // KC-CLUB-ONLINE (0.29.0): anderen zeigen, wann ich online bin (Standard: an)
   online: (w) => ({ zeigen: w?.zeigen !== false }),
+  // KC-CLUB-ANKLOPFEN-ERLAUBEN (1.8.0): darf man bei mir anklopfen (Standard: ja) + welcher Anklopfton (Registry in der App)
+  anklopfen: (w) => ({ erlaubt: w?.erlaubt !== false, ton: typeof w?.ton === "string" && /^[a-z]{1,15}$/.test(w.ton) ? w.ton : "klopf" }),
+  // KC-CLUB-SCHNELLSTART (1.8.0): große Kachel mit Symbolen (nur erweiterte Ansicht) – an/aus und eigene Auswahl (höchstens 8,
+  // Reihenfolge = Auswahl; null = Grundeinstellung der App)
+  schnellstart: (w) => ({ an: w?.an !== false,
+    ids: Array.isArray(w?.ids) ? [...new Set(w.ids.filter((x: unknown) => typeof x === "string" && /^[a-z_]{1,20}$/.test(x)))].slice(0, 8) : null }),
   // KC-CLUB-LIVETIPPEN (0.56.0): andere sehen live, was ich in einer Unterhaltung tippe (Standard: aus – freiwillig)
   live_tippen: (w) => ({ an: w?.an === true }),
   // KC-CLUB-RUHEZEIT (0.98.0): „Nicht stören“ – in diesem Zeitraum kein Push (Anrufe kommen weiter durch)
@@ -3174,7 +3191,7 @@ Köcheclub Werne`,
         const [on, { data: anMich }, { data: vonMir }] = await Promise.all([
           zeigen ? onlineJetzt() : Promise.resolve(new Set<string>()),
           db.from("kc_club_anklopfen").select("id,von,erstellt_am").eq("an", ich.person_id).eq("status", "offen").gte("erstellt_am", seit).order("erstellt_am", { ascending: false }).limit(3),
-          db.from("kc_club_anklopfen").select("id,an,status,thread_id,beantwortet_am").eq("von", ich.person_id).gte("erstellt_am", new Date(Date.now() - 600000).toISOString()),
+          db.from("kc_club_anklopfen").select("id,an,status,thread_id,beantwortet_am,antwort").eq("von", ich.person_id).gte("erstellt_am", new Date(Date.now() - 600000).toISOString()),
         ]);
         const { data: rufe } = await db.from("kc_club_anruf").select("id,von,art,erstellt_am").eq("an", ich.person_id).eq("status", "klingelt").eq("automatisch", false).gte("erstellt_am", new Date(Date.now() - ANRUF_KLINGEL_SEK * 1000).toISOString()).order("erstellt_am", { ascending: false }).limit(1);
         // KC-CLUB-ANRUF-VERPASST (0.81.0): nicht angenommen, nicht selbst abgelehnt, Hinweis noch nicht gesehen (letzte 24 h).
@@ -3189,10 +3206,12 @@ Köcheclub Werne`,
           verp = verp.filter((v) => !(spaeter ?? []).some((s: any) => [s.von, s.an].includes(v.von) && s.angenommen_am > v.erstellt_am));
         }
         on.delete(ich.person_id);
+        const klopfbar = await anklopfenErlaubtMap([...on]);
         const leute = await personen([...on, ...(anMich ?? []).map((x: any) => x.von), ...(vonMir ?? []).map((x: any) => x.an), ...(rufe ?? []).map((x: any) => x.von), ...verp.map((x: any) => x.von)]);
         const wer = (id: string) => ({ person_id: id, name: leute.get(id)?.display_name || id, vorname: vorname(leute.get(id) ?? null) || id });
-        return json({ zeigen, verpasst: verp.map((x: any) => ({ id: x.id, von: wer(x.von), art: x.art, zeit: x.erstellt_am })), online: [...on].map(wer), klopfen: (anMich ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), zeit: x.erstellt_am })),
-          antworten: (vonMir ?? []).map((x: any) => ({ id: x.id, an: wer(x.an), status: x.status, thread: x.thread_id })),
+        return json({ zeigen, verpasst: verp.map((x: any) => ({ id: x.id, von: wer(x.von), art: x.art, zeit: x.erstellt_am })), online: [...on].map((id) => ({ ...wer(id), klopfbar: klopfbar.get(id) !== false })), klopfen: (anMich ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), zeit: x.erstellt_am })),
+          klopfAntworten: (anMich ?? []).length ? Object.entries(KLOPF_ANTWORTEN).map(([id, text]) => ({ id, text })) : undefined,
+          antworten: (vonMir ?? []).map((x: any) => ({ id: x.id, an: wer(x.an), status: x.status, thread: x.thread_id, antwort: x.antwort ?? null })),
           anrufe: (rufe ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), art: x.art, zeit: x.erstellt_am })) });
       }
 
@@ -3200,6 +3219,10 @@ Köcheclub Werne`,
         const an = String(p.an || "");
         if (an === ich.person_id) throw new Fehler("Bei dir selbst kannst du nicht anklopfen 🙂");
         if (!(await aktiveMitglieder()).some((m) => m.person_id === an)) throw new Fehler("Mitglied nicht gefunden.", 404);
+        if ((await anklopfenErlaubtMap([an])).get(an) === false) {
+          const pa = (await personen([an])).get(an) ?? null;
+          throw new Fehler(`${vorname(pa) || "Das Mitglied"} hat Anklopfen ausgeschaltet – schreib einfach eine Nachricht.`, 409);
+        }
         // Bremse: ein offenes Anklopfen je Person reicht (innerhalb von 3 Minuten)
         const { data: offen } = await db.from("kc_club_anklopfen").select("id").eq("von", ich.person_id).eq("an", an).eq("status", "offen").gte("erstellt_am", new Date(Date.now() - ANKLOPFEN_SEK * 1000).toISOString()).limit(1);
         if (offen?.length) return json({ ok: true, id: offen[0].id, schon: true });
@@ -3221,8 +3244,9 @@ Köcheclub Werne`,
         if (!k) throw new Fehler("Anklopfen nicht gefunden.", 404);
         if (k.status !== "offen") return json({ ok: true, status: k.status, thread: k.thread_id });
         if (!p.annehmen) {
-          await db.from("kc_club_anklopfen").update({ status: "spaeter", beantwortet_am: jetzt() }).eq("id", k.id);
-          return json({ ok: true, status: "spaeter" });
+          const antwort = typeof p.antwort === "string" && KLOPF_ANTWORTEN[p.antwort] ? KLOPF_ANTWORTEN[p.antwort] : null;
+          await db.from("kc_club_anklopfen").update({ status: "spaeter", beantwortet_am: jetzt(), ...(antwort ? { antwort } : {}) }).eq("id", k.id);
+          return json({ ok: true, status: "spaeter", antwort });
         }
         let thread = await zweierGespraech(k.von, ich.person_id);
         if (!thread) {
