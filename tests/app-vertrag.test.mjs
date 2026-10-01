@@ -1633,7 +1633,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 142. 1.13.0: DP2 Build 251 Button-Logik (unverändert übernommen) + offene Club-App-Angaben zählen als eigene Daten
 {
   const q = JSON.parse(lies("dp2/QUELLE.json"));
-  assert.ok(/^(f893f5d|c0d279a)/.test(q.commit) && q.dp2Version === "0.20.0-build251" && q.reihenfolge.includes("src/ui/member-button-logic.js"), "DP2 Build 251 mit Button-Logik übernommen");
+  assert.ok(/^(f893f5d|c0d279a|d50ed58)/.test(q.commit) && /^0\.20\.0-build25[13]$/.test(q.dp2Version) && q.reihenfolge.includes("src/ui/member-button-logic.js"), "DP2 Build 251 (ab 1.17.2: Build 253 RC) mit Button-Logik übernommen");
   const d = lies("dp2-club/daten.js");
   assert.ok(/status: "confirmed", source: "club_app"/.test(d) && /K\.wishes = \[\.\.\.\(D\.meine\?\.entries \|\| \[\]\)\.map/.test(d), "Eingangs-Angaben (auch Status offen) zählen in DP2 als eigene aktive Wünsche");
 }
@@ -1668,7 +1668,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 
 // 146. 1.16.1: DP2-Nachtrag + Cache-Schlüssel mit Commit
 {
-  assert.ok(JSON.parse(lies("dp2/QUELLE.json")).commit.startsWith("c0d279a"), "Nachtrag c0d279a übernommen");
+  assert.ok(/^(c0d279a|d50ed58)/.test(JSON.parse(lies("dp2/QUELLE.json")).commit), "Nachtrag c0d279a übernommen (ab 1.17.2 im gemeinsamen Stand d50ed58 enthalten)");
   assert.ok(/quelle\.dp2Version \+ "-" \+ String\(quelle\.commit \|\| ""\)\.slice\(0, 7\)/.test(lies("dp2-club/lader.js")), "Cache-Schlüssel mit Commit");
 }
 
@@ -1693,6 +1693,16 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/<img class="muetze" src="kc-kochmuetze-weiss\.webp" alt=""><span class="loch"><\/span><\/button>/.test(r), "Kochmütze auf jedem Ordnerrücken");
   assert.ok(/<div class="ar-kopf"[\s\S]{0,400}<img class="muetze" src="kc-kochmuetze-weiss\.webp" alt="">/.test(html), "Kochmütze im Ordnerkopf");
   assert.ok(/"kc-kochmuetze-weiss\.webp"/.test(lies("sw.js")), "Bild im Offline-Speicher");
+}
+
+// 149. 1.17.2: DP2 Build 253 RC (dp3 d50ed58) – gemeinsamer Stand aus Club-App-Schnittstelle und PDF-/QR-Korrekturen
+{
+  const q = JSON.parse(lies("dp2/QUELLE.json"));
+  assert.ok(q.commit.startsWith("d50ed58") && q.dp2Version === "0.20.0-build253", "DP2 Build 253 RC (d50ed58) übernommen");
+  for (const f of ["src/core/document-identity.js", "src/vendor/qrcode-generator.js", "src/core/personalized-forms.js", "src/adapters/pdf.js", "src/ui/member-button-logic.js"])
+    assert.ok(q.reihenfolge.includes(f), `${f} fehlt in der DP2-Übernahme`);
+  assert.ok(q.reihenfolge.indexOf("src/adapters/pdf.js") < q.reihenfolge.indexOf("src/ui/original-brand.js") || !q.reihenfolge.includes("src/ui/original-brand.js"), "PDF-Baustein vor dem Abschluss geladen");
+  assert.ok(/kc-original-kochmuetze\.png/.test(lies("dp2/src/adapters/pdf.js")) && Object.keys(q.dateien).includes("assets/kc-original-kochmuetze.png"), "Original-Kochmütze für die Papiermatrix mitgeliefert");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

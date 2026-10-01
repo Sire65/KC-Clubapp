@@ -1,10 +1,16 @@
 {
-  "version": "1.17.1",
+  "version": "1.17.2",
   "datum": "2026-10-01",
   "neu": [
-    "🗄️ Archiv: Jeder Ordner trägt jetzt die Köcheclub-Kochmütze auf dem Rücken"
+    "🖨️ Dienstwunsch: „Meine Unterlagen“ druckt jetzt die persönliche Papiermatrix mit QR-Code und Original-Kochmütze (DP2 Build 253 RC)"
   ],
   "verlauf": [
+    {
+      "version": "1.17.2",
+      "neu": [
+        "🖨️ Dienstwunsch: „Meine Unterlagen“ druckt jetzt die persönliche Papiermatrix mit QR-Code und Original-Kochmütze (DP2 Build 253 RC)"
+      ]
+    },
     {
       "version": "1.17.1",
       "neu": [

@@ -1,5 +1,14 @@
 # Änderungen
 
+## 1.17.2 – 2026-10-01 (DEV)
+
+- KC-CLUB-DIENSTWUNSCH: DP2 auf Build 253 RC übernommen (dp3 `d50ed58`, Zweig codex/club-app-interface, Freigabe Hansi) –
+  gemeinsamer Stand aus Club-App-Schnittstelle/Button-Logik/Konfliktprüfung (250–252 RC) und den PDF-/QR-Korrekturen des
+  DP2-Hauptzweigs (Build 250/251). Neu in dp2/: document-identity, qrcode-generator, personalized-forms, adapters/pdf.js –
+  „Meine Unterlagen → Papiermatrix/Handschriftprobe“ im Twinkey erzeugt den Bogen (vorher „Cannot read properties of
+  undefined (reading 'downloadPdf')“). Alle bisherigen DP2-Dateien unverändert. RC: Live-Handtest, zentrale
+  Kollegenfreigabe und serverseitige Claim-/Versionsprüfung offen. Test 149.
+
 ## 1.17.1 – 2026-10-01 (DEV)
 
 - KC-CLUB-ARCHIV-MUETZE (Wunsch Hansi): originale Köcheclub-Kochmütze (kc-kochmuetze-weiss.webp, schon im Offline-Speicher)

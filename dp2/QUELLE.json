@@ -1,9 +1,9 @@
 {
   "hinweis": "Unverändert aus KC DP2 übernommen – NICHT hier bearbeiten. Änderungen in DP2 machen und neu übernehmen (tools/dp2-twinkey-uebernehmen.mjs).",
   "repository": "Sire65/dp3",
-  "commit": "c0d279a6c9ed1f6bc4e0c068125321bf1605f14d",
-  "commitDatum": "2026-10-01T14:05:04+02:00",
-  "dp2Version": "0.20.0-build251",
+  "commit": "d50ed585bbf377673fd59bae3124302d6e1592f7",
+  "commitDatum": "2026-10-01T13:28:11+00:00",
+  "dp2Version": "0.20.0-build253",
   "vorlage": "twinkey-test.html (ohne twinkey-test-data.js, twinkey-test-boot.js)",
   "reihenfolge": [
     "src/ui/app.css",
@@ -83,6 +83,10 @@
     "src/ui/assistant-staffing.js",
     "src/ui/assistant-hours.js",
     "src/ui/simple-wish-assistant.js",
+    "src/core/document-identity.js",
+    "src/vendor/qrcode-generator.js",
+    "src/core/personalized-forms.js",
+    "src/adapters/pdf.js",
     "src/ui/original-brand.js"
   ],
   "dateien": {
@@ -163,6 +167,10 @@
     "src/ui/assistant-staffing.js": "b662428255ff1679bc627c2482fb173dbb95425a7a2c0e6866fa2dc80494d65f",
     "src/ui/assistant-hours.js": "027b586672f43aa8e834d8f36133d5b8e61ed9f89646788bdc4a0bb2c8c36ebe",
     "src/ui/simple-wish-assistant.js": "9f979ca6c68d3fcb3206dce7eb6ff279b13a3de12f82b309a1b3362c4f31bab9",
+    "src/core/document-identity.js": "9671c2be9f879bffa0944152439259dc3c10f57b909efdb2e02e38a4c25be456",
+    "src/vendor/qrcode-generator.js": "79ec86f82856005b1c887905cfccfcfbec3821ca61c7fd5a952faa5f778f791c",
+    "src/core/personalized-forms.js": "9791bc106fbf537322461cdc889aca0d392164985a8fa6799ec6cad338e0f6f4",
+    "src/adapters/pdf.js": "84ab8652abe75d7f21a3f83e371571e61bba09595c1e7d3e65a35bc80b7628f5",
     "src/ui/original-brand.js": "b060622790f7e74f20b9007253db4d59572db78673be3fc89c795924569b1d1a",
     "assets/kc-login-startbild-v01917.webp": "f85a7e0c7996a9585524ef7b3a9e233e0cb6a75008d832194b18119af31a4220",
     "assets/kc-login-startbild.webp": "c2e250d35eba2a098cd27af353820c56e8da305998321573a1119579e077dee9",
