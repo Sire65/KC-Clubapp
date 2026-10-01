@@ -602,6 +602,7 @@
   .mini-kachel .mk-gross { font-weight: 800; font-size: 1.05rem; }
   .mini-kachel .marke { justify-self: start; }
   .mini-kachel.mk-offen { border-color: var(--gelb); }
+  .mini-kachel.mk-dabei, .mini-kachel.mk-voll { border-color: var(--gruen); }
   .info-gross { font-size: 1.12rem; }
   .info-gross .karte { box-shadow: none; padding: 4px 2px; margin: 0; }
   .info-gross .hl-titel, .info-gross .wann { font-size: 1.3rem !important; }
@@ -1884,7 +1885,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.23.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.23.2"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -5487,6 +5488,7 @@ async function hlLaden() {
     if (HL.tab === "helfen") HL.hilfe = await api("hilfe_liste"); else HL.leihen = await api("leihen_liste");
     hlZeigen();
     const li = document.getElementById("leihInfo"); if (li && HL.tab === "leihen") leihInfo(li.dataset.id);
+    const hi = document.getElementById("hilfeInfo"); if (hi && HL.tab === "helfen") hilfeInfo(hi.dataset.id);
   } catch (e) { $("hlInhalt").innerHTML = `<div class="karte hinweis">${esc(e.message)}</div>`; }
 }
 // Kachel-Reihe: ein Wert aus einer Liste [{w, t}]
@@ -5554,12 +5556,28 @@ function hilfeKarte(a) {
     ${a.offen && !a.eigen ? `<div class="hl-antwort"><button class="${a.meine === "komme" ? "an" : ""}" onclick="hilfeAntwort('${a.id}', '${a.meine === "komme" ? "" : "komme"}')">✋ Ich komme</button><button class="${a.meine === "kann_nicht" ? "an nein" : ""}" onclick="hilfeAntwort('${a.id}', '${a.meine === "kann_nicht" ? "" : "kann_nicht"}')">🙅 Kann nicht</button></div>` : ""}
     ${a.darfSchliessen ? `<div class="knoepfe"><button class="knopf klein" onclick="hilfeSchliessen('${a.id}')">🔒 Aufruf schließen</button></div>` : ""}</div>`;
 }
+// KC-CLUB-MINIKACHELN (1.23.2, Wunsch Hansi): Hilfe-Aufrufe als kleine Kacheln – Antippen öffnet alle Einzelheiten groß
+function hilfeKachel(a) {
+  const d = HL.hilfe || {}, label = d.arten?.[a.art] || a.art, sym = label.split(" ")[0], was = label.slice(sym.length).trim() || label;
+  const n = a.komme.length, voll = n >= a.anzahl, slotSym = a.slot && d.zeitfenster?.[a.slot] ? " " + d.zeitfenster[a.slot].split(" ")[0] : "";
+  return `<button class="mini-kachel${a.meine === "komme" ? " mk-dabei" : voll && a.offen ? " mk-voll" : ""}" onclick="hilfeInfo('${a.id}')"><span class="mk-sym">${esc(sym)}</span>
+    <span class="mk-titel">${esc(was)}</span><span class="mk-unter">🗓️ ${esc(hlTagName(a.datum))}${esc(slotSym)}${a.ort ? ` · 📍 ${esc(a.ort)}` : ""}</span>
+    <span class="mk-unter">von ${esc(a.eigen ? "dir" : a.von.name)}</span>
+    <span class="marke ${voll ? "gruen" : "gelb"}">✋ ${n} von ${a.anzahl}${voll ? " 🎉" : ""}</span>${a.meine === "komme" ? '<span class="mk-unter"><b>✔ Du kommst</b></span>' : ""}</button>`;
+}
+function hilfeInfo(id) {
+  const a = HL.hilfe?.aufrufe.find((x) => x.id === id);
+  if (!a) { document.getElementById("hilfeInfo")?.remove(); return; }
+  const f = blattAuf("hilfeInfo", `<div class="info-gross">${hilfeKarte(a)}</div><button class="knopf" style="text-align:center" onclick="$('hilfeInfo').remove()">Schließen</button>`);
+  f.dataset.id = id;
+}
 function hilfeListeHtml() {
   const d = HL.hilfe; if (!d) return '<div class="karte hinweis">Wird geladen …</div>';
   const offen = d.aufrufe.filter((a) => a.offen), alt = d.aufrufe.filter((a) => !a.offen);
+  const kacheln = (l) => `<div class="mini-kacheln">${l.map(hilfeKachel).join("")}</div>`;
   return `<button class="knopf haupt hl-gross" onclick="hilfeNeu()">🙋 Ich suche Hilfe</button>
-    <div class="abschnitt"><h3>Offene Aufrufe</h3></div>${offen.map(hilfeKarte).join("") || '<div class="karte hinweis">Gerade sucht niemand Hilfe. Tippe oben, wenn du Unterstützung brauchst – z. B. beim Aufbau oder Einkauf.</div>'}
-    ${alt.length ? `<details class="karte"><summary><b>Vorbei / geschlossen (${alt.length})</b></summary>${alt.map(hilfeKarte).join("")}</details>` : ""}`;
+    <div class="abschnitt"><h3>Offene Aufrufe</h3></div>${offen.length ? kacheln(offen) : '<div class="karte hinweis">Gerade sucht niemand Hilfe. Tippe oben, wenn du Unterstützung brauchst – z. B. beim Aufbau oder Einkauf.</div>'}
+    ${alt.length ? `<details class="karte"><summary><b>Vorbei / geschlossen (${alt.length})</b></summary>${kacheln(alt)}</details>` : ""}`;
 }
 async function hilfeAntwort(id, antwort) {
   try { await api("hilfe_antwort", { id, antwort: antwort || null }); melde(antwort === "komme" ? "✋ Danke! Deine Zusage ist gespeichert" : antwort ? "Gespeichert – danke für die Rückmeldung" : "Zurückgenommen"); hlLaden(); }

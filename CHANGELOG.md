@@ -1,5 +1,11 @@
 # Änderungen
 
+## 1.23.2 – 2026-10-01 (DEV)
+
+- KC-CLUB-MINIKACHELN (Wunsch Hansi): Hilfe-Aufrufe (offen und vorbei) als kleine Kacheln – Symbol, Wobei, Tag mit
+  Zeitfenster-Symbol, Ort, „✋ n von m“; grüner Rand, wenn ich zugesagt habe oder genug Helfer da sind. Antippen öffnet das
+  große Info-Fenster mit allen Einzelheiten und den Knöpfen; nach einer Antwort frischt es sich selbst auf.
+
 ## 1.23.1 – 2026-10-01 (DEV)
 
 - KC-CLUB-MINIKACHELN (Wunsch Hansi „kleine Kacheln nebeneinander, anklicken → Info-Fenster groß und lesbar“):

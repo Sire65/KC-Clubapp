@@ -1,7 +1,8 @@
 {
-  "version": "1.23.1",
+  "version": "1.23.2",
   "datum": "2026-10-01",
   "neu": [
+    "🙋 Hilfe-Aufrufe jetzt auch als kleine Kacheln – antippen öffnet die Einzelheiten groß mit „✋ Ich komme“ / „🙅 Kann nicht“",
     "🧩 Spendenprojekte und Ausleihen als kleine Kacheln nebeneinander – antippen öffnet ein großes, gut lesbares Info-Fenster mit allen Einzelheiten und Knöpfen",
     "📦 „Das kann man ausleihen“: jede Sache als Kachel – antippen zeigt Bestand, heute frei, was schon eingeplant ist, und „ausleihen“ mit einem Tipp",
     "🤝 Neue Kachel „Helfen & Leihen“ (Verein): „🙋 Wer kann helfen?“ – Hilfe-Aufruf mit wenigen Tipps (Wobei? Wann? Wie viele?) an alle oder an alle gerade online; zusagen mit „✋ Ich komme“",
@@ -9,6 +10,12 @@
     "💝 Vorschläge: jetzt auch Spendenprojekte für die nächste Sitzung – ein oder mehrere, mit Betrag (z. B. Kinderhospiz Lünen/Werne), Summe wird angezeigt"
   ],
   "verlauf": [
+    {
+      "version": "1.23.2",
+      "neu": [
+        "🙋 Hilfe-Aufrufe jetzt auch als kleine Kacheln – antippen öffnet die Einzelheiten groß mit „✋ Ich komme“ / „🙅 Kann nicht“"
+      ]
+    },
     {
       "version": "1.23.1",
       "neu": [

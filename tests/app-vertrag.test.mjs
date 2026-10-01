@@ -1935,6 +1935,12 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/\.info-gross \{ font-size: 1\.12rem; \}/.test(html), "große Schrift im Info-Fenster");
 }
 
+// 170. 1.23.2: Hilfe-Aufrufe als kleine Kacheln (KC-CLUB-MINIKACHELN)
+{
+  assert.ok(/l\.map\(hilfeKachel\)/.test(html) && /onclick="hilfeInfo\('\$\{a\.id\}'\)"/.test(html), "Hilfe-Aufrufe als Kacheln");
+  assert.ok(/blattAuf\("hilfeInfo", `<div class="info-gross">\$\{hilfeKarte\(a\)\}/.test(html), "Info-Fenster mit Ich komme / Kann nicht");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
