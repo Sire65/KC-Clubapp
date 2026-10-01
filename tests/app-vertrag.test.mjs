@@ -1316,12 +1316,16 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   let aufrufe = 0; const antworten = [];
   const setze = (liste) => { antworten.length = 0; antworten.push(...liste); aufrufe = 0; };
   const fetchT = async () => { aufrufe++; const a = antworten.shift(); return { status: a.s, ok: a.s < 300, json: async () => { if (a.j === undefined) throw 0; return a.j; } }; };
-  const run = (liste) => { setze(liste); return new Function("fetch", "performance", "vbStart", "vbEnde", "API", "KEY", "APP_VERSION", "$", "setTimeout", code + "; return apiRoh('init');")(fetchT, { now: () => 0 }, () => {}, () => {}, "x", "k", "v", () => ({ classList: { add() {}, remove() {} } }), (f) => f()); };
+  const run = (liste) => { setze(liste); return new Function("fetch", "performance", "vbStart", "vbEnde", "API", "KEY", "APP_VERSION", "$", "setTimeout", code + "; REGION_AUS_BIS = " + (globalThis.__mitRegion ? 0 : 1e15) + "; return apiRoh('init');")(fetchT, { now: () => 0 }, () => {}, () => {}, "x", "k", "v", () => ({ classList: { add() {}, remove() {} } }), (f) => f()); };
   const ok1 = await run([{ s: 503 }, { s: 200, j: { ok: 1 } }]);
   assert.ok(ok1.ok === 1 && aufrufe === 2, "503 ohne Antwort wird nicht wiederholt");
   await run([{ s: 503 }, { s: 503 }]).then(() => assert.fail("zweimal 503 muss Fehler sein"), (e) => assert.ok(/kurz nicht erreichbar/.test(e.message) && aufrufe === 2, "höchstens ein Wiederholversuch / Meldung"));
   await run([{ s: 502 }, { s: 200, j: {} }]).then(() => assert.fail("502 darf nicht wiederholt werden"), () => assert.equal(aufrufe, 1, "502 wiederholt"));
   await run([{ s: 503, j: { error: "Wartung" } }]).then(() => assert.fail(), (e) => assert.ok(e.message === "Wartung" && aufrufe === 1, "Programm-503 (mit Meldung) wiederholt"));
+  // 1.16.0 KC-CLUB-NAHE-REGION: über die Region ein 502 → genau ein Versuch über den Standardweg (danach wie bisher)
+  globalThis.__mitRegion = true;
+  const ok2 = await run([{ s: 502 }, { s: 200, j: { ok: 2 } }]); assert.ok(ok2.ok === 2 && aufrufe === 2, "Region gestört: Standardweg");
+  globalThis.__mitRegion = false;
 }
 
 // 98. 0.77.0: Linkschutz + Tablet/PC-Tipp (KC-CLUB-LINKSCHUTZ / KC-CLUB-GERAETE-TIPP)
@@ -1651,6 +1655,15 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   const sm = server.slice(server.indexOf('case "sicherheit_melden"'), server.indexOf('case "nachricht_ausblenden"'));
   assert.ok(/db\.rpc\("kc_club_sicherheit_status"\)/.test(sm) && /await adminIds\(\)/.test(sm) && /"fehler_sicherheit"/.test(sm) && /\(count \?\? 0\) >= 3\) throw/.test(sm), "Server prüft neu, an Admins, Fehlerprotokoll, Bremse");
   assert.ok(/onclick="sicherheitMelden\(\)">📨 Ergebnis an Hansi \(Admin\) senden/.test(html), "Knopf vorhanden");
+}
+
+// 145. 1.16.0: Server neben der Datenbank (mit Rückweg) + paralleles Zählen
+{
+  assert.ok(/const SERVER_REGION = "eu-west-2"/.test(html) && /forceFunctionRegion=\$\{SERVER_REGION\}/.test(html), "Region festgelegt");
+  assert.ok(/if \(mitRegion && navigator\.onLine\) \{ REGION_AUS_BIS = Date\.now\(\) \+ REGION_PAUSE_MS;[^\n]*return apiRoh\(/.test(html) && /mitRegion && r\.status >= 502 && r\.status <= 504/.test(html), "Rückweg bei Region-Störung (Regel 12)");
+  const l = lies("dp2-club/lader.js");
+  assert.ok(/forceFunctionRegion=eu-west-2/.test(l) && /if \(!r\) r = await anfrage\(API\)/.test(l), "Dienstwunsch-Lader mit Rückweg");
+  assert.ok(/const zahlen = await Promise\.all\(\(teil \?\? \[\]\)\.map/.test(server), "init zählt gleichzeitig");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

@@ -3,7 +3,7 @@
 // start.js dort, wo DP2 twinkey-test-boot.js lädt. Die Seite hat <base href="dp2/">: Pfade sind relativ zu dp2/.
 (function () {
   "use strict";
-  const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club", APP_VERSION = "1.15.0";
+  const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club", APP_VERSION = "1.16.0";
   const laden = document.getElementById("dwLaden");
   // CSP ohne Inline-Skripte: Knopf per addEventListener
   const zurueck = () => (parent !== window ? parent.postMessage("dienstwunsch-zu", location.origin) : history.back());
@@ -11,8 +11,16 @@
     document.getElementById("dwZurueck").addEventListener("click", zurueck); };
   let key = ""; try { key = localStorage.getItem("kc_club_key") || ""; } catch {}
   if (!key) return fehler("Bitte die Club-App mit deinem persönlichen Link öffnen.");
+  // KC-CLUB-NAHE-REGION (1.16.0): wie die Club-App – Server neben der Datenbank; antwortet die Region nicht, Standardweg
+  let regionAus = false;
   window.KC_CLUB_DW_API = async (action, daten = {}) => {
-    const r = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json", "x-club-token": key, "x-club-version": APP_VERSION }, body: JSON.stringify({ action, ...daten }) });
+    const anfrage = (url) => fetch(url, { method: "POST", headers: { "Content-Type": "application/json", "x-club-token": key, "x-club-version": APP_VERSION }, body: JSON.stringify({ action, ...daten }) });
+    let r;
+    if (!regionAus) {
+      try { r = await anfrage(API + "?forceFunctionRegion=eu-west-2"); if (r.status >= 502 && r.status <= 504) { regionAus = true; r = null; } }
+      catch { regionAus = true; r = null; }
+    }
+    if (!r) r = await anfrage(API);
     const j = await r.json().catch(() => null);
     if (!r.ok || !j || j.error) throw new Error(j?.error || "Keine Verbindung zum Server.");
     return j;

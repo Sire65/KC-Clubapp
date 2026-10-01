@@ -1,5 +1,16 @@
 # Änderungen
 
+## 1.16.0 – 2026-10-01 (DEV)
+
+- KC-CLUB-NAHE-REGION (Hinweis Hansi „sieht langsam aus“): Messung in den Server-Protokollen: Aufrufe aus Deutschland liefen
+  in Frankfurt (eu-central-1), die Datenbank steht in London (eu-west-2) – jede Abfrage pendelte; Median 571 ms, p90 1,4 s.
+  App und Dienstwunsch-Lader rufen den Server jetzt mit forceFunctionRegion=SERVER_REGION (eu-west-2) auf (Supabase
+  Regional Invocation, kostenlos). Rückweg: Netzfehler oder 502–504 aus der Region → sofort Standardweg, 10 Min. dabei
+  bleiben (kein Single Point of Failure). Beim Datenbank-Umzug SERVER_REGION mitändern.
+- KC-CLUB-SCHNELLSTART-SERVER: init zählt ungelesene Nachrichten aller Unterhaltungen gleichzeitig statt nacheinander.
+- Sicherheits-Check: zwei Messungen, der bessere Wert zählt (Aufwecken des Servers verfälscht die Anzeige nicht);
+  Index für die Prüffunktion (Migration 20261001_kc_club_v1160_index).
+
 ## 1.15.0 – 2026-10-01 (DEV)
 
 - KC-CLUB-SICHERHEIT-MELDEN (Wunsch Hansi): Knopf „📨 Ergebnis an Hansi (Admin) senden“ im Sicherheits-Check (hervorgehoben,

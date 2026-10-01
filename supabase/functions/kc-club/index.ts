@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.15.0";
+const SERVER_VERSION = "1.16.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -2002,11 +2002,15 @@ Köcheclub Werne`,
         ]);
         let ungelesen = 0, ungelesenLaut = 0;
         const { data: stummE } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "stumm").maybeSingle();
-        for (const t of teil ?? []) {
+        // KC-CLUB-SCHNELLSTART-SERVER (1.16.0): alle Unterhaltungen gleichzeitig zählen statt nacheinander (spart je Chat eine Runde)
+        const zahlen = await Promise.all((teil ?? []).map(async (t: any) => {
           let q = db.from("kc_communication_messages").select("id", { count: "exact", head: true }).eq("thread_id", t.thread_id).neq("sender_person_id", ich.person_id);
           if (t.last_read_at) q = q.gt("created_at", t.last_read_at);
-          const { count } = await q; ungelesen += count ?? 0;
-          if (!stummJetzt(stummE?.wert, t.thread_id)) ungelesenLaut += count ?? 0; // KC-CLUB-STUMM: stumme Chats ohne Ton
+          const { count } = await q; return { t, n: count ?? 0 };
+        }));
+        for (const { t, n } of zahlen) {
+          ungelesen += n;
+          if (!stummJetzt(stummE?.wert, t.thread_id)) ungelesenLaut += n; // KC-CLUB-STUMM: stumme Chats ohne Ton
         }
         const { data: pk } = await db.rpc("kc_communication_get_server_secret", { p_name: "kc_communication_vapid_public_key" });
         const meinStatus = (await statusMap([ich.person_id])).get(ich.person_id) ?? { status: "verfuegbar", hinweis: null, bis: null };

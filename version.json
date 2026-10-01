@@ -1,10 +1,16 @@
 {
-  "version": "1.15.0",
+  "version": "1.16.0",
   "datum": "2026-10-01",
   "neu": [
-    "📨 Sicherheits-Check: Ergebnis mit einem Knopf an Hansi (Admin) senden – z. B. wenn ein Punkt nicht bestätigt ist"
+    "⚡ Schneller: Der Server arbeitet jetzt direkt neben dem Daten-Speicher, und der Start zählt ungelesene Nachrichten gleichzeitig"
   ],
   "verlauf": [
+    {
+      "version": "1.16.0",
+      "neu": [
+        "⚡ Schneller: Der Server arbeitet jetzt direkt neben dem Daten-Speicher, und der Start zählt ungelesene Nachrichten gleichzeitig"
+      ]
+    },
     {
       "version": "1.15.0",
       "neu": [

@@ -1762,7 +1762,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.15.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.16.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3527,13 +3527,23 @@ const VERKEHR_LAGER = "kc_club_verkehr_v1";
 // zeigt auf der Linie „KC Club-App → Supabase“ nur dann Bewegung, wenn der Zähler zwischen zwei Lebenszeichen gestiegen ist.
 function verkehrStand() { try { const n = Number(localStorage.getItem(VERKEHR_LAGER)); return Number.isSafeInteger(n) && n >= 0 ? n : 0; } catch { return 0; } }
 function verkehrZaehlen() { try { localStorage.setItem(VERKEHR_LAGER, String(verkehrStand() + 1)); } catch {} }
+// KC-CLUB-NAHE-REGION (1.16.0): Server-Code im selben Rechenzentrum wie die Datenbank ausführen (Supabase „Regional Invocation“,
+// kostenlos) – sonst läuft er beim Mitglied (Frankfurt) und jede Datenbank-Abfrage geht nach London und zurück.
+// Beim Umzug der Datenbank SERVER_REGION mitändern. Rückweg: Antwortet die Region nicht, sofort ohne Region (Standard) und
+// für REGION_PAUSE_MS dabei bleiben – die App hängt nie an einer einzelnen Region (Regel 12).
+const SERVER_REGION = "eu-west-2", REGION_PAUSE_MS = 10 * 60 * 1000;
+let REGION_AUS_BIS = 0;
+const apiAdresse = () => (Date.now() < REGION_AUS_BIS ? API : `${API}?forceFunctionRegion=${SERVER_REGION}`);
 async function apiRoh(action, daten = {}, zweiterVersuch = false) {
   // KC-CLUB-VERBINDUNG: jede Anfrage zählt für die LEDs (Datenverkehr + Status)
   const t0 = performance.now(); vbStart();
   let r;
-  try { r = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json", "x-club-token": KEY, "x-club-version": APP_VERSION }, body: JSON.stringify({ action, ...daten }) }); if (action !== "lebenszeichen") verkehrZaehlen(); }
-  catch { vbEnde(false, 0, navigator.onLine ? "Server nicht erreichbar" : "Handy offline"); throw new Error(navigator.onLine ? "Keine Verbindung zum Server – bitte gleich nochmal versuchen." : "Keine Internetverbindung."); }
+  const adresse = apiAdresse(), mitRegion = adresse !== API;
+  try { r = await fetch(adresse, { method: "POST", headers: { "Content-Type": "application/json", "x-club-token": KEY, "x-club-version": APP_VERSION }, body: JSON.stringify({ action, ...daten }) }); if (action !== "lebenszeichen") verkehrZaehlen(); }
+  catch { if (mitRegion && navigator.onLine) { REGION_AUS_BIS = Date.now() + REGION_PAUSE_MS; vbEnde(true, performance.now() - t0, ""); return apiRoh(action, daten, zweiterVersuch); } // Region weg → Standardweg
+    vbEnde(false, 0, navigator.onLine ? "Server nicht erreichbar" : "Handy offline"); throw new Error(navigator.onLine ? "Keine Verbindung zum Server – bitte gleich nochmal versuchen." : "Keine Internetverbindung."); }
   const j = await r.json().catch(() => null);
+  if (mitRegion && r.status >= 502 && r.status <= 504 && !j?.error) { REGION_AUS_BIS = Date.now() + REGION_PAUSE_MS; return apiRoh(action, daten, zweiterVersuch); } // Region gestört → Standardweg
   if (r.status === 503 && !j?.error && !zweiterVersuch) { vbEnde(true, performance.now() - t0, ""); await new Promise((ok) => setTimeout(ok, AUSSETZER_PAUSE_MS)); return apiRoh(action, daten, true); }
   // Verbindungsfehler: Gateway (502–504) oder 5xx ohne Antwort des Programms; Fachfehler (z. B. 400/403) heißen „verbunden“
   const leitungKaputt = (r.status >= 502 && r.status <= 504) || (r.status >= 500 && !j);
@@ -5580,7 +5590,10 @@ async function sicherheitPruefen() {
   SI = { laeuft: true, r: null, zeit: null }; sicherheitZeigen(0);
   const r = { zugang: null, serverMs: null, s: null, neueste: null };
   const t0 = performance.now();
-  try { r.s = await api("sicherheit_pruefen", {}, { warten: false }); r.serverMs = Math.round(performance.now() - t0); r.zugang = true; }
+  // zwei Messungen, der bessere Wert zählt – das erste Aufwecken des Servers soll die Anzeige nicht verfälschen
+  try { r.s = await api("sicherheit_pruefen", {}, { warten: false }); r.serverMs = Math.round(performance.now() - t0); r.zugang = true;
+    const t1 = performance.now(), s2 = await api("sicherheit_pruefen", {}, { warten: false }).catch(() => null), ms2 = Math.round(performance.now() - t1);
+    if (s2 && ms2 < r.serverMs) { r.serverMs = ms2; r.s = { ...s2, dbMs: Math.min(s2.dbMs ?? Infinity, r.s.dbMs ?? Infinity) }; } else if (s2?.dbMs != null && r.s.dbMs != null) r.s.dbMs = Math.min(r.s.dbMs, s2.dbMs); }
   catch (e) { r.zugang = /zugang|link|berechtig/i.test(e.message) ? false : null; }
   try { r.neueste = (await (await fetch("version.json?t=" + Date.now(), { cache: "no-store" })).json()).version || null; } catch {}
   SI.r = r; SI.zeit = new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
