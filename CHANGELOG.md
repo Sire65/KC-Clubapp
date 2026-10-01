@@ -1,5 +1,12 @@
 # Änderungen
 
+## 1.16.1 – 2026-10-01 (DEV)
+
+- KC-CLUB-DIENSTWUNSCH: Nachtrag zu DP2 Build 251 RC übernommen (dp3 c0d279a, docs/CLAUDE-BUTTON-LOGIK-NACHTRAG.md):
+  gesperrtes „Weiter“ in Twinkey zeigt den Grund („Bitte mit oder ohne Twinkey wählen.“ / „Bitte zuerst eine Aufgabe
+  wählen.“). Prüfsummen in dp2/QUELLE.json erneuert. Lader: Cache-Schlüssel der DP2-Dateien enthält jetzt auch die
+  Commit-Kennung – Nachträge bei gleicher Build-Nummer kommen ohne alte Dateien aus dem Browser-Speicher an.
+
 ## 1.16.0 – 2026-10-01 (DEV)
 
 - KC-CLUB-NAHE-REGION (Hinweis Hansi „sieht langsam aus“): Messung in den Server-Protokollen: Aufrufe aus Deutschland liefen

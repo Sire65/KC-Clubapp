@@ -3,7 +3,7 @@
 // start.js dort, wo DP2 twinkey-test-boot.js lädt. Die Seite hat <base href="dp2/">: Pfade sind relativ zu dp2/.
 (function () {
   "use strict";
-  const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club", APP_VERSION = "1.16.0";
+  const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club", APP_VERSION = "1.16.1";
   const laden = document.getElementById("dwLaden");
   // CSP ohne Inline-Skripte: Knopf per addEventListener
   const zurueck = () => (parent !== window ? parent.postMessage("dienstwunsch-zu", location.origin) : history.back());
@@ -30,7 +30,7 @@
     try {
       const [quelle, daten] = await Promise.all([fetch("QUELLE.json?v=" + APP_VERSION, { cache: "no-cache" }).then((r) => r.json()), window.KC_CLUB_DW_API("dienstwunsch_laden")]);
       window.KC_CLUB_DW = daten;
-      const v = "?v=" + encodeURIComponent(quelle.dp2Version);
+      const v = "?v=" + encodeURIComponent(quelle.dp2Version + "-" + String(quelle.commit || "").slice(0, 7)); // 1.16.1: Commit im Schlüssel – Nachträge bei gleicher Build-Nummer kommen sicher an
       for (const f of quelle.reihenfolge.filter((f) => f.endsWith(".css"))) { const l = document.createElement("link"); l.rel = "stylesheet"; l.href = f + v; document.head.appendChild(l); }
       const js = quelle.reihenfolge.filter((f) => f.endsWith(".js"));
       const reihe = [];

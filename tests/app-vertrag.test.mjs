@@ -1633,7 +1633,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 142. 1.13.0: DP2 Build 251 Button-Logik (unverändert übernommen) + offene Club-App-Angaben zählen als eigene Daten
 {
   const q = JSON.parse(lies("dp2/QUELLE.json"));
-  assert.ok(q.commit.startsWith("f893f5d") && q.dp2Version === "0.20.0-build251" && q.reihenfolge.includes("src/ui/member-button-logic.js"), "DP2 Build 251 mit Button-Logik übernommen");
+  assert.ok(/^(f893f5d|c0d279a)/.test(q.commit) && q.dp2Version === "0.20.0-build251" && q.reihenfolge.includes("src/ui/member-button-logic.js"), "DP2 Build 251 mit Button-Logik übernommen");
   const d = lies("dp2-club/daten.js");
   assert.ok(/status: "confirmed", source: "club_app"/.test(d) && /K\.wishes = \[\.\.\.\(D\.meine\?\.entries \|\| \[\]\)\.map/.test(d), "Eingangs-Angaben (auch Status offen) zählen in DP2 als eigene aktive Wünsche");
 }
@@ -1664,6 +1664,12 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   const l = lies("dp2-club/lader.js");
   assert.ok(/forceFunctionRegion=eu-west-2/.test(l) && /if \(!r\) r = await anfrage\(API\)/.test(l), "Dienstwunsch-Lader mit Rückweg");
   assert.ok(/const zahlen = await Promise\.all\(\(teil \?\? \[\]\)\.map/.test(server), "init zählt gleichzeitig");
+}
+
+// 146. 1.16.1: DP2-Nachtrag + Cache-Schlüssel mit Commit
+{
+  assert.ok(JSON.parse(lies("dp2/QUELLE.json")).commit.startsWith("c0d279a"), "Nachtrag c0d279a übernommen");
+  assert.ok(/quelle\.dp2Version \+ "-" \+ String\(quelle\.commit \|\| ""\)\.slice\(0, 7\)/.test(lies("dp2-club/lader.js")), "Cache-Schlüssel mit Commit");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

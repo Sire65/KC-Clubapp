@@ -1,10 +1,16 @@
 {
-  "version": "1.16.0",
+  "version": "1.16.1",
   "datum": "2026-10-01",
   "neu": [
-    "⚡ Schneller: Der Server arbeitet jetzt direkt neben dem Daten-Speicher, und der Start zählt ungelesene Nachrichten gleichzeitig"
+    "🧑‍🍳 Dienstwünsche: Ist „Weiter“ noch grau, steht jetzt dabei warum – z. B. „Bitte zuerst eine Aufgabe wählen.“"
   ],
   "verlauf": [
+    {
+      "version": "1.16.1",
+      "neu": [
+        "🧑‍🍳 Dienstwünsche: Ist „Weiter“ noch grau, steht jetzt dabei warum – z. B. „Bitte zuerst eine Aufgabe wählen.“"
+      ]
+    },
     {
       "version": "1.16.0",
       "neu": [

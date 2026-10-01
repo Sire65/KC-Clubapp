@@ -1,8 +1,8 @@
 {
   "hinweis": "Unverändert aus KC DP2 übernommen – NICHT hier bearbeiten. Änderungen in DP2 machen und neu übernehmen (tools/dp2-twinkey-uebernehmen.mjs).",
   "repository": "Sire65/dp3",
-  "commit": "f893f5db0977998eb6bb8165e3374e135b43ede6",
-  "commitDatum": "2026-10-01T13:28:24+02:00",
+  "commit": "c0d279a6c9ed1f6bc4e0c068125321bf1605f14d",
+  "commitDatum": "2026-10-01T14:05:04+02:00",
   "dp2Version": "0.20.0-build251",
   "vorlage": "twinkey-test.html (ohne twinkey-test-data.js, twinkey-test-boot.js)",
   "reihenfolge": [
@@ -152,7 +152,7 @@
     "src/core/actual.js": "204c0ad8d3ec576aa6a536b274f6514dde04ee418457d65bad1235fa2bf10cb6",
     "src/core/wish-contract.js": "d91a8907fad5248cfd83ca3f90271ad3093901dda51f29cc19300b6f0a03f48a",
     "src/core/mobile-wish-matrix.js": "82646fac19db5a2e0e209d3f550031701c9bd0f56b839e8ee41459d7ddf712a8",
-    "src/ui/member-button-logic.js": "b2a9aa8805d9100df7d7f4a39ede54af38932921b6f2e1ec68823967318eaf26",
+    "src/ui/member-button-logic.js": "20d1b14b587afd0b40ab048f9415033912e5acae0aef37fc66c676fdf56f6865",
     "src/ui/role-ux.js": "06231e608a6ca7f7a2cf2bc2624b54bbd5f9da61fc2776e1a4a9164073ad5f00",
     "src/ui/mobile-wish-matrix.js": "7dd05d6eef5dae7b822df6d05fb8a85fe346fbc9d44e81d8a3450c1cb45e9467",
     "src/ui/wish-assistant.js": "aef206a3d4b931f1fad3203a7294bded44f23a2e7a7278fe90fdf08d36243e46",
