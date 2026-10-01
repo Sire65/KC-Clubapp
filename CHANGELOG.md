@@ -1,5 +1,12 @@
 # Änderungen
 
+## 1.7.1 – 2026-10-01 (DEV)
+
+- KC-CLUB-SOS-WO (Live-Test Hansi: „Adresse nicht gefunden“): Nominatim lehnt Anfragen vom Supabase-Server ab (403).
+  Neuer kostenloser Adapter „photon“ (komoot, OpenStreetMap-Daten) im Ortsnamen-Registry ORTSNAMEN, Reihenfolge
+  ORTSNAME_QUELLEN = photon → nominatim (Ausweichweg) über ortsnameHolen(); gilt auch für Foto-Ortsnamen.
+  Nominatim mit „genau“ jetzt auf Hausnummer-Ebene (zoom 18).
+
 ## 1.7.0 – 2026-10-01 (DEV)
 
 - KC-CLUB-SOS-WO (Wunsch Hansi): In der SOS-Ansicht „📍 Wo bin ich?“ – eigener Standort (Koordinaten, Genauigkeit, Uhrzeit)

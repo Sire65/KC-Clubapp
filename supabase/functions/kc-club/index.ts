@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.7.0";
+const SERVER_VERSION = "1.7.1";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -341,7 +341,7 @@ function fotoMetaPruefen(roh: any, mitOrt: boolean) {
 // genau = mit Hausnummer und PLZ (SOS „Wo bin ich?“ zum Vorlesen am Telefon); ohne = kurzer Ortsname wie bisher (Fotos)
 const ORTSNAMEN: Record<string, (lat: number, lon: number, genau?: boolean) => Promise<string | null>> = {
   nominatim: async (lat, lon, genau) => {
-    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=17&accept-language=de`,
+    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=${genau ? 18 : 17}&accept-language=de`,
       { headers: { "User-Agent": "KC-Clubapp (Koecheclub Werne, sire65.github.io/KC-Clubapp)" }, signal: AbortSignal.timeout(8000) });
     if (!r.ok) throw new Error("Nominatim " + r.status);
     const d = await r.json(), a = d.address ?? {};
@@ -354,8 +354,31 @@ const ORTSNAMEN: Record<string, (lat: number, lon: number, genau?: boolean) => P
     const teile = [d.name && d.name !== a.road ? d.name : "", a.road || "", a.suburb && a.suburb !== ort ? a.suburb : "", ort, a.country_code && a.country_code !== "de" ? a.country : ""];
     return [...new Set(teile.filter(Boolean))].join(", ") || d.display_name || null;
   },
+  // KC-CLUB-SOS-WO (1.7.1): Photon (komoot, kostenlos, OpenStreetMap-Daten) – Nominatim lehnt Anfragen aus Rechenzentren
+  // (Supabase) mit 403/429 ab; deshalb Photon zuerst, Nominatim bleibt als Ausweichweg.
+  photon: async (lat, lon, genau) => {
+    const r = await fetch(`https://photon.komoot.io/reverse?lat=${lat}&lon=${lon}&lang=de&limit=1`,
+      { headers: { "User-Agent": "KC-Clubapp (Koecheclub Werne, sire65.github.io/KC-Clubapp)" }, signal: AbortSignal.timeout(8000) });
+    if (!r.ok) throw new Error("Photon " + r.status);
+    const a = (await r.json())?.features?.[0]?.properties;
+    if (!a) return null;
+    const ort = a.city || a.town || a.village || a.locality || "";
+    const strasse = [a.street || "", genau ? a.housenumber || "" : ""].filter(Boolean).join(" ");
+    const name = a.name && a.name !== a.street && a.type !== "house" ? a.name : "";
+    const teile = genau ? [name, strasse, [a.postcode || "", ort].filter(Boolean).join(" ")] : [name, strasse, a.district && a.district !== ort ? a.district : "", ort];
+    if (a.countrycode && a.countrycode !== "DE") teile.push(a.country || "");
+    return [...new Set(teile.filter(Boolean))].join(", ") || null;
+  },
 };
-const ORTSNAME_QUELLE = "nominatim";
+const ORTSNAME_QUELLEN = ["photon", "nominatim"]; // Reihenfolge = Ausweichweg
+async function ortsnameHolen(lat: number, lon: number, genau?: boolean) {
+  let fehler: unknown = null;
+  for (const q of ORTSNAME_QUELLEN) {
+    try { const n = await ORTSNAMEN[q](lat, lon, genau); if (n) return n; } catch (e) { fehler = e; console.error("ortsname", q, String(e)); }
+  }
+  if (fehler) throw fehler;
+  return null;
+}
 let ortsnameZuletzt = 0;
 const sosOrtZuletzt = new Map<string, number>(); // KC-CLUB-SOS-WO: höchstens 1 Adressabfrage je Person in 5 s
 async function fotoHolen(id: unknown) {
@@ -2689,7 +2712,7 @@ Köcheclub Werne`,
         if (Date.now() - ortsnameZuletzt < 1100) await new Promise((r) => setTimeout(r, 1100)); // Nutzungsregel: max. 1 Anfrage/s
         ortsnameZuletzt = Date.now();
         let adresse: string | null = null;
-        try { adresse = await ORTSNAMEN[ORTSNAME_QUELLE](Math.round(lat * 1e5) / 1e5, Math.round(lon * 1e5) / 1e5, true); }
+        try { adresse = await ortsnameHolen(Math.round(lat * 1e5) / 1e5, Math.round(lon * 1e5) / 1e5, true); }
         catch (e) { console.error("sos_ort", String(e)); return json({ adresse: null, fehler: "Adresse gerade nicht abrufbar – die Koordinaten gelten trotzdem." }); }
         await protokoll(ich.person_id, "sos_wo_bin_ich", {});
         return json({ adresse });
@@ -4374,7 +4397,7 @@ Köcheclub Werne`,
         if (!meta.gps || meta.ort) return json({ meta: f.meta ?? null });
         if (Date.now() - ortsnameZuletzt < 1100) await new Promise((r) => setTimeout(r, 1100)); // Nutzungsregel: max. 1 Anfrage/s
         ortsnameZuletzt = Date.now();
-        try { meta.ort = await ORTSNAMEN[ORTSNAME_QUELLE](meta.gps.lat, meta.gps.lon); }
+        try { meta.ort = await ortsnameHolen(meta.gps.lat, meta.gps.lon); }
         catch (e) { console.error("foto_ort", String(e)); return json({ meta: f.meta, fehler: "Ortsname gerade nicht abrufbar" }); }
         if (meta.ort) await db.from("kc_club_fotos").update({ meta }).eq("id", f.id);
         return json({ meta });

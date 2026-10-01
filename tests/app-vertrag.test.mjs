@@ -1525,9 +1525,10 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 134. 1.7.0: SOS „Wo bin ich?“ + Notfallpass (KC-CLUB-SOS-WO, KC-CLUB-NOTFALLPASS)
 {
   const so = server.slice(server.indexOf('case "sos_ort"'), server.indexOf('case "geburtstag_freigabe"'));
-  assert.ok(so && /ORTSNAMEN\[ORTSNAME_QUELLE\]\([\s\S]{0,120}, true\)/.test(so) && /sosOrtZuletzt/.test(so) && /ortsnameZuletzt < 1100/.test(so), "sos_ort: Adapter (genau), Bremse je Person und 1/s");
+  assert.ok(so && /ortsnameHolen\([\s\S]{0,120}, true\)/.test(so) && /sosOrtZuletzt/.test(so) && /ortsnameZuletzt < 1100/.test(so), "sos_ort: Adapter (genau), Bremse je Person und 1/s");
   assert.ok(!/\.(insert|update|upsert)\(/.test(so) && /protokoll\(ich\.person_id, "sos_wo_bin_ich", \{\}\)/.test(so), "sos_ort: nichts speichern, keine Koordinaten ins Protokoll");
   assert.ok(/nominatim: async \(lat, lon, genau\)/.test(server) && /if \(genau\) \{/.test(server), "Ortsnamen-Adapter: Option genau (Fotos unverändert)");
+  assert.ok(/photon: async \(lat, lon, genau\)/.test(server) && /const ORTSNAME_QUELLEN = \["photon", "nominatim"\]/.test(server), "1.7.1: Photon zuerst, Nominatim als Ausweichweg");
   assert.ok(/function sosWoBinIch\(\)/.test(html) && /api\("sos_ort", \{ lat: w\.lat, lon: w\.lon \}/.test(html) && /notrufe \+ sosWoKarte\(\) \+ nfpKarte\(\)/.test(html), "App: Wo bin ich im SOS-Bereich");
   const nfp = html.slice(html.indexOf("// ---------- KC-CLUB-NOTFALLPASS"), html.indexOf("// ---------- KC-CLUB-WISCHEN"));
   assert.ok(/const NFP_FELDER = \[/.test(nfp) && /"kc_club_notfallpass_" \+ \(ICH\?\.person_id/.test(nfp), "Notfallpass: Registry + Speicher je Person");

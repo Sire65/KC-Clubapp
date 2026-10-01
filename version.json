@@ -1,11 +1,16 @@
 {
-  "version": "1.7.0",
+  "version": "1.7.1",
   "datum": "2026-10-01",
   "neu": [
-    "📍 SOS: „Wo bin ich?“ zeigt deinen Standort mit Adresse – zum Vorlesen am Telefon oder per SMS/WhatsApp schicken",
-    "🪪 SOS: Dein Notfallpass (Allergien, Medikamente, Blutgruppe …) – bleibt nur auf deinem Handy, niemand sonst sieht ihn"
+    "📍 SOS „Wo bin ich?“: Die Adresse wird jetzt zuverlässig gefunden – mit Hausnummer und Postleitzahl"
   ],
   "verlauf": [
+    {
+      "version": "1.7.1",
+      "neu": [
+        "📍 SOS „Wo bin ich?“: Die Adresse wird jetzt zuverlässig gefunden – mit Hausnummer und Postleitzahl"
+      ]
+    },
     {
       "version": "1.7.0",
       "neu": [
