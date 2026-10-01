@@ -12,6 +12,10 @@
   Rückfrage „ECHTER ANRUF – KEIN TEST“, nie direkt per Link. Mitglieder im Notfall erreichen (Anruf, SMS, WhatsApp, Festnetz,
   E-Mail) – nur freigegebene Angaben (gleiche Regeln wie „Mitglied ansehen“); Notfallkontakte unverändert nur für die
   Clubleitung, alle anderen sehen die Clubleitung oben. Neue Aktion sos_kontakte (protokolliert „sos_geoeffnet“).
+- KC-CLUB-IOS-CHROME (Meldung Thomas Hess: nutzt nur Chrome, Safari deaktiviert): Kein „auf dem iPhone nur Safari“ mehr. Seit
+  iOS 16.4 legt auch Chrome die App auf den Home-Bildschirm (dann mit Push). Neuer Hinweis „ios_chrome“ mit Anleitung (höchstens
+  1× pro Woche, nur im Browser), Push-/Installationshinweise, Einstellungen und Kurzanleitung nennen Safari oder Chrome;
+  Firefox/Opera auf dem iPhone: Tipp „Safari oder Chrome“. Start-Fehlerseite ohne „bitte Safari“.
 - KC-CLUB-TIPP (Wunsch Hansi): Tipp des Tages beim Öffnen (höchstens einer je Tag, nach dem Einstiegs-Tipp, Registry TIPPS):
   „👉 Jetzt ausprobieren“ führt hin, „✔ Kenne ich“, „⏰ Später“ (3 Tage), „🔕 Keine Tipps mehr“. Schalter unter ⚙️ → „Das
   Wichtigste“ (Standard an). Server-Einstellung „tipps“ (geräteübergreifend).

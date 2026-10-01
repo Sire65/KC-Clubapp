@@ -74,7 +74,7 @@
     senden(true);
     if (!appDa) {
       var ua = navigator.userAgent, ios = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-      var tipp = ios && /CriOS|FxiOS|EdgiOS|OPiOS/.test(ua) ? "Du hast die App in einem anderen Browser als Safari geöffnet. Auf iPhone und iPad bitte den Link in <b>Safari</b> öffnen."
+      var tipp = ios && /CriOS|FxiOS|EdgiOS|OPiOS/.test(ua) ? "Bitte prüfe, ob dein Browser (z. B. Chrome) und dein iPhone/iPad auf dem neuesten Stand sind (App Store bzw. Einstellungen → Allgemein → Softwareupdate). Klappt es dann nicht, den Link einmal in einem anderen Browser öffnen."
         : ios ? "Bitte prüfe, ob dein iPhone/iPad auf dem neuesten Stand ist (Einstellungen → Allgemein → Softwareupdate)."
         : "Bitte öffne den Link in <b>Google Chrome</b> und prüfe, ob der Browser auf dem neuesten Stand ist.";
       var d = document.createElement("div");
@@ -1375,7 +1375,7 @@
         3. Fragt das Handy, ob Chrome etwas auf dem Startbildschirm anlegen darf: <b>„Zulassen“</b>.<br>
         4. Fertig, wenn „Köcheclub“ auch in der <b>App-Liste</b> des Handys steht. Danach das alte Symbol löschen (lange drücken → Entfernen) – deine Daten bleiben erhalten.<br>
         <b>Samsung:</b> im Samsung-Browser „Internet“ unten ≡ → „Seite hinzufügen zu“ → „Startbildschirm“ – oder wie oben mit Chrome.<br>
-        <b>iPhone:</b> in <b>Safari</b> Teilen □↑ → „Zum Home-Bildschirm“ → „Hinzufügen“. Zeigt die neue App „Persönlicher Link nötig“: Link aus Mail/WhatsApp kopieren und dort bei „📋 Link einfügen“ einfügen.<br>
+        <b>iPhone:</b> in <b>Safari</b> oder <b>Chrome</b> Teilen □↑ → „Zum Home-Bildschirm“ → „Hinzufügen“. Zeigt die neue App „Persönlicher Link nötig“: Link aus Mail/WhatsApp kopieren und dort bei „📋 Link einfügen“ einfügen.<br>
         <span style="font-size:.85rem">Nur als richtige App klappen WhatsApp, Karten und „Teilen aus der Galerie → Köcheclub“ zuverlässig.</span></div>
     </details>
     <!-- KC-CLUB-ADMIN-EINSTELLUNGEN (0.65.0): alle Admin-Einstellungen in einem Klappbereich, darin je Thema ein Klappbereich mit Schloss;
@@ -2125,8 +2125,9 @@ async function ansichtSetzen(art, ausFrage) {
 function ansichtWechseln() { ansichtSetzen(einfach() ? "erweitert" : "einfach"); }
 // Einstellungen der einfachen Ansicht: eine Frage statt Tabelle (setzt alle Bereiche gleich; genauer geht es in „Erweitert“)
 function pushWeg() {
-  if (IST_IOS && /CriOS|FxiOS|EdgiOS|OPiOS/i.test(navigator.userAgent)) return "📱 Aufs Handy geht beim iPhone nur mit <b>Safari</b>: Öffne deinen Link in Safari, tippe auf Teilen □↑ → „Zum Home-Bildschirm“ und starte die App von dort.";
-  if (IST_IOS && START_ART !== "app") return "📱 Aufs Handy geht beim iPhone nur, wenn die App auf dem Home-Bildschirm liegt: in Safari Teilen □↑ → „Zum Home-Bildschirm“ → „Hinzufügen“, dann die App von dort starten.";
+  if (IST_IOS && /CriOS|EdgiOS/i.test(navigator.userAgent) && START_ART !== "app") return "📱 Aufs Handy geht beim iPhone, wenn die App auf dem Home-Bildschirm liegt: in Chrome auf Teilen □↑ (oben in der Adresszeile) → „Zum Home-Bildschirm“ → „Hinzufügen“, dann die App über das neue Symbol starten.";
+  if (IST_IOS && /FxiOS|OPiOS/i.test(navigator.userAgent) && START_ART !== "app") return "📱 Aufs Handy geht beim iPhone, wenn die App auf dem Home-Bildschirm liegt – am einfachsten aus <b>Safari</b> oder <b>Chrome</b>: Teilen □↑ → „Zum Home-Bildschirm“, dann die App von dort starten.";
+  if (IST_IOS && START_ART !== "app") return "📱 Aufs Handy geht beim iPhone nur, wenn die App auf dem Home-Bildschirm liegt: in Safari oder Chrome Teilen □↑ → „Zum Home-Bildschirm“ → „Hinzufügen“, dann die App von dort starten.";
   if (!pushMoeglich()) return "📱 Aufs Handy geht auf diesem Gerät leider nicht – nimm „Per E-Mail“.";
   return null;
 }
@@ -6856,7 +6857,7 @@ function druckAnleitung() {
   const html = schritt(1, "📩 Link öffnen", `<p>Du bekommst von Hansi per <b>WhatsApp</b> oder <b>E-Mail</b> deinen <b>persönlichen Link</b>. Tippe ihn an.</p>
       <p>⚠️ Der Link gehört nur dir – bitte <b>nicht weitergeben</b>.</p>`)
     + schritt(2, "📲 Auf den Startbildschirm legen", `<p>Dann öffnet sich die App wie jede andere über ihr Symbol (die <b>Kochmütze</b>) – und Nachrichten kommen aufs Handy.</p>
-      <div class="anl-zwei"><div><b class="kopf">🍎 iPhone</b>Den Link in <b>Safari</b> öffnen (nicht Chrome).<br>Unten ${k("Teilen □↑")} antippen<br>→ ${k("Zum Home-Bildschirm")}<br>→ ${k("Hinzufügen")}</div>
+      <div class="anl-zwei"><div><b class="kopf">🍎 iPhone</b>Den Link in <b>Safari</b> oder <b>Chrome</b> öffnen.<br>${k("Teilen □↑")} antippen<br>→ ${k("Zum Home-Bildschirm")}<br>→ ${k("Hinzufügen")}</div>
         <div><b class="kopf">🤖 Android</b>Den Link in <b>Chrome</b> öffnen.<br>Oben rechts ${k("⋮")} antippen<br>→ ${k("App installieren")}<br>→ ${k("Installieren")}</div></div>`)
     + schritt(3, "✅ Loslegen", `<p>Die App über das neue Symbol öffnen. Beim ersten Start fragt sie: <b>„Wie möchtest du starten?“</b> – wähle <b>🟢 Einfach</b>.</p>
       <p>Dann siehst du nur die wichtigsten Knöpfe:</p>
@@ -8258,9 +8259,15 @@ function fpOhneLink() {
 }
 // Verständliche Hilfe-Schritte statt Fehlermeldungen – je Hinweis höchstens einmal am Tag
 const FP_HINWEISE = [
-  { id: "ios_fremd", wenn: () => FP_IOS && /CriOS|FxiOS|EdgiOS|OPiOS/.test(navigator.userAgent),
-    titel: "📱 Bitte in Safari öffnen", text: () => `Du hast die Club-App in <b>${fpBrowser()}</b> geöffnet. Auf iPhone und iPad funktioniert sie nur in <b>Safari</b> richtig – nur dort kannst du sie auf den Home-Bildschirm legen und Benachrichtigungen bekommen.`,
-    schritte: ["Unten auf <b>„🔗 Meinen Link kopieren“</b> tippen", "<b>Safari</b> öffnen (blaues Kompass-Symbol)", "Oben in die Adresszeile tippen, gedrückt halten → <b>„Einsetzen und öffnen“</b>", "Dann Teilen □↑ → <b>„Zum Home-Bildschirm“</b> → „Hinzufügen“ – ab jetzt immer über das neue Symbol öffnen"], link: true },
+  // KC-CLUB-IOS-CHROME (1.6.0, Meldung Thomas Hess: „ich benutze ausschließlich Chrome, Safari ist deaktiviert“): Seit iOS 16.4
+  // legt auch Chrome die App auf den Home-Bildschirm (mit Benachrichtigungen). Kein „nur Safari“ mehr – nur freundliche Anleitung,
+  // höchstens einmal pro Woche und nur, solange die App nicht schon vom Home-Bildschirm läuft.
+  { id: "ios_chrome", wenn: () => FP_IOS && /CriOS|EdgiOS/.test(navigator.userAgent) && START_ART !== "app", abstandTage: 7,
+    titel: "📱 Club-App in Chrome – Tipp", text: () => `Die Club-App läuft auch in <b>${fpBrowser()}</b>. Für ein eigenes App-Symbol und Benachrichtigungen aufs Handy leg sie einmal auf den Home-Bildschirm:`,
+    schritte: ["In Chrome auf <b>Teilen □↑</b> tippen (oben rechts in der Adresszeile, sonst unten über <b>⋯</b>)", "<b>„Zum Home-Bildschirm“</b> wählen → <b>„Hinzufügen“</b>", "Ab jetzt die Club-App über das neue <b>Köcheclub-Symbol</b> öffnen", "Fehlt „Zum Home-Bildschirm“? Dann ist das iPhone zu alt (vor iOS 16.4) – die App geht trotzdem hier in Chrome, Neuigkeiten kommen per E-Mail."] },
+  { id: "ios_fremd", wenn: () => FP_IOS && /FxiOS|OPiOS/.test(navigator.userAgent),
+    titel: "📱 Tipp: Safari oder Chrome nehmen", text: () => `Du hast die Club-App in <b>${fpBrowser()}</b> geöffnet. Am zuverlässigsten läuft sie auf iPhone und iPad in <b>Safari</b> oder <b>Chrome</b> – dort kannst du sie auf den Home-Bildschirm legen und Benachrichtigungen bekommen.`,
+    schritte: ["Unten auf <b>„🔗 Meinen Link kopieren“</b> tippen", "<b>Safari</b> (blaues Kompass-Symbol) oder <b>Chrome</b> öffnen", "Oben in die Adresszeile tippen, gedrückt halten → <b>„Einsetzen und öffnen“</b>", "Dann Teilen □↑ → <b>„Zum Home-Bildschirm“</b> → „Hinzufügen“ – ab jetzt immer über das neue Symbol öffnen"], link: true },
   { id: "inapp", wenn: () => /; wv\)|FBAN|FBAV|Instagram|Line\//.test(navigator.userAgent),
     titel: "🌐 Bitte im richtigen Browser öffnen", text: () => "Die App läuft gerade in einem <b>eingebauten Mini-Browser</b> (z. B. direkt aus WhatsApp oder Facebook). Dort funktionieren Anmeldung, Fotos und Benachrichtigungen oft nicht.",
     schritte: () => FP_IOS ? ["Unten oder oben auf <b>„In Safari öffnen“</b> (Kompass-Symbol) tippen", "Falls es das nicht gibt: „🔗 Meinen Link kopieren“ und in Safari einfügen"] : ["Oben rechts auf <b>⋮</b> tippen", "<b>„In Chrome öffnen“</b> bzw. „Im Browser öffnen“ wählen"], link: true },
@@ -8282,7 +8289,8 @@ function fpHinweisPruefen() {
   const h = FP_HINWEISE.find((x) => { try { return x.wenn(); } catch { return false; } });
   if (!h) return;
   const heute = new Date().toISOString().slice(0, 10);
-  try { if (localStorage.getItem("kc_club_hinweis_" + h.id) === heute) return; localStorage.setItem("kc_club_hinweis_" + h.id, heute); } catch {}
+  try { const z = localStorage.getItem("kc_club_hinweis_" + h.id);
+    if (z === heute || (h.abstandTage && z && (Date.parse(heute) - Date.parse(z)) / 86400000 < h.abstandTage)) return; localStorage.setItem("kc_club_hinweis_" + h.id, heute); } catch {}
   fpNeu("hinweis", { id: h.id, browser: fpBrowser(), system: fpSystem(), start: START_ART, text: "Hilfe gezeigt: " + h.titel });
   const schritte = typeof h.schritte === "function" ? h.schritte() : h.schritte;
   const f = document.createElement("div"); f.id = "fpFenster"; f.className = "blatt"; f.setAttribute("role", "dialog"); f.setAttribute("aria-modal", "true");
