@@ -1556,6 +1556,13 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/const KLOPF_TOENE = \[/.test(html) && /id="setKlopfTon"/.test(html) && /▶ Testton/.test(html) && /klopfTonSpielen\(klopfStand\(\)\.ton\)/.test(html), "Anklopfton wählbar mit Testton, spielt beim Anklopfen");
 }
 
+// 136. 1.8.2: Nachricht kopieren (KC-CLUB-KOPIEREN)
+{
+  assert.ok(/naKopieren\('\$\{id\}'\)">📋 Kopieren/.test(html) && /async function naKopieren\(id\)/.test(html), "Kopieren im Antipp-Menü");
+  assert.ok(/navigator\.clipboard\.writeText\(t\)/.test(html.slice(html.indexOf("async function naKopieren"))) && /execCommand\("copy"\)/.test(html), "Kopieren mit Rückfall");
+  assert.ok(/weiterleitenBlatt\('\$\{id\}'\)">↪️ Weiterleiten/.test(html), "Weiterleiten bleibt");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

@@ -1,10 +1,16 @@
 {
-  "version": "1.8.1",
+  "version": "1.8.2",
   "datum": "2026-10-01",
   "neu": [
-    "⚡ Schnellstart ist jetzt eine eigene Karte oben im farbigen Feld – nach rechts blättern (als Startkarte wählbar unter ⚙️)"
+    "📋 Nachrichten kopieren: Nachricht antippen → „Kopieren“ – dann in einem anderen Chat einfügen"
   ],
   "verlauf": [
+    {
+      "version": "1.8.2",
+      "neu": [
+        "📋 Nachrichten kopieren: Nachricht antippen → „Kopieren“ – dann in einem anderen Chat einfügen"
+      ]
+    },
     {
       "version": "1.8.1",
       "neu": [

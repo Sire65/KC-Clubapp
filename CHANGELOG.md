@@ -1,5 +1,11 @@
 # Änderungen
 
+## 1.8.2 – 2026-10-01 (DEV)
+
+- KC-CLUB-KOPIEREN (Wunsch Hansi): Im Antipp-Menü einer Nachricht „📋 Kopieren“ (nur bei Nachrichten mit Text) – Text in die
+  Zwischenablage, um ihn in einem anderen Chat (auch außerhalb der App) einzufügen. Rückfall: alter Kopierweg bzw. Text zum
+  Markieren. „↪️ Weiterleiten“ (innerhalb der App) bleibt unverändert.
+
 ## 1.8.1 – 2026-10-01 (DEV)
 
 - KC-CLUB-SCHNELLSTART (Wunsch Hansi): Schnellstart ist keine extra Kachel unter dem Info-Feld mehr, sondern eine eigene
