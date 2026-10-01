@@ -1,5 +1,17 @@
 # Änderungen
 
+## 1.4.0 – 2026-10-01 (DEV)
+
+- KC-CLUB-SUCHE (Wunsch Hansi: globale Live-Suche ab 2 Buchstaben + erweiterte Suche; „Lupe als kleines Symbol, keine
+  große Kachel“): 🔍 klein im Kopf der Startseite und rechts in jeder Unterseiten-Kopfzeile. Suchfenster mit Live-Treffern
+  (0,3 s nach dem Tippen, je Bereich 4, markiert, Umlaut-tolerant: ä=a=ae, ß=ss), Sprung direkt an die Stelle (Nachricht
+  in der Unterhaltung hervorgehoben, Protokoll, Aktion, Archiv-Ordner …), letzte 5 Suchen nur auf dem Gerät.
+  „⚙️ Filter“ = erweiterte Suche: Wo suchen (Kästchen, Alle/Keine, gemerkt), Zeitraum, Von wem, nur mit Anhang,
+  genaue Wortfolge, Sortierung; Ergebnis-Reiter je Bereich. App-Funktionen (Kacheln, Einstellungen) ohne Server.
+  Rechte wie auf den Seiten (Nachrichten nur eigene Unterhaltungen, private Termine nur eigene, Protokolle nur mit
+  Recht, Archiv „nur Clubleitung“). Suchbegriffe werden nicht gespeichert. Migration v130 (kc_club_norm,
+  kc_club_suche – nur service_role; angewendet). Server 1.4.0. Test 129.
+
 ## 1.3.0 – 2026-09-30 (DEV)
 
 - KC-CLUB-GRUPPE-LOESCHEN (Wunsch Hansi: „Angelegte Gruppen müssen löschbar sein“): im ⋮-Menü einer Gruppe

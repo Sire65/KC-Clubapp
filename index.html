@@ -791,6 +791,43 @@
   /* Fotoalbum (KC-CLUB-FOTOALBUM) */
   .speicherbalken { height: 10px; border-radius: 6px; background: var(--karte2); overflow: hidden; margin: 8px 0 6px; }
   .speicherbalken i { display: block; height: 100%; background: var(--gruen); border-radius: 6px; }
+  /* KC-CLUB-SUCHE (1.4.0): kleine Lupe + Suchfenster */
+  .su-klein { position: fixed; z-index: 21; right: max(12px, calc(50% - 372px)); bottom: calc(84px + env(safe-area-inset-bottom)); width: 44px; height: 44px; border-radius: 50%; border: none;
+    background: var(--karte); color: var(--text); font-size: 1.15rem; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.22); opacity: .93; }
+  .su-klein:active { transform: scale(.94); }
+  body.im-chat .su-klein, body.su-auf .su-klein { display: none; }
+  body.su-auf { overflow: hidden; }
+  .su-fenster { position: fixed; inset: 0; z-index: 80; background: rgba(0,0,0,.45); display: flex; justify-content: center; align-items: flex-start; }
+  .su-innen { width: 100%; max-width: 720px; max-height: 100%; overflow-y: auto; background: var(--bg); border-radius: 0 0 18px 18px; padding: max(10px, env(safe-area-inset-top)) 12px 16px; box-shadow: var(--schatten); }
+  .su-kopf { position: sticky; top: 0; z-index: 1; display: flex; gap: 6px; align-items: center; background: var(--bg); padding-bottom: 8px; }
+  .su-kopf .su-lupe { font-size: 1.1rem; }
+  .su-kopf input { flex: 1; min-width: 0; padding: 11px 12px; border: 2px solid var(--linie); border-radius: 12px; background: var(--karte); color: var(--text); font-size: 1.05rem; font-family: inherit; }
+  .su-kopf input:focus { border-color: var(--rot); outline: none; }
+  .su-filterknopf, .su-zu { flex: none; border: none; border-radius: 12px; background: var(--karte2); color: var(--text); padding: 10px; cursor: pointer; font-weight: 700; }
+  .su-filterknopf span { margin-left: 4px; font-size: .85rem; } .su-filterknopf b { background: var(--rot); color: #fff; border-radius: 9px; padding: 0 6px; }
+  .su-filterknopf.an { background: var(--rot); color: #fff; }
+  .su-filter { background: var(--karte); border-radius: 14px; padding: 10px; margin-bottom: 10px; display: grid; gap: 10px; box-shadow: var(--schatten); }
+  .su-titel { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 2px 2px 6px; }
+  .su-titel small { color: var(--grau); }
+  .su-kaestchen { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 4px 10px; }
+  .su-kaestchen label, .su-schalter > label:not(.feld) { display: flex; gap: 8px; align-items: center; padding: 6px 4px; cursor: pointer; }
+  .su-kaestchen input, .su-schalter input[type=checkbox] { width: 20px; height: 20px; flex: none; accent-color: var(--rot); }
+  .su-zwei { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } .su-zwei .feld, .su-schalter .feld { margin: 0; }
+  .su-schalter { display: grid; gap: 4px; }
+  .su-ergebnis.laedt { opacity: .55; transition: opacity .2s; }
+  .su-tipp { margin: 10px 4px; }
+  .su-reiter { display: flex; gap: 4px; overflow-x: auto; margin-bottom: 8px; }
+  .su-reiter button { flex: none; border: none; border-radius: 12px; padding: 7px 11px; background: var(--karte2); color: var(--text); font-weight: 700; cursor: pointer; }
+  .su-reiter button.an { background: var(--rot); color: #fff; } .su-reiter small { font-weight: 400; opacity: .85; }
+  .su-bereich { background: var(--karte); border-radius: 14px; padding: 8px; margin-bottom: 10px; box-shadow: var(--schatten); }
+  .su-zeile { display: flex; gap: 10px; align-items: center; width: 100%; text-align: left; border: none; border-top: 1px solid var(--linie); background: none; color: var(--text); padding: 9px 4px; cursor: pointer; font: inherit; }
+  .su-zeile:first-of-type { border-top: none; }
+  .su-zeile .su-text { flex: 1; min-width: 0; display: grid; gap: 2px; } .su-zeile .su-sym { font-size: 1.3rem; } .su-zeile .pfeil { color: var(--grau); font-size: 1.3rem; }
+  .su-zeile .su-aus { font-size: .88rem; color: var(--grau); overflow-wrap: anywhere; } .su-zeile .su-zusatz { font-size: .78rem; color: var(--grau); }
+  .su-zeile mark { background: #ffe58a; color: #2b1a1c; border-radius: 3px; padding: 0 1px; }
+  .su-mehr { display: block; width: 100%; border: none; background: none; color: var(--rot); font-weight: 700; padding: 8px 4px 2px; text-align: left; cursor: pointer; }
+  :root.dunkel .su-mehr { color: var(--rot3, #f08a8a); }
+  .su-erw { text-align: center; background: var(--karte2); border-radius: 12px; padding: 10px; }
   /* KC-CLUB-ARCHIV (1.2.0): Regal mit Aktenordnern, innen Register-Reiter */
   .ar-filter { display: grid; gap: 8px; }
   .ar-filter input[type=search] { width: 100%; box-sizing: border-box; padding: 12px; border: 1px solid var(--linie); border-radius: 12px; background: var(--bg); color: var(--text); font-size: 1rem; font-family: inherit; }
@@ -1572,7 +1609,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.3.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.4.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -4322,6 +4359,7 @@ function zeige(v, ausHistorie) {
   ["start", "dokumente", "termine", "vorschlaege", "aktionen", "aktion", "fotos", "feedback", "gruppe", "mitglied", "protokolle", "protokoll", "dienste", "nachrichten", "chat", "neu", "mitglieder", "einstellungen", "pinnwand", "erstattung", "ueberblick", "programme", "standort", "archiv"].forEach((x) => $("v-" + x).classList.toggle("versteckt", x !== v));
   document.querySelectorAll("#fuss button").forEach((b) => b.classList.toggle("an", b.dataset.v === v || (v === "chat" && b.dataset.v === "nachrichten") || (v === "neu" && b.dataset.v === "nachrichten")));
   $("eingabe").classList.toggle("versteckt", v !== "chat");
+  document.body.classList.toggle("im-chat", v === "chat"); // KC-CLUB-SUCHE: Lupe nicht über dem Senden-Knopf
   clearInterval(chatTimer);
   if (v !== "chat" && TIPP.id) tippenAus(); // Unterhaltung verlassen → „schreibt …“ sofort beenden
   if (v !== "chat") tipptZeigen([]);
@@ -4357,6 +4395,8 @@ let letztesZurueck = 0;
 window.addEventListener("popstate", (e) => {
   // Fotoalbum: „Zurück“ schließt zuerst nur die Großansicht
   if (faZurueck) { faZurueck = false; return; } // Großansicht wurde mit ✕ geschlossen
+  if (SU.zurueck) { SU.zurueck = false; return; }
+  if (SU.offen) { sucheZu(true); return; } // KC-CLUB-SUCHE: „Zurück“ schließt zuerst das Suchfenster
   if (!$("fotoBetrachter").classList.contains("versteckt")) { fotoSchliessen(true); if (e.state?.v === "fotos") return; }
   document.querySelectorAll(".blatt:not(.versteckt)").forEach((b) => b.classList.add("versteckt"));
   const s = e.state || {};
@@ -7386,13 +7426,13 @@ async function jetztAktualisieren() {
 // Pflegen (Ordner, Hochladen, Ändern, Löschen): Clubsprecher und Admin – der Server prüft das.
 const AR_FARBEN = ["#8b1e2d", "#1f5f99", "#2e7d4f", "#b36b00", "#5b3f8c", "#3f4a54", "#0f7c80", "#a33b6b"];
 const AR_AUTO = { treffen: ["📅", "Treffen"], protokoll: ["📄", "Protokolle"], abstimmung: ["🗳️", "Abstimmungen"], aktion: ["🧳", "Aktionen"], pinnwand: ["📌", "Pinnwand"], anhang: ["📎", "Anhänge"], dienst: ["🗓️", "Dienste"] };
-let AR = { daten: null, ordner: null, register: "", suche: "", jahr: "", art: "", korb: false, datei: null };
+let AR = { ziel: null, daten: null, ordner: null, register: "", suche: "", jahr: "", art: "", korb: false, datei: null };
 try { const f = JSON.parse(localStorage.getItem("kc_club_archiv_filter") || "null"); if (f) { AR.jahr = f.jahr || ""; AR.art = f.art || ""; } } catch {}
 const arFilterMerken = () => { try { localStorage.setItem("kc_club_archiv_filter", JSON.stringify({ jahr: AR.jahr, art: AR.art })); } catch {} };
 function arStart() { AR.ordner = null; AR.korb = false; AR.suche = ""; zeige("archiv"); }
 async function arLaden() {
   if (!AR.daten) $("arInhalt").innerHTML = '<p class="hinweis">Lädt …</p>';
-  try { AR.daten = await api("archiv_liste"); arZeigen(); } catch (e) { $("arInhalt").innerHTML = `<div class="karte hinweis">⚠️ ${esc(e.message)}</div>`; }
+  try { AR.daten = await api("archiv_liste"); if (AR.ziel) { const z = AR.ziel; AR.ziel = null; if (AR.daten.ordner.some((o) => o.id === z)) return arOrdnerOeffnen(z); } arZeigen(); } catch (e) { $("arInhalt").innerHTML = `<div class="karte hinweis">⚠️ ${esc(e.message)}</div>`; }
 }
 const arJahr = (datum) => String(datum || "").slice(0, 4);
 const arAutoOrdner = (jahr) => ({ id: "auto:" + jahr, auto: true, jahr: Number(jahr), titel: "Vereinsleben", farbe: 0, register: Object.keys(AR_AUTO).map((k) => AR_AUTO[k][1]) });
@@ -7613,6 +7653,199 @@ async function arWiederher(was) {
   try { await api("archiv_wiederherstellen", was); melde("♻️ Wiederhergestellt"); await arLaden(); arKorbZeigen(); } catch (e) { melde(e.message, true); }
 }
 
+// ---------- KC-CLUB-SUCHE (1.4.0, Wunsch Hansi): kleine Lupe überall → Schnellsuche ab 2 Buchstaben, ⚙️ Filter = erweiterte Suche ----------
+// Der Server sucht nur, was man auch sonst sehen darf. Suchbegriffe bleiben auf dem Gerät (letzte 5) – nie im Protokoll.
+const SU_BEREICHE = {
+  mitglieder: ["👥", "Mitglieder"], nachrichten: ["💬", "Nachrichten"], termine: ["📅", "Termine"], pinnwand: ["📌", "Pinnwand"],
+  protokolle: ["📄", "Protokolle & Aufgaben"], vorschlaege: ["🗳️", "Vorschläge"], aktionen: ["🧳", "Aktionen"], archiv: ["🗄️", "Archiv"],
+  fotos: ["📷", "Fotos"], dienste: ["🗓️", "Dienste"], app: ["⚙️", "In der App"],
+};
+const SU_ZEITRAUM = [["", "Jederzeit"], ["30", "Letzte 30 Tage"], ["jahr", "Dieses Jahr"], ["vorjahr", "Letztes Jahr"], ["eigen", "Von – bis …"]];
+let SU = { offen: false, q: "", filter: false, bereiche: Object.keys(SU_BEREICHE), zeitraum: "", von: "", bis: "", autor: "", anhang: false, genau: false, sortierung: "datum", reiter: "", nr: 0, ergebnis: null, timer: null };
+try { const f = JSON.parse(localStorage.getItem("kc_club_suche_filter") || "null"); if (f) Object.assign(SU, { bereiche: f.bereiche || SU.bereiche, sortierung: f.sortierung || "datum" }); } catch {}
+const suMerken = () => { try { localStorage.setItem("kc_club_suche_filter", JSON.stringify({ bereiche: SU.bereiche, sortierung: SU.sortierung })); } catch {} };
+const suLetzte = () => { try { return JSON.parse(localStorage.getItem("kc_club_suche_letzte") || "[]"); } catch { return []; } };
+function suLetzteMerken(q) { try { const l = [q, ...suLetzte().filter((x) => x !== q)].slice(0, 5); localStorage.setItem("kc_club_suche_letzte", JSON.stringify(l)); } catch {} }
+// App-Funktionen: ohne Server, aus den Kacheln + Einstellungen
+function suAppListe() {
+  const ein = (id) => () => suEinstellung(id);
+  const feste = [
+    ["🔔", "Push-Benachrichtigungen", "push benachrichtigung mitteilung handy", ein("pushStatus")], ["🔊", "Ton", "ton klingel laut", ein("setTon")],
+    ["🌙", "Nicht stören (Ruhezeit)", "nicht stören ruhezeit nacht stumm", ein("ruheAn")], ["🔠", "Schriftgröße", "schrift gross groß lesen", ein(einfach() ? "setGrossE" : "setGross")],
+    ["🎨", "Farbe & Design", "farbe design aussehen", ein(einfach() ? "designWahlE" : "designWahl")], ["🌗", "Tag/Nacht umschalten", "dunkel hell nacht tag", () => dunkelUmschalten()],
+    ["🎂", "Geburtstag anzeigen", "geburtstag", ein("setGeburtstag")], ["🟢", "Online sichtbar", "online sichtbar unsichtbar", ein("setOnline")],
+    ["🆘", "Notfallkontakt", "notfall kontakt", ein("nfName")], ["📆", "Kalender-Abo (Handy-Kalender)", "kalender abo handy ical", ein("kalAboKnopf")],
+    ["📱", "Meine Geräte", "geräte handy tablet abmelden", () => geraeteBlatt()], ["📡", "Verbindung prüfen", "verbindung internet led server", () => verbindungBlatt()],
+    ["🔄", "Update prüfen", "update version neu", () => updateKachel()], ["🟢", "Mein Status", "status urlaub verfügbar krank", () => statusBlatt()],
+    ["👀", "Ansicht wechseln (einfach/erweitert)", "ansicht einfach erweitert kacheln", () => ansichtWechseln()], ["🧪", "Test an mich", "test push mail ausprobieren", () => testAnMichStarten()],
+    ["🆘", "Problem melden", "problem fehler hilfe melden", () => fpProblemMelden()], ["👥", "Wer ist online?", "online wer", () => onlineBlatt()],
+    ["📍", "Standort teilen", "standort teilen wo bin ich", () => stBlatt()],
+  ].map(([sym, t, w, fn]) => ({ sym, t, w, fn }));
+  const kach = Object.values(KACHELN).flat().filter((k) => !k.bald && (!k.nur || k.nur()))
+    .map((k) => ({ sym: k.sym, t: k.t, w: typeof k.u === "string" ? k.u : "", fn: () => (k.aktion ? new Function(k.aktion)() : zeige(k.v)) }));
+  return [...kach, ...feste];
+}
+function suEinstellung(id) {
+  zeige("einstellungen");
+  setTimeout(() => { const z = $(id); if (!z) return; const d = z.closest("details"); if (d) d.open = true;
+    z.scrollIntoView({ behavior: "smooth", block: "center" }); z.classList.add("hervor"); setTimeout(() => z.classList.remove("hervor"), 2600); }, 300);
+}
+// gleiche Vereinheitlichung wie auf dem Server (ä=a=ae, ß=ss)
+const suNorm = (t) => String(t ?? "").toLowerCase().replace(/[äöüéèêàáâëïçñ]/g, (c) => ({ ä: "a", ö: "o", ü: "u", é: "e", è: "e", ê: "e", à: "a", á: "a", â: "a", ë: "e", ï: "i", ç: "c", ñ: "n" })[c])
+  .replace(/ß/g, "ss").replace(/ae/g, "a").replace(/oe/g, "o").replace(/ue/g, "u");
+function suWoerter() { return SU.genau ? [SU.q.trim()] : SU.q.trim().split(/\s+/).filter(Boolean); }
+// Treffer im Text markieren (Umlaut-tolerant)
+function suMuster() {
+  const teile = suWoerter().map((w) => suNorm(w).replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/a/g, "(?:a|ä|ae)").replace(/o/g, "(?:o|ö|oe)").replace(/u/g, "(?:u|ü|ue)").replace(/ss/g, "(?:ss|ß)")).filter(Boolean);
+  try { return teile.length ? new RegExp("(" + teile.join("|") + ")", "gi") : null; } catch { return null; }
+}
+function suMarkiert(text, muster) { const t = esc(text || ""); return muster ? t.replace(muster, "<mark>$1</mark>") : t; }
+// Ausschnitt rund um den ersten Treffer
+function suAusschnitt(text, muster, n = 110) {
+  const t = String(text || "").replace(/\s+/g, " ").trim(); if (!t) return "";
+  muster && (muster.lastIndex = 0); const m = muster ? muster.exec(t) : null; muster && (muster.lastIndex = 0);
+  if (!m || t.length <= n) return t.length > n ? t.slice(0, n) + " …" : t;
+  const a = Math.max(0, m.index - 35); return (a ? "… " : "") + t.slice(a, a + n) + (a + n < t.length ? " …" : "");
+}
+function sucheAuf(start) {
+  if (!$("suFenster")) {
+    const f = document.createElement("div"); f.id = "suFenster"; f.className = "su-fenster versteckt"; f.setAttribute("role", "dialog"); f.setAttribute("aria-modal", "true"); f.setAttribute("aria-label", "Suche");
+    f.innerHTML = `<div class="su-innen">
+      <div class="su-kopf"><span class="su-lupe" aria-hidden="true">🔍</span><input id="suEingabe" type="search" enterkeyhint="search" autocomplete="off" placeholder="Suchen … (ab 2 Buchstaben)" oninput="suTippen(this.value)" onkeydown="if(event.key==='Escape')sucheZu();if(event.key==='Enter'){this.blur();suJetzt()}">
+        <button class="su-filterknopf" id="suFilterKnopf" onclick="suFilterUmschalten()" title="Erweiterte Suche mit Filtern">⚙️<span>Filter</span></button><button class="su-zu" onclick="sucheZu()" aria-label="Suche schließen">✕</button></div>
+      <div id="suFilter" class="su-filter versteckt"></div><div id="suErgebnis" class="su-ergebnis"></div></div>`;
+    f.onclick = (e) => { if (e.target === f) sucheZu(); };
+    document.body.appendChild(f);
+  }
+  if (!SU.offen) { SU.offen = true; history.pushState({ ...(history.state || {}), suche: true }, "", location.href); nzZaehlen("suche"); }
+  $("suFenster").classList.remove("versteckt"); document.body.classList.add("su-auf");
+  SU.q = start != null ? start : ""; SU.ergebnis = null; // neu öffnen = leeres Feld + „Zuletzt gesucht“
+  $("suEingabe").value = SU.q; suFilterZeigen(); suZeigen();
+  setTimeout(() => $("suEingabe").focus(), 50);
+  if (SU.q.trim().length >= 2) suJetzt();
+}
+function sucheZu(ausHistorie) {
+  if (!SU.offen) return;
+  SU.offen = false; clearTimeout(SU.timer);
+  $("suFenster")?.classList.add("versteckt"); document.body.classList.remove("su-auf");
+  if (!ausHistorie && history.state?.suche) { SU.zurueck = true; history.back(); } // eigener Verlaufseintrag weg, ohne die Ansicht neu zu laden
+}
+function suTippen(v) { SU.q = v; clearTimeout(SU.timer); if (suNorm(v).replace(/\s/g, "").length < 2) { SU.ergebnis = null; return suZeigen(); } SU.timer = setTimeout(suJetzt, 300); }
+async function suJetzt() {
+  clearTimeout(SU.timer);
+  const q = SU.q.trim(); if (suNorm(q).replace(/\s/g, "").length < 2) return;
+  const nr = ++SU.nr; $("suErgebnis").classList.add("laedt");
+  const z = suZeitraum(), server = SU.bereiche.filter((b) => b !== "app");
+  try {
+    const r = server.length ? await api("suche", { q, schnell: !SU.filter, bereiche: server, genau: SU.genau, anhang: SU.anhang, autor: SU.autor || undefined, von: z.von, bis: z.bis, sortierung: SU.sortierung }) : { bereiche: [] };
+    if (nr !== SU.nr) return; // inzwischen weitergetippt
+    SU.ergebnis = r.bereiche; SU.fehler = null; suLetzteMerken(q);
+  } catch (e) { if (nr !== SU.nr) return; SU.ergebnis = []; SU.fehler = e.message; }
+  $("suErgebnis").classList.remove("laedt"); suZeigen();
+}
+function suZeitraum() {
+  const heute = heuteIso(), j = heute.slice(0, 4);
+  if (SU.zeitraum === "30") return { von: tagPlus(heute, -30), bis: heute };
+  if (SU.zeitraum === "jahr") return { von: j + "-01-01", bis: j + "-12-31" };
+  if (SU.zeitraum === "vorjahr") return { von: (j - 1) + "-01-01", bis: (j - 1) + "-12-31" };
+  if (SU.zeitraum === "eigen") return { von: SU.von || undefined, bis: SU.bis || undefined };
+  return {};
+}
+function suFilterAktiv() { return (SU.bereiche.length !== Object.keys(SU_BEREICHE).length ? 1 : 0) + (SU.zeitraum ? 1 : 0) + (SU.autor ? 1 : 0) + (SU.anhang ? 1 : 0) + (SU.genau ? 1 : 0); }
+async function suFilterUmschalten() {
+  SU.filter = !SU.filter;
+  if (SU.filter && !MITGLIEDER) try { await mitgliederHolen(); } catch {}
+  suFilterZeigen(); if (SU.q.trim().length >= 2) suJetzt();
+}
+function suFilterZeigen() {
+  const n = suFilterAktiv();
+  $("suFilterKnopf").classList.toggle("an", SU.filter);
+  $("suFilterKnopf").innerHTML = `⚙️<span>Filter${n ? ` <b>${n}</b>` : ""}</span>`;
+  $("suFilter").classList.toggle("versteckt", !SU.filter);
+  if (!SU.filter) return;
+  const alleAn = SU.bereiche.length === Object.keys(SU_BEREICHE).length;
+  $("suFilter").innerHTML = `
+    <div class="su-gruppe"><div class="su-titel"><b>Wo suchen?</b><button class="knopf klein" onclick="SU.bereiche=${alleAn ? "[]" : "Object.keys(SU_BEREICHE)"};suMerken();suFilterZeigen();suJetzt()">${alleAn ? "Keine" : "Alle"}</button></div>
+      <div class="su-kaestchen">${Object.entries(SU_BEREICHE).filter(([b]) => b !== "protokolle" || ICH?.protokolle !== false).map(([b, [sym, t]]) => `<label><input type="checkbox" ${SU.bereiche.includes(b) ? "checked" : ""} onchange="suBereich('${b}', this.checked)"><span>${sym} ${esc(t)}</span></label>`).join("")}</div></div>
+    <div class="su-gruppe su-zwei">
+      <label class="feld">Zeitraum<select onchange="SU.zeitraum=this.value;suFilterZeigen();suJetzt()">${SU_ZEITRAUM.map(([w, t]) => `<option value="${w}" ${SU.zeitraum === w ? "selected" : ""}>${t}</option>`).join("")}</select></label>
+      <label class="feld">Von wem<select onchange="SU.autor=this.value;suFilterZeigen();suJetzt()"><option value="">Egal</option>${ICH ? `<option value="${ICH.person_id}" ${SU.autor === ICH.person_id ? "selected" : ""}>Von mir</option>` : ""}${(MITGLIEDER || []).filter((m) => m.person_id !== ICH?.person_id).map((m) => `<option value="${m.person_id}" ${SU.autor === m.person_id ? "selected" : ""}>${esc(m.name)}</option>`).join("")}</select></label>
+      ${SU.zeitraum === "eigen" ? `<label class="feld">von<input type="date" value="${SU.von}" onchange="SU.von=this.value;suJetzt()"></label><label class="feld">bis<input type="date" value="${SU.bis}" onchange="SU.bis=this.value;suJetzt()"></label>` : ""}
+    </div>
+    <div class="su-gruppe su-schalter">
+      <label><input type="checkbox" ${SU.anhang ? "checked" : ""} onchange="SU.anhang=this.checked;suFilterZeigen();suJetzt()"><span>📎 nur mit Datei/Anhang</span></label>
+      <label><input type="checkbox" ${SU.genau ? "checked" : ""} onchange="SU.genau=this.checked;suFilterZeigen();suJetzt()"><span>„ “ genau diese Wortfolge</span></label>
+      <label class="feld">Sortieren<select onchange="SU.sortierung=this.value;suMerken();suJetzt()"><option value="datum" ${SU.sortierung === "datum" ? "selected" : ""}>Neueste zuerst</option><option value="relevanz" ${SU.sortierung === "relevanz" ? "selected" : ""}>Beste Treffer zuerst</option></select></label>
+      ${n ? `<button class="knopf klein" onclick="suZuruecksetzen()">↺ Filter zurücksetzen</button>` : ""}
+    </div>`;
+}
+function suBereich(b, an) { SU.bereiche = an ? [...new Set([...SU.bereiche, b])] : SU.bereiche.filter((x) => x !== b); suMerken(); suFilterZeigen(); suJetzt(); }
+function suZuruecksetzen() { Object.assign(SU, { bereiche: Object.keys(SU_BEREICHE), zeitraum: "", von: "", bis: "", autor: "", anhang: false, genau: false, sortierung: "datum", reiter: "" }); suMerken(); suFilterZeigen(); suJetzt(); }
+function suAppTreffer() {
+  if (!SU.bereiche.includes("app") || SU.anhang || SU.autor || SU.zeitraum) return [];
+  const w = suWoerter().map(suNorm);
+  return suAppListe().filter((a) => { const n = suNorm(a.t + " " + a.w); return w.every((x) => n.includes(x)); });
+}
+let SU_APP = [];
+function suZeigen() {
+  const ziel = $("suErgebnis"), q = SU.q.trim();
+  if (suNorm(q).replace(/\s/g, "").length < 2) {
+    const l = suLetzte();
+    ziel.innerHTML = `<p class="hinweis su-tipp">Tippe mindestens 2 Buchstaben. Gesucht wird in Mitgliedern, Nachrichten, Terminen, Pinnwand, Protokollen, Archiv und mehr – nur in dem, was du auch sonst sehen darfst.</p>
+      ${l.length ? `<div class="su-titel"><b>Zuletzt gesucht</b></div><div class="chips">${l.map((x) => `<button class="chip" onclick='sucheAuf(${esc(JSON.stringify(x))})'>🕘 ${esc(x)}</button>`).join("")}</div>` : ""}`;
+    return;
+  }
+  if (!SU.ergebnis) { ziel.innerHTML = '<p class="hinweis su-tipp">Suche …</p>'; return; }
+  const muster = suMuster();
+  SU_APP = suAppTreffer();
+  const gruppen = [...SU.ergebnis, ...(SU_APP.length ? [{ bereich: "app", treffer: SU_APP.slice(0, SU.filter ? 30 : 4).map((a, i) => ({ id: String(i), titel: a.t, text: "", app: true, sym: a.sym })), mehr: !SU.filter && SU_APP.length > 4 }] : [])];
+  if (SU.reiter && !gruppen.some((g) => g.bereich === SU.reiter)) SU.reiter = "";
+  const summe = gruppen.reduce((s, g) => s + g.treffer.length, 0);
+  if (!summe) { ziel.innerHTML = `<p class="hinweis su-tipp">${SU.fehler ? "⚠️ " + esc(SU.fehler) : `Nichts gefunden für „${esc(q)}“.${suFilterAktiv() ? " Vielleicht sind Filter gesetzt – <button class=\"knopf klein\" onclick=\"suZuruecksetzen()\">↺ zurücksetzen</button>" : " Tipp: weniger oder andere Wörter versuchen."}`}</p>`; return; }
+  const reiter = SU.filter && gruppen.length > 1 ? `<div class="su-reiter">${[["", "Alle", summe], ...gruppen.map((g) => [g.bereich, SU_BEREICHE[g.bereich][0], g.treffer.length + (g.mehr ? "+" : "")])].map(([b, t, n]) => `<button class="${SU.reiter === b ? "an" : ""}" onclick="SU.reiter='${b}';suZeigen()">${t} <small>${n}</small></button>`).join("")}</div>` : "";
+  ziel.innerHTML = reiter + gruppen.filter((g) => !SU.filter || !SU.reiter || g.bereich === SU.reiter).map((g) => {
+    const [sym, t] = SU_BEREICHE[g.bereich];
+    return `<div class="su-bereich"><div class="su-titel"><b>${sym} ${esc(t)}</b><small>${g.treffer.length}${g.mehr ? "+" : ""}</small></div>
+      ${g.treffer.map((x) => suZeile(g.bereich, x, muster)).join("")}
+      ${g.mehr && !SU.filter ? `<button class="su-mehr" onclick="suNurBereich('${g.bereich}')">Mehr in ${esc(t)} anzeigen ›</button>` : ""}</div>`;
+  }).join("") + (SU.filter ? "" : `<button class="su-mehr su-erw" onclick="suFilterUmschalten()">⚙️ Erweiterte Suche mit Filtern ›</button>`);
+}
+function suNurBereich(b) { SU.bereiche = [b]; SU.reiter = ""; SU.filter = false; suFilterUmschalten(); }
+function suZeile(b, x, muster) {
+  const e = x.extra || {}, zusatz = [];
+  if (x.datum) zusatz.push(String(x.datum).length === 10 ? fTagDe(x.datum) : zeitKurz(x.datum));
+  if (x.von && b !== "mitglieder") zusatz.push(x.von);
+  const marke = e.abgesagt ? "❌ abgesagt" : e.art === "privat" ? "🔒 privat" : e.art === "anfrage" ? "📨 Anfrage" : e.art === "aufgabe" ? (e.erledigt ? "✔ Aufgabe erledigt" : "📝 Aufgabe") : e.entwurf ? "✏️ Entwurf" : e.erledigt ? "✔ erledigt" : e.vorstand ? "🔒 Clubleitung" : e.unterhaltung ? "" : "";
+  const text = b === "nachrichten" && !e.unterhaltung ? suAusschnitt(x.text, muster) : b === "mitglieder" ? x.text : suAusschnitt(x.text, muster, 90);
+  const titel = b === "pinnwand" ? suAusschnitt(x.titel, muster, 70) : x.titel;
+  return `<button class="su-zeile" onclick="suOeffnen('${b}', ${esc(JSON.stringify(x.id))})">${x.app ? `<span class="su-sym">${x.sym}</span>` : ""}
+    <span class="su-text"><b>${suMarkiert(titel, muster)}</b>${marke ? ` <span class="marke">${marke}</span>` : ""}
+    ${text && text !== titel ? `<span class="su-aus">${suMarkiert(text, muster)}</span>` : ""}${zusatz.length ? `<span class="su-zusatz">${esc(zusatz.join(" · "))}</span>` : ""}</span><span class="pfeil">›</span></button>`;
+}
+function suOeffnen(b, id) {
+  const x = (SU.ergebnis || []).find((g) => g.bereich === b)?.treffer.find((t) => t.id === id), e = x?.extra || {};
+  sucheZu(true); if (history.state?.suche) history.replaceState({ ...history.state, suche: false }, "", location.href);
+  if (b === "app") { const a = SU_APP[Number(id)]; return a?.fn(); }
+  if (!x) return;
+  if (b === "mitglieder") return mitgliedOeffnen(id);
+  if (b === "nachrichten") {
+    return chatOeffnen(e.thread).then(() => { if (e.unterhaltung) return; const el = document.getElementById("msg-" + id);
+      if (el) { el.scrollIntoView({ behavior: "smooth", block: "center" }); el.classList.add("hervor"); setTimeout(() => el.classList.remove("hervor"), 2600); } });
+  }
+  if (b === "termine") { termineArt = "liste"; return zeige("termine"); }
+  if (b === "pinnwand") return zeige("pinnwand");
+  if (b === "protokolle") return e.art === "protokoll" ? protokollOeffnen(id) : e.protokoll ? protokollOeffnen(e.protokoll) : zeige("protokolle");
+  if (b === "vorschlaege") return zeige("vorschlaege");
+  if (b === "aktionen") return aktionOeffnen(id);
+  if (b === "archiv") { AR.ziel = e.ordner; return arStart(); }
+  if (b === "fotos") { faFilter = e.thema ? { thema: e.thema } : {}; faPapierkorb = false; return zeige("fotos"); }
+  if (b === "dienste") return dpNurIch();
+}
+// kleine runde Lupe unten rechts über der Leiste – auf jeder Seite gleich, verdrängt keine Knöpfe (im Chat ausgeblendet)
+function suLupenEinbauen() {
+  if (!$("suLupe")) document.body.insertAdjacentHTML("beforeend", `<button class="su-klein" id="suLupe" onclick="sucheAuf()" title="Suchen" aria-label="Suchen">🔍</button>`);
+}
+
 const NZ_TAKT_MS = 120000;
 let nzPuffer = (() => { try { return JSON.parse(localStorage.getItem("kc_club_nutzung") || "{}"); } catch { return {}; } })();
 function nzZaehlen(v) { if (!v) return; nzPuffer[v] = (nzPuffer[v] || 0) + 1; try { localStorage.setItem("kc_club_nutzung", JSON.stringify(nzPuffer)); } catch {} }
@@ -7626,7 +7859,7 @@ document.addEventListener("visibilitychange", () => { if (document.hidden) nzSen
 const NZ_NAMEN = { start: "🏠 Startseite", termine: "📅 Termine", nachrichten: "💬 Nachrichten (Liste)", chat: "💬 Unterhaltung geöffnet", neu: "✍️ Neue Nachricht",
   pinnwand: "📌 Pinnwand", fotos: "📷 Fotoalbum", mitglieder: "👥 Mitglieder", mitglied: "👤 Mitglied angesehen", einstellungen: "⚙️ Einstellungen", dienste: "🗓️ Dienstpläne",
   aktionen: "🧳 Aktionen", aktion: "🧳 Aktion angesehen", protokolle: "📋 Protokolle", protokoll: "📋 Protokoll angesehen", vorschlaege: "🗳️ Vorschläge", dokumente: "📚 Dokumente",
-  standort: "📍 Standorte", erstattung: "💶 Erstattung", feedback: "💭 Feedback", programme: "💻 Programme", ueberblick: "🗺️ Überblick", gruppe: "👥 Gruppe", archiv: "🗄️ Archiv" };
+  standort: "📍 Standorte", erstattung: "💶 Erstattung", feedback: "💭 Feedback", programme: "💻 Programme", ueberblick: "🗺️ Überblick", gruppe: "👥 Gruppe", archiv: "🗄️ Archiv", suche: "🔍 Suche geöffnet" };
 let NZ_TAGE = 7;
 async function nzAdmin(tage) {
   if (tage) NZ_TAGE = tage;
@@ -7796,7 +8029,7 @@ async function fpAdmin(tage) {
   if (!KEY) { $("gesperrt").classList.remove("versteckt"); fpOhneLink(); return; }
   $("app").classList.remove("versteckt");
   iosStartMitSchluessel();
-  klappenMerken(); registerZeigen(); kachelnZeigen();
+  klappenMerken(); registerZeigen(); kachelnZeigen(); suLupenEinbauen();
   // Verlauf: unten ein „Basis“-Eintrag, darüber die Startseite → „Zurück“ bleibt in der App
   const sprung = location.hash; START_HASH = sprung;
   history.replaceState({ basis: true }, "", url.pathname);

@@ -1682,3 +1682,17 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/id="chatGruppeWeg" onclick="gruppeLoeschen\(\)"/.test(html) && /\$\("chatGruppeWeg"\)\.classList\.toggle\("versteckt", !g\?\.darfVerwalten\)/.test(html), "App: Knopf Gruppe löschen fehlt");
   assert.ok(/async function gruppeLoeschen\(\)[\s\S]{0,300}confirm\(/.test(html), "App: Rückfrage vor dem Löschen fehlt");
 }
+
+// 129. 1.4.0: globale Suche (KC-CLUB-SUCHE)
+{
+  const mig = lies("supabase/migrations/20261001_kc_club_v130_suche.sql");
+  assert.ok(/create or replace function kc_club_norm/.test(mig) && /create or replace function kc_club_suche/.test(mig), "Suchfunktionen fehlen");
+  assert.ok(/revoke all on function kc_club_suche\([^)]*\) from public, anon, authenticated/.test(mig), "Suche nur über den Server");
+  assert.ok(/kc_communication_thread_participants tp on tp\.thread_id = m\.thread_id and tp\.person_id = p_person/.test(mig), "Nachrichten nur aus eigenen Unterhaltungen");
+  assert.ok(/where pt\.person_id = p_person/.test(mig) && /\(not o\.nur_vorstand or p_vorstand\)/.test(mig) && /p_protokolle and not p_anhang/.test(mig), "Rechte: privat/Archiv/Protokolle");
+  const f = server.slice(server.indexOf('case "suche"'), server.indexOf('case "', server.indexOf('case "suche"') + 10));
+  assert.ok(f && /p_person: ich\.person_id, p_protokolle: ich\.protokolle, p_vorstand: ich\.vorstand/.test(f) && !/protokoll\(/.test(f), "Server: Rechte übergeben, Suchbegriff nie protokollieren");
+  assert.ok(/length < 2\) return json\(\{ bereiche: \[\] \}\)/.test(f), "erst ab 2 Zeichen");
+  assert.ok(/class="su-klein" id="suLupe" onclick="sucheAuf\(\)"[^>]*>🔍/.test(html) && /suLupenEinbauen\(\);/.test(html) && !/id: "suche"/.test(html), "App: kleine Lupe (keine Kachel)");
+  assert.ok(/SU\.timer = setTimeout\(suJetzt, 300\)/.test(html) && /function suFilterZeigen\(/.test(html) && /Wo suchen\?/.test(html), "App: Live-Suche/Filter fehlt");
+}

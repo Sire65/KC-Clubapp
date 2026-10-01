@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.3.0";
+const SERVER_VERSION = "1.4.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -980,6 +980,20 @@ async function archivAuto(ich: Ich) {
   return e.filter((x) => x.datum).sort((a, b) => String(b.datum).localeCompare(String(a.datum)));
 }
 
+// ---------- Globale Suche (KC-CLUB-SUCHE, 1.4.0) ----------
+// Schnellsuche (Lupe, ab 2 Buchstaben) und erweiterte Suche. Datenbank-Teil: kc_club_suche() mit denselben Sichtbarkeitsregeln
+// wie die einzelnen Seiten. Mitglieder, Aktionen und Gruppennamen sucht der Server hier selbst. Suchbegriffe werden nie gespeichert.
+const SUCHE_BEREICHE = ["mitglieder", "nachrichten", "termine", "pinnwand", "protokolle", "vorschlaege", "aktionen", "archiv", "fotos", "dienste"];
+// gleiche Vereinheitlichung wie kc_club_norm() in der Datenbank
+const suchNorm = (t: unknown) => String(t ?? "").toLowerCase().replace(/[äöüéèêàáâëïçñ]/g, (c) => ({ ä: "a", ö: "o", ü: "u", é: "e", è: "e", ê: "e", à: "a", á: "a", â: "a", ë: "e", ï: "i", ç: "c", ñ: "n" } as Record<string, string>)[c])
+  .replace(/ß/g, "ss").replace(/ae/g, "a").replace(/oe/g, "o").replace(/ue/g, "u");
+const suchPasst = (woerter: string[], ...felder: unknown[]) => { const n = suchNorm(felder.filter(Boolean).join(" ")); return woerter.every((w) => n.includes(suchNorm(w))); };
+function suchTag(v: unknown, plus = 0) {
+  const d = archivDatum(v); if (!d) return null;
+  const [y, m, t] = d.split("-").map(Number);
+  return berlinZuUtc(y, m, t + plus, 0, 0);
+}
+
 // ---------- Vorschläge & Abstimmungen (KC-CLUB-VORSCHLAG) ----------
 const STANDARD_OPTIONEN = ["Ja", "Nein", "Enthaltung"];
 async function vorschlaegeListe(ich: Ich) {
@@ -1479,7 +1493,7 @@ async function privatListe(ich: Ich, von: string, bis?: string) {
 
 // KC-CLUB-NUTZUNG (0.99.0): nur diese Bereiche werden gezählt (Ansichten der App)
 const NUTZUNG_BEREICHE = new Set(["start", "termine", "nachrichten", "chat", "neu", "pinnwand", "fotos", "mitglieder", "mitglied", "einstellungen", "dienste",
-  "aktionen", "aktion", "protokolle", "protokoll", "vorschlaege", "dokumente", "standort", "erstattung", "feedback", "programme", "ueberblick", "gruppe", "archiv"]);
+  "aktionen", "aktion", "protokolle", "protokoll", "vorschlaege", "dokumente", "standort", "erstattung", "feedback", "programme", "ueberblick", "gruppe", "archiv", "suche"]);
 
 // ---------- Hauptprogramm ----------
 Deno.serve(async (req) => {
@@ -4218,6 +4232,66 @@ Köcheclub Werne`,
         await db.from("kc_club_fotos").update({ geloescht_am: null, geloescht_von: null }).eq("id", f.id);
         await protokoll(ich.person_id, "foto_wiederhergestellt", { foto: f.id });
         return json({ ok: true });
+      }
+
+      // ----- Globale Suche (KC-CLUB-SUCHE, 1.4.0) -----
+      case "suche": {
+        const roh = txt(p.q, 80);
+        if (suchNorm(roh).replace(/\s/g, "").length < 2) return json({ bereiche: [] });
+        const woerter = p.genau ? [roh] : roh.split(/\s+/).filter(Boolean).slice(0, 6);
+        const bereiche = Array.isArray(p.bereiche) ? SUCHE_BEREICHE.filter((b) => p.bereiche.includes(b)) : SUCHE_BEREICHE;
+        const grenze = p.schnell ? 6 : 60;
+        const von = suchTag(p.von), bis = suchTag(p.bis, 1), autor = txt(p.autor, 60) || null, anhang = !!p.anhang;
+        const imZeitraum = (d: unknown) => { const t = d ? new Date(String(d).length === 10 ? String(d) + "T12:00:00Z" : String(d)) : null; return !t || ((!von || t >= von) && (!bis || t < bis)); };
+        const treffer: any[] = [];
+        const [{ data: db1, error }] = await Promise.all([
+          db.rpc("kc_club_suche", { p_woerter: woerter, p_bereiche: bereiche, p_person: ich.person_id, p_protokolle: ich.protokolle, p_vorstand: ich.vorstand,
+            p_von: von?.toISOString() ?? null, p_bis: bis?.toISOString() ?? null, p_autor: autor, p_anhang: anhang, p_grenze: grenze }),
+          (async () => {
+            if (anhang) return;
+            if (bereiche.includes("mitglieder") && !autor && !von && !bis) {
+              const [leute, { data: rollen }] = await Promise.all([aktiveMitglieder(), db.from("kc_club_rollen").select("person_id,aemter")]);
+              const am = new Map((rollen ?? []).map((r: any) => [r.person_id, (r.aemter ?? []) as string[]]));
+              for (const m of leute) {
+                const aemter = am.get(m.person_id) ?? [];
+                if (suchPasst(woerter, m.display_name, m.preferred_name, ...aemter))
+                  treffer.push({ bereich: "mitglieder", id: m.person_id, titel: m.display_name, inhalt: aemter.join(" · "), datum: null, autor: null, extra: {}, rang: suchNorm(m.display_name).startsWith(suchNorm(woerter[0])) ? 5 : 3 });
+              }
+            }
+            if (bereiche.includes("aktionen") && !autor) {
+              const { liste } = await aktionenRoh();
+              for (const a of liste) if (imZeitraum(a.dateFrom) && suchPasst(woerter, a.activity, a.organizer, a.mobility, typeof a.description === "string" ? a.description : ""))
+                treffer.push({ bereich: "aktionen", id: String(a.id), titel: txt(a.activity, 200) || "Aktion", inhalt: [txt(a.organizer, 120), a.dateTo && a.dateTo !== a.dateFrom ? "bis " + a.dateTo : ""].filter(Boolean).join(" · "), datum: a.dateFrom, autor: null, extra: {}, rang: 2 });
+            }
+            if (bereiche.includes("nachrichten") && !autor) {
+              // Gruppen und Unterhaltungen nach Namen/Betreff (nur meine)
+              const { data: tp } = await db.from("kc_communication_thread_participants").select("thread_id").eq("person_id", ich.person_id);
+              const ids = (tp ?? []).map((x: any) => x.thread_id);
+              const { data: th } = ids.length ? await db.from("kc_communication_threads").select("id,subject,updated_at").in("id", ids) : { data: [] as any[] };
+              const { data: gr } = ids.length ? await db.from("kc_club_gruppen").select("thread_id,name,symbol").in("thread_id", ids) : { data: [] as any[] };
+              const gm = new Map((gr ?? []).map((g: any) => [g.thread_id, g]));
+              for (const t of th ?? []) {
+                const g: any = gm.get(t.id);
+                if (imZeitraum(t.updated_at) && suchPasst(woerter, g?.name || t.subject))
+                  treffer.push({ bereich: "nachrichten", id: "u:" + t.id, titel: g ? `${g.symbol} ${g.name}` : t.subject || "Unterhaltung", inhalt: g ? "Gruppe" : "Unterhaltung", datum: t.updated_at, autor: null, extra: { thread: t.id, unterhaltung: true }, rang: 4 });
+              }
+            }
+          })(),
+        ]);
+        if (error) { console.error("suche", error.message); throw new Fehler("Die Suche hat gerade nicht geklappt – bitte gleich nochmal versuchen.", 500); }
+        treffer.push(...(db1 ?? []));
+        const leute = await personen(treffer.map((t) => t.autor).filter(Boolean));
+        const relevanz = p.sortierung === "relevanz";
+        const gruppen = bereiche.map((b) => {
+          const alle = treffer.filter((t) => t.bereich === b)
+            .sort((x, y) => (relevanz ? (y.rang ?? 1) - (x.rang ?? 1) : 0) || String(y.datum ?? "").localeCompare(String(x.datum ?? "")));
+          // gleiche Nachricht über Text und Anhang nur einmal
+          const gesehen = new Set<string>(), liste = alle.filter((t) => { const k = t.bereich + t.id; if (gesehen.has(k)) return false; gesehen.add(k); return true; });
+          const zeigen = p.schnell ? 4 : grenze;
+          return { bereich: b, mehr: liste.length > zeigen || liste.length >= grenze, treffer: liste.slice(0, zeigen).map((t) => ({
+            id: t.id, titel: txt(t.titel, 160) || "–", text: txt(t.inhalt, 600), datum: t.datum, von: t.autor ? leute.get(t.autor)?.display_name || null : null, extra: t.extra ?? {} })) };
+        }).filter((g) => g.treffer.length);
+        return json({ bereiche: gruppen });
       }
 
       // ----- Archiv (KC-CLUB-ARCHIV, 1.2.0) -----
