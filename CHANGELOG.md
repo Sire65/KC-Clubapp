@@ -1,5 +1,14 @@
 # Änderungen
 
+## 1.21.0 – 2026-10-01 (DEV)
+
+- KC-CLUB-EINGABE-GROSS (Wunsch Hansi „Eingabe größer und breiter“): Schreibfeld im Chat oben über die volle Breite (2 Zeilen
+  hoch, größere Schrift, wächst bis 40 % der Höhe) mit ➤ daneben; 📎 🎤 😊 🔔 als kleinere Knöpfe in einer Zeile darunter.
+  Alle Knöpfe und Funktionen unverändert.
+- KC-CLUB-ENTWURF-ANZEIGE: steht Text im Feld, der noch nicht gesendet ist, erscheint „✏️ Entwurf – noch nicht gesendet“;
+  in der Chatliste steht bei solchen Chats „✏️ Entwurf: …“ statt der letzten Nachricht (wie WhatsApp). Grundlage ist der
+  vorhandene Entwurfs-Speicher (KC-CLUB-ENTWURF 1.12.0, nur auf dem Gerät).
+
 ## 1.20.1 – 2026-10-01 (DEV)
 
 - KC-CLUB-CHAT-KOPF (Wunsch Hansi): im Chat bleibt die Kopfzeile (‹, Name, 🔍, ⋮, Suchleiste, „zuletzt da“/Teilnehmer,
