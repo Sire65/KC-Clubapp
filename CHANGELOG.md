@@ -1,5 +1,15 @@
 # Änderungen
 
+## 1.18.1 – 2026-10-01 (DEV)
+
+- KC-CLUB-DIENSTWUNSCH: DP2 auf Build 254 RC übernommen (dp3 `3945960`, Zweig codex/club-app-interface, Wunsch Hansi):
+  „🖨️ Meine Angaben ausdrucken (PDF mit QR)“ am Ende von Tagesmatrix, Twinkey-Auswertung und einfachem Assistenten –
+  Sicherheitsabfrage, dann PDF-Vorschau (Desktop eingebettet, Handy PDF-Anzeige), erst danach Drucken/Speichern.
+  Ausgefüllter V12-Bogen mit QR oben rechts (gleiche Profil-ID wie die Papiermatrix) und Original-Kochmütze.
+  Ganzer Sperrtag: Bildschirmwege sperrten V/H/B bereits; Papierimport übernimmt am Sperrtag kein V/H/B und keine Zeiten
+  (zur Prüfung sichtbar). dienstwunsch.html: CSP frame-src blob: (nur die selbst erzeugte PDF-Vorschau). Test 151.
+  RC: Live-Handtest, Kollegenfreigabe, serverseitige Claim-Prüfung offen.
+
 ## 1.18.0 – 2026-10-01 (DEV)
 
 - KC-CLUB-ARCHIV-ABLAGE (Wunsch Hansi): gemeinsame Rückfrage „🗄️ Auch in deinen Archiv-Ordner legen?“ mit Auswahl

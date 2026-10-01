@@ -1,11 +1,16 @@
 {
-  "version": "1.18.0",
+  "version": "1.18.1",
   "datum": "2026-10-01",
   "neu": [
-    "🗄️ Erstattung: Nach dem Senden an den Kassenwart fragt die App, ob Antrag und Belege auch in deinen Archiv-Ordner sollen",
-    "🛡️ Sicherheits-Check: Während der Prüfung wirbelt die Köcheclub-Kochmütze statt der Sanduhr"
+    "🖨️ Dienstwunsch: Am Ende „Meine Angaben ausdrucken“ – mit Rückfrage, erst als PDF-Vorschau, dann drucken; QR-Code oben rechts. Ganzer Sperrtag: kein Vorne/Hinten auf dem Papierbogen (DP2 Build 254 RC)"
   ],
   "verlauf": [
+    {
+      "version": "1.18.1",
+      "neu": [
+        "🖨️ Dienstwunsch: Am Ende „Meine Angaben ausdrucken“ – mit Rückfrage, erst als PDF-Vorschau, dann drucken; QR-Code oben rechts. Ganzer Sperrtag: kein Vorne/Hinten auf dem Papierbogen (DP2 Build 254 RC)"
+      ]
+    },
     {
       "version": "1.18.0",
       "neu": [

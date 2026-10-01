@@ -1633,7 +1633,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 142. 1.13.0: DP2 Build 251 Button-Logik (unverändert übernommen) + offene Club-App-Angaben zählen als eigene Daten
 {
   const q = JSON.parse(lies("dp2/QUELLE.json"));
-  assert.ok(/^(f893f5d|c0d279a|d50ed58)/.test(q.commit) && /^0\.20\.0-build25[13]$/.test(q.dp2Version) && q.reihenfolge.includes("src/ui/member-button-logic.js"), "DP2 Build 251 (ab 1.17.2: Build 253 RC) mit Button-Logik übernommen");
+  assert.ok(/^(f893f5d|c0d279a|d50ed58|3945960)/.test(q.commit) && /^0\.20\.0-build25[134]$/.test(q.dp2Version) && q.reihenfolge.includes("src/ui/member-button-logic.js"), "DP2 Build 251 (ab 1.17.2: Build 253 RC) mit Button-Logik übernommen");
   const d = lies("dp2-club/daten.js");
   assert.ok(/status: "confirmed", source: "club_app"/.test(d) && /K\.wishes = \[\.\.\.\(D\.meine\?\.entries \|\| \[\]\)\.map/.test(d), "Eingangs-Angaben (auch Status offen) zählen in DP2 als eigene aktive Wünsche");
 }
@@ -1668,7 +1668,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 
 // 146. 1.16.1: DP2-Nachtrag + Cache-Schlüssel mit Commit
 {
-  assert.ok(/^(c0d279a|d50ed58)/.test(JSON.parse(lies("dp2/QUELLE.json")).commit), "Nachtrag c0d279a übernommen (ab 1.17.2 im gemeinsamen Stand d50ed58 enthalten)");
+  assert.ok(/^(c0d279a|d50ed58|3945960)/.test(JSON.parse(lies("dp2/QUELLE.json")).commit), "Nachtrag c0d279a übernommen (ab 1.17.2 im gemeinsamen Stand d50ed58 enthalten)");
   assert.ok(/quelle\.dp2Version \+ "-" \+ String\(quelle\.commit \|\| ""\)\.slice\(0, 7\)/.test(lies("dp2-club/lader.js")), "Cache-Schlüssel mit Commit");
 }
 
@@ -1698,7 +1698,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 149. 1.17.2: DP2 Build 253 RC (dp3 d50ed58) – gemeinsamer Stand aus Club-App-Schnittstelle und PDF-/QR-Korrekturen
 {
   const q = JSON.parse(lies("dp2/QUELLE.json"));
-  assert.ok(q.commit.startsWith("d50ed58") && q.dp2Version === "0.20.0-build253", "DP2 Build 253 RC (d50ed58) übernommen");
+  assert.ok(/^(d50ed58|3945960)/.test(q.commit) && /^0\.20\.0-build25[34]$/.test(q.dp2Version), "DP2 Build 253 RC (d50ed58) oder neuer übernommen");
   for (const f of ["src/core/document-identity.js", "src/vendor/qrcode-generator.js", "src/core/personalized-forms.js", "src/adapters/pdf.js", "src/ui/member-button-logic.js"])
     assert.ok(q.reihenfolge.includes(f), `${f} fehlt in der DP2-Übernahme`);
   assert.ok(q.reihenfolge.indexOf("src/adapters/pdf.js") < q.reihenfolge.indexOf("src/ui/original-brand.js") || !q.reihenfolge.includes("src/ui/original-brand.js"), "PDF-Baustein vor dem Abschluss geladen");
@@ -1717,6 +1717,15 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/positionen: ERS\.pos\.map\(\(\{ belegNamen, belegDateien, satz, \.\.\.x \}\) => x\)/.test(s), "Beleg-Dateien gehen nicht mit dem Antrag an den Server");
   assert.ok(/\.si-muetze \{[^}]*animation: siWirbel/.test(html) && /rotate3d\(1, 1, 0, 360deg\)/.test(html) && /rotate3d\(1, -1, 0, 360deg\)/.test(html), "Kochmütze wirbelt auch diagonal");
   assert.ok(/<span class="si-muetze" role="img" aria-label="Prüfung läuft"><img src="kc-kochmuetze-weiss\.webp"/.test(html) && !/si-dreht/.test(html), "Sicherheits-Check: Mütze statt Sanduhr");
+}
+
+// 151. 1.18.1: DP2 Build 254 RC (dp3 3945960) – Meine Angaben ausdrucken (PDF mit QR, Abfrage, Vorschau) + Sperrtag ohne V/H/B
+{
+  const q = JSON.parse(lies("dp2/QUELLE.json"));
+  assert.ok(q.commit.startsWith("3945960") && q.dp2Version === "0.20.0-build254", "DP2 Build 254 RC (3945960) übernommen");
+  assert.ok(q.reihenfolge.includes("src/ui/wish-print.js") && q.reihenfolge.includes("src/ui/wish-print.css"), "Ausdruck-Baustein fehlt in der Übernahme");
+  assert.ok(/frame-src blob:/.test(lies("dienstwunsch.html")) && !/frame-src 'none'/.test(lies("dienstwunsch.html")), "PDF-Vorschau braucht frame-src blob: (nur selbst erzeugte PDFs)");
+  assert.ok(/window\.confirm\(FRAGE\)/.test(lies("dp2/src/ui/wish-print.js")) && /filledPdf/.test(lies("dp2/src/core/personalized-forms.js")), "Sicherheitsabfrage/ausgefüllter Bogen fehlt");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
