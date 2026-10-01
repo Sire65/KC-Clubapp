@@ -1,5 +1,11 @@
 # Änderungen
 
+## 1.8.3 – 2026-10-01 (DEV)
+
+- KC-CLUB-NA-SEITE (Wunsch Hansi, wie WhatsApp): neben jeder Nachricht (fremde rechts, eigene links) ein gebogener Pfeil
+  → kleines Menü „↪️ Weiterleiten“ / „📋 Kopieren“, und ein blaues „i“ → vorhandene Info (geschrieben von, Empfänger,
+  gelesen, Zustellung; nachricht_details). Beim Wischen ausgeblendet. Antipp-Menü unverändert.
+
 ## 1.8.2 – 2026-10-01 (DEV)
 
 - KC-CLUB-KOPIEREN (Wunsch Hansi): Im Antipp-Menü einer Nachricht „📋 Kopieren“ (nur bei Nachrichten mit Text) – Text in die

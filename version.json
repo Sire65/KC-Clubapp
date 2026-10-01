@@ -1,10 +1,18 @@
 {
-  "version": "1.8.2",
+  "version": "1.8.3",
   "datum": "2026-10-01",
   "neu": [
-    "📋 Nachrichten kopieren: Nachricht antippen → „Kopieren“ – dann in einem anderen Chat einfügen"
+    "↪️ Neben jeder Nachricht: gebogener Pfeil zum sofortigen Weiterleiten oder Kopieren – wie bei WhatsApp",
+    "ℹ️ Blaues i neben jeder Nachricht: wer sie geschrieben, bekommen und gelesen hat"
   ],
   "verlauf": [
+    {
+      "version": "1.8.3",
+      "neu": [
+        "↪️ Neben jeder Nachricht: gebogener Pfeil zum sofortigen Weiterleiten oder Kopieren – wie bei WhatsApp",
+        "ℹ️ Blaues i neben jeder Nachricht: wer sie geschrieben, bekommen und gelesen hat"
+      ]
+    },
     {
       "version": "1.8.2",
       "neu": [

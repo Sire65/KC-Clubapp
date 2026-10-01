@@ -337,6 +337,14 @@
   .blase[data-wisch="antworten"]::before { content: "↩️"; position: absolute; left: -34px; top: 50%; transform: translateY(-50%); font-size: 1.3rem; }
   .blase[data-wisch="loeschen"]::after { content: "🗑️"; position: absolute; right: -34px; top: 50%; transform: translateY(-50%); font-size: 1.3rem; }
   #chat { overflow-x: hidden; }
+  /* KC-CLUB-NA-SEITE (1.8.3, wie WhatsApp): gebogener Pfeil (weiterleiten/kopieren) + blaues i (Info) neben jeder Nachricht */
+  .blase { position: relative; }
+  .na-seite { position: absolute; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 6px; }
+  .blase:not(.eigen) .na-seite { right: -40px; } .blase.eigen .na-seite { left: -40px; }
+  .na-seite button { width: 30px; height: 30px; border-radius: 50%; border: none; padding: 0; display: grid; place-items: center; cursor: pointer; box-shadow: var(--schatten); }
+  .na-seite .na-pfeil { background: var(--karte); color: var(--grau); } .na-seite .na-pfeil svg { width: 17px; height: 17px; fill: currentColor; }
+  .na-seite .na-info { background: #1e88e5; color: #fff; font: italic 700 15px/1 Georgia, serif; }
+  .blase.wischt .na-seite { display: none; }
   /* KC-CLUB-SOS (1.6.0) */
   .kachel.sos { background: #c0392b; color: #fff; } .kachel.sos small { color: #ffe3df; }
   .karte.sos-warn { background: #c0392b; color: #fff; } .karte.sos-warn b { color: #fff; }
@@ -1689,7 +1697,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.8.2"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.8.3"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -5200,6 +5208,7 @@ async function chatLaden(scrollen) {
     $("chat").innerHTML = u.nachrichten.map((m) => `<div data-id="${m.id}" class="blase${m.eigen ? " eigen" : ""}${m.erwaehntMich ? " erwaehnt-mich" : ""}" id="msg-${m.id}" title="Antippen: reagieren, antworten, Details" onclick="if(!event.target.closest('button,img,a,audio,video,.sprache,.zitat'))nachrichtMenue('${m.id}')">
       ${!m.eigen && andere.length > 1 ? `<div class="von">${esc(m.von)}</div>` : ""}${m.antwortAuf ? `<div class="zitat" onclick="zuNachricht('${m.antwortAuf.id}')"><b>${esc(m.antwortAuf.von)}</b><span>${esc(m.antwortAuf.text)}</span></div>` : ""}${m.text === "📎" && m.anlagen.length ? "" : `<div class="txt">${naText(m.text)}</div>`}
       ${m.anlagen.map((a) => /^image\//.test(a.mime || "") ? `<img data-anlage="${a.id}" alt="${esc(a.name)}" onclick="anlageOeffnen('${a.id}')">` : /^audio\//.test(a.mime || "") ? `<div class="sprache" data-sprache="${a.id}"><button onclick="spracheAbspielen(this, '${a.id}')">▶️ Sprachnachricht anhören</button></div>` : `<div class="anlage" onclick="anlageOeffnen('${a.id}')">📄 ${esc(a.name)}</div>`).join("")}
+      <div class="na-seite"><button class="na-pfeil" title="Weiterleiten oder kopieren" aria-label="Weiterleiten oder kopieren" onclick="naPfeilMenue('${m.id}')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4.5l7.5 7.5-7.5 7.5v-4.3c-5.2 0-8.8 1.7-11.4 5.3 1-5.2 4.1-10.3 11.4-11.3V4.5z"/></svg></button><button class="na-info" title="Info: wer geschrieben, bekommen und gelesen hat" aria-label="Info zur Nachricht" onclick="nachrichtInfo('${m.id}')">i</button></div>
       <div class="fuss">${zeitKurz(m.zeit)}${m.eigen ? " " + (m.gelesenAlle ? '<b title="gelesen">✓✓</b>' : m.gelesenVon?.length ? `✓✓ ${m.gelesenVon.length}/${andere.length}` : "✓") + zustellText(m.zustellung) : ""}${m.eigen || ICH.admin ? ` <button class="weg" title="Nachricht löschen" onclick="nachrichtLoeschen('${m.id}')">🗑️</button>` : ""}</div></div>`).join("")
       || '<p class="hinweis">Schreib die erste Nachricht.</p>';
     document.querySelectorAll("img[data-anlage]").forEach(bildLaden);
@@ -5241,6 +5250,19 @@ function nachrichtMenue(id) {
     <button class="knopf" onclick="document.getElementById('naMenue').remove();weiterleitenBlatt('${id}')">↪️ Weiterleiten</button>
     <button class="knopf" onclick="document.getElementById('naMenue').remove();nachrichtInfo('${id}')">ℹ️ Details – wann gesendet, angekommen, gelesen</button>
     <button class="knopf" onclick="document.getElementById('naMenue').remove();naLoeschenFragen('${id}')">🗑️ Löschen</button>
+    <button class="knopf" onclick="document.getElementById('naMenue').remove()">Abbrechen</button></div>`;
+  f.onclick = (e) => { if (e.target === f) f.remove(); };
+  document.body.appendChild(f);
+}
+// KC-CLUB-NA-SEITE (1.8.3, Wunsch Hansi – wie WhatsApp): gebogener Pfeil neben der Nachricht → sofort weiterleiten oder kopieren
+function naPfeilMenue(id) {
+  const m = NA.nachrichten.get(id); if (!m) return;
+  document.getElementById("naMenue")?.remove();
+  const f = document.createElement("div"); f.id = "naMenue"; f.className = "blatt"; f.setAttribute("role", "dialog"); f.setAttribute("aria-modal", "true");
+  f.innerHTML = `<div class="blatt-innen na-menue">
+    <div class="na-vorschau">${m.eigen ? "Du" : esc(m.von)}: ${esc(String(m.text || "").slice(0, 120))}</div>
+    <button class="knopf haupt" onclick="document.getElementById('naMenue').remove();weiterleitenBlatt('${id}')">↪️ Weiterleiten</button>
+    ${m.text ? `<button class="knopf" onclick="document.getElementById('naMenue').remove();naKopieren('${id}')">📋 Kopieren</button>` : ""}
     <button class="knopf" onclick="document.getElementById('naMenue').remove()">Abbrechen</button></div>`;
   f.onclick = (e) => { if (e.target === f) f.remove(); };
   document.body.appendChild(f);

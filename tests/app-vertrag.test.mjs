@@ -1563,6 +1563,14 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/weiterleitenBlatt\('\$\{id\}'\)">↪️ Weiterleiten/.test(html), "Weiterleiten bleibt");
 }
 
+// 137. 1.8.3: Pfeil + blaues i neben der Nachricht (KC-CLUB-NA-SEITE)
+{
+  assert.ok(/<div class="na-seite"><button class="na-pfeil"[^>]*onclick="naPfeilMenue\('\$\{m\.id\}'\)"/.test(html) && /class="na-info"[^>]*onclick="nachrichtInfo\('\$\{m\.id\}'\)">i<\/button>/.test(html), "Pfeil und i neben jeder Nachricht");
+  const pm = html.slice(html.indexOf("function naPfeilMenue"), html.indexOf("// KC-CLUB-KOPIEREN (1.8.2"));
+  assert.ok(/weiterleitenBlatt\('\$\{id\}'\)/.test(pm) && /naKopieren\('\$\{id\}'\)/.test(pm), "Pfeil-Menü: Weiterleiten + Kopieren (vorhandene Funktionen)");
+  assert.ok(/\.na-seite \.na-info \{ background: #1e88e5/.test(html), "i ist blau");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
