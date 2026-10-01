@@ -552,12 +552,21 @@
   /* KC-CLUB-PINNWAND-DIREKT (0.58.0): neuer Zettel geht als Post-it-Fenster auf */
   .pwfenster-zettel { display: grid; gap: 22px; padding: 18px 10px 8px; }
   .pwfenster-zettel .zettel { font-size: 1.1rem; }
-  .punkte3 { display: inline-flex; gap: 3px; background: var(--karte); border-radius: 12px; padding: 6px 9px; box-shadow: var(--schatten); }
-  .punkte3 i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .35; animation: tippHuepf 1.2s infinite ease-in-out; }
-  .punkte3 i:nth-child(2) { animation-delay: .15s; } .punkte3 i:nth-child(3) { animation-delay: .3s; }
+  /* KC-CLUB-TIPPT-WELLE (1.11.0, Wunsch Hansi): größer und deutlicher – Punkte laufen als Welle */
+  .punkte3 { display: inline-flex; align-items: center; gap: 5px; background: var(--karte); border-radius: 16px; padding: 10px 13px; box-shadow: var(--schatten); }
+  .punkte3 i { width: 9px; height: 9px; border-radius: 50%; background: var(--rot); opacity: .35; animation: tippWelle 1.3s infinite ease-in-out; }
+  .punkte3 i:nth-child(2) { animation-delay: .18s; } .punkte3 i:nth-child(3) { animation-delay: .36s; }
+  @keyframes tippWelle { 0%, 60%, 100% { transform: translateY(0) scale(1); opacity: .35; } 30% { transform: translateY(-8px) scale(1.15); opacity: 1; } }
+  .tippt .zeile { display: flex; align-items: center; gap: 10px; font-size: .98rem; font-style: normal; font-weight: 600; margin: 2px 0; }
+  /* KC-CLUB-SPRICHT (1.11.0): Oszilloskop – bei den anderen als laufende Welle, bei mir echt vom Mikrofon */
+  .oszi { width: 86px; height: 30px; background: var(--karte); border-radius: 16px; padding: 3px 8px; box-shadow: var(--schatten); overflow: hidden; }
+  .oszi path { fill: none; stroke: var(--rot); stroke-width: 2.4; stroke-linecap: round; }
+  .oszi .lauf { animation: osziLauf 0.9s linear infinite; } .oszi .hub { transform-origin: 0 12px; animation: osziHub 1.6s ease-in-out infinite; }
+  @keyframes osziLauf { to { transform: translateX(-20px); } } @keyframes osziHub { 0%, 100% { transform: scaleY(.45); } 35% { transform: scaleY(1); } 70% { transform: scaleY(.7); } }
+  #aufnahmeOszi { flex: 1; min-width: 60px; height: 34px; }
   @keyframes tippHuepf { 0%, 60%, 100% { transform: translateY(0); opacity: .35; } 30% { transform: translateY(-4px); opacity: 1; } }
-  @media (prefers-reduced-motion: reduce) { .punkte3 i { animation: none; opacity: .8; } }
-  .chat { display: flex; flex-direction: column; gap: 6px; padding: 8px 0 160px; }
+  @media (prefers-reduced-motion: reduce) { .punkte3 i, .oszi .lauf, .oszi .hub { animation: none; opacity: .8; } }
+  .chat { display: flex; flex-direction: column; gap: 6px; padding: 8px 0 var(--chatUnten, 160px); } /* KC-CLUB-CHAT-ABSTAND (1.11.0): Höhe der Eingabe gemessen */
   /* KC-CLUB-ZUSTELLWAHL: Symbole für Erreichbarkeit und Auswahl, wie benachrichtigt wird */
   .wege { display: inline-flex; gap: 3px; margin-left: 6px; font-size: .95rem; vertical-align: middle; }
   .wege i { font-style: normal; }
@@ -1525,7 +1534,7 @@
   <!-- KC-CLUB-EMOJI (0.95.0): kompakte Emoji-Auswahl über der Eingabe -->
   <div class="emo-feld versteckt" id="emoFeld" role="dialog" aria-label="Emoji auswählen"><div class="emo-reiter" id="emoReiter"></div><div class="emo-gitter" id="emoGitter"></div></div>
   <!-- KC-CLUB-SPRACHE: Aufnahme-Leiste -->
-  <div class="aufnahme versteckt" id="aufnahmeLeiste"><span class="rec">●</span><b id="aufnahmeZeit">0:00</b><span class="hinweis" style="margin:0;flex:1">Aufnahme läuft …</span>
+  <div class="aufnahme versteckt" id="aufnahmeLeiste"><span class="rec">●</span><b id="aufnahmeZeit">0:00</b><canvas id="aufnahmeOszi" aria-label="Aufnahme läuft"></canvas>
     <button class="knopf klein" onclick="spracheAbbrechen()">✖ Verwerfen</button><button class="knopf haupt klein" onclick="spracheSenden()">➤ Senden</button></div>
   <div class="innen">
     <button class="rund" title="Anlage" onclick="anlageMenue()">📎</button>
@@ -1722,7 +1731,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.10.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.11.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2601,19 +2610,36 @@ function tippenMelden() {
   TIPP = { zuletzt: Date.now(), id: chatId, nach: null };
   api("tippen", { id: chatId, ...(live ? { text: [...text].slice(-LIVE_TIPPEN_ZEICHEN).join("") } : {}) }).catch(() => {});
 }
+// KC-CLUB-CHAT-ABSTAND (1.11.0, Wunsch Hansi): letzte Nachricht stößt nicht mehr unten an – Abstand = gemessene Höhe
+// des Eingabebereichs (+ untere Leiste) + etwas Luft; passt sich an, wenn Antwort-/Emoji-/Aufnahmeleiste dazukommt.
+function chatAbstand() {
+  const e = $("eingabe"); if (!e || e.classList.contains("versteckt")) return;
+  const c = $("chat"); if (!c) return;
+  // Platz, den die Seite unter dem Chat ohnehin hat (z. B. für die untere Leiste), nicht doppelt rechnen
+  const rest = Math.max(0, document.documentElement.scrollHeight - (c.getBoundingClientRect().bottom + window.scrollY));
+  const unten = Math.max(0, window.innerHeight - e.getBoundingClientRect().top);
+  document.documentElement.style.setProperty("--chatUnten", Math.max(40, Math.ceil(unten + 18 - rest)) + "px");
+}
+if (window.ResizeObserver) document.addEventListener("DOMContentLoaded", () => { const e = $("eingabe"); if (e) new ResizeObserver(chatAbstand).observe(e); });
+window.addEventListener("resize", chatAbstand);
 function tippenAus() { clearTimeout(TIPP.nach); if (TIPP.id) api("tippen", { id: TIPP.id, aus: true }).catch(() => {}); TIPP = { zuletzt: 0, id: null, nach: null }; }
 async function liveTippenSetzen(an) {
   try { await api("einstellung_setzen", { schluessel: "live_tippen", wert: { an } }); if (INIT?.einstellungen) INIT.einstellungen.live_tippen = { an };
     melde(an ? "👁️ Live-Tippen an – andere sehen in Unterhaltungen, was du tippst" : "Live-Tippen aus – andere sehen nur noch „schreibt …“"); }
   catch (e) { melde(e.message, true); if ($("setLiveTippen")) $("setLiveTippen").checked = !an; }
 }
-function tipptZeigen(namen, entwurf = []) {
+const OSZI_SVG = `<svg class="oszi" viewBox="0 0 70 24" aria-hidden="true"><g class="hub"><g class="lauf"><path d="M0 12 ${Array.from({ length: 10 }, (_, i) => `Q${i * 10 + 5} ${i % 2 ? 22 : 2} ${i * 10 + 10} 12`).join(" ")}"/></g></g></svg>`;
+const werText = (n) => n.length === 1 ? n[0] : n.length === 2 ? `${n[0]} und ${n[1]}` : `${n.length} Personen`;
+function tipptZeigen(namen, entwurf = [], sprechen = []) {
   const e = $("tipptAnzeige"); if (!e) return;
-  if (!namen.length) { e.classList.add("versteckt"); e.innerHTML = ""; return; }
+  if (!namen.length && !sprechen.length) { e.classList.add("versteckt"); e.innerHTML = ""; return; }
+  // KC-CLUB-SPRICHT (1.11.0): „nimmt eine Sprachnachricht auf“ mit Oszilloskop-Welle
+  const sp = sprechen.length ? `<div class="zeile">${OSZI_SVG}<span>🎤 ${esc(werText(sprechen))} ${sprechen.length > 1 ? "nehmen" : "nimmt"} eine Sprachnachricht auf</span></div>` : "";
+  if (!namen.length) { e.innerHTML = sp; e.classList.remove("versteckt"); return; }
   const kurz = (t) => { const z = [...t]; return z.length > LIVE_ANZEIGE_ZEICHEN ? "…" + z.slice(-LIVE_ANZEIGE_ZEICHEN).join("") : t; };
   const entwuerfe = entwurf.map((x) => `<div class="entwurf">✍️ <b>${esc(x.name)}:</b> ${esc(kurz(x.text))}</div>`).join("");
   const wer = namen.length === 1 ? namen[0] : namen.length === 2 ? `${namen[0]} und ${namen[1]}` : `${namen.length} Personen`;
-  e.innerHTML = `<div style="display:flex;align-items:center;gap:8px"><span class="punkte3"><i></i><i></i><i></i></span><span>${esc(wer)} ${namen.length > 1 ? "schreiben" : "schreibt"} …</span></div>${entwuerfe}`;
+  e.innerHTML = `<div class="zeile"><span class="punkte3"><i></i><i></i><i></i></span><span>${esc(wer)} ${namen.length > 1 ? "schreiben" : "schreibt"} …</span></div>${entwuerfe}${sp}`;
   e.classList.remove("versteckt");
 }
 
@@ -3161,18 +3187,47 @@ async function spracheStart() {
   rec.ondataavailable = (e) => { if (e.data?.size) SPR?.teile.push(e.data); };
   rec.start(1000);
   $("aufnahmeLeiste").classList.remove("versteckt"); $("mikroKnopf").classList.add("versteckt");
+  osziStart(strom); sprichtMelden(); // KC-CLUB-SPRICHT (1.11.0)
   try { navigator.vibrate?.(30); } catch {}
-  SPR.uhr = setInterval(() => { if (!SPR) return; const s = Math.floor((Date.now() - SPR.start) / 1000); $("aufnahmeZeit").textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; if (s >= 180) { melde("⏱️ Höchstens 3 Minuten – die Aufnahme wird jetzt gesendet."); spracheSenden(); } }, 500);
+  SPR.uhr = setInterval(() => { if (!SPR) return; const s = Math.floor((Date.now() - SPR.start) / 1000); $("aufnahmeZeit").textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; if (s >= 180) { melde("⏱️ Höchstens 3 Minuten – die Aufnahme wird jetzt gesendet."); spracheSenden(); } else if (Date.now() - (SPR.gemeldet || 0) > 3000) sprichtMelden(); }, 500);
 }
 function spracheBeenden() {
   return new Promise((ok) => {
     if (!SPR) return ok(null);
-    const s = SPR; clearInterval(s.uhr); SPR = null;
+    const s = SPR; clearInterval(s.uhr); SPR = null; osziStopp(); if (s.meldeId) api("tippen", { id: s.meldeId, aus: true }).catch(() => {});
     $("aufnahmeLeiste").classList.add("versteckt"); $("mikroKnopf").classList.remove("versteckt");
     s.rec.onstop = () => { s.strom.getTracks().forEach((t) => t.stop()); ok(s); };
     try { s.rec.stop(); } catch { s.strom.getTracks().forEach((t) => t.stop()); ok(s); }
   });
 }
+// KC-CLUB-SPRICHT (1.11.0): die anderen sehen „🎤 … nimmt eine Sprachnachricht auf“ (wie „schreibt …“, nur wenn ich
+// meinen Online-Status zeige). Eigenes Oszilloskop: echte Mikrofon-Welle (Web Audio, nichts wird gespeichert/gesendet).
+function sprichtMelden() {
+  if (!SPR || !chatId || !ONL.zeigen) return;
+  SPR.gemeldet = Date.now(); SPR.meldeId = chatId;
+  api("tippen", { id: chatId, sprache: true }).catch(() => {});
+}
+let OSZI = null;
+function osziStart(strom) {
+  osziStopp();
+  const c = $("aufnahmeOszi"); if (!c) return;
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)(), an = ctx.createAnalyser(); an.fftSize = 1024;
+    ctx.createMediaStreamSource(strom).connect(an);
+    const daten = new Uint8Array(an.fftSize), g = c.getContext("2d"), farbe = getComputedStyle(document.documentElement).getPropertyValue("--rot").trim() || "#8b1a2b";
+    OSZI = { ctx, raf: 0 };
+    const malen = () => {
+      if (!OSZI) return;
+      const b = c.clientWidth, h = c.clientHeight; if (c.width !== b * 2) { c.width = b * 2; c.height = h * 2; }
+      an.getByteTimeDomainData(daten);
+      g.clearRect(0, 0, c.width, c.height); g.lineWidth = 3; g.strokeStyle = farbe; g.beginPath();
+      for (let i = 0; i < daten.length; i++) { const x = (i / (daten.length - 1)) * c.width, y = (daten[i] / 255) * c.height; i ? g.lineTo(x, y) : g.moveTo(x, y); }
+      g.stroke(); OSZI.raf = requestAnimationFrame(malen);
+    };
+    malen();
+  } catch { OSZI = null; }
+}
+function osziStopp() { if (!OSZI) return; cancelAnimationFrame(OSZI.raf); OSZI.ctx.close().catch(() => {}); OSZI = null; }
 async function spracheAbbrechen() { await spracheBeenden(); melde("🗑️ Aufnahme verworfen"); }
 async function spracheSenden() {
   const s = await spracheBeenden(); if (!s) return;
@@ -5229,7 +5284,7 @@ async function chatLaden(scrollen) {
     if (andere.length === 1) { if (!MITGLIEDER) await mitgliederHolen().catch(() => {}); const m = MITGLIEDER?.find((x) => x.person_id === andere[0].person_id); if (m?.status) st = statusText(m.status); }
     $("chatTeilnehmer").textContent = !andere.length ? "Nur du (Test-Unterhaltung)" : u.gruppe ? `👥 ${andere.length + 1} Mitglieder: Du, ${andere.map((x) => x.name.split(" ")[0]).join(", ")} ›` : u.betreff || andere.length > 1 ? "Mit: " + andere.map((x) => x.name).join(", ") : st;
     $("chatAngeheftet").innerHTML = (u.angeheftet || []).map((a) => `<button class="pin-zeile" onclick="zuNachricht('${a.id}')">📌 <b>${esc(a.von)}:</b> ${esc(a.text)}</button>`).join(""); // KC-CLUB-ANHEFTEN
-    tipptZeigen(u.tippt || [], u.entwurf || []);
+    tipptZeigen(u.tippt || [], u.entwurf || [], u.spricht || []); chatAbstand();
     if (u.tippt?.length && andere.length === 1) $("chatTeilnehmer").textContent = "✍️ schreibt …";
     const stand = JSON.stringify(u.nachrichten.map((m) => [m.id, m.gelesenVon?.length, (m.reaktionen || []).map((x) => x.emoji + x.anzahl).join("")]));
     if (NA.antwort && !u.nachrichten.some((m) => m.id === NA.antwort.id)) naAntwortWeg(); // Antwort gehört zu einem anderen Chat

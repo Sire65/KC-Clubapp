@@ -1028,7 +1028,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/kc_club_tippen"\)\.delete\(\)\.eq\("thread_id", threadId\)/.test(server), "Senden beendet „schreibt …“ nicht");
   assert.ok(/if \(!chatId \|\| !ONL\.zeigen\) return;/.test(html) && /abstand = live \? 1000 : 3000/.test(html) && /Date\.now\(\) - TIPP\.zuletzt < abstand/.test(html), "Tipp-Meldung ohne Privatsphäre/Drosselung");
   assert.ok(/tippenMelden\(\)"><\/textarea>/.test(html) && /id="tipptAnzeige"/.test(html) && /"tippen"(, "[a-z_]+")*\]\);/.test(html), "Anzeige/Eingabe/WARTEN_STILL fehlt");
-  assert.ok(/tipptZeigen\(u\.tippt \|\| \[\], u\.entwurf \|\| \[\]\);\n    if \(u\.tippt\?\.length && andere\.length === 1\)[^\n]*\n    const stand = /.test(html), "Anzeige muss vor dem frühen Ausstieg aktualisiert werden");
+  assert.ok(/tipptZeigen\(u\.tippt \|\| \[\], u\.entwurf \|\| \[\](, u\.spricht \|\| \[\])?\);( chatAbstand\(\);)?\n    if \(u\.tippt\?\.length && andere\.length === 1\)[^\n]*\n    const stand = /.test(html), "Anzeige muss vor dem frühen Ausstieg aktualisiert werden");
   assert.ok(/if \(chatTakt\.laeuft\) return;/.test(html) && !/setInterval\(chatTakt, 4000\)/.test(html), "Chat-Takt überlappt / alter Takt");
   assert.ok(/if \(v !== "chat" && TIPP\.id\) tippenAus\(\);/.test(html), "Verlassen beendet „schreibt …“ nicht");
   assert.ok(/mirror_enabled, backup_enabled, note, updated_at\)\nvalues \('kc_club_tippen', 'Club-App', 'sensitive', false, false, false/.test(lies("supabase/migrations/20260929_kc_club_v54_tippen.sql")), "Spiegel-Regel für kc_club_tippen fehlt");
@@ -1601,6 +1601,18 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/Abstimmungen und Kontaktkarten lassen sich nicht bearbeiten/.test(server), "Abstimmung/Kontakt nicht bearbeitbar");
   assert.ok(/onclick="mitgliedOeffnen\('\$\{k\.person_id\}'\)">📇 Kontakt ansehen/.test(html), "Kontaktkarte nutzt vorhandene Mitglieder-Ansicht (Freigaben)");
   assert.ok(/anlageMenue\(\);cuForm\(\)">📊 Abstimmung/.test(html) && /anlageMenue\(\);kontaktWahl\(\)">👤 Kontakt teilen/.test(html) && /onclick="gemerktZeigen\(\)"/.test(html) && /id="chatAngeheftet"/.test(html), "App: Einstiege vorhanden");
+}
+
+// 140. 1.11.0: Abstand unten, Wellen-Punkte, Sprachaufnahme-Anzeige mit Oszilloskop
+{
+  assert.ok(/padding: 8px 0 var\(--chatUnten, 160px\)/.test(html) && /function chatAbstand\(\)/.test(html) && /new ResizeObserver\(chatAbstand\)/.test(html), "Abstand unten gemessen");
+  assert.ok(/@keyframes tippWelle/.test(html) && /\.punkte3 i \{ width: 9px; height: 9px/.test(html), "Punkte größer + Welle");
+  const ti = server.slice(server.indexOf('case "tippen"'), server.indexOf('case "nachricht_senden"'));
+  assert.ok(/const art = p\.sprache \? "sprache" : "text"/.test(ti) && /text: art === "sprache" \? null : text, art/.test(ti), "Server: Sprachaufnahme ohne Text");
+  assert.ok(/const spricht = \(tippen \?\? \[\]\)\.filter\(\(x: any\) => x\.art === "sprache"\)/.test(server), "Server liefert spricht");
+  assert.ok(/function sprichtMelden\(\) \{\n  if \(!SPR \|\| !chatId \|\| !ONL\.zeigen\) return;/.test(html) && /getByteTimeDomainData/.test(html) && /osziStopp\(\); if \(s\.meldeId\) api\("tippen", \{ id: s\.meldeId, aus: true \}\)/.test(html), "App: melden nur bei Online-Status, echtes Oszilloskop, Ende meldet ab");
+  const mig = lies("supabase/migrations/20261001_kc_club_v1110_spricht.sql");
+  assert.ok(/add column if not exists art text not null default 'text'/.test(mig), "Migration additiv");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

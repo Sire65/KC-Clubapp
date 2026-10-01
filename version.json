@@ -1,13 +1,20 @@
 {
-  "version": "1.10.0",
+  "version": "1.11.0",
   "datum": "2026-10-01",
   "neu": [
-    "📌 Wichtige Nachricht oben im Chat anheften (bis zu 3)",
-    "⭐ Nachrichten merken – deine Merkliste unter 💬 Kommunikation → ⭐",
-    "📊 Kurze Abstimmung direkt im Chat: 📎 → „Abstimmung“ (z. B. Wer kommt? Ja / Nein / Vielleicht)",
-    "👤 Kontakt teilen: 📎 → „Kontakt teilen“ – zeigt nur, was das Mitglied freigegeben hat"
+    "💬 „schreibt …“ jetzt größer und deutlicher – die Punkte laufen als Welle",
+    "🎤 Nimmt jemand eine Sprachnachricht auf, siehst du das mit einer Oszilloskop-Welle; bei deiner eigenen Aufnahme zeigt die Welle deine Stimme",
+    "↕️ Die letzte Nachricht stößt nicht mehr unten an die Eingabe"
   ],
   "verlauf": [
+    {
+      "version": "1.11.0",
+      "neu": [
+        "💬 „schreibt …“ jetzt größer und deutlicher – die Punkte laufen als Welle",
+        "🎤 Nimmt jemand eine Sprachnachricht auf, siehst du das mit einer Oszilloskop-Welle; bei deiner eigenen Aufnahme zeigt die Welle deine Stimme",
+        "↕️ Die letzte Nachricht stößt nicht mehr unten an die Eingabe"
+      ]
+    },
     {
       "version": "1.10.0",
       "neu": [

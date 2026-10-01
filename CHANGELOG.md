@@ -1,5 +1,15 @@
 # Änderungen
 
+## 1.11.0 – 2026-10-01 (DEV)
+
+- KC-CLUB-CHAT-ABSTAND (Hinweis Hansi): Abstand unter der letzten Nachricht = gemessene Höhe des Eingabebereichs + Luft
+  (ResizeObserver, CSS-Variable --chatUnten) statt fester 160 px – nichts stößt mehr unten an.
+- KC-CLUB-TIPPT-WELLE (Wunsch Hansi): „schreibt …“ größer (Punkte 9 px, Schrift 0,98 rem, fett) und als Welle animiert
+  (bei „Bewegung reduzieren“ ohne Animation).
+- KC-CLUB-SPRICHT (Wunsch Hansi): Wer eine Sprachnachricht aufnimmt, meldet das wie „schreibt …“ (tippen mit sprache,
+  alle 3 s, nur bei sichtbarem Online-Status); die anderen sehen „🎤 … nimmt eine Sprachnachricht auf“ mit laufender
+  Oszilloskop-Welle. Eigene Aufnahme: echtes Oszilloskop der Mikrofon-Welle (Web Audio, lokal). Migration: kc_club_tippen.art.
+
 ## 1.10.0 – 2026-10-01 (DEV)
 
 - KC-CLUB-ANHEFTEN (Wunsch Hansi, wie WhatsApp): Nachricht antippen → „📌 Oben anheften“ / „Lösen“; bis zu 3 je

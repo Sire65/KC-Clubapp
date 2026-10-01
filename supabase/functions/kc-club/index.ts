@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.10.0";
+const SERVER_VERSION = "1.11.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -2891,13 +2891,14 @@ Köcheclub Werne`,
         await db.from("kc_communication_thread_participants").update({ last_read_at: jetzt() }).eq("thread_id", id).eq("person_id", ich.person_id);
         const [{ data: gr }, { data: tippen }] = await Promise.all([
           db.from("kc_club_gruppen").select("*").eq("thread_id", id).maybeSingle(),
-          db.from("kc_club_tippen").select("person_id,text").eq("thread_id", id).neq("person_id", ich.person_id).gt("bis", jetzt()),
+          db.from("kc_club_tippen").select("person_id,text,art").eq("thread_id", id).neq("person_id", ich.person_id).gt("bis", jetzt()),
         ]);
-        const tippt = (tippen ?? []).map((x: any) => vorname(leute.get(x.person_id)) || x.person_id);
+        const tippt = (tippen ?? []).filter((x: any) => x.art !== "sprache").map((x: any) => vorname(leute.get(x.person_id)) || x.person_id);
+        const spricht = (tippen ?? []).filter((x: any) => x.art === "sprache").map((x: any) => vorname(leute.get(x.person_id)) || x.person_id); // KC-CLUB-SPRICHT
         // KC-CLUB-LIVETIPPEN: Entwurf nur von denen, die es freiwillig eingeschaltet haben (Server speichert sonst keinen Text)
         const entwurf = (tippen ?? []).filter((x: any) => x.text).map((x: any) => ({ name: vorname(leute.get(x.person_id)) || x.person_id, text: x.text }));
         const angeheftet = pinIds.map((pid: string) => { const m: any = nachMid.get(pid); return { id: pid, von: m.sender_person_id === ich.person_id ? "Du" : vorname(leute.get(m.sender_person_id)) || "?", text: txt(m.body, 90) }; });
-        return json({ id, betreff: t?.subject ?? "", tippt, entwurf, angeheftet,
+        return json({ id, betreff: t?.subject ?? "", tippt, entwurf, spricht, angeheftet,
           gruppe: gr ? { name: gr.name, symbol: gr.symbol, erstellt_von: gr.erstellt_von, darfVerwalten: gr.erstellt_von === ich.person_id || ich.vorstand } : null, teilnehmer: (tn ?? []).map((x: any) => ({ person_id: x.person_id, name: leute.get(x.person_id)?.display_name || x.person_id })), nachrichten });
       }
 
@@ -2912,7 +2913,9 @@ Köcheclub Werne`,
           const { data: e } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "live_tippen").maybeSingle();
           if (e?.wert?.an === true) text = [...p.text].slice(-LIVE_TIPPEN_ZEICHEN).join("");
         }
-        await db.from("kc_club_tippen").upsert({ thread_id: id, person_id: ich.person_id, bis: new Date(Date.now() + TIPPT_SEK * 1000).toISOString(), text });
+        // KC-CLUB-SPRICHT (1.11.0): „nimmt eine Sprachnachricht auf“ statt „schreibt …“ (ohne Text)
+        const art = p.sprache ? "sprache" : "text";
+        await db.from("kc_club_tippen").upsert({ thread_id: id, person_id: ich.person_id, bis: new Date(Date.now() + TIPPT_SEK * 1000).toISOString(), text: art === "sprache" ? null : text, art });
         return json({ ok: true });
       }
 
