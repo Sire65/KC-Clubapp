@@ -1,5 +1,12 @@
 # Änderungen
 
+## 1.21.5 – 2026-10-01 (DEV)
+
+- KC-CLUB-TIPPT-WELLE (Hinweis Hansi „Punkte bei ‚Steven schreibt‘ nicht animiert“): Ursache 1 – bei „Animationen
+  reduzieren“ (auf vielen Android-Handys z. B. im Energiesparmodus an) standen die Punkte still; jetzt ruhige, langsamere
+  Welle (2,2 s). Ursache 2 – die Anzeige wurde bei jedem Chat-Takt (2 s) neu gezeichnet und die Welle begann von vorn;
+  jetzt nur noch bei Änderung. Gleiches für die Oszilloskop-Welle („nimmt eine Sprachnachricht auf“).
+
 ## 1.21.4 – 2026-10-01 (DEV)
 
 - KC-CLUB-NEU-KACHEL (Wunsch Hansi): Kachel „💬 Kommunikation“ bzw. „Nachrichten“ (einfache Ansicht) bekommt bei ungelesenen

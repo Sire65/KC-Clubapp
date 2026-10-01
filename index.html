@@ -598,7 +598,8 @@
   @keyframes osziLauf { to { transform: translateX(-20px); } } @keyframes osziHub { 0%, 100% { transform: scaleY(.45); } 35% { transform: scaleY(1); } 70% { transform: scaleY(.7); } }
   #aufnahmeOszi { flex: 1; min-width: 60px; height: 34px; }
   @keyframes tippHuepf { 0%, 60%, 100% { transform: translateY(0); opacity: .35; } 30% { transform: translateY(-4px); opacity: 1; } }
-  @media (prefers-reduced-motion: reduce) { .punkte3 i, .oszi .lauf, .oszi .hub { animation: none; opacity: .8; } }
+  /* 1.21.5 (Hinweis Hansi „Punkte bewegen sich nicht“): auch bei „Animationen reduzieren“ eine ruhige, langsame Welle statt Stillstand */
+  @media (prefers-reduced-motion: reduce) { .punkte3 i { animation-duration: 2.2s; } .punkte3 i:nth-child(2) { animation-delay: .3s; } .punkte3 i:nth-child(3) { animation-delay: .6s; } .oszi .lauf, .oszi .hub { animation-duration: 3s; } }
   .chat { display: flex; flex-direction: column; gap: 6px; padding: 8px 0 var(--chatUnten, 160px); } /* KC-CLUB-CHAT-ABSTAND (1.11.0): Höhe der Eingabe gemessen */
   /* KC-CLUB-ZUSTELLWAHL: Symbole für Erreichbarkeit und Auswahl, wie benachrichtigt wird */
   .wege { display: inline-flex; gap: 3px; margin-left: 6px; font-size: .95rem; vertical-align: middle; }
@@ -1811,7 +1812,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.21.4"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.21.5"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2782,14 +2783,16 @@ const OSZI_SVG = `<svg class="oszi" viewBox="0 0 70 24" aria-hidden="true"><g cl
 const werText = (n) => n.length === 1 ? n[0] : n.length === 2 ? `${n[0]} und ${n[1]}` : `${n.length} Personen`;
 function tipptZeigen(namen, entwurf = [], sprechen = []) {
   const e = $("tipptAnzeige"); if (!e) return;
-  if (!namen.length && !sprechen.length) { e.classList.add("versteckt"); e.innerHTML = ""; return; }
+  if (!namen.length && !sprechen.length) { e.classList.add("versteckt"); e.innerHTML = ""; e.dataset.stand = ""; return; }
   // KC-CLUB-SPRICHT (1.11.0): „nimmt eine Sprachnachricht auf“ mit Oszilloskop-Welle
   const sp = sprechen.length ? `<div class="zeile">${OSZI_SVG}<span>🎤 ${esc(werText(sprechen))} ${sprechen.length > 1 ? "nehmen" : "nimmt"} eine Sprachnachricht auf</span></div>` : "";
-  if (!namen.length) { e.innerHTML = sp; e.classList.remove("versteckt"); return; }
+  if (!namen.length) { if (e.dataset.stand !== sp) { e.innerHTML = sp; e.dataset.stand = sp; } e.classList.remove("versteckt"); return; }
   const kurz = (t) => { const z = [...t]; return z.length > LIVE_ANZEIGE_ZEICHEN ? "…" + z.slice(-LIVE_ANZEIGE_ZEICHEN).join("") : t; };
   const entwuerfe = entwurf.map((x) => `<div class="entwurf">✍️ <b>${esc(x.name)}:</b> ${esc(kurz(x.text))}</div>`).join("");
   const wer = namen.length === 1 ? namen[0] : namen.length === 2 ? `${namen[0]} und ${namen[1]}` : `${namen.length} Personen`;
-  e.innerHTML = `<div class="zeile"><span class="punkte3"><i></i><i></i><i></i></span><span>${esc(wer)} ${namen.length > 1 ? "schreiben" : "schreibt"} …</span></div>${entwuerfe}${sp}`;
+  // 1.21.5: nur neu zeichnen, wenn sich etwas geändert hat – sonst fängt die Punkte-Welle bei jedem Takt (2 s) von vorn an
+  const html = `<div class="zeile"><span class="punkte3"><i></i><i></i><i></i></span><span>${esc(wer)} ${namen.length > 1 ? "schreiben" : "schreibt"} …</span></div>${entwuerfe}${sp}`;
+  if (e.dataset.stand !== html) { e.innerHTML = html; e.dataset.stand = html; }
   e.classList.remove("versteckt");
 }
 

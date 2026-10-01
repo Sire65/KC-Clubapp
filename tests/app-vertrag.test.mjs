@@ -1840,6 +1840,12 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/k\.classList\.toggle\("neu-da", n > 0\)/.test(html), "Zähler zieht die Farbe mit");
 }
 
+// 162. 1.21.5: Schreib-Punkte immer als Welle (KC-CLUB-TIPPT-WELLE)
+{
+  assert.ok(/@media \(prefers-reduced-motion: reduce\) \{ \.punkte3 i \{ animation-duration: 2\.2s; \}/.test(html) && !/\.punkte3 i, \.oszi \.lauf, \.oszi \.hub \{ animation: none/.test(html), "reduzierte Bewegung: langsam statt Stillstand");
+  assert.ok(/if \(e\.dataset\.stand !== html\) \{ e\.innerHTML = html; e\.dataset\.stand = html; \}/.test(html), "nur bei Änderung neu zeichnen");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
