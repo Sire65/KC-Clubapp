@@ -1,13 +1,18 @@
 {
-  "version": "1.6.0",
-  "datum": "2026-09-30",
+  "version": "1.7.0",
+  "datum": "2026-10-01",
   "neu": [
-    "🆘 Neue rote SOS-Kachel: wichtige Notrufnummern (mit Sicherheitsabfrage) und Mitglieder im Notfall schnell erreichen",
-    "👉 Nachrichten wie bei WhatsApp: nach rechts wischen = antworten, nach links wischen = löschen (für alle oder nur für dich)",
-    "💡 Tipp des Tages beim Öffnen – abschaltbar unter ⚙️ Einstellungen",
-    "▴ Einstellungen: lange Bereiche jetzt auch unten zuklappen"
+    "📍 SOS: „Wo bin ich?“ zeigt deinen Standort mit Adresse – zum Vorlesen am Telefon oder per SMS/WhatsApp schicken",
+    "🪪 SOS: Dein Notfallpass (Allergien, Medikamente, Blutgruppe …) – bleibt nur auf deinem Handy, niemand sonst sieht ihn"
   ],
   "verlauf": [
+    {
+      "version": "1.7.0",
+      "neu": [
+        "📍 SOS: „Wo bin ich?“ zeigt deinen Standort mit Adresse – zum Vorlesen am Telefon oder per SMS/WhatsApp schicken",
+        "🪪 SOS: Dein Notfallpass (Allergien, Medikamente, Blutgruppe …) – bleibt nur auf deinem Handy, niemand sonst sieht ihn"
+      ]
+    },
     {
       "version": "1.6.0",
       "neu": [

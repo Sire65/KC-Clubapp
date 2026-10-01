@@ -1,5 +1,17 @@
 # Änderungen
 
+## 1.7.0 – 2026-10-01 (DEV)
+
+- KC-CLUB-SOS-WO (Wunsch Hansi): In der SOS-Ansicht „📍 Wo bin ich?“ – eigener Standort (Koordinaten, Genauigkeit, Uhrzeit)
+  mit Adresse inkl. Hausnummer/PLZ zum Vorlesen am Telefon; Kopieren, SMS, WhatsApp, Karte. Nur auf Knopfdruck, nichts wird
+  gespeichert, Koordinaten nicht im Protokoll. Neue Aktion sos_ort (gleicher kostenloser Ortsnamen-Adapter wie Fotos, Option
+  „genau“; höchstens 1 Abfrage je Person in 5 s, global 1/s für OpenStreetMap).
+- KC-CLUB-NOTFALLPASS (Wunsch Hansi): freiwilliger Notfallpass (Geburtsdatum, Blutgruppe, Allergien, Vorerkrankungen,
+  Medikamente, Hinweise, Hausarzt, Krankenkasse, Organspende; Registry NFP_FELDER) + eigener Notfallkontakt. Gesundheitsdaten
+  bleiben NUR auf dem Gerät (localStorage je Person) – kein Server, keine Sicherung, kein Neon, auch nicht für die Clubleitung.
+  Großanzeige zum Vorzeigen; Hinweis auf den Notfallpass des Handys (Sperrbildschirm). Beide auch über die Suche erreichbar.
+- Entscheidung Hansi: Notfallkontakte anderer Mitglieder sieht weiterhin nur die Clubleitung.
+
 ## 1.6.0 – 2026-10-01 (DEV)
 
 - KC-CLUB-KLAPPE-UNTEN (Wunsch Hansi): Jeder Klappbereich (details[data-klappe], außer inneren Admin-Bereichen) hat unten

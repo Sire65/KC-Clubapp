@@ -1522,6 +1522,19 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/const TIPPS = \[/.test(html) && /function tippDesTages\(\)/.test(html) && /Keine Tipps mehr anzeigen/.test(html) && /id="setTipps" checked/.test(html) && /tipps: \(w\) =>/.test(server), "Tipp des Tages + Schalter (Standard an)");
 }
 
+// 134. 1.7.0: SOS „Wo bin ich?“ + Notfallpass (KC-CLUB-SOS-WO, KC-CLUB-NOTFALLPASS)
+{
+  const so = server.slice(server.indexOf('case "sos_ort"'), server.indexOf('case "geburtstag_freigabe"'));
+  assert.ok(so && /ORTSNAMEN\[ORTSNAME_QUELLE\]\([\s\S]{0,120}, true\)/.test(so) && /sosOrtZuletzt/.test(so) && /ortsnameZuletzt < 1100/.test(so), "sos_ort: Adapter (genau), Bremse je Person und 1/s");
+  assert.ok(!/\.(insert|update|upsert)\(/.test(so) && /protokoll\(ich\.person_id, "sos_wo_bin_ich", \{\}\)/.test(so), "sos_ort: nichts speichern, keine Koordinaten ins Protokoll");
+  assert.ok(/nominatim: async \(lat, lon, genau\)/.test(server) && /if \(genau\) \{/.test(server), "Ortsnamen-Adapter: Option genau (Fotos unverändert)");
+  assert.ok(/function sosWoBinIch\(\)/.test(html) && /api\("sos_ort", \{ lat: w\.lat, lon: w\.lon \}/.test(html) && /notrufe \+ sosWoKarte\(\) \+ nfpKarte\(\)/.test(html), "App: Wo bin ich im SOS-Bereich");
+  const nfp = html.slice(html.indexOf("// ---------- KC-CLUB-NOTFALLPASS"), html.indexOf("// ---------- KC-CLUB-WISCHEN"));
+  assert.ok(/const NFP_FELDER = \[/.test(nfp) && /"kc_club_notfallpass_" \+ \(ICH\?\.person_id/.test(nfp), "Notfallpass: Registry + Speicher je Person");
+  assert.ok(!/api\(/.test(nfp), "Notfallpass: Gesundheitsdaten nie an den Server");
+  assert.ok(/confirm\("Notfallpass auf diesem Gerät löschen\?"\)/.test(nfp) && /id="nfpBlatt"/.test(html), "Notfallpass: Löschen mit Rückfrage, Blatt vorhanden");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

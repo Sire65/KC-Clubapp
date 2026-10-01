@@ -350,6 +350,11 @@
   .sos-name small { color: var(--grau); font-size: .8rem; } .sos-name span { margin-left: auto; color: var(--grau); }
   .sos-detail { padding: 0 2px 10px; } .sos-detail .knoepfe a { text-decoration: none; }
   .sos-nf { margin-top: 8px; padding: 8px; border-radius: 10px; background: #fdecea; }
+  .sos-wo-adr { font-size: 1.25rem; font-weight: 700; margin: 6px 0 2px; } .sos-wo-koord { font-family: ui-monospace, monospace; font-size: 1.05rem; }
+  .nfp-pass { border: 3px solid #c0392b; border-radius: var(--radius); padding: 12px; background: var(--karte); }
+  .nfp-pass h3 { margin: 0 0 8px; color: #c0392b; } .nfp-zeile { padding: 6px 0; border-bottom: 1px solid var(--linie); } .nfp-zeile:last-child { border-bottom: none; }
+  .nfp-zeile small { display: block; color: var(--grau); } .nfp-zeile b { font-size: 1.15rem; white-space: pre-wrap; }
+  #nfpForm textarea { min-height: 54px; }
   .tdt-kopf { font-size: .8rem; font-weight: 800; color: var(--gold); text-transform: uppercase; letter-spacing: .05em; }
   details.karte.fest > summary { cursor: default; }
   details.karte[open] > summary { margin-bottom: 8px; }
@@ -1608,6 +1613,10 @@
     <div class="zwei"><button class="knopf" style="text-align:center" id="tdtKenne">✔ Kenne ich</button><button class="knopf" style="text-align:center" id="tdtSpaeter">⏰ Später</button></div>
     <button class="knopf klein" style="text-align:center;margin-top:6px" id="tdtAus">🔕 Keine Tipps mehr anzeigen</button></div>
 </div>
+<!-- KC-CLUB-NOTFALLPASS (1.7.0): nur auf diesem Gerät gespeichert -->
+<div class="blatt versteckt" id="nfpBlatt" onclick="if(event.target===this)nfpZu()">
+  <div class="blatt-innen"><div id="nfpInhalt"></div></div>
+</div>
 <!-- KC-CLUB-BEGRUESSUNG: einmal beim ersten Start je Mitglied -->
 <div class="blatt versteckt" id="begruessungBlatt">
   <div class="blatt-innen begruessung"><div id="begruessungText"></div>
@@ -1654,7 +1663,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.6.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.7.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2253,6 +2262,7 @@ const TIPPS = [
   { id: "reaktion", sym: "👍", t: "Auf Nachrichten reagieren", x: "Tippe eine Nachricht an – dann kannst du mit 👍 ❤️ 😂 … reagieren, antworten oder weiterleiten.", testen: () => zeige("nachrichten") },
   { id: "erwaehnung", sym: "📣", t: "Jemanden direkt ansprechen", x: "Schreib in einer Gruppe <b>@</b> und den Namen – die Person bekommt dann sicher Bescheid.", testen: () => zeige("nachrichten") },
   { id: "sos", sym: "🆘", t: "Für den Notfall: die rote SOS-Kachel", x: "Dort findest du die wichtigsten Notrufnummern und erreichst Mitglieder schnell. Trag auch deinen eigenen Notfallkontakt ein.", testen: () => sosStart() },
+  { id: "notfallpass", sym: "🪪", t: "Dein Notfallpass im SOS-Bereich", x: "Allergien, Medikamente, Blutgruppe – freiwillig und nur auf deinem Handy gespeichert. Und „📍 Wo bin ich?“ zeigt dir im Notfall die Adresse zum Vorlesen.", testen: () => { sosStart(); nfpBearbeiten(); } },
   { id: "lupe", sym: "🔍", t: "Alles finden mit der Lupe", x: "Mit der kleinen Lupe suchst du in Nachrichten, Terminen, Archiv, Pinnwand und mehr – schon ab 2 Buchstaben.", testen: () => sucheAuf() },
   { id: "ruhe", sym: "🌙", t: "Nachts Ruhe mit „Nicht stören“", x: "In den Einstellungen kannst du einen Zeitraum ohne Push einstellen – Anrufe kommen trotzdem durch.", testen: () => einstiegHin("benachrichtigung", "ruheVon") },
   { id: "antwort_zurueck", sym: "↩️", t: "Termin-Antwort zurücknehmen", x: "Bei einem Termin nochmal auf deine farbige Antwort tippen – dann ist sie zurückgenommen.", testen: () => zeige("termine") },
@@ -3187,7 +3197,7 @@ async function zugangAnfordern() {
 // KC-CLUB-WARTEN (0.33.0): dauert eine Anfrage länger als 0,35 s, erscheint die drehende Kochmütze mit passendem Text.
 // Hintergrund-Abfragen (alle paar Sekunden/Minuten) zeigen sie nicht, damit nichts flackert.
 const WARTEN_STILL = new Set(["nutzung_melden", "standort_update", "standort_liste", "terminanfragen_liste", "init", "online", "anruf_status", "diagnose", "unterhaltung", "unterhaltungen", "einstellung_setzen", "pinnwand", "kalender", "terminumfragen_liste", "communicator_status", "ping", "anruf_ende", "protokoll_speichern", "todo_erledigt", "todo_liste", "wetter", "fotos_neueste", "admin_lage", "tippen", "pinnwand_neu", "pinnwand_gesehen"]);
-const WARTEN_TEXT = { standort_ort: "Standort wird bestimmt …", standort_start: "Standort wird geteilt …", standort_ende: "Wird beendet …", terminanfrage_senden: "Anfrage wird gesendet …", terminanfrage_antwort: "Antwort wird gemeldet …", terminanfrage_absagen: "Wird abgesagt …", nachricht_senden: "Nachricht wird gesendet …", gruppe_anlegen: "Gruppe wird angelegt …", gruppe_aendern: "Wird gespeichert …", treffen_speichern: "Termin wird gespeichert …",
+const WARTEN_TEXT = { standort_ort: "Standort wird bestimmt …", sos_ort: "Adresse wird gesucht …", standort_start: "Standort wird geteilt …", standort_ende: "Wird beendet …", terminanfrage_senden: "Anfrage wird gesendet …", terminanfrage_antwort: "Antwort wird gemeldet …", terminanfrage_absagen: "Wird abgesagt …", nachricht_senden: "Nachricht wird gesendet …", gruppe_anlegen: "Gruppe wird angelegt …", gruppe_aendern: "Wird gespeichert …", treffen_speichern: "Termin wird gespeichert …",
   pinnwand_anheften: "Zettel wird angeheftet …", feedback_senden: "Feedback wird gesendet …", anklopfen: "Es wird angeklopft …", anruf_start: "Anruf wird aufgebaut …", anlage_hochladen: "Wird hochgeladen …", erstattung_senden: "Antrag wird gesendet …", km_satz_setzen: "Wird gespeichert …", todo_zuweisen: "Wird zugewiesen …",
   link_erzeugen: "Link wird erzeugt …", todo_anlegen: "Wird eingetragen …", zugang_anfordern: "Mail wird gesendet …", foto_hochladen: "Foto wird hochgeladen …", test_an_mich: "Test wird gesendet …",
   init: "Wird aktualisiert …", wetter: "Wetter wird abgefragt …", admin_lage: "Server, Datenbank und Verbindungen werden geprüft …", kalender: "Termine werden geladen …",
@@ -5321,8 +5331,8 @@ const NOTRUFE = [
   { nr: "08001110111", anzeige: "0800 111 0 111", t: "Telefonseelsorge", u: "kostenlos, rund um die Uhr", sym: "🤝" },
   { nr: "116116", anzeige: "116 116", t: "Sperr-Notruf", u: "Bank- und Kreditkarten sperren", sym: "💳" },
 ];
-let SOS = { daten: null, suche: "", offen: null };
-function sosStart() { SOS.suche = ""; SOS.offen = null; zeige("sos"); sosZeigen(); sosLaden(); }
+let SOS = { daten: null, suche: "", offen: null, wo: null };
+function sosStart() { SOS.suche = ""; SOS.offen = null; SOS.wo = null; zeige("sos"); sosZeigen(); sosLaden(); }
 async function sosLaden() { try { SOS.daten = await api("sos_kontakte"); sosZeigen(); } catch (e) { SOS.daten = { fehler: e.message }; sosZeigen(); } }
 function sosAnrufen(nr) {
   const n = NOTRUFE.find((x) => x.nr === nr); if (!n) return;
@@ -5362,7 +5372,106 @@ function sosZeigen() {
       <input id="sosSuche" type="search" placeholder="🔍 Name suchen …" autocomplete="off" value="${esc(SOS.suche)}" oninput="SOS.suche=this.value;sosZeigen();$('sosSuche').focus();$('sosSuche').setSelectionRange(this.value.length,this.value.length)">
       <div class="karte">${liste.map(zeile).join("") || '<p class="hinweis">Niemand gefunden.</p>'}</div>`;
   }
-  $("sosInhalt").innerHTML = notrufe + eigen + kontakte;
+  $("sosInhalt").innerHTML = notrufe + sosWoKarte() + nfpKarte() + eigen + kontakte;
+}
+
+// ---------- KC-CLUB-SOS-WO (1.7.0, Wunsch Hansi): „📍 Wo bin ich?“ – eigener Standort mit Adresse zum Vorlesen am Telefon
+// oder zum Verschicken (SMS, WhatsApp, kopieren). Nur auf Knopfdruck, nichts wird gespeichert, kein Live-Teilen.
+// Adresse über den Server (gleicher kostenloser OpenStreetMap-Adapter wie bei Fotos); Koordinaten gelten auch ohne Adresse.
+function sosWoKarte() {
+  const w = SOS.wo;
+  if (!w) return `<div class="karte"><b>📍 Wo bin ich?</b><div class="hinweis">Zeigt deinen Standort mit Adresse – zum Vorlesen am Telefon oder zum Schicken. Wird nicht gespeichert.</div>
+    <button class="knopf haupt" style="margin-top:8px" onclick="sosWoBinIch()">📍 Standort jetzt bestimmen</button></div>`;
+  if (w.fehler && !w.lat) return `<div class="karte"><b>📍 Wo bin ich?</b><div class="hinweis">⚠️ ${esc(w.fehler)}</div><button class="knopf" style="margin-top:8px" onclick="sosWoBinIch()">🔄 Noch einmal</button></div>`;
+  const koord = `${w.lat.toFixed(5)}, ${w.lon.toFixed(5)}`;
+  return `<div class="karte"><b>📍 Hier bin ich</b> <span class="hinweis">(${esc(w.zeit)} Uhr · auf ca. ${w.genau} m genau)</span>
+    <div class="sos-wo-adr">${w.adresse ? esc(w.adresse) : w.laedt ? "Adresse wird gesucht …" : "Adresse nicht gefunden"}</div>
+    <div class="sos-wo-koord">${koord}</div>${w.adrFehler ? `<div class="hinweis">${esc(w.adrFehler)}</div>` : ""}
+    <div class="knoepfe" style="margin-top:8px"><button class="knopf klein" onclick="sosWoKopieren()">📋 Kopieren</button>
+      <a class="knopf klein" href="${esc("sms:?&body=" + encodeURIComponent(sosWoText()))}">💬 SMS</a>
+      <a class="knopf klein" href="${esc("https://wa.me/?text=" + encodeURIComponent(sosWoText()))}" target="_blank" rel="noopener">🟢 WhatsApp</a>
+      <a class="knopf klein" href="${esc(stKarte(w.lat.toFixed(5), w.lon.toFixed(5)))}" target="_blank" rel="noopener">🗺️ Karte</a>
+      <button class="knopf klein" onclick="sosWoBinIch()">🔄 Neu</button></div></div>`;
+}
+function sosWoText() {
+  const w = SOS.wo; if (!w?.lat) return "";
+  return `Mein Standort (${w.zeit} Uhr): ${w.adresse ? w.adresse + " – " : ""}${w.lat.toFixed(5)}, ${w.lon.toFixed(5)} – Karte: ${stKarte(w.lat.toFixed(5), w.lon.toFixed(5))}`;
+}
+function sosWoKopieren() { const t = sosWoText(); navigator.clipboard?.writeText(t).then(() => melde("📋 Standort kopiert"), () => prompt("Standort:", t)); }
+async function sosWoBinIch() {
+  let p;
+  try { p = await stPositionWarten(); } catch (e) { SOS.wo = { fehler: e.message }; sosZeigen(); return; }
+  const c = p.coords, zeit = new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+  SOS.wo = { lat: c.latitude, lon: c.longitude, genau: Math.max(1, Math.round(c.accuracy || 0)), zeit, laedt: true };
+  sosZeigen();
+  const w = SOS.wo;
+  try { const r = await api("sos_ort", { lat: w.lat, lon: w.lon }, { warten: true }); w.adresse = r.adresse || null; if (r.fehler) w.adrFehler = r.fehler; }
+  catch (e) { w.adrFehler = e.message; }
+  w.laedt = false; if (SOS.wo === w) sosZeigen();
+}
+
+// ---------- KC-CLUB-NOTFALLPASS (1.7.0, Wunsch Hansi): freiwillige Gesundheitsangaben zum Vorzeigen im Notfall.
+// Gesundheitsdaten sind besonders schützenswert → sie bleiben NUR auf diesem Gerät (localStorage je Person), gehen nie an
+// den Server, nicht in die Sicherung und nicht nach Neon. Niemand sonst sieht sie – auch die Clubleitung nicht.
+// Hinweis auf den Notfallpass des Handys (Sperrbildschirm), weil die Club-App bei gesperrtem Handy nicht erreichbar ist.
+const NFP_FELDER = [
+  { k: "geburt", t: "Geburtsdatum", typ: "date" },
+  { k: "blut", t: "Blutgruppe", typ: "wahl", w: ["", "0 Rh+", "0 Rh−", "A Rh+", "A Rh−", "B Rh+", "B Rh−", "AB Rh+", "AB Rh−", "weiß ich nicht"] },
+  { k: "allergien", t: "Allergien / Unverträglichkeiten", typ: "lang", bsp: "z. B. Penicillin, Nüsse, Wespenstich" },
+  { k: "erkrankungen", t: "Vorerkrankungen", typ: "lang", bsp: "z. B. Diabetes, Herz, Asthma, Epilepsie" },
+  { k: "medikamente", t: "Medikamente", typ: "lang", bsp: "z. B. Blutverdünner, Insulin" },
+  { k: "hinweise", t: "Wichtig für Helfer", typ: "lang", bsp: "z. B. Herzschrittmacher, Notfallspray in der Jackentasche" },
+  { k: "arzt", t: "Hausarzt (Name und Telefon)", bsp: "z. B. Dr. Muster, 02389 …" },
+  { k: "kasse", t: "Krankenkasse", bsp: "z. B. AOK" },
+  { k: "organspende", t: "Organspende", typ: "wahl", w: ["", "Ausweis ist dabei", "im Organspende-Register eingetragen", "nein", "keine Angabe"] },
+];
+const nfpSchluessel = () => "kc_club_notfallpass_" + (ICH?.person_id || "x");
+function nfpLesen() { try { const d = JSON.parse(localStorage.getItem(nfpSchluessel()) || "null"); return d && typeof d === "object" ? d : null; } catch { return null; } }
+function nfpGefuellt(d) { return !!d && NFP_FELDER.some((f) => String(d[f.k] || "").trim()); }
+function nfpKarte() {
+  const d = nfpLesen(), voll = nfpGefuellt(d);
+  return `<div class="karte"><b>🪪 Mein Notfallpass</b><div class="hinweis">${voll ? "Zum Vorzeigen für Helfer und Rettungsdienst." : "Allergien, Medikamente, Blutgruppe … – freiwillig."} 🔒 Nur auf diesem Gerät gespeichert, niemand sonst sieht ihn.</div>
+    <div class="knoepfe" style="margin-top:8px">${voll ? `<button class="knopf haupt" onclick="nfpZeigen()">🪪 Notfallpass zeigen</button><button class="knopf klein" onclick="nfpBearbeiten()">✏️ Ändern</button>` : `<button class="knopf haupt" onclick="nfpBearbeiten()">✏️ Notfallpass ausfüllen</button>`}</div></div>`;
+}
+function nfpZu() { $("nfpBlatt").classList.add("versteckt"); }
+function nfpWert(f, v) { if (f.typ === "date" && /^\d{4}-\d{2}-\d{2}$/.test(v)) return v.split("-").reverse().join("."); return v; }
+function nfpZeigen() {
+  const d = nfpLesen() || {}, nf = INIT?.notfall;
+  const zeilen = NFP_FELDER.filter((f) => String(d[f.k] || "").trim()).map((f) => `<div class="nfp-zeile"><small>${esc(f.t)}</small><b>${esc(nfpWert(f, String(d[f.k]).trim()))}</b></div>`).join("");
+  $("nfpInhalt").innerHTML = `<div class="nfp-pass"><h3>🆘 NOTFALLPASS</h3>
+      <div class="nfp-zeile"><small>Name</small><b>${esc(ICH?.name || "")}</b></div>${zeilen}
+      ${nf?.name || nf?.telefon ? `<div class="nfp-zeile"><small>Notfallkontakt${nf.beziehung ? " (" + esc(nf.beziehung) + ")" : ""}</small><b>${esc(nf.name || "")}${nf.telefon ? " · " + esc(nf.telefon) : ""}</b></div>` : ""}</div>
+    <p class="hinweis">Stand: ${esc(d.stand ? new Date(d.stand).toLocaleDateString("de-DE") : "–")}</p>
+    <button class="knopf" style="text-align:center" onclick="nfpZu()">Schließen</button>`;
+  $("nfpBlatt").classList.remove("versteckt");
+}
+function nfpBearbeiten() {
+  const d = nfpLesen() || {};
+  const feld = (f) => {
+    const v = esc(String(d[f.k] || "")), id = "nfp_" + f.k;
+    if (f.typ === "wahl") return `<label class="feld">${esc(f.t)}<select id="${id}">${f.w.map((x) => `<option value="${esc(x)}"${x === String(d[f.k] || "") ? " selected" : ""}>${x ? esc(x) : "– bitte wählen –"}</option>`).join("")}</select></label>`;
+    if (f.typ === "lang") return `<label class="feld">${esc(f.t)}<textarea id="${id}" maxlength="500" placeholder="${esc(f.bsp || "")}">${v}</textarea></label>`;
+    return `<label class="feld">${esc(f.t)}<input id="${id}" ${f.typ === "date" ? 'type="date"' : 'maxlength="120"'} placeholder="${esc(f.bsp || "")}" value="${v}"></label>`;
+  };
+  $("nfpInhalt").innerHTML = `<h3 style="margin-top:0">🪪 Notfallpass ausfüllen</h3>
+    <p class="hinweis">Alles freiwillig – nur ausfüllen, was Helfern im Notfall nützt. 🔒 Die Angaben bleiben <b>nur auf diesem Gerät</b>: Sie gehen nicht an den Club, nicht an die Clubleitung und nicht in die Sicherung. Auf einem neuen Handy musst du sie neu eintragen.</p>
+    <div id="nfpForm">${NFP_FELDER.map(feld).join("")}</div>
+    <p class="hinweis">🆘 Der Notfallkontakt kommt aus deinen Einstellungen${INIT?.notfall?.name ? ` (${esc(INIT.notfall.name)})` : " – noch keiner eingetragen"}.</p>
+    <p class="hinweis">📱 Tipp: Trag das Wichtigste auch im Notfallpass deines Handys ein – den sehen Helfer auch bei gesperrtem Handy. iPhone: App „Health“ → Profilbild → Notfallpass. Android: Einstellungen → Sicherheit und Notfall → Medizinische Informationen.</p>
+    <button class="knopf haupt" style="text-align:center" onclick="nfpSpeichern()">💾 Speichern</button>
+    <div class="zwei"><button class="knopf" style="text-align:center" onclick="nfpZu()">Abbrechen</button>${nfpGefuellt(d) ? '<button class="knopf" style="text-align:center" onclick="nfpLoeschen()">🗑️ Löschen</button>' : ""}</div>`;
+  $("nfpBlatt").classList.remove("versteckt");
+}
+function nfpSpeichern() {
+  const d = { stand: new Date().toISOString() };
+  for (const f of NFP_FELDER) { const v = String($("nfp_" + f.k)?.value || "").trim().slice(0, 500); if (v) d[f.k] = v; }
+  try { localStorage.setItem(nfpSchluessel(), JSON.stringify(d)); } catch { melde("Speichern auf diesem Gerät ist nicht möglich (privates Surfen?).", true); return; }
+  nfpZu(); melde("🪪 Notfallpass auf diesem Gerät gespeichert"); sosZeigen();
+}
+function nfpLoeschen() {
+  if (!confirm("Notfallpass auf diesem Gerät löschen?")) return;
+  try { localStorage.removeItem(nfpSchluessel()); } catch {}
+  nfpZu(); melde("Notfallpass gelöscht"); sosZeigen();
 }
 
 // ---------- KC-CLUB-WISCHEN (1.6.0, Wunsch Hansi – wie WhatsApp): Nachricht nach rechts wischen = antworten,
@@ -8015,6 +8124,7 @@ function suAppListe() {
     ["👀", "Ansicht wechseln (einfach/erweitert)", "ansicht einfach erweitert kacheln", () => ansichtWechseln()], ["🧪", "Test an mich", "test push mail ausprobieren", () => testAnMichStarten()],
     ["🆘", "Problem melden", "problem fehler hilfe melden", () => fpProblemMelden()], ["👥", "Wer ist online?", "online wer", () => onlineBlatt()],
     ["📍", "Standort teilen", "standort teilen wo bin ich", () => stBlatt()],
+    ["🆘", "Wo bin ich? (SOS)", "wo bin ich adresse standort notfall sos", () => sosStart()], ["🪪", "Mein Notfallpass", "notfallpass allergien medikamente blutgruppe notfall", () => { sosStart(); nfpBearbeiten(); }],
   ].map(([sym, t, w, fn]) => ({ sym, t, w, fn }));
   const kach = Object.values(KACHELN).flat().filter((k) => !k.bald && (!k.nur || k.nur()))
     .map((k) => ({ sym: k.sym, t: k.t, w: typeof k.u === "string" ? k.u : "", fn: () => (k.aktion ? new Function(k.aktion)() : zeige(k.v)) }));

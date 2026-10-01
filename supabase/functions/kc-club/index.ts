@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.6.0";
+const SERVER_VERSION = "1.7.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -338,19 +338,26 @@ function fotoMetaPruefen(roh: any, mitOrt: boolean) {
   return Object.keys(m).length ? m : null;
 }
 // Ortsname zu GPS-Daten (Adapter, kostenlos: OpenStreetMap/Nominatim, höchstens 1 Anfrage je Sekunde, Ergebnis wird gemerkt)
-const ORTSNAMEN: Record<string, (lat: number, lon: number) => Promise<string | null>> = {
-  nominatim: async (lat, lon) => {
+// genau = mit Hausnummer und PLZ (SOS „Wo bin ich?“ zum Vorlesen am Telefon); ohne = kurzer Ortsname wie bisher (Fotos)
+const ORTSNAMEN: Record<string, (lat: number, lon: number, genau?: boolean) => Promise<string | null>> = {
+  nominatim: async (lat, lon, genau) => {
     const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=17&accept-language=de`,
       { headers: { "User-Agent": "KC-Clubapp (Koecheclub Werne, sire65.github.io/KC-Clubapp)" }, signal: AbortSignal.timeout(8000) });
     if (!r.ok) throw new Error("Nominatim " + r.status);
     const d = await r.json(), a = d.address ?? {};
     const ort = a.town || a.city || a.village || a.hamlet || a.municipality || "";
+    if (genau) {
+      const strasse = [a.road || a.pedestrian || a.footway || a.path || "", a.house_number || ""].filter(Boolean).join(" ");
+      const teileG = [d.name && d.name !== a.road ? d.name : "", strasse, [a.postcode || "", ort].filter(Boolean).join(" "), a.country_code && a.country_code !== "de" ? a.country : ""];
+      return [...new Set(teileG.filter(Boolean))].join(", ") || d.display_name || null;
+    }
     const teile = [d.name && d.name !== a.road ? d.name : "", a.road || "", a.suburb && a.suburb !== ort ? a.suburb : "", ort, a.country_code && a.country_code !== "de" ? a.country : ""];
     return [...new Set(teile.filter(Boolean))].join(", ") || d.display_name || null;
   },
 };
 const ORTSNAME_QUELLE = "nominatim";
 let ortsnameZuletzt = 0;
+const sosOrtZuletzt = new Map<string, number>(); // KC-CLUB-SOS-WO: höchstens 1 Adressabfrage je Person in 5 s
 async function fotoHolen(id: unknown) {
   const { data: f } = await db.from("kc_club_fotos").select("*").eq("id", String(id || "")).maybeSingle();
   if (!f) throw new Fehler("Foto nicht gefunden.", 404);
@@ -2669,6 +2676,23 @@ Köcheclub Werne`,
         });
         await protokoll(ich.person_id, "sos_geoeffnet", { notfallkontakte: ich.vorstand });
         return json({ mitglieder: liste, siehtNotfall: ich.vorstand });
+      }
+
+      case "sos_ort": {
+        // KC-CLUB-SOS-WO (1.7.0, Wunsch Hansi): Adresse zum eigenen Standort – nur auf Knopfdruck, nichts wird gespeichert,
+        // Koordinaten kommen nicht ins Protokoll. Gleicher Ortsnamen-Adapter wie bei Fotos (kostenlos, max. 1 Anfrage/s).
+        const lat = Number(p.lat), lon = Number(p.lon);
+        if (!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180 || (lat === 0 && lon === 0)) throw new Fehler("Kein gültiger Standort.");
+        const zuletzt = sosOrtZuletzt.get(ich.person_id) ?? 0;
+        if (Date.now() - zuletzt < 5000) throw new Fehler("Bitte einen Moment warten und dann noch einmal tippen.", 429);
+        sosOrtZuletzt.set(ich.person_id, Date.now());
+        if (Date.now() - ortsnameZuletzt < 1100) await new Promise((r) => setTimeout(r, 1100)); // Nutzungsregel: max. 1 Anfrage/s
+        ortsnameZuletzt = Date.now();
+        let adresse: string | null = null;
+        try { adresse = await ORTSNAMEN[ORTSNAME_QUELLE](Math.round(lat * 1e5) / 1e5, Math.round(lon * 1e5) / 1e5, true); }
+        catch (e) { console.error("sos_ort", String(e)); return json({ adresse: null, fehler: "Adresse gerade nicht abrufbar – die Koordinaten gelten trotzdem." }); }
+        await protokoll(ich.person_id, "sos_wo_bin_ich", {});
+        return json({ adresse });
       }
 
       case "geburtstag_freigabe": {
