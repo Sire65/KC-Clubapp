@@ -1811,6 +1811,13 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/entwurfAlle\(\)\[u\.id\]\?\.trim\(\) \? `<span class="entwurf-marke">✏️ Entwurf:<\/span>/.test(html), "Chatliste zeigt Entwurf");
 }
 
+// 158. 1.21.1: Farben je Absender im Gruppen-Chat (KC-CLUB-GRUPPE-FARBEN)
+{
+  assert.ok(/const GRUPPEN_FARBEN = \[\["#1f618d", "#82b8ff"\]/.test(html) && /function gruppenFarbe\(name\)/.test(html), "Farb-Registry");
+  assert.ok(/\$\{!m\.eigen && andere\.length > 1 \? " farbig" : ""\}"\$\{!m\.eigen && andere\.length > 1 \? ` style="\$\{gruppenFarbe\(m\.von\)\}"` : ""\}/.test(html), "nur fremde Nachrichten in Gruppen");
+  assert.ok(/\.blase\.farbig \{ border-left: 4px solid var\(--pf\); \} \.blase\.farbig \.von \{ color: var\(--pf\);/.test(html) && /:root\.dunkel \.blase\.farbig \.von \{ color: var\(--pfd\); \}/.test(html), "Tag/Nacht lesbar");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

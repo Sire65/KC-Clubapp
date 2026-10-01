@@ -1,11 +1,16 @@
 {
-  "version": "1.21.0",
+  "version": "1.21.1",
   "datum": "2026-10-01",
   "neu": [
-    "✍️ Chat: Das Schreibfeld ist jetzt größer und geht über die ganze Breite – die Knöpfe 📎 🎤 😊 🔔 sitzen darunter",
-    "✏️ Noch nicht gesendeter Text heißt jetzt „Entwurf“ – im Chat über dem Schreibfeld und in der Chatliste"
+    "🎨 Gruppen-Chat: Jeder Absender hat jetzt seine eigene Farbe – Name und Streifen links an der Nachricht (wie WhatsApp)"
   ],
   "verlauf": [
+    {
+      "version": "1.21.1",
+      "neu": [
+        "🎨 Gruppen-Chat: Jeder Absender hat jetzt seine eigene Farbe – Name und Streifen links an der Nachricht (wie WhatsApp)"
+      ]
+    },
     {
       "version": "1.21.0",
       "neu": [

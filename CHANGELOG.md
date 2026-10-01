@@ -1,5 +1,12 @@
 # Änderungen
 
+## 1.21.1 – 2026-10-01 (DEV)
+
+- KC-CLUB-GRUPPE-FARBEN (Wunsch Hansi, wie WhatsApp): in Gruppen-Chats hat jeder Absender eine eigene Farbe – Name über der
+  Nachricht und Streifen links an der Blase. Farben aus der Registry GRUPPEN_FARBEN (je Tag-/Nacht-Design lesbar), innerhalb
+  einer Gruppe alle verschieden (Reihenfolge nach Name; ausgetretene Absender behalten eine feste Farbe aus dem Namen).
+  Rot zuletzt, weil eigene Blasen rot sind. Einzel-Chats unverändert.
+
 ## 1.21.0 – 2026-10-01 (DEV)
 
 - KC-CLUB-EINGABE-GROSS (Wunsch Hansi „Eingabe größer und breiter“): Schreibfeld im Chat oben über die volle Breite (2 Zeilen
