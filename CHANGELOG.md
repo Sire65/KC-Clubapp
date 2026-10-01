@@ -1,5 +1,25 @@
 # Änderungen
 
+## 1.23.0 – 2026-10-01 (DEV)
+
+- KC-CLUB-HELFEN (Wunsch Hansi „Wer kann helfen … nicht viel tippen, Auswahl als Kacheln“): Hilfe-Aufruf mit Kacheln für
+  Wobei (Registry HILFE_ARTEN), Tag (Heute/Morgen/Wochentage/📅), Zeitfenster (Registry ZEITFENSTER), Anzahl per ＋/－,
+  Ort aus zuletzt genutzten Orten. An alle (persönliche Benachrichtigungs-Einstellung) oder an alle gerade online (Push).
+  Antwort „✋ Ich komme“/„🙅 Kann nicht“; wer aufruft, erfährt jede Zusage, „genug Helfer“ genau einmal.
+- KC-CLUB-LEIHEN: Vereinsgegenstände ausleihen. Startbestand nach Hansis Freigabe: 8 Stehtische, 4 Bierzeltgarnituren,
+  2 Pavillons, 1 Zapfanlage, 2 Glühweintöpfe, 3 Kühlboxen, 1 Gastrobräter, 4 Warmhaltebehälter, 3 Kabeltrommeln –
+  die Clubleitung pflegt Anzahl/Gegenstände in der App (⚙️). „Noch frei“ je Zeitraum (genehmigte/abgeholte Ausleihen,
+  ohne Namen), der Server lässt nie mehr als frei zu. Anfrage per Push + E-Mail an Clubsprecher, Kassenwart und Admin;
+  eine Zusage genügt (nur die erste Entscheidung zählt), über die eigene Anfrage entscheidet jemand anderes. Ablehnen mit
+  Begründungs-Kachel. Antrag und Bescheid als Textdatei im Vereinsordner „Admin <Jahr>“ und im persönlichen Ordner des
+  Mitglieds, jeweils Register „Ausleihe“ (entsteht von selbst). Status abgeholt/zurück/storniert; Erinnerung am Rückgabetag.
+- KC-CLUB-SPENDE: Vorschläge haben die neue Art „💝 Spende“ (jedes Mitglied): ein bis zehn Projekte mit Empfänger
+  (Kachel – Kinderhospiz Lünen/Werne und bisher genutzte – oder „✏️ Andere“) und Betrag (50/100/250/500/1000 € oder
+  eigener), Summe sichtbar. Wird wie ein Thema unterstützt und erscheint beim Treffen und im Protokoll-Vorschlag.
+- Eine Kachel „🤝 Helfen & Leihen“ im Register Verein (Sprung #helfen).
+- DB: Migration 20261001_kc_club_v1230_helfen_leihen.sql (4 Tabellen, RLS ohne Policies, Spiegel-Regeln; Vorschläge:
+  Spalte spenden, art-Check um 'spende' erweitert). Rückweg steht in der Migration.
+
 ## 1.22.2 – 2026-10-01 (DEV)
 
 - KC-CLUB-KONTRAST (Hinweis Hansi „kein guter Kontrast in Nachtsicht, immer leserlich“): SOS 112/110 im Nacht-Design

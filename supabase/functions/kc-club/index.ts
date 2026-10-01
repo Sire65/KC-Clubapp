@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.22.2";
+const SERVER_VERSION = "1.23.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -1036,7 +1036,7 @@ async function adminOrdner(jahr: number, register: string) {
   }
   const [admin] = await adminIds();
   const { data: neu, error } = await db.from("kc_club_archiv_ordner").insert({ art: ADMIN_ORDNER.art, jahr, titel: ADMIN_ORDNER.titel, farbe: ADMIN_ORDNER.farbe,
-    register: ADMIN_ORDNER.register, nur_vorstand: true, erstellt_von: admin }).select("id").single();
+    register: [...new Set([register, ...ADMIN_ORDNER.register])], nur_vorstand: true, erstellt_von: admin }).select("id").single();
   if (error || !neu) throw new Error("Admin-Ordner konnte nicht angelegt werden");
   await protokoll(null, "archiv_ordner_angelegt", { ordner: neu.id, art: ADMIN_ORDNER.art, jahr, titel: ADMIN_ORDNER.titel, nur_vorstand: true, automatisch: true });
   return neu.id as string;
@@ -1241,7 +1241,7 @@ async function vorschlaegeListe(ich: Ich) {
   return alle.map((v: any) => {
     const s = (st ?? []).filter((x: any) => x.vorschlag_id === v.id);
     const mein = s.find((x: any) => x.person_id === ich.person_id);
-    const optionen = v.art === "thema" ? ["dafuer"] : v.optionen;
+    const optionen = unterstuetzbar(v.art) ? ["dafuer"] : v.optionen;
     // geheim: Ergebnis erst nach Abschluss und nie mit Namen
     const ergebnis = !v.geheim || v.status !== "offen" ? optionen.map((o: string) => ({
       option: o,
@@ -1251,12 +1251,13 @@ async function vorschlaegeListe(ich: Ich) {
     const eigener = v.erstellt_von === ich.person_id;
     const t: any = v.treffen_id ? treffen.get(v.treffen_id) : null;
     return {
-      id: v.id, art: v.art, titel: v.titel, beschreibung: v.beschreibung, optionen: v.art === "thema" ? [] : v.optionen, geheim: v.geheim,
+      id: v.id, art: v.art, titel: v.titel, beschreibung: v.beschreibung, optionen: unterstuetzbar(v.art) ? [] : v.optionen, geheim: v.geheim,
+      ...(v.art === "spende" ? { spenden: v.spenden ?? [], summe: spendenSumme(v.spenden) } : {}),
       status: v.status, frist: v.frist, erstellt_am: v.erstellt_am, abgeschlossen_am: v.abgeschlossen_am,
       von: { person_id: v.erstellt_von, name: leute.get(v.erstellt_von)?.display_name || v.erstellt_von },
       treffen: t ? { id: t.id, titel: t.titel, beginn: t.beginn } : null,
       abgestimmt: !!mein, meine: v.geheim ? null : mein?.wahl ?? null, stimmen: s.length, berechtigt, ergebnis,
-      darfAbschliessen: v.status === "offen" && (ich.vorstand || (eigener && v.art === "thema")),
+      darfAbschliessen: v.status === "offen" && (ich.vorstand || (eigener && unterstuetzbar(v.art))),
       darfZurueckziehen: v.status === "offen" && (ich.vorstand || eigener),
       // löschen: Organisation immer; wer ihn gemacht hat, solange niemand sonst abgestimmt/unterstützt hat
       darfLoeschen: ich.vorstand || (eigener && !s.some((x: any) => x.person_id !== ich.person_id) && !(geh ?? []).some((g: any) => g.vorschlag_id === v.id)),
@@ -1283,6 +1284,181 @@ async function abstimmungsErgebnis(v: any) {
   const zaehl = new Map<string, number>();
   (s ?? []).forEach((x: any) => x.wahl && zaehl.set(x.wahl, (zaehl.get(x.wahl) ?? 0) + 1));
   return v.optionen.map((o: string) => `${o}: ${zaehl.get(o) ?? 0}`).join(" · ");
+}
+
+// ---------- KC-CLUB-SPENDE (1.23.0): Spendenprojekte als Vorschlag (Empfänger + Betrag, ein oder mehrere) ----------
+// Wird wie ein Thema behandelt (unterstützen 👍, landet in der Tagesordnung). Vorschläge für Empfänger: die Registry
+// plus alles, was schon einmal vorgeschlagen wurde – so wächst die Auswahl von selbst, Tippen nur beim ersten Mal.
+const SPENDEN_VORSCHLAEGE = ["Kinderhospiz Lünen/Werne"];
+const SPENDEN_BETRAEGE = [50, 100, 250, 500, 1000];
+const SPENDE_MAX = 100000;
+const unterstuetzbar = (art: string) => art === "thema" || art === "spende";
+const euroRund = (n: number) => new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: Number.isInteger(n) ? 0 : 2 }).format(n);
+const spendenSumme = (s: any[]) => (s ?? []).reduce((x: number, y: any) => x + Number(y.betrag || 0), 0);
+function spendenPruefen(roh: unknown) {
+  const liste = (Array.isArray(roh) ? roh : []).map((x: any) => ({ empfaenger: txt(x?.empfaenger, 100), betrag: Math.round(Number(x?.betrag) * 100) / 100 }))
+    .filter((x) => x.empfaenger);
+  if (!liste.length) throw new Fehler("Bitte mindestens ein Spendenprojekt auswählen.");
+  if (liste.length > 10) throw new Fehler("Höchstens 10 Spendenprojekte auf einmal.");
+  for (const x of liste) if (!(x.betrag > 0 && x.betrag <= SPENDE_MAX)) throw new Fehler(`Bitte für „${x.empfaenger}“ einen Betrag zwischen 1 und ${euroRund(SPENDE_MAX)} wählen.`);
+  return liste;
+}
+const spendenTitel = (s: any[]) => (s.length === 1 ? `💝 Spende: ${s[0].empfaenger} – ${euroRund(s[0].betrag)}` : `💝 Spenden: ${s.length} Projekte – zusammen ${euroRund(spendenSumme(s))}`).slice(0, 150);
+async function spendenEmpfaenger() {
+  const { data } = await db.from("kc_club_vorschlaege").select("spenden").eq("art", "spende").order("erstellt_am", { ascending: false }).limit(50);
+  const alle = [...SPENDEN_VORSCHLAEGE, ...(data ?? []).flatMap((v: any) => (v.spenden ?? []).map((x: any) => String(x.empfaenger || "")))].filter(Boolean);
+  const gesehen = new Set<string>();
+  return alle.filter((n) => { const k = n.toLowerCase(); if (gesehen.has(k)) return false; gesehen.add(k); return true; }).slice(0, 12);
+}
+
+// ---------- KC-CLUB-LEIHEN & KC-CLUB-HELFEN (1.23.0, Wunsch Hansi) ----------
+// Auswahl statt Freitext: Zeitfenster, Zwecke und Hilfe-Arten kommen aus diesen Registries (die App zeigt sie als Kacheln).
+const ZEITFENSTER: Record<string, string> = { vormittag: "🌅 Vormittag (8–12 Uhr)", mittag: "☀️ Mittag (12–14 Uhr)", nachmittag: "🌤️ Nachmittag (14–18 Uhr)", abend: "🌙 Abend (18–22 Uhr)" };
+const LEIH_ZWECKE: Record<string, string> = { vereinsfest: "🎉 Vereinsfest", feier: "🎂 Private Feier", markt: "🏪 Markt / Stand", verein: "🤝 Anderer Verein", sonstiges: "✏️ Sonstiges" };
+const HILFE_ARTEN: Record<string, string> = { kochen: "🍳 Kochen", aufbau: "🧱 Aufbau", abbau: "📦 Abbau", einkauf: "🛒 Einkauf", fahren: "🚗 Fahrdienst", service: "🍽️ Service", spuelen: "🧽 Spülen & Putzen", sonstiges: "🙋 Sonstiges" };
+const LEIH_STATUS: Record<string, string> = { angefragt: "⏳ angefragt", genehmigt: "✅ genehmigt", abgelehnt: "❌ abgelehnt", abgeholt: "📦 abgeholt", zurueck: "↩️ zurückgegeben", storniert: "🚫 storniert" };
+const LEIH_BELEGT = ["genehmigt", "abgeholt"], LEIH_OFFEN = ["angefragt", "genehmigt", "abgeholt"];
+const LEIH_MAX_TAGE = 30, LEIH_VORLAUF_TAGE = 365, HILFE_VORLAUF_TAGE = 180;
+const fWt = new Intl.DateTimeFormat("de-DE", { timeZone: "UTC", weekday: "short" });
+const leihTag = (iso: string, slot?: string | null) => `${fWt.format(new Date(iso + "T12:00:00Z"))} ${iso.split("-").reverse().join(".")}${slot && ZEITFENSTER[slot] ? " · " + ZEITFENSTER[slot] : ""}`;
+const tagDazu = (iso: string, n: number) => { const d = new Date(iso + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+const isoTag = (v: unknown) => { const s = String(v || ""); return /^\d{4}-\d{2}-\d{2}$/.test(s) && !isNaN(Date.parse(s + "T12:00:00Z")) ? s : ""; };
+const slotWahl = (v: unknown) => { const s = String(v || ""); if (s && !ZEITFENSTER[s]) throw new Fehler("Unbekanntes Zeitfenster."); return s || null; };
+// Clubleitung = Clubsprecher, Kassenwart (Recht „Organisation“) und Admin – Testpersonen nie
+async function leitungIds(): Promise<string[]> {
+  const { data } = await db.from("kc_club_rollen").select("person_id").or("ist_vorstand.eq.true,ist_admin.eq.true");
+  return [...new Set<string>((data ?? []).map((x: any) => x.person_id as string))].filter((id) => !id.startsWith("KC-P-TEST"));
+}
+// Belegung im Zeitraum (überschneidende Ausleihen): belegt = genehmigt/abgeholt, angefragt = noch offen
+async function leihBelegung(von: string, bis: string, ohne?: string) {
+  const { data } = await db.from("kc_club_ausleihen").select("id,positionen,status").in("status", LEIH_OFFEN).lte("abholung", bis).gte("rueckgabe", von);
+  const belegt = new Map<string, number>(), angefragt = new Map<string, number>();
+  for (const a of data ?? []) {
+    if (a.id === ohne) continue;
+    const m = LEIH_BELEGT.includes(a.status) ? belegt : angefragt;
+    for (const x of a.positionen ?? []) m.set(x.id, (m.get(x.id) ?? 0) + Number(x.anzahl || 0));
+  }
+  return { belegt, angefragt };
+}
+async function leihFreiPruefen(positionen: any[], von: string, bis: string, ohne?: string) {
+  const { data: g } = await db.from("kc_club_leih_gegenstaende").select("id,name,anzahl").in("id", positionen.map((x) => x.id));
+  const { belegt } = await leihBelegung(von, bis, ohne);
+  for (const x of positionen) {
+    const ge = (g ?? []).find((y: any) => y.id === x.id), frei = Math.max(0, Number(ge?.anzahl ?? 0) - (belegt.get(x.id) ?? 0));
+    if (x.anzahl > frei) throw new Fehler(`${x.name}: im Zeitraum ${frei ? `nur noch ${frei} frei` : "nichts mehr frei"}.`, 409);
+  }
+}
+const leihZeilen = (a: any) => (a.positionen ?? []).map((x: any) => `${x.anzahl} × ${x.sym || "📦"} ${x.name}`);
+function leihText(a: any, wer: string, art: "Antrag" | "Bescheid", entscheider?: string) {
+  const heute = berlinTag(new Date()).split("-").reverse().join(".");
+  return [`Köcheclub Werne – ${art === "Antrag" ? "Anfrage Ausleihe" : "Bescheid Ausleihe"}`, `${wer} · ${heute}`, "────────────────────", "",
+    "Gegenstände:", ...leihZeilen(a).map((z: string) => "  • " + z), "",
+    `Abholung:  ${leihTag(a.abholung, a.abholung_slot)}`, `Rückgabe:  ${leihTag(a.rueckgabe, a.rueckgabe_slot)}`,
+    ...(a.zweck ? [`Zweck:     ${LEIH_ZWECKE[a.zweck] ?? a.zweck}`] : []), ...(a.notiz ? [`Notiz:     ${a.notiz}`] : []), "",
+    `Status:    ${LEIH_STATUS[a.status] ?? a.status}${entscheider ? ` (von ${entscheider})` : ""}`, ...(a.grund ? [`Begründung: ${a.grund}`] : []), "",
+    art === "Antrag" ? "Die Anfrage ging an Clubsprecher, Kassenwart und Admin – eine Zusage genügt." : "", `Vorgang: ${a.id}`, ""].join("\n");
+}
+// Textdatei ins Archiv legen (eigene Datei je Ablage, damit Löschen an einer Stelle die andere nicht trifft)
+async function archivTextAblegen(ich: Ich, ordner: string, register: string, titel: string, dateiname: string, text: string, stichworte: string) {
+  const bytes = new TextEncoder().encode("﻿" + text);
+  let b = ""; for (const x of bytes) b += String.fromCharCode(x);
+  const datei = await dateiAblegen(ich, dateiname.replace(/[^\w.\-äöüÄÖÜß]/g, "_"), "text/plain", btoa(b), ARCHIV_DATEITYPEN);
+  const { error } = await db.from("kc_club_archiv_dokumente").insert({ ordner_id: ordner, register, titel: titel.slice(0, 120), datum: berlinTag(new Date()),
+    stichworte: archivStichworte(stichworte), attachment_id: datei.id, datei_name: datei.name, mime: "text/plain", groesse: datei.groesse, hochgeladen_von: ich.person_id, status: "ok" });
+  if (error) { await dateienEntfernen([datei.id]); throw new Error(error.message); }
+}
+// persönlicher Ordner des Jahres (anlegen, wenn es ihn noch nicht gibt) + Register sicherstellen; im Papierkorb → null
+async function persoenlicherOrdner(pid: string, name: string, jahr: number, register: string) {
+  const { data: da } = await db.from("kc_club_archiv_ordner").select("id,register,geloescht_am").eq("besitzer", pid).eq("jahr", jahr).maybeSingle();
+  if (da?.geloescht_am) return null;
+  if (da) {
+    if (!(da.register || []).includes(register)) await db.from("kc_club_archiv_ordner").update({ register: [...(da.register || []), register], geaendert_am: jetzt() }).eq("id", da.id);
+    return da.id as string;
+  }
+  const { data: neu } = await db.from("kc_club_archiv_ordner").insert({ art: "persoenlich", besitzer: pid, jahr, titel: name, farbe: 6,
+    register: [...PERSOENLICH_REGISTER, register], erstellt_von: pid }).select("id").maybeSingle();
+  if (neu) await protokoll(pid, "archiv_eigener_ordner_angelegt", { ordner: neu.id, jahr, automatisch: "ausleihe" });
+  return neu?.id as string | undefined ?? null;
+}
+// Antrag/Bescheid → Vereinsordner „Admin <Jahr>“ (Register Ausleihe) + persönlicher Ordner des Mitglieds (Register Ausleihe)
+async function leihAblegen(ich: Ich, a: any, art: "Antrag" | "Bescheid") {
+  const jahr = Number(berlinTag(new Date()).slice(0, 4));
+  const p = (await personen([a.person_id, a.entschieden_von])), wer = p.get(a.person_id)?.display_name || a.person_id;
+  const entscheider = a.entschieden_von ? p.get(a.entschieden_von)?.display_name || a.entschieden_von : undefined;
+  const text = leihText(a, wer, art, art === "Bescheid" ? entscheider : undefined);
+  const kurz = (a.positionen ?? []).map((x: any) => `${x.anzahl}× ${x.name}`).join(", ");
+  const titel = `${art === "Antrag" ? "Anfrage" : "Bescheid"} Ausleihe ${a.abholung.split("-").reverse().join(".")}${art === "Bescheid" ? ` – ${LEIH_STATUS[a.status] ?? a.status}` : ""}: ${kurz}`;
+  const dateiname = `Ausleihe-${art}-${a.abholung}-${vorname(p.get(a.person_id) ?? null) || "Mitglied"}.txt`;
+  const stichworte = `Ausleihe, ${(a.positionen ?? []).map((x: any) => x.name).join(", ")}, ${wer}`;
+  const erg = { verein: false, persoenlich: false };
+  try { await archivTextAblegen(ich, await adminOrdner(jahr, "Ausleihe"), "Ausleihe", `${wer}: ${titel}`, dateiname, text, stichworte); erg.verein = true; }
+  catch (e) { console.error("ausleihe ablegen verein", String(e)); }
+  try {
+    const o = await persoenlicherOrdner(a.person_id, wer, jahr, "Ausleihe");
+    if (o) { await archivTextAblegen(ich, o, "Ausleihe", titel, dateiname, text, stichworte); erg.persoenlich = true; }
+  } catch (e) { console.error("ausleihe ablegen persoenlich", String(e)); }
+  return erg;
+}
+async function leihenListe(ich: Ich) {
+  const heute = berlinTag(new Date());
+  const [{ data: g }, { data: offen }, { data: meine }, { data: fertig }] = await Promise.all([
+    db.from("kc_club_leih_gegenstaende").select("*").order("sort").order("name"),
+    db.from("kc_club_ausleihen").select("*").in("status", LEIH_OFFEN).gte("rueckgabe", tagDazu(heute, -LEIH_MAX_TAGE)).order("abholung").limit(300),
+    db.from("kc_club_ausleihen").select("*").eq("person_id", ich.person_id).order("erstellt_am", { ascending: false }).limit(20),
+    ich.vorstand ? db.from("kc_club_ausleihen").select("*").not("status", "in", `(${LEIH_OFFEN.join(",")})`).order("geaendert_am", { ascending: false }).limit(20) : Promise.resolve({ data: [] as any[] }),
+  ]);
+  const zeigen = [...(meine ?? []), ...(ich.vorstand ? [...(offen ?? []), ...(fertig ?? [])] : [])];
+  const leute = await personen([...zeigen.map((a: any) => a.person_id), ...zeigen.map((a: any) => a.entschieden_von)]);
+  const karte = (a: any) => ({ id: a.id, positionen: a.positionen, abholung: a.abholung, abholung_slot: a.abholung_slot, rueckgabe: a.rueckgabe, rueckgabe_slot: a.rueckgabe_slot,
+    zweck: a.zweck, notiz: a.notiz, status: a.status, grund: a.grund, erstellt_am: a.erstellt_am, entschieden_am: a.entschieden_am, eigen: a.person_id === ich.person_id,
+    wer: leute.get(a.person_id)?.display_name || a.person_id, entschieden_von: a.entschieden_von ? leute.get(a.entschieden_von)?.display_name || a.entschieden_von : null });
+  const eindeutig = new Map<string, any>(); zeigen.forEach((a: any) => eindeutig.set(a.id, a));
+  return {
+    gegenstaende: (g ?? []).filter((x: any) => x.aktiv || ich.vorstand).map((x: any) => ({ id: x.id, name: x.name, sym: x.sym, anzahl: x.anzahl, aktiv: x.aktiv, sort: x.sort })),
+    // für „noch X frei“ – ohne Namen
+    belegungen: (offen ?? []).filter((a: any) => a.rueckgabe >= heute).map((a: any) => ({ von: a.abholung, bis: a.rueckgabe, belegt: LEIH_BELEGT.includes(a.status), positionen: (a.positionen ?? []).map((x: any) => ({ id: x.id, anzahl: x.anzahl })) })),
+    ausleihen: [...eindeutig.values()].map(karte),
+    zeitfenster: ZEITFENSTER, zwecke: LEIH_ZWECKE, status: LEIH_STATUS, maxTage: LEIH_MAX_TAGE, darfEntscheiden: ich.vorstand,
+  };
+}
+async function leihErinnern() {
+  // KC-CLUB-LEIHEN: am Rückgabetag (ab 9 Uhr) einmal erinnern
+  const heute = berlinTag(new Date());
+  const { data } = await db.from("kc_club_ausleihen").select("*").in("status", LEIH_BELEGT).eq("rueckgabe", heute).is("erinnert_am", null).limit(50);
+  let n = 0;
+  for (const a of data ?? []) {
+    const { data: ok } = await db.from("kc_club_ausleihen").update({ erinnert_am: jetzt() }).eq("id", a.id).is("erinnert_am", null).select("id");
+    if (!ok?.length) continue;
+    await senden("club_nachricht", [a.person_id], {
+      titel: "📦 Heute Rückgabe", kurz: `${leihZeilen(a).join(", ")} – bitte heute zurückbringen${a.rueckgabe_slot ? " (" + ZEITFENSTER[a.rueckgabe_slot] + ")" : ""}.`,
+      betreff: "Köcheclub Werne – Erinnerung: Rückgabe heute",
+      text: `Hallo,\n\nkleine Erinnerung: heute ist die Rückgabe der ausgeliehenen Sachen fällig:\n\n${leihZeilen(a).map((z: string) => "• " + z).join("\n")}\n\nRückgabe: ${leihTag(a.rueckgabe, a.rueckgabe_slot)}\n\nDanke!\nKöcheclub Werne`,
+      url: APP_URL + "#helfen",
+    }, `club-leihe-rueckgabe:${a.id}`).catch(() => null);
+    n++;
+  }
+  return n;
+}
+async function hilfeListe(ich: Ich) {
+  const heute = berlinTag(new Date());
+  const { data: auf } = await db.from("kc_club_hilfe_aufrufe").select("*").gte("datum", tagDazu(heute, -14)).order("datum").order("erstellt_am").limit(100);
+  const ids = (auf ?? []).map((x: any) => x.id);
+  const { data: ant } = ids.length ? await db.from("kc_club_hilfe_antworten").select("*").in("aufruf_id", ids) : { data: [] as any[] };
+  const leute = await personen([...(auf ?? []).map((x: any) => x.von), ...(ant ?? []).map((x: any) => x.person_id)]);
+  const { data: orte } = await db.from("kc_club_hilfe_aufrufe").select("ort").not("ort", "is", null).order("erstellt_am", { ascending: false }).limit(50);
+  const ortListe: string[] = []; for (const o of orte ?? []) if (o.ort && !ortListe.some((x) => x.toLowerCase() === o.ort.toLowerCase()) && ortListe.length < 6) ortListe.push(o.ort);
+  const n = (pid: string) => leute.get(pid)?.display_name || pid;
+  return {
+    aufrufe: (auf ?? []).map((x: any) => {
+      const a = (ant ?? []).filter((y: any) => y.aufruf_id === x.id), komme = a.filter((y: any) => y.antwort === "komme");
+      const vorbei = x.datum < heute || !!x.geschlossen_am;
+      return { id: x.id, art: x.art, datum: x.datum, slot: x.slot, anzahl: x.anzahl, ort: x.ort, notiz: x.notiz, ziel: x.ziel, erstellt_am: x.erstellt_am,
+        von: { person_id: x.von, name: n(x.von) }, eigen: x.von === ich.person_id, offen: !vorbei, geschlossen: !!x.geschlossen_am,
+        komme: komme.map((y: any) => n(y.person_id)).sort(), kannNicht: a.filter((y: any) => y.antwort === "kann_nicht").length,
+        meine: a.find((y: any) => y.person_id === ich.person_id)?.antwort ?? null, darfSchliessen: !vorbei && (x.von === ich.person_id || ich.vorstand) };
+    }).filter((x: any) => x.offen || x.eigen || ich.vorstand),
+    arten: HILFE_ARTEN, zeitfenster: ZEITFENSTER, orte: ortListe,
+  };
 }
 
 // ---------- Sitzungsprotokolle (KC-CLUB-PROTOKOLLE) & Aufgaben (KC-CLUB-AUFGABEN) ----------
@@ -1980,7 +2156,8 @@ Köcheclub Werne`,
         if (aoIds.length) await db.from("kc_club_archiv_ordner").delete().in("id", aoIds);
         if (archivEntfernt || aoIds.length) await protokoll(null, "archiv_endgueltig_entfernt", { dokumente: archivEntfernt, ordner: aoIds.length });
       }
-      return json({ ok: true, erinnerungen: n, beendet, dienst, geb, aufg, nachfass, fotosEntfernt, archivEntfernt, anfragenErinnert: anfr, standorteGeloescht: (stWeg ?? []).length, ruheMeldungen, privErinnert });
+      const leiheErinnert = await leihErinnern().catch((e) => { console.error("leihe erinnern", String(e)); return 0; }); // KC-CLUB-LEIHEN
+      return json({ ok: true, erinnerungen: n, beendet, dienst, geb, aufg, nachfass, fotosEntfernt, archivEntfernt, anfragenErinnert: anfr, standorteGeloescht: (stWeg ?? []).length, ruheMeldungen, privErinnert, leiheErinnert });
     }
 
     // ----- KC-CLUB-ZUGANG-SELBST: Link verloren → neuen Link an die hinterlegte Mail-Adresse (ohne Anmeldung) -----
@@ -2497,13 +2674,15 @@ Köcheclub Werne`,
       // ----- Vorschläge & Abstimmungen -----
       case "vorschlaege_liste": {
         const { data: kommend } = await db.from("kc_club_treffen").select("id,titel,beginn").eq("status", "geplant").gte("beginn", jetzt()).order("beginn").limit(10);
-        return json({ vorschlaege: await vorschlaegeListe(ich), treffen: kommend ?? [] });
+        return json({ vorschlaege: await vorschlaegeListe(ich), treffen: kommend ?? [], spenden: { empfaenger: await spendenEmpfaenger(), betraege: SPENDEN_BETRAEGE, max: SPENDE_MAX } });
       }
 
       case "vorschlag_speichern": {
-        const art = p.art === "abstimmung" ? "abstimmung" : "thema";
+        const art = p.art === "abstimmung" ? "abstimmung" : p.art === "spende" ? "spende" : "thema";
         if (art === "abstimmung") nurVorstand(ich);
-        const titel = txt(p.titel, 150);
+        // KC-CLUB-SPENDE: Titel entsteht aus den gewählten Projekten, wenn keiner eingegeben ist
+        const spenden = art === "spende" ? spendenPruefen(p.spenden) : null;
+        const titel = txt(p.titel, 150) || (spenden ? spendenTitel(spenden) : "");
         if (!titel) throw new Fehler("Bitte ein Thema bzw. eine Frage eingeben.");
         let optionen: string[] = [];
         if (art === "abstimmung") {
@@ -2513,7 +2692,7 @@ Köcheclub Werne`,
         const frist = p.frist ? new Date(String(p.frist)) : null;
         if (frist && (isNaN(frist.getTime()) || frist.getTime() < Date.now())) throw new Fehler("Die Frist liegt in der Vergangenheit.");
         const { data: v, error } = await db.from("kc_club_vorschlaege").insert({
-          art, titel, beschreibung: txt(p.beschreibung, 2000) || null, optionen, geheim: art === "abstimmung" && !!p.geheim,
+          art, titel, beschreibung: txt(p.beschreibung, 2000) || null, optionen, geheim: art === "abstimmung" && !!p.geheim, spenden,
           treffen_id: p.treffen_id ? String(p.treffen_id) : null, frist: art === "abstimmung" && frist ? frist.toISOString() : null, erstellt_von: ich.person_id,
         }).select().single();
         if (error || !v) throw new Fehler("Speichern fehlgeschlagen.", 500);
@@ -2523,19 +2702,20 @@ Köcheclub Werne`,
           const ziel = art === "abstimmung" ? (await aktiveMitglieder()).map((x) => x.person_id)
             : ((await db.from("kc_club_rollen").select("person_id").eq("ist_vorstand", true)).data ?? []).map((r: any) => r.person_id);
           const fristText = v.frist ? ` Abstimmen bis ${wann(v.frist)}.` : "";
+          const spText = spenden ? "\n\n" + spenden.map((x) => `💝 ${x.empfaenger}: ${euroRund(x.betrag)}`).join("\n") + (spenden.length > 1 ? `\nZusammen: ${euroRund(spendenSumme(spenden))}` : "") : "";
           versand = await senden("club_vorschlag", ziel.filter((id: string) => id !== ich.person_id), art === "abstimmung" ? {
             titel: "🗳️ Abstimmung: " + titel, kurz: `Bitte in der App abstimmen.${fristText}`,
             betreff: `Köcheclub Werne – Abstimmung: ${titel}`,
             text: `Hallo,\n\nes gibt eine neue Abstimmung${v.geheim ? " (geheim)" : ""}:\n\n🗳️ ${titel}${v.beschreibung ? "\n\n" + v.beschreibung : ""}\n\nAntworten: ${optionen.join(" / ")}${fristText ? "\n" + fristText.trim() : ""}\n\nAbstimmen in der Köcheclub-App: ${APP_URL}#vorschlaege\n\nViele Grüße\nKöcheclub Werne`,
             url: APP_URL + "#vorschlaege",
           } : {
-            titel: "💡 Themenvorschlag", kurz: `${ich.name}: ${titel}`,
-            betreff: `Köcheclub Werne – neuer Themenvorschlag: ${titel}`,
-            text: `Hallo,\n\n${ich.name} schlägt ein Thema für die nächste Sitzung vor:\n\n💡 ${titel}${v.beschreibung ? "\n\n" + v.beschreibung : ""}\n\nAnsehen in der Köcheclub-App: ${APP_URL}#vorschlaege\n\nViele Grüße\nKöcheclub Werne`,
+            titel: spenden ? "💝 Spendenvorschlag" : "💡 Themenvorschlag", kurz: `${ich.name}: ${titel}`,
+            betreff: `Köcheclub Werne – neuer ${spenden ? "Spendenvorschlag" : "Themenvorschlag"}: ${titel}`,
+            text: `Hallo,\n\n${ich.name} schlägt ${spenden ? "eine Spende" : "ein Thema"} für die nächste Sitzung vor:\n\n${spenden ? "" : "💡 "}${titel}${spText}${v.beschreibung ? "\n\n" + v.beschreibung : ""}\n\nAnsehen in der Köcheclub-App: ${APP_URL}#vorschlaege\n\nViele Grüße\nKöcheclub Werne`,
             url: APP_URL + "#vorschlaege",
           }, `club-vorschlag:${v.id}`);
         }
-        await protokoll(ich.person_id, "vorschlag_angelegt", { vorschlag: v.id, art, geheim: v.geheim, versand });
+        await protokoll(ich.person_id, "vorschlag_angelegt", { vorschlag: v.id, art, geheim: v.geheim, versand, ...(spenden ? { spenden: spenden.length, summe: spendenSumme(spenden) } : {}) });
         return json({ ok: true, id: v.id, versand });
       }
 
@@ -2543,8 +2723,8 @@ Köcheclub Werne`,
         const { data: v } = await db.from("kc_club_vorschlaege").select("*").eq("id", String(p.id || "")).maybeSingle();
         if (!v) throw new Fehler("Vorschlag nicht gefunden.", 404);
         if (v.status !== "offen") throw new Fehler("Hier kann nicht mehr abgestimmt werden.", 409);
-        if (v.art === "thema") {
-          // Unterstützen an/aus
+        if (unterstuetzbar(v.art)) {
+          // Unterstützen an/aus (Thema und Spendenprojekt)
           if (p.wahl) await db.from("kc_club_stimmen").upsert({ vorschlag_id: v.id, person_id: ich.person_id, wahl: "dafuer", geaendert_am: jetzt() });
           else await db.from("kc_club_stimmen").delete().eq("vorschlag_id", v.id).eq("person_id", ich.person_id);
         } else {
@@ -2570,7 +2750,7 @@ Köcheclub Werne`,
           if (!ich.vorstand && !eigener) throw new Fehler("Das darf nur, wer den Vorschlag gemacht hat, oder Clubsprecher/Kassenwart.", 403);
           await db.from("kc_club_vorschlaege").update({ status: "zurueckgezogen", abgeschlossen_am: jetzt(), abgeschlossen_von: ich.person_id }).eq("id", v.id);
         } else if (p.status === "abgeschlossen") {
-          if (!ich.vorstand && !(eigener && v.art === "thema")) throw new Fehler("Abstimmungen beenden Clubsprecher, Kassenwart oder Admin.", 403);
+          if (!ich.vorstand && !(eigener && unterstuetzbar(v.art))) throw new Fehler("Abstimmungen beenden Clubsprecher, Kassenwart oder Admin.", 403);
           versand = await vorschlagAbschliessen(v, ich.person_id);
         } else throw new Fehler("Unbekannter Status.");
         await protokoll(ich.person_id, "vorschlag_" + p.status, { vorschlag: v.id, versand });
@@ -2589,6 +2769,178 @@ Köcheclub Werne`,
         // geheime Stimmen ohne Person – nur die Anzahl je Antwort wird gesichert
         await geloescht(ich, "vorschlag", { vorschlag: v, stimmen: v.geheim ? [] : st ?? [], geheim: (geh ?? []).map((g: any) => g.wahl) });
         await db.from("kc_club_vorschlaege").delete().eq("id", v.id);
+        return json({ ok: true });
+      }
+
+      // ----- KC-CLUB-LEIHEN (1.23.0): Vereinsgegenstände ausleihen – Anfrage an die Clubleitung, eine Zusage genügt -----
+      case "leihen_liste": return json(await leihenListe(ich));
+
+      case "leihen_anfrage": {
+        const heute = berlinTag(new Date());
+        const von = isoTag(p.abholung), bis = isoTag(p.rueckgabe);
+        if (!von || !bis) throw new Fehler("Bitte Abholung und Rückgabe wählen.");
+        if (von < heute) throw new Fehler("Die Abholung liegt in der Vergangenheit.");
+        if (bis < von) throw new Fehler("Die Rückgabe liegt vor der Abholung.");
+        if (von > tagDazu(heute, LEIH_VORLAUF_TAGE)) throw new Fehler("Bitte höchstens ein Jahr im Voraus anfragen.");
+        if (bis > tagDazu(von, LEIH_MAX_TAGE)) throw new Fehler(`Höchstens ${LEIH_MAX_TAGE} Tage am Stück.`);
+        const abSlot = slotWahl(p.abholung_slot), rueSlot = slotWahl(p.rueckgabe_slot);
+        const zweck = p.zweck ? String(p.zweck) : null;
+        if (zweck && !LEIH_ZWECKE[zweck]) throw new Fehler("Unbekannter Zweck.");
+        const wunsch = new Map<string, number>();
+        for (const x of Array.isArray(p.positionen) ? p.positionen : []) {
+          const n = Math.floor(Number(x?.anzahl)); if (x?.id && n > 0) wunsch.set(String(x.id), (wunsch.get(String(x.id)) ?? 0) + n);
+        }
+        if (!wunsch.size) throw new Fehler("Bitte mindestens einen Gegenstand auswählen.");
+        const { data: g } = await db.from("kc_club_leih_gegenstaende").select("id,name,sym,anzahl,aktiv").in("id", [...wunsch.keys()]);
+        const positionen = [...wunsch].map(([id, anzahl]) => {
+          const ge = (g ?? []).find((y: any) => y.id === id);
+          if (!ge || !ge.aktiv) throw new Fehler("Ein Gegenstand ist nicht mehr verfügbar – bitte neu laden.", 409);
+          return { id, name: ge.name, sym: ge.sym, anzahl };
+        });
+        await leihFreiPruefen(positionen, von, bis);
+        const { data: a, error } = await db.from("kc_club_ausleihen").insert({ person_id: ich.person_id, positionen, abholung: von, abholung_slot: abSlot,
+          rueckgabe: bis, rueckgabe_slot: rueSlot, zweck, notiz: txt(p.notiz, 500) || null }).select().single();
+        if (error || !a) throw new Fehler("Anfrage konnte nicht gespeichert werden.", 500);
+        const ziel = (await leitungIds()).filter((id) => id !== ich.person_id);
+        const liste = leihZeilen(a);
+        const versand = await sendenGewaehlt("club_nachricht", ziel, ["push", "email"], {
+          titel: "📦 Anfrage Ausleihe", kurz: `${ich.name}: ${liste.join(", ")} · ${leihTag(von)}–${leihTag(bis)}`,
+          betreff: `Köcheclub Werne – Anfrage Ausleihe von ${ich.name}`,
+          text: `Hallo,\n\n${ich.name} möchte folgende Vereinssachen ausleihen:\n\n${liste.map((z: string) => "• " + z).join("\n")}\n\nAbholung: ${leihTag(von, abSlot)}\nRückgabe: ${leihTag(bis, rueSlot)}${zweck ? `\nZweck: ${LEIH_ZWECKE[zweck]}` : ""}${a.notiz ? `\nNotiz: ${a.notiz}` : ""}\n\nDie Anfrage ging an Clubsprecher, Kassenwart und Admin – eine Zusage genügt.\nGenehmigen oder ablehnen in der Köcheclub-App: ${APP_URL}#helfen\n\nViele Grüße\nKöcheclub-App`,
+          url: APP_URL + "#helfen",
+        }, `club-leihe:${a.id}`).catch(() => null);
+        const abgelegt = await leihAblegen(ich, a, "Antrag");
+        await protokoll(ich.person_id, "leihe_angefragt", { leihe: a.id, positionen: positionen.map((x) => ({ id: x.id, anzahl: x.anzahl })), von, bis, versand, abgelegt });
+        return json({ ok: true, id: a.id, versand, abgelegt });
+      }
+
+      case "leihen_entscheiden": {
+        nurVorstand(ich);
+        const wahl = p.wahl === "genehmigt" ? "genehmigt" : p.wahl === "abgelehnt" ? "abgelehnt" : "";
+        if (!wahl) throw new Fehler("Bitte genehmigen oder ablehnen.");
+        const { data: a } = await db.from("kc_club_ausleihen").select("*").eq("id", String(p.id || "")).maybeSingle();
+        if (!a) throw new Fehler("Anfrage nicht gefunden.", 404);
+        if (a.status !== "angefragt") throw new Fehler("Darüber wurde schon entschieden.", 409);
+        if (a.person_id === ich.person_id && (await leitungIds()).some((id) => id !== ich.person_id)) throw new Fehler("Über die eigene Anfrage entscheidet jemand anderes aus der Clubleitung.", 403);
+        if (wahl === "genehmigt") await leihFreiPruefen(a.positionen ?? [], a.abholung, a.rueckgabe, a.id);
+        const grund = txt(p.grund, 300) || null;
+        // eine Zusage genügt: nur wer zuerst entscheidet, ändert den Status
+        const { data: neu } = await db.from("kc_club_ausleihen").update({ status: wahl, entschieden_von: ich.person_id, entschieden_am: jetzt(), grund, geaendert_am: jetzt() })
+          .eq("id", a.id).eq("status", "angefragt").select().maybeSingle();
+        if (!neu) throw new Fehler("Darüber hat gerade schon jemand anderes entschieden.", 409);
+        const liste = leihZeilen(neu);
+        const versand = await sendenGewaehlt("club_nachricht", [a.person_id], ["push", "email"], {
+          titel: wahl === "genehmigt" ? "✅ Ausleihe genehmigt" : "❌ Ausleihe abgelehnt", kurz: `${liste.join(", ")}${grund ? " – " + grund : ""}`,
+          betreff: `Köcheclub Werne – deine Ausleihe wurde ${wahl === "genehmigt" ? "genehmigt" : "abgelehnt"}`,
+          text: `Hallo,\n\n${ich.name} hat deine Anfrage ${wahl === "genehmigt" ? "genehmigt ✅" : "abgelehnt ❌"}:\n\n${liste.map((z: string) => "• " + z).join("\n")}\n\nAbholung: ${leihTag(neu.abholung, neu.abholung_slot)}\nRückgabe: ${leihTag(neu.rueckgabe, neu.rueckgabe_slot)}${grund ? `\n\nBegründung: ${grund}` : ""}\n\nIn der Köcheclub-App: ${APP_URL}#helfen\n\nViele Grüße\nKöcheclub Werne`,
+          url: APP_URL + "#helfen",
+        }, `club-leihe-bescheid:${a.id}`).catch(() => null);
+        const abgelegt = await leihAblegen(ich, neu, "Bescheid");
+        await protokoll(ich.person_id, "leihe_" + wahl, { leihe: a.id, fuer: a.person_id, versand, abgelegt });
+        return json({ ok: true, versand, abgelegt });
+      }
+
+      case "leihen_status": {
+        const status = ["abgeholt", "zurueck", "storniert"].includes(String(p.status)) ? String(p.status) : "";
+        if (!status) throw new Fehler("Unbekannter Status.");
+        const { data: a } = await db.from("kc_club_ausleihen").select("*").eq("id", String(p.id || "")).maybeSingle();
+        if (!a) throw new Fehler("Ausleihe nicht gefunden.", 404);
+        const eigen = a.person_id === ich.person_id;
+        const erlaubt = status === "storniert" ? ["angefragt", "genehmigt"].includes(a.status) && (eigen || ich.vorstand)
+          : status === "abgeholt" ? a.status === "genehmigt" && ich.vorstand
+          : ["genehmigt", "abgeholt"].includes(a.status) && ich.vorstand;
+        if (!erlaubt) throw new Fehler(ich.vorstand || eigen ? "Das passt nicht zum aktuellen Stand – bitte neu laden." : "Das darf nur die Clubleitung.", ich.vorstand || eigen ? 409 : 403);
+        const { data: ok } = await db.from("kc_club_ausleihen").update({ status, geaendert_am: jetzt() }).eq("id", a.id).eq("status", a.status).select("id");
+        if (!ok?.length) throw new Fehler("Der Stand hat sich gerade geändert – bitte neu laden.", 409);
+        // Mitglied storniert eine schon genehmigte Ausleihe → wer genehmigt hat, erfährt es
+        if (status === "storniert" && eigen && a.status === "genehmigt" && a.entschieden_von && a.entschieden_von !== ich.person_id) {
+          await senden("club_nachricht", [a.entschieden_von], { titel: "🚫 Ausleihe storniert", kurz: `${ich.name}: ${leihZeilen(a).join(", ")}`,
+            betreff: "Köcheclub Werne – Ausleihe storniert", text: `Hallo,\n\n${ich.name} braucht die genehmigte Ausleihe doch nicht:\n\n${leihZeilen(a).map((z: string) => "• " + z).join("\n")}\nAbholung war: ${leihTag(a.abholung, a.abholung_slot)}\n\nViele Grüße\nKöcheclub-App`,
+            url: APP_URL + "#helfen" }, `club-leihe-storno:${a.id}`).catch(() => null);
+        }
+        await protokoll(ich.person_id, "leihe_" + status, { leihe: a.id, vorher: a.status });
+        return json({ ok: true });
+      }
+
+      case "leihen_gegenstand": {
+        nurVorstand(ich);
+        const name = txt(p.name, 60), sym = txt(p.sym, 8) || "📦";
+        const anzahl = Math.floor(Number(p.anzahl));
+        if (!name) throw new Fehler("Bitte einen Namen angeben.");
+        if (!(anzahl >= 0 && anzahl <= 999)) throw new Fehler("Anzahl 0 bis 999.");
+        const daten: any = { name, sym, anzahl, aktiv: p.aktiv !== false, geaendert_am: jetzt() };
+        if (p.sort !== undefined && Number.isFinite(Number(p.sort))) daten.sort = Math.floor(Number(p.sort));
+        let alt: any = null;
+        if (p.id) {
+          ({ data: alt } = await db.from("kc_club_leih_gegenstaende").select("*").eq("id", String(p.id)).maybeSingle());
+          if (!alt) throw new Fehler("Gegenstand nicht gefunden.", 404);
+        }
+        const { data: g, error } = alt ? await db.from("kc_club_leih_gegenstaende").update(daten).eq("id", alt.id).select().single()
+          : await db.from("kc_club_leih_gegenstaende").insert({ ...daten, sort: daten.sort ?? 1000 }).select().single();
+        if (error || !g) throw new Fehler(String(error?.message || "").includes("duplicate") ? "Diesen Gegenstand gibt es schon." : "Speichern fehlgeschlagen.", error?.code === "23505" ? 409 : 500);
+        await protokoll(ich.person_id, alt ? "leihe_gegenstand_geaendert" : "leihe_gegenstand_neu", { gegenstand: g.id, vorher: alt, nachher: daten });
+        return json({ ok: true, id: g.id });
+      }
+
+      // ----- KC-CLUB-HELFEN (1.23.0): „Wer kann helfen?“ – Aufruf an alle oder an alle gerade online -----
+      case "hilfe_liste": return json(await hilfeListe(ich));
+
+      case "hilfe_aufruf": {
+        const heute = berlinTag(new Date());
+        const art = String(p.art || "");
+        if (!HILFE_ARTEN[art]) throw new Fehler("Bitte auswählen, wobei geholfen werden soll.");
+        const datum = isoTag(p.datum);
+        if (!datum || datum < heute) throw new Fehler("Bitte einen Tag ab heute wählen.");
+        if (datum > tagDazu(heute, HILFE_VORLAUF_TAGE)) throw new Fehler("Bitte höchstens ein halbes Jahr im Voraus.");
+        const slot = slotWahl(p.slot), anzahl = Math.min(20, Math.max(1, Math.floor(Number(p.anzahl) || 1)));
+        const ziel = p.ziel === "online" ? "online" : "alle";
+        const { data: h, error } = await db.from("kc_club_hilfe_aufrufe").insert({ von: ich.person_id, art, datum, slot, anzahl, ort: txt(p.ort, 80) || null,
+          notiz: txt(p.notiz, 300) || null, ziel }).select().single();
+        if (error || !h) throw new Fehler("Aufruf konnte nicht gespeichert werden.", 500);
+        const empf = (ziel === "online" ? [...await onlineJetzt()] : (await aktiveMitglieder()).map((m) => m.person_id)).filter((id) => id !== ich.person_id);
+        const was = HILFE_ARTEN[art], wann2 = leihTag(datum, slot);
+        const vars = {
+          titel: `🙋 Wer kann helfen? ${was}`, kurz: `${ich.name} sucht ${anzahl} Helfer · ${wann2}${h.ort ? " · " + h.ort : ""}`,
+          betreff: `Köcheclub Werne – Wer kann helfen? ${was.replace(/^\S+\s/, "")} am ${datum.split("-").reverse().join(".")}`,
+          text: `Hallo,\n\n${ich.name} sucht Hilfe:\n\n${was}\nWann: ${wann2}\nGesucht: ${anzahl} ${anzahl === 1 ? "Person" : "Personen"}${h.ort ? `\nWo: ${h.ort}` : ""}${h.notiz ? `\n\n${h.notiz}` : ""}\n\nMit einem Tipp zusagen in der Köcheclub-App: ${APP_URL}#helfen\n\nViele Grüße\nKöcheclub Werne`,
+          url: APP_URL + "#helfen",
+        };
+        const versand = !empf.length ? { gesendet: 0 } : ziel === "online" ? await sendenGewaehlt("club_nachricht", empf, ["push"], vars, `club-hilfe:${h.id}`).catch(() => null)
+          : await senden("club_nachricht", empf, vars, `club-hilfe:${h.id}`).catch(() => null);
+        await protokoll(ich.person_id, "hilfe_aufruf", { aufruf: h.id, art, datum, anzahl, ziel, empfaenger: empf.length, versand });
+        return json({ ok: true, id: h.id, versand, empfaenger: empf.length });
+      }
+
+      case "hilfe_antwort": {
+        const { data: h } = await db.from("kc_club_hilfe_aufrufe").select("*").eq("id", String(p.id || "")).maybeSingle();
+        if (!h) throw new Fehler("Aufruf nicht gefunden.", 404);
+        if (h.geschlossen_am || h.datum < berlinTag(new Date())) throw new Fehler("Dieser Aufruf ist schon geschlossen.", 409);
+        const antwort = p.antwort === "komme" ? "komme" : p.antwort === "kann_nicht" ? "kann_nicht" : null;
+        const { data: vorher } = await db.from("kc_club_hilfe_antworten").select("antwort").eq("aufruf_id", h.id).eq("person_id", ich.person_id).maybeSingle();
+        if (antwort) await db.from("kc_club_hilfe_antworten").upsert({ aufruf_id: h.id, person_id: ich.person_id, antwort, am: jetzt() });
+        else await db.from("kc_club_hilfe_antworten").delete().eq("aufruf_id", h.id).eq("person_id", ich.person_id);
+        if (antwort === "komme" && vorher?.antwort !== "komme" && h.von !== ich.person_id) {
+          const { count } = await db.from("kc_club_hilfe_antworten").select("person_id", { count: "exact", head: true }).eq("aufruf_id", h.id).eq("antwort", "komme");
+          const voll = (count ?? 0) >= h.anzahl;
+          // „voll“ nur einmal melden
+          const vollNeu = voll && !h.voll_gemeldet_am ? !!(await db.from("kc_club_hilfe_aufrufe").update({ voll_gemeldet_am: jetzt() }).eq("id", h.id).is("voll_gemeldet_am", null).select("id")).data?.length : false;
+          await senden("club_nachricht", [h.von], {
+            titel: vollNeu ? "🎉 Genug Helfer!" : "✋ Zusage", kurz: `${ich.name} kommt – ${HILFE_ARTEN[h.art]} ${leihTag(h.datum, h.slot)} (${count ?? 0} von ${h.anzahl})`,
+            betreff: `Köcheclub Werne – ${vollNeu ? "genug Helfer" : "Zusage"}: ${HILFE_ARTEN[h.art].replace(/^\S+\s/, "")}`,
+            text: `Hallo,\n\n${ich.name} hat für deinen Aufruf zugesagt:\n${HILFE_ARTEN[h.art]} · ${leihTag(h.datum, h.slot)}\n\nZusagen: ${count ?? 0} von ${h.anzahl}${vollNeu ? "\n\n🎉 Damit sind genug Helfer zusammen." : ""}\n\n${APP_URL}#helfen\n\nViele Grüße\nKöcheclub-App`,
+            url: APP_URL + "#helfen",
+          }, `club-hilfe-zusage:${h.id}:${ich.person_id}`).catch(() => null);
+        }
+        await protokoll(ich.person_id, "hilfe_antwort", { aufruf: h.id, antwort });
+        return json({ ok: true });
+      }
+
+      case "hilfe_schliessen": {
+        const { data: h } = await db.from("kc_club_hilfe_aufrufe").select("*").eq("id", String(p.id || "")).maybeSingle();
+        if (!h) throw new Fehler("Aufruf nicht gefunden.", 404);
+        if (h.von !== ich.person_id && !ich.vorstand) throw new Fehler("Schließen kann nur, wer den Aufruf gestartet hat – oder die Clubleitung.", 403);
+        await db.from("kc_club_hilfe_aufrufe").update({ geschlossen_am: jetzt() }).eq("id", h.id).is("geschlossen_am", null);
+        await protokoll(ich.person_id, "hilfe_geschlossen", { aufruf: h.id });
         return json({ ok: true });
       }
 
@@ -2708,7 +3060,7 @@ Köcheclub Werne`,
           privatListe(ich, zeitraum.von, zeitraum.bis), // KC-CLUB-PRIVATTERMIN (1.0.0) – nur meine
         ]);
         const tids = treffen.map((t: any) => t.id);
-        const { data: themen } = tids.length ? await db.from("kc_club_vorschlaege").select("treffen_id,titel").eq("art", "thema").neq("status", "zurueckgezogen").in("treffen_id", tids) : { data: [] as any[] };
+        const { data: themen } = tids.length ? await db.from("kc_club_vorschlaege").select("treffen_id,titel").in("art", ["thema", "spende"]).neq("status", "zurueckgezogen").in("treffen_id", tids) : { data: [] as any[] };
         return json({
           treffen: treffen.map((t: any) => ({ ...t, themen: (themen ?? []).filter((x: any) => x.treffen_id === t.id).map((x: any) => x.titel) })),
           dienste: (dienste ?? []).map((s: any) => ({ datum: s.work_date, start: String(s.start_time).slice(0, 5), ende: String(s.end_time).slice(0, 5), bereich: s.area })),
@@ -4333,7 +4685,7 @@ Köcheclub-App`,
             treffen_id: tid, titel: t.titel, datum: berlinTag(new Date(t.beginn)), ort: t.ort || (g ? `bei ${g.display_name}` : null),
             anwesend: (teil ?? []).filter((x: any) => x.antwort === "ja").map((x: any) => x.person_id),
             entschuldigt: (teil ?? []).filter((x: any) => x.antwort === "nein").map((x: any) => x.person_id),
-            tagesordnung: (vs ?? []).filter((x: any) => x.art === "thema").map((x: any) => x.titel), beschluesse,
+            tagesordnung: (vs ?? []).filter((x: any) => unterstuetzbar(x.art)).map((x: any) => x.titel), beschluesse,
           });
         }
         const { data: neu, error } = await db.from("kc_club_sitzungsprotokolle").insert(zeile).select("id").single();

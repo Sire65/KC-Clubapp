@@ -1647,7 +1647,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(!/supabase|neon|postgres|backblaze|amazon|aws/i.test(html.slice(html.indexOf("const SICHERHEIT_PRUEFUNGEN"), html.indexOf("const SI_UHREN"))), "Keine Datenbank-/Anbieternamen in der Prüfreihe");
   assert.ok(/!schlecht && !offen\n      \? `<div class="si-ergebnis si-gut"><span class="gross">✅<\/span><div><b>Alle Systeme laufen einwandfrei/.test(html), "„Alle Systeme laufen einwandfrei“ nur wenn nichts schlecht und nichts offen");
   assert.ok(/w === false \? "Achtung" : "nicht geprüft"/.test(html), "Unbekannt wird als „nicht geprüft“ angezeigt");
-  assert.ok(/\{ id: "sicherheit", sym: "🛡️", t: "Sicherheits-Check"/.test(html) && /"sos", "sicherheit"\]\.forEach/.test(html), "Kachel im Reiter Programme + Ansicht");
+  assert.ok(/\{ id: "sicherheit", sym: "🛡️", t: "Sicherheits-Check"/.test(html) && /"sos", "sicherheit"[,\]]/.test(html), "Kachel im Reiter Programme + Ansicht");
 }
 
 // 144. 1.15.0: Sicherheits-Check an Admin senden
@@ -1872,6 +1872,58 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/:root\.dunkel \.sos-nr\.haupt \{ background: #4a1f22; color: #fff2ef; \}/.test(html), "SOS 112/110 nachts dunkel mit heller Schrift");
   assert.ok(/--textRot: #741521; --textGruen: #17663a; --textOrange: #8a5200; --textNotruf: #c0392b;/.test(html) && /:root\.dunkel \{ --textRot: #ff9fae; --textGruen: #7bd88f; --textOrange: #ffbe5c; --textNotruf: #ff8a7a;/.test(html), "zentrale Schriftfarben Tag/Nacht");
   assert.ok(/:root\.dunkel \.umschalter button\.an, :root\.dunkel \.fuss-leiste button\.an[^{]*\{ color: var\(--textRot\);/.test(html), "gewählte Reiter nachts hell");
+}
+
+// 166. 1.23.0: Ausleihen – Anfrage an die Clubleitung, eine Zusage genügt, Ablage Verein + persönlich (KC-CLUB-LEIHEN)
+{
+  for (const a of ["leihen_liste", "leihen_anfrage", "leihen_entscheiden", "leihen_status", "leihen_gegenstand"]) assert.ok(aktionen.has(a) && aufrufe.has(a), `Leihen-Aktion ${a} fehlt`);
+  const mig = lies("supabase/migrations/20261001_kc_club_v1230_helfen_leihen.sql");
+  for (const [n, z] of [["Stehtische", 8], ["Bierzeltgarnitur", 4], ["Pavillon", 2], ["Zapfanlage", 1], ["Glühweintopf", 2], ["Kühlbox", 3], ["Gastrobräter", 1], ["Warmhaltebehälter", 4], ["Kabeltrommel", 3]])
+    assert.ok(new RegExp(`\\('${n}', '[^']+', ${z}, \\d+\\)`).test(mig), `Startbestand ${n} = ${z}`);
+  assert.ok(/enable row level security/.test(mig) && /revoke all on kc_club_leih_gegenstaende, kc_club_ausleihen, kc_club_hilfe_aufrufe, kc_club_hilfe_antworten from anon, authenticated/.test(mig), "RLS an, kein Direktzugriff");
+  assert.ok(/kc_db_mirror_table_rules/.test(mig) && /kc_neon_resume_tables/.test(mig), "Spiegel/Sicherung wie die übrigen Club-Tabellen");
+  const an = server.slice(server.indexOf('case "leihen_anfrage"'), server.indexOf('case "leihen_entscheiden"'));
+  assert.ok(/await leihFreiPruefen\(positionen, von, bis\)/.test(an), "nie mehr als frei");
+  assert.ok(/const ziel = \(await leitungIds\(\)\)\.filter/.test(an) && /sendenGewaehlt\("club_nachricht", ziel, \["push", "email"\]/.test(an), "Anfrage an Clubsprecher, Kassenwart, Admin per Push + Mail");
+  assert.ok(/or\("ist_vorstand\.eq\.true,ist_admin\.eq\.true"\)/.test(server) && /!id\.startsWith\("KC-P-TEST"\)/.test(server.slice(server.indexOf("async function leitungIds"), server.indexOf("async function leihBelegung"))), "Clubleitung ohne Testpersonen");
+  assert.ok(/await leihAblegen\(ich, a, "Antrag"\)/.test(an), "Antrag wird abgelegt");
+  const ab = server.slice(server.indexOf("async function leihAblegen"), server.indexOf("async function leihenListe"));
+  assert.ok(/adminOrdner\(jahr, "Ausleihe"\), "Ausleihe"/.test(ab) && /persoenlicherOrdner\(a\.person_id, wer, jahr, "Ausleihe"\)/.test(ab), "Ablage: Admin <Jahr> + persönlicher Ordner, Register Ausleihe");
+  assert.ok(/register: \[\.\.\.new Set\(\[register, \.\.\.ADMIN_ORDNER\.register\]\)\]/.test(server), "neuer Admin-Ordner hat das gewünschte Register");
+  const en = server.slice(server.indexOf('case "leihen_entscheiden"'), server.indexOf('case "leihen_status"'));
+  assert.ok(/nurVorstand\(ich\)/.test(en) && /\.eq\("id", a\.id\)\.eq\("status", "angefragt"\)/.test(en), "eine Zusage genügt (nur wer zuerst entscheidet)");
+  assert.ok(/Über die eigene Anfrage entscheidet jemand anderes/.test(en) && /await leihAblegen\(ich, neu, "Bescheid"\)/.test(en), "nicht über eigene Anfrage; Bescheid abgelegt");
+  assert.ok(/const leiheErinnert = await leihErinnern\(\)/.test(server), "Rückgabe-Erinnerung in der Wartung");
+  assert.ok(/belegungen: [^\n]*positionen: \(a\.positionen \?\? \[\]\)\.map\(\(x: any\) => \(\{ id: x\.id, anzahl: x\.anzahl \}\)\)/.test(server), "Belegung ohne Namen");
+  assert.ok(/function leihFormHtml\(\)/.test(html) && /hlStepper\(n, 0, frei,/.test(html) && /hlTageWahl\("abholung", f\.abholung\)/.test(html), "Auswahl per Kachel + Stepper");
+}
+
+// 167. 1.23.0: Wer kann helfen? (KC-CLUB-HELFEN) + eine Kachel im Register Verein
+{
+  for (const a of ["hilfe_liste", "hilfe_aufruf", "hilfe_antwort", "hilfe_schliessen"]) assert.ok(aktionen.has(a) && aufrufe.has(a), `Hilfe-Aktion ${a} fehlt`);
+  const h = server.slice(server.indexOf('case "hilfe_aufruf"'), server.indexOf('case "hilfe_antwort"'));
+  assert.ok(/if \(!HILFE_ARTEN\[art\]\) throw/.test(h) && /slotWahl\(p\.slot\)/.test(h), "Auswahl aus Registry, kein Freitext-Typ");
+  assert.ok(/ziel === "online" \? \[\.\.\.await onlineJetzt\(\)\]/.test(h) && /\.filter\(\(id\) => id !== ich\.person_id\)/.test(h), "an alle oder alle gerade online, nie an sich selbst");
+  assert.ok(/is\("voll_gemeldet_am", null\)/.test(server), "„genug Helfer“ nur einmal");
+  const k = html.slice(html.indexOf("const KACHELN = {"), html.indexOf("  mein: ["));
+  assert.ok(/\{ id: "helfen", sym: "🤝", t: "Helfen & Leihen", u: "Wer kann helfen\? · Ausleihen", aktion: "hlStart\(\)" \}/.test(k), "Kachel 🤝 im Register Verein");
+  assert.ok(/id="v-helfen"/.test(html) && /"sicherheit", "helfen"\]\.forEach/.test(html) && /"#archiv", "#helfen"\]\.includes\(h\)/.test(html), "Ansicht + Sprung #helfen");
+  assert.ok(/onclick="hlTab\('helfen'\)">🙋 Wer kann helfen\?/.test(html) && /onclick="hlTab\('leihen'\)">📦 Ausleihen/.test(html), "zwei Bereiche");
+  assert.ok(/const hlJs = \(v\) => JSON\.stringify\(v\)\.replace\(\/&\/g, "&amp;"\)\.replace\(\/'\/g, "&#39;"\)/.test(html), "Werte im onclick sicher maskiert");
+}
+
+// 168. 1.23.0: Spendenprojekte in Vorschlägen (KC-CLUB-SPENDE)
+{
+  const mig = lies("supabase/migrations/20261001_kc_club_v1230_helfen_leihen.sql");
+  assert.ok(/check \(art in \('thema', 'abstimmung', 'spende'\)\)/.test(mig) && /jsonb_array_length\(spenden\) between 1 and 10/.test(mig), "Art spende + 1–10 Projekte");
+  assert.ok(/const SPENDEN_VORSCHLAEGE = \["Kinderhospiz Lünen\/Werne"\]/.test(server), "Kinderhospiz als Vorschlag");
+  const sp = server.slice(server.indexOf('case "vorschlag_speichern"'), server.indexOf('case "vorschlag_stimme"'));
+  assert.ok(/p\.art === "spende" \? "spende"/.test(sp) && /spendenPruefen\(p\.spenden\)/.test(sp) && /if \(art === "abstimmung"\) nurVorstand\(ich\)/.test(sp), "Spende darf jedes Mitglied vorschlagen, Abstimmung weiter nur Leitung");
+  assert.ok(/x\.betrag > 0 && x\.betrag <= SPENDE_MAX/.test(server), "Betrag geprüft");
+  assert.ok(/const unterstuetzbar = \(art: string\) => art === "thema" \|\| art === "spende"/.test(server) && /if \(unterstuetzbar\(v\.art\)\) \{/.test(server), "Spende wie Thema unterstützen");
+  assert.ok(/in\("art", \["thema", "spende"\]\)/.test(server), "Spende erscheint beim Treffen");
+  assert.ok(/onclick="vorschlagForm\('spende'\)">💝 Spende/.test(html) && /function vfSpZeigen\(\)/.test(html) && /＋ weiteres Spendenprojekt/.test(html), "Formular: mehrere Projekte per Kachel");
+  assert.ok(/<div class="summe"><span>Zusammen<\/span>/.test(html), "Summe sichtbar");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

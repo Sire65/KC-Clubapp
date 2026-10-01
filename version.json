@@ -1,13 +1,20 @@
 {
-  "version": "1.22.2",
+  "version": "1.23.0",
   "datum": "2026-10-01",
   "neu": [
-    "🌙 Besser lesbar im Nacht-Design: SOS-Nummern 112/110, Markierungen, Status, Schnellstart-Zahlen und Hinweise – geprüft in allen Farb-Designs",
-    "🛡️ Sicherheits-Check: Wer sein Ergebnis an Hansi schickt – das kommt jetzt immer per Push und E-Mail an und wird zusätzlich im Archiv abgelegt",
-    "📥 WhatsApp → Club-Chat: In WhatsApp Nachricht gedrückt halten → Teilen → „Köcheclub“ – dann Club-Chat wählen (oder Archiv). Klappt auch mit Fotos, Dateien und WhatsApp-Chat-Export (Android, App auf dem Startbildschirm)",
-    "🟠 Oben im großen Feld leuchtet „Neue Nachr.“ orange, sobald etwas Neues da ist"
+    "🤝 Neue Kachel „Helfen & Leihen“ (Verein): „🙋 Wer kann helfen?“ – Hilfe-Aufruf mit wenigen Tipps (Wobei? Wann? Wie viele?) an alle oder an alle gerade online; zusagen mit „✋ Ich komme“",
+    "📦 Ausleihen: Stehtische, Pavillon, Zapfanlage & Co. per Antippen anfragen – Abholung und Rückgabe wählen, „noch frei“ wird angezeigt. Clubsprecher, Kassenwart und Admin bekommen die Anfrage, eine Zusage genügt; Antrag und Bescheid liegen im Archiv (Register „Ausleihe“)",
+    "💝 Vorschläge: jetzt auch Spendenprojekte für die nächste Sitzung – ein oder mehrere, mit Betrag (z. B. Kinderhospiz Lünen/Werne), Summe wird angezeigt"
   ],
   "verlauf": [
+    {
+      "version": "1.23.0",
+      "neu": [
+        "🤝 Neue Kachel „Helfen & Leihen“ (Verein): „🙋 Wer kann helfen?“ – Hilfe-Aufruf mit wenigen Tipps (Wobei? Wann? Wie viele?) an alle oder an alle gerade online; zusagen mit „✋ Ich komme“",
+        "📦 Ausleihen: Stehtische, Pavillon, Zapfanlage & Co. per Antippen anfragen – Abholung und Rückgabe wählen, „noch frei“ wird angezeigt. Clubsprecher, Kassenwart und Admin bekommen die Anfrage, eine Zusage genügt; Antrag und Bescheid liegen im Archiv (Register „Ausleihe“)",
+        "💝 Vorschläge: jetzt auch Spendenprojekte für die nächste Sitzung – ein oder mehrere, mit Betrag (z. B. Kinderhospiz Lünen/Werne), Summe wird angezeigt"
+      ]
+    },
     {
       "version": "1.22.2",
       "neu": [

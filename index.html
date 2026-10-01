@@ -523,8 +523,8 @@
   .feld input, .feld select, .feld textarea { display: block; width: 100%; margin-top: 5px; padding: 12px; border: 1px solid var(--linie); border-radius: 12px; background: var(--bg); color: var(--text); } /* 0.46.0: Textfarbe immer passend zum Feld-Hintergrund (sonst z. B. weiß auf hell in der Foto-Großansicht) */
   .zwei { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .marke { display: inline-block; font-size: .78rem; font-weight: 800; padding: 3px 9px; border-radius: 10px; background: var(--karte2); }
-  .marke.gruen { background: var(--gruenbg); color: var(--gruen); }
-  .marke.gelb { background: var(--gelbbg); color: var(--gelb); }
+  .marke.gruen { background: var(--gruenbg); color: var(--textGruen); } /* 1.23.0: zentrale Schriftfarben – kleine Marken ≥ 4,5:1 */
+  .marke.gelb { background: var(--gelbbg); color: var(--textOrange); }
   .marke.rot { background: var(--rotbg); color: #a51d1d; }
 
   /* Treffen */
@@ -558,6 +558,47 @@
   .balken .spur i { display: block; height: 100%; background: var(--rot); border-radius: 6px; }
   .balken .wer { font-size: .82rem; color: var(--grau); margin-top: 2px; }
   .artwahl { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .artwahl.drei { grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); }
+  .artwahl.drei .knopf { padding: 11px 4px; min-width: 0; overflow-wrap: anywhere; }
+  /* KC-CLUB-HELFEN / KC-CLUB-LEIHEN (1.23.0): Auswahl per Kachel, Stepper statt Tippen */
+  .hl-gross { width: 100%; font-size: 1.08rem; padding: 16px; margin: 4px 0 6px; }
+  .hl-frage { font-weight: 800; margin: 14px 0 6px; }
+  .hl-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 6px; }
+  .hl-chips .chip { padding: 9px 12px; font-size: .95rem; color: var(--text); border: 2px solid transparent; cursor: pointer; }
+  .hl-chips .chip.an { border-color: var(--rot); }
+  .hl-kal { display: inline-flex; align-items: center; gap: 8px; background: var(--karte2); border-radius: 12px; padding: 7px 10px; font-weight: 700; margin: 0 0 6px; position: relative; cursor: pointer; }
+  .hl-kal input { position: absolute; inset: 0; opacity: 0; width: 100%; cursor: pointer; }
+  .hl-kal.an { background: var(--rot); color: #fff; }
+  .hl-stepper { display: inline-flex; align-items: center; gap: 10px; }
+  .hl-stepper button { width: 42px; height: 42px; border-radius: 50%; border: 2px solid var(--linie); background: var(--karte); font-size: 1.3rem; font-weight: 800; cursor: pointer; color: var(--text); }
+  .hl-stepper button:disabled { opacity: .35; cursor: default; }
+  .hl-stepper b { min-width: 2ch; text-align: center; font-size: 1.2rem; }
+  .hl-dinge { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+  .hl-ding { background: var(--karte2); border: 2px solid transparent; border-radius: 14px; padding: 10px; text-align: center; display: grid; gap: 4px; justify-items: center; }
+  .hl-ding.an { border-color: var(--rot); background: var(--karte); }
+  .hl-ding.leer { opacity: .6; }
+  .hl-sym { font-size: 1.8rem; line-height: 1; }
+  .hl-name { font-weight: 800; }
+  .hl-frei { font-size: .8rem; color: var(--grau); }
+  .hl-summe { margin-top: 12px; padding: 10px 12px; border-radius: 12px; background: var(--gelbbg); color: var(--text); }
+  .hl-karte .hl-titel { font-size: 1.1rem; font-weight: 800; }
+  .hl-karte.vorbei { opacity: .75; }
+  .hl-stand { margin-top: 8px; padding: 8px 10px; border-radius: 12px; background: var(--karte2); }
+  .hl-stand.voll { background: var(--gruenbg); }
+  .hl-antwort { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+  .hl-antwort button { border: 2px solid var(--linie); background: var(--karte); border-radius: 14px; padding: 12px; font-weight: 800; cursor: pointer; color: var(--text); }
+  .hl-antwort button.an { background: var(--gruen); border-color: var(--gruen); color: #fff; }
+  .hl-antwort button.an.nein { background: var(--grau); border-color: var(--grau); }
+  .hl-bestand { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+  .hl-editzeile { display: grid; grid-template-columns: auto 1fr auto auto; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--linie); }
+  .hl-editzeile .hl-sym { font-size: 1.4rem; }
+  .hl-editzeile.aus { opacity: .5; }
+  /* KC-CLUB-SPENDE (1.23.0) */
+  .sp-projekt { background: var(--karte2); border-radius: 14px; padding: 10px; margin: 8px 0; }
+  .sp-projekt .hl-chips .chip:not(.an) { background: var(--karte); }
+  .sp-liste { margin: 8px 0 0; padding: 8px 12px; border-radius: 12px; background: var(--karte2); }
+  .sp-liste div { display: flex; justify-content: space-between; gap: 10px; padding: 3px 0; }
+  .sp-liste .summe { border-top: 1px solid var(--linie); margin-top: 4px; padding-top: 6px; font-weight: 800; }
 
   /* Dienstpläne */
   .dpnav { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 16px 2px 4px; }
@@ -800,7 +841,7 @@
   /* KC-CLUB-ANSICHT-NAME (0.66.0): hinter „Schnellzugriff“ klein und farbig, welche Ansicht gerade aktiv ist */
   .ansichtname { font-size: .66rem; font-weight: 700; margin-left: 2px; vertical-align: middle; white-space: nowrap; border: none; background: none; padding: 6px 2px; font-family: inherit; cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; }
   #versionMarke { white-space: nowrap; flex: none; }
-  .ansichtname.ein { color: #1e8449; } .ansichtname.erw { color: var(--rot); }
+  .ansichtname.ein { color: var(--textGruen); } .ansichtname.erw { color: var(--textRot); } /* 1.23.0: im Nacht-Design lesbar */
   body.einfach .ansichtname.erw, body:not(.einfach) .ansichtname.ein { display: none; }
   /* KC-CLUB-EINSTIEG: „dort ist es“ – kurz aufleuchten */
   .hervor { outline: 3px solid #1e8449 !important; outline-offset: 3px; border-radius: 12px; animation: hervor 0.9s ease-in-out 3; }
@@ -1224,6 +1265,13 @@
     <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>🗳️ Vorschläge</h2><button class="knopf haupt klein" onclick="vorschlagForm()">＋ Neu</button></div>
     <div id="vorschlagForm" class="karte versteckt"></div>
     <div id="vorschlagListe"><div class="karte hinweis">Wird geladen …</div></div>
+  </section>
+
+  <!-- HELFEN & LEIHEN (KC-CLUB-HELFEN, KC-CLUB-LEIHEN – 1.23.0) -->
+  <section id="v-helfen" class="versteckt">
+    <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>🤝 Helfen & Leihen</h2></div>
+    <div class="umschalter" id="hlTabs"><button data-t="helfen" onclick="hlTab('helfen')">🙋 Wer kann helfen?</button><button data-t="leihen" onclick="hlTab('leihen')">📦 Ausleihen</button></div>
+    <div id="hlInhalt"><div class="karte hinweis">Wird geladen …</div></div>
   </section>
 
   <!-- AKTIONEN / AUSFLÜGE (KC-CLUB-AKTIONEN) -->
@@ -1822,7 +1870,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.22.2"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.23.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3985,6 +4033,8 @@ const KACHELN = {
     { id: "fotos", sym: "📷", t: "Fotoalbum", u: "Nach Thema & Datum", aktion: "faFilter={};faPapierkorb=false;zeige('fotos')" },
     { id: "feedback", sym: "💭", t: "Feedback", u: "Deine Meinung zur App", v: "feedback" },
     { id: "pinnwand", sym: "📌", t: "Pinnwand", u: "Kurze Zettel · wichtig & erledigt", v: "pinnwand", zahl: () => PW.offen || 0 },
+    // KC-CLUB-HELFEN / KC-CLUB-LEIHEN (1.23.0, Wunsch Hansi): eine Kachel für „Wer kann helfen?“ und „Ausleihen“
+    { id: "helfen", sym: "🤝", t: "Helfen & Leihen", u: "Wer kann helfen? · Ausleihen", aktion: "hlStart()" },
   ],
   mein: [
     { id: "status", sym: "🟢", t: "Mein Status", u: "verfügbar, Urlaub …", aktion: "statusBlatt()" },
@@ -4915,7 +4965,7 @@ function zeige(v, ausHistorie) {
   aktuelleAnsicht = v; if (window.KCFP) KCFP.sicht = v;
   nzZaehlen(v); // KC-CLUB-NUTZUNG: nur „Bereich geöffnet“, ohne Namen
   if (vorher === "protokoll" && v !== "protokoll" && prTimer) prSpeichernJetzt(false).catch(() => {}); // ungespeicherte Eingaben sichern
-  ["start", "dokumente", "termine", "vorschlaege", "aktionen", "aktion", "fotos", "feedback", "gruppe", "mitglied", "protokolle", "protokoll", "dienste", "nachrichten", "chat", "neu", "mitglieder", "einstellungen", "pinnwand", "erstattung", "ueberblick", "programme", "standort", "archiv", "sos", "sicherheit"].forEach((x) => $("v-" + x).classList.toggle("versteckt", x !== v));
+  ["start", "dokumente", "termine", "vorschlaege", "aktionen", "aktion", "fotos", "feedback", "gruppe", "mitglied", "protokolle", "protokoll", "dienste", "nachrichten", "chat", "neu", "mitglieder", "einstellungen", "pinnwand", "erstattung", "ueberblick", "programme", "standort", "archiv", "sos", "sicherheit", "helfen"].forEach((x) => $("v-" + x).classList.toggle("versteckt", x !== v));
   document.querySelectorAll("#fuss button").forEach((b) => b.classList.toggle("an", b.dataset.v === v || (v === "chat" && b.dataset.v === "nachrichten") || (v === "neu" && b.dataset.v === "nachrichten")));
   $("eingabe").classList.toggle("versteckt", v !== "chat");
   document.body.classList.toggle("im-chat", v === "chat"); // KC-CLUB-SUCHE: Lupe nicht über dem Senden-Knopf
@@ -4936,6 +4986,7 @@ function zeige(v, ausHistorie) {
   if (v === "standort") stLaden(); else stAnsichtStopp();
   if (v === "erstattung") erstattungLaden();
   if (v === "archiv") arLaden(); // KC-CLUB-ARCHIV
+  if (v === "helfen") { hlZeigen(); hlLaden(); } // KC-CLUB-HELFEN / KC-CLUB-LEIHEN
   if (v === "dienste") dienstLaden();
   if (v === "nachrichten") unterhLaden();
   if (v === "mitglieder") mitgliederLaden();
@@ -5263,15 +5314,16 @@ async function treffenAbsagen(id, va) {
 }
 
 // ---------- Vorschläge & Abstimmungen ----------
-let VORSCHLAG_TREFFEN = [];
+let VORSCHLAG_TREFFEN = [], VORSCHLAG_SPENDEN = { empfaenger: [], betraege: [50, 100, 250, 500, 1000], max: 100000 };
 async function vorschlaegeLaden() {
   try {
-    const { vorschlaege, treffen } = await api("vorschlaege_liste");
-    VORSCHLAG_TREFFEN = treffen;
+    const { vorschlaege, treffen, spenden: spCfg } = await api("vorschlaege_liste");
+    VORSCHLAG_TREFFEN = treffen; if (spCfg) VORSCHLAG_SPENDEN = spCfg;
     const offen = vorschlaege.filter((v) => v.status === "offen"), fertig = vorschlaege.filter((v) => v.status !== "offen");
-    const abst = offen.filter((v) => v.art === "abstimmung"), themen = offen.filter((v) => v.art === "thema");
+    const abst = offen.filter((v) => v.art === "abstimmung"), themen = offen.filter((v) => v.art === "thema"), spenden = offen.filter((v) => v.art === "spende");
     $("vorschlagListe").innerHTML =
       (abst.length ? `<div class="abschnitt"><h3>🗳️ Abstimmungen</h3></div>` + abst.map(vorschlagKarte).join("") : "")
+      + (spenden.length ? `<div class="abschnitt"><h3>💝 Spendenprojekte für die nächste Sitzung</h3></div>` + spenden.map(vorschlagKarte).join("") : "")
       + `<div class="abschnitt"><h3>💡 Themen für die nächste Sitzung</h3></div>`
       + (themen.map(vorschlagKarte).join("") || '<div class="karte hinweis">Noch keine Themen. Tippe oben auf „＋ Neu“, um etwas vorzuschlagen.</div>')
       + (fertig.length ? `<div class="abschnitt"><h3>Erledigt</h3></div>` + fertig.map(vorschlagKarte).join("") : "");
@@ -5286,14 +5338,14 @@ function balken(v) {
 }
 function vorschlagKarte(v) {
   const offen = v.status === "offen";
-  const kopf = `${v.art === "abstimmung" ? `<span class="marke">🗳️ Abstimmung</span> <span class="marke">${v.geheim ? "🔒 geheim" : "👁️ offen"}</span>` : '<span class="marke">💡 Thema</span>'}
+  const kopf = `${v.art === "abstimmung" ? `<span class="marke">🗳️ Abstimmung</span> <span class="marke">${v.geheim ? "🔒 geheim" : "👁️ offen"}</span>` : v.art === "spende" ? '<span class="marke">💝 Spende</span>' : '<span class="marke">💡 Thema</span>'}
     ${v.status === "abgeschlossen" ? ' <span class="marke gruen">✔ erledigt</span>' : v.status === "zurueckgezogen" ? ' <span class="marke rot">zurückgezogen</span>' : ""}
     ${offen && v.frist ? ` <span class="marke gelb">⏳ bis ${esc(wann(v.frist))}</span>` : ""}`;
   const unter = `<div class="hinweis" style="font-size:.85rem">von ${esc(v.von.name)} · ${esc(zeitKurz(v.erstellt_am))}${v.treffen ? " · für " + esc(v.treffen.titel) + " am " + esc(fKurz.format(new Date(v.treffen.beginn))) : ""}</div>`;
   let mitte = "";
-  if (v.art === "thema") {
+  if (v.art !== "abstimmung") { // Thema und Spendenprojekt: unterstützen 👍
     const e = v.ergebnis?.[0] || { anzahl: 0, namen: [] };
-    mitte = (offen ? `<div class="wahl"><button class="${v.meine ? "an" : ""}" onclick="stimme('${v.id}', ${v.meine ? "null" : "'dafuer'"})">👍 ${v.meine ? "Ich unterstütze das" : "Unterstützen"} · ${e.anzahl}</button></div>` : `<p><b>👍 ${e.anzahl}</b></p>`)
+    mitte = spendenListeHtml(v) + (offen ? `<div class="wahl"><button class="${v.meine ? "an" : ""}" onclick="stimme('${v.id}', ${v.meine ? "null" : "'dafuer'"})">👍 ${v.meine ? "Ich unterstütze das" : "Unterstützen"} · ${e.anzahl}</button></div>` : `<p><b>👍 ${e.anzahl}</b></p>`)
       + (e.namen?.length ? `<div class="wer hinweis" style="font-size:.85rem;margin-top:6px">👍 ${esc(e.namen.join(", "))}</div>` : "");
   } else {
     const kannWaehlen = offen && !(v.geheim && v.abgestimmt);
@@ -5323,13 +5375,45 @@ async function vorschlagLoeschen(id) {
   if (!confirm("Diesen Vorschlag bzw. diese Abstimmung endgültig löschen?\n\nAlle Stimmen gehen mit verloren. Es wird niemand benachrichtigt.\nEine Sicherung bleibt im Änderungsprotokoll.")) return;
   try { await api("vorschlag_loeschen", { id }); melde("🗑️ Gelöscht"); vorschlaegeLaden(); neuLaden(); } catch (e) { melde(e.message, true); }
 }
-let vfArt = "thema";
+let vfArt = "thema", VF_SP = [];
+// KC-CLUB-SPENDE (1.23.0): Spendenprojekte – Empfänger und Betrag per Kachel, Tippen nur für Neues
+const spEuro = (n) => new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: Number.isInteger(Number(n)) ? 0 : 2 }).format(Number(n) || 0);
+function spendenListeHtml(v) {
+  if (v.art !== "spende" || !v.spenden?.length) return "";
+  return `<div class="sp-liste">${v.spenden.map((x) => `<div><span>💝 ${esc(x.empfaenger)}</span><b>${esc(spEuro(x.betrag))}</b></div>`).join("")}${v.spenden.length > 1 ? `<div class="summe"><span>Zusammen</span><span>${esc(spEuro(v.summe))}</span></div>` : ""}</div>`;
+}
+function vfSpZeigen() {
+  const z = $("vfSpenden"); if (!z) return;
+  const cfg = VORSCHLAG_SPENDEN, summe = VF_SP.reduce((s, x) => s + (Number(x.betrag) || 0), 0);
+  z.innerHTML = VF_SP.map((x, i) => {
+    const bekannt = cfg.empfaenger.includes(x.empfaenger), betragBekannt = cfg.betraege.includes(Number(x.betrag));
+    return `<div class="sp-projekt"><div class="hl-frage" style="margin-top:0">💝 Projekt ${VF_SP.length > 1 ? i + 1 : ""}${VF_SP.length > 1 ? ` <button class="knopf klein" style="float:right" onclick="VF_SP.splice(${i},1);vfSpZeigen()">🗑️</button>` : ""}</div>
+      <div class="hinweis" style="margin:0 0 4px">An wen?</div>
+      <div class="hl-chips">${cfg.empfaenger.map((n) => `<button class="chip${x.empfaenger === n && !x.frei ? " an" : ""}" onclick='vfSp(${i}, "empfaenger", ${hlJs(n)})'>${esc(n)}</button>`).join("")}<button class="chip${x.frei || (x.empfaenger && !bekannt) ? " an" : ""}" onclick="vfSp(${i}, 'frei', true)">✏️ Andere</button></div>
+      ${x.frei || (x.empfaenger && !bekannt) ? `<label class="feld"><input maxlength="100" placeholder="z. B. Tafel Werne" value="${esc(x.empfaenger)}" oninput="VF_SP[${i}].empfaenger=this.value"></label>` : ""}
+      <div class="hinweis" style="margin:6px 0 4px">Wie viel?</div>
+      <div class="hl-chips">${cfg.betraege.map((b) => `<button class="chip${Number(x.betrag) === b && !x.freiBetrag ? " an" : ""}" onclick="vfSp(${i}, 'betrag', ${b})">${esc(spEuro(b))}</button>`).join("")}<button class="chip${x.freiBetrag || (x.betrag && !betragBekannt) ? " an" : ""}" onclick="vfSp(${i}, 'freiBetrag', true)">✏️ Anderer Betrag</button></div>
+      ${x.freiBetrag || (x.betrag && !betragBekannt) ? `<label class="feld"><input type="number" inputmode="decimal" min="1" max="${cfg.max}" step="1" placeholder="Betrag in €" value="${x.betrag || ""}" oninput="VF_SP[${i}].betrag=Number(this.value)||0;vfSpSumme()"></label>` : ""}</div>`;
+  }).join("") + `<button class="knopf klein" ${VF_SP.length >= 10 ? "disabled" : ""} onclick="VF_SP.push({ empfaenger: '', betrag: 0 });vfSpZeigen()">＋ weiteres Spendenprojekt</button>
+    <div class="hl-summe" id="vfSpSumme">${VF_SP.length > 1 ? "Zusammen: " : "Betrag: "}<b>${esc(spEuro(summe))}</b></div>`;
+}
+function vfSpSumme() { const e = $("vfSpSumme"); if (e) e.innerHTML = `${VF_SP.length > 1 ? "Zusammen: " : "Betrag: "}<b>${esc(spEuro(VF_SP.reduce((s, x) => s + (Number(x.betrag) || 0), 0)))}</b>`; }
+function vfSp(i, feld, wert) {
+  const x = VF_SP[i]; if (!x) return;
+  if (feld === "empfaenger") { x.empfaenger = wert; x.frei = false; }
+  else if (feld === "frei") { x.frei = true; if (VORSCHLAG_SPENDEN.empfaenger.includes(x.empfaenger)) x.empfaenger = ""; }
+  else if (feld === "betrag") { x.betrag = wert; x.freiBetrag = false; }
+  else if (feld === "freiBetrag") { x.freiBetrag = true; if (VORSCHLAG_SPENDEN.betraege.includes(Number(x.betrag))) x.betrag = 0; }
+  vfSpZeigen();
+}
 function vorschlagForm(art) {
   vfArt = art || "thema";
+  if (vfArt === "spende") VF_SP = [{ empfaenger: VORSCHLAG_SPENDEN.empfaenger[0] || "", betrag: 0 }];
   const t0 = VORSCHLAG_TREFFEN[0]?.id || "";
   $("vorschlagForm").innerHTML = `<h3>Neuer Vorschlag</h3>
-    ${ICH.vorstand ? `<div class="artwahl"><button class="knopf ${vfArt === "thema" ? "haupt" : ""}" onclick="vorschlagForm('thema')">💡 Thema</button><button class="knopf ${vfArt === "abstimmung" ? "haupt" : ""}" onclick="vorschlagForm('abstimmung')">🗳️ Abstimmung</button></div>` : ""}
-    <label class="feld">${vfArt === "abstimmung" ? "Frage" : "Thema"}<input id="vfTitel" maxlength="150" placeholder="${vfArt === "abstimmung" ? "z. B. Sollen wir im Mai ein Grillfest machen?" : "z. B. Grillfest im Mai"}"></label>
+    <div class="artwahl drei"><button class="knopf ${vfArt === "thema" ? "haupt" : ""}" onclick="vorschlagForm('thema')">💡 Thema</button><button class="knopf ${vfArt === "spende" ? "haupt" : ""}" onclick="vorschlagForm('spende')">💝 Spende</button>${ICH.vorstand ? `<button class="knopf ${vfArt === "abstimmung" ? "haupt" : ""}" onclick="vorschlagForm('abstimmung')">🗳️ Abstimmung</button>` : ""}</div>
+    ${vfArt === "spende" ? `<p class="hinweis" style="margin:8px 0 0">Ein oder mehrere Spendenprojekte für die nächste Sitzung – einfach antippen.</p><div id="vfSpenden"></div>` : ""}
+    <label class="feld">${vfArt === "abstimmung" ? "Frage" : vfArt === "spende" ? "Überschrift (freiwillig – sonst automatisch)" : "Thema"}<input id="vfTitel" maxlength="150" placeholder="${vfArt === "abstimmung" ? "z. B. Sollen wir im Mai ein Grillfest machen?" : vfArt === "spende" ? "z. B. Spenden aus dem Weihnachtsmarkt" : "z. B. Grillfest im Mai"}"></label>
     <label class="feld">Beschreibung (freiwillig)<textarea id="vfBeschr" rows="3"></textarea></label>
     <label class="feld">Für welches Treffen?<select id="vfTreffen"><option value="">– allgemein –</option>${VORSCHLAG_TREFFEN.map((t) => `<option value="${t.id}" ${t.id === t0 ? "selected" : ""}>${esc(t.titel)} · ${esc(wann(t.beginn))}</option>`).join("")}</select></label>
     ${vfArt === "abstimmung" ? `<label class="feld">Antworten (eine pro Zeile)<textarea id="vfOptionen" rows="3">Ja\nNein\nEnthaltung</textarea></label>
@@ -5338,9 +5422,15 @@ function vorschlagForm(art) {
     <label class="schalter"><span>${vfArt === "abstimmung" ? "Alle Mitglieder benachrichtigen" : "Clubsprecher & Kassenwart benachrichtigen"}</span><input type="checkbox" id="vfInfo" checked></label>
     <div class="knoepfe"><button class="knopf haupt" onclick="vorschlagSpeichern(this)">${vfArt === "abstimmung" ? "Abstimmung starten" : "Vorschlagen"}</button><button class="knopf" onclick="$('vorschlagForm').classList.add('versteckt')">Abbrechen</button></div>`;
   $("vorschlagForm").classList.remove("versteckt"); window.scrollTo(0, 0);
+  if (vfArt === "spende") vfSpZeigen();
 }
 async function vorschlagSpeichern(knopf) {
   const daten = { art: vfArt, titel: $("vfTitel").value, beschreibung: $("vfBeschr").value, treffen_id: $("vfTreffen").value || null, benachrichtigen: $("vfInfo").checked };
+  if (vfArt === "spende") {
+    daten.spenden = VF_SP.map((x) => ({ empfaenger: String(x.empfaenger || "").trim(), betrag: Number(x.betrag) || 0 }));
+    const fehlt = daten.spenden.find((x) => !x.empfaenger || !(x.betrag > 0));
+    if (fehlt) return melde(!fehlt.empfaenger ? "Bitte bei jedem Projekt antippen, an wen gespendet wird." : `Bitte für „${fehlt.empfaenger}“ einen Betrag antippen.`, true);
+  }
   if (vfArt === "abstimmung") {
     daten.optionen = $("vfOptionen").value.split("\n").map((x) => x.trim()).filter(Boolean);
     daten.geheim = $("vfGeheim").checked;
@@ -5352,6 +5442,236 @@ async function vorschlagSpeichern(knopf) {
       $("vorschlagForm").classList.add("versteckt");
       melde(r.versand ? `Gespeichert – ${r.versand.gesendet} benachrichtigt` : "Gespeichert"); vorschlaegeLaden();
     } catch (e) { melde(e.message, true); }
+  });
+}
+
+// ---------- KC-CLUB-HELFEN & KC-CLUB-LEIHEN (1.23.0, Wunsch Hansi): eine Kachel, zwei Bereiche – fast alles per Antippen ----------
+let HL = { tab: "helfen", hilfe: null, leihen: null, form: null, edit: false };
+const hlTag = (n) => tagPlus(heuteIso(), n);
+const hlTagName = (iso) => iso === hlTag(0) ? "Heute" : iso === hlTag(1) ? "Morgen" : fTagDp.format(new Date(iso + "T12:00:00Z"));
+const hlTagLang = (iso, slot, zf) => `${hlTagName(iso)}${iso === hlTag(0) || iso === hlTag(1) ? " " + fTagDp.format(new Date(iso + "T12:00:00Z")) : ""}${slot && zf?.[slot] ? " · " + zf[slot] : ""}`;
+function hlStart(tab) { if (tab) HL.tab = tab; HL.form = null; HL.edit = false; zeige("helfen"); }
+function hlTab(t) { HL.tab = t; HL.form = null; HL.edit = false; hlZeigen(); hlLaden(); }
+async function hlLaden() {
+  try {
+    if (HL.tab === "helfen") HL.hilfe = await api("hilfe_liste"); else HL.leihen = await api("leihen_liste");
+    hlZeigen();
+  } catch (e) { $("hlInhalt").innerHTML = `<div class="karte hinweis">${esc(e.message)}</div>`; }
+}
+// Kachel-Reihe: ein Wert aus einer Liste [{w, t}]
+const hlJs = (v) => JSON.stringify(v).replace(/&/g, "&amp;").replace(/'/g, "&#39;");
+const hlChips = (feld, opt, aktuell) => `<div class="hl-chips">${opt.map((o) => `<button class="chip${String(aktuell ?? "") === String(o.w) ? " an" : ""}" onclick='hlSetze(${hlJs(feld)}, ${hlJs(o.w)})'>${esc(o.t)}</button>`).join("")}</div>`;
+// Tage als Kacheln (heute … +6) und für alles andere der Kalender
+function hlTageWahl(feld, aktuell, ab) {
+  const start = ab && ab > hlTag(0) ? ab : hlTag(0), tage = [0, 1, 2, 3, 4, 5, 6].map((i) => tagPlus(start, i));
+  const fremd = aktuell && !tage.includes(aktuell);
+  return hlChips(feld, tage.map((t) => ({ w: t, t: hlTagName(t) })), aktuell)
+    + `<label class="hl-kal${fremd ? " an" : ""}">📅 ${fremd ? esc(hlTagName(aktuell)) : "Anderer Tag"}<input type="date" min="${start}" value="${aktuell || ""}" onchange="this.value && hlSetze('${feld}', this.value)"></label>`;
+}
+const hlSlots = (zf, mitEgal) => [...(mitEgal ? [{ w: "", t: "⏱️ egal" }] : []), ...Object.entries(zf || {}).map(([w, t]) => ({ w, t }))];
+const hlStepper = (wert, min, max, minus, plus) => `<div class="hl-stepper"><button aria-label="weniger" ${wert <= min ? "disabled" : ""} onclick="${minus}">－</button><b>${wert}</b><button aria-label="mehr" ${wert >= max ? "disabled" : ""} onclick="${plus}">＋</button></div>`;
+function hlSetze(feld, wert) {
+  if (!HL.form) return;
+  HL.form[feld] = wert;
+  if (feld === "ort") HL.form.ortFrei = false;
+  if (feld === "abholung" && HL.form.rueckgabe < wert) HL.form.rueckgabe = wert;
+  hlZeigen();
+}
+function hlText(feld, el) { if (HL.form) HL.form[feld] = el.value; }
+
+function hlZeigen() {
+  document.querySelectorAll("#hlTabs button").forEach((b) => b.classList.toggle("an", b.dataset.t === HL.tab));
+  const z = $("hlInhalt"); if (!z) return;
+  if (HL.tab === "helfen") z.innerHTML = HL.form ? hilfeFormHtml() : hilfeListeHtml();
+  else z.innerHTML = HL.edit ? leihEditHtml() : HL.form ? leihFormHtml() : leihListeHtml();
+}
+
+// ----- 🙋 Wer kann helfen? -----
+function hilfeNeu() { HL.form = { art: "", datum: hlTag(0), slot: "", anzahl: 2, ort: "", ortFrei: false, notiz: "", ziel: "alle" }; hlZeigen(); window.scrollTo(0, 0); }
+function hilfeFormHtml() {
+  const f = HL.form, d = HL.hilfe || {}, orte = d.orte || [];
+  return `<div class="karte hl-form"><h3 style="margin:0 0 6px">🙋 Hilfe suchen</h3>
+    <div class="hl-frage">Wobei?</div>${hlChips("art", Object.entries(d.arten || {}).map(([w, t]) => ({ w, t })), f.art)}
+    <div class="hl-frage">Wann?</div>${hlTageWahl("datum", f.datum)}${hlChips("slot", hlSlots(d.zeitfenster, true), f.slot)}
+    <div class="hl-frage">Wie viele Helfer?</div>${hlStepper(f.anzahl, 1, 20, "hlSetze('anzahl', HL.form.anzahl - 1)", "hlSetze('anzahl', HL.form.anzahl + 1)")}
+    <div class="hl-frage">Wo? <small class="hinweis">(freiwillig)</small></div>
+    ${hlChips("ort", [{ w: "", t: "– keine Angabe –" }, ...orte.map((o) => ({ w: o, t: "📍 " + o }))], f.ortFrei ? "\u0000" : f.ort)}
+    ${f.ortFrei ? `<label class="feld"><input id="hfOrt" maxlength="80" placeholder="z. B. Vereinsheim" value="${esc(f.ort)}" oninput="hlText('ort', this)"></label>` : `<button class="knopf klein" onclick="HL.form.ortFrei=true;HL.form.ort='';hlZeigen();$('hfOrt')?.focus()">✏️ Anderer Ort</button>`}
+    <div class="hl-frage">An wen?</div>
+    <div class="umschalter"><button class="${f.ziel === "alle" ? "an" : ""}" onclick="hlSetze('ziel','alle')">👥 Alle Mitglieder</button><button class="${f.ziel === "online" ? "an" : ""}" onclick="hlSetze('ziel','online')">🟢 Alle gerade online</button></div>
+    <label class="feld">Kurzer Hinweis (freiwillig)<input maxlength="300" placeholder="z. B. Schürze mitbringen" value="${esc(f.notiz)}" oninput="hlText('notiz', this)"></label>
+    <div class="knoepfe"><button class="knopf haupt" onclick="hilfeSenden(this)">📣 Aufruf senden</button><button class="knopf" onclick="HL.form=null;hlZeigen()">Abbrechen</button></div></div>`;
+}
+async function hilfeSenden(knopf) {
+  const f = HL.form;
+  if (!f.art) return melde("Bitte antippen, wobei geholfen werden soll.", true);
+  await einmal(knopf, async () => {
+    try {
+      const r = await api("hilfe_aufruf", { art: f.art, datum: f.datum, slot: f.slot || null, anzahl: f.anzahl, ort: f.ort || null, notiz: f.notiz || null, ziel: f.ziel });
+      HL.form = null; melde(r.empfaenger ? `📣 Aufruf gesendet – an ${r.empfaenger} ${r.empfaenger === 1 ? "Mitglied" : "Mitglieder"}` : "📣 Aufruf gespeichert – gerade ist niemand sonst online"); hlLaden();
+    } catch (e) { melde(e.message, true); }
+  });
+}
+function hilfeKarte(a) {
+  const d = HL.hilfe || {}, n = a.komme.length, voll = n >= a.anzahl;
+  return `<div class="karte hl-karte${a.offen ? "" : " vorbei"}">
+    <div class="hl-titel">${esc(d.arten?.[a.art] || a.art)}</div>
+    <div>🗓️ ${esc(hlTagLang(a.datum, a.slot, d.zeitfenster))}${a.ort ? ` · 📍 ${esc(a.ort)}` : ""}</div>
+    <div class="hinweis" style="font-size:.85rem">von ${esc(a.eigen ? "dir" : a.von.name)}${a.ziel === "online" ? " · an alle, die online waren" : ""}${a.geschlossen ? " · 🔒 geschlossen" : !a.offen ? " · vorbei" : ""}</div>
+    ${a.notiz ? `<p style="margin:6px 0 0;white-space:pre-wrap">${esc(a.notiz)}</p>` : ""}
+    <div class="hl-stand${voll ? " voll" : ""}"><b>✋ ${n} von ${a.anzahl}</b>${voll ? " – genug Helfer 🎉" : ""}${n ? `<br><small>${esc(a.komme.join(", "))}</small>` : ""}${a.kannNicht ? `<br><small class="hinweis">🙅 ${a.kannNicht} kann nicht</small>` : ""}</div>
+    ${a.offen && !a.eigen ? `<div class="hl-antwort"><button class="${a.meine === "komme" ? "an" : ""}" onclick="hilfeAntwort('${a.id}', '${a.meine === "komme" ? "" : "komme"}')">✋ Ich komme</button><button class="${a.meine === "kann_nicht" ? "an nein" : ""}" onclick="hilfeAntwort('${a.id}', '${a.meine === "kann_nicht" ? "" : "kann_nicht"}')">🙅 Kann nicht</button></div>` : ""}
+    ${a.darfSchliessen ? `<div class="knoepfe"><button class="knopf klein" onclick="hilfeSchliessen('${a.id}')">🔒 Aufruf schließen</button></div>` : ""}</div>`;
+}
+function hilfeListeHtml() {
+  const d = HL.hilfe; if (!d) return '<div class="karte hinweis">Wird geladen …</div>';
+  const offen = d.aufrufe.filter((a) => a.offen), alt = d.aufrufe.filter((a) => !a.offen);
+  return `<button class="knopf haupt hl-gross" onclick="hilfeNeu()">🙋 Ich suche Hilfe</button>
+    <div class="abschnitt"><h3>Offene Aufrufe</h3></div>${offen.map(hilfeKarte).join("") || '<div class="karte hinweis">Gerade sucht niemand Hilfe. Tippe oben, wenn du Unterstützung brauchst – z. B. beim Aufbau oder Einkauf.</div>'}
+    ${alt.length ? `<details class="karte"><summary><b>Vorbei / geschlossen (${alt.length})</b></summary>${alt.map(hilfeKarte).join("")}</details>` : ""}`;
+}
+async function hilfeAntwort(id, antwort) {
+  try { await api("hilfe_antwort", { id, antwort: antwort || null }); melde(antwort === "komme" ? "✋ Danke! Deine Zusage ist gespeichert" : antwort ? "Gespeichert – danke für die Rückmeldung" : "Zurückgenommen"); hlLaden(); }
+  catch (e) { melde(e.message, true); }
+}
+async function hilfeSchliessen(id) {
+  if (!confirm("Aufruf schließen? Danach kann niemand mehr zusagen.")) return;
+  try { await api("hilfe_schliessen", { id }); melde("🔒 Geschlossen"); hlLaden(); } catch (e) { melde(e.message, true); }
+}
+
+// ----- 📦 Ausleihen -----
+// frei im Zeitraum = Bestand − genehmigte/abgeholte Ausleihen, die sich mit dem Zeitraum überschneiden
+function leihFrei(id, von, bis) {
+  const d = HL.leihen, g = d?.gegenstaende.find((x) => x.id === id); if (!g) return { frei: 0, angefragt: 0 };
+  let belegt = 0, angefragt = 0;
+  for (const b of d.belegungen || []) if (b.von <= bis && b.bis >= von) for (const p of b.positionen) if (p.id === id) { if (b.belegt) belegt += p.anzahl; else angefragt += p.anzahl; }
+  return { frei: Math.max(0, g.anzahl - belegt), angefragt };
+}
+function leihNeu() { HL.form = { menge: {}, abholung: hlTag(1), abholung_slot: "", rueckgabe: hlTag(2), rueckgabe_slot: "", zweck: "", notiz: "" }; hlZeigen(); window.scrollTo(0, 0); }
+function leihMenge(id, d) {
+  const f = HL.form, fr = leihFrei(id, f.abholung, f.rueckgabe).frei;
+  f.menge[id] = Math.max(0, Math.min(fr, (f.menge[id] || 0) + d)); hlZeigen();
+}
+function leihFormHtml() {
+  const f = HL.form, d = HL.leihen;
+  // Zeitraum geändert → nichts über „frei“ hinaus
+  for (const id of Object.keys(f.menge)) f.menge[id] = Math.min(f.menge[id], leihFrei(id, f.abholung, f.rueckgabe).frei);
+  const aktiv = d.gegenstaende.filter((g) => g.aktiv);
+  const kacheln = aktiv.map((g) => {
+    const { frei, angefragt } = leihFrei(g.id, f.abholung, f.rueckgabe), n = f.menge[g.id] || 0;
+    return `<div class="hl-ding${n ? " an" : ""}${frei ? "" : " leer"}"><div class="hl-sym">${esc(g.sym)}</div><div class="hl-name">${esc(g.name)}</div>
+      <div class="hl-frei">${frei ? `${frei} von ${g.anzahl} frei` : "im Zeitraum vergeben"}${angefragt ? ` · ${angefragt} angefragt` : ""}</div>
+      ${hlStepper(n, 0, frei, `leihMenge('${g.id}', -1)`, `leihMenge('${g.id}', 1)`)}</div>`;
+  }).join("");
+  const tage = (() => { const a = new Date(f.abholung + "T12:00:00Z"), b = new Date(f.rueckgabe + "T12:00:00Z"); return Math.round((b - a) / 86400000); })();
+  const rueck = [0, 1, 2, 3, 7].map((n) => ({ w: tagPlus(f.abholung, n), t: n === 0 ? "Gleicher Tag" : n === 7 ? "1 Woche später" : `${hlTagName(tagPlus(f.abholung, n))} (+${n})` }));
+  const summe = aktiv.filter((g) => f.menge[g.id]).map((g) => `${f.menge[g.id]} × ${g.sym} ${g.name}`);
+  return `<div class="karte hl-form"><h3 style="margin:0 0 6px">📦 Anfrage Ausleihe</h3>
+    <div class="hl-frage">Was möchtest du ausleihen?</div><div class="hl-dinge">${kacheln || '<p class="hinweis">Noch keine Gegenstände eingetragen.</p>'}</div>
+    <div class="hl-frage">Abholung</div>${hlTageWahl("abholung", f.abholung)}${hlChips("abholung_slot", hlSlots(d.zeitfenster, true), f.abholung_slot)}
+    <div class="hl-frage">Rückgabe</div>${hlChips("rueckgabe", rueck, f.rueckgabe)}
+    <label class="hl-kal${rueck.some((r) => r.w === f.rueckgabe) ? "" : " an"}">📅 ${rueck.some((r) => r.w === f.rueckgabe) ? "Anderer Tag" : esc(hlTagName(f.rueckgabe))}<input type="date" min="${f.abholung}" max="${tagPlus(f.abholung, d.maxTage || 30)}" value="${f.rueckgabe}" onchange="this.value && hlSetze('rueckgabe', this.value)"></label>
+    ${hlChips("rueckgabe_slot", hlSlots(d.zeitfenster, true), f.rueckgabe_slot)}
+    <div class="hl-frage">Wofür? <small class="hinweis">(freiwillig)</small></div>${hlChips("zweck", [{ w: "", t: "– ohne –" }, ...Object.entries(d.zwecke || {}).map(([w, t]) => ({ w, t }))], f.zweck)}
+    <label class="feld">Notiz (freiwillig)<input maxlength="500" placeholder="z. B. hole mit dem Anhänger ab" value="${esc(f.notiz)}" oninput="hlText('notiz', this)"></label>
+    <div class="hl-summe">${summe.length ? `<b>${summe.map(esc).join(" · ")}</b><br>${esc(hlTagLang(f.abholung, f.abholung_slot, d.zeitfenster))} → ${esc(hlTagLang(f.rueckgabe, f.rueckgabe_slot, d.zeitfenster))} (${tage ? tage + (tage === 1 ? " Tag" : " Tage") : "gleicher Tag"})` : "Noch nichts ausgewählt – tippe bei den Gegenständen auf ＋"}</div>
+    <p class="hinweis" style="font-size:.85rem;margin:6px 0 0">Die Anfrage geht an Clubsprecher, Kassenwart und Admin – eine Zusage genügt. Sie wird im Vereinsarchiv und in deinem Ordner (Register „Ausleihe“) abgelegt.</p>
+    <div class="knoepfe"><button class="knopf haupt" ${summe.length ? "" : "disabled"} onclick="leihSenden(this)">📨 Anfrage senden</button><button class="knopf" onclick="HL.form=null;hlZeigen()">Abbrechen</button></div></div>`;
+}
+async function leihSenden(knopf) {
+  const f = HL.form, positionen = Object.entries(f.menge).filter(([, n]) => n > 0).map(([id, anzahl]) => ({ id, anzahl }));
+  if (!positionen.length) return melde("Bitte mindestens einen Gegenstand auswählen.", true);
+  await einmal(knopf, async () => {
+    try {
+      const r = await api("leihen_anfrage", { positionen, abholung: f.abholung, abholung_slot: f.abholung_slot || null, rueckgabe: f.rueckgabe, rueckgabe_slot: f.rueckgabe_slot || null, zweck: f.zweck || null, notiz: f.notiz || null });
+      HL.form = null;
+      const ab = r.abgelegt ? (r.abgelegt.verein && r.abgelegt.persoenlich ? " · im Archiv abgelegt" : " · Archiv-Ablage teilweise nicht geklappt") : "";
+      melde(`📨 Anfrage gesendet${r.versand?.gesendet ? ` – ${r.versand.gesendet} Meldung(en) an die Clubleitung` : ""}${ab}`); hlLaden();
+    } catch (e) { melde(e.message, true); if (e.message.includes("frei")) hlLaden(); }
+  });
+}
+function leihKarte(a, leitung) {
+  const d = HL.leihen, st = d.status?.[a.status] || a.status;
+  const farbe = a.status === "genehmigt" || a.status === "zurueck" ? "gruen" : a.status === "abgelehnt" || a.status === "storniert" ? "rot" : a.status === "angefragt" ? "gelb" : "";
+  const kn = [];
+  if (leitung && a.status === "angefragt" && !a.eigen) kn.push(`<button class="knopf klein haupt" onclick="leihEntscheiden('${a.id}','genehmigt', this)">✅ Genehmigen</button>`, `<button class="knopf klein" onclick="leihAblehnen('${a.id}')">❌ Ablehnen</button>`);
+  if (leitung && a.status === "genehmigt") kn.push(`<button class="knopf klein" onclick="leihStatus('${a.id}','abgeholt')">📦 Abgeholt</button>`);
+  if (leitung && (a.status === "genehmigt" || a.status === "abgeholt")) kn.push(`<button class="knopf klein" onclick="leihStatus('${a.id}','zurueck')">↩️ Zurück</button>`);
+  if ((a.eigen || leitung) && (a.status === "angefragt" || a.status === "genehmigt")) kn.push(`<button class="knopf klein" onclick="leihStatus('${a.id}','storniert')">🚫 Stornieren</button>`);
+  return `<div class="karte hl-karte"><span class="marke ${farbe}">${esc(st)}</span>${leitung ? ` <b>${esc(a.eigen ? "Du" : a.wer)}</b>` : ""}
+    <div class="hl-titel" style="margin-top:6px">${a.positionen.map((p) => `${p.anzahl} × ${esc(p.sym || "📦")} ${esc(p.name)}`).join(" · ")}</div>
+    <div>📤 ${esc(hlTagLang(a.abholung, a.abholung_slot, d.zeitfenster))}</div><div>📥 ${esc(hlTagLang(a.rueckgabe, a.rueckgabe_slot, d.zeitfenster))}</div>
+    ${a.zweck ? `<div class="hinweis">${esc(d.zwecke?.[a.zweck] || a.zweck)}</div>` : ""}${a.notiz ? `<p style="margin:6px 0 0;white-space:pre-wrap">${esc(a.notiz)}</p>` : ""}
+    ${a.entschieden_von ? `<div class="hinweis" style="font-size:.85rem">entschieden von ${esc(a.entschieden_von)}${a.grund ? ` – „${esc(a.grund)}“` : ""}</div>` : ""}
+    ${leitung && a.status === "angefragt" && a.eigen ? '<div class="hinweis" style="font-size:.85rem">Über deine eigene Anfrage entscheidet jemand anderes aus der Clubleitung.</div>' : ""}
+    ${kn.length ? `<div class="knoepfe">${kn.join("")}</div>` : ""}</div>`;
+}
+function leihListeHtml() {
+  const d = HL.leihen; if (!d) return '<div class="karte hinweis">Wird geladen …</div>';
+  const meine = d.ausleihen.filter((a) => a.eigen).sort((a, b) => b.erstellt_am.localeCompare(a.erstellt_am));
+  let html = `<button class="knopf haupt hl-gross" onclick="leihNeu()">📦 Etwas ausleihen</button>`;
+  if (d.darfEntscheiden) {
+    const anfr = d.ausleihen.filter((a) => a.status === "angefragt").sort((a, b) => a.abholung.localeCompare(b.abholung));
+    const lauf = d.ausleihen.filter((a) => a.status === "genehmigt" || a.status === "abgeholt").sort((a, b) => a.abholung.localeCompare(b.abholung));
+    const fertig = d.ausleihen.filter((a) => !["angefragt", "genehmigt", "abgeholt"].includes(a.status)).sort((a, b) => b.erstellt_am.localeCompare(a.erstellt_am)).slice(0, 20);
+    html += `<div class="abschnitt"><h3>📨 Offene Anfragen${anfr.length ? ` (${anfr.length})` : ""}</h3></div>${anfr.map((a) => leihKarte(a, true)).join("") || '<div class="karte hinweis">Keine offenen Anfragen.</div>'}
+      <div class="abschnitt"><h3>📦 Verliehen / zugesagt</h3></div>${lauf.map((a) => leihKarte(a, true)).join("") || '<div class="karte hinweis">Gerade ist nichts verliehen.</div>'}
+      ${fertig.length ? `<details class="karte"><summary><b>Erledigt (${fertig.length})</b></summary>${fertig.map((a) => leihKarte(a, true)).join("")}</details>` : ""}
+      <button class="knopf" style="width:100%;margin-top:10px" onclick="HL.edit=true;hlZeigen()">⚙️ Gegenstände & Anzahl pflegen</button>`;
+  } else {
+    html += `<div class="abschnitt"><h3>Meine Ausleihen</h3></div>${meine.map((a) => leihKarte(a, false)).join("") || '<div class="karte hinweis">Du hast noch nichts ausgeliehen.</div>'}`;
+  }
+  html += `<div class="abschnitt"><h3>Das kann man ausleihen</h3></div><div class="karte hl-bestand">${d.gegenstaende.filter((g) => g.aktiv).map((g) => `<span>${esc(g.sym)} ${esc(g.name)} <b>${g.anzahl}</b></span>`).join("")}</div>`;
+  return html;
+}
+async function leihEntscheiden(id, wahl, knopf, grund) {
+  await einmal(knopf, async () => {
+    try {
+      const r = await api("leihen_entscheiden", { id, wahl, grund: grund || null });
+      document.getElementById("leihNein")?.remove();
+      melde(`${wahl === "genehmigt" ? "✅ Genehmigt" : "❌ Abgelehnt"} – ${r.versand?.gesendet ? "Mitglied benachrichtigt" : "gespeichert"}${r.abgelegt?.verein ? " · im Archiv abgelegt" : ""}`); hlLaden();
+    } catch (e) { melde(e.message, true); hlLaden(); }
+  });
+}
+const LEIH_GRUENDE = ["Im Zeitraum schon verliehen", "Wird selbst gebraucht", "Termin passt nicht – bitte melden", "Nicht für diesen Zweck"];
+function leihAblehnen(id) {
+  blattAuf("leihNein", `<h3 style="margin-top:0">❌ Ablehnen – warum?</h3><div class="wahl">${LEIH_GRUENDE.map((g) => `<button onclick='leihEntscheiden("${id}", "abgelehnt", this, ${hlJs(g)})'>${esc(g)}</button>`).join("")}
+    <button onclick="leihEntscheiden('${id}', 'abgelehnt', this, null)">Ohne Begründung</button></div>
+    <div class="knoepfe"><button class="knopf" onclick="$('leihNein').remove()">Abbrechen</button></div>`);
+}
+async function leihStatus(id, status) {
+  const frage = { storniert: "Ausleihe stornieren?", abgeholt: "Als abgeholt markieren?", zurueck: "Alles zurückgegeben?" }[status];
+  if (!confirm(frage)) return;
+  try { await api("leihen_status", { id, status }); melde({ storniert: "🚫 Storniert", abgeholt: "📦 Abgeholt", zurueck: "↩️ Zurückgegeben – danke!" }[status]); hlLaden(); }
+  catch (e) { melde(e.message, true); }
+}
+// Clubleitung: Bestand pflegen (Anzahl ＋/－, aus-/einblenden, neuer Gegenstand per Symbol-Kachel)
+const LEIH_SYMBOLE = ["📦", "🪑", "🍻", "⛺", "🍺", "🍷", "❄️", "🔥", "🍲", "🔌", "🍽️", "🥘", "🔊", "💡", "🧯", "🧺"];
+let leihNeuSym = "📦";
+function leihEditHtml() {
+  const d = HL.leihen;
+  return `<div class="karte hl-form"><h3 style="margin:0 0 6px">⚙️ Gegenstände & Anzahl</h3>
+    ${d.gegenstaende.map((g) => `<div class="hl-editzeile${g.aktiv ? "" : " aus"}"><span class="hl-sym">${esc(g.sym)}</span><span class="hl-name">${esc(g.name)}</span>
+      ${hlStepper(g.anzahl, 0, 999, `leihBestand('${g.id}', -1)`, `leihBestand('${g.id}', 1)`)}
+      <button class="knopf klein" title="${g.aktiv ? "ausblenden" : "einblenden"}" onclick="leihAktiv('${g.id}')">${g.aktiv ? "👁️" : "🙈"}</button></div>`).join("")}
+    <div class="hl-frage">＋ Neuer Gegenstand</div>
+    <div class="hl-chips">${LEIH_SYMBOLE.map((s) => `<button class="chip${s === leihNeuSym ? " an" : ""}" onclick="leihNeuSym='${s}';hlZeigen()">${s}</button>`).join("")}</div>
+    <div class="zwei"><label class="feld">Name<input id="leihNeuName" maxlength="60" placeholder="z. B. Gasbrenner"></label><label class="feld">Anzahl<input id="leihNeuAnzahl" type="number" min="1" max="999" value="1"></label></div>
+    <div class="knoepfe"><button class="knopf haupt" onclick="leihGegenstandNeu(this)">＋ Hinzufügen</button><button class="knopf" onclick="HL.edit=false;hlZeigen()">Fertig</button></div>
+    <p class="hinweis" style="font-size:.85rem">🙈 Ausgeblendete Gegenstände kann niemand mehr anfragen; alte Anfragen bleiben lesbar.</p></div>`;
+}
+async function leihGegenstandSpeichern(g, aenderung) {
+  try { await api("leihen_gegenstand", { id: g.id, name: g.name, sym: g.sym, anzahl: g.anzahl, aktiv: g.aktiv, ...aenderung }); Object.assign(g, aenderung); hlZeigen(); }
+  catch (e) { melde(e.message, true); }
+}
+function leihBestand(id, d) { const g = HL.leihen.gegenstaende.find((x) => x.id === id); if (g) leihGegenstandSpeichern(g, { anzahl: Math.max(0, Math.min(999, g.anzahl + d)) }); }
+function leihAktiv(id) { const g = HL.leihen.gegenstaende.find((x) => x.id === id); if (g) leihGegenstandSpeichern(g, { aktiv: !g.aktiv }); }
+async function leihGegenstandNeu(knopf) {
+  const name = $("leihNeuName").value.trim(), anzahl = Number($("leihNeuAnzahl").value);
+  if (!name) return melde("Bitte einen Namen eingeben.", true);
+  await einmal(knopf, async () => {
+    try { await api("leihen_gegenstand", { name, sym: leihNeuSym, anzahl }); melde("＋ " + name + " hinzugefügt"); HL.leihen = await api("leihen_liste"); hlZeigen(); }
+    catch (e) { melde(e.message, true); }
   });
 }
 
@@ -9630,7 +9950,7 @@ async function fpAdmin(tage) {
     else if (h === "#pinnwand") zeige("pinnwand");
     else if (h === "#standort") zeige("standort");
     else if (h === "#dienstwunsch") dwOeffnen();
-    else if (["#termine", "#vorschlaege", "#aktionen", "#fotos", "#protokolle", "#dienste", "#nachrichten", "#mitglieder", "#einstellungen", "#archiv"].includes(h)) zeige(h.slice(1));
+    else if (["#termine", "#vorschlaege", "#aktionen", "#fotos", "#protokolle", "#dienste", "#nachrichten", "#mitglieder", "#einstellungen", "#archiv", "#helfen"].includes(h)) zeige(h.slice(1));
   });
   updatePruefen(false);
   setTimeout(stStart, 2500); // KC-CLUB-STANDORT
