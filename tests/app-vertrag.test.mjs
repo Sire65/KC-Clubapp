@@ -1572,7 +1572,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/<div class="na-seite"><button class="na-pfeil"[^>]*onclick="naPfeilMenue\('\$\{m\.id\}'\)"/.test(html) && /class="na-info"[^>]*onclick="nachrichtInfo\('\$\{m\.id\}'\)">i<\/button>/.test(html), "Pfeil und i neben jeder Nachricht");
   const pm = html.slice(html.indexOf("function naPfeilMenue"), html.indexOf("// KC-CLUB-KOPIEREN (1.8.2"));
   assert.ok(/weiterleitenBlatt\('\$\{id\}'\)/.test(pm) && /naKopieren\('\$\{id\}'\)/.test(pm), "Pfeil-Menü: Weiterleiten + Kopieren (vorhandene Funktionen)");
-  assert.ok(/\.na-seite \.na-info \{ background: #1e88e5/.test(html), "i ist blau");
+  assert.ok(/\.na-seite \.na-info \{ background: #(1e88e5|1565c0)/.test(html), "i ist blau"); // 1.22.2: dunkleres Blau für Kontrast
 }
 
 // 138. 1.9.0: Bearbeiten, Stummschalten, Suche im Chat
@@ -1865,6 +1865,13 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/await sicherheitAblegen\(ich,[\s\S]{0,200}\.catch\(\(e\) => \{ console\.error\("sicherheit ablegen"/.test(f), "Ablage stoppt die Meldung nicht");
   assert.ok(/const ADMIN_ORDNER = \{ art: "sonstiges", titel: "Admin", farbe: 8, register: \["Sicherheitscheck", "Sonstiges"\] \}/.test(server) && /nur_vorstand: true, erstellt_von: admin/.test(server), "Ordner Admin (nur Clubleitung)");
   assert.ok(/register: "Sicherheitscheck",/.test(server) && /dateiAblegen\(ich, name, "text\/plain", btoa\(b\), ARCHIV_DATEITYPEN\)/.test(server), "Register + Textdatei");
+}
+
+// 165. 1.22.2: Kontrast – Nacht-Design lesbar (KC-CLUB-KONTRAST)
+{
+  assert.ok(/:root\.dunkel \.sos-nr\.haupt \{ background: #4a1f22; color: #fff2ef; \}/.test(html), "SOS 112/110 nachts dunkel mit heller Schrift");
+  assert.ok(/--textRot: #741521; --textGruen: #17663a; --textOrange: #8a5200; --textNotruf: #c0392b;/.test(html) && /:root\.dunkel \{ --textRot: #ff9fae; --textGruen: #7bd88f; --textOrange: #ffbe5c; --textNotruf: #ff8a7a;/.test(html), "zentrale Schriftfarben Tag/Nacht");
+  assert.ok(/:root\.dunkel \.umschalter button\.an, :root\.dunkel \.fuss-leiste button\.an[^{]*\{ color: var\(--textRot\);/.test(html), "gewählte Reiter nachts hell");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

@@ -99,13 +99,15 @@
 <style>
   :root {
     --rot: #741521; --rot2: #9b2536; --rot3: #c0485a; --gold: #c9a46a;
-    --bg: #f5eee3; --karte: #ffffff; --karte2: #efe5d6; --text: #2b1a1c; --grau: #7b6b66; --linie: #e4d7c4;
+    /* KC-CLUB-KONTRAST (1.22.2): Schriftfarben für Akzente – im Nacht-Design hell genug (WCAG ≥ 4,5:1 auf dunklen Karten) */
+    --textRot: #741521; --textGruen: #17663a; --textOrange: #8a5200; --textNotruf: #c0392b;
+    --bg: #f5eee3; --karte: #ffffff; --karte2: #efe5d6; --text: #2b1a1c; --grau: #6b5c57; --linie: #e4d7c4;
     --gruen: #2e7d4f; --gruenbg: #e3f2e8; --gelb: #9a6b00; --gelbbg: #fbf0d6; --rotbg: #fbe3e3; --schatten: 0 6px 18px rgba(80, 30, 20, .10);
     --radius: 18px; --fs: 16px;
     --hero1: #4d0c16; --hero4: #b5705a; --heroschatten: rgba(116, 21, 33, .35);
     --blau: #1f5f99; --blaubg: #e3edf7; --lila: #7b3fa0; --lilabg: #f1e6f7; --tuerkis: #0e7c86; --tuerkisbg: #dcf1f3;
   }
-  :root.dunkel { --bg: #1b1415; --karte: #2a2021; --karte2: #33282a; --text: #f4e9e4; --grau: #b9a8a3; --linie: #45393a; --gruenbg: #1f3a2a; --gelbbg: #3a2f17; --rotbg: #4a2126; --schatten: 0 6px 18px rgba(0,0,0,.35); --blau: #8cbbe8; --blaubg: #1d2c3d; --lila: #cfa3e8; --lilabg: #33203d; --tuerkis: #6fd0d8; --tuerkisbg: #173338; }
+  :root.dunkel { --textRot: #ff9fae; --textGruen: #7bd88f; --textOrange: #ffbe5c; --textNotruf: #ff8a7a; --bg: #1b1415; --karte: #2a2021; --karte2: #33282a; --text: #f4e9e4; --grau: #b9a8a3; --linie: #45393a; --gruenbg: #1f3a2a; --gelbbg: #3a2f17; --rotbg: #4a2126; --schatten: 0 6px 18px rgba(0,0,0,.35); --blau: #8cbbe8; --blaubg: #1d2c3d; --lila: #cfa3e8; --lilabg: #33203d; --tuerkis: #6fd0d8; --tuerkisbg: #173338; }
   /* Kalender (KC-CLUB-KALENDER) */
   .umschalter { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: var(--karte2); padding: 5px; border-radius: 16px; margin: 4px 0 12px; }
   .umschalter button { border: none; border-radius: 12px; padding: 10px; font-weight: 800; background: none; cursor: pointer; }
@@ -132,9 +134,9 @@
   .zettelpunkt { width: 16px; height: 16px; border-radius: 3px; flex: none; box-shadow: 1px 1px 2px rgba(0,0,0,.3); }
   .zettelpunkt.f1 { background: #fff27a; } .zettelpunkt.f2 { background: #ffb8d1; } .zettelpunkt.f3 { background: #c6f2a2; } .zettelpunkt.f4 { background: #aeddf7; }
   .zettel.wichtig::before { background: radial-gradient(circle at 35% 35%, #ffb3b3, #d50000 60%, #7f0000); width: 18px; height: 18px; margin-left: -9px; }
-  .zettel .zwichtig { position: absolute; top: 4px; right: 6px; font-size: .7rem; font-weight: 900; color: #b71c1c; }
+  .zettel .zwichtig { position: absolute; top: 4px; right: 6px; font-size: .7rem; font-weight: 900; color: #8e0f0f; }
   .zettel .ztext { white-space: pre-wrap; font-weight: 700; }
-  .zettel .zfuss { margin-top: 8px; font-size: .74rem; color: #6b5a1e; }
+  .zettel .zfuss { margin-top: 8px; font-size: .74rem; color: #4a3d10; }
   .zettel .zknoepfe { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
   .zettel .zknoepfe button { border: 1px solid rgba(0,0,0,.25); background: rgba(255,255,255,.55); color: #2b2410; border-radius: 10px; padding: 5px 9px; font-weight: 800; font-size: .8rem; cursor: pointer; }
   .zettel .zknoepfe button.erl { background: #2e7d4f; color: #fff; border-color: #2e7d4f; }
@@ -142,7 +144,7 @@
   .zettel details { margin-top: 6px; font-size: .78rem; } .zettel summary { cursor: pointer; font-weight: 800; }
   .zaehler200 { text-align: right; font-size: .85rem; font-weight: 800; color: var(--grau); margin-top: 4px; } .zaehler200.knapp { color: #b26a00; } .zaehler200.voll { color: #c62828; }
   /* Nachts: Akzent als Schrift auf dunklem Grund in der helleren Variante, damit er lesbar bleibt */
-  :root.dunkel .umschalter button.an, :root.dunkel .fuss-leiste button.an, :root.dunkel details.karte .pfeil, :root.dunkel .kalnav .pf { color: var(--rot3); }
+  :root.dunkel .umschalter button.an, :root.dunkel .fuss-leiste button.an, :root.dunkel details.karte .pfeil, :root.dunkel .kalnav .pf { color: var(--textRot); }
   .tuer { display: block; width: 100%; margin: 14px 0 4px; padding: 14px; border-radius: 16px; border: 2px solid var(--linie); background: var(--karte); color: var(--text); font-weight: 800; font-size: 1rem; cursor: pointer; }
   .umschalter button.an { background: var(--karte); box-shadow: var(--schatten); color: var(--rot); }
   .kalnav { display: flex; align-items: center; gap: 6px; }
@@ -196,14 +198,14 @@
   .titel { font-size: 1.35rem; font-weight: 800; line-height: 1.15; }
   /* KC-CLUB-STATUSFARBE (0.34.1): jeder Status hat seine Farbe (grün verfügbar, orange beschäftigt, blau Urlaub, lila krank, rot nicht erreichbar) */
   .stmarke { display: inline-block; border-radius: 999px; padding: 2px 9px; font-weight: 800; border: 1.5px solid transparent; }
-  .st-verfuegbar { background: var(--gruenbg); color: var(--gruen); border-color: var(--gruen); }
+  .st-verfuegbar { background: var(--gruenbg); color: var(--textGruen); border-color: var(--gruen); }
   .st-beschaeftigt { background: var(--gelbbg); color: var(--gelb); border-color: #e08a1e; }
   .st-urlaub { background: var(--blaubg); color: var(--blau); border-color: var(--blau); }
   .st-krank { background: var(--lilabg); color: var(--lila); border-color: var(--lila); }
   .st-abwesend { background: var(--rotbg); color: #c62828; border-color: #c62828; }
   .knopf.stmarke { padding: 8px 12px; }
   .statuschip { margin-top: 6px; border: none; border-radius: 12px; padding: 4px 10px; background: rgba(255,255,255,.18); color: #fff; font-weight: 700; font-size: .82rem; cursor: pointer; }
-  .statuschip.st-verfuegbar { background: var(--gruenbg); color: var(--gruen); } .statuschip.st-beschaeftigt { background: var(--gelbbg); color: var(--gelb); }
+  .statuschip.st-verfuegbar { background: var(--gruenbg); color: var(--textGruen); } .statuschip.st-beschaeftigt { background: var(--gelbbg); color: var(--gelb); }
   .statuschip.st-urlaub { background: var(--blaubg); color: var(--blau); } .statuschip.st-krank { background: var(--lilabg); color: var(--lila); } .statuschip.st-abwesend { background: var(--rotbg); color: #c62828; }
   .rund { width: 48px; height: 48px; border-radius: 50%; border: none; background: rgba(255,255,255,.16); color: #fff; font-size: 1.15rem; cursor: pointer; flex: none; }
   #modusKnopf { position: relative; }
@@ -346,7 +348,7 @@
   .blase:not(.eigen) .na-seite { right: -40px; } .blase.eigen .na-seite { left: -40px; }
   .na-seite button { width: 30px; height: 30px; border-radius: 50%; border: none; padding: 0; display: grid; place-items: center; cursor: pointer; box-shadow: var(--schatten); }
   .na-seite .na-pfeil { background: var(--karte); color: var(--grau); } .na-seite .na-pfeil svg { width: 17px; height: 17px; fill: currentColor; }
-  .na-seite .na-info { background: #1e88e5; color: #fff; font: italic 700 15px/1 Georgia, serif; }
+  .na-seite .na-info { background: #1565c0; color: #fff; font: italic 700 15px/1 Georgia, serif; }
   .blase.wischt .na-seite { display: none; }
   /* KC-CLUB-BEARBEITEN / KC-CLUB-CHATSUCHE (1.9.0) */
   .fuss .bearb { font-style: italic; opacity: .8; margin-right: 4px; }
@@ -398,7 +400,11 @@
   #sosSuche { width: 100%; box-sizing: border-box; padding: 11px 12px; border-radius: 12px; border: 1px solid var(--linie); font-size: 1rem; background: var(--karte); color: inherit; margin-bottom: 8px; }
   .sos-nummern { display: grid; gap: 8px; margin: 10px 0; }
   .sos-nr { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; border: 2px solid #c0392b; border-radius: var(--radius); background: var(--karte); padding: 10px 12px; cursor: pointer; color: inherit; }
-  .sos-nr.haupt { background: #fdecea; } .sos-nr .sym { font-size: 1.6rem; } .sos-nr .ruf { margin-left: auto; font-size: 1.4rem; }
+  .sos-nr.haupt { background: #fdecea; color: #2b1a1c; } .sos-nr.haupt .txt small { color: #6b4a45; }
+  /* KC-CLUB-KONTRAST (1.22.2, Hinweis Hansi „kein guter Kontrast in Nachtsicht“): 112/110 im Nacht-Design dunkelrot statt hellrosa */
+  :root.dunkel .sos-nr.haupt { background: #4a1f22; color: #fff2ef; } :root.dunkel .sos-nr.haupt .txt b { color: #ff9b8f; } :root.dunkel .sos-nr.haupt .txt small { color: #f0c9c3; }
+  :root.dunkel .sos-nr .txt b { color: #ff8a7a; }
+  .sos-nr .sym { font-size: 1.6rem; } .sos-nr .ruf { margin-left: auto; font-size: 1.4rem; }
   .sos-nr .txt { display: flex; flex-direction: column; } .sos-nr .txt b { font-size: 1.25rem; color: #c0392b; } .sos-nr .txt small { color: var(--grau); }
   .sos-mitglied { border-bottom: 1px solid var(--linie); } .sos-mitglied:last-child { border-bottom: none; }
   .sos-name { display: flex; align-items: center; gap: 8px; width: 100%; background: none; border: none; padding: 10px 2px; text-align: left; cursor: pointer; color: inherit; font-size: 1rem; }
@@ -407,7 +413,7 @@
   .sos-nf { margin-top: 8px; padding: 8px; border-radius: 10px; background: #fdecea; }
   .sos-wo-adr { font-size: 1.25rem; font-weight: 700; margin: 6px 0 2px; } .sos-wo-koord { font-family: ui-monospace, monospace; font-size: 1.05rem; }
   .nfp-pass { border: 3px solid #c0392b; border-radius: var(--radius); padding: 12px; background: var(--karte); }
-  .nfp-pass h3 { margin: 0 0 8px; color: #c0392b; } .nfp-zeile { padding: 6px 0; border-bottom: 1px solid var(--linie); } .nfp-zeile:last-child { border-bottom: none; }
+  .nfp-pass h3 { margin: 0 0 8px; color: var(--textNotruf); } .nfp-zeile { padding: 6px 0; border-bottom: 1px solid var(--linie); } .nfp-zeile:last-child { border-bottom: none; }
   .nfp-zeile small { display: block; color: var(--grau); } .nfp-zeile b { font-size: 1.15rem; white-space: pre-wrap; }
   #nfpForm textarea { min-height: 54px; }
   .tdt-kopf { font-size: .8rem; font-weight: 800; color: var(--gold); text-transform: uppercase; letter-spacing: .05em; }
@@ -584,7 +590,7 @@
   .unterh .mitte div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .punkt { background: var(--rot); color: #fff; border-radius: 12px; padding: 2px 9px; font-weight: 800; font-size: .85rem; }
   /* KC-CLUB-TIPPT (0.54.0): „schreibt …“ mit drei hüpfenden Punkten */
-  .tippt { display: block; font-size: .88rem; color: var(--gruen, #2e7d4f); font-style: italic; padding: 2px 6px 4px; }
+  .tippt { display: block; font-size: .88rem; color: var(--textGruen, #2e7d4f); font-style: italic; padding: 2px 6px 4px; }
   .entwurf { margin: 4px 0 0; padding: 6px 10px; border-radius: 12px; background: var(--karte); color: var(--text); box-shadow: var(--schatten); font-size: .9rem; font-style: italic; word-wrap: break-word; max-height: 4.6em; overflow: hidden; }
   /* KC-CLUB-PINNWAND-DIREKT (0.58.0): neuer Zettel geht als Post-it-Fenster auf */
   .pwfenster-zettel { display: grid; gap: 22px; padding: 18px 10px 8px; }
@@ -646,7 +652,7 @@
   .eingabe .innen > #text { grid-row: 1; grid-column: 1 / 6; min-height: 56px; max-height: 40vh; font-size: 1.12rem; line-height: 1.35; padding: 14px 16px; border-radius: 20px; }
   .eingabe .innen > #sendenKnopf { grid-row: 1; grid-column: 6; width: 52px; height: 52px; font-size: 1.3rem; }
   .eingabe .innen > .rund:not(#sendenKnopf) { grid-row: 2; width: 40px !important; height: 40px !important; font-size: 1.05rem !important; }
-  .eingabe .innen > .wa-knopf { background: #25d366 !important; color: #fff; font-weight: 900; font-size: .95rem !important; letter-spacing: .02em; }
+  .eingabe .innen > .wa-knopf { background: #0f7a3f !important; color: #fff; font-weight: 900; font-size: .95rem !important; letter-spacing: .02em; }
   .eingabe-entwurf { font-size: .8rem; color: var(--gelb, #d68910); font-weight: 700; margin: 0 6px 2px; }
   .entwurf-marke { color: #d35400; font-weight: 800; }
   .anhaengen { display: grid; gap: 8px; }
@@ -778,7 +784,7 @@
   /* KC-CLUB-KREISE (0.60.0): ganzer Namenskreis farbig nach Zustand (Registry KREIS_ARTEN) */
   .avatar.k-neutral { background: #8d6e63; }
   .avatar.k-online { background: #1e8449; } .avatar.k-heute { background: #2471a3; } .avatar.k-weg { background: #d68910; }
-  .avatar.k-fehler { background: #c0392b; } .avatar.k-selten { background: #95a5a6; }
+  .avatar.k-fehler { background: #c0392b; } .avatar.k-selten { background: #5f6b6d; }
   .avatar.k-unbekannt { background: transparent; color: var(--grau); border: 2px dashed #95a5a6; }
   /* KC-CLUB-ANSICHT (0.62.0): einfache Ansicht – große Kacheln, nur das Wichtigste; nichts wird gelöscht, nur ausgeblendet */
   body.einfach #register, body.einfach .wischhinweis, body.einfach #kaAusHinweis, body.einfach #kachelLeiste,
@@ -842,7 +848,7 @@
   .ss-wahl { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 8px 0; }
   .ss-wahl button { position: relative; border: 2px solid var(--linie); border-radius: 12px; background: var(--karte); color: inherit; padding: 8px 2px; cursor: pointer; font-size: .75rem; }
   .ss-wahl button span { display: block; font-size: 1.5rem; } .ss-wahl button.an { border-color: var(--rot); }
-  .ss-wahl button i { position: absolute; top: 2px; right: 5px; font-style: normal; font-weight: 700; color: var(--rot); }
+  .ss-wahl button i { position: absolute; top: 2px; right: 5px; font-style: normal; font-weight: 700; color: var(--textRot); }
   .neuigkeiten { max-height: 88vh; overflow-y: auto; } .blatt-innen.neuigkeiten .knopf { text-align: center; }
   .neuigkeiten ul { margin: 4px 0 10px; padding-left: 20px; } .neuigkeiten li { margin: 4px 0; }
   .neuigkeiten .vkopf { font-weight: 900; color: var(--rot); margin-top: 6px; }
@@ -1050,7 +1056,7 @@
   .fbd-links a, .fbd-links button { color: #fff; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.25); border-radius: 10px; padding: 5px 10px; font: inherit; font-size: .88rem; text-decoration: none; cursor: pointer; }
   #fbBild { cursor: zoom-in; }
   /* KC-CLUB-PINNWAND-KNOPF (0.91.0): Zettel-Stand als kleine Zahl im Knopf, nicht statt des Knopfes */
-  #pwNeuKnopf .pwStand { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: rgba(255,255,255,.22); font-size: .78em; font-weight: 800; vertical-align: 1px; }
+  #pwNeuKnopf .pwStand { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: rgba(0,0,0,.32); font-size: .78em; font-weight: 800; vertical-align: 1px; } /* 1.22.2: dunkler Grund – in allen Designs lesbar */
   #pwNeuKnopf .pwStand.voll { background: #f6c343; color: #3b2a00; }
   .pwVollZeile { margin: 0 0 10px; border: 2px solid #d68910; border-radius: 10px; padding: 8px 10px; }
   /* KC-CLUB-TERMINANFRAGE / KC-CLUB-STANDORT (0.92.0) */
@@ -1816,7 +1822,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.22.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.22.2"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -1856,20 +1862,20 @@ function einstellung(k, an) { try { localStorage.setItem("kc_club_" + k, an ? "1
 // Neues Design = neuer Eintrag hier (Registry), sonst nichts.
 const DESIGNS = [
   { id: "klassik", name: "Köcheclub Klassik",
-    tag: { rot: "#741521", rot2: "#9b2536", rot3: "#c0485a", gold: "#c9a46a", hero1: "#4d0c16", hero4: "#b5705a", bg: "#f5eee3", karte: "#ffffff", karte2: "#efe5d6", linie: "#e4d7c4", text: "#2b1a1c", grau: "#7b6b66" },
+    tag: { rot: "#741521", rot2: "#9b2536", rot3: "#c0485a", gold: "#c9a46a", hero1: "#4d0c16", hero4: "#b5705a", bg: "#f5eee3", karte: "#ffffff", karte2: "#efe5d6", linie: "#e4d7c4", text: "#2b1a1c", grau: "#6b5c57" },
     nacht: { rot: "#741521", rot2: "#9b2536", rot3: "#c0485a", gold: "#c9a46a", hero1: "#4d0c16", hero4: "#b5705a", bg: "#1b1415", karte: "#2a2021", karte2: "#33282a", linie: "#45393a", text: "#f4e9e4", grau: "#b9a8a3" } },
   { id: "kuechengruen", name: "Küchengrün",
-    tag: { rot: "#2f5d3a", rot2: "#3f7a4c", rot3: "#5c9a68", gold: "#c9a46a", hero1: "#1b3522", hero4: "#8a9a5b", bg: "#eef2ea", karte: "#ffffff", karte2: "#e2eadb", linie: "#d3dfcb", text: "#1d2a1f", grau: "#5f6d5f" },
+    tag: { rot: "#2f5d3a", rot2: "#3f7a4c", rot3: "#5c9a68", gold: "#c9a46a", hero1: "#1b3522", hero4: "#8a9a5b", bg: "#eef2ea", karte: "#ffffff", karte2: "#e2eadb", linie: "#d3dfcb", text: "#1d2a1f", grau: "#4c594c" },
     nacht: { rot: "#2f6b40", rot2: "#3f7a4c", rot3: "#5c9a68", gold: "#c9a46a", hero1: "#12261a", hero4: "#6f7f45", bg: "#121a14", karte: "#1d2820", karte2: "#25322a", linie: "#34443a", text: "#e8f0e8", grau: "#a9b8aa" } },
   { id: "nordsee", name: "Nordsee",
-    tag: { rot: "#1d4e7a", rot2: "#2a6a9e", rot3: "#4f8fc0", gold: "#e0b85c", hero1: "#0f2c47", hero4: "#5a9bb8", bg: "#edf2f7", karte: "#ffffff", karte2: "#dfe8f1", linie: "#cfdbe7", text: "#16222e", grau: "#5b6b7a" },
+    tag: { rot: "#1d4e7a", rot2: "#2a6a9e", rot3: "#4f8fc0", gold: "#e0b85c", hero1: "#0f2c47", hero4: "#5a9bb8", bg: "#edf2f7", karte: "#ffffff", karte2: "#dfe8f1", linie: "#cfdbe7", text: "#16222e", grau: "#4b5a68" },
     nacht: { rot: "#245d91", rot2: "#2a6a9e", rot3: "#4f8fc0", gold: "#e0b85c", hero1: "#0b2238", hero4: "#3f7f9c", bg: "#0f161d", karte: "#1a242e", karte2: "#223040", linie: "#2f3f50", text: "#e6eef6", grau: "#a3b3c3" } },
   { id: "schiefer", name: "Schiefer",
-    tag: { rot: "#37424d", rot2: "#4b5866", rot3: "#6d7b89", gold: "#c9a46a", hero1: "#1f262d", hero4: "#7d8a96", bg: "#f0f1f2", karte: "#ffffff", karte2: "#e3e6e9", linie: "#d4d8dc", text: "#1c2126", grau: "#626b74" },
+    tag: { rot: "#37424d", rot2: "#4b5866", rot3: "#6d7b89", gold: "#c9a46a", hero1: "#1f262d", hero4: "#7d8a96", bg: "#f0f1f2", karte: "#ffffff", karte2: "#e3e6e9", linie: "#d4d8dc", text: "#1c2126", grau: "#4f575f" },
     nacht: { rot: "#56626f", rot2: "#4b5866", rot3: "#6d7b89", gold: "#c9a46a", hero1: "#1a2026", hero4: "#5e6a75", bg: "#141719", karte: "#1f2327", karte2: "#292e33", linie: "#3a4046", text: "#eceff1", grau: "#a8b0b7" } },
   // Farben aus dem Reiseassistenten (V11.4.0): Navy #082F49, Türkis #0E7490, Aqua #14B8A6, Gold #F4B860, Kopf-Verlauf #07415E → #0B7F93 → #22B8A6
   { id: "lagune", name: "Lagune", deko: ["#14B8A6", "#F4B860"], // Kachel-Ecke oben rechts: Aqua → Gold wie im Reiseassistenten
-    tag: { rot: "#0E7490", rot2: "#0B7F93", rot3: "#14B8A6", gold: "#F4B860", hero1: "#07415E", hero4: "#22B8A6", bg: "#EEF7FB", karte: "#ffffff", karte2: "#e1eff6", linie: "#cfe3ec", text: "#102330", grau: "#667985" },
+    tag: { rot: "#0E7490", rot2: "#0B7F93", rot3: "#14B8A6", gold: "#F4B860", hero1: "#07415E", hero4: "#22B8A6", bg: "#EEF7FB", karte: "#ffffff", karte2: "#e1eff6", linie: "#cfe3ec", text: "#102330", grau: "#4e606c" },
     nacht: { rot: "#0E7490", rot2: "#0B7F93", rot3: "#2dd4bf", gold: "#F4B860", hero1: "#082F49", hero4: "#14B8A6", bg: "#06141c", karte: "#0f2430", karte2: "#16303d", linie: "#23414f", text: "#e6f3f8", grau: "#9fb6c2" } },
   // KC-CLUB-DESIGN-DISKO/REGENBOGEN (0.75.0, Wunsch Hansi): optionales „verlauf“ je Tag/Nacht ersetzt den Kopf-Verlauf,
   // „heroSchrift“ gibt der weißen Schrift oben einen Schatten (lesbar auf hellen Verlaufsstellen)
@@ -7078,7 +7084,7 @@ function mitgliederZeichnen() {
     $("mitgliederListe").innerHTML = kreisLegende() + liste.map((m) => `<div class="zeile">
       ${kreis(m, m.name, 40, `onclick="mitgliedOeffnen('${m.person_id}')"`)}
       <div style="flex:1;cursor:pointer" onclick="mitgliedOeffnen('${m.person_id}')"><b>${esc(m.name)}</b>${wegIcons(m)} <span class="hinweis">›</span>${m.aemter?.length ? ` <span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}
-        <div class="hinweis" style="font-size:.85rem">${m.online ? '<b style="color:#1e8449">● online</b> · ' : ""}${m.status || m.aktiv ? `<span class="stmarke st-${statusArt(m.status)}">${esc(m.status ? statusText(m.status) : "🟢 verfügbar")}</span>` : "⚪ noch nicht in der App"}${m.aktiv ? " · 📲 aktiv" : ""}${!m.online && m.zuletztDa ? ` · 🕒 ${esc(zuletztText(m.zuletztDa))}` : ""}</div>
+        <div class="hinweis" style="font-size:.85rem">${m.online ? '<b style="color:var(--textGruen)">● online</b> · ' : ""}${m.status || m.aktiv ? `<span class="stmarke st-${statusArt(m.status)}">${esc(m.status ? statusText(m.status) : "🟢 verfügbar")}</span>` : "⚪ noch nicht in der App"}${m.aktiv ? " · 📲 aktiv" : ""}${!m.online && m.zuletztDa ? ` · 🕒 ${esc(zuletztText(m.zuletztDa))}` : ""}</div>
         ${ICH.admin && (m.app || m.push || !m.mail || m.protokolle === false) ? `<div class="hinweis" style="font-size:.85rem">${[m.app && m.zuletzt ? "zuletzt " + zeitKurz(m.zuletzt) : m.app ? "Link verschickt" : "", m.push ? "🔔 Push" : "", m.mail ? "" : "⚠️ keine Mail", m.protokolle === false ? "📄 ohne Protokolle" : "", m.app && m.zuletzt ? (m.ansicht === "einfach" ? "🟢 einfache Ansicht" : m.ansicht === "erweitert" ? "🔧 erweiterte Ansicht" : "❔ Ansicht noch nicht gewählt") : ""].filter(Boolean).join(" · ")}</div>` : ""}</div>
       ${m.online ? `<button class="knopf klein" title="Anklopfen – direkt schreiben" onclick="anklopfen('${m.person_id}')">👋</button>` : ""}${m.person_id !== ICH.person_id ? `<button class="knopf klein" onclick="direkt('${m.person_id}')">💬</button>` : ""}
       ${ICH.admin ? `<button class="knopf klein" onclick="linkTeilen('${m.person_id}')">🔗</button><button class="knopf klein" onclick="rolleBearbeiten('${m.person_id}')">🎖️</button>` : ""}</div>`).join("")
@@ -8587,8 +8593,8 @@ function installStandZeigen() {
   $("pcZugang").classList.toggle("versteckt", umzug || !KEY);
   $("zugangMailKnopf").classList.toggle("versteckt", !INIT?.einstieg?.mailMaske);
   const [farbe, text] = START_ART === "app" ? ["var(--gruen)", "✅ Die App ist richtig installiert."]
-    : START_ART === "verknuepfung" ? ["#b36b00", "⚠️ Die App ist nur als <b>Verknüpfung</b> angelegt. Dadurch können WhatsApp, Karten und die Galerie auf manchen Handys nicht aufgehen. Bitte wie unten beschrieben richtig installieren."]
-    : START_ART === "browser" ? (schonInstalliert ? ["var(--gruen)", "✅ Die App ist installiert – bitte über das Köcheclub-Symbol öffnen."] : ["#b36b00", "ℹ️ Du bist gerade im Browser. " + (installEreignis ? "Tippe auf „Jetzt als App installieren“." : "Installiere die App wie unten beschrieben.")])
+    : START_ART === "verknuepfung" ? ["var(--textOrange)", "⚠️ Die App ist nur als <b>Verknüpfung</b> angelegt. Dadurch können WhatsApp, Karten und die Galerie auf manchen Handys nicht aufgehen. Bitte wie unten beschrieben richtig installieren."]
+    : START_ART === "browser" ? (schonInstalliert ? ["var(--gruen)", "✅ Die App ist installiert – bitte über das Köcheclub-Symbol öffnen."] : ["var(--textOrange)", "ℹ️ Du bist gerade im Browser. " + (installEreignis ? "Tippe auf „Jetzt als App installieren“." : "Installiere die App wie unten beschrieben.")])
     : ["var(--grau)", "❔ Nicht erkennbar, wie die App gestartet wurde."];
   el.innerHTML = `<p style="margin:4px 0 10px;font-weight:700;color:${farbe}">${text}</p>`;
 }

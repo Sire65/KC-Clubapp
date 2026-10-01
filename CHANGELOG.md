@@ -1,5 +1,14 @@
 # Änderungen
 
+## 1.22.2 – 2026-10-01 (DEV)
+
+- KC-CLUB-KONTRAST (Hinweis Hansi „kein guter Kontrast in Nachtsicht, immer leserlich“): SOS 112/110 im Nacht-Design
+  dunkelrot mit heller Schrift statt hellrosa. Zentrale Schriftfarben --textRot/--textGruen/--textOrange/--textNotruf (Tag =
+  bisherige Farben, Nacht = hell) für gewählte Reiter/Fußleiste, Status „verfügbar“, „online“, „schreibt …“, Schnellstart-
+  Nummern, Install-Hinweis, Notfallpass-Titel. Dazu: Info-Knopf i, WA-Knopf, grauer Namenskreis, Post-it-Fußzeile und
+  „WICHTIG“, Pinnwand-Zähler und das Grau der hellen Designs etwas dunkler. Geprüft mit einem automatischen Kontrast-Scan
+  (WCAG 4,5:1, große Schrift 3:1) über 11 Seiten in allen 8 Designs, jeweils Tag und Nacht.
+
 ## 1.22.1 – 2026-10-01 (DEV)
 
 - KC-CLUB-SICHERHEIT-ZUSTELLUNG (Wunsch Hansi „der Bericht muss mich erreichen“): Sicherheits-Check-Bericht geht immer per
