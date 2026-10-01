@@ -1,5 +1,12 @@
 # Änderungen
 
+## 1.15.0 – 2026-10-01 (DEV)
+
+- KC-CLUB-SICHERHEIT-MELDEN (Wunsch Hansi): Knopf „📨 Ergebnis an Hansi (Admin) senden“ im Sicherheits-Check (hervorgehoben,
+  wenn ein Punkt nicht bestätigt ist; freiwillige Notiz). Neue Aktion sicherheit_melden: Server prüft selbst neu, nur
+  Verbindung/Version/Antwortzeit kommen vom Gerät; Push + Mail an alle Admins (Weg wie „Problem melden“), Eintrag
+  „fehler_sicherheit“ im Fehlerprotokoll; höchstens 3 Meldungen je Person und Stunde.
+
 ## 1.14.0 – 2026-10-01 (DEV)
 
 - KC-CLUB-SICHERHEIT (Wunsch Hansi): Kachel „🛡️ Sicherheits-Check“ im Reiter Programme. Prüfreihe mit 11 echten Prüfungen

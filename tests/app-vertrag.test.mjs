@@ -1646,6 +1646,13 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/\{ id: "sicherheit", sym: "🛡️", t: "Sicherheits-Check"/.test(html) && /"sos", "sicherheit"\]\.forEach/.test(html), "Kachel im Reiter Programme + Ansicht");
 }
 
+// 144. 1.15.0: Sicherheits-Check an Admin senden
+{
+  const sm = server.slice(server.indexOf('case "sicherheit_melden"'), server.indexOf('case "nachricht_ausblenden"'));
+  assert.ok(/db\.rpc\("kc_club_sicherheit_status"\)/.test(sm) && /await adminIds\(\)/.test(sm) && /"fehler_sicherheit"/.test(sm) && /\(count \?\? 0\) >= 3\) throw/.test(sm), "Server prüft neu, an Admins, Fehlerprotokoll, Bremse");
+  assert.ok(/onclick="sicherheitMelden\(\)">📨 Ergebnis an Hansi \(Admin\) senden/.test(html), "Knopf vorhanden");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

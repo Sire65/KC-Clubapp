@@ -1,10 +1,16 @@
 {
-  "version": "1.14.0",
+  "version": "1.15.0",
   "datum": "2026-10-01",
   "neu": [
-    "🛡️ Neu im Reiter Programme: Sicherheits-Check – prüft Verschlüsselung, Zugriffsschutz, Sicherungen und Überwachung und zeigt die Antwortzeiten"
+    "📨 Sicherheits-Check: Ergebnis mit einem Knopf an Hansi (Admin) senden – z. B. wenn ein Punkt nicht bestätigt ist"
   ],
   "verlauf": [
+    {
+      "version": "1.15.0",
+      "neu": [
+        "📨 Sicherheits-Check: Ergebnis mit einem Knopf an Hansi (Admin) senden – z. B. wenn ein Punkt nicht bestätigt ist"
+      ]
+    },
     {
       "version": "1.14.0",
       "neu": [

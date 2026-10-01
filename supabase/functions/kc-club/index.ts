@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.14.0";
+const SERVER_VERSION = "1.15.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -3243,6 +3243,56 @@ Köcheclub Werne`,
           wiederherstellung: s1.wiederherstellung_min == null ? null : frisch(s1.wiederherstellung_min, 8 * 24 * 60) && !s1.wiederherstellung_fehler_danach,
           ueberwachung: frisch(s1.ueberwachung_min, 120), ueberwachungMin: s1.ueberwachung_min ?? null, // alle 30 Minuten
         });
+      }
+
+      // KC-CLUB-SICHERHEIT-MELDEN (1.15.0, Wunsch Hansi): Prüfergebnis an die Admins (Push + Mail, gleicher Weg wie „Problem
+      // melden“). Der Server prüft dabei SELBST erneut – nur App-seitige Punkte (Verbindung, Version, Antwortzeit) kommen vom Gerät.
+      case "sicherheit_melden": {
+        const { count } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("person_id", ich.person_id).eq("aktion", "fehler_sicherheit").gte("zeit", new Date(Date.now() - 3600000).toISOString());
+        if ((count ?? 0) >= 3) throw new Fehler("Dein Prüfergebnis ist schon angekommen – Hansi meldet sich bei dir.", 429);
+        const { data: s0 } = await db.rpc("kc_club_sicherheit_status");
+        const st: any = s0 ?? {}, frisch = (min: unknown, grenze: number) => (typeof min === "number" ? min <= grenze : null);
+        const geraet: any = p.geraet && typeof p.geraet === "object" ? p.geraet : {};
+        const ja = (v: unknown) => (v === true ? true : v === false ? false : null);
+        const punkte: [string, boolean | null][] = [
+          ["Verbindung verschlüsselt (Gerät)", ja(geraet.verbindung)],
+          ["Server erreichbar", true],
+          ["Daten-Speicher antwortet", s0 ? true : null],
+          ["Zugriffsschutz auf allen Daten", typeof st.ohne_schutz === "number" ? st.ohne_schutz === 0 : null],
+          ["Sicherungskopie aktuell", frisch(st.spiegel_min, 8 * 60)],
+          ["Nächtliche Sicherung", frisch(st.sicherung_min, 30 * 60)],
+          ["Wiederherstellung getestet", st.wiederherstellung_min == null ? null : frisch(st.wiederherstellung_min, 8 * 24 * 60) && !st.wiederherstellung_fehler_danach],
+          ["Überwachung aktiv", frisch(st.ueberwachung_min, 120)],
+          ["App auf dem neuesten Stand (Gerät)", ja(geraet.version)],
+        ];
+        const zeichen = (v: boolean | null) => (v === true ? "✅" : v === false ? "⚠️" : "❔");
+        const probleme = punkte.filter(([, v]) => v !== true).length;
+        const ms = Number.isFinite(Number(geraet.serverMs)) ? Math.round(Number(geraet.serverMs)) : null;
+        const notiz = txt(p.notiz, 300);
+        await protokoll(ich.person_id, "fehler_sicherheit", { probleme, punkte: Object.fromEntries(punkte), serverMs: ms, version: txt(req.headers.get("x-club-version"), 20), notiz });
+        const ziel = await adminIds();
+        const versand = ziel.length ? await senden("club_nachricht", ziel, {
+          titel: probleme ? `🛡️ Sicherheits-Check: ${probleme} Punkt${probleme === 1 ? "" : "e"} nicht bestätigt` : "🛡️ Sicherheits-Check: alles in Ordnung",
+          kurz: `${ich.name} hat das Prüfergebnis geschickt${probleme ? " – bitte ansehen" : ""}`,
+          betreff: `Köcheclub-App: Sicherheits-Check von ${ich.name}${probleme ? ` – ${probleme} Punkt${probleme === 1 ? "" : "e"} offen` : " – alles OK"}`,
+          text: `Hallo,
+
+${ich.name} hat in der Club-App das Ergebnis des Sicherheits-Checks geschickt (Server hat neu geprüft):
+
+${punkte.map(([t, v]) => `${zeichen(v)} ${t}`).join("\n")}
+
+Antwortzeit beim Mitglied: ${ms ?? "?"} ms · App ${txt(req.headers.get("x-club-version"), 20)}${notiz ? `
+
+Notiz: ${notiz}` : ""}
+
+Einzelheiten: Admin-Zentrale → 🩺 Fehlerprotokoll
+${APP_URL}
+
+Viele Grüße
+Köcheclub-App`,
+          url: APP_URL,
+        }, `club-sicherheit:${ich.person_id}:${Date.now()}`) : null;
+        return json({ ok: true, probleme, versand });
       }
 
       case "nachricht_ausblenden": {
