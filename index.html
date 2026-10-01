@@ -442,6 +442,12 @@
   .kachel .sym { font-size: 1.65rem; line-height: 1; }
   .kachel b { display: block; font-size: 1.02rem; margin-top: 7px; }
   .kachel small { color: var(--grau); font-weight: 700; font-size: .82rem; }
+  /* KC-CLUB-NEU-KACHEL (1.21.4, Wunsch Hansi): Kachel mit neuen Nachrichten bekommt einen anderen, auffälligen Hintergrund (grün wie WhatsApp) */
+  .kachel.neu-da { background: linear-gradient(135deg, #d9f7e2, #a9e8bf); box-shadow: 0 0 0 3px #25a55a inset, var(--schatten); animation: neuDa 2.4s ease-in-out infinite; }
+  .kachel.neu-da small { color: #1d5e36; } .kachel.neu-da .zahl { background: #1e8449; }
+  :root.dunkel .kachel.neu-da { background: linear-gradient(135deg, #1d4a2c, #1b6b3c); box-shadow: 0 0 0 3px #3ddc84 inset, var(--schatten); } :root.dunkel .kachel.neu-da small { color: #c9f5d8; }
+  @keyframes neuDa { 50% { filter: brightness(1.06); } }
+  @media (prefers-reduced-motion: reduce) { .kachel.neu-da { animation: none; } }
   .kachel .zahl { position: absolute; right: 12px; bottom: 12px; background: var(--rot); color: #fff; border-radius: 12px; padding: 2px 9px; font-weight: 800; font-size: .85rem; z-index: 1; }
   .kachel.bald { opacity: .55; }
   /* KC-CLUB-KACHELN: eigene Anordnung (lange drücken → Bearbeiten) */
@@ -1805,7 +1811,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.21.3"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.21.4"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3956,7 +3962,7 @@ const KACHELN = {
     { id: "termine", sym: "📅", t: "Termine", u: "Treffen · Zu- & Absagen", v: "termine" },
     // KC-CLUB-SOS (1.6.0, Wunsch Hansi): rote Notfall-Kachel – Notrufnummern + Kontakte der Mitglieder
     { id: "sos", sym: "🆘", t: "SOS – Notfall", u: "Notruf · Kontakte im Notfall", aktion: "sosStart()", klasse: "sos" },
-    { id: "kommunikation", sym: "💬", t: "Kommunikation", u: "Nachrichten & Anlagen", v: "nachrichten", zahl: () => INIT?.ungelesen || 0 },
+    { id: "kommunikation", sym: "💬", t: "Kommunikation", u: "Nachrichten & Anlagen", v: "nachrichten", zahl: () => INIT?.ungelesen || 0, neuFarbe: true }, // 1.21.4: farbig bei Neuem
     { id: "mitglieder", sym: "👥", t: "Aktive Mitglieder", u: "Status · Ämter · Kontakt", v: "mitglieder" },
     { id: "vorschlaege", sym: "🗳️", t: "Vorschläge", u: "Themen & Abstimmungen", v: "vorschlaege", zahl: () => INIT?.offeneAbstimmungen || 0 },
     { id: "protokolle", sym: "📄", t: "Protokolle", u: "Sitzungen · Aufgaben", v: "protokolle", nur: () => ICH?.protokolle !== false, zahl: () => (INIT?.protokolleUngelesen || 0) + (INIT?.meineAufgaben?.length || 0) },
@@ -4178,7 +4184,7 @@ function kachelnZeigen() {
   $("kaAusHinweis").innerHTML = ausN ? `<button class="kaausgeblendet" onclick="kaBearbeiten(true)">🙈 ${ausN} ausgeblendete Kachel${ausN > 1 ? "n" : ""} – anzeigen</button>` : "";
   $("raster").innerHTML = kacheln(reg).map((k, i) => {
     const z = k.zahl ? k.zahl() : 0;
-    return `<button class="kachel${k.bald ? " bald" : ""}${k.klasse ? " " + k.klasse : ""}" data-id="${k.id}" onclick="${k.bald ? `melde('„${k.t}“ kommt in einer der nächsten Versionen.')` : k.aktion || `zeige('${k.v}')`}">
+    return `<button class="kachel${k.bald ? " bald" : ""}${k.klasse ? " " + k.klasse : ""}${k.neuFarbe && z ? " neu-da" : ""}" data-id="${k.id}" onclick="${k.bald ? `melde('„${k.t}“ kommt in einer der nächsten Versionen.')` : k.aktion || `zeige('${k.v}')`}">
       <div class="sym">${k.sym}</div><b>${esc(k.t)}</b><small>${esc(typeof k.u === "function" ? k.u() : k.u)}</small>${k.bald ? '<span class="zahl">bald</span>' : z ? `<span class="zahl">${z}</span>` : ""}</button>`;
   }).join("");
 }
@@ -4873,6 +4879,12 @@ async function neuLaden(vonHand) {
 function zaehlerZeigen() {
   const n = INIT?.ungelesen || 0;
   $("fussZaehler").textContent = n; $("fussZaehler").classList.toggle("versteckt", !n);
+  // KC-CLUB-NEU-KACHEL (1.21.4): Farbe und Zahl der Nachrichten-Kachel sofort mitziehen (ohne die Startseite neu zu zeichnen)
+  document.querySelectorAll('.kachel[data-id="kommunikation"]:not(.bearb)').forEach((k) => {
+    k.classList.toggle("neu-da", n > 0); let z = k.querySelector(".zahl");
+    if (n && !z) { z = document.createElement("span"); z.className = "zahl"; k.appendChild(z); }
+    if (z) { if (n) z.textContent = n; else z.remove(); }
+  });
   try { n ? navigator.setAppBadge?.(n) : navigator.clearAppBadge?.(); } catch {}
   // KC-CLUB-STUMM (1.9.0): Ton nur für neue Nachrichten aus nicht stummgeschalteten Unterhaltungen
   const laut = INIT?.ungelesenLaut ?? n;

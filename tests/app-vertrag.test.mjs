@@ -1833,6 +1833,13 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(!/\$\("text"\)\.value = ""/.test(f), "Text bleibt im Feld");
 }
 
+// 161. 1.21.4: Nachrichten-Kachel farbig bei Neuem (KC-CLUB-NEU-KACHEL)
+{
+  assert.ok(/id: "kommunikation",[^\n]*neuFarbe: true/.test(html) && /\$\{k\.neuFarbe && z \? " neu-da" : ""\}/.test(html), "Kachel-Merkmal + Klasse");
+  assert.ok(/\.kachel\.neu-da \{ background: linear-gradient/.test(html) && /:root\.dunkel \.kachel\.neu-da/.test(html), "Farbe Tag/Nacht");
+  assert.ok(/k\.classList\.toggle\("neu-da", n > 0\)/.test(html), "Zähler zieht die Farbe mit");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

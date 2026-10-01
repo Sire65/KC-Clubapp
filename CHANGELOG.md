@@ -1,5 +1,11 @@
 # Änderungen
 
+## 1.21.4 – 2026-10-01 (DEV)
+
+- KC-CLUB-NEU-KACHEL (Wunsch Hansi): Kachel „💬 Kommunikation“ bzw. „Nachrichten“ (einfache Ansicht) bekommt bei ungelesenen
+  Nachrichten einen anderen Hintergrund (hellgrün mit grünem Rand, sanftes Leuchten; Nacht-Design dunkelgrün; bei „Bewegung
+  reduzieren“ ohne Leuchten). Registry-Merkmal neuFarbe an der Kachel; Farbe und Zahl ziehen beim Zählertakt sofort mit.
+
 ## 1.21.3 – 2026-10-01 (DEV)
 
 - KC-CLUB-WA-SENDEN (Wunsch Hansi): grüner Knopf „WA“ in der Knopfzeile unter dem Schreibfeld. Kopiert den Text in die
