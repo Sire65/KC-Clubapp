@@ -734,11 +734,12 @@
   .klopf-kacheln { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; }
   .klopf-kacheln button { border: 1px solid var(--linie); border-radius: var(--radius); background: var(--karte); color: inherit; padding: 12px 8px; font-size: .95rem; font-weight: 600; cursor: pointer; }
   /* KC-CLUB-SCHNELLSTART (1.8.0) */
-  .schnell { padding: 10px 12px 12px; } .schnell-kopf { display: flex; align-items: center; justify-content: space-between; font-weight: 700; margin-bottom: 6px; }
-  .schnell-kopf button { background: none; border: none; font-size: 1.1rem; cursor: pointer; color: inherit; }
-  .schnell-raster { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-  .schnell-raster button { display: flex; flex-direction: column; align-items: center; gap: 2px; border: none; border-radius: 14px; background: var(--hinter, rgba(0,0,0,.04)); color: inherit; padding: 10px 2px 8px; cursor: pointer; }
-  .schnell-raster span { font-size: 1.9rem; line-height: 1.1; } .schnell-raster small { font-size: .78rem; font-weight: 600; }
+  /* 1.8.1: als eigene Karte im farbigen Info-Feld oben (wie Treffen, Wetter …) */
+  .schnell-kopf { display: flex; align-items: center; justify-content: space-between; } .schnell-kopf h2 { margin: 0; }
+  .schnell-kopf button { background: rgba(255,255,255,.14); border: none; border-radius: 999px; width: 38px; height: 38px; font-size: 1.05rem; cursor: pointer; color: #fff; }
+  .schnell-raster { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px; }
+  .schnell-raster .mini { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 64px; padding: 8px 2px; text-align: center; }
+  .schnell-raster .mini b { font-size: 1.75rem; line-height: 1.1; } .schnell-raster .mini span { font-size: .66rem; letter-spacing: .02em; }
   .ss-wahl { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 8px 0; }
   .ss-wahl button { position: relative; border: 2px solid var(--linie); border-radius: 12px; background: var(--karte); color: inherit; padding: 8px 2px; cursor: pointer; font-size: .75rem; }
   .ss-wahl button span { display: block; font-size: 1.5rem; } .ss-wahl button.an { border-color: var(--rot); }
@@ -1064,7 +1065,6 @@
       <div class="ipunkte" id="infoPunkte"></div>
     </div>
     <div id="updateHinweis"></div>
-    <div id="schnellstart"></div>
     <div class="abschnitt"><h3>Schnellzugriff <button type="button" class="ansichtname ein" onclick="ansichtWechseln()" title="Antippen: zur erweiterten Ansicht wechseln">(Einfache Ansicht)</button><button type="button" class="ansichtname erw" onclick="ansichtWechseln()" title="Antippen: zur einfachen Ansicht wechseln">(Erweiterte Ansicht)</button></h3><button class="marke" id="versionMarke" style="border:none;cursor:pointer" title="Update prüfen" onclick="updateKachel()">v–</button></div>
     <div class="register" id="register"></div>
     <div class="kachelleiste versteckt" id="kachelLeiste"><p>✏️ <b>Kacheln anordnen:</b> Kachel <b>kurz festhalten</b>, an den neuen Platz <b>ziehen</b> und loslassen (oder ◀ ▲ ▼ ▶ antippen). ✕ blendet aus, 👁️ wieder ein. Ausgeblendete bleiben hier blass an ihrem Platz.</p>
@@ -1689,7 +1689,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.8.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.8.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2123,7 +2123,7 @@ function ansichtAnwenden() {
   if ($("ansichtKnopf")) $("ansichtKnopf").textContent = einfach() ? "🔧 Mehr Funktionen anzeigen" : "🟢 Einfache Ansicht";
   if (einfach() && kaBearb) kaBearbeiten(false);
   ansichtInfo();
-  if (INIT) { registerZeigen(); kachelnZeigen(); heroZeigen(0); }
+  if (INIT) { registerZeigen(); kachelnZeigen(); infoFelderAktualisieren(); heroZeigen(0); }
 }
 // einfache Ansicht: oben immer „Nächstes Treffen“ (kein Blättern)
 function ansichtInfo() { if (!einfach()) return; const i = INFO_FELDER.findIndex((f) => f.id === "treffen"); if (i >= 0) INFO_I = i; }
@@ -2288,7 +2288,7 @@ const TIPPS = [
   { id: "reaktion", sym: "👍", t: "Auf Nachrichten reagieren", x: "Tippe eine Nachricht an – dann kannst du mit 👍 ❤️ 😂 … reagieren, antworten oder weiterleiten.", testen: () => zeige("nachrichten") },
   { id: "erwaehnung", sym: "📣", t: "Jemanden direkt ansprechen", x: "Schreib in einer Gruppe <b>@</b> und den Namen – die Person bekommt dann sicher Bescheid.", testen: () => zeige("nachrichten") },
   { id: "sos", sym: "🆘", t: "Für den Notfall: die rote SOS-Kachel", x: "Dort findest du die wichtigsten Notrufnummern und erreichst Mitglieder schnell. Trag auch deinen eigenen Notfallkontakt ein.", testen: () => sosStart() },
-  { id: "schnellstart", sym: "⚡", t: "Schnellstart: deine 8 Lieblings-Symbole", x: "In der erweiterten Ansicht oben auf der Startseite – ein Tipp, und du schreibst, siehst den nächsten Termin oder machst einen Zettel. Welche Symbole, bestimmst du unter ⚙️.", testen: () => suEinstellung("ssWahl") },
+  { id: "schnellstart", sym: "⚡", t: "Schnellstart: deine 8 Lieblings-Symbole", x: "In der erweiterten Ansicht oben im farbigen Feld – nach rechts blättern bis „⚡ Schnellstart“. Ein Tipp, und du schreibst, siehst den nächsten Termin oder machst einen Zettel. Welche Symbole, bestimmst du unter ⚙️.", testen: () => suEinstellung("ssWahl") },
   { id: "anklopfen", sym: "👋", t: "Anklopfen: kurz antworten statt annehmen", x: "Klopft jemand an, tippst du einfach „Bin beschäftigt“ oder „Melde mich später“ – der andere sieht es sofort. Anklopfen und Anklopfton stellst du unter ⚙️ → Privatsphäre ein.", testen: () => suEinstellung("setAnklopfen") },
   { id: "notfallpass", sym: "🪪", t: "Dein Notfallpass im SOS-Bereich", x: "Allergien, Medikamente, Blutgruppe – freiwillig und nur auf deinem Handy gespeichert. Und „📍 Wo bin ich?“ zeigt dir im Notfall die Adresse zum Vorlesen.", testen: () => { sosStart(); nfpBearbeiten(); } },
   { id: "lupe", sym: "🔍", t: "Alles finden mit der Lupe", x: "Mit der kleinen Lupe suchst du in Nachrichten, Terminen, Archiv, Pinnwand und mehr – schon ab 2 Buchstaben.", testen: () => sucheAuf() },
@@ -2497,13 +2497,12 @@ function schnellAuswahl() {
   const ids = schnellStand().ids || SCHNELL_STANDARD, da = schnellMoeglich();
   return ids.map((id) => da.find((x) => x.id === id)).filter(Boolean).slice(0, 8);
 }
-function schnellZeigen() {
-  const el = $("schnellstart"); if (!el) return;
-  const liste = schnellAuswahl();
-  if (einfach() || !schnellStand().an || !liste.length) { el.innerHTML = ""; return; }
-  el.innerHTML = `<div class="karte schnell"><div class="schnell-kopf"><span>⚡ Schnellstart</span><button title="Symbole auswählen" onclick="suEinstellung('ssWahl')">✏️</button></div>
-    <div class="schnell-raster">${liste.map((x) => `<button onclick="schnellLos('${x.id}')"><span>${x.sym}</span><small>${esc(x.t)}</small></button>`).join("")}</div></div>`;
+function infoSchnellstart() {
+  return `<div class="schnell-kopf"><h2>⚡ Schnellstart</h2><button title="Symbole auswählen" onclick="event.stopPropagation();suEinstellung('ssWahl')">✏️</button></div>
+    <div class="schnell-raster">${schnellAuswahl().map((x) => `<button class="mini" onclick="event.stopPropagation();schnellLos('${x.id}')"><b>${x.sym}</b><span>${esc(x.t)}</span></button>`).join("")}</div>`;
 }
+// Karte im Info-Feld ein-/ausblenden und neu zeichnen (nach Auswahl, Schalter oder Ansichtswechsel)
+function schnellZeigen() { infoFelderAktualisieren(); if (INIT) heroZeigen(0); }
 function schnellLos(id) { const x = SCHNELL.find((y) => y.id === id); if (x) try { x.los(); } catch (e) { melde(e.message, true); } }
 function schnellWahlZeigen() {
   const st = schnellStand(), ids = st.ids || SCHNELL_STANDARD;
@@ -3895,7 +3894,6 @@ function kachelnZeigen() {
           : b(-1, "◀", "nach links") + (sp > 1 ? b(-sp, "▲", "nach oben") + b(sp, "▼", "nach unten") : "") + b(1, "▶", "nach rechts")}</div></div>`; }).join("");
     return;
   }
-  schnellZeigen(); // KC-CLUB-SCHNELLSTART (1.8.0)
   const ausN = kaSortiert(reg).length - kacheln(reg).length;
   $("kaAusHinweis").innerHTML = ausN ? `<button class="kaausgeblendet" onclick="kaBearbeiten(true)">🙈 ${ausN} ausgeblendete Kachel${ausN > 1 ? "n" : ""} – anzeigen</button>` : "";
   $("raster").innerHTML = kacheln(reg).map((k, i) => {
@@ -3909,6 +3907,8 @@ function kachelnZeigen() {
 // Kein automatisches Weiterblättern (in Ruhe lesen). Neue Felder = neuer Eintrag hier.
 const INFO_ALLE = [
   { id: "treffen", t: "Nächstes Treffen", html: () => infoTreffen() },
+  // KC-CLUB-SCHNELLSTART (1.8.1, Wunsch Hansi): eigene Karte oben im farbigen Info-Feld – nur erweiterte Ansicht
+  { id: "schnellstart", t: "Schnellstart", html: () => infoSchnellstart(), nur: () => !einfach() && schnellStand().an !== false && schnellAuswahl().length > 0 },
   { id: "wetter", t: "Wetter", html: () => infoWetter() },
   { id: "fuerdich", t: "Für dich", html: () => infoFuerDich() },
   { id: "demnaechst", t: "Demnächst", html: () => infoDemnaechst(), laden: () => api("kalender", { von: heuteIso(), bis: tagPlus(heuteIso(), DEMNAECHST_TAGE) }), neuMin: 10 },

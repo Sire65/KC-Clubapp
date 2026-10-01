@@ -807,7 +807,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 65. 0.42.0: Info-Feld blätterbar (Registry, Pfeile, Punkte, Wischen) + Wetter (Adapter/Registry, nur Admin stellt ein, Rule 11)
 {
   const ids = [...html.slice(html.indexOf("const INFO_ALLE = ["), html.indexOf("];", html.indexOf("const INFO_ALLE = ["))).matchAll(/id: "([a-z]+)"/g)].map((m) => m[1]);
-  assert.deepEqual(ids, ["treffen", "wetter", "fuerdich", "demnaechst", "fotos", "zentrale", "admin"], "Info-Felder falsch");
+  assert.deepEqual(ids, ["treffen", "schnellstart", "wetter", "fuerdich", "demnaechst", "fotos", "zentrale", "admin"], "Info-Felder falsch (1.8.1: + schnellstart)");
   assert.ok(/class="ipfeil links"[^>]*onclick="infoBlaettern\(-1\)"/.test(html) && /onclick="infoBlaettern\(1\)"/.test(html) && /class="ipunkt\$\{i === INFO_I \? " an" : ""\}"/.test(html), "Pfeile/Punkte fehlen");
   assert.ok(/\[\$\("heroInfo"\), infoBlaettern\]/.test(html), "Wischen im Info-Feld fehlt");
   assert.ok(!/setInterval\([^)]*infoBlaettern/.test(html), "Info-Feld darf nicht automatisch blättern");
@@ -1540,7 +1540,8 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 135. 1.8.0: Schnellstart, Anklopfen erlauben, Kurzantworten, Anklopfton
 {
   assert.ok(/const SCHNELL = \[/.test(html) && /const SCHNELL_STANDARD = \["schreiben", "termin", "zettel", "foto", "standort", "dienst", "suchen", "sos"\]/.test(html), "Schnellstart: Registry + 8 Grund-Symbole");
-  assert.ok(/if \(einfach\(\) \|\| !schnellStand\(\)\.an/.test(html) && /schnellZeigen\(\); \/\/ KC-CLUB-SCHNELLSTART/.test(html), "Schnellstart nur in der erweiterten Ansicht");
+  assert.ok(/\{ id: "schnellstart", t: "Schnellstart", html: \(\) => infoSchnellstart\(\), nur: \(\) => !einfach\(\) && schnellStand\(\)\.an !== false/.test(html), "1.8.1: Schnellstart als Karte im farbigen Info-Feld, nur erweiterte Ansicht");
+  assert.ok(!/id="schnellstart"/.test(html), "1.8.1: keine extra Kachel mehr unter dem Info-Feld");
   assert.ok(/ids\.length >= 8\) return melde/.test(html) && /schnellstart: \(w\) =>[\s\S]{0,250}\.slice\(0, 8\)/.test(server), "Schnellstart: höchstens 8 (App + Server)");
   assert.ok(/!x\.kachel \|\| kachelDa\(x\.kachel\)/.test(html), "Schnellstart: nur Symbole, für die das Mitglied Rechte hat");
   const ak = server.slice(server.indexOf('case "anklopfen":'), server.indexOf('case "anklopfen_antwort"'));

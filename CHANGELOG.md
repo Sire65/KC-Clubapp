@@ -1,5 +1,11 @@
 # Änderungen
 
+## 1.8.1 – 2026-10-01 (DEV)
+
+- KC-CLUB-SCHNELLSTART (Wunsch Hansi): Schnellstart ist keine extra Kachel unter dem Info-Feld mehr, sondern eine eigene
+  Karte im farbigen Info-Feld oben (Registry INFO_ALLE, zweite Karte nach „Nächstes Treffen“, nur erweiterte Ansicht und
+  wenn eingeschaltet). Als Startkarte wählbar unter ⚙️ („Beim Start zeigen“). Ansichtswechsel aktualisiert die Karten.
+
 ## 1.8.0 – 2026-10-01 (DEV)
 
 - KC-CLUB-SCHNELLSTART (Wunsch Hansi): große Kachel „⚡ Schnellstart“ oben auf der Startseite – nur in der erweiterten Ansicht.
