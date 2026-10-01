@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.7.1";
+const SERVER_VERSION = "1.7.2";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -338,8 +338,9 @@ function fotoMetaPruefen(roh: any, mitOrt: boolean) {
   return Object.keys(m).length ? m : null;
 }
 // Ortsname zu GPS-Daten (Adapter, kostenlos: OpenStreetMap/Nominatim, höchstens 1 Anfrage je Sekunde, Ergebnis wird gemerkt)
-// genau = mit Hausnummer und PLZ (SOS „Wo bin ich?“ zum Vorlesen am Telefon); ohne = kurzer Ortsname wie bisher (Fotos)
-const ORTSNAMEN: Record<string, (lat: number, lon: number, genau?: boolean) => Promise<string | null>> = {
+// genau = mit Hausnummer und PLZ (SOS „Wo bin ich?“ zum Vorlesen am Telefon); ohne = kurzer Ortsname wie bisher (Fotos).
+// Ist genau eine Zahl (GPS-Genauigkeit in m), nennt Photon zusätzlich Nachbarhäuser derselben Straße in diesem Umkreis.
+const ORTSNAMEN: Record<string, (lat: number, lon: number, genau?: number | boolean) => Promise<string | null>> = {
   nominatim: async (lat, lon, genau) => {
     const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=${genau ? 18 : 17}&accept-language=de`,
       { headers: { "User-Agent": "KC-Clubapp (Koecheclub Werne, sire65.github.io/KC-Clubapp)" }, signal: AbortSignal.timeout(8000) });
@@ -357,21 +358,29 @@ const ORTSNAMEN: Record<string, (lat: number, lon: number, genau?: boolean) => P
   // KC-CLUB-SOS-WO (1.7.1): Photon (komoot, kostenlos, OpenStreetMap-Daten) – Nominatim lehnt Anfragen aus Rechenzentren
   // (Supabase) mit 403/429 ab; deshalb Photon zuerst, Nominatim bleibt als Ausweichweg.
   photon: async (lat, lon, genau) => {
-    const r = await fetch(`https://photon.komoot.io/reverse?lat=${lat}&lon=${lon}&lang=de&limit=1`,
+    const r = await fetch(`https://photon.komoot.io/reverse?lat=${lat}&lon=${lon}&lang=de&limit=${genau ? 6 : 1}`,
       { headers: { "User-Agent": "KC-Clubapp (Koecheclub Werne, sire65.github.io/KC-Clubapp)" }, signal: AbortSignal.timeout(8000) });
     if (!r.ok) throw new Error("Photon " + r.status);
-    const a = (await r.json())?.features?.[0]?.properties;
+    const alle: any[] = (await r.json())?.features ?? [], a = alle[0]?.properties;
     if (!a) return null;
     const ort = a.city || a.town || a.village || a.locality || "";
     const strasse = [a.street || "", genau ? a.housenumber || "" : ""].filter(Boolean).join(" ");
     const name = a.name && a.name !== a.street && a.type !== "house" ? a.name : "";
     const teile = genau ? [name, strasse, [a.postcode || "", ort].filter(Boolean).join(" ")] : [name, strasse, a.district && a.district !== ort ? a.district : "", ort];
     if (a.countrycode && a.countrycode !== "DE") teile.push(a.country || "");
-    return [...new Set(teile.filter(Boolean))].join(", ") || null;
+    let text = [...new Set(teile.filter(Boolean))].join(", ");
+    if (typeof genau === "number" && a.housenumber && a.street) {
+      // KC-CLUB-SOS-WO (1.7.2, Live-Test Hansi): GPS liegt oft ein Haus daneben → Nachbarhäuser im Messumkreis (10–40 m) nennen
+      const umkreis = Math.min(40, Math.max(10, genau)), m = (c: number[]) => Math.hypot((c[0] - lon) * 111320 * Math.cos(lat * Math.PI / 180), (c[1] - lat) * 110540);
+      const nachbarn = alle.slice(1).filter((f) => f.properties?.street === a.street && f.properties?.housenumber && f.properties.housenumber !== a.housenumber && Array.isArray(f.geometry?.coordinates) && m(f.geometry.coordinates) <= umkreis)
+        .map((f) => String(f.properties.housenumber)).filter((x, i, l) => l.indexOf(x) === i).slice(0, 2);
+      if (nachbarn.length) text += ` (oder Nachbarhaus Nr. ${nachbarn.join(", ")})`;
+    }
+    return text || null;
   },
 };
 const ORTSNAME_QUELLEN = ["photon", "nominatim"]; // Reihenfolge = Ausweichweg
-async function ortsnameHolen(lat: number, lon: number, genau?: boolean) {
+async function ortsnameHolen(lat: number, lon: number, genau?: number | boolean) {
   let fehler: unknown = null;
   for (const q of ORTSNAME_QUELLEN) {
     try { const n = await ORTSNAMEN[q](lat, lon, genau); if (n) return n; } catch (e) { fehler = e; console.error("ortsname", q, String(e)); }
@@ -2712,7 +2721,8 @@ Köcheclub Werne`,
         if (Date.now() - ortsnameZuletzt < 1100) await new Promise((r) => setTimeout(r, 1100)); // Nutzungsregel: max. 1 Anfrage/s
         ortsnameZuletzt = Date.now();
         let adresse: string | null = null;
-        try { adresse = await ortsnameHolen(Math.round(lat * 1e5) / 1e5, Math.round(lon * 1e5) / 1e5, true); }
+        const messung = Number(p.genau);
+        try { adresse = await ortsnameHolen(Math.round(lat * 1e5) / 1e5, Math.round(lon * 1e5) / 1e5, Number.isFinite(messung) && messung > 0 ? messung : true); }
         catch (e) { console.error("sos_ort", String(e)); return json({ adresse: null, fehler: "Adresse gerade nicht abrufbar – die Koordinaten gelten trotzdem." }); }
         await protokoll(ich.person_id, "sos_wo_bin_ich", {});
         return json({ adresse });

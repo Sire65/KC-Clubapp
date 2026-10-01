@@ -1,5 +1,11 @@
 # Änderungen
 
+## 1.7.2 – 2026-10-01 (DEV)
+
+- KC-CLUB-SOS-WO (Live-Test Hansi: Hausnummer vom Nachbarhaus): Die App schickt die GPS-Genauigkeit mit; Photon nennt
+  zusätzlich bis zu 2 Nachbarhäuser derselben Straße im Messumkreis (10–40 m), z. B. „Friedensstraße 4 (oder Nachbarhaus
+  Nr. 6, 2)“, dazu der Hinweis „Hausnummer vor Ort kurz prüfen“. Foto-Ortsnamen unverändert.
+
 ## 1.7.1 – 2026-10-01 (DEV)
 
 - KC-CLUB-SOS-WO (Live-Test Hansi: „Adresse nicht gefunden“): Nominatim lehnt Anfragen vom Supabase-Server ab (403).

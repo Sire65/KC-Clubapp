@@ -1663,7 +1663,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.7.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.7.2"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -5386,7 +5386,7 @@ function sosWoKarte() {
   const koord = `${w.lat.toFixed(5)}, ${w.lon.toFixed(5)}`;
   return `<div class="karte"><b>📍 Hier bin ich</b> <span class="hinweis">(${esc(w.zeit)} Uhr · auf ca. ${w.genau} m genau)</span>
     <div class="sos-wo-adr">${w.adresse ? esc(w.adresse) : w.laedt ? "Adresse wird gesucht …" : "Adresse nicht gefunden"}</div>
-    <div class="sos-wo-koord">${koord}</div>${w.adrFehler ? `<div class="hinweis">${esc(w.adrFehler)}</div>` : ""}
+    <div class="sos-wo-koord">${koord}</div>${w.adresse && /Nachbarhaus/.test(w.adresse) ? '<div class="hinweis">GPS ist auf einige Meter ungenau – bitte die Hausnummer vor Ort kurz prüfen.</div>' : ""}${w.adrFehler ? `<div class="hinweis">${esc(w.adrFehler)}</div>` : ""}
     <div class="knoepfe" style="margin-top:8px"><button class="knopf klein" onclick="sosWoKopieren()">📋 Kopieren</button>
       <a class="knopf klein" href="${esc("sms:?&body=" + encodeURIComponent(sosWoText()))}">💬 SMS</a>
       <a class="knopf klein" href="${esc("https://wa.me/?text=" + encodeURIComponent(sosWoText()))}" target="_blank" rel="noopener">🟢 WhatsApp</a>
@@ -5405,7 +5405,7 @@ async function sosWoBinIch() {
   SOS.wo = { lat: c.latitude, lon: c.longitude, genau: Math.max(1, Math.round(c.accuracy || 0)), zeit, laedt: true };
   sosZeigen();
   const w = SOS.wo;
-  try { const r = await api("sos_ort", { lat: w.lat, lon: w.lon }, { warten: true }); w.adresse = r.adresse || null; if (r.fehler) w.adrFehler = r.fehler; }
+  try { const r = await api("sos_ort", { lat: w.lat, lon: w.lon, genau: w.genau }, { warten: true }); w.adresse = r.adresse || null; if (r.fehler) w.adrFehler = r.fehler; }
   catch (e) { w.adrFehler = e.message; }
   w.laedt = false; if (SOS.wo === w) sosZeigen();
 }
