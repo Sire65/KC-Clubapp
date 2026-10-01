@@ -1498,6 +1498,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/if \(o\.besitzer\) \{/.test(ho) && /o\.besitzer === ich\.person_id/.test(ho) && /archivKeinZugriff\(ich, o, "den Ordner"\)/.test(ho) && !/ich\.admin/.test(ho), "Nur Besitzer + Freigabe – kein Admin-Zugriff");
   assert.ok(/async function archivFremdversuch/.test(server) && /"archiv_fremdzugriff"/.test(server) && /await adminIds\(\)/.test(server.slice(server.indexOf("async function archivFremdversuch"))), "Fremdversuch → Besitzer + Admins");
   assert.ok(/Deine Freigabe für diesen Ordner ist abgelaufen/.test(server), "Abgelaufene Freigabe: Hinweis statt Alarm");
+  assert.ok(/Dieses Dokument ist für dich nicht freigegeben\./.test(server), "Freigabe ohne dieses Dokument: Hinweis statt „abgelaufen“");
   const au = server.slice(server.indexOf('case "anlage_url"'), server.indexOf('case "anlage_url"') + 4000);
   assert.ok(/darfDokSehen\(ich, o, x, fr\)/.test(au) && /archivKeinZugriff\(ich, fremd, "ein Dokument"\)/.test(au), "Datei-Link geschützt");
   assert.ok(/case "archiv_freigeben"/.test(server) && /FREIGABE_MAX_TAGE \* 86400_000/.test(server) && /case "archiv_freigabe_beenden"/.test(server), "Freigabe auf Zeit");

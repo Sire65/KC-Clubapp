@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.5.0";
+const SERVER_VERSION = "1.5.1";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -949,8 +949,9 @@ async function archivFremdversuch(ich: Ich, o: any, was: string) {
   }, `club-archiv-fremd-admin:${o.id}:${ich.person_id}:${Date.now()}`).catch(() => null);
 }
 async function archivKeinZugriff(ich: Ich, o: any, was: string): Promise<never> {
-  // abgelaufene/zurückgenommene Freigabe → nur Hinweis, kein Alarm
+  // gültige Freigabe, die dieses Dokument nicht umfasst → Hinweis; abgelaufene/zurückgenommene Freigabe → Hinweis; beides kein Alarm
   const alt = await archivFreigabenFuer(ich.person_id, [o.id], true);
+  if (alt.some((f: any) => !f.beendet_am && new Date(f.bis).getTime() > Date.now())) throw new Fehler("Dieses Dokument ist für dich nicht freigegeben.", 403);
   if (alt.length) throw new Fehler("Deine Freigabe für diesen Ordner ist abgelaufen oder wurde beendet.", 403);
   await archivFremdversuch(ich, o, was);
   throw new Fehler("Das ist ein persönlicher Ordner – kein Zugriff. Der Besitzer wurde informiert.", 403);

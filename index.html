@@ -853,7 +853,9 @@
   .ordner .ar-frei { position: absolute; top: 4px; left: 6px; font-size: .9rem; }
   .ar-pers { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   .fr-personen { max-height: 220px; overflow-y: auto; border: 1px solid var(--linie); border-radius: 10px; padding: 4px 8px; margin-top: 6px; }
-  .fr-person { display: flex; gap: 8px; align-items: center; padding: 6px 2px; border-bottom: 1px solid var(--linie); }
+  .fr-person { display: flex; gap: 10px; align-items: center; justify-content: flex-start; padding: 8px 2px; border-bottom: 1px solid var(--linie); cursor: pointer; }
+  .fr-person input[type=checkbox], .fr-gruppe input[type=checkbox] { width: 22px; height: 22px; min-width: 22px; margin: 0; flex: 0 0 auto; }
+  .fr-gruppe { display: inline-flex; flex-direction: row; gap: 8px; align-items: center; padding: 6px 12px; border-radius: 16px; background: var(--karte2); cursor: pointer; margin: 0 6px 6px 0; }
   .fr-person:last-child { border-bottom: none; }
   .ar-kopf { display: flex; gap: 12px; align-items: center; background: var(--of); color: #fff; border-radius: var(--radius); padding: 12px 14px; box-shadow: var(--schatten); }
   .ar-kopf .sym { font-size: 1.8rem; } .ar-kopf b { font-size: 1.15rem; } .ar-kopf .klein { font-size: .85rem; opacity: .9; }
@@ -1617,7 +1619,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.5.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.5.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -7488,7 +7490,7 @@ function arListeZeigen() {
     ? `<div class="karte hinweis">${AR.jahr || AR.art ? "Für diese Auswahl gibt es keinen Vereinsordner. <button class=\"knopf klein\" onclick=\"AR.jahr='';AR.art='';arFilterMerken();arZeigen()\">✕ Filter zurücksetzen</button>" : "Im Vereinsarchiv ist noch nichts." + (d.darf ? " Tippe oben auf „＋ Ordner“." : "")}</div>`
     : jahre.map((j) => `<div class="abschnitt"><h3>${j}</h3></div><div class="regal">${ordner.filter((o) => o.jahr === j).sort((a, b) => (b.auto ? 1 : 0) - (a.auto ? 1 : 0) || a.titel.localeCompare(b.titel)).map(arRuecken).join("")}</div>`).join("")
       + `<p class="hinweis" style="margin-top:14px">🤖 <b>Vereinsleben</b> füllt sich von selbst mit dem, was vorbei ist.${d.darf ? "" : " Unterlagen legen Clubsprecher und Admin ab."}</p>`;
-  const adminSicht = d.persoenlich?.length ? `<details class="karte" style="margin-top:12px"><summary><b>👤 Persönliche Ordner der Mitglieder (${d.persoenlich.length})</b> – nur Übersicht, kein Inhalt</summary>
+  const adminSicht = d.persoenlich?.length ? `<details class="karte" style="margin-top:12px"><summary><b>👤 Persönliche Ordner der Mitglieder (${d.persoenlich.length}) – nur Übersicht, kein Inhalt</b></summary>
       ${d.persoenlich.map((x) => `<div class="ar-dok"><span class="sym">👤</span><div><b>${esc(x.name)} ${x.jahr}</b><div class="hinweis">${x.anzahl} ${x.anzahl === 1 ? "Dokument" : "Dokumente"} · ${arGroesse(x.groesse) || "0 KB"}</div></div><span></span></div>`).join("")}</details>` : "";
   $("arListe").innerHTML = pers + `<div class="abschnitt"><h3>🗄️ Vereinsarchiv</h3></div>` + verein + adminSicht;
 }
@@ -7732,7 +7734,7 @@ function arFreigabeForm(oid) {
   arBlatt(`<h3>🔓 Freigeben – Mein Ordner ${o.jahr}</h3>
     <label class="feld">Was?<select id="frWas" onchange="arFrWas()"><option value="o">🗂️ ganzer Ordner</option>${o.register.map((r) => `<option value="r:${esc(r)}">📑 Register „${esc(r)}“</option>`).join("")}${doks.map((x) => `<option value="d:${x.id}">📄 ${esc(x.titel)}</option>`).join("")}</select></label>
     <div class="feld">Für wen?
-      ${d.gruppen?.length ? `<div class="chips" style="margin:4px 0">${d.gruppen.map((g) => `<label class="chip"><input type="checkbox" class="frGr" value="${g.id}"> ${esc(g.name)}</label>`).join("")}</div>` : ""}
+      ${d.gruppen?.length ? `<div style="margin:6px 0">${d.gruppen.map((g) => `<label class="fr-gruppe"><input type="checkbox" class="frGr" value="${g.id}"> ${esc(g.name)}</label>`).join("")}</div>` : ""}
       <input id="frSuche" type="search" placeholder="🔍 Person suchen …" autocomplete="off" oninput="arFrFilter(this.value)">
       <div id="frPersonen" class="fr-personen">${(d.personen || []).map((m) => `<label class="fr-person" data-n="${esc(suNorm(m.name))}"><input type="checkbox" class="frPe" value="${esc(m.id)}"> ${esc(m.name)}</label>`).join("")}</div></div>
     <div class="zwei"><label class="feld">Wie lange?<select id="frDauer" onchange="$('frDatumFeld').classList.toggle('versteckt', this.value !== 'datum')"><option value="1">1 Tag</option><option value="7" selected>1 Woche</option><option value="30">1 Monat</option><option value="90">3 Monate</option><option value="datum">bis Datum …</option></select></label>

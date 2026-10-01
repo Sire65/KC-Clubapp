@@ -1,5 +1,11 @@
 # Änderungen
 
+## 1.5.1 – 2026-10-01 (DEV)
+
+- KC-CLUB-ARCHIV-PERSOENLICH (Live-Test): Wer eine gültige Freigabe nur für ein Register/Dokument hat und etwas anderes öffnen
+  will, bekommt jetzt „Dieses Dokument ist für dich nicht freigegeben.“ (vorher fälschlich „Freigabe abgelaufen“) – kein Alarm.
+  Freigabe-Fenster: Kästchen für Personen/Gruppen sauber neben dem Namen; Admin-Übersicht einzeilig.
+
 ## 1.5.0 – 2026-10-01 (DEV)
 
 - KC-CLUB-ARCHIV-PERSOENLICH (Wunsch Hansi): Im Archiv hat jedes Mitglied eigene Ordner je Jahr (Rücken: Jahr oben, Name

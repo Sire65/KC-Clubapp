@@ -1,11 +1,16 @@
 {
-  "version": "1.5.0",
+  "version": "1.5.1",
   "datum": "2026-09-30",
   "neu": [
-    "👤 Archiv: dein eigener Ordner je Jahr (Jahr + Name auf dem Rücken) mit Registern – nur du siehst ihn",
-    "🔓 Freigeben auf Zeit: ganzen Ordner, ein Register oder ein Dokument für Personen oder Gruppen – auf Wunsch dürfen sie etwas hineinlegen, du nimmst an oder lehnst ab"
+    "🗄️ Archiv: klarere Hinweise bei Freigaben und besser bedienbare Auswahl im Freigabe-Fenster"
   ],
   "verlauf": [
+    {
+      "version": "1.5.1",
+      "neu": [
+        "🗄️ Archiv: klarere Hinweise bei Freigaben und besser bedienbare Auswahl im Freigabe-Fenster"
+      ]
+    },
     {
       "version": "1.5.0",
       "neu": [
