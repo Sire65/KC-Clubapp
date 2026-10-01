@@ -735,6 +735,9 @@
   }
   .kopf2 { display: flex; align-items: center; gap: 10px; margin: 6px 0 4px; }
   .kopf2 h2 { margin: 0; font-size: 1.35rem; flex: 1; }
+  /* KC-CLUB-CHAT-KOPF (1.20.1): Chat-Kopf klebt oben (wie WhatsApp); Nachrichten, zu denen gesprungen wird, nicht darunter verstecken */
+  .chat-kopf { position: sticky; top: 0; z-index: 30; background: var(--bg); padding: 2px 0 4px; margin: 0 -4px; padding-left: 4px; padding-right: 4px; box-shadow: 0 6px 8px -8px rgba(0,0,0,.35); }
+  #chat > * { scroll-margin-top: var(--chatKopfHoehe, 120px); }
   .zurueck { width: 44px; height: 44px; border-radius: 50%; border: none; background: var(--karte); box-shadow: var(--schatten); font-size: 1.2rem; cursor: pointer; }
   .meldung { position: fixed; left: 50%; transform: translateX(-50%); top: 14px; background: #2b1a1c; color: #fff; padding: 12px 18px; border-radius: 14px; z-index: 50; max-width: 92%; box-shadow: 0 8px 24px rgba(0,0,0,.25); }
   .meldung.fehler { background: #a51d1d; }
@@ -1263,10 +1266,13 @@
 
   <!-- UNTERHALTUNG -->
   <section id="v-chat" class="versteckt">
-    <div class="kopf2"><button class="zurueck" onclick="zeige('nachrichten')">‹</button><h2 id="chatTitel">…</h2><button class="rund" id="chatSuchKnopf" title="Im Chat suchen" aria-label="Im Chat suchen" onclick="chatSucheAuf()">🔍</button><button class="rund" id="chatMenueKnopf" title="Mehr" onclick="chatMenue()">⋮</button></div>
-    <div id="chatSuchLeiste" class="versteckt"><input id="chatSuchFeld" type="search" placeholder="Im Chat suchen …" autocomplete="off" oninput="chatSucheJetzt(true)" onkeydown="if(event.key==='Enter'){event.preventDefault();chatSucheSpringen(1)}"><span id="chatSuchZahl"></span><button title="vorheriger Treffer" onclick="chatSucheSpringen(-1)">▲</button><button title="nächster Treffer" onclick="chatSucheSpringen(1)">▼</button><button title="Suche schließen" onclick="chatSucheZu()">✕</button></div>
-    <div class="hinweis" id="chatTeilnehmer" style="margin-left:54px;cursor:pointer" onclick="if(CHAT?.gruppe)chatMenue()"></div>
-    <div id="chatAngeheftet"></div>
+    <!-- KC-CLUB-CHAT-KOPF (1.20.1, Wunsch Hansi): Kopfzeile (Name, Lupe, Menü, Suche, Angeheftetes) bleibt beim Scrollen oben stehen -->
+    <div class="chat-kopf" id="chatKopf">
+      <div class="kopf2"><button class="zurueck" onclick="zeige('nachrichten')">‹</button><h2 id="chatTitel">…</h2><button class="rund" id="chatSuchKnopf" title="Im Chat suchen" aria-label="Im Chat suchen" onclick="chatSucheAuf()">🔍</button><button class="rund" id="chatMenueKnopf" title="Mehr" onclick="chatMenue()">⋮</button></div>
+      <div id="chatSuchLeiste" class="versteckt"><input id="chatSuchFeld" type="search" placeholder="Im Chat suchen …" autocomplete="off" oninput="chatSucheJetzt(true)" onkeydown="if(event.key==='Enter'){event.preventDefault();chatSucheSpringen(1)}"><span id="chatSuchZahl"></span><button title="vorheriger Treffer" onclick="chatSucheSpringen(-1)">▲</button><button title="nächster Treffer" onclick="chatSucheSpringen(1)">▼</button><button title="Suche schließen" onclick="chatSucheZu()">✕</button></div>
+      <div class="hinweis" id="chatTeilnehmer" style="margin-left:54px;cursor:pointer" onclick="if(CHAT?.gruppe)chatMenue()"></div>
+      <div id="chatAngeheftet"></div>
+    </div>
     <div class="chat" id="chat"></div>
   </section>
 
@@ -1783,7 +1789,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.20.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.20.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2684,6 +2690,7 @@ function tippenMelden() {
 // KC-CLUB-CHAT-ABSTAND (1.11.0, Wunsch Hansi): letzte Nachricht stößt nicht mehr unten an – Abstand = gemessene Höhe
 // des Eingabebereichs (+ untere Leiste) + etwas Luft; passt sich an, wenn Antwort-/Emoji-/Aufnahmeleiste dazukommt.
 function chatAbstand() {
+  if ($("chatKopf")) document.documentElement.style.setProperty("--chatKopfHoehe", Math.ceil($("chatKopf").getBoundingClientRect().height + 12) + "px"); // 1.20.1
   const e = $("eingabe"); if (!e || e.classList.contains("versteckt")) return;
   const c = $("chat"); if (!c) return;
   // Platz, den die Seite unter dem Chat ohnehin hat (z. B. für die untere Leiste), nicht doppelt rechnen

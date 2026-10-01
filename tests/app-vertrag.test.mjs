@@ -1795,6 +1795,14 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/m\.zuletztDa \? ` · 🕒 \$\{esc\(zuletztText\(m\.zuletztDa\)\)\}`/.test(html) && /Zuletzt in der App:/.test(html) && /\[zuletztText\(u\.partnerDa\), st\]/.test(html), "App: Liste, Seite, Chat-Kopf");
 }
 
+// 156. 1.20.1: Chat-Kopfzeile bleibt oben (KC-CLUB-CHAT-KOPF)
+{
+  assert.ok(/<div class="chat-kopf" id="chatKopf">\s*<div class="kopf2"><button class="zurueck" onclick="zeige\('nachrichten'\)">‹<\/button><h2 id="chatTitel">/.test(html), "Kopf im eigenen Bereich");
+  const k = html.slice(html.indexOf('id="chatKopf"'), html.indexOf('<div class="chat" id="chat">'));
+  assert.ok(/id="chatSuchKnopf"/.test(k) && /id="chatSuchLeiste"/.test(k) && /id="chatTeilnehmer"/.test(k) && /id="chatAngeheftet"/.test(k), "Lupe, Suche, Untertitel, Angeheftetes im Kopf");
+  assert.ok(/\.chat-kopf \{ position: sticky; top: 0;/.test(html) && /#chat > \* \{ scroll-margin-top: var\(--chatKopfHoehe/.test(html), "sticky + Sprungabstand");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

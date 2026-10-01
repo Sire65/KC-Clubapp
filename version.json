@@ -1,10 +1,16 @@
 {
-  "version": "1.20.0",
+  "version": "1.20.1",
   "datum": "2026-10-01",
   "neu": [
-    "🕒 Neu: „Zuletzt da“ wie bei WhatsApp – im Chat oben, in der Mitgliederliste und beim Mitglied. Heute mit Uhrzeit, sonst nur grob. Wer das nicht möchte: ⚙️ → Privatsphäre → „Anderen zeigen, wann ich zuletzt da war“ ausschalten (dann siehst du es auch bei anderen nicht)"
+    "💬 Chat: Die Kopfzeile mit Name, 🔍 und Menü bleibt beim Scrollen oben stehen"
   ],
   "verlauf": [
+    {
+      "version": "1.20.1",
+      "neu": [
+        "💬 Chat: Die Kopfzeile mit Name, 🔍 und Menü bleibt beim Scrollen oben stehen"
+      ]
+    },
     {
       "version": "1.20.0",
       "neu": [

@@ -1,5 +1,11 @@
 # Änderungen
 
+## 1.20.1 – 2026-10-01 (DEV)
+
+- KC-CLUB-CHAT-KOPF (Wunsch Hansi): im Chat bleibt die Kopfzeile (‹, Name, 🔍, ⋮, Suchleiste, „zuletzt da“/Teilnehmer,
+  Angeheftetes) beim Scrollen oben stehen (sticky, eigener Bereich #chatKopf). Sprung zu einer Nachricht (Antwort, Suche,
+  Neue-Nachrichten-Linie) hält Abstand zur Kopfzeile (scroll-margin aus der gemessenen Kopfhöhe).
+
 ## 1.20.0 – 2026-10-01 (DEV)
 
 - KC-CLUB-ZULETZT-DA (Wunsch Hansi: „eingeschaltet, alle drei Stellen“): „zuletzt da“ wie WhatsApp „zuletzt online“ –
