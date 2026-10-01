@@ -1784,6 +1784,17 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/kc_dp_wish_inbox_claim/.test(lies("docs/DP2_CODEX_AUFTRAG_BUILD255_SPERRE.md")), "Codex-Auftrag Build 255 fehlt");
 }
 
+// 155. 1.20.0: „Zuletzt da“ (KC-CLUB-ZULETZT-DA)
+{
+  assert.ok(/zuletzt: \(w\) => \(\{ zeigen: w\?\.zeigen !== false \}\)/.test(server), "Einstellung zuletzt, Standard an");
+  const f = server.slice(server.indexOf("async function zuletztDaMap("), server.indexOf("async function onlineJetzt("));
+  assert.ok(/\.in\("schluessel", \["online", "zuletzt"\]\)/.test(f) && /if \(verborgen\(ich\.person_id\)\) return aus;/.test(f), "gegenseitig (online oder zuletzt verborgen)");
+  assert.ok(/zeit: tag === heute \?/.test(f) && /lange: true/.test(f) && /pid\.startsWith\("KC-P-TEST"\)/.test(f), "grob: Uhrzeit nur heute, alt = länger nicht da, Testpersonen nie");
+  assert.ok(/zuletztDa: zd\.get\(m\.person_id\) \?\? null/.test(server) && /zuletztDa: selbst \? null : \(await zuletztDaMap\(ich, \[pid\]\)\)/.test(server) && /partnerDa = andere\.length === 1/.test(server), "Server: alle drei Stellen");
+  assert.ok(/id="setZuletzt" onchange="zuletztZeigen\(this\.checked\)"/.test(html) && /function zuletztText\(z\)/.test(html), "App: Schalter + Text");
+  assert.ok(/m\.zuletztDa \? ` · 🕒 \$\{esc\(zuletztText\(m\.zuletztDa\)\)\}`/.test(html) && /Zuletzt in der App:/.test(html) && /\[zuletztText\(u\.partnerDa\), st\]/.test(html), "App: Liste, Seite, Chat-Kopf");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

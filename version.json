@@ -1,13 +1,16 @@
 {
-  "version": "1.19.0",
+  "version": "1.20.0",
   "datum": "2026-10-01",
   "neu": [
-    "🗄️ Archiv: Chats, Dateien aus Nachrichten, Fotos und Protokolle lassen sich in deinen Ordner legen – beim Löschen oder Verlassen eines Chats fragt die App vorher",
-    "🗑️ Archiv: Dokumente direkt löschen, Register löschen, Papierkorb endgültig leeren (Speicher wird sofort frei)",
-    "🛡️ Sicherheits-Check: Die Kochmütze dreht sich jetzt ruhig und gleichmäßig",
-    "⏩ Startseite: Doppelpfeil « » unter den Pfeilen oben – springt sofort zur ersten bzw. letzten Karte"
+    "🕒 Neu: „Zuletzt da“ wie bei WhatsApp – im Chat oben, in der Mitgliederliste und beim Mitglied. Heute mit Uhrzeit, sonst nur grob. Wer das nicht möchte: ⚙️ → Privatsphäre → „Anderen zeigen, wann ich zuletzt da war“ ausschalten (dann siehst du es auch bei anderen nicht)"
   ],
   "verlauf": [
+    {
+      "version": "1.20.0",
+      "neu": [
+        "🕒 Neu: „Zuletzt da“ wie bei WhatsApp – im Chat oben, in der Mitgliederliste und beim Mitglied. Heute mit Uhrzeit, sonst nur grob. Wer das nicht möchte: ⚙️ → Privatsphäre → „Anderen zeigen, wann ich zuletzt da war“ ausschalten (dann siehst du es auch bei anderen nicht)"
+      ]
+    },
     {
       "version": "1.19.0",
       "neu": [

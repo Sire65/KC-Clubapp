@@ -1436,6 +1436,8 @@
     <details class="karte" data-klappe="privat" data-einfach>
       <summary>🔒 Privatsphäre</summary>
       <div class="schalter"><div><b>🎂 Meinen Geburtstag anzeigen (ohne Jahr)</b><div class="hinweis" id="gebHinweis">Andere sehen dann nur Tag und Monat – im Kalender, in der Terminliste und unter „Heute wichtig“.</div></div><input type="checkbox" id="setGeburtstag" onchange="geburtstagFreigabe(this.checked)"></div>
+      <!-- KC-CLUB-ZULETZT-DA (1.20.0) -->
+      <div class="schalter"><div><b>🕒 Anderen zeigen, wann ich zuletzt da war</b><div class="hinweis">Wie bei WhatsApp „zuletzt online“: heute mit Uhrzeit, sonst nur grob („gestern“, „vor 3 Tagen“). Ausgeschaltet siehst du es auch bei anderen nicht.</div></div><input type="checkbox" id="setZuletzt" onchange="zuletztZeigen(this.checked)"></div>
       <div class="schalter"><div><b>🟢 Anderen zeigen, wann ich online bin</b><div class="hinweis">Dann sehen andere einen grünen Punkt bei dir und können „anklopfen“. Ausgeschaltet siehst du auch selbst nicht, wer online ist.</div></div><input type="checkbox" id="setOnline" onchange="onlineZeigen(this.checked)"></div>
       <!-- KC-CLUB-ANKLOPFEN-ERLAUBEN (1.8.0) -->
       <div class="schalter"><div><b>👋 Anklopfen erlauben</b><div class="hinweis">Andere dürfen bei dir anklopfen, wenn du online bist. Aus: Sie sehen 🔕 und schreiben dir stattdessen eine Nachricht.</div></div><input type="checkbox" id="setAnklopfen" checked onchange="anklopfenSetzen({ erlaubt: this.checked })"></div>
@@ -1781,7 +1783,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.19.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.20.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2548,6 +2550,25 @@ function klopfTonSpielen(id) {
       o.connect(g).connect(audio.destination); o.start(jetzt + ab); o.stop(jetzt + ab + dauer + .05);
     }
   } catch {}
+}
+// KC-CLUB-ZULETZT-DA (1.20.0): „zuletzt da“ – Text aus der groben Server-Angabe { online, tag, zeit (nur heute), lange }
+function zuletztText(z) {
+  if (!z) return "";
+  if (z.online) return "🟢 online";
+  if (z.lange) return "länger nicht da";
+  if (z.zeit) {
+    const [h, m] = z.zeit.split(":").map(Number), [jh, jm] = new Intl.DateTimeFormat("de-DE", { timeZone: TZ, hour: "2-digit", minute: "2-digit" }).format(new Date()).split(":").map(Number);
+    const min = jh * 60 + jm - (h * 60 + m);
+    return min < 60 ? `zuletzt da vor ${Math.max(1, min)} Min.` : `zuletzt da heute ${z.zeit}`;
+  }
+  const tage = Math.round((Date.parse(heuteIso() + "T12:00:00Z") - Date.parse(z.tag + "T12:00:00Z")) / 86400000);
+  return tage <= 1 ? "zuletzt da gestern" : tage < 7 ? `zuletzt da vor ${tage} Tagen` : `zuletzt da am ${z.tag.slice(8, 10)}.${z.tag.slice(5, 7)}.`;
+}
+function zuletztSchalterZeigen() { if ($("setZuletzt")) $("setZuletzt").checked = INIT?.einstellungen?.zuletzt?.zeigen !== false; }
+async function zuletztZeigen(an) {
+  try { await api("einstellung_setzen", { schluessel: "zuletzt", wert: { zeigen: an } }); INIT.einstellungen = { ...(INIT.einstellungen || {}), zuletzt: { zeigen: an } };
+    melde(an ? "🕒 Andere sehen jetzt, wann du zuletzt da warst" : "„Zuletzt da“ ausgeschaltet – du siehst es auch bei anderen nicht"); MITGLIEDER = null; }
+  catch (e) { melde(e.message, true); zuletztSchalterZeigen(); }
 }
 function anklopfenZeigen() {
   const w = klopfStand();
@@ -4852,7 +4873,7 @@ function zeige(v, ausHistorie) {
   if (v === "dienste") dienstLaden();
   if (v === "nachrichten") unterhLaden();
   if (v === "mitglieder") mitgliederLaden();
-  if (v === "einstellungen") { infoStartZeigen(); tippSchalterZeigen(); ruheZeigen(); if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); anklopfenZeigen(); schnellWahlZeigen(); }
+  if (v === "einstellungen") { infoStartZeigen(); tippSchalterZeigen(); ruheZeigen(); if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); anklopfenZeigen(); zuletztSchalterZeigen(); schnellWahlZeigen(); }
   if (v === "start") neuLaden();
   // KC-CLUB-ZURUECK: jede Ansicht bekommt einen Verlaufseintrag, damit „Zurück“ eine Ansicht zurückgeht statt die App zu schließen
   const hash = v === "start" || v === "chat" ? "" : v === "protokoll" ? "#protokoll=" + prId : v === "aktion" ? "#aktion=" + aktionId : v === "mitglied" ? "#mitglied=" + mitgliedId : "#" + v;
@@ -5416,7 +5437,7 @@ async function chatLaden(scrollen) {
     zustellZeigen();
     let st = "";
     if (andere.length === 1) { if (!MITGLIEDER) await mitgliederHolen().catch(() => {}); const m = MITGLIEDER?.find((x) => x.person_id === andere[0].person_id); if (m?.status) st = statusText(m.status); }
-    $("chatTeilnehmer").textContent = !andere.length ? "Nur du (Test-Unterhaltung)" : u.gruppe ? `👥 ${andere.length + 1} Mitglieder: Du, ${andere.map((x) => x.name.split(" ")[0]).join(", ")} ›` : u.betreff || andere.length > 1 ? "Mit: " + andere.map((x) => x.name).join(", ") : st;
+    $("chatTeilnehmer").textContent = !andere.length ? "Nur du (Test-Unterhaltung)" : u.gruppe ? `👥 ${andere.length + 1} Mitglieder: Du, ${andere.map((x) => x.name.split(" ")[0]).join(", ")} ›` : u.betreff || andere.length > 1 ? "Mit: " + andere.map((x) => x.name).join(", ") : [zuletztText(u.partnerDa), st].filter(Boolean).join(" · "); // 1.20.0: zuletzt da
     $("chatAngeheftet").innerHTML = (u.angeheftet || []).map((a) => `<button class="pin-zeile" onclick="zuNachricht('${a.id}')">📌 <b>${esc(a.von)}:</b> ${esc(a.text)}</button>`).join(""); // KC-CLUB-ANHEFTEN
     tipptZeigen(u.tippt || [], u.entwurf || [], u.spricht || []); chatAbstand();
     if (u.tippt?.length && andere.length === 1) $("chatTeilnehmer").textContent = "✍️ schreibt …";
@@ -6934,7 +6955,7 @@ function mitgliederZeichnen() {
     $("mitgliederListe").innerHTML = kreisLegende() + liste.map((m) => `<div class="zeile">
       ${kreis(m, m.name, 40, `onclick="mitgliedOeffnen('${m.person_id}')"`)}
       <div style="flex:1;cursor:pointer" onclick="mitgliedOeffnen('${m.person_id}')"><b>${esc(m.name)}</b>${wegIcons(m)} <span class="hinweis">›</span>${m.aemter?.length ? ` <span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}
-        <div class="hinweis" style="font-size:.85rem">${m.online ? '<b style="color:#1e8449">● online</b> · ' : ""}${m.status || m.aktiv ? `<span class="stmarke st-${statusArt(m.status)}">${esc(m.status ? statusText(m.status) : "🟢 verfügbar")}</span>` : "⚪ noch nicht in der App"}${m.aktiv ? " · 📲 aktiv" : ""}</div>
+        <div class="hinweis" style="font-size:.85rem">${m.online ? '<b style="color:#1e8449">● online</b> · ' : ""}${m.status || m.aktiv ? `<span class="stmarke st-${statusArt(m.status)}">${esc(m.status ? statusText(m.status) : "🟢 verfügbar")}</span>` : "⚪ noch nicht in der App"}${m.aktiv ? " · 📲 aktiv" : ""}${!m.online && m.zuletztDa ? ` · 🕒 ${esc(zuletztText(m.zuletztDa))}` : ""}</div>
         ${ICH.admin && (m.app || m.push || !m.mail || m.protokolle === false) ? `<div class="hinweis" style="font-size:.85rem">${[m.app && m.zuletzt ? "zuletzt " + zeitKurz(m.zuletzt) : m.app ? "Link verschickt" : "", m.push ? "🔔 Push" : "", m.mail ? "" : "⚠️ keine Mail", m.protokolle === false ? "📄 ohne Protokolle" : "", m.app && m.zuletzt ? (m.ansicht === "einfach" ? "🟢 einfache Ansicht" : m.ansicht === "erweitert" ? "🔧 erweiterte Ansicht" : "❔ Ansicht noch nicht gewählt") : ""].filter(Boolean).join(" · ")}</div>` : ""}</div>
       ${m.online ? `<button class="knopf klein" title="Anklopfen – direkt schreiben" onclick="anklopfen('${m.person_id}')">👋</button>` : ""}${m.person_id !== ICH.person_id ? `<button class="knopf klein" onclick="direkt('${m.person_id}')">💬</button>` : ""}
       ${ICH.admin ? `<button class="knopf klein" onclick="linkTeilen('${m.person_id}')">🔗</button><button class="knopf klein" onclick="rolleBearbeiten('${m.person_id}')">🎖️</button>` : ""}</div>`).join("")
@@ -8225,6 +8246,7 @@ function mitgliedZeigen() {
       <div style="font-size:1.3rem;font-weight:800;margin-top:8px">${esc(m.name)}</div>
       ${m.aemter?.length ? `<div style="margin-top:4px">${m.aemter.map((a) => `<span class="marke">${esc(a)}</span>`).join(" ")}</div>` : ""}
       <div class="hinweis" style="margin-top:4px">${m.status ? esc(statusText(m.status)) : ""}${m.geburtstag ? ` · 🎂 ${esc(m.geburtstag.slice(3) + "." + m.geburtstag.slice(0, 2) + ".")}` : ""}</div>
+      ${m.zuletztDa ? `<div class="hinweis" style="margin-top:2px">${m.zuletztDa.online ? "🟢 gerade online" : "🕒 " + esc(zuletztText(m.zuletztDa).replace(/^zuletzt da/, "Zuletzt in der App:"))}</div>` : ""}
     </div>
     <div class="karte">${zeilen}${leer}</div>
     ${m.notfall ? `<div class="karte"><h3>🆘 Notfallkontakt</h3><div class="zeile"><div style="flex:1"><b>${esc(m.notfall.name || "–")}</b>${m.notfall.beziehung ? ` <span class="hinweis">(${esc(m.notfall.beziehung)})</span>` : ""}<div class="hinweis">${esc(m.notfall.telefon || "")}</div></div>${m.notfall.telefon ? `<a class="knopf klein" href="tel:${esc(nurZiffern(m.notfall.telefon))}">📞</a>` : ""}</div><p class="hinweis" style="font-size:.85rem;margin-bottom:0">🔒 Nur für ${m.selbst ? "dich und " : ""}Clubsprecher, Kassenwart und Admin sichtbar.</p></div>` : m.selbst ? '<p class="hinweis">🆘 Noch kein Notfallkontakt – eintragen unter ⚙️ Mehr → Privatsphäre.</p>' : ""}
@@ -9082,7 +9104,7 @@ function suAppListe() {
     ["🔔", "Push-Benachrichtigungen", "push benachrichtigung mitteilung handy", ein("pushStatus")], ["🔊", "Ton", "ton klingel laut", ein("setTon")],
     ["🌙", "Nicht stören (Ruhezeit)", "nicht stören ruhezeit nacht stumm", ein("ruheAn")], ["🔠", "Schriftgröße", "schrift gross groß lesen", ein(einfach() ? "setGrossE" : "setGross")],
     ["🎨", "Farbe & Design", "farbe design aussehen", ein(einfach() ? "designWahlE" : "designWahl")], ["🌗", "Tag/Nacht umschalten", "dunkel hell nacht tag", () => dunkelUmschalten()],
-    ["🎂", "Geburtstag anzeigen", "geburtstag", ein("setGeburtstag")], ["🟢", "Online sichtbar", "online sichtbar unsichtbar", ein("setOnline")],
+    ["🎂", "Geburtstag anzeigen", "geburtstag", ein("setGeburtstag")], ["🟢", "Online sichtbar", "online sichtbar unsichtbar", ein("setOnline")], ["🕒", "Zuletzt da anzeigen", "zuletzt da online gesehen", ein("setZuletzt")],
     ["🆘", "Notfallkontakt", "notfall kontakt", ein("nfName")], ["📆", "Kalender-Abo (Handy-Kalender)", "kalender abo handy ical", ein("kalAboKnopf")],
     ["📱", "Meine Geräte", "geräte handy tablet abmelden", () => geraeteBlatt()], ["📡", "Verbindung prüfen", "verbindung internet led server", () => verbindungBlatt()],
     ["🔄", "Update prüfen", "update version neu", () => updateKachel()], ["🟢", "Mein Status", "status urlaub verfügbar krank", () => statusBlatt()],

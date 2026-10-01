@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.19.0";
+const SERVER_VERSION = "1.20.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -235,6 +235,32 @@ const KLOPF_ANTWORTEN: Record<string, string> = {
   beschaeftigt: "⏳ Bin gerade beschäftigt", spaeter: "🔁 Melde mich später", anrufen: "📞 Ruf mich kurz an",
   schreiben: "💬 Schreib mir lieber", unterwegs: "🚗 Bin unterwegs", kochen: "🍳 Stehe gerade am Herd",
 };
+// KC-CLUB-ZULETZT-DA (1.20.0, Wunsch Hansi): „zuletzt da“ wie WhatsApp „zuletzt online“. Gegenseitig: wer Online- oder
+// Zuletzt-Anzeige verbirgt, sieht sie auch bei anderen nicht. Grob: Uhrzeit nur für heute, sonst nur der Tag; älter als
+// ZULETZT_TAGE nur „länger nicht da“. Quelle ist zuletzt_gesehen (setzt sich nur, solange die App wirklich offen ist).
+const ZULETZT_TAGE = 30;
+async function zuletztDaMap(ich: Ich, ids: string[]) {
+  const aus = new Map<string, { online: boolean; tag?: string; zeit?: string | null; lange?: boolean } | null>();
+  const ziel = [...new Set(ids)].filter((id) => id && id !== ich.person_id);
+  if (!ziel.length) return aus;
+  const [{ data: e }, { data: z }] = await Promise.all([
+    db.from("kc_club_person_einstellung").select("person_id,wert").in("schluessel", ["online", "zuletzt"]).in("person_id", [...ziel, ich.person_id]),
+    db.from("kc_club_zugang").select("person_id,zuletzt_gesehen").in("person_id", ziel),
+  ]);
+  const verborgen = (pid: string) => (e ?? []).some((x: any) => x.person_id === pid && x.wert?.zeigen === false);
+  if (verborgen(ich.person_id)) return aus;
+  const heute = berlinTag(new Date()), grenze = Date.now() - ZULETZT_TAGE * 86400000;
+  for (const pid of ziel) {
+    const zg = (z ?? []).find((x: any) => x.person_id === pid)?.zuletzt_gesehen;
+    if (verborgen(pid) || !zg || pid.startsWith("KC-P-TEST")) { aus.set(pid, null); continue; }
+    const t = new Date(zg).getTime();
+    if (t < grenze) { aus.set(pid, { online: false, lange: true }); continue; }
+    const tag = berlinTag(new Date(zg));
+    aus.set(pid, { online: Date.now() - t < ONLINE_SEK * 1000, tag,
+      zeit: tag === heute ? new Intl.DateTimeFormat("de-DE", { timeZone: TZ, hour: "2-digit", minute: "2-digit" }).format(new Date(zg)) : null });
+  }
+  return aus;
+}
 async function onlineJetzt(): Promise<Set<string>> {
   const seit = new Date(Date.now() - ONLINE_SEK * 1000).toISOString();
   const { data } = await db.from("kc_club_zugang").select("person_id").eq("aktiv", true).gte("zuletzt_gesehen", seit).not("person_id", "like", "KC-P-TEST%");
@@ -510,6 +536,8 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
   infofeld: (w) => ({ start: typeof w?.start === "string" && KA_ID.test(w.start) ? w.start : "zuletzt" }),
   // KC-CLUB-ONLINE (0.29.0): anderen zeigen, wann ich online bin (Standard: an)
   online: (w) => ({ zeigen: w?.zeigen !== false }),
+  // KC-CLUB-ZULETZT-DA (1.20.0): anderen zeigen, wann ich zuletzt in der App war (Standard: an, gegenseitig wie WhatsApp)
+  zuletzt: (w) => ({ zeigen: w?.zeigen !== false }),
   // KC-CLUB-STUMM (1.9.0): Unterhaltungen stummschalten – je Unterhaltung „immer“ oder bis Zeitpunkt (höchstens 200)
   stumm: (w) => ({ threads: Object.fromEntries(Object.entries(w?.threads && typeof w.threads === "object" ? w.threads : {})
     .filter(([id, b]) => /^[0-9a-f-]{36}$/.test(id) && (b === "immer" || (typeof b === "string" && !isNaN(Date.parse(b)) && Date.parse(b) > Date.now())))
@@ -2099,6 +2127,7 @@ Köcheclub Werne`,
         const ichZeige = (await onlineZeigenMap([ich.person_id])).get(ich.person_id) !== false, on = ichZeige ? await onlineJetzt() : new Set<string>();
         // KC-CLUB-KREISE (0.60.0): Farbe der Namenskreise. „heute da“ und „verborgen“ folgen derselben Regel wie online
         // (wer sich verbirgt, sieht auch andere nicht). Zustellfehler (rot) nur für den Admin.
+        const zd = await zuletztDaMap(ich, leute.map((m) => m.person_id)); // KC-CLUB-ZULETZT-DA (1.20.0)
         const zeigen = await onlineZeigenMap(), tag = (d: string | Date) => new Date(d).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }), heute = tag(new Date());
         const fehler = new Map<string, string>(), ansicht = new Map<string, string>();
         if (ich.admin) {
@@ -2119,7 +2148,7 @@ Köcheclub Werne`,
           mitglieder: leute.map((m) => ({
             person_id: m.person_id, name: m.display_name, vorname: vorname(m),
             vorstand: !!(r.get(m.person_id) as any)?.ist_vorstand, aemter: (r.get(m.person_id) as any)?.aemter ?? [], admin: !!(r.get(m.person_id) as any)?.ist_admin,
-            status: st.get(m.person_id) ?? null, online: on.has(m.person_id) && m.person_id !== ich.person_id,
+            status: st.get(m.person_id) ?? null, online: on.has(m.person_id) && m.person_id !== ich.person_id, zuletztDa: zd.get(m.person_id) ?? null,
             verborgen: m.person_id !== ich.person_id && (!ichZeige || zeigen.get(m.person_id) === false),
             heute: ichZeige && (zeigen.get(m.person_id) !== false || m.person_id === ich.person_id) && !!(z.get(m.person_id) as any)?.zuletzt_gesehen && tag((z.get(m.person_id) as any).zuletzt_gesehen) === heute,
             wege: { push: ps.has(m.person_id), mail: !!m.email, whatsapp: hatTel.has(m.person_id) && (ich.admin || m.person_id === ich.person_id || (ich.kontakte && handyFrei.has(m.person_id))) },
@@ -2711,6 +2740,7 @@ Köcheclub Werne`,
           ...(selbst || ich.admin ? { freigegeben: Object.fromEntries(KONTAKT_FELDER.map((f) => [f, frei("kontakt_" + f)])) } : {}),
           darfKontakte: ich.kontakte || ich.admin,
           notfall: nf ?? null,
+          zuletztDa: selbst ? null : (await zuletztDaMap(ich, [pid])).get(pid) ?? null, // KC-CLUB-ZULETZT-DA (1.20.0)
         });
       }
 
@@ -2904,7 +2934,9 @@ Köcheclub Werne`,
         const angeheftet = pinIds.map((pid: string) => { const m: any = nachMid.get(pid); return { id: pid, von: m.sender_person_id === ich.person_id ? "Du" : vorname(leute.get(m.sender_person_id)) || "?", text: txt(m.body, 90) }; });
         // KC-CLUB-NEU-LINIE (1.12.0): bis wann hatte ich gelesen (vor diesem Öffnen) – für die Linie „Neue Nachrichten“
         const gelesenBis = (tn ?? []).find((x: any) => x.person_id === ich.person_id)?.last_read_at ?? null;
-        return json({ id, betreff: t?.subject ?? "", tippt, entwurf, spricht, angeheftet, gelesenBis,
+        // KC-CLUB-ZULETZT-DA (1.20.0): im Einzel-Chat „online“ / „zuletzt da …“ des Gegenübers (gleiche Regeln wie überall)
+        const partnerDa = andere.length === 1 ? (await zuletztDaMap(ich, [andere[0].person_id])).get(andere[0].person_id) ?? null : null;
+        return json({ id, betreff: t?.subject ?? "", tippt, entwurf, spricht, angeheftet, gelesenBis, partnerDa,
           gruppe: gr ? { name: gr.name, symbol: gr.symbol, erstellt_von: gr.erstellt_von, darfVerwalten: gr.erstellt_von === ich.person_id || ich.vorstand } : null, teilnehmer: (tn ?? []).map((x: any) => ({ person_id: x.person_id, name: leute.get(x.person_id)?.display_name || x.person_id })), nachrichten });
       }
 

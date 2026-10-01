@@ -1,5 +1,14 @@
 # Änderungen
 
+## 1.20.0 – 2026-10-01 (DEV)
+
+- KC-CLUB-ZULETZT-DA (Wunsch Hansi: „eingeschaltet, alle drei Stellen“): „zuletzt da“ wie WhatsApp „zuletzt online“ –
+  im Einzel-Chat oben (unter dem Namen), in der Mitgliederliste (klein, grau) und auf der Mitglieder-Seite. Server liefert nur
+  grob: { online, tag, zeit nur für heute } bzw. „länger nicht da“ (> 30 Tage). Gegenseitig: wer Online- oder Zuletzt-Anzeige
+  verbirgt, sieht sie auch bei anderen nicht. Neue Einstellung „zuletzt“ (Standard an) unter ⚙️ → Privatsphäre, auch über die
+  Einstellungs-Suche. Ankündigung über „Neu in dieser Version“. Quelle zuletzt_gesehen (nur solange die App sichtbar offen ist).
+  Admin-Angaben (genaue Zeit, Ansicht) unverändert.
+
 ## 1.19.0 – 2026-10-01 (DEV)
 
 - KC-CLUB-ARCHIV-ABLAGE (Wunsch Hansi „alles einbauen“): neue Anlässe in der Registry ARCHIV_ABLAGE_ARTEN –
