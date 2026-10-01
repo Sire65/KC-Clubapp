@@ -1,10 +1,16 @@
 {
-  "version": "1.18.1",
+  "version": "1.18.2",
   "datum": "2026-10-01",
   "neu": [
-    "🖨️ Dienstwunsch: Am Ende „Meine Angaben ausdrucken“ – mit Rückfrage, erst als PDF-Vorschau, dann drucken; QR-Code oben rechts. Ganzer Sperrtag: kein Vorne/Hinten auf dem Papierbogen (DP2 Build 254 RC)"
+    "🔒 Dienstwunsch: Die Übernahme deiner Wünsche in den Dienstplan ist jetzt gegen doppeltes Eintragen abgesichert, wenn zwei Planer-PCs gleichzeitig arbeiten (Vorbereitung DP2 Build 255)"
   ],
   "verlauf": [
+    {
+      "version": "1.18.2",
+      "neu": [
+        "🔒 Dienstwunsch: Die Übernahme deiner Wünsche in den Dienstplan ist jetzt gegen doppeltes Eintragen abgesichert, wenn zwei Planer-PCs gleichzeitig arbeiten (Vorbereitung DP2 Build 255)"
+      ]
+    },
     {
       "version": "1.18.1",
       "neu": [

@@ -1,5 +1,17 @@
 # Änderungen
 
+## 1.18.2 – 2026-10-01 (DEV)
+
+- KC-DP-WUNSCH-SPERRE (Freigabe Hansi „Claude macht die DB, Codex das Programm“): Reservierung je Wunsch-Eingang gegen zwei
+  gleichzeitig importierende DP2-PCs. Migration 20261001_kc_dp_wunsch_eingang_sperre.sql (live, nur additiv): Spalten
+  claim_token/claimed_by/claimed_device/claimed_revision/claimed_until/taken_claim; neue RPCs kc_dp_wish_inbox_claim
+  (1–30 Min., gilt nur für die reservierte Revision, gleiches Gerät verlängert), kc_dp_wish_inbox_ack_claimed (quittiert nur mit
+  eigener Reservierung: stale | not_open | claim_lost), kc_dp_wish_inbox_release; pending/receipt um Reservierungsstand und
+  takenClaim ergänzt. kc_dp_wish_inbox_ack (Build ≤ 254) unverändert außer: aktive fremde Reservierung → claimed statt Quittierung.
+  Kollegenfreigabe unverändert (interne Hilfsfunktion, Kopieren nie erweitert). Probe-Transaktion mit 17 Fällen, zurückgerollt.
+  Auftrag an Codex: docs/DP2_CODEX_AUFTRAG_BUILD255_SPERRE.md (DP2 Build 255). Test 152. RC: DP2 255, Wiederherstellungsprüfung,
+  Live-Handtest offen.
+
 ## 1.18.1 – 2026-10-01 (DEV)
 
 - KC-CLUB-DIENSTWUNSCH: DP2 auf Build 254 RC übernommen (dp3 `3945960`, Zweig codex/club-app-interface, Wunsch Hansi):

@@ -1728,6 +1728,26 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/window\.confirm\(FRAGE\)/.test(lies("dp2/src/ui/wish-print.js")) && /filledPdf/.test(lies("dp2/src/core/personalized-forms.js")), "Sicherheitsabfrage/ausgefüllter Bogen fehlt");
 }
 
+// 152. 1.18.2: DB – Reservierung je Wunsch-Eingang gegen zwei gleichzeitig importierende DP2-PCs (KC-DP-WUNSCH-SPERRE)
+{
+  const mig = lies("supabase/migrations/20261001_kc_dp_wunsch_eingang_sperre.sql");
+  const teil = (name) => mig.slice(mig.indexOf(`create or replace function public.${name}(`), mig.indexOf("$function$;", mig.indexOf(`create or replace function public.${name}(`)));
+  const claim = teil("kc_dp_wish_inbox_claim"), ackC = teil("kc_dp_wish_inbox_ack_claimed"), ack = teil("kc_dp_wish_inbox_ack"), rel = teil("kc_dp_wish_inbox_release");
+  assert.ok(/add column if not exists claim_token uuid/.test(mig) && !/drop column|drop table/i.test(mig), "nur additive Spalten");
+  assert.ok(/where id = p_id for update;/.test(claim) && /v_aktiv and not v_meine/.test(claim) && /least\(30, coalesce\(p_minutes, 10\)\)/.test(claim), "Reservierung atomar, fremde aktive Reservierung gewinnt, höchstens 30 Min.");
+  assert.ok(/claimed_revision = v\.revision/.test(claim), "Reservierung gilt nur für die reservierte Revision");
+  assert.ok(/where id = p_id for update;/.test(ackC) && /claim_token is distinct from p_claim_token/.test(ackC) && /'claim_lost'/.test(ackC), "Quittierung nur mit eigener Reservierung");
+  assert.ok(/and not \(claim_token is not null and claimed_until > now\(\) and claimed_revision = revision\)/.test(ack) && /'stale', false, 'claimed', true/.test(ack), "bisherige Quittierung respektiert fremde Reservierung, ohne stale zu melden");
+  assert.ok(/claim_token = p_claim_token/.test(rel), "Freigeben nur mit eigenem Token");
+  for (const f of [claim, ackC, ack, rel]) assert.ok(/m\.role in \('admin', 'planner', 'duty_manager'\)/.test(f) && /raise exception 'Keine aktive dp2-Planungsberechtigung'/.test(f), "Rollenprüfung fehlt");
+  assert.ok(/allow_copy = case when excluded\.allow_view then public\.kc_dp_plan_sharing\.allow_copy else false end/.test(mig) && /revoke all on function public\.kc_dp_wish_inbox_sharing_apply\(text, text, boolean\) from public, anon, authenticated;/.test(mig), "Kollegenfreigabe unverändert, Hilfsfunktion nicht direkt aufrufbar");
+  for (const s of ["kc_dp_wish_inbox_claim\\(uuid, integer, text, integer\\)", "kc_dp_wish_inbox_release\\(uuid, uuid\\)", "kc_dp_wish_inbox_ack_claimed\\(uuid, integer, text, jsonb, uuid\\)"])
+    assert.ok(new RegExp(`revoke all on function public\\.${s} from public, anon;`).test(mig), `Rechte ${s}`);
+  assert.ok(/'claimActive'/.test(teil("kc_dp_wish_inbox_pending")) && /'submittedAt', i\.submitted_at/.test(teil("kc_dp_wish_inbox_pending")), "Abholen: bisherige Felder + Reservierungsstand");
+  assert.ok(/stable\s+security definer/.test(teil("kc_dp_wish_inbox_receipt")), "Beleg bleibt lesend");
+  assert.ok(/kc_dp_wish_inbox_claim/.test(lies("docs/DP2_CODEX_AUFTRAG_BUILD255_SPERRE.md")), "Codex-Auftrag Build 255 fehlt");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
