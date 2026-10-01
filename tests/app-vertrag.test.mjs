@@ -1824,6 +1824,15 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/onclick="onlineRunde\(\)">💬 Mit allen \$\{ONL\.liste\.length\} schreiben/.test(html) && /async function onlineRunde\(\) \{[\s\S]{0,160}gruppeWahl\("@online"\)/.test(html), "Knopf auf der Startseite");
 }
 
+// 160. 1.21.3: WA-Knopf (KC-CLUB-WA-SENDEN)
+{
+  assert.ok(/id="waKnopf" onclick="waSenden\(\)">WA<\/button>/.test(html), "Knopf WA");
+  const f = html.slice(html.indexOf("async function waSenden()"), html.indexOf("async function whatsappWeitergeben("));
+  assert.ok(/if \(!text\) return melde\(/.test(f) && /navigator\.clipboard\?\.writeText\(text\)/.test(f), "leer → Hinweis; Text kopieren");
+  assert.ok(/wege\?\.whatsapp\) return whatsappWeitergeben\(text, ids\)/.test(f) && /window\.open\(web, "_blank", "noopener"\)/.test(f), "Einzel-Chat direkt, PC neuer Tab");
+  assert.ok(!/\$\("text"\)\.value = ""/.test(f), "Text bleibt im Feld");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

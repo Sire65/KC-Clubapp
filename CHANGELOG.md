@@ -1,5 +1,12 @@
 # Änderungen
 
+## 1.21.3 – 2026-10-01 (DEV)
+
+- KC-CLUB-WA-SENDEN (Wunsch Hansi): grüner Knopf „WA“ in der Knopfzeile unter dem Schreibfeld. Kopiert den Text in die
+  Zwischenablage und öffnet WhatsApp: im Einzel-Chat mit freigegebener Handynummer direkt bei der Person (vorhandener Weg
+  whatsappWeitergeben), sonst WhatsApp mit dem Text zur Empfängerwahl (Android intent, iPhone whatsapp://, PC wa.me im neuen
+  Tab). Der Text bleibt im Feld (Entwurf). Keine Nummern im Browser ohne Freigabe, kein neuer Serverweg.
+
 ## 1.21.2 – 2026-10-01 (DEV)
 
 - KC-CLUB-ONLINE-RUNDE (Wunsch Hansi „temporäre Gruppe, z. B. mit allen online“): Startseite „Gerade online“ hat ab zwei

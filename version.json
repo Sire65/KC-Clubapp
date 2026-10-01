@@ -1,10 +1,16 @@
 {
-  "version": "1.21.2",
+  "version": "1.21.3",
   "datum": "2026-10-01",
   "neu": [
-    "🟢 Spontane Runde: Auf der Startseite bei „Gerade online“ gibt es „💬 Mit allen schreiben“ – und beim Schreiben die Schnellwahl „🟢 Alle gerade online“"
+    "🟢 Chat: Neuer grüner Knopf „WA“ unter dem Schreibfeld – öffnet WhatsApp mit deinem Text (im Einzel-Chat direkt bei der Person, wenn die Nummer freigegeben ist)"
   ],
   "verlauf": [
+    {
+      "version": "1.21.3",
+      "neu": [
+        "🟢 Chat: Neuer grüner Knopf „WA“ unter dem Schreibfeld – öffnet WhatsApp mit deinem Text (im Einzel-Chat direkt bei der Person, wenn die Nummer freigegeben ist)"
+      ]
+    },
     {
       "version": "1.21.2",
       "neu": [
