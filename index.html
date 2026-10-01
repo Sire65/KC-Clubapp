@@ -1802,7 +1802,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.21.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.21.2"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2505,8 +2505,14 @@ setInterval(onlineLedZeigen, 30000);
 function onlineLeisteZeigen() {
   onlineLedZeigen();
   const el = $("onlineLeiste"); if (!el) return;
-  el.innerHTML = ONL.zeigen && ONL.liste.length ? `<div class="hinweis" style="margin:0 0 4px"><span class="onpunkt"></span><b>Gerade online</b> – antippen zum Anklopfen</div>
+  el.innerHTML = ONL.zeigen && ONL.liste.length ? `<div class="hinweis" style="margin:0 0 4px"><span class="onpunkt"></span><b>Gerade online</b> – antippen zum Anklopfen${ONL.liste.length > 1 ? ` · <button class="knopf klein" style="padding:3px 8px" onclick="onlineRunde()">💬 Mit allen ${ONL.liste.length} schreiben</button>` : ""}</div>
     <div class="onleiste">${ONL.liste.map((x) => x.klopfbar === false ? `<button title="Anklopfen ausgeschaltet – Nachricht schreiben" onclick="direkt('${x.person_id}')">🔕 ${esc(x.vorname)}</button>` : `<button onclick="anklopfen('${x.person_id}')">👋 ${esc(x.vorname)}</button>`).join("")}</div>` : "";
+}
+// KC-CLUB-ONLINE-RUNDE (1.21.2): neue Nachricht, alle gerade Online sind schon angehakt (danach wie jeder Mehrpersonen-Chat)
+async function onlineRunde() {
+  try { await mitgliederHolen(); } catch (e) { return melde(e.message, true); }
+  await neueNachricht(); gruppeWahl("@online");
+  if ($("neuBetreff") && !$("neuBetreff").value) $("neuBetreff").value = "🟢 Runde " + new Intl.DateTimeFormat("de-DE", { timeZone: TZ, day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }).format(new Date()) + " Uhr";
 }
 // Startseite „🟢 3 online“ → Liste mit Direktkontakt (👋 anklopfen oder 💬 gleich schreiben)
 function onlineBlatt() {
@@ -6372,7 +6378,8 @@ async function neueNachricht() {
   zeige("neu"); empfListe();
 }
 // Schnellwahl (Alle / Ämter) setzt die Häkchen der zugehörigen Personen – so sieht man sofort, wer dazugehört
-const empfGruppe = (a) => MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && (a === "*" || (m.aemter || []).includes(a))).map((m) => m.person_id);
+// KC-CLUB-ONLINE-RUNDE (1.21.2, Wunsch Hansi): „🟢 Alle gerade online“ – spontane Runde mit allen, die jetzt in der App sind
+const empfGruppe = (a) => MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && (a === "*" || (a === "@online" ? (m.online || ONL.ids.has(m.person_id)) : (m.aemter || []).includes(a)))).map((m) => m.person_id);
 const empfTest = () => empfWahl.personen.length === 1 && empfWahl.personen[0] === ICH.person_id;
 function empfListe() {
   const q = $("empfSuche").value.toLowerCase();
@@ -6381,6 +6388,7 @@ function empfListe() {
     return `<button class="knopf klein ${an ? "haupt" : ""}" onclick='gruppeWahl(${JSON.stringify(a).replace(/'/g, "&#39;")})'>${text} <small>(${g.length})</small></button>`;
   };
   $("schnellEmpf").innerHTML = [
+    ...(empfGruppe("@online").length ? [chip("@online", "🟢 Alle gerade online")] : []), // KC-CLUB-ONLINE-RUNDE (1.21.2)
     chip("*", "👥 Alle Mitglieder"), // KC-CLUB-ZENTRALE (0.44.0): alle dürfen alle anschreiben
     ...AEMTER.map((a) => chip(a, "🎖️ " + esc(a))),
     `<button class="knopf klein ${empfTest() ? "haupt" : ""}" onclick="testAnMich()">🧪 Test an mich</button>`,
@@ -6392,7 +6400,7 @@ function empfListe() {
 }
 function gruppeWahl(a) {
   const g = empfGruppe(a);
-  if (!g.length) return melde(`Zu „${a}“ gehörst nur du. Für einen Test tippe auf „🧪 Test an mich“.`);
+  if (!g.length) return melde(a === "@online" ? "Gerade ist niemand anderes online." : `Zu „${a}“ gehörst nur du. Für einen Test tippe auf „🧪 Test an mich“.`);
   const alleDrin = g.every((p) => empfWahl.personen.includes(p));
   const ohneIch = empfWahl.personen.filter((p) => p !== ICH.person_id);
   empfWahl.personen = alleDrin ? ohneIch.filter((p) => !g.includes(p)) : [...new Set([...ohneIch, ...g])];

@@ -1818,6 +1818,12 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/\.blase\.farbig \{ border-left: 4px solid var\(--pf\); \} \.blase\.farbig \.von \{ color: var\(--pf\);/.test(html) && /:root\.dunkel \.blase\.farbig \.von \{ color: var\(--pfd\); \}/.test(html), "Tag/Nacht lesbar");
 }
 
+// 159. 1.21.2: spontane Runde mit allen Online (KC-CLUB-ONLINE-RUNDE)
+{
+  assert.ok(/a === "@online" \? \(m\.online \|\| ONL\.ids\.has\(m\.person_id\)\)/.test(html) && /chip\("@online", "🟢 Alle gerade online"\)/.test(html), "Schnellwahl Alle online");
+  assert.ok(/onclick="onlineRunde\(\)">💬 Mit allen \$\{ONL\.liste\.length\} schreiben/.test(html) && /async function onlineRunde\(\) \{[\s\S]{0,160}gruppeWahl\("@online"\)/.test(html), "Knopf auf der Startseite");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

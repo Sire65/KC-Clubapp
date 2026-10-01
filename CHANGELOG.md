@@ -1,5 +1,12 @@
 # Änderungen
 
+## 1.21.2 – 2026-10-01 (DEV)
+
+- KC-CLUB-ONLINE-RUNDE (Wunsch Hansi „temporäre Gruppe, z. B. mit allen online“): Startseite „Gerade online“ hat ab zwei
+  Personen „💬 Mit allen N schreiben“ → neue Nachricht, alle gerade Online sind angehakt, Betreff „🟢 Runde TT.MM., HH:MM Uhr“
+  (änderbar). Beim Schreiben zusätzlich die Schnellwahl „🟢 Alle gerade online“. Ergebnis ist ein gemeinsamer
+  Mehrpersonen-Chat wie bisher (keine feste Gruppe, mit Farben je Absender); entfernen wie jeder Chat. Kein neuer Serverweg.
+
 ## 1.21.1 – 2026-10-01 (DEV)
 
 - KC-CLUB-GRUPPE-FARBEN (Wunsch Hansi, wie WhatsApp): in Gruppen-Chats hat jeder Absender eine eigene Farbe – Name über der

@@ -1,10 +1,16 @@
 {
-  "version": "1.21.1",
+  "version": "1.21.2",
   "datum": "2026-10-01",
   "neu": [
-    "🎨 Gruppen-Chat: Jeder Absender hat jetzt seine eigene Farbe – Name und Streifen links an der Nachricht (wie WhatsApp)"
+    "🟢 Spontane Runde: Auf der Startseite bei „Gerade online“ gibt es „💬 Mit allen schreiben“ – und beim Schreiben die Schnellwahl „🟢 Alle gerade online“"
   ],
   "verlauf": [
+    {
+      "version": "1.21.2",
+      "neu": [
+        "🟢 Spontane Runde: Auf der Startseite bei „Gerade online“ gibt es „💬 Mit allen schreiben“ – und beim Schreiben die Schnellwahl „🟢 Alle gerade online“"
+      ]
+    },
     {
       "version": "1.21.1",
       "neu": [
