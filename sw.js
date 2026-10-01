@@ -1,6 +1,6 @@
 // KC Club-App – Service Worker: Seite zuerst aus dem Netz (offline aus dem Speicher), Push-Benachrichtigungen, Update.
 // VERSION muss bei jeder neuen Version mit version.json und APP_VERSION in index.html übereinstimmen.
-const VERSION = "1.21.5";
+const VERSION = "1.22.0";
 const CACHE = "kc-club-" + VERSION;
 const DATEIEN = ["./", "index.html", "manifest.webmanifest", "kc-kochmuetze-weiss.webp", "icon-192.png", "icon-512.png"];
 
@@ -17,8 +17,9 @@ async function geteiltAnnehmen(req) {
   for (const k of await c.keys()) await c.delete(k);
   const dateien = f.getAll("fotos").filter((x) => x && typeof x === "object" && x.size).slice(0, 50);
   for (let i = 0; i < dateien.length; i++)
-    await c.put(`geteilt/${i}`, new Response(dateien[i], { headers: { "content-type": dateien[i].type || "image/jpeg", "x-name": encodeURIComponent(dateien[i].name || `Foto_${i + 1}.jpg`) } }));
-  await c.put("geteilt/info", new Response(JSON.stringify({ anzahl: dateien.length, text: String(f.get("text") || f.get("titel") || "").slice(0, 300), zeit: Date.now() })));
+    await c.put(`geteilt/${i}`, new Response(dateien[i], { headers: { "content-type": dateien[i].type || "application/octet-stream", "x-name": encodeURIComponent(dateien[i].name || `Datei_${i + 1}`) } }));
+  // 1.22.0 (KC-CLUB-TEILEN-ALLES): auch Text aus WhatsApp & Co. (bis 4000 Zeichen), Titel und Link; Dateien jeder Art
+  await c.put("geteilt/info", new Response(JSON.stringify({ anzahl: dateien.length, text: String(f.get("text") || "").slice(0, 4000), titel: String(f.get("titel") || "").slice(0, 200), url: String(f.get("url") || "").slice(0, 500), zeit: Date.now() })));
   return Response.redirect("./#geteilt", 303);
 }
 self.addEventListener("fetch", (e) => {

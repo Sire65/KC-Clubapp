@@ -30,14 +30,22 @@
     "params": {
       "title": "titel",
       "text": "text",
+      "url": "url",
       "files": [
         {
           "name": "fotos",
           "accept": [
-            "image/jpeg",
-            "image/png",
-            "image/webp",
-            "image/*"
+            "image/*",
+            "application/pdf",
+            "text/plain",
+            ".txt",
+            "application/zip",
+            ".zip",
+            "audio/*",
+            "application/msword",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/vnd.ms-excel",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
           ]
         }
       ]

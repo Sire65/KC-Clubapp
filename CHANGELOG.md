@@ -1,5 +1,16 @@
 # Änderungen
 
+## 1.22.0 – 2026-10-01 (DEV)
+
+- KC-CLUB-TEILEN-ALLES (Wunsch Hansi „WhatsApp-Nachrichten in den Club-Chat“, Weg 1 – kostenlos, ohne Meta): „Teilen →
+  Köcheclub“ nimmt jetzt Text (bis 4000 Zeichen), Links und Dateien jeder gängigen Art an (Fotos, PDF, Text, Office, Audio,
+  WhatsApp-Chat-Export .txt/.zip). Danach Auswahl: 💬 in einen Club-Chat (Liste der Chats oder „Neue Nachricht“; Text und
+  Dateien werden eingefügt, gesendet wird erst mit ➤), 📷 ins Fotoalbum (nur Fotos, wie bisher), 🗄️ ins eigene Archiv
+  (Anlass „geteilt“; WhatsApp-Export wird erkannt und empfohlen). Manifest share_target erweitert (Android; iPhone erlaubt
+  Web-Apps kein Teilen-Ziel). Service Worker speichert wie bisher nur kurz im eigenen Zwischenspeicher.
+- KC-CLUB-NEU-ORANGE (Wunsch Hansi): Kennzahl „Neue Nachr.“ im großen Kopf-Feld oben links wird bei ungelesenen
+  Nachrichten orange (sanftes Leuchten, bei „Bewegung reduzieren“ ruhig).
+
 ## 1.21.5 – 2026-10-01 (DEV)
 
 - KC-CLUB-TIPPT-WELLE (Hinweis Hansi „Punkte bei ‚Steven schreibt‘ nicht animiert“): Ursache 1 – bei „Animationen

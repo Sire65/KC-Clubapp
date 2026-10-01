@@ -88,7 +88,7 @@ assert.ok(server.includes('from("kc_club_dienst_erinnerung").upsert({ person_id:
 // 13. KC-CLUB-ZURUECK + Kopf: Verlaufseinträge, Kennzahlen führen in Bereiche, kein Zahnrad im Kopf.
 assert.ok(/history\.replaceState\(\{ basis: true \}/.test(html) && /addEventListener\("popstate"/.test(html), "Zurück-Steuerung fehlt");
 assert.ok(/history\.pushState\(st,/.test(html), "Ansichten legen keinen Verlaufseintrag an");
-for (const z of ["nachrichten", "mitglieder"]) assert.ok(html.includes(`<button class="mini" onclick="zeige('${z}')">`), `Kennzahl → ${z} fehlt`);
+for (const z of ["nachrichten", "mitglieder"]) assert.ok(html.includes(`<button class="mini" onclick="zeige('${z}')">`) || (z === "nachrichten" && html.includes(`<button class="mini\${n ? " mini-neu" : ""}" onclick="zeige('nachrichten')">`)), `Kennzahl → ${z} fehlt`); // 1.22.0: orange bei Neuem
 // 0.27.2: „Nächstes Treffen“ führt über zumTreffen() in Termine (Kalender, Tag ausgewählt)
 assert.ok(html.includes(`<button class="mini" onclick="zumTreffen()">`) && /function zumTreffen\(\) \{[\s\S]{0,400}zeige\("termine"\)/.test(html), "Kennzahl → termine fehlt");
 const kopfHtml = html.slice(html.indexOf('<section id="v-start">'), html.indexOf('id="heroInfo"'));
@@ -1844,6 +1844,18 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 {
   assert.ok(/@media \(prefers-reduced-motion: reduce\) \{ \.punkte3 i \{ animation-duration: 2\.2s; \}/.test(html) && !/\.punkte3 i, \.oszi \.lauf, \.oszi \.hub \{ animation: none/.test(html), "reduzierte Bewegung: langsam statt Stillstand");
   assert.ok(/if \(e\.dataset\.stand !== html\) \{ e\.innerHTML = html; e\.dataset\.stand = html; \}/.test(html), "nur bei Änderung neu zeichnen");
+}
+
+// 163. 1.22.0: Teilen → Köcheclub für Text/Dateien + orange „Neue Nachr.“ (KC-CLUB-TEILEN-ALLES, KC-CLUB-NEU-ORANGE)
+{
+  const m = JSON.parse(lies("manifest.webmanifest")).share_target;
+  assert.ok(m.params.text === "text" && m.params.url === "url" && m.params.files[0].accept.includes("application/pdf") && m.params.files[0].accept.includes(".zip"), "Manifest nimmt Text, Links, Dateien");
+  const sw = lies("sw.js");
+  assert.ok(/text: String\(f\.get\("text"\) \|\| ""\)\.slice\(0, 4000\)/.test(sw) && /const GETEILT = "kcclub-geteilt";/.test(sw), "SW: Text bis 4000, eigener Zwischenspeicher");
+  assert.ok(/function teilenWahl\(text, dateien\)/.test(html) && /onclick="teilenChatWahl\(\)">💬 In einen Club-Chat/.test(html) && /onclick="teilenArchiv\(\)">🗄️ In mein Archiv/.test(html), "Auswahl nach dem Teilen");
+  const f = html.slice(html.indexOf("async function teilenInChat("), html.indexOf("function teilenArchiv("));
+  assert.ok(!/api\("nachricht_senden"/.test(f) && /melde\("📥 Eingefügt – prüfen und mit ➤ senden"\)/.test(f), "nichts wird ungefragt gesendet");
+  assert.ok(/<button class="mini\$\{n \? " mini-neu" : ""\}" onclick="zeige\('nachrichten'\)">/.test(html) && /\.mini\.mini-neu \{ background: linear-gradient\(135deg, #f39c12/.test(html), "Neue Nachr. orange");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

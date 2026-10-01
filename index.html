@@ -419,6 +419,10 @@
   .wahltabelle td:not(:first-child), .wahltabelle th:not(:first-child) { text-align: center; width: 68px; }
   .wahltabelle input { width: 26px; height: 26px; accent-color: var(--rot); }
   .mini b { display: block; font-size: 1.2rem; }
+  /* KC-CLUB-NEU-ORANGE (1.22.0, Wunsch Hansi): „Neue Nachr.“ oben links im großen Feld orange, sobald etwas Neues da ist */
+  .mini.mini-neu { background: linear-gradient(135deg, #f39c12, #e67e22); box-shadow: 0 0 0 2px #ffd08a inset, 0 4px 14px rgba(230,126,34,.45); animation: neuDa 2.4s ease-in-out infinite; }
+  .mini.mini-neu b { font-size: 1.5rem; }
+  @media (prefers-reduced-motion: reduce) { .mini.mini-neu { animation: none; } }
   .mini span { font-size: .72rem; letter-spacing: .06em; font-weight: 700; text-transform: uppercase; opacity: .9; }
 
   /* Schnellzugriff */
@@ -1812,7 +1816,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.21.5"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.22.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -4764,7 +4768,7 @@ function infoTreffen() {
   } else kopf = `<h2>Kein Treffen geplant</h2><div class="unter">Sobald ein Köcheclub-Treffen ansteht, siehst du es hier.</div>`;
   return `<div class="klick" onclick="zumTreffen()">${kopf}</div>
     <div class="kacheln3">
-      <button class="mini" onclick="zeige('nachrichten')"><b>${n}</b><span>Neue Nachr. ›</span></button>
+      <button class="mini${n ? " mini-neu" : ""}" onclick="zeige('nachrichten')"><b>${n}</b><span>Neue Nachr. ›</span></button>
       <button class="mini" onclick="zeige('mitglieder')"><b>${INIT?.mitgliederAnzahl || "–"}</b><span>Mitglieder ›</span>${ONL.zeigen ? `<span class="onmini${ONL.liste.length ? "" : " leer"}" role="button" onclick="event.stopPropagation(); onlineBlatt()">${ONL.liste.length ? `🟢 ${ONL.liste.length} online ›` : "⚪ keiner online"}</span>` : ""}</button>
       <button class="mini" onclick="zumTreffen()"><b style="font-size:1.05rem">${bisTreffen}</b><span>Nächstes Treffen ›</span></button>
     </div>`;
@@ -6586,10 +6590,57 @@ async function geteiltEmpfangen() {
     }
     await caches.delete("kcclub-geteilt");
   } catch {}
-  api("diagnose", { art: "teilen", daten: { anzahl: dateien.length } }).catch(() => {});
-  if (!dateien.length) return melde("Es sind keine Fotos angekommen – bitte nochmal aus der Galerie teilen.", true);
-  faFilter = {}; faPapierkorb = false; faGeteilt = dateien; zeige("fotos"); // Formular öffnet sich nach dem Laden des Albums
-  melde(`📥 ${dateien.length} Foto${dateien.length > 1 ? "s" : ""} aus der Galerie – Thema wählen und „Hochladen“ tippen`);
+  api("diagnose", { art: "teilen", daten: { anzahl: dateien.length, text: !!info.text } }).catch(() => {});
+  const text = [info.text, info.url && !String(info.text || "").includes(info.url) ? info.url : ""].filter(Boolean).join("\n").trim();
+  if (!dateien.length && !text) return melde("Es ist nichts angekommen – bitte nochmal über „Teilen → Köcheclub“ versuchen.", true);
+  teilenWahl(text, dateien);
+}
+// ---------- KC-CLUB-TEILEN-ALLES (1.22.0, Wunsch Hansi „WhatsApp-Nachrichten in den Club-Chat“): aus WhatsApp & Co. über
+// „Teilen → Köcheclub“ – danach wählen: 💬 in einen Chat (Text + Dateien vorausgefüllt, man drückt selbst ➤),
+// 📷 ins Fotoalbum (nur Fotos, wie bisher) oder 🗄️ ins eigene Archiv (z. B. ein WhatsApp-Chat-Export). Nichts geht ungefragt raus.
+let TEILEN = null;
+const teilenWaExport = (d) => /whatsapp/i.test(d.name) && /\.(txt|zip)$/i.test(d.name);
+function teilenWahl(text, dateien) {
+  TEILEN = { text, dateien };
+  const nurFotos = dateien.length && dateien.every((d) => /^image\//.test(d.type)), export_ = dateien.some(teilenWaExport);
+  blattAuf("teilenBlatt", `<h3 style="margin-top:0">📥 Mit Köcheclub geteilt</h3>
+    ${text ? `<div class="karte" style="margin:0 0 8px;white-space:pre-wrap;max-height:30vh;overflow:auto">${esc(text.slice(0, 1500))}${text.length > 1500 ? " …" : ""}</div>` : ""}
+    ${dateien.length ? `<p class="hinweis" style="margin:0 0 8px">📎 ${dateien.map((d) => esc(d.name)).join(", ")}</p>` : ""}
+    ${export_ ? '<p class="hinweis" style="margin:0 0 8px">💡 Das sieht nach einem WhatsApp-Chat-Export aus – am besten ins Archiv legen.</p>' : ""}
+    <div class="knoepfe" style="flex-direction:column;align-items:stretch">
+      <button class="knopf haupt" onclick="teilenChatWahl()">💬 In einen Club-Chat</button>
+      ${nurFotos ? '<button class="knopf" onclick="teilenFotos()">📷 Ins Fotoalbum</button>' : ""}
+      ${dateien.length || text ? '<button class="knopf" onclick="teilenArchiv()">🗄️ In mein Archiv</button>' : ""}
+      <button class="knopf" onclick="document.getElementById('teilenBlatt').remove();TEILEN=null">Abbrechen</button></div>`);
+}
+function teilenFotos() { document.getElementById("teilenBlatt")?.remove(); faFilter = {}; faPapierkorb = false; faGeteilt = TEILEN.dateien; zeige("fotos");
+  melde(`📥 ${TEILEN.dateien.length} Foto${TEILEN.dateien.length > 1 ? "s" : ""} – Thema wählen und „Hochladen“ tippen`); }
+async function teilenChatWahl() {
+  let liste = []; try { liste = (await api("unterhaltungen", {}, { warten: true })).unterhaltungen || []; } catch (e) { return melde(e.message, true); }
+  blattAuf("teilenBlatt", `<h3 style="margin-top:0">💬 In welchen Chat?</h3>
+    <div style="display:grid;gap:6px">${liste.slice(0, 30).map((u) => `<button class="knopf" style="text-align:left" onclick="teilenInChat('${u.id}')">${u.gruppe ? esc(u.gruppe.symbol) + " " : ""}${esc(u.gruppe?.name || u.betreff || u.teilnehmer.join(", "))}</button>`).join("")}</div>
+    <div class="knoepfe" style="margin-top:8px"><button class="knopf haupt" onclick="teilenInChat(null)">＋ Neue Nachricht</button><button class="knopf" onclick="document.getElementById('teilenBlatt').remove();TEILEN=null">Abbrechen</button></div>`);
+}
+async function teilenInChat(id) {
+  document.getElementById("teilenBlatt")?.remove(); const t = TEILEN; if (!t) return;
+  if (id) await chatOeffnen(id); else await neueNachricht();
+  $("text").value = t.text; $("text").style.height = "auto"; $("text").style.height = $("text").scrollHeight + "px"; entwurfMarkeZeigen();
+  for (const d of t.dateien) {
+    const e = { name: d.name, laedt: true }; anlagen.push(e); chipsZeigen();
+    try { const r = await anlageHochladen(d); Object.assign(e, { id: r.id, name: r.name, laedt: false }); } catch (err) { anlagen.splice(anlagen.indexOf(e), 1); melde(err.message, true); }
+    chipsZeigen();
+  }
+  TEILEN = null; melde("📥 Eingefügt – prüfen und mit ➤ senden");
+}
+function teilenArchiv() {
+  document.getElementById("teilenBlatt")?.remove(); const t = TEILEN; if (!t) return; TEILEN = null;
+  const heute = heuteIso(), export_ = t.dateien.find(teilenWaExport);
+  archivAblageFragen("geteilt", { titel: export_ ? export_.name.replace(/\.(txt|zip)$/i, "") : t.dateien[0]?.name || "Geteilter Text", datum: heute,
+    hinweis: [t.text ? "mit Text" : "", t.dateien.length ? `${t.dateien.length} Datei(en)` : ""].filter(Boolean).join(" · "),
+    dateien: async () => [
+      ...(t.text ? [{ titel: `Geteilt am ${heute.split("-").reverse().join(".")}`, name: `Geteilt-${heute}.txt`, mime: "text/plain", blob: textDatei(t.text), stichworte: "Text" }] : []),
+      ...t.dateien.map((d) => ({ titel: d.name.replace(/\.[^.]+$/, "").slice(0, 120), name: d.name, mime: /\.txt$/i.test(d.name) ? "text/plain" : d.type, blob: d })),
+    ] });
 }
 
 // ---------- Datei-/Fotoauswahl (KC-CLUB-KAMERA) ----------
@@ -8912,6 +8963,7 @@ const ARCHIV_ABLAGE_ARTEN = {
   anlage: { sym: "📎", register: ["Sonstiges"], stichworte: "aus Nachricht" },
   foto: { sym: "📷", register: ["Fotos", "Sonstiges"], stichworte: "Foto" },
   protokoll: { sym: "📝", register: ["Protokolle", "Sonstiges"], stichworte: "Protokoll" },
+  geteilt: { sym: "📥", register: ["Chats", "Sonstiges"], stichworte: "geteilt" }, // 1.22.0: über „Teilen → Köcheclub“ (z. B. WhatsApp-Export)
 };
 // Dateitypen, die das Archiv annimmt (gleiche Liste wie ARCHIV_DATEITYPEN im Server) – anderes (z. B. Sprachnachrichten) wird übersprungen
 const ARCHIV_TYP_OK = (mime) => /^(application\/pdf|image\/(jpeg|png|webp)|text\/plain|application\/msword|application\/vnd\.ms-excel|application\/vnd\.openxmlformats-officedocument\.(wordprocessingml\.document|spreadsheetml\.sheet))$/.test(String(mime || ""));

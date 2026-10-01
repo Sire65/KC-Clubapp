@@ -1,12 +1,18 @@
 {
-  "version": "1.21.5",
+  "version": "1.22.0",
   "datum": "2026-10-01",
   "neu": [
-    "〰️ „… schreibt“: Die drei Punkte bewegen sich jetzt immer als Welle – auch bei Handys mit „Animationen reduzieren“",
-    "💚 Startseite: Sind neue Nachrichten da, leuchtet die Nachrichten-Kachel grün",
-    "🟢 Chat: Neuer grüner Knopf „WA“ unter dem Schreibfeld – öffnet WhatsApp mit deinem Text (im Einzel-Chat direkt bei der Person, wenn die Nummer freigegeben ist)"
+    "📥 WhatsApp → Club-Chat: In WhatsApp Nachricht gedrückt halten → Teilen → „Köcheclub“ – dann Club-Chat wählen (oder Archiv). Klappt auch mit Fotos, Dateien und WhatsApp-Chat-Export (Android, App auf dem Startbildschirm)",
+    "🟠 Oben im großen Feld leuchtet „Neue Nachr.“ orange, sobald etwas Neues da ist"
   ],
   "verlauf": [
+    {
+      "version": "1.22.0",
+      "neu": [
+        "📥 WhatsApp → Club-Chat: In WhatsApp Nachricht gedrückt halten → Teilen → „Köcheclub“ – dann Club-Chat wählen (oder Archiv). Klappt auch mit Fotos, Dateien und WhatsApp-Chat-Export (Android, App auf dem Startbildschirm)",
+        "🟠 Oben im großen Feld leuchtet „Neue Nachr.“ orange, sobald etwas Neues da ist"
+      ]
+    },
     {
       "version": "1.21.5",
       "neu": [
