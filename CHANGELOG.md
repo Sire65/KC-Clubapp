@@ -1,5 +1,12 @@
 # Änderungen
 
+## 1.32.2 – 2026-10-02 (DEV)
+
+- KC-CLUB-BILDSCHIRMFOTO im Chat (Wunsch Hansi mit Bildschirmfoto „neben dem WA-Knopf ist noch Platz“): runder Knopf 📸 in
+  der Eingabezeile des Chats. Startet den vorhandenen Auslöser und merkt sich den Chat; in der Vorschau steht dann oben
+  „💬 In den Chat mit <Name>“ (Bild wird wie gewohnt als Anlage eingefügt, gesendet wird erst mit ➤), darunter
+  „In einen anderen Chat“, Problem an Hansi, Archiv, Handy.
+
 ## 1.32.1 – 2026-10-02 (DEV)
 
 - KC-CLUB-KOPFZEILE (Hinweis Hansi mit Bildschirmfoto: „＋ Neu fehlt, wofür ist der Stern?“): Bei großer Schrift schob die

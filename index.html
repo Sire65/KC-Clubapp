@@ -718,6 +718,7 @@
   .eingabe .innen > #text { grid-row: 1; grid-column: 1 / 6; min-height: 56px; max-height: 40vh; font-size: 1.12rem; line-height: 1.35; padding: 14px 16px; border-radius: 20px; }
   .eingabe .innen > #sendenKnopf { grid-row: 1; grid-column: 6; width: 52px; height: 52px; font-size: 1.3rem; }
   .eingabe .innen > .rund:not(#sendenKnopf) { grid-row: 2; width: 40px !important; height: 40px !important; font-size: 1.05rem !important; }
+  .eingabe .innen > .bf-chat-knopf { background: var(--karte2) !important; }
   .eingabe .innen > .wa-knopf { background: #0f7a3f !important; color: #fff; font-weight: 900; font-size: .95rem !important; letter-spacing: .02em; }
   .eingabe-entwurf { font-size: .8rem; color: var(--gelb, #d68910); font-weight: 700; margin: 0 6px 2px; }
   .entwurf-marke { color: #d35400; font-weight: 800; }
@@ -1753,6 +1754,8 @@
     <button class="rund" title="Senden" id="sendenKnopf" onclick="senden()">➤</button>
     <!-- KC-CLUB-WA-SENDEN (1.21.3, Wunsch Hansi): Text an WhatsApp übergeben und WhatsApp öffnen -->
     <button class="rund wa-knopf" title="Mit WhatsApp senden" aria-label="Mit WhatsApp senden" id="waKnopf" onclick="waSenden()">WA</button>
+    <!-- KC-CLUB-BILDSCHIRMFOTO im Chat (1.32.2, Wunsch Hansi): Auslöser starten – das Foto landet danach in diesem Chat -->
+    <button class="rund bf-chat-knopf" title="Bildschirmfoto für diesen Chat" aria-label="Bildschirmfoto für diesen Chat" id="bfChatKnopf" onclick="bfAusChat()">📸</button>
   </div>
 </div>
 <div class="blatt versteckt" id="verbindungBlatt" onclick="if(event.target===this)this.classList.add('versteckt')">
@@ -1944,7 +1947,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.32.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.32.2"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -7927,7 +7930,9 @@ function teilenArchiv() {
 // ---------- KC-CLUB-BILDSCHIRMFOTO (1.24.0, Wunsch Hansi): Auslöser antippen → in Ruhe hingehen → Foto der App → einzeichnen → senden ----------
 // Am Handy darf eine Web-App nur sich selbst abbilden (kein Fremd-Bildschirm, kein Video). Die App zeichnet sich dafür selbst
 // ab (html2canvas, MIT, liegt in lib/ – nichts wird von fremden Servern geladen). Gespeichert wird nur, was man selbst wählt.
-const BF = { bild: null, striche: [], zug: null, laden: null };
+const BF = { bild: null, striche: [], zug: null, laden: null, chat: null };
+// aus dem Chat gestartet: Ziel-Chat merken, damit das Foto mit einem Tipp wieder dort landet
+function bfAusChat() { BF.chat = chatId ? { id: chatId, name: $("chatTitel")?.textContent?.trim() || "diesem Chat" } : null; bfStart(); }
 const BF_BIB = "lib/html2canvas.min.js?v=1.4.1";
 function bfBibliothek() {
   if (window.html2canvas) return Promise.resolve();
@@ -7946,7 +7951,7 @@ function bfStart() {
   }
   melde("📸 Geh in Ruhe dahin, wo du fotografieren willst – dann den roten Auslöser drücken. Er lässt sich verschieben.");
 }
-function bfEnde() { $("bfAusloeser")?.remove(); }
+function bfEnde() { $("bfAusloeser")?.remove(); BF.chat = null; }
 // Auslöser mit dem Finger verschieben (kurzes Tippen löst aus, Ziehen nicht)
 function bfZiehbar(el) {
   let start = null;
@@ -7998,7 +8003,8 @@ function bfVorschau() {
     <div class="bf-rahmen"><canvas id="bfLeinwand"></canvas></div>
     <div class="knoepfe" style="margin:0"><button class="knopf klein" onclick="bfZurueck()">↩️ Rückgängig</button><button class="knopf klein" onclick="BF.striche=[];bfMalen()">🧽 Alles weg</button></div>
     <div class="knoepfe" style="flex-direction:column;align-items:stretch">
-      <button class="knopf haupt" onclick="bfWeiter('chat')">💬 In einen Chat schicken</button>
+      ${BF.chat ? `<button class="knopf haupt" onclick="bfWeiter('zurueck')">💬 In den Chat mit ${esc(BF.chat.name)}</button>` : ""}
+      <button class="knopf${BF.chat ? "" : " haupt"}" onclick="bfWeiter('chat')">💬 ${BF.chat ? "In einen anderen Chat" : "In einen Chat schicken"}</button>
       <button class="knopf" onclick="bfWeiter('problem')">🆘 Als Problem an Hansi</button>
       <button class="knopf" onclick="bfWeiter('archiv')">🗄️ In mein Archiv</button>
       <button class="knopf" onclick="bfWeiter('speichern')">💾 Aufs Handy speichern / teilen</button>
@@ -8023,6 +8029,7 @@ function bfDatei() {
   return new Promise((ok, fehler) => lw.toBlob((b) => (b ? ok(new File([b], name, { type: "image/png" })) : fehler(new Error("Bild konnte nicht erstellt werden."))), "image/png"));
 }
 async function bfWeiter(wohin) {
+  const zielChat = BF.chat; // bfEnde() unten setzt es zurück
   if (wohin === "nochmal") { $("bfBlatt")?.remove(); BF.bild = null; return melde("📸 Bereit – Auslöser drücken, wenn du so weit bist."); }
   let datei; try { datei = await bfDatei(); } catch (e) { return melde(e.message, true); }
   if (wohin === "speichern") {
@@ -8031,6 +8038,7 @@ async function bfWeiter(wohin) {
     setTimeout(() => URL.revokeObjectURL(a.href), 30000); return melde("💾 Gespeichert (Ordner „Downloads“)");
   }
   $("bfBlatt")?.remove(); bfEnde();
+  if (wohin === "zurueck" && zielChat) { TEILEN = { text: "", dateien: [datei] }; return teilenInChat(zielChat.id); }
   if (wohin === "chat") { TEILEN = { text: "", dateien: [datei] }; return teilenChatWahl(); }
   if (wohin === "archiv") { TEILEN = { text: "", dateien: [datei] }; return teilenArchiv(); }
   if (wohin === "problem") {

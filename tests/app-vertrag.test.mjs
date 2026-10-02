@@ -2085,6 +2085,12 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/⭐ Gemerkt<\/button>/.test(html) && /\.kopf2 \{ display: flex; align-items: center; gap: 10px; margin: 6px 0 4px; flex-wrap: wrap; \}/.test(html), "Stern beschriftet, Kopfzeile bricht um");
 }
 
+// 183. 1.32.2: Bildschirmfoto-Knopf im Chat (KC-CLUB-BILDSCHIRMFOTO)
+{
+  assert.ok(/id="waKnopf"[^\n]*\n[^\n]*\n\s*<button class="rund bf-chat-knopf"[^>]*id="bfChatKnopf" onclick="bfAusChat\(\)">📸<\/button>/.test(html), "📸 neben WA");
+  assert.ok(/const zielChat = BF\.chat;/.test(html) && /return teilenInChat\(zielChat\.id\)/.test(html), "Foto zurück in denselben Chat (nur eingefügt, nicht gesendet)");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
