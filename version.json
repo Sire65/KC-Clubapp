@@ -1,7 +1,9 @@
 {
-  "version": "1.33.2",
+  "version": "1.34.0",
   "datum": "2026-10-02",
   "neu": [
+    "👥 Aktive Mitglieder: Deine Gruppen (z. B. „Innovation“) stehen oben – antippen zeigt nur die Mitglieder dieser Gruppe, mit „💬 In die Gruppe schreiben“",
+    "🟢 Der Status-Knopf oben rechts heißt jetzt „Mein Status“",
     "👥 Auch unter „👥 Gruppe“ stehen jetzt deine vorhandenen Gruppen (z. B. „Innovation“) ganz oben – antippen öffnet die Gruppe",
     "👥 Neue Nachricht: Deine Gruppen (z. B. „Innovation“) stehen jetzt ganz oben – antippen und direkt in die Gruppe schreiben",
     "📋 Tages-Übersicht beim Start für die Clubleitung: Datum und Uhrzeit, was seit dem letzten Besuch neu ist, was heute ansteht und die nächste Sitzung – jede Zeile antippbar (Admin)",
@@ -24,6 +26,13 @@
     "📨 Danach mit einem Tipp: Einladung mit Tagesordnung an alle senden – und später alle erinnern, die noch nicht geantwortet haben (Admin)"
   ],
   "verlauf": [
+    {
+      "version": "1.34.0",
+      "neu": [
+        "👥 Aktive Mitglieder: Deine Gruppen (z. B. „Innovation“) stehen oben – antippen zeigt nur die Mitglieder dieser Gruppe, mit „💬 In die Gruppe schreiben“",
+        "🟢 Der Status-Knopf oben rechts heißt jetzt „Mein Status“"
+      ]
+    },
     {
       "version": "1.33.2",
       "neu": [

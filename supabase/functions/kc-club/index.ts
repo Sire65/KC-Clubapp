@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.33.2";
+const SERVER_VERSION = "1.34.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -3770,6 +3770,8 @@ Köcheclub Werne`,
           return {
             id: t.id, betreff: t.subject, teilnehmer: andere, anzahl: andere.length + 1,
             gruppe: gruppe.has(t.id) ? { name: (gruppe.get(t.id) as any).name, symbol: (gruppe.get(t.id) as any).symbol } : null,
+            // KC-CLUB-MG-GRUPPEN (1.34.0): bei Gruppen die person_ids (inkl. mir) – für den Gruppen-Filter in „Aktive Mitglieder“
+            ...(gruppe.has(t.id) ? { personen: (tn ?? []).filter((x: any) => x.thread_id === t.id).map((x: any) => x.person_id) } : {}),
             letzte: m[0] ? { von: m[0].sender_person_id === ich.person_id ? "Du" : vorname(leute.get(m[0].sender_person_id)), text: String(m[0].body).slice(0, 120), zeit: m[0].created_at } : null,
             ungelesen: m.filter((x: any) => x.sender_person_id !== ich.person_id && (!lr || x.created_at > lr)).length,
             aktualisiert: m[0]?.created_at || t.updated_at,

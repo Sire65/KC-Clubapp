@@ -1,5 +1,13 @@
 # Änderungen
 
+## 1.34.0 – 2026-10-02 (DEV)
+
+- KC-CLUB-MG-GRUPPEN (Wunsch Hansi): „👥 Aktive Mitglieder“ zeigt unter „Alle | Nur online“ die eigenen Gruppen
+  (z. B. „📋 Innovation (6)“). Antippen filtert die Liste auf die Mitglieder der Gruppe (kombinierbar mit „Nur online“),
+  dazu „💬 In die Gruppe schreiben“ und „✖ Alle zeigen“. Server unterhaltungen liefert bei Gruppen zusätzlich die
+  person_ids der Teilnehmer (nur Gruppen, in denen ich selbst bin – keine neuen Daten über das bisher Sichtbare hinaus).
+- Status-Knopf oben rechts trägt jetzt die kleine Überschrift „Mein Status“.
+
 ## 1.33.2 – 2026-10-02 (DEV)
 
 - KC-CLUB-GRUPPEN-WAHL (Rückmeldung Hansi: „die erstellte Gruppe wird nicht angezeigt“): Auch „👥 Gruppe“ in der

@@ -204,6 +204,10 @@
   .st-krank { background: var(--lilabg); color: var(--lila); border-color: var(--lila); }
   .st-abwesend { background: var(--rotbg); color: #c62828; border-color: #c62828; }
   .knopf.stmarke { padding: 8px 12px; }
+  /* KC-CLUB-MG-GRUPPEN (1.34.0, Wunsch Hansi): „Mein Status“ als kleine Überschrift im Status-Knopf */
+  .st-titel { display: block; font-size: .72rem; font-weight: 700; opacity: .85; line-height: 1.1; text-align: left; }
+  .mg-gruppen { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 0 0 8px; }
+  .mg-gruppen .knopf.an { background: var(--karte); box-shadow: var(--schatten); color: var(--rot); outline: 2px solid var(--rot); }
   .statuschip { margin-top: 6px; border: none; border-radius: 12px; padding: 4px 10px; background: rgba(255,255,255,.18); color: #fff; font-weight: 700; font-size: .82rem; cursor: pointer; }
   .statuschip.st-verfuegbar { background: var(--gruenbg); color: var(--textGruen); } .statuschip.st-beschaeftigt { background: var(--gelbbg); color: var(--gelb); }
   .statuschip.st-urlaub { background: var(--blaubg); color: var(--blau); } .statuschip.st-krank { background: var(--lilabg); color: var(--lila); } .statuschip.st-abwesend { background: var(--rotbg); color: #c62828; }
@@ -1549,10 +1553,11 @@
 
   <!-- MITGLIEDER -->
   <section id="v-mitglieder" class="versteckt">
-    <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>👥 Aktive Mitglieder</h2><button class="knopf klein stmarke st-verfuegbar" id="meinStatusKnopf" onclick="statusBlatt()">🟢 verfügbar ▾</button></div>
+    <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>👥 Aktive Mitglieder</h2><button class="knopf klein stmarke st-verfuegbar" id="meinStatusKnopf" onclick="statusBlatt()"><small class="st-titel">Mein Status</small>🟢 verfügbar ▾</button></div>
     <!-- KC-CLUB-ONLINEFILTER (0.72.0): alle oder nur gerade online -->
     <div style="display:flex;justify-content:flex-end;margin:0 0 8px"><div class="umschalter" id="mgFilter" style="margin:0;min-width:230px">
       <button data-f="alle" onclick="mgFilterSetzen('alle')">👥 Alle</button><button data-f="online" onclick="mgFilterSetzen('online')">🟢 Nur online</button></div></div>
+    <div id="mgGruppen"></div><!-- KC-CLUB-MG-GRUPPEN (1.34.0): eigene Gruppen als Filter -->
     <div class="karte" id="mitgliederListe"><span class="hinweis">Wird geladen …</span></div>
   </section>
 
@@ -1955,7 +1960,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.33.2"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.34.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3994,7 +3999,7 @@ const statusKurz = (s) => { const x = STATUS[statusArt(s)]; return `${x[0]} ${x[
 function meinStatusZeigen() {
   const s = INIT?.status, art = statusArt(s);
   $("statusChip").textContent = statusText(s) + " ▾"; $("statusChip").className = "statuschip stmarke st-" + art;
-  if ($("meinStatusKnopf")) { $("meinStatusKnopf").textContent = statusKurz(s) + " ▾"; $("meinStatusKnopf").className = "knopf klein stmarke st-" + art; }
+  if ($("meinStatusKnopf")) { $("meinStatusKnopf").innerHTML = `<small class="st-titel">Mein Status</small>${esc(statusKurz(s))} ▾`; $("meinStatusKnopf").className = "knopf klein stmarke st-" + art; }
 }
 const statusText = (s) => { const x = STATUS[s?.status] || STATUS.verfuegbar; return `${x[0]} ${x[1]}${s?.bis ? " bis " + fDatumKurz(s.bis) : ""}${s?.hinweis ? " · " + s.hinweis : ""}`; };
 function statusBlatt() {
@@ -8555,14 +8560,29 @@ async function protokollKorrigieren() {
 // Online-Anzeige verborgen hat, sieht auch andere nicht online – dann ist der Filter gesperrt (nie eine falsche leere Liste).
 let MG_FILTER = (() => { try { return localStorage.getItem("kc_club_mg_filter") === "online" ? "online" : "alle"; } catch { return "alle"; } })();
 function mgFilterSetzen(f) { MG_FILTER = f === "online" ? "online" : "alle"; try { localStorage.setItem("kc_club_mg_filter", MG_FILTER); } catch {} mitgliederZeichnen(); }
+// KC-CLUB-MG-GRUPPEN (1.34.0, Wunsch Hansi): eigene Gruppen (z. B. „Innovation“) als Filter – antippen zeigt nur deren Mitglieder
+let MG_GRUPPEN = [], MG_GRUPPE = null;
+function mgGruppeSetzen(id) { MG_GRUPPE = MG_GRUPPE === id ? null : id; mitgliederZeichnen(); }
 async function mitgliederLaden() {
   try { await mitgliederHolen(); mitgliederZeichnen(); } catch (e) { melde(e.message, true); }
+  try { MG_GRUPPEN = ((await api("unterhaltungen", {})).unterhaltungen || []).filter((u) => u.gruppe && Array.isArray(u.personen)); } catch { MG_GRUPPEN = []; }
+  if (MG_GRUPPE && !MG_GRUPPEN.some((g) => g.id === MG_GRUPPE)) MG_GRUPPE = null;
+  if (MITGLIEDER) mitgliederZeichnen();
+}
+function mgGruppenZeichnen() {
+  const z = $("mgGruppen"); if (!z) return null;
+  const g = MG_GRUPPEN.find((x) => x.id === MG_GRUPPE) || null;
+  z.innerHTML = MG_GRUPPEN.length ? `<div class="mg-gruppen"><span class="hinweis">Gruppen:</span>${MG_GRUPPEN.map((x) => `<button class="knopf klein${x.id === MG_GRUPPE ? " an" : ""}" onclick="mgGruppeSetzen('${x.id}')">${esc(x.gruppe.symbol || "👥")} ${esc(x.gruppe.name)} <small>(${x.personen.length})</small></button>`).join("")}</div>`
+    + (g ? `<div class="karte" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center"><b style="flex:1 1 160px">${esc(g.gruppe.symbol || "👥")} ${esc(g.gruppe.name)} · ${g.personen.length} Mitglieder</b><button class="knopf haupt klein" onclick="chatOeffnen('${g.id}')">💬 In die Gruppe schreiben</button><button class="knopf klein" onclick="mgGruppeSetzen(null)">✖ Alle zeigen</button></div>` : "") : "";
+  return g;
 }
 function mitgliederZeichnen() {
   try {
     const sichtbar = ONLINE_SICHTBAR !== false, anzahl = MITGLIEDER.filter((m) => m.online).length, nurOnline = MG_FILTER === "online" && sichtbar;
     document.querySelectorAll("#mgFilter button").forEach((b) => { b.classList.toggle("an", b.dataset.f === (nurOnline ? "online" : "alle")); if (b.dataset.f === "online") { b.disabled = !sichtbar; b.textContent = `🟢 Nur online${sichtbar ? ` (${anzahl})` : ""}`; b.title = sichtbar ? "" : "Du hast deine Online-Anzeige verborgen – dann siehst du auch andere nicht online (⚙️ → Privatsphäre)"; } });
-    const liste = nurOnline ? MITGLIEDER.filter((m) => m.online) : MITGLIEDER;
+    const gr = mgGruppenZeichnen();
+    const liste = (nurOnline ? MITGLIEDER.filter((m) => m.online) : MITGLIEDER).filter((m) => !gr || gr.personen.includes(m.person_id));
+    if (gr && !liste.length) { $("mitgliederListe").innerHTML = `<div class="leer">Aus dieser Gruppe ist gerade niemand online.<br><button class="knopf klein" style="margin-top:8px" onclick="mgFilterSetzen('alle')">👥 Alle der Gruppe anzeigen</button></div>`; return; }
     if (nurOnline && !liste.length) { $("mitgliederListe").innerHTML = `<div class="leer">Gerade ist niemand online.<br><button class="knopf klein" style="margin-top:8px" onclick="mgFilterSetzen('alle')">👥 Alle anzeigen</button></div>`; return; }
     $("mitgliederListe").innerHTML = kreisLegende() + liste.map((m) => `<div class="zeile">
       ${kreis(m, m.name, 40, `onclick="mitgliedOeffnen('${m.person_id}')"`)}

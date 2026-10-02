@@ -2116,6 +2116,15 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/async function neuGruppenZeigen\(ziel = "neuGruppen", frisch = false\)/.test(html), "Liste frisch holbar");
 }
 
+// 187. 1.34.0: Gruppen-Filter in „Aktive Mitglieder“ + „Mein Status“ (KC-CLUB-MG-GRUPPEN)
+{
+  assert.ok(/<div id="mgGruppen"><\/div>/.test(html) && /function mgGruppeSetzen\(id\)/.test(html), "Gruppen-Filter");
+  assert.ok(/\.filter\(\(m\) => !gr \|\| gr\.personen\.includes\(m\.person_id\)\)/.test(html), "nur Mitglieder der Gruppe");
+  assert.ok(/\.filter\(\(u\) => u\.gruppe && Array\.isArray\(u\.personen\)\)/.test(html), "nur Gruppen, in denen ich bin (Server-Liste)");
+  assert.ok(/\.\.\.\(gruppe\.has\(t\.id\) \? \{ personen: /.test(server), "Server liefert person_ids nur bei Gruppen");
+  assert.ok(/<small class="st-titel">Mein Status<\/small>\$\{esc\(statusKurz\(s\)\)\}/.test(html), "„Mein Status“ im Knopf");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
