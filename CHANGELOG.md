@@ -1,5 +1,14 @@
 # Änderungen
 
+## 1.45.1 – 2026-10-02 (DEV)
+
+- KC-CLUB-DIENSTWUNSCH / KC-DP-TWINKEY-EINFACH (Wunsch Hansi nach UX-Prüfung, vor Wilfrieds Eingabe): DP2 auf Build 256 RC
+  übernommen (dp3 `51518cc`, Zweig codex/club-app-interface). Twinkey „Selbst eingeben“: „x von 13 Tagen fertig“ und
+  „▶ Weiter mit <nächster offener Tag>“ in Tagesliste und nach dem Speichern; „Fertig“ fragt bei offenen Tagen nach;
+  Kann-Zeit nicht mehr mit dem ganzen Tag vorausgefüllt („Ganze freie Zeit übernehmen“ als bewusster Knopf); Wunschzeit-
+  „Weiter“ erst nach Wahl; „Diesen Tag eintragen“/„Angaben bearbeiten“ sofort sichtbar. Datenformat unverändert. Test 201,
+  Tests 142/146/149/151/199 erweitert. RC.
+
 ## 1.45.0 – 2026-10-02 (DEV)
 
 - KC-CLUB-MG-KACHELN (Wunsch Hansi, Entwurf freigegeben; „jeder kann selbst wählen“): „👥 Aktive Mitglieder“ wahlweise als

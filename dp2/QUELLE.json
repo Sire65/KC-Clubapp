@@ -1,9 +1,9 @@
 {
   "hinweis": "Unverändert aus KC DP2 übernommen – NICHT hier bearbeiten. Änderungen in DP2 machen und neu übernehmen (tools/dp2-twinkey-uebernehmen.mjs).",
   "repository": "Sire65/dp3",
-  "commit": "ae349c0c2ffaeff9d934fbe96260561f51c5b9e9",
-  "commitDatum": "2026-10-02T11:33:26+02:00",
-  "dp2Version": "0.20.0-build255",
+  "commit": "51518ccb893ae27661913630811ce8ed3dfdd2cd",
+  "commitDatum": "2026-10-02T10:32:56+00:00",
+  "dp2Version": "0.20.0-build256",
   "vorlage": "twinkey-test.html (ohne twinkey-test-data.js, twinkey-test-boot.js)",
   "reihenfolge": [
     "src/ui/app.css",
@@ -168,7 +168,7 @@
     "src/ui/wish-demand.js": "49fd5d45e89d81e1198ed48be7ea9eb14bb5de2a9a284c45cb09778dbca2d822",
     "src/ui/assistant-staffing.js": "b662428255ff1679bc627c2482fb173dbb95425a7a2c0e6866fa2dc80494d65f",
     "src/ui/assistant-hours.js": "027b586672f43aa8e834d8f36133d5b8e61ed9f89646788bdc4a0bb2c8c36ebe",
-    "src/ui/simple-wish-assistant.js": "8ee880ffeaa0c230308c997457fdeb067ed340497c28a9a0481ccc8dcfa58087",
+    "src/ui/simple-wish-assistant.js": "fded3dc5ed949cefe54bf976d2d50ae3694dfbd56f8656162dc269efcc9d9540",
     "src/core/document-identity.js": "9671c2be9f879bffa0944152439259dc3c10f57b909efdb2e02e38a4c25be456",
     "src/vendor/qrcode-generator.js": "79ec86f82856005b1c887905cfccfcfbec3821ca61c7fd5a952faa5f778f791c",
     "src/core/personalized-forms.js": "85760065a6cddd2bcdb378e849170d010f54f2b0754d87ba5664b9366f6b23d8",

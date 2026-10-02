@@ -1633,7 +1633,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 142. 1.13.0: DP2 Build 251 Button-Logik (unverändert übernommen) + offene Club-App-Angaben zählen als eigene Daten
 {
   const q = JSON.parse(lies("dp2/QUELLE.json"));
-  assert.ok(/^(f893f5d|c0d279a|d50ed58|3945960|ae349c0)/.test(q.commit) && /^0\.20\.0-build25[1345]$/.test(q.dp2Version) && q.reihenfolge.includes("src/ui/member-button-logic.js"), "DP2 Build 251 (ab 1.17.2: Build 253 RC) mit Button-Logik übernommen");
+  assert.ok(/^(f893f5d|c0d279a|d50ed58|3945960|ae349c0|51518cc)/.test(q.commit) && /^0\.20\.0-build25[13456]$/.test(q.dp2Version) && q.reihenfolge.includes("src/ui/member-button-logic.js"), "DP2 Build 251 (ab 1.17.2: Build 253 RC) mit Button-Logik übernommen");
   const d = lies("dp2-club/daten.js");
   assert.ok(/status: "confirmed", source: "club_app"/.test(d) && /K\.wishes = \[\.\.\.\(D\.meine\?\.entries \|\| \[\]\)\.map/.test(d), "Eingangs-Angaben (auch Status offen) zählen in DP2 als eigene aktive Wünsche");
 }
@@ -1668,7 +1668,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 
 // 146. 1.16.1: DP2-Nachtrag + Cache-Schlüssel mit Commit
 {
-  assert.ok(/^(c0d279a|d50ed58|3945960|ae349c0)/.test(JSON.parse(lies("dp2/QUELLE.json")).commit), "Nachtrag c0d279a übernommen (ab 1.17.2 im gemeinsamen Stand d50ed58 enthalten)");
+  assert.ok(/^(c0d279a|d50ed58|3945960|ae349c0|51518cc)/.test(JSON.parse(lies("dp2/QUELLE.json")).commit), "Nachtrag c0d279a übernommen (ab 1.17.2 im gemeinsamen Stand d50ed58 enthalten)");
   assert.ok(/quelle\.dp2Version \+ "-" \+ String\(quelle\.commit \|\| ""\)\.slice\(0, 7\)/.test(lies("dp2-club/lader.js")), "Cache-Schlüssel mit Commit");
 }
 
@@ -1698,7 +1698,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 149. 1.17.2: DP2 Build 253 RC (dp3 d50ed58) – gemeinsamer Stand aus Club-App-Schnittstelle und PDF-/QR-Korrekturen
 {
   const q = JSON.parse(lies("dp2/QUELLE.json"));
-  assert.ok(/^(d50ed58|3945960|ae349c0)/.test(q.commit) && /^0\.20\.0-build25[345]$/.test(q.dp2Version), "DP2 Build 253 RC (d50ed58) oder neuer übernommen");
+  assert.ok(/^(d50ed58|3945960|ae349c0|51518cc)/.test(q.commit) && /^0\.20\.0-build25[3456]$/.test(q.dp2Version), "DP2 Build 253 RC (d50ed58) oder neuer übernommen");
   for (const f of ["src/core/document-identity.js", "src/vendor/qrcode-generator.js", "src/core/personalized-forms.js", "src/adapters/pdf.js", "src/ui/member-button-logic.js"])
     assert.ok(q.reihenfolge.includes(f), `${f} fehlt in der DP2-Übernahme`);
   assert.ok(q.reihenfolge.indexOf("src/adapters/pdf.js") < q.reihenfolge.indexOf("src/ui/original-brand.js") || !q.reihenfolge.includes("src/ui/original-brand.js"), "PDF-Baustein vor dem Abschluss geladen");
@@ -1758,7 +1758,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 151. 1.18.1: DP2 Build 254 RC (dp3 3945960) – Meine Angaben ausdrucken (PDF mit QR, Abfrage, Vorschau) + Sperrtag ohne V/H/B
 {
   const q = JSON.parse(lies("dp2/QUELLE.json"));
-  assert.ok(/^(3945960|ae349c0)/.test(q.commit) && /^0\.20\.0-build25[45]$/.test(q.dp2Version), "DP2 Build 254 RC (3945960) oder neuer übernommen");
+  assert.ok(/^(3945960|ae349c0|51518cc)/.test(q.commit) && /^0\.20\.0-build25[456]$/.test(q.dp2Version), "DP2 Build 254 RC (3945960) oder neuer übernommen");
   assert.ok(q.reihenfolge.includes("src/ui/wish-print.js") && q.reihenfolge.includes("src/ui/wish-print.css"), "Ausdruck-Baustein fehlt in der Übernahme");
   assert.ok(/frame-src blob:/.test(lies("dienstwunsch.html")) && !/frame-src 'none'/.test(lies("dienstwunsch.html")), "PDF-Vorschau braucht frame-src blob: (nur selbst erzeugte PDFs)");
   assert.ok(/window\.confirm\(FRAGE\)/.test(lies("dp2/src/ui/wish-print.js")) && /filledPdf/.test(lies("dp2/src/core/personalized-forms.js")), "Sicherheitsabfrage/ausgefüllter Bogen fehlt");
@@ -2244,7 +2244,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 199. 1.44.1: DP2 Build 255 RC (dp3 ae349c0) – Reservierung je PC beim Club-App-Wunscheingang (KC-DP-WUNSCH-SPERRE)
 {
   const q = JSON.parse(lies("dp2/QUELLE.json"));
-  assert.ok(q.commit.startsWith("ae349c0") && q.dp2Version === "0.20.0-build255", "DP2 Build 255 RC (ae349c0) übernommen");
+  assert.ok(/^(ae349c0|51518cc)/.test(q.commit) && /^0\.20\.0-build25[56]$/.test(q.dp2Version), "DP2 Build 255 RC (ae349c0) oder neuer übernommen");
   assert.ok(q.reihenfolge.includes("src/ui/wish-print.js") && q.reihenfolge.includes("src/ui/member-button-logic.js"), "Build-254-Bausteine (Ausdruck, Button-Logik) bleiben enthalten");
   assert.ok(/kc_dp_wish_inbox_claim/.test(lies("supabase/migrations/20261001_kc_dp_wunsch_eingang_sperre.sql")), "Datenbankseite der Reservierung vorhanden");
 }
@@ -2254,6 +2254,16 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/id="mgAnsichtWahl"/.test(html) && /function mgAnsichtSetzen\(a\)/.test(html) && /localStorage\.setItem\("kc_club_mg_ansicht", MG_ANSICHT\)/.test(html), "Einstellung unter Darstellung (je Gerät)");
   assert.ok(/if \(MG_ANSICHT === "kacheln"\) \{ \$\("mitgliederListe"\)\.innerHTML = mgKachelnHtml\(liste\); return; \}/.test(html), "Kachel-Ansicht; Liste bleibt unverändert");
   assert.ok(/onclick="mitgliedOeffnen\('\$\{m\.person_id\}'\)"/.test(html) && /ICH\?\.admin \? `<div class="knoepfe"><button class="knopf" onclick="linkTeilen\(/.test(html), "Antippen → Details; Admin: 🔗/🎖️ in den Details");
+}
+
+// 201. 1.45.1: DP2 Build 256 RC (dp3 51518cc) – Twinkey einfacher und fehlersicher (KC-DP-TWINKEY-EINFACH)
+{
+  const q = JSON.parse(lies("dp2/QUELLE.json")), sw = lies("dp2/src/ui/simple-wish-assistant.js");
+  assert.ok(q.commit.startsWith("51518cc") && q.dp2Version === "0.20.0-build256", "DP2 Build 256 RC (51518cc) übernommen");
+  assert.ok(/id="swProgress"/.test(sw) && /id="swNextOpen"/.test(sw) && /id="swNextDay"/.test(sw), "Fortschritt und nächster offener Tag");
+  assert.ok(/function confirmOpenDays\(\)/.test(sw) && /if\(confirmOpenDays\(\)\)finishOverview\(false\)/.test(sw), "Rückfrage vor „Fertig“ bei offenen Tagen");
+  assert.ok(/if\(!can\.length\)can=\[\{start:null,end:null,wishZone:'B'\}\];/.test(sw) && /id="swWholeDay"/.test(sw), "Kann-Zeit nicht vorausgefüllt, ganze Zeit nur per Knopf");
+  assert.ok(/!times\.length&&!wishChosen\?\['Bitte zuerst wählen/.test(sw), "Wunschzeit erst nach bewusster Wahl");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
