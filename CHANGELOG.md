@@ -1,5 +1,15 @@
 # Änderungen
 
+## 1.23.3 – 2026-10-02 (DEV)
+
+- KC-CLUB-HELFEN/-LEIHEN Nachtrag (Abgleich mit dem besprochenen Vorschlag, Freigabe Hansi „bau 1, 2 und 3“):
+  1. Schnellstart-Symbole „🙋 Hilfe suchen“ und „📦 Ausleihen“ (öffnen direkt das Formular; Formular wartet auf die Daten).
+  2. Registry ergänzt: HILFE_ARTEN + „Tische tragen“, „Verkauf am Stand“ (Aufbauen/Abbauen umbenannt), LEIH_ZWECKE +
+     „Nachbarschaftsfest“, „Vereinsfest“ → „Vereinsveranstaltung“; Schlüssel unverändert. Bei „Sonstiges“ ein kurzes Feld,
+     das als „Wobei:“/„Wofür:“ in die Notiz kommt (keine Schemaänderung).
+  3. App-Suche: Einträge „Hilfe suchen“, „Etwas ausleihen“ (mit allen Gegenständen als Suchwörter) und „Spendenprojekt
+     vorschlagen“. „Unsere App auf einen Blick“ zeigt die Kachel schon automatisch (aus KACHELN).
+
 ## 1.23.2 – 2026-10-01 (DEV)
 
 - KC-CLUB-MINIKACHELN (Wunsch Hansi): Hilfe-Aufrufe (offen und vorbei) als kleine Kacheln – Symbol, Wobei, Tag mit

@@ -1885,7 +1885,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.23.2"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.23.3"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2711,6 +2711,9 @@ const SCHNELL = [
   { id: "online", sym: "👋", t: "Online", los: () => onlineBlatt() },
   { id: "wobinich", sym: "🧭", t: "Wo bin ich", los: () => { sosStart(); sosWoBinIch(); } },
   { id: "notfallpass", sym: "🪪", t: "Notfallpass", los: () => { sosStart(); nfpZeigenOderAusfuellen(); } },
+  // KC-CLUB-HELFEN / KC-CLUB-LEIHEN (1.23.3): direkt ins Formular
+  { id: "hilfe", sym: "🙋", t: "Hilfe suchen", kachel: "helfen", los: () => { hlStart("helfen"); hilfeNeu(); } },
+  { id: "ausleihen", sym: "📦", t: "Ausleihen", kachel: "helfen", los: () => { hlStart("leihen"); leihNeu(); } },
 ];
 const SCHNELL_STANDARD = ["schreiben", "termin", "zettel", "foto", "standort", "dienst", "suchen", "sos"];
 const schnellStand = () => ({ an: true, ids: null, ...(INIT?.einstellungen?.schnellstart || {}) });
@@ -5516,15 +5519,16 @@ function hlZeigen() {
   document.querySelectorAll("#hlTabs button").forEach((b) => b.classList.toggle("an", b.dataset.t === HL.tab));
   const z = $("hlInhalt"); if (!z) return;
   if (HL.tab === "helfen") z.innerHTML = HL.form ? hilfeFormHtml() : hilfeListeHtml();
-  else z.innerHTML = HL.edit ? leihEditHtml() : HL.form ? leihFormHtml() : leihListeHtml();
+  else z.innerHTML = !HL.leihen && (HL.edit || HL.form) ? '<div class="karte hinweis">Wird geladen …</div>' : HL.edit ? leihEditHtml() : HL.form ? leihFormHtml() : leihListeHtml();
 }
 
 // ----- 🙋 Wer kann helfen? -----
-function hilfeNeu() { HL.form = { art: "", datum: hlTag(0), slot: "", anzahl: 2, ort: "", ortFrei: false, notiz: "", ziel: "alle" }; hlZeigen(); window.scrollTo(0, 0); }
+function hilfeNeu() { HL.form = { art: "", artText: "", datum: hlTag(0), slot: "", anzahl: 2, ort: "", ortFrei: false, notiz: "", ziel: "alle" }; hlZeigen(); window.scrollTo(0, 0); }
 function hilfeFormHtml() {
   const f = HL.form, d = HL.hilfe || {}, orte = d.orte || [];
   return `<div class="karte hl-form"><h3 style="margin:0 0 6px">🙋 Hilfe suchen</h3>
     <div class="hl-frage">Wobei?</div>${hlChips("art", Object.entries(d.arten || {}).map(([w, t]) => ({ w, t })), f.art)}
+    ${f.art === "sonstiges" ? `<label class="feld">Wobei genau?<input maxlength="80" placeholder="z. B. Zelt reparieren" value="${esc(f.artText)}" oninput="hlText('artText', this)"></label>` : ""}
     <div class="hl-frage">Wann?</div>${hlTageWahl("datum", f.datum)}${hlChips("slot", hlSlots(d.zeitfenster, true), f.slot)}
     <div class="hl-frage">Wie viele Helfer?</div>${hlStepper(f.anzahl, 1, 20, "hlSetze('anzahl', HL.form.anzahl - 1)", "hlSetze('anzahl', HL.form.anzahl + 1)")}
     <div class="hl-frage">Wo? <small class="hinweis">(freiwillig)</small></div>
@@ -5540,7 +5544,8 @@ async function hilfeSenden(knopf) {
   if (!f.art) return melde("Bitte antippen, wobei geholfen werden soll.", true);
   await einmal(knopf, async () => {
     try {
-      const r = await api("hilfe_aufruf", { art: f.art, datum: f.datum, slot: f.slot || null, anzahl: f.anzahl, ort: f.ort || null, notiz: f.notiz || null, ziel: f.ziel });
+      const notiz = [f.art === "sonstiges" && f.artText.trim() ? "Wobei: " + f.artText.trim() : "", f.notiz.trim()].filter(Boolean).join("\n").slice(0, 300);
+      const r = await api("hilfe_aufruf", { art: f.art, datum: f.datum, slot: f.slot || null, anzahl: f.anzahl, ort: f.ort || null, notiz: notiz || null, ziel: f.ziel });
       HL.form = null; melde(r.empfaenger ? `📣 Aufruf gesendet – an ${r.empfaenger} ${r.empfaenger === 1 ? "Mitglied" : "Mitglieder"}` : "📣 Aufruf gespeichert – gerade ist niemand sonst online"); hlLaden();
     } catch (e) { melde(e.message, true); }
   });
@@ -5596,7 +5601,7 @@ function leihFrei(id, von, bis) {
   for (const b of d.belegungen || []) if (b.von <= bis && b.bis >= von) for (const p of b.positionen) if (p.id === id) { if (b.belegt) belegt += p.anzahl; else angefragt += p.anzahl; }
   return { frei: Math.max(0, g.anzahl - belegt), angefragt };
 }
-function leihNeu() { HL.form = { menge: {}, abholung: hlTag(1), abholung_slot: "", rueckgabe: hlTag(2), rueckgabe_slot: "", zweck: "", notiz: "" }; hlZeigen(); window.scrollTo(0, 0); }
+function leihNeu() { HL.form = { menge: {}, abholung: hlTag(1), abholung_slot: "", rueckgabe: hlTag(2), rueckgabe_slot: "", zweck: "", zweckText: "", notiz: "" }; hlZeigen(); window.scrollTo(0, 0); }
 function leihMenge(id, d) {
   const f = HL.form, fr = leihFrei(id, f.abholung, f.rueckgabe).frei;
   f.menge[id] = Math.max(0, Math.min(fr, (f.menge[id] || 0) + d)); hlZeigen();
@@ -5622,6 +5627,7 @@ function leihFormHtml() {
     <label class="hl-kal${rueck.some((r) => r.w === f.rueckgabe) ? "" : " an"}">📅 ${rueck.some((r) => r.w === f.rueckgabe) ? "Anderer Tag" : esc(hlTagName(f.rueckgabe))}<input type="date" min="${f.abholung}" max="${tagPlus(f.abholung, d.maxTage || 30)}" value="${f.rueckgabe}" onchange="this.value && hlSetze('rueckgabe', this.value)"></label>
     ${hlChips("rueckgabe_slot", hlSlots(d.zeitfenster, true), f.rueckgabe_slot)}
     <div class="hl-frage">Wofür? <small class="hinweis">(freiwillig)</small></div>${hlChips("zweck", [{ w: "", t: "– ohne –" }, ...Object.entries(d.zwecke || {}).map(([w, t]) => ({ w, t }))], f.zweck)}
+    ${f.zweck === "sonstiges" ? `<label class="feld">Wofür genau?<input maxlength="80" placeholder="z. B. Schulfest" value="${esc(f.zweckText)}" oninput="hlText('zweckText', this)"></label>` : ""}
     <label class="feld">Notiz (freiwillig)<input maxlength="500" placeholder="z. B. hole mit dem Anhänger ab" value="${esc(f.notiz)}" oninput="hlText('notiz', this)"></label>
     <div class="hl-summe">${summe.length ? `<b>${summe.map(esc).join(" · ")}</b><br>${esc(hlTagLang(f.abholung, f.abholung_slot, d.zeitfenster))} → ${esc(hlTagLang(f.rueckgabe, f.rueckgabe_slot, d.zeitfenster))} (${tage ? tage + (tage === 1 ? " Tag" : " Tage") : "gleicher Tag"})` : "Noch nichts ausgewählt – tippe bei den Gegenständen auf ＋"}</div>
     <p class="hinweis" style="font-size:.85rem;margin:6px 0 0">Die Anfrage geht an Clubsprecher, Kassenwart und Admin – eine Zusage genügt. Sie wird im Vereinsarchiv und in deinem Ordner (Register „Ausleihe“) abgelegt.</p>
@@ -5632,7 +5638,8 @@ async function leihSenden(knopf) {
   if (!positionen.length) return melde("Bitte mindestens einen Gegenstand auswählen.", true);
   await einmal(knopf, async () => {
     try {
-      const r = await api("leihen_anfrage", { positionen, abholung: f.abholung, abholung_slot: f.abholung_slot || null, rueckgabe: f.rueckgabe, rueckgabe_slot: f.rueckgabe_slot || null, zweck: f.zweck || null, notiz: f.notiz || null });
+      const notiz = [f.zweck === "sonstiges" && f.zweckText.trim() ? "Wofür: " + f.zweckText.trim() : "", f.notiz.trim()].filter(Boolean).join("\n").slice(0, 500);
+      const r = await api("leihen_anfrage", { positionen, abholung: f.abholung, abholung_slot: f.abholung_slot || null, rueckgabe: f.rueckgabe, rueckgabe_slot: f.rueckgabe_slot || null, zweck: f.zweck || null, notiz: notiz || null });
       HL.form = null;
       const ab = r.abgelegt ? (r.abgelegt.verein && r.abgelegt.persoenlich ? " · im Archiv abgelegt" : " · Archiv-Ablage teilweise nicht geklappt") : "";
       melde(`📨 Anfrage gesendet${r.versand?.gesendet ? ` – ${r.versand.gesendet} Meldung(en) an die Clubleitung` : ""}${ab}`); hlLaden();
@@ -9646,6 +9653,9 @@ function suAppListe() {
     ["🛡️", "Sicherheits-Check", "sicherheit sicher datenschutz verschlüsselung sicherung prüfen test", () => sicherheitStart()],
     ["🔕", "Chat stummschalten", "stumm stummschalten leise chat gruppe", () => { melde("Im Chat oben auf ⋮ tippen → 🔕 Stummschalten"); zeige("nachrichten"); }],
     ["⚡", "Schnellstart-Symbole auswählen", "schnellstart symbole schnell kachel", ein("ssWahl")], ["👋", "Anklopfen erlauben / Anklopfton", "anklopfen klopfen ton klingel", ein("setAnklopfen")],
+    ["🙋", "Hilfe suchen (Wer kann helfen?)", "hilfe helfen helfer aufruf aufbau abbau tische tragen kochen spülen einkauf fahrdienst verkauf stand", () => { hlStart("helfen"); hilfeNeu(); }],
+    ["📦", "Etwas ausleihen", "ausleihen leihen verleih stehtisch bierzelt garnitur pavillon zapfanlage glühwein kühlbox bräter warmhalte kabeltrommel", () => { hlStart("leihen"); leihNeu(); }],
+    ["💝", "Spendenprojekt vorschlagen", "spende spenden spendenprojekt kinderhospiz geld verein", () => { zeige("vorschlaege"); vorschlagForm("spende"); }],
     ["🆘", "Wo bin ich? (SOS)", "wo bin ich adresse standort notfall sos", () => sosStart()], ["🪪", "Mein Notfallpass", "notfallpass allergien medikamente blutgruppe notfall", () => { sosStart(); nfpBearbeiten(); }],
   ].map(([sym, t, w, fn]) => ({ sym, t, w, fn }));
   const kach = Object.values(KACHELN).flat().filter((k) => !k.bald && (!k.nur || k.nur()))

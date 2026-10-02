@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.23.2";
+const SERVER_VERSION = "1.23.3";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -1314,8 +1314,9 @@ async function spendenEmpfaenger() {
 // ---------- KC-CLUB-LEIHEN & KC-CLUB-HELFEN (1.23.0, Wunsch Hansi) ----------
 // Auswahl statt Freitext: Zeitfenster, Zwecke und Hilfe-Arten kommen aus diesen Registries (die App zeigt sie als Kacheln).
 const ZEITFENSTER: Record<string, string> = { vormittag: "🌅 Vormittag (8–12 Uhr)", mittag: "☀️ Mittag (12–14 Uhr)", nachmittag: "🌤️ Nachmittag (14–18 Uhr)", abend: "🌙 Abend (18–22 Uhr)" };
-const LEIH_ZWECKE: Record<string, string> = { vereinsfest: "🎉 Vereinsfest", feier: "🎂 Private Feier", markt: "🏪 Markt / Stand", verein: "🤝 Anderer Verein", sonstiges: "✏️ Sonstiges" };
-const HILFE_ARTEN: Record<string, string> = { kochen: "🍳 Kochen", aufbau: "🧱 Aufbau", abbau: "📦 Abbau", einkauf: "🛒 Einkauf", fahren: "🚗 Fahrdienst", service: "🍽️ Service", spuelen: "🧽 Spülen & Putzen", sonstiges: "🙋 Sonstiges" };
+// 1.23.3: wie mit Hansi besprochen ergänzt (Schlüssel bleiben, damit alte Einträge lesbar bleiben)
+const LEIH_ZWECKE: Record<string, string> = { vereinsfest: "🎉 Vereinsveranstaltung", feier: "🎂 Private Feier", nachbarschaft: "🏡 Nachbarschaftsfest", markt: "🏪 Markt / Stand", verein: "🤝 Anderer Verein", sonstiges: "✏️ Sonstiges" };
+const HILFE_ARTEN: Record<string, string> = { aufbau: "🧱 Aufbauen", abbau: "📦 Abbauen", tragen: "🪑 Tische tragen", kochen: "🍳 Kochen", spuelen: "🧽 Spülen & Putzen", verkauf: "🏪 Verkauf am Stand", service: "🍽️ Service", einkauf: "🛒 Einkauf", fahren: "🚗 Fahrdienst", sonstiges: "🙋 Sonstiges" };
 const LEIH_STATUS: Record<string, string> = { angefragt: "⏳ angefragt", genehmigt: "✅ genehmigt", abgelehnt: "❌ abgelehnt", abgeholt: "📦 abgeholt", zurueck: "↩️ zurückgegeben", storniert: "🚫 storniert" };
 const LEIH_BELEGT = ["genehmigt", "abgeholt"], LEIH_OFFEN = ["angefragt", "genehmigt", "abgeholt"];
 const LEIH_MAX_TAGE = 30, LEIH_VORLAUF_TAGE = 365, HILFE_VORLAUF_TAGE = 180;

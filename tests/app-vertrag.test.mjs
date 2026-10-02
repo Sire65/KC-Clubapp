@@ -1941,6 +1941,16 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/blattAuf\("hilfeInfo", `<div class="info-gross">\$\{hilfeKarte\(a\)\}/.test(html), "Info-Fenster mit Ich komme / Kann nicht");
 }
 
+// 171. 1.23.3: Schnellstart, ergänzte Auswahl, Suche (KC-CLUB-HELFEN, KC-CLUB-LEIHEN)
+{
+  assert.ok(/\{ id: "hilfe", sym: "🙋", t: "Hilfe suchen", kachel: "helfen", los: \(\) => \{ hlStart\("helfen"\); hilfeNeu\(\); \} \}/.test(html) && /\{ id: "ausleihen", sym: "📦", t: "Ausleihen", kachel: "helfen"/.test(html), "Schnellstart Hilfe/Ausleihen");
+  assert.ok(/tragen: "🪑 Tische tragen"/.test(server) && /verkauf: "🏪 Verkauf am Stand"/.test(server) && /nachbarschaft: "🏡 Nachbarschaftsfest"/.test(server), "Auswahl wie besprochen");
+  for (const k of ["kochen", "aufbau", "abbau", "einkauf", "fahren", "service", "spuelen", "sonstiges"]) assert.ok(new RegExp(`\\b${k}: "`).test(server.slice(server.indexOf("const HILFE_ARTEN"), server.indexOf("const LEIH_STATUS"))), `alter Schlüssel ${k} bleibt`);
+  assert.ok(/"Wobei: " \+ f\.artText\.trim\(\)/.test(html) && /"Wofür: " \+ f\.zweckText\.trim\(\)/.test(html), "Sonstiges-Feld");
+  assert.ok(/\["📦", "Etwas ausleihen", "ausleihen leihen/.test(html) && /\["💝", "Spendenprojekt vorschlagen"/.test(html), "Suche");
+  assert.ok(/!HL\.leihen && \(HL\.edit \|\| HL\.form\)/.test(html), "Formular wartet auf Daten");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
