@@ -1,7 +1,8 @@
 {
-  "version": "1.29.0",
+  "version": "1.30.0",
   "datum": "2026-10-02",
   "neu": [
+    "🎉 Neuer Schalter unter ⚙️ Einstellungen: „Runde Geburtstage – Clubleitung darf mein Alter sehen“. Freiwillig: nur dann sieht die Clubleitung bei 50., 60., 70., 75. … das Alter, z. B. für ein Geschenk. Alle anderen sehen weiterhin kein Jahr",
     "🎂 Büro: Geburtstage & Vereinsjubiläen auf einen Blick (heute, diese Woche, danach) – antippen zum Gratulieren per Nachricht, Glückwunschkarte als Brief oder Gruß an der Pinnwand; Liste zum Ausdrucken (Admin)",
     "📸 Büro – nach der Sitzung: die ausgefüllte Protokoll-Vorlage abfotografieren und direkt ans Protokoll hängen (Admin)",
     "✔️ Büro – Aufgaben verteilen: Wer? Was? Bis wann? per Antippen; die Mitglieder bekommen ihre Aufgabe beim Veröffentlichen des Protokolls – oder auf Wunsch sofort (Admin)",
@@ -14,6 +15,12 @@
     "📨 Danach mit einem Tipp: Einladung mit Tagesordnung an alle senden – und später alle erinnern, die noch nicht geantwortet haben (Admin)"
   ],
   "verlauf": [
+    {
+      "version": "1.30.0",
+      "neu": [
+        "🎉 Neuer Schalter unter ⚙️ Einstellungen: „Runde Geburtstage – Clubleitung darf mein Alter sehen“. Freiwillig: nur dann sieht die Clubleitung bei 50., 60., 70., 75. … das Alter, z. B. für ein Geschenk. Alle anderen sehen weiterhin kein Jahr"
+      ]
+    },
     {
       "version": "1.29.0",
       "neu": [

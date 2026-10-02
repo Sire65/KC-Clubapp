@@ -1574,6 +1574,8 @@
     <details class="karte" data-klappe="privat" data-einfach>
       <summary>🔒 Privatsphäre</summary>
       <div class="schalter"><div><b>🎂 Meinen Geburtstag anzeigen (ohne Jahr)</b><div class="hinweis" id="gebHinweis">Andere sehen dann nur Tag und Monat – im Kalender, in der Terminliste und unter „Heute wichtig“.</div></div><input type="checkbox" id="setGeburtstag" onchange="geburtstagFreigabe(this.checked)"></div>
+      <!-- KC-CLUB-RUNDER-GEBURTSTAG (1.30.0): freiwillig, nur für die Clubleitung -->
+      <div class="schalter"><div><b>🎉 Runde Geburtstage: Clubleitung darf mein Alter sehen</b><div class="hinweis" id="rundGebHinweis">Nur Clubsprecher, Kassenwart und Admin – und nur bei runden Geburtstagen (z. B. 50., 60., 70., 75.), damit der Club gratulieren oder ein Geschenk besorgen kann. Andere Mitglieder sehen weiterhin kein Jahr.</div></div><input type="checkbox" id="setRundGeburtstag" onchange="runderGeburtstagFreigabe(this.checked)"></div>
       <!-- KC-CLUB-ZULETZT-DA (1.20.0) -->
       <div class="schalter"><div><b>🕒 Anderen zeigen, wann ich zuletzt da war</b><div class="hinweis">Wie bei WhatsApp „zuletzt online“: heute mit Uhrzeit, sonst nur grob („gestern“, „vor 3 Tagen“). Ausgeschaltet siehst du es auch bei anderen nicht.</div></div><input type="checkbox" id="setZuletzt" onchange="zuletztZeigen(this.checked)"></div>
       <div class="schalter"><div><b>🟢 Anderen zeigen, wann ich online bin</b><div class="hinweis">Dann sehen andere einen grünen Punkt bei dir und können „anklopfen“. Ausgeschaltet siehst du auch selbst nicht, wer online ist.</div></div><input type="checkbox" id="setOnline" onchange="onlineZeigen(this.checked)"></div>
@@ -1926,7 +1928,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.29.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.30.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -5209,8 +5211,13 @@ function geburtstageListe(geb, tage) {
 function geburtstagSchalterZeigen() {
   const s = $("setGeburtstag"); if (!s || !INIT) return;
   s.checked = !!INIT.geburtstagFreigabe; s.disabled = !INIT.hatGeburtstag;
+  const r = $("setRundGeburtstag"); if (r) { r.checked = !!INIT.runderGeburtstagFreigabe; r.disabled = !INIT.hatGeburtstag; }
   $("gebHinweis").textContent = INIT.hatGeburtstag ? "Andere sehen dann nur Tag und Monat – im Kalender, in der Terminliste und unter „Heute wichtig“."
     : "⚠️ Für dich ist kein Geburtstag hinterlegt – bitte Hansi Bescheid geben.";
+}
+async function runderGeburtstagFreigabe(an) {
+  try { await api("runder_geburtstag_freigabe", { erlaubt: an }); INIT.runderGeburtstagFreigabe = an; melde(an ? "🎉 Bei runden Geburtstagen sieht die Clubleitung dein Alter." : "Die Clubleitung sieht dein Alter nicht mehr."); }
+  catch (e) { melde(e.message, true); $("setRundGeburtstag").checked = !an; }
 }
 async function geburtstagFreigabe(an) {
   try { await api("geburtstag_freigabe", { erlaubt: an }); INIT.geburtstagFreigabe = an; melde(an ? "🎂 Dein Geburtstag wird angezeigt (ohne Jahr)." : "Dein Geburtstag wird nicht mehr angezeigt."); }
@@ -5588,7 +5595,7 @@ function buStartHtml() {
   const summe = Object.values(e).reduce((a, b) => a + b, 0);
   const eingang = [["📦", "Ausleih-Anfragen", e.ausleihen, "buEingang()"], ["🗳️", "Offene Vorschläge", e.vorschlaege, "buEingang()"], ["🙋", "Hilfe-Aufrufe", e.hilfe, "buEingang()"],
     ["🗄️", "Archiv: zu prüfen", e.archiv, "arStart()"], ["✔️", "Offene Aufgaben", e.aufgaben, "zeige('protokolle')"], ["📄", "Protokoll-Entwürfe", e.entwuerfe, "zeige('protokolle')"]];
-  const festHeute = BU_F ? [...BU_F.geburtstage.filter((f) => f.tage === 0).map((f) => `🎂 ${esc(f.vorname)} hat Geburtstag`), ...BU_F.jubilaeen.filter((f) => f.tage === 0).map((f) => `🏅 ${esc(f.vorname)}: ${f.jahre} Jahre im Club`)] : [];
+  const festHeute = BU_F ? [...BU_F.geburtstage.filter((f) => f.tage === 0).map((f) => f.alter ? `🎉 ${esc(f.vorname)} wird ${f.alter}` : `🎂 ${esc(f.vorname)} hat Geburtstag`), ...BU_F.jubilaeen.filter((f) => f.tage === 0).map((f) => `🏅 ${esc(f.vorname)}: ${f.jahre} Jahre im Club`)] : [];
   const festBald = BU_F ? BU_F.geburtstage.concat(BU_F.jubilaeen).filter((f) => f.tage >= 0 && f.tage <= 7).length : 0;
   return `<div class="karte bu-gruss"><b>${buTageszeit()}, ${esc(ICH.vorname || ICH.name)}!</b>${festHeute.length ? `<div class="bu-tipp" style="margin:6px 0">🎉 Heute: ${festHeute.join(" · ")} – <button class="knopf klein" onclick="buFeste()">gratulieren</button></div>` : "<br>"}${t ? `Nächste Sitzung: <b>${esc(t.titel)}</b> · ${esc(wann(t.beginn))}<br>✅ ${t.ja} zugesagt · ❌ ${t.nein} abgesagt · ❓ ${t.ohne} ohne Antwort` : "Gerade ist keine Sitzung geplant – lege sie unter 📅 Termine an."}
     ${dran ? `<div class="bu-tipp">👉 Nächster Schritt: <b>${dran}</b></div>` : t ? '<div class="bu-tipp">✅ Für diese Sitzung ist alles erledigt.</div>' : ""}</div>
@@ -6043,8 +6050,8 @@ const buFTag = (f) => f.tage === 0 ? "heute 🎉" : f.tage === 1 ? "morgen" : f.
 function buFeste() { BU.sicht = "feste"; buZeigen(); buFesteListe(BU_F?.tage || 60).then(() => { if (aktuelleAnsicht === "buero" && BU.sicht === "feste") buZeigen(); }); window.scrollTo(0, 0); }
 function buFesteKachel(f, art) {
   const heute = f.tage === 0;
-  return `<button class="mini-kachel${heute ? " bu-dran" : f.rund ? " mk-offen" : ""}" onclick="buFestInfo('${art}','${f.person_id}')"><span class="mk-sym">${art === "geb" ? "🎂" : f.rund ? "🏆" : "🏅"}</span>
-    <span class="mk-titel">${esc(f.name)}</span><span class="mk-unter">${art === "geb" ? "Geburtstag" : `<b>${f.jahre} Jahre</b> im Club${f.rund ? " – rund!" : ""}`}</span><span class="mk-unter">${esc(buFTag(f))}</span></button>`;
+  return `<button class="mini-kachel${heute ? " bu-dran" : f.rund ? " mk-offen" : ""}" onclick="buFestInfo('${art}','${f.person_id}')"><span class="mk-sym">${art === "geb" ? (f.alter ? "🎉" : "🎂") : f.rund ? "🏆" : "🏅"}</span>
+    <span class="mk-titel">${esc(f.name)}</span><span class="mk-unter">${art === "geb" ? (f.alter ? `<b>wird ${f.alter}</b> – runder Geburtstag!` : "Geburtstag") : `<b>${f.jahre} Jahre</b> im Club${f.rund ? " – rund!" : ""}`}</span><span class="mk-unter">${esc(buFTag(f))}</span></button>`;
 }
 function buFesteHtml() {
   const d = BU_F; if (!d) return '<div class="karte hinweis">Wird geladen …</div>';
@@ -6064,14 +6071,14 @@ function buFest(art, pid) { return (art === "geb" ? BU_F?.geburtstage : BU_F?.ju
 function buFestInfo(art, pid) {
   const f = buFest(art, pid); if (!f) return;
   blattAuf("buFest", `<div class="info-gross"><div style="font-size:3rem;line-height:1">${art === "geb" ? "🎂" : f.rund ? "🏆" : "🏅"}</div><h3 style="font-size:1.35rem;margin:4px 0">${esc(f.name)}</h3>
-    <p style="margin:0">${art === "geb" ? "hat Geburtstag" : `ist seit <b>${esc(f.eintritt)}</b> im Köcheclub – <b>${f.jahre} Jahre</b>${f.rund ? " 🎉" : ""}`}<br>📅 ${esc(buFTag(f))}</p></div>
+    <p style="margin:0">${art === "geb" ? (f.alter ? `wird <b>${f.alter}</b> – runder Geburtstag 🎉` : "hat Geburtstag") : `ist seit <b>${esc(f.eintritt)}</b> im Köcheclub – <b>${f.jahre} Jahre</b>${f.rund ? " 🎉" : ""}`}<br>📅 ${esc(buFTag(f))}</p></div>
     <div class="knoepfe" style="flex-direction:column;align-items:stretch">
       <button class="knopf haupt" onclick="$('buFest').remove();buFestNachricht('${art}','${pid}')">💬 Glückwunsch als Nachricht</button>
       <button class="knopf" onclick="$('buFest').remove();buFestBrief('${art}','${pid}')">✉️ Glückwunschkarte als Brief</button>
       <button class="knopf" onclick="$('buFest').remove();buFestPinnwand('${art}','${pid}')">📌 Gruß an die Pinnwand (für alle)</button>
       <button class="knopf" onclick="$('buFest').remove()">Schließen</button></div>`);
 }
-const buFestText = (art, f) => art === "geb" ? `Alles Gute zum Geburtstag, ${f.vorname}! 🎂🥳 Herzliche Grüße vom ganzen Köcheclub.`
+const buFestText = (art, f) => art === "geb" ? `Alles Gute zum ${f.alter ? f.alter + ". " : ""}Geburtstag, ${f.vorname}! 🎂🥳 Herzliche Grüße vom ganzen Köcheclub.`
   : `Herzlichen Glückwunsch, ${f.vorname}, zu ${f.jahre} Jahren im Köcheclub Werne! 🏅 Danke für deine Treue und deinen Einsatz.`;
 async function buFestNachricht(art, pid) {
   const f = buFest(art, pid); if (!f) return;
@@ -6083,8 +6090,8 @@ function buFestBrief(art, pid) {
   const f = buFest(art, pid); if (!f) return;
   buBrief();
   Object.assign(BRIEF, { vorlage: "glueckwunsch", empfaenger: f.name, anrede: `Liebe/r ${f.vorname},`, gruss: "Herzliche Grüße",
-    betreff: art === "geb" ? "Herzlichen Glückwunsch zum Geburtstag" : `Herzlichen Glückwunsch zu ${f.jahre} Jahren im Köcheclub Werne`,
-    text: art === "geb" ? "zu deinem Geburtstag gratulieren wir dir im Namen aller Mitglieder des Köcheclubs Werne ganz herzlich.\n\nFür das neue Lebensjahr wünschen wir dir Gesundheit, Glück und viele schöne Stunden – gern auch in unserer Küche."
+    betreff: art === "geb" ? `Herzlichen Glückwunsch zum ${f.alter ? f.alter + ". " : ""}Geburtstag` : `Herzlichen Glückwunsch zu ${f.jahre} Jahren im Köcheclub Werne`,
+    text: art === "geb" ? (f.alter ? `zu deinem ${f.alter}. Geburtstag` : "zu deinem Geburtstag") + " gratulieren wir dir im Namen aller Mitglieder des Köcheclubs Werne ganz herzlich.\n\nFür das neue Lebensjahr wünschen wir dir Gesundheit, Glück und viele schöne Stunden – gern auch in unserer Küche."
       : `seit ${f.eintritt} bist du Mitglied im Köcheclub Werne – das sind nun ${f.jahre} Jahre! Dafür möchten wir dir im Namen aller Mitglieder ganz herzlich danken.\n\nDeine Treue und dein Einsatz machen unseren Verein aus. Wir freuen uns auf viele weitere gemeinsame Jahre.` });
   briefMerken(); buZeigen();
 }
@@ -6096,9 +6103,9 @@ function buFestPinnwand(art, pid) {
 // Ausdruck: Liste für den gewählten Zeitraum
 function druckFeste() {
   const d = BU_F; if (!d) throw new Error("Bitte die Liste im Büro öffnen.");
-  const alle = [...d.geburtstage.map((f) => ({ ...f, art: "🎂 Geburtstag" })), ...d.jubilaeen.map((f) => ({ ...f, art: `🏅 ${f.jahre} Jahre im Club${f.rund ? " (rund)" : ""}` }))].sort((a, b) => a.datum.localeCompare(b.datum));
+  const alle = [...d.geburtstage.map((f) => ({ ...f, art: f.alter ? `🎉 ${f.alter}. Geburtstag` : "🎂 Geburtstag" })), ...d.jubilaeen.map((f) => ({ ...f, art: `🏅 ${f.jahre} Jahre im Club${f.rund ? " (rund)" : ""}` }))].sort((a, b) => a.datum.localeCompare(b.datum));
   const zeile = (f) => `<tr><td style="padding:1.5mm 2mm;border-bottom:.2mm solid #bbb;white-space:nowrap">${esc(fTagDp.format(new Date(f.datum + "T12:00:00Z")))}</td><td style="padding:1.5mm 2mm;border-bottom:.2mm solid #bbb"><b>${esc(f.name)}</b></td><td style="padding:1.5mm 2mm;border-bottom:.2mm solid #bbb">${esc(f.art)}</td><td style="padding:1.5mm 2mm;border-bottom:.2mm solid #bbb;width:30mm">☐ gratuliert</td></tr>`;
-  return { titel: "Geburtstage & Jubiläen", unter: `${d.tage === 366 ? "Das nächste Jahr" : `Die nächsten ${d.tage} Tage`} ab ${dz(d.heute)}`, fuss: "Geburtstage nur bei Freigabe, ohne Jahr",
+  return { titel: "Geburtstage & Jubiläen", unter: `${d.tage === 366 ? "Das nächste Jahr" : `Die nächsten ${d.tage} Tage`} ab ${dz(d.heute)}`, fuss: "Geburtstage nur bei Freigabe · Alter nur bei runden Geburtstagen mit eigener Freigabe",
     html: alle.length ? `<table style="width:100%;border-collapse:collapse;font-size:3.6mm"><thead><tr style="text-align:left;border-bottom:.5mm solid #741521"><th style="padding:1.5mm 2mm">Datum</th><th style="padding:1.5mm 2mm">Name</th><th style="padding:1.5mm 2mm">Anlass</th><th></th></tr></thead><tbody>${alle.map(zeile).join("")}</tbody></table>` : "<p>In diesem Zeitraum steht nichts an.</p>" };
 }
 
@@ -10390,7 +10397,7 @@ function suAppListe() {
     ["🔔", "Push-Benachrichtigungen", "push benachrichtigung mitteilung handy", ein("pushStatus")], ["🔊", "Ton", "ton klingel laut", ein("setTon")],
     ["🌙", "Nicht stören (Ruhezeit)", "nicht stören ruhezeit nacht stumm", ein("ruheAn")], ["🔠", "Schriftgröße", "schrift gross groß lesen", ein(einfach() ? "setGrossE" : "setGross")],
     ["🎨", "Farbe & Design", "farbe design aussehen", ein(einfach() ? "designWahlE" : "designWahl")], ["🌗", "Tag/Nacht umschalten", "dunkel hell nacht tag", () => dunkelUmschalten()],
-    ["🎂", "Geburtstag anzeigen", "geburtstag", ein("setGeburtstag")], ["🟢", "Online sichtbar", "online sichtbar unsichtbar", ein("setOnline")], ["🕒", "Zuletzt da anzeigen", "zuletzt da online gesehen", ein("setZuletzt")],
+    ["🎂", "Geburtstag anzeigen", "geburtstag", ein("setGeburtstag")], ["🎉", "Runde Geburtstage (Alter für die Clubleitung)", "runder geburtstag alter jubiläum", ein("setRundGeburtstag")], ["🟢", "Online sichtbar", "online sichtbar unsichtbar", ein("setOnline")], ["🕒", "Zuletzt da anzeigen", "zuletzt da online gesehen", ein("setZuletzt")],
     ["🆘", "Notfallkontakt", "notfall kontakt", ein("nfName")], ["📆", "Kalender-Abo (Handy-Kalender)", "kalender abo handy ical", ein("kalAboKnopf")],
     ["📱", "Meine Geräte", "geräte handy tablet abmelden", () => geraeteBlatt()], ["📡", "Verbindung prüfen", "verbindung internet led server", () => verbindungBlatt()],
     ["🔄", "Update prüfen", "update version neu", () => updateKachel()], ["🟢", "Mein Status", "status urlaub verfügbar krank", () => statusBlatt()],

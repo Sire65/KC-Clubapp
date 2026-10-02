@@ -1,5 +1,14 @@
 # Änderungen
 
+## 1.30.0 – 2026-10-02 (DEV)
+
+- KC-CLUB-RUNDER-GEBURTSTAG (Wunsch Hansi „bau den Schalter für runde Geburtstage ein“): neue freiwillige Freigabe je
+  Mitglied (kc_club_freigaben, Bereich 'runder_geburtstag', Aktion runder_geburtstag_freigabe, Schalter in den
+  Einstellungen unter „Meinen Geburtstag anzeigen“). Nur mit dieser Freigabe zeigt das Büro (nur Clubleitung) bei runden
+  Geburtstagen (ab 18: jede volle 10, ab 65 auch jede 5) das Alter – auch wenn der Geburtstag sonst nicht öffentlich ist.
+  Ohne Freigabe bleibt alles wie bisher (nie ein Jahr). Glückwunsch-Texte, Brief und Druckliste nennen dann „zum 60.“.
+- DB: Migration 20261002_kc_club_v1300_runder_geburtstag.sql (Check-Erweiterung, rein additiv).
+
 ## 1.29.0 – 2026-10-02 (DEV)
 
 - KC-CLUB-BUERO-FESTE (Wunsch Hansi): Büro-Kachel „🎂 Geburtstage & Jubiläen“. Server buero_feste (nur Clubleitung):

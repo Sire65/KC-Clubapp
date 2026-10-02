@@ -2028,10 +2028,25 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(aktionen.has("buero_feste") && aufrufe.has("buero_feste"), "Aktion buero_feste fehlt");
   const f = server.slice(server.indexOf('case "buero_feste"'), server.indexOf('case "leihen_liste"'));
   assert.ok(/nurVorstand\(ich\)/.test(f.slice(0, 120)), "nur Clubleitung");
-  assert.ok(/if \(!frei\.has\(m\.person_id\) && m\.person_id !== ich\.person_id\) \{ ohneFreigabe\+\+; continue; \}/.test(f), "Geburtstag nur mit Freigabe");
-  assert.ok(!/birth_date\)\.slice\(0, 4\)|jahrgang|alter/i.test(f) && /geburtstage\.push\(\{ person_id: m\.person_id, name: m\.display_name, vorname: vorname\(m\), datum: d, tage: t \}\)/.test(f), "kein Geburtsjahr/Alter");
+  // 1.30.0: zusätzlich freiwillige Freigabe „runde Geburtstage“ (Test 179) – ohne sie weiterhin nur mit Geburtstags-Freigabe
+  assert.ok(/if \(!frei\.has\(m\.person_id\) && m\.person_id !== ich\.person_id && !rund\) \{ ohneFreigabe\+\+; continue; \}/.test(f), "Geburtstag nur mit Freigabe");
+  assert.ok(/geburtstage\.push\(\{ person_id: m\.person_id, name: m\.display_name, vorname: vorname\(m\), datum: d, tage: t, \.\.\.\(rund \? \{ rund: true, alter \} : \{\}\) \}\)/.test(f), "Alter nur bei Freigabe für runde Geburtstage");
   assert.ok(/m\?\.joinedAt/.test(f) && /namensSchluessel\(m\.firstName, m\.lastName\)/.test(f), "Jubiläum aus KC Manager, gleiche Zuordnung");
   assert.ok(/feste: \{ bauen: \(\) => druckFeste\(\) \}/.test(html) && /function buFestNachricht/.test(html) && !/api\("nachricht_senden"/.test(html.slice(html.indexOf("async function buFestNachricht"), html.indexOf("function buFestBrief"))), "Gratulieren nur vorbereitet");
+}
+
+// 179. 1.30.0: runde Geburtstage nur mit eigener Freigabe (KC-CLUB-RUNDER-GEBURTSTAG)
+{
+  assert.ok(aktionen.has("runder_geburtstag_freigabe") && aufrufe.has("runder_geburtstag_freigabe"), "Schalter-Aktion fehlt");
+  const c = server.slice(server.indexOf('case "runder_geburtstag_freigabe"'), server.indexOf('case "dienst_freigabe"'));
+  assert.ok(/person_id: ich\.person_id, bereich: "runder_geburtstag"/.test(c), "nur die eigene Freigabe");
+  const f = server.slice(server.indexOf('case "buero_feste"'), server.indexOf('case "leihen_liste"'));
+  assert.ok(/const rund = rundFrei\.has\(m\.person_id\) && rundesAlter\(alter\);/.test(f) && /\.\.\.\(rund \? \{ rund: true, alter \} : \{\}\)/.test(f), "Alter nur mit Freigabe und nur rund");
+  assert.ok(/nurVorstand\(ich\)/.test(f.slice(0, 120)), "nur Clubleitung");
+  const g = server.slice(server.indexOf("async function geburtstageSichtbar"), server.indexOf("// ---------- Treffen ----------"));
+  assert.ok(!/runder_geburtstag|alter/.test(g), "öffentliche Geburtstage weiter ohne Jahr");
+  assert.ok(/id="setRundGeburtstag" onchange="runderGeburtstagFreigabe\(this\.checked\)"/.test(html), "Schalter in den Einstellungen");
+  assert.ok(/'runder_geburtstag'/.test(lies("supabase/migrations/20261002_kc_club_v1300_runder_geburtstag.sql")), "Migration");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

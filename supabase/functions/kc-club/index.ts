@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.29.0";
+const SERVER_VERSION = "1.30.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -2344,7 +2344,8 @@ Köcheclub Werne`,
         const geb = await geburtstageSichtbar(ich);
         const geburtstageHeute = geb.filter((g) => g.md === heuteMd || (!schalt && heuteMd === "02-28" && g.md === "02-29"))
           .map((g) => ({ person_id: g.person_id, name: g.name, vorname: g.vorname }));
-        const { data: gf } = await db.from("kc_club_freigaben").select("erlaubt").eq("person_id", ich.person_id).eq("bereich", "geburtstag").maybeSingle();
+        const { data: gfs } = await db.from("kc_club_freigaben").select("bereich,erlaubt").eq("person_id", ich.person_id).in("bereich", ["geburtstag", "runder_geburtstag"]);
+        const gf = (gfs ?? []).find((x: any) => x.bereich === "geburtstag"), rgf = (gfs ?? []).find((x: any) => x.bereich === "runder_geburtstag");
         const hatGeburtstag = !!(mitglieder.find((m: any) => m.person_id === ich.person_id) as any)?.birth_date;
         // KC-CLUB-AUFGABEN / KC-CLUB-PROTOKOLLE: meine offenen Aufgaben, ungelesene Protokolle
         let meineAufgaben: any[] = [], protokolleUngelesen = 0;
@@ -2390,7 +2391,7 @@ Köcheclub Werne`,
         const communicator = await communicatorStatus(ich).catch(() => null);
         const kontaktFreigabe = Object.fromEntries(KONTAKT_FELDER.map((f) => [f, !!(kf ?? []).find((x: any) => x.bereich === "kontakt_" + f)?.erlaubt]));
         const benachrichtigung = Object.fromEntries(BEREICHE.map((b) => { const x: any = (wahl ?? []).find((y: any) => y.bereich === b); return [b, x ? { push: x.push, email: x.email } : STANDARD_WAHL[b]]; }));
-        return json({ ich, status: meinStatus, server: SERVER_VERSION, ungelesen, ungelesenLaut, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, communicator, notfall: nf ?? null, einstellungen, kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
+        return json({ ich, status: meinStatus, server: SERVER_VERSION, ungelesen, ungelesenLaut, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, communicator, notfall: nf ?? null, einstellungen, kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
             // KC-CLUB-GERAETE-TIPP: wohin der Link ginge – nur teilweise (z. B. „h…@web.de“)
@@ -2974,10 +2975,13 @@ Köcheclub Werne`,
         const heute = berlinTag(new Date()), tage = Math.min(366, Math.max(7, Math.floor(Number(p.tage) || 60)));
         const [leute, { data: fr }, { data: mg }] = await Promise.all([
           aktiveMitglieder(),
-          db.from("kc_club_freigaben").select("person_id").eq("bereich", "geburtstag").eq("erlaubt", true),
+          db.from("kc_club_freigaben").select("person_id,bereich").in("bereich", ["geburtstag", "runder_geburtstag"]).eq("erlaubt", true),
           db.from(AKTIONEN_QUELLE.tabelle).select("payload").eq("org_id", ORG).eq("section_key", AKTIONEN_QUELLE.mitglieder).maybeSingle(),
         ]);
-        const frei = new Set((fr ?? []).map((x: any) => x.person_id));
+        const frei = new Set((fr ?? []).filter((x: any) => x.bereich === "geburtstag").map((x: any) => x.person_id));
+        // KC-CLUB-RUNDER-GEBURTSTAG: Alter nur, wenn das Mitglied es freigegeben hat – und nur bei runden Geburtstagen
+        const rundFrei = new Set((fr ?? []).filter((x: any) => x.bereich === "runder_geburtstag").map((x: any) => x.person_id));
+        const rundesAlter = (a: number) => a >= 18 && (a % 10 === 0 || (a >= 65 && a % 5 === 0));
         // nächster Jahrestag eines MM-TT ab (heute − 7 Tage); 29.02. → 28.02. in Nicht-Schaltjahren
         const naechster = (md: string) => {
           const ab = tagDazu(heute, -7), j0 = Number(ab.slice(0, 4));
@@ -2993,10 +2997,12 @@ Köcheclub Werne`,
         let ohneFreigabe = 0;
         for (const m of leute as any[]) {
           if (!m.birth_date) continue;
-          if (!frei.has(m.person_id) && m.person_id !== ich.person_id) { ohneFreigabe++; continue; }
           const d = naechster(String(m.birth_date).slice(5, 10)); if (!d) continue;
+          const alter = Number(d.slice(0, 4)) - Number(String(m.birth_date).slice(0, 4));
+          const rund = rundFrei.has(m.person_id) && rundesAlter(alter);
+          if (!frei.has(m.person_id) && m.person_id !== ich.person_id && !rund) { ohneFreigabe++; continue; }
           const t = tageBis(d); if (t > tage) continue;
-          geburtstage.push({ person_id: m.person_id, name: m.display_name, vorname: vorname(m), datum: d, tage: t });
+          geburtstage.push({ person_id: m.person_id, name: m.display_name, vorname: vorname(m), datum: d, tage: t, ...(rund ? { rund: true, alter } : {}) });
         }
         const kern = new Map((leute as any[]).map((p) => [namensSchluessel(p.given_name || p.display_name.split(" ")[0], p.family_name || p.display_name.split(" ").slice(-1)[0]), p]));
         const jubilaeen: any[] = [];
@@ -3421,6 +3427,13 @@ Köcheclub Werne`,
       case "geburtstag_freigabe": {
         await db.from("kc_club_freigaben").upsert({ person_id: ich.person_id, bereich: "geburtstag", erlaubt: !!p.erlaubt, geaendert_am: jetzt() });
         await protokoll(ich.person_id, "geburtstag_freigabe", { erlaubt: !!p.erlaubt });
+        return json({ ok: true });
+      }
+
+      // KC-CLUB-RUNDER-GEBURTSTAG (1.30.0): freiwillig – Clubleitung darf bei runden Geburtstagen das Alter sehen
+      case "runder_geburtstag_freigabe": {
+        await db.from("kc_club_freigaben").upsert({ person_id: ich.person_id, bereich: "runder_geburtstag", erlaubt: !!p.erlaubt, geaendert_am: jetzt() });
+        await protokoll(ich.person_id, "runder_geburtstag_freigabe", { erlaubt: !!p.erlaubt });
         return json({ ok: true });
       }
 
