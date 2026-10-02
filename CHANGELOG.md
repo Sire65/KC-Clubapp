@@ -1,5 +1,13 @@
 # Änderungen
 
+## 1.53.5 – 2026-10-02
+- Dokumente: „Schnellanleitung Bilderrechner“ zeigt jetzt die **Kurzanleitung Version 4** (28 Seiten,
+  `dokumente/Kurzanleitung_Bilderrechner_V4.pdf`). Neu bzw. geändert gegenüber Version 3 (Kasse vom 02.10.2026):
+  Rabatt (farbige Gründe mit Vorschlag, Kontrollzeile), Weitere Funktionen (Gruppen Geld/Rückgabe/Bon und Übersicht,
+  farbig), Bargeldentnahme (Münzen und Scheine), Gutschein (echte Scheine), Helfer (Küche DO, farbig) und neu
+  „Bargeld vom Kassenwart übernehmen“ (Scanfeld, Vorschau, Kurzcode). Knöpfe einzeln sauber ausgeschnitten.
+  Unveränderte Seiten aus Version 3 übernommen; die Datei Version 3 bleibt im Ordner erhalten.
+
 ## 1.53.4 – 2026-10-02
 - KC-CLUB-NEU-AMEISEN (Rückmeldung Hansi „bewegt sich nicht“): Die Ameisenstraße ist jetzt ein echtes SVG im Feld statt eines
   Hintergrundbilds – die Bewegung im Hintergrundbild lief nicht auf jedem Handy. Bei „Bewegung reduzieren“ läuft sie langsam

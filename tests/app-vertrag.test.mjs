@@ -1401,7 +1401,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 {
   assert.ok(/\{ id: "programme", sym: "💻", t: "Freigegebene Programme", u: "[^"]*", v: "programme" \}/.test(html) && /id="v-programme"/.test(html) && /"ueberblick", "programme"(, "[a-z]+")*\]\.forEach/.test(html), "Kachel/Ansicht Programme");
   assert.ok(/const PROGRAMME = \[\s*\{ id: "kasse-schulung",[^}]*url: "https:\/\/sire65\.github\.io\/Kasse\/schulung\/" \}/.test(html), "Kassen-Schulung in der Registry");
-  assert.ok(/datei: "dokumente\/Kurzanleitung_Bilderrechner_V3\.pdf"/.test(html) && fs.existsSync(new URL("../dokumente/Kurzanleitung_Bilderrechner_V3.pdf", import.meta.url)), "Bilderrechner-PDF fehlt");
+  assert.ok(/datei: "dokumente\/Kurzanleitung_Bilderrechner_V4\.pdf"/.test(html) && fs.existsSync(new URL("../dokumente/Kurzanleitung_Bilderrechner_V4.pdf", import.meta.url)), "Bilderrechner-PDF fehlt");
 }
 
 // 105. 0.84.0: Lebenszeichen (KC-CLUB-HEARTBEAT) – über den eigenen Server an den gemeinsamen KICC-Empfänger, kein Schlüssel im Browser

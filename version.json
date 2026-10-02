@@ -1,11 +1,18 @@
 {
-  "version": "1.53.4",
+  "version": "1.53.5",
   "datum": "2026-10-02",
   "neu": [
-    "🔧 Kleine Systemverbesserungen",
-    "🧑‍🍳 Dienstwunsch mit Twinkey übersichtlicher: klare Frage „Ich kann / ganzer Tag gesperrt / zeitweise gesperrt“, Tage als farbige Kacheln (grün = fertig), kurze Zusammenfassung, weniger Knöpfe"
+    "📄 Kurzanleitung Bilderrechner Version 4: neue Seiten zu Rabatt, Weitere Funktionen, Entnahme, Gutschein, Helfer und „Bargeld vom Kassenwart übernehmen“",
+    "🧑‍🍳 Dienstwunsch mit Twinkey übersichtlicher: klare Frage „Ich kann / ganzer Tag gesperrt / zeitweise gesperrt“, Tage als farbige Kacheln (grün = fertig), kurze Zusammenfassung, weniger Knöpfe",
+    "🔧 Kleine Systemverbesserungen"
   ],
   "verlauf": [
+    {
+      "version": "1.53.5",
+      "neu": [
+        "📄 Kurzanleitung Bilderrechner Version 4: neue Seiten zu Rabatt, Weitere Funktionen, Entnahme, Gutschein, Helfer und „Bargeld vom Kassenwart übernehmen“"
+      ]
+    },
     {
       "version": "1.53.4",
       "neu": [
