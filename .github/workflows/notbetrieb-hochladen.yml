@@ -1,0 +1,65 @@
+# KC-CLUB-NOTBETRIEB (1.52.0): lädt den Ersatz-Server (notbetrieb/) zu Cloudflare hoch (kostenloser Tarif).
+# Läuft, sobald sich notbetrieb/ auf main ändert, oder per Hand („Run workflow“).
+# Braucht die Repository-Secrets CLOUDFLARE_API_TOKEN (Vorlage „Edit Cloudflare Workers“) und CLOUDFLARE_ACCOUNT_ID.
+# Fehlen sie, wird nichts hochgeladen (der Lauf ist dann grün mit Hinweis) – die Club-App läuft unverändert weiter.
+# Der Prüfschlüssel (öffentlicher Teil des Signaturschlüssels des Club-Servers, kein Geheimnis) steht in
+# notbetrieb/pruefschluessel.json.
+name: Notbetrieb hochladen
+on:
+  push:
+    branches: [main]
+    paths:
+      - "notbetrieb/**"
+      - ".github/workflows/notbetrieb-hochladen.yml"
+  workflow_dispatch:
+concurrency:
+  group: notbetrieb-hochladen
+  cancel-in-progress: false
+jobs:
+  hochladen:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Eingerichtet?
+        id: pruef
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::notice::Cloudflare noch nicht eingerichtet (Secrets fehlen) – nichts hochgeladen."; echo "los=nein" >> "$GITHUB_OUTPUT"
+          elif [ ! -s notbetrieb/pruefschluessel.json ]; then
+            echo "::notice::Prüfschlüssel fehlt noch (notbetrieb/pruefschluessel.json) – nichts hochgeladen."; echo "los=nein" >> "$GITHUB_OUTPUT"
+          else echo "los=ja" >> "$GITHUB_OUTPUT"; fi
+      - uses: actions/setup-node@v4
+        if: steps.pruef.outputs.los == 'ja'
+        with:
+          node-version: 22
+      - name: Speicher (KV) suchen oder anlegen, Prüfschlüssel eintragen
+        if: steps.pruef.outputs.los == 'ja'
+        working-directory: notbetrieb
+        run: |
+          set -e
+          liste=$(npx -y wrangler@4 kv namespace list)
+          id=$(node -e 'const l=JSON.parse(process.argv[1]);const n=l.find(x=>x.title==="kc-club-notpaket");console.log(n?n.id:"")' "$liste")
+          if [ -z "$id" ]; then
+            npx -y wrangler@4 kv namespace create kc-club-notpaket >/dev/null
+            liste=$(npx -y wrangler@4 kv namespace list)
+            id=$(node -e 'const l=JSON.parse(process.argv[1]);console.log(l.find(x=>x.title==="kc-club-notpaket").id)' "$liste")
+          fi
+          schluessel=$(node -e 'const j=require("./pruefschluessel.json");console.log(JSON.stringify({kty:j.kty,crv:j.crv,x:j.x}))')
+          sed -i "s/KV_ID_WIRD_BEIM_HOCHLADEN_GESETZT/$id/" wrangler.toml
+          sed -i "s|PRUEFSCHLUESSEL_WIRD_BEIM_HOCHLADEN_GESETZT|$schluessel|" wrangler.toml
+      - name: Ersatz-Server hochladen
+        if: steps.pruef.outputs.los == 'ja'
+        working-directory: notbetrieb
+        run: npx -y wrangler@4 deploy
+      - name: Prüfen, ob der Ersatz-Server antwortet
+        if: steps.pruef.outputs.los == 'ja'
+        working-directory: notbetrieb
+        run: |
+          sub=$(curl -s -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/subdomain" | node -e 'let d="";process.stdin.on("data",c=>d+=c).on("end",()=>console.log(JSON.parse(d).result?.subdomain||""))')
+          url="https://kc-club-notbetrieb.$sub.workers.dev"
+          echo "Ersatz-Server: $url"
+          for i in 1 2 3 4 5 6; do a=$(curl -s "$url/status" || true); echo "$a"; if echo "$a" | grep -q '"notbetrieb":true'; then exit 0; fi; sleep 10; done
+          echo "Ersatz-Server antwortet nicht"; exit 1

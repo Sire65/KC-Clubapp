@@ -705,7 +705,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 55. 0.33.0: drehende Kochmütze bei längeren Anfragen – nicht bei Hintergrund-Abfragen, immer wieder ausgeblendet
 {
   assert.ok(/id="warten"/.test(html) && /kc-kochmuetze-weiss\.webp" alt=""><\/div><b id="wartenText">/.test(html), "Kochmütze fehlt");
-  assert.ok(/const warte = wartenStart\(action, opt\.warten\);\s*try \{ return await apiRoh\(action, daten\); \}\s*(catch \(e\) \{[^}]*\}[^\n]*\n\s*)?finally \{ if \(warte\) wartenEnde\(\); \}/ /* 0.93.0: catch nur zum Protokollieren, wirft weiter */.test(html), "Kochmütze wird bei Fehlern nicht ausgeblendet");
+  assert.ok(/const warte = wartenStart\(action, opt\.warten\);\s*try \{[^]{0,900}\n  finally \{ if \(warte\) wartenEnde\(\); \}/ /* 0.93.0: catch nur zum Protokollieren, wirft weiter */.test(html), "Kochmütze wird bei Fehlern nicht ausgeblendet");
   for (const a of ["online", "anruf_status", "unterhaltung", "protokoll_speichern", "init"]) assert.ok(new RegExp(`WARTEN_STILL = new Set\\([^)]*"${a}"`).test(html), `Hintergrund-Abfrage ${a} ließe die Mütze flackern`);
   assert.ok(/nachricht_senden: "Nachricht wird gesendet …"/.test(html), "Text beim Senden fehlt");
 }
@@ -2361,6 +2361,24 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/Herzlich willkommen \$\{vorname\}\. Schön, dass du da bist\. Viel Spaß mit der Köcheclub-App\. Wenn etwas nicht klappt, melde dich gerne bei mir\. Gruß/.test(html) && /wege: \["push"\]/.test(html), "Begrüßung als Nachricht mit Push");
   const mig = lies("supabase/migrations/20261002_kc_club_v1510_erstmals.sql");
   assert.ok(/erstmals_gesehen = coalesce\(erstmals_gesehen, now\(\)\)/.test(mig) && /'abgebrochen'/.test(mig), "Migration: erster Besuch + Status abgebrochen");
+}
+
+// 214. 1.52.0: Notbetrieb bei Supabase-Ausfall – Ersatz-Server bei Cloudflare (KC-CLUB-NOTBETRIEB)
+{
+  const worker = lies("notbetrieb/worker.js"), wf = lies(".github/workflows/notbetrieb-hochladen.yml"), mig = lies("supabase/migrations/20261002_kc_club_v1520_notbetrieb.sql");
+  // Server: eine Regel – dieselben Aktionen intern, nur lesend; Paket nur bei Änderung, signiert
+  assert.ok(/async function aktionAusfuehren\(a: string, p: any, ich: Ich, req: Request/.test(server) && /return await aktionAusfuehren\(a, p, ich, req, t0Anfrage, anmeldungMs\);/.test(server), "Aktionen in einer Funktion (auch intern nutzbar)");
+  assert.ok(/nurLesen: true/.test(server) && /if \(!ich\.nurLesen\) await protokoll\(ich\.person_id, "sos_geoeffnet"/.test(server) && /fremd\.length && !ich\.nurLesen/.test(server) && /if \(!ich\.nurLesen\) await db\.from\("kc_communication_thread_participants"\)\.update/.test(server), "Paket-Bau schreibt nichts");
+  assert.ok(/st\.fingerabdruck === fp/.test(server) && /name: "Ed25519"/.test(server) && /if \(!st\.url\) return \{ ok: true, aus:/.test(server), "nur bei Änderung, signiert, aus solange nicht eingerichtet");
+  assert.ok(/'secret', false, false, false/.test(mig) && /cron\.schedule\('kc-club-notpaket-15min'/.test(mig), "Schlüssel nie gespiegelt, Lauf alle 15 Min.");
+  // Ersatz-Server: nur lesen, Signatur prüfen, keine Geheimnisse
+  assert.ok(/const LESEN = new Set\(\["init", "mitglieder", "treffen_liste", "sos_kontakte", "pinnwand", "unterhaltungen", "todo_liste", "dienste", "unterhaltung"\]\)/.test(worker) && /if \(!LESEN\.has\(a\)\) return antwort\(env, \{ error: NICHT_MOEGLICH/.test(worker), "Ersatz-Server nur lesend");
+  assert.ok(/signaturOk\(env, roh, req\.headers\.get\("x-kc-signatur"\)\)/.test(worker) && /String\(p\.erstellt\) <= String\(alt\.erstellt\)/.test(worker) && !/service_role|SUPABASE_SERVICE/.test(worker), "Paket nur signiert und neuer, keine Geheimnisse");
+  assert.ok(/CLOUDFLARE_API_TOKEN: \$\{\{ secrets\.CLOUDFLARE_API_TOKEN \}\}/.test(wf) && /Cloudflare noch nicht eingerichtet/.test(wf), "Hochladen nur mit Secrets, sonst still");
+  // App: Umschalten, Band, Rückkehr, Probe, Handschalter
+  assert.ok(/if \(NOT\.an\) return await notApi\(action, daten\);/.test(html) && /e\?\.leitung && \(\+\+NOT\.fehler >= NOT_FEHLER_GRENZE \|\| action === "init"\)/.test(html), "automatisch umschalten");
+  assert.ok(/Ansehen geht, Ändern, Fotos und Push gerade nicht\./.test(html) && /if \(\+\+NOT\.ok >= 2\) notAus\(/.test(html) && /id="notProbeKnopf"/.test(html) && /k\?\.modus === "an"/.test(html), "Band, Rückkehr, Probe, Handschalter");
+  const nb = JSON.parse(lies("notbetrieb.json")); assert.ok(["auto", "an", "aus"].includes(nb.modus), "notbetrieb.json gültig");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

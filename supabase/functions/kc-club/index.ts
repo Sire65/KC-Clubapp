@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.51.0";
+const SERVER_VERSION = "1.52.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -864,7 +864,8 @@ async function adminSpiegel() {
 } // kostenloser Supabase-Tarif (falls der System-Check keinen Wert liefert)
 
 // ---------- Anmeldung ----------
-type Ich = { person_id: string; name: string; vorname: string; admin: boolean; vorstand: boolean; aemter: string[]; protokolle: boolean; kontakte: boolean; buero: BueroRecht };
+type Ich = { person_id: string; name: string; vorname: string; admin: boolean; vorstand: boolean; aemter: string[]; protokolle: boolean; kontakte: boolean; buero: BueroRecht;
+  nurLesen?: boolean }; // KC-CLUB-NOTBETRIEB: true = Antwort nur für das Notfall-Paket berechnen, nichts schreiben
 // KC-CLUB-BUERO-RECHTE (1.37.0): Büro je Mitglied vom Admin freigeschaltet – null = kein Büro; Admin immer „schreiben“
 type BueroRecht = "lesen" | "schreiben" | null;
 const BUERO_RECHTE = ["lesen", "schreiben"] as const;
@@ -902,6 +903,10 @@ async function anmeldenDb(hash: string, version: string | null): Promise<Ich> {
   if (!a) throw new Fehler("Kein Zugang – bitte den persönlichen Link neu öffnen.", 401);
   const p = a.person, r = a.rollen;
   if (!p?.active) throw new Fehler("Kein Zugang – bitte bei Hansi melden.", 401);
+  return ichAus(p, r);
+}
+// Person + Rollen → angemeldetes Mitglied (gemeinsam für Anmeldung und Notfall-Paket – eine Regel, nicht zwei)
+function ichAus(p: any, r: any): Ich {
   return { person_id: p.person_id, name: p.display_name, vorname: vorname(p), admin: !!r?.ist_admin, vorstand: !!(r?.ist_vorstand || r?.ist_admin), aemter: r?.aemter ?? [],
     // Sitzungsprotokolle: Recht aus der Rollen-Registry (Standard ja; Aushilfen nein)
     protokolle: r ? r.protokolle_lesen !== false : true,
@@ -2167,6 +2172,12 @@ Deno.serve(async (req) => {
   let p: any; try { p = await req.json(); } catch { return json({ error: "Ungültige Anfrage" }, 400); }
   const a = String(p?.action || "");
   try {
+    // ----- KC-CLUB-NOTBETRIEB (1.52.0): Notfall-Paket bauen und beim Ersatz-Server ablegen (Zeitplaner, alle 15 Min.) -----
+    if (a === "notpaket") {
+      const { data: geheim } = await db.rpc("kc_communication_get_server_secret", { p_name: "kc_club_cron_secret" });
+      if (!geheim || p.cronSecret !== geheim) return json({ error: "Kein Zugang" }, 401);
+      return json(await notpaketLauf(!!p.erzwingen));
+    }
     // ----- Zeitplaner: Erinnerung am Vortag (ab 9 Uhr) an alle, die nicht abgesagt haben -----
     if (a === "wartung") {
       const { data: geheim } = await db.rpc("kc_communication_get_server_secret", { p_name: "kc_club_cron_secret" });
@@ -2486,7 +2497,17 @@ Köcheclub Werne`,
     const tAnm = Date.now();
     const ich = await anmelden(req);
     const anmeldungMs = Date.now() - tAnm;
+    return await aktionAusfuehren(a, p, ich, req, t0Anfrage, anmeldungMs);
+  } catch (e) {
+    if (e instanceof Fehler) return json({ error: e.message }, e.status);
+    console.error(e);
+    return json({ error: e instanceof Error ? e.message : String(e) }, 500);
+  }
+});
 
+// KC-CLUB-NOTBETRIEB (1.52.0): alle angemeldeten Aktionen in einer Funktion – so kann der Server dieselben Antworten
+// auch intern (nur lesend) für das Notfall-Paket berechnen. Inhalt unverändert aus Deno.serve übernommen.
+async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anfrage: number, anmeldungMs: number): Promise<Response> {
     switch (a) {
       case "init": {
         const [naechstes, { data: teil }, mitglieder] = await Promise.all([
@@ -3933,7 +3954,7 @@ Köcheclub Werne`,
           return { id: m.person_id, name: m.display_name, selbst, aemter: r.aemter ?? [], leitung: !!(r.ist_vorstand || r.ist_admin), kontakt,
             notfall: n ? { name: txt(n.name, 120), telefon: txt(n.telefon, 40), beziehung: txt(n.beziehung, 60) } : null };
         });
-        await protokoll(ich.person_id, "sos_geoeffnet", { notfallkontakte: ich.vorstand });
+        if (!ich.nurLesen) await protokoll(ich.person_id, "sos_geoeffnet", { notfallkontakte: ich.vorstand });
         return json({ mitglieder: liste, siehtNotfall: ich.vorstand });
       }
 
@@ -4092,7 +4113,7 @@ Köcheclub Werne`,
             ...(eigen && m.body !== "📎" && !(umf ?? []).some((x: any) => x.message_id === m.id) && !(kon ?? []).some((x: any) => x.message_id === m.id) && Date.now() - Date.parse(m.created_at) < BEARBEITEN_MIN * 60000 ? { bearbeitbarBis: new Date(Date.parse(m.created_at) + BEARBEITEN_MIN * 60000).toISOString() } : {}),
           };
         });
-        await db.from("kc_communication_thread_participants").update({ last_read_at: jetzt() }).eq("thread_id", id).eq("person_id", ich.person_id);
+        if (!ich.nurLesen) await db.from("kc_communication_thread_participants").update({ last_read_at: jetzt() }).eq("thread_id", id).eq("person_id", ich.person_id);
         const [{ data: gr }, { data: tippen }] = await Promise.all([
           db.from("kc_club_gruppen").select("*").eq("thread_id", id).maybeSingle(),
           db.from("kc_club_tippen").select("person_id,text,art").eq("thread_id", id).neq("person_id", ich.person_id).gt("bis", jetzt()),
@@ -5124,7 +5145,7 @@ Köcheclub-App`,
         const zettel = await pinnwandSichtbar(ich);
         // „gesehen“ beim ersten Anzeigen erfassen (erste Zeit bleibt stehen); eigene Zettel zählen nicht
         const fremd = zettel.filter((z: any) => z.person_id !== ich.person_id);
-        if (fremd.length) await db.from("kc_club_pinnwand_gelesen").upsert(fremd.map((z: any) => ({ zettel_id: z.id, person_id: ich.person_id })), { onConflict: "zettel_id,person_id", ignoreDuplicates: true });
+        if (fremd.length && !ich.nurLesen) await db.from("kc_club_pinnwand_gelesen").upsert(fremd.map((z: any) => ({ zettel_id: z.id, person_id: ich.person_id })), { onConflict: "zettel_id,person_id", ignoreDuplicates: true });
         const ids = zettel.map((z: any) => z.id);
         const { data: gl } = ids.length ? await db.from("kc_club_pinnwand_gelesen").select("zettel_id,person_id,gesehen_am,erledigt_am").in("zettel_id", ids) : { data: [] };
         const aktiv = await aktiveMitglieder();
@@ -6522,11 +6543,97 @@ Köcheclub-App`,
         return json({ ok: true });
       }
 
+      // KC-CLUB-NOTBETRIEB (1.52.0): Stand des Notfall-Pakets + öffentlicher Prüfschlüssel für den Ersatz-Server (Admin)
+      case "notbetrieb_info": {
+        nurAdmin(ich);
+        const st = await notStand();
+        return json({ eingerichtet: !!st.url, url: st.url, hochgeladen_am: st.hochgeladen_am, groesse: st.groesse, mitglieder: st.mitglieder, fehler: st.fehler,
+          pruefschluessel: (await notSchluessel()).oeffentlich });
+      }
+
       default: return json({ error: "Unbekannte Aktion" }, 400);
     }
-  } catch (e) {
-    if (e instanceof Fehler) return json({ error: e.message }, e.status);
-    console.error(e);
-    return json({ error: e instanceof Error ? e.message : String(e) }, 500);
+}
+
+// ---------- KC-CLUB-NOTBETRIEB (1.52.0): Notfall-Paket für den Ersatz-Server (Cloudflare) ----------
+// Fällt Supabase aus, schaltet die App auf den Ersatz-Server um. Der rechnet NICHTS selbst: Er gibt jedem Mitglied die
+// Antworten zurück, die dieser Server vorher genau für dieses Mitglied berechnet hat (gleiche Rechte, eine Regel).
+// Nur lesende Aktionen; ich.nurLesen verhindert Schreiben (gelesen-Markierungen, Protokoll). Gebaut wird nur, wenn sich
+// seit dem letzten Paket etwas geändert hat (Fingerabdruck in der Datenbank) – sonst nur „Stand ist aktuell“ melden.
+// Signiert (Ed25519): der private Schlüssel bleibt hier, der Ersatz-Server prüft nur mit dem öffentlichen.
+const NOT_AKTIONEN: [string, Record<string, unknown>][] = [["init", {}], ["mitglieder", {}], ["treffen_liste", {}], ["sos_kontakte", {}], ["pinnwand", {}],
+  ["unterhaltungen", {}], ["todo_liste", {}]];
+const NOT_CHATS = 12, NOT_DIENST_TAGE = 45;
+async function notStand(): Promise<any> {
+  const { data } = await db.from("kc_club_notbetrieb").select("*").eq("id", 1).maybeSingle();
+  return data ?? {};
+}
+async function notSchluessel(): Promise<{ privat: CryptoKey; oeffentlich: JsonWebKey }> {
+  const st = await notStand();
+  if (st.privat && st.oeffentlich) return { privat: await crypto.subtle.importKey("jwk", st.privat, { name: "Ed25519" }, false, ["sign"]), oeffentlich: st.oeffentlich };
+  const paar = await crypto.subtle.generateKey({ name: "Ed25519" }, true, ["sign", "verify"]) as CryptoKeyPair;
+  const privat = await crypto.subtle.exportKey("jwk", paar.privateKey), oeffentlich = await crypto.subtle.exportKey("jwk", paar.publicKey);
+  await db.from("kc_club_notbetrieb").upsert({ id: 1, privat, oeffentlich, geaendert_am: jetzt() });
+  return { privat: paar.privateKey, oeffentlich };
+}
+const b64 = (u: Uint8Array) => { let x = ""; for (let i = 0; i < u.length; i += 0x8000) x += String.fromCharCode(...u.subarray(i, i + 0x8000)); return btoa(x); };
+async function gzip(text: string): Promise<Uint8Array> {
+  const s = new Blob([text]).stream().pipeThrough(new CompressionStream("gzip"));
+  return new Uint8Array(await new Response(s).arrayBuffer());
+}
+async function notpaketBauen() {
+  const { data: zug } = await db.from("kc_club_zugang").select("person_id,token_hash").eq("aktiv", true).not("token_hash", "is", null).not("person_id", "like", "KC-P-TEST%");
+  const ids = (zug ?? []).map((z: any) => z.person_id);
+  const [{ data: pe }, { data: ro }] = await Promise.all([
+    db.from("kc_core_people").select("person_id,display_name,given_name,preferred_name,active").in("person_id", ids),
+    db.from("kc_club_rollen").select("*").in("person_id", ids),
+  ]);
+  const pm = new Map<string, any>((pe ?? []).map((x: any) => [x.person_id, x])), rm = new Map<string, any>((ro ?? []).map((x: any) => [x.person_id, x]));
+  const heute = berlinTag(new Date()), bis = tagDazu(heute, NOT_DIENST_TAGE), anfrage = new Request(APP_URL, { method: "POST" });
+  const mitglieder: Record<string, unknown> = {};
+  const holen = async (ich: Ich, a: string, prm: Record<string, unknown>) => {
+    try { const r = await aktionAusfuehren(a, prm, ich, anfrage, 0, 0); return r.ok ? await r.json() : null; } catch { return null; }
+  };
+  for (const z of zug ?? []) {
+    const p0 = pm.get(z.person_id); if (!p0?.active) continue;
+    const ich: Ich = { ...ichAus(p0, rm.get(z.person_id) ?? null), nurLesen: true };
+    const antworten: Record<string, unknown> = {};
+    for (const [a, prm] of NOT_AKTIONEN) { const j = await holen(ich, a, prm); if (j) antworten[a] = j; }
+    const d = await holen(ich, "dienste", { von: heute, bis, personen: [] }); if (d) antworten.dienste = d;
+    const chats = ((antworten.unterhaltungen as any)?.unterhaltungen ?? []).slice(0, NOT_CHATS);
+    for (const c of chats) { const j = await holen(ich, "unterhaltung", { id: c.id }); if (j) antworten["unterhaltung:" + c.id] = j; }
+    mitglieder[z.token_hash] = { person_id: z.person_id, antworten };
   }
-});
+  return { mitglieder, anzahl: Object.keys(mitglieder).length };
+}
+async function notpaketLauf(erzwingen: boolean) {
+  await notSchluessel(); // Schlüsselpaar gleich anlegen – den öffentlichen Teil braucht der Ersatz-Server schon beim Einrichten
+  const st = await notStand();
+  if (!st.url) return { ok: true, aus: "Ersatz-Server noch nicht eingerichtet" };
+  const { data: fp } = await db.rpc("kc_club_notpaket_fingerabdruck");
+  const ziel = String(st.url).replace(/\/+$/, "");
+  const { privat } = await notSchluessel();
+  const senden = async (pfad: string, roh: Uint8Array, art: string) => {
+    const sig = new Uint8Array(await crypto.subtle.sign({ name: "Ed25519" }, privat, roh as BufferSource));
+    const r = await fetch(ziel + pfad, { method: "POST", headers: { "content-type": art, "x-kc-signatur": b64(sig) }, body: roh as unknown as BodyInit });
+    if (!r.ok) throw new Error(`Ersatz-Server antwortet ${r.status}`);
+  };
+  try {
+    const erstellt = jetzt();
+    if (!erzwingen && fp && st.fingerabdruck === fp) {
+      // nichts geändert: nur „Stand ist aktuell bis jetzt“ melden (klein, signiert)
+      await senden("/stand", new TextEncoder().encode(JSON.stringify({ stand: erstellt, fingerabdruck: fp })), "application/json");
+      await db.from("kc_club_notbetrieb").update({ bestaetigt_am: erstellt, fehler: null }).eq("id", 1);
+      return { ok: true, unveraendert: true };
+    }
+    const t0 = Date.now(), paket = await notpaketBauen();
+    const roh = await gzip(JSON.stringify({ format: 1, erstellt, stand: erstellt, fingerabdruck: fp, server: SERVER_VERSION, mitglieder: paket.mitglieder }));
+    await senden("/paket", roh, "application/gzip");
+    await db.from("kc_club_notbetrieb").update({ fingerabdruck: fp, hochgeladen_am: erstellt, bestaetigt_am: erstellt, groesse: roh.length, mitglieder: paket.anzahl, dauer_ms: Date.now() - t0, fehler: null }).eq("id", 1);
+    return { ok: true, mitglieder: paket.anzahl, groesse: roh.length, ms: Date.now() - t0 };
+  } catch (e) {
+    const fehler = txt(e instanceof Error ? e.message : String(e), 300);
+    await db.from("kc_club_notbetrieb").update({ fehler, fehler_am: jetzt() }).eq("id", 1);
+    return { ok: false, fehler };
+  }
+}

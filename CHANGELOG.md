@@ -1,5 +1,18 @@
 # Änderungen
 
+## 1.52.0 – 2026-10-02
+- KC-CLUB-NOTBETRIEB (Wunsch Hansi, Weg B): Fällt Supabase aus, schaltet die App auf einen Ersatz-Server bei Cloudflare um
+  (kostenlos, keine Neon-Rechenzeit). Der Club-Server berechnet alle 15 Min. – nur wenn sich etwas geändert hat
+  (Fingerabdruck) – für jedes Mitglied dieselben Antworten wie sonst (Start, Mitglieder, Termine, SOS, Pinnwand, Nachrichten,
+  Aufgaben, Dienste; gleiche Rechte, eine Regel) und legt sie signiert (Ed25519) beim Ersatz-Server ab. Der Ersatz-Server prüft
+  Signatur und Zugang (nur Prüfwert) und gibt nur diese Antworten zurück; Ändern ist im Notbetrieb nicht möglich (klare Meldung).
+  App: Umschalten nach 2 Verbindungsfehlern bzw. wenn schon der Start scheitert; oranges Band „Notbetrieb – Stand von …“;
+  zurück, sobald der Club-Server 2× antwortet. Handschalter notbetrieb.json (auto/an/aus), Admin: „Notbetrieb-Probe auf
+  diesem Gerät“. Server: Aktionen in aktionAusfuehren() (unverändert), ichAus() gemeinsam mit der Anmeldung, nurLesen-Schutz.
+  Neu: notbetrieb/ (Worker + wrangler.toml), Workflow „Notbetrieb hochladen“ (läuft erst mit Cloudflare-Secrets),
+  Migration 20261002_kc_club_v1520_notbetrieb (Tabelle kc_club_notbetrieb nie gespiegelt, Fingerabdruck, Zeitplaner 15 Min.).
+  Solange kein Ersatz-Server eingetragen ist, bleibt alles aus.
+
 ## 1.51.0 – 2026-10-02
 - KC-CLUB-ANKLOPFEN-WARTEN: Nach dem Anklopfen erscheint „👋 Klopfe gerade an bei X …“ mit Sekunden-Uhr (1:00 → 0:00) und „Auflegen“. Nach einer Minute: „Weiter anklopfen“, „Nachricht senden: Melde dich doch mal bei mir. Gruß …“ (mit Push) oder „Auflegen“. Auflegen schließt die Anklopf-Frage beim Gegenüber („X hat aufgelegt“). Neuer Status 'abgebrochen', Aktion anklopfen_abbrechen.
 - KC-CLUB-BEGRUESSUNG: Tages-Übersicht (Admin) zeigt „XY hat sich heute zum ersten Mal angemeldet – Begrüßungs-Nachricht senden?“. Ja → Nachricht mit Push „Herzlich willkommen XY. Schön, dass du da bist. Viel Spaß mit der Köcheclub-App. Wenn etwas nicht klappt, melde dich gerne bei mir. Gruß <Absender>“; danach nicht mehr angeboten. Datenbank: kc_club_zugang.erstmals_gesehen (Anmeldung setzt sie einmalig; Bestand aus Protokoll übernommen).

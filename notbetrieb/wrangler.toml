@@ -1,0 +1,16 @@
+# KC-CLUB-NOTBETRIEB (1.52.0): Ersatz-Server der Club-App bei Cloudflare (kostenloser Tarif).
+# Hochladen nur über GitHub („Notbetrieb hochladen“) mit den Repository-Secrets CLOUDFLARE_API_TOKEN und CLOUDFLARE_ACCOUNT_ID.
+# Die Speicher-ID (KV) setzt der Hochlade-Lauf selbst ein; PRUEFSCHLUESSEL ist der ÖFFENTLICHE Teil des Signaturschlüssels
+# (kein Geheimnis) – der private bleibt im Club-Server.
+name = "kc-club-notbetrieb"
+main = "worker.js"
+compatibility_date = "2026-09-01"
+workers_dev = true
+
+[[kv_namespaces]]
+binding = "PAKET"
+id = "KV_ID_WIRD_BEIM_HOCHLADEN_GESETZT"
+
+[vars]
+APP_HERKUNFT = "https://sire65.github.io"
+PRUEFSCHLUESSEL = 'PRUEFSCHLUESSEL_WIRD_BEIM_HOCHLADEN_GESETZT'

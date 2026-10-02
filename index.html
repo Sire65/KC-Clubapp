@@ -420,6 +420,9 @@
   .sos-name small { color: var(--grau); font-size: .8rem; } .sos-name span { margin-left: auto; color: var(--grau); }
   .sos-detail { padding: 0 2px 10px; } .sos-detail .knoepfe a { text-decoration: none; }
   .sos-nf { margin-top: 8px; padding: 8px; border-radius: 10px; background: #fdecea; }
+  /* KC-CLUB-NOTBETRIEB */
+  .not-band { position: sticky; top: 0; z-index: 4000; background: #e67e22; color: #1f1300; font-weight: 700; padding: 8px 12px; text-align: center; font-size: .92rem; line-height: 1.3; box-shadow: 0 2px 8px rgba(0,0,0,.25); }
+  .not-band button { margin-left: 6px; border: none; border-radius: 10px; padding: 3px 10px; font: inherit; font-weight: 800; background: #fff; color: #7a3d00; cursor: pointer; }
   .kw-knopf { background: var(--gruenbg); color: var(--textGruen); border: 2px solid var(--gruen); border-radius: 14px; padding: 12px; font-weight: 800; font-size: 1.1rem; text-align: center; }
   .kw-uhr { font-size: 2.6rem; font-weight: 900; text-align: center; margin: 10px 0 4px; font-variant-numeric: tabular-nums; }
   .sos-kopf { display: flex; align-items: center; gap: 8px; margin: 16px 4px 6px; } .sos-kopf h3 { margin: 0; flex: 1; }
@@ -1792,6 +1795,7 @@
     <summary>🛠️ Admin-Einstellungen</summary>
     <button class="knopf" onclick="fpAdmin()">🩺 Fehlerprotokoll &amp; Startprobleme der Mitglieder</button>
     <button class="knopf" onclick="nzAdmin()">📊 Nutzung der App – ohne Namen</button>
+    <button class="knopf" id="notProbeKnopf" onclick="notProbeSetzen(!notProbe())">🧪 Notbetrieb-Probe auf diesem Gerät</button>
     <details class="karte innen" data-klappe="admin_pinnwand" id="adminPinnwand">
       <summary>📌 Pinnwand: Erinnerung an alte Zettel</summary>
       <p class="hinweis" style="margin-top:0">Beim Öffnen der App fragt sie: „Dein Post-it vom … hängt noch an der Pinnwand. Möchtest du es abnehmen?“ – gilt für alle Mitglieder.</p>
@@ -2082,7 +2086,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.51.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.52.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3956,10 +3960,84 @@ function wartenEnde() {
 }
 async function api(action, daten = {}, opt = {}) {
   const warte = wartenStart(action, opt.warten);
-  try { return await apiRoh(action, daten); }
-  catch (e) { fpApiFehler(action, e); throw e; } // KC-CLUB-FEHLERPROTOKOLL
+  try {
+    if (NOT.an) return await notApi(action, daten); // KC-CLUB-NOTBETRIEB
+    const r = await apiRoh(action, daten); NOT.fehler = 0; return r;
+  }
+  catch (e) {
+    // KC-CLUB-NOTBETRIEB: Server mehrmals nicht erreichbar (oder schon der Start scheitert) → Ersatz-Server versuchen
+    if (!NOT.an && e?.leitung && (++NOT.fehler >= NOT_FEHLER_GRENZE || action === "init") && (await notEinschalten("auto"))) {
+      if (action !== "init") setTimeout(() => neuLaden(), 0);
+      try { return await notApi(action, daten); } catch (e2) { e = e2; }
+    }
+    fpApiFehler(action, e); throw e; // KC-CLUB-FEHLERPROTOKOLL
+  }
   finally { if (warte) wartenEnde(); }
 }
+// ---------- KC-CLUB-NOTBETRIEB (1.52.0, Wunsch Hansi): Supabase fällt aus → Ersatz-Server bei Cloudflare ----------
+// Der Ersatz-Server liefert jedem Mitglied die Antworten, die der Club-Server vorher genau für es berechnet hat (alle 15 Min.,
+// nur bei Änderung). Lesen geht (Start, Termine, Mitglieder, SOS, Dienste, Pinnwand, Nachrichten, Aufgaben), Ändern nicht.
+// Umschalten: automatisch (Server mehrmals nicht erreichbar, Internet geht), von Hand (notbetrieb.json „modus“: an/auto/aus)
+// oder als Probe nur auf diesem Gerät (Admin). Zurück: automatisch, sobald der Club-Server wieder 2× antwortet.
+const NOT = { an: false, grund: "", url: "", stand: null, fehler: 0, ok: 0, timer: null, konfig: null, geholt: 0 };
+const NOT_FEHLER_GRENZE = 2, NOT_PRUEF_MS = 60000, NOT_PROBE = "kc_club_notprobe";
+const notProbe = () => { try { return localStorage.getItem(NOT_PROBE) === "1"; } catch { return false; } };
+async function notKonfig(frisch) {
+  if (!frisch && NOT.konfig && Date.now() - NOT.geholt < 5 * 60000) return NOT.konfig;
+  try { const r = await fetch("notbetrieb.json?t=" + Date.now(), { cache: "no-store" }); if (r.ok) { NOT.konfig = await r.json(); NOT.geholt = Date.now(); } } catch {}
+  return NOT.konfig;
+}
+async function notEinschalten(grund) {
+  const k = await notKonfig(true), url = String(k?.url || "").replace(/\/+$/, "");
+  if (!url || (k.modus === "aus" && grund !== "probe")) return false;
+  try { const r = await fetch(url + "/status", { cache: "no-store" }); const j = await r.json(); if (!j?.ok) return false; NOT.stand = j.stand; } catch { return false; }
+  NOT.an = true; NOT.grund = grund; NOT.url = url; NOT.ok = 0; notBandZeigen();
+  clearInterval(NOT.timer); NOT.timer = setInterval(notZurueckPruefen, NOT_PRUEF_MS);
+  return true;
+}
+function notAus(meldung) {
+  NOT.an = false; NOT.grund = ""; NOT.fehler = 0; clearInterval(NOT.timer); NOT.timer = null;
+  document.getElementById("notBand")?.remove(); document.body.classList.remove("im-notbetrieb");
+  if (meldung) melde(meldung);
+  neuLaden(true);
+}
+async function notZurueckPruefen() {
+  if (!NOT.an) return;
+  if (NOT.grund === "probe") return; // Probe endet nur von Hand
+  if (NOT.grund === "hand") { const k = await notKonfig(true); if (k?.modus === "an") return; }
+  try { await apiRoh("ping"); if (++NOT.ok >= 2) notAus("✅ Die Club-App ist wieder normal verbunden"); } catch { NOT.ok = 0; }
+}
+async function notApi(action, daten = {}) {
+  let r;
+  try { r = await fetch(NOT.url + "/", { method: "POST", headers: { "Content-Type": "application/json", "x-club-token": KEY, "x-club-version": APP_VERSION }, body: JSON.stringify({ action, ...daten }) }); }
+  catch { throw new Error(navigator.onLine ? "Keine Verbindung – weder Club-Server noch Ersatz-Server erreichbar." : "Keine Internetverbindung."); }
+  const j = await r.json().catch(() => null);
+  if (j?._notbetrieb?.stand && j._notbetrieb.stand !== NOT.stand) { NOT.stand = j._notbetrieb.stand; notBandZeigen(); }
+  if (!r.ok) throw new Error(j?.error || "Notbetrieb: keine Antwort");
+  return j;
+}
+function notBandZeigen() {
+  let el = document.getElementById("notBand");
+  if (!el) { el = document.createElement("div"); el.id = "notBand"; el.className = "not-band"; el.setAttribute("role", "status"); document.body.prepend(el); }
+  document.body.classList.add("im-notbetrieb");
+  const st = NOT.stand ? new Date(NOT.stand) : null, heute = st && st.toDateString() === new Date().toDateString();
+  const standText = st ? `Stand von ${heute ? "" : fKurz.format(st) + ", "}${fZeit.format(st)} Uhr` : "Stand unbekannt";
+  el.innerHTML = `⚠️ <b>${NOT.grund === "probe" ? "Notbetrieb-Probe" : "Notbetrieb"}</b> – ${esc(standText)}. Ansehen geht, Ändern, Fotos und Push gerade nicht.${NOT.grund === "probe" ? ` <button onclick="notProbeSetzen(false)">Probe beenden</button>` : ""}`;
+}
+// Probe nur auf diesem Gerät (Admin): alles läuft über den Ersatz-Server, die anderen merken nichts
+async function notProbeSetzen(an) {
+  try { an ? localStorage.setItem(NOT_PROBE, "1") : localStorage.removeItem(NOT_PROBE); } catch {}
+  if (!an) { if (NOT.grund === "probe") notAus("🧪 Notbetrieb-Probe beendet"); return notProbeZeigen(); }
+  if (await notEinschalten("probe")) { melde("🧪 Notbetrieb-Probe läuft – nur auf diesem Gerät"); neuLaden(true); }
+  else { try { localStorage.removeItem(NOT_PROBE); } catch {} melde("Der Ersatz-Server ist noch nicht eingerichtet oder nicht erreichbar.", true); }
+  notProbeZeigen();
+}
+function notProbeZeigen() { const b = $("notProbeKnopf"); if (b) b.textContent = notProbe() ? "🧪 Notbetrieb-Probe beenden" : "🧪 Notbetrieb-Probe auf diesem Gerät"; }
+// beim Start: von Hand eingeschaltet (notbetrieb.json „an“) oder Probe auf diesem Gerät?
+(async () => {
+  const k = await notKonfig(true);
+  if (notProbe() ? await notEinschalten("probe") : k?.modus === "an" ? await notEinschalten("hand") : false) setTimeout(() => neuLaden(true), 0);
+})();
 // KC-CLUB-AUSSETZER (0.76.0): 503 ohne Antwort unseres Programms = Supabase hatte kurz keinen freien Server (die Anfrage
 // hat unseren Code nie erreicht) → einmal still wiederholen. Andere Fehler nicht wiederholen (sonst evtl. doppelt gesendet).
 const AUSSETZER_PAUSE_MS = 800;
@@ -3983,7 +4061,7 @@ async function apiRoh(action, daten = {}, zweiterVersuch = false) {
   const adresse = apiAdresse(), mitRegion = adresse !== API;
   try { r = await fetch(adresse, { method: "POST", headers: { "Content-Type": "application/json", "x-club-token": KEY, "x-club-version": APP_VERSION }, body: JSON.stringify({ action, ...daten }) }); if (action !== "lebenszeichen") verkehrZaehlen(); }
   catch { if (mitRegion && navigator.onLine) { REGION_AUS_BIS = Date.now() + REGION_PAUSE_MS; vbEnde(true, performance.now() - t0, ""); return apiRoh(action, daten, zweiterVersuch); } // Region weg → Standardweg
-    vbEnde(false, 0, navigator.onLine ? "Server nicht erreichbar" : "Handy offline"); throw new Error(navigator.onLine ? "Keine Verbindung zum Server – bitte gleich nochmal versuchen." : "Keine Internetverbindung."); }
+    vbEnde(false, 0, navigator.onLine ? "Server nicht erreichbar" : "Handy offline"); throw Object.assign(new Error(navigator.onLine ? "Keine Verbindung zum Server – bitte gleich nochmal versuchen." : "Keine Internetverbindung."), { leitung: navigator.onLine }); }
   const j = await r.json().catch(() => null);
   if (mitRegion && r.status >= 502 && r.status <= 504 && !j?.error) { REGION_AUS_BIS = Date.now() + REGION_PAUSE_MS; return apiRoh(action, daten, zweiterVersuch); } // Region gestört → Standardweg
   if (r.status === 503 && !j?.error && !zweiterVersuch) { vbEnde(true, performance.now() - t0, ""); await new Promise((ok) => setTimeout(ok, AUSSETZER_PAUSE_MS)); return apiRoh(action, daten, true); }
@@ -3992,7 +4070,7 @@ async function apiRoh(action, daten = {}, zweiterVersuch = false) {
   vbEnde(!leitungKaputt, performance.now() - t0, leitungKaputt ? "Serverfehler " + r.status : "");
   if (!j && !leitungKaputt && r.ok) throw new Error("Unerwartete Antwort vom Server.");
   if (r.status === 401) { $("app").classList.add("versteckt"); $("gesperrt").classList.remove("versteckt"); $("linkUngueltig").classList.remove("versteckt"); throw new Error(j?.error || "Kein Zugang"); }
-  if (!r.ok) throw new Error(j?.error || (leitungKaputt ? "Der Server ist gerade kurz nicht erreichbar – bitte gleich nochmal versuchen." : "Fehler " + r.status));
+  if (!r.ok) throw Object.assign(new Error(j?.error || (leitungKaputt ? "Der Server ist gerade kurz nicht erreichbar – bitte gleich nochmal versuchen." : "Fehler " + r.status)), { leitung: leitungKaputt });
   return j;
 }
 
@@ -5300,7 +5378,7 @@ function zeige(v, ausHistorie) {
   if (v === "dienste") dienstLaden();
   if (v === "nachrichten") unterhLaden();
   if (v === "mitglieder") { mgAnsichtWahlZeigen(); mitgliederLaden(); }
-  if (v === "einstellungen") { infoStartZeigen(); tippSchalterZeigen(); ruheZeigen(); if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); anklopfenZeigen(); zuletztSchalterZeigen(); schnellWahlZeigen(); mgAnsichtWahlZeigen(); }
+  if (v === "einstellungen") { notProbeZeigen(); infoStartZeigen(); tippSchalterZeigen(); ruheZeigen(); if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); anklopfenZeigen(); zuletztSchalterZeigen(); schnellWahlZeigen(); mgAnsichtWahlZeigen(); }
   if (v === "start") neuLaden();
   // KC-CLUB-ZURUECK: jede Ansicht bekommt einen Verlaufseintrag, damit „Zurück“ eine Ansicht zurückgeht statt die App zu schließen
   const hash = v === "start" || v === "chat" ? "" : v === "protokoll" ? "#protokoll=" + prId : v === "aktion" ? "#aktion=" + aktionId : v === "mitglied" ? "#mitglied=" + mitgliedId : "#" + v;
