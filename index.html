@@ -728,6 +728,15 @@
   .eingabe .innen > .rund:not(#sendenKnopf) { grid-row: 2; width: 40px !important; height: 40px !important; font-size: 1.05rem !important; }
   .eingabe .innen > .bf-chat-knopf { background: var(--karte2) !important; }
   .eingabe .innen > .wa-einf-knopf { background: var(--karte2) !important; justify-self: end; }
+  /* KC-CLUB-EINGABE-KONTRAST (1.37.0, Wunsch Hansi): Knöpfe unter dem Schreibfeld hell mit Rand – Symbole gut erkennbar;
+     🎤 mit kräftigem Ring und größer. WA (grün) und ➤ bleiben. Aktives 🔔 bleibt farbig. */
+  .eingabe .innen > .rund:not(#sendenKnopf):not(.wa-knopf) { background: var(--karte) !important; border: 2px solid var(--linie); color: var(--text); opacity: 1; box-shadow: 0 1px 4px rgba(0,0,0,.22); }
+  .eingabe .innen > #mikroKnopf.rund:not(#sendenKnopf) { background: #fff !important; border: 3px solid var(--rot3, var(--rot)) !important; font-size: 1.35rem !important; box-shadow: 0 0 0 2px var(--rot) inset, 0 1px 4px rgba(0,0,0,.25); }
+  .eingabe .innen > .zustell-knopf.an { background: var(--rot) !important; border-color: var(--rot); color: #fff; }
+  fieldset.bu-fs { border: 0; padding: 0; margin: 0; min-width: 0; }
+  .bu-haken-liste.br-liste { grid-template-columns: 1fr; }
+  .br-liste .br-name { flex: 1 1 auto; min-width: 0; }
+  .br-liste .br-recht { flex: none; white-space: nowrap; margin-left: auto; }
   .eingabe .innen > .wa-knopf { background: #0f7a3f !important; color: #fff; font-weight: 900; font-size: .95rem !important; letter-spacing: .02em; }
   .eingabe-entwurf { font-size: .8rem; color: var(--gelb, #d68910); font-weight: 700; margin: 0 6px 2px; }
   .entwurf-marke { color: #d35400; font-weight: 800; }
@@ -1967,7 +1976,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.36.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.37.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -4137,7 +4146,7 @@ const KACHELN = {
     // KC-CLUB-HELFEN / KC-CLUB-LEIHEN (1.23.0, Wunsch Hansi): eine Kachel für „Wer kann helfen?“ und „Ausleihen“
     { id: "helfen", sym: "🤝", t: "Helfen & Leihen", u: "Wer kann helfen? · Ausleihen", aktion: "hlStart()" },
     // KC-CLUB-BUERO (1.25.0): nur für die Clubleitung (Clubsprecher, Kassenwart, Admin)
-    { id: "buero", sym: "🗂️", t: "Büro", u: "Sitzung vorbereiten · Einladung · Eingang", aktion: "buStart()", nur: () => !!ICH?.vorstand },
+    { id: "buero", sym: "🗂️", t: "Büro", u: "Sitzung vorbereiten · Einladung · Eingang", aktion: "buStart()", nur: () => !!ICH?.buero },
   ],
   mein: [
     { id: "status", sym: "🟢", t: "Mein Status", u: "verfügbar, Urlaub …", aktion: "statusBlatt()" },
@@ -5596,10 +5605,12 @@ async function vorschlagSpeichern(knopf) {
 // ---------- KC-CLUB-BUERO (1.25.0, Wunsch Hansi): Büro für die Clubleitung – bedienerfreundliche Hilfe Schritt für Schritt ----------
 let BU = { start: null, s: null, f: null, sicht: "start" };
 const buTageszeit = () => { const h = new Date().getHours(); return h < 11 ? "☀️ Guten Morgen" : h < 18 ? "🌤️ Guten Tag" : "🌙 Guten Abend"; };
-const buDarf = () => !!ICH?.vorstand;
-// Beim Start (einmal je App-Start, nur Clubleitung, nicht nach einem Sprung-Link)
+// KC-CLUB-BUERO-RECHTE (1.37.0): Büro je Mitglied vom Admin freigeschaltet (lesen/schreiben); Admin immer schreiben
+const buDarf = () => !!ICH?.buero;
+const buSchreiben = () => ICH?.buero === "schreiben";
+// Beim Start (einmal je App-Start, nur Clubleitung, nicht nach einem Sprung-Link) – Tages-Übersicht bleibt Clubleitung
 function buGrussFragen(nochmal) {
-  if (!buDarf()) return;
+  if (!ICH?.vorstand || !buDarf()) return;
   try { if (sessionStorage.getItem("kc_buero_gefragt") || localStorage.getItem("kc_buero_frage_aus")) return; } catch {}
   if (document.querySelector(".blatt:not(.versteckt)") || aktuelleAnsicht !== "start") { if (!nochmal) setTimeout(() => buGrussFragen(true), 5000); return; }
   try { sessionStorage.setItem("kc_buero_gefragt", "1"); } catch {}
@@ -5680,7 +5691,7 @@ function buZurueck() { if (BU.sicht !== "start") { BU.sicht = "start"; buLaden()
 function buZeigen() { buZeigenRoh(); klappenMerken($("buInhalt")); }
 // Bereich im Büro: Klappkarte mit Pfeil und Schloss wie in den Einstellungen (Zustand je Gerät gemerkt)
 const buBereich = (name, titel, inhalt) => `<details class="karte bu-bereich" data-klappe="buero_${name}" data-ohne-unten open><summary>${titel}</summary>${inhalt}</details>`;
-function buZeigenRoh() { $("buInhalt").innerHTML = BU.sicht === "sitzung" ? buSitzungHtml() : BU.sicht === "eingang" ? buEingangHtml() : BU.sicht === "brief" ? buBriefHtml() : BU.sicht === "termine" ? buTermineHtml() : BU.sicht === "kontakt" ? buKontaktHtml() : BU.sicht === "nachher" ? buNachherHtml() : BU.sicht === "feste" ? buFesteHtml() : BU.sicht === "liste" ? buListeHtml() : BU.sicht === "fl" ? buFlHtml() : BU.sicht === "flneu" ? buFlNeuHtml() : BU.sicht === "fall" ? buFallHtml() : buStartHtml(); }
+function buZeigenRoh() { $("buInhalt").innerHTML = BU.sicht === "sitzung" ? buSitzungHtml() : BU.sicht === "eingang" ? buEingangHtml() : BU.sicht === "brief" ? buBriefHtml() : BU.sicht === "termine" ? buTermineHtml() : BU.sicht === "kontakt" ? buKontaktHtml() : BU.sicht === "nachher" ? buNachherHtml() : BU.sicht === "feste" ? buFesteHtml() : BU.sicht === "liste" ? buListeHtml() : BU.sicht === "fl" ? buFlHtml() : BU.sicht === "flneu" ? buFlNeuHtml() : BU.sicht === "fall" ? buFallHtml() : BU.sicht === "rechte" ? buRechteHtml() : buStartHtml(); }
 // Nächster sinnvoller Schritt für eine Sitzung
 function buNaechster(t) {
   if (!t) return null;
@@ -5691,9 +5702,10 @@ function buNaechster(t) {
 }
 function buStartHtml() {
   const r = BU.start; if (!r) return '<div class="karte hinweis">Wird geladen …</div>';
-  const t = r.sitzungen[0], n = buNaechster(t), e = r.eingang;
+  const S = buSchreiben(), L = !!ICH?.vorstand; // 1.37.0: S = Büro schreiben, L = Clubleitung (Kontakte, Freud & Leid, Eingang)
+  const t = r.sitzungen[0], n = S ? buNaechster(t) : null, e = r.eingang;
   const k = (id, sym, titel, unter, fn, extra = "") => `<button class="mini-kachel${n === id ? " bu-dran" : ""}" onclick="${fn}"><span class="mk-sym">${sym}</span><span class="mk-titel">${esc(titel)}</span><span class="mk-unter">${unter}</span>${extra}</button>`;
-  const nt = buNachherTipp();
+  const nt = S ? buNachherTipp() : null;
   const dran = nt ? nt.text : { vorbereiten: "📝 Sitzung vorbereiten", einladung: "📨 Einladung mit Tagesordnung senden", erinnerung: `🔔 ${t?.ohne} Mitglieder an die Antwort erinnern` }[n];
   const summe = Object.values(e).reduce((a, b) => a + b, 0);
   const eingang = [["📦", "Ausleih-Anfragen", e.ausleihen, "buEingang()"], ["🗳️", "Offene Vorschläge", e.vorschlaege, "buEingang()"], ["🙋", "Hilfe-Aufrufe", e.hilfe, "buEingang()"],
@@ -5701,24 +5713,56 @@ function buStartHtml() {
   const festHeute = BU_F ? [...BU_F.geburtstage.filter((f) => f.tage === 0).map((f) => f.alter ? `🎉 ${esc(f.vorname)} wird ${f.alter}` : `🎂 ${esc(f.vorname)} hat Geburtstag`), ...BU_F.jubilaeen.filter((f) => f.tage === 0).map((f) => `🏅 ${esc(f.vorname)}: ${f.jahre} Jahre im Club`)] : [];
   const festBald = BU_F ? BU_F.geburtstage.concat(BU_F.jubilaeen).filter((f) => f.tage >= 0 && f.tage <= 7).length : 0;
   return `<div class="karte bu-gruss"><b>${buTageszeit()}, ${esc(ICH.vorname || ICH.name)}!</b>${festHeute.length ? `<div class="bu-tipp" style="margin:6px 0">🎉 Heute: ${festHeute.join(" · ")} – <button class="knopf klein" onclick="buFeste()">gratulieren</button></div>` : "<br>"}${t ? `Nächste Sitzung: <b>${esc(t.titel)}</b> · ${esc(wann(t.beginn))}<br>✅ ${t.ja} zugesagt · ❌ ${t.nein} abgesagt · ❓ ${t.ohne} ohne Antwort` : "Gerade ist keine Sitzung geplant – lege sie unter 📅 Termine an."}
-    ${dran ? `<div class="bu-tipp">👉 Nächster Schritt: <b>${dran}</b></div>` : t ? '<div class="bu-tipp">✅ Für diese Sitzung ist alles erledigt.</div>' : ""}</div>
+    ${!S ? '<div class="bu-tipp">👁️ Du hast im Büro <b>Leserechte</b>: ansehen und drucken. Ändern und Versenden schaltet der Admin frei.</div>' : dran ? `<div class="bu-tipp">👉 Nächster Schritt: <b>${dran}</b></div>` : t ? '<div class="bu-tipp">✅ Für diese Sitzung ist alles erledigt.</div>' : ""}</div>
+    ${ICH?.admin ? buBereich("verwaltung", "🔐 Verwaltung", `<div class="mini-kacheln"><button class="mini-kachel" onclick="buRechte()"><span class="mk-sym">🔐</span><span class="mk-titel">Büro-Freigaben</span><span class="mk-unter">wer darf ins Büro – nur lesen oder lesen &amp; schreiben</span></button></div>`) : ""}
     ${buBereich("sitzung", "🗂️ Sitzung", `<div class="mini-kacheln">
-      ${k("vorbereiten", "📝", "Sitzung vorbereiten", t ? (t.vorbereitet ? "✅ vorbereitet – ändern" : "Anwesenheit, Tagesordnung, Vorlage") : "keine Sitzung geplant", "buSitzungWahl()")}
+      ${S ? k("vorbereiten", "📝", "Sitzung vorbereiten", t ? (t.vorbereitet ? "✅ vorbereitet – ändern" : "Anwesenheit, Tagesordnung, Vorlage") : "keine Sitzung geplant", "buSitzungWahl()") : k("ansehen", "👁️", "Sitzung ansehen", t ? "Anwesenheit, Tagesordnung" : "keine Sitzung geplant", "buSitzungWahl()")}
       ${k("drucken", "🖨️", "Vorlage drucken", t?.vorbereitet ? "Protokoll-Vorlage mit Schreiblinien" : "erst vorbereiten", "buDruckWahl()")}
-      ${k("einladung", "📨", "Einladung senden", t?.einladung_am ? `✅ gesendet ${esc(zeitKurz(t.einladung_am))}` : "mit Tagesordnung an alle", "buEinladungWahl(false)")}
-      ${k("erinnerung", "🔔", "Erinnern", t ? `${t.ohne} ohne Antwort${t.erinnerung_am ? ` · zuletzt ${esc(zeitKurz(t.erinnerung_am))}` : ""}` : "–", "buEinladungWahl(true)")}
+      ${S ? k("einladung", "📨", "Einladung senden", t?.einladung_am ? `✅ gesendet ${esc(zeitKurz(t.einladung_am))}` : "mit Tagesordnung an alle", "buEinladungWahl(false)") : ""}
+      ${S ? k("erinnerung", "🔔", "Erinnern", t ? `${t.ohne} ohne Antwort${t.erinnerung_am ? ` · zuletzt ${esc(zeitKurz(t.erinnerung_am))}` : ""}` : "–", "buEinladungWahl(true)") : ""}
       ${k("protokolle", "📄", "Protokolle", "schreiben · veröffentlichen", "zeige('protokolle')")}
-      ${k("termine", "📅", "Termine bearbeiten", "anlegen · ändern · absagen", "buTermine()")}
+      ${S ? k("termine", "📅", "Termine bearbeiten", "anlegen · ändern · absagen", "buTermine()") : ""}
     </div>`)}
-    ${buBereich("nachher", "📄 Nach der Sitzung", `<div class="mini-kacheln">
+    ${S ? buBereich("nachher", "📄 Nach der Sitzung", `<div class="mini-kacheln">
       ${k("foto", "📸", "Protokoll-Foto", "Mitschrift abfotografieren & anhängen", "buNachherWahl('📸 Foto für welche Sitzung?')", nt?.text.startsWith("📸") ? '<span class="marke gelb">jetzt dran</span>' : "")}
       ${k("aufgaben", "✔️", "Aufgaben verteilen", "wer · was · bis wann", "buNachherWahl('✔️ Aufgaben aus welcher Sitzung?')")}
       ${k("veroeffentlichen", "📢", "Protokoll veröffentlichen", "alle bekommen Bescheid · 7 Tage Einspruch", "buNachherWahl('📢 Welches Protokoll?')", nt?.text.startsWith("📢") ? '<span class="marke gelb">jetzt dran</span>' : "")}
-    </div>`)}
-    ${buBereich("mitglieder", "👥 Mitglieder", `<div class="mini-kacheln">${k("kontakt", "👥", "Mitglieder kontaktieren", "Gruppe wählen · schreiben · anrufen", "buKontakt()")}${k("feste", "🎂", "Geburtstage & Jubiläen", festBald ? `${festBald} in den nächsten 7 Tagen` : "gratulieren · Liste drucken", "buFeste()", festHeute.length ? '<span class="marke gelb">heute!</span>' : "")}${k("fl", "🤍", "Freud & Leid", FL.d ? (FL.d.faelle.filter((f) => f.status === "offen").length ? `${FL.d.faelle.filter((f) => f.status === "offen").length} offen` : "Geburt, Hochzeit, Trauerfall …") : "Geburt, Hochzeit, Trauerfall …", "buFreudLeid()")}${k("liste", "📇", "Mitgliederliste drucken", "Übersicht · Telefon · Adressen · Unterschriften", "buListe()")}</div>`)}
-    ${buBereich("schreiben", "✉️ Schreiben", `<div class="mini-kacheln">${k("brief", "✉️", "Briefbogen", "Brief mit Logo – Spende, Dank, Einladung …", "buBrief()")}</div>`)}
-    ${buBereich("eingang", `📥 Eingang ${summe ? `<span class="marke gelb">${summe}</span>` : ""}`, `<button class="knopf haupt" style="width:100%;margin:0 0 8px" onclick="buEingang()">📥 Eingang öffnen – alles auf einen Blick erledigen</button>
+    </div>`) : ""}
+    ${buBereich("mitglieder", "👥 Mitglieder", `<div class="mini-kacheln">${L ? k("kontakt", "👥", "Mitglieder kontaktieren", "Gruppe wählen · schreiben · anrufen", "buKontakt()") : ""}${k("feste", "🎂", "Geburtstage & Jubiläen", festBald ? `${festBald} in den nächsten 7 Tagen` : "gratulieren · Liste drucken", "buFeste()", festHeute.length ? '<span class="marke gelb">heute!</span>' : "")}${L ? k("fl", "🤍", "Freud & Leid", FL.d ? (FL.d.faelle.filter((f) => f.status === "offen").length ? `${FL.d.faelle.filter((f) => f.status === "offen").length} offen` : "Geburt, Hochzeit, Trauerfall …") : "Geburt, Hochzeit, Trauerfall …", "buFreudLeid()") : ""}${L ? k("liste", "📇", "Mitgliederliste drucken", "Übersicht · Telefon · Adressen · Unterschriften", "buListe()") : ""}</div>`)}
+    ${!S ? "" : buBereich("schreiben", "✉️ Schreiben", `<div class="mini-kacheln">${k("brief", "✉️", "Briefbogen", "Brief mit Logo – Spende, Dank, Einladung …", "buBrief()")}</div>`)}
+    ${!L ? "" : buBereich("eingang", `📥 Eingang ${summe ? `<span class="marke gelb">${summe}</span>` : ""}`, `<button class="knopf haupt" style="width:100%;margin:0 0 8px" onclick="buEingang()">📥 Eingang öffnen – alles auf einen Blick erledigen</button>
     <div class="mini-kacheln">${eingang.map(([sym, t2, z, fn]) => `<button class="mini-kachel${z ? " mk-offen" : ""}" onclick="${fn}"><span class="mk-sym">${sym}</span><span class="mk-titel">${esc(t2)}</span><span class="mk-gross">${z || "–"}</span></button>`).join("")}</div>`)}`;
+}
+// ---------- KC-CLUB-BUERO-RECHTE (1.37.0, Wunsch Hansi): Admin schaltet das Büro frei – erst WAS (lesen / schreiben / entziehen), dann WER ----------
+let BR = { liste: null, recht: null, wahl: new Set() };
+const BR_RECHTE = { lesen: ["👁️", "Nur lesen", "ansehen und drucken – nichts ändern, nichts versenden"], schreiben: ["✏️", "Lesen & schreiben", "Sitzung vorbereiten, Einladung senden, Termine, Briefe, Aufgaben"], keins: ["⛔", "Zugang entziehen", "das Büro ist für diese Mitglieder nicht mehr sichtbar"] };
+async function buRechte() {
+  if (!ICH?.admin) return;
+  BR = { liste: null, recht: null, wahl: new Set() }; BU.sicht = "rechte"; buZeigen(); window.scrollTo(0, 0);
+  try { BR.liste = (await api("buero_rechte", {}, { warten: true })).mitglieder || []; } catch (e) { BR.liste = []; melde(e.message, true); }
+  buZeigen();
+}
+function buRechteHtml() {
+  if (!BR.liste) return '<div class="karte hinweis">Wird geladen …</div>';
+  const name = (r) => BR.liste.filter((m) => m.recht === r).map((m) => esc(m.name.split(" ")[0]) + (m.admin ? " (Admin)" : "")).join(", ") || "–";
+  const marke = (m) => m.recht === "schreiben" ? '<span class="marke gruen br-recht">✏️ schreiben</span>' : m.recht === "lesen" ? '<span class="marke br-recht">👁️ lesen</span>' : '<span class="hinweis br-recht">⛔ kein Zugang</span>';
+  return `<div class="karte"><h3 style="margin-top:0">🔐 Büro-Freigaben</h3>
+      <p style="margin:0 0 4px">✏️ <b>Lesen & schreiben:</b> ${name("schreiben")}</p><p style="margin:0">👁️ <b>Nur lesen:</b> ${name("lesen")}</p>
+      <p class="hinweis" style="margin:8px 0 0">🔒 Freud & Leid, die Mitgliederliste mit Kontakten, der Eingang und das Alter bei runden Geburtstagen bleiben immer nur für die Clubleitung.</p></div>
+    <div class="karte"><h3 style="margin-top:0">1️⃣ Was soll gelten?</h3><div class="wahl">${Object.entries(BR_RECHTE).map(([k, [sym, t, u]]) =>
+      `<button class="${BR.recht === k ? "an" : ""}" onclick="BR.recht='${k}';buZeigen()">${sym} <b>${t}</b><br><small>${u}</small></button>`).join("")}</div></div>
+    ${BR.recht ? `<div class="karte"><h3 style="margin-top:0">2️⃣ Für wen?</h3><div class="bu-haken-liste br-liste">${BR.liste.map((m) => m.admin
+      ? `<label class="bu-haken"><input type="checkbox" disabled> <span class="br-name">${esc(m.name)}</span> <small class="hinweis br-recht">Admin – immer voll</small></label>`
+      : `<label class="bu-haken${BR.wahl.has(m.person_id) ? " an" : ""}"><input type="checkbox" ${BR.wahl.has(m.person_id) ? "checked" : ""} onchange="BR.wahl[this.checked ? 'add' : 'delete']('${m.person_id}');buZeigen()"> <span class="br-name">${esc(m.name)}</span> ${marke(m)}</label>`).join("")}</div></div>
+    <div class="bu-leiste"><button class="knopf haupt" style="width:100%;text-align:center" ${BR.wahl.size ? "" : "disabled"} onclick="buRechteSpeichern(this)">✅ ${esc(BR_RECHTE[BR.recht][1])} für ${BR.wahl.size} Mitglied${BR.wahl.size === 1 ? "" : "er"} speichern</button></div>` : ""}`;
+}
+async function buRechteSpeichern(knopf) {
+  const r = BR_RECHTE[BR.recht], namen = BR.liste.filter((m) => BR.wahl.has(m.person_id)).map((m) => m.name);
+  if (!r || !namen.length) return;
+  if (!confirm(`${r[0]} ${r[1]}\n\nfür: ${namen.join(", ")}\n\nJetzt speichern? (Es wird keine Nachricht verschickt.)`)) return;
+  knopf.disabled = true;
+  try { const x = await api("buero_rechte_setzen", { recht: BR.recht, personen: [...BR.wahl] }, { warten: true }); melde(`🔐 Gespeichert – ${x.geaendert} Mitglied${x.geaendert === 1 ? "" : "er"}: ${r[1]}. Wirkt beim nächsten Öffnen der App.`); await buRechte(); }
+  catch (e) { melde(e.message, true); knopf.disabled = false; }
 }
 // Mehrere Sitzungen → antippen, welche
 function buSitzungWaehlen(titel, weiter) {
@@ -5747,7 +5791,8 @@ function buSitzungHtml() {
   const nein = m.filter((x) => x.antwort === "nein"), rest = m.filter((x) => x.antwort !== "nein");
   const haken = (x) => `<label class="bu-haken${f.anwesend.has(x.person_id) ? " an" : ""}"><input type="checkbox" ${f.anwesend.has(x.person_id) ? "checked" : ""} onchange="buAnw('${x.person_id}', this.checked)"> ${esc(x.name)} <small>${x.antwort === "ja" ? "✅" : x.antwort === "vielleicht" ? "❓" : ""}</small></label>`;
   const verfuegbar = s.vorschlaege.filter((v) => !f.tagesordnung.some((t) => t.id === v.id));
-  return `<div class="karte bu-kopf"><img src="kc-kochmuetze-weiss.webp" alt="" class="bu-logo"><div><b>Köcheclub Werne</b><br><span style="font-size:1.15rem;font-weight:800">${esc(s.treffen.titel)}</span><br>${esc(wann(s.treffen.beginn, true))}${s.treffen.ort ? " · 📍 " + esc(s.treffen.ort) : ""}</div></div>
+  // 1.37.0: nur Leserecht → alles sichtbar, aber gesperrt (fieldset disabled); Drucken bleibt
+  return `${buSchreiben() ? "" : '<p class="bu-tipp">👁️ Nur ansehen – Ändern schaltet der Admin frei.</p>'}<fieldset class="bu-fs"${buSchreiben() ? "" : " disabled"}><div class="karte bu-kopf"><img src="kc-kochmuetze-weiss.webp" alt="" class="bu-logo"><div><b>Köcheclub Werne</b><br><span style="font-size:1.15rem;font-weight:800">${esc(s.treffen.titel)}</span><br>${esc(wann(s.treffen.beginn, true))}${s.treffen.ort ? " · 📍 " + esc(s.treffen.ort) : ""}</div></div>
     <div class="karte"><h3 style="margin-top:0">1️⃣ Wer ist dabei?</h3><p class="hinweis" style="margin:0 0 6px">Angehakt sind alle, die zugesagt haben. Antippen ändert es.</p>
       <div class="bu-haken-liste">${rest.map(haken).join("")}</div>
       <p style="margin:10px 0 0"><b>Entschuldigt:</b> ${nein.length ? nein.map((x) => esc(x.name) + (x.notiz ? ` <small class="hinweis">(${esc(x.notiz)})</small>` : "")).join(", ") : "–"}</p></div>
@@ -5761,7 +5806,8 @@ function buSitzungHtml() {
       <div class="zwei" style="align-items:end"><label class="feld">Eigener Punkt<input id="buNeu" maxlength="200" placeholder="z. B. Planung Weihnachtsmarkt" value="${esc(f.neu)}" oninput="BU.f.neu=this.value"></label><button class="knopf" onclick="buTopNeu()">＋ Dazu</button></div></div>
     <div class="karte"><h3 style="margin-top:0">4️⃣ Schreiblinien je Punkt</h3><div class="hl-chips">${s.zeilenWahl.map((z) => `<button class="chip${f.zeilen === z ? " an" : ""}" onclick="BU.f.zeilen=${z};buZeigen()">${z ? z + " Zeilen" : "keine"}</button>`).join("")}</div></div>
     ${s.protokoll && s.protokoll.status !== "entwurf" ? '<p class="hinweis">ℹ️ Das Protokoll dieser Sitzung ist schon veröffentlicht – es wird nicht verändert.</p>' : ""}
-    <div class="bu-leiste"><button class="knopf haupt" style="width:100%;text-align:center" onclick="buSpeichern(this)">✅ Fertig – speichern</button></div>`;
+    ${buSchreiben() ? '<div class="bu-leiste"><button class="knopf haupt" style="width:100%;text-align:center" onclick="buSpeichern(this)">✅ Fertig – speichern</button></div>' : ""}</fieldset>
+    ${buSchreiben() ? "" : '<div class="bu-leiste"><button class="knopf haupt" style="width:100%;text-align:center" onclick="buDruckWahl()">🖨️ Vorlage drucken</button></div>'}`;
 }
 function buAnw(id, an) { an ? BU.f.anwesend.add(id) : BU.f.anwesend.delete(id); }
 function buTop(i, d) { const l = BU.f.tagesordnung, j = i + d; [l[i], l[j]] = [l[j], l[i]]; buZeigen(); }
@@ -10806,7 +10852,7 @@ function suAppListe() {
     ["🙋", "Hilfe suchen (Wer kann helfen?)", "hilfe helfen helfer aufruf aufbau abbau tische tragen kochen spülen einkauf fahrdienst verkauf stand", () => { hlStart("helfen"); hilfeNeu(); }],
     ["📦", "Etwas ausleihen", "ausleihen leihen verleih stehtisch bierzelt garnitur pavillon zapfanlage glühwein kühlbox bräter warmhalte kabeltrommel", () => { hlStart("leihen"); leihNeu(); }],
     ["💝", "Spendenprojekt vorschlagen", "spende spenden spendenprojekt kinderhospiz geld verein", () => { zeige("vorschlaege"); vorschlagForm("spende"); }],
-    ...(ICH?.vorstand ? [["🗂️", "Büro – Sitzung vorbereiten, Einladung", "büro buero sitzung vorbereiten tagesordnung einladung protokoll vorlage drucken eingang", () => buStart()]] : []),
+    ...(ICH?.buero ? [["🗂️", "Büro – Sitzung vorbereiten, Einladung", "büro buero sitzung vorbereiten tagesordnung einladung protokoll vorlage drucken eingang", () => buStart()]] : []),
     ["📸", "Bildschirmfoto der App", "bildschirmfoto screenshot foto bildschirm aufnahme zeigen problem", () => bfStart()],
     ["🆘", "Wo bin ich? (SOS)", "wo bin ich adresse standort notfall sos", () => sosStart()], ["🪪", "Mein Notfallpass", "notfallpass allergien medikamente blutgruppe notfall", () => { sosStart(); nfpBearbeiten(); }],
   ].map(([sym, t, w, fn]) => ({ sym, t, w, fn }));
@@ -11193,7 +11239,7 @@ async function fpAdmin(tage) {
     else if (h === "#standort") zeige("standort");
     else if (h === "#dienstwunsch") dwOeffnen();
     else if (["#termine", "#vorschlaege", "#aktionen", "#fotos", "#protokolle", "#dienste", "#nachrichten", "#mitglieder", "#einstellungen", "#archiv", "#helfen"].includes(h)) zeige(h.slice(1));
-    else if (h === "#buero" && ICH?.vorstand) buStart();
+    else if (h === "#buero" && ICH?.buero) buStart();
     if (!h || h === "#") setTimeout(() => buGrussFragen(), 1500); // KC-CLUB-BUERO: Begrüßung der Clubleitung
   });
   updatePruefen(false);

@@ -1059,7 +1059,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/db\.rpc\("kc_club_anmeldung", \{ p_hash: hash, p_version: version \}\)/.test(an) && /if \(!a\) throw new Fehler\("Kein Zugang/.test(an) && /if \(!p\?\.active\) throw/.test(an), "Datenbank-Prüfung beim Nachladen fehlt");
   const rpc = lies("supabase/migrations/20260929_kc_club_v57_anmeldung_rpc.sql");
   assert.ok(/where token_hash = p_hash and aktiv/.test(rpc) && /revoke all on function public\.kc_club_anmeldung\(text, text\) from public, anon, authenticated;/.test(rpc), "Anmelde-RPC prüft nicht aktiv / ist öffentlich");
-  assert.equal((server.match(/anmeldungenVergessen\(\);/g) || []).length, 3, "Zugang/Rollen ändern leert den Speicher nicht");
+  assert.equal((server.match(/anmeldungenVergessen\(\);/g) || []).length, 4, "Zugang/Rollen/Büro-Rechte ändern leert den Speicher nicht");
   assert.ok(/serverMs: Date\.now\(\) - t0Anfrage/.test(server) && /Server gesamt \$\{t\.srv\} ms/.test(html), "Server-Zeit im Verbindungstest fehlt");
   // Live-Tippen
   assert.ok(/live_tippen: \(w\) => \(\{ an: w\?\.an === true \}\)/.test(server), "Einstellung nicht standardmäßig aus");
@@ -1974,17 +1974,17 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   for (const a of ["buero_start", "buero_sitzung", "buero_speichern", "buero_einladung"]) assert.ok(aktionen.has(a) && aufrufe.has(a), `Büro-Aktion ${a} fehlt`);
   for (const a of ["buero_start", "buero_speichern", "buero_einladung"]) {
     const c = server.slice(server.indexOf(`case "${a}"`), server.indexOf(`case "${a}"`) + 200);
-    assert.ok(/nurVorstand\(ich\)/.test(c), `${a} nur Clubleitung`);
+    assert.ok(/nurVorstand\(ich\)|nurBuero(Lesen|Schreiben)\(ich\)/.test(c), `${a} nur mit Büro-Recht (1.37.0)`);
   }
-  assert.ok(/case "buero_sitzung": nurVorstand\(ich\);/.test(server), "buero_sitzung nur Clubleitung");
+  assert.ok(/case "buero_sitzung": nurBueroLesen\(ich\);/.test(server), "buero_sitzung nur mit Büro-Recht (1.37.0)");
   assert.ok(/const BUERO_TOP_VORNE = \["Begrüßung", "Genehmigung des letzten Protokolls", "Bericht des Kassenwarts"\]/.test(server) && /const BUERO_TOP_HINTEN = \["Verschiedenes"\]/.test(server), "feste Tagesordnungspunkte");
   const sp = server.slice(server.indexOf('case "buero_speichern"'), server.indexOf('case "buero_einladung"'));
   assert.ok(/pr\.status === "entwurf" && pr\.version === 1 && new Date\(t\.beginn\)\.getTime\(\) > Date\.now\(\)/.test(sp), "veröffentlichte Protokolle / Entwürfe nach Sitzungsbeginn unberührt");
   const ei = server.slice(server.indexOf('case "buero_einladung"'), server.indexOf('case "leihen_liste"'));
   assert.ok(/nurOffen \? alle\.filter\(\(id\) => !geantwortet\.has\(id\)\) : alle\)\.filter\(\(id\) => id !== ich\.person_id\)/.test(ei), "Erinnerung nur an Mitglieder ohne Antwort");
   assert.ok(/if \(!confirm\(`\$\{x\.nurOffen \? "Erinnerung" : "Einladung"\} jetzt an \$\{anzahl\} Mitglieder senden\?`\)\) return;/.test(html), "Senden erst nach Bestätigung");
-  assert.ok(/\{ id: "buero", sym: "🗂️", t: "Büro",[^\n]*nur: \(\) => !!ICH\?\.vorstand \}/.test(html), "Kachel nur für die Clubleitung");
-  assert.ok(/if \(!buDarf\(\)\) return;/.test(html) && /sessionStorage\.getItem\("kc_buero_gefragt"\)/.test(html) && /if \(!h \|\| h === "#"\) setTimeout\(\(\) => buGrussFragen\(\), 1500\)/.test(html), "Begrüßung einmal je Start, nur Clubleitung, nicht nach Sprung");
+  assert.ok(/\{ id: "buero", sym: "🗂️", t: "Büro",[^\n]*nur: \(\) => !!ICH\?\.buero \}/.test(html), "Kachel nur mit Büro-Freigabe (1.37.0)");
+  assert.ok(/if \(!ICH\?\.vorstand \|\| !buDarf\(\)\) return;/.test(html) && /sessionStorage\.getItem\("kc_buero_gefragt"\)/.test(html) && /if \(!h \|\| h === "#"\) setTimeout\(\(\) => buGrussFragen\(\), 1500\)/.test(html), "Begrüßung einmal je Start, nur Clubleitung, nicht nach Sprung");
   assert.ok(/sitzung: \{ bauen: \(\) => druckSitzung\(\) \}/.test(html) && /Anmerkung zum letzten Protokoll/.test(html) && /TOP \$\{i \+ 1\}/.test(html), "Druckvorlage");
   const mig = lies("supabase/migrations/20261002_kc_club_v1250_buero.sql");
   assert.ok(/enable row level security/.test(mig) && /revoke all on kc_club_buero_sitzung from anon, authenticated/.test(mig) && /kc_db_mirror_table_rules/.test(mig), "RLS + Spiegel");
@@ -2014,7 +2014,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 {
   for (const a of ["buero_nachher", "buero_aufgaben_mitteilen"]) {
     assert.ok(aktionen.has(a) && aufrufe.has(a), `Aktion ${a} fehlt`);
-    assert.ok(/nurVorstand\(ich\)/.test(server.slice(server.indexOf(`case "${a}"`), server.indexOf(`case "${a}"`) + 150)), `${a} nur Clubleitung`);
+    assert.ok(/nurVorstand\(ich\)|nurBuero(Lesen|Schreiben)\(ich\)/.test(server.slice(server.indexOf(`case "${a}"`), server.indexOf(`case "${a}"`) + 150)), `${a} nur mit Büro-Recht (1.37.0)`);
   }
   const m = server.slice(server.indexOf('case "buero_aufgaben_mitteilen"'), server.indexOf('case "leihen_liste"'));
   assert.ok(/filter\(\(a: any\) => !a\.mitgeteilt_am && !a\.erledigt_am\)/.test(m) && /await aufgabenMitteilen\(offen, ich, pr\.titel\)/.test(m), "nur noch nicht mitgeteilte, vorhandene Mitteilung");
@@ -2027,7 +2027,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 {
   assert.ok(aktionen.has("buero_feste") && aufrufe.has("buero_feste"), "Aktion buero_feste fehlt");
   const f = server.slice(server.indexOf('case "buero_feste"'), server.indexOf('case "leihen_liste"'));
-  assert.ok(/nurVorstand\(ich\)/.test(f.slice(0, 120)), "nur Clubleitung");
+  assert.ok(/nurVorstand\(ich\)|nurBuero(Lesen|Schreiben)\(ich\)/.test(f.slice(0, 120)), "nur mit Büro-Recht (1.37.0)");
   // 1.30.0: zusätzlich freiwillige Freigabe „runde Geburtstage“ (Test 179) – ohne sie weiterhin nur mit Geburtstags-Freigabe
   assert.ok(/if \(!frei\.has\(m\.person_id\) && m\.person_id !== ich\.person_id && !rund\) \{ ohneFreigabe\+\+; continue; \}/.test(f), "Geburtstag nur mit Freigabe");
   assert.ok(/geburtstage\.push\(\{ person_id: m\.person_id, name: m\.display_name, vorname: vorname\(m\), datum: d, tage: t, \.\.\.\(rund \? \{ rund: true, alter \} : \{\}\) \}\)/.test(f), "Alter nur bei Freigabe für runde Geburtstage");
@@ -2041,8 +2041,8 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   const c = server.slice(server.indexOf('case "runder_geburtstag_freigabe"'), server.indexOf('case "dienst_freigabe"'));
   assert.ok(/person_id: ich\.person_id, bereich: "runder_geburtstag"/.test(c), "nur die eigene Freigabe");
   const f = server.slice(server.indexOf('case "buero_feste"'), server.indexOf('case "leihen_liste"'));
-  assert.ok(/const rund = rundFrei\.has\(m\.person_id\) && rundesAlter\(alter\);/.test(f) && /\.\.\.\(rund \? \{ rund: true, alter \} : \{\}\)/.test(f), "Alter nur mit Freigabe und nur rund");
-  assert.ok(/nurVorstand\(ich\)/.test(f.slice(0, 120)), "nur Clubleitung");
+  assert.ok(/const rund = ich\.vorstand && rundFrei\.has\(m\.person_id\) && rundesAlter\(alter\);/.test(f) && /\.\.\.\(rund \? \{ rund: true, alter \} : \{\}\)/.test(f), "Alter nur mit Freigabe und nur rund");
+  assert.ok(/nurVorstand\(ich\)|nurBuero(Lesen|Schreiben)\(ich\)/.test(f.slice(0, 120)), "nur mit Büro-Recht (1.37.0)");
   const g = server.slice(server.indexOf("async function geburtstageSichtbar"), server.indexOf("// ---------- Treffen ----------"));
   assert.ok(!/runder_geburtstag|alter/.test(g), "öffentliche Geburtstage weiter ohne Jahr");
   assert.ok(/id="setRundGeburtstag" onchange="runderGeburtstagFreigabe\(this\.checked\)"/.test(html), "Schalter in den Einstellungen");
@@ -2142,6 +2142,22 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   const f = html.slice(html.indexOf("function waEinsetzen("), html.indexOf("async function waEinfuegen("));
   assert.ok(!/senden\(\)/.test(f) && /\$\("text"\)/.test(f), "nie automatisch senden – nur ins Schreibfeld");
   assert.ok(/grid-template-columns: auto auto auto auto auto 1fr auto;/.test(html) && /#sendenKnopf \{ grid-row: 1; grid-column: 7;/.test(html), "Leiste mit 7 Spalten");
+}
+
+// 190. 1.37.0: Büro-Freigaben je Mitglied (KC-CLUB-BUERO-RECHTE) + Kontrast der Chat-Knöpfe (KC-CLUB-EINGABE-KONTRAST)
+{
+  const mig = lies("supabase/migrations/20261002_kc_club_v1370_buero_rechte.sql");
+  assert.ok(/check \(buero_recht is null or buero_recht in \('lesen', 'schreiben'\)\)/.test(mig) && /update kc_club_rollen set buero_recht = 'schreiben' where ist_vorstand and buero_recht is null;/.test(mig), "Migration: Recht + bisherige Clubleitung behält Zugang");
+  assert.ok(/buero: r\?\.ist_admin \? "schreiben" :/.test(server), "Admin immer schreiben");
+  for (const a of ["buero_start", "buero_sitzung", "buero_nachher", "buero_feste"]) assert.ok(new RegExp(`case "${a}"[^]{0,80}nurBueroLesen\\(ich\\);`).test(server), `${a} braucht Leserecht`);
+  for (const a of ["buero_speichern", "buero_einladung", "buero_aufgaben_mitteilen"]) assert.ok(new RegExp(`case "${a}"[^]{0,80}nurBueroSchreiben\\(ich\\);`).test(server), `${a} braucht Schreibrecht`);
+  for (const a of ["buero_mitgliederliste", "fl_liste", "fl_anlegen", "tagesinfo", "treffen_loeschen"]) assert.ok(new RegExp(`case "${a}"[^]{0,200}nurVorstand\\(ich\\);`).test(server), `${a} bleibt Clubleitung`);
+  assert.ok(/case "buero_rechte":[^]{0,40}nurAdmin\(ich\);/.test(server) && /case "buero_rechte_setzen":[^]{0,40}nurAdmin\(ich\);/.test(server), "Verwaltung nur Admin");
+  assert.ok(/const rund = ich\.vorstand && rundFrei\.has/.test(server), "Alter nur Clubleitung");
+  assert.ok(/const buDarf = \(\) => !!ICH\?\.buero;/.test(html) && /nur: \(\) => !!ICH\?\.buero \}/.test(html), "Büro-Kachel nach Recht");
+  assert.ok(/<fieldset class="bu-fs"\$\{buSchreiben\(\) \? "" : " disabled"\}>/.test(html), "Lesemodus gesperrt");
+  assert.ok(/function buRechteHtml\(\)/.test(html) && /1️⃣ Was soll gelten\?/.test(html) && /2️⃣ Für wen\?/.test(html), "erst WAS, dann WER");
+  assert.ok(/\.eingabe \.innen > #mikroKnopf\.rund:not\(#sendenKnopf\) \{ background: #fff !important; border: 3px solid/.test(html), "Mikrofon gut erkennbar");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

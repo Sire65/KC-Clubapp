@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.36.0";
+const SERVER_VERSION = "1.37.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -864,7 +864,10 @@ async function adminSpiegel() {
 } // kostenloser Supabase-Tarif (falls der System-Check keinen Wert liefert)
 
 // ---------- Anmeldung ----------
-type Ich = { person_id: string; name: string; vorname: string; admin: boolean; vorstand: boolean; aemter: string[]; protokolle: boolean; kontakte: boolean };
+type Ich = { person_id: string; name: string; vorname: string; admin: boolean; vorstand: boolean; aemter: string[]; protokolle: boolean; kontakte: boolean; buero: BueroRecht };
+// KC-CLUB-BUERO-RECHTE (1.37.0): Büro je Mitglied vom Admin freigeschaltet – null = kein Büro; Admin immer „schreiben“
+type BueroRecht = "lesen" | "schreiben" | null;
+const BUERO_RECHTE = ["lesen", "schreiben"] as const;
 // KC-CLUB-ANMELDECACHE (0.56.0): geprüfte Anmeldung je Server-Instanz ANMELDUNG_CACHE_MS lang merken (spart je Anfrage
 // 2 Datenbank-Runden). Schlüssel = SHA-256 des Tokens (nie das Token selbst). Rollen-/Zugangsänderungen leeren den Speicher
 // dieser Instanz sofort; andere Instanzen übernehmen sie spätestens nach ANMELDUNG_CACHE_MS. „zuletzt gesehen“ höchstens
@@ -903,10 +906,15 @@ async function anmeldenDb(hash: string, version: string | null): Promise<Ich> {
     // Sitzungsprotokolle: Recht aus der Rollen-Registry (Standard ja; Aushilfen nein)
     protokolle: r ? r.protokolle_lesen !== false : true,
     // Kontaktdaten anderer (sofern freigegeben): Rollen-Registry (Standard ja; Aushilfen nein)
-    kontakte: r ? r.kontakte_sehen !== false : true };
+    kontakte: r ? r.kontakte_sehen !== false : true,
+    buero: r?.ist_admin ? "schreiben" : (BUERO_RECHTE as readonly string[]).includes(r?.buero_recht) ? r.buero_recht : null };
 }
 // „vorstand“ ist intern das Recht, Treffen/Veranstaltungen/Abstimmungen anzulegen (im Club: Clubsprecher, Kassenwart, Admin)
 const nurVorstand = (ich: Ich) => { if (!ich.vorstand) throw new Fehler("Das dürfen nur Clubsprecher, Kassenwart und Admin.", 403); };
+const nurBueroLesen = (ich: Ich) => { if (!ich.buero) throw new Fehler("Das Büro ist für dich nicht freigeschaltet – bitte beim Admin melden.", 403); };
+const nurBueroSchreiben = (ich: Ich) => { nurBueroLesen(ich); if (ich.buero !== "schreiben") throw new Fehler("Im Büro hast du nur Leserechte – Ändern und Versenden schaltet der Admin frei.", 403); };
+// Termine anlegen/ändern/absagen: Clubleitung wie bisher – oder Büro mit Schreibrecht (endgültig löschen bleibt Clubleitung)
+const nurTermineSchreiben = (ich: Ich) => { if (!ich.vorstand && ich.buero !== "schreiben") nurVorstand(ich); };
 const nurAdmin = (ich: Ich) => { if (!ich.admin) throw new Fehler("Das darf nur der Admin.", 403); };
 
 // ---------- Eigener Status ----------
@@ -1845,7 +1853,7 @@ async function kalenderIcs(token: string) {
   const { data: pe } = await db.from("kc_core_people").select("person_id,display_name,given_name,preferred_name,active").eq("person_id", abo.person_id).maybeSingle();
   if (!pe?.active) return new Response("Kein Zugang.", { status: 403 });
   db.from("kc_club_kalender_abo").update({ zuletzt_abgerufen: jetzt() }).eq("person_id", abo.person_id).then(() => {});
-  const ich = { person_id: pe.person_id, name: pe.display_name, vorname: vorname(pe), admin: false, vorstand: false, aemter: [], protokolle: false, kontakte: false } as Ich;
+  const ich = { person_id: pe.person_id, name: pe.display_name, vorname: vorname(pe), admin: false, vorstand: false, aemter: [], protokolle: false, kontakte: false, buero: null } as Ich;
   const [{ data: tr }, akt, geb] = await Promise.all([
     db.from("kc_club_treffen").select("*").gte("beginn", new Date(Date.now() - 60 * 86400000).toISOString()).lte("beginn", new Date(Date.now() + 500 * 86400000).toISOString()).order("beginn"),
     aktionenRoh(), geburtstageSichtbar(ich),
@@ -2563,7 +2571,7 @@ Köcheclub Werne`,
       }
 
       case "treffen_speichern": {
-        nurVorstand(ich);
+        nurTermineSchreiben(ich);
         const titel = txt(p.titel, 120) || "Köcheclub-Treffen";
         const beginn = new Date(String(p.beginn || ""));
         if (isNaN(beginn.getTime())) throw new Fehler("Bitte Datum und Uhrzeit angeben.");
@@ -2614,7 +2622,7 @@ Köcheclub Werne`,
       }
 
       case "treffen_absagen": {
-        nurVorstand(ich);
+        nurTermineSchreiben(ich);
         const { data: t } = await db.from("kc_club_treffen").update({ status: "abgesagt", geaendert_am: jetzt() }).eq("id", p.id).select().single();
         if (!t) throw new Fehler("Treffen nicht gefunden.", 404);
         const g = t.gastgeber_person_id ? (await personen([t.gastgeber_person_id])).get(t.gastgeber_person_id) : null;
@@ -2954,7 +2962,7 @@ Köcheclub Werne`,
 
       // ----- KC-CLUB-BUERO (1.25.0): Büro für die Clubleitung -----
       case "buero_start": {
-        nurVorstand(ich);
+        nurBueroLesen(ich);
         const [sitzungen, eingang] = await Promise.all([bueroNaechste(), bueroEingang()]);
         const ids = sitzungen.map((t: any) => t.id);
         const [{ data: prep }, { data: teil }] = ids.length ? await Promise.all([
@@ -2972,10 +2980,10 @@ Köcheclub Werne`,
         });
       }
 
-      case "buero_sitzung": nurVorstand(ich); return json(await bueroSitzung(ich, String(p.treffen_id || "")));
+      case "buero_sitzung": nurBueroLesen(ich); return json(await bueroSitzung(ich, String(p.treffen_id || "")));
 
       case "buero_speichern": {
-        nurVorstand(ich);
+        nurBueroSchreiben(ich);
         const tid = String(p.treffen_id || "");
         const { data: t } = await db.from("kc_club_treffen").select("*").eq("id", tid).maybeSingle();
         if (!t) throw new Fehler("Sitzung nicht gefunden.", 404);
@@ -3007,7 +3015,7 @@ Köcheclub Werne`,
       }
 
       case "buero_einladung": {
-        nurVorstand(ich);
+        nurBueroSchreiben(ich);
         const tid = String(p.treffen_id || "");
         const nurOffen = !!p.nur_offen;
         const { data: t } = await db.from("kc_club_treffen").select("*").eq("id", tid).maybeSingle();
@@ -3043,7 +3051,7 @@ Köcheclub Werne`,
 
       // ----- KC-CLUB-BUERO-NACHHER (1.28.0): nach der Sitzung – Foto der Mitschrift, Aufgaben verteilen, veröffentlichen -----
       case "buero_nachher": {
-        nurVorstand(ich);
+        nurBueroLesen(ich);
         const { data: tr } = await db.from("kc_club_treffen").select("id,titel,beginn,ort,art,status").neq("art", "veranstaltung").neq("status", "abgesagt")
           .gte("beginn", new Date(Date.now() - 90 * 86400000).toISOString()).lte("beginn", new Date(Date.now() + 6 * 3600000).toISOString()).order("beginn", { ascending: false }).limit(6);
         const ids = (tr ?? []).map((t: any) => t.id);
@@ -3061,7 +3069,7 @@ Köcheclub Werne`,
       }
 
       case "buero_aufgaben_mitteilen": {
-        nurVorstand(ich);
+        nurBueroSchreiben(ich);
         const pr = await protokollHolen(p.protokoll_id);
         const { data: auf } = await db.from("kc_club_aufgaben").select("*").eq("protokoll_id", pr.id);
         const offen = (auf ?? []).filter((a: any) => !a.mitgeteilt_am && !a.erledigt_am);
@@ -3072,7 +3080,7 @@ Köcheclub Werne`,
 
       // ----- KC-CLUB-BUERO-FESTE (1.29.0): Geburtstage (nur freigegebene, nur Tag/Monat) & Vereinsjubiläen (Eintritt aus dem KC Manager) -----
       case "buero_feste": {
-        nurVorstand(ich);
+        nurBueroLesen(ich);
         const heute = berlinTag(new Date()), tage = Math.min(366, Math.max(7, Math.floor(Number(p.tage) || 60)));
         const [leute, { data: fr }, { data: mg }] = await Promise.all([
           aktiveMitglieder(),
@@ -3100,7 +3108,7 @@ Köcheclub Werne`,
           if (!m.birth_date) continue;
           const d = naechster(String(m.birth_date).slice(5, 10)); if (!d) continue;
           const alter = Number(d.slice(0, 4)) - Number(String(m.birth_date).slice(0, 4));
-          const rund = rundFrei.has(m.person_id) && rundesAlter(alter);
+          const rund = ich.vorstand && rundFrei.has(m.person_id) && rundesAlter(alter); // 1.37.0: Alter nur für die Clubleitung (auch bei Büro-Freigabe)
           if (!frei.has(m.person_id) && m.person_id !== ich.person_id && !rund) { ohneFreigabe++; continue; }
           const t = tageBis(d); if (t > tage) continue;
           geburtstage.push({ person_id: m.person_id, name: m.display_name, vorname: vorname(m), datum: d, tage: t, ...(rund ? { rund: true, alter } : {}) });
@@ -6243,6 +6251,36 @@ Köcheclub-App`,
         await protokoll(ich.person_id, "link_erzeugt", { fuer: pid });
         return json({ ok: true, link: `${APP_URL}?k=${token}` });
       }
+      // KC-CLUB-BUERO-RECHTE (1.37.0): Admin legt fest, wer das Büro sieht (lesen) oder darin arbeitet (schreiben)
+      case "buero_rechte": {
+        nurAdmin(ich);
+        const [mg, { data: ro }] = await Promise.all([aktiveMitglieder(), db.from("kc_club_rollen").select("person_id,ist_admin,ist_vorstand,aemter,buero_recht")]);
+        const rm = new Map((ro ?? []).map((x: any) => [x.person_id, x]));
+        return json({ mitglieder: mg.map((m: any) => { const x: any = rm.get(m.person_id);
+          return { person_id: m.person_id, name: m.display_name, admin: !!x?.ist_admin, leitung: !!(x?.ist_vorstand || x?.ist_admin), aemter: x?.aemter ?? [],
+            recht: x?.ist_admin ? "schreiben" : (BUERO_RECHTE as readonly string[]).includes(x?.buero_recht) ? x.buero_recht : null }; })
+          .sort((a: any, b: any) => a.name.localeCompare(b.name, "de")) });
+      }
+      case "buero_rechte_setzen": {
+        nurAdmin(ich);
+        const recht = p.recht === null || p.recht === "keins" ? null : String(p.recht);
+        if (recht !== null && !(BUERO_RECHTE as readonly string[]).includes(recht)) throw new Fehler("Bitte „nur lesen“, „lesen & schreiben“ oder „kein Zugang“ wählen.");
+        const ids = [...new Set((Array.isArray(p.personen) ? p.personen : []).map((x: unknown) => String(x)))].slice(0, 100);
+        if (!ids.length) throw new Fehler("Bitte mindestens ein Mitglied auswählen.");
+        const gueltig = new Set((await aktiveMitglieder()).map((m: any) => m.person_id));
+        const { data: ro } = await db.from("kc_club_rollen").select("person_id,ist_admin").in("person_id", ids);
+        const admins = new Set((ro ?? []).filter((x: any) => x.ist_admin).map((x: any) => x.person_id));
+        const ziel = ids.filter((id) => gueltig.has(id) && !admins.has(id)); // Admin hat immer vollen Zugang
+        if (!ziel.length) throw new Fehler("Für diese Auswahl ist nichts zu ändern (der Admin hat immer vollen Zugang).");
+        const vorhanden = new Set((ro ?? []).map((x: any) => x.person_id));
+        const neu = ziel.filter((id) => !vorhanden.has(id)), alt = ziel.filter((id) => vorhanden.has(id));
+        if (alt.length) { const { error } = await db.from("kc_club_rollen").update({ buero_recht: recht, geaendert_am: jetzt() }).in("person_id", alt); if (error) throw error; }
+        if (neu.length) { const { error } = await db.from("kc_club_rollen").insert(neu.map((person_id) => ({ person_id, buero_recht: recht, geaendert_am: jetzt() }))); if (error) throw error; }
+        anmeldungenVergessen(); // sofort wirksam
+        await protokoll(ich.person_id, "buero_rechte_gesetzt", { recht: recht ?? "keins", fuer: ziel });
+        return json({ ok: true, geaendert: ziel.length });
+      }
+
       case "rolle_setzen": {
         nurAdmin(ich);
         const pid = String(p.person_id || "");

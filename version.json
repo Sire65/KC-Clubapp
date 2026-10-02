@@ -1,7 +1,9 @@
 {
-  "version": "1.36.0",
+  "version": "1.37.0",
   "datum": "2026-10-02",
   "neu": [
+    "🔐 Büro-Freigaben: Der Admin legt fest, wer ins Büro darf – nur lesen oder lesen & schreiben (Admin)",
+    "🎤 Die Knöpfe unter dem Schreibfeld sind jetzt besser zu erkennen – vor allem das Mikrofon",
     "📋 Im Chat neu: „Aus WhatsApp einfügen“ – in WhatsApp Nachrichten markieren und kopieren, hier 📋 tippen: der Text kommt sauber ins Schreibfeld (mit Vorname und Uhrzeit, Handynummern werden entfernt). Du prüfst und sendest selbst mit ➤",
     "🗂️ Büro: Jeder Bereich (Sitzung, Nach der Sitzung, Mitglieder, Schreiben, Eingang) lässt sich mit dem Pfeil auf- und zuklappen und mit dem Schloss 🔒 feststellen – wie in den Einstellungen (Admin)",
     "👥 Aktive Mitglieder: Deine Gruppen (z. B. „Innovation“) stehen oben – antippen zeigt nur die Mitglieder dieser Gruppe, mit „💬 In die Gruppe schreiben“",
@@ -28,6 +30,13 @@
     "📨 Danach mit einem Tipp: Einladung mit Tagesordnung an alle senden – und später alle erinnern, die noch nicht geantwortet haben (Admin)"
   ],
   "verlauf": [
+    {
+      "version": "1.37.0",
+      "neu": [
+        "🔐 Büro-Freigaben: Der Admin legt fest, wer ins Büro darf – nur lesen oder lesen & schreiben (Admin)",
+        "🎤 Die Knöpfe unter dem Schreibfeld sind jetzt besser zu erkennen – vor allem das Mikrofon"
+      ]
+    },
     {
       "version": "1.36.0",
       "neu": [

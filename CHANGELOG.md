@@ -1,5 +1,16 @@
 # Änderungen
 
+## 1.37.0 – 2026-10-02 (DEV)
+
+- KC-CLUB-BUERO-RECHTE (Wunsch Hansi): Der Admin schaltet das Büro je Mitglied frei – im Büro unter „🔐 Verwaltung →
+  Büro-Freigaben“: erst festlegen WAS (👁️ nur lesen / ✏️ lesen & schreiben / ⛔ Zugang entziehen), dann WER (Häkchen),
+  Rückfrage, speichern (keine Nachricht an die Mitglieder). Neue Spalte kc_club_rollen.buero_recht; bisherige Clubleitung
+  (Klaus, Dieter) behält „schreiben“, der Admin hat immer vollen Zugang. Server: Büro-Aktionen prüfen Lese-/Schreibrecht;
+  Termine anlegen/ändern/absagen auch mit Büro-Schreibrecht, endgültig löschen bleibt Clubleitung. Freud & Leid,
+  Mitgliederliste mit Kontakten, Eingang, Tages-Übersicht und das Alter bei runden Geburtstagen bleiben nur Clubleitung.
+  Lesemodus: „Sitzung ansehen“ (gesperrt, Drucken möglich), keine Versand-/Änderungs-Kacheln.
+- KC-CLUB-EINGABE-KONTRAST: Knöpfe unter dem Schreibfeld hell mit Rand und Schatten; 🎤 größer mit kräftigem Ring.
+
 ## 1.36.0 – 2026-10-02 (DEV)
 
 - KC-CLUB-WA-EINFUEGEN (Wunsch Hansi: WhatsApp bietet bei Text-Nachrichten kein „Teilen“): Im Chat neuer Knopf 📋
