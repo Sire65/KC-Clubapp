@@ -1951,6 +1951,17 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/!HL\.leihen && \(HL\.edit \|\| HL\.form\)/.test(html), "Formular wartet auf Daten");
 }
 
+// 172. 1.24.0: Bildschirmfoto mit Auslöser (KC-CLUB-BILDSCHIRMFOTO)
+{
+  assert.ok(/\{ id: "bildschirmfoto", sym: "📸", t: "Bildschirmfoto", los: \(\) => bfStart\(\) \}/.test(html), "Schnellstart-Symbol");
+  assert.ok(/const BF_BIB = "lib\/html2canvas\.min\.js\?v=1\.4\.1"/.test(html) && !/cdn\.jsdelivr\.net\/npm\/html2canvas|unpkg\.com\/html2canvas/.test(html), "Bibliothek liegt lokal");
+  const lib = lies("lib/html2canvas.min.js");
+  assert.ok(/html2canvas 1\.4\.1/.test(lib.slice(0, 200)) && /Released under MIT License/.test(lib.slice(0, 300)), "html2canvas 1.4.1, MIT");
+  assert.ok(/ignoreElements: \(el\) => el\.id === "bfAusloeser"/.test(html), "Auslöser nicht mit auf dem Bild");
+  const w = html.slice(html.indexOf("async function bfWeiter("), html.indexOf("// ---------- Datei-/Fotoauswahl (KC-CLUB-KAMERA)"));
+  assert.ok(!/api\("nachricht_senden"/.test(w) && /teilenChatWahl\(\)/.test(w) && /teilenArchiv\(\)/.test(w), "nichts wird ungefragt gesendet; vorhandene Wege");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

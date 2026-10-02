@@ -1,5 +1,17 @@
 # Änderungen
 
+## 1.24.0 – 2026-10-02 (DEV)
+
+- KC-CLUB-BILDSCHIRMFOTO (Wunsch Hansi „erst Symbol antippen, dann Inhalt suchen, dann Auslöser“): Schnellstart-Symbol
+  und Suche „📸 Bildschirmfoto“ blenden einen verschiebbaren roten Auslöser ein (bleibt beim Wechseln der Ansicht).
+  Auslöser → die App bildet den sichtbaren Bereich ab (Auslöser und Meldungen nicht mit drauf), Blitz, Vorschau.
+  Darauf rot einzeichnen (Rückgängig/Alles weg), dann: in einen Chat (vorhandener Teilen-Weg), als Problem an Hansi
+  (neue Nachricht an den Admin mit Bild und Ansicht/Version), ins Archiv (Archiv-Ablage), aufs Handy (Teilen bzw.
+  Download) oder neues Foto. Nichts wird automatisch gesendet oder gespeichert.
+- Grenzen (Web-App): nur die Club-App selbst, kein Video, keine fremden Apps – dafür bleibt die Handy-eigene Aufnahme.
+- Bibliothek html2canvas 1.4.1 (MIT, kostenlos) liegt unter lib/ und wird erst beim ersten Foto geladen;
+  SHA-256 e87e5507…38eab8cb, identisch von jsdelivr und unpkg geprüft. Keine Abhängigkeit zur Laufzeit von fremden Servern.
+
 ## 1.23.3 – 2026-10-02 (DEV)
 
 - KC-CLUB-HELFEN/-LEIHEN Nachtrag (Abgleich mit dem besprochenen Vorschlag, Freigabe Hansi „bau 1, 2 und 3“):

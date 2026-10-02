@@ -593,6 +593,15 @@
   .hl-editzeile { display: grid; grid-template-columns: auto 1fr auto auto; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--linie); }
   .hl-editzeile .hl-sym { font-size: 1.4rem; }
   .hl-editzeile.aus { opacity: .5; }
+  /* KC-CLUB-BILDSCHIRMFOTO (1.24.0): verschiebbarer Auslöser, Blitz, Vorschau mit Einzeichnen */
+  .bf-ausloeser { position: fixed; right: 14px; bottom: calc(96px + env(safe-area-inset-bottom)); z-index: 35; /* unter Fenstern (.blatt 40) */ display: flex; align-items: flex-start; touch-action: none; user-select: none; }
+  .bf-knopf { width: 64px; height: 64px; border-radius: 50%; border: 4px solid #fff; background: #d0021b; color: #fff; font-size: 1.7rem; box-shadow: 0 6px 18px rgba(0,0,0,.35), 0 0 0 3px #d0021b; cursor: pointer; }
+  .bf-knopf:active { transform: scale(.92); }
+  .bf-zu { width: 26px; height: 26px; margin-left: -14px; border-radius: 50%; border: 2px solid #fff; background: #333; color: #fff; font-size: .8rem; font-weight: 800; cursor: pointer; }
+  .bf-blitz { position: fixed; inset: 0; background: #fff; z-index: 95; pointer-events: none; animation: bfBlitz .45s ease-out forwards; }
+  @keyframes bfBlitz { from { opacity: .85; } to { opacity: 0; } }
+  .bf-rahmen { border: 2px solid var(--linie); border-radius: 12px; background: var(--karte2); text-align: center; padding: 4px; } /* ohne overflow:hidden – sonst schrumpft die Vorschau im Fenster */
+  .bf-rahmen canvas { display: block; margin: 0 auto; border-radius: 8px; height: 48vh; width: auto; max-width: 100%; touch-action: none; cursor: crosshair; }
   /* KC-CLUB-MINIKACHELN (1.23.1, Wunsch Hansi): kleine Kacheln nebeneinander, Antippen → großes Info-Fenster */
   .mini-kacheln { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin: 0 0 10px; }
   .mini-kachel { background: var(--karte); color: var(--text); border: 2px solid transparent; border-radius: 16px; padding: 10px; box-shadow: var(--schatten); text-align: left; cursor: pointer; display: grid; gap: 3px; align-content: start; font: inherit; min-width: 0; }
@@ -1885,7 +1894,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.23.3"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.24.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2714,6 +2723,7 @@ const SCHNELL = [
   // KC-CLUB-HELFEN / KC-CLUB-LEIHEN (1.23.3): direkt ins Formular
   { id: "hilfe", sym: "🙋", t: "Hilfe suchen", kachel: "helfen", los: () => { hlStart("helfen"); hilfeNeu(); } },
   { id: "ausleihen", sym: "📦", t: "Ausleihen", kachel: "helfen", los: () => { hlStart("leihen"); leihNeu(); } },
+  { id: "bildschirmfoto", sym: "📸", t: "Bildschirmfoto", los: () => bfStart() }, // KC-CLUB-BILDSCHIRMFOTO (1.24.0)
 ];
 const SCHNELL_STANDARD = ["schreiben", "termin", "zettel", "foto", "standort", "dienst", "suchen", "sos"];
 const schnellStand = () => ({ an: true, ids: null, ...(INIT?.einstellungen?.schnellstart || {}) });
@@ -7056,6 +7066,125 @@ function teilenArchiv() {
     ] });
 }
 
+// ---------- KC-CLUB-BILDSCHIRMFOTO (1.24.0, Wunsch Hansi): Auslöser antippen → in Ruhe hingehen → Foto der App → einzeichnen → senden ----------
+// Am Handy darf eine Web-App nur sich selbst abbilden (kein Fremd-Bildschirm, kein Video). Die App zeichnet sich dafür selbst
+// ab (html2canvas, MIT, liegt in lib/ – nichts wird von fremden Servern geladen). Gespeichert wird nur, was man selbst wählt.
+const BF = { bild: null, striche: [], zug: null, laden: null };
+const BF_BIB = "lib/html2canvas.min.js?v=1.4.1";
+function bfBibliothek() {
+  if (window.html2canvas) return Promise.resolve();
+  return BF.laden ||= new Promise((ok, fehler) => {
+    const s = document.createElement("script"); s.src = BF_BIB; s.onload = () => ok(); s.onerror = () => { BF.laden = null; fehler(new Error("Bildschirmfoto konnte nicht geladen werden – bitte Internet prüfen.")); };
+    document.head.appendChild(s);
+  });
+}
+function bfStart() {
+  bfBibliothek().catch(() => {}); // schon mal im Hintergrund laden
+  document.querySelectorAll(".blatt:not(.versteckt)").forEach((b) => b.classList.add("versteckt")); // offene Fenster zu (wie „Zurück“)
+  if (!$("bfAusloeser")) {
+    document.body.insertAdjacentHTML("beforeend", `<div id="bfAusloeser" class="bf-ausloeser" role="group" aria-label="Bildschirmfoto">
+      <button class="bf-knopf" onclick="bfAusloesen()" aria-label="Foto machen">📸</button><button class="bf-zu" onclick="bfEnde()" aria-label="Auslöser schließen">✕</button></div>`);
+    bfZiehbar($("bfAusloeser"));
+  }
+  melde("📸 Geh in Ruhe dahin, wo du fotografieren willst – dann den roten Auslöser drücken. Er lässt sich verschieben.");
+}
+function bfEnde() { $("bfAusloeser")?.remove(); }
+// Auslöser mit dem Finger verschieben (kurzes Tippen löst aus, Ziehen nicht)
+function bfZiehbar(el) {
+  let start = null;
+  el.addEventListener("pointerdown", (e) => { if (e.target.closest(".bf-zu")) return; const r = el.getBoundingClientRect(); start = { x: e.clientX, y: e.clientY, l: r.left, t: r.top, weg: false }; });
+  window.addEventListener("pointermove", (e) => {
+    if (!start) return; const dx = e.clientX - start.x, dy = e.clientY - start.y;
+    if (!start.weg && Math.hypot(dx, dy) < 8) return; start.weg = true;
+    el.style.left = Math.max(4, Math.min(innerWidth - el.offsetWidth - 4, start.l + dx)) + "px"; el.style.top = Math.max(4, Math.min(innerHeight - el.offsetHeight - 4, start.t + dy)) + "px";
+    el.style.right = "auto"; el.style.bottom = "auto";
+  });
+  window.addEventListener("pointerup", () => { if (start?.weg) el.dataset.gezogen = String(Date.now()); start = null; });
+}
+async function bfAusloesen() {
+  const a = $("bfAusloeser"); if (!a || Date.now() - Number(a.dataset.gezogen || 0) < 300) return;
+  try {
+    await bfBibliothek();
+    a.style.visibility = "hidden";
+    const bg = getComputedStyle(document.body).backgroundColor;
+    const c = await window.html2canvas(document.body, {
+      x: scrollX, y: scrollY, width: innerWidth, height: innerHeight, windowWidth: innerWidth, windowHeight: innerHeight,
+      scale: Math.min(2, devicePixelRatio || 1), useCORS: true, logging: false, backgroundColor: bg,
+      ignoreElements: (el) => el.id === "bfAusloeser" || !!el.classList?.contains("meldung"),
+      // Mischfarben (color-mix) kann die Bibliothek nicht – im Abbild durch schlichte Flächen ersetzen
+      onclone: bfKlonGlaetten,
+    });
+    a.style.visibility = "";
+    document.body.insertAdjacentHTML("beforeend", '<div class="bf-blitz"></div>'); setTimeout(() => document.querySelector(".bf-blitz")?.remove(), 450);
+    try { navigator.vibrate?.(40); } catch {}
+    BF.bild = c; BF.striche = [];
+    bfVorschau();
+  } catch (e) { if (a) a.style.visibility = ""; melde(e.message || "Bildschirmfoto hat nicht geklappt.", true); }
+}
+// Der Browser rechnet Mischfarben (color-mix) in „color(srgb …)“ um – das kennt die Bibliothek nicht. Im Abbild (nur in der
+// Kopie, die Seite selbst bleibt unverändert) werden solche Werte in rgba() umgeschrieben; Deko-Pseudoelemente entfallen.
+const bfRgba = (v) => String(v).replace(/color\(srgb\s+([\d.e-]+)\s+([\d.e-]+)\s+([\d.e-]+)(?:\s*\/\s*([\d.e-]+%?))?\)/g, (_, r, g, b, a) =>
+  `rgba(${Math.round(r * 255)}, ${Math.round(g * 255)}, ${Math.round(b * 255)}, ${a === undefined ? 1 : a.endsWith("%") ? parseFloat(a) / 100 : a})`);
+const BF_FARBFELDER = ["color", "background-color", "background-image", "border-top-color", "border-right-color", "border-bottom-color", "border-left-color", "outline-color", "box-shadow", "text-shadow", "text-decoration-color", "fill", "stroke", "caret-color", "column-rule-color"];
+function bfKlonGlaetten(d) {
+  const st = d.createElement("style"); st.textContent = ".kachel::after{background:none!important}.warten{display:none!important}*{box-shadow:none!important}"; d.head.appendChild(st);
+  const win = d.defaultView || window;
+  for (const el of d.querySelectorAll("*")) {
+    const cs = win.getComputedStyle(el);
+    for (const f of BF_FARBFELDER) { const v = cs.getPropertyValue(f); if (v && v.includes("color(")) el.style.setProperty(f, bfRgba(v), "important"); }
+  }
+}
+function bfVorschau() {
+  const f = blattAuf("bfBlatt", `<h3 style="margin-top:0">📸 Dein Bildschirmfoto</h3>
+    <p class="hinweis" style="margin:0">✏️ Mit dem Finger rot einkreisen oder Pfeile malen, wo das Problem ist.</p>
+    <div class="bf-rahmen"><canvas id="bfLeinwand"></canvas></div>
+    <div class="knoepfe" style="margin:0"><button class="knopf klein" onclick="bfZurueck()">↩️ Rückgängig</button><button class="knopf klein" onclick="BF.striche=[];bfMalen()">🧽 Alles weg</button></div>
+    <div class="knoepfe" style="flex-direction:column;align-items:stretch">
+      <button class="knopf haupt" onclick="bfWeiter('chat')">💬 In einen Chat schicken</button>
+      <button class="knopf" onclick="bfWeiter('problem')">🆘 Als Problem an Hansi</button>
+      <button class="knopf" onclick="bfWeiter('archiv')">🗄️ In mein Archiv</button>
+      <button class="knopf" onclick="bfWeiter('speichern')">💾 Aufs Handy speichern / teilen</button>
+      <button class="knopf" onclick="bfWeiter('nochmal')">📸 Neues Foto</button>
+      <button class="knopf" onclick="$('bfBlatt').remove();bfEnde()">✕ Verwerfen und Auslöser schließen</button></div>`);
+  const lw = $("bfLeinwand"); lw.width = BF.bild.width; lw.height = BF.bild.height;
+  const punkt = (e) => { const r = lw.getBoundingClientRect(); return [(e.clientX - r.left) * lw.width / r.width, (e.clientY - r.top) * lw.height / r.height]; };
+  lw.addEventListener("pointerdown", (e) => { e.preventDefault(); lw.setPointerCapture(e.pointerId); BF.zug = [punkt(e)]; BF.striche.push(BF.zug); bfMalen(); });
+  lw.addEventListener("pointermove", (e) => { if (!BF.zug) return; BF.zug.push(punkt(e)); bfMalen(); });
+  const ab = () => { BF.zug = null; }; lw.addEventListener("pointerup", ab); lw.addEventListener("pointercancel", ab);
+  bfMalen(); return f;
+}
+function bfMalen() {
+  const lw = $("bfLeinwand"); if (!lw || !BF.bild) return; const g = lw.getContext("2d");
+  g.drawImage(BF.bild, 0, 0);
+  g.strokeStyle = "#e0102a"; g.lineWidth = Math.max(5, lw.width / 90); g.lineCap = g.lineJoin = "round";
+  for (const s of BF.striche) { g.beginPath(); s.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); if (s.length === 1) g.lineTo(s[0][0] + 0.1, s[0][1]); g.stroke(); }
+}
+function bfZurueck() { BF.striche.pop(); bfMalen(); }
+function bfDatei() {
+  const lw = $("bfLeinwand"), z = new Date(), name = `Bildschirmfoto-${heuteIso()}-${String(z.getHours()).padStart(2, "0")}${String(z.getMinutes()).padStart(2, "0")}.png`;
+  return new Promise((ok, fehler) => lw.toBlob((b) => (b ? ok(new File([b], name, { type: "image/png" })) : fehler(new Error("Bild konnte nicht erstellt werden."))), "image/png"));
+}
+async function bfWeiter(wohin) {
+  if (wohin === "nochmal") { $("bfBlatt")?.remove(); BF.bild = null; return melde("📸 Bereit – Auslöser drücken, wenn du so weit bist."); }
+  let datei; try { datei = await bfDatei(); } catch (e) { return melde(e.message, true); }
+  if (wohin === "speichern") {
+    try { if (navigator.canShare?.({ files: [datei] })) { await navigator.share({ files: [datei], title: datei.name }); return; } } catch (e) { if (e?.name === "AbortError") return; }
+    const a = document.createElement("a"); a.href = URL.createObjectURL(datei); a.download = datei.name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 30000); return melde("💾 Gespeichert (Ordner „Downloads“)");
+  }
+  $("bfBlatt")?.remove(); bfEnde();
+  if (wohin === "chat") { TEILEN = { text: "", dateien: [datei] }; return teilenChatWahl(); }
+  if (wohin === "archiv") { TEILEN = { text: "", dateien: [datei] }; return teilenArchiv(); }
+  if (wohin === "problem") {
+    TEILEN = { text: `🆘 Problem in der App (Ansicht: ${aktuelleAnsicht}, Version ${APP_VERSION}): `, dateien: [datei] };
+    await teilenInChat(null);
+    const admins = (MITGLIEDER || []).filter((m) => m.admin && m.person_id !== ICH?.person_id).map((m) => m.person_id);
+    if (admins.length) { empfWahl.personen = admins; empfListe(); }
+    if ($("neuBetreff")) $("neuBetreff").value = "🆘 Problem in der App";
+    melde("🆘 Bild ist angehängt – kurz schreiben, was nicht klappt, dann ➤ senden");
+  }
+}
+
 // ---------- Datei-/Fotoauswahl (KC-CLUB-KAMERA) ----------
 // Galerie/Kamera laufen über fremde Apps. Manche Handys (Xiaomi + Chrome) lassen die aus der App nicht aufgehen –
 // dann erscheint ein Hinweis mit der Kamera in der App (ohne fremde App). Gemessen wird nur, ob sich etwas geöffnet hat.
@@ -9656,6 +9785,7 @@ function suAppListe() {
     ["🙋", "Hilfe suchen (Wer kann helfen?)", "hilfe helfen helfer aufruf aufbau abbau tische tragen kochen spülen einkauf fahrdienst verkauf stand", () => { hlStart("helfen"); hilfeNeu(); }],
     ["📦", "Etwas ausleihen", "ausleihen leihen verleih stehtisch bierzelt garnitur pavillon zapfanlage glühwein kühlbox bräter warmhalte kabeltrommel", () => { hlStart("leihen"); leihNeu(); }],
     ["💝", "Spendenprojekt vorschlagen", "spende spenden spendenprojekt kinderhospiz geld verein", () => { zeige("vorschlaege"); vorschlagForm("spende"); }],
+    ["📸", "Bildschirmfoto der App", "bildschirmfoto screenshot foto bildschirm aufnahme zeigen problem", () => bfStart()],
     ["🆘", "Wo bin ich? (SOS)", "wo bin ich adresse standort notfall sos", () => sosStart()], ["🪪", "Mein Notfallpass", "notfallpass allergien medikamente blutgruppe notfall", () => { sosStart(); nfpBearbeiten(); }],
   ].map(([sym, t, w, fn]) => ({ sym, t, w, fn }));
   const kach = Object.values(KACHELN).flat().filter((k) => !k.bald && (!k.nur || k.nur()))
