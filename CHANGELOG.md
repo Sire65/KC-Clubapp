@@ -1,5 +1,10 @@
 # Änderungen
 
+## 1.52.2 – 2026-10-02
+- KC-CLUB-STATUS-PFEIL (Wunsch Hansi): Pfeil des Status-Felds mittig auf der Unterkante statt rechts zwischen Feld und LEDs
+  (Feld dadurch schmaler). Feld-Pfeile der drei Kopf-Felder in der erweiterten Ansicht einheitlich tiefer auf dem rechten
+  Rand (74 %) – der rechte sitzt nicht mehr unten im Text „Nächster Termin“, sondern unter » zum Blättern.
+
 ## 1.52.1 – 2026-10-02
 - KC-CLUB-NOTBETRIEB (Probe Hansi): Das orange Notbetrieb-Band verdeckte rote/dunkle Meldungen oben (z. B. „Im Notbetrieb
   gerade nicht möglich“). Meldungen und SOS-Balken rutschen jetzt um die Höhe des Bandes nach unten (CSS-Variable --notH,

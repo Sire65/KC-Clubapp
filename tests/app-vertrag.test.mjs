@@ -2389,6 +2389,13 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.match(html, /notBand"\)\?\.remove\(\);[^\n]*removeProperty\("--notH"\)/, "beim Ausschalten zurückgesetzt");
 }
 
+// 216. 1.52.2: Status-Pfeil auf der Unterkante, Feld-Pfeile einheitlich (Wunsch Hansi)
+{
+  assert.match(html, /\.statuschip \.stpfeil \{[^}]*left: 50%; bottom: 0; transform: translate\(-50%, 50%\) rotate\(90deg\)/, "Status-Pfeil mittig auf der Unterkante");
+  assert.match(html, /body:not\(\.einfach\) \.kacheln3 \.mini \.mpfeil \{ top: 74%; \}/, "Feld-Pfeile in der erweiterten Ansicht einheitlich");
+  assert.doesNotMatch(html, /\.mini:last-child \.mpfeil \{ top: auto; bottom: 8px/, "rechter Pfeil nicht mehr unten im Text");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
