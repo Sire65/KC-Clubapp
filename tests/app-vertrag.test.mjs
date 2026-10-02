@@ -1962,6 +1962,13 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(!/api\("nachricht_senden"/.test(w) && /teilenChatWahl\(\)/.test(w) && /teilenArchiv\(\)/.test(w), "nichts wird ungefragt gesendet; vorhandene Wege");
 }
 
+// 173. 1.24.1: nach Zusage Themenvorschlag anbieten (KC-CLUB-THEMA-FRAGE)
+{
+  assert.ok(/if \(a === "ja" && bisher !== "ja" && TREFFEN_IDX\.get\(id\)\?\.art !== "veranstaltung"\) themaFragen\(id\)/.test(html), "Frage nur bei neuer Zusage zum Club-Treffen");
+  assert.ok(/Deine Vorschläge sind immer willkommen!/.test(html) && /zeige\("vorschlaege"\); VS_ZIEL = id;/.test(html), "Hinweis + Vorschläge");
+  assert.ok(/VS_ZIEL && VORSCHLAG_TREFFEN\.some\(\(t\) => t\.id === VS_ZIEL\) \? VS_ZIEL/.test(html), "Sitzung vorgewählt");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

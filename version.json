@@ -1,10 +1,17 @@
 {
-  "version": "1.24.0",
+  "version": "1.24.1",
   "datum": "2026-10-02",
   "neu": [
+    "💡 Wer bei einem Club-Treffen auf „Ich komme“ tippt, wird gefragt, ob er ein Thema für die Sitzung vorschlagen möchte – bei „Ja“ öffnen sich die Vorschläge mit kurzem Hinweis, die Sitzung ist schon vorgewählt",
     "📸 Bildschirmfoto der App: Symbol antippen (Schnellstart oder Suche) → in Ruhe zur richtigen Stelle gehen → roten Auslöser drücken. Danach mit dem Finger rot einkreisen und das Bild in einen Chat, als Problem an Hansi, ins Archiv oder aufs Handy schicken"
   ],
   "verlauf": [
+    {
+      "version": "1.24.1",
+      "neu": [
+        "💡 Wer bei einem Club-Treffen auf „Ich komme“ tippt, wird gefragt, ob er ein Thema für die Sitzung vorschlagen möchte – bei „Ja“ öffnen sich die Vorschläge mit kurzem Hinweis, die Sitzung ist schon vorgewählt"
+      ]
+    },
     {
       "version": "1.24.0",
       "neu": [

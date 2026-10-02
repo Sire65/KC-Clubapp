@@ -1,5 +1,12 @@
 # Änderungen
 
+## 1.24.1 – 2026-10-02 (DEV)
+
+- KC-CLUB-THEMA-FRAGE (Wunsch Hansi): nach „Ich komme“ bei einem Club-Treffen (nicht bei Veranstaltungen, nicht beim
+  Zurücknehmen) fragt ein Fenster „Möchtest du … ein Thema vorschlagen?“. „Ja“ öffnet die Vorschläge mit dem Hinweis
+  „Deine Vorschläge sind immer willkommen! Tippe jetzt oben rechts auf „＋ Neu“ … Es kommt auf die Tagesordnung für … Schon
+  mal vielen Dank!“, „＋ Neu“ pulsiert kurz, und im Formular ist diese Sitzung schon vorgewählt. „Nein, danke“ schließt nur.
+
 ## 1.24.0 – 2026-10-02 (DEV)
 
 - KC-CLUB-BILDSCHIRMFOTO (Wunsch Hansi „erst Symbol antippen, dann Inhalt suchen, dann Auslöser“): Schnellstart-Symbol
