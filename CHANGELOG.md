@@ -1,5 +1,13 @@
 # Änderungen
 
+## 1.41.0 – 2026-10-02 (DEV)
+
+- KC-CLUB-MITFAHRT-BESCHEID (Wunsch Hansi): Wer mitfahren will, aber es gibt noch keine Fahrt mit freiem Platz, bekommt ein
+  Meldungsfenster „Zurzeit gibt es noch keine Mitfahrgelegenheit. Soll ich das für dich im Auge behalten und dich
+  informieren, sobald eine neue Gelegenheit eingestellt wird?“ – Ja / Nein. Ja trägt die Suche ein (vorhandene Funktion:
+  neue Fahrt → Push/Mail „🚗 Mitfahrgelegenheit gefunden“ an alle Suchenden). Auslöser: „🙋 Ich suche …“ ohne freie Plätze
+  und Schnellstart „🚗 Mitfahrt“ (nach Zusage zum nächsten Treffen). Hinweis im Fenster: andere sehen den Namen als suchend.
+
 ## 1.40.0 – 2026-10-02 (DEV)
 
 - KC-CLUB-DIENSTWUNSCH (Hinweis Hansi „beim Twinkey-Aufruf keine drehende Kochmütze“): Die Ladeanzeige der Twinkey-Seite

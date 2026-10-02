@@ -90,7 +90,7 @@ assert.ok(/history\.replaceState\(\{ basis: true \}/.test(html) && /addEventList
 assert.ok(/history\.pushState\(st,/.test(html), "Ansichten legen keinen Verlaufseintrag an");
 for (const z of ["nachrichten", "mitglieder"]) assert.ok(html.includes(`<button class="mini" onclick="zeige('${z}')">`) || (z === "nachrichten" && html.includes(`<button class="mini\${n ? " mini-neu" : ""}" onclick="zeige('nachrichten')">`)), `Kennzahl → ${z} fehlt`); // 1.22.0: orange bei Neuem
 // 0.27.2: „Nächstes Treffen“ führt über zumTreffen() in Termine (Kalender, Tag ausgewählt)
-assert.ok(html.includes(`<button class="mini" onclick="zumTreffen()">`) && /function zumTreffen\(\) \{[\s\S]{0,400}zeige\("termine"\)/.test(html), "Kennzahl → termine fehlt");
+assert.ok(html.includes(`<button class="mini" onclick="zumTreffen()">`) && /function zumTreffen\(mitfahrt\) \{[\s\S]{0,400}zeige\("termine"\)/.test(html), "Kennzahl → termine fehlt");
 const kopfHtml = html.slice(html.indexOf('<section id="v-start">'), html.indexOf('id="heroInfo"'));
 assert.ok(!kopfHtml.includes("⚙️"), "Zahnrad gehört nicht mehr in den Kopf");
 assert.ok(/onclick="webseite\(\)"/.test(kopfHtml), "Kochmütze → Internetseite fehlt");
@@ -629,7 +629,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 
 // 48. 0.27.2: „Nächstes Treffen“ öffnet den Kalender im richtigen Monat mit ausgewähltem Tag
 {
-  const z = html.slice(html.indexOf("function zumTreffen()"), html.indexOf("function kalHeute()"));
+  const z = html.slice(html.indexOf("function zumTreffen(mitfahrt)"), html.indexOf("function kalHeute()"));
   assert.ok(/kalTagWahl = tag; termineArt = "kalender";/.test(z) && /kalM = \+tag\.slice\(5, 7\) - 1/.test(z), "Sprung zum Treffen-Tag fehlt");
   assert.ok(/onclick="zumTreffen\(\)"><b style="font-size:1\.05rem">\$\{bisTreffen\}/.test(html), "Kachel „Nächstes Treffen“ springt nicht zum Tag");
   assert.ok(/da < alle \? `\$\{da\}\/\$\{alle\}` : da/.test(html), "Register zeigen nicht „sichtbar/gesamt“");
@@ -2182,6 +2182,15 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/<div class="muetze"><img src="\.\.\/kc-kochmuetze-weiss\.webp" alt=""><\/div>Twinkey wird geladen/.test(seite) && /#dwLaden \.muetze\{[^}]*background:linear-gradient\(135deg,#4d0c16,#741521\)[^}]*animation:dwDreh/.test(seite), "weiße Mütze auf dunkelrotem Kreis, dreht sich");
   assert.ok(!/filter:invert\(\.2\) sepia/.test(seite), "keine fast unsichtbare blasse Mütze mehr");
   assert.ok(/<div class="warten an"[^>]*><div class="muetze"><img src="kc-kochmuetze-weiss\.webp" alt=""><\/div><b>Twinkey wird geladen …<\/b><\/div>/.test(html) && /onload="this\.previousElementSibling\?\.remove\(\);/.test(html), "Mütze schon während die Seite lädt, danach weg");
+}
+
+// 194. 1.41.0: „Keine Mitfahrgelegenheit – soll ich Bescheid geben?“ (KC-CLUB-MITFAHRT-BESCHEID)
+{
+  assert.ok(/onclick="mfSuchenFragen\('\$\{art\}', '\$\{esc\(bezugId\)\}', \$\{liste\.some\(\(m\) => !m\.eigen && m\.frei > 0\)\}\)">🙋 Ich suche eine Mitfahrgelegenheit/.test(html), "Suchen-Knopf fragt, wenn nichts frei ist");
+  assert.ok(/Zurzeit gibt es noch keine Mitfahrgelegenheit/.test(html) && /Soll ich das für dich im Auge behalten und dich informieren, sobald eine neue Gelegenheit eingestellt wird\?/.test(html), "Text wie gewünscht");
+  assert.ok(/async function mfBescheidJa\(art, bezugId\) \{[^]{0,120}api\("mitfahrt_suchen", \{ bezug_art: art, bezug_id: bezugId, an: true \}/.test(html), "Ja = Suche eintragen (vorhandene Benachrichtigung)");
+  assert.ok(/titel: "🚗 Mitfahrgelegenheit gefunden"/.test(server), "Server benachrichtigt Suchende bei neuer Fahrt");
+  assert.ok(/\{ id: "mitfahrt", sym: "🚗", t: "Mitfahrt", los: \(\) => zumTreffen\(true\) \}/.test(html) && /if \(!darf \|\| mf\.some\(\(m\) => m\.eigen \|\| m\.dabei \|\| m\.frei > 0\)/.test(html), "Schnellstart prüft – nur nach Zusage, nur ohne freie Fahrt");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

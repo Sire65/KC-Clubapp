@@ -1,7 +1,8 @@
 {
-  "version": "1.40.0",
+  "version": "1.41.0",
   "datum": "2026-10-02",
   "neu": [
+    "🚗 Noch keine Mitfahrgelegenheit? Die App fragt: „Soll ich das für dich im Auge behalten?“ – bei Ja bekommst du Bescheid, sobald jemand eine Fahrt einstellt",
     "📝 Dienstwünsche (Twinkey): Beim Öffnen dreht sich jetzt gut sichtbar die Kochmütze, bis alles geladen ist",
     "🚗 Mitfahren mit echten Sitzplätzen: Jeder Fahrer hat ein kleines Auto mit seinen Plätzen – grün = frei (antippen und reservieren), blau = dein Platz, rot gestrichen = belegt. Große Autos zeigen weitere Sitzreihen wie ein Kleinbus",
     "📋 Die Tages-Übersicht vom Start kannst du jetzt jederzeit wieder öffnen: „📋 Übersicht“ bei „Heute wichtig“ und im Büro (Clubleitung)",
@@ -33,6 +34,12 @@
     "📨 Danach mit einem Tipp: Einladung mit Tagesordnung an alle senden – und später alle erinnern, die noch nicht geantwortet haben (Admin)"
   ],
   "verlauf": [
+    {
+      "version": "1.41.0",
+      "neu": [
+        "🚗 Noch keine Mitfahrgelegenheit? Die App fragt: „Soll ich das für dich im Auge behalten?“ – bei Ja bekommst du Bescheid, sobald jemand eine Fahrt einstellt"
+      ]
+    },
     {
       "version": "1.40.0",
       "neu": [

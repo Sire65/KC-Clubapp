@@ -2001,7 +2001,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.40.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.41.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2821,7 +2821,7 @@ const SCHNELL = [
   { id: "sos", sym: "🆘", t: "SOS", los: () => sosStart() },
   { id: "status", sym: "🟢", t: "Status", kachel: "status", los: () => statusBlatt() },
   { id: "erstattung", sym: "💶", t: "Erstattung", kachel: "erstattung", los: () => zeige("erstattung") },
-  { id: "mitfahrt", sym: "🚗", t: "Mitfahrt", los: () => zumTreffen() },
+  { id: "mitfahrt", sym: "🚗", t: "Mitfahrt", los: () => zumTreffen(true) },
   { id: "vorschlaege", sym: "🗳️", t: "Vorschläge", kachel: "vorschlaege", los: () => zeige("vorschlaege") },
   { id: "mitglieder", sym: "👥", t: "Mitglieder", los: () => zeige("mitglieder") },
   { id: "online", sym: "👋", t: "Online", los: () => onlineBlatt() },
@@ -5181,9 +5181,10 @@ function termineModus(m) {
   treffenLaden();
 }
 // KC-CLUB-ZUM-TREFFEN (0.27.2): „Nächstes Treffen“ antippen → Kalender springt in den Monat, der Tag ist ausgewählt
-function zumTreffen() {
+function zumTreffen(mitfahrt) {
   const t = INIT?.naechstesTreffen;
   if (!t) return zeige("termine");
+  if (mitfahrt) setTimeout(() => mfNaechstesPruefen(t.id), 900); // KC-CLUB-MITFAHRT-BESCHEID (1.41.0)
   const tag = berlinIso(t.beginn);
   kalJ = +tag.slice(0, 4); kalM = +tag.slice(5, 7) - 1; kalTagWahl = tag; termineArt = "kalender";
   zeige("termine");
@@ -9121,7 +9122,7 @@ function mitfahrtBlock(art, bezugId, liste, offen, suche = [], darf = true) {
   const suchZeile = suche.length ? `<div class="hinweis" style="margin:6px 0 2px">🙋 <b>Sucht eine Mitfahrgelegenheit:</b> ${suche.map((s) => esc(s.name) + (s.notiz ? ` <i>(${esc(s.notiz)})</i>` : "")).join(", ")}</div>` : "";
   const knoepfe = aktiv ? [
     !ichFahre && !ichDabei ? (ichSuche ? `<button class="knopf klein gruen" onclick="mitfahrtSuchen('${art}', '${esc(bezugId)}', false)">✔ Du suchst · zurücknehmen</button>`
-      : `<button class="knopf klein" onclick="mitfahrtSuchen('${art}', '${esc(bezugId)}', true)">🙋 Ich suche eine Mitfahrgelegenheit</button>`) : "",
+      : `<button class="knopf klein" onclick="mfSuchenFragen('${art}', '${esc(bezugId)}', ${liste.some((m) => !m.eigen && m.frei > 0)})">🙋 Ich suche eine Mitfahrgelegenheit</button>`) : "",
     !ichFahre && !ichDabei ? `<button class="knopf klein" onclick="mitfahrtAnbieten('${art}', '${esc(bezugId)}')">🚗 Ich biete eine Mitfahrgelegenheit</button>` : "",
   ].filter(Boolean).join("") : "";
   const legende = liste.length ? '<div class="mf-legende"><span><i class="mf-q mf-frei"></i>frei – antippen</span><span><i class="mf-q mf-du"></i>dein Platz</span><span><i class="mf-q mf-belegt"></i>belegt</span></div>' : "";
@@ -9166,6 +9167,34 @@ async function mfSitzBuchen(id, fahrer) {
 async function mfSitzFreigeben(id, fahrer) {
   if (!confirm(`Deinen Platz bei ${fahrer} wieder freigeben?\n\n${fahrer} bekommt Bescheid.`)) return;
   mitfahrtPlatz(id, false);
+}
+// KC-CLUB-MITFAHRT-BESCHEID (1.41.0, Wunsch Hansi): Wer mitfahren will, aber es gibt (noch) keine Fahrt mit freiem Platz →
+// Meldungsfenster „Soll ich das für dich im Auge behalten?“ – Ja trägt die Suche ein (vorhandene Funktion: wer danach eine
+// Fahrt einstellt, löst die Benachrichtigung „🚗 Mitfahrgelegenheit gefunden“ an alle Suchenden aus). Nein = nichts passiert.
+function mfSuchenFragen(art, bezugId, hatFrei) {
+  if (hatFrei) return mitfahrtSuchen(art, bezugId, true); // es gibt freie Plätze → wie bisher (Fahrer bekommen Bescheid)
+  mfBescheidFenster(art, bezugId);
+}
+function mfBescheidFenster(art, bezugId, titel) {
+  blattAuf("mfBescheid", `<h3 style="margin-top:0">🚗 Zurzeit gibt es noch keine Mitfahrgelegenheit</h3>
+    ${titel ? `<p style="margin:0 0 6px"><b>${esc(titel)}</b></p>` : ""}
+    <p style="margin:0 0 8px">Soll ich das für dich im Auge behalten und dich informieren, sobald eine neue Gelegenheit eingestellt wird?</p>
+    <p class="hinweis" style="margin:0 0 10px">Die anderen sehen dann bei diesem Termin „🙋 sucht eine Mitfahrgelegenheit“ mit deinem Namen. Du kannst das jederzeit zurücknehmen.</p>
+    <div class="knoepfe" style="flex-direction:column;align-items:stretch"><button class="knopf haupt" style="text-align:center" onclick="mfBescheidJa('${art}', '${esc(bezugId)}')">👀 Ja, bitte Bescheid geben</button>
+    <button class="knopf" style="text-align:center" onclick="$('mfBescheid').remove()">Nein, danke</button></div>`);
+}
+async function mfBescheidJa(art, bezugId) {
+  $("mfBescheid")?.remove();
+  try { await api("mitfahrt_suchen", { bezug_art: art, bezug_id: bezugId, an: true }, { warten: true }); melde("👀 Mach ich – du bekommst Bescheid, sobald jemand eine Mitfahrgelegenheit einstellt."); mitfahrtNeuLaden(art); }
+  catch (e) { melde(e.message, true); }
+}
+// Schnellstart „🚗 Mitfahrt“: nach dem Sprung zum nächsten Treffen nachsehen – keine Fahrt mit freiem Platz → Meldungsfenster
+async function mfNaechstesPruefen(id) {
+  let t = null; try { t = ((await api("treffen_liste")).treffen || []).find((x) => x.id === id); } catch { return; }
+  if (!t || t.status === "abgesagt") return;
+  const darf = t.art === "veranstaltung" || t.meine === "ja", mf = t.mitfahrten || [];
+  if (!darf || mf.some((m) => m.eigen || m.dabei || m.frei > 0) || (t.mitfahrtSuche || []).some((x) => x.eigen)) return;
+  if (aktuelleAnsicht === "termine" && !document.querySelector(".blatt:not(.versteckt)")) mfBescheidFenster("treffen", t.id, t.titel);
 }
 async function mitfahrtSuchen(art, bezugId, an) {
   try { const r = await api("mitfahrt_suchen", { bezug_art: art, bezug_id: bezugId, an }); melde(an ? `🙋 Eingetragen${r.fahrerBenachrichtigt ? ` – ${r.fahrerBenachrichtigt === 1 ? "ein Fahrer weiß" : r.fahrerBenachrichtigt + " Fahrer wissen"} Bescheid` : " – wer eine Fahrt anbietet, bekommt Bescheid"}` : "Suche zurückgenommen"); mitfahrtNeuLaden(art); }
