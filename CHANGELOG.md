@@ -1,5 +1,12 @@
 # Änderungen
 
+## 1.40.0 – 2026-10-02 (DEV)
+
+- KC-CLUB-DIENSTWUNSCH (Hinweis Hansi „beim Twinkey-Aufruf keine drehende Kochmütze“): Die Ladeanzeige der Twinkey-Seite
+  zeigte die weiße Mütze blass eingefärbt auf Hellbeige – praktisch unsichtbar. Jetzt wie in der Club-App: weiße Mütze auf
+  dunkelrotem Kreis, dreht sich. Zusätzlich erscheint die Mütze schon im Fenster, während die Twinkey-Seite selbst noch lädt
+  (verschwindet beim Laden der Seite). DP2-Dateien (dp2/) unverändert.
+
 ## 1.39.0 – 2026-10-02 (DEV)
 
 - KC-CLUB-MITFAHRT-SITZE (Wunsch Hansi, Entwurf freigegeben): Mitfahrgelegenheiten mit echten Sitzplätzen – je Fahrer ein

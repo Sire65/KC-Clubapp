@@ -11,13 +11,16 @@
      kommen aus der Club-App: Tage/Kernzeit von DP2, eigener Wunschstand aus dem Wunsch-Eingang (Supabase). -->
 <style>.ux-userchip{display:none!important}
 #dwLaden{position:fixed;inset:0;display:grid;place-items:center;font:600 1.05rem system-ui,sans-serif;color:#5a2a1c;background:#fff8ee;z-index:99;text-align:center;padding:24px}
-#dwLaden img{width:84px;height:auto;display:block;margin:0 auto 12px;animation:dwDreh 1.4s linear infinite}
-@keyframes dwDreh{to{transform:rotate(360deg)}}
-@media (prefers-reduced-motion:reduce){#dwLaden img{animation:none}}</style>
+/* 1.40.0 (Hinweis Hansi „keine drehende Kochmütze“): die weiße Mütze war auf Hellbeige fast unsichtbar –
+   jetzt wie in der Club-App: weiße Mütze auf dunkelrotem Kreis, der sich dreht */
+#dwLaden .muetze{width:84px;height:84px;border-radius:50%;margin:0 auto 14px;display:grid;place-items:center;background:linear-gradient(135deg,#4d0c16,#741521);box-shadow:0 4px 14px rgba(77,12,22,.35);animation:dwDreh 1.1s linear infinite}
+#dwLaden .muetze img{width:54px;height:54px;display:block}
+@keyframes dwDreh{from{transform:rotateY(0deg)}to{transform:rotateY(360deg)}}
+@media (prefers-reduced-motion:reduce){#dwLaden .muetze{animation-duration:3s}}</style>
 </head>
 <body>
-<div id="dwLaden" role="status"><div><img src="../kc-kochmuetze-weiss.webp" alt="" style="filter:invert(.2) sepia(1) hue-rotate(-30deg)">Twinkey wird geladen …</div></div>
+<div id="dwLaden" role="status"><div><div class="muetze"><img src="../kc-kochmuetze-weiss.webp" alt=""></div>Twinkey wird geladen …</div></div>
 <div id="kcdpUxRoot"></div>
-<script src="../dp2-club/lader.js?v=1.39.0"></script>
+<script src="../dp2-club/lader.js?v=1.40.0"></script>
 </body>
 </html>

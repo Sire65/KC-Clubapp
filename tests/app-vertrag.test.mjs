@@ -2176,6 +2176,14 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/if \(!confirm\(`🚗 Diesen Platz bei \$\{fahrer\} für dich reservieren\?/.test(html) && /if \(!confirm\(`Deinen Platz bei \$\{fahrer\} wieder freigeben\?/.test(html), "Buchen/Freigeben mit Rückfrage");
 }
 
+// 193. 1.40.0: Twinkey-Ladeanzeige mit sichtbarer drehender Kochmütze (KC-CLUB-DIENSTWUNSCH)
+{
+  const seite = lies("dienstwunsch.html");
+  assert.ok(/<div class="muetze"><img src="\.\.\/kc-kochmuetze-weiss\.webp" alt=""><\/div>Twinkey wird geladen/.test(seite) && /#dwLaden \.muetze\{[^}]*background:linear-gradient\(135deg,#4d0c16,#741521\)[^}]*animation:dwDreh/.test(seite), "weiße Mütze auf dunkelrotem Kreis, dreht sich");
+  assert.ok(!/filter:invert\(\.2\) sepia/.test(seite), "keine fast unsichtbare blasse Mütze mehr");
+  assert.ok(/<div class="warten an"[^>]*><div class="muetze"><img src="kc-kochmuetze-weiss\.webp" alt=""><\/div><b>Twinkey wird geladen …<\/b><\/div>/.test(html) && /onload="this\.previousElementSibling\?\.remove\(\);/.test(html), "Mütze schon während die Seite lädt, danach weg");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
