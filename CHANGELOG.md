@@ -1,5 +1,14 @@
 # Änderungen
 
+## 1.47.1 – 2026-10-02 (DEV)
+
+- KC-CLUB-DIENSTWUNSCH / KC-DP-TWINKEY-EINFACH (Wunsch Hansi vor Wilfrieds Eingabe): DP2 auf Build 257 RC übernommen
+  (dp3 `37bd067`). Sperr-Frage mit drei klaren Antworten (Weiter ohne Antwort gesperrt), ein Zurück je Schritt,
+  „Bisherige Besetzung“ nur noch bei der (Wunschzeit) als Link, kurze Tageszusammenfassung (Details zugeklappt),
+  Tageskacheln „Mi., 2.12. · Aufbau · 08:00–18:00“ mit Statusfarbe, „Überspringen“ auf dem Willkommensbildschirm entfällt.
+  Begriffe (Kann-Zeit)/(Wunschzeit) bleiben wie auf Papiermatrix und Excel. Datenformat unverändert. Test 205, Tests
+  142/146/149/151/199/201 erweitert. RC.
+
 ## 1.47.0 – 2026-10-02
 - KC-CLUB-MG-UMSCHALTER: Mitgliederübersicht hat oben einen Umschalter 🔲 Kacheln | ☰ Liste (gleiche Einstellung wie unter Darstellung), daneben 👥 Alle | 🟢 Online.
 - KC-CLUB-ONLINE-ZAHL: Im Startfeld „Mitglieder“ statt „keiner online“ nur eine LED mit Zahl (grün = jemand online, grau = niemand; Stand unbekannt = grau mit „?“).

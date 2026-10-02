@@ -1,11 +1,16 @@
 {
-  "version": "1.47.0",
+  "version": "1.47.1",
   "datum": "2026-10-02",
   "neu": [
-    "🔧 Kleine Systemverbesserungen",
-    "🧑‍🍳 Dienstwunsch mit Twinkey einfacher: „x von 13 Tagen fertig“, Knopf zum nächsten offenen Tag, Rückfrage vor „Fertig“, Kann-Zeit nicht mehr automatisch der ganze Tag, Wunschzeit erst nach Auswahl"
+    "🧑‍🍳 Dienstwunsch mit Twinkey übersichtlicher: klare Frage „Ich kann / ganzer Tag gesperrt / zeitweise gesperrt“, Tage als farbige Kacheln (grün = fertig), kurze Zusammenfassung, weniger Knöpfe"
   ],
   "verlauf": [
+    {
+      "version": "1.47.1",
+      "neu": [
+        "🧑‍🍳 Dienstwunsch mit Twinkey übersichtlicher: klare Frage „Ich kann / ganzer Tag gesperrt / zeitweise gesperrt“, Tage als farbige Kacheln (grün = fertig), kurze Zusammenfassung, weniger Knöpfe"
+      ]
+    },
     {
       "version": "1.47.0",
       "neu": [
