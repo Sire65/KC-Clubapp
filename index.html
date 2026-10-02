@@ -2005,7 +2005,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.42.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.42.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -7902,10 +7902,17 @@ async function unterhaltungWeg(fuerAlle, gefragt) {
   try { await api(fuerAlle ? "unterhaltung_loeschen" : "unterhaltung_ausblenden", { id: chatId }); melde(fuerAlle ? "🗑️ Für alle gelöscht" : "🙈 Aus deiner Liste entfernt"); zeige("nachrichten"); neuLaden(); }
   catch (e) { melde(e.message, true); }
 }
-const bildCache = {};
-async function bildLaden(img) {
-  const id = img.dataset.anlage;
-  try { if (!bildCache[id]) bildCache[id] = (await api("anlage_url", { id })).url; img.src = bildCache[id]; } catch {}
+// KC-CLUB-BILD-LINK (1.42.1, Meldung Klaus 02.10. „img nicht geladen“): Der Server gibt Bild-Links 10 Minuten aus
+// (anlage_url, 600 s). Früher wurde der Link für immer gemerkt – nach 10 Minuten blieb das Bild beim Neuzeichnen leer.
+// Jetzt: höchstens 8 Minuten wiederverwenden; schlägt das Laden trotzdem fehl, einmal mit frischem Link nachladen.
+const bildCache = {}, BILD_LINK_MS = 8 * 60 * 1000;
+async function bildLaden(img, frisch = false) {
+  const id = img.dataset.anlage, c = bildCache[id];
+  try {
+    if (frisch || !c || c.bis < Date.now()) bildCache[id] = { url: (await api("anlage_url", { id })).url, bis: Date.now() + BILD_LINK_MS };
+    if (!frisch) img.addEventListener("error", () => { if (!img.dataset.nochmal) { img.dataset.nochmal = "1"; bildLaden(img, true); } }, { once: true });
+    img.src = bildCache[id].url;
+  } catch {}
 }
 async function anlageOeffnen(id) { try { const r = await api("anlage_url", { id }); window.open(r.url, "_blank"); } catch (e) { melde(e.message, true); } }
 

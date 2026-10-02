@@ -1,5 +1,12 @@
 # Änderungen
 
+## 1.42.1 – 2026-10-02 (DEV)
+
+- KC-CLUB-BILD-LINK (Fehlermeldung Klaus 02.10., 9:33 „img nicht geladen: Bildschirmfoto…“): Bilder im Chat bekommen vom
+  Server einen 10-Minuten-Link (anlage_url). Die App hat ihn für immer gemerkt – bei länger offenem Chat blieb ein Bild
+  nach dem Neuzeichnen leer. Jetzt wird der Link höchstens 8 Minuten wiederverwendet und bei einem Ladefehler einmal frisch
+  geholt. Datei und Zugriffsrecht waren in Ordnung (geprüft). Server unverändert.
+
 ## 1.42.0 – 2026-10-02 (DEV)
 
 - KC-CLUB-HILFE-ANGEBOT (Wunsch Hansi): Unter „🤝 Helfen & Leihen → Wer kann helfen?“ neben „🙋 Ich suche Hilfe“ jetzt

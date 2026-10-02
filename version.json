@@ -1,7 +1,8 @@
 {
-  "version": "1.42.0",
+  "version": "1.42.1",
   "datum": "2026-10-02",
   "neu": [
+    "🖼️ Bilder im Chat bleiben jetzt auch bei lange geöffnetem Chat sichtbar (vorher konnten sie nach 10 Minuten leer werden)",
     "🤲 Neu unter „Helfen & Leihen“: „Ich biete Hilfe an“ – z. B. Einrichtung der Club-App oder Einführung in den Bilderrechner. Mitglieder tippen die Kachel an und fragen einen Termin an oder schreiben eine Nachricht",
     "🚗 Noch keine Mitfahrgelegenheit? Die App fragt: „Soll ich das für dich im Auge behalten?“ – bei Ja bekommst du Bescheid, sobald jemand eine Fahrt einstellt",
     "📝 Dienstwünsche (Twinkey): Beim Öffnen dreht sich jetzt gut sichtbar die Kochmütze, bis alles geladen ist",
@@ -35,6 +36,12 @@
     "📨 Danach mit einem Tipp: Einladung mit Tagesordnung an alle senden – und später alle erinnern, die noch nicht geantwortet haben (Admin)"
   ],
   "verlauf": [
+    {
+      "version": "1.42.1",
+      "neu": [
+        "🖼️ Bilder im Chat bleiben jetzt auch bei lange geöffnetem Chat sichtbar (vorher konnten sie nach 10 Minuten leer werden)"
+      ]
+    },
     {
       "version": "1.42.0",
       "neu": [

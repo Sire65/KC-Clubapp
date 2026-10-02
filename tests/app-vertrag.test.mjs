@@ -2207,6 +2207,14 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(!/senden\(\)/.test(na), "Nachricht wird nur vorbereitet, nicht gesendet");
 }
 
+// 196. 1.42.1: Bild-Links laufen nicht mehr ab (KC-CLUB-BILD-LINK)
+{
+  const f = html.slice(html.indexOf("const bildCache = {}"), html.indexOf("async function anlageOeffnen("));
+  assert.ok(/BILD_LINK_MS = 8 \* 60 \* 1000/.test(f) && /c\.bis < Date\.now\(\)/.test(f), "Link höchstens 8 Minuten wiederverwenden");
+  assert.ok(/addEventListener\("error", \(\) => \{ if \(!img\.dataset\.nochmal\)/.test(f) && /bildLaden\(img, true\)/.test(f), "bei Ladefehler einmal frisch nachladen");
+  assert.ok(/createSignedUrl\(att\.object_path, 600,/.test(server), "Server-Link 10 Minuten (Cache muss kürzer sein)");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
