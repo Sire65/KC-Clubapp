@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.30.0";
+const SERVER_VERSION = "1.31.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -3017,6 +3017,36 @@ Köcheclub Werne`,
         }
         const sort = (a: any, b: any) => a.datum.localeCompare(b.datum) || a.name.localeCompare(b.name);
         return json({ heute, tage, geburtstage: geburtstage.sort(sort), jubilaeen: jubilaeen.sort(sort), ohneFreigabe });
+      }
+
+      // ----- KC-CLUB-BUERO-MITGLIEDERLISTE (1.31.0): Liste zum Drucken – Kontaktdaten nach denselben Regeln wie die Mitglieder-Seite -----
+      case "buero_mitgliederliste": {
+        nurVorstand(ich);
+        const leute = await aktiveMitglieder();
+        const ids = leute.map((m) => m.person_id);
+        const [{ data: pe }, { data: fr }, { data: rollen }, { data: mg }] = await Promise.all([
+          db.from("kc_core_people").select("person_id,phone,email,street,postal_code,city,birth_date,given_name,family_name,display_name").in("person_id", ids),
+          db.from("kc_club_freigaben").select("person_id,bereich,erlaubt").in("person_id", ids).eq("erlaubt", true),
+          db.from("kc_club_rollen").select("person_id,aemter").in("person_id", ids),
+          db.from(AKTIONEN_QUELLE.tabelle).select("payload").eq("org_id", ORG).eq("section_key", AKTIONEN_QUELLE.mitglieder).maybeSingle(),
+        ]);
+        const mgListe = Array.isArray(mg?.payload?.data) ? mg.payload.data : [];
+        const ausManager = (p: any) => mgListe.find((x: any) => namensSchluessel(x.firstName, x.lastName) === namensSchluessel(p.given_name || p.display_name.split(" ")[0], p.family_name || p.display_name.split(" ").slice(-1)[0]));
+        let verborgen = 0;
+        const liste = leute.map((m) => {
+          const p: any = (pe ?? []).find((x: any) => x.person_id === m.person_id) ?? {}, km: any = ausManager({ ...m, ...p });
+          const frei = (b: string) => (fr ?? []).some((x: any) => x.person_id === m.person_id && x.bereich === b);
+          const darf = (f: string) => m.person_id === ich.person_id || ich.admin || (ich.kontakte && frei("kontakt_" + f));
+          const werte: Record<string, unknown> = { handy: txt(p.phone, 40) || null, festnetz: txt(km?.phone, 40) || null, mail: txt(p.email, 120) || null,
+            adresse: p.street || p.city ? `${txt(p.street, 120)}, ${txt(p.postal_code, 10)} ${txt(p.city, 80)}`.replace(/^, |, $/g, "").trim() : null };
+          const kontakt: Record<string, unknown> = {};
+          for (const f of KONTAKT_FELDER) { if (!werte[f]) continue; if (darf(f)) kontakt[f] = werte[f]; else verborgen++; }
+          return { person_id: m.person_id, name: m.display_name, nachname: txt(p.family_name, 80) || m.display_name.split(" ").slice(-1)[0], aemter: (rollen ?? []).find((r: any) => r.person_id === m.person_id)?.aemter ?? [],
+            eintritt: /^\d{4}-\d{2}-\d{2}/.test(String(km?.joinedAt || "")) ? String(km.joinedAt).slice(0, 10) : null,
+            geburtstag: p.birth_date && (frei("geburtstag") || m.person_id === ich.person_id) ? String(p.birth_date).slice(5, 10) : null, kontakt };
+        });
+        await protokoll(ich.person_id, "buero_mitgliederliste", { anzahl: liste.length, verborgen });
+        return json({ liste, verborgen, admin: ich.admin });
       }
 
       // ----- KC-CLUB-LEIHEN (1.23.0): Vereinsgegenstände ausleihen – Anfrage an die Clubleitung, eine Zusage genügt -----

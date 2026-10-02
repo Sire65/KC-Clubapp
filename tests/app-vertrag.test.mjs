@@ -2049,6 +2049,18 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/'runder_geburtstag'/.test(lies("supabase/migrations/20261002_kc_club_v1300_runder_geburtstag.sql")), "Migration");
 }
 
+// 180. 1.31.0: Büro – Mitgliederliste drucken (KC-CLUB-BUERO-MITGLIEDERLISTE)
+{
+  assert.ok(aktionen.has("buero_mitgliederliste") && aufrufe.has("buero_mitgliederliste"), "Aktion fehlt");
+  const f = server.slice(server.indexOf('case "buero_mitgliederliste"'), server.indexOf('case "leihen_liste"'));
+  assert.ok(/nurVorstand\(ich\)/.test(f.slice(0, 120)), "nur Clubleitung");
+  assert.ok(/const darf = \(f: string\) => m\.person_id === ich\.person_id \|\| ich\.admin \|\| \(ich\.kontakte && frei\("kontakt_" \+ f\)\);/.test(f), "gleiche Kontakt-Regeln wie Mitglieder-Seite");
+  assert.ok(/if \(darf\(f\)\) kontakt\[f\] = werte\[f\]; else verborgen\+\+;/.test(f) && /await protokoll\(ich\.person_id, "buero_mitgliederliste"/.test(f), "Verborgenes nur gezählt, Abruf protokolliert");
+  assert.ok(!/birth_date\)\.slice\(0, 4\)/.test(f), "kein Geburtsjahr");
+  for (const k of ["uebersicht", "telefon", "adressen", "unterschrift", "abhaken"]) assert.ok(new RegExp(`\\b${k}: \\{ sym:`).test(html.slice(html.indexOf("const ML_ARTEN"), html.indexOf("const ML_SPALTEN"))), `Listenart ${k}`);
+  assert.ok(/mitgliederliste: \{ bauen: \(\) => druckMitgliederliste\(\) \}/.test(html) && /Vertraulich – nur für Vereinszwecke/.test(html), "Druck mit Vertraulich-Hinweis");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

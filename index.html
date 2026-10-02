@@ -889,6 +889,9 @@
   .bu-top-knoepfe button { width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--linie); background: var(--karte); color: var(--text); font-weight: 800; cursor: pointer; }
   .bu-top-knoepfe button:disabled { opacity: .3; }
   .bu-leiste { position: sticky; bottom: calc(80px + env(safe-area-inset-bottom)); padding: 8px 0; z-index: 5; }
+  .ml-tab { width: 100%; border-collapse: collapse; font-size: .9rem; }
+  .ml-tab th { text-align: left; padding: 6px 8px; border-bottom: 2px solid var(--rot); white-space: nowrap; }
+  .ml-tab td { padding: 6px 8px; border-bottom: 1px solid var(--linie); }
   /* KC-CLUB-THEMA-FRAGE (1.24.1) */
   .vs-hinweis { background: var(--gelbbg); color: var(--text); font-size: 1.05rem; line-height: 1.45; border: 2px solid var(--gelb); }
   .vs-puls { animation: vsPuls 1s ease-in-out 6; }
@@ -1928,7 +1931,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.30.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.31.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -5577,7 +5580,7 @@ async function buLaden() {
   buZeigen();
 }
 function buZurueck() { if (BU.sicht !== "start") { BU.sicht = "start"; buLaden(); window.scrollTo(0, 0); } else zeige("start"); }
-function buZeigen() { $("buInhalt").innerHTML = BU.sicht === "sitzung" ? buSitzungHtml() : BU.sicht === "eingang" ? buEingangHtml() : BU.sicht === "brief" ? buBriefHtml() : BU.sicht === "termine" ? buTermineHtml() : BU.sicht === "kontakt" ? buKontaktHtml() : BU.sicht === "nachher" ? buNachherHtml() : BU.sicht === "feste" ? buFesteHtml() : buStartHtml(); }
+function buZeigen() { $("buInhalt").innerHTML = BU.sicht === "sitzung" ? buSitzungHtml() : BU.sicht === "eingang" ? buEingangHtml() : BU.sicht === "brief" ? buBriefHtml() : BU.sicht === "termine" ? buTermineHtml() : BU.sicht === "kontakt" ? buKontaktHtml() : BU.sicht === "nachher" ? buNachherHtml() : BU.sicht === "feste" ? buFesteHtml() : BU.sicht === "liste" ? buListeHtml() : buStartHtml(); }
 // Nächster sinnvoller Schritt für eine Sitzung
 function buNaechster(t) {
   if (!t) return null;
@@ -5615,7 +5618,7 @@ function buStartHtml() {
       ${k("veroeffentlichen", "📢", "Protokoll veröffentlichen", "alle bekommen Bescheid · 7 Tage Einspruch", "buNachherWahl('📢 Welches Protokoll?')", nt?.text.startsWith("📢") ? '<span class="marke gelb">jetzt dran</span>' : "")}
     </div>
     <div class="abschnitt"><h3>👥 Mitglieder</h3></div>
-    <div class="mini-kacheln">${k("kontakt", "👥", "Mitglieder kontaktieren", "Gruppe wählen · schreiben · anrufen", "buKontakt()")}${k("feste", "🎂", "Geburtstage & Jubiläen", festBald ? `${festBald} in den nächsten 7 Tagen` : "gratulieren · Liste drucken", "buFeste()", festHeute.length ? '<span class="marke gelb">heute!</span>' : "")}${k("liste", "📇", "Mitgliederliste", "Status · Ämter · Kontakt", "zeige('mitglieder')")}</div>
+    <div class="mini-kacheln">${k("kontakt", "👥", "Mitglieder kontaktieren", "Gruppe wählen · schreiben · anrufen", "buKontakt()")}${k("feste", "🎂", "Geburtstage & Jubiläen", festBald ? `${festBald} in den nächsten 7 Tagen` : "gratulieren · Liste drucken", "buFeste()", festHeute.length ? '<span class="marke gelb">heute!</span>' : "")}${k("liste", "📇", "Mitgliederliste drucken", "Übersicht · Telefon · Adressen · Unterschriften", "buListe()")}</div>
     <div class="abschnitt"><h3>✉️ Schreiben</h3></div>
     <div class="mini-kacheln">${k("brief", "✉️", "Briefbogen", "Brief mit Logo – Spende, Dank, Einladung …", "buBrief()")}</div>
     <div class="abschnitt"><h3>📥 Eingang ${summe ? `<span class="marke gelb">${summe}</span>` : ""}</h3></div>
@@ -6107,6 +6110,55 @@ function druckFeste() {
   const zeile = (f) => `<tr><td style="padding:1.5mm 2mm;border-bottom:.2mm solid #bbb;white-space:nowrap">${esc(fTagDp.format(new Date(f.datum + "T12:00:00Z")))}</td><td style="padding:1.5mm 2mm;border-bottom:.2mm solid #bbb"><b>${esc(f.name)}</b></td><td style="padding:1.5mm 2mm;border-bottom:.2mm solid #bbb">${esc(f.art)}</td><td style="padding:1.5mm 2mm;border-bottom:.2mm solid #bbb;width:30mm">☐ gratuliert</td></tr>`;
   return { titel: "Geburtstage & Jubiläen", unter: `${d.tage === 366 ? "Das nächste Jahr" : `Die nächsten ${d.tage} Tage`} ab ${dz(d.heute)}`, fuss: "Geburtstage nur bei Freigabe · Alter nur bei runden Geburtstagen mit eigener Freigabe",
     html: alle.length ? `<table style="width:100%;border-collapse:collapse;font-size:3.6mm"><thead><tr style="text-align:left;border-bottom:.5mm solid #741521"><th style="padding:1.5mm 2mm">Datum</th><th style="padding:1.5mm 2mm">Name</th><th style="padding:1.5mm 2mm">Anlass</th><th></th></tr></thead><tbody>${alle.map(zeile).join("")}</tbody></table>` : "<p>In diesem Zeitraum steht nichts an.</p>" };
+}
+
+// ---------- KC-CLUB-BUERO-MITGLIEDERLISTE (1.31.0, Wunsch Hansi): Mitgliederliste zum Drucken – Art antippen, Vorschau, drucken ----------
+// Kontaktdaten nur nach den Regeln der Mitglieder-Seite (eigene, Admin, sonst nur Freigegebenes); Arten als Registry.
+const ML_ARTEN = {
+  uebersicht: { sym: "📇", t: "Übersicht", u: "Name · Ämter · Mitglied seit", spalten: ["name", "aemter", "eintritt"] },
+  telefon: { sym: "📞", t: "Telefonliste", u: "Name · Handy · Festnetz · E-Mail", spalten: ["name", "handy", "festnetz", "mail"] },
+  adressen: { sym: "🏠", t: "Adressliste", u: "Name · Anschrift", spalten: ["name", "adresse"] },
+  unterschrift: { sym: "✍️", t: "Unterschriften", u: "z. B. Anwesenheit, Empfang", spalten: ["nr", "name", "unterschrift"] },
+  abhaken: { sym: "☑️", t: "Abhakliste", u: "z. B. Beitrag, Rückmeldung", spalten: ["nr", "name", "haken", "notiz"] },
+};
+const ML_SPALTEN = { nr: "Nr.", name: "Name", aemter: "Ämter", eintritt: "Mitglied seit", handy: "Handy", festnetz: "Festnetz", mail: "E-Mail", adresse: "Anschrift", unterschrift: "Unterschrift", haken: "✓", notiz: "Notiz" };
+let ML = { daten: null, art: "uebersicht", sort: "name", titel: "" };
+async function buListe() {
+  BU.sicht = "liste"; buZeigen(); window.scrollTo(0, 0);
+  try { ML.daten = await api("buero_mitgliederliste"); } catch (e) { return melde(e.message, true); }
+  if (aktuelleAnsicht === "buero" && BU.sicht === "liste") buZeigen();
+}
+function mlZeilen() {
+  const l = (ML.daten?.liste || []).slice();
+  return ML.sort === "eintritt" ? l.sort((a, b) => (a.eintritt || "9999").localeCompare(b.eintritt || "9999") || a.nachname.localeCompare(b.nachname))
+    : l.sort((a, b) => a.nachname.localeCompare(b.nachname) || a.name.localeCompare(b.name));
+}
+function mlWert(m, s, i) {
+  const k = m.kontakt || {};
+  return { nr: String(i + 1), name: m.name, aemter: (m.aemter || []).join(", "), eintritt: m.eintritt ? m.eintritt.split("-").reverse().join(".") : "", handy: k.handy || "", festnetz: k.festnetz || "", mail: k.mail || "", adresse: k.adresse || "", unterschrift: "", haken: "☐", notiz: "" }[s] ?? "";
+}
+function buListeHtml() {
+  const d = ML.daten, a = ML_ARTEN[ML.art];
+  const vorschau = d ? `<div class="karte" style="overflow-x:auto"><table class="ml-tab"><thead><tr>${a.spalten.map((s) => `<th>${esc(ML_SPALTEN[s])}</th>`).join("")}</tr></thead>
+    <tbody>${mlZeilen().map((m, i) => `<tr>${a.spalten.map((s) => `<td>${esc(mlWert(m, s, i))}</td>`).join("")}</tr>`).join("")}</tbody></table></div>` : '<div class="karte hinweis">Wird geladen …</div>';
+  const hinweis = d && d.verborgen && ["telefon", "adressen"].includes(ML.art) ? `<p class="hinweis">🔒 ${d.verborgen} Angabe${d.verborgen === 1 ? " ist" : "n sind"} nicht freigegeben und ${d.verborgen === 1 ? "bleibt" : "bleiben"} leer.</p>` : "";
+  return `<div class="karte bu-gruss">📇 <b>Mitgliederliste</b> – Art antippen, prüfen, drucken. ${d ? `${d.liste.length} aktive Mitglieder.` : ""}</div>
+    <div class="mini-kacheln">${Object.entries(ML_ARTEN).map(([k, x]) => `<button class="mini-kachel${ML.art === k ? " mk-offen" : ""}" onclick="ML.art='${k}';buZeigen()"><span class="mk-sym">${x.sym}</span><span class="mk-titel">${esc(x.t)}</span><span class="mk-unter">${esc(x.u)}</span></button>`).join("")}</div>
+    <div class="hl-chips" style="margin-top:8px"><button class="chip${ML.sort === "name" ? " an" : ""}" onclick="ML.sort='name';buZeigen()">🔤 nach Name</button><button class="chip${ML.sort === "eintritt" ? " an" : ""}" onclick="ML.sort='eintritt';buZeigen()">📅 nach Eintritt</button></div>
+    ${["unterschrift", "abhaken"].includes(ML.art) ? `<label class="feld">Überschrift (freiwillig)<input maxlength="100" placeholder="${ML.art === "unterschrift" ? "z. B. Anwesenheit Jahreshauptversammlung" : "z. B. Jahresbeitrag 2027"}" value="${esc(ML.titel)}" oninput="ML.titel=this.value"></label>` : ""}
+    ${hinweis}${vorschau}
+    <div class="bu-leiste"><div class="knoepfe" style="margin:0"><button class="knopf haupt" style="flex:1;text-align:center" ${d ? "" : "disabled"} onclick="druckStarten('mitgliederliste')">🖨️ Vorschau & Drucken</button><button class="knopf" onclick="buZurueck()">🗂️ Büro</button></div></div>`;
+}
+function druckMitgliederliste() {
+  const d = ML.daten, a = ML_ARTEN[ML.art]; if (!d) throw new Error("Bitte die Liste im Büro öffnen.");
+  const breit = { nr: "8mm", haken: "10mm", unterschrift: "60mm", notiz: "45mm" };
+  const hoch = ["unterschrift", "abhaken"].includes(ML.art) ? "height:9mm;" : "";
+  const zelle = "padding:1.4mm 2mm;border-bottom:.2mm solid #999;vertical-align:middle;";
+  const html = `<table style="width:100%;border-collapse:collapse;font-size:3.5mm"><thead><tr style="text-align:left;border-bottom:.5mm solid #741521">${a.spalten.map((s) => `<th style="padding:1.4mm 2mm;${breit[s] ? `width:${breit[s]};` : ""}">${esc(ML_SPALTEN[s])}</th>`).join("")}</tr></thead>
+    <tbody>${mlZeilen().map((m, i) => `<tr style="break-inside:avoid">${a.spalten.map((s) => `<td style="${zelle}${hoch}${s === "name" ? "font-weight:700;" : ""}">${esc(mlWert(m, s, i))}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+  const privat = ["telefon", "adressen"].includes(ML.art);
+  return { titel: ML.titel.trim() || `Mitgliederliste – ${a.t}`, unter: `${d.liste.length} aktive Mitglieder · ${ML.sort === "eintritt" ? "nach Eintritt" : "nach Name"}${ML.titel.trim() ? " · " + a.t : ""}`, html,
+    fuss: privat ? "Vertraulich – nur für Vereinszwecke, nicht weitergeben · nur freigegebene Angaben" : "" };
 }
 
 // ---------- KC-CLUB-HELFEN & KC-CLUB-LEIHEN (1.23.0, Wunsch Hansi): eine Kachel, zwei Bereiche – fast alles per Antippen ----------
@@ -9031,7 +9083,8 @@ const DRUCKARTEN = {
   protokoll: { bauen: () => druckProtokoll() },
   sitzung: { bauen: () => druckSitzung() }, // KC-CLUB-BUERO (1.25.0): Protokoll-Vorlage mit Schreiblinien
   brief: { bauen: () => druckBrief() },
-  feste: { bauen: () => druckFeste() }, // KC-CLUB-BUERO-FESTE (1.29.0) // KC-CLUB-BRIEFBOGEN (1.26.0): eigener Briefkopf, ohne App-Kopf/-Fuß
+  feste: { bauen: () => druckFeste() }, // KC-CLUB-BUERO-FESTE (1.29.0)
+  mitgliederliste: { bauen: () => druckMitgliederliste() }, // KC-CLUB-BUERO-MITGLIEDERLISTE (1.31.0) // KC-CLUB-BRIEFBOGEN (1.26.0): eigener Briefkopf, ohne App-Kopf/-Fuß
   erstattung: { titel: "🖨️ Erstattungsantrag drucken", optionen: () => druckErstattungOptionen(), bauen: (o) => druckErstattung(o) },
   anleitung: { bauen: () => druckAnleitung() },
   ueberblick: { bauen: () => druckUeberblick() },

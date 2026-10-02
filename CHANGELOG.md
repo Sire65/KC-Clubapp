@@ -1,5 +1,14 @@
 # Änderungen
 
+## 1.31.0 – 2026-10-02 (DEV)
+
+- KC-CLUB-BUERO-MITGLIEDERLISTE (Wunsch Hansi): Büro-Kachel „📇 Mitgliederliste drucken“. Server buero_mitgliederliste
+  (nur Clubleitung, protokolliert): aktive Mitglieder mit Ämtern, Eintritt (KC Manager), Geburtstag nur bei Freigabe;
+  Kontaktdaten nach denselben Regeln wie die Mitglieder-Seite (eigene, Admin, sonst nur Freigegebenes mit Recht
+  „Kontakte sehen“) – nicht freigegebene Angaben bleiben leer und werden nur gezählt. Arten als Registry: Übersicht,
+  Telefonliste, Adressliste, Unterschriftenliste, Abhakliste (mit eigener Überschrift); Sortierung nach Name/Eintritt;
+  Vorschau am Bildschirm, Druck über die Druckvorschau; Telefon-/Adressliste mit Fußzeile „vertraulich“.
+
 ## 1.30.0 – 2026-10-02 (DEV)
 
 - KC-CLUB-RUNDER-GEBURTSTAG (Wunsch Hansi „bau den Schalter für runde Geburtstage ein“): neue freiwillige Freigabe je
