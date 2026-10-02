@@ -754,6 +754,7 @@
   .eingabe .innen > #text.wichtig { border: 3px solid #ff9800; box-shadow: 0 0 0 3px rgba(255,152,0,.25); }
   .blase.wichtig { border: 3px solid #ff9800; box-shadow: 0 0 0 3px rgba(255,152,0,.30), var(--schatten); }
   .blase.wichtig .wichtig-marke { display: inline-block; margin: 0 0 4px; padding: 1px 8px; border-radius: 999px; background: #ff9800; color: #1f1300; font-weight: 800; font-size: .78rem; letter-spacing: .02em; }
+  .ni-zeile.ni-wichtig { border: 2px solid #ff9800; border-radius: 12px; padding: 8px 10px; background: rgba(255,152,0,.12); font-weight: 700; }
   .unterh.wichtig-neu { box-shadow: inset 4px 0 0 #ff9800; background: rgba(255,152,0,.10); }
   .unterh .punkt.wichtig { background: #ff9800; color: #1f1300; }
   @media (max-width: 420px) { .eingabe .innen { gap: 6px 5px; } .eingabe .innen > .rund:not(#sendenKnopf) { width: 38px !important; height: 38px !important; } }
@@ -2097,7 +2098,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.53.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.53.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -8052,6 +8053,7 @@ async function nachrichtInfo(id) {
         ${w.kanal === "email" && !w.aufgegeben && w.status === "sent" ? `<div class="hinweis" style="font-size:.8rem">Ob die Mail geöffnet wurde, meldet ein Postfach nicht zurück.</div>` : ""}</div>`).join("");
   f.innerHTML = `<div class="blatt-innen" style="max-height:88vh;overflow-y:auto">
     <h3>ℹ️ Nachricht – Einzelheiten</h3>
+    ${r.wichtig ? '<div class="ni-zeile ni-wichtig"><span>❗ <b>Wichtige Nachricht</b></span><span>Wichtigkeit: hoch</span></div>' : ""}
     <div class="ni-zeile"><span>✍️ Geschrieben ${r.eigen ? "von dir" : "von " + esc(r.von)}</span><span class="hinweis">${esc(niZeit(r.zeit))}</span></div>
     <b>👥 Empfänger${r.empfaenger.length > 1 ? ` – ${gel} von ${r.empfaenger.length} gelesen` : ""}</b>${empf || '<p class="hinweis" style="margin:0">Nur du (Test-Unterhaltung)</p>'}
     ${r.wegeSichtbar ? `<b>🚚 Zustellung</b>${wege}` : ""}

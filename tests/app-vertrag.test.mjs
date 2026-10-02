@@ -2416,6 +2416,14 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.match(mig, /revoke all on kc_club_nachricht_wichtig from anon, authenticated/, "kein Direktzugriff");
 }
 
+// 218. 1.53.1: Wichtig auch in den Nachricht-Infos (KC-CLUB-WICHTIG)
+{
+  const srv = lies("supabase/functions/kc-club/index.ts");
+  assert.match(srv, /wegeSichtbar: darfWege, wichtig: !!wi \}/, "nachricht_details liefert wichtig");
+  assert.match(html, /\$\{r\.wichtig \? '<div class="ni-zeile ni-wichtig">❗ ?<span>|\$\{r\.wichtig \? '<div class="ni-zeile ni-wichtig"><span>❗ <b>Wichtige Nachricht<\/b><\/span><span>Wichtigkeit: hoch<\/span>/, "Info zeigt Wichtigkeit hoch");
+  assert.match(srv, /const stumm = await stummFuer\(/, "stumm bleibt stumm (auch bei ❗)");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.53.0";
+const SERVER_VERSION = "1.53.1";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -2916,7 +2916,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             ereignisse: (ev ?? []).filter((e: any) => e.request_id === r.id).map((e: any) => ({ typ: e.event_type, anbieter: e.provider, zeit: e.created_at })),
           }));
         }
-        return json({ id: m.id, zeit: m.created_at, von: eigen ? "Du" : name(m.sender_person_id), eigen, empfaenger, wege, wegeSichtbar: darfWege });
+        // KC-CLUB-WICHTIG (1.53.1, Wunsch Hansi): in den Infos zeigen, dass es eine wichtige Nachricht ist
+        const { data: wi } = await db.from("kc_club_nachricht_wichtig").select("am").eq("message_id", m.id).maybeSingle();
+        return json({ id: m.id, zeit: m.created_at, von: eigen ? "Du" : name(m.sender_person_id), eigen, empfaenger, wege, wegeSichtbar: darfWege, wichtig: !!wi });
       }
 
       // ----- KC-CLUB-FEHLERPROTOKOLL (0.93.0) -----

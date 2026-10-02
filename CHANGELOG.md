@@ -1,5 +1,10 @@
 # Änderungen
 
+## 1.53.1 – 2026-10-02
+- KC-CLUB-WICHTIG (Wunsch Hansi): In „ℹ️ Nachricht – Einzelheiten“ steht bei wichtigen Nachrichten oben orange umrandet
+  „❗ Wichtige Nachricht – Wichtigkeit: hoch“ (Server: nachricht_details liefert wichtig). Stummgeschaltete Chats bleiben
+  auch bei ❗ stumm (Entscheidung Hansi).
+
 ## 1.53.0 – 2026-10-02
 - KC-CLUB-WICHTIG (Wunsch Hansi): ❗-Knopf unter dem Schreibfeld = Nachricht mit „Wichtigkeit hoch“. Beim Schreiben werden
   Knopf und Schreibfeld orange; die Nachricht erscheint bei allen orange umrandet mit der Marke „❗ WICHTIG“. In der Chat-Liste
