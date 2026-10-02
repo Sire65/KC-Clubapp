@@ -2091,6 +2091,19 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/const zielChat = BF\.chat;/.test(html) && /return teilenInChat\(zielChat\.id\)/.test(html), "Foto zurück in denselben Chat (nur eingefügt, nicht gesendet)");
 }
 
+// 184. 1.33.0: Tages-Übersicht beim Start (KC-CLUB-TAGESINFO)
+{
+  assert.ok(aktionen.has("tagesinfo") && aufrufe.has("tagesinfo"), "Aktion tagesinfo fehlt");
+  const f = server.slice(server.indexOf('case "tagesinfo"'), server.indexOf('case "leihen_liste"'));
+  assert.ok(/nurVorstand\(ich\)/.test(f.slice(0, 120)), "nur Clubleitung");
+  assert.ok(/if \(ich\.admin\) \{/.test(f) && /const kassenwart = ich\.admin \|\| \(ich\.aemter \|\| \[\]\)\.some/.test(f), "Technik nur Admin, Kasse nur Kassenwart/Admin");
+  assert.ok(!/\.insert\(|\.update\(|\.delete\(|senden\(/.test(f), "liest nur, sendet nichts");
+  assert.ok(/const DB_GRENZE_BYTES = 500 \* 1024 \* 1024;/.test(server), "Grenze Free-Tarif");
+  assert.ok(/const tiAmpel = \(wert, gelb, rot\) => \(wert === null \|\| wert === undefined \|\| Number\.isNaN\(wert\) \? "⚪"/.test(html), "fehlender Wert = ⚪, nie grün");
+  assert.ok(/tiAmpel\(t\.db\?\.prozent \?\? null, 70, 90\)/.test(html), "Datenbank-Ampel 70/90");
+  assert.ok(/revoke all on function public\.kc_club_db_groesse\(\) from public, anon, authenticated;/.test(lies("supabase/migrations/20261002_kc_club_v1330_tagesinfo.sql")), "Funktion nur service_role");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

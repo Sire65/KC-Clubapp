@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.32.2";
+const SERVER_VERSION = "1.33.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -1472,6 +1472,8 @@ async function hilfeListe(ich: Ich) {
 const BUERO_TOP_VORNE = ["Begrüßung", "Genehmigung des letzten Protokolls", "Bericht des Kassenwarts"];
 const BUERO_TOP_HINTEN = ["Verschiedenes"];
 const BUERO_ZEILEN = [0, 3, 5, 8, 12];
+// KC-CLUB-TAGESINFO: Grenze der Datenbank im Supabase-Tarif „Free“ (500 MB) – bei Tarifwechsel hier anpassen
+const DB_GRENZE_BYTES = 500 * 1024 * 1024;
 const topVorschlag = (v: any) => v.art === "spende" ? `${v.titel}${(v.spenden ?? []).length > 1 ? ` (zusammen ${euroRund(spendenSumme(v.spenden))})` : ""}` : v.art === "abstimmung" ? `🗳️ ${v.titel}` : v.titel;
 async function bueroNaechste() {
   const { data } = await db.from("kc_club_treffen").select("id,titel,beginn,ort,art,status").eq("status", "geplant").neq("art", "veranstaltung")
@@ -3262,6 +3264,65 @@ Köcheclub Werne`,
         } catch (e) { console.error("fl ablegen", String(e)); }
         await protokoll(ich.person_id, "fl_abgeschlossen", { fall: f.id, abgelegt });
         return json({ ok: true, abgelegt });
+      }
+
+      // ----- KC-CLUB-TAGESINFO (1.33.0, Wunsch Hansi): Tages-Übersicht beim Start – Clubleitung; Kassenwart/Admin mit Extras -----
+      // Nur lesend. „seit“ = letzter Blick auf die Übersicht (vom Gerät, höchstens 7 Tage zurück). Fehlende Messwerte = null (nie grün).
+      case "tagesinfo": {
+        nurVorstand(ich);
+        const jetztMs = Date.now(), seitRoh = Date.parse(String(p.seit || ""));
+        const seit = new Date(Number.isFinite(seitRoh) ? Math.max(seitRoh, jetztMs - 7 * 86400000) : jetztMs - 86400000).toISOString();
+        const heute = berlinTag(new Date());
+        const [eingang, { data: auf }] = await Promise.all([
+          bueroEingang(),
+          db.from("kc_club_aufgaben").select("id,text,faellig").eq("person_id", ich.person_id).is("erledigt_am", null).order("faellig", { nullsFirst: false }).limit(30),
+        ]);
+        const aufgaben = (auf ?? []).filter((a: any) => a.faellig && a.faellig <= heute).map((a: any) => ({ text: a.text, faellig: a.faellig, ueberfaellig: a.faellig < heute }));
+        const aus: any = { seit, jetzt: jetzt(), rolle: ich.admin ? "admin" : (ich.aemter || []).some((a: string) => /^kassenwart/i.test(a)) ? "kassenwart" : "leitung",
+          eingang, aufgaben, aufgabenOffen: (auf ?? []).length };
+        const kassenwart = ich.admin || (ich.aemter || []).some((a: string) => /^kassenwart/i.test(a));
+        if (kassenwart) {
+          const [{ data: lei }, { data: ers }, { data: sp }, { data: fl }] = await Promise.all([
+            db.from("kc_club_ausleihen").select("id,person_id,positionen,rueckgabe,status").in("status", ["genehmigt", "abgeholt"]),
+            db.from("kc_club_erstattung").select("summe").eq("status", "eingereicht"),
+            db.from("kc_club_vorschlaege").select("spenden").eq("art", "spende").eq("status", "offen"),
+            db.from("kc_club_fl_faelle").select("betrag").eq("status", "offen").not("betrag", "is", null),
+          ]);
+          const leute = await personen((lei ?? []).map((a: any) => a.person_id));
+          aus.kasse = {
+            verliehen: (lei ?? []).length,
+            rueckgabe: (lei ?? []).filter((a: any) => a.rueckgabe <= heute).map((a: any) => ({ wer: leute.get(a.person_id)?.display_name || a.person_id, was: (a.positionen ?? []).map((x: any) => `${x.anzahl}× ${x.name}`).join(", "), bis: a.rueckgabe, ueberfaellig: a.rueckgabe < heute })),
+            erstattungen: (ers ?? []).length, erstattungenSumme: (ers ?? []).reduce((s: number, x: any) => s + Number(x.summe || 0), 0),
+            spendenSumme: (sp ?? []).reduce((s: number, v: any) => s + spendenSumme(v.spenden), 0), spendenAnzahl: (sp ?? []).length,
+            freudLeidSumme: (fl ?? []).reduce((s: number, x: any) => s + Number(x.betrag || 0), 0),
+          };
+        }
+        if (ich.admin) {
+          const PROGRAMMFEHLER = ["fehler_skript", "fehler_versprechen", "fehler_api", "fehler_laden"];
+          const [{ data: pr }, { count: fehler }, groesse, status, { data: zug }] = await Promise.all([
+            db.from("kc_club_protokoll").select("person_id,aktion,zeit,details").in("aktion", ["hilferuf", "fehler_sicherheit", "feedback_gesendet"]).gte("zeit", seit).order("zeit", { ascending: false }).limit(30),
+            db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).in("aktion", PROGRAMMFEHLER).gte("zeit", seit),
+            db.rpc("kc_club_db_groesse"),
+            db.rpc("kc_club_sicherheit_status"),
+            db.from("kc_club_zugang").select("person_id,app_version,zuletzt_gesehen").eq("aktiv", true).gte("zuletzt_gesehen", new Date(jetztMs - 30 * 86400000).toISOString()).not("person_id", "like", "KC-P-TEST%"),
+          ]);
+          const neuer = (a: string, b: string) => { const x = a.split(".").map(Number), y = b.split(".").map(Number); for (let i = 0; i < 3; i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); return false; };
+          const alt = (zug ?? []).filter((z: any) => z.app_version && /^\d+\.\d+\.\d+$/.test(z.app_version) && neuer(SERVER_VERSION, z.app_version));
+          const leute = await personen([...(pr ?? []).map((x: any) => x.person_id), ...alt.map((z: any) => z.person_id)]);
+          const n = (pid: string) => leute.get(pid)?.display_name || pid;
+          const st: any = status.data ?? null, bytes = typeof groesse.data === "number" ? groesse.data : Number(groesse.data);
+          aus.technik = {
+            meldungen: (pr ?? []).map((x: any) => ({ art: x.aktion === "hilferuf" ? "problem" : x.aktion === "fehler_sicherheit" ? "sicherheit" : "feedback", wer: n(x.person_id), zeit: x.zeit,
+              text: x.aktion === "hilferuf" ? txt(x.details?.text, 120) || null : x.aktion === "fehler_sicherheit" ? (Number(x.details?.probleme) ? `${x.details.probleme} Punkt(e) offen` : "alles in Ordnung") : null })),
+            programmfehler: fehler ?? null,
+            db: Number.isFinite(bytes) && bytes > 0 ? { bytes, grenze: DB_GRENZE_BYTES, prozent: Math.round((bytes / DB_GRENZE_BYTES) * 100) } : null,
+            spiegelMin: typeof st?.spiegel_min === "number" ? st.spiegel_min : null, sicherungMin: typeof st?.sicherung_min === "number" ? st.sicherung_min : null,
+            sicherungAm: st?.sicherung_am ?? null, ueberwachungMin: typeof st?.ueberwachung_min === "number" ? st.ueberwachung_min : null,
+            alteVersionen: alt.map((z: any) => ({ wer: n(z.person_id), version: z.app_version })).sort((a: any, b: any) => a.version.localeCompare(b.version, undefined, { numeric: true })),
+            aktuell: SERVER_VERSION,
+          };
+        }
+        return json(aus);
       }
 
       // ----- KC-CLUB-LEIHEN (1.23.0): Vereinsgegenstände ausleihen – Anfrage an die Clubleitung, eine Zusage genügt -----

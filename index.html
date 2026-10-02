@@ -904,6 +904,12 @@
   .fl-schritt.aus { opacity: .55; }
   .fl-schritt select, .fl-schritt input[type=date] { width: 100%; padding: 8px; border-radius: 10px; border: 1px solid var(--linie); background: var(--karte); color: var(--text); }
   .fl-abgesprochen { border: 2px solid var(--gelb); border-radius: 12px; padding: 8px; }
+  /* KC-CLUB-TAGESINFO (1.33.0) */
+  .ti-block { margin-top: 12px; }
+  .ti-titel { font-weight: 800; font-size: 1.02rem; margin: 0 0 4px; padding-bottom: 3px; border-bottom: 2px solid var(--linie); }
+  .ti-zeile { display: flex; gap: 8px; align-items: flex-start; width: 100%; text-align: left; background: none; border: none; border-bottom: 1px solid var(--linie); padding: 8px 2px; font: inherit; color: var(--text); cursor: pointer; line-height: 1.35; }
+  .ti-zeile span { flex: 1; }
+  .ti-zeile > b { color: var(--grau); }
   /* KC-CLUB-THEMA-FRAGE (1.24.1) */
   .vs-hinweis { background: var(--gelbbg); color: var(--text); font-size: 1.05rem; line-height: 1.45; border: 2px solid var(--gelb); }
   .vs-puls { animation: vsPuls 1s ease-in-out 6; }
@@ -1947,7 +1953,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.32.2"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.33.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -5581,15 +5587,74 @@ function buGrussFragen(nochmal) {
   try { if (sessionStorage.getItem("kc_buero_gefragt") || localStorage.getItem("kc_buero_frage_aus")) return; } catch {}
   if (document.querySelector(".blatt:not(.versteckt)") || aktuelleAnsicht !== "start") { if (!nochmal) setTimeout(() => buGrussFragen(true), 5000); return; }
   try { sessionStorage.setItem("kc_buero_gefragt", "1"); } catch {}
-  blattAuf("buGruss", `<h3 style="margin-top:0;font-size:1.35rem">${buTageszeit()}, ${esc(ICH.vorname || ICH.name)}!</h3>
-    <p style="margin:0;font-size:1.1rem">Möchtest du etwas im <b>Büro</b> erledigen?</p><div id="buGrussInfo" class="hinweis" style="margin:4px 0 0"></div>
-    <div class="knoepfe" style="flex-direction:column;align-items:stretch"><button class="knopf haupt" style="text-align:center" onclick="$('buGruss').remove();buStart()">🗂️ Ja, ins Büro</button>
-    <button class="knopf" style="text-align:center" onclick="$('buGruss').remove()">Nein, zur Club-App</button></div>
-    <label class="schalter" style="margin-top:4px"><span><small>Auf diesem Gerät nicht mehr beim Start fragen</small></span><input type="checkbox" onchange="try{this.checked?localStorage.setItem('kc_buero_frage_aus','1'):localStorage.removeItem('kc_buero_frage_aus')}catch{}"></label>`);
-  api("buero_start").then((r) => { BU.start = r; const t = r.sitzungen[0], e = $("buGrussInfo"); if (!e) return;
-    const offen = Object.values(r.eingang).reduce((a, b) => a + b, 0);
-    e.innerHTML = [t ? `📝 Nächste Sitzung: <b>${esc(t.titel)}</b> · ${esc(wann(t.beginn))}${t.vorbereitet ? " · ✅ vorbereitet" : " · noch nicht vorbereitet"}` : "", offen ? `📥 Im Eingang: <b>${offen}</b>` : ""].filter(Boolean).join("<br>"); }).catch(() => {});
+  tagesinfoZeigen();
 }
+// ---------- KC-CLUB-TAGESINFO (1.33.0, Wunsch Hansi): Tages-Übersicht beim Start – alles Wichtige, jede Zeile antippbar ----------
+// Clubleitung: Eingang, Aufgaben, Geburtstage/Jubiläen, nächste Sitzung; Kassenwart zusätzlich Kasse/Ausleihen; Admin zusätzlich
+// Meldungen und Technik (Ampel: fehlender oder veralteter Messwert = ⚪ „nicht geprüft“, nie grün). Liest nur, sendet nichts.
+const TI_SEIT = "kc_club_tagesinfo_seit";
+const tiAmpel = (wert, gelb, rot) => (wert === null || wert === undefined || Number.isNaN(wert) ? "⚪" : wert >= rot ? "🔴" : wert >= gelb ? "🟡" : "🟢");
+const tiDauer = (min) => (min < 60 ? `vor ${Math.max(1, Math.round(min))} Min.` : min < 48 * 60 ? `vor ${Math.round(min / 60)} Std.` : `vor ${Math.round(min / 1440)} Tagen`);
+const tiZeit = (iso) => { const d = new Date(iso), h = heuteIso(), t = berlinIso(iso); return (t === h ? "heute" : t === tagPlus(h, -1) ? "gestern" : fTagDp.format(new Date(t + "T12:00:00Z"))) + " " + fZeit.format(d) + " Uhr"; };
+const tiZeile = (sym, html, fn) => `<button class="ti-zeile" onclick="$('buGruss').remove();${fn}">${sym} <span>${html}</span><b>›</b></button>`;
+async function tagesinfoZeigen() {
+  const jetzt = new Date(), rolleText = ICH.admin ? "Admin" : (ICH.aemter || []).find((a) => /^(clubsprecher|kassenwart)/i.test(a)) || "Clubleitung";
+  const datum = new Intl.DateTimeFormat("de-DE", { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(jetzt);
+  blattAuf("buGruss", `<div class="ti"><h3 style="margin:0;font-size:1.3rem">${buTageszeit()}, ${esc(ICH.vorname || ICH.name)} <small class="hinweis">(${esc(rolleText)})</small></h3>
+    <p style="margin:2px 0 0">Heute ist <b>${esc(datum)}</b>, es ist <b>${esc(fZeit.format(jetzt))} Uhr</b>.</p>
+    <div id="tiInhalt"><p class="hinweis">⏳ Ich schaue kurz nach, was es Neues gibt …</p></div></div>
+    <div class="knoepfe" style="flex-direction:column;align-items:stretch"><button class="knopf haupt" style="text-align:center" onclick="$('buGruss').remove();buStart()">🗂️ Ins Büro</button>
+    <button class="knopf" style="text-align:center" onclick="$('buGruss').remove()">Zur Club-App</button></div>
+    <label class="schalter" style="margin-top:4px"><span><small>Auf diesem Gerät nicht mehr beim Start zeigen</small></span><input type="checkbox" onchange="try{this.checked?localStorage.setItem('kc_buero_frage_aus','1'):localStorage.removeItem('kc_buero_frage_aus')}catch{}"></label>`);
+  let seit = null; try { seit = localStorage.getItem(TI_SEIT); } catch {}
+  const [ti, st, fe] = await Promise.allSettled([api("tagesinfo", { seit }), api("buero_start"), api("buero_feste", { tage: 7 })]);
+  const e = $("tiInhalt"); if (!e) return;
+  if (ti.status !== "fulfilled") { e.innerHTML = `<p class="hinweis">⚪ Die Übersicht konnte gerade nicht geladen werden (${esc(ti.reason?.message || "keine Verbindung")}).</p>`; return; }
+  try { localStorage.setItem(TI_SEIT, new Date().toISOString()); } catch {}
+  const d = ti.value, start = st.status === "fulfilled" ? st.value : null, feste = fe.status === "fulfilled" && Array.isArray(fe.value?.geburtstage) ? fe.value : null;
+  if (start) BU.start = start;
+  const neu = [], heute = [], kasse = [], technik = [];
+  // Seit dem letzten Besuch
+  const t = d.technik;
+  for (const m of t?.meldungen || []) {
+    if (m.art === "problem") neu.push(tiZeile("🆘", `<b>${esc(m.wer)}</b> hat ${esc(tiZeit(m.zeit))} ein <b>Problem gemeldet</b>${m.text ? `: „${esc(m.text)}“` : ""}`, "fpAdmin(7)"));
+    else if (m.art === "sicherheit") neu.push(tiZeile("🛡️", `<b>${esc(m.wer)}</b> hat dir ${esc(tiZeit(m.zeit))} seinen <b>Sicherheitsbericht</b> geschickt (${esc(m.text || "")})`, "arStart()"));
+    else neu.push(tiZeile("💭", `<b>${esc(m.wer)}</b> hat ${esc(tiZeit(m.zeit))} <b>Feedback</b> gegeben`, "zeige('feedback')"));
+  }
+  if (INIT?.ungelesen) neu.push(tiZeile("💬", `<b>${INIT.ungelesen} ungelesene Nachricht${INIT.ungelesen === 1 ? "" : "en"}</b>`, "zeige('nachrichten')"));
+  const ein = d.eingang || {};
+  if (ein.ausleihen) neu.push(tiZeile("📦", `<b>${ein.ausleihen} Ausleih-Anfrage${ein.ausleihen === 1 ? "" : "n"}</b> wartet auf Entscheidung`, "buStart();buEingang()"));
+  if (ein.archiv) neu.push(tiZeile("🗄️", `<b>${ein.archiv}</b> Archiv-Einreichung${ein.archiv === 1 ? "" : "en"} zu prüfen`, "arStart()"));
+  if (ein.vorschlaege) neu.push(tiZeile("🗳️", `<b>${ein.vorschlaege}</b> offene Vorschläge`, "zeige('vorschlaege')"));
+  // Heute
+  for (const a of d.aufgaben || []) heute.push(tiZeile("✔️", `Deine Aufgabe: <b>${esc(a.text)}</b> ${a.ueberfaellig ? '<span class="marke rot">überfällig</span>' : '<span class="marke gelb">heute fällig</span>'}`, "zeige('protokolle')"));
+  for (const f of feste ? [...feste.geburtstage.map((x) => ({ ...x, geb: true })), ...feste.jubilaeen].filter((x) => x.tage === 0) : [])
+    heute.push(tiZeile(f.geb ? (f.alter ? "🎉" : "🎂") : "🏅", f.geb ? `<b>${esc(f.vorname)}</b> ${f.alter ? `wird <b>${f.alter}</b>` : "hat Geburtstag"}` : `<b>${esc(f.vorname)}</b>: ${f.jahre} Jahre im Club`, "buStart();buFeste()"));
+  const s = start?.sitzungen?.[0];
+  if (s) heute.push(tiZeile("🗓️", `Nächste Sitzung: <b>${esc(s.titel)}</b> · ${esc(wann(s.beginn))} · ✅ ${s.ja} · ❓ ${s.ohne} ohne Antwort${s.vorbereitet ? "" : ' <span class="marke gelb">noch nicht vorbereitet</span>'}`, "buStart()"));
+  // Kasse (Kassenwart/Admin)
+  if (d.kasse) {
+    const k = d.kasse;
+    for (const r of k.rueckgabe) kasse.push(tiZeile("📥", `<b>${esc(r.wer)}</b>: ${esc(r.was)} – Rückgabe ${r.ueberfaellig ? '<span class="marke rot">überfällig</span>' : "heute"}`, "hlStart('leihen')"));
+    kasse.push(tiZeile("📦", `${k.verliehen} Ausleihe${k.verliehen === 1 ? "" : "n"} gerade unterwegs`, "hlStart('leihen')"));
+    if (k.erstattungen) kasse.push(tiZeile("💶", `<b>${k.erstattungen} Erstattung${k.erstattungen === 1 ? "" : "en"}</b> offen · ${esc(spEuro(k.erstattungenSumme))}`, "zeige('erstattung')"));
+    if (k.spendenAnzahl) kasse.push(tiZeile("💝", `${k.spendenAnzahl} Spendenvorschlag${k.spendenAnzahl === 1 ? "" : "e"} offen · zusammen ${esc(spEuro(k.spendenSumme))}`, "zeige('vorschlaege')"));
+    if (k.freudLeidSumme) kasse.push(tiZeile("🤍", `Freud & Leid: offen ${esc(spEuro(k.freudLeidSumme))} für Blumen/Geschenke`, "buStart();buFreudLeid()"));
+  }
+  // Technik (Admin)
+  if (t) {
+    technik.push(tiZeile(tiAmpel(t.db?.prozent ?? null, 70, 90), t.db ? `Datenbank: <b>${t.db.prozent} %</b> belegt (${Math.round(t.db.bytes / 1048576)} von ${Math.round(t.db.grenze / 1048576)} MB)` : "Datenbank-Füllstand: nicht geprüft", "sicherheitStart()"));
+    technik.push(tiZeile(tiAmpel(t.spiegelMin, 8 * 60, 24 * 60), t.spiegelMin !== null ? `Spiegelung: ${esc(tiDauer(t.spiegelMin))}` : "Spiegelung: nicht geprüft", "sicherheitStart()"));
+    technik.push(tiZeile(tiAmpel(t.sicherungMin, 30 * 60, 48 * 60), t.sicherungMin !== null ? `Sicherung: ${esc(tiDauer(t.sicherungMin))}` : "Sicherung: nicht geprüft", "sicherheitStart()"));
+    technik.push(tiZeile(tiAmpel(t.ueberwachungMin, 120, 360), t.ueberwachungMin !== null ? `Überwachung: zuletzt ${esc(tiDauer(t.ueberwachungMin))}` : "Überwachung: nicht geprüft", "sicherheitStart()"));
+    technik.push(tiZeile(t.programmfehler === null ? "⚪" : t.programmfehler ? (t.programmfehler > 5 ? "🔴" : "🟡") : "🟢", t.programmfehler === null ? "Programmfehler: nicht geprüft" : t.programmfehler ? `<b>${t.programmfehler} Programmfehler</b> seit deinem letzten Besuch` : "Keine Programmfehler seit deinem letzten Besuch", "fpAdmin(7)"));
+    technik.push(tiZeile(t.alteVersionen.length ? "🟡" : "🟢", t.alteVersionen.length ? `<b>${t.alteVersionen.length} Mitglied${t.alteVersionen.length === 1 ? "" : "er"}</b> mit alter App-Version (${t.alteVersionen.slice(0, 3).map((x) => `${esc(x.wer.split(" ")[0])}: ${esc(x.version)}`).join(", ")}${t.alteVersionen.length > 3 ? " …" : ""})` : `Alle nutzen die aktuelle Version ${esc(t.aktuell)}`, "zeige('einstellungen')"));
+  }
+  const block = (titel, l, leer) => `<div class="ti-block"><div class="ti-titel">${titel}</div>${l.length ? l.join("") : `<p class="hinweis" style="margin:2px 0">${leer}</p>`}</div>`;
+  e.innerHTML = block("📥 Seit deinem letzten Besuch", neu, "✅ Alles ruhig – nichts Neues.") + block("📅 Heute", heute, "Heute steht nichts Besonderes an.")
+    + (d.kasse ? block("💶 Kasse & Ausleihe", kasse, "–") : "") + (t ? block("🖥️ Technik", technik, "–") : "");
+}
+
 function buStart() { BU.sicht = "start"; zeige("buero"); }
 async function buLaden() {
   try { [BU.start] = await Promise.all([api("buero_start"), buNachherListe(), buFesteListe(BU_F?.tage || 60), flLaden()]); } catch (e) { $("buInhalt").innerHTML = `<div class="karte hinweis">${esc(e.message)}</div>`; return; }

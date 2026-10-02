@@ -1,7 +1,9 @@
 {
-  "version": "1.32.2",
+  "version": "1.33.0",
   "datum": "2026-10-02",
   "neu": [
+    "📋 Tages-Übersicht beim Start für die Clubleitung: Datum und Uhrzeit, was seit dem letzten Besuch neu ist, was heute ansteht und die nächste Sitzung – jede Zeile antippbar (Admin)",
+    "💶 Kassenwart sieht zusätzlich Ausleihen, Rückgaben, offene Erstattungen und Spenden; 🖥️ Admin zusätzlich Problem-Meldungen, Sicherheitsberichte, Feedback und die Technik-Ampel (Datenbank, Spiegelung, Sicherung, alte App-Versionen) (Admin)",
     "📸 Im Chat neben „WA“: Bildschirmfoto-Knopf – Auslöser starten, in Ruhe hingehen, auslösen, einkreisen und mit einem Tipp „In den Chat mit …“ zurückschicken",
     "💬 Kommunikation: „＋ Neu“ ist jetzt immer oben rechts sichtbar – auch bei großer Schrift; darunter beschriftet „👥 Gruppe“, „⭐ Gemerkt“ (deine gemerkten Nachrichten) und „🧪 Test“",
     "🤍 Büro: Freud & Leid – Geburt, Hochzeit, Jubiläum … oder Trauerfall, Krankheit: in drei Schritten anlegen, die App schlägt eine Checkliste vor (Was – Wer – Bis wann), Zuständige bekommen ihre Aufgabe mit Erinnerung (Admin)",
@@ -20,6 +22,13 @@
     "📨 Danach mit einem Tipp: Einladung mit Tagesordnung an alle senden – und später alle erinnern, die noch nicht geantwortet haben (Admin)"
   ],
   "verlauf": [
+    {
+      "version": "1.33.0",
+      "neu": [
+        "📋 Tages-Übersicht beim Start für die Clubleitung: Datum und Uhrzeit, was seit dem letzten Besuch neu ist, was heute ansteht und die nächste Sitzung – jede Zeile antippbar (Admin)",
+        "💶 Kassenwart sieht zusätzlich Ausleihen, Rückgaben, offene Erstattungen und Spenden; 🖥️ Admin zusätzlich Problem-Meldungen, Sicherheitsberichte, Feedback und die Technik-Ampel (Datenbank, Spiegelung, Sicherung, alte App-Versionen) (Admin)"
+      ]
+    },
     {
       "version": "1.32.2",
       "neu": [

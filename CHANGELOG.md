@@ -1,5 +1,18 @@
 # Änderungen
 
+## 1.33.0 – 2026-10-02 (DEV)
+
+- KC-CLUB-TAGESINFO (Wunsch Hansi; Freigabe „Kassenwart ja, Ampel 70/90 %, so bauen“): Die Begrüßung der Clubleitung beim
+  Start wird zur Tages-Übersicht. Server tagesinfo (nur Clubleitung, nur lesend): „seit“ = letzter Blick (vom Gerät,
+  höchstens 7 Tage), Eingang, eigene heute fällige/überfällige Aufgaben; Kassenwart/Admin: laufende Ausleihen, fällige
+  Rückgaben, offene Erstattungen (Summe), offene Spendenvorschläge (Summe), offene Freud-&-Leid-Beträge; Admin: Problem-
+  Meldungen, Sicherheitsberichte, Feedback seit dem letzten Besuch, Programmfehler-Zahl, Datenbank-Füllstand
+  (kc_club_db_groesse, Grenze 500 MB Supabase Free), Spiegel/Sicherung/Überwachung (kc_club_sicherheit_status), Mitglieder
+  mit älterer App-Version. App ergänzt Geburtstage/Jubiläen heute und nächste Sitzung (vorhandene Büro-Aktionen).
+  Ampel: 🟢/🟡/🔴, fehlender Wert = ⚪ „nicht geprüft“ (nie grün); Datenbank 🟡 ab 70 %, 🔴 ab 90 %. Jede Zeile führt
+  direkt zur passenden Stelle. Einmal je App-Start, je Gerät abschaltbar; sendet nichts.
+- DB: Migration 20261002_kc_club_v1330_tagesinfo.sql (Funktion kc_club_db_groesse, nur service_role).
+
 ## 1.32.2 – 2026-10-02 (DEV)
 
 - KC-CLUB-BILDSCHIRMFOTO im Chat (Wunsch Hansi mit Bildschirmfoto „neben dem WA-Knopf ist noch Platz“): runder Knopf 📸 in
