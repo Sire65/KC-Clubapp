@@ -1520,6 +1520,7 @@
 
   <section id="v-gruppe" class="versteckt">
     <div class="kopf2"><button class="zurueck" onclick="GR?.id ? chatOeffnen(GR.id) : zeige('nachrichten')">‹</button><h2 id="grTitel">👥 Neue Gruppe</h2></div>
+    <div id="grVorhanden"></div><!-- 1.33.2 (Wunsch Hansi): vorhandene Gruppen auch hier zeigen -->
     <div class="karte">
       <label class="feld">Name der Gruppe<input id="grName" maxlength="60" placeholder="z. B. Küchenteam, Grillabend, Weihnachtsmarkt"></label>
       <div class="hinweis" style="margin:8px 0 6px">Symbol</div><div class="symbolwahl" id="grSymbole"></div>
@@ -1954,7 +1955,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.33.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.33.2"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -7747,16 +7748,17 @@ async function mitgliederHolen() { const r = await api("mitglieder"); MITGLIEDER
 async function neueNachricht() {
   if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return melde(e.message, true); }
   empfWahl = { personen: [], aemter: [], alle: false, vorstand: false }; $("neuBetreff").value = ""; $("empfSuche").value = "";
-  zeige("neu"); empfListe(); neuGruppenZeigen();
+  zeige("neu"); empfListe(); neuGruppenZeigen("neuGruppen", true);
 }
 // KC-CLUB-GRUPPEN-WAHL (1.33.1, Wunsch Hansi): eigene Gruppen (z. B. „Innovation“) oben anbieten – Antippen öffnet die Gruppe
-async function neuGruppenZeigen() {
-  const z = $("neuGruppen"); if (!z) return;
-  let liste = UH.liste;
+// 1.33.2: auch auf „👥 Gruppe“ (Neue Gruppe) – dort mit Hinweis, dass man hier eine weitere Gruppe anlegt; Liste immer frisch holen
+async function neuGruppenZeigen(ziel = "neuGruppen", frisch = false) {
+  const z = $(ziel); if (!z) return;
+  let liste = frisch ? [] : UH.liste;
   if (!liste?.length) try { liste = (await api("unterhaltungen", {}, { warten: true })).unterhaltungen || []; UH.liste = liste; } catch { liste = []; }
   const gruppen = (liste || []).filter((u) => u.gruppe);
   z.innerHTML = gruppen.length ? `<div class="karte"><h3 style="margin-top:0">👥 Deine Gruppen</h3><p class="hinweis" style="margin:0 0 6px">Antippen – du schreibst direkt in die Gruppe.</p>
-    <div class="knoepfe">${gruppen.map((u) => `<button class="knopf" onclick="chatOeffnen('${u.id}')">${esc(u.gruppe.symbol || "👥")} ${esc(u.gruppe.name)} <small>· ${u.anzahl || u.teilnehmer.length + 1} Mitgl.</small></button>`).join("")}</div></div>` : "";
+    <div class="knoepfe">${gruppen.map((u) => `<button class="knopf" onclick="chatOeffnen('${u.id}')">${esc(u.gruppe.symbol || "👥")} ${esc(u.gruppe.name)} <small>· ${u.anzahl || u.teilnehmer.length + 1} Mitgl.</small></button>`).join("")}</div>${ziel === "grVorhanden" ? '<p class="hinweis" style="margin:8px 0 0">Oder lege unten eine <b>weitere</b> Gruppe an.</p>' : ""}</div>` : "";
 }
 // Schnellwahl (Alle / Ämter) setzt die Häkchen der zugehörigen Personen – so sieht man sofort, wer dazugehört
 // KC-CLUB-ONLINE-RUNDE (1.21.2, Wunsch Hansi): „🟢 Alle gerade online“ – spontane Runde mit allen, die jetzt in der App sind
@@ -7874,6 +7876,7 @@ async function gruppeForm(chat) {
   $("grKnopf").textContent = GR.id ? "💾 Speichern" : "👥 Gruppe anlegen";
   $("grName").value = GR.name; $("grSuche").value = "";
   zeige("gruppe"); grSymbole(); grListe();
+  if (GR.id) $("grVorhanden").innerHTML = ""; else neuGruppenZeigen("grVorhanden", true); // KC-CLUB-GRUPPEN-WAHL (1.33.2)
 }
 function grSymbole() { $("grSymbole").innerHTML = GR_SYMBOLE.map((x) => `<button class="${x === GR.symbol ? "an" : ""}" onclick="GR.symbol='${x}';grSymbole()">${x}</button>`).join(""); }
 function grListe() {

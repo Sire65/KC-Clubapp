@@ -2106,8 +2106,14 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 
 // 185. 1.33.1: Gruppen in „Neue Nachricht“ (KC-CLUB-GRUPPEN-WAHL)
 {
-  assert.ok(/zeige\("neu"\); empfListe\(\); neuGruppenZeigen\(\);/.test(html) && /<div id="neuGruppen"><\/div>/.test(html), "Gruppen-Bereich");
+  assert.ok(/zeige\("neu"\); empfListe\(\); neuGruppenZeigen\("neuGruppen", true\);/.test(html) && /<div id="neuGruppen"><\/div>/.test(html), "Gruppen-Bereich");
   assert.ok(/const gruppen = \(liste \|\| \[\]\)\.filter\(\(u\) => u\.gruppe\);/.test(html) && /onclick="chatOeffnen\('\$\{u\.id\}'\)"/.test(html), "vorhandene Gruppe öffnen");
+}
+
+// 186. 1.33.2: vorhandene Gruppen auch auf „👥 Gruppe“ (Neue Gruppe)
+{
+  assert.ok(/<div id="grVorhanden"><\/div>/.test(html) && /if \(GR\.id\) \$\("grVorhanden"\)\.innerHTML = ""; else neuGruppenZeigen\("grVorhanden", true\);/.test(html), "Gruppenliste auf der Gruppen-Seite");
+  assert.ok(/async function neuGruppenZeigen\(ziel = "neuGruppen", frisch = false\)/.test(html), "Liste frisch holbar");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

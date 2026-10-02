@@ -1,5 +1,11 @@
 # Änderungen
 
+## 1.33.2 – 2026-10-02 (DEV)
+
+- KC-CLUB-GRUPPEN-WAHL (Rückmeldung Hansi: „die erstellte Gruppe wird nicht angezeigt“): Auch „👥 Gruppe“ in der
+  Kommunikation (bisher nur „Neue Gruppe anlegen“) zeigt oben die vorhandenen Gruppen; Antippen öffnet die Gruppe. Die Liste
+  wird an beiden Stellen jedes Mal frisch vom Server geholt (kein veralteter Zwischenstand).
+
 ## 1.33.1 – 2026-10-02 (DEV)
 
 - KC-CLUB-GRUPPEN-WAHL (Wunsch Hansi: „Gruppe Innovation sollte bei der Auswahl angezeigt werden“): „Neue Nachricht“ zeigt

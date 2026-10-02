@@ -1,7 +1,8 @@
 {
-  "version": "1.33.1",
+  "version": "1.33.2",
   "datum": "2026-10-02",
   "neu": [
+    "👥 Auch unter „👥 Gruppe“ stehen jetzt deine vorhandenen Gruppen (z. B. „Innovation“) ganz oben – antippen öffnet die Gruppe",
     "👥 Neue Nachricht: Deine Gruppen (z. B. „Innovation“) stehen jetzt ganz oben – antippen und direkt in die Gruppe schreiben",
     "📋 Tages-Übersicht beim Start für die Clubleitung: Datum und Uhrzeit, was seit dem letzten Besuch neu ist, was heute ansteht und die nächste Sitzung – jede Zeile antippbar (Admin)",
     "💶 Kassenwart sieht zusätzlich Ausleihen, Rückgaben, offene Erstattungen und Spenden; 🖥️ Admin zusätzlich Problem-Meldungen, Sicherheitsberichte, Feedback und die Technik-Ampel (Datenbank, Spiegelung, Sicherung, alte App-Versionen) (Admin)",
@@ -23,6 +24,12 @@
     "📨 Danach mit einem Tipp: Einladung mit Tagesordnung an alle senden – und später alle erinnern, die noch nicht geantwortet haben (Admin)"
   ],
   "verlauf": [
+    {
+      "version": "1.33.2",
+      "neu": [
+        "👥 Auch unter „👥 Gruppe“ stehen jetzt deine vorhandenen Gruppen (z. B. „Innovation“) ganz oben – antippen öffnet die Gruppe"
+      ]
+    },
     {
       "version": "1.33.1",
       "neu": [
