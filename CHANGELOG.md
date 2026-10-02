@@ -1,5 +1,10 @@
 # Änderungen
 
+## 1.53.4 – 2026-10-02
+- KC-CLUB-NEU-AMEISEN (Rückmeldung Hansi „bewegt sich nicht“): Die Ameisenstraße ist jetzt ein echtes SVG im Feld statt eines
+  Hintergrundbilds – die Bewegung im Hintergrundbild lief nicht auf jedem Handy. Bei „Bewegung reduzieren“ läuft sie langsam
+  (3 s) statt stillzustehen (wie die Schreib-Punkte).
+
 ## 1.53.3 – 2026-10-02
 - KC-CLUB-NEU-AMEISEN (Wunsch Hansi): Feld „Neue Nachr.“ im Kopf wird bei neuen Nachrichten nicht mehr ganz orange, sondern
   bleibt in der Kopffarbe wie die anderen Felder; eine orange „Ameisenstraße“ läuft um den Rand, die Zahl ist orange.

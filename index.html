@@ -446,12 +446,15 @@
   .wahltabelle input { width: 26px; height: 26px; accent-color: var(--rot); }
   .mini b { display: block; font-size: 1.2rem; }
   /* KC-CLUB-NEU-ORANGE (1.22.0, Wunsch Hansi): „Neue Nachr.“ oben links im großen Feld orange, sobald etwas Neues da ist */
-  /* KC-CLUB-NEU-AMEISEN (1.53.3, Wunsch Hansi): Feld bleibt in der Kopffarbe wie die anderen, eine orange „Ameisenstraße“
-     läuft um den Rand, Zahl orange. Rand als SVG (Strich 6 px, außen zur Hälfte abgeschnitten = 3 px sichtbar, folgt der Rundung). */
+  /* KC-CLUB-NEU-AMEISEN (1.53.3, 1.53.4 Wunsch Hansi): Feld bleibt in der Kopffarbe wie die anderen, eine orange „Ameisenstraße“
+     läuft um den Rand, Zahl orange. 1.53.4: Rand als echtes SVG im Feld (Bewegung im Hintergrundbild lief nicht auf jedem Handy);
+     Strich 6 px, außen zur Hälfte abgeschnitten = 3 px sichtbar, folgt der Rundung. Reduzierte Bewegung: langsam statt Stillstand. */
   .mini.mini-neu { position: relative; }
   .mini.mini-neu b { font-size: 1.5rem; color: #ffb74d; }
-  .mini.mini-neu::before { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Cstyle%3Erect%7Banimation:a 1s linear infinite%7D@keyframes a%7Bto%7Bstroke-dashoffset:-15%7D%7D%3C/style%3E%3Crect width='100%25' height='100%25' rx='16' fill='none' stroke='%23ff9800' stroke-width='6' stroke-dasharray='9 6'/%3E%3C/svg%3E") no-repeat; }
-  @media (prefers-reduced-motion: reduce) { .mini.mini-neu::before { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Crect width='100%25' height='100%25' rx='16' fill='none' stroke='%23ff9800' stroke-width='6' stroke-dasharray='9 6'/%3E%3C/svg%3E") no-repeat; } }
+  .mini.mini-neu .ameisen { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; border-radius: inherit; }
+  .mini.mini-neu .ameisen rect { fill: none; stroke: #ff9800; stroke-width: 6; stroke-dasharray: 9 6; animation: ameisenLauf 1s linear infinite; }
+  @keyframes ameisenLauf { to { stroke-dashoffset: -15; } }
+  @media (prefers-reduced-motion: reduce) { .mini.mini-neu .ameisen rect { animation-duration: 3s; } }
   .mini span { font-size: .72rem; letter-spacing: .06em; font-weight: 700; text-transform: uppercase; opacity: .9; }
 
   /* Schnellzugriff */
@@ -2101,7 +2104,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.53.3"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.53.4"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -5225,7 +5228,7 @@ function infoTreffen() {
   } else kopf = `<h2>Kein Termin geplant</h2><div class="unter">Sobald ein Köcheclub-Termin ansteht, siehst du es hier.</div>`;
   return `<div class="klick" onclick="zumTreffen()">${kopf}</div>
     <div class="kacheln3">
-      <button class="mini${n ? " mini-neu" : ""}" onclick="zeige('nachrichten')"><b>${n}</b><span>Neue Nachr.</span><span class="mpfeil" aria-hidden="true">›</span></button>
+      <button class="mini${n ? " mini-neu" : ""}" onclick="zeige('nachrichten')">${n ? '<svg class="ameisen" aria-hidden="true"><rect width="100%" height="100%" rx="16"/></svg>' : ""}<b>${n}</b><span>Neue Nachr.</span><span class="mpfeil" aria-hidden="true">›</span></button>
       <button class="mini" onclick="zeige('mitglieder')"><b class="mini-zeile">${INIT?.mitgliederAnzahl || "–"}${ONL.zeigen ? onlineZahlHtml() : ""}</b><span>Mitglieder</span><span class="mpfeil" aria-hidden="true">›</span></button>
       <button class="mini" onclick="zumTreffen()"><b style="font-size:1.05rem">${bisTreffen}</b><span>Nächster Termin</span><span class="mpfeil" aria-hidden="true">›</span></button>
     </div>`;
