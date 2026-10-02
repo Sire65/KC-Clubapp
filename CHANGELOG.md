@@ -1,5 +1,11 @@
 # Änderungen
 
+## 1.52.1 – 2026-10-02
+- KC-CLUB-NOTBETRIEB (Probe Hansi): Das orange Notbetrieb-Band verdeckte rote/dunkle Meldungen oben (z. B. „Im Notbetrieb
+  gerade nicht möglich“). Meldungen und SOS-Balken rutschen jetzt um die Höhe des Bandes nach unten (CSS-Variable --notH,
+  wird beim Ein-/Ausblenden und bei Größenänderung gesetzt). Ersatz-Server eingetragen (notbetrieb.json), Zeitplaner wartet
+  120 s auf den Paketbau.
+
 ## 1.52.0 – 2026-10-02
 - KC-CLUB-NOTBETRIEB (Wunsch Hansi, Weg B): Fällt Supabase aus, schaltet die App auf einen Ersatz-Server bei Cloudflare um
   (kostenlos, keine Neon-Rechenzeit). Der Club-Server berechnet alle 15 Min. – nur wenn sich etwas geändert hat

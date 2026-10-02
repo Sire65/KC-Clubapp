@@ -931,7 +931,7 @@
   .chat-kopf { position: sticky; top: 0; z-index: 30; background: var(--bg); padding: 2px 0 4px; margin: 0 -4px; padding-left: 4px; padding-right: 4px; box-shadow: 0 6px 8px -8px rgba(0,0,0,.35); }
   #chat > * { scroll-margin-top: var(--chatKopfHoehe, 120px); }
   .zurueck { width: 44px; height: 44px; border-radius: 50%; border: none; background: var(--karte); box-shadow: var(--schatten); font-size: 1.2rem; cursor: pointer; }
-  .meldung { position: fixed; left: 50%; transform: translateX(-50%); top: 14px; background: #2b1a1c; color: #fff; padding: 12px 18px; border-radius: 14px; z-index: 50; max-width: 92%; box-shadow: 0 8px 24px rgba(0,0,0,.25); }
+  .meldung { position: fixed; left: 50%; transform: translateX(-50%); top: calc(14px + var(--notH, 0px)); background: #2b1a1c; color: #fff; padding: 12px 18px; border-radius: 14px; z-index: 50; max-width: 92%; box-shadow: 0 8px 24px rgba(0,0,0,.25); }
   .meldung.fehler { background: #a51d1d; }
   .updatebalken { background: var(--gelbbg); color: var(--gelb); border-radius: 14px; padding: 12px; margin-top: 10px; display: flex; gap: 10px; align-items: center; font-weight: 700; }
   .schalter { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--linie); }
@@ -1304,7 +1304,7 @@
   .ta-markiert { box-shadow: 0 0 0 3px var(--gold); }
   .st-karte iframe { width: 100%; height: 240px; border: 0; border-radius: 12px; margin-top: 8px; background: #ddd; }
   .st-alt { opacity: .6; }
-  #stBalken { position: fixed; left: 50%; transform: translateX(-50%); top: calc(8px + env(safe-area-inset-top)); z-index: 45; background: #b3261e; color: #fff; border-radius: 999px;
+  #stBalken { position: fixed; left: 50%; transform: translateX(-50%); top: calc(8px + env(safe-area-inset-top) + var(--notH, 0px)); z-index: 45; background: #b3261e; color: #fff; border-radius: 999px;
     padding: 6px 8px 6px 14px; display: flex; align-items: center; gap: 10px; box-shadow: 0 6px 18px rgba(0,0,0,.3); font-weight: 700; font-size: .9rem; max-width: calc(100% - 24px); }
   #stBalken button { background: #fff; color: #b3261e; border: 0; border-radius: 999px; padding: 6px 12px; font-weight: 900; }
   /* KC-CLUB-FEHLERPROTOKOLL (0.93.0) */
@@ -2086,7 +2086,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.52.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.52.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3997,7 +3997,7 @@ async function notEinschalten(grund) {
 }
 function notAus(meldung) {
   NOT.an = false; NOT.grund = ""; NOT.fehler = 0; clearInterval(NOT.timer); NOT.timer = null;
-  document.getElementById("notBand")?.remove(); document.body.classList.remove("im-notbetrieb");
+  document.getElementById("notBand")?.remove(); document.body.classList.remove("im-notbetrieb"); document.documentElement.style.removeProperty("--notH");
   if (meldung) melde(meldung);
   neuLaden(true);
 }
@@ -4023,6 +4023,13 @@ function notBandZeigen() {
   const st = NOT.stand ? new Date(NOT.stand) : null, heute = st && st.toDateString() === new Date().toDateString();
   const standText = st ? `Stand von ${heute ? "" : fKurz.format(st) + ", "}${fZeit.format(st)} Uhr` : "Stand unbekannt";
   el.innerHTML = `⚠️ <b>${NOT.grund === "probe" ? "Notbetrieb-Probe" : "Notbetrieb"}</b> – ${esc(standText)}. Ansehen geht, Ändern, Fotos und Push gerade nicht.${NOT.grund === "probe" ? ` <button onclick="notProbeSetzen(false)">Probe beenden</button>` : ""}`;
+  notBandHoehe(el);
+}
+// Meldungen (rot/dunkel) und SOS-Balken rutschen unter das orange Band statt davon verdeckt zu werden
+function notBandHoehe(el) {
+  const setzen = () => document.documentElement.style.setProperty("--notH", (el.isConnected ? el.offsetHeight : 0) + "px");
+  setzen();
+  if (!el._ro && typeof ResizeObserver === "function") { el._ro = new ResizeObserver(setzen); el._ro.observe(el); }
 }
 // Probe nur auf diesem Gerät (Admin): alles läuft über den Ersatz-Server, die anderen merken nichts
 async function notProbeSetzen(an) {

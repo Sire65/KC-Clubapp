@@ -2381,6 +2381,14 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   const nb = JSON.parse(lies("notbetrieb.json")); assert.ok(["auto", "an", "aus"].includes(nb.modus), "notbetrieb.json gültig");
 }
 
+// 215. 1.52.1: Notbetrieb-Band verdeckt keine Meldungen (KC-CLUB-NOTBETRIEB)
+{
+  assert.match(html, /\.meldung \{[^}]*top: calc\(14px \+ var\(--notH, 0px\)\)/, "Meldungen rutschen unter das Notbetrieb-Band");
+  assert.match(html, /#stBalken \{[^}]*var\(--notH, 0px\)/, "SOS-Balken rutscht unter das Notbetrieb-Band");
+  assert.match(html, /function notBandHoehe\(el\)[\s\S]{0,300}setProperty\("--notH"/, "Bandhöhe wird gesetzt");
+  assert.match(html, /notBand"\)\?\.remove\(\);[^\n]*removeProperty\("--notH"\)/, "beim Ausschalten zurückgesetzt");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
