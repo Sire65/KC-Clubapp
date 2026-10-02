@@ -765,6 +765,8 @@
   .tr-kachel.tr-va { border-left: 5px solid var(--gruen); }
   .tr-kachel.tr-ab { opacity: .7; }
   .tr-gross > .karte { margin: 0; box-shadow: none; padding: 4px 2px; }
+  /* 1.46.0: Karten innerhalb eines Klappbereichs ohne doppelten Rahmen */
+  details.tm-klappe > .karte { box-shadow: none; border: 1px solid var(--linie); margin: 8px 0 0; }
   /* KC-CLUB-MITFAHRT-SITZE (1.39.0): Auto von oben mit echten Sitzplätzen */
   .mf-karte { border: 1px solid var(--linie); border-radius: 16px; padding: 10px 12px; margin: 8px 0; background: var(--karte); }
   .mf-kopf { display: flex; gap: 6px; align-items: flex-start; }
@@ -920,6 +922,14 @@
   .schalter:last-child { border-bottom: none; }
   .schalter input { flex: none; width: 26px; height: 26px; accent-color: var(--rot); }
   .blatt { position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 40; display: flex; align-items: flex-end; justify-content: center; }
+  /* KC-CLUB-DIALOG (1.46.0): Rückfragen/Eingaben als App-Fenster – über allem anderen */
+  .blatt.dlg-blatt { z-index: 5000; }
+  .dlg-innen { max-height: 88vh; overflow-y: auto; }
+  .dlg-kopf { margin: 0 0 6px; font-size: 1.15rem; white-space: pre-line; }
+  .dlg-text { margin: 0 0 10px; white-space: pre-line; }
+  .dlg-knoepfe { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+  .dlg-knoepfe .knopf { text-align: center; justify-content: center; width: 100%; }
+  .knopf.haupt.dlg-gefahr { background: #b3261e; border-color: #b3261e; color: #fff; }
   .blatt-innen { background: var(--karte); width: min(560px, 100%); border-radius: 22px 22px 0 0; padding: 18px 16px calc(18px + env(safe-area-inset-bottom)); display: grid; gap: 10px; }
   .blatt-innen h3 { margin: 0 0 4px; }
   .begruessung { max-height: 92vh; overflow-y: auto; }
@@ -1373,7 +1383,7 @@
 
   <!-- TERMINE -->
   <section id="v-termine" class="versteckt">
-    <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>📅 Termine</h2><button id="neuAnfrageKnopf" class="knopf klein" onclick="taForm()" title="Terminanfrage an einzelne Mitglieder, mehrere oder eine Gruppe">📨 Anfrage</button><button id="neuUmfrageKnopf" class="knopf klein versteckt" onclick="umfrageForm()" title="Terminfindung: mehrere Termine zur Auswahl">🗓️ Umfrage</button><button id="neuTreffenKnopf" class="knopf haupt klein" onclick="neuTermin()" title="Neuer Termin – mit Häkchen „Privat“ nur für dich">＋ Neu</button><button type="button" class="druckknopf" title="Drucken: Kalender (Tag/Woche/Monat/Jahr) oder To-do-Liste" aria-label="Drucken" onclick="druckStarten('termine')" id="druckTermine"></button></div>
+    <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>📅 Termine</h2><button id="neuTreffenKnopf" class="knopf haupt klein" onclick="termineNeuWahl()" title="Neuer Termin, Terminanfrage oder Terminfindung">＋ Neu</button><button type="button" class="druckknopf" title="Drucken: Kalender (Tag/Woche/Monat/Jahr) oder To-do-Liste" aria-label="Drucken" onclick="druckStarten('termine')" id="druckTermine"></button></div>
     <div class="umschalter modus3"><button data-m="liste" onclick="termineModus('liste')">☰ Liste</button><button data-m="kalender" onclick="termineModus('kalender')">🗓️ Kalender</button><button data-m="todo" onclick="termineModus('todo')">✅ To-do</button></div>
     <div id="todoBereich" class="versteckt"></div>
     <div id="treffenForm" class="karte versteckt"></div>
@@ -1392,7 +1402,7 @@
         <div class="wt"><span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span><span>Sa</span><span>So</span></div>
         <div class="tage" id="kalGitter"></div>
         <div class="legende">
-          <span><i style="background:var(--rot)"></i>Club-Treffen</span><span><i style="background:var(--gruenbg);outline:1px solid var(--gruen)"></i>🎪 Veranstaltung</span><span><i style="background:var(--tuerkisbg);outline:1px solid var(--tuerkis)"></i>🧳 Aktion / Ausflug</span><span><i style="background:var(--blaubg);outline:1px solid var(--blau)"></i>mein Dienst</span>
+          <span><i style="background:var(--rot)"></i>Sitzung</span><span><i style="background:var(--gruenbg);outline:1px solid var(--gruen)"></i>🎪 Veranstaltung</span><span><i style="background:var(--tuerkisbg);outline:1px solid var(--tuerkis)"></i>🧳 Aktion / Ausflug</span><span><i style="background:var(--blaubg);outline:1px solid var(--blau)"></i>mein Dienst</span>
           <span><i style="background:var(--gelbbg);outline:1px solid #d19a22"></i>Abstimmungs-Frist</span><span><i style="background:var(--lilabg);outline:1px solid var(--lila)"></i>🎂 Geburtstag</span><span><i style="background:var(--rotbg);outline:1px solid var(--rot3)"></i>🇩🇪 Feiertag NRW</span>
           <span><i style="background:var(--gold)"></i>📨 Anfrage</span><span><i style="outline:2px dashed #5b7fa6"></i>🔒 Privat</span>
           <span><i style="outline:2px solid var(--gold)"></i>heute</span>
@@ -1419,7 +1429,7 @@
 
   <!-- HELFEN & LEIHEN (KC-CLUB-HELFEN, KC-CLUB-LEIHEN – 1.23.0) -->
   <section id="v-helfen" class="versteckt">
-    <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>🤝 Helfen & Leihen</h2></div>
+    <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>🤝 Helfen & Leihen</h2><button class="knopf haupt klein" onclick="hlNeuWahl()">＋ Neu</button></div>
     <div class="umschalter" id="hlTabs"><button data-t="helfen" onclick="hlTab('helfen')">🙋 Wer kann helfen?</button><button data-t="leihen" onclick="hlTab('leihen')">📦 Ausleihen</button><button data-t="boerse" onclick="hlTab('boerse')">🛍️ Börse</button></div>
     <div id="hlInhalt"><div class="karte hinweis">Wird geladen …</div></div>
   </section>
@@ -1437,7 +1447,7 @@
 
   <!-- FOTOALBUM (KC-CLUB-FOTOALBUM) -->
   <section id="v-fotos" class="versteckt">
-    <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>📷 Fotoalbum</h2><button class="knopf haupt klein" onclick="fotoForm()">＋ Fotos</button></div>
+    <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>📷 Fotoalbum</h2><button class="knopf haupt klein" onclick="fotoForm()">＋ Neu</button></div>
     <div id="fotoForm" class="karte versteckt"></div>
     <div id="fotoSpeicher"></div>
     <div id="fotoFilter" class="karte"></div>
@@ -1697,7 +1707,7 @@
     </details>
     <details class="karte" data-klappe="handykalender">
       <summary>📲 Termine im Handy-Kalender</summary>
-      <p class="hinweis" style="margin-top:0">Alle Treffen, Veranstaltungen, Aktionen und freigegebenen Geburtstage erscheinen automatisch in deinem normalen Handy-Kalender – und bleiben aktuell.</p>
+      <p class="hinweis" style="margin-top:0">Alle Sitzungen, Veranstaltungen, Aktionen und freigegebenen Geburtstage erscheinen automatisch in deinem normalen Handy-Kalender – und bleiben aktuell.</p>
       <div id="kalAboInfo"></div>
       <button class="knopf haupt" id="kalAboKnopf" onclick="kalenderAbo()">📲 Kalender verbinden</button>
     </details>
@@ -2035,7 +2045,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.45.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.46.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2413,7 +2423,7 @@ async function pwErledigt(id, zurueck) {
   try { await api("pinnwand_erledigt", { id, zurueck: !!zurueck }); await pwLaden(); if (!zurueck) melde("✓ Erledigt – der Verfasser sieht es"); } catch (e) { melde(e.message, true); }
 }
 async function pwAbnehmen(id, ausFormular) {
-  if (!confirm("Zettel von der Pinnwand abnehmen?")) return;
+  if (!(await frage("Zettel von der Pinnwand abnehmen?"))) return;
   try { await api("pinnwand_abnehmen", { id }); melde("🗑️ Abgenommen"); await pwLaden(); if (ausFormular) pwVoll(); } catch (e) { melde(e.message, true); }
 }
 
@@ -2762,7 +2772,7 @@ async function anklopfen(pid) {
   const m = MITGLIEDER?.find((x) => x.person_id === pid) || ONL.liste.find((x) => x.person_id === pid);
   const name = m?.vorname || m?.name || "";
   if (ONL.liste.find((x) => x.person_id === pid)?.klopfbar === false) return melde(`🔕 ${name} hat Anklopfen ausgeschaltet – schreib einfach eine Nachricht.`);
-  if (!confirm(`Bei ${name} anklopfen?\n\n${name} bekommt sofort die Frage, ob ihr jetzt schreiben wollt.`)) return;
+  if (!(await frage(`Bei ${name} anklopfen?\n\n${name} bekommt sofort die Frage, ob ihr jetzt schreiben wollt.`))) return;
   try {
     const r = await api("anklopfen", { an: pid });
     ONL.wartet = r.id; onlineTakt(); setTimeout(() => { if (ONL.wartet === r.id) { ONL.wartet = null; onlineTakt(); melde(`${name} hat (noch) nicht reagiert – du kannst ihr/ihm eine normale Nachricht schreiben.`); } }, 180000);
@@ -3422,11 +3432,11 @@ async function anrufAnnehmen(mitBild) {
     setTimeout(() => { if (RUF && !RUF.verbunden) anrufFehlgeschlagen(); }, 15000);
   } catch (e) { const id = RUF?.id; anrufAufraeumen(); if (id) api("anruf_ende", { id }).catch(() => {}); melde(e.message, true); }
 }
-function anrufFehlgeschlagen() {
+async function anrufFehlgeschlagen() {
   if (!RUF) return; const g = RUF.gegen, id = RUF.id;
   api("diagnose", { art: "anruf", daten: { verbunden: false, rolle: RUF.rolle, ice: RUF.pc?.iceConnectionState || "" } }).catch(() => {});
   anrufAufraeumen(); if (id) api("anruf_ende", { id }).catch(() => {});
-  if (confirm(`Die Verbindung zu ${g.vorname || g.name} ließ sich nicht aufbauen – das passiert in manchen Mobilfunknetzen.\n\nStattdessen eine Nachricht schreiben?`)) direkt(g.person_id);
+  if ((await frage(`Die Verbindung zu ${g.vorname || g.name} ließ sich nicht aufbauen – das passiert in manchen Mobilfunknetzen.\n\nStattdessen eine Nachricht schreiben?`))) direkt(g.person_id);
 }
 async function anrufAuflegen() {
   if (!RUF) return; const id = RUF.id, verbunden = !!RUF.verbunden, dauer = RUF.start ? Math.round((Date.now() - RUF.start) / 1000) : 0, rolle = RUF.rolle;
@@ -3545,7 +3555,7 @@ async function todoHaken(id, erledigt) {
 }
 async function todoZuweisen(id) { return todoWerWaehlen(id); } // 0.52.0: Häkchen-Liste statt Nummern-Eingabe, mehrere möglich
 async function todoLoeschen(id) {
-  if (!confirm("Eintrag löschen?")) return;
+  if (!(await frage("Eintrag löschen?"))) return;
   try { await api("todo_loeschen", { id }); await todoLaden(); } catch (e) { melde(e.message, true); }
 }
 
@@ -3670,7 +3680,7 @@ function erstattungArt(art) {
        <label class="feld">Ziel / Ort (freiwillig)<input id="ersZiel" maxlength="120" placeholder="z. B. Dortmund"></label>
        <p class="hinweis" id="ersVorschau" style="margin:0">Pauschale: ${eur(satzAm(heute))} je km</p>`
     : `<label class="feld">Betrag in €<input id="ersBetrag" inputmode="decimal" placeholder="z. B. 23,90"></label>
-       <label class="feld">${art === "einkauf" ? "Was wurde eingekauft?" : "Wofür war die Auslage?"}<input id="ersWas" maxlength="200" placeholder="${art === "einkauf" ? "z. B. Getränke für das Treffen" : "z. B. Parkgebühr"}"></label>
+       <label class="feld">${art === "einkauf" ? "Was wurde eingekauft?" : "Wofür war die Auslage?"}<input id="ersWas" maxlength="200" placeholder="${art === "einkauf" ? "z. B. Getränke für die Sitzung" : "z. B. Parkgebühr"}"></label>
        ${art === "einkauf" ? `<label class="feld">Geschäft (freiwillig)<input id="ersGeschaeft" maxlength="120" placeholder="z. B. Edeka Werne"></label>` : ""}${beleg}`);
 }
 function erstattungVorschau() {
@@ -3727,7 +3737,7 @@ function erstattungAuszahlung(a) { ERS.auszahlung = a; document.querySelectorAll
 async function erstattungSenden() {
   if (!ERS.pos.length) return;
   const summe = ERS.pos.reduce((a, x) => a + x.betrag, 0);
-  if (!confirm(`Erstattung über ${eur(summe)} beantragen?\n\nDer Antrag geht per Mail an Kassenwart und Clubsprecher. Du bekommst eine Kopie.`)) return;
+  if (!(await frage(`Erstattung über ${eur(summe)} beantragen?\n\nDer Antrag geht per Mail an Kassenwart und Clubsprecher. Du bekommst eine Kopie.`))) return;
   try {
     const kopie = { pos: ERS.pos.slice(), auszahlung: ERS.auszahlung, bemerkung: $("ersBemerkung").value.trim() };
     const r = await api("erstattung_senden", { positionen: ERS.pos.map(({ belegNamen, belegDateien, satz, ...x }) => x), auszahlung: ERS.auszahlung, bemerkung: kopie.bemerkung });
@@ -3777,11 +3787,11 @@ function kmSaetzeZeigen(saetze, aktuell) {
 async function kmSatzSpeichern() {
   const satz = $("kmSatzNeu").value.trim(), ab = $("kmSatzAb").value;
   if (!satz || !ab) return melde("Bitte Satz und Datum angeben.", true);
-  if (!confirm(`${satz.replace(".", ",")} € je km ab ${ab.split("-").reverse().join(".")} speichern?\n\nGilt für alle Fahrten ab diesem Tag.`)) return;
+  if (!(await frage(`${satz.replace(".", ",")} € je km ab ${ab.split("-").reverse().join(".")} speichern?\n\nGilt für alle Fahrten ab diesem Tag.`))) return;
   try { const r = await api("km_satz_setzen", { satz, ab }); $("kmSatzNeu").value = ""; melde("💾 km-Satz gespeichert"); kmSatzAdminLaden(); } catch (e) { melde(e.message, true); }
 }
 async function kmSatzLoeschen(id) {
-  if (!confirm("Diesen km-Satz löschen?")) return;
+  if (!(await frage("Diesen km-Satz löschen?"))) return;
   try { await api("km_satz_loeschen", { id }); kmSatzAdminLaden(); } catch (e) { melde(e.message, true); }
 }
 
@@ -4059,7 +4069,7 @@ async function verbindungTesten() {
 }
 async function wartungUmschalten() {
   const an = !VB.wartung?.an;
-  const hinweis = an ? prompt("Wartung ankündigen – kurzer Hinweis für alle (freiwillig), z. B. „bis 20 Uhr“:", "") : null;
+  const hinweis = an ? (await eingabe("Wartung ankündigen – kurzer Hinweis für alle (freiwillig), z. B. „bis 20 Uhr“:", "")) : null;
   if (an && hinweis === null) return;
   try { const r = await api("wartung_setzen", { an, hinweis }); VB.wartung = r.wartung; vbStatusLed(); vbBlattZeigen(); melde(an ? "🔵 Wartung angekündigt – alle sehen die blaue LED" : "🟢 Wartung beendet"); }
   catch (e) { melde(e.message, true); }
@@ -4192,7 +4202,7 @@ async function druckUeberblick() { return { titel: "Unsere Club-App auf einen Bl
 // ---------- Start ----------
 const KACHELN = {
   verein: [
-    { id: "termine", sym: "📅", t: "Termine", u: "Treffen · Zu- & Absagen", v: "termine" },
+    { id: "termine", sym: "📅", t: "Termine", u: "Termine · Zu- & Absagen", v: "termine" },
     // KC-CLUB-SOS (1.6.0, Wunsch Hansi): rote Notfall-Kachel – Notrufnummern + Kontakte der Mitglieder
     { id: "sos", sym: "🆘", t: "SOS – Notfall", u: "Notruf · Kontakte im Notfall", aktion: "sosStart()", klasse: "sos" },
     { id: "kommunikation", sym: "💬", t: "Kommunikation", u: "Nachrichten & Anlagen", v: "nachrichten", zahl: () => INIT?.ungelesen || 0, neuFarbe: true }, // 1.21.4: farbig bei Neuem
@@ -4269,8 +4279,8 @@ function kaSichtbar(id, sichtbar) {
   kaFrisch = id; kaSpeichern(); registerZeigen(); kachelnZeigen();
   if (!sichtbar) melde("🙈 Ausgeblendet – mit 👁️ jederzeit wieder einblenden");
 }
-function kaStandard() {
-  if (!confirm("Alle Kacheln wieder in der ursprünglichen Reihenfolge und alle einblenden?")) return;
+async function kaStandard() {
+  if (!(await frage("Alle Kacheln wieder in der ursprünglichen Reihenfolge und alle einblenden?"))) return;
   KA = { reihenfolge: {}, aus: [], register: [] }; kaSpeichern(); registerZeigen(); kachelnZeigen();
 }
 // Lange drücken (0,6 s) auf eine Kachel → Bearbeiten; der Fingertipp danach öffnet die Kachel nicht
@@ -4429,7 +4439,7 @@ function kachelnZeigen() {
 // ‹ › antippen, im Feld wischen oder einen Punkt antippen. Felder kommen aus der Registry; die App merkt sich das zuletzt gezeigte.
 // Kein automatisches Weiterblättern (in Ruhe lesen). Neue Felder = neuer Eintrag hier.
 const INFO_ALLE = [
-  { id: "treffen", t: "Nächstes Treffen", html: () => infoTreffen() },
+  { id: "treffen", t: "Nächster Termin", html: () => infoTreffen() },
   // KC-CLUB-SCHNELLSTART (1.8.1, Wunsch Hansi): eigene Karte oben im farbigen Info-Feld – nur erweiterte Ansicht
   { id: "schnellstart", t: "Schnellstart", html: () => infoSchnellstart(), nur: () => !einfach() && schnellStand().an !== false && schnellAuswahl().length > 0 },
   { id: "wetter", t: "Wetter", html: () => infoWetter() },
@@ -4608,7 +4618,7 @@ async function zeAnrufen() {
   try {
     const d = await api("mitglied_details", { person_id: pid }), nr = d.kontakt?.handy || d.kontakt?.festnetz;
     if (!nr) return melde(`${zeVorname(pid)} ist nicht online und hat keine Telefonnummer freigegeben – schreib eine Nachricht oder klopf später an.`, true);
-    if (confirm(`${zeVorname(pid)} ist gerade nicht in der App.\n\nNormal anrufen (${nr})?`)) location.href = "tel:" + nurZiffern(nr);
+    if ((await frage(`${zeVorname(pid)} ist gerade nicht in der App.\n\nNormal anrufen (${nr})?`))) location.href = "tel:" + nurZiffern(nr);
   } catch (e) { melde(e.message, true); }
 }
 // 💬 / 🎤 → Unterhaltung öffnen (Gruppe oder neue/bestehende Unterhaltung mit den Gewählten); 🎤 startet gleich die Aufnahme
@@ -4632,7 +4642,7 @@ async function zeSenden() {
   if (!ZE.gruppe && !ZE.personen.length) return melde("Bitte oben auswählen, an wen.", true);
   const an = zeWerText(), n = ZE.gruppe ? ZE.gruppe.anzahl - 1 : ZE.personen.length;
   const wege = ["push", "email"].filter((w) => ZE.wege[w]);
-  if (n >= ZE_RUECKFRAGE_AB && !confirm(`Nachricht an ${an} senden?\n\n„${text.slice(0, 120)}“${wege.length ? "\n\nzusätzlich per " + wege.map((w) => (w === "push" ? "Push" : "E-Mail")).join(" und ") : ""}`)) return;
+  if (n >= ZE_RUECKFRAGE_AB && !(await frage(`Nachricht an ${an} senden?\n\n„${text.slice(0, 120)}“${wege.length ? "\n\nzusätzlich per " + wege.map((w) => (w === "push" ? "Push" : "E-Mail")).join(" und ") : ""}`))) return;
   try {
     const r = ZE.gruppe ? await api("nachricht_senden", { id: ZE.gruppe.id, text, wege })
       : await api("nachricht_senden", { text, wege, empfaenger: { personen: [...ZE.personen], aemter: [], alle: false, vorstand: false } });
@@ -4710,7 +4720,7 @@ function infoAdmin() {
 }
 // Notfall: Spiegel sofort anstoßen (verbraucht Neon-Rechenzeit – daher mit Rückfrage)
 async function adminSpiegeln() {
-  if (!confirm("Spiegel Supabase → Neon jetzt sofort anstoßen?\n\nDas verbraucht Neon-Rechenzeit – bitte nur im Notfall. Normal läuft er alle 6 Stunden von selbst.")) return;
+  if (!(await frage("Spiegel Supabase → Neon jetzt sofort anstoßen?\n\nDas verbraucht Neon-Rechenzeit – bitte nur im Notfall. Normal läuft er alle 6 Stunden von selbst."))) return;
   try { const r = await api("admin_spiegeln"); const e = r.ergebnis || {};
     melde(e.status === "mirror_dispatched" ? `🪞 Spiegel angestoßen (${e.tables} Tabellen)` : e.status === "maintenance" ? "Neon ist gerade in Wartung – nichts gestartet." : "Nichts zu spiegeln.");
     if (INFO_DATEN.admin) INFO_DATEN.admin.geholt = 0;
@@ -4841,7 +4851,7 @@ function infoWetter() {
   if (tr) {
     const w = d.tage.find((x) => x.datum === treffenTag);
     treffen = w ? `<button class="wtreffen" onclick="zumTreffen()">📅 Beim Treffen (${esc(fWtag.format(new Date(treffenTag + "T12:00:00Z")))} ${treffenTag.slice(8, 10)}.${treffenTag.slice(5, 7)}.): <b>${wetterArt(w.code).sym} ${grad(w.max)} / ${grad(w.min)}</b>${w.regenWkt != null ? ` · ☔ ${w.regenWkt} %` : ""} ›</button>`
-      : `<div class="unter" style="font-size:.85rem">📅 Wetter zum nächsten Treffen gibt es etwa 2 Wochen vorher.</div>`;
+      : `<div class="unter" style="font-size:.85rem">📅 Wetter zum nächsten Termin gibt es etwa 2 Wochen vorher.</div>`;
   }
   return `<div class="wszene ${szene}" aria-hidden="true"></div>
     <div class="winhalt">
@@ -4978,7 +4988,7 @@ async function wetterOrtSuchen() {
       : '<p class="hinweis">Kein Ort gefunden – anders schreiben?</p>';
   } catch (e) { melde(e.message, true); }
 }
-function wetterOrtWahl(i) { const o = WETTER_ORTE[i]; if (o && confirm(`Wetter für „${o.name}“${o.region ? " (" + o.region + ")" : ""} als Club-Vorgabe?\n\nGilt für alle Mitglieder ohne eigenen Wetterort.`)) wetterSetzen({ ort: o }); }
+async function wetterOrtWahl(i) { const o = WETTER_ORTE[i]; if (o && (await frage(`Wetter für „${o.name}“${o.region ? " (" + o.region + ")" : ""} als Club-Vorgabe?\n\nGilt für alle Mitglieder ohne eigenen Wetterort.`))) wetterSetzen({ ort: o }); }
 async function wetterSetzen(teil) {
   try {
     await api("wetter_setzen", teil); melde("💾 Wetter-Einstellung gespeichert");
@@ -4995,12 +5005,12 @@ function infoTreffen() {
     const meine = { ja: "✅ Ich komme", nein: "❌ Abgesagt", vielleicht: "❓ Vielleicht" }[t.meine] || "❔ Bitte zu- oder absagen";
     kopf = `<h2>${esc(t.titel)}</h2><div class="unter">${esc(wann(t.beginn))}${ort ? " · " + esc(ort) : ""}</div><div class="unter"><b>${meine}</b> · ✅ ${t.ja} Zusagen</div>`;
     bisTreffen = tage <= 0 ? "Heute" : tage === 1 ? "Morgen" : `in ${tage} Tagen`;
-  } else kopf = `<h2>Kein Treffen geplant</h2><div class="unter">Sobald ein Köcheclub-Treffen ansteht, siehst du es hier.</div>`;
+  } else kopf = `<h2>Kein Termin geplant</h2><div class="unter">Sobald ein Köcheclub-Termin ansteht, siehst du es hier.</div>`;
   return `<div class="klick" onclick="zumTreffen()">${kopf}</div>
     <div class="kacheln3">
       <button class="mini${n ? " mini-neu" : ""}" onclick="zeige('nachrichten')"><b>${n}</b><span>Neue Nachr. ›</span></button>
       <button class="mini" onclick="zeige('mitglieder')"><b>${INIT?.mitgliederAnzahl || "–"}</b><span>Mitglieder ›</span>${ONL.zeigen ? `<span class="onmini${ONL.liste.length ? "" : " leer"}" role="button" onclick="event.stopPropagation(); onlineBlatt()">${ONL.liste.length ? `🟢 ${ONL.liste.length} online ›` : "⚪ keiner online"}</span>` : ""}</button>
-      <button class="mini" onclick="zumTreffen()"><b style="font-size:1.05rem">${bisTreffen}</b><span>Nächstes Treffen ›</span></button>
+      <button class="mini" onclick="zumTreffen()"><b style="font-size:1.05rem">${bisTreffen}</b><span>Nächster Termin ›</span></button>
     </div>`;
 }
 // Internetseite des Köcheclubs (Platzhalter, bis die Seite online ist)
@@ -5008,7 +5018,7 @@ const WEBSEITE_URL = "";
 function webseite() { if (WEBSEITE_URL) window.open(WEBSEITE_URL, "_blank"); else melde("🌐 Die Internetseite des Köcheclubs kommt bald – hier geht es dann direkt hin."); }
 
 // ---------- Benachrichtigungen je Bereich (Push / E-Mail) ----------
-const WAHL_BEREICHE = [["termine", "📅 Treffen, Protokolle & Aufgaben"], ["nachrichten", "💬 Neue Nachrichten"], ["vorschlaege", "🗳️ Vorschläge & Abstimmungen"], ["dienste", "🗓️ Erinnerung an meinen Dienst (Vorabend)"], ["geburtstage", "🎂 Geburtstage (2 Tage vorher und am Tag)"], ["pinnwand", "📌 Neue Post-its an der Pinnwand"]];
+const WAHL_BEREICHE = [["termine", "📅 Sitzungen, Protokolle & Aufgaben"], ["nachrichten", "💬 Neue Nachrichten"], ["vorschlaege", "🗳️ Vorschläge & Abstimmungen"], ["dienste", "🗓️ Erinnerung an meinen Dienst (Vorabend)"], ["geburtstage", "🎂 Geburtstage (2 Tage vorher und am Tag)"], ["pinnwand", "📌 Neue Post-its an der Pinnwand"]];
 function wahlZeigen() {
   const w = INIT?.benachrichtigung || {};
   $("wahlTabelle").innerHTML = WAHL_BEREICHE.map(([b, t]) => `<tr><td>${t}</td>
@@ -5111,7 +5121,6 @@ async function neuLaden(vonHand) {
     meinStatusZeigen();
     $("ichName").textContent = ICH.name + (ICH.aemter?.length ? ` (${ICH.aemter.join(", ")})` : ICH.admin ? " (Admin)" : "");
     $("neuTreffenKnopf").classList.remove("versteckt"); // KC-CLUB-PRIVATTERMIN: „＋ Neu“ für alle (Mitglieder: privat)
-    $("neuUmfrageKnopf").classList.toggle("versteckt", !ICH.vorstand);
     heroZeigen(); registerZeigen(); kachelnZeigen(); wichtigZeigen(); zaehlerZeigen();
     if (vonHand) { melde("Aktualisiert"); updatePruefen(false); }
   } catch (e) { melde(e.message, true); }
@@ -5354,9 +5363,9 @@ async function treffenLaden() {
     const { treffen, geburtstage } = await api("treffen_liste"); orteMerken(treffen);
     const kommend = treffen.filter((t) => new Date(t.ende || t.beginn) > Date.now() - 3 * 3600000), vorbei = treffen.filter((t) => !kommend.includes(t)).reverse();
     // KC-CLUB-TERMIN-KACHELN (1.44.0, Wunsch Hansi „wirkt so erschlagen“): Liste als kleine Kacheln – antippen öffnet den Termin groß
-    $("treffenListe").innerHTML = (kommend.length ? `<div class="mini-kacheln">${kommend.map((t) => treffenKachel(t)).join("")}</div>` : '<div class="karte hinweis">Zurzeit ist kein Treffen geplant.</div>')
+    $("treffenListe").innerHTML = (kommend.length ? `<div class="mini-kacheln">${kommend.map((t) => treffenKachel(t)).join("")}</div>` : '<div class="karte hinweis">Zurzeit ist kein Termin geplant.</div>')
       + geburtstageListe(geburtstage || [], 30)
-      + (vorbei.length ? `<details class="karte"><summary><b>Vergangene Treffen (${vorbei.length})</b></summary><div class="mini-kacheln" style="margin-top:8px">${vorbei.map((t) => treffenKachel(t, true)).join("")}</div></details>` : "");
+      + (vorbei.length ? `<details class="karte"><summary><b>Vergangene Termine (${vorbei.length})</b></summary><div class="mini-kacheln" style="margin-top:8px">${vorbei.map((t) => treffenKachel(t, true)).join("")}</div></details>` : "");
     const ti = document.getElementById("treffenInfo"); if (ti) treffenInfo(ti.dataset.id, ti.dataset.vorbei === "1"); // nach Antwort/Mitfahrt frisch zeigen
   } catch (e) { melde(e.message, true); }
 }
@@ -5434,8 +5443,8 @@ async function antwort(id, a) {
   let notiz = "";
   // KC-CLUB-ANTWORT-ZURUECK (0.90.0, Fund Hansi): nochmal auf die eigene Antwort tippen nimmt sie zurück („keine Antwort“)
   const bisher = TREFFEN_IDX.get(id)?.meine, wort = { ja: "Ich komme", vielleicht: "Vielleicht", nein: "Kann nicht" };
-  if (bisher && bisher === a) { if (!confirm(`Deine Antwort „${wort[a]}“ zurücknehmen?\n\nDanach stehst du bei diesem Termin wieder ohne Antwort.`)) return; a = "keine"; }
-  else if (a !== "ja") notiz = prompt(a === "nein" ? "Kurzer Grund (freiwillig):" : "Kurze Notiz (freiwillig):", "") ?? "";
+  if (bisher && bisher === a) { if (!(await frage(`Deine Antwort „${wort[a]}“ zurücknehmen?\n\nDanach stehst du bei diesem Termin wieder ohne Antwort.`))) return; a = "keine"; }
+  else if (a !== "ja") { notiz = await eingabe(a === "nein" ? "Kurzer Grund (freiwillig)" : "Kurze Notiz (freiwillig)", "", { vorschlaege: a === "nein" ? ["Urlaub", "krank", "Arbeit", "anderer Termin"] : ["komme später", "gehe früher", "noch unsicher"], ja: a === "nein" ? "❌ Absagen" : "❓ Vielleicht", nein: "Ohne Notiz" }); notiz = notiz ?? ""; } // 1.46.0: wie bisher – ohne Notiz wird trotzdem geantwortet
   try {
     await api("treffen_antwort", { id, antwort: a, notiz }); melde(a === "ja" ? "Schön, dass du kommst!" : a === "keine" ? "Antwort zurückgenommen" : "Gespeichert");
     // KC-CLUB-THEMA-FRAGE (1.24.1, Wunsch Hansi): wer zur Sitzung zusagt, wird gefragt, ob er ein Thema vorschlagen möchte
@@ -5443,16 +5452,16 @@ async function antwort(id, a) {
     // KC-CLUB-MITFAHRT-SUCHE (0.87.0): bei Absage nachfragen, ob der gebuchte Platz / die eigene Fahrt frei wird (Suche entfällt automatisch)
     if (a === "nein" || a === "keine") {
       const mf = TREFFEN_IDX.get(id)?.mitfahrten || [], gebucht = mf.find((m) => m.dabei), eigen = mf.find((m) => m.eigen);
-      if (gebucht && confirm(`Du hast einen Platz bei ${gebucht.fahrer.name} gebucht.\n\nSoll ich den gebuchten Platz wieder freigeben?`)) {
+      if (gebucht && (await frage(`Du hast einen Platz bei ${gebucht.fahrer.name} gebucht.\n\nSoll ich den gebuchten Platz wieder freigeben?`))) {
         await api("mitfahrt_platz", { id: gebucht.id, dabei: false }).then(() => melde("🚗 Platz freigegeben – der Fahrer weiß Bescheid"), (e) => melde(e.message, true)); }
-      if (eigen && confirm(`Du bietest eine Mitfahrgelegenheit an${eigen.mitfahrer.length ? ` (${eigen.mitfahrer.length} fahren mit)` : ""}.\n\nSoll ich sie absagen? Mitfahrer bekommen Bescheid.`)) {
+      if (eigen && (await frage(`Du bietest eine Mitfahrgelegenheit an${eigen.mitfahrer.length ? ` (${eigen.mitfahrer.length} fahren mit)` : ""}.\n\nSoll ich sie absagen? Mitfahrer bekommen Bescheid.`))) {
         await api("mitfahrt_loeschen", { id: eigen.id }).then(() => melde("🚗 Mitfahrgelegenheit abgesagt"), (e) => melde(e.message, true)); }
     }
     treffenLaden();
   } catch (e) { melde(e.message, true); }
 }
 // KC-CLUB-TREFFEN-AUSWAHL (0.27.0): Titel und Ort per Auswahlliste; bisher benutzte Orte kommen automatisch dazu
-const TITEL_VORSCHLAEGE = ["Köcheclub-Treffen", "Kochabend", "Grillabend", "Weihnachtsfeier", "Jahreshauptversammlung", "Sitzung Clubleitung", "Ausflug", "Aufbau Weihnachtsmarkt"];
+const TITEL_VORSCHLAEGE = ["Köcheclub-Sitzung", "Kochabend", "Grillabend", "Weihnachtsfeier", "Jahreshauptversammlung", "Sitzung Clubleitung", "Ausflug", "Aufbau Weihnachtsmarkt"];
 const ORT_VORSCHLAEGE = ["Garten", "Hütte bei Anne"];
 let TR_ORTE = [];
 function orteMerken(treffen) {
@@ -5481,9 +5490,9 @@ async function treffenForm(t) {
   const bisDatum = t?.ende && tagIso(t.ende) !== datum ? tagIso(t.ende) : "", bisZeit = t?.ende && !ganz ? fZeit.format(new Date(t.ende)) : "";
   $("treffenForm").innerHTML = `<h3>${t?.id ? "Termin ändern" : "Neuer Termin"}</h3>
     ${t?.id ? "" : `<label class="schalter pt-privat"><span><b>🔒 Privat</b> – nur ich sehe diesen Termin</span><input type="checkbox" onchange="if(this.checked)privatForm(ptAusTreffen())"></label>`}
-    <div class="artwahl"><button type="button" class="knopf ${art === "treffen" ? "haupt" : ""}" data-art="treffen" onclick="tfArtWahl('treffen')">👥 Club-Treffen</button><button type="button" class="knopf ${art === "veranstaltung" ? "haupt" : ""}" data-art="veranstaltung" onclick="tfArtWahl('veranstaltung')">🎪 Veranstaltung</button></div>
+    <div class="artwahl"><button type="button" class="knopf ${art === "treffen" ? "haupt" : ""}" data-art="treffen" onclick="tfArtWahl('treffen')">👥 Sitzungen</button><button type="button" class="knopf ${art === "veranstaltung" ? "haupt" : ""}" data-art="veranstaltung" onclick="tfArtWahl('veranstaltung')">🎪 Veranstaltung</button></div>
     <input type="hidden" id="tfArt" value="${art}">
-    ${comboFeld("tfTitel", "Titel", TITEL_VORSCHLAEGE, t?.titel || (art === "treffen" ? "Köcheclub-Treffen" : ""), "– bitte wählen –", "✏️ Eigener Titel …", "z. B. Aufbau Weihnachtsmarkt")}
+    ${comboFeld("tfTitel", "Titel", TITEL_VORSCHLAEGE, t?.titel || (art === "treffen" ? "Köcheclub-Sitzung" : ""), "– bitte wählen –", "✏️ Eigener Titel …", "z. B. Aufbau Weihnachtsmarkt")}
     <div class="zwei"><label class="feld">Datum<input id="tfDatum" type="date" value="${datum}"></label><label class="feld">von<input id="tfZeit" type="time" value="${zeit}"></label></div>
     <div class="zwei"><label class="feld">bis Datum (mehrtägig)<input id="tfBisDatum" type="date" value="${bisDatum}"></label><label class="feld">bis Uhrzeit<input id="tfBisZeit" type="time" value="${bisZeit}"></label></div>
     <label class="schalter" id="tfGanzZeile"><span>Ganztägig (ohne Uhrzeit)</span><input type="checkbox" id="tfGanz" ${ganz ? "checked" : ""}></label>
@@ -5531,11 +5540,11 @@ async function treffenSpeichern(id, knopf) {
 }
 // KC-CLUB-LOESCHEN: endgültig entfernen (z. B. Test) – ohne Nachricht an die Mitglieder; Sicherung liegt im Änderungsprotokoll
 async function treffenLoeschen(id, va) {
-  if (!confirm(`${va ? "Termin" : "Treffen"} endgültig löschen?\n\nZu- und Absagen gehen mit verloren. Es wird niemand benachrichtigt (zum Absagen mit Nachricht an alle bitte „Absagen“ nutzen).\nEine Sicherung bleibt im Änderungsprotokoll.`)) return;
+  if (!(await frage(`${va ? "Veranstaltung" : "Sitzung"} endgültig löschen?\n\nZu- und Absagen gehen mit verloren. Es wird niemand benachrichtigt (zum Absagen mit Nachricht an alle bitte „Absagen“ nutzen).\nEine Sicherung bleibt im Änderungsprotokoll.`))) return;
   try { await api("treffen_loeschen", { id }); melde("🗑️ Gelöscht"); treffenLaden(); neuLaden(); } catch (e) { melde(e.message, true); }
 }
 async function treffenAbsagen(id, va) {
-  if (!confirm(`${va ? "Termin" : "Treffen"} wirklich absagen? Alle Mitglieder werden benachrichtigt.`)) return;
+  if (!(await frage(`${va ? "Veranstaltung" : "Sitzung"} wirklich absagen? Alle Mitglieder werden benachrichtigt.`))) return;
   try { await api("treffen_absagen", { id }); melde("Abgesagt – alle wurden benachrichtigt"); treffenLaden(); } catch (e) { melde(e.message, true); }
 }
 
@@ -5597,11 +5606,11 @@ async function stimme(id, wahl) {
 }
 async function vorschlagStatus(id, status, art) {
   const frage = status === "zurueckgezogen" ? "Vorschlag wirklich zurückziehen?" : art === "abstimmung" ? "Abstimmung jetzt beenden? Alle bekommen das Ergebnis." : "Als erledigt markieren (z. B. in die Tagesordnung aufgenommen)?";
-  if (!confirm(frage)) return;
+  if (!(await frage(frage))) return;
   try { await api("vorschlag_status", { id, status }); melde("Gespeichert"); vorschlaegeLaden(); neuLaden(); } catch (e) { melde(e.message, true); }
 }
 async function vorschlagLoeschen(id) {
-  if (!confirm("Diesen Vorschlag bzw. diese Abstimmung endgültig löschen?\n\nAlle Stimmen gehen mit verloren. Es wird niemand benachrichtigt.\nEine Sicherung bleibt im Änderungsprotokoll.")) return;
+  if (!(await frage("Diesen Vorschlag bzw. diese Abstimmung endgültig löschen?\n\nAlle Stimmen gehen mit verloren. Es wird niemand benachrichtigt.\nEine Sicherung bleibt im Änderungsprotokoll."))) return;
   try { await api("vorschlag_loeschen", { id }); melde("🗑️ Gelöscht"); vorschlaegeLaden(); neuLaden(); } catch (e) { melde(e.message, true); }
 }
 let vfArt = "thema", VF_SP = [], VORSCHLAG_MAP = new Map();
@@ -5659,7 +5668,7 @@ function vorschlagForm(art) {
     ${vfArt === "spende" ? `<p class="hinweis" style="margin:8px 0 0">Ein oder mehrere Spendenprojekte für die nächste Sitzung – einfach antippen.</p><div id="vfSpenden"></div>` : ""}
     <label class="feld">${vfArt === "abstimmung" ? "Frage" : vfArt === "spende" ? "Überschrift (freiwillig – sonst automatisch)" : "Thema"}<input id="vfTitel" maxlength="150" placeholder="${vfArt === "abstimmung" ? "z. B. Sollen wir im Mai ein Grillfest machen?" : vfArt === "spende" ? "z. B. Spenden aus dem Weihnachtsmarkt" : "z. B. Grillfest im Mai"}"></label>
     <label class="feld">Beschreibung (freiwillig)<textarea id="vfBeschr" rows="3"></textarea></label>
-    <label class="feld">Für welches Treffen?<select id="vfTreffen"><option value="">– allgemein –</option>${VORSCHLAG_TREFFEN.map((t) => `<option value="${t.id}" ${t.id === t0 ? "selected" : ""}>${esc(t.titel)} · ${esc(wann(t.beginn))}</option>`).join("")}</select></label>
+    <label class="feld">Für welchen Termin?<select id="vfTreffen"><option value="">– allgemein –</option>${VORSCHLAG_TREFFEN.map((t) => `<option value="${t.id}" ${t.id === t0 ? "selected" : ""}>${esc(t.titel)} · ${esc(wann(t.beginn))}</option>`).join("")}</select></label>
     ${vfArt === "abstimmung" ? `<label class="feld">Antworten (eine pro Zeile)<textarea id="vfOptionen" rows="3">Ja\nNein\nEnthaltung</textarea></label>
       <label class="schalter"><span><b>🔒 Geheime Abstimmung</b><br><small class="hinweis">Niemand sieht, wer wie gestimmt hat; Ergebnis erst am Ende</small></span><input type="checkbox" id="vfGeheim"></label>
       <div class="zwei"><label class="feld">Abstimmen bis (freiwillig)<input id="vfFristDatum" type="date"></label><label class="feld">Uhrzeit<input id="vfFristZeit" type="time" value="20:00"></label></div>` : ""}
@@ -5855,7 +5864,7 @@ function buRechteHtml() {
 async function buRechteSpeichern(knopf) {
   const r = BR_RECHTE[BR.recht], namen = BR.liste.filter((m) => BR.wahl.has(m.person_id)).map((m) => m.name);
   if (!r || !namen.length) return;
-  if (!confirm(`${r[0]} ${r[1]}\n\nfür: ${namen.join(", ")}\n\nJetzt speichern? (Es wird keine Nachricht verschickt.)`)) return;
+  if (!(await frage(`${r[0]} ${r[1]}\n\nfür: ${namen.join(", ")}\n\nJetzt speichern? (Es wird keine Nachricht verschickt.)`))) return;
   knopf.disabled = true;
   try { const x = await api("buero_rechte_setzen", { recht: BR.recht, personen: [...BR.wahl] }, { warten: true }); melde(`🔐 Gespeichert – ${x.geaendert} Mitglied${x.geaendert === 1 ? "" : "er"}: ${r[1]}. Wirkt beim nächsten Öffnen der App.`); await buRechte(); }
   catch (e) { melde(e.message, true); knopf.disabled = false; }
@@ -5870,7 +5879,7 @@ function buSitzungWaehlen(titel, weiter) {
     <div class="knoepfe"><button class="knopf" onclick="$('buWahl').remove()">Abbrechen</button></div>`);
 }
 const buSitzungWahl = () => buSitzungWaehlen("📝 Welche Sitzung vorbereiten?", buSitzungOeffnen);
-const buDruckWahl = () => buSitzungWaehlen("🖨️ Vorlage für welche Sitzung?", async (id) => { const t = BU.start.sitzungen.find((x) => x.id === id); if (!t?.vorbereitet) { if (confirm("Diese Sitzung ist noch nicht vorbereitet.\n\nJetzt vorbereiten?")) buSitzungOeffnen(id); return; } await buSitzungLaden(id); druckStarten("sitzung"); });
+const buDruckWahl = () => buSitzungWaehlen("🖨️ Vorlage für welche Sitzung?", async (id) => { const t = BU.start.sitzungen.find((x) => x.id === id); if (!t?.vorbereitet) { if ((await frage("Diese Sitzung ist noch nicht vorbereitet.\n\nJetzt vorbereiten?"))) buSitzungOeffnen(id); return; } await buSitzungLaden(id); druckStarten("sitzung"); });
 const buEinladungWahl = (nurOffen) => buSitzungWaehlen(nurOffen ? "🔔 Für welche Sitzung erinnern?" : "📨 Einladung für welche Sitzung?", (id) => buEinladung(id, nurOffen));
 async function buSitzungLaden(id) {
   BU.s = await api("buero_sitzung", { treffen_id: id }, { warten: true });
@@ -5954,7 +5963,7 @@ function druckSitzung() {
 async function buEinladung(id, nurOffen) {
   let s; try { s = await api("buero_sitzung", { treffen_id: id }, { warten: true }); } catch (e) { return melde(e.message, true); }
   const top = (s.vorbereitung?.tagesordnung || []).map((t, i) => `${i + 1}. ${t.t}`);
-  if (!nurOffen && !top.length && !confirm("Die Sitzung ist noch nicht vorbereitet – die Einladung geht dann ohne Tagesordnung.\n\nTrotzdem weiter?")) return buSitzungOeffnen(id);
+  if (!nurOffen && !top.length && !(await frage("Die Sitzung ist noch nicht vorbereitet – die Einladung geht dann ohne Tagesordnung.\n\nTrotzdem weiter?"))) return buSitzungOeffnen(id);
   const ohne = s.mitglieder.filter((m) => !m.antwort || m.antwort === "keine").length;
   const anzahl = nurOffen ? ohne : s.mitglieder.length;
   const schon = nurOffen ? s.vorbereitung?.erinnerung_am : s.vorbereitung?.einladung_am;
@@ -5971,7 +5980,7 @@ async function buEinladung(id, nurOffen) {
 function buWeg(w) { window.__buSend.wege = w === "beide" ? ["push", "email"] : w ? [w] : []; document.querySelectorAll("#buWege .chip").forEach((b) => b.classList.toggle("an", b.dataset.w === w)); }
 async function buSenden(knopf, anzahl) {
   const x = window.__buSend;
-  if (!confirm(`${x.nurOffen ? "Erinnerung" : "Einladung"} jetzt an ${anzahl} Mitglieder senden?`)) return;
+  if (!(await frage(`${x.nurOffen ? "Erinnerung" : "Einladung"} jetzt an ${anzahl} Mitglieder senden?`))) return;
   await einmal(knopf, async () => {
     try {
       const r = await api("buero_einladung", { treffen_id: x.id, nur_offen: x.nurOffen, wege: x.wege, text: $("buZusatz")?.value || "" });
@@ -6043,9 +6052,9 @@ function buBrief() {
 function briefFeld(k, el) { BRIEF[k] = el.value; briefMerken(); }
 let briefTimer = null;
 function briefMerken() { clearTimeout(briefTimer); briefTimer = setTimeout(() => { try { localStorage.setItem("kc_club_brief_entwurf", JSON.stringify(BRIEF)); } catch {} }, 400); }
-function briefVorlage(k) {
+async function briefVorlage(k) {
   const v = BRIEF_VORLAGEN[k]; if (!v) return;
-  if ((BRIEF.text || "").trim() && BRIEF.text !== BRIEF_VORLAGEN[BRIEF.vorlage]?.text && !confirm("Deinen bisherigen Text durch die Vorlage ersetzen?")) return;
+  if ((BRIEF.text || "").trim() && BRIEF.text !== BRIEF_VORLAGEN[BRIEF.vorlage]?.text && !(await frage("Deinen bisherigen Text durch die Vorlage ersetzen?"))) return;
   Object.assign(BRIEF, { vorlage: k, betreff: v.betreff, text: v.text }); briefMerken(); buZeigen();
 }
 function briefWahl(k, w) { BRIEF[k] = w; briefMerken(); buZeigen(); }
@@ -6066,8 +6075,8 @@ function buBriefHtml() {
       <button class="knopf klein" onclick="briefStandardSpeichern()">💾 Absender & Unterschrift für nächstes Mal merken</button></div>
     <div class="bu-leiste"><div class="knoepfe" style="margin:0"><button class="knopf haupt" style="flex:1;text-align:center" onclick="druckStarten('brief')">👁️ Vorschau & Drucken</button><button class="knopf" onclick="briefNeu()">🆕 Neu</button></div></div>`;
 }
-function briefNeu() {
-  if (!confirm("Neuen, leeren Brief beginnen? Der jetzige Entwurf wird verworfen.")) return;
+async function briefNeu() {
+  if (!(await frage("Neuen, leeren Brief beginnen? Der jetzige Entwurf wird verworfen."))) return;
   try { localStorage.removeItem("kc_club_brief_entwurf"); } catch {}
   const { absender, fuss, name, amt } = BRIEF; BRIEF = null; buBrief(); Object.assign(BRIEF, { absender, fuss, name, amt }); buZeigen();
 }
@@ -6276,7 +6285,7 @@ async function buNAufgabe(knopf) {
   });
 }
 async function buNMitteilen(knopf) {
-  if (!confirm("Die eingetragenen Aufgaben jetzt an die Mitglieder schicken?")) return;
+  if (!(await frage("Die eingetragenen Aufgaben jetzt an die Mitglieder schicken?"))) return;
   await einmal(knopf, async () => {
     try { const r = await api("buero_aufgaben_mitteilen", { protokoll_id: prId }); melde(r.personen ? `📨 ${r.personen} Mitglied${r.personen === 1 ? "" : "er"} benachrichtigt` : "Alle Aufgaben waren schon mitgeteilt"); await buNachherNeu(); }
     catch (e) { melde(e.message, true); }
@@ -6509,7 +6518,7 @@ async function flAendern(id, daten, meldung) {
   try { await api("fl_aendern", { id, ...daten }); if (meldung) melde(meldung); await flLaden(); buZeigen(); } catch (e) { melde(e.message, true); }
 }
 const flSchritt = (id, sid, erledigt) => flAendern(id, { was: "schritt_erledigt", schritt_id: sid, erledigt }, erledigt ? "✔ Erledigt" : "Wieder offen");
-const flSchrittWeg = (id, sid) => { if (confirm("Diesen Schritt streichen?")) flAendern(id, { was: "schritt_weg", schritt_id: sid }, "Gestrichen"); };
+const flSchrittWeg = async (id, sid) => { if ((await frage("Diesen Schritt streichen?"))) flAendern(id, { was: "schritt_weg", schritt_id: sid }, "Gestrichen"); };
 const flSchrittNeu = (id) => { const t = ($("flNeuSchritt")?.value || "").trim(); if (!t) return melde("Bitte kurz eintragen, was zu tun ist.", true); flAendern(id, { was: "schritt_neu", text: t }, "＋ Schritt ergänzt"); };
 function flAngaben(id) {
   const f = FL.d.faelle.find((x) => x.id === id); if (!f) return;
@@ -6546,7 +6555,7 @@ function flInformieren(id) {
 async function flSenden(knopf) {
   const x = window.__flSend, f = FL.d.faelle.find((y) => y.id === x.id), leid = flLeid(f);
   if (leid && !$("flIOK")?.checked) return melde("Bitte zuerst bestätigen, dass es mit der Familie abgesprochen ist.", true);
-  if (!confirm("Nachricht jetzt an alle Mitglieder senden?")) return;
+  if (!(await frage("Nachricht jetzt an alle Mitglieder senden?"))) return;
   await einmal(knopf, async () => {
     try {
       const r = await api("fl_informieren", { id: x.id, text: $("flIT").value, abgesprochen: leid ? true : undefined, abordnung: !!$("flIA")?.checked, wege: x.wege });
@@ -6565,7 +6574,7 @@ function flKarte(id) {
 async function flAbschliessen(id) {
   const f = FL.d.faelle.find((x) => x.id === id);
   const offen = f ? f.schritte.length - f.erledigt : 0;
-  if (!confirm(`Fall abschließen?${offen ? `\n\nNoch ${offen} Schritt(e) offen.` : ""}\n\nEr wird im Archiv abgelegt (Ordner „Admin“, Register „Freud & Leid“).`)) return;
+  if (!(await frage(`Fall abschließen?${offen ? `\n\nNoch ${offen} Schritt(e) offen.` : ""}\n\nEr wird im Archiv abgelegt (Ordner „Admin“, Register „Freud & Leid“).`))) return;
   try { const r = await api("fl_abschliessen", { id }); melde(r.abgelegt ? "✅ Abgeschlossen und im Archiv abgelegt" : "✅ Abgeschlossen (Archiv-Ablage hat nicht geklappt)"); await flLaden(); buFreudLeid(); }
   catch (e) { melde(e.message, true); }
 }
@@ -6618,6 +6627,12 @@ function hlZeigen() {
   else z.innerHTML = !HL.leihen && (HL.edit || HL.form) ? '<div class="karte hinweis">Wird geladen …</div>' : HL.edit ? leihEditHtml() : HL.form ? leihFormHtml() : leihListeHtml();
 }
 
+// KC-CLUB-NEU-EINHEITLICH (1.46.0): „＋ Neu“ oben rechts – je Reiter die passenden Möglichkeiten
+function hlNeuWahl() {
+  if (HL.tab === "leihen") return leihNeu(); // nur eine Möglichkeit → direkt
+  if (HL.tab === "boerse") return neuWahlFenster("＋ Neu in der Börse", [{ sym: "🟢", t: "Ich biete …", u: "verkaufen, verschenken, tauschen", los: () => boNeu("biete") }, { sym: "🔵", t: "Ich suche …", u: "jemand hat vielleicht etwas übrig", los: () => boNeu("suche") }]);
+  neuWahlFenster("＋ Neu bei Helfen", [{ sym: "🙋", t: "Ich suche Hilfe", u: "Aufbau, Einkauf, Kochen … – alle bekommen Bescheid", los: () => hilfeNeu() }, { sym: "🤲", t: "Ich biete Hilfe an", u: "z. B. Club-App einrichten – als Kachel für alle", los: () => angebotNeu() }]);
+}
 // ----- 🙋 Wer kann helfen? -----
 function hilfeNeu() { HL.form = { art: "", artText: "", datum: hlTag(0), slot: "", anzahl: 2, ort: "", ortFrei: false, notiz: "", ziel: "alle" }; hlZeigen(); window.scrollTo(0, 0); }
 function hilfeFormHtml() {
@@ -6741,7 +6756,7 @@ async function angebotSpeichern() {
   catch (e) { melde(e.message, true); }
 }
 async function angebotBeenden(id) {
-  if (!confirm("Dieses Angebot beenden? Die Kachel verschwindet für alle.")) return;
+  if (!(await frage("Dieses Angebot beenden? Die Kachel verschwindet für alle."))) return;
   try { await api("hilfe_angebot_beenden", { id }, { warten: true }); $("angebotInfo")?.remove(); melde("🔒 Angebot beendet"); hlLaden(); } catch (e) { melde(e.message, true); }
 }
 // ---------- KC-CLUB-BOERSE (1.43.0, Wunsch Hansi): 🛍️ Börse – Biete / Suche, bis 3 Fotos, 30 Tage, Treffer-Meldung ----------
@@ -6801,8 +6816,8 @@ async function boKontakt(id) {
 }
 async function boStatus(id, was, tage) {
   const a = BO.d?.anzeigen.find((x) => x.id === id);
-  if (was === "loeschen" && !confirm(a?.eigen ? "Diese Anzeige löschen? Die Fotos werden mit gelöscht." : "Diese Anzeige als Clubleitung entfernen? Die Fotos werden mit gelöscht.")) return;
-  if (was === "erledigt" && !confirm("Als erledigt markieren? Die Anzeige verschwindet für die anderen.")) return;
+  if (was === "loeschen" && !(await frage(a?.eigen ? "Diese Anzeige löschen? Die Fotos werden mit gelöscht." : "Diese Anzeige als Clubleitung entfernen? Die Fotos werden mit gelöscht."))) return;
+  if (was === "erledigt" && !(await frage("Als erledigt markieren? Die Anzeige verschwindet für die anderen."))) return;
   try {
     const x = await api("boerse_status", { id, was, tage }, { warten: true });
     melde(was === "verlaengern" ? `⏳ Verlängert bis ${boDatum(x.laeuft_bis)}` : was === "auslaufen" ? "In Ordnung – die Anzeige läuft einfach aus." : was === "erledigt" ? "✅ Erledigt – danke!" : "🗑️ Gelöscht");
@@ -6859,7 +6874,7 @@ async function hilfeAntwort(id, antwort) {
   catch (e) { melde(e.message, true); }
 }
 async function hilfeSchliessen(id) {
-  if (!confirm("Aufruf schließen? Danach kann niemand mehr zusagen.")) return;
+  if (!(await frage("Aufruf schließen? Danach kann niemand mehr zusagen."))) return;
   try { await api("hilfe_schliessen", { id }); melde("🔒 Geschlossen"); hlLaden(); } catch (e) { melde(e.message, true); }
 }
 
@@ -6998,7 +7013,7 @@ function leihAblehnen(id) {
 }
 async function leihStatus(id, status) {
   const frage = { storniert: "Ausleihe stornieren?", abgeholt: "Als abgeholt markieren?", zurueck: "Alles zurückgegeben?" }[status];
-  if (!confirm(frage)) return;
+  if (!(await frage(frage))) return;
   try { await api("leihen_status", { id, status }); melde({ storniert: "🚫 Storniert", abgeholt: "📦 Abgeholt", zurueck: "↩️ Zurückgegeben – danke!" }[status]); hlLaden(); }
   catch (e) { melde(e.message, true); }
 }
@@ -7150,8 +7165,8 @@ function unterhZeichnen() {
 }
 async function unterhEntfernen(id, fuerAlle) {
   const u = UH.liste.find((x) => x.id === id), name = u ? unterhName(u) : "diese Unterhaltung";
-  if (!confirm(fuerAlle ? `„${name}“ mit allen Nachrichten für ALLE Teilnehmer endgültig löschen?\nEine Sicherung bleibt im Änderungsprotokoll.`
-    : `„${name}“ aus deiner Liste entfernen?\n\nDie anderen behalten die Unterhaltung. Schreibt jemand wieder, erscheint sie bei dir erneut.`)) return;
+  if (!(await frage(fuerAlle ? `„${name}“ mit allen Nachrichten für ALLE Teilnehmer endgültig löschen?\nEine Sicherung bleibt im Änderungsprotokoll.`
+    : `„${name}“ aus deiner Liste entfernen?\n\nDie anderen behalten die Unterhaltung. Schreibt jemand wieder, erscheint sie bei dir erneut.`))) return;
   try {
     await api(fuerAlle ? "unterhaltung_loeschen" : "unterhaltung_ausblenden", { id });
     melde(fuerAlle ? "🗑️ Für alle gelöscht" : "🙈 Aus deiner Liste entfernt"); UH.wahl = null; await unterhLaden();
@@ -7257,6 +7272,50 @@ function nachrichtMenue(id) {
   document.body.appendChild(f);
 }
 // ---------- KC-CLUB-ANHEFTEN / -MERKEN / -CHATUMFRAGE / -KONTAKT (1.10.0, Wunsch Hansi – wie WhatsApp) ----------
+// ---------- KC-CLUB-DIALOG (1.46.0, Wunsch Hansi „überall das gleiche Bedienkonzept“): App-Fenster statt der grauen
+// Handy-Abfragen (confirm/prompt). frage() → true/false, eingabe() → Text oder null. Erste Zeile vor einer Leerzeile = Überschrift.
+// „OK = …, Abbrechen = …“ im Text wird zu Knopf-Beschriftungen. Tippen daneben oder „Abbrechen“ = nein/null.
+function dlgTeile(text) {
+  let t = String(text ?? ""), ja = null, nein = null;
+  const ok = t.match(/\n*\s*OK\s*=\s*([^\n,]+?)\s*(?:,|\n)\s*Abbrechen\s*=\s*([^\n]+?)\s*$/i);
+  if (ok) { ja = ok[1]; nein = ok[2].replace(/\s*\(.*\)\s*$/, ""); t = t.slice(0, ok.index).trimEnd(); }
+  const gross = (x) => x ? x.charAt(0).toUpperCase() + x.slice(1) : x;
+  const i = t.indexOf("\n\n");
+  return { kopf: i > 0 ? t.slice(0, i) : (t.length <= 90 ? t : ""), rest: i > 0 ? t.slice(i + 2) : (t.length <= 90 ? "" : t), ja: gross(ja), nein: gross(nein) };
+}
+function dlgOeffnen(html, beiZu) {
+  const f = document.createElement("div"); f.className = "blatt dlg-blatt"; f.setAttribute("role", "dialog"); f.setAttribute("aria-modal", "true");
+  f.innerHTML = `<div class="blatt-innen dlg-innen">${html}</div>`;
+  f.onclick = (e) => { if (e.target === f) beiZu(); };
+  document.body.appendChild(f); return f;
+}
+function frage(text, opt = {}) {
+  const d = dlgTeile(text), gefahr = opt.gefahr ?? /lösch|entfern|endgültig|leeren|verlassen|absagen|zurückziehen|beenden/i.test(String(text));
+  return new Promise((fertig) => {
+    let f; const zu = (w) => { f?.remove(); document.removeEventListener("keydown", taste); fertig(w); };
+    const taste = (e) => { if (e.key === "Escape") zu(false); };
+    f = dlgOeffnen(`${d.kopf ? `<h3 class="dlg-kopf">${esc(d.kopf)}</h3>` : ""}${d.rest ? `<p class="dlg-text">${esc(d.rest)}</p>` : ""}
+      <div class="dlg-knoepfe"><button class="knopf haupt${gefahr ? " dlg-gefahr" : ""}" data-w="1">${esc(opt.ja || d.ja || (gefahr ? "Ja" : "✅ Ja"))}</button><button class="knopf" data-w="0">${esc(opt.nein || d.nein || "Abbrechen")}</button></div>`, () => zu(false));
+    f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => zu(b.dataset.w === "1")));
+    document.addEventListener("keydown", taste); f.querySelector("[data-w='1']").focus();
+  });
+}
+function eingabe(text, wert = "", opt = {}) {
+  const d = dlgTeile(text), lang = opt.mehrzeilig ?? String(wert ?? "").length > 60;
+  return new Promise((fertig) => {
+    let f; const zu = (w) => { f?.remove(); fertig(w); };
+    f = dlgOeffnen(`${d.kopf ? `<h3 class="dlg-kopf">${esc(d.kopf)}</h3>` : ""}${d.rest ? `<p class="dlg-text">${esc(d.rest)}</p>` : ""}
+      ${opt.vorschlaege?.length ? `<div class="hl-chips">${opt.vorschlaege.map((v) => `<button class="chip" data-v="${esc(v)}">${esc(v)}</button>`).join("")}</div>` : ""}
+      <label class="feld" style="margin:0">${lang ? `<textarea rows="4" class="dlg-feld">${esc(wert ?? "")}</textarea>` : `<input class="dlg-feld" value="${esc(wert ?? "")}" ${opt.zahl ? 'inputmode="numeric"' : ""}>`}</label>
+      <div class="dlg-knoepfe"><button class="knopf haupt" data-w="1">${esc(opt.ja || "✅ OK")}</button><button class="knopf" data-w="0">${esc(opt.nein || "Abbrechen")}</button></div>`, () => zu(null));
+    const feld = f.querySelector(".dlg-feld");
+    f.querySelectorAll("[data-v]").forEach((b) => (b.onclick = () => { feld.value = b.dataset.v; feld.focus(); }));
+    f.querySelector("[data-w='1']").onclick = () => zu(feld.value);
+    f.querySelector("[data-w='0']").onclick = () => zu(null);
+    feld.addEventListener("keydown", (e) => { if (e.key === "Enter" && feld.tagName === "INPUT") zu(feld.value); if (e.key === "Escape") zu(null); });
+    setTimeout(() => { feld.focus(); feld.select?.(); }, 50);
+  });
+}
 function blattAuf(id, html) {
   document.getElementById(id)?.remove();
   const f = document.createElement("div"); f.id = id; f.className = "blatt"; f.setAttribute("role", "dialog"); f.setAttribute("aria-modal", "true");
@@ -7437,7 +7496,7 @@ async function sicherheitPruefen() {
 async function sicherheitMelden() {
   const r = SI.r; if (!r) return;
   const schlecht = SICHERHEIT_PRUEFUNGEN.some((p) => p.wert(r) !== true);
-  const notiz = schlecht ? prompt("Möchtest du kurz etwas dazuschreiben? (freiwillig)", "") : "";
+  const notiz = schlecht ? (await eingabe("Möchtest du kurz etwas dazuschreiben? (freiwillig)", "")) : "";
   if (notiz === null) return;
   try {
     await api("sicherheit_melden", { notiz, geraet: { verbindung: location.protocol === "https:", version: r.neueste == null ? null : r.neueste === APP_VERSION, serverMs: r.serverMs } }, { warten: true });
@@ -7546,7 +7605,7 @@ async function naKopieren(id) {
     document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, t.length); const g = document.execCommand("copy"); ta.remove();
     if (g) return ok();
   } catch {}
-  prompt("Text markieren und kopieren:", t);
+  (await eingabe("Text markieren und kopieren:", t));
 }
 async function reagieren(id, emoji) {
   try { await api("reaktion_setzen", { id, emoji }); chatStand = ""; await chatLaden(false); } catch (e) { melde(e.message, true); }
@@ -7664,7 +7723,7 @@ async function geraeteBlatt() {
   document.body.appendChild(f);
 }
 async function geraetEntfernen(id, dieses) {
-  if (!confirm(dieses ? "Dieses Gerät bekommt dann keine Push-Meldungen mehr. Entfernen?" : "Dieses Gerät bekommt dann keine Push-Meldungen mehr. Entfernen?")) return;
+  if (!(await frage(dieses ? "Dieses Gerät bekommt dann keine Push-Meldungen mehr. Entfernen?" : "Dieses Gerät bekommt dann keine Push-Meldungen mehr. Entfernen?"))) return;
   try { await api("geraet_entfernen", { id }); melde("🗑️ Gerät entfernt"); if (dieses) try { await (await (await navigator.serviceWorker.ready).pushManager.getSubscription())?.unsubscribe(); } catch {} geraeteBlatt(); pushStatusZeigen?.(); }
   catch (e) { melde(e.message, true); }
 }
@@ -7773,9 +7832,9 @@ const NOTRUFE = [
 let SOS = { daten: null, suche: "", offen: null, wo: null };
 function sosStart() { SOS.suche = ""; SOS.offen = null; SOS.wo = null; zeige("sos"); sosZeigen(); sosLaden(); }
 async function sosLaden() { try { SOS.daten = await api("sos_kontakte"); sosZeigen(); } catch (e) { SOS.daten = { fehler: e.message }; sosZeigen(); } }
-function sosAnrufen(nr) {
+async function sosAnrufen(nr) {
   const n = NOTRUFE.find((x) => x.nr === nr); if (!n) return;
-  if (!confirm(`⚠️ ECHTER ANRUF – KEIN TEST\n\nDein Telefon wählt jetzt wirklich ${n.anzeige}\n(${n.t}).\n\nNur im echten Notfall. Jetzt anrufen?`)) return;
+  if (!(await frage(`⚠️ ECHTER ANRUF – KEIN TEST\n\nDein Telefon wählt jetzt wirklich ${n.anzeige}\n(${n.t}).\n\nNur im echten Notfall. Jetzt anrufen?`))) return;
   location.href = "tel:" + n.nr;
 }
 const sosNummer = (t) => String(t || "").replace(/[^\d+]/g, "");
@@ -7836,7 +7895,7 @@ function sosWoText() {
   const w = SOS.wo; if (!w?.lat) return "";
   return `Mein Standort (${w.zeit} Uhr): ${w.adresse ? w.adresse + " – " : ""}${w.lat.toFixed(5)}, ${w.lon.toFixed(5)} – Karte: ${stKarte(w.lat.toFixed(5), w.lon.toFixed(5))}`;
 }
-function sosWoKopieren() { const t = sosWoText(); navigator.clipboard?.writeText(t).then(() => melde("📋 Standort kopiert"), () => prompt("Standort:", t)); }
+function sosWoKopieren() { const t = sosWoText(); navigator.clipboard?.writeText(t).then(() => melde("📋 Standort kopiert"), async () => (await eingabe("Standort:", t))); }
 async function sosWoBinIch() {
   let p;
   try { p = await stPositionWarten(); } catch (e) { SOS.wo = { fehler: e.message }; sosZeigen(); return; }
@@ -7908,8 +7967,8 @@ function nfpSpeichern() {
   try { localStorage.setItem(nfpSchluessel(), JSON.stringify(d)); } catch { melde("Speichern auf diesem Gerät ist nicht möglich (privates Surfen?).", true); return; }
   nfpZu(); melde("🪪 Notfallpass auf diesem Gerät gespeichert"); sosZeigen();
 }
-function nfpLoeschen() {
-  if (!confirm("Notfallpass auf diesem Gerät löschen?")) return;
+async function nfpLoeschen() {
+  if (!(await frage("Notfallpass auf diesem Gerät löschen?"))) return;
   try { localStorage.removeItem(nfpSchluessel()); } catch {}
   nfpZu(); melde("Notfallpass gelöscht"); sosZeigen();
 }
@@ -7924,7 +7983,7 @@ const nfpEigeneOrdner = (d) => (d?.ordner || []).filter((o) => o.besitzer && o.e
 function nfpStandText(d) { return new Date(d?.stand || Date.now()).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" }); }
 async function nfpArchivWahl() {
   const d = nfpLesen(); if (!nfpGefuellt(d)) return melde("Der Notfallpass ist noch leer.", true);
-  if (!confirm("🗄️ Notfallpass ins Archiv kopieren?\n\nBisher liegt dein Notfallpass nur auf diesem Handy.\nDie Kopie wird in deinem persönlichen Ordner gespeichert – also auch auf dem Vereins-Server, in der Spiegel-Datenbank und in Sicherungen.\n\nSehen kann sie nur du (und wem du deinen Ordner selbst freigibst).\n\nWeiter?")) return;
+  if (!(await frage("🗄️ Notfallpass ins Archiv kopieren?\n\nBisher liegt dein Notfallpass nur auf diesem Handy.\nDie Kopie wird in deinem persönlichen Ordner gespeichert – also auch auf dem Vereins-Server, in der Spiegel-Datenbank und in Sicherungen.\n\nSehen kann sie nur du (und wem du deinen Ordner selbst freigibst).\n\nWeiter?"))) return;
   $("nfpInhalt").innerHTML = '<p class="hinweis">Lädt deine Ordner …</p>';
   try { NFP_AR = await api("archiv_liste"); } catch (e) { melde(e.message, true); return nfpZeigen(); }
   const ordner = nfpEigeneOrdner(NFP_AR);
@@ -7985,7 +8044,7 @@ async function nfpArchivKopieren() {
       name: `Notfallpass-${stand.replace(/\./g, "-")}.png`, mime: "image/png", daten: base64(await bild.arrayBuffer()) }, { warten: true });
     nfpZu(); melde(`🗄️ Notfallpass liegt jetzt in deinem Ordner (Register „${register}“)`);
     AR.daten = null;
-    if (confirm(`Der Notfallpass liegt jetzt in deinem Ordner, Register „${register}“.\n\nArchiv jetzt öffnen?`)) { AR.ziel = ordner_id; arStart(); }
+    if ((await frage(`Der Notfallpass liegt jetzt in deinem Ordner, Register „${register}“.\n\nArchiv jetzt öffnen?`))) { AR.ziel = ordner_id; arStart(); }
   } catch (e) { melde(e.message, true); }
 }
 
@@ -8044,7 +8103,7 @@ async function naLoeschen(id, fuerAlle) {
 }
 // KC-CLUB-LOESCHEN: eigene Nachricht für alle löschen; Unterhaltung nur für mich entfernen oder (Admin) für alle löschen
 async function nachrichtLoeschen(id) {
-  if (!confirm("Diese Nachricht für alle löschen?")) return;
+  if (!(await frage("Diese Nachricht für alle löschen?"))) return;
   try { await api("nachricht_loeschen", { id }); chatStand = ""; melde("🗑️ Gelöscht"); chatLaden(false); } catch (e) { melde(e.message, true); }
 }
 function chatMenue() {
@@ -8064,7 +8123,7 @@ async function unterhaltungWeg(fuerAlle, gefragt) {
   if (!chatId) return zeige("nachrichten"); // noch nicht gesendeter Entwurf
   // KC-CLUB-ARCHIV-ABLAGE (1.19.0): vor dem Entfernen/Löschen anbieten, den Chat ins persönliche Archiv zu legen
   if (!gefragt && await chatAblageFragen({ frage: "Vorher in dein persönliches Archiv ablegen?", ja: "Ja, ablegen – dann weiter", nein: "Nein, nur weiter", danach: () => unterhaltungWeg(fuerAlle, true) })) return;
-  if (fuerAlle && !confirm("Unterhaltung mit allen Nachrichten für ALLE Teilnehmer endgültig löschen?\nEine Sicherung bleibt im Änderungsprotokoll.")) return;
+  if (fuerAlle && !(await frage("Unterhaltung mit allen Nachrichten für ALLE Teilnehmer endgültig löschen?\nEine Sicherung bleibt im Änderungsprotokoll."))) return;
   try { await api(fuerAlle ? "unterhaltung_loeschen" : "unterhaltung_ausblenden", { id: chatId }); melde(fuerAlle ? "🗑️ Für alle gelöscht" : "🙈 Aus deiner Liste entfernt"); zeige("nachrichten"); neuLaden(); }
   catch (e) { melde(e.message, true); }
 }
@@ -8249,13 +8308,13 @@ async function gruppeLoeschen(gefragt) {
   $("chatBlatt").classList.add("versteckt");
   const g = CHAT?.gruppe; if (!g || !chatId) return;
   if (!gefragt && await chatAblageFragen({ frage: "Vorher in dein persönliches Archiv ablegen?", ja: "Ja, ablegen – dann weiter", nein: "Nein, nur weiter", danach: () => gruppeLoeschen(true) })) return; // 1.19.0
-  if (!confirm(`Die Gruppe „${g.name}“ für ALLE löschen?\n\nAlle Nachrichten darin verschwinden bei allen ${CHAT.teilnehmer.length} Mitgliedern. Die anderen bekommen einen kurzen Hinweis.`)) return;
+  if (!(await frage(`Die Gruppe „${g.name}“ für ALLE löschen?\n\nAlle Nachrichten darin verschwinden bei allen ${CHAT.teilnehmer.length} Mitgliedern. Die anderen bekommen einen kurzen Hinweis.`))) return;
   try { await api("gruppe_loeschen", { id: chatId }); melde(`🗑️ Gruppe „${g.name}“ gelöscht`); zeige("nachrichten"); neuLaden(); } catch (e) { melde(e.message, true); }
 }
 async function gruppeVerlassen(gefragt) {
   $("chatBlatt").classList.add("versteckt");
   if (CHAT?.gruppe && !gefragt && await chatAblageFragen({ frage: "Vorher in dein persönliches Archiv ablegen?", ja: "Ja, ablegen – dann weiter", nein: "Nein, nur weiter", danach: () => gruppeVerlassen(true) })) return; // 1.19.0
-  if (!CHAT?.gruppe || !confirm(`Die Gruppe „${CHAT.gruppe.name}“ verlassen? Du bekommst dann keine Nachrichten mehr daraus.`)) return;
+  if (!CHAT?.gruppe || !(await frage(`Die Gruppe „${CHAT.gruppe.name}“ verlassen? Du bekommst dann keine Nachrichten mehr daraus.`))) return;
   try { await api("gruppe_verlassen", { id: CHAT.id }); melde("🚪 Gruppe verlassen"); zeige("nachrichten"); neuLaden(); } catch (e) { melde(e.message, true); }
 }
 
@@ -8690,35 +8749,37 @@ async function protokolleLaden() {
   try {
     prListe = await api("protokolle_liste");
     const { protokolle, aufgaben, treffenOhneProtokoll } = prListe; aufgabenMitGruppe(aufgaben);
-    const auf = aufgaben.length ? `<div class="karte"><h3>📌 Offene Aufgaben</h3>${aufgaben.map((a) => aufgabeZeile(a, a.meine || ICH.vorstand, a.verwalten)).join("")}</div>` : "";
-    const neu = treffenOhneProtokoll.length ? `<div class="karte"><h3>✍️ Protokoll schreiben</h3><p class="hinweis" style="margin-top:0">Wer diesmal schreibt, tippt beim Treffen auf „Anlegen“ – Datum, Ort, wer da war und die Themen trägt die App schon ein.</p>
+    const auf = aufgaben.length ? `<details class="karte" data-klappe="pr_aufgaben" data-ohne-unten open><summary>📌 Offene Aufgaben <span class="marke gelb">${aufgaben.length}</span></summary>${aufgaben.map((a) => aufgabeZeile(a, a.meine || ICH.vorstand, a.verwalten)).join("")}</details>` : "";
+    const neu = treffenOhneProtokoll.length ? `<details class="karte" data-klappe="pr_schreiben" data-ohne-unten open><summary>✍️ Protokoll schreiben <span class="marke">${treffenOhneProtokoll.length}</span></summary><p class="hinweis" style="margin-top:0">Wer diesmal schreibt, tippt bei der Sitzung auf „Anlegen“ – Datum, Ort, wer da war und die Themen trägt die App schon ein.</p>
       ${treffenOhneProtokoll.map((t) => `<div class="zeile"><div style="flex:1"><b>${esc(t.titel)}</b><div class="hinweis" style="font-size:.85rem">${esc(wann(t.beginn))}${t.ort ? " · " + esc(t.ort) : ""}</div></div>
-        <button class="knopf haupt klein" onclick="einmal(this, () => protokollAnlegen('${t.id}'))">＋ Anlegen</button></div>`).join("")}</div>` : "";
+        <button class="knopf haupt klein" onclick="einmal(this, () => protokollAnlegen('${t.id}'))">＋ Anlegen</button></div>`).join("")}</details>` : "";
     const suche = protokolle.length > 5 ? `<label class="feld" style="margin-top:12px"><input id="prSuche" placeholder="🔎 Protokoll suchen …" oninput="protokollFilter()"></label>` : "";
     $("protokollListe").innerHTML = auf + neu + `<div class="abschnitt"><h3>📄 Protokolle</h3></div>` + suche
-      + (protokolle.map(protokollKarte).join("") || '<div class="karte hinweis">Noch keine Protokolle. Nach dem nächsten Treffen erscheint es oben unter „Protokoll schreiben“.</div>');
+      + (protokolle.length ? `<div class="mini-kacheln">${protokolle.map(protokollKarte).join("")}</div>` : "") + (protokolle.length ? "" : '<div class="karte hinweis">Noch keine Protokolle. Nach der nächsten Sitzung erscheint sie oben unter „Protokoll schreiben“.</div>');
+    klappenMerken($("protokollListe")); // 1.46.0: Klappbereiche mit Pfeil und Schloss wie überall
   } catch (e) { melde(e.message, true); }
 }
 function protokollFilter() {
   const q = $("prSuche").value.toLowerCase();
   document.querySelectorAll("#protokollListe .prkarte").forEach((k) => k.classList.toggle("versteckt", !!q && !k.dataset.suche.includes(q)));
 }
+// KC-CLUB-PROTOKOLL-KACHELN (1.46.0, Wunsch Hansi „nichts überladen“): Protokolle als kleine Kacheln – antippen öffnet
+// das Protokoll (dort auch Löschen, Einwand, Drucken). Fremde Entwürfe sind sichtbar, aber nicht zu öffnen.
 function protokollKarte(p) {
   const offen = p.status !== "entwurf" || p.darfBearbeiten;
   const info = [p.anlagen ? `📎 ${p.anlagen}` : "", p.aufgabenOffen ? `📌 ${p.aufgabenOffen} offen` : "", p.einwaende ? `⚠️ ${p.einwaende}` : ""].filter(Boolean).join(" · ");
-  return `<div class="karte prkarte" data-suche="${esc((p.titel + " " + (p.ort || "") + " " + p.datum).toLowerCase())}" ${offen ? `style="cursor:pointer" onclick="protokollOeffnen('${p.id}')"` : ""}>
-    ${prStatusMarke(p)}${!p.gelesen ? ' <span class="marke rot">🆕 neu</span>' : ""}${p.version > 1 ? ` <span class="marke">Fassung ${p.version}</span>` : ""}
-    <div style="font-size:1.12rem;font-weight:800;margin-top:6px">${esc(p.titel)}</div>
-    <div class="hinweis" style="font-size:.85rem">${esc(tagKurz(p.datum))}${p.ort ? " · " + esc(p.ort) : ""} · ${p.status === "entwurf" && !p.darfBearbeiten ? "wird geschrieben von " : "von "}${esc(p.verfasser.name)}${info ? " · " + info : ""}</div>
-    ${p.darfLoeschen ? `<div class="knoepfe"><button class="knopf klein" onclick="event.stopPropagation();protokollLoeschen('${p.id}', ${p.status !== "entwurf"})">🗑️ Löschen</button></div>` : ""}</div>`;
+  return `<button class="mini-kachel prkarte${!p.gelesen ? " mk-offen" : ""}" data-suche="${esc((p.titel + " " + (p.ort || "") + " " + p.datum).toLowerCase())}" ${offen ? `onclick="protokollOeffnen('${p.id}')"` : 'disabled style="opacity:.75;cursor:default"'}>
+    <span class="mk-sym">📄</span><span class="mk-titel">${esc(p.titel)}</span><span class="mk-unter">🗓️ ${esc(tagKurz(p.datum))}${p.ort ? " · " + esc(p.ort) : ""}</span>
+    <span>${prStatusMarke(p)}${!p.gelesen ? ' <span class="marke rot">🆕 neu</span>' : ""}</span>
+    <span class="mk-unter">${p.status === "entwurf" && !p.darfBearbeiten ? "✍️ schreibt " : "von "}${esc(p.verfasser.name.split(" ")[0])}${p.version > 1 ? ` · Fassung ${p.version}` : ""}</span>${info ? `<span class="mk-unter">${info}</span>` : ""}</button>`;
 }
 async function protokollAnlegen(treffenId) {
-  try { const r = await api("protokoll_vorlage", treffenId ? { treffen_id: treffenId } : { titel: prompt("Wofür ist das Protokoll? (z. B. Jahreshauptversammlung)", "Sitzung des Köcheclubs") || "" }); protokollOeffnen(r.id); }
+  try { const r = await api("protokoll_vorlage", treffenId ? { treffen_id: treffenId } : { titel: (await eingabe("Wofür ist das Protokoll? (z. B. Jahreshauptversammlung)", "Sitzung des Köcheclubs")) || "" }); protokollOeffnen(r.id); }
   catch (e) { melde(e.message, true); }
 }
-function protokollNeu() {
-  if (prListe?.treffenOhneProtokoll?.length) return melde("Tipp: Oben beim Treffen auf „＋ Anlegen“ tippen – dann ist die Vorlage schon ausgefüllt.");
-  if (confirm("Protokoll ohne Club-Treffen anlegen (z. B. für eine Sitzung, die nicht in der App steht)?")) protokollAnlegen(null);
+async function protokollNeu() {
+  if (prListe?.treffenOhneProtokoll?.length) return melde("Tipp: Oben bei der Sitzung auf „＋ Anlegen“ tippen – dann ist die Vorlage schon ausgefüllt.");
+  if ((await frage("Protokoll ohne Termin aus der App anlegen (z. B. für eine Sitzung, die nicht in der App steht)?"))) protokollAnlegen(null);
 }
 async function protokollOeffnen(id, ausHistorie) {
   prId = id; PR = null;
@@ -8826,7 +8887,7 @@ async function protokollDateien(input) {
   try { await prNeuLaden(); } catch (e) { melde(e.message, true); }
 }
 async function protokollAnlageWeg(aid) {
-  if (!confirm("Diese Anlage aus dem Protokoll entfernen?")) return;
+  if (!(await frage("Diese Anlage aus dem Protokoll entfernen?"))) return;
   try { await api("protokoll_anlage", { id: prId, attachment_id: aid, entfernen: true }); await prNeuLaden(); } catch (e) { melde(e.message, true); }
 }
 // KC-CLUB-AUFGABEN-MEHRERE (0.53.0): „Wer?“ per Häkchen – bei mehreren bekommt jeder seine eigene (verknüpfte) Aufgabe
@@ -8858,7 +8919,7 @@ async function aufgabeErledigt(id, erledigt) {
   } catch (e) { melde(e.message, true); }
 }
 async function aufgabeLoeschen(id) {
-  if (!confirm("Aufgabe löschen?")) return;
+  if (!(await frage("Aufgabe löschen?"))) return;
   try {
     await api("aufgabe_loeschen", { id }); melde("🗑️ Gelöscht");
     if (aktuelleAnsicht === "protokoll") { if ($("prAufgaben")) await prNeuLaden(); else protokollOeffnen(prId, true); }
@@ -8869,15 +8930,15 @@ async function aufgabeLoeschen(id) {
 }
 async function protokollVeroeffentlichen() {
   try { await prSpeichernJetzt(false); } catch { return; }
-  if (!PR.anlagen.length && !$("prK").value.trim() && !confirm("Es ist noch kein Foto und keine Datei angehängt. Trotzdem veröffentlichen?")) return;
-  if (!confirm("Protokoll jetzt veröffentlichen? Alle Mitglieder (ohne Aushilfen) bekommen Bescheid und haben 7 Tage Zeit für Einwände.")) return;
+  if (!PR.anlagen.length && !$("prK").value.trim() && !(await frage("Es ist noch kein Foto und keine Datei angehängt. Trotzdem veröffentlichen?"))) return;
+  if (!(await frage("Protokoll jetzt veröffentlichen? Alle Mitglieder (ohne Aushilfen) bekommen Bescheid und haben 7 Tage Zeit für Einwände."))) return;
   try { const r = await api("protokoll_veroeffentlichen", { id: prId }); melde(`📢 Veröffentlicht – Einwände bis ${fKurz.format(new Date(r.einspruch_bis))}`); protokollOeffnen(prId, true); }
   catch (e) { melde(e.message, true); }
 }
 async function protokollLoeschen(id, veroeffentlicht) {
   id = id || prId;
   if (veroeffentlicht === undefined) veroeffentlicht = !!PR && (PR.protokoll.roh !== "entwurf" || PR.protokoll.version > 1);
-  if (!confirm(`${veroeffentlicht ? "Dieses Protokoll" : "Diesen Entwurf"} endgültig löschen?\n\nAufgaben, Einwände und Lesebestätigungen dazu gehen mit verloren. Es wird niemand benachrichtigt.\nEine Sicherung bleibt im Änderungsprotokoll.`)) return;
+  if (!(await frage(`${veroeffentlicht ? "Dieses Protokoll" : "Diesen Entwurf"} endgültig löschen?\n\nAufgaben, Einwände und Lesebestätigungen dazu gehen mit verloren. Es wird niemand benachrichtigt.\nEine Sicherung bleibt im Änderungsprotokoll.`))) return;
   try {
     if (id === prId) { clearTimeout(prTimer); prTimer = null; }
     await api("protokoll_loeschen", { id }); if (id === prId) PR = null; melde("🗑️ Gelöscht");
@@ -8916,19 +8977,19 @@ function protokollLesen() {
   document.querySelectorAll("#protokollInhalt img[data-anlage]").forEach(bildLaden);
 }
 async function einwandSchreiben() {
-  const text = prompt("Was stimmt im Protokoll nicht? (Der Schriftführer und Clubsprecher/Kassenwart bekommen Bescheid.)");
+  const text = (await eingabe("Was stimmt im Protokoll nicht? (Der Schriftführer und Clubsprecher/Kassenwart bekommen Bescheid.)"));
   if (!text || !text.trim()) return;
   try { await api("protokoll_einwand", { id: prId, text }); melde("Einwand gesendet"); protokollOeffnen(prId, true); } catch (e) { melde(e.message, true); }
 }
 async function einwandLoeschen(id) {
-  if (!confirm("Diesen Einwand löschen?")) return;
+  if (!(await frage("Diesen Einwand löschen?"))) return;
   try { await api("einwand_loeschen", { id }); melde("🗑️ Gelöscht"); protokollOeffnen(prId, true); } catch (e) { melde(e.message, true); }
 }
 async function einwandErledigt(id) {
   try { await api("einwand_erledigt", { id }); protokollOeffnen(prId, true); } catch (e) { melde(e.message, true); }
 }
 async function protokollKorrigieren() {
-  if (!confirm("Protokoll korrigieren? Die jetzige Fassung bleibt im Archiv erhalten. Nach dem erneuten Veröffentlichen beginnen die 7 Tage Einspruch von vorn.")) return;
+  if (!(await frage("Protokoll korrigieren? Die jetzige Fassung bleibt im Archiv erhalten. Nach dem erneuten Veröffentlichen beginnen die 7 Tage Einspruch von vorn."))) return;
   try { await api("protokoll_korrigieren", { id: prId }); protokollOeffnen(prId, true); } catch (e) { melde(e.message, true); }
 }
 
@@ -9018,9 +9079,10 @@ async function ptLaden() {
   let liste = []; try { liste = (await api("privattermine_liste")).privat || []; } catch { $("privattermine").innerHTML = ""; return; }
   liste.forEach((x) => PT.map.set(x.id, x));
   const zeig = liste.filter((x) => new Date(x.ende || x.beginn) > Date.now() - 3 * 3600000).slice(0, 8);
-  $("privattermine").innerHTML = zeig.length ? `<div class="karte pt-karte"><b>🔒 Meine privaten Termine</b> <span class="hinweis" style="font-size:.8rem">nur du siehst sie</span>
+  $("privattermine").innerHTML = zeig.length ? `<details class="karte pt-karte" data-klappe="tm_privat" data-ohne-unten open><summary>🔒 Meine privaten Termine <span class="hinweis" style="font-size:.8rem;font-weight:600">nur du siehst sie</span></summary>
     ${zeig.map((x) => `<div class="keintrag" onclick="privatForm(PT.nachId('${x.id}'),'${berlinIso(x.beginn)}')"><div class="farbe" style="background:#5b7fa6"></div><div style="flex:1"><b>${x.wiederholung && x.wiederholung !== "keine" ? "🔁 " : ""}${esc(x.titel)}</b>
-      <small>${esc(x.ganztaegig ? fTag.format(new Date(x.beginn)) + " · ganztägig" : wann(x.beginn))}${x.ort ? " · 📍 " + esc(x.ort) : ""}${x.erinnerung_min ? " · ⏰" : ""}</small></div></div>`).join("")}</div>` : "";
+      <small>${esc(x.ganztaegig ? fTag.format(new Date(x.beginn)) + " · ganztägig" : wann(x.beginn))}${x.ort ? " · 📍 " + esc(x.ort) : ""}${x.erinnerung_min ? " · ⏰" : ""}</small></div></div>`).join("")}</details>` : "";
+  klappenMerken($("privattermine")); // 1.46.0
 }
 function privatForm(x, vorkommen) {
   x = x || {};
@@ -9064,7 +9126,7 @@ async function privatSpeichern(id) {
 }
 async function privatLoeschen(id, reihe) {
   if (reihe && PT.vorkommen) return privatLoeschenReihe(id);
-  if (!confirm("Diesen privaten Termin löschen?")) return;
+  if (!(await frage("Diesen privaten Termin löschen?"))) return;
   try { await api("privattermin_loeschen", { id }); PT.map.delete(id); $("treffenForm").classList.add("versteckt"); melde("🗑️ Gelöscht"); treffenLaden(); } catch (e) { melde(e.message, true); }
 }
 // Reihe: nur diesen einen Termin oder die ganze Reihe?
@@ -9084,6 +9146,20 @@ async function privatLoeschenTun(id, tag) {
     melde(tag ? "🗑️ Dieser eine Termin ist gelöscht – die Reihe bleibt" : "🗑️ Ganze Reihe gelöscht"); treffenLaden(); } catch (e) { melde(e.message, true); }
 }
 
+// KC-CLUB-NEU-EINHEITLICH (1.46.0, Wunsch Hansi „überall das gleiche Bedienkonzept“): EIN „＋ Neu“ oben rechts –
+// bei mehreren Möglichkeiten erst ein kleines Auswahlfenster (statt mehrerer Knöpfe in der Kopfzeile)
+function neuWahlFenster(titel, optionen) {
+  window.__neuW = optionen.map((o) => o.los);
+  blattAuf("neuWahlBlatt", `<h3 style="margin-top:0">${titel}</h3><div class="wahl">${optionen.map((o, i) => `<button onclick="$('neuWahlBlatt').remove();window.__neuW[${i}]()">${o.sym} <b>${esc(o.t)}</b><br><small>${esc(o.u)}</small></button>`).join("")}</div>
+    <button class="knopf" style="width:100%;text-align:center;margin-top:8px" onclick="$('neuWahlBlatt').remove()">Abbrechen</button>`);
+}
+function termineNeuWahl() {
+  neuWahlFenster("＋ Neu bei Termine", [
+    { sym: "📅", t: ICH?.vorstand ? "Termin eintragen" : "Privater Termin", u: ICH?.vorstand ? "Sitzung, Veranstaltung – oder mit Häkchen „Privat“ nur für dich" : "nur für dich sichtbar", los: () => neuTermin() },
+    { sym: "📨", t: "Terminanfrage", u: "Einzelne, mehrere oder eine Gruppe fragen – Ja / Vielleicht / Nein", los: () => taForm() },
+    ...(ICH?.vorstand ? [{ sym: "🗓️", t: "Terminfindung", u: "Mehrere Termine zur Auswahl – alle stimmen ab", los: () => umfrageForm() }] : []),
+  ]);
+}
 // ---------- KC-CLUB-TERMINANFRAGE (0.92.0) ----------
 // Jedes Mitglied fragt Einzelne, mehrere oder eine Gruppe an: Anlass, Datum/Uhrzeit, Ort, Notiz – Antwort Ja / Vielleicht / Nein.
 // Nochmal auf die eigene Antwort tippen nimmt sie zurück (wie bei Treffen). Der Absender kann absagen.
@@ -9093,7 +9169,8 @@ const TA = { liste: [], wahl: { personen: [], gruppe: null }, gruppen: [], marki
 async function taLaden() {
   try { TA.liste = (await api("terminanfragen_liste")).anfragen || []; } catch (e) { $("terminanfragen").innerHTML = ""; return; }
   const kommend = TA.liste.filter((a) => new Date(a.ende || a.beginn) > Date.now() - 3 * 3600000);
-  $("terminanfragen").innerHTML = kommend.map(taKarte).join("");
+  $("terminanfragen").innerHTML = kommend.length ? `<details class="karte tm-klappe" data-klappe="tm_anfragen" data-ohne-unten open><summary>📨 Terminanfragen <span class="marke">${kommend.length}</span></summary>${kommend.map(taKarte).join("")}</details>` : ""; // 1.46.0
+  klappenMerken($("terminanfragen"));
   if (TA.markiert) { const k = document.getElementById("ta-" + TA.markiert); if (k) { k.classList.add("ta-markiert"); k.scrollIntoView({ behavior: "smooth", block: "center" }); } TA.markiert = null; }
 }
 function taZeigen(id) { TA.markiert = id; termineArt = "liste"; if (aktuelleAnsicht === "termine") treffenLaden(); else zeige("termine"); }
@@ -9117,14 +9194,14 @@ function taKarte(a) {
 async function taAntwort(id, antwort) {
   let notiz = "";
   if (antwort === "nein" || antwort === "vielleicht") {
-    const r = prompt(antwort === "nein" ? "Kurze Begründung (freiwillig), z. B. „Bin im Urlaub“:" : "Kurze Notiz (freiwillig), z. B. „Erst ab 18 Uhr“:", "");
+    const r = await eingabe(antwort === "nein" ? "Kurze Begründung (freiwillig)" : "Kurze Notiz (freiwillig)", "", { vorschlaege: antwort === "nein" ? ["Urlaub", "krank", "Arbeit", "anderer Termin"] : ["erst später", "nur kurz", "noch unsicher"] });
     if (r === null) return; notiz = r.trim().slice(0, 300);
   }
   try { await api("terminanfrage_antwort", { id, antwort, notiz }); melde(antwort === "keine" ? "↩️ Antwort zurückgenommen" : `${TA_ANTW[antwort]} – ist gemeldet`); TA.markiert = id; await taLaden(); neuLaden(); }
   catch (e) { melde(e.message, true); }
 }
 async function taAbsagen(id) {
-  const grund = prompt("Anfrage absagen? Alle, die nicht schon Nein gesagt haben, bekommen Bescheid.\n\nGrund (freiwillig):", "");
+  const grund = (await eingabe("Anfrage absagen? Alle, die nicht schon Nein gesagt haben, bekommen Bescheid.\n\nGrund (freiwillig):", ""));
   if (grund === null) return;
   try { await api("terminanfrage_absagen", { id, grund: grund.trim() }); melde("🚫 Abgesagt – Bescheid ist raus"); await taLaden(); } catch (e) { melde(e.message, true); }
 }
@@ -9183,7 +9260,7 @@ async function taSenden() {
   const beginn = taZeitpunkt(datum, zeit), ende = bis ? taZeitpunkt(datum, bis) : null;
   if (ende && ende < beginn) return melde("„bis“ liegt vor der Uhrzeit.", true);
   const n = TA.wahl.gruppe ? TA.wahl.gruppe.anzahl : TA.wahl.personen.length;
-  if (n >= ZE_RUECKFRAGE_AB && !confirm(`Anfrage wirklich an ${taWerText()} senden?`)) return;
+  if (n >= ZE_RUECKFRAGE_AB && !(await frage(`Anfrage wirklich an ${taWerText()} senden?`))) return;
   try {
     const r = await api("terminanfrage_senden", { an: TA.wahl.gruppe ? { gruppe: TA.wahl.gruppe.id } : { personen: TA.wahl.personen }, anlass, beginn, ende,
       ort: $("taOrt").value.trim(), notiz: $("taNotiz").value.trim(), frist: frist ? taZeitpunkt(frist, "23:59") : null });
@@ -9309,7 +9386,9 @@ async function terminfindungLaden() {
   try {
     const { umfragen } = await api("terminumfragen_liste");
     UMFRAGEN = umfragen.filter((u) => u.status === "offen");
-    $("terminfindung").innerHTML = UMFRAGEN.map(umfrageKarte).join("");
+    // 1.46.0: als Klappbereich mit Pfeil und Schloss (wie überall)
+    $("terminfindung").innerHTML = UMFRAGEN.length ? `<details class="karte tm-klappe" data-klappe="tm_umfragen" data-ohne-unten open><summary>🗓️ Terminfindung <span class="marke">${UMFRAGEN.length}</span></summary>${UMFRAGEN.map(umfrageKarte).join("")}</details>` : "";
+    klappenMerken($("terminfindung"));
   } catch (e) { melde(e.message, true); }
 }
 function umfrageKarte(u) {
@@ -9338,12 +9417,12 @@ async function umfrageAntwort(optionId, antwort) {
 }
 async function umfrageFestlegen(id, optionId) {
   const u = UMFRAGEN.find((x) => x.id === id), o = u?.optionen.find((x) => x.id === optionId);
-  if (!o || !confirm(`„${u.titel}“ auf ${wann(o.beginn)} festlegen?\n\nDer Termin wird angelegt, alle bekommen die Einladung. Wer „passt“ angekreuzt hat, ist schon zugesagt.`)) return;
+  if (!o || !(await frage(`„${u.titel}“ auf ${wann(o.beginn)} festlegen?\n\nDer Termin wird angelegt, alle bekommen die Einladung. Wer „passt“ angekreuzt hat, ist schon zugesagt.`))) return;
   try { const r = await api("terminumfrage_festlegen", { id, option_id: optionId }); melde(`📅 Festgelegt${r.versand ? ` – ${r.versand.gesendet} Mitglieder benachrichtigt` : ""}`); treffenLaden(); neuLaden(); }
   catch (e) { melde(e.message, true); }
 }
 async function umfrageLoeschen(id) {
-  if (!confirm("Diese Terminfindung endgültig löschen? Alle Antworten gehen mit verloren. Eine Sicherung bleibt im Änderungsprotokoll.")) return;
+  if (!(await frage("Diese Terminfindung endgültig löschen? Alle Antworten gehen mit verloren. Eine Sicherung bleibt im Änderungsprotokoll."))) return;
   try { await api("terminumfrage_loeschen", { id }); melde("🗑️ Gelöscht"); terminfindungLaden(); neuLaden(); } catch (e) { melde(e.message, true); }
 }
 let tuArt = "treffen";
@@ -9354,8 +9433,8 @@ function umfrageForm() {
   const reihe = tuReihe;
   $("terminumfrageForm").innerHTML = `<h3>🗓️ Terminfindung starten</h3>
     <p class="hinweis" style="margin-top:0">Mehrere Termine vorschlagen – alle kreuzen an, was passt. Danach legst du mit 📅 den besten Termin fest.</p>
-    <div class="artwahl"><button type="button" class="knopf haupt" data-art="treffen" onclick="tuArtWahl('treffen')">👥 Club-Treffen</button><button type="button" class="knopf" data-art="veranstaltung" onclick="tuArtWahl('veranstaltung')">🎪 Veranstaltung</button></div>
-    <label class="feld">Titel<input id="tuTitel" maxlength="120" value="Köcheclub-Treffen"></label>
+    <div class="artwahl"><button type="button" class="knopf haupt" data-art="treffen" onclick="tuArtWahl('treffen')">👥 Sitzungen</button><button type="button" class="knopf" data-art="veranstaltung" onclick="tuArtWahl('veranstaltung')">🎪 Veranstaltung</button></div>
+    <label class="feld">Titel<input id="tuTitel" maxlength="120" value="Köcheclub-Sitzung"></label>
     <label class="feld">Ort (freiwillig)<input id="tuOrt" maxlength="200"></label>
     <label class="feld">Beschreibung (freiwillig)<textarea id="tuBeschr" rows="2"></textarea></label>
     <p style="margin:12px 0 0"><b>Terminvorschläge</b></p>
@@ -9426,11 +9505,11 @@ function mfAutoHtml(m, art, bezugId, aktiv, offen, ichDabei) {
     <div class="mf-status"><span>${frei} von ${m.plaetze} ${m.plaetze === 1 ? "Platz" : "Plätzen"} frei</span>${marke}</div></div>`;
 }
 async function mfSitzBuchen(id, fahrer) {
-  if (!confirm(`🚗 Diesen Platz bei ${fahrer} für dich reservieren?\n\n${fahrer} bekommt Bescheid.`)) return;
+  if (!(await frage(`🚗 Diesen Platz bei ${fahrer} für dich reservieren?\n\n${fahrer} bekommt Bescheid.`))) return;
   mitfahrtPlatz(id, true);
 }
 async function mfSitzFreigeben(id, fahrer) {
-  if (!confirm(`Deinen Platz bei ${fahrer} wieder freigeben?\n\n${fahrer} bekommt Bescheid.`)) return;
+  if (!(await frage(`Deinen Platz bei ${fahrer} wieder freigeben?\n\n${fahrer} bekommt Bescheid.`))) return;
   mitfahrtPlatz(id, false);
 }
 // KC-CLUB-MITFAHRT-BESCHEID (1.41.0, Wunsch Hansi): Wer mitfahren will, aber es gibt (noch) keine Fahrt mit freiem Platz →
@@ -9466,18 +9545,25 @@ async function mitfahrtSuchen(art, bezugId, an) {
   catch (e) { melde(e.message, true); }
 }
 async function mitfahrtNeuLaden(art) { if (art === "aktion") { AKTIONEN = null; aktionOeffnen(aktionId, true); } else treffenLaden(); }
-async function mitfahrtAnbieten(art, bezugId, plaetze, treffpunkt) {
-  const p = prompt("Wie viele freie Plätze hast du?", String(plaetze || 3));
-  if (p === null) return;
-  const t = prompt("Treffpunkt / Abfahrt (freiwillig, z. B. „Marktplatz 17:30“):", treffpunkt || "");
-  if (t === null) return;
-  try { await api("mitfahrt_anbieten", { bezug_art: art, bezug_id: bezugId, plaetze: Number(p), treffpunkt: t }); melde("🚗 Eingetragen"); mitfahrtNeuLaden(art); } catch (e) { melde(e.message, true); }
+// KC-CLUB-DIALOG (1.46.0): Mitfahrt anbieten in EINEM Fenster – Plätze antippen (1–8), Treffpunkt dazu
+function mitfahrtAnbieten(art, bezugId, plaetze, treffpunkt) {
+  window.__mfP = plaetze || 3;
+  const knoepfe = () => Array.from({ length: 8 }, (_, i) => `<button class="chip${window.__mfP === i + 1 ? " an" : ""}" onclick="window.__mfP=${i + 1};this.parentNode.querySelectorAll('.chip').forEach((b,k)=>b.classList.toggle('an',k===${i}))">${i + 1}</button>`).join("");
+  blattAuf("mfAnbieten", `<h3 style="margin-top:0">🚗 Mitfahrgelegenheit anbieten</h3>
+    <div class="hl-frage">Wie viele freie Plätze?</div><div class="hl-chips">${knoepfe()}</div>
+    <label class="feld">Treffpunkt / Abfahrt (freiwillig)<input id="mfTreff" maxlength="150" placeholder="z. B. Marktplatz 17:30" value="${esc(treffpunkt || "")}"></label>
+    <div class="dlg-knoepfe"><button class="knopf haupt" onclick="mitfahrtAnbietenSpeichern('${art}', '${esc(bezugId)}', this)">✅ ${plaetze ? "Speichern" : "Anbieten"}</button><button class="knopf" onclick="$('mfAnbieten').remove()">Abbrechen</button></div>`);
+}
+async function mitfahrtAnbietenSpeichern(art, bezugId, knopf) {
+  knopf.disabled = true;
+  try { await api("mitfahrt_anbieten", { bezug_art: art, bezug_id: bezugId, plaetze: Number(window.__mfP), treffpunkt: $("mfTreff").value.trim() }); $("mfAnbieten").remove(); melde("🚗 Eingetragen"); mitfahrtNeuLaden(art); }
+  catch (e) { melde(e.message, true); knopf.disabled = false; }
 }
 async function mitfahrtPlatz(id, dabei) {
   try { await api("mitfahrt_platz", { id, dabei }); melde(dabei ? "🚗 Du fährst mit – der Fahrer weiß Bescheid" : "Abgemeldet"); mitfahrtNeuLaden(aktuelleAnsicht === "aktion" ? "aktion" : "treffen"); } catch (e) { melde(e.message, true); }
 }
 async function mitfahrtLoeschen(id, art) {
-  if (!confirm("Diese Mitfahrgelegenheit löschen? Wer schon mitfährt, bekommt Bescheid.")) return;
+  if (!(await frage("Diese Mitfahrgelegenheit löschen? Wer schon mitfährt, bekommt Bescheid."))) return;
   try { await api("mitfahrt_loeschen", { id }); melde("🗑️ Gelöscht"); mitfahrtNeuLaden(art); } catch (e) { melde(e.message, true); }
 }
 
@@ -9531,13 +9617,13 @@ function kalenderAboZeigen(url) {
       <div class="knoepfe"><button class="knopf" onclick='extOeffnen("https://calendar.google.com/calendar/r?cid=" + encodeURIComponent(${JSON.stringify(url).replace(/'/g, "&#39;")}.replace(/^https:/, "webcal:")))'>➕ In Google Kalender</button>
         <button class="knopf" onclick='extOeffnen("https://outlook.live.com/calendar/0/addfromweb?url=" + encodeURIComponent(${JSON.stringify(url).replace(/'/g, "&#39;")}) + "&name=" + encodeURIComponent("Köcheclub Werne"))'>➕ In Outlook</button></div>
       <p class="hinweis" style="font-size:.85rem">Klappt es bei Google nicht (manche Handys): Link kopieren und einmalig am PC unter <i>calendar.google.com</i> → „Weitere Kalender ＋“ → „Per URL“ einfügen. Outlook am PC (Programm): oben „Kalender jetzt abonnieren“.</p>
-      <button class="knopf" onclick="navigator.clipboard.writeText(${JSON.stringify(url).replace(/"/g, "&quot;")}).then(() => melde('📋 Link kopiert'), () => prompt('Link:', ${JSON.stringify(url).replace(/"/g, "&quot;")}))">📋 Link kopieren</button>
+      <button class="knopf" onclick="navigator.clipboard.writeText(${JSON.stringify(url).replace(/"/g, "&quot;")}).then(() => melde('📋 Link kopiert'), () => eingabe('Link zum Kopieren:', ${JSON.stringify(url).replace(/"/g, "&quot;")}))">📋 Link kopieren</button>
       <p class="hinweis" style="font-size:.85rem">Den Link bitte nicht weitergeben – er zeigt deine Club-Termine.</p></div>`
     : a ? `<p class="hinweis">✅ Kalender verbunden seit ${esc(zeitKurz(a.erstellt_am))}${a.zuletzt_abgerufen ? ` · zuletzt aktualisiert ${esc(zeitKurz(a.zuletzt_abgerufen))}` : " · noch nicht abgerufen"}.</p>` : "";
   $("kalAboKnopf").textContent = a || url ? "🔄 Neuen Link erzeugen" : "📲 Kalender verbinden";
 }
 async function kalenderAbo() {
-  if (INIT?.kalenderAbo && !confirm("Neuen Kalender-Link erzeugen? Der alte Link funktioniert dann nicht mehr (z. B. auf einem alten Handy).")) return;
+  if (INIT?.kalenderAbo && !(await frage("Neuen Kalender-Link erzeugen? Der alte Link funktioniert dann nicht mehr (z. B. auf einem alten Handy)."))) return;
   try { const r = await api("kalender_abo"); INIT.kalenderAbo = { erstellt_am: new Date().toISOString(), zuletzt_abgerufen: null }; kalenderAboZeigen(r.url); } catch (e) { melde(e.message, true); }
 }
 
@@ -9581,7 +9667,7 @@ function fotosZeigen() {
     <div class="knoepfe" style="margin-top:4px">${Object.keys(faFilter).length ? '<button class="knopf klein" onclick="faFilter={};fotosLaden()">✕ Filter zurücksetzen</button>' : ""}
       ${ICH.admin && (FA.papierkorb || faPapierkorb) ? `<button class="knopf klein ${faPapierkorb ? "haupt" : ""}" onclick="faPapierkorb=!faPapierkorb;fotosLaden()">🗑️ Papierkorb (${FA.papierkorb})</button>` : ""}</div>`;
   if (!FA.fotos.length) {
-    $("fotoListe").innerHTML = `<div class="karte hinweis">${faPapierkorb ? "Der Papierkorb ist leer." : Object.keys(faFilter).length ? "Keine Fotos für diese Auswahl." : "Noch keine Fotos im Album. Tippe oben auf „＋ Fotos“."}</div>`;
+    $("fotoListe").innerHTML = `<div class="karte hinweis">${faPapierkorb ? "Der Papierkorb ist leer." : Object.keys(faFilter).length ? "Keine Fotos für diese Auswahl." : "Noch keine Fotos im Album. Tippe oben auf „＋ Neu“."}</div>`;
     return;
   }
   // nach Monaten gruppiert, neueste zuerst
@@ -9598,15 +9684,20 @@ function faFilterSetzen(was, wert) {
   fotosLaden();
 }
 async function fotoWiederherstellen(id) {
-  if (!confirm("Dieses Foto aus dem Papierkorb zurückholen?")) return;
+  if (!(await frage("Dieses Foto aus dem Papierkorb zurückholen?"))) return;
   try { await api("foto_wiederherstellen", { id }); melde("♻️ Foto ist wieder im Album"); fotosLaden(); } catch (e) { melde(e.message, true); }
 }
 
 // Hochladen: mehrere Fotos auf einmal, gemeinsames Thema/Anlass; Datum je Foto aus den Bilddaten (EXIF)
+// KC-CLUB-DIALOG (1.46.0): neues Foto-Thema im App-Fenster statt grauer Abfrage
+async function faThemaNeu(sel) {
+  const t = await eingabe("Neues Thema", "", { vorschlaege: ["Grillfest", "Weihnachtsfeier", "Ausflug", "Kochabend"] });
+  if (t && t.trim()) sel.add(new Option(t.trim(), t.trim(), true, true), 1); else sel.value = "";
+}
 function themaAuswahl(id, wert) {
   const themen = (FA?.themen || []).map((t) => t.thema);
   if (wert && !themen.includes(wert)) themen.unshift(wert);
-  return `<select id="${id}" onchange="if(this.value==='__neu'){const t=prompt('Neues Thema (z. B. Grillfest, Weihnachtsfeier):');if(t&&t.trim()){const o=new Option(t.trim(),t.trim(),true,true);this.add(o,1);}else this.value='';}">
+  return `<select id="${id}" onchange="if(this.value==='__neu')faThemaNeu(this)">
     <option value="">– ohne Thema –</option>${themen.map((t) => `<option ${t === wert ? "selected" : ""}>${esc(t)}</option>`).join("")}<option value="__neu">＋ Neues Thema …</option></select>`;
 }
 function anlassAuswahl(id, art, bid) {
@@ -9763,7 +9854,7 @@ async function fotoOrtLaden(f) {
   if (FA?.fotos?.[faIndex]?.id === f.id && !$("fbDetails").classList.contains("versteckt")) $("fbDetails").innerHTML = fotoDetailsHtml(f);
 }
 async function fotoOrtEntfernen() {
-  const f = FA?.fotos?.[faIndex]; if (!f || !confirm("Den Aufnahmeort bei diesem Foto für alle entfernen?\n\nDas lässt sich nicht rückgängig machen.")) return;
+  const f = FA?.fotos?.[faIndex]; if (!f || !(await frage("Den Aufnahmeort bei diesem Foto für alle entfernen?\n\nDas lässt sich nicht rückgängig machen."))) return;
   try { const r = await api("foto_ort", { id: f.id, entfernen: true }); f.meta = r.meta; melde("🚫 Ort entfernt"); fotoDetails(true); } catch (e) { melde(e.message, true); }
 }
 function fotoBlaettern(r) { const n = faIndex + r; if (FA && n >= 0 && n < FA.fotos.length) fotoAnsehen(n, true); }
@@ -9806,7 +9897,7 @@ async function fotoAendern() {
 }
 async function fotoLoeschen() {
   const f = FA.fotos[faIndex];
-  if (!confirm("Dieses Foto löschen?\n\nEs kommt 30 Tage in den Papierkorb (Hansi kann es zurückholen), danach wird es endgültig entfernt und der Speicher frei.")) return;
+  if (!(await frage("Dieses Foto löschen?\n\nEs kommt 30 Tage in den Papierkorb (Hansi kann es zurückholen), danach wird es endgültig entfernt und der Speicher frei."))) return;
   try {
     await api("foto_loeschen", { id: f.id });
     FA.fotos.splice(faIndex, 1); melde("🗑️ Foto gelöscht");
@@ -9830,7 +9921,7 @@ document.querySelectorAll("button.druckknopf:empty").forEach((b) => (b.innerHTML
 const druckKnopf = (klick, klasse = "") => `<button type="button" class="druckknopf ${klasse}" title="Drucken / als PDF speichern" aria-label="Drucken" onclick="${klick}">${DRUCK_ICON}</button>`;
 const IST_IOS_APP = () => IST_IOS && (navigator.standalone === true || matchMedia("(display-mode: standalone)").matches);
 let DRUCK = null; // { art, param }
-const DRUCK_INHALTE = [["treffen", "🍽️ Treffen & Veranstaltungen"], ["aktion", "🧳 Aktionen & Ausflüge"], ["geb", "🎂 Geburtstage"], ["dienst", "🗓️ Meine Dienste"], ["frist", "🗳️ Abstimmungen"], ["feiertag", "🇩🇪 Feiertage"]];
+const DRUCK_INHALTE = [["treffen", "🍽️ Sitzungen & Veranstaltungen"], ["aktion", "🧳 Aktionen & Ausflüge"], ["geb", "🎂 Geburtstage"], ["dienst", "🗓️ Meine Dienste"], ["frist", "🗳️ Abstimmungen"], ["feiertag", "🇩🇪 Feiertage"]];
 const DRUCKARTEN = {
   termine: { titel: "🖨️ Termine drucken", optionen: () => druckTermineOptionen(), bauen: (o) => (o.art === "todo" ? druckTodo(o) : druckKalender(o)) },
   treffen: { bauen: (o, id) => druckTreffen(id) },
@@ -10014,7 +10105,7 @@ async function druckTodo(o) {
 }
 // ---- Treffen: Teilnehmerliste (mit Spalte zum Abhaken) ----
 async function druckTreffen(id) {
-  const t = TREFFEN_IDX.get(id); if (!t) throw new Error("Treffen nicht gefunden.");
+  const t = TREFFEN_IDX.get(id); if (!t) throw new Error("Termin nicht gefunden.");
   if (!MITGLIEDER) await mitgliederHolen();
   const ort = t.ort || (t.gastgeber ? "bei " + t.gastgeber.name : ""), va = t.art === "veranstaltung";
   const antwort = { ja: "✅ kommt", vielleicht: "❓ vielleicht", nein: "❌ kann nicht" };
@@ -10153,11 +10244,11 @@ async function fbSenden() {
 }
 // KC-CLUB-FEEDBACK-NEU: eigene Antworten löschen und neu anfangen / (Admin) neue Runde für alle – der Server sichert vorher eine Kopie
 async function fbNeu() {
-  if (!confirm("Neues Feedback starten?\n\nDeine bisherigen Antworten werden gelöscht und du fängst von vorn an.")) return;
+  if (!(await frage("Neues Feedback starten?\n\nDeine bisherigen Antworten werden gelöscht und du fängst von vorn an."))) return;
   try { await api("feedback_neu"); melde("🆕 Alte Antworten gelöscht – viel Spaß beim neuen Feedback!"); await fbLaden(); } catch (e) { melde(e.message, true); }
 }
 async function fbRundeNeu(anzahl) {
-  if (!confirm(`Neue Feedback-Runde für alle starten?\n\nAlle ${anzahl} bisherigen Antworten werden gelöscht (eine Sicherungskopie bleibt im Archiv). Die Auswertung beginnt wieder bei null.`)) return;
+  if (!(await frage(`Neue Feedback-Runde für alle starten?\n\nAlle ${anzahl} bisherigen Antworten werden gelöscht (eine Sicherungskopie bleibt im Archiv). Die Auswertung beginnt wieder bei null.`))) return;
   try { const r = await api("feedback_runde_neu"); melde(`🆕 Neue Runde gestartet – ${r.geloescht} alte Antworten gelöscht`); await fbAuswertung(); } catch (e) { melde(e.message, true); }
 }
 async function fbAuswertung() {
@@ -10373,7 +10464,7 @@ function kontaktSpeichern() {
 }
 // Korrektur an den Admin (normale App-Nachricht, damit es nur eine Stelle mit den richtigen Daten gibt)
 async function korrekturMelden() {
-  const text = prompt("Was stimmt an deinen Daten nicht? (z. B. „Neue Handynummer: 0171 …“)");
+  const text = (await eingabe("Was stimmt an deinen Daten nicht? (z. B. „Neue Handynummer: 0171 …“)"));
   if (!text || !text.trim()) return;
   try {
     if (!MITGLIEDER) await mitgliederHolen();
@@ -10398,7 +10489,7 @@ async function gratulieren(pid, ohneFrage) {
   if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return melde(e.message, true); }
   const m = MITGLIEDER.find((x) => x.person_id === pid);
   if (!m || pid === ICH?.person_id) return;
-  if (!ohneFrage && !confirm(`🎂 ${m.name} hat heute Geburtstag.\n\nMöchtest du gratulieren?`)) return;
+  if (!ohneFrage && !(await frage(`🎂 ${m.name} hat heute Geburtstag.\n\nMöchtest du gratulieren?`))) return;
   await direkt(pid);
   $("text").value = `Alles Gute zum Geburtstag, ${m.vorname}! 🎂🥳`;
   $("text").focus();
@@ -10411,25 +10502,38 @@ async function direkt(pid) {
   $("chatTitel").textContent = m?.name || ""; $("chatTeilnehmer").textContent = ""; $("chat").innerHTML = '<p class="hinweis">Schreib eine Nachricht und tippe auf ➤.</p>'; }
 async function linkTeilen(pid) {
   const m = MITGLIEDER.find((x) => x.person_id === pid);
-  if (m.app && !confirm(`${m.name} hat schon einen Link. Neuen erzeugen? Der alte funktioniert dann nicht mehr.`)) return;
+  if (m.app && !(await frage(`${m.name} hat schon einen Link. Neuen erzeugen? Der alte funktioniert dann nicht mehr.`))) return;
   try {
     const { link } = await api("link_erzeugen", { person_id: pid });
     // 0.27.3: Anleitung wie unter ⚙️ → App-Installation (richtige App statt Verknüpfung)
     const text = `Hallo ${m.vorname}, hier ist dein persönlicher Link zur Köcheclub-App:\n${link}\n\nSo geht's (Android): Link in Chrome öffnen → oben rechts ⋮ → „App installieren“ (bzw. „Zum Startbildschirm hinzufügen“ → „Installieren“, nicht „Verknüpfung“). Samsung-Browser „Internet“: unten ≡ → „Seite hinzufügen zu“ → „Startbildschirm“.\niPhone: den Link in *Safari* öffnen → unten Teilen □↑ → „Zum Home-Bildschirm“ → „Hinzufügen“. Danach die App über das neue Symbol öffnen.\n\nFunktioniert der Link nicht (z. B. weil es einen neueren gibt)? Die Seite zeigt dann „Link verloren?“ – dort deine E-Mail-Adresse eingeben, der neue Link kommt sofort per Mail.\n\nBitte nicht weitergeben – der Link ist dein persönlicher Zugang. Viele Grüße, Hansi`;
-    if (confirm(`Link für ${m.name} erzeugt.\n\nOK = per WhatsApp schicken\nAbbrechen = in die Zwischenablage kopieren`)) window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank");
-    else { try { await navigator.clipboard.writeText(text); melde("Text mit Link kopiert"); } catch { prompt("Zum Kopieren:", text); } }
+    if ((await frage(`Link für ${m.name} erzeugt.\n\nOK = per WhatsApp schicken\nAbbrechen = in die Zwischenablage kopieren`))) window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank");
+    else { try { await navigator.clipboard.writeText(text); melde("Text mit Link kopiert"); } catch { (await eingabe("Zum Kopieren:", text)); } }
     mitgliederLaden();
   } catch (e) { melde(e.message, true); }
 }
-async function rolleBearbeiten(pid) {
-  const m = MITGLIEDER.find((x) => x.person_id === pid);
-  // intern „vorstand“ = Recht, Treffen/Veranstaltungen/Abstimmungen anzulegen
-  const vorstand = confirm(`${m.name}: Darf Treffen, Veranstaltungen und Abstimmungen anlegen?\n\nOK = ja, Abbrechen = nein`);
-  const aemter = prompt(`Ämter von ${m.name} (mit Komma getrennt, z. B. Kassenwart, Clubsprecher – leer = keine):`, (m.aemter || []).join(", "));
-  if (aemter === null) return;
-  const protokolle = confirm(`${m.name}: Darf Sitzungsprotokolle lesen und schreiben?\n\nOK = ja, Abbrechen = nein (z. B. Aushilfen)`);
-  const kontakte = confirm(`${m.name}: Darf freigegebene Kontaktdaten anderer Mitglieder sehen (Telefon, Adresse …)?\n\nOK = ja, Abbrechen = nein (z. B. Aushilfen)`);
-  try { await api("rolle_setzen", { person_id: pid, vorstand, protokolle, kontakte, aemter: aemter.split(",").map((x) => x.trim()).filter(Boolean) }); MITGLIEDER = null; melde("Gespeichert"); mitgliederLaden(); } catch (e) { melde(e.message, true); }
+// KC-CLUB-DIALOG (1.46.0): Amt & Rechte in EINEM Fenster (Häkchen statt Komma-Eingabe und drei Ja/Nein-Fragen)
+const AEMTER_VORSCHLAG = ["Clubsprecher", "Kassenwart", "Schriftführer", "Admin IT"];
+function rolleBearbeiten(pid) {
+  const m = MITGLIEDER.find((x) => x.person_id === pid); if (!m) return;
+  const liste = [...new Set([...AEMTER_VORSCHLAG, ...(AEMTER || []), ...(m.aemter || [])])];
+  const schalter = (id, titel, hinweis, an) => `<label class="schalter"><div><b>${titel}</b><div class="hinweis">${hinweis}</div></div><input type="checkbox" id="${id}" ${an ? "checked" : ""}></label>`;
+  blattAuf("rolleBlatt", `<h3 style="margin-top:0">🎖️ ${esc(m.name)}</h3>
+    <div class="hl-frage">Ämter</div><div class="bu-haken-liste">${liste.map((a) => `<label class="bu-haken"><input type="checkbox" class="roAmt" value="${esc(a)}" ${(m.aemter || []).includes(a) ? "checked" : ""}> ${esc(a)}</label>`).join("")}</div>
+    <label class="feld">Weiteres Amt (freiwillig)<input id="roNeu" maxlength="40" placeholder="z. B. Beisitzer"></label>
+    <div class="hl-frage">Rechte</div>
+    ${schalter("roLeitung", "Termine & Abstimmungen anlegen", "Termine, Veranstaltungen und Abstimmungen anlegen (Clubleitung)", !!m.vorstand)}
+    ${schalter("roProtokolle", "Protokolle lesen & schreiben", "aus z. B. für Aushilfen", m.protokolle !== false)}
+    ${schalter("roKontakte", "Kontaktdaten anderer sehen", "Telefon, Adresse … soweit freigegeben – aus z. B. für Aushilfen", m.kontakte !== false)}
+    <div class="dlg-knoepfe"><button class="knopf haupt" onclick="rolleSpeichern('${pid}', this)">💾 Speichern</button><button class="knopf" onclick="$('rolleBlatt').remove()">Abbrechen</button></div>`);
+}
+async function rolleSpeichern(pid, knopf) {
+  const aemter = [...document.querySelectorAll("#rolleBlatt .roAmt:checked")].map((x) => x.value);
+  const neu = $("roNeu").value.trim(); if (neu) aemter.push(neu);
+  knopf.disabled = true;
+  try { await api("rolle_setzen", { person_id: pid, vorstand: $("roLeitung").checked, protokolle: $("roProtokolle").checked, kontakte: $("roKontakte").checked, aemter: [...new Set(aemter)].slice(0, 5) });
+    $("rolleBlatt").remove(); MITGLIEDER = null; melde("🎖️ Gespeichert"); mitgliederLaden(); }
+  catch (e) { melde(e.message, true); knopf.disabled = false; }
 }
 
 // ---------- Push & Ton ----------
@@ -10535,14 +10639,14 @@ async function appInfoZeigen() {
 async function appInfoKopieren() {
   if (!APPINFO.length) APPINFO = await appInfoDaten();
   const text = ["Köcheclub-App – Info", `Angemeldet als: ${ICH?.name || "–"}`, ...APPINFO.map(([k, v]) => `${k.replace(/^\S+\s/, "")}: ${v}`), `Stand: ${new Date().toLocaleString("de-DE")}`].join("\n");
-  try { await navigator.clipboard.writeText(text); melde("📋 App-Infos kopiert – z. B. in eine Nachricht an Hansi einfügen"); } catch { prompt("App-Infos:", text); }
+  try { await navigator.clipboard.writeText(text); melde("📋 App-Infos kopiert – z. B. in eine Nachricht an Hansi einfügen"); } catch { (await eingabe("App-Infos:", text)); }
 }
 
 // Persönlichen Link kopieren (bleibt auf dem Handy – nur in die Zwischenablage), damit die App in Chrome geöffnet/installiert werden kann
 async function zugangKopieren() {
   const link = APP_URL_CLUB + "?k=" + KEY;
   try { await navigator.clipboard.writeText(link); melde("📋 Link kopiert – jetzt Chrome öffnen, oben lange drücken → Einfügen"); }
-  catch { prompt("Diesen Link kopieren (nicht weitergeben):", link); }
+  catch { (await eingabe("Diesen Link kopieren (nicht weitergeben):", link)); }
   api("diagnose", { art: "start", daten: { zugang_kopiert: true, start: START_ART } }).catch(() => {});
 }
 // Link für den eigenen PC: über „Teilen“ (Mail, Notizen …) oder als Mail an mich
@@ -10633,7 +10737,7 @@ async function jetztAktualisieren() {
 // Automatisch: „Vereinsleben JJJJ“ je Jahr aus vorhandenen Daten (nur lesen). Von Hand: Ordner mit Art, Jahr, Farbe, Registern.
 // Pflegen (Ordner, Hochladen, Ändern, Löschen): Clubsprecher und Admin – der Server prüft das.
 const AR_FARBEN = ["#8b1e2d", "#1f5f99", "#2e7d4f", "#b36b00", "#5b3f8c", "#3f4a54", "#0f7c80", "#a33b6b"];
-const AR_AUTO = { treffen: ["📅", "Treffen"], protokoll: ["📄", "Protokolle"], abstimmung: ["🗳️", "Abstimmungen"], aktion: ["🧳", "Aktionen"], pinnwand: ["📌", "Pinnwand"], anhang: ["📎", "Anhänge"], dienst: ["🗓️", "Dienste"] };
+const AR_AUTO = { treffen: ["📅", "Termine"], protokoll: ["📄", "Protokolle"], abstimmung: ["🗳️", "Abstimmungen"], aktion: ["🧳", "Aktionen"], pinnwand: ["📌", "Pinnwand"], anhang: ["📎", "Anhänge"], dienst: ["🗓️", "Dienste"] };
 let AR = { ziel: null, daten: null, ordner: null, register: "", suche: "", jahr: "", art: "", korb: false, datei: null };
 try { const f = JSON.parse(localStorage.getItem("kc_club_archiv_filter") || "null"); if (f) { AR.jahr = f.jahr || ""; AR.art = f.art || ""; } } catch {}
 const arFilterMerken = () => { try { localStorage.setItem("kc_club_archiv_filter", JSON.stringify({ jahr: AR.jahr, art: AR.art })); } catch {} };
@@ -10767,11 +10871,11 @@ async function arRegisterWeg(oid, r) {
   } catch (e) { melde(e.message, true); await arLaden(); }
 }
 async function arEndgueltig(was, titel) {
-  if (!confirm(`„${titel}“ jetzt ENDGÜLTIG löschen?\n\nDas lässt sich nicht rückgängig machen. Der Speicherplatz wird sofort frei.`)) return;
+  if (!(await frage(`„${titel}“ jetzt ENDGÜLTIG löschen?\n\nDas lässt sich nicht rückgängig machen. Der Speicherplatz wird sofort frei.`))) return;
   try { await api("archiv_endgueltig", was); melde("❌ Endgültig gelöscht – Speicher frei"); await arLaden(); arKorbZeigen(); } catch (e) { melde(e.message, true); }
 }
 async function arKorbLeeren(liste) {
-  if (!liste.length || !confirm(`Den ganzen Papierkorb (${liste.length} ${liste.length === 1 ? "Eintrag" : "Einträge"}) ENDGÜLTIG leeren?\n\nDas lässt sich nicht rückgängig machen.`)) return;
+  if (!liste.length || !(await frage(`Den ganzen Papierkorb (${liste.length} ${liste.length === 1 ? "Eintrag" : "Einträge"}) ENDGÜLTIG leeren?\n\nDas lässt sich nicht rückgängig machen.`))) return;
   let n = 0; for (const w of liste) { try { await api("archiv_endgueltig", w); n++; } catch (e) { melde(e.message, true); } }
   melde(`❌ ${n} endgültig gelöscht – Speicher frei`); await arLaden(); arKorbZeigen();
 }
@@ -10864,7 +10968,7 @@ async function arOrdnerSpeichern(id) {
   const f = document.querySelector(".ar-farben button.an");
   const alt = id ? AR.daten.ordner.find((x) => x.id === id) : null;
   const weg = alt ? AR.daten.dokumente.filter((x) => x.ordner_id === id && !arReg.includes(x.register)).length : 0;
-  if (weg && !confirm(`${weg} Dokument(e) liegen in einem Register, das du entfernt hast. Sie kommen ins Register „${arReg[0] || "Allgemein"}“. Weiter?`)) return;
+  if (weg && !(await frage(`${weg} Dokument(e) liegen in einem Register, das du entfernt hast. Sie kommen ins Register „${arReg[0] || "Allgemein"}“. Weiter?`))) return;
   try {
     const r = await api("archiv_ordner_speichern", { id: id || undefined, art: $("arArt").value, jahr: Number($("arJahrWahl").value), titel: $("arTitel").value.trim(), farbe: Number(f?.dataset.f || 1), register: arReg, nur_vorstand: $("arLeitung").checked });
     arBlattZu(); melde(id ? "✔ Ordner geändert" : "✔ Ordner angelegt");
@@ -10873,7 +10977,7 @@ async function arOrdnerSpeichern(id) {
 }
 async function arOrdnerLoeschen(id) {
   const o = AR.daten.ordner.find((x) => x.id === id); if (!o) return;
-  if (!confirm(`Ordner „${o.titel} ${o.jahr}“ mit ${o.anzahl} Dokument(en) in den Papierkorb legen?\n\nEr lässt sich ${AR.daten.papierkorbTage} Tage lang wiederherstellen.`)) return;
+  if (!(await frage(`Ordner „${o.titel} ${o.jahr}“ mit ${o.anzahl} Dokument(en) in den Papierkorb legen?\n\nEr lässt sich ${AR.daten.papierkorbTage} Tage lang wiederherstellen.`))) return;
   try { await api("archiv_ordner_loeschen", { id }); melde("🗑️ Im Papierkorb"); AR.ordner = null; await arLaden(); } catch (e) { melde(e.message, true); }
 }
 // ----- Dokument ablegen / ändern -----
@@ -10926,7 +11030,7 @@ async function arDokSpeichern(id) {
   } catch (e) { melde(e.message, true); }
 }
 async function arDokLoeschen(id) {
-  if (!confirm(`Dieses Dokument in den Papierkorb legen?\n\nEs lässt sich ${AR.daten.papierkorbTage} Tage lang wiederherstellen.`)) return;
+  if (!(await frage(`Dieses Dokument in den Papierkorb legen?\n\nEs lässt sich ${AR.daten.papierkorbTage} Tage lang wiederherstellen.`))) return;
   try { await api("archiv_loeschen", { id }); arBlattZu(); melde("🗑️ Im Papierkorb"); await arLaden(); } catch (e) { melde(e.message, true); }
 }
 // ---------- KC-CLUB-ARCHIV-ABLAGE (1.18.0, Wunsch Hansi): gemeinsame Rückfrage „Auch in deinen Archiv-Ordner legen?“ ----------
@@ -10999,7 +11103,7 @@ async function ablAblegen() {
   if (fehler) {
     // Ablage hat nicht (ganz) geklappt → das „danach“ (z. B. Löschen) NICHT stillschweigend ausführen
     melde(ok ? `🗄️ ${ok} Datei(en) abgelegt – Rest nicht: ${fehler}` : fehler, true);
-    if (danach && confirm(`Die Ablage im Archiv hat nicht ganz geklappt:\n${fehler}\n\nTrotzdem weitermachen?`)) danach();
+    if (danach && (await frage(`Die Ablage im Archiv hat nicht ganz geklappt:\n${fehler}\n\nTrotzdem weitermachen?`))) danach();
     return;
   }
   melde(`🗄️ Im Archiv abgelegt (Register „${register}“)${nicht}`);
@@ -11108,11 +11212,11 @@ function arEigenForm(o) {
 async function arEigenSpeichern(id) {
   const f = document.querySelector(".ar-farben button.an");
   const weg = AR.daten.dokumente.filter((x) => x.ordner_id === id && !arReg.includes(x.register)).length;
-  if (weg && !confirm(`${weg} Dokument(e) liegen in einem Register, das du entfernt hast. Sie kommen ins Register „${arReg[0] || "Urkunden"}“. Weiter?`)) return;
+  if (weg && !(await frage(`${weg} Dokument(e) liegen in einem Register, das du entfernt hast. Sie kommen ins Register „${arReg[0] || "Urkunden"}“. Weiter?`))) return;
   try { await api("archiv_ordner_speichern", { id, register: arReg, farbe: Number(f?.dataset.f || 6) }); arBlattZu(); melde("✔ Ordner geändert"); await arLaden(); } catch (e) { melde(e.message, true); }
 }
 async function arNeuesJahr() {
-  const j = prompt("Für welches Jahr soll ein weiterer eigener Ordner angelegt werden?", String(new Date().getFullYear() - 1));
+  const j = (await eingabe("Für welches Jahr soll ein weiterer eigener Ordner angelegt werden?", String(new Date().getFullYear() - 1)));
   if (j === null) return;
   try { const r = await api("archiv_mein_ordner", { jahr: Number(j) }); await arLaden(); arOrdnerOeffnen(r.id); } catch (e) { melde(e.message, true); }
 }
@@ -11154,15 +11258,15 @@ async function arFreigabeSpeichern(oid) {
   } catch (e) { melde(e.message, true); }
 }
 async function arFreigabeBeenden(id) {
-  if (!confirm("Diese Freigabe jetzt beenden?")) return;
+  if (!(await frage("Diese Freigabe jetzt beenden?"))) return;
   try { await api("archiv_freigabe_beenden", { id }); melde("🔒 Freigabe beendet"); await arLaden(); } catch (e) { melde(e.message, true); }
 }
 async function arPruefung(id, annehmen) {
-  if (!annehmen && !confirm("Dieses Dokument ablehnen? Es wird gelöscht und der Absender bekommt Bescheid.")) return;
+  if (!annehmen && !(await frage("Dieses Dokument ablehnen? Es wird gelöscht und der Absender bekommt Bescheid."))) return;
   try { await api("archiv_pruefung", { id, annehmen }); melde(annehmen ? "✔ Angenommen" : "✖ Abgelehnt und gelöscht"); await arLaden(); } catch (e) { melde(e.message, true); }
 }
 async function arEinreichungZurueck(id) {
-  if (!confirm("Deine Einreichung zurückziehen? Sie wird gelöscht.")) return;
+  if (!(await frage("Deine Einreichung zurückziehen? Sie wird gelöscht."))) return;
   try { await api("archiv_loeschen", { id }); melde("↩ Zurückgezogen"); await arLaden(); } catch (e) { melde(e.message, true); }
 }
 // ----- Papierkorb -----
@@ -11518,7 +11622,7 @@ async function fpLinkKopieren() {
   melde(ok ? "🔗 Dein Link ist kopiert – jetzt in Safari/Chrome oben einfügen" : "Kopieren ging nicht – bitte den Link aus deiner Mail/WhatsApp nehmen", !ok);
 }
 async function fpProblemMelden() {
-  const text = prompt("Was klappt nicht? (freiwillig, ein paar Worte reichen)\n\nHansi bekommt eine Nachricht und sieht automatisch, welches Handy, welcher Browser und welche Version du hast.", "");
+  const text = (await eingabe("Was klappt nicht? (freiwillig, ein paar Worte reichen)\n\nHansi bekommt eine Nachricht und sieht automatisch, welches Handy, welcher Browser und welche Version du hast.", ""));
   if (text === null) return;
   try { window.KCFP?.senden(true); } catch {}
   if (!INIT) { fpNeu("hilferuf_anonym", { text: text.trim(), browser: fpBrowser(), system: fpSystem() }); window.KCFP?.senden(true); return melde("🆘 Deine Meldung ist unterwegs – Hansi meldet sich."); }

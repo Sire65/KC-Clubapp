@@ -255,7 +255,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
     const i = html.indexOf(`async function ${fn}(`);
     assert.ok(i > 0, `${fn} fehlt`);
     const body = html.slice(i, html.indexOf(`api("${api}"`, i));
-    assert.ok(/confirm\(/.test(body), `${fn}: keine Sicherheitsabfrage vor dem Löschen`);
+    assert.ok(/frage\(/.test(body), `${fn}: keine Sicherheitsabfrage vor dem Löschen`);
   }
   assert.ok(/id="chatBlatt"/.test(html) && /unterhaltung_ausblenden/.test(html), "Unterhaltung entfernen fehlt");
 }
@@ -624,7 +624,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(fa.indexOf('from("kc_club_feedback_archiv").insert') > 0 && fa.indexOf('from("kc_club_feedback_archiv").insert') < fa.indexOf(".delete()") && /if \(fa\) throw/.test(fa), "Löschen ohne vorherige Sicherungskopie");
   const neu = server.slice(server.indexOf('case "feedback_neu"'), server.indexOf('case "feedback_runde_neu"'));
   assert.ok(/feedbackArchivieren\(ich, "neu_ausfuellen", ich\.person_id\)/.test(neu), "Mitglied könnte fremdes Feedback löschen");
-  assert.ok(/onclick="fbNeu\(\)"/.test(html) && /fbRundeNeu\(/.test(html) && /confirm\(/.test(html.slice(html.indexOf("async function fbNeu"), html.indexOf("async function fbAuswertung"))), "Knöpfe/Rückfrage fehlen");
+  assert.ok(/onclick="fbNeu\(\)"/.test(html) && /fbRundeNeu\(/.test(html) && /frage\(/.test(html.slice(html.indexOf("async function fbNeu"), html.indexOf("async function fbAuswertung"))), "Knöpfe/Rückfrage fehlen");
 }
 
 // 48. 0.27.2: „Nächstes Treffen“ öffnet den Kalender im richtigen Monat mit ausgewähltem Tag
@@ -800,7 +800,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   const tipp = html.slice(html.indexOf("function unterhTipp"), html.indexOf("function unterhZeichnen"));
   assert.ok(/jetzt - lt\.t < DOPPELTIPP_MS/.test(tipp) && /return chatOeffnen\(id\)/.test(tipp), "Doppeltippen öffnet nicht");
   const weg = html.slice(html.indexOf("async function unterhEntfernen"), html.indexOf("async function unterhEntfernen") + 900);
-  assert.ok(/if \(!confirm\(/.test(weg) && /fuerAlle \? "unterhaltung_loeschen" : "unterhaltung_ausblenden"/.test(weg), "Entfernen ohne Rückfrage");
+  assert.ok(/if \(!\(await frage\(/.test(weg) && /fuerAlle \? "unterhaltung_loeschen" : "unterhaltung_ausblenden"/.test(weg), "Entfernen ohne Rückfrage");
   assert.ok(/ICH\?\.admin \? `<button class="knopf klein" onclick="unterhEntfernen\('\$\{u\.id\}', true\)"/.test(html), "„Für alle löschen“ nicht auf Admin beschränkt");
 }
 
@@ -845,7 +845,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   for (const w of ["push", "email", "whatsapp"]) assert.ok(z.includes(`weg("${w}"`), `Zentrale: Weg ${w} fehlt`);
   assert.ok(/zeWahl\('alle'\)/.test(z) && /zeWahl\('online'\)/.test(z) && /zeWahl\('keiner'\)/.test(z) && /zeBlatt\(\)/.test(z), "Zentrale: Auswahl Alle/Online/Keiner/Auswahl fehlt");
   const zs = html.slice(html.indexOf("async function zeSenden"), html.indexOf("// Feld 4 (0.43.0)"));
-  assert.ok(/api\("nachricht_senden"/.test(zs) && /n >= ZE_RUECKFRAGE_AB && !confirm/.test(zs), "Zentrale sendet nicht über den vorhandenen Weg oder ohne Rückfrage");
+  assert.ok(/api\("nachricht_senden"/.test(zs) && /n >= ZE_RUECKFRAGE_AB && !\(await frage/.test(zs), "Zentrale sendet nicht über den vorhandenen Weg oder ohne Rückfrage");
   assert.ok(/\.ipfeil\.links \{ left: -17px; \}/.test(html) && /id="infoPunkte"/.test(html) && !/class="inav"/.test(html), "Pfeile nicht am Rahmen / Punkte nicht unter dem Feld");
   assert.ok(/chip\("\*", "👥 Alle Mitglieder"\)/.test(html) && !/ICH\.vorstand \? chip\("\*"/.test(html), "„Alle Mitglieder“ nicht für alle");
 }
@@ -928,7 +928,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   const spar = (std) => f({ neon: { aktiv: true, lagSek: 23400, letzter: vor(std), regeln: [] }, backup: { aktiv: true, letztes: vor(3) } }).neon[0];
   assert.equal(spar(3), "gruen"); assert.equal(spar(9), "gelb"); assert.equal(spar(20), "rot");
   assert.ok(aktionen.has("admin_spiegeln") && aufrufe.has("admin_spiegeln") && /case "admin_spiegeln": \{\s*nurAdmin\(ich\);/.test(server), "Notfall-Spiegel fehlt oder ungeschützt");
-  assert.ok(/async function adminSpiegeln\(\) \{\s*if \(!confirm\(/.test(html), "Notfall-Spiegel ohne Rückfrage");
+  assert.ok(/async function adminSpiegeln\(\) \{\s*if \(!\(await frage\(/.test(html), "Notfall-Spiegel ohne Rückfrage");
   // 0.50.0: Abdeckung (Tabellen ohne Regel) und Watchdog – fehlende Tabellen nie grün, stummer Watchdog grau
   const basis = { neon: { aktiv: true, lagSek: 23400, letzter: vor(1), regeln: [] }, backup: { aktiv: true, letztes: vor(3) } };
   assert.equal(f({ ...basis, abdeckung: { tabellen: 195, ohne: 118, liste: [] } }).abdeckung[0], "gelb", "fehlende Tabellen nicht gemeldet");
@@ -1460,7 +1460,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 {
   const ta = server.slice(server.indexOf('case "treffen_antwort"'), server.indexOf('case "vorschlaege_liste"'));
   assert.ok(/\["ja", "nein", "vielleicht", "keine"\]/.test(ta) && /if \(antwort === "keine"\) await db\.from\("kc_club_teilnahme"\)\.delete\(\)\.eq\("treffen_id", t\.id\)\.eq\("person_id", ich\.person_id\)/.test(ta) && /if \(antwort !== "ja"\) await db\.from\("kc_club_mitfahrt_suche"\)\.delete\(\)/.test(ta), "Server: zurücknehmen löscht nur die eigene Zeile");
-  assert.ok(/if \(bisher && bisher === a\) \{ if \(!confirm\(/.test(html) && /a = "keine";/.test(html) && /if \(a === "nein" \|\| a === "keine"\)/.test(html) && /Nochmal auf deine Antwort tippen = zurücknehmen/.test(html), "App: nochmal tippen nimmt zurück, Platzfrage");
+  assert.ok(/if \(bisher && bisher === a\) \{ if \(!\(await frage\(/.test(html) && /a = "keine";/.test(html) && /if \(a === "nein" \|\| a === "keine"\)/.test(html) && /Nochmal auf deine Antwort tippen = zurücknehmen/.test(html), "App: nochmal tippen nimmt zurück, Platzfrage");
 }
 
 // 130. DB: Kollegenfreigabe beim Übernehmen + Übernahmebeleg (KC-DP-WUNSCH-FREIGABE)
@@ -1518,7 +1518,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/function naWischenEinrichten\(\)/.test(html) && /naAntworten\(id\)/.test(html.slice(html.indexOf("function naWischenEinrichten"))) && /naLoeschenFragen\(id\)/.test(html.slice(html.indexOf("function naWischenEinrichten"))), "Wischen: rechts antworten, links löschen");
   assert.ok(/Nur für mich löschen/.test(html) && /case "nachricht_ausblenden"/.test(server) && /kc_communication_message_hidden/.test(server.slice(server.indexOf('case "unterhaltung"'), server.indexOf('case "unterhaltung"') + 2500)), "Für mich löschen + ausgeblendet");
   const sos = html.slice(html.indexOf("function sosAnrufen"), html.indexOf("function sosAnrufen") + 600);
-  assert.ok(/ECHTER ANRUF – KEIN TEST/.test(sos) && /if \(!confirm\(/.test(sos), "Notruf nur nach Sicherheitsabfrage");
+  assert.ok(/ECHTER ANRUF – KEIN TEST/.test(sos) && /if \(!\(await frage\(/.test(sos), "Notruf nur nach Sicherheitsabfrage");
   assert.ok(!/href="tel:(112|110)/.test(html) && /nr: "112"/.test(html) && /nr: "110"/.test(html), "Notruf nie als direkter Link");
   assert.ok(/id: "sos", sym: "🆘"/.test(html) && /klasse: "sos"/.test(html) && /"sos"\];/.test(html) && /\.kachel\.sos \{ background: #c0392b/.test(html), "Rote SOS-Kachel (auch einfache Ansicht)");
   const sk = server.slice(server.indexOf('case "sos_kontakte"'), server.indexOf('case "geburtstag_freigabe"'));
@@ -1538,7 +1538,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   const nfp = html.slice(html.indexOf("// ---------- KC-CLUB-NOTFALLPASS"), html.indexOf("// ---------- KC-CLUB-NOTFALLPASS-ARCHIV")); // 1.17.0: Kopie ins Archiv nur auf ausdrücklichen Wunsch (Abschnitt 147)
   assert.ok(/const NFP_FELDER = \[/.test(nfp) && /"kc_club_notfallpass_" \+ \(ICH\?\.person_id/.test(nfp), "Notfallpass: Registry + Speicher je Person");
   assert.ok(!/api\(/.test(nfp), "Notfallpass: Gesundheitsdaten nie an den Server");
-  assert.ok(/confirm\("Notfallpass auf diesem Gerät löschen\?"\)/.test(nfp) && /id="nfpBlatt"/.test(html), "Notfallpass: Löschen mit Rückfrage, Blatt vorhanden");
+  assert.ok(/frage\("Notfallpass auf diesem Gerät löschen\?"\)/.test(nfp) && /id="nfpBlatt"/.test(html), "Notfallpass: Löschen mit Rückfrage, Blatt vorhanden");
 }
 
 // 135. 1.8.0: Schnellstart, Anklopfen erlauben, Kurzantworten, Anklopfton
@@ -1676,8 +1676,8 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 {
   const f = html.slice(html.indexOf("async function nfpArchivWahl()"), html.indexOf("async function nfpArchivKopieren()") + 1200);
   assert.ok(/onclick="nfpArchivWahl\(\)">🗄️ In mein Archiv kopieren/.test(html), "Knopf in der Notfallpass-Anzeige fehlt");
-  assert.ok(/if \(!confirm\("🗄️ Notfallpass ins Archiv kopieren\?[^"]*Server[^"]*Spiegel[^"]*Sicherungen/.test(f), "Warnhinweis Server/Spiegel/Sicherung vor dem Kopieren");
-  assert.ok(f.indexOf("confirm(") < f.indexOf('api("archiv_liste")'), "erst Rückfrage, dann Server");
+  assert.ok(/if \(!\(await frage\("🗄️ Notfallpass ins Archiv kopieren\?[^"]*Server[^"]*Spiegel[^"]*Sicherungen/.test(f), "Warnhinweis Server/Spiegel/Sicherung vor dem Kopieren");
+  assert.ok(f.indexOf("frage(") < f.indexOf('api("archiv_liste")'), "erst Rückfrage, dann Server");
   assert.ok(/const nfpEigeneOrdner = \(d\) => \(d\?\.ordner \|\| \[\]\)\.filter\(\(o\) => o\.besitzer && o\.eigen\)/.test(html), "nur eigene Ordner als Ziel");
   assert.ok(/<select id="nfpArOrdner"/.test(f) && /<select id="nfpArReg">/.test(f), "Ordner und Register per Auswahl (kein Freitext)");
   assert.ok(/api\("archiv_hochladen", \{ ordner_id, titel: `Notfallpass \(Stand \$\{stand\}\)`[\s\S]{0,200}mime: "image\/png"/.test(f), "vorhandener Upload-Weg als PNG");
@@ -1741,7 +1741,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
     assert.ok(t.indexOf("chatAblageFragen") < t.indexOf("api("), `${f}: erst fragen, dann ausführen`);
   }
   const ab = html.slice(html.indexOf("async function ablAblegen()"), html.indexOf("// ----- 1.19.0: Chat als Textdatei"));
-  assert.ok(/if \(fehler\) \{[\s\S]*if \(danach && confirm\(/.test(ab), "Ablage fehlgeschlagen → Löschen nur nach Rückfrage");
+  assert.ok(/if \(fehler\) \{[\s\S]*if \(danach && \(await frage\(/.test(ab), "Ablage fehlgeschlagen → Löschen nur nach Rückfrage");
   assert.ok(/if \(!ARCHIV_TYP_OK\(f\.mime\)\) \{ uebersprungen\+\+; continue; \}/.test(ab), "nicht erlaubte Dateitypen überspringen");
   assert.ok(/naAnlagenArchiv\(id, "Wichtig\? Die Datei auch in dein Archiv legen\?"\)/.test(html), "Merken mit Datei → fragen");
   assert.ok(/onclick="fotoInsArchiv\(\)">🗄️ Archiv/.test(html) && /onclick="protokollInsArchiv\(\)">🗄️ In mein Archiv legen/.test(html), "Foto/Protokoll-Knöpfe");
@@ -1982,7 +1982,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/pr\.status === "entwurf" && pr\.version === 1 && new Date\(t\.beginn\)\.getTime\(\) > Date\.now\(\)/.test(sp), "veröffentlichte Protokolle / Entwürfe nach Sitzungsbeginn unberührt");
   const ei = server.slice(server.indexOf('case "buero_einladung"'), server.indexOf('case "leihen_liste"'));
   assert.ok(/nurOffen \? alle\.filter\(\(id\) => !geantwortet\.has\(id\)\) : alle\)\.filter\(\(id\) => id !== ich\.person_id\)/.test(ei), "Erinnerung nur an Mitglieder ohne Antwort");
-  assert.ok(/if \(!confirm\(`\$\{x\.nurOffen \? "Erinnerung" : "Einladung"\} jetzt an \$\{anzahl\} Mitglieder senden\?`\)\) return;/.test(html), "Senden erst nach Bestätigung");
+  assert.ok(/if \(!\(await frage\(`\$\{x\.nurOffen \? "Erinnerung" : "Einladung"\} jetzt an \$\{anzahl\} Mitglieder senden\?`\)\)\) return;/.test(html), "Senden erst nach Bestätigung");
   assert.ok(/\{ id: "buero", sym: "🗂️", t: "Büro",[^\n]*nur: \(\) => !!ICH\?\.buero \}/.test(html), "Kachel nur mit Büro-Freigabe (1.37.0)");
   assert.ok(/if \(!ICH\?\.vorstand \|\| !buDarf\(\)\) return;/.test(html) && /sessionStorage\.getItem\("kc_buero_gefragt"\)/.test(html) && /if \(!h \|\| h === "#"\) setTimeout\(\(\) => buGrussFragen\(\), 1500\)/.test(html), "Begrüßung einmal je Start, nur Clubleitung, nicht nach Sprung");
   assert.ok(/sitzung: \{ bauen: \(\) => druckSitzung\(\) \}/.test(html) && /Anmerkung zum letzten Protokoll/.test(html) && /TOP \$\{i \+ 1\}/.test(html), "Druckvorlage");
@@ -2020,7 +2020,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/filter\(\(a: any\) => !a\.mitgeteilt_am && !a\.erledigt_am\)/.test(m) && /await aufgabenMitteilen\(offen, ich, pr\.titel\)/.test(m), "nur noch nicht mitgeteilte, vorhandene Mitteilung");
   assert.ok(/api\("aufgabe_speichern", \{ protokoll_id: prId, person_ids: \[\.\.\.BU_N\.wer\]/.test(html), "vorhandene Aufgaben-Aktion");
   assert.ok(/dateiWahl\('buFotoKamera', buNachherDateien\)/.test(html) && /id="buFotoKamera" accept="image\/\*" capture="environment"/.test(html), "Kamera direkt");
-  assert.ok(/if \(!confirm\("Die eingetragenen Aufgaben jetzt an die Mitglieder schicken\?"\)\) return;/.test(html), "Mitteilen nur nach Bestätigung");
+  assert.ok(/if \(!\(await frage\("Die eingetragenen Aufgaben jetzt an die Mitglieder schicken\?"\)\)\) return;/.test(html), "Mitteilen nur nach Bestätigung");
 }
 
 // 178. 1.29.0: Büro – Geburtstage & Jubiläen (KC-CLUB-BUERO-FESTE)
@@ -2074,7 +2074,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/Gedenken an \$\{totNamen\.join\(", "\)\} \(Schweigeminute\)/.test(server), "Schweigeminute in der Tagesordnung");
   assert.ok(/adminOrdner\(jahr, "Freud & Leid"\), "Freud & Leid"/.test(server), "Archiv-Ablage");
   for (const k of ["beileid", "genesung", "geburt", "hochzeit"]) assert.ok(new RegExp(`\\b${k}: \\{ sym:`).test(html.slice(html.indexOf("const BRIEF_VORLAGEN"), html.indexOf("const BRIEF_ANREDEN"))), `Briefvorlage ${k}`);
-  assert.ok(/if \(leid && !\$\("flIOK"\)\?\.checked\) return melde/.test(html) && /if \(!confirm\("Nachricht jetzt an alle Mitglieder senden\?"\)\) return;/.test(html), "Senden nur nach Bestätigung");
+  assert.ok(/if \(leid && !\$\("flIOK"\)\?\.checked\) return melde/.test(html) && /if \(!\(await frage\("Nachricht jetzt an alle Mitglieder senden\?"\)\)\) return;/.test(html), "Senden nur nach Bestätigung");
   const mig = lies("supabase/migrations/20261002_kc_club_v1320_freud_leid.sql");
   assert.ok(/revoke all on kc_club_fl_faelle, kc_club_fl_schritte from anon, authenticated/.test(mig) && /kc_db_mirror_table_rules/.test(mig), "RLS + Spiegel");
 }
@@ -2173,7 +2173,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   const f = html.slice(html.indexOf("function mfAutoHtml("), html.indexOf("async function mfSitzBuchen("));
   assert.ok(/Array\.from\(\{ length: m\.plaetze \}/.test(f) && /for \(let i = 1; i < sitze\.length; i \+= 3\)/.test(f), "so viele Sitze wie angeboten, Kleinbus-Reihen");
   assert.ok(/const waehlbar = aktiv && !m\.eigen && !ichDabei;/.test(f) && /mf-sitz mf-belegt" role="img"/.test(f), "frei nur wählbar, wenn erlaubt; belegt nie anwählbar");
-  assert.ok(/if \(!confirm\(`🚗 Diesen Platz bei \$\{fahrer\} für dich reservieren\?/.test(html) && /if \(!confirm\(`Deinen Platz bei \$\{fahrer\} wieder freigeben\?/.test(html), "Buchen/Freigeben mit Rückfrage");
+  assert.ok(/if \(!\(await frage\(`🚗 Diesen Platz bei \$\{fahrer\} für dich reservieren\?/.test(html) && /if \(!\(await frage\(`Deinen Platz bei \$\{fahrer\} wieder freigeben\?/.test(html), "Buchen/Freigeben mit Rückfrage");
 }
 
 // 193. 1.40.0: Twinkey-Ladeanzeige mit sichtbarer drehender Kochmütze (KC-CLUB-DIENSTWUNSCH)
@@ -2266,6 +2266,18 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/!times\.length&&!wishChosen\?\['Bitte zuerst wählen/.test(sw), "Wunschzeit erst nach bewusster Wahl");
 }
 
+// 202. 1.46.0: einheitliches Bedienkonzept (KC-CLUB-DIALOG, KC-CLUB-NEU-EINHEITLICH, KC-CLUB-PROTOKOLL-KACHELN, Begriffe, Klappbereiche)
+{
+  const code = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]).join("\n");
+  assert.ok(!/[^.\w]confirm\(/.test(code) && !/[^.\w]prompt\(/.test(code) && !/[^.\w]confirm\(|[^.\w]prompt\(/.test(html.replace(/<script>[\s\S]*?<\/script>/g, "")), "keine grauen Handy-Abfragen mehr (confirm/prompt)");
+  assert.ok(/function frage\(text, opt = \{\}\)/.test(html) && /function eingabe\(text, wert = "", opt = \{\}\)/.test(html) && /\.blatt\.dlg-blatt \{ z-index: 5000; \}/.test(html), "App-Fenster über allem");
+  assert.ok(/function rolleBearbeiten\(pid\)[^]{0,1500}class="roAmt"/.test(html) && /function mitfahrtAnbieten\([^]{0,1500}Wie viele freie Plätze\?/.test(html), "Amt & Rechte und Mitfahrt in je einem Fenster");
+  assert.ok(/onclick="termineNeuWahl\(\)"[^>]*>＋ Neu<\/button>/.test(html) && !/id="neuAnfrageKnopf"/.test(html) && /onclick="hlNeuWahl\(\)">＋ Neu<\/button>/.test(html), "ein ＋ Neu oben rechts");
+  assert.ok(/protokolle\.length \? `<div class="mini-kacheln">\$\{protokolle\.map\(protokollKarte\)/.test(html) && /data-klappe="pr_aufgaben"/.test(html), "Protokolle als Kacheln, Aufgaben klappbar");
+  assert.ok(/data-klappe="tm_umfragen"/.test(html) && /data-klappe="tm_anfragen"/.test(html) && /data-klappe="tm_privat"/.test(html), "Termine-Bereiche klappbar");
+  assert.ok(!/>Zurzeit ist kein Treffen geplant\.</.test(html) && /<span>Nächster Termin ›<\/span>/.test(html), "Begriffe: Termin / Sitzung / Veranstaltung");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
@@ -2290,7 +2302,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(!/from\("kc_club_treffen"\)\.insert[^;]*anlass/.test(server), "Anfrage darf nicht in kc_club_treffen landen");
   assert.ok(/anfragen: anfragen\.filter/.test(server) && /UID:anfrage-/.test(server), "Kalender/Kalender-Abo ohne Anfragen");
   assert.ok(/club-terminanfrage-erinnerung/.test(server) && /club-terminanfrage-nachfass/.test(server), "Erinnerung am Vortag fehlt");
-  assert.ok(/id="neuAnfrageKnopf"/.test(html) && /function taForm\(/.test(html) && /function taAntwort\(/.test(html), "App: Anfrage-Formular/Antwort fehlt");
+  assert.ok(/los: \(\) => taForm\(\)/.test(html) && /function taForm\(/.test(html) && /function taAntwort\(/.test(html), "App: Anfrage-Formular/Antwort fehlt");
   assert.ok(/knopf\("📨", "Termin"/.test(html), "Kommunikationszentrale: Knopf Termin fehlt");
   assert.ok(/"keine" : w/.test(html), "Antwort zurücknehmen (nochmal tippen) fehlt");
 }
@@ -2433,7 +2445,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   { const pl = server.slice(server.indexOf("async function privatListe("), server.indexOf("async function privatListe(") + 1400);
     assert.ok((pl.match(/from\("kc_club_privattermine"\)\.select\(felder\)\.eq\("person_id", ich\.person_id\)/g) || []).length === 2, "Liste nur eigene Einträge (Einzel und Reihen)"); }
   assert.ok(/privatListe\(ich, zeitraum\.von, zeitraum\.bis\)/.test(server) && /UID:privat-/.test(server) && /club-privat:/.test(server), "Kalender/Abo/Erinnerung fehlt");
-  assert.ok(/onclick="neuTermin\(\)"/.test(html) && /function privatForm\(/.test(html) && /🔒 Privat<\/b> – nur ich sehe diesen Termin/.test(html), "App: Neu mit Häkchen Privat fehlt");
+  assert.ok(/los: \(\) => neuTermin\(\)/.test(html) && /function privatForm\(/.test(html) && /🔒 Privat<\/b> – nur ich sehe diesen Termin/.test(html), "App: Neu mit Häkchen Privat fehlt");
   assert.ok(/\$\("neuTreffenKnopf"\)\.classList\.remove\("versteckt"\)/.test(html), "„＋ Neu“ muss für alle sichtbar sein");
 }
 
@@ -2479,7 +2491,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/const \{ g, darfVerwalten \} = await gruppeHolen\(ich, p\.id\);\s*if \(!darfVerwalten\) throw/.test(f), "Löschen nur für Verwalter der Gruppe");
   assert.ok(f.indexOf('await geloescht(ich, "gruppe"') > 0 && f.indexOf('await geloescht(ich, "gruppe"') < f.indexOf('.delete()'), "Sicherung vor dem Löschen");
   assert.ok(/id="chatGruppeWeg" onclick="gruppeLoeschen\(\)"/.test(html) && /\$\("chatGruppeWeg"\)\.classList\.toggle\("versteckt", !g\?\.darfVerwalten\)/.test(html), "App: Knopf Gruppe löschen fehlt");
-  assert.ok(/async function gruppeLoeschen\((gefragt)?\)[\s\S]{0,700}confirm\(/.test(html), "App: Rückfrage vor dem Löschen fehlt");
+  assert.ok(/async function gruppeLoeschen\((gefragt)?\)[\s\S]{0,700}frage\(/.test(html), "App: Rückfrage vor dem Löschen fehlt");
 }
 
 // 129. 1.4.0: globale Suche (KC-CLUB-SUCHE)

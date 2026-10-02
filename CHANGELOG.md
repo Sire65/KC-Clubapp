@@ -1,5 +1,23 @@
 # Änderungen
 
+## 1.46.0 – 2026-10-02 (DEV)
+
+Einheitliches Bedienkonzept (Wunsch Hansi „überall das gleiche Bedienkonzept, nichts überladen“; Freigabe A–D). Für die
+Mitglieder nur als „Kleine Systemverbesserungen“ angekündigt.
+- KC-CLUB-DIALOG: Alle 81 Rückfragen (confirm) und 20 Eingaben (prompt) laufen als App-Fenster (frage()/eingabe(), über
+  allem, Überschrift + Text, „OK = …, Abbrechen = …“ wird zu Knopf-Beschriftungen, Löschen/Absagen mit rotem Knopf).
+  Per Code-Analyse umgestellt (10 Funktionen dafür asynchron, Ergebnisse nirgends direkt weiterverwendet). Von Hand neu:
+  Amt & Rechte in einem Fenster (Häkchen statt Komma-Eingabe + drei Ja/Nein-Fragen), Mitfahrt anbieten in einem Fenster
+  (Plätze 1–8 antippen + Treffpunkt), Notiz bei „Kann nicht/Vielleicht“ mit Vorschlägen („Ohne Notiz“ antwortet wie bisher).
+- KC-CLUB-NEU-EINHEITLICH: Termine nur noch „＋ Neu“ (Auswahl Termin / Terminanfrage / Terminfindung) + Drucker in einer
+  Zeile; Helfen & Leihen mit „＋ Neu“ oben rechts (je Reiter); Fotoalbum „＋ Neu“ statt „＋ Fotos“.
+- KC-CLUB-PROTOKOLL-KACHELN: Protokolle als kleine Kacheln (Status, neu, Anlagen/Aufgaben); „Offene Aufgaben“ und
+  „Protokoll schreiben“ als Klappbereiche mit Schloss; Löschen im geöffneten Protokoll. Pinnwand (Zettelwand) und Archiv
+  (Ordnerregal) bleiben – dort ist die Darstellung bereits bildhaft und übersichtlich.
+- Begriffe: sichtbar einheitlich Termin (Oberbegriff) / Sitzung / Veranstaltung („Nächster Termin“, „Vergangene Termine“,
+  Legende/Filter „Sitzung(en)“, Titelvorschlag „Köcheclub-Sitzung“). Terminanfrage-Anlass „Treffen“ bleibt (privat).
+- Klappbereiche mit Pfeil und Schloss auch bei Termine (Terminfindung, Terminanfragen, private Termine).
+
 ## 1.45.1 – 2026-10-02 (DEV)
 
 - KC-CLUB-DIENSTWUNSCH / KC-DP-TWINKEY-EINFACH (Wunsch Hansi nach UX-Prüfung, vor Wilfrieds Eingabe): DP2 auf Build 256 RC
