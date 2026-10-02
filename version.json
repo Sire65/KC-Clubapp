@@ -1,12 +1,16 @@
 {
-  "version": "1.53.5",
+  "version": "1.53.6",
   "datum": "2026-10-02",
   "neu": [
-    "📄 Kurzanleitung Bilderrechner Version 4: neue Seiten zu Rabatt, Weitere Funktionen, Entnahme, Gutschein, Helfer und „Bargeld vom Kassenwart übernehmen“",
-    "🧑‍🍳 Dienstwunsch mit Twinkey übersichtlicher: klare Frage „Ich kann / ganzer Tag gesperrt / zeitweise gesperrt“, Tage als farbige Kacheln (grün = fertig), kurze Zusammenfassung, weniger Knöpfe",
-    "🔧 Kleine Systemverbesserungen"
+    "🐜 Feld „Nächster Termin“ oben rechts: Ameisenstraße läuft um das Feld – ab 5 Tagen vorher hellgrün und langsam, ab 3 Tagen orange, am Vortag und am Tag selbst rot"
   ],
   "verlauf": [
+    {
+      "version": "1.53.6",
+      "neu": [
+        "🐜 Feld „Nächster Termin“ oben rechts: Ameisenstraße läuft um das Feld – ab 5 Tagen vorher hellgrün und langsam, ab 3 Tagen orange, am Vortag und am Tag selbst rot"
+      ]
+    },
     {
       "version": "1.53.5",
       "neu": [

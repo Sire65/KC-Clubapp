@@ -90,7 +90,7 @@ assert.ok(/history\.replaceState\(\{ basis: true \}/.test(html) && /addEventList
 assert.ok(/history\.pushState\(st,/.test(html), "Ansichten legen keinen Verlaufseintrag an");
 for (const z of ["nachrichten", "mitglieder"]) assert.ok(html.includes(`<button class="mini" onclick="zeige('${z}')">`) || (z === "nachrichten" && html.includes(`<button class="mini\${n ? " mini-neu" : ""}" onclick="zeige('nachrichten')">`)), `Kennzahl → ${z} fehlt`); // 1.22.0: orange bei Neuem
 // 0.27.2: „Nächstes Treffen“ führt über zumTreffen() in Termine (Kalender, Tag ausgewählt)
-assert.ok(html.includes(`<button class="mini" onclick="zumTreffen()">`) && /function zumTreffen\(mitfahrt\) \{[\s\S]{0,400}zeige\("termine"\)/.test(html), "Kennzahl → termine fehlt");
+assert.ok((html.includes(`<button class="mini" onclick="zumTreffen()">`) || html.includes(`<button class="mini\${frist ? " mini-frist frist-" + frist : ""}" onclick="zumTreffen()">`)) && /function zumTreffen\(mitfahrt\) \{[\s\S]{0,400}zeige\("termine"\)/.test(html), "Kennzahl → termine fehlt");
 const kopfHtml = html.slice(html.indexOf('<section id="v-start">'), html.indexOf('id="heroInfo"'));
 assert.ok(!kopfHtml.includes("⚙️"), "Zahnrad gehört nicht mehr in den Kopf");
 assert.ok(/onclick="webseite\(\)"/.test(kopfHtml), "Kochmütze → Internetseite fehlt");
@@ -631,7 +631,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 {
   const z = html.slice(html.indexOf("function zumTreffen(mitfahrt)"), html.indexOf("function kalHeute()"));
   assert.ok(/kalTagWahl = tag; termineArt = "kalender";/.test(z) && /kalM = \+tag\.slice\(5, 7\) - 1/.test(z), "Sprung zum Treffen-Tag fehlt");
-  assert.ok(/onclick="zumTreffen\(\)"><b style="font-size:1\.05rem">\$\{bisTreffen\}/.test(html), "Kachel „Nächstes Treffen“ springt nicht zum Tag");
+  assert.ok(/onclick="zumTreffen\(\)">(?:\$\{frist \? '<svg class="ameisen" aria-hidden="true"><rect width="100%" height="100%" rx="16"\/><\/svg>' : ""\})?<b style="font-size:1\.05rem">\$\{bisTreffen\}/.test(html), "Kachel „Nächstes Treffen“ springt nicht zum Tag"); // 1.53.6: optional Ameisenstraße davor
   assert.ok(/da < alle \? `\$\{da\}\/\$\{alle\}` : da/.test(html), "Register zeigen nicht „sichtbar/gesamt“");
 }
 
@@ -2439,6 +2439,21 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.match(html, /prefers-reduced-motion: reduce\) \{ \.mini\.mini-neu \.ameisen rect \{ animation-duration: 3s; \} \}/, "reduzierte Bewegung: langsam statt Stillstand");
   assert.doesNotMatch(html, /\.mini\.mini-neu::before/, "kein Hintergrundbild-Rand mehr");
   assert.doesNotMatch(html, /\.mini\.mini-neu \{ background: linear-gradient\(135deg, #f39c12/, "Feld nicht mehr ganz orange");
+}
+
+// 221. 1.53.6: „Nächster Termin“ mit Ameisenstraße je nach Tagen bis zum Termin (KC-CLUB-FRIST-AMEISEN)
+{
+  const def = html.match(/const fristStufe = \(tage\) => [^;]+;/)?.[0];
+  assert.ok(def, "fristStufe fehlt");
+  const fristStufe = new Function(`${def} return fristStufe;`)();
+  const erwartet = [[0, "rot"], [1, "rot"], [2, "orange"], [3, "orange"], [4, "gruen"], [5, "gruen"], [6, ""], [30, ""]];
+  for (const [tage, stufe] of erwartet) assert.equal(fristStufe(tage), stufe, `${tage} Tage → ${stufe || "kein Rand"}`);
+  assert.match(html, /frist = fristStufe\(tage\);/, "Stufe aus derselben Tageszahl wie die Anzeige");
+  assert.match(html, /<button class="mini\$\{frist \? " mini-frist frist-" \+ frist : ""\}" onclick="zumTreffen\(\)">\$\{frist \? '<svg class="ameisen"/, "Rand nur bei Stufe, als SVG im Feld");
+  assert.match(html, /\.mini\.frist-gruen \{ --frist-lauf: 2\.4s; \} \.mini\.frist-gruen \.ameisen rect \{ stroke: #a5e887; \}/, "hellgrün langsam");
+  assert.match(html, /\.mini\.frist-orange \{ --frist-lauf: 1\.4s; \} \.mini\.frist-orange \.ameisen rect \{ stroke: #ff9800; \}/, "orange");
+  assert.match(html, /\.mini\.frist-rot \{ --frist-lauf: \.8s; \} \.mini\.frist-rot \.ameisen rect \{ stroke: #ff4d4d; \}/, "rot schnell");
+  assert.match(html, /prefers-reduced-motion: reduce\) \{ \.mini\.mini-frist \.ameisen rect \{ animation-duration: 3s; \} \}/, "reduzierte Bewegung: langsam");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

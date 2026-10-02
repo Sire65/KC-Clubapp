@@ -1,5 +1,11 @@
 # Änderungen
 
+## 1.53.6 – 2026-10-02
+- KC-CLUB-FRIST-AMEISEN (Wunsch Hansi): Das Feld „Nächster Termin“ oben rechts bekommt je nach Tagen bis zum nächsten
+  Termin eine laufende Ameisenstraße (wie „Neue Nachr.“): ≤ 5 Tage hellgrün und langsam (2,4 s), ≤ 3 Tage orange (1,4 s),
+  ≤ 1 Tag (morgen/heute) rot und schnell (0,8 s). Mehr als 5 Tage oder kein Termin: kein Rand. Grundlage ist dieselbe
+  Tageszahl, die im Feld steht. Bei „Bewegung reduzieren“ langsam (3 s).
+
 ## 1.53.5 – 2026-10-02
 - Dokumente: „Schnellanleitung Bilderrechner“ zeigt jetzt die **Kurzanleitung Version 4** (28 Seiten,
   `dokumente/Kurzanleitung_Bilderrechner_V4.pdf`). Neu bzw. geändert gegenüber Version 3 (Kasse vom 02.10.2026):
