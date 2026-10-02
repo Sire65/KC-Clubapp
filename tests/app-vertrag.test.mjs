@@ -2323,10 +2323,17 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 
 // 209. 1.49.0: SOS – Mitglieder als Kacheln, Notfallkontakt rot (nur Clubleitung), Kacheln | Liste (KC-CLUB-SOS-KACHELN)
 {
-  assert.ok(/nfJa = d\.siehtNotfall && m\.notfall/.test(html), "rote Markierung nur, wenn die Clubleitung Notfallkontakte sieht");
+  assert.ok(/zeigNf = d\.siehtNotfall \|\| m\.selbst, nfJa = zeigNf && m\.notfall/.test(html), "rote Markierung nur, wenn die Clubleitung Notfallkontakte sieht (oder beim eigenen)");
   assert.ok(/function sosInfo\(id\)/.test(html) && /onclick="sosInfo\('\$\{m\.id\}'\)"/.test(html), "Kachel öffnet Fenster mit Anrufen/SMS/WhatsApp");
   assert.ok(/id="sosAnsicht"/.test(html) && /if \(aktuelleAnsicht === "sos"\) sosZeigen\(\);/.test(html), "Umschalter Kacheln | Liste im SOS-Bereich (gleiche Einstellung)");
   assert.ok(/Den Notfallkontakt sieht nur die Clubleitung \(Clubsprecher, Kassenwart, Admin\)/.test(html), "Hinweis für Mitglieder bleibt");
+}
+
+// 210. 1.49.1: SOS – eigene Kachel „(du)“ mit eigenem Notfallkontakt, neutrale Kreise (KC-CLUB-SOS-KACHELN)
+{
+  assert.ok(/zeigNf = d\.siehtNotfall \|\| m\.selbst/.test(html) && /const ich = d\.mitglieder\.find\(\(m\) => m\.selbst/.test(html), "eigene Kachel, eigener Notfallkontakt für jeden sichtbar");
+  assert.ok(/if \(m\.selbst\) return blattAuf\("sosInfo"[^]{0,1200}einstiegHin\('privat','nfName'\)/.test(html), "eigenes Fenster mit Ändern/Eintragen statt Anrufen");
+  assert.ok(/\.sos-k \.sos-av \{ background: #6b7577; \}/.test(html), "Kreise im SOS neutral (Rot = Notfallkontakt)");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

@@ -417,7 +417,8 @@
   .sos-nf { margin-top: 8px; padding: 8px; border-radius: 10px; background: #fdecea; }
   .sos-kopf { display: flex; align-items: center; gap: 8px; margin: 16px 4px 6px; } .sos-kopf h3 { margin: 0; flex: 1; }
   .sos-kopf .umschalter { margin: 0; grid-template-columns: 42px 42px; } .sos-kopf .umschalter button { padding: 5px 0; font-size: 1.1rem; }
-  .sos-k.hat-nf { border-color: #e57373; } .sos-k.leit { border-color: var(--gold); }
+  .sos-k.hat-nf { border-color: #e57373; } .sos-k .sos-av { background: #6b7577; } /* neutral: Rot heißt hier „Notfallkontakt“ */
+  .sos-k .mk-titel small { font-weight: 600; color: var(--grau); } .sos-k.leit { border-color: var(--gold); }
   .nf-ja { justify-self: start; background: var(--rotbg); color: var(--textNotruf); border-radius: 999px; padding: 2px 9px; font-weight: 800; font-size: .8rem; }
   .sos-nf-gross { margin-top: 12px; padding: 10px 12px; border: 2px solid #e57373; border-radius: 14px; background: var(--rotbg); color: var(--textRot); }
   .sos-wo-adr { font-size: 1.25rem; font-weight: 700; margin: 6px 0 2px; } .sos-wo-koord { font-family: ui-monospace, monospace; font-size: 1.05rem; }
@@ -2074,7 +2075,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.49.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.49.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -7909,6 +7910,12 @@ function sosKnoepfe(k) {
 function sosInfo(id) {
   const d = SOS.daten, m = d?.mitglieder?.find((x) => x.id === id); if (!m) return;
   const k = m.kontakt || {}, hat = k.handy || k.festnetz || k.mail;
+  if (m.selbst) return blattAuf("sosInfo", `<h3 style="margin-top:0">${esc(m.name)} <small class="hinweis">(du)</small></h3>
+    ${m.notfall ? `<div class="sos-nf sos-nf-gross" style="margin-top:0"><b>🆘 Dein Notfallkontakt: ${esc(m.notfall.name || "–")}</b>${m.notfall.beziehung ? ` <span>(${esc(m.notfall.beziehung)})</span>` : ""}${m.notfall.telefon ? `<div>📞 ${esc(m.notfall.telefon)}</div>` : ""}</div>`
+      : '<div class="karte hinweis" style="margin:0">⚠️ Du hast noch keinen Notfallkontakt hinterlegt.</div>'}
+    <p class="hinweis" style="font-size:.85rem">🔒 Deinen Notfallkontakt sehen nur du und die Clubleitung (Clubsprecher, Kassenwart, Admin).</p>
+    <button class="knopf haupt" style="width:100%;text-align:center" onclick="$('sosInfo').remove();einstiegHin('privat','nfName')">✏️ ${m.notfall ? "Notfallkontakt ändern" : "Notfallkontakt eintragen"}</button>
+    <button class="knopf" style="width:100%;text-align:center;margin-top:8px" onclick="$('sosInfo').remove()">Schließen</button>`);
   blattAuf("sosInfo", `<h3 style="margin-top:0">${esc(m.name)}${m.aemter?.length ? ` <span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}</h3>
     ${hat ? `<div class="knoepfe">${sosKnoepfe(k)}</div>` : '<p class="hinweis" style="margin:0">Keine freigegebenen Kontaktdaten.</p>'}
     ${d.siehtNotfall ? (m.notfall ? `<div class="sos-nf sos-nf-gross"><b>🆘 Notfallkontakt: ${esc(m.notfall.name || "–")}</b>${m.notfall.beziehung ? ` <span>(${esc(m.notfall.beziehung)})</span>` : ""}
@@ -7940,18 +7947,21 @@ function sosZeigen() {
     // KC-CLUB-SOS-KACHELN (1.49.0): Mitglieder als Kacheln (wählbar: Kacheln | Liste, gleiche Einstellung wie bei Mitglieder);
     // Notfallkontakt rot markiert – das sieht wie bisher nur die Clubleitung (siehtNotfall), alle anderen nur Name/Amt/erreichbar
     const kachelAn = MG_ANSICHT === "kacheln";
-    const kachel = (m, leit) => { const k = m.kontakt || {}, hat = k.handy || k.festnetz || k.mail, nfJa = d.siehtNotfall && m.notfall;
-      return `<button class="mini-kachel sos-k${nfJa ? " hat-nf" : ""}${leit ? " leit" : ""}" onclick="sosInfo('${m.id}')"><span class="avatar" style="width:46px;height:46px">${esc(initialen(m.name))}</span>
-        <span class="mk-titel">${esc(m.name)}</span>${m.aemter?.length ? `<span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}
-        ${d.siehtNotfall ? (nfJa ? '<span class="nf-ja">🆘 Notfallkontakt</span>' : '<span class="mk-unter">kein Notfallkontakt</span>') : ""}
-        <span class="mk-unter">${hat ? "📞 erreichbar" : "🔒 keine Nummer frei"}</span></button>`; };
-    const block = (l, leit) => kachelAn ? `<div class="mini-kacheln">${l.map((m) => kachel(m, leit)).join("")}</div>` : `<div class="karte">${l.map(zeile).join("")}</div>`;
+    // eigener Notfallkontakt: sieht jeder bei sich selbst (Server liefert ihn immer für einen selbst)
+    const kachel = (m, leit) => { const k = m.kontakt || {}, hat = k.handy || k.festnetz || k.mail, zeigNf = d.siehtNotfall || m.selbst, nfJa = zeigNf && m.notfall;
+      return `<button class="mini-kachel sos-k${nfJa ? " hat-nf" : ""}${leit ? " leit" : ""}${m.selbst ? " selbst" : ""}" onclick="sosInfo('${m.id}')"><span class="avatar sos-av" style="width:46px;height:46px">${esc(initialen(m.name))}</span>
+        <span class="mk-titel">${esc(m.name)}${m.selbst ? " <small>(du)</small>" : ""}</span>${m.aemter?.length ? `<span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}
+        ${zeigNf ? (nfJa ? '<span class="nf-ja">🆘 Notfallkontakt</span>' : `<span class="mk-unter">${m.selbst ? "⚠️ noch kein Notfallkontakt" : "kein Notfallkontakt"}</span>`) : ""}
+        ${m.selbst ? '<span class="mk-unter">✏️ antippen zum Prüfen</span>' : `<span class="mk-unter">${hat ? "📞 erreichbar" : "🔒 keine Nummer frei"}</span>`}</button>`; };
+    const ich = d.mitglieder.find((m) => m.selbst && (!q || suNorm(m.name).includes(q)));
+    const ichZeile = (m) => `<div class="sos-mitglied"><button class="sos-name" onclick="sosInfo('${m.id}')"><b>${esc(m.name)}</b><small>(du)</small>${m.notfall ? '<small class="nf-ja">🆘</small>' : '<small>⚠️ noch kein Notfallkontakt</small>'}<span>›</span></button></div>`;
+    const block = (l, leit, mitIch) => kachelAn ? `<div class="mini-kacheln">${mitIch && ich ? kachel(ich) : ""}${l.map((m) => kachel(m, leit)).join("")}</div>` : `<div class="karte">${mitIch && ich ? ichZeile(ich) : ""}${l.map(zeile).join("")}</div>`;
     const schalter = `<div class="umschalter sos-ansicht" id="sosAnsicht"><button data-a="kacheln" class="${kachelAn ? "an" : ""}" onclick="mgAnsichtSetzen('kacheln')" title="Als Kacheln zeigen" aria-label="Als Kacheln zeigen">🔲</button><button data-a="liste" class="${kachelAn ? "" : "an"}" onclick="mgAnsichtSetzen('liste')" title="Als Liste zeigen" aria-label="Als Liste zeigen">☰</button></div>`;
     kontakte = (leitung.length && !d.siehtNotfall ? `<h3 style="margin:16px 4px 6px">⭐ Clubleitung</h3>${block(leitung, true)}` : "")
       + `<div class="sos-kopf"><h3>👥 Mitglieder im Notfall erreichen</h3>${schalter}</div>
       ${d.siehtNotfall && kachelAn ? '<p class="hinweis" style="margin:0 4px 8px;font-size:.85rem"><span class="nf-ja">🆘</span> = Notfallkontakt hinterlegt (rot umrandet) · antippen für Anrufen, SMS, WhatsApp</p>' : ""}
       <input id="sosSuche" type="search" placeholder="🔍 Name suchen …" autocomplete="off" value="${esc(SOS.suche)}" oninput="SOS.suche=this.value;sosZeigen();$('sosSuche').focus();$('sosSuche').setSelectionRange(this.value.length,this.value.length)">
-      ${liste.length ? block(liste) : '<div class="karte"><p class="hinweis">Niemand gefunden.</p></div>'}`;
+      ${liste.length || ich ? block(liste, false, true) : '<div class="karte"><p class="hinweis">Niemand gefunden.</p></div>'}`;
   }
   $("sosInhalt").innerHTML = notrufe + sosWoKarte() + nfpKarte() + eigen + kontakte;
 }
