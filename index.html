@@ -734,6 +734,31 @@
   .eingabe .innen > #mikroKnopf.rund:not(#sendenKnopf) { background: #fff !important; border: 3px solid var(--rot3, var(--rot)) !important; font-size: 1.35rem !important; box-shadow: 0 0 0 2px var(--rot) inset, 0 1px 4px rgba(0,0,0,.25); }
   .eingabe .innen > .zustell-knopf.an { background: var(--rot) !important; border-color: var(--rot); color: #fff; }
   fieldset.bu-fs { border: 0; padding: 0; margin: 0; min-width: 0; }
+  /* KC-CLUB-MITFAHRT-SITZE (1.39.0): Auto von oben mit echten Sitzplätzen */
+  .mf-karte { border: 1px solid var(--linie); border-radius: 16px; padding: 10px 12px; margin: 8px 0; background: var(--karte); }
+  .mf-kopf { display: flex; gap: 6px; align-items: flex-start; }
+  .mf-auto { position: relative; margin: 8px auto 4px; width: fit-content; min-width: 200px; max-width: 100%; padding: 30px 12px 12px; border: 3px solid #9aa3aa; border-radius: 56px 56px 30px 30px; background: var(--karte2); }
+  .mf-auto::before { content: ""; position: absolute; left: 30px; right: 30px; top: 7px; height: 14px; border-radius: 10px 10px 4px 4px; background: #cfe0ea; border: 2px solid #9aa3aa; opacity: .9; }
+  .mf-auto.mf-bus { border-radius: 30px 30px 20px 20px; }
+  .mf-reihe { display: flex; justify-content: center; gap: 6px; margin: 4px 0; }
+  .mf-platz { display: flex; flex-direction: column; align-items: center; gap: 2px; width: 74px; }
+  .mf-platz small { font-size: .74rem; font-weight: 700; max-width: 74px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mf-sitz { width: 60px; height: 66px; border-radius: 14px 14px 10px 10px; border: 3px solid; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding: 0 0 6px; font: inherit; font-weight: 800; font-size: .78rem; overflow: hidden; }
+  .mf-sitz::before { content: ""; position: absolute; top: 6px; left: 8px; right: 8px; height: 20px; border-radius: 10px 10px 4px 4px; border: 2px solid currentColor; opacity: .5; }
+  .mf-ic { font-size: 1.1rem; line-height: 1; margin-bottom: 2px; }
+  .mf-frei { background: var(--gruenbg); border-color: var(--textGruen); color: var(--textGruen); cursor: pointer; }
+  .mf-frei.mf-aus { cursor: default; opacity: .75; }
+  .mf-du { background: #1d5fa8; border-color: #1d5fa8; color: #fff; box-shadow: 0 0 0 4px rgba(29,95,168,.28); cursor: pointer; }
+  .mf-belegt { background: var(--rotbg); border-color: var(--textNotruf); color: var(--textNotruf); cursor: not-allowed; }
+  .mf-belegt::after { content: ""; position: absolute; left: -10px; right: -10px; top: 50%; height: 4px; background: var(--textNotruf); transform: rotate(-40deg); opacity: .85; }
+  .mf-fahrer { background: #5b6770; border-color: #3e474e; color: #fff; }
+  .mf-status { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; font-weight: 800; margin-top: 4px; }
+  .mf-status .marke { white-space: nowrap; }
+  .marke.mf-m-du { background: var(--blaubg); color: var(--text); }
+  .mf-legende { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: .8rem; margin: 4px 0 2px; }
+  .mf-legende span { display: flex; align-items: center; gap: 5px; }
+  .mf-q { width: 14px; height: 14px; border-radius: 4px; border: 2px solid; display: inline-block; }
+  .mf-q.mf-belegt::after { display: none; }
   .bu-haken-liste.br-liste { grid-template-columns: 1fr; }
   .br-liste .br-name { flex: 1 1 auto; min-width: 0; }
   .br-liste .br-recht { flex: none; white-space: nowrap; margin-left: auto; }
@@ -1976,7 +2001,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.38.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.39.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -9089,20 +9114,55 @@ async function umfrageSpeichern() {
 function mitfahrtBlock(art, bezugId, liste, offen, suche = [], darf = true) {
   if (!offen && !liste.length && !suche.length) return "";
   const aktiv = offen && darf, ichFahre = liste.some((m) => m.eigen), ichDabei = liste.some((m) => m.dabei), ichSuche = suche.some((s) => s.eigen);
-  const zeilen = liste.map((m) => `<div class="zeile"><div style="flex:1"><b>🚗 ${esc(m.fahrer.name)}</b> <span class="marke${m.frei ? " gruen" : ""}">${m.frei ? `${m.frei} von ${m.plaetze} frei` : "voll"}</span>
-      <div class="hinweis" style="font-size:.85rem">${m.treffpunkt ? "📍 " + esc(m.treffpunkt) + " · " : ""}${m.mitfahrer.length ? "Mit: " + esc(m.mitfahrer.join(", ")) : "noch niemand"}${m.notiz ? " · " + esc(m.notiz) : ""}</div></div>
-      ${aktiv && !m.eigen ? (m.dabei ? `<button class="knopf klein gruen" title="Platz wieder freigeben" onclick="mitfahrtPlatz('${m.id}', false)">✔ Platz gebucht · freigeben</button>` : m.frei && !ichDabei ? `<button class="knopf klein" onclick="mitfahrtPlatz('${m.id}', true)">🚗 Platz buchen</button>` : "") : ""}
-      ${m.eigen && offen ? `<button class="knopf klein" title="ändern" onclick="mitfahrtAnbieten('${art}', '${esc(bezugId)}', ${m.plaetze}, ${JSON.stringify(m.treffpunkt || "").replace(/"/g, "&quot;")})">✏️</button>` : ""}
-      ${m.darfLoeschen ? `<button class="knopf klein" title="löschen" onclick="mitfahrtLoeschen('${m.id}', '${art}')">🗑️</button>` : ""}</div>`).join("");
+  const zeilen = liste.map((m) => mfAutoHtml(m, art, bezugId, aktiv, offen, ichDabei)).join("");
   const suchZeile = suche.length ? `<div class="hinweis" style="margin:6px 0 2px">🙋 <b>Sucht eine Mitfahrgelegenheit:</b> ${suche.map((s) => esc(s.name) + (s.notiz ? ` <i>(${esc(s.notiz)})</i>` : "")).join(", ")}</div>` : "";
   const knoepfe = aktiv ? [
     !ichFahre && !ichDabei ? (ichSuche ? `<button class="knopf klein gruen" onclick="mitfahrtSuchen('${art}', '${esc(bezugId)}', false)">✔ Du suchst · zurücknehmen</button>`
       : `<button class="knopf klein" onclick="mitfahrtSuchen('${art}', '${esc(bezugId)}', true)">🙋 Ich suche eine Mitfahrgelegenheit</button>`) : "",
     !ichFahre && !ichDabei ? `<button class="knopf klein" onclick="mitfahrtAnbieten('${art}', '${esc(bezugId)}')">🚗 Ich biete eine Mitfahrgelegenheit</button>` : "",
   ].filter(Boolean).join("") : "";
-  return `<div style="margin-top:10px;border-top:1px solid var(--linie);padding-top:8px"><b>🚗 Mitfahren</b>${zeilen || '<p class="hinweis" style="margin:4px 0">Noch keine Mitfahrgelegenheit.</p>'}${suchZeile}
+  const legende = liste.length ? '<div class="mf-legende"><span><i class="mf-q mf-frei"></i>frei – antippen</span><span><i class="mf-q mf-du"></i>dein Platz</span><span><i class="mf-q mf-belegt"></i>belegt</span></div>' : "";
+  return `<div style="margin-top:10px;border-top:1px solid var(--linie);padding-top:8px"><b>🚗 Mitfahren</b>${legende}${zeilen || '<p class="hinweis" style="margin:4px 0">Noch keine Mitfahrgelegenheit.</p>'}${suchZeile}
     ${knoepfe ? `<div class="knoepfe">${knoepfe}</div>` : ""}
     ${offen && !darf ? '<p class="hinweis" style="margin:6px 0 0;font-size:.85rem">Sag zuerst „✅ Ich komme“ – dann kannst du eine Mitfahrgelegenheit suchen, anbieten oder einen Platz buchen.</p>' : ""}</div>`;
+}
+// KC-CLUB-MITFAHRT-SITZE (1.39.0, Wunsch Hansi): echte Sitzplätze – Auto von oben, Fahrer vorne links, so viele Sitze wie
+// angeboten (bis 8 → weitere Reihen wie ein Kleinbus). Grün = frei (antippen = reservieren), Blau = dein Platz (antippen =
+// freigeben), Rot gestrichen = belegt (nicht wählbar). Jede Buchung/Freigabe mit Rückfrage; der Fahrer bekommt wie bisher Bescheid.
+const mfVorname = (n) => String(n || "").trim().split(/\s+/)[0] || "?";
+const mfKuerzel = (n) => String(n || "").trim().split(/\s+/).map((w) => w[0] || "").join("").slice(0, 2).toUpperCase() || "?";
+function mfAutoHtml(m, art, bezugId, aktiv, offen, ichDabei) {
+  const mit = m.mitfahrer.slice(), meinIdx = m.dabei ? mit.findIndex((n) => n === ICH?.name) : -1;
+  const sitze = Array.from({ length: m.plaetze }, (_, i) => i < mit.length ? (i === (meinIdx >= 0 ? meinIdx : -1) ? { art: "du", name: mit[i] } : { art: "belegt", name: mit[i] }) : { art: "frei" });
+  if (m.dabei && meinIdx < 0) { const b = sitze.findIndex((x) => x.art === "belegt"); if (b >= 0) sitze[b] = { art: "du", name: ICH?.name }; } // Name abweichend → trotzdem „Du“ zeigen
+  const fahrer = mfVorname(m.fahrer.name), sicher = (t) => esc(t).replace(/'/g, "&#39;");
+  const sitz = (x) => {
+    if (x.art === "fahrer") return `<div class="mf-platz"><div class="mf-sitz mf-fahrer" aria-label="Fahrer ${esc(m.fahrer.name)}"><span class="mf-ic">🛞</span>Fahrer</div><small>${esc(fahrer)}</small></div>`;
+    if (x.art === "belegt") return `<div class="mf-platz"><div class="mf-sitz mf-belegt" role="img" aria-label="belegt: ${esc(x.name)}"><span class="mf-ic">👤</span>${esc(mfKuerzel(x.name))}</div><small>${esc(mfVorname(x.name))}</small></div>`;
+    if (x.art === "du") return `<div class="mf-platz"><button class="mf-sitz mf-du" ${aktiv ? `onclick="mfSitzFreigeben('${m.id}', '${sicher(fahrer)}')"` : "disabled"} aria-label="Dein Platz – antippen zum Freigeben"><span class="mf-ic">✔</span>Du</button><small>dein Platz</small></div>`;
+    const waehlbar = aktiv && !m.eigen && !ichDabei;
+    return `<div class="mf-platz"><button class="mf-sitz mf-frei${waehlbar ? "" : " mf-aus"}" ${waehlbar ? `onclick="mfSitzBuchen('${m.id}', '${sicher(fahrer)}')"` : "disabled"} aria-label="freier Platz${waehlbar ? " – antippen zum Reservieren" : ""}"><span class="mf-ic">＋</span>frei</button><small>${waehlbar ? "antippen" : "frei"}</small></div>`;
+  };
+  // Reihen: vorne Fahrer + 1, dahinter Bänke mit je 3 (Kleinbus bei mehr als 4 Plätzen)
+  const reihen = [[{ art: "fahrer" }, ...sitze.slice(0, 1)]];
+  for (let i = 1; i < sitze.length; i += 3) reihen.push(sitze.slice(i, i + 3));
+  const frei = sitze.filter((x) => x.art === "frei").length;
+  const marke = m.dabei ? '<span class="marke mf-m-du">✔ du fährst mit</span>' : frei ? '<span class="marke gruen">🟢 noch Platz</span>' : '<span class="marke rot">🔴 voll</span>';
+  return `<div class="mf-karte">
+    <div class="mf-kopf"><div style="flex:1;min-width:0"><b>🚗 ${esc(m.fahrer.name)}</b>${m.eigen ? ' <span class="marke">deine Fahrt</span>' : ""}
+      <div class="hinweis" style="font-size:.85rem">${m.treffpunkt ? "📍 " + esc(m.treffpunkt) : "📍 Treffpunkt noch offen"}${m.notiz ? " · " + esc(m.notiz) : ""}</div></div>
+      ${m.eigen && offen ? `<button class="knopf klein" title="ändern" onclick="mitfahrtAnbieten('${art}', '${esc(bezugId)}', ${m.plaetze}, ${JSON.stringify(m.treffpunkt || "").replace(/"/g, "&quot;")})">✏️</button>` : ""}
+      ${m.darfLoeschen ? `<button class="knopf klein" title="löschen" onclick="mitfahrtLoeschen('${m.id}', '${art}')">🗑️</button>` : ""}</div>
+    <div class="mf-auto${m.plaetze > 4 ? " mf-bus" : ""}">${reihen.map((rh) => `<div class="mf-reihe">${rh.map(sitz).join("")}</div>`).join("")}</div>
+    <div class="mf-status"><span>${frei} von ${m.plaetze} ${m.plaetze === 1 ? "Platz" : "Plätzen"} frei</span>${marke}</div></div>`;
+}
+async function mfSitzBuchen(id, fahrer) {
+  if (!confirm(`🚗 Diesen Platz bei ${fahrer} für dich reservieren?\n\n${fahrer} bekommt Bescheid.`)) return;
+  mitfahrtPlatz(id, true);
+}
+async function mfSitzFreigeben(id, fahrer) {
+  if (!confirm(`Deinen Platz bei ${fahrer} wieder freigeben?\n\n${fahrer} bekommt Bescheid.`)) return;
+  mitfahrtPlatz(id, false);
 }
 async function mitfahrtSuchen(art, bezugId, an) {
   try { const r = await api("mitfahrt_suchen", { bezug_art: art, bezug_id: bezugId, an }); melde(an ? `🙋 Eingetragen${r.fahrerBenachrichtigt ? ` – ${r.fahrerBenachrichtigt === 1 ? "ein Fahrer weiß" : r.fahrerBenachrichtigt + " Fahrer wissen"} Bescheid` : " – wer eine Fahrt anbietet, bekommt Bescheid"}` : "Suche zurückgenommen"); mitfahrtNeuLaden(art); }

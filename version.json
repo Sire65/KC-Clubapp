@@ -1,7 +1,8 @@
 {
-  "version": "1.38.0",
+  "version": "1.39.0",
   "datum": "2026-10-02",
   "neu": [
+    "🚗 Mitfahren mit echten Sitzplätzen: Jeder Fahrer hat ein kleines Auto mit seinen Plätzen – grün = frei (antippen und reservieren), blau = dein Platz, rot gestrichen = belegt. Große Autos zeigen weitere Sitzreihen wie ein Kleinbus",
     "📋 Die Tages-Übersicht vom Start kannst du jetzt jederzeit wieder öffnen: „📋 Übersicht“ bei „Heute wichtig“ und im Büro (Clubleitung)",
     "🔐 Büro-Freigaben: Der Admin legt fest, wer ins Büro darf – nur lesen oder lesen & schreiben (Admin)",
     "🎤 Die Knöpfe unter dem Schreibfeld sind jetzt besser zu erkennen – vor allem das Mikrofon",
@@ -31,6 +32,12 @@
     "📨 Danach mit einem Tipp: Einladung mit Tagesordnung an alle senden – und später alle erinnern, die noch nicht geantwortet haben (Admin)"
   ],
   "verlauf": [
+    {
+      "version": "1.39.0",
+      "neu": [
+        "🚗 Mitfahren mit echten Sitzplätzen: Jeder Fahrer hat ein kleines Auto mit seinen Plätzen – grün = frei (antippen und reservieren), blau = dein Platz, rot gestrichen = belegt. Große Autos zeigen weitere Sitzreihen wie ein Kleinbus"
+      ]
+    },
     {
       "version": "1.38.0",
       "neu": [

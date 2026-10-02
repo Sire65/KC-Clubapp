@@ -2167,6 +2167,15 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/async function tagesinfoZeigen\(manuell = false\) \{\s*if \(!ICH\?\.vorstand\) return;/.test(html) && /if \(!manuell\) try \{ localStorage\.setItem\(TI_SEIT/.test(html), "manuell verschiebt den Merkpunkt nicht");
 }
 
+// 192. 1.39.0: Mitfahrt mit echten Sitzplätzen (KC-CLUB-MITFAHRT-SITZE)
+{
+  assert.ok(/const zeilen = liste\.map\(\(m\) => mfAutoHtml\(m, art, bezugId, aktiv, offen, ichDabei\)\)\.join\(""\);/.test(html), "Block nutzt die Sitzplatz-Ansicht");
+  const f = html.slice(html.indexOf("function mfAutoHtml("), html.indexOf("async function mfSitzBuchen("));
+  assert.ok(/Array\.from\(\{ length: m\.plaetze \}/.test(f) && /for \(let i = 1; i < sitze\.length; i \+= 3\)/.test(f), "so viele Sitze wie angeboten, Kleinbus-Reihen");
+  assert.ok(/const waehlbar = aktiv && !m\.eigen && !ichDabei;/.test(f) && /mf-sitz mf-belegt" role="img"/.test(f), "frei nur wählbar, wenn erlaubt; belegt nie anwählbar");
+  assert.ok(/if \(!confirm\(`🚗 Diesen Platz bei \$\{fahrer\} für dich reservieren\?/.test(html) && /if \(!confirm\(`Deinen Platz bei \$\{fahrer\} wieder freigeben\?/.test(html), "Buchen/Freigeben mit Rückfrage");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

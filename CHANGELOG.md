@@ -1,5 +1,12 @@
 # Änderungen
 
+## 1.39.0 – 2026-10-02 (DEV)
+
+- KC-CLUB-MITFAHRT-SITZE (Wunsch Hansi, Entwurf freigegeben): Mitfahrgelegenheiten mit echten Sitzplätzen – je Fahrer ein
+  Auto von oben (Fahrer vorne links), so viele Sitze wie angeboten; bei mehr als 4 Plätzen weitere Reihen wie ein Kleinbus
+  (bis 8). Grün „frei“ antippen = reservieren, blau „Du“ antippen = freigeben (jeweils Rückfrage, Fahrer bekommt wie bisher
+  Bescheid), rot gestrichen = belegt (nicht wählbar, Name darunter). Statuszeile „x von n frei“ mit 🟢/🔴/✔. Server unverändert.
+
 ## 1.38.0 – 2026-10-02 (DEV)
 
 - KC-CLUB-TAGESINFO-MANUELL (Wunsch Hansi, keine neue Kachel): Die Tages-Übersicht vom Start ist jederzeit wieder
