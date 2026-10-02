@@ -2321,6 +2321,14 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/\[kaSchluessel\(\)\]: neu/.test(html) && /\[kaSchluessel\(\)\]: liste/.test(html), "Ziehen und Pfeile speichern in die richtige Reihenfolge");
 }
 
+// 209. 1.49.0: SOS – Mitglieder als Kacheln, Notfallkontakt rot (nur Clubleitung), Kacheln | Liste (KC-CLUB-SOS-KACHELN)
+{
+  assert.ok(/nfJa = d\.siehtNotfall && m\.notfall/.test(html), "rote Markierung nur, wenn die Clubleitung Notfallkontakte sieht");
+  assert.ok(/function sosInfo\(id\)/.test(html) && /onclick="sosInfo\('\$\{m\.id\}'\)"/.test(html), "Kachel öffnet Fenster mit Anrufen/SMS/WhatsApp");
+  assert.ok(/id="sosAnsicht"/.test(html) && /if \(aktuelleAnsicht === "sos"\) sosZeigen\(\);/.test(html), "Umschalter Kacheln | Liste im SOS-Bereich (gleiche Einstellung)");
+  assert.ok(/Den Notfallkontakt sieht nur die Clubleitung \(Clubsprecher, Kassenwart, Admin\)/.test(html), "Hinweis für Mitglieder bleibt");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

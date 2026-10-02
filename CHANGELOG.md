@@ -1,5 +1,8 @@
 # Änderungen
 
+## 1.49.0 – 2026-10-02
+- KC-CLUB-SOS-KACHELN: SOS → „Mitglieder im Notfall erreichen“ als Kacheln (Name, Amt, erreichbar/keine Nummer frei); Antippen öffnet Anrufen/SMS/WhatsApp. Für die Clubleitung: Notfallkontakt rot umrandet + rotes Schild, im Fenster rot hinterlegt. Mitglieder sehen weiter keine Notfallkontakte; Clubleitung-Bereich als Kacheln mit goldenem Rand. Umschalter 🔲 | ☰ (gleiche Einstellung wie bei Mitglieder); Liste zeigt 🆘 neben dem Namen. Notrufknöpfe unverändert.
+
 ## 1.48.0 – 2026-10-02
 - KC-CLUB-EINFACH-ANORDNEN: Auch in der einfachen Ansicht lassen sich die Kacheln anordnen (lange drücken → nach oben/unten ziehen oder ▲ ▼). Eigene Reihenfolge, getrennt von der erweiterten Ansicht, geräteübergreifend gespeichert (Einstellung „kacheln“, Schlüssel „einfach“). Kein Ausblenden in der einfachen Ansicht; „↺ Standard“ setzt dort nur deren Reihenfolge zurück.
 
