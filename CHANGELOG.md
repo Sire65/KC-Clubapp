@@ -1,5 +1,8 @@
 # Änderungen
 
+## 1.49.2 – 2026-10-02
+- KC-CLUB-ZUSTELLFEHLER: Roter Kreis (nur Admin) nur noch, wenn nach einem Zustellfehler auf demselben Weg nichts mehr angekommen ist (vorher blieb ein einzelner alter Push-Fehler 7 Tage rot). „Kein Push und keine E-Mail“ ist kein roter Fehler mehr, sondern ein Hinweis „📵 nicht erreichbar“ in Liste und Kachel (nur Admin).
+
 ## 1.49.1 – 2026-10-02
 - KC-CLUB-SOS-KACHELN: Eigene Kachel „(du)“ vorne (auch in der Liste) – zeigt, ob der eigene Notfallkontakt hinterlegt ist; Antippen zeigt ihn und führt zu „ändern/eintragen“. Namenskreise im SOS neutral grau, damit Rot nur „Notfallkontakt“ bedeutet.
 

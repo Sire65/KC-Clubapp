@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.49.1";
+const SERVER_VERSION = "1.49.2";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -2589,14 +2589,23 @@ Köcheclub Werne`,
           // KC-CLUB-ANSICHT: wer nutzt welche Ansicht (nur für den Admin – zeigt, ob die einfache Ansicht angenommen wird)
           const { data: an } = await db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "ansicht");
           for (const x of an ?? []) if ((x as any).wert?.gewaehlt) ansicht.set((x as any).person_id, (x as any).wert.art === "erweitert" ? "erweitert" : "einfach");
-          const { data: fx } = await db.from("kc_communication_requests").select("recipient_refs,channel,status,created_at").eq("source_program", "kc-club")
-            .in("status", COMM_FEHLER).gte("created_at", new Date(Date.now() - 7 * 86400000).toISOString()).limit(500);
+          // KC-CLUB-ZUSTELLFEHLER (1.49.2): rot nur, wenn nach dem Fehler auf demselben Weg nichts mehr angekommen ist
+          // (vorher blieb z. B. ein einzelner alter Push-Fehler 7 Tage rot, obwohl danach alles ankam)
+          const seit = new Date(Date.now() - 7 * 86400000).toISOString();
+          const [{ data: fx }, { data: ok }] = await Promise.all([
+            db.from("kc_communication_requests").select("recipient_refs,channel,status,created_at").eq("source_program", "kc-club").in("status", COMM_FEHLER).gte("created_at", seit).limit(500),
+            db.from("kc_communication_requests").select("recipient_refs,channel,created_at").eq("source_program", "kc-club").in("status", COMM_OK).gte("created_at", seit).order("created_at", { ascending: false }).limit(2000),
+          ]);
           const perMail = new Map(leute.filter((m) => m.email).map((m) => [String(m.email).toLowerCase(), m.person_id]));
-          for (const x of fx ?? []) for (const r of (Array.isArray(x.recipient_refs) ? x.recipient_refs : []) as any[]) {
-            const id = r?.personId ?? perMail.get(String(r?.email ?? "").toLowerCase());
-            if (id && !fehler.has(id)) fehler.set(id, x.channel === "push" ? "Push kam nicht an (letzte 7 Tage)" : "E-Mail kam nicht an (letzte 7 Tage)");
+          const wer = (r: any) => r?.personId ?? perMail.get(String(r?.email ?? "").toLowerCase());
+          const zuletztOk = new Map<string, string>(); // person|kanal → letzte Zustellung
+          for (const x of ok ?? []) for (const r of (Array.isArray(x.recipient_refs) ? x.recipient_refs : []) as any[]) {
+            const id = wer(r), k = id + "|" + x.channel; if (id && !(zuletztOk.get(k)! >= x.created_at)) zuletztOk.set(k, x.created_at);
           }
-          for (const m of leute) if (!ps.has(m.person_id) && !m.email && !fehler.has(m.person_id)) fehler.set(m.person_id, "Nicht erreichbar: kein Push und keine E-Mail");
+          for (const x of fx ?? []) for (const r of (Array.isArray(x.recipient_refs) ? x.recipient_refs : []) as any[]) {
+            const id = wer(r); if (!id || fehler.has(id) || zuletztOk.get(id + "|" + x.channel)! > x.created_at) continue;
+            fehler.set(id, x.channel === "push" ? "Push kam nicht an (letzte 7 Tage)" : "E-Mail kam nicht an (letzte 7 Tage)");
+          }
         }
         return json({
           aemter, onlineSichtbar: ichZeige,
@@ -2609,7 +2618,8 @@ Köcheclub Werne`,
             wege: { push: ps.has(m.person_id), mail: !!m.email, whatsapp: hatTel.has(m.person_id) && (ich.admin || m.person_id === ich.person_id || (ich.kontakte && handyFrei.has(m.person_id))) },
             // für alle nur grob: in den letzten 14 Tagen in der App gewesen (genaue Zeit nur für den Admin)
             aktiv: !!(z.get(m.person_id) as any)?.zuletzt_gesehen && Date.now() - new Date((z.get(m.person_id) as any).zuletzt_gesehen).getTime() < 14 * 86400000,
-            ...(ich.admin ? { kontakte: (r.get(m.person_id) as any)?.kontakte_sehen !== false, protokolle: (r.get(m.person_id) as any)?.protokolle_lesen !== false, app: !!(z.get(m.person_id) as any)?.aktiv, zuletzt: (z.get(m.person_id) as any)?.zuletzt_gesehen ?? null, push: ps.has(m.person_id), mail: !!m.email, fehler: fehler.get(m.person_id) ?? null, ansicht: ansicht.get(m.person_id) ?? null } : {}),
+            ...(ich.admin ? { kontakte: (r.get(m.person_id) as any)?.kontakte_sehen !== false, protokolle: (r.get(m.person_id) as any)?.protokolle_lesen !== false, app: !!(z.get(m.person_id) as any)?.aktiv, zuletzt: (z.get(m.person_id) as any)?.zuletzt_gesehen ?? null, push: ps.has(m.person_id), mail: !!m.email, fehler: fehler.get(m.person_id) ?? null,
+              unerreichbar: !ps.has(m.person_id) && !m.email, /* kein Push, keine E-Mail: Hinweis statt roter Kreis */ ansicht: ansicht.get(m.person_id) ?? null } : {}),
           })),
         });
       }

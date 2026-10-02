@@ -1138,7 +1138,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/function pwVoll\(\)/.test(html) && /pwAbnehmen\('\$\{z\.id\}', true\)/.test(html), "Volle Plätze: Abnehmen im Formular fehlt");
   // Kreise: Registry, Rot nur Admin (Server liefert fehler nur im Admin-Zweig), Unbekannt nie OK
   assert.ok(/const KREIS_ARTEN = \[/.test(html) && /art: "fehler"[^\n]*nurAdmin: true, gilt: \(m\) => ICH\?\.admin && !!m\.fehler/.test(html), "Rot nicht auf Admin beschränkt");
-  assert.ok(/\.\.\.\(ich\.admin \? \{[^\n]*fehler: fehler\.get\(m\.person_id\) \?\? null[,}]/.test(server) && /if \(ich\.admin\) \{[\s\S]{0,600}const \{ data: fx \}/.test(server), "Server gibt Fehler an Nicht-Admins");
+  assert.ok(/\.\.\.\(ich\.admin \? \{[^\n]*fehler: fehler\.get\(m\.person_id\) \?\? null[,}]/.test(server) && /if \(ich\.admin\) \{[\s\S]{0,1400}\{ data: fx \}/.test(server), "Server gibt Fehler an Nicht-Admins");
   assert.ok(/verborgen: m\.person_id !== ich\.person_id && \(!ichZeige \|\| zeigen\.get\(m\.person_id\) === false\)/.test(server) && /heute: ichZeige && /.test(server), "Online-Privatsphäre bei heute/verborgen nicht beachtet");
   assert.ok(/\.avatar\.k-unbekannt \{ background: transparent;[^}]*dashed/.test(html) && /return k \|\| \{ art: "unbekannt"/.test(html), "Unbekannt wird nicht als unbekannt gezeigt");
   assert.ok((html.match(/[{:] ?kreis\((m|\{|MITGLIEDER)/g) || []).length >= 4 && /kreisLegende\(\) \+ (MITGLIEDER|liste)\.map/.test(html), "Kreise nicht in allen Listen / Legende fehlt");
@@ -2334,6 +2334,13 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/zeigNf = d\.siehtNotfall \|\| m\.selbst/.test(html) && /const ich = d\.mitglieder\.find\(\(m\) => m\.selbst/.test(html), "eigene Kachel, eigener Notfallkontakt für jeden sichtbar");
   assert.ok(/if \(m\.selbst\) return blattAuf\("sosInfo"[^]{0,1200}einstiegHin\('privat','nfName'\)/.test(html), "eigenes Fenster mit Ändern/Eintragen statt Anrufen");
   assert.ok(/\.sos-k \.sos-av \{ background: #6b7577; \}/.test(html), "Kreise im SOS neutral (Rot = Notfallkontakt)");
+}
+
+// 211. 1.49.2: Zustellfehler nur rot, wenn danach nichts mehr ankam; „kein Push, keine Mail“ als Hinweis statt rot (KC-CLUB-ZUSTELLFEHLER)
+{
+  assert.ok(/zuletztOk\.get\(id \+ "\|" \+ x\.channel\)! > x\.created_at\) continue;/.test(server), "alter Fehler wird durch spätere Zustellung aufgehoben");
+  assert.ok(!/Nicht erreichbar: kein Push und keine E-Mail/.test(server) && /unerreichbar: !ps\.has\(m\.person_id\) && !m\.email/.test(server), "kein Push/keine Mail nicht mehr als roter Fehler");
+  assert.ok(/m\.unerreichbar \? "📵 nicht erreichbar – kein Push, keine Mail"/.test(html) && /ICH\.admin && m\.unerreichbar \? '<span class="mk-unter"/.test(html), "Hinweis in Liste und Kachel (nur Admin)");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
