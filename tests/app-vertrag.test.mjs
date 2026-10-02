@@ -2278,6 +2278,12 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(!/>Zurzeit ist kein Treffen geplant\.</.test(html) && /<span>Nächster Termin ›<\/span>/.test(html), "Begriffe: Termin / Sitzung / Veranstaltung");
 }
 
+// 203. 1.46.1: Themen und Abstimmungen als kleine Kacheln (KC-CLUB-VORSCHLAG-KACHELN)
+{
+  assert.ok(/function vorschlagKachel\(v\)[^]{0,1500}onclick="vorschlagInfo\('\$\{v\.id\}'\)"/.test(html), "Kachel öffnet Info-Fenster");
+  assert.ok(/themen\.length \? `<div class="mini-kacheln">\$\{themen\.map\(vorschlagKachel\)/.test(html) && /abst\.map\(vorschlagKachel\)/.test(html) && /fertig\.map\(vorschlagKachel\)/.test(html), "Themen, Abstimmungen, Erledigtes als Kacheln");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

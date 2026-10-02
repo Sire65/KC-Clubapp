@@ -1,11 +1,17 @@
 {
-  "version": "1.46.0",
+  "version": "1.46.1",
   "datum": "2026-10-02",
   "neu": [
     "🔧 Kleine Systemverbesserungen",
     "🧑‍🍳 Dienstwunsch mit Twinkey einfacher: „x von 13 Tagen fertig“, Knopf zum nächsten offenen Tag, Rückfrage vor „Fertig“, Kann-Zeit nicht mehr automatisch der ganze Tag, Wunschzeit erst nach Auswahl"
   ],
   "verlauf": [
+    {
+      "version": "1.46.1",
+      "neu": [
+        "🔧 Kleine Systemverbesserungen"
+      ]
+    },
     {
       "version": "1.46.0",
       "neu": [

@@ -2045,7 +2045,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.46.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.46.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -5560,11 +5560,11 @@ async function vorschlaegeLaden() {
     const offen = vorschlaege.filter((v) => v.status === "offen"), fertig = vorschlaege.filter((v) => v.status !== "offen");
     const abst = offen.filter((v) => v.art === "abstimmung"), themen = offen.filter((v) => v.art === "thema"), spenden = offen.filter((v) => v.art === "spende");
     $("vorschlagListe").innerHTML =
-      (abst.length ? `<div class="abschnitt"><h3>🗳️ Abstimmungen</h3></div>` + abst.map(vorschlagKarte).join("") : "")
+      (abst.length ? `<div class="abschnitt"><h3>🗳️ Abstimmungen</h3></div><div class="mini-kacheln">${abst.map(vorschlagKachel).join("")}</div>` : "")
       + (spenden.length ? `<div class="abschnitt"><h3>💝 Spendenprojekte für die nächste Sitzung</h3></div><div class="mini-kacheln">${spenden.map(spendeKachel).join("")}</div>` : "")
       + `<div class="abschnitt"><h3>💡 Themen für die nächste Sitzung</h3></div>`
-      + (themen.map(vorschlagKarte).join("") || '<div class="karte hinweis">Noch keine Themen. Tippe oben auf „＋ Neu“, um etwas vorzuschlagen.</div>')
-      + (fertig.length ? `<div class="abschnitt"><h3>Erledigt</h3></div>` + fertig.map(vorschlagKarte).join("") : "");
+      + (themen.length ? `<div class="mini-kacheln">${themen.map(vorschlagKachel).join("")}</div>` : '<div class="karte hinweis">Noch keine Themen. Tippe oben auf „＋ Neu“, um etwas vorzuschlagen.</div>')
+      + (fertig.length ? `<div class="abschnitt"><h3>Erledigt</h3></div><div class="mini-kacheln">${fertig.map(vorschlagKachel).join("")}</div>` : "");
   } catch (e) { melde(e.message, true); }
 }
 function balken(v) {
@@ -5621,6 +5621,18 @@ function spendeKachel(v) {
     <span class="mk-titel">${esc(sp[0]?.empfaenger || "Spende")}${sp.length > 1 ? ` <small>+${sp.length - 1} weitere</small>` : ""}</span>
     <span class="mk-gross">${esc(spEuro(v.summe ?? sp.reduce((s, x) => s + Number(x.betrag || 0), 0)))}</span>
     <span class="mk-unter">👍 ${e}${v.meine ? " · auch von dir" : ""} · von ${esc(v.von?.name || "?")}</span></button>`;
+}
+// KC-CLUB-VORSCHLAG-KACHELN (1.46.1): Themen, Abstimmungen und Erledigtes als kleine Kacheln – Antippen öffnet alles groß
+function vorschlagKachel(v) {
+  if (v.art === "spende" && v.status === "offen") return spendeKachel(v);
+  const offen = v.status === "offen", e = v.ergebnis?.[0]?.anzahl || 0;
+  const sym = v.art === "abstimmung" ? "🗳️" : v.art === "spende" ? "💝" : "💡";
+  const lage = !offen ? (v.status === "abgeschlossen" ? '<span class="marke gruen">✔ erledigt</span>' : '<span class="marke rot">zurückgezogen</span>')
+    : v.art === "abstimmung" ? (v.meine || v.abgestimmt ? '<span class="marke gruen">✔ Du hast abgestimmt</span>' : '<span class="marke gelb">👉 Stimme fehlt</span>') : "";
+  const zahl = v.art === "abstimmung" ? `🗳️ ${v.stimmen ?? 0} von ${v.berechtigt ?? "?"}` : `👍 ${e}${v.meine ? " · auch von dir" : ""}`;
+  return `<button class="mini-kachel${offen && v.art === "abstimmung" && !(v.meine || v.abgestimmt) ? " mk-offen" : ""}" onclick="vorschlagInfo('${v.id}')"><span class="mk-sym">${sym}</span>
+    <span class="mk-titel">${esc(v.titel)}</span>${lage}<span class="mk-unter">${zahl}</span>
+    ${offen && v.frist ? `<span class="mk-unter">⏳ bis ${esc(wann(v.frist))}</span>` : ""}<span class="mk-unter">von ${esc(v.von?.name || "?")}</span></button>`;
 }
 function vorschlagInfo(id) {
   const v = VORSCHLAG_MAP.get(id);

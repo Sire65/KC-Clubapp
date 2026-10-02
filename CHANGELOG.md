@@ -1,5 +1,8 @@
 # Änderungen
 
+## 1.46.1 – 2026-10-02
+- KC-CLUB-VORSCHLAG-KACHELN: Themen, Abstimmungen und Erledigtes unter „Vorschläge“ als kleine Kacheln; Antippen öffnet alle Einzelheiten mit Unterstützen/Abstimmen/Abschließen.
+
 ## 1.46.0 – 2026-10-02 (DEV)
 
 Einheitliches Bedienkonzept (Wunsch Hansi „überall das gleiche Bedienkonzept, nichts überladen“; Freigabe A–D). Für die
