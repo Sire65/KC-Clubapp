@@ -1,5 +1,11 @@
 # Änderungen
 
+## 1.33.1 – 2026-10-02 (DEV)
+
+- KC-CLUB-GRUPPEN-WAHL (Wunsch Hansi: „Gruppe Innovation sollte bei der Auswahl angezeigt werden“): „Neue Nachricht“ zeigt
+  oben „👥 Deine Gruppen“ (alle Gruppen-Unterhaltungen, in denen ich bin) mit Mitgliederzahl; Antippen öffnet die
+  vorhandene Gruppe (kein Doppel-Chat). Quelle: vorhandene Aktion unterhaltungen.
+
 ## 1.33.0 – 2026-10-02 (DEV)
 
 - KC-CLUB-TAGESINFO (Wunsch Hansi; Freigabe „Kassenwart ja, Ampel 70/90 %, so bauen“): Die Begrüßung der Clubleitung beim

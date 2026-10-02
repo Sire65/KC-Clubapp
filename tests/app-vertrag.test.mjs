@@ -2104,6 +2104,12 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/revoke all on function public\.kc_club_db_groesse\(\) from public, anon, authenticated;/.test(lies("supabase/migrations/20261002_kc_club_v1330_tagesinfo.sql")), "Funktion nur service_role");
 }
 
+// 185. 1.33.1: Gruppen in „Neue Nachricht“ (KC-CLUB-GRUPPEN-WAHL)
+{
+  assert.ok(/zeige\("neu"\); empfListe\(\); neuGruppenZeigen\(\);/.test(html) && /<div id="neuGruppen"><\/div>/.test(html), "Gruppen-Bereich");
+  assert.ok(/const gruppen = \(liste \|\| \[\]\)\.filter\(\(u\) => u\.gruppe\);/.test(html) && /onclick="chatOeffnen\('\$\{u\.id\}'\)"/.test(html), "vorhandene Gruppe öffnen");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
