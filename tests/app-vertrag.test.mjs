@@ -2462,7 +2462,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   // Worker: nur vier Schreib-Aktionen, Eingang statt Ausführen, Abholen/Quittieren nur signiert mit Zeitstempel
   for (const a of ["nachricht_senden", "treffen_antwort", "status_setzen", "pinnwand_anheften"]) assert.match(wk, new RegExp(`\\n  ${a}: \\(p`), `Worker nimmt ${a} an`);
   assert.match(wk, /if \(SCHREIBEN\[a\]\) return await eingangLegen\(env, hash, m, a, p, nb\);/, "Schreiben → Eingang");
-  assert.match(wk, /Im Notbetrieb geht Schreiben nur in einem bestehenden Chat\./, "keine neuen Unterhaltungen");
+  assert.match(wk, /Neue Chats gehen im Notbetrieb nicht – bitte einen Chat aus der Liste öffnen und dort schreiben\./, "keine neuen Unterhaltungen");
   assert.match(wk, /if \(!\(await env\.PAKET\.get\(schluessel\)\)\)/, "gleiche notId nicht doppelt");
   assert.match(wk, /EINGANG_JE_MITGLIED = 40/, "Grenze je Mitglied");
   assert.match(wk, /j\?\.zweck !== zweck \|\| Math\.abs\(Date\.now\(\) - Date\.parse\(j\.zeit\)\) > SIGNATUR_ZEIT_MS/, "signiert + Zeitstempel");

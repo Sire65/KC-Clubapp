@@ -29,7 +29,7 @@ const kurz = (v, n) => String(v ?? "").trim().slice(0, n);
 const SCHREIBEN = {
   nachricht_senden: (p, m) => {
     const id = kurz(p.id, 60), text = kurz(p.text, 4000);
-    if (!id || !m.antworten?.["unterhaltung:" + id]) return "Im Notbetrieb geht Schreiben nur in einem bestehenden Chat.";
+    if (!id || !m.antworten?.["unterhaltung:" + id]) return "Neue Chats gehen im Notbetrieb nicht – bitte einen Chat aus der Liste öffnen und dort schreiben.";
     if (p.umfrage || p.kontakt || (Array.isArray(p.anlagen) && p.anlagen.length)) return "Im Notbetrieb geht nur Text – Fotos, Anlagen, Abstimmungen und Kontakte später.";
     if (!text) return "Bitte eine Nachricht schreiben.";
     return { id, text, wichtig: !!p.wichtig, wege: (Array.isArray(p.wege) ? p.wege : []).filter((w) => w === "push" || w === "email") };
