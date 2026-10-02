@@ -101,8 +101,9 @@ export default {
     if (req.method === "OPTIONS") return new Response(null, { headers: kopf(env) });
     try {
       if (req.method === "GET" && url.pathname === "/status") {
+        // ohne Daten → für jede Herkunft lesbar (KC Check prüft den Notbetrieb auch lokal vom PC aus)
         const st = await env.PAKET.get("stand", "json");
-        return antwort(env, { ok: !!st, notbetrieb: true, stand: st?.stand || null });
+        return new Response(JSON.stringify({ ok: !!st, notbetrieb: true, stand: st?.stand || null }), { headers: kopf(env, { "access-control-allow-origin": "*" }) });
       }
       if (req.method === "POST" && url.pathname === "/paket") return await paketAnnehmen(req, env);
       if (req.method === "POST" && url.pathname === "/stand") return await standAnnehmen(req, env);
