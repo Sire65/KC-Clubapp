@@ -2010,6 +2010,19 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(!/telefon|email|\.mail\b/i.test(kh.replace(/E-Mail/g, "")) && /mitgliedOeffnen\(/.test(kh), "keine zusätzlichen Kontaktdaten im Büro");
 }
 
+// 177. 1.28.0: Büro nach der Sitzung – Foto, Aufgaben (KC-CLUB-BUERO-NACHHER)
+{
+  for (const a of ["buero_nachher", "buero_aufgaben_mitteilen"]) {
+    assert.ok(aktionen.has(a) && aufrufe.has(a), `Aktion ${a} fehlt`);
+    assert.ok(/nurVorstand\(ich\)/.test(server.slice(server.indexOf(`case "${a}"`), server.indexOf(`case "${a}"`) + 150)), `${a} nur Clubleitung`);
+  }
+  const m = server.slice(server.indexOf('case "buero_aufgaben_mitteilen"'), server.indexOf('case "leihen_liste"'));
+  assert.ok(/filter\(\(a: any\) => !a\.mitgeteilt_am && !a\.erledigt_am\)/.test(m) && /await aufgabenMitteilen\(offen, ich, pr\.titel\)/.test(m), "nur noch nicht mitgeteilte, vorhandene Mitteilung");
+  assert.ok(/api\("aufgabe_speichern", \{ protokoll_id: prId, person_ids: \[\.\.\.BU_N\.wer\]/.test(html), "vorhandene Aufgaben-Aktion");
+  assert.ok(/dateiWahl\('buFotoKamera', buNachherDateien\)/.test(html) && /id="buFotoKamera" accept="image\/\*" capture="environment"/.test(html), "Kamera direkt");
+  assert.ok(/if \(!confirm\("Die eingetragenen Aufgaben jetzt an die Mitglieder schicken\?"\)\) return;/.test(html), "Mitteilen nur nach Bestätigung");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

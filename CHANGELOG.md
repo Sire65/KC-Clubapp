@@ -1,5 +1,16 @@
 # Änderungen
 
+## 1.28.0 – 2026-10-02 (DEV)
+
+- KC-CLUB-BUERO-NACHHER (Wunsch Hansi „Protokoll-Foto und Aufgaben verteilen“): Büro-Bereich „📄 Nach der Sitzung“ mit
+  Kacheln 📸 Protokoll-Foto, ✔️ Aufgaben verteilen, 📢 Protokoll veröffentlichen. Sitzungen der letzten 90 Tage zur
+  Auswahl (Server buero_nachher, nur Clubleitung); fehlt das Protokoll, legt die vorhandene Vorlage den Entwurf an.
+  Eine Seite mit drei Schritten: 1) Foto direkt mit der Kamera, aus der Galerie oder als Datei (vorhandene Protokoll-
+  Anlagen); 2) Aufgaben: Wer (Chips, mehrere), Was (Chips aus der Tagesordnung + Feld), Bis wann (1/2 Wochen, bis zur
+  nächsten Sitzung, Datum) – vorhandene aufgabe_speichern; Mitteilen wie bisher beim Veröffentlichen, zusätzlich
+  „📨 Jetzt schon mitteilen“ (buero_aufgaben_mitteilen, nutzt aufgabenMitteilen, je Aufgabe nur einmal); 3) Protokoll
+  öffnen & veröffentlichen. „👉 Nächster Schritt“ im Büro weist nach einer Sitzung auf Foto/Veröffentlichen hin.
+
 ## 1.27.0 – 2026-10-02 (DEV)
 
 - KC-CLUB-BUERO-TERMINE (Wunsch Hansi): Büro-Bereich „📅 Termine bearbeiten“ – kommende Termine (aus treffen_liste) als

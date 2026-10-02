@@ -1,6 +1,6 @@
 // KC Club-App – Service Worker: Seite zuerst aus dem Netz (offline aus dem Speicher), Push-Benachrichtigungen, Update.
 // VERSION muss bei jeder neuen Version mit version.json und APP_VERSION in index.html übereinstimmen.
-const VERSION = "1.27.0";
+const VERSION = "1.28.0";
 const CACHE = "kc-club-" + VERSION;
 const DATEIEN = ["./", "index.html", "manifest.webmanifest", "kc-kochmuetze-weiss.webp", "icon-192.png", "icon-512.png"];
 

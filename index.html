@@ -1911,6 +1911,7 @@
 <input type="file" id="dateiBild" accept="image/*" multiple class="versteckt" onchange="dateienGewaehlt(this)">
 <input type="file" id="dateiDok" accept="application/pdf,image/*,.doc,.docx,.xls,.xlsx,.txt" multiple class="versteckt" onchange="dateienGewaehlt(this)">
 <input type="file" id="prBild" accept="image/*" multiple class="versteckt" onchange="protokollDateien(this)">
+<input type="file" id="buFotoKamera" accept="image/*" capture="environment" class="versteckt"><!-- KC-CLUB-BUERO-NACHHER: Kamera direkt -->
 <input type="file" id="prDok" accept=".pdf,.doc,.docx,.odt,.rtf,.txt,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.oasis.opendocument.text,image/*" multiple class="versteckt" onchange="protokollDateien(this)">
 
 <nav class="fuss-leiste" id="fuss">
@@ -1925,7 +1926,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.27.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.28.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -5565,11 +5566,11 @@ function buGrussFragen(nochmal) {
 }
 function buStart() { BU.sicht = "start"; zeige("buero"); }
 async function buLaden() {
-  try { BU.start = await api("buero_start"); } catch (e) { $("buInhalt").innerHTML = `<div class="karte hinweis">${esc(e.message)}</div>`; return; }
+  try { [BU.start] = await Promise.all([api("buero_start"), buNachherListe()]); } catch (e) { $("buInhalt").innerHTML = `<div class="karte hinweis">${esc(e.message)}</div>`; return; }
   buZeigen();
 }
 function buZurueck() { if (BU.sicht !== "start") { BU.sicht = "start"; buLaden(); window.scrollTo(0, 0); } else zeige("start"); }
-function buZeigen() { $("buInhalt").innerHTML = BU.sicht === "sitzung" ? buSitzungHtml() : BU.sicht === "eingang" ? buEingangHtml() : BU.sicht === "brief" ? buBriefHtml() : BU.sicht === "termine" ? buTermineHtml() : BU.sicht === "kontakt" ? buKontaktHtml() : buStartHtml(); }
+function buZeigen() { $("buInhalt").innerHTML = BU.sicht === "sitzung" ? buSitzungHtml() : BU.sicht === "eingang" ? buEingangHtml() : BU.sicht === "brief" ? buBriefHtml() : BU.sicht === "termine" ? buTermineHtml() : BU.sicht === "kontakt" ? buKontaktHtml() : BU.sicht === "nachher" ? buNachherHtml() : buStartHtml(); }
 // Nächster sinnvoller Schritt für eine Sitzung
 function buNaechster(t) {
   if (!t) return null;
@@ -5582,7 +5583,8 @@ function buStartHtml() {
   const r = BU.start; if (!r) return '<div class="karte hinweis">Wird geladen …</div>';
   const t = r.sitzungen[0], n = buNaechster(t), e = r.eingang;
   const k = (id, sym, titel, unter, fn, extra = "") => `<button class="mini-kachel${n === id ? " bu-dran" : ""}" onclick="${fn}"><span class="mk-sym">${sym}</span><span class="mk-titel">${esc(titel)}</span><span class="mk-unter">${unter}</span>${extra}</button>`;
-  const dran = { vorbereiten: "📝 Sitzung vorbereiten", einladung: "📨 Einladung mit Tagesordnung senden", erinnerung: `🔔 ${t?.ohne} Mitglieder an die Antwort erinnern` }[n];
+  const nt = buNachherTipp();
+  const dran = nt ? nt.text : { vorbereiten: "📝 Sitzung vorbereiten", einladung: "📨 Einladung mit Tagesordnung senden", erinnerung: `🔔 ${t?.ohne} Mitglieder an die Antwort erinnern` }[n];
   const summe = Object.values(e).reduce((a, b) => a + b, 0);
   const eingang = [["📦", "Ausleih-Anfragen", e.ausleihen, "buEingang()"], ["🗳️", "Offene Vorschläge", e.vorschlaege, "buEingang()"], ["🙋", "Hilfe-Aufrufe", e.hilfe, "buEingang()"],
     ["🗄️", "Archiv: zu prüfen", e.archiv, "arStart()"], ["✔️", "Offene Aufgaben", e.aufgaben, "zeige('protokolle')"], ["📄", "Protokoll-Entwürfe", e.entwuerfe, "zeige('protokolle')"]];
@@ -5596,6 +5598,12 @@ function buStartHtml() {
       ${k("erinnerung", "🔔", "Erinnern", t ? `${t.ohne} ohne Antwort${t.erinnerung_am ? ` · zuletzt ${esc(zeitKurz(t.erinnerung_am))}` : ""}` : "–", "buEinladungWahl(true)")}
       ${k("protokolle", "📄", "Protokolle", "schreiben · veröffentlichen", "zeige('protokolle')")}
       ${k("termine", "📅", "Termine bearbeiten", "anlegen · ändern · absagen", "buTermine()")}
+    </div>
+    <div class="abschnitt"><h3>📄 Nach der Sitzung</h3></div>
+    <div class="mini-kacheln">
+      ${k("foto", "📸", "Protokoll-Foto", "Mitschrift abfotografieren & anhängen", "buNachherWahl('📸 Foto für welche Sitzung?')", nt?.text.startsWith("📸") ? '<span class="marke gelb">jetzt dran</span>' : "")}
+      ${k("aufgaben", "✔️", "Aufgaben verteilen", "wer · was · bis wann", "buNachherWahl('✔️ Aufgaben aus welcher Sitzung?')")}
+      ${k("veroeffentlichen", "📢", "Protokoll veröffentlichen", "alle bekommen Bescheid · 7 Tage Einspruch", "buNachherWahl('📢 Welches Protokoll?')", nt?.text.startsWith("📢") ? '<span class="marke gelb">jetzt dran</span>' : "")}
     </div>
     <div class="abschnitt"><h3>👥 Mitglieder</h3></div>
     <div class="mini-kacheln">${k("kontakt", "👥", "Mitglieder kontaktieren", "Gruppe wählen · schreiben · anrufen", "buKontakt()")}${k("liste", "📇", "Mitgliederliste", "Status · Ämter · Kontakt", "zeige('mitglieder')")}</div>
@@ -5932,6 +5940,94 @@ async function buKSchreiben() {
 function buKBrief() {
   const m = MITGLIEDER.find((x) => x.person_id === [...BU_K.wahl][0]); buBrief();
   if (m && !BRIEF.empfaenger) { BRIEF.empfaenger = m.name; BRIEF.anrede = `Liebe/r ${m.vorname || m.name.split(" ")[0]},`; BRIEF.gruss = "Herzliche Grüße"; briefMerken(); buZeigen(); }
+}
+
+// ---------- KC-CLUB-BUERO-NACHHER (1.28.0, Wunsch Hansi): nach der Sitzung – Foto der Mitschrift, Aufgaben verteilen, veröffentlichen ----------
+// Nutzt das vorhandene Protokoll (Anlagen, Aufgaben, Veröffentlichen mit Einspruchsfrist): die Büro-Seite rendert #prAnlagen/#prAufgaben,
+// damit die bekannten Funktionen (protokollDateien, prNeuLaden, aufgabeZeile) hier genauso arbeiten.
+let BU_N = { liste: null, t: null, wer: new Set(), was: "", bis: "" };
+async function buNachherListe() { try { BU_N.liste = (await api("buero_nachher")).sitzungen; } catch { BU_N.liste = []; } return BU_N.liste; }
+// Hinweis auf der Büro-Startseite: was nach der letzten Sitzung noch fehlt
+function buNachherTipp() {
+  const t = (BU_N.liste || []).find((x) => new Date(x.beginn) < Date.now() && Date.now() - new Date(x.beginn) < 21 * 86400000); if (!t) return null;
+  if (!t.protokoll || !t.fotos) return { t, text: `📸 Foto der Mitschrift von „${t.titel}“ anhängen` };
+  if (t.nichtMitgeteilt && t.protokoll.status === "veroeffentlicht") return { t, text: "✔️ Aufgaben mitteilen" };
+  if (t.protokoll.status === "entwurf") return { t, text: `📢 Protokoll „${t.titel}“ veröffentlichen` };
+  return null;
+}
+function buNachherWahl(titel) {
+  const l = (BU_N.liste || []).filter((x) => new Date(x.beginn) < Date.now() + 6 * 3600000);
+  if (!l.length) return melde("Es gab in den letzten Wochen keine Sitzung.", true);
+  if (l.length === 1) return buNachher(l[0].id);
+  blattAuf("buWahl", `<h3 style="margin-top:0">${titel}</h3><div class="wahl">${l.map((t) => `<button onclick="$('buWahl').remove();buNachher('${t.id}')">${esc(t.titel)}<br><small>${esc(wann(t.beginn))} · ${t.protokoll ? (t.protokoll.status === "entwurf" ? "📝 Entwurf" : "✅ veröffentlicht") : "noch kein Protokoll"}${t.fotos ? ` · 📸 ${t.fotos}` : ""}${t.aufgaben ? ` · ✔️ ${t.aufgaben}` : ""}</small></button>`).join("")}</div>
+    <div class="knoepfe"><button class="knopf" onclick="$('buWahl').remove()">Abbrechen</button></div>`);
+}
+async function buNachher(tid) {
+  const t = (BU_N.liste || []).find((x) => x.id === tid); if (!t) return;
+  try {
+    // Protokoll da? Sonst Entwurf aus der Sitzung anlegen (vorhandene Vorlage: Anwesende, Tagesordnung …)
+    const pid = t.protokoll?.id || (await api("protokoll_vorlage", { treffen_id: tid }, { warten: true })).id;
+    prId = pid; PR = await api("protokoll_laden", { id: pid }, { warten: true }); aufgabenMitGruppe(PR.aufgaben || []);
+    if (!MITGLIEDER) await mitgliederHolen();
+  } catch (e) { return melde(e.message, true); }
+  BU_N = { ...BU_N, t, wer: new Set(), was: "", bis: "" };
+  BU.sicht = "nachher"; buZeigen(); window.scrollTo(0, 0);
+  document.querySelectorAll("#prAnlagen img[data-anlage]").forEach(bildLaden);
+}
+async function buNachherNeu() { await prNeuLaden(); buZeigen(); document.querySelectorAll("#prAnlagen img[data-anlage]").forEach(bildLaden); }
+function buNachherHtml() {
+  if (!PR) return '<div class="karte hinweis">Wird geladen …</div>';
+  const p = PR.protokoll, t = BU_N.t, entwurf = p.roh === "entwurf";
+  const naechste = (BU.start?.sitzungen || []).find((x) => new Date(x.beginn) > Date.now());
+  const bisWahl = [["", "ohne Frist"], [tagPlus(heuteIso(), 7), "in 1 Woche"], [tagPlus(heuteIso(), 14), "in 2 Wochen"], ...(naechste ? [[berlinIso(naechste.beginn), "bis zur nächsten Sitzung"]] : [])];
+  const tops = (p.tagesordnung || []).filter(Boolean).filter((x) => !/^(Begrüßung|Verschiedenes|Genehmigung des letzten Protokolls)$/i.test(x));
+  const andere = MITGLIEDER.slice().sort((a, b) => a.name.localeCompare(b.name));
+  const offenMit = (PR.aufgaben || []).filter((a) => !a.erledigt_am).length;
+  return `<div class="karte bu-kopf"><img src="kc-kochmuetze-weiss.webp" alt="" class="bu-logo"><div><b>📄 Nach der Sitzung</b><br><span style="font-size:1.1rem;font-weight:800">${esc(p.titel)}</span><br>${esc(t ? wann(t.beginn) : p.datum)} · ${entwurf ? "📝 Protokoll-Entwurf" : "✅ veröffentlicht"}</div></div>
+    <div class="karte"><h3 style="margin-top:0">1️⃣ Foto der Mitschrift</h3>
+      <p class="hinweis" style="margin:0 0 6px">Die ausgefüllte Vorlage einfach abfotografieren – jede Seite ein Foto. Gut ausleuchten, gerade von oben.</p>
+      ${entwurf ? `<div class="knoepfe" style="margin:0 0 8px"><button class="knopf haupt" onclick="dateiWahl('buFotoKamera', buNachherDateien)">📷 Foto machen</button><button class="knopf" onclick="dateiWahl('prBild', buNachherDateien)">🖼️ Aus der Galerie</button><button class="knopf" onclick="$('prDok').click()">📄 Datei</button></div>`
+        : '<p class="hinweis">Das Protokoll ist veröffentlicht – Fotos ergänzen geht über „Protokoll öffnen → Korrigieren“.</p>'}
+      <div id="prAnlagen">${anlagenListe(entwurf)}</div></div>
+    <div class="karte"><h3 style="margin-top:0">2️⃣ Aufgaben verteilen</h3>
+      <div class="hl-frage" style="margin-top:0">Wer?</div>
+      <div class="hl-chips">${andere.map((m) => `<button class="chip${BU_N.wer.has(m.person_id) ? " an" : ""}" onclick="buNWer('${m.person_id}')">${esc(m.name)}</button>`).join("")}</div>
+      <div class="hl-frage">Was?</div>
+      ${tops.length ? `<div class="hl-chips">${tops.map((x) => `<button class="chip" onclick='buNWas(${hlJs(x)})'>📌 ${esc(x)}</button>`).join("")}</div>` : ""}
+      <label class="feld" style="margin:0"><input id="buNWas" maxlength="300" placeholder="z. B. Angebot für Glühwein einholen" value="${esc(BU_N.was)}" oninput="BU_N.was=this.value"></label>
+      <div class="hl-frage">Bis wann?</div>
+      <div class="hl-chips">${bisWahl.map(([w, x]) => `<button class="chip${BU_N.bis === w ? " an" : ""}" onclick="BU_N.bis='${w}';buZeigen()">${esc(x)}</button>`).join("")}
+        <label class="hl-kal${BU_N.bis && !bisWahl.some(([w]) => w === BU_N.bis) ? " an" : ""}">📅 ${BU_N.bis && !bisWahl.some(([w]) => w === BU_N.bis) ? esc(fTagDp.format(new Date(BU_N.bis + "T12:00:00Z"))) : "Datum"}<input type="date" min="${heuteIso()}" onchange="if(this.value){BU_N.bis=this.value;buZeigen()}"></label></div>
+      <button class="knopf haupt" style="width:100%;margin-top:8px" onclick="buNAufgabe(this)">＋ Aufgabe eintragen${BU_N.wer.size > 1 ? ` (für ${BU_N.wer.size})` : ""}</button>
+      <div class="hl-frage">Eingetragen</div><div id="prAufgaben">${(PR.aufgaben || []).map((a) => aufgabeZeile(a, true, true)).join("") || '<p class="hinweis">Noch keine Aufgaben.</p>'}</div>
+      ${offenMit ? (entwurf ? `<p class="hinweis" style="margin:8px 0 0">📨 Die Mitglieder bekommen ihre Aufgabe automatisch, sobald das Protokoll veröffentlicht ist.</p><button class="knopf" style="margin-top:6px" onclick="buNMitteilen(this)">📨 Jetzt schon mitteilen</button>`
+        : `<button class="knopf" style="margin-top:8px" onclick="buNMitteilen(this)">📨 Neue Aufgaben jetzt mitteilen</button>`) : ""}</div>
+    <div class="karte"><h3 style="margin-top:0">3️⃣ Protokoll fertigstellen</h3>
+      <p class="hinweis" style="margin:0 0 6px">${entwurf ? "Im Protokoll noch Beschlüsse/Kurzfassung ergänzen und dann „Veröffentlichen“ tippen. Alle Mitglieder bekommen Bescheid, 7 Tage Einspruchsfrist laufen automatisch." : "Das Protokoll ist veröffentlicht."}</p>
+      <button class="knopf haupt" style="width:100%" onclick="protokollOeffnen('${p.id}')">📄 Protokoll öffnen${entwurf ? " & veröffentlichen" : ""}</button></div>
+    <div class="knoepfe"><button class="knopf" onclick="buZurueck()">🗂️ Zurück ins Büro</button></div>`;
+}
+async function buNachherDateien(input) { await protokollDateien(input); buZeigen(); document.querySelectorAll("#prAnlagen img[data-anlage]").forEach(bildLaden); }
+function buNWer(id) { BU_N.wer.has(id) ? BU_N.wer.delete(id) : BU_N.wer.add(id); buZeigen(); }
+function buNWas(x) { BU_N.was = x + ": "; buZeigen(); const e = $("buNWas"); if (e) { e.focus(); e.setSelectionRange(e.value.length, e.value.length); } }
+async function buNAufgabe(knopf) {
+  const text = (BU_N.was || "").trim();
+  if (!BU_N.wer.size) return melde("Bitte antippen, wer die Aufgabe übernimmt.", true);
+  if (!text || text.endsWith(":")) return melde("Bitte kurz eintragen, was zu tun ist.", true);
+  await einmal(knopf, async () => {
+    try {
+      await api("aufgabe_speichern", { protokoll_id: prId, person_ids: [...BU_N.wer], text, faellig: BU_N.bis || null });
+      melde(`✔️ Aufgabe für ${BU_N.wer.size === 1 ? nameVon([...BU_N.wer][0]) : BU_N.wer.size + " Personen"} eingetragen`);
+      BU_N.wer = new Set(); BU_N.was = ""; await buNachherNeu();
+    } catch (e) { melde(e.message, true); }
+  });
+}
+async function buNMitteilen(knopf) {
+  if (!confirm("Die eingetragenen Aufgaben jetzt an die Mitglieder schicken?")) return;
+  await einmal(knopf, async () => {
+    try { const r = await api("buero_aufgaben_mitteilen", { protokoll_id: prId }); melde(r.personen ? `📨 ${r.personen} Mitglied${r.personen === 1 ? "" : "er"} benachrichtigt` : "Alle Aufgaben waren schon mitgeteilt"); await buNachherNeu(); }
+    catch (e) { melde(e.message, true); }
+  });
 }
 
 // ---------- KC-CLUB-HELFEN & KC-CLUB-LEIHEN (1.23.0, Wunsch Hansi): eine Kachel, zwei Bereiche – fast alles per Antippen ----------
@@ -7972,6 +8068,7 @@ async function aufgabeErledigt(id, erledigt) {
   try {
     await api("aufgabe_erledigt", { id, erledigt }); melde(erledigt ? "✔ Erledigt – danke!" : "Wieder offen");
     if (aktuelleAnsicht === "protokoll") { if ($("prAufgaben")) await prNeuLaden(); else protokollOeffnen(prId, true); }
+    else if (aktuelleAnsicht === "buero" && BU.sicht === "nachher") await buNachherNeu(); // KC-CLUB-BUERO-NACHHER
     else if (aktuelleAnsicht === "protokolle") protokolleLaden();
     neuLaden();
   } catch (e) { melde(e.message, true); }
@@ -7980,7 +8077,9 @@ async function aufgabeLoeschen(id) {
   if (!confirm("Aufgabe löschen?")) return;
   try {
     await api("aufgabe_loeschen", { id }); melde("🗑️ Gelöscht");
-    if (aktuelleAnsicht === "protokoll") { if ($("prAufgaben")) await prNeuLaden(); else protokollOeffnen(prId, true); } else protokolleLaden();
+    if (aktuelleAnsicht === "protokoll") { if ($("prAufgaben")) await prNeuLaden(); else protokollOeffnen(prId, true); }
+    else if (aktuelleAnsicht === "buero" && BU.sicht === "nachher") await buNachherNeu(); // KC-CLUB-BUERO-NACHHER
+    else protokolleLaden();
     neuLaden();
   } catch (e) { melde(e.message, true); }
 }

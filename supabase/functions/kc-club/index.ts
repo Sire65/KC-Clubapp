@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.27.0";
+const SERVER_VERSION = "1.28.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -2937,6 +2937,35 @@ Köcheclub Werne`,
         await db.from("kc_club_buero_sitzung").upsert({ treffen_id: tid, ...(prep ? {} : { geaendert_von: ich.person_id }), [nurOffen ? "erinnerung_am" : "einladung_am"]: jetzt() }, { onConflict: "treffen_id" });
         await protokoll(ich.person_id, nurOffen ? "buero_erinnerung" : "buero_einladung", { treffen: tid, empfaenger: ziel.length, wege, versand });
         return json({ ok: true, versand, empfaenger: ziel.length });
+      }
+
+      // ----- KC-CLUB-BUERO-NACHHER (1.28.0): nach der Sitzung – Foto der Mitschrift, Aufgaben verteilen, veröffentlichen -----
+      case "buero_nachher": {
+        nurVorstand(ich);
+        const { data: tr } = await db.from("kc_club_treffen").select("id,titel,beginn,ort,art,status").neq("art", "veranstaltung").neq("status", "abgesagt")
+          .gte("beginn", new Date(Date.now() - 90 * 86400000).toISOString()).lte("beginn", new Date(Date.now() + 6 * 3600000).toISOString()).order("beginn", { ascending: false }).limit(6);
+        const ids = (tr ?? []).map((t: any) => t.id);
+        const { data: prs } = ids.length ? await db.from("kc_club_sitzungsprotokolle").select("id,treffen_id,status,version,einspruch_bis").in("treffen_id", ids) : { data: [] as any[] };
+        const pids = (prs ?? []).map((x: any) => x.id);
+        const [{ data: anl }, { data: auf }] = pids.length ? await Promise.all([
+          db.from("kc_club_sitzungsprotokoll_anlagen").select("protokoll_id").in("protokoll_id", pids),
+          db.from("kc_club_aufgaben").select("protokoll_id,mitgeteilt_am,erledigt_am").in("protokoll_id", pids),
+        ]) : [{ data: [] as any[] }, { data: [] as any[] }];
+        return json({ sitzungen: (tr ?? []).map((t: any) => {
+          const pr = (prs ?? []).find((x: any) => x.treffen_id === t.id), a = pr ? (auf ?? []).filter((x: any) => x.protokoll_id === pr.id) : [];
+          return { ...t, protokoll: pr ? { id: pr.id, status: pr.status, version: pr.version } : null, fotos: pr ? (anl ?? []).filter((x: any) => x.protokoll_id === pr.id).length : 0,
+            aufgaben: a.length, nichtMitgeteilt: a.filter((x: any) => !x.mitgeteilt_am && !x.erledigt_am).length };
+        }) });
+      }
+
+      case "buero_aufgaben_mitteilen": {
+        nurVorstand(ich);
+        const pr = await protokollHolen(p.protokoll_id);
+        const { data: auf } = await db.from("kc_club_aufgaben").select("*").eq("protokoll_id", pr.id);
+        const offen = (auf ?? []).filter((a: any) => !a.mitgeteilt_am && !a.erledigt_am);
+        await aufgabenMitteilen(offen, ich, pr.titel);
+        await protokoll(ich.person_id, "buero_aufgaben_mitgeteilt", { protokoll: pr.id, aufgaben: offen.length });
+        return json({ ok: true, mitgeteilt: offen.length, personen: new Set(offen.filter((a: any) => a.person_id !== ich.person_id).map((a: any) => a.person_id)).size });
       }
 
       // ----- KC-CLUB-LEIHEN (1.23.0): Vereinsgegenstände ausleihen – Anfrage an die Clubleitung, eine Zusage genügt -----
