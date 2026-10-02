@@ -2424,6 +2424,13 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.match(srv, /const stumm = await stummFuer\(/, "stumm bleibt stumm (auch bei ❗)");
 }
 
+// 219. 1.53.2: Reiter „Meins“, „✏️ … schreibt“ mit Welle
+{
+  assert.match(html, /\["mein", "Meins"\]/, "Reiter heißt Meins");
+  assert.doesNotMatch(html, /\["mein", "Mein Bereich"\]/, "alter Name weg");
+  assert.match(html, /<span class="punkte3"><i><\/i><i><\/i><i><\/i><\/span><span>✏️ \$\{esc\(wer\)\}/, "Stift + Welle bleiben");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

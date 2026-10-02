@@ -1,5 +1,9 @@
 # Änderungen
 
+## 1.53.2 – 2026-10-02
+- Wunsch Hansi: Reiter „Mein Bereich“ heißt jetzt „Meins“ (kürzer, die Zahl bricht nicht mehr um; Inhalt unverändert).
+- KC-CLUB-TIPPT: „✏️ Klaus schreibt …“ – Stift vor dem Namen, die hüpfenden Punkte (Welle) bleiben.
+
 ## 1.53.1 – 2026-10-02
 - KC-CLUB-WICHTIG (Wunsch Hansi): In „ℹ️ Nachricht – Einzelheiten“ steht bei wichtigen Nachrichten oben orange umrandet
   „❗ Wichtige Nachricht – Wichtigkeit: hoch“ (Server: nachricht_details liefert wichtig). Stummgeschaltete Chats bleiben

@@ -2098,7 +2098,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.53.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.53.2"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3133,7 +3133,7 @@ function tipptZeigen(namen, entwurf = [], sprechen = []) {
   const entwuerfe = entwurf.map((x) => `<div class="entwurf">✍️ <b>${esc(x.name)}:</b> ${esc(kurz(x.text))}</div>`).join("");
   const wer = namen.length === 1 ? namen[0] : namen.length === 2 ? `${namen[0]} und ${namen[1]}` : `${namen.length} Personen`;
   // 1.21.5: nur neu zeichnen, wenn sich etwas geändert hat – sonst fängt die Punkte-Welle bei jedem Takt (2 s) von vorn an
-  const html = `<div class="zeile"><span class="punkte3"><i></i><i></i><i></i></span><span>${esc(wer)} ${namen.length > 1 ? "schreiben" : "schreibt"} …</span></div>${entwuerfe}${sp}`;
+  const html = `<div class="zeile"><span class="punkte3"><i></i><i></i><i></i></span><span>✏️ ${esc(wer)} ${namen.length > 1 ? "schreiben" : "schreibt"} …</span></div>${entwuerfe}${sp}`;
   if (e.dataset.stand !== html) { e.innerHTML = html; e.dataset.stand = html; }
   e.classList.remove("versteckt");
 }
@@ -4587,7 +4587,7 @@ let REGZ = null, regZogGerade = false;
   document.addEventListener("touchmove", (e) => { if (REGZ && e.cancelable) e.preventDefault(); }, { passive: false });
 })();
 // Register mit kleiner Anzahl der Kacheln; per Wischen links/rechts wechselbar
-const REGISTER_ALLE = [["verein", "Verein"], ["mein", "Mein Bereich"], ["programme", "Programme"]];
+const REGISTER_ALLE = [["verein", "Verein"], ["mein", "Meins"], ["programme", "Programme"]]; // 1.53.2 (Wunsch Hansi): „Meins“ statt „Mein Bereich“ – kürzer, Zahl bricht nicht um
 // KC-CLUB-REGISTER-ZIEHEN (0.36.0): eigene Reihenfolge der Register (festhalten und nach links/rechts ziehen)
 const registerReihe = () => { const o = KA.register || []; const pos = (r) => { const i = o.indexOf(r[0]); return i < 0 ? 100 + REGISTER_ALLE.indexOf(r) : i; }; return [...REGISTER_ALLE].sort((a, b) => pos(a) - pos(b)); };
 let REGISTER = registerReihe();
