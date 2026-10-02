@@ -2233,6 +2233,14 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/Auslaufen lassen/.test(html) && /⏳ Verlängern bis …/.test(html), "Verlängern bis … oder auslaufen lassen");
 }
 
+// 198. 1.44.0: Termine-Liste als kleine Kacheln (KC-CLUB-TERMIN-KACHELN)
+{
+  assert.ok(/kommend\.map\(\(t\) => treffenKachel\(t\)\)/.test(html) && /vorbei\.map\(\(t\) => treffenKachel\(t, true\)\)/.test(html), "Liste als Kacheln");
+  assert.ok(/function treffenInfo\(id, vorbei\)/.test(html) && /treffenKarte\(t, vorbei\)/.test(html), "antippen öffnet den vollständigen Termin (alle Knöpfe bleiben)");
+  assert.ok(/offen\.innerHTML = html; return;/.test(html), "Auffrischen tauscht nur den Inhalt (kein Überdecken anderer Fenster)");
+  assert.ok(/👉 Antwort fehlt/.test(html), "fehlende Antwort sichtbar");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

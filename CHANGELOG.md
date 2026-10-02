@@ -1,5 +1,12 @@
 # Änderungen
 
+## 1.44.0 – 2026-10-02 (DEV)
+
+- KC-CLUB-TERMIN-KACHELN (Wunsch Hansi „wirkt so erschlagen“): Termine → Liste zeigt kommende Termine als kleine Kacheln
+  (🍽️ Treffen / 🎪 Veranstaltung / 🚫 abgesagt, Titel, Datum, Ort, eigene Antwort bzw. „👉 Antwort fehlt“, Zu-/Absagen,
+  „🚗 x Plätze frei“). Antippen öffnet den vollständigen Termin wie bisher (Zusagen, Mitfahren, Kalender, Ändern/Absagen/
+  Löschen, Drucken). Vergangene Treffen als zugeklappter Bereich. Kalender-Ansicht unverändert.
+
 ## 1.43.0 – 2026-10-02 (DEV)
 
 - KC-CLUB-BOERSE (Wunsch Hansi; Freigabe „1 ja, 2 ja, 3 b, 30 Tage mit Verlängerung, 3 Tage vorher Erinnerung“): Club-Börse

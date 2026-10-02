@@ -753,6 +753,10 @@
   #hlTabs { grid-template-columns: 1fr 1fr 1fr; }
   .hl-chips.bo-rubriken { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
   .hl-chips.bo-rubriken .chip { flex: none; }
+  /* KC-CLUB-TERMIN-KACHELN (1.44.0) */
+  .tr-kachel.tr-va { border-left: 5px solid var(--gruen); }
+  .tr-kachel.tr-ab { opacity: .7; }
+  .tr-gross > .karte { margin: 0; box-shadow: none; padding: 4px 2px; }
   /* KC-CLUB-MITFAHRT-SITZE (1.39.0): Auto von oben mit echten Sitzplätzen */
   .mf-karte { border: 1px solid var(--linie); border-radius: 16px; padding: 10px 12px; margin: 8px 0; background: var(--karte); }
   .mf-kopf { display: flex; gap: 6px; align-items: flex-start; }
@@ -2020,7 +2024,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.43.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.44.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -5338,9 +5342,11 @@ async function treffenLaden() {
   try {
     const { treffen, geburtstage } = await api("treffen_liste"); orteMerken(treffen);
     const kommend = treffen.filter((t) => new Date(t.ende || t.beginn) > Date.now() - 3 * 3600000), vorbei = treffen.filter((t) => !kommend.includes(t)).reverse();
-    $("treffenListe").innerHTML = (kommend.map((t) => treffenKarte(t)).join("") || '<div class="karte hinweis">Zurzeit ist kein Treffen geplant.</div>')
+    // KC-CLUB-TERMIN-KACHELN (1.44.0, Wunsch Hansi „wirkt so erschlagen“): Liste als kleine Kacheln – antippen öffnet den Termin groß
+    $("treffenListe").innerHTML = (kommend.length ? `<div class="mini-kacheln">${kommend.map((t) => treffenKachel(t)).join("")}</div>` : '<div class="karte hinweis">Zurzeit ist kein Treffen geplant.</div>')
       + geburtstageListe(geburtstage || [], 30)
-      + (vorbei.length ? `<div class="abschnitt"><h3>Vergangene Treffen</h3></div>` + vorbei.map((t) => treffenKarte(t, true)).join("") : "");
+      + (vorbei.length ? `<details class="karte"><summary><b>Vergangene Treffen (${vorbei.length})</b></summary><div class="mini-kacheln" style="margin-top:8px">${vorbei.map((t) => treffenKachel(t, true)).join("")}</div></details>` : "");
+    const ti = document.getElementById("treffenInfo"); if (ti) treffenInfo(ti.dataset.id, ti.dataset.vorbei === "1"); // nach Antwort/Mitfahrt frisch zeigen
   } catch (e) { melde(e.message, true); }
 }
 // Zeitangabe: Uhrzeit von–bis, ganztägig oder mehrtägig (Veranstaltungen)
@@ -5351,6 +5357,26 @@ function zeitText(t) {
   if (e && gleicherTag) return `${fTag.format(b)}, ${fZeit.format(b)}–${fZeit.format(e)} Uhr`;
   if (e) return `${wann(t.beginn)} bis ${wann(t.ende)}`;
   return wann(t.beginn);
+}
+function treffenKachel(t, vorbei) {
+  TREFFEN_IDX.set(t.id, t);
+  const va = t.art === "veranstaltung", ab = t.status === "abgesagt", offen = t.status === "geplant" && !vorbei;
+  const ort = t.ort || (t.gastgeber ? "bei " + t.gastgeber.name : "");
+  const meine = va || ab || !offen ? "" : t.meine === "ja" ? '<span class="marke gruen">✅ Du kommst</span>' : t.meine === "vielleicht" ? '<span class="marke gelb">❓ Vielleicht</span>'
+    : t.meine === "nein" ? '<span class="marke rot">❌ Kann nicht</span>' : '<span class="marke gelb">👉 Antwort fehlt</span>';
+  const frei = (t.mitfahrten || []).reduce((n, m) => n + (m.eigen ? 0 : m.frei || 0), 0);
+  return `<button class="mini-kachel tr-kachel${va ? " tr-va" : ""}${ab ? " tr-ab" : ""}" onclick="treffenInfo('${t.id}', ${!!vorbei})"><span class="mk-sym">${ab ? "🚫" : va ? "🎪" : "🍽️"}</span>
+    <span class="mk-titel">${esc(t.titel)}</span><span class="mk-unter">🗓️ ${esc(zeitText(t))}</span>${ort ? `<span class="mk-unter">📍 ${esc(ort)}</span>` : ""}
+    ${ab ? '<span class="marke rot">abgesagt</span>' : meine}${!va && !ab ? `<span class="mk-unter">✅ ${t.ja} · ❓ ${t.vielleicht} · ❌ ${t.nein}</span>` : ""}${offen && frei ? `<span class="mk-unter">🚗 ${frei} ${frei === 1 ? "Platz" : "Plätze"} frei</span>` : ""}</button>`;
+}
+function treffenInfo(id, vorbei) {
+  const t = TREFFEN_IDX.get(id); if (!t) { document.getElementById("treffenInfo")?.remove(); return; }
+  const html = `<div class="tr-gross">${treffenKarte(t, vorbei)}</div><button class="knopf" style="width:100%;text-align:center;margin-top:8px" onclick="$('treffenInfo').remove()">Schließen</button>`;
+  // schon offen (Auffrischen nach Antwort/Mitfahrt) → Inhalt austauschen, damit es nicht über anderen Fenstern (z. B. Thema-Frage) landet
+  const offen = document.querySelector("#treffenInfo > .blatt-innen");
+  if (offen && document.getElementById("treffenInfo").dataset.id === id) { offen.innerHTML = html; return; }
+  const f = blattAuf("treffenInfo", html);
+  f.dataset.id = id; f.dataset.vorbei = vorbei ? "1" : "0";
 }
 function treffenKarte(t, vorbei) {
   TREFFEN_IDX.set(t.id, t);
@@ -5435,6 +5461,7 @@ function comboWahl(id) {
   if (w === "__eigen") { f.classList.remove("versteckt"); f.value = ""; f.focus(); } else { f.classList.add("versteckt"); f.value = w; }
 }
 async function treffenForm(t) {
+  document.getElementById("treffenInfo")?.remove(); // 1.44.0: aus der Termin-Kachel heraus „Ändern“
   if (!MITGLIEDER) await mitgliederHolen();
   if (!TR_ORTE.length) try { orteMerken((await api("treffen_liste")).treffen); } catch {}
   const tagIso = (iso) => new Intl.DateTimeFormat("sv-SE", { timeZone: TZ }).format(new Date(iso));
