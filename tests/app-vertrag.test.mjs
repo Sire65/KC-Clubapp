@@ -2275,7 +2275,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/onclick="termineNeuWahl\(\)"[^>]*>＋ Neu<\/button>/.test(html) && !/id="neuAnfrageKnopf"/.test(html) && /onclick="hlNeuWahl\(\)">＋ Neu<\/button>/.test(html), "ein ＋ Neu oben rechts");
   assert.ok(/protokolle\.length \? `<div class="mini-kacheln">\$\{protokolle\.map\(protokollKarte\)/.test(html) && /data-klappe="pr_aufgaben"/.test(html), "Protokolle als Kacheln, Aufgaben klappbar");
   assert.ok(/data-klappe="tm_umfragen"/.test(html) && /data-klappe="tm_anfragen"/.test(html) && /data-klappe="tm_privat"/.test(html), "Termine-Bereiche klappbar");
-  assert.ok(!/>Zurzeit ist kein Treffen geplant\.</.test(html) && /<span>Nächster Termin ›<\/span>/.test(html), "Begriffe: Termin / Sitzung / Veranstaltung");
+  assert.ok(!/>Zurzeit ist kein Treffen geplant\.</.test(html) && /<span>Nächster Termin<\/span><span class=\"mpfeil\"/.test(html), "Begriffe: Termin / Sitzung / Veranstaltung");
 }
 
 // 203. 1.46.1: Themen und Abstimmungen als kleine Kacheln (KC-CLUB-VORSCHLAG-KACHELN)
@@ -2305,6 +2305,12 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 206. 1.47.2: Online-Zahl größer (KC-CLUB-ONLINE-ZAHL)
 {
   assert.ok(/\.onzahl \{[^}]*font-size: 1\.3rem/.test(html) && /\.onzahl \.led \{ width: 13px; height: 13px; \}/.test(html), "Online-Zahl gut lesbar");
+}
+
+// 207. 1.47.3: Pfeile der drei Startfelder rechts mittig auf dem Rand (KC-CLUB-MINI-PFEIL)
+{
+  assert.ok((html.match(/<span class="mpfeil" aria-hidden="true">›<\/span><\/button>/g) || []).length === 3 && !/Nachr\. ›|Mitglieder ›<|Termin ›</.test(html), "drei Randpfeile, keine kleinen Pfeile im Text");
+  assert.ok(/\.kacheln3 \.mini \.mpfeil \{[^}]*transform: translate\(50%, -50%\)/.test(html), "Pfeil mittig auf dem rechten Rand");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

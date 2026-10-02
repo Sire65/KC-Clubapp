@@ -1,5 +1,8 @@
 # Änderungen
 
+## 1.47.3 – 2026-10-02
+- KC-CLUB-MINI-PFEIL: Die drei Felder im Startkopf (Neue Nachr., Mitglieder, Nächster Termin) zeigen ihren ›-Pfeil rechts mittig auf dem Rand, etwas größer, ohne Umrandung.
+
 ## 1.47.2 – 2026-10-02
 - KC-CLUB-ONLINE-ZAHL: Zahl der Online-Mitglieder im Startfeld größer (1.3rem, LED 13 px).
 
