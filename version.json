@@ -1,11 +1,17 @@
 {
-  "version": "1.47.3",
+  "version": "1.48.0",
   "datum": "2026-10-02",
   "neu": [
     "🔧 Kleine Systemverbesserungen",
     "🧑‍🍳 Dienstwunsch mit Twinkey übersichtlicher: klare Frage „Ich kann / ganzer Tag gesperrt / zeitweise gesperrt“, Tage als farbige Kacheln (grün = fertig), kurze Zusammenfassung, weniger Knöpfe"
   ],
   "verlauf": [
+    {
+      "version": "1.48.0",
+      "neu": [
+        "🔧 Kleine Systemverbesserungen"
+      ]
+    },
     {
       "version": "1.47.3",
       "neu": [

@@ -2313,6 +2313,14 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/\.kacheln3 \.mini \.mpfeil \{[^}]*transform: translate\(50%, -50%\)/.test(html), "Pfeil mittig auf dem rechten Rand");
 }
 
+// 208. 1.48.0: Kacheln auch in der einfachen Ansicht verschieben – eigene Reihenfolge, nur oben/unten (KC-CLUB-EINFACH-ANORDNEN)
+{
+  assert.ok(!/Kacheln anordnen geht in der erweiterten Ansicht/.test(html) && !/body\.einfach #kaAusHinweis, body\.einfach #kachelLeiste/.test(html), "Anordnen in der einfachen Ansicht erlaubt");
+  assert.ok(/const kaSchluessel = \(\) => einfach\(\) \? "einfach" : reg;/.test(html) && /KA\.reihenfolge\.einfach \|\| \[\]/.test(html), "eigene Reihenfolge der einfachen Ansicht (getrennt von der erweiterten)");
+  assert.ok(/kaSchieben\('\$\{alle\[i\]\.id\}',\$\{d\}\)/.test(html) && /b\(i, -1, "▲", "nach oben"\)\}\$\{b\(i, 1, "▼", "nach unten"\)\}/.test(html), "nur ▲ / ▼, kein Ausblenden");
+  assert.ok(/\[kaSchluessel\(\)\]: neu/.test(html) && /\[kaSchluessel\(\)\]: liste/.test(html), "Ziehen und Pfeile speichern in die richtige Reihenfolge");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

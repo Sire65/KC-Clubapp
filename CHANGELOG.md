@@ -1,5 +1,8 @@
 # Änderungen
 
+## 1.48.0 – 2026-10-02
+- KC-CLUB-EINFACH-ANORDNEN: Auch in der einfachen Ansicht lassen sich die Kacheln anordnen (lange drücken → nach oben/unten ziehen oder ▲ ▼). Eigene Reihenfolge, getrennt von der erweiterten Ansicht, geräteübergreifend gespeichert (Einstellung „kacheln“, Schlüssel „einfach“). Kein Ausblenden in der einfachen Ansicht; „↺ Standard“ setzt dort nur deren Reihenfolge zurück.
+
 ## 1.47.3 – 2026-10-02
 - KC-CLUB-MINI-PFEIL: Die drei Felder im Startkopf (Neue Nachr., Mitglieder, Nächster Termin) zeigen ihren ›-Pfeil rechts mittig auf dem Rand, etwas größer, ohne Umrandung.
 
