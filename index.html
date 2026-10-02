@@ -1926,7 +1926,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.28.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.29.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -5566,11 +5566,11 @@ function buGrussFragen(nochmal) {
 }
 function buStart() { BU.sicht = "start"; zeige("buero"); }
 async function buLaden() {
-  try { [BU.start] = await Promise.all([api("buero_start"), buNachherListe()]); } catch (e) { $("buInhalt").innerHTML = `<div class="karte hinweis">${esc(e.message)}</div>`; return; }
+  try { [BU.start] = await Promise.all([api("buero_start"), buNachherListe(), buFesteListe(BU_F?.tage || 60)]); } catch (e) { $("buInhalt").innerHTML = `<div class="karte hinweis">${esc(e.message)}</div>`; return; }
   buZeigen();
 }
 function buZurueck() { if (BU.sicht !== "start") { BU.sicht = "start"; buLaden(); window.scrollTo(0, 0); } else zeige("start"); }
-function buZeigen() { $("buInhalt").innerHTML = BU.sicht === "sitzung" ? buSitzungHtml() : BU.sicht === "eingang" ? buEingangHtml() : BU.sicht === "brief" ? buBriefHtml() : BU.sicht === "termine" ? buTermineHtml() : BU.sicht === "kontakt" ? buKontaktHtml() : BU.sicht === "nachher" ? buNachherHtml() : buStartHtml(); }
+function buZeigen() { $("buInhalt").innerHTML = BU.sicht === "sitzung" ? buSitzungHtml() : BU.sicht === "eingang" ? buEingangHtml() : BU.sicht === "brief" ? buBriefHtml() : BU.sicht === "termine" ? buTermineHtml() : BU.sicht === "kontakt" ? buKontaktHtml() : BU.sicht === "nachher" ? buNachherHtml() : BU.sicht === "feste" ? buFesteHtml() : buStartHtml(); }
 // Nächster sinnvoller Schritt für eine Sitzung
 function buNaechster(t) {
   if (!t) return null;
@@ -5588,7 +5588,9 @@ function buStartHtml() {
   const summe = Object.values(e).reduce((a, b) => a + b, 0);
   const eingang = [["📦", "Ausleih-Anfragen", e.ausleihen, "buEingang()"], ["🗳️", "Offene Vorschläge", e.vorschlaege, "buEingang()"], ["🙋", "Hilfe-Aufrufe", e.hilfe, "buEingang()"],
     ["🗄️", "Archiv: zu prüfen", e.archiv, "arStart()"], ["✔️", "Offene Aufgaben", e.aufgaben, "zeige('protokolle')"], ["📄", "Protokoll-Entwürfe", e.entwuerfe, "zeige('protokolle')"]];
-  return `<div class="karte bu-gruss"><b>${buTageszeit()}, ${esc(ICH.vorname || ICH.name)}!</b><br>${t ? `Nächste Sitzung: <b>${esc(t.titel)}</b> · ${esc(wann(t.beginn))}<br>✅ ${t.ja} zugesagt · ❌ ${t.nein} abgesagt · ❓ ${t.ohne} ohne Antwort` : "Gerade ist keine Sitzung geplant – lege sie unter 📅 Termine an."}
+  const festHeute = BU_F ? [...BU_F.geburtstage.filter((f) => f.tage === 0).map((f) => `🎂 ${esc(f.vorname)} hat Geburtstag`), ...BU_F.jubilaeen.filter((f) => f.tage === 0).map((f) => `🏅 ${esc(f.vorname)}: ${f.jahre} Jahre im Club`)] : [];
+  const festBald = BU_F ? BU_F.geburtstage.concat(BU_F.jubilaeen).filter((f) => f.tage >= 0 && f.tage <= 7).length : 0;
+  return `<div class="karte bu-gruss"><b>${buTageszeit()}, ${esc(ICH.vorname || ICH.name)}!</b>${festHeute.length ? `<div class="bu-tipp" style="margin:6px 0">🎉 Heute: ${festHeute.join(" · ")} – <button class="knopf klein" onclick="buFeste()">gratulieren</button></div>` : "<br>"}${t ? `Nächste Sitzung: <b>${esc(t.titel)}</b> · ${esc(wann(t.beginn))}<br>✅ ${t.ja} zugesagt · ❌ ${t.nein} abgesagt · ❓ ${t.ohne} ohne Antwort` : "Gerade ist keine Sitzung geplant – lege sie unter 📅 Termine an."}
     ${dran ? `<div class="bu-tipp">👉 Nächster Schritt: <b>${dran}</b></div>` : t ? '<div class="bu-tipp">✅ Für diese Sitzung ist alles erledigt.</div>' : ""}</div>
     <div class="abschnitt"><h3>🗂️ Sitzung</h3></div>
     <div class="mini-kacheln">
@@ -5606,7 +5608,7 @@ function buStartHtml() {
       ${k("veroeffentlichen", "📢", "Protokoll veröffentlichen", "alle bekommen Bescheid · 7 Tage Einspruch", "buNachherWahl('📢 Welches Protokoll?')", nt?.text.startsWith("📢") ? '<span class="marke gelb">jetzt dran</span>' : "")}
     </div>
     <div class="abschnitt"><h3>👥 Mitglieder</h3></div>
-    <div class="mini-kacheln">${k("kontakt", "👥", "Mitglieder kontaktieren", "Gruppe wählen · schreiben · anrufen", "buKontakt()")}${k("liste", "📇", "Mitgliederliste", "Status · Ämter · Kontakt", "zeige('mitglieder')")}</div>
+    <div class="mini-kacheln">${k("kontakt", "👥", "Mitglieder kontaktieren", "Gruppe wählen · schreiben · anrufen", "buKontakt()")}${k("feste", "🎂", "Geburtstage & Jubiläen", festBald ? `${festBald} in den nächsten 7 Tagen` : "gratulieren · Liste drucken", "buFeste()", festHeute.length ? '<span class="marke gelb">heute!</span>' : "")}${k("liste", "📇", "Mitgliederliste", "Status · Ämter · Kontakt", "zeige('mitglieder')")}</div>
     <div class="abschnitt"><h3>✉️ Schreiben</h3></div>
     <div class="mini-kacheln">${k("brief", "✉️", "Briefbogen", "Brief mit Logo – Spende, Dank, Einladung …", "buBrief()")}</div>
     <div class="abschnitt"><h3>📥 Eingang ${summe ? `<span class="marke gelb">${summe}</span>` : ""}</h3></div>
@@ -5946,7 +5948,7 @@ function buKBrief() {
 // Nutzt das vorhandene Protokoll (Anlagen, Aufgaben, Veröffentlichen mit Einspruchsfrist): die Büro-Seite rendert #prAnlagen/#prAufgaben,
 // damit die bekannten Funktionen (protokollDateien, prNeuLaden, aufgabeZeile) hier genauso arbeiten.
 let BU_N = { liste: null, t: null, wer: new Set(), was: "", bis: "" };
-async function buNachherListe() { try { BU_N.liste = (await api("buero_nachher")).sitzungen; } catch { BU_N.liste = []; } return BU_N.liste; }
+async function buNachherListe() { try { const r = await api("buero_nachher"); BU_N.liste = Array.isArray(r?.sitzungen) ? r.sitzungen : []; } catch { BU_N.liste = []; } return BU_N.liste; }
 // Hinweis auf der Büro-Startseite: was nach der letzten Sitzung noch fehlt
 function buNachherTipp() {
   const t = (BU_N.liste || []).find((x) => new Date(x.beginn) < Date.now() && Date.now() - new Date(x.beginn) < 21 * 86400000); if (!t) return null;
@@ -6028,6 +6030,76 @@ async function buNMitteilen(knopf) {
     try { const r = await api("buero_aufgaben_mitteilen", { protokoll_id: prId }); melde(r.personen ? `📨 ${r.personen} Mitglied${r.personen === 1 ? "" : "er"} benachrichtigt` : "Alle Aufgaben waren schon mitgeteilt"); await buNachherNeu(); }
     catch (e) { melde(e.message, true); }
   });
+}
+
+// ---------- KC-CLUB-BUERO-FESTE (1.29.0, Wunsch Hansi): Geburtstage & Jubiläen im Büro – gratulieren per Nachricht, Brief oder Pinnwand ----------
+// Geburtstage nur, wer sie freigegeben hat, und nur Tag/Monat (wie überall in der App); Jubiläen aus dem Eintrittsdatum im KC Manager.
+let BU_F = null;
+async function buFesteListe(tage = 60) {
+  try { const r = await api("buero_feste", { tage }); BU_F = r && Array.isArray(r.geburtstage) && Array.isArray(r.jubilaeen) ? r : null; } catch { BU_F = null; } // unvollständig = nichts anzeigen statt Absturz
+  return BU_F;
+}
+const buFTag = (f) => f.tage === 0 ? "heute 🎉" : f.tage === 1 ? "morgen" : f.tage === -1 ? "gestern" : f.tage < 0 ? `vor ${-f.tage} Tagen` : `${fTagDp.format(new Date(f.datum + "T12:00:00Z"))} · in ${f.tage} Tagen`;
+function buFeste() { BU.sicht = "feste"; buZeigen(); buFesteListe(BU_F?.tage || 60).then(() => { if (aktuelleAnsicht === "buero" && BU.sicht === "feste") buZeigen(); }); window.scrollTo(0, 0); }
+function buFesteKachel(f, art) {
+  const heute = f.tage === 0;
+  return `<button class="mini-kachel${heute ? " bu-dran" : f.rund ? " mk-offen" : ""}" onclick="buFestInfo('${art}','${f.person_id}')"><span class="mk-sym">${art === "geb" ? "🎂" : f.rund ? "🏆" : "🏅"}</span>
+    <span class="mk-titel">${esc(f.name)}</span><span class="mk-unter">${art === "geb" ? "Geburtstag" : `<b>${f.jahre} Jahre</b> im Club${f.rund ? " – rund!" : ""}`}</span><span class="mk-unter">${esc(buFTag(f))}</span></button>`;
+}
+function buFesteHtml() {
+  const d = BU_F; if (!d) return '<div class="karte hinweis">Wird geladen …</div>';
+  const alle = [...d.geburtstage.map((f) => ({ ...f, art: "geb" })), ...d.jubilaeen.map((f) => ({ ...f, art: "jub" }))].sort((a, b) => a.datum.localeCompare(b.datum));
+  const gruppe = (titel, l) => l.length ? `<div class="abschnitt"><h3>${titel}</h3></div><div class="mini-kacheln">${l.map((f) => buFesteKachel(f, f.art)).join("")}</div>` : "";
+  return `<div class="karte bu-gruss">🎉 <b>Geburtstage & Jubiläen</b> – antippen zum Gratulieren (Nachricht, Brief oder Pinnwand).</div>
+    <div class="hl-chips">${[30, 60, 90, 366].map((t) => `<button class="chip${d.tage === t ? " an" : ""}" onclick="buFesteListe(${t}).then(buZeigen)">${t === 366 ? "ganzes Jahr" : `nächste ${t} Tage`}</button>`).join("")}</div>
+    ${gruppe("🎉 Heute", alle.filter((f) => f.tage === 0))}
+    ${gruppe("📅 Diese Woche", alle.filter((f) => f.tage > 0 && f.tage <= 7))}
+    ${gruppe("🗓️ Danach", alle.filter((f) => f.tage > 7))}
+    ${gruppe("⏪ Gerade vorbei", alle.filter((f) => f.tage < 0))}
+    ${!alle.length ? '<div class="karte hinweis">In diesem Zeitraum steht nichts an.</div>' : ""}
+    ${d.ohneFreigabe ? `<p class="hinweis">🔒 ${d.ohneFreigabe} Mitglied${d.ohneFreigabe === 1 ? " hat seinen" : "er haben ihren"} Geburtstag nicht freigegeben – deshalb ${d.ohneFreigabe === 1 ? "erscheint er" : "erscheinen sie"} hier nicht.</p>` : ""}
+    <div class="knoepfe"><button class="knopf" onclick="druckStarten('feste')">🖨️ Liste drucken</button><button class="knopf" onclick="buZurueck()">🗂️ Zurück ins Büro</button></div>`;
+}
+function buFest(art, pid) { return (art === "geb" ? BU_F?.geburtstage : BU_F?.jubilaeen)?.find((x) => x.person_id === pid); }
+function buFestInfo(art, pid) {
+  const f = buFest(art, pid); if (!f) return;
+  blattAuf("buFest", `<div class="info-gross"><div style="font-size:3rem;line-height:1">${art === "geb" ? "🎂" : f.rund ? "🏆" : "🏅"}</div><h3 style="font-size:1.35rem;margin:4px 0">${esc(f.name)}</h3>
+    <p style="margin:0">${art === "geb" ? "hat Geburtstag" : `ist seit <b>${esc(f.eintritt)}</b> im Köcheclub – <b>${f.jahre} Jahre</b>${f.rund ? " 🎉" : ""}`}<br>📅 ${esc(buFTag(f))}</p></div>
+    <div class="knoepfe" style="flex-direction:column;align-items:stretch">
+      <button class="knopf haupt" onclick="$('buFest').remove();buFestNachricht('${art}','${pid}')">💬 Glückwunsch als Nachricht</button>
+      <button class="knopf" onclick="$('buFest').remove();buFestBrief('${art}','${pid}')">✉️ Glückwunschkarte als Brief</button>
+      <button class="knopf" onclick="$('buFest').remove();buFestPinnwand('${art}','${pid}')">📌 Gruß an die Pinnwand (für alle)</button>
+      <button class="knopf" onclick="$('buFest').remove()">Schließen</button></div>`);
+}
+const buFestText = (art, f) => art === "geb" ? `Alles Gute zum Geburtstag, ${f.vorname}! 🎂🥳 Herzliche Grüße vom ganzen Köcheclub.`
+  : `Herzlichen Glückwunsch, ${f.vorname}, zu ${f.jahre} Jahren im Köcheclub Werne! 🏅 Danke für deine Treue und deinen Einsatz.`;
+async function buFestNachricht(art, pid) {
+  const f = buFest(art, pid); if (!f) return;
+  if (pid === ICH?.person_id) return melde("Das bist du selbst 😊", true);
+  await direkt(pid); $("text").value = buFestText(art, f); $("text").dispatchEvent(new Event("input")); entwurfMarkeZeigen?.();
+  melde("💬 Text ist vorbereitet – ändern oder direkt mit ➤ senden");
+}
+function buFestBrief(art, pid) {
+  const f = buFest(art, pid); if (!f) return;
+  buBrief();
+  Object.assign(BRIEF, { vorlage: "glueckwunsch", empfaenger: f.name, anrede: `Liebe/r ${f.vorname},`, gruss: "Herzliche Grüße",
+    betreff: art === "geb" ? "Herzlichen Glückwunsch zum Geburtstag" : `Herzlichen Glückwunsch zu ${f.jahre} Jahren im Köcheclub Werne`,
+    text: art === "geb" ? "zu deinem Geburtstag gratulieren wir dir im Namen aller Mitglieder des Köcheclubs Werne ganz herzlich.\n\nFür das neue Lebensjahr wünschen wir dir Gesundheit, Glück und viele schöne Stunden – gern auch in unserer Küche."
+      : `seit ${f.eintritt} bist du Mitglied im Köcheclub Werne – das sind nun ${f.jahre} Jahre! Dafür möchten wir dir im Namen aller Mitglieder ganz herzlich danken.\n\nDeine Treue und dein Einsatz machen unseren Verein aus. Wir freuen uns auf viele weitere gemeinsame Jahre.` });
+  briefMerken(); buZeigen();
+}
+function buFestPinnwand(art, pid) {
+  const f = buFest(art, pid); if (!f) return;
+  zeige("pinnwand"); pwForm(true);
+  setTimeout(() => { const t = $("pwText"); if (!t) return; t.value = (art === "geb" ? `🎂 ${f.vorname} hat ${f.tage === 0 ? "heute" : "am " + fTagDp.format(new Date(f.datum + "T12:00:00Z"))} Geburtstag – herzlichen Glückwunsch!` : `🏅 ${f.vorname}: ${f.jahre} Jahre im Köcheclub – herzlichen Glückwunsch & danke!`).slice(0, 200); pwFuer?.("alle"); pwZaehlen?.(); }, 300);
+}
+// Ausdruck: Liste für den gewählten Zeitraum
+function druckFeste() {
+  const d = BU_F; if (!d) throw new Error("Bitte die Liste im Büro öffnen.");
+  const alle = [...d.geburtstage.map((f) => ({ ...f, art: "🎂 Geburtstag" })), ...d.jubilaeen.map((f) => ({ ...f, art: `🏅 ${f.jahre} Jahre im Club${f.rund ? " (rund)" : ""}` }))].sort((a, b) => a.datum.localeCompare(b.datum));
+  const zeile = (f) => `<tr><td style="padding:1.5mm 2mm;border-bottom:.2mm solid #bbb;white-space:nowrap">${esc(fTagDp.format(new Date(f.datum + "T12:00:00Z")))}</td><td style="padding:1.5mm 2mm;border-bottom:.2mm solid #bbb"><b>${esc(f.name)}</b></td><td style="padding:1.5mm 2mm;border-bottom:.2mm solid #bbb">${esc(f.art)}</td><td style="padding:1.5mm 2mm;border-bottom:.2mm solid #bbb;width:30mm">☐ gratuliert</td></tr>`;
+  return { titel: "Geburtstage & Jubiläen", unter: `${d.tage === 366 ? "Das nächste Jahr" : `Die nächsten ${d.tage} Tage`} ab ${dz(d.heute)}`, fuss: "Geburtstage nur bei Freigabe, ohne Jahr",
+    html: alle.length ? `<table style="width:100%;border-collapse:collapse;font-size:3.6mm"><thead><tr style="text-align:left;border-bottom:.5mm solid #741521"><th style="padding:1.5mm 2mm">Datum</th><th style="padding:1.5mm 2mm">Name</th><th style="padding:1.5mm 2mm">Anlass</th><th></th></tr></thead><tbody>${alle.map(zeile).join("")}</tbody></table>` : "<p>In diesem Zeitraum steht nichts an.</p>" };
 }
 
 // ---------- KC-CLUB-HELFEN & KC-CLUB-LEIHEN (1.23.0, Wunsch Hansi): eine Kachel, zwei Bereiche – fast alles per Antippen ----------
@@ -8951,7 +9023,8 @@ const DRUCKARTEN = {
   treffen: { bauen: (o, id) => druckTreffen(id) },
   protokoll: { bauen: () => druckProtokoll() },
   sitzung: { bauen: () => druckSitzung() }, // KC-CLUB-BUERO (1.25.0): Protokoll-Vorlage mit Schreiblinien
-  brief: { bauen: () => druckBrief() }, // KC-CLUB-BRIEFBOGEN (1.26.0): eigener Briefkopf, ohne App-Kopf/-Fuß
+  brief: { bauen: () => druckBrief() },
+  feste: { bauen: () => druckFeste() }, // KC-CLUB-BUERO-FESTE (1.29.0) // KC-CLUB-BRIEFBOGEN (1.26.0): eigener Briefkopf, ohne App-Kopf/-Fuß
   erstattung: { titel: "🖨️ Erstattungsantrag drucken", optionen: () => druckErstattungOptionen(), bauen: (o) => druckErstattung(o) },
   anleitung: { bauen: () => druckAnleitung() },
   ueberblick: { bauen: () => druckUeberblick() },

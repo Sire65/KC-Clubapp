@@ -1,5 +1,15 @@
 # Änderungen
 
+## 1.29.0 – 2026-10-02 (DEV)
+
+- KC-CLUB-BUERO-FESTE (Wunsch Hansi): Büro-Kachel „🎂 Geburtstage & Jubiläen“. Server buero_feste (nur Clubleitung):
+  Geburtstage nur von Mitgliedern mit Freigabe (wie überall, nur Tag/Monat, kein Jahr – Anzahl ohne Freigabe wird nur
+  gezählt), Vereinsjubiläen aus dem Eintrittsdatum (joinedAt) im KC Manager, gleiche Namenszuordnung wie bei Aktionen,
+  runde Jubiläen (alle 5 Jahre) hervorgehoben; Zeitraum 30/60/90 Tage oder ein Jahr, inkl. der letzten 7 Tage.
+  Antippen → Glückwunsch als Nachricht (vorbereiteter Text im Zweier-Chat, nichts automatisch), Glückwunschkarte als
+  Brief (Briefbogen, Vorlage passend vorbelegt) oder Gruß an der Pinnwand. Liste mit „☐ gratuliert“ zum Ausdrucken.
+  Büro-Startseite zeigt „🎉 Heute: …“.
+
 ## 1.28.0 – 2026-10-02 (DEV)
 
 - KC-CLUB-BUERO-NACHHER (Wunsch Hansi „Protokoll-Foto und Aufgaben verteilen“): Büro-Bereich „📄 Nach der Sitzung“ mit

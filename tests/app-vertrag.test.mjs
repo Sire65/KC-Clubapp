@@ -2023,6 +2023,17 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/if \(!confirm\("Die eingetragenen Aufgaben jetzt an die Mitglieder schicken\?"\)\) return;/.test(html), "Mitteilen nur nach Bestätigung");
 }
 
+// 178. 1.29.0: Büro – Geburtstage & Jubiläen (KC-CLUB-BUERO-FESTE)
+{
+  assert.ok(aktionen.has("buero_feste") && aufrufe.has("buero_feste"), "Aktion buero_feste fehlt");
+  const f = server.slice(server.indexOf('case "buero_feste"'), server.indexOf('case "leihen_liste"'));
+  assert.ok(/nurVorstand\(ich\)/.test(f.slice(0, 120)), "nur Clubleitung");
+  assert.ok(/if \(!frei\.has\(m\.person_id\) && m\.person_id !== ich\.person_id\) \{ ohneFreigabe\+\+; continue; \}/.test(f), "Geburtstag nur mit Freigabe");
+  assert.ok(!/birth_date\)\.slice\(0, 4\)|jahrgang|alter/i.test(f) && /geburtstage\.push\(\{ person_id: m\.person_id, name: m\.display_name, vorname: vorname\(m\), datum: d, tage: t \}\)/.test(f), "kein Geburtsjahr/Alter");
+  assert.ok(/m\?\.joinedAt/.test(f) && /namensSchluessel\(m\.firstName, m\.lastName\)/.test(f), "Jubiläum aus KC Manager, gleiche Zuordnung");
+  assert.ok(/feste: \{ bauen: \(\) => druckFeste\(\) \}/.test(html) && /function buFestNachricht/.test(html) && !/api\("nachricht_senden"/.test(html.slice(html.indexOf("async function buFestNachricht"), html.indexOf("function buFestBrief"))), "Gratulieren nur vorbereitet");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

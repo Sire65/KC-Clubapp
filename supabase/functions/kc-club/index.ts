@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.28.0";
+const SERVER_VERSION = "1.29.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -2966,6 +2966,51 @@ Köcheclub Werne`,
         await aufgabenMitteilen(offen, ich, pr.titel);
         await protokoll(ich.person_id, "buero_aufgaben_mitgeteilt", { protokoll: pr.id, aufgaben: offen.length });
         return json({ ok: true, mitgeteilt: offen.length, personen: new Set(offen.filter((a: any) => a.person_id !== ich.person_id).map((a: any) => a.person_id)).size });
+      }
+
+      // ----- KC-CLUB-BUERO-FESTE (1.29.0): Geburtstage (nur freigegebene, nur Tag/Monat) & Vereinsjubiläen (Eintritt aus dem KC Manager) -----
+      case "buero_feste": {
+        nurVorstand(ich);
+        const heute = berlinTag(new Date()), tage = Math.min(366, Math.max(7, Math.floor(Number(p.tage) || 60)));
+        const [leute, { data: fr }, { data: mg }] = await Promise.all([
+          aktiveMitglieder(),
+          db.from("kc_club_freigaben").select("person_id").eq("bereich", "geburtstag").eq("erlaubt", true),
+          db.from(AKTIONEN_QUELLE.tabelle).select("payload").eq("org_id", ORG).eq("section_key", AKTIONEN_QUELLE.mitglieder).maybeSingle(),
+        ]);
+        const frei = new Set((fr ?? []).map((x: any) => x.person_id));
+        // nächster Jahrestag eines MM-TT ab (heute − 7 Tage); 29.02. → 28.02. in Nicht-Schaltjahren
+        const naechster = (md: string) => {
+          const ab = tagDazu(heute, -7), j0 = Number(ab.slice(0, 4));
+          for (const j of [j0, j0 + 1]) {
+            const schalt = (j % 4 === 0 && j % 100 !== 0) || j % 400 === 0;
+            const d = `${j}-${md === "02-29" && !schalt ? "02-28" : md}`;
+            if (d >= ab) return d;
+          }
+          return null;
+        };
+        const tageBis = (d: string) => Math.round((Date.parse(d + "T12:00:00Z") - Date.parse(heute + "T12:00:00Z")) / 86400000);
+        const geburtstage: any[] = [];
+        let ohneFreigabe = 0;
+        for (const m of leute as any[]) {
+          if (!m.birth_date) continue;
+          if (!frei.has(m.person_id) && m.person_id !== ich.person_id) { ohneFreigabe++; continue; }
+          const d = naechster(String(m.birth_date).slice(5, 10)); if (!d) continue;
+          const t = tageBis(d); if (t > tage) continue;
+          geburtstage.push({ person_id: m.person_id, name: m.display_name, vorname: vorname(m), datum: d, tage: t });
+        }
+        const kern = new Map((leute as any[]).map((p) => [namensSchluessel(p.given_name || p.display_name.split(" ")[0], p.family_name || p.display_name.split(" ").slice(-1)[0]), p]));
+        const jubilaeen: any[] = [];
+        for (const m of Array.isArray(mg?.payload?.data) ? mg.payload.data : []) {
+          const ein = String(m?.joinedAt || "").slice(0, 10);
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(ein) || m?.exitDate) continue;
+          const pp: any = kern.get(namensSchluessel(m.firstName, m.lastName)); if (!pp) continue;
+          const d = naechster(ein.slice(5, 10)); if (!d) continue;
+          const t = tageBis(d), jahre = Number(d.slice(0, 4)) - Number(ein.slice(0, 4));
+          if (t > tage || jahre < 1) continue;
+          jubilaeen.push({ person_id: pp.person_id, name: pp.display_name, vorname: vorname(pp), datum: d, tage: t, jahre, eintritt: ein.slice(0, 4), rund: jahre % 5 === 0 });
+        }
+        const sort = (a: any, b: any) => a.datum.localeCompare(b.datum) || a.name.localeCompare(b.name);
+        return json({ heute, tage, geburtstage: geburtstage.sort(sort), jubilaeen: jubilaeen.sort(sort), ohneFreigabe });
       }
 
       // ----- KC-CLUB-LEIHEN (1.23.0): Vereinsgegenstände ausleihen – Anfrage an die Clubleitung, eine Zusage genügt -----
