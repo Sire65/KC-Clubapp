@@ -420,6 +420,8 @@
   .sos-name small { color: var(--grau); font-size: .8rem; } .sos-name span { margin-left: auto; color: var(--grau); }
   .sos-detail { padding: 0 2px 10px; } .sos-detail .knoepfe a { text-decoration: none; }
   .sos-nf { margin-top: 8px; padding: 8px; border-radius: 10px; background: #fdecea; }
+  .kw-knopf { background: var(--gruenbg); color: var(--textGruen); border: 2px solid var(--gruen); border-radius: 14px; padding: 12px; font-weight: 800; font-size: 1.1rem; text-align: center; }
+  .kw-uhr { font-size: 2.6rem; font-weight: 900; text-align: center; margin: 10px 0 4px; font-variant-numeric: tabular-nums; }
   .sos-kopf { display: flex; align-items: center; gap: 8px; margin: 16px 4px 6px; } .sos-kopf h3 { margin: 0; flex: 1; }
   .sos-kopf .umschalter { margin: 0; grid-template-columns: 42px 42px; } .sos-kopf .umschalter button { padding: 5px 0; font-size: 1.1rem; }
   .sos-k.hat-nf { border-color: #e57373; } .sos-k .sos-av { background: #6b7577; } /* neutral: Rot heißt hier „Notfallkontakt“ */
@@ -2080,7 +2082,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.50.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.51.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2745,6 +2747,8 @@ async function onlinePing() {
     else if (ruf && RUF && !ZWEIT && ruf.id !== RUF.id && !(RUF.rolle === "rufer" && !RUF.verbunden && RUF.gegen?.person_id === ruf.von?.person_id)) zweitZeigen(ruf);
     if (ZWEIT && !(r.anrufe || []).some((x) => x.id === ZWEIT.id)) zweitWeg(); // hat aufgegeben
     if (!RUF) verpasstZeigen((r.verpasst || []).filter((v) => !ONL.erledigt.has("v" + v.id)));
+    if (KLOPF && !$("klopfBlatt").classList.contains("versteckt") && !(r.klopfen || []).some((x) => x.id === KLOPF.id)) {
+      $("klopfBlatt").classList.add("versteckt"); melde(`👋 ${KLOPF.von.vorname} hat aufgelegt`); KLOPF = null; } // KC-CLUB-ANKLOPFEN-WARTEN
     const k = (r.klopfen || []).find((x) => !ONL.erledigt.has(x.id));
     if (k && $("klopfBlatt").classList.contains("versteckt")) klopfZeigen(k, r.klopfAntworten);
     // Antwort auf mein Anklopfen
@@ -2752,6 +2756,7 @@ async function onlinePing() {
       if (ONL.erledigt.has("a" + a.id) || a.status === "offen") continue;
       ONL.erledigt.add("a" + a.id);
       if (ONL.wartet === a.id) { ONL.wartet = null; onlineTakt(); }
+      if (KW?.id === a.id) klopfWartenEnde();
       if (a.status === "angenommen" && a.thread) { melde(`✅ ${a.an.vorname} hat angenommen – schreibt los!`); try { navigator.vibrate?.(60); } catch {} chatOeffnen(a.thread); }
       else if (a.status === "spaeter" && a.antwort) { melde(`👋 ${a.an.vorname}: „${a.antwort}“`); try { navigator.vibrate?.(60); } catch {} }
       else if (a.status === "spaeter") melde(`⏳ ${a.an.vorname} hat gerade keine Zeit – schreib eine Nachricht, sie/er meldet sich.`);
@@ -2812,10 +2817,57 @@ async function anklopfen(pid) {
   if (!(await frage(`Bei ${name} anklopfen?\n\n${name} bekommt sofort die Frage, ob ihr jetzt schreiben wollt.`))) return;
   try {
     const r = await api("anklopfen", { an: pid });
-    ONL.wartet = r.id; onlineTakt(); setTimeout(() => { if (ONL.wartet === r.id) { ONL.wartet = null; onlineTakt(); melde(`${name} hat (noch) nicht reagiert – du kannst ihr/ihm eine normale Nachricht schreiben.`); } }, 180000);
-    melde(`👋 Angeklopft bei ${name} – warte auf Antwort …`);
+    ONL.wartet = r.id; onlineTakt(); klopfWartenStart(r.id, pid, name);
   } catch (e) { melde(e.message, true); }
 }
+// KC-CLUB-ANKLOPFEN-WARTEN (1.51.0, Wunsch Hansi): „👋 Klopfe gerade an bei X“ mit Sekunden-Uhr; nach 1 Minute fragen:
+// weiter anklopfen, auflegen oder eine Nachricht „Melde dich doch mal bei mir“ schicken. Antwortet X, schließt sich alles.
+const KLOPF_WARTEN_SEK = 60;
+let KW = null;
+function klopfWartenStart(id, pid, name) {
+  klopfWartenEnde();
+  KW = { id, pid, name, bis: Date.now() + KLOPF_WARTEN_SEK * 1000, timer: null };
+  const f = blattAuf("klopfWarten", `<div id="kwInhalt"></div>`); f.onclick = null; // nicht aus Versehen wegtippen
+  klopfWartenZeichnen(); KW.timer = setInterval(klopfWartenZeichnen, 1000);
+}
+function klopfWartenZeichnen() {
+  if (!KW) return;
+  const el = $("kwInhalt"), sek = Math.max(0, Math.ceil((KW.bis - Date.now()) / 1000));
+  if (el) el.innerHTML = `<div class="kw-knopf">👋 Klopfe gerade an bei ${esc(KW.name)} …</div>
+    <div class="kw-uhr" aria-live="polite">${Math.floor(sek / 60)}:${String(sek % 60).padStart(2, "0")}</div>
+    <p class="hinweis" style="text-align:center;margin:0 0 10px">Warte auf Antwort – sobald ${esc(KW.name)} annimmt, geht der Chat auf.</p>
+    <button class="knopf" style="width:100%;text-align:center" onclick="klopfAuflegen()">📵 Auflegen</button>`;
+  if (sek <= 0) { clearInterval(KW.timer); KW.timer = null; klopfWartenFrage(); }
+}
+function klopfWartenFrage() {
+  if (!KW || !$("kwInhalt")) return;
+  $("kwInhalt").innerHTML = `<h3 style="margin-top:0">⏳ ${esc(KW.name)} hat noch nicht reagiert</h3><p style="margin:0 0 12px">Was möchtest du tun?</p>
+    <div class="knoepfe" style="flex-direction:column;align-items:stretch">
+      <button class="knopf haupt" style="text-align:center" onclick="klopfWeiter()">👋 Weiter anklopfen</button>
+      <button class="knopf" style="text-align:center" onclick="klopfMeldeDich()">💬 Nachricht senden: „Melde dich doch mal bei mir“</button>
+      <button class="knopf" style="text-align:center" onclick="klopfAuflegen()">📵 Auflegen</button></div>`;
+}
+const klopfMeldeText = () => `Melde dich doch mal bei mir. Gruß ${ICH?.vorname || ICH?.name || ""}`.trim();
+async function klopfWeiter() {
+  if (!KW) return;
+  const { pid, name } = KW;
+  try { const r = await api("anklopfen", { an: pid }); ONL.wartet = r.id; onlineTakt(); klopfWartenStart(r.id, pid, name); } catch (e) { melde(e.message, true); }
+}
+async function klopfAuflegen(still) {
+  if (!KW) return;
+  const id = KW.id; klopfWartenEnde(); if (ONL.wartet === id) { ONL.wartet = null; onlineTakt(); }
+  ONL.erledigt.add("a" + id);
+  try { await api("anklopfen_abbrechen", { id }); } catch {}
+  if (!still) melde("📵 Aufgelegt");
+}
+async function klopfMeldeDich() {
+  if (!KW) return;
+  const { pid, name } = KW, text = klopfMeldeText();
+  await klopfAuflegen(true);
+  try { await api("nachricht_senden", { text, wege: ["push"], empfaenger: { personen: [pid], aemter: [], alle: false, vorstand: false }, betreff: "" }); melde(`💬 ${name} bekommt: „${text}“`); }
+  catch (e) { melde(e.message, true); }
+}
+function klopfWartenEnde() { if (KW?.timer) clearInterval(KW.timer); KW = null; document.getElementById("klopfWarten")?.remove(); }
 let KLOPF = null;
 function klopfZeigen(k, antworten) {
   KLOPF = k; ONL.erledigt.add(k.id);
@@ -5836,6 +5888,8 @@ async function tagesinfoZeigen(manuell = false) {
     else if (m.art === "sicherheit") neu.push(tiZeile("🛡️", `<b>${esc(m.wer)}</b> hat dir ${esc(tiZeit(m.zeit))} seinen <b>Sicherheitsbericht</b> geschickt (${esc(m.text || "")})`, "arStart()"));
     else neu.push(tiZeile("💭", `<b>${esc(m.wer)}</b> hat ${esc(tiZeit(m.zeit))} <b>Feedback</b> gegeben`, "zeige('feedback')"));
   }
+  // KC-CLUB-BEGRUESSUNG (1.51.0): heute zum ersten Mal da → Begrüßung anbieten (nur Admin)
+  for (const n of d.neuDa || []) neu.push(tiZeile("🎉", `<b>${esc(n.name)}</b> hat sich heute zum ersten Mal angemeldet (${esc(fZeit.format(new Date(n.zeit)))} Uhr). <b>Begrüßungs-Nachricht senden?</b>`, `begruessungSenden('${esc(n.person_id)}', ${esc(JSON.stringify(n.vorname || n.name))})`));
   if (INIT?.ungelesen) neu.push(tiZeile("💬", `<b>${INIT.ungelesen} ungelesene Nachricht${INIT.ungelesen === 1 ? "" : "en"}</b>`, "zeige('nachrichten')"));
   const ein = d.eingang || {};
   if (ein.ausleihen) neu.push(tiZeile("📦", `<b>${ein.ausleihen} Ausleih-Anfrage${ein.ausleihen === 1 ? "" : "n"}</b> wartet auf Entscheidung`, "buStart();buEingang()"));
@@ -5870,6 +5924,16 @@ async function tagesinfoZeigen(manuell = false) {
     + (d.kasse ? block("💶 Kasse & Ausleihe", kasse, "–") : "") + (t ? block("🖥️ Technik", technik, "–") : "");
 }
 
+const begruessungText = (vorname) => `Herzlich willkommen ${vorname}. Schön, dass du da bist. Viel Spaß mit der Köcheclub-App. Wenn etwas nicht klappt, melde dich gerne bei mir. Gruß ${ICH?.vorname || ICH?.name || ""}`.trim();
+async function begruessungSenden(pid, vorname) {
+  const text = begruessungText(vorname);
+  if (!(await frage(`Begrüßung an ${vorname} senden?\n\n„${text}“\n\nKommt als Nachricht mit Push.`, { ja: "✅ Senden", nein: "Nicht jetzt" }))) return;
+  try {
+    await api("nachricht_senden", { text, wege: ["push"], empfaenger: { personen: [pid], aemter: [], alle: false, vorstand: false }, betreff: "" });
+    await api("begruessung_vermerken", { person_id: pid }).catch(() => {});
+    melde(`🎉 Begrüßung an ${vorname} ist unterwegs`);
+  } catch (e) { melde(e.message, true); }
+}
 function buStart() { BU.sicht = "start"; zeige("buero"); }
 async function buLaden() {
   try { [BU.start] = await Promise.all([api("buero_start"), buNachherListe(), buFesteListe(BU_F?.tage || 60), flLaden()]); } catch (e) { $("buInhalt").innerHTML = `<div class="karte hinweis">${esc(e.message)}</div>`; return; }

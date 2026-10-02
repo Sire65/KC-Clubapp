@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.50.0";
+const SERVER_VERSION = "1.51.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -3411,7 +3411,27 @@ Köcheclub Werne`,
             aktuell: SERVER_VERSION,
           };
         }
+        // KC-CLUB-BEGRUESSUNG (1.51.0): wer heute zum ersten Mal in der App war und noch nicht begrüßt wurde (nur Admin)
+        if (ich.admin) {
+          const [{ data: neu }, { data: schon }] = await Promise.all([
+            db.from("kc_club_zugang").select("person_id,erstmals_gesehen").gte("erstmals_gesehen", new Date(jetztMs - 26 * 3600000).toISOString()).not("person_id", "like", "KC-P-TEST%").neq("person_id", ich.person_id),
+            db.from("kc_club_protokoll").select("details").eq("aktion", "begruessung_gesendet").gte("zeit", new Date(jetztMs - 7 * 86400000).toISOString()),
+          ]);
+          const begruesst = new Set((schon ?? []).map((x: any) => x.details?.fuer));
+          const heuteNeu = (neu ?? []).filter((z: any) => berlinTag(new Date(z.erstmals_gesehen)) === heute && !begruesst.has(z.person_id));
+          const lp = await personen(heuteNeu.map((z: any) => z.person_id));
+          aus.neuDa = heuteNeu.map((z: any) => ({ person_id: z.person_id, name: lp.get(z.person_id)?.display_name || z.person_id, vorname: vorname(lp.get(z.person_id) ?? null), zeit: z.erstmals_gesehen }));
+        }
         return json(aus);
+      }
+
+      // KC-CLUB-BEGRUESSUNG (1.51.0): Begrüßung ist als Nachricht verschickt → in der Tages-Übersicht nicht mehr anbieten
+      case "begruessung_vermerken": {
+        nurAdmin(ich);
+        const pid = String(p.person_id || "");
+        if (!(await aktiveMitglieder()).some((m) => m.person_id === pid)) throw new Fehler("Mitglied nicht gefunden.", 404);
+        await protokoll(ich.person_id, "begruessung_gesendet", { fuer: pid });
+        return json({ ok: true });
       }
 
       // ----- KC-CLUB-LEIHEN (1.23.0): Vereinsgegenstände ausleihen – Anfrage an die Clubleitung, eine Zusage genügt -----
@@ -4658,6 +4678,14 @@ Köcheclub-App`,
         }, `club-anklopfen:${k.id}`);
         await protokoll(ich.person_id, "angeklopft", { an, versand });
         return json({ ok: true, id: k.id, push: versand.gesendet > 0 });
+      }
+
+      // KC-CLUB-ANKLOPFEN-WARTEN (1.51.0): wer anklopft, legt auf → beim Gegenüber verschwindet die Frage
+      case "anklopfen_abbrechen": {
+        const { data: k } = await db.from("kc_club_anklopfen").select("id,status").eq("id", String(p.id || "")).eq("von", ich.person_id).maybeSingle();
+        if (!k) throw new Fehler("Anklopfen nicht gefunden.", 404);
+        if (k.status === "offen") await db.from("kc_club_anklopfen").update({ status: "abgebrochen", beantwortet_am: jetzt() }).eq("id", k.id).eq("status", "offen");
+        return json({ ok: true });
       }
 
       case "anklopfen_antwort": {

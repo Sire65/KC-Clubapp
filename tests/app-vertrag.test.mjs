@@ -2352,6 +2352,17 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/!\["verfuegbar", "ruhe"\]\.includes\(statusArt\(m\.status\)\)/.test(html), "Ruhezeit macht den Kreis nicht orange (abwesend)");
 }
 
+// 213. 1.51.0: Anklopfen mit Sekunden-Uhr + Begrüßung neuer Mitglieder (KC-CLUB-ANKLOPFEN-WARTEN, KC-CLUB-BEGRUESSUNG)
+{
+  assert.ok(/const KLOPF_WARTEN_SEK = 60;/.test(html) && /👋 Klopfe gerade an bei \$\{esc\(KW\.name\)\}/.test(html) && /class="kw-uhr"/.test(html), "Knopf „Klopfe gerade an bei X“ mit Sekunden-Uhr");
+  assert.ok(/👋 Weiter anklopfen/.test(html) && /Nachricht senden: „Melde dich doch mal bei mir“/.test(html) && /📵 Auflegen/.test(html) && /`Melde dich doch mal bei mir\. Gruß \$\{/.test(html), "nach 1 Minute: weiter, Nachricht oder auflegen");
+  assert.ok(/case "anklopfen_abbrechen"/.test(server) && /status: "abgebrochen"/.test(server) && /hat aufgelegt/.test(html), "Auflegen schließt die Frage beim Gegenüber");
+  assert.ok(/aus\.neuDa = /.test(server) && /if \(ich\.admin\) \{\s*const \[\{ data: neu \}/.test(server) && /case "begruessung_vermerken"/.test(server), "Tagesinfo: heute zum ersten Mal da (nur Admin), einmal begrüßen");
+  assert.ok(/Herzlich willkommen \$\{vorname\}\. Schön, dass du da bist\. Viel Spaß mit der Köcheclub-App\. Wenn etwas nicht klappt, melde dich gerne bei mir\. Gruß/.test(html) && /wege: \["push"\]/.test(html), "Begrüßung als Nachricht mit Push");
+  const mig = lies("supabase/migrations/20261002_kc_club_v1510_erstmals.sql");
+  assert.ok(/erstmals_gesehen = coalesce\(erstmals_gesehen, now\(\)\)/.test(mig) && /'abgebrochen'/.test(mig), "Migration: erster Besuch + Status abgebrochen");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

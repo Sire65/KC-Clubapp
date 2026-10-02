@@ -1,5 +1,9 @@
 # Änderungen
 
+## 1.51.0 – 2026-10-02
+- KC-CLUB-ANKLOPFEN-WARTEN: Nach dem Anklopfen erscheint „👋 Klopfe gerade an bei X …“ mit Sekunden-Uhr (1:00 → 0:00) und „Auflegen“. Nach einer Minute: „Weiter anklopfen“, „Nachricht senden: Melde dich doch mal bei mir. Gruß …“ (mit Push) oder „Auflegen“. Auflegen schließt die Anklopf-Frage beim Gegenüber („X hat aufgelegt“). Neuer Status 'abgebrochen', Aktion anklopfen_abbrechen.
+- KC-CLUB-BEGRUESSUNG: Tages-Übersicht (Admin) zeigt „XY hat sich heute zum ersten Mal angemeldet – Begrüßungs-Nachricht senden?“. Ja → Nachricht mit Push „Herzlich willkommen XY. Schön, dass du da bist. Viel Spaß mit der Köcheclub-App. Wenn etwas nicht klappt, melde dich gerne bei mir. Gruß <Absender>“; danach nicht mehr angeboten. Datenbank: kc_club_zugang.erstmals_gesehen (Anmeldung setzt sie einmalig; Bestand aus Protokoll übernommen).
+
 ## 1.50.0 – 2026-10-02
 - KC-CLUB-STATUS-RUHE: Während der eigenen „Nicht stören“-Zeit (⚙️ → Benachrichtigungen) zeigt der Status „🌙 Ruhezeit bis HH:MM“ – oben im Kopf (live, minütlich) und für die anderen in Mitgliederliste/-seite. Nur Anzeige, nichts gespeichert; Urlaub/krank/beschäftigt/nicht erreichbar haben Vorrang. Nicht als Status wählbar; Kreis bleibt dabei nicht orange.
 - KC-CLUB-STATUS-PFEIL: Pfeil am Statusfeld rechts mittig auf dem Rand (wie bei den Feldern darunter), Statusfeld dadurch schmaler.
