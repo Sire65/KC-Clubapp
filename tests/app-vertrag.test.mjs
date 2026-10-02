@@ -2284,6 +2284,14 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/themen\.length \? `<div class="mini-kacheln">\$\{themen\.map\(vorschlagKachel\)/.test(html) && /abst\.map\(vorschlagKachel\)/.test(html) && /fertig\.map\(vorschlagKachel\)/.test(html), "Themen, Abstimmungen, Erledigtes als Kacheln");
 }
 
+// 204. 1.47.0: Mitglieder-Umschalter oben, Online als LED + Zahl, aufgeräumter Kopf in der einfachen Ansicht
+{
+  assert.ok(/id="mgAnsichtOben"[^]{0,200}mgAnsichtSetzen\('kacheln'\)[^]{0,200}mgAnsichtSetzen\('liste'\)/.test(html) && /querySelectorAll\("#mgAnsichtWahl button, #mgAnsichtOben button"\)/.test(html), "Kacheln | Liste oben in der Mitgliederübersicht");
+  assert.ok(/function onlineZahlHtml\(\)[^]{0,600}frisch \? n : "\?"/.test(html) && !/keiner online/.test(html), "Online nur als LED + Zahl, unbekannt = grau mit ?");
+  assert.ok(/body\.einfach #modusKnopf, body\.einfach #aktualisierenKnopf, body\.einfach #herzKnopf \{ display: none; \}/.test(html), "einfache Ansicht ohne Mond, Aktualisieren, Herz");
+  assert.ok(/body\.einfach #leds:not\(:has\(\.led\.rot, \.led\.gelb\)\) \{ display: none; \}/.test(html), "LEDs in der einfachen Ansicht nur bei Störung");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

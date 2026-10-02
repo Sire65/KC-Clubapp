@@ -1,5 +1,10 @@
 # Änderungen
 
+## 1.47.0 – 2026-10-02
+- KC-CLUB-MG-UMSCHALTER: Mitgliederübersicht hat oben einen Umschalter 🔲 Kacheln | ☰ Liste (gleiche Einstellung wie unter Darstellung), daneben 👥 Alle | 🟢 Online.
+- KC-CLUB-ONLINE-ZAHL: Im Startfeld „Mitglieder“ statt „keiner online“ nur eine LED mit Zahl (grün = jemand online, grau = niemand; Stand unbekannt = grau mit „?“).
+- KC-CLUB-KOPF-EINFACH: Einfache Ansicht ohne 🌙, ↻ und ♥ im Kopf; die Verbindungs-LEDs erscheinen dort nur bei einer Störung. Kopf dadurch niedriger, Clubname ungekürzt.
+
 ## 1.46.1 – 2026-10-02
 - KC-CLUB-VORSCHLAG-KACHELN: Themen, Abstimmungen und Erledigtes unter „Vorschläge“ als kleine Kacheln; Antippen öffnet alle Einzelheiten mit Unterstützen/Abstimmen/Abschließen.
 
