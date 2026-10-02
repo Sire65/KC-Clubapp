@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.53.5";
+const SERVER_VERSION = "1.54.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -2176,7 +2176,9 @@ Deno.serve(async (req) => {
     if (a === "notpaket") {
       const { data: geheim } = await db.rpc("kc_communication_get_server_secret", { p_name: "kc_club_cron_secret" });
       if (!geheim || p.cronSecret !== geheim) return json({ error: "Kein Zugang" }, 401);
-      return json(await notpaketLauf(!!p.erzwingen));
+      // KC-CLUB-NOTBETRIEB-STUFE2 (1.54.0): zuerst nachtragen, was im Notbetrieb geschrieben wurde – dann das Paket bauen
+      const nachtrag = await notEingangLauf().catch((e) => ({ ok: false, fehler: txt(String(e?.message || e), 200) }));
+      return json({ ...(await notpaketLauf(!!p.erzwingen)), nachtrag });
     }
     // ----- Zeitplaner: Erinnerung am Vortag (ab 9 Uhr) an alle, die nicht abgesagt haben -----
     if (a === "wartung") {
@@ -3444,6 +3446,13 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           const heuteNeu = (neu ?? []).filter((z: any) => berlinTag(new Date(z.erstmals_gesehen)) === heute && !begruesst.has(z.person_id));
           const lp = await personen(heuteNeu.map((z: any) => z.person_id));
           aus.neuDa = heuteNeu.map((z: any) => ({ person_id: z.person_id, name: lp.get(z.person_id)?.display_name || z.person_id, vorname: vorname(lp.get(z.person_id) ?? null), zeit: z.erstmals_gesehen }));
+          // KC-CLUB-NOTBETRIEB-STUFE2 (1.54.0): was in den letzten 26 Std. aus dem Notbetrieb nachgetragen wurde – Probleme einzeln
+          const { data: nt } = await db.from("kc_club_notbetrieb_eingang").select("person_id,aktion,status,ergebnis,geschrieben_am").gte("angenommen_am", new Date(jetztMs - 26 * 3600000).toISOString()).limit(500);
+          if ((nt ?? []).length) {
+            const ln = await personen((nt ?? []).map((x: any) => x.person_id).filter(Boolean));
+            aus.notNachtrag = { erledigt: (nt ?? []).filter((x: any) => x.status === "erledigt").length, offen: (nt ?? []).filter((x: any) => x.status === "offen").length,
+              probleme: (nt ?? []).filter((x: any) => x.status === "abgelehnt").slice(0, 20).map((x: any) => ({ name: ln.get(x.person_id)?.display_name || "Unbekannt", aktion: x.aktion, grund: x.ergebnis, zeit: x.geschrieben_am })) };
+          }
         }
         return json(aus);
       }
@@ -6559,6 +6568,15 @@ Köcheclub-App`,
         return json({ ok: true });
       }
 
+      // KC-CLUB-NOTBETRIEB-STUFE2 (1.54.0): die App ist zurück aus dem Notbetrieb → Eingang sofort nachtragen (nicht erst
+      // beim nächsten Zeitplaner-Lauf) und dem Mitglied sagen, was aus seinen Einträgen geworden ist
+      case "notbetrieb_nachtragen": {
+        const lauf = await notEingangLauf().catch((e) => ({ ok: false, fehler: txt(String(e?.message || e), 200) }));
+        const ids = (Array.isArray(p.notIds) ? p.notIds : []).map((x: unknown) => txt(x, 64)).filter(Boolean).slice(0, 100);
+        const { data: meine } = ids.length ? await db.from("kc_club_notbetrieb_eingang").select("not_id,aktion,status,ergebnis").eq("person_id", ich.person_id).in("not_id", ids) : { data: [] as any[] };
+        return json({ ok: true, lauf: { ok: !!(lauf as any).ok }, eintraege: (meine ?? []).filter((x: any) => x.status !== "offen").map((x: any) => ({ notId: x.not_id, aktion: x.aktion, status: x.status, grund: x.status === "abgelehnt" ? x.ergebnis : null })) });
+      }
+
       // KC-CLUB-NOTBETRIEB (1.52.0): Stand des Notfall-Pakets + öffentlicher Prüfschlüssel für den Ersatz-Server (Admin)
       case "notbetrieb_info": {
         nurAdmin(ich);
@@ -6621,6 +6639,77 @@ async function notpaketBauen() {
     mitglieder[z.token_hash] = { person_id: z.person_id, antworten };
   }
   return { mitglieder, anzahl: Object.keys(mitglieder).length };
+}
+// ---------- KC-CLUB-NOTBETRIEB-STUFE2 (1.54.0): im Notbetrieb Geschriebenes nachtragen ----------
+// Der Ersatz-Server hat Nachricht/Zu-/Absage/Status/Pinnwand-Zettel nur in seinen Eingang gelegt. Hier wird jeder Eintrag
+// genau einmal (Merkzettel kc_club_notbetrieb_eingang, Schlüssel des Ersatz-Servers) über die NORMALE Aktion nachgetragen –
+// gleiche Prüfungen und Rechte, Push/Mail wie sonst. Was nicht mehr passt (z. B. Treffen inzwischen abgesagt), wird nicht still
+// verworfen: Ergebnis „abgelehnt“ mit Grund → Tagesinfo des Admins und Rückmeldung an das Mitglied.
+// Erst danach wird der Eintrag beim Ersatz-Server gelöscht (quittiert). Technische Fehler → beim nächsten Lauf erneut.
+const NOT_NACHTRAG = new Set(["nachricht_senden", "treffen_antwort", "status_setzen", "pinnwand_anheften"]);
+const NOT_UHR = new Intl.DateTimeFormat("de-DE", { timeZone: "Europe/Berlin", hour: "2-digit", minute: "2-digit" });
+async function notSigniert(pfad: string, inhalt: Record<string, unknown>) {
+  const st = await notStand(), { privat } = await notSchluessel();
+  const roh = new TextEncoder().encode(JSON.stringify({ ...inhalt, zeit: jetzt() }));
+  const sig = new Uint8Array(await crypto.subtle.sign({ name: "Ed25519" }, privat, roh as BufferSource));
+  const r = await fetch(String(st.url).replace(/\/+$/, "") + pfad, { method: "POST", headers: { "content-type": "application/json", "x-kc-signatur": b64(sig) }, body: roh as unknown as BodyInit });
+  if (!r.ok) throw new Error(`Ersatz-Server antwortet ${r.status}`);
+  return await r.json();
+}
+async function notEingangLauf() {
+  const st = await notStand();
+  if (!st.url) return { ok: true, aus: "Ersatz-Server noch nicht eingerichtet" };
+  // nicht zweimal gleichzeitig (Zeitplaner + zurückkehrende Apps): Lauf-Marke, höchstens alle 30 s
+  const { data: frei } = await db.from("kc_club_notbetrieb").update({ nachtrag_am: jetzt() }).eq("id", 1)
+    .or(`nachtrag_am.is.null,nachtrag_am.lt.${new Date(Date.now() - 30000).toISOString()}`).select("id");
+  if (!(frei ?? []).length) return { ok: true, laeuft_schon: true };
+  const { eintraege = [] } = await notSigniert("/eingang/abholen", { zweck: "abholen" });
+  if (!eintraege.length) return { ok: true, anzahl: 0 };
+  const fertig: string[] = [], z = { erledigt: 0, abgelehnt: 0, fehler: 0 };
+  const merken = (schluessel: string, status: string, ergebnis: string | null, person_id: string | null) =>
+    db.from("kc_club_notbetrieb_eingang").update({ status, ergebnis, ...(person_id ? { person_id } : {}), nachgetragen_am: jetzt() }).eq("schluessel", schluessel);
+  for (const e of [...eintraege].sort((a: any, b: any) => String(a.zeit).localeCompare(String(b.zeit)))) {
+    const schluessel = txt(e.schluessel, 120);
+    if (!schluessel.startsWith("e:")) continue;
+    const { data: neu } = await db.from("kc_club_notbetrieb_eingang").upsert({ schluessel, not_id: txt(e.notId, 64) || schluessel, aktion: txt(e.aktion, 40), daten: e.daten ?? {}, geschrieben_am: e.zeit ?? null },
+      { onConflict: "schluessel", ignoreDuplicates: true }).select("schluessel");
+    if (!(neu ?? []).length) {
+      // schon bekannt: fertig → nur noch quittieren; hängengeblieben (> 10 Min. „offen“) → nicht blind wiederholen, sondern melden
+      const { data: alt } = await db.from("kc_club_notbetrieb_eingang").select("status,angenommen_am").eq("schluessel", schluessel).maybeSingle();
+      if (alt && alt.status !== "offen") fertig.push(schluessel);
+      else if (alt && Date.now() - Date.parse(alt.angenommen_am) > 600000) {
+        await merken(schluessel, "abgelehnt", "Nachtragen wurde unterbrochen – bitte prüfen, ob es angekommen ist.", null); z.abgelehnt++; fertig.push(schluessel);
+      }
+      continue;
+    }
+    const ablehnen = async (grund: string, pid: string | null = null) => { await merken(schluessel, "abgelehnt", grund, pid); z.abgelehnt++; fertig.push(schluessel); };
+    if (!NOT_NACHTRAG.has(e.aktion)) { await ablehnen("Im Notbetrieb nicht vorgesehen."); continue; }
+    const { data: zg } = await db.from("kc_club_zugang").select("person_id").eq("token_hash", String(e.hash || "")).eq("aktiv", true).maybeSingle();
+    if (!zg) { await ablehnen("Der persönliche Link gilt nicht mehr."); continue; }
+    const [{ data: pe }, { data: ro }] = await Promise.all([
+      db.from("kc_core_people").select("person_id,display_name,given_name,preferred_name,active").eq("person_id", zg.person_id).maybeSingle(),
+      db.from("kc_club_rollen").select("*").eq("person_id", zg.person_id).maybeSingle(),
+    ]);
+    if (!pe?.active) { await ablehnen("Mitglied nicht mehr aktiv.", zg.person_id); continue; }
+    const ich = ichAus(pe, ro ?? null), daten: any = { ...(e.daten ?? {}) };
+    // im Chat erkennbar: wann es wirklich geschrieben wurde (die Nachricht erscheint erst jetzt)
+    if (e.aktion === "nachricht_senden" && daten.text) daten.text = `${daten.text}\n\n🟠 im Notbetrieb geschrieben um ${NOT_UHR.format(new Date(e.zeit || Date.now()))} Uhr`;
+    try {
+      const r = await aktionAusfuehren(e.aktion, daten, ich, new Request(APP_URL, { method: "POST" }), Date.now(), 0);
+      if (r.ok) { await merken(schluessel, "erledigt", null, zg.person_id); z.erledigt++; fertig.push(schluessel); }
+      else { const j: any = await r.json().catch(() => ({})); await ablehnen(txt(j?.error, 200) || `Abgelehnt (${r.status}).`, zg.person_id); }
+    } catch (x) {
+      if (x instanceof Fehler) { await ablehnen(x.message, zg.person_id); continue; }
+      // technischer Fehler: Merkzettel wieder weg → beim nächsten Lauf neu versuchen (Ersatz-Server behält den Eintrag)
+      await db.from("kc_club_notbetrieb_eingang").delete().eq("schluessel", schluessel).eq("status", "offen"); z.fehler++;
+      console.error("notbetrieb nachtrag", e.aktion, String(x));
+    }
+  }
+  for (let i = 0; i < fertig.length; i += 400) await notSigniert("/eingang/quittieren", { zweck: "quittieren", schluessel: fertig.slice(i, i + 400) });
+  const bericht = { am: jetzt(), anzahl: eintraege.length, ...z };
+  await db.from("kc_club_notbetrieb").update({ nachtrag: bericht }).eq("id", 1);
+  await protokoll(null, "notbetrieb_nachgetragen", bericht);
+  return { ok: true, ...bericht };
 }
 async function notpaketLauf(erzwingen: boolean) {
   await notSchluessel(); // Schlüsselpaar gleich anlegen – den öffentlichen Teil braucht der Ersatz-Server schon beim Einrichten

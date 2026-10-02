@@ -769,6 +769,7 @@
   .eingabe .innen > #text.wichtig { border: 3px solid #ff9800; box-shadow: 0 0 0 3px rgba(255,152,0,.25); }
   .blase.wichtig { border: 3px solid #ff9800; box-shadow: 0 0 0 3px rgba(255,152,0,.30), var(--schatten); }
   .blase.wichtig .wichtig-marke { display: inline-block; margin: 0 0 4px; padding: 1px 8px; border-radius: 999px; background: #ff9800; color: #1f1300; font-weight: 800; font-size: .78rem; letter-spacing: .02em; }
+  .blase.wartet { opacity: .78; } .blase.wartet .fuss { font-style: italic; } /* KC-CLUB-NOTBETRIEB-STUFE2 */
   .ni-zeile.ni-wichtig { border: 2px solid #ff9800; border-radius: 12px; padding: 8px 10px; background: rgba(255,152,0,.12); font-weight: 700; }
   .unterh.wichtig-neu { box-shadow: inset 4px 0 0 #ff9800; background: rgba(255,152,0,.10); }
   .unterh .punkt.wichtig { background: #ff9800; color: #1f1300; }
@@ -2113,7 +2114,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.53.6"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.54.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -4027,6 +4028,7 @@ function notAus(meldung) {
   document.getElementById("notBand")?.remove(); document.body.classList.remove("im-notbetrieb"); document.documentElement.style.removeProperty("--notH");
   if (meldung) melde(meldung);
   neuLaden(true);
+  notNachtragVersuche = 0; setTimeout(notNachtragen, 1500); // KC-CLUB-NOTBETRIEB-STUFE2: Gespeichertes sofort übertragen lassen
 }
 async function notZurueckPruefen() {
   if (!NOT.an) return;
@@ -4034,13 +4036,45 @@ async function notZurueckPruefen() {
   if (NOT.grund === "hand") { const k = await notKonfig(true); if (k?.modus === "an") return; }
   try { await apiRoh("ping"); if (++NOT.ok >= 2) notAus("✅ Die Club-App ist wieder normal verbunden"); } catch { NOT.ok = 0; }
 }
+// ---------- KC-CLUB-NOTBETRIEB-STUFE2 (1.54.0, Wunsch Hansi): im Notbetrieb schreiben ----------
+// Nachricht (bestehender Chat), Zu-/Absage, Status und Pinnwand-Zettel nimmt der Ersatz-Server an und legt sie in seinen
+// Eingang. Die App merkt sich, was wartet (Anzeige ⏳ im Chat, Zahl im orangen Band). Zurück im Normalbetrieb bittet sie den
+// Club-Server, sofort nachzutragen, und meldet, was angekommen ist – und was nicht mehr passte (mit Grund).
+const NOT_SCHREIBEN = ["nachricht_senden", "treffen_antwort", "status_setzen", "pinnwand_anheften"], NOT_WARTET = "kc_club_notwartet", NOT_WARTET_TAGE = 3;
+function notWartet() {
+  try { return (JSON.parse(localStorage.getItem(NOT_WARTET) || "[]") || []).filter((x) => x && Date.now() - x.zeit < NOT_WARTET_TAGE * 864e5); } catch { return []; }
+}
+function notWartetSetzen(liste) { try { liste.length ? localStorage.setItem(NOT_WARTET, JSON.stringify(liste.slice(-100))) : localStorage.removeItem(NOT_WARTET); } catch {} }
+const notNeueId = () => { try { return crypto.randomUUID(); } catch { return Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 12); } };
+function notWartendeHtml(id) {
+  return notWartet().filter((w) => w.aktion === "nachricht_senden" && w.chat === id).map((w) => `<div class="blase eigen wartet${w.wichtig ? " wichtig" : ""}">${w.wichtig ? '<div class="wichtig-marke">❗ WICHTIG</div>' : ""}<div class="txt">${naText(w.text || "")}</div><div class="fuss">⏳ wartet – wird übertragen, sobald alles wieder läuft</div></div>`).join("");
+}
+let notNachtragVersuche = 0;
+async function notNachtragen() {
+  const liste = notWartet(); notWartetSetzen(liste); if (!liste.length || NOT.an) return;
+  let r; try { r = await api("notbetrieb_nachtragen", { notIds: liste.map((w) => w.notId) }); } catch { r = null; }
+  const fertig = new Map((r?.eintraege || []).map((e) => [e.notId, e]));
+  const rest = notWartet().filter((w) => !fertig.has(w.notId)); notWartetSetzen(rest);
+  const ok = [...fertig.values()].filter((e) => e.status === "erledigt").length, weg = [...fertig.values()].filter((e) => e.status === "abgelehnt");
+  const NAME = { nachricht_senden: "Nachricht", treffen_antwort: "Zu-/Absage", status_setzen: "Status", pinnwand_anheften: "Pinnwand-Zettel" };
+  if (ok) { melde(`✅ ${ok} Eintr${ok === 1 ? "ag" : "äge"} aus dem Notbetrieb übertragen`); neuLaden(true); }
+  if (weg.length) setTimeout(() => melde(`⚠️ Nicht übertragen: ${weg.map((e) => `${NAME[e.aktion] || "Eintrag"} – ${e.grund || "abgelehnt"}`).join(" · ")}`, true), ok ? 2500 : 0);
+  // noch nicht dabei (Ersatz-Server liefert neue Einträge mit kurzer Verzögerung) → später noch einmal
+  if (rest.length && ++notNachtragVersuche <= 5) setTimeout(notNachtragen, 60000);
+}
 async function notApi(action, daten = {}) {
+  const schreiben = NOT_SCHREIBEN.includes(action);
+  if (schreiben) daten = { ...daten, notId: notNeueId() };
   let r;
   try { r = await fetch(NOT.url + "/", { method: "POST", headers: { "Content-Type": "application/json", "x-club-token": KEY, "x-club-version": APP_VERSION }, body: JSON.stringify({ action, ...daten }) }); }
   catch { throw new Error(navigator.onLine ? "Keine Verbindung – weder Club-Server noch Ersatz-Server erreichbar." : "Keine Internetverbindung."); }
   const j = await r.json().catch(() => null);
   if (j?._notbetrieb?.stand && j._notbetrieb.stand !== NOT.stand) { NOT.stand = j._notbetrieb.stand; notBandZeigen(); }
   if (!r.ok) throw new Error(j?.error || "Notbetrieb: keine Antwort");
+  if (schreiben && j?.gespeichert) {
+    notWartetSetzen([...notWartet(), { notId: j.notId, aktion: action, zeit: Date.now(), ...(action === "nachricht_senden" ? { chat: daten.id, text: String(daten.text || "").slice(0, 4000), wichtig: !!daten.wichtig } : {}) }]);
+    notBandZeigen(); setTimeout(() => melde(j.hinweis || "📨 Gespeichert – wird übertragen, sobald alles wieder läuft."), 1300);
+  }
   return j;
 }
 function notBandZeigen() {
@@ -4049,7 +4083,8 @@ function notBandZeigen() {
   document.body.classList.add("im-notbetrieb");
   const st = NOT.stand ? new Date(NOT.stand) : null, heute = st && st.toDateString() === new Date().toDateString();
   const standText = st ? `Stand von ${heute ? "" : fKurz.format(st) + ", "}${fZeit.format(st)} Uhr` : "Stand unbekannt";
-  el.innerHTML = `⚠️ <b>${NOT.grund === "probe" ? "Notbetrieb-Probe" : "Notbetrieb"}</b> – ${esc(standText)}. Ansehen geht, Ändern, Fotos und Push gerade nicht.${NOT.grund === "probe" ? ` <button onclick="notProbeSetzen(false)">Probe beenden</button>` : ""}`;
+  const w = notWartet().length; // KC-CLUB-NOTBETRIEB-STUFE2: was hier geschrieben wird, wartet und wird später übertragen
+  el.innerHTML = `⚠️ <b>${NOT.grund === "probe" ? "Notbetrieb-Probe" : "Notbetrieb"}</b> – ${esc(standText)}. Ansehen geht. Nachrichten, Zu-/Absagen, Status und Zettel werden später übertragen. Fotos und Push gerade nicht.${w ? ` <b>📨 ${w} ${w > 1 ? "warten" : "wartet"}</b>` : ""}${NOT.grund === "probe" ? ` <button onclick="notProbeSetzen(false)">Probe beenden</button>` : ""}`;
   notBandHoehe(el);
 }
 // Meldungen (rot/dunkel) und SOS-Balken rutschen unter das orange Band statt davon verdeckt zu werden
@@ -4071,6 +4106,7 @@ function notProbeZeigen() { const b = $("notProbeKnopf"); if (b) b.textContent =
 (async () => {
   const k = await notKonfig(true);
   if (notProbe() ? await notEinschalten("probe") : k?.modus === "an" ? await notEinschalten("hand") : false) setTimeout(() => neuLaden(true), 0);
+  else if (notWartet().length) setTimeout(notNachtragen, 8000); // KC-CLUB-NOTBETRIEB-STUFE2: App war zu, als alles wieder lief
 })();
 // KC-CLUB-AUSSETZER (0.76.0): 503 ohne Antwort unseres Programms = Supabase hatte kurz keinen freien Server (die Anfrage
 // hat unseren Code nie erreicht) → einmal still wiederholen. Andere Fehler nicht wiederholen (sonst evtl. doppelt gesendet).
@@ -6004,6 +6040,9 @@ async function tagesinfoZeigen(manuell = false) {
     else neu.push(tiZeile("💭", `<b>${esc(m.wer)}</b> hat ${esc(tiZeit(m.zeit))} <b>Feedback</b> gegeben`, "zeige('feedback')"));
   }
   // KC-CLUB-BEGRUESSUNG (1.51.0): heute zum ersten Mal da → Begrüßung anbieten (nur Admin)
+  // KC-CLUB-NOTBETRIEB-STUFE2 (1.54.0): was aus dem Notbetrieb nachgetragen wurde – Probleme einzeln (nur Admin)
+  if (d.notNachtrag) { const nb = d.notNachtrag, pr = nb.probleme || [];
+    neu.push(tiZeile("🟠", `Notbetrieb: <b>${nb.erledigt} Eintr${nb.erledigt === 1 ? "ag" : "äge"} nachgetragen</b>${nb.offen ? `, ${nb.offen} noch offen` : ""}${pr.length ? `, <b>${pr.length} nicht übertragen</b>: ${pr.map((x) => `${esc(x.name)} (${esc({ nachricht_senden: "Nachricht", treffen_antwort: "Zu-/Absage", status_setzen: "Status", pinnwand_anheften: "Zettel" }[x.aktion] || x.aktion)}) – ${esc(x.grund || "")}`).join(" · ")}` : ""}`, "")); }
   for (const n of d.neuDa || []) neu.push(tiZeile("🎉", `<b>${esc(n.name)}</b> hat sich heute zum ersten Mal angemeldet (${esc(fZeit.format(new Date(n.zeit)))} Uhr). <b>Begrüßungs-Nachricht senden?</b>`, `begruessungSenden('${esc(n.person_id)}', ${esc(JSON.stringify(n.vorname || n.name))})`));
   if (INIT?.ungelesen) neu.push(tiZeile("💬", `<b>${INIT.ungelesen} ungelesene Nachricht${INIT.ungelesen === 1 ? "" : "en"}</b>`, "zeige('nachrichten')"));
   const ein = d.eingang || {};
@@ -7479,7 +7518,7 @@ async function chatLaden(scrollen) {
       ${m.wichtig ? '<div class="wichtig-marke">❗ WICHTIG</div>' : ""}${!m.eigen && andere.length > 1 ? `<div class="von">${esc(m.von)}</div>` : ""}${m.antwortAuf ? `<div class="zitat" onclick="zuNachricht('${m.antwortAuf.id}')"><b>${esc(m.antwortAuf.von)}</b><span>${esc(m.antwortAuf.text)}</span></div>` : ""}${m.umfrage ? umfrageHtml(m) : m.kontakt ? kontaktKarteHtml(m) : m.text === "📎" && m.anlagen.length ? "" : `<div class="txt">${naText(m.text)}</div>`}
       ${m.anlagen.map((a) => /^image\//.test(a.mime || "") ? `<img data-anlage="${a.id}" alt="${esc(a.name)}" onclick="anlageOeffnen('${a.id}')">` : /^audio\//.test(a.mime || "") ? `<div class="sprache" data-sprache="${a.id}"><button onclick="spracheAbspielen(this, '${a.id}')">▶️ Sprachnachricht anhören</button></div>` : `<div class="anlage" onclick="anlageOeffnen('${a.id}')">📄 ${esc(a.name)}</div>`).join("")}
       <div class="na-seite"><button class="na-pfeil" title="Weiterleiten oder kopieren" aria-label="Weiterleiten oder kopieren" onclick="naPfeilMenue('${m.id}')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4.5l7.5 7.5-7.5 7.5v-4.3c-5.2 0-8.8 1.7-11.4 5.3 1-5.2 4.1-10.3 11.4-11.3V4.5z"/></svg></button><button class="na-info" title="Info: wer geschrieben, bekommen und gelesen hat" aria-label="Info zur Nachricht" onclick="nachrichtInfo('${m.id}')">i</button></div>
-      <div class="fuss">${m.angeheftet ? '<span title="oben angeheftet">📌</span> ' : ""}${m.gemerkt ? '<span title="gemerkt">⭐</span> ' : ""}${m.bearbeitet ? '<span class="bearb" title="nachträglich geändert">bearbeitet</span>' : ""}${zeitKurz(m.zeit)}${m.eigen ? " " + (m.gelesenAlle ? '<b title="gelesen">✓✓</b>' : m.gelesenVon?.length ? `✓✓ ${m.gelesenVon.length}/${andere.length}` : "✓") + zustellText(m.zustellung) : ""}${m.eigen || ICH.admin ? ` <button class="weg" title="Nachricht löschen" onclick="nachrichtLoeschen('${m.id}')">🗑️</button>` : ""}</div></div>`).join("")
+      <div class="fuss">${m.angeheftet ? '<span title="oben angeheftet">📌</span> ' : ""}${m.gemerkt ? '<span title="gemerkt">⭐</span> ' : ""}${m.bearbeitet ? '<span class="bearb" title="nachträglich geändert">bearbeitet</span>' : ""}${zeitKurz(m.zeit)}${m.eigen ? " " + (m.gelesenAlle ? '<b title="gelesen">✓✓</b>' : m.gelesenVon?.length ? `✓✓ ${m.gelesenVon.length}/${andere.length}` : "✓") + zustellText(m.zustellung) : ""}${m.eigen || ICH.admin ? ` <button class="weg" title="Nachricht löschen" onclick="nachrichtLoeschen('${m.id}')">🗑️</button>` : ""}</div></div>`).join("") + notWartendeHtml(chatId) // KC-CLUB-NOTBETRIEB-STUFE2
       || '<p class="hinweis">Schreib die erste Nachricht.</p>';
     document.querySelectorAll("img[data-anlage]").forEach(bildLaden);
     naWischenEinrichten();

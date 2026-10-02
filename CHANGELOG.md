@@ -1,5 +1,14 @@
 # Änderungen
 
+## 1.54.0 – 2026-10-02
+- KC-CLUB-NOTBETRIEB-STUFE2 (Wunsch Hansi): Im Notbetrieb gehen jetzt auch Nachricht in einem bestehenden Chat (Text, ❗),
+  Zu-/Absage, Status und Pinnwand-Zettel. Der Ersatz-Server legt sie in seinen Eingang (nichts doppelt, max. 40 je Mitglied);
+  die App zeigt ⏳-Blasen im Chat und „📨 N warten“ im orangen Band. Zurück im Normalbetrieb holt der Club-Server den Eingang
+  signiert ab und trägt jeden Eintrag genau einmal über die normale Aktion nach (gleiche Prüfungen, Push/Mail, Hinweis
+  „🟠 im Notbetrieb geschrieben um …“). Abgelehntes (mit Grund) bekommt das Mitglied gemeldet und der Admin in der Tagesinfo.
+  Server: notEingangLauf (Zeitplaner + Aktion notbetrieb_nachtragen), DB: kc_club_notbetrieb_eingang, kc_club_notbetrieb.nachtrag.
+  Worker: /eingang/abholen, /eingang/quittieren (signiert, Zeitstempel). Doku: docs/NOTBETRIEB.md.
+
 ## 1.53.6 – 2026-10-02
 - KC-CLUB-FRIST-AMEISEN (Wunsch Hansi): Das Feld „Nächster Termin“ oben rechts bekommt je nach Tagen bis zum nächsten
   Termin eine laufende Ameisenstraße (wie „Neue Nachr.“): ≤ 5 Tage hellgrün und langsam (2,4 s), ≤ 3 Tage orange (1,4 s),

@@ -2377,7 +2377,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/CLOUDFLARE_API_TOKEN: \$\{\{ secrets\.CLOUDFLARE_API_TOKEN \}\}/.test(wf) && /Cloudflare noch nicht eingerichtet/.test(wf), "Hochladen nur mit Secrets, sonst still");
   // App: Umschalten, Band, Rückkehr, Probe, Handschalter
   assert.ok(/if \(NOT\.an\) return await notApi\(action, daten\);/.test(html) && /e\?\.leitung && \(\+\+NOT\.fehler >= NOT_FEHLER_GRENZE \|\| action === "init"\)/.test(html), "automatisch umschalten");
-  assert.ok(/Ansehen geht, Ändern, Fotos und Push gerade nicht\./.test(html) && /if \(\+\+NOT\.ok >= 2\) notAus\(/.test(html) && /id="notProbeKnopf"/.test(html) && /k\?\.modus === "an"/.test(html), "Band, Rückkehr, Probe, Handschalter");
+  assert.ok(/Ansehen geht(, Ändern, Fotos und Push gerade nicht\.|\. Nachrichten, Zu-\/Absagen, Status und Zettel werden später übertragen\. Fotos und Push gerade nicht\.)/.test(html) && /if \(\+\+NOT\.ok >= 2\) notAus\(/.test(html) && /id="notProbeKnopf"/.test(html) && /k\?\.modus === "an"/.test(html), "Band, Rückkehr, Probe, Handschalter");
   const nb = JSON.parse(lies("notbetrieb.json")); assert.ok(["auto", "an", "aus"].includes(nb.modus), "notbetrieb.json gültig");
 }
 
@@ -2454,6 +2454,35 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.match(html, /\.mini\.frist-orange \{ --frist-lauf: 1\.4s; \} \.mini\.frist-orange \.ameisen rect \{ stroke: #ff9800; \}/, "orange");
   assert.match(html, /\.mini\.frist-rot \{ --frist-lauf: \.8s; \} \.mini\.frist-rot \.ameisen rect \{ stroke: #ff4d4d; \}/, "rot schnell");
   assert.match(html, /prefers-reduced-motion: reduce\) \{ \.mini\.mini-frist \.ameisen rect \{ animation-duration: 3s; \} \}/, "reduzierte Bewegung: langsam");
+}
+
+// 222. 1.54.0: Notbetrieb Stufe 2 – Schreiben im Notbetrieb, Nachtragen (KC-CLUB-NOTBETRIEB-STUFE2)
+{
+  const srv = lies("supabase/functions/kc-club/index.ts"), wk = lies("notbetrieb/worker.js"), mig = lies("supabase/migrations/20261002_kc_club_v1540_notbetrieb_stufe2.sql");
+  // Worker: nur vier Schreib-Aktionen, Eingang statt Ausführen, Abholen/Quittieren nur signiert mit Zeitstempel
+  for (const a of ["nachricht_senden", "treffen_antwort", "status_setzen", "pinnwand_anheften"]) assert.match(wk, new RegExp(`\\n  ${a}: \\(p`), `Worker nimmt ${a} an`);
+  assert.match(wk, /if \(SCHREIBEN\[a\]\) return await eingangLegen\(env, hash, m, a, p, nb\);/, "Schreiben → Eingang");
+  assert.match(wk, /Im Notbetrieb geht Schreiben nur in einem bestehenden Chat\./, "keine neuen Unterhaltungen");
+  assert.match(wk, /if \(!\(await env\.PAKET\.get\(schluessel\)\)\)/, "gleiche notId nicht doppelt");
+  assert.match(wk, /EINGANG_JE_MITGLIED = 40/, "Grenze je Mitglied");
+  assert.match(wk, /j\?\.zweck !== zweck \|\| Math\.abs\(Date\.now\(\) - Date\.parse\(j\.zeit\)\) > SIGNATUR_ZEIT_MS/, "signiert + Zeitstempel");
+  // Server: genau einmal, normale Aktion, Ablehnung mit Grund, erst danach quittieren
+  assert.match(srv, /upsert\(\{ schluessel, not_id:[\s\S]{0,300}\{ onConflict: "schluessel", ignoreDuplicates: true \}\)/, "Merkzettel: jeder Eintrag einmal");
+  assert.match(srv, /const r = await aktionAusfuehren\(e\.aktion, daten, ich, new Request\(APP_URL/, "über die normale Aktion");
+  assert.match(srv, /if \(x instanceof Fehler\) \{ await ablehnen\(x\.message, zg\.person_id\); continue; \}/, "Ablehnung mit Grund");
+  assert.match(srv, /await notSigniert\("\/eingang\/quittieren"/, "danach quittieren");
+  assert.match(srv, /const nachtrag = await notEingangLauf\(\)/, "Zeitplaner trägt nach");
+  assert.match(srv, /case "notbetrieb_nachtragen": \{/, "App kann sofort nachtragen lassen");
+  assert.match(srv, /aus\.notNachtrag = /, "Tagesinfo Admin");
+  assert.match(mig, /check \(status in \('offen', 'erledigt', 'abgelehnt'\)\)/, "Zustände");
+  assert.match(mig, /revoke all on public\.kc_club_notbetrieb_eingang from public, anon, authenticated/, "kein Direktzugriff");
+  // App
+  assert.match(html, /const NOT_SCHREIBEN = \["nachricht_senden", "treffen_antwort", "status_setzen", "pinnwand_anheften"\]/, "App kennt die vier");
+  assert.match(html, /if \(schreiben\) daten = \{ \.\.\.daten, notId: notNeueId\(\) \};/, "notId je Eintrag");
+  assert.match(html, /\.join\(""\) \+ notWartendeHtml\(chatId\)/, "⏳-Blasen im Chat");
+  assert.match(html, /setTimeout\(notNachtragen, 1500\); \/\/ KC-CLUB-NOTBETRIEB-STUFE2/, "nach Rückkehr nachtragen");
+  assert.match(html, /\$\{w > 1 \? "warten" : "wartet"\}/, "Zahl im Band");
+  assert.ok(lies("docs/NOTBETRIEB.md").includes("Stufe 2"), "Doku");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
