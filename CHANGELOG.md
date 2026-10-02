@@ -1,5 +1,25 @@
 # Änderungen
 
+## 1.25.0 – 2026-10-02 (DEV)
+
+- KC-CLUB-BUERO (Wunsch Hansi, Freigabe „ganze Clubleitung, feste Punkte passen, so bauen“): Büro für Clubsprecher,
+  Kassenwart und Admin (ICH.vorstand).
+  - Begrüßung beim App-Start („Guten Morgen/Tag/Abend, <Vorname>! Möchtest du etwas im Büro erledigen?“) einmal je
+    Start, nicht nach Sprung-Links, nicht über anderen Fenstern; je Gerät abschaltbar. „Nein“ → normale Club-App.
+  - Büro-Startseite: nächste Sitzung mit Zu-/Absagen, „👉 Nächster Schritt“ (vorbereiten → Einladung → Erinnerung),
+    Kacheln Sitzung vorbereiten, Vorlage drucken, Einladung, Erinnern, Protokolle, Termine; Eingang mit Zahlen
+    (Ausleih-Anfragen, offene Vorschläge, Hilfe-Aufrufe, Archiv-Prüfung, offene Aufgaben, Protokoll-Entwürfe).
+  - Sitzung vorbereiten: Anwesenheit (Zusagen vorangehakt), Entschuldigte mit Grund, Anmerkung zum letzten Protokoll
+    (Vorschlag aus dessen Stand) + offene Aufgaben, Tagesordnung = Begrüßung, Genehmigung des letzten Protokolls,
+    Bericht des Kassenwarts, Vorschläge der Sitzung, Verschiedenes (▲▼✕, weitere Vorschläge per Chip, eigener Punkt),
+    Schreiblinien 0/3/5/8/12. Speichern legt den Protokoll-Entwurf an bzw. führt ihn vor der Sitzung mit (veröffentlichte
+    Protokolle und Entwürfe nach Sitzungsbeginn bleiben unberührt). Danach Auswahl: drucken / Einladung / Entwurf öffnen.
+  - Druckvorlage (Druckvorschau wie gewohnt): Logo + Köcheclub Werne, Titel/Datum/Ort, Anwesenheit mit Kästchen,
+    Entschuldigt, Gäste, Anmerkung, offene Aufgaben, TOPs mit Schreiblinien, Beschlüsse, Unterschriften.
+  - Einladung/Erinnerung: Vorschau, persönliche Zeile, Weg (Einstellung/Push/E-Mail/beides), Senden erst nach
+    Bestätigung; Erinnerung nur an Mitglieder ohne Antwort. Zeitpunkt wird gemerkt.
+- DB: Migration 20261002_kc_club_v1250_buero.sql (kc_club_buero_sitzung, RLS ohne Policies, Spiegel-Regel).
+
 ## 1.24.1 – 2026-10-02 (DEV)
 
 - KC-CLUB-THEMA-FRAGE (Wunsch Hansi): nach „Ich komme“ bei einem Club-Treffen (nicht bei Veranstaltungen, nicht beim

@@ -870,6 +870,24 @@
   /* KC-CLUB-EINSTIEG: „dort ist es“ – kurz aufleuchten */
   .hervor { outline: 3px solid #1e8449 !important; outline-offset: 3px; border-radius: 12px; animation: hervor 0.9s ease-in-out 3; }
   @keyframes hervor { 50% { outline-color: transparent; } }
+  /* KC-CLUB-BUERO (1.25.0) */
+  .bu-gruss { font-size: 1.05rem; line-height: 1.45; }
+  .bu-tipp { margin-top: 8px; padding: 8px 10px; border-radius: 12px; background: var(--gelbbg); border: 2px solid var(--gelb); }
+  .mini-kachel.bu-dran { border-color: var(--rot); animation: vsPuls 1.2s ease-in-out 4; }
+  .bu-kopf { display: flex; gap: 12px; align-items: center; }
+  .bu-logo { width: 54px; height: 54px; border-radius: 50%; background: var(--rot); padding: 7px; box-sizing: border-box; }
+  .bu-haken-liste { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+  .bu-haken { display: flex; gap: 6px; align-items: center; background: var(--karte2); border-radius: 12px; padding: 9px 10px; font-weight: 700; cursor: pointer; border: 2px solid transparent; }
+  .bu-haken.an, .bu-haken:has(input:checked) { border-color: var(--gruen); }
+  .bu-haken input { width: 20px; height: 20px; }
+  .bu-top { margin: 0; padding-left: 26px; display: grid; gap: 6px; }
+  .bu-top li { background: var(--karte2); border-radius: 12px; padding: 6px 6px 6px 10px; }
+  .bu-top li > span:first-child { display: inline-block; font-weight: 700; }
+  .bu-top li.bu-top-vorschlag { border-left: 4px solid var(--gelb); }
+  .bu-top-knoepfe { float: right; display: inline-flex; gap: 4px; }
+  .bu-top-knoepfe button { width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--linie); background: var(--karte); color: var(--text); font-weight: 800; cursor: pointer; }
+  .bu-top-knoepfe button:disabled { opacity: .3; }
+  .bu-leiste { position: sticky; bottom: calc(80px + env(safe-area-inset-bottom)); padding: 8px 0; z-index: 5; }
   /* KC-CLUB-THEMA-FRAGE (1.24.1) */
   .vs-hinweis { background: var(--gelbbg); color: var(--text); font-size: 1.05rem; line-height: 1.45; border: 2px solid var(--gelb); }
   .vs-puls { animation: vsPuls 1s ease-in-out 6; }
@@ -1295,6 +1313,12 @@
     <div id="vorschlagHinweis"></div>
     <div id="vorschlagForm" class="karte versteckt"></div>
     <div id="vorschlagListe"><div class="karte hinweis">Wird geladen …</div></div>
+  </section>
+
+  <!-- BÜRO DER CLUBLEITUNG (KC-CLUB-BUERO – 1.25.0) -->
+  <section id="v-buero" class="versteckt">
+    <div class="kopf2"><button class="zurueck" onclick="buZurueck()">‹</button><h2>🗂️ Büro</h2></div>
+    <div id="buInhalt"><div class="karte hinweis">Wird geladen …</div></div>
   </section>
 
   <!-- HELFEN & LEIHEN (KC-CLUB-HELFEN, KC-CLUB-LEIHEN – 1.23.0) -->
@@ -1900,7 +1924,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.24.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.25.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -4069,6 +4093,8 @@ const KACHELN = {
     { id: "pinnwand", sym: "📌", t: "Pinnwand", u: "Kurze Zettel · wichtig & erledigt", v: "pinnwand", zahl: () => PW.offen || 0 },
     // KC-CLUB-HELFEN / KC-CLUB-LEIHEN (1.23.0, Wunsch Hansi): eine Kachel für „Wer kann helfen?“ und „Ausleihen“
     { id: "helfen", sym: "🤝", t: "Helfen & Leihen", u: "Wer kann helfen? · Ausleihen", aktion: "hlStart()" },
+    // KC-CLUB-BUERO (1.25.0): nur für die Clubleitung (Clubsprecher, Kassenwart, Admin)
+    { id: "buero", sym: "🗂️", t: "Büro", u: "Sitzung vorbereiten · Einladung · Eingang", aktion: "buStart()", nur: () => !!ICH?.vorstand },
   ],
   mein: [
     { id: "status", sym: "🟢", t: "Mein Status", u: "verfügbar, Urlaub …", aktion: "statusBlatt()" },
@@ -4999,7 +5025,7 @@ function zeige(v, ausHistorie) {
   aktuelleAnsicht = v; if (window.KCFP) KCFP.sicht = v;
   nzZaehlen(v); // KC-CLUB-NUTZUNG: nur „Bereich geöffnet“, ohne Namen
   if (vorher === "protokoll" && v !== "protokoll" && prTimer) prSpeichernJetzt(false).catch(() => {}); // ungespeicherte Eingaben sichern
-  ["start", "dokumente", "termine", "vorschlaege", "aktionen", "aktion", "fotos", "feedback", "gruppe", "mitglied", "protokolle", "protokoll", "dienste", "nachrichten", "chat", "neu", "mitglieder", "einstellungen", "pinnwand", "erstattung", "ueberblick", "programme", "standort", "archiv", "sos", "sicherheit", "helfen"].forEach((x) => $("v-" + x).classList.toggle("versteckt", x !== v));
+  ["start", "dokumente", "termine", "vorschlaege", "aktionen", "aktion", "fotos", "feedback", "gruppe", "mitglied", "protokolle", "protokoll", "dienste", "nachrichten", "chat", "neu", "mitglieder", "einstellungen", "pinnwand", "erstattung", "ueberblick", "programme", "standort", "archiv", "sos", "sicherheit", "helfen", "buero"].forEach((x) => $("v-" + x).classList.toggle("versteckt", x !== v));
   document.querySelectorAll("#fuss button").forEach((b) => b.classList.toggle("an", b.dataset.v === v || (v === "chat" && b.dataset.v === "nachrichten") || (v === "neu" && b.dataset.v === "nachrichten")));
   $("eingabe").classList.toggle("versteckt", v !== "chat");
   document.body.classList.toggle("im-chat", v === "chat"); // KC-CLUB-SUCHE: Lupe nicht über dem Senden-Knopf
@@ -5021,6 +5047,7 @@ function zeige(v, ausHistorie) {
   if (v === "erstattung") erstattungLaden();
   if (v === "archiv") arLaden(); // KC-CLUB-ARCHIV
   if (v === "helfen") { hlZeigen(); hlLaden(); } // KC-CLUB-HELFEN / KC-CLUB-LEIHEN
+  if (v === "buero") { BU.sicht = "start"; buZeigen(); buLaden(); } // KC-CLUB-BUERO
   if (v === "dienste") dienstLaden();
   if (v === "nachrichten") unterhLaden();
   if (v === "mitglieder") mitgliederLaden();
@@ -5511,6 +5538,182 @@ async function vorschlagSpeichern(knopf) {
       const r = await api("vorschlag_speichern", daten);
       $("vorschlagForm").classList.add("versteckt");
       melde(r.versand ? `Gespeichert – ${r.versand.gesendet} benachrichtigt` : "Gespeichert"); vorschlaegeLaden();
+    } catch (e) { melde(e.message, true); }
+  });
+}
+
+// ---------- KC-CLUB-BUERO (1.25.0, Wunsch Hansi): Büro für die Clubleitung – bedienerfreundliche Hilfe Schritt für Schritt ----------
+let BU = { start: null, s: null, f: null, sicht: "start" };
+const buTageszeit = () => { const h = new Date().getHours(); return h < 11 ? "☀️ Guten Morgen" : h < 18 ? "🌤️ Guten Tag" : "🌙 Guten Abend"; };
+const buDarf = () => !!ICH?.vorstand;
+// Beim Start (einmal je App-Start, nur Clubleitung, nicht nach einem Sprung-Link)
+function buGrussFragen(nochmal) {
+  if (!buDarf()) return;
+  try { if (sessionStorage.getItem("kc_buero_gefragt") || localStorage.getItem("kc_buero_frage_aus")) return; } catch {}
+  if (document.querySelector(".blatt:not(.versteckt)") || aktuelleAnsicht !== "start") { if (!nochmal) setTimeout(() => buGrussFragen(true), 5000); return; }
+  try { sessionStorage.setItem("kc_buero_gefragt", "1"); } catch {}
+  blattAuf("buGruss", `<h3 style="margin-top:0;font-size:1.35rem">${buTageszeit()}, ${esc(ICH.vorname || ICH.name)}!</h3>
+    <p style="margin:0;font-size:1.1rem">Möchtest du etwas im <b>Büro</b> erledigen?</p><div id="buGrussInfo" class="hinweis" style="margin:4px 0 0"></div>
+    <div class="knoepfe" style="flex-direction:column;align-items:stretch"><button class="knopf haupt" style="text-align:center" onclick="$('buGruss').remove();buStart()">🗂️ Ja, ins Büro</button>
+    <button class="knopf" style="text-align:center" onclick="$('buGruss').remove()">Nein, zur Club-App</button></div>
+    <label class="schalter" style="margin-top:4px"><span><small>Auf diesem Gerät nicht mehr beim Start fragen</small></span><input type="checkbox" onchange="try{this.checked?localStorage.setItem('kc_buero_frage_aus','1'):localStorage.removeItem('kc_buero_frage_aus')}catch{}"></label>`);
+  api("buero_start").then((r) => { BU.start = r; const t = r.sitzungen[0], e = $("buGrussInfo"); if (!e) return;
+    const offen = Object.values(r.eingang).reduce((a, b) => a + b, 0);
+    e.innerHTML = [t ? `📝 Nächste Sitzung: <b>${esc(t.titel)}</b> · ${esc(wann(t.beginn))}${t.vorbereitet ? " · ✅ vorbereitet" : " · noch nicht vorbereitet"}` : "", offen ? `📥 Im Eingang: <b>${offen}</b>` : ""].filter(Boolean).join("<br>"); }).catch(() => {});
+}
+function buStart() { BU.sicht = "start"; zeige("buero"); }
+async function buLaden() {
+  try { BU.start = await api("buero_start"); } catch (e) { $("buInhalt").innerHTML = `<div class="karte hinweis">${esc(e.message)}</div>`; return; }
+  buZeigen();
+}
+function buZurueck() { if (BU.sicht !== "start") { BU.sicht = "start"; buLaden(); window.scrollTo(0, 0); } else zeige("start"); }
+function buZeigen() { $("buInhalt").innerHTML = BU.sicht === "sitzung" ? buSitzungHtml() : buStartHtml(); }
+// Nächster sinnvoller Schritt für eine Sitzung
+function buNaechster(t) {
+  if (!t) return null;
+  if (!t.vorbereitet) return "vorbereiten";
+  if (!t.einladung_am) return "einladung";
+  if (t.ohne && !t.erinnerung_am && new Date(t.beginn) - Date.now() < 7 * 86400000) return "erinnerung";
+  return null;
+}
+function buStartHtml() {
+  const r = BU.start; if (!r) return '<div class="karte hinweis">Wird geladen …</div>';
+  const t = r.sitzungen[0], n = buNaechster(t), e = r.eingang;
+  const k = (id, sym, titel, unter, fn, extra = "") => `<button class="mini-kachel${n === id ? " bu-dran" : ""}" onclick="${fn}"><span class="mk-sym">${sym}</span><span class="mk-titel">${esc(titel)}</span><span class="mk-unter">${unter}</span>${extra}</button>`;
+  const dran = { vorbereiten: "📝 Sitzung vorbereiten", einladung: "📨 Einladung mit Tagesordnung senden", erinnerung: `🔔 ${t?.ohne} Mitglieder an die Antwort erinnern` }[n];
+  const eingang = [["📦", "Ausleih-Anfragen", e.ausleihen, "hlStart('leihen')"], ["🗳️", "Offene Vorschläge", e.vorschlaege, "zeige('vorschlaege')"], ["🙋", "Hilfe-Aufrufe", e.hilfe, "hlStart('helfen')"],
+    ["🗄️", "Archiv: zu prüfen", e.archiv, "arStart()"], ["✔️", "Offene Aufgaben", e.aufgaben, "zeige('protokolle')"], ["📄", "Protokoll-Entwürfe", e.entwuerfe, "zeige('protokolle')"]];
+  return `<div class="karte bu-gruss"><b>${buTageszeit()}, ${esc(ICH.vorname || ICH.name)}!</b><br>${t ? `Nächste Sitzung: <b>${esc(t.titel)}</b> · ${esc(wann(t.beginn))}<br>✅ ${t.ja} zugesagt · ❌ ${t.nein} abgesagt · ❓ ${t.ohne} ohne Antwort` : "Gerade ist keine Sitzung geplant – lege sie unter 📅 Termine an."}
+    ${dran ? `<div class="bu-tipp">👉 Nächster Schritt: <b>${dran}</b></div>` : t ? '<div class="bu-tipp">✅ Für diese Sitzung ist alles erledigt.</div>' : ""}</div>
+    <div class="abschnitt"><h3>🗂️ Sitzung</h3></div>
+    <div class="mini-kacheln">
+      ${k("vorbereiten", "📝", "Sitzung vorbereiten", t ? (t.vorbereitet ? "✅ vorbereitet – ändern" : "Anwesenheit, Tagesordnung, Vorlage") : "keine Sitzung geplant", "buSitzungWahl()")}
+      ${k("drucken", "🖨️", "Vorlage drucken", t?.vorbereitet ? "Protokoll-Vorlage mit Schreiblinien" : "erst vorbereiten", "buDruckWahl()")}
+      ${k("einladung", "📨", "Einladung senden", t?.einladung_am ? `✅ gesendet ${esc(zeitKurz(t.einladung_am))}` : "mit Tagesordnung an alle", "buEinladungWahl(false)")}
+      ${k("erinnerung", "🔔", "Erinnern", t ? `${t.ohne} ohne Antwort${t.erinnerung_am ? ` · zuletzt ${esc(zeitKurz(t.erinnerung_am))}` : ""}` : "–", "buEinladungWahl(true)")}
+      ${k("protokolle", "📄", "Protokolle", "schreiben · veröffentlichen", "zeige('protokolle')")}
+      ${k("termine", "📅", "Termine", "Sitzung anlegen oder ändern", "zeige('termine')")}
+    </div>
+    <div class="abschnitt"><h3>📥 Eingang</h3></div>
+    <div class="mini-kacheln">${eingang.map(([sym, t2, z, fn]) => `<button class="mini-kachel${z ? " mk-offen" : ""}" onclick="${fn}"><span class="mk-sym">${sym}</span><span class="mk-titel">${esc(t2)}</span><span class="mk-gross">${z || "–"}</span></button>`).join("")}</div>`;
+}
+// Mehrere Sitzungen → antippen, welche
+function buSitzungWaehlen(titel, weiter) {
+  const l = BU.start?.sitzungen || [];
+  if (!l.length) return melde("Es ist keine Sitzung geplant – bitte zuerst unter 📅 Termine anlegen.", true);
+  if (l.length === 1) return weiter(l[0].id);
+  window.__buWeiter = weiter;
+  blattAuf("buWahl", `<h3 style="margin-top:0">${titel}</h3><div class="wahl">${l.map((t) => `<button onclick="$('buWahl').remove();window.__buWeiter('${t.id}')">${esc(t.titel)}<br><small>${esc(wann(t.beginn))}${t.vorbereitet ? " · ✅ vorbereitet" : ""}</small></button>`).join("")}</div>
+    <div class="knoepfe"><button class="knopf" onclick="$('buWahl').remove()">Abbrechen</button></div>`);
+}
+const buSitzungWahl = () => buSitzungWaehlen("📝 Welche Sitzung vorbereiten?", buSitzungOeffnen);
+const buDruckWahl = () => buSitzungWaehlen("🖨️ Vorlage für welche Sitzung?", async (id) => { const t = BU.start.sitzungen.find((x) => x.id === id); if (!t?.vorbereitet) { if (confirm("Diese Sitzung ist noch nicht vorbereitet.\n\nJetzt vorbereiten?")) buSitzungOeffnen(id); return; } await buSitzungLaden(id); druckStarten("sitzung"); });
+const buEinladungWahl = (nurOffen) => buSitzungWaehlen(nurOffen ? "🔔 Für welche Sitzung erinnern?" : "📨 Einladung für welche Sitzung?", (id) => buEinladung(id, nurOffen));
+async function buSitzungLaden(id) {
+  BU.s = await api("buero_sitzung", { treffen_id: id }, { warten: true });
+  const v = BU.s.vorbereitung, st = BU.s.standard;
+  BU.f = { anwesend: new Set(v ? v.anwesend : st.anwesend), anmerkung: v ? v.anmerkung || "" : BU.s.anmerkungVorschlag, tagesordnung: (v ? v.tagesordnung : st.tagesordnung).map((x) => ({ ...x })), zeilen: v ? v.zeilen : st.zeilen, neu: "" };
+}
+async function buSitzungOeffnen(id) {
+  try { await buSitzungLaden(id); } catch (e) { return melde(e.message, true); }
+  BU.sicht = "sitzung"; buZeigen(); window.scrollTo(0, 0);
+}
+function buSitzungHtml() {
+  const s = BU.s, f = BU.f; if (!s) return "";
+  const m = s.mitglieder.slice().sort((a, b) => a.name.localeCompare(b.name));
+  const nein = m.filter((x) => x.antwort === "nein"), rest = m.filter((x) => x.antwort !== "nein");
+  const haken = (x) => `<label class="bu-haken${f.anwesend.has(x.person_id) ? " an" : ""}"><input type="checkbox" ${f.anwesend.has(x.person_id) ? "checked" : ""} onchange="buAnw('${x.person_id}', this.checked)"> ${esc(x.name)} <small>${x.antwort === "ja" ? "✅" : x.antwort === "vielleicht" ? "❓" : ""}</small></label>`;
+  const verfuegbar = s.vorschlaege.filter((v) => !f.tagesordnung.some((t) => t.id === v.id));
+  return `<div class="karte bu-kopf"><img src="kc-kochmuetze-weiss.webp" alt="" class="bu-logo"><div><b>Köcheclub Werne</b><br><span style="font-size:1.15rem;font-weight:800">${esc(s.treffen.titel)}</span><br>${esc(wann(s.treffen.beginn, true))}${s.treffen.ort ? " · 📍 " + esc(s.treffen.ort) : ""}</div></div>
+    <div class="karte"><h3 style="margin-top:0">1️⃣ Wer ist dabei?</h3><p class="hinweis" style="margin:0 0 6px">Angehakt sind alle, die zugesagt haben. Antippen ändert es.</p>
+      <div class="bu-haken-liste">${rest.map(haken).join("")}</div>
+      <p style="margin:10px 0 0"><b>Entschuldigt:</b> ${nein.length ? nein.map((x) => esc(x.name) + (x.notiz ? ` <small class="hinweis">(${esc(x.notiz)})</small>` : "")).join(", ") : "–"}</p></div>
+    <div class="karte"><h3 style="margin-top:0">2️⃣ Anmerkung zum letzten Protokoll</h3>
+      <label class="feld" style="margin:0"><textarea id="buAnmerkung" rows="3" maxlength="1000" oninput="BU.f.anmerkung=this.value">${esc(f.anmerkung)}</textarea></label>
+      ${s.aufgaben.filter((a) => !a.erledigt).length ? `<p style="margin:8px 0 2px"><b>Offene Aufgaben aus dem letzten Protokoll:</b></p><ul style="margin:0;padding-left:20px">${s.aufgaben.filter((a) => !a.erledigt).map((a) => `<li>${esc(a.wer)}: ${esc(a.text)}</li>`).join("")}</ul>` : ""}</div>
+    <div class="karte"><h3 style="margin-top:0">3️⃣ Tagesordnung</h3>
+      <ol class="bu-top">${f.tagesordnung.map((t, i) => `<li class="bu-top-${t.art}"><span>${esc(t.t)}${t.art === "vorschlag" ? ' <small class="hinweis">· Vorschlag</small>' : ""}</span>
+        <span class="bu-top-knoepfe"><button ${i ? "" : "disabled"} onclick="buTop(${i},-1)" aria-label="nach oben">▲</button><button ${i < f.tagesordnung.length - 1 ? "" : "disabled"} onclick="buTop(${i},1)" aria-label="nach unten">▼</button><button onclick="buTopWeg(${i})" aria-label="streichen">✕</button></span></li>`).join("")}</ol>
+      ${verfuegbar.length ? `<p class="hinweis" style="margin:8px 0 4px">Weitere Vorschläge – antippen zum Aufnehmen:</p><div class="hl-chips">${verfuegbar.map((v) => `<button class="chip" onclick="buTopVorschlag('${v.id}')">＋ ${esc(v.text)}${v.unterstuetzt ? ` · 👍${v.unterstuetzt}` : ""}</button>`).join("")}</div>` : ""}
+      <div class="zwei" style="align-items:end"><label class="feld">Eigener Punkt<input id="buNeu" maxlength="200" placeholder="z. B. Planung Weihnachtsmarkt" value="${esc(f.neu)}" oninput="BU.f.neu=this.value"></label><button class="knopf" onclick="buTopNeu()">＋ Dazu</button></div></div>
+    <div class="karte"><h3 style="margin-top:0">4️⃣ Schreiblinien je Punkt</h3><div class="hl-chips">${s.zeilenWahl.map((z) => `<button class="chip${f.zeilen === z ? " an" : ""}" onclick="BU.f.zeilen=${z};buZeigen()">${z ? z + " Zeilen" : "keine"}</button>`).join("")}</div></div>
+    ${s.protokoll && s.protokoll.status !== "entwurf" ? '<p class="hinweis">ℹ️ Das Protokoll dieser Sitzung ist schon veröffentlicht – es wird nicht verändert.</p>' : ""}
+    <div class="bu-leiste"><button class="knopf haupt" style="width:100%;text-align:center" onclick="buSpeichern(this)">✅ Fertig – speichern</button></div>`;
+}
+function buAnw(id, an) { an ? BU.f.anwesend.add(id) : BU.f.anwesend.delete(id); }
+function buTop(i, d) { const l = BU.f.tagesordnung, j = i + d; [l[i], l[j]] = [l[j], l[i]]; buZeigen(); }
+function buTopWeg(i) { BU.f.tagesordnung.splice(i, 1); buZeigen(); }
+// neue Punkte vor „Verschiedenes“ einreihen
+function buTopEinfuegen(p) { const l = BU.f.tagesordnung, v = l.findIndex((x) => x.art === "fest" && /^Verschiedenes$/i.test(x.t)); l.splice(v < 0 ? l.length : v, 0, p); buZeigen(); }
+function buTopVorschlag(id) { const v = BU.s.vorschlaege.find((x) => x.id === id); if (v) buTopEinfuegen({ t: v.text, art: "vorschlag", id: v.id }); }
+function buTopNeu() { const t = (BU.f.neu || "").trim(); if (!t) return melde("Bitte kurz eingeben, worum es geht.", true); BU.f.neu = ""; buTopEinfuegen({ t, art: "eigen" }); }
+async function buSpeichern(knopf) {
+  const f = BU.f, s = BU.s;
+  if (!f.tagesordnung.length) return melde("Die Tagesordnung ist leer.", true);
+  await einmal(knopf, async () => {
+    try {
+      const r = await api("buero_speichern", { treffen_id: s.treffen.id, anwesend: [...f.anwesend], anmerkung: f.anmerkung, tagesordnung: f.tagesordnung, zeilen: f.zeilen });
+      s.protokoll = r.protokoll_id ? { id: r.protokoll_id, status: s.protokoll?.status || "entwurf" } : s.protokoll;
+      s.vorbereitung = { anwesend: [...f.anwesend], anmerkung: f.anmerkung, tagesordnung: f.tagesordnung, zeilen: f.zeilen };
+      buWeiterFragen("✅ Gespeichert!", `Die Vorlage ist fertig${r.protokollStand === "angelegt" ? " und als Protokoll-Entwurf angelegt" : r.protokollStand === "aktualisiert" ? ", der Protokoll-Entwurf ist aktualisiert" : ""}. Was möchtest du als Nächstes tun?`, [
+        ["🖨️ Vorlage ansehen & drucken", "buDruckJetzt()", true], ["📨 Tagesordnung an die Mitglieder senden", `buEinladung('${s.treffen.id}', false)`],
+        ...(r.protokoll_id ? [["📄 Protokoll-Entwurf öffnen", `protokollOeffnen('${r.protokoll_id}')`]] : []), ["🗂️ Zurück ins Büro", "buStart()"]]);
+    } catch (e) { melde(e.message, true); }
+  });
+}
+// Logische Abfolge: nach jedem Schritt die sinnvollen nächsten anbieten
+function buWeiterFragen(titel, text, knoepfe) {
+  blattAuf("buWeiter", `<h3 style="margin-top:0">${titel}</h3><p style="margin:0;font-size:1.05rem">${text}</p>
+    <div class="knoepfe" style="flex-direction:column;align-items:stretch">${knoepfe.map(([t, fn, haupt]) => `<button class="knopf${haupt ? " haupt" : ""}" style="text-align:center" onclick="$('buWeiter').remove();${fn}">${t}</button>`).join("")}</div>`);
+}
+function buDruckJetzt() { druckStarten("sitzung"); }
+// Druckvorlage: Kopf (Logo + Köcheclub Werne kommen aus dem Druckrahmen), Anwesenheit, Entschuldigt, Anmerkung, Tagesordnung mit Linien
+function druckSitzung() {
+  const s = BU.s, f = BU.f; if (!s || !f) throw new Error("Bitte die Sitzung zuerst im Büro vorbereiten.");
+  const m = s.mitglieder.slice().sort((a, b) => a.name.localeCompare(b.name)), nein = m.filter((x) => x.antwort === "nein"), rest = m.filter((x) => x.antwort !== "nein");
+  const linien = (n) => Array.from({ length: n }, () => '<div style="border-bottom:1px solid #999;height:8.5mm"></div>').join("");
+  const box = (an) => `<span style="display:inline-block;width:4.2mm;height:4.2mm;border:1.4px solid #222;margin-right:2mm;vertical-align:-0.6mm;text-align:center;line-height:4mm;font-size:3.6mm;font-weight:800">${an ? "✓" : ""}</span>`;
+  const h = (t) => `<h2 style="font-size:4.6mm;margin:6mm 0 2mm;border-bottom:2px solid #741521;padding-bottom:1mm">${t}</h2>`;
+  const auf = s.aufgaben.filter((a) => !a.erledigt);
+  const html = `${h("Anwesend")}<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.5mm 4mm;font-size:3.6mm">${rest.map((x) => `<div>${box(f.anwesend.has(x.person_id))}${esc(x.name)}</div>`).join("")}</div>
+    <p style="margin:3mm 0 0;font-size:3.6mm"><b>Entschuldigt:</b> ${nein.length ? nein.map((x) => esc(x.name) + (x.notiz ? ` (${esc(x.notiz)})` : "")).join(", ") : "–"}</p>
+    <p style="margin:2mm 0 0;font-size:3.6mm"><b>Gäste:</b> ______________________________________________</p>
+    ${h("Anmerkung zum letzten Protokoll")}<div style="font-size:3.6mm;white-space:pre-wrap">${esc(f.anmerkung || "")}</div>
+    ${auf.length ? `<p style="margin:2mm 0 1mm;font-size:3.6mm"><b>Offene Aufgaben:</b></p><ul style="margin:0;padding-left:6mm;font-size:3.5mm">${auf.map((a) => `<li>${box(false)}${esc(a.wer)}: ${esc(a.text)}</li>`).join("")}</ul>` : ""}${linien(2)}
+    ${h("Tagesordnung")}${f.tagesordnung.map((t, i) => `<div style="break-inside:avoid;margin:0 0 3mm"><div style="font-size:4mm;font-weight:800;margin-top:3mm">TOP ${i + 1}: ${esc(t.t)}</div>${linien(f.zeilen)}</div>`).join("")}
+    <div style="break-inside:avoid">${h("Beschlüsse / Sonstiges")}${linien(Math.max(3, f.zeilen))}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10mm;margin-top:12mm;font-size:3.3mm"><div style="border-top:1px solid #222;padding-top:1mm">Protokoll (Name, Unterschrift)</div><div style="border-top:1px solid #222;padding-top:1mm">Sitzungsleitung (Name, Unterschrift)</div></div></div>`;
+  return { titel: s.treffen.titel, unter: `${wann(s.treffen.beginn, true)}${s.treffen.ort ? " · " + s.treffen.ort : ""}`, html, fuss: "Protokoll-Vorlage aus dem Büro" };
+}
+// Einladung / Erinnerung: Vorschau, Weg wählen, erst nach Bestätigung senden
+async function buEinladung(id, nurOffen) {
+  let s; try { s = await api("buero_sitzung", { treffen_id: id }, { warten: true }); } catch (e) { return melde(e.message, true); }
+  const top = (s.vorbereitung?.tagesordnung || []).map((t, i) => `${i + 1}. ${t.t}`);
+  if (!nurOffen && !top.length && !confirm("Die Sitzung ist noch nicht vorbereitet – die Einladung geht dann ohne Tagesordnung.\n\nTrotzdem weiter?")) return buSitzungOeffnen(id);
+  const ohne = s.mitglieder.filter((m) => !m.antwort || m.antwort === "keine").length;
+  const anzahl = nurOffen ? ohne : s.mitglieder.length;
+  const schon = nurOffen ? s.vorbereitung?.erinnerung_am : s.vorbereitung?.einladung_am;
+  window.__buSend = { id, nurOffen, wege: [] };
+  blattAuf("buEinladung", `<h3 style="margin-top:0">${nurOffen ? "🔔 Erinnerung" : "📨 Einladung"}: ${esc(s.treffen.titel)}</h3>
+    ${schon ? `<p class="hinweis" style="margin:0">ℹ️ Schon einmal gesendet: ${esc(zeitKurz(schon))}</p>` : ""}
+    <div class="karte" style="margin:0;white-space:pre-wrap;font-size:.95rem">${esc(nurOffen ? `Kommst du? ${s.treffen.titel}\n${wann(s.treffen.beginn, true)}\nBitte kurz in der App zu- oder absagen.` : `Einladung: ${s.treffen.titel}\n${wann(s.treffen.beginn, true)}${s.treffen.ort ? "\n" + s.treffen.ort : ""}${top.length ? "\n\nTagesordnung:\n" + top.join("\n") : ""}`)}</div>
+    <label class="feld">Persönliche Zeile (freiwillig)<input id="buZusatz" maxlength="500" placeholder="z. B. Bitte Kassenbuch mitbringen"></label>
+    <div class="hinweis" style="margin:4px 0">Wie benachrichtigen?</div>
+    <div class="hl-chips" id="buWege">${[["", "⚙️ Wie jeder es eingestellt hat"], ["push", "🔔 Push"], ["email", "✉️ E-Mail"], ["beide", "🔔+✉️ Beides"]].map(([w, t]) => `<button class="chip${w === "" ? " an" : ""}" data-w="${w}" onclick="buWeg('${w}')">${t}</button>`).join("")}</div>
+    <div class="knoepfe" style="flex-direction:column;align-items:stretch"><button class="knopf haupt" style="text-align:center" ${anzahl ? "" : "disabled"} onclick="buSenden(this, ${anzahl})">${anzahl ? `📨 Jetzt an ${anzahl} Mitglieder senden` : "Alle haben schon geantwortet 👍"}</button>
+    <button class="knopf" style="text-align:center" onclick="$('buEinladung').remove()">Abbrechen</button></div>`);
+}
+function buWeg(w) { window.__buSend.wege = w === "beide" ? ["push", "email"] : w ? [w] : []; document.querySelectorAll("#buWege .chip").forEach((b) => b.classList.toggle("an", b.dataset.w === w)); }
+async function buSenden(knopf, anzahl) {
+  const x = window.__buSend;
+  if (!confirm(`${x.nurOffen ? "Erinnerung" : "Einladung"} jetzt an ${anzahl} Mitglieder senden?`)) return;
+  await einmal(knopf, async () => {
+    try {
+      const r = await api("buero_einladung", { treffen_id: x.id, nur_offen: x.nurOffen, wege: x.wege, text: $("buZusatz")?.value || "" });
+      $("buEinladung")?.remove();
+      if (x.nurOffen) { melde(`🔔 Erinnerung an ${r.empfaenger} Mitglieder gesendet`); return buStart(); }
+      buWeiterFragen("✅ Einladung gesendet!", `${r.empfaenger} Mitglieder haben die Einladung bekommen. Ein paar Tage vor der Sitzung kannst du alle erinnern, die noch nicht geantwortet haben.`,
+        [["🗂️ Zurück ins Büro", "buStart()", true], ["🏠 Zur Club-App", "zeige('start')"]]);
     } catch (e) { melde(e.message, true); }
   });
 }
@@ -8431,6 +8634,7 @@ const DRUCKARTEN = {
   termine: { titel: "🖨️ Termine drucken", optionen: () => druckTermineOptionen(), bauen: (o) => (o.art === "todo" ? druckTodo(o) : druckKalender(o)) },
   treffen: { bauen: (o, id) => druckTreffen(id) },
   protokoll: { bauen: () => druckProtokoll() },
+  sitzung: { bauen: () => druckSitzung() }, // KC-CLUB-BUERO (1.25.0): Protokoll-Vorlage mit Schreiblinien
   erstattung: { titel: "🖨️ Erstattungsantrag drucken", optionen: () => druckErstattungOptionen(), bauen: (o) => druckErstattung(o) },
   anleitung: { bauen: () => druckAnleitung() },
   ueberblick: { bauen: () => druckUeberblick() },
@@ -9811,6 +10015,7 @@ function suAppListe() {
     ["🙋", "Hilfe suchen (Wer kann helfen?)", "hilfe helfen helfer aufruf aufbau abbau tische tragen kochen spülen einkauf fahrdienst verkauf stand", () => { hlStart("helfen"); hilfeNeu(); }],
     ["📦", "Etwas ausleihen", "ausleihen leihen verleih stehtisch bierzelt garnitur pavillon zapfanlage glühwein kühlbox bräter warmhalte kabeltrommel", () => { hlStart("leihen"); leihNeu(); }],
     ["💝", "Spendenprojekt vorschlagen", "spende spenden spendenprojekt kinderhospiz geld verein", () => { zeige("vorschlaege"); vorschlagForm("spende"); }],
+    ...(ICH?.vorstand ? [["🗂️", "Büro – Sitzung vorbereiten, Einladung", "büro buero sitzung vorbereiten tagesordnung einladung protokoll vorlage drucken eingang", () => buStart()]] : []),
     ["📸", "Bildschirmfoto der App", "bildschirmfoto screenshot foto bildschirm aufnahme zeigen problem", () => bfStart()],
     ["🆘", "Wo bin ich? (SOS)", "wo bin ich adresse standort notfall sos", () => sosStart()], ["🪪", "Mein Notfallpass", "notfallpass allergien medikamente blutgruppe notfall", () => { sosStart(); nfpBearbeiten(); }],
   ].map(([sym, t, w, fn]) => ({ sym, t, w, fn }));
@@ -10197,6 +10402,8 @@ async function fpAdmin(tage) {
     else if (h === "#standort") zeige("standort");
     else if (h === "#dienstwunsch") dwOeffnen();
     else if (["#termine", "#vorschlaege", "#aktionen", "#fotos", "#protokolle", "#dienste", "#nachrichten", "#mitglieder", "#einstellungen", "#archiv", "#helfen"].includes(h)) zeige(h.slice(1));
+    else if (h === "#buero" && ICH?.vorstand) buStart();
+    if (!h || h === "#") setTimeout(() => buGrussFragen(), 1500); // KC-CLUB-BUERO: Begrüßung der Clubleitung
   });
   updatePruefen(false);
   setTimeout(stStart, 2500); // KC-CLUB-STANDORT

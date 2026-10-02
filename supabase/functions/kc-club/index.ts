@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.24.1";
+const SERVER_VERSION = "1.25.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -1462,6 +1462,81 @@ async function hilfeListe(ich: Ich) {
   };
 }
 
+// ---------- KC-CLUB-BUERO (1.25.0, Wunsch Hansi): Büro für die Clubleitung (Clubsprecher, Kassenwart, Admin) ----------
+// Sitzung vorbereiten (Anwesenheit, Anmerkung zum letzten Protokoll, Tagesordnung, Schreiblinien) → Protokoll-Entwurf →
+// Ausdruck → Einladung mit Tagesordnung → Erinnerung an alle ohne Antwort. Dazu der Eingang auf einen Blick.
+// Feste Tagesordnungspunkte (Freigabe Hansi „passt“); die Vorschläge kommen vor „Verschiedenes“.
+const BUERO_TOP_VORNE = ["Begrüßung", "Genehmigung des letzten Protokolls", "Bericht des Kassenwarts"];
+const BUERO_TOP_HINTEN = ["Verschiedenes"];
+const BUERO_ZEILEN = [0, 3, 5, 8, 12];
+const topVorschlag = (v: any) => v.art === "spende" ? `${v.titel}${(v.spenden ?? []).length > 1 ? ` (zusammen ${euroRund(spendenSumme(v.spenden))})` : ""}` : v.art === "abstimmung" ? `🗳️ ${v.titel}` : v.titel;
+async function bueroNaechste() {
+  const { data } = await db.from("kc_club_treffen").select("id,titel,beginn,ort,art,status").eq("status", "geplant").neq("art", "veranstaltung")
+    .gte("beginn", new Date(Date.now() - 6 * 3600000).toISOString()).order("beginn").limit(6);
+  return data ?? [];
+}
+async function bueroSitzung(ich: Ich, tid: string) {
+  const { data: t } = await db.from("kc_club_treffen").select("*").eq("id", tid).maybeSingle();
+  if (!t) throw new Fehler("Sitzung nicht gefunden.", 404);
+  const [mitglieder, { data: teil }, { data: vs }, { data: prep }, { data: pr }, { data: letzt }] = await Promise.all([
+    aktiveMitglieder(),
+    db.from("kc_club_teilnahme").select("person_id,antwort,notiz").eq("treffen_id", tid),
+    db.from("kc_club_vorschlaege").select("*").or(`treffen_id.eq.${tid},and(treffen_id.is.null,status.eq.offen)`).neq("status", "zurueckgezogen").order("erstellt_am"),
+    db.from("kc_club_buero_sitzung").select("*").eq("treffen_id", tid).maybeSingle(),
+    db.from("kc_club_sitzungsprotokolle").select("id,status,version").eq("treffen_id", tid).maybeSingle(),
+    db.from("kc_club_sitzungsprotokolle").select("id,titel,datum,status,einspruch_bis,veroeffentlicht_am").lt("datum", berlinTag(new Date(t.beginn))).order("datum", { ascending: false }).limit(1).maybeSingle(),
+  ]);
+  const { data: auf } = letzt ? await db.from("kc_club_aufgaben").select("person_id,text,faellig,erledigt_am").eq("protokoll_id", letzt.id) : { data: [] as any[] };
+  const leute = await personen((auf ?? []).map((a: any) => a.person_id));
+  const ant = new Map<string, any>((teil ?? []).map((x: any) => [x.person_id as string, x]));
+  const unterst = new Map<string, number>();
+  if ((vs ?? []).length) {
+    const { data: st } = await db.from("kc_club_stimmen").select("vorschlag_id").in("vorschlag_id", (vs ?? []).map((v: any) => v.id));
+    (st ?? []).forEach((s: any) => unterst.set(s.vorschlag_id, (unterst.get(s.vorschlag_id) ?? 0) + 1));
+  }
+  const vorschlaege: any[] = (vs ?? []).map((v: any) => ({ id: v.id, art: v.art, titel: v.titel, text: topVorschlag(v), fuerDiese: v.treffen_id === tid, status: v.status, unterstuetzt: unterst.get(v.id) ?? 0 }));
+  // Vorschlag für die Anmerkung: Stand des letzten Protokolls
+  let anmerkungVorschlag = "";
+  if (letzt) {
+    const d = letzt.datum.split("-").reverse().join(".");
+    anmerkungVorschlag = letzt.status === "entwurf" ? `Protokoll vom ${d} ist noch nicht veröffentlicht.`
+      : letzt.einspruch_bis && new Date(letzt.einspruch_bis).getTime() > Date.now() ? `Protokoll vom ${d}: Einspruchsfrist läuft bis ${wann(letzt.einspruch_bis)}.`
+      : `Protokoll vom ${d} ist genehmigt (keine Einsprüche).`;
+  }
+  const standardTop = [...BUERO_TOP_VORNE.map((x) => ({ t: x, art: "fest" })), ...vorschlaege.filter((v) => v.fuerDiese).map((v) => ({ t: v.text, art: "vorschlag", id: v.id })), ...BUERO_TOP_HINTEN.map((x) => ({ t: x, art: "fest" }))];
+  return {
+    treffen: { id: t.id, titel: t.titel, beginn: t.beginn, ort: t.ort },
+    mitglieder: mitglieder.map((m) => ({ person_id: m.person_id, name: m.display_name, antwort: ant.get(m.person_id)?.antwort ?? null, notiz: ant.get(m.person_id)?.notiz ?? null })),
+    vorschlaege, anmerkungVorschlag,
+    letztes: letzt ? { titel: letzt.titel, datum: letzt.datum, status: letzt.status } : null,
+    aufgaben: (auf ?? []).map((a: any) => ({ wer: leute.get(a.person_id)?.display_name || a.person_id, text: a.text, faellig: a.faellig, erledigt: !!a.erledigt_am })),
+    vorbereitung: prep ? { anwesend: prep.anwesend, anmerkung: prep.anmerkung, tagesordnung: prep.tagesordnung, zeilen: prep.zeilen, einladung_am: prep.einladung_am, erinnerung_am: prep.erinnerung_am } : null,
+    standard: { anwesend: mitglieder.filter((m) => ant.get(m.person_id)?.antwort === "ja").map((m) => m.person_id), tagesordnung: standardTop, zeilen: 5 },
+    protokoll: pr ? { id: pr.id, status: pr.status } : null,
+    zeilenWahl: BUERO_ZEILEN,
+  };
+}
+async function bueroEingang() {
+  const leer = { count: 0 };
+  const zahl = async (q: any) => { try { const r = await q; return r.count ?? 0; } catch { return 0; } };
+  const [ausleihen, vorschlaege, hilfe, archiv, aufgaben, entwuerfe] = await Promise.all([
+    zahl(db.from("kc_club_ausleihen").select("id", { count: "exact", head: true }).eq("status", "angefragt")),
+    zahl(db.from("kc_club_vorschlaege").select("id", { count: "exact", head: true }).eq("status", "offen")),
+    zahl(db.from("kc_club_hilfe_aufrufe").select("id", { count: "exact", head: true }).is("geschlossen_am", null).gte("datum", berlinTag(new Date()))),
+    zahl(db.from("kc_club_archiv_dokumente").select("id", { count: "exact", head: true }).eq("status", "pruefung").is("geloescht_am", null)),
+    zahl(db.from("kc_club_aufgaben").select("id", { count: "exact", head: true }).is("erledigt_am", null)),
+    zahl(db.from("kc_club_sitzungsprotokolle").select("id", { count: "exact", head: true }).eq("status", "entwurf")),
+  ]);
+  void leer;
+  return { ausleihen, vorschlaege, hilfe, archiv, aufgaben, entwuerfe };
+}
+function bueroTopListe(roh: unknown) {
+  const l = (Array.isArray(roh) ? roh : []).map((x: any) => ({ t: txt(x?.t, 200), art: ["fest", "vorschlag", "eigen"].includes(x?.art) ? x.art : "eigen", ...(x?.id ? { id: String(x.id).slice(0, 40) } : {}) }))
+    .filter((x) => x.t);
+  if (l.length > 40) throw new Fehler("Höchstens 40 Tagesordnungspunkte.");
+  return l;
+}
+
 // ---------- Sitzungsprotokolle (KC-CLUB-PROTOKOLLE) & Aufgaben (KC-CLUB-AUFGABEN) ----------
 // Schreiben darf jedes Mitglied mit Leserecht (der Schriftführer wechselt); ändern: Verfasser oder Organisation.
 // Ablauf: Vorlage → Entwurf (Foto/Datei anhängen) → veröffentlichen → 7 Tage Einspruch → genehmigt.
@@ -2771,6 +2846,95 @@ Köcheclub Werne`,
         await geloescht(ich, "vorschlag", { vorschlag: v, stimmen: v.geheim ? [] : st ?? [], geheim: (geh ?? []).map((g: any) => g.wahl) });
         await db.from("kc_club_vorschlaege").delete().eq("id", v.id);
         return json({ ok: true });
+      }
+
+      // ----- KC-CLUB-BUERO (1.25.0): Büro für die Clubleitung -----
+      case "buero_start": {
+        nurVorstand(ich);
+        const [sitzungen, eingang] = await Promise.all([bueroNaechste(), bueroEingang()]);
+        const ids = sitzungen.map((t: any) => t.id);
+        const [{ data: prep }, { data: teil }] = ids.length ? await Promise.all([
+          db.from("kc_club_buero_sitzung").select("treffen_id,einladung_am,erinnerung_am,geaendert_am").in("treffen_id", ids),
+          db.from("kc_club_teilnahme").select("treffen_id,antwort").in("treffen_id", ids),
+        ]) : [{ data: [] as any[] }, { data: [] as any[] }];
+        const anzahl = (await aktiveMitglieder()).length;
+        return json({
+          sitzungen: sitzungen.map((t: any) => {
+            const p = (prep ?? []).find((x: any) => x.treffen_id === t.id), a = (teil ?? []).filter((x: any) => x.treffen_id === t.id);
+            return { ...t, vorbereitet: !!p, einladung_am: p?.einladung_am ?? null, erinnerung_am: p?.erinnerung_am ?? null,
+              ja: a.filter((x: any) => x.antwort === "ja").length, nein: a.filter((x: any) => x.antwort === "nein").length, ohne: Math.max(0, anzahl - a.filter((x: any) => x.antwort && x.antwort !== "keine").length) };
+          }),
+          eingang,
+        });
+      }
+
+      case "buero_sitzung": nurVorstand(ich); return json(await bueroSitzung(ich, String(p.treffen_id || "")));
+
+      case "buero_speichern": {
+        nurVorstand(ich);
+        const tid = String(p.treffen_id || "");
+        const { data: t } = await db.from("kc_club_treffen").select("*").eq("id", tid).maybeSingle();
+        if (!t) throw new Fehler("Sitzung nicht gefunden.", 404);
+        const aktiv = new Set((await aktiveMitglieder()).map((m) => m.person_id));
+        const anwesend = [...new Set<string>((Array.isArray(p.anwesend) ? p.anwesend : []).map(String))].filter((id) => aktiv.has(id));
+        const tagesordnung = bueroTopListe(p.tagesordnung);
+        const zeilen = BUERO_ZEILEN.includes(Number(p.zeilen)) ? Number(p.zeilen) : 5;
+        const anmerkung = txt(p.anmerkung, 1000) || null;
+        const { error } = await db.from("kc_club_buero_sitzung").upsert({ treffen_id: tid, anwesend, anmerkung, tagesordnung, zeilen, geaendert_von: ich.person_id, geaendert_am: jetzt() });
+        if (error) throw new Fehler("Speichern fehlgeschlagen.", 500);
+        // Protokoll-Entwurf anlegen bzw. (solange nie veröffentlicht) mitführen – veröffentlichte Protokolle bleiben unberührt
+        const { data: teil } = await db.from("kc_club_teilnahme").select("person_id,antwort").eq("treffen_id", tid);
+        const entschuldigt = (teil ?? []).filter((x: any) => x.antwort === "nein").map((x: any) => x.person_id).filter((id: string) => !anwesend.includes(id));
+        const g = t.gastgeber_person_id ? (await personen([t.gastgeber_person_id])).get(t.gastgeber_person_id) : null;
+        const felder = { titel: t.titel, datum: berlinTag(new Date(t.beginn)), ort: t.ort || (g ? `bei ${g.display_name}` : null), anwesend, entschuldigt, tagesordnung: tagesordnung.map((x) => x.t) };
+        const { data: pr } = await db.from("kc_club_sitzungsprotokolle").select("id,status,version").eq("treffen_id", tid).maybeSingle();
+        let protokollId = pr?.id ?? null, protokollStand = "unveraendert";
+        if (!pr) {
+          const { data: neu } = await db.from("kc_club_sitzungsprotokolle").insert({ ...felder, treffen_id: tid, verfasser: ich.person_id }).select("id").single();
+          protokollId = neu?.id ?? null; protokollStand = neu ? "angelegt" : "fehler";
+          if (neu) await protokoll(ich.person_id, "sitzungsprotokoll_angelegt", { protokoll: neu.id, treffen: tid, buero: true });
+        } else if (pr.status === "entwurf" && pr.version === 1 && new Date(t.beginn).getTime() > Date.now()) {
+          // nur vor der Sitzung – danach gehört der Entwurf dem Schriftführer
+          await db.from("kc_club_sitzungsprotokolle").update({ ...felder, geaendert_am: jetzt() }).eq("id", pr.id).eq("status", "entwurf");
+          protokollStand = "aktualisiert";
+        }
+        await protokoll(ich.person_id, "buero_sitzung_vorbereitet", { treffen: tid, punkte: tagesordnung.length, anwesend: anwesend.length, protokoll: protokollStand });
+        return json({ ok: true, protokoll_id: protokollId, protokollStand });
+      }
+
+      case "buero_einladung": {
+        nurVorstand(ich);
+        const tid = String(p.treffen_id || "");
+        const nurOffen = !!p.nur_offen;
+        const { data: t } = await db.from("kc_club_treffen").select("*").eq("id", tid).maybeSingle();
+        if (!t || t.status !== "geplant") throw new Fehler("Sitzung nicht gefunden oder abgesagt.", 404);
+        const { data: prep } = await db.from("kc_club_buero_sitzung").select("*").eq("treffen_id", tid).maybeSingle();
+        const top = (prep?.tagesordnung ?? []).map((x: any, i: number) => `${i + 1}. ${x.t}`);
+        const alle = (await aktiveMitglieder()).map((m) => m.person_id);
+        const { data: teil } = await db.from("kc_club_teilnahme").select("person_id,antwort").eq("treffen_id", tid);
+        const geantwortet = new Set((teil ?? []).filter((x: any) => x.antwort && x.antwort !== "keine").map((x: any) => x.person_id));
+        const ziel = (nurOffen ? alle.filter((id) => !geantwortet.has(id)) : alle).filter((id) => id !== ich.person_id);
+        if (!ziel.length) return json({ ok: true, versand: { gesendet: 0 }, empfaenger: 0 });
+        const g = t.gastgeber_person_id ? (await personen([t.gastgeber_person_id])).get(t.gastgeber_person_id) : null;
+        const ort = t.ort || (g ? `bei ${g.display_name}` : "");
+        const zusatz = txt(p.text, 500);
+        const url = APP_URL + "#termine";
+        const vars = nurOffen ? {
+          titel: `🔔 Kommst du? ${t.titel}`, kurz: `${wann(t.beginn)}${ort ? " · " + ort : ""} – bitte kurz zu- oder absagen.`,
+          betreff: `Köcheclub Werne – Erinnerung: ${t.titel} am ${wann(t.beginn)}`,
+          text: `Hallo,\n\nkleine Erinnerung an unsere Sitzung:\n\n${t.titel}\n${wann(t.beginn, true)}${ort ? `\n${ort}` : ""}\n\nBitte sag kurz in der App zu oder ab – das hilft bei der Vorbereitung.${zusatz ? `\n\n${zusatz}` : ""}\n\n${url}\n\nViele Grüße\n${ich.name}\nKöcheclub Werne`,
+          url,
+        } : {
+          titel: `📨 Einladung: ${t.titel}`, kurz: `${wann(t.beginn)}${ort ? " · " + ort : ""}${top.length ? ` · ${top.length} Tagesordnungspunkte` : ""}`,
+          betreff: `Köcheclub Werne – Einladung: ${t.titel} am ${wann(t.beginn)}`,
+          text: `Hallo,\n\nhiermit lade ich herzlich ein zu unserer Sitzung:\n\n${t.titel}\n${wann(t.beginn, true)}${ort ? `\n${ort}` : ""}${top.length ? `\n\nTagesordnung:\n${top.join("\n")}` : ""}${zusatz ? `\n\n${zusatz}` : ""}\n\nBitte in der App kurz zu- oder absagen. Themen kannst du jederzeit unter „Vorschläge“ einreichen.\n${url}\n\nViele Grüße\n${ich.name}\nKöcheclub Werne`,
+          url,
+        };
+        const wege = zustellwege(p.wege);
+        const versand = await sendenGewaehlt("club_treffen", ziel, wege, vars, `club-buero-${nurOffen ? "erinnerung" : "einladung"}:${tid}:${Date.now()}`);
+        await db.from("kc_club_buero_sitzung").upsert({ treffen_id: tid, ...(prep ? {} : { geaendert_von: ich.person_id }), [nurOffen ? "erinnerung_am" : "einladung_am"]: jetzt() }, { onConflict: "treffen_id" });
+        await protokoll(ich.person_id, nurOffen ? "buero_erinnerung" : "buero_einladung", { treffen: tid, empfaenger: ziel.length, wege, versand });
+        return json({ ok: true, versand, empfaenger: ziel.length });
       }
 
       // ----- KC-CLUB-LEIHEN (1.23.0): Vereinsgegenstände ausleihen – Anfrage an die Clubleitung, eine Zusage genügt -----

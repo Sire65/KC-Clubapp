@@ -1907,7 +1907,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/is\("voll_gemeldet_am", null\)/.test(server), "„genug Helfer“ nur einmal");
   const k = html.slice(html.indexOf("const KACHELN = {"), html.indexOf("  mein: ["));
   assert.ok(/\{ id: "helfen", sym: "🤝", t: "Helfen & Leihen", u: "Wer kann helfen\? · Ausleihen", aktion: "hlStart\(\)" \}/.test(k), "Kachel 🤝 im Register Verein");
-  assert.ok(/id="v-helfen"/.test(html) && /"sicherheit", "helfen"\]\.forEach/.test(html) && /"#archiv", "#helfen"\]\.includes\(h\)/.test(html), "Ansicht + Sprung #helfen");
+  assert.ok(/id="v-helfen"/.test(html) && /"sicherheit", "helfen"[,\]]/.test(html) && /"#archiv", "#helfen"\]\.includes\(h\)/.test(html), "Ansicht + Sprung #helfen");
   assert.ok(/onclick="hlTab\('helfen'\)">🙋 Wer kann helfen\?/.test(html) && /onclick="hlTab\('leihen'\)">📦 Ausleihen/.test(html), "zwei Bereiche");
   assert.ok(/const hlJs = \(v\) => JSON\.stringify\(v\)\.replace\(\/&\/g, "&amp;"\)\.replace\(\/'\/g, "&#39;"\)/.test(html), "Werte im onclick sicher maskiert");
 }
@@ -1967,6 +1967,27 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/if \(a === "ja" && bisher !== "ja" && TREFFEN_IDX\.get\(id\)\?\.art !== "veranstaltung"\) themaFragen\(id\)/.test(html), "Frage nur bei neuer Zusage zum Club-Treffen");
   assert.ok(/Deine Vorschläge sind immer willkommen!/.test(html) && /zeige\("vorschlaege"\); VS_ZIEL = id;/.test(html), "Hinweis + Vorschläge");
   assert.ok(/VS_ZIEL && VORSCHLAG_TREFFEN\.some\(\(t\) => t\.id === VS_ZIEL\) \? VS_ZIEL/.test(html), "Sitzung vorgewählt");
+}
+
+// 174. 1.25.0: Büro für die Clubleitung (KC-CLUB-BUERO)
+{
+  for (const a of ["buero_start", "buero_sitzung", "buero_speichern", "buero_einladung"]) assert.ok(aktionen.has(a) && aufrufe.has(a), `Büro-Aktion ${a} fehlt`);
+  for (const a of ["buero_start", "buero_speichern", "buero_einladung"]) {
+    const c = server.slice(server.indexOf(`case "${a}"`), server.indexOf(`case "${a}"`) + 200);
+    assert.ok(/nurVorstand\(ich\)/.test(c), `${a} nur Clubleitung`);
+  }
+  assert.ok(/case "buero_sitzung": nurVorstand\(ich\);/.test(server), "buero_sitzung nur Clubleitung");
+  assert.ok(/const BUERO_TOP_VORNE = \["Begrüßung", "Genehmigung des letzten Protokolls", "Bericht des Kassenwarts"\]/.test(server) && /const BUERO_TOP_HINTEN = \["Verschiedenes"\]/.test(server), "feste Tagesordnungspunkte");
+  const sp = server.slice(server.indexOf('case "buero_speichern"'), server.indexOf('case "buero_einladung"'));
+  assert.ok(/pr\.status === "entwurf" && pr\.version === 1 && new Date\(t\.beginn\)\.getTime\(\) > Date\.now\(\)/.test(sp), "veröffentlichte Protokolle / Entwürfe nach Sitzungsbeginn unberührt");
+  const ei = server.slice(server.indexOf('case "buero_einladung"'), server.indexOf('case "leihen_liste"'));
+  assert.ok(/nurOffen \? alle\.filter\(\(id\) => !geantwortet\.has\(id\)\) : alle\)\.filter\(\(id\) => id !== ich\.person_id\)/.test(ei), "Erinnerung nur an Mitglieder ohne Antwort");
+  assert.ok(/if \(!confirm\(`\$\{x\.nurOffen \? "Erinnerung" : "Einladung"\} jetzt an \$\{anzahl\} Mitglieder senden\?`\)\) return;/.test(html), "Senden erst nach Bestätigung");
+  assert.ok(/\{ id: "buero", sym: "🗂️", t: "Büro",[^\n]*nur: \(\) => !!ICH\?\.vorstand \}/.test(html), "Kachel nur für die Clubleitung");
+  assert.ok(/if \(!buDarf\(\)\) return;/.test(html) && /sessionStorage\.getItem\("kc_buero_gefragt"\)/.test(html) && /if \(!h \|\| h === "#"\) setTimeout\(\(\) => buGrussFragen\(\), 1500\)/.test(html), "Begrüßung einmal je Start, nur Clubleitung, nicht nach Sprung");
+  assert.ok(/sitzung: \{ bauen: \(\) => druckSitzung\(\) \}/.test(html) && /Anmerkung zum letzten Protokoll/.test(html) && /TOP \$\{i \+ 1\}/.test(html), "Druckvorlage");
+  const mig = lies("supabase/migrations/20261002_kc_club_v1250_buero.sql");
+  assert.ok(/enable row level security/.test(mig) && /revoke all on kc_club_buero_sitzung from anon, authenticated/.test(mig) && /kc_db_mirror_table_rules/.test(mig), "RLS + Spiegel");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

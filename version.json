@@ -1,11 +1,20 @@
 {
-  "version": "1.24.1",
+  "version": "1.25.0",
   "datum": "2026-10-02",
   "neu": [
-    "💡 Wer bei einem Club-Treffen auf „Ich komme“ tippt, wird gefragt, ob er ein Thema für die Sitzung vorschlagen möchte – bei „Ja“ öffnen sich die Vorschläge mit kurzem Hinweis, die Sitzung ist schon vorgewählt",
-    "📸 Bildschirmfoto der App: Symbol antippen (Schnellstart oder Suche) → in Ruhe zur richtigen Stelle gehen → roten Auslöser drücken. Danach mit dem Finger rot einkreisen und das Bild in einen Chat, als Problem an Hansi, ins Archiv oder aufs Handy schicken"
+    "🗂️ Büro für die Clubleitung (Clubsprecher, Kassenwart, Admin): Begrüßung beim Start „Möchtest du etwas im Büro erledigen?“, alles als Kacheln, und die App zeigt immer den nächsten sinnvollen Schritt",
+    "📝 Sitzung vorbereiten: Anwesenheit (Zusagen schon angehakt), Entschuldigte, Anmerkung zum letzten Protokoll, Tagesordnung mit den eingegangenen Vorschlägen – daraus entsteht der Protokoll-Entwurf und eine Druckvorlage mit Logo und Schreiblinien",
+    "📨 Danach mit einem Tipp: Einladung mit Tagesordnung an alle senden – und später alle erinnern, die noch nicht geantwortet haben (Admin)"
   ],
   "verlauf": [
+    {
+      "version": "1.25.0",
+      "neu": [
+        "🗂️ Büro für die Clubleitung (Clubsprecher, Kassenwart, Admin): Begrüßung beim Start „Möchtest du etwas im Büro erledigen?“, alles als Kacheln, und die App zeigt immer den nächsten sinnvollen Schritt",
+        "📝 Sitzung vorbereiten: Anwesenheit (Zusagen schon angehakt), Entschuldigte, Anmerkung zum letzten Protokoll, Tagesordnung mit den eingegangenen Vorschlägen – daraus entsteht der Protokoll-Entwurf und eine Druckvorlage mit Logo und Schreiblinien",
+        "📨 Danach mit einem Tipp: Einladung mit Tagesordnung an alle senden – und später alle erinnern, die noch nicht geantwortet haben (Admin)"
+      ]
+    },
     {
       "version": "1.24.1",
       "neu": [
