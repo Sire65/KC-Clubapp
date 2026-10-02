@@ -1,5 +1,12 @@
 # Änderungen
 
+## 1.38.0 – 2026-10-02 (DEV)
+
+- KC-CLUB-TAGESINFO-MANUELL (Wunsch Hansi, keine neue Kachel): Die Tages-Übersicht vom Start ist jederzeit wieder
+  aufrufbar – Knopf „📋 Übersicht“ rechts in der Karte „Heute wichtig“ und in der Büro-Begrüßung (nur Clubleitung:
+  Clubsprecher, Kassenwart, Admin). Manuell aufgerufen bleibt „Seit deinem letzten Besuch“ auf dem Stand vom App-Start
+  (Merkpunkt wird nur beim automatischen Start-Aufruf weitergesetzt).
+
 ## 1.37.0 – 2026-10-02 (DEV)
 
 - KC-CLUB-BUERO-RECHTE (Wunsch Hansi): Der Admin schaltet das Büro je Mitglied frei – im Büro unter „🔐 Verwaltung →

@@ -2160,6 +2160,13 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/\.eingabe \.innen > #mikroKnopf\.rund:not\(#sendenKnopf\) \{ background: #fff !important; border: 3px solid/.test(html), "Mikrofon gut erkennbar");
 }
 
+// 191. 1.38.0: Tages-Übersicht nochmal aufrufen (KC-CLUB-TAGESINFO-MANUELL)
+{
+  assert.ok(/id="tiKnopfStart"[^>]*onclick="tagesinfoZeigen\(true\)">📋 Übersicht<\/button>/.test(html) && /\$\("tiKnopfStart"\)\?\.classList\.toggle\("versteckt", !ICH\?\.vorstand\)/.test(html), "Knopf bei „Heute wichtig“ nur Clubleitung");
+  assert.ok(/\$\{ICH\?\.vorstand \? '<button class="knopf klein" style="margin-left:auto" onclick="tagesinfoZeigen\(true\)">📋 Übersicht<\/button>' : ""\}/.test(html), "Knopf im Büro");
+  assert.ok(/async function tagesinfoZeigen\(manuell = false\) \{\s*if \(!ICH\?\.vorstand\) return;/.test(html) && /if \(!manuell\) try \{ localStorage\.setItem\(TI_SEIT/.test(html), "manuell verschiebt den Merkpunkt nicht");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

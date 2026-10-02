@@ -1310,7 +1310,7 @@
     <div class="raster" id="raster" oncontextmenu="return false"></div>
     <div id="kaAusHinweis"></div>
     <div class="wischhinweis">‹ wischen für weitere Bereiche ›</div>
-    <div class="karte"><h3>Heute wichtig</h3><div id="wichtig" class="hinweis">…</div></div>
+    <div class="karte"><h3 style="display:flex;align-items:center;gap:8px">Heute wichtig<!-- KC-CLUB-TAGESINFO-MANUELL (1.38.0): Tages-Übersicht nochmal (nur Clubleitung) --><button class="knopf klein versteckt" id="tiKnopfStart" style="margin-left:auto" onclick="tagesinfoZeigen(true)">📋 Übersicht</button></h3><div id="wichtig" class="hinweis">…</div></div>
     <button class="knopf" id="ansichtKnopf" style="width:100%;text-align:center;margin-top:10px" onclick="ansichtWechseln()">🔧 Mehr Funktionen anzeigen</button>
     <button class="tuer" onclick="appSchliessen()">🚪 App schließen</button>
   </section>
@@ -1976,7 +1976,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.37.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.38.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -5008,6 +5008,7 @@ function installHilfe() {
   zeige("einstellungen"); const d = document.querySelector('details[data-klappe="install"]'); if (d) { d.open = true; setTimeout(() => d.scrollIntoView({ block: "start", behavior: "smooth" }), 100); }
 }
 function wichtigZeigen() {
+  $("tiKnopfStart")?.classList.toggle("versteckt", !ICH?.vorstand); // KC-CLUB-TAGESINFO-MANUELL (1.38.0)
   const h = [];
   if (START_ART === "verknuepfung" || (START_ART === "browser" && installEreignis)) h.push(`<div class="zeile" style="cursor:pointer" onclick="installHilfe()">📲 <b>${START_ART === "browser" ? "Köcheclub als App installieren" : "App richtig installieren"}</b> – dann klappen WhatsApp & Galerie<span style="margin-left:auto">›</span></div>`);
   if (INIT?.wartung?.an) h.push(`<div class="zeile" style="cursor:pointer" onclick="verbindungBlatt()">🔵 <b>Wartung</b>${INIT.wartung.hinweis ? " – " + esc(INIT.wartung.hinweis) : ": es kann kurz zu Unterbrechungen kommen"}<span style="margin-left:auto">›</span></div>`);
@@ -5624,7 +5625,11 @@ const tiAmpel = (wert, gelb, rot) => (wert === null || wert === undefined || Num
 const tiDauer = (min) => (min < 60 ? `vor ${Math.max(1, Math.round(min))} Min.` : min < 48 * 60 ? `vor ${Math.round(min / 60)} Std.` : `vor ${Math.round(min / 1440)} Tagen`);
 const tiZeit = (iso) => { const d = new Date(iso), h = heuteIso(), t = berlinIso(iso); return (t === h ? "heute" : t === tagPlus(h, -1) ? "gestern" : fTagDp.format(new Date(t + "T12:00:00Z"))) + " " + fZeit.format(d) + " Uhr"; };
 const tiZeile = (sym, html, fn) => `<button class="ti-zeile" onclick="$('buGruss').remove();${fn}">${sym} <span>${html}</span><b>›</b></button>`;
-async function tagesinfoZeigen() {
+// KC-CLUB-TAGESINFO-MANUELL (1.38.0, Wunsch Hansi): nochmal aufrufbar (📋 Übersicht bei „Heute wichtig“ und im Büro).
+// Manuell: „Seit deinem letzten Besuch“ bezieht sich weiter auf denselben Zeitpunkt wie beim Start – der Merkpunkt wird nicht verschoben.
+const TI_SEIT_SITZUNG = "kc_club_tagesinfo_seit_sitzung";
+async function tagesinfoZeigen(manuell = false) {
+  if (!ICH?.vorstand) return;
   const jetzt = new Date(), rolleText = ICH.admin ? "Admin" : (ICH.aemter || []).find((a) => /^(clubsprecher|kassenwart)/i.test(a)) || "Clubleitung";
   const datum = new Intl.DateTimeFormat("de-DE", { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(jetzt);
   blattAuf("buGruss", `<div class="ti"><h3 style="margin:0;font-size:1.3rem">${buTageszeit()}, ${esc(ICH.vorname || ICH.name)} <small class="hinweis">(${esc(rolleText)})</small></h3>
@@ -5633,11 +5638,16 @@ async function tagesinfoZeigen() {
     <div class="knoepfe" style="flex-direction:column;align-items:stretch"><button class="knopf haupt" style="text-align:center" onclick="$('buGruss').remove();buStart()">🗂️ Ins Büro</button>
     <button class="knopf" style="text-align:center" onclick="$('buGruss').remove()">Zur Club-App</button></div>
     <label class="schalter" style="margin-top:4px"><span><small>Auf diesem Gerät nicht mehr beim Start zeigen</small></span><input type="checkbox" onchange="try{this.checked?localStorage.setItem('kc_buero_frage_aus','1'):localStorage.removeItem('kc_buero_frage_aus')}catch{}"></label>`);
-  let seit = null; try { seit = localStorage.getItem(TI_SEIT); } catch {}
+  let seit = null;
+  try {
+    const s0 = sessionStorage.getItem(TI_SEIT_SITZUNG);
+    if (manuell && s0 !== null) seit = s0 || null;
+    else { seit = localStorage.getItem(TI_SEIT); if (!manuell) sessionStorage.setItem(TI_SEIT_SITZUNG, seit || ""); }
+  } catch {}
   const [ti, st, fe] = await Promise.allSettled([api("tagesinfo", { seit }), api("buero_start"), api("buero_feste", { tage: 7 })]);
   const e = $("tiInhalt"); if (!e) return;
   if (ti.status !== "fulfilled") { e.innerHTML = `<p class="hinweis">⚪ Die Übersicht konnte gerade nicht geladen werden (${esc(ti.reason?.message || "keine Verbindung")}).</p>`; return; }
-  try { localStorage.setItem(TI_SEIT, new Date().toISOString()); } catch {}
+  if (!manuell) try { localStorage.setItem(TI_SEIT, new Date().toISOString()); } catch {}
   const d = ti.value, start = st.status === "fulfilled" ? st.value : null, feste = fe.status === "fulfilled" && Array.isArray(fe.value?.geburtstage) ? fe.value : null;
   if (start) BU.start = start;
   const neu = [], heute = [], kasse = [], technik = [];
@@ -5712,7 +5722,7 @@ function buStartHtml() {
     ["🗄️", "Archiv: zu prüfen", e.archiv, "arStart()"], ["✔️", "Offene Aufgaben", e.aufgaben, "zeige('protokolle')"], ["📄", "Protokoll-Entwürfe", e.entwuerfe, "zeige('protokolle')"]];
   const festHeute = BU_F ? [...BU_F.geburtstage.filter((f) => f.tage === 0).map((f) => f.alter ? `🎉 ${esc(f.vorname)} wird ${f.alter}` : `🎂 ${esc(f.vorname)} hat Geburtstag`), ...BU_F.jubilaeen.filter((f) => f.tage === 0).map((f) => `🏅 ${esc(f.vorname)}: ${f.jahre} Jahre im Club`)] : [];
   const festBald = BU_F ? BU_F.geburtstage.concat(BU_F.jubilaeen).filter((f) => f.tage >= 0 && f.tage <= 7).length : 0;
-  return `<div class="karte bu-gruss"><b>${buTageszeit()}, ${esc(ICH.vorname || ICH.name)}!</b>${festHeute.length ? `<div class="bu-tipp" style="margin:6px 0">🎉 Heute: ${festHeute.join(" · ")} – <button class="knopf klein" onclick="buFeste()">gratulieren</button></div>` : "<br>"}${t ? `Nächste Sitzung: <b>${esc(t.titel)}</b> · ${esc(wann(t.beginn))}<br>✅ ${t.ja} zugesagt · ❌ ${t.nein} abgesagt · ❓ ${t.ohne} ohne Antwort` : "Gerade ist keine Sitzung geplant – lege sie unter 📅 Termine an."}
+  return `<div class="karte bu-gruss"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b>${buTageszeit()}, ${esc(ICH.vorname || ICH.name)}!</b>${ICH?.vorstand ? '<button class="knopf klein" style="margin-left:auto" onclick="tagesinfoZeigen(true)">📋 Übersicht</button>' : ""}</div>${festHeute.length ? `<div class="bu-tipp" style="margin:6px 0">🎉 Heute: ${festHeute.join(" · ")} – <button class="knopf klein" onclick="buFeste()">gratulieren</button></div>` : ""}${t ? `Nächste Sitzung: <b>${esc(t.titel)}</b> · ${esc(wann(t.beginn))}<br>✅ ${t.ja} zugesagt · ❌ ${t.nein} abgesagt · ❓ ${t.ohne} ohne Antwort` : "Gerade ist keine Sitzung geplant – lege sie unter 📅 Termine an."}
     ${!S ? '<div class="bu-tipp">👁️ Du hast im Büro <b>Leserechte</b>: ansehen und drucken. Ändern und Versenden schaltet der Admin frei.</div>' : dran ? `<div class="bu-tipp">👉 Nächster Schritt: <b>${dran}</b></div>` : t ? '<div class="bu-tipp">✅ Für diese Sitzung ist alles erledigt.</div>' : ""}</div>
     ${ICH?.admin ? buBereich("verwaltung", "🔐 Verwaltung", `<div class="mini-kacheln"><button class="mini-kachel" onclick="buRechte()"><span class="mk-sym">🔐</span><span class="mk-titel">Büro-Freigaben</span><span class="mk-unter">wer darf ins Büro – nur lesen oder lesen &amp; schreiben</span></button></div>`) : ""}
     ${buBereich("sitzung", "🗂️ Sitzung", `<div class="mini-kacheln">
