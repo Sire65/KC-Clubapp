@@ -1,5 +1,10 @@
 # Änderungen
 
+## 1.53.3 – 2026-10-02
+- KC-CLUB-NEU-AMEISEN (Wunsch Hansi): Feld „Neue Nachr.“ im Kopf wird bei neuen Nachrichten nicht mehr ganz orange, sondern
+  bleibt in der Kopffarbe wie die anderen Felder; eine orange „Ameisenstraße“ läuft um den Rand, die Zahl ist orange.
+  Bei „Bewegung reduzieren“ steht der Rand still.
+
 ## 1.53.2 – 2026-10-02
 - Wunsch Hansi: Reiter „Mein Bereich“ heißt jetzt „Meins“ (kürzer, die Zahl bricht nicht mehr um; Inhalt unverändert).
 - KC-CLUB-TIPPT: „✏️ Klaus schreibt …“ – Stift vor dem Namen, die hüpfenden Punkte (Welle) bleiben.

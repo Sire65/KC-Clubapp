@@ -1855,7 +1855,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/function teilenWahl\(text, dateien\)/.test(html) && /onclick="teilenChatWahl\(\)">💬 In einen Club-Chat/.test(html) && /onclick="teilenArchiv\(\)">🗄️ In mein Archiv/.test(html), "Auswahl nach dem Teilen");
   const f = html.slice(html.indexOf("async function teilenInChat("), html.indexOf("function teilenArchiv("));
   assert.ok(!/api\("nachricht_senden"/.test(f) && /melde\("📥 Eingefügt – prüfen und mit ➤ senden"\)/.test(f), "nichts wird ungefragt gesendet");
-  assert.ok(/<button class="mini\$\{n \? " mini-neu" : ""\}" onclick="zeige\('nachrichten'\)">/.test(html) && /\.mini\.mini-neu \{ background: linear-gradient\(135deg, #f39c12/.test(html), "Neue Nachr. orange");
+  assert.ok(/<button class="mini\$\{n \? " mini-neu" : ""\}" onclick="zeige\('nachrichten'\)">/.test(html) && /\.mini\.mini-neu::before \{[^}]*stroke='%23ff9800'/.test(html), "Neue Nachr. orange (ab 1.53.3 als orange Ameisenstraße)");
 }
 
 // 164. 1.22.1: Sicherheits-Bericht erreicht den Admin sicher + Ablage „Admin <Jahr>“ (KC-CLUB-SICHERHEIT-ZUSTELLUNG/-ARCHIV)
@@ -2429,6 +2429,14 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.match(html, /\["mein", "Meins"\]/, "Reiter heißt Meins");
   assert.doesNotMatch(html, /\["mein", "Mein Bereich"\]/, "alter Name weg");
   assert.match(html, /<span class="punkte3"><i><\/i><i><\/i><i><\/i><\/span><span>✏️ \$\{esc\(wer\)\}/, "Stift + Welle bleiben");
+}
+
+// 220. 1.53.3: „Neue Nachr.“ mit orange Ameisenstraße statt ganz orange (KC-CLUB-NEU-AMEISEN)
+{
+  assert.match(html, /\.mini\.mini-neu::before \{[^}]*stroke-dashoffset:-15[^}]*stroke-dasharray='9 6'/, "laufender orange Rand");
+  assert.match(html, /prefers-reduced-motion: reduce\) \{ \.mini\.mini-neu::before \{ background: url\("data:image\/svg\+xml,%3Csvg[^"]*%3E%3Crect/, "ruhiger Rand bei reduzierter Bewegung");
+  assert.doesNotMatch(html, /\.mini\.mini-neu \{ background: linear-gradient\(135deg, #f39c12/, "Feld nicht mehr ganz orange");
+  assert.match(html, /<button class="mini\$\{n \? " mini-neu" : ""\}"/, "nur bei neuen Nachrichten");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

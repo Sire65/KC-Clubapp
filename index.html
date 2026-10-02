@@ -446,9 +446,12 @@
   .wahltabelle input { width: 26px; height: 26px; accent-color: var(--rot); }
   .mini b { display: block; font-size: 1.2rem; }
   /* KC-CLUB-NEU-ORANGE (1.22.0, Wunsch Hansi): „Neue Nachr.“ oben links im großen Feld orange, sobald etwas Neues da ist */
-  .mini.mini-neu { background: linear-gradient(135deg, #f39c12, #e67e22); box-shadow: 0 0 0 2px #ffd08a inset, 0 4px 14px rgba(230,126,34,.45); animation: neuDa 2.4s ease-in-out infinite; }
-  .mini.mini-neu b { font-size: 1.5rem; }
-  @media (prefers-reduced-motion: reduce) { .mini.mini-neu { animation: none; } }
+  /* KC-CLUB-NEU-AMEISEN (1.53.3, Wunsch Hansi): Feld bleibt in der Kopffarbe wie die anderen, eine orange „Ameisenstraße“
+     läuft um den Rand, Zahl orange. Rand als SVG (Strich 6 px, außen zur Hälfte abgeschnitten = 3 px sichtbar, folgt der Rundung). */
+  .mini.mini-neu { position: relative; }
+  .mini.mini-neu b { font-size: 1.5rem; color: #ffb74d; }
+  .mini.mini-neu::before { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Cstyle%3Erect%7Banimation:a 1s linear infinite%7D@keyframes a%7Bto%7Bstroke-dashoffset:-15%7D%7D%3C/style%3E%3Crect width='100%25' height='100%25' rx='16' fill='none' stroke='%23ff9800' stroke-width='6' stroke-dasharray='9 6'/%3E%3C/svg%3E") no-repeat; }
+  @media (prefers-reduced-motion: reduce) { .mini.mini-neu::before { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Crect width='100%25' height='100%25' rx='16' fill='none' stroke='%23ff9800' stroke-width='6' stroke-dasharray='9 6'/%3E%3C/svg%3E") no-repeat; } }
   .mini span { font-size: .72rem; letter-spacing: .06em; font-weight: 700; text-transform: uppercase; opacity: .9; }
 
   /* Schnellzugriff */
@@ -2098,7 +2101,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.53.2"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.53.3"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
