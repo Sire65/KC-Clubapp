@@ -1,5 +1,16 @@
 # Änderungen
 
+## 1.26.0 – 2026-10-02 (DEV)
+
+- KC-CLUB-BUERO-EINGANG (Wunsch Hansi „bau den Eingang“): eigene Büro-Seite „📥 Eingang“ – Ausleih-Anfragen (entscheiden),
+  genehmigte Ausleihen mit fälliger Abholung, offene Vorschläge, Hilfe-Aufrufe mit zu wenigen Helfern als kleine Kacheln;
+  Antippen öffnet die vorhandenen Info-Fenster mit allen Knöpfen, danach frischt sich der Eingang selbst auf. Archiv-Prüfung,
+  offene Aufgaben und Protokoll-Entwürfe als Sprung-Kacheln. Keine zweite Datenhaltung (vorhandene Listen-Aktionen).
+- KC-CLUB-BRIEFBOGEN: Brief mit Logo im Büro. Vorlagen-Registry (leer, Spendenübergabe, Dankeschön, Einladung,
+  Glückwunsch), Anrede- und Gruß-Kacheln, Empfänger/Ort/Datum/Betreff/Text, Unterschrift mit Amt, Absender- und Fußzeile.
+  Entwurf bleibt auf dem Gerät erhalten; Absender/Fuß/Name/Amt per Einstellung „briefbogen“ für alle Geräte merkbar.
+  Druck über die Druckvorschau mit eigenem Briefkopf (DIN-5008-nah, Absenderzeile über der Anschrift für Fensterumschläge).
+
 ## 1.25.0 – 2026-10-02 (DEV)
 
 - KC-CLUB-BUERO (Wunsch Hansi, Freigabe „ganze Clubleitung, feste Punkte passen, so bauen“): Büro für Clubsprecher,

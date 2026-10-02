@@ -1,12 +1,21 @@
 {
-  "version": "1.25.0",
+  "version": "1.26.0",
   "datum": "2026-10-02",
   "neu": [
+    "📥 Büro-Eingang: alles, was auf die Clubleitung wartet, auf einer Seite – Ausleih-Anfragen, offene Vorschläge, Hilfe-Aufrufe ohne genug Helfer; antippen und direkt erledigen (Admin)",
+    "✉️ Briefbogen mit Logo im Büro: Vorlage antippen (Spendenübergabe, Dankeschön, Einladung, Glückwunsch oder leer), ausfüllen, Vorschau, drucken oder als PDF (Admin)",
     "🗂️ Büro für die Clubleitung (Clubsprecher, Kassenwart, Admin): Begrüßung beim Start „Möchtest du etwas im Büro erledigen?“, alles als Kacheln, und die App zeigt immer den nächsten sinnvollen Schritt",
     "📝 Sitzung vorbereiten: Anwesenheit (Zusagen schon angehakt), Entschuldigte, Anmerkung zum letzten Protokoll, Tagesordnung mit den eingegangenen Vorschlägen – daraus entsteht der Protokoll-Entwurf und eine Druckvorlage mit Logo und Schreiblinien",
     "📨 Danach mit einem Tipp: Einladung mit Tagesordnung an alle senden – und später alle erinnern, die noch nicht geantwortet haben (Admin)"
   ],
   "verlauf": [
+    {
+      "version": "1.26.0",
+      "neu": [
+        "📥 Büro-Eingang: alles, was auf die Clubleitung wartet, auf einer Seite – Ausleih-Anfragen, offene Vorschläge, Hilfe-Aufrufe ohne genug Helfer; antippen und direkt erledigen (Admin)",
+        "✉️ Briefbogen mit Logo im Büro: Vorlage antippen (Spendenübergabe, Dankeschön, Einladung, Glückwunsch oder leer), ausfüllen, Vorschau, drucken oder als PDF (Admin)"
+      ]
+    },
     {
       "version": "1.25.0",
       "neu": [

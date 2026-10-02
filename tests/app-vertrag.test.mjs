@@ -1990,6 +1990,16 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/enable row level security/.test(mig) && /revoke all on kc_club_buero_sitzung from anon, authenticated/.test(mig) && /kc_db_mirror_table_rules/.test(mig), "RLS + Spiegel");
 }
 
+// 175. 1.26.0: Büro-Eingang + Briefbogen (KC-CLUB-BUERO-EINGANG, KC-CLUB-BRIEFBOGEN)
+{
+  assert.ok(/function buEingangHtml\(\)/.test(html) && /api\("leihen_liste"\), api\("vorschlaege_liste"\), api\("hilfe_liste"\)/.test(html), "Eingang nutzt vorhandene Listen");
+  assert.ok((html.match(/buEingangAuffrischen\(\); \/\/ KC-CLUB-BUERO-EINGANG/g) || []).length === 2, "Eingang frischt sich nach Aktionen auf");
+  assert.ok(/brief: \{ bauen: \(\) => druckBrief\(\) \}/.test(html) && /\$\("druck"\)\.innerHTML = s\.ohneRahmen \? s\.html :/.test(html), "Briefdruck mit eigenem Kopf");
+  for (const k of ["leer", "spende", "dank", "einladung", "glueckwunsch"]) assert.ok(new RegExp(`\\b${k}: \\{ sym:`).test(html.slice(html.indexOf("const BRIEF_VORLAGEN"), html.indexOf("const BRIEF_ANREDEN"))), `Briefvorlage ${k}`);
+  assert.ok(/briefbogen: \(w\) => \(\{ absender: txt\(w\?\.absender, 200\)/.test(server), "Einstellung briefbogen geprüft");
+  assert.ok(/src="icon-192\.png"[^>]*style="width:22mm/.test(html) && /Köcheclub Werne<\/div>/.test(html), "Logo + Name im Briefkopf");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

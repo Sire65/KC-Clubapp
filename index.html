@@ -1924,7 +1924,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.25.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.26.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -5401,6 +5401,7 @@ async function vorschlaegeLaden() {
     VORSCHLAG_TREFFEN = treffen; if (spCfg) VORSCHLAG_SPENDEN = spCfg;
     VORSCHLAG_MAP = new Map(vorschlaege.map((v) => [v.id, v]));
     if (document.getElementById("vorschlagInfo")) vorschlagInfo(document.getElementById("vorschlagInfo").dataset.id); // offenes Info-Fenster auffrischen
+    buEingangAuffrischen(); // KC-CLUB-BUERO-EINGANG
     const offen = vorschlaege.filter((v) => v.status === "offen"), fertig = vorschlaege.filter((v) => v.status !== "offen");
     const abst = offen.filter((v) => v.art === "abstimmung"), themen = offen.filter((v) => v.art === "thema"), spenden = offen.filter((v) => v.art === "spende");
     $("vorschlagListe").innerHTML =
@@ -5567,7 +5568,7 @@ async function buLaden() {
   buZeigen();
 }
 function buZurueck() { if (BU.sicht !== "start") { BU.sicht = "start"; buLaden(); window.scrollTo(0, 0); } else zeige("start"); }
-function buZeigen() { $("buInhalt").innerHTML = BU.sicht === "sitzung" ? buSitzungHtml() : buStartHtml(); }
+function buZeigen() { $("buInhalt").innerHTML = BU.sicht === "sitzung" ? buSitzungHtml() : BU.sicht === "eingang" ? buEingangHtml() : BU.sicht === "brief" ? buBriefHtml() : buStartHtml(); }
 // Nächster sinnvoller Schritt für eine Sitzung
 function buNaechster(t) {
   if (!t) return null;
@@ -5581,7 +5582,8 @@ function buStartHtml() {
   const t = r.sitzungen[0], n = buNaechster(t), e = r.eingang;
   const k = (id, sym, titel, unter, fn, extra = "") => `<button class="mini-kachel${n === id ? " bu-dran" : ""}" onclick="${fn}"><span class="mk-sym">${sym}</span><span class="mk-titel">${esc(titel)}</span><span class="mk-unter">${unter}</span>${extra}</button>`;
   const dran = { vorbereiten: "📝 Sitzung vorbereiten", einladung: "📨 Einladung mit Tagesordnung senden", erinnerung: `🔔 ${t?.ohne} Mitglieder an die Antwort erinnern` }[n];
-  const eingang = [["📦", "Ausleih-Anfragen", e.ausleihen, "hlStart('leihen')"], ["🗳️", "Offene Vorschläge", e.vorschlaege, "zeige('vorschlaege')"], ["🙋", "Hilfe-Aufrufe", e.hilfe, "hlStart('helfen')"],
+  const summe = Object.values(e).reduce((a, b) => a + b, 0);
+  const eingang = [["📦", "Ausleih-Anfragen", e.ausleihen, "buEingang()"], ["🗳️", "Offene Vorschläge", e.vorschlaege, "buEingang()"], ["🙋", "Hilfe-Aufrufe", e.hilfe, "buEingang()"],
     ["🗄️", "Archiv: zu prüfen", e.archiv, "arStart()"], ["✔️", "Offene Aufgaben", e.aufgaben, "zeige('protokolle')"], ["📄", "Protokoll-Entwürfe", e.entwuerfe, "zeige('protokolle')"]];
   return `<div class="karte bu-gruss"><b>${buTageszeit()}, ${esc(ICH.vorname || ICH.name)}!</b><br>${t ? `Nächste Sitzung: <b>${esc(t.titel)}</b> · ${esc(wann(t.beginn))}<br>✅ ${t.ja} zugesagt · ❌ ${t.nein} abgesagt · ❓ ${t.ohne} ohne Antwort` : "Gerade ist keine Sitzung geplant – lege sie unter 📅 Termine an."}
     ${dran ? `<div class="bu-tipp">👉 Nächster Schritt: <b>${dran}</b></div>` : t ? '<div class="bu-tipp">✅ Für diese Sitzung ist alles erledigt.</div>' : ""}</div>
@@ -5594,7 +5596,10 @@ function buStartHtml() {
       ${k("protokolle", "📄", "Protokolle", "schreiben · veröffentlichen", "zeige('protokolle')")}
       ${k("termine", "📅", "Termine", "Sitzung anlegen oder ändern", "zeige('termine')")}
     </div>
-    <div class="abschnitt"><h3>📥 Eingang</h3></div>
+    <div class="abschnitt"><h3>✉️ Schreiben</h3></div>
+    <div class="mini-kacheln">${k("brief", "✉️", "Briefbogen", "Brief mit Logo – Spende, Dank, Einladung …", "buBrief()")}</div>
+    <div class="abschnitt"><h3>📥 Eingang ${summe ? `<span class="marke gelb">${summe}</span>` : ""}</h3></div>
+    <button class="knopf haupt" style="width:100%;margin:0 0 8px" onclick="buEingang()">📥 Eingang öffnen – alles auf einen Blick erledigen</button>
     <div class="mini-kacheln">${eingang.map(([sym, t2, z, fn]) => `<button class="mini-kachel${z ? " mk-offen" : ""}" onclick="${fn}"><span class="mk-sym">${sym}</span><span class="mk-titel">${esc(t2)}</span><span class="mk-gross">${z || "–"}</span></button>`).join("")}</div>`;
 }
 // Mehrere Sitzungen → antippen, welche
@@ -5718,6 +5723,119 @@ async function buSenden(knopf, anzahl) {
   });
 }
 
+// ---------- KC-CLUB-BUERO-EINGANG (1.26.0): alles, was auf die Clubleitung wartet – direkt hier erledigen ----------
+// Nutzt die vorhandenen Listen/Info-Fenster (Ausleihen, Vorschläge, Hilfe) – keine zweite Datenhaltung.
+let BU_EIN = { leihen: null, vorschlaege: null, hilfe: null };
+function buEingang() { BU.sicht = "eingang"; buZeigen(); buEingangLaden(); window.scrollTo(0, 0); }
+async function buEingangLaden() {
+  const [l, v, h] = await Promise.allSettled([api("leihen_liste"), api("vorschlaege_liste"), api("hilfe_liste")]);
+  if (l.status === "fulfilled") { BU_EIN.leihen = l.value; HL.leihen = l.value; }
+  if (v.status === "fulfilled") { BU_EIN.vorschlaege = v.value.vorschlaege; VORSCHLAG_MAP = new Map(v.value.vorschlaege.map((x) => [x.id, x])); VORSCHLAG_TREFFEN = v.value.treffen; }
+  if (h.status === "fulfilled") { BU_EIN.hilfe = h.value; HL.hilfe = h.value; }
+  try { BU.start = await api("buero_start"); } catch {}
+  if (aktuelleAnsicht === "buero" && BU.sicht === "eingang") buZeigen();
+}
+// nach einer Aktion in einem Info-Fenster (genehmigen, unterstützen …) den Eingang auffrischen
+function buEingangAuffrischen() { if (aktuelleAnsicht === "buero" && BU.sicht === "eingang") buEingangLaden(); }
+function buEingangHtml() {
+  const e = BU.start?.eingang || {}, l = BU_EIN.leihen, v = BU_EIN.vorschlaege, h = BU_EIN.hilfe;
+  const abschnitt = (sym, titel, anzahl, inhalt, leer) => `<div class="abschnitt"><h3>${sym} ${titel}${anzahl ? ` <span class="marke gelb">${anzahl}</span>` : ""}</h3></div>${anzahl ? inhalt : `<div class="karte hinweis">${leer}</div>`}`;
+  const anfr = (l?.ausleihen || []).filter((a) => a.status === "angefragt");
+  const lauf = (l?.ausleihen || []).filter((a) => a.status === "genehmigt" && a.abholung <= heuteIso());
+  const offenV = (v || []).filter((x) => x.status === "offen");
+  const hilfe = (h?.aufrufe || []).filter((a) => a.offen && a.komme.length < a.anzahl);
+  const link = (sym, titel, z, fn, u) => `<button class="mini-kachel${z ? " mk-offen" : ""}" onclick="${fn}"><span class="mk-sym">${sym}</span><span class="mk-titel">${titel}</span><span class="mk-gross">${z || "–"}</span><span class="mk-unter">${u}</span></button>`;
+  return `<div class="karte bu-gruss">📥 <b>Eingang</b> – hier landet alles, was auf eine Entscheidung oder Erledigung durch die Clubleitung wartet. Kachel antippen → Einzelheiten und Knöpfe.</div>
+    ${!l && !v && !h ? '<div class="karte hinweis">Wird geladen …</div>' : ""}
+    ${abschnitt("📦", "Ausleih-Anfragen – bitte entscheiden", anfr.length, `<div class="mini-kacheln">${anfr.map((a) => leihKachel(a, true).replace("leihInfo(", "HL.tab='leihen';leihInfo(")).join("")}</div>`, "Keine offenen Ausleih-Anfragen 👍")}
+    ${lauf.length ? abschnitt("📤", "Genehmigt – Abholung fällig", lauf.length, `<div class="mini-kacheln">${lauf.map((a) => leihKachel(a, true).replace("leihInfo(", "HL.tab='leihen';leihInfo(")).join("")}</div>`, "") : ""}
+    ${abschnitt("🗳️", "Offene Vorschläge", offenV.length, `<div class="mini-kacheln">${offenV.map((x) => x.art === "spende" ? spendeKachel(x) : `<button class="mini-kachel" onclick="vorschlagInfo('${x.id}')"><span class="mk-sym">${x.art === "abstimmung" ? "🗳️" : "💡"}</span><span class="mk-titel">${esc(x.titel)}</span><span class="mk-unter">${x.art === "abstimmung" ? `${x.stimmen} von ${x.berechtigt} abgestimmt` : `👍 ${x.ergebnis?.[0]?.anzahl || 0}`} · ${esc(x.von?.name || "")}</span></button>`).join("")}</div>`, "Keine offenen Vorschläge.")}
+    ${abschnitt("🙋", "Hilfe-Aufrufe – noch Helfer gesucht", hilfe.length, `<div class="mini-kacheln">${hilfe.map((a) => hilfeKachel(a).replace("hilfeInfo(", "HL.tab='helfen';hilfeInfo(")).join("")}</div>`, "Alle Hilfe-Aufrufe sind versorgt.")}
+    <div class="abschnitt"><h3>📋 Weiteres</h3></div>
+    <div class="mini-kacheln">${link("🗄️", "Archiv: zu prüfen", e.archiv, "arStart()", "Einreichungen freigeben")}${link("✔️", "Offene Aufgaben", e.aufgaben, "zeige('protokolle')", "aus den Protokollen")}${link("📄", "Protokoll-Entwürfe", e.entwuerfe, "zeige('protokolle')", "fertigstellen · veröffentlichen")}</div>
+    <div class="knoepfe"><button class="knopf" onclick="buEingangLaden()">↻ Neu laden</button><button class="knopf" onclick="buZurueck()">🗂️ Zurück ins Büro</button></div>`;
+}
+
+// ---------- KC-CLUB-BRIEFBOGEN (1.26.0, Wunsch Hansi): Brief mit Logo – Vorlage antippen, ausfüllen, Vorschau, drucken ----------
+// Vorlagen als Registry (Betreff + Text); Absender/Fußzeile/Unterschrift merkt sich die App je Person (Einstellung „briefbogen“).
+const BRIEF_VORLAGEN = {
+  leer: { sym: "✉️", t: "Leerer Brief", betreff: "", text: "" },
+  spende: { sym: "💝", t: "Spendenübergabe", betreff: "Spende des Köcheclubs Werne", text: "wir freuen uns sehr, Ihre wertvolle Arbeit mit einer Spende in Höhe von [Betrag] € unterstützen zu dürfen.\n\nDas Geld stammt aus [z. B. dem Erlös unseres Glühweinstands auf dem Weihnachtsmarkt]. Alle Mitglieder des Köcheclubs haben mit viel Einsatz dazu beigetragen.\n\nWir wünschen Ihnen weiterhin viel Kraft und alles Gute für Ihre Arbeit." },
+  dank: { sym: "🙏", t: "Dankeschön", betreff: "Herzlichen Dank", text: "für Ihre Unterstützung bei [Anlass] möchten wir uns ganz herzlich bedanken.\n\nOhne Ihre Hilfe wäre das so nicht möglich gewesen." },
+  einladung: { sym: "📨", t: "Einladung", betreff: "Einladung", text: "hiermit laden wir Sie herzlich ein zu [Anlass]\n\nam [Datum] um [Uhrzeit]\nin [Ort].\n\nWir freuen uns auf Ihr Kommen. Bitte geben Sie uns bis [Datum] kurz Bescheid." },
+  glueckwunsch: { sym: "🎉", t: "Glückwunsch", betreff: "Herzlichen Glückwunsch", text: "zu [Anlass] gratulieren wir Ihnen im Namen aller Mitglieder des Köcheclubs Werne ganz herzlich.\n\nFür die Zukunft wünschen wir Ihnen alles Gute." },
+};
+const BRIEF_ANREDEN = ["Sehr geehrte Damen und Herren,", "Sehr geehrte Frau …,", "Sehr geehrter Herr …,", "Liebe …,", "Hallo zusammen,"];
+const BRIEF_GRUESSE = ["Mit freundlichen Grüßen", "Herzliche Grüße", "Mit herzlichen Grüßen aus der Küche", "Viele Grüße"];
+let BRIEF = null;
+function buBrief() {
+  const eb = INIT?.einstellungen?.briefbogen || {};
+  let entwurf = null; try { entwurf = JSON.parse(localStorage.getItem("kc_club_brief_entwurf") || "null"); } catch {}
+  BRIEF = entwurf || { vorlage: "leer", empfaenger: "", ort: "Werne", datum: heuteIso(), betreff: "", anrede: BRIEF_ANREDEN[0], text: "", gruss: BRIEF_GRUESSE[0] };
+  BRIEF.absender ??= eb.absender || "Köcheclub Werne"; BRIEF.fuss ??= eb.fuss || ""; BRIEF.name ??= eb.name || ICH?.name || ""; BRIEF.amt ??= eb.amt || (ICH?.aemter || [])[0] || "";
+  BU.sicht = "brief"; buZeigen(); window.scrollTo(0, 0);
+  if (entwurf) melde("✏️ Dein letzter Brief-Entwurf ist wieder da");
+}
+function briefFeld(k, el) { BRIEF[k] = el.value; briefMerken(); }
+let briefTimer = null;
+function briefMerken() { clearTimeout(briefTimer); briefTimer = setTimeout(() => { try { localStorage.setItem("kc_club_brief_entwurf", JSON.stringify(BRIEF)); } catch {} }, 400); }
+function briefVorlage(k) {
+  const v = BRIEF_VORLAGEN[k]; if (!v) return;
+  if ((BRIEF.text || "").trim() && BRIEF.text !== BRIEF_VORLAGEN[BRIEF.vorlage]?.text && !confirm("Deinen bisherigen Text durch die Vorlage ersetzen?")) return;
+  Object.assign(BRIEF, { vorlage: k, betreff: v.betreff, text: v.text }); briefMerken(); buZeigen();
+}
+function briefWahl(k, w) { BRIEF[k] = w; briefMerken(); buZeigen(); }
+function buBriefHtml() {
+  const b = BRIEF, chips = (k, l) => `<div class="hl-chips">${l.map((w) => `<button class="chip${b[k] === w ? " an" : ""}" onclick='briefWahl(${hlJs(k)}, ${hlJs(w)})'>${esc(w)}</button>`).join("")}</div>`;
+  const fe = (k, label, ph, rows) => `<label class="feld">${label}${rows ? `<textarea rows="${rows}" maxlength="${k === "text" ? 6000 : 400}" placeholder="${esc(ph)}" oninput="briefFeld('${k}', this)">${esc(b[k])}</textarea>` : `<input maxlength="200" placeholder="${esc(ph)}" value="${esc(b[k])}" oninput="briefFeld('${k}', this)">`}</label>`;
+  return `<div class="karte bu-kopf"><img src="kc-kochmuetze-weiss.webp" alt="" class="bu-logo"><div><b>✉️ Briefbogen</b><br><small class="hinweis">Mit Logo und „Köcheclub Werne“ – zum Ausdrucken oder als PDF</small></div></div>
+    <div class="karte"><h3 style="margin-top:0">1️⃣ Vorlage</h3><div class="mini-kacheln">${Object.entries(BRIEF_VORLAGEN).map(([k, v]) => `<button class="mini-kachel${b.vorlage === k ? " mk-offen" : ""}" onclick="briefVorlage('${k}')"><span class="mk-sym">${v.sym}</span><span class="mk-titel">${esc(v.t)}</span></button>`).join("")}</div>
+      <p class="hinweis" style="margin:6px 0 0">Stellen in [eckigen Klammern] bitte ersetzen.</p></div>
+    <div class="karte"><h3 style="margin-top:0">2️⃣ An wen?</h3>${fe("empfaenger", "Empfänger (Name und Anschrift)", "z. B. Kinderhospiz Lünen/Werne\nStraße Nr.\n59368 Werne", 4)}
+      <div class="zwei">${fe("ort", "Ort", "Werne")}<label class="feld">Datum<input type="date" value="${esc(b.datum)}" onchange="briefFeld('datum', this)"></label></div></div>
+    <div class="karte"><h3 style="margin-top:0">3️⃣ Text</h3>${fe("betreff", "Betreff", "z. B. Spende des Köcheclubs Werne")}
+      <div class="hinweis" style="margin:6px 0 4px">Anrede</div>${chips("anrede", BRIEF_ANREDEN)}
+      ${fe("anrede", "", "Anrede")}${fe("text", "Brieftext", "Text …", 9)}
+      <div class="hinweis" style="margin:6px 0 4px">Gruß</div>${chips("gruss", BRIEF_GRUESSE)}</div>
+    <div class="karte"><h3 style="margin-top:0">4️⃣ Unterschrift & Absender</h3><div class="zwei">${fe("name", "Name", "Vor- und Nachname")}${fe("amt", "Amt", "z. B. Clubsprecher")}</div>
+      ${fe("absender", "Absenderzeile (oben, klein)", "Köcheclub Werne · Straße · 59368 Werne")}${fe("fuss", "Fußzeile (freiwillig)", "z. B. Bankverbindung, E-Mail, Internet")}
+      <button class="knopf klein" onclick="briefStandardSpeichern()">💾 Absender & Unterschrift für nächstes Mal merken</button></div>
+    <div class="bu-leiste"><div class="knoepfe" style="margin:0"><button class="knopf haupt" style="flex:1;text-align:center" onclick="druckStarten('brief')">👁️ Vorschau & Drucken</button><button class="knopf" onclick="briefNeu()">🆕 Neu</button></div></div>`;
+}
+function briefNeu() {
+  if (!confirm("Neuen, leeren Brief beginnen? Der jetzige Entwurf wird verworfen.")) return;
+  try { localStorage.removeItem("kc_club_brief_entwurf"); } catch {}
+  const { absender, fuss, name, amt } = BRIEF; BRIEF = null; buBrief(); Object.assign(BRIEF, { absender, fuss, name, amt }); buZeigen();
+}
+async function briefStandardSpeichern() {
+  const wert = { absender: BRIEF.absender, fuss: BRIEF.fuss, name: BRIEF.name, amt: BRIEF.amt };
+  try { await api("einstellung_setzen", { schluessel: "briefbogen", wert }); INIT.einstellungen = { ...(INIT.einstellungen || {}), briefbogen: wert }; melde("💾 Gemerkt – beim nächsten Brief schon ausgefüllt"); }
+  catch (e) { melde(e.message, true); }
+}
+// Brief nach DIN 5008 (vereinfacht): Briefkopf mit Logo, Absenderzeile über der Anschrift (Fensterumschlag), Datum rechts
+function druckBrief() {
+  const b = BRIEF; if (!b) throw new Error("Bitte den Brief im Büro ausfüllen.");
+  const datum = b.datum ? new Intl.DateTimeFormat("de-DE", { day: "2-digit", month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(b.datum + "T12:00:00Z")) : "";
+  const absatz = (t) => esc(t).replace(/\n/g, "<br>");
+  const html = `<div style="font-family:Georgia,'Times New Roman',serif;color:#111;font-size:4mm;line-height:1.45;min-height:240mm;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;gap:5mm;border-bottom:1.2mm solid #741521;padding-bottom:3mm">
+      <img src="icon-192.png" alt="" style="width:22mm;height:22mm;border-radius:50%">
+      <div style="flex:1"><div style="font-size:9mm;font-weight:700;color:#741521;letter-spacing:.3mm">Köcheclub Werne</div><div style="font-size:3.4mm;color:#555">Gemeinsam kochen · feiern · helfen</div></div></div>
+    <div style="display:flex;justify-content:space-between;margin-top:12mm;gap:10mm">
+      <div style="width:85mm"><div style="font-size:2.6mm;color:#555;border-bottom:.2mm solid #888;padding-bottom:.6mm;margin-bottom:3mm">${esc(b.absender || "Köcheclub Werne")}</div>
+        <div style="min-height:30mm">${absatz(b.empfaenger || "")}</div></div>
+      <div style="text-align:right;align-self:flex-end">${esc([b.ort, datum].filter(Boolean).join(", "))}</div></div>
+    ${b.betreff ? `<div style="font-weight:700;margin-top:12mm">${esc(b.betreff)}</div>` : '<div style="margin-top:12mm"></div>'}
+    <div style="margin-top:7mm">${absatz(b.anrede || "")}</div>
+    <div style="margin-top:4mm">${absatz(b.text || "")}</div>
+    <div style="margin-top:7mm">${esc(b.gruss || "")}</div>
+    <div style="height:16mm"></div>
+    <div>${esc(b.name || "")}${b.amt ? `<br><span style="color:#555">${esc(b.amt)}, Köcheclub Werne</span>` : ""}</div>
+    <div style="flex:1"></div>
+    ${b.fuss ? `<div style="border-top:.3mm solid #741521;margin-top:10mm;padding-top:2mm;font-size:2.8mm;color:#555;text-align:center">${absatz(b.fuss)}</div>` : ""}</div>`;
+  return { titel: b.betreff || "Brief", ohneRahmen: true, html };
+}
+
 // ---------- KC-CLUB-HELFEN & KC-CLUB-LEIHEN (1.23.0, Wunsch Hansi): eine Kachel, zwei Bereiche – fast alles per Antippen ----------
 let HL = { tab: "helfen", hilfe: null, leihen: null, form: null, edit: false };
 const hlTag = (n) => tagPlus(heuteIso(), n);
@@ -5731,6 +5849,7 @@ async function hlLaden() {
     hlZeigen();
     const li = document.getElementById("leihInfo"); if (li && HL.tab === "leihen") leihInfo(li.dataset.id);
     const hi = document.getElementById("hilfeInfo"); if (hi && HL.tab === "helfen") hilfeInfo(hi.dataset.id);
+    buEingangAuffrischen(); // KC-CLUB-BUERO-EINGANG
   } catch (e) { $("hlInhalt").innerHTML = `<div class="karte hinweis">${esc(e.message)}</div>`; }
 }
 // Kachel-Reihe: ein Wert aus einer Liste [{w, t}]
@@ -8635,6 +8754,7 @@ const DRUCKARTEN = {
   treffen: { bauen: (o, id) => druckTreffen(id) },
   protokoll: { bauen: () => druckProtokoll() },
   sitzung: { bauen: () => druckSitzung() }, // KC-CLUB-BUERO (1.25.0): Protokoll-Vorlage mit Schreiblinien
+  brief: { bauen: () => druckBrief() }, // KC-CLUB-BRIEFBOGEN (1.26.0): eigener Briefkopf, ohne App-Kopf/-Fuß
   erstattung: { titel: "🖨️ Erstattungsantrag drucken", optionen: () => druckErstattungOptionen(), bauen: (o) => druckErstattung(o) },
   anleitung: { bauen: () => druckAnleitung() },
   ueberblick: { bauen: () => druckUeberblick() },
@@ -8683,7 +8803,7 @@ function druckOptionenLesen() {
 async function druckSeiteBauen() {
   const d = DRUCKARTEN[DRUCK.art], o = druckOptionenLesen();
   const s = await d.bauen(o, DRUCK.param); if (!s) return false;
-  $("druck").innerHTML = `<div class="dkopf"><img src="icon-192.png" alt=""><div><h1>${esc(s.titel)}</h1>${s.unter ? `<div class="unter">${esc(s.unter)}</div>` : ""}</div>
+  $("druck").innerHTML = s.ohneRahmen ? s.html : `<div class="dkopf"><img src="icon-192.png" alt=""><div><h1>${esc(s.titel)}</h1>${s.unter ? `<div class="unter">${esc(s.unter)}</div>` : ""}</div>
       <div class="dklub"><b>Köcheclub Werne</b><br>${esc(fKurzJahr.format(new Date()))}</div></div>
     ${s.html}
     <div class="dfuss">Gedruckt am ${esc(wann(new Date().toISOString()))} von ${esc(ICH?.name || "")} · Köcheclub-App v${APP_VERSION}${s.fuss ? " · " + esc(s.fuss) : ""}</div>`;

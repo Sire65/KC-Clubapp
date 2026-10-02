@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.25.0";
+const SERVER_VERSION = "1.26.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -538,6 +538,8 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
   online: (w) => ({ zeigen: w?.zeigen !== false }),
   // KC-CLUB-ZULETZT-DA (1.20.0): anderen zeigen, wann ich zuletzt in der App war (Standard: an, gegenseitig wie WhatsApp)
   zuletzt: (w) => ({ zeigen: w?.zeigen !== false }),
+  // KC-CLUB-BRIEFBOGEN (1.26.0): eigene Absenderzeile/Fußzeile und Unterschrift je Person (Clubleitung)
+  briefbogen: (w) => ({ absender: txt(w?.absender, 200), fuss: txt(w?.fuss, 300), name: txt(w?.name, 80), amt: txt(w?.amt, 80) }),
   // KC-CLUB-STUMM (1.9.0): Unterhaltungen stummschalten – je Unterhaltung „immer“ oder bis Zeitpunkt (höchstens 200)
   stumm: (w) => ({ threads: Object.fromEntries(Object.entries(w?.threads && typeof w.threads === "object" ? w.threads : {})
     .filter(([id, b]) => /^[0-9a-f-]{36}$/.test(id) && (b === "immer" || (typeof b === "string" && !isNaN(Date.parse(b)) && Date.parse(b) > Date.now())))
