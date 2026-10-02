@@ -1,7 +1,8 @@
 {
-  "version": "1.32.0",
+  "version": "1.32.1",
   "datum": "2026-10-02",
   "neu": [
+    "💬 Kommunikation: „＋ Neu“ ist jetzt immer oben rechts sichtbar – auch bei großer Schrift; darunter beschriftet „👥 Gruppe“, „⭐ Gemerkt“ (deine gemerkten Nachrichten) und „🧪 Test“",
     "🤍 Büro: Freud & Leid – Geburt, Hochzeit, Jubiläum … oder Trauerfall, Krankheit: in drei Schritten anlegen, die App schlägt eine Checkliste vor (Was – Wer – Bis wann), Zuständige bekommen ihre Aufgabe mit Erinnerung (Admin)",
     "🕊️ Bei Todesfällen: Kranz/Blumen (100 €), Beileidskarte, Abordnung zur Beerdigung („Wer kommt mit?“), Schweigeminute wird bei der nächsten Sitzung vorgeschlagen; Mitglieder informieren erst nach Absprache mit der Familie (Admin)",
     "📇 Büro: Mitgliederliste zum Drucken – Übersicht (Ämter, Mitglied seit), Telefonliste, Adressliste, Unterschriften- oder Abhakliste; sortiert nach Name oder Eintritt (Admin)",
@@ -18,6 +19,12 @@
     "📨 Danach mit einem Tipp: Einladung mit Tagesordnung an alle senden – und später alle erinnern, die noch nicht geantwortet haben (Admin)"
   ],
   "verlauf": [
+    {
+      "version": "1.32.1",
+      "neu": [
+        "💬 Kommunikation: „＋ Neu“ ist jetzt immer oben rechts sichtbar – auch bei großer Schrift; darunter beschriftet „👥 Gruppe“, „⭐ Gemerkt“ (deine gemerkten Nachrichten) und „🧪 Test“"
+      ]
+    },
     {
       "version": "1.32.0",
       "neu": [

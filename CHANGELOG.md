@@ -1,5 +1,12 @@
 # Änderungen
 
+## 1.32.1 – 2026-10-02 (DEV)
+
+- KC-CLUB-KOPFZEILE (Hinweis Hansi mit Bildschirmfoto: „＋ Neu fehlt, wofür ist der Stern?“): Bei großer Schrift schob die
+  Kopfzeile der Kommunikation „＋ Neu“ aus dem Bildschirm. Jetzt steht nur „＋ Neu“ in der Kopfzeile; „👥 Gruppe“,
+  „⭐ Gemerkt“ (vorher nur ⭐) und „🧪 Test“ in einer eigenen, beschrifteten Reihe darunter. Alle Kopfzeilen (.kopf2)
+  brechen bei Platzmangel um, statt Knöpfe abzuschneiden.
+
 ## 1.32.0 – 2026-10-02 (DEV)
 
 - KC-CLUB-FREUD-LEID (Wunsch Hansi; Freigabe „nur Clubleitung, 100 € bei Todesfall, Abordnung fragen, Checklisten passen“):
