@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.31.0";
+const SERVER_VERSION = "1.32.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -1318,7 +1318,8 @@ async function spendenEmpfaenger() {
 const ZEITFENSTER: Record<string, string> = { vormittag: "🌅 Vormittag (8–12 Uhr)", mittag: "☀️ Mittag (12–14 Uhr)", nachmittag: "🌤️ Nachmittag (14–18 Uhr)", abend: "🌙 Abend (18–22 Uhr)" };
 // 1.23.3: wie mit Hansi besprochen ergänzt (Schlüssel bleiben, damit alte Einträge lesbar bleiben)
 const LEIH_ZWECKE: Record<string, string> = { vereinsfest: "🎉 Vereinsveranstaltung", feier: "🎂 Private Feier", nachbarschaft: "🏡 Nachbarschaftsfest", markt: "🏪 Markt / Stand", verein: "🤝 Anderer Verein", sonstiges: "✏️ Sonstiges" };
-const HILFE_ARTEN: Record<string, string> = { aufbau: "🧱 Aufbauen", abbau: "📦 Abbauen", tragen: "🪑 Tische tragen", kochen: "🍳 Kochen", spuelen: "🧽 Spülen & Putzen", verkauf: "🏪 Verkauf am Stand", service: "🍽️ Service", einkauf: "🛒 Einkauf", fahren: "🚗 Fahrdienst", sonstiges: "🙋 Sonstiges" };
+const HILFE_ARTEN: Record<string, string> = { aufbau: "🧱 Aufbauen", abbau: "📦 Abbauen", tragen: "🪑 Tische tragen", kochen: "🍳 Kochen", spuelen: "🧽 Spülen & Putzen", verkauf: "🏪 Verkauf am Stand", service: "🍽️ Service", einkauf: "🛒 Einkauf", fahren: "🚗 Fahrdienst", sonstiges: "🙋 Sonstiges",
+  abordnung: "🕊️ Abordnung / Begleitung" }; // 1.32.0: KC-CLUB-FREUD-LEID (z. B. Beerdigung)
 const LEIH_STATUS: Record<string, string> = { angefragt: "⏳ angefragt", genehmigt: "✅ genehmigt", abgelehnt: "❌ abgelehnt", abgeholt: "📦 abgeholt", zurueck: "↩️ zurückgegeben", storniert: "🚫 storniert" };
 const LEIH_BELEGT = ["genehmigt", "abgeholt"], LEIH_OFFEN = ["angefragt", "genehmigt", "abgeholt"];
 const LEIH_MAX_TAGE = 30, LEIH_VORLAUF_TAGE = 365, HILFE_VORLAUF_TAGE = 180;
@@ -1505,7 +1506,11 @@ async function bueroSitzung(ich: Ich, tid: string) {
       : letzt.einspruch_bis && new Date(letzt.einspruch_bis).getTime() > Date.now() ? `Protokoll vom ${d}: Einspruchsfrist läuft bis ${wann(letzt.einspruch_bis)}.`
       : `Protokoll vom ${d} ist genehmigt (keine Einsprüche).`;
   }
-  const standardTop = [...BUERO_TOP_VORNE.map((x) => ({ t: x, art: "fest" })), ...vorschlaege.filter((v) => v.fuerDiese).map((v) => ({ t: v.text, art: "vorschlag", id: v.id })), ...BUERO_TOP_HINTEN.map((x) => ({ t: x, art: "fest" }))];
+  // KC-CLUB-FREUD-LEID: verstorbene Mitglieder der letzten 90 Tage → „Gedenken / Schweigeminute“ direkt nach der Begrüßung
+  const { data: tod } = await db.from("kc_club_fl_faelle").select("person_id").eq("art", "tod_mitglied").gte("datum", tagDazu(berlinTag(new Date(t.beginn)), -90)).lte("datum", berlinTag(new Date(t.beginn)));
+  const totNamen = [...(await personen((tod ?? []).map((x: any) => x.person_id))).values()].map((x: any) => x.display_name);
+  const gedenken = totNamen.length ? [{ t: `Gedenken an ${totNamen.join(", ")} (Schweigeminute)`, art: "fest" }] : [];
+  const standardTop = [{ t: BUERO_TOP_VORNE[0], art: "fest" }, ...gedenken, ...BUERO_TOP_VORNE.slice(1).map((x) => ({ t: x, art: "fest" })), ...vorschlaege.filter((v) => v.fuerDiese).map((v) => ({ t: v.text, art: "vorschlag", id: v.id })), ...BUERO_TOP_HINTEN.map((x) => ({ t: x, art: "fest" }))];
   return {
     treffen: { id: t.id, titel: t.titel, beginn: t.beginn, ort: t.ort },
     mitglieder: mitglieder.map((m) => ({ person_id: m.person_id, name: m.display_name, antwort: ant.get(m.person_id)?.antwort ?? null, notiz: ant.get(m.person_id)?.notiz ?? null })),
@@ -1537,6 +1542,100 @@ function bueroTopListe(roh: unknown) {
     .filter((x) => x.t);
   if (l.length > 40) throw new Fehler("Höchstens 40 Tagesordnungspunkte.");
   return l;
+}
+
+// ---------- KC-CLUB-FREUD-LEID (1.32.0, Wunsch Hansi): Freud & Leid – nur Clubleitung ----------
+// Registry: Art → Symbol, Titel, Gruppe, Standardbetrag (Freigabe Hansi: 100 € bei Todesfall, sonst offen) und Checkliste.
+// wer: Rolle (clubsprecher/kassenwart/admin) oder „alle“ (= Aufruf an die Mitglieder, z. B. Abordnung); bis: sofort, Tage, termin, sitzung.
+type FlSchritt = { t: string; wer?: string; bis?: string };
+const FL_GLUECKWUNSCH: FlSchritt[] = [
+  { t: "💬 Glückwunsch schicken (Nachricht oder Anruf)", wer: "clubsprecher", bis: "sofort" },
+  { t: "✉️ Glückwunschkarte besorgen und unterschreiben lassen", bis: "sitzung" },
+  { t: "🎁 Geschenk besorgen (Betrag festlegen)", wer: "kassenwart", bis: "7" },
+  { t: "📌 Gruß an die Pinnwand", wer: "clubsprecher", bis: "sofort" },
+];
+const FL_GENESUNG: FlSchritt[] = [
+  { t: "💬 Gute Besserung wünschen (Anruf oder Nachricht)", wer: "clubsprecher", bis: "sofort" },
+  { t: "✉️ Genesungskarte besorgen und unterschreiben lassen", bis: "3" },
+  { t: "🍎 Besuch oder kleiner Gruß (z. B. Obstkorb)", bis: "7" },
+  { t: "📞 In 2 Wochen nachfragen, wie es geht", wer: "clubsprecher", bis: "14" },
+];
+const FL_ARTEN: Record<string, { sym: string; t: string; gruppe: "freude" | "leid"; betrag?: number; schritte: FlSchritt[] }> = {
+  geburtstag_rund: { sym: "🎂", t: "Runder Geburtstag", gruppe: "freude", schritte: FL_GLUECKWUNSCH },
+  jubilaeum: { sym: "🏅", t: "Vereinsjubiläum", gruppe: "freude", schritte: FL_GLUECKWUNSCH },
+  geburt: { sym: "👶", t: "Geburt / Enkel", gruppe: "freude", schritte: [FL_GLUECKWUNSCH[0], FL_GLUECKWUNSCH[1], { t: "🧸 Kleines Geschenk fürs Baby besorgen", wer: "kassenwart", bis: "14" }, FL_GLUECKWUNSCH[3]] },
+  hochzeit: { sym: "💍", t: "Hochzeit", gruppe: "freude", schritte: FL_GLUECKWUNSCH },
+  ehejubilaeum: { sym: "🥂", t: "Silber-/Goldhochzeit", gruppe: "freude", schritte: FL_GLUECKWUNSCH },
+  pruefung: { sym: "🎓", t: "Prüfung / Meister", gruppe: "freude", schritte: [FL_GLUECKWUNSCH[0], FL_GLUECKWUNSCH[1], FL_GLUECKWUNSCH[3]] },
+  ruhestand: { sym: "🌅", t: "Ruhestand", gruppe: "freude", schritte: FL_GLUECKWUNSCH },
+  genesung: { sym: "💪", t: "Wieder gesund", gruppe: "freude", schritte: [FL_GLUECKWUNSCH[0], FL_GLUECKWUNSCH[3]] },
+  tod_mitglied: { sym: "🕊️", t: "Tod eines Mitglieds", gruppe: "leid", betrag: 100, schritte: [
+    { t: "📞 Der Familie persönlich kondolieren", wer: "clubsprecher", bis: "sofort" },
+    { t: "💐 Kranz mit Schleife „Köcheclub Werne“ bestellen (100 €)", wer: "kassenwart", bis: "termin" },
+    { t: "✉️ Beileidskarte besorgen und unterschreiben lassen", bis: "3" },
+    { t: "🚶 Abordnung zur Beerdigung – Mitglieder fragen, wer mitkommt", wer: "alle", bis: "termin" },
+    { t: "📝 Nachruf schreiben", wer: "clubsprecher", bis: "7" },
+    { t: "🕯️ Schweigeminute bei der nächsten Sitzung", wer: "clubsprecher", bis: "sitzung" },
+    { t: "🗂️ Mitglied im KC Manager als ausgeschieden eintragen", wer: "admin", bis: "28" },
+    { t: "📞 In 4 Wochen bei der Familie nachfragen", wer: "clubsprecher", bis: "28" },
+  ] },
+  tod_angehoeriger: { sym: "🕯️", t: "Tod eines nahen Angehörigen", gruppe: "leid", betrag: 100, schritte: [
+    { t: "📞 Persönlich kondolieren (Anruf oder Besuch)", wer: "clubsprecher", bis: "sofort" },
+    { t: "✉️ Beileidskarte besorgen", bis: "3" },
+    { t: "✍️ Karte von allen unterschreiben lassen", bis: "sitzung" },
+    { t: "💐 Blumen/Gesteck bestellen (100 €)", wer: "kassenwart", bis: "termin" },
+    { t: "🚶 Wer geht zur Beerdigung? – Mitglieder fragen", wer: "alle", bis: "termin" },
+    { t: "📞 In 4 Wochen nachfragen, wie es geht", wer: "clubsprecher", bis: "28" },
+  ] },
+  krankheit: { sym: "🏥", t: "Schwere Krankheit / Krankenhaus", gruppe: "leid", schritte: FL_GENESUNG },
+  unfall: { sym: "🚑", t: "Unfall", gruppe: "leid", schritte: FL_GENESUNG },
+};
+async function flRollen() {
+  const { data } = await db.from("kc_club_rollen").select("person_id,aemter,ist_admin");
+  const mit = (wort: string) => (data ?? []).filter((r: any) => (r.aemter ?? []).some((a: string) => a.toLowerCase().startsWith(wort))).map((r: any) => r.person_id);
+  return { clubsprecher: mit("clubsprecher"), kassenwart: mit("kassenwart"), admin: (data ?? []).filter((r: any) => r.ist_admin).map((r: any) => r.person_id) };
+}
+async function flFallHolen(id: unknown) {
+  const { data: f } = await db.from("kc_club_fl_faelle").select("*").eq("id", String(id || "")).maybeSingle();
+  if (!f) throw new Fehler("Fall nicht gefunden.", 404);
+  return f;
+}
+const flTitel = (f: any, name?: string) => `${FL_ARTEN[f.art]?.sym ?? "🤍"} ${FL_ARTEN[f.art]?.t ?? f.art}${name ? ` – ${name}` : ""}`;
+// Schritt mit Zuständigem → Aufgabe (wird wie alle Aufgaben mitgeteilt, erinnert und unter „Meine Aufgaben“ abgehakt)
+async function flAufgabe(ich: Ich, f: any, s: { text: string; wer: string | null; bis: string | null }, name: string) {
+  if (!s.wer) return null;
+  const { data: a } = await db.from("kc_club_aufgaben").insert({ protokoll_id: null, person_id: s.wer, text: `${FL_ARTEN[f.art]?.sym ?? "🤍"} ${name}: ${s.text}`.slice(0, 300), faellig: s.bis, erstellt_von: ich.person_id }).select().single();
+  return a ?? null;
+}
+async function flListe(ich: Ich) {
+  const [{ data: offen }, { data: zu }] = await Promise.all([
+    db.from("kc_club_fl_faelle").select("*").eq("status", "offen").order("erstellt_am", { ascending: false }).limit(50),
+    db.from("kc_club_fl_faelle").select("*").eq("status", "abgeschlossen").order("abgeschlossen_am", { ascending: false }).limit(20),
+  ]);
+  const faelle = [...(offen ?? []), ...(zu ?? [])], ids = faelle.map((f: any) => f.id);
+  const { data: sch } = ids.length ? await db.from("kc_club_fl_schritte").select("*").in("fall_id", ids).order("sort") : { data: [] as any[] };
+  const aids = (sch ?? []).map((s: any) => s.aufgabe_id).filter(Boolean);
+  const { data: auf } = aids.length ? await db.from("kc_club_aufgaben").select("id,erledigt_am,mitgeteilt_am").in("id", aids) : { data: [] as any[] };
+  const aufrufIds = faelle.map((f: any) => f.aufruf_id).filter(Boolean);
+  const [{ data: ant }, leute] = await Promise.all([
+    aufrufIds.length ? db.from("kc_club_hilfe_antworten").select("aufruf_id,person_id,antwort").in("aufruf_id", aufrufIds) : Promise.resolve({ data: [] as any[] }),
+    personen([...faelle.map((f: any) => f.person_id), ...(sch ?? []).map((s: any) => s.wer)]),
+  ]);
+  const n = (pid: string | null) => (pid ? leute.get(pid)?.display_name || pid : null);
+  return {
+    arten: Object.fromEntries(Object.entries(FL_ARTEN).map(([k, v]) => [k, { sym: v.sym, t: v.t, gruppe: v.gruppe, betrag: v.betrag ?? null, schritte: v.schritte }])),
+    rollen: await flRollen(),
+    faelle: faelle.map((f: any) => {
+      const s = (sch ?? []).filter((x: any) => x.fall_id === f.id).map((x: any) => {
+        const a = (auf ?? []).find((y: any) => y.id === x.aufgabe_id);
+        return { id: x.id, text: x.text, wer: x.wer, werName: n(x.wer), alle: x.alle, bis: x.bis, erledigt: !!(x.erledigt_am || a?.erledigt_am), mitgeteilt: !!a?.mitgeteilt_am };
+      });
+      const kommen = (ant ?? []).filter((y: any) => y.aufruf_id === f.aufruf_id && y.antwort === "komme").map((y: any) => n(y.person_id));
+      return { id: f.id, art: f.art, person_id: f.person_id, name: n(f.person_id), notiz: f.notiz, datum: f.datum, termin: f.termin, termin_ort: f.termin_ort,
+        betrag: f.betrag === null ? null : Number(f.betrag), status: f.status, informiert_am: f.informiert_am, aufruf: f.aufruf_id ? { id: f.aufruf_id, kommen } : null,
+        erstellt_am: f.erstellt_am, abgeschlossen_am: f.abgeschlossen_am, schritte: s, erledigt: s.filter((x: any) => x.erledigt).length };
+    }),
+  };
 }
 
 // ---------- Sitzungsprotokolle (KC-CLUB-PROTOKOLLE) & Aufgaben (KC-CLUB-AUFGABEN) ----------
@@ -3047,6 +3146,122 @@ Köcheclub Werne`,
         });
         await protokoll(ich.person_id, "buero_mitgliederliste", { anzahl: liste.length, verborgen });
         return json({ liste, verborgen, admin: ich.admin });
+      }
+
+      // ----- KC-CLUB-FREUD-LEID (1.32.0): nur Clubleitung -----
+      case "fl_liste": nurVorstand(ich); return json(await flListe(ich));
+
+      case "fl_anlegen": {
+        nurVorstand(ich);
+        const art = String(p.art || "");
+        if (!FL_ARTEN[art]) throw new Fehler("Bitte antippen, was passiert ist.");
+        const aktiv = new Set((await aktiveMitglieder()).map((m) => m.person_id));
+        const person = p.person_id && aktiv.has(String(p.person_id)) ? String(p.person_id) : null;
+        if (!person) throw new Fehler("Bitte antippen, wen es betrifft.");
+        const termin = p.termin && !isNaN(Date.parse(String(p.termin))) ? new Date(String(p.termin)).toISOString() : null;
+        const betrag = p.betrag === null || p.betrag === undefined || p.betrag === "" ? null : Math.round(Number(p.betrag) * 100) / 100;
+        if (betrag !== null && !(betrag >= 0 && betrag <= 10000)) throw new Fehler("Betrag 0 bis 10.000 €.");
+        const { data: f, error } = await db.from("kc_club_fl_faelle").insert({ art, person_id: person, notiz: txt(p.notiz, 500) || null, datum: isoTag(p.datum) || berlinTag(new Date()),
+          termin, termin_ort: txt(p.termin_ort, 120) || null, betrag, erstellt_von: ich.person_id }).select().single();
+        if (error || !f) throw new Fehler("Speichern fehlgeschlagen.", 500);
+        const name = (await personen([person])).get(person)?.display_name || person;
+        const liste = (Array.isArray(p.schritte) ? p.schritte : []).slice(0, 20);
+        const aufgaben: any[] = [];
+        let i = 0;
+        for (const x of liste) {
+          const text = txt(x?.text, 200); if (!text) continue;
+          const alle = !!x?.alle, wer = !alle && x?.wer && aktiv.has(String(x.wer)) ? String(x.wer) : null, bis = isoTag(x?.bis) || null;
+          const a = await flAufgabe(ich, f, { text, wer, bis }, name);
+          if (a) aufgaben.push(a);
+          await db.from("kc_club_fl_schritte").insert({ fall_id: f.id, text, wer, alle, bis, aufgabe_id: a?.id ?? null, sort: i++ });
+        }
+        if (p.mitteilen !== false && aufgaben.length) await aufgabenMitteilen(aufgaben, ich, null);
+        await protokoll(ich.person_id, "fl_angelegt", { fall: f.id, art, schritte: i, aufgaben: aufgaben.length });
+        return json({ ok: true, id: f.id });
+      }
+
+      case "fl_aendern": {
+        nurVorstand(ich);
+        const f = await flFallHolen(p.id);
+        const was = String(p.was || "");
+        if (was === "schritt_erledigt") {
+          const { data: s } = await db.from("kc_club_fl_schritte").select("*").eq("id", String(p.schritt_id || "")).eq("fall_id", f.id).maybeSingle();
+          if (!s) throw new Fehler("Schritt nicht gefunden.", 404);
+          const an = p.erledigt !== false;
+          await db.from("kc_club_fl_schritte").update({ erledigt_am: an ? jetzt() : null, erledigt_von: an ? ich.person_id : null }).eq("id", s.id);
+          if (s.aufgabe_id) await db.from("kc_club_aufgaben").update({ erledigt_am: an ? jetzt() : null }).eq("id", s.aufgabe_id);
+        } else if (was === "schritt_neu") {
+          const text = txt(p.text, 200); if (!text) throw new Fehler("Bitte kurz eintragen, was zu tun ist.");
+          const aktiv = new Set((await aktiveMitglieder()).map((m) => m.person_id));
+          const wer = p.wer && aktiv.has(String(p.wer)) ? String(p.wer) : null, bis = isoTag(p.bis) || null;
+          const { count } = await db.from("kc_club_fl_schritte").select("id", { count: "exact", head: true }).eq("fall_id", f.id);
+          if ((count ?? 0) >= 30) throw new Fehler("Höchstens 30 Schritte je Fall.");
+          const name = (await personen([f.person_id])).get(f.person_id)?.display_name || "";
+          const a = await flAufgabe(ich, f, { text, wer, bis }, name);
+          await db.from("kc_club_fl_schritte").insert({ fall_id: f.id, text, wer, bis, aufgabe_id: a?.id ?? null, sort: count ?? 0 });
+          if (a) await aufgabenMitteilen([a], ich, null);
+        } else if (was === "schritt_weg") {
+          const { data: s } = await db.from("kc_club_fl_schritte").select("*").eq("id", String(p.schritt_id || "")).eq("fall_id", f.id).maybeSingle();
+          if (!s) throw new Fehler("Schritt nicht gefunden.", 404);
+          await geloescht(ich, "fl_schritt", { schritt: s });
+          await db.from("kc_club_fl_schritte").delete().eq("id", s.id);
+          if (s.aufgabe_id) await db.from("kc_club_aufgaben").delete().eq("id", s.aufgabe_id).is("erledigt_am", null);
+        } else if (was === "angaben") {
+          const betrag = p.betrag === null || p.betrag === "" || p.betrag === undefined ? null : Math.round(Number(p.betrag) * 100) / 100;
+          if (betrag !== null && !(betrag >= 0 && betrag <= 10000)) throw new Fehler("Betrag 0 bis 10.000 €.");
+          const termin = p.termin && !isNaN(Date.parse(String(p.termin))) ? new Date(String(p.termin)).toISOString() : null;
+          await db.from("kc_club_fl_faelle").update({ notiz: txt(p.notiz, 500) || null, termin, termin_ort: txt(p.termin_ort, 120) || null, betrag }).eq("id", f.id);
+        } else throw new Fehler("Unbekannte Änderung.");
+        await protokoll(ich.person_id, "fl_" + was, { fall: f.id });
+        return json({ ok: true });
+      }
+
+      // Mitglieder informieren (bei Leid nur nach Absprache mit der Familie) – optional mit „Wer kommt mit?“ (Abordnung)
+      case "fl_informieren": {
+        nurVorstand(ich);
+        const f = await flFallHolen(p.id);
+        const leid = FL_ARTEN[f.art]?.gruppe === "leid";
+        if (leid && p.abgesprochen !== true) throw new Fehler("Bitte bestätigen, dass es mit der Familie abgesprochen ist.");
+        const text = txt(p.text, 1000); if (!text) throw new Fehler("Bitte einen Text eingeben.");
+        const ziel = (await aktiveMitglieder()).map((m) => m.person_id).filter((id) => id !== ich.person_id && (!leid || id !== f.person_id));
+        let aufrufId: string | null = f.aufruf_id;
+        if (p.abordnung && !aufrufId) {
+          if (!f.termin) throw new Fehler("Für die Abordnung bitte zuerst den Termin (z. B. Beerdigung) eintragen.");
+          const { data: h } = await db.from("kc_club_hilfe_aufrufe").insert({ von: ich.person_id, art: "abordnung", datum: berlinTag(new Date(f.termin)), slot: null,
+            anzahl: Math.min(20, Math.max(1, Math.floor(Number(p.anzahl) || 5))), ort: f.termin_ort, notiz: txt(p.aufruf_notiz, 300) || null, ziel: "alle" }).select("id").single();
+          aufrufId = h?.id ?? null;
+        }
+        const url = aufrufId ? APP_URL + "#helfen" : APP_URL;
+        const vars = { titel: leid ? "🕊️ Nachricht aus dem Club" : "🎉 Neuigkeit aus dem Club", kurz: text.slice(0, 150),
+          betreff: `Köcheclub Werne – ${leid ? "traurige Nachricht" : "gute Nachricht"}`,
+          text: `Hallo,\n\n${text}${aufrufId ? `\n\nWer zur ${f.art.startsWith("tod") ? "Beerdigung" : "Begleitung"} mitkommen möchte, sagt bitte kurz in der App zu: ${APP_URL}#helfen` : ""}\n\nViele Grüße\n${ich.name}\nKöcheclub Werne`, url };
+        const versand = await sendenGewaehlt("club_nachricht", ziel, zustellwege(p.wege), vars, `club-fl:${f.id}:${Date.now()}`);
+        await db.from("kc_club_fl_faelle").update({ informiert_am: jetzt(), aufruf_id: aufrufId }).eq("id", f.id);
+        if (aufrufId) await db.from("kc_club_fl_schritte").update({ erledigt_am: jetzt(), erledigt_von: ich.person_id }).eq("fall_id", f.id).eq("alle", true).is("erledigt_am", null);
+        await protokoll(ich.person_id, "fl_informiert", { fall: f.id, empfaenger: ziel.length, abordnung: !!aufrufId, versand });
+        return json({ ok: true, empfaenger: ziel.length, versand, aufruf: aufrufId });
+      }
+
+      case "fl_abschliessen": {
+        nurVorstand(ich);
+        const f = await flFallHolen(p.id);
+        if (f.status === "abgeschlossen") return json({ ok: true });
+        const l = await flListe(ich), x: any = l.faelle.find((y: any) => y.id === f.id);
+        await db.from("kc_club_fl_faelle").update({ status: "abgeschlossen", abgeschlossen_am: jetzt() }).eq("id", f.id);
+        // Ablage im Vereinsordner „Admin <Jahr>“, Register „Freud & Leid“
+        let abgelegt = false;
+        try {
+          const jahr = Number(berlinTag(new Date()).slice(0, 4));
+          const zeilen = [`Köcheclub Werne – Freud & Leid`, flTitel(f, x?.name), "────────────────────", "",
+            `Datum: ${f.datum ? f.datum.split("-").reverse().join(".") : "–"}`, ...(f.termin ? [`Termin: ${wann(f.termin, true)}${f.termin_ort ? " · " + f.termin_ort : ""}`] : []),
+            ...(f.notiz ? [`Notiz: ${f.notiz}`] : []), ...(f.betrag !== null ? [`Betrag: ${euro(Number(f.betrag))}`] : []), "", "Schritte:",
+            ...(x?.schritte ?? []).map((s: any) => `  ${s.erledigt ? "✔" : "☐"} ${s.text}${s.werName ? ` – ${s.werName}` : s.alle ? " – alle" : ""}${s.bis ? ` (bis ${s.bis.split("-").reverse().join(".")})` : ""}`),
+            ...(x?.aufruf ? ["", `Begleitung/Abordnung: ${x.aufruf.kommen.join(", ") || "–"}`] : []), "", `Abgeschlossen von ${ich.name}, ${wann(jetzt())}`, ""];
+          await archivTextAblegen(ich, await adminOrdner(jahr, "Freud & Leid"), "Freud & Leid", flTitel(f, x?.name), `FreudLeid-${f.datum || berlinTag(new Date())}-${(x?.name || "Mitglied").split(" ")[0]}.txt`, zeilen.join("\n"), `Freud & Leid, ${FL_ARTEN[f.art]?.t ?? f.art}, ${x?.name ?? ""}`);
+          abgelegt = true;
+        } catch (e) { console.error("fl ablegen", String(e)); }
+        await protokoll(ich.person_id, "fl_abgeschlossen", { fall: f.id, abgelegt });
+        return json({ ok: true, abgelegt });
       }
 
       // ----- KC-CLUB-LEIHEN (1.23.0): Vereinsgegenstände ausleihen – Anfrage an die Clubleitung, eine Zusage genügt -----

@@ -1,5 +1,22 @@
 # Änderungen
 
+## 1.32.0 – 2026-10-02 (DEV)
+
+- KC-CLUB-FREUD-LEID (Wunsch Hansi; Freigabe „nur Clubleitung, 100 € bei Todesfall, Abordnung fragen, Checklisten passen“):
+  Büro-Kachel „🤍 Freud & Leid“. Fälle (kc_club_fl_faelle) mit Checkliste (kc_club_fl_schritte), nur Clubleitung.
+  - Registry FL_ARTEN: Freude (runder Geburtstag, Jubiläum, Geburt, Hochzeit, Ehejubiläum, Prüfung, Ruhestand, wieder
+    gesund) und Leid (Tod eines Mitglieds, Tod eines nahen Angehörigen, Krankheit, Unfall) mit vorgeschlagenen Schritten
+    (Rolle Clubsprecher/Kassenwart/Admin, „Aufruf an alle“; Frist sofort/Tage/Termin/nächste Sitzung), 100 € bei Todesfall.
+  - Anlegen in drei Schritten; Schritte mit Zuständigem werden als Aufgabe angelegt (vorhandene Mitteilung/Erinnerung,
+    „Meine Aufgaben“), Abhaken im Fall erledigt auch die Aufgabe.
+  - „📣 Mitglieder informieren“: Textvorschlag, bei Leid Pflicht-Bestätigung „mit der Familie abgesprochen“, betroffenes
+    Mitglied bekommt die Leid-Nachricht nicht; bei Todesfall optional Abordnung („Wer kommt mit?“) als Hilfe-Aufruf
+    (neue Hilfe-Art „Abordnung / Begleitung“), Zusagen erscheinen im Fall.
+  - Briefbogen-Vorlagen: Beileid, Gute Besserung, Geburt, Hochzeit; Gruß „In stiller Anteilnahme“.
+  - Sitzung vorbereiten schlägt nach dem Tod eines Mitglieds (90 Tage) „Gedenken an … (Schweigeminute)“ vor.
+  - Abschließen legt den Fall als Textdatei im Vereinsordner „Admin <Jahr>“, Register „Freud & Leid“, ab.
+- DB: Migration 20261002_kc_club_v1320_freud_leid.sql (2 Tabellen, RLS ohne Policies, Spiegel-Regeln).
+
 ## 1.31.0 – 2026-10-02 (DEV)
 
 - KC-CLUB-BUERO-MITGLIEDERLISTE (Wunsch Hansi): Büro-Kachel „📇 Mitgliederliste drucken“. Server buero_mitgliederliste

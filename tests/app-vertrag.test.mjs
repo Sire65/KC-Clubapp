@@ -2061,6 +2061,24 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/mitgliederliste: \{ bauen: \(\) => druckMitgliederliste\(\) \}/.test(html) && /Vertraulich – nur für Vereinszwecke/.test(html), "Druck mit Vertraulich-Hinweis");
 }
 
+// 181. 1.32.0: Freud & Leid (KC-CLUB-FREUD-LEID)
+{
+  for (const a of ["fl_liste", "fl_anlegen", "fl_aendern", "fl_informieren", "fl_abschliessen"]) {
+    assert.ok(aktionen.has(a) && aufrufe.has(a), `Aktion ${a} fehlt`);
+    assert.ok(/nurVorstand\(ich\)/.test(server.slice(server.indexOf(`case "${a}"`), server.indexOf(`case "${a}"`) + 140)), `${a} nur Clubleitung`);
+  }
+  assert.ok(/tod_mitglied: \{ sym: "🕊️", t: "Tod eines Mitglieds", gruppe: "leid", betrag: 100,/.test(server) && /tod_angehoeriger: \{[^\n]*betrag: 100,/.test(server), "100 € bei Todesfall");
+  const inf = server.slice(server.indexOf('case "fl_informieren"'), server.indexOf('case "fl_abschliessen"'));
+  assert.ok(/if \(leid && p\.abgesprochen !== true\) throw/.test(inf) && /\(!leid \|\| id !== f\.person_id\)/.test(inf), "Leid: nur nach Absprache, Betroffene nicht");
+  assert.ok(/art: "abordnung"/.test(inf) && /abordnung: "🕊️ Abordnung \/ Begleitung"/.test(server), "Abordnung als Hilfe-Aufruf");
+  assert.ok(/Gedenken an \$\{totNamen\.join\(", "\)\} \(Schweigeminute\)/.test(server), "Schweigeminute in der Tagesordnung");
+  assert.ok(/adminOrdner\(jahr, "Freud & Leid"\), "Freud & Leid"/.test(server), "Archiv-Ablage");
+  for (const k of ["beileid", "genesung", "geburt", "hochzeit"]) assert.ok(new RegExp(`\\b${k}: \\{ sym:`).test(html.slice(html.indexOf("const BRIEF_VORLAGEN"), html.indexOf("const BRIEF_ANREDEN"))), `Briefvorlage ${k}`);
+  assert.ok(/if \(leid && !\$\("flIOK"\)\?\.checked\) return melde/.test(html) && /if \(!confirm\("Nachricht jetzt an alle Mitglieder senden\?"\)\) return;/.test(html), "Senden nur nach Bestätigung");
+  const mig = lies("supabase/migrations/20261002_kc_club_v1320_freud_leid.sql");
+  assert.ok(/revoke all on kc_club_fl_faelle, kc_club_fl_schritte from anon, authenticated/.test(mig) && /kc_db_mirror_table_rules/.test(mig), "RLS + Spiegel");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

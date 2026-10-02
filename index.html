@@ -892,6 +892,13 @@
   .ml-tab { width: 100%; border-collapse: collapse; font-size: .9rem; }
   .ml-tab th { text-align: left; padding: 6px 8px; border-bottom: 2px solid var(--rot); white-space: nowrap; }
   .ml-tab td { padding: 6px 8px; border-bottom: 1px solid var(--linie); }
+  /* KC-CLUB-FREUD-LEID (1.32.0): ruhige Farben für Leid */
+  .mini-kachel.fl-leid { border-color: #6b7a8f; }
+  .fl-kopf-leid { border-left: 6px solid #6b7a8f; }
+  .fl-schritt { background: var(--karte2); border-radius: 12px; padding: 8px 10px; margin: 6px 0; }
+  .fl-schritt.aus { opacity: .55; }
+  .fl-schritt select, .fl-schritt input[type=date] { width: 100%; padding: 8px; border-radius: 10px; border: 1px solid var(--linie); background: var(--karte); color: var(--text); }
+  .fl-abgesprochen { border: 2px solid var(--gelb); border-radius: 12px; padding: 8px; }
   /* KC-CLUB-THEMA-FRAGE (1.24.1) */
   .vs-hinweis { background: var(--gelbbg); color: var(--text); font-size: 1.05rem; line-height: 1.45; border: 2px solid var(--gelb); }
   .vs-puls { animation: vsPuls 1s ease-in-out 6; }
@@ -1931,7 +1938,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.31.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.32.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -5576,11 +5583,11 @@ function buGrussFragen(nochmal) {
 }
 function buStart() { BU.sicht = "start"; zeige("buero"); }
 async function buLaden() {
-  try { [BU.start] = await Promise.all([api("buero_start"), buNachherListe(), buFesteListe(BU_F?.tage || 60)]); } catch (e) { $("buInhalt").innerHTML = `<div class="karte hinweis">${esc(e.message)}</div>`; return; }
+  try { [BU.start] = await Promise.all([api("buero_start"), buNachherListe(), buFesteListe(BU_F?.tage || 60), flLaden()]); } catch (e) { $("buInhalt").innerHTML = `<div class="karte hinweis">${esc(e.message)}</div>`; return; }
   buZeigen();
 }
 function buZurueck() { if (BU.sicht !== "start") { BU.sicht = "start"; buLaden(); window.scrollTo(0, 0); } else zeige("start"); }
-function buZeigen() { $("buInhalt").innerHTML = BU.sicht === "sitzung" ? buSitzungHtml() : BU.sicht === "eingang" ? buEingangHtml() : BU.sicht === "brief" ? buBriefHtml() : BU.sicht === "termine" ? buTermineHtml() : BU.sicht === "kontakt" ? buKontaktHtml() : BU.sicht === "nachher" ? buNachherHtml() : BU.sicht === "feste" ? buFesteHtml() : BU.sicht === "liste" ? buListeHtml() : buStartHtml(); }
+function buZeigen() { $("buInhalt").innerHTML = BU.sicht === "sitzung" ? buSitzungHtml() : BU.sicht === "eingang" ? buEingangHtml() : BU.sicht === "brief" ? buBriefHtml() : BU.sicht === "termine" ? buTermineHtml() : BU.sicht === "kontakt" ? buKontaktHtml() : BU.sicht === "nachher" ? buNachherHtml() : BU.sicht === "feste" ? buFesteHtml() : BU.sicht === "liste" ? buListeHtml() : BU.sicht === "fl" ? buFlHtml() : BU.sicht === "flneu" ? buFlNeuHtml() : BU.sicht === "fall" ? buFallHtml() : buStartHtml(); }
 // Nächster sinnvoller Schritt für eine Sitzung
 function buNaechster(t) {
   if (!t) return null;
@@ -5618,7 +5625,7 @@ function buStartHtml() {
       ${k("veroeffentlichen", "📢", "Protokoll veröffentlichen", "alle bekommen Bescheid · 7 Tage Einspruch", "buNachherWahl('📢 Welches Protokoll?')", nt?.text.startsWith("📢") ? '<span class="marke gelb">jetzt dran</span>' : "")}
     </div>
     <div class="abschnitt"><h3>👥 Mitglieder</h3></div>
-    <div class="mini-kacheln">${k("kontakt", "👥", "Mitglieder kontaktieren", "Gruppe wählen · schreiben · anrufen", "buKontakt()")}${k("feste", "🎂", "Geburtstage & Jubiläen", festBald ? `${festBald} in den nächsten 7 Tagen` : "gratulieren · Liste drucken", "buFeste()", festHeute.length ? '<span class="marke gelb">heute!</span>' : "")}${k("liste", "📇", "Mitgliederliste drucken", "Übersicht · Telefon · Adressen · Unterschriften", "buListe()")}</div>
+    <div class="mini-kacheln">${k("kontakt", "👥", "Mitglieder kontaktieren", "Gruppe wählen · schreiben · anrufen", "buKontakt()")}${k("feste", "🎂", "Geburtstage & Jubiläen", festBald ? `${festBald} in den nächsten 7 Tagen` : "gratulieren · Liste drucken", "buFeste()", festHeute.length ? '<span class="marke gelb">heute!</span>' : "")}${k("fl", "🤍", "Freud & Leid", FL.d ? (FL.d.faelle.filter((f) => f.status === "offen").length ? `${FL.d.faelle.filter((f) => f.status === "offen").length} offen` : "Geburt, Hochzeit, Trauerfall …") : "Geburt, Hochzeit, Trauerfall …", "buFreudLeid()")}${k("liste", "📇", "Mitgliederliste drucken", "Übersicht · Telefon · Adressen · Unterschriften", "buListe()")}</div>
     <div class="abschnitt"><h3>✉️ Schreiben</h3></div>
     <div class="mini-kacheln">${k("brief", "✉️", "Briefbogen", "Brief mit Logo – Spende, Dank, Einladung …", "buBrief()")}</div>
     <div class="abschnitt"><h3>📥 Eingang ${summe ? `<span class="marke gelb">${summe}</span>` : ""}</h3></div>
@@ -5786,10 +5793,14 @@ const BRIEF_VORLAGEN = {
   spende: { sym: "💝", t: "Spendenübergabe", betreff: "Spende des Köcheclubs Werne", text: "wir freuen uns sehr, Ihre wertvolle Arbeit mit einer Spende in Höhe von [Betrag] € unterstützen zu dürfen.\n\nDas Geld stammt aus [z. B. dem Erlös unseres Glühweinstands auf dem Weihnachtsmarkt]. Alle Mitglieder des Köcheclubs haben mit viel Einsatz dazu beigetragen.\n\nWir wünschen Ihnen weiterhin viel Kraft und alles Gute für Ihre Arbeit." },
   dank: { sym: "🙏", t: "Dankeschön", betreff: "Herzlichen Dank", text: "für Ihre Unterstützung bei [Anlass] möchten wir uns ganz herzlich bedanken.\n\nOhne Ihre Hilfe wäre das so nicht möglich gewesen." },
   einladung: { sym: "📨", t: "Einladung", betreff: "Einladung", text: "hiermit laden wir Sie herzlich ein zu [Anlass]\n\nam [Datum] um [Uhrzeit]\nin [Ort].\n\nWir freuen uns auf Ihr Kommen. Bitte geben Sie uns bis [Datum] kurz Bescheid." },
+  beileid: { sym: "🕊️", t: "Beileid", betreff: "In stiller Anteilnahme", text: "mit großer Betroffenheit haben wir vom Tod [Name] erfahren.\n\nIn diesen schweren Stunden sind wir in Gedanken bei euch. Wir wünschen euch viel Kraft und Trost.\n\nIm Namen aller Mitglieder des Köcheclubs Werne" },
+  genesung: { sym: "💐", t: "Gute Besserung", betreff: "Gute Besserung!", text: "wir haben gehört, dass es dir gerade nicht gut geht, und wünschen dir von Herzen gute Besserung.\n\nWerde schnell wieder gesund – wir freuen uns, dich bald wieder bei uns zu sehen." },
+  geburt: { sym: "👶", t: "Geburt", betreff: "Herzlichen Glückwunsch zur Geburt", text: "zur Geburt von [Name] gratulieren wir euch ganz herzlich.\n\nWir wünschen der ganzen Familie viel Glück, Gesundheit und eine wunderschöne Zeit." },
+  hochzeit: { sym: "💍", t: "Hochzeit", betreff: "Herzlichen Glückwunsch zur Hochzeit", text: "zu eurer Hochzeit gratulieren wir euch im Namen aller Mitglieder des Köcheclubs Werne ganz herzlich.\n\nFür euren gemeinsamen Weg wünschen wir euch viel Liebe, Glück und immer etwas Gutes auf dem Tisch." },
   glueckwunsch: { sym: "🎉", t: "Glückwunsch", betreff: "Herzlichen Glückwunsch", text: "zu [Anlass] gratulieren wir Ihnen im Namen aller Mitglieder des Köcheclubs Werne ganz herzlich.\n\nFür die Zukunft wünschen wir Ihnen alles Gute." },
 };
 const BRIEF_ANREDEN = ["Sehr geehrte Damen und Herren,", "Sehr geehrte Frau …,", "Sehr geehrter Herr …,", "Liebe …,", "Hallo zusammen,"];
-const BRIEF_GRUESSE = ["Mit freundlichen Grüßen", "Herzliche Grüße", "Mit herzlichen Grüßen aus der Küche", "Viele Grüße"];
+const BRIEF_GRUESSE = ["Mit freundlichen Grüßen", "Herzliche Grüße", "Mit herzlichen Grüßen aus der Küche", "Viele Grüße", "In stiller Anteilnahme"];
 let BRIEF = null;
 function buBrief() {
   const eb = INIT?.einstellungen?.briefbogen || {};
@@ -6159,6 +6170,174 @@ function druckMitgliederliste() {
   const privat = ["telefon", "adressen"].includes(ML.art);
   return { titel: ML.titel.trim() || `Mitgliederliste – ${a.t}`, unter: `${d.liste.length} aktive Mitglieder · ${ML.sort === "eintritt" ? "nach Eintritt" : "nach Name"}${ML.titel.trim() ? " · " + a.t : ""}`, html,
     fuss: privat ? "Vertraulich – nur für Vereinszwecke, nicht weitergeben · nur freigegebene Angaben" : "" };
+}
+
+// ---------- KC-CLUB-FREUD-LEID (1.32.0, Wunsch Hansi): Freud & Leid – nur Clubleitung ----------
+// Fall anlegen in drei Schritten (Was? – Wen? – Was ist zu tun?), Checkliste aus der Server-Registry mit Wer/Bis wann vorbelegt.
+let FL = { d: null, neu: null, fall: null };
+async function flLaden() { try { const r = await api("fl_liste"); FL.d = r && Array.isArray(r.faelle) ? r : null; } catch { FL.d = null; } return FL.d; }
+function buFreudLeid() { BU.sicht = "fl"; buZeigen(); flLaden().then(() => { if (aktuelleAnsicht === "buero" && BU.sicht === "fl") buZeigen(); }); window.scrollTo(0, 0); }
+const flArt = (k) => FL.d?.arten?.[k] || { sym: "🤍", t: k, gruppe: "freude" };
+const flLeid = (f) => flArt(f.art).gruppe === "leid";
+function flKachel(f) {
+  const a = flArt(f.art), n = f.schritte.length;
+  return `<button class="mini-kachel${f.status === "offen" && flLeid(f) ? " fl-leid" : f.status === "offen" ? " mk-offen" : ""}" onclick="flFall('${f.id}')"><span class="mk-sym">${a.sym}</span>
+    <span class="mk-titel">${esc(f.name || "?")}</span><span class="mk-unter">${esc(a.t)}</span><span class="mk-unter">${f.status === "offen" ? `✔️ ${f.erledigt} von ${n} erledigt` : "✅ abgeschlossen"}</span></button>`;
+}
+function buFlHtml() {
+  const d = FL.d; if (!d) return '<div class="karte hinweis">Wird geladen …</div>';
+  const offen = d.faelle.filter((f) => f.status === "offen"), zu = d.faelle.filter((f) => f.status !== "offen");
+  return `<div class="karte bu-gruss">🤍 <b>Freud & Leid</b> – was im Leben unserer Mitglieder passiert und was der Club daraus macht. <small class="hinweis">Nur für die Clubleitung sichtbar.</small></div>
+    <button class="knopf haupt hl-gross" onclick="flNeu()">＋ Neuer Fall</button>
+    <div class="abschnitt"><h3>Offen</h3></div>${offen.length ? `<div class="mini-kacheln">${offen.map(flKachel).join("")}</div>` : '<div class="karte hinweis">Gerade nichts offen.</div>'}
+    ${zu.length ? `<details class="karte"><summary><b>Abgeschlossen (${zu.length})</b></summary><div class="mini-kacheln" style="margin-top:8px">${zu.map(flKachel).join("")}</div></details>` : ""}
+    <div class="knoepfe"><button class="knopf" onclick="buZurueck()">🗂️ Zurück ins Büro</button></div>`;
+}
+// --- neuer Fall ---
+function flBis(regel) {
+  const h = heuteIso();
+  if (regel === "sofort") return h;
+  if (regel === "termin") return FL.neu?.termin ? FL.neu.termin.slice(0, 10) : tagPlus(h, 5);
+  if (regel === "sitzung") { const t = (BU.start?.sitzungen || []).find((x) => new Date(x.beginn) > Date.now()); return t ? berlinIso(t.beginn) : tagPlus(h, 14); }
+  return /^\d+$/.test(regel || "") ? tagPlus(h, Number(regel)) : "";
+}
+function flWer(rolle) { const r = FL.d?.rollen || {}; return rolle === "alle" ? "alle" : (r[rolle] || []).find((id) => MITGLIEDER?.some((m) => m.person_id === id)) || ""; }
+async function flNeu() {
+  if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return melde(e.message, true); }
+  if (!FL.d) await flLaden();
+  FL.neu = { art: "", person: "", notiz: "", datum: heuteIso(), termin: "", terminZeit: "11:00", ort: "", betrag: "", schritte: [], mitteilen: true };
+  BU.sicht = "flneu"; buZeigen(); window.scrollTo(0, 0);
+}
+function flArtWahl(k) {
+  const a = flArt(k); FL.neu.art = k; FL.neu.betrag = a.betrag ?? "";
+  FL.neu.schritte = (a.schritte || []).map((s) => ({ an: true, text: s.t, wer: flWer(s.wer), regel: s.bis || "", bis: flBis(s.bis) }));
+  buZeigen();
+}
+function flTermin(el, feld) { FL.neu[feld] = el.value; if (feld === "termin") FL.neu.schritte.forEach((s) => { if (s.regel === "termin") s.bis = el.value || s.bis; }); buZeigen(); }
+function buFlNeuHtml() {
+  const n = FL.neu, d = FL.d; if (!n || !d) return '<div class="karte hinweis">Wird geladen …</div>';
+  const gruppe = (g, titel) => `<div class="hl-frage">${titel}</div><div class="mini-kacheln">${Object.entries(d.arten).filter(([, a]) => a.gruppe === g).map(([k, a]) => `<button class="mini-kachel${n.art === k ? (g === "leid" ? " fl-leid" : " mk-offen") : ""}" onclick="flArtWahl('${k}')"><span class="mk-sym">${a.sym}</span><span class="mk-titel">${esc(a.t)}</span></button>`).join("")}</div>`;
+  const a = n.art ? flArt(n.art) : null, leid = a?.gruppe === "leid", tod = /^tod_/.test(n.art);
+  const mg = MITGLIEDER.slice().sort((x, y) => x.name.localeCompare(y.name));
+  const werChips = (i, s) => `<select onchange="FL.neu.schritte[${i}].wer=this.value" style="max-width:100%"><option value="">– noch offen –</option>${s.wer === "alle" || /Mitglieder fragen|wer mitkommt/i.test(s.text) ? `<option value="alle" ${s.wer === "alle" ? "selected" : ""}>👥 Aufruf an alle</option>` : ""}${mg.map((m) => `<option value="${m.person_id}" ${s.wer === m.person_id ? "selected" : ""}>${esc(m.name)}</option>`).join("")}</select>`;
+  return `<div class="karte"><h3 style="margin-top:0">1️⃣ Was ist passiert?</h3>${gruppe("freude", "🎉 Freude")}${gruppe("leid", "🕯️ Leid")}</div>
+    ${a ? `<div class="karte"><h3 style="margin-top:0">2️⃣ Wen betrifft es?</h3>
+      <div class="hl-chips">${mg.map((m) => `<button class="chip${n.person === m.person_id ? " an" : ""}" onclick="FL.neu.person='${m.person_id}';buZeigen()">${esc(m.name)}</button>`).join("")}</div>
+      <label class="feld">Kurze Notiz (freiwillig)<input maxlength="500" placeholder="${leid ? "z. B. Mutter verstorben" : "z. B. Enkelin Mia geboren"}" value="${esc(n.notiz)}" oninput="FL.neu.notiz=this.value"></label>
+      ${tod || leid ? `<div class="zwei"><label class="feld">${tod ? "Beerdigung am" : "Termin (freiwillig)"}<input type="date" value="${esc(n.termin)}" onchange="flTermin(this,'termin')"></label><label class="feld">Uhrzeit<input type="time" value="${esc(n.terminZeit)}" onchange="FL.neu.terminZeit=this.value"></label></div>
+        <label class="feld">Ort${tod ? " (Friedhof/Kirche)" : ""}<input maxlength="120" value="${esc(n.ort)}" oninput="FL.neu.ort=this.value"></label>` : ""}
+      <label class="feld">Betrag für Blumen/Geschenk (€)<input type="number" min="0" max="10000" step="1" value="${esc(n.betrag)}" oninput="FL.neu.betrag=this.value" placeholder="offen"></label></div>
+    <div class="karte"><h3 style="margin-top:0">3️⃣ Was ist zu tun?</h3><p class="hinweis" style="margin:0 0 6px">Vorschlag – Häkchen weg, wenn etwas nicht passt. Zuständige bekommen ihre Aufgabe mit Erinnerung.</p>
+      ${n.schritte.map((s, i) => `<div class="fl-schritt${s.an ? "" : " aus"}"><label style="display:flex;gap:8px;align-items:flex-start"><input type="checkbox" ${s.an ? "checked" : ""} onchange="FL.neu.schritte[${i}].an=this.checked;buZeigen()"><span><b>${esc(s.text)}</b></span></label>
+        ${s.an ? `<div class="zwei" style="margin-top:6px">${werChips(i, s)}<input type="date" value="${esc(s.bis)}" onchange="FL.neu.schritte[${i}].bis=this.value"></div>` : ""}</div>`).join("")}
+      <div class="zwei" style="align-items:end;margin-top:6px"><label class="feld" style="margin:0">Eigener Schritt<input id="flEigen" maxlength="200" placeholder="z. B. Trauerkarte in die Zeitung"></label><button class="knopf" onclick="flEigen()">＋ Dazu</button></div>
+      <label class="schalter" style="margin-top:8px"><span>Zuständige gleich benachrichtigen</span><input type="checkbox" ${n.mitteilen ? "checked" : ""} onchange="FL.neu.mitteilen=this.checked"></label></div>
+    <div class="bu-leiste"><div class="knoepfe" style="margin:0"><button class="knopf haupt" style="flex:1;text-align:center" onclick="flSpeichern(this)">✅ Fall anlegen</button><button class="knopf" onclick="buFreudLeid()">Abbrechen</button></div></div>` : ""}`;
+}
+function flEigen() { const t = ($("flEigen")?.value || "").trim(); if (!t) return melde("Bitte kurz eintragen, was zu tun ist.", true); FL.neu.schritte.push({ an: true, text: t, wer: "", regel: "", bis: "" }); buZeigen(); }
+async function flSpeichern(knopf) {
+  const n = FL.neu;
+  if (!n.art) return melde("Bitte antippen, was passiert ist.", true);
+  if (!n.person) return melde("Bitte antippen, wen es betrifft.", true);
+  const termin = n.termin ? new Date(`${n.termin}T${n.terminZeit || "11:00"}:00`).toISOString() : null;
+  await einmal(knopf, async () => {
+    try {
+      const r = await api("fl_anlegen", { art: n.art, person_id: n.person, notiz: n.notiz, datum: n.datum, termin, termin_ort: n.ort, betrag: n.betrag === "" ? null : Number(n.betrag), mitteilen: n.mitteilen,
+        schritte: n.schritte.filter((s) => s.an).map((s) => ({ text: s.text, wer: s.wer === "alle" ? null : s.wer || null, alle: s.wer === "alle", bis: s.bis || null })) });
+      melde("✅ Fall angelegt"); await flLaden(); flFall(r.id, true);
+    } catch (e) { melde(e.message, true); }
+  });
+}
+// --- Fall ansehen / bearbeiten ---
+function flFall(id, nachAnlegen) {
+  FL.fall = id; BU.sicht = "fall"; buZeigen(); window.scrollTo(0, 0);
+  const f = FL.d?.faelle.find((x) => x.id === id);
+  if (nachAnlegen && f && f.schritte.some((s) => s.alle) && !f.informiert_am)
+    buWeiterFragen("✅ Fall angelegt", flLeid(f) ? "Möchtest du die Mitglieder jetzt informieren und fragen, wer zur Beerdigung mitkommt? (Bitte vorher mit der Familie absprechen.)" : "Möchtest du die Mitglieder jetzt informieren?",
+      [["📣 Mitglieder informieren", `flInformieren('${id}')`, true], ["Später", "void 0"]]);
+}
+function buFallHtml() {
+  const f = FL.d?.faelle.find((x) => x.id === FL.fall); if (!f) return '<div class="karte hinweis">Fall nicht gefunden.</div><div class="knoepfe"><button class="knopf" onclick="buFreudLeid()">Zurück</button></div>';
+  const a = flArt(f.art), leid = flLeid(f), offen = f.status === "offen";
+  return `<div class="karte bu-kopf${leid ? " fl-kopf-leid" : ""}"><div style="font-size:2.4rem">${a.sym}</div><div><b>${esc(a.t)}</b><br><span style="font-size:1.15rem;font-weight:800">${esc(f.name || "")}</span>
+      ${f.notiz ? `<br>${esc(f.notiz)}` : ""}${f.termin ? `<br>🗓️ ${esc(wann(f.termin, true))}${f.termin_ort ? " · 📍 " + esc(f.termin_ort) : ""}` : ""}${f.betrag !== null ? `<br>💶 ${esc(spEuro(f.betrag))}` : ""}</div></div>
+    <div class="karte"><h3 style="margin-top:0">✔️ Was ist zu tun? <span class="marke ${f.erledigt === f.schritte.length ? "gruen" : "gelb"}">${f.erledigt} von ${f.schritte.length}</span></h3>
+      ${f.schritte.map((s) => `<div class="zeile"><button class="knopf klein ${s.erledigt ? "gruen" : ""}" ${offen ? "" : "disabled"} onclick="flSchritt('${f.id}','${s.id}', ${!s.erledigt})">${s.erledigt ? "✔" : "☐"}</button>
+        <div style="flex:1${s.erledigt ? ";text-decoration:line-through;opacity:.6" : ""}"><b>${esc(s.text)}</b><div class="hinweis" style="font-size:.85rem">${s.alle ? "👥 Aufruf an alle" : s.werName ? "👤 " + esc(s.werName) : "noch offen, wer"}${s.bis ? " · " + faelligText(s.bis) : ""}${s.mitgeteilt ? " · 📨 mitgeteilt" : ""}</div></div>
+        ${offen ? `<button class="knopf klein" onclick="flSchrittWeg('${f.id}','${s.id}')">✕</button>` : ""}</div>`).join("") || '<p class="hinweis">Keine Schritte.</p>'}
+      ${offen ? `<div class="zwei" style="align-items:end;margin-top:8px"><label class="feld" style="margin:0">Weiterer Schritt<input id="flNeuSchritt" maxlength="200" placeholder="z. B. Danke-Karte der Familie aushängen"></label><button class="knopf" onclick="flSchrittNeu('${f.id}')">＋</button></div>` : ""}</div>
+    ${f.aufruf ? `<div class="karte"><b>🚶 ${/^tod_/.test(f.art) ? "Abordnung zur Beerdigung" : "Begleitung"}:</b> ${f.aufruf.kommen.length ? esc(f.aufruf.kommen.join(", ")) : "noch keine Zusagen"}</div>` : ""}
+    ${offen ? `<div class="mini-kacheln">
+      <button class="mini-kachel" onclick="flInformieren('${f.id}')"><span class="mk-sym">📣</span><span class="mk-titel">Mitglieder informieren</span><span class="mk-unter">${f.informiert_am ? "✅ " + esc(zeitKurz(f.informiert_am)) : leid ? "nach Absprache mit der Familie" : "Push / E-Mail"}</span></button>
+      <button class="mini-kachel" onclick="flKarte('${f.id}')"><span class="mk-sym">✉️</span><span class="mk-titel">Karte / Brief</span><span class="mk-unter">${leid ? "Beileid · Genesung" : "Glückwunsch"}</span></button>
+      ${f.person_id && !leid ? `<button class="mini-kachel" onclick="direkt('${f.person_id}')"><span class="mk-sym">💬</span><span class="mk-titel">Nachricht an ${esc((f.name || "").split(" ")[0])}</span></button>` : ""}
+      <button class="mini-kachel" onclick="flAngaben('${f.id}')"><span class="mk-sym">✏️</span><span class="mk-titel">Angaben ändern</span><span class="mk-unter">Termin · Ort · Betrag</span></button>
+      <button class="mini-kachel" onclick="flAbschliessen('${f.id}')"><span class="mk-sym">✅</span><span class="mk-titel">Fall abschließen</span><span class="mk-unter">wird im Archiv abgelegt</span></button></div>` : '<p class="hinweis">Abgeschlossen – liegt im Archiv (Ordner „Admin“, Register „Freud & Leid“).</p>'}
+    <div class="knoepfe"><button class="knopf" onclick="buFreudLeid()">🤍 Alle Fälle</button><button class="knopf" onclick="buZurueck()">🗂️ Büro</button></div>`;
+}
+async function flAendern(id, daten, meldung) {
+  try { await api("fl_aendern", { id, ...daten }); if (meldung) melde(meldung); await flLaden(); buZeigen(); } catch (e) { melde(e.message, true); }
+}
+const flSchritt = (id, sid, erledigt) => flAendern(id, { was: "schritt_erledigt", schritt_id: sid, erledigt }, erledigt ? "✔ Erledigt" : "Wieder offen");
+const flSchrittWeg = (id, sid) => { if (confirm("Diesen Schritt streichen?")) flAendern(id, { was: "schritt_weg", schritt_id: sid }, "Gestrichen"); };
+const flSchrittNeu = (id) => { const t = ($("flNeuSchritt")?.value || "").trim(); if (!t) return melde("Bitte kurz eintragen, was zu tun ist.", true); flAendern(id, { was: "schritt_neu", text: t }, "＋ Schritt ergänzt"); };
+function flAngaben(id) {
+  const f = FL.d.faelle.find((x) => x.id === id); if (!f) return;
+  const tag = f.termin ? berlinIso(f.termin) : "", zeit = f.termin ? fZeit.format(new Date(f.termin)) : "11:00";
+  blattAuf("flAng", `<h3 style="margin-top:0">✏️ Angaben ändern</h3>
+    <label class="feld">Notiz<input id="flAN" maxlength="500" value="${esc(f.notiz || "")}"></label>
+    <div class="zwei"><label class="feld">Termin<input id="flAT" type="date" value="${tag}"></label><label class="feld">Uhrzeit<input id="flAZ" type="time" value="${zeit}"></label></div>
+    <label class="feld">Ort<input id="flAO" maxlength="120" value="${esc(f.termin_ort || "")}"></label>
+    <label class="feld">Betrag (€)<input id="flAB" type="number" min="0" max="10000" value="${f.betrag ?? ""}"></label>
+    <div class="knoepfe"><button class="knopf haupt" onclick="flAngabenSpeichern('${id}')">Speichern</button><button class="knopf" onclick="$('flAng').remove()">Abbrechen</button></div>`);
+}
+function flAngabenSpeichern(id) {
+  const t = $("flAT").value, termin = t ? new Date(`${t}T${$("flAZ").value || "11:00"}:00`).toISOString() : null;
+  const b = $("flAB").value; $("flAng").remove();
+  flAendern(id, { was: "angaben", notiz: $("flAN")?.value ?? "", termin, termin_ort: $("flAO")?.value ?? "", betrag: b === "" ? null : Number(b) }, "Gespeichert");
+}
+// Mitglieder informieren – bei Leid ruhiger Textvorschlag und Rückfrage „mit der Familie abgesprochen?“
+function flInformieren(id) {
+  const f = FL.d.faelle.find((x) => x.id === id); if (!f) return;
+  const leid = flLeid(f), tod = /^tod_/.test(f.art), vn = (f.name || "").split(" ")[0];
+  const vorschlag = f.art === "tod_mitglied" ? `in tiefer Trauer müssen wir euch mitteilen, dass unser Mitglied ${f.name} verstorben ist. Unsere Gedanken sind bei der Familie.${f.termin ? `\n\nDie Beerdigung ist am ${wann(f.termin, true)}${f.termin_ort ? " in " + f.termin_ort : ""}.` : ""}`
+    : f.art === "tod_angehoeriger" ? `leider müssen wir euch mitteilen, dass ${vn} einen nahen Angehörigen verloren hat${f.notiz ? ` (${f.notiz})` : ""}. Wir sind in Gedanken bei ${vn} und der Familie.${f.termin ? `\n\nDie Beerdigung ist am ${wann(f.termin, true)}${f.termin_ort ? " in " + f.termin_ort : ""}.` : ""}`
+    : leid ? `${vn} geht es gerade nicht gut${f.notiz ? ` (${f.notiz})` : ""}. Ein kurzer Gruß oder eine Nachricht freut sicher sehr.`
+    : `schöne Nachricht: ${f.name} – ${flArt(f.art).t}${f.notiz ? ` (${f.notiz})` : ""}! Herzlichen Glückwunsch vom ganzen Club. 🎉`;
+  window.__flSend = { id, wege: [] };
+  blattAuf("flInfo", `<h3 style="margin-top:0">📣 Mitglieder informieren</h3>
+    <label class="feld">Text (ändern, wie es passt)<textarea id="flIT" rows="6" maxlength="1000">${esc(vorschlag)}</textarea></label>
+    ${tod && !f.aufruf ? `<label class="schalter"><span><b>🚶 Fragen, wer zur Beerdigung mitkommt</b><br><small class="hinweis">Mitglieder sagen mit „✋ Ich komme“ zu</small></span><input type="checkbox" id="flIA" checked></label>` : ""}
+    ${leid ? `<label class="schalter fl-abgesprochen"><span><b>Mit der Familie abgesprochen?</b><br><small class="hinweis">Bitte erst senden, wenn die Familie einverstanden ist.</small></span><input type="checkbox" id="flIOK"></label>` : ""}
+    <div class="hinweis" style="margin:4px 0">Wie benachrichtigen?</div>
+    <div class="hl-chips" id="flWege">${[["", "⚙️ Wie eingestellt"], ["push", "🔔 Push"], ["email", "✉️ E-Mail"], ["beide", "🔔+✉️ Beides"]].map(([w, t]) => `<button class="chip${w === "" ? " an" : ""}" data-w="${w}" onclick="window.__flSend.wege=('${w}'==='beide'?['push','email']:'${w}'?['${w}']:[]);document.querySelectorAll('#flWege .chip').forEach((b)=>b.classList.toggle('an',b.dataset.w==='${w}'))">${t}</button>`).join("")}</div>
+    <div class="knoepfe" style="flex-direction:column;align-items:stretch"><button class="knopf haupt" style="text-align:center" onclick="flSenden(this)">📣 An alle Mitglieder senden</button><button class="knopf" style="text-align:center" onclick="$('flInfo').remove()">Abbrechen</button></div>`);
+}
+async function flSenden(knopf) {
+  const x = window.__flSend, f = FL.d.faelle.find((y) => y.id === x.id), leid = flLeid(f);
+  if (leid && !$("flIOK")?.checked) return melde("Bitte zuerst bestätigen, dass es mit der Familie abgesprochen ist.", true);
+  if (!confirm("Nachricht jetzt an alle Mitglieder senden?")) return;
+  await einmal(knopf, async () => {
+    try {
+      const r = await api("fl_informieren", { id: x.id, text: $("flIT").value, abgesprochen: leid ? true : undefined, abordnung: !!$("flIA")?.checked, wege: x.wege });
+      $("flInfo")?.remove(); melde(`📣 ${r.empfaenger} Mitglieder informiert${r.aufruf ? " – Zusagen erscheinen hier" : ""}`); await flLaden(); buZeigen();
+    } catch (e) { melde(e.message, true); }
+  });
+}
+function flKarte(id) {
+  const f = FL.d.faelle.find((x) => x.id === id); if (!f) return;
+  const k = /^tod_/.test(f.art) ? "beileid" : ["krankheit", "unfall"].includes(f.art) ? "genesung" : f.art === "geburt" ? "geburt" : ["hochzeit", "ehejubilaeum"].includes(f.art) ? "hochzeit" : "glueckwunsch";
+  buBrief(); const v = BRIEF_VORLAGEN[k];
+  Object.assign(BRIEF, { vorlage: k, empfaenger: f.art === "tod_mitglied" ? `Familie ${(f.name || "").split(" ").slice(-1)[0]}` : f.name, betreff: v.betreff, text: v.text,
+    anrede: f.art === "tod_mitglied" ? "Liebe Familie,": `Liebe/r ${(f.name || "").split(" ")[0]},`, gruss: /^tod_/.test(f.art) ? "In stiller Anteilnahme" : "Herzliche Grüße" });
+  briefMerken(); buZeigen();
+}
+async function flAbschliessen(id) {
+  const f = FL.d.faelle.find((x) => x.id === id);
+  const offen = f ? f.schritte.length - f.erledigt : 0;
+  if (!confirm(`Fall abschließen?${offen ? `\n\nNoch ${offen} Schritt(e) offen.` : ""}\n\nEr wird im Archiv abgelegt (Ordner „Admin“, Register „Freud & Leid“).`)) return;
+  try { const r = await api("fl_abschliessen", { id }); melde(r.abgelegt ? "✅ Abgeschlossen und im Archiv abgelegt" : "✅ Abgeschlossen (Archiv-Ablage hat nicht geklappt)"); await flLaden(); buFreudLeid(); }
+  catch (e) { melde(e.message, true); }
 }
 
 // ---------- KC-CLUB-HELFEN & KC-CLUB-LEIHEN (1.23.0, Wunsch Hansi): eine Kachel, zwei Bereiche – fast alles per Antippen ----------
