@@ -455,6 +455,15 @@
   .mini.mini-neu .ameisen rect { fill: none; stroke: #ff9800; stroke-width: 6; stroke-dasharray: 9 6; animation: ameisenLauf 1s linear infinite; }
   @keyframes ameisenLauf { to { stroke-dashoffset: -15; } }
   @media (prefers-reduced-motion: reduce) { .mini.mini-neu .ameisen rect { animation-duration: 3s; } }
+  /* KC-CLUB-FRIST-AMEISEN (1.53.6): Feld „Nächster Termin“ – Ameisenstraße je nach Tagen bis zum Termin:
+     ≤ 5 Tage hellgrün langsam, ≤ 3 Tage orange, ≤ 1 Tag (morgen/heute) rot und schneller */
+  .mini.mini-frist { position: relative; }
+  .mini.mini-frist .ameisen { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; border-radius: inherit; }
+  .mini.mini-frist .ameisen rect { fill: none; stroke-width: 6; stroke-dasharray: 9 6; animation: ameisenLauf var(--frist-lauf) linear infinite; }
+  .mini.frist-gruen { --frist-lauf: 2.4s; } .mini.frist-gruen .ameisen rect { stroke: #a5e887; }
+  .mini.frist-orange { --frist-lauf: 1.4s; } .mini.frist-orange .ameisen rect { stroke: #ff9800; }
+  .mini.frist-rot { --frist-lauf: .8s; } .mini.frist-rot .ameisen rect { stroke: #ff4d4d; }
+  @media (prefers-reduced-motion: reduce) { .mini.mini-frist .ameisen rect { animation-duration: 3s; } }
   .mini span { font-size: .72rem; letter-spacing: .06em; font-weight: 700; text-transform: uppercase; opacity: .9; }
 
   /* Schnellzugriff */
@@ -2104,7 +2113,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.53.5"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.53.6"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -5218,21 +5227,24 @@ async function wetterSetzen(teil) {
 // Feld 1: das nächste Treffen (antippen → Termine), darunter drei Kennzahlen, jede führt in ihren Bereich
 function infoTreffen() {
   const t = INIT?.naechstesTreffen, n = INIT?.ungelesen || 0;
-  let kopf, bisTreffen = "—";
+  let kopf, bisTreffen = "—", frist = "";
   if (t) {
     const tage = Math.ceil((new Date(t.beginn) - Date.now()) / 86400000);
     const ort = t.ort || (t.gastgeber ? "bei " + t.gastgeber.name : "");
     const meine = { ja: "✅ Ich komme", nein: "❌ Abgesagt", vielleicht: "❓ Vielleicht" }[t.meine] || "❔ Bitte zu- oder absagen";
     kopf = `<h2>${esc(t.titel)}</h2><div class="unter">${esc(wann(t.beginn))}${ort ? " · " + esc(ort) : ""}</div><div class="unter"><b>${meine}</b> · ✅ ${t.ja} Zusagen</div>`;
     bisTreffen = tage <= 0 ? "Heute" : tage === 1 ? "Morgen" : `in ${tage} Tagen`;
+    frist = fristStufe(tage);
   } else kopf = `<h2>Kein Termin geplant</h2><div class="unter">Sobald ein Köcheclub-Termin ansteht, siehst du es hier.</div>`;
   return `<div class="klick" onclick="zumTreffen()">${kopf}</div>
     <div class="kacheln3">
       <button class="mini${n ? " mini-neu" : ""}" onclick="zeige('nachrichten')">${n ? '<svg class="ameisen" aria-hidden="true"><rect width="100%" height="100%" rx="16"/></svg>' : ""}<b>${n}</b><span>Neue Nachr.</span><span class="mpfeil" aria-hidden="true">›</span></button>
       <button class="mini" onclick="zeige('mitglieder')"><b class="mini-zeile">${INIT?.mitgliederAnzahl || "–"}${ONL.zeigen ? onlineZahlHtml() : ""}</b><span>Mitglieder</span><span class="mpfeil" aria-hidden="true">›</span></button>
-      <button class="mini" onclick="zumTreffen()"><b style="font-size:1.05rem">${bisTreffen}</b><span>Nächster Termin</span><span class="mpfeil" aria-hidden="true">›</span></button>
+      <button class="mini${frist ? " mini-frist frist-" + frist : ""}" onclick="zumTreffen()">${frist ? '<svg class="ameisen" aria-hidden="true"><rect width="100%" height="100%" rx="16"/></svg>' : ""}<b style="font-size:1.05rem">${bisTreffen}</b><span>Nächster Termin</span><span class="mpfeil" aria-hidden="true">›</span></button>
     </div>`;
 }
+// KC-CLUB-FRIST-AMEISEN (1.53.6): Stufe der Ameisenstraße am Feld „Nächster Termin“ (Wunsch Hansi)
+const fristStufe = (tage) => tage <= 1 ? "rot" : tage <= 3 ? "orange" : tage <= 5 ? "gruen" : "";
 // KC-CLUB-ONLINE-ZAHL (1.47.0): statt Text nur LED + Zahl – grün = jemand online, grau = niemand oder Stand unbekannt (dann „?“)
 function onlineZahlHtml() {
   const frisch = ONL.stand && Date.now() - ONL.stand < 3 * 60 * 1000, n = ONL.liste.length, an = frisch && n > 0;
