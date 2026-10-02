@@ -1,5 +1,9 @@
 # Änderungen
 
+## 1.50.0 – 2026-10-02
+- KC-CLUB-STATUS-RUHE: Während der eigenen „Nicht stören“-Zeit (⚙️ → Benachrichtigungen) zeigt der Status „🌙 Ruhezeit bis HH:MM“ – oben im Kopf (live, minütlich) und für die anderen in Mitgliederliste/-seite. Nur Anzeige, nichts gespeichert; Urlaub/krank/beschäftigt/nicht erreichbar haben Vorrang. Nicht als Status wählbar; Kreis bleibt dabei nicht orange.
+- KC-CLUB-STATUS-PFEIL: Pfeil am Statusfeld rechts mittig auf dem Rand (wie bei den Feldern darunter), Statusfeld dadurch schmaler.
+
 ## 1.49.2 – 2026-10-02
 - KC-CLUB-ZUSTELLFEHLER: Roter Kreis (nur Admin) nur noch, wenn nach einem Zustellfehler auf demselben Weg nichts mehr angekommen ist (vorher blieb ein einzelner alter Push-Fehler 7 Tage rot). „Kein Push und keine E-Mail“ ist kein roter Fehler mehr, sondern ein Hinweis „📵 nicht erreichbar“ in Liste und Kachel (nur Admin).
 

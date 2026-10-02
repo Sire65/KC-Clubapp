@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.49.2";
+const SERVER_VERSION = "1.50.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -919,13 +919,25 @@ const nurAdmin = (ich: Ich) => { if (!ich.admin) throw new Fehler("Das darf nur 
 
 // ---------- Eigener Status ----------
 const STATUS = ["verfuegbar", "beschaeftigt", "urlaub", "krank", "abwesend"];
-async function statusMap(ids?: string[]) {
+async function statusMap(ids?: string[], mitRuhe = false) {
   let q = db.from("kc_club_status").select("person_id,status,hinweis,bis,geaendert_am");
   if (ids) q = q.in("person_id", ids);
   const { data } = await q;
   const heute = berlinTag(new Date());
   // abgelaufener Status („bis“ vorbei) gilt wieder als verfügbar
-  return new Map((data ?? []).map((x: any) => [x.person_id, x.bis && x.bis < heute ? { status: "verfuegbar", hinweis: null, bis: null } : { status: x.status, hinweis: x.hinweis, bis: x.bis }]));
+  const m = new Map<string, any>((data ?? []).map((x: any) => [x.person_id, x.bis && x.bis < heute ? { status: "verfuegbar", hinweis: null, bis: null } : { status: x.status, hinweis: x.hinweis, bis: x.bis }]));
+  // KC-CLUB-STATUS-RUHE (1.50.0): wer gerade in seiner „Nicht stören“-Zeit ist und sonst „verfügbar“ wäre, zeigt „🌙 nicht stören bis …“
+  // (nur Anzeige – gespeichert wird nichts; Urlaub/krank/… haben Vorrang)
+  if (mitRuhe) {
+    let rq = db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "ruhezeit");
+    if (ids) rq = rq.in("person_id", ids);
+    const { data: rz } = await rq;
+    for (const x of rz ?? []) {
+      const alt = m.get((x as any).person_id);
+      if (inRuhezeit((x as any).wert) && (!alt || alt.status === "verfuegbar")) m.set((x as any).person_id, { status: "ruhe", hinweis: null, bis: null, uhr: (x as any).wert.bis });
+    }
+  }
+  return m;
 }
 
 // ---------- Geburtstage (KC-CLUB-GEBURTSTAG-FREIGABE) ----------
@@ -2569,7 +2581,7 @@ Köcheclub Werne`,
       case "mitglieder": {
         const [leute, { data: rollen }, { data: zug }, { data: push }, st, { data: tel }, { data: hfr }] = await Promise.all([
           aktiveMitglieder(), db.from("kc_club_rollen").select("*"), db.from("kc_club_zugang").select("person_id,aktiv,zuletzt_gesehen"),
-          db.from("kc_member_push_subscriptions").select("person_id").eq("active", true), statusMap(),
+          db.from("kc_member_push_subscriptions").select("person_id").eq("active", true), statusMap(undefined, true),
           db.from("kc_core_people").select("person_id").eq("active", true).eq("org_id", ORG).not("phone", "is", null).neq("phone", ""),
           db.from("kc_club_freigaben").select("person_id").eq("bereich", "kontakt_handy").eq("erlaubt", true),
         ]);
@@ -3847,7 +3859,7 @@ Köcheclub Werne`,
         const [{ data: fr }, { data: rolle }, st] = await Promise.all([
           db.from("kc_club_freigaben").select("bereich,erlaubt").eq("person_id", pid),
           db.from("kc_club_rollen").select("aemter").eq("person_id", pid).maybeSingle(),
-          statusMap([pid]),
+          statusMap([pid], true),
         ]);
         const frei = (b: string) => !!(fr ?? []).find((x: any) => x.bereich === b)?.erlaubt;
         const darf = (f: string) => selbst || ich.admin || (ich.kontakte && frei("kontakt_" + f));

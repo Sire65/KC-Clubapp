@@ -2343,6 +2343,15 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/m\.unerreichbar \? "📵 nicht erreichbar – kein Push, keine Mail"/.test(html) && /ICH\.admin && m\.unerreichbar \? '<span class="mk-unter"/.test(html), "Hinweis in Liste und Kachel (nur Admin)");
 }
 
+// 212. 1.50.0: Status zeigt die eigene Ruhezeit; Status-Pfeil auf dem Rand (KC-CLUB-STATUS-RUHE, KC-CLUB-STATUS-PFEIL)
+{
+  assert.ok(/async function statusMap\(ids\?: string\[\], mitRuhe = false\)/.test(server) && /inRuhezeit\(\(x as any\)\.wert\) && \(!alt \|\| alt\.status === "verfuegbar"\)/.test(server), "Server: Ruhezeit nur statt „verfügbar“, Urlaub/krank haben Vorrang");
+  assert.ok(/statusMap\(undefined, true\)/.test(server) && /statusMap\(\[pid\], true\)/.test(server) && !/case "status_setzen"[^]{0,300}"ruhe"/.test(server), "andere sehen die Ruhezeit; nicht speicherbar");
+  assert.ok(/function inRuheJetzt\(r\)/.test(html) && /function eigenerStatus\(\)/.test(html) && /filter\(\(\[k\]\) => STATUS_WAEHLBAR\.includes\(k\)\)/.test(html), "eigener Status live, Ruhezeit nicht wählbar");
+  assert.ok(/<span class="stpfeil" aria-hidden="true">›<\/span>/.test(html) && /\.statuschip \.stpfeil \{[^}]*rotate\(90deg\)/.test(html), "Pfeil auf dem Rand");
+  assert.ok(/!\["verfuegbar", "ruhe"\]\.includes\(statusArt\(m\.status\)\)/.test(html), "Ruhezeit macht den Kreis nicht orange (abwesend)");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
