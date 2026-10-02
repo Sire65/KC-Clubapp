@@ -722,11 +722,12 @@
   @media (max-width: 420px) { .eingabe .innen { gap: 5px; } .eingabe .innen > .rund:not(.zustell-knopf) { width: 42px; height: 42px; font-size: 1.05rem; } } /* 1.12.0: mehr Platz fürs Schreibfeld */
   /* KC-CLUB-EINGABE-GROSS (1.21.0, Wunsch Hansi „Eingabe größer und breiter“): oben das Schreibfeld über die ganze Breite
      (höher, größere Schrift) mit ➤ daneben, darunter die Knöpfe 📎 🎤 😊 🔔 – kleiner, links */
-  .eingabe .innen { display: grid; grid-template-columns: auto auto auto auto 1fr auto; gap: 6px 8px; align-items: end; }
-  .eingabe .innen > #text { grid-row: 1; grid-column: 1 / 6; min-height: 56px; max-height: 40vh; font-size: 1.12rem; line-height: 1.35; padding: 14px 16px; border-radius: 20px; }
-  .eingabe .innen > #sendenKnopf { grid-row: 1; grid-column: 6; width: 52px; height: 52px; font-size: 1.3rem; }
+  .eingabe .innen { display: grid; grid-template-columns: auto auto auto auto auto 1fr auto; gap: 6px 8px; align-items: end; } /* 1.36.0: + 📋 */
+  .eingabe .innen > #text { grid-row: 1; grid-column: 1 / 7; min-height: 56px; max-height: 40vh; font-size: 1.12rem; line-height: 1.35; padding: 14px 16px; border-radius: 20px; }
+  .eingabe .innen > #sendenKnopf { grid-row: 1; grid-column: 7; width: 52px; height: 52px; font-size: 1.3rem; }
   .eingabe .innen > .rund:not(#sendenKnopf) { grid-row: 2; width: 40px !important; height: 40px !important; font-size: 1.05rem !important; }
   .eingabe .innen > .bf-chat-knopf { background: var(--karte2) !important; }
+  .eingabe .innen > .wa-einf-knopf { background: var(--karte2) !important; justify-self: end; }
   .eingabe .innen > .wa-knopf { background: #0f7a3f !important; color: #fff; font-weight: 900; font-size: .95rem !important; letter-spacing: .02em; }
   .eingabe-entwurf { font-size: .8rem; color: var(--gelb, #d68910); font-weight: 700; margin: 0 6px 2px; }
   .entwurf-marke { color: #d35400; font-weight: 800; }
@@ -1772,6 +1773,8 @@
     <!-- KC-CLUB-WA-SENDEN (1.21.3, Wunsch Hansi): Text an WhatsApp übergeben und WhatsApp öffnen -->
     <button class="rund wa-knopf" title="Mit WhatsApp senden" aria-label="Mit WhatsApp senden" id="waKnopf" onclick="waSenden()">WA</button>
     <!-- KC-CLUB-BILDSCHIRMFOTO im Chat (1.32.2, Wunsch Hansi): Auslöser starten – das Foto landet danach in diesem Chat -->
+    <!-- KC-CLUB-WA-EINFUEGEN (1.36.0, Wunsch Hansi): in WhatsApp kopierte Nachrichten sauber einfügen (ohne Nummern/Zeitstempel) -->
+    <button class="rund wa-einf-knopf" title="Aus WhatsApp einfügen" aria-label="Aus WhatsApp einfügen" id="waEinfKnopf" onclick="waEinfuegen()">📋</button>
     <button class="rund bf-chat-knopf" title="Bildschirmfoto für diesen Chat" aria-label="Bildschirmfoto für diesen Chat" id="bfChatKnopf" onclick="bfAusChat()">📸</button>
   </div>
 </div>
@@ -1964,7 +1967,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.35.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.36.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -8205,6 +8208,49 @@ async function appKameraAusloesen() {
 }
 
 // ---------- Anlagen ----------
+// KC-CLUB-WA-EINFUEGEN (1.36.0, Wunsch Hansi): WhatsApp erlaubt bei Text kein „Teilen“ – also in WhatsApp „Kopieren“,
+// hier 📋 tippen. Zwischenablage lesen (sonst Einfügefeld), Handynummern und WhatsApp-Zeitstempel entfernen,
+// je Nachricht „Vorname (hh:mm): Text“. Es wird NIE automatisch gesendet – der Text landet im Schreibfeld.
+const WA_TEL = /(?:\+|00)\d[\d \t\/()-]{6,}\d|\b0\d[\d \t\/()-]{6,}\d/g;
+const waOhneNummer = (t) => String(t).replace(WA_TEL, (x) => (x.replace(/\D/g, "").length >= 8 ? "[Nummer entfernt]" : x));
+function waAufbereiten(roh) {
+  const zeilen = String(roh || "").replace(/\r/g, "").replace(/[\u200e\u200f\u202a-\u202e]/g, "").split("\n");
+  const kopf1 = /^\[([^\]]{4,40})\]\s*([^:]{1,60}?):\s?(.*)$/;                                   // [09:22, 2.10.2026] Klaus: …
+  const kopf2 = /^(\d{1,2}\.\d{1,2}\.\d{2,4}),?\s+(\d{1,2}:\d{2})\s+-\s+([^:]{1,60}?):\s?(.*)$/;   // 02.10.26, 09:22 - Klaus: …
+  const name = (n) => {
+    n = n.replace(/^~\s*/, "").trim();
+    if (n.replace(/\D/g, "").length >= 8 && /^[+\d\s()\/-]+$/.test(n)) return "Mitglied";            // nur Nummer → keine Nummer zeigen
+    const m = (MITGLIEDER || []).find((x) => x.name.toLowerCase() === n.toLowerCase());
+    if (m?.person_id === ICH?.person_id || n.toLowerCase() === String(ICH?.name || "").toLowerCase()) return ICH?.vorname || n.split(" ")[0];
+    return (m?.name || n).split(" ")[0];
+  };
+  const nachr = []; let frei = [];
+  for (const z of zeilen) {
+    const a = z.match(kopf1), b = a ? null : z.match(kopf2);
+    if (a || b) { nachr.push({ von: name(a ? a[2] : b[3]), zeit: (a ? a[1] : b[2]).match(/\d{1,2}:\d{2}/)?.[0] || "", text: [a ? a[3] : b[4]] }); }
+    else if (nachr.length) nachr[nachr.length - 1].text.push(z);
+    else frei.push(z);
+  }
+  if (!nachr.length) return { text: waOhneNummer(frei.join("\n").trim()), anzahl: frei.join("").trim() ? 1 : 0 };
+  const teile = nachr.map((x) => `${x.von}${x.zeit ? ` (${x.zeit})` : ""}: ${waOhneNummer(x.text.join("\n").trim())}`);
+  return { text: "📋 Aus WhatsApp:\n" + teile.join("\n"), anzahl: nachr.length };
+}
+function waEinsetzen(roh) {
+  const e = waAufbereiten(roh); if (!e.text) return melde("Da war nichts zum Einfügen – bitte in WhatsApp zuerst „Kopieren“ tippen.", true);
+  const f = $("text"); f.value = (f.value.trim() ? f.value.trimEnd() + "\n" : "") + e.text;
+  f.style.height = "auto"; f.style.height = f.scrollHeight + "px"; entwurfMerken(); entwurfMarkeZeigen(); f.focus();
+  melde(`📋 ${e.anzahl > 1 ? e.anzahl + " Nachrichten" : "Text"} eingefügt – Nummern entfernt. Bitte kurz prüfen und mit ➤ senden.`);
+}
+async function waEinfuegen() {
+  // Lesen kann auf manchen Geräten auf eine Bestätigung warten – nach 8 s lieber das Einfügefeld zeigen
+  try { const t = await Promise.race([navigator.clipboard.readText(), new Promise((_, nein) => setTimeout(() => nein(new Error("zeit")), 8000))]); if (t?.trim()) return waEinsetzen(t); } catch {}
+  // Ausweg (keine Berechtigung/kein Lesen möglich): Feld zum Einfügen
+  blattAuf("waEinfBlatt", `<h3 style="margin-top:0">📋 Aus WhatsApp einfügen</h3>
+    <p class="hinweis" style="margin:0 0 6px">1. In WhatsApp Nachrichten lange drücken (mehrere antippen) → oben ⧉ <b>Kopieren</b>.<br>2. Hier ins Feld <b>lange drücken → Einfügen</b>.</p>
+    <label class="feld" style="margin:0"><textarea id="waEinfFeld" rows="6" placeholder="Hier lange drücken → Einfügen"></textarea></label>
+    <div class="knoepfe" style="margin-top:8px"><button class="knopf haupt" onclick="const t=$('waEinfFeld').value;$('waEinfBlatt').remove();waEinsetzen(t)">✅ Übernehmen</button><button class="knopf" onclick="$('waEinfBlatt').remove()">Abbrechen</button></div>`);
+  setTimeout(() => $("waEinfFeld")?.focus(), 50);
+}
 function anlageMenue() { $("anlageBlatt").classList.toggle("versteckt"); }
 function anlageWahl(id) { $("anlageBlatt").classList.add("versteckt"); dateiWahl(id, dateienGewaehlt); }
 function chipsZeigen() { $("anlagenChips").innerHTML = anlagen.map((a, i) => `<button class="chip" onclick="anlagen.splice(${i},1);chipsZeigen()">${a.laedt ? "⏳" : "📎"} ${esc(a.name)} ✕</button>`).join(""); }

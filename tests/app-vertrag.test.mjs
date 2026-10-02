@@ -1805,7 +1805,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 
 // 157. 1.21.0: größeres Schreibfeld + „Entwurf“ (KC-CLUB-EINGABE-GROSS, KC-CLUB-ENTWURF-ANZEIGE)
 {
-  assert.ok(/\.eingabe \.innen > #text \{ grid-row: 1; grid-column: 1 \/ 6; min-height: 56px;/.test(html) && /\.eingabe \.innen > \.rund:not\(#sendenKnopf\) \{ grid-row: 2;/.test(html), "Schreibfeld oben volle Breite, Knöpfe darunter");
+  assert.ok(/\.eingabe \.innen > #text \{ grid-row: 1; grid-column: 1 \/ 7; min-height: 56px;/.test(html) && /\.eingabe \.innen > \.rund:not\(#sendenKnopf\) \{ grid-row: 2;/.test(html), "Schreibfeld oben volle Breite, Knöpfe darunter");
   for (const id of ["mikroKnopf", "emoKnopf", "zustellKnopf", "sendenKnopf"]) assert.ok(new RegExp(`id="${id}"`).test(html), `Knopf ${id} bleibt`);
   assert.ok(/id="entwurfMarke">✏️ Entwurf – noch nicht gesendet/.test(html) && /entwurfMerken\(\);entwurfMarkeZeigen\(\)/.test(html) && /\$\("text"\)\.value = ""; \$\("text"\)\.style\.height = "auto"; entwurfMarkeZeigen\(\);/.test(html), "Entwurf-Hinweis an/aus");
   assert.ok(/entwurfAlle\(\)\[u\.id\]\?\.trim\(\) \? `<span class="entwurf-marke">✏️ Entwurf:<\/span>/.test(html), "Chatliste zeigt Entwurf");
@@ -2087,7 +2087,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 
 // 183. 1.32.2: Bildschirmfoto-Knopf im Chat (KC-CLUB-BILDSCHIRMFOTO)
 {
-  assert.ok(/id="waKnopf"[^\n]*\n[^\n]*\n\s*<button class="rund bf-chat-knopf"[^>]*id="bfChatKnopf" onclick="bfAusChat\(\)">📸<\/button>/.test(html), "📸 neben WA");
+  assert.ok(/id="waKnopf"[\s\S]{0,700}?<button class="rund bf-chat-knopf"[^>]*id="bfChatKnopf" onclick="bfAusChat\(\)">📸<\/button>/.test(html), "📸 neben WA");
   assert.ok(/const zielChat = BF\.chat;/.test(html) && /return teilenInChat\(zielChat\.id\)/.test(html), "Foto zurück in denselben Chat (nur eingefügt, nicht gesendet)");
 }
 
@@ -2131,6 +2131,17 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/const buBereich = \(name, titel, inhalt\) => `<details class="karte bu-bereich" data-klappe="buero_\$\{name\}" data-ohne-unten open>/.test(html), "Bereich = Klappkarte");
   for (const b of ["sitzung", "nachher", "mitglieder", "schreiben", "eingang"]) assert.ok(html.includes(`buBereich("${b}"`), `Büro-Bereich ${b} klappbar`);
   assert.ok(/d\.dataset\.klappeAn = "1";/.test(html), "kein doppeltes Schloss");
+}
+
+// 189. 1.36.0: Aus WhatsApp einfügen (KC-CLUB-WA-EINFUEGEN)
+{
+  assert.ok(/id="waEinfKnopf" onclick="waEinfuegen\(\)">📋<\/button>/.test(html), "📋-Knopf im Chat");
+  assert.ok(/function waAufbereiten\(roh\)/.test(html) && /function waOhneNummer|const waOhneNummer = /.test(html), "Aufbereiten + Nummern entfernen");
+  assert.ok(/"\[Nummer entfernt\]"/.test(html) && /return "Mitglied";/.test(html), "keine Telefonnummern – auch nicht als Absender");
+  assert.ok(/Promise\.race\(\[navigator\.clipboard\.readText\(\)/.test(html) && /id="waEinfFeld"/.test(html), "Zwischenablage mit Zeitlimit, sonst Einfügefeld");
+  const f = html.slice(html.indexOf("function waEinsetzen("), html.indexOf("async function waEinfuegen("));
+  assert.ok(!/senden\(\)/.test(f) && /\$\("text"\)/.test(f), "nie automatisch senden – nur ins Schreibfeld");
+  assert.ok(/grid-template-columns: auto auto auto auto auto 1fr auto;/.test(html) && /#sendenKnopf \{ grid-row: 1; grid-column: 7;/.test(html), "Leiste mit 7 Spalten");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

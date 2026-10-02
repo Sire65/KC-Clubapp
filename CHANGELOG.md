@@ -1,5 +1,13 @@
 # Änderungen
 
+## 1.36.0 – 2026-10-02 (DEV)
+
+- KC-CLUB-WA-EINFUEGEN (Wunsch Hansi: WhatsApp bietet bei Text-Nachrichten kein „Teilen“): Im Chat neuer Knopf 📋
+  „Aus WhatsApp einfügen“. In WhatsApp Nachrichten markieren → Kopieren, in der App 📋 tippen. Die App liest die
+  Zwischenablage (Zeitlimit 8 s; ohne Berechtigung erscheint ein Einfügefeld), entfernt WhatsApp-Zeitstempel und alle
+  Telefonnummern (auch als Absender → „Mitglied“) und schreibt je Nachricht „Vorname (hh:mm): Text“ ins Schreibfeld.
+  Gesendet wird nie automatisch – nur mit ➤. Rein im Gerät, kein Server, keine Kosten.
+
 ## 1.35.0 – 2026-10-02 (DEV)
 
 - KC-CLUB-BUERO-KLAPPE (Wunsch Hansi): Die Büro-Startseite ist in Klappbereiche gegliedert (🗂️ Sitzung, 📄 Nach der
