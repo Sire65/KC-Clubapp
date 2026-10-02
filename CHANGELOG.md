@@ -1,5 +1,16 @@
 # Änderungen
 
+## 1.43.0 – 2026-10-02 (DEV)
+
+- KC-CLUB-BOERSE (Wunsch Hansi; Freigabe „1 ja, 2 ja, 3 b, 30 Tage mit Verlängerung, 3 Tage vorher Erinnerung“): Club-Börse
+  als dritter Reiter in „🤝 Helfen & Leihen“. „🟢 Ich biete …“ / „🔵 Ich suche …“, Rubrik (Küche, Musik & Bücher, Sport &
+  Freizeit, Kleidung, Haushalt, Sonstiges), Preis (zu verschenken / Festpreis / VB / Tausch), bis 3 Fotos (verkleinert),
+  Beschreibung. Kacheln mit Foto, Filter Biete/Suche und Rubrik, „📋 Meine Anzeigen“. Kontakt per vorbereiteter Nachricht.
+  Laufzeit 30 Tage; 3 Tage vorher Push/Mail „verlängern oder auslaufen lassen“ (Sprung #boerse=…), Verlängern um 7/14/30
+  Tage („bis TT.MM.“), höchstens 60 Tage im Voraus. Treffer: neue Anzeige teilt ein Stichwort mit einer Gegen-Anzeige →
+  deren Ersteller bekommt einmal Bescheid (kc_club_boerse_treffer). Kein Versand an alle. Erledigt/abgelaufen nach 30
+  Tagen samt Fotos entfernt. Fotos aktiver Anzeigen dürfen alle Mitglieder sehen (anlage_url). Clubleitung kann entfernen.
+
 ## 1.42.1 – 2026-10-02 (DEV)
 
 - KC-CLUB-BILD-LINK (Fehlermeldung Klaus 02.10., 9:33 „img nicht geladen: Bildschirmfoto…“): Bilder im Chat bekommen vom

@@ -738,6 +738,21 @@
   .hl-zwei { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .hl-zwei .hl-gross { margin: 0; }
   .knopf.hl-biete { background: var(--gruenbg); color: var(--textGruen); border: 2px solid var(--textGruen); }
+  /* KC-CLUB-BOERSE (1.43.0) */
+  .knopf.bo-suche { background: var(--blaubg); color: var(--text); border: 2px solid #1d5fa8; }
+  .marke.blau { background: var(--blaubg); color: var(--text); }
+  .bo-kachel .bo-foto { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 10px; background: var(--karte2); }
+  .bo-galerie { display: flex; gap: 6px; overflow-x: auto; margin: 0 0 8px; }
+  .bo-galerie img { height: 34vh; max-width: 88%; border-radius: 12px; object-fit: cover; background: var(--karte2); flex: none; cursor: zoom-in; }
+  .bo-fotos { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 6px; }
+  .bo-mini { position: relative; width: 84px; height: 84px; }
+  .bo-mini img { width: 84px; height: 84px; object-fit: cover; border-radius: 10px; background: var(--karte2); }
+  .bo-mini button { position: absolute; top: -6px; right: -6px; width: 26px; height: 26px; border-radius: 50%; border: none; background: var(--rot); color: #fff; font-weight: 900; cursor: pointer; }
+  .bo-plus { width: 84px; height: 84px; border: 2px dashed var(--linie); border-radius: 10px; display: grid; place-items: center; font-weight: 800; cursor: pointer; background: var(--karte2); }
+  .bo-tipp { background: var(--gelbbg); border-radius: 12px; padding: 8px 10px; font-weight: 700; }
+  #hlTabs { grid-template-columns: 1fr 1fr 1fr; }
+  .hl-chips.bo-rubriken { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+  .hl-chips.bo-rubriken .chip { flex: none; }
   /* KC-CLUB-MITFAHRT-SITZE (1.39.0): Auto von oben mit echten Sitzplätzen */
   .mf-karte { border: 1px solid var(--linie); border-radius: 16px; padding: 10px 12px; margin: 8px 0; background: var(--karte); }
   .mf-kopf { display: flex; gap: 6px; align-items: flex-start; }
@@ -1393,7 +1408,7 @@
   <!-- HELFEN & LEIHEN (KC-CLUB-HELFEN, KC-CLUB-LEIHEN – 1.23.0) -->
   <section id="v-helfen" class="versteckt">
     <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>🤝 Helfen & Leihen</h2></div>
-    <div class="umschalter" id="hlTabs"><button data-t="helfen" onclick="hlTab('helfen')">🙋 Wer kann helfen?</button><button data-t="leihen" onclick="hlTab('leihen')">📦 Ausleihen</button></div>
+    <div class="umschalter" id="hlTabs"><button data-t="helfen" onclick="hlTab('helfen')">🙋 Wer kann helfen?</button><button data-t="leihen" onclick="hlTab('leihen')">📦 Ausleihen</button><button data-t="boerse" onclick="hlTab('boerse')">🛍️ Börse</button></div>
     <div id="hlInhalt"><div class="karte hinweis">Wird geladen …</div></div>
   </section>
 
@@ -2005,7 +2020,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.42.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.43.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -6522,15 +6537,17 @@ let HL = { tab: "helfen", hilfe: null, leihen: null, form: null, angebotForm: nu
 const hlTag = (n) => tagPlus(heuteIso(), n);
 const hlTagName = (iso) => iso === hlTag(0) ? "Heute" : iso === hlTag(1) ? "Morgen" : fTagDp.format(new Date(iso + "T12:00:00Z"));
 const hlTagLang = (iso, slot, zf) => `${hlTagName(iso)}${iso === hlTag(0) || iso === hlTag(1) ? " " + fTagDp.format(new Date(iso + "T12:00:00Z")) : ""}${slot && zf?.[slot] ? " · " + zf[slot] : ""}`;
-function hlStart(tab) { if (tab) HL.tab = tab; HL.form = null; HL.angebotForm = null; HL.edit = false; zeige("helfen"); }
-function hlTab(t) { HL.tab = t; HL.form = null; HL.angebotForm = null; HL.edit = false; hlZeigen(); hlLaden(); }
+function hlStart(tab) { if (tab) HL.tab = tab; HL.form = null; HL.angebotForm = null; HL.edit = false; BO.form = null; zeige("helfen"); }
+function hlTab(t) { HL.tab = t; HL.form = null; HL.angebotForm = null; HL.edit = false; BO.form = null; hlZeigen(); hlLaden(); }
 async function hlLaden() {
   try {
-    if (HL.tab === "helfen") HL.hilfe = await api("hilfe_liste"); else HL.leihen = await api("leihen_liste");
+    if (HL.tab === "helfen") HL.hilfe = await api("hilfe_liste"); else if (HL.tab === "boerse") BO.d = await api("boerse_liste"); else HL.leihen = await api("leihen_liste");
     hlZeigen();
     const li = document.getElementById("leihInfo"); if (li && HL.tab === "leihen") leihInfo(li.dataset.id);
     const hi = document.getElementById("hilfeInfo"); if (hi && HL.tab === "helfen") hilfeInfo(hi.dataset.id);
     const ai = document.getElementById("angebotInfo"); if (ai && HL.tab === "helfen") angebotInfo(ai.dataset.id);
+    const bi = document.getElementById("boInfo"); if (bi && HL.tab === "boerse") boInfo(bi.dataset.id);
+    if (HL.tab === "boerse" && BO.oeffnen) { const id = BO.oeffnen; BO.oeffnen = null; boInfo(id); } // Sprung aus Push/Mail (#boerse=…)
     buEingangAuffrischen(); // KC-CLUB-BUERO-EINGANG
   } catch (e) { $("hlInhalt").innerHTML = `<div class="karte hinweis">${esc(e.message)}</div>`; }
 }
@@ -6559,6 +6576,7 @@ function hlZeigen() {
   document.querySelectorAll("#hlTabs button").forEach((b) => b.classList.toggle("an", b.dataset.t === HL.tab));
   const z = $("hlInhalt"); if (!z) return;
   if (HL.tab === "helfen") z.innerHTML = HL.angebotForm ? angebotFormHtml() : HL.form ? hilfeFormHtml() : hilfeListeHtml();
+  else if (HL.tab === "boerse") { z.innerHTML = BO.form ? boFormHtml() : boListeHtml(); z.querySelectorAll("img[data-anlage]").forEach((i) => bildLaden(i)); }
   else z.innerHTML = !HL.leihen && (HL.edit || HL.form) ? '<div class="karte hinweis">Wird geladen …</div>' : HL.edit ? leihEditHtml() : HL.form ? leihFormHtml() : leihListeHtml();
 }
 
@@ -6687,6 +6705,116 @@ async function angebotSpeichern() {
 async function angebotBeenden(id) {
   if (!confirm("Dieses Angebot beenden? Die Kachel verschwindet für alle.")) return;
   try { await api("hilfe_angebot_beenden", { id }, { warten: true }); $("angebotInfo")?.remove(); melde("🔒 Angebot beendet"); hlLaden(); } catch (e) { melde(e.message, true); }
+}
+// ---------- KC-CLUB-BOERSE (1.43.0, Wunsch Hansi): 🛍️ Börse – Biete / Suche, bis 3 Fotos, 30 Tage, Treffer-Meldung ----------
+let BO = { d: null, form: null, filter: "alle", rubrik: "", oeffnen: null };
+const boPreis = (a, d) => a.preis_art === "verschenken" ? "🎁 zu verschenken" : a.preis_art === "tausch" ? "🔄 Tausch" : a.preis !== null && a.preis !== undefined ? `💶 ${spEuro(a.preis)}${a.preis_art === "vb" ? " VB" : ""}` : "🤝 VB";
+const boDatum = (iso) => iso ? iso.split("-").reverse().slice(0, 2).join(".") + "." : "";
+const boRubrikSym = (r) => (BO.d?.rubriken?.[r] || "📦").split(" ")[0];
+function boKachel(a) {
+  const foto = a.fotos?.[0];
+  return `<button class="mini-kachel bo-kachel" onclick="boInfo('${a.id}')">
+    ${foto ? `<img class="bo-foto" data-anlage="${esc(foto)}" alt="">` : `<span class="mk-sym">${esc(boRubrikSym(a.rubrik))}</span>`}
+    <span class="marke ${a.art === "biete" ? "gruen" : "blau"}">${a.art === "biete" ? "🟢 Biete" : "🔵 Suche"}</span>
+    <span class="mk-titel">${esc(a.titel)}</span><span class="mk-unter">${esc(boPreis(a))}</span>
+    <span class="mk-unter">${a.eigen ? "deine Anzeige" : "von " + esc(a.von.vorname || a.von.name)}${a.status !== "aktiv" ? ` · ${a.status === "erledigt" ? "✅ erledigt" : "⌛ abgelaufen"}` : ""}</span></button>`;
+}
+function boListeHtml() {
+  const d = BO.d; if (!d) return '<div class="karte hinweis">Wird geladen …</div>';
+  const aktiv = d.anzeigen.filter((a) => a.status === "aktiv" && !a.eigen && (BO.filter === "alle" || a.art === BO.filter) && (!BO.rubrik || a.rubrik === BO.rubrik));
+  const meine = d.anzeigen.filter((a) => a.eigen);
+  const chip = (w, t, an, fn) => `<button class="chip${an ? " an" : ""}" onclick="${fn}">${t}</button>`;
+  return `<div class="hl-zwei"><button class="knopf hl-gross hl-biete" onclick="boNeu('biete')">🟢 Ich biete …</button><button class="knopf hl-gross bo-suche" onclick="boNeu('suche')">🔵 Ich suche …</button></div>
+    <p class="hinweis" style="margin:8px 2px 4px">Verkaufen, verschenken, tauschen unter Mitgliedern – bezahlt wird privat. Passt eine neue Anzeige zu deiner, bekommst du Bescheid.</p>
+    <div class="hl-chips">${chip("alle", "Alle", BO.filter === "alle", "BO.filter='alle';hlZeigen()")}${chip("biete", "🟢 Biete", BO.filter === "biete", "BO.filter='biete';hlZeigen()")}${chip("suche", "🔵 Suche", BO.filter === "suche", "BO.filter='suche';hlZeigen()")}</div>
+    <div class="hl-chips bo-rubriken">${chip("", "Alle Rubriken", !BO.rubrik, "BO.rubrik='';hlZeigen()")}${Object.entries(d.rubriken).map(([k, t]) => chip(k, esc(t), BO.rubrik === k, `BO.rubrik='${k}';hlZeigen()`)).join("")}</div>
+    ${aktiv.length ? `<div class="mini-kacheln">${aktiv.map(boKachel).join("")}</div>` : '<div class="karte hinweis">Hier ist gerade nichts von den anderen. Hast du etwas übrig – oder suchst du etwas? Tippe oben auf „Ich biete“ oder „Ich suche“.</div>'}
+    ${meine.length ? `<div class="abschnitt"><h3>📋 Meine Anzeigen</h3></div><div class="mini-kacheln">${meine.map((a) => boKachel(a).replace('<span class="mk-unter">deine Anzeige', `<span class="mk-unter">⏳ bis ${esc(boDatum(a.laeuft_bis))} · deine Anzeige`)).join("")}</div>` : ""}`;
+}
+function boInfo(id) {
+  const a = BO.d?.anzeigen.find((x) => x.id === id);
+  if (!a) { document.getElementById("boInfo")?.remove(); if (BO.d) melde("Diese Anzeige gibt es nicht mehr.", true); return; }
+  const d = BO.d, vn = esc(a.von.vorname || a.von.name.split(" ")[0]), bald = a.status === "aktiv" && a.laeuft_bis <= tagPlus(d.heute || heuteIso(), 3);
+  const verl = d.verlaengern.map((t) => { const basis = a.status === "aktiv" && a.laeuft_bis >= (d.heute || heuteIso()) ? a.laeuft_bis : (d.heute || heuteIso()); return `<button class="knopf klein" onclick="boStatus('${a.id}', 'verlaengern', ${t})">bis ${esc(boDatum(tagPlus(basis, t)))}</button>`; }).join("");
+  const f = blattAuf("boInfo", `<div class="info-gross">
+      ${a.fotos.length ? `<div class="bo-galerie">${a.fotos.map((x) => `<img data-anlage="${esc(x)}" alt="Foto" onclick="anlageOeffnen('${esc(x)}')">`).join("")}</div>` : `<div style="font-size:2.6rem;line-height:1">${esc(boRubrikSym(a.rubrik))}</div>`}
+      <span class="marke ${a.art === "biete" ? "gruen" : "blau"}">${a.art === "biete" ? "🟢 Biete" : "🔵 Suche"}</span> <span class="hinweis">${esc(d.rubriken[a.rubrik] || "")}</span>
+      <h3 style="margin:6px 0 2px">${esc(a.titel)}</h3><p style="margin:0 0 6px;font-weight:800">${esc(boPreis(a))}</p>
+      ${a.text ? `<p style="white-space:pre-wrap;margin:0 0 8px">${esc(a.text)}</p>` : ""}
+      <p class="hinweis" style="margin:0 0 10px">von ${esc(a.eigen ? "dir" : a.von.name)} · eingestellt ${esc(zeitKurz(a.erstellt_am))} · ${a.status === "aktiv" ? `läuft bis ${esc(boDatum(a.laeuft_bis))}` : a.status === "erledigt" ? "✅ erledigt" : "⌛ abgelaufen"}</p></div>
+    <div class="knoepfe" style="flex-direction:column;align-items:stretch">
+      ${!a.eigen && a.status === "aktiv" ? `<button class="knopf haupt" style="text-align:center" onclick="boKontakt('${a.id}')">💬 ${a.art === "biete" ? "Interesse" : "Ich hab das"} – Nachricht an ${vn}</button>` : ""}
+      ${a.eigen ? `${bald || a.status === "abgelaufen" ? `<div class="bo-tipp">⏳ ${a.status === "abgelaufen" ? "Abgelaufen" : `Läuft am ${esc(boDatum(a.laeuft_bis))} ab`} – verlängern oder auslaufen lassen?</div>` : ""}
+        <div class="hinweis" style="margin:2px 0 0">⏳ Verlängern bis …</div><div class="knoepfe" style="margin:0">${verl}</div>
+        ${bald ? `<button class="knopf" style="text-align:center" onclick="boStatus('${a.id}', 'auslaufen')">Auslaufen lassen</button>` : ""}
+        ${a.status === "aktiv" ? `<button class="knopf" style="text-align:center" onclick="boNeu(null, '${a.id}')">✏️ Ändern</button><button class="knopf" style="text-align:center" onclick="boStatus('${a.id}', 'erledigt')">✅ Erledigt (${a.art === "biete" ? "weg" : "gefunden"})</button>` : ""}` : ""}
+      ${a.darfEntfernen ? `<button class="knopf" style="text-align:center" onclick="boStatus('${a.id}', 'loeschen')">🗑️ ${a.eigen ? "Löschen" : "Entfernen (Clubleitung)"}</button>` : ""}
+      <button class="knopf" style="text-align:center" onclick="$('boInfo').remove()">Schließen</button></div>`);
+  f.dataset.id = id; f.querySelectorAll("img[data-anlage]").forEach((i) => bildLaden(i));
+}
+async function boKontakt(id) {
+  const a = BO.d?.anzeigen.find((x) => x.id === id); if (!a) return;
+  $("boInfo")?.remove();
+  await direkt(a.von.person_id);
+  const t = $("text"); if (!t) return;
+  const vn = a.von.vorname || a.von.name.split(" ")[0];
+  t.value = a.art === "biete" ? `Hallo ${vn}, ist „${a.titel}“ aus der Club-Börse noch zu haben?` : `Hallo ${vn}, du suchst „${a.titel}“ – das hätte ich!`;
+  t.style.height = "auto"; t.style.height = t.scrollHeight + "px"; try { entwurfMarkeZeigen(); } catch {}
+}
+async function boStatus(id, was, tage) {
+  const a = BO.d?.anzeigen.find((x) => x.id === id);
+  if (was === "loeschen" && !confirm(a?.eigen ? "Diese Anzeige löschen? Die Fotos werden mit gelöscht." : "Diese Anzeige als Clubleitung entfernen? Die Fotos werden mit gelöscht.")) return;
+  if (was === "erledigt" && !confirm("Als erledigt markieren? Die Anzeige verschwindet für die anderen.")) return;
+  try {
+    const x = await api("boerse_status", { id, was, tage }, { warten: true });
+    melde(was === "verlaengern" ? `⏳ Verlängert bis ${boDatum(x.laeuft_bis)}` : was === "auslaufen" ? "In Ordnung – die Anzeige läuft einfach aus." : was === "erledigt" ? "✅ Erledigt – danke!" : "🗑️ Gelöscht");
+    if (was !== "verlaengern") $("boInfo")?.remove();
+    hlLaden();
+  } catch (e) { melde(e.message, true); }
+}
+function boNeu(art, id) {
+  const a = id ? BO.d?.anzeigen.find((x) => x.id === id) : null;
+  $("boInfo")?.remove();
+  BO.form = a ? { id: a.id, art: a.art, rubrik: a.rubrik, titel: a.titel, text: a.text || "", preis_art: a.preis_art, preis: a.preis === null ? "" : String(a.preis).replace(".", ","), fotos: [...a.fotos], laedt: 0 }
+    : { id: null, art, rubrik: "", titel: "", text: "", preis_art: art === "suche" ? "vb" : "vb", preis: "", fotos: [], laedt: 0 };
+  hlZeigen(); window.scrollTo(0, 0);
+}
+function boFormHtml() {
+  const f = BO.form, d = BO.d || { rubriken: {}, preisArten: {} };
+  const chips = (feld, liste, wert) => `<div class="hl-chips">${Object.entries(liste).map(([k, t]) => `<button class="chip${wert === k ? " an" : ""}" onclick="BO.form.${feld}='${k}';hlZeigen()">${esc(t)}</button>`).join("")}</div>`;
+  return `<div class="karte hl-form"><h3 style="margin:0 0 6px">🛍️ ${f.id ? "Anzeige ändern" : f.art === "suche" ? "🔵 Ich suche …" : "🟢 Ich biete …"}</h3>
+    <div class="hl-frage">Biete oder suche?</div>${chips("art", { biete: "🟢 Biete", suche: "🔵 Suche" }, f.art)}
+    <div class="hl-frage">Rubrik</div>${chips("rubrik", d.rubriken, f.rubrik)}
+    <label class="feld">Was?<input maxlength="80" placeholder="${f.art === "suche" ? "z. B. Pink Floyd CD (The Wall o. ä.)" : "z. B. Schlittschuhe Größe 39"}" value="${esc(f.titel)}" oninput="BO.form.titel=this.value"></label>
+    <div class="hl-frage">Preis</div>${chips("preis_art", d.preisArten, f.preis_art)}
+    ${f.preis_art === "preis" || f.preis_art === "vb" ? `<label class="feld">${f.art === "suche" ? "Wie viel würdest du zahlen? (freiwillig)" : f.preis_art === "preis" ? "Preis in €" : "Preisvorstellung in € (freiwillig)"}<input inputmode="decimal" maxlength="9" placeholder="z. B. 15" value="${esc(f.preis)}" oninput="BO.form.preis=this.value"></label>` : ""}
+    <div class="hl-frage">Fotos (freiwillig, bis 3)</div>
+    <div class="bo-fotos">${f.fotos.map((x, i) => `<span class="bo-mini"><img data-anlage="${esc(x)}" alt=""><button onclick="BO.form.fotos.splice(${i},1);hlZeigen()" aria-label="Foto entfernen">✕</button></span>`).join("")}
+      ${f.fotos.length + f.laedt < 3 ? `<label class="bo-plus">${f.laedt ? "⏳" : "📷 ＋"}<input type="file" accept="image/*" multiple hidden onchange="boFotos(this)"></label>` : ""}</div>
+    <label class="feld">Beschreibung (freiwillig)<textarea rows="3" maxlength="600" placeholder="z. B. kaum getragen, abzuholen in Werne" oninput="BO.form.text=this.value">${esc(f.text)}</textarea></label>
+    <p class="hinweis" style="margin:4px 0 8px">Die Anzeige läuft ${BO.d?.tage || 30} Tage. 3 Tage vorher bekommst du eine Erinnerung – verlängern oder auslaufen lassen. Beim Einstellen wird nichts an alle verschickt; nur wer eine passende Anzeige hat, bekommt Bescheid.</p>
+    <div class="knoepfe"><button class="knopf haupt" ${f.laedt ? "disabled" : ""} onclick="einmal(this, boSpeichern)">✅ ${f.id ? "Speichern" : "Anzeige einstellen"}</button><button class="knopf" onclick="BO.form=null;hlZeigen()">Abbrechen</button></div></div>`;
+}
+async function boFotos(input) {
+  const f = BO.form; if (!f) return;
+  const dateien = [...input.files].filter((x) => /^image\//.test(x.type)).slice(0, 3 - f.fotos.length);
+  f.laedt = dateien.length; hlZeigen();
+  for (const roh of dateien) {
+    try { const r = await anlageHochladen(roh); if (r?.id) f.fotos.push(r.id); } catch (e) { melde(e.message, true); }
+    f.laedt = Math.max(0, f.laedt - 1); if (BO.form === f) hlZeigen();
+  }
+}
+async function boSpeichern() {
+  const f = BO.form; if (!f) return;
+  if (!f.rubrik) return melde("Bitte eine Rubrik wählen.", true);
+  if (!f.titel.trim()) return melde("Bitte kurz schreiben, was du anbietest oder suchst.", true);
+  try {
+    const x = await api("boerse_speichern", { id: f.id, art: f.art, rubrik: f.rubrik, titel: f.titel.trim(), text: f.text.trim(), preis_art: f.preis_art, preis: f.preis === "" ? null : f.preis, fotos: f.fotos }, { warten: true });
+    BO.form = null;
+    melde(f.id ? "✅ Gespeichert" : `🛍️ Anzeige ist drin – läuft ${BO.d?.tage || 30} Tage.${x.treffer ? ` Es gibt ${x.treffer === 1 ? "eine passende Anzeige" : x.treffer + " passende Anzeigen"} – schau mal rein!` : ""}`);
+    if (x.treffer) BO.filter = f.art === "biete" ? "suche" : "biete";
+    hlLaden();
+  } catch (e) { melde(e.message, true); }
 }
 async function hilfeAntwort(id, antwort) {
   try { await api("hilfe_antwort", { id, antwort: antwort || null }); melde(antwort === "komme" ? "✋ Danke! Deine Zusage ist gespeichert" : antwort ? "Gespeichert – danke für die Rückmeldung" : "Zurückgenommen"); hlLaden(); }
@@ -11410,6 +11538,7 @@ async function fpAdmin(tage) {
     else if (h.startsWith("#gratulieren=")) gratulieren(h.slice(13));
     else if (h.startsWith("#protokoll=")) protokollOeffnen(h.slice(11));
     else if (h.startsWith("#aktion=")) aktionOeffnen(decodeURIComponent(h.slice(8)));
+    else if (h === "#boerse" || h.startsWith("#boerse=")) { BO.oeffnen = h.slice(8) || null; hlStart("boerse"); } // KC-CLUB-BOERSE
     else if (h.startsWith("#mitglied=")) mitgliedOeffnen(decodeURIComponent(h.slice(10)));
     else if (h === "#geteilt") geteiltEmpfangen();
     else if (h === "#todo") { termineArt = "todo"; zeige("termine"); }

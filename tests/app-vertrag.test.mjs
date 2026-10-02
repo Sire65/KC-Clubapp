@@ -2215,6 +2215,24 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/createSignedUrl\(att\.object_path, 600,/.test(server), "Server-Link 10 Minuten (Cache muss kürzer sein)");
 }
 
+// 197. 1.43.0: Club-Börse (KC-CLUB-BOERSE)
+{
+  for (const a of ["boerse_liste", "boerse_speichern", "boerse_status"]) assert.ok(aktionen.has(a) && aufrufe.has(a), `Aktion ${a} fehlt`);
+  const mig = lies("supabase/migrations/20261002_kc_club_v1430_boerse.sql");
+  assert.ok(/enable row level security/.test(mig) && /revoke all on kc_club_boerse, kc_club_boerse_treffer from anon, authenticated/.test(mig) && /kc_neon_resume_tables/.test(mig), "RLS + Spiegel");
+  assert.ok(/jsonb_array_length\(fotos\) <= 3/.test(mig), "höchstens 3 Fotos");
+  assert.ok(/const BOERSE_TAGE = 30, BOERSE_ERINNERN_TAGE = 3/.test(server), "30 Tage, 3 Tage vorher erinnern");
+  assert.ok(/laeuft_bis: tagDazu\(berlinTag\(new Date\(\)\), BOERSE_TAGE\)/.test(server) && /erinnert_am: null/.test(server), "Laufzeit + Verlängern setzt Erinnerung zurück");
+  assert.ok(/kc_club_boerse_treffer"\)\.insert\(\{ anzeige_id: id, gegen_id: g\.id \}\)/.test(server) && /if \(dopp\) continue;/.test(server), "Treffer nur einmal melden");
+  const sp = server.slice(server.indexOf('case "boerse_speichern"'), server.indexOf('case "boerse_status"'));
+  assert.ok(!/aktiveMitglieder\(\)/.test(sp) && /senden\("club_nachricht", \[g\.von\]/.test(sp), "kein Versand an alle – nur passende Gegen-Anzeigen");
+  assert.ok(/startsWith\(`club\/\$\{ich\.person_id\}\/`\) && \/\^image\\\/\/\.test/.test(sp), "nur eigene Bilder als Fotos");
+  assert.ok(/from\("kc_club_boerse"\)\.select\("id"\)\.eq\("status", "aktiv"\)\.contains\("fotos", JSON\.stringify\(\[att\.id\]\)\)/.test(server), "Fotos aktiver Anzeigen für Mitglieder sichtbar");
+  assert.ok(/const boerse = await boerseWartung\(\)/.test(server), "Wartung: Erinnerung/Ablauf");
+  assert.ok(/<button data-t="boerse" onclick="hlTab\('boerse'\)">🛍️ Börse<\/button>/.test(html) && /h\.startsWith\("#boerse="\)/.test(html), "Reiter + Sprung aus Push");
+  assert.ok(/Auslaufen lassen/.test(html) && /⏳ Verlängern bis …/.test(html), "Verlängern bis … oder auslaufen lassen");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

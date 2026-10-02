@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.42.1";
+const SERVER_VERSION = "1.43.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -1451,6 +1451,58 @@ async function leihErinnern() {
   }
   return n;
 }
+// ---------- KC-CLUB-BOERSE (1.43.0, Wunsch Hansi): Club-Börse – Biete / Suche ----------
+const BOERSE_RUBRIKEN: Record<string, string> = { kueche: "🍳 Küche", musik: "📀 Musik & Bücher", sport: "⛸️ Sport & Freizeit", kleidung: "👕 Kleidung", haushalt: "🏠 Haushalt", sonstiges: "📦 Sonstiges" };
+const BOERSE_PREIS: Record<string, string> = { verschenken: "🎁 zu verschenken", preis: "💶 Festpreis", vb: "🤝 Verhandlungsbasis", tausch: "🔄 Tausch" };
+const BOERSE_TAGE = 30, BOERSE_ERINNERN_TAGE = 3, BOERSE_VERLAENGERN = [7, 14, 30], BOERSE_MAX_VORLAUF = 60, BOERSE_AUFBEWAHREN_TAGE = 30;
+// Stichwörter für Treffer: Wörter ab 3 Zeichen, ohne Füllwörter; Umlaute vereinheitlicht („Größe“ = „groesse“)
+const BOERSE_FUELL = new Set(["und", "oder", "der", "die", "das", "ein", "eine", "einen", "von", "mit", "für", "fuer", "suche", "biete", "gebe", "ab", "gut", "neu", "alt", "gross", "groesse", "grosse", "klein", "sehr", "wie", "auch", "nur", "noch", "aus", "zum", "zur", "bei", "set", "stück", "stueck", "paar", "ähnlich", "aehnlich", "etc"]);
+const boerseWorte = (t: string) => new Set(String(t || "").toLowerCase().replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss")
+  .split(/[^a-z0-9]+/).filter((w) => w.length >= 3 && !BOERSE_FUELL.has(w) && !/^\d+$/.test(w)));
+const boersePasst = (a: any, b: any) => { const wa = boerseWorte(a.titel); for (const w of boerseWorte(b.titel)) if (wa.has(w)) return true; return false; };
+async function boerseHolen(id: unknown) {
+  const { data } = await db.from("kc_club_boerse").select("*").eq("id", String(id || "")).maybeSingle();
+  if (!data || data.status === "geloescht") throw new Fehler("Anzeige nicht gefunden.", 404);
+  return data;
+}
+async function boerseListe(ich: Ich) {
+  const heute = berlinTag(new Date()), seit = tagDazu(heute, -BOERSE_AUFBEWAHREN_TAGE);
+  const [{ data: aktiv }, { data: meine }] = await Promise.all([
+    db.from("kc_club_boerse").select("*").eq("status", "aktiv").gte("laeuft_bis", heute).order("erstellt_am", { ascending: false }).limit(200),
+    db.from("kc_club_boerse").select("*").eq("von", ich.person_id).neq("status", "geloescht").gte("geaendert_am", seit + "T00:00:00Z").order("erstellt_am", { ascending: false }).limit(50),
+  ]);
+  const alle = new Map([...(aktiv ?? []), ...(meine ?? [])].map((x: any) => [x.id, x]));
+  const leute = await personen([...alle.values()].map((x: any) => x.von));
+  const zeig = (x: any) => ({ id: x.id, art: x.art, rubrik: x.rubrik, titel: x.titel, text: x.text, preis_art: x.preis_art, preis: x.preis === null ? null : Number(x.preis),
+    fotos: x.fotos ?? [], laeuft_bis: x.laeuft_bis, erstellt_am: x.erstellt_am, status: x.status === "aktiv" && x.laeuft_bis < heute ? "abgelaufen" : x.status,
+    von: { person_id: x.von, name: leute.get(x.von)?.display_name || x.von, vorname: vorname(leute.get(x.von)) }, eigen: x.von === ich.person_id,
+    darfEntfernen: x.von === ich.person_id || ich.vorstand });
+  return { anzeigen: [...alle.values()].map(zeig), rubriken: BOERSE_RUBRIKEN, preisArten: BOERSE_PREIS, tage: BOERSE_TAGE, verlaengern: BOERSE_VERLAENGERN, heute };
+}
+// Wartung: 3 Tage vor Ablauf einmal erinnern; Abgelaufenes markieren; Erledigtes/Abgelaufenes nach 30 Tagen samt Fotos entfernen
+async function boerseWartung() {
+  const heute = berlinTag(new Date());
+  const { data: bald } = await db.from("kc_club_boerse").select("*").eq("status", "aktiv").is("erinnert_am", null).gte("laeuft_bis", heute).lte("laeuft_bis", tagDazu(heute, BOERSE_ERINNERN_TAGE)).limit(50);
+  let erinnert = 0;
+  for (const a of bald ?? []) {
+    const { data: ok } = await db.from("kc_club_boerse").update({ erinnert_am: jetzt() }).eq("id", a.id).is("erinnert_am", null).select("id");
+    if (!ok?.length) continue;
+    const bis = String(a.laeuft_bis).split("-").reverse().join(".");
+    await senden("club_nachricht", [a.von], {
+      titel: "🛍️ Deine Anzeige läuft bald ab", kurz: `„${a.titel}“ läuft am ${bis} ab – verlängern oder auslaufen lassen?`,
+      betreff: `Köcheclub Werne – Börse: „${a.titel}“ läuft am ${bis} ab`,
+      text: `Hallo,\n\ndeine Anzeige „${a.titel}“ in der Club-Börse läuft am ${bis} ab.\n\nIn der Köcheclub-App kannst du sie mit einem Tipp verlängern – oder einfach auslaufen lassen, dann musst du nichts tun.\n\n${APP_URL}#boerse=${a.id}\n\nViele Grüße\nKöcheclub Werne`,
+      url: `${APP_URL}#boerse=${a.id}`,
+    }, `club-boerse-ablauf:${a.id}:${a.laeuft_bis}`).catch(() => null);
+    erinnert++;
+  }
+  await db.from("kc_club_boerse").update({ status: "abgelaufen", geaendert_am: jetzt() }).eq("status", "aktiv").lt("laeuft_bis", heute);
+  const alt = new Date(Date.now() - BOERSE_AUFBEWAHREN_TAGE * 86400000).toISOString();
+  const { data: weg } = await db.from("kc_club_boerse").select("id,fotos").in("status", ["erledigt", "abgelaufen", "geloescht"]).lt("geaendert_am", alt).limit(100);
+  for (const a of weg ?? []) { await dateienEntfernen(a.fotos ?? []); await db.from("kc_club_boerse").delete().eq("id", a.id); }
+  return { erinnert, entfernt: (weg ?? []).length };
+}
+
 async function hilfeListe(ich: Ich) {
   const heute = berlinTag(new Date());
   const { data: auf } = await db.from("kc_club_hilfe_aufrufe").select("*").gte("datum", tagDazu(heute, -14)).order("datum").order("erstellt_am").limit(100);
@@ -2350,7 +2402,8 @@ Köcheclub Werne`,
         if (archivEntfernt || aoIds.length) await protokoll(null, "archiv_endgueltig_entfernt", { dokumente: archivEntfernt, ordner: aoIds.length });
       }
       const leiheErinnert = await leihErinnern().catch((e) => { console.error("leihe erinnern", String(e)); return 0; }); // KC-CLUB-LEIHEN
-      return json({ ok: true, erinnerungen: n, beendet, dienst, geb, aufg, nachfass, fotosEntfernt, archivEntfernt, anfragenErinnert: anfr, standorteGeloescht: (stWeg ?? []).length, ruheMeldungen, privErinnert, leiheErinnert });
+      const boerse = await boerseWartung().catch((e) => { console.error("boerse wartung", String(e)); return null; }); // KC-CLUB-BOERSE
+      return json({ ok: true, erinnerungen: n, beendet, dienst, geb, aufg, nachfass, fotosEntfernt, archivEntfernt, anfragenErinnert: anfr, standorteGeloescht: (stWeg ?? []).length, ruheMeldungen, privErinnert, leiheErinnert, boerse });
     }
 
     // ----- KC-CLUB-ZUGANG-SELBST: Link verloren → neuen Link an die hinterlegte Mail-Adresse (ohne Anmeldung) -----
@@ -3451,6 +3504,93 @@ Köcheclub Werne`,
 
       // ----- KC-CLUB-HELFEN (1.23.0): „Wer kann helfen?“ – Aufruf an alle oder an alle gerade online -----
       case "hilfe_liste": return json(await hilfeListe(ich));
+
+      // ----- KC-CLUB-BOERSE (1.43.0) -----
+      case "boerse_liste": return json(await boerseListe(ich));
+      case "boerse_speichern": {
+        const art = p.art === "suche" ? "suche" : p.art === "biete" ? "biete" : "";
+        if (!art) throw new Fehler("Bitte „Biete“ oder „Suche“ wählen.");
+        const rubrik = String(p.rubrik || ""); if (!BOERSE_RUBRIKEN[rubrik]) throw new Fehler("Bitte eine Rubrik wählen.");
+        const titel = txt(p.titel, 80); if (!titel || titel.length < 2) throw new Fehler("Bitte kurz schreiben, was du anbietest oder suchst.");
+        const preis_art = BOERSE_PREIS[String(p.preis_art)] ? String(p.preis_art) : "vb";
+        let preis: number | null = null;
+        if (preis_art === "preis" || preis_art === "vb") {
+          if (p.preis !== null && p.preis !== undefined && p.preis !== "") { preis = Math.round(Number(String(p.preis).replace(",", ".")) * 100) / 100; if (!(preis >= 0 && preis <= 99999)) throw new Fehler("Bitte einen Preis zwischen 0 und 99 999 € angeben."); }
+          if (preis_art === "preis" && preis === null) throw new Fehler("Bitte den Preis eintragen – oder „Verhandlungsbasis“ wählen.");
+        }
+        const fotosRoh = (Array.isArray(p.fotos) ? p.fotos : []).map((x: unknown) => String(x)).slice(0, 3);
+        let fotos: string[] = [];
+        if (fotosRoh.length) { // nur eigene hochgeladene Bilder
+          const { data: att } = await db.from("kc_communication_attachments").select("id,object_path,mime_type").in("id", fotosRoh);
+          fotos = fotosRoh.filter((id: string) => (att ?? []).some((x: any) => x.id === id && String(x.object_path).startsWith(`club/${ich.person_id}/`) && /^image\//.test(String(x.mime_type))));
+        }
+        const zeile = { art, rubrik, titel, text: txt(p.text, 600) || null, preis_art, preis, fotos, geaendert_am: jetzt() };
+        let id: string, alt: any = null;
+        if (p.id) {
+          alt = await boerseHolen(p.id);
+          if (alt.von !== ich.person_id) throw new Fehler("Ändern darf nur, wer die Anzeige eingestellt hat.", 403);
+          await db.from("kc_club_boerse").update(zeile).eq("id", alt.id); id = alt.id;
+          const wegFotos = (alt.fotos ?? []).filter((f: string) => !fotos.includes(f)); if (wegFotos.length) await dateienEntfernen(wegFotos);
+        } else {
+          const { count } = await db.from("kc_club_boerse").select("id", { count: "exact", head: true }).eq("von", ich.person_id).eq("status", "aktiv");
+          if ((count ?? 0) >= 15) throw new Fehler("Du hast schon 15 aktive Anzeigen – bitte erst eine erledigen.");
+          const { data: neu, error } = await db.from("kc_club_boerse").insert({ ...zeile, von: ich.person_id, laeuft_bis: tagDazu(berlinTag(new Date()), BOERSE_TAGE) }).select("id").single();
+          if (error || !neu) throw new Fehler("Anzeige konnte nicht gespeichert werden.", 500);
+          id = neu.id;
+        }
+        // Treffer (Freigabe 3b): passende Gegen-Anzeigen anderer – deren Ersteller bekommt EINMAL Bescheid
+        const heute = berlinTag(new Date());
+        const { data: gegen } = await db.from("kc_club_boerse").select("*").eq("status", "aktiv").eq("art", art === "biete" ? "suche" : "biete").neq("von", ich.person_id).gte("laeuft_bis", heute).limit(300);
+        const passend = (gegen ?? []).filter((g: any) => boersePasst({ titel }, g));
+        let gemeldet = 0;
+        for (const g of passend) {
+          const { error: dopp } = await db.from("kc_club_boerse_treffer").insert({ anzeige_id: id, gegen_id: g.id });
+          if (dopp) continue; // schon gemeldet
+          await senden("club_nachricht", [g.von], {
+            titel: art === "biete" ? "🛍️ Passt zu deiner Suche!" : "🛍️ Jemand sucht, was du anbietest",
+            kurz: art === "biete" ? `${ich.name} bietet „${titel}“ – du suchst „${g.titel}“` : `${ich.name} sucht „${titel}“ – du bietest „${g.titel}“`,
+            betreff: `Köcheclub Werne – Börse: ${art === "biete" ? "passendes Angebot" : "passende Suche"} zu „${g.titel}“`,
+            text: `Hallo,\n\nin der Club-Börse gibt es etwas Passendes zu deiner Anzeige „${g.titel}“:\n\n${ich.name} ${art === "biete" ? "bietet" : "sucht"}: ${titel}\n\nAnsehen und Kontakt aufnehmen in der Köcheclub-App:\n${APP_URL}#boerse=${id}\n\nViele Grüße\nKöcheclub Werne`,
+            url: `${APP_URL}#boerse=${id}`,
+          }, `club-boerse-treffer:${id}:${g.id}`).catch(() => null);
+          gemeldet++;
+        }
+        await protokoll(ich.person_id, p.id ? "boerse_geaendert" : "boerse_angelegt", { anzeige: id, art, rubrik, titel, fotos: fotos.length, treffer: passend.length, gemeldet });
+        return json({ ok: true, id, treffer: passend.length, gemeldet });
+      }
+      case "boerse_status": {
+        const a = await boerseHolen(p.id), was = String(p.was || "");
+        const eigen = a.von === ich.person_id;
+        if (was === "verlaengern") {
+          if (!eigen) throw new Fehler("Verlängern darf nur, wer die Anzeige eingestellt hat.", 403);
+          const tage = Number(p.tage); if (!BOERSE_VERLAENGERN.includes(tage)) throw new Fehler("Bitte 7, 14 oder 30 Tage wählen.");
+          const heute = berlinTag(new Date()), basis = a.status === "aktiv" && a.laeuft_bis >= heute ? a.laeuft_bis : heute;
+          const bis = tagDazu(basis, tage);
+          if (bis > tagDazu(heute, BOERSE_MAX_VORLAUF)) throw new Fehler(`Höchstens ${BOERSE_MAX_VORLAUF} Tage im Voraus – bitte später nochmal verlängern.`);
+          await db.from("kc_club_boerse").update({ status: "aktiv", laeuft_bis: bis, erinnert_am: null, geaendert_am: jetzt() }).eq("id", a.id);
+          await protokoll(ich.person_id, "boerse_verlaengert", { anzeige: a.id, bis });
+          return json({ ok: true, laeuft_bis: bis });
+        }
+        if (was === "auslaufen") { // „auslaufen lassen“ – nichts ändern, nur Erinnerung abhaken
+          if (!eigen) throw new Fehler("Nur für deine eigene Anzeige.", 403);
+          await protokoll(ich.person_id, "boerse_auslaufen", { anzeige: a.id });
+          return json({ ok: true });
+        }
+        if (was === "erledigt") {
+          if (!eigen) throw new Fehler("Als erledigt markieren darf nur, wer die Anzeige eingestellt hat.", 403);
+          await db.from("kc_club_boerse").update({ status: "erledigt", geaendert_am: jetzt() }).eq("id", a.id);
+          await protokoll(ich.person_id, "boerse_erledigt", { anzeige: a.id });
+          return json({ ok: true });
+        }
+        if (was === "loeschen") {
+          if (!eigen && !ich.vorstand) throw new Fehler("Löschen darf nur, wer die Anzeige eingestellt hat (oder die Clubleitung).", 403);
+          await db.from("kc_club_boerse").update({ status: "geloescht", geaendert_am: jetzt() }).eq("id", a.id);
+          await dateienEntfernen(a.fotos ?? []);
+          await protokoll(ich.person_id, eigen ? "boerse_geloescht" : "boerse_entfernt_leitung", { anzeige: a.id, von: a.von, titel: a.titel });
+          return json({ ok: true });
+        }
+        throw new Fehler("Unbekannte Aktion.");
+      }
 
       // KC-CLUB-HILFE-ANGEBOT (1.42.0): eigenes Angebot anlegen/ändern – es wird nichts verschickt
       case "hilfe_angebot_speichern": {
@@ -5558,6 +5698,11 @@ Köcheclub-App`,
             const { data: tp } = await db.from("kc_communication_thread_participants").select("thread_id").eq("thread_id", m.thread_id).eq("person_id", ich.person_id).maybeSingle();
             if (tp) { erlaubt = true; break; }
           }
+        }
+        if (!erlaubt) {
+          // KC-CLUB-BOERSE (1.43.0): Fotos aktiver Börsen-Anzeigen dürfen alle Mitglieder sehen
+          const { data: bo } = await db.from("kc_club_boerse").select("id").eq("status", "aktiv").contains("fotos", JSON.stringify([att.id])).limit(1); // jsonb: JSON-Text, kein {…}-Array
+          if (bo?.length) erlaubt = true;
         }
         if (!erlaubt && ich.protokolle) {
           // Anlage eines Sitzungsprotokolls: veröffentlicht → alle Leser; Entwurf → wer es bearbeiten darf
