@@ -611,6 +611,7 @@
   .mini-kachel .mk-gross { font-weight: 800; font-size: 1.05rem; }
   .mini-kachel .marke { justify-self: start; }
   .mini-kachel.mk-offen { border-color: var(--gelb); }
+  .mini-kachel:disabled { opacity: .45; cursor: default; }
   .mini-kachel.mk-dabei, .mini-kachel.mk-voll { border-color: var(--gruen); }
   .info-gross { font-size: 1.12rem; }
   .info-gross .karte { box-shadow: none; padding: 4px 2px; margin: 0; }
@@ -1924,7 +1925,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.26.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.27.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -5568,7 +5569,7 @@ async function buLaden() {
   buZeigen();
 }
 function buZurueck() { if (BU.sicht !== "start") { BU.sicht = "start"; buLaden(); window.scrollTo(0, 0); } else zeige("start"); }
-function buZeigen() { $("buInhalt").innerHTML = BU.sicht === "sitzung" ? buSitzungHtml() : BU.sicht === "eingang" ? buEingangHtml() : BU.sicht === "brief" ? buBriefHtml() : buStartHtml(); }
+function buZeigen() { $("buInhalt").innerHTML = BU.sicht === "sitzung" ? buSitzungHtml() : BU.sicht === "eingang" ? buEingangHtml() : BU.sicht === "brief" ? buBriefHtml() : BU.sicht === "termine" ? buTermineHtml() : BU.sicht === "kontakt" ? buKontaktHtml() : buStartHtml(); }
 // Nächster sinnvoller Schritt für eine Sitzung
 function buNaechster(t) {
   if (!t) return null;
@@ -5594,8 +5595,10 @@ function buStartHtml() {
       ${k("einladung", "📨", "Einladung senden", t?.einladung_am ? `✅ gesendet ${esc(zeitKurz(t.einladung_am))}` : "mit Tagesordnung an alle", "buEinladungWahl(false)")}
       ${k("erinnerung", "🔔", "Erinnern", t ? `${t.ohne} ohne Antwort${t.erinnerung_am ? ` · zuletzt ${esc(zeitKurz(t.erinnerung_am))}` : ""}` : "–", "buEinladungWahl(true)")}
       ${k("protokolle", "📄", "Protokolle", "schreiben · veröffentlichen", "zeige('protokolle')")}
-      ${k("termine", "📅", "Termine", "Sitzung anlegen oder ändern", "zeige('termine')")}
+      ${k("termine", "📅", "Termine bearbeiten", "anlegen · ändern · absagen", "buTermine()")}
     </div>
+    <div class="abschnitt"><h3>👥 Mitglieder</h3></div>
+    <div class="mini-kacheln">${k("kontakt", "👥", "Mitglieder kontaktieren", "Gruppe wählen · schreiben · anrufen", "buKontakt()")}${k("liste", "📇", "Mitgliederliste", "Status · Ämter · Kontakt", "zeige('mitglieder')")}</div>
     <div class="abschnitt"><h3>✉️ Schreiben</h3></div>
     <div class="mini-kacheln">${k("brief", "✉️", "Briefbogen", "Brief mit Logo – Spende, Dank, Einladung …", "buBrief()")}</div>
     <div class="abschnitt"><h3>📥 Eingang ${summe ? `<span class="marke gelb">${summe}</span>` : ""}</h3></div>
@@ -5834,6 +5837,101 @@ function druckBrief() {
     <div style="flex:1"></div>
     ${b.fuss ? `<div style="border-top:.3mm solid #741521;margin-top:10mm;padding-top:2mm;font-size:2.8mm;color:#555;text-align:center">${absatz(b.fuss)}</div>` : ""}</div>`;
   return { titel: b.betreff || "Brief", ohneRahmen: true, html };
+}
+
+// ---------- KC-CLUB-BUERO-TERMINE (1.27.0, Wunsch Hansi): Termine im Büro – kommende Termine als Kacheln, antippen → alles dazu ----------
+// Nutzt die vorhandenen Wege (treffen_liste, treffenForm, treffenAbsagen, Büro-Vorbereitung/Einladung) – nichts doppelt.
+let BU_TERMINE = null;
+function buTermine() { BU.sicht = "termine"; buZeigen(); buTermineLaden(); window.scrollTo(0, 0); }
+async function buTermineLaden() {
+  try { const r = await api("treffen_liste"); orteMerken(r.treffen); BU_TERMINE = r.treffen.filter((t) => new Date(t.ende || t.beginn) > Date.now() - 3 * 3600000).sort((a, b) => a.beginn.localeCompare(b.beginn)); }
+  catch (e) { return melde(e.message, true); }
+  if (aktuelleAnsicht === "buero" && BU.sicht === "termine") buZeigen();
+}
+function buTermineHtml() {
+  const l = BU_TERMINE;
+  const kachel = (t) => { const va = t.art === "veranstaltung", ab = t.status === "abgesagt";
+    return `<button class="mini-kachel${ab ? "" : va ? "" : " mk-offen"}" onclick="buTerminInfo('${t.id}')"><span class="mk-sym">${ab ? "🚫" : va ? "🎪" : "🍽️"}</span><span class="mk-titel">${esc(t.titel)}</span>
+      <span class="mk-unter">${esc(wann(t.beginn))}${t.ort ? " · " + esc(t.ort) : ""}</span>${ab ? '<span class="marke rot">abgesagt</span>' : va ? "" : `<span class="mk-unter">✅ ${t.ja} · ❌ ${t.nein} · ❓ ${t.vielleicht}</span>`}</button>`; };
+  return `<div class="karte bu-gruss">📅 <b>Termine</b> – antippen zum Ändern, Absagen, Vorbereiten oder Einladen.</div>
+    <div class="knoepfe" style="margin:0 0 8px"><button class="knopf haupt" style="flex:1" onclick="buTerminNeu()">＋ Neuer Termin</button><button class="knopf" onclick="termineArt='kalender';zeige('termine')">📆 Kalender</button></div>
+    ${!l ? '<div class="karte hinweis">Wird geladen …</div>' : l.length ? `<div class="mini-kacheln">${l.map(kachel).join("")}</div>` : '<div class="karte hinweis">Keine kommenden Termine. Tippe auf „＋ Neuer Termin“.</div>'}
+    <div class="knoepfe"><button class="knopf" onclick="termineArt='liste';zeige('termine')">🧭 Terminfindung & Anfragen</button><button class="knopf" onclick="buZurueck()">🗂️ Zurück ins Büro</button></div>`;
+}
+const buTerminObj = (t) => ({ id: t.id, titel: t.titel, beginn: t.beginn, ende: t.ende, ort: t.ort, beschreibung: t.beschreibung, gastgeber: t.gastgeber?.person_id || "", art: t.art, ganztaegig: t.ganztaegig });
+function buTerminInfo(id) {
+  const t = (BU_TERMINE || []).find((x) => x.id === id); if (!t) return;
+  const va = t.art === "veranstaltung", ab = t.status === "abgesagt", offen = !ab && new Date(t.ende || t.beginn) > Date.now();
+  const namen = (a) => (t.teilnahme || []).filter((y) => y.antwort === a).map((y) => esc(y.name)).join(", ") || "–";
+  const kn = [
+    offen ? `<button class="knopf haupt" onclick="buTerminAendern('${id}')">✏️ Ändern (Datum, Zeit, Ort …)</button>` : "",
+    offen && !va ? `<button class="knopf" onclick="$('buTermin').remove();buSitzungOeffnen('${id}')">📝 Sitzung vorbereiten</button>` : "",
+    offen && !va ? `<button class="knopf" onclick="$('buTermin').remove();buEinladung('${id}', false)">📨 Einladung mit Tagesordnung</button>` : "",
+    offen && !va ? `<button class="knopf" onclick="$('buTermin').remove();buEinladung('${id}', true)">🔔 An Antwort erinnern</button>` : "",
+    offen ? `<button class="knopf" onclick="$('buTermin').remove();buTerminAbsagen('${id}', ${va})">🚫 Absagen (alle bekommen Bescheid)</button>` : "",
+  ].filter(Boolean).join("");
+  const f = blattAuf("buTermin", `<div class="info-gross"><h3 style="margin:0">${va ? "🎪" : "🍽️"} ${esc(t.titel)}</h3>
+    <p style="margin:4px 0 0">🗓️ ${esc(wann(t.beginn, true))}${t.ort ? `<br>📍 ${esc(t.ort)}` : t.gastgeber ? `<br>🏠 bei ${esc(t.gastgeber.name)}` : ""}</p>
+    ${t.beschreibung ? `<p style="white-space:pre-wrap;margin:8px 0 0">${esc(t.beschreibung)}</p>` : ""}
+    ${va ? "" : `<p style="margin:8px 0 0">✅ <b>Kommen:</b> ${namen("ja")}<br>❓ <b>Vielleicht:</b> ${namen("vielleicht")}<br>❌ <b>Abgesagt:</b> ${namen("nein")}</p>`}
+    ${ab ? '<p><span class="marke rot">abgesagt</span></p>' : ""}</div>
+    <div class="knoepfe" style="flex-direction:column;align-items:stretch">${kn}<button class="knopf" onclick="$('buTermin').remove()">Schließen</button></div>`);
+  f.dataset.id = id;
+}
+function buTerminAendern(id) { const t = (BU_TERMINE || []).find((x) => x.id === id); $("buTermin")?.remove(); termineArt = "liste"; zeige("termine"); treffenForm(buTerminObj(t)); melde("✏️ Ändern, dann „Speichern“ – zurück ins Büro über 🗂️"); }
+function buTerminNeu() { termineArt = "liste"; zeige("termine"); treffenForm(); }
+async function buTerminAbsagen(id, va) { await treffenAbsagen(id, va); buTermineLaden(); }
+
+// ---------- KC-CLUB-BUERO-KONTAKT (1.27.0): Mitglieder kontaktieren – Gruppe antippen, Auswahl prüfen, Weg wählen ----------
+// Schreiben läuft über die vorhandene „Neue Nachricht“ (mit Push/Mail-Wahl); Anrufen/WhatsApp über die Mitglieder-Seite
+// mit deren Freigaberegeln – das Büro zeigt keine Kontaktdaten zusätzlich an.
+let BU_K = { wahl: new Set(), gruppe: "", antworten: null };
+async function buKontakt() {
+  BU.sicht = "kontakt"; BU_K = { wahl: new Set(), gruppe: "", antworten: null }; buZeigen(); window.scrollTo(0, 0);
+  try { await mitgliederHolen(); } catch (e) { return melde(e.message, true); }
+  const t = BU.start?.sitzungen?.[0];
+  if (t) try { const s = await api("buero_sitzung", { treffen_id: t.id }); BU_K.antworten = new Map(s.mitglieder.map((m) => [m.person_id, m.antwort])); BU_K.sitzung = t; } catch {}
+  if (aktuelleAnsicht === "buero" && BU.sicht === "kontakt") buZeigen();
+}
+function buKGruppen() {
+  const andere = (MITGLIEDER || []).filter((m) => m.person_id !== ICH?.person_id), a = BU_K.antworten;
+  const g = [["alle", "👥 Alle", andere.map((m) => m.person_id)], ["online", "🟢 Gerade online", andere.filter((m) => m.online || ONL?.ids?.has(m.person_id)).map((m) => m.person_id)]];
+  if (a) g.push(["ja", "✅ Kommen zur Sitzung", andere.filter((m) => a.get(m.person_id) === "ja").map((m) => m.person_id)],
+    ["ohne", "❓ Noch ohne Antwort", andere.filter((m) => !a.get(m.person_id) || a.get(m.person_id) === "keine").map((m) => m.person_id)],
+    ["nein", "❌ Abgesagt", andere.filter((m) => a.get(m.person_id) === "nein").map((m) => m.person_id)]);
+  for (const amt of AEMTER || []) { const ids = andere.filter((m) => (m.aemter || []).includes(amt)).map((m) => m.person_id); if (ids.length) g.push(["amt:" + amt, "🎖️ " + amt, ids]); }
+  return g;
+}
+function buKGruppe(k) { const g = buKGruppen().find((x) => x[0] === k); if (!g) return; BU_K.gruppe = k; BU_K.wahl = new Set(g[2]); buZeigen(); }
+function buKToggle(id) { BU_K.wahl.has(id) ? BU_K.wahl.delete(id) : BU_K.wahl.add(id); BU_K.gruppe = ""; buZeigen(); }
+function buKontaktHtml() {
+  if (!MITGLIEDER) return '<div class="karte hinweis">Wird geladen …</div>';
+  const andere = MITGLIEDER.filter((m) => m.person_id !== ICH?.person_id).sort((a, b) => a.name.localeCompare(b.name)), n = BU_K.wahl.size;
+  const ant = (id) => ({ ja: "✅", nein: "❌", vielleicht: "❓" }[BU_K.antworten?.get(id)] || "");
+  return `<div class="karte bu-gruss">👥 <b>Mitglieder kontaktieren</b> – Gruppe antippen oder einzelne Personen, dann den Weg wählen.</div>
+    <div class="abschnitt"><h3>1️⃣ Wen?</h3></div>
+    <div class="hl-chips">${buKGruppen().map(([k, t, ids]) => `<button class="chip${BU_K.gruppe === k ? " an" : ""}" onclick='buKGruppe(${hlJs(k)})'>${esc(t)} · ${ids.length}</button>`).join("")}<button class="chip" onclick="BU_K.wahl=new Set();BU_K.gruppe='';buZeigen()">✕ Keine</button></div>
+    ${BU_K.sitzung ? `<p class="hinweis" style="margin:2px 0 6px">✅❓❌ beziehen sich auf: ${esc(BU_K.sitzung.titel)} · ${esc(wann(BU_K.sitzung.beginn))}</p>` : ""}
+    <div class="bu-haken-liste" style="grid-template-columns:repeat(auto-fill, minmax(260px, 1fr))">${andere.map((m) => `<div class="bu-haken${BU_K.wahl.has(m.person_id) ? " an" : ""}" style="justify-content:space-between">
+      <label style="display:flex;gap:6px;align-items:center;flex:1;min-width:0;cursor:pointer"><input type="checkbox" ${BU_K.wahl.has(m.person_id) ? "checked" : ""} onchange="buKToggle('${m.person_id}')"> ${esc(m.name)} <small>${ant(m.person_id)}${m.online ? " 🟢" : ""}</small></label>
+      <button class="knopf klein" style="padding:6px 8px;flex-shrink:0" title="Kontakt (Anrufen, WhatsApp …)" onclick="mitgliedOeffnen('${m.person_id}')">👤</button></div>`).join("")}</div>
+    <div class="abschnitt"><h3>2️⃣ Wie? ${n ? `<span class="marke gelb">${n} ausgewählt</span>` : ""}</h3></div>
+    <div class="mini-kacheln">
+      <button class="mini-kachel" ${n ? "" : "disabled"} onclick="buKSchreiben()"><span class="mk-sym">💬</span><span class="mk-titel">Nachricht schreiben</span><span class="mk-unter">in der App – mit Push und/oder E-Mail</span></button>
+      <button class="mini-kachel" ${n === 1 ? "" : "disabled"} onclick="mitgliedOeffnen([...BU_K.wahl][0])"><span class="mk-sym">📞</span><span class="mk-titel">Anrufen / WhatsApp</span><span class="mk-unter">${n === 1 ? "Kontakt öffnen" : "genau 1 Person wählen"}</span></button>
+      <button class="mini-kachel" ${n === 1 ? "" : "disabled"} onclick="buKBrief()"><span class="mk-sym">✉️</span><span class="mk-titel">Brief schreiben</span><span class="mk-unter">${n === 1 ? "Briefbogen mit Namen" : "genau 1 Person wählen"}</span></button>
+      <button class="mini-kachel" onclick="zeige('pinnwand');pwForm(true)"><span class="mk-sym">📌</span><span class="mk-titel">Zettel an die Pinnwand</span><span class="mk-unter">kurz & für alle sichtbar</span></button>
+    </div>
+    <div class="knoepfe"><button class="knopf" onclick="buZurueck()">🗂️ Zurück ins Büro</button></div>`;
+}
+async function buKSchreiben() {
+  const ids = [...BU_K.wahl]; if (!ids.length) return;
+  await neueNachricht(); empfWahl.personen = ids; empfListe();
+  melde(`💬 ${ids.length} Empfänger übernommen – Betreff und Text schreiben, dann senden`);
+}
+function buKBrief() {
+  const m = MITGLIEDER.find((x) => x.person_id === [...BU_K.wahl][0]); buBrief();
+  if (m && !BRIEF.empfaenger) { BRIEF.empfaenger = m.name; BRIEF.anrede = `Liebe/r ${m.vorname || m.name.split(" ")[0]},`; BRIEF.gruss = "Herzliche Grüße"; briefMerken(); buZeigen(); }
 }
 
 // ---------- KC-CLUB-HELFEN & KC-CLUB-LEIHEN (1.23.0, Wunsch Hansi): eine Kachel, zwei Bereiche – fast alles per Antippen ----------

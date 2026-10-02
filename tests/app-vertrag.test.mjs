@@ -2000,6 +2000,16 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/src="icon-192\.png"[^>]*style="width:22mm/.test(html) && /Köcheclub Werne<\/div>/.test(html), "Logo + Name im Briefkopf");
 }
 
+// 176. 1.27.0: Büro – Termine bearbeiten, Mitglieder kontaktieren (KC-CLUB-BUERO-TERMINE, KC-CLUB-BUERO-KONTAKT)
+{
+  assert.ok(/k\("termine", "📅", "Termine bearbeiten", "anlegen · ändern · absagen", "buTermine\(\)"\)/.test(html) && /k\("kontakt", "👥", "Mitglieder kontaktieren"/.test(html), "Kacheln im Büro");
+  assert.ok(/function buTerminAendern\(id\)[^\n]*treffenForm\(buTerminObj\(t\)\)/.test(html), "Ändern nutzt vorhandenes Formular");
+  const k = html.slice(html.indexOf("async function buKSchreiben()"), html.indexOf("function buKBrief()"));
+  assert.ok(/await neueNachricht\(\); empfWahl\.personen = ids; empfListe\(\);/.test(k) && !/api\("nachricht_senden"/.test(k), "Schreiben über vorhandene Neue Nachricht, nichts automatisch");
+  const kh = html.slice(html.indexOf("function buKontaktHtml()"), html.indexOf("async function buKSchreiben()"));
+  assert.ok(!/telefon|email|\.mail\b/i.test(kh.replace(/E-Mail/g, "")) && /mitgliedOeffnen\(/.test(kh), "keine zusätzlichen Kontaktdaten im Büro");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

@@ -1,5 +1,15 @@
 # Änderungen
 
+## 1.27.0 – 2026-10-02 (DEV)
+
+- KC-CLUB-BUERO-TERMINE (Wunsch Hansi): Büro-Bereich „📅 Termine bearbeiten“ – kommende Termine (aus treffen_liste) als
+  Kacheln mit Zu-/Absagen; Info-Fenster mit Wer kommt/vielleicht/abgesagt und Knöpfen Ändern (vorhandenes Termin-Formular),
+  Sitzung vorbereiten, Einladung, Erinnern, Absagen; „＋ Neuer Termin“, Kalender, Terminfindung.
+- KC-CLUB-BUERO-KONTAKT: „👥 Mitglieder kontaktieren“ – Gruppen-Chips (Alle, Gerade online, zur nächsten Sitzung: kommen /
+  ohne Antwort / abgesagt, je Amt) und Einzelauswahl; Wege: Nachricht (vorhandene „Neue Nachricht“ mit vorbelegten
+  Empfängern und Push/Mail-Wahl), Anrufen/WhatsApp (Mitglieder-Seite mit deren Freigaberegeln – das Büro zeigt keine
+  zusätzlichen Kontaktdaten), Brief (Briefbogen mit Namen), Pinnwand-Zettel. Gesendet wird nichts ohne eigenes Absenden.
+
 ## 1.26.0 – 2026-10-02 (DEV)
 
 - KC-CLUB-BUERO-EINGANG (Wunsch Hansi „bau den Eingang“): eigene Büro-Seite „📥 Eingang“ – Ausleih-Anfragen (entscheiden),

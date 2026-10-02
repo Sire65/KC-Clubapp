@@ -1,7 +1,9 @@
 {
-  "version": "1.26.0",
+  "version": "1.27.0",
   "datum": "2026-10-02",
   "neu": [
+    "📅 Büro: Termine bearbeiten – kommende Termine als Kacheln, antippen zum Ändern, Absagen, Vorbereiten, Einladen oder Erinnern; „＋ Neuer Termin“ (Admin)",
+    "👥 Büro: Mitglieder kontaktieren – Gruppe antippen (Alle, Online, Zusagen/Absagen/ohne Antwort zur Sitzung, Ämter) oder Einzelne, dann Nachricht, Anruf/WhatsApp, Brief oder Pinnwand (Admin)",
     "📥 Büro-Eingang: alles, was auf die Clubleitung wartet, auf einer Seite – Ausleih-Anfragen, offene Vorschläge, Hilfe-Aufrufe ohne genug Helfer; antippen und direkt erledigen (Admin)",
     "✉️ Briefbogen mit Logo im Büro: Vorlage antippen (Spendenübergabe, Dankeschön, Einladung, Glückwunsch oder leer), ausfüllen, Vorschau, drucken oder als PDF (Admin)",
     "🗂️ Büro für die Clubleitung (Clubsprecher, Kassenwart, Admin): Begrüßung beim Start „Möchtest du etwas im Büro erledigen?“, alles als Kacheln, und die App zeigt immer den nächsten sinnvollen Schritt",
@@ -9,6 +11,13 @@
     "📨 Danach mit einem Tipp: Einladung mit Tagesordnung an alle senden – und später alle erinnern, die noch nicht geantwortet haben (Admin)"
   ],
   "verlauf": [
+    {
+      "version": "1.27.0",
+      "neu": [
+        "📅 Büro: Termine bearbeiten – kommende Termine als Kacheln, antippen zum Ändern, Absagen, Vorbereiten, Einladen oder Erinnern; „＋ Neuer Termin“ (Admin)",
+        "👥 Büro: Mitglieder kontaktieren – Gruppe antippen (Alle, Online, Zusagen/Absagen/ohne Antwort zur Sitzung, Ämter) oder Einzelne, dann Nachricht, Anruf/WhatsApp, Brief oder Pinnwand (Admin)"
+      ]
+    },
     {
       "version": "1.26.0",
       "neu": [
