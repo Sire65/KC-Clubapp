@@ -1194,7 +1194,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   const bereich = html.slice(html.indexOf('id="adminBereich"'), html.indexOf('data-klappe="app"'));
   for (const k of ["admin_pinnwand", "admin_erstattung", "admin_wetter"]) assert.ok(bereich.includes(`data-klappe="${k}"`), `Admin-Klappbereich ${k} fehlt im Admin-Bereich`);
   assert.ok(/<details class="karte versteckt" data-klappe="admin" data-einfach id="adminBereich">/.test(html) && /\$\("adminBereich"\)\.classList\.remove\("versteckt"\)/.test(html), "Admin-Bereich (auch einfach, nur Admin) fehlt");
-  assert.ok(/document\.querySelectorAll\("details\[data-klappe\]"\)/.test(html) && /details\.karte:not\(\[open\]\) > summary \.pfeil/.test(html), "Schloss/Pfeil je Bereich");
+  assert.ok(/wurzel\.querySelectorAll\("details\[data-klappe\]:not\(\[data-klappe-an\]\)"\)/.test(html) && /function klappenMerken\(wurzel = document\)/.test(html) && /details\.karte:not\(\[open\]\) > summary \.pfeil/.test(html), "Schloss/Pfeil je Bereich");
   const fs = server.slice(server.indexOf('case "pinnwand_fristen_setzen"'), server.indexOf('case "wetter_setzen"'));
   assert.ok(/nurAdmin\(ich\);/.test(fs) && /protokoll\(ich\.person_id, "pinnwand_fristen_gesetzt"/.test(fs) && /PINNWAND_FRISTEN_GRENZEN = \{ erinnernTage: \[1, 30\], pauseTage: \[1, 60\] \}/.test(server), "Fristen: nur Admin, Grenzen, Protokoll");
   assert.ok(/pinnwandFristen: pwFristen[,}]/.test(server) && /const pwFristen = \(\) => \(\{ \.\.\.PW_FRISTEN_STANDARD, \.\.\.\(INIT\?\.pinnwandFristen \|\| \{\}\) \}\);/.test(html), "Fristen kommen nicht vom Server");
@@ -2123,6 +2123,14 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/\.filter\(\(u\) => u\.gruppe && Array\.isArray\(u\.personen\)\)/.test(html), "nur Gruppen, in denen ich bin (Server-Liste)");
   assert.ok(/\.\.\.\(gruppe\.has\(t\.id\) \? \{ personen: /.test(server), "Server liefert person_ids nur bei Gruppen");
   assert.ok(/<small class="st-titel">Mein Status<\/small>\$\{esc\(statusKurz\(s\)\)\}/.test(html), "„Mein Status“ im Knopf");
+}
+
+// 188. 1.35.0: Büro-Bereiche klappbar mit Pfeil und Schloss (KC-CLUB-BUERO-KLAPPE)
+{
+  assert.ok(/function buZeigen\(\) \{ buZeigenRoh\(\); klappenMerken\(\$\("buInhalt"\)\); \}/.test(html), "Klappen nach jedem Zeichnen einrichten");
+  assert.ok(/const buBereich = \(name, titel, inhalt\) => `<details class="karte bu-bereich" data-klappe="buero_\$\{name\}" data-ohne-unten open>/.test(html), "Bereich = Klappkarte");
+  for (const b of ["sitzung", "nachher", "mitglieder", "schreiben", "eingang"]) assert.ok(html.includes(`buBereich("${b}"`), `Büro-Bereich ${b} klappbar`);
+  assert.ok(/d\.dataset\.klappeAn = "1";/.test(html), "kein doppeltes Schloss");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

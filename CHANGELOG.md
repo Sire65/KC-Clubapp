@@ -1,5 +1,12 @@
 # Änderungen
 
+## 1.35.0 – 2026-10-02 (DEV)
+
+- KC-CLUB-BUERO-KLAPPE (Wunsch Hansi): Die Büro-Startseite ist in Klappbereiche gegliedert (🗂️ Sitzung, 📄 Nach der
+  Sitzung, 👥 Mitglieder, ✉️ Schreiben, 📥 Eingang) – je Bereich Klapppfeil und Schloss 🔒/🔓 wie in den Einstellungen;
+  Zustand und Feststellung je Gerät gemerkt. klappenMerken() ist dafür für nachträglich gezeichnete Bereiche wiederverwendbar
+  (je Bereich nur einmal eingerichtet); Einstellungen unverändert.
+
 ## 1.34.0 – 2026-10-02 (DEV)
 
 - KC-CLUB-MG-GRUPPEN (Wunsch Hansi): „👥 Aktive Mitglieder“ zeigt unter „Alle | Nur online“ die eigenen Gruppen

@@ -607,6 +607,10 @@
   .bf-rahmen { border: 2px solid var(--linie); border-radius: 12px; background: var(--karte2); text-align: center; padding: 4px; } /* ohne overflow:hidden – sonst schrumpft die Vorschau im Fenster */
   .bf-rahmen canvas { display: block; margin: 0 auto; border-radius: 8px; height: 48vh; width: auto; max-width: 100%; touch-action: none; cursor: crosshair; }
   /* KC-CLUB-MINIKACHELN (1.23.1, Wunsch Hansi): kleine Kacheln nebeneinander, Antippen → großes Info-Fenster */
+  /* KC-CLUB-BUERO-KLAPPE (1.35.0): Büro-Bereiche als Klappkarten */
+  details.karte.bu-bereich > summary { margin: 0; }
+  details.karte.bu-bereich[open] > summary { margin-bottom: 10px; }
+  details.karte.bu-bereich .mini-kacheln { margin: 0; }
   .mini-kacheln { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin: 0 0 10px; }
   .mini-kachel { background: var(--karte); color: var(--text); border: 2px solid transparent; border-radius: 16px; padding: 10px; box-shadow: var(--schatten); text-align: left; cursor: pointer; display: grid; gap: 3px; align-content: start; font: inherit; min-width: 0; }
   .mini-kachel .mk-sym { font-size: 1.6rem; line-height: 1.1; }
@@ -1960,7 +1964,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.34.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.35.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -4948,10 +4952,12 @@ async function wahlSetzen(b) {
   } catch (e) { melde(e.message, true); wahlZeigen(); }
 }
 // Auf-/Zuklappen merken; Schloss 🔒 stellt den Bereich fest (bleibt offen bzw. zu), 🔓 löst ihn wieder
-function klappenMerken() {
+// KC-CLUB-BUERO-KLAPPE (1.35.0): auch für nachträglich gezeichnete Bereiche (Büro) – jeder Bereich wird nur einmal eingerichtet
+function klappenMerken(wurzel = document) {
   const lies = (k) => { try { return localStorage.getItem("kc_club_" + k); } catch { return null; } };
   const schreib = (k, v) => { try { localStorage.setItem("kc_club_" + k, v); } catch {} };
-  document.querySelectorAll("details[data-klappe]").forEach((d) => {
+  wurzel.querySelectorAll("details[data-klappe]:not([data-klappe-an])").forEach((d) => {
+    d.dataset.klappeAn = "1";
     const name = d.dataset.klappe, s = d.querySelector("summary");
     const v = lies("klappe_" + name); if (v !== null) d.open = v === "1";
     s.insertAdjacentHTML("beforeend", '<button type="button" class="schloss" aria-label="Bereich feststellen"></button><span class="pfeil" aria-hidden="true">▾</span>');
@@ -4976,7 +4982,7 @@ function klappenMerken() {
     });
     d.addEventListener("toggle", () => schreib("klappe_" + name, d.open ? "1" : "0"));
     // KC-CLUB-KLAPPE-UNTEN (1.6.0, Wunsch Hansi): bei langen Bereichen auch unten zuklappen – ohne nach oben zu scrollen
-    if (!d.classList.contains("innen")) {
+    if (!d.classList.contains("innen") && !d.hasAttribute("data-ohne-unten")) {
       d.insertAdjacentHTML("beforeend", '<button type="button" class="klappe-unten" aria-label="Bereich zuklappen">▴ Zuklappen</button>');
       d.querySelector(":scope > .klappe-unten").addEventListener("click", () => {
         if (lies("fest_" + name) === "1") return melde("🔒 Dieser Bereich ist festgestellt – zum Lösen oben das Schloss antippen.");
@@ -5668,7 +5674,10 @@ async function buLaden() {
   buZeigen();
 }
 function buZurueck() { if (BU.sicht !== "start") { BU.sicht = "start"; buLaden(); window.scrollTo(0, 0); } else zeige("start"); }
-function buZeigen() { $("buInhalt").innerHTML = BU.sicht === "sitzung" ? buSitzungHtml() : BU.sicht === "eingang" ? buEingangHtml() : BU.sicht === "brief" ? buBriefHtml() : BU.sicht === "termine" ? buTermineHtml() : BU.sicht === "kontakt" ? buKontaktHtml() : BU.sicht === "nachher" ? buNachherHtml() : BU.sicht === "feste" ? buFesteHtml() : BU.sicht === "liste" ? buListeHtml() : BU.sicht === "fl" ? buFlHtml() : BU.sicht === "flneu" ? buFlNeuHtml() : BU.sicht === "fall" ? buFallHtml() : buStartHtml(); }
+function buZeigen() { buZeigenRoh(); klappenMerken($("buInhalt")); }
+// Bereich im Büro: Klappkarte mit Pfeil und Schloss wie in den Einstellungen (Zustand je Gerät gemerkt)
+const buBereich = (name, titel, inhalt) => `<details class="karte bu-bereich" data-klappe="buero_${name}" data-ohne-unten open><summary>${titel}</summary>${inhalt}</details>`;
+function buZeigenRoh() { $("buInhalt").innerHTML = BU.sicht === "sitzung" ? buSitzungHtml() : BU.sicht === "eingang" ? buEingangHtml() : BU.sicht === "brief" ? buBriefHtml() : BU.sicht === "termine" ? buTermineHtml() : BU.sicht === "kontakt" ? buKontaktHtml() : BU.sicht === "nachher" ? buNachherHtml() : BU.sicht === "feste" ? buFesteHtml() : BU.sicht === "liste" ? buListeHtml() : BU.sicht === "fl" ? buFlHtml() : BU.sicht === "flneu" ? buFlNeuHtml() : BU.sicht === "fall" ? buFallHtml() : buStartHtml(); }
 // Nächster sinnvoller Schritt für eine Sitzung
 function buNaechster(t) {
   if (!t) return null;
@@ -5690,28 +5699,23 @@ function buStartHtml() {
   const festBald = BU_F ? BU_F.geburtstage.concat(BU_F.jubilaeen).filter((f) => f.tage >= 0 && f.tage <= 7).length : 0;
   return `<div class="karte bu-gruss"><b>${buTageszeit()}, ${esc(ICH.vorname || ICH.name)}!</b>${festHeute.length ? `<div class="bu-tipp" style="margin:6px 0">🎉 Heute: ${festHeute.join(" · ")} – <button class="knopf klein" onclick="buFeste()">gratulieren</button></div>` : "<br>"}${t ? `Nächste Sitzung: <b>${esc(t.titel)}</b> · ${esc(wann(t.beginn))}<br>✅ ${t.ja} zugesagt · ❌ ${t.nein} abgesagt · ❓ ${t.ohne} ohne Antwort` : "Gerade ist keine Sitzung geplant – lege sie unter 📅 Termine an."}
     ${dran ? `<div class="bu-tipp">👉 Nächster Schritt: <b>${dran}</b></div>` : t ? '<div class="bu-tipp">✅ Für diese Sitzung ist alles erledigt.</div>' : ""}</div>
-    <div class="abschnitt"><h3>🗂️ Sitzung</h3></div>
-    <div class="mini-kacheln">
+    ${buBereich("sitzung", "🗂️ Sitzung", `<div class="mini-kacheln">
       ${k("vorbereiten", "📝", "Sitzung vorbereiten", t ? (t.vorbereitet ? "✅ vorbereitet – ändern" : "Anwesenheit, Tagesordnung, Vorlage") : "keine Sitzung geplant", "buSitzungWahl()")}
       ${k("drucken", "🖨️", "Vorlage drucken", t?.vorbereitet ? "Protokoll-Vorlage mit Schreiblinien" : "erst vorbereiten", "buDruckWahl()")}
       ${k("einladung", "📨", "Einladung senden", t?.einladung_am ? `✅ gesendet ${esc(zeitKurz(t.einladung_am))}` : "mit Tagesordnung an alle", "buEinladungWahl(false)")}
       ${k("erinnerung", "🔔", "Erinnern", t ? `${t.ohne} ohne Antwort${t.erinnerung_am ? ` · zuletzt ${esc(zeitKurz(t.erinnerung_am))}` : ""}` : "–", "buEinladungWahl(true)")}
       ${k("protokolle", "📄", "Protokolle", "schreiben · veröffentlichen", "zeige('protokolle')")}
       ${k("termine", "📅", "Termine bearbeiten", "anlegen · ändern · absagen", "buTermine()")}
-    </div>
-    <div class="abschnitt"><h3>📄 Nach der Sitzung</h3></div>
-    <div class="mini-kacheln">
+    </div>`)}
+    ${buBereich("nachher", "📄 Nach der Sitzung", `<div class="mini-kacheln">
       ${k("foto", "📸", "Protokoll-Foto", "Mitschrift abfotografieren & anhängen", "buNachherWahl('📸 Foto für welche Sitzung?')", nt?.text.startsWith("📸") ? '<span class="marke gelb">jetzt dran</span>' : "")}
       ${k("aufgaben", "✔️", "Aufgaben verteilen", "wer · was · bis wann", "buNachherWahl('✔️ Aufgaben aus welcher Sitzung?')")}
       ${k("veroeffentlichen", "📢", "Protokoll veröffentlichen", "alle bekommen Bescheid · 7 Tage Einspruch", "buNachherWahl('📢 Welches Protokoll?')", nt?.text.startsWith("📢") ? '<span class="marke gelb">jetzt dran</span>' : "")}
-    </div>
-    <div class="abschnitt"><h3>👥 Mitglieder</h3></div>
-    <div class="mini-kacheln">${k("kontakt", "👥", "Mitglieder kontaktieren", "Gruppe wählen · schreiben · anrufen", "buKontakt()")}${k("feste", "🎂", "Geburtstage & Jubiläen", festBald ? `${festBald} in den nächsten 7 Tagen` : "gratulieren · Liste drucken", "buFeste()", festHeute.length ? '<span class="marke gelb">heute!</span>' : "")}${k("fl", "🤍", "Freud & Leid", FL.d ? (FL.d.faelle.filter((f) => f.status === "offen").length ? `${FL.d.faelle.filter((f) => f.status === "offen").length} offen` : "Geburt, Hochzeit, Trauerfall …") : "Geburt, Hochzeit, Trauerfall …", "buFreudLeid()")}${k("liste", "📇", "Mitgliederliste drucken", "Übersicht · Telefon · Adressen · Unterschriften", "buListe()")}</div>
-    <div class="abschnitt"><h3>✉️ Schreiben</h3></div>
-    <div class="mini-kacheln">${k("brief", "✉️", "Briefbogen", "Brief mit Logo – Spende, Dank, Einladung …", "buBrief()")}</div>
-    <div class="abschnitt"><h3>📥 Eingang ${summe ? `<span class="marke gelb">${summe}</span>` : ""}</h3></div>
-    <button class="knopf haupt" style="width:100%;margin:0 0 8px" onclick="buEingang()">📥 Eingang öffnen – alles auf einen Blick erledigen</button>
-    <div class="mini-kacheln">${eingang.map(([sym, t2, z, fn]) => `<button class="mini-kachel${z ? " mk-offen" : ""}" onclick="${fn}"><span class="mk-sym">${sym}</span><span class="mk-titel">${esc(t2)}</span><span class="mk-gross">${z || "–"}</span></button>`).join("")}</div>`;
+    </div>`)}
+    ${buBereich("mitglieder", "👥 Mitglieder", `<div class="mini-kacheln">${k("kontakt", "👥", "Mitglieder kontaktieren", "Gruppe wählen · schreiben · anrufen", "buKontakt()")}${k("feste", "🎂", "Geburtstage & Jubiläen", festBald ? `${festBald} in den nächsten 7 Tagen` : "gratulieren · Liste drucken", "buFeste()", festHeute.length ? '<span class="marke gelb">heute!</span>' : "")}${k("fl", "🤍", "Freud & Leid", FL.d ? (FL.d.faelle.filter((f) => f.status === "offen").length ? `${FL.d.faelle.filter((f) => f.status === "offen").length} offen` : "Geburt, Hochzeit, Trauerfall …") : "Geburt, Hochzeit, Trauerfall …", "buFreudLeid()")}${k("liste", "📇", "Mitgliederliste drucken", "Übersicht · Telefon · Adressen · Unterschriften", "buListe()")}</div>`)}
+    ${buBereich("schreiben", "✉️ Schreiben", `<div class="mini-kacheln">${k("brief", "✉️", "Briefbogen", "Brief mit Logo – Spende, Dank, Einladung …", "buBrief()")}</div>`)}
+    ${buBereich("eingang", `📥 Eingang ${summe ? `<span class="marke gelb">${summe}</span>` : ""}`, `<button class="knopf haupt" style="width:100%;margin:0 0 8px" onclick="buEingang()">📥 Eingang öffnen – alles auf einen Blick erledigen</button>
+    <div class="mini-kacheln">${eingang.map(([sym, t2, z, fn]) => `<button class="mini-kachel${z ? " mk-offen" : ""}" onclick="${fn}"><span class="mk-sym">${sym}</span><span class="mk-titel">${esc(t2)}</span><span class="mk-gross">${z || "–"}</span></button>`).join("")}</div>`)}`;
 }
 // Mehrere Sitzungen → antippen, welche
 function buSitzungWaehlen(titel, weiter) {
