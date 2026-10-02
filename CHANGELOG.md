@@ -1,5 +1,8 @@
 # Änderungen
 
+## 1.47.2 – 2026-10-02
+- KC-CLUB-ONLINE-ZAHL: Zahl der Online-Mitglieder im Startfeld größer (1.3rem, LED 13 px).
+
 ## 1.47.1 – 2026-10-02 (DEV)
 
 - KC-CLUB-DIENSTWUNSCH / KC-DP-TWINKEY-EINFACH (Wunsch Hansi vor Wilfrieds Eingabe): DP2 auf Build 257 RC übernommen

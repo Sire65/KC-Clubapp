@@ -2302,6 +2302,11 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(!/id="twSkip"/.test(tw), "doppeltes „Überspringen“ entfernt");
 }
 
+// 206. 1.47.2: Online-Zahl größer (KC-CLUB-ONLINE-ZAHL)
+{
+  assert.ok(/\.onzahl \{[^}]*font-size: 1\.3rem/.test(html) && /\.onzahl \.led \{ width: 13px; height: 13px; \}/.test(html), "Online-Zahl gut lesbar");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
