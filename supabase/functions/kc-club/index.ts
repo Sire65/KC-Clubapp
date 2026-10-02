@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.52.2";
+const SERVER_VERSION = "1.53.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -4009,6 +4009,10 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const gelesen = new Map((meine ?? []).map((x: any) => [x.thread_id, x.last_read_at]));
         const { data: gr } = await db.from("kc_club_gruppen").select("thread_id,name,symbol").in("thread_id", ids);
         const gruppe = new Map((gr ?? []).map((g: any) => [g.thread_id, g]));
+        // KC-CLUB-WICHTIG (1.53.0): ungelesene wichtige Nachrichten je Chat
+        const ungelesenIds = (msgs ?? []).filter((x: any) => x.sender_person_id !== ich.person_id && (!gelesen.get(x.thread_id) || x.created_at > gelesen.get(x.thread_id))).map((x: any) => x.id).slice(0, 300);
+        const { data: wi } = ungelesenIds.length ? await db.from("kc_club_nachricht_wichtig").select("message_id").in("message_id", ungelesenIds) : { data: [] as any[] };
+        const wichtigSet = new Set((wi ?? []).map((x: any) => x.message_id));
         const liste = (th ?? []).map((t: any) => {
           const m = (msgs ?? []).filter((x: any) => x.thread_id === t.id);
           const lr = gelesen.get(t.id);
@@ -4020,6 +4024,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             ...(gruppe.has(t.id) ? { personen: (tn ?? []).filter((x: any) => x.thread_id === t.id).map((x: any) => x.person_id) } : {}),
             letzte: m[0] ? { von: m[0].sender_person_id === ich.person_id ? "Du" : vorname(leute.get(m[0].sender_person_id)), text: String(m[0].body).slice(0, 120), zeit: m[0].created_at } : null,
             ungelesen: m.filter((x: any) => x.sender_person_id !== ich.person_id && (!lr || x.created_at > lr)).length,
+            wichtigNeu: m.filter((x: any) => wichtigSet.has(x.id)).length,
             aktualisiert: m[0]?.created_at || t.updated_at,
           };
         }).sort((x: any, y: any) => String(y.aktualisiert).localeCompare(String(x.aktualisiert)));
@@ -4067,13 +4072,15 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const bearbMap = new Map((bearb ?? []).map((x: any) => [x.message_id, x.bearbeitet_am]));
         // KC-CLUB-ANHEFTEN / -MERKEN / -CHATUMFRAGE / -KONTAKT (1.10.0)
         const leer = { data: [] as any[] };
-        const [{ data: pins }, { data: gem }, { data: umf }, { data: stim }, { data: kon }] = mids.length ? await Promise.all([
+        const [{ data: pins }, { data: gem }, { data: umf }, { data: stim }, { data: kon }, { data: wicht }] = mids.length ? await Promise.all([
           db.from("kc_club_angeheftet").select("message_id,am").eq("thread_id", id).order("am", { ascending: false }),
           db.from("kc_club_gemerkt").select("message_id").eq("person_id", ich.person_id).in("message_id", mids),
           db.from("kc_club_chat_umfrage").select("message_id,frage,optionen,mehrfach").in("message_id", mids),
           db.from("kc_club_chat_stimme").select("message_id,person_id,option").in("message_id", mids),
           db.from("kc_club_chat_kontakt").select("message_id,person_id").in("message_id", mids),
-        ]) : [leer, leer, leer, leer, leer];
+          db.from("kc_club_nachricht_wichtig").select("message_id").in("message_id", mids), // KC-CLUB-WICHTIG (1.53.0)
+        ]) : [leer, leer, leer, leer, leer, leer];
+        const wichtigIds = new Set((wicht ?? []).map((x: any) => x.message_id));
         const midSet = new Set(mids), pinIds = (pins ?? []).map((x: any) => x.message_id).filter((x: string) => midSet.has(x)).slice(0, 3);
         const gemSet = new Set((gem ?? []).map((x: any) => x.message_id));
         const xLeute = await personen([...(stim ?? []).map((x: any) => x.person_id), ...(kon ?? []).map((x: any) => x.person_id)]);
@@ -4109,7 +4116,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             antwortAuf: bezug ? { id: bezug.id, von: bezug.sender_person_id === ich.person_id ? "Du" : vorname(leute.get(bezug.sender_person_id)) || "?", text: txt(bezug.body, 90) } : null,
             erwaehnt: erw.map((x: any) => x.person_id === ich.person_id ? "dich" : vorname(rkLeute.get(x.person_id)) || "?"), erwaehntMich: erw.some((x: any) => x.person_id === ich.person_id),
             bearbeitet: bearbMap.get(m.id) ?? null,
-            gemerkt: gemSet.has(m.id), angeheftet: pinIds.includes(m.id), umfrage: umfrageVon(m.id), kontakt: kontaktVon(m.id),
+            gemerkt: gemSet.has(m.id), angeheftet: pinIds.includes(m.id), umfrage: umfrageVon(m.id), kontakt: kontaktVon(m.id), wichtig: wichtigIds.has(m.id),
             ...(eigen && m.body !== "📎" && !(umf ?? []).some((x: any) => x.message_id === m.id) && !(kon ?? []).some((x: any) => x.message_id === m.id) && Date.now() - Date.parse(m.created_at) < BEARBEITEN_MIN * 60000 ? { bearbeitbarBis: new Date(Date.parse(m.created_at) + BEARBEITEN_MIN * 60000).toISOString() } : {}),
           };
         });
@@ -4167,6 +4174,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           kontaktPid = k.person_id; text = `👤 Kontakt: ${k.display_name}`;
         }
         if (!text && !anlagen.length) throw new Fehler("Bitte eine Nachricht schreiben oder eine Anlage anhängen.");
+        // KC-CLUB-WICHTIG (1.53.0): „Wichtigkeit hoch“ – nur für normale Nachrichten (nicht Abstimmung/Kontaktkarte)
+        const wichtig = !!p.wichtig && !umfrage && !kontaktPid;
         let threadId = String(p.id || ""), neu = false;
         if (threadId) await binTeilnehmer(threadId, ich.person_id);
         else {
@@ -4222,6 +4231,11 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             : await db.from("kc_club_chat_kontakt").insert({ message_id: m.id, person_id: kontaktPid });
           if (ze) { await db.from("kc_communication_messages").delete().eq("id", m.id); throw new Fehler(umfrage ? "Abstimmung konnte nicht gespeichert werden." : "Kontakt konnte nicht gesendet werden.", 500); }
         }
+        if (wichtig) {
+          const { error: we } = await db.from("kc_club_nachricht_wichtig").insert({ message_id: m.id, person_id: ich.person_id });
+          if (we) { await db.from("kc_communication_messages").delete().eq("id", m.id); throw new Fehler("Wichtige Nachricht konnte nicht gespeichert werden.", 500); }
+        }
+        const wMarke = wichtig ? "❗ Wichtig – " : "";
         await Promise.all([
           // neue Nachricht: wer die Unterhaltung ausgeblendet hatte, sieht sie wieder (wie bei WhatsApp)
           db.from("kc_communication_thread_participants").update({ hidden_at: null }).eq("thread_id", threadId).not("hidden_at", "is", null),
@@ -4246,7 +4260,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (erwaehnt.length) {
           await db.from("kc_club_erwaehnungen").insert(erwaehnt.map((person_id) => ({ message_id: m.id, person_id })));
           versandErw = await sendenGewaehlt("club_nachricht", erwaehnt, ["push"], {
-            titel: `📣 ${ich.vorname} hat dich erwähnt${grp ? ` – ${grp.symbol} ${grp.name}` : ""}`, kurz: txt(text, 140) || "Neue Nachricht",
+            titel: `${wMarke}📣 ${ich.vorname} hat dich erwähnt${grp ? ` – ${grp.symbol} ${grp.name}` : ""}`, kurz: txt(text, 140) || "Neue Nachricht",
             betreff: `Köcheclub Werne – ${ich.name} hat dich erwähnt${grp ? " in " + grp.name : ""}`,
             text: `Hallo,\n\n${ich.name} hat dich${grp ? ` in der Gruppe „${grp.name}“` : ""} erwähnt:\n\n${text}\n\nAntworten in der Köcheclub-App: ${APP_URL}#nachricht=${threadId}\n\nViele Grüße\nKöcheclub Werne`,
             url: `${APP_URL}#nachricht=${threadId}`,
@@ -4257,12 +4271,12 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const stumm = await stummFuer(ziel.filter((x: string) => x !== ich.person_id), threadId);
         for (let i = ziel.length - 1; i >= 0; i--) if (stumm.has(ziel[i])) ziel.splice(i, 1);
         const versand = await sendenGewaehlt("club_nachricht", ziel, wege, {
-          titel: grp ? `${grp.symbol} ${grp.name}: ${ich.vorname}` : `💬 ${ich.name}`, kurz: th?.subject ? `Neue Nachricht in „${th.subject}“` : "Neue Nachricht im Köcheclub",
-          betreff: `Köcheclub Werne – neue Nachricht von ${ich.name}${th?.subject ? ": " + th.subject : ""}`,
+          titel: wMarke + (grp ? `${grp.symbol} ${grp.name}: ${ich.vorname}` : `💬 ${ich.name}`), kurz: wichtig ? txt(text, 140) || "Wichtige Nachricht im Köcheclub" : th?.subject ? `Neue Nachricht in „${th.subject}“` : "Neue Nachricht im Köcheclub",
+          betreff: `${wMarke}Köcheclub Werne – ${wichtig ? "wichtige" : "neue"} Nachricht von ${ich.name}${th?.subject ? ": " + th.subject : ""}`,
           text: `Hallo,\n\n${ich.name} hat dir im Köcheclub geschrieben${th?.subject ? ` („${th.subject}“)` : ""}:\n\n${text}${anlagen.length ? `\n\n📎 ${anlagen.length} Anlage(n) – in der App ansehen.` : ""}\n\nAntworten in der Köcheclub-App: ${APP_URL}#nachricht=${threadId}\n\nViele Grüße\nKöcheclub Werne`,
           url: `${APP_URL}#nachricht=${threadId}`,
         }, `club-nachricht:${m.id}`);
-        await protokoll(ich.person_id, weiterVon ? "nachricht_weitergeleitet" : "nachricht_gesendet", { thread: threadId, neu, empfaenger: ziel.length, stumm: stumm.size, umfrage: !!umfrage, kontakt: !!kontaktPid, anlagen: anlagen.length, wege, versand, antwort: !!antwortAuf, erwaehnt: erwaehnt.length, versandErw, ...(weiterVon ? { von_nachricht: weiterVon.id } : {}) });
+        await protokoll(ich.person_id, weiterVon ? "nachricht_weitergeleitet" : "nachricht_gesendet", { thread: threadId, neu, empfaenger: ziel.length, stumm: stumm.size, umfrage: !!umfrage, kontakt: !!kontaktPid, anlagen: anlagen.length, wege, versand, antwort: !!antwortAuf, erwaehnt: erwaehnt.length, versandErw, wichtig, ...(weiterVon ? { von_nachricht: weiterVon.id } : {}) });
         return json({ ok: true, id: threadId, versand });
       }
 

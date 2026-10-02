@@ -1,5 +1,12 @@
 # Änderungen
 
+## 1.53.0 – 2026-10-02
+- KC-CLUB-WICHTIG (Wunsch Hansi): ❗-Knopf unter dem Schreibfeld = Nachricht mit „Wichtigkeit hoch“. Beim Schreiben werden
+  Knopf und Schreibfeld orange; die Nachricht erscheint bei allen orange umrandet mit der Marke „❗ WICHTIG“. In der Chat-Liste
+  fallen Chats mit ungelesener wichtiger Nachricht auf (orange Kante, „❗“ an der Zahl). Push/Mail tragen „❗ Wichtig –“ im
+  Titel. Gilt nur für die nächste Nachricht im aktuellen Chat (danach wieder normal). Stummgeschaltete Chats bleiben stumm.
+  DB: kc_club_nachricht_wichtig (hängt an kc_communication_messages, Kern-Tabelle unverändert; RLS an, Spiegel wie üblich).
+
 ## 1.52.2 – 2026-10-02
 - KC-CLUB-STATUS-PFEIL (Wunsch Hansi): Pfeil des Status-Felds mittig auf der Unterkante statt rechts zwischen Feld und LEDs
   (Feld dadurch schmaler). Feld-Pfeile der drei Kopf-Felder in der erweiterten Ansicht einheitlich tiefer auf dem rechten

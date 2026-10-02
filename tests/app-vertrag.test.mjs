@@ -1805,7 +1805,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 
 // 157. 1.21.0: größeres Schreibfeld + „Entwurf“ (KC-CLUB-EINGABE-GROSS, KC-CLUB-ENTWURF-ANZEIGE)
 {
-  assert.ok(/\.eingabe \.innen > #text \{ grid-row: 1; grid-column: 1 \/ 7; min-height: 56px;/.test(html) && /\.eingabe \.innen > \.rund:not\(#sendenKnopf\) \{ grid-row: 2;/.test(html), "Schreibfeld oben volle Breite, Knöpfe darunter");
+  assert.ok(/\.eingabe \.innen > #text \{ grid-row: 1; grid-column: 1 \/ [78]; min-height: 56px;/.test(html) && /\.eingabe \.innen > \.rund:not\(#sendenKnopf\) \{ grid-row: 2;/.test(html), "Schreibfeld oben volle Breite, Knöpfe darunter");
   for (const id of ["mikroKnopf", "emoKnopf", "zustellKnopf", "sendenKnopf"]) assert.ok(new RegExp(`id="${id}"`).test(html), `Knopf ${id} bleibt`);
   assert.ok(/id="entwurfMarke">✏️ Entwurf – noch nicht gesendet/.test(html) && /entwurfMerken\(\);entwurfMarkeZeigen\(\)/.test(html) && /\$\("text"\)\.value = ""; \$\("text"\)\.style\.height = "auto"; entwurfMarkeZeigen\(\);/.test(html), "Entwurf-Hinweis an/aus");
   assert.ok(/entwurfAlle\(\)\[u\.id\]\?\.trim\(\) \? `<span class="entwurf-marke">✏️ Entwurf:<\/span>/.test(html), "Chatliste zeigt Entwurf");
@@ -2141,7 +2141,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/Promise\.race\(\[navigator\.clipboard\.readText\(\)/.test(html) && /id="waEinfFeld"/.test(html), "Zwischenablage mit Zeitlimit, sonst Einfügefeld");
   const f = html.slice(html.indexOf("function waEinsetzen("), html.indexOf("async function waEinfuegen("));
   assert.ok(!/senden\(\)/.test(f) && /\$\("text"\)/.test(f), "nie automatisch senden – nur ins Schreibfeld");
-  assert.ok(/grid-template-columns: auto auto auto auto auto 1fr auto;/.test(html) && /#sendenKnopf \{ grid-row: 1; grid-column: 7;/.test(html), "Leiste mit 7 Spalten");
+  assert.ok(/grid-template-columns: auto auto auto auto auto (auto )?1fr auto;/.test(html) && /#sendenKnopf \{ grid-row: 1; grid-column: [78];/.test(html), "Leiste mit 7 Spalten (ab 1.53.0 mit ❗: 8)");
 }
 
 // 190. 1.37.0: Büro-Freigaben je Mitglied (KC-CLUB-BUERO-RECHTE) + Kontrast der Chat-Knöpfe (KC-CLUB-EINGABE-KONTRAST)
@@ -2394,6 +2394,26 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.match(html, /\.statuschip \.stpfeil \{[^}]*left: 50%; bottom: 0; transform: translate\(-50%, 50%\) rotate\(90deg\)/, "Status-Pfeil mittig auf der Unterkante");
   assert.match(html, /body:not\(\.einfach\) \.kacheln3 \.mini \.mpfeil \{ top: 74%; \}/, "Feld-Pfeile in der erweiterten Ansicht einheitlich");
   assert.doesNotMatch(html, /\.mini:last-child \.mpfeil \{ top: auto; bottom: 8px/, "rechter Pfeil nicht mehr unten im Text");
+}
+
+// 217. 1.53.0: Wichtige Nachricht (KC-CLUB-WICHTIG)
+{
+  const srv = lies("supabase/functions/kc-club/index.ts"), mig = lies("supabase/migrations/20261002_kc_club_v1530_wichtig.sql");
+  assert.match(html, /id="wichtigKnopf" onclick="wichtigUmschalten\(\)">❗<\/button>/, "❗-Knopf unter dem Schreibfeld");
+  assert.match(html, /\.\.\.\(WICHTIG \? \{ wichtig: true \} : \{\}\)/, "senden schickt wichtig nur wenn an");
+  assert.match(html, /wichtigUmschalten\(false\); \/\/ KC-CLUB-ENTWURF \/ -RUHIGE-EINGABE \/ -WICHTIG/, "nach dem Senden wieder normal");
+  assert.match(html, /\$\{m\.wichtig \? " wichtig" : ""\}/, "Blase bekommt Klasse wichtig");
+  assert.match(html, /\.blase\.wichtig \{ border: 3px solid #ff9800/, "wichtige Nachricht orange umrandet");
+  assert.match(html, /u\.wichtigNeu \? " wichtig-neu" : ""/, "Chat-Liste markiert ungelesene wichtige Nachricht");
+  assert.match(srv, /const wichtig = !!p\.wichtig && !umfrage && !kontaktPid;/, "Server: nur normale Nachrichten");
+  assert.match(srv, /from\("kc_club_nachricht_wichtig"\)\.insert\(\{ message_id: m\.id, person_id: ich\.person_id \}\)/, "Server speichert Kennzeichen");
+  assert.match(srv, /if \(we\) \{ await db\.from\("kc_communication_messages"\)\.delete\(\)\.eq\("id", m\.id\)/, "kein halber Zustand");
+  assert.match(srv, /wichtig: wichtigIds\.has\(m\.id\)/, "Chat liefert wichtig");
+  assert.match(srv, /wichtigNeu: m\.filter/, "Liste liefert wichtigNeu");
+  assert.match(srv, /titel: wMarke \+ \(grp/, "Push-Titel mit ❗");
+  assert.match(mig, /references kc_communication_messages\(id\) on delete cascade/, "hängt an der Nachricht");
+  assert.match(mig, /enable row level security/, "RLS an");
+  assert.match(mig, /revoke all on kc_club_nachricht_wichtig from anon, authenticated/, "kein Direktzugriff");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
