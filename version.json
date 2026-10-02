@@ -1,43 +1,16 @@
 {
-  "version": "1.44.0",
+  "version": "1.44.1",
   "datum": "2026-10-02",
   "neu": [
-    "📅 Termine: Die Liste zeigt jetzt übersichtliche kleine Kacheln – antippen öffnet den Termin mit allen Knöpfen (Zusagen, Mitfahren, Kalender …)",
-    "🛍️ Neu: Club-Börse unter „Helfen & Leihen“ – „Ich biete …“ oder „Ich suche …“ mit Foto und Preis (oder zu verschenken). Passt etwas zu deiner Anzeige, bekommst du Bescheid. Anzeigen laufen 30 Tage und lassen sich verlängern",
-    "🖼️ Bilder im Chat bleiben jetzt auch bei lange geöffnetem Chat sichtbar (vorher konnten sie nach 10 Minuten leer werden)",
-    "🤲 Neu unter „Helfen & Leihen“: „Ich biete Hilfe an“ – z. B. Einrichtung der Club-App oder Einführung in den Bilderrechner. Mitglieder tippen die Kachel an und fragen einen Termin an oder schreiben eine Nachricht",
-    "🚗 Noch keine Mitfahrgelegenheit? Die App fragt: „Soll ich das für dich im Auge behalten?“ – bei Ja bekommst du Bescheid, sobald jemand eine Fahrt einstellt",
-    "📝 Dienstwünsche (Twinkey): Beim Öffnen dreht sich jetzt gut sichtbar die Kochmütze, bis alles geladen ist",
-    "🚗 Mitfahren mit echten Sitzplätzen: Jeder Fahrer hat ein kleines Auto mit seinen Plätzen – grün = frei (antippen und reservieren), blau = dein Platz, rot gestrichen = belegt. Große Autos zeigen weitere Sitzreihen wie ein Kleinbus",
-    "📋 Die Tages-Übersicht vom Start kannst du jetzt jederzeit wieder öffnen: „📋 Übersicht“ bei „Heute wichtig“ und im Büro (Clubleitung)",
-    "🔐 Büro-Freigaben: Der Admin legt fest, wer ins Büro darf – nur lesen oder lesen & schreiben (Admin)",
-    "🎤 Die Knöpfe unter dem Schreibfeld sind jetzt besser zu erkennen – vor allem das Mikrofon",
-    "📋 Im Chat neu: „Aus WhatsApp einfügen“ – in WhatsApp Nachrichten markieren und kopieren, hier 📋 tippen: der Text kommt sauber ins Schreibfeld (mit Vorname und Uhrzeit, Handynummern werden entfernt). Du prüfst und sendest selbst mit ➤",
-    "🗂️ Büro: Jeder Bereich (Sitzung, Nach der Sitzung, Mitglieder, Schreiben, Eingang) lässt sich mit dem Pfeil auf- und zuklappen und mit dem Schloss 🔒 feststellen – wie in den Einstellungen (Admin)",
-    "👥 Aktive Mitglieder: Deine Gruppen (z. B. „Innovation“) stehen oben – antippen zeigt nur die Mitglieder dieser Gruppe, mit „💬 In die Gruppe schreiben“",
-    "🟢 Der Status-Knopf oben rechts heißt jetzt „Mein Status“",
-    "👥 Auch unter „👥 Gruppe“ stehen jetzt deine vorhandenen Gruppen (z. B. „Innovation“) ganz oben – antippen öffnet die Gruppe",
-    "👥 Neue Nachricht: Deine Gruppen (z. B. „Innovation“) stehen jetzt ganz oben – antippen und direkt in die Gruppe schreiben",
-    "📋 Tages-Übersicht beim Start für die Clubleitung: Datum und Uhrzeit, was seit dem letzten Besuch neu ist, was heute ansteht und die nächste Sitzung – jede Zeile antippbar (Admin)",
-    "💶 Kassenwart sieht zusätzlich Ausleihen, Rückgaben, offene Erstattungen und Spenden; 🖥️ Admin zusätzlich Problem-Meldungen, Sicherheitsberichte, Feedback und die Technik-Ampel (Datenbank, Spiegelung, Sicherung, alte App-Versionen) (Admin)",
-    "📸 Im Chat neben „WA“: Bildschirmfoto-Knopf – Auslöser starten, in Ruhe hingehen, auslösen, einkreisen und mit einem Tipp „In den Chat mit …“ zurückschicken",
-    "💬 Kommunikation: „＋ Neu“ ist jetzt immer oben rechts sichtbar – auch bei großer Schrift; darunter beschriftet „👥 Gruppe“, „⭐ Gemerkt“ (deine gemerkten Nachrichten) und „🧪 Test“",
-    "🤍 Büro: Freud & Leid – Geburt, Hochzeit, Jubiläum … oder Trauerfall, Krankheit: in drei Schritten anlegen, die App schlägt eine Checkliste vor (Was – Wer – Bis wann), Zuständige bekommen ihre Aufgabe mit Erinnerung (Admin)",
-    "🕊️ Bei Todesfällen: Kranz/Blumen (100 €), Beileidskarte, Abordnung zur Beerdigung („Wer kommt mit?“), Schweigeminute wird bei der nächsten Sitzung vorgeschlagen; Mitglieder informieren erst nach Absprache mit der Familie (Admin)",
-    "📇 Büro: Mitgliederliste zum Drucken – Übersicht (Ämter, Mitglied seit), Telefonliste, Adressliste, Unterschriften- oder Abhakliste; sortiert nach Name oder Eintritt (Admin)",
-    "🎉 Neuer Schalter unter ⚙️ Einstellungen: „Runde Geburtstage – Clubleitung darf mein Alter sehen“. Freiwillig: nur dann sieht die Clubleitung bei 50., 60., 70., 75. … das Alter, z. B. für ein Geschenk. Alle anderen sehen weiterhin kein Jahr",
-    "🎂 Büro: Geburtstage & Vereinsjubiläen auf einen Blick (heute, diese Woche, danach) – antippen zum Gratulieren per Nachricht, Glückwunschkarte als Brief oder Gruß an der Pinnwand; Liste zum Ausdrucken (Admin)",
-    "📸 Büro – nach der Sitzung: die ausgefüllte Protokoll-Vorlage abfotografieren und direkt ans Protokoll hängen (Admin)",
-    "✔️ Büro – Aufgaben verteilen: Wer? Was? Bis wann? per Antippen; die Mitglieder bekommen ihre Aufgabe beim Veröffentlichen des Protokolls – oder auf Wunsch sofort (Admin)",
-    "📅 Büro: Termine bearbeiten – kommende Termine als Kacheln, antippen zum Ändern, Absagen, Vorbereiten, Einladen oder Erinnern; „＋ Neuer Termin“ (Admin)",
-    "👥 Büro: Mitglieder kontaktieren – Gruppe antippen (Alle, Online, Zusagen/Absagen/ohne Antwort zur Sitzung, Ämter) oder Einzelne, dann Nachricht, Anruf/WhatsApp, Brief oder Pinnwand (Admin)",
-    "📥 Büro-Eingang: alles, was auf die Clubleitung wartet, auf einer Seite – Ausleih-Anfragen, offene Vorschläge, Hilfe-Aufrufe ohne genug Helfer; antippen und direkt erledigen (Admin)",
-    "✉️ Briefbogen mit Logo im Büro: Vorlage antippen (Spendenübergabe, Dankeschön, Einladung, Glückwunsch oder leer), ausfüllen, Vorschau, drucken oder als PDF (Admin)",
-    "🗂️ Büro für die Clubleitung (Clubsprecher, Kassenwart, Admin): Begrüßung beim Start „Möchtest du etwas im Büro erledigen?“, alles als Kacheln, und die App zeigt immer den nächsten sinnvollen Schritt",
-    "📝 Sitzung vorbereiten: Anwesenheit (Zusagen schon angehakt), Entschuldigte, Anmerkung zum letzten Protokoll, Tagesordnung mit den eingegangenen Vorschlägen – daraus entsteht der Protokoll-Entwurf und eine Druckvorlage mit Logo und Schreiblinien",
-    "📨 Danach mit einem Tipp: Einladung mit Tagesordnung an alle senden – und später alle erinnern, die noch nicht geantwortet haben (Admin)"
+    "🔒 Dienstwunsch: DP2 Build 255 übernommen – deine Wünsche werden auch bei zwei gleichzeitig arbeitenden Planer-PCs nur einmal in den Dienstplan eingetragen"
   ],
   "verlauf": [
+    {
+      "version": "1.44.1",
+      "neu": [
+        "🔒 Dienstwunsch: DP2 Build 255 übernommen – deine Wünsche werden auch bei zwei gleichzeitig arbeitenden Planer-PCs nur einmal in den Dienstplan eingetragen"
+      ]
+    },
     {
       "version": "1.44.0",
       "neu": [

@@ -1,9 +1,9 @@
 {
   "hinweis": "Unverändert aus KC DP2 übernommen – NICHT hier bearbeiten. Änderungen in DP2 machen und neu übernehmen (tools/dp2-twinkey-uebernehmen.mjs).",
   "repository": "Sire65/dp3",
-  "commit": "3945960e621c5f39ac651506ded01ddf6aa9554d",
-  "commitDatum": "2026-10-01T13:51:12+00:00",
-  "dp2Version": "0.20.0-build254",
+  "commit": "ae349c0c2ffaeff9d934fbe96260561f51c5b9e9",
+  "commitDatum": "2026-10-02T11:33:26+02:00",
+  "dp2Version": "0.20.0-build255",
   "vorlage": "twinkey-test.html (ohne twinkey-test-data.js, twinkey-test-boot.js)",
   "reihenfolge": [
     "src/ui/app.css",

@@ -1,5 +1,14 @@
 # Änderungen
 
+## 1.44.1 – 2026-10-02 (DEV)
+
+- KC-CLUB-DIENSTWUNSCH / KC-DP-WUNSCH-SPERRE: DP2 auf Build 255 RC übernommen (dp3 `ae349c0`, Zweig codex/club-app-interface,
+  Codex). DP2 reserviert jeden Club-App-Eingang je PC (kc_dp_wish_inbox_claim) erst nach Tagesvergleich und unmittelbar vor dem
+  lokalen Eintragen, quittiert nur mit eigener Reservierung (ack_claimed), erkennt nach Neustart die eigene Quittierung über
+  takenClaim und rollt bei claim_lost/stale gezielt zurück; Kollegenfreigabe nur noch aus der Serverantwort. Die Twinkey-Dateien
+  der Club-App sind unverändert (Planer-Seite), nur dp2/QUELLE.json + Cache-Schlüssel neu. Vertragstests 142/146/149/151
+  erweitert, Test 199. RC: Wiederherstellungsprüfung und Live-Test mit zwei echten Planer-PCs (alle auf Build 255) offen.
+
 ## 1.44.0 – 2026-10-02 (DEV)
 
 - KC-CLUB-TERMIN-KACHELN (Wunsch Hansi „wirkt so erschlagen“): Termine → Liste zeigt kommende Termine als kleine Kacheln
