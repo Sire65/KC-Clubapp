@@ -2249,6 +2249,13 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/kc_dp_wish_inbox_claim/.test(lies("supabase/migrations/20261001_kc_dp_wunsch_eingang_sperre.sql")), "Datenbankseite der Reservierung vorhanden");
 }
 
+// 200. 1.45.0: Mitglieder als Kacheln oder Liste – jeder wählt selbst (KC-CLUB-MG-KACHELN)
+{
+  assert.ok(/id="mgAnsichtWahl"/.test(html) && /function mgAnsichtSetzen\(a\)/.test(html) && /localStorage\.setItem\("kc_club_mg_ansicht", MG_ANSICHT\)/.test(html), "Einstellung unter Darstellung (je Gerät)");
+  assert.ok(/if \(MG_ANSICHT === "kacheln"\) \{ \$\("mitgliederListe"\)\.innerHTML = mgKachelnHtml\(liste\); return; \}/.test(html), "Kachel-Ansicht; Liste bleibt unverändert");
+  assert.ok(/onclick="mitgliedOeffnen\('\$\{m\.person_id\}'\)"/.test(html) && /ICH\?\.admin \? `<div class="knoepfe"><button class="knopf" onclick="linkTeilen\(/.test(html), "Antippen → Details; Admin: 🔗/🎖️ in den Details");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

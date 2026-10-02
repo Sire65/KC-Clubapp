@@ -1,10 +1,17 @@
 {
-  "version": "1.44.1",
+  "version": "1.45.0",
   "datum": "2026-10-02",
   "neu": [
+    "👥 Mitglieder jetzt als übersichtliche Kacheln – wer lieber die Liste mag: ⚙️ Einstellungen → Darstellung → „Mitglieder anzeigen als“",
     "🔒 Dienstwunsch: DP2 Build 255 übernommen – deine Wünsche werden auch bei zwei gleichzeitig arbeitenden Planer-PCs nur einmal in den Dienstplan eingetragen"
   ],
   "verlauf": [
+    {
+      "version": "1.45.0",
+      "neu": [
+        "👥 Mitglieder jetzt als übersichtliche Kacheln – wer lieber die Liste mag: ⚙️ Einstellungen → Darstellung → „Mitglieder anzeigen als“"
+      ]
+    },
     {
       "version": "1.44.1",
       "neu": [

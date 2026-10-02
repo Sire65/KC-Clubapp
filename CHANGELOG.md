@@ -1,5 +1,12 @@
 # Änderungen
 
+## 1.45.0 – 2026-10-02 (DEV)
+
+- KC-CLUB-MG-KACHELN (Wunsch Hansi, Entwurf freigegeben; „jeder kann selbst wählen“): „👥 Aktive Mitglieder“ wahlweise als
+  Kacheln (Kreis mit Statusfarbe, grüner Ring = online, Name, Amt, Status, zuletzt da, 💬 / 👋) oder als bisherige Liste.
+  Umschalter unter ⚙️ Einstellungen → 🎨 Darstellung → „👥 Mitglieder anzeigen als“ (je Gerät, Standard Kacheln).
+  Kachel antippen öffnet die Mitglied-Details; dort für den Admin jetzt auch 🔗 App-Link und 🎖️ Amt & Rechte.
+
 ## 1.44.1 – 2026-10-02 (DEV)
 
 - KC-CLUB-DIENSTWUNSCH / KC-DP-WUNSCH-SPERRE: DP2 auf Build 255 RC übernommen (dp3 `ae349c0`, Zweig codex/club-app-interface,
