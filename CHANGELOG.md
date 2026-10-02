@@ -1,5 +1,14 @@
 # Änderungen
 
+## 1.42.0 – 2026-10-02 (DEV)
+
+- KC-CLUB-HILFE-ANGEBOT (Wunsch Hansi): Unter „🤝 Helfen & Leihen → Wer kann helfen?“ neben „🙋 Ich suche Hilfe“ jetzt
+  „🤲 Ich biete Hilfe an“ – dauerhafte Angebote als Kacheln (z. B. „Einrichtung der Club-App“, „Einführung in den
+  Bilderrechner“; Vorschläge antippbar, Symbol wählbar, Beschreibung freiwillig). Mitglieder tippen die Kachel an:
+  „📨 Termin anfragen“ (vorhandene Terminanfrage, Anbieter schon gewählt, Anlass = Angebot) oder „💬 Nachricht“ (Text
+  vorbereitet, Senden selbst). Anlegen verschickt nichts. Ändern/Beenden: Anbieter oder Clubleitung. Neue Tabelle
+  kc_club_hilfe_angebote (RLS, Spiegel), Aktionen hilfe_angebot_speichern / hilfe_angebot_beenden; hilfe_liste liefert angebote.
+
 ## 1.41.0 – 2026-10-02 (DEV)
 
 - KC-CLUB-MITFAHRT-BESCHEID (Wunsch Hansi): Wer mitfahren will, aber es gibt noch keine Fahrt mit freiem Platz, bekommt ein

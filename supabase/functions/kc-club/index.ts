@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.41.0";
+const SERVER_VERSION = "1.42.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -1456,7 +1456,9 @@ async function hilfeListe(ich: Ich) {
   const { data: auf } = await db.from("kc_club_hilfe_aufrufe").select("*").gte("datum", tagDazu(heute, -14)).order("datum").order("erstellt_am").limit(100);
   const ids = (auf ?? []).map((x: any) => x.id);
   const { data: ant } = ids.length ? await db.from("kc_club_hilfe_antworten").select("*").in("aufruf_id", ids) : { data: [] as any[] };
-  const leute = await personen([...(auf ?? []).map((x: any) => x.von), ...(ant ?? []).map((x: any) => x.person_id)]);
+  // KC-CLUB-HILFE-ANGEBOT (1.42.0): aktive Angebote („Ich biete Hilfe an“)
+  const { data: ang } = await db.from("kc_club_hilfe_angebote").select("*").eq("aktiv", true).order("erstellt_am").limit(60);
+  const leute = await personen([...(auf ?? []).map((x: any) => x.von), ...(ant ?? []).map((x: any) => x.person_id), ...(ang ?? []).map((x: any) => x.von)]);
   const { data: orte } = await db.from("kc_club_hilfe_aufrufe").select("ort").not("ort", "is", null).order("erstellt_am", { ascending: false }).limit(50);
   const ortListe: string[] = []; for (const o of orte ?? []) if (o.ort && !ortListe.some((x) => x.toLowerCase() === o.ort.toLowerCase()) && ortListe.length < 6) ortListe.push(o.ort);
   const n = (pid: string) => leute.get(pid)?.display_name || pid;
@@ -1469,9 +1471,13 @@ async function hilfeListe(ich: Ich) {
         komme: komme.map((y: any) => n(y.person_id)).sort(), kannNicht: a.filter((y: any) => y.antwort === "kann_nicht").length,
         meine: a.find((y: any) => y.person_id === ich.person_id)?.antwort ?? null, darfSchliessen: !vorbei && (x.von === ich.person_id || ich.vorstand) };
     }).filter((x: any) => x.offen || x.eigen || ich.vorstand),
+    angebote: (ang ?? []).map((x: any) => ({ id: x.id, sym: x.sym, titel: x.titel, text: x.text, erstellt_am: x.erstellt_am,
+      von: { person_id: x.von, name: n(x.von), vorname: vorname(leute.get(x.von)) || n(x.von).split(" ")[0] }, eigen: x.von === ich.person_id, darfAendern: x.von === ich.person_id || ich.vorstand })),
+    angebotSymbole: HILFE_ANGEBOT_SYMBOLE,
     arten: HILFE_ARTEN, zeitfenster: ZEITFENSTER, orte: ortListe,
   };
 }
+const HILFE_ANGEBOT_SYMBOLE = ["🤲", "📱", "🧮", "💻", "🍳", "🔪", "🚗", "🛠️", "📸", "🎓", "🧾", "🌿"];
 
 // ---------- KC-CLUB-BUERO (1.25.0, Wunsch Hansi): Büro für die Clubleitung (Clubsprecher, Kassenwart, Admin) ----------
 // Sitzung vorbereiten (Anwesenheit, Anmerkung zum letzten Protokoll, Tagesordnung, Schreiblinien) → Protokoll-Entwurf →
@@ -3445,6 +3451,35 @@ Köcheclub Werne`,
 
       // ----- KC-CLUB-HELFEN (1.23.0): „Wer kann helfen?“ – Aufruf an alle oder an alle gerade online -----
       case "hilfe_liste": return json(await hilfeListe(ich));
+
+      // KC-CLUB-HILFE-ANGEBOT (1.42.0): eigenes Angebot anlegen/ändern – es wird nichts verschickt
+      case "hilfe_angebot_speichern": {
+        const titel = txt(p.titel, 80), text = txt(p.text, 600) || null;
+        if (!titel || titel.length < 2) throw new Fehler("Bitte kurz schreiben, wobei du helfen kannst.");
+        const sym = HILFE_ANGEBOT_SYMBOLE.includes(String(p.sym)) ? String(p.sym) : "🤲";
+        if (p.id) {
+          const { data: a } = await db.from("kc_club_hilfe_angebote").select("von,aktiv").eq("id", String(p.id)).maybeSingle();
+          if (!a || !a.aktiv) throw new Fehler("Angebot nicht gefunden.", 404);
+          if (a.von !== ich.person_id && !ich.vorstand) throw new Fehler("Ändern darf nur, wer das Angebot eingestellt hat.", 403);
+          await db.from("kc_club_hilfe_angebote").update({ sym, titel, text, geaendert_am: jetzt() }).eq("id", String(p.id));
+          await protokoll(ich.person_id, "hilfe_angebot_geaendert", { angebot: p.id, titel });
+          return json({ ok: true, id: p.id });
+        }
+        const { count } = await db.from("kc_club_hilfe_angebote").select("id", { count: "exact", head: true }).eq("von", ich.person_id).eq("aktiv", true);
+        if ((count ?? 0) >= 10) throw new Fehler("Du hast schon 10 Angebote – bitte erst eines beenden.");
+        const { data: neu, error } = await db.from("kc_club_hilfe_angebote").insert({ von: ich.person_id, sym, titel, text }).select("id").single();
+        if (error || !neu) throw new Fehler("Angebot konnte nicht gespeichert werden.", 500);
+        await protokoll(ich.person_id, "hilfe_angebot_angelegt", { angebot: neu.id, titel });
+        return json({ ok: true, id: neu.id });
+      }
+      case "hilfe_angebot_beenden": {
+        const { data: a } = await db.from("kc_club_hilfe_angebote").select("von,titel,aktiv").eq("id", String(p.id || "")).maybeSingle();
+        if (!a || !a.aktiv) throw new Fehler("Angebot nicht gefunden.", 404);
+        if (a.von !== ich.person_id && !ich.vorstand) throw new Fehler("Beenden darf nur, wer das Angebot eingestellt hat.", 403);
+        await db.from("kc_club_hilfe_angebote").update({ aktiv: false, geaendert_am: jetzt() }).eq("id", String(p.id));
+        await protokoll(ich.person_id, "hilfe_angebot_beendet", { angebot: p.id, titel: a.titel });
+        return json({ ok: true });
+      }
 
       case "hilfe_aufruf": {
         const heute = berlinTag(new Date());

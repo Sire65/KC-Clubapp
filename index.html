@@ -734,6 +734,10 @@
   .eingabe .innen > #mikroKnopf.rund:not(#sendenKnopf) { background: #fff !important; border: 3px solid var(--rot3, var(--rot)) !important; font-size: 1.35rem !important; box-shadow: 0 0 0 2px var(--rot) inset, 0 1px 4px rgba(0,0,0,.25); }
   .eingabe .innen > .zustell-knopf.an { background: var(--rot) !important; border-color: var(--rot); color: #fff; }
   fieldset.bu-fs { border: 0; padding: 0; margin: 0; min-width: 0; }
+  /* KC-CLUB-HILFE-ANGEBOT (1.42.0) */
+  .hl-zwei { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .hl-zwei .hl-gross { margin: 0; }
+  .knopf.hl-biete { background: var(--gruenbg); color: var(--textGruen); border: 2px solid var(--textGruen); }
   /* KC-CLUB-MITFAHRT-SITZE (1.39.0): Auto von oben mit echten Sitzplätzen */
   .mf-karte { border: 1px solid var(--linie); border-radius: 16px; padding: 10px 12px; margin: 8px 0; background: var(--karte); }
   .mf-kopf { display: flex; gap: 6px; align-items: flex-start; }
@@ -2001,7 +2005,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.41.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.42.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -6514,18 +6518,19 @@ async function flAbschliessen(id) {
 }
 
 // ---------- KC-CLUB-HELFEN & KC-CLUB-LEIHEN (1.23.0, Wunsch Hansi): eine Kachel, zwei Bereiche – fast alles per Antippen ----------
-let HL = { tab: "helfen", hilfe: null, leihen: null, form: null, edit: false };
+let HL = { tab: "helfen", hilfe: null, leihen: null, form: null, angebotForm: null, edit: false };
 const hlTag = (n) => tagPlus(heuteIso(), n);
 const hlTagName = (iso) => iso === hlTag(0) ? "Heute" : iso === hlTag(1) ? "Morgen" : fTagDp.format(new Date(iso + "T12:00:00Z"));
 const hlTagLang = (iso, slot, zf) => `${hlTagName(iso)}${iso === hlTag(0) || iso === hlTag(1) ? " " + fTagDp.format(new Date(iso + "T12:00:00Z")) : ""}${slot && zf?.[slot] ? " · " + zf[slot] : ""}`;
-function hlStart(tab) { if (tab) HL.tab = tab; HL.form = null; HL.edit = false; zeige("helfen"); }
-function hlTab(t) { HL.tab = t; HL.form = null; HL.edit = false; hlZeigen(); hlLaden(); }
+function hlStart(tab) { if (tab) HL.tab = tab; HL.form = null; HL.angebotForm = null; HL.edit = false; zeige("helfen"); }
+function hlTab(t) { HL.tab = t; HL.form = null; HL.angebotForm = null; HL.edit = false; hlZeigen(); hlLaden(); }
 async function hlLaden() {
   try {
     if (HL.tab === "helfen") HL.hilfe = await api("hilfe_liste"); else HL.leihen = await api("leihen_liste");
     hlZeigen();
     const li = document.getElementById("leihInfo"); if (li && HL.tab === "leihen") leihInfo(li.dataset.id);
     const hi = document.getElementById("hilfeInfo"); if (hi && HL.tab === "helfen") hilfeInfo(hi.dataset.id);
+    const ai = document.getElementById("angebotInfo"); if (ai && HL.tab === "helfen") angebotInfo(ai.dataset.id);
     buEingangAuffrischen(); // KC-CLUB-BUERO-EINGANG
   } catch (e) { $("hlInhalt").innerHTML = `<div class="karte hinweis">${esc(e.message)}</div>`; }
 }
@@ -6553,7 +6558,7 @@ function hlText(feld, el) { if (HL.form) HL.form[feld] = el.value; }
 function hlZeigen() {
   document.querySelectorAll("#hlTabs button").forEach((b) => b.classList.toggle("an", b.dataset.t === HL.tab));
   const z = $("hlInhalt"); if (!z) return;
-  if (HL.tab === "helfen") z.innerHTML = HL.form ? hilfeFormHtml() : hilfeListeHtml();
+  if (HL.tab === "helfen") z.innerHTML = HL.angebotForm ? angebotFormHtml() : HL.form ? hilfeFormHtml() : hilfeListeHtml();
   else z.innerHTML = !HL.leihen && (HL.edit || HL.form) ? '<div class="karte hinweis">Wird geladen …</div>' : HL.edit ? leihEditHtml() : HL.form ? leihFormHtml() : leihListeHtml();
 }
 
@@ -6615,9 +6620,73 @@ function hilfeListeHtml() {
   const d = HL.hilfe; if (!d) return '<div class="karte hinweis">Wird geladen …</div>';
   const offen = d.aufrufe.filter((a) => a.offen), alt = d.aufrufe.filter((a) => !a.offen);
   const kacheln = (l) => `<div class="mini-kacheln">${l.map(hilfeKachel).join("")}</div>`;
-  return `<button class="knopf haupt hl-gross" onclick="hilfeNeu()">🙋 Ich suche Hilfe</button>
-    <div class="abschnitt"><h3>Offene Aufrufe</h3></div>${offen.length ? kacheln(offen) : '<div class="karte hinweis">Gerade sucht niemand Hilfe. Tippe oben, wenn du Unterstützung brauchst – z. B. beim Aufbau oder Einkauf.</div>'}
+  const ang = d.angebote || [];
+  return `<div class="hl-zwei"><button class="knopf haupt hl-gross" onclick="hilfeNeu()">🙋 Ich suche Hilfe</button><button class="knopf hl-gross hl-biete" onclick="angebotNeu()">🤲 Ich biete Hilfe an</button></div>
+    <div class="abschnitt"><h3>🤲 Hilfe-Angebote</h3></div>${ang.length ? `<div class="mini-kacheln">${ang.map(angebotKachel).join("")}</div>` : '<div class="karte hinweis">Noch keine Angebote. Kannst du etwas gut – z. B. die Club-App einrichten oder Messer schleifen? Tippe oben auf „🤲 Ich biete Hilfe an“.</div>'}
+    <div class="abschnitt"><h3>🙋 Offene Aufrufe</h3></div>${offen.length ? kacheln(offen) : '<div class="karte hinweis">Gerade sucht niemand Hilfe. Tippe oben, wenn du Unterstützung brauchst – z. B. beim Aufbau oder Einkauf.</div>'}
     ${alt.length ? `<details class="karte"><summary><b>Vorbei / geschlossen (${alt.length})</b></summary>${kacheln(alt)}</details>` : ""}`;
+}
+// ----- KC-CLUB-HILFE-ANGEBOT (1.42.0, Wunsch Hansi): „🤲 Ich biete Hilfe an“ – Kachel antippen → Termin anfragen oder Nachricht -----
+function angebotKachel(a) {
+  return `<button class="mini-kachel mk-angebot" onclick="angebotInfo('${a.id}')"><span class="mk-sym">${esc(a.sym)}</span><span class="mk-titel">${esc(a.titel)}</span>
+    <span class="mk-unter">von ${esc(a.eigen ? "dir" : a.von.vorname || a.von.name)}</span><span class="marke gruen">${a.eigen ? "dein Angebot" : "📨 anfragen"}</span></button>`;
+}
+function angebotInfo(id) {
+  const a = HL.hilfe?.angebote?.find((x) => x.id === id);
+  if (!a) { document.getElementById("angebotInfo")?.remove(); return; }
+  const vn = esc(a.von.vorname || a.von.name.split(" ")[0]);
+  const f = blattAuf("angebotInfo", `<div class="info-gross"><div style="font-size:2.4rem;line-height:1">${esc(a.sym)}</div><h3 style="margin:6px 0 2px">${esc(a.titel)}</h3>
+      <p class="hinweis" style="margin:0 0 8px">🤲 Angebot von ${esc(a.eigen ? "dir" : a.von.name)}</p>${a.text ? `<p style="white-space:pre-wrap;margin:0 0 10px">${esc(a.text)}</p>` : ""}</div>
+    <div class="knoepfe" style="flex-direction:column;align-items:stretch">
+      ${a.eigen ? "" : `<button class="knopf haupt" style="text-align:center" onclick="angebotAnfragen('${a.id}')">📨 Termin bei ${vn} anfragen</button>
+      <button class="knopf" style="text-align:center" onclick="angebotNachricht('${a.id}')">💬 Nachricht an ${vn}</button>`}
+      ${a.darfAendern ? `<button class="knopf" style="text-align:center" onclick="angebotNeu('${a.id}')">✏️ Ändern</button><button class="knopf" style="text-align:center" onclick="angebotBeenden('${a.id}')">🔒 Angebot beenden</button>` : ""}
+      <button class="knopf" style="text-align:center" onclick="$('angebotInfo').remove()">Schließen</button></div>`);
+  f.dataset.id = id;
+}
+// Terminanfrage (vorhandene Funktion) – Anbieter schon gewählt, Anlass = Angebot
+async function angebotAnfragen(id) {
+  const a = HL.hilfe?.angebote?.find((x) => x.id === id); if (!a) return;
+  $("angebotInfo")?.remove();
+  await taForm({ personen: [a.von.person_id] });
+  const w = $("taAnlassWahl"), f = $("taAnlass");
+  if (w && f) { w.value = "__eigen"; comboWahl("taAnlass"); f.value = `${a.sym} ${a.titel}`.slice(0, 120); }
+  melde(`📨 ${a.von.vorname || a.von.name.split(" ")[0]} ist schon ausgewählt – Tag und Uhrzeit vorschlagen, dann „Anfrage senden“.`);
+}
+async function angebotNachricht(id) {
+  const a = HL.hilfe?.angebote?.find((x) => x.id === id); if (!a) return;
+  $("angebotInfo")?.remove();
+  await direkt(a.von.person_id);
+  const t = $("text"); if (!t) return;
+  t.value = `Hallo ${a.von.vorname || a.von.name.split(" ")[0]}, ich hätte gern deine Hilfe bei „${a.titel}“. Wann würde es dir passen?`;
+  t.style.height = "auto"; t.style.height = t.scrollHeight + "px"; try { entwurfMarkeZeigen(); } catch {}
+}
+function angebotNeu(id) {
+  const a = id ? HL.hilfe?.angebote?.find((x) => x.id === id) : null;
+  $("angebotInfo")?.remove();
+  HL.angebotForm = { id: a?.id || null, sym: a?.sym || "🤲", titel: a?.titel || "", text: a?.text || "" }; hlZeigen(); window.scrollTo(0, 0);
+}
+const ANGEBOT_IDEEN = ["Einrichtung der Club-App", "Einführung in den Bilderrechner", "Hilfe am Handy", "Messer schleifen", "Fahrdienst"];
+function angebotFormHtml() {
+  const f = HL.angebotForm, sy = HL.hilfe?.angebotSymbole || ["🤲"];
+  return `<div class="karte hl-form"><h3 style="margin:0 0 6px">🤲 ${f.id ? "Angebot ändern" : "Ich biete Hilfe an"}</h3>
+    <div class="hl-frage">Wobei kannst du helfen?</div>
+    <div class="hl-chips">${ANGEBOT_IDEEN.map((t) => `<button class="chip${f.titel === t ? " an" : ""}" onclick="HL.angebotForm.titel=${JSON.stringify(t).replace(/"/g, "&quot;")};hlZeigen()">${esc(t)}</button>`).join("")}</div>
+    <label class="feld">oder eigener Text<input maxlength="80" placeholder="z. B. Einführung in den Bilderrechner" value="${esc(f.titel)}" oninput="HL.angebotForm.titel=this.value"></label>
+    <div class="hl-frage">Symbol</div><div class="symbolwahl">${sy.map((x) => `<button class="${x === f.sym ? "an" : ""}" onclick="HL.angebotForm.sym='${x}';hlZeigen()">${x}</button>`).join("")}</div>
+    <label class="feld">Was genau? (freiwillig)<textarea rows="3" maxlength="600" placeholder="z. B. Ich komme vorbei oder wir treffen uns im Vereinsheim – ca. 30 Minuten, Handy bitte mitbringen." oninput="HL.angebotForm.text=this.value">${esc(f.text)}</textarea></label>
+    <p class="hinweis" style="margin:4px 0 8px">Dein Angebot erscheint als Kachel unter „🤲 Hilfe-Angebote“. Es wird nichts verschickt – Mitglieder tippen es an und fragen dich per Terminanfrage oder Nachricht.</p>
+    <div class="knoepfe"><button class="knopf haupt" onclick="einmal(this, angebotSpeichern)">✅ ${f.id ? "Speichern" : "Angebot einstellen"}</button><button class="knopf" onclick="HL.angebotForm=null;hlZeigen()">Abbrechen</button></div></div>`;
+}
+async function angebotSpeichern() {
+  const f = HL.angebotForm; if (!f) return;
+  if (!f.titel.trim()) return melde("Bitte kurz schreiben, wobei du helfen kannst.", true);
+  try { await api("hilfe_angebot_speichern", { id: f.id, sym: f.sym, titel: f.titel.trim(), text: f.text.trim() }, { warten: true }); HL.angebotForm = null; melde(f.id ? "✅ Gespeichert" : "🤲 Danke! Dein Angebot ist eingestellt."); hlLaden(); }
+  catch (e) { melde(e.message, true); }
+}
+async function angebotBeenden(id) {
+  if (!confirm("Dieses Angebot beenden? Die Kachel verschwindet für alle.")) return;
+  try { await api("hilfe_angebot_beenden", { id }, { warten: true }); $("angebotInfo")?.remove(); melde("🔒 Angebot beendet"); hlLaden(); } catch (e) { melde(e.message, true); }
 }
 async function hilfeAntwort(id, antwort) {
   try { await api("hilfe_antwort", { id, antwort: antwort || null }); melde(antwort === "komme" ? "✋ Danke! Deine Zusage ist gespeichert" : antwort ? "Gespeichert – danke für die Rückmeldung" : "Zurückgenommen"); hlLaden(); }

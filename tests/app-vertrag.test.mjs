@@ -2193,6 +2193,20 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/\{ id: "mitfahrt", sym: "🚗", t: "Mitfahrt", los: \(\) => zumTreffen\(true\) \}/.test(html) && /if \(!darf \|\| mf\.some\(\(m\) => m\.eigen \|\| m\.dabei \|\| m\.frei > 0\)/.test(html), "Schnellstart prüft – nur nach Zusage, nur ohne freie Fahrt");
 }
 
+// 195. 1.42.0: „🤲 Ich biete Hilfe an“ (KC-CLUB-HILFE-ANGEBOT)
+{
+  for (const a of ["hilfe_angebot_speichern", "hilfe_angebot_beenden"]) assert.ok(aktionen.has(a) && aufrufe.has(a), `Aktion ${a} fehlt`);
+  const mig = lies("supabase/migrations/20261002_kc_club_v1420_hilfe_angebote.sql");
+  assert.ok(/enable row level security/.test(mig) && /revoke all on kc_club_hilfe_angebote from anon, authenticated/.test(mig) && /kc_db_mirror_table_rules/.test(mig) && /kc_neon_resume_tables/.test(mig), "RLS + Spiegel");
+  const sp = server.slice(server.indexOf('case "hilfe_angebot_speichern"'), server.indexOf('case "hilfe_aufruf"'));
+  assert.ok(!/senden\(|sendenGewaehlt\(/.test(sp), "Anlegen verschickt nichts");
+  assert.ok(/a\.von !== ich\.person_id && !ich\.vorstand/.test(sp), "Ändern/Beenden nur eigenes (oder Clubleitung)");
+  assert.ok(/🤲 Ich biete Hilfe an<\/button>/.test(html) && /function angebotKachel\(a\)/.test(html), "Knopf + Kacheln");
+  assert.ok(/await taForm\(\{ personen: \[a\.von\.person_id\] \}\);/.test(html) && /await direkt\(a\.von\.person_id\);/.test(html), "Termin anfragen (Terminanfrage) oder Nachricht");
+  const na = html.slice(html.indexOf("async function angebotNachricht("), html.indexOf("function angebotNeu("));
+  assert.ok(!/senden\(\)/.test(na), "Nachricht wird nur vorbereitet, nicht gesendet");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
