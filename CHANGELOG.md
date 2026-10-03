@@ -1,5 +1,12 @@
 # Änderungen
 
+## 1.80.0 – 2026-10-03
+- KC-CLUB-REGISTER-AMEISEN überarbeitet (Fund Hansi: „sitzt nicht genau auf dem Rand, läuft nicht; heller Rahmen soll bleiben“):
+  Rahmen jetzt als SVG-Rechteck genau auf der Knopfkante (gleiche runde Ecken, gemessen), gleiche Technik und Animation wie der
+  gelbe Ameisenlauf bei „Neue Nachr.“. Beim Wechsel läuft er 1,6 s – auch bei „Bewegung reduzieren“ (vorher dort still, daher
+  „läuft nicht“) –, danach bleibt er als ruhiger heller Rahmen im Ton des eigenen Designs stehen. Vertragstest 259 an die neuen
+  Klassennamen angepasst.
+
 ## 1.79.0 – 2026-10-03
 - KC-CLUB-REGISTER-AMEISEN (Wunsch Hansi): Beim Wechsel des Registers (Club/Meins/Technik) läuft auf dem neu gewählten Knopf
   kurz (1,6 s) ein „Ameisenlauf“ – gestrichelter, wandernder Rahmen in einem helleren Ton des eigenen Farbdesigns. Bei

@@ -475,14 +475,13 @@
   .register { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
   .register button { border: none; border-radius: 14px; padding: 11px 6px; background: var(--karte2); font-weight: 800; cursor: pointer; }
   .register button.an { background: var(--rot); color: #fff; }
-  /* KC-CLUB-REGISTER-AMEISEN (1.79.0, Wunsch Hansi): beim Wechsel läuft kurz ein „Ameisenlauf“ in einem helleren Ton des Designs */
+  /* KC-CLUB-REGISTER-AMEISEN (1.79.0, 1.80.0 Fund Hansi „sitzt nicht genau auf dem Rand, läuft nicht“): Rahmen als SVG-Rechteck
+     mit denselben runden Ecken wie der Knopf – liegt genau auf dem Rand. Beim Wechsel läuft er kurz (Ameisenlauf), danach bleibt er
+     ruhig als heller Rahmen stehen. Farbe: hellerer Ton des eigenen Designs. */
   .register button { position: relative; }
-  .register button.ameisen::after { content: ""; position: absolute; inset: 3px; border-radius: 11px; pointer-events: none; --af: color-mix(in srgb, var(--rot) 40%, #fff);
-    background: linear-gradient(90deg, var(--af) 50%, transparent 0) repeat-x, linear-gradient(90deg, var(--af) 50%, transparent 0) repeat-x,
-      linear-gradient(0deg, var(--af) 50%, transparent 0) repeat-y, linear-gradient(0deg, var(--af) 50%, transparent 0) repeat-y;
-    background-size: 10px 3px, 10px 3px, 3px 10px, 3px 10px; background-position: 0 0, 0 100%, 0 0, 100% 0; animation: ameisen .45s linear infinite; }
-  @keyframes ameisen { to { background-position: 10px 0, -10px 100%, 0 -10px, 100% 10px; } }
-  @media (prefers-reduced-motion: reduce) { .register button.ameisen::after { animation: none; } }
+  .register .reg-rahmen { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  .register .reg-rahmen rect { fill: none; stroke: color-mix(in srgb, var(--rot) 40%, #fff); stroke-width: 3; }
+  .register button.reg-lauf .reg-rahmen rect { stroke-dasharray: 9 6; animation: ameisenLauf .6s linear infinite; } /* dieselbe Animation wie „Neue Nachr.“ */
   .register .anz { display: inline-block; min-width: 20px; margin-left: 5px; padding: 0 6px; border-radius: 10px; font-size: .72rem; line-height: 18px; background: rgba(0,0,0,.08); vertical-align: 1px; }
   .register button.an .anz { background: rgba(255,255,255,.25); }
   .raster { touch-action: pan-y; }
@@ -2319,7 +2318,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.79.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.80.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -5344,11 +5343,19 @@ function registerZeigen() {
   // Anzahl: „8/10“ = 8 sichtbar von 10 (2 ausgeblendet); ohne Ausgeblendete nur die Zahl
   REGISTER = registerReihe();
   $("register").innerHTML = REGISTER.map(([r, t]) => { const da = kacheln(r).length, alle = kaSortiert(r).length;
-    return `<button data-r="${r}" class="${r === reg ? "an" : ""}" onclick="register('${r}')" title="${da < alle ? `${alle - da} ausgeblendet` : ""}">${t}<span class="anz">${da < alle ? `${da}/${alle}` : da}</span></button>`; }).join("");
+    return `<button data-r="${r}" class="${r === reg ? "an" : ""}" onclick="register('${r}')" title="${da < alle ? `${alle - da} ausgeblendet` : ""}">${t}<span class="anz">${da < alle ? `${da}/${alle}` : da}</span>${r === reg ? '<svg class="reg-rahmen" aria-hidden="true"><rect></rect></svg>' : ""}</button>`; }).join("");
+  regRahmenMessen();
 }
+// Rechteck genau auf den Knopfrand legen (Strich mittig auf der Kante, Ecken = border-radius des Knopfs)
+function regRahmenMessen() {
+  const b = document.querySelector("#register button.an"), r = b?.querySelector(".reg-rahmen rect"); if (!r || !b.offsetWidth) return;
+  const rad = parseFloat(getComputedStyle(b).borderTopLeftRadius) || 14, s = 1.5;
+  Object.entries({ x: s, y: s, width: b.offsetWidth - 2 * s, height: b.offsetHeight - 2 * s, rx: Math.max(0, rad - s), ry: Math.max(0, rad - s) }).forEach(([k, v]) => r.setAttribute(k, v));
+}
+addEventListener("resize", regRahmenMessen);
 function register(r, richtung) {
   const neu = r !== reg; reg = r; registerZeigen(); kachelnZeigen();
-  if (neu) { const b = document.querySelector(`#register button[data-r="${r}"]`); if (b) { b.classList.add("ameisen"); setTimeout(() => b.classList.remove("ameisen"), 1600); } } // KC-CLUB-REGISTER-AMEISEN
+  if (neu) { const b = document.querySelector(`#register button[data-r="${r}"]`); if (b) { b.classList.add("reg-lauf"); setTimeout(() => b.classList.remove("reg-lauf"), 1600); } } // KC-CLUB-REGISTER-AMEISEN
   if (richtung) { const ra = $("raster"); ra.classList.remove("rein-links", "rein-rechts"); void ra.offsetWidth; ra.classList.add(richtung > 0 ? "rein-links" : "rein-rechts"); }
 }
 function registerWischen(schritt) {

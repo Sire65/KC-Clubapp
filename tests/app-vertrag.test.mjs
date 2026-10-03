@@ -2915,9 +2915,15 @@ assert.ok(/id: "emoji",[^\n]*unter dem Schreibfeld<\/b> auf <b>😊<\/b>/.test(h
 }
 // 259. 1.79.0: Ameisenlauf beim Registerwechsel, Farbschemen-Tipp mit allen neuen Schemen
 {
-  assert.ok(/\.register button\.ameisen::after \{[^}]*color-mix\(in srgb, var\(--rot\) 40%, #fff\)/.test(html) && /@keyframes ameisen/.test(html), "Ameisenlauf im Design-Ton");
-  assert.ok(/const neu = r !== reg; reg = r;[^\n]*\n  if \(neu\) \{[^\n]*classList\.add\("ameisen"\); setTimeout\(\(\) => b\.classList\.remove\("ameisen"\), 1600\)/.test(html), "nur beim Wechsel, kurz");
+  // 1.80.0: Rahmen als SVG genau auf der Kante (Klassen umbenannt: reg-rahmen / reg-lauf) – Prüfung angepasst
+  assert.ok(/\.register \.reg-rahmen rect \{[^}]*stroke: color-mix\(in srgb, var\(--rot\) 40%, #fff\)/.test(html), "Rahmen im Design-Ton");
+  assert.ok(/const neu = r !== reg; reg = r;[^\n]*\n  if \(neu\) \{[^\n]*classList\.add\("reg-lauf"\); setTimeout\(\(\) => b\.classList\.remove\("reg-lauf"\), 1600\)/.test(html), "nur beim Wechsel, kurz");
   assert.ok(/unsere \$\{DESIGNS\.filter\(\(d\) => d\.mehr\)\.length\} neuen Farbschemen/.test(html) && /"designMehrKlappe", "designBuntKlappe"/.test(html), "Tipp zählt alle neuen Schemen");
+}
+// 260. 1.80.0: Register-Rahmen als SVG auf der Kante, danach ruhig
+{
+  assert.ok(/'<svg class="reg-rahmen" aria-hidden="true"><rect><\/rect><\/svg>'/.test(html) && /function regRahmenMessen\(\)/.test(html) && /addEventListener\("resize", regRahmenMessen\)/.test(html), "Rahmen gemessen auf der Kante");
+  assert.ok(/\.register button\.reg-lauf \.reg-rahmen rect \{ stroke-dasharray: 9 6; animation: ameisenLauf/.test(html) && !/reduce\) \{ \.register/.test(html), "läuft (gleiche Animation), auch bei reduzierter Bewegung");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
