@@ -955,6 +955,12 @@
   /* KC-CLUB-WICHTIG (1.53.0, Wunsch Hansi): ❗ an = Schreibfeld und Knopf orange; wichtige Nachrichten orange umrandet mit Marke */
   .eingabe .innen > #wichtigKnopf.rund.an { background: #ff9800 !important; border-color: #e65100 !important; color: #fff; box-shadow: 0 0 0 3px rgba(255,152,0,.35); }
   .eingabe .innen > #text.wichtig { border: 3px solid #ff9800; box-shadow: 0 0 0 3px rgba(255,152,0,.25); }
+  /* 2.16.0 KC-CLUB-CHAT-VORLESEN */
+  .blase.cv-jetzt { outline: 3px solid #2e86de; outline-offset: 2px; }
+  .cv-leiste { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(196px + env(safe-area-inset-bottom)); z-index: 60; display: flex; align-items: center; gap: 8px; max-width: calc(100% - 24px);
+    padding: 8px 10px 8px 14px; border-radius: 999px; background: #1f3a5f; color: #fff; box-shadow: 0 6px 18px rgba(0,0,0,.35); font-weight: 700; }
+  .cv-leiste span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  .cv-leiste button { flex: none; min-height: 40px; padding: 4px 12px; border: none; border-radius: 999px; background: rgba(255,255,255,.18); color: #fff; font: inherit; font-weight: 800; cursor: pointer; }
   .blase.wichtig { border: 3px solid #ff9800; box-shadow: 0 0 0 3px rgba(255,152,0,.30), var(--schatten); }
   .blase.wichtig .wichtig-marke { display: inline-block; margin: 0 0 4px; padding: 1px 8px; border-radius: 999px; background: #ff9800; color: #1f1300; font-weight: 800; font-size: .78rem; letter-spacing: .02em; }
   /* KC-CLUB-HAKEN (1.55.0): Haken wie WhatsApp – grau gesendet/angekommen, blau gelesen */
@@ -2154,6 +2160,11 @@
       <div class="schalter" id="setSprAnsZeile"><div><b>🗣️ Sprachansagen</b><div class="hinweis" id="sprAnsStand">Das Handy sagt an, was dich betrifft – auch wer online kommt</div></div><button class="knopf klein" onclick="ansBlatt()">Auswählen</button></div>
       <!-- KC-CLUB-STIMME (2.6.2) -->
       <div class="zwei"><label class="feld">🗣️ Stimme zum Vorlesen (dieses Gerät)<select id="setStimme" onchange="stimmeSetzen(this.value)"></select></label><button class="knopf klein" style="align-self:end" onclick="stimmeProbe()">▶ Probe</button></div>
+      <!-- KC-CLUB-CHAT-VORLESEN (2.16.0): zwei Stimmen beim Vorlesen ganzer Chats -->
+      <div class="zwei"><label class="feld">👨 Männerstimme (Chat vorlesen)<select id="setStimmeM" onchange="stimme2Setzen('m', this.value)"></select></label><button class="knopf klein" style="align-self:end" onclick="stimme2Probe('m')">▶ Probe</button></div>
+      <div class="zwei"><label class="feld">👩 Frauenstimme (Chat vorlesen)<select id="setStimmeW" onchange="stimme2Setzen('w', this.value)"></select></label><button class="knopf klein" style="align-self:end" onclick="stimme2Probe('w')">▶ Probe</button></div>
+      <p class="hinweis" style="margin:-4px 0 8px">⭐⭐ Premium und ⭐ Erweitert klingen am natürlichsten. <b>iPad/iPhone:</b> Einstellungen → Bedienungshilfen → Gesprochene Inhalte → Stimmen → Deutsch → z. B. „Anna (Premium)“ und „Markus (Erweitert)“ laden – danach stehen sie hier zur Auswahl.</p>
+      <label class="feld">🗣️ Wenn andere meine Nachrichten vorlesen, klinge ich wie …<select id="setMeineStimme" onchange="meineStimmeSetzen(this.value)"><option value="">Automatisch (nach Vorname)</option><option value="m">👨 eine Männerstimme</option><option value="w">👩 eine Frauenstimme</option></select></label>
       <p class="hinweis" style="margin:-4px 0 10px">Klingt es blechern? Auf iPhone/iPad unter <b>Einstellungen → Bedienungshilfen → Gesprochene Inhalte → Stimmen → Deutsch</b> z. B. „Anna (Premium)“ laden – kostenlos – und hier auswählen.</p>
       <!-- KC-CLUB-RECHTSCHREIBUNG (1.70.0, Wunsch Hansi): Tippfehler rot unterstrichen – macht die Handy-Tastatur, die App schaltet es überall ein -->
       <div class="schalter" id="setRsZeile"><div><b>🖍️ Tippfehler rot unterstreichen</b><div class="hinweis">Beim Schreiben im Chat werden Fehler rot unterstrichen. Antippen zeigt Vorschläge.</div></div><button class="knopf klein" onclick="rsBlatt()">Prüfen</button></div>
@@ -2518,6 +2529,8 @@
     <button class="knopf versteckt" id="chatGruppeRaus" onclick="gruppeVerlassen()">🚪 Gruppe verlassen</button>
     <button class="knopf versteckt" id="chatGruppeWeg" onclick="gruppeLoeschen()">🗑️ Gruppe löschen (für alle)</button>
     <div id="chatStummBereich"></div>
+    <button class="knopf" onclick="$('chatBlatt').classList.add('versteckt');chatVorlesenStart('neu')">🔊 Vorlesen ab den neuen Nachrichten</button>
+    <button class="knopf" onclick="$('chatBlatt').classList.add('versteckt');chatVorlesenStart('alles')">🔊 Ganzen Chat vorlesen</button>
     <button class="knopf" onclick="chatInsArchiv()">🗄️ Chat in mein Archiv legen</button>
     <button class="knopf" onclick="unterhaltungWeg(false)">🙈 Nur bei mir entfernen</button>
     <p class="hinweis" style="margin:0 4px 6px;font-size:.85rem">Die anderen behalten sie. Schreibt jemand wieder, erscheint sie erneut.</p>
@@ -2551,7 +2564,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.15.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.16.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3445,11 +3458,98 @@ function sprechen(text) {
   try { if (!("speechSynthesis" in window)) return; speechSynthesis.speak(sprechAusgabe(text)); } catch {}
 }
 function stimmeWahlZeigen() {
+  stimme2Zeigen(); // 2.16.0
   const sel = $("setStimme"); if (!sel) return;
   const alle = deStimmen(), best = deStimme(); let wahl = ""; try { wahl = localStorage.getItem(STIMME_KEY) || ""; } catch {}
   sel.innerHTML = `<option value="">Automatisch – beste Stimme${best && !wahl ? " (" + esc(best.name) + ")" : ""}</option>` + [...alle].sort((a, b) => stimmeWert(b) - stimmeWert(a))
     .map((v) => `<option value="${esc(v.voiceURI)}" ${v.voiceURI === wahl ? "selected" : ""}>${esc(v.name)}${STIMME_SCHLECHT.test(v.name) ? " (Spaßstimme)" : ""}</option>`).join("");
   sel.disabled = !alle.length;
+}
+// ---------- KC-CLUB-CHAT-VORLESEN (2.16.0, Wunsch Hansi): ganzen Chat ab Einstiegspunkt vorlesen – zwei Stimmen (Mann/Frau) ----------
+// Wer schreibt, bestimmt die Stimme: eigene Angabe in ⚙️ („klinge ich wie …“), sonst nach Vorname geraten. Welche Männer- und
+// Frauenstimme das Gerät nimmt, wählt jeder selbst (gute zuerst, mit Güte ⭐⭐ Premium / ⭐ Erweitert / Standard). Nur das Gerät spricht.
+const STIMME_W = /anna|helena|petra|marlene|vicki|katja|hedda|amala|hanna|eva\b|lena|klara|seraphina|louisa|elke|tanja|maja|female|weiblich|frau/i;
+const STIMME_M = /markus|yannick|viktor|martin|stefan|conrad|hans|jonas|killian|florian|ralf|daniel|male\b|männlich|mann\b/i;
+const stimmeGuete = (v) => /premium/i.test(v.name) ? "⭐⭐ Premium" : /erweitert|enhanced|verbessert|neural|natural|online/i.test(v.name) ? "⭐ Erweitert" : STIMME_SCHLECHT.test(v.name) ? "Spaßstimme" : "Standard";
+const stimmeArt = (v) => (STIMME_W.test(v.name) ? "w" : STIMME_M.test(v.name) ? "m" : "");
+function stimmeFuer(art) { // → { voice, pitch } – ohne passende Stimme dieselbe Stimme etwas tiefer/höher, damit man Mann und Frau unterscheidet
+  const alle = deStimmen(); let wahl = ""; try { wahl = localStorage.getItem(STIMME_KEY + "_" + art) || ""; } catch {}
+  const gewaehlt = alle.find((v) => v.voiceURI === wahl); if (gewaehlt) return { voice: gewaehlt, pitch: 1 };
+  const passend = alle.filter((v) => stimmeArt(v) === art && !STIMME_SCHLECHT.test(v.name)).sort((a, b) => stimmeWert(b) - stimmeWert(a))[0];
+  return passend ? { voice: passend, pitch: 1 } : { voice: deStimme(), pitch: art === "m" ? 0.8 : 1.15 };
+}
+function stimme2Zeigen() {
+  for (const art of ["m", "w"]) {
+    const sel = $(art === "m" ? "setStimmeM" : "setStimmeW"); if (!sel) continue;
+    const alle = deStimmen(); let wahl = ""; try { wahl = localStorage.getItem(STIMME_KEY + "_" + art) || ""; } catch {}
+    const auto = stimmeFuer(art).voice;
+    sel.innerHTML = `<option value="">Automatisch${auto && !wahl ? " (" + esc(auto.name) + ")" : ""}</option>` + [...alle].sort((a, b) => (stimmeArt(b) === art) - (stimmeArt(a) === art) || stimmeWert(b) - stimmeWert(a))
+      .map((v) => `<option value="${esc(v.voiceURI)}" ${v.voiceURI === wahl ? "selected" : ""}>${esc(v.name)} – ${stimmeGuete(v)}${stimmeArt(v) ? (stimmeArt(v) === "m" ? " · 👨" : " · 👩") : ""}</option>`).join("");
+    sel.disabled = !alle.length;
+  }
+  if ($("setMeineStimme")) $("setMeineStimme").value = INIT?.einstellungen?.vorlesestimme?.art || "";
+}
+function stimme2Setzen(art, uri) { try { uri ? localStorage.setItem(STIMME_KEY + "_" + art, uri) : localStorage.removeItem(STIMME_KEY + "_" + art); } catch {} stimme2Zeigen(); stimme2Probe(art); }
+function stimme2Probe(art) {
+  try { speechSynthesis.cancel(); const st = stimmeFuer(art), u = new SpeechSynthesisUtterance(art === "m" ? "Hallo, so klingen die Männer im Chat." : "Hallo, so klingen die Frauen im Chat.");
+    u.lang = "de-DE"; if (st.voice) { u.voice = st.voice; u.lang = st.voice.lang; } u.pitch = st.pitch; speechSynthesis.speak(u); } catch {}
+}
+async function meineStimmeSetzen(art) {
+  const wert = { art: art === "m" || art === "w" ? art : null };
+  try { await einstSpeichern("vorlesestimme", wert); INIT.einstellungen = { ...(INIT.einstellungen || {}), vorlesestimme: wert }; melde(wert.art ? `🗣️ Deine Nachrichten werden mit einer ${wert.art === "m" ? "Männer" : "Frauen"}stimme vorgelesen` : "🗣️ Stimme wird nach deinem Vornamen gewählt"); }
+  catch (e) { meldeFehler(e); stimme2Zeigen(); }
+}
+// Vorname → Mann/Frau (nur wenn jemand nichts eingestellt hat). Häufige Namen fest, sonst nach Endung; im Zweifel „m“.
+const VN_W = new Set("andrea anja anke anna annette astrid barbara beate bettina birgit brigitte britta carmen christa christiane christina claudia cornelia dagmar daniela doris edith elisabeth elke erika eva gabi gabriele gerda gisela gudrun hannelore heike helga helene heidi ilse inge ingrid iris irmgard jutta karin katharina kerstin kirsten klara lena margarete maria marianne marion martina monika nicole petra regina reinhilde renate rita rosemarie ruth sabine sandra silke simone sonja stefanie susanne tanja ulrike ursula ute vera waltraud weronika winny".split(" "));
+const VN_M = new Set("achim andreas bernd christian dieter dirk frank fritz georg gerd gerhard günter hans harald heinz helmut horst jan joachim jörg jürgen kai karl klaus luca manfred markus martin matthias michael norbert ole olaf peter rainer ralf reinhard rolf sascha stefan thomas thorsten uwe volker walter werner wolfgang".split(" "));
+function vornameArt(name) {
+  const v = String(name || "").trim().split(/[\s-]+/)[0].toLowerCase(); if (!v) return "m";
+  if (VN_W.has(v)) return "w"; if (VN_M.has(v)) return "m";
+  return /(a|e|i|y|ine|ette|ild|ina)$/.test(v) ? "w" : "m";
+}
+let CV = { an: false, lauf: 0, liste: [], i: 0, stimmen: {}, letzterVon: null };
+async function chatVorlesenStart(ab) {
+  if (!("speechSynthesis" in window)) return melde("Dieses Gerät kann leider nicht vorlesen.", true);
+  const alle = CHAT?.nachrichten || []; let start = 0;
+  if (ab === "neu") { start = alle.findIndex((m) => m.id === NA.trennerVor); if (start < 0) { start = 0; melde("Keine neuen Nachrichten – ich lese den ganzen Chat vor"); } }
+  else if (ab && ab !== "alles") start = Math.max(0, alle.findIndex((m) => m.id === ab));
+  const liste = alle.slice(start).filter((m) => (m.text && m.text !== "📎") || m.anlagen?.length);
+  if (!liste.length) return melde("Hier gibt es nichts zum Vorlesen.");
+  chatVorlesenStopp(true);
+  const lauf = ++CV.lauf; CV = { ...CV, an: true, liste, i: 0, stimmen: {}, letzterVon: null };
+  try { CV.stimmen = (await api("vorlese_stimmen", { ids: [...new Set(liste.map((m) => m.vonId).filter(Boolean))] })).stimmen || {}; } catch {}
+  if (lauf !== CV.lauf || !CV.an) return;
+  cvLeiste(); cvNaechste(lauf);
+}
+function cvArt(m) { const eigen = m.eigen || m.vonId === ICH?.person_id; return CV.stimmen[m.vonId] || (eigen ? INIT?.einstellungen?.vorlesestimme?.art : null) || vornameArt(eigen ? ICH?.vorname : m.von); }
+function cvNaechste(lauf) {
+  if (lauf !== CV.lauf || !CV.an) return;
+  document.querySelectorAll(".blase.cv-jetzt").forEach((b) => b.classList.remove("cv-jetzt"));
+  if (CV.i >= CV.liste.length) { CV.an = false; cvLeiste(); return melde("✅ Fertig vorgelesen"); }
+  const m = CV.liste[CV.i], el = document.getElementById("msg-" + m.id);
+  if (el) { el.classList.add("cv-jetzt"); try { el.scrollIntoView({ block: "center", behavior: "smooth" }); } catch {} }
+  const name = m.eigen ? "Du" : String(m.von || "").split(" ")[0], neuerSprecher = m.vonId !== CV.letzterVon; CV.letzterVon = m.vonId;
+  const anl = (m.anlagen || []).map((a) => /^image\//.test(a.mime) ? "ein Foto" : /^audio\//.test(a.mime) ? "eine Sprachnachricht" : /^video\//.test(a.mime) ? "ein Video" : "eine Datei");
+  const text = `${neuerSprecher ? name + (m.wichtig ? ", wichtig" : "") + ": " : ""}${m.text && m.text !== "📎" ? vorlesbar(m.text) : ""}${anl.length ? (m.text && m.text !== "📎" ? ". " : "") + (m.eigen ? "Du hast " : "hat ") + anl.join(" und ") + " geschickt." : ""}`;
+  const st = stimmeFuer(cvArt(m)), u = new SpeechSynthesisUtterance(text);
+  u.lang = "de-DE"; if (st.voice) { u.voice = st.voice; u.lang = st.voice.lang; } u.pitch = st.pitch;
+  const weiter = () => { if (lauf !== CV.lauf || !CV.an) return; CV.i++; setTimeout(() => cvNaechste(lauf), 300); };
+  u.onend = weiter; u.onerror = weiter;
+  cvLeiste();
+  try { speechSynthesis.speak(u); } catch { weiter(); }
+}
+function cvWeiter() { if (!CV.an) return; const lauf = ++CV.lauf; try { speechSynthesis.cancel(); } catch {} CV.i++; setTimeout(() => cvNaechste(lauf), 150); }
+function chatVorlesenStopp(still) {
+  const war = CV.an; CV.an = false; CV.lauf++; try { if (war) speechSynthesis.cancel(); } catch {}
+  document.querySelectorAll(".blase.cv-jetzt").forEach((b) => b.classList.remove("cv-jetzt")); cvLeiste();
+  if (war && !still) melde("⏹ Vorlesen beendet");
+}
+function cvLeiste() {
+  let l = $("cvLeiste");
+  if (!CV.an) { l?.remove(); return; }
+  if (!l) { l = document.createElement("div"); l.id = "cvLeiste"; l.className = "cv-leiste"; l.setAttribute("role", "status"); document.body.appendChild(l); }
+  const m = CV.liste[CV.i];
+  l.innerHTML = `<span>🔊 ${m ? esc(m.eigen ? "Du" : String(m.von || "").split(" ")[0]) : ""} ${Math.min(CV.i + 1, CV.liste.length)}/${CV.liste.length}</span><button onclick="cvWeiter()" aria-label="Nächste Nachricht">⏭</button><button onclick="chatVorlesenStopp()" aria-label="Vorlesen beenden">⏹</button>`;
 }
 function stimmeSetzen(uri) { try { uri ? localStorage.setItem(STIMME_KEY, uri) : localStorage.removeItem(STIMME_KEY); } catch {} stimmeWahlZeigen(); stimmeProbe(); }
 function stimmeProbe() { try { speechSynthesis.cancel(); } catch {} sprechen(`Hallo ${ICH?.vorname || ""}, so klinge ich beim Vorlesen in der Köcheclub-App.`); }
@@ -4983,22 +5083,24 @@ async function spHerausfordernBlatt(pid) {
   if (!SP.liste) await spLaden(true);
   const alle = SP.liste?.bereit || [];
   if (!alle.length) return melde("Noch niemand hat „Herausfordern erlauben“ eingeschaltet – frag doch mal im Club 🙂");
-  let gr = 3, art = SP.art || "ttt"; // 2.10.0: auch Bauernskat
+  let gr = 3, art = SP.art || "ttt", stufe = "mittel"; // 2.10.0: auch Bauernskat; 2.16.0: Zeitstufe für Küchenterror
   const f = blattAuf("spHerausBlatt", `<div id="spHerausInhalt"></div><button class="knopf" onclick="fensterZu(document.getElementById('spHerausBlatt'))">Abbrechen</button>`);
   const zeichnen = () => {
     const b = alle.filter((m) => (m.spiele || ["ttt"]).includes(art));
     $("spHerausInhalt").innerHTML = `<h3 style="margin:0">🎲 Herausfordern</h3>
       ${spWahl("Spiel", art, [["ttt", "❌⭕ Tic-Tac-Toe"], ["schach", "♟️ Schach"], ["bsk", "🃏 Bauernskat"], ["kt", "🔪 Küchenterror"]], "spHerausArt")}
       ${art === "ttt" ? spWahl("Feld", String(gr), [["3", "3 × 3"], ["4", "4 × 4"]], "spHerausGroesse") : ""}
-      <p class="hinweis" style="margin:0">Wen möchtest du herausfordern? ${art === "bsk" ? "Du bist Vorhand und sagst Trumpf an. Die Karten mischt der Server – niemand sieht fremde Karten." : art === "kt" ? "12 Küchenfragen in 4 Runden, ihr spielt abwechselnd je eine Runde. 10 Sekunden je Frage – schnell und richtig gibt die meisten Punkte. Die letzte ist eine 🎖️ Meisterfrage und zählt doppelt. Du fängst an." : `Du fängst an (${art === "schach" ? "Weiß" : SP_ZEICHEN.x}).`}</p>
+      ${art === "kt" ? spWahl("Zeit", stufe, [["leicht", "😊 20 s"], ["mittel", "🙂 15 s"], ["schwer", "😎 10 s"]], "spHerausStufe") : ""}
+      <p class="hinweis" style="margin:0">Wen möchtest du herausfordern? ${art === "bsk" ? "Du bist Vorhand und sagst Trumpf an. Die Karten mischt der Server – niemand sieht fremde Karten." : art === "kt" ? "12 Küchenfragen in 4 Runden, ihr spielt abwechselnd je eine Runde. Die Zeit je Frage wählst du oben – schnell und richtig gibt die meisten Punkte. Die letzte ist eine 🎖️ Meisterfrage und zählt doppelt. Du fängst an." : `Du fängst an (${art === "schach" ? "Weiß" : SP_ZEICHEN.x}).`}</p>
       ${b.length ? b.map((m) => `<button class="zeile sp-wer${m.person_id === pid ? " an" : ""}" onclick="spHerausfordern('${m.person_id}')">${kreis(MITGLIEDER?.find((x) => x.person_id === m.person_id) || {}, m.name, 36)}<b style="flex:1;text-align:left">${esc(m.name)}</b><span>${art === "schach" ? "♟️" : art === "bsk" ? "🃏" : art === "kt" ? "🔪" : "🎲"} ›</span></button>`).join("")
         : `<p class="hinweis">Für ${art === "schach" ? "Schach" : art === "bsk" ? "Bauernskat" : art === "kt" ? "Küchenterror" : "Tic-Tac-Toe"} hat sich noch niemand freigeschaltet.</p>`}`;
   };
   window.spHerausArt = (a) => { art = ["schach", "bsk", "kt"].includes(a) ? a : "ttt"; zeichnen(); };
   window.spHerausGroesse = (g) => { gr = Number(g) === 4 ? 4 : 3; zeichnen(); };
+  window.spHerausStufe = (w) => { stufe = KT_ZEIT[w] ? w : "mittel"; zeichnen(); };
   zeichnen();
   window.spHerausfordern = async (an) => {
-    try { const r = await api("spiel_herausfordern", { an, groesse: gr, spiel: art }, { warten: true }); f.remove(); melde(`🎲 Herausforderung an ${r.spiel.gegner.vorname} geschickt`); SP.tab = "mg"; SP.offen = null; SP.art = art; await spLaden(true); if (aktuelleAnsicht !== "spiele") zeige("spiele"); else spZeigen(); }
+    try { const r = await api("spiel_herausfordern", { an, groesse: gr, spiel: art, ...(art === "kt" ? { stufe } : {}) }, { warten: true }); f.remove(); melde(`🎲 Herausforderung an ${r.spiel.gegner.vorname} geschickt`); SP.tab = "mg"; SP.offen = null; SP.art = art; await spLaden(true); if (aktuelleAnsicht !== "spiele") zeige("spiele"); else spZeigen(); }
     catch (e) { meldeFehler(e); }
   };
 }
@@ -5538,16 +5640,19 @@ async function spEinlSchalter(an) {
 // Gegen Mitglieder: 4 Runden à 3 Fragen, abwechselnd wie beim Quizduell; der Server stellt die Fragen, misst die Zeit und wertet.
 // Fragen: lib/kuechenterror/fragen.js (eine Quelle, Server bekommt eine wörtliche Kopie).
 const KT_MS = 10000, KT_KEY = "kc_club_kuechenterror_pc";
+// 2.16.0 (Wunsch Hansi): Zeit je Frage nach Stufe – leicht 20 s, mittel 15 s, schwer 10 s (wie bisher)
+const KT_ZEIT = { leicht: 20000, mittel: 15000, schwer: KT_MS };
+const ktpLimit = () => KT_ZEIT[KTP.staerke] || KT_MS;
 let KT_FRAGEN_L = null;
 async function ktFragenLaden() { if (!KT_FRAGEN_L) KT_FRAGEN_L = (await import("./lib/kuechenterror/fragen.js?v=2")).KT_FRAGEN; return KT_FRAGEN_L; }
 const ktMischen = (l) => { const a = [...l]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-const ktPunkte = (ok, ms, meister) => (ok && ms <= KT_MS ? 100 + Math.round(100 * (1 - ms / KT_MS)) : 0) * (meister ? 2 : 1); // 2.15.0: 🎖️ Meisterfrage doppelt
+const ktPunkte = (ok, ms, lim = KT_MS) => (ok && ms <= lim ? 100 + Math.round(100 * (1 - ms / lim)) : 0); // Zeitbonus relativ zur Stufe
 const ktSek = (ms) => (ms / 1000).toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 // Frage mit Zeitbalken; aufl = Auflösung (richtig/gewaehlt/ok/p/ms/e) – dann sind die Knöpfe gesperrt und eingefärbt
 function ktFrageHtml(fr, { klick = "", aufl = null, kopf = "", denkt = false } = {}) {
-  const rest = Math.max(0, fr.restMs ?? KT_MS), weg = KT_MS - Math.min(rest, KT_MS);
+  const lim = fr.limitMs || KT_MS, rest = Math.max(0, fr.restMs ?? lim), weg = lim - Math.min(rest, lim);
   return `${kopf}${fr.m ? '<div class="kt-meister">🎖️ Meisterfrage – richtig zählt doppelt!</div>' : ""}<div class="kt-frage">${esc(fr.f)}</div>
-    <div class="kt-zeit${aufl ? " stop" : ""}" role="timer" aria-label="Zeit: 10 Sekunden"><i style="animation-duration:${KT_MS}ms;animation-delay:-${weg}ms"></i></div>
+    <div class="kt-zeit${aufl ? " stop" : ""}" role="timer" aria-label="Zeit: ${lim / 1000} Sekunden"><i style="animation-duration:${lim}ms;animation-delay:-${weg}ms"></i></div>
     <div class="kt-antworten">${fr.a.map((t, i) => `<button class="kt-antwort${aufl ? (i === aufl.richtig ? " richtig" : i === aufl.gewaehlt ? " falsch" : "") : ""}${denkt ? " denkt" : ""}" ${aufl || !klick ? "disabled" : ""} onclick="${klick}(${i})">${"ABCD"[i]}) ${esc(t)}</button>`).join("")}</div>
     ${aufl ? `<div class="kt-ergebnis">${aufl.ok ? `✅ Richtig in ${ktSek(aufl.ms)} s – <b>+${aufl.p} Punkte${fr.m ? " (doppelt!)" : ""}</b>` : aufl.gewaehlt < 0 || aufl.zuSpaet ? "⏰ Zeit abgelaufen – 0 Punkte" : "❌ Leider falsch – 0 Punkte"}</div>
       <p class="kt-erkl">💡 ${esc(aufl.e || "")}</p>` : ""}`;
@@ -5555,24 +5660,24 @@ function ktFrageHtml(fr, { klick = "", aufl = null, kopf = "", denkt = false } =
 // ----- gegen den Computer -----
 let KTP = (() => { let w = null; try { w = JSON.parse(localStorage.getItem(KT_KEY) || "null"); } catch {} return { staerke: "mittel", stand: { ich: 0, pc: 0, remis: 0 }, ...(w || {}), z: null, uhr: null, pcUhr: null }; })();
 const ktpMerken = () => { try { localStorage.setItem(KT_KEY, JSON.stringify({ staerke: KTP.staerke, stand: KTP.stand })); } catch {} };
-const KT_STAERKE = { leicht: { quote: 0.45, von: 3000, bis: 9000 }, mittel: { quote: 0.65, von: 2000, bis: 7000 }, schwer: { quote: 0.85, von: 1500, bis: 5000 } };
+const KT_STAERKE = { leicht: { quote: 0.45, von: 4000, bis: 16000 }, mittel: { quote: 0.65, von: 3000, bis: 11000 }, schwer: { quote: 0.85, von: 1500, bis: 5000 } }; // Antwortzeit passt zur Zeitstufe
 const ktpSichtbar = () => aktuelleAnsicht === "spiele" && SP.tab === "pc" && SP.art === "kt";
 async function ktPcZeigen() {
   const F = await ktFragenLaden(); if (!ktpSichtbar()) return;
   const z = KTP.z, s = KTP.stand;
   const stand = `<div class="sp-stand"><span>Du <b>${s.ich}</b></span><span>🤝 <b>${s.remis}</b></span><span><b>${s.pc}</b> Computer</span></div>`;
   if (!z) { $("spInhalt").innerHTML = `<div class="karte sp-karte">
-      ${spWahl("Stärke", KTP.staerke, [["leicht", "😊 Leicht"], ["mittel", "🙂 Mittel"], ["schwer", "😎 Schwer"]], "ktPcStaerke")}
+      ${spWahl("Stufe", KTP.staerke, [["leicht", "😊 Leicht<br><small>20 s</small>"], ["mittel", "🙂 Mittel<br><small>15 s</small>"], ["schwer", "😎 Schwer<br><small>10 s</small>"]], "ktPcStaerke")}
       ${stand}
       <p style="margin:6px 0">🔪 <b>Küchenterror</b> – ${F.length} Fragen aus dem Profi-Küchenalltag. Du und der Computer bekommt <b>abwechselnd</b> je eine Frage, insgesamt 12.
-        Jede Frage hat 4 Antworten, nur eine ist richtig. Der Zeitbalken läuft <b>10 Sekunden</b>: richtig gibt 100 Punkte plus bis zu 100 Punkte Zeitbonus – wer schneller ist, holt mehr. Zum Schluss kommt für jeden eine schwere <b>🎖️ Meisterfrage</b> – die zählt doppelt!</p>
+        Jede Frage hat 4 Antworten, nur eine ist richtig. Der Zeitbalken läuft je nach Stufe <b>20, 15 oder 10 Sekunden</b>: richtig gibt 100 Punkte plus bis zu 100 Punkte Zeitbonus – wer schneller ist, holt mehr. Zum Schluss kommt für jeden eine schwere <b>🎖️ Meisterfrage</b> – die zählt doppelt!</p>
       <div class="knoepfe"><button class="knopf haupt" onclick="ktPcStart()">▶ Los geht’s</button>${s.ich + s.pc + s.remis ? '<button class="knopf" onclick="ktPcStandWeg()">🗑️ Spielstand zurücksetzen</button>' : ""}</div></div>`; return; }
   const kopf = `<div class="kt-kopf"><span>Du <b>${z.punkte[0]}</b></span><span>Frage ${Math.min(z.i + 1, 12)}/12</span><span><b>${z.punkte[1]}</b> Computer</span></div>`;
   if (z.phase === "ende") {
     const [a, b] = z.punkte, sieg = a > b, remis = a === b;
     $("spInhalt").innerHTML = `<div class="karte sp-karte">${stand}<div class="sp-banner ${remis ? "remis" : sieg ? "sieg" : "niederlage"}">${remis ? "🤝 Unentschieden!" : sieg ? "🏆 Du hast gewonnen!" : "🤖 Der Computer hat gewonnen"}<br><small>${a} : ${b} Punkte</small></div>
       <div class="knoepfe"><button class="knopf haupt" onclick="ktPcStart()">↺ Neues Spiel</button><button class="knopf" onclick="KTP.z=null;ktPcZeigen()">Stärke ändern</button></div></div>`; return; }
-  const f = F.find((q) => q.id === z.ids[z.i]), alle = [f.r, ...f.x], fr = { f: f.f, a: z.perm.map((k) => alle[k]), restMs: KT_MS - (Date.now() - z.seit), m: !!f.m };
+  const f = F.find((q) => q.id === z.ids[z.i]), alle = [f.r, ...f.x], fr = { f: f.f, a: z.perm.map((k) => alle[k]), restMs: ktpLimit() - (Date.now() - z.seit), m: !!f.m, limitMs: ktpLimit() };
   const wer = z.i % 2 === 0 ? "ich" : "pc";
   const kopfWer = `<div class="sp-status${wer === "ich" && z.phase === "frage" ? " sp-ichdran" : ""}">${wer === "ich" ? "👨‍🍳 Deine Frage" : "🤖 Frage an den Computer"}</div>`;
   $("spInhalt").innerHTML = `<div class="karte sp-karte">${kopf}${kopfWer}${ktFrageHtml(fr, { klick: wer === "ich" && z.phase === "frage" ? "ktPcAntwort" : "", aufl: z.phase === "aufl" ? z.aufl : null, denkt: wer === "pc" && z.phase === "frage" })}
@@ -5581,7 +5686,7 @@ async function ktPcZeigen() {
 }
 function ktPcUhren() { // Zeitablauf (und beim Computer: seine Antwort) – auch nach Wiederkommen in die Ansicht
   const z = KTP.z; clearTimeout(KTP.uhr); clearTimeout(KTP.pcUhr);
-  const rest = KT_MS - (Date.now() - z.seit);
+  const rest = ktpLimit() - (Date.now() - z.seit);
   KTP.uhr = setTimeout(() => ktPcAntwort(-1, true), Math.max(0, rest) + 50);
   if (z.i % 2 === 1) KTP.pcUhr = setTimeout(() => { const st = KT_STAERKE[KTP.staerke] || KT_STAERKE.mittel; ktPcAntwort(Math.random() < st.quote * (KT_FRAGEN_L.find((q) => q.id === z.ids[z.i])?.m ? 0.8 : 1) ? z.perm.indexOf(0) : [0, 1, 2, 3].filter((k) => z.perm[k] !== 0)[Math.floor(Math.random() * 3)], true); }, Math.max(0, z.pcZeit - (Date.now() - z.seit)));
 }
@@ -5596,10 +5701,10 @@ function ktPcAntwort(wahl, vonUhr) {
   const z = KTP.z; if (!z || z.phase !== "frage") return;
   if (!vonUhr && z.i % 2 === 1) return; // beim Computer tippt nicht der Mensch
   clearTimeout(KTP.uhr); clearTimeout(KTP.pcUhr);
-  const ms = Math.min(Date.now() - z.seit, KT_MS + 1), ok = wahl >= 0 && z.perm[wahl] === 0 && ms <= KT_MS; let p = ktPunkte(ok, ms);
+  const lim = ktpLimit(), ms = Math.min(Date.now() - z.seit, lim + 1), ok = wahl >= 0 && z.perm[wahl] === 0 && ms <= lim; let p = ktPunkte(ok, ms, lim);
   const f = KT_FRAGEN_L.find((q) => q.id === z.ids[z.i]);
   if (f?.m) p *= 2; // 🎖️ Meisterfrage
-  z.punkte[z.i % 2] += p; z.phase = "aufl"; z.aufl = { richtig: z.perm.indexOf(0), gewaehlt: wahl, ok, p, ms, zuSpaet: ms > KT_MS, e: f?.e };
+  z.punkte[z.i % 2] += p; z.phase = "aufl"; z.aufl = { richtig: z.perm.indexOf(0), gewaehlt: wahl, ok, p, ms, zuSpaet: ms > lim, e: f?.e };
   try { navigator.vibrate?.(ok ? 30 : [40, 30, 40]); } catch {}
   if (ktpSichtbar()) ktPcZeigen();
 }
@@ -5618,7 +5723,7 @@ function ktSpielZeigen(g) {
   if (KTM.id !== g.id) { clearTimeout(KTM.uhr); KTM = { id: g.id, frage: null, aufl: null, uhr: null, sendet: false }; }
   const q = g.quiz, er = esc(g.gegner.vorname);
   if (!q) { $("spInhalt").innerHTML = '<div class="karte hinweis">Spielstand fehlt – bitte „‹“ und neu öffnen.</div>'; return; }
-  const zurueck = `<div class="zeile" style="border:none;padding:0"><button class="knopf klein" onclick="ktMgUebersicht()">‹ Übersicht</button><b style="flex:1;text-align:right">🔪 Du gegen ${er}</b></div>`;
+  const zurueck = `<div class="zeile" style="border:none;padding:0"><button class="knopf klein" onclick="ktMgUebersicht()">‹ Übersicht</button><b style="flex:1;text-align:right">🔪 Du gegen ${er}<br><small class="hinweis">⏱ ${(q.limitMs || KT_MS) / 1000} Sekunden je Frage</small></b></div>`;
   if (KTM.frage || KTM.aufl) {
     const fr = KTM.frage || KTM.aufl.frage, rest = KTM.frage ? KTM.frage.restMs - (Date.now() - KTM.frage.empfangen) : 0;
     const kopf = `<div class="kt-kopf"><span>Frage ${fr.imZug}/${fr.vonImZug}</span><span>Runde ${Math.ceil(fr.nr / 3)} von 4</span></div>`;
@@ -5637,7 +5742,7 @@ function ktSpielZeigen(g) {
   else if (g.status !== "laeuft") status = `<div class="sp-status">Diese Partie findet nicht statt.</div>`;
   else status = g.ichDran ? `<div class="sp-status sp-ichdran">Du bist dran – ${q.offenBeiMir} ${q.offenBeiMir === 1 ? "Frage" : "Fragen"} warten auf dich</div>
       <div class="knoepfe"><button class="knopf haupt" style="width:100%" onclick="ktMgFrage()">${q.laeuft != null ? "▶ Weiter – deine Frage läuft noch!" : "▶ Los geht’s"}</button></div>
-      <p class="hinweis" style="margin:4px 0 0;text-align:center">Je Frage 10 Sekunden – erst tippen, wenn du bereit bist. Mittendrin aufhören zählt als „Zeit abgelaufen“.</p>`
+      <p class="hinweis" style="margin:4px 0 0;text-align:center">Je Frage ${(q.limitMs || KT_MS) / 1000} Sekunden – erst tippen, wenn du bereit bist. Mittendrin aufhören zählt als „Zeit abgelaufen“.</p>`
     : `<div class="sp-status">${er} ist dran …</div>`;
   $("spInhalt").innerHTML = `<div class="karte sp-karte">${zurueck}${status}${spTerminHtml(g)}${tafel}
     ${q.rueckblick ? `<details class="sch-verlauf"><summary>📖 Alle Fragen mit Lösung</summary>${q.rueckblick.filter(Boolean).map((x, i) => `<p style="margin:6px 0"><b>${i + 1}. ${x.m ? "🎖️ " : ""}${esc(x.f)}</b><br>✅ ${esc(x.r)}<br><small class="hinweis">💡 ${esc(x.e)}</small></p>`).join("")}</details>` : ""}
@@ -7771,6 +7876,7 @@ const ZEIGE_OHNE_ICH = new Set(["start", "sos"]);
 let startBereitLoesen; const startBereit = new Promise((ok) => { startBereitLoesen = ok; });
 let ZEIGE_WARTET = null;
 function zeige(v, ausHistorie) {
+  if (v !== "chat" && CV.an) chatVorlesenStopp(true); /* KC-CLUB-CHAT-VORLESEN: nur im offenen Chat */
   if (!ICH && !ZEIGE_OHNE_ICH.has(v)) {
     if (!ZEIGE_WARTET) melde("⏳ Einen Moment – die App meldet dich noch an …");
     ZEIGE_WARTET = { v, ausHistorie };
@@ -10299,6 +10405,7 @@ function nachrichtMenue(id) {
     ${m.bearbeitbarBis && Date.parse(m.bearbeitbarBis) > Date.now() ? `<button class="knopf" onclick="document.getElementById('naMenue').remove();naBearbeiten('${id}')">✏️ Bearbeiten</button>` : ""}
     ${m.text ? `<button class="knopf" onclick="document.getElementById('naMenue').remove();naKopieren('${id}')">📋 Kopieren</button>` : ""}
     ${m.text && m.text !== "📎" ? `<button class="knopf" onclick="document.getElementById('naMenue').remove();naVorlesen('${id}')">🔊 Vorlesen</button>` : ""}
+    <button class="knopf" onclick="document.getElementById('naMenue').remove();chatVorlesenStart('${id}')">🔊 Ab hier alles vorlesen</button>
     <button class="knopf" onclick="document.getElementById('naMenue').remove();weiterleitenBlatt('${id}')">↪️ Weiterleiten</button>
     ${(m.anlagen || []).some((a) => ARCHIV_TYP_OK(a.mime)) ? `<button class="knopf" onclick="document.getElementById('naMenue').remove();naAnlagenArchiv('${id}')">🗄️ Datei in mein Archiv</button>` : ""}
     <button class="knopf" onclick="document.getElementById('naMenue').remove();nachrichtInfo('${id}')">ℹ️ Details – wann gesendet, angekommen, gelesen</button>

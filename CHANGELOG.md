@@ -1,5 +1,20 @@
 # Änderungen
 
+## 2.16.0 – 2026-10-03 – ⏱ Küchenterror-Zeitstufen + 🔊 ganzen Chat vorlesen mit zwei Stimmen (Wunsch Hansi)
+- KC-CLUB-KUECHENTERROR-ZEIT: Zeit je Frage nach Stufe – 😊 leicht 20 s, 🙂 mittel 15 s, 😎 schwer 10 s (wie bisher). Gegen den
+  Computer über die Stufe (Computer antwortet passend langsamer), gegen Mitglieder wählt der Herausforderer die Zeit (Standard
+  mittel), gilt für beide und bleibt bei der Revanche. Zeitbonus rechnet relativ zur Stufe. Server: quiz.stufe, ktLimit();
+  laufende Partien ohne Stufe = 10 s.
+- KC-CLUB-CHAT-VORLESEN: im Chat ⋮ → „🔊 Vorlesen ab den neuen Nachrichten“ (ab der Linie „Neue Nachrichten“) oder „🔊 Ganzen Chat
+  vorlesen“, an jeder Nachricht „🔊 Ab hier alles vorlesen“. Liest der Reihe nach (Name nur beim Sprecherwechsel, „wichtig“,
+  Fotos/Sprachnachrichten/Dateien werden genannt), markiert die gerade gelesene Nachricht und scrollt mit. Leiste mit ⏭ (weiter)
+  und ⏹ (Stopp); Verlassen des Chats beendet das Vorlesen.
+- Zwei Stimmen: Männer mit Männerstimme, Frauen mit Frauenstimme. Wer schreibt, legt selbst fest, wie er klingt (⚙️ „Wenn andere
+  meine Nachrichten vorlesen, klinge ich wie …“, Einstellung „vorlesestimme“ am Konto); ohne Angabe nach Vorname geraten.
+  Welche Männer-/Frauenstimme das Gerät nimmt, wählt jeder in ⚙️ – Liste mit Güte (⭐⭐ Premium / ⭐ Erweitert / Standard /
+  Spaßstimme), gute zuerst, mit Probe; Hinweis, wie man am iPad Premium-Stimmen lädt. Fehlt eine passende Stimme, spricht dieselbe
+  Stimme tiefer bzw. höher. Server: Nachrichten tragen vonId, neue Aktion vorlese_stimmen (nur selbst eingestellte Angaben).
+
 ## 2.15.0 – 2026-10-03 – 🎖️ Meisterfrage im Küchenterror + ❗ wichtige Hilfe-Aufrufe (Wunsch Hansi)
 - KC-CLUB-KUECHENTERROR-MEISTER: 40 schwere Meisterfragen (m: true, ids k151–k190: Saucen-Ableitungen, Garnituren „à la …“,
   Kartoffel-Klassiker, Fleischteile, Fonds, Patisserie). Sie zählen doppelt (richtig = 2 × (100 + Zeitbonus), also bis 400).

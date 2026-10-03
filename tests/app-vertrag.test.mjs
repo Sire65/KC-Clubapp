@@ -3373,7 +3373,7 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   for (const q of KT_FRAGEN) assert.ok(/^k\d{3}$/.test(q.id) && q.f && q.r && q.e && q.x.length === 3 && new Set([q.r, ...q.x]).size === 4, "Frage unvollständig: " + q.id);
   assert.ok(/const KT_MS = 10000, KT_GNADE_MS = 800;/.test(server) && /\[\[0, \[0, 1, 2\]\], \[1, \[0, 1, 2, 3, 4, 5\]\], \[0, \[3, 4, 5, 6, 7, 8\]\], \[1, \[6, 7, 8, 9, 10, 11\]\], \[0, \[9, 10, 11\]\]\]/.test(server), "10 s, Runden abwechselnd");
   const kz = server.slice(server.indexOf("async function ktZug("), server.indexOf("// ---------- Hauptprogramm ----------"));
-  assert.ok(/p = \(ok \? 100 \+ Math\.round\(100 \* \(1 - zeit \/ KT_MS\)\) : 0\) \* \(f\?\.m \? 2 : 1\)/.test(kz) && /seit: Date\.now\(\)/.test(kz) && /if \(!q\.offen\) \{/.test(kz), "Server misst Zeit, Neuladen setzt sie nicht zurück");
+  assert.ok(/p = \(ok \? 100 \+ Math\.round\(100 \* \(1 - zeit \/ LIM\)\) : 0\) \* \(f\?\.m \? 2 : 1\)/.test(kz) && /seit: Date\.now\(\)/.test(kz) && /if \(!q\.offen\) \{/.test(kz), "Server misst Zeit, Neuladen setzt sie nicht zurück");
   assert.ok(/a: q\.offen\.perm\.map\(\(k: number\) => alle\[k\]\)/.test(kz) && !/frage = \{[^}]*richtig/.test(kz), "Frage ohne Lösung");
   assert.ok(/quiz: g\.spiel === "kt" \? ktSicht\(g\.quiz,/.test(server) && /if \(g\.spiel === "kt"\) return await ktZug\(g, ich, p\.zug \?\? \{\}\);/.test(server), "nur Sicht verlässt den Server");
   assert.ok(/function ktPcZeigen\(\)/.test(html) && /function ktSpielZeigen\(g\)/.test(html) && /\["kt", "🔪", "Küchenterror"/.test(html) && /KTM\.frage \|\| KTM\.aufl\) return;/.test(html), "App: Kachel, Computer, Mitglieder, kein Neuzeichnen mitten in der Frage");
@@ -3387,6 +3387,15 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   const hw = server.slice(server.indexOf('case "hilfe_wichtig": {'), server.indexOf('case "hilfe_antwort": {'));
   assert.ok(/if \(h\.von !== ich\.person_id && !ich\.vorstand\) throw/.test(hw) && /if \(wichtig && !h\.wichtig && p\.bescheid\)/.test(hw) && /!schon\.has\(id\)/.test(hw), "Hilfe wichtig: nur Ersteller/Clubleitung, Bescheid nur auf Wunsch an Unbeantwortete");
   assert.ok(/wichtig: !!x\.wichtig/.test(server) && /onclick="hilfeWichtig\(/.test(html) && /\.zettel\.aushang\.wichtig \{/.test(html), "Aushang zeigt und schaltet wichtig");
+}
+// 310. 2.16.0: Küchenterror-Zeitstufen + Chat vorlesen mit zwei Stimmen (KC-CLUB-KUECHENTERROR-ZEIT, KC-CLUB-CHAT-VORLESEN)
+{
+  assert.ok(/const KT_STUFEN: Record<string, number> = \{ leicht: 20000, mittel: 15000, schwer: KT_MS \};/.test(server) && /const LIM = ktLimit\(q\)/.test(server), "Server: Zeit je Stufe");
+  assert.ok(/spielStart\(art, groesse, \{ stufe: p\.stufe \}\)/.test(server) && /stufe: p\.stufe \?\? g\.quiz\?\.stufe/.test(server), "Stufe beim Herausfordern und bei der Revanche");
+  assert.ok(/const KT_ZEIT = \{ leicht: 20000, mittel: 15000, schwer: KT_MS \};/.test(html) && /"spHerausStufe"/.test(html), "App: Stufe wählbar");
+  assert.ok(/vonId: m\.sender_person_id/.test(server) && /vorlesestimme: \(w\) => \(\{ art: w\?\.art === "m" \|\| w\?\.art === "w" \? w\.art : null \}\)/.test(server) && /case "vorlese_stimmen": \{/.test(server), "Server: Sender-ID + eigene Stimme");
+  for (const k of ["chatVorlesenStart('neu')", "chatVorlesenStart('alles')", "chatVorlesenStart('${id}')", 'id="setStimmeM"', 'id="setStimmeW"', 'id="setMeineStimme"']) assert.ok(html.includes(k), "fehlt: " + k);
+  assert.ok(/if \(v !== "chat" && CV\.an\) chatVorlesenStopp\(true\);/.test(html) && /const stimmeGuete = /.test(html), "Stopp beim Verlassen, Güte sichtbar");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

@@ -26,7 +26,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "2.15.0";
+const SERVER_VERSION = "2.16.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -797,6 +797,8 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
   inkognito: (w) => ({ an: w?.an === true }),
   // KC-CLUB-SPIELE (2.7.0): darf man mich herausfordern (Standard: nein) + welche Spiele (bisher nur Tic-Tac-Toe)
   spiele: (w) => ({ herausforderung: w?.herausforderung === true, spiele: [...new Set((Array.isArray(w?.spiele) ? w.spiele : ["ttt"]).filter((x: unknown) => x === "ttt" || x === "schach" || x === "bsk" || x === "kt"))].slice(0, 4) }),
+  // KC-CLUB-CHAT-VORLESEN (2.16.0, Wunsch Hansi): eigene Vorlese-Stimme – Mann oder Frau (null = nach Vorname raten)
+  vorlesestimme: (w) => ({ art: w?.art === "m" || w?.art === "w" ? w.art : null }),
   // KC-CLUB-SPIEL-EINLADUNG (2.12.0, Wunsch Hansi): „Lust auf eine Partie?“ beim App-Start – „Keine Spiele“ schaltet aus (Standard an)
   spiel_einladung: (w) => ({ an: w?.an !== false }),
   // KC-CLUB-EINWEISUNG (2.4.0): Erklärkarte beim ersten Öffnen eines Bereichs – an/aus (Standard an) + welche schon gesehen
@@ -1183,12 +1185,16 @@ const spielSym = (spiel: string) => spiel === "schach" ? "♟️" : spiel === "b
 // o Runde 3 + 4 → x Runde 4. Beide bekommen dieselben Fragen. Der Server merkt sich die Startzeit jeder Frage (Neuladen setzt sie
 // nicht zurück) und rechnet: richtig = 100 Punkte + Zeitbonus bis 100 (je schneller, desto mehr), falsch/zu spät = 0.
 // Die App bekommt die richtige Antwort erst NACH dem Antworten.
-const KT_MS = 10000, KT_GNADE_MS = 800; // 10 Sekunden je Frage; Gnade für die Übertragung
+const KT_MS = 10000, KT_GNADE_MS = 800; // 10 Sekunden je Frage (Stufe schwer); Gnade für die Übertragung
+// 2.16.0 (Wunsch Hansi „bei leicht viel Zeit, bei schwer so wie jetzt“): Zeitstufe wählt, wer herausfordert – gilt für beide
+const KT_STUFEN: Record<string, number> = { leicht: 20000, mittel: 15000, schwer: KT_MS };
+const ktStufe = (x: unknown) => (typeof x === "string" && KT_STUFEN[x] ? x : "schwer");
+const ktLimit = (q: any) => KT_STUFEN[q?.stufe] ?? KT_MS;
 const KT_ZUEGE: [number, number[]][] = [[0, [0, 1, 2]], [1, [0, 1, 2, 3, 4, 5]], [0, [3, 4, 5, 6, 7, 8]], [1, [6, 7, 8, 9, 10, 11]], [0, [9, 10, 11]]];
 const KT_INDEX = new Map<string, any>((KT_FRAGEN as any[]).map((q) => [q.id, q]));
 const ktMischen = <T>(l: T[]) => { const a = [...l], z = new Uint32Array(a.length); crypto.getRandomValues(z); for (let i = a.length - 1; i > 0; i--) { const j = z[i] % (i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 // 2.15.0 (Wunsch Hansi): die 12. Frage ist eine 🎖️ Meisterfrage (schwerer, zählt doppelt) – für beide dieselbe
-const ktNeu = () => ({ ids: [...ktMischen((KT_FRAGEN as any[]).filter((q) => !q.m).map((q) => q.id)).slice(0, 11), ktMischen((KT_FRAGEN as any[]).filter((q) => q.m).map((q) => q.id))[0]], ant: [{}, {}], zug: 0, offen: null });
+const ktNeu = (stufe?: unknown) => ({ stufe: ktStufe(stufe), ids: [...ktMischen((KT_FRAGEN as any[]).filter((q) => !q.m).map((q) => q.id)).slice(0, 11), ktMischen((KT_FRAGEN as any[]).filter((q) => q.m).map((q) => q.id))[0]], ant: [{}, {}], zug: 0, offen: null });
 const ktSumme = (a: Record<string, any>, nur?: (i: number) => boolean) => Object.entries(a).reduce((s, [i, x]) => s + (!nur || nur(Number(i)) ? Number(x?.p) || 0 : 0), 0);
 function ktSicht(q: any, s: number) {
   if (!q) return null;
@@ -1198,11 +1204,11 @@ function ktSicht(q: any, s: number) {
     return { ich: mein[i] ? { p: mein[i].p, ok: mein[i].ok } : null, er: sein[i] ? (sichtbar(i) ? { p: sein[i].p, ok: sein[i].ok } : { verdeckt: true }) : null }; }));
   const t = KT_ZUEGE[q.zug], meineListe = t && t[0] === s ? t[1] : [];
   return { runden, ende, meisterNr: q.ids.findIndex((id: string) => KT_INDEX.get(id)?.m), summe: [ktSumme(mein), ktSumme(sein, sichtbar)], offenBeiMir: meineListe.filter((i) => !mein[i]).length, imZug: meineListe.length,
-    laeuft: q.offen?.s === s ? Math.max(0, KT_MS + KT_GNADE_MS - (Date.now() - q.offen.seit)) : null,
+    laeuft: q.offen?.s === s ? Math.max(0, ktLimit(q) + KT_GNADE_MS - (Date.now() - q.offen.seit)) : null, stufe: ktStufe(q.stufe), limitMs: ktLimit(q),
     rueckblick: ende ? q.ids.map((id: string) => { const f = KT_INDEX.get(id); return f ? { f: f.f, r: f.r, e: f.e, m: !!f.m } : null; }) : null };
 }
 // KC-CLUB-BAUERNSKAT-MG (2.10.0): Startwerte je Spielart; beim Bauernskat mischt der Server, Spieler x ist Vorhand (sagt an)
-const spielStart = (art: string, n: number) => art === "schach" ? { brett: SCHACH_START } : art === "bsk" ? { brett: "bsk", bsk: bskNeu(0) } : art === "kt" ? { brett: "kt", quiz: ktNeu() } : { brett: ".".repeat(n * n) };
+const spielStart = (art: string, n: number, opt: { stufe?: unknown } = {}) => art === "schach" ? { brett: SCHACH_START } : art === "bsk" ? { brett: "bsk", bsk: bskNeu(0) } : art === "kt" ? { brett: "kt", quiz: ktNeu(opt.stufe) } : { brett: ".".repeat(n * n) };
 // Was ein Spieler vom Bauernskat sehen darf: eigene Hand (vor der Ansage nur die ersten 4), offene Bauern beider Seiten,
 // Stich, letzter Stich, gewonnene Stiche. Nie: Hand des Gegenübers, verdeckte Bauern (nur „liegt da“). Sicht immer aus „ich = 0“.
 function bskSicht(z: any, s: number) {
@@ -2654,20 +2660,20 @@ const NUTZUNG_BEREICHE = new Set(["spiele", "start", "termine", "nachrichten", "
 // „antwort“ (wahl 0–3, −1 = Zeit abgelaufen) wertet aus und liefert Lösung + Erklärung. Abgelaufene offene Frage = 0 Punkte.
 async function ktZug(g: any, ich: any, zug: any) {
   const q = structuredClone(g.quiz), s = g.spieler_x === ich.person_id ? 0 : 1, gegner = g.von === ich.person_id ? g.an : g.von;
-  const t = KT_ZUEGE[q.zug]; if (!t || t[0] !== s) throw new Fehler("Du bist gerade nicht dran.", 409);
+  const LIM = ktLimit(q), t = KT_ZUEGE[q.zug]; if (!t || t[0] !== s) throw new Fehler("Du bist gerade nicht dran.", 409);
   let antwort: any = null, frage: any = null, verpasst = false;
   const werten = (wahl: number) => { const o = q.offen, f = KT_INDEX.get(q.ids[o.i]); const zeit = Math.max(0, Date.now() - o.seit - KT_GNADE_MS);
-    const ok = wahl >= 0 && wahl <= 3 && zeit <= KT_MS && o.perm[wahl] === 0, p = (ok ? 100 + Math.round(100 * (1 - zeit / KT_MS)) : 0) * (f?.m ? 2 : 1); // Meisterfrage doppelt
-    q.ant[s][o.i] = { ok, p, ms: Math.min(zeit, KT_MS) }; q.offen = null;
-    return { ok, p, ms: Math.min(zeit, KT_MS), zuSpaet: zeit > KT_MS, richtig: o.perm.indexOf(0), gewaehlt: wahl, r: f?.r ?? "", e: f?.e ?? "", m: !!f?.m }; };
-  if (q.offen && q.offen.s === s && Date.now() - q.offen.seit > KT_MS + KT_GNADE_MS + 2000) { werten(-1); verpasst = true; } // App war zu – Frage verfallen
+    const ok = wahl >= 0 && wahl <= 3 && zeit <= LIM && o.perm[wahl] === 0, p = (ok ? 100 + Math.round(100 * (1 - zeit / LIM)) : 0) * (f?.m ? 2 : 1); // Meisterfrage doppelt
+    q.ant[s][o.i] = { ok, p, ms: Math.min(zeit, LIM) }; q.offen = null;
+    return { ok, p, ms: Math.min(zeit, LIM), zuSpaet: zeit > LIM, richtig: o.perm.indexOf(0), gewaehlt: wahl, r: f?.r ?? "", e: f?.e ?? "", m: !!f?.m }; };
+  if (q.offen && q.offen.s === s && Date.now() - q.offen.seit > LIM + KT_GNADE_MS + 2000) { werten(-1); verpasst = true; } // App war zu – Frage verfallen
   if (zug.kt === "antwort") {
     if (!q.offen || q.offen.s !== s) { if (verpasst) frage = null; else throw new Fehler("Keine offene Frage – bitte neu laden.", 409); }
     else antwort = werten(Number.isInteger(zug.wahl) ? zug.wahl : -1);
   } else if (zug.kt === "frage") {
     if (!q.offen) { const i = t[1].find((x) => !q.ant[s][x]); if (i !== undefined) q.offen = { s, i, seit: Date.now(), perm: ktMischen([0, 1, 2, 3]) }; }
     if (q.offen) { const f = KT_INDEX.get(q.ids[q.offen.i]), alle = [f.r, ...f.x];
-      frage = { f: f.f, a: q.offen.perm.map((k: number) => alle[k]), restMs: Math.max(0, KT_MS + KT_GNADE_MS - (Date.now() - q.offen.seit)), nr: q.offen.i + 1, imZug: t[1].indexOf(q.offen.i) + 1, vonImZug: t[1].length, m: !!f.m }; }
+      frage = { f: f.f, a: q.offen.perm.map((k: number) => alle[k]), restMs: Math.max(0, LIM + KT_GNADE_MS - (Date.now() - q.offen.seit)), nr: q.offen.i + 1, imZug: t[1].indexOf(q.offen.i) + 1, vonImZug: t[1].length, m: !!f.m, limitMs: LIM }; }
   } else throw new Fehler("Unbekannter Zug.", 400);
   // Zug fertig? → weiter zum Gegenüber bzw. Ende
   let dran = ich.person_id, ende = false;
@@ -4875,7 +4881,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           const erw = (ew ?? []).filter((x: any) => x.message_id === m.id);
           const gelesenVon = eigen ? andere.filter((x: any) => x.last_read_at && x.last_read_at >= m.created_at).map((x: any) => vorname(leute.get(x.person_id))) : [];
           return {
-            id: m.id, eigen, von: eigen ? "Du" : leute.get(m.sender_person_id)?.display_name || m.sender_person_id, text: m.body, zeit: m.created_at,
+            id: m.id, eigen, von: eigen ? "Du" : leute.get(m.sender_person_id)?.display_name || m.sender_person_id, vonId: m.sender_person_id, text: m.body, zeit: m.created_at,
             anlagen: (ma ?? []).filter((x: any) => x.message_id === m.id).map((x: any) => (att ?? []).find((y: any) => y.id === x.attachment_id)).filter(Boolean)
               .map((y: any) => ({ id: y.id, name: y.file_name, mime: y.mime_type, groesse: y.size_bytes })),
             ...(eigen ? { gelesenVon, gelesenAlle: andere.length > 0 && gelesenVon.length === andere.length, zustellung: zustellung(m.id),
@@ -6052,6 +6058,14 @@ Köcheclub-App`,
         }
         await protokoll(ich.person_id, "pinnwand_wichtig", { zettel: z.id, wichtig, versand });
         return json({ ok: true, wichtig, versand });
+      }
+
+      // KC-CLUB-CHAT-VORLESEN (2.16.0): Vorlese-Stimme (Mann/Frau) der Teilnehmer – nur die, die es selbst eingestellt haben
+      case "vorlese_stimmen": {
+        const ids = (Array.isArray(p.ids) ? p.ids : []).map(String).slice(0, 80);
+        if (!ids.length) return json({ stimmen: {} });
+        const { data } = await db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "vorlesestimme").in("person_id", ids);
+        return json({ stimmen: Object.fromEntries((data ?? []).filter((x: any) => x.wert?.art === "m" || x.wert?.art === "w").map((x: any) => [x.person_id, x.wert.art])) });
       }
 
       case "pinnwand_abnehmen": {
@@ -7426,7 +7440,7 @@ Köcheclub-App`,
         const schon = (offen ?? []).find((g: any) => g.status === "angefragt" && ((g.von === ich.person_id && g.an === an) || (g.von === an && g.an === ich.person_id)));
         if (schon) throw new Fehler(schon.von === ich.person_id ? "Du hast diese Person schon herausgefordert – warte auf die Antwort." : "Diese Person hat dich schon herausgefordert – nimm einfach an.", 409);
         const { data: g, error } = await db.from("kc_club_spiele").insert({ spiel: art, groesse, von: ich.person_id, an, spieler_x: ich.person_id, spieler_o: an,
-          ...spielStart(art, groesse), dran: ich.person_id }).select("*").single();
+          ...spielStart(art, groesse, { stufe: p.stufe }), dran: ich.person_id }).select("*").single();
         if (error || !g) throw new Fehler("Die Herausforderung konnte nicht gespeichert werden.", 500);
         const titel = spielTitel(g);
         await spielPush(an, { titel: `${spielSym(art)} ${ich.vorname} fordert dich heraus`, kurz: `${titel} – Köcheclub Edition. Annehmen?`, text: `${ich.name} fordert dich zu ${titel} heraus.` }, g.id, `club-spiel:${g.id}:frage`, false);
@@ -7526,7 +7540,7 @@ Köcheclub-App`,
         // Revanche: beide haben schon gespielt → läuft sofort; wer vorher zuerst gezogen hat, ist jetzt zweiter
         const n = g.spiel === "schach" ? 8 : g.spiel === "bsk" ? 32 : g.spiel === "kt" ? 12 : Number(p.groesse) === 4 ? 4 : Number(p.groesse) === 3 ? 3 : g.groesse;
         const { data: neu, error } = await db.from("kc_club_spiele").insert({ spiel: g.spiel, groesse: n, von: ich.person_id, an: gegner, spieler_x: g.spieler_o, spieler_o: g.spieler_x,
-          status: "laeuft", ...spielStart(g.spiel, n), dran: g.spieler_o }).select("*").single();
+          status: "laeuft", ...spielStart(g.spiel, n, { stufe: p.stufe ?? g.quiz?.stufe }), dran: g.spieler_o }).select("*").single();
         if (error || !neu) throw new Fehler("Die Revanche konnte nicht gestartet werden.", 500);
         await spielPush(gegner, { titel: `${spielSym(g.spiel)} Revanche von ${ich.vorname}!`, kurz: neu.dran === gegner ? "Du fängst an." : `${ich.vorname} fängt an.`, text: `${ich.name} will eine Revanche (${spielTitel(neu)}).` }, neu.id, `club-spiel:${neu.id}:revanche`, false);
         return json({ ok: true, spiel: spielSicht(neu, ich.person_id, await personen([ich.person_id, gegner])) });
