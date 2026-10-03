@@ -154,6 +154,9 @@
   .zettel.aushang { background: #e3f6e6; outline: 3px solid #2e7d4f; padding-top: 24px; } .zettel.aushang .zwichtig { color: #1d5e33; position: static; display: block; margin: 0 0 4px; font-size: .74rem; }
   .zettel.aushang::before { background: radial-gradient(circle at 35% 35%, #9be7a8, #2e7d4f 60%, #144d26); }
   .zettel.aushang .zknoepfe button.antw { background: #2e7d4f; border-color: #2e7d4f; }
+  /* 2.15.0 KC-CLUB-HILFE-WICHTIG: wichtiger Hilfe-Aufruf – roter Rahmen, rote Nadel, rote Kopfzeile */
+  .zettel.aushang.wichtig { outline: 4px solid #c62828; } .zettel.aushang.wichtig .zwichtig { color: #c62828; font-size: .8rem; }
+  .zettel.aushang.wichtig::before { background: radial-gradient(circle at 35% 35%, #ffb3b3, #d50000 60%, #7f0000); width: 18px; height: 18px; margin-left: -9px; }
   .hl-anzahl { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
   /* KC-CLUB-HILFE-KURZ (1.93.0): Zusammenfassung + drei große Antworten */
   .hk .hk-zeile { display: flex; gap: 10px; align-items: flex-start; padding: 6px 0; border-bottom: 1px solid var(--linie); }
@@ -202,6 +205,8 @@
   .sch-legende { display: flex; flex-wrap: wrap; gap: 4px 10px; justify-content: center; margin: 6px 0 0; font-size: .85rem; }
   /* 2.14.0 KC-CLUB-KUECHENTERROR: Küchenquiz auf Zeit */
   .kt-kopf { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-weight: 800; margin: 0 0 6px; }
+  .kt-meister { text-align: center; font-weight: 800; padding: 6px 10px; margin: 0 0 6px; border-radius: 12px; background: linear-gradient(135deg, #f7dc6f, #d4a017); color: #3d2b00; }
+  .kt-tafel td.meister { background: rgba(212,160,23,.18); }
   .kt-frage { font-size: 1.2rem; font-weight: 800; line-height: 1.35; text-align: center; margin: 4px 0 10px; }
   .kt-zeit { height: 16px; border-radius: 8px; background: var(--linie); overflow: hidden; margin: 4px 0 12px; }
   .kt-zeit i { display: block; height: 100%; width: 100%; border-radius: 8px; animation-name: ktZeit; animation-timing-function: linear; animation-fill-mode: forwards; }
@@ -2546,7 +2551,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.14.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.15.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2807,7 +2812,7 @@ async function pwStart(nurZaehlen) { // nurZaehlen: Begrüßung ist offen → Pi
     if (n.length) { n.forEach((z) => PW_GEMELDET.add(z.id)); try { localStorage.setItem("kc_club_pw_gemeldet", JSON.stringify([...PW_GEMELDET].slice(-PW_GEMELDET_MAX))); } catch {}
       pwFenster(n); gezeigt = true; } } catch {}
   try { const r = await api("pinnwand"); pwUebernehmen(r);
-    if (!gezeigt && !nurZaehlen && PW.zettel.some(pwOffen) && aktuelleAnsicht === "start") { PW.wichtigStart = true; zeige("pinnwand"); gezeigt = true; }
+    if (!gezeigt && !nurZaehlen && (PW.zettel.some(pwOffen) || pwHilfeNeu().some((a) => a.wichtig)) && aktuelleAnsicht === "start") { PW.wichtigStart = true; if (pwHilfeNeu().some((a) => a.wichtig)) PW.hilfeStart = true; /* 2.15.0: wichtiger Hilfe-Aufruf */ zeige("pinnwand"); gezeigt = true; }
     // KC-CLUB-HILFE-PINNWAND (1.90.0): neuer Hilfe-Aufruf → beim Start einmal (je Aufruf und Gerät) die Pinnwand mit dem Aushang zeigen
     const hNeu = pwHilfeNeu().filter((a) => !PW_GEMELDET.has("hilfe:" + a.id));
     if (!gezeigt && !nurZaehlen && hNeu.length && aktuelleAnsicht === "start") {
@@ -2915,7 +2920,7 @@ async function pwLaden() {
 function pwZeigen() {
   const wichtigOffen = PW.zettel.filter(pwOffen).length;
   $("pwHinweis").innerHTML = (PW.wichtigStart && wichtigOffen ? `<div class="karte" style="border:2px solid #c62828"><b>❗ ${wichtigOffen === 1 ? "Ein wichtiger Zettel" : wichtigOffen + " wichtige Zettel"} für dich.</b> Bitte lesen und mit „✓ erl.“ abhaken.</div>` : "")
-    + (PW.hilfeStart && pwHilfeNeu().length ? `<div class="karte" style="border:2px solid #2e7d4f"><b>🙋 Es wird Hilfe gesucht.</b> Tippe auf den grünen Aushang – dort siehst du alles und kannst zusagen.</div>` : "");
+    + (PW.hilfeStart && pwHilfeNeu().length ? `<div class="karte" style="border:2px solid #2e7d4f"><b>${pwHilfeNeu().some((a) => a.wichtig) ? "❗ Es wird dringend Hilfe gesucht." : "🙋 Es wird Hilfe gesucht."}</b> Tippe auf den grünen Aushang – dort siehst du alles und kannst zusagen.</div>` : "");
   $("pwNeuKnopf").disabled = false; // bei vollen Zetteln öffnet das Formular mit „einen abnehmen“
   // KC-CLUB-PINNWAND-KNOPF (0.91.0, Betreiber: „das Schild 4/4 verdeckt den ＋-Knopf, man weiß nicht, was man da machen
   // soll“): Der Knopf heißt IMMER „＋ Zettel“; der Stand steht als kleine Zahl daneben, und bei vollen Plätzen erklärt
@@ -2946,11 +2951,11 @@ function pwZeigen() {
 function pwAushangHtml() {
   const h = PW.hilfe; if (!h?.aufrufe?.length) return "";
   return h.aufrufe.map((a) => { const voll = hlVoll(a), wobei = /^Wobei: (.+)/.exec(a.notiz || "")?.[1], was = wobei ? "🙋 " + wobei : (h.arten?.[a.art] || a.art);
-    return `<div class="zettel aushang" style="--dreh:${pwDreh(a.id)}deg"><span class="zwichtig">🙋 HILFE GESUCHT</span>
+    return `<div class="zettel aushang${a.wichtig ? " wichtig" : ""}" style="--dreh:${pwDreh(a.id)}deg"><span class="zwichtig">${a.wichtig ? "❗ WICHTIG · " : ""}🙋 HILFE GESUCHT</span>
       <div class="zkopf">von <b>${esc(a.eigen ? "dir" : a.von.name.split(" ")[0])}</b></div>
       <div class="ztext">${esc(was)}</div><div class="zfuss">${esc(hlWann(a, true, h.zeitfenster))}${a.ort ? ` · 📍 ${esc(a.ort)}` : ""}</div>
       <div class="zfuss"><b>✋ ${hlStand(a)}</b>${voll ? " – genug 🎉" : ""}${a.meine === "komme" ? " · ✔ du kommst" : ""}</div>
-      <div class="zknoepfe"><button class="antw" onclick="hilfeVonPinnwand('${a.id}')">${a.eigen ? "🙋 Ansehen" : a.meine ? "🙋 Ansehen" : "🙋 Ansehen & antworten"}</button></div></div>`; }).join("");
+      <div class="zknoepfe"><button class="antw" onclick="hilfeVonPinnwand('${a.id}')">${a.eigen ? "🙋 Ansehen" : a.meine ? "🙋 Ansehen" : "🙋 Ansehen & antworten"}</button>${a.darfSchliessen ? `<button onclick="hilfeWichtig('${a.id}', ${!a.wichtig})">${a.wichtig ? "❗ nicht mehr wichtig" : "❗ wichtig machen"}</button>` : ""}</div></div>`; }).join("");
 }
 function pwForm(an, antwort) {
   $("pwForm").classList.toggle("versteckt", !an);
@@ -3023,6 +3028,13 @@ async function pwWichtig(id, an) {
   if (an && z.fuer !== "ich") bescheid = await frage("❗ Zettel als wichtig markieren. Sollen die Empfänger, die ihn noch nicht abgehakt haben, nochmal Bescheid bekommen?", { ja: "🔔 Ja, Bescheid geben", nein: "Nur markieren" });
   try { const r = await api("pinnwand_wichtig", { id, wichtig: an, bescheid }, { warten: true });
     melde(an ? (r.versand?.gesendet ? `❗ Wichtig – ${r.versand.gesendet} ${r.versand.gesendet === 1 ? "Person hat" : "Personen haben"} Bescheid bekommen` : "❗ Jetzt als wichtig markiert") : "Nicht mehr als wichtig markiert"); await pwLaden(); }
+  catch (e) { meldeFehler(e); }
+}
+// KC-CLUB-HILFE-WICHTIG (2.15.0, Wunsch Hansi): Hilfe-Aufruf ❗ wichtig – auf Wunsch mit Bescheid an alle, die noch nicht geantwortet haben
+async function hilfeWichtig(id, an) {
+  const bescheid = an ? await frage("❗ Hilfe-Aufruf als wichtig markieren. Sollen alle, die noch nicht geantwortet haben, nochmal Bescheid bekommen?", { ja: "🔔 Ja, Bescheid geben", nein: "Nur markieren" }) : false;
+  try { const r = await api("hilfe_wichtig", { id, wichtig: an, bescheid }, { warten: true });
+    melde(an ? (r.versand?.gesendet ? `❗ Wichtig – ${r.versand.gesendet} ${r.versand.gesendet === 1 ? "Person hat" : "Personen haben"} Bescheid bekommen` : "❗ Hilfe-Aufruf ist jetzt als wichtig markiert") : "Nicht mehr als wichtig markiert"); await pwLaden(); }
   catch (e) { meldeFehler(e); }
 }
 async function pwAbnehmen(id, ausFormular) {
@@ -4978,7 +4990,7 @@ async function spHerausfordernBlatt(pid) {
     $("spHerausInhalt").innerHTML = `<h3 style="margin:0">🎲 Herausfordern</h3>
       ${spWahl("Spiel", art, [["ttt", "❌⭕ Tic-Tac-Toe"], ["schach", "♟️ Schach"], ["bsk", "🃏 Bauernskat"], ["kt", "🔪 Küchenterror"]], "spHerausArt")}
       ${art === "ttt" ? spWahl("Feld", String(gr), [["3", "3 × 3"], ["4", "4 × 4"]], "spHerausGroesse") : ""}
-      <p class="hinweis" style="margin:0">Wen möchtest du herausfordern? ${art === "bsk" ? "Du bist Vorhand und sagst Trumpf an. Die Karten mischt der Server – niemand sieht fremde Karten." : art === "kt" ? "12 Küchenfragen in 4 Runden, ihr spielt abwechselnd je eine Runde. 10 Sekunden je Frage – schnell und richtig gibt die meisten Punkte. Du fängst an." : `Du fängst an (${art === "schach" ? "Weiß" : SP_ZEICHEN.x}).`}</p>
+      <p class="hinweis" style="margin:0">Wen möchtest du herausfordern? ${art === "bsk" ? "Du bist Vorhand und sagst Trumpf an. Die Karten mischt der Server – niemand sieht fremde Karten." : art === "kt" ? "12 Küchenfragen in 4 Runden, ihr spielt abwechselnd je eine Runde. 10 Sekunden je Frage – schnell und richtig gibt die meisten Punkte. Die letzte ist eine 🎖️ Meisterfrage und zählt doppelt. Du fängst an." : `Du fängst an (${art === "schach" ? "Weiß" : SP_ZEICHEN.x}).`}</p>
       ${b.length ? b.map((m) => `<button class="zeile sp-wer${m.person_id === pid ? " an" : ""}" onclick="spHerausfordern('${m.person_id}')">${kreis(MITGLIEDER?.find((x) => x.person_id === m.person_id) || {}, m.name, 36)}<b style="flex:1;text-align:left">${esc(m.name)}</b><span>${art === "schach" ? "♟️" : art === "bsk" ? "🃏" : art === "kt" ? "🔪" : "🎲"} ›</span></button>`).join("")
         : `<p class="hinweis">Für ${art === "schach" ? "Schach" : art === "bsk" ? "Bauernskat" : art === "kt" ? "Küchenterror" : "Tic-Tac-Toe"} hat sich noch niemand freigeschaltet.</p>`}`;
   };
@@ -5527,17 +5539,17 @@ async function spEinlSchalter(an) {
 // Fragen: lib/kuechenterror/fragen.js (eine Quelle, Server bekommt eine wörtliche Kopie).
 const KT_MS = 10000, KT_KEY = "kc_club_kuechenterror_pc";
 let KT_FRAGEN_L = null;
-async function ktFragenLaden() { if (!KT_FRAGEN_L) KT_FRAGEN_L = (await import("./lib/kuechenterror/fragen.js?v=1")).KT_FRAGEN; return KT_FRAGEN_L; }
+async function ktFragenLaden() { if (!KT_FRAGEN_L) KT_FRAGEN_L = (await import("./lib/kuechenterror/fragen.js?v=2")).KT_FRAGEN; return KT_FRAGEN_L; }
 const ktMischen = (l) => { const a = [...l]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-const ktPunkte = (ok, ms) => (ok && ms <= KT_MS ? 100 + Math.round(100 * (1 - ms / KT_MS)) : 0);
+const ktPunkte = (ok, ms, meister) => (ok && ms <= KT_MS ? 100 + Math.round(100 * (1 - ms / KT_MS)) : 0) * (meister ? 2 : 1); // 2.15.0: 🎖️ Meisterfrage doppelt
 const ktSek = (ms) => (ms / 1000).toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 // Frage mit Zeitbalken; aufl = Auflösung (richtig/gewaehlt/ok/p/ms/e) – dann sind die Knöpfe gesperrt und eingefärbt
 function ktFrageHtml(fr, { klick = "", aufl = null, kopf = "", denkt = false } = {}) {
   const rest = Math.max(0, fr.restMs ?? KT_MS), weg = KT_MS - Math.min(rest, KT_MS);
-  return `${kopf}<div class="kt-frage">${esc(fr.f)}</div>
+  return `${kopf}${fr.m ? '<div class="kt-meister">🎖️ Meisterfrage – richtig zählt doppelt!</div>' : ""}<div class="kt-frage">${esc(fr.f)}</div>
     <div class="kt-zeit${aufl ? " stop" : ""}" role="timer" aria-label="Zeit: 10 Sekunden"><i style="animation-duration:${KT_MS}ms;animation-delay:-${weg}ms"></i></div>
     <div class="kt-antworten">${fr.a.map((t, i) => `<button class="kt-antwort${aufl ? (i === aufl.richtig ? " richtig" : i === aufl.gewaehlt ? " falsch" : "") : ""}${denkt ? " denkt" : ""}" ${aufl || !klick ? "disabled" : ""} onclick="${klick}(${i})">${"ABCD"[i]}) ${esc(t)}</button>`).join("")}</div>
-    ${aufl ? `<div class="kt-ergebnis">${aufl.ok ? `✅ Richtig in ${ktSek(aufl.ms)} s – <b>+${aufl.p} Punkte</b>` : aufl.gewaehlt < 0 || aufl.zuSpaet ? "⏰ Zeit abgelaufen – 0 Punkte" : "❌ Leider falsch – 0 Punkte"}</div>
+    ${aufl ? `<div class="kt-ergebnis">${aufl.ok ? `✅ Richtig in ${ktSek(aufl.ms)} s – <b>+${aufl.p} Punkte${fr.m ? " (doppelt!)" : ""}</b>` : aufl.gewaehlt < 0 || aufl.zuSpaet ? "⏰ Zeit abgelaufen – 0 Punkte" : "❌ Leider falsch – 0 Punkte"}</div>
       <p class="kt-erkl">💡 ${esc(aufl.e || "")}</p>` : ""}`;
 }
 // ----- gegen den Computer -----
@@ -5553,14 +5565,14 @@ async function ktPcZeigen() {
       ${spWahl("Stärke", KTP.staerke, [["leicht", "😊 Leicht"], ["mittel", "🙂 Mittel"], ["schwer", "😎 Schwer"]], "ktPcStaerke")}
       ${stand}
       <p style="margin:6px 0">🔪 <b>Küchenterror</b> – ${F.length} Fragen aus dem Profi-Küchenalltag. Du und der Computer bekommt <b>abwechselnd</b> je eine Frage, insgesamt 12.
-        Jede Frage hat 4 Antworten, nur eine ist richtig. Der Zeitbalken läuft <b>10 Sekunden</b>: richtig gibt 100 Punkte plus bis zu 100 Punkte Zeitbonus – wer schneller ist, holt mehr.</p>
+        Jede Frage hat 4 Antworten, nur eine ist richtig. Der Zeitbalken läuft <b>10 Sekunden</b>: richtig gibt 100 Punkte plus bis zu 100 Punkte Zeitbonus – wer schneller ist, holt mehr. Zum Schluss kommt für jeden eine schwere <b>🎖️ Meisterfrage</b> – die zählt doppelt!</p>
       <div class="knoepfe"><button class="knopf haupt" onclick="ktPcStart()">▶ Los geht’s</button>${s.ich + s.pc + s.remis ? '<button class="knopf" onclick="ktPcStandWeg()">🗑️ Spielstand zurücksetzen</button>' : ""}</div></div>`; return; }
   const kopf = `<div class="kt-kopf"><span>Du <b>${z.punkte[0]}</b></span><span>Frage ${Math.min(z.i + 1, 12)}/12</span><span><b>${z.punkte[1]}</b> Computer</span></div>`;
   if (z.phase === "ende") {
     const [a, b] = z.punkte, sieg = a > b, remis = a === b;
     $("spInhalt").innerHTML = `<div class="karte sp-karte">${stand}<div class="sp-banner ${remis ? "remis" : sieg ? "sieg" : "niederlage"}">${remis ? "🤝 Unentschieden!" : sieg ? "🏆 Du hast gewonnen!" : "🤖 Der Computer hat gewonnen"}<br><small>${a} : ${b} Punkte</small></div>
       <div class="knoepfe"><button class="knopf haupt" onclick="ktPcStart()">↺ Neues Spiel</button><button class="knopf" onclick="KTP.z=null;ktPcZeigen()">Stärke ändern</button></div></div>`; return; }
-  const f = F.find((q) => q.id === z.ids[z.i]), alle = [f.r, ...f.x], fr = { f: f.f, a: z.perm.map((k) => alle[k]), restMs: KT_MS - (Date.now() - z.seit) };
+  const f = F.find((q) => q.id === z.ids[z.i]), alle = [f.r, ...f.x], fr = { f: f.f, a: z.perm.map((k) => alle[k]), restMs: KT_MS - (Date.now() - z.seit), m: !!f.m };
   const wer = z.i % 2 === 0 ? "ich" : "pc";
   const kopfWer = `<div class="sp-status${wer === "ich" && z.phase === "frage" ? " sp-ichdran" : ""}">${wer === "ich" ? "👨‍🍳 Deine Frage" : "🤖 Frage an den Computer"}</div>`;
   $("spInhalt").innerHTML = `<div class="karte sp-karte">${kopf}${kopfWer}${ktFrageHtml(fr, { klick: wer === "ich" && z.phase === "frage" ? "ktPcAntwort" : "", aufl: z.phase === "aufl" ? z.aufl : null, denkt: wer === "pc" && z.phase === "frage" })}
@@ -5571,12 +5583,12 @@ function ktPcUhren() { // Zeitablauf (und beim Computer: seine Antwort) – auch
   const z = KTP.z; clearTimeout(KTP.uhr); clearTimeout(KTP.pcUhr);
   const rest = KT_MS - (Date.now() - z.seit);
   KTP.uhr = setTimeout(() => ktPcAntwort(-1, true), Math.max(0, rest) + 50);
-  if (z.i % 2 === 1) KTP.pcUhr = setTimeout(() => { const st = KT_STAERKE[KTP.staerke] || KT_STAERKE.mittel; ktPcAntwort(Math.random() < st.quote ? z.perm.indexOf(0) : [0, 1, 2, 3].filter((k) => z.perm[k] !== 0)[Math.floor(Math.random() * 3)], true); }, Math.max(0, z.pcZeit - (Date.now() - z.seit)));
+  if (z.i % 2 === 1) KTP.pcUhr = setTimeout(() => { const st = KT_STAERKE[KTP.staerke] || KT_STAERKE.mittel; ktPcAntwort(Math.random() < st.quote * (KT_FRAGEN_L.find((q) => q.id === z.ids[z.i])?.m ? 0.8 : 1) ? z.perm.indexOf(0) : [0, 1, 2, 3].filter((k) => z.perm[k] !== 0)[Math.floor(Math.random() * 3)], true); }, Math.max(0, z.pcZeit - (Date.now() - z.seit)));
 }
 async function ktPcStart() {
   const F = await ktFragenLaden();
   const st = KT_STAERKE[KTP.staerke] || KT_STAERKE.mittel;
-  KTP.z = { ids: ktMischen(F.map((q) => q.id)).slice(0, 12), i: 0, punkte: [0, 0], phase: "frage", seit: Date.now(), perm: ktMischen([0, 1, 2, 3]), aufl: null };
+  KTP.z = { ids: [...ktMischen(F.filter((q) => !q.m).map((q) => q.id)).slice(0, 10), ...ktMischen(F.filter((q) => q.m).map((q) => q.id)).slice(0, 2)], i: 0, /* 2.15.0: die letzten beiden (je eine für dich und den Computer) sind Meisterfragen */ punkte: [0, 0], phase: "frage", seit: Date.now(), perm: ktMischen([0, 1, 2, 3]), aufl: null };
   KTP.z.pcZeit = st.von + Math.random() * (st.bis - st.von);
   ktPcZeigen();
 }
@@ -5584,8 +5596,9 @@ function ktPcAntwort(wahl, vonUhr) {
   const z = KTP.z; if (!z || z.phase !== "frage") return;
   if (!vonUhr && z.i % 2 === 1) return; // beim Computer tippt nicht der Mensch
   clearTimeout(KTP.uhr); clearTimeout(KTP.pcUhr);
-  const ms = Math.min(Date.now() - z.seit, KT_MS + 1), ok = wahl >= 0 && z.perm[wahl] === 0 && ms <= KT_MS, p = ktPunkte(ok, ms);
+  const ms = Math.min(Date.now() - z.seit, KT_MS + 1), ok = wahl >= 0 && z.perm[wahl] === 0 && ms <= KT_MS; let p = ktPunkte(ok, ms);
   const f = KT_FRAGEN_L.find((q) => q.id === z.ids[z.i]);
+  if (f?.m) p *= 2; // 🎖️ Meisterfrage
   z.punkte[z.i % 2] += p; z.phase = "aufl"; z.aufl = { richtig: z.perm.indexOf(0), gewaehlt: wahl, ok, p, ms, zuSpaet: ms > KT_MS, e: f?.e };
   try { navigator.vibrate?.(ok ? 30 : [40, 30, 40]); } catch {}
   if (ktpSichtbar()) ktPcZeigen();
@@ -5614,7 +5627,7 @@ function ktSpielZeigen(g) {
     return;
   }
   const zelle = (x) => !x ? "–" : x.verdeckt ? "✔︎" : `<span class="${x.ok ? "ok" : "nein"}">${x.ok ? x.p : "0"}</span>`;
-  const tafel = `<table class="kt-tafel"><tr><th></th><th colspan="3">Du</th><th colspan="3">${er}</th></tr>${q.runden.map((rd, i) => `<tr><th>R${i + 1}</th>${rd.map((k) => `<td>${zelle(k.ich)}</td>`).join("")}${rd.map((k) => `<td>${zelle(k.er)}</td>`).join("")}</tr>`).join("")}
+  const tafel = `<table class="kt-tafel"><tr><th></th><th colspan="3">Du</th><th colspan="3">${er}</th></tr>${q.runden.map((rd, i) => `<tr><th>R${i + 1}</th>${rd.map((k, j) => `<td${i * 3 + j === q.meisterNr ? ' class="meister" title="Meisterfrage"' : ""}>${zelle(k.ich)}</td>`).join("")}${rd.map((k, j) => `<td${i * 3 + j === q.meisterNr ? ' class="meister" title="Meisterfrage"' : ""}>${zelle(k.er)}</td>`).join("")}</tr>`).join("")}
     <tr><th>Σ</th><td colspan="3"><b>${q.summe[0]}</b></td><td colspan="3"><b>${q.summe[1]}</b>${q.ende ? "" : '<small class="hinweis"> *</small>'}</td></tr></table>
     ${q.ende ? "" : '<p class="hinweis" style="margin:0">* Punkte des Gegenübers siehst du erst, wenn du dieselben Fragen auch gespielt hast (✔︎ = schon beantwortet).</p>'}`;
   let status;
@@ -5627,7 +5640,7 @@ function ktSpielZeigen(g) {
       <p class="hinweis" style="margin:4px 0 0;text-align:center">Je Frage 10 Sekunden – erst tippen, wenn du bereit bist. Mittendrin aufhören zählt als „Zeit abgelaufen“.</p>`
     : `<div class="sp-status">${er} ist dran …</div>`;
   $("spInhalt").innerHTML = `<div class="karte sp-karte">${zurueck}${status}${spTerminHtml(g)}${tafel}
-    ${q.rueckblick ? `<details class="sch-verlauf"><summary>📖 Alle Fragen mit Lösung</summary>${q.rueckblick.filter(Boolean).map((x, i) => `<p style="margin:6px 0"><b>${i + 1}. ${esc(x.f)}</b><br>✅ ${esc(x.r)}<br><small class="hinweis">💡 ${esc(x.e)}</small></p>`).join("")}</details>` : ""}
+    ${q.rueckblick ? `<details class="sch-verlauf"><summary>📖 Alle Fragen mit Lösung</summary>${q.rueckblick.filter(Boolean).map((x, i) => `<p style="margin:6px 0"><b>${i + 1}. ${x.m ? "🎖️ " : ""}${esc(x.f)}</b><br>✅ ${esc(x.r)}<br><small class="hinweis">💡 ${esc(x.e)}</small></p>`).join("")}</details>` : ""}
     <div class="knoepfe">${g.status === "beendet" ? `<button class="knopf haupt" onclick="spRevanche('${g.id}')">↺ Revanche</button>` : g.status === "laeuft" ? `<button class="knopf" onclick="spAufgeben('${g.id}')">🏳️ Aufgeben</button>` : ""}</div></div>`;
 }
 function ktMgUebersicht() { clearTimeout(KTM.uhr); KTM.frage = null; KTM.aufl = null; SP.offen = null; spZeigen(); spLaden(true); }

@@ -1,5 +1,16 @@
 # Änderungen
 
+## 2.15.0 – 2026-10-03 – 🎖️ Meisterfrage im Küchenterror + ❗ wichtige Hilfe-Aufrufe (Wunsch Hansi)
+- KC-CLUB-KUECHENTERROR-MEISTER: 40 schwere Meisterfragen (m: true, ids k151–k190: Saucen-Ableitungen, Garnituren „à la …“,
+  Kartoffel-Klassiker, Fleischteile, Fonds, Patisserie). Sie zählen doppelt (richtig = 2 × (100 + Zeitbonus), also bis 400).
+  Gegen Mitglieder ist die 12. Frage für beide dieselbe Meisterfrage (Server wählt 11 normale + 1 Meisterfrage), gegen den Computer
+  bekommt jeder zum Schluss eine (Computer trifft dort seltener). Goldener Hinweis „🎖️ Meisterfrage – richtig zählt doppelt!“,
+  in der Tafel golden hinterlegt, im Rückblick mit 🎖️. Laufende Partien bleiben unverändert. Fragen-Datei ?v=2.
+- KC-CLUB-HILFE-WICHTIG: Hilfe-Aufrufe („🙋 Hilfe gesucht“ an der Pinnwand) lassen sich vom Ersteller oder der Clubleitung als
+  ❗ wichtig markieren – roter Rahmen, rote Nadel, „❗ WICHTIG · 🙋 HILFE GESUCHT“. Auf Wunsch nochmal Bescheid (Push/Mail) an alle,
+  die noch nicht geantwortet haben. Wichtige offene Aufrufe öffnen beim Start die Pinnwand („❗ Es wird dringend Hilfe gesucht.“).
+  Server-Aktion hilfe_wichtig; Migration supabase/migrations/20261003_kc_club_v2150_hilfe_wichtig.sql (eingespielt).
+
 ## 2.14.0 – 2026-10-03 – 🔪 Küchenterror – das Küchenquiz auf Zeit (Wunsch Hansi)
 - KC-CLUB-KUECHENTERROR: viertes Spiel (eigene Kachel). 150 Fragen aus dem professionellen Küchenalltag (Garmethoden, Brigade,
   Saucen, Schnittarten, Fleisch/Fisch, Patisserie, Hygiene/HACCP, Warenkunde, Klassiker) in lib/kuechenterror/fragen.js – je

@@ -3373,10 +3373,20 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   for (const q of KT_FRAGEN) assert.ok(/^k\d{3}$/.test(q.id) && q.f && q.r && q.e && q.x.length === 3 && new Set([q.r, ...q.x]).size === 4, "Frage unvollständig: " + q.id);
   assert.ok(/const KT_MS = 10000, KT_GNADE_MS = 800;/.test(server) && /\[\[0, \[0, 1, 2\]\], \[1, \[0, 1, 2, 3, 4, 5\]\], \[0, \[3, 4, 5, 6, 7, 8\]\], \[1, \[6, 7, 8, 9, 10, 11\]\], \[0, \[9, 10, 11\]\]\]/.test(server), "10 s, Runden abwechselnd");
   const kz = server.slice(server.indexOf("async function ktZug("), server.indexOf("// ---------- Hauptprogramm ----------"));
-  assert.ok(/p = ok \? 100 \+ Math\.round\(100 \* \(1 - zeit \/ KT_MS\)\) : 0/.test(kz) && /seit: Date\.now\(\)/.test(kz) && /if \(!q\.offen\) \{/.test(kz), "Server misst Zeit, Neuladen setzt sie nicht zurück");
+  assert.ok(/p = \(ok \? 100 \+ Math\.round\(100 \* \(1 - zeit \/ KT_MS\)\) : 0\) \* \(f\?\.m \? 2 : 1\)/.test(kz) && /seit: Date\.now\(\)/.test(kz) && /if \(!q\.offen\) \{/.test(kz), "Server misst Zeit, Neuladen setzt sie nicht zurück");
   assert.ok(/a: q\.offen\.perm\.map\(\(k: number\) => alle\[k\]\)/.test(kz) && !/frage = \{[^}]*richtig/.test(kz), "Frage ohne Lösung");
   assert.ok(/quiz: g\.spiel === "kt" \? ktSicht\(g\.quiz,/.test(server) && /if \(g\.spiel === "kt"\) return await ktZug\(g, ich, p\.zug \?\? \{\}\);/.test(server), "nur Sicht verlässt den Server");
   assert.ok(/function ktPcZeigen\(\)/.test(html) && /function ktSpielZeigen\(g\)/.test(html) && /\["kt", "🔪", "Küchenterror"/.test(html) && /KTM\.frage \|\| KTM\.aufl\) return;/.test(html), "App: Kachel, Computer, Mitglieder, kein Neuzeichnen mitten in der Frage");
+}
+// 309. 2.15.0: Meisterfrage (doppelt) + wichtige Hilfe-Aufrufe (KC-CLUB-KUECHENTERROR-MEISTER, KC-CLUB-HILFE-WICHTIG)
+{
+  const { KT_FRAGEN } = await import(new URL("../lib/kuechenterror/fragen.js", import.meta.url));
+  assert.ok(KT_FRAGEN.filter((q) => q.m).length >= 30, "mindestens 30 Meisterfragen");
+  assert.ok(/filter\(\(q\) => !q\.m\)[^\n]*slice\(0, 11\), ktMischen\(\(KT_FRAGEN as any\[\]\)\.filter\(\(q\) => q\.m\)/.test(server), "Server: 11 normale + 1 Meisterfrage");
+  assert.ok(/\* \(f\?\.m \? 2 : 1\); \/\/ Meisterfrage doppelt/.test(server) && /if \(f\?\.m\) p \*= 2;/.test(html), "doppelte Punkte (Server + Computer-Spiel)");
+  const hw = server.slice(server.indexOf('case "hilfe_wichtig": {'), server.indexOf('case "hilfe_antwort": {'));
+  assert.ok(/if \(h\.von !== ich\.person_id && !ich\.vorstand\) throw/.test(hw) && /if \(wichtig && !h\.wichtig && p\.bescheid\)/.test(hw) && /!schon\.has\(id\)/.test(hw), "Hilfe wichtig: nur Ersteller/Clubleitung, Bescheid nur auf Wunsch an Unbeantwortete");
+  assert.ok(/wichtig: !!x\.wichtig/.test(server) && /onclick="hilfeWichtig\(/.test(html) && /\.zettel\.aushang\.wichtig \{/.test(html), "Aushang zeigt und schaltet wichtig");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

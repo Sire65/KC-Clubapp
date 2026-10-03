@@ -26,7 +26,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "2.14.0";
+const SERVER_VERSION = "2.15.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -1187,7 +1187,8 @@ const KT_MS = 10000, KT_GNADE_MS = 800; // 10 Sekunden je Frage; Gnade für die 
 const KT_ZUEGE: [number, number[]][] = [[0, [0, 1, 2]], [1, [0, 1, 2, 3, 4, 5]], [0, [3, 4, 5, 6, 7, 8]], [1, [6, 7, 8, 9, 10, 11]], [0, [9, 10, 11]]];
 const KT_INDEX = new Map<string, any>((KT_FRAGEN as any[]).map((q) => [q.id, q]));
 const ktMischen = <T>(l: T[]) => { const a = [...l], z = new Uint32Array(a.length); crypto.getRandomValues(z); for (let i = a.length - 1; i > 0; i--) { const j = z[i] % (i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-const ktNeu = () => ({ ids: ktMischen((KT_FRAGEN as any[]).map((q) => q.id)).slice(0, 12), ant: [{}, {}], zug: 0, offen: null });
+// 2.15.0 (Wunsch Hansi): die 12. Frage ist eine 🎖️ Meisterfrage (schwerer, zählt doppelt) – für beide dieselbe
+const ktNeu = () => ({ ids: [...ktMischen((KT_FRAGEN as any[]).filter((q) => !q.m).map((q) => q.id)).slice(0, 11), ktMischen((KT_FRAGEN as any[]).filter((q) => q.m).map((q) => q.id))[0]], ant: [{}, {}], zug: 0, offen: null });
 const ktSumme = (a: Record<string, any>, nur?: (i: number) => boolean) => Object.entries(a).reduce((s, [i, x]) => s + (!nur || nur(Number(i)) ? Number(x?.p) || 0 : 0), 0);
 function ktSicht(q: any, s: number) {
   if (!q) return null;
@@ -1196,9 +1197,9 @@ function ktSicht(q: any, s: number) {
   const runden = [0, 1, 2, 3].map((r) => [0, 1, 2].map((k) => { const i = r * 3 + k;
     return { ich: mein[i] ? { p: mein[i].p, ok: mein[i].ok } : null, er: sein[i] ? (sichtbar(i) ? { p: sein[i].p, ok: sein[i].ok } : { verdeckt: true }) : null }; }));
   const t = KT_ZUEGE[q.zug], meineListe = t && t[0] === s ? t[1] : [];
-  return { runden, ende, summe: [ktSumme(mein), ktSumme(sein, sichtbar)], offenBeiMir: meineListe.filter((i) => !mein[i]).length, imZug: meineListe.length,
+  return { runden, ende, meisterNr: q.ids.findIndex((id: string) => KT_INDEX.get(id)?.m), summe: [ktSumme(mein), ktSumme(sein, sichtbar)], offenBeiMir: meineListe.filter((i) => !mein[i]).length, imZug: meineListe.length,
     laeuft: q.offen?.s === s ? Math.max(0, KT_MS + KT_GNADE_MS - (Date.now() - q.offen.seit)) : null,
-    rueckblick: ende ? q.ids.map((id: string) => { const f = KT_INDEX.get(id); return f ? { f: f.f, r: f.r, e: f.e } : null; }) : null };
+    rueckblick: ende ? q.ids.map((id: string) => { const f = KT_INDEX.get(id); return f ? { f: f.f, r: f.r, e: f.e, m: !!f.m } : null; }) : null };
 }
 // KC-CLUB-BAUERNSKAT-MG (2.10.0): Startwerte je Spielart; beim Bauernskat mischt der Server, Spieler x ist Vorhand (sagt an)
 const spielStart = (art: string, n: number) => art === "schach" ? { brett: SCHACH_START } : art === "bsk" ? { brett: "bsk", bsk: bskNeu(0) } : art === "kt" ? { brett: "kt", quiz: ktNeu() } : { brett: ".".repeat(n * n) };
@@ -2007,7 +2008,7 @@ async function hilfeListe(ich: Ich) {
       const a = (ant ?? []).filter((y: any) => y.aufruf_id === x.id), komme = a.filter((y: any) => y.antwort === "komme");
       const vorbei = x.datum < heute || !!x.geschlossen_am;
       return { id: x.id, art: x.art, datum: x.datum, slot: x.slot, nachAbsprache: !!x.nach_absprache, anzahl: x.anzahl, ort: x.ort, notiz: x.notiz, ziel: x.ziel, erstellt_am: x.erstellt_am,
-        von: { person_id: x.von, name: n(x.von) }, eigen: x.von === ich.person_id, offen: !vorbei, geschlossen: !!x.geschlossen_am,
+        von: { person_id: x.von, name: n(x.von) }, eigen: x.von === ich.person_id, offen: !vorbei, geschlossen: !!x.geschlossen_am, wichtig: !!x.wichtig,
         komme: komme.map((y: any) => n(y.person_id)).sort(), kannNicht: a.filter((y: any) => y.antwort === "kann_nicht").length,
         meine: a.find((y: any) => y.person_id === ich.person_id)?.antwort ?? null, darfSchliessen: !vorbei && (x.von === ich.person_id || ich.vorstand) };
     }).filter((x: any) => x.offen || x.eigen || ich.vorstand),
@@ -2656,9 +2657,9 @@ async function ktZug(g: any, ich: any, zug: any) {
   const t = KT_ZUEGE[q.zug]; if (!t || t[0] !== s) throw new Fehler("Du bist gerade nicht dran.", 409);
   let antwort: any = null, frage: any = null, verpasst = false;
   const werten = (wahl: number) => { const o = q.offen, f = KT_INDEX.get(q.ids[o.i]); const zeit = Math.max(0, Date.now() - o.seit - KT_GNADE_MS);
-    const ok = wahl >= 0 && wahl <= 3 && zeit <= KT_MS && o.perm[wahl] === 0, p = ok ? 100 + Math.round(100 * (1 - zeit / KT_MS)) : 0;
+    const ok = wahl >= 0 && wahl <= 3 && zeit <= KT_MS && o.perm[wahl] === 0, p = (ok ? 100 + Math.round(100 * (1 - zeit / KT_MS)) : 0) * (f?.m ? 2 : 1); // Meisterfrage doppelt
     q.ant[s][o.i] = { ok, p, ms: Math.min(zeit, KT_MS) }; q.offen = null;
-    return { ok, p, ms: Math.min(zeit, KT_MS), zuSpaet: zeit > KT_MS, richtig: o.perm.indexOf(0), gewaehlt: wahl, r: f?.r ?? "", e: f?.e ?? "" }; };
+    return { ok, p, ms: Math.min(zeit, KT_MS), zuSpaet: zeit > KT_MS, richtig: o.perm.indexOf(0), gewaehlt: wahl, r: f?.r ?? "", e: f?.e ?? "", m: !!f?.m }; };
   if (q.offen && q.offen.s === s && Date.now() - q.offen.seit > KT_MS + KT_GNADE_MS + 2000) { werten(-1); verpasst = true; } // App war zu – Frage verfallen
   if (zug.kt === "antwort") {
     if (!q.offen || q.offen.s !== s) { if (verpasst) frage = null; else throw new Fehler("Keine offene Frage – bitte neu laden.", 409); }
@@ -2666,7 +2667,7 @@ async function ktZug(g: any, ich: any, zug: any) {
   } else if (zug.kt === "frage") {
     if (!q.offen) { const i = t[1].find((x) => !q.ant[s][x]); if (i !== undefined) q.offen = { s, i, seit: Date.now(), perm: ktMischen([0, 1, 2, 3]) }; }
     if (q.offen) { const f = KT_INDEX.get(q.ids[q.offen.i]), alle = [f.r, ...f.x];
-      frage = { f: f.f, a: q.offen.perm.map((k: number) => alle[k]), restMs: Math.max(0, KT_MS + KT_GNADE_MS - (Date.now() - q.offen.seit)), nr: q.offen.i + 1, imZug: t[1].indexOf(q.offen.i) + 1, vonImZug: t[1].length }; }
+      frage = { f: f.f, a: q.offen.perm.map((k: number) => alle[k]), restMs: Math.max(0, KT_MS + KT_GNADE_MS - (Date.now() - q.offen.seit)), nr: q.offen.i + 1, imZug: t[1].indexOf(q.offen.i) + 1, vonImZug: t[1].length, m: !!f.m }; }
   } else throw new Fehler("Unbekannter Zug.", 400);
   // Zug fertig? → weiter zum Gegenüber bzw. Ende
   let dran = ich.person_id, ende = false;
@@ -4364,6 +4365,31 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           : await senden("club_nachricht", empf, vars, `club-hilfe:${h.id}`).catch(() => null);
         await protokoll(ich.person_id, "hilfe_aufruf", { aufruf: h.id, art, datum, absprache, anzahl, ziel, empfaenger: empf.length, versand });
         return json({ ok: true, id: h.id, versand, empfaenger: empf.length });
+      }
+
+      // KC-CLUB-HILFE-WICHTIG (2.15.0, Wunsch Hansi): Hilfe-Aufruf als ❗ wichtig markieren (Ersteller oder Clubleitung, nur offene).
+      // Auf Wunsch („bescheid“) nochmal Push/Mail an alle, die noch nicht geantwortet haben – über die vorhandene Benachrichtigung.
+      case "hilfe_wichtig": {
+        const { data: h } = await db.from("kc_club_hilfe_aufrufe").select("*").eq("id", String(p.id || "")).maybeSingle();
+        if (!h) throw new Fehler("Aufruf nicht gefunden.", 404);
+        if (h.von !== ich.person_id && !ich.vorstand) throw new Fehler("Wichtig machen darf nur, wer um Hilfe gebeten hat (oder die Clubleitung).", 403);
+        if (h.geschlossen_am || h.datum < berlinTag(new Date())) throw new Fehler("Dieser Aufruf ist schon vorbei.", 409);
+        const wichtig = !!p.wichtig;
+        if (!!h.wichtig !== wichtig) await db.from("kc_club_hilfe_aufrufe").update({ wichtig }).eq("id", h.id);
+        let versand: any = { gesendet: 0 };
+        if (wichtig && !h.wichtig && p.bescheid) {
+          const { data: ant } = await db.from("kc_club_hilfe_antworten").select("person_id").eq("aufruf_id", h.id);
+          const schon = new Set((ant ?? []).map((x: any) => x.person_id));
+          const empf = (h.ziel === "online" ? [...await onlineJetzt(true)] : (await aktiveMitglieder()).map((m) => m.person_id)).filter((id) => id !== h.von && id !== ich.person_id && !schon.has(id));
+          const von = (await personen([h.von])).get(h.von)?.display_name || "Ein Mitglied", was = HILFE_ARTEN[h.art] || "Hilfe", wann2 = hilfeWann(h);
+          const vars = { titel: `❗ Wichtig: Wer kann helfen? ${was}`, kurz: `${von} sucht dringend Hilfe · ${wann2}${h.ort ? " · " + h.ort : ""}`,
+            betreff: `Köcheclub Werne – Wichtig: Wer kann helfen? ${was.replace(/^\S+\s/, "")}`,
+            text: `Hallo,\n\n${von} sucht dringend Hilfe:\n\n${was}\nWann: ${wann2}${h.ort ? `\nWo: ${h.ort}` : ""}${h.notiz ? `\n\n${h.notiz}` : ""}\n\nMit einem Tipp zusagen in der Köcheclub-App: ${APP_URL}#hilfe=${h.id}\n\nViele Grüße\nKöcheclub Werne`,
+            url: APP_URL + "#hilfe=" + h.id };
+          if (empf.length) versand = await senden("club_nachricht", empf, vars, `club-hilfe:${h.id}:wichtig`).catch(() => ({ gesendet: 0, fehler: empf.length }));
+        }
+        await protokoll(ich.person_id, "hilfe_wichtig", { aufruf: h.id, wichtig, versand });
+        return json({ ok: true, wichtig, versand });
       }
 
       case "hilfe_antwort": {
