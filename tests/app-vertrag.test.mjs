@@ -2799,9 +2799,17 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   const me = server.slice(server.indexOf('case "meine_eingaben"'), server.indexOf('case "dienstwunsch_laden"'));
   assert.ok(/\.eq\("person_id", ich\.person_id\)/.test(me) && /dienstwunschAufstellung\(ich\)/.test(me), "nur eigene Eingaben");
   assert.ok(/routerSenden\("club_nachricht_beide", \[ich\.person_id\]/.test(me) && /aktion", "dienstwunsch_bestaetigt"\)\.gte\("zeit", new Date\(Date\.now\(\) - 120_000\)/.test(me), "App + Mail nur an mich, höchstens 1× je 2 Min.");
-  assert.ok(/url: `\$\{APP_URL\}#bestaetigung=erstattung:\$\{a\.id\}`/.test(server) && /routerSenden\("club_nachricht_push", \[ich\.person_id\]/.test(server), "Erstattung: App-Nachricht an den Antragsteller");
+  assert.ok(/const url = `\$\{APP_URL\}#bestaetigung=erstattung:\$\{a\.id\}`/.test(server) && /routerSenden\("club_nachricht_push", \[ich\.person_id\], erstattungBestaetigung\(/.test(server), "Erstattung: App-Nachricht an den Antragsteller");
   assert.ok(/data-k="fertig"[^>]*>✅ Fertig – Bestätigung<\/button>/.test(html) && /bestaetigung: \{ bauen: \(\) => druckBestaetigung\(\) \}/.test(html) && /h\.startsWith\("#bestaetigung="\)/.test(html), "Knopf, Druckart, Link");
   assert.ok(/quer: true, fuss: "Bestätigung aus der Köcheclub-App"/.test(html) && /return druckErstattung\(\{ antrag: b\.antrag\.id \}\)/.test(html), "Querformat / vorhandener Antrags-Ausdruck");
+}
+
+// 246. 1.69.1: Postausgang (Wartung verschickt, Audit) + „Unter Vorbehalt“ in jeder Erstattungs-Bestätigung
+{
+  const mig = lies("supabase/migrations/20261003_kc_club_v1691_postausgang.sql");
+  assert.ok(/create table if not exists kc_club_postausgang/.test(mig) && /veranlasst_von text not null/.test(mig) && /enable row level security/.test(mig) && /revoke all on kc_club_postausgang from anon, authenticated/.test(mig), "Tabelle nur für den Server");
+  assert.ok(/await postausgangLauf\(\)\.catch/.test(server) && /a\.person_id !== o\.person_id/.test(server) && /update\(\{ gesendet_am: jetzt\(\), ergebnis \}\)/.test(server), "nur an den Antragsteller, Ergebnis festgehalten");
+  assert.ok(/const ERSTATTUNG_VORBEHALT = "Unter Vorbehalt: Dein Antrag wird vom Kassenwart geprüft/.test(server) && /\$\{ERSTATTUNG_VORBEHALT\}/.test(server), "Vorbehalt im Text");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

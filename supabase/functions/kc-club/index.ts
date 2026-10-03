@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.69.0";
+const SERVER_VERSION = "1.69.1";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -559,6 +559,36 @@ async function ortsnameHolen(lat: number, lon: number, genau?: number | boolean)
 }
 let ortsnameZuletzt = 0;
 const sosOrtZuletzt = new Map<string, number>(); // KC-CLUB-SOS-WO: höchstens 1 Adressabfrage je Person in 5 s
+// KC-CLUB-BESTAETIGUNG (1.69.0/1.69.1): Text der Erstattungs-Bestätigung (beim Senden und aus dem Postausgang – eine Regel)
+const ERSTATTUNG_VORBEHALT = "Unter Vorbehalt: Dein Antrag wird vom Kassenwart geprüft – die Erstattung erfolgt nach Freigabe.";
+function erstattungBestaetigung(vorname: string, a: any, hinweis = "") {
+  const pos = (a.positionen || []) as any[], summe = Number(a.summe || 0), d = (iso: string) => String(iso || "").split("-").reverse().join(".");
+  const zeilen = pos.map((x, i) => x.art === "fahrt" ? `${i + 1}. 🚗 ${d(x.datum)}: ${String(x.km).replace(".", ",")} km × ${euro(x.satz)} = ${euro(x.betrag)} · ${x.grund}${x.ziel ? " · " + x.ziel : ""}`
+    : `${i + 1}. ${x.art === "einkauf" ? "🛒" : "📦"} ${d(x.datum)}: ${euro(x.betrag)} · ${x.was || ""}`).join("\n");
+  const url = `${APP_URL}#bestaetigung=erstattung:${a.id}`;
+  return { titel: `✅ Dein Erstattungsantrag über ${euro(summe)} ist eingegangen`, kurz: `${pos.length} Position${pos.length === 1 ? "" : "en"} · ${euro(summe)} · unter Vorbehalt – 📄 Aufstellung öffnen`,
+    betreff: `Köcheclub Werne – Bestätigung deines Erstattungsantrags (${euro(summe)})`, url,
+    text: `Hallo ${vorname},\n\ndein Antrag über ${euro(summe)} ist beim Kassenwart eingegangen.\n\n${zeilen}\n\nSumme: ${euro(summe)} · Auszahlung: ${a.auszahlung === "bar" ? "bar" : "per Überweisung"}\n\n${hinweis ? hinweis + "\n" : ""}${ERSTATTUNG_VORBEHALT}\n\nAufstellung: ${url}\n\nViele Grüße\nKöcheclub-App` };
+}
+// KC-CLUB-POSTAUSGANG (1.69.1): beim Wartungslauf offene Einträge verschicken (je Lauf höchstens 20; Ergebnis bleibt als Audit stehen)
+async function postausgangLauf() {
+  const { data: offen } = await db.from("kc_club_postausgang").select("*").is("gesendet_am", null).order("erstellt_am").limit(20);
+  for (const o of offen ?? []) {
+    let ergebnis: any = null;
+    try {
+      if (o.art === "erstattung_bestaetigung") {
+        const { data: a } = await db.from("kc_club_erstattung").select("id,person_id,positionen,summe,auszahlung").eq("id", o.bezug).maybeSingle();
+        if (!a || a.person_id !== o.person_id) ergebnis = { fehler: "Antrag nicht gefunden oder gehört jemand anderem" };
+        else {
+          const p = (await personen([o.person_id])).get(o.person_id);
+          ergebnis = await routerSenden("club_nachricht_beide", [o.person_id], erstattungBestaetigung(vorname(p), a, txt(o.hinweis, 500)), `club-postausgang:${o.id}`);
+        }
+      } else ergebnis = { fehler: "unbekannte Art" };
+    } catch (e) { ergebnis = { fehler: String(e).slice(0, 200) }; }
+    await db.from("kc_club_postausgang").update({ gesendet_am: jetzt(), ergebnis }).eq("id", o.id);
+    await protokoll(o.veranlasst_von, "postausgang_gesendet", { eintrag: o.id, art: o.art, an: o.person_id, ergebnis });
+  }
+}
 async function fotoHolen(id: unknown) {
   const { data: f } = await db.from("kc_club_fotos").select("*").eq("id", String(id || "")).maybeSingle();
   if (!f) throw new Fehler("Foto nicht gefunden.", 404);
@@ -2352,6 +2382,7 @@ Deno.serve(async (req) => {
       if (!geheim || p.cronSecret !== geheim) return json({ error: "Kein Zugang" }, 401);
       // KC-CLUB-FP-UEBERWACHUNG (1.58.0): neue schwerwiegende Einträge im Fehlerprotokoll → Push an den Admin
       await fpUeberwachen().catch((e) => console.error("fp ueberwachung", String(e)));
+      await postausgangLauf().catch((e) => console.error("postausgang", String(e))); // KC-CLUB-POSTAUSGANG (1.69.1)
       // Abstimmungen mit abgelaufener Frist beenden (Ergebnis geht an alle)
       const { data: abgelaufen } = await db.from("kc_club_vorschlaege").select("*").eq("status", "offen").lt("frist", jetzt());
       let beendet = 0;
@@ -5392,11 +5423,7 @@ Köcheclub-App`,
         await db.from("kc_club_erstattung").update({ versand: { an, cc, bcc: bcc.length, ...versand } }).eq("id", a.id);
         await protokoll(ich.person_id, "erstattung_beantragt", { antrag: a.id, summe, positionen: pos.length, versand });
         // KC-CLUB-BESTAETIGUNG (1.69.0): Antragsteller bekommt zusätzlich eine App-Nachricht mit Link zur Aufstellung (Mail kommt als BCC)
-        if (versand.gesendet) await routerSenden("club_nachricht_push", [ich.person_id], {
-          titel: `✅ Dein Erstattungsantrag über ${euro(summe)} ist eingegangen`, kurz: `${pos.length} Position${pos.length === 1 ? "" : "en"} · ${euro(summe)} – 📄 Aufstellung öffnen`,
-          betreff: `Köcheclub Werne – Bestätigung deines Erstattungsantrags (${euro(summe)})`, text: `Hallo ${ich.vorname},\n\ndein Antrag über ${euro(summe)} ist beim Kassenwart eingegangen.\n\n${zeilen}\n\nAufstellung: ${APP_URL}#bestaetigung=erstattung:${a.id}\n\nViele Grüße\nKöcheclub-App`,
-          url: `${APP_URL}#bestaetigung=erstattung:${a.id}`,
-        }, `club-bestaetigung-ers:${a.id}`).catch(() => null);
+        if (versand.gesendet) await routerSenden("club_nachricht_push", [ich.person_id], erstattungBestaetigung(ich.vorname, { id: a.id, positionen: pos, summe, auszahlung }), `club-bestaetigung-ers:${a.id}`).catch(() => null);
         if (!versand.gesendet) throw new Fehler("Der Antrag ist gespeichert, aber die Mail konnte nicht verschickt werden – bitte später nochmal versuchen oder Hansi Bescheid geben.", 502);
         const leute = await personen([...an, ...cc]);
         return json({ ok: true, id: a.id, summe, an: an.map((id) => leute.get(id)?.display_name || id), cc: cc.map((id) => leute.get(id)?.display_name || id) });

@@ -1,5 +1,12 @@
 # Änderungen
 
+## 1.69.1 – 2026-10-03
+- KC-CLUB-POSTAUSGANG (Wunsch Hansi: Steven die Bestätigung nachträglich schicken): Tabelle kc_club_postausgang – der Wartungslauf
+  (alle 15 Min.) verschickt offene Einträge über den normalen Versandweg (App-Nachricht + E-Mail) und hält Veranlasser und Ergebnis
+  fest (Audit). Erste Art: erstattung_bestaetigung (nur an den Antragsteller des Antrags).
+- Erstattungs-Bestätigung: ein gemeinsamer Text (beim Senden und aus dem Postausgang) – jetzt immer mit dem Hinweis
+  „Unter Vorbehalt: Dein Antrag wird vom Kassenwart geprüft – die Erstattung erfolgt nach Freigabe.“
+
 ## 1.69.0 – 2026-10-03
 - KC-CLUB-BESTAETIGUNG (Wunsch Hansi, Fall Steven): Aufstellung der eigenen Eingaben als Bestätigung – **App-Nachricht + E-Mail**.
   Dienstwünsche: neuer Knopf „✅ Fertig – Bestätigung“ oben im Dienstwunsch-Fenster (kein Versand bei jedem Zwischenspeichern;
