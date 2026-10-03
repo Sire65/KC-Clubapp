@@ -3271,6 +3271,11 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
       b = b.slice(0, i) + (x ? "x" : "o") + b.slice(i + 1); const a = spAuswerten(b, 3); if (a.sieger || a.voll) { assert.ok(a.sieger !== "x", "Computer (schwer, 3×3) hat verloren: " + b); break; } x = !x; } }
   assert.ok(spAuswerten("xxxx............", 4).sieger === "x" && spAuswerten("xxx.............", 4).sieger === null && spAuswerten("o....o....o....o", 4).sieger === "o", "4×4: vier in einer Reihe");
 }
+// 298. 2.7.1: Pokal des Monats (KC-CLUB-SPIELE-POKAL)
+{
+  assert.ok(/monat: \{ name: monatName\(jetztM\), liste: diesen\.slice\(0, 5\) \}, pokalVormonat: \{ name: monatName\(vorM\), sieger: pokal\(vorher\) \}/.test(server) && /const monatVon = \(d: Date\) => berlinTag\(d\)\.slice\(0, 7\)/.test(server), "Monat in deutscher Zeit, Vormonat vergeben");
+  assert.ok(/function spPokalHtml\(L\)/.test(html) && /\$\{spPokalHtml\(L\)\}/.test(html), "Pokal-Karte");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

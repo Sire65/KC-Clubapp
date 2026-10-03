@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "2.7.0";
+const SERVER_VERSION = "2.7.1";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -7204,20 +7204,33 @@ Köcheclub-App`,
         const { data: meine } = await db.from("kc_club_spiele").select("*").or(`von.eq.${ich.person_id},an.eq.${ich.person_id}`)
           .or(`status.in.(angefragt,laeuft),geaendert_am.gte."${new Date(Date.now() - 14 * 86400000).toISOString()}"`).order("geaendert_am", { ascending: false }).limit(40);
         const [aktiv, bereit, { data: fertig }] = await Promise.all([aktiveMitglieder(), spielBereitMap(),
-          db.from("kc_club_spiele").select("spieler_x,spieler_o,gewinner").eq("status", "beendet").limit(2000)]);
+          db.from("kc_club_spiele").select("spieler_x,spieler_o,gewinner,geaendert_am").eq("status", "beendet").limit(5000)]);
         const aktivIds = new Set(aktiv.map((m) => m.person_id));
         const namen = await personen([...new Set([...(meine ?? []).flatMap((g: any) => [g.von, g.an]), ...aktiv.map((m) => m.person_id)])]);
         // Club-Rangliste: Siege (2 Punkte) und Unentschieden (1 Punkt) aller beendeten Spiele unter Mitgliedern
-        const tab = new Map<string, { s: number; u: number; n: number; sp: number }>();
-        for (const g of fertig ?? []) for (const pid of [g.spieler_x, g.spieler_o]) {
-          if (!aktivIds.has(pid)) continue;
-          const t = tab.get(pid) ?? { s: 0, u: 0, n: 0, sp: 0 }; t.sp++;
-          if (g.gewinner === "remis") t.u++; else if (g.gewinner === pid) t.s++; else t.n++; tab.set(pid, t);
-        }
-        const rang = [...tab.entries()].map(([pid, t]) => ({ person_id: pid, vorname: vorname(namen.get(pid) ?? null) || pid, siege: t.s, remis: t.u, niederlagen: t.n, spiele: t.sp, punkte: t.s * 2 + t.u }))
-          .sort((a, b) => b.punkte - a.punkte || b.siege - a.siege || a.spiele - b.spiele).slice(0, 10);
+        const tabelle = (liste: any[]) => {
+          const tab = new Map<string, { s: number; u: number; n: number; sp: number }>();
+          for (const g of liste) for (const pid of [g.spieler_x, g.spieler_o]) {
+            if (!aktivIds.has(pid)) continue;
+            const t = tab.get(pid) ?? { s: 0, u: 0, n: 0, sp: 0 }; t.sp++;
+            if (g.gewinner === "remis") t.u++; else if (g.gewinner === pid) t.s++; else t.n++; tab.set(pid, t);
+          }
+          return [...tab.entries()].map(([pid, t]) => ({ person_id: pid, vorname: vorname(namen.get(pid) ?? null) || pid, siege: t.s, remis: t.u, niederlagen: t.n, spiele: t.sp, punkte: t.s * 2 + t.u }))
+            .sort((a, b) => b.punkte - a.punkte || b.siege - a.siege || a.spiele - b.spiele);
+        };
+        const rang = tabelle(fertig ?? []).slice(0, 10);
+        // KC-CLUB-SPIELE-POKAL (2.7.1, Wunsch Hansi): 🏆 Pokal des Monats – wer im Kalendermonat (deutsche Zeit) die meisten Punkte holt.
+        // Gleichstand → mehrere Pokalgewinner. Vormonat = Pokal vergeben, laufender Monat = „Wer liegt vorn?“
+        const monatVon = (d: Date) => berlinTag(d).slice(0, 7), jetztM = monatVon(new Date());
+        const [jj, mm] = jetztM.split("-").map(Number), vorM = mm === 1 ? `${jj - 1}-12` : `${jj}-${String(mm - 1).padStart(2, "0")}`;
+        const MONATE = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
+        const monatName = (m: string) => `${MONATE[Number(m.slice(5, 7)) - 1]} ${m.slice(0, 4)}`;
+        const imMonat = (m: string) => tabelle((fertig ?? []).filter((g: any) => monatVon(new Date(g.geaendert_am)) === m));
+        const diesen = imMonat(jetztM), vorher = imMonat(vorM);
+        const pokal = (t: any[]) => t.length && t[0].punkte > 0 ? t.filter((x) => x.punkte === t[0].punkte && x.siege === t[0].siege) : [];
         const ichDarf = (await spielBereitMap([ich.person_id])).get(ich.person_id) === true;
         return json({ ichBereit: ichDarf, spiele: (meine ?? []).map((g: any) => spielSicht(g, ich.person_id, namen)), rangliste: rang,
+          monat: { name: monatName(jetztM), liste: diesen.slice(0, 5) }, pokalVormonat: { name: monatName(vorM), sieger: pokal(vorher) },
           bereit: aktiv.filter((m) => m.person_id !== ich.person_id && bereit.get(m.person_id) === true && !m.person_id.startsWith("KC-P-TEST"))
             .map((m) => ({ person_id: m.person_id, vorname: vorname(m) || m.display_name, name: m.display_name })) });
       }

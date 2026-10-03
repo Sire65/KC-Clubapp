@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.7.1 – 2026-10-03 – 🏆 Pokal des Monats (Wunsch Hansi)
+- KC-CLUB-SPIELE-POKAL: In „👥 Gegen Mitglieder“ oben eine Pokal-Karte: Pokalgewinner des Vormonats (meiste Punkte, Gleichstand →
+  mehrere) und „<Monat> – wer liegt vorn?“ (Top 5 des laufenden Monats, deutsche Zeit). Darunter die Rangliste aller Zeiten.
+  Sieg 2, Unentschieden 1 Punkt; nur Partien gegen Mitglieder. Keine Nachricht an alle (Ankündigung nur nach Rückfrage).
+
 ## 2.7.0 – 2026-10-03 – 🎲 Spiele – Köcheclub Edition: Tic-Tac-Toe (Wunsch Hansi)
 - KC-CLUB-SPIELE: Neuer Bereich „🎲 Spiele“ (Kachel im Register Club und in der einfachen Ansicht, Sprunglink #spiele/#spiel=…).
   Tic-Tac-Toe 3×3 (drei in einer Reihe) oder 4×4 (vier in einer Reihe), 🍅 Tomate gegen 🥦 Brokkoli, Gewinnreihe golden,

@@ -204,6 +204,8 @@
   .sp-dran { font-weight: 800; color: var(--textGruen); white-space: nowrap; }
   .sp-wer { width: 100%; border: 2px solid var(--linie); border-radius: 14px; background: var(--karte); color: var(--text); font: inherit; margin: 4px 0; cursor: pointer; }
   @media (prefers-reduced-motion: reduce) { .sp-feld, .sp-feld.sp-sieg { animation: none; } }
+  .sp-pokal { border: 2px solid #d4ac0d; background: linear-gradient(180deg, #fef9e7, var(--karte) 60%); }
+  .sp-pokal-kopf { display: flex; align-items: center; gap: 12px; } .sp-pokal-sym { font-size: 2.6rem; line-height: 1; filter: drop-shadow(0 2px 3px rgba(0,0,0,.25)); }
   /* KC-CLUB-NUTZUNG-PERSONEN (2.6.0) */
   .nz-wer { justify-self: start; padding: 1px 6px; border-radius: 9px; background: var(--gruenbg); color: var(--textGruen); font-size: .8rem; font-weight: 700; white-space: nowrap; }
   .nz-wer.nur1 { background: #fdebd0; color: #7a4a00; }
@@ -2460,7 +2462,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.7.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.7.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -4813,12 +4815,23 @@ function spListeZeigen() {
   $("spInhalt").innerHTML = `
     ${L.ichBereit ? "" : `<div class="karte" style="border:2px solid var(--gruen)"><b>🎲 Möchtest du auch herausgefordert werden?</b><p class="hinweis" style="margin:4px 0 8px">Dann sehen dich die anderen in der Liste und können dich zu einer Partie einladen.</p><button class="knopf haupt" onclick="spBereitSetzen(true)">✅ Ja, ich spiele mit</button></div>`}
     <button class="knopf haupt" style="width:100%" onclick="spHerausfordernBlatt()">🎲 Jemanden herausfordern</button>
+    ${spPokalHtml(L)}
     ${an.length ? `<div class="karte"><h3>📩 Herausforderungen an dich</h3>${an.map((g) => zeile(g, "") + `<div class="knoepfe" style="margin:0 0 8px"><button class="knopf haupt" onclick="spAntwort('${g.id}', true)">✅ Annehmen</button><button class="knopf" onclick="spAntwort('${g.id}', false)">Ablehnen</button></div>`).join("")}</div>` : ""}
     ${laufend.length ? `<div class="karte"><h3>▶ Laufende Spiele</h3>${laufend.map((g) => zeile(g, g.ichDran ? '<span class="sp-dran">Du bist dran ›</span>' : '<span class="hinweis">wartet …</span>')).join("")}</div>` : ""}
     ${meine.length ? `<div class="karte"><h3>⏳ Du hast herausgefordert</h3>${meine.map((g) => zeile(g, `<button class="knopf klein" onclick="spAufgeben('${g.id}', true)">Zurückziehen</button>`)).join("")}</div>` : ""}
     ${fertig.length ? `<div class="karte"><h3>✅ Zuletzt gespielt</h3>${fertig.map((g) => zeile(g, `<span class="hinweis">${spErgebnisText(g)}</span>`)).join("")}</div>` : ""}
     ${!an.length && !laufend.length && !meine.length && !fertig.length ? `<div class="karte hinweis">Noch keine Partie gegen Mitglieder. ${L.bereit.length ? `${L.bereit.length} Mitglied${L.bereit.length === 1 ? " spielt" : "er spielen"} gerne mit – fordere jemanden heraus!` : "Noch niemand hat „Herausfordern erlauben“ eingeschaltet."}</div>` : ""}
-    ${L.rangliste.length ? `<div class="karte"><h3>🏆 Club-Rangliste</h3><p class="hinweis" style="margin:0 0 6px">Sieg = 2 Punkte, Unentschieden = 1 Punkt.</p>${L.rangliste.map((r, i) => `<div class="zeile"><b style="width:1.8em">${["🥇", "🥈", "🥉"][i] || i + 1 + "."}</b><span style="flex:1">${esc(r.vorname)}</span><span class="hinweis">${r.siege} S · ${r.remis} U · ${r.niederlagen} N</span><b style="margin-left:8px">${r.punkte}</b></div>`).join("")}</div>` : ""}`;
+    ${L.rangliste.length ? `<div class="karte"><h3>📊 Club-Rangliste (alle Zeiten)</h3><p class="hinweis" style="margin:0 0 6px">Sieg = 2 Punkte, Unentschieden = 1 Punkt.</p>${L.rangliste.map((r, i) => `<div class="zeile"><b style="width:1.8em">${["🥇", "🥈", "🥉"][i] || i + 1 + "."}</b><span style="flex:1">${esc(r.vorname)}</span><span class="hinweis">${r.siege} S · ${r.remis} U · ${r.niederlagen} N</span><b style="margin-left:8px">${r.punkte}</b></div>`).join("")}</div>` : ""}`;
+}
+// KC-CLUB-SPIELE-POKAL (2.7.1, Wunsch Hansi): 🏆 Pokal des Monats – Vormonat vergeben, laufender Monat „wer liegt vorn“
+function spPokalHtml(L) {
+  const v = L.pokalVormonat, m = L.monat; if (!v && !m) return "";
+  const namen = (l) => l.map((x) => esc(x.vorname)).join(" & ");
+  return `<div class="karte sp-pokal">
+    ${v?.sieger?.length ? `<div class="sp-pokal-kopf"><span class="sp-pokal-sym" aria-hidden="true">🏆</span><div><div class="hinweis" style="margin:0">Pokal des Monats ${esc(v.name)}</div><b>${namen(v.sieger)}</b><div class="hinweis" style="margin:0">${v.sieger[0].siege} Sieg${v.sieger[0].siege === 1 ? "" : "e"} · ${v.sieger[0].punkte} Punkte – herzlichen Glückwunsch!</div></div></div>` : `<div class="sp-pokal-kopf"><span class="sp-pokal-sym" aria-hidden="true">🏆</span><div><b>Pokal des Monats</b><div class="hinweis" style="margin:0">Wer im Monat die meisten Punkte holt, bekommt den Pokal.</div></div></div>`}
+    <h3 style="margin:10px 0 4px">${esc(m?.name || "Dieser Monat")} – wer liegt vorn?</h3>
+    ${m?.liste?.length ? m.liste.map((r, i) => `<div class="zeile"><b style="width:1.8em">${["🥇", "🥈", "🥉"][i] || i + 1 + "."}</b><span style="flex:1">${esc(r.vorname)}</span><span class="hinweis">${r.siege} S · ${r.remis} U · ${r.niederlagen} N</span><b style="margin-left:8px">${r.punkte}</b></div>`).join("") : '<p class="hinweis" style="margin:0">Noch keine Partie in diesem Monat – der Pokal ist noch zu haben!</p>'}
+    <p class="hinweis" style="margin:6px 0 0">Sieg = 2 Punkte, Unentschieden = 1 Punkt. Nur Partien gegen Mitglieder zählen.</p></div>`;
 }
 async function spBereitSetzen(an) {
   try { await einstSpeichern("spiele", { herausforderung: !!an, spiele: ["ttt"] }); INIT.einstellungen = { ...(INIT.einstellungen || {}), spiele: { herausforderung: !!an, spiele: ["ttt"] } };
