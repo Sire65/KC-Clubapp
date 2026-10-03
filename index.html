@@ -2393,7 +2393,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.1.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.1.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -4631,10 +4631,12 @@ function melde(t, fehler) {
 }
 // KC-CLUB-KURZCODE (1.87.0): 6 Ziffern einlösen → Schlüssel merken → App starten (kein Kopieren/Einfügen)
 function kcCodeTippen(el) { const d = el.value.replace(/\D/g, "").slice(0, 6); el.value = d.length > 3 ? d.slice(0, 3) + " " + d.slice(3) : d; if (d.length === 6) kurzcodeEinloesen(); }
+let KC_LAEUFT = false;
 async function kurzcodeEinloesen() {
+  if (KC_LAEUFT) return; // 2.1.1: Auto-Senden bei der 6. Ziffer + Enter → nur einmal
   const code = ($("kcCode")?.value || "").replace(/\D/g, ""), a = $("kcCodeAntwort");
   if (code.length !== 6) { a.textContent = "Bitte alle 6 Ziffern eingeben."; return; }
-  $("kcCodeKnopf").disabled = true; a.textContent = "⏳ Einen Moment …";
+  $("kcCodeKnopf").disabled = true; a.textContent = "⏳ Einen Moment …"; KC_LAEUFT = true;
   try {
     const r = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "kurzcode_einloesen", code }) });
     const d = await r.json().catch(() => ({}));
@@ -4642,7 +4644,7 @@ async function kurzcodeEinloesen() {
     a.textContent = "✅ Angemeldet – die App startet …";
     try { localStorage.setItem("kc_club_key", d.k); } catch {}
     location.href = location.pathname + "?k=" + d.k;
-  } catch (e) { a.textContent = "⚠️ " + e.message; $("kcCodeKnopf").disabled = false; $("kcCode").select?.(); }
+  } catch (e) { a.textContent = "⚠️ " + e.message; $("kcCodeKnopf").disabled = false; $("kcCode").select?.(); KC_LAEUFT = false; }
 }
 // Code für ein weiteres Gerät bzw. die gerade installierte App (nur angemeldet)
 async function kurzcodeHolen() { const r = await api("kurzcode_erzeugen", {}, { warten: true }); return { ...r, schoen: r.code.slice(0, 3) + " " + r.code.slice(3) }; }
@@ -4938,7 +4940,7 @@ const SERVER_REGION = "eu-west-2", REGION_PAUSE_MS = 10 * 60 * 1000;
 let REGION_AUS_BIS = 0;
 const apiAdresse = () => (Date.now() < REGION_AUS_BIS ? API : `${API}?forceFunctionRegion=${SERVER_REGION}`);
 // Aktionen, die nur lesen – nur diese dürfen nach einer Störung still wiederholt werden
-const API_LESEN = /^(init|ping|lebenszeichen|online|tagesinfo|pinnwand|pinnwand_neu|unterhaltung|suche|kalender_daten|.*_liste|.*_statistik|.*_holen|.*_info|.*_start|.*_stand)$/;
+const API_LESEN = /^(init|ping|lebenszeichen|online|tagesinfo|pinnwand|pinnwand_neu|unterhaltung|unterhaltungen|mitglieder|mitglied_details|kalender|kalender_daten|protokoll_laden|fotos_neueste|anlage_url|suche|buero_start|.*_liste|.*_statistik|.*_holen|.*_info|.*_stand)$/; // 2.1.1: kein „*_start“ mehr (anruf_start/standort_start schreiben)
 async function apiRoh(action, daten = {}, zweiterVersuch = false) {
   // KC-CLUB-NOTBETRIEB-ERNSTFALL: simulierter Ausfall – genau der Fehler, den ein unerreichbarer Club-Server liefert
   if (notErnstfall()) { vbStart(); await new Promise((ok) => setTimeout(ok, 300)); vbEnde(false, 0, "Server nicht erreichbar (Simulation)"); throw Object.assign(new Error("Keine Verbindung zum Server – bitte gleich nochmal versuchen."), { leitung: true }); }
@@ -4948,9 +4950,10 @@ async function apiRoh(action, daten = {}, zweiterVersuch = false) {
   const adresse = apiAdresse(), mitRegion = adresse !== API;
   // KC-CLUB-ZEITGRENZE (1.97.0, Gesamtprüfung): ohne Antwort nach 25 s (Hochladen 90 s) abbrechen und als Verbindungsfehler werten –
   // sonst drehte sich die Sanduhr bis zu 2½ Minuten und der Notbetrieb sprang nicht an
-  const zeitMs = /hochladen|upload/.test(action) ? 90000 : 25000;
+  // 2.1.1: Lesen 25 s; Schreiben 140 s (der Server speichert zuerst und benachrichtigt dann – das darf dauern, sonst doppelt)
+  const zeitMs = API_LESEN.test(action) ? 25000 : 140000;
   try { r = await fetch(adresse, { method: "POST", headers: { "Content-Type": "application/json", "x-club-token": KEY, "x-club-version": APP_VERSION }, body: JSON.stringify({ action, ...daten }), signal: AbortSignal.timeout?.(zeitMs) }); if (action !== "lebenszeichen") verkehrZaehlen(); }
-  catch (fe) { if (fe?.name === "TimeoutError" || fe?.name === "AbortError") { vbEnde(false, 0, "Server antwortet nicht"); throw Object.assign(new Error("Der Server antwortet gerade nicht – bitte gleich nochmal versuchen."), { leitung: true }); }
+  catch (fe) { if (fe?.name === "TimeoutError" || fe?.name === "AbortError") { vbEnde(false, 0, "Server antwortet nicht"); throw Object.assign(new Error(API_LESEN.test(action) ? "Der Server antwortet gerade nicht – bitte gleich nochmal versuchen." : "Der Server antwortet gerade nicht – bitte kurz prüfen, ob es angekommen ist, bevor du es nochmal sendest."), { leitung: true, zeit: true }); }
     if (mitRegion && navigator.onLine) { REGION_AUS_BIS = Date.now() + REGION_PAUSE_MS; vbEnde(true, performance.now() - t0, ""); return apiRoh(action, daten, zweiterVersuch); } // Region weg → Standardweg
     vbEnde(false, 0, navigator.onLine ? "Server nicht erreichbar" : "Handy offline"); throw Object.assign(new Error(navigator.onLine ? "Keine Verbindung zum Server – bitte gleich nochmal versuchen." : "Keine Internetverbindung."), { leitung: navigator.onLine }); }
   const j = await r.json().catch(() => null);
@@ -5013,7 +5016,7 @@ function vbStatusLed() {
   const l = $("ledStatus"); if (!l) return;
   const [farbe, text] = vbZustand(), [cFarbe, cText] = vbCommZustand();
   l.className = "led " + farbe; $("ledComm").className = "led " + cFarbe; $("leds").title = text + " · " + cText;
-  if (!$("verbindungBlatt").classList.contains("versteckt")) vbBlattZeigen();
+  if (!$("verbindungBlatt").classList.contains("versteckt")) ICH?.admin ? vbBlattZeigen() : vbEinfachZeigen(); // 2.1.1: Mitglieder behalten die einfache Ansicht
 }
 // echte Datenübertragungen, die nicht über api() laufen (Fotos/Vorschauen aus dem Supabase-Speicher)
 try {
@@ -5043,14 +5046,16 @@ const mittel = (a) => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
 // KC-CLUB-KOPF-EINFACH (2.1.0, Gesamtprüfung): Mitglieder sehen EIN Lämpchen und beim Antippen nur „in Ordnung / Störung“;
 // die Technik (Server, Communicator, Datenverkehr, Messwerte) bleibt für den Admin
 function verbindungBlatt() {
-  if (!ICH?.admin) {
+  if (!ICH?.admin) { vbEinfachZeigen(); $("verbindungBlatt").classList.remove("versteckt"); return; }
+  vbBlattZeigen(); $("verbindungBlatt").classList.remove("versteckt"); communicatorPruefen();
+}
+function vbEinfachZeigen() {
+  {
     const [farbe, text] = vbZustand(), gut = farbe === "gruen";
     $("vbInhalt").innerHTML = `<div class="vb-status"><i class="led ${farbe}"></i><b>${gut ? "✅ Verbindung in Ordnung" : farbe === "blau" ? "🔧 " + esc(text) : farbe === "grau" ? "⏳ Verbindung wird geprüft …" : "⚠️ Gerade Störung – " + esc(text)}</b></div>
       <p class="hinweis" style="margin:8px 0">${gut ? "Nachrichten, Termine und Mitteilungen kommen an." : "Bitte kurz warten. Bleibt es so, hilft „Problem melden“."}</p>
       <div class="knoepfe"><button class="knopf" onclick="$('verbindungBlatt').classList.add('versteckt');testAnMichStarten()">🧪 Test-Mitteilung an mich</button><button class="knopf" onclick="$('verbindungBlatt').classList.add('versteckt');fpProblemMelden()">🆘 Problem melden</button></div>`;
-    $("verbindungBlatt").classList.remove("versteckt"); return;
   }
-  vbBlattZeigen(); $("verbindungBlatt").classList.remove("versteckt"); communicatorPruefen();
 }
 async function communicatorPruefen() {
   try { vbCommSetzen(await api("communicator_status")); } catch { /* Serverfehler zeigt schon die obere LED */ }
@@ -6350,9 +6355,10 @@ function wichtigZeigen() {
 }
 // KC-CLUB-LADEN-EINMAL (1.97.0): läuft schon ein Laden, wird es mitbenutzt statt ein zweites zu starten (sonst konnte eine ältere
 // Antwort eine neuere überschreiben)
-let NEU_LADEN_LAUF = null;
+let NEU_LADEN_LAUF = null, NEU_LADEN_FOLGE = null;
 function neuLaden(vonHand) {
-  if (NEU_LADEN_LAUF && !vonHand) return NEU_LADEN_LAUF;
+  // 2.1.1: läuft schon eins, kommt GENAU EIN frisches Laden danach (wer gerade gespeichert hat, sieht sonst den alten Stand)
+  if (NEU_LADEN_LAUF && !vonHand) return NEU_LADEN_FOLGE || (NEU_LADEN_FOLGE = NEU_LADEN_LAUF.catch(() => {}).then(() => { NEU_LADEN_FOLGE = null; return neuLaden(); }));
   const lauf = neuLadenRoh(vonHand).finally(() => { if (NEU_LADEN_LAUF === lauf) NEU_LADEN_LAUF = null; });
   return (NEU_LADEN_LAUF = lauf);
 }
@@ -6387,6 +6393,7 @@ function standMerken() {
   try { const t = JSON.stringify({ zeit: Date.now(), person: ICH?.person_id, schluessel: KEY.slice(-8), init: INIT }); if (t.length < 400000) localStorage.setItem(STAND_KEY, t); } catch {}
 }
 function offlineStandLaden(e) {
+  if (INIT?._offline) { offlineStandZeigen(true); return true; } // schon im Offline-Stand: Hinweis bleibt, keine Fehlermeldung
   if (INIT || !(e?.leitung || !navigator.onLine)) return false;
   let g = null; try { g = JSON.parse(localStorage.getItem(STAND_KEY) || "null"); } catch {}
   if (!g?.init?.ich || g.schluessel !== KEY.slice(-8)) return false; // nur der eigene Stand (anderer Link auf dem Gerät → nichts zeigen)
@@ -6405,7 +6412,7 @@ function offlineStandZeigen(an) {
   const d = new Date(INIT._offline);
   el.innerHTML = `📴 <b>Kein Netz – das ist dein Stand von ${esc(fKurz.format(d))} ${esc(fZeit.format(d))} Uhr.</b> Neues kommt, sobald du wieder Internet hast.`;
 }
-window.addEventListener("online", () => { if (INIT?._offline) INIT = null; if (KEY) neuLaden(); owSenden(); });
+window.addEventListener("online", () => { if (KEY) neuLaden(); owSenden(); }); // 2.1.1: INIT nicht leeren – das Neuladen ersetzt den Offline-Stand
 // Nachrichten ohne Netz: nicht verlieren, sondern auf dem Gerät vormerken und bei Netz automatisch senden.
 // Nur wenn das Handy sicher offline ist (dann hat der Server die Nachricht garantiert nicht bekommen → nie doppelt).
 const OW_KEY = "kc_club_warteschlange";
@@ -6420,7 +6427,8 @@ async function owSenden() {
     for (const x of l) {
       try { await api("nachricht_senden", { id: x.chat, text: x.text, wege: x.wege || [], ...(x.antwort_auf ? { antwort_auf: x.antwort_auf } : {}), ...(x.wichtig ? { wichtig: true } : {}) });
         owSchreiben(owLesen().filter((y) => y.id !== x.id)); ok++; }
-      catch (e) { if (e?.leitung || !navigator.onLine) break; owSchreiben(owLesen().filter((y) => y.id !== x.id)); melde(`Eine vorgemerkte Nachricht ging nicht: ${e.message}`, true); }
+      catch (e) { if (e?.zeit) { owSchreiben(owLesen().filter((y) => y.id !== x.id)); melde("Eine vorgemerkte Nachricht: der Server hat nicht rechtzeitig geantwortet – bitte im Chat prüfen, ob sie angekommen ist.", true); break; }
+        if (e?.leitung || !navigator.onLine) break; owSchreiben(owLesen().filter((y) => y.id !== x.id)); melde(`Eine vorgemerkte Nachricht ging nicht: ${e.message}`, true); }
     }
   } finally { OW_LAEUFT = false; }
   if (ok) { melde(`📤 ${ok} vorgemerkte Nachricht${ok === 1 ? "" : "en"} gesendet`); if (chatId) chatLaden(false); }
@@ -6432,8 +6440,9 @@ function owZeigen() {
   z.insertAdjacentHTML("beforeend", `<div class="ow-warte">${l.map((x) => `<div class="ow-blase">${esc(x.text)}<small>⏳ wartet auf Netz – wird automatisch gesendet</small></div>`).join("")}</div>`);
 }
 function zaehlerZeigen() {
-  const n = INIT?.ungelesen || 0;
-  $("fussZaehler").textContent = n; $("fussZaehler").classList.toggle("versteckt", !n);
+  const n = INIT?.ungelesen || 0, unsicher = !!INIT?.ungelesenUnsicher; // 2.1.1: einzelne Zahl nicht ladbar → „?“ statt still 0 (Regel 11)
+  $("fussZaehler").textContent = unsicher ? (n ? n + "+" : "?") : n; $("fussZaehler").classList.toggle("versteckt", !n && !unsicher);
+  $("fussZaehler").title = unsicher ? "Nicht alle Unterhaltungen konnten gezählt werden" : "";
   // KC-CLUB-NEU-KACHEL (1.21.4): Farbe und Zahl der Nachrichten-Kachel sofort mitziehen (ohne die Startseite neu zu zeichnen)
   document.querySelectorAll('.kachel[data-id="kommunikation"]:not(.bearb)').forEach((k) => {
     k.classList.toggle("neu-da", n > 0); let z = k.querySelector(".zahl");
@@ -8883,7 +8892,7 @@ async function chatOeffnen(id, ausHistorie) {
   if (id !== chatId) { entwurfLaden(id); zustellUmschalten(false); wichtigUmschalten(false); } // KC-CLUB-ENTWURF / -RUHIGE-EINGABE (1.12.0) / -WICHTIG
   NA.trennerChat = null; // KC-CLUB-NEU-LINIE: beim Öffnen neu bestimmen
   chatId = id; zeige("chat", ausHistorie); chatId = id;
-  history.replaceState({ v: "chat", id }, "", location.pathname + "#nachricht=" + id);
+  history.replaceState({ v: "chat", id, tiefe: history.state?.tiefe }, "", location.pathname + "#nachricht=" + id); // 2.1.1: Tiefe behalten (sonst ‹-Schleife)
   const offenId = chatId; await chatLaden(true);
   clearInterval(chatTimer); if (chatId === offenId && aktuelleAnsicht === "chat") chatTimer = setInterval(chatTakt, CHAT_TAKT_MS); // 1.97.0: nie zwei Takte
   $("liveHinweis").classList.toggle("versteckt", !liveTippen() || !ONL.zeigen);
@@ -8999,7 +9008,7 @@ function dlgOeffnen(html, beiZu) {
 }
 // KC-CLUB-RUECKFRAGE-KLAR (1.98.0, Gesamtprüfung): roter Knopf sagt, was passiert („🗑️ Löschen“) statt nur „Ja“
 function frageVerb(text) {
-  const t = String(text), v = [[/lösch/i, "🗑️ Löschen"], [/entfern/i, "Entfernen"], [/absagen/i, "Absagen"], [/zurückziehen/i, "Zurückziehen"], [/verlassen/i, "Verlassen"], [/leeren/i, "Leeren"], [/beenden/i, "Beenden"], [/endgültig/i, "Endgültig"]];
+  const t = String(text).split(/[?\n]/)[0], v = [[/lösch/i, "🗑️ Löschen"], [/entfern/i, "Entfernen"], [/absagen/i, "Absagen"], [/zurückziehen/i, "Zurückziehen"], [/verlassen/i, "Verlassen"], [/leeren/i, "Leeren"], [/beenden/i, "Beenden"], [/endgültig/i, "Endgültig"]];
   return (v.find(([r]) => r.test(t)) || [, "Ja"])[1];
 }
 function frage(text, opt = {}) {
@@ -9025,7 +9034,7 @@ function eingabe(text, wert = "", opt = {}) {
     f.querySelectorAll("[data-v]").forEach((b) => (b.onclick = () => { feld.value = b.dataset.v; feld.focus(); }));
     f.querySelector("[data-w='1']").onclick = () => zu(feld.value);
     f.querySelector("[data-w='0']").onclick = () => zu(null);
-    feld.addEventListener("keydown", (e) => { if (e.key === "Enter" && feld.tagName === "INPUT") zu(feld.value); if (e.key === "Escape") zu(null); });
+    feld.addEventListener("keydown", (e) => { if (e.key === "Enter" && feld.tagName === "INPUT") zu(feld.value); if (e.key === "Escape") { e.preventDefault(); zu(null); } }); // 2.1.1: nur dieses Fenster schließen
     setTimeout(() => { feld.focus(); feld.select?.(); }, 50);
   });
 }
@@ -10148,7 +10157,7 @@ async function senden() {
     if (chatId) entwurfWeg(chatId); clearTimeout(entwurfTimer); zustellUmschalten(false); wichtigUmschalten(false); // KC-CLUB-ENTWURF / -RUHIGE-EINGABE / -WICHTIG
     $("text").value = ""; $("text").style.height = "auto"; entwurfMarkeZeigen(); anlagen = []; chipsZeigen(); neuEntwurf = null; naAntwortWeg(); NA.erw.clear(); clearTimeout(TIPP.nach); TIPP = { zuletzt: 0, id: null, nach: null }; // Server beendet „schreibt …“
     if (ZW.whatsapp && text) whatsappWeitergeben(text, empfIds.filter((id) => id !== ICH.person_id));
-    if (!chatId) { chatId = r.id; history.replaceState({ v: "chat", id: r.id }, "", location.pathname + "#nachricht=" + r.id); clearInterval(chatTimer); chatTimer = setInterval(chatTakt, CHAT_TAKT_MS); }
+    if (!chatId) { chatId = r.id; history.replaceState({ v: "chat", id: r.id, tiefe: history.state?.tiefe }, "", location.pathname + "#nachricht=" + r.id); clearInterval(chatTimer); chatTimer = setInterval(chatTakt, CHAT_TAKT_MS); }
     await chatLaden(true);
   } catch (e) { melde(e.message, true); }
   $("sendenKnopf").disabled = false;
@@ -12735,6 +12744,7 @@ async function jetztAktualisieren() {
 // Beim Zurückholen der App: gibt es eine neue Version und wird gerade nichts eingegeben, aktualisiert die App sich selbst –
 // höchstens einmal je 10 Min. und Version (Schutz vor Endlosschleife, falls der Server kurz noch die alte Seite liefert)
 function updateRuhig() {
+  if (RUF || SPR || wartenZahl) return false; // 2.1.1: nie während Anruf, Sprachaufnahme oder laufender Übertragung
   if (document.querySelector(".blatt:not(.versteckt)")) return false;
   const a = document.activeElement; if (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) return false;
   return ![...document.querySelectorAll("textarea, input[type=text], input:not([type])")].some((el) => el.offsetParent && el.value.trim());

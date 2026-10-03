@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "2.1.0";
+const SERVER_VERSION = "2.1.1";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -1185,9 +1185,10 @@ async function anmeldenDb(hash: string, version: string | null): Promise<Ich> {
   if (!a) {
     const { data: vm } = await db.from("kc_club_zugang").update({ token_hash: hash, neu_token_hash: null, neu_bis: null, erstellt_am: jetzt() })
       .eq("neu_token_hash", hash).gt("neu_bis", jetzt()).eq("aktiv", true).select("person_id");
-    if (vm?.length) { anmeldungenVergessen(); await protokoll(vm[0].person_id, "zugang_uebernommen", {});
-      ({ data: a, error } = await db.rpc("kc_club_anmeldung", { p_hash: hash, p_version: version }));
-      if (error) throw new Fehler("Anmeldung gerade nicht möglich – bitte gleich noch einmal versuchen.", 503); }
+    if (vm?.length) { anmeldungenVergessen(); await protokoll(vm[0].person_id, "zugang_uebernommen", {}); }
+    // 2.1.1: auch wenn eine gleichzeitige Anfrage die Übernahme gerade gemacht hat – jetzt nochmal normal prüfen
+    ({ data: a, error } = await db.rpc("kc_club_anmeldung", { p_hash: hash, p_version: version }));
+    if (error) throw new Fehler("Anmeldung gerade nicht möglich – bitte gleich noch einmal versuchen.", 503);
   }
   if (!a) throw new Fehler("Kein Zugang – bitte den persönlichen Link neu öffnen.", 401);
   const p = a.person, r = a.rollen;
@@ -2781,8 +2782,11 @@ Köcheclub Werne`,
       // KC-CLUB-ZUGANG-VORMERKEN (1.96.0, Sicherheitsprüfung): Wer nur die Mail-Adresse kennt, darf niemanden aussperren – der neue
       // Link wird vorgemerkt (24 h), der bisherige bleibt gültig, bis der neue zum ersten Mal geöffnet wird. Ohne bisherigen Zugang wie früher.
       const { data: bisher } = await db.from("kc_club_zugang").select("person_id,aktiv").eq("person_id", pe.person_id).maybeSingle();
-      if (bisher?.aktiv) await db.from("kc_club_zugang").update({ neu_token_hash: await sha256(token), neu_bis: new Date(Date.now() + ZUGANG_VORMERK_MS).toISOString() }).eq("person_id", pe.person_id);
-      else { await db.from("kc_club_zugang").upsert({ person_id: pe.person_id, token_hash: await sha256(token), aktiv: true, erstellt_am: jetzt(), erstellt_von: pe.person_id, neu_token_hash: null, neu_bis: null }); anmeldungenVergessen(); }
+      const { error: zf } = bisher?.aktiv
+        ? await db.from("kc_club_zugang").update({ neu_token_hash: await sha256(token), neu_bis: new Date(Date.now() + ZUGANG_VORMERK_MS).toISOString() }).eq("person_id", pe.person_id)
+        : await db.from("kc_club_zugang").upsert({ person_id: pe.person_id, token_hash: await sha256(token), aktiv: true, erstellt_am: jetzt(), erstellt_von: pe.person_id, neu_token_hash: null, neu_bis: null });
+      if (zf) { console.error("zugang_anfordern", zf.message); return json({ ok: true, text }); } // 2.1.1: nie einen Link verschicken, der nicht gespeichert ist
+      anmeldungenVergessen();
       const link = `${APP_URL}?k=${token}`;
       const versand = await routerSenden("club_nachricht_mail", [pe.person_id], {
         titel: "🔑 Dein Link zur Köcheclub-App", kurz: "Hier ist dein neuer persönlicher Link.",
@@ -2806,11 +2810,12 @@ Köcheclub Werne`,
       // gezählt). Läuft die Gesamtgrenze über, werden alle offenen Codes ungültig (Erraten dann unmöglich; neue Codes gehen sofort).
       await protokoll(null, "kurzcode_versuch", { netz });
       const [{ count: fehlNetz }, { count: fehlGesamt }] = await Promise.all([
-        db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("aktion", "kurzcode_versuch").eq("details->>netz", netz).gte("zeit", seit),
+        // 2.1.1: je Netz nur FEHLversuche (Club-WLAN: viele richtige Codes nacheinander sind normal); gesamt jeden Versuch
+        db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("aktion", "kurzcode_fehlversuch").eq("details->>netz", netz).gte("zeit", seit),
         db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("aktion", "kurzcode_versuch").gte("zeit", seit),
       ]);
       if ((fehlGesamt ?? 0) > KURZCODE_FEHL_GESAMT) { await db.from("kc_club_kurzcodes").delete().gt("gueltig_bis", jetzt()); throw new Fehler(`Zu viele Versuche – bitte in ${KURZCODE_MIN} Minuten noch einmal.`, 429); }
-      if ((fehlNetz ?? 0) > KURZCODE_FEHL_NETZ) throw new Fehler(`Zu viele Versuche – bitte in ${KURZCODE_MIN} Minuten noch einmal.`, 429);
+      if ((fehlNetz ?? 0) >= KURZCODE_FEHL_NETZ) throw new Fehler(`Zu viele Versuche – bitte in ${KURZCODE_MIN} Minuten noch einmal.`, 429);
       const { data: z } = await db.from("kc_club_kurzcodes").select("*").eq("code_hash", await kurzcodeHash(code)).gt("gueltig_bis", jetzt()).maybeSingle();
       if (!z) { await protokoll(null, "kurzcode_fehlversuch", { netz }); throw new Fehler("Der Code stimmt nicht oder ist abgelaufen. Bitte einen neuen Code anzeigen lassen.", 404); }
       await db.from("kc_club_kurzcodes").delete().eq("code_hash", z.code_hash); // nur einmal gültig
@@ -2903,13 +2908,13 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // KC-CLUB-UNBEKANNT-NICHT-OK (1.97.0, Gesamtprüfung): klemmt die Datenbank, lieber ehrlich „gerade nicht möglich“ (503 → App
         // zeigt den Fehler bzw. Notbetrieb) als „0 ungelesen / Alles erledigt 👍“ aus fehlenden Daten
         if (teilFehler) throw new Fehler("Die Daten konnten gerade nicht geladen werden – bitte gleich noch einmal versuchen.", 503);
-        let ungelesen = 0, ungelesenLaut = 0;
+        let ungelesen = 0, ungelesenLaut = 0, zaehlUnsicher = false;
         const { data: stummE } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "stumm").maybeSingle();
         // KC-CLUB-SCHNELLSTART-SERVER (1.16.0): alle Unterhaltungen gleichzeitig zählen statt nacheinander (spart je Chat eine Runde)
         const zahlen = await Promise.all((teil ?? []).map(async (t: any) => {
           let q = db.from("kc_communication_messages").select("id", { count: "exact", head: true }).eq("thread_id", t.thread_id).neq("sender_person_id", ich.person_id);
           if (t.last_read_at) q = q.gt("created_at", t.last_read_at);
-          const { count, error } = await q; if (error) throw new Fehler("Die Daten konnten gerade nicht geladen werden – bitte gleich noch einmal versuchen.", 503);
+          const { count, error } = await q; if (error) { zaehlUnsicher = true; return { t, n: 0 }; } // 2.1.1: einzelne Zahl fehlt → „unsicher“, kein Notbetrieb
           return { t, n: count ?? 0 };
         }));
         for (const { t, n } of zahlen) {
@@ -2981,7 +2986,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const communicator = await communicatorStatus(ich).catch(() => null);
         const kontaktFreigabe = Object.fromEntries(KONTAKT_FELDER.map((f) => [f, !!(kf ?? []).find((x: any) => x.bereich === "kontakt_" + f)?.erlaubt]));
         const benachrichtigung = Object.fromEntries(BEREICHE.map((b) => { const x: any = (wahl ?? []).find((y: any) => y.bereich === b); return [b, x ? { push: x.push, email: x.email } : STANDARD_WAHL[b]]; }));
-        return json({ ich, status: meinStatus, server: SERVER_VERSION, adminName: await adminVorname(), ungelesen, ungelesenLaut, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, communicator, notfall: nf ?? null, einstellungen, kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
+        return json({ ich, status: meinStatus, server: SERVER_VERSION, adminName: await adminVorname(), ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, communicator, notfall: nf ?? null, einstellungen, kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
             // KC-CLUB-GERAETE-TIPP: wohin der Link ginge – nur teilweise (z. B. „h…@web.de“)
@@ -7164,7 +7169,8 @@ Köcheclub-App`,
         const { data: pe } = await db.from("kc_core_people").select("person_id,active").eq("person_id", pid).maybeSingle();
         if (!pe?.active) throw new Fehler("Mitglied nicht gefunden.", 404);
         const token = zufall();
-        await db.from("kc_club_zugang").upsert({ person_id: pid, token_hash: await sha256(token), aktiv: true, erstellt_am: jetzt(), erstellt_von: ich.person_id, neu_token_hash: null, neu_bis: null }); anmeldungenVergessen(); // KC-CLUB-ANMELDECACHE: Änderung sofort wirksam
+        const { error: zf } = await db.from("kc_club_zugang").upsert({ person_id: pid, token_hash: await sha256(token), aktiv: true, erstellt_am: jetzt(), erstellt_von: ich.person_id, neu_token_hash: null, neu_bis: null });
+        if (zf) throw new Fehler("Der Link konnte nicht gespeichert werden – bitte gleich noch einmal versuchen.", 500); // 2.1.1 anmeldungenVergessen(); // KC-CLUB-ANMELDECACHE: Änderung sofort wirksam
         await protokoll(ich.person_id, "link_erzeugt", { fuer: pid });
         return json({ ok: true, link: `${APP_URL}?k=${token}` });
       }

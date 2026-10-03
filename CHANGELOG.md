@@ -1,5 +1,22 @@
 # Änderungen
 
+## 2.1.1 – 2026-10-03 – Nachprüfung der Versionen 1.88–2.1 (Funde behoben)
+- ‹ im Chat: Verlaufseintrag behält seine Tiefe – vorher Schleife Chat ↔ Nachrichten (kritisch).
+- Zeitgrenze: Lesen 25 s, Schreiben 140 s (Server speichert erst, benachrichtigt dann) – sonst doppelte Nachrichten bei langsamem
+  Communicator. Vorgemerkte Nachricht bei Zeitüberschreitung nicht erneut senden, sondern „bitte prüfen“.
+- Kurzcode: je Netz zählen wieder nur Fehlversuche (Einrichten im Club-WLAN blockiert nicht), gesamt jeder Versuch; App sendet
+  den Code nicht doppelt (6. Ziffer + Enter).
+- Selbst-Update nie während Anruf, Sprachaufnahme oder laufender Übertragung.
+- Einfache Verbindungsansicht der Mitglieder wird nicht mehr nach Sekunden durch die Technik-Ansicht ersetzt.
+- API_LESEN: anruf_start/standort_start nicht mehr als „Lesen“ (keine stille Wiederholung); fehlende Lese-Aktionen ergänzt.
+- Neu laden nach dem Speichern: läuft schon ein Laden, folgt genau ein frisches (sonst kurz alter Stand).
+- Link vormerken: gleichzeitige Anfragen beim ersten Öffnen → kein falsches „Link ungültig“; Link wird nur verschickt/angezeigt,
+  wenn er wirklich gespeichert ist.
+- Escape im Eingabefenster schließt nur dieses; Gefahr-Knopf nimmt das Verb nur aus dem ersten Satz („Neues Feedback starten?“
+  heißt nicht mehr „Löschen“).
+- Wieder online: Offline-Stand bleibt sichtbar, bis frische Daten da sind (kein leerer Zustand bei wackligem Netz).
+- Start: fehlt nur eine einzelne Ungelesen-Zahl, kein Notbetrieb mehr – die Leiste zeigt „?“ bzw. „3+“ statt still 0.
+
 ## 2.1.0 – 2026-10-03 – Paket 5 (Gesamtprüfung)
 - KC-CLUB-OFFLINE: Nachricht schreiben ohne Netz → wird auf dem Gerät vorgemerkt (Blase „⏳ wartet auf Netz“) und automatisch
   gesendet, sobald wieder Internet da ist (nur wenn das Handy sicher offline war – dann kann nichts doppelt ankommen; nur

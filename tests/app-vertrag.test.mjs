@@ -3073,7 +3073,7 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/fehlGesamt \?\? 0\) > KURZCODE_FEHL_GESAMT\) \{ await db\.from\("kc_club_kurzcodes"\)\.delete\(\)/.test(kc), "Überlauf → offene Codes ungültig");
   assert.ok(/\^\(\?:\\p\{Extended_Pictographic\}\|\\p\{Emoji_Component\}/.test(server) && /onclick="reagieren\('\$\{m\.id\}',\$\{esc\(JSON\.stringify\(x\.emoji\)\)\}\)">\$\{esc\(x\.emoji\)\}/.test(html), "Reaktion nur Emoji, maskiert");
   const za = server.slice(server.indexOf('if (a === "zugang_anfordern") {'), server.indexOf('if (a === "kurzcode_einloesen") {'));
-  assert.ok(/neu_token_hash: await sha256\(token\), neu_bis:/.test(za) && /if \(bisher\?\.aktiv\)/.test(za), "Link verloren nur vormerken");
+  assert.ok(/neu_token_hash: await sha256\(token\), neu_bis:/.test(za) && /bisher\?\.aktiv/.test(za), "Link verloren nur vormerken"); // 2.1.1: als Bedingungsausdruck
   assert.ok(/\.eq\("neu_token_hash", hash\)\.gt\("neu_bis", jetzt\(\)\)\.eq\("aktiv", true\)/.test(server) && /"zugang_uebernommen"/.test(server), "Übernahme beim ersten Öffnen");
   assert.ok(/aktiv\.has\(id\) && \(id !== ich\.person_id \|\| g\.erstellt_von === ich\.person_id\)/.test(server), "kein Selbst-Hinzufügen in fremde Gruppen");
   const mig = lies("supabase/migrations/20261003_kc_club_v1960_zugang_vormerken.sql");
@@ -3088,7 +3088,7 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/addEventListener\("controllerchange", neu, \{ once: true \}\)/.test(ja) && /sw\.addEventListener\("statechange"/.test(ja) && !/setTimeout\(\(\) => location\.reload\(\), 400\)/.test(ja), "Update wartet auf Einrichtung + Übernahme");
   assert.ok(/updatePruefen\(false\)\.then\(updateSelbst\)/.test(html) && /z\.v === NEUE_VERSION && Date\.now\(\) - z\.t < 10 \* 60000/.test(html), "Selbst-Update beim Zurückholen, mit Schleifenschutz");
   assert.ok(/signal: AbortSignal\.timeout\?\.\(zeitMs\)/.test(html) && /fe\?\.name === "TimeoutError"/.test(html) && /if \(API_LESEN\.test\(action\)\) return apiRoh/.test(html), "Zeitgrenze + nur Lesen wiederholen");
-  assert.ok(/if \(NEU_LADEN_LAUF && !vonHand\) return NEU_LADEN_LAUF;/.test(html) && /if \(fuer !== chatId\) return;/.test(html) && /clearInterval\(chatTimer\); if \(chatId === offenId/.test(html), "Laden/Chat nicht doppelt");
+  assert.ok(/if \(NEU_LADEN_LAUF && !vonHand\) return (NEU_LADEN_LAUF;|NEU_LADEN_FOLGE \|\|)/.test(html) /* 2.1.1: mit Folge-Laden */ && /if \(fuer !== chatId\) return;/.test(html) && /clearInterval\(chatTimer\); if \(chatId === offenId/.test(html), "Laden/Chat nicht doppelt");
   assert.ok(/todoAnlegen = nurEinmal\("todoAnlegen", todoAnlegen\)/.test(html) && /erstattungSenden = nurEinmal/.test(html), "Doppeltippen gesperrt");
   assert.ok(/else if \(push\.zustand !== "ok" \|\| email\.zustand !== "ok"\) \{ farbe = "grau"/.test(server) && /ok: r\.status < 400/.test(server) && /if \(teilFehler\) throw new Fehler/.test(server), "unbekannt nie grün");
 }
@@ -3130,8 +3130,17 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
 {
   assert.ok(/if \(!navigator\.onLine && chatId && !anlagen\.length && text\) \{/.test(html) && /async function owSenden\(\)/.test(html) && /window\.addEventListener\("online", \(\) => \{[^\n]*owSenden\(\)/.test(html), "Nachrichten ohne Netz vormerken + senden");
   assert.ok(/function offlineStandLaden\(e\)/.test(html) && /g\.schluessel !== KEY\.slice\(-8\)/.test(html) && /📴 <b>Kein Netz – das ist dein Stand von/.test(html) && /if \(!INIT \|\| INIT\._offline\) return;/.test(html), "Offline-Stand markiert, nur eigener, nie zurückgespeichert");
-  assert.ok(/body:not\(\.ist-admin\) #ledComm, body:not\(\.ist-admin\) #ledDaten, body:not\(\.ist-admin\) #herzKnopf \{ display: none; \}/.test(html) && /if \(!ICH\?\.admin\) \{\n    const \[farbe, text\] = vbZustand\(\)/.test(html), "einfacher Kopf für Mitglieder");
+  assert.ok(/body:not\(\.ist-admin\) #ledComm, body:not\(\.ist-admin\) #ledDaten, body:not\(\.ist-admin\) #herzKnopf \{ display: none; \}/.test(html) && /if \(!ICH\?\.admin\) \{ vbEinfachZeigen\(\);/.test(html) && /function vbEinfachZeigen\(\) \{/.test(html), "einfacher Kopf für Mitglieder"); // 2.1.1: eigene Funktion
   assert.ok(/function fensterZu\(b\) \{ if \(b\._zu\) b\._zu\(\); else if \(b\.dataset\.fest\) b\.classList\.add\("versteckt"\); else b\.remove\(\); \}/.test(html) && /offen\.forEach\(fensterZu\);/.test(html) && /e\.key !== "Escape"/.test(html), "ein Fenster-Kern");
+}
+// 283. 2.1.1: Funde der Nachprüfung
+{
+  assert.equal((html.match(/history\.replaceState\(\{ v: "chat", id(: r\.id)?, tiefe: history\.state\?\.tiefe \}/g) || []).length, 2, "Chat behält Tiefe");
+  assert.ok(/const zeitMs = API_LESEN\.test\(action\) \? 25000 : 140000;/.test(html) && !/\|\.\*_start\|/.test(html) && /if \(e\?\.zeit\) \{ owSchreiben/.test(html), "Zeitgrenzen / Lesen");
+  assert.ok(/eq\("aktion", "kurzcode_fehlversuch"\)\.eq\("details->>netz", netz\)/.test(server) && /if \(KC_LAEUFT\) return;/.test(html), "Kurzcode-Bremse fair");
+  assert.ok(/if \(RUF \|\| SPR \|\| wartenZahl\) return false;/.test(html) && /ICH\?\.admin \? vbBlattZeigen\(\) : vbEinfachZeigen\(\)/.test(html), "Update ruhig / einfache Ansicht bleibt");
+  assert.ok(/NEU_LADEN_FOLGE = NEU_LADEN_LAUF\.catch/.test(html) && /if \(e\.key === "Escape"\) \{ e\.preventDefault\(\); zu\(null\); \}/.test(html) && /String\(text\)\.split\(\/\[\?\\n\]\/\)\[0\]/.test(html), "Laden/Escape/Verb");
+  assert.ok(/if \(zf\) \{ console\.error\("zugang_anfordern"/.test(server) && /zaehlUnsicher = true; return \{ t, n: 0 \}/.test(server) && /ungelesenUnsicher: zaehlUnsicher/.test(server), "Server-Funde");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
