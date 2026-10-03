@@ -3012,7 +3012,7 @@ assert.ok(/<h2>🗂️ Büro<\/h2><span class="bu-kopfgruss" id="buKopfGruss"><\
   assert.ok(/const hilfeWann = \(h: any\) => h\.nach_absprache \? "nach Absprache"/.test(server) && !/leihTag\(h\.datum, h\.slot\)/.test(server.slice(server.indexOf('case "hilfe_antwort": {'), server.indexOf('case "hilfe_schliessen": {'))), "Zusage-Meldung mit hilfeWann");
   const pw = server.slice(server.indexOf('case "pinnwand": {'), server.indexOf('case "pinnwand_anheften": {'));
   assert.ok(/hilfe: await hilfeListe\(ich\)/.test(pw) && /\.catch\(\(\) => null\)/.test(pw), "Pinnwand liefert Aufrufe aus dem vorhandenen Kern, Fehler bricht die Pinnwand nicht");
-  assert.ok(/function pwAushangHtml\(\)/.test(html) && /onclick="hilfeVonPinnwand\('\$\{a\.id\}'\)"/.test(html) && /function hilfeVonPinnwand\(id\) \{ HL\.oeffnen = id; hlStart\("helfen"\); \}/.test(html), "Aushang führt zum Aufruf");
+  assert.ok(/function pwAushangHtml\(\)/.test(html) && /onclick="hilfeVonPinnwand\('\$\{a\.id\}'\)"/.test(html) && /function hilfeVonPinnwand\(id\) \{[^\n]*(HL\.oeffnen = id; (return )?hlStart\("helfen"\)|hilfeDirekt\(id\))/.test(html), "Aushang führt zum Aufruf"); // 1.93.0: Kurzansicht bzw. Formular (Test 274)
   assert.ok(/if \(HL\.tab === "helfen" && HL\.oeffnen\)/.test(html), "Aufruf nach Laden öffnen");
   assert.ok(/PW\.offen = PW\.zettel\.filter\(\(z\) => !z\.vonMir && !z\.erledigt\)\.length \+ pwHilfeNeu\(\)\.length/.test(html) && /PW_GEMELDET\.has\("hilfe:" \+ a\.id\)/.test(html), "Zählen + Start-Hinweis einmal je Aufruf");
   assert.ok(/hlSetze\('absprache', true\)">🤝 Nach Absprache/.test(html) && /absprache: false, datum: hlTag\(0\)/.test(html) && /absprache: !!f\.absprache/.test(html), "Formular Absprache, Standard bestimmter Tag");
@@ -3040,6 +3040,15 @@ assert.ok(/<h2>🗂️ Büro<\/h2><span class="bu-kopfgruss" id="buKopfGruss"><\
 }
 // 273. 1.92.1: nach dem Speichern bleibt der Aufruf sichtbar offen
 assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert – der Aufruf bleibt offen/.test(html) && /if \(HL\.tab === "helfen" && HL\.infoNach\)/.test(html) && /: " · 🟢 offen"\}<\/div>/.test(html), "Speichern zeigt offenen Aufruf");
+// 274. 1.93.0: KC-CLUB-HILFE-KURZ – Zusammenfassung + drei Antworten, Sprung per #hilfe=
+{
+  const k = html.slice(html.indexOf("function hilfeKurzHtml(a) {"), html.indexOf("async function hilfeKurzAntwort("));
+  assert.ok(/✋ Ja, ich kann helfen/.test(k) && /🙅 Dabei kann ich nicht helfen/.test(k) && /❓ Ich brauche noch mehr Details/.test(k) && !/<input|<textarea|hlChips|hlStepper/.test(k), "Kurzansicht ohne Eingabefelder, drei Antworten");
+  assert.ok(/if \(a\.offen && !a\.eigen && !a\.darfSchliessen\) return hilfeKurzHtml\(a\);/.test(html), "fremde offene Aufrufe → Kurzansicht");
+  assert.ok(/async function hilfeDetails\(id\)[\s\S]{0,400}await direkt\(a\.von\.person_id\)/.test(html), "Details → Nachricht an Suchenden");
+  assert.ok(/else if \(h\.startsWith\("#hilfe="\)\) hilfeDirekt\(/.test(html) && /url: APP_URL \+ "#hilfe=" \+ h\.id/.test(server), "Push/Mail-Sprung");
+  assert.ok(/function hilfeVonPinnwand\(id\) \{[^\n]*hilfeDirekt\(id\)/.test(html), "Pinnwand → Kurzansicht");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

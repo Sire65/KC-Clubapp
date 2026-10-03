@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.92.1";
+const SERVER_VERSION = "1.93.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -4073,8 +4073,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const vars = {
           titel: `🙋 Wer kann helfen? ${was}`, kurz: `${ich.name} sucht ${anzahl ? anzahl + " " : ""}Helfer · ${wann2}${h.ort ? " · " + h.ort : ""}`,
           betreff: `Köcheclub Werne – Wer kann helfen? ${was.replace(/^\S+\s/, "")} ${absprache ? "(nach Absprache)" : "am " + datum.split("-").reverse().join(".")}`,
-          text: `Hallo,\n\n${ich.name} sucht Hilfe:\n\n${was}\nWann: ${wann2}\nGesucht: ${anzahl ? `${anzahl} ${anzahl === 1 ? "Person" : "Personen"}` : "egal wie viele – jede Hilfe zählt"}${h.ort ? `\nWo: ${h.ort}` : ""}${h.notiz ? `\n\n${h.notiz}` : ""}\n\nMit einem Tipp zusagen in der Köcheclub-App: ${APP_URL}#helfen\n\nViele Grüße\nKöcheclub Werne`,
-          url: APP_URL + "#helfen",
+          text: `Hallo,\n\n${ich.name} sucht Hilfe:\n\n${was}\nWann: ${wann2}\nGesucht: ${anzahl ? `${anzahl} ${anzahl === 1 ? "Person" : "Personen"}` : "egal wie viele – jede Hilfe zählt"}${h.ort ? `\nWo: ${h.ort}` : ""}${h.notiz ? `\n\n${h.notiz}` : ""}\n\nMit einem Tipp zusagen in der Köcheclub-App: ${APP_URL}#hilfe=${h.id}\n\nViele Grüße\nKöcheclub Werne`,
+          url: APP_URL + "#hilfe=" + h.id, // KC-CLUB-HILFE-KURZ (1.93.0): direkt zur Kurzansicht
         };
         const versand = !empf.length ? { gesendet: 0 } : ziel === "online" ? await sendenGewaehlt("club_nachricht", empf, ["push"], vars, `club-hilfe:${h.id}`).catch(() => null)
           : await senden("club_nachricht", empf, vars, `club-hilfe:${h.id}`).catch(() => null);
@@ -4133,8 +4133,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           if (empf.length) versand = await senden("club_nachricht", empf, {
             titel: `✏️ Geändert: ${HILFE_ARTEN[art]}`, kurz: `Neu: ${hilfeWann(nachher)}${nachher.ort ? " · " + nachher.ort : ""}`,
             betreff: `Köcheclub Werne – Hilfe-Aufruf geändert: ${HILFE_ARTEN[art].replace(/^\S+\s/, "")}`,
-            text: `Hallo,\n\n${ich.name} hat den Hilfe-Aufruf geändert, für den du zugesagt hast:\n\n${HILFE_ARTEN[art]}\nWann: ${hilfeWann(nachher)}${nachher.ort ? `\nWo: ${nachher.ort}` : ""}\n\nDeine Zusage bleibt bestehen. Ändern kannst du sie in der Köcheclub-App: ${APP_URL}#helfen\n\nViele Grüße\nKöcheclub Werne`,
-            url: APP_URL + "#helfen",
+            text: `Hallo,\n\n${ich.name} hat den Hilfe-Aufruf geändert, für den du zugesagt hast:\n\n${HILFE_ARTEN[art]}\nWann: ${hilfeWann(nachher)}${nachher.ort ? `\nWo: ${nachher.ort}` : ""}\n\nDeine Zusage bleibt bestehen. Ändern kannst du sie in der Köcheclub-App: ${APP_URL}#hilfe=${h.id}\n\nViele Grüße\nKöcheclub Werne`,
+            url: APP_URL + "#hilfe=" + h.id,
           }, `club-hilfe-aenderung:${h.id}:${Date.now()}`).catch(() => null);
         }
         await protokoll(ich.person_id, "hilfe_geaendert", { aufruf: h.id, vorher: { art: h.art, datum: h.datum, slot: h.slot, nach_absprache: h.nach_absprache, anzahl: h.anzahl, ort: h.ort },

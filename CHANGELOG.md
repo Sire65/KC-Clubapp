@@ -1,5 +1,14 @@
 # Änderungen
 
+## 1.93.0 – 2026-10-03
+- KC-CLUB-HILFE-KURZ (Wunsch Hansi: „beim Anklicken nicht den kompletten Menüpunkt mit allen Eingabemöglichkeiten, sondern eine
+  Zusammenfassung, was gesucht wird – dann: ich kann helfen / dabei kann ich nicht helfen / ich brauche noch mehr Details“):
+  Fremde offene Aufrufe zeigen beim Antippen eine Kurzansicht (wer sucht · Wobei · Wann · Wo · Gesucht/Stand · Beschreibung) mit drei
+  großen Knöpfen: „✋ Ja, ich kann helfen“, „🙅 Dabei kann ich nicht helfen“, „❓ Ich brauche noch mehr Details“ (öffnet eine
+  Nachricht an die suchende Person mit vorbereitetem Anfang). Antworten lassen sich zurücknehmen. Vom Pinnwand-Aushang geht die
+  Kurzansicht direkt über der Pinnwand auf (kein Sprung in den ganzen Bereich). Push/E-Mail zu Aufruf und Änderung führen mit
+  `#hilfe=<id>` direkt dorthin. Wer den Aufruf gestartet hat (und die Clubleitung) bekommt weiter das Formular zum Ändern.
+
 ## 1.92.1 – 2026-10-03
 - KC-CLUB-HILFE-AENDERN (Fund Hansi: „ich hab geschlossen, wollte den Vorgang aber nicht schließen“ – tatsächlich wurde nur
   gespeichert, das Formular ging zu und es sah aus wie „weg“): Nach „💾 Änderungen speichern“ geht jetzt der Aufruf selbst auf,

@@ -143,6 +143,12 @@
   .zettel.aushang::before { background: radial-gradient(circle at 35% 35%, #9be7a8, #2e7d4f 60%, #144d26); }
   .zettel.aushang .zknoepfe button.antw { background: #2e7d4f; border-color: #2e7d4f; }
   .hl-anzahl { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  /* KC-CLUB-HILFE-KURZ (1.93.0): Zusammenfassung + drei große Antworten */
+  .hk .hk-zeile { display: flex; gap: 10px; align-items: flex-start; padding: 6px 0; border-bottom: 1px solid var(--linie); }
+  .hk .hk-zeile > span { font-size: 1.4rem; line-height: 1.2; } .hk .hk-zeile small { display: block; color: var(--grau); font-size: .8rem; } .hk .hk-zeile b { font-size: 1.08rem; }
+  .hk .hk-text { margin: 10px 0 0; white-space: pre-wrap; font-size: 1.02rem; background: var(--karte2); border-radius: 12px; padding: 10px 12px; }
+  .hk .hk-knoepfe { display: grid; gap: 10px; margin-top: 14px; } .hk .hk-knoepfe .knopf { min-height: 52px; font-size: 1.05rem; justify-content: center; text-align: center; }
+  .hk .hk-knoepfe .knopf.an:not(.haupt) { background: var(--rotbg, #fde2e2); }
   textarea.hl-notiz { min-height: 8.5em; font-size: 1.02rem; line-height: 1.4; }
   .zettel .zfuss { margin-top: 8px; font-size: .74rem; color: #4a3d10; }
   .zettel .zknoepfe { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
@@ -2352,7 +2358,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.92.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.93.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2748,7 +2754,7 @@ function pwAushangHtml() {
       <div class="zkopf">von <b>${esc(a.eigen ? "dir" : a.von.name.split(" ")[0])}</b></div>
       <div class="ztext">${esc(was)}</div><div class="zfuss">${esc(hlWann(a, true, h.zeitfenster))}${a.ort ? ` · 📍 ${esc(a.ort)}` : ""}</div>
       <div class="zfuss"><b>✋ ${hlStand(a)}</b>${voll ? " – genug 🎉" : ""}${a.meine === "komme" ? " · ✔ du kommst" : ""}</div>
-      <div class="zknoepfe"><button class="antw" onclick="hilfeVonPinnwand('${a.id}')">${a.darfSchliessen ? "✏️ Ansehen & ändern" : a.meine ? "🙋 Ansehen" : "🙋 Ansehen & zusagen"}</button></div></div>`; }).join("");
+      <div class="zknoepfe"><button class="antw" onclick="hilfeVonPinnwand('${a.id}')">${a.darfSchliessen ? "✏️ Ansehen & ändern" : a.meine ? "🙋 Ansehen" : "🙋 Ansehen & antworten"}</button></div></div>`; }).join("");
 }
 function pwForm(an, antwort) {
   $("pwForm").classList.toggle("versteckt", !an);
@@ -8141,7 +8147,42 @@ async function hilfeSenden(knopf) {
     } catch (e) { melde(e.message, true); }
   });
 }
+// KC-CLUB-HILFE-KURZ (1.93.0, Wunsch Hansi): Wer einen fremden, offenen Aufruf antippt, sieht nur eine Zusammenfassung
+// (wer sucht, was, wann, wo, Beschreibung, Stand) und drei große Antworten – nicht den ganzen Bereich mit allen Eingaben.
+function hilfeKurzHtml(a) {
+  const d = HL.hilfe || {}, voll = hlVoll(a), wobei = /^Wobei: (.*)(?:\n|$)/.exec(a.notiz || ""), rest = wobei ? (a.notiz || "").slice(wobei[0].length).trim() : (a.notiz || "");
+  const was = wobei ? wobei[1] : (d.arten?.[a.art] || a.art).replace(/^\S+\s/, ""), zeile = (sym, t, w) => w ? `<div class="hk-zeile"><span>${sym}</span><div><small>${t}</small><b>${esc(w)}</b></div></div>` : "";
+  return `<div class="karte hk"><h3 style="margin:0 0 8px">🙋 ${esc(a.von.name.split(" ")[0])} sucht Hilfe</h3>
+    ${zeile("🔧", "Wobei", was)}${zeile("🗓️", "Wann", hlWann(a, true, d.zeitfenster).replace(/^\S+\s/, ""))}${zeile("📍", "Wo", a.ort)}
+    ${zeile("👥", "Gesucht", a.anzahl ? `${a.anzahl} ${a.anzahl === 1 ? "Helfer" : "Helfer"} – ${a.komme.length} ${a.komme.length === 1 ? "hat" : "haben"} schon zugesagt` : `egal wie viele – ${a.komme.length} dabei`)}
+    ${rest ? `<p class="hk-text">${esc(rest)}</p>` : ""}
+    ${voll ? '<p class="hinweis" style="margin:6px 0 0">🎉 Es haben schon genug zugesagt – weitere Hilfe ist trotzdem willkommen.</p>' : ""}
+    <div class="hk-knoepfe">
+      <button class="knopf haupt${a.meine === "komme" ? " an" : ""}" onclick="hilfeKurzAntwort('${a.id}', '${a.meine === "komme" ? "" : "komme"}')">${a.meine === "komme" ? "✔ Du hilfst – zurücknehmen" : "✋ Ja, ich kann helfen"}</button>
+      <button class="knopf${a.meine === "kann_nicht" ? " an" : ""}" onclick="hilfeKurzAntwort('${a.id}', '${a.meine === "kann_nicht" ? "" : "kann_nicht"}')">${a.meine === "kann_nicht" ? "✔ Du kannst nicht – zurücknehmen" : "🙅 Dabei kann ich nicht helfen"}</button>
+      <button class="knopf" onclick="hilfeDetails('${a.id}')">❓ Ich brauche noch mehr Details</button>
+    </div></div>`;
+}
+async function hilfeKurzAntwort(id, antwort) {
+  try { await api("hilfe_antwort", { id, antwort: antwort || null }); $("hilfeInfo")?.remove();
+    melde(antwort === "komme" ? "✋ Danke! Deine Zusage ist angekommen" : antwort ? "Danke für die Rückmeldung" : "Zurückgenommen");
+    hlLaden(); if (aktuelleAnsicht === "pinnwand") pwLaden(); } catch (e) { melde(e.message, true); }
+}
+// „Mehr Details“: Nachricht an die Person, die sucht – mit vorbereitetem Anfang
+async function hilfeDetails(id) {
+  const a = HL.hilfe?.aufrufe.find((x) => x.id === id); if (!a) return;
+  const wobei = /^Wobei: (.*)(?:\n|$)/.exec(a.notiz || ""), was = wobei ? wobei[1] : (HL.hilfe.arten?.[a.art] || a.art).replace(/^\S+\s/, "");
+  $("hilfeInfo")?.remove(); await direkt(a.von.person_id);
+  const t = $("text"); if (t) { t.value = `Zu deinem Hilfe-Aufruf „${was}“: Ich hätte noch eine Frage – `; t.focus(); t.setSelectionRange(t.value.length, t.value.length); }
+}
+// Sprung aus Pinnwand, Push oder E-Mail (#hilfe=…): Daten holen, dann Kurzansicht bzw. für den Ersteller das Formular
+async function hilfeDirekt(id) {
+  try { HL.hilfe = await api("hilfe_liste"); HL.tab = "helfen"; } catch (e) { return melde(e.message, true); }
+  if (!HL.hilfe.aufrufe.some((x) => x.id === id)) { melde("Dieser Aufruf ist schon geschlossen."); return hlStart("helfen"); }
+  hilfeOeffnen(id);
+}
 function hilfeKarte(a) {
+  if (a.offen && !a.eigen && !a.darfSchliessen) return hilfeKurzHtml(a);
   const d = HL.hilfe || {}, n = a.komme.length, voll = hlVoll(a);
   return `<div class="karte hl-karte${a.offen ? "" : " vorbei"}">
     <div class="hl-titel">${esc(d.arten?.[a.art] || a.art)}</div>
@@ -8350,7 +8391,7 @@ async function boSpeichern() {
   } catch (e) { melde(e.message, true); }
 }
 // KC-CLUB-HILFE-PINNWAND (1.90.0): Aushang an der Pinnwand antippen → Hilfebereich mit genau diesem Aufruf offen
-function hilfeVonPinnwand(id) { HL.oeffnen = id; hlStart("helfen"); }
+function hilfeVonPinnwand(id) { const a = PW.hilfe?.aufrufe.find((x) => x.id === id); if (a?.darfSchliessen) { HL.oeffnen = id; return hlStart("helfen"); } hilfeDirekt(id); } // 1.93.0: Mitglieder sehen die Kurzansicht über der Pinnwand
 async function hilfeAntwort(id, antwort) {
   try { await api("hilfe_antwort", { id, antwort: antwort || null }); melde(antwort === "komme" ? "✋ Danke! Deine Zusage ist gespeichert" : antwort ? "Gespeichert – danke für die Rückmeldung" : "Zurückgenommen"); hlLaden(); }
   catch (e) { melde(e.message, true); }
@@ -13645,6 +13686,7 @@ async function fpAdmin(tage) {
     else if (h.startsWith("#protokoll=")) protokollOeffnen(h.slice(11));
     else if (h.startsWith("#aktion=")) aktionOeffnen(decodeURIComponent(h.slice(8)));
     else if (h === "#boerse" || h.startsWith("#boerse=")) { BO.oeffnen = h.slice(8) || null; hlStart("boerse"); } // KC-CLUB-BOERSE
+    else if (h.startsWith("#hilfe=")) hilfeDirekt(decodeURIComponent(h.slice(7))); // KC-CLUB-HILFE-KURZ (1.93.0): Push/Mail → Kurzansicht
     else if (h.startsWith("#mitglied=")) mitgliedOeffnen(decodeURIComponent(h.slice(10)));
     else if (h.startsWith("#dokument=")) dokOeffnen(decodeURIComponent(h.slice(10))); // KC-CLUB-DOK-ANZEIGE
     else if (h.startsWith("#bestaetigung=")) bestaetigungZeigen(decodeURIComponent(h.slice(14))); // KC-CLUB-BESTAETIGUNG
