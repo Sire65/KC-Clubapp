@@ -2583,7 +2583,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.18.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.18.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -5771,48 +5771,58 @@ async function ktPcZeigen() {
   if (!z) { $("spInhalt").innerHTML = `<div class="karte sp-karte">
       ${spWahl("Stufe", KTP.staerke, [["leicht", "😊 Leicht<br><small>20 s</small>"], ["mittel", "🙂 Mittel<br><small>15 s</small>"], ["schwer", "😎 Schwer<br><small>10 s</small>"]], "ktPcStaerke")}
       ${stand}
-      <p style="margin:6px 0">🔪 <b>Küchenterror</b> – ${F.length} Fragen aus dem Profi-Küchenalltag. Du und der Computer bekommt <b>abwechselnd</b> je eine Frage, insgesamt 12.
-        Jede Frage hat 4 Antworten, nur eine ist richtig. Der Zeitbalken läuft je nach Stufe <b>20, 15 oder 10 Sekunden</b>: richtig gibt 100 Punkte plus bis zu 100 Punkte Zeitbonus – wer schneller ist, holt mehr. Zum Schluss kommt für jeden eine schwere <b>🎖️ Meisterfrage</b> – die zählt doppelt!</p>
+      <p style="margin:6px 0">🔪 <b>Küchenterror</b> – ${F.length} Fragen aus dem Profi-Küchenalltag. Du beantwortest <b>alle 12 Fragen</b> – der Computer rät jedes Mal <b>gleichzeitig mit</b>.
+        Jede Frage hat 4 Antworten, nur eine ist richtig. Der Zeitbalken läuft je nach Stufe <b>20, 15 oder 10 Sekunden</b>: richtig gibt 100 Punkte plus bis zu 100 Punkte Zeitbonus – wer schneller ist, holt mehr. Die letzte ist eine schwere <b>🎖️ Meisterfrage</b> – die zählt doppelt!</p>
       <div class="knoepfe"><button class="knopf haupt" onclick="ktPcStart()">▶ Los geht’s</button>${s.ich + s.pc + s.remis ? '<button class="knopf" onclick="ktPcStandWeg()">🗑️ Spielstand zurücksetzen</button>' : ""}</div></div>`; return; }
   const kopf = `<div class="kt-kopf"><span>Du <b>${z.punkte[0]}</b></span><span>Frage ${Math.min(z.i + 1, 12)}/12</span><span><b>${z.punkte[1]}</b> Computer</span></div>`;
   if (z.phase === "ende") {
     const [a, b] = z.punkte, sieg = a > b, remis = a === b;
     $("spInhalt").innerHTML = `<div class="karte sp-karte">${stand}<div class="sp-banner ${remis ? "remis" : sieg ? "sieg" : "niederlage"}">${remis ? "🤝 Unentschieden!" : sieg ? "🏆 Du hast gewonnen!" : "🤖 Der Computer hat gewonnen"}<br><small>${a} : ${b} Punkte</small></div>
-      <div class="knoepfe"><button class="knopf haupt" onclick="ktPcStart()">↺ Neues Spiel</button><button class="knopf" onclick="KTP.z=null;ktPcZeigen()">Stärke ändern</button></div></div>`; return; }
-  const f = F.find((q) => q.id === z.ids[z.i]), alle = [f.r, ...f.x], fr = { f: f.f, a: z.perm.map((k) => alle[k]), restMs: ktpLimit() - (Date.now() - z.seit), m: !!f.m, limitMs: ktpLimit() };
-  const wer = z.i % 2 === 0 ? "ich" : "pc";
-  const kopfWer = `<div class="sp-status${wer === "ich" && z.phase === "frage" ? " sp-ichdran" : ""}">${wer === "ich" ? "👨‍🍳 Deine Frage – tippe die richtige Antwort an" : "🤖 Frage an den Computer – du schaust nur zu"}</div>`;
+      <div class="knoepfe"><button class="knopf haupt" onclick="ktPcStart()">↺ Neues Spiel</button><button class="knopf" onclick="KTP.z=null;ktPcZeigen()">Stufe ändern</button></div></div>`; return; }
+  const f = F.find((q) => q.id === z.ids[z.i]), alle = [f.r, ...f.x], fr = { f: f.f, a: z.perm.map((k) => alle[k]), m: !!f.m, limitMs: ktpLimit() };
+  const kopfWer = z.phase === "frage" ? `<div class="sp-status sp-ichdran">👨‍🍳 Tippe die richtige Antwort an – 🤖 der Computer rät mit <span id="ktPcStatus"></span></div>` : "";
+  const pc = z.aufl?.pc, pcZeile = z.phase === "aufl" && pc ? `<div class="kt-ergebnis" style="font-size:1rem">🤖 Computer: ${pc.wahl < 0 ? "keine Antwort" : `${"ABCD"[pc.wahl]}) ` + (pc.ok ? `richtig in ${ktSek(pc.ms)} s – +${pc.p}` : "falsch – 0")}</div>` : "";
   ktBildFrei(true, "pc:" + z.ids.join() + ":" + z.i);
-  $("spInhalt").innerHTML = `<div class="karte sp-karte">${kopf}${kopfWer}${ktFrageHtml(fr, { klick: wer === "ich" && z.phase === "frage" ? "ktPcAntwort" : "", aufl: z.phase === "aufl" ? z.aufl : null, denkt: wer === "pc" && z.phase === "frage" })}
+  $("spInhalt").innerHTML = `<div class="karte sp-karte">${kopf}${kopfWer}${ktFrageHtml(fr, { klick: z.phase === "frage" ? "ktPcAntwort" : "", aufl: z.phase === "aufl" ? z.aufl : null })}${pcZeile}
     ${z.phase === "aufl" ? `<div class="knoepfe"><button class="knopf haupt" onclick="ktPcWeiter()">${z.i >= 11 ? "🏁 Ergebnis" : "Weiter ›"}</button></div>` : ""}</div>`;
   if (z.phase === "frage" && z.pausiert && !SP.pause) return ktPcFortsetzen(); // 2.18.0: nach Rückkehr weiter
   if (z.phase === "frage" && !SP.pause) ktPcUhren();
   spPauseZeigen();
 }
-function ktPcUhren() { // Zeitablauf über den Wächter (und beim Computer: seine Antwort) – auch nach Wiederkommen in die Ansicht
+// 2.18.1 (Fund Hansi „Antworten lassen sich manchmal nicht antippen, kurz vor Ablauf ist B markiert“): vorher gab es abwechselnd
+// Fragen an den Computer (dort war nichts antippbar, er wählte spät). Jetzt beantwortest du jede Frage – der Computer rät gleichzeitig:
+// seine Wahl und Zeit werden beim Start der Frage ausgelost und erst bei der Auflösung gezeigt.
+function ktPcNeueFrage(z) {
+  const st = KT_STAERKE[KTP.staerke] || KT_STAERKE.mittel, f = KT_FRAGEN_L.find((q) => q.id === z.ids[z.i]);
+  z.phase = "frage"; z.seit = z.lesenBis = Date.now() + KT_LESEN_MS; z.perm = ktMischen([0, 1, 2, 3]); z.aufl = null;
+  z.pcZeit = Math.min(ktpLimit() + 500, st.von + Math.random() * (st.bis - st.von));
+  const trifft = Math.random() < st.quote * (f?.m ? 0.8 : 1);
+  z.pcWahl = z.pcZeit > ktpLimit() ? -1 : trifft ? z.perm.indexOf(0) : [0, 1, 2, 3].filter((k) => z.perm[k] !== 0)[Math.floor(Math.random() * 3)];
+}
+function ktPcUhren() { // Zeitablauf über den Wächter – auch nach Wiederkommen in die Ansicht
   const z = KTP.z; clearTimeout(KTP.uhr); clearTimeout(KTP.pcUhr);
   if (SP.pause) return ktUhrStopp(); // 2.18.0: angehalten
   const jetzt = Date.now(), lim = ktpLimit(), lesenEnde = Math.max(jetzt, z.lesenBis || z.seit); // 2.18.0: nach Pause neue Lesezeit
   ktUhrStart(lesenEnde - jetzt, lim - Math.max(0, lesenEnde - z.seit), lim, () => ktPcAntwort(-1, true));
-  if (z.i % 2 === 1) KTP.pcUhr = setTimeout(() => { const st = KT_STAERKE[KTP.staerke] || KT_STAERKE.mittel; ktPcAntwort(Math.random() < st.quote * (KT_FRAGEN_L.find((q) => q.id === z.ids[z.i])?.m ? 0.8 : 1) ? z.perm.indexOf(0) : [0, 1, 2, 3].filter((k) => z.perm[k] !== 0)[Math.floor(Math.random() * 3)], true); }, Math.max(lesenEnde - jetzt + 300, z.pcZeit - (jetzt - z.seit)));
+  if (z.pcWahl >= 0) KTP.pcUhr = setTimeout(() => { const e = $("ktPcStatus"); if (e) e.textContent = "· 🤖 hat schon geantwortet!"; }, Math.max(lesenEnde - jetzt, z.pcZeit - (jetzt - z.seit)));
 }
 async function ktPcStart() {
   const F = await ktFragenLaden();
-  const st = KT_STAERKE[KTP.staerke] || KT_STAERKE.mittel;
-  KTP.z = { ids: [...ktMischen(F.filter((q) => !q.m).map((q) => q.id)).slice(0, 10), ...ktMischen(F.filter((q) => q.m).map((q) => q.id)).slice(0, 2)], i: 0, /* 2.15.0: die letzten beiden (je eine für dich und den Computer) sind Meisterfragen */ punkte: [0, 0], phase: "frage", seit: Date.now() + KT_LESEN_MS, lesenBis: Date.now() + KT_LESEN_MS, perm: ktMischen([0, 1, 2, 3]), aufl: null };
-  KTP.z.pcZeit = st.von + Math.random() * (st.bis - st.von);
+  // 11 normale Fragen + zum Schluss 1 🎖️ Meisterfrage (wie gegen Mitglieder)
+  KTP.z = { ids: [...ktMischen(F.filter((q) => !q.m).map((q) => q.id)).slice(0, 11), ...ktMischen(F.filter((q) => q.m).map((q) => q.id)).slice(0, 1)], i: 0, punkte: [0, 0] };
+  ktPcNeueFrage(KTP.z);
   ktPcZeigen();
 }
 function ktPcAntwort(wahl, vonUhr) {
   const z = KTP.z; if (!z || z.phase !== "frage") return;
-  if (!vonUhr && z.i % 2 === 1) return; // beim Computer tippt nicht der Mensch
   if (SP.pause || z.pausiert) return; // 2.18.0: angehalten
   if (!vonUhr && Date.now() < (z.lesenBis || z.seit)) return; // noch Lesezeit (3-2-1)
   clearTimeout(KTP.uhr); clearTimeout(KTP.pcUhr); ktUhrStopp();
-  const lim = ktpLimit(), ms = Math.min(Date.now() - z.seit, lim + 1), ok = wahl >= 0 && z.perm[wahl] === 0 && ms <= lim; let p = ktPunkte(ok, ms, lim);
-  const f = KT_FRAGEN_L.find((q) => q.id === z.ids[z.i]);
-  if (f?.m) p *= 2; // 🎖️ Meisterfrage
-  z.punkte[z.i % 2] += p; z.phase = "aufl"; z.aufl = { richtig: z.perm.indexOf(0), gewaehlt: wahl, ok, p, ms, zuSpaet: ms > lim, e: f?.e };
+  const lim = ktpLimit(), ms = Math.min(Date.now() - z.seit, lim + 1), ok = wahl >= 0 && z.perm[wahl] === 0 && ms <= lim;
+  const f = KT_FRAGEN_L.find((q) => q.id === z.ids[z.i]), mal = f?.m ? 2 : 1; // 🎖️ Meisterfrage doppelt
+  const p = ktPunkte(ok, ms, lim) * mal, pcOk = z.pcWahl >= 0 && z.perm[z.pcWahl] === 0, pcP = ktPunkte(pcOk, z.pcZeit, lim) * mal;
+  z.punkte[0] += p; z.punkte[1] += pcP; z.phase = "aufl";
+  z.aufl = { richtig: z.perm.indexOf(0), gewaehlt: wahl, ok, p, ms, zuSpaet: ms > lim, e: f?.e, pc: { wahl: z.pcWahl, ok: pcOk, p: pcP, ms: z.pcZeit } };
   try { navigator.vibrate?.(ok ? 30 : [40, 30, 40]); } catch {}
   if (ktpSichtbar()) ktPcZeigen();
 }
@@ -5828,7 +5838,7 @@ function ktPcWeiter() {
   const z = KTP.z; if (!z || z.phase !== "aufl") return;
   z.i++;
   if (z.i >= 12) { z.phase = "ende"; const [a, b] = z.punkte; if (a > b) KTP.stand.ich++; else if (b > a) KTP.stand.pc++; else KTP.stand.remis++; ktpMerken(); }
-  else { const st = KT_STAERKE[KTP.staerke] || KT_STAERKE.mittel; z.phase = "frage"; z.seit = z.lesenBis = Date.now() + KT_LESEN_MS; z.perm = ktMischen([0, 1, 2, 3]); z.aufl = null; z.pcZeit = st.von + Math.random() * (st.bis - st.von); }
+  else ktPcNeueFrage(z);
   ktPcZeigen();
 }
 const ktPcStaerke = (w) => { KTP.staerke = KT_STAERKE[w] ? w : "mittel"; ktpMerken(); ktPcZeigen(); };

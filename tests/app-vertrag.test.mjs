@@ -3383,7 +3383,7 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   const { KT_FRAGEN } = await import(new URL("../lib/kuechenterror/fragen.js", import.meta.url));
   assert.ok(KT_FRAGEN.filter((q) => q.m).length >= 30, "mindestens 30 Meisterfragen");
   assert.ok(/filter\(\(q\) => !q\.m\)[^\n]*slice\(0, 11\), ktMischen\(\(KT_FRAGEN as any\[\]\)\.filter\(\(q\) => q\.m\)/.test(server), "Server: 11 normale + 1 Meisterfrage");
-  assert.ok(/\* \(f\?\.m \? 2 : 1\); \/\/ Meisterfrage doppelt/.test(server) && /if \(f\?\.m\) p \*= 2;/.test(html), "doppelte Punkte (Server + Computer-Spiel)");
+  assert.ok(/\* \(f\?\.m \? 2 : 1\); \/\/ Meisterfrage doppelt/.test(server) && /mal = f\?\.m \? 2 : 1/.test(html), "doppelte Punkte (Server + Computer-Spiel)");
   const hw = server.slice(server.indexOf('case "hilfe_wichtig": {'), server.indexOf('case "hilfe_antwort": {'));
   assert.ok(/if \(h\.von !== ich\.person_id && !ich\.vorstand\) throw/.test(hw) && /if \(wichtig && !h\.wichtig && p\.bescheid\)/.test(hw) && /!schon\.has\(id\)/.test(hw), "Hilfe wichtig: nur Ersteller/Clubleitung, Bescheid nur auf Wunsch an Unbeantwortete");
   assert.ok(/wichtig: !!x\.wichtig/.test(server) && /onclick="hilfeWichtig\(/.test(html) && /\.zettel\.aushang\.wichtig \{/.test(html), "Aushang zeigt und schaltet wichtig");
@@ -3428,6 +3428,12 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   for (const f of ["spPcComputer", "schPcComputerStart", "bskPcComputer"]) assert.ok(html.includes(`spPauseHalt(${f})`), "Computer wartet in der Pause: " + f);
   assert.ok(/function ktPcPausieren\(\)/.test(html) && /z\.seit = z\.lesenBis - z\.pausiert\.verbraucht/.test(html) && /if \(SP\.pause\) return ktUhrStopp\(\);/.test(html), "Quiz-Uhr hält an, Restzeit bleibt");
   assert.ok(/if \(!KTM\.pause && g\?\.ichDran/.test(html), "gegen Mitglieder: Pause nach der Frage");
+}
+// 316. 2.18.1: Küchenterror gegen den Computer – jede Frage antippbar, Computer rät gleichzeitig (KC-CLUB-KUECHENTERROR-GLEICHZEITIG)
+{
+  const pc = html.slice(html.indexOf("async function ktPcZeigen()"), html.indexOf("const ktPcStaerke = (w) =>"));
+  assert.ok(!/z\.i % 2/.test(pc), "keine Fragen mehr nur für den Computer");
+  assert.ok(/klick: z\.phase === "frage" \? "ktPcAntwort" : ""/.test(pc) && /function ktPcNeueFrage\(z\)/.test(pc) && /z\.punkte\[0\] \+= p; z\.punkte\[1\] \+= pcP;/.test(pc), "du antwortest immer, Computer zählt mit");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.18.1 – 2026-10-03 – Küchenterror gegen den Computer: jede Frage ist deine (Fund Hansi)
+- KC-CLUB-KUECHENTERROR-GLEICHZEITIG: Fund „Antworten lassen sich immer noch manchmal nicht anklicken, kurz vor Ablauf ist B markiert“ –
+  Ursache: gegen den Computer kam abwechselnd eine Frage an den Computer; dort war (gewollt) nichts antippbar und der Computer wählte
+  oft spät. Jetzt beantwortest du alle 12 Fragen selbst, der Computer rät gleichzeitig mit (Wahl und Zeit werden beim Start der Frage
+  nach Stufe ausgelost; „🤖 hat schon geantwortet!“ erscheint, sobald er fertig wäre). Auflösung zeigt darunter „🤖 Computer: B)
+  richtig in 2,9 s – +171“. 11 Fragen + 1 🎖️ Meisterfrage zum Schluss (wie gegen Mitglieder). Geprüft: alle 12 Fragen mit 4
+  antippbaren Antworten.
+- Keine neue Fehl-Anmeldung: die Admin-Meldung 23:15 war die Sammelmeldung zum anonymen Vorfall 23:02 (in 2.17.3 behoben).
+
 ## 2.18.0 – 2026-10-03 – ⏸ Pause / ▶ Weiter in jedem Spiel (Wunsch Hansi)
 - KC-CLUB-SPIELE-PAUSE: unten ein Umschalter „⏸ Pause“ ↔ „▶ Weiter“ in jedem Spiel gegen den Computer (Tic-Tac-Toe, Schach,
   Bauernskat, Küchenterror). Pause: Spiel steht still – der Computer zieht nicht (sein Zug wird nachgeholt), die Küchenterror-Uhr hält
