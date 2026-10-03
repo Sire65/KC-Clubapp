@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.12.0 – 2026-10-03 – 🎲 Spiel-Einladung beim App-Start (Wunsch Hansi)
+- KC-CLUB-SPIEL-EINLADUNG: Beim Start: „Hey <Vorname>, heute Lust auf eine Partie? Schach gegen den Computer – oder fordere doch ein
+  anderes Mitglied heraus. Tic-Tac-Toe oder Bauernskat habe ich auch im Angebot.“ (plus „X Partien warten schon auf dich“, wenn ja).
+  Knöpfe: ✅ Ja (öffnet die Spiele-Kacheln) · ⏰ Später (frühestens in 2 Std. wieder, auch bei offener App) · Nein, heute nicht ·
+  🚫 Keine Spiele (aus – Einstellung „spiel_einladung“ am Konto, gilt auf allen Geräten, in ⚙️ Einstellungen wieder einschaltbar).
+- Höchstens einmal am Tag, nur auf der Startseite ohne Sprung-Link, wartet bis Tagesinfo/Neuigkeiten zu sind (max. 2 Min.),
+  nie im Notbetrieb. Daneben tippen = Später.
+- Spiele-Kacheln zählen robust, auch wenn die Liste noch nicht geladen ist.
+
 ## 2.11.0 – 2026-10-03 – Spiele als Kacheln + Schach mit Küchenbrigade (Wunsch Hansi)
 - KC-CLUB-SPIELE-KACHELN: „🎲 Spiele“ zeigt zuerst je Spiel eine große Kachel (Tic-Tac-Toe, Schach, Bauernskat) mit gelber Zahl,
   wenn dort jemand auf dich wartet (du bist dran / neue Herausforderung). Erst in der Kachel: Gegen den Computer / Gegen Mitglieder

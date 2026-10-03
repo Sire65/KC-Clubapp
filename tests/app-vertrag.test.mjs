@@ -3349,6 +3349,13 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/SCH_BRIGADE_NAME = \{ k: "Küchenchef", q: "Kaltmamsell", r: "Souschef", b: "Patissier", n: "Springer", p: "Praktikant" \}/.test(html) && /function schStilWechseln\(\)/.test(html) && /\$\{schStilHtml\(\)\}/.test(html), "Küchenbrigade umschaltbar");
   assert.ok(!/SCH_FIG\[f\.type\]/.test(html), "Brett zeichnet über schFigHtml");
 }
+// 306. 2.12.0: Spiel-Einladung beim Start (KC-CLUB-SPIEL-EINLADUNG)
+{
+  assert.ok(/spiel_einladung: \(w\) => \(\{ an: w\?\.an !== false \}\)/.test(server), "Einstellung am Konto, Standard an");
+  assert.ok(/function spEinladung\(versuch = 0\)/.test(html) && /localStorage\.getItem\(SPE_TAG\) === heuteIso\(\)/.test(html) && /classList\.contains\("im-notbetrieb"\)/.test(html), "einmal am Tag, nie im Notbetrieb");
+  for (const k of ["'ja'", "'spaeter'", "'nein'", "'aus'"]) assert.ok(html.includes(`spEinlAntwort(${k})`), "Knopf " + k);
+  assert.ok(/if \(!h \|\| h === "#"\) setTimeout\(\(\) => spEinladung\(\), 4000\)/.test(html) && /id="setSpielEinl"/.test(html), "beim Start + Schalter in Einstellungen");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

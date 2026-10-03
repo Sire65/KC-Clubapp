@@ -24,7 +24,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "2.11.0";
+const SERVER_VERSION = "2.12.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -795,6 +795,8 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
   inkognito: (w) => ({ an: w?.an === true }),
   // KC-CLUB-SPIELE (2.7.0): darf man mich herausfordern (Standard: nein) + welche Spiele (bisher nur Tic-Tac-Toe)
   spiele: (w) => ({ herausforderung: w?.herausforderung === true, spiele: [...new Set((Array.isArray(w?.spiele) ? w.spiele : ["ttt"]).filter((x: unknown) => x === "ttt" || x === "schach" || x === "bsk"))].slice(0, 3) }),
+  // KC-CLUB-SPIEL-EINLADUNG (2.12.0, Wunsch Hansi): „Lust auf eine Partie?“ beim App-Start – „Keine Spiele“ schaltet aus (Standard an)
+  spiel_einladung: (w) => ({ an: w?.an !== false }),
   // KC-CLUB-EINWEISUNG (2.4.0): Erklärkarte beim ersten Öffnen eines Bereichs – an/aus (Standard an) + welche schon gesehen
   einweisung: (w) => ({ an: w?.an !== false, gesehen: Object.fromEntries(Object.entries(w?.gesehen && typeof w.gesehen === "object" ? w.gesehen : {})
     .filter(([id, d]) => KA_ID.test(id) && typeof d === "string" && !isNaN(Date.parse(d))).slice(0, 40).map(([id, d]) => [id, new Date(String(d)).toISOString()])) }),

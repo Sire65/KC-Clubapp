@@ -2157,6 +2157,7 @@
       <!-- KC-CLUB-SPIELE (2.7.0) -->
       <div class="schalter"><div><b>🎲 Andere dürfen mich zu Spielen herausfordern</b><div class="hinweis">Tic-Tac-Toe, Schach und Bauernskat – darunter wählst du, welche. Aus: Du erscheinst nicht in der Liste und bekommst keine Herausforderungen. Gegen den Computer spielen geht immer.</div></div><input type="checkbox" id="setSpiele" onchange="spBereitSetzen(this.checked)"></div>
       <div class="knoepfe versteckt" id="setSpieleArten" style="margin:-4px 0 10px" aria-label="Zu welchen Spielen darf man dich herausfordern?"></div>
+      <div class="schalter"><div><b>🎲 Spiel-Einladung beim Start</b><div class="hinweis">Höchstens einmal am Tag: „Heute Lust auf eine Partie?“ – mit Ja, Nein, Später oder Keine Spiele</div></div><input type="checkbox" id="setSpielEinl" checked onchange="spEinlSchalter(this.checked)"></div>
       <!-- KC-CLUB-ANKLOPFEN-ERLAUBEN (1.8.0) -->
       <div class="schalter"><div><b>👋 Anklopfen erlauben</b><div class="hinweis">Andere dürfen bei dir anklopfen, wenn du online bist. Aus: Sie sehen 🔕 und schreiben dir stattdessen eine Nachricht.</div></div><input type="checkbox" id="setAnklopfen" checked onchange="anklopfenSetzen({ erlaubt: this.checked })"></div>
       <div class="zwei"><label class="feld">🔔 Anklopfton<select id="setKlopfTon" onchange="anklopfenSetzen({ ton: this.value })"></select></label><button class="knopf klein" style="align-self:end" onclick="klopfTonSpielen($('setKlopfTon').value)">▶ Testton</button></div>
@@ -2530,7 +2531,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.11.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.12.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -4767,7 +4768,7 @@ function spZurueck() { // ‹ oben: Partie → Spiel → Übersicht → Startsei
   else zurueck("start");
 }
 function spKachelnZeigen() {
-  const L = SP.liste, zahl = (a) => L ? L.spiele.filter((g) => g.spiel === a && ((g.status === "laeuft" && g.ichDran) || (g.status === "angefragt" && !g.vonMir))).length : 0;
+  const L = SP.liste, zahl = (a) => Array.isArray(L?.spiele) ? L.spiele.filter((g) => g.spiel === a && ((g.status === "laeuft" && g.ichDran) || (g.status === "angefragt" && !g.vonMir))).length : 0;
   $("spInhalt").innerHTML = `<p class="hinweis" style="margin:0 0 10px;text-align:center">Köcheclub Edition – such dir ein Spiel aus:</p>
     <div class="sp-kacheln">${SP_ARTEN.map(([a, sym, t, u]) => { const n = zahl(a);
       return `<button class="sp-kachel" onclick="spArtWahl('${a}')"${n ? ` aria-label="${t}, ${n} wartet auf dich"` : ""}><span class="sp-k-sym" aria-hidden="true">${sym}</span><span><b>${t}</b><small>${u}</small></span><span class="sp-k-pfeil" aria-hidden="true">›</span>${n ? `<span class="sp-k-zahl">${n}</span>` : ""}</button>`; }).join("")}</div>`;
@@ -4935,6 +4936,7 @@ async function spBereitSetzen(an, arten) {
   catch (e) { spEinstZeigen(); meldeFehler(e); }
 }
 function spEinstZeigen() {
+  if ($("setSpielEinl")) $("setSpielEinl").checked = spEinlAn();
   const an = INIT?.einstellungen?.spiele?.herausforderung === true, l = spMeineArten();
   if ($("setSpiele")) $("setSpiele").checked = an;
   if ($("setSpieleArten")) { $("setSpieleArten").classList.toggle("versteckt", !an);
@@ -5454,6 +5456,42 @@ function bskMgKarte(k) {
   const p = z.sp[0], hi = p.hand.indexOf(k); // Karte sofort in den Stich legen (der verdeckte Bauer darunter kommt vom Server), Server rechnet ab
   if (hi >= 0) p.hand.splice(hi, 1); else { const t = p.tisch.find((x) => x.oben === k); if (t) t.oben = null; }
   z.stich.push({ s: 0, k }); bskMgZug({ karte: k });
+}
+
+// ---------- KC-CLUB-SPIEL-EINLADUNG (2.12.0, Wunsch Hansi): „Hey, heute Lust auf eine Partie?“ beim App-Start ----------
+// Höchstens einmal am Tag und nur auf der Startseite, wenn kein anderes Fenster offen ist (Tagesinfo/Neuigkeiten gehen vor; es wird
+// bis zu 2 Minuten gewartet). Ja → Spiele-Kacheln. Nein → heute nicht mehr. Später → frühestens in 2 Stunden wieder (auch bei offener App).
+// Keine Spiele → aus (Einstellung „spiel_einladung“ am Konto, in ⚙️ Einstellungen wieder einschaltbar). Nie im Notbetrieb/SOS.
+const SPE_TAG = "kc_club_spiel_einl_tag", SPE_SPAETER = "kc_club_spiel_einl_spaeter", SPE_SPAETER_MS = 2 * 3600000;
+const spEinlAn = () => INIT?.einstellungen?.spiel_einladung?.an !== false;
+function spEinladung(versuch = 0) {
+  if (!ICH || !INIT || !spEinlAn() || document.body.classList.contains("im-notbetrieb")) return;
+  try { if (localStorage.getItem(SPE_TAG) === heuteIso() || Date.now() < Number(localStorage.getItem(SPE_SPAETER) || 0)) return; } catch { return; }
+  if (document.querySelector(".blatt:not(.versteckt)") || aktuelleAnsicht !== "start") { if (versuch < 24) setTimeout(() => spEinladung(versuch + 1), 5000); return; }
+  const dran = INIT.spieleDran || 0;
+  const f = blattAuf("spEinlBlatt", `<div style="text-align:center"><div style="font-size:2.6rem;line-height:1.2" aria-hidden="true">♟️ 🃏 ❌⭕</div>
+      <h3 style="margin:6px 0">Hey ${esc(ICH.vorname || ICH.name || "")}, heute Lust auf eine Partie?</h3>
+      <p style="margin:0 0 6px">Schach gegen den Computer – oder fordere doch ein anderes Mitglied heraus. Tic-Tac-Toe oder Bauernskat habe ich auch im Angebot.</p>
+      ${dran ? `<p class="hinweis" style="margin:0 0 6px"><b>🎲 ${dran === 1 ? "Eine Partie wartet" : dran + " Partien warten"} schon auf dich.</b></p>` : ""}</div>
+    <div class="knoepfe" style="flex-direction:column;align-items:stretch">
+      <button class="knopf haupt" style="text-align:center" onclick="spEinlAntwort('ja')">✅ Ja, lass uns spielen</button>
+      <button class="knopf" style="text-align:center" onclick="spEinlAntwort('spaeter')">⏰ Später</button>
+      <button class="knopf" style="text-align:center" onclick="spEinlAntwort('nein')">Nein, heute nicht</button>
+      <button class="knopf klein" style="text-align:center" onclick="spEinlAntwort('aus')">🚫 Keine Spiele – nicht mehr fragen</button></div>`);
+  f.onclick = (e) => { if (e.target === f) spEinlAntwort("spaeter"); }; // daneben getippt = später
+}
+async function spEinlAntwort(a) {
+  $("spEinlBlatt")?.remove();
+  try { if (a === "spaeter") localStorage.setItem(SPE_SPAETER, String(Date.now() + SPE_SPAETER_MS)); else { localStorage.setItem(SPE_TAG, heuteIso()); localStorage.removeItem(SPE_SPAETER); } } catch {}
+  if (a === "ja") return spStart();
+  if (a === "spaeter") { clearTimeout(spEinlAntwort.t); spEinlAntwort.t = setTimeout(() => spEinladung(), SPE_SPAETER_MS + 1000); return melde("⏰ Gut, ich frage später nochmal"); }
+  if (a === "aus") return spEinlSchalter(false);
+}
+async function spEinlSchalter(an) {
+  try { await einstSpeichern("spiel_einladung", { an: !!an }); INIT.einstellungen = { ...(INIT.einstellungen || {}), spiel_einladung: { an: !!an } };
+    melde(an ? "🎲 Spiel-Einladung beim Start ist an" : "🚫 Keine Spiel-Einladungen mehr – in ⚙️ Einstellungen wieder einschaltbar"); }
+  catch (e) { meldeFehler(e); }
+  spEinstZeigen();
 }
 
 // ---------- KC-CLUB-SPIEL-TERMIN (2.9.1, Wunsch Hansi): zu einer Partie einen Termin vereinbaren ----------
@@ -14633,7 +14671,7 @@ function suAppListe() {
     ["🔔", "Push-Benachrichtigungen", "push benachrichtigung mitteilung handy", ein("pushStatus")], ["🔊", "Ton", "ton klingel laut", ein("setTon")],
     ["🌙", "Nicht stören (Ruhezeit)", "nicht stören ruhezeit nacht stumm", ein("ruheAn")], ["🔠", "Schriftgröße", "schrift gross groß lesen", ein(einfach() ? "setGrossE" : "setGross")],
     ["🎨", "Farbe & Design", "farbe design aussehen", ein(einfach() ? "designWahlE" : "designWahl")], ["🌗", "Tag/Nacht umschalten", "dunkel hell nacht tag", () => dunkelUmschalten()],
-    ["🎂", "Geburtstag anzeigen", "geburtstag", ein("setGeburtstag")], ["🎉", "Runde Geburtstage (Alter für die Clubleitung)", "runder geburtstag alter jubiläum", ein("setRundGeburtstag")], ["🟢", "Online sichtbar", "online sichtbar unsichtbar", ein("setOnline")], ["🗣️", "Stimme zum Vorlesen", "stimme vorlesen sprache ansage roboter klang", ein("setStimme")], ["🎲", "Spiele: herausfordern erlauben", "spiele spiel tic tac toe schach bauernskat skat karten herausfordern", ein("setSpiele")], ["🎓", "Einweisung beim ersten Öffnen", "einweisung erklärung hilfe anleitung neu", ein("setEinw")], ...(ICH?.admin ? [["🕶️", "Inkognito (nur Admin)", "inkognito unsichtbar versteckt online", ein("setInkognito")]] : []), ["🕒", "Zuletzt da anzeigen", "zuletzt da online gesehen", ein("setZuletzt")],
+    ["🎂", "Geburtstag anzeigen", "geburtstag", ein("setGeburtstag")], ["🎉", "Runde Geburtstage (Alter für die Clubleitung)", "runder geburtstag alter jubiläum", ein("setRundGeburtstag")], ["🟢", "Online sichtbar", "online sichtbar unsichtbar", ein("setOnline")], ["🗣️", "Stimme zum Vorlesen", "stimme vorlesen sprache ansage roboter klang", ein("setStimme")], ["🎲", "Spiele: herausfordern erlauben", "spiele spiel tic tac toe schach bauernskat skat karten herausfordern", ein("setSpiele")], ["🎲", "Spiel-Einladung beim Start", "spiel einladung start lust partie keine spiele", ein("setSpielEinl")], ["🎓", "Einweisung beim ersten Öffnen", "einweisung erklärung hilfe anleitung neu", ein("setEinw")], ...(ICH?.admin ? [["🕶️", "Inkognito (nur Admin)", "inkognito unsichtbar versteckt online", ein("setInkognito")]] : []), ["🕒", "Zuletzt da anzeigen", "zuletzt da online gesehen", ein("setZuletzt")],
     ["🆘", "Notfallkontakt", "notfall kontakt", ein("nfName")], ["📆", "Kalender-Abo (Handy-Kalender)", "kalender abo handy ical", ein("kalAboKnopf")],
     ["📱", "Meine Geräte", "geräte handy tablet abmelden", () => geraeteBlatt()], ["📡", "Verbindung prüfen", "verbindung internet led server", () => verbindungBlatt()],
     ["🔄", "Update prüfen", "update version neu", () => updateKachel()], ["🟢", "Mein Status", "status urlaub verfügbar krank", () => statusBlatt()],
@@ -15087,6 +15125,7 @@ async function fpAdmin(tage) {
     else if (["#termine", "#vorschlaege", "#aktionen", "#fotos", "#protokolle", "#dienste", "#nachrichten", "#mitglieder", "#einstellungen", "#archiv", "#helfen"].includes(h)) zeige(h.slice(1));
     else if (h === "#buero" && ICH?.buero) buStart();
     if (!h || h === "#") setTimeout(() => buGrussFragen(), 1500); // KC-CLUB-BUERO: Begrüßung der Clubleitung
+    if (!h || h === "#") setTimeout(() => spEinladung(), 4000); // KC-CLUB-SPIEL-EINLADUNG (2.12.0): nach Begrüßung/Neuigkeiten
   });
   // KC-CLUB-UPDATE-AUTO (2.3.2, Wunsch Hansi): auch beim Start und alle 10 Min. (nur auf der Startseite, nichts offen,
   // nichts eingetippt) selbst aktualisieren – Schutz wie bisher in updateRuhig/updateSelbst (1× je 10 Min. und Version)
