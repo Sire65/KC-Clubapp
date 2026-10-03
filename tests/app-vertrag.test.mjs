@@ -3441,6 +3441,16 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(!m, "Variable verdeckt Hilfsfunktion: " + (m || []).join(", "));
   assert.ok(/if \(!\(await frage\(text\)\)\) return;/.test(html.slice(html.indexOf("async function leihStatus("), html.indexOf("async function leihStatus(") + 400)), "Storno fragt mit text");
 }
+// 318. 2.18.3: Diktat ohne Wiederholungen (KC-CLUB-DIKTAT-DOPPELT) – Zusammenführen mit der echten Funktion prüfen
+{
+  const a = html.indexOf("const dtNorm = "), b = html.indexOf("\n}", html.indexOf("function diktatMerge(")) + 2;
+  const { diktatMerge } = new Function(html.slice(a, b) + "; return { diktatMerge };")();
+  const kum = ["kannst du", "kannst du deinen Text", "kannst du deinen Text einsprechen", "kannst du deinen Text einsprechen der dann aber trotzdem"].reduce(diktatMerge, []);
+  assert.equal(kum.join(" "), "kannst du deinen Text einsprechen der dann aber trotzdem", "kumulative Android-Stücke nicht doppelt");
+  assert.equal(["hallo zusammen", "wer kommt morgen"].reduce(diktatMerge, []).join(" "), "hallo zusammen wer kommt morgen", "normale Stücke");
+  assert.equal(["ja", "ja"].reduce(diktatMerge, []).join(" "), "ja ja", "kurze Wiederholung bleibt");
+  assert.ok(/e\.continuous = !DIKTAT_ANDROID;/.test(html) && /for \(let i = 0; i < ev\.results\.length; i\+\+\)/.test(html), "Android Satz für Satz, Runde neu zusammensetzen");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

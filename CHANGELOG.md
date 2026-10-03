@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.18.3 – 2026-10-03 – Diktat: keine Wiederholungen mehr auf Android (Fund Hansi)
+- KC-CLUB-DIKTAT-DOPPELT: Fund (Bild): eingesprochener Text wiederholte sich „kannst du deinen Text kannst du deinen Text einsprechen …“.
+  Ursache: Android-Chrome liefert beim Dauer-Zuhören jedes Stück erneut als ganzen bisherigen Satz und zählt neu – die App hängte jedes
+  Stück an. Jetzt werden die Ergebnisse jeder Hör-Runde neu zusammengesetzt und zusammengeführt (diktatMerge: neues Stück, das mit dem
+  letzten beginnt, ersetzt es; schon vorhandenes Ende fällt weg; kurze echte Wiederholungen wie „ja ja“ bleiben). Auf Android zusätzlich
+  Satz-für-Satz-Hören (continuous aus, nach jeder Pause automatisch weiter, wie bisher höchstens 5 Minuten).
+- Geprüft mit nachgestellten Android-Ergebnissen, normalem Desktop-Verlauf, mehreren Runden und „ja ja“.
+
 ## 2.18.2 – 2026-10-03 – Storno bei der Ausleihe geht wieder (Fund Hansi)
 - KC-CLUB-LEIHEN-STORNO: Fund „Storno in Ausleihe klappt nicht“ – Ursache: in leihStatus hieß der Rückfragetext „frage“ und verdeckte
   die Funktion frage() → „frage is not a function“, die App brach vor der Rückfrage ab (nichts ging an den Server). Gleicher Fehler in

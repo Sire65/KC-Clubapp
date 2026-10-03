@@ -2583,7 +2583,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.18.2"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.18.3"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -4780,11 +4780,26 @@ function diktatSatz(t) {
   x = x.replace(/[ \t]+/g, " ").replace(/ *\n */g, "\n").replace(/([.,?!:])(?=[^\s\n.,?!:])/g, "$1 ").trim();
   return x.replace(/(^|[.?!]\s+|\n)([a-zäöü])/g, (m, a, b) => a + b.toUpperCase());
 }
-const DT = { erk: null, aktiv: false, basis: "", fertig: "", seit: 0 };
+const DT = { erk: null, aktiv: false, basis: "", fertig: "", seit: 0, vorher: [], sitzung: [], zwischen: "" };
+// KC-CLUB-DIKTAT-DOPPELT (2.18.3, Fund Hansi: eingesprochener Text wiederholte sich „kannst du deinen Text kannst du deinen Text …“):
+// Android-Chrome liefert beim Dauer-Zuhören jedes Stück erneut als ganzen bisherigen Satz („kumulativ“) und fängt die Zählung neu an.
+// Jetzt: Stücke zusammenführen statt anhängen – ein neues Stück, das mit dem letzten beginnt, ersetzt es; eines, das schon am Ende
+// steht, fällt weg. Auf Android außerdem Satz-für-Satz-Hören (continuous aus, nach jeder Pause neu starten).
+const DIKTAT_ANDROID = /Android/i.test(navigator.userAgent);
+const dtNorm = (t) => String(t || "").toLowerCase().replace(/[^\p{L}\p{N} ]/gu, "").replace(/\s+/g, " ").trim();
+function diktatMerge(liste, t) {
+  t = String(t || "").trim(); if (!t) return liste;
+  const l = [...liste], letzt = l[l.length - 1], a = dtNorm(letzt), b = dtNorm(t);
+  if (letzt && b.startsWith(a) && (b.length > a.length || a.length >= 12)) l[l.length - 1] = t; // kumulativ: der neue Text enthält den alten
+  else if (letzt && b.length >= 12 && a.endsWith(b)) { /* schon da */ }
+  else if (b.length >= 12 && dtNorm(l.join(" ")).endsWith(b)) { /* schon da (über mehrere Stücke) – kurze Wiederholungen wie „ja ja“ bleiben */ }
+  else l.push(t);
+  return l;
+}
 function diktatStart() {
   if (!DIKTAT_GEHT) return spracheStart();
   if (DT.aktiv) return;
-  const feld = $("text"); DT.basis = feld.value; DT.fertig = ""; DT.aktiv = true; DT.seit = Date.now();
+  const feld = $("text"); DT.basis = feld.value; DT.fertig = ""; DT.aktiv = true; DT.seit = Date.now(); DT.vorher = []; DT.sitzung = []; DT.zwischen = "";
   const f = blattAuf("diktatBlatt", `<div class="diktat"><span class="bu-hpunkt">✍️</span><b>Ich schreibe mit …</b>
     <div class="diktat-text" id="diktatText"><span class="hinweis">Sprich einfach los. Satzzeichen sagen: „Punkt“, „Komma“, „Fragezeichen“, „neue Zeile“.</span></div>
     <div class="knoepfe" style="justify-content:center"><button class="knopf haupt" data-d="senden">📤 Senden</button><button class="knopf" data-d="fertig">✅ Fertig – noch prüfen</button><button class="knopf" data-d="weg">✕ Verwerfen</button></div>
@@ -4795,16 +4810,21 @@ function diktatStart() {
 }
 function diktatHoeren() {
   const Erk = window.SpeechRecognition || window.webkitSpeechRecognition, e = new Erk(); DT.erk = e;
-  e.lang = "de-DE"; e.continuous = true; e.interimResults = true;
+  e.lang = "de-DE"; e.continuous = !DIKTAT_ANDROID; e.interimResults = true;
   e.onresult = (ev) => {
-    let neu = ""; for (let i = ev.resultIndex; i < ev.results.length; i++) { const r = ev.results[i]; if (r.isFinal) DT.fertig += " " + r[0].transcript; else neu += " " + r[0].transcript; }
-    const gesagt = diktatSatz(DT.fertig + neu), feld = $("text");
+    // jedes Mal alle Ergebnisse dieser Hör-Runde neu zusammensetzen (nicht anhängen) – so entstehen keine Wiederholungen
+    let fin = [], neu = "";
+    for (let i = 0; i < ev.results.length; i++) { const r = ev.results[i], t = (r[0]?.transcript || "").trim(); if (!t) continue; if (r.isFinal) fin = diktatMerge(fin, t); else neu = t; }
+    DT.sitzung = fin; DT.zwischen = neu;
+    let teile = [...DT.vorher]; for (const t of fin) teile = diktatMerge(teile, t); if (neu) teile = diktatMerge(teile, neu);
+    const gesagt = diktatSatz(teile.join(" ")), feld = $("text");
     feld.value = (DT.basis ? DT.basis.replace(/\s*$/, " ") : "") + gesagt; feld.dispatchEvent(new Event("input", { bubbles: true }));
     if ($("diktatText")) $("diktatText").textContent = gesagt || "…";
   };
   e.onerror = (ev) => { if (ev.error === "not-allowed" || ev.error === "service-not-allowed") { melde("✍️ Bitte das Mikrofon für die App erlauben (Handy-Einstellungen).", true); diktatEnde("fertig"); } };
   // Chrome hört nach einer Pause von selbst auf – solange das Fenster offen ist, weiter zuhören (höchstens 5 Minuten)
-  e.onend = () => { if (DT.aktiv && Date.now() - DT.seit < 5 * 60000) { try { diktatHoeren(); } catch { diktatEnde("fertig"); } } else if (DT.aktiv) diktatEnde("fertig"); };
+  e.onend = () => { for (const t of [...DT.sitzung, DT.zwischen]) DT.vorher = diktatMerge(DT.vorher, t); DT.sitzung = []; DT.zwischen = ""; // Runde abschließen
+    if (DT.aktiv && Date.now() - DT.seit < 5 * 60000) { try { diktatHoeren(); } catch { diktatEnde("fertig"); } } else if (DT.aktiv) diktatEnde("fertig"); };
   try { e.start(); } catch { melde("✍️ Mikrofon gerade nicht verfügbar.", true); diktatEnde("fertig"); }
 }
 function diktatEnde(was) {
