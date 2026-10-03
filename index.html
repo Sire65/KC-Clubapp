@@ -1886,7 +1886,8 @@
       <div class="schalter"><div><b>🌙 Nicht stören</b><div class="hinweis" id="ruheHinweisE">nachts kein Push</div></div><input type="checkbox" id="ruheAnE" onchange="ruheSchnell(this.checked)"></div>
       <div class="knoepfe" style="margin:0 0 10px"><button class="knopf klein" onclick="geraeteBlatt()">📱 Meine Geräte</button></div>
       <div id="farbeE"><b>🎨 Lieblingsfarbe</b><div class="hinweis">Antippen – die App färbt sich sofort um</div><div class="designwahl" id="designWahlE"></div>
-        <details class="ds-mehr" id="designMehrKlappeE"><summary>🎨 Weitere Farbschemen</summary><div class="designwahl" id="designWahlMehrE"></div></details></div>
+        <details class="ds-mehr" id="designMehrKlappeE"><summary>🎨 Weitere Farbschemen</summary><div class="designwahl" id="designWahlMehrE"></div></details>
+        <details class="ds-mehr" id="designBuntKlappeE"><summary>✨ Ausgefallene Farbschemen</summary><div class="designwahl" id="designWahlBuntE"></div></details></div>
       <div class="schalter"><div><b>🔠 Große Schrift</b></div><input type="checkbox" id="setGrossE" onchange="einstellung('gross', this.checked); if ($('setGross')) $('setGross').checked = this.checked"></div>
       <div class="schalter"><div><b>🟢 Einfache Ansicht</b><div class="hinweis">Ausschalten zeigt alle Funktionen – du kannst jederzeit zurück.</div></div><button class="knopf klein" onclick="ansichtSetzen('erweitert')">🔧 Alle Funktionen</button></div>
       <div class="schalter"><div><b>📄 Kurzanleitung</b><div class="hinweis">Die App in 3 Schritten – zum Ansehen oder Ausdrucken</div></div><button class="knopf klein" onclick="druckStarten('anleitung')">Ansehen</button></div>
@@ -1970,6 +1971,7 @@
       <div><b>🎨 Farbdesign</b><div class="hinweis">Antippen – die App färbt sich sofort um</div></div>
       <div class="designwahl" id="designWahl"></div>
       <details class="ds-mehr" id="designMehrKlappe"><summary>🎨 Weitere Farbschemen <span class="hinweis" id="designMehrZahl"></span></summary><div class="designwahl" id="designWahlMehr"></div></details>
+      <details class="ds-mehr" id="designBuntKlappe"><summary>✨ Ausgefallene Farbschemen <span class="hinweis" id="designBuntZahl"></span></summary><div class="designwahl" id="designWahlBunt"></div></details>
       <button class="knopf klein" onclick="designStandard()">↺ Standard wiederherstellen</button>
       <div class="wortwahl" id="meinWetterort"></div>
       <div class="schalter"><div><b>🪧 Info-Feld oben beim Start</b><div class="hinweis">Welche Karte zuerst erscheint – z. B. Nr. 1 oder die Kommunikationszentrale</div></div><select id="setInfoStart" onchange="infoStartSetzen(this.value)" style="max-width:48%"></select></div>
@@ -2309,7 +2311,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.77.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.78.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2402,6 +2404,31 @@ const DESIGNS = [
   { id: "rose", name: "Rosé", mehr: true,
     tag: { rot: "#a3435f", rot2: "#b85a76", rot3: "#d08098", gold: "#d9b06e", hero1: "#5c1f33", hero4: "#d79aa9", bg: "#fbf3f5", karte: "#ffffff", karte2: "#f3e3e8", linie: "#ead3da", text: "#2b161d", grau: "#6d5860" },
     nacht: { rot: "#a3435f", rot2: "#b85a76", rot3: "#e08ca4", gold: "#d9b06e", hero1: "#3a1220", hero4: "#8a4d5f", bg: "#1a1114", karte: "#271a1f", karte2: "#312228", linie: "#4a343c", text: "#f7eaee", grau: "#c2a9b1" } },
+  // KC-CLUB-DESIGN-BUNT (1.78.0, Wunsch Hansi „etwas ausgefallenere“): mit Farbverlauf oben wie Disko/Regenbogen – eigene Klappzone
+  { id: "sonnenuntergang", name: "Sonnenuntergang", mehr: true, bunt: true, deko: ["#e0533d", "#f6a33b"], heroSchrift: true,
+    verlauf: { tag: "linear-gradient(135deg, #3b0a45 0%, #8e1e5c 35%, #e0533d 70%, #f6a33b 100%)", nacht: "linear-gradient(135deg, #1e0526 0%, #5e1240 35%, #a83a2a 70%, #b8721f 100%)" },
+    tag: { rot: "#a8324a", rot2: "#c2463a", rot3: "#e0703d", gold: "#f6a33b", hero1: "#3b0a45", hero4: "#f6a33b", bg: "#fdf4ee", karte: "#ffffff", karte2: "#f7e4d9", linie: "#efd2c2", text: "#2a1218", grau: "#6e5157" },
+    nacht: { rot: "#a8324a", rot2: "#c2463a", rot3: "#f08a55", gold: "#f6a33b", hero1: "#1e0526", hero4: "#b8641f", bg: "#170c10", karte: "#24141a", karte2: "#2e1b22", linie: "#47303a", text: "#f8ebe6", grau: "#c0a6ad" } },
+  { id: "polarlicht", name: "Polarlicht", mehr: true, bunt: true, deko: ["#7be0a6", "#5b8def"],
+    verlauf: { tag: "linear-gradient(135deg, #0b1d3a 0%, #134e5e 35%, #1fa37a 65%, #7be0a6 100%)", nacht: "linear-gradient(135deg, #050f20 0%, #0c3440 35%, #147a5c 65%, #3fae78 100%)" },
+    tag: { rot: "#13715c", rot2: "#1a8a6f", rot3: "#2fb38c", gold: "#e6c35c", hero1: "#0b1d3a", hero4: "#1fa37a", bg: "#eef7f4", karte: "#ffffff", karte2: "#dcefe8", linie: "#c9e3da", text: "#0f2420", grau: "#4a605a" },
+    nacht: { rot: "#13715c", rot2: "#1a8a6f", rot3: "#3fd0a0", gold: "#e6c35c", hero1: "#050f20", hero4: "#147a5c", bg: "#0a1416", karte: "#122224", karte2: "#1a2e30", linie: "#2a4446", text: "#e4f5ef", grau: "#9db9b1" } },
+  { id: "kirschbluete", name: "Kirschblüte", mehr: true, bunt: true, deko: ["#f2a7c3", "#d9a86c"], heroSchrift: true,
+    verlauf: { tag: "linear-gradient(135deg, #7a2848 0%, #c45a86 45%, #f2a7c3 100%)", nacht: "linear-gradient(135deg, #3d1024 0%, #7e2f55 45%, #b8648a 100%)" },
+    tag: { rot: "#a8436e", rot2: "#c2588a", rot3: "#e08aae", gold: "#d9a86c", hero1: "#7a2848", hero4: "#f2a7c3", bg: "#fdf5f8", karte: "#ffffff", karte2: "#f7e3ec", linie: "#efd0de", text: "#2b1420", grau: "#6d5360" },
+    nacht: { rot: "#a8436e", rot2: "#c2588a", rot3: "#f0a0c0", gold: "#d9a86c", hero1: "#3d1024", hero4: "#9c4a70", bg: "#190f14", karte: "#26161e", karte2: "#301d27", linie: "#4a3140", text: "#f9eaf1", grau: "#c4a8b6" } },
+  { id: "tiefsee", name: "Tiefsee", mehr: true, bunt: true, deko: ["#22a6c9", "#4fd1e0"],
+    verlauf: { tag: "linear-gradient(135deg, #020b1f 0%, #0a2a5c 40%, #0d5c8c 75%, #22a6c9 100%)", nacht: "linear-gradient(135deg, #010612 0%, #071c40 40%, #0a4466 75%, #127a96 100%)" },
+    tag: { rot: "#0d4f8c", rot2: "#1565a6", rot3: "#2b8fd0", gold: "#4fd1e0", hero1: "#020b1f", hero4: "#22a6c9", bg: "#eef4fa", karte: "#ffffff", karte2: "#dde8f4", linie: "#cbdbec", text: "#0d1b2a", grau: "#4a5a6c" },
+    nacht: { rot: "#1360a8", rot2: "#1565a6", rot3: "#3aa5e0", gold: "#4fd1e0", hero1: "#010612", hero4: "#0f6e8f", bg: "#070d18", karte: "#0f1a2a", karte2: "#162436", linie: "#253a52", text: "#e4eef8", grau: "#9fb2c6" } },
+  { id: "glut", name: "Glut", mehr: true, bunt: true, deko: ["#f28c28", "#f2b632"],
+    verlauf: { tag: "linear-gradient(135deg, #1a0a05 0%, #6b1508 35%, #c8361a 70%, #f28c28 100%)", nacht: "linear-gradient(135deg, #0d0503 0%, #4a0e05 35%, #8f2612 70%, #b0601c 100%)" },
+    tag: { rot: "#b8321a", rot2: "#d0461f", rot3: "#e9762f", gold: "#f2b632", hero1: "#1a0a05", hero4: "#f28c28", bg: "#fbf3ee", karte: "#ffffff", karte2: "#f5e1d6", linie: "#eccebe", text: "#2a120a", grau: "#6e5248" },
+    nacht: { rot: "#b8321a", rot2: "#d0461f", rot3: "#ff8a3d", gold: "#f2b632", hero1: "#0d0503", hero4: "#a8401a", bg: "#140b08", karte: "#21130e", karte2: "#2b1a13", linie: "#45291f", text: "#f9ece5", grau: "#c1a79c" } },
+  { id: "retro", name: "Retro 70er", mehr: true, bunt: true, deko: ["#d98a2b", "#6b8e23"], heroSchrift: true,
+    verlauf: { tag: "linear-gradient(120deg, #5a3a1a 0%, #a0522d 30%, #d98a2b 55%, #c8a838 75%, #6b8e23 100%)", nacht: "linear-gradient(120deg, #2e1d0c 0%, #6b3720 30%, #9a6020 55%, #8a7426 75%, #4f6a19 100%)" },
+    tag: { rot: "#8a4b1f", rot2: "#a0522d", rot3: "#c47a2c", gold: "#d9a92b", hero1: "#5a3a1a", hero4: "#6b8e23", bg: "#fbf5e8", karte: "#fffdf7", karte2: "#f2e6cc", linie: "#e6d6b2", text: "#2a1d0e", grau: "#6b5a40" },
+    nacht: { rot: "#9a5524", rot2: "#a0522d", rot3: "#d98a2b", gold: "#d9a92b", hero1: "#2e1d0c", hero4: "#4f6a19", bg: "#16110a", karte: "#231b11", karte2: "#2d2417", linie: "#463924", text: "#f6eedc", grau: "#bdb095" } },
 ];
 // Gewählt: Design + Modus (auto = nach Helligkeit: Lichtsensor, falls das Handy ihn freigibt, sonst Sonnenauf-/-untergang in Werne)
 let DS = { design: "klassik", modus: "auto" }, dsGeaendert = 0, LICHT_NACHT = null;
@@ -2465,7 +2492,8 @@ function anwendenDesign() {
 function designWahlZeigen() {
   if (!$("designWahl")) return;
   queueMicrotask(() => { if ($("designWahlE")) $("designWahlE").innerHTML = $("designWahl").innerHTML;
-    if ($("designWahlMehrE") && $("designWahlMehr")) { $("designWahlMehrE").innerHTML = $("designWahlMehr").innerHTML; if ($("designMehrKlappe").open) $("designMehrKlappeE").open = true; } }); // gleiche Farbwahl in „Das Wichtigste“
+    for (const [q, z, k, kz] of [["designWahlMehr", "designWahlMehrE", "designMehrKlappe", "designMehrKlappeE"], ["designWahlBunt", "designWahlBuntE", "designBuntKlappe", "designBuntKlappeE"]])
+      if ($(z) && $(q)) { $(z).innerHTML = $(q).innerHTML; if ($(k).open) $(kz).open = true; } }); // gleiche Farbwahl in „Das Wichtigste“
   const nacht = istNacht();
   const knopf = (d) => { const f = d[nacht ? "nacht" : "tag"];
     return `<button class="${d.id === DS.design ? "an" : ""}" onclick="designWaehlen('${d.id}')"><span class="vorschau" style="background:${f.bg}">`
@@ -2474,8 +2502,9 @@ function designWahlZeigen() {
       + `</span>${d.id === DS.design ? "✓ " : ""}${esc(d.name)}</button>`; };
   $("designWahl").innerHTML = DESIGNS.filter((d) => !d.mehr).map(knopf).join("");
   // 1.76.0: weitere Schemen in eigener Klappzone; ist eins davon gewählt, steht die Zone offen
-  const mehr = DESIGNS.filter((d) => d.mehr);
-  if ($("designWahlMehr")) { $("designWahlMehr").innerHTML = mehr.map(knopf).join(""); $("designMehrZahl").textContent = `(${mehr.length})`; if (mehr.some((d) => d.id === DS.design)) $("designMehrKlappe").open = true; }
+  const zone = (liste, w, z, k) => { if (!$(w)) return; $(w).innerHTML = liste.map(knopf).join(""); $(z).textContent = `(${liste.length})`; if (liste.some((d) => d.id === DS.design)) $(k).open = true; };
+  zone(DESIGNS.filter((d) => d.mehr && !d.bunt), "designWahlMehr", "designMehrZahl", "designMehrKlappe");
+  zone(DESIGNS.filter((d) => d.bunt), "designWahlBunt", "designBuntZahl", "designBuntKlappe"); // 1.78.0: ausgefallene Schemen
   document.querySelectorAll("#modusWahl button").forEach((b) => b.classList.toggle("an", b.dataset.m === DS.modus));
   const s = sonne(), z = (d) => fZeit.format(d);
   $("modusInfo").textContent = DS.modus !== "auto" ? "" : `Gerade: ${nacht ? "🌙 Nacht" : "☀️ Tag"} – ` + (LICHT_NACHT !== null ? "nach dem Lichtsensor des Handys." : `nach Sonnenstand in Werne (heute hell von ${z(s.auf)} bis ${z(s.unter)} Uhr).`);

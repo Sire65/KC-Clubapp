@@ -1,5 +1,10 @@
 # Änderungen
 
+## 1.78.0 – 2026-10-03
+- KC-CLUB-DESIGN-BUNT (Wunsch Hansi „etwas ausgefallenere Schemata“): 6 Farbschemen mit Farbverlauf oben (wie Disko/Regenbogen):
+  Sonnenuntergang, Polarlicht, Kirschblüte, Tiefsee, Glut, Retro 70er – je Tag und Nacht, Kontrast geprüft. Eigene Klappzone
+  „✨ Ausgefallene Farbschemen (6)“ unter ⚙️ → Darstellung (und in der einfachen Ansicht unter „Lieblingsfarbe“).
+
 ## 1.77.0 – 2026-10-03
 - Tipp des Tages „Farbschemen“ für alle (Wunsch Hansi): „🎨 Hallo Klaus, hast du schon unsere 8 neuen Farbschemen entdeckt?“
   – persönlich mit Vornamen, steht ganz vorne (kommt als nächster Tipp). Knöpfe: „🎨 Jetzt einstellen“ (öffnet ⚙️ und die

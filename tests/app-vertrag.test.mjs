@@ -2905,6 +2905,14 @@ assert.ok(/id: "emoji",[^\n]*unter dem Schreibfeld<\/b> auf <b>😊<\/b>/.test(h
   assert.ok(/id: "farbschemen_neu"[^]*?Hallo \$\{ICH\?\.vorname[^]*?ja: "🎨 Jetzt einstellen", nein: "🙈 Nicht mehr anzeigen", nur: \(\) => !DESIGNS\.find/.test(t), "persönlich, Knöpfe, nur ohne neues Schema");
   assert.ok(/\$\{esc\(typeof tipp\.t === "function" \? tipp\.t\(\) : tipp\.t\)\}/.test(html) && /id="designMehrKlappeE"/.test(html), "Titel-Funktion + Klappzone in der einfachen Ansicht");
 }
+// 258. 1.78.0: ausgefallene Farbschemen (mit Verlauf) in eigener Klappzone
+{
+  const ds = html.slice(html.indexOf("const DESIGNS = ["), html.indexOf("// Gewählt: Design + Modus"));
+  const D = new Function(ds.replace("const DESIGNS =", "return"))();
+  const bunt = D.filter((d) => d.bunt);
+  assert.ok(bunt.length >= 6 && bunt.every((d) => d.mehr && d.verlauf?.tag && d.verlauf?.nacht), "ausgefallene Schemen mit Verlauf");
+  assert.ok(/id="designBuntKlappe"><summary>✨ Ausgefallene Farbschemen/.test(html) && /id="designBuntKlappeE"/.test(html) && /DESIGNS\.filter\(\(d\) => d\.mehr && !d\.bunt\)/.test(html), "eigene Klappzone");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
