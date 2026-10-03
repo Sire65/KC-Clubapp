@@ -2852,6 +2852,12 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   // Server-Titel, auf die sich die Deutung stützt (Vertrag: werden sie geändert, muss ansageDeuten mit)
   for (const t of ["`💬 ${ich.name}`", "hat dich erwähnt", "`📌 ${kopf}`", "Post-it von ${von} bekommen", "\"✋ Zusage\"", "\"🚗 Neue Mitfahrt\"", "\"🚗 Mitfahrgelegenheit gefunden\"", "`📍 ${ich.name}`", "`👋 ${ich.vorname} klopft an`"]) assert.ok(server.includes(t), "Server-Titel fehlt: " + t);
 }
+// 251. 1.72.0: Register „Club“/„Technik“, dezente Blätter-Pfeile
+{
+  assert.ok(/const REGISTER_ALLE = \[\["verein", "Club"\], \["mein", "Meins"\], \["programme", "Technik"\]\]/.test(html), "Register-Namen");
+  assert.ok(!/rgba\(90,15,25,\.72\)/.test(html) && /\.ipfeil \{[^}]*background: rgba\(255,255,255,\.16\)/.test(html), "Info-Pfeile ohne festes Weinrot");
+  assert.ok(/\.bl-pfeil \{[^}]*border-radius: 50%; background: rgba\(255,255,255,\.82\)[^}]*color: var\(--grau\)/.test(html), "Blätter-Pfeile dezent");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

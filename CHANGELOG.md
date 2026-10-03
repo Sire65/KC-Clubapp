@@ -1,5 +1,12 @@
 # Änderungen
 
+## 1.72.0 – 2026-10-03
+- Register auf der Startseite (Wunsch Hansi): „Verein“ heißt jetzt „Club“, „Programme“ heißt „Technik“ (dort liegen Update,
+  freigegebene Programme und Sicherheits-Check); auch im Überblick („🏠 Im Club“, „🛠️ Technik“). Interne IDs bleiben – eigene
+  Register-Reihenfolge und Kachel-Anordnung bleiben erhalten.
+- Blätter-Pfeile ans Farbkonzept angepasst (Wunsch Hansi: „zu krass in Weinrot“): Info-Feld oben jetzt Glas-Knöpfe, die jedem
+  Farbdesign folgen (vorher festes Weinrot); Blättern in Ordnern/Chronik runde helle Knöpfe mit grauem Pfeil statt dunkler Balken.
+
 ## 1.71.0 – 2026-10-03
 - KC-CLUB-SPRACHANSAGEN (Wunsch Hansi): Das Handy sagt an, was mich betrifft – z. B. „Christina hat dir eine Nachricht
   geschickt“, „Klaus klopft gerade bei dir an“, „Christina hat ein Post-it an die Pinnwand gehängt“, „Klaus hat auf deine

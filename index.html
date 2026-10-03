@@ -239,7 +239,7 @@
   .ifeld { min-height: 150px; }
   .ifeld.rein-r { animation: ireinR .28s ease-out; } .ifeld.rein-l { animation: ireinL .28s ease-out; }
   @keyframes ireinR { from { opacity: 0; transform: translateX(34px); } } @keyframes ireinL { from { opacity: 0; transform: translateX(-34px); } }
-  .ipfeil { position: absolute; top: 50%; z-index: 2; width: 32px; height: 32px; margin-top: -16px; border-radius: 50%; border: 1px solid rgba(255,255,255,.45); background: rgba(90,15,25,.72); color: #fff; font-size: 1.3rem; font-weight: 800; line-height: 1; padding: 0 0 2px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,.25); }
+  .ipfeil { position: absolute; top: 50%; z-index: 2; width: 32px; height: 32px; margin-top: -16px; border-radius: 50%; border: 1px solid rgba(255,255,255,.4); background: rgba(255,255,255,.16); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); color: #fff; font-size: 1.3rem; font-weight: 800; line-height: 1; padding: 0 0 2px; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,.12); } /* 1.72.0: dezent, folgt dem Farbdesign (vorher festes Weinrot) */
   .ipfeil.links { left: -17px; } .ipfeil.rechts { right: -17px; }
   /* KC-CLUB-INFO-SPRUNG (1.19.0, Wunsch Hansi): Doppelpfeil unter dem einfachen Pfeil – « zur ersten, » zur letzten Karte.
      Beide Pfeile zusammen mittig: einfacher Pfeil etwas höher, Doppelpfeil direkt darunter */
@@ -1399,8 +1399,8 @@
   .bl-zeichen button { flex: 0 0 auto; border: none; border-radius: 8px 8px 2px 2px; background: var(--rf); color: #fff; font: inherit; font-size: .8rem; font-weight: 700; padding: 5px 10px; opacity: .7; cursor: pointer; }
   .bl-zeichen button.an { opacity: 1; transform: translateY(-3px); box-shadow: 0 2px 6px rgba(0,0,0,.4); }
   .bl-regel { display: flex; gap: 8px; align-items: center; } .bl-regel input { flex: 1; accent-color: #d4a017; }
-  .bl-pfeil { position: absolute; top: 50%; transform: translateY(-50%); width: 42px; height: 64px; border: none; border-radius: 10px; background: rgba(0,0,0,.4); color: #fff; font-size: 1.7rem; z-index: 2; cursor: pointer; }
-  .bl-pfeil.links { left: 2px; } .bl-pfeil.rechts { right: 2px; } .bl-pfeil:disabled { opacity: .15; }
+  .bl-pfeil { position: absolute; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border: 1px solid var(--linie); border-radius: 50%; background: rgba(255,255,255,.82); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); color: var(--grau); font-size: 1.6rem; font-weight: 700; line-height: 1; padding: 0 0 3px; box-shadow: 0 2px 8px rgba(0,0,0,.18); z-index: 2; cursor: pointer; } /* 1.72.0: dezent statt dunkel */
+  .bl-pfeil.links { left: 6px; } .bl-pfeil.rechts { right: 6px; } .bl-pfeil:disabled { opacity: .25; }
   @keyframes blVor { from { transform: rotateY(-32deg) translateX(40px); opacity: .3; } to { transform: none; opacity: 1; } }
   @keyframes blZurueck { from { transform: rotateY(32deg) translateX(-40px); opacity: .3; } to { transform: none; opacity: 1; } }
   .bl-buehne.vor .bl-seite { animation: blVor .38s ease-out; transform-origin: left center; }
@@ -2291,7 +2291,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.71.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.72.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -5011,7 +5011,7 @@ function programmOeffnen(id) { const p = PROGRAMME.find((x) => x.id === id); if 
 // ---- KC-CLUB-UEBERBLICK (0.79.0, Wunsch Hansi): „Unsere Club-App auf einen Blick“ – aktualisiert sich selbst:
 // Bereiche kommen aus der Kachel-Registry (KACHELN: fertige, für mich freigegebene), Neuigkeiten aus version.json (verlauf).
 // Fest ist nur der kurze Einleitungstext (UE_TEXT). Admin-Neuerungen sehen nur Admins.
-const UE_GRUPPEN = [["verein", "🏠 Im Verein"], ["mein", "🙋 Für mich"], ["programme", "💻 Programme"]], UE_AUSGELASSEN = ["test", "update"], UE_VERSIONEN = 8;
+const UE_GRUPPEN = [["verein", "🏠 Im Club"], ["mein", "🙋 Für mich"], ["programme", "🛠️ Technik"]], UE_AUSGELASSEN = ["test", "update"], UE_VERSIONEN = 8;
 const UE_TEXT = {
   beta: ["Noch nicht alle Funktionen sind komplett getestet", "Funktionen, Ansichten usw. können sich noch ändern", "Deshalb ist Hansi auf euer Feedback angewiesen: 💭 Feedback-Kachel"],
   warum: ["Alles an einem Ort statt verstreut in WhatsApp, Mails und auf Zetteln", "Termine und Zusagen auf einen Blick, ohne ständiges Nachfragen", "Kostenlos, keine Werbung, kein App-Store nötig",
@@ -5237,7 +5237,7 @@ let REGZ = null, regZogGerade = false;
   document.addEventListener("touchmove", (e) => { if (REGZ && e.cancelable) e.preventDefault(); }, { passive: false });
 })();
 // Register mit kleiner Anzahl der Kacheln; per Wischen links/rechts wechselbar
-const REGISTER_ALLE = [["verein", "Verein"], ["mein", "Meins"], ["programme", "Programme"]]; // 1.53.2 (Wunsch Hansi): „Meins“ statt „Mein Bereich“ – kürzer, Zahl bricht nicht um
+const REGISTER_ALLE = [["verein", "Club"], ["mein", "Meins"], ["programme", "Technik"]]; // 1.72.0 (Wunsch Hansi): „Club“ statt „Verein“, „Technik“ statt „Programme“; 1.53.2: „Meins“ statt „Mein Bereich“ – kürzer, Zahl bricht nicht um
 // KC-CLUB-REGISTER-ZIEHEN (0.36.0): eigene Reihenfolge der Register (festhalten und nach links/rechts ziehen)
 const registerReihe = () => { const o = KA.register || []; const pos = (r) => { const i = o.indexOf(r[0]); return i < 0 ? 100 + REGISTER_ALLE.indexOf(r) : i; }; return [...REGISTER_ALLE].sort((a, b) => pos(a) - pos(b)); };
 let REGISTER = registerReihe();
@@ -8563,7 +8563,7 @@ const SICHERHEIT_PRUEFUNGEN = [
   { id: "sicherung", sym: "💾", t: "Nächtliche Datensicherung", wert: (r) => r.s?.sicherung ?? null, info: (r) => r.s?.sicherungAm ? `Zuletzt ${new Date(r.s.sicherungAm).toLocaleString("de-DE", { weekday: "short", hour: "2-digit", minute: "2-digit" })} Uhr` : "" },
   { id: "wiederherstellung", sym: "♻️", t: "Wiederherstellung erfolgreich getestet", wert: (r) => r.s?.wiederherstellung ?? null, info: () => "Die Sicherung wird regelmäßig zur Probe zurückgespielt" },
   { id: "ueberwachung", sym: "👁️", t: "Überwachung rund um die Uhr aktiv", wert: (r) => r.s?.ueberwachung ?? null, info: (r) => r.s?.ueberwachungMin != null ? `Letzte Kontrolle ${siZeit(r.s.ueberwachungMin)}` : "" },
-  { id: "version", sym: "🔄", t: "App auf dem neuesten Stand", wert: (r) => r.neueste == null ? null : r.neueste === APP_VERSION, info: (r) => r.neueste && r.neueste !== APP_VERSION ? `Neu: v${r.neueste} – unter Programme → Update` : `v${APP_VERSION}` },
+  { id: "version", sym: "🔄", t: "App auf dem neuesten Stand", wert: (r) => r.neueste == null ? null : r.neueste === APP_VERSION, info: (r) => r.neueste && r.neueste !== APP_VERSION ? `Neu: v${r.neueste} – unter Technik → Update` : `v${APP_VERSION}` },
 ];
 // Rundinstrumente: Grenzen je Messung (ms) – schnell / normal / langsam, immer mit Wort (nicht nur Farbe)
 const SI_UHREN = [
