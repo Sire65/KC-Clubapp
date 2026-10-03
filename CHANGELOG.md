@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.9.3 – 2026-10-03 – Bauernskat-Karten noch näher am Original (Wunsch Hansi)
+- KC-CLUB-KARTEN-ECHT: echte französische Kartenbilder (32 SVG + Rückseite) in lib/karten/ – Vorlage Adrian Kennard über
+  npm @letele/playing-cards 0.1.0, gemeinfrei (CC0, LICENSE/HERKUNFT.txt beiliegend, kostenfrei). Eckzeichen J/Q auf deutsche
+  B/D umgestellt, Pik-Ass ohne QR-Code/Fremdtext. Generator: tools/karten/. Fallback: lädt ein Bild nicht (offline),
+  bleibt die gezeichnete Karte aus 2.9.2 sichtbar (onerror). Bilder werden beim Öffnen von Bauernskat vorgeladen.
+
 ## 2.9.2 – 2026-10-03 – Bauernskat-Karten wie ein echtes französisches Blatt (Wunsch Hansi)
 - KC-CLUB-BAUERNSKAT: Eckzeichen (Wert + Farbe) oben links und unten rechts gedreht, Zahlenkarten 7–10 mit klassisch angeordneten
   Symbolen (untere Hälfte auf dem Kopf), Ass mit großem Mittelsymbol, Bildkarten mit Rahmen und Figur – Köcheclub Edition: Bube als

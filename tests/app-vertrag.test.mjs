@@ -3314,6 +3314,14 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
 {
   assert.ok(/function bskKartenbild\(c\)/.test(html) && /const BSK_FIGUR = \{ B: "👨‍🍳", D: "👸", K: "🤴" \};/.test(html) && /"10": \[\[25, 8\]/.test(html) && /\.bsk-ecke\.unten \{[^}]*rotate\(180deg\)/.test(html), "Eckzeichen, Pips, Bildkarten");
 }
+// 303. 2.9.3: echte Kartenbilder (KC-CLUB-KARTEN-ECHT) – CC0, mit Fallback auf gezeichnete Karte
+{
+  const karten = ["kr", "pi", "he", "ka"].flatMap((f) => ["A", "10", "K", "D", "B", "9", "8", "7"].map((w) => `${f}-${w}.svg`));
+  for (const k of [...karten, "rueck.svg"]) assert.ok(lies("lib/karten/" + k).startsWith("<svg"), "Kartenbild fehlt: " + k);
+  assert.ok(/CC0/.test(lies("lib/karten/LICENSE")), "Lizenz CC0");
+  assert.ok(!/<text/.test(lies("lib/karten/pi-A.svg")), "Pik-Ass ohne Fremdtext");
+  assert.ok(/class="bsk-bildkarte" src="lib\/karten\/\$\{k\}\.svg\?v=1"[^>]*onerror="this\.remove\(\)"/.test(html) && /bskKartenbild\(c\) \+/.test(html), "Bild mit Fallback");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

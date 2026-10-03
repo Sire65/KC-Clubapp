@@ -1,0 +1,7 @@
+Spielkarten (französisches Blatt) für Bauernskat in der Köcheclub-App
+Quelle: Adrian Kennard, SVG playing cards (https://www.me.uk/cards/), umgesetzt im npm-Paket @letele/playing-cards 0.1.0
+Lizenz: CC0 1.0 Universal (gemeinfrei) – siehe LICENSE. Keine Kosten.
+Änderungen für die Köcheclub-App (2.9.3): aus den React-Bausteinen in einzelne SVG-Dateien umgewandelt (tools/karten/umwandeln.mjs),
+32 Karten des Skatblatts (7 bis Ass), Eckzeichen von Bube und Dame auf deutsche Buchstaben „B“ und „D“ geändert,
+auf dem Pik-Ass den Hinweis (QR-Code + Schrift) der Quelle entfernt (tools/karten/deutsch.mjs).
+Dateinamen: <farbe>-<wert>.svg mit farbe kr/pi/he/ka (Kreuz/Pik/Herz/Karo), wert A/10/K/D/B/9/8/7; rueck.svg = Rückseite.

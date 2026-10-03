@@ -227,6 +227,9 @@
   .bsk-tisch, .bsk-hand { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
   .bsk-stapel { position: relative; display: flex; justify-content: center; min-height: 92px; }
   .bsk-stapel.mit-unten { padding-bottom: 14px; } .bsk-stapel .bsk-karte.rueck.klein { position: absolute; bottom: 0; left: 50%; max-width: 64px; width: 88%; transform: translateX(-42%) rotate(5deg); }
+  .bsk-bildkarte { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; border-radius: inherit; pointer-events: none; user-select: none; }
+  .bsk-karte:has(.bsk-bildkarte) { border-color: transparent; background: #fff; }
+  .bsk-karte.blass::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: rgba(226,220,208,.62); }
   .bsk-karte.blass { background: #e9e4da; color: #a39d92 !important; border-color: #d8d2c6; box-shadow: none; } /* nicht durchsichtig – sonst scheint der verdeckte Bauer durch */
   .bsk-stapel > :last-child { position: relative; z-index: 1; }
   .bsk-karte { position: relative; width: 100%; max-width: 74px; aspect-ratio: 5 / 7; border-radius: 8px; border: 1px solid #b9b2a4; background: linear-gradient(160deg, #fff 0%, #fbf8f1 100%); color: #1b1b1b; display: block; font: inherit; padding: 0; box-shadow: 0 2px 4px rgba(0,0,0,.22); overflow: hidden; container-type: inline-size; }
@@ -2511,7 +2514,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.9.2"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.9.3"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -5281,10 +5284,14 @@ function bskKartenbild(c) {
   else mitte = `<span class="bsk-pips">${BSK_BILD[c.w].map(([x, y]) => `<i style="left:${x}%;top:${y}%"${y > 50 ? ' class="kopf"' : ""}>${sym}</i>`).join("")}</span>`;
   return ecke(false) + mitte + ecke(true);
 }
+// KC-CLUB-KARTEN-ECHT (2.9.3, Wunsch Hansi „noch näher am Original“): Kartenbilder einmal vorladen, damit beim Spielen nichts nachlädt
+let bskBilderGeladen = false;
+function bskBilderVorladen() { if (bskBilderGeladen) return; bskBilderGeladen = true; for (const f of BSK_FARBEN) for (const w of BSK_WERTE) { const i = new Image(); i.src = `lib/karten/${f}-${w}.svg?v=1`; } }
 function bskKarteHtml(k, { klick = "", aus = false, klein = false, verdeckt = false, trumpf = null, blass = false } = {}) {
   if (verdeckt) return `<span class="bsk-karte rueck${klein ? " klein" : ""}" aria-label="verdeckte Karte"></span>`;
   const c = bskKarte(k), rot = c.f === "he" || c.f === "ka", tr = trumpf && bskTrumpf(k, trumpf);
-  const inhalt = bskKartenbild(c);
+  // 2.9.3: echtes Kartenbild (französisches Blatt, CC0, lib/karten) über der gezeichneten Karte – fehlt das Bild (offline), bleibt die gezeichnete
+  const inhalt = bskKartenbild(c) + `<img class="bsk-bildkarte" src="lib/karten/${k}.svg?v=1" alt="" draggable="false" onerror="this.remove()">`;
   return klick ? `<button class="bsk-karte${rot ? " rot" : ""}${klein ? " klein" : ""}${tr ? " trumpf" : ""}" ${aus ? "disabled" : ""} onclick="${klick}('${k}')" aria-label="${BSK_FNAME[c.f]} ${c.w}${tr ? ", Trumpf" : ""}">${inhalt}</button>`
     : `<span class="bsk-karte${rot ? " rot" : ""}${klein ? " klein" : ""}${tr ? " trumpf" : ""}${blass ? " blass" : ""}" aria-label="${BSK_FNAME[c.f]} ${c.w}${blass ? " (jetzt nicht spielbar)" : ""}">${inhalt}</span>`;
 }
@@ -5308,6 +5315,7 @@ function bskBrettHtml(z, ich, { klick, aus, gegnerName, ansageSicht }) {
   </div>`;
 }
 function bskPcZeigen() {
+  bskBilderVorladen();
   if (!BSK.z) bskPcNeu(false);
   if (!BSK.denkt && BSK.z && ((BSK.z.phase === "spiel" && BSK.z.amZug === 1 && BSK.z.stich.length < 2) || (BSK.z.phase === "ansage" && BSK.z.vorhand === 1)) && !bskPcZeigen.laeuft) { bskPcZeigen.laeuft = true; setTimeout(() => { bskPcZeigen.laeuft = false; bskPcComputer(); }, 700); }
   const z = BSK.z, s = BSK.stand;
