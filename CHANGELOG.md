@@ -1,5 +1,10 @@
 # Änderungen
 
+## 1.57.1 – 2026-10-03
+- KC-CLUB-ONLINE-ANSAGE (Fund Hansi „Schalter nicht zu sehen“): Die Schalter Ansage / Anmelde-Ton / Anmelde-Push standen im
+  Kasten „Das Wichtigste“, der nur in der einfachen Ansicht erscheint. Jetzt eigener Kasten „🗣️ Ansagen & Töne“ – in beiden
+  Ansichten sichtbar.
+
 ## 1.57.0 – 2026-10-03
 - KC-CLUB-ONLINE-PUSH (Wunsch Hansi): Admin bekommt auch bei geschlossener App eine Push „🟢 Klaus ist jetzt online“ (normaler
   Benachrichtigungston des Handys – eigener Ton/Sprache gehen bei geschlossener App technisch nicht). Nur wenn das Mitglied

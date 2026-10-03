@@ -2552,6 +2552,16 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.match(html, /id="setOnlinePushZeile"[^\n]*id="setOnlinePush" onchange="onlinePushSchalter\(this\.checked\)"/, "Admin-Schalter");
 }
 
+// 227. 1.57.1: Ansage-Schalter in beiden Ansichten sichtbar
+{
+  const k0 = html.indexOf('<details class="karte" data-klappe="ansagen" data-einfach open>'), k1 = html.indexOf("</details>", k0);
+  assert.ok(k0 > 0, "eigener Kasten mit data-einfach (einfache Ansicht) – kein data-klappe=\"einfach\" (sonst in der erweiterten weg)");
+  const kasten = html.slice(k0, k1);
+  for (const id of ["setAnsage", "setAnmeldeTon", "setOnlinePush"]) assert.ok(kasten.includes(`id="${id}"`), `${id} im Kasten`);
+  const e0 = html.indexOf('data-klappe="einfach"'), e1 = html.indexOf("</details>", e0);
+  assert.ok(!html.slice(e0, e1).includes('id="setAnsage"'), "nicht mehr nur in der einfachen Ansicht");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
