@@ -1,5 +1,11 @@
 # Änderungen
 
+## 1.83.0 – 2026-10-03
+- KC-CLUB-BUERO-KOPF (Wunsch Hansi, kein Platz verschenken): Begrüßung („🌤️ Guten Tag, Hansi!“) steht oben in der Kopfzeile
+  neben „🗂️ Büro“; „📋 Übersicht“ und „☰ Liste“ (bzw. „🗄️ Büro-Raum“) stehen nebeneinander in einer Reihe.
+- Regal: alle Ordner gleich hoch und breit (die absichtlich unterschiedlichen Höhen entfallen) – ordentlicher.
+- Vertragstest 157 (Knopf „Übersicht“ im Büro) an die Knopfreihe angepasst.
+
 ## 1.82.0 – 2026-10-03
 - KC-CLUB-VORLAGE-KOPF (Wunsch Hansi): Protokoll-Vorlage zum Mitschreiben (Büro → Drucken → Sitzungs-Vorlage) mit kompaktem Kopf:
   „Protokollführer: ____“ und „Ort:“ (vorbelegt, sonst Strich) nebeneinander; „Entschuldigt bzw. fehlend:“ (Absagen vorbelegt +

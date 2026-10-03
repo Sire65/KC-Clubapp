@@ -1058,7 +1058,7 @@
   .bu-ordner { width: 48px; height: 204px; align-self: end; margin-bottom: 16px; position: relative; border: none; cursor: pointer; padding: 8px 0 10px; border-radius: 5px 5px 2px 2px;
     background: linear-gradient(90deg, rgba(0,0,0,.18), transparent 22%, transparent 78%, rgba(0,0,0,.14)), var(--of); color: #fffdf8;
     display: flex; flex-direction: column; align-items: center; gap: 6px; transition: transform .18s ease, box-shadow .18s ease; box-shadow: 0 1px 2px rgba(0,0,0,.25); }
-  .bu-ordner:nth-child(3n) { height: 190px; } .bu-ordner:nth-child(4n+1) { height: 198px; }
+  /* 1.83.0 (Wunsch Hansi „alle gleich hoch und breit – ordentlicher“): keine unterschiedlichen Höhen mehr */
   .bu-ordner:hover, .bu-ordner:focus-visible { transform: translateY(-8px); box-shadow: 0 8px 14px rgba(0,0,0,.25); }
   .bu-ordner:active { transform: translateY(-12px) scale(1.02); }
   .bu-osym { font-size: 1.25rem; line-height: 1; }
@@ -1124,6 +1124,9 @@
   @media (prefers-reduced-motion: reduce) { .bu-ordner, .bu-ding { transition: none; } }
   /* KC-CLUB-BUERO (1.25.0) */
   .bu-gruss { font-size: 1.05rem; line-height: 1.45; }
+  /* KC-CLUB-BUERO-KOPF (1.83.0, Wunsch Hansi): Begrüßung oben neben „Büro“, Knöpfe nebeneinander – kein Platz verschenkt */
+  .bu-kopfgruss { margin-left: auto; font-weight: 800; font-size: .98rem; text-align: right; }
+  .bu-knopfreihe { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; } .bu-knopfreihe .knopf { text-align: center; }
   .bu-tipp { margin-top: 8px; padding: 8px 10px; border-radius: 12px; background: var(--gelbbg); border: 2px solid var(--gelb); }
   .mini-kachel.bu-dran { border-color: var(--rot); animation: vsPuls 1.2s ease-in-out 4; }
   .bu-kopf { display: flex; gap: 12px; align-items: center; }
@@ -1650,7 +1653,7 @@
 
   <!-- BÜRO DER CLUBLEITUNG (KC-CLUB-BUERO – 1.25.0) -->
   <section id="v-buero" class="versteckt">
-    <div class="kopf2"><button class="zurueck" onclick="buZurueck()">‹</button><h2>🗂️ Büro</h2></div>
+    <div class="kopf2"><button class="zurueck" onclick="buZurueck()">‹</button><h2>🗂️ Büro</h2><span class="bu-kopfgruss" id="buKopfGruss"></span></div>
     <div id="buInhalt"><div class="karte hinweis">Wird geladen …</div></div>
   </section>
 
@@ -2318,7 +2321,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.82.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.83.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -6839,7 +6842,8 @@ async function lvJetzt() {
 function lvGross() { if (LV.art) druckStarten(LV.art); }
 // Bereich im Büro: Klappkarte mit Pfeil und Schloss wie in den Einstellungen (Zustand je Gerät gemerkt)
 const buBereich = (name, titel, inhalt) => `<details class="karte bu-bereich" data-klappe="buero_${name}" data-ohne-unten open><summary>${titel}</summary>${inhalt}</details>`;
-function buZeigenRoh() { $("buInhalt").innerHTML = BU.sicht === "ordner" ? buOrdnerHtml() : BU.sicht === "sitzung" ? buSitzungHtml() : BU.sicht === "eingang" ? buEingangHtml() : BU.sicht === "brief" ? buBriefHtml() : BU.sicht === "termine" ? buTermineHtml() : BU.sicht === "kontakt" ? buKontaktHtml() : BU.sicht === "nachher" ? buNachherHtml() : BU.sicht === "feste" ? buFesteHtml() : BU.sicht === "liste" ? buListeHtml() : BU.sicht === "fl" ? buFlHtml() : BU.sicht === "flneu" ? buFlNeuHtml() : BU.sicht === "fall" ? buFallHtml() : BU.sicht === "rechte" ? buRechteHtml() : buStartHtml(); lvNachZeigen(); }
+function buZeigenRoh() { if ($("buKopfGruss") && ICH) $("buKopfGruss").textContent = `${buTageszeit()}, ${ICH.vorname || ICH.name}!`; // 1.83.0: Begrüßung in der Kopfzeile
+  $("buInhalt").innerHTML = BU.sicht === "ordner" ? buOrdnerHtml() : BU.sicht === "sitzung" ? buSitzungHtml() : BU.sicht === "eingang" ? buEingangHtml() : BU.sicht === "brief" ? buBriefHtml() : BU.sicht === "termine" ? buTermineHtml() : BU.sicht === "kontakt" ? buKontaktHtml() : BU.sicht === "nachher" ? buNachherHtml() : BU.sicht === "feste" ? buFesteHtml() : BU.sicht === "liste" ? buListeHtml() : BU.sicht === "fl" ? buFlHtml() : BU.sicht === "flneu" ? buFlNeuHtml() : BU.sicht === "fall" ? buFallHtml() : BU.sicht === "rechte" ? buRechteHtml() : buStartHtml(); lvNachZeigen(); }
 // Nächster sinnvoller Schritt für eine Sitzung
 function buNaechster(t) {
   if (!t) return null;
@@ -6866,7 +6870,7 @@ function buStartListeHtml() {
     ["🗄️", "Archiv: zu prüfen", e.archiv, "arStart()"], ["✔️", "Offene Aufgaben", e.aufgaben, "zeige('protokolle')"], ["📄", "Protokoll-Entwürfe", e.entwuerfe, "zeige('protokolle')"]];
   const festHeute = BU_F ? [...BU_F.geburtstage.filter((f) => f.tage === 0).map((f) => f.alter ? `🎉 ${esc(f.vorname)} wird ${f.alter}` : `🎂 ${esc(f.vorname)} hat Geburtstag`), ...BU_F.jubilaeen.filter((f) => f.tage === 0).map((f) => `🏅 ${esc(f.vorname)}: ${f.jahre} Jahre im Club`)] : [];
   const festBald = BU_F ? BU_F.geburtstage.concat(BU_F.jubilaeen).filter((f) => f.tage >= 0 && f.tage <= 7).length : 0;
-  return `<div class="karte bu-gruss"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b>${buTageszeit()}, ${esc(ICH.vorname || ICH.name)}!</b>${ICH?.vorstand ? '<button class="knopf klein" style="margin-left:auto" onclick="tagesinfoZeigen(true)">📋 Übersicht</button>' : ""}<button class="knopf klein" ${ICH?.vorstand ? "" : 'style="margin-left:auto"'} onclick="buAnsichtWechseln()">🗄️ Büro-Raum</button></div>${festHeute.length ? `<div class="bu-tipp" style="margin:6px 0">🎉 Heute: ${festHeute.join(" · ")} – <button class="knopf klein" onclick="buFeste()">gratulieren</button></div>` : ""}${t ? `Nächste Sitzung: <b>${esc(t.titel)}</b> · ${esc(wann(t.beginn))}<br>✅ ${t.ja} zugesagt · ❌ ${t.nein} abgesagt · ❓ ${t.ohne} ohne Antwort` : "Gerade ist keine Sitzung geplant – lege sie unter 📅 Termine an."}
+  return `<div class="karte bu-gruss"><div class="bu-knopfreihe">${ICH?.vorstand ? '<button class="knopf klein" onclick="tagesinfoZeigen(true)">📋 Übersicht</button>' : ""}<button class="knopf klein" onclick="buAnsichtWechseln()">🗄️ Büro-Raum</button></div>${festHeute.length ? `<div class="bu-tipp" style="margin:6px 0">🎉 Heute: ${festHeute.join(" · ")} – <button class="knopf klein" onclick="buFeste()">gratulieren</button></div>` : ""}${t ? `Nächste Sitzung: <b>${esc(t.titel)}</b> · ${esc(wann(t.beginn))}<br>✅ ${t.ja} zugesagt · ❌ ${t.nein} abgesagt · ❓ ${t.ohne} ohne Antwort` : "Gerade ist keine Sitzung geplant – lege sie unter 📅 Termine an."}
     ${!S ? '<div class="bu-tipp">👁️ Du hast im Büro <b>Leserechte</b>: ansehen und drucken. Ändern und Versenden schaltet der Admin frei.</div>' : dran ? `<div class="bu-tipp">👉 Nächster Schritt: <b>${dran}</b></div>` : t ? '<div class="bu-tipp">✅ Für diese Sitzung ist alles erledigt.</div>' : ""}</div>
     ${ICH?.admin ? buBereich("verwaltung", "🔐 Verwaltung", `<div class="mini-kacheln"><button class="mini-kachel" onclick="buRechte()"><span class="mk-sym">🔐</span><span class="mk-titel">Büro-Freigaben</span><span class="mk-unter">wer darf ins Büro – nur lesen oder lesen &amp; schreiben</span></button></div>`) : ""}
     ${buBereich("sitzung", "🗂️ Sitzung", `<div class="mini-kacheln">
@@ -6919,8 +6923,8 @@ function buRaumHtml() {
   const naechst = (r.sitzungen || []).find((x) => new Date(x.beginn) >= Date.now() - 6 * 3600000) || t;
   const kal = naechst ? new Date(naechst.beginn) : null;
   const ding = (cls, inhalt, label, fn, extra = "") => `<button class="bu-ding ${cls}" onclick="${fn}">${inhalt}<span class="bu-dlabel">${label}</span>${extra}</button>`;
-  return `<div class="karte bu-gruss"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b>${buTageszeit()}, ${esc(ICH.vorname || ICH.name)}!</b>
-      ${L ? '<button class="knopf klein" style="margin-left:auto" onclick="tagesinfoZeigen(true)">📋 Übersicht</button>' : ""}<button class="knopf klein" ${L ? "" : 'style="margin-left:auto"'} onclick="buAnsichtWechseln()">☰ Liste</button></div>
+  return `<div class="karte bu-gruss"><div class="bu-knopfreihe">
+      ${L ? '<button class="knopf klein" onclick="tagesinfoZeigen(true)">📋 Übersicht</button>' : ""}<button class="knopf klein" onclick="buAnsichtWechseln()">☰ Liste</button></div>
       ${BSPR.geht ? '<button class="bu-mikro" onclick="buSprechen()" aria-label="Sprachsteuerung: sag z. B. „Öffne Ordner Protokolle“"><span>🎙️</span><b>Sag mir, was du brauchst</b><small>z. B. „Öffne Ordner Protokolle“ oder „Anrufen Erika“</small></button>' : ""}
       ${festHeute.length ? `<div class="bu-tipp" style="margin:6px 0 0">🎉 Heute: ${festHeute.map((f) => f.jahre ? `${esc(f.vorname)} – ${f.jahre} Jahre im Club` : `${esc(f.vorname)} hat Geburtstag`).join(" · ")}</div>` : ""}
       ${!S ? '<div class="bu-tipp">👁️ Du hast im Büro <b>Leserechte</b>: ansehen und drucken.</div>' : ""}</div>

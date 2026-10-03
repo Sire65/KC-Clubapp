@@ -2171,7 +2171,8 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 191. 1.38.0: Tages-Übersicht nochmal aufrufen (KC-CLUB-TAGESINFO-MANUELL)
 {
   assert.ok(/id="tiKnopfStart"[^>]*onclick="tagesinfoZeigen\(true\)">📋 Übersicht<\/button>/.test(html) && /\$\("tiKnopfStart"\)\?\.classList\.toggle\("versteckt", !ICH\?\.vorstand\)/.test(html), "Knopf bei „Heute wichtig“ nur Clubleitung");
-  assert.ok(/\$\{ICH\?\.vorstand \? '<button class="knopf klein" style="margin-left:auto" onclick="tagesinfoZeigen\(true\)">📋 Übersicht<\/button>' : ""\}/.test(html), "Knopf im Büro");
+  // 1.83.0: Knöpfe stehen in der Knopfreihe (ohne margin-left) – Prüfung angepasst
+  assert.ok(/\$\{ICH\?\.vorstand \? '<button class="knopf klein"( style="margin-left:auto")? onclick="tagesinfoZeigen\(true\)">📋 Übersicht<\/button>' : ""\}/.test(html), "Knopf im Büro");
   assert.ok(/async function tagesinfoZeigen\(manuell = false\) \{\s*if \(!ICH\?\.vorstand\) return;/.test(html) && /if \(!manuell\) try \{ localStorage\.setItem\(TI_SEIT/.test(html), "manuell verschiebt den Merkpunkt nicht");
 }
 
@@ -2941,6 +2942,9 @@ assert.ok(/id: "emoji",[^\n]*unter dem Schreibfeld<\/b> auf <b>😊<\/b>/.test(h
   for (const t of ['zeile("Protokollführer"', 'zeile("Ort"', "<b>Entschuldigt bzw. fehlend:</b>", "<b>Gäste:</b>", "<b>Nächster Termin:</b>"]) assert.ok(v.includes(t), "Vorlage: " + t);
   assert.ok(/const weiter = \(BU\.start\?\.sitzungen \|\| \[\]\)\.find\(\(x\) => x\.id !== s\.treffen\.id && new Date\(x\.beginn\) > new Date\(s\.treffen\.beginn\)\)/.test(v), "nächster Termin vorbelegt");
 }
+// 263. 1.83.0: Büro – Begrüßung in der Kopfzeile, Knöpfe nebeneinander, Ordner gleich hoch
+assert.ok(/<h2>🗂️ Büro<\/h2><span class="bu-kopfgruss" id="buKopfGruss"><\/span>/.test(html) && /\$\("buKopfGruss"\)\.textContent = `\$\{buTageszeit\(\)\}, /.test(html)
+  && (html.match(/<div class="bu-knopfreihe">/g) || []).length === 2 && !/\.bu-ordner:nth-child\(3n\) \{ height/.test(html), "Büro-Kopf und gleich hohe Ordner");
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
