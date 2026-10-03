@@ -1,5 +1,11 @@
 # Änderungen
 
+## 1.82.0 – 2026-10-03
+- KC-CLUB-VORLAGE-KOPF (Wunsch Hansi): Protokoll-Vorlage zum Mitschreiben (Büro → Drucken → Sitzungs-Vorlage) mit kompaktem Kopf:
+  „Protokollführer: ____“ und „Ort:“ (vorbelegt, sonst Strich) nebeneinander; „Entschuldigt bzw. fehlend:“ (Absagen vorbelegt +
+  Strich zum Ergänzen); „Gäste:“ als Strich. Unten „Nächster Termin:“ – vorbelegt, wenn schon eine weitere Sitzung geplant ist,
+  sonst Datum/Uhrzeit/Ort zum Eintragen. Abstände leicht gekürzt, die Vorlage bleibt auf einer Seite.
+
 ## 1.81.0 – 2026-10-03
 - KC-CLUB-ANLEITUNG Version 2 (Wunsch Hansi: „Handbuch überarbeiten, weil sich einiges geändert hat“): 27 Seiten,
   `dokumente/Koecheclub-App_Anleitung_V2.pdf`. Neu bzw. geändert (mit NEU markiert): Register Club/Meins/Technik mit

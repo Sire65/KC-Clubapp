@@ -2935,6 +2935,12 @@ assert.ok(/id: "emoji",[^\n]*unter dem Schreibfeld<\/b> auf <b>😊<\/b>/.test(h
   assert.ok(/anleitung: 2/.test(inh) && /10\. Fotos & Alben/.test(inh) && /11\. Archiv & Chronik/.test(inh) && /<b>Club<\/b> = alles rund um den Club/.test(inh) && !/Programme<\/b> = Dienstplan/.test(inh), "Inhalt V2");
   assert.ok(!/ptblnpiroqftcvlsrhac|service_role|eyJ[A-Za-z0-9_-]{20}/.test(f2), "fotos2 ohne echte Zugänge");
 }
+// 262. 1.82.0: Protokoll-Vorlage – Protokollführer, Ort, Entschuldigt bzw. fehlend, Gäste, Nächster Termin
+{
+  const v = html.slice(html.indexOf("function druckSitzung()"), html.indexOf("// Einladung / Erinnerung"));
+  for (const t of ['zeile("Protokollführer"', 'zeile("Ort"', "<b>Entschuldigt bzw. fehlend:</b>", "<b>Gäste:</b>", "<b>Nächster Termin:</b>"]) assert.ok(v.includes(t), "Vorlage: " + t);
+  assert.ok(/const weiter = \(BU\.start\?\.sitzungen \|\| \[\]\)\.find\(\(x\) => x\.id !== s\.treffen\.id && new Date\(x\.beginn\) > new Date\(s\.treffen\.beginn\)\)/.test(v), "nächster Termin vorbelegt");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
