@@ -1,5 +1,25 @@
 # Änderungen
 
+## 1.98.0 – 2026-10-03 – Bedienung (Gesamtprüfung, Paket 3)
+- KC-CLUB-ZURUECK-KNOPF: Alle ‹-Knöpfe, die direkt eine Ansicht öffneten, gehen jetzt im Verlauf zurück (zurueck()), wenn es eine
+  vorige App-Ansicht gibt – vorher legte ‹ einen neuen Eintrag an und die Handy-Zurück-Taste öffnete die verlassene Ansicht
+  wieder (Schleife). Mitglied aus dem Chat geöffnet → ‹ führt zurück in den Chat. Verlaufseinträge tragen eine Tiefe.
+  Eigene ‹-Logik (Büro, Archiv, Fotoalbum, Gruppe) bleibt unverändert. Alle ‹ haben aria-label „Zurück“.
+- KC-CLUB-ZURUECK-FENSTER: Ist ein Fenster oder eine Rückfrage offen, schließt die Handy-Zurück-Taste nur das Fenster
+  (Rückfrage = „Abbrechen“, Eingabe = abgebrochen); die Ansicht und angefangene Eingaben bleiben.
+- KC-CLUB-RUECKFRAGE-KLAR: Gefährliche Rückfragen haben einen sprechenden roten Knopf („🗑️ Löschen“, „Entfernen“, „Absagen“ …)
+  statt „Ja“; der Fokus steht auf „Abbrechen“.
+- KC-CLUB-BEGRIFFE: einheitlich „Nachrichten“ (statt „Kommunikation“ in Kachel/Überschrift; Untertitel „Chats, Gruppen & Anlagen“),
+  „Zettel“ (statt „Post-it“ in den Pinnwand-Fenstern/Einstellungen), „Club“ (Clubarchiv, Clubordner, Clubleben statt Verein…).
+  Interne Namen und Server-Texte (Push-Erkennung) unverändert.
+- KC-CLUB-GROSSE-SCHRIFT: Bei „große Schrift“ werden untere Leiste und Kopf nicht mehr abgeschnitten (Leistenschrift fest 10 px,
+  Clubname darf umbrechen, «/» ausgeblendet – Wischen und Punkte bleiben).
+- KC-CLUB-TIPPFLAECHE: kleine Knöpfe mind. 40 px, Auswahl-Chips mind. 38 px hoch. Unten mehr Platz, damit 🔍 nichts verdeckt.
+- KC-CLUB-EINRICHTEN-MINIBROWSER: Einrichtungs-Assistent erkennt Mini-Browser (WhatsApp, Facebook, Instagram, Google-App/Lens)
+  und zeigt zuerst „In Safari/Chrome öffnen“; Firefox am PC: Hinweis auf Chrome/Edge. Code-Feld: Platzhalter „6 Ziffern“.
+  „Link verloren?“-Mail nennt Safari (iPhone/iPad) bzw. Chrome (Android) statt nur Chrome.
+- Bewusst unverändert (Regel 1 / Entscheidung offen): Kachel „Meine Schulungen (bald)“, Name „Hansi“ in Texten, App-Symbol.
+
 ## 1.97.0 – 2026-10-03 – Updates & Ausfallsicherheit (Gesamtprüfung, Paket 2)
 - KC-CLUB-UPDATE-SICHER: „Jetzt aktualisieren“ wartet, bis die neue Version fertig eingerichtet ist (bis 15 s), schaltet um und lädt
   erst nach der Übernahme ganz neu (vorher oft 400 ms → neue Version blieb „wartend“). Beim Zurückholen der App aktualisiert sie

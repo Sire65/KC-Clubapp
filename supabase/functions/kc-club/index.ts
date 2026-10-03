@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.97.0";
+const SERVER_VERSION = "1.98.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -2767,7 +2767,7 @@ Köcheclub Werne`,
       const versand = await routerSenden("club_nachricht_mail", [pe.person_id], {
         titel: "🔑 Dein Link zur Köcheclub-App", kurz: "Hier ist dein neuer persönlicher Link.",
         betreff: "Köcheclub Werne – dein persönlicher Link zur App",
-        text: `Hallo,\n\nhier ist dein neuer persönlicher Link zur Köcheclub-App:\n\n${link}\n\nBitte antippen (am besten im Browser Chrome öffnen). Danach kannst du die App über ⋮ → „App installieren“ auf den Startbildschirm legen.\n\nDer Link ist nur für dich – bitte nicht weitergeben. Sobald du ihn öffnest, gilt ein früherer Link nicht mehr. Der Link gilt 24 Stunden.\nDu hast keinen neuen Link angefordert? Dann bitte kurz Hansi Bescheid geben.\n\nViele Grüße\nKöcheclub Werne`,
+        text: `Hallo,\n\nhier ist dein neuer persönlicher Link zur Köcheclub-App:\n\n${link}\n\nBitte antippen – die App zeigt dir dann Schritt für Schritt, wie du sie auf dein Handy legst (iPhone/iPad: in Safari öffnen, Android: in Chrome).\n\nDer Link ist nur für dich – bitte nicht weitergeben. Sobald du ihn öffnest, gilt ein früherer Link nicht mehr. Der Link gilt 24 Stunden.\nDu hast keinen neuen Link angefordert? Dann bitte kurz Hansi Bescheid geben.\n\nViele Grüße\nKöcheclub Werne`,
         url: link,
       }, `club-zugang:${pe.person_id}:${Date.now()}`);
       await db.rpc("kc_club_zugangslinks_schwaerzen").then(() => {}, () => {}); // KC-CLUB-LINKSCHUTZ: Schlüssel nicht im Mail-Speicher lassen

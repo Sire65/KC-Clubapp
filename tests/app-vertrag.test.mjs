@@ -95,7 +95,7 @@ assert.ok(server.includes('from("kc_club_dienst_erinnerung").upsert({ person_id:
 
 // 13. KC-CLUB-ZURUECK + Kopf: Verlaufseinträge, Kennzahlen führen in Bereiche, kein Zahnrad im Kopf.
 assert.ok(/history\.replaceState\(\{ basis: true \}/.test(html) && /addEventListener\("popstate"/.test(html), "Zurück-Steuerung fehlt");
-assert.ok(/history\.pushState\(st,/.test(html), "Ansichten legen keinen Verlaufseintrag an");
+assert.ok(/history\.pushState\((st|\{ \.\.\.st, tiefe: tiefe \+ 1 \}),/.test(html), "Ansichten legen keinen Verlaufseintrag an"); // 1.98.0: mit Tiefe (Test 279)
 for (const z of ["nachrichten", "mitglieder"]) assert.ok(html.includes(`<button class="mini" onclick="zeige('${z}')">`) || (z === "mitglieder" && html.includes(`<button class="mini" onclick="mgNurOnline()">`)) || (z === "nachrichten" && html.includes(`<button class="mini\${n ? " mini-neu" : ""}" onclick="zeige('nachrichten')">`)), `Kennzahl → ${z} fehlt`); // 1.22.0: orange bei Neuem // 1.91.0: Mitglieder-Kachel → Seite nur online (mgNurOnline zeigt „mitglieder“, Test 271)
 // 0.27.2: „Nächstes Treffen“ führt über zumTreffen() in Termine (Kalender, Tag ausgewählt)
 assert.ok((html.includes(`<button class="mini" onclick="zumTreffen()">`) || html.includes(`<button class="mini\${frist ? " mini-frist frist-" + frist : ""}" onclick="zumTreffen()">`)) && /function zumTreffen\(mitfahrt\) \{[\s\S]{0,400}zeige\("termine"\)/.test(html), "Kennzahl → termine fehlt");
@@ -1094,7 +1094,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/club_pinnwand: "pinnwand"/.test(server) && /"geburtstage", "pinnwand"\]/.test(server) && /pinnwand: \{ push: true, email: false \}/.test(server), "Bereich Pinnwand fehlt");
   const mig = lies("supabase/migrations/20260929_kc_club_v58_pinnwand_push.sql");
   assert.ok(/'club_pinnwand','Club-App – Pinnwand \(nur Push\)', array\['push'\]/.test(mig) && /'pinnwand'\]\)\);/.test(mig), "Regeln/Bereich in der Datenbank fehlen");
-  assert.ok(/setInterval\(pwLive, PW_LIVE_MS\)/.test(html) && /api\("pinnwand_neu"\)/.test(html) && /"pinnwand_neu"(, "[a-z_]+")*\]\);/.test(html) && /\["pinnwand", "📌 Neue Post-its an der Pinnwand"\]/.test(html), "App: Live-Abfrage/Einstellung fehlt");
+  assert.ok(/setInterval\(pwLive, PW_LIVE_MS\)/.test(html) && /api\("pinnwand_neu"\)/.test(html) && /"pinnwand_neu"(, "[a-z_]+")*\]\);/.test(html) && /\["pinnwand", "📌 Neue (Post-its|Zettel) an der Pinnwand"\]/.test(html), "App: Live-Abfrage/Einstellung fehlt");
   assert.ok(/else if \(h === "#pinnwand"\) zeige\("pinnwand"\);/.test(html), "Push-Sprung zur Pinnwand fehlt");
 }
 
@@ -1195,7 +1195,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/const PW_FRISTEN_STANDARD = \{ erinnernTage: 3, pauseTage: 7 \};/.test(html) && /if \(!gezeigt && !nurZaehlen && !pwErinnern\(\)( && !einstiegPruefen\(\)( && !einrichtenEinmal\(\))?\) tippDesTages\(\);|\) einstiegPruefen\(\);)/.test(html), "Erinnerung beim Start fehlt"); // 1.87.0: Einrichtungs-Assistent (einmal je Gerät) vor dem Tipp des Tages
   const e = html.slice(html.indexOf("function pwErinnern()"), html.indexOf("async function pwLaden()"));
   assert.ok(/z\.vonMir && jetzt - new Date\(z\.erstellt_am\)\.getTime\(\) >= PW_ERINNERN_TAGE \* 86400000/.test(e) && /bis\[z\.id\]/.test(e), "nur eigene, alte, nicht zurückgestellte Zettel");
-  assert.ok(/hängt noch an der Pinnwand\./.test(e) && /Möchtest du \$\{liste\.length === 1 \? "es" : "sie"\} abnehmen\?/.test(e) && /api\("pinnwand_abnehmen"/.test(e), "Text/Abnehmen fehlt");
+  assert.ok(/hängt noch an der Pinnwand\./.test(e) && /Möchtest du \$\{liste\.length === 1 \? "(es|ihn)" : "sie"\} abnehmen\?/.test(e) /* 1.98.0: „Zettel“ → ihn */ && /api\("pinnwand_abnehmen"/.test(e), "Text/Abnehmen fehlt");
   assert.ok(/document\.querySelector\("\.blatt:not\(\.versteckt\)"\)\) return/.test(e), "Erinnerung könnte über anderen Fenstern aufgehen");
 }
 
@@ -1807,7 +1807,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 
 // 156. 1.20.1: Chat-Kopfzeile bleibt oben (KC-CLUB-CHAT-KOPF)
 {
-  assert.ok(/<div class="chat-kopf" id="chatKopf">\s*<div class="kopf2"><button class="zurueck" onclick="zeige\('nachrichten'\)">‹<\/button><h2 id="chatTitel">/.test(html), "Kopf im eigenen Bereich");
+  assert.ok(/<div class="chat-kopf" id="chatKopf">\s*<div class="kopf2"><button class="zurueck" onclick="(zeige|zurueck)\('nachrichten'\)"( aria-label="Zurück")?>‹<\/button><h2 id="chatTitel">/.test(html), "Kopf im eigenen Bereich");
   const k = html.slice(html.indexOf('id="chatKopf"'), html.indexOf('<div class="chat" id="chat">'));
   assert.ok(/id="chatSuchKnopf"/.test(k) && /id="chatSuchLeiste"/.test(k) && /id="chatTeilnehmer"/.test(k) && /id="chatAngeheftet"/.test(k), "Lupe, Suche, Untertitel, Angeheftetes im Kopf");
   assert.ok(/\.chat-kopf \{ position: sticky; top: 0;/.test(html) && /#chat > \* \{ scroll-margin-top: var\(--chatKopfHoehe/.test(html), "sticky + Sprungabstand");
@@ -2091,7 +2091,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 
 // 182. 1.32.1: „＋ Neu“ immer sichtbar, Kopfzeilen brechen um (KC-CLUB-KOPFZEILE)
 {
-  assert.ok(/<h2>💬 Kommunikation<\/h2><button class="knopf haupt klein" onclick="neueNachricht\(\)">＋ Neu<\/button><\/div>/.test(html), "＋ Neu direkt in der Kopfzeile");
+  assert.ok(/<h2>💬 (Kommunikation|Nachrichten)<\/h2><button class="knopf haupt klein" onclick="neueNachricht\(\)">＋ Neu<\/button><\/div>/.test(html), "＋ Neu direkt in der Kopfzeile");
   assert.ok(/⭐ Gemerkt<\/button>/.test(html) && /\.kopf2 \{ display: flex; align-items: center; gap: 10px; margin: 6px 0 4px; flex-wrap: wrap; \}/.test(html), "Stern beschriftet, Kopfzeile bricht um");
 }
 
@@ -2739,7 +2739,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/case "archiv_ausblenden"/.test(server) && /schluessel: "archiv_ausgeblendet"/.test(server) && /const auto = autoAlle\.filter\(\(x: any\) => !ausgeblendet\.has\(`\$\{x\.art\}:\$\{x\.id\}`\)\);/.test(server), "Ausblenden auf dem Server");
   assert.ok(/nachricht: m\.id, vonMir: m\.sender_person_id === ich\.person_id/.test(server), "Anlage weiß, ob sie von mir ist");
   assert.ok(/onclick="event\.stopPropagation\(\);arAusblenden\(/.test(html) && /async function arAusblenden\(x\)/.test(html) && /api\("nachricht_loeschen", \{ id: x\.nachricht \}\)/.test(html), "🗑️ in jeder Vereinsleben-Zeile");
-  assert.ok(/function arEinblenden\(art, id\)/.test(html) && /Aus dem Vereinsleben entfernt/.test(html), "Zurückholen im Papierkorb");
+  assert.ok(/function arEinblenden\(art, id\)/.test(html) && /Aus dem (Vereins|Club)leben entfernt/.test(html), "Zurückholen im Papierkorb");
 }
 
 // 240. 1.65.0: Büro als Raum (Regal + Schreibtisch) über den vorhandenen Büro-Funktionen
@@ -3091,6 +3091,19 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/if \(NEU_LADEN_LAUF && !vonHand\) return NEU_LADEN_LAUF;/.test(html) && /if \(fuer !== chatId\) return;/.test(html) && /clearInterval\(chatTimer\); if \(chatId === offenId/.test(html), "Laden/Chat nicht doppelt");
   assert.ok(/todoAnlegen = nurEinmal\("todoAnlegen", todoAnlegen\)/.test(html) && /erstattungSenden = nurEinmal/.test(html), "Doppeltippen gesperrt");
   assert.ok(/else if \(push\.zustand !== "ok" \|\| email\.zustand !== "ok"\) \{ farbe = "grau"/.test(server) && /ok: r\.status < 400/.test(server) && /if \(teilFehler\) throw new Fehler/.test(server), "unbekannt nie grün");
+}
+// 279. 1.98.0: Bedienung – Zurück, Fenster, Rückfragen, Begriffe, große Schrift, Mini-Browser
+{
+  assert.ok(/function zurueck\(ziel\) \{ if \(\(history\.state\?\.tiefe \|\| 0\) > 1\) history\.back\(\); else zeige\(ziel \|\| "start"\); \}/.test(html), "zurueck()");
+  assert.ok(!/<button class="zurueck" onclick="zeige\(/.test(html), "kein ‹ legt mehr einen neuen Eintrag an");
+  assert.equal((html.match(/<button class="zurueck"[^>]*>‹<\/button>/g) || []).filter((b) => !/aria-label=/.test(b)).length, 0, "‹ ohne aria-label");
+  assert.ok(/history\.pushState\(\{ v: "start", tiefe: 1 \}/.test(html) && /pushState\(\{ \.\.\.st, tiefe: tiefe \+ 1 \}/.test(html), "Tiefe im Verlauf");
+  assert.ok(/if \(offen\.length && VERLAUF\.state\) \{/.test(html) && /f\.dataset\.dyn = "1"; f\._zu = beiZu;/.test(html) && /history\.pushState\(VERLAUF\.state, "", VERLAUF\.url\); return;/.test(html), "Zurück schließt nur das Fenster");
+  assert.ok(/function frageVerb\(text\)/.test(html) && /gefahr \? frageVerb\(text\) : "✅ Ja"/.test(html) && /f\.querySelector\(gefahr \? "\[data-w='0'\]"/.test(html), "sprechender Gefahr-Knopf, Fokus Abbrechen");
+  assert.ok(/<h2>💬 Nachrichten<\/h2>/.test(html) && !/Vereinsarchiv|Vereinsordner/.test(html) && /"🤖 Clubleben"/.test(html), "Begriffe");
+  assert.ok(/:root\.gross \.fuss-leiste button \{ font-size: 10px;/.test(html) && /\.knopf\.klein \{ min-height: 40px; \}/.test(html), "große Schrift / Tippflächen");
+  assert.ok(/const inapp = \/; wv\\\)\|FBAN\|FBAV\|Instagram\|Line\\\/\|GSA\\\/\/\.test\(ua\);/.test(html) && /Erst in Chrome öffnen/.test(html) && /Erst in Safari öffnen/.test(html), "Mini-Browser im Assistenten");
+  assert.ok(/iPhone\/iPad: in Safari öffnen, Android: in Chrome/.test(server), "Mail nennt Safari/Chrome");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
