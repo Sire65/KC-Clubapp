@@ -658,7 +658,8 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/online: \(w\) => \(\{ zeigen: w\?\.zeigen !== false \}\)/.test(server), "Einstellung „online“ fehlt oder Standard nicht an");
   const on = server.slice(server.indexOf('case "online": {'), server.indexOf('case "anklopfen": {'));
   assert.ok(/zeigen \? onlineJetzt\(\) : Promise\.resolve\(new Set/.test(on), "Wer sich verbirgt, sieht trotzdem andere");
-  assert.ok(/filter\(\(id: string\) => zeigen\.get\(id\) !== false\)/.test(server), "Verborgene erscheinen als online");
+  // 2.3.0: zusätzlich ohne Inkognito-Admin (KC-CLUB-INKOGNITO)
+  assert.ok(/filter\(\(id: string\) => zeigen\.get\(id\) !== false(\)| && !inko\.has\(id\)\))/.test(server), "Verborgene erscheinen als online");
   const aw = server.slice(server.indexOf('case "anklopfen_antwort"'), server.indexOf('case "anklopfen_antwort"') + 400);
   assert.ok(/\.eq\("an", ich\.person_id\)/.test(aw), "Fremde könnten ein Anklopfen beantworten");
   const ak = server.slice(server.indexOf('case "anklopfen": {'), server.indexOf('case "anklopfen_antwort"'));
@@ -1798,7 +1799,8 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 {
   assert.ok(/zuletzt: \(w\) => \(\{ zeigen: w\?\.zeigen !== false \}\)/.test(server), "Einstellung zuletzt, Standard an");
   const f = server.slice(server.indexOf("async function zuletztDaMap("), server.indexOf("async function onlineJetzt("));
-  assert.ok(/\.in\("schluessel", \["online", "zuletzt"\]\)/.test(f) && /if \(verborgen\(ich\.person_id\)\) return aus;/.test(f), "gegenseitig (online oder zuletzt verborgen)");
+  // 2.3.0: + „inkognito“ (verbirgt nur den Admin selbst, nicht gegenseitig)
+  assert.ok(/\.in\("schluessel", \["online", "zuletzt"(, "inkognito")?\]\)/.test(f) && /if \(verborgen\(ich\.person_id(, true)?\)\) return aus;/.test(f), "gegenseitig (online oder zuletzt verborgen)");
   assert.ok(/zeit: tag === heute \?/.test(f) && /lange: true/.test(f) && /pid\.startsWith\("KC-P-TEST"\)/.test(f), "grob: Uhrzeit nur heute, alt = länger nicht da, Testpersonen nie");
   assert.ok(/zuletztDa: zd\.get\(m\.person_id\) \?\? null/.test(server) && /zuletztDa: selbst \? null : \(await zuletztDaMap\(ich, \[pid\]\)\)/.test(server) && /partnerDa = andere\.length === 1/.test(server), "Server: alle drei Stellen");
   assert.ok(/id="setZuletzt" onchange="zuletztZeigen\(this\.checked\)"/.test(html) && /function zuletztText\(z\)/.test(html), "App: Schalter + Text");
@@ -3164,6 +3166,17 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   const pdf = fs.readFileSync(new URL("../dokumente/Vertretung_Admin_V1.pdf", import.meta.url)), werkzeug = fs.readFileSync(new URL("../tools/vertretung/bau.mjs", import.meta.url), "utf8");
   assert.ok(pdf.subarray(0, 5).toString() === "%PDF-" && !/ptblnpiroqftcvlsrhac|service_role|eyJ[A-Za-z0-9_-]{20}|passwort:/i.test(werkzeug), "Vertretungs-PDF da, Werkzeug ohne Geheimnisse");
   assert.ok(!/OK = per WhatsApp schicken\\nAbbrechen = in die Zwischenablage kopieren/.test(html) && /data-w="kopie">📋 Kopieren/.test(html), "Link-Fenster mit echten Knöpfen");
+}
+// 286. 2.3.0: Inkognito-Hauptschalter (nur Admin, nicht gegenseitig)
+{
+  assert.ok(/inkognito: \(w\) => \(\{ an: w\?\.an === true \}\)/.test(server) && /schluessel === "inkognito" && !ich\.admin\) throw new Fehler\("Nur für den Admin\.", 403\)/.test(server), "nur Admin darf Inkognito setzen");
+  assert.ok(/zeigen\.get\(id\) !== false && !inko\.has\(id\)/.test(server), "onlineJetzt ohne Inkognito-Admin");
+  assert.ok(/if \(\(await inkognitoSet\(\[wer\.person_id\]\)\)\.has\(wer\.person_id\)\) return;/.test(server), "kein Online-Push bei Inkognito");
+  assert.ok(/x\.schluessel === "inkognito" \? !selbst && x\.wert\?\.an === true/.test(server) && /verborgen\(ich\.person_id, true\)/.test(server), "zuletzt da: verbirgt nur den Admin selbst");
+  assert.ok(/zeigen\.get\(m\.person_id\) !== false && !inko\.has\(m\.person_id\)/.test(server), "kein „heute da“ bei Inkognito");
+  assert.ok(/"inkognito_geaendert"/.test(server), "Audit");
+  assert.ok(/id="setInkognitoZeile"/.test(html) && /body:not\(\.ist-admin\) #setInkognitoZeile/.test(html) && /const inkognitoAn = \(\) => !!\(ICH\?\.admin &&/.test(html), "Schalter nur für Admin");
+  assert.ok(/onclick="inkognitoSetzen\(!inkognitoAn\(\)\)"/.test(html) && /class="inko-marke"/.test(html), "Hauptschalter Admin-Zentrale + Marke");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

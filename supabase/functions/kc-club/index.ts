@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "2.2.0";
+const SERVER_VERSION = "2.3.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -242,6 +242,14 @@ async function onlineZeigenMap(ids?: string[]) {
   const { data } = await q;
   return new Map((data ?? []).map((x: any) => [x.person_id, x.wert?.zeigen !== false]));
 }
+// KC-CLUB-INKOGNITO (2.3.0, Wunsch Hansi): Hauptschalter nur für Admins – andere sehen den Admin nicht online, nicht „heute da“,
+// nicht „zuletzt da“, keine Online-Ansage/-Push. Anders als „online verbergen“ NICHT gegenseitig: der Admin sieht die anderen weiter.
+async function inkognitoSet(ids?: string[]) {
+  let q = db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "inkognito");
+  if (ids) q = q.in("person_id", ids);
+  const { data } = await q;
+  return new Set((data ?? []).filter((x: any) => x.wert?.an === true).map((x: any) => x.person_id as string));
+}
 // KC-CLUB-STUMM (1.9.0): wer hat diese Unterhaltung gerade stummgeschaltet? („immer“ oder bis Zeitpunkt in der Zukunft)
 const stummJetzt = (wert: any, threadId: string) => { const b = wert?.threads?.[threadId]; return b === "immer" || (typeof b === "string" && Date.parse(b) > Date.now()); };
 async function stummFuer(ids: string[], threadId: string) {
@@ -271,11 +279,12 @@ async function zuletztDaMap(ich: Ich, ids: string[]) {
   const ziel = [...new Set(ids)].filter((id) => id && id !== ich.person_id);
   if (!ziel.length) return aus;
   const [{ data: e }, { data: z }] = await Promise.all([
-    db.from("kc_club_person_einstellung").select("person_id,wert").in("schluessel", ["online", "zuletzt"]).in("person_id", [...ziel, ich.person_id]),
+    db.from("kc_club_person_einstellung").select("person_id,schluessel,wert").in("schluessel", ["online", "zuletzt", "inkognito"]).in("person_id", [...ziel, ich.person_id]),
     db.from("kc_club_zugang").select("person_id,zuletzt_gesehen").in("person_id", ziel),
   ]);
-  const verborgen = (pid: string) => (e ?? []).some((x: any) => x.person_id === pid && x.wert?.zeigen === false);
-  if (verborgen(ich.person_id)) return aus;
+  // KC-CLUB-INKOGNITO: verbirgt nur den Admin selbst (er sieht die anderen weiter)
+  const verborgen = (pid: string, selbst = false) => (e ?? []).some((x: any) => x.person_id === pid && (x.schluessel === "inkognito" ? !selbst && x.wert?.an === true : x.wert?.zeigen === false));
+  if (verborgen(ich.person_id, true)) return aus;
   const heute = berlinTag(new Date()), grenze = Date.now() - ZULETZT_TAGE * 86400000;
   for (const pid of ziel) {
     const zg = (z ?? []).find((x: any) => x.person_id === pid)?.zuletzt_gesehen;
@@ -338,6 +347,7 @@ const ONLINE_PUSH_PAUSE_MS = 10 * 60000;
 async function onlinePushMelden(wer: Ich) {
   if (wer.person_id.startsWith("KC-P-TEST")) return;
   if ((await onlineZeigenMap([wer.person_id])).get(wer.person_id) === false) return;
+  if ((await inkognitoSet([wer.person_id])).has(wer.person_id)) return; // KC-CLUB-INKOGNITO
   const { data: ad } = await db.from("kc_club_rollen").select("person_id").eq("ist_admin", true).neq("person_id", wer.person_id);
   let ids = (ad ?? []).map((x: any) => x.person_id as string);
   if (!ids.length) return;
@@ -356,8 +366,8 @@ async function onlinePushMelden(wer: Ich) {
 async function onlineJetzt(): Promise<Set<string>> {
   const seit = new Date(Date.now() - ONLINE_SEK * 1000).toISOString();
   const { data } = await db.from("kc_club_zugang").select("person_id").eq("aktiv", true).gte("zuletzt_gesehen", seit).not("person_id", "like", "KC-P-TEST%");
-  const ids = (data ?? []).map((x: any) => x.person_id), zeigen = await onlineZeigenMap(ids);
-  return new Set(ids.filter((id: string) => zeigen.get(id) !== false));
+  const ids = (data ?? []).map((x: any) => x.person_id), [zeigen, inko] = await Promise.all([onlineZeigenMap(ids), inkognitoSet(ids)]);
+  return new Set(ids.filter((id: string) => zeigen.get(id) !== false && !inko.has(id)));
 }
 
 // ---------- KC-CLUB-ANRUF (0.31.0, Test): Sprechen per Ton, App zu App (WebRTC) ----------
@@ -772,6 +782,8 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
   infofeld: (w) => ({ start: typeof w?.start === "string" && KA_ID.test(w.start) ? w.start : "zuletzt" }),
   // KC-CLUB-ONLINE (0.29.0): anderen zeigen, wann ich online bin (Standard: an)
   online: (w) => ({ zeigen: w?.zeigen !== false }),
+  // KC-CLUB-INKOGNITO (2.3.0): nur Admins (Prüfung in einstellung_setzen) – Standard: aus
+  inkognito: (w) => ({ an: w?.an === true }),
   // KC-CLUB-ONLINE-PUSH (1.57.0): Admin bekommt eine Push, wenn ein Mitglied online kommt (Standard: an)
   online_push: (w) => ({ an: w?.an !== false }),
   // KC-CLUB-ZULETZT-DA (1.20.0): anderen zeigen, wann ich zuletzt in der App war (Standard: an, gegenseitig wie WhatsApp)
@@ -3037,7 +3049,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // KC-CLUB-KREISE (0.60.0): Farbe der Namenskreise. „heute da“ und „verborgen“ folgen derselben Regel wie online
         // (wer sich verbirgt, sieht auch andere nicht). Zustellfehler (rot) nur für den Admin.
         const zd = await zuletztDaMap(ich, leute.map((m) => m.person_id)); // KC-CLUB-ZULETZT-DA (1.20.0)
-        const zeigen = await onlineZeigenMap(), tag = (d: string | Date) => new Date(d).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }), heute = tag(new Date());
+        const [zeigen, inko] = await Promise.all([onlineZeigenMap(), inkognitoSet()]), tag = (d: string | Date) => new Date(d).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }), heute = tag(new Date());
         const fehler = new Map<string, string>(), ansicht = new Map<string, string>();
         if (ich.admin) {
           // KC-CLUB-ANSICHT: wer nutzt welche Ansicht (nur für den Admin – zeigt, ob die einfache Ansicht angenommen wird)
@@ -3068,7 +3080,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             vorstand: !!(r.get(m.person_id) as any)?.ist_vorstand, aemter: (r.get(m.person_id) as any)?.aemter ?? [], admin: !!(r.get(m.person_id) as any)?.ist_admin,
             status: st.get(m.person_id) ?? null, online: on.has(m.person_id) && m.person_id !== ich.person_id, zuletztDa: zd.get(m.person_id) ?? null,
             verborgen: m.person_id !== ich.person_id && (!ichZeige || zeigen.get(m.person_id) === false),
-            heute: ichZeige && (zeigen.get(m.person_id) !== false || m.person_id === ich.person_id) && !!(z.get(m.person_id) as any)?.zuletzt_gesehen && tag((z.get(m.person_id) as any).zuletzt_gesehen) === heute,
+            heute: ichZeige && ((zeigen.get(m.person_id) !== false && !inko.has(m.person_id)) || m.person_id === ich.person_id) && !!(z.get(m.person_id) as any)?.zuletzt_gesehen && tag((z.get(m.person_id) as any).zuletzt_gesehen) === heute,
             wege: { push: ps.has(m.person_id), mail: !!m.email, whatsapp: hatTel.has(m.person_id) && (ich.admin || m.person_id === ich.person_id || (ich.kontakte && handyFrei.has(m.person_id))) },
             // für alle nur grob: in den letzten 14 Tagen in der App gewesen (genaue Zeit nur für den Admin)
             aktiv: !!(z.get(m.person_id) as any)?.zuletzt_gesehen && Date.now() - new Date((z.get(m.person_id) as any).zuletzt_gesehen).getTime() < 14 * 86400000,
@@ -7100,9 +7112,11 @@ Köcheclub-App`,
         const schluessel = String(p.schluessel || "");
         const pruefen = EINSTELLUNGEN[schluessel];
         if (!pruefen) throw new Fehler("Unbekannte Einstellung.");
+        if (schluessel === "inkognito" && !ich.admin) throw new Fehler("Nur für den Admin.", 403);
         const wert = pruefen(p.wert);
         const { error } = await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel, wert, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
         if (error) throw new Fehler("Einstellung konnte nicht gespeichert werden.", 500);
+        if (schluessel === "inkognito") await protokoll(ich.person_id, "inkognito_geaendert", { an: (wert as any).an });
         return json({ ok: true, wert });
       }
 

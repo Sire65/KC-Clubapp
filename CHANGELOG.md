@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.3.0 – 2026-10-03 – Inkognito-Hauptschalter für den Admin (Wunsch Hansi)
+- KC-CLUB-INKOGNITO: Neue Einstellung „inkognito“ (nur Admins, Server lehnt sonst mit 403 ab; jede Änderung wird als
+  „inkognito_geaendert“ protokolliert). Ist sie an, sehen andere den Admin nicht online (onlineJetzt), nicht „heute da“,
+  nicht „zuletzt da“; keine Online-Ansage und kein Online-Push. Anders als „online verbergen“ NICHT gegenseitig: der Admin
+  sieht die anderen weiter. Er erscheint nicht als „verborgen“ (grauer Kreis), damit Inkognito nicht auffällt.
+- Schalter: Admin-Zentrale („🕶️ Inkognito einschalten/ausschalten“), Einstellungen → 🔒 Privatsphäre (nur Admin sichtbar),
+  Suche in den Einstellungen. Solange an: 🕶️-Marke an der Mitglieder-Kachel.
+- Unverändert: Lesebestätigung/„zugestellt“ in Chats und „schreibt …“ beim eigenen Tippen.
+
 ## 2.2.0 – 2026-10-03 – Vertretung des Admins vorbereitet (Konzept „Hansi ist der einzige Schlüssel“, AGENTS Regel 12)
 - KC-CLUB-VERTRETUNG: Im Fenster „🎖️ Amt & Rechte“ (nur Admin, nicht für sich selbst) neuer Schalter „🛡️ Admin (Vertretung)“ –
   Vergabe nur mit ausdrücklicher Rückfrage; Server protokolliert „admin_recht_geaendert“ (vorher/nachher) und benachrichtigt die

@@ -168,6 +168,9 @@
   .ow-blase small { display: block; color: var(--grau); font-size: .78rem; margin-top: 4px; }
   /* KC-CLUB-KOPF-EINFACH (2.1.0): Mitglieder ohne Technik-Lämpchen und Lebenszeichen-Herz (nur Admin) */
   body:not(.ist-admin) #ledComm, body:not(.ist-admin) #ledDaten, body:not(.ist-admin) #herzKnopf { display: none; }
+  body:not(.ist-admin) #setInkognitoZeile { display: none; }
+  /* KC-CLUB-INKOGNITO (2.3.0) */
+  .inko-marke { display: inline-block; margin-left: 4px; padding: 0 6px; border-radius: 9px; background: #34495e; color: #fff; font-size: .8rem; line-height: 1.4; vertical-align: middle; }
   textarea.hl-notiz { min-height: 8.5em; font-size: 1.02rem; line-height: 1.4; }
   .zettel .zfuss { margin-top: 8px; font-size: .74rem; color: #4a3d10; }
   .zettel .zknoepfe { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
@@ -2020,6 +2023,8 @@
       <!-- KC-CLUB-ZULETZT-DA (1.20.0) -->
       <div class="schalter"><div><b>🕒 Anderen zeigen, wann ich zuletzt da war</b><div class="hinweis">Wie bei WhatsApp „zuletzt online“: heute mit Uhrzeit, sonst nur grob („gestern“, „vor 3 Tagen“). Ausgeschaltet siehst du es auch bei anderen nicht.</div></div><input type="checkbox" id="setZuletzt" onchange="zuletztZeigen(this.checked)"></div>
       <div class="schalter"><div><b>🟢 Anderen zeigen, wann ich online bin</b><div class="hinweis">Dann sehen andere einen grünen Punkt bei dir und können „anklopfen“. Ausgeschaltet siehst du auch selbst nicht, wer online ist.</div></div><input type="checkbox" id="setOnline" onchange="onlineZeigen(this.checked)"></div>
+      <!-- KC-CLUB-INKOGNITO (2.3.0): Hauptschalter nur für den Admin -->
+      <div class="schalter" id="setInkognitoZeile"><div><b>🕶️ Inkognito (nur Admin)</b><div class="hinweis">Niemand sieht, dass du online oder heute da warst – kein grüner Punkt, keine Ansage, kein „zuletzt da“. Du selbst siehst die anderen weiter.</div></div><input type="checkbox" id="setInkognito" onchange="inkognitoSetzen(this.checked)"></div>
       <!-- KC-CLUB-ANKLOPFEN-ERLAUBEN (1.8.0) -->
       <div class="schalter"><div><b>👋 Anklopfen erlauben</b><div class="hinweis">Andere dürfen bei dir anklopfen, wenn du online bist. Aus: Sie sehen 🔕 und schreiben dir stattdessen eine Nachricht.</div></div><input type="checkbox" id="setAnklopfen" checked onchange="anklopfenSetzen({ erlaubt: this.checked })"></div>
       <div class="zwei"><label class="feld">🔔 Anklopfton<select id="setKlopfTon" onchange="anklopfenSetzen({ ton: this.value })"></select></label><button class="knopf klein" style="align-self:end" onclick="klopfTonSpielen($('setKlopfTon').value)">▶ Testton</button></div>
@@ -2393,7 +2398,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.2.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.3.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3579,6 +3584,21 @@ function zuletztText(z) {
   }
   const tage = Math.round((Date.parse(heuteIso() + "T12:00:00Z") - Date.parse(z.tag + "T12:00:00Z")) / 86400000);
   return tage <= 1 ? "zuletzt da gestern" : tage < 7 ? `zuletzt da vor ${tage} Tagen` : `zuletzt da am ${z.tag.slice(8, 10)}.${z.tag.slice(5, 7)}.`;
+}
+// ---------- KC-CLUB-INKOGNITO (2.3.0, Wunsch Hansi): Admin unsichtbar online sein ----------
+const inkognitoAn = () => !!(ICH?.admin && INIT?.einstellungen?.inkognito?.an);
+function inkognitoZeigen() {
+  if ($("setInkognito")) $("setInkognito").checked = inkognitoAn();
+  if (INFO_FELDER[INFO_I]?.id === "treffen" || INFO_FELDER[INFO_I]?.id === "admin") heroZeigen();
+}
+async function inkognitoSetzen(an) {
+  if (!ICH?.admin || !INIT) return;
+  const vorher = inkognitoAn();
+  INIT.einstellungen = { ...(INIT.einstellungen || {}), inkognito: { an: !!an } }; inkognitoZeigen();
+  try {
+    await api("einstellung_setzen", { schluessel: "inkognito", wert: { an: !!an } });
+    melde(an ? "🕶️ Inkognito an – niemand sieht, dass du online bist" : "🟢 Inkognito aus – andere sehen dich wieder online"); MITGLIEDER = null;
+  } catch (e) { INIT.einstellungen.inkognito = { an: vorher }; inkognitoZeigen(); melde(e.message, true); }
 }
 function zuletztSchalterZeigen() { if ($("setZuletzt")) $("setZuletzt").checked = INIT?.einstellungen?.zuletzt?.zeigen !== false; }
 async function zuletztZeigen(an) {
@@ -5956,7 +5976,7 @@ function infoAdmin() {
       <span>👥 <b>${m.gesamt}</b> Mitglieder</span><span>🔑 <b>${m.mitZugang}</b> mit Zugang</span><span>🟢 <b>${m.online}</b> online</span>
       <span>📅 <b>${m.heute}</b> heute</span><span>🗓️ <b>${m.woche}</b> in 7 Tagen</span><span>⏳ <b>${m.nieAngemeldet}</b> nie angemeldet</span>
       <span>🔔 <b>${m.pushAbos}</b> mit Push</span><span>🔄 <b>${m.alteVersion}</b> alte Version</span></div>
-    <div class="knoepfe" style="margin-top:8px"><button class="wlink" onclick="adminBlatt()">📋 Einzelheiten ›</button><button class="wlink" onclick="INFO_DATEN.admin.geholt=0;infoDatenLaden(INFO_FELDER[INFO_I], true)">↻ Neu prüfen</button></div>`;
+    <div class="knoepfe" style="margin-top:8px"><button class="wlink" onclick="inkognitoSetzen(!inkognitoAn())" aria-pressed="${inkognitoAn()}">${inkognitoAn() ? "🕶️ Inkognito: AN – ausschalten" : "🕶️ Inkognito einschalten"}</button><button class="wlink" onclick="adminBlatt()">📋 Einzelheiten ›</button><button class="wlink" onclick="INFO_DATEN.admin.geholt=0;infoDatenLaden(INFO_FELDER[INFO_I], true)">↻ Neu prüfen</button></div>`;
 }
 // Notfall: Spiegel sofort anstoßen (verbraucht Neon-Rechenzeit – daher mit Rückfrage)
 async function adminSpiegeln() {
@@ -6251,7 +6271,7 @@ function infoTreffen() {
   return `<div class="klick" onclick="zumTreffen()">${kopf}</div>
     <div class="kacheln3">
       <button class="mini${n ? " mini-neu" : ""}" onclick="zeige('nachrichten')">${n ? '<svg class="ameisen" aria-hidden="true"><rect width="100%" height="100%" rx="16"/></svg>' : ""}<b>${n}</b><span>Neue Nachr.</span><span class="mpfeil" aria-hidden="true">›</span></button>
-      <button class="mini" onclick="mgNurOnline()"><b class="mini-zeile">${INIT?.mitgliederAnzahl || "–"}${ONL.zeigen ? onlineZahlHtml() : ""}</b><span>Mitglieder</span><span class="mpfeil" aria-hidden="true">›</span></button>
+      <button class="mini" onclick="mgNurOnline()"><b class="mini-zeile">${INIT?.mitgliederAnzahl || "–"}${ONL.zeigen ? onlineZahlHtml() : ""}</b><span>Mitglieder${inkognitoAn() ? '<i class="inko-marke" title="Inkognito ist an – niemand sieht dich online">🕶️</i>' : ""}</span><span class="mpfeil" aria-hidden="true">›</span></button>
       <button class="mini${frist ? " mini-frist frist-" + frist : ""}" onclick="zumTreffen()">${frist ? '<svg class="ameisen" aria-hidden="true"><rect width="100%" height="100%" rx="16"/></svg>' : ""}<b style="font-size:1.05rem">${bisTreffen}</b><span>Nächster Termin</span><span class="mpfeil" aria-hidden="true">›</span></button>
     </div>`;
 }
@@ -6500,7 +6520,7 @@ function zeige(v, ausHistorie) {
   if (v === "dienste") dienstLaden();
   if (v === "nachrichten") unterhLaden();
   if (v === "mitglieder") { mgAnsichtWahlZeigen(); mitgliederLaden(); }
-  if (v === "einstellungen") { notProbeZeigen(); infoStartZeigen(); tippSchalterZeigen(); ansageSchalterZeigen(); ansStandZeigen(); ruheZeigen(); if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); anklopfenZeigen(); zuletztSchalterZeigen(); schnellWahlZeigen(); mgAnsichtWahlZeigen(); }
+  if (v === "einstellungen") { notProbeZeigen(); infoStartZeigen(); tippSchalterZeigen(); ansageSchalterZeigen(); ansStandZeigen(); ruheZeigen(); if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); anklopfenZeigen(); zuletztSchalterZeigen(); inkognitoZeigen(); schnellWahlZeigen(); mgAnsichtWahlZeigen(); }
   if (v === "start") neuLaden();
   // KC-CLUB-ZURUECK: jede Ansicht bekommt einen Verlaufseintrag, damit „Zurück“ eine Ansicht zurückgeht statt die App zu schließen
   const hash = v === "start" || v === "chat" ? "" : v === "protokoll" ? "#protokoll=" + prId : v === "aktion" ? "#aktion=" + aktionId : v === "mitglied" ? "#mitglied=" + mitgliedId : v === "dokansicht" ? "#dokument=" + encodeURIComponent(DOKA.id) : "#" + v;
@@ -13519,7 +13539,7 @@ function suAppListe() {
     ["🔔", "Push-Benachrichtigungen", "push benachrichtigung mitteilung handy", ein("pushStatus")], ["🔊", "Ton", "ton klingel laut", ein("setTon")],
     ["🌙", "Nicht stören (Ruhezeit)", "nicht stören ruhezeit nacht stumm", ein("ruheAn")], ["🔠", "Schriftgröße", "schrift gross groß lesen", ein(einfach() ? "setGrossE" : "setGross")],
     ["🎨", "Farbe & Design", "farbe design aussehen", ein(einfach() ? "designWahlE" : "designWahl")], ["🌗", "Tag/Nacht umschalten", "dunkel hell nacht tag", () => dunkelUmschalten()],
-    ["🎂", "Geburtstag anzeigen", "geburtstag", ein("setGeburtstag")], ["🎉", "Runde Geburtstage (Alter für die Clubleitung)", "runder geburtstag alter jubiläum", ein("setRundGeburtstag")], ["🟢", "Online sichtbar", "online sichtbar unsichtbar", ein("setOnline")], ["🕒", "Zuletzt da anzeigen", "zuletzt da online gesehen", ein("setZuletzt")],
+    ["🎂", "Geburtstag anzeigen", "geburtstag", ein("setGeburtstag")], ["🎉", "Runde Geburtstage (Alter für die Clubleitung)", "runder geburtstag alter jubiläum", ein("setRundGeburtstag")], ["🟢", "Online sichtbar", "online sichtbar unsichtbar", ein("setOnline")], ...(ICH?.admin ? [["🕶️", "Inkognito (nur Admin)", "inkognito unsichtbar versteckt online", ein("setInkognito")]] : []), ["🕒", "Zuletzt da anzeigen", "zuletzt da online gesehen", ein("setZuletzt")],
     ["🆘", "Notfallkontakt", "notfall kontakt", ein("nfName")], ["📆", "Kalender-Abo (Handy-Kalender)", "kalender abo handy ical", ein("kalAboKnopf")],
     ["📱", "Meine Geräte", "geräte handy tablet abmelden", () => geraeteBlatt()], ["📡", "Verbindung prüfen", "verbindung internet led server", () => verbindungBlatt()],
     ["🔄", "Update prüfen", "update version neu", () => updateKachel()], ["🟢", "Mein Status", "status urlaub verfügbar krank", () => statusBlatt()],
