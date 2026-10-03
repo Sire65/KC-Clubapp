@@ -1,5 +1,12 @@
 # Änderungen
 
+## 1.69.2 – 2026-10-03
+- KC-CLUB-EINGABEN-ARCHIV (Wunsch Hansi: Stevens Unterlagen in seinen Ordner, passendes Register): Aufstellungen (Erstattungsantrag →
+  Register „Rechnungen“, Dienstwünsche → Register „Dienstplan“, wird bei Bedarf vor „Sonstiges“ ergänzt) als Textdatei in den
+  persönlichen Archiv-Ordner. Legt jemand anderes ab (Clubleitung über den Postausgang, Art „archiv_ablage“), landen die Dokumente
+  „zur Prüfung“ – der Besitzer bekommt Bescheid und nimmt an oder lehnt ab (persönliche Ordner bleiben seine Sache). Selbst
+  abgelegt: nach „✅ Fertig – Bestätigung“ fragt die App „Auch in deinen Archiv-Ordner legen?“ (Server: eingaben_ablegen).
+
 ## 1.69.1 – 2026-10-03
 - KC-CLUB-POSTAUSGANG (Wunsch Hansi: Steven die Bestätigung nachträglich schicken): Tabelle kc_club_postausgang – der Wartungslauf
   (alle 15 Min.) verschickt offene Einträge über den normalen Versandweg (App-Nachricht + E-Mail) und hält Veranlasser und Ergebnis

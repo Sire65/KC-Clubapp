@@ -2812,6 +2812,16 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/const ERSTATTUNG_VORBEHALT = "Unter Vorbehalt: Dein Antrag wird vom Kassenwart geprüft/.test(server) && /\$\{ERSTATTUNG_VORBEHALT\}/.test(server), "Vorbehalt im Text");
 }
 
+// 247. 1.69.2: Aufstellungen ins persönliche Archiv – fremd abgelegt nur „zur Prüfung“
+{
+  const f = server.slice(server.indexOf("async function eingabenArchivieren("), server.indexOf("// KC-CLUB-POSTAUSGANG (1.69.1): beim Wartungslauf"));
+  assert.ok(/const selbst = von === besitzer\.person_id;/.test(f) && /status: selbst \? "ok" : "pruefung"/.test(f), "fremd → zur Prüfung");
+  assert.ok(/a\.person_id !== besitzer\.person_id\) continue;/.test(f), "nur eigener Antrag");
+  assert.ok(/const ABLAGE_REGISTER: Record<string, string> = \{ erstattung: "Rechnungen", dienstwunsch: "Dienstplan" \};/.test(server), "Register-Zuordnung");
+  assert.ok(/case "eingaben_ablegen"/.test(server) && /eingabenArchivieren\(ich, \[teil\], ich\.person_id\)/.test(server), "eigene Ablage nur in den eigenen Ordner");
+  assert.ok(/check \(art in \('erstattung_bestaetigung', 'archiv_ablage'\)\)/.test(lies("supabase/migrations/20261003_kc_club_v1692_postausgang_archiv.sql")), "Postausgang-Art");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

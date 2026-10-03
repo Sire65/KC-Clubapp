@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.69.1";
+const SERVER_VERSION = "1.69.2";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -570,6 +570,54 @@ function erstattungBestaetigung(vorname: string, a: any, hinweis = "") {
     betreff: `Köcheclub Werne – Bestätigung deines Erstattungsantrags (${euro(summe)})`, url,
     text: `Hallo ${vorname},\n\ndein Antrag über ${euro(summe)} ist beim Kassenwart eingegangen.\n\n${zeilen}\n\nSumme: ${euro(summe)} · Auszahlung: ${a.auszahlung === "bar" ? "bar" : "per Überweisung"}\n\n${hinweis ? hinweis + "\n" : ""}${ERSTATTUNG_VORBEHALT}\n\nAufstellung: ${url}\n\nViele Grüße\nKöcheclub-App` };
 }
+// KC-CLUB-EINGABEN-ARCHIV (1.69.2, Wunsch Hansi): Aufstellungen als Textdatei in den persönlichen Archiv-Ordner des Mitglieds.
+// Selbst abgelegt (von = Besitzer) → sofort sichtbar; von jemand anderem (Clubleitung) → „zur Prüfung“, der Besitzer entscheidet.
+// Register aus ABLAGE_REGISTER; fehlt es im Ordner, wird es vor „Sonstiges“ ergänzt (nichts geht verloren).
+const ABLAGE_REGISTER: Record<string, string> = { erstattung: "Rechnungen", dienstwunsch: "Dienstplan" };
+async function eingabenArchivieren(besitzer: Ich, teile: string[], von: string) {
+  const jahr = Number(berlinTag(new Date()).slice(0, 4));
+  const oid = await archivEigenerOrdner(besitzer, jahr); if (!oid) throw new Error("Ordner konnte nicht angelegt werden");
+  const { data: o } = await db.from("kc_club_archiv_ordner").select("id,register,geloescht_am").eq("id", oid).single();
+  if (o?.geloescht_am) throw new Error("Ordner liegt im Papierkorb");
+  const docs: any[] = [];
+  for (const teil of teile.slice(0, 5)) {
+    const [art, id] = teil.split(":");
+    if (art === "erstattung") {
+      const { data: a } = await db.from("kc_club_erstattung").select("id,person_id,positionen,summe,auszahlung,erstellt_am").eq("id", String(id || "")).maybeSingle();
+      if (!a || a.person_id !== besitzer.person_id) continue;
+      const tag = berlinTag(new Date(a.erstellt_am));
+      docs.push({ art, titel: `Erstattungsantrag ${euro(Number(a.summe))} vom ${tag.split("-").reverse().join(".")}`, datum: tag, name: `Erstattungsantrag-${tag}.txt`, stichworte: "Erstattung, Fahrtkosten",
+        text: erstattungBestaetigung(besitzer.vorname, a).text });
+    } else if (art === "dienstwunsch") {
+      const auf = await dienstwunschAufstellung(besitzer); if (!auf.tage.length) continue;
+      docs.push({ art, titel: `Dienstwünsche ${DW.name} (Stand ${auf.stand})`, datum: berlinTag(new Date()), name: `Dienstwuensche-${DW.veranstaltung}.txt`, stichworte: "Dienstwunsch, Dienstplan",
+        text: `Köcheclub-App – Meine Dienstwünsche\n${DW.name} · ${besitzer.name} · Stand ${auf.stand}\n────────────────────\n\n${auf.tage.map((t: any) => `${t.tag}\n${t.zeilen.map((z: string) => "   " + z).join("\n")}`).join("\n\n")}\n` });
+    }
+  }
+  if (!docs.length) return { abgelegt: 0 };
+  const reg = [...(o?.register ?? [])];
+  for (const d of docs) { const r = ABLAGE_REGISTER[d.art]; if (r && !reg.includes(r)) reg.splice(Math.max(0, reg.indexOf("Sonstiges") < 0 ? reg.length : reg.indexOf("Sonstiges")), 0, r); }
+  if (reg.length !== (o?.register ?? []).length) await db.from("kc_club_archiv_ordner").update({ register: reg.slice(0, 12), geaendert_am: jetzt() }).eq("id", oid);
+  const selbst = von === besitzer.person_id;
+  for (const d of docs) {
+    const bytes = new TextEncoder().encode("\ufeff" + d.text); let b = ""; for (const x of bytes) b += String.fromCharCode(x);
+    const datei = await dateiAblegen(besitzer, d.name, "text/plain", btoa(b), ARCHIV_DATEITYPEN);
+    const { error } = await db.from("kc_club_archiv_dokumente").insert({ ordner_id: oid, register: ABLAGE_REGISTER[d.art], titel: d.titel.slice(0, 120), datum: d.datum,
+      stichworte: archivStichworte(d.stichworte), attachment_id: datei.id, datei_name: datei.name, mime: "text/plain", groesse: datei.groesse, hochgeladen_von: von, status: selbst ? "ok" : "pruefung" });
+    if (error) { await dateienEntfernen([datei.id]); throw new Error(error.message); }
+  }
+  await protokoll(von, "eingaben_archiviert", { besitzer: besitzer.person_id, ordner: oid, dokumente: docs.map((d) => d.art), pruefung: !selbst });
+  if (!selbst) {
+    const vn = (await personen([von])).get(von)?.display_name || "Die Clubleitung", url = `${APP_URL}#archiv`;
+    await senden("club_nachricht", [besitzer.person_id], {
+      titel: "📥 Neu in deinem Archiv-Ordner – bitte prüfen", kurz: `${vn} hat ${docs.length === 1 ? "1 Dokument" : `${docs.length} Dokumente`} (${docs.map((d) => d.art === "erstattung" ? "Erstattungsantrag" : "Dienstwünsche").join(", ")}) in deinen Ordner ${jahr} gelegt – annehmen oder ablehnen`,
+      betreff: "Köcheclub Werne – neue Dokumente in deinem Archiv-Ordner",
+      text: `Hallo ${besitzer.vorname},\n\n${vn} hat dir folgende Aufstellungen in deinen persönlichen Archiv-Ordner ${jahr} gelegt:\n\n${docs.map((d) => "📄 " + d.titel).join("\n")}\n\nSie sind erst sichtbar, wenn du sie annimmst (Archiv → Mein Ordner ${jahr}). Ablehnen löscht sie.\n\n${url}\n\nViele Grüße\nKöcheclub-App`,
+      url,
+    }, `club-eingaben-archiv:${besitzer.person_id}:${Date.now()}`).catch(() => null);
+  }
+  return { abgelegt: docs.length, ordner: oid, pruefung: !selbst };
+}
 // KC-CLUB-POSTAUSGANG (1.69.1): beim Wartungslauf offene Einträge verschicken (je Lauf höchstens 20; Ergebnis bleibt als Audit stehen)
 async function postausgangLauf() {
   const { data: offen } = await db.from("kc_club_postausgang").select("*").is("gesendet_am", null).order("erstellt_am").limit(20);
@@ -583,6 +631,11 @@ async function postausgangLauf() {
           const p = (await personen([o.person_id])).get(o.person_id);
           ergebnis = await routerSenden("club_nachricht_beide", [o.person_id], erstattungBestaetigung(vorname(p), a, txt(o.hinweis, 500)), `club-postausgang:${o.id}`);
         }
+      } else if (o.art === "archiv_ablage") {
+        // bezug: Teile durch „|“ getrennt, z. B. „erstattung:<id>|dienstwunsch“ – landet „zur Prüfung“ im Ordner des Mitglieds
+        const p = (await personen([o.person_id])).get(o.person_id);
+        const besitzer: any = { person_id: o.person_id, name: p?.display_name || o.person_id, vorname: vorname(p) };
+        ergebnis = await eingabenArchivieren(besitzer, String(o.bezug).split("|"), o.veranlasst_von);
       } else ergebnis = { fehler: "unbekannte Art" };
     } catch (e) { ergebnis = { fehler: String(e).slice(0, 200) }; }
     await db.from("kc_club_postausgang").update({ gesendet_am: jetzt(), ergebnis }).eq("id", o.id);
@@ -4001,6 +4054,14 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         }, `club-bestaetigung-dw:${ich.person_id}:${a.revision}:${Date.now()}`);
         await protokoll(ich.person_id, "dienstwunsch_bestaetigt", { revision: a.revision, tage: a.tage.length, versand });
         return json({ ok: true, ...versand });
+      }
+
+      case "eingaben_ablegen": {
+        // KC-CLUB-EINGABEN-ARCHIV (1.69.2): eigene Aufstellung in den eigenen Archiv-Ordner (sofort sichtbar)
+        const teil = p.art === "erstattung" ? `erstattung:${txt(p.id, 60)}` : "dienstwunsch";
+        const r = await eingabenArchivieren(ich, [teil], ich.person_id);
+        if (!r.abgelegt) throw new Fehler("Es gibt noch nichts zum Ablegen.", 409);
+        return json({ ok: true, ...r });
       }
 
       case "dienstwunsch_laden": {
