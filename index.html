@@ -178,6 +178,10 @@
   .hero .inko-ameisen rect { fill: none; stroke: #000; stroke-width: 8; stroke-dasharray: 10 8; animation: ameisenLauf .7s linear infinite; }
   @media (prefers-reduced-motion: reduce) { .hero .inko-ameisen rect { animation-duration: 3s; } }
   #inkoKnopf { opacity: .45; } #inkoKnopf.an { opacity: 1; background: #2c3e50; box-shadow: 0 0 0 2px #f1c40f; }
+  /* KC-CLUB-NUTZUNG-PERSONEN (2.6.0) */
+  .nz-wer { justify-self: start; padding: 1px 6px; border-radius: 9px; background: var(--gruenbg); color: var(--textGruen); font-size: .8rem; font-weight: 700; white-space: nowrap; }
+  .nz-wer.nur1 { background: #fdebd0; color: #7a4a00; }
+  .nz-nie { border: 2px solid #d68910; }
   /* KC-CLUB-VORLESEN-HILFE (2.5.0) */
   .vorlese-knopf { float: right; margin: -4px 0 0 8px; border: 2px solid currentColor; border-radius: 14px; padding: 4px 10px; background: transparent; color: inherit; font: inherit; font-size: .85rem; font-weight: 800; text-transform: none; letter-spacing: 0; cursor: pointer; }
   /* KC-CLUB-EINWEISUNG (2.4.0) */
@@ -1626,7 +1630,7 @@
   .ge-dieses { box-shadow: 0 0 0 2px var(--gruen, #2fbf5b); }
   .ruhe-zeiten input:disabled { opacity: .5; }
   /* KC-CLUB-NUTZUNG (0.99.0) */
-  .nz-zeile { display: grid; grid-template-columns: 11rem minmax(0, 1fr) 2.6rem; gap: 8px; align-items: center; font-size: .92rem; }
+  .nz-zeile { display: grid; grid-template-columns: 9.5rem minmax(0, 1fr) 2.4rem 3.2rem; gap: 6px; align-items: center; font-size: .92rem; }
   .nz-zeile span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .nz-zeile b { text-align: right; }
   .nz-zeile.nz-unter { font-size: .84rem; color: var(--grau, #666); } .nz-zeile.nz-unter span { padding-left: 1.1em; } .nz-zeile.nz-unter .nz-balken i { opacity: .55; }
   .nz-balken { height: 10px; background: var(--karte2, rgba(128,128,128,.2)); border-radius: 6px; overflow: hidden; }
@@ -2417,7 +2421,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.5.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.6.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -13867,11 +13871,26 @@ function suLupenEinbauen() {
 
 const NZ_TAKT_MS = 120000;
 let nzPuffer = (() => { try { return JSON.parse(localStorage.getItem("kc_club_nutzung") || "{}"); } catch { return {}; } })();
-function nzZaehlen(v) { if (!v) return; nzPuffer[v] = (nzPuffer[v] || 0) + 1; try { localStorage.setItem("kc_club_nutzung", JSON.stringify(nzPuffer)); } catch {} }
+// KC-CLUB-NUTZUNG-PERSONEN (2.6.0, Wunsch Hansi: „welche Funktionen sie nutzen“, ohne Namen): je Gerät eine ZUFÄLLIGE Kennung
+// (nur hier erzeugt, nicht der Zugangsschlüssel, nicht die Fehlerprotokoll-Kennung) und je Tag einmal „Bereich genutzt“ –
+// der Server zählt daraus nur „von wie vielen verschiedenen Geräten“. Wer, wird nirgends gespeichert.
+const NZ_GERAET = (() => { try { let g = localStorage.getItem("kc_club_nz_geraet");
+  if (!/^[a-z0-9]{24}$/.test(g || "")) { const a = new Uint8Array(24); crypto.getRandomValues(a); g = [...a].map((x) => "abcdefghijklmnopqrstuvwxyz0123456789"[x % 36]).join(""); localStorage.setItem("kc_club_nz_geraet", g); }
+  return g; } catch { return ""; } })();
+const nzHeuteLesen = () => { const tag = heuteIso(); let h = null; try { h = JSON.parse(localStorage.getItem("kc_club_nz_heute") || "null"); } catch {} return h?.tag === tag ? h : { tag, offen: [], gesendet: [] }; };
+const nzHeuteSchreiben = (h) => { try { localStorage.setItem("kc_club_nz_heute", JSON.stringify(h)); } catch {} };
+function nzZaehlen(v) {
+  if (!v) return; nzPuffer[v] = (nzPuffer[v] || 0) + 1; try { localStorage.setItem("kc_club_nutzung", JSON.stringify(nzPuffer)); } catch {}
+  const h = nzHeuteLesen(); if (!h.offen.includes(v) && !h.gesendet.includes(v)) { h.offen.push(v); nzHeuteSchreiben(h); }
+}
 async function nzSenden() {
-  if (!INIT || !Object.keys(nzPuffer).length) return;
+  const h = nzHeuteLesen(), heute = h.offen.slice(0, 40);
+  if (!INIT || (!Object.keys(nzPuffer).length && !heute.length)) return;
   const z = nzPuffer; nzPuffer = {}; try { localStorage.setItem("kc_club_nutzung", "{}"); } catch {}
-  try { await api("nutzung_melden", { zaehler: z }); } catch { for (const [k, n] of Object.entries(z)) nzPuffer[k] = (nzPuffer[k] || 0) + n; try { localStorage.setItem("kc_club_nutzung", JSON.stringify(nzPuffer)); } catch {} }
+  try {
+    await api("nutzung_melden", { zaehler: z, ...(NZ_GERAET && heute.length ? { geraet: NZ_GERAET, heute } : {}) });
+    const n = nzHeuteLesen(); if (n.tag === h.tag) { n.gesendet = [...new Set([...n.gesendet, ...heute])]; n.offen = n.offen.filter((b) => !heute.includes(b)); nzHeuteSchreiben(n); }
+  } catch { for (const [k, n] of Object.entries(z)) nzPuffer[k] = (nzPuffer[k] || 0) + n; try { localStorage.setItem("kc_club_nutzung", JSON.stringify(nzPuffer)); } catch {} }
 }
 setInterval(nzSenden, NZ_TAKT_MS);
 document.addEventListener("visibilitychange", () => { if (document.hidden) nzSenden(); });
@@ -13896,18 +13915,20 @@ async function nzAdmin(tage) {
   const tageMap = new Map(); for (const z of r.zeilen) tageMap.set(z.tag, (tageMap.get(z.tag) || 0) + z.anzahl);
   const tagListe = []; for (let i = r.tage - 1; i >= 0; i--) { const t = new Intl.DateTimeFormat("sv-SE", { timeZone: TZ }).format(new Date(Date.now() - i * 86400000)); tagListe.push([t, tageMap.get(t) || 0]); }
   const tmax = Math.max(1, ...tagListe.map((x) => x[1]));
-  const ungenutzt = Object.keys(NZ_NAMEN).filter((b) => !summe.has(b) && !nzOber(b) && !["gruppe", "sos", "sicherheit"].includes(b));
+  const ungenutzt = Object.keys(NZ_NAMEN).filter((b) => !summe.has(b) && !["gruppe", "sos", "sicherheit"].includes(b) && (!nzOber(b) || summe.has(nzOber(b))));
+  const wer = r.geraete || {}, werZ = (b) => wer[b] ? `<small class="nz-wer${wer[b] === 1 ? " nur1" : ""}" title="von ${wer[b]} verschiedenen Mitgliedern (Geräten)">👤 ${wer[b]}</small>` : "<small></small>";
   // Hauptbereiche nach Anzahl (inkl. Unterbereiche), darunter eingerückt ihre Unterbereiche
   const haupt = new Map(); for (const [b, n] of liste) { const o = nzOber(b) || b; haupt.set(o, (haupt.get(o) || 0) + (nzOber(b) ? 0 : n)); }
   const zeilen = [...haupt.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).flatMap(([o, n]) => [[o, n, false], ...liste.filter(([b]) => nzOber(b) === o).map(([b, m]) => [b, m, true])]);
   $("adminBlattInhalt").innerHTML = `<h3 style="margin:0">📊 Nutzung – ohne Namen</h3>
-    <p class="hinweis" style="margin:0">Wie oft die Bereiche geöffnet wurden. Es wird nie gespeichert, wer – nur Tag, Bereich und Anzahl.</p>
+    <p class="hinweis" style="margin:0">Wie oft die Bereiche geöffnet wurden und <b>👤 von wie vielen verschiedenen Mitgliedern</b>. Es wird nie gespeichert, wer – nur Tag, Bereich, Anzahl und eine zufällige Geräte-Kennung.</p>
     <div class="knoepfe">${[7, 30, 90].map((t) => `<button class="knopf klein${r.tage === t ? " haupt" : ""}" onclick="nzAdmin(${t})">${t} Tage</button>`).join("")}${INFO_DATEN.admin?.r ? `<button class="knopf klein" onclick="adminBlatt()">‹ Admin-Zentrale</button>` : ""}</div>
-    <b>Insgesamt ${gesamt} Öffnungen in ${r.tage} Tagen</b><span class="hinweis" style="margin:0">↳ = Teilbereich (z. B. Büro → Eingang). Die Zahl beim Hauptbereich zählt nur das Öffnen selbst.</span>
+    <b>Insgesamt ${gesamt} Öffnungen in ${r.tage} Tagen${r.geraeteGesamt ? ` · 👤 ${r.geraeteGesamt} verschiedene Mitglieder${r.mitglieder ? ` von ${r.mitglieder}` : ""}` : ""}</b>
+    <span class="hinweis" style="margin:0">👤 = verschiedene Mitglieder (genau: Geräte – wer Handy und Tablet nutzt, zählt doppelt). Gezählt ab Version 2.6.0. <span class="nz-wer nur1">👤 1</span> = nur ein einziges Mitglied.</span><span class="hinweis" style="margin:0">↳ = Teilbereich (z. B. Büro → Eingang). Die Zahl beim Hauptbereich zählt nur das Öffnen selbst.</span>
     <div class="nz-tage" title="Öffnungen je Tag">${tagListe.map(([t, n]) => `<div title="${esc(t.slice(8) + "." + t.slice(5, 7) + ".: " + n)}"><i style="height:${Math.round(n / tmax * 100)}%"></i></div>`).join("")}</div>
-    ${liste.length ? zeilen.map(([b, n, unter]) => `<div class="nz-zeile${unter ? " nz-unter" : ""}"><span>${unter ? "↳ " : ""}${esc(NZ_NAMEN[b] || b)}</span><div class="nz-balken"><i style="width:${Math.round(n / max * 100)}%"></i></div><b>${n}</b></div>`).join("")
+    ${liste.length ? zeilen.map(([b, n, unter]) => `<div class="nz-zeile${unter ? " nz-unter" : ""}"><span>${unter ? "↳ " : ""}${esc(NZ_NAMEN[b] || b)}</span><div class="nz-balken"><i style="width:${Math.round(n / max * 100)}%"></i></div><b>${n}</b>${werZ(b)}</div>`).join("")
       : '<p class="hinweis">Noch keine Zahlen – die Statistik füllt sich, sobald die Mitglieder die neue Version nutzen.</p>'}
-    ${liste.length && ungenutzt.length ? `<p class="hinweis" style="margin:6px 0 0">Nicht geöffnet in diesem Zeitraum: ${ungenutzt.map((b) => esc(NZ_NAMEN[b])).join(", ")}</p>` : ""}`;
+    ${liste.length && ungenutzt.length ? `<div class="karte nz-nie" style="margin:6px 0 0"><b>🚫 Nie geöffnet in ${r.tage} Tagen</b> <span class="hinweis">– vielleicht erklären oder vereinfachen</span><div style="margin-top:6px">${ungenutzt.map((b) => `<span class="stmarke" style="display:inline-block;margin:2px 4px 2px 0">${esc(NZ_NAMEN[b])}</span>`).join("")}</div></div>` : ""}`;
   $("adminBlatt").classList.remove("versteckt");
 }
 

@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.6.0 – 2026-10-03 – Nutzung: von wie vielen verschiedenen Mitgliedern (ohne Namen, Wunsch Hansi)
+- KC-CLUB-NUTZUNG-PERSONEN: Hansi wollte ein Protokoll je Person; abgelehnt (heimliche Einzelüberwachung, DSGVO/Vertrauen).
+  Sein Ziel „sehen, welche Funktionen genutzt werden“ jetzt ohne Namen: je Gerät eine zufällige Kennung (in der App erzeugt,
+  mit keiner Person verknüpft), je Tag einmal „Bereich genutzt“. Neue Tabelle kc_club_nutzung_geraete (tag, bereich, geraet),
+  RLS ohne Policies, Funktion kc_club_nutzung_geraete_zahlen (nur Zahlen), Aufbewahrung 100 Tage (Wartungslauf).
+  Migration supabase/migrations/20261003_kc_club_v2600_nutzung_geraete.sql (eingespielt).
+- Admin → 📊 Nutzung: je Bereich „👤 n“ verschiedene Mitglieder (Geräte), „👤 1“ hervorgehoben, Gesamtzahl „von N Mitgliedern“,
+  Karte „🚫 Nie geöffnet“ (jetzt auch Teilbereiche). Zeitraum wie bisher 7/30/90 Tage.
+
 ## 2.5.0 – 2026-10-03 – 🔊 Vorlesen bei Einweisung und Tipp des Tages (Wunsch Hansi)
 - KC-CLUB-VORLESEN-HILFE: Knopf „🔊 Vorlesen“ oben rechts in jeder Einweisungs-Karte und im Tipp des Tages. Liest Überschrift
   und Text mit der Sprachausgabe des Handys vor (vorhandene Funktion sprechen(), ohne Emojis/Pfeilzeichen); nochmal tippen =

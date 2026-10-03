@@ -3226,6 +3226,16 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   const f = html.slice(html.indexOf("function vorlesenKarte("), html.indexOf("const VORLESE_KNOPF"));
   assert.ok(/speechSynthesis\.speaking\) \{ speechSynthesis\.cancel\(\); return; \}/.test(f) && /sprechen\(t\)/.test(f) && !/fetch\(/.test(f), "an/aus, nur Handy-Sprache");
 }
+// 294. 2.6.0: Nutzung – verschiedene Mitglieder ohne Namen (KC-CLUB-NUTZUNG-PERSONEN)
+{
+  const mig = lies("supabase/migrations/20261003_kc_club_v2600_nutzung_geraete.sql");
+  assert.ok(/create table if not exists kc_club_nutzung_geraete/.test(mig) && /enable row level security/.test(mig) && !/person_id/.test(mig) && /revoke all on function kc_club_nutzung_geraete_zahlen/.test(mig), "Tabelle ohne Person, RLS, Funktion gesperrt");
+  const f = server.slice(server.indexOf('case "nutzung_melden": {'), server.indexOf('case "nutzung_statistik": {'));
+  assert.ok(/from\("kc_club_nutzung_geraete"\)\.upsert\(\[\.\.\.new Set\(heute\)\]\.map\(\(bereich\) => \(\{ tag, bereich, geraet \}\)\)/.test(f) && !/person_id/.test(f.slice(f.indexOf("KC-CLUB-NUTZUNG-PERSONEN"))), "Server speichert keine Person");
+  assert.ok(/kc_club_nutzung_geraete"\)\.delete\(\)\.lt\("tag", berlinTag\(new Date\(Date\.now\(\) - 100 \* 86400000\)\)\)/.test(server), "100 Tage Aufbewahrung");
+  assert.ok(/crypto\.getRandomValues\(a\)/.test(html) && /localStorage\.getItem\("kc_club_nz_geraet"\)/.test(html) && /geraet: NZ_GERAET, heute/.test(html), "zufällige Geräte-Kennung");
+  assert.ok(/class="nz-wer/.test(html) && /🚫 Nie geöffnet in/.test(html), "Anzeige");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

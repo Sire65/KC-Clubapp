@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "2.5.0";
+const SERVER_VERSION = "2.6.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -2566,6 +2566,8 @@ Deno.serve(async (req) => {
       await fpUeberwachen().catch((e) => console.error("fp ueberwachung", String(e)));
       await postausgangLauf().catch((e) => console.error("postausgang", String(e))); // KC-CLUB-POSTAUSGANG (1.69.1)
       await adminAbwesendPruefen().catch((e) => console.error("admin abwesend", String(e))); // KC-CLUB-VERTRETUNG (2.2.0)
+      // KC-CLUB-NUTZUNG-PERSONEN (2.6.0): Geräte-Kennungen nur 100 Tage aufbewahren
+      await db.from("kc_club_nutzung_geraete").delete().lt("tag", berlinTag(new Date(Date.now() - 100 * 86400000))).then(() => {}, () => {});
       // Abstimmungen mit abgelaufener Frist beenden (Ergebnis geht an alle)
       const { data: abgelaufen } = await db.from("kc_club_vorschlaege").select("*").eq("status", "offen").lt("frist", jetzt());
       let beendet = 0;
@@ -4891,14 +4893,23 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const paare = Object.entries(z).filter(([b, n]) => NUTZUNG_BEREICHE.has(String(b)) && Number.isFinite(Number(n)) && Number(n) > 0).slice(0, 40)
           .map(([b, n]) => [String(b), Math.min(200, Math.round(Number(n)))] as [string, number]);
         if (paare.length) await db.rpc("kc_club_nutzung_zaehlen", { p_tag: berlinTag(new Date()), p_bereiche: paare.map((x) => x[0]), p_anzahlen: paare.map((x) => x[1]) });
+        // KC-CLUB-NUTZUNG-PERSONEN (2.6.0): zufällige Geräte-Kennung (aus der App, mit keiner Person verknüpft) je Tag + Bereich –
+        // nur um „von wie vielen verschiedenen“ zu zählen. Die Person (ich) wird hier bewusst NICHT gespeichert.
+        const geraet = String(p.geraet || ""), heute = (Array.isArray(p.heute) ? p.heute : []).map(String).filter((b: string) => NUTZUNG_BEREICHE.has(b)).slice(0, 40);
+        if (/^[a-z0-9]{16,40}$/.test(geraet) && heute.length) {
+          const tag = berlinTag(new Date());
+          await db.from("kc_club_nutzung_geraete").upsert([...new Set(heute)].map((bereich) => ({ tag, bereich, geraet })), { onConflict: "tag,bereich,geraet", ignoreDuplicates: true });
+        }
         return json({ ok: true });
       }
       case "nutzung_statistik": {
         nurAdmin(ich);
         const tage = Math.min(90, Math.max(1, Math.round(Number(p.tage) || 7)));
         const von = berlinTag(new Date(Date.now() - (tage - 1) * 86400000));
-        const { data } = await db.from("kc_club_nutzung").select("tag,bereich,anzahl").gte("tag", von).order("tag");
-        return json({ tage, von, zeilen: data ?? [] });
+        const [{ data }, { data: gz }] = await Promise.all([db.from("kc_club_nutzung").select("tag,bereich,anzahl").gte("tag", von).order("tag"),
+          db.rpc("kc_club_nutzung_geraete_zahlen", { p_von: von })]); // KC-CLUB-NUTZUNG-PERSONEN (2.6.0): nur Zahlen
+        const geraete = Object.fromEntries((gz ?? []).filter((x: any) => x.bereich !== "*").map((x: any) => [x.bereich, x.geraete]));
+        return json({ tage, von, zeilen: data ?? [], geraete, geraeteGesamt: (gz ?? []).find((x: any) => x.bereich === "*")?.geraete ?? 0, mitglieder: (await aktiveMitglieder()).length });
       }
 
       // ----- KC-CLUB-REAKTION (0.97.0): je Person eine Reaktion je Nachricht; gleiche nochmal = weg; Autor bekommt Bescheid -----
