@@ -112,6 +112,8 @@
   .umschalter { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: var(--karte2); padding: 5px; border-radius: 16px; margin: 4px 0 12px; }
   .umschalter button { border: none; border-radius: 12px; padding: 10px; font-weight: 800; background: none; cursor: pointer; }
   /* KC-CLUB-DESIGN: Auswahl der fertigen Farbdesigns + Tag/Nacht */
+  .ds-mehr { margin: 0 0 12px; border: 1px dashed var(--linie); border-radius: 14px; padding: 8px 12px; } .ds-mehr summary { cursor: pointer; font-weight: 800; padding: 4px 0; }
+  .ds-mehr[open] summary { margin-bottom: 4px; }
   .designwahl { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin: 8px 0 12px; }
   .designwahl button { border: 2px solid var(--linie); background: var(--karte); color: var(--text); border-radius: 16px; padding: 8px; cursor: pointer; text-align: left; font-weight: 800; font-size: .9rem; }
   .designwahl button.an { border-color: var(--rot); box-shadow: 0 0 0 2px var(--rot); }
@@ -1966,6 +1968,7 @@
       <p class="hinweis" id="modusInfo" style="margin-top:-4px"></p>
       <div><b>🎨 Farbdesign</b><div class="hinweis">Antippen – die App färbt sich sofort um</div></div>
       <div class="designwahl" id="designWahl"></div>
+      <details class="ds-mehr" id="designMehrKlappe"><summary>🎨 Weitere Farbschemen <span class="hinweis" id="designMehrZahl"></span></summary><div class="designwahl" id="designWahlMehr"></div></details>
       <button class="knopf klein" onclick="designStandard()">↺ Standard wiederherstellen</button>
       <div class="wortwahl" id="meinWetterort"></div>
       <div class="schalter"><div><b>🪧 Info-Feld oben beim Start</b><div class="hinweis">Welche Karte zuerst erscheint – z. B. Nr. 1 oder die Kommunikationszentrale</div></div><select id="setInfoStart" onchange="infoStartSetzen(this.value)" style="max-width:48%"></select></div>
@@ -2305,7 +2308,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.75.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.76.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2373,6 +2376,31 @@ const DESIGNS = [
   { id: "kontrast", name: "Großer Kontrast",
     tag: { rot: "#000000", rot2: "#1a1a1a", rot3: "#333333", gold: "#ffd400", hero1: "#000000", hero4: "#2a2a2a", bg: "#ffffff", karte: "#ffffff", karte2: "#eeeeee", linie: "#555555", text: "#000000", grau: "#333333" },
     nacht: { rot: "#0044aa", rot2: "#0055cc", rot3: "#3377dd", gold: "#ffd400", hero1: "#000000", hero4: "#003380", bg: "#000000", karte: "#111111", karte2: "#1e1e1e", linie: "#888888", text: "#ffffff", grau: "#e0e0e0" } },
+  // KC-CLUB-DESIGN-MEHR (1.76.0, Wunsch Hansi): weitere Farbschemen – stehen in einer eigenen Klappzone, damit es übersichtlich bleibt
+  { id: "toskana", name: "Toskana", mehr: true,
+    tag: { rot: "#a4532f", rot2: "#bf6a40", rot3: "#d98a5f", gold: "#d8b26e", hero1: "#5a2614", hero4: "#c98a55", bg: "#f8f1ea", karte: "#ffffff", karte2: "#f0e2d4", linie: "#e6d3c0", text: "#2c1a12", grau: "#6e5a4e" },
+    nacht: { rot: "#a4532f", rot2: "#bf6a40", rot3: "#e09a6f", gold: "#d8b26e", hero1: "#3a180c", hero4: "#9c6a42", bg: "#1a1310", karte: "#271d18", karte2: "#312520", linie: "#47372f", text: "#f5ebe4", grau: "#bba79b" } },
+  { id: "weinberg", name: "Weinberg", mehr: true,
+    tag: { rot: "#5e1f3d", rot2: "#7a2c52", rot3: "#9e4a74", gold: "#c9a46a", hero1: "#350f22", hero4: "#8f5a78", bg: "#f6f0f3", karte: "#ffffff", karte2: "#ece0e6", linie: "#e0cfd8", text: "#25131c", grau: "#6a5761" },
+    nacht: { rot: "#7a2c52", rot2: "#8e3862", rot3: "#c06a95", gold: "#d4b07a", hero1: "#22091a", hero4: "#6e3f58", bg: "#170f13", karte: "#241820", karte2: "#2e2029", linie: "#45323d", text: "#f4e8ee", grau: "#bba6b1" } },
+  { id: "salbei", name: "Salbei", mehr: true,
+    tag: { rot: "#4f6b55", rot2: "#62826a", rot3: "#86a38d", gold: "#c9a46a", hero1: "#2b3d2f", hero4: "#9bb08f", bg: "#f2f4ef", karte: "#ffffff", karte2: "#e4e9e0", linie: "#d5ddd0", text: "#1e2620", grau: "#56605a" },
+    nacht: { rot: "#4f6b55", rot2: "#62826a", rot3: "#8fb096", gold: "#c9a46a", hero1: "#1a251c", hero4: "#5f7556", bg: "#121613", karte: "#1c221d", karte2: "#252d26", linie: "#364036", text: "#e9efe9", grau: "#a9b5ab" } },
+  { id: "lavendel", name: "Lavendel", mehr: true,
+    tag: { rot: "#5d4e8c", rot2: "#7262a6", rot3: "#9686c4", gold: "#d9b46a", hero1: "#2f2650", hero4: "#9a8cc0", bg: "#f4f2f9", karte: "#ffffff", karte2: "#e7e3f2", linie: "#d9d3ea", text: "#1f1a2e", grau: "#5f5874" },
+    nacht: { rot: "#5d4e8c", rot2: "#7262a6", rot3: "#a596d4", gold: "#d9b46a", hero1: "#1c1633", hero4: "#5d5088", bg: "#13111a", karte: "#1e1b28", karte2: "#282433", linie: "#3b354b", text: "#eeeaf7", grau: "#b0a9c4" } },
+  { id: "ocker", name: "Ocker", mehr: true,
+    tag: { rot: "#7f5300", rot2: "#a56d0a", rot3: "#c8902e", gold: "#e2b84f", hero1: "#4a3000", hero4: "#c9a25a", bg: "#fbf6ea", karte: "#ffffff", karte2: "#f2e8d0", linie: "#e8dcbc", text: "#2a1f0a", grau: "#6b5e45" },
+    nacht: { rot: "#7f5300", rot2: "#a56d0a", rot3: "#d9a040", gold: "#e2b84f", hero1: "#2e1e00", hero4: "#8a6a2c", bg: "#18140b", karte: "#241e12", karte2: "#2e2718", linie: "#463b25", text: "#f6efde", grau: "#bfb296" } },
+  { id: "schokolade", name: "Schokolade", mehr: true,
+    tag: { rot: "#5b3a29", rot2: "#74503b", rot3: "#957059", gold: "#d1a970", hero1: "#2e1c12", hero4: "#9c7a5e", bg: "#f6f1ec", karte: "#ffffff", karte2: "#ebe1d8", linie: "#ddcfc3", text: "#24170f", grau: "#66574d" },
+    nacht: { rot: "#6e4935", rot2: "#74503b", rot3: "#a8826a", gold: "#d1a970", hero1: "#1c110b", hero4: "#6b5040", bg: "#15100d", karte: "#211915", karte2: "#2b211c", linie: "#40332b", text: "#f3eae4", grau: "#b8a99f" } },
+  { id: "petrol", name: "Petrol", mehr: true,
+    tag: { rot: "#0f5c5c", rot2: "#167373", rot3: "#3a9696", gold: "#e0b85c", hero1: "#073333", hero4: "#4fa3a0", bg: "#eef5f5", karte: "#ffffff", karte2: "#dfeced", linie: "#cfe0e0", text: "#122424", grau: "#4c5f5f" },
+    nacht: { rot: "#0f5c5c", rot2: "#167373", rot3: "#46aaaa", gold: "#e0b85c", hero1: "#042222", hero4: "#2f7a78", bg: "#0d1515", karte: "#162222", karte2: "#1e2c2c", linie: "#2e4242", text: "#e5f1f1", grau: "#a0b5b5" } },
+  { id: "rose", name: "Rosé", mehr: true,
+    tag: { rot: "#a3435f", rot2: "#b85a76", rot3: "#d08098", gold: "#d9b06e", hero1: "#5c1f33", hero4: "#d79aa9", bg: "#fbf3f5", karte: "#ffffff", karte2: "#f3e3e8", linie: "#ead3da", text: "#2b161d", grau: "#6d5860" },
+    nacht: { rot: "#a3435f", rot2: "#b85a76", rot3: "#e08ca4", gold: "#d9b06e", hero1: "#3a1220", hero4: "#8a4d5f", bg: "#1a1114", karte: "#271a1f", karte2: "#312228", linie: "#4a343c", text: "#f7eaee", grau: "#c2a9b1" } },
 ];
 // Gewählt: Design + Modus (auto = nach Helligkeit: Lichtsensor, falls das Handy ihn freigibt, sonst Sonnenauf-/-untergang in Werne)
 let DS = { design: "klassik", modus: "auto" }, dsGeaendert = 0, LICHT_NACHT = null;
@@ -2437,11 +2465,15 @@ function designWahlZeigen() {
   if (!$("designWahl")) return;
   queueMicrotask(() => { if ($("designWahlE")) $("designWahlE").innerHTML = $("designWahl").innerHTML; }); // gleiche Farbwahl in „Das Wichtigste“
   const nacht = istNacht();
-  $("designWahl").innerHTML = DESIGNS.map((d) => { const f = d[nacht ? "nacht" : "tag"];
+  const knopf = (d) => { const f = d[nacht ? "nacht" : "tag"];
     return `<button class="${d.id === DS.design ? "an" : ""}" onclick="designWaehlen('${d.id}')"><span class="vorschau" style="background:${f.bg}">`
       + `<i style="left:0;right:0;top:0;height:24px;border-radius:0;background:${d.verlauf ? d.verlauf[nacht ? "nacht" : "tag"] : `linear-gradient(135deg,${f.hero1},${f.rot},${f.hero4})`}"></i>`
       + `<i style="left:8px;top:30px;width:44px;height:22px;background:${f.karte};border:1px solid ${f.linie}"></i><i style="left:58px;top:30px;width:44px;height:22px;background:${f.rot}"></i><i style="right:8px;top:34px;width:14px;height:14px;border-radius:50%;background:${f.gold}"></i>`
-      + `</span>${d.id === DS.design ? "✓ " : ""}${esc(d.name)}</button>`; }).join("");
+      + `</span>${d.id === DS.design ? "✓ " : ""}${esc(d.name)}</button>`; };
+  $("designWahl").innerHTML = DESIGNS.filter((d) => !d.mehr).map(knopf).join("");
+  // 1.76.0: weitere Schemen in eigener Klappzone; ist eins davon gewählt, steht die Zone offen
+  const mehr = DESIGNS.filter((d) => d.mehr);
+  if ($("designWahlMehr")) { $("designWahlMehr").innerHTML = mehr.map(knopf).join(""); $("designMehrZahl").textContent = `(${mehr.length})`; if (mehr.some((d) => d.id === DS.design)) $("designMehrKlappe").open = true; }
   document.querySelectorAll("#modusWahl button").forEach((b) => b.classList.toggle("an", b.dataset.m === DS.modus));
   const s = sonne(), z = (d) => fZeit.format(d);
   $("modusInfo").textContent = DS.modus !== "auto" ? "" : `Gerade: ${nacht ? "🌙 Nacht" : "☀️ Tag"} – ` + (LICHT_NACHT !== null ? "nach dem Lichtsensor des Handys." : `nach Sonnenstand in Werne (heute hell von ${z(s.auf)} bis ${z(s.unter)} Uhr).`);
@@ -2901,7 +2933,7 @@ function einstiegHinweis() {
 const TIPP_SPAETER_TAGE = 3;
 const TIPPS = [
   // 1.59.0 (Wunsch Hansi): Fragen „Soll ich dir zeigen, wo?“ – Ja führt genau hin, Nein = später nochmal anbieten
-  { id: "sprachansage", sym: "🗣️", t: "Möchtest du hören, wenn sich jemand anmeldet?", x: "Dann schalte doch die <b>Sprachansage</b> an – das Handy sagt z. B. „Klaus ist jetzt online“. <b>Soll ich dir zeigen, wo?</b>", ja: "👉 Ja, zeig mir wo", nein: "⏰ Nein, später", neinSpaeter: true, nur: () => !ansageAn(), testen: () => einstiegHin("ansagen", "setSprAnsZeile") }, // 1.75.0: Online-Ansage steht jetzt unter „Sprachansagen“
+  { id: "sprachansage", sym: "🗣️", t: "Möchtest du hören, wenn sich jemand anmeldet?", x: "Unter ⚙️ → <b>„🗣️ Sprachansagen“</b> kreuzt du an, was dein Handy ansagen soll – z. B. „Klaus ist jetzt online“ oder „Christina hat dir eine Nachricht geschickt“. Mit ▶ hörst du ein Beispiel. <b>Soll ich dir zeigen, wo?</b>", ja: "👉 Ja, zeig mir wo", nein: "⏰ Nein, später", neinSpaeter: true, nur: () => !ansageAn(), testen: () => einstiegHin("ansagen", "setSprAnsZeile") }, // 1.75.0: Online-Ansage steht jetzt unter „Sprachansagen“
   { id: "vorlesen", sym: "🔊", t: "Nachrichten vorlesen lassen?", x: "Das Handy kann dir neue Nachrichten im Chat <b>vorlesen</b> – an- und ausschalten mit dem Lautsprecher 🔇/🔊 oben im Chat. <b>Soll ich dir zeigen, wo?</b>", ja: "👉 Ja, zeig mir wo", nein: "⏰ Nein, später", neinSpaeter: true, nur: () => !vorlesenAn(), testen: () => einstiegHin("ansagen", "setVorlesenZeile") },
   { id: "archiv_ordner", sym: "👤", t: "Kennst du schon deinen eigenen Archiv-Ordner?", x: "Im Archiv hast du einen persönlichen Ordner mit Registern – nur du siehst ihn. Mit 🔓 kannst du anderen etwas auf Zeit freigeben.", testen: () => arStart() },
   { id: "wischen", sym: "👉", t: "In Nachrichten kannst du jetzt wischen", x: "Eine Nachricht <b>nach rechts</b> wischen = antworten. <b>Nach links</b> wischen = löschen (mit Rückfrage).", testen: () => zeige("nachrichten") },
@@ -2918,10 +2950,15 @@ const TIPPS = [
   { id: "ruhe", sym: "🌙", t: "Nachts Ruhe mit „Nicht stören“", x: "In den Einstellungen kannst du einen Zeitraum ohne Push einstellen – Anrufe kommen trotzdem durch.", testen: () => einstiegHin("benachrichtigung", "ruheVon") },
   { id: "antwort_zurueck", sym: "↩️", t: "Termin-Antwort zurücknehmen", x: "Bei einem Termin nochmal auf deine farbige Antwort tippen – dann ist sie zurückgenommen.", testen: () => zeige("termine") },
   { id: "mitfahren", sym: "🚗", t: "Mitfahrgelegenheit suchen oder anbieten", x: "Nach „✅ Ich komme“ kannst du bei jedem Termin eine Mitfahrt suchen oder anbieten und Plätze buchen.", testen: () => zeige("termine") },
-  { id: "kalender", sym: "📆", t: "Termine im eigenen Kalender", x: "Die Club-Termine kannst du in Google- oder Outlook-Kalender übernehmen – automatisch aktuell.", testen: () => einstiegHin("handykalender") },
+  { id: "kalender", sym: "📆", t: "Termine im eigenen Kalender", x: "Alle Club-Termine erscheinen auf Wunsch automatisch im normalen Kalender deines Handys – immer aktuell. Einmal unter ⚙️ → „📲 Termine im Handy-Kalender“ verbinden.", testen: () => einstiegHin("handykalender") },
   { id: "klappe", sym: "🔒", t: "Bereiche festhalten", x: "In den Einstellungen kannst du jeden Bereich mit dem Schloss offen oder zu feststellen. Lange Bereiche klappst du jetzt auch unten mit „▴ Zuklappen“ zu.", testen: () => zeige("einstellungen") },
   { id: "rechtschreibung", sym: "🖍️", t: "Tippfehler werden rot unterstrichen", x: "Beim Schreiben im Chat zeigt eine rote Wellenlinie Tippfehler – antippen, dann kommen Vorschläge. Siehst du keine Linie? Unter ⚙️ → „🖍️ Tippfehler rot unterstreichen“ → Prüfen.", testen: () => rsBlatt() },
   { id: "private_termine", sym: "🗓️", t: "Eigene private Termine", x: "Unter Termine kannst du mit „＋ Neu“ auch private Einträge anlegen – nur du siehst sie.", testen: () => zeige("termine") },
+  // 1.76.0 (Wunsch Hansi: Tipps an den heutigen Stand anpassen) – neue Funktionen, je ein kurzer Tipp
+  { id: "diktieren", sym: "✍️", t: "Diktieren statt tippen", x: "Im Chat unter dem Schreibfeld auf <b>🎤</b> tippen → <b>„✍️ Diktieren“</b>: du sprichst, das Handy schreibt mit. Oder „🎤 Sprachnachricht“ für eine Tonaufnahme.", testen: () => zeige("nachrichten") },
+  { id: "fotoalben", sym: "📸", t: "Eigene Fotoalben anlegen", x: "Im Fotoalbum auf <b>„☑️ Auswählen“</b> tippen, Bilder anhaken und <b>„📸 Ins Album“</b> – z. B. „Weihnachtsmarkt 2026“. Deine Alben stehen auch im Archiv-Regal.", testen: () => zeige("fotos") },
+  { id: "chronik", sym: "📖", t: "Die Clubchronik zum Blättern", x: "Im Archiv steht die <b>Clubchronik</b> – mit „📖 Blättern“ wie in einem Buch. Du hast alte Fotos oder Zeitungsartikel? Einfach einreichen, die Clubleitung nimmt sie auf.", testen: () => arStartArt("chronik") },
+  { id: "helfen_leihen", sym: "🤝", t: "Helfen, Leihen & Börse", x: "Unter <b>„🤝 Helfen & Leihen“</b> suchst du Helfer, leihst Club-Sachen (z. B. den Pavillon) oder bietest in der Börse etwas an.", testen: () => hlStart() },
 ];
 const tippStand = () => ({ an: true, bekannt: {}, spaeter: {}, zuletzt: null, ...(INIT?.einstellungen?.tipps || {}) });
 function tippSpeichern(neu) {

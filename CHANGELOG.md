@@ -1,5 +1,14 @@
 # Änderungen
 
+## 1.76.0 – 2026-10-03
+- KC-CLUB-DESIGN-MEHR (Wunsch Hansi): 8 weitere Farbschemen – Toskana, Weinberg, Salbei, Lavendel, Ocker, Schokolade, Petrol,
+  Rosé (je Tag und Nacht, Kontrast geprüft: Schrift ≥ 7:1, weiße Schrift auf Knöpfen ≥ 4,5:1). Sie stehen unter ⚙️ →
+  Darstellung in einer eigenen Klappzone „🎨 Weitere Farbschemen (8)“, damit die Auswahl übersichtlich bleibt; ist eines gewählt,
+  steht die Zone offen.
+- Tipps des Tages geprüft (Wunsch Hansi): „Sprachansage“ beschreibt jetzt „⚙️ → 🗣️ Sprachansagen“ mit ▶ Beispiel;
+  „Kalender“ beschreibt den Handy-Kalender statt Google/Outlook. Neu: Diktieren, eigene Fotoalben, Clubchronik zum Blättern,
+  Helfen/Leihen/Börse. Die übrigen Tipps stimmen mit der App überein.
+
 ## 1.75.1 – 2026-10-03
 - Tipp des Tages „Emojis“ (Fund Hansi): Text sagte „neben dem Schreibfeld“ – die Knöpfe sitzen inzwischen unter dem Schreibfeld.
   Jetzt: „Im Chat unter dem Schreibfeld auf 😊 tippen – darüber öffnet sich die bunte Emoji-Auswahl.“

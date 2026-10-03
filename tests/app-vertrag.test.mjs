@@ -2885,6 +2885,19 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 }
 // 255. 1.75.1: Emoji-Tipp beschreibt die richtige Stelle
 assert.ok(/id: "emoji",[^\n]*unter dem Schreibfeld<\/b> auf <b>😊<\/b>/.test(html) && !/neben dem Schreibfeld gibt es eine kleine Emoji-Auswahl/.test(html), "Emoji-Tipp: unter dem Schreibfeld");
+// 256. 1.76.0: weitere Farbschemen in eigener Klappzone, Tipps aktualisiert
+{
+  const ds = html.slice(html.indexOf("const DESIGNS = ["), html.indexOf("// Gewählt: Design + Modus"));
+  const D = new Function(ds.replace("const DESIGNS =", "return"))();
+  const mehr = D.filter((d) => d.mehr);
+  assert.ok(mehr.length >= 8 && D.filter((d) => !d.mehr).length === 8, "8 Grund-Designs + weitere in der Klappzone");
+  const L = (h) => { const c = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255).map((x) => (x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4)); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
+  const k = (a, b) => { const [x, y] = [L(a), L(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+  for (const d of mehr) for (const m of ["tag", "nacht"]) assert.ok(k("#ffffff", d[m].rot) >= 4.5 && k(d[m].grau, d[m].karte) >= 4.5, `${d.id} ${m}: Kontrast`);
+  assert.ok(/<details class="ds-mehr" id="designMehrKlappe"><summary>🎨 Weitere Farbschemen/.test(html) && /DESIGNS\.filter\(\(d\) => !d\.mehr\)/.test(html), "eigene Klappzone");
+  for (const id of ["diktieren", "fotoalben", "chronik", "helfen_leihen"]) assert.ok(new RegExp(`\\{ id: "${id}", sym:`).test(html), "Tipp " + id);
+  assert.ok(!/Google- oder Outlook-Kalender übernehmen/.test(html), "Kalender-Tipp veraltet");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
