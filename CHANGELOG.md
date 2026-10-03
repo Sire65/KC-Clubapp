@@ -1,5 +1,12 @@
 # Änderungen
 
+## 1.79.0 – 2026-10-03
+- KC-CLUB-REGISTER-AMEISEN (Wunsch Hansi): Beim Wechsel des Registers (Club/Meins/Technik) läuft auf dem neu gewählten Knopf
+  kurz (1,6 s) ein „Ameisenlauf“ – gestrichelter, wandernder Rahmen in einem helleren Ton des eigenen Farbdesigns. Bei
+  „Bewegung reduzieren“ steht der Rahmen still. Der gelbe gestrichelte Rahmen bei „Neue Nachr.“ bleibt unverändert.
+- Tipp „neue Farbschemen“ angepasst: zählt jetzt alle neuen Schemen (14) und nennt ruhige und ausgefallene getrennt;
+  „Jetzt einstellen“ öffnet beide Klappzonen.
+
 ## 1.78.0 – 2026-10-03
 - KC-CLUB-DESIGN-BUNT (Wunsch Hansi „etwas ausgefallenere Schemata“): 6 Farbschemen mit Farbverlauf oben (wie Disko/Regenbogen):
   Sonnenuntergang, Polarlicht, Kirschblüte, Tiefsee, Glut, Retro 70er – je Tag und Nacht, Kontrast geprüft. Eigene Klappzone

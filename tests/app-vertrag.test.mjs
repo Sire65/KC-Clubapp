@@ -2913,6 +2913,12 @@ assert.ok(/id: "emoji",[^\n]*unter dem Schreibfeld<\/b> auf <b>😊<\/b>/.test(h
   assert.ok(bunt.length >= 6 && bunt.every((d) => d.mehr && d.verlauf?.tag && d.verlauf?.nacht), "ausgefallene Schemen mit Verlauf");
   assert.ok(/id="designBuntKlappe"><summary>✨ Ausgefallene Farbschemen/.test(html) && /id="designBuntKlappeE"/.test(html) && /DESIGNS\.filter\(\(d\) => d\.mehr && !d\.bunt\)/.test(html), "eigene Klappzone");
 }
+// 259. 1.79.0: Ameisenlauf beim Registerwechsel, Farbschemen-Tipp mit allen neuen Schemen
+{
+  assert.ok(/\.register button\.ameisen::after \{[^}]*color-mix\(in srgb, var\(--rot\) 40%, #fff\)/.test(html) && /@keyframes ameisen/.test(html), "Ameisenlauf im Design-Ton");
+  assert.ok(/const neu = r !== reg; reg = r;[^\n]*\n  if \(neu\) \{[^\n]*classList\.add\("ameisen"\); setTimeout\(\(\) => b\.classList\.remove\("ameisen"\), 1600\)/.test(html), "nur beim Wechsel, kurz");
+  assert.ok(/unsere \$\{DESIGNS\.filter\(\(d\) => d\.mehr\)\.length\} neuen Farbschemen/.test(html) && /"designMehrKlappe", "designBuntKlappe"/.test(html), "Tipp zählt alle neuen Schemen");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

@@ -475,6 +475,14 @@
   .register { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
   .register button { border: none; border-radius: 14px; padding: 11px 6px; background: var(--karte2); font-weight: 800; cursor: pointer; }
   .register button.an { background: var(--rot); color: #fff; }
+  /* KC-CLUB-REGISTER-AMEISEN (1.79.0, Wunsch Hansi): beim Wechsel läuft kurz ein „Ameisenlauf“ in einem helleren Ton des Designs */
+  .register button { position: relative; }
+  .register button.ameisen::after { content: ""; position: absolute; inset: 3px; border-radius: 11px; pointer-events: none; --af: color-mix(in srgb, var(--rot) 40%, #fff);
+    background: linear-gradient(90deg, var(--af) 50%, transparent 0) repeat-x, linear-gradient(90deg, var(--af) 50%, transparent 0) repeat-x,
+      linear-gradient(0deg, var(--af) 50%, transparent 0) repeat-y, linear-gradient(0deg, var(--af) 50%, transparent 0) repeat-y;
+    background-size: 10px 3px, 10px 3px, 3px 10px, 3px 10px; background-position: 0 0, 0 100%, 0 0, 100% 0; animation: ameisen .45s linear infinite; }
+  @keyframes ameisen { to { background-position: 10px 0, -10px 100%, 0 -10px, 100% 10px; } }
+  @media (prefers-reduced-motion: reduce) { .register button.ameisen::after { animation: none; } }
   .register .anz { display: inline-block; min-width: 20px; margin-left: 5px; padding: 0 6px; border-radius: 10px; font-size: .72rem; line-height: 18px; background: rgba(0,0,0,.08); vertical-align: 1px; }
   .register button.an .anz { background: rgba(255,255,255,.25); }
   .raster { touch-action: pan-y; }
@@ -2311,7 +2319,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.78.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.79.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2964,10 +2972,10 @@ function einstiegHinweis() {
 const TIPP_SPAETER_TAGE = 3;
 const TIPPS = [
   // 1.77.0 (Wunsch Hansi, für alle): persönlich angesprochen, ganz vorne = kommt als nächster Tipp. Nicht, wer schon ein neues Schema hat.
-  { id: "farbschemen_neu", sym: "🎨", t: () => `Hallo ${ICH?.vorname || ""}, hast du schon unsere 8 neuen Farbschemen entdeckt?`.replace("Hallo , ", "Hallo, "),
-    x: "Toskana, Weinberg, Salbei, Lavendel, Ocker, Schokolade, Petrol und Rosé – stell doch dein <b>Lieblingsschema</b> ein. Die App färbt sich sofort um.",
+  { id: "farbschemen_neu", sym: "🎨", t: () => `Hallo ${ICH?.vorname || ""}, hast du schon unsere ${DESIGNS.filter((d) => d.mehr).length} neuen Farbschemen entdeckt?`.replace("Hallo , ", "Hallo, "),
+    x: "<b>🎨 Ruhig:</b> Toskana, Weinberg, Salbei, Lavendel, Ocker, Schokolade, Petrol, Rosé<br><b>✨ Ausgefallen:</b> Sonnenuntergang, Polarlicht, Kirschblüte, Tiefsee, Glut, Retro 70er<br>Stell doch dein <b>Lieblingsschema</b> ein – die App färbt sich sofort um.",
     ja: "🎨 Jetzt einstellen", nein: "🙈 Nicht mehr anzeigen", nur: () => !DESIGNS.find((d) => d.id === DS.design)?.mehr,
-    testen: () => { const e = einfach(); einstiegHin(e ? "einfach" : "darstellung", e ? "designMehrKlappeE" : "designMehrKlappe"); setTimeout(() => { const k = $(e ? "designMehrKlappeE" : "designMehrKlappe"); if (k) k.open = true; }, 350); } },
+    testen: () => { const e = einfach(); einstiegHin(e ? "einfach" : "darstellung", e ? "designMehrKlappeE" : "designMehrKlappe"); setTimeout(() => { for (const id of e ? ["designMehrKlappeE", "designBuntKlappeE"] : ["designMehrKlappe", "designBuntKlappe"]) if ($(id)) $(id).open = true; }, 350); } },
   // 1.59.0 (Wunsch Hansi): Fragen „Soll ich dir zeigen, wo?“ – Ja führt genau hin, Nein = später nochmal anbieten
   { id: "sprachansage", sym: "🗣️", t: "Möchtest du hören, wenn sich jemand anmeldet?", x: "Unter ⚙️ → <b>„🗣️ Sprachansagen“</b> kreuzt du an, was dein Handy ansagen soll – z. B. „Klaus ist jetzt online“ oder „Christina hat dir eine Nachricht geschickt“. Mit ▶ hörst du ein Beispiel. <b>Soll ich dir zeigen, wo?</b>", ja: "👉 Ja, zeig mir wo", nein: "⏰ Nein, später", neinSpaeter: true, nur: () => !ansageAn(), testen: () => einstiegHin("ansagen", "setSprAnsZeile") }, // 1.75.0: Online-Ansage steht jetzt unter „Sprachansagen“
   { id: "vorlesen", sym: "🔊", t: "Nachrichten vorlesen lassen?", x: "Das Handy kann dir neue Nachrichten im Chat <b>vorlesen</b> – an- und ausschalten mit dem Lautsprecher 🔇/🔊 oben im Chat. <b>Soll ich dir zeigen, wo?</b>", ja: "👉 Ja, zeig mir wo", nein: "⏰ Nein, später", neinSpaeter: true, nur: () => !vorlesenAn(), testen: () => einstiegHin("ansagen", "setVorlesenZeile") },
@@ -5339,7 +5347,8 @@ function registerZeigen() {
     return `<button data-r="${r}" class="${r === reg ? "an" : ""}" onclick="register('${r}')" title="${da < alle ? `${alle - da} ausgeblendet` : ""}">${t}<span class="anz">${da < alle ? `${da}/${alle}` : da}</span></button>`; }).join("");
 }
 function register(r, richtung) {
-  reg = r; registerZeigen(); kachelnZeigen();
+  const neu = r !== reg; reg = r; registerZeigen(); kachelnZeigen();
+  if (neu) { const b = document.querySelector(`#register button[data-r="${r}"]`); if (b) { b.classList.add("ameisen"); setTimeout(() => b.classList.remove("ameisen"), 1600); } } // KC-CLUB-REGISTER-AMEISEN
   if (richtung) { const ra = $("raster"); ra.classList.remove("rein-links", "rein-rechts"); void ra.offsetWidth; ra.classList.add(richtung > 0 ? "rein-links" : "rein-rechts"); }
 }
 function registerWischen(schritt) {
