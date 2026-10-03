@@ -2828,6 +2828,15 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/hinweis: DW_HINWEIS\(DW\.name\)/.test(server) && /\$\{a\.hinweis\}\\n\\nDeine Dienstwünsche/.test(server) && /\$\{auf\.hinweis\}/.test(server) && /\$\{b\.hinweis \?/.test(html), "an allen drei Stellen");
 }
 
+// 249. 1.70.0: Tippfehler rot unterstreichen (KC-CLUB-RECHTSCHREIBUNG)
+{
+  assert.ok(/<textarea id="text" rows="2" spellcheck="true" lang="de" autocapitalize="sentences"/.test(html), "Chat-Schreibfeld ohne Rechtschreibprüfung");
+  assert.ok(/<textarea id="naBearbText" spellcheck="true" lang="de"/.test(html), "Bearbeiten-Feld ohne Rechtschreibprüfung");
+  assert.ok(/document\.addEventListener\("focusin", \(e\) => rsAn\(e\.target\)\)/.test(html) && /const RS_AUS = new Set\(\["email", "password", "tel", "number"/.test(html), "alle Schreibfelder, aber nicht E-Mail/Telefon/Zahl/Passwort");
+  assert.ok(/onclick="rsBlatt\(\)">Prüfen<\/button>/.test(html) && /id: "rechtschreibung", sym: "🖍️"/.test(html), "Einstellung/Tipp fehlt");
+  for (const g of ["android", "samsung", "ios", "pc"]) assert.ok(new RegExp(`\\n  ${g}: "<b>`).test(html), "Anleitung " + g);
+  assert.ok(!/languagetool|spellcheck.*api\./i.test(html), "kein Fremddienst für die Prüfung");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

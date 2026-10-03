@@ -1903,6 +1903,8 @@
       <!-- KC-CLUB-ONLINE-ANSAGE (1.56.0, Wunsch Hansi): Sprachansage „Klaus ist jetzt online“ – nur dieses Gerät, nur wenn die App offen ist -->
       <div class="schalter" id="setAnsageZeile"><div><b>🗣️ Ansage, wenn jemand online kommt</b><div class="hinweis">Das Handy sagt z. B. „Klaus ist jetzt online“ – nur solange die App offen ist, nicht in deiner Ruhezeit</div></div><input type="checkbox" id="setAnsage" onchange="ansageSchalter(this.checked)"></div>
       <!-- KC-CLUB-VORLESEN (1.59.0, Wunsch Hansi): neue Nachrichten im offenen Chat vorlesen (auch im Chat oben 🔇/🔊) -->
+      <!-- KC-CLUB-RECHTSCHREIBUNG (1.70.0, Wunsch Hansi): Tippfehler rot unterstrichen – macht die Handy-Tastatur, die App schaltet es überall ein -->
+      <div class="schalter" id="setRsZeile"><div><b>🖍️ Tippfehler rot unterstreichen</b><div class="hinweis">Beim Schreiben im Chat werden Fehler rot unterstrichen. Antippen zeigt Vorschläge.</div></div><button class="knopf klein" onclick="rsBlatt()">Prüfen</button></div>
       <div class="schalter" id="setMikroZeile"><div><b>🎤 Mikrofon im Chat</b><div class="hinweis">Sprachnachricht (Ton) oder Diktieren (das Handy schreibt mit, verschickt wird Text).</div></div>
         <select id="setMikro" onchange="mikroArtSetzen(this.value)" style="max-width:150px"><option value="">Jedes Mal fragen</option><option value="sprach">🎤 Sprachnachricht</option><option value="diktat">✍️ Diktieren</option></select></div>
       <div class="schalter" id="setVorlesenZeile"><div><b>🔊 Neue Nachrichten vorlesen</b><div class="hinweis">Im offenen Chat liest das Handy neue Nachrichten vor. Einzelne Nachricht: antippen → „🔊 Vorlesen“. Schalter auch im Chat oben (🔇/🔊).</div></div><input type="checkbox" id="setVorlesen" onchange="vorlesenSchalter(this.checked)"></div>
@@ -2080,7 +2082,7 @@
     <button class="rund zustell-knopf" title="Wie benachrichtigen? (Push, E-Mail, WhatsApp)" id="zustellKnopf" aria-expanded="false" onclick="zustellUmschalten()">🔔</button>
     <!-- KC-CLUB-WICHTIG (1.53.0, Wunsch Hansi): Nachricht mit „Wichtigkeit hoch“ – wird beim Empfänger farbig umrandet -->
     <button class="rund wichtig-knopf" title="Wichtig – Wichtigkeit hoch" aria-label="Als wichtig senden" aria-pressed="false" id="wichtigKnopf" onclick="wichtigUmschalten()">❗</button>
-    <textarea id="text" rows="2" placeholder="Nachricht schreiben …" onblur="emoStelleMerken()" onkeyup="emoStelleMerken()" onclick="emoStelleMerken()" oninput="emoStelleMerken();naErwPruefen();this.style.height='auto';this.style.height=this.scrollHeight+'px';tippenMelden();entwurfMerken();entwurfMarkeZeigen()"></textarea>
+    <textarea id="text" rows="2" spellcheck="true" lang="de" autocapitalize="sentences" autocorrect="on" placeholder="Nachricht schreiben …" onblur="emoStelleMerken()" onkeyup="emoStelleMerken()" onclick="emoStelleMerken()" oninput="emoStelleMerken();naErwPruefen();this.style.height='auto';this.style.height=this.scrollHeight+'px';tippenMelden();entwurfMerken();entwurfMarkeZeigen()"></textarea>
     <button class="rund" title="Senden" id="sendenKnopf" onclick="senden()">➤</button>
     <!-- KC-CLUB-WA-SENDEN (1.21.3, Wunsch Hansi): Text an WhatsApp übergeben und WhatsApp öffnen -->
     <button class="rund wa-knopf" title="Mit WhatsApp senden" aria-label="Mit WhatsApp senden" id="waKnopf" onclick="waSenden()">WA</button>
@@ -2287,7 +2289,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.69.3"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.70.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2902,6 +2904,7 @@ const TIPPS = [
   { id: "mitfahren", sym: "🚗", t: "Mitfahrgelegenheit suchen oder anbieten", x: "Nach „✅ Ich komme“ kannst du bei jedem Termin eine Mitfahrt suchen oder anbieten und Plätze buchen.", testen: () => zeige("termine") },
   { id: "kalender", sym: "📆", t: "Termine im eigenen Kalender", x: "Die Club-Termine kannst du in Google- oder Outlook-Kalender übernehmen – automatisch aktuell.", testen: () => einstiegHin("handykalender") },
   { id: "klappe", sym: "🔒", t: "Bereiche festhalten", x: "In den Einstellungen kannst du jeden Bereich mit dem Schloss offen oder zu feststellen. Lange Bereiche klappst du jetzt auch unten mit „▴ Zuklappen“ zu.", testen: () => zeige("einstellungen") },
+  { id: "rechtschreibung", sym: "🖍️", t: "Tippfehler werden rot unterstrichen", x: "Beim Schreiben im Chat zeigt eine rote Wellenlinie Tippfehler – antippen, dann kommen Vorschläge. Siehst du keine Linie? Unter ⚙️ → „🖍️ Tippfehler rot unterstreichen“ → Prüfen.", testen: () => rsBlatt() },
   { id: "private_termine", sym: "🗓️", t: "Eigene private Termine", x: "Unter Termine kannst du mit „＋ Neu“ auch private Einträge anlegen – nur du siehst sie.", testen: () => zeige("termine") },
 ];
 const tippStand = () => ({ an: true, bekannt: {}, spaeter: {}, zuletzt: null, ...(INIT?.einstellungen?.tipps || {}) });
@@ -8510,7 +8513,7 @@ function naBearbeiten(id) {
   const f = document.createElement("div"); f.id = "naMenue"; f.className = "blatt"; f.setAttribute("role", "dialog"); f.setAttribute("aria-modal", "true");
   const rest = Math.max(1, Math.round((Date.parse(m.bearbeitbarBis) - Date.now()) / 60000));
   f.innerHTML = `<div class="blatt-innen na-menue"><h3 style="margin:0">✏️ Nachricht bearbeiten</h3>
-    <textarea id="naBearbText" maxlength="4000" style="width:100%;min-height:110px;box-sizing:border-box;padding:10px;border-radius:12px;border:1px solid var(--linie);font:inherit;background:var(--karte);color:inherit"></textarea>
+    <textarea id="naBearbText" spellcheck="true" lang="de" autocapitalize="sentences" autocorrect="on" maxlength="4000" style="width:100%;min-height:110px;box-sizing:border-box;padding:10px;border-radius:12px;border:1px solid var(--linie);font:inherit;background:var(--karte);color:inherit"></textarea>
     <p class="hinweis" style="margin:0">Noch ${rest} Min. möglich. Die anderen sehen danach „bearbeitet“ – es kommt keine neue Benachrichtigung.</p>
     <button class="knopf haupt" onclick="naBearbeitenSpeichern('${id}')">💾 Speichern</button>
     <button class="knopf" onclick="document.getElementById('naMenue').remove()">Abbrechen</button></div>`;
@@ -8726,6 +8729,53 @@ async function geraetEntfernen(id, dieses) {
   if (!(await frage(dieses ? "Dieses Gerät bekommt dann keine Push-Meldungen mehr. Entfernen?" : "Dieses Gerät bekommt dann keine Push-Meldungen mehr. Entfernen?"))) return;
   try { await api("geraet_entfernen", { id }); melde("🗑️ Gerät entfernt"); if (dieses) try { await (await (await navigator.serviceWorker.ready).pushManager.getSubscription())?.unsubscribe(); } catch {} geraeteBlatt(); pushStatusZeigen?.(); }
   catch (e) { melde(e.message, true); }
+}
+
+// ---------- KC-CLUB-RECHTSCHREIBUNG (1.70.0, Wunsch Hansi): Tippfehler rot unterstreichen ----------
+// Die Prüfung macht die Rechtschreibhilfe des Handys bzw. Browsers (Deutsch, kostenlos, nichts verlässt das Gerät).
+// Die App schaltet sie in allen Schreibfeldern ausdrücklich ein (Deutsch, Satzanfang groß). Zeigt das Handy trotzdem
+// keine rote Linie, ist die Rechtschreibprüfung in der Tastatur aus – „Prüfen“ zeigt einen Testsatz und die passende Anleitung.
+const RS_AUS = new Set(["email", "password", "tel", "number", "url", "date", "time", "datetime-local", "search"]);
+function rsAn(el) {
+  if (!el || el.dataset.rs) return;
+  const ist = el.tagName === "TEXTAREA" || (el.tagName === "INPUT" && !RS_AUS.has((el.type || "text").toLowerCase()) && !el.inputMode?.match(/numeric|decimal|tel|email/));
+  if (!ist) return;
+  el.dataset.rs = "1";
+  if (!el.hasAttribute("spellcheck")) el.spellcheck = true;
+  if (!el.hasAttribute("lang") && !el.closest("[lang]:not(html)")) el.lang = "de";
+  if (el.tagName === "TEXTAREA" && !el.hasAttribute("autocapitalize")) el.setAttribute("autocapitalize", "sentences");
+}
+document.addEventListener("focusin", (e) => rsAn(e.target));
+function rsGeraet() {
+  const ua = navigator.userAgent || "";
+  if (/iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return "ios";
+  if (/SamsungBrowser|SM-[A-Z0-9]/.test(ua)) return "samsung";
+  if (/Android/.test(ua)) return "android";
+  return "pc";
+}
+const RS_ANLEITUNG = {
+  android: "<b>Android:</b> Einstellungen → System → Sprachen &amp; Eingabe → Bildschirmtastatur → <b>Gboard</b> → Rechtschreibprüfung → <b>einschalten</b>. Bei manchen Handys zusätzlich: Sprachen &amp; Eingabe → „Rechtschreibprüfung“ → an, Sprache Deutsch.",
+  samsung: "<b>Samsung:</b> Einstellungen → Allgemeine Verwaltung → Samsung-Tastatur-Einstellungen → Intelligente Eingabe bzw. <b>„Rechtschreibung prüfen“</b> → einschalten, Sprache Deutsch.",
+  ios: "<b>iPhone/iPad:</b> Einstellungen → Allgemein → Tastatur → <b>„Rechtschreibprüfung“</b> und „Auto-Korrektur“ einschalten. Unter „Tastaturen“ sollte Deutsch dabei sein.",
+  pc: "<b>PC (Chrome/Edge):</b> Rechtsklick ins Schreibfeld → Rechtschreibprüfung → <b>Deutsch</b> anhaken. Oder Einstellungen → Sprachen → Rechtschreibprüfung → an.",
+};
+function rsBlatt() {
+  document.getElementById("rsFenster")?.remove();
+  const g = rsGeraet();
+  const f = document.createElement("div"); f.id = "rsFenster"; f.className = "blatt"; f.setAttribute("role", "dialog"); f.setAttribute("aria-modal", "true");
+  f.innerHTML = `<div class="blatt-innen" style="max-height:88vh;overflow-y:auto">
+    <h3>🖍️ Tippfehler rot unterstreichen</h3>
+    <p class="hinweis" style="margin:0 0 8px">Tippe einmal in das Feld und schreib ein Wort dazu. Im Satz sind zwei Fehler versteckt.</p>
+    <textarea id="rsTest" rows="3" spellcheck="true" lang="de" autocapitalize="sentences" autocorrect="on" style="width:100%;box-sizing:border-box;padding:10px;border-radius:12px;border:1px solid var(--linie);font:inherit;background:var(--karte);color:inherit">Ich freue mich auf den Weihnachtsmakrt in Werne. Bis morgn!</textarea>
+    <p style="margin:10px 0 4px"><b>✅ Siehst du rote Wellenlinien unter „Weihnachtsmakrt“ und „morgn“?</b><br>Dann ist alles an. Ein Fehlerwort antippen (am PC: Rechtsklick) – dann kommen Vorschläge.</p>
+    <p style="margin:10px 0 4px"><b>❌ Keine rote Linie?</b> Dann ist die Rechtschreibprüfung in der Handy-Tastatur aus. So schaltest du sie ein:</p>
+    <p class="hinweis" style="margin:0 0 6px;line-height:1.5">${RS_ANLEITUNG[g]}</p>
+    <details><summary class="hinweis">Andere Geräte</summary><p class="hinweis" style="line-height:1.5">${Object.keys(RS_ANLEITUNG).filter((k) => k !== g).map((k) => RS_ANLEITUNG[k]).join("<br><br>")}</p></details>
+    <p class="hinweis" style="font-size:.85rem">Die Prüfung macht dein Handy selbst – kostenlos, und dein Text verlässt dabei nicht das Gerät.</p>
+    <button class="knopf" onclick="document.getElementById('rsFenster').remove()">Schließen</button></div>`;
+  f.onclick = (e) => { if (e.target === f) f.remove(); };
+  document.body.appendChild(f);
+  setTimeout(() => { const t = $("rsTest"); if (t) { t.focus(); t.setSelectionRange(t.value.length, t.value.length); } }, 150);
 }
 
 // ---------- KC-CLUB-EMOJI (0.95.0): Emojis in Nachrichten – übersichtlich in wenigen Gruppen ----------

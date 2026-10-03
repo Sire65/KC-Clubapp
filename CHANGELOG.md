@@ -1,5 +1,12 @@
 # Änderungen
 
+## 1.70.0 – 2026-10-03
+- KC-CLUB-RECHTSCHREIBUNG (Wunsch Hansi: Fehler im Chat rot unterstreichen): Die App schaltet die Rechtschreibhilfe des
+  Handys/Browsers in allen Schreibfeldern ausdrücklich ein (spellcheck, Deutsch, Satzanfang groß; nicht bei E-Mail, Telefon,
+  Zahlen, Passwort, Suche). Kostenlos, kein Fremddienst – der Text verlässt das Gerät nicht.
+- ⚙️ → „Ansagen, Töne & Tipps“ → „🖍️ Tippfehler rot unterstreichen“ → Prüfen: Testsatz mit zwei Fehlern und – passend zum
+  erkannten Gerät (Android/Samsung/iPhone/PC) – die Anleitung, falls die Tastatur-Rechtschreibprüfung aus ist. Neuer Tipp des Tages.
+
 ## 1.69.3 – 2026-10-03
 - Dienstwunsch-Bestätigung (Wortlaut Hansi): „Vielen Dank für die Übermittlung deiner Dienstzeiten für den Weihnachtsmarkt Werne 2026.
   Bitte beachte, dass es sich um deine Wünsche handelt – eine Abstimmung mit allen Clubmitgliedern erfolgt noch.“ – in App-Nachricht/
