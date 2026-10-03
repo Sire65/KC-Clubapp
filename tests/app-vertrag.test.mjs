@@ -3196,6 +3196,18 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/if \(notErnstfall\(\)\) return Promise\.resolve\(true\)/.test(g) && /if \(!navigator\.onLine\) return Promise\.resolve\(false\)/.test(g), "Simulation schaltet, offline nicht");
   assert.ok(/fetch\(API, \{/.test(g) && /action: "ping"/.test(g) && /if \(!weg\) NOT\.fehler = 0;/.test(g) && /notGegenLauf \|\|=/.test(g), "direkte Probe, gemeinsam, Zähler zurück");
 }
+// 290. 2.4.0: Einweisung beim ersten Öffnen (KC-CLUB-EINWEISUNG)
+{
+  const ids = [...html.slice(html.indexOf("const EINWEISUNG = ["), html.indexOf("const einwStand")).matchAll(/\{ id: "([a-z]+)"/g)].map((m) => m[1]);
+  assert.ok(ids.length >= 15 && ids.every((id) => html.includes(`<section id="v-${id}"`)), "jede Einweisung gehört zu einer echten Ansicht");
+  assert.ok(/einwZeigen\(v\); \/\/ KC-CLUB-EINWEISUNG/.test(html) && /inkognitoZeigen\(\); einwZeigen\(aktuelleAnsicht\);/.test(html), "beim Öffnen und nach dem Laden");
+  assert.ok(/onclick="einwVerstanden\('\$\{v\}'\)">👍 Verstanden/.test(html) && /onclick="einwAlleAus\(\)">Keine Einweisungen mehr/.test(html), "zwei Knöpfe");
+  assert.ok(/id="setEinw" checked onchange="einwSchalter\(this\.checked\)"/.test(html) && /onclick="einwZuruecksetzen\(\)"/.test(html), "Einstellungen");
+  assert.ok(/if \(einwOffen\("start"\)\) return false;/.test(html), "Tipp wartet");
+  assert.ok(/einweisung: \(w\) => \(\{ an: w\?\.an !== false, gesehen:/.test(server) && /KA_ID\.test\(id\)[^\n]*\.slice\(0, 40\)/.test(server), "Server prüft Einstellung");
+  const z = server.slice(server.indexOf("async function einweisungZahlen("), server.indexOf("async function adminAbwesendPruefen("));
+  assert.ok(!/name|display_name/.test(z.replace("einweisungZahlen", "")) && /einweisung: await einweisungZahlen\(\)/.test(server), "Admin-Zahlen ohne Namen");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

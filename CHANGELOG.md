@@ -1,5 +1,15 @@
 # Änderungen
 
+## 2.4.0 – 2026-10-03 – Einweisung beim ersten Öffnen eines Bereichs (Wunsch Hansi)
+- KC-CLUB-EINWEISUNG: Registry EINWEISUNG (15 Bereiche: Start, Nachrichten, Pinnwand, Termine, Mitglieder, Fotos, Helfen &
+  Leihen, Archiv, Dokumente, Einstellungen, Protokolle, Vorschläge, Dienstpläne, Aktionen, Büro nur Clubleitung). Beim ersten
+  Öffnen erscheint oben im Bereich eine grüne Karte „🎓 Kurz erklärt“ (kein Fenster, blockiert nichts) mit „👍 Verstanden“
+  (für diesen Bereich nie wieder) und „Keine Einweisungen mehr“. Gilt für alle, je Bereich einmal, geräteübergreifend in der
+  Server-Einstellung „einweisung“ (geprüft: Bereichs-IDs, Datum, höchstens 40).
+- Einstellungen: Schalter „🎓 Einweisung beim ersten Öffnen“ (Standard an) + „Alle Einweisungen nochmal zeigen“; auch über die Lupe.
+- Tipp des Tages wartet, bis die Startseite erklärt ist (nicht zwei Hinweise auf einmal).
+- Admin-Zentrale → Einzelheiten: wie viele Mitglieder Einweisungen gesehen haben, je Bereich – nur Zahlen, keine Namen.
+
 ## 2.3.3 – 2026-10-03 – Kein Fehlalarm-Notbetrieb mehr (Fund Hansi: oranges Band, Server lief einwandfrei)
 - KC-CLUB-NOTBETRIEB-GEGENPROBE: Vor dem automatischen Umschalten wartet die App 3 s und fragt den Club-Server einmal direkt
   (ohne Region, 10 s). Antwortet er überhaupt (auch mit 400/401), bleibt sie im Normalbetrieb und setzt den Fehlerzähler zurück.

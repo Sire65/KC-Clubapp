@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "2.3.3";
+const SERVER_VERSION = "2.4.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -784,6 +784,9 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
   online: (w) => ({ zeigen: w?.zeigen !== false }),
   // KC-CLUB-INKOGNITO (2.3.0): nur Admins (Prüfung in einstellung_setzen) – Standard: aus
   inkognito: (w) => ({ an: w?.an === true }),
+  // KC-CLUB-EINWEISUNG (2.4.0): Erklärkarte beim ersten Öffnen eines Bereichs – an/aus (Standard an) + welche schon gesehen
+  einweisung: (w) => ({ an: w?.an !== false, gesehen: Object.fromEntries(Object.entries(w?.gesehen && typeof w.gesehen === "object" ? w.gesehen : {})
+    .filter(([id, d]) => KA_ID.test(id) && typeof d === "string" && !isNaN(Date.parse(d))).slice(0, 40).map(([id, d]) => [id, new Date(String(d)).toISOString()])) }),
   // KC-CLUB-ONLINE-PUSH (1.57.0): Admin bekommt eine Push, wenn ein Mitglied online kommt (Standard: an)
   online_push: (w) => ({ an: w?.an !== false }),
   // KC-CLUB-ZULETZT-DA (1.20.0): anderen zeigen, wann ich zuletzt in der App war (Standard: an, gegenseitig wie WhatsApp)
@@ -1149,6 +1152,13 @@ const ADMIN_ABWESEND_TAGE = 10;
 async function adminAnzahl(): Promise<number> {
   const [{ data: ro }, aktiv] = await Promise.all([db.from("kc_club_rollen").select("person_id").eq("ist_admin", true).not("person_id", "like", "KC-P-TEST%"), aktiveMitglieder()]);
   const ids = new Set(aktiv.map((m) => m.person_id)); return (ro ?? []).filter((r: any) => ids.has(r.person_id)).length;
+}
+// KC-CLUB-EINWEISUNG (2.4.0): für die Admin-Zentrale – nur Zahlen, keine Namen (wie die Nutzungsstatistik)
+async function einweisungZahlen() {
+  const { data } = await db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "einweisung").not("person_id", "like", "KC-P-TEST%");
+  const bereiche: Record<string, number> = {};
+  for (const x of data ?? []) for (const id of Object.keys((x as any).wert?.gesehen ?? {})) bereiche[id] = (bereiche[id] ?? 0) + 1;
+  return { personen: (data ?? []).filter((x: any) => Object.keys(x.wert?.gesehen ?? {}).length).length, aus: (data ?? []).filter((x: any) => x.wert?.an === false).length, bereiche };
 }
 async function adminAbwesendPruefen() {
   const { data: ad } = await db.from("kc_club_rollen").select("person_id").eq("ist_admin", true).not("person_id", "like", "KC-P-TEST%");
@@ -7071,7 +7081,7 @@ Köcheclub-App`,
           zeit: jetzt(), server: { version: SERVER_VERSION, dbMs, ok: !dbFehler },
           datenbank: { bytes: dbFehler ? null : Number(dbBytes), grenze: Number(health?.free_db_reference_bytes) || ADMIN_DB_GRENZE,
             warnPct: health?.warning_threshold_pct ?? 75, kritPct: health?.critical_threshold_pct ?? 90, check: health ? { status: health.status, zeit: health.last_check_at } : null },
-          speicher, wartung, spiegel, admins: await adminAnzahl(),
+          speicher, wartung, spiegel, admins: await adminAnzahl(), einweisung: await einweisungZahlen(),
           communicator: { farbe: comm.farbe, text: comm.text, erreichbar: comm.erreichbar, push: comm.push.zustand, email: comm.email.zustand, club: comm.club, bericht: comm.bericht },
           mitglieder: {
             gesamt: leute.length, mitZugang: mz.length, ohneZugang: leute.length - mz.length, nieAngemeldet: mz.filter((x: any) => !x.zuletzt_gesehen).length,

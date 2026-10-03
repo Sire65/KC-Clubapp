@@ -171,6 +171,10 @@
   body:not(.ist-admin) #setInkognitoZeile, body:not(.ist-admin) #inkoKnopf { display: none; }
   /* 2.3.1: Hauptschalter in der Kopfleiste – aus = blass, an = deutlich markiert */
   #inkoKnopf { opacity: .45; } #inkoKnopf.an { opacity: 1; background: #2c3e50; box-shadow: 0 0 0 2px #f1c40f; }
+  /* KC-CLUB-EINWEISUNG (2.4.0) */
+  .einw-karte { border: 2px solid var(--gruen); background: var(--gruenbg); }
+  .einw-karte .einw-kopf { font-size: .8rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--textGruen); }
+  .einw-karte h3 { margin: 4px 0 6px; } .einw-karte p { margin: 0 0 10px; line-height: 1.45; }
   /* KC-CLUB-INKOGNITO (2.3.0) */
   .inko-marke { display: inline-block; margin-left: 4px; padding: 0 6px; border-radius: 9px; background: #34495e; color: #fff; font-size: .8rem; line-height: 1.4; vertical-align: middle; }
   textarea.hl-notiz { min-height: 8.5em; font-size: 1.02rem; line-height: 1.4; }
@@ -2004,6 +2008,9 @@
     <details class="karte" data-klappe="ansagen" data-einfach open>
       <summary>🗣️ Ansagen, Töne &amp; Tipps</summary>
       <div class="schalter"><div><b>💡 Tipp des Tages</b><div class="hinweis">Beim Öffnen ab und zu ein kurzer Tipp zu neuen Funktionen</div></div><input type="checkbox" id="setTipps" checked onchange="tippSchalter(this.checked)"></div>
+      <!-- KC-CLUB-EINWEISUNG (2.4.0) -->
+      <div class="schalter"><div><b>🎓 Einweisung beim ersten Öffnen</b><div class="hinweis">Beim ersten Besuch eines Bereichs eine kurze Erklärung, was man dort machen kann</div></div><input type="checkbox" id="setEinw" checked onchange="einwSchalter(this.checked)"></div>
+      <button class="knopf klein" onclick="einwZuruecksetzen()">🎓 Alle Einweisungen nochmal zeigen</button>
       <!-- KC-CLUB-ONLINE-ANSAGE (1.56.0, Wunsch Hansi): Sprachansage „Klaus ist jetzt online“ – nur dieses Gerät, nur wenn die App offen ist -->
       <div class="schalter versteckt" id="setAnsageZeile"><div><b>🗣️ Ansage, wenn jemand online kommt</b><div class="hinweis">Das Handy sagt z. B. „Klaus ist jetzt online“ – nur solange die App offen ist, nicht in deiner Ruhezeit</div></div><input type="checkbox" id="setAnsage" onchange="ansageSchalter(this.checked)"></div>
       <!-- KC-CLUB-VORLESEN (1.59.0, Wunsch Hansi): neue Nachrichten im offenen Chat vorlesen (auch im Chat oben 🔇/🔊) -->
@@ -2401,7 +2408,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.3.3"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.4.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3082,6 +3089,53 @@ function einstiegHinweis() {
   document.querySelector(".ansichtname.erw")?.classList.add("hervor"); setTimeout(() => document.querySelector(".ansichtname.erw")?.classList.remove("hervor"), 4000);
 }
 
+// ---------- KC-CLUB-EINWEISUNG (2.4.0, Wunsch Hansi): kurze Erklärung beim ersten Öffnen eines Bereichs ----------
+// Registry EINWEISUNG: neue Bereiche einfach hier ergänzen (id = Ansicht). Karte oben im Bereich (kein Fenster, blockiert nichts).
+// „👍 Verstanden“ = für diesen Bereich nie wieder, „Keine Einweisungen mehr“ = aus (⚙️ → „🎓 Einweisung“, Standard an,
+// „Alle nochmal zeigen“ setzt zurück). Gespeichert wie die Tipps in der Server-Einstellung „einweisung“ (geräteübergreifend).
+const EINWEISUNG = [
+  { id: "start", sym: "🏠", t: "Die Startseite", x: "Oben im farbigen Feld blätterst du mit <b>‹ ›</b> durch Infos – z. B. nächster Termin, Wetter, Neues für dich. Darunter die <b>Kacheln</b>: antippen öffnet den Bereich. Die <b>Leiste unten</b> bringt dich immer schnell zurück. Oben unter „KÖCHECLUB WERNE“ stellst du deinen <b>Status</b> ein (z. B. im Urlaub)." },
+  { id: "nachrichten", sym: "💬", t: "Nachrichten", x: "Hier schreibst du anderen Clubmitgliedern – einzeln oder in einer Gruppe. Mit <b>„＋ Neu“</b> beginnst du eine Unterhaltung, mit <b>„👥 Gruppe“</b> legst du eine Gruppe an. Vieles kennst du von WhatsApp: Haken zeigen, ob die Nachricht angekommen ist, nach rechts wischen = antworten. Mit <b>🎤</b> kannst du diktieren statt tippen." },
+  { id: "pinnwand", sym: "📌", t: "Pinnwand", x: "Wie das schwarze Brett im Clubheim: Mit <b>„＋ Zettel“</b> hängst du etwas für alle auf – Glückwünsche, Hinweise oder eine Bitte um Hilfe. Auf Zettel kannst du mit <b>Emojis</b> antworten. Wichtige Zettel (❗) sieht jeder beim Öffnen der App." },
+  { id: "termine", sym: "📅", t: "Termine", x: "Alle Club-Termine. Mit <b>✅ Ich komme</b> oder <b>❌</b> sagst du zu oder ab – nochmal antippen nimmt die Antwort zurück. Nach der Zusage kannst du eine <b>Mitfahrt</b> suchen oder anbieten. Mit <b>„＋ Neu“</b> legst du auch private Termine an, die nur du siehst. Oben wechselst du zwischen Liste und Kalender." },
+  { id: "mitglieder", sym: "👥", t: "Mitglieder", x: "Alle aktiven Clubmitglieder. Ein <b>grüner Punkt</b> heißt: gerade in der App. Mit <b>💬</b> schreibst du direkt, mit <b>👋</b> klopfst du bei jemandem an, der gerade online ist. Mit 🔲 / ☰ wechselst du zwischen Kacheln und Liste." },
+  { id: "fotos", sym: "📷", t: "Fotoalbum", x: "Fotos vom Clubleben. Mit <b>„＋ Neu“</b> lädst du eigene Bilder hoch. Mit <b>„☑️ Auswählen“</b> hakst du Bilder an und legst sie in ein eigenes Album – z. B. „Weihnachtsmarkt“." },
+  { id: "helfen", sym: "🤝", t: "Helfen & Leihen", x: "Oben drei Bereiche: <b>🙋 Wer kann helfen?</b> – Helfer suchen oder Hilfe anbieten. <b>📦 Ausleihen</b> – Club-Sachen wie den Pavillon reservieren. <b>🛍️ Börse</b> – privat etwas anbieten oder suchen. Mit <b>„＋ Neu“</b> legst du etwas an." },
+  { id: "archiv", sym: "🗄️", t: "Archiv", x: "Das Regal des Clubs: Ordner nach Jahren mit Terminen, Protokollen, Fotos und mehr – vieles wird automatisch abgelegt. Dort steht auch die <b>Clubchronik</b> zum Blättern. Und du hast einen <b>eigenen Ordner</b>, den nur du siehst." },
+  { id: "dokumente", sym: "📚", t: "Meine Dokumente", x: "Anleitungen und wichtige Unterlagen zum Lesen – z. B. die <b>Bedienungsanleitung</b> der App. Antippen öffnet das Dokument, oben geht es mit „Zurück zur App“ wieder hierher." },
+  { id: "einstellungen", sym: "⚙️", t: "Einstellungen", x: "Hier stellst du die App für dich ein – Töne, Benachrichtigungen, Farben, Privatsphäre. Bereiche öffnest du durch Antippen der Überschrift. Tipp: Mit der <b>Lupe 🔍</b> findest du jede Einstellung – z. B. „Ton“ eingeben." },
+  { id: "protokolle", sym: "📄", t: "Protokolle", x: "Die Protokolle der Clubsitzungen zum Nachlesen. Neue Protokolle sind markiert, bis du sie geöffnet hast." },
+  { id: "vorschlaege", sym: "🗳️", t: "Vorschläge", x: "Du hast eine Idee für den Club – ein Ausflug, ein Thema, ein Kochabend? Mit <b>„＋ Neu“</b> schlägst du sie vor, die anderen können abstimmen." },
+  { id: "dienste", sym: "🗓️", t: "Dienstpläne", x: "Die Dienstpläne Woche für Woche. Mit <b>‹ Woche</b> / <b>Woche ›</b> blätterst du, <b>„Heute“</b> springt zurück." },
+  { id: "aktionen", sym: "🧳", t: "Aktionen", x: "Ausflüge und besondere Aktionen des Clubs – antippen zeigt alle Einzelheiten." },
+  { id: "buero", sym: "🗂️", t: "Büro der Clubleitung", x: "Nur für die Clubleitung: Regal mit Ordnern, Schreibtisch für die laufende Arbeit, Freud & Leid (Glückwünsche, Genesungswünsche) und Briefe. Normale Mitglieder sehen das Büro nicht.", nur: () => !!ICH?.buero },
+];
+const einwStand = () => ({ an: true, gesehen: {}, ...(INIT?.einstellungen?.einweisung || {}) });
+function einwSpeichern(neu) {
+  if (!INIT) return;
+  const w = { ...einwStand(), ...neu };
+  INIT.einstellungen = { ...(INIT.einstellungen || {}), einweisung: w };
+  api("einstellung_setzen", { schluessel: "einweisung", wert: w }).catch(() => {});
+}
+function einwOffen(v) {
+  const st = einwStand(), e = EINWEISUNG.find((x) => x.id === v);
+  return !!(INIT && ICH && st.an && e && !st.gesehen?.[v] && (!e.nur || e.nur()));
+}
+function einwZeigen(v) {
+  document.querySelectorAll(".einw-karte").forEach((k) => k.remove());
+  const sek = $("v-" + v); if (!sek || !einwOffen(v)) return;
+  const e = EINWEISUNG.find((x) => x.id === v), k = document.createElement("div");
+  k.className = "karte einw-karte"; k.setAttribute("role", "note");
+  k.innerHTML = `<div class="einw-kopf">🎓 Kurz erklärt</div><h3>${e.sym} ${esc(e.t)}</h3><p>${e.x}</p>
+    <div class="knoepfe"><button class="knopf haupt klein" onclick="einwVerstanden('${v}')">👍 Verstanden</button><button class="knopf klein" onclick="einwAlleAus()">Keine Einweisungen mehr</button></div>`;
+  const nach = sek.querySelector(":scope > .kopf2, :scope > .hero"); nach ? nach.after(k) : sek.prepend(k);
+}
+function einwVerstanden(v) { document.querySelectorAll(".einw-karte").forEach((k) => k.remove()); einwSpeichern({ gesehen: { ...einwStand().gesehen, [v]: new Date().toISOString() } }); }
+function einwAlleAus() { document.querySelectorAll(".einw-karte").forEach((k) => k.remove()); einwSpeichern({ an: false }); einwSchalterZeigen(); melde("🎓 Keine Einweisungen mehr – wieder einschalten unter ⚙️ Einstellungen"); }
+function einwSchalter(an) { einwSpeichern({ an }); melde(an ? "🎓 Einweisungen sind an" : "🎓 Einweisungen sind aus"); }
+function einwZuruecksetzen() { einwSpeichern({ an: true, gesehen: {} }); einwSchalterZeigen(); einwZeigen(aktuelleAnsicht); melde("🎓 Alle Einweisungen kommen beim nächsten Öffnen der Bereiche wieder"); }
+function einwSchalterZeigen() { if ($("setEinw")) $("setEinw").checked = einwStand().an; }
+
 // ---------- KC-CLUB-TIPP (1.6.0, Wunsch Hansi): Tipp des Tages beim Öffnen – höchstens einer je Tag ----------
 // Registry TIPPS: neue Tipps einfach hier ergänzen (nur: wann der Tipp passt; testen: führt direkt hin).
 // „Kenne ich“ = nie wieder dieser Tipp, „Später“ = frühestens in TIPP_SPAETER_TAGE wieder, „Keine Tipps mehr“ = aus
@@ -3130,6 +3184,7 @@ function tippSpeichern(neu) {
 function tippDesTages() {
   const st = tippStand();
   if (!st.an || !INIT || document.querySelector(".blatt:not(.versteckt)") || aktuelleAnsicht !== "start") return false;
+  if (einwOffen("start")) return false; // KC-CLUB-EINWEISUNG: erst die Startseite erklären, Tipps danach
   const heute = heuteIso();
   if (st.zuletzt && new Date(st.zuletzt).toLocaleDateString("sv-SE", { timeZone: TZ }) === heute) return false; // einer je Tag
   const tipp = TIPPS.find((x) => !st.bekannt[x.id] && (!st.spaeter[x.id] || tageSeit(st.spaeter[x.id]) >= TIPP_SPAETER_TAGE) && (!x.nur || x.nur()));
@@ -6019,6 +6074,7 @@ function adminBlatt() {
   const c = r.communicator, b = c.bericht, m = r.mitglieder;
   $("adminBlattInhalt").innerHTML = `<h3 style="margin:0">🛡️ Admin-Zentrale – Einzelheiten</h3><p class="hinweis" style="margin:0">Stand ${esc(zeitKurz(r.zeit))} Uhr</p>
     ${r.admins != null && r.admins < 2 ? `<div class="karte" style="border:2px solid #d68910;margin:0"><b>🛡️ Noch keine Admin-Vertretung.</b> Fällst du aus, kann niemand Links erzeugen oder Rechte ändern. Bestimmen: Mitglieder → Mitglied → 🎖️ → „Admin (Vertretung)“. Anleitung: 📚 Meine Dokumente → „Vertretung des Admins“.</div>` : ""}
+    ${r.einweisung ? `<div class="karte" style="margin:0"><b>🎓 Einweisungen</b> <span class="hinweis">(ohne Namen)</span><div class="hinweis" style="margin-top:4px">${r.einweisung.personen} Mitglied${r.einweisung.personen === 1 ? "" : "er"} ${r.einweisung.personen === 1 ? "hat" : "haben"} mindestens eine angesehen${r.einweisung.aus ? ` · ${r.einweisung.aus} abgeschaltet` : ""}</div>${EINWEISUNG.filter((e) => r.einweisung.bereiche?.[e.id]).map((e) => `<span class="stmarke" style="margin:4px 4px 0 0;display:inline-block">${e.sym} ${esc(e.t)}: ${r.einweisung.bereiche[e.id]}</span>`).join("")}</div>` : ""}
     <button class="knopf" onclick="fpAdmin()">🩺 Fehlerprotokoll &amp; Startprobleme der Mitglieder</button>
     <button class="knopf" onclick="nzAdmin()">📊 Nutzung der App – ohne Namen</button>
     <b>👥 Zuletzt in der App</b>
@@ -6415,7 +6471,7 @@ function neuLaden(vonHand) {
 }
 async function neuLadenRoh(vonHand) {
   try {
-    INIT = await api("init", {}, { warten: !!vonHand }); ICH = INIT.ich; adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); // KC-CLUB-KOPF-EINFACH
+    INIT = await api("init", {}, { warten: !!vonHand }); ICH = INIT.ich; adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); einwZeigen(aktuelleAnsicht); // KC-CLUB-KOPF-EINFACH
     fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln);
     if ($("setLiveTippen")) $("setLiveTippen").checked = liveTippen();
@@ -6523,6 +6579,7 @@ function zeige(v, ausHistorie) {
   if (v !== "buero" && typeof BU !== "undefined") BU.nzSicht = null; // KC-CLUB-NUTZUNG-BEREICHE (1.89.0): beim nächsten Büro-Besuch wieder zählen
   if (vorher === "protokoll" && v !== "protokoll" && prTimer) prSpeichernJetzt(false).catch(() => {}); // ungespeicherte Eingaben sichern
   ["start", "dokumente", "dokansicht", "termine", "vorschlaege", "aktionen", "aktion", "fotos", "feedback", "gruppe", "mitglied", "protokolle", "protokoll", "dienste", "nachrichten", "chat", "neu", "mitglieder", "einstellungen", "pinnwand", "erstattung", "ueberblick", "programme", "standort", "archiv", "sos", "sicherheit", "helfen", "buero"].forEach((x) => $("v-" + x).classList.toggle("versteckt", x !== v));
+  einwZeigen(v); // KC-CLUB-EINWEISUNG (2.4.0)
   document.querySelectorAll("#fuss button").forEach((b) => b.classList.toggle("an", b.dataset.v === v || (v === "chat" && b.dataset.v === "nachrichten") || (v === "neu" && b.dataset.v === "nachrichten")));
   $("eingabe").classList.toggle("versteckt", v !== "chat");
   document.body.classList.toggle("im-chat", v === "chat"); // KC-CLUB-SUCHE: Lupe nicht über dem Senden-Knopf
@@ -6548,7 +6605,7 @@ function zeige(v, ausHistorie) {
   if (v === "dienste") dienstLaden();
   if (v === "nachrichten") unterhLaden();
   if (v === "mitglieder") { mgAnsichtWahlZeigen(); mitgliederLaden(); }
-  if (v === "einstellungen") { notProbeZeigen(); infoStartZeigen(); tippSchalterZeigen(); ansageSchalterZeigen(); ansStandZeigen(); ruheZeigen(); if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); anklopfenZeigen(); zuletztSchalterZeigen(); inkognitoZeigen(); schnellWahlZeigen(); mgAnsichtWahlZeigen(); }
+  if (v === "einstellungen") { notProbeZeigen(); infoStartZeigen(); tippSchalterZeigen(); einwSchalterZeigen(); ansageSchalterZeigen(); ansStandZeigen(); ruheZeigen(); if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); anklopfenZeigen(); zuletztSchalterZeigen(); inkognitoZeigen(); schnellWahlZeigen(); mgAnsichtWahlZeigen(); }
   if (v === "start") neuLaden();
   // KC-CLUB-ZURUECK: jede Ansicht bekommt einen Verlaufseintrag, damit „Zurück“ eine Ansicht zurückgeht statt die App zu schließen
   const hash = v === "start" || v === "chat" ? "" : v === "protokoll" ? "#protokoll=" + prId : v === "aktion" ? "#aktion=" + aktionId : v === "mitglied" ? "#mitglied=" + mitgliedId : v === "dokansicht" ? "#dokument=" + encodeURIComponent(DOKA.id) : "#" + v;
@@ -13568,7 +13625,7 @@ function suAppListe() {
     ["🔔", "Push-Benachrichtigungen", "push benachrichtigung mitteilung handy", ein("pushStatus")], ["🔊", "Ton", "ton klingel laut", ein("setTon")],
     ["🌙", "Nicht stören (Ruhezeit)", "nicht stören ruhezeit nacht stumm", ein("ruheAn")], ["🔠", "Schriftgröße", "schrift gross groß lesen", ein(einfach() ? "setGrossE" : "setGross")],
     ["🎨", "Farbe & Design", "farbe design aussehen", ein(einfach() ? "designWahlE" : "designWahl")], ["🌗", "Tag/Nacht umschalten", "dunkel hell nacht tag", () => dunkelUmschalten()],
-    ["🎂", "Geburtstag anzeigen", "geburtstag", ein("setGeburtstag")], ["🎉", "Runde Geburtstage (Alter für die Clubleitung)", "runder geburtstag alter jubiläum", ein("setRundGeburtstag")], ["🟢", "Online sichtbar", "online sichtbar unsichtbar", ein("setOnline")], ...(ICH?.admin ? [["🕶️", "Inkognito (nur Admin)", "inkognito unsichtbar versteckt online", ein("setInkognito")]] : []), ["🕒", "Zuletzt da anzeigen", "zuletzt da online gesehen", ein("setZuletzt")],
+    ["🎂", "Geburtstag anzeigen", "geburtstag", ein("setGeburtstag")], ["🎉", "Runde Geburtstage (Alter für die Clubleitung)", "runder geburtstag alter jubiläum", ein("setRundGeburtstag")], ["🟢", "Online sichtbar", "online sichtbar unsichtbar", ein("setOnline")], ["🎓", "Einweisung beim ersten Öffnen", "einweisung erklärung hilfe anleitung neu", ein("setEinw")], ...(ICH?.admin ? [["🕶️", "Inkognito (nur Admin)", "inkognito unsichtbar versteckt online", ein("setInkognito")]] : []), ["🕒", "Zuletzt da anzeigen", "zuletzt da online gesehen", ein("setZuletzt")],
     ["🆘", "Notfallkontakt", "notfall kontakt", ein("nfName")], ["📆", "Kalender-Abo (Handy-Kalender)", "kalender abo handy ical", ein("kalAboKnopf")],
     ["📱", "Meine Geräte", "geräte handy tablet abmelden", () => geraeteBlatt()], ["📡", "Verbindung prüfen", "verbindung internet led server", () => verbindungBlatt()],
     ["🔄", "Update prüfen", "update version neu", () => updateKachel()], ["🟢", "Mein Status", "status urlaub verfügbar krank", () => statusBlatt()],
