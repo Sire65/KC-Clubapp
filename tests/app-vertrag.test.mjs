@@ -2492,7 +2492,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.match(html, /id="notErnstfallKnopf" onclick="notErnstfallSetzen\(!notErnstfall\(\)\)"/, "Admin-Knopf");
   const f0 = html.indexOf("function notErnstfallSetzen("), f = html.slice(f0, html.indexOf("\n}\n", f0));
   assert.doesNotMatch(f, /notEinschalten\(/, "kein Umschalten von Hand – die App muss es selbst erkennen");
-  assert.match(html, /if \(FP_LEISE\.has\(action\) \|\| notErnstfall\(\)\) return;/, "Simulation nicht im Fehlerprotokoll");
+  assert.match(html, /if \(FP_LEISE\.has\(action\) \|\| notErnstfall\(\)( \|\| NOT\.an)?\) return;/, "Simulation nicht im Fehlerprotokoll");
   assert.match(html, /notErnstfall\(\) \? ` <button onclick="notErnstfallSetzen\(false\)">Simulation beenden<\/button>`/, "Beenden im Band");
 }
 
@@ -2560,6 +2560,30 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   for (const id of ["setAnsage", "setAnmeldeTon", "setOnlinePush"]) assert.ok(kasten.includes(`id="${id}"`), `${id} im Kasten`);
   const e0 = html.indexOf('data-klappe="einfach"'), e1 = html.indexOf("</details>", e0);
   assert.ok(!html.slice(e0, e1).includes('id="setAnsage"'), "nicht mehr nur in der einfachen Ansicht");
+}
+
+// 228. 1.58.0: Fehlerprotokoll einstufen, leeren, überwachen (KC-CLUB-FP-UEBERWACHUNG)
+{
+  const srv = lies("supabase/functions/kc-club/index.ts");
+  const def = srv.slice(srv.indexOf("const FP_SCHWER"), srv.indexOf("async function fpZaehlen(")).replace(/: "schwer" \| "hinweis" \| "info"/, "").replace(/\(aktion: string, d: any\)/, "(aktion, d)");
+  const fpStufe = new Function(`${def}; return fpStufe;`)();
+  assert.equal(fpStufe("hilferuf", {}), "schwer"); assert.equal(fpStufe("fehler_anonym_start_kaputt", {}), "schwer");
+  assert.equal(fpStufe("fehler_skript", { text: "Script error." }), "hinweis", "Safari ohne Einzelheiten nur Hinweis");
+  assert.equal(fpStufe("fehler_skript", { text: "x is not defined" }), "schwer");
+  assert.equal(fpStufe("fehler_sicherheit", { probleme: [] }), "info"); assert.equal(fpStufe("fehler_sicherheit", { probleme: ["a"] }), "schwer");
+  for (const a of ["fehler_alte_version", "fehler_update_getippt", "diagnose_start", "fehler_umgebung"]) assert.equal(fpStufe(a, {}), "info", a);
+  assert.equal(fpStufe("fehler_api", { text: "x" }), "hinweis");
+  const leeren = srv.slice(srv.indexOf('case "fehlerprotokoll_leeren"'), srv.indexOf('case "fehlerprotokoll_leeren"') + 1600);
+  assert.ok(leeren.indexOf('aktion: "fp_geleert"') > 0 && leeren.indexOf('aktion: "fp_geleert"') < leeren.indexOf(".delete()"), "erst Sicherung, dann löschen");
+  assert.match(leeren, /nurAdmin\(ich\);/, "nur Admin");
+  assert.match(srv, /await fpUeberwachen\(\)\.catch/, "Wartung überwacht");
+  assert.match(srv, /routerSenden\("club_fehler", an,/, "Push an den Admin");
+  assert.match(srv, /if \(fz\.anzahl >= FP_VOLL\) aus\.fpVoll = fz;/, "Tagesinfo fragt bei vollem Protokoll");
+  assert.doesNotMatch("fp_geleert", /^fehler/, "Sicherung fällt nicht selbst unter das Fehlerprotokoll");
+  assert.match(html, /onclick="fpLeeren\(\$\{r\.gesamt\.anzahl\}, \$\{r\.gesamt\.schwer\}\)">🗑️ Protokoll leeren<\/button>/, "Knopf");
+  assert.match(html, /<b>Soll ich das Fehlerprotokoll leeren\?<\/b> Es sind \$\{d\.fpVoll\.anzahl\} Einträge drin/, "Frage in der Tagesinfo");
+  assert.match(html, /notErnstfall\(\) \|\| NOT\.an\) return;/, "Notbetrieb nicht ins Protokoll");
+  assert.match(lies("notbetrieb/worker.js"), /pinnwand_neu: \(\) => \(\{ neu: \[\] \}\)/, "Ersatz-Server still");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

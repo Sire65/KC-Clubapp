@@ -1,5 +1,15 @@
 # Änderungen
 
+## 1.58.0 – 2026-10-03
+- KC-CLUB-FP-UEBERWACHUNG (Wunsch Hansi): Fehlerprotokoll mit Einstufung 🔴 schwerwiegend / 🟡 Hinweis / ⚪ Info (eine Regel
+  im Server: Hilferuf, App startet gar nicht, echter Programmfehler, Sicherheitsbericht mit Problemen = schwer; Updates,
+  App-Starts, Gerät-Infos = Info; „Script error.“ ohne Einzelheiten = Hinweis). Knopf „🗑️ Protokoll leeren“ (Admin, mit
+  Rückfrage; vorher Sicherung als ein Protokolleintrag „fp_geleert“). Überwachung: Wartung (15 Min.) schickt bei neuen
+  schwerwiegenden Einträgen eine Push an den Admin (nicht in der Ruhezeit – dann danach). Ab 300 Einträgen fragt die
+  Tagesinfo „Soll ich das Fehlerprotokoll leeren? Es sind X Einträge drin – Y schwerwiegend …“.
+- Ursache vieler Einträge behoben: Im Notbetrieb (und der Simulation) landen Meldungen nicht mehr im Fehlerprotokoll;
+  Ersatz-Server beantwortet die Hintergrund-Abfrage neuer Zettel still. Communicator-Regel club_fehler (nur Push).
+
 ## 1.57.1 – 2026-10-03
 - KC-CLUB-ONLINE-ANSAGE (Fund Hansi „Schalter nicht zu sehen“): Die Schalter Ansage / Anmelde-Ton / Anmelde-Push standen im
   Kasten „Das Wichtigste“, der nur in der einfachen Ansicht erscheint. Jetzt eigener Kasten „🗣️ Ansagen & Töne“ – in beiden

@@ -772,6 +772,7 @@
   /* KC-CLUB-HAKEN (1.55.0): Haken wie WhatsApp – grau gesendet/angekommen, blau gelesen */
   .haken { display: inline-flex; vertical-align: -2px; margin: 0 2px 0 4px; color: var(--grau); } .blase.eigen .haken { color: rgba(255,255,255,.8); }
   .haken.blau, .blase.eigen .haken.blau { color: #5fd3ff; filter: drop-shadow(0 0 1px rgba(0,0,0,.6)); } .haken-teil { opacity: .85; }
+  .fp-gesamt { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; padding: 8px 10px; border-radius: 12px; background: var(--karte2); } /* KC-CLUB-FP-UEBERWACHUNG */
   .blase.wartet { opacity: .78; } .blase.wartet .fuss { font-style: italic; } /* KC-CLUB-NOTBETRIEB-STUFE2 */
   .ni-zeile.ni-wichtig { border: 2px solid #ff9800; border-radius: 12px; padding: 8px 10px; background: rgba(255,152,0,.12); font-weight: 700; }
   .unterh.wichtig-neu { box-shadow: inset 4px 0 0 #ff9800; background: rgba(255,152,0,.10); }
@@ -2128,7 +2129,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.57.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.58.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -6128,6 +6129,8 @@ async function tagesinfoZeigen(manuell = false) {
     else neu.push(tiZeile("💭", `<b>${esc(m.wer)}</b> hat ${esc(tiZeit(m.zeit))} <b>Feedback</b> gegeben`, "zeige('feedback')"));
   }
   // KC-CLUB-BEGRUESSUNG (1.51.0): heute zum ersten Mal da → Begrüßung anbieten (nur Admin)
+  // KC-CLUB-FP-UEBERWACHUNG (1.58.0): Protokoll zu voll → fragen
+  if (d.fpVoll) neu.push(tiZeile("🩺", `<b>Soll ich das Fehlerprotokoll leeren?</b> Es sind ${d.fpVoll.anzahl} Einträge drin – ${d.fpVoll.schwer} schwerwiegend, ${d.fpVoll.hinweis} Hinweise, ${d.fpVoll.info} Info.`, `fpLeeren(${d.fpVoll.anzahl}, ${d.fpVoll.schwer})`));
   // KC-CLUB-NOTBETRIEB-STUFE2 (1.54.0): was aus dem Notbetrieb nachgetragen wurde – Probleme einzeln (nur Admin)
   if (d.notNachtrag) { const nb = d.notNachtrag, pr = nb.probleme || [];
     neu.push(tiZeile("🟠", `Notbetrieb: <b>${nb.erledigt} Eintr${nb.erledigt === 1 ? "ag" : "äge"} nachgetragen</b>${nb.offen ? `, ${nb.offen} noch offen` : ""}${pr.length ? `, <b>${pr.length} nicht übertragen</b>: ${pr.map((x) => `${esc(x.name)} (${esc({ nachricht_senden: "Nachricht", treffen_antwort: "Zu-/Absage", status_setzen: "Status", pinnwand_anheften: "Zettel" }[x.aktion] || x.aktion)}) – ${esc(x.grund || "")}`).join(" · ")}` : ""}`, "")); }
@@ -11969,7 +11972,7 @@ async function nzAdmin(tage) {
 const fpNeu = (art, d) => { try { window.KCFP?.neu(art, d); } catch {} };
 const FP_LEISE = new Set(["nutzung_melden", "lebenszeichen", "tippen", "anruf_status", "ping", "online", "standort_update", "fehler_melden", "diagnose"]);
 function fpApiFehler(action, e) {
-  if (FP_LEISE.has(action) || notErnstfall()) return; // KC-CLUB-NOTBETRIEB-ERNSTFALL: Simulation landet nicht im Fehlerprotokoll
+  if (FP_LEISE.has(action) || notErnstfall() || NOT.an) return; // KC-CLUB-NOTBETRIEB(-ERNSTFALL): Notbetrieb/Simulation nicht ins Fehlerprotokoll
   fpNeu(navigator.onLine ? "api" : "offline", { aktion: action, text: String(e?.message || e) });
 }
 const FP_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
@@ -12089,6 +12092,13 @@ const FP_ARTEN = {
 };
 function fpArtVon(aktion) { return String(aktion).replace(/^fehler_anonym_/, "").replace(/^fehler_/, ""); }
 let FP_ADMIN = { tage: 2, person: "" };
+// KC-CLUB-FP-UEBERWACHUNG (1.58.0): Einstufung kommt vom Server (eine Regel), hier nur das Zeichen
+const FP_STUFE_ZEICHEN = { schwer: "🔴", hinweis: "🟡", info: "⚪" };
+async function fpLeeren(anzahl, schwer) {
+  if (!(await frage(`Fehlerprotokoll leeren?\n\nEs sind ${anzahl} Einträge drin${schwer ? `, davon ${schwer} schwerwiegend` : ""}. Vorher wird eine Sicherung angelegt.`))) return;
+  try { const r = await api("fehlerprotokoll_leeren", {}, { warten: true }); melde(`🗑️ Protokoll geleert – ${r.geloescht} Einträge (Sicherung angelegt)`); if (!$("adminBlatt").classList.contains("versteckt")) fpAdmin(); }
+  catch (e) { melde(e.message, true); }
+}
 async function fpAdmin(tage) {
   if (tage) FP_ADMIN.tage = tage;
   let r; try { r = await api("fehlerprotokoll", { tage: FP_ADMIN.tage }, { warten: true }); } catch (e) { return melde(e.message, true); }
@@ -12097,11 +12107,13 @@ async function fpAdmin(tage) {
   for (const x of r.eintraege) { const k = x.name || `anonym ${x.details?.geraet || ""}`; if (!gruppen.has(k)) gruppen.set(k, []); gruppen.get(k).push(x); }
   const zeile = (x) => { const art = fpArtVon(x.aktion), [sym, name, tun] = FP_ARTEN[art] || ["•", art, ""], d = x.details || {};
     const info = [d.text, d.aktion ? "bei „" + d.aktion + "“" : "", d.browser, d.system, d.start ? "läuft als " + d.start : "", d.version ? "v" + d.version : "", d.datei ? d.datei + ":" + d.zeile : ""].filter(Boolean).join(" · ");
-    return `<div class="fp-zeile${art === "hilferuf" ? " fp-rot" : ""}"><span class="hinweis">${esc(fKurz.format(new Date(x.zeit)) + " " + fZeit.format(new Date(x.zeit)))}</span> ${sym} <b>${esc(name)}</b>${info ? `<div class="hinweis">${esc(info)}</div>` : ""}${tun ? `<div class="hinweis" style="font-style:italic">→ ${esc(tun)}</div>` : ""}</div>`; };
-  const karten = [...gruppen.entries()].map(([name, liste]) => { const probleme = liste.filter((x) => !nurStarts(x) && !/umgebung|hinweis|update_getippt|link_kopiert/.test(x.aktion));
+    return `<div class="fp-zeile${x.stufe === "schwer" || art === "hilferuf" ? " fp-rot" : ""}"><span class="hinweis">${esc(fKurz.format(new Date(x.zeit)) + " " + fZeit.format(new Date(x.zeit)))}</span> ${FP_STUFE_ZEICHEN[x.stufe] || ""} ${sym} <b>${esc(name)}</b>${info ? `<div class="hinweis">${esc(info)}</div>` : ""}${tun ? `<div class="hinweis" style="font-style:italic">→ ${esc(tun)}</div>` : ""}</div>`; };
+  const karten = [...gruppen.entries()].map(([name, liste]) => { const probleme = liste.filter((x) => x.stufe ? x.stufe !== "info" : !nurStarts(x) && !/umgebung|hinweis|update_getippt|link_kopiert/.test(x.aktion));
     return `<details class="karte innen"${probleme.length ? " open" : ""}><summary><b>${esc(name)}</b> – ${probleme.length ? `<span style="color:#c62828">${probleme.length} Auffälligkeit${probleme.length === 1 ? "" : "en"}</span>` : "✅ unauffällig"} · ${liste.filter(nurStarts).length}× geöffnet</summary>${liste.map(zeile).join("")}</details>`; }).join("");
   $("adminBlattInhalt").innerHTML = `<h3 style="margin:0">🩺 Fehlerprotokoll</h3>
     <p class="hinweis" style="margin:0">Alles, was bei den Mitgliedern beim Starten oder Bedienen schiefging – mit Gerät, Browser und Version. Nur Technik, keine Inhalte.</p>
+    ${r.gesamt ? `<div class="fp-gesamt"><span>Im Protokoll: <b>${r.gesamt.anzahl}</b> Einträge – 🔴 ${r.gesamt.schwer} schwerwiegend · 🟡 ${r.gesamt.hinweis} Hinweise · ⚪ ${r.gesamt.info} Info</span>${r.gesamt.anzahl ? `<button class="knopf klein" onclick="fpLeeren(${r.gesamt.anzahl}, ${r.gesamt.schwer})">🗑️ Protokoll leeren</button>` : ""}</div>
+    <p class="hinweis" style="margin:0;font-size:.8rem">🔴 schwerwiegend = Push an dich · Ab ${r.voll || 300} Einträgen fragt die Tagesinfo, ob geleert werden soll.</p>` : ""}
     <div class="knoepfe">${[1, 2, 7, 14].map((t) => `<button class="knopf klein${FP_ADMIN.tage === t ? " haupt" : ""}" onclick="fpAdmin(${t})">${t === 1 ? "24 Std." : t + " Tage"}</button>`).join("")}${INFO_DATEN.admin?.r ? `<button class="knopf klein" onclick="adminBlatt()">‹ Admin-Zentrale</button>` : ""}</div>
     ${karten || '<p class="hinweis">Keine Einträge in diesem Zeitraum.</p>'}`;
   $("adminBlatt").classList.remove("versteckt");

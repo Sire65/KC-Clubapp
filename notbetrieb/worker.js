@@ -20,6 +20,7 @@ const STILL = {
   tippen: () => ({ ok: true }),
   fehler_melden: () => ({ ok: true, gespeichert: 0 }),
   fehler_anonym: () => ({ ok: true, gespeichert: 0 }),
+  pinnwand_neu: () => ({ neu: [] }), // 1.58.0: Hintergrund-Abfrage neuer Zettel – im Notbetrieb nichts Neues statt Fehler
 };
 const NICHT_MOEGLICH = "Im Notbetrieb gerade nicht möglich – bitte später noch einmal versuchen.";
 // KC-CLUB-NOTBETRIEB-STUFE2: was im Notbetrieb angenommen wird – nur die nötigen Felder, geprüft und gekürzt.

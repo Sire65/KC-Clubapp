@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.57.1";
+const SERVER_VERSION = "1.58.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -261,6 +261,48 @@ async function zuletztDaMap(ich: Ich, ids: string[]) {
   }
   return aus;
 }
+// ---------- KC-CLUB-FP-UEBERWACHUNG (1.58.0, Wunsch Hansi): Fehlerprotokoll einstufen, leeren, überwachen ----------
+// Eine Regel für die Einstufung (Server liefert sie der App mit): 🔴 schwer – sofort Push an den Admin; 🟡 Hinweis; ⚪ Info.
+// „Script error.“ ohne Einzelheiten (Safari/fremde Skripte) ist nur ein Hinweis; Sicherheitsbericht nur mit Problemen schwer.
+const FP_FILTER = "aktion.like.fehler_%,aktion.eq.hilferuf,aktion.eq.diagnose_start,aktion.eq.zugang_angefordert";
+const FP_SCHWER = new Set(["hilferuf", "hilferuf_anonym", "start_kaputt"]);
+const FP_INFO = new Set(["alte_version", "update_getippt", "umgebung", "hinweis", "link_kopiert", "diagnose_start", "zugang_angefordert", "offline", "anonym_admin_benachrichtigt"]);
+const FP_VOLL = 300; // ab so vielen Einträgen fragt die Tagesinfo, ob geleert werden soll
+function fpStufe(aktion: string, d: any): "schwer" | "hinweis" | "info" {
+  const art = String(aktion).replace(/^fehler_anonym_/, "").replace(/^fehler_/, "");
+  if (FP_SCHWER.has(art)) return "schwer";
+  if (art === "skript") return /^Script error\.?$/i.test(String(d?.text ?? "").trim()) ? "hinweis" : "schwer";
+  if (art === "sicherheit") return Array.isArray(d?.probleme) && d.probleme.length ? "schwer" : "info";
+  return FP_INFO.has(art) ? "info" : "hinweis";
+}
+async function fpZaehlen() {
+  const z = { anzahl: 0, schwer: 0, hinweis: 0, info: 0 };
+  for (let ab = 0; ab < 20000; ab += 1000) {
+    const { data } = await db.from("kc_club_protokoll").select("aktion,details").or(FP_FILTER).range(ab, ab + 999);
+    for (const x of data ?? []) { z.anzahl++; z[fpStufe(x.aktion, x.details)]++; }
+    if ((data ?? []).length < 1000) break;
+  }
+  return z;
+}
+async function fpUeberwachen() {
+  const { data: letzte } = await db.from("kc_club_protokoll").select("zeit").eq("aktion", "fp_schwer_gemeldet").order("zeit", { ascending: false }).limit(1);
+  const seit = letzte?.[0]?.zeit ?? new Date(Date.now() - 3600000).toISOString();
+  const { data: neu } = await db.from("kc_club_protokoll").select("zeit,person_id,aktion,details").or(FP_FILTER).gt("zeit", seit).order("zeit").limit(500);
+  const schwer = (neu ?? []).filter((x: any) => fpStufe(x.aktion, x.details) === "schwer");
+  if (!schwer.length) return { schwer: 0 };
+  const { data: ad } = await db.from("kc_club_rollen").select("person_id").eq("ist_admin", true);
+  const ids = (ad ?? []).map((x: any) => x.person_id as string), ruhe = await ruhendePersonen(ids);
+  const an = ids.filter((id) => !ruhe.has(id));
+  if (!an.length) return { schwer: schwer.length, wartet: "Ruhezeit" }; // Marke nicht setzen → nach der Ruhezeit melden
+  const leute = await personen(schwer.map((x: any) => x.person_id).filter(Boolean));
+  const was = [...new Set(schwer.map((x: any) => `${x.person_id ? vorname(leute.get(x.person_id)) || "Mitglied" : "ohne Anmeldung"}: ${String(x.details?.text || x.aktion.replace(/^fehler_/, "")).slice(0, 60)}`))].slice(0, 3).join(" · ");
+  await routerSenden("club_fehler", an, { titel: `🔴 ${schwer.length} schwerwiegende${schwer.length === 1 ? "s Problem" : " Probleme"} in der Club-App`, kurz: was,
+    betreff: "Köcheclub-App – schwerwiegendes Problem", text: `Im Fehlerprotokoll steht Neues:\n\n${was}\n\nEinzelheiten: Admin-Zentrale → 🩺 Fehlerprotokoll\n${APP_URL}`, url: APP_URL },
+    `club-fehler:${schwer[schwer.length - 1].zeit}`);
+  await protokoll(null, "fp_schwer_gemeldet", { anzahl: schwer.length, bis: schwer[schwer.length - 1].zeit });
+  return { schwer: schwer.length, gemeldet: an.length };
+}
+
 // ---------- KC-CLUB-ONLINE-PUSH (1.57.0, Wunsch Hansi): „🟢 Klaus ist jetzt online“ als Push an Admins ----------
 // Auch bei geschlossener App (dann mit dem normalen Benachrichtigungston des Handys). Nicht an Admins, deren App gerade offen ist
 // (die hören Ton/Ansage in der App), nicht in deren Ruhezeit, nicht für Mitglieder, die ihren Online-Status verbergen.
@@ -2212,6 +2254,8 @@ Deno.serve(async (req) => {
     if (a === "wartung") {
       const { data: geheim } = await db.rpc("kc_communication_get_server_secret", { p_name: "kc_club_cron_secret" });
       if (!geheim || p.cronSecret !== geheim) return json({ error: "Kein Zugang" }, 401);
+      // KC-CLUB-FP-UEBERWACHUNG (1.58.0): neue schwerwiegende Einträge im Fehlerprotokoll → Push an den Admin
+      await fpUeberwachen().catch((e) => console.error("fp ueberwachung", String(e)));
       // Abstimmungen mit abgelaufener Frist beenden (Ergebnis geht an alle)
       const { data: abgelaufen } = await db.from("kc_club_vorschlaege").select("*").eq("status", "offen").lt("frist", jetzt());
       let beendet = 0;
@@ -2984,13 +3028,33 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const tage = Math.min(14, Math.max(1, Math.round(Number(p.tage) || 2)));
         const seit = new Date(Date.now() - tage * 86400000).toISOString();
         let q = db.from("kc_club_protokoll").select("zeit,person_id,aktion,details").gte("zeit", seit)
-          .or("aktion.like.fehler_%,aktion.eq.hilferuf,aktion.eq.diagnose_start,aktion.eq.zugang_angefordert")
+          .or(FP_FILTER)
           .order("zeit", { ascending: false }).limit(600);
         if (p.person_id) q = q.eq("person_id", String(p.person_id));
         const { data } = await q;
         const leute = await personen((data ?? []).map((x: any) => x.person_id).filter(Boolean));
-        return json({ tage, eintraege: (data ?? []).map((x: any) => ({ zeit: x.zeit, person_id: x.person_id, name: x.person_id ? (leute.get(x.person_id)?.display_name || x.person_id) : null,
-          aktion: x.aktion, details: x.details })) });
+        return json({ tage, gesamt: await fpZaehlen(), voll: FP_VOLL, eintraege: (data ?? []).map((x: any) => ({ zeit: x.zeit, person_id: x.person_id, name: x.person_id ? (leute.get(x.person_id)?.display_name || x.person_id) : null,
+          aktion: x.aktion, details: x.details, stufe: fpStufe(x.aktion, x.details) })) });
+      }
+
+      // KC-CLUB-FP-UEBERWACHUNG (1.58.0): Fehlerprotokoll leeren (Admin). Recovery-Punkt: alle Einträge als Sicherung in EINEN
+      // Protokolleintrag („fp_geleert“), erst danach löschen. Nur Technik-Einträge, keine anderen Protokollzeilen.
+      case "fehlerprotokoll_leeren": {
+        nurAdmin(ich);
+        const alle: any[] = [];
+        for (let ab = 0; ab < 20000; ab += 1000) {
+          const { data } = await db.from("kc_club_protokoll").select("id,zeit,person_id,aktion,details").or(FP_FILTER).order("id").range(ab, ab + 999);
+          alle.push(...(data ?? [])); if ((data ?? []).length < 1000) break;
+        }
+        if (!alle.length) return json({ ok: true, geloescht: 0 });
+        const z = { schwer: 0, hinweis: 0, info: 0 } as Record<string, number>;
+        for (const x of alle) z[fpStufe(x.aktion, x.details)]++;
+        const { error: se } = await db.from("kc_club_protokoll").insert({ person_id: ich.person_id, aktion: "fp_geleert", details: { anzahl: alle.length, ...z, sicherung: alle } });
+        if (se) throw new Fehler("Sicherung fehlgeschlagen – es wurde nichts gelöscht.", 500);
+        const maxId = alle[alle.length - 1].id;
+        const { error: de } = await db.from("kc_club_protokoll").delete().or(FP_FILTER).lte("id", maxId);
+        if (de) throw new Fehler("Löschen fehlgeschlagen – die Sicherung ist angelegt.", 500);
+        return json({ ok: true, geloescht: alle.length, ...z });
       }
 
       // ----- Vorschläge & Abstimmungen -----
@@ -3474,6 +3538,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           const heuteNeu = (neu ?? []).filter((z: any) => berlinTag(new Date(z.erstmals_gesehen)) === heute && !begruesst.has(z.person_id));
           const lp = await personen(heuteNeu.map((z: any) => z.person_id));
           aus.neuDa = heuteNeu.map((z: any) => ({ person_id: z.person_id, name: lp.get(z.person_id)?.display_name || z.person_id, vorname: vorname(lp.get(z.person_id) ?? null), zeit: z.erstmals_gesehen }));
+          // KC-CLUB-FP-UEBERWACHUNG (1.58.0): Fehlerprotokoll zu voll → fragen, ob geleert werden soll
+          const fz = await fpZaehlen(); if (fz.anzahl >= FP_VOLL) aus.fpVoll = fz;
           // KC-CLUB-NOTBETRIEB-STUFE2 (1.54.0): was in den letzten 26 Std. aus dem Notbetrieb nachgetragen wurde – Probleme einzeln
           const { data: nt } = await db.from("kc_club_notbetrieb_eingang").select("person_id,aktion,status,ergebnis,geschrieben_am").gte("angenommen_am", new Date(jetztMs - 26 * 3600000).toISOString()).limit(500);
           if ((nt ?? []).length) {
