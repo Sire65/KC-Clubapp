@@ -1056,7 +1056,7 @@
   :root.dunkel .bu-tisch { background: linear-gradient(180deg, #5a4836, #4e3e2f); }
   .bu-tisch::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 6px; background: rgba(0,0,0,.12); }
   .bu-dinge { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-  @media (min-width: 640px) { .bu-dinge { grid-template-columns: repeat(6, 1fr); } }
+  @media (min-width: 640px) { .bu-dinge { grid-template-columns: repeat(auto-fit, minmax(108px, 1fr)); } }
   .bu-ding { position: relative; border: none; border-radius: 14px; background: rgba(255,253,246,.55); color: #3b2f2a; cursor: pointer; padding: 10px 4px 8px; min-height: 96px;
     display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 6px; box-shadow: 0 2px 5px rgba(60,40,20,.18); transition: transform .15s ease; font: inherit; }
   :root.dunkel .bu-ding { background: rgba(255,255,255,.08); color: #f4e9e4; }
@@ -1080,6 +1080,13 @@
   .bu-telliste { max-height: 52vh; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
   .bu-telzeile { display: flex; align-items: center; gap: 10px; border: none; background: var(--karte2); color: var(--text); border-radius: 10px; padding: 10px 12px; font: inherit; text-align: left; cursor: pointer; min-height: 48px; }
   .bu-telzeile b { flex: 1; }
+  .bu-mikro { display: flex; align-items: center; gap: 4px 10px; flex-wrap: wrap; width: 100%; margin-top: 8px; border: 1px dashed var(--linie); border-radius: 14px; background: var(--karte2); color: var(--text); padding: 8px 12px; font: inherit; text-align: left; cursor: pointer; }
+  .bu-mikro span { font-size: 1.6rem; width: 46px; height: 46px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: #a65a4a; box-shadow: 0 2px 6px rgba(0,0,0,.25); }
+  .bu-mikro b { flex: 1; } .bu-mikro small { flex-basis: 100%; color: var(--grau); padding-left: 56px; margin-top: -8px; }
+  .bu-hoeren { text-align: center; padding: 6px 0 2px; } .bu-hoeren b { display: block; font-size: 1.2rem; margin: 10px 0 4px; min-height: 1.5em; }
+  .bu-hpunkt { font-size: 2.4rem; width: 84px; height: 84px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: #b4553f; animation: buHoeren 1.2s ease-in-out infinite; }
+  @keyframes buHoeren { 0%, 100% { box-shadow: 0 0 0 0 rgba(180,85,63,.55); } 50% { box-shadow: 0 0 0 18px rgba(180,85,63,0); } }
+  @media (prefers-reduced-motion: reduce) { .bu-hpunkt { animation-duration: 3s; } }
   @media (prefers-reduced-motion: reduce) { .bu-ordner, .bu-ding { transition: none; } }
   /* KC-CLUB-BUERO (1.25.0) */
   .bu-gruss { font-size: 1.05rem; line-height: 1.45; }
@@ -2267,7 +2274,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.65.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.66.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -6540,6 +6547,7 @@ function buRaumHtml() {
   const ding = (cls, inhalt, label, fn, extra = "") => `<button class="bu-ding ${cls}" onclick="${fn}">${inhalt}<span class="bu-dlabel">${label}</span>${extra}</button>`;
   return `<div class="karte bu-gruss"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b>${buTageszeit()}, ${esc(ICH.vorname || ICH.name)}!</b>
       ${L ? '<button class="knopf klein" style="margin-left:auto" onclick="tagesinfoZeigen(true)">📋 Übersicht</button>' : ""}<button class="knopf klein" ${L ? "" : 'style="margin-left:auto"'} onclick="buAnsichtWechseln()">☰ Liste</button></div>
+      ${BSPR.geht ? '<button class="bu-mikro" onclick="buSprechen()" aria-label="Sprachsteuerung: sag z. B. „Öffne Ordner Protokolle“"><span>🎙️</span><b>Sag mir, was du brauchst</b><small>z. B. „Öffne Ordner Protokolle“ oder „Anrufen Erika“</small></button>' : ""}
       ${festHeute.length ? `<div class="bu-tipp" style="margin:6px 0 0">🎉 Heute: ${festHeute.map((f) => f.jahre ? `${esc(f.vorname)} – ${f.jahre} Jahre im Club` : `${esc(f.vorname)} hat Geburtstag`).join(" · ")}</div>` : ""}
       ${!S ? '<div class="bu-tipp">👁️ Du hast im Büro <b>Leserechte</b>: ansehen und drucken.</div>' : ""}</div>
     <div class="bu-raum">
@@ -6550,6 +6558,7 @@ function buRaumHtml() {
           ${L ? ding("bu-korb", `<span class="bu-dsym">📥</span>${summe ? `<span class="bu-dzahl">${summe}</span>` : ""}`, "Eingang", "buEingang()") : ""}
           ${ding("bu-fueller", '<span class="bu-dsym">✒️</span>', "Schreiben", "buFueller()", S ? "" : '<span class="bu-nur">nur lesen</span>')}
           ${L ? ding("bu-telefon", '<span class="bu-dsym">☎️</span>', "Anrufen", "buTelefon()") : ""}
+          ${L ? ding("bu-post", '<span class="bu-dsym">📨</span>', "Nachricht &amp; Mail", "buNachricht()") : ""}
           ${ding("bu-kalender", kal ? `<span class="bu-kal"><span class="bu-kmon">${esc(kal.toLocaleDateString("de-DE", { month: "short" }))}</span><span class="bu-ktag">${kal.getDate()}</span><span class="bu-kwt">${esc(kal.toLocaleDateString("de-DE", { weekday: "short" }))}</span></span>` : '<span class="bu-dsym">📅</span>', kal ? esc(naechst.titel || "Nächster Termin") : "Termine", S ? "buTermine()" : "zeige('termine')")}
           ${ding("bu-drucker", '<span class="bu-dsym">🖨️</span>', "Drucken", "buDrucker()")}
           ${fest.length ? ding("bu-karte", '<span class="bu-dsym">🎂</span>', fest.length === 1 ? "1 Glückwunsch" : `${fest.length} Glückwünsche`, "buFeste()") : ""}
@@ -6590,17 +6599,96 @@ function buDrucker() {
   f.querySelector("[data-zu]").onclick = () => f.remove();
 }
 // ☎️ Telefon: Person aussuchen → freigegebene Nummer → das Handy wählt wirklich (tel:). Ohne Nummer: Nachricht anbieten.
-async function buTelefon() {
+// Personenwahl (gemeinsam für ☎️ Telefon und 📨 Nachricht): suchen, antippen; oben optional zusätzliche Knöpfe
+async function buPersonWahl(titel, sym, weiter, oben = "") {
   try { if (!MITGLIEDER) await mitgliederHolen(); } catch (e) { return melde(e.message, true); }
-  const f = blattAuf("buTelBlatt", `<h3 style="margin-top:0">☎️ Wen möchtest du anrufen?</h3>
+  const f = blattAuf("buTelBlatt", `<h3 style="margin-top:0">${titel}</h3>${oben}
     <input id="buTelSuche" type="search" placeholder="🔍 Name …" autocomplete="off" style="width:100%;margin-bottom:8px">
     <div id="buTelListe" class="bu-telliste"></div><div class="knoepfe"><button class="knopf" data-zu="1">Abbrechen</button></div>`);
   f.querySelector("[data-zu]").onclick = () => f.remove();
   const liste = () => { const q = suNorm($("buTelSuche").value || "");
     $("buTelListe").innerHTML = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && (!q || suNorm(m.name).includes(q))).sort((a, b) => a.name.localeCompare(b.name))
-      .map((m) => `<button class="bu-telzeile" data-p="${m.person_id}"><span class="zpunkt ${ONL.ids?.has(m.person_id) ? "on" : ""}"></span><b>${esc(m.name)}</b><span class="pfeil">📞</span></button>`).join("") || '<p class="hinweis">Niemand gefunden.</p>';
-    $("buTelListe").querySelectorAll("[data-p]").forEach((b) => (b.onclick = () => buTelPerson(b.dataset.p))); };
+      .map((m) => `<button class="bu-telzeile" data-p="${m.person_id}"><span class="zpunkt ${ONL.ids?.has(m.person_id) ? "on" : ""}"></span><b>${esc(m.name)}</b><span class="pfeil">${sym}</span></button>`).join("") || '<p class="hinweis">Niemand gefunden.</p>';
+    $("buTelListe").querySelectorAll("[data-p]").forEach((b) => (b.onclick = () => weiter(b.dataset.p))); };
   $("buTelSuche").oninput = liste; liste();
+  return f;
+}
+async function buTelefon() { return buPersonWahl("☎️ Wen möchtest du anrufen?", "📞", buTelPerson); }
+// 📨 Nachricht (1.66.0, Wunsch Hansi): an eine Person per App-Nachricht, E-Mail oder WhatsApp – oder an mehrere (vorhandenes „Mitglieder kontaktieren“)
+async function buNachricht() {
+  const f = await buPersonWahl("📨 An wen möchtest du schreiben?", "✉️", buNachrichtPerson,
+    '<button class="knopf haupt" style="width:100%;margin:0 0 8px" data-mehrere="1">👥 An mehrere oder eine Gruppe …</button>');
+  f?.querySelector("[data-mehrere]")?.addEventListener("click", () => { f.remove(); buKontakt(); });
+}
+async function buNachrichtPerson(pid) {
+  const m = MITGLIEDER.find((x) => x.person_id === pid), name = m?.name || "", vn = name.split(" ")[0];
+  try {
+    const d = await api("mitglied_details", { person_id: pid }, { warten: true }), k = d.kontakt || {};
+    const f = blattAuf("buTelBlatt", `<h3 style="margin-top:0">📨 ${esc(name)}</h3>
+      <div class="knoepfe" style="flex-direction:column;align-items:stretch">
+        <button class="knopf haupt" style="min-height:52px" data-w="app">💬 Nachricht in der App</button>
+        ${k.mail ? `<a class="knopf" style="justify-content:center;min-height:52px" href="mailto:${esc(k.mail)}">✉️ E-Mail an ${esc(k.mail)}</a>` : ""}
+        ${k.handy ? '<button class="knopf" style="min-height:52px" data-w="wa">🟢 WhatsApp</button>' : ""}</div>
+      ${!k.mail || !k.handy ? `<p class="hinweis">${esc(vn)} hat ${!k.mail && !k.handy ? "keine E-Mail und keine Handynummer" : !k.mail ? "keine E-Mail" : "keine Handynummer"} freigegeben.</p>` : ""}
+      <div class="knoepfe"><button class="knopf" data-w="zurueck">‹ Andere Person</button><button class="knopf" data-w="zu">Schließen</button></div>`);
+    f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => { const w = b.dataset.w;
+      if (w === "app") { f.remove(); direkt(pid); } else if (w === "wa") { f.remove(); extern("whatsapp", k.handy); } else if (w === "zurueck") buNachricht(); else f.remove(); }));
+  } catch (e) { melde(e.message, true); }
+}
+// ---------- KC-CLUB-BUERO-SPRACHE (1.66.0, Wunsch Hansi): Sprachsteuerung im Büro – „Öffne Ordner Protokolle“, „Anrufen Erika“ ----------
+// Spracherkennung des Handys (Web Speech API, kostenlos; bei Chrome erkennt Google die Sprache – nur solange das Mikrofon an ist).
+// Befehle kommen aus Registries (Regal BU_REGAL + Schreibtisch BU_SPRACHE); Rechte gelten wie beim Antippen. Nichts wird ohne Antippen
+// verschickt – Sprache öffnet nur (Ordner, Telefon mit Person, Nachricht an Person).
+const BSPR = { geht: !!(window.SpeechRecognition || window.webkitSpeechRecognition), erk: null };
+const BU_SPRACHE = [
+  { w: ["eingang", "post", "ablage", "korb"], fn: "buEingang()", t: "Eingang", recht: "L" },
+  { w: ["schreiben", "fuller", "fueller", "stift"], fn: "buFueller()", t: "Schreiben" },
+  { w: ["drucken", "drucker", "ausdrucken"], fn: "buDrucker()", t: "Drucken" },
+  { w: ["ubersicht", "uebersicht", "tagesubersicht"], fn: "tagesinfoZeigen(true)", t: "Übersicht", recht: "L" },
+  { w: ["liste", "listenansicht"], fn: "buAnsichtWechseln()", t: "Listenansicht" },
+  { w: ["zuruck", "zurueck", "regal", "buro", "buero", "schreibtisch"], fn: "BU.sicht !== 'start' ? buZurueck() : null", t: "Büro" },
+];
+const BU_REGAL_WORTE = { sitzung: ["sitzung", "sitzungen", "vorbereiten", "einladung"], nachher: ["nachbereitung", "nachher", "mitschrift"], protokolle: ["protokoll", "protokolle"],
+  feste: ["geburtstag", "geburtstage", "jubilaum", "jubilaen", "feste"], fl: ["freud", "leid", "trauer", "hochzeit"], liste: ["mitglieder", "mitgliederliste", "adressen"],
+  termine: ["termin", "termine", "kalender"], briefe: ["brief", "briefe", "briefbogen"], erstattung: ["erstattung", "kasse", "kosten"], chronik: ["chronik", "geschichte"],
+  archiv: ["archiv"], verwaltung: ["freigabe", "freigaben", "rechte"] };
+const sprWorte = (t) => suNorm(t).replace(/[^a-z0-9ß ]/g, " ").split(/\s+/).filter(Boolean);
+// Text → Befehl { fn, t } oder null (rein, testbar). Reihenfolge: Anrufen/Nachricht mit Name → Regal-Ordner → Schreibtisch.
+function buSprachDeuten(text, mitglieder = [], darf = () => true) {
+  const w = sprWorte(text); if (!w.length) return null;
+  const hat = (...x) => x.some((y) => w.includes(y));
+  const person = () => { const rest = w.filter((x) => x.length > 2); return mitglieder.find((m) => sprWorte(m.name).some((n) => rest.includes(n))) || null; };
+  if (hat("anrufen", "anruf", "telefon", "telefonieren", "ruf", "rufe")) { const p = person(); return darf({ recht: "L" }) ? { fn: p ? `buTelPerson('${p.person_id}')` : "buTelefon()", t: p ? `Anrufen: ${p.name}` : "Telefon" } : { verboten: "Telefon" }; }
+  if (hat("nachricht", "email", "mail", "whatsapp", "schreib", "schicke", "schick")) { const p = person(); if (p || !hat("schreib")) return darf({ recht: "L" }) ? { fn: p ? `buNachrichtPerson('${p.person_id}')` : "buNachricht()", t: p ? `Nachricht an ${p.name}` : "Nachricht" } : { verboten: "Nachricht" }; }
+  for (const o of BU_REGAL) if ((BU_REGAL_WORTE[o.id] || []).some((x) => w.includes(x))) return darf(o) ? { fn: o.bereich ? `buOrdner('${o.id}')` : o.fn, t: `Ordner ${o.t}` } : { verboten: o.t };
+  for (const b of BU_SPRACHE) if (b.w.some((x) => w.includes(x))) return darf(b) ? { fn: b.fn, t: b.t } : { verboten: b.t };
+  return null;
+}
+async function buSprechen() {
+  if (!BSPR.geht) return melde("Dieses Gerät kann leider keine Sprache erkennen.", true);
+  try { if (!MITGLIEDER) await mitgliederHolen(); } catch {}
+  BSPR.erk?.abort?.();
+  const Erk = window.SpeechRecognition || window.webkitSpeechRecognition, e = new Erk(); BSPR.erk = e;
+  e.lang = "de-DE"; e.interimResults = true; e.maxAlternatives = 3;
+  const f = blattAuf("buSprachBlatt", `<div class="bu-hoeren"><span class="bu-hpunkt">🎙️</span><b id="buSprText">Ich höre zu …</b>
+    <p class="hinweis">Sag z. B. „Öffne Ordner Protokolle“, „Anrufen Erika“, „Nachricht an Klaus“, „Eingang“, „Drucken“ oder „Zurück“.</p>
+    <p class="hinweis" style="font-size:.8rem">🔒 Das Handy erkennt die Sprache nur, solange dieses Fenster offen ist.</p>
+    <button class="knopf" data-zu="1">Abbrechen</button></div>`);
+  f.querySelector("[data-zu]").onclick = () => { e.abort(); f.remove(); };
+  let fertig = false;
+  e.onresult = (ev) => {
+    const r = ev.results[ev.results.length - 1]; $("buSprText") && ($("buSprText").textContent = `„${r[0].transcript}“`);
+    if (!r.isFinal || fertig) return; fertig = true;
+    const darf = (x) => buRecht(x);
+    const treffer = [...r].map((a) => buSprachDeuten(a.transcript, MITGLIEDER || [], darf)).find(Boolean);
+    setTimeout(() => { f.remove();
+      if (!treffer) return melde(`🎙️ „${r[0].transcript}“ habe ich nicht verstanden – sag z. B. „Öffne Ordner Protokolle“.`, true);
+      if (treffer.verboten) return melde(`🎙️ „${treffer.verboten}“ ist für dich im Büro nicht freigeschaltet.`, true);
+      melde(`🎙️ ${treffer.t}`); new Function(treffer.fn)(); }, 450);
+  };
+  e.onerror = (ev) => { if (fertig) return; fertig = true; f.remove(); if (ev.error === "not-allowed" || ev.error === "service-not-allowed") melde("🎙️ Bitte das Mikrofon für die App erlauben (Handy-Einstellungen).", true); else if (ev.error !== "aborted") melde("🎙️ Ich habe nichts verstanden – bitte nochmal.", true); };
+  e.onend = () => { if (!fertig) { fertig = true; f.remove(); melde("🎙️ Ich habe nichts gehört – bitte nochmal auf das Mikrofon tippen."); } };
+  try { e.start(); } catch { f.remove(); melde("🎙️ Mikrofon gerade nicht verfügbar.", true); }
 }
 async function buTelPerson(pid) {
   const m = MITGLIEDER.find((x) => x.person_id === pid), name = m?.name || "";

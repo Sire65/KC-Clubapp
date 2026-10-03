@@ -5,6 +5,14 @@ import assert from "node:assert/strict";
 
 const lies = (p) => fs.readFileSync(new URL("../" + p, import.meta.url), "utf8");
 const html = lies("index.html");
+// 242. 1.66.0: Das App-Skript muss sich übersetzen lassen (z. B. kein doppelt vergebener Name wie „const SPR“) – sonst startet die App nicht
+{
+  const vm = await import("node:vm");
+  const bloecke = [...html.matchAll(/<script(?![^>]*src)[^>]*>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
+  assert.ok(bloecke.length >= 1, "Skript-Blöcke gefunden");
+  bloecke.forEach((code, i) => { try { new vm.Script(code, { filename: `index.html#script${i}` }); } catch (e) { assert.fail(`Skript ${i} lässt sich nicht übersetzen: ${e.message}`); } });
+}
+
 const sw = lies("sw.js");
 const server = lies("supabase/functions/kc-club/index.ts");
 const version = JSON.parse(lies("version.json"));
@@ -2740,6 +2748,27 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/href="tel:\$\{esc\(nurZiffern\(nr\)\)\}"/.test(html) && /async function buTelefon\(\)/.test(html) && /api\("mitglied_details", \{ person_id: pid \}/.test(html), "Telefon wählt wirklich (nur freigegebene Nummer)");
   assert.ok(/function buFueller\(\)/.test(html) && /function buDrucker\(\)/.test(html) && /function arStartArt\(art\)/.test(html), "Füller/Drucker/Chronik");
   assert.ok(/onclick="buAnsichtWechseln\(\)">☰ Liste/.test(html) && /onclick="buAnsichtWechseln\(\)">🗄️ Büro-Raum/.test(html), "Umschalter in beiden Ansichten");
+}
+
+// 241. 1.66.0: Büro – Nachricht (App/Mail/WhatsApp) + Sprachsteuerung
+{
+  assert.ok(/async function buPersonWahl\(/.test(html) && /function buTelefon\(\) \{ return buPersonWahl\(/.test(html), "gemeinsame Personenwahl");
+  assert.ok(/href="mailto:\$\{esc\(k\.mail\)\}"/.test(html) && /extern\("whatsapp", k\.handy\)/.test(html) && /direkt\(pid\)/.test(html) && /buKontakt\(\)/.test(html), "App / Mail / WhatsApp / mehrere");
+  const code = html.slice(html.indexOf("const BU_SPRACHE = ["), html.indexOf("async function buSprechen("));
+  const BU_REGAL = [{ id: "protokolle", t: "Protokolle", fn: "zeige('protokolle')" }, { id: "sitzung", t: "Sitzung", bereich: "sitzung" }, { id: "fl", t: "Freud & Leid", fn: "buFreudLeid()", recht: "L" }, { id: "chronik", t: "Chronik", fn: "arStartArt('chronik')" }];
+  const suNorm = (t) => String(t ?? "").toLowerCase().replace(/[äöü]/g, (c) => ({ ä: "a", ö: "o", ü: "u" })[c]);
+  const { deuten } = new Function("BU_REGAL", "suNorm", `${code}; return { deuten: buSprachDeuten };`)(BU_REGAL, suNorm);
+  const leute = [{ person_id: "P2", name: "Erika Beispiel" }, { person_id: "P3", name: "Klaus Zander" }];
+  assert.equal(deuten("Öffne Ordner Protokolle", leute)?.fn, "zeige('protokolle')");
+  assert.equal(deuten("Sitzung", leute)?.fn, "buOrdner('sitzung')");
+  assert.equal(deuten("Anrufen Erika", leute)?.fn, "buTelPerson('P2')");
+  assert.equal(deuten("ruf mal an", leute)?.fn, "buTelefon()");
+  assert.equal(deuten("Nachricht an Klaus", leute)?.fn, "buNachrichtPerson('P3')");
+  assert.equal(deuten("Zeig mir die Chronik", leute)?.fn, "arStartArt('chronik')");
+  assert.equal(deuten("Eingang", leute)?.fn, "buEingang()");
+  assert.equal(deuten("Wetter morgen", leute), null, "Unbekanntes → nichts tun");
+  assert.ok(deuten("Freud und Leid", leute, (x) => x.recht !== "L")?.verboten, "Rechte gelten auch per Sprache");
+  assert.ok(/const BSPR = \{ geht: !!\(window\.SpeechRecognition \|\| window\.webkitSpeechRecognition\)/.test(html) && /\$\{BSPR\.geht \? '<button class="bu-mikro"/.test(html), "Mikrofon nur, wenn das Gerät es kann");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

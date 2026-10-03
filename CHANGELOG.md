@@ -1,5 +1,14 @@
 # Änderungen
 
+## 1.66.0 – 2026-10-03
+- Büro-Schreibtisch (Wunsch Hansi): neu **📨 Nachricht & Mail** (App, E-Mail, WhatsApp) – Person suchen → „💬 Nachricht in der App“,
+  „✉️ E-Mail“ (wenn freigegeben, öffnet das Mailprogramm) oder „🟢 WhatsApp“ (vorhandener WhatsApp-Weg); oben „👥 An mehrere oder
+  eine Gruppe“ (vorhandenes „Mitglieder kontaktieren“). Telefon und Nachricht nutzen dieselbe Personenwahl.
+- KC-CLUB-BUERO-SPRACHE: **🎙️ Sprachsteuerung** im Büro – Mikrofon „Sag mir, was du brauchst“: „Öffne Ordner Protokolle“,
+  „Chronik“, „Anrufen Erika“, „Nachricht an Klaus“, „Eingang“, „Drucken“, „Schreiben“, „Übersicht“, „Zurück“. Befehle aus den
+  Registries (Regal + Schreibtisch), Rechte wie beim Antippen. Sprache öffnet nur – verschickt oder wählt nie von selbst.
+  Erkennung durch das Handy (Web Speech API, kostenlos; nur solange das Mikrofon-Fenster offen ist). Ohne Unterstützung kein Knopf.
+
 ## 1.65.0 – 2026-10-03
 - KC-CLUB-BUERO-RAUM (Wunsch Hansi): Das Büro als Raum – oben ein **Regal** mit schmalen Ordnern (quer beschriftet, dezente
   Farben, leicht unterschiedliche Höhen; antippen zieht den Ordner heraus): Sitzung, Nachbereitung, Protokolle, Geburtstage,
