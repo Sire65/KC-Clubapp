@@ -2722,6 +2722,14 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/if \(String\(id\)\.startsWith\("auto:"\)\) return blVereinsleben\(id\);/.test(html) && /function blVereinsleben\(id\)/.test(html), "Vereinsleben blättern");
 }
 
+// 239. 1.64.2: Entfernen im Vereinsleben (nur für mich ausblenden; eigene Chat-Anlage auch im Chat löschen)
+{
+  assert.ok(/case "archiv_ausblenden"/.test(server) && /schluessel: "archiv_ausgeblendet"/.test(server) && /const auto = autoAlle\.filter\(\(x: any\) => !ausgeblendet\.has\(`\$\{x\.art\}:\$\{x\.id\}`\)\);/.test(server), "Ausblenden auf dem Server");
+  assert.ok(/nachricht: m\.id, vonMir: m\.sender_person_id === ich\.person_id/.test(server), "Anlage weiß, ob sie von mir ist");
+  assert.ok(/onclick="event\.stopPropagation\(\);arAusblenden\(/.test(html) && /async function arAusblenden\(x\)/.test(html) && /api\("nachricht_loeschen", \{ id: x\.nachricht \}\)/.test(html), "🗑️ in jeder Vereinsleben-Zeile");
+  assert.ok(/function arEinblenden\(art, id\)/.test(html) && /Aus dem Vereinsleben entfernt/.test(html), "Zurückholen im Papierkorb");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

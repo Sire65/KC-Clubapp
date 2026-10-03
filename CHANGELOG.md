@@ -1,5 +1,12 @@
 # Änderungen
 
+## 1.64.2 – 2026-10-03
+- KC-CLUB-ARCHIV-AUSBLENDEN (Wunsch Hansi „Löschen muss in allen Ordnern möglich sein“ – zwei Bildschirmfotos standen unter
+  „🤖 Vereinsleben → Anhänge“ ohne Löschknopf): jede Zeile im Vereinsleben hat jetzt 🗑️. Standard: nur für mich entfernen –
+  Termine, Protokolle, Abstimmungen usw. bleiben in ihrem Bereich unangetastet. Eigene Chat-Anlage: wahlweise „Nur hier im
+  Archiv“ oder „Auch im Chat löschen“ (vorhandenes nachricht_loeschen mit Sicherung). Zurückholen: Archiv → 🗑️ Papierkorb →
+  „🤖 Aus dem Vereinsleben entfernt“ → ♻️. Gespeichert je Person (Einstellung archiv_ausgeblendet), Server-Aktion archiv_ausblenden.
+
 ## 1.64.1 – 2026-10-03
 - Fund Hansi „Blättern wird im Clubordner nicht angezeigt“: „📖 Blättern“ jetzt auch in „🤖 Vereinsleben“ – jeder Eintrag
   (Termin, Protokoll, Abstimmung, Aktion …) wird eine Karten-Seite mit Symbol, Titel, Datum und Text; Lesezeichen je Bereich.

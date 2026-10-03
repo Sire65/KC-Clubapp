@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.64.1";
+const SERVER_VERSION = "1.64.2";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -1348,7 +1348,7 @@ async function archivAuto(ich: Ich) {
       const { data: ma } = await db.from("kc_communication_message_attachments").select("message_id,attachment_id").limit(3000);
       const mids = [...new Set((ma ?? []).map((x: any) => x.message_id))];
       const msgs: any[] = [];
-      for (let i = 0; i < mids.length; i += 200) { const { data } = await db.from("kc_communication_messages").select("id,thread_id,created_at").in("id", mids.slice(i, i + 200)); msgs.push(...(data ?? [])); }
+      for (let i = 0; i < mids.length; i += 200) { const { data } = await db.from("kc_communication_messages").select("id,thread_id,created_at,sender_person_id").in("id", mids.slice(i, i + 200)); msgs.push(...(data ?? [])); }
       const mm = new Map(msgs.filter((m) => tids.has(m.thread_id)).map((m) => [m.id, m]));
       const paare = (ma ?? []).filter((x: any) => mm.has(x.message_id));
       if (!paare.length) return;
@@ -1360,7 +1360,8 @@ async function archivAuto(ich: Ich) {
       const am = new Map(atts.map((a) => [a.id, a]));
       for (const x of paare) {
         const a = am.get(x.attachment_id), m: any = mm.get(x.message_id);
-        if (a) e.push({ art: "anhang", id: a.id, titel: a.file_name, datum: berlinTag(new Date(m.created_at)), text: "💬 " + (betreff.get(m.thread_id) || "Unterhaltung"), mime: a.mime_type, groesse: a.size_bytes, chat: m.thread_id });
+        if (a) e.push({ art: "anhang", id: a.id, titel: a.file_name, datum: berlinTag(new Date(m.created_at)), text: "💬 " + (betreff.get(m.thread_id) || "Unterhaltung"), mime: a.mime_type, groesse: a.size_bytes, chat: m.thread_id,
+          nachricht: m.id, vonMir: m.sender_person_id === ich.person_id }); // 1.64.2: eigene Anlage → auch „im Chat löschen“ möglich
       }
     }),
     sicher(async () => {
@@ -6286,12 +6287,18 @@ Köcheclub-App`,
       case "archiv_liste": {
         // KC-CLUB-ARCHIV-PERSOENLICH (1.5.0): eigener Ordner des laufenden Jahres entsteht beim ersten Öffnen von selbst
         await archivEigenerOrdner(ich, Number(berlinTag(new Date()).slice(0, 4))).catch((e) => console.error("eigener Ordner", String(e)));
-        const [{ data: or }, auto, fr, alben] = await Promise.all([
+        const [{ data: or }, autoAlle, fr, alben, { data: ausW }] = await Promise.all([
           db.from("kc_club_archiv_ordner").select("*").is("geloescht_am", null).order("jahr", { ascending: false }).order("titel"),
           archivAuto(ich),
           archivFreigabenFuer(ich.person_id),
           albenFuer(ich).catch((e) => { console.error("alben", String(e)); return [] as any[]; }), // KC-CLUB-FOTO-ALBEN (1.63.0): Alben als Rücken im Regal
+          db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "archiv_ausgeblendet").maybeSingle(),
         ]);
+        // KC-CLUB-ARCHIV-AUSBLENDEN (1.64.2, Wunsch Hansi „Löschen muss in allen Ordnern möglich sein“): Vereinsleben zeigt Daten
+        // anderer Bereiche – „🗑️“ blendet sie nur für mich aus (Termine, Protokolle … bleiben unangetastet; zurückholbar).
+        const ausgeblendet = new Set<string>((ausW?.wert?.ids ?? []) as string[]);
+        const auto = autoAlle.filter((x: any) => !ausgeblendet.has(`${x.art}:${x.id}`));
+        const autoWeg = autoAlle.filter((x: any) => ausgeblendet.has(`${x.art}:${x.id}`)).map((x: any) => ({ art: x.art, id: x.id, titel: x.titel, datum: x.datum }));
         const geteiltIds = new Set(fr.map((f: any) => f.ordner_id));
         const ordner = (or ?? []).filter((o: any) => o.besitzer ? (o.besitzer === ich.person_id || geteiltIds.has(o.id)) : darfOrdnerSehen(ich, o));
         const oids = ordner.map((o: any) => o.id), om = new Map(ordner.map((o: any) => [o.id, o]));
@@ -6334,7 +6341,7 @@ Köcheclub-App`,
           }),
           dokumente: dk.map((d: any) => ({ id: d.id, ordner_id: d.ordner_id, register: d.register, titel: d.titel, datum: d.datum, stichworte: d.stichworte, status: d.status, beschreibung: d.beschreibung || "",
             name: d.datei_name, mime: d.mime, groesse: d.groesse, datei: d.attachment_id, von: leute.get(d.hochgeladen_von)?.display_name || d.hochgeladen_von, vonIch: d.hochgeladen_von === ich.person_id, am: d.hochgeladen_am })),
-          auto, persoenlich, alben,
+          auto, persoenlich, alben, autoWeg,
         });
       }
 
@@ -6444,6 +6451,19 @@ Köcheclub-App`,
           }
           return json({ ok: true, id: d.id, pruefung: einreichung });
         } catch (e) { await dateienEntfernen([datei.id]); throw e; }
+      }
+
+      case "archiv_ausblenden": {
+        // KC-CLUB-ARCHIV-AUSBLENDEN (1.64.2): Eintrag aus „Vereinsleben“ nur für mich aus- oder wieder einblenden
+        const key = `${txt(p.art, 20)}:${txt(p.id, 120)}`;
+        if (!/^(treffen|protokoll|abstimmung|aktion|pinnwand|anhang|dienst):.+/.test(key)) throw new Fehler("Unbekannter Eintrag.");
+        const { data: w } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "archiv_ausgeblendet").maybeSingle();
+        const ids = new Set<string>((w?.wert?.ids ?? []) as string[]);
+        if (p.zurueck) ids.delete(key); else ids.add(key);
+        const { error } = await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel: "archiv_ausgeblendet", wert: { ids: [...ids].slice(-2000) }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
+        if (error) throw new Fehler("Konnte nicht gespeichert werden.", 500);
+        await protokoll(ich.person_id, p.zurueck ? "archiv_eingeblendet" : "archiv_ausgeblendet", { eintrag: key });
+        return json({ ok: true });
       }
 
       // KC-CLUB-BLAETTERN (1.64.0): alle sichtbaren Dokumente eines Ordners mit Link (1 Stunde) – für „📖 Blättern“ in einem Rutsch
