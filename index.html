@@ -2366,7 +2366,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.96.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.97.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -4890,6 +4890,8 @@ function verkehrZaehlen() { try { localStorage.setItem(VERKEHR_LAGER, String(ver
 const SERVER_REGION = "eu-west-2", REGION_PAUSE_MS = 10 * 60 * 1000;
 let REGION_AUS_BIS = 0;
 const apiAdresse = () => (Date.now() < REGION_AUS_BIS ? API : `${API}?forceFunctionRegion=${SERVER_REGION}`);
+// Aktionen, die nur lesen – nur diese dürfen nach einer Störung still wiederholt werden
+const API_LESEN = /^(init|ping|lebenszeichen|online|tagesinfo|pinnwand|pinnwand_neu|unterhaltung|suche|kalender_daten|.*_liste|.*_statistik|.*_holen|.*_info|.*_start|.*_stand)$/;
 async function apiRoh(action, daten = {}, zweiterVersuch = false) {
   // KC-CLUB-NOTBETRIEB-ERNSTFALL: simulierter Ausfall – genau der Fehler, den ein unerreichbarer Club-Server liefert
   if (notErnstfall()) { vbStart(); await new Promise((ok) => setTimeout(ok, 300)); vbEnde(false, 0, "Server nicht erreichbar (Simulation)"); throw Object.assign(new Error("Keine Verbindung zum Server – bitte gleich nochmal versuchen."), { leitung: true }); }
@@ -4897,11 +4899,16 @@ async function apiRoh(action, daten = {}, zweiterVersuch = false) {
   const t0 = performance.now(); vbStart();
   let r;
   const adresse = apiAdresse(), mitRegion = adresse !== API;
-  try { r = await fetch(adresse, { method: "POST", headers: { "Content-Type": "application/json", "x-club-token": KEY, "x-club-version": APP_VERSION }, body: JSON.stringify({ action, ...daten }) }); if (action !== "lebenszeichen") verkehrZaehlen(); }
-  catch { if (mitRegion && navigator.onLine) { REGION_AUS_BIS = Date.now() + REGION_PAUSE_MS; vbEnde(true, performance.now() - t0, ""); return apiRoh(action, daten, zweiterVersuch); } // Region weg → Standardweg
+  // KC-CLUB-ZEITGRENZE (1.97.0, Gesamtprüfung): ohne Antwort nach 25 s (Hochladen 90 s) abbrechen und als Verbindungsfehler werten –
+  // sonst drehte sich die Sanduhr bis zu 2½ Minuten und der Notbetrieb sprang nicht an
+  const zeitMs = /hochladen|upload/.test(action) ? 90000 : 25000;
+  try { r = await fetch(adresse, { method: "POST", headers: { "Content-Type": "application/json", "x-club-token": KEY, "x-club-version": APP_VERSION }, body: JSON.stringify({ action, ...daten }), signal: AbortSignal.timeout?.(zeitMs) }); if (action !== "lebenszeichen") verkehrZaehlen(); }
+  catch (fe) { if (fe?.name === "TimeoutError" || fe?.name === "AbortError") { vbEnde(false, 0, "Server antwortet nicht"); throw Object.assign(new Error("Der Server antwortet gerade nicht – bitte gleich nochmal versuchen."), { leitung: true }); }
+    if (mitRegion && navigator.onLine) { REGION_AUS_BIS = Date.now() + REGION_PAUSE_MS; vbEnde(true, performance.now() - t0, ""); return apiRoh(action, daten, zweiterVersuch); } // Region weg → Standardweg
     vbEnde(false, 0, navigator.onLine ? "Server nicht erreichbar" : "Handy offline"); throw Object.assign(new Error(navigator.onLine ? "Keine Verbindung zum Server – bitte gleich nochmal versuchen." : "Keine Internetverbindung."), { leitung: navigator.onLine }); }
   const j = await r.json().catch(() => null);
-  if (mitRegion && r.status >= 502 && r.status <= 504 && !j?.error) { REGION_AUS_BIS = Date.now() + REGION_PAUSE_MS; return apiRoh(action, daten, zweiterVersuch); } // Region gestört → Standardweg
+  // Region gestört → Standardweg. 1.97.0: LED-Zähler ausgleichen; Schreib-Aktionen NICHT still wiederholen (sonst evtl. doppelt gespeichert)
+  if (mitRegion && r.status >= 502 && r.status <= 504 && !j?.error) { REGION_AUS_BIS = Date.now() + REGION_PAUSE_MS; vbEnde(false, performance.now() - t0, "Region gestört " + r.status); if (API_LESEN.test(action)) return apiRoh(action, daten, zweiterVersuch); }
   if (r.status === 503 && !j?.error && !zweiterVersuch) { vbEnde(true, performance.now() - t0, ""); await new Promise((ok) => setTimeout(ok, AUSSETZER_PAUSE_MS)); return apiRoh(action, daten, true); }
   // Verbindungsfehler: Gateway (502–504) oder 5xx ohne Antwort des Programms; Fachfehler (z. B. 400/403) heißen „verbunden“
   const leitungKaputt = (r.status >= 502 && r.status <= 504) || (r.status >= 500 && !j);
@@ -6283,7 +6290,15 @@ function wichtigZeigen() {
   if (pushMoeglich() && Notification.permission !== "granted") h.push(`<div class="zeile">🔔 Benachrichtigungen sind aus<button class="knopf haupt klein" style="margin-left:auto" onclick="pushEinschalten()">Einschalten</button></div>`);
   $("wichtig").innerHTML = h.join("") || "Alles erledigt 👍";
 }
-async function neuLaden(vonHand) {
+// KC-CLUB-LADEN-EINMAL (1.97.0): läuft schon ein Laden, wird es mitbenutzt statt ein zweites zu starten (sonst konnte eine ältere
+// Antwort eine neuere überschreiben)
+let NEU_LADEN_LAUF = null;
+function neuLaden(vonHand) {
+  if (NEU_LADEN_LAUF && !vonHand) return NEU_LADEN_LAUF;
+  const lauf = neuLadenRoh(vonHand).finally(() => { if (NEU_LADEN_LAUF === lauf) NEU_LADEN_LAUF = null; });
+  return (NEU_LADEN_LAUF = lauf);
+}
+async function neuLadenRoh(vonHand) {
   try {
     INIT = await api("init", {}, { warten: !!vonHand }); ICH = INIT.ich;
     fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
@@ -6701,6 +6716,9 @@ function tfArtWahl(art, start) {
   if (!start) $("tfInfo").checked = art === "treffen";
 }
 // Doppel-Tipp-Sperre: Knopf ist gesperrt, bis der Server geantwortet hat (sonst entstehen doppelte Einträge)
+// KC-CLUB-EINMAL-SENDEN (1.97.0, Gesamtprüfung): Absende-Aktionen ohne eigenen Knopf-Schutz laufen nie doppelt gleichzeitig
+const LAEUFT = new Set();
+const nurEinmal = (name, fn) => async (...a) => { if (LAEUFT.has(name)) return; LAEUFT.add(name); try { return await fn(...a); } finally { LAEUFT.delete(name); } };
 async function einmal(knopf, arbeit) {
   if (knopf?.disabled) return;
   const text = knopf?.textContent;
@@ -8734,15 +8752,16 @@ async function chatOeffnen(id, ausHistorie) {
   NA.trennerChat = null; // KC-CLUB-NEU-LINIE: beim Öffnen neu bestimmen
   chatId = id; zeige("chat", ausHistorie); chatId = id;
   history.replaceState({ v: "chat", id }, "", location.pathname + "#nachricht=" + id);
-  await chatLaden(true);
-  chatTimer = setInterval(chatTakt, CHAT_TAKT_MS);
+  const offenId = chatId; await chatLaden(true);
+  clearInterval(chatTimer); if (chatId === offenId && aktuelleAnsicht === "chat") chatTimer = setInterval(chatTakt, CHAT_TAKT_MS); // 1.97.0: nie zwei Takte
   $("liveHinweis").classList.toggle("versteckt", !liveTippen() || !ONL.zeigen);
 }
 let chatStand = "";
 async function chatLaden(scrollen) {
   if (!chatId) return;
   try {
-    const u = await api("unterhaltung", { id: chatId });
+    const fuer = chatId, u = await api("unterhaltung", { id: fuer });
+    if (fuer !== chatId) return; // 1.97.0: inzwischen eine andere Unterhaltung geöffnet → alte Antwort verwerfen
     CHAT = u;
     const andere = u.teilnehmer.filter((x) => x.person_id !== ICH.person_id);
     $("chatTitel").textContent = (u.gruppe ? `${u.gruppe.symbol} ${u.gruppe.name}` : u.betreff || andere.map((x) => x.name).join(", ")) + (stummAn(chatId) ? " 🔕" : "");
@@ -12550,11 +12569,37 @@ function versionAnzeigen() {
   $("versionMarke").classList.toggle("gelb", !!NEUE_VERSION);
   if (reg === "programme") kachelnZeigen();
 }
+// KC-CLUB-UPDATE-SICHER (1.97.0, Gesamtprüfung: „Updates kommen nicht zuverlässig an“): erst warten, bis die neue Version
+// fertig eingerichtet ist (bis 15 s), dann umschalten und GANZ neu laden, sobald sie übernommen hat – nie ein Mischstand
 async function jetztAktualisieren() {
   VB.update = true; vbStatusLed(); // blaue LED: Wartung/Update läuft
   try { localStorage.setItem("kc_club_neustart_update", "1"); } catch {} // KC-CLUB-FEHLERPROTOKOLL: kein Fehlalarm „mehrfach geöffnet“
-  try { const reg = await navigator.serviceWorker.getRegistration(); await reg?.update(); reg?.waiting?.postMessage("jetzt-aktivieren"); } catch {}
-  setTimeout(() => location.reload(), 400);
+  let fertig = false; const neu = () => { if (!fertig) { fertig = true; location.reload(); } };
+  try {
+    const reg = await navigator.serviceWorker?.getRegistration();
+    if (reg) {
+      navigator.serviceWorker.addEventListener("controllerchange", neu, { once: true });
+      await reg.update().catch(() => {});
+      const sw = reg.installing;
+      if (sw) await new Promise((ok) => { const t = setTimeout(ok, 15000); sw.addEventListener("statechange", () => { if (sw.state !== "installing") { clearTimeout(t); ok(); } }); });
+      if (reg.waiting) { reg.waiting.postMessage("jetzt-aktivieren"); setTimeout(neu, 4000); return; }
+    }
+  } catch {}
+  neu();
+}
+// Beim Zurückholen der App: gibt es eine neue Version und wird gerade nichts eingegeben, aktualisiert die App sich selbst –
+// höchstens einmal je 10 Min. und Version (Schutz vor Endlosschleife, falls der Server kurz noch die alte Seite liefert)
+function updateRuhig() {
+  if (document.querySelector(".blatt:not(.versteckt)")) return false;
+  const a = document.activeElement; if (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) return false;
+  return ![...document.querySelectorAll("textarea, input[type=text], input:not([type])")].some((el) => el.offsetParent && el.value.trim());
+}
+function updateSelbst() {
+  if (!NEUE_VERSION || !updateRuhig()) return;
+  let z = {}; try { z = JSON.parse(localStorage.getItem("kc_club_auto_update") || "{}"); } catch {}
+  if (z.v === NEUE_VERSION && Date.now() - z.t < 10 * 60000) return;
+  try { localStorage.setItem("kc_club_auto_update", JSON.stringify({ v: NEUE_VERSION, t: Date.now() })); } catch {}
+  fpNeu("update_selbst", { hat: APP_VERSION, neu: NEUE_VERSION }); melde(`🔄 Neue Version ${NEUE_VERSION} – wird geladen …`); jetztAktualisieren();
 }
 
 // ---------- KC-CLUB-NUTZUNG (0.99.0): Nutzungsstatistik OHNE Namen ----------
@@ -13703,6 +13748,10 @@ async function fpAdmin(tage) {
   try { if (k) localStorage.setItem("kc_club_key", k); KEY = k || localStorage.getItem("kc_club_key") || ""; } catch { KEY = k || ""; }
   if (k) { url.searchParams.delete("k"); history.replaceState(null, "", url.pathname + url.hash); }
   if (window.KCFP) KCFP.version = APP_VERSION;
+  // KC-CLUB-EINMAL-SENDEN (1.97.0): diese Aktionen gegen Doppeltippen sperren (gleiche Funktion, nur mit Sperre)
+  todoAnlegen = nurEinmal("todoAnlegen", todoAnlegen); cuSenden = nurEinmal("cuSenden", cuSenden); kontaktSenden = nurEinmal("kontaktSenden", kontaktSenden);
+  erstattungSenden = nurEinmal("erstattungSenden", erstattungSenden); statusSpeichern = nurEinmal("statusSpeichern", statusSpeichern);
+  korrekturMelden = nurEinmal("korrekturMelden", korrekturMelden); arChronikAnlegen = nurEinmal("arChronikAnlegen", arChronikAnlegen);
   if (!KEY) { $("gesperrt").classList.remove("versteckt"); fpOhneLink(); return; }
   $("app").classList.remove("versteckt");
   iosStartMitSchluessel();
@@ -13740,7 +13789,7 @@ async function fpAdmin(tage) {
   });
   updatePruefen(false);
   setTimeout(stStart, 2500); // KC-CLUB-STANDORT
-  document.addEventListener("visibilitychange", () => { if (!document.hidden) { if (ST.eigen) stMelden(true); neuLaden(); updatePruefen(false); if (chatId) chatLaden(false); setTimeout(pwLive, 1500); } });
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) { if (ST.eigen) stMelden(true); neuLaden(); updatePruefen(false).then(updateSelbst); if (chatId) chatLaden(false); setTimeout(pwLive, 1500); } });
   setInterval(() => { if (!document.hidden && aktuelleAnsicht !== "chat") neuLaden(); }, 60000);
   setInterval(pwLive, PW_LIVE_MS); // KC-CLUB-PINNWAND-LIVE: auch im Chat
 })();

@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.96.0";
+const SERVER_VERSION = "1.97.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -1014,7 +1014,7 @@ async function communicatorStatus(ich: Ich, erreichbarkeit = false) {
     db.from("kc_communication_requests").select("status,channel,sent_at,created_at,error_code").eq("source_program", "kc-club").gte("created_at", seit7).order("created_at", { ascending: false }).limit(500),
     erreichbarkeit ? (async () => {
       const t0 = Date.now();
-      try { const r = await fetch(`${SUPA}/functions/v1/kc-communication-router`, { method: "OPTIONS", signal: AbortSignal.timeout(4000) }); return { ok: r.status < 500, ms: Date.now() - t0 }; }
+      try { const r = await fetch(`${SUPA}/functions/v1/kc-communication-router`, { method: "OPTIONS", signal: AbortSignal.timeout(4000) }); return { ok: r.status < 400, ms: Date.now() - t0 }; } // 1.97.0: 404 (nicht eingerichtet) ist NICHT erreichbar
       catch { return { ok: false, ms: null }; }
     })() : Promise.resolve(null),
     // fehlgeschlagene Aufträge aller Programme (24 h) – ersetzt den Zähler „failed“ des Zustandsberichts, der Empfängerfehler mitzählt
@@ -1043,9 +1043,11 @@ async function communicatorStatus(ich: Ich, erreichbarkeit = false) {
   else if (!st.dispatch_enabled) { farbe = "blau"; text = "Versand pausiert (Wartung) – Benachrichtigungen werden gesammelt und später verschickt"; }
   else if (push.zustand === "stoerung" && email.zustand === "stoerung") { farbe = "rot"; text = "Störung: weder Push noch E-Mail kommen an"; }
   else if (alterMin == null || alterMin > COMM_BERICHT_VERALTET_MIN) { farbe = "grau"; text = alterMin == null ? "Kein Zustandsbericht vorhanden" : `Zustandsbericht veraltet (${Math.round(alterMin)} Min. alt)`; }
-  else if (push.zustand === "stoerung" || email.zustand === "stoerung" || systemFehler24 > 0 || club.fehler24 > 0 || Number(bericht?.success_rate ?? 100) < 90) {
+  else if (push.zustand === "stoerung" || email.zustand === "stoerung" || systemFehler24 > 0 || club.fehler24 > 0 || (bericht?.success_rate != null && Number(bericht.success_rate) < 90)) {
     farbe = "gelb"; text = push.zustand === "stoerung" ? "Eingeschränkt: Push gestört – es geht per E-Mail raus" : email.zustand === "stoerung" ? "Eingeschränkt: E-Mail gestört – Push läuft" : "Eingeschränkt: einzelne Benachrichtigungen fehlgeschlagen";
   }
+  // KC-CLUB-UNBEKANNT-NICHT-OK (1.97.0, AGENTS Regel 11): grün nur, wenn Push UND E-Mail sicher „ok“ sind – sonst grau
+  else if (push.zustand !== "ok" || email.zustand !== "ok") { farbe = "grau"; text = `Zustand nicht sicher bekannt (Push: ${push.zustand}, E-Mail: ${email.zustand})`; }
   else { farbe = "gruen"; text = "KC Communicator läuft – Push und E-Mail werden zugestellt"; }
   return { farbe, text, erreichbar, push, email, club,
     bericht: bericht ? { zeit: bericht.created_at, erfolg: Number(bericht.success_rate), pushMs: Math.round(Number(bericht.avg_push_ms) || 0) || null, mailMs: Math.round(Number(bericht.avg_email_ms) || 0) || null,
@@ -2868,18 +2870,22 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         return json({ code, bis, minuten: KURZCODE_MIN });
       }
       case "init": {
-        const [naechstes, { data: teil }, mitglieder] = await Promise.all([
+        const [naechstes, { data: teil, error: teilFehler }, mitglieder] = await Promise.all([
           treffenListe(ich, true),
           db.from("kc_communication_thread_participants").select("thread_id,last_read_at").eq("person_id", ich.person_id).is("hidden_at", null),
           aktiveMitglieder(),
         ]);
+        // KC-CLUB-UNBEKANNT-NICHT-OK (1.97.0, Gesamtprüfung): klemmt die Datenbank, lieber ehrlich „gerade nicht möglich“ (503 → App
+        // zeigt den Fehler bzw. Notbetrieb) als „0 ungelesen / Alles erledigt 👍“ aus fehlenden Daten
+        if (teilFehler) throw new Fehler("Die Daten konnten gerade nicht geladen werden – bitte gleich noch einmal versuchen.", 503);
         let ungelesen = 0, ungelesenLaut = 0;
         const { data: stummE } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "stumm").maybeSingle();
         // KC-CLUB-SCHNELLSTART-SERVER (1.16.0): alle Unterhaltungen gleichzeitig zählen statt nacheinander (spart je Chat eine Runde)
         const zahlen = await Promise.all((teil ?? []).map(async (t: any) => {
           let q = db.from("kc_communication_messages").select("id", { count: "exact", head: true }).eq("thread_id", t.thread_id).neq("sender_person_id", ich.person_id);
           if (t.last_read_at) q = q.gt("created_at", t.last_read_at);
-          const { count } = await q; return { t, n: count ?? 0 };
+          const { count, error } = await q; if (error) throw new Fehler("Die Daten konnten gerade nicht geladen werden – bitte gleich noch einmal versuchen.", 503);
+          return { t, n: count ?? 0 };
         }));
         for (const { t, n } of zahlen) {
           ungelesen += n;

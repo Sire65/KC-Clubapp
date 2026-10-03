@@ -1,5 +1,23 @@
 # Änderungen
 
+## 1.97.0 – 2026-10-03 – Updates & Ausfallsicherheit (Gesamtprüfung, Paket 2)
+- KC-CLUB-UPDATE-SICHER: „Jetzt aktualisieren“ wartet, bis die neue Version fertig eingerichtet ist (bis 15 s), schaltet um und lädt
+  erst nach der Übernahme ganz neu (vorher oft 400 ms → neue Version blieb „wartend“). Beim Zurückholen der App aktualisiert sie
+  sich selbst, wenn es eine neue Version gibt und gerade nichts eingegeben wird (höchstens 1× je 10 Min. und Version).
+  Service Worker: Dateien beim Einrichten am Browser-Zwischenspeicher vorbei (cache: reload) – kein Mischstand alt/neu
+  (AGENTS Regel 16); Seitenaufrufe immer frisch nachfragen; nichts mit persönlichem Schlüssel (?k=) und keinen Notbetrieb-Schalter
+  speichern; Offline-Ersatz „Startseite“ nur noch für Seitenaufrufe (nicht für Bilder/Skripte).
+- KC-CLUB-ZEITGRENZE: Server-Anfragen brechen nach 25 s (Hochladen 90 s) ab und zählen als Verbindungsfehler → Meldung statt
+  endloser Sanduhr, Notbetrieb kann übernehmen. Nach Region-Störung (502–504) werden nur noch Lese-Aktionen still wiederholt
+  (keine doppelt gespeicherten Einträge); Datenverkehrs-LED bleibt dabei nicht mehr hängen.
+- KC-CLUB-LADEN-EINMAL: gleichzeitige Neu-Lade-Anstöße (Takt, Zurückholen, Push) teilen sich ein Laden – keine ältere Antwort
+  überschreibt eine neuere. Chat: nie zwei Takte; eine verspätete Antwort einer vorher offenen Unterhaltung wird verworfen.
+- KC-CLUB-EINMAL-SENDEN: Aufgabe eintragen, Chat-Abstimmung, Kontakt teilen, Erstattung senden, Status speichern, Korrektur melden,
+  Chronik anlegen laufen nie doppelt gleichzeitig (Doppeltippen).
+- KC-CLUB-UNBEKANNT-NICHT-OK (AGENTS Regel 11): Communicator-Licht grün nur, wenn Push und E-Mail sicher „ok“ sind, sonst grau;
+  fehlende Erfolgsquote zählt nicht als 100 %; „nicht eingerichtet“ (404) gilt als nicht erreichbar. Startdaten: klemmt die
+  Datenbank, kommt ehrlich „gerade nicht möglich“ statt „0 ungelesen / Alles erledigt“.
+
 ## 1.96.0 – 2026-10-03 – Sicherheitspaket (Gesamtprüfung, Paket 1)
 - KC-CLUB-KURZCODE-BREMSE: Jeder Code-Versuch wird zuerst eingetragen, dann gezählt (vorher erst nach der Prüfung → viele
   gleichzeitige Anfragen kamen an der Bremse vorbei). Grenzen wie bisher (8 je Netz / 60 gesamt in 15 Min.); läuft die

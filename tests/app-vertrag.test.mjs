@@ -1428,7 +1428,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/const COMM_EMPFAENGER_FEHLER = \/\^\(PUSH_NO_ACTIVE_SUBSCRIPTION\|PUSH_SUBSCRIPTION_NOT_FOUND\|PUSH_USER_RECIPIENT_MISSING\|EMAIL_RECIPIENT_MISSING\)\//.test(server), "Liste wie im Communicator");
   const cs = server.slice(server.indexOf("async function communicatorStatus"), server.indexOf("// ----- KC-CLUB-ADMINLAGE (0.47.0)"));
   assert.ok(!/bericht\?\.failed \?\? 0\) > 0/.test(cs) && /systemFehler24 > 0 \|\| club\.fehler24 > 0/.test(cs) && /fehler24: liste\.filter\(\(x: any\) => commSystemFehler\(x\)/.test(cs), "nur Systemfehler zählen");
-  assert.ok(/push\.zustand === "stoerung" \|\| email\.zustand === "stoerung"/.test(cs) && /Number\(bericht\?\.success_rate \?\? 100\) < 90/.test(cs), "echte Störungen bleiben gelb");
+  assert.ok(/push\.zustand === "stoerung" \|\| email\.zustand === "stoerung"/.test(cs) && /bericht\?\.success_rate != null && Number\(bericht\.success_rate\) < 90/.test(cs), "echte Störungen bleiben gelb"); // 1.97.0: fehlende Quote ≠ 100 % (Test 278)
   const f = (s, c) => /^(failed|dead_lettered|error)$/.test(s) && !/^(PUSH_NO_ACTIVE_SUBSCRIPTION|PUSH_SUBSCRIPTION_NOT_FOUND|PUSH_USER_RECIPIENT_MISSING|EMAIL_RECIPIENT_MISSING)/.test(c || "");
   assert.ok(!f("failed", "PUSH_NO_ACTIVE_SUBSCRIPTION") && f("failed", "PUSH_ALL_FAILED:410") && f("dead_lettered", null) && !f("sent", null), "Beispiele");
 }
@@ -3078,6 +3078,19 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/aktiv\.has\(id\) && \(id !== ich\.person_id \|\| g\.erstellt_von === ich\.person_id\)/.test(server), "kein Selbst-Hinzufügen in fremde Gruppen");
   const mig = lies("supabase/migrations/20261003_kc_club_v1960_zugang_vormerken.sql");
   assert.ok(/add column if not exists neu_token_hash text/.test(mig) && /Rückweg/.test(mig), "Migration Vormerken");
+}
+// 278. 1.97.0: Updates & Ausfallsicherheit
+{
+  const sw = lies("sw.js");
+  assert.ok(/c\.addAll\(DATEIEN\.map\(\(u\) => new Request\(u, \{ cache: "reload" \}\)\)\)/.test(sw) && /cache: "no-cache"/.test(sw) && /url\.searchParams\.has\("k"\)/.test(sw) && /e\.waitUntil\(caches\.open\(CACHE\)/.test(sw) && /navi \? caches\.match\("index\.html"\) : Response\.error\(\)/.test(sw), "Service Worker sicher");
+  assert.ok(!/self\.addEventListener\("install"[^\n]*skipWaiting/.test(sw), "kein Sofort-Umschalten beim Einrichten (Mischstand)");
+  const ja = html.slice(html.indexOf("async function jetztAktualisieren() {"), html.indexOf("function updateRuhig() {"));
+  assert.ok(/addEventListener\("controllerchange", neu, \{ once: true \}\)/.test(ja) && /sw\.addEventListener\("statechange"/.test(ja) && !/setTimeout\(\(\) => location\.reload\(\), 400\)/.test(ja), "Update wartet auf Einrichtung + Übernahme");
+  assert.ok(/updatePruefen\(false\)\.then\(updateSelbst\)/.test(html) && /z\.v === NEUE_VERSION && Date\.now\(\) - z\.t < 10 \* 60000/.test(html), "Selbst-Update beim Zurückholen, mit Schleifenschutz");
+  assert.ok(/signal: AbortSignal\.timeout\?\.\(zeitMs\)/.test(html) && /fe\?\.name === "TimeoutError"/.test(html) && /if \(API_LESEN\.test\(action\)\) return apiRoh/.test(html), "Zeitgrenze + nur Lesen wiederholen");
+  assert.ok(/if \(NEU_LADEN_LAUF && !vonHand\) return NEU_LADEN_LAUF;/.test(html) && /if \(fuer !== chatId\) return;/.test(html) && /clearInterval\(chatTimer\); if \(chatId === offenId/.test(html), "Laden/Chat nicht doppelt");
+  assert.ok(/todoAnlegen = nurEinmal\("todoAnlegen", todoAnlegen\)/.test(html) && /erstattungSenden = nurEinmal/.test(html), "Doppeltippen gesperrt");
+  assert.ok(/else if \(push\.zustand !== "ok" \|\| email\.zustand !== "ok"\) \{ farbe = "grau"/.test(server) && /ok: r\.status < 400/.test(server) && /if \(teilFehler\) throw new Fehler/.test(server), "unbekannt nie grün");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
