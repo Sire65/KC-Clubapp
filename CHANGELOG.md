@@ -1,5 +1,14 @@
 # Änderungen
 
+## 1.59.0 – 2026-10-03
+- KC-CLUB-VORLESEN (Wunsch Hansi): Nachrichten vorlesen lassen – Lautsprecher 🔇/🔊 oben im Chat (und Schalter „🔊 Neue
+  Nachrichten vorlesen“ im Kasten „Ansagen, Töne & Tipps“): neue Nachrichten anderer im offenen Chat werden vorgelesen
+  („Klaus: …“, ❗ als „wichtig“). Einzelne Nachricht: antippen → „🔊 Vorlesen“. Das Gerät spricht selbst (kostenlos).
+- Tipp des Tages neu: „Möchtest du hören, wenn sich jemand anmeldet? … Soll ich dir zeigen, wo?“ und „Nachrichten vorlesen
+  lassen?“ – „👉 Ja, zeig mir wo“ springt genau zum Schalter und hebt ihn hervor, „⏰ Nein, später“ bietet es später erneut an;
+  erscheint nur, solange der Schalter aus ist. Tipps können jetzt eigene Knopftexte haben (ja/nein/neinSpaeter).
+- Fund Hansi (Tablet): Symbole in runden Knöpfen (🎤, WA, …) sitzen jetzt genau mittig (Flex-Zentrierung, kein Innenabstand).
+
 ## 1.58.2 – 2026-10-03
 - Fund Hansi: Die Update-Meldung zeigte bei jedem Update wieder den Text von 1.53.6 („🐜 Feld Nächster Termin …“), weil
   version.json „neu“ beim Hochzählen nicht mitgezogen wurde. Jetzt wieder nur „🔧 Kleine Systemverbesserungen“; neuer

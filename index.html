@@ -216,7 +216,8 @@
   .statuschip { margin-top: 6px; border: none; border-radius: 12px; padding: 4px 10px; background: rgba(255,255,255,.18); color: #fff; font-weight: 700; font-size: .82rem; cursor: pointer; }
   .statuschip.st-verfuegbar { background: var(--gruenbg); color: var(--textGruen); } .statuschip.st-beschaeftigt { background: var(--gelbbg); color: var(--gelb); }
   .statuschip.st-urlaub { background: var(--blaubg); color: var(--blau); } .statuschip.st-krank { background: var(--lilabg); color: var(--lila); } .statuschip.st-abwesend { background: var(--rotbg); color: #c62828; }
-  .rund { width: 48px; height: 48px; border-radius: 50%; border: none; background: rgba(255,255,255,.16); color: #fff; font-size: 1.15rem; cursor: pointer; flex: none; }
+  .rund { width: 48px; height: 48px; border-radius: 50%; border: none; background: rgba(255,255,255,.16); color: #fff; font-size: 1.15rem; cursor: pointer; flex: none;
+    display: inline-flex; align-items: center; justify-content: center; padding: 0; line-height: 1; box-sizing: border-box; } /* 1.59.0 (Fund Hansi, Tablet): Symbol immer mittig im Kreis */
   #modusKnopf { position: relative; }
   #modusKnopf .modusbuchstabe { position: absolute; right: -3px; bottom: -3px; min-width: 17px; height: 17px; border-radius: 9px; background: #fff; color: #741521; font: 800 .66rem/17px system-ui, sans-serif; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,.35); }
   .rund:active { transform: scale(.94); }
@@ -1576,7 +1577,7 @@
   <section id="v-chat" class="versteckt">
     <!-- KC-CLUB-CHAT-KOPF (1.20.1, Wunsch Hansi): Kopfzeile (Name, Lupe, Menü, Suche, Angeheftetes) bleibt beim Scrollen oben stehen -->
     <div class="chat-kopf" id="chatKopf">
-      <div class="kopf2"><button class="zurueck" onclick="zeige('nachrichten')">‹</button><h2 id="chatTitel">…</h2><button class="rund" id="chatSuchKnopf" title="Im Chat suchen" aria-label="Im Chat suchen" onclick="chatSucheAuf()">🔍</button><button class="rund" id="chatMenueKnopf" title="Mehr" onclick="chatMenue()">⋮</button></div>
+      <div class="kopf2"><button class="zurueck" onclick="zeige('nachrichten')">‹</button><h2 id="chatTitel">…</h2><button class="rund" id="chatVorlesenKnopf" title="Neue Nachrichten vorlesen" aria-label="Neue Nachrichten vorlesen" aria-pressed="false" onclick="vorlesenSchalter(!vorlesenAn())">🔇</button><button class="rund" id="chatSuchKnopf" title="Im Chat suchen" aria-label="Im Chat suchen" onclick="chatSucheAuf()">🔍</button><button class="rund" id="chatMenueKnopf" title="Mehr" onclick="chatMenue()">⋮</button></div>
       <div id="chatSuchLeiste" class="versteckt"><input id="chatSuchFeld" type="search" placeholder="Im Chat suchen …" autocomplete="off" oninput="chatSucheJetzt(true)" onkeydown="if(event.key==='Enter'){event.preventDefault();chatSucheSpringen(1)}"><span id="chatSuchZahl"></span><button title="vorheriger Treffer" onclick="chatSucheSpringen(-1)">▲</button><button title="nächster Treffer" onclick="chatSucheSpringen(1)">▼</button><button title="Suche schließen" onclick="chatSucheZu()">✕</button></div>
       <div class="hinweis" id="chatTeilnehmer" style="margin-left:54px;cursor:pointer" onclick="if(CHAT?.gruppe)chatMenue()"></div>
       <div id="chatAngeheftet"></div>
@@ -1755,7 +1756,9 @@
       <summary>🗣️ Ansagen, Töne &amp; Tipps</summary>
       <div class="schalter"><div><b>💡 Tipp des Tages</b><div class="hinweis">Beim Öffnen ab und zu ein kurzer Tipp zu neuen Funktionen</div></div><input type="checkbox" id="setTipps" checked onchange="tippSchalter(this.checked)"></div>
       <!-- KC-CLUB-ONLINE-ANSAGE (1.56.0, Wunsch Hansi): Sprachansage „Klaus ist jetzt online“ – nur dieses Gerät, nur wenn die App offen ist -->
-      <div class="schalter"><div><b>🗣️ Ansage, wenn jemand online kommt</b><div class="hinweis">Das Handy sagt z. B. „Klaus ist jetzt online“ – nur solange die App offen ist, nicht in deiner Ruhezeit</div></div><input type="checkbox" id="setAnsage" onchange="ansageSchalter(this.checked)"></div>
+      <div class="schalter" id="setAnsageZeile"><div><b>🗣️ Ansage, wenn jemand online kommt</b><div class="hinweis">Das Handy sagt z. B. „Klaus ist jetzt online“ – nur solange die App offen ist, nicht in deiner Ruhezeit</div></div><input type="checkbox" id="setAnsage" onchange="ansageSchalter(this.checked)"></div>
+      <!-- KC-CLUB-VORLESEN (1.59.0, Wunsch Hansi): neue Nachrichten im offenen Chat vorlesen (auch im Chat oben 🔇/🔊) -->
+      <div class="schalter" id="setVorlesenZeile"><div><b>🔊 Neue Nachrichten vorlesen</b><div class="hinweis">Im offenen Chat liest das Handy neue Nachrichten vor. Einzelne Nachricht: antippen → „🔊 Vorlesen“. Schalter auch im Chat oben (🔇/🔊).</div></div><input type="checkbox" id="setVorlesen" onchange="vorlesenSchalter(this.checked)"></div>
       <div class="schalter versteckt" id="setAnmeldeTonZeile"><div><b>🔔 Ton, wenn sich jemand anmeldet (Admin)</b><div class="hinweis">Kurzer Doppelton, sobald ein Mitglied online kommt</div></div><input type="checkbox" id="setAnmeldeTon" onchange="anmeldeTonSchalter(this.checked)"></div>
       <!-- KC-CLUB-ONLINE-PUSH (1.57.0): auch bei geschlossener App – als Push mit dem normalen Benachrichtigungston -->
       <div class="schalter versteckt" id="setOnlinePushZeile"><div><b>📲 Push, wenn sich jemand anmeldet (Admin)</b><div class="hinweis">Auch wenn die App zu ist: „🟢 Klaus ist jetzt online“ – mit dem normalen Ton des Handys. Nicht in deiner Ruhezeit, nicht wenn die App gerade offen ist.</div></div><input type="checkbox" id="setOnlinePush" onchange="onlinePushSchalter(this.checked)"></div>
@@ -2129,7 +2132,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.58.2"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.59.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2724,6 +2727,9 @@ function einstiegHinweis() {
 // (⚙️ Einstellungen → „💡 Tipp des Tages“, Standard an). Gespeichert in der Server-Einstellung „tipps“ (geräteübergreifend).
 const TIPP_SPAETER_TAGE = 3;
 const TIPPS = [
+  // 1.59.0 (Wunsch Hansi): Fragen „Soll ich dir zeigen, wo?“ – Ja führt genau hin, Nein = später nochmal anbieten
+  { id: "sprachansage", sym: "🗣️", t: "Möchtest du hören, wenn sich jemand anmeldet?", x: "Dann schalte doch die <b>Sprachansage</b> an – das Handy sagt z. B. „Klaus ist jetzt online“. <b>Soll ich dir zeigen, wo?</b>", ja: "👉 Ja, zeig mir wo", nein: "⏰ Nein, später", neinSpaeter: true, nur: () => !ansageAn(), testen: () => einstiegHin("ansagen", "setAnsageZeile") },
+  { id: "vorlesen", sym: "🔊", t: "Nachrichten vorlesen lassen?", x: "Das Handy kann dir neue Nachrichten im Chat <b>vorlesen</b> – an- und ausschalten mit dem Lautsprecher 🔇/🔊 oben im Chat. <b>Soll ich dir zeigen, wo?</b>", ja: "👉 Ja, zeig mir wo", nein: "⏰ Nein, später", neinSpaeter: true, nur: () => !vorlesenAn(), testen: () => einstiegHin("ansagen", "setVorlesenZeile") },
   { id: "archiv_ordner", sym: "👤", t: "Kennst du schon deinen eigenen Archiv-Ordner?", x: "Im Archiv hast du einen persönlichen Ordner mit Registern – nur du siehst ihn. Mit 🔓 kannst du anderen etwas auf Zeit freigeben.", testen: () => arStart() },
   { id: "wischen", sym: "👉", t: "In Nachrichten kannst du jetzt wischen", x: "Eine Nachricht <b>nach rechts</b> wischen = antworten. <b>Nach links</b> wischen = löschen (mit Rückfrage).", testen: () => zeige("nachrichten") },
   { id: "emoji", sym: "😊", t: "Weißt du schon, dass du Emojis in deine Nachrichten setzen kannst?", x: "Im Chat neben dem Schreibfeld gibt es eine kleine Emoji-Auswahl.", testen: () => zeige("nachrichten") },
@@ -2760,7 +2766,8 @@ function tippDesTages() {
   $("tdtText").innerHTML = `<div class="tdt-kopf">💡 Tipp des Tages</div><h3 style="margin:4px 0 6px">${tipp.sym} ${tipp.t}</h3><p style="margin:0 0 4px">${tipp.x}</p>`;
   const zu = () => $("tdtBlatt").classList.add("versteckt");
   $("tdtTesten").onclick = () => { zu(); tippSpeichern({ spaeter: { ...tippStand().spaeter, [tipp.id]: new Date().toISOString() } }); tipp.testen(); };
-  $("tdtKenne").onclick = () => { zu(); tippSpeichern({ bekannt: { ...tippStand().bekannt, [tipp.id]: new Date().toISOString() } }); melde("👍 Alles klar – dieser Tipp kommt nicht wieder"); };
+  $("tdtTesten").textContent = tipp.ja || "👉 Jetzt ausprobieren"; $("tdtKenne").textContent = tipp.nein || "✔ Kenne ich"; $("tdtSpaeter").classList.toggle("versteckt", !!tipp.neinSpaeter); $("tdtKenne").parentElement.style.gridTemplateColumns = tipp.neinSpaeter ? "1fr" : "";
+  $("tdtKenne").onclick = tipp.neinSpaeter ? () => $("tdtSpaeter").onclick() : () => { zu(); tippSpeichern({ bekannt: { ...tippStand().bekannt, [tipp.id]: new Date().toISOString() } }); melde("👍 Alles klar – dieser Tipp kommt nicht wieder"); };
   $("tdtSpaeter").onclick = () => { zu(); tippSpeichern({ spaeter: { ...tippStand().spaeter, [tipp.id]: new Date().toISOString() } }); melde(`⏰ Ich erinnere dich in ${TIPP_SPAETER_TAGE} Tagen`); };
   $("tdtAus").onclick = () => { zu(); tippSpeichern({ an: false }); melde("🔕 Keine Tipps mehr – einschalten kannst du sie unter ⚙️ Einstellungen"); };
   $("tdtBlatt").classList.remove("versteckt");
@@ -2791,13 +2798,42 @@ function sprechen(text) {
   try { if (!("speechSynthesis" in window)) return; const u = new SpeechSynthesisUtterance(text); u.lang = "de-DE";
     const st = speechSynthesis.getVoices().find((v) => /^de/i.test(v.lang)); if (st) u.voice = st; speechSynthesis.speak(u); } catch {}
 }
+// ---------- KC-CLUB-VORLESEN (1.59.0, Wunsch Hansi): Nachrichten vorlesen – Lautsprecher im Chat an/aus ----------
+// Nur im offenen Chat und nur Neues von anderen (nicht beim Öffnen alles auf einmal); höchstens 3 auf einmal. Gerät spricht selbst.
+const VORLESEN = "kc_club_vorlesen", VL = { chat: null, ids: new Set() };
+const vorlesenAn = () => lsLesen(VORLESEN) === "1";
+const vorlesbar = (t) => String(t || "").replace(/https?:\/\/\S+/g, "Link").replace(/[*_~`>#]/g, "").replace(/\n+/g, ". ").slice(0, 600);
+function vorlesenNeue(liste) {
+  const ids = (liste || []).map((m) => m.id);
+  if (VL.chat !== chatId) { VL.chat = chatId; VL.ids = new Set(ids); return; }
+  const neu = (liste || []).filter((m) => !VL.ids.has(m.id) && !m.eigen && m.text && m.text !== "📎");
+  ids.forEach((i) => VL.ids.add(i));
+  if (!vorlesenAn() || document.hidden || !neu.length) return;
+  neu.slice(-3).forEach((m) => sprechen(`${String(m.von || "").split(" ")[0]}${m.wichtig ? ", wichtig" : ""}: ${vorlesbar(m.text)}`));
+}
+function naVorlesen(id) {
+  const m = NA.nachrichten.get(id); if (!m?.text) return;
+  if (!("speechSynthesis" in window)) return melde("Dieses Gerät kann leider nicht vorlesen.", true);
+  try { speechSynthesis.cancel(); } catch {}
+  sprechen(`${m.eigen ? "Du" : String(m.von || "").split(" ")[0]}: ${vorlesbar(m.text)}`);
+}
+function vorlesenZeigen() {
+  const an = vorlesenAn(), k = $("chatVorlesenKnopf");
+  if (k) { k.textContent = an ? "🔊" : "🔇"; k.setAttribute("aria-pressed", String(an)); k.title = an ? "Vorlesen ist an – antippen zum Ausschalten" : "Neue Nachrichten vorlesen"; }
+  if ($("setVorlesen")) $("setVorlesen").checked = an;
+}
+function vorlesenSchalter(an) {
+  lsSetzen(VORLESEN, an ? "1" : "0"); vorlesenZeigen();
+  if (an) { sprechen("Vorlesen ist an"); melde("🔊 Neue Nachrichten im offenen Chat werden vorgelesen" + ("speechSynthesis" in window ? "" : " – dieses Gerät kann leider nicht sprechen")); }
+  else { try { speechSynthesis.cancel(); } catch {} melde("🔇 Vorlesen aus"); }
+}
 function anmeldeTon() {
   try { const ctx = new (window.AudioContext || window.webkitAudioContext)();
     [[523, 0], [784, 0.18]].forEach(([f, d]) => { const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = f; g.gain.setValueAtTime(0.13, ctx.currentTime + d); g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + d + 0.35); o.connect(g).connect(ctx.destination); o.start(ctx.currentTime + d); o.stop(ctx.currentTime + d + 0.36); });
     setTimeout(() => ctx.close().catch(() => {}), 900); } catch {}
 }
 function ansageSchalterZeigen() {
-  if ($("setAnsage")) $("setAnsage").checked = ansageAn();
+  if ($("setAnsage")) $("setAnsage").checked = ansageAn(); vorlesenZeigen();
   $("setAnmeldeTonZeile")?.classList.toggle("versteckt", !ICH?.admin); if ($("setAnmeldeTon")) $("setAnmeldeTon").checked = anmeldeTonAn();
   $("setOnlinePushZeile")?.classList.toggle("versteckt", !ICH?.admin); if ($("setOnlinePush")) $("setOnlinePush").checked = INIT?.einstellungen?.online_push?.an !== false;
 }
@@ -7565,6 +7601,7 @@ async function unterhEntfernen(id, fuerAlle) {
   } catch (e) { melde(e.message, true); }
 }
 async function chatOeffnen(id, ausHistorie) {
+  vorlesenZeigen(); // KC-CLUB-VORLESEN: Lautsprecher oben zeigt den gespeicherten Zustand
   if (id !== chatId) { naAntwortWeg(); NA.erw.clear(); } // KC-CLUB-ANTWORT: Antwort/Erwähnung gehört zum vorigen Chat
   if (id !== chatId) ZW = { push: false, email: false, whatsapp: false };
   if (id !== chatId && CS.offen) chatSucheZu(); // KC-CLUB-CHATSUCHE: Suche gehört zum vorigen Chat
@@ -7594,6 +7631,7 @@ async function chatLaden(scrollen) {
     const stand = JSON.stringify(u.nachrichten.map((m) => [m.id, m.gelesenVon?.length, m.haken, (m.reaktionen || []).map((x) => x.emoji + x.anzahl).join(""),
       m.text, m.bearbeitet, m.gemerkt, m.angeheftet, m.umfrage?.optionen.map((o) => o.stimmen + (o.meine ? "*" : "")).join(",")])); // 1.12.0: auch Stimmen/Bearbeitungen anderer
     const idStand = u.nachrichten.map((m) => m.id).join(",");
+    vorlesenNeue(u.nachrichten); // KC-CLUB-VORLESEN
     if (NA.antwort && !u.nachrichten.some((m) => m.id === NA.antwort.id)) naAntwortWeg(); // Antwort gehört zu einem anderen Chat
     if (stand === chatStand && !scrollen) return;
     const neuVonAnderen = chatStand && u.nachrichten.length && !u.nachrichten[u.nachrichten.length - 1].eigen && stand !== chatStand && NA.idStand !== idStand;
@@ -7655,6 +7693,7 @@ function nachrichtMenue(id) {
     <button class="knopf" onclick="document.getElementById('naMenue').remove();naMerken('${id}', ${!m.gemerkt})">${m.gemerkt ? "⭐ Nicht mehr merken" : "⭐ Merken"}</button>
     ${m.bearbeitbarBis && Date.parse(m.bearbeitbarBis) > Date.now() ? `<button class="knopf" onclick="document.getElementById('naMenue').remove();naBearbeiten('${id}')">✏️ Bearbeiten</button>` : ""}
     ${m.text ? `<button class="knopf" onclick="document.getElementById('naMenue').remove();naKopieren('${id}')">📋 Kopieren</button>` : ""}
+    ${m.text && m.text !== "📎" ? `<button class="knopf" onclick="document.getElementById('naMenue').remove();naVorlesen('${id}')">🔊 Vorlesen</button>` : ""}
     <button class="knopf" onclick="document.getElementById('naMenue').remove();weiterleitenBlatt('${id}')">↪️ Weiterleiten</button>
     ${(m.anlagen || []).some((a) => ARCHIV_TYP_OK(a.mime)) ? `<button class="knopf" onclick="document.getElementById('naMenue').remove();naAnlagenArchiv('${id}')">🗄️ Datei in mein Archiv</button>` : ""}
     <button class="knopf" onclick="document.getElementById('naMenue').remove();nachrichtInfo('${id}')">ℹ️ Details – wann gesendet, angekommen, gelesen</button>

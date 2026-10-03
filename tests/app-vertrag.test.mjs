@@ -2603,6 +2603,26 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.deepEqual(neuigkeitenSeit({ version: "2.0.1", neu: ["ALT"], verlauf: [{ version: "2.0.0", neu: ["x"] }] }, "2.0.0", "2.0.1"), [], "kein Verlaufseintrag im Bereich → kein alter Text");
 }
 
+// 231. 1.59.0: Vorlesen, Tipps mit „Zeig mir wo“, runde Knöpfe mittig
+{
+  const code = html.slice(html.indexOf('const VORLESEN = "kc_club_vorlesen"'), html.indexOf("function naVorlesen("));
+  const gesagt = []; const speicher = { kc_club_vorlesen: "1" };
+  const run = new Function("lsLesen", "sprechen", "document", "env", `let chatId = null; ${code}; return { vorlesenNeue, setChat: (c) => { chatId = c; } };`);
+  const { vorlesenNeue, setChat } = run((k) => speicher[k] ?? null, (t) => gesagt.push(t), { hidden: false });
+  setChat("c1"); vorlesenNeue([{ id: "1", von: "Klaus Zander", text: "Alt" }]);
+  assert.equal(gesagt.length, 0, "beim Öffnen nichts vorlesen");
+  vorlesenNeue([{ id: "1", von: "Klaus Zander", text: "Alt" }, { id: "2", von: "Klaus Zander", text: "Kommst du?" }, { id: "3", eigen: true, von: "Du", text: "Ja" }]);
+  assert.deepEqual(gesagt, ["Klaus: Kommst du?"], "nur Neues von anderen");
+  vorlesenNeue([{ id: "4", von: "Dieter X", text: "Achtung", wichtig: true }]);
+  assert.equal(gesagt[1], "Dieter, wichtig: Achtung", "wichtig wird angesagt");
+  assert.match(html, /id="chatVorlesenKnopf"[^>]*onclick="vorlesenSchalter\(!vorlesenAn\(\)\)">🔇<\/button>/, "Lautsprecher im Chat");
+  assert.match(html, /naVorlesen\('\$\{id\}'\)">🔊 Vorlesen<\/button>/, "Menüeintrag");
+  assert.match(html, /id: "sprachansage"[^\n]*ja: "👉 Ja, zeig mir wo", nein: "⏰ Nein, später", neinSpaeter: true, nur: \(\) => !ansageAn\(\), testen: \(\) => einstiegHin\("ansagen", "setAnsageZeile"\)/, "Tipp Sprachansage führt genau hin");
+  assert.match(html, /id: "vorlesen"[^\n]*testen: \(\) => einstiegHin\("ansagen", "setVorlesenZeile"\)/, "Tipp Vorlesen");
+  assert.match(html, /\$\("tdtKenne"\)\.onclick = tipp\.neinSpaeter \? \(\) => \$\("tdtSpaeter"\)\.onclick\(\)/, "Nein = später");
+  assert.match(html, /\.rund \{[^}]*display: inline-flex; align-items: center; justify-content: center; padding: 0;/, "Symbole mittig");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
