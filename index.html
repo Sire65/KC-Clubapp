@@ -211,6 +211,14 @@
   .kt-zeit { height: 16px; border-radius: 8px; background: var(--linie); overflow: hidden; margin: 4px 0 12px; }
   .kt-zeit i { display: block; height: 100%; width: 100%; border-radius: 8px; background: #27ae60; }
   /* 2.17.0 KC-CLUB-KUECHENTERROR-WAECHTER: Balken wird vom Wächter (Uhrzeit) gestellt, nicht animiert; 3-2-1 Lesezeit */
+  /* 2.18.0 KC-CLUB-SPIELE-PAUSE: Pause/Weiter unten – angehaltenes Spiel ist verschwommen (nichts ablesen, nichts antippen) */
+  .sp-pause { position: fixed; z-index: 22; left: 50%; transform: translateX(-50%); bottom: calc(84px + env(safe-area-inset-bottom)); display: flex; align-items: center; gap: 10px; }
+  body.kt-aktiv .sp-pause { bottom: calc(12px + env(safe-area-inset-bottom)); }
+  .sp-pause .knopf, .sp-pause .sp-pause-text { white-space: nowrap; }
+  .sp-pause .knopf { min-height: 52px; padding: 8px 22px; border-radius: 999px; font-size: 1.05rem; box-shadow: 0 6px 16px rgba(0,0,0,.25); }
+  .sp-pause .sp-pause-text { background: #1f3a5f; color: #fff; padding: 8px 14px; border-radius: 999px; font-weight: 800; box-shadow: 0 6px 16px rgba(0,0,0,.25); }
+  #v-spiele:has(.sp-pause:not(.versteckt)) #spInhalt { padding-bottom: 72px; }
+  #v-spiele.pausiert #spInhalt { filter: blur(14px); pointer-events: none; user-select: none; }
   .kt-uhr { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 30px; margin: -6px 0 6px; font-weight: 800; font-size: 1.1rem; }
   .kt-lesen-zahl { display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; border-radius: 50%; background: var(--rot); color: #fff; font-size: 1.8rem; }
   .kt-antworten.kt-lesen { visibility: hidden; }
@@ -1891,6 +1899,7 @@
     <div class="umschalter versteckt" id="spArt"><button data-a="ttt" onclick="spArtWahl('ttt')">❌⭕ Tic-Tac-Toe</button><button data-a="schach" onclick="spArtWahl('schach')">♟️ Schach</button><button data-a="bsk" onclick="spArtWahl('bsk')">🃏 Bauernskat</button></div>
     <div class="umschalter versteckt" id="spTabs"><button data-t="pc" onclick="spTab('pc')">🤖 Gegen den Computer</button><button data-t="mg" onclick="spTab('mg')">👥 Gegen Mitglieder</button></div>
     <div id="spInhalt"><div class="karte hinweis">Wird geladen …</div></div>
+    <div id="spPause" class="sp-pause versteckt" role="group" aria-label="Pause"></div>
   </section>
 
   <!-- AKTIONEN / AUSFLÜGE (KC-CLUB-AKTIONEN) -->
@@ -2574,7 +2583,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.17.3"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.18.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -4908,7 +4917,42 @@ const SP_KEY = "kc_club_spiel_pc", SP_TAKT_MS = 3000;
 let SP = { tab: "pc", art: null, liste: null, offen: null, takt: null, laedt: false, ch: null };
 const SP_ARTEN = [["ttt", "❌⭕", "Tic-Tac-Toe", "🍅 gegen 🥦 · 3 × 3 oder 4 × 4"], ["schach", "♟️", "Schach", "Die Küchenbrigade tritt an"], ["bsk", "🃏", "Bauernskat", "Zu zweit · französisches Blatt"], ["kt", "🔪", "Küchenterror", "Küchenquiz auf Zeit · 10 Sekunden je Frage"]];
 // KC-CLUB-SCHACH (2.8.0): Spielauswahl oben (gilt für „gegen den Computer“ und als Vorschlag beim Herausfordern)
-function spArtWahl(a) { SP.art = ["schach", "bsk", "kt"].includes(a) ? a : "ttt"; if (SP.offen) SP.offen = null; spZeigen(); if (SP.tab === "mg") spLaden(true); }
+function spArtWahl(a) { SP.pause = false; SP.nachholen = null; SP.art = ["schach", "bsk", "kt"].includes(a) ? a : "ttt"; if (SP.offen) SP.offen = null; spZeigen(); if (SP.tab === "mg") spLaden(true); }
+// KC-CLUB-SPIELE-PAUSE (2.18.0, Wunsch Hansi): je Spiel unten ein Umschalter ⏸ Pause ↔ ▶ Weiter.
+// Gegen den Computer: Spiel steht still – Computer zieht nicht, Küchenterror-Uhr hält an, das Brett/die Frage ist verschwommen.
+// Weiter: Küchenterror gibt nochmal 3-2-1 Lesezeit, dann läuft die restliche Zeit weiter. Gegen Mitglieder (Küchenterror) misst der
+// Server die Zeit – dort gilt „Pause nach dieser Frage“ (danach geht es erst mit ▶ Weiter weiter); Brettspiele gegen Mitglieder warten ohnehin.
+SP.pause = false; SP.nachholen = null;
+function spPauseSichtbar() {
+  if (aktuelleAnsicht !== "spiele") return false;
+  if (SP.offen) return SP.offen.spiel === "kt" && SP.offen.status === "laeuft" && SP.offen.ichDran;
+  if (SP.tab !== "pc" || !SP.art) return false;
+  return SP.art !== "kt" || (!!KTP.z && KTP.z.phase !== "ende");
+}
+function spPauseZeigen() {
+  const leiste = $("spPause"); if (!leiste) return;
+  const zeigen = spPauseSichtbar(), mg = !!SP.offen;
+  leiste.classList.toggle("versteckt", !zeigen);
+  $("v-spiele").classList.toggle("pausiert", zeigen && SP.pause && !mg);
+  if (!zeigen) return;
+  const an = mg ? KTM.pause : SP.pause;
+  leiste.innerHTML = an ? `<span class="sp-pause-text">⏸ ${mg && KTM.frage ? "Pause nach dieser Frage" : "Pause"}</span><button class="knopf haupt" onclick="spWeiter()">▶ Weiter</button>`
+    : `<button class="knopf" onclick="spPausieren()" aria-label="Spiel anhalten">⏸ Pause</button>`;
+}
+function spPausieren() {
+  if (SP.offen?.spiel === "kt") { KTM.pause = true; spPauseZeigen(); return melde(KTM.frage ? "⏸ Nach dieser Frage ist Pause" : "⏸ Pause – mit ▶ Weiter geht es weiter"); }
+  SP.pause = true;
+  if (SP.art === "kt") ktPcPausieren();
+  try { speechSynthesis.cancel(); } catch {}
+  spPauseZeigen();
+}
+function spWeiter() {
+  if (SP.offen?.spiel === "kt") { KTM.pause = false; spPauseZeigen(); if (!KTM.frage && !KTM.aufl && SP.offen.ichDran && SP.offen.quiz?.offenBeiMir > 0) ktMgFrage(); else if (KTM.aufl) ktMgWeiter(); return; }
+  SP.pause = false; spPauseZeigen();
+  if (SP.art === "kt") return ktPcFortsetzen();
+  const f = SP.nachholen; SP.nachholen = null; spZeigen(); if (f) setTimeout(f, 400);
+}
+const spPauseHalt = (f) => { if (!SP.pause) return false; SP.nachholen = f; return true; }; // Computer wartet, bis ▶ Weiter
 function spZurueck() { // ‹ oben: Partie → Spiel → Übersicht → Startseite
   if (SP.offen) { SP.offen = null; spZeigen(); spLaden(true); }
   else if (SP.art) { SP.art = null; spZeigen(); }
@@ -4969,6 +5013,7 @@ function spStart(tab, art) { if (tab) SP.tab = tab; SP.art = art || null; SP.off
 function spTab(t) { SP.tab = t; SP.offen = null; spZeigen(); if (t === "mg") spLaden(); }
 function spZeigen() {
   document.body.classList.remove("kt-aktiv"); // 2.17.1: nur während einer Küchenterror-Frage (setzt ktBildFrei)
+  setTimeout(spPauseZeigen, 0); // 2.18.0
   const uebersicht = !SP.art && !SP.offen;
   ["spEdition", "spTabs"].forEach((id) => $(id).classList.toggle("versteckt", uebersicht));
   if (uebersicht) { clearInterval(SP.takt); SP.takt = null; return spKachelnZeigen(); }
@@ -5032,6 +5077,7 @@ function spPcZug(i) {
   spPcZeigen();
 }
 function spPcComputer() {
+  if (spPauseHalt(spPcComputer)) { SPC.denkt = false; return; }
   if (SPC.ende || aktuelleAnsicht !== "spiele" || SP.art !== "ttt") { SPC.denkt = false; return; }
   const i = spComputerZug(SPC.brett, SPC.groesse, SPC.staerke);
   if (i !== undefined) SPC.brett = SPC.brett.slice(0, i) + "o" + SPC.brett.slice(i + 1);
@@ -5325,6 +5371,7 @@ function schPcComputerStart() {
   SCH.denkt = true; schPcZeigen();
   setTimeout(() => { // kurz warten, damit das Brett erst neu gezeichnet wird
     const ch = SCH.ch; if (!ch || aktuelleAnsicht !== "spiele") { SCH.denkt = false; return; }
+    if (spPauseHalt(schPcComputerStart)) { SCH.denkt = false; return; } // 2.18.0: Pause
     const m = schComputerZug(ch, SCH.staerke); if (m) ch.move(m);
     SCH.denkt = false; schPcWerten(); schMerken(); if (SP.tab === "pc" && SP.art === "schach") schPcZeigen();
   }, 350);
@@ -5560,6 +5607,7 @@ function bskPcKarte(k) {
   bskPcNachStich(bskSpielen(z, 0, k));
 }
 function bskPcComputer() {
+  if (spPauseHalt(bskPcComputer)) return; // 2.18.0: Pause
   const z = BSK.z; if (!z || aktuelleAnsicht !== "spiele" || SP.art !== "bsk") return; // weiter, sobald Bauernskat wieder offen ist (siehe bskPcZeigen)
   if (z.phase === "ansage" && z.vorhand === 1) { z.trumpf = bskAnsageWahl(bskSichtbarAnsage(z, 1)); z.phase = "spiel"; z.amZug = 1; bskMerken();
     melde(`🤖 Der Computer sagt an: ${z.trumpf === "grand" ? "Grand – nur Buben" : BSK_SYM[z.trumpf] + " " + BSK_FNAME[z.trumpf]}`); bskZeichnen(); setTimeout(bskPcComputer, 800); return; }
@@ -5737,25 +5785,29 @@ async function ktPcZeigen() {
   ktBildFrei(true, "pc:" + z.ids.join() + ":" + z.i);
   $("spInhalt").innerHTML = `<div class="karte sp-karte">${kopf}${kopfWer}${ktFrageHtml(fr, { klick: wer === "ich" && z.phase === "frage" ? "ktPcAntwort" : "", aufl: z.phase === "aufl" ? z.aufl : null, denkt: wer === "pc" && z.phase === "frage" })}
     ${z.phase === "aufl" ? `<div class="knoepfe"><button class="knopf haupt" onclick="ktPcWeiter()">${z.i >= 11 ? "🏁 Ergebnis" : "Weiter ›"}</button></div>` : ""}</div>`;
-  if (z.phase === "frage") ktPcUhren();
+  if (z.phase === "frage" && z.pausiert && !SP.pause) return ktPcFortsetzen(); // 2.18.0: nach Rückkehr weiter
+  if (z.phase === "frage" && !SP.pause) ktPcUhren();
+  spPauseZeigen();
 }
 function ktPcUhren() { // Zeitablauf über den Wächter (und beim Computer: seine Antwort) – auch nach Wiederkommen in die Ansicht
   const z = KTP.z; clearTimeout(KTP.uhr); clearTimeout(KTP.pcUhr);
-  const jetzt = Date.now(), lim = ktpLimit();
-  ktUhrStart(Math.max(0, z.seit - jetzt), lim - Math.max(0, jetzt - z.seit), lim, () => ktPcAntwort(-1, true));
-  if (z.i % 2 === 1) KTP.pcUhr = setTimeout(() => { const st = KT_STAERKE[KTP.staerke] || KT_STAERKE.mittel; ktPcAntwort(Math.random() < st.quote * (KT_FRAGEN_L.find((q) => q.id === z.ids[z.i])?.m ? 0.8 : 1) ? z.perm.indexOf(0) : [0, 1, 2, 3].filter((k) => z.perm[k] !== 0)[Math.floor(Math.random() * 3)], true); }, Math.max(0, z.pcZeit - (Date.now() - z.seit)));
+  if (SP.pause) return ktUhrStopp(); // 2.18.0: angehalten
+  const jetzt = Date.now(), lim = ktpLimit(), lesenEnde = Math.max(jetzt, z.lesenBis || z.seit); // 2.18.0: nach Pause neue Lesezeit
+  ktUhrStart(lesenEnde - jetzt, lim - Math.max(0, lesenEnde - z.seit), lim, () => ktPcAntwort(-1, true));
+  if (z.i % 2 === 1) KTP.pcUhr = setTimeout(() => { const st = KT_STAERKE[KTP.staerke] || KT_STAERKE.mittel; ktPcAntwort(Math.random() < st.quote * (KT_FRAGEN_L.find((q) => q.id === z.ids[z.i])?.m ? 0.8 : 1) ? z.perm.indexOf(0) : [0, 1, 2, 3].filter((k) => z.perm[k] !== 0)[Math.floor(Math.random() * 3)], true); }, Math.max(lesenEnde - jetzt + 300, z.pcZeit - (jetzt - z.seit)));
 }
 async function ktPcStart() {
   const F = await ktFragenLaden();
   const st = KT_STAERKE[KTP.staerke] || KT_STAERKE.mittel;
-  KTP.z = { ids: [...ktMischen(F.filter((q) => !q.m).map((q) => q.id)).slice(0, 10), ...ktMischen(F.filter((q) => q.m).map((q) => q.id)).slice(0, 2)], i: 0, /* 2.15.0: die letzten beiden (je eine für dich und den Computer) sind Meisterfragen */ punkte: [0, 0], phase: "frage", seit: Date.now() + KT_LESEN_MS, perm: ktMischen([0, 1, 2, 3]), aufl: null };
+  KTP.z = { ids: [...ktMischen(F.filter((q) => !q.m).map((q) => q.id)).slice(0, 10), ...ktMischen(F.filter((q) => q.m).map((q) => q.id)).slice(0, 2)], i: 0, /* 2.15.0: die letzten beiden (je eine für dich und den Computer) sind Meisterfragen */ punkte: [0, 0], phase: "frage", seit: Date.now() + KT_LESEN_MS, lesenBis: Date.now() + KT_LESEN_MS, perm: ktMischen([0, 1, 2, 3]), aufl: null };
   KTP.z.pcZeit = st.von + Math.random() * (st.bis - st.von);
   ktPcZeigen();
 }
 function ktPcAntwort(wahl, vonUhr) {
   const z = KTP.z; if (!z || z.phase !== "frage") return;
   if (!vonUhr && z.i % 2 === 1) return; // beim Computer tippt nicht der Mensch
-  if (!vonUhr && Date.now() < z.seit) return; // noch Lesezeit (3-2-1)
+  if (SP.pause || z.pausiert) return; // 2.18.0: angehalten
+  if (!vonUhr && Date.now() < (z.lesenBis || z.seit)) return; // noch Lesezeit (3-2-1)
   clearTimeout(KTP.uhr); clearTimeout(KTP.pcUhr); ktUhrStopp();
   const lim = ktpLimit(), ms = Math.min(Date.now() - z.seit, lim + 1), ok = wahl >= 0 && z.perm[wahl] === 0 && ms <= lim; let p = ktPunkte(ok, ms, lim);
   const f = KT_FRAGEN_L.find((q) => q.id === z.ids[z.i]);
@@ -5764,19 +5816,28 @@ function ktPcAntwort(wahl, vonUhr) {
   try { navigator.vibrate?.(ok ? 30 : [40, 30, 40]); } catch {}
   if (ktpSichtbar()) ktPcZeigen();
 }
+function ktPcPausieren() { // Uhr anhalten, verbrauchte Zeit merken
+  const z = KTP.z; if (!z || z.phase !== "frage" || z.pausiert) return;
+  const jetzt = Date.now(); z.pausiert = { verbraucht: Math.max(0, jetzt - z.seit) }; ktUhrStopp(); clearTimeout(KTP.uhr); clearTimeout(KTP.pcUhr);
+}
+function ktPcFortsetzen() { // nochmal 3-2-1 Lesezeit, dann die restliche Zeit
+  const z = KTP.z; if (z?.pausiert) { z.lesenBis = Date.now() + KT_LESEN_MS; z.seit = z.lesenBis - z.pausiert.verbraucht; delete z.pausiert; }
+  ktPcZeigen();
+}
 function ktPcWeiter() {
   const z = KTP.z; if (!z || z.phase !== "aufl") return;
   z.i++;
   if (z.i >= 12) { z.phase = "ende"; const [a, b] = z.punkte; if (a > b) KTP.stand.ich++; else if (b > a) KTP.stand.pc++; else KTP.stand.remis++; ktpMerken(); }
-  else { const st = KT_STAERKE[KTP.staerke] || KT_STAERKE.mittel; z.phase = "frage"; z.seit = Date.now() + KT_LESEN_MS; z.perm = ktMischen([0, 1, 2, 3]); z.aufl = null; z.pcZeit = st.von + Math.random() * (st.bis - st.von); }
+  else { const st = KT_STAERKE[KTP.staerke] || KT_STAERKE.mittel; z.phase = "frage"; z.seit = z.lesenBis = Date.now() + KT_LESEN_MS; z.perm = ktMischen([0, 1, 2, 3]); z.aufl = null; z.pcZeit = st.von + Math.random() * (st.bis - st.von); }
   ktPcZeigen();
 }
 const ktPcStaerke = (w) => { KTP.staerke = KT_STAERKE[w] ? w : "mittel"; ktpMerken(); ktPcZeigen(); };
 async function ktPcStandWeg() { if (!(await frage("Spielstand Küchenterror auf 0 : 0 zurücksetzen?", { ja: "🗑️ Zurücksetzen", nein: "Abbrechen" }))) return; KTP.stand = { ich: 0, pc: 0, remis: 0 }; ktpMerken(); ktPcZeigen(); }
 // ----- gegen Mitglieder -----
-let KTM = { id: null, frage: null, aufl: null, uhr: null, sendet: false };
+let KTM = { id: null, frage: null, aufl: null, uhr: null, sendet: false, pause: false };
 function ktSpielZeigen(g) {
-  if (KTM.id !== g.id) { clearTimeout(KTM.uhr); KTM = { id: g.id, frage: null, aufl: null, uhr: null, sendet: false }; }
+  if (KTM.id !== g.id) { clearTimeout(KTM.uhr); KTM = { id: g.id, frage: null, aufl: null, uhr: null, sendet: false, pause: false }; }
+  setTimeout(spPauseZeigen, 0); // 2.18.0
   const q = g.quiz, er = esc(g.gegner.vorname);
   if (!q) { $("spInhalt").innerHTML = '<div class="karte hinweis">Spielstand fehlt – bitte „‹“ und neu öffnen.</div>'; return; }
   const zurueck = `<div class="zeile" style="border:none;padding:0"><button class="knopf klein" onclick="ktMgUebersicht()">‹ Übersicht</button><b style="flex:1;text-align:right">🔪 Du gegen ${er}<br><small class="hinweis">⏱ ${(q.limitMs || KT_MS) / 1000} Sekunden je Frage</small></b></div>`;
@@ -5809,7 +5870,7 @@ function ktSpielZeigen(g) {
 function ktMgUebersicht() { clearTimeout(KTM.uhr); ktUhrStopp(); KTM.frage = null; KTM.aufl = null; SP.offen = null; spZeigen(); spLaden(true); }
 async function ktMgFrage() {
   const g = SP.offen; if (!g?.ichDran || KTM.sendet) return;
-  KTM.sendet = true;
+  KTM.pause = false; KTM.sendet = true;
   try { const r = await api("spiel_zug", { id: g.id, zug: { kt: "frage" }, zuege: g.zuege }, { warten: true }); SP.offen = r.spiel;
     if (r.verpasst) melde("⏰ Eine Frage war schon abgelaufen – 0 Punkte");
     if (r.frage) { KTM.frage = { ...r.frage, empfangen: Date.now() }; KTM.aufl = null; clearTimeout(KTM.uhr); ktUhrStart(r.frage.lesenMs || 0, r.frage.restMs, r.frage.limitMs, () => ktMgAntwort(-1)); } }
@@ -5828,7 +5889,7 @@ async function ktMgAntwort(wahl) {
   finally { KTM.sendet = false; }
   if (aktuelleAnsicht === "spiele" && SP.offen) spZeigen();
 }
-function ktMgWeiter() { const g = SP.offen; KTM.aufl = null; if (g?.ichDran && g.quiz?.offenBeiMir > 0) return ktMgFrage(); spZeigen(); }
+function ktMgWeiter() { const g = SP.offen; KTM.aufl = null; if (!KTM.pause && g?.ichDran && g.quiz?.offenBeiMir > 0) return ktMgFrage(); spZeigen(); } // 2.18.0: bei Pause zur Übersicht
 
 // ---------- KC-CLUB-SPIEL-TERMIN (2.9.1, Wunsch Hansi): zu einer Partie einen Termin vereinbaren ----------
 // Nutzt die vorhandene Terminanfrage (steht dann bei beiden im Kalender und im Kalender-Abo, Vortags-Erinnerung). Dazu eine
@@ -7937,6 +7998,7 @@ let ZEIGE_WARTET = null;
 function zeige(v, ausHistorie) {
   if (v !== "chat" && CV.an) chatVorlesenStopp(true); /* KC-CLUB-CHAT-VORLESEN: nur im offenen Chat */
   document.body.classList.remove("kt-aktiv"); /* 2.17.1: Fußleiste nach dem Quiz wieder zeigen */
+  if (v !== "spiele") $("spPause")?.classList.add("versteckt"); /* 2.18.0 */
   if (!ICH && !ZEIGE_OHNE_ICH.has(v)) {
     if (!ZEIGE_WARTET) melde("⏳ Einen Moment – die App meldet dich noch an …");
     ZEIGE_WARTET = { v, ausHistorie };

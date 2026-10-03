@@ -3401,7 +3401,7 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
 {
   assert.ok(/function ktUhrStart\(lesenMs, restMs, lim, beiEnde\)/.test(html) && /KTU\.t = setInterval\(tick, 100\)/.test(html) && /const rest = Math\.max\(0, KTU\.ende - now\)/.test(html), "Wächter rechnet mit fester Endzeit");
   assert.ok(!/animation-name: ktZeit/.test(html) && !/@keyframes ktZeit/.test(html), "keine Balken-Animation mehr");
-  assert.ok(/const KT_LESEN_MS = 3000;/.test(html) && /if \(!vonUhr && Date\.now\(\) < z\.seit\) return;/.test(html) && /if \(wahl >= 0 && ktLiest\(\)\) return;/.test(html), "App: Lesezeit, kein Antippen davor");
+  assert.ok(/const KT_LESEN_MS = 3000;/.test(html) && /if \(!vonUhr && Date\.now\(\) < \(z\.lesenBis \|\| z\.seit\)\) return;/.test(html) && /if \(wahl >= 0 && ktLiest\(\)\) return;/.test(html), "App: Lesezeit, kein Antippen davor");
   assert.ok(/const KT_LESEN_MS = 3000;/.test(server) && /seit: Date\.now\(\) \+ KT_LESEN_MS/.test(server) && /lesenMs: Math\.max\(0, q\.offen\.seit - Date\.now\(\)\)/.test(server), "Server: Uhr startet nach der Lesezeit");
 }
 // 312. 2.17.1: Antworten frei antippbar (KC-CLUB-KUECHENTERROR-FREI)
@@ -3421,6 +3421,13 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   const skripte = [...html.matchAll(/<script(?: [^>]*)?>([\s\S]*?)<\/script>/g)].map((m) => m[1]).join("\n") + lies("dp2-club/lader.js") + lies("sw.js");
   for (const [re, was] of [[/\|\|=|\?\?=|&&=/, "logische Zuweisung (||= ??= &&=)"], [/\.at\(-?\d/, ".at()"], [/structuredClone\(/, "structuredClone"], [/[^\w"'.]\d+_\d{3}\b/, "Zahl mit _"]])
     assert.ok(!re.test(skripte), `Zu neue Schreibweise im App-Code: ${was} – ältere Handys starten dann gar nicht`);
+}
+// 315. 2.18.0: Pause / Weiter in jedem Spiel (KC-CLUB-SPIELE-PAUSE)
+{
+  assert.ok(/id="spPause"/.test(html) && /function spPausieren\(\)/.test(html) && /function spWeiter\(\)/.test(html) && /#v-spiele\.pausiert #spInhalt \{ filter: blur/.test(html), "Leiste + verschwommen");
+  for (const f of ["spPcComputer", "schPcComputerStart", "bskPcComputer"]) assert.ok(html.includes(`spPauseHalt(${f})`), "Computer wartet in der Pause: " + f);
+  assert.ok(/function ktPcPausieren\(\)/.test(html) && /z\.seit = z\.lesenBis - z\.pausiert\.verbraucht/.test(html) && /if \(SP\.pause\) return ktUhrStopp\(\);/.test(html), "Quiz-Uhr hält an, Restzeit bleibt");
+  assert.ok(/if \(!KTM\.pause && g\?\.ichDran/.test(html), "gegen Mitglieder: Pause nach der Frage");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

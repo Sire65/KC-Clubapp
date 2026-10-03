@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.18.0 – 2026-10-03 – ⏸ Pause / ▶ Weiter in jedem Spiel (Wunsch Hansi)
+- KC-CLUB-SPIELE-PAUSE: unten ein Umschalter „⏸ Pause“ ↔ „▶ Weiter“ in jedem Spiel gegen den Computer (Tic-Tac-Toe, Schach,
+  Bauernskat, Küchenterror). Pause: Spiel steht still – der Computer zieht nicht (sein Zug wird nachgeholt), die Küchenterror-Uhr hält
+  an (verbrauchte Zeit gemerkt), Brett bzw. Frage sind verschwommen (nichts ablesen, nichts antippen), Vorlesen verstummt.
+  Weiter: Küchenterror gibt nochmal 3-2-1 Lesezeit, dann läuft die Restzeit weiter (geprüft: 8 s vor → 8 s nach der Pause).
+- Küchenterror gegen Mitglieder: der Server misst die Zeit, darum „⏸ Pause nach dieser Frage“ – danach geht es erst mit ▶ Weiter
+  (oder „Los geht’s“) weiter. Brettspiele gegen Mitglieder warten ohnehin, dort keine Leiste. Spielwechsel/Verlassen hebt die Pause auf;
+  eine angehaltene Küchenterror-Frage geht beim Zurückkommen mit Lesezeit weiter.
+
 ## 2.17.3 – 2026-10-03 – App startet wieder auf älteren Browsern (Fund Hansi: „App startet nicht bei einem Mitglied“)
 - KC-CLUB-ALTGERAETE: Protokoll (anonym, 21:02 UTC): „SyntaxError: Unexpected token '='“, Zeile 6240, „App-Programm ist gar nicht
   angelaufen“ – Gerät meldet sich als Chrome 116/Linux, kann aber keine logischen Zuweisungen (||=, ES2021). Ein einziger solcher
