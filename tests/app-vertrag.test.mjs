@@ -1316,7 +1316,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   let aufrufe = 0; const antworten = [];
   const setze = (liste) => { antworten.length = 0; antworten.push(...liste); aufrufe = 0; };
   const fetchT = async () => { aufrufe++; const a = antworten.shift(); return { status: a.s, ok: a.s < 300, json: async () => { if (a.j === undefined) throw 0; return a.j; } }; };
-  const run = (liste) => { setze(liste); return new Function("fetch", "performance", "vbStart", "vbEnde", "API", "KEY", "APP_VERSION", "$", "setTimeout", code + "; REGION_AUS_BIS = " + (globalThis.__mitRegion ? 0 : 1e15) + "; return apiRoh('init');")(fetchT, { now: () => 0 }, () => {}, () => {}, "x", "k", "v", () => ({ classList: { add() {}, remove() {} } }), (f) => f()); };
+  const run = (liste) => { setze(liste); return new Function("fetch", "performance", "vbStart", "vbEnde", "API", "KEY", "APP_VERSION", "$", "setTimeout", "notErnstfall", code + "; REGION_AUS_BIS = " + (globalThis.__mitRegion ? 0 : 1e15) + "; return apiRoh('init');")(fetchT, { now: () => 0 }, () => {}, () => {}, "x", "k", "v", () => ({ classList: { add() {}, remove() {} } }), (f) => f(), () => false); }; // 1.54.1: keine Ernstfall-Simulation
   const ok1 = await run([{ s: 503 }, { s: 200, j: { ok: 1 } }]);
   assert.ok(ok1.ok === 1 && aufrufe === 2, "503 ohne Antwort wird nicht wiederholt");
   await run([{ s: 503 }, { s: 503 }]).then(() => assert.fail("zweimal 503 muss Fehler sein"), (e) => assert.ok(/kurz nicht erreichbar/.test(e.message) && aufrufe === 2, "höchstens ein Wiederholversuch / Meldung"));
@@ -2483,6 +2483,17 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.match(html, /setTimeout\(notNachtragen, 1500\); \/\/ KC-CLUB-NOTBETRIEB-STUFE2/, "nach Rückkehr nachtragen");
   assert.match(html, /\$\{w > 1 \? "warten" : "wartet"\}/, "Zahl im Band");
   assert.ok(lies("docs/NOTBETRIEB.md").includes("Stufe 2"), "Doku");
+}
+
+// 223. 1.54.1: Ernstfall-Simulation nur auf diesem Gerät (KC-CLUB-NOTBETRIEB-ERNSTFALL)
+{
+  const roh = html.slice(html.indexOf("async function apiRoh("), html.indexOf("async function apiRoh(") + 600);
+  assert.match(roh, /if \(notErnstfall\(\)\) \{[^\n]*throw Object\.assign\(new Error\("Keine Verbindung zum Server – bitte gleich nochmal versuchen\."\), \{ leitung: true \}\); \}/, "simuliert genau den Verbindungsfehler");
+  assert.match(html, /id="notErnstfallKnopf" onclick="notErnstfallSetzen\(!notErnstfall\(\)\)"/, "Admin-Knopf");
+  const f0 = html.indexOf("function notErnstfallSetzen("), f = html.slice(f0, html.indexOf("\n}\n", f0));
+  assert.doesNotMatch(f, /notEinschalten\(/, "kein Umschalten von Hand – die App muss es selbst erkennen");
+  assert.match(html, /if \(FP_LEISE\.has\(action\) \|\| notErnstfall\(\)\) return;/, "Simulation nicht im Fehlerprotokoll");
+  assert.match(html, /notErnstfall\(\) \? ` <button onclick="notErnstfallSetzen\(false\)">Simulation beenden<\/button>`/, "Beenden im Band");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

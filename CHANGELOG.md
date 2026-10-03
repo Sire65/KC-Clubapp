@@ -1,5 +1,12 @@
 # Änderungen
 
+## 1.54.1 – 2026-10-03
+- KC-CLUB-NOTBETRIEB-ERNSTFALL (Wunsch Hansi): Admin-Knopf „🧯 Ernstfall simulieren (Supabase weg, nur dieses Gerät)“. Anders als
+  die Probe schaltet nichts von Hand um: Auf diesem Gerät scheitert jede Anfrage an den Club-Server wie bei einem echten
+  Ausfall; Erkennen, automatisches Umschalten, Rückkehr (2 erfolgreiche Antworten) und Nachtragen laufen wie im Ernstfall.
+  Band „Notbetrieb (Ernstfall-Simulation)“ mit „Simulation beenden“; simulierte Fehler landen nicht im Fehlerprotokoll.
+  Ersatz-Server: verständlichere Meldung bei neuem Chat im Notbetrieb.
+
 ## 1.54.0 – 2026-10-02
 - KC-CLUB-NOTBETRIEB-STUFE2 (Wunsch Hansi): Im Notbetrieb gehen jetzt auch Nachricht in einem bestehenden Chat (Text, ❗),
   Zu-/Absage, Status und Pinnwand-Zettel. Der Ersatz-Server legt sie in seinen Eingang (nichts doppelt, max. 40 je Mitglied);

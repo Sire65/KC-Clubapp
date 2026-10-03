@@ -1822,6 +1822,8 @@
     <button class="knopf" onclick="fpAdmin()">🩺 Fehlerprotokoll &amp; Startprobleme der Mitglieder</button>
     <button class="knopf" onclick="nzAdmin()">📊 Nutzung der App – ohne Namen</button>
     <button class="knopf" id="notProbeKnopf" onclick="notProbeSetzen(!notProbe())">🧪 Notbetrieb-Probe auf diesem Gerät</button>
+    <!-- KC-CLUB-NOTBETRIEB-ERNSTFALL (1.54.1, Wunsch Hansi): Ausfall nur auf diesem Gerät nachstellen – die App muss selbst umschalten -->
+    <button class="knopf" id="notErnstfallKnopf" onclick="notErnstfallSetzen(!notErnstfall())">🧯 Ernstfall simulieren (Supabase weg, nur dieses Gerät)</button>
     <details class="karte innen" data-klappe="admin_pinnwand" id="adminPinnwand">
       <summary>📌 Pinnwand: Erinnerung an alte Zettel</summary>
       <p class="hinweis" style="margin-top:0">Beim Öffnen der App fragt sie: „Dein Post-it vom … hängt noch an der Pinnwand. Möchtest du es abnehmen?“ – gilt für alle Mitglieder.</p>
@@ -2114,7 +2116,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.54.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.54.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -4084,7 +4086,7 @@ function notBandZeigen() {
   const st = NOT.stand ? new Date(NOT.stand) : null, heute = st && st.toDateString() === new Date().toDateString();
   const standText = st ? `Stand von ${heute ? "" : fKurz.format(st) + ", "}${fZeit.format(st)} Uhr` : "Stand unbekannt";
   const w = notWartet().length; // KC-CLUB-NOTBETRIEB-STUFE2: was hier geschrieben wird, wartet und wird später übertragen
-  el.innerHTML = `⚠️ <b>${NOT.grund === "probe" ? "Notbetrieb-Probe" : "Notbetrieb"}</b> – ${esc(standText)}. Ansehen geht. Nachrichten, Zu-/Absagen, Status und Zettel werden später übertragen. Fotos und Push gerade nicht.${w ? ` <b>📨 ${w} ${w > 1 ? "warten" : "wartet"}</b>` : ""}${NOT.grund === "probe" ? ` <button onclick="notProbeSetzen(false)">Probe beenden</button>` : ""}`;
+  el.innerHTML = `⚠️ <b>${NOT.grund === "probe" ? "Notbetrieb-Probe" : notErnstfall() ? "Notbetrieb (Ernstfall-Simulation)" : "Notbetrieb"}</b> – ${esc(standText)}. Ansehen geht. Nachrichten, Zu-/Absagen, Status und Zettel werden später übertragen. Fotos und Push gerade nicht.${w ? ` <b>📨 ${w} ${w > 1 ? "warten" : "wartet"}</b>` : ""}${NOT.grund === "probe" ? ` <button onclick="notProbeSetzen(false)">Probe beenden</button>` : notErnstfall() ? ` <button onclick="notErnstfallSetzen(false)">Simulation beenden</button>` : ""}`;
   notBandHoehe(el);
 }
 // Meldungen (rot/dunkel) und SOS-Balken rutschen unter das orange Band statt davon verdeckt zu werden
@@ -4101,7 +4103,21 @@ async function notProbeSetzen(an) {
   else { try { localStorage.removeItem(NOT_PROBE); } catch {} melde("Der Ersatz-Server ist noch nicht eingerichtet oder nicht erreichbar.", true); }
   notProbeZeigen();
 }
-function notProbeZeigen() { const b = $("notProbeKnopf"); if (b) b.textContent = notProbe() ? "🧪 Notbetrieb-Probe beenden" : "🧪 Notbetrieb-Probe auf diesem Gerät"; }
+function notProbeZeigen() { const b = $("notProbeKnopf"); if (b) b.textContent = notProbe() ? "🧪 Notbetrieb-Probe beenden" : "🧪 Notbetrieb-Probe auf diesem Gerät"; notErnstfallZeigen(); }
+// KC-CLUB-NOTBETRIEB-ERNSTFALL (1.54.1, Wunsch Hansi): anders als die Probe schaltet hier NICHTS von Hand um. Auf diesem Gerät
+// ist der Club-Server nur „weg“ (jede Anfrage scheitert wie bei einem echten Ausfall) – erkennen, umschalten, zurückkehren und
+// nachtragen macht die App genau wie im Ernstfall selbst. Die anderen Mitglieder merken nichts.
+const NOT_ERNSTFALL = "kc_club_noternstfall";
+const notErnstfall = () => { try { return localStorage.getItem(NOT_ERNSTFALL) === "1"; } catch { return false; } };
+function notErnstfallZeigen() { const b = $("notErnstfallKnopf"); if (b) b.textContent = notErnstfall() ? "🧯 Ernstfall-Simulation beenden (Supabase wieder da)" : "🧯 Ernstfall simulieren (Supabase weg, nur dieses Gerät)"; }
+function notErnstfallSetzen(an) {
+  try { an ? localStorage.setItem(NOT_ERNSTFALL, "1") : localStorage.removeItem(NOT_ERNSTFALL); } catch {}
+  notErnstfallZeigen(); if (NOT.an) notBandZeigen();
+  if (an) { melde("🧯 Simulation: Supabase ist auf diesem Gerät jetzt „weg“ – die App muss gleich von selbst umschalten"); NOT.fehler = 0; neuLaden(true); return; }
+  melde("🧯 Simulation beendet: Supabase ist wieder da – die App prüft und schaltet von selbst zurück");
+  // wie im Ernstfall: zwei erfolgreiche Antworten nötig – hier gleich prüfen statt bis zu 2 Min. zu warten
+  if (NOT.an) { notZurueckPruefen(); setTimeout(notZurueckPruefen, 4000); }
+}
 // beim Start: von Hand eingeschaltet (notbetrieb.json „an“) oder Probe auf diesem Gerät?
 (async () => {
   const k = await notKonfig(true);
@@ -4125,6 +4141,8 @@ const SERVER_REGION = "eu-west-2", REGION_PAUSE_MS = 10 * 60 * 1000;
 let REGION_AUS_BIS = 0;
 const apiAdresse = () => (Date.now() < REGION_AUS_BIS ? API : `${API}?forceFunctionRegion=${SERVER_REGION}`);
 async function apiRoh(action, daten = {}, zweiterVersuch = false) {
+  // KC-CLUB-NOTBETRIEB-ERNSTFALL: simulierter Ausfall – genau der Fehler, den ein unerreichbarer Club-Server liefert
+  if (notErnstfall()) { vbStart(); await new Promise((ok) => setTimeout(ok, 300)); vbEnde(false, 0, "Server nicht erreichbar (Simulation)"); throw Object.assign(new Error("Keine Verbindung zum Server – bitte gleich nochmal versuchen."), { leitung: true }); }
   // KC-CLUB-VERBINDUNG: jede Anfrage zählt für die LEDs (Datenverkehr + Status)
   const t0 = performance.now(); vbStart();
   let r;
@@ -11881,7 +11899,7 @@ async function nzAdmin(tage) {
 const fpNeu = (art, d) => { try { window.KCFP?.neu(art, d); } catch {} };
 const FP_LEISE = new Set(["nutzung_melden", "lebenszeichen", "tippen", "anruf_status", "ping", "online", "standort_update", "fehler_melden", "diagnose"]);
 function fpApiFehler(action, e) {
-  if (FP_LEISE.has(action)) return;
+  if (FP_LEISE.has(action) || notErnstfall()) return; // KC-CLUB-NOTBETRIEB-ERNSTFALL: Simulation landet nicht im Fehlerprotokoll
   fpNeu(navigator.onLine ? "api" : "offline", { aktion: action, text: String(e?.message || e) });
 }
 const FP_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
