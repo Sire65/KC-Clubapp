@@ -3290,6 +3290,17 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   const { schComputerZug } = new Function("Chess", code + "; return { schComputerZug };")(Chess);
   assert.equal(schComputerZug(new Chess("6k1/5ppp/8/8/8/8/5PPP/3R2K1 w - - 0 1"), "mittel").san, "Rd8#", "Computer findet Matt in 1 nicht");
 }
+// 300. 2.9.0: Bauernskat gegen den Computer (KC-CLUB-BAUERNSKAT)
+{
+  const code = html.slice(html.indexOf("const BSK_FARBEN"), html.indexOf("// ----- Ansicht (gegen den Computer) -----"));
+  const E = new Function(code + "; return { bskNeu, bskErlaubt, bskSpielen, bskStichAbschliessen, bskErgebnis, bskZugComputer, bskAnsageWahl, bskSichtbarAnsage, bskStichGewinner };")();
+  assert.ok(E.bskStichGewinner([{ s: 0, k: "he-A" }, { s: 1, k: "ka-B" }], "kr") === 1 && E.bskStichGewinner([{ s: 0, k: "pi-B" }, { s: 1, k: "kr-B" }], "grand") === 1
+    && E.bskStichGewinner([{ s: 0, k: "he-7" }, { s: 1, k: "pi-A" }], "kr") === 0 && E.bskStichGewinner([{ s: 0, k: "ka-B" }, { s: 1, k: "kr-A" }], "kr") === 0, "Stichregeln");
+  for (let n = 0; n < 30; n++) { const z = E.bskNeu(n % 2); z.trumpf = E.bskAnsageWahl(E.bskSichtbarAnsage(z, z.vorhand)); z.phase = "spiel"; z.amZug = z.vorhand; let i = 0;
+    while (z.phase !== "ende") { const s = z.amZug, k = E.bskZugComputer(z, s, n % 3 ? "mittel" : "leicht"); assert.ok(E.bskErlaubt(z, s).includes(k), "unerlaubte Karte"); if (E.bskSpielen(z, s, k)) E.bskStichAbschliessen(z); assert.ok(++i < 40, "Schleife"); }
+    const e = E.bskErgebnis(z); assert.equal(e.augen[0] + e.augen[1], 120, "Augen ≠ 120"); assert.equal(e.gewinner, e.augen[e.ansager] >= 61 ? e.ansager : 1 - e.ansager, "61-Regel"); }
+  assert.ok(/onclick="spArtWahl\('bsk'\)"/.test(html) && /function bskPcZeigen\(\)/.test(html), "Bauernskat in der App");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

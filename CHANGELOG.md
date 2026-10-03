@@ -1,5 +1,15 @@
 # Änderungen
 
+## 2.9.0 – 2026-10-03 – 🃏 Bauernskat – Köcheclub Edition gegen den Computer (Wunsch Hansi, Stufe 3)
+- KC-CLUB-BAUERNSKAT: dritte Spielwahl im Bereich „🎲 Spiele“. Regeln nach Hansi: 2 Spieler, 32 Karten, je 8 Handkarten +
+  4 Bauern (offen auf verdeckt); Vorhand sieht offene Bauern + erste 4 Handkarten und sagt Trumpf an (Farbe oder Grand = nur
+  Buben); Buben ♣ ♠ ♥ ♦ höchste Trümpfe, dann A 10 K D 9 8 7; Bedienpflicht, sonst stechen oder abwerfen; gespielter Bauer →
+  Karte darunter wird aufgedeckt; Ansager braucht 61 Augen (60 : 60 gewinnt der Gegner). Vorhand wechselt jedes Spiel.
+- Gegen den Computer (nur auf dem Gerät): Leicht (oft zufällig) / Mittel (Regeln + Faustregeln) / Schwer (jede Karte mit
+  24 zufälligen Verteilungen der unbekannten Karten zu Ende gespielt). Große Karten, ♥ ♦ rot, Trümpfe goldener Rand, spielbare
+  Karten weiß mit grünem Rand, andere grau; Stich in der Mitte, Augen beider Seiten, Spielstand + Zurücksetzen, Kurzregeln.
+  Laufendes Spiel bleibt nach dem Schließen erhalten. Gegen Mitglieder folgt in der nächsten Version.
+
 ## 2.8.0 – 2026-10-03 – ♟️ Schach – Köcheclub Edition (Wunsch Hansi, Stufe 2 der Spiele)
 - KC-CLUB-SCHACH: Spielauswahl oben im Bereich „🎲 Spiele“ (❌⭕ Tic-Tac-Toe / ♟️ Schach). Regeln, Schach/Matt/Patt/Remis, Rochade,
   en passant, Umwandlung über chess.js 1.4.0 (BSD-2-Clause, lokal in lib/chess und im Funktionsordner – keine fremden Server,

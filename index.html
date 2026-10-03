@@ -220,7 +220,27 @@
   .sch-geschlagen { display: flex; justify-content: space-between; gap: 8px; min-height: 1.6em; margin: 4px 0 0; } .sch-geschlagen .sch-fig { font-size: 1.15rem; }
   .sch-umw { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; } .sch-umw button { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 4px; border: 2px solid var(--linie); border-radius: 14px; background: #f3e5c8; cursor: pointer; font: inherit; }
   .sch-umw .sch-fig { font-size: 2.4rem; } .sch-verlauf { margin: 6px 0; } .sch-verlauf summary { cursor: pointer; font-weight: 800; } .sch-verlauf div { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: .9rem; margin-top: 4px; }
-  #spArt { margin-bottom: 6px; }
+  #spArt { margin-bottom: 6px; grid-template-columns: 1fr 1fr 1fr; } #spArt button { padding: 8px 4px; font-size: .92rem; }
+  /* KC-CLUB-BAUERNSKAT (2.9.0): Karten groß und klar (♥ ♦ rot, ♣ ♠ schwarz), Trümpfe mit goldenem Rand */
+  .bsk { display: flex; flex-direction: column; gap: 8px; }
+  .bsk-kopf { display: flex; justify-content: space-between; font-weight: 700; font-size: .92rem; }
+  .bsk-tisch, .bsk-hand { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .bsk-stapel { position: relative; display: flex; justify-content: center; min-height: 92px; }
+  .bsk-stapel.mit-unten { padding-bottom: 14px; } .bsk-stapel .bsk-karte.rueck.klein { position: absolute; bottom: 0; left: 50%; max-width: 64px; width: 88%; transform: translateX(-42%) rotate(5deg); }
+  .bsk-karte.blass { background: #e9e4da; color: #a39d92 !important; border-color: #d8d2c6; box-shadow: none; } /* nicht durchsichtig – sonst scheint der verdeckte Bauer durch */
+  .bsk-stapel > :last-child { position: relative; z-index: 1; }
+  .bsk-karte { width: 100%; max-width: 74px; aspect-ratio: 5 / 7; border-radius: 9px; border: 2px solid #c9c2b5; background: #fffdf8; color: #1b1b1b; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font: inherit; padding: 0; box-shadow: 0 2px 4px rgba(0,0,0,.18); }
+  .bsk-karte b { font-size: 1.35rem; line-height: 1; } .bsk-karte .bsk-sym { font-size: 1.7rem; line-height: 1; font-family: "DejaVu Sans", "Segoe UI Symbol", sans-serif; }
+  .bsk-karte.rot { color: #c0392b; } .bsk-karte.trumpf { box-shadow: 0 0 0 3px #d4ac0d, 0 2px 4px rgba(0,0,0,.18); }
+  button.bsk-karte { cursor: pointer; transform: translateY(-4px); border-color: #1e8449; } button.bsk-karte:active { transform: translateY(0) scale(.96); }
+  .bsk-karte.rueck { background: repeating-linear-gradient(45deg, var(--rot) 0 6px, var(--rot2, #8e1b2a) 6px 12px); border-color: #fff; }
+  .bsk-karte.klein { max-width: 60px; } .bsk-leer { width: 100%; max-width: 74px; aspect-ratio: 5 / 7; border: 2px dashed var(--linie); border-radius: 9px; }
+  .bsk-mitte { display: grid; grid-template-columns: 90px 1fr; gap: 8px; align-items: center; padding: 6px; border-radius: 14px; background: #2e6b40; color: #fff; min-height: 110px; }
+  .bsk-trumpf { text-align: center; font-size: .85rem; line-height: 1.25; } .bsk-trumpf b { font-size: 1.05rem; }
+  .bsk-stich { display: flex; justify-content: center; gap: 10px; } .bsk-stich .bsk-karte { width: 64px; } .bsk-stich-karte.er { transform: rotate(-5deg); } .bsk-stich-karte.ich { transform: rotate(5deg) translateY(6px); }
+  .bsk-ansage { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .bsk-ansage button { min-height: 64px; border: 2px solid var(--linie); border-radius: 14px; background: #fffdf8; color: #1b1b1b; font-size: 1.8rem; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
+  .bsk-ansage button.rot { color: #c0392b; } .bsk-ansage small { font-size: .72rem; font-weight: 800; color: #444; }
   .sp-pokal { border: 2px solid #d4ac0d; background: linear-gradient(180deg, #fef9e7, var(--karte) 60%); }
   .sp-pokal-kopf { display: flex; align-items: center; gap: 12px; } .sp-pokal-sym { font-size: 2.6rem; line-height: 1; filter: drop-shadow(0 2px 3px rgba(0,0,0,.25)); }
   /* KC-CLUB-NUTZUNG-PERSONEN (2.6.0) */
@@ -1803,7 +1823,7 @@
   <section id="v-spiele" class="versteckt">
     <div class="kopf2"><button class="zurueck" onclick="zurueck('start')" aria-label="Zurück">‹</button><h2>🎲 Spiele</h2></div>
     <div class="sp-edition" id="spEdition"><b>Tic-Tac-Toe</b><span>Köcheclub Edition · 🍅 gegen 🥦</span></div>
-    <div class="umschalter" id="spArt"><button data-a="ttt" onclick="spArtWahl('ttt')">❌⭕ Tic-Tac-Toe</button><button data-a="schach" onclick="spArtWahl('schach')">♟️ Schach</button></div>
+    <div class="umschalter" id="spArt"><button data-a="ttt" onclick="spArtWahl('ttt')">❌⭕ Tic-Tac-Toe</button><button data-a="schach" onclick="spArtWahl('schach')">♟️ Schach</button><button data-a="bsk" onclick="spArtWahl('bsk')">🃏 Bauernskat</button></div>
     <div class="umschalter" id="spTabs"><button data-t="pc" onclick="spTab('pc')">🤖 Gegen den Computer</button><button data-t="mg" onclick="spTab('mg')">👥 Gegen Mitglieder</button></div>
     <div id="spInhalt"><div class="karte hinweis">Wird geladen …</div></div>
   </section>
@@ -2481,7 +2501,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.8.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.9.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3181,7 +3201,7 @@ const EINWEISUNG = [
   { id: "vorschlaege", sym: "🗳️", t: "Vorschläge", x: "Du hast eine Idee für den Club – ein Ausflug, ein Thema, ein Kochabend? Mit <b>„＋ Neu“</b> schlägst du sie vor, die anderen können abstimmen." },
   { id: "dienste", sym: "🗓️", t: "Dienstpläne", x: "Die Dienstpläne Woche für Woche. Mit <b>‹ Woche</b> / <b>Woche ›</b> blätterst du, <b>„Heute“</b> springt zurück." },
   { id: "aktionen", sym: "🧳", t: "Aktionen", x: "Ausflüge und besondere Aktionen des Clubs – antippen zeigt alle Einzelheiten." },
-  { id: "spiele", sym: "🎲", t: "Spiele – Köcheclub Edition", x: "Ganz oben wählst du das Spiel: <b>Tic-Tac-Toe</b> (🍅 gegen 🥦 – wer zuerst drei, bei 4 × 4 vier, in einer Reihe hat) oder <b>♟️ Schach</b> (Figur antippen, dann das Zielfeld – erlaubte Felder leuchten). Darunter wählst du <b>🤖 Gegen den Computer</b> – mit Feldgröße und Stärke – oder <b>👥 Gegen Mitglieder</b>: jemanden herausfordern, abwechselnd ziehen, du bekommst Bescheid, wenn du dran bist." },
+  { id: "spiele", sym: "🎲", t: "Spiele – Köcheclub Edition", x: "Ganz oben wählst du das Spiel: <b>Tic-Tac-Toe</b> (🍅 gegen 🥦 – wer zuerst drei, bei 4 × 4 vier, in einer Reihe hat) oder <b>♟️ Schach</b> (Figur antippen, dann das Zielfeld – erlaubte Felder leuchten) oder <b>🃏 Bauernskat</b> zu zweit (spielbare Karten sind grün umrandet). Darunter wählst du <b>🤖 Gegen den Computer</b> – mit Feldgröße und Stärke – oder <b>👥 Gegen Mitglieder</b>: jemanden herausfordern, abwechselnd ziehen, du bekommst Bescheid, wenn du dran bist." },
   { id: "buero", sym: "🗂️", t: "Büro der Clubleitung", x: "Nur für die Clubleitung: Regal mit Ordnern, Schreibtisch für die laufende Arbeit, Freud & Leid (Glückwünsche, Genesungswünsche) und Briefe. Normale Mitglieder sehen das Büro nicht.", nur: () => !!ICH?.buero },
 ];
 const einwStand = () => ({ an: true, gesehen: {}, ...(INIT?.einstellungen?.einweisung || {}) });
@@ -4707,9 +4727,9 @@ async function spracheAbspielen(knopf, id) {
 // Wer herausgefordert werden möchte, schaltet das unter ⚙️ → 🎲 Spiele ein (Standard aus).
 const SP_ZEICHEN = { x: "🍅", o: "🥦" }, SP_NAME = { x: "Tomate", o: "Brokkoli" };
 const SP_KEY = "kc_club_spiel_pc", SP_TAKT_MS = 3000;
-let SP = { tab: "pc", art: (() => { try { return localStorage.getItem("kc_club_spiel_art") === "schach" ? "schach" : "ttt"; } catch { return "ttt"; } })(), liste: null, offen: null, takt: null, laedt: false, ch: null };
+let SP = { tab: "pc", art: (() => { try { const a = localStorage.getItem("kc_club_spiel_art"); return a === "schach" || a === "bsk" ? a : "ttt"; } catch { return "ttt"; } })(), liste: null, offen: null, takt: null, laedt: false, ch: null };
 // KC-CLUB-SCHACH (2.8.0): Spielauswahl oben (gilt für „gegen den Computer“ und als Vorschlag beim Herausfordern)
-function spArtWahl(a) { SP.art = a === "schach" ? "schach" : "ttt"; try { localStorage.setItem("kc_club_spiel_art", SP.art); } catch {} if (SP.tab === "mg" && SP.offen) SP.offen = null; spZeigen(); }
+function spArtWahl(a) { SP.art = a === "schach" || a === "bsk" ? a : "ttt"; try { localStorage.setItem("kc_club_spiel_art", SP.art); } catch {} if (SP.tab === "mg" && SP.offen) SP.offen = null; spZeigen(); }
 let SPC = (() => { let w = null; try { w = JSON.parse(localStorage.getItem(SP_KEY) || "null"); } catch {}
   return { groesse: 3, staerke: "mittel", beginn: "ich", stand: { ich: 0, pc: 0, remis: 0 }, ...(w || {}), brett: null, ende: null, denkt: false }; })();
 const spcMerken = () => { try { localStorage.setItem(SP_KEY, JSON.stringify({ groesse: SPC.groesse, staerke: SPC.staerke, beginn: SPC.beginn, stand: SPC.stand })); } catch {} };
@@ -4761,9 +4781,9 @@ function spZeigen() {
   const art = SP.tab === "mg" && SP.offen ? SP.offen.spiel : SP.art;
   document.querySelectorAll("#spArt button").forEach((b) => b.classList.toggle("an", b.dataset.a === art));
   $("spArt").classList.toggle("versteckt", SP.tab === "mg" && !!SP.offen);
-  $("spEdition").innerHTML = art === "schach" ? "<b>♟️ Schach</b><span>Köcheclub Edition · Weiß gegen Schwarz</span>" : "<b>Tic-Tac-Toe</b><span>Köcheclub Edition · 🍅 gegen 🥦</span>";
+  $("spEdition").innerHTML = art === "schach" ? "<b>♟️ Schach</b><span>Köcheclub Edition · Weiß gegen Schwarz</span>" : art === "bsk" ? "<b>🃏 Bauernskat</b><span>Köcheclub Edition · zu zweit</span>" : "<b>Tic-Tac-Toe</b><span>Köcheclub Edition · 🍅 gegen 🥦</span>";
   clearInterval(SP.takt); SP.takt = null;
-  if (SP.tab === "pc") return SP.art === "schach" ? schPcZeigen() : spPcZeigen();
+  if (SP.tab === "pc") return SP.art === "schach" ? schPcZeigen() : SP.art === "bsk" ? bskPcZeigen() : spPcZeigen();
   if (SP.offen) return spSpielZeigen();
   spListeZeigen();
 }
@@ -4817,11 +4837,11 @@ function spPcZug(i) {
   spPcZeigen();
 }
 function spPcComputer() {
-  if (SPC.ende || aktuelleAnsicht !== "spiele" || SP.art === "schach") { SPC.denkt = false; return; }
+  if (SPC.ende || aktuelleAnsicht !== "spiele" || SP.art !== "ttt") { SPC.denkt = false; return; }
   const i = spComputerZug(SPC.brett, SPC.groesse, SPC.staerke);
   if (i !== undefined) SPC.brett = SPC.brett.slice(0, i) + "o" + SPC.brett.slice(i + 1);
   SPC.denkt = false; spPcEnde();
-  if (SP.tab === "pc" && SP.art !== "schach") spPcZeigen();
+  if (SP.tab === "pc" && SP.art === "ttt") spPcZeigen();
 }
 // ----- gegen Mitglieder -----
 async function spLaden(still) {
@@ -4876,7 +4896,7 @@ async function spHerausfordernBlatt(pid) {
   if (!SP.liste) await spLaden(true);
   const alle = SP.liste?.bereit || [];
   if (!alle.length) return melde("Noch niemand hat „Herausfordern erlauben“ eingeschaltet – frag doch mal im Club 🙂");
-  let gr = 3, art = SP.art;
+  let gr = 3, art = SP.art === "schach" ? "schach" : "ttt"; // Bauernskat gegen Mitglieder folgt
   const f = blattAuf("spHerausBlatt", `<div id="spHerausInhalt"></div><button class="knopf" onclick="fensterZu(document.getElementById('spHerausBlatt'))">Abbrechen</button>`);
   const zeichnen = () => {
     const b = alle.filter((m) => (m.spiele || ["ttt"]).includes(art));
@@ -5128,6 +5148,181 @@ async function schMgKlick(feld) {
   if (f && f.color === ich) { SCHM.auswahl = feld; SCHM.ziele = ch.moves({ square: feld, verbose: true }).map((m) => m.to); }
   else { SCHM.auswahl = null; SCHM.ziele = []; }
   schSpielZeigen(g);
+}
+
+// ---------- KC-CLUB-BAUERNSKAT (2.9.0, Wunsch Hansi – Stufe 3 der Spiele): Bauernskat – Köcheclub Edition ----------
+// Regeln nach Hansi: 2 Spieler, 32 Karten. Jeder: 8 Karten auf der Hand + 4 „Bauern“ auf dem Tisch (je 1 verdeckt, 1 offen darauf).
+// Vorhand sieht die offenen Bauern + die ersten 4 Handkarten und sagt Trumpf an (Farbe oder Grand = nur Buben), bekommt dann den
+// Rest und spielt aus. Buben höchste Trümpfe (♣ ♠ ♥ ♦), dann Trumpffarbe A 10 K D 9 8 7. Bedienpflicht; wer nicht bedienen kann,
+// darf stechen oder abwerfen. Wird ein offener Bauer gespielt, wird die Karte darunter sofort aufgedeckt. Ansager braucht 61 Augen
+// (60 : 60 gewinnt der Gegner). Gespielt werden kann jede Handkarte und jeder offene Bauer.
+const BSK_FARBEN = ["kr", "pi", "he", "ka"], BSK_WERTE = ["A", "10", "K", "D", "B", "9", "8", "7"];
+const BSK_SYM = { kr: "♣", pi: "♠", he: "♥", ka: "♦" }, BSK_FNAME = { kr: "Kreuz", pi: "Pik", he: "Herz", ka: "Karo", grand: "Grand" };
+const BSK_AUGEN = { A: 11, "10": 10, K: 4, D: 3, B: 2, "9": 0, "8": 0, "7": 0 };
+const bskKarte = (k) => ({ f: k.split("-")[0], w: k.split("-")[1] });
+const bskAugen = (k) => BSK_AUGEN[bskKarte(k).w];
+const bskTrumpf = (k, t) => { const c = bskKarte(k); return c.w === "B" || (t !== "grand" && c.f === t); };
+const bskFarbe = (k, t) => (bskTrumpf(k, t) ? "T" : bskKarte(k).f); // „Farbe“ zum Bedienen (Trumpf = eigene Farbe)
+function bskRang(k, t) { // größer = stärker; Trümpfe über allem
+  const c = bskKarte(k);
+  if (c.w === "B") return 200 + (3 - BSK_FARBEN.indexOf(c.f));
+  if (bskTrumpf(k, t)) return 100 + (7 - ["A", "10", "K", "D", "9", "8", "7"].indexOf(c.w));
+  return 7 - ["A", "10", "K", "D", "9", "8", "7"].indexOf(c.w);
+}
+function bskStichGewinner(stich, t) { // stich = [{s, k}, {s, k}] – erste Karte ist ausgespielt
+  const [a, b] = stich, fa = bskFarbe(a.k, t), fb = bskFarbe(b.k, t);
+  if (fb === fa) return bskRang(b.k, t) > bskRang(a.k, t) ? b.s : a.s;
+  return fb === "T" ? b.s : a.s;
+}
+function bskMischen() { const d = []; for (const f of BSK_FARBEN) for (const w of BSK_WERTE) d.push(f + "-" + w);
+  for (let i = d.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [d[i], d[j]] = [d[j], d[i]]; } return d; }
+function bskNeu(vorhand) { // Spieler 0 = ich, 1 = Gegner
+  const d = bskMischen(), sp = [0, 1].map((i) => ({ hand: d.slice(i * 16, i * 16 + 8), tisch: [0, 1, 2, 3].map((j) => ({ unten: d[i * 16 + 8 + j], oben: d[i * 16 + 12 + j] })) }));
+  return { sp, vorhand, trumpf: null, phase: "ansage", amZug: vorhand, stich: [], stiche: [[], []], letzter: null };
+}
+const bskSichtbarAnsage = (z, s) => [...z.sp[s].tisch.map((p) => p.oben).filter(Boolean), ...z.sp[s].hand.slice(0, 4)]; // was Vorhand vor der Ansage sieht
+const bskVerfuegbar = (z, s) => [...z.sp[s].hand, ...z.sp[s].tisch.map((p) => p.oben).filter(Boolean)];
+function bskErlaubt(z, s) {
+  const alle = bskVerfuegbar(z, s); if (!z.stich.length) return alle;
+  const f = bskFarbe(z.stich[0].k, z.trumpf), bed = alle.filter((k) => bskFarbe(k, z.trumpf) === f);
+  return bed.length ? bed : alle;
+}
+function bskSpielen(z, s, k) { // spielt Karte k von Spieler s; gibt true zurück, wenn der Stich voll ist
+  const p = z.sp[s], hi = p.hand.indexOf(k);
+  if (hi >= 0) p.hand.splice(hi, 1);
+  else { const t = p.tisch.find((x) => x.oben === k); if (!t) throw new Error("Karte nicht vorhanden"); t.oben = t.unten; t.unten = null; } // Bauer aufdecken
+  z.stich.push({ s, k }); z.amZug = 1 - s;
+  return z.stich.length === 2;
+}
+function bskStichAbschliessen(z) {
+  const g = bskStichGewinner(z.stich, z.trumpf); z.stiche[g].push(...z.stich.map((x) => x.k)); z.letzter = { stich: z.stich, gewinner: g }; z.stich = []; z.amZug = g;
+  if (!bskVerfuegbar(z, 0).length && !bskVerfuegbar(z, 1).length) z.phase = "ende";
+}
+const bskSumme = (l) => l.reduce((a, k) => a + bskAugen(k), 0);
+function bskErgebnis(z) { const a = z.vorhand, aug = [bskSumme(z.stiche[0]), bskSumme(z.stiche[1])]; return { augen: aug, ansager: a, gewinner: aug[a] >= 61 ? a : 1 - a }; }
+// ----- Computer -----
+function bskAnsageWahl(karten) { // wählt Trumpf nach Stärke der sichtbaren Karten
+  const buben = karten.filter((k) => bskKarte(k).w === "B").length;
+  let best = "grand", wert = buben >= 3 ? buben * 4 + karten.filter((k) => bskKarte(k).w === "A").length * 2 : -1;
+  for (const f of BSK_FARBEN) { const t = karten.filter((k) => bskTrumpf(k, f)); const w = t.length * 3 + buben * 2 + t.reduce((a, k) => a + (bskAugen(k) >= 10 ? 2 : 0), 0);
+    if (w > wert) { wert = w; best = f; } }
+  return best;
+}
+function bskZugHeuristik(z, s) {
+  const erl = bskErlaubt(z, s), t = z.trumpf, billig = (l) => [...l].sort((a, b) => bskAugen(a) - bskAugen(b) || bskRang(a, t) - bskRang(b, t))[0];
+  if (!z.stich.length) { // ausspielen: Ass in Fehlfarbe, sonst niedrige Fehlfarbe, sonst kleiner Trumpf
+    const asse = erl.filter((k) => !bskTrumpf(k, t) && bskKarte(k).w === "A"); if (asse.length) return asse[0];
+    const fehl = erl.filter((k) => !bskTrumpf(k, t) && bskAugen(k) === 0); if (fehl.length) return fehl[0];
+    const trumpf = erl.filter((k) => bskTrumpf(k, t)); if (trumpf.length >= 4) return [...trumpf].sort((a, b) => bskRang(b, t) - bskRang(a, t))[0];
+    return billig(erl);
+  }
+  const vorn = z.stich[0], gewinnt = erl.filter((k) => bskStichGewinner([vorn, { s, k }], t) === s);
+  const wertImStich = bskAugen(vorn.k);
+  if (gewinnt.length) { // mit der billigsten Siegkarte stechen, wenn es sich lohnt – oder ohne Verlust geht
+    const sieg = [...gewinnt].sort((a, b) => (bskTrumpf(a, t) - bskTrumpf(b, t)) || bskRang(a, t) - bskRang(b, t));
+    const kein = sieg.find((k) => !bskTrumpf(k, t)); if (kein) return [...gewinnt.filter((k) => !bskTrumpf(k, t))].sort((a, b) => bskAugen(b) - bskAugen(a))[0]; // in Farbe: hoch drüber, Augen mitnehmen
+    if (wertImStich >= 4) return sieg[0];
+  }
+  return billig(erl);
+}
+function bskZugComputer(z, s, staerke) {
+  const erl = bskErlaubt(z, s);
+  if (staerke === "leicht" && Math.random() < 0.5) return erl[Math.floor(Math.random() * erl.length)];
+  if (staerke !== "schwer" || erl.length === 1) return bskZugHeuristik(z, s);
+  // schwer: jede erlaubte Karte mit vielen zufälligen Verteilungen der unbekannten Karten zu Ende spielen (Heuristik) – beste Durchschnitts-Augen
+  const bekannt = new Set([...bskVerfuegbar(z, s), ...z.stiche[0], ...z.stiche[1], ...z.stich.map((x) => x.k), ...bskVerfuegbar(z, 1 - s).filter((k) => !z.sp[1 - s].hand.includes(k))]);
+  const unbekannt = []; for (const f of BSK_FARBEN) for (const w of BSK_WERTE) { const k = f + "-" + w; if (!bekannt.has(k)) unbekannt.push(k); }
+  let best = null, bestW = -Infinity;
+  for (const k of erl) {
+    let summe = 0;
+    for (let n = 0; n < 24; n++) {
+      const kopie = JSON.parse(JSON.stringify(z)), u = [...unbekannt].sort(() => Math.random() - 0.5);
+      const g = kopie.sp[1 - s]; let i = 0; g.hand = g.hand.map(() => u[i++]); g.tisch.forEach((p) => { if (p.unten) p.unten = u[i++] ?? p.unten; }); kopie.sp[s].tisch.forEach((p) => { if (p.unten) p.unten = u[i++] ?? p.unten; });
+      if (bskSpielen(kopie, s, k)) bskStichAbschliessen(kopie);
+      let schutz = 40; while (kopie.phase !== "ende" && schutz--) { const wer = kopie.amZug; if (bskSpielen(kopie, wer, bskZugHeuristik(kopie, wer))) bskStichAbschliessen(kopie); }
+      summe += bskSumme(kopie.stiche[s]) - bskSumme(kopie.stiche[1 - s]);
+    }
+    if (summe > bestW) { bestW = summe; best = k; }
+  }
+  return best;
+}
+// ----- Ansicht (gegen den Computer) -----
+const BSK_KEY = "kc_club_bauernskat_pc";
+let BSK = (() => { let w = null; try { w = JSON.parse(localStorage.getItem(BSK_KEY) || "null"); } catch {}
+  return { staerke: "mittel", stand: { ich: 0, pc: 0 }, runde: 0, z: null, ...(w || {}), denkt: false, gewertet: w?.gewertet || false }; })();
+const bskMerken = () => { try { localStorage.setItem(BSK_KEY, JSON.stringify({ staerke: BSK.staerke, stand: BSK.stand, runde: BSK.runde, z: BSK.z, gewertet: BSK.gewertet })); } catch {} };
+function bskKarteHtml(k, { klick = "", aus = false, klein = false, verdeckt = false, trumpf = null, blass = false } = {}) {
+  if (verdeckt) return `<span class="bsk-karte rueck${klein ? " klein" : ""}" aria-label="verdeckte Karte"></span>`;
+  const c = bskKarte(k), rot = c.f === "he" || c.f === "ka", tr = trumpf && bskTrumpf(k, trumpf);
+  const inhalt = `<b>${c.w}</b><span class="bsk-sym">${BSK_SYM[c.f]}</span>`;
+  return klick ? `<button class="bsk-karte${rot ? " rot" : ""}${klein ? " klein" : ""}${tr ? " trumpf" : ""}" ${aus ? "disabled" : ""} onclick="${klick}('${k}')" aria-label="${BSK_FNAME[c.f]} ${c.w}${tr ? ", Trumpf" : ""}">${inhalt}</button>`
+    : `<span class="bsk-karte${rot ? " rot" : ""}${klein ? " klein" : ""}${tr ? " trumpf" : ""}${blass ? " blass" : ""}" aria-label="${BSK_FNAME[c.f]} ${c.w}${blass ? " (jetzt nicht spielbar)" : ""}">${inhalt}</span>`;
+}
+const bskSort = (l, t) => [...l].sort((a, b) => { const fa = bskFarbe(a, t || "kr"), fb = bskFarbe(b, t || "kr"); return fa === fb ? bskRang(b, t || "kr") - bskRang(a, t || "kr") : (fa === "T" ? -1 : fb === "T" ? 1 : BSK_FARBEN.indexOf(fa) - BSK_FARBEN.indexOf(fb)); });
+function bskTischHtml(z, s, { klick = "", erlaubt = [], aus = false, ichDran = false } = {}) {
+  return `<div class="bsk-tisch">${z.sp[s].tisch.map((p) => `<div class="bsk-stapel${p.unten ? " mit-unten" : ""}">${p.unten ? bskKarteHtml(null, { verdeckt: true, klein: true }) : ""}${p.oben ? bskKarteHtml(p.oben, { klick: klick && erlaubt.includes(p.oben) ? klick : "", aus, trumpf: z.trumpf, blass: ichDran && !erlaubt.includes(p.oben) }) : '<span class="bsk-leer"></span>'}</div>`).join("")}</div>`;
+}
+function bskBrettHtml(z, ich, { klick, aus, gegnerName, ansageSicht }) {
+  const er = 1 - ich, erl = !aus && z.phase === "spiel" && z.amZug === ich ? bskErlaubt(z, ich) : [];
+  const hand = ansageSicht ? z.sp[ich].hand.slice(0, 4) : bskSort(z.sp[ich].hand, z.trumpf);
+  const aug = [bskSumme(z.stiche[0]), bskSumme(z.stiche[1])];
+  const stich = z.stich.length ? z.stich : z.letzterZeigen ? z.letzter?.stich || [] : [];
+  return `<div class="bsk">
+    <div class="bsk-kopf"><span>${esc(gegnerName)} · ${z.sp[er].hand.length} Handkarten</span><span>Augen: <b>${aug[er]}</b></span></div>
+    ${bskTischHtml(z, er)}
+    <div class="bsk-mitte"><div class="bsk-trumpf">${z.trumpf ? `Trumpf<br><b>${z.trumpf === "grand" ? "Grand<br><small>nur Buben</small>" : BSK_SYM[z.trumpf] + " " + BSK_FNAME[z.trumpf]}</b>` : "Trumpf<br><b>?</b>"}<br><small>Ansager: ${z.vorhand === ich ? "Du" : esc(gegnerName)}</small></div>
+      <div class="bsk-stich">${stich.map((x) => `<div class="bsk-stich-karte ${x.s === ich ? "ich" : "er"}">${bskKarteHtml(x.k, { trumpf: z.trumpf })}</div>`).join("") || '<span class="hinweis">Stich</span>'}</div></div>
+    ${bskTischHtml(z, ich, { klick, erlaubt: erl, aus, ichDran: erl.length > 0 })}
+    <div class="bsk-hand">${hand.map((k) => bskKarteHtml(k, { klick: erl.includes(k) ? klick : "", trumpf: z.trumpf, blass: erl.length > 0 && !erl.includes(k) })).join("")}${ansageSicht ? '<span class="bsk-karte rueck"></span>'.repeat(4) : ""}</div>
+    <div class="bsk-kopf"><span>Du</span><span>Augen: <b>${aug[ich]}</b></span></div>
+  </div>`;
+}
+function bskPcZeigen() {
+  if (!BSK.z) bskPcNeu(false);
+  if (!BSK.denkt && BSK.z && ((BSK.z.phase === "spiel" && BSK.z.amZug === 1 && BSK.z.stich.length < 2) || (BSK.z.phase === "ansage" && BSK.z.vorhand === 1)) && !bskPcZeigen.laeuft) { bskPcZeigen.laeuft = true; setTimeout(() => { bskPcZeigen.laeuft = false; bskPcComputer(); }, 700); }
+  const z = BSK.z, s = BSK.stand;
+  let status;
+  if (z.phase === "ansage") status = z.vorhand === 0 ? `<div class="sp-status sp-ichdran">Du bist Vorhand – sag Trumpf an:</div><div class="bsk-ansage">${BSK_FARBEN.map((f) => `<button class="${f === "he" || f === "ka" ? "rot" : ""}" onclick="bskPcAnsage('${f}')">${BSK_SYM[f]}<small>${BSK_FNAME[f]}</small></button>`).join("")}<button onclick="bskPcAnsage('grand')">🃏<small>Grand</small></button></div>` : `<div class="sp-status">🤖 Der Computer überlegt, was Trumpf wird …</div>`;
+  else if (z.phase === "ende") { const e = bskErgebnis(z), ich = e.gewinner === 0;
+    status = `<div class="sp-banner ${ich ? "sieg" : "niederlage"}">${ich ? "🏆 Du hast gewonnen!" : "🤖 Der Computer hat gewonnen"}<br><small>${e.augen[0]} : ${e.augen[1]} Augen · ${e.ansager === 0 ? "du hast" : "der Computer hat"} angesagt – ${e.augen[e.ansager] >= 61 ? "61 geschafft" : "unter 61 geblieben"}</small></div>`; }
+  else status = `<div class="sp-status${z.amZug === 0 ? " sp-ichdran" : ""}">${BSK.denkt || z.amZug === 1 ? "🤖 Der Computer ist dran …" : z.stich.length ? "Du bist dran – bedienen, wenn du kannst" : "Du spielst aus"}</div>`;
+  $("spInhalt").innerHTML = `<div class="karte sp-karte">
+      ${spWahl("Stärke", BSK.staerke, [["leicht", "😊 Leicht"], ["mittel", "🙂 Mittel"], ["schwer", "😎 Schwer"]], "bskPcStaerke")}
+      <div class="sp-stand"><span>Du <b>${s.ich}</b></span><span><b>${s.pc}</b> Computer</span></div>
+      ${status}
+      ${bskBrettHtml(z, 0, { klick: "bskPcKarte", aus: BSK.denkt || z.phase !== "spiel" || z.amZug !== 0, gegnerName: "Computer", ansageSicht: z.phase === "ansage" })}
+      <div class="knoepfe"><button class="knopf haupt" onclick="bskPcNeu()">↺ Neues Spiel</button><button class="knopf" onclick="bskPcStandWeg()">🗑️ Spielstand zurücksetzen</button></div>
+      <details class="sch-verlauf"><summary>📖 Regeln kurz</summary><p class="hinweis" style="margin:4px 0">Jeder hat 8 Karten auf der Hand und 4 Bauern auf dem Tisch (offen auf verdeckt). Vorhand sagt nach den ersten Karten Trumpf an – eine Farbe oder Grand (nur Buben). Buben sind die höchsten Trümpfe (♣ ♠ ♥ ♦), dann Ass, Zehn, König, Dame, 9, 8, 7. Farbe bedienen, wenn möglich – sonst stechen oder abwerfen. Wird ein Bauer gespielt, wird die Karte darunter aufgedeckt. Der Ansager braucht 61 Augen (Ass 11, Zehn 10, König 4, Dame 3, Bube 2).</p></details>
+    </div>`;
+}
+async function bskPcNeu(fragen = true) {
+  if (fragen && BSK.z && BSK.z.phase === "spiel" && (BSK.z.stiche[0].length + BSK.z.stiche[1].length) > 0 && !(await frage("Neues Spiel beginnen? Das laufende Spiel wird nicht gewertet.", { ja: "↺ Neues Spiel", nein: "Weiterspielen" }))) return;
+  BSK.runde = (BSK.runde || 0) + 1; BSK.z = bskNeu(BSK.runde % 2 ? 0 : 1); BSK.gewertet = false; BSK.denkt = false; bskMerken();
+  if (fragen !== false || aktuelleAnsicht === "spiele") bskPcZeigen();
+  if (BSK.z.vorhand === 1) setTimeout(bskPcComputer, 700);
+}
+const bskPcStaerke = (w) => { BSK.staerke = ["leicht", "mittel", "schwer"].includes(w) ? w : "mittel"; bskMerken(); bskPcZeigen(); };
+async function bskPcStandWeg() { if (!(await frage("Spielstand Bauernskat auf 0 : 0 zurücksetzen?", { ja: "🗑️ Zurücksetzen", nein: "Abbrechen" }))) return; BSK.stand = { ich: 0, pc: 0 }; bskMerken(); bskPcZeigen(); }
+function bskPcAnsage(t) { const z = BSK.z; if (z.phase !== "ansage" || z.vorhand !== 0) return; z.trumpf = t; z.phase = "spiel"; z.amZug = 0; bskMerken(); melde(`Trumpf: ${t === "grand" ? "Grand – nur Buben" : BSK_SYM[t] + " " + BSK_FNAME[t]}`); bskPcZeigen(); }
+function bskPcWerten() { const z = BSK.z; if (z.phase !== "ende" || BSK.gewertet) return; BSK.gewertet = true; const e = bskErgebnis(z); if (e.gewinner === 0) BSK.stand.ich++; else BSK.stand.pc++; try { navigator.vibrate?.(e.gewinner === 0 ? [60, 40, 60] : 40); } catch {} }
+const bskZeichnen = () => { if (aktuelleAnsicht === "spiele" && SP.tab === "pc" && SP.art === "bsk") bskPcZeigen(); }; // nur, wenn Bauernskat gerade sichtbar ist
+function bskPcNachStich(voll) {
+  const z = BSK.z;
+  if (voll) { z.letzterZeigen = true; bskMerken(); bskZeichnen(); BSK.denkt = true;
+    setTimeout(() => { bskStichAbschliessen(z); z.letzterZeigen = false; BSK.denkt = false; bskPcWerten(); bskMerken(); bskZeichnen(); if (z.phase === "spiel" && z.amZug === 1) setTimeout(bskPcComputer, 500); }, 1100);
+    return; }
+  bskMerken(); bskZeichnen(); if (z.amZug === 1) setTimeout(bskPcComputer, 600);
+}
+function bskPcKarte(k) {
+  const z = BSK.z; if (BSK.denkt || z.phase !== "spiel" || z.amZug !== 0 || !bskErlaubt(z, 0).includes(k)) return;
+  bskPcNachStich(bskSpielen(z, 0, k));
+}
+function bskPcComputer() {
+  const z = BSK.z; if (!z || aktuelleAnsicht !== "spiele" || SP.art !== "bsk") return; // weiter, sobald Bauernskat wieder offen ist (siehe bskPcZeigen)
+  if (z.phase === "ansage" && z.vorhand === 1) { z.trumpf = bskAnsageWahl(bskSichtbarAnsage(z, 1)); z.phase = "spiel"; z.amZug = 1; bskMerken();
+    melde(`🤖 Der Computer sagt an: ${z.trumpf === "grand" ? "Grand – nur Buben" : BSK_SYM[z.trumpf] + " " + BSK_FNAME[z.trumpf]}`); bskZeichnen(); setTimeout(bskPcComputer, 800); return; }
+  if (z.phase !== "spiel" || z.amZug !== 1) return;
+  bskPcNachStich(bskSpielen(z, 1, bskZugComputer(z, 1, BSK.staerke)));
 }
 
 // ---------- KC-CLUB-ERSTATTUNG (0.38.0): Fahrtkosten, vorgestreckter Einkauf, sonstige Auslagen beantragen ----------
@@ -6133,7 +6328,7 @@ const KACHELN = {
     // KC-CLUB-BUERO (1.25.0): nur für die Clubleitung (Clubsprecher, Kassenwart, Admin)
     { id: "buero", sym: "🗂️", t: "Büro", u: "Sitzung vorbereiten · Einladung · Eingang", aktion: "buStart()", nur: () => !!ICH?.buero },
     // KC-CLUB-SPIELE (2.7.0, Wunsch Hansi): Spiele – Köcheclub Edition (Zahl = Partien, in denen ich dran bin / Herausforderungen an mich)
-    { id: "spiele", sym: "🎲", t: "Spiele", u: "Tic-Tac-Toe · Schach – Köcheclub Edition", aktion: "spStart()", zahl: () => INIT?.spieleDran || 0 },
+    { id: "spiele", sym: "🎲", t: "Spiele", u: "Tic-Tac-Toe · Schach · Bauernskat", aktion: "spStart()", zahl: () => INIT?.spieleDran || 0 },
   ],
   mein: [
     { id: "status", sym: "🟢", t: "Mein Status", u: "verfügbar, Urlaub …", aktion: "statusBlatt()" },
