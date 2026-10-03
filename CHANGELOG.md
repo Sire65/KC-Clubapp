@@ -1,5 +1,19 @@
 # Änderungen
 
+## 1.90.0 – 2026-10-03
+- KC-CLUB-HILFE-PINNWAND (Wunsch Hansi: „Hilferuf an die Pinnwand hängen, von dort gezielt zum Hilfebereich“): Offene
+  Hilfe-Aufrufe hängen als grüner Aushang (grüne Nadel, „🙋 HILFE GESUCHT“, was · wann · ✋ x von y) vorne an der Pinnwand;
+  „🙋 Ansehen & zusagen“ öffnet Helfen & Leihen mit genau diesem Aufruf. Zählt nicht zu den 4 eigenen Zetteln. Die Zahl auf der
+  Pinnwand-Kachel enthält Aufrufe, auf die man noch nicht geantwortet hat. Beim Start geht – einmal je Aufruf und Gerät – die
+  Pinnwand mit dem Hinweis „🙋 Es wird Hilfe gesucht“ auf (wie bei wichtigen Zetteln). Server: `pinnwand` liefert `hilfe`
+  (aus dem vorhandenen hilfeListe-Kern, kein zweiter Kern).
+- KC-CLUB-HILFE-ABSPRACHE (Wunsch Hansi: „ich suche nicht für heute, sondern nach Terminabsprache“): Beim Hilfe-Aufruf unter
+  „Wann?“ jetzt „📅 Bestimmter Tag“ oder „🤝 Nach Absprache“. Nach Absprache: kein Tag/Zeitfenster, Aufruf bleibt 30 Tage offen
+  (vorher schließbar); Anzeige, Push, E-Mail, Zusage-Meldung und Büro-Eingang sagen „nach Absprache“. Standard bleibt „Bestimmter Tag“.
+- KC-CLUB-HILFE-TEXT (Wunsch Hansi: „Texteingabe für das Gesuch größer“): „Beschreibung“ ist jetzt ein großes Textfeld
+  (6 Zeilen), bis 1000 statt 300 Zeichen.
+- DB: Migration 20261003_kc_club_v1900_hilfe_absprache.sql (Spalte nach_absprache, Hinweis-Länge 1000; Rückweg in der Datei).
+
 ## 1.89.0 – 2026-10-03
 - KC-CLUB-NUTZUNG-BEREICHE (Wunsch Hansi „Nutzung-Übersicht anpassen, z. B. Büro fehlt“): Die Statistik „📊 Nutzung – ohne Namen“
   kennt jetzt alle Bereiche: 🗂️ Büro, 🤝 Helfen & Leihen, 📄 Dokument gelesen, 🛡️ Sicherheits-Check, 🆘 SOS, 📆 Kalender-Abo – dazu

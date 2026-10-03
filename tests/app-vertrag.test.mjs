@@ -3001,6 +3001,22 @@ assert.ok(/<h2>🗂️ Büro<\/h2><span class="bu-kopfgruss" id="buKopfGruss"><\
   assert.ok(/function buNzZaehlen\(\) \{[^\n]*k === BU\.nzSicht\) return;/.test(html) && /if \(v !== "buero" && typeof BU !== "undefined"\) BU\.nzSicht = null;/.test(html), "Büro-Fächer einmal je Öffnen zählen");
   assert.ok(/class="nz-zeile\$\{unter \? " nz-unter" : ""\}"/.test(html), "Teilbereiche eingerückt");
 }
+// 270. 1.90.0: Hilfe-Aufruf an der Pinnwand, „nach Absprache“, größeres Textfeld
+{
+  const mig = lies("supabase/migrations/20261003_kc_club_v1900_hilfe_absprache.sql");
+  assert.ok(/add column if not exists nach_absprache boolean not null default false/.test(mig) && /char_length\(notiz\) <= 1000/.test(mig) && /Rückweg/.test(mig), "Migration Absprache/Textlänge");
+  const auf = server.slice(server.indexOf('case "hilfe_aufruf": {'), server.indexOf('case "hilfe_antwort": {'));
+  assert.ok(/const datum = absprache \? tagDazu\(heute, HILFE_ABSPRACHE_TAGE\)/.test(auf) && /nach_absprache: absprache/.test(auf) && /txt\(p\.notiz, HILFE_NOTIZ_ZEICHEN\)/.test(auf) && /wann2 = hilfeWann\(h\)/.test(auf), "Server: Absprache + 1000 Zeichen");
+  assert.ok(/const hilfeWann = \(h: any\) => h\.nach_absprache \? "nach Absprache"/.test(server) && !/leihTag\(h\.datum, h\.slot\)/.test(server.slice(server.indexOf('case "hilfe_antwort": {'), server.indexOf('case "hilfe_schliessen": {'))), "Zusage-Meldung mit hilfeWann");
+  const pw = server.slice(server.indexOf('case "pinnwand": {'), server.indexOf('case "pinnwand_anheften": {'));
+  assert.ok(/hilfe: await hilfeListe\(ich\)/.test(pw) && /\.catch\(\(\) => null\)/.test(pw), "Pinnwand liefert Aufrufe aus dem vorhandenen Kern, Fehler bricht die Pinnwand nicht");
+  assert.ok(/function pwAushangHtml\(\)/.test(html) && /onclick="hilfeVonPinnwand\('\$\{a\.id\}'\)"/.test(html) && /function hilfeVonPinnwand\(id\) \{ HL\.oeffnen = id; hlStart\("helfen"\); \}/.test(html), "Aushang führt zum Aufruf");
+  assert.ok(/if \(HL\.tab === "helfen" && HL\.oeffnen\)/.test(html), "Aufruf nach Laden öffnen");
+  assert.ok(/PW\.offen = PW\.zettel\.filter\(\(z\) => !z\.vonMir && !z\.erledigt\)\.length \+ pwHilfeNeu\(\)\.length/.test(html) && /PW_GEMELDET\.has\("hilfe:" \+ a\.id\)/.test(html), "Zählen + Start-Hinweis einmal je Aufruf");
+  assert.ok(/hlSetze\('absprache', true\)">🤝 Nach Absprache/.test(html) && /absprache: false, datum: hlTag\(0\)/.test(html) && /absprache: !!f\.absprache/.test(html), "Formular Absprache, Standard bestimmter Tag");
+  assert.ok(/<textarea class="hl-notiz" rows="6" maxlength="900"/.test(html) && /\.slice\(0, 1000\)/.test(html), "großes Textfeld");
+  assert.ok(!/🗓️ \$\{esc\(hlTagName\(a\.datum\)\)\}/.test(html) && /hlWann\(a\)/.test(html), "Anzeige überall über hlWann");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

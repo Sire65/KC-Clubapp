@@ -138,6 +138,11 @@
   .zettel.wichtig::before { background: radial-gradient(circle at 35% 35%, #ffb3b3, #d50000 60%, #7f0000); width: 18px; height: 18px; margin-left: -9px; }
   .zettel .zwichtig { position: absolute; top: 4px; right: 6px; font-size: .7rem; font-weight: 900; color: #8e0f0f; }
   .zettel .ztext { white-space: pre-wrap; font-weight: 700; }
+  /* KC-CLUB-HILFE-PINNWAND (1.90.0): Hilfe-Aufruf als grüner Aushang mit grüner Nadel */
+  .zettel.aushang { background: #e3f6e6; outline: 3px solid #2e7d4f; padding-top: 24px; } .zettel.aushang .zwichtig { color: #1d5e33; position: static; display: block; margin: 0 0 4px; font-size: .74rem; }
+  .zettel.aushang::before { background: radial-gradient(circle at 35% 35%, #9be7a8, #2e7d4f 60%, #144d26); }
+  .zettel.aushang .zknoepfe button.antw { background: #2e7d4f; border-color: #2e7d4f; }
+  textarea.hl-notiz { min-height: 8.5em; font-size: 1.02rem; line-height: 1.4; }
   .zettel .zfuss { margin-top: 8px; font-size: .74rem; color: #4a3d10; }
   .zettel .zknoepfe { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
   .zettel .zknoepfe button { border: 1px solid rgba(0,0,0,.25); background: rgba(255,255,255,.55); color: #2b2410; border-radius: 10px; padding: 5px 9px; font-weight: 800; font-size: .8rem; cursor: pointer; }
@@ -2346,7 +2351,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.89.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.90.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2585,9 +2590,12 @@ const pwDreh = (id) => { let h = 0; for (const c of String(id)) h = (h * 31 + c.
 const pwOffen = (z) => z.wichtig && !z.erledigt && (!z.vonMir || z.fuer === "ich");
 function pwUebernehmen(r) {
   PW.zettel = r.zettel || []; PW.meine = r.meine || 0; PW.max = r.max || 4; PW.zeichen = r.zeichen || 200;
-  PW.offen = PW.zettel.filter((z) => !z.vonMir && !z.erledigt).length;
+  PW.hilfe = r.hilfe || null; // KC-CLUB-HILFE-PINNWAND (1.90.0): offene Hilfe-Aufrufe als Aushang
+  PW.offen = PW.zettel.filter((z) => !z.vonMir && !z.erledigt).length + pwHilfeNeu().length;
   if (aktuelleAnsicht === "start" && !kaBearb) kachelnZeigen();
 }
+// Aufrufe, auf die ich noch nicht geantwortet habe (eigene zählen nicht)
+const pwHilfeNeu = () => (PW.hilfe?.aufrufe || []).filter((a) => !a.eigen && !a.meine && a.komme.length < a.anzahl);
 // Beim Öffnen der App: offene wichtige Zettel → Pinnwand zeigen
 async function pwStart(nurZaehlen) { // nurZaehlen: Begrüßung ist offen → Pinnwand nicht zusätzlich öffnen
   // 0.58.0: Zettel, die gekommen sind, während die App zu war, gehen direkt als Post-it-Fenster auf
@@ -2597,6 +2605,11 @@ async function pwStart(nurZaehlen) { // nurZaehlen: Begrüßung ist offen → Pi
       pwFenster(n); gezeigt = true; } } catch {}
   try { const r = await api("pinnwand"); pwUebernehmen(r);
     if (!gezeigt && !nurZaehlen && PW.zettel.some(pwOffen) && aktuelleAnsicht === "start") { PW.wichtigStart = true; zeige("pinnwand"); gezeigt = true; }
+    // KC-CLUB-HILFE-PINNWAND (1.90.0): neuer Hilfe-Aufruf → beim Start einmal (je Aufruf und Gerät) die Pinnwand mit dem Aushang zeigen
+    const hNeu = pwHilfeNeu().filter((a) => !PW_GEMELDET.has("hilfe:" + a.id));
+    if (!gezeigt && !nurZaehlen && hNeu.length && aktuelleAnsicht === "start") {
+      hNeu.forEach((a) => PW_GEMELDET.add("hilfe:" + a.id)); try { localStorage.setItem("kc_club_pw_gemeldet", JSON.stringify([...PW_GEMELDET].slice(-PW_GEMELDET_MAX))); } catch {}
+      PW.hilfeStart = true; zeige("pinnwand"); gezeigt = true; }
     if (!gezeigt && !nurZaehlen && !pwErinnern() && !einstiegPruefen() && !einrichtenEinmal()) tippDesTages();
   } catch {}
 }
@@ -2698,7 +2711,8 @@ async function pwLaden() {
 }
 function pwZeigen() {
   const wichtigOffen = PW.zettel.filter(pwOffen).length;
-  $("pwHinweis").innerHTML = PW.wichtigStart && wichtigOffen ? `<div class="karte" style="border:2px solid #c62828"><b>❗ ${wichtigOffen === 1 ? "Ein wichtiger Zettel" : wichtigOffen + " wichtige Zettel"} für dich.</b> Bitte lesen und mit „✓ erl.“ abhaken.</div>` : "";
+  $("pwHinweis").innerHTML = (PW.wichtigStart && wichtigOffen ? `<div class="karte" style="border:2px solid #c62828"><b>❗ ${wichtigOffen === 1 ? "Ein wichtiger Zettel" : wichtigOffen + " wichtige Zettel"} für dich.</b> Bitte lesen und mit „✓ erl.“ abhaken.</div>` : "")
+    + (PW.hilfeStart && pwHilfeNeu().length ? `<div class="karte" style="border:2px solid #2e7d4f"><b>🙋 Es wird Hilfe gesucht.</b> Tippe auf den grünen Aushang – dort siehst du alles und kannst zusagen.</div>` : "");
   $("pwNeuKnopf").disabled = false; // bei vollen Zetteln öffnet das Formular mit „einen abnehmen“
   // KC-CLUB-PINNWAND-KNOPF (0.91.0, Betreiber: „das Schild 4/4 verdeckt den ＋-Knopf, man weiß nicht, was man da machen
   // soll“): Der Knopf heißt IMMER „＋ Zettel“; der Stand steht als kleine Zahl daneben, und bei vollen Plätzen erklärt
@@ -2708,8 +2722,9 @@ function pwZeigen() {
   $("pwNeuKnopf").title = voll ? `Du hast ${PW.max} von ${PW.max} Zetteln hängen` : `Du hast ${PW.meine} von ${PW.max} Zetteln hängen`;
   $("pwVollHinweis").innerHTML = voll ? `<div class="hinweis pwVollZeile">📌 Du hast schon <b>${PW.max} von ${PW.max}</b> Zetteln hängen. Für einen neuen erst einen eigenen abnehmen – mit <b>🗑️ abnehmen</b> auf deinem Zettel oder über „＋ Zettel“.</div>` : "";
   $("pwMaxText").textContent = PW.max;
-  if (!PW.zettel.length) return ($("pwWand").innerHTML = `<div class="leer">Noch keine Zettel an der Pinnwand.<br>Mit „＋ Zettel“ einen anheften.</div>`);
-  $("pwWand").innerHTML = PW.zettel.map((z) => {
+  const aushang = pwAushangHtml();
+  if (!PW.zettel.length) return ($("pwWand").innerHTML = aushang + (aushang ? "" : `<div class="leer">Noch keine Zettel an der Pinnwand.<br>Mit „＋ Zettel“ einen anheften.</div>`));
+  $("pwWand").innerHTML = aushang + PW.zettel.map((z) => {
     const knoepfe = [];
     if (!z.vonMir) knoepfe.push(`<button class="antw" onclick="pwAntworten('${z.id}','${esc(z.von.person_id)}','${esc(z.von.vorname).replace(/'/g, "")}')">✍️ Antworten</button>`);
     if (!z.vonMir) knoepfe.push(z.erledigt ? `<button class="erl" onclick="pwErledigt('${z.id}', true)">✓ erl. ${zeitKurz(z.erledigt)}</button>` : `<button onclick="pwErledigt('${z.id}')">✓ erl.</button>`);
@@ -2722,6 +2737,16 @@ function pwZeigen() {
       + pwKopf(z.vonMir ? ICH?.vorname || "mir" : z.von.vorname, z.erstellt_am)
       + `<div class="ztext">${esc(z.text)}</div><div class="zfuss">${esc(pwFuerText(z))}</div>`
       + leser + (knoepfe.length ? `<div class="zknoepfe">${knoepfe.join("")}</div>` : "") + `</div>`; }).join("");
+}
+// KC-CLUB-HILFE-PINNWAND (1.90.0): offene Hilfe-Aufrufe als grüner Aushang (kein Post-it, zählt nicht zu den 4 Zetteln)
+function pwAushangHtml() {
+  const h = PW.hilfe; if (!h?.aufrufe?.length) return "";
+  return h.aufrufe.map((a) => { const n = a.komme.length, voll = n >= a.anzahl, wobei = /^Wobei: (.+)/.exec(a.notiz || "")?.[1], was = wobei ? "🙋 " + wobei : (h.arten?.[a.art] || a.art);
+    return `<div class="zettel aushang" style="--dreh:${pwDreh(a.id)}deg"><span class="zwichtig">🙋 HILFE GESUCHT</span>
+      <div class="zkopf">von <b>${esc(a.eigen ? "dir" : a.von.name.split(" ")[0])}</b></div>
+      <div class="ztext">${esc(was)}</div><div class="zfuss">${esc(hlWann(a, true, h.zeitfenster))}${a.ort ? ` · 📍 ${esc(a.ort)}` : ""}</div>
+      <div class="zfuss"><b>✋ ${n} von ${a.anzahl}</b>${voll ? " – genug 🎉" : ""}${a.meine === "komme" ? " · ✔ du kommst" : ""}</div>
+      <div class="zknoepfe"><button class="antw" onclick="hilfeVonPinnwand('${a.id}')">${a.eigen || a.meine ? "🙋 Ansehen" : "🙋 Ansehen & zusagen"}</button></div></div>`; }).join("");
 }
 function pwForm(an, antwort) {
   $("pwForm").classList.toggle("versteckt", !an);
@@ -7411,7 +7436,7 @@ function buEingangPosten() {
   for (const x of (v || []).filter((y) => y.status === "offen"))
     P.push({ sym: x.art === "spende" ? "💝" : x.art === "abstimmung" ? "🗳️" : "💡", gruppe: x.art === "spende" ? "Spenden-Vorschlag" : "Offener Vorschlag", titel: x.art === "spende" ? (x.spenden?.[0]?.empfaenger || "Spende") : x.titel, unter: `von ${x.von?.name || "?"}`, auf: `vorschlagInfo('${x.id}')`, ordner: ["🗳️", "Vorschläge", "zeige('vorschlaege')"] });
   for (const a of (h?.aufrufe || []).filter((x) => x.offen && x.komme.length < x.anzahl))
-    P.push({ sym: "🙋", gruppe: "Hilfe-Aufruf – noch Helfer gesucht", titel: (h.arten?.[a.art] || a.art).replace(/^\S+\s/, ""), unter: `${hlTagName(a.datum)} · ✋ ${a.komme.length} von ${a.anzahl}`, auf: `HL.tab='helfen';hilfeInfo('${a.id}')`, ordner: ["🤝", "Helfen & Leihen", "hlStart()"] });
+    P.push({ sym: "🙋", gruppe: "Hilfe-Aufruf – noch Helfer gesucht", titel: (h.arten?.[a.art] || a.art).replace(/^\S+\s/, ""), unter: `${hlWann(a).replace(/^\S+\s/, "")} · ✋ ${a.komme.length} von ${a.anzahl}`, auf: `HL.tab='helfen';hilfeInfo('${a.id}')`, ordner: ["🤝", "Helfen & Leihen", "hlStart()"] });
   if (ar?.darf) for (const d of (ar.dokumente || []).filter((x) => x.status === "pruefung")) {
     const o = (ar.ordner || []).find((y) => y.id === d.ordner_id); if (!o || o.besitzer) continue;
     P.push({ sym: "🗄️", gruppe: `Archiv: zur Prüfung · ${o.titel || "Ordner"}`, titel: d.titel, unter: `eingereicht von ${d.von || "?"}`, auf: `arAnlage('${d.id}', true)`,
@@ -8012,6 +8037,8 @@ async function flAbschliessen(id) {
 let HL = { tab: "helfen", hilfe: null, leihen: null, form: null, angebotForm: null, edit: false };
 const hlTag = (n) => tagPlus(heuteIso(), n);
 const hlTagName = (iso) => iso === hlTag(0) ? "Heute" : iso === hlTag(1) ? "Morgen" : fTagDp.format(new Date(iso + "T12:00:00Z"));
+// KC-CLUB-HILFE-ABSPRACHE (1.90.0): „nach Absprache“ statt Tag – überall dieselbe Anzeige
+const hlWann = (a, lang, zf) => a.nachAbsprache ? "🤝 nach Absprache" : "🗓️ " + (lang ? hlTagLang(a.datum, a.slot, zf) : hlTagName(a.datum));
 const hlTagLang = (iso, slot, zf) => `${hlTagName(iso)}${iso === hlTag(0) || iso === hlTag(1) ? " " + fTagDp.format(new Date(iso + "T12:00:00Z")) : ""}${slot && zf?.[slot] ? " · " + zf[slot] : ""}`;
 function hlStart(tab) { if (tab) HL.tab = tab; HL.form = null; HL.angebotForm = null; HL.edit = false; BO.form = null; zeige("helfen"); nzZaehlen("helfen_" + HL.tab); }
 function hlTab(t) { if (t !== HL.tab) nzZaehlen("helfen_" + t); HL.tab = t; HL.form = null; HL.angebotForm = null; HL.edit = false; BO.form = null; hlZeigen(); hlLaden(); }
@@ -8021,6 +8048,7 @@ async function hlLaden() {
     hlZeigen();
     const li = document.getElementById("leihInfo"); if (li && HL.tab === "leihen") leihInfo(li.dataset.id);
     const hi = document.getElementById("hilfeInfo"); if (hi && HL.tab === "helfen") hilfeInfo(hi.dataset.id);
+    if (HL.tab === "helfen" && HL.oeffnen) { const id = HL.oeffnen; HL.oeffnen = null; hilfeInfo(id); } // KC-CLUB-HILFE-PINNWAND: Sprung vom Aushang
     const ai = document.getElementById("angebotInfo"); if (ai && HL.tab === "helfen") angebotInfo(ai.dataset.id);
     const bi = document.getElementById("boInfo"); if (bi && HL.tab === "boerse") boInfo(bi.dataset.id);
     if (HL.tab === "boerse" && BO.oeffnen) { const id = BO.oeffnen; BO.oeffnen = null; boInfo(id); } // Sprung aus Push/Mail (#boerse=…)
@@ -8063,20 +8091,21 @@ function hlNeuWahl() {
   neuWahlFenster("＋ Neu bei Helfen", [{ sym: "🙋", t: "Ich suche Hilfe", u: "Aufbau, Einkauf, Kochen … – alle bekommen Bescheid", los: () => hilfeNeu() }, { sym: "🤲", t: "Ich biete Hilfe an", u: "z. B. Club-App einrichten – als Kachel für alle", los: () => angebotNeu() }]);
 }
 // ----- 🙋 Wer kann helfen? -----
-function hilfeNeu() { HL.form = { art: "", artText: "", datum: hlTag(0), slot: "", anzahl: 2, ort: "", ortFrei: false, notiz: "", ziel: "alle" }; hlZeigen(); window.scrollTo(0, 0); }
+function hilfeNeu() { HL.form = { art: "", artText: "", absprache: false, datum: hlTag(0), slot: "", anzahl: 2, ort: "", ortFrei: false, notiz: "", ziel: "alle" }; hlZeigen(); window.scrollTo(0, 0); }
 function hilfeFormHtml() {
   const f = HL.form, d = HL.hilfe || {}, orte = d.orte || [];
   return `<div class="karte hl-form"><h3 style="margin:0 0 6px">🙋 Hilfe suchen</h3>
     <div class="hl-frage">Wobei?</div>${hlChips("art", Object.entries(d.arten || {}).map(([w, t]) => ({ w, t })), f.art)}
     ${f.art === "sonstiges" ? `<label class="feld">Wobei genau?<input maxlength="80" placeholder="z. B. Zelt reparieren" value="${esc(f.artText)}" oninput="hlText('artText', this)"></label>` : ""}
-    <div class="hl-frage">Wann?</div>${hlTageWahl("datum", f.datum)}${hlChips("slot", hlSlots(d.zeitfenster, true), f.slot)}
+    <div class="hl-frage">Wann?</div><div class="umschalter"><button class="${f.absprache ? "" : "an"}" onclick="hlSetze('absprache', false)">📅 Bestimmter Tag</button><button class="${f.absprache ? "an" : ""}" onclick="hlSetze('absprache', true)">🤝 Nach Absprache</button></div>
+    ${f.absprache ? '<p class="hinweis" style="margin:4px 0 0">Kein fester Tag – wer helfen kann, sagt zu, und ihr macht den Termin miteinander aus. Der Aufruf bleibt 30 Tage offen (vorher schließbar).</p>' : hlTageWahl("datum", f.datum) + hlChips("slot", hlSlots(d.zeitfenster, true), f.slot)}
     <div class="hl-frage">Wie viele Helfer?</div>${hlStepper(f.anzahl, 1, 20, "hlSetze('anzahl', HL.form.anzahl - 1)", "hlSetze('anzahl', HL.form.anzahl + 1)")}
     <div class="hl-frage">Wo? <small class="hinweis">(freiwillig)</small></div>
     ${hlChips("ort", [{ w: "", t: "– keine Angabe –" }, ...orte.map((o) => ({ w: o, t: "📍 " + o }))], f.ortFrei ? "\u0000" : f.ort)}
     ${f.ortFrei ? `<label class="feld"><input id="hfOrt" maxlength="80" placeholder="z. B. Vereinsheim" value="${esc(f.ort)}" oninput="hlText('ort', this)"></label>` : `<button class="knopf klein" onclick="HL.form.ortFrei=true;HL.form.ort='';hlZeigen();$('hfOrt')?.focus()">✏️ Anderer Ort</button>`}
     <div class="hl-frage">An wen?</div>
     <div class="umschalter"><button class="${f.ziel === "alle" ? "an" : ""}" onclick="hlSetze('ziel','alle')">👥 Alle Mitglieder</button><button class="${f.ziel === "online" ? "an" : ""}" onclick="hlSetze('ziel','online')">🟢 Alle gerade online</button></div>
-    <label class="feld">Kurzer Hinweis (freiwillig)<input maxlength="300" placeholder="z. B. Schürze mitbringen" value="${esc(f.notiz)}" oninput="hlText('notiz', this)"></label>
+    <label class="feld">Beschreibung (freiwillig) – was genau, was mitbringen, wie erreichbar<textarea class="hl-notiz" rows="6" maxlength="900" placeholder="z. B. Für den Weihnachtsmarkt bauen wir den Stand auf. Bitte Arbeitshandschuhe mitbringen. Meldet euch kurz, wann es euch passt." oninput="hlText('notiz', this)">${esc(f.notiz)}</textarea></label>
     <div class="knoepfe"><button class="knopf haupt" onclick="hilfeSenden(this)">📣 Aufruf senden</button><button class="knopf" onclick="HL.form=null;hlZeigen()">Abbrechen</button></div></div>`;
 }
 async function hilfeSenden(knopf) {
@@ -8084,8 +8113,8 @@ async function hilfeSenden(knopf) {
   if (!f.art) return melde("Bitte antippen, wobei geholfen werden soll.", true);
   await einmal(knopf, async () => {
     try {
-      const notiz = [f.art === "sonstiges" && f.artText.trim() ? "Wobei: " + f.artText.trim() : "", f.notiz.trim()].filter(Boolean).join("\n").slice(0, 300);
-      const r = await api("hilfe_aufruf", { art: f.art, datum: f.datum, slot: f.slot || null, anzahl: f.anzahl, ort: f.ort || null, notiz: notiz || null, ziel: f.ziel });
+      const notiz = [f.art === "sonstiges" && f.artText.trim() ? "Wobei: " + f.artText.trim() : "", f.notiz.trim()].filter(Boolean).join("\n").slice(0, 1000);
+      const r = await api("hilfe_aufruf", { art: f.art, absprache: !!f.absprache, datum: f.datum, slot: f.absprache ? null : f.slot || null, anzahl: f.anzahl, ort: f.ort || null, notiz: notiz || null, ziel: f.ziel });
       HL.form = null; melde(r.empfaenger ? `📣 Aufruf gesendet – an ${r.empfaenger} ${r.empfaenger === 1 ? "Mitglied" : "Mitglieder"}` : "📣 Aufruf gespeichert – gerade ist niemand sonst online"); hlLaden();
     } catch (e) { melde(e.message, true); }
   });
@@ -8094,7 +8123,7 @@ function hilfeKarte(a) {
   const d = HL.hilfe || {}, n = a.komme.length, voll = n >= a.anzahl;
   return `<div class="karte hl-karte${a.offen ? "" : " vorbei"}">
     <div class="hl-titel">${esc(d.arten?.[a.art] || a.art)}</div>
-    <div>🗓️ ${esc(hlTagLang(a.datum, a.slot, d.zeitfenster))}${a.ort ? ` · 📍 ${esc(a.ort)}` : ""}</div>
+    <div>${esc(hlWann(a, true, d.zeitfenster))}${a.ort ? ` · 📍 ${esc(a.ort)}` : ""}</div>
     <div class="hinweis" style="font-size:.85rem">von ${esc(a.eigen ? "dir" : a.von.name)}${a.ziel === "online" ? " · an alle, die online waren" : ""}${a.geschlossen ? " · 🔒 geschlossen" : !a.offen ? " · vorbei" : ""}</div>
     ${a.notiz ? `<p style="margin:6px 0 0;white-space:pre-wrap">${esc(a.notiz)}</p>` : ""}
     <div class="hl-stand${voll ? " voll" : ""}"><b>✋ ${n} von ${a.anzahl}</b>${voll ? " – genug Helfer 🎉" : ""}${n ? `<br><small>${esc(a.komme.join(", "))}</small>` : ""}${a.kannNicht ? `<br><small class="hinweis">🙅 ${a.kannNicht} kann nicht</small>` : ""}</div>
@@ -8106,7 +8135,7 @@ function hilfeKachel(a) {
   const d = HL.hilfe || {}, label = d.arten?.[a.art] || a.art, sym = label.split(" ")[0], was = label.slice(sym.length).trim() || label;
   const n = a.komme.length, voll = n >= a.anzahl, slotSym = a.slot && d.zeitfenster?.[a.slot] ? " " + d.zeitfenster[a.slot].split(" ")[0] : "";
   return `<button class="mini-kachel${a.meine === "komme" ? " mk-dabei" : voll && a.offen ? " mk-voll" : ""}" onclick="hilfeInfo('${a.id}')"><span class="mk-sym">${esc(sym)}</span>
-    <span class="mk-titel">${esc(was)}</span><span class="mk-unter">🗓️ ${esc(hlTagName(a.datum))}${esc(slotSym)}${a.ort ? ` · 📍 ${esc(a.ort)}` : ""}</span>
+    <span class="mk-titel">${esc(was)}</span><span class="mk-unter">${esc(hlWann(a))}${esc(a.nachAbsprache ? "" : slotSym)}${a.ort ? ` · 📍 ${esc(a.ort)}` : ""}</span>
     <span class="mk-unter">von ${esc(a.eigen ? "dir" : a.von.name)}</span>
     <span class="marke ${voll ? "gruen" : "gelb"}">✋ ${n} von ${a.anzahl}${voll ? " 🎉" : ""}</span>${a.meine === "komme" ? '<span class="mk-unter"><b>✔ Du kommst</b></span>' : ""}</button>`;
 }
@@ -8298,6 +8327,8 @@ async function boSpeichern() {
     hlLaden();
   } catch (e) { melde(e.message, true); }
 }
+// KC-CLUB-HILFE-PINNWAND (1.90.0): Aushang an der Pinnwand antippen → Hilfebereich mit genau diesem Aufruf offen
+function hilfeVonPinnwand(id) { HL.oeffnen = id; hlStart("helfen"); }
 async function hilfeAntwort(id, antwort) {
   try { await api("hilfe_antwort", { id, antwort: antwort || null }); melde(antwort === "komme" ? "✋ Danke! Deine Zusage ist gespeichert" : antwort ? "Gespeichert – danke für die Rückmeldung" : "Zurückgenommen"); hlLaden(); }
   catch (e) { melde(e.message, true); }
