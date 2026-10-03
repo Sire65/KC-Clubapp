@@ -1069,7 +1069,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/db\.rpc\("kc_club_anmeldung", \{ p_hash: hash, p_version: version \}\)/.test(an) && /if \(!a\) throw new Fehler\("Kein Zugang/.test(an) && /if \(!p\?\.active\) throw/.test(an), "Datenbank-Prüfung beim Nachladen fehlt");
   const rpc = lies("supabase/migrations/20260929_kc_club_v57_anmeldung_rpc.sql");
   assert.ok(/where token_hash = p_hash and aktiv/.test(rpc) && /revoke all on function public\.kc_club_anmeldung\(text, text\) from public, anon, authenticated;/.test(rpc), "Anmelde-RPC prüft nicht aktiv / ist öffentlich");
-  assert.equal((server.match(/anmeldungenVergessen\(\);/g) || []).length, 4, "Zugang/Rollen/Büro-Rechte ändern leert den Speicher nicht");
+  assert.equal((server.match(/anmeldungenVergessen\(\);/g) || []).length, 5, "Zugang/Rollen/Büro-Rechte ändern leert den Speicher nicht"); // 1.96.0: +1 Übernahme des vorgemerkten Links
   assert.ok(/serverMs: Date\.now\(\) - t0Anfrage/.test(server) && /Server gesamt \$\{t\.srv\} ms/.test(html), "Server-Zeit im Verbindungstest fehlt");
   // Live-Tippen
   assert.ok(/live_tippen: \(w\) => \(\{ an: w\?\.an === true \}\)/.test(server), "Einstellung nicht standardmäßig aus");
@@ -3065,6 +3065,19 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/\$\{eigen \? `<div class="hk-knoepfe"><button class="knopf haupt" onclick="\$\('hilfeInfo'\)\?\.remove\(\);hilfeBearbeiten/.test(k), "eigener Aufruf: Ändern/Schließen statt Antworten");
   assert.ok(/const ANSAGE_SAMMEL_MS = 1500, ANSAGE_NAMEN_MAX = 3;/.test(html) && /n\.length > ANSAGE_NAMEN_MAX\) return `\$\{n\.length\} Clubkameradinnen und Kameraden sind gerade online`/.test(html), "ab 4 zusammenfassen");
   assert.ok(/OA\.warte = \[\.\.\.new Set\(\[\.\.\.\(OA\.warte \|\| \[\]\), \.\.\.n\]\)\];/.test(html) && /clearTimeout\(OA\.sammelTimer\)/.test(html), "kurz nacheinander → eine Ansage");
+}
+// 277. 1.96.0: Sicherheitspaket
+{
+  const kc = server.slice(server.indexOf('if (a === "kurzcode_einloesen") {'), server.indexOf('if (a === "fehler_anonym") {'));
+  assert.ok(kc.indexOf('protokoll(null, "kurzcode_versuch"') > 0 && kc.indexOf('protokoll(null, "kurzcode_versuch"') < kc.indexOf('from("kc_club_kurzcodes").select'), "Versuch vor der Prüfung zählen");
+  assert.ok(/fehlGesamt \?\? 0\) > KURZCODE_FEHL_GESAMT\) \{ await db\.from\("kc_club_kurzcodes"\)\.delete\(\)/.test(kc), "Überlauf → offene Codes ungültig");
+  assert.ok(/\^\(\?:\\p\{Extended_Pictographic\}\|\\p\{Emoji_Component\}/.test(server) && /onclick="reagieren\('\$\{m\.id\}',\$\{esc\(JSON\.stringify\(x\.emoji\)\)\}\)">\$\{esc\(x\.emoji\)\}/.test(html), "Reaktion nur Emoji, maskiert");
+  const za = server.slice(server.indexOf('if (a === "zugang_anfordern") {'), server.indexOf('if (a === "kurzcode_einloesen") {'));
+  assert.ok(/neu_token_hash: await sha256\(token\), neu_bis:/.test(za) && /if \(bisher\?\.aktiv\)/.test(za), "Link verloren nur vormerken");
+  assert.ok(/\.eq\("neu_token_hash", hash\)\.gt\("neu_bis", jetzt\(\)\)\.eq\("aktiv", true\)/.test(server) && /"zugang_uebernommen"/.test(server), "Übernahme beim ersten Öffnen");
+  assert.ok(/aktiv\.has\(id\) && \(id !== ich\.person_id \|\| g\.erstellt_von === ich\.person_id\)/.test(server), "kein Selbst-Hinzufügen in fremde Gruppen");
+  const mig = lies("supabase/migrations/20261003_kc_club_v1960_zugang_vormerken.sql");
+  assert.ok(/add column if not exists neu_token_hash text/.test(mig) && /Rückweg/.test(mig), "Migration Vormerken");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

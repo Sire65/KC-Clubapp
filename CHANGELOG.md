@@ -1,5 +1,18 @@
 # Änderungen
 
+## 1.96.0 – 2026-10-03 – Sicherheitspaket (Gesamtprüfung, Paket 1)
+- KC-CLUB-KURZCODE-BREMSE: Jeder Code-Versuch wird zuerst eingetragen, dann gezählt (vorher erst nach der Prüfung → viele
+  gleichzeitige Anfragen kamen an der Bremse vorbei). Grenzen wie bisher (8 je Netz / 60 gesamt in 15 Min.); läuft die
+  Gesamtgrenze über, werden alle offenen Codes ungültig – Erraten unmöglich, neue Codes gehen sofort.
+- KC-CLUB-REAKTION-SICHER: Reaktionen nehmen nur noch Emoji-Zeichen an (Server, verankert, höchstens 8 Zeichen); die App setzt
+  Reaktionen zusätzlich maskiert ein (esc + JSON) – kein fremder Text/Code über Reaktionen.
+- KC-CLUB-ZUGANG-VORMERKEN: „Link verloren?“ sperrt niemanden mehr aus – der neue Link wird 24 h vorgemerkt, der bisherige bleibt
+  gültig, bis der neue zum ersten Mal geöffnet wird (Protokoll „zugang_uebernommen“). Ein vom Admin erzeugter Link löscht eine
+  Vormerkung. Mail-Text angepasst. Migration 20261003_kc_club_v1960_zugang_vormerken.sql (Rückweg in der Datei).
+- KC-CLUB-GRUPPE-PRIVAT: Die Clubleitung darf fremde Gruppen weiter verwalten/auflösen, sich aber nicht selbst hinzufügen
+  (sonst rückwirkendes Mitlesen privater Gruppen).
+- Geprüft ohne Befund: Spiegel-/Sicherungsfunktionen (kc_db_mirror_snapshot u. a.) sind für anon/authenticated gesperrt.
+
 ## 1.95.0 – 2026-10-03
 - KC-CLUB-HILFE-KURZ (Wunsch Hansi: „ich sehe immer die Langversion von meinem Aufruf“): Auch der eigene offene Aufruf öffnet
   zuerst die Kurzansicht – Überschrift „Dein Aufruf – so sehen ihn die Mitglieder“, darunter wer zugesagt hat, wie viele nicht

@@ -2366,7 +2366,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.95.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.96.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -8800,7 +8800,7 @@ function naReaktionenZeigen(liste) {
     if (!m.reaktionen?.length) continue;
     const el = document.getElementById("msg-" + m.id); if (!el) continue;
     const r = document.createElement("div"); r.className = "reaktionen";
-    r.innerHTML = m.reaktionen.map((x) => `<button type="button" class="${x.meine ? "meine" : ""}" title="${esc(x.namen.join(", "))}" onclick="reagieren('${m.id}','${x.emoji}')">${x.emoji}${x.anzahl > 1 ? ` <b>${x.anzahl}</b>` : ""}</button>`).join("");
+    r.innerHTML = m.reaktionen.map((x) => `<button type="button" class="${x.meine ? "meine" : ""}" title="${esc(x.namen.join(", "))}" onclick="reagieren('${m.id}',${esc(JSON.stringify(x.emoji))})">${esc(x.emoji)}${x.anzahl > 1 ? ` <b>${x.anzahl}</b>` : ""}</button>`).join("");
     el.appendChild(r);
   }
 }
