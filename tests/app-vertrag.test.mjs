@@ -2636,7 +2636,8 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 
 // 232. 1.60.0: Bedienungsanleitung Club-App (PDF wie Kasse) in „Meine Dokumente“
 {
-  assert.ok(/\{ id: "bedienung-club-app", sym: "📖", t: "Bedienungsanleitung Club-App"[^}]*datei: "dokumente\/Koecheclub-App_Anleitung_V1\.pdf"(, neuBis: "[\d-]+")? \}/.test(html), "Eintrag Bedienungsanleitung fehlt");
+  // 1.81.0: Eintrag zeigt Version 2 (V1-Datei bleibt unverändert im Repo – Release-Artefakte sind unveränderlich)
+  assert.ok(/\{ id: "bedienung-club-app-v2", sym: "📖", t: "Bedienungsanleitung Club-App"[^}]*datei: "dokumente\/Koecheclub-App_Anleitung_V2\.pdf"(, neuBis: "[\d-]+")? \}/.test(html), "Eintrag Bedienungsanleitung fehlt");
   assert.ok(/datei: "dokumente\/Koecheclub-App_Kurzanleitung\.pdf"/.test(html), "Kurzanleitung muss bleiben");
   const pdf = fs.readFileSync(new URL("../dokumente/Koecheclub-App_Anleitung_V1.pdf", import.meta.url));
   assert.ok(pdf.subarray(0, 5).toString() === "%PDF-" && pdf.length < 8e6, "Anleitung-PDF fehlt oder zu groß");
@@ -2924,6 +2925,15 @@ assert.ok(/id: "emoji",[^\n]*unter dem Schreibfeld<\/b> auf <b>😊<\/b>/.test(h
 {
   assert.ok(/'<svg class="reg-rahmen" aria-hidden="true"><rect><\/rect><\/svg>'/.test(html) && /function regRahmenMessen\(\)/.test(html) && /addEventListener\("resize", regRahmenMessen\)/.test(html), "Rahmen gemessen auf der Kante");
   assert.ok(/\.register button\.reg-lauf \.reg-rahmen rect \{ stroke-dasharray: 9 6; animation: ameisenLauf/.test(html) && !/reduce\) \{ \.register/.test(html), "läuft (gleiche Animation), auch bei reduzierter Bewegung");
+}
+// 261. 1.81.0: Bedienungsanleitung Version 2
+{
+  const v2 = fs.readFileSync(new URL("../dokumente/Koecheclub-App_Anleitung_V2.pdf", import.meta.url));
+  assert.ok(v2.subarray(0, 5).toString() === "%PDF-" && v2.length < 8e6, "Anleitung V2 fehlt oder zu groß");
+  assert.ok(fs.existsSync(new URL("../dokumente/Koecheclub-App_Anleitung_V1.pdf", import.meta.url)), "V1 muss unverändert bleiben");
+  const inh = fs.readFileSync(new URL("../tools/anleitung/inhalt.mjs", import.meta.url), "utf8"), f2 = fs.readFileSync(new URL("../tools/anleitung/fotos2.mjs", import.meta.url), "utf8");
+  assert.ok(/anleitung: 2/.test(inh) && /10\. Fotos & Alben/.test(inh) && /11\. Archiv & Chronik/.test(inh) && /<b>Club<\/b> = alles rund um den Club/.test(inh) && !/Programme<\/b> = Dienstplan/.test(inh), "Inhalt V2");
+  assert.ok(!/ptblnpiroqftcvlsrhac|service_role|eyJ[A-Za-z0-9_-]{20}/.test(f2), "fotos2 ohne echte Zugänge");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

@@ -1,15 +1,15 @@
 // Inhalt der Club-App-Anleitung (Texte). Bilder: bild/<name>.png (ganze Seite) und bild/s-<name>.png (Ausschnitt).
-export const VERSION = { anleitung: 1, app: "1.59.0", stand: "03.10.2026" };
+export const VERSION = { anleitung: 2, app: "1.80.0", stand: "03.10.2026" };
 export const INHALT = [
   ["So fängst du an", "in 4 Schritten"], ["1. Startseite", "einfache Ansicht – das Wichtigste auf einen Blick"], ["2. Erweiterte Ansicht", "alle Funktionen, Anzeigen im Kopf"],
-  ["3. Nachrichten", "Chats, Schreiben, Haken, wichtige Nachrichten, Vorlesen"], ["4. Termine", "zu- und absagen, Mitfahren, Kalender"], ["5. Mitglieder", "wer ist online, Status, Kontakt, Anklopfen"],
-  ["6. Pinnwand", "kurze Zettel für alle oder einzelne"], ["7. SOS – Notfall", "Notrufnummern, Notfallpass, Kontakte"], ["8. Einstellungen", "Ansagen, Benachrichtigungen, Privatsphäre"],
-  ["9. Notbetrieb", "wenn der Server einmal ausfällt"],
+  ["3. Nachrichten", "Chats, Schreiben, Diktieren, Tippfehler, wichtige Nachrichten"], ["4. Termine", "zu- und absagen, Mitfahren, Kalender"], ["5. Mitglieder", "wer ist online, Status, Kontakt, Anklopfen"],
+  ["6. Pinnwand", "kurze Zettel für alle oder einzelne"], ["7. SOS – Notfall", "Notrufnummern, Notfallpass, Kontakte"], ["8. Einstellungen", "Sprachansagen, Farbschemen, Benachrichtigungen, Privatsphäre"],
+  ["9. Notbetrieb", "wenn der Server einmal ausfällt"], ["10. Fotos & Alben", "eigene Alben mit Namen"], ["11. Archiv & Chronik", "dein Ordner, die Clubchronik zum Blättern"],
 ];
 export const GUT_ZU_WISSEN = [
   "<b>Gut zu wissen:</b> Alle Bilder zeigen <b>Beispieldaten</b> – Namen wie „Max Mustermann“ und alle Telefonnummern sind erfunden. In deiner App stehen die echten Mitglieder und Termine.",
   "Die App hat eine <b>einfache</b> und eine <b>erweiterte Ansicht</b>. Die einfache zeigt nur das Wichtigste mit großen Knöpfen. Umschalten geht jederzeit (Teil 1 und 2).",
-  "Die Farben kannst du in den Einstellungen ändern („Lieblingsfarbe“). Die Bilder zeigen „Köcheclub Klassik“ am Tag.",
+  "Die Farben kannst du in den Einstellungen ändern („Lieblingsfarbe“) – es gibt jetzt <b>22 Farbschemen</b>. Die Bilder zeigen „Köcheclub Klassik“ am Tag.",
   "<b><u>Beachte:</u></b> Die Club-App ist noch eine Beta-Version. Einige Funktionen können sich mit der Zeit noch ändern, weil ständig weiterentwickelt wird.",
 ];
 export const START_SCHRITTE = [
@@ -26,15 +26,15 @@ export const TEILE = [
       { nr: 1, titel: "Status", zeilen: [["s-status", "Mein Status", "Zeigt den anderen, wie du gerade erreichbar bist: 🟢 verfügbar, 🟠 beschäftigt, 🏖️ Urlaub, 🤒 krank, ⚪ abwesend – auf Wunsch mit „bis“-Datum. Hast du eine Ruhezeit eingestellt, steht dort automatisch „🌙 Ruhezeit bis 07:00“."]] },
       { nr: 2, titel: "Termin-Karte und die drei Felder", zeilen: [
         ["s-termin-karte", "Termin-Karte", "Der nächste Termin mit Datum, Uhrzeit und Ort – und deine Antwort (z. B. ✅ Ich komme) mit der Zahl der Zusagen. Antippen öffnet den Termin."],
-        ["s-mini0", "Neue Nachrichten", "Die Zahl der ungelesenen Nachrichten. Gibt es Neues, läuft ein <b>orangefarbener Rand</b> („Ameisenstraße“) um das Feld. Antippen öffnet die Nachrichten.", "neu"],
+        ["s-mini0", "Neue Nachrichten", "Die Zahl der ungelesenen Nachrichten. Gibt es Neues, läuft ein <b>orangefarbener Rand</b> („Ameisenstraße“) um das Feld. Antippen öffnet die Nachrichten."],
         ["s-mini1", "Mitglieder", "Wie viele Mitglieder es gibt – daneben der <b>grüne Punkt mit der Zahl</b>, wer gerade online ist. Grau = gerade niemand online."],
-        ["s-mini2", "Nächster Termin", "In wie vielen Tagen der nächste Termin ist. Ab 5 Tagen vorher läuft ein hellgrüner Rand, ab 3 Tagen ein orangefarbener, am Vortag und am Tag selbst ein roter.", "neu"]] },
+        ["s-mini2", "Nächster Termin", "In wie vielen Tagen der nächste Termin ist. Ab 5 Tagen vorher läuft ein hellgrüner Rand, ab 3 Tagen ein orangefarbener, am Vortag und am Tag selbst ein roter."]] },
       { nr: 6, titel: "Ansicht, Version und Schnellzugriff", zeilen: [
         ["s-ansicht", "Einfache Ansicht", "Antippen schaltet zur <b>erweiterten Ansicht</b> mit allen Funktionen (Teil 2). Zurück geht es genauso."],
         ["s-version", "Version", "Zeigt die App-Version. Antippen prüft, ob es ein Update gibt. Updates kommen sonst von selbst – ein Hinweis fragt dann kurz nach."],
         ["s-kachel0", "Termine", "Alle Termine, zu- und absagen (Teil 4)."], ["s-kachel1", "Nachrichten", "Chats mit einzelnen Mitgliedern und Gruppen (Teil 3). Die Zahl zeigt Ungelesenes."],
         ["s-kachel2", "Pinnwand", "Kurze Zettel für alle oder einzelne (Teil 6). Die Zahl zeigt neue Zettel."], ["s-kachel3", "Mein Dienst", "Deine Dienste aus dem Dienstplan."],
-        ["s-kachel4", "Mitglieder", "Alle Mitglieder mit Status, Amt und Kontakt (Teil 5)."], ["s-kachel5", "Meine Dokumente", "Anleitungen und Unterlagen zum Ansehen und Drucken – auch diese hier."],
+        ["s-kachel4", "Mitglieder", "Alle Mitglieder mit Status, Amt und Kontakt (Teil 5)."], ["s-kachel5", "Meine Dokumente", "Anleitungen und Unterlagen – öffnen sich direkt in der App mit „‹ Zurück zur App“, Drucken und Teilen. Auch diese Anleitung."],
         ["s-kachel6", "SOS – Notfall", "Notrufnummern und Kontakte im Notfall (Teil 7)."],
         ["s-heute-wichtig", "Heute wichtig", "Was heute für dich ansteht: neue Nachrichten, offene Abstimmungen, Hinweise. Antippen führt direkt hin."],
         ["s-mehr-funktionen", "Mehr Funktionen anzeigen", "Schaltet zur erweiterten Ansicht."], ["s-app-schliessen", "App schließen", "Beendet die App sauber."]] },
@@ -43,7 +43,7 @@ export const TEILE = [
         ["s-fuss", "Fußleiste", "Immer unten zu sehen: <b>Start</b>, <b>Termine</b>, <b>Nachrichten</b>, <b>Mitglieder</b> und <b>Mehr</b> (Einstellungen). Die roten Zahlen zeigen Neues, die grüne Zahl, wer online ist."]] },
     ] },
   { titel: "2. Erweiterte Ansicht", unter: "Alle Funktionen und die Anzeigen im Kopf", bild: "start-erweitert",
-    legende: [["LEDs", "Verbindung zum Server"], ["Herz", "Lebenszeichen"], ["Tag/Nacht", "hell oder dunkel"], ["Aktualisieren", "neu laden"], ["Blättern", "nächste Karte"], ["Springen", "zur letzten Karte"], ["Punkte", "welche Karte gerade gezeigt wird"], ["Register", "Verein, Meins, Programme"], ["Kacheln", "alle Funktionen"]],
+    legende: [["LEDs", "Verbindung zum Server"], ["Herz", "Lebenszeichen"], ["Tag/Nacht", "hell oder dunkel"], ["Aktualisieren", "neu laden"], ["Blättern", "nächste Karte"], ["Springen", "zur letzten Karte"], ["Punkte", "welche Karte gerade gezeigt wird"], ["Register", "Club, Meins, Technik"], ["Kacheln", "alle Funktionen"]],
     abschnitte: [
       { nr: 1, titel: "Anzeigen und Knöpfe im Kopf", zeilen: [
         ["s-leds", "LEDs", "<b>Oben</b> = Server: 🟢 verbunden · 🔴 keine Verbindung · 🔵 Wartung · ⚪ unbekannt. <b>Mitte</b> = Push und Mail (KC Communicator): 🟢 läuft · 🟡 eingeschränkt · 🔴 Störung. <b>Unten</b> flackert, wenn gerade Daten übertragen werden. Der Punkt ganz unten zeigt, wer online ist (antippen). Antippen der LEDs öffnet die Verbindungsprüfung."],
@@ -53,33 +53,34 @@ export const TEILE = [
       { nr: 5, titel: "Karten im Kopf und Register", zeilen: [
         ["s-pfeile", "Blättern", "Mit ‹ › blätterst du durch die Karten im Kopf: nächster Termin, Wetter, Schnellstart und mehr. « » springen zur ersten oder letzten Karte. Wischen geht auch."],
         ["s-punkte", "Punkte", "Zeigen, welche Karte gerade zu sehen ist."],
-        ["s-register", "Register", "<b>Verein</b> = alles rund um den Club, <b>Meins</b> = deine eigenen Sachen, <b>Programme</b> = Dienstplan und weitere Programme. Die Zahl zeigt, wie viele Kacheln darin sind. Kacheln lassen sich festhalten und verschieben."]] },
+        ["s-register", "Register", "<b>Club</b> = alles rund um den Club, <b>Meins</b> = deine eigenen Sachen, <b>Technik</b> = Update, freigegebene Programme und Sicherheits-Check. Die Zahl zeigt, wie viele Kacheln darin sind. Beim Wechsel läuft kurz ein heller Rahmen um das gewählte Register (<b>Ameisenlauf</b>), danach bleibt er ruhig stehen. Kacheln lassen sich festhalten und verschieben.", "neu"]] },
     ] },
   { titel: "3. Nachrichten", unter: "Chats, Schreiben, Haken, wichtige Nachrichten, Vorlesen", bild: "nachrichten",
     legende: [["＋ Neu", "neue Nachricht an ein Mitglied"], ["Gruppe", "eine Gruppe anlegen"], ["Gemerkt", "deine gemerkten Nachrichten"], ["Test", "Nachricht an dich selbst (zum Ausprobieren)"], ["Chat", "einmal tippen = auswählen, doppelt = öffnen"], ["❗ Wichtig", "ungelesene wichtige Nachricht"], ["Gruppenchat", "mit Symbol und Zahl der Mitglieder"]],
     abschnitte: [
-      { nr: 5, titel: "Die Chat-Liste", zeilen: [["s-chat-zeile", "Chat mit ungelesener wichtiger Nachricht", "Eine <b>orangefarbene Kante</b> links und <b>❗</b> an der Zahl zeigen: Darin wartet eine wichtige Nachricht. Die Zahl zeigt, wie viele Nachrichten ungelesen sind.", "neu"]] },
+      { nr: 5, titel: "Die Chat-Liste", zeilen: [["s-chat-zeile", "Chat mit ungelesener wichtiger Nachricht", "Eine <b>orangefarbene Kante</b> links und <b>❗</b> an der Zahl zeigen: Darin wartet eine wichtige Nachricht. Die Zahl zeigt, wie viele Nachrichten ungelesen sind."]] },
     ],
     weiter: [{ bild: "chat", titel: "Der Chat", legende: [["Zurück", "zur Chat-Liste"], ["Name", "mit wem du schreibst"], ["Online / Status", "ist der andere gerade da?"], ["Lautsprecher", "neue Nachrichten vorlesen 🔇/🔊"], ["Lupe", "im Chat suchen"], ["Menü ⋮", "stummschalten, Gruppe, Archiv …"], ["Nachricht", "vom anderen (links)"], ["Deine Nachricht", "rechts, mit Haken"], ["Wichtig", "orange umrandet mit „❗ WICHTIG“"], ["Antwort", "zitiert die Nachricht, auf die du antwortest"], ["Weiterleiten / Info", "↪️ weiterleiten, ℹ️ Einzelheiten"], ["Schreibfeld", "hier schreiben"], ["Senden", "Nachricht abschicken"], ["Knopfleiste", "Anlage, Sprache, Emoji, …"]],
       abschnitte: [
         { nr: 1, titel: "Kopfzeile", zeilen: [["s-chat-kopf", "Kopfzeile", "‹ zurück, der Name, 🔇/🔊 <b>Vorlesen</b>, 🔍 im Chat suchen und ⋮ das Menü (z. B. Chat stummschalten)."],
-          ["s-vorlesen", "Vorlesen 🔇 / 🔊", "Antippen schaltet das Vorlesen ein (🔊): Das Handy liest neue Nachrichten im offenen Chat vor, z. B. „Erika: Kommst du Samstag?“. Nochmal antippen = aus (🔇).", "neu"]] },
+          ["s-vorlesen", "Vorlesen 🔇 / 🔊", "Antippen schaltet das Vorlesen ein (🔊): Das Handy liest neue Nachrichten im offenen Chat vor, z. B. „Erika: Kommst du Samstag?“. Nochmal antippen = aus (🔇)."]] },
         { nr: 8, titel: "Die Haken – wie bei WhatsApp", zeilen: [
-          ["s-haken-1", "Ein grauer Haken", "Gesendet – aber noch <b>nicht auf dem Handy</b> des anderen angekommen.", "neu"],
-          ["s-haken-2", "Zwei graue Haken", "Auf dem Handy des anderen <b>angekommen</b>, aber noch nicht gelesen.", "neu"],
-          ["s-haken-3", "Zwei blaue Haken", "<b>Gelesen.</b> In Gruppen werden die Haken erst grau bzw. blau, wenn es für alle gilt; daneben steht klein, wie viele schon gelesen haben (z. B. 2/5).", "neu"]] },
+          ["s-haken-1", "Ein grauer Haken", "Gesendet – aber noch <b>nicht auf dem Handy</b> des anderen angekommen."],
+          ["s-haken-2", "Zwei graue Haken", "Auf dem Handy des anderen <b>angekommen</b>, aber noch nicht gelesen."],
+          ["s-haken-3", "Zwei blaue Haken", "<b>Gelesen.</b> In Gruppen werden die Haken erst grau bzw. blau, wenn es für alle gilt; daneben steht klein, wie viele schon gelesen haben (z. B. 2/5)."]] },
         { nr: 9, titel: "Besondere Nachrichten", zeilen: [
-          ["s-blase-wichtig", "Wichtige Nachricht", "Mit dem <b>❗-Knopf</b> unten verschickt: orange umrandet mit „❗ WICHTIG“ – beim Empfänger und bei dir. In den Infos (ℹ️) steht „Wichtigkeit: hoch“.", "neu"],
+          ["s-blase-wichtig", "Wichtige Nachricht", "Mit dem <b>❗-Knopf</b> unten verschickt: orange umrandet mit „❗ WICHTIG“ – beim Empfänger und bei dir. In den Infos (ℹ️) steht „Wichtigkeit: hoch“."],
           ["s-zitat", "Antwort", "Nachricht antippen → „↩️ Antworten“ (oder nach rechts wischen). Oben steht dann, worauf du antwortest."],
           ["s-blase-reaktion", "Reaktion", "Nachricht antippen und z. B. ❤️ oder 👍 wählen – die Reaktion steht unter der Nachricht."],
           ["s-na-seite", "Weiterleiten und Info", "↪️ leitet die Nachricht weiter oder kopiert sie. ℹ️ zeigt, wann gesendet, angekommen und gelesen."]] },
         { nr: 14, titel: "Die Knöpfe unter dem Schreibfeld", zeilen: [
-          ["s-k-anlage", "Anlage 📎", "Foto, Datei oder Dokument anhängen."], ["s-k-mikro", "Sprachnachricht 🎤", "Antippen, sprechen, „Senden“ – oder verwerfen."],
-          ["s-k-emoji", "Emoji 😊", "Kleine Auswahl an Emojis für deine Nachricht."], ["s-k-zustell", "Benachrichtigen 🔔", "Wie der andere Bescheid bekommt: Push, E-Mail oder WhatsApp."],
-          ["s-k-wichtig", "Wichtig ❗", "Die nächste Nachricht wird als <b>wichtig</b> verschickt. Schreibfeld und Knopf werden orange – nach dem Senden wieder normal.", "neu"],
+          ["s-k-anlage", "Anlage 📎", "Foto, Datei oder Dokument anhängen."], ["s-k-mikro", "Mikrofon 🎤", "Antippen und wählen: <b>Sprachnachricht</b> (deine Stimme wird verschickt) oder <b>Diktieren</b> (das Handy schreibt mit, verschickt wird Text).", "neu"], ["s-mikro-wahl", "Sprachnachricht oder Diktieren", "Mit „Immer so“ fragt die App nicht mehr – ändern unter ⚙️ → Ansagen, Töne & Tipps → Mikrofon im Chat.", "neu"],
+          ["s-k-emoji", "Emoji 😊", "Öffnet über dem Schreibfeld die bunte Emoji-Auswahl – antippen setzt das Emoji in deinen Text."], ["s-k-zustell", "Benachrichtigen 🔔", "Wie der andere Bescheid bekommt: Push, E-Mail oder WhatsApp."],
+          ["s-k-wichtig", "Wichtig ❗", "Die nächste Nachricht wird als <b>wichtig</b> verschickt. Schreibfeld und Knopf werden orange – nach dem Senden wieder normal."],
           ["s-wichtig-an", "So sieht „wichtig“ beim Schreiben aus", "Das Schreibfeld ist orange umrandet, der ❗-Knopf orange gefüllt."],
           ["s-k-wa", "WhatsApp", "Den Text an WhatsApp übergeben und dort verschicken."], ["s-k-waein", "Aus WhatsApp einfügen 📋", "In WhatsApp kopierte Nachrichten sauber einfügen."],
-          ["s-k-bf", "Bildschirmfoto 📸", "Ein Bildschirmfoto machen und in diesen Chat schicken."], ["s-k-senden", "Senden ➤", "Schickt die Nachricht ab."]] },
+          ["s-k-bf", "Bildschirmfoto 📸", "Ein Bildschirmfoto machen und in diesen Chat schicken."], ["s-k-senden", "Senden ➤", "Schickt die Nachricht ab."],
+          ["s-rechtschreibung", "Tippfehler rot unterstrichen", "Beim Schreiben zeigt eine rote Wellenlinie Tippfehler – antippen, dann kommen Vorschläge. Das macht die Tastatur deines Handys. Keine Linie? ⚙️ → „🖍️ Tippfehler rot unterstreichen“ → <b>Prüfen</b> zeigt einen Testsatz und wie du die Prüfung einschaltest.", "neu"]] },
       ] },
       { bild: "chat-menue", titel: "Nachricht antippen – was geht alles?", text: "Eine Nachricht <b>antippen</b> öffnet dieses Menü: oben eine schnelle Reaktion (👍 ❤️ 😂 …), darunter <b>Antworten</b>, <b>Oben anheften</b>, <b>Merken</b>, <b>Kopieren</b>, <b>🔊 Vorlesen</b>, <b>Weiterleiten</b>, <b>Details</b> (wann gesendet, angekommen, gelesen) und <b>Löschen</b>. Eigene Nachrichten lassen sich 15 Minuten lang <b>bearbeiten</b>." }] },
   { titel: "4. Termine", unter: "Zu- und absagen, Mitfahren, Kalender", bild: "termine",
@@ -97,12 +98,15 @@ export const TEILE = [
     text: "Beim Antippen einer Nummer fragt die App <b>einmal nach</b> – erst dann wird wirklich angerufen. So passiert nichts aus Versehen.",
     weiter: [{ bild: "sos-unten", titel: "Notfallpass und Kontakte", legende: [["Notfallpass", "Allergien, Medikamente, Blutgruppe – nur auf deinem Handy gespeichert"], ["Clubleitung", "Clubsprecher und Kassenwart schnell erreichen"], ["Mitglieder", "alle, die im Notfall erreichbar sind"], ["Du", "dein eigener Notfallkontakt – antippen zum Prüfen"]],
       text: "Trag bitte deinen <b>eigenen Notfallkontakt</b> ein (wer soll angerufen werden?). Notfallkontakte anderer sieht nur die Clubleitung. „📍 Wo bin ich?“ zeigt im Notfall die Adresse zum Vorlesen." }] },
-  { titel: "8. Einstellungen", unter: "Ansagen, Benachrichtigungen, Privatsphäre – unten über „Mehr“", bilderReihe: ["einst-ansagen", "einst-benachrichtigung", "einst-privat"],
+  { titel: "8. Einstellungen", unter: "Sprachansagen, Farbschemen, Benachrichtigungen, Privatsphäre – unten über „Mehr“", bilderReihe: ["s-ansagen-zeilen", "s-sprachansagen", "einst-farben"],
     abschnitte: [
       { nr: 1, titel: "Ansagen, Töne & Tipps", zeilen: [
         [null, "💡 Tipp des Tages", "Beim Öffnen ab und zu ein kurzer Tipp. „👉 Ja, zeig mir wo“ führt direkt zur passenden Stelle."],
-        [null, "🗣️ Ansage, wenn jemand online kommt", "Das Handy sagt z. B. „Klaus ist jetzt online“ – nur bei offener App, nicht in deiner Ruhezeit.", "neu"],
-        [null, "🔊 Neue Nachrichten vorlesen", "Liest neue Nachrichten im offenen Chat vor (wie der Lautsprecher im Chat).", "neu"]] },
+        [null, "🗣️ Sprachansagen", "Unter <b>„Auswählen“</b> kreuzt du an, was dein Handy ansagen soll: <b>wer online kommt</b>, neue Nachrichten, Anklopfen, Pinnwand, Helfen/Leihen/Börse, Mitfahrt, Standort mit Entfernung (Luftlinie) und Termine. <b>▶</b> spielt ein Beispiel, z. B. „Christina hat dir ein Post-it an die Pinnwand gehängt“. Am Anfang sind nur Nachrichten und Anklopfen an.", "neu"],
+        [null, "Wann spricht das Handy?", "Nur, solange die Köcheclub-App <b>offen</b> ist – nicht in deiner Ruhezeit und nicht für den Chat, den du gerade offen hast. Ist die App zu oder im Hintergrund, kommt der normale Push mit Ton (Android und iPhone erlauben Web-Apps im Hintergrund keine Sprache).", "neu"],
+        [null, "🖍️ Tippfehler rot unterstreichen", "„Prüfen“ zeigt einen Testsatz mit zwei Fehlern und – passend zu deinem Handy – wie du die Rechtschreibprüfung einschaltest.", "neu"],
+        [null, "🎤 Mikrofon im Chat", "Jedes Mal fragen, immer Sprachnachricht oder immer Diktieren.", "neu"],
+        [null, "🔊 Neue Nachrichten vorlesen", "Liest neue Nachrichten im offenen Chat vor (wie der Lautsprecher im Chat)."]] },
       { nr: 2, titel: "Benachrichtigungen", zeilen: [
         [null, "Push und E-Mail je Bereich", "Für Termine, Nachrichten, Abstimmungen, Dienste, Geburtstage und Pinnwand einzeln wählen: aufs Handy, per Mail oder beides."],
         [null, "🌙 Nicht stören", "Eine Ruhezeit (z. B. 22–7 Uhr) ohne Push. Anrufe kommen trotzdem durch. Dein Status zeigt dann „Ruhezeit bis …“."]] },
@@ -110,14 +114,27 @@ export const TEILE = [
         [null, "Online und „zuletzt da“", "Ob andere sehen, dass du online bist bzw. wann du zuletzt da warst. Ausgeschaltet siehst du es bei anderen auch nicht – wie bei WhatsApp."],
         [null, "Anklopfen erlauben", "Ob andere bei dir anklopfen dürfen, wenn du online bist."],
         [null, "Geburtstag, Kontaktdaten", "Was andere von dir sehen dürfen – nichts wird ohne dein Einverständnis gezeigt."]] },
-      { nr: 4, titel: "Darstellung", zeilen: [[null, "Lieblingsfarbe und Ansicht", "Farbe der App, Tag/Nacht und einfache oder erweiterte Ansicht."]] },
+      { nr: 4, titel: "Darstellung", zeilen: [[null, "Lieblingsfarbe und Ansicht", "Farbe der App, Tag/Nacht und einfache oder erweiterte Ansicht."],
+        [null, "🎨 Weitere Farbschemen", "Unter den 8 bekannten Farben klappt „Weitere Farbschemen“ 8 ruhige Töne auf: Toskana, Weinberg, Salbei, Lavendel, Ocker, Schokolade, Petrol, Rosé.", "neu"],
+        ["s-farben-bunt", "✨ Ausgefallene Farbschemen", "6 Schemen mit Farbverlauf oben: Sonnenuntergang, Polarlicht, Kirschblüte, Tiefsee, Glut, Retro 70er. Antippen – die App färbt sich sofort um.", "neu"]] },
     ] },
   { titel: "9. Notbetrieb", unter: "Wenn der Server einmal ausfällt", bild: "notbetrieb",
     legende: [["Oranges Band", "die App läuft gerade im Notbetrieb"]],
     abschnitte: [{ nr: 1, titel: "Was im Notbetrieb geht", zeilen: [
-      ["s-not-band", "Notbetrieb", "Fällt der Club-Server aus, schaltet die App <b>von selbst</b> auf einen Ersatz-Server um. Oben steht das orange Band mit der Uhrzeit des Stands.", "neu"],
-      [null, "Ansehen geht", "Termine, Mitglieder, SOS, Dienste, Pinnwand und Nachrichten – so, wie es zuletzt war.", "neu"],
-      [null, "Schreiben wird gespeichert", "Nachrichten in bestehenden Chats, Zu- und Absagen, Status und Zettel werden gespeichert (⏳ „wartet“) und <b>automatisch übertragen</b>, sobald alles wieder läuft.", "neu"],
-      [null, "Geht gerade nicht", "Fotos und Anlagen, neue Chats, Anrufe und Push. Die Notrufnummern (112 …) gehen <b>immer</b>.", "neu"],
-      [null, "Zurück", "Ist der Server wieder da, verschwindet das Band von selbst und alles Gespeicherte wird übertragen.", "neu"]] }] },
+      ["s-not-band", "Notbetrieb", "Fällt der Club-Server aus, schaltet die App <b>von selbst</b> auf einen Ersatz-Server um. Oben steht das orange Band mit der Uhrzeit des Stands."],
+      [null, "Ansehen geht", "Termine, Mitglieder, SOS, Dienste, Pinnwand und Nachrichten – so, wie es zuletzt war."],
+      [null, "Schreiben wird gespeichert", "Nachrichten in bestehenden Chats, Zu- und Absagen, Status und Zettel werden gespeichert (⏳ „wartet“) und <b>automatisch übertragen</b>, sobald alles wieder läuft."],
+      [null, "Geht gerade nicht", "Fotos und Anlagen, neue Chats, Anrufe und Push. Die Notrufnummern (112 …) gehen <b>immer</b>."],
+      [null, "Zurück", "Ist der Server wieder da, verschwindet das Band von selbst und alles Gespeicherte wird übertragen."]] }] },
+  { titel: "10. Fotos & Alben", unter: "Eigene Fotoalben mit Namen – z. B. „Weihnachtsmarkt 2026“", bild: "fotos-auswahl",
+    legende: [["Neues Album", "Fotos auswählen und ein Album anlegen"], ["Album", "antippen öffnet es – 👥 für alle, 🔒 nur für dich"], ["Auswahl", "„☑️ Auswählen“ / „Auswahl beenden“"], ["Ins Album", "die angehakten Fotos in ein Album legen"]],
+    text: "So geht’s: im Fotoalbum auf <b>„☑️ Auswählen“</b> tippen, Fotos anhaken und <b>„📸 Ins Album“</b>. Ein Album ist nur eine Sammlung – die Fotos bleiben im Fotoalbum und brauchen keinen zusätzlichen Platz.",
+    abschnitte: [{ nr: 4, titel: "In welches Album?", zeilen: [["s-album-wahl", "Album wählen oder neu anlegen", "Ein vorhandenes Album antippen oder <b>„＋ Neues Album …“</b>: Namen eingeben und festlegen, ob <b>alle Mitglieder</b> es sehen oder <b>nur du</b>.", "neu"]] }] },
+  { titel: "11. Archiv & Chronik", unter: "Dein eigener Ordner, Fotoalben im Regal und die Clubchronik zum Blättern", bild: "archiv-regal",
+    legende: [["Mein Ordner", "nur du siehst ihn – mit 🔓 kannst du anderen etwas auf Zeit freigeben"], ["Album", "deine Fotoalben stehen auch im Regal"], ["Clubchronik", "die Geschichte des Clubs"]],
+    text: "Legt jemand anderes etwas in deinen Ordner (z. B. die Clubleitung eine Bestätigung), steht es dort erst <b>„zur Prüfung“</b> – du nimmst es an oder lehnst es ab.",
+    weiter: [{ bild: "chronik-ordner", titel: "Die Clubchronik", legende: [["Blättern", "die Chronik wie ein Buch ansehen"], ["So füllen wir …", "kurze Anleitung, was hineingehört"], ["Beitrag einreichen", "Foto, Zeitungsartikel oder Dokument einreichen – die Clubleitung prüft und nimmt es auf"]],
+      text: "Register wie Gründung, Presse, Rekorde & Höhepunkte, Feste & Jubiläen oder In Gedenken ordnen die Einträge." },
+      { bild: "chronik-blaettern", titel: "Blättern", legende: [["Schließen", "zurück zur App"], ["Umblättern", "‹ › antippen oder wischen"], ["Register", "springt direkt zu einem Teil, unten zeigt der Balken, wo du bist"]],
+      text: "Blättern geht in jedem Ordner im Archiv – Fotos, PDF und Dokumente erscheinen als Seiten." }] },
 ];

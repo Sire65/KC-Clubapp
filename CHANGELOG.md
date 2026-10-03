@@ -1,5 +1,14 @@
 # Änderungen
 
+## 1.81.0 – 2026-10-03
+- KC-CLUB-ANLEITUNG Version 2 (Wunsch Hansi: „Handbuch überarbeiten, weil sich einiges geändert hat“): 27 Seiten,
+  `dokumente/Koecheclub-App_Anleitung_V2.pdf`. Neu bzw. geändert (mit NEU markiert): Register Club/Meins/Technik mit
+  Ameisenlauf, Mikrofon (Sprachnachricht oder Diktieren), Tippfehler rot unterstrichen, Emoji-Auswahl, Sprachansagen (mit
+  „Wann spricht das Handy?“), Mikrofon-Einstellung, weitere und ausgefallene Farbschemen, Meine Dokumente in der App,
+  neuer Teil 10 „Fotos & Alben“ und Teil 11 „Archiv & Chronik“ (Mein Ordner, Clubchronik, Blättern). Alle Bilder neu
+  (Demodaten). V1-Datei bleibt unverändert; „Meine Dokumente“ zeigt jetzt V2 (neue id → einmal die leise NEU-Zeile).
+- Werkzeug: `tools/anleitung/fotos2.mjs` (Bilder der neuen Funktionen), `inhalt.mjs` auf V2; README ergänzt.
+
 ## 1.80.0 – 2026-10-03
 - KC-CLUB-REGISTER-AMEISEN überarbeitet (Fund Hansi: „sitzt nicht genau auf dem Rand, läuft nicht; heller Rahmen soll bleiben“):
   Rahmen jetzt als SVG-Rechteck genau auf der Knopfkante (gleiche runde Ecken, gemessen), gleiche Technik und Animation wie der
