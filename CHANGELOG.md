@@ -1,5 +1,19 @@
 # Änderungen
 
+## 1.87.0 – 2026-10-03
+- KC-CLUB-KURZCODE (Wunsch Hansi: „Installation einfacher – der lange Code schreckt ab“): Anmelden mit einem 6-stelligen Code
+  statt Link kopieren/einfügen. Der Anmeldebildschirm zeigt oben „🔢 Mit Code anmelden“ (großes Zahlenfeld, meldet bei 6 Ziffern
+  sofort an). Den Code zeigt ein bereits angemeldetes Gerät: im Einrichtungs-Assistenten (iPhone/iPad, Schritt 4) oder unter
+  ⚙️ → App-Installation → „🔢 Code für ein anderes Gerät“. Gültig 15 Minuten, nur einmal, je Person nur ein Code; der Schlüssel liegt
+  bis dahin AES-GCM-verschlüsselt (Server-Geheimnis) und wird beim Einlösen gelöscht; Bremse: 8 Fehlversuche je Netz bzw. 60
+  insgesamt je 15 Min.; Code eines älteren Links wird abgelehnt. DB: Tabelle kc_club_kurzcodes (Migration v1870, nur Server).
+- KC-CLUB-EINRICHTEN: Einrichtungs-Assistent erkennt Gerät und Browser (iPhone, iPad, Safari/Chrome, Android Chrome, Samsung
+  Internet, PC) und zeigt nur die passenden Schritte – mit kleinem Bild der Browserleiste/des Menüs, der gesuchte Punkt rot
+  markiert, beide üblichen Namen („Zum Home-Bildschirm“/„Zum Startbildschirm“, „App installieren“/„Zum Startbildschirm
+  hinzufügen“). Android mit Installations-Angebot: oben „📲 Jetzt installieren – ein Tipp genügt“. Öffnet sich auf Handy/Tablet
+  im Browser einmal von selbst; danach über „Heute wichtig“ und ⚙️ → App-Installation („🧭 Schritt für Schritt einrichten“).
+- Vertragstest 64 (Startreihenfolge) um den Assistenten ergänzt.
+
 ## 1.86.0 – 2026-10-03
 - KC-CLUB-ORDNER-EINLEITUNG (Wunsch Hansi: Einleitung für die Clubchronik): Vereinsordner können eine Einleitung haben (erste Zeile
   = Überschrift, Absätze mit Leerzeile; Clubleitung pflegt sie unter „✏️ Ordner“). Sie steht oben im Ordner („📜 Wie alles begann“)

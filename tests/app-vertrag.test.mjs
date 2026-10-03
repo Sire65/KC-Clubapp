@@ -1190,7 +1190,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 {
   assert.ok(/pinnwand_erinnert: \(w\) => \(\{ bis: Object\.fromEntries/.test(server) && /\/\^\[0-9a-f-\]\{36\}\$\/\.test\(id\)/.test(server), "Server speichert „hängen lassen“ nicht geprüft");
   // 0.65.0: Fristen vom Admin (Server), ohne Wert 3 / 7 Tage
-  assert.ok(/const PW_FRISTEN_STANDARD = \{ erinnernTage: 3, pauseTage: 7 \};/.test(html) && /if \(!gezeigt && !nurZaehlen && !pwErinnern\(\)( && !einstiegPruefen\(\)\) tippDesTages\(\);|\) einstiegPruefen\(\);)/.test(html), "Erinnerung beim Start fehlt");
+  assert.ok(/const PW_FRISTEN_STANDARD = \{ erinnernTage: 3, pauseTage: 7 \};/.test(html) && /if \(!gezeigt && !nurZaehlen && !pwErinnern\(\)( && !einstiegPruefen\(\)( && !einrichtenEinmal\(\))?\) tippDesTages\(\);|\) einstiegPruefen\(\);)/.test(html), "Erinnerung beim Start fehlt"); // 1.87.0: Einrichtungs-Assistent (einmal je Gerät) vor dem Tipp des Tages
   const e = html.slice(html.indexOf("function pwErinnern()"), html.indexOf("async function pwLaden()"));
   assert.ok(/z\.vonMir && jetzt - new Date\(z\.erstellt_am\)\.getTime\(\) >= PW_ERINNERN_TAGE \* 86400000/.test(e) && /bis\[z\.id\]/.test(e), "nur eigene, alte, nicht zurückgestellte Zettel");
   assert.ok(/hängt noch an der Pinnwand\./.test(e) && /Möchtest du \$\{liste\.length === 1 \? "es" : "sie"\} abnehmen\?/.test(e) && /api\("pinnwand_abnehmen"/.test(e), "Text/Abnehmen fehlt");
@@ -2965,6 +2965,19 @@ assert.ok(/<h2>🗂️ Büro<\/h2><span class="bu-kopfgruss" id="buKopfGruss"><\
   assert.ok(/function arEinleitungHtml\(t\)/.test(html) && /<textarea id="arEinleitung"/.test(html) && /\.\.\.\(r\.ordner\.einleitung \? \[\{ art: "html", titel: r\.ordner\.einleitung\.trim\(\)\.split/.test(html), "Ordner-Ansicht, Formular, Blättern");
   const mig = fs.readFileSync(new URL("../supabase/migrations/20261003_kc_club_v1860_ordner_einleitung.sql", import.meta.url), "utf8");
   assert.ok(/add column if not exists einleitung text/.test(mig) && /Rückweg:/.test(mig), "Migration");
+}
+// 267. 1.87.0: Kurzcode-Anmeldung + Einrichtungs-Assistent
+{
+  assert.ok(/if \(a === "kurzcode_einloesen"\)/.test(server) && server.indexOf('if (a === "kurzcode_einloesen")') < server.indexOf("const ich = await anmelden(req);"), "Einlösen ohne Anmeldung");
+  assert.ok(/case "kurzcode_erzeugen":/.test(server) && /schluessel_enc: await kurzcodeVerschluesseln\(token\)/.test(server) && /name: "AES-GCM"/.test(server), "Schlüssel nur verschlüsselt");
+  assert.ok(/KURZCODE_MIN = 15, KURZCODE_FEHL_NETZ = 8, KURZCODE_FEHL_GESAMT = 60/.test(server) && /delete\(\)\.eq\("code_hash", z\.code_hash\); \/\/ nur einmal gültig/.test(server), "Gültigkeit, Bremse, einmalig");
+  assert.ok(/eq\("token_hash", await sha256\(k\)\)/.test(server), "Code eines älteren Links wird abgelehnt");
+  assert.ok(!/protokoll\([^)]*code[,: ][^)]*\)/.test(server.slice(server.indexOf('case "kurzcode_erzeugen"'), server.indexOf('case "init"'))), "Code nicht im Protokoll");
+  assert.ok(/<input id="kcCode" class="kc-code" inputmode="numeric" autocomplete="one-time-code"/.test(html) && /function kurzcodeEinloesen\(\)/.test(html), "Code-Feld auf dem Anmeldebildschirm");
+  for (const g of ["g.ios", "g.android && g.browser === \"samsung\"", "g.android"]) assert.ok(html.includes(`if (${g}`), "Assistent: " + g);
+  assert.ok(/function einrichtenEinmal\(\)/.test(html) && /lsSetzen\("kc_club_einrichten_gezeigt", "1"\)/.test(html) && /if \(START_ART !== "app"\) return einrichtenAssistent\(\);/.test(html), "einmal von selbst, sonst über installHilfe");
+  const mig = fs.readFileSync(new URL("../supabase/migrations/20261003_kc_club_v1870_kurzcode.sql", import.meta.url), "utf8");
+  assert.ok(/enable row level security/.test(mig) && /revoke all on kc_club_kurzcodes from anon, authenticated/.test(mig), "Tabelle nur für den Server");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

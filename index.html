@@ -1128,6 +1128,18 @@
   /* KC-CLUB-BUERO (1.25.0) */
   .bu-gruss { font-size: 1.05rem; line-height: 1.45; }
   /* KC-CLUB-BUERO-KOPF (1.83.0, Wunsch Hansi): Begrüßung oben neben „Büro“, Knöpfe nebeneinander – kein Platz verschenkt */
+  /* KC-CLUB-KURZCODE / KC-CLUB-EINRICHTEN (1.87.0) */
+  .kc-code-karte { border: 2px solid var(--rot); }
+  .kc-code { width: 100%; box-sizing: border-box; font-size: 2.2rem; font-weight: 800; letter-spacing: .25em; text-align: center; padding: 10px; border-radius: 14px; border: 2px solid var(--linie); background: var(--karte); color: var(--text); font-family: inherit; }
+  .kc-code-gross { font-size: 2.6rem; font-weight: 900; letter-spacing: .2em; text-align: center; margin: 10px 0 4px; color: var(--rot); }
+  .er-schritte { padding-left: 1.4em; margin: 0; } .er-schritte li { margin: 0 0 14px; } .er-schritte li > b { font-size: 1.08rem; } .er-schritte li > div { margin: 2px 0 6px; line-height: 1.45; }
+  .er-geraet { border: 2px solid var(--linie); border-radius: 14px; overflow: hidden; max-width: 280px; background: var(--karte2); display: flex; flex-direction: column; }
+  .er-geraet.unten { flex-direction: column-reverse; } .er-seite { padding: 16px; text-align: center; color: var(--grau); font-size: .9rem; }
+  .er-leiste { display: flex; justify-content: space-around; align-items: center; gap: 6px; padding: 6px 8px; background: var(--karte); font-size: 1.15rem; }
+  .er-leiste span { padding: 2px 6px; border-radius: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; } .er-leiste span:not(.er-ziel) { color: var(--grau); }
+  .er-ziel { outline: 3px solid #e53935; border-radius: 8px; font-weight: 800; animation: erPuls 1.2s ease-in-out infinite; }
+  @keyframes erPuls { 50% { outline-color: rgba(229,57,53,.25); } }
+  .er-liste { display: flex; flex-direction: column; gap: 4px; max-width: 280px; } .er-liste span { padding: 7px 10px; background: var(--karte2); border-radius: 10px; } .er-liste span.er-ziel { background: var(--karte); }
   .ar-einleitung h3 { margin: 0 0 6px; } .ar-einleitung p { margin: 0 0 8px; line-height: 1.5; } /* KC-CLUB-ORDNER-EINLEITUNG */
   .bu-kopfgruss { margin-left: auto; font-weight: 800; font-size: .98rem; text-align: right; }
   .bu-knopfreihe { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; } .bu-knopfreihe .knopf { text-align: center; }
@@ -1569,6 +1581,12 @@
 <div id="gesperrt" class="seite versteckt">
   <div class="hero"><div class="kopfzeile"><div class="logo"><img src="kc-kochmuetze-weiss.webp" alt=""></div><div><div class="marke-klein">KÖCHECLUB WERNE</div><div class="titel">Willkommen</div></div></div></div>
   <div class="karte versteckt" id="linkUngueltig" style="border:2px solid #c62828"><h3 style="color:#c62828">⚠️ Dieser Link gilt nicht mehr</h3><p style="margin:0">Es wurde inzwischen ein <b>neuerer Link</b> für dich verschickt – oder der Link ist unvollständig. Kein Problem: unten bei <b>„Link verloren?“</b> deine E-Mail-Adresse eingeben, dann kommt sofort ein neuer, gültiger Link.</p></div>
+  <!-- KC-CLUB-KURZCODE (1.87.0, Wunsch Hansi): anmelden mit 6 Ziffern statt Link kopieren -->
+  <div class="karte kc-code-karte"><h3>🔢 Mit Code anmelden</h3>
+    <p style="margin:0 0 8px">Tippe auf deinen <b>persönlichen Link</b> (WhatsApp oder Mail). In der App, die sich dann öffnet, steht bei <b>„📲 Köcheclub als App einrichten“</b> ein <b>6-stelliger Code</b> – den hier eingeben. Schon auf einem anderen Gerät angemeldet? Dort ⚙️ → App-Installation → <b>„🔢 Code für ein anderes Gerät“</b>.</p>
+    <input id="kcCode" class="kc-code" inputmode="numeric" autocomplete="one-time-code" maxlength="7" placeholder="000 000" aria-label="6-stelliger Code" oninput="kcCodeTippen(this)" onkeydown="if(event.key==='Enter')kurzcodeEinloesen()">
+    <button class="knopf haupt" id="kcCodeKnopf" style="width:100%;margin-top:8px" onclick="kurzcodeEinloesen()">✅ Anmelden</button>
+    <p class="hinweis" id="kcCodeAntwort" style="margin:6px 0 0"></p></div>
   <div class="karte"><h3>🔑 Persönlicher Link nötig</h3><p>Bitte öffne die App über deinen <b>persönlichen Link</b>, den du von Hansi bekommen hast (per WhatsApp oder Mail). Danach kannst du sie auf den Startbildschirm legen.</p>
     <p class="hinweis" style="margin:0"><b>Link funktioniert nicht?</b> Dann nimm immer den <b>neuesten</b> Link – oder fordere unten einfach einen neuen an.</p></div>
   <div class="karte"><h3>✉️ Link verloren?</h3><p style="margin-top:0">Gib die E-Mail-Adresse ein, die im Club hinterlegt ist. Wir schicken dir sofort einen neuen persönlichen Link.</p>
@@ -2000,6 +2018,8 @@
     <details class="karte" data-klappe="install" data-einfach>
       <summary>📲 App-Installation</summary>
       <div id="installStand"></div>
+      <!-- KC-CLUB-EINRICHTEN (1.87.0) -->
+      <div class="bu-knopfreihe" style="margin:0 0 10px"><button class="knopf haupt" onclick="einrichtenAssistent()">🧭 Schritt für Schritt einrichten</button><button class="knopf" onclick="kurzcodeBlatt()">🔢 Code für ein anderes Gerät</button></div>
       <button id="installKnopf" class="knopf haupt versteckt" onclick="installieren()">📲 Jetzt als App installieren</button>
       <button id="zugangKopieren" class="knopf haupt versteckt" onclick="zugangKopieren()">📋 Meinen persönlichen Link kopieren</button>
       <!-- KC-CLUB-PC (0.26.3): denselben Link auf PC/Tablet nutzen – „Link verloren?“ würde den Handy-Link ersetzen -->
@@ -2325,7 +2345,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.86.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.87.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2576,7 +2596,7 @@ async function pwStart(nurZaehlen) { // nurZaehlen: Begrüßung ist offen → Pi
       pwFenster(n); gezeigt = true; } } catch {}
   try { const r = await api("pinnwand"); pwUebernehmen(r);
     if (!gezeigt && !nurZaehlen && PW.zettel.some(pwOffen) && aktuelleAnsicht === "start") { PW.wichtigStart = true; zeige("pinnwand"); gezeigt = true; }
-    if (!gezeigt && !nurZaehlen && !pwErinnern() && !einstiegPruefen()) tippDesTages();
+    if (!gezeigt && !nurZaehlen && !pwErinnern() && !einstiegPruefen() && !einrichtenEinmal()) tippDesTages();
   } catch {}
 }
 // KC-CLUB-PINNWAND-LIVE (0.57.0): bei geöffneter App alle PW_LIVE_MS nach neuen Zetteln schauen (Aktion pinnwand_neu markiert
@@ -4506,6 +4526,92 @@ function melde(t, fehler) {
   m.onclick = () => m.remove();
   document.body.appendChild(m); setTimeout(() => m.remove(), Math.min(20000, (4000 + String(t).length * 70) * (fehler ? 2 : 1)));
 }
+// KC-CLUB-KURZCODE (1.87.0): 6 Ziffern einlösen → Schlüssel merken → App starten (kein Kopieren/Einfügen)
+function kcCodeTippen(el) { const d = el.value.replace(/\D/g, "").slice(0, 6); el.value = d.length > 3 ? d.slice(0, 3) + " " + d.slice(3) : d; if (d.length === 6) kurzcodeEinloesen(); }
+async function kurzcodeEinloesen() {
+  const code = ($("kcCode")?.value || "").replace(/\D/g, ""), a = $("kcCodeAntwort");
+  if (code.length !== 6) { a.textContent = "Bitte alle 6 Ziffern eingeben."; return; }
+  $("kcCodeKnopf").disabled = true; a.textContent = "⏳ Einen Moment …";
+  try {
+    const r = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "kurzcode_einloesen", code }) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.k) throw new Error(d.error || "Das hat nicht geklappt – bitte nochmal.");
+    a.textContent = "✅ Angemeldet – die App startet …";
+    try { localStorage.setItem("kc_club_key", d.k); } catch {}
+    location.href = location.pathname + "?k=" + d.k;
+  } catch (e) { a.textContent = "⚠️ " + e.message; $("kcCodeKnopf").disabled = false; $("kcCode").select?.(); }
+}
+// Code für ein weiteres Gerät bzw. die gerade installierte App (nur angemeldet)
+async function kurzcodeHolen() { const r = await api("kurzcode_erzeugen", {}, { warten: true }); return { ...r, schoen: r.code.slice(0, 3) + " " + r.code.slice(3) }; }
+async function kurzcodeBlatt() {
+  let r; try { r = await kurzcodeHolen(); } catch (e) { return melde(e.message, true); }
+  const f = blattAuf("kcCodeBlatt", `<h3 style="margin-top:0">🔢 Code für ein anderes Gerät</h3>
+    <p style="margin:0 0 6px">Auf dem anderen Gerät die Köcheclub-App öffnen, bei <b>„🔢 Mit Code anmelden“</b> eintippen:</p>
+    <div class="kc-code-gross">${r.schoen}</div>
+    <p class="hinweis" style="text-align:center">gilt ${r.minuten} Minuten · nur einmal · nicht weitergeben</p>
+    <div class="knoepfe"><button class="knopf" data-neu="1">↻ Neuer Code</button><button class="knopf haupt" data-zu="1">Fertig</button></div>`);
+  f.querySelector("[data-neu]").onclick = () => { f.remove(); kurzcodeBlatt(); }; f.querySelector("[data-zu]").onclick = () => f.remove();
+}
+
+// ---------- KC-CLUB-EINRICHTEN (1.87.0, Wunsch Hansi „Installation einfacher, nicht abschrecken“) ----------
+// Erkennt Gerät + Browser und zeigt NUR die passenden Schritte – mit Bild des Browsers und Pfeil auf die richtige Stelle,
+// beide üblichen Namen der Menüpunkte. iPhone/iPad: am Ende der Kurzcode für die neue Home-Bildschirm-App.
+function einrichtenGeraet() {
+  const ua = navigator.userAgent || "", ipad = /iPad/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  if (/iPhone|iPod/.test(ua) || ipad) return { ios: true, ipad, name: ipad ? "iPad" : "iPhone", browser: /CriOS/.test(ua) ? "chrome" : /FxiOS/.test(ua) ? "firefox" : /EdgiOS/.test(ua) ? "edge" : "safari" };
+  if (/Android/.test(ua)) return { android: true, name: "Android-Handy", browser: /SamsungBrowser/.test(ua) ? "samsung" : /Firefox/.test(ua) ? "firefox" : "chrome" };
+  return { pc: true, name: "PC", browser: /Edg\//.test(ua) ? "edge" : "chrome" };
+}
+// kleines Bild des Browsers: Leiste oben oder unten, das gesuchte Zeichen leuchtet
+const einrichtenBild = (lage, zeichen, ziel) => `<div class="er-geraet ${lage}"><div class="er-leiste">${zeichen.map((z, i) => `<span class="${i === ziel ? "er-ziel" : ""}">${z}</span>`).join("")}</div><div class="er-seite">🍳 Köcheclub</div></div>`;
+function einrichtenSchritte(g) {
+  const S = (t, x, bild) => ({ t, x, bild });
+  if (g.ios) {
+    const teilen = g.browser === "safari"
+      ? (g.ipad ? S("Teilen-Zeichen antippen", "Oben rechts neben der Adresse auf <b>□↑ Teilen</b> tippen.", einrichtenBild("oben", ["‹", "›", "sire65.github.io", "□↑", "＋"], 3))
+        : S("Teilen-Zeichen antippen", "Unten auf <b>□↑ Teilen</b> tippen. Siehst du es nicht: erst unten rechts auf <b>⋯</b> (drei Punkte), dann auf <b>Teilen</b>.", einrichtenBild("unten", ["‹", "›", "□↑", "📖", "⋯"], 2)))
+      : S("Teilen-Zeichen antippen", "Oben rechts in der Adresszeile auf <b>□↑ Teilen</b> tippen (bei manchen Versionen erst <b>⋯</b>).", einrichtenBild("oben", ["sire65.github.io", "□↑", "⋯"], 1));
+    return [teilen,
+      S("„Zum Home-Bildschirm“ wählen", "In der Liste etwas <b>nach unten wischen</b> und <b>„Zum Home-Bildschirm“</b> antippen (manchmal: <b>„Zum Startbildschirm“</b>).", `<div class="er-liste"><span>📋 Kopieren</span><span>⭐ Zu Favoriten</span><span class="er-ziel">⊞ Zum Home-Bildschirm</span><span>🔖 Lesezeichen</span></div>`),
+      S("„Hinzufügen“ tippen", "Oben rechts auf <b>„Hinzufügen“</b> tippen. Jetzt ist die Kochmütze auf deinem Home-Bildschirm.", `<div class="er-liste"><span>Abbrechen</span><span class="er-ziel">Hinzufügen</span></div>`),
+      S("App öffnen und Code eingeben", "Die <b>Köcheclub-App</b> über die neue Kochmütze öffnen. Sie fragt nach einem Code – diesen eintippen:", `<div class="kc-code-gross" id="erCode">…</div><p class="hinweis" style="text-align:center;margin:0" id="erCodeInfo">wird geholt …</p>`)];
+  }
+  if (g.android && g.browser === "samsung") return [
+    S("Menü öffnen", "Unten rechts auf <b>≡</b> (drei Striche) tippen.", einrichtenBild("unten", ["‹", "›", "⌂", "▢", "≡"], 4)),
+    S("„Seite hinzufügen zu“", "<b>„Seite hinzufügen zu“</b> antippen (manchmal: <b>„Hinzufügen zu“</b>).", `<div class="er-liste"><span>🔖 Lesezeichen</span><span class="er-ziel">➕ Seite hinzufügen zu</span><span>🔍 Auf Seite suchen</span></div>`),
+    S("„Startbildschirm“ wählen", "<b>„Startbildschirm“</b> antippen und mit <b>„Hinzufügen“</b> bestätigen.", `<div class="er-liste"><span>Lesezeichen</span><span class="er-ziel">Startbildschirm</span></div>`),
+    S("Fertig – über die Kochmütze öffnen", "Ab jetzt die App nur noch über die <b>Kochmütze</b> auf dem Startbildschirm öffnen.", "")];
+  if (g.android) return [
+    S("Menü öffnen", "Oben rechts auf <b>⋮</b> (drei Punkte) tippen.", einrichtenBild("oben", ["⌂", "sire65.github.io", "⋮"], 2)),
+    S("„App installieren“ wählen", "<b>„App installieren“</b> antippen. Steht dort nur <b>„Zum Startbildschirm hinzufügen“</b>: das antippen und dann <b>„Installieren“</b> wählen – <u>nicht</u> „Verknüpfung“.", `<div class="er-liste"><span>⭐ Lesezeichen</span><span class="er-ziel">📲 App installieren</span><span>⬇ Downloads</span></div>`),
+    S("„Installieren“ bestätigen", "Im Fenster auf <b>„Installieren“</b> tippen. Fragt das Handy, ob etwas auf den Startbildschirm darf: <b>„Zulassen“</b>.", `<div class="er-liste"><span>Abbrechen</span><span class="er-ziel">Installieren</span></div>`),
+    S("Fertig – über die Kochmütze öffnen", "Ab jetzt die App nur noch über die <b>Kochmütze</b> öffnen. Steht sie auch in der App-Liste des Handys, ist alles richtig.", "")];
+  return [S("Installieren-Zeichen in der Adresszeile", "Rechts in der Adresszeile auf <b>⊕</b> bzw. <b>„App installieren“</b> tippen (Chrome oder Edge). Alternativ: Menü <b>⋮</b> → „Streamen, speichern und teilen“ → „Seite als App installieren“.", einrichtenBild("oben", ["sire65.github.io", "⊕", "⋮"], 1)),
+    S("„Installieren“ bestätigen", "Im Fenster auf <b>„Installieren“</b> klicken – die App bekommt ein eigenes Fenster und ein Symbol.", "")];
+}
+// einmal je Gerät von selbst: Handy/Tablet nutzt die App noch im Browser → Assistent öffnen (danach nur noch über „Heute wichtig“/⚙️)
+function einrichtenEinmal() {
+  const g = einrichtenGeraet();
+  if (START_ART !== "browser" || schonInstalliert || g.pc || lsLesen("kc_club_einrichten_gezeigt") || document.querySelector(".blatt:not(.versteckt)")) return false;
+  lsSetzen("kc_club_einrichten_gezeigt", "1"); einrichtenAssistent(); return true;
+}
+async function einrichtenAssistent() {
+  const g = einrichtenGeraet();
+  if (START_ART === "app") return blattAuf("erBlatt", `<h3 style="margin-top:0">✅ Alles eingerichtet</h3><p>Die Köcheclub-App ist auf diesem ${esc(g.name)} richtig installiert.</p>
+    <p class="hinweis">Noch ein Gerät einrichten (z. B. iPad)? Dort die App öffnen und diesen Code verwenden:</p><div class="knoepfe"><button class="knopf haupt" onclick="document.getElementById('erBlatt').remove();kurzcodeBlatt()">🔢 Code für ein anderes Gerät</button><button class="knopf" onclick="document.getElementById('erBlatt').remove()">Schließen</button></div>`);
+  const schritte = einrichtenSchritte(g), sofort = g.android && installEreignis;
+  const f = blattAuf("erBlatt", `<h3 style="margin-top:0">📲 Köcheclub als App einrichten</h3>
+    <p class="hinweis" style="margin:0 0 8px">Erkannt: <b>${esc(g.name)}</b> · ${esc({ safari: "Safari", chrome: "Chrome", samsung: "Samsung Internet", firefox: "Firefox", edge: "Edge" }[g.browser] || g.browser)} – so geht’s in ${schritte.length} Schritten:</p>
+    ${sofort ? `<button class="knopf haupt" style="width:100%;font-size:1.1rem" onclick="document.getElementById('erBlatt').remove();installieren()">📲 Jetzt installieren – ein Tipp genügt</button><p class="hinweis" style="text-align:center">oder Schritt für Schritt:</p>` : ""}
+    <ol class="er-schritte">${schritte.map((x) => `<li><b>${x.t}</b><div>${x.x}</div>${x.bild || ""}</li>`).join("")}</ol>
+    ${g.ios ? "" : '<p class="hinweis" style="font-size:.85rem">Fragt die installierte App nach einem Code: hier unten „🔢 Code anzeigen“ tippen.</p>'}
+    <div class="knoepfe">${g.ios ? "" : '<button class="knopf" data-code="1">🔢 Code anzeigen</button>'}<button class="knopf haupt" data-zu="1">Fertig</button></div>`);
+  f.querySelector("[data-zu]").onclick = () => f.remove();
+  f.querySelector("[data-code]")?.addEventListener("click", () => { f.remove(); kurzcodeBlatt(); });
+  if (g.ios) try { const r = await kurzcodeHolen(); if ($("erCode")) { $("erCode").textContent = r.schoen; $("erCodeInfo").textContent = `gilt ${r.minuten} Minuten · nur einmal – kommst du zu spät, hier einfach nochmal öffnen`; } }
+    catch (e) { if ($("erCodeInfo")) $("erCodeInfo").textContent = "⚠️ " + e.message; }
+}
+
 // KC-CLUB-ZUGANG-SELBST: neuen persönlichen Link per Mail anfordern (ohne Anmeldung; der Link geht nur an die hinterlegte Adresse)
 // KC-CLUB-LINK-EINFUEGEN: persönlichen Link (oder nur den Schlüssel) einfügen → merken und App starten
 function linkUebernehmen(text) {
@@ -6078,13 +6184,13 @@ function klappenMerken(wurzel = document) {
   });
 }
 function installHilfe() {
-  if (START_ART === "browser" && installEreignis) return installieren();
+  if (START_ART !== "app") return einrichtenAssistent(); // 1.87.0: Schritt-für-Schritt-Assistent (Android mit „Jetzt installieren“ obenauf)
   zeige("einstellungen"); const d = document.querySelector('details[data-klappe="install"]'); if (d) { d.open = true; setTimeout(() => d.scrollIntoView({ block: "start", behavior: "smooth" }), 100); }
 }
 function wichtigZeigen() {
   $("tiKnopfStart")?.classList.toggle("versteckt", !ICH?.vorstand); // KC-CLUB-TAGESINFO-MANUELL (1.38.0)
   const h = [];
-  if (START_ART === "verknuepfung" || (START_ART === "browser" && installEreignis)) h.push(`<div class="zeile" style="cursor:pointer" onclick="installHilfe()">📲 <b>${START_ART === "browser" ? "Köcheclub als App installieren" : "App richtig installieren"}</b> – dann klappen WhatsApp & Galerie<span style="margin-left:auto">›</span></div>`);
+  if (START_ART === "verknuepfung" || (START_ART === "browser" && !schonInstalliert)) h.push(`<div class="zeile" style="cursor:pointer" onclick="installHilfe()">📲 <b>${START_ART === "browser" ? "Köcheclub als App installieren" : "App richtig installieren"}</b> – dann klappen WhatsApp & Galerie<span style="margin-left:auto">›</span></div>`);
   if (INIT?.wartung?.an) h.push(`<div class="zeile" style="cursor:pointer" onclick="verbindungBlatt()">🔵 <b>Wartung</b>${INIT.wartung.hinweis ? " – " + esc(INIT.wartung.hinweis) : ": es kann kurz zu Unterbrechungen kommen"}<span style="margin-left:auto">›</span></div>`);
   if (INIT?.ungelesen) h.push(`<div class="zeile" style="cursor:pointer" onclick="zeige('nachrichten')">💬 <b>${INIT.ungelesen} neue Nachricht${INIT.ungelesen > 1 ? "en" : ""}</b><span style="margin-left:auto">›</span></div>`);
   if (INIT?.offeneAbstimmungen) h.push(`<div class="zeile" style="cursor:pointer" onclick="zeige('vorschlaege')">🗳️ <b>${INIT.offeneAbstimmungen === 1 ? "1 Abstimmung wartet" : INIT.offeneAbstimmungen + " Abstimmungen warten"}</b> auf deine Stimme<span style="margin-left:auto">›</span></div>`);

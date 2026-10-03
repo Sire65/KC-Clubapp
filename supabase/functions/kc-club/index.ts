@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.86.0";
+const SERVER_VERSION = "1.87.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -42,6 +42,26 @@ async function sha256(s: string) {
   const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
   return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
 }
+// ---------- KC-CLUB-KURZCODE (1.87.0, Wunsch Hansi: Installation ohne langen Link) ----------
+// 6-stelliger Code (15 Min., einmal). Der Schlüssel des Mitglieds liegt bis zum Einlösen AES-GCM-verschlüsselt in
+// kc_club_kurzcodes (Schlüssel abgeleitet aus dem Server-Geheimnis, nie im Klartext). Fehlversuche: je Netz 8, insgesamt 60 je 15 Min.
+const KURZCODE_MIN = 15, KURZCODE_FEHL_NETZ = 8, KURZCODE_FEHL_GESAMT = 60;
+let KURZCODE_AES: CryptoKey | null = null;
+async function kurzcodeAes() {
+  if (!KURZCODE_AES) KURZCODE_AES = await crypto.subtle.importKey("raw", await crypto.subtle.digest("SHA-256", new TextEncoder().encode("kc-kurzcode:" + SERVICE)), "AES-GCM", false, ["encrypt", "decrypt"]);
+  return KURZCODE_AES;
+}
+const kcB64 = (u: Uint8Array) => btoa(String.fromCharCode(...u)), kcUnb64 = (t: string) => Uint8Array.from(atob(t), (c) => c.charCodeAt(0));
+async function kurzcodeVerschluesseln(klartext: string) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const enc = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, await kurzcodeAes(), new TextEncoder().encode(klartext)));
+  return kcB64(iv) + "." + kcB64(enc);
+}
+async function kurzcodeEntschluesseln(t: string) {
+  const [iv, enc] = t.split(".");
+  return new TextDecoder().decode(await crypto.subtle.decrypt({ name: "AES-GCM", iv: kcUnb64(iv) }, await kurzcodeAes(), kcUnb64(enc)));
+}
+const kurzcodeHash = (code: string) => sha256("kc-kurzcode:" + code);
 function zufall(bytes = 24) { const a = new Uint8Array(bytes); crypto.getRandomValues(a); return [...a].map((x) => x.toString(16).padStart(2, "0")).join(""); }
 const jetzt = () => new Date().toISOString();
 const fTag = new Intl.DateTimeFormat("de-DE", { timeZone: TZ, weekday: "short", day: "2-digit", month: "2-digit" });
@@ -2731,6 +2751,27 @@ Köcheclub Werne`,
       return json({ ok: true, text });
     }
 
+    // ----- KC-CLUB-KURZCODE (1.87.0): Code einlösen (ohne Anmeldung) → persönlicher Schlüssel für dieses Gerät -----
+    if (a === "kurzcode_einloesen") {
+      const code = String(p.code ?? "").replace(/\D/g, "");
+      if (!/^\d{6}$/.test(code)) throw new Fehler("Bitte die 6 Ziffern eingeben.");
+      const netz = await sha256("kc-netz:" + (req.headers.get("x-forwarded-for") || "").split(",")[0].trim());
+      const seit = new Date(Date.now() - KURZCODE_MIN * 60000).toISOString();
+      const [{ count: fehlNetz }, { count: fehlGesamt }] = await Promise.all([
+        db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("aktion", "kurzcode_fehlversuch").eq("details->>netz", netz).gte("zeit", seit),
+        db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("aktion", "kurzcode_fehlversuch").gte("zeit", seit),
+      ]);
+      if ((fehlNetz ?? 0) >= KURZCODE_FEHL_NETZ || (fehlGesamt ?? 0) >= KURZCODE_FEHL_GESAMT) throw new Fehler(`Zu viele Versuche – bitte in ${KURZCODE_MIN} Minuten noch einmal.`, 429);
+      const { data: z } = await db.from("kc_club_kurzcodes").select("*").eq("code_hash", await kurzcodeHash(code)).gt("gueltig_bis", jetzt()).maybeSingle();
+      if (!z) { await protokoll(null, "kurzcode_fehlversuch", { netz }); throw new Fehler("Der Code stimmt nicht oder ist abgelaufen. Bitte einen neuen Code anzeigen lassen.", 404); }
+      await db.from("kc_club_kurzcodes").delete().eq("code_hash", z.code_hash); // nur einmal gültig
+      const k = await kurzcodeEntschluesseln(z.schluessel_enc).catch(() => "");
+      const { data: zug } = k ? await db.from("kc_club_zugang").select("person_id").eq("person_id", z.person_id).eq("aktiv", true).eq("token_hash", await sha256(k)).maybeSingle() : { data: null };
+      if (!zug) { await protokoll(z.person_id, "kurzcode_veraltet", {}); throw new Fehler("Dieser Code gehört zu einem älteren Link. Bitte den neuesten Link öffnen und dort einen neuen Code anzeigen lassen.", 409); }
+      await protokoll(z.person_id, "kurzcode_eingeloest", {});
+      return json({ ok: true, k });
+    }
+
     // ----- KC-CLUB-FEHLERPROTOKOLL (0.93.0): Fehler VOR der Anmeldung (Link fehlt/ungültig) – anonym, mit Geräte-Kennung -----
     if (a === "fehler_anonym") {
       const geraet = txt(p.geraet, 40).replace(/[^A-Za-z0-9-]/g, "");
@@ -2783,6 +2824,22 @@ Köcheclub Werne`,
 // auch intern (nur lesend) für das Notfall-Paket berechnen. Inhalt unverändert aus Deno.serve übernommen.
 async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anfrage: number, anmeldungMs: number): Promise<Response> {
     switch (a) {
+      // ----- KC-CLUB-KURZCODE (1.87.0): Code für ein weiteres Gerät / die installierte App erzeugen -----
+      case "kurzcode_erzeugen": {
+        const token = req.headers.get("x-club-token") ?? "";
+        if (!/^[0-9a-f]{32,96}$/.test(token)) throw new Fehler("Kein Zugang – bitte den persönlichen Link neu öffnen.", 401);
+        await db.from("kc_club_kurzcodes").delete().or(`person_id.eq.${JSON.stringify(ich.person_id)},gueltig_bis.lt.${jetzt()}`); // je Person nur ein Code; Abgelaufenes weg
+        let code = "", hash = "";
+        for (let i = 0; i < 5; i++) {
+          const z = crypto.getRandomValues(new Uint32Array(1))[0] % 1_000_000; code = String(z).padStart(6, "0"); hash = await kurzcodeHash(code);
+          const { data: da } = await db.from("kc_club_kurzcodes").select("code_hash").eq("code_hash", hash).maybeSingle(); if (!da) break;
+        }
+        const bis = new Date(Date.now() + KURZCODE_MIN * 60000).toISOString();
+        const { error } = await db.from("kc_club_kurzcodes").insert({ code_hash: hash, person_id: ich.person_id, schluessel_enc: await kurzcodeVerschluesseln(token), gueltig_bis: bis });
+        if (error) throw new Fehler("Der Code konnte nicht erzeugt werden – bitte nochmal tippen.", 500);
+        await protokoll(ich.person_id, "kurzcode_erzeugt", {}); // ohne Code
+        return json({ code, bis, minuten: KURZCODE_MIN });
+      }
       case "init": {
         const [naechstes, { data: teil }, mitglieder] = await Promise.all([
           treffenListe(ich, true),
