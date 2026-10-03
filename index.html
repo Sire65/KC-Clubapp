@@ -1903,6 +1903,8 @@
       <!-- KC-CLUB-ONLINE-ANSAGE (1.56.0, Wunsch Hansi): Sprachansage „Klaus ist jetzt online“ – nur dieses Gerät, nur wenn die App offen ist -->
       <div class="schalter" id="setAnsageZeile"><div><b>🗣️ Ansage, wenn jemand online kommt</b><div class="hinweis">Das Handy sagt z. B. „Klaus ist jetzt online“ – nur solange die App offen ist, nicht in deiner Ruhezeit</div></div><input type="checkbox" id="setAnsage" onchange="ansageSchalter(this.checked)"></div>
       <!-- KC-CLUB-VORLESEN (1.59.0, Wunsch Hansi): neue Nachrichten im offenen Chat vorlesen (auch im Chat oben 🔇/🔊) -->
+      <!-- KC-CLUB-SPRACHANSAGEN (1.71.0, Wunsch Hansi): „Christina hat dir eine Nachricht geschickt“ – eine Zeile, Auswahl im Fenster -->
+      <div class="schalter" id="setSprAnsZeile"><div><b>🗣️ Sprachansagen</b><div class="hinweis" id="sprAnsStand">Das Handy sagt an, was dich betrifft</div></div><button class="knopf klein" onclick="ansBlatt()">Auswählen</button></div>
       <!-- KC-CLUB-RECHTSCHREIBUNG (1.70.0, Wunsch Hansi): Tippfehler rot unterstrichen – macht die Handy-Tastatur, die App schaltet es überall ein -->
       <div class="schalter" id="setRsZeile"><div><b>🖍️ Tippfehler rot unterstreichen</b><div class="hinweis">Beim Schreiben im Chat werden Fehler rot unterstrichen. Antippen zeigt Vorschläge.</div></div><button class="knopf klein" onclick="rsBlatt()">Prüfen</button></div>
       <div class="schalter" id="setMikroZeile"><div><b>🎤 Mikrofon im Chat</b><div class="hinweis">Sprachnachricht (Ton) oder Diktieren (das Handy schreibt mit, verschickt wird Text).</div></div>
@@ -2289,7 +2291,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.70.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.71.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2965,6 +2967,136 @@ function sprechen(text) {
   try { if (!("speechSynthesis" in window)) return; const u = new SpeechSynthesisUtterance(text); u.lang = "de-DE";
     const st = speechSynthesis.getVoices().find((v) => /^de/i.test(v.lang)); if (st) u.voice = st; speechSynthesis.speak(u); } catch {}
 }
+// ---------- KC-CLUB-SPRACHANSAGEN (1.71.0, Wunsch Hansi): das Handy sagt an, was mich betrifft ----------
+// Quelle ist der normale Push (der Service Worker reicht Titel/Text/Link an die offene App weiter) – also genau das, was das
+// Mitglied unter Benachrichtigungen bekommt; Anklopfen kommt direkt aus der App. Sprechen kann das Handy nur bei offener App
+// (Web-Apps dürfen bei geschlossener App nicht sprechen – dann bleibt es beim Push-Ton). Je Gerät wählbar, Standard nur
+// Nachrichten + Anklopfen. Nie in der Ruhezeit, nicht für den gerade offenen Chat, viele auf einmal → eine Sammelansage.
+// Standort: Entfernung als Luftlinie (eigener Standort nur auf diesem Gerät, wird nicht gesendet), Ansage bei Annäherung.
+const ANS_ARTEN = [
+  { id: "nachricht", sym: "💬", t: "Nachrichten", u: "auch @Erwähnungen und Reaktionen", bsp: "Christina hat dir eine Nachricht geschickt.", an: true },
+  { id: "anklopfen", sym: "👋", t: "Anklopfen", bsp: "Christina klopft gerade bei dir an.", an: true },
+  { id: "pinnwand", sym: "📌", t: "Pinnwand", bsp: "Christina hat dir ein Post-it an die Pinnwand gehängt." },
+  { id: "helfen", sym: "🤝", t: "Helfen, Leihen & Börse", bsp: "Klaus hat auf deine Hilfeanfrage reagiert und kommt." },
+  { id: "mitfahrt", sym: "🚗", t: "Mitfahrt", bsp: "Klaus fährt bei dir mit." },
+  { id: "standort", sym: "📍", t: "Standort mit Entfernung", u: "Luftlinie – und wenn die Person näher kommt", bsp: "Christina teilt den Standort mit dir. Sie ist noch etwa 12 Kilometer entfernt, Luftlinie." },
+  { id: "termine", sym: "📅", t: "Termine & Abstimmungen", u: "neue Termine, Erinnerungen, Anfragen", bsp: "Morgen: Clubabend im Vereinsheim." },
+];
+const ANS_KEY = "kc_club_sprachansagen", ANS = { q: [], t: null, gesagt: new Map(), st: null };
+function ansWahl() { let w = null; try { w = JSON.parse(lsLesen(ANS_KEY) || "null"); } catch {} return w && typeof w === "object" ? w : Object.fromEntries(ANS_ARTEN.map((a) => [a.id, !!a.an])); }
+const ansAn = (id) => !!ansWahl()[id];
+function ansStandZeigen() {
+  const w = ansWahl(), n = ANS_ARTEN.filter((a) => w[a.id]);
+  if ($("sprAnsStand")) $("sprAnsStand").textContent = n.length ? `An: ${n.map((a) => a.t.split(" ")[0].replace(/,$/, "")).join(", ")}` : "Aus – nichts wird angesagt";
+}
+function ansSetzen(id, an) {
+  const w = { ...ansWahl(), [id]: !!an }; lsSetzen(ANS_KEY, JSON.stringify(w)); ansStandZeigen();
+  if (id === "standort" && an) ansMeinOrt().then((o) => { if (!o) melde("📍 Für die Entfernung bitte den Standort für die App erlauben.", true); });
+}
+function ansBlatt() {
+  document.getElementById("ansFenster")?.remove();
+  const w = ansWahl(), pushAus = !("Notification" in window) || Notification.permission !== "granted";
+  const f = document.createElement("div"); f.id = "ansFenster"; f.className = "blatt"; f.setAttribute("role", "dialog"); f.setAttribute("aria-modal", "true");
+  f.innerHTML = `<div class="blatt-innen" style="max-height:88vh;overflow-y:auto">
+    <h3>🗣️ Sprachansagen</h3>
+    <p class="hinweis" style="margin:0 0 6px">Was soll dein Handy ansagen? Mit ▶ hörst du ein Beispiel.</p>
+    ${ANS_ARTEN.map((a) => `<div class="schalter ans-zeile"><label style="display:flex;gap:10px;align-items:center;flex:1;cursor:pointer"><input type="checkbox" ${w[a.id] ? "checked" : ""} onchange="ansSetzen('${a.id}', this.checked)"><span><b>${a.sym} ${esc(a.t)}</b>${a.u ? `<span class="hinweis" style="display:block">${esc(a.u)}</span>` : ""}</span></label>
+      <button class="knopf klein" aria-label="Beispiel anhören" title="Beispiel anhören" onclick="sprechen(ANS_ARTEN.find((x) => x.id === '${a.id}').bsp)">▶</button></div>`).join("")}
+    ${pushAus ? '<p class="hinweis" style="margin:8px 0 0">⚠️ Auf diesem Handy ist Push noch aus – die Ansagen kommen mit dem Push. Einschalten: ⚙️ → Benachrichtigungen.</p>' : ""}
+    <p class="hinweis" style="margin:8px 0 10px;font-size:.85rem">Das Handy spricht nur, solange die Köcheclub-App offen ist – nicht in deiner Ruhezeit. Ist die App zu, kommt der normale Push mit Ton.</p>
+    <button class="knopf" onclick="document.getElementById('ansFenster').remove()">Fertig</button></div>`;
+  f.onclick = (e) => { if (e.target === f) f.remove(); };
+  document.body.appendChild(f);
+}
+const ansOhneSym = (t) => String(t || "").replace(/^[^\p{L}\p{N}„"]+/u, "").trim();
+const ansSatz = (t) => { const x = ansOhneSym(t); return /[.!?]$/.test(x) ? x : x + "."; };
+// Push (Titel, Text, Link) → { art, text } – Titel kommen aus dem eigenen Club-Server; Unbekanntes sagt den Titel ohne Symbol
+function ansageDeuten(titel, text, url) {
+  const t0 = String(titel || ""), b = String(text || ""), h = String(url || "").replace(/^[^#]*/, "");
+  const w = /^❗ Wichtig – /.test(t0) ? "Wichtig! " : "", t = t0.replace(/^❗ Wichtig – /, ""), name = (re) => (re.exec(b) || [])[1] || "Jemand";
+  let m;
+  if (/^#anklopfen/.test(h) || /^🟢 /.test(t)) return null; // eigene Wege (klopfZeigen, Online-Ansage)
+  if (/^#standort/.test(h) && (m = /^📍 (.+)$/.exec(t))) return { art: "standort", text: `${m[1]} teilt den Standort mit dir.`, wer: m[1] };
+  if (/^#nachricht=/.test(h)) {
+    if (h.slice(11) === String(chatId) && aktuelleAnsicht === "chat" && !document.hidden) return null; // Chat ist offen
+    if ((m = /^📣 (.+?) hat dich erwähnt(?: – \S+ (.+))?$/.exec(t))) return { art: "nachricht", text: `${w}${m[1]} hat dich erwähnt${m[2] ? " – in der Gruppe " + m[2] : ""}.` };
+    if ((m = /^\S+ (.+?) hat reagiert$/.exec(t))) return { art: "nachricht", text: `${m[1]} hat auf deine Nachricht reagiert.` };
+    if ((m = /^💬 (.+)$/.exec(t))) return { art: "nachricht", text: `${w}${m[1]} hat dir eine Nachricht geschickt.` };
+    if ((m = /^\S+ (.+): (.+)$/.exec(t))) return { art: "nachricht", text: `${w}${m[2]} hat in der Gruppe ${m[1]} geschrieben.` };
+    return { art: "nachricht", text: w + ansSatz(t) };
+  }
+  if (/^#pinnwand/.test(h) && (m = /(wichtiges )?(privates )?Post-it von (.+?)(?: bekommen)?$/.exec(t))) return { art: "pinnwand", text: `${m[3]} hat ${m[2] ? "dir ein privates" : m[1] ? "ein wichtiges" : "ein"} Post-it an die Pinnwand gehängt.` };
+  if (/^🚗|Mitfahr/.test(t)) {
+    const n = name(/^(.+?) (?:fährt|bietet|sucht)/);
+    if (/Neue Mitfahrt/.test(t)) return { art: "mitfahrt", text: `${n} fährt bei dir mit.` };
+    if (/Mitfahrt abgesagt/.test(t)) return { art: "mitfahrt", text: `${n} fährt doch nicht bei dir mit.` };
+    if (/gefunden/.test(t)) return { art: "mitfahrt", text: `${n} bietet dir eine Mitfahrgelegenheit an.` };
+    if (/Sucht Mitfahr/.test(t)) return { art: "mitfahrt", text: `${n} sucht eine Mitfahrgelegenheit.` };
+    return { art: "mitfahrt", text: ansSatz(t) };
+  }
+  if (/^#(helfen|boerse)/.test(h)) {
+    if (/^✋ Zusage/.test(t)) return { art: "helfen", text: `${name(/^(.+?) kommt/)} hat auf deine Hilfeanfrage reagiert und kommt.` };
+    if (/Genug Helfer/.test(t)) return { art: "helfen", text: "Für deine Hilfeanfrage haben sich genug Helfer gemeldet." };
+    if ((m = /^🙋 Wer kann helfen\? (.+)$/.exec(t))) return { art: "helfen", text: `${name(/^(.+?) sucht/)} sucht Hilfe: ${ansOhneSym(m[1])}.` };
+    if (/Anfrage Ausleihe/.test(t)) return { art: "helfen", text: `${name(/^(.+?):/)} möchte etwas ausleihen.` };
+    return { art: "helfen", text: ansSatz(t) };
+  }
+  if (/^#(termin|aktion|vorschlaege)/.test(h)) return { art: "termine", text: ansSatz(t) };
+  return null;
+}
+function ansageAusPush(d) { const x = ansageDeuten(d?.titel, d?.text, d?.url); if (x) ansageMelden(x); }
+function ansageMelden(x) {
+  if (!x || !ansAn(x.art.split("-")[0]) || inRuheJetzt(INIT?.einstellungen?.ruhezeit)) return;
+  const jetzt = Date.now(); if (jetzt - (ANS.gesagt.get(x.text) || 0) < 30000) return; // derselbe Satz nicht doppelt (z. B. zwei Wege)
+  ANS.gesagt.set(x.text, jetzt);
+  ANS.q.push(x); clearTimeout(ANS.t);
+  ANS.t = setTimeout(async () => {
+    const q = ANS.q.splice(0);
+    if (q.length >= 3) return sprechen(`${q.length} neue Meldungen im Köcheclub.`);
+    for (const y of q) sprechen(y.art === "standort" ? y.text + (await ansEntfernungText(y.wer, true)) : y.text);
+  }, 1300); // kurz warten: Push-Ton zuerst, mehrere auf einmal sammeln
+}
+function ansMeinOrt() {
+  return new Promise((ok) => { if (!navigator.geolocation) return ok(null);
+    navigator.geolocation.getCurrentPosition((p) => ok({ lat: p.coords.latitude, lon: p.coords.longitude }), () => ok(null), { maximumAge: 300000, timeout: 10000, enableHighAccuracy: false }); });
+}
+function ansKm(a, b) {
+  const r = Math.PI / 180, dLat = (b.lat - a.lat) * r, dLon = (b.lon - a.lon) * r;
+  const x = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * r) * Math.cos(b.lat * r) * Math.sin(dLon / 2) ** 2;
+  return 12742 * Math.asin(Math.min(1, Math.sqrt(x)));
+}
+const ansKmText = (km) => km < 1 ? `etwa ${Math.max(100, Math.round(km * 10) * 100)} Meter` : km < 3 ? `etwa ${String(Math.round(km * 2) / 2).replace(".", ",")} Kilometer` : `etwa ${Math.round(km)} Kilometer`;
+const ANS_STUFEN = [20, 10, 5, 2, 1, 0.3]; // Ansage beim Unterschreiten
+async function ansEntfernung(wer) {
+  let r; try { r = await api("standort_liste", {}); } catch { return null; }
+  const z = (r?.standorte || []).find((x) => !x.vonMir && x.von?.name === wer);
+  if (!z) return { weg: true };
+  const ich = await ansMeinOrt(); if (!ich) return null;
+  return { km: ansKm(ich, { lat: Number(z.lat), lon: Number(z.lon) }), vorname: String(wer).split(" ")[0] };
+}
+async function ansEntfernungText(wer, folgen) {
+  const e = await ansEntfernung(wer); if (!e || e.weg) return "";
+  if (folgen) ansFolgen(wer, e.km);
+  return e.km < 0.3 ? ` ${e.vorname} ist schon ganz in deiner Nähe.` : ` ${e.vorname} ist noch ${ansKmText(e.km)} entfernt, Luftlinie.`;
+}
+// Annäherung: solange geteilt wird und die App offen ist, jede Minute nachsehen – Ansage nur beim Unterschreiten einer Stufe
+function ansFolgen(wer, km) {
+  if (ANS.st) clearInterval(ANS.st.timer);
+  const start = Date.now(), st = { wer, stufe: ANS_STUFEN.findIndex((s) => km >= s), timer: null };
+  if (st.stufe < 0) return (ANS.st = null);
+  st.timer = setInterval(async () => {
+    if (!ansAn("standort") || Date.now() - start > 3 * 3600000) { clearInterval(st.timer); return; }
+    if (document.hidden) return;
+    const e = await ansEntfernung(wer); if (!e) return; if (e.weg) { clearInterval(st.timer); return; }
+    const neu = ANS_STUFEN.findIndex((s) => e.km >= s), stufe = neu < 0 ? ANS_STUFEN.length : neu;
+    if (stufe <= st.stufe) return;
+    st.stufe = stufe;
+    if (stufe >= ANS_STUFEN.length) { clearInterval(st.timer); return ansageMelden({ art: "standort-nah", text: `${e.vorname} ist gleich da.` }); }
+    ansageMelden({ art: "standort-nah", text: `${e.vorname} ist noch ${ansKmText(e.km)} entfernt.` });
+  }, 60000);
+  ANS.st = st;
+}
+
 // ---------- KC-CLUB-VORLESEN (1.59.0, Wunsch Hansi): Nachrichten vorlesen – Lautsprecher im Chat an/aus ----------
 // Nur im offenen Chat und nur Neues von anderen (nicht beim Öffnen alles auf einmal); höchstens 3 auf einmal. Gerät spricht selbst.
 const VORLESEN = "kc_club_vorlesen", VL = { chat: null, ids: new Set() };
@@ -3174,6 +3306,7 @@ function klopfZeigen(k, antworten) {
   $("klopfKacheln").innerHTML = (antworten || []).map((a) => `<button onclick="klopfKurz('${esc(a.id)}', this.textContent)">${esc(a.text)}</button>`).join("");
   $("klopfBlatt").classList.remove("versteckt");
   klopfTonSpielen(klopfStand().ton);
+  ansageMelden({ art: "anklopfen", text: `${k.von.vorname} klopft gerade bei dir an` }); // KC-CLUB-SPRACHANSAGEN
 }
 async function klopfKurz(antwort, text) {
   $("klopfBlatt").classList.add("versteckt");
@@ -5924,7 +6057,7 @@ function zeige(v, ausHistorie) {
   if (v === "dienste") dienstLaden();
   if (v === "nachrichten") unterhLaden();
   if (v === "mitglieder") { mgAnsichtWahlZeigen(); mitgliederLaden(); }
-  if (v === "einstellungen") { notProbeZeigen(); infoStartZeigen(); tippSchalterZeigen(); ansageSchalterZeigen(); ruheZeigen(); if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); anklopfenZeigen(); zuletztSchalterZeigen(); schnellWahlZeigen(); mgAnsichtWahlZeigen(); }
+  if (v === "einstellungen") { notProbeZeigen(); infoStartZeigen(); tippSchalterZeigen(); ansageSchalterZeigen(); ansStandZeigen(); ruheZeigen(); if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); anklopfenZeigen(); zuletztSchalterZeigen(); schnellWahlZeigen(); mgAnsichtWahlZeigen(); }
   if (v === "start") neuLaden();
   // KC-CLUB-ZURUECK: jede Ansicht bekommt einen Verlaufseintrag, damit „Zurück“ eine Ansicht zurückgeht statt die App zu schließen
   const hash = v === "start" || v === "chat" ? "" : v === "protokoll" ? "#protokoll=" + prId : v === "aktion" ? "#aktion=" + aktionId : v === "mitglied" ? "#mitglied=" + mitgliedId : v === "dokansicht" ? "#dokument=" + encodeURIComponent(DOKA.id) : "#" + v;
@@ -13085,7 +13218,7 @@ async function fpAdmin(tage) {
   history.pushState({ v: "start" }, "", url.pathname);
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("sw.js").catch((e) => fpNeu("sw", { text: "Offline-Speicher (Service Worker) nicht eingerichtet: " + (e?.message || e) }));
-    navigator.serviceWorker.addEventListener("message", (e) => { if (e.data?.typ === "push") { neuLaden(); onlinePing(); if (chatId) chatLaden(false); }
+    navigator.serviceWorker.addEventListener("message", (e) => { if (e.data?.typ === "push") { neuLaden(); onlinePing(); if (chatId) chatLaden(false); ansageAusPush(e.data); }
       if (e.data?.typ === "online-ansage") onlineAnsageSprechen([e.data.name]); }); // KC-CLUB-ONLINE-ANSAGE-PUSH
   }
   // Messung: wie wurde die App gestartet (einmal je Sitzung) – zeigt, ob die Installation geklappt hat

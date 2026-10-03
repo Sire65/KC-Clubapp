@@ -1,6 +1,6 @@
 // KC Club-App – Service Worker: Seite zuerst aus dem Netz (offline aus dem Speicher), Push-Benachrichtigungen, Update.
 // VERSION muss bei jeder neuen Version mit version.json und APP_VERSION in index.html übereinstimmen.
-const VERSION = "1.70.0";
+const VERSION = "1.71.0";
 const CACHE = "kc-club-" + VERSION;
 const DATEIEN = ["./", "index.html", "manifest.webmanifest", "kc-kochmuetze-weiss.webp", "icon-192.png", "icon-512.png"];
 
@@ -47,7 +47,8 @@ self.addEventListener("push", (e) => {
     // KC-CLUB-ONLINE-ANSAGE-PUSH (1.64.0): „🟢 X ist jetzt online“ bei offener, sichtbarer App → Ton/Ansage in der App statt Mitteilung
     const online = /^🟢 (.+) ist jetzt online$/.exec(titel), sichtbar = fenster.filter((c) => c.visibilityState === "visible");
     if (online && sichtbar.length) { sichtbar.forEach((c) => c.postMessage({ typ: "online-ansage", name: online[1] })); await quittung(d.data?.requestId, "displayed"); return; }
-    fenster.forEach((c) => c.postMessage({ typ: "push", titel }));
+    // KC-CLUB-SPRACHANSAGEN (1.71.0): Text und Link mitgeben – die offene App sagt an, was das Mitglied ausgewählt hat
+    fenster.forEach((c) => c.postMessage({ typ: "push", titel, text: d.body || d.text || "", url: d.data?.url || "" }));
     if (self.navigator.setAppBadge) try { await self.navigator.setAppBadge(); } catch {}
     await self.registration.showNotification(titel, {
       body: d.body || d.text || "", icon: "icon-192.png", badge: "icon-192.png", tag: d.data?.url || "kc-club",

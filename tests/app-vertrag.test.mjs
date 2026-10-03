@@ -2837,6 +2837,21 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   for (const g of ["android", "samsung", "ios", "pc"]) assert.ok(new RegExp(`\\n  ${g}: "<b>`).test(html), "Anleitung " + g);
   assert.ok(!/languagetool|spellcheck.*api\./i.test(html), "kein Fremddienst für die Prüfung");
 }
+// 250. 1.71.0: Sprachansagen (KC-CLUB-SPRACHANSAGEN)
+{
+  const sw = lies("sw.js");
+  assert.ok(/c\.postMessage\(\{ typ: "push", titel, text: d\.body \|\| d\.text \|\| "", url: d\.data\?\.url \|\| "" \}\)/.test(sw), "Service Worker gibt Text/Link weiter");
+  assert.ok(/if \(chatId\) chatLaden\(false\); ansageAusPush\(e\.data\); \}/.test(html), "Push → Ansage");
+  assert.ok(/klopfTonSpielen\(klopfStand\(\)\.ton\);\n  ansageMelden\(\{ art: "anklopfen"/.test(html), "Anklopfen wird angesagt");
+  for (const id of ["nachricht", "anklopfen", "pinnwand", "helfen", "mitfahrt", "standort", "termine"]) assert.ok(new RegExp(`\\{ id: "${id}", sym: "[^"]+", t: "[^"]+",[^\\n]*bsp: "`).test(html), "Ansage-Art " + id);
+  assert.ok(/\{ id: "nachricht",[^\n]*an: true \}/.test(html) && /\{ id: "anklopfen",[^\n]*an: true \}/.test(html) && !/\{ id: "pinnwand",[^\n]*an: true/.test(html), "Standard nur Nachrichten + Anklopfen");
+  assert.ok(/onclick="ansBlatt\(\)">Auswählen<\/button>/.test(html) && /aria-label="Beispiel anhören"/.test(html), "eine Zeile + ▶ Beispiel");
+  assert.ok(/!ansAn\(x\.art\.split\("-"\)\[0\]\) \|\| inRuheJetzt\(INIT\?\.einstellungen\?\.ruhezeit\)/.test(html), "Auswahl + Ruhezeit");
+  assert.ok(/aktuelleAnsicht === "chat" && !document\.hidden\) return null; \/\/ Chat ist offen/.test(html) && /q\.length >= 3\) return sprechen\(`\$\{q\.length\} neue Meldungen/.test(html), "offener Chat still, Sammelansage");
+  assert.ok(/Luftlinie/.test(html) && !/api\("standort_(start|update)"[^\n]*ansMeinOrt/.test(html), "Entfernung nur lokal (eigener Ort wird nicht gesendet)");
+  // Server-Titel, auf die sich die Deutung stützt (Vertrag: werden sie geändert, muss ansageDeuten mit)
+  for (const t of ["`💬 ${ich.name}`", "hat dich erwähnt", "`📌 ${kopf}`", "Post-it von ${von} bekommen", "\"✋ Zusage\"", "\"🚗 Neue Mitfahrt\"", "\"🚗 Mitfahrgelegenheit gefunden\"", "`📍 ${ich.name}`", "`👋 ${ich.vorname} klopft an`"]) assert.ok(server.includes(t), "Server-Titel fehlt: " + t);
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

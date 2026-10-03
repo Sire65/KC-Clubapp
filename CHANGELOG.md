@@ -1,5 +1,16 @@
 # Änderungen
 
+## 1.71.0 – 2026-10-03
+- KC-CLUB-SPRACHANSAGEN (Wunsch Hansi): Das Handy sagt an, was mich betrifft – z. B. „Christina hat dir eine Nachricht
+  geschickt“, „Klaus klopft gerade bei dir an“, „Christina hat ein Post-it an die Pinnwand gehängt“, „Klaus hat auf deine
+  Hilfeanfrage reagiert und kommt“, „Klaus fährt bei dir mit“, „Christina teilt den Standort mit dir. Christina ist noch etwa
+  12 Kilometer entfernt, Luftlinie.“ (danach Ansage beim Näherkommen: 10/5/2/1 km, „ist gleich da“).
+- Übersichtlich: unter ⚙️ → „Ansagen, Töne & Tipps“ nur eine Zeile „🗣️ Sprachansagen – Auswählen“; im Fenster 7 Bereiche zum
+  Ankreuzen, je mit ▶ zum Probehören. Standard (je Gerät): Nachrichten + Anklopfen.
+- Quelle ist der normale Push (Service Worker gibt Titel/Text/Link an die offene App); Anklopfen kommt direkt aus der App.
+  Nur bei offener App (Web-Apps dürfen geschlossen nicht sprechen), nie in der Ruhezeit, nicht für den gerade offenen Chat,
+  derselbe Satz nicht doppelt, ab 3 Meldungen auf einmal eine Sammelansage. Entfernung: eigener Standort bleibt auf dem Gerät.
+
 ## 1.70.0 – 2026-10-03
 - KC-CLUB-RECHTSCHREIBUNG (Wunsch Hansi: Fehler im Chat rot unterstreichen): Die App schaltet die Rechtschreibhilfe des
   Handys/Browsers in allen Schreibfeldern ausdrücklich ein (spellcheck, Deutsch, Satzanfang groß; nicht bei E-Mail, Telefon,
