@@ -3034,7 +3034,7 @@ assert.ok(/<h2>🗂️ Büro<\/h2><span class="bu-kopfgruss" id="buKopfGruss"><\
   assert.ok(/h\.von !== ich\.person_id && !ich\.vorstand\) throw new Fehler\("Ändern kann nur/.test(ae) && /h\.geschlossen_am \|\| h\.datum < heute/.test(ae) && /protokoll\(ich\.person_id, "hilfe_geaendert"/.test(ae), "Rechte, offen, Audit");
   assert.ok(/\.eq\("antwort", "komme"\)/.test(ae) && !/aktiveMitglieder/.test(ae), "nur Zugesagte benachrichtigen, kein Rundruf");
   assert.ok(/const voll = !!h\.anzahl && \(count \?\? 0\) >= h\.anzahl;/.test(server) && /const hilfeAnzahl = \(v: unknown\) => v === null/.test(server), "ohne Grenze nie voll");
-  assert.ok(/function hilfeOeffnen\(id\) \{[^\n]*a\?\.darfSchliessen \? hilfeBearbeiten\(id\) : hilfeInfo\(id\)/.test(html) && /class="mini-kachel[^\n]*onclick="hilfeOeffnen\('\$\{a\.id\}'\)"/.test(html), "Kachel → Formular für Berechtigte");
+  assert.ok(/function hilfeOeffnen\(id\) \{[^\n]*hilfeInfo\(id\)/.test(html) && /onclick="\$\('hilfeInfo'\)\?\.remove\(\);hilfeBearbeiten\('\$\{a\.id\}'\)">✏️ Ändern<\/button>/.test(html) /* 1.95.0: erst Kurzansicht, dort ✏️ Ändern (Test 276) */ && /class="mini-kachel[^\n]*onclick="hilfeOeffnen\('\$\{a\.id\}'\)"/.test(html), "Kachel → Formular für Berechtigte");
   assert.ok(/api\("hilfe_aendern", \{ id: f\.id, \.\.\.daten \}\)/.test(html) && /anzahl: f\.ohne \? null : f\.anzahl/.test(html) && /♾️ Egal wie viele/.test(html), "Formular speichert Änderung / ohne Grenze");
   assert.ok(!/komme\.length < [ax]\.anzahl/.test(html) && !/\$\{n\} von \$\{a\.anzahl\}/.test(html), "überall hlVoll/hlStand");
 }
@@ -3044,7 +3044,7 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
 {
   const k = html.slice(html.indexOf("function hilfeKurzHtml(a) {"), html.indexOf("async function hilfeKurzAntwort("));
   assert.ok(/✋ Ja, ich kann helfen/.test(k) && /🙅 Dabei kann ich nicht helfen/.test(k) && /❓ Ich brauche noch mehr Details/.test(k) && !/<input|<textarea|hlChips|hlStepper/.test(k), "Kurzansicht ohne Eingabefelder, drei Antworten");
-  assert.ok(/if \(a\.offen && !a\.eigen && !a\.darfSchliessen\) return hilfeKurzHtml\(a\);/.test(html), "fremde offene Aufrufe → Kurzansicht");
+  assert.ok(/if \(a\.offen( && !a\.eigen && !a\.darfSchliessen)?\) return hilfeKurzHtml\(a\);/.test(html), "offene Aufrufe → Kurzansicht"); // 1.95.0: auch eigene (Test 276)
   assert.ok(/async function hilfeDetails\(id\)[\s\S]{0,400}await direkt\(a\.von\.person_id\)/.test(html), "Details → Nachricht an Suchenden");
   assert.ok(/else if \(h\.startsWith\("#hilfe="\)\) hilfeDirekt\(/.test(html) && /url: APP_URL \+ "#hilfe=" \+ h\.id/.test(server), "Push/Mail-Sprung");
   assert.ok(/function hilfeVonPinnwand\(id\) \{[^\n]*hilfeDirekt\(id\)/.test(html), "Pinnwand → Kurzansicht");
@@ -3057,6 +3057,14 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/t\.maxLength > 0 && t\.value\.length \+ e\.length > t\.maxLength/.test(html) && /pwText: \{[^\n]*nachher: \(\) => pwZaehlen\(\)/.test(html), "Zeichengrenze + Zähler");
   const chatFeld = html.slice(html.indexOf('<textarea id="text" rows="2"'), html.indexOf("</textarea>", html.indexOf('<textarea id="text" rows="2"')));
   assert.ok(!/emoStelleMerken\(\)/.test(chatFeld) && /emoStelleMerken\('text'\)/.test(chatFeld), "Chat-Feld merkt sein eigenes Ziel");
+}
+// 276. 1.95.0: eigener Aufruf zuerst als Kurzansicht; Online-Ansage gesammelt, ab 4 Personen ohne Namen
+{
+  assert.ok(/if \(a\.offen\) return hilfeKurzHtml\(a\);/.test(html) && /Dein Aufruf – so sehen ihn die Mitglieder/.test(html) && /Noch niemand hat zugesagt/.test(html), "eigene Kurzansicht mit Stand");
+  const k = html.slice(html.indexOf("function hilfeKurzHtml(a) {"), html.indexOf("async function hilfeKurzAntwort("));
+  assert.ok(/\$\{eigen \? `<div class="hk-knoepfe"><button class="knopf haupt" onclick="\$\('hilfeInfo'\)\?\.remove\(\);hilfeBearbeiten/.test(k), "eigener Aufruf: Ändern/Schließen statt Antworten");
+  assert.ok(/const ANSAGE_SAMMEL_MS = 1500, ANSAGE_NAMEN_MAX = 3;/.test(html) && /n\.length > ANSAGE_NAMEN_MAX\) return `\$\{n\.length\} Clubkameradinnen und Kameraden sind gerade online`/.test(html), "ab 4 zusammenfassen");
+  assert.ok(/OA\.warte = \[\.\.\.new Set\(\[\.\.\.\(OA\.warte \|\| \[\]\), \.\.\.n\]\)\];/.test(html) && /clearTimeout\(OA\.sammelTimer\)/.test(html), "kurz nacheinander → eine Ansage");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

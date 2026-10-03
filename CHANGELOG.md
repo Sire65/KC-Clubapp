@@ -1,5 +1,15 @@
 # Änderungen
 
+## 1.95.0 – 2026-10-03
+- KC-CLUB-HILFE-KURZ (Wunsch Hansi: „ich sehe immer die Langversion von meinem Aufruf“): Auch der eigene offene Aufruf öffnet
+  zuerst die Kurzansicht – Überschrift „Dein Aufruf – so sehen ihn die Mitglieder“, darunter wer zugesagt hat, wie viele nicht
+  können und wie viele noch fehlen, Knöpfe „✏️ Ändern“ (öffnet das Formular) und „🔒 Aufruf schließen“. Clubleitung sieht bei
+  fremden Aufrufen zusätzlich Stand + kleine Knöpfe „✏️ Ändern (Clubleitung)“ / „🔒 Schließen“. Pinnwand-Aushang öffnet für alle
+  die Kurzansicht.
+- KC-CLUB-ONLINE-ANSAGE-SAMMELN (Wunsch Hansi): Online-Meldungen, die kurz nacheinander kommen (z. B. beim Start), werden 1,5 s
+  gesammelt und als eine Ansage gesprochen; bei mehr als 3 Personen ohne Namen: „5 Clubkameradinnen und Kameraden sind gerade
+  online“. Bis 3 Personen weiter mit Namen („Klaus und Steven sind jetzt online“).
+
 ## 1.94.0 – 2026-10-03
 - KC-CLUB-PINNWAND-EMOJI (Wunsch Hansi: „auf Post-its Emojis einsetzen, z. B. jemand ist krank und man wünscht gute Besserung“):
   Unter dem Zettel-Text eine Schnellreihe 🤒 💐 🍀 💪 ❤️ 🙏 🤗 🎂 🎉 👍 ☀️ 🍲 und „😊 Mehr“ für die volle Auswahl (gleiche Gruppen und

@@ -2366,7 +2366,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.94.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.95.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2762,7 +2762,7 @@ function pwAushangHtml() {
       <div class="zkopf">von <b>${esc(a.eigen ? "dir" : a.von.name.split(" ")[0])}</b></div>
       <div class="ztext">${esc(was)}</div><div class="zfuss">${esc(hlWann(a, true, h.zeitfenster))}${a.ort ? ` · 📍 ${esc(a.ort)}` : ""}</div>
       <div class="zfuss"><b>✋ ${hlStand(a)}</b>${voll ? " – genug 🎉" : ""}${a.meine === "komme" ? " · ✔ du kommst" : ""}</div>
-      <div class="zknoepfe"><button class="antw" onclick="hilfeVonPinnwand('${a.id}')">${a.darfSchliessen ? "✏️ Ansehen & ändern" : a.meine ? "🙋 Ansehen" : "🙋 Ansehen & antworten"}</button></div></div>`; }).join("");
+      <div class="zknoepfe"><button class="antw" onclick="hilfeVonPinnwand('${a.id}')">${a.eigen ? "🙋 Ansehen" : a.meine ? "🙋 Ansehen" : "🙋 Ansehen & antworten"}</button></div></div>`; }).join("");
 }
 function pwForm(an, antwort) {
   $("pwForm").classList.toggle("versteckt", !an);
@@ -3131,13 +3131,25 @@ function onlineAnsagen(liste) {
 // KC-CLUB-ONLINE-ANSAGE-PUSH (1.64.0, Fund Hansi „Steven angemeldet, keine Ansage“): Ton/Ansage auf DIESEM Gerät – aus dem
 // Online-Takt oder aus dem Admin-Push („🟢 X ist jetzt online“, den der Service Worker bei offener App hierher gibt).
 // Dieselbe Person höchstens einmal je 10 Min. (egal über welchen Weg); nie in der Ruhezeit.
+// KC-CLUB-ONLINE-ANSAGE-SAMMELN (1.95.0, Wunsch Hansi): Meldungen, die kurz nacheinander kommen (z. B. mehrere Pushes beim Start),
+// werden 1,5 s gesammelt und als EINE Ansage gesprochen; bei mehr als 3 Personen ohne Namen: „5 Clubkameradinnen und Kameraden …“
+const ANSAGE_SAMMEL_MS = 1500, ANSAGE_NAMEN_MAX = 3;
+function onlineAnsageText(n) {
+  if (n.length > ANSAGE_NAMEN_MAX) return `${n.length} Clubkameradinnen und Kameraden sind gerade online`;
+  return n.length === 1 ? `${n[0]} ist jetzt online` : `${n.slice(0, -1).join(", ")} und ${n[n.length - 1]} sind jetzt online`;
+}
 function onlineAnsageSprechen(namen) {
   if (document.hidden || inRuheJetzt(INIT?.einstellungen?.ruhezeit)) return;
   const jetzt = Date.now(), n = [...new Set(namen.filter(Boolean))].filter((x) => jetzt - (OA.gesagt.get(x) || 0) >= ANSAGE_PAUSE_MS);
   if (!n.length) return;
   n.forEach((x) => OA.gesagt.set(x, jetzt));
-  const ton = anmeldeTonAn(); if (ton) anmeldeTon();
-  if (ansageAn()) setTimeout(() => sprechen(n.length === 1 ? `${n[0]} ist jetzt online` : `${n.slice(0, -1).join(", ")} und ${n[n.length - 1]} sind jetzt online`), ton ? 700 : 0);
+  OA.warte = [...new Set([...(OA.warte || []), ...n])];
+  clearTimeout(OA.sammelTimer);
+  OA.sammelTimer = setTimeout(() => {
+    const alle = OA.warte || []; OA.warte = []; if (!alle.length || document.hidden) return;
+    const ton = anmeldeTonAn(); if (ton) anmeldeTon();
+    if (ansageAn()) setTimeout(() => sprechen(onlineAnsageText(alle)), ton ? 700 : 0);
+  }, ANSAGE_SAMMEL_MS);
 }
 function sprechen(text) {
   try { if (!("speechSynthesis" in window)) return; const u = new SpeechSynthesisUtterance(text); u.lang = "de-DE";
@@ -8122,7 +8134,8 @@ function hlNeuWahl() {
 function hilfeNeu() { HL.form = { id: null, art: "", artText: "", absprache: false, datum: hlTag(0), slot: "", anzahl: 2, ohne: false, ort: "", ortFrei: false, notiz: "", ziel: "alle" }; hlZeigen(); window.scrollTo(0, 0); }
 // KC-CLUB-HILFE-AENDERN (1.92.0, Wunsch Hansi): eigene Kachel antippen → ganzes Formular mit allen Angaben zum Ändern;
 // andere Mitglieder sehen weiter die Einzelheiten mit „Ich komme / Kann nicht“
-function hilfeOeffnen(id) { const a = HL.hilfe?.aufrufe.find((x) => x.id === id); return a?.darfSchliessen ? hilfeBearbeiten(id) : hilfeInfo(id); }
+// 1.95.0 (Wunsch Hansi): auch der eigene Aufruf öffnet zuerst die Kurzansicht (wie die Mitglieder sie sehen) – mit Stand und ✏️ Ändern
+function hilfeOeffnen(id) { return hilfeInfo(id); }
 function hilfeBearbeiten(id) {
   const a = HL.hilfe?.aufrufe.find((x) => x.id === id); if (!a) return;
   const wobei = /^Wobei: (.*)(?:\n|$)/.exec(a.notiz || ""), orte = HL.hilfe.orte || [];
@@ -8167,16 +8180,18 @@ async function hilfeSenden(knopf) {
 function hilfeKurzHtml(a) {
   const d = HL.hilfe || {}, voll = hlVoll(a), wobei = /^Wobei: (.*)(?:\n|$)/.exec(a.notiz || ""), rest = wobei ? (a.notiz || "").slice(wobei[0].length).trim() : (a.notiz || "");
   const was = wobei ? wobei[1] : (d.arten?.[a.art] || a.art).replace(/^\S+\s/, ""), zeile = (sym, t, w) => w ? `<div class="hk-zeile"><span>${sym}</span><div><small>${t}</small><b>${esc(w)}</b></div></div>` : "";
-  return `<div class="karte hk"><h3 style="margin:0 0 8px">🙋 ${esc(a.von.name.split(" ")[0])} sucht Hilfe</h3>
+  const verw = !!a.darfSchliessen, eigen = !!a.eigen;
+  return `<div class="karte hk"><h3 style="margin:0 0 8px">🙋 ${eigen ? "Dein Aufruf – so sehen ihn die Mitglieder" : esc(a.von.name.split(" ")[0]) + " sucht Hilfe"}</h3>
     ${zeile("🔧", "Wobei", was)}${zeile("🗓️", "Wann", hlWann(a, true, d.zeitfenster).replace(/^\S+\s/, ""))}${zeile("📍", "Wo", a.ort)}
     ${zeile("👥", "Gesucht", a.anzahl ? `${a.anzahl} ${a.anzahl === 1 ? "Helfer" : "Helfer"} – ${a.komme.length} ${a.komme.length === 1 ? "hat" : "haben"} schon zugesagt` : `egal wie viele – ${a.komme.length} dabei`)}
     ${rest ? `<p class="hk-text">${esc(rest)}</p>` : ""}
     ${voll ? '<p class="hinweis" style="margin:6px 0 0">🎉 Es haben schon genug zugesagt – weitere Hilfe ist trotzdem willkommen.</p>' : ""}
-    <div class="hk-knoepfe">
+    ${verw ? `<div class="hl-stand${voll ? " voll" : ""}" style="margin-top:10px"><b>✋ ${a.komme.length ? esc(a.komme.join(", ")) : "Noch niemand hat zugesagt"}</b>${a.kannNicht ? `<br><small class="hinweis">🙅 ${a.kannNicht} kann nicht</small>` : ""}${a.anzahl && !voll ? `<br><small>Es fehlen noch ${a.anzahl - a.komme.length}</small>` : ""}</div>` : ""}
+    ${eigen ? `<div class="hk-knoepfe"><button class="knopf haupt" onclick="$('hilfeInfo')?.remove();hilfeBearbeiten('${a.id}')">✏️ Ändern</button><button class="knopf" onclick="$('hilfeInfo')?.remove();hilfeSchliessen('${a.id}')">🔒 Aufruf schließen</button></div>` : `<div class="hk-knoepfe">
       <button class="knopf haupt${a.meine === "komme" ? " an" : ""}" onclick="hilfeKurzAntwort('${a.id}', '${a.meine === "komme" ? "" : "komme"}')">${a.meine === "komme" ? "✔ Du hilfst – zurücknehmen" : "✋ Ja, ich kann helfen"}</button>
       <button class="knopf${a.meine === "kann_nicht" ? " an" : ""}" onclick="hilfeKurzAntwort('${a.id}', '${a.meine === "kann_nicht" ? "" : "kann_nicht"}')">${a.meine === "kann_nicht" ? "✔ Du kannst nicht – zurücknehmen" : "🙅 Dabei kann ich nicht helfen"}</button>
       <button class="knopf" onclick="hilfeDetails('${a.id}')">❓ Ich brauche noch mehr Details</button>
-    </div></div>`;
+    </div>${verw ? `<div class="knoepfe" style="margin-top:10px"><button class="knopf klein" onclick="$('hilfeInfo')?.remove();hilfeBearbeiten('${a.id}')">✏️ Ändern (Clubleitung)</button><button class="knopf klein" onclick="$('hilfeInfo')?.remove();hilfeSchliessen('${a.id}')">🔒 Schließen</button></div>` : ""}`}</div>`;
 }
 async function hilfeKurzAntwort(id, antwort) {
   try { await api("hilfe_antwort", { id, antwort: antwort || null }); $("hilfeInfo")?.remove();
@@ -8197,7 +8212,7 @@ async function hilfeDirekt(id) {
   hilfeOeffnen(id);
 }
 function hilfeKarte(a) {
-  if (a.offen && !a.eigen && !a.darfSchliessen) return hilfeKurzHtml(a);
+  if (a.offen) return hilfeKurzHtml(a);
   const d = HL.hilfe || {}, n = a.komme.length, voll = hlVoll(a);
   return `<div class="karte hl-karte${a.offen ? "" : " vorbei"}">
     <div class="hl-titel">${esc(d.arten?.[a.art] || a.art)}</div>
@@ -8406,7 +8421,7 @@ async function boSpeichern() {
   } catch (e) { melde(e.message, true); }
 }
 // KC-CLUB-HILFE-PINNWAND (1.90.0): Aushang an der Pinnwand antippen → Hilfebereich mit genau diesem Aufruf offen
-function hilfeVonPinnwand(id) { const a = PW.hilfe?.aufrufe.find((x) => x.id === id); if (a?.darfSchliessen) { HL.oeffnen = id; return hlStart("helfen"); } hilfeDirekt(id); } // 1.93.0: Mitglieder sehen die Kurzansicht über der Pinnwand
+function hilfeVonPinnwand(id) { hilfeDirekt(id); } // 1.95.0: für alle die Kurzansicht über der Pinnwand // 1.93.0: Mitglieder sehen die Kurzansicht über der Pinnwand
 async function hilfeAntwort(id, antwort) {
   try { await api("hilfe_antwort", { id, antwort: antwort || null }); melde(antwort === "komme" ? "✋ Danke! Deine Zusage ist gespeichert" : antwort ? "Gespeichert – danke für die Rückmeldung" : "Zurückgenommen"); hlLaden(); }
   catch (e) { melde(e.message, true); }
