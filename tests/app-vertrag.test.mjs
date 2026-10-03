@@ -2513,6 +2513,30 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.match(html, /\[m\.id, m\.gelesenVon\?\.length, m\.haken,/, "Chat zeichnet bei neuem Haken neu");
 }
 
+// 225. 1.56.0: Ansage „… ist jetzt online“, Admin-Ton (KC-CLUB-ONLINE-ANSAGE)
+{
+  const code = html.slice(html.indexOf("const ANSAGE = "), html.indexOf("function sprechen("));
+  const gesagt = [], toene = [];
+  const run = new Function("ICH", "INIT", "document", "inRuheJetzt", "localStorage", "setTimeout", "sprechen", "anmeldeTon",
+    `${code}; return { onlineAnsagen, OA };`);
+  const speicher = { kc_club_online_ansage: "1" };
+  const ls = { getItem: (k) => speicher[k] ?? null, setItem: (k, v) => { speicher[k] = v; } };
+  const { onlineAnsagen, OA } = run({ person_id: "ICH", admin: true }, {}, { hidden: false }, () => false, ls, (f) => f(), (t) => gesagt.push(t), () => toene.push(1));
+  onlineAnsagen([{ person_id: "ICH" }, { person_id: "A", vorname: "Klaus" }]);
+  assert.equal(gesagt.length, 0, "erste Liste: niemand wird angesagt");
+  onlineAnsagen([{ person_id: "ICH" }, { person_id: "A", vorname: "Klaus" }, { person_id: "B", vorname: "Dieter" }]);
+  assert.deepEqual(gesagt, ["Dieter ist jetzt online"], "Neuer wird angesagt, ich selbst nie");
+  assert.equal(toene.length, 1, "Admin: Ton");
+  onlineAnsagen([{ person_id: "A", vorname: "Klaus" }]); onlineAnsagen([{ person_id: "A", vorname: "Klaus" }, { person_id: "B", vorname: "Dieter" }]);
+  assert.equal(gesagt.length, 1, "kurz weg und wieder da: keine zweite Ansage");
+  onlineAnsagen([{ person_id: "A" }, { person_id: "B" }, { person_id: "C", vorname: "Steven" }, { person_id: "D", vorname: "Willfried" }]);
+  assert.equal(gesagt[1], "Steven und Willfried sind jetzt online", "mehrere zusammen");
+  assert.match(html, /id="setAnsage" onchange="ansageSchalter\(this\.checked\)"/, "Schalter in den Einstellungen");
+  assert.match(html, /id="setAnmeldeTonZeile"[^\n]*id="setAnmeldeTon"/, "Admin-Ton-Schalter");
+  assert.match(code, /if \(!neu\.length \|\| document\.hidden \|\| inRuheJetzt\(INIT\?\.einstellungen\?\.ruhezeit\)\) return;/, "nicht in Ruhezeit / im Hintergrund");
+  assert.match(html, /onlineAnsagen\(ONL\.liste\); \/\/ KC-CLUB-ONLINE-ANSAGE/, "an der vorhandenen Online-Liste");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

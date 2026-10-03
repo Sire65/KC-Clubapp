@@ -1,5 +1,12 @@
 # Änderungen
 
+## 1.56.0 – 2026-10-03
+- KC-CLUB-ONLINE-ANSAGE (Wunsch Hansi): Einstellung „🗣️ Ansage, wenn jemand online kommt“ – das Handy sagt „Klaus ist jetzt
+  online“ (mehrere: „Klaus und Dieter sind jetzt online“). Admin zusätzlich „🔔 Ton, wenn sich jemand anmeldet“ (Standard an).
+  Sprache/Ton macht das Gerät selbst (kostenlos). Nur bei offener App, nicht in der eigenen Ruhezeit, dieselbe Person erst
+  nach 10 Min. Abwesenheit wieder, nach langer Pause keine Sammelansage. Nutzt die vorhandene Online-Liste (gleiche
+  Privatsphäre). Einstellung je Gerät.
+
 ## 1.55.0 – 2026-10-03
 - KC-CLUB-HAKEN (Wunsch Hansi „wie WhatsApp“): Haken an eigenen Nachrichten – ✓ gesendet (noch nicht auf dem Handy des anderen),
   ✓✓ grau angekommen, ✓✓ blau gelesen. „Angekommen“ je Empfänger: Push auf seinem Handy angezeigt/geöffnet (Rückmeldung des

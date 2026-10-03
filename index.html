@@ -1726,6 +1726,9 @@
       <div class="schalter"><div><b>🔠 Große Schrift</b></div><input type="checkbox" id="setGrossE" onchange="einstellung('gross', this.checked); if ($('setGross')) $('setGross').checked = this.checked"></div>
       <div class="schalter"><div><b>🟢 Einfache Ansicht</b><div class="hinweis">Ausschalten zeigt alle Funktionen – du kannst jederzeit zurück.</div></div><button class="knopf klein" onclick="ansichtSetzen('erweitert')">🔧 Alle Funktionen</button></div>
       <div class="schalter"><div><b>💡 Tipp des Tages</b><div class="hinweis">Beim Öffnen ab und zu ein kurzer Tipp zu neuen Funktionen</div></div><input type="checkbox" id="setTipps" checked onchange="tippSchalter(this.checked)"></div>
+      <!-- KC-CLUB-ONLINE-ANSAGE (1.56.0, Wunsch Hansi): Sprachansage „Klaus ist jetzt online“ – nur dieses Gerät, nur wenn die App offen ist -->
+      <div class="schalter"><div><b>🗣️ Ansage, wenn jemand online kommt</b><div class="hinweis">Das Handy sagt z. B. „Klaus ist jetzt online“ – nur solange die App offen ist, nicht in deiner Ruhezeit</div></div><input type="checkbox" id="setAnsage" onchange="ansageSchalter(this.checked)"></div>
+      <div class="schalter versteckt" id="setAnmeldeTonZeile"><div><b>🔔 Ton, wenn sich jemand anmeldet (Admin)</b><div class="hinweis">Kurzer Doppelton, sobald ein Mitglied online kommt</div></div><input type="checkbox" id="setAnmeldeTon" onchange="anmeldeTonSchalter(this.checked)"></div>
       <div class="schalter"><div><b>📄 Kurzanleitung</b><div class="hinweis">Die App in 3 Schritten – zum Ansehen oder Ausdrucken</div></div><button class="knopf klein" onclick="druckStarten('anleitung')">Ansehen</button></div>
       <div class="schalter"><div><b>💭 Feedback</b><div class="hinweis">Was gefällt dir, was ist zu kompliziert? Schreib es Hansi.</div></div><button class="knopf klein" onclick="zeige('feedback')">Schreiben</button></div>
     </details>
@@ -2119,7 +2122,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.55.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.56.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2756,6 +2759,46 @@ function tippDesTages() {
   $("tdtBlatt").classList.remove("versteckt");
   return true;
 }
+// ---------- KC-CLUB-ONLINE-ANSAGE (1.56.0, Wunsch Hansi): „Klaus ist jetzt online“ als Sprachansage, Admin zusätzlich ein Ton ----------
+// Nutzt die vorhandene Online-Liste (gleiche Privatsphäre: wer sich verbirgt, wird nicht angesagt; wer selbst unsichtbar ist,
+// sieht/hört niemanden). Sprache und Ton macht das Handy selbst (kostenlos, nichts geht an einen Dienst). Nur bei offener App,
+// nicht in der eigenen Ruhezeit; dieselbe Person frühestens nach 10 Min. Abwesenheit wieder. Einstellung je Gerät.
+const ANSAGE = "kc_club_online_ansage", ANSAGE_TON = "kc_club_anmelde_ton", ANSAGE_PAUSE_MS = 10 * 60000, ANSAGE_FRISCH_MS = 3 * 60000;
+const lsLesen = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
+const lsSetzen = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
+const ansageAn = () => lsLesen(ANSAGE) === "1";
+const anmeldeTonAn = () => !!ICH?.admin && lsLesen(ANSAGE_TON) !== "0"; // Admin: Standard an
+const OA = { vorher: null, zuletzt: 0, gesehen: new Map() };
+function onlineAnsagen(liste) {
+  const jetzt = Date.now(), andere = (liste || []).filter((x) => x.person_id !== ICH?.person_id);
+  // nur echte Neuankömmlinge: vorige Liste ist frisch (sonst nach langer Pause nicht alle auf einmal) und Person war ≥ 10 Min. weg
+  const neu = OA.vorher && jetzt - OA.zuletzt < ANSAGE_FRISCH_MS ? andere.filter((x) => !OA.vorher.has(x.person_id) && jetzt - (OA.gesehen.get(x.person_id) || 0) >= ANSAGE_PAUSE_MS) : [];
+  for (const x of andere) OA.gesehen.set(x.person_id, jetzt);
+  OA.vorher = new Set(andere.map((x) => x.person_id)); OA.zuletzt = jetzt;
+  if (!neu.length || document.hidden || inRuheJetzt(INIT?.einstellungen?.ruhezeit)) return;
+  const ton = anmeldeTonAn(); if (ton) anmeldeTon();
+  if (ansageAn()) { const n = neu.map((x) => x.vorname || x.name);
+    setTimeout(() => sprechen(n.length === 1 ? `${n[0]} ist jetzt online` : `${n.slice(0, -1).join(", ")} und ${n[n.length - 1]} sind jetzt online`), ton ? 700 : 0); }
+}
+function sprechen(text) {
+  try { if (!("speechSynthesis" in window)) return; const u = new SpeechSynthesisUtterance(text); u.lang = "de-DE";
+    const st = speechSynthesis.getVoices().find((v) => /^de/i.test(v.lang)); if (st) u.voice = st; speechSynthesis.speak(u); } catch {}
+}
+function anmeldeTon() {
+  try { const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [[523, 0], [784, 0.18]].forEach(([f, d]) => { const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = f; g.gain.setValueAtTime(0.13, ctx.currentTime + d); g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + d + 0.35); o.connect(g).connect(ctx.destination); o.start(ctx.currentTime + d); o.stop(ctx.currentTime + d + 0.36); });
+    setTimeout(() => ctx.close().catch(() => {}), 900); } catch {}
+}
+function ansageSchalterZeigen() {
+  if ($("setAnsage")) $("setAnsage").checked = ansageAn();
+  $("setAnmeldeTonZeile")?.classList.toggle("versteckt", !ICH?.admin); if ($("setAnmeldeTon")) $("setAnmeldeTon").checked = anmeldeTonAn();
+}
+function ansageSchalter(an) {
+  lsSetzen(ANSAGE, an ? "1" : "0");
+  if (an) { sprechen("Ansage ist an"); melde("🗣️ Ansage an – z. B. „Klaus ist jetzt online“ (nur bei offener App)" + ("speechSynthesis" in window ? "" : " – dieses Gerät kann leider nicht sprechen")); }
+  else melde("🔇 Ansage aus");
+}
+function anmeldeTonSchalter(an) { lsSetzen(ANSAGE_TON, an ? "1" : "0"); if (an) anmeldeTon(); melde(an ? "🔔 Anmelde-Ton an" : "🔕 Anmelde-Ton aus"); }
 function tippSchalterZeigen() { if ($("setTipps")) $("setTipps").checked = tippStand().an; }
 function tippSchalter(an) { tippSpeichern({ an, ...(an ? { zuletzt: null } : {}) }); melde(an ? "💡 Tipp des Tages ist an" : "🔕 Tipp des Tages ist aus"); }
 
@@ -2768,6 +2811,7 @@ async function onlinePing() {
   try {
     const r = await api("online");
     ONL.zeigen = r.zeigen; ONL.liste = r.online || []; ONL.ids = new Set(ONL.liste.map((x) => x.person_id)); ONL.stand = Date.now();
+    onlineAnsagen(ONL.liste); // KC-CLUB-ONLINE-ANSAGE
     if ($("setOnline")) $("setOnline").checked = r.zeigen;
     onlineLeisteZeigen(); if (INIT) heroZeigen();
     // jemand klopft bei mir an → Fenster (jedes Anklopfen nur einmal)
@@ -5483,7 +5527,7 @@ function zeige(v, ausHistorie) {
   if (v === "dienste") dienstLaden();
   if (v === "nachrichten") unterhLaden();
   if (v === "mitglieder") { mgAnsichtWahlZeigen(); mitgliederLaden(); }
-  if (v === "einstellungen") { notProbeZeigen(); infoStartZeigen(); tippSchalterZeigen(); ruheZeigen(); if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); anklopfenZeigen(); zuletztSchalterZeigen(); schnellWahlZeigen(); mgAnsichtWahlZeigen(); }
+  if (v === "einstellungen") { notProbeZeigen(); infoStartZeigen(); tippSchalterZeigen(); ansageSchalterZeigen(); ruheZeigen(); if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); anklopfenZeigen(); zuletztSchalterZeigen(); schnellWahlZeigen(); mgAnsichtWahlZeigen(); }
   if (v === "start") neuLaden();
   // KC-CLUB-ZURUECK: jede Ansicht bekommt einen Verlaufseintrag, damit „Zurück“ eine Ansicht zurückgeht statt die App zu schließen
   const hash = v === "start" || v === "chat" ? "" : v === "protokoll" ? "#protokoll=" + prId : v === "aktion" ? "#aktion=" + aktionId : v === "mitglied" ? "#mitglied=" + mitgliedId : "#" + v;
