@@ -2033,6 +2033,9 @@
       <!-- KC-CLUB-VORLESEN (1.59.0, Wunsch Hansi): neue Nachrichten im offenen Chat vorlesen (auch im Chat oben 🔇/🔊) -->
       <!-- KC-CLUB-SPRACHANSAGEN (1.71.0, Wunsch Hansi): „Christina hat dir eine Nachricht geschickt“ – eine Zeile, Auswahl im Fenster -->
       <div class="schalter" id="setSprAnsZeile"><div><b>🗣️ Sprachansagen</b><div class="hinweis" id="sprAnsStand">Das Handy sagt an, was dich betrifft – auch wer online kommt</div></div><button class="knopf klein" onclick="ansBlatt()">Auswählen</button></div>
+      <!-- KC-CLUB-STIMME (2.6.2) -->
+      <div class="zwei"><label class="feld">🗣️ Stimme zum Vorlesen (dieses Gerät)<select id="setStimme" onchange="stimmeSetzen(this.value)"></select></label><button class="knopf klein" style="align-self:end" onclick="stimmeProbe()">▶ Probe</button></div>
+      <p class="hinweis" style="margin:-4px 0 10px">Klingt es blechern? Auf iPhone/iPad unter <b>Einstellungen → Bedienungshilfen → Gesprochene Inhalte → Stimmen → Deutsch</b> z. B. „Anna (Premium)“ laden – kostenlos – und hier auswählen.</p>
       <!-- KC-CLUB-RECHTSCHREIBUNG (1.70.0, Wunsch Hansi): Tippfehler rot unterstrichen – macht die Handy-Tastatur, die App schaltet es überall ein -->
       <div class="schalter" id="setRsZeile"><div><b>🖍️ Tippfehler rot unterstreichen</b><div class="hinweis">Beim Schreiben im Chat werden Fehler rot unterstrichen. Antippen zeigt Vorschläge.</div></div><button class="knopf klein" onclick="rsBlatt()">Prüfen</button></div>
       <div class="schalter" id="setMikroZeile"><div><b>🎤 Mikrofon im Chat</b><div class="hinweis">Sprachnachricht (Ton) oder Diktieren (das Handy schreibt mit, verschickt wird Text).</div></div>
@@ -2425,7 +2428,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.6.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.6.2"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3278,10 +3281,37 @@ function onlineAnsageSprechen(namen) {
     if (ansageAn()) setTimeout(() => sprechen(onlineAnsageText(alle)), ton ? 700 : 0);
   }, ANSAGE_SAMMEL_MS);
 }
-function sprechen(text) {
-  try { if (!("speechSynthesis" in window)) return; const u = new SpeechSynthesisUtterance(text); u.lang = "de-DE";
-    const st = speechSynthesis.getVoices().find((v) => /^de/i.test(v.lang)); if (st) u.voice = st; speechSynthesis.speak(u); } catch {}
+// KC-CLUB-STIMME (2.6.2, Fund Hansi: „auf dem iPad hört sich das Vorlesen schrecklich an“): Apple liefert unter Deutsch auch
+// Spaß- und Roboterstimmen (Eloquence/Novelty: Eddy, Flo, Grandma, Rocko, Zarvox …) – vorher nahm die App einfach die erste.
+// Jetzt: eigene Wahl auf diesem Gerät (⚙️ → Ansagen → Stimme) oder automatisch die beste (Premium/Erweitert, bekannte gute
+// Namen, keine Spaßstimmen). Eine Stelle für alle Ansagen und das Vorlesen.
+const STIMME_KEY = "kc_club_stimme";
+const STIMME_SCHLECHT = /eddy|flo\b|grandma|grandpa|oma\b|opa\b|reed|rocko|sandy|shelley|albert|bad news|bahh|bells|boing|bubbles|cellos|good news|jester|organ|superstar|trinoids|whisper|wobble|zarvox|fred|junior|kathy|ralph|hysterical|deranged|pipe|princess/i;
+const STIMME_GUT = /anna|helena|markus|yannick|petra|viktor|martin|katja|conrad|amala|hedda|stefan|google|microsoft|siri/i;
+const deStimmen = () => { try { return speechSynthesis.getVoices().filter((v) => /^de/i.test(v.lang)); } catch { return []; } };
+function stimmeWert(v) {
+  return (/premium|erweitert|enhanced|verbessert|neural|natural|online/i.test(v.name) ? 6 : 0) + (STIMME_GUT.test(v.name) ? 3 : 0)
+    + (STIMME_SCHLECHT.test(v.name) ? -20 : 0) + (/^de[-_]DE/i.test(v.lang) ? 1 : 0) + (v.default ? 1 : 0);
 }
+function deStimme() {
+  const alle = deStimmen(); if (!alle.length) return null;
+  let wahl = ""; try { wahl = localStorage.getItem(STIMME_KEY) || ""; } catch {}
+  return alle.find((v) => v.voiceURI === wahl) || [...alle].sort((a, b) => stimmeWert(b) - stimmeWert(a))[0];
+}
+try { speechSynthesis.getVoices(); speechSynthesis.addEventListener?.("voiceschanged", () => { if ($("setStimme")) stimmeWahlZeigen(); }); } catch {}
+function sprechAusgabe(text) { const u = new SpeechSynthesisUtterance(text); u.lang = "de-DE"; const st = deStimme(); if (st) { u.voice = st; u.lang = st.lang; } return u; }
+function sprechen(text) {
+  try { if (!("speechSynthesis" in window)) return; speechSynthesis.speak(sprechAusgabe(text)); } catch {}
+}
+function stimmeWahlZeigen() {
+  const sel = $("setStimme"); if (!sel) return;
+  const alle = deStimmen(), best = deStimme(); let wahl = ""; try { wahl = localStorage.getItem(STIMME_KEY) || ""; } catch {}
+  sel.innerHTML = `<option value="">Automatisch – beste Stimme${best && !wahl ? " (" + esc(best.name) + ")" : ""}</option>` + [...alle].sort((a, b) => stimmeWert(b) - stimmeWert(a))
+    .map((v) => `<option value="${esc(v.voiceURI)}" ${v.voiceURI === wahl ? "selected" : ""}>${esc(v.name)}${STIMME_SCHLECHT.test(v.name) ? " (Spaßstimme)" : ""}</option>`).join("");
+  sel.disabled = !alle.length;
+}
+function stimmeSetzen(uri) { try { uri ? localStorage.setItem(STIMME_KEY, uri) : localStorage.removeItem(STIMME_KEY); } catch {} stimmeWahlZeigen(); stimmeProbe(); }
+function stimmeProbe() { try { speechSynthesis.cancel(); } catch {} sprechen(`Hallo ${ICH?.vorname || ""}, so klinge ich beim Vorlesen in der Köcheclub-App.`); }
 // KC-CLUB-VORLESEN-HILFE (2.5.0, Wunsch Hansi): 🔊 an Einweisung und Tipp des Tages – liest Überschrift + Text vor
 // (ohne Emojis und Zeichen wie ‹ ›). Nochmal antippen = aufhören. Nur die Sprachausgabe des Handys, nichts geht nach außen.
 // 2.6.1 (Prüfung): eigene Ausgabe merken – nur DIESE wird beendet; Knopf zeigt „⏹ Aufhören“, solange vorgelesen wird
@@ -3301,8 +3331,7 @@ function vorlesenKarte(knopf) {
     d.innerHTML = [...(k?.querySelectorAll("h3, p") || [])].map((x) => x.innerHTML).join(". ");
     const t = d.textContent.replace(/[\p{Extended_Pictographic}\uFE0F‹›«»＋☰🔲]/gu, " ").replace(/\s+/g, " ").replace(/\.\s*\./g, ".").trim();
     if (!t) return;
-    const u = new SpeechSynthesisUtterance(t); u.lang = "de-DE";
-    const st = speechSynthesis.getVoices().find((x) => /^de/i.test(x.lang)); if (st) u.voice = st;
+    const u = sprechAusgabe(t); // KC-CLUB-STIMME (2.6.2)
     VORLESE = { u, knopf }; knopf.textContent = VORLESE_STOPP; knopf.setAttribute("aria-pressed", "true");
     u.onend = u.onerror = () => { if (VORLESE?.u === u) { VORLESE = null; if (knopf.isConnected) { knopf.textContent = VORLESE_TEXT; knopf.setAttribute("aria-pressed", "false"); } } };
     speechSynthesis.speak(u);
@@ -6717,7 +6746,7 @@ function zeige(v, ausHistorie) {
   if (v === "dienste") dienstLaden();
   if (v === "nachrichten") unterhLaden();
   if (v === "mitglieder") { mgAnsichtWahlZeigen(); mitgliederLaden(); }
-  if (v === "einstellungen") { notProbeZeigen(); infoStartZeigen(); tippSchalterZeigen(); einwSchalterZeigen(); ansageSchalterZeigen(); ansStandZeigen(); ruheZeigen(); if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); anklopfenZeigen(); zuletztSchalterZeigen(); inkognitoZeigen(); schnellWahlZeigen(); mgAnsichtWahlZeigen(); }
+  if (v === "einstellungen") { notProbeZeigen(); infoStartZeigen(); tippSchalterZeigen(); einwSchalterZeigen(); stimmeWahlZeigen(); ansageSchalterZeigen(); ansStandZeigen(); ruheZeigen(); if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); anklopfenZeigen(); zuletztSchalterZeigen(); inkognitoZeigen(); schnellWahlZeigen(); mgAnsichtWahlZeigen(); }
   if (v === "start") neuLaden();
   // KC-CLUB-ZURUECK: jede Ansicht bekommt einen Verlaufseintrag, damit „Zurück“ eine Ansicht zurückgeht statt die App zu schließen
   const hash = v === "start" || v === "chat" ? "" : v === "protokoll" ? "#protokoll=" + prId : v === "aktion" ? "#aktion=" + aktionId : v === "mitglied" ? "#mitglied=" + mitgliedId : v === "dokansicht" ? "#dokument=" + encodeURIComponent(DOKA.id) : "#" + v;
@@ -13743,7 +13772,7 @@ function suAppListe() {
     ["🔔", "Push-Benachrichtigungen", "push benachrichtigung mitteilung handy", ein("pushStatus")], ["🔊", "Ton", "ton klingel laut", ein("setTon")],
     ["🌙", "Nicht stören (Ruhezeit)", "nicht stören ruhezeit nacht stumm", ein("ruheAn")], ["🔠", "Schriftgröße", "schrift gross groß lesen", ein(einfach() ? "setGrossE" : "setGross")],
     ["🎨", "Farbe & Design", "farbe design aussehen", ein(einfach() ? "designWahlE" : "designWahl")], ["🌗", "Tag/Nacht umschalten", "dunkel hell nacht tag", () => dunkelUmschalten()],
-    ["🎂", "Geburtstag anzeigen", "geburtstag", ein("setGeburtstag")], ["🎉", "Runde Geburtstage (Alter für die Clubleitung)", "runder geburtstag alter jubiläum", ein("setRundGeburtstag")], ["🟢", "Online sichtbar", "online sichtbar unsichtbar", ein("setOnline")], ["🎓", "Einweisung beim ersten Öffnen", "einweisung erklärung hilfe anleitung neu", ein("setEinw")], ...(ICH?.admin ? [["🕶️", "Inkognito (nur Admin)", "inkognito unsichtbar versteckt online", ein("setInkognito")]] : []), ["🕒", "Zuletzt da anzeigen", "zuletzt da online gesehen", ein("setZuletzt")],
+    ["🎂", "Geburtstag anzeigen", "geburtstag", ein("setGeburtstag")], ["🎉", "Runde Geburtstage (Alter für die Clubleitung)", "runder geburtstag alter jubiläum", ein("setRundGeburtstag")], ["🟢", "Online sichtbar", "online sichtbar unsichtbar", ein("setOnline")], ["🗣️", "Stimme zum Vorlesen", "stimme vorlesen sprache ansage roboter klang", ein("setStimme")], ["🎓", "Einweisung beim ersten Öffnen", "einweisung erklärung hilfe anleitung neu", ein("setEinw")], ...(ICH?.admin ? [["🕶️", "Inkognito (nur Admin)", "inkognito unsichtbar versteckt online", ein("setInkognito")]] : []), ["🕒", "Zuletzt da anzeigen", "zuletzt da online gesehen", ein("setZuletzt")],
     ["🆘", "Notfallkontakt", "notfall kontakt", ein("nfName")], ["📆", "Kalender-Abo (Handy-Kalender)", "kalender abo handy ical", ein("kalAboKnopf")],
     ["📱", "Meine Geräte", "geräte handy tablet abmelden", () => geraeteBlatt()], ["📡", "Verbindung prüfen", "verbindung internet led server", () => verbindungBlatt()],
     ["🔄", "Update prüfen", "update version neu", () => updateKachel()], ["🟢", "Mein Status", "status urlaub verfügbar krank", () => statusBlatt()],

@@ -3248,6 +3248,12 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/<div class="gruss"><button id="inkoKnopf"[^>]*>🕶️<\/button><span id="begruessung">/.test(html), "🕶️ vor dem Gruß, nicht in der vollen Knopfreihe");
   assert.ok(/\n\s+anmeldungenVergessen\(\); \/\/ KC-CLUB-ANMELDECACHE: alter Link sofort ungültig/.test(server) && /if \(e3 \|\| count === null \|\| count > 0\) return;/.test(server), "Link-Cache, kein Fehlalarm");
 }
+// 296. 2.6.2: Vorlese-Stimme – beste deutsche Stimme statt der ersten, wählbar (KC-CLUB-STIMME)
+{
+  assert.ok(/function deStimme\(\)/.test(html) && /STIMME_SCHLECHT\.test\(v\.name\) \? -20/.test(html) && /const u = sprechAusgabe\(t\);/.test(html), "eine Stelle für die Stimme, Spaßstimmen raus");
+  assert.ok(!/getVoices\(\)\.find\(\(\w\) => \/\^de\/i\.test/.test(html), "nirgends mehr „erste deutsche Stimme“");
+  assert.ok(/id="setStimme" onchange="stimmeSetzen\(this\.value\)"/.test(html) && /onclick="stimmeProbe\(\)"/.test(html), "Wahl + Probe in den Einstellungen");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

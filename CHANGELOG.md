@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.6.2 – 2026-10-03 – Bessere Vorlese-Stimme, Stimme wählbar (Fund Hansi: iPad klingt schrecklich)
+- KC-CLUB-STIMME: Bisher nahm die App die erste deutsche Stimme – auf Apple-Geräten oft eine Spaß-/Roboterstimme (Eloquence/
+  Novelty). Jetzt eine Stelle (deStimme/sprechAusgabe) für alle Ansagen und das Vorlesen: eigene Wahl je Gerät oder automatisch
+  die beste (Premium/Erweitert, bekannte gute Namen wie Anna/Helena/Markus, Spaßstimmen ausgeschlossen).
+- ⚙️ → Ansagen, Töne & Tipps: „🗣️ Stimme zum Vorlesen“ mit ▶ Probe und Hinweis, wie man auf iPhone/iPad kostenlos eine
+  Premium-Stimme lädt. Auch über die Lupe.
+
 ## 2.6.1 – 2026-10-03 – Gesamtprüfung 2 (Stand 2.6.0): Funde behoben
 - KC-CLUB-START-BEREIT (Ursache der Meldung „Cannot read properties of null (reading 'person_id')“ bei Hansi nach dem Auto-Update):
   Kacheln waren vor der Anmeldung (init) antippbar, ICH = null. Bereiche außer Start/SOS warten jetzt auf die Anmeldung
