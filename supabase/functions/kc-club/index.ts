@@ -22,7 +22,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "2.9.0";
+const SERVER_VERSION = "2.9.1";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -2765,6 +2765,26 @@ Köcheclub Werne`,
         await protokoll(null, "treffen_erinnerung", { treffen: t.id, empfaenger: ziel.length });
         n++;
       }
+      // KC-CLUB-SPIEL-TERMIN (2.9.1): Erinnerung kurz vor Beginn (erinnerung_min) an Absender + Zugesagte – Lauf alle 15 Min.,
+      // daher „etwa“; nie nach Beginn + 10 Min. (dann ist es zu spät)
+      { const { data: ku } = await db.from("kc_club_terminanfragen").select("*").eq("status", "offen").gt("erinnerung_min", 0).is("kurz_erinnert_am", null)
+          .gte("beginn", new Date(Date.now() - 10 * 60000).toISOString()).lte("beginn", new Date(Date.now() + 125 * 60000).toISOString());
+        for (const x of ku ?? []) {
+          if (new Date(x.beginn).getTime() - x.erinnerung_min * 60000 > Date.now()) continue;
+          const { data: ok } = await db.from("kc_club_terminanfragen").update({ kurz_erinnert_am: jetzt() }).eq("id", x.id).is("kurz_erinnert_am", null).select("id");
+          if (!ok?.length) continue;
+          const { data: e } = await db.from("kc_club_terminanfrage_empfaenger").select("person_id,antwort").eq("anfrage_id", x.id);
+          const zu = (e ?? []).filter((y: any) => y.antwort === "ja").map((y: any) => y.person_id);
+          if (!zu.length) continue; // noch niemand hat zugesagt → keine „gleich geht's los“-Erinnerung
+          const min = Math.max(0, Math.round((new Date(x.beginn).getTime() - Date.now()) / 60000));
+          await senden("club_erinnerung", [x.erstellt_von, ...zu], {
+            betreff: `Köcheclub Werne – gleich: ${x.anlass}, ${fZeit.format(new Date(x.beginn))} Uhr`,
+            titel: `⏰ ${min > 5 ? "In " + (min >= 90 ? Math.round(min / 60) + " Std." : min + " Min.") : "Jetzt"}: ${x.anlass}`, kurz: `${fZeit.format(new Date(x.beginn))} Uhr${x.ort ? " – " + x.ort : ""}`,
+            text: `Hallo,\n\ngleich geht es los:\n\n📌 ${x.anlass}\n📅 ${anfrageWann(x)}${x.ort ? "\n📍 " + x.ort : ""}\n\nViel Spaß!\nKöcheclub Werne`,
+            url: x.spiel_id ? `${APP_URL}#spiel=${x.spiel_id}` : APP_URL + "#termine",
+          }, `club-terminanfrage-kurz:${x.id}`).catch(() => null);
+        }
+      }
       // KC-CLUB-TERMINANFRAGE (0.92.0): am Vortag ab 9 Uhr – Zugesagte (Ja/Vielleicht) und Absender erinnern,
       // wer noch nicht geantwortet hat, bekommt „bitte noch antworten“
       let anfr = 0;
@@ -3284,14 +3304,22 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (ende && (isNaN(ende.getTime()) || ende < beginn)) throw new Fehler("Das Ende liegt vor dem Beginn.");
         const frist = p.frist ? new Date(String(p.frist)) : null;
         if (frist && (isNaN(frist.getTime()) || frist.getTime() < Date.now())) throw new Fehler("Die Antwortfrist liegt in der Vergangenheit.");
-        const ziel = await zielPersonen(ich, p.an);
+        // KC-CLUB-SPIEL-TERMIN (2.9.1): Termin zu einer Partie – nur an das Gegenüber, mit Erinnerung kurz vorher
+        let spielId: string | null = null, ziel: string[];
+        if (p.spiel_id) {
+          const { data: sg } = await db.from("kc_club_spiele").select("id,von,an,status").eq("id", String(p.spiel_id)).maybeSingle();
+          if (!sg || (sg.von !== ich.person_id && sg.an !== ich.person_id)) throw new Fehler("Partie nicht gefunden.", 404);
+          if (!["angefragt", "laeuft"].includes(sg.status)) throw new Fehler("Zu dieser Partie geht kein Termin mehr – sie ist vorbei.", 409);
+          spielId = sg.id; ziel = [sg.von === ich.person_id ? sg.an : sg.von];
+        } else ziel = await zielPersonen(ich, p.an);
+        const erinnerungMin = [30, 60, 120].includes(Number(p.erinnerung_min)) ? Number(p.erinnerung_min) : 0;
         if (!ziel.length) throw new Fehler("Bitte mindestens ein Mitglied oder eine Gruppe wählen.");
         if (ziel.length > ANFRAGE_MAX_EMPFAENGER) throw new Fehler(`Höchstens ${ANFRAGE_MAX_EMPFAENGER} Empfänger je Anfrage.`);
         const { count } = await db.from("kc_club_terminanfragen").select("id", { count: "exact", head: true }).eq("erstellt_von", ich.person_id).gte("erstellt_am", new Date(Date.now() - 86400000).toISOString());
         if ((count ?? 0) >= ANFRAGE_MAX_JE_TAG) throw new Fehler("Heute sind schon sehr viele Anfragen verschickt worden – bitte morgen weiter.", 429);
         const ort = txt(p.ort, 200) || null, notiz = txt(p.notiz, 1000) || null;
         const { data: a, error } = await db.from("kc_club_terminanfragen").insert({ erstellt_von: ich.person_id, anlass, beginn: beginn.toISOString(), ende: ende ? ende.toISOString() : null,
-          ort, notiz, frist: frist ? frist.toISOString() : null }).select().single();
+          ort, notiz, frist: frist ? frist.toISOString() : null, spiel_id: spielId, erinnerung_min: erinnerungMin }).select().single();
         if (error || !a) throw new Fehler("Speichern fehlgeschlagen.", 500);
         const { error: e2 } = await db.from("kc_club_terminanfrage_empfaenger").insert(ziel.map((person_id) => ({ anfrage_id: a.id, person_id })));
         if (e2) { await db.from("kc_club_terminanfragen").delete().eq("id", a.id); throw new Fehler("Speichern fehlgeschlagen.", 500); }
@@ -3299,7 +3327,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           titel: `📨 Terminanfrage von ${ich.vorname}`, kurz: `${anlass} – ${wann(a.beginn)}${ort ? " – " + ort : ""}`,
           betreff: `Köcheclub Werne – Terminanfrage von ${ich.name}: ${anlass}`,
           text: `Hallo,\n\n${ich.name} fragt dich an:\n\n📌 ${anlass}\n📅 ${anfrageWann(a)}${ort ? "\n📍 " + ort : ""}${notiz ? "\n📝 " + notiz : ""}${frist ? `\n⏳ Bitte antworten bis ${wann(a.frist)}` : ""}\n\nBitte in der Köcheclub-App antworten: Ja, Vielleicht oder Nein.\n${APP_URL}#termine\n\nViele Grüße\nKöcheclub Werne`,
-          url: APP_URL + "#termine",
+          url: spielId ? `${APP_URL}#spiel=${spielId}` : APP_URL + "#termine",
         }, `club-terminanfrage:${a.id}`);
         await protokoll(ich.person_id, "terminanfrage_gesendet", { anfrage: a.id, empfaenger: ziel.length, beginn: a.beginn, versand });
         return json({ ok: true, id: a.id, empfaenger: ziel.length, versand });
@@ -7235,7 +7263,19 @@ Köcheclub-App`,
         const diesen = imMonat(jetztM), vorher = imMonat(vorM);
         const pokal = (t: any[]) => t.length && t[0].punkte > 0 ? t.filter((x) => x.punkte === t[0].punkte && x.siege === t[0].siege) : [];
         const meineSpiele = (await spielBereitMap([ich.person_id])).get(ich.person_id) ?? [];
-        return json({ ichBereit: meineSpiele.length > 0, meineSpiele, spiele: (meine ?? []).map((g: any) => spielSicht(g, ich.person_id, namen)), rangliste: rang,
+        // KC-CLUB-SPIEL-TERMIN (2.9.1): nächster Termin je offener Partie (Terminanfrage mit spiel_id)
+        const offeneIds = (meine ?? []).filter((g: any) => ["angefragt", "laeuft"].includes(g.status)).map((g: any) => g.id);
+        const termine = new Map<string, any>();
+        if (offeneIds.length) {
+          const { data: ta } = await db.from("kc_club_terminanfragen").select("id,spiel_id,beginn,ort,erstellt_von,erinnerung_min").eq("status", "offen").in("spiel_id", offeneIds)
+            .gte("beginn", new Date(Date.now() - 3 * 3600000).toISOString()).order("beginn");
+          const { data: te } = (ta ?? []).length ? await db.from("kc_club_terminanfrage_empfaenger").select("anfrage_id,person_id,antwort").in("anfrage_id", (ta ?? []).map((x: any) => x.id)) : { data: [] as any[] };
+          for (const x of ta ?? []) if (!termine.has(x.spiel_id)) {
+            const emp = (te ?? []).find((y: any) => y.anfrage_id === x.id);
+            termine.set(x.spiel_id, { id: x.id, beginn: x.beginn, ort: x.ort, vonMir: x.erstellt_von === ich.person_id, antwort: emp?.antwort ?? null, erinnerungMin: x.erinnerung_min });
+          }
+        }
+        return json({ ichBereit: meineSpiele.length > 0, meineSpiele, spiele: (meine ?? []).map((g: any) => ({ ...spielSicht(g, ich.person_id, namen), termin: termine.get(g.id) ?? null })), rangliste: rang,
           monat: { name: monatName(jetztM), liste: diesen.slice(0, 5) }, pokalVormonat: { name: monatName(vorM), sieger: pokal(vorher) },
           bereit: aktiv.filter((m) => m.person_id !== ich.person_id && (bereit.get(m.person_id) ?? []).length > 0 && !m.person_id.startsWith("KC-P-TEST"))
             .map((m) => ({ person_id: m.person_id, vorname: vorname(m) || m.display_name, name: m.display_name, spiele: bereit.get(m.person_id) })) });

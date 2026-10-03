@@ -3301,6 +3301,15 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
     const e = E.bskErgebnis(z); assert.equal(e.augen[0] + e.augen[1], 120, "Augen ≠ 120"); assert.equal(e.gewinner, e.augen[e.ansager] >= 61 ? e.ansager : 1 - e.ansager, "61-Regel"); }
   assert.ok(/onclick="spArtWahl\('bsk'\)"/.test(html) && /function bskPcZeigen\(\)/.test(html), "Bauernskat in der App");
 }
+// 301. 2.9.1: Termin zu einer Partie (KC-CLUB-SPIEL-TERMIN) – über die vorhandene Terminanfrage
+{
+  const mig = lies("supabase/migrations/20261003_kc_club_v2910_spiel_termin.sql");
+  assert.ok(/add column if not exists spiel_id uuid references kc_club_spiele\(id\) on delete set null/.test(mig) && /erinnerung_min in \(0, 30, 60, 120\)/.test(mig), "Spalten");
+  const ts = server.slice(server.indexOf('case "terminanfrage_senden": {'), server.indexOf('case "terminanfragen_liste": {'));
+  assert.ok(/sg\.von !== ich\.person_id && sg\.an !== ich\.person_id\)\) throw/.test(ts) && /ziel = \[sg\.von === ich\.person_id \? sg\.an : sg\.von\]/.test(ts), "nur eigene Partie, nur an das Gegenüber");
+  assert.ok(/\.gt\("erinnerung_min", 0\)\.is\("kurz_erinnert_am", null\)/.test(server) && /if \(!zu\.length\) continue;/.test(server), "Erinnerung kurz vorher nur nach Zusage");
+  assert.ok(/function spTerminBlatt\(id\)/.test(html) && /api\("terminanfrage_senden", \{ anlass:/.test(html) && /spiel_id: g\.id, erinnerung_min: Number\(\$\("spTErin"\)\.value\)/.test(html) && /\$\{spTerminHtml\(g\)\}/.test(html), "App: Termin an der Partie");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

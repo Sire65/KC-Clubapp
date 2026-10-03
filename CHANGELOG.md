@@ -1,5 +1,15 @@
 # Änderungen
 
+## 2.9.1 – 2026-10-03 – 📅 Termin zu einer Partie vereinbaren (Wunsch Hansi)
+- KC-CLUB-SPIEL-TERMIN: An jeder offenen Partie gegen ein Mitglied „📅 Termin vereinbaren“ (Tag, Uhrzeit, Ort, Erinnerung
+  etwa 30 Min./1 Std./2 Std. vorher oder nur Vortag, Notiz). Nutzt die vorhandene Terminanfrage (kein Parallel-Kern): steht bei
+  beiden im Kalender und im Handy-Kalender-Abo, Vortags-Erinnerung wie bisher, Push/Mail „Terminanfrage von …“ öffnet die Partie.
+  Gegenüber sagt direkt an der Partie zu („✅ Passt“) oder ab; Stand sichtbar (⏳/✅/❌), anderer Termin jederzeit vorschlagbar.
+- Neu im Wartungslauf (alle 15 Min.): Erinnerung kurz vor Beginn an Absender + Zugesagte („⏰ In 30 Min.: Schach-Partie …“),
+  nur wenn zugesagt wurde, nie später als 10 Min. nach Beginn.
+- Migration supabase/migrations/20261003_kc_club_v2910_spiel_termin.sql (eingespielt): kc_club_terminanfragen + spiel_id,
+  erinnerung_min, kurz_erinnert_am.
+
 ## 2.9.0 – 2026-10-03 – 🃏 Bauernskat – Köcheclub Edition gegen den Computer (Wunsch Hansi, Stufe 3)
 - KC-CLUB-BAUERNSKAT: dritte Spielwahl im Bereich „🎲 Spiele“. Regeln nach Hansi: 2 Spieler, 32 Karten, je 8 Handkarten +
   4 Bauern (offen auf verdeckt); Vorhand sieht offene Bauern + erste 4 Handkarten und sagt Trumpf an (Farbe oder Grand = nur

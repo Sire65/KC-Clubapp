@@ -241,6 +241,7 @@
   .bsk-ansage { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
   .bsk-ansage button { min-height: 64px; border: 2px solid var(--linie); border-radius: 14px; background: #fffdf8; color: #1b1b1b; font-size: 1.8rem; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
   .bsk-ansage button.rot { color: #c0392b; } .bsk-ansage small { font-size: .72rem; font-weight: 800; color: #444; }
+  .sp-termin { padding: 8px 10px; border-radius: 12px; background: var(--karte2); margin: 6px 0; display: flex; flex-direction: column; gap: 4px; } /* KC-CLUB-SPIEL-TERMIN */
   .sp-pokal { border: 2px solid #d4ac0d; background: linear-gradient(180deg, #fef9e7, var(--karte) 60%); }
   .sp-pokal-kopf { display: flex; align-items: center; gap: 12px; } .sp-pokal-sym { font-size: 2.6rem; line-height: 1; filter: drop-shadow(0 2px 3px rgba(0,0,0,.25)); }
   /* KC-CLUB-NUTZUNG-PERSONEN (2.6.0) */
@@ -2501,7 +2502,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.9.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.9.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -4856,7 +4857,7 @@ function spListeZeigen() {
   const an = L.spiele.filter((g) => g.status === "angefragt" && !g.vonMir), meine = L.spiele.filter((g) => g.status === "angefragt" && g.vonMir);
   const laufend = L.spiele.filter((g) => g.status === "laeuft").sort((a, b) => b.ichDran - a.ichDran), fertig = L.spiele.filter((g) => g.status === "beendet").slice(0, 8);
   const zeile = (g, rechts) => `<div class="zeile sp-zeile" ${g.status === "laeuft" || g.status === "beendet" ? `style="cursor:pointer" onclick="spOeffnen('${g.id}')"` : ""}>${kreis(MITGLIEDER?.find((m) => m.person_id === g.gegner.person_id) || {}, g.gegner.name, 36)}
-    <div style="flex:1;min-width:0"><b>${esc(g.gegner.vorname)}</b><div class="hinweis" style="margin:0;font-size:.85rem">${g.spiel === "schach" ? "♟️ Schach" : `❌⭕ Tic-Tac-Toe ${g.groesse}×${g.groesse}`}</div></div>${rechts}</div>`;
+    <div style="flex:1;min-width:0"><b>${esc(g.gegner.vorname)}</b><div class="hinweis" style="margin:0;font-size:.85rem">${g.spiel === "schach" ? "♟️ Schach" : `❌⭕ Tic-Tac-Toe ${g.groesse}×${g.groesse}`}</div>${spTerminKurz(g)}</div>${rechts}</div>`;
   $("spInhalt").innerHTML = `
     ${L.ichBereit ? "" : `<div class="karte" style="border:2px solid var(--gruen)"><b>🎲 Möchtest du auch herausgefordert werden?</b><p class="hinweis" style="margin:4px 0 8px">Dann sehen dich die anderen in der Liste und können dich zu einer Partie einladen.</p><button class="knopf haupt" onclick="spBereitSetzen(true)">✅ Ja, ich spiele mit</button></div>`}
     <button class="knopf haupt" style="width:100%" onclick="spHerausfordernBlatt()">🎲 Jemanden herausfordern</button>
@@ -4934,6 +4935,7 @@ function spSpielZeigen() {
   $("spInhalt").innerHTML = `<div class="karte sp-karte">
       <div class="zeile" style="border:none;padding:0"><button class="knopf klein" onclick="SP.offen=null;spZeigen();spLaden(true)">‹ Übersicht</button><b style="flex:1;text-align:right">${SP_ZEICHEN[ich]} Du gegen ${esc(g.gegner.vorname)} ${SP_ZEICHEN[er]}</b></div>
       ${banner}
+      ${spTerminHtml(g)}
       ${spBrettHtml(g.brett, n, { linie: g.linie, klick: "spZug", aus: !g.ichDran })}
       <p class="hinweis" style="text-align:center;margin:6px 0">${n === 3 ? "Drei" : "Vier"} in einer Reihe gewinnen. Du musst nicht warten – ${esc(g.gegner.vorname)} bekommt Bescheid.</p>
       <div class="knoepfe">${g.status === "beendet" ? `<button class="knopf haupt" onclick="spRevanche('${g.id}')">↺ Revanche</button>` : g.status === "laeuft" ? `<button class="knopf" onclick="spAufgeben('${g.id}')">🏳️ Aufgeben</button>` : ""}</div>
@@ -5124,6 +5126,7 @@ async function schSpielZeigen(g) {
   $("spInhalt").innerHTML = `<div class="karte sp-karte">
       <div class="zeile" style="border:none;padding:0"><button class="knopf klein" onclick="SP.offen=null;spZeigen();spLaden(true)">‹ Übersicht</button><b style="flex:1;text-align:right">♟️ Du (${ich === "w" ? "Weiß" : "Schwarz"}) gegen ${esc(g.gegner.vorname)}</b></div>
       ${banner}
+      ${spTerminHtml(g)}
       ${schGeschlagenHtml(ch)}
       ${schBrettHtml(ch, { unten: ich, auswahl: SCHM.auswahl, ziele: SCHM.ziele, letzter: g.letzterZug, klick: "schMgKlick", aus: !g.ichDran })}
       ${schVerlaufHtml(g.verlauf || [])}
@@ -5325,6 +5328,54 @@ function bskPcComputer() {
   bskPcNachStich(bskSpielen(z, 1, bskZugComputer(z, 1, BSK.staerke)));
 }
 
+// ---------- KC-CLUB-SPIEL-TERMIN (2.9.1, Wunsch Hansi): zu einer Partie einen Termin vereinbaren ----------
+// Nutzt die vorhandene Terminanfrage (steht dann bei beiden im Kalender und im Kalender-Abo, Vortags-Erinnerung). Dazu eine
+// Erinnerung kurz vor Beginn an beide, sobald zugesagt ist. Zu-/Absagen direkt an der Partie.
+const spTitel = (g) => g.spiel === "schach" ? "♟️ Schach" : g.spiel === "bsk" ? "🃏 Bauernskat" : `❌⭕ Tic-Tac-Toe ${g.groesse}×${g.groesse}`;
+const spTerminZeit = (t) => new Intl.DateTimeFormat("de-DE", { timeZone: TZ, weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }).format(new Date(t.beginn)) + " Uhr";
+function spTerminKurz(g) {
+  const t = g.termin; if (!t) return "";
+  const st = t.antwort === "ja" ? "✅" : t.antwort === "nein" ? "❌" : "⏳";
+  return `<div class="hinweis sp-termin-kurz" style="margin:0;font-size:.85rem">📅 ${esc(spTerminZeit(t))} ${st}</div>`;
+}
+function spTerminHtml(g) {
+  if (!["angefragt", "laeuft"].includes(g.status)) return "";
+  const t = g.termin, neu = `<button class="knopf klein" onclick="spTerminBlatt('${g.id}')">📅 ${t ? "Anderen Termin vorschlagen" : "Termin vereinbaren"}</button>`;
+  if (!t) return `<div class="sp-termin">${neu}<span class="hinweis">Lieber zu einer festen Zeit spielen? Steht dann bei euch beiden im Kalender.</span></div>`;
+  const wer = esc(g.gegner.vorname);
+  const st = t.antwort === "ja" ? `✅ ${t.vonMir ? wer + " hat zugesagt" : "du hast zugesagt"}` : t.antwort === "nein" ? `❌ ${t.vonMir ? wer + " kann nicht" : "du hast abgesagt"}` : t.vonMir ? `⏳ wartet auf ${wer}` : "Passt dir der Termin?";
+  const knoepfe = !t.vonMir && !t.antwort ? `<div class="knoepfe" style="margin:6px 0 0"><button class="knopf haupt klein" onclick="spTerminAntwort('${t.id}', 'ja')">✅ Passt</button><button class="knopf klein" onclick="spTerminAntwort('${t.id}', 'nein')">❌ Passt nicht</button></div>` : "";
+  return `<div class="sp-termin"><b>📅 ${esc(spTerminZeit(t))}</b>${t.ort ? ` · ${esc(t.ort)}` : ""}<div class="hinweis" style="margin:2px 0 0">${st}${t.erinnerungMin && t.antwort === "ja" ? ` · ⏰ Erinnerung etwa ${t.erinnerungMin >= 60 ? t.erinnerungMin / 60 + " Std." : t.erinnerungMin + " Min."} vorher` : ""}</div>${knoepfe}${t.antwort === "nein" || t.vonMir ? `<div style="margin-top:6px">${neu}</div>` : ""}</div>`;
+}
+function spTerminBlatt(id) {
+  const g = SP.offen?.id === id ? SP.offen : SP.liste?.spiele?.find((x) => x.id === id); if (!g) return;
+  const morgen = new Date(Date.now() + 86400000), tag = new Intl.DateTimeFormat("sv-SE", { timeZone: TZ }).format(morgen);
+  const f = blattAuf("spTerminBlatt", `<h3 style="margin:0">📅 Termin für die Partie</h3>
+    <p class="hinweis" style="margin:0">${esc(spTitel(g))} mit ${esc(g.gegner.vorname)} – ${esc(g.gegner.vorname)} bekommt die Anfrage und kann zu- oder absagen. Der Termin steht dann bei euch beiden im Kalender.</p>
+    <div class="zwei"><label class="feld">Tag<input type="date" id="spTTag" value="${tag}" min="${new Intl.DateTimeFormat("sv-SE", { timeZone: TZ }).format(new Date())}"></label>
+      <label class="feld">Uhrzeit<input type="time" id="spTZeit" value="18:00" step="900"></label></div>
+    <label class="feld">Wo?<select id="spTOrt"><option>In der Köcheclub-App (jeder bei sich)</option><option>Im Clubheim</option><option>Bei mir</option><option>Beim Treffen</option></select></label>
+    <label class="feld">Erinnerung kurz vorher<select id="spTErin"><option value="30">etwa 30 Minuten vorher</option><option value="60" selected>etwa 1 Stunde vorher</option><option value="120">etwa 2 Stunden vorher</option><option value="0">keine (nur am Vortag)</option></select></label>
+    <label class="feld">Notiz (freiwillig)<input id="spTNotiz" maxlength="200" placeholder="z. B. Revanche vom letzten Mal 😉"></label>
+    <div class="knoepfe"><button class="knopf haupt" id="spTSenden">📨 Termin vorschlagen</button><button class="knopf" onclick="fensterZu(document.getElementById('spTerminBlatt'))">Abbrechen</button></div>`);
+  f.querySelector("#spTSenden").onclick = async () => {
+    const tagW = $("spTTag").value, zeit = $("spTZeit").value;
+    if (!tagW || !zeit) return melde("Bitte Tag und Uhrzeit wählen.", true);
+    const beginn = new Date(`${tagW}T${zeit}`);
+    if (isNaN(beginn.getTime()) || beginn.getTime() < Date.now()) return melde("Der Termin liegt in der Vergangenheit.", true);
+    try {
+      await api("terminanfrage_senden", { anlass: `${spTitel(g)}-Partie: ${ICH?.vorname || ""} & ${g.gegner.vorname}`.replace(/ ×/, "×"), beginn: beginn.toISOString(), ende: new Date(beginn.getTime() + (g.spiel === "ttt" ? 30 : 90) * 60000).toISOString(),
+        ort: $("spTOrt").value, notiz: $("spTNotiz").value.trim(), spiel_id: g.id, erinnerung_min: Number($("spTErin").value) }, { warten: true });
+      f.remove(); melde(`📅 Termin an ${g.gegner.vorname} geschickt – steht in deinem Kalender`); await spLaden(true);
+      if (SP.offen?.id === g.id) { SP.offen.termin = SP.liste?.spiele?.find((x) => x.id === g.id)?.termin || null; spZeigen(); }
+    } catch (e) { meldeFehler(e); }
+  };
+}
+async function spTerminAntwort(anfrageId, antwort) {
+  try { await api("terminanfrage_antwort", { id: anfrageId, antwort }, { warten: true }); melde(antwort === "ja" ? "✅ Zugesagt – steht in deinem Kalender" : "Abgesagt – schlag gern einen anderen Termin vor");
+    await spLaden(true); if (SP.offen) { SP.offen.termin = SP.liste?.spiele?.find((x) => x.id === SP.offen.id)?.termin || null; spZeigen(); } }
+  catch (e) { meldeFehler(e); }
+}
 // ---------- KC-CLUB-ERSTATTUNG (0.38.0): Fahrtkosten, vorgestreckter Einkauf, sonstige Auslagen beantragen ----------
 // Positionen sammeln → Summe → Mail an Kassenwart (An) + Clubsprecher (CC); Antragsteller und Admin bekommen eine Blindkopie.
 let ERS = { pos: [], art: "fahrt", kmSatz: 0.38, saetze: [], gruende: [], arten: [], belege: [], auszahlung: "ueberweisung", geladen: false };
