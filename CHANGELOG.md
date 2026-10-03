@@ -1,5 +1,9 @@
 # Änderungen
 
+## 1.75.1 – 2026-10-03
+- Tipp des Tages „Emojis“ (Fund Hansi): Text sagte „neben dem Schreibfeld“ – die Knöpfe sitzen inzwischen unter dem Schreibfeld.
+  Jetzt: „Im Chat unter dem Schreibfeld auf 😊 tippen – darüber öffnet sich die bunte Emoji-Auswahl.“
+
 ## 1.75.0 – 2026-10-03
 - Sprachansagen (Fund Hansi: „Steven eingeloggt, keine Ansage, obwohl eingeschaltet“): Die Online-Ansage („Steven ist jetzt
   online“) hatte einen eigenen Schalter und fehlte in der neuen Liste „🗣️ Sprachansagen“. Jetzt steht sie dort als erste Zeile

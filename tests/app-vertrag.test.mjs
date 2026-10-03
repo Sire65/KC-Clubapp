@@ -2883,6 +2883,8 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/online: ansageAn\(\) \}; \}/.test(html) && /if \(id === "online"\) \{ lsSetzen\(ANSAGE, an \? "1" : "0"\)/.test(html), "nutzt den bisherigen Schalter");
   assert.ok(/<div class="schalter versteckt" id="setAnsageZeile">/.test(html) && /id="setAnsage" onchange="ansageSchalter\(this\.checked\)"/.test(html), "alte Zeile nur ausgeblendet, Schalter bleibt");
 }
+// 255. 1.75.1: Emoji-Tipp beschreibt die richtige Stelle
+assert.ok(/id: "emoji",[^\n]*unter dem Schreibfeld<\/b> auf <b>😊<\/b>/.test(html) && !/neben dem Schreibfeld gibt es eine kleine Emoji-Auswahl/.test(html), "Emoji-Tipp: unter dem Schreibfeld");
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
