@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "2.1.2";
+const SERVER_VERSION = "2.2.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -1131,6 +1131,32 @@ async function adminSpiegel() {
   };
 } // kostenloser Supabase-Tarif (falls der System-Check keinen Wert liefert)
 
+// KC-CLUB-VERTRETUNG (2.2.0, Konzept „Hansi ist der einzige Schlüssel“): Zahl der aktiven Admins + Warnung an die Clubleitung,
+// wenn länger kein Admin in der App war (Hinweis auf Notfall-Umschlag und Betriebsanleitung) – höchstens 1× je 7 Tage
+const ADMIN_ABWESEND_TAGE = 10;
+async function adminAnzahl(): Promise<number> {
+  const [{ data: ro }, aktiv] = await Promise.all([db.from("kc_club_rollen").select("person_id").eq("ist_admin", true).not("person_id", "like", "KC-P-TEST%"), aktiveMitglieder()]);
+  const ids = new Set(aktiv.map((m) => m.person_id)); return (ro ?? []).filter((r: any) => ids.has(r.person_id)).length;
+}
+async function adminAbwesendPruefen() {
+  const { data: ad } = await db.from("kc_club_rollen").select("person_id").eq("ist_admin", true).not("person_id", "like", "KC-P-TEST%");
+  const ids = (ad ?? []).map((x: any) => x.person_id); if (!ids.length) return;
+  const { data: zg } = await db.from("kc_club_zugang").select("zuletzt_gesehen").in("person_id", ids).not("zuletzt_gesehen", "is", null).order("zuletzt_gesehen", { ascending: false }).limit(1);
+  const zuletzt = zg?.[0]?.zuletzt_gesehen ? Date.parse(zg[0].zuletzt_gesehen) : 0;
+  if (Date.now() - zuletzt < ADMIN_ABWESEND_TAGE * 86400000) return;
+  const { count } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("aktion", "admin_abwesend_gemeldet").gte("zeit", new Date(Date.now() - 7 * 86400000).toISOString());
+  if ((count ?? 0) > 0) return;
+  const { data: lt } = await db.from("kc_club_rollen").select("person_id,aemter,ist_vorstand,ist_admin");
+  const leitung = (lt ?? []).filter((r: any) => !r.ist_admin && (r.ist_vorstand || (r.aemter ?? []).includes("Clubsprecher"))).map((r: any) => r.person_id);
+  if (!leitung.length) return;
+  const name = await adminVorname();
+  await protokoll(null, "admin_abwesend_gemeldet", { tage: ADMIN_ABWESEND_TAGE, leitung: leitung.length });
+  await senden("club_nachricht", leitung, {
+    titel: "🛡️ Längere Zeit kein Admin in der App", kurz: `Seit über ${ADMIN_ABWESEND_TAGE} Tagen war kein Admin in der Club-App.`,
+    betreff: "Köcheclub Werne – längere Zeit kein Admin in der App",
+    text: `Hallo,\n\nseit über ${ADMIN_ABWESEND_TAGE} Tagen war kein Admin in der Köcheclub-App. Das ist nur ein Hinweis – vielleicht ist ${name} einfach im Urlaub.\n\nFalls etwas Dringendes ist (z. B. ein Mitglied kommt nicht mehr in die App): Bitte zuerst ${name} direkt ansprechen. Ist ${name} nicht erreichbar, liegt beim Clubsprecher der versiegelte Notfall-Umschlag mit der Betriebsanleitung für die Vertretung.\n\nViele Grüße\nKöcheclub-App`, url: APP_URL,
+  }, `club-admin-abwesend:${berlinTag(new Date())}`).catch(() => null);
+}
 // KC-CLUB-ADMIN-NAME (1.99.0): Vorname des (ersten) Admins für Texte wie „bitte … Bescheid geben“ – 10 Min. gemerkt
 let ADMIN_VORNAME: { name: string; bis: number } | null = null;
 async function adminVorname(): Promise<string> {
@@ -2517,6 +2543,7 @@ Deno.serve(async (req) => {
       // KC-CLUB-FP-UEBERWACHUNG (1.58.0): neue schwerwiegende Einträge im Fehlerprotokoll → Push an den Admin
       await fpUeberwachen().catch((e) => console.error("fp ueberwachung", String(e)));
       await postausgangLauf().catch((e) => console.error("postausgang", String(e))); // KC-CLUB-POSTAUSGANG (1.69.1)
+      await adminAbwesendPruefen().catch((e) => console.error("admin abwesend", String(e))); // KC-CLUB-VERTRETUNG (2.2.0)
       // Abstimmungen mit abgelaufener Frist beenden (Ergebnis geht an alle)
       const { data: abgelaufen } = await db.from("kc_club_vorschlaege").select("*").eq("status", "offen").lt("frist", jetzt());
       let beendet = 0;
@@ -7032,7 +7059,7 @@ Köcheclub-App`,
           zeit: jetzt(), server: { version: SERVER_VERSION, dbMs, ok: !dbFehler },
           datenbank: { bytes: dbFehler ? null : Number(dbBytes), grenze: Number(health?.free_db_reference_bytes) || ADMIN_DB_GRENZE,
             warnPct: health?.warning_threshold_pct ?? 75, kritPct: health?.critical_threshold_pct ?? 90, check: health ? { status: health.status, zeit: health.last_check_at } : null },
-          speicher, wartung, spiegel,
+          speicher, wartung, spiegel, admins: await adminAnzahl(),
           communicator: { farbe: comm.farbe, text: comm.text, erreichbar: comm.erreichbar, push: comm.push.zustand, email: comm.email.zustand, club: comm.club, bericht: comm.bericht },
           mitglieder: {
             gesamt: leute.length, mitZugang: mz.length, ohneZugang: leute.length - mz.length, nieAngemeldet: mz.filter((x: any) => !x.zuletzt_gesehen).length,
@@ -7208,10 +7235,22 @@ Köcheclub-App`,
         nurAdmin(ich);
         const pid = String(p.person_id || "");
         const aemter = (Array.isArray(p.aemter) ? p.aemter : []).map((x: unknown) => txt(x, 40)).filter(Boolean).slice(0, 5);
+        // KC-CLUB-VERTRETUNG (2.2.0): Admin-Recht für andere ist ab jetzt im Fenster schaltbar – Änderung wird protokolliert und gemeldet
+        const { data: vorher } = await db.from("kc_club_rollen").select("ist_admin").eq("person_id", pid).maybeSingle();
+        const adminNeu = pid === ich.person_id ? null : !!p.admin, adminAlt = !!vorher?.ist_admin;
         await db.from("kc_club_rollen").upsert({ person_id: pid, ist_vorstand: !!p.vorstand, ...(pid === ich.person_id ? {} : { ist_admin: !!p.admin }), aemter,
           ...(typeof p.protokolle === "boolean" ? { protokolle_lesen: p.protokolle } : {}), ...(typeof p.kontakte === "boolean" ? { kontakte_sehen: p.kontakte } : {}), geaendert_am: jetzt() });
         anmeldungenVergessen(); // KC-CLUB-ANMELDECACHE: neue Rolle sofort wirksam
-        await protokoll(ich.person_id, "rolle_gesetzt", { fuer: pid, vorstand: !!p.vorstand, aemter, protokolle: p.protokolle ?? null });
+        await protokoll(ich.person_id, "rolle_gesetzt", { fuer: pid, vorstand: !!p.vorstand, aemter, protokolle: p.protokolle ?? null, admin: adminNeu });
+        if (adminNeu !== null && adminNeu !== adminAlt) {
+          await protokoll(ich.person_id, "admin_recht_geaendert", { fuer: pid, vorher: adminAlt, nachher: adminNeu });
+          await senden("club_nachricht", [pid], adminNeu ? {
+            titel: "🛡️ Du bist jetzt Admin-Vertretung", kurz: `${ich.name} hat dir die Admin-Rechte gegeben.`,
+            betreff: "Köcheclub Werne – du bist jetzt Admin-Vertretung",
+            text: `Hallo,\n\n${ich.name} hat dir in der Köcheclub-App die Admin-Rechte gegeben – als Vertretung.\n\nWas dazugehört, steht in der App unter 📚 Meine Dokumente → „Vertretung des Admins“.\n\nViele Grüße\nKöcheclub Werne`, url: APP_URL,
+          } : { titel: "🛡️ Admin-Rechte beendet", kurz: `${ich.name} hat deine Admin-Rechte beendet.`, betreff: "Köcheclub Werne – Admin-Rechte beendet",
+            text: `Hallo,\n\n${ich.name} hat deine Admin-Rechte in der Köcheclub-App beendet.\n\nViele Grüße\nKöcheclub Werne`, url: APP_URL }, `club-admin-recht:${pid}:${Date.now()}`).catch(() => null);
+        }
         return json({ ok: true });
       }
 

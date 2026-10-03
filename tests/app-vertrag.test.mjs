@@ -3152,6 +3152,19 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(!/ptblnpiroqftcvlsrhac|service_role|eyJ[A-Za-z0-9_-]{20}/.test(f3), "fotos3 ohne echte Zugänge");
   assert.ok(/datei: "dokumente\/Koecheclub-App_Anleitung_V3\.pdf"/.test(html), "V3 in Meine Dokumente");
 }
+// 285. 2.2.0: Vertretung des Admins vorbereitet
+{
+  assert.ok(/schalter\("roAdmin", "🛡️ Admin \(Vertretung\)"/.test(html) && /ICH\?\.admin && pid !== ICH\.person_id \? schalter\("roAdmin"/.test(html), "Admin-Schalter nur für Admin, nicht für sich selbst");
+  assert.ok(/if \(adminSchalter && admin && !m\?\.admin && !\(await frage\(/.test(html) && /kontakte: \$\("roKontakte"\)\.checked, admin, aemter/.test(html), "Rückfrage + senden");
+  const rs = server.slice(server.indexOf('case "rolle_setzen": {'), server.indexOf('return json({ ok: true });', server.indexOf('case "rolle_setzen": {')));
+  assert.ok(/nurAdmin\(ich\)/.test(rs) && /pid === ich\.person_id \? null : !!p\.admin/.test(rs) && /"admin_recht_geaendert"/.test(rs), "Server: Admin-Recht protokolliert, nicht für sich selbst");
+  assert.ok(/admins: await adminAnzahl\(\)/.test(server) && /r\.admins != null && r\.admins < 2/.test(html), "Admin-Zentrale warnt");
+  assert.ok(/await adminAbwesendPruefen\(\)\.catch/.test(server) && /eq\("aktion", "admin_abwesend_gemeldet"\)\.gte\("zeit", new Date\(Date\.now\(\) - 7 \* 86400000\)/.test(server), "Hinweis an Clubleitung gedrosselt");
+  assert.ok(/\{ id: "vertretung", sym: "🛡️"[^\n]*nur: \(\) => !!ICH\?\.admin \}/.test(html) && /DOKUMENTE\.filter\(\(d\) => !d\.nur \|\| d\.nur\(\)\)/.test(html), "Dokument nur für Admins");
+  const pdf = fs.readFileSync(new URL("../dokumente/Vertretung_Admin_V1.pdf", import.meta.url)), werkzeug = fs.readFileSync(new URL("../tools/vertretung/bau.mjs", import.meta.url), "utf8");
+  assert.ok(pdf.subarray(0, 5).toString() === "%PDF-" && !/ptblnpiroqftcvlsrhac|service_role|eyJ[A-Za-z0-9_-]{20}|passwort:/i.test(werkzeug), "Vertretungs-PDF da, Werkzeug ohne Geheimnisse");
+  assert.ok(!/OK = per WhatsApp schicken\\nAbbrechen = in die Zwischenablage kopieren/.test(html) && /data-w="kopie">📋 Kopieren/.test(html), "Link-Fenster mit echten Knöpfen");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

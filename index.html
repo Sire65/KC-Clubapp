@@ -2393,7 +2393,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.1.2"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.2.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -5257,11 +5257,13 @@ const DOKUMENTE = [
   // 1.81.0: Version 2 (Register Club/Technik, Sprachansagen, Diktieren, Tippfehler, Farbschemen, Fotoalben, Archiv & Chronik) – V1 bleibt als Datei unverändert;
   // neue id, damit die leise „NEU“-Zeile (KC-CLUB-DOK-NEU) einmal wieder erscheint
   { id: "bedienung-club-app-v3", sym: "📖", t: "Bedienungsanleitung Club-App", u: "Version 3 · alles erklärt, mit Bildern · 32 Seiten", datei: "dokumente/Koecheclub-App_Anleitung_V3.pdf", neuBis: "2026-11-15" }, // KC-CLUB-ANLEITUNG-V3 (2.1.2)
+  // KC-CLUB-VERTRETUNG (2.2.0): Betriebsanleitung für die Admin-Vertretung + Notfall-Umschlag (ohne Zugangsdaten) – nur für Admins sichtbar
+  { id: "vertretung", sym: "🛡️", t: "Vertretung des Admins", u: "Betriebsanleitung + Notfall-Umschlag zum Ausfüllen", datei: "dokumente/Vertretung_Admin_V1.pdf", nur: () => !!ICH?.admin },
   { id: "bilderrechner", sym: "🧮", t: "Schnellanleitung Bilderrechner", u: "Kurzanleitung V4 · 28 Seiten", datei: "dokumente/Kurzanleitung_Bilderrechner_V4.pdf" },
 ];
 function dokumenteZeigen() {
   const da = (d) => !!(d.datei || d.v);
-  $("dokRaster").innerHTML = DOKUMENTE.map((d) => `<button class="kachel${da(d) ? "" : " bald"}" onclick="dokOeffnen('${d.id}')">
+  $("dokRaster").innerHTML = DOKUMENTE.filter((d) => !d.nur || d.nur()).map((d) => `<button class="kachel${da(d) ? "" : " bald"}" onclick="dokOeffnen('${d.id}')">
     <div class="sym">${d.sym}</div><b>${esc(d.t)}</b><small>${esc(d.u)}</small>${da(d) ? (dokNeu(d) ? '<span class="zahl">NEU</span>' : "") : '<span class="zahl">bald</span>'}</button>`).join("");
 }
 // KC-CLUB-DOK-NEU (1.61.0, Wunsch Hansi: „nicht mit zu vielen Meldungen überhäufen“): Neues Dokument (neuBis im Eintrag)
@@ -5270,7 +5272,7 @@ function dokumenteZeigen() {
 const DOK_GESEHEN = "kc_club_dok_gesehen";
 const dokGesehen = () => { try { return JSON.parse(lsLesen(DOK_GESEHEN) || "[]"); } catch { return []; } };
 function dokNeu(d) { return !!(d?.datei && d.neuBis && heuteIso() <= d.neuBis && !dokGesehen().includes(d.id)); }
-function dokHinweis() { return DOKUMENTE.find(dokNeu) || null; }
+function dokHinweis() { return DOKUMENTE.find((d) => (!d.nur || d.nur()) && dokNeu(d)) || null; }
 function dokErledigt(id) {
   const g = dokGesehen(); if (!g.includes(id)) { g.push(id); try { localStorage.setItem(DOK_GESEHEN, JSON.stringify(g.slice(-30))); } catch {} }
   if (typeof wichtigZeigen === "function" && INIT) { wichtigZeigen(); infoFelderAktualisieren(); }
@@ -5968,6 +5970,7 @@ function adminBlatt() {
   const r = INFO_DATEN.admin?.r; if (!r) return;
   const c = r.communicator, b = c.bericht, m = r.mitglieder;
   $("adminBlattInhalt").innerHTML = `<h3 style="margin:0">🛡️ Admin-Zentrale – Einzelheiten</h3><p class="hinweis" style="margin:0">Stand ${esc(zeitKurz(r.zeit))} Uhr</p>
+    ${r.admins != null && r.admins < 2 ? `<div class="karte" style="border:2px solid #d68910;margin:0"><b>🛡️ Noch keine Admin-Vertretung.</b> Fällst du aus, kann niemand Links erzeugen oder Rechte ändern. Bestimmen: Mitglieder → Mitglied → 🎖️ → „Admin (Vertretung)“. Anleitung: 📚 Meine Dokumente → „Vertretung des Admins“.</div>` : ""}
     <button class="knopf" onclick="fpAdmin()">🩺 Fehlerprotokoll &amp; Startprobleme der Mitglieder</button>
     <button class="knopf" onclick="nzAdmin()">📊 Nutzung der App – ohne Namen</button>
     <b>👥 Zuletzt in der App</b>
@@ -12506,8 +12509,12 @@ async function linkTeilen(pid) {
     const { link } = await api("link_erzeugen", { person_id: pid });
     // 0.27.3: Anleitung wie unter ⚙️ → App-Installation (richtige App statt Verknüpfung)
     const text = `Hallo ${m.vorname}, hier ist dein persönlicher Link zur Köcheclub-App:\n${link}\n\nSo geht's (Android): Link in Chrome öffnen → oben rechts ⋮ → „App installieren“ (bzw. „Zum Startbildschirm hinzufügen“ → „Installieren“, nicht „Verknüpfung“). Samsung-Browser „Internet“: unten ≡ → „Seite hinzufügen zu“ → „Startbildschirm“.\niPhone: den Link in *Safari* öffnen → unten Teilen □↑ → „Zum Home-Bildschirm“ → „Hinzufügen“. Danach die App über das neue Symbol öffnen.\n\nFunktioniert der Link nicht (z. B. weil es einen neueren gibt)? Die Seite zeigt dann „Link verloren?“ – dort deine E-Mail-Adresse eingeben, der neue Link kommt sofort per Mail.\n\nBitte nicht weitergeben – der Link ist dein persönlicher Zugang. Viele Grüße, ${ICH?.vorname || adminName()}`;
-    if ((await frage(`Link für ${m.name} erzeugt.\n\nOK = per WhatsApp schicken\nAbbrechen = in die Zwischenablage kopieren`))) window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank");
-    else { try { await navigator.clipboard.writeText(text); melde("Text mit Link kopiert"); } catch { (await eingabe("Zum Kopieren:", text)); } }
+    // 2.2.0 (Gesamtprüfung): zwei echte Knöpfe statt „Abbrechen = kopieren“
+    const f = blattAuf("linkBlatt", `<h3 style="margin-top:0">🔗 Link für ${esc(m.name)} erzeugt</h3><p class="hinweis">Der alte Link gilt ab jetzt nicht mehr. Wie soll er zu ${esc(m.vorname || m.name)}?</p>
+      <div class="dlg-knoepfe"><button class="knopf haupt" data-w="wa">🟢 Per WhatsApp schicken</button><button class="knopf" data-w="kopie">📋 Kopieren</button><button class="knopf" data-w="zu">Schließen</button></div>`);
+    f.querySelector('[data-w="wa"]').onclick = () => { f.remove(); window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank"); };
+    f.querySelector('[data-w="kopie"]').onclick = async () => { f.remove(); try { await navigator.clipboard.writeText(text); melde("📋 Text mit Link kopiert"); } catch { await eingabe("Zum Kopieren:", text); } };
+    f.querySelector('[data-w="zu"]').onclick = () => f.remove();
     mitgliederLaden();
   } catch (e) { melde(e.message, true); }
 }
@@ -12524,13 +12531,17 @@ function rolleBearbeiten(pid) {
     ${schalter("roLeitung", "Termine & Abstimmungen anlegen", "Termine, Veranstaltungen und Abstimmungen anlegen (Clubleitung)", !!m.vorstand)}
     ${schalter("roProtokolle", "Protokolle lesen & schreiben", "aus z. B. für Aushilfen", m.protokolle !== false)}
     ${schalter("roKontakte", "Kontaktdaten anderer sehen", "Telefon, Adresse … soweit freigegeben – aus z. B. für Aushilfen", m.kontakte !== false)}
+    ${ICH?.admin && pid !== ICH.person_id ? schalter("roAdmin", "🛡️ Admin (Vertretung)", "Volle Rechte wie der Admin: Links, Rollen, Freigaben, Admin-Zentrale. Nur für die feste Vertretung.", !!m.admin) : ""}
     <div class="dlg-knoepfe"><button class="knopf haupt" onclick="rolleSpeichern('${pid}', this)">💾 Speichern</button><button class="knopf" onclick="$('rolleBlatt').remove()">Abbrechen</button></div>`);
 }
 async function rolleSpeichern(pid, knopf) {
   const aemter = [...document.querySelectorAll("#rolleBlatt .roAmt:checked")].map((x) => x.value);
   const neu = $("roNeu").value.trim(); if (neu) aemter.push(neu);
+  // KC-CLUB-VERTRETUNG (2.2.0): Admin-Recht nur mit ausdrücklicher Rückfrage vergeben
+  const m = MITGLIEDER?.find((x) => x.person_id === pid), adminSchalter = $("roAdmin"), admin = adminSchalter ? adminSchalter.checked : !!m?.admin;
+  if (adminSchalter && admin && !m?.admin && !(await frage(`${m?.name || "Dieses Mitglied"} wirklich zur Admin-Vertretung machen?\nVolle Rechte: Links erzeugen, Rollen und Freigaben ändern, Admin-Zentrale. Wird protokolliert, ${m?.name?.split(" ")[0] || "das Mitglied"} bekommt Bescheid.`, { ja: "🛡️ Ja, Admin-Vertretung" }))) return;
   knopf.disabled = true;
-  try { await api("rolle_setzen", { person_id: pid, vorstand: $("roLeitung").checked, protokolle: $("roProtokolle").checked, kontakte: $("roKontakte").checked, aemter: [...new Set(aemter)].slice(0, 5) });
+  try { await api("rolle_setzen", { person_id: pid, vorstand: $("roLeitung").checked, protokolle: $("roProtokolle").checked, kontakte: $("roKontakte").checked, admin, aemter: [...new Set(aemter)].slice(0, 5) });
     $("rolleBlatt").remove(); MITGLIEDER = null; melde("🎖️ Gespeichert"); mitgliederLaden(); }
   catch (e) { melde(e.message, true); knopf.disabled = false; }
 }

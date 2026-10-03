@@ -1,5 +1,18 @@
 # Änderungen
 
+## 2.2.0 – 2026-10-03 – Vertretung des Admins vorbereitet (Konzept „Hansi ist der einzige Schlüssel“, AGENTS Regel 12)
+- KC-CLUB-VERTRETUNG: Im Fenster „🎖️ Amt & Rechte“ (nur Admin, nicht für sich selbst) neuer Schalter „🛡️ Admin (Vertretung)“ –
+  Vergabe nur mit ausdrücklicher Rückfrage; Server protokolliert „admin_recht_geaendert“ (vorher/nachher) und benachrichtigt die
+  Person. Vorher fehlte der Schalter in der App (der Server konnte es bereits; ohne Schalter wurde „admin“ nie gesendet).
+  Noch kein zweiter Admin bestimmt.
+- Admin-Zentrale zeigt „🛡️ Noch keine Admin-Vertretung“, solange es nur einen aktiven Admin gibt (admin_lage liefert „admins“).
+- Wartungslauf: War über 10 Tage kein Admin in der App, bekommt die Clubleitung (ohne Admins) höchstens 1× je 7 Tage einen ruhigen
+  Hinweis mit Verweis auf Notfall-Umschlag und Betriebsanleitung.
+- Dokument „🛡️ Vertretung des Admins“ (dokumente/Vertretung_Admin_V1.pdf, 4 Seiten, nur für Admins in „Meine Dokumente“ sichtbar):
+  Betriebsanleitung (häufige Fälle Schritt für Schritt, wöchentlicher Blick) + Notfall-Umschlag zum Ausfüllen von Hand + Protokoll
+  beim Öffnen. Enthält absichtlich KEINE Zugangsdaten (AGENTS Regel 15). Werkzeug: tools/vertretung/bau.mjs.
+- „Link erzeugt“-Fenster: zwei echte Knöpfe „🟢 Per WhatsApp schicken“ / „📋 Kopieren“ statt „Abbrechen = kopieren“.
+
 ## 2.1.2 – 2026-10-03
 - KC-CLUB-ANLEITUNG-V3 (Wunsch Hansi „Handbuch neu“): Bedienungsanleitung Version 3 (32 Seiten, Stand App 2.1.1) in
   „Meine Dokumente“ – alle Bilder neu (Demodaten), neue Teile „12. Helfen & Leihen“ (Formular mit „nach Absprache“/„egal wie viele“,
