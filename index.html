@@ -209,9 +209,11 @@
   .kt-tafel td.meister { background: rgba(212,160,23,.18); }
   .kt-frage { font-size: 1.2rem; font-weight: 800; line-height: 1.35; text-align: center; margin: 4px 0 10px; }
   .kt-zeit { height: 16px; border-radius: 8px; background: var(--linie); overflow: hidden; margin: 4px 0 12px; }
-  .kt-zeit i { display: block; height: 100%; width: 100%; border-radius: 8px; animation-name: ktZeit; animation-timing-function: linear; animation-fill-mode: forwards; }
-  .kt-zeit.stop i { animation-play-state: paused; }
-  @keyframes ktZeit { 0% { width: 100%; background: #27ae60; } 55% { background: #f1c40f; } 80% { background: #e67e22; } 100% { width: 0; background: #c0392b; } }
+  .kt-zeit i { display: block; height: 100%; width: 100%; border-radius: 8px; background: #27ae60; }
+  /* 2.17.0 KC-CLUB-KUECHENTERROR-WAECHTER: Balken wird vom Wächter (Uhrzeit) gestellt, nicht animiert; 3-2-1 Lesezeit */
+  .kt-uhr { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 30px; margin: -6px 0 6px; font-weight: 800; font-size: 1.1rem; }
+  .kt-lesen-zahl { display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; border-radius: 50%; background: var(--rot); color: #fff; font-size: 1.8rem; }
+  .kt-antworten.kt-lesen { visibility: hidden; }
   .kt-antworten { display: grid; gap: 8px; }
   .kt-antwort { min-height: 54px; padding: 10px 12px; border: 2px solid var(--linie); border-radius: 14px; background: var(--karte); color: var(--text); font: inherit; font-weight: 700; text-align: left; cursor: pointer; line-height: 1.3; }
   .kt-antwort:disabled { cursor: default; opacity: 1; color: var(--text); }
@@ -2564,7 +2566,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.16.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.17.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -5650,13 +5652,40 @@ const ktPunkte = (ok, ms, lim = KT_MS) => (ok && ms <= lim ? 100 + Math.round(10
 const ktSek = (ms) => (ms / 1000).toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 // Frage mit Zeitbalken; aufl = Auflösung (richtig/gewaehlt/ok/p/ms/e) – dann sind die Knöpfe gesperrt und eingefärbt
 function ktFrageHtml(fr, { klick = "", aufl = null, kopf = "", denkt = false } = {}) {
-  const lim = fr.limitMs || KT_MS, rest = Math.max(0, fr.restMs ?? lim), weg = lim - Math.min(rest, lim);
+  const lim = fr.limitMs || KT_MS, rest = aufl ? Math.max(0, lim - (aufl.ms || 0)) : lim;
   return `${kopf}${fr.m ? '<div class="kt-meister">🎖️ Meisterfrage – richtig zählt doppelt!</div>' : ""}<div class="kt-frage">${esc(fr.f)}</div>
-    <div class="kt-zeit${aufl ? " stop" : ""}" role="timer" aria-label="Zeit: ${lim / 1000} Sekunden"><i style="animation-duration:${lim}ms;animation-delay:-${weg}ms"></i></div>
-    <div class="kt-antworten">${fr.a.map((t, i) => `<button class="kt-antwort${aufl ? (i === aufl.richtig ? " richtig" : i === aufl.gewaehlt ? " falsch" : "") : ""}${denkt ? " denkt" : ""}" ${aufl || !klick ? "disabled" : ""} onclick="${klick}(${i})">${"ABCD"[i]}) ${esc(t)}</button>`).join("")}</div>
+    <div class="kt-zeit" role="timer" aria-label="Zeit: ${lim / 1000} Sekunden"><i ${aufl ? "" : 'id="ktBalken"'} style="width:${(rest / lim * 100).toFixed(1)}%;background:${rest / lim > 0.45 ? "#27ae60" : rest / lim > 0.2 ? "#f1c40f" : "#c0392b"}"></i></div>
+    ${aufl ? "" : '<div class="kt-uhr"><span id="ktLesen" class="kt-lesen-zahl versteckt" aria-live="polite"></span><span id="ktSek"></span></div>'}
+    <div class="kt-antworten${aufl ? "" : " kt-lesen"}">${fr.a.map((t, i) => `<button class="kt-antwort${aufl ? (i === aufl.richtig ? " richtig" : i === aufl.gewaehlt ? " falsch" : "") : ""}${denkt ? " denkt" : ""}" ${aufl || !klick ? "disabled" : ""} onclick="${klick}(${i})">${"ABCD"[i]}) ${esc(t)}</button>`).join("")}</div>
     ${aufl ? `<div class="kt-ergebnis">${aufl.ok ? `✅ Richtig in ${ktSek(aufl.ms)} s – <b>+${aufl.p} Punkte${fr.m ? " (doppelt!)" : ""}</b>` : aufl.gewaehlt < 0 || aufl.zuSpaet ? "⏰ Zeit abgelaufen – 0 Punkte" : "❌ Leider falsch – 0 Punkte"}</div>
       <p class="kt-erkl">💡 ${esc(aufl.e || "")}</p>` : ""}`;
 }
+// KC-CLUB-KUECHENTERROR-WAECHTER (2.17.0, Fund Hansi „die Zeit läuft nicht gleichmäßig“): Zeit-Wächter statt CSS-Animation.
+// Er rechnet alle 0,1 s mit der festen Endzeit (Uhrzeit) – Balken und Sekunden zeigen immer die echte Restzeit, auch wenn das Handy
+// kurz hängt, neu zeichnet oder im Hintergrund war; läuft die Zeit ab, löst der Wächter genau einmal „Zeit abgelaufen“ aus.
+// Davor 3 Sekunden Lesezeit: die Frage steht schon da, 3 – 2 – 1 zählt runter, erst dann erscheinen die Antworten und die Uhr läuft.
+const KT_LESEN_MS = 3000;
+let KTU = { t: null, start: 0, ende: 0, lim: KT_MS, fertig: null, aus: true };
+function ktUhrStart(lesenMs, restMs, lim, beiEnde) {
+  ktUhrStopp();
+  const jetzt = Date.now(); KTU = { t: null, start: jetzt + Math.max(0, lesenMs), ende: jetzt + Math.max(0, lesenMs) + Math.max(0, restMs), lim: lim || KT_MS, fertig: beiEnde, aus: false };
+  const tick = () => {
+    if (KTU.aus) return;
+    const now = Date.now(), b = $("ktBalken"), sek = $("ktSek"), les = $("ktLesen"), ant = document.querySelector(".kt-antworten");
+    if (now < KTU.start) {
+      if (les) { les.textContent = String(Math.ceil((KTU.start - now) / 1000)); les.classList.remove("versteckt"); }
+      ant?.classList.add("kt-lesen"); if (b) b.style.width = "100%"; if (sek) sek.textContent = "Lies die Frage …"; return;
+    }
+    les?.classList.add("versteckt"); ant?.classList.remove("kt-lesen");
+    const rest = Math.max(0, KTU.ende - now), f = Math.min(1, rest / KTU.lim);
+    if (b) { b.style.width = (f * 100).toFixed(1) + "%"; b.style.background = f > 0.45 ? "#27ae60" : f > 0.2 ? "#f1c40f" : "#c0392b"; }
+    if (sek) sek.textContent = `⏱ ${Math.ceil(rest / 1000)} s`;
+    if (rest <= 0) { const fn = KTU.fertig; ktUhrStopp(); fn?.(); }
+  };
+  KTU.t = setInterval(tick, 100); tick();
+}
+function ktUhrStopp() { clearInterval(KTU.t); KTU.t = null; KTU.aus = true; }
+const ktLiest = () => !KTU.aus && Date.now() < KTU.start; // während 3-2-1 keine Antwort
 // ----- gegen den Computer -----
 let KTP = (() => { let w = null; try { w = JSON.parse(localStorage.getItem(KT_KEY) || "null"); } catch {} return { staerke: "mittel", stand: { ich: 0, pc: 0, remis: 0 }, ...(w || {}), z: null, uhr: null, pcUhr: null }; })();
 const ktpMerken = () => { try { localStorage.setItem(KT_KEY, JSON.stringify({ staerke: KTP.staerke, stand: KTP.stand })); } catch {} };
@@ -5684,23 +5713,24 @@ async function ktPcZeigen() {
     ${z.phase === "aufl" ? `<div class="knoepfe"><button class="knopf haupt" onclick="ktPcWeiter()">${z.i >= 11 ? "🏁 Ergebnis" : "Weiter ›"}</button></div>` : ""}</div>`;
   if (z.phase === "frage") ktPcUhren();
 }
-function ktPcUhren() { // Zeitablauf (und beim Computer: seine Antwort) – auch nach Wiederkommen in die Ansicht
+function ktPcUhren() { // Zeitablauf über den Wächter (und beim Computer: seine Antwort) – auch nach Wiederkommen in die Ansicht
   const z = KTP.z; clearTimeout(KTP.uhr); clearTimeout(KTP.pcUhr);
-  const rest = ktpLimit() - (Date.now() - z.seit);
-  KTP.uhr = setTimeout(() => ktPcAntwort(-1, true), Math.max(0, rest) + 50);
+  const jetzt = Date.now(), lim = ktpLimit();
+  ktUhrStart(Math.max(0, z.seit - jetzt), lim - Math.max(0, jetzt - z.seit), lim, () => ktPcAntwort(-1, true));
   if (z.i % 2 === 1) KTP.pcUhr = setTimeout(() => { const st = KT_STAERKE[KTP.staerke] || KT_STAERKE.mittel; ktPcAntwort(Math.random() < st.quote * (KT_FRAGEN_L.find((q) => q.id === z.ids[z.i])?.m ? 0.8 : 1) ? z.perm.indexOf(0) : [0, 1, 2, 3].filter((k) => z.perm[k] !== 0)[Math.floor(Math.random() * 3)], true); }, Math.max(0, z.pcZeit - (Date.now() - z.seit)));
 }
 async function ktPcStart() {
   const F = await ktFragenLaden();
   const st = KT_STAERKE[KTP.staerke] || KT_STAERKE.mittel;
-  KTP.z = { ids: [...ktMischen(F.filter((q) => !q.m).map((q) => q.id)).slice(0, 10), ...ktMischen(F.filter((q) => q.m).map((q) => q.id)).slice(0, 2)], i: 0, /* 2.15.0: die letzten beiden (je eine für dich und den Computer) sind Meisterfragen */ punkte: [0, 0], phase: "frage", seit: Date.now(), perm: ktMischen([0, 1, 2, 3]), aufl: null };
+  KTP.z = { ids: [...ktMischen(F.filter((q) => !q.m).map((q) => q.id)).slice(0, 10), ...ktMischen(F.filter((q) => q.m).map((q) => q.id)).slice(0, 2)], i: 0, /* 2.15.0: die letzten beiden (je eine für dich und den Computer) sind Meisterfragen */ punkte: [0, 0], phase: "frage", seit: Date.now() + KT_LESEN_MS, perm: ktMischen([0, 1, 2, 3]), aufl: null };
   KTP.z.pcZeit = st.von + Math.random() * (st.bis - st.von);
   ktPcZeigen();
 }
 function ktPcAntwort(wahl, vonUhr) {
   const z = KTP.z; if (!z || z.phase !== "frage") return;
   if (!vonUhr && z.i % 2 === 1) return; // beim Computer tippt nicht der Mensch
-  clearTimeout(KTP.uhr); clearTimeout(KTP.pcUhr);
+  if (!vonUhr && Date.now() < z.seit) return; // noch Lesezeit (3-2-1)
+  clearTimeout(KTP.uhr); clearTimeout(KTP.pcUhr); ktUhrStopp();
   const lim = ktpLimit(), ms = Math.min(Date.now() - z.seit, lim + 1), ok = wahl >= 0 && z.perm[wahl] === 0 && ms <= lim; let p = ktPunkte(ok, ms, lim);
   const f = KT_FRAGEN_L.find((q) => q.id === z.ids[z.i]);
   if (f?.m) p *= 2; // 🎖️ Meisterfrage
@@ -5712,7 +5742,7 @@ function ktPcWeiter() {
   const z = KTP.z; if (!z || z.phase !== "aufl") return;
   z.i++;
   if (z.i >= 12) { z.phase = "ende"; const [a, b] = z.punkte; if (a > b) KTP.stand.ich++; else if (b > a) KTP.stand.pc++; else KTP.stand.remis++; ktpMerken(); }
-  else { const st = KT_STAERKE[KTP.staerke] || KT_STAERKE.mittel; z.phase = "frage"; z.seit = Date.now(); z.perm = ktMischen([0, 1, 2, 3]); z.aufl = null; z.pcZeit = st.von + Math.random() * (st.bis - st.von); }
+  else { const st = KT_STAERKE[KTP.staerke] || KT_STAERKE.mittel; z.phase = "frage"; z.seit = Date.now() + KT_LESEN_MS; z.perm = ktMischen([0, 1, 2, 3]); z.aufl = null; z.pcZeit = st.von + Math.random() * (st.bis - st.von); }
   ktPcZeigen();
 }
 const ktPcStaerke = (w) => { KTP.staerke = KT_STAERKE[w] ? w : "mittel"; ktpMerken(); ktPcZeigen(); };
@@ -5725,7 +5755,7 @@ function ktSpielZeigen(g) {
   if (!q) { $("spInhalt").innerHTML = '<div class="karte hinweis">Spielstand fehlt – bitte „‹“ und neu öffnen.</div>'; return; }
   const zurueck = `<div class="zeile" style="border:none;padding:0"><button class="knopf klein" onclick="ktMgUebersicht()">‹ Übersicht</button><b style="flex:1;text-align:right">🔪 Du gegen ${er}<br><small class="hinweis">⏱ ${(q.limitMs || KT_MS) / 1000} Sekunden je Frage</small></b></div>`;
   if (KTM.frage || KTM.aufl) {
-    const fr = KTM.frage || KTM.aufl.frage, rest = KTM.frage ? KTM.frage.restMs - (Date.now() - KTM.frage.empfangen) : 0;
+    const fr = KTM.frage || KTM.aufl.frage, rest = 0; /* Restzeit stellt der Wächter */
     const kopf = `<div class="kt-kopf"><span>Frage ${fr.imZug}/${fr.vonImZug}</span><span>Runde ${Math.ceil(fr.nr / 3)} von 4</span></div>`;
     $("spInhalt").innerHTML = `<div class="karte sp-karte">${ktFrageHtml({ ...fr, restMs: rest }, { klick: KTM.frage ? "ktMgAntwort" : "", aufl: KTM.aufl, kopf })}
       ${KTM.aufl ? `<div class="knoepfe"><button class="knopf haupt" onclick="ktMgWeiter()">${g.ichDran && q.offenBeiMir > 0 ? "Nächste Frage ›" : "Fertig ›"}</button></div>` : ""}</div>`;
@@ -5748,21 +5778,22 @@ function ktSpielZeigen(g) {
     ${q.rueckblick ? `<details class="sch-verlauf"><summary>📖 Alle Fragen mit Lösung</summary>${q.rueckblick.filter(Boolean).map((x, i) => `<p style="margin:6px 0"><b>${i + 1}. ${x.m ? "🎖️ " : ""}${esc(x.f)}</b><br>✅ ${esc(x.r)}<br><small class="hinweis">💡 ${esc(x.e)}</small></p>`).join("")}</details>` : ""}
     <div class="knoepfe">${g.status === "beendet" ? `<button class="knopf haupt" onclick="spRevanche('${g.id}')">↺ Revanche</button>` : g.status === "laeuft" ? `<button class="knopf" onclick="spAufgeben('${g.id}')">🏳️ Aufgeben</button>` : ""}</div></div>`;
 }
-function ktMgUebersicht() { clearTimeout(KTM.uhr); KTM.frage = null; KTM.aufl = null; SP.offen = null; spZeigen(); spLaden(true); }
+function ktMgUebersicht() { clearTimeout(KTM.uhr); ktUhrStopp(); KTM.frage = null; KTM.aufl = null; SP.offen = null; spZeigen(); spLaden(true); }
 async function ktMgFrage() {
   const g = SP.offen; if (!g?.ichDran || KTM.sendet) return;
   KTM.sendet = true;
   try { const r = await api("spiel_zug", { id: g.id, zug: { kt: "frage" }, zuege: g.zuege }, { warten: true }); SP.offen = r.spiel;
     if (r.verpasst) melde("⏰ Eine Frage war schon abgelaufen – 0 Punkte");
-    if (r.frage) { KTM.frage = { ...r.frage, empfangen: Date.now() }; KTM.aufl = null; clearTimeout(KTM.uhr); KTM.uhr = setTimeout(() => ktMgAntwort(-1), Math.max(0, r.frage.restMs) + 100); } }
+    if (r.frage) { KTM.frage = { ...r.frage, empfangen: Date.now() }; KTM.aufl = null; clearTimeout(KTM.uhr); ktUhrStart(r.frage.lesenMs || 0, r.frage.restMs, r.frage.limitMs, () => ktMgAntwort(-1)); } }
   catch (e) { meldeFehler(e); try { SP.offen = (await api("spiel_holen", { id: g.id })).spiel; } catch {} }
   finally { KTM.sendet = false; }
   if (aktuelleAnsicht === "spiele" && SP.offen) spZeigen();
 }
 async function ktMgAntwort(wahl) {
   const g = SP.offen, fr = KTM.frage; if (!g || !fr || KTM.sendet) return;
-  KTM.sendet = true; clearTimeout(KTM.uhr);
-  document.querySelectorAll(".kt-antwort").forEach((b) => (b.disabled = true)); document.querySelector(".kt-zeit")?.classList.add("stop");
+  if (wahl >= 0 && ktLiest()) return; // noch Lesezeit (3-2-1)
+  KTM.sendet = true; clearTimeout(KTM.uhr); ktUhrStopp();
+  document.querySelectorAll(".kt-antwort").forEach((b) => (b.disabled = true));
   try { const r = await api("spiel_zug", { id: g.id, zug: { kt: "antwort", wahl }, zuege: g.zuege }, { warten: true }); SP.offen = r.spiel;
     KTM.frage = null; KTM.aufl = r.antwort ? { ...r.antwort, frage: fr } : null; try { navigator.vibrate?.(r.antwort?.ok ? 30 : [40, 30, 40]); } catch {} }
   catch (e) { meldeFehler(e); KTM.frage = null; KTM.aufl = null; try { SP.offen = (await api("spiel_holen", { id: g.id })).spiel; } catch {} }

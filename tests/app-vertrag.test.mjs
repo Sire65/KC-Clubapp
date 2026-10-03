@@ -3397,6 +3397,13 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   for (const k of ["chatVorlesenStart('neu')", "chatVorlesenStart('alles')", "chatVorlesenStart('${id}')", 'id="setStimmeM"', 'id="setStimmeW"', 'id="setMeineStimme"']) assert.ok(html.includes(k), "fehlt: " + k);
   assert.ok(/if \(v !== "chat" && CV\.an\) chatVorlesenStopp\(true\);/.test(html) && /const stimmeGuete = /.test(html), "Stopp beim Verlassen, Güte sichtbar");
 }
+// 311. 2.17.0: Zeit-Wächter statt Animation + 3-2-1 Lesezeit (KC-CLUB-KUECHENTERROR-WAECHTER)
+{
+  assert.ok(/function ktUhrStart\(lesenMs, restMs, lim, beiEnde\)/.test(html) && /KTU\.t = setInterval\(tick, 100\)/.test(html) && /const rest = Math\.max\(0, KTU\.ende - now\)/.test(html), "Wächter rechnet mit fester Endzeit");
+  assert.ok(!/animation-name: ktZeit/.test(html) && !/@keyframes ktZeit/.test(html), "keine Balken-Animation mehr");
+  assert.ok(/const KT_LESEN_MS = 3000;/.test(html) && /if \(!vonUhr && Date\.now\(\) < z\.seit\) return;/.test(html) && /if \(wahl >= 0 && ktLiest\(\)\) return;/.test(html), "App: Lesezeit, kein Antippen davor");
+  assert.ok(/const KT_LESEN_MS = 3000;/.test(server) && /seit: Date\.now\(\) \+ KT_LESEN_MS/.test(server) && /lesenMs: Math\.max\(0, q\.offen\.seit - Date\.now\(\)\)/.test(server), "Server: Uhr startet nach der Lesezeit");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

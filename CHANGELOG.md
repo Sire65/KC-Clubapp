@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.17.0 – 2026-10-03 – ⏱ Küchenterror: Zeit-Wächter + 3-2-1 Lesezeit (Fund/Wunsch Hansi)
+- KC-CLUB-KUECHENTERROR-WAECHTER: Fund „die Zeit läuft nicht gleichmäßig ab, einiges geht schneller“ – Ursache: der Balken war eine
+  CSS-Animation, die beim Neuzeichnen, Ruckeln oder kurzem Hintergrund neu startet bzw. springt. Jetzt stellt ein Wächter alle 0,1 s
+  Balken und Sekundenanzeige („⏱ 7 s“) aus der festen Endzeit (Uhrzeit) – immer die echte Restzeit; läuft sie ab, löst er genau einmal
+  „Zeit abgelaufen“ aus. Geprüft: 10 s-Stufe läuft gleichmäßig ~10 % je Sekunde. Gegen Mitglieder misst zusätzlich der Server.
+- Lesezeit: Die Frage erscheint, 3 – 2 – 1 zählt herunter („Lies die Frage …“), erst dann erscheinen die Antworten und die Sekunden
+  laufen. Antippen während der Lesezeit zählt nicht. Server: Startzeit der Frage = jetzt + 3 s (KT_LESEN_MS), liefert lesenMs/restMs;
+  der Computergegner antwortet ebenfalls erst nach der Lesezeit.
+
 ## 2.16.0 – 2026-10-03 – ⏱ Küchenterror-Zeitstufen + 🔊 ganzen Chat vorlesen mit zwei Stimmen (Wunsch Hansi)
 - KC-CLUB-KUECHENTERROR-ZEIT: Zeit je Frage nach Stufe – 😊 leicht 20 s, 🙂 mittel 15 s, 😎 schwer 10 s (wie bisher). Gegen den
   Computer über die Stufe (Computer antwortet passend langsamer), gegen Mitglieder wählt der Herausforderer die Zeit (Standard

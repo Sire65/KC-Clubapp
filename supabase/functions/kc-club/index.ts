@@ -26,7 +26,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "2.16.0";
+const SERVER_VERSION = "2.17.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -1190,6 +1190,8 @@ const KT_MS = 10000, KT_GNADE_MS = 800; // 10 Sekunden je Frage (Stufe schwer); 
 const KT_STUFEN: Record<string, number> = { leicht: 20000, mittel: 15000, schwer: KT_MS };
 const ktStufe = (x: unknown) => (typeof x === "string" && KT_STUFEN[x] ? x : "schwer");
 const ktLimit = (q: any) => KT_STUFEN[q?.stufe] ?? KT_MS;
+// 2.17.0 (Wunsch Hansi): 3 Sekunden Lesezeit (3-2-1) – die Uhr der Frage startet erst danach
+const KT_LESEN_MS = 3000;
 const KT_ZUEGE: [number, number[]][] = [[0, [0, 1, 2]], [1, [0, 1, 2, 3, 4, 5]], [0, [3, 4, 5, 6, 7, 8]], [1, [6, 7, 8, 9, 10, 11]], [0, [9, 10, 11]]];
 const KT_INDEX = new Map<string, any>((KT_FRAGEN as any[]).map((q) => [q.id, q]));
 const ktMischen = <T>(l: T[]) => { const a = [...l], z = new Uint32Array(a.length); crypto.getRandomValues(z); for (let i = a.length - 1; i > 0; i--) { const j = z[i] % (i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
@@ -2671,9 +2673,9 @@ async function ktZug(g: any, ich: any, zug: any) {
     if (!q.offen || q.offen.s !== s) { if (verpasst) frage = null; else throw new Fehler("Keine offene Frage – bitte neu laden.", 409); }
     else antwort = werten(Number.isInteger(zug.wahl) ? zug.wahl : -1);
   } else if (zug.kt === "frage") {
-    if (!q.offen) { const i = t[1].find((x) => !q.ant[s][x]); if (i !== undefined) q.offen = { s, i, seit: Date.now(), perm: ktMischen([0, 1, 2, 3]) }; }
+    if (!q.offen) { const i = t[1].find((x) => !q.ant[s][x]); if (i !== undefined) q.offen = { s, i, seit: Date.now() + KT_LESEN_MS, perm: ktMischen([0, 1, 2, 3]) }; }
     if (q.offen) { const f = KT_INDEX.get(q.ids[q.offen.i]), alle = [f.r, ...f.x];
-      frage = { f: f.f, a: q.offen.perm.map((k: number) => alle[k]), restMs: Math.max(0, LIM + KT_GNADE_MS - (Date.now() - q.offen.seit)), nr: q.offen.i + 1, imZug: t[1].indexOf(q.offen.i) + 1, vonImZug: t[1].length, m: !!f.m, limitMs: LIM }; }
+      frage = { f: f.f, a: q.offen.perm.map((k: number) => alle[k]), lesenMs: Math.max(0, q.offen.seit - Date.now()), restMs: Math.max(0, LIM - Math.max(0, Date.now() - q.offen.seit)), nr: q.offen.i + 1, imZug: t[1].indexOf(q.offen.i) + 1, vonImZug: t[1].length, m: !!f.m, limitMs: LIM }; }
   } else throw new Fehler("Unbekannter Zug.", 400);
   // Zug fertig? → weiter zum Gegenüber bzw. Ende
   let dran = ich.person_id, ende = false;
