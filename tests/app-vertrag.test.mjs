@@ -3213,6 +3213,12 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/body\.inkognito #v-start \.hero \{ box-shadow: 0 0 0 4px #000/.test(html) && /document\.body\.classList\.toggle\("inkognito", inkognitoAn\(\)\)/.test(html), "schwarzer Rahmen solange an");
   assert.ok(/if \(an\) inkoAmeisen\(\);/.test(html) && /\.hero \.inko-ameisen rect \{[^}]*animation: ameisenLauf/.test(html) && /const INKO_AMEISEN_MS = 4000;/.test(html), "Ameisen beim Einschalten, dann aus");
 }
+// 292. 2.4.2: Programmfehler aus catch-Blöcken protokollieren und verständlich zeigen (KC-CLUB-FEHLER-FANG)
+{
+  assert.ok(!/melde\(e\.message, true\)/.test(html), "alle catch-Meldungen über meldeFehler");
+  assert.ok(/function meldeFehler\(e\) \{/.test(html) && /e instanceof TypeError \|\| e instanceof ReferenceError/.test(html) && /window\.KCFP\?\.neu\("gefangen", \{ text: t, stack: fehlerStapel\(e\?\.stack\) \}\)/.test(html), "mit Stapel ins Protokoll");
+  assert.ok(/if \(fehler && JS_FEHLER\.test\(String\(t\)\)\)/.test(html), "auch direkte Meldungen");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

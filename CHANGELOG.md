@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.4.2 – 2026-10-03 – Programmfehler werden protokolliert und verständlich gezeigt (Fund Hansi)
+- KC-CLUB-FEHLER-FANG: Hansi sah nach dem Update auf 2.4.1 die rote Meldung „Cannot read properties of null (reading
+  'person_id')“. Server-Protokolle sauber (kein 5xx, keine Fehler-Nr.), Fehlerprotokoll leer – der Fehler wurde in einem catch
+  gefangen und nur angezeigt. Nachstellen im Test gelang nicht. Daher: alle 247 Stellen `melde(e.message, true)` → `meldeFehler(e)`.
+  JS-Programmfehler (TypeError/ReferenceError) gehen mit Fundstelle (Stapel) als „fehler_gefangen“ ins Fehlerprotokoll; das
+  Mitglied sieht „Da hat in der App etwas nicht geklappt – bitte nochmal versuchen. Der Fehler ist gemeldet.“ Fachliche
+  Server-Meldungen bleiben wörtlich. Ursache wird mit dem nächsten Protokolleintrag an der Quelle behoben.
+
 ## 2.4.1 – 2026-10-03 – Inkognito sichtbar am Kopfbereich (Wunsch Hansi)
 - KC-CLUB-INKOGNITO: Solange Inkognito an ist, schwarzer Rahmen (4 px) um den oberen Kopfbereich der Startseite (body.inkognito).
   Beim Einschalten läuft 4 s ein schwarz-gelber Ameisenrahmen (gleiche Animation ameisenLauf wie „Neue Nachr.“), danach bleibt

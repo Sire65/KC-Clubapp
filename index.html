@@ -2414,7 +2414,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.4.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.4.2"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2738,7 +2738,7 @@ async function pwFristenSpeichern() {
   try { const r = await api("pinnwand_fristen_setzen", { erinnernTage, pauseTage });
     INIT.pinnwandFristen = { erinnernTage: r.erinnernTage, pauseTage: r.pauseTage, geaendertAm: new Date().toISOString() };
     pwFristenZeigen(); melde(`💾 Gespeichert – Erinnerung nach ${r.erinnernTage} Tagen, wieder fragen nach ${r.pauseTage} Tagen`); }
-  catch (e) { melde(e.message, true); pwFristenZeigen(); }
+  catch (e) { meldeFehler(e); pwFristenZeigen(); }
 }
 function pwErinnern() {
   const { erinnernTage: PW_ERINNERN_TAGE, pauseTage: PW_ERINNERN_PAUSE_TAGE } = pwFristen();
@@ -2761,7 +2761,7 @@ function pwErinnern() {
       b.disabled = true;
       try { await api("pinnwand_abnehmen", { id: b.dataset.weg }); melde("🗑️ Abgenommen"); PW.zettel = PW.zettel.filter((z) => z.id !== b.dataset.weg); PW.meine = Math.max(0, PW.meine - 1);
         const rest = liste.filter((z) => z.id !== b.dataset.weg); if (rest.length) zeichnen(rest); else f.remove(); if (aktuelleAnsicht === "pinnwand") pwLaden(); }
-      catch (e) { b.disabled = false; melde(e.message, true); } });
+      catch (e) { b.disabled = false; meldeFehler(e); } });
     f.querySelector('[data-k="lassen"]').onclick = () => {
       f.remove();
       const neu = { ...bis }, spaeter = new Date(jetzt + PW_ERINNERN_PAUSE_TAGE * 86400000).toISOString();
@@ -2859,7 +2859,7 @@ function pwWichtig(an) { PW.form.wichtig = an; document.querySelectorAll("#pwWic
 async function pwFuer(f) {
   PW.form.fuer = f; document.querySelectorAll("#pwFuer button").forEach((b) => b.classList.toggle("an", b.dataset.f === f));
   $("pwPersonen").classList.toggle("versteckt", f !== "personen");
-  if (f === "personen") { if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return melde(e.message, true); } pwListe(); }
+  if (f === "personen") { if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return meldeFehler(e); } pwListe(); }
 }
 function pwListe() {
   const q = $("pwSuche").value.toLowerCase();
@@ -2878,14 +2878,14 @@ async function pwAnheften() {
   $("pwSpeichernKnopf").disabled = true;
   try { await api("pinnwand_anheften", { text, wichtig: PW.form.wichtig, fuer: PW.form.fuer, personen: PW.form.personen, ...(PW.form.antwortAuf ? { antwort_auf: PW.form.antwortAuf } : {}) });
     melde(PW.form.antwortAuf ? "📌 Antwort angeheftet" : "📌 Angeheftet"); pwForm(false); await pwLaden(); }
-  catch (e) { melde(e.message, true); } finally { $("pwSpeichernKnopf").disabled = false; }
+  catch (e) { meldeFehler(e); } finally { $("pwSpeichernKnopf").disabled = false; }
 }
 async function pwErledigt(id, zurueck) {
-  try { await api("pinnwand_erledigt", { id, zurueck: !!zurueck }); await pwLaden(); if (!zurueck) melde("✓ Erledigt – der Verfasser sieht es"); } catch (e) { melde(e.message, true); }
+  try { await api("pinnwand_erledigt", { id, zurueck: !!zurueck }); await pwLaden(); if (!zurueck) melde("✓ Erledigt – der Verfasser sieht es"); } catch (e) { meldeFehler(e); }
 }
 async function pwAbnehmen(id, ausFormular) {
   if (!(await frage("Zettel von der Pinnwand abnehmen?"))) return;
-  try { await api("pinnwand_abnehmen", { id }); melde("🗑️ Abgenommen"); await pwLaden(); if (ausFormular) pwVoll(); } catch (e) { melde(e.message, true); }
+  try { await api("pinnwand_abnehmen", { id }); melde("🗑️ Abgenommen"); await pwLaden(); if (ausFormular) pwVoll(); } catch (e) { meldeFehler(e); }
 }
 
 // ---------- KC-CLUB-BEGRUESSUNG (0.28.0): beim ersten Start einmal je Mitglied, danach nie wieder (auch nicht auf neuen Geräten) ----------
@@ -3007,7 +3007,7 @@ async function neuWahlSetzen(art) {
   try {
     for (const [b] of WAHL_BEREICHE) { await api("benachrichtigung_setzen", { bereich: b, push, email }); INIT.benachrichtigung = { ...(INIT.benachrichtigung || {}), [b]: { push, email } }; }
     melde("Gespeichert ✔");
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
   neuWahlZeigen();
 }
 
@@ -3076,7 +3076,7 @@ async function einstiegFristenSpeichern() {
   try { const r = await api("einstieg_fristen_setzen", w);
     INIT.einstieg = { ...(INIT.einstieg || {}), fristen: { aktiv: r.aktiv, farbeTage: r.farbeTage, privatTage: r.privatTage, erweitertTage: r.erweitertTage, spaeterTage: r.spaeterTage, feedbackTage: r.feedbackTage, geraeteTage: r.geraeteTage, geaendertAm: new Date().toISOString() } };
     einstiegFristenZeigen(); melde(r.aktiv ? "💾 Gespeichert – gilt beim nächsten Öffnen der App" : "💾 Gespeichert – Tipps sind ausgeschaltet"); }
-  catch (e) { melde(e.message, true); einstiegFristenZeigen(); }
+  catch (e) { meldeFehler(e); einstiegFristenZeigen(); }
 }
 // „Ja“ führt direkt hin: Einstellungen öffnen, Bereich aufklappen, hinscrollen und kurz hervorheben
 function einstiegHin(klappe, zielId) {
@@ -3442,7 +3442,7 @@ function ansageSchalter(an) {
 async function onlinePushSchalter(an) {
   try { await api("einstellung_setzen", { schluessel: "online_push", wert: { an } }); if (INIT) INIT.einstellungen = { ...(INIT.einstellungen || {}), online_push: { an } };
     melde(an ? "📲 Push bei Anmeldung an – auch wenn die App zu ist" : "📲 Push bei Anmeldung aus"); }
-  catch (e) { melde(e.message, true); if ($("setOnlinePush")) $("setOnlinePush").checked = !an; }
+  catch (e) { meldeFehler(e); if ($("setOnlinePush")) $("setOnlinePush").checked = !an; }
 }
 function anmeldeTonSchalter(an) { lsSetzen(ANSAGE_TON, an ? "1" : "0"); if (an) anmeldeTon(); melde(an ? "🔔 Anmelde-Ton an" : "🔕 Anmelde-Ton aus"); }
 function tippSchalterZeigen() { if ($("setTipps")) $("setTipps").checked = tippStand().an; }
@@ -3522,7 +3522,7 @@ function onlineLeisteZeigen() {
 }
 // KC-CLUB-ONLINE-RUNDE (1.21.2): neue Nachricht, alle gerade Online sind schon angehakt (danach wie jeder Mehrpersonen-Chat)
 async function onlineRunde() {
-  try { await mitgliederHolen(); } catch (e) { return melde(e.message, true); }
+  try { await mitgliederHolen(); } catch (e) { return meldeFehler(e); }
   await neueNachricht(); gruppeWahl("@online");
   if ($("neuBetreff") && !$("neuBetreff").value) $("neuBetreff").value = "🟢 Runde " + new Intl.DateTimeFormat("de-DE", { timeZone: TZ, day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }).format(new Date()) + " Uhr";
 }
@@ -3545,7 +3545,7 @@ async function anklopfen(pid) {
   try {
     const r = await api("anklopfen", { an: pid });
     ONL.wartet = r.id; onlineTakt(); klopfWartenStart(r.id, pid, name);
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 // KC-CLUB-ANKLOPFEN-WARTEN (1.51.0, Wunsch Hansi): „👋 Klopfe gerade an bei X“ mit Sekunden-Uhr; nach 1 Minute fragen:
 // weiter anklopfen, auflegen oder eine Nachricht „Melde dich doch mal bei mir“ schicken. Antwortet X, schließt sich alles.
@@ -3578,7 +3578,7 @@ const klopfMeldeText = () => `Melde dich doch mal bei mir. Gruß ${ICH?.vorname 
 async function klopfWeiter() {
   if (!KW) return;
   const { pid, name } = KW;
-  try { const r = await api("anklopfen", { an: pid }); ONL.wartet = r.id; onlineTakt(); klopfWartenStart(r.id, pid, name); } catch (e) { melde(e.message, true); }
+  try { const r = await api("anklopfen", { an: pid }); ONL.wartet = r.id; onlineTakt(); klopfWartenStart(r.id, pid, name); } catch (e) { meldeFehler(e); }
 }
 async function klopfAuflegen(still) {
   if (!KW) return;
@@ -3592,7 +3592,7 @@ async function klopfMeldeDich() {
   const { pid, name } = KW, text = klopfMeldeText();
   await klopfAuflegen(true);
   try { await api("nachricht_senden", { text, wege: ["push"], empfaenger: { personen: [pid], aemter: [], alle: false, vorstand: false }, betreff: "" }); melde(`💬 ${name} bekommt: „${text}“`); }
-  catch (e) { melde(e.message, true); }
+  catch (e) { meldeFehler(e); }
 }
 function klopfWartenEnde() { if (KW?.timer) clearInterval(KW.timer); KW = null; document.getElementById("klopfWarten")?.remove(); }
 let KLOPF = null;
@@ -3610,7 +3610,7 @@ async function klopfKurz(antwort, text) {
   if (!KLOPF) return;
   const k = KLOPF; KLOPF = null;
   try { await api("anklopfen_antwort", { id: k.id, annehmen: false, antwort }); melde(`✔ ${k.von.vorname} sieht: „${text}“`); }
-  catch (e) { melde(e.message, true); }
+  catch (e) { meldeFehler(e); }
 }
 // ---------- KC-CLUB-ANKLOPFEN-ERLAUBEN + Anklopfton (1.8.0, Wunsch Hansi) ----------
 // Töne werden im Gerät erzeugt (Web Audio) – keine Tondateien, nichts zu laden. Neue Töne = neuer Eintrag hier.
@@ -3674,13 +3674,13 @@ async function inkognitoSetzen(an) {
     await api("einstellung_setzen", { schluessel: "inkognito", wert: { an: !!an } });
     melde(an ? "🕶️ Inkognito an – niemand sieht, dass du online bist" : "🟢 Inkognito aus – andere sehen dich wieder online"); MITGLIEDER = null;
     if (an) inkoAmeisen();
-  } catch (e) { INIT.einstellungen.inkognito = { an: vorher }; inkognitoZeigen(); melde(e.message, true); }
+  } catch (e) { INIT.einstellungen.inkognito = { an: vorher }; inkognitoZeigen(); meldeFehler(e); }
 }
 function zuletztSchalterZeigen() { if ($("setZuletzt")) $("setZuletzt").checked = INIT?.einstellungen?.zuletzt?.zeigen !== false; }
 async function zuletztZeigen(an) {
   try { await api("einstellung_setzen", { schluessel: "zuletzt", wert: { zeigen: an } }); INIT.einstellungen = { ...(INIT.einstellungen || {}), zuletzt: { zeigen: an } };
     melde(an ? "🕒 Andere sehen jetzt, wann du zuletzt da warst" : "„Zuletzt da“ ausgeschaltet – du siehst es auch bei anderen nicht"); MITGLIEDER = null; }
-  catch (e) { melde(e.message, true); zuletztSchalterZeigen(); }
+  catch (e) { meldeFehler(e); zuletztSchalterZeigen(); }
 }
 function anklopfenZeigen() {
   const w = klopfStand();
@@ -3691,7 +3691,7 @@ async function anklopfenSetzen(teil) {
   const w = { ...klopfStand(), ...teil };
   if (INIT) INIT.einstellungen = { ...(INIT.einstellungen || {}), anklopfen: w };
   try { await api("einstellung_setzen", { schluessel: "anklopfen", wert: w }); melde("erlaubt" in teil ? (w.erlaubt ? "👋 Anklopfen ist erlaubt" : "🔕 Anklopfen ausgeschaltet") : "🔔 Anklopfton gespeichert"); }
-  catch (e) { melde(e.message, true); }
+  catch (e) { meldeFehler(e); }
   if ("ton" in teil) klopfTonSpielen(w.ton);
 }
 
@@ -3734,7 +3734,7 @@ function infoSchnellstart() {
 }
 // Karte im Info-Feld ein-/ausblenden und neu zeichnen (nach Auswahl, Schalter oder Ansichtswechsel)
 function schnellZeigen() { infoFelderAktualisieren(); if (INIT) heroZeigen(0); }
-function schnellLos(id) { const x = SCHNELL.find((y) => y.id === id); if (x) try { x.los(); } catch (e) { melde(e.message, true); } }
+function schnellLos(id) { const x = SCHNELL.find((y) => y.id === id); if (x) try { x.los(); } catch (e) { meldeFehler(e); } }
 function schnellWahlZeigen() {
   const st = schnellStand(), ids = st.ids || SCHNELL_STANDARD;
   if ($("ssAn")) $("ssAn").checked = st.an !== false;
@@ -3752,7 +3752,7 @@ async function schnellSetzen(teil) {
   if (INIT) INIT.einstellungen = { ...(INIT.einstellungen || {}), schnellstart: w };
   schnellWahlZeigen(); schnellZeigen();
   try { await api("einstellung_setzen", { schluessel: "schnellstart", wert: w }); if ("an" in teil) melde(w.an ? "⚡ Schnellstart ist an" : "Schnellstart ausgeblendet"); }
-  catch (e) { melde(e.message, true); }
+  catch (e) { meldeFehler(e); }
 }
 function nfpZeigenOderAusfuellen() { if (nfpGefuellt(nfpLesen())) nfpZeigen(); else nfpBearbeiten(); }
 
@@ -3761,7 +3761,7 @@ async function klopfAntwort(annehmen) {
   if (!KLOPF) return;
   const k = KLOPF; KLOPF = null;
   try { const r = await api("anklopfen_antwort", { id: k.id, annehmen }); if (annehmen && r.thread) chatOeffnen(r.thread); }
-  catch (e) { melde(e.message, true); }
+  catch (e) { meldeFehler(e); }
 }
 // aus dem Push („… klopft an“) geöffnet: #anklopfen=<id>
 async function anklopfenAusLink(id) {
@@ -3769,7 +3769,7 @@ async function anklopfenAusLink(id) {
 }
 async function onlineZeigen(an) {
   try { await api("einstellung_setzen", { schluessel: "online", wert: { zeigen: an } }); melde(an ? "🟢 Andere sehen jetzt, wann du online bist" : "Online-Anzeige ausgeschaltet"); MITGLIEDER = null; onlinePing(); }
-  catch (e) { melde(e.message, true); }
+  catch (e) { meldeFehler(e); }
 }
 // Chat: alle 4 s neu laden, wenn jemand aus dem Gespräch online ist – sonst alle 12 s
 // 2-s-Takt (0.54.0): schreibt gerade jemand → jedes Mal; jemand online → alle 4 s; sonst alle 12 s (wie bisher)
@@ -3858,7 +3858,7 @@ function tippenAus() { clearTimeout(TIPP.nach); if (TIPP.id) api("tippen", { id:
 async function liveTippenSetzen(an) {
   try { await api("einstellung_setzen", { schluessel: "live_tippen", wert: { an } }); if (INIT?.einstellungen) INIT.einstellungen.live_tippen = { an };
     melde(an ? "👁️ Live-Tippen an – andere sehen in Unterhaltungen, was du tippst" : "Live-Tippen aus – andere sehen nur noch „schreibt …“"); }
-  catch (e) { melde(e.message, true); if ($("setLiveTippen")) $("setLiveTippen").checked = !an; }
+  catch (e) { meldeFehler(e); if ($("setLiveTippen")) $("setLiveTippen").checked = !an; }
 }
 const OSZI_SVG = `<svg class="oszi" viewBox="0 0 70 24" aria-hidden="true"><g class="hub"><g class="lauf"><path d="M0 12 ${Array.from({ length: 10 }, (_, i) => `Q${i * 10 + 5} ${i % 2 ? 22 : 2} ${i * 10 + 10} 12`).join(" ")}"/></g></g></svg>`;
 const werText = (n) => n.length === 1 ? n[0] : n.length === 2 ? `${n[0]} und ${n[1]}` : `${n.length} Personen`;
@@ -3972,7 +3972,7 @@ async function anrufen(pid, mitBild) {
     if (r.gegenanruf) { anrufAufraeumen(); return gegenanrufAnnehmen(r.gegenanruf, mitBild); }
     RUF.id = r.id; anrufZustand(`${mitBild ? "🎥" : "📞"} Klingelt bei ${m.vorname || m.name} …`); klang("frei");
     RUF.poll = setInterval(anrufPruefen, 1500);
-  } catch (e) { anrufAufraeumen(); melde(e.message, true); }
+  } catch (e) { anrufAufraeumen(); meldeFehler(e); }
 }
 // Status abfragen: Anrufer wartet auf Antwort; beide merken, wenn der andere auflegt
 async function anrufPruefen() {
@@ -4024,7 +4024,7 @@ async function anrufMitText(i) {
   const text = antwortText(i, "anrufEigen"); if (!text) return melde("Bitte kurz etwas schreiben.", true);
   if (!RUF || RUF.rolle !== "angerufen") return; const id = RUF.id, g = RUF.gegen;
   anrufAufraeumen();
-  try { await api("anruf_antwort", { id, text }); melde(`💬 An ${g.vorname || g.name} geschickt: „${text}“`); } catch (e) { melde(e.message, true); }
+  try { await api("anruf_antwort", { id, text }); melde(`💬 An ${g.vorname || g.name} geschickt: „${text}“`); } catch (e) { meldeFehler(e); }
 }
 // ---- KC-CLUB-ANRUF-ZWEIT (0.81.0): zweiter Anruf während eines Gesprächs – anzeigen, auflegen & annehmen, ablehnen oder kurz antworten ----
 let ZWEIT = null;
@@ -4053,7 +4053,7 @@ async function zweitAblehnen() { const z = ZWEIT; if (!z) return; zweitWeg(); ap
 async function zweitMitText(i) {
   const z = ZWEIT; if (!z) return; const text = antwortText(i, "zweitEigen"); if (!text) return melde("Bitte kurz etwas schreiben.", true);
   zweitWeg();
-  try { await api("anruf_antwort", { id: z.id, text }); melde(`💬 An ${z.von.vorname || z.von.name} geschickt: „${text}“`); } catch (e) { melde(e.message, true); }
+  try { await api("anruf_antwort", { id: z.id, text }); melde(`💬 An ${z.von.vorname || z.von.name} geschickt: „${text}“`); } catch (e) { meldeFehler(e); }
 }
 // ---- KC-CLUB-KONFERENZ (0.82.0): Konferenz bis 4 Personen, nur Ton. Jedes Handy verbindet sich direkt mit jedem anderen:
 // RUF.konf.beine = meine Verbindungen (Bein-ID → { pc, gegen, audio }); der Takt (2 s) holt den Stand, nimmt Querverbindungen
@@ -4164,7 +4164,7 @@ async function konfEinladen(pid) {
     if (!RUF) { bein.pc.close(); return; }
     bein.id = r.id; if (!RUF.konf) konfStart(r.konferenz); RUF.konf.beine.set(r.id, bein);
     melde(`📞 ${m.vorname || m.name} wird dazugeholt …`); konfTakt();
-  } catch (e) { try { bein.pc.close(); bein.audio.remove(); } catch {} melde(e.message, true); }
+  } catch (e) { try { bein.pc.close(); bein.audio.remove(); } catch {} meldeFehler(e); }
 }
 // zweiter Anruf während des Gesprächs → in die Konferenz nehmen
 async function zweitDazu() {
@@ -4178,7 +4178,7 @@ async function zweitDazu() {
     await bein.pc.setLocalDescription(await bein.pc.createAnswer()); await iceFertig(bein.pc);
     await api("anruf_annehmen", { id: z.id, antwort: bein.pc.localDescription.sdp });
     melde(`👥 ${z.von.vorname || z.von.name} kommt in die Konferenz`); konfTakt();
-  } catch (e) { melde(e.message, true); if (RUF?.konf?.beine.has(z.id)) konfBeinWeg(z.id, true); }
+  } catch (e) { meldeFehler(e); if (RUF?.konf?.beine.has(z.id)) konfBeinWeg(z.id, true); }
 }
 // ---- KC-CLUB-HEARTBEAT (0.84.0): Lebenszeichen wie die anderen KC-Programme. Die App meldet alle 60 s über ihren eigenen
 // Server (Aktion „lebenszeichen“, angemeldet mit dem Club-Link – kein Schlüssel im Browser); der Server reicht es im
@@ -4254,7 +4254,7 @@ async function anrufAntwortenSpeichern() {
   const texte = $("anrufAntwortenFeld").value.split("\n").map((s) => s.trim()).filter(Boolean);
   try { const r = await api("anruf_antworten_setzen", { texte }); INIT.anrufAntworten = { texte: r.texte, geaendertAm: new Date().toISOString() };
     anrufAntwortenZeigen(); melde(`💾 ${r.texte.length} Antworten gespeichert`); }
-  catch (e) { melde(e.message, true); anrufAntwortenZeigen(); }
+  catch (e) { meldeFehler(e); anrufAntwortenZeigen(); }
 }
 // KC-CLUB-GEGENANRUF (0.80.0): Wer selbst anrufen wollte, nimmt den gleichzeitigen Anruf der Gegenseite direkt an
 async function gegenanrufAnnehmen(id, mitBild) {
@@ -4274,7 +4274,7 @@ async function anrufAnnehmen(mitBild) {
     clearInterval(RUF.poll); RUF.poll = setInterval(anrufPruefen, 3000);
     if (RUF.konferenzId) konfStart(RUF.konferenzId); // KC-CLUB-KONFERENZ: Einladung angenommen
     setTimeout(() => { if (RUF && !RUF.verbunden) anrufFehlgeschlagen(); }, 15000);
-  } catch (e) { const id = RUF?.id; anrufAufraeumen(); if (id) api("anruf_ende", { id }).catch(() => {}); melde(e.message, true); }
+  } catch (e) { const id = RUF?.id; anrufAufraeumen(); if (id) api("anruf_ende", { id }).catch(() => {}); meldeFehler(e); }
 }
 async function anrufFehlgeschlagen() {
   if (!RUF) return; const g = RUF.gegen, id = RUF.id;
@@ -4348,7 +4348,7 @@ function todoWerKnopf() { const k = $("todoWer"); if (k) k.textContent = TODO.ne
 // KC-CLUB-PERSONENWAHL (0.53.0): ein Häkchen-Fenster für „Wer?“ – { titel, auswahl, max, leerText, fertig(ids) }
 let PW_AUSWAHL = null;
 async function personenWaehlen(opt) {
-  if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return melde(e.message, true); }
+  if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return meldeFehler(e); }
   PW_AUSWAHL = { max: 10, leerText: "noch niemand", ...opt, ids: [...(opt.auswahl || [])] };
   $("personenTitel").textContent = opt.titel || "👉 Wer?"; personenListe(); $("personenBlatt").classList.remove("versteckt");
 }
@@ -4374,7 +4374,7 @@ async function todoWerFertig(id, ids) {
   if (!id) { TODO.neuWer = [...ids]; return todoWerKnopf(); }
   try { const r = await api("todo_zuweisen", { id, zustaendige: ids });
     melde(ids.length ? `👉 Zuständig: ${todoNamen(ids)}${r.versand ? ` – ${r.versand.benachrichtigt} bekommen Bescheid` : ""}` : "👉 Niemand mehr zuständig – offen"); todoLaden(); }
-  catch (e) { melde(e.message, true); }
+  catch (e) { meldeFehler(e); }
 }
 function todoKategorienFuellen() {
   todoWerFuellen();
@@ -4402,16 +4402,16 @@ async function todoAnlegen() {
   try { const wer = todoNamen(TODO.neuWer.filter((id) => id !== ICH.person_id));
     const r = await api("todo_anlegen", { text, kategorie: $("todoKat").value, fuer: TODO.fuer, faellig: $("todoFaellig").value || null, zustaendige: TODO.neuWer });
     $("todoText").value = ""; $("todoFaellig").value = ""; TODO.neuWer = []; todoWerKnopf(); melde(r.versand ? `✅ Eingetragen – ${wer} ${r.versand.benachrichtigt > 1 ? "bekommen" : "bekommt"} Bescheid` : "✅ Eingetragen"); await todoLaden(); $("todoText").focus(); }
-  catch (e) { melde(e.message, true); }
+  catch (e) { meldeFehler(e); }
 }
 async function todoHaken(id, erledigt) {
   const x = TODO.eintraege.find((y) => y.id === id); if (x) { x.erledigt = erledigt ? new Date().toISOString() : null; x.erledigtVon = erledigt ? ICH.vorname : null; todoZeigen(); }
-  try { await api("todo_erledigt", { id, erledigt }); } catch (e) { melde(e.message, true); todoLaden(); }
+  try { await api("todo_erledigt", { id, erledigt }); } catch (e) { meldeFehler(e); todoLaden(); }
 }
 async function todoZuweisen(id) { return todoWerWaehlen(id); } // 0.52.0: Häkchen-Liste statt Nummern-Eingabe, mehrere möglich
 async function todoLoeschen(id) {
   if (!(await frage("Eintrag löschen?"))) return;
-  try { await api("todo_loeschen", { id }); await todoLaden(); } catch (e) { melde(e.message, true); }
+  try { await api("todo_loeschen", { id }); await todoLaden(); } catch (e) { meldeFehler(e); }
 }
 
 // ---------- KC-CLUB-DIKTAT (1.68.0, Wunsch Hansi): Mikrofon im Chat – Sprachnachricht ODER Diktieren (Sprache → Text) ----------
@@ -4547,7 +4547,7 @@ async function spracheSenden() {
     anlagen = [...anlagen, { id: r.id, name: r.name, laedt: false }]; chipsZeigen();
     const alt = $("text").value; $("text").value = (alt ? alt + "\n" : "") + `🎤 Sprachnachricht (${Math.floor(sek / 60)}:${String(sek % 60).padStart(2, "0")})`;
     await senden();
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 const SPRACH_TEMPI = [1, 1.5, 2];
 function sprachTempo() { try { const t = Number(localStorage.getItem("kc_club_sprachtempo")); return SPRACH_TEMPI.includes(t) ? t : 1; } catch { return 1; } }
@@ -4563,7 +4563,7 @@ async function spracheAbspielen(knopf, id) {
     a.addEventListener("play", () => { if (a.playbackRate !== a.defaultPlaybackRate) a.playbackRate = a.defaultPlaybackRate; });
     setzen(sprachTempo());
     knopf.replaceWith(a); a.after(tempo); a.play().catch(() => {});
-  } catch (e) { knopf.disabled = false; knopf.textContent = "▶️ Sprachnachricht anhören"; melde(e.message, true); }
+  } catch (e) { knopf.disabled = false; knopf.textContent = "▶️ Sprachnachricht anhören"; meldeFehler(e); }
 }
 
 // ---------- KC-CLUB-ERSTATTUNG (0.38.0): Fahrtkosten, vorgestreckter Einkauf, sonstige Auslagen beantragen ----------
@@ -4581,7 +4581,7 @@ async function erstattungLaden() {
       <span class="stmarke ${a.status === "erstattet" ? "st-verfuegbar" : a.status === "abgelehnt" ? "st-abwesend" : "st-beschaeftigt"}">${a.status === "erstattet" ? "✅ erstattet" : a.status === "abgelehnt" ? "❌ abgelehnt" : "📨 eingereicht"}</span></div>`).join("")
       : '<p class="hinweis" style="margin:0">Noch keine Anträge.</p>';
     if (!r.empfaengerDa) $("ersHinweis").innerHTML = '<p class="hinweis" style="color:#c62828">⚠️ Es ist noch kein Kassenwart oder Clubsprecher eingetragen.</p>';
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
   erstattungZeigen();
 }
 function erstattungArt(art) {
@@ -4616,7 +4616,7 @@ async function erstattungBeleg(input) {
     if (!/^image\//.test(f.type) && !/\.pdf$/i.test(f.name) && f.type !== "application/pdf") { melde(`${f.name}: bitte ein Foto oder eine PDF-Datei wählen.`, true); continue; }
     const b = { name: f.name || "Foto.jpg", laedt: true, datei: f }; ERS.belege.push(b); belegeZeigen(); // datei: nur im Speicher, für die Archiv-Ablage (1.18.0)
     try { const r = await anlageHochladen(f); Object.assign(b, { id: r.id, name: r.name, laedt: false }); melde("📎 Beleg angehängt"); }
-    catch (e) { ERS.belege.splice(ERS.belege.indexOf(b), 1); melde(e.message, true); }
+    catch (e) { ERS.belege.splice(ERS.belege.indexOf(b), 1); meldeFehler(e); }
     belegeZeigen();
   }
   input.value = "";
@@ -4662,7 +4662,7 @@ async function erstattungSenden() {
     melde(`📨 Antrag über ${eur(r.summe)} verschickt an ${[...r.an, ...r.cc].join(" und ")} – du bekommst eine Kopie per Mail.`);
     erstattungLaden();
     erstattungAblageFragen(kopie, r); // KC-CLUB-ARCHIV-ABLAGE (1.18.0): erst nach erfolgreichem Versand
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 
 // KC-CLUB-ARCHIV-ABLAGE (1.18.0): gesendeten Antrag (als Bild) + Belege auf Wunsch in den eigenen Archiv-Ordner legen
@@ -4705,11 +4705,11 @@ async function kmSatzSpeichern() {
   const satz = $("kmSatzNeu").value.trim(), ab = $("kmSatzAb").value;
   if (!satz || !ab) return melde("Bitte Satz und Datum angeben.", true);
   if (!(await frage(`${satz.replace(".", ",")} € je km ab ${ab.split("-").reverse().join(".")} speichern?\n\nGilt für alle Fahrten ab diesem Tag.`))) return;
-  try { const r = await api("km_satz_setzen", { satz, ab }); $("kmSatzNeu").value = ""; melde("💾 km-Satz gespeichert"); kmSatzAdminLaden(); } catch (e) { melde(e.message, true); }
+  try { const r = await api("km_satz_setzen", { satz, ab }); $("kmSatzNeu").value = ""; melde("💾 km-Satz gespeichert"); kmSatzAdminLaden(); } catch (e) { meldeFehler(e); }
 }
 async function kmSatzLoeschen(id) {
   if (!(await frage("Diesen km-Satz löschen?"))) return;
-  try { await api("km_satz_loeschen", { id }); kmSatzAdminLaden(); } catch (e) { melde(e.message, true); }
+  try { await api("km_satz_loeschen", { id }); kmSatzAdminLaden(); } catch (e) { meldeFehler(e); }
 }
 
 // ---------- KC-CLUB-SCHLIESSEN: Ausgangstür ----------
@@ -4719,7 +4719,25 @@ function appSchliessen() {
   setTimeout(() => { if (!document.hidden) melde("Dieses Fenster lässt sich nicht selbst schließen. So geht's: zweimal „Zurück“ tippen – oder unten vom Rand nach oben wischen und die Köcheclub-App wegwischen."); }, 400);
 }
 
+// KC-CLUB-FEHLER-FANG (2.4.2, Fund Hansi: rote Meldung „Cannot read properties of null (reading 'person_id')“, nirgends protokolliert):
+// Programmfehler, die ein catch als Meldung zeigt, landen jetzt mit Fundstelle im Fehlerprotokoll (Art „gefangen“), und das
+// Mitglied sieht einen verständlichen deutschen Satz statt englischer Technik. Fachliche Meldungen (Server) bleiben unverändert.
+const JS_FEHLER = /Cannot read propert|Cannot set propert|is not a function|is not defined|is not iterable|is not an object|undefined is not|null is not/;
+const JS_FEHLER_TEXT = "Da hat in der App etwas nicht geklappt – bitte nochmal versuchen. Der Fehler ist gemeldet.";
+function fehlerStapel(st) { return String(st || "").split("\n").slice(0, 6).map((z) => z.trim().replace(/https?:\/\/[^\s)]*\/([^/\s)]+)/g, "$1")).join(" < "); }
+function meldeFehler(e) {
+  const t = String(e?.message ?? e ?? "Unbekannter Fehler");
+  if (e instanceof TypeError || e instanceof ReferenceError || JS_FEHLER.test(t)) {
+    try { window.KCFP?.neu("gefangen", { text: t, stack: fehlerStapel(e?.stack) }); } catch {}
+    return melde(JS_FEHLER_TEXT, true);
+  }
+  melde(t, true);
+}
 function melde(t, fehler) {
+  if (fehler && JS_FEHLER.test(String(t))) { // Programmfehler über einen anderen Weg → trotzdem melden und verständlich zeigen
+    try { window.KCFP?.neu("gefangen", { text: String(t), stack: fehlerStapel(new Error().stack) }); } catch {}
+    t = JS_FEHLER_TEXT;
+  }
   // Lange genug zum Lesen (je nach Textlänge, Fehler doppelt so lange); Antippen schließt die Meldung sofort.
   const m = document.createElement("div"); m.className = "meldung" + (fehler ? " fehler" : ""); m.textContent = t;
   m.onclick = () => m.remove();
@@ -4745,7 +4763,7 @@ async function kurzcodeEinloesen() {
 // Code für ein weiteres Gerät bzw. die gerade installierte App (nur angemeldet)
 async function kurzcodeHolen() { const r = await api("kurzcode_erzeugen", {}, { warten: true }); return { ...r, schoen: r.code.slice(0, 3) + " " + r.code.slice(3) }; }
 async function kurzcodeBlatt() {
-  let r; try { r = await kurzcodeHolen(); } catch (e) { return melde(e.message, true); }
+  let r; try { r = await kurzcodeHolen(); } catch (e) { return meldeFehler(e); }
   const f = blattAuf("kcCodeBlatt", `<h3 style="margin-top:0">🔢 Code für ein anderes Gerät</h3>
     <p style="margin:0 0 6px">Auf dem anderen Gerät die Köcheclub-App öffnen, bei <b>„🔢 Mit Code anmelden“</b> eintippen:</p>
     <div class="kc-code-gross">${r.schoen}</div>
@@ -5267,7 +5285,7 @@ async function wartungUmschalten() {
   const hinweis = an ? (await eingabe("Wartung ankündigen – kurzer Hinweis für alle (freiwillig), z. B. „bis 20 Uhr“:", "")) : null;
   if (an && hinweis === null) return;
   try { const r = await api("wartung_setzen", { an, hinweis }); VB.wartung = r.wartung; vbStatusLed(); vbBlattZeigen(); melde(an ? "🔵 Wartung angekündigt – alle sehen die blaue LED" : "🟢 Wartung beendet"); }
-  catch (e) { melde(e.message, true); }
+  catch (e) { meldeFehler(e); }
 }
 
 // ---------- Eigener Status ----------
@@ -5311,7 +5329,7 @@ function statusBlatt2() {
 }
 async function statusSpeichern() {
   try { await api("status_setzen", { status: statusWahl, bis: $("stBis").value, hinweis: $("stHinweis").value }); $("statusBlatt").classList.add("versteckt"); melde("Status gespeichert"); MITGLIEDER = null; await neuLaden(); if (aktuelleAnsicht === "mitglieder") mitgliederLaden(); }
-  catch (e) { melde(e.message, true); }
+  catch (e) { meldeFehler(e); }
 }
 
 // ---------- KC-CLUB-DIENSTWUNSCH (0.59.0): Twinkey aus DP2 im Vollbild ----------
@@ -5323,16 +5341,16 @@ async function statusSpeichern() {
 let BEST = null;
 async function dwBestaetigen() {
   try { await api("eingaben_bestaetigen", { art: "dienstwunsch" }, { warten: true }); }
-  catch (e) { return melde(e.message, true); }
+  catch (e) { return meldeFehler(e); }
   melde("✅ Bestätigung ist unterwegs – als App-Nachricht und per E-Mail");
   if (await frage("🗄️ Die Aufstellung auch in deinen Archiv-Ordner legen?\nDann findest du sie später unter Archiv → Mein Ordner → Dienstplan.", { ja: "🗄️ Ja, ablegen", nein: "Nein" })) {
-    try { await api("eingaben_ablegen", { art: "dienstwunsch" }, { warten: true }); melde("🗄️ In deinem Archiv-Ordner abgelegt (Register Dienstplan)"); } catch (e) { melde(e.message, true); }
+    try { await api("eingaben_ablegen", { art: "dienstwunsch" }, { warten: true }); melde("🗄️ In deinem Archiv-Ordner abgelegt (Register Dienstplan)"); } catch (e) { meldeFehler(e); }
   }
   if (await frage("✅ Deine Dienstwünsche sind gespeichert.\nDie Aufstellung bekommst du als App-Nachricht und per E-Mail.\n\nAufstellung jetzt ansehen?", { ja: "📄 Ansehen", nein: "Später" })) bestaetigungZeigen("dienstwunsch");
 }
 async function bestaetigungZeigen(was) {
   const [art, id] = String(was || "").split(":");
-  try { BEST = await api("meine_eingaben", { art, id }, { warten: true }); } catch (e) { return melde(e.message, true); }
+  try { BEST = await api("meine_eingaben", { art, id }, { warten: true }); } catch (e) { return meldeFehler(e); }
   druckStarten("bestaetigung");
 }
 function druckBestaetigung() {
@@ -5460,7 +5478,7 @@ function dokDruckSeite() {
 }
 async function dokDrucken() {
   DRUCK = { art: "dokument", param: DOKA.id };
-  try { if (!(await druckSeiteBauen())) return melde("Bitte warten, bis alle Seiten geladen sind."); } catch (e) { return melde(e.message, true); }
+  try { if (!(await druckSeiteBauen())) return melde("Bitte warten, bis alle Seiten geladen sind."); } catch (e) { return meldeFehler(e); }
   druckJetzt();
 }
 async function dokTeilen() {
@@ -5861,7 +5879,7 @@ function infoStartZeigen() {
 }
 async function infoStartSetzen(start) {
   try { await api("einstellung_setzen", { schluessel: "infofeld", wert: { start } }); INIT.einstellungen = { ...(INIT.einstellungen || {}), infofeld: { start } }; melde("💾 Gespeichert – gilt beim nächsten Start"); }
-  catch (e) { melde(e.message, true); }
+  catch (e) { meldeFehler(e); }
 }
 function infoGehe(i, richtung) {
   const n = INFO_FELDER.length, neu = ((i % n) + n) % n;
@@ -5944,7 +5962,7 @@ function zeUhr() {
 }
 async function zeMitglieder() { if (!MITGLIEDER) await mitgliederHolen(); return MITGLIEDER; }
 async function zeWahl(art) {
-  try { await zeMitglieder(); } catch (e) { return melde(e.message, true); }
+  try { await zeMitglieder(); } catch (e) { return meldeFehler(e); }
   ZE.gruppe = null;
   if (art === "alle") ZE.personen = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id).map((m) => m.person_id);
   else if (art === "online") { ZE.personen = ONL.liste.map((m) => m.person_id).filter((p) => p !== ICH.person_id); if (!ZE.personen.length) melde(ONL.zeigen ? "Gerade ist niemand sonst online." : "Die Online-Anzeige ist bei dir ausgeschaltet (⚙️ → Privatsphäre)."); }
@@ -5952,7 +5970,7 @@ async function zeWahl(art) {
   heroZeigen(0); if ($("zeBlatt") && !$("zeBlatt").classList.contains("versteckt")) zeListe();
 }
 async function zeBlatt() {
-  try { await zeMitglieder(); } catch (e) { return melde(e.message, true); }
+  try { await zeMitglieder(); } catch (e) { return meldeFehler(e); }
   $("zeSuche").value = ""; zeListe(); $("zeBlatt").classList.remove("versteckt");
 }
 function zeBlattZu() { $("zeBlatt").classList.add("versteckt"); heroZeigen(0); }
@@ -5979,11 +5997,11 @@ async function zeAnrufen() {
     const d = await api("mitglied_details", { person_id: pid }), nr = d.kontakt?.handy || d.kontakt?.festnetz;
     if (!nr) return melde(`${zeVorname(pid)} ist nicht online und hat keine Telefonnummer freigegeben – schreib eine Nachricht oder klopf später an.`, true);
     if ((await frage(`${zeVorname(pid)} ist gerade nicht in der App.\n\nNormal anrufen (${nr})?`))) location.href = "tel:" + nurZiffern(nr);
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 // 💬 / 🎤 → Unterhaltung öffnen (Gruppe oder neue/bestehende Unterhaltung mit den Gewählten); 🎤 startet gleich die Aufnahme
 async function zeChat(sprache) {
-  try { await zeMitglieder(); } catch (e) { return melde(e.message, true); }
+  try { await zeMitglieder(); } catch (e) { return meldeFehler(e); }
   if (ZE.gruppe) await chatOeffnen(ZE.gruppe.id);
   else {
     ZW = { ...ZE.wege }; CHAT = null;
@@ -6012,7 +6030,7 @@ async function zeSenden() {
     melde(`📨 Gesendet an ${an}`);
     if (INFO_DATEN.zentrale) INFO_DATEN.zentrale.geholt = 0;
     $("zeText")?.blur(); heroZeigen(0);
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 
 // ---------- KC-CLUB-ADMINLAGE (0.47.0): Feld 7 (nur Admin) – Admin-Kommandozentrale ----------
@@ -6084,7 +6102,7 @@ async function adminSpiegeln() {
   try { const r = await api("admin_spiegeln"); const e = r.ergebnis || {};
     melde(e.status === "mirror_dispatched" ? `🪞 Spiegel angestoßen (${e.tables} Tabellen)` : e.status === "maintenance" ? "Neon ist gerade in Wartung – nichts gestartet." : "Nichts zu spiegeln.");
     if (INFO_DATEN.admin) INFO_DATEN.admin.geholt = 0;
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 function adminBlatt() {
   const r = INFO_DATEN.admin?.r; if (!r) return;
@@ -6331,7 +6349,7 @@ async function meinWetterortSuchen(sfx) {
     MWO_TREFFER = (await api("wetter_ort_suchen", { q })).orte || [];
     $("mwoTreffer" + sfx).innerHTML = MWO_TREFFER.length ? MWO_TREFFER.map((o, i) => `<button class="knopf klein wort" onclick="meinWetterortSetzen(MWO_TREFFER[${i}])">📍 <b>${esc(o.name)}</b> <span class="hinweis">${esc(o.region || "")}</span></button>`).join("")
       : '<p class="hinweis">Kein Ort gefunden – anders schreiben?</p>';
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 async function meinWetterortSetzen(ort) {
   const wert = { ort: ort ? { name: ort.name, lat: ort.lat, lon: ort.lon, region: ort.region || "" } : null };
@@ -6340,7 +6358,7 @@ async function meinWetterortSetzen(ort) {
     INIT.einstellungen = { ...(INIT.einstellungen || {}), wetterort: r.wert ?? wert };
     melde(ort ? `🌦️ Wetter jetzt für ${ort.name}` : "🌦️ Wetter wieder nach Club-Vorgabe");
     WET.geholt = 0; await wetterLaden(false).catch(() => {}); meinWetterortZeigen(); heroZeigen(0);
-  } catch (e) { melde(e.message, true); meinWetterortZeigen(); }
+  } catch (e) { meldeFehler(e); meinWetterortZeigen(); }
 }
 async function wetterOrtSuchen() {
   const q = $("wetterOrtQ").value.trim(); if (q.length < 2) return melde("Bitte mindestens 2 Buchstaben eingeben.", true);
@@ -6348,14 +6366,14 @@ async function wetterOrtSuchen() {
     WETTER_ORTE = (await api("wetter_ort_suchen", { q })).orte || [];
     $("wetterOrte").innerHTML = WETTER_ORTE.length ? WETTER_ORTE.map((o, i) => `<button class="knopf klein wort" onclick="wetterOrtWahl(${i})">📍 <b>${esc(o.name)}</b> <span class="hinweis">${esc(o.region)}</span></button>`).join("")
       : '<p class="hinweis">Kein Ort gefunden – anders schreiben?</p>';
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 async function wetterOrtWahl(i) { const o = WETTER_ORTE[i]; if (o && (await frage(`Wetter für „${o.name}“${o.region ? " (" + o.region + ")" : ""} als Club-Vorgabe?\n\nGilt für alle Mitglieder ohne eigenen Wetterort.`))) wetterSetzen({ ort: o }); }
 async function wetterSetzen(teil) {
   try {
     await api("wetter_setzen", teil); melde("💾 Wetter-Einstellung gespeichert");
     $("wetterOrte").innerHTML = ""; $("wetterOrtQ").value = ""; WET.geholt = 0; infoLetztes = ""; wetterAdminLaden(); wetterLaden(true);
-  } catch (e) { melde(e.message, true); wetterAdminLaden(); }
+  } catch (e) { meldeFehler(e); wetterAdminLaden(); }
 }
 // Feld 1: das nächste Treffen (antippen → Termine), darunter drei Kennzahlen, jede führt in ihren Bereich
 function infoTreffen() {
@@ -6404,7 +6422,7 @@ async function wahlSetzen(b) {
     INIT.benachrichtigung[b] = { push, email };
     melde(push || email ? "Gespeichert ✔" : "Gespeichert – dafür bekommst du keine Benachrichtigung mehr");
     if (push && pushMoeglich() && Notification.permission !== "granted") melde("Tipp: Schalte unten noch „Push auf diesem Handy“ ein.");
-  } catch (e) { melde(e.message, true); wahlZeigen(); }
+  } catch (e) { meldeFehler(e); wahlZeigen(); }
 }
 // Auf-/Zuklappen merken; Schloss 🔒 stellt den Bereich fest (bleibt offen bzw. zu), 🔓 löst ihn wieder
 // KC-CLUB-BUERO-KLAPPE (1.35.0): auch für nachträglich gezeichnete Bereiche (Büro) – jeder Bereich wird nur einmal eingerichtet
@@ -6506,7 +6524,7 @@ async function neuLadenRoh(vonHand) {
     heroZeigen(); registerZeigen(); kachelnZeigen(); wichtigZeigen(); zaehlerZeigen();
     if (vonHand) { melde("Aktualisiert"); updatePruefen(false); }
     standMerken(); offlineStandZeigen(false); owSenden(); // KC-CLUB-OFFLINE (2.1.0)
-  } catch (e) { if (!offlineStandLaden(e)) melde(e.message, true); }
+  } catch (e) { if (!offlineStandLaden(e)) meldeFehler(e); }
 }
 // ---------- KC-CLUB-OFFLINE (2.1.0, Gesamtprüfung) ----------
 // Start ohne Netz: der zuletzt geladene Stand (nur auf diesem Gerät) wird gezeigt – deutlich als „Stand von …“ markiert,
@@ -6712,7 +6730,7 @@ async function kalLaden() {
   const erster = `${kalJ}-${String(kalM + 1).padStart(2, "0")}-01`;
   const start = montag(erster), ende = tagPlus(start, 41); // 6 Wochen Raster
   $("kalMonat").textContent = MONATE[kalM]; $("kalJahr").textContent = kalJ;
-  try { KAL = await api("kalender", { von: start, bis: ende }, { warten: true }); KAL.start = start; (KAL.privat || []).forEach((x) => PT.map.set(x.id, x)); kalZeichnen(); } catch (e) { melde(e.message, true); }
+  try { KAL = await api("kalender", { von: start, bis: ende }, { warten: true }); KAL.start = start; (KAL.privat || []).forEach((x) => PT.map.set(x.id, x)); kalZeichnen(); } catch (e) { meldeFehler(e); }
 }
 // Einträge je Tag (YYYY-MM-DD) zusammenstellen
 // Gesetzliche Feiertage NRW – für jedes Jahr berechnet (Ostern nach der Gauß'schen Osterformel), ohne Server
@@ -6808,11 +6826,11 @@ function geburtstagSchalterZeigen() {
 }
 async function runderGeburtstagFreigabe(an) {
   try { await api("runder_geburtstag_freigabe", { erlaubt: an }); INIT.runderGeburtstagFreigabe = an; melde(an ? "🎉 Bei runden Geburtstagen sieht die Clubleitung dein Alter." : "Die Clubleitung sieht dein Alter nicht mehr."); }
-  catch (e) { melde(e.message, true); $("setRundGeburtstag").checked = !an; }
+  catch (e) { meldeFehler(e); $("setRundGeburtstag").checked = !an; }
 }
 async function geburtstagFreigabe(an) {
   try { await api("geburtstag_freigabe", { erlaubt: an }); INIT.geburtstagFreigabe = an; melde(an ? "🎂 Dein Geburtstag wird angezeigt (ohne Jahr)." : "Dein Geburtstag wird nicht mehr angezeigt."); }
-  catch (e) { melde(e.message, true); $("setGeburtstag").checked = !an; }
+  catch (e) { meldeFehler(e); $("setGeburtstag").checked = !an; }
 }
 
 // ---------- Treffen ----------
@@ -6835,7 +6853,7 @@ async function treffenLaden() {
       + geburtstageListe(geburtstage || [], 30)
       + (vorbei.length ? `<details class="karte"><summary><b>Vergangene Termine (${vorbei.length})</b></summary><div class="mini-kacheln" style="margin-top:8px">${vorbei.map((t) => treffenKachel(t, true)).join("")}</div></details>` : "");
     const ti = document.getElementById("treffenInfo"); if (ti) treffenInfo(ti.dataset.id, ti.dataset.vorbei === "1"); // nach Antwort/Mitfahrt frisch zeigen
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 // Zeitangabe: Uhrzeit von–bis, ganztägig oder mehrtägig (Veranstaltungen)
 function zeitText(t) {
@@ -6921,12 +6939,12 @@ async function antwort(id, a) {
     if (a === "nein" || a === "keine") {
       const mf = TREFFEN_IDX.get(id)?.mitfahrten || [], gebucht = mf.find((m) => m.dabei), eigen = mf.find((m) => m.eigen);
       if (gebucht && (await frage(`Du hast einen Platz bei ${gebucht.fahrer.name} gebucht.\n\nSoll ich den gebuchten Platz wieder freigeben?`))) {
-        await api("mitfahrt_platz", { id: gebucht.id, dabei: false }).then(() => melde("🚗 Platz freigegeben – der Fahrer weiß Bescheid"), (e) => melde(e.message, true)); }
+        await api("mitfahrt_platz", { id: gebucht.id, dabei: false }).then(() => melde("🚗 Platz freigegeben – der Fahrer weiß Bescheid"), (e) => meldeFehler(e)); }
       if (eigen && (await frage(`Du bietest eine Mitfahrgelegenheit an${eigen.mitfahrer.length ? ` (${eigen.mitfahrer.length} fahren mit)` : ""}.\n\nSoll ich sie absagen? Mitfahrer bekommen Bescheid.`))) {
-        await api("mitfahrt_loeschen", { id: eigen.id }).then(() => melde("🚗 Mitfahrgelegenheit abgesagt"), (e) => melde(e.message, true)); }
+        await api("mitfahrt_loeschen", { id: eigen.id }).then(() => melde("🚗 Mitfahrgelegenheit abgesagt"), (e) => meldeFehler(e)); }
     }
     treffenLaden();
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 // KC-CLUB-TREFFEN-AUSWAHL (0.27.0): Titel und Ort per Auswahlliste; bisher benutzte Orte kommen automatisch dazu
 const TITEL_VORSCHLAEGE = ["Köcheclub-Sitzung", "Kochabend", "Grillabend", "Weihnachtsfeier", "Jahreshauptversammlung", "Sitzung Clubleitung", "Ausflug", "Aufbau Weihnachtsmarkt"];
@@ -7006,17 +7024,17 @@ async function treffenSpeichern(id, knopf) {
         ...(!id && $("tfWdh") && $("tfWdh").value !== "keine" ? { wiederholung: $("tfWdh").value, wiederholung_bis: $("tfWdhBis").value || null } : {}) });
       if (r.anzahl) { $("treffenForm").classList.add("versteckt"); melde(`🔁 Terminreihe mit ${r.anzahl} Terminen angelegt${r.versand ? ` – ${r.versand.gesendet} Mitglieder benachrichtigt` : ""}`); treffenLaden(); return; }
       $("treffenForm").classList.add("versteckt"); melde(r.versand ? `Gespeichert – ${r.versand.gesendet} Mitglieder benachrichtigt` : "Gespeichert"); treffenLaden();
-    } catch (e) { melde(e.message, true); }
+    } catch (e) { meldeFehler(e); }
   });
 }
 // KC-CLUB-LOESCHEN: endgültig entfernen (z. B. Test) – ohne Nachricht an die Mitglieder; Sicherung liegt im Änderungsprotokoll
 async function treffenLoeschen(id, va) {
   if (!(await frage(`${va ? "Veranstaltung" : "Sitzung"} endgültig löschen?\n\nZu- und Absagen gehen mit verloren. Es wird niemand benachrichtigt (zum Absagen mit Nachricht an alle bitte „Absagen“ nutzen).\nEine Sicherung bleibt im Änderungsprotokoll.`))) return;
-  try { await api("treffen_loeschen", { id }); melde("🗑️ Gelöscht"); treffenLaden(); neuLaden(); } catch (e) { melde(e.message, true); }
+  try { await api("treffen_loeschen", { id }); melde("🗑️ Gelöscht"); treffenLaden(); neuLaden(); } catch (e) { meldeFehler(e); }
 }
 async function treffenAbsagen(id, va) {
   if (!(await frage(`${va ? "Veranstaltung" : "Sitzung"} wirklich absagen? Alle Mitglieder werden benachrichtigt.`))) return;
-  try { await api("treffen_absagen", { id }); melde("Abgesagt – alle wurden benachrichtigt"); treffenLaden(); } catch (e) { melde(e.message, true); }
+  try { await api("treffen_absagen", { id }); melde("Abgesagt – alle wurden benachrichtigt"); treffenLaden(); } catch (e) { meldeFehler(e); }
 }
 
 // ---------- Vorschläge & Abstimmungen ----------
@@ -7036,7 +7054,7 @@ async function vorschlaegeLaden() {
       + `<div class="abschnitt"><h3>💡 Themen für die nächste Sitzung</h3></div>`
       + (themen.length ? `<div class="mini-kacheln">${themen.map(vorschlagKachel).join("")}</div>` : '<div class="karte hinweis">Noch keine Themen. Tippe oben auf „＋ Neu“, um etwas vorzuschlagen.</div>')
       + (fertig.length ? `<div class="abschnitt"><h3>Erledigt</h3></div><div class="mini-kacheln">${fertig.map(vorschlagKachel).join("")}</div>` : "");
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 function balken(v) {
   if (!v.ergebnis) return `<p class="hinweis">🔒 Geheime Abstimmung – das Ergebnis erscheint, wenn sie beendet ist. ${v.stimmen} von ${v.berechtigt} haben abgestimmt.</p>`;
@@ -7073,16 +7091,16 @@ function vorschlagKarte(v) {
 }
 async function stimme(id, wahl) {
   try { await api("vorschlag_stimme", { id, wahl }); melde(wahl ? "Deine Stimme ist gespeichert 👍" : "Zurückgenommen"); vorschlaegeLaden(); neuLaden(); }
-  catch (e) { melde(e.message, true); }
+  catch (e) { meldeFehler(e); }
 }
 async function vorschlagStatus(id, status, art) {
   const frage = status === "zurueckgezogen" ? "Vorschlag wirklich zurückziehen?" : art === "abstimmung" ? "Abstimmung jetzt beenden? Alle bekommen das Ergebnis." : "Als erledigt markieren (z. B. in die Tagesordnung aufgenommen)?";
   if (!(await frage(frage))) return;
-  try { await api("vorschlag_status", { id, status }); melde("Gespeichert"); vorschlaegeLaden(); neuLaden(); } catch (e) { melde(e.message, true); }
+  try { await api("vorschlag_status", { id, status }); melde("Gespeichert"); vorschlaegeLaden(); neuLaden(); } catch (e) { meldeFehler(e); }
 }
 async function vorschlagLoeschen(id) {
   if (!(await frage("Diesen Vorschlag bzw. diese Abstimmung endgültig löschen?\n\nAlle Stimmen gehen mit verloren. Es wird niemand benachrichtigt.\nEine Sicherung bleibt im Änderungsprotokoll."))) return;
-  try { await api("vorschlag_loeschen", { id }); melde("🗑️ Gelöscht"); vorschlaegeLaden(); neuLaden(); } catch (e) { melde(e.message, true); }
+  try { await api("vorschlag_loeschen", { id }); melde("🗑️ Gelöscht"); vorschlaegeLaden(); neuLaden(); } catch (e) { meldeFehler(e); }
 }
 let vfArt = "thema", VF_SP = [], VORSCHLAG_MAP = new Map();
 // KC-CLUB-MINIKACHELN (1.23.1): Spendenprojekt als kleine Kachel – Antippen öffnet alle Einzelheiten groß
@@ -7177,7 +7195,7 @@ async function vorschlagSpeichern(knopf) {
       const r = await api("vorschlag_speichern", daten);
       $("vorschlagForm").classList.add("versteckt");
       melde(r.versand ? `Gespeichert – ${r.versand.gesendet} benachrichtigt` : "Gespeichert"); vorschlaegeLaden();
-    } catch (e) { melde(e.message, true); }
+    } catch (e) { meldeFehler(e); }
   });
 }
 
@@ -7285,7 +7303,7 @@ async function begruessungSenden(pid, vorname) {
     await api("nachricht_senden", { text, wege: ["push"], empfaenger: { personen: [pid], aemter: [], alle: false, vorstand: false }, betreff: "" });
     await api("begruessung_vermerken", { person_id: pid }).catch(() => {});
     melde(`🎉 Begrüßung an ${vorname} ist unterwegs`);
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 function buStart() { BU.sicht = "start"; zeige("buero"); }
 async function buLaden() {
@@ -7462,7 +7480,7 @@ function buDrucker() {
 // ☎️ Telefon: Person aussuchen → freigegebene Nummer → das Handy wählt wirklich (tel:). Ohne Nummer: Nachricht anbieten.
 // Personenwahl (gemeinsam für ☎️ Telefon und 📨 Nachricht): suchen, antippen; oben optional zusätzliche Knöpfe
 async function buPersonWahl(titel, sym, weiter, oben = "") {
-  try { if (!MITGLIEDER) await mitgliederHolen(); } catch (e) { return melde(e.message, true); }
+  try { if (!MITGLIEDER) await mitgliederHolen(); } catch (e) { return meldeFehler(e); }
   const f = blattAuf("buTelBlatt", `<h3 style="margin-top:0">${titel}</h3>${oben}
     <input id="buTelSuche" type="search" placeholder="🔍 Name …" autocomplete="off" style="width:100%;margin-bottom:8px">
     <div id="buTelListe" class="bu-telliste"></div><div class="knoepfe"><button class="knopf" data-zu="1">Abbrechen</button></div>`);
@@ -7494,7 +7512,7 @@ async function buNachrichtPerson(pid) {
       <div class="knoepfe"><button class="knopf" data-w="zurueck">‹ Andere Person</button><button class="knopf" data-w="zu">Schließen</button></div>`);
     f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => { const w = b.dataset.w;
       if (w === "app") { f.remove(); direkt(pid); } else if (w === "wa") { f.remove(); extern("whatsapp", k.handy); } else if (w === "zurueck") buNachricht(); else f.remove(); }));
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 // ---------- KC-CLUB-BUERO-SPRACHE (1.66.0, Wunsch Hansi): Sprachsteuerung im Büro – „Öffne Ordner Protokolle“, „Anrufen Erika“ ----------
 // Spracherkennung des Handys (Web Speech API, kostenlos; bei Chrome erkennt Google die Sprache – nur solange das Mikrofon an ist).
@@ -7563,7 +7581,7 @@ async function buTelPerson(pid) {
     f.querySelector("[data-zu]").onclick = () => f.remove();
     f.querySelector("[data-zurueck]").onclick = () => buTelefon();
     f.querySelector("[data-nachricht]").onclick = () => { f.remove(); direkt(pid); };
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 // ---------- KC-CLUB-BUERO-RECHTE (1.37.0, Wunsch Hansi): Admin schaltet das Büro frei – erst WAS (lesen / schreiben / entziehen), dann WER ----------
 let BR = { liste: null, recht: null, wahl: new Set() };
@@ -7571,7 +7589,7 @@ const BR_RECHTE = { lesen: ["👁️", "Nur lesen", "ansehen und drucken – nic
 async function buRechte() {
   if (!ICH?.admin) return;
   BR = { liste: null, recht: null, wahl: new Set() }; BU.sicht = "rechte"; buZeigen(); window.scrollTo(0, 0);
-  try { BR.liste = (await api("buero_rechte", {}, { warten: true })).mitglieder || []; } catch (e) { BR.liste = []; melde(e.message, true); }
+  try { BR.liste = (await api("buero_rechte", {}, { warten: true })).mitglieder || []; } catch (e) { BR.liste = []; meldeFehler(e); }
   buZeigen();
 }
 function buRechteHtml() {
@@ -7594,7 +7612,7 @@ async function buRechteSpeichern(knopf) {
   if (!(await frage(`${r[0]} ${r[1]}\n\nfür: ${namen.join(", ")}\n\nJetzt speichern? (Es wird keine Nachricht verschickt.)`))) return;
   knopf.disabled = true;
   try { const x = await api("buero_rechte_setzen", { recht: BR.recht, personen: [...BR.wahl] }, { warten: true }); melde(`🔐 Gespeichert – ${x.geaendert} Mitglied${x.geaendert === 1 ? "" : "er"}: ${r[1]}. Wirkt beim nächsten Öffnen der App.`); await buRechte(); }
-  catch (e) { melde(e.message, true); knopf.disabled = false; }
+  catch (e) { meldeFehler(e); knopf.disabled = false; }
 }
 // Mehrere Sitzungen → antippen, welche
 function buSitzungWaehlen(titel, weiter) {
@@ -7614,7 +7632,7 @@ async function buSitzungLaden(id) {
   BU.f = { anwesend: new Set(v ? v.anwesend : st.anwesend), anmerkung: v ? v.anmerkung || "" : BU.s.anmerkungVorschlag, tagesordnung: (v ? v.tagesordnung : st.tagesordnung).map((x) => ({ ...x })), zeilen: v ? v.zeilen : st.zeilen, neu: "" };
 }
 async function buSitzungOeffnen(id) {
-  try { await buSitzungLaden(id); } catch (e) { return melde(e.message, true); }
+  try { await buSitzungLaden(id); } catch (e) { return meldeFehler(e); }
   BU.sicht = "sitzung"; buZeigen(); window.scrollTo(0, 0);
 }
 function buSitzungHtml() {
@@ -7660,7 +7678,7 @@ async function buSpeichern(knopf) {
       buWeiterFragen("✅ Gespeichert!", `Die Vorlage ist fertig${r.protokollStand === "angelegt" ? " und als Protokoll-Entwurf angelegt" : r.protokollStand === "aktualisiert" ? ", der Protokoll-Entwurf ist aktualisiert" : ""}. Was möchtest du als Nächstes tun?`, [
         ["🖨️ Vorlage ansehen & drucken", "buDruckJetzt()", true], ["📨 Tagesordnung an die Mitglieder senden", `buEinladung('${s.treffen.id}', false)`],
         ...(r.protokoll_id ? [["📄 Protokoll-Entwurf öffnen", `protokollOeffnen('${r.protokoll_id}')`]] : []), ["🗂️ Zurück ins Büro", "buStart()"]]);
-    } catch (e) { melde(e.message, true); }
+    } catch (e) { meldeFehler(e); }
   });
 }
 // Logische Abfolge: nach jedem Schritt die sinnvollen nächsten anbieten
@@ -7696,7 +7714,7 @@ function druckSitzung() {
 }
 // Einladung / Erinnerung: Vorschau, Weg wählen, erst nach Bestätigung senden
 async function buEinladung(id, nurOffen) {
-  let s; try { s = await api("buero_sitzung", { treffen_id: id }, { warten: true }); } catch (e) { return melde(e.message, true); }
+  let s; try { s = await api("buero_sitzung", { treffen_id: id }, { warten: true }); } catch (e) { return meldeFehler(e); }
   const top = (s.vorbereitung?.tagesordnung || []).map((t, i) => `${i + 1}. ${t.t}`);
   if (!nurOffen && !top.length && !(await frage("Die Sitzung ist noch nicht vorbereitet – die Einladung geht dann ohne Tagesordnung.\n\nTrotzdem weiter?"))) return buSitzungOeffnen(id);
   const ohne = s.mitglieder.filter((m) => !m.antwort || m.antwort === "keine").length;
@@ -7723,7 +7741,7 @@ async function buSenden(knopf, anzahl) {
       if (x.nurOffen) { melde(`🔔 Erinnerung an ${r.empfaenger} Mitglieder gesendet`); return buStart(); }
       buWeiterFragen("✅ Einladung gesendet!", `${r.empfaenger} Mitglieder haben die Einladung bekommen. Ein paar Tage vor der Sitzung kannst du alle erinnern, die noch nicht geantwortet haben.`,
         [["🗂️ Zurück ins Büro", "buStart()", true], ["🏠 Zur Club-App", "zeige('start')"]]);
-    } catch (e) { melde(e.message, true); }
+    } catch (e) { meldeFehler(e); }
   });
 }
 
@@ -7790,11 +7808,11 @@ function buEinPosten(i) {
 }
 async function buEinArchiv(id, annehmen) {
   if (!annehmen && !(await frage("Dieses Dokument ablehnen? Es wird gelöscht und der Absender bekommt Bescheid."))) return;
-  try { await api("archiv_pruefung", { id, annehmen }); melde(annehmen ? "✔ Angenommen – liegt jetzt im Ordner" : "✖ Abgelehnt und gelöscht"); AR.daten = null; } catch (e) { melde(e.message, true); }
+  try { await api("archiv_pruefung", { id, annehmen }); melde(annehmen ? "✔ Angenommen – liegt jetzt im Ordner" : "✖ Abgelehnt und gelöscht"); AR.daten = null; } catch (e) { meldeFehler(e); }
   buEingangLaden();
 }
 async function buEinAufgabe(id) {
-  try { await api("aufgabe_erledigt", { id, erledigt: true }); melde("✔ Aufgabe erledigt"); } catch (e) { melde(e.message, true); }
+  try { await api("aufgabe_erledigt", { id, erledigt: true }); melde("✔ Aufgabe erledigt"); } catch (e) { meldeFehler(e); }
   buEingangLaden();
 }
 
@@ -7857,7 +7875,7 @@ async function briefNeu() {
 async function briefStandardSpeichern() {
   const wert = { absender: BRIEF.absender, fuss: BRIEF.fuss, name: BRIEF.name, amt: BRIEF.amt };
   try { await api("einstellung_setzen", { schluessel: "briefbogen", wert }); INIT.einstellungen = { ...(INIT.einstellungen || {}), briefbogen: wert }; melde("💾 Gemerkt – beim nächsten Brief schon ausgefüllt"); }
-  catch (e) { melde(e.message, true); }
+  catch (e) { meldeFehler(e); }
 }
 // Brief nach DIN 5008 (vereinfacht): Briefkopf mit Logo, Absenderzeile über der Anschrift (Fensterumschlag), Datum rechts
 function druckBrief() {
@@ -7889,7 +7907,7 @@ let BU_TERMINE = null;
 function buTermine() { BU.sicht = "termine"; buZeigen(); buTermineLaden(); window.scrollTo(0, 0); }
 async function buTermineLaden() {
   try { const r = await api("treffen_liste"); orteMerken(r.treffen); BU_TERMINE = r.treffen.filter((t) => new Date(t.ende || t.beginn) > Date.now() - 3 * 3600000).sort((a, b) => a.beginn.localeCompare(b.beginn)); }
-  catch (e) { return melde(e.message, true); }
+  catch (e) { return meldeFehler(e); }
   if (aktuelleAnsicht === "buero" && BU.sicht === "termine") buZeigen();
 }
 function buTermineHtml() {
@@ -7932,7 +7950,7 @@ async function buTerminAbsagen(id, va) { await treffenAbsagen(id, va); buTermine
 let BU_K = { wahl: new Set(), gruppe: "", antworten: null };
 async function buKontakt() {
   BU.sicht = "kontakt"; BU_K = { wahl: new Set(), gruppe: "", antworten: null }; buZeigen(); window.scrollTo(0, 0);
-  try { await mitgliederHolen(); } catch (e) { return melde(e.message, true); }
+  try { await mitgliederHolen(); } catch (e) { return meldeFehler(e); }
   const t = BU.start?.sitzungen?.[0];
   if (t) try { const s = await api("buero_sitzung", { treffen_id: t.id }); BU_K.antworten = new Map(s.mitglieder.map((m) => [m.person_id, m.antwort])); BU_K.sitzung = t; } catch {}
   if (aktuelleAnsicht === "buero" && BU.sicht === "kontakt") buZeigen();
@@ -8005,7 +8023,7 @@ async function buNachher(tid) {
     const pid = t.protokoll?.id || (await api("protokoll_vorlage", { treffen_id: tid }, { warten: true })).id;
     prId = pid; PR = await api("protokoll_laden", { id: pid }, { warten: true }); aufgabenMitGruppe(PR.aufgaben || []);
     if (!MITGLIEDER) await mitgliederHolen();
-  } catch (e) { return melde(e.message, true); }
+  } catch (e) { return meldeFehler(e); }
   BU_N = { ...BU_N, t, wer: new Set(), was: "", bis: "" };
   BU.sicht = "nachher"; buZeigen(); window.scrollTo(0, 0);
   document.querySelectorAll("#prAnlagen img[data-anlage]").forEach(bildLaden);
@@ -8055,14 +8073,14 @@ async function buNAufgabe(knopf) {
       await api("aufgabe_speichern", { protokoll_id: prId, person_ids: [...BU_N.wer], text, faellig: BU_N.bis || null });
       melde(`✔️ Aufgabe für ${BU_N.wer.size === 1 ? nameVon([...BU_N.wer][0]) : BU_N.wer.size + " Personen"} eingetragen`);
       BU_N.wer = new Set(); BU_N.was = ""; await buNachherNeu();
-    } catch (e) { melde(e.message, true); }
+    } catch (e) { meldeFehler(e); }
   });
 }
 async function buNMitteilen(knopf) {
   if (!(await frage("Die eingetragenen Aufgaben jetzt an die Mitglieder schicken?"))) return;
   await einmal(knopf, async () => {
     try { const r = await api("buero_aufgaben_mitteilen", { protokoll_id: prId }); melde(r.personen ? `📨 ${r.personen} Mitglied${r.personen === 1 ? "" : "er"} benachrichtigt` : "Alle Aufgaben waren schon mitgeteilt"); await buNachherNeu(); }
-    catch (e) { melde(e.message, true); }
+    catch (e) { meldeFehler(e); }
   });
 }
 
@@ -8149,7 +8167,7 @@ const ML_SPALTEN = { nr: "Nr.", name: "Name", aemter: "Ämter", eintritt: "Mitgl
 let ML = { daten: null, art: "uebersicht", sort: "name", titel: "" };
 async function buListe() {
   BU.sicht = "liste"; buZeigen(); window.scrollTo(0, 0);
-  try { ML.daten = await api("buero_mitgliederliste"); } catch (e) { return melde(e.message, true); }
+  try { ML.daten = await api("buero_mitgliederliste"); } catch (e) { return meldeFehler(e); }
   if (aktuelleAnsicht === "buero" && BU.sicht === "liste") buZeigen();
 }
 function mlZeilen() {
@@ -8216,7 +8234,7 @@ function flBis(regel) {
 }
 function flWer(rolle) { const r = FL.d?.rollen || {}; return rolle === "alle" ? "alle" : (r[rolle] || []).find((id) => MITGLIEDER?.some((m) => m.person_id === id)) || ""; }
 async function flNeu() {
-  if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return melde(e.message, true); }
+  if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return meldeFehler(e); }
   if (!FL.d) await flLaden();
   FL.neu = { art: "", person: "", notiz: "", datum: heuteIso(), termin: "", terminZeit: "11:00", ort: "", betrag: "", schritte: [], mitteilen: true };
   BU.sicht = "flneu"; buZeigen(); window.scrollTo(0, 0);
@@ -8258,7 +8276,7 @@ async function flSpeichern(knopf) {
       const r = await api("fl_anlegen", { art: n.art, person_id: n.person, notiz: n.notiz, datum: n.datum, termin, termin_ort: n.ort, betrag: n.betrag === "" ? null : Number(n.betrag), mitteilen: n.mitteilen,
         schritte: n.schritte.filter((s) => s.an).map((s) => ({ text: s.text, wer: s.wer === "alle" ? null : s.wer || null, alle: s.wer === "alle", bis: s.bis || null })) });
       melde("✅ Fall angelegt"); await flLaden(); flFall(r.id, true);
-    } catch (e) { melde(e.message, true); }
+    } catch (e) { meldeFehler(e); }
   });
 }
 // --- Fall ansehen / bearbeiten ---
@@ -8289,7 +8307,7 @@ function buFallHtml() {
     <div class="knoepfe"><button class="knopf" onclick="buFreudLeid()">🤍 Alle Fälle</button><button class="knopf" onclick="buZurueck()">🗂️ Büro</button></div>`;
 }
 async function flAendern(id, daten, meldung) {
-  try { await api("fl_aendern", { id, ...daten }); if (meldung) melde(meldung); await flLaden(); buZeigen(); } catch (e) { melde(e.message, true); }
+  try { await api("fl_aendern", { id, ...daten }); if (meldung) melde(meldung); await flLaden(); buZeigen(); } catch (e) { meldeFehler(e); }
 }
 const flSchritt = (id, sid, erledigt) => flAendern(id, { was: "schritt_erledigt", schritt_id: sid, erledigt }, erledigt ? "✔ Erledigt" : "Wieder offen");
 const flSchrittWeg = async (id, sid) => { if ((await frage("Diesen Schritt streichen?"))) flAendern(id, { was: "schritt_weg", schritt_id: sid }, "Gestrichen"); };
@@ -8334,7 +8352,7 @@ async function flSenden(knopf) {
     try {
       const r = await api("fl_informieren", { id: x.id, text: $("flIT").value, abgesprochen: leid ? true : undefined, abordnung: !!$("flIA")?.checked, wege: x.wege });
       $("flInfo")?.remove(); melde(`📣 ${r.empfaenger} Mitglieder informiert${r.aufruf ? " – Zusagen erscheinen hier" : ""}`); await flLaden(); buZeigen();
-    } catch (e) { melde(e.message, true); }
+    } catch (e) { meldeFehler(e); }
   });
 }
 function flKarte(id) {
@@ -8350,7 +8368,7 @@ async function flAbschliessen(id) {
   const offen = f ? f.schritte.length - f.erledigt : 0;
   if (!(await frage(`Fall abschließen?${offen ? `\n\nNoch ${offen} Schritt(e) offen.` : ""}\n\nEr wird im Archiv abgelegt (Ordner „Admin“, Register „Freud & Leid“).`))) return;
   try { const r = await api("fl_abschliessen", { id }); melde(r.abgelegt ? "✅ Abgeschlossen und im Archiv abgelegt" : "✅ Abgeschlossen (Archiv-Ablage hat nicht geklappt)"); await flLaden(); buFreudLeid(); }
-  catch (e) { melde(e.message, true); }
+  catch (e) { meldeFehler(e); }
 }
 
 // ---------- KC-CLUB-HELFEN & KC-CLUB-LEIHEN (1.23.0, Wunsch Hansi): eine Kachel, zwei Bereiche – fast alles per Antippen ----------
@@ -8456,7 +8474,7 @@ async function hilfeSenden(knopf) {
       if (f.id) { const r = await api("hilfe_aendern", { id: f.id, ...daten }); HL.form = null; HL.infoNach = f.id; melde(r.benachrichtigt ? "💾 Gespeichert – der Aufruf bleibt offen; wer zugesagt hat, bekommt Bescheid" : "💾 Gespeichert – der Aufruf bleibt offen"); hlLaden(); return; } // 1.92.1: danach den (weiter offenen) Aufruf zeigen
       const r = await api("hilfe_aufruf", { ...daten, ziel: f.ziel });
       HL.form = null; melde(r.empfaenger ? `📣 Aufruf gesendet – an ${r.empfaenger} ${r.empfaenger === 1 ? "Mitglied" : "Mitglieder"}` : "📣 Aufruf gespeichert – gerade ist niemand sonst online"); hlLaden();
-    } catch (e) { melde(e.message, true); }
+    } catch (e) { meldeFehler(e); }
   });
 }
 // KC-CLUB-HILFE-KURZ (1.93.0, Wunsch Hansi): Wer einen fremden, offenen Aufruf antippt, sieht nur eine Zusammenfassung
@@ -8480,7 +8498,7 @@ function hilfeKurzHtml(a) {
 async function hilfeKurzAntwort(id, antwort) {
   try { await api("hilfe_antwort", { id, antwort: antwort || null }); $("hilfeInfo")?.remove();
     melde(antwort === "komme" ? "✋ Danke! Deine Zusage ist angekommen" : antwort ? "Danke für die Rückmeldung" : "Zurückgenommen");
-    hlLaden(); if (aktuelleAnsicht === "pinnwand") pwLaden(); } catch (e) { melde(e.message, true); }
+    hlLaden(); if (aktuelleAnsicht === "pinnwand") pwLaden(); } catch (e) { meldeFehler(e); }
 }
 // „Mehr Details“: Nachricht an die Person, die sucht – mit vorbereitetem Anfang
 async function hilfeDetails(id) {
@@ -8491,7 +8509,7 @@ async function hilfeDetails(id) {
 }
 // Sprung aus Pinnwand, Push oder E-Mail (#hilfe=…): Daten holen, dann Kurzansicht bzw. für den Ersteller das Formular
 async function hilfeDirekt(id) {
-  try { HL.hilfe = await api("hilfe_liste"); HL.tab = "helfen"; } catch (e) { return melde(e.message, true); }
+  try { HL.hilfe = await api("hilfe_liste"); HL.tab = "helfen"; } catch (e) { return meldeFehler(e); }
   if (!HL.hilfe.aufrufe.some((x) => x.id === id)) { melde("Dieser Aufruf ist schon geschlossen."); return hlStart("helfen"); }
   hilfeOeffnen(id);
 }
@@ -8588,11 +8606,11 @@ async function angebotSpeichern() {
   const f = HL.angebotForm; if (!f) return;
   if (!f.titel.trim()) return melde("Bitte kurz schreiben, wobei du helfen kannst.", true);
   try { await api("hilfe_angebot_speichern", { id: f.id, sym: f.sym, titel: f.titel.trim(), text: f.text.trim() }, { warten: true }); HL.angebotForm = null; melde(f.id ? "✅ Gespeichert" : "🤲 Danke! Dein Angebot ist eingestellt."); hlLaden(); }
-  catch (e) { melde(e.message, true); }
+  catch (e) { meldeFehler(e); }
 }
 async function angebotBeenden(id) {
   if (!(await frage("Dieses Angebot beenden? Die Kachel verschwindet für alle."))) return;
-  try { await api("hilfe_angebot_beenden", { id }, { warten: true }); $("angebotInfo")?.remove(); melde("🔒 Angebot beendet"); hlLaden(); } catch (e) { melde(e.message, true); }
+  try { await api("hilfe_angebot_beenden", { id }, { warten: true }); $("angebotInfo")?.remove(); melde("🔒 Angebot beendet"); hlLaden(); } catch (e) { meldeFehler(e); }
 }
 // ---------- KC-CLUB-BOERSE (1.43.0, Wunsch Hansi): 🛍️ Börse – Biete / Suche, bis 3 Fotos, 30 Tage, Treffer-Meldung ----------
 let BO = { d: null, form: null, filter: "alle", rubrik: "", oeffnen: null };
@@ -8658,7 +8676,7 @@ async function boStatus(id, was, tage) {
     melde(was === "verlaengern" ? `⏳ Verlängert bis ${boDatum(x.laeuft_bis)}` : was === "auslaufen" ? "In Ordnung – die Anzeige läuft einfach aus." : was === "erledigt" ? "✅ Erledigt – danke!" : "🗑️ Gelöscht");
     if (was !== "verlaengern") $("boInfo")?.remove();
     hlLaden();
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 function boNeu(art, id) {
   const a = id ? BO.d?.anzeigen.find((x) => x.id === id) : null;
@@ -8688,7 +8706,7 @@ async function boFotos(input) {
   const dateien = [...input.files].filter((x) => /^image\//.test(x.type)).slice(0, 3 - f.fotos.length);
   f.laedt = dateien.length; hlZeigen();
   for (const roh of dateien) {
-    try { const r = await anlageHochladen(roh); if (r?.id) f.fotos.push(r.id); } catch (e) { melde(e.message, true); }
+    try { const r = await anlageHochladen(roh); if (r?.id) f.fotos.push(r.id); } catch (e) { meldeFehler(e); }
     f.laedt = Math.max(0, f.laedt - 1); if (BO.form === f) hlZeigen();
   }
 }
@@ -8702,17 +8720,17 @@ async function boSpeichern() {
     melde(f.id ? "✅ Gespeichert" : `🛍️ Anzeige ist drin – läuft ${BO.d?.tage || 30} Tage.${x.treffer ? ` Es gibt ${x.treffer === 1 ? "eine passende Anzeige" : x.treffer + " passende Anzeigen"} – schau mal rein!` : ""}`);
     if (x.treffer) BO.filter = f.art === "biete" ? "suche" : "biete";
     hlLaden();
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 // KC-CLUB-HILFE-PINNWAND (1.90.0): Aushang an der Pinnwand antippen → Hilfebereich mit genau diesem Aufruf offen
 function hilfeVonPinnwand(id) { hilfeDirekt(id); } // 1.95.0: für alle die Kurzansicht über der Pinnwand // 1.93.0: Mitglieder sehen die Kurzansicht über der Pinnwand
 async function hilfeAntwort(id, antwort) {
   try { await api("hilfe_antwort", { id, antwort: antwort || null }); melde(antwort === "komme" ? "✋ Danke! Deine Zusage ist gespeichert" : antwort ? "Gespeichert – danke für die Rückmeldung" : "Zurückgenommen"); hlLaden(); }
-  catch (e) { melde(e.message, true); }
+  catch (e) { meldeFehler(e); }
 }
 async function hilfeSchliessen(id) {
   if (!(await frage("Aufruf schließen? Danach kann niemand mehr zusagen."))) return;
-  try { await api("hilfe_schliessen", { id }); melde("🔒 Geschlossen"); if (HL.form?.id === id) HL.form = null; hlLaden(); } catch (e) { melde(e.message, true); }
+  try { await api("hilfe_schliessen", { id }); melde("🔒 Geschlossen"); if (HL.form?.id === id) HL.form = null; hlLaden(); } catch (e) { meldeFehler(e); }
 }
 
 // ----- 📦 Ausleihen -----
@@ -8765,7 +8783,7 @@ async function leihSenden(knopf) {
       HL.form = null;
       const ab = r.abgelegt ? (r.abgelegt.verein && r.abgelegt.persoenlich ? " · im Archiv abgelegt" : " · Archiv-Ablage teilweise nicht geklappt") : "";
       melde(`📨 Anfrage gesendet${r.versand?.gesendet ? ` – ${r.versand.gesendet} Meldung(en) an die Clubleitung` : ""}${ab}`); hlLaden();
-    } catch (e) { melde(e.message, true); if (e.message.includes("frei")) hlLaden(); }
+    } catch (e) { meldeFehler(e); if (e.message.includes("frei")) hlLaden(); }
   });
 }
 function leihKarte(a, leitung) {
@@ -8839,7 +8857,7 @@ async function leihEntscheiden(id, wahl, knopf, grund) {
       const r = await api("leihen_entscheiden", { id, wahl, grund: grund || null });
       document.getElementById("leihNein")?.remove();
       melde(`${wahl === "genehmigt" ? "✅ Genehmigt" : "❌ Abgelehnt"} – ${r.versand?.gesendet ? "Mitglied benachrichtigt" : "gespeichert"}${r.abgelegt?.verein ? " · im Archiv abgelegt" : ""}`); hlLaden();
-    } catch (e) { melde(e.message, true); hlLaden(); }
+    } catch (e) { meldeFehler(e); hlLaden(); }
   });
 }
 const LEIH_GRUENDE = ["Im Zeitraum schon verliehen", "Wird selbst gebraucht", "Termin passt nicht – bitte melden", "Nicht für diesen Zweck"];
@@ -8852,7 +8870,7 @@ async function leihStatus(id, status) {
   const frage = { storniert: "Ausleihe stornieren?", abgeholt: "Als abgeholt markieren?", zurueck: "Alles zurückgegeben?" }[status];
   if (!(await frage(frage))) return;
   try { await api("leihen_status", { id, status }); melde({ storniert: "🚫 Storniert", abgeholt: "📦 Abgeholt", zurueck: "↩️ Zurückgegeben – danke!" }[status]); hlLaden(); }
-  catch (e) { melde(e.message, true); }
+  catch (e) { meldeFehler(e); }
 }
 // Clubleitung: Bestand pflegen (Anzahl ＋/－, aus-/einblenden, neuer Gegenstand per Symbol-Kachel)
 const LEIH_SYMBOLE = ["📦", "🪑", "🍻", "⛺", "🍺", "🍷", "❄️", "🔥", "🍲", "🔌", "🍽️", "🥘", "🔊", "💡", "🧯", "🧺"];
@@ -8871,7 +8889,7 @@ function leihEditHtml() {
 }
 async function leihGegenstandSpeichern(g, aenderung) {
   try { await api("leihen_gegenstand", { id: g.id, name: g.name, sym: g.sym, anzahl: g.anzahl, aktiv: g.aktiv, ...aenderung }); Object.assign(g, aenderung); hlZeigen(); }
-  catch (e) { melde(e.message, true); }
+  catch (e) { meldeFehler(e); }
 }
 function leihBestand(id, d) { const g = HL.leihen.gegenstaende.find((x) => x.id === id); if (g) leihGegenstandSpeichern(g, { anzahl: Math.max(0, Math.min(999, g.anzahl + d)) }); }
 function leihAktiv(id) { const g = HL.leihen.gegenstaende.find((x) => x.id === id); if (g) leihGegenstandSpeichern(g, { aktiv: !g.aktiv }); }
@@ -8880,7 +8898,7 @@ async function leihGegenstandNeu(knopf) {
   if (!name) return melde("Bitte einen Namen eingeben.", true);
   await einmal(knopf, async () => {
     try { await api("leihen_gegenstand", { name, sym: leihNeuSym, anzahl }); melde("＋ " + name + " hinzugefügt"); HL.leihen = await api("leihen_liste"); hlZeigen(); }
-    catch (e) { melde(e.message, true); }
+    catch (e) { meldeFehler(e); }
   });
 }
 
@@ -8916,7 +8934,7 @@ async function dienstLaden() {
       return `<button class="ptaste${an ? " an" : ""}" style="${an ? `background:${f};border-color:${f}` : ""}" onclick="dpPerson('${p.person_id}')"><i style="background:${an ? "#fff" : f}"></i>${p.ich ? "Ich" : esc(p.name)}</button>`;
     }).join("") + (DP.personen.length === 1 ? '<span class="hinweis" style="font-size:.85rem">Noch hat niemand sonst seine Dienstzeiten freigegeben.</span>' : "");
     dpZeichnen();
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 function dpZeichnen() {
   const tage = [...Array(7)].map((_, i) => tagPlus(dpStart, i)), heute = heuteIso();
@@ -8960,7 +8978,7 @@ function dpZeichnen() {
 }
 async function dienstFreigabe(an) {
   try { await api("dienst_freigabe", { erlaubt: an }); melde(an ? "Andere Mitglieder können deine Dienstzeiten jetzt sehen." : "Deine Dienstzeiten sind nur noch für dich sichtbar."); }
-  catch (e) { melde(e.message, true); $("dpFreigabe").checked = !an; }
+  catch (e) { meldeFehler(e); $("dpFreigabe").checked = !an; }
 }
 
 // ---------- Nachrichten ----------
@@ -8975,7 +8993,7 @@ async function unterhLaden() {
       <div class="mitte"><div><b>${esc(u.gruppe?.name || u.betreff || u.teilnehmer.join(", "))}</b>${stummAn(u.id) ? ' <span title="stummgeschaltet">🔕</span>' : ""}${u.gruppe ? ` <span class="hinweis" style="font-size:.8rem">· ${u.anzahl} Mitgl.</span>` : ""}</div><div class="hinweis">${entwurfAlle()[u.id]?.trim() ? `<span class="entwurf-marke">✏️ Entwurf:</span> ${esc(entwurfAlle()[u.id].trim().slice(0, 80))}` : u.letzte ? esc(u.letzte.von + ": " + u.letzte.text) : "Noch keine Nachricht"}</div></div>
       <div style="text-align:right"><div class="hinweis" style="font-size:.8rem">${u.letzte ? zeitKurz(u.letzte.zeit) : ""}</div>${u.ungelesen ? `<span class="punkt${u.wichtigNeu ? " wichtig" : ""}" title="${u.wichtigNeu ? "darunter wichtige Nachricht" : ""}">${u.wichtigNeu ? "❗ " : ""}${u.ungelesen}</span>` : ""}</div></div>${u.id === UH.wahl ? unterhAktionen(u) : ""}`).join("")
       || '<p class="hinweis">Noch keine Nachrichten. Tippe oben auf „＋ Neu“.</p>';
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 // KC-CLUB-CHATLISTE (0.41.0): einmal tippen wählt die Unterhaltung aus (Öffnen / aus Liste entfernen), doppelt tippen öffnet sie.
 // „Entfernen“ blendet nur für mich aus (Server: unterhaltung_ausblenden) – schreibt jemand wieder, erscheint sie erneut.
@@ -9007,7 +9025,7 @@ async function unterhEntfernen(id, fuerAlle) {
   try {
     await api(fuerAlle ? "unterhaltung_loeschen" : "unterhaltung_ausblenden", { id });
     melde(fuerAlle ? "🗑️ Für alle gelöscht" : "🙈 Aus deiner Liste entfernt"); UH.wahl = null; await unterhLaden();
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 async function chatOeffnen(id, ausHistorie) {
   vorlesenZeigen(); // KC-CLUB-VORLESEN: Lautsprecher oben zeigt den gespeicherten Zustand
@@ -9069,7 +9087,7 @@ async function chatLaden(scrollen) {
     else if (scrollen || (neuVonAnderen && !weitOben())) setTimeout(() => window.scrollTo(0, document.body.scrollHeight), 50);
     else if (neuVonAnderen) NA.neuUnten = true;
     setTimeout(nachUntenPruefen, 120);
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 // ---------- KC-CLUB-REAKTION / -ANTWORT / -ERWAEHNUNG (0.97.0) ----------
 // Nachricht antippen → kleines Menü: 6 Schnell-Reaktionen, „↩️ Antworten“, „ℹ️ Details“. Reaktionen stehen als kleine Chips
@@ -9172,7 +9190,7 @@ function blattAuf(id, html) {
 }
 async function naAnheften(id, an) {
   try { const r = await api("nachricht_anheften", { id, an }); melde(an ? `📌 Oben angeheftet${r.ersetzt ? " – die älteste angeheftete ist herausgefallen (höchstens 3)" : ""}` : "📌 Gelöst"); chatStand = ""; await chatLaden(false); }
-  catch (e) { melde(e.message, true); }
+  catch (e) { meldeFehler(e); }
 }
 async function naMerken(id, an) {
   try {
@@ -9181,10 +9199,10 @@ async function naMerken(id, an) {
     if (an && (NA.nachrichten.get(id)?.anlagen || []).some((a) => ARCHIV_TYP_OK(a.mime))) naAnlagenArchiv(id, "Wichtig? Die Datei auch in dein Archiv legen?");
     await chatLaden(false);
   }
-  catch (e) { melde(e.message, true); }
+  catch (e) { meldeFehler(e); }
 }
 async function gemerktZeigen() {
-  let r; try { r = await api("gemerkte_nachrichten", {}, { warten: true }); } catch (e) { return melde(e.message, true); }
+  let r; try { r = await api("gemerkte_nachrichten", {}, { warten: true }); } catch (e) { return meldeFehler(e); }
   blattAuf("gmFenster", `<h3 style="margin-top:0">⭐ Gemerkte Nachrichten</h3>
     ${r.liste.length ? r.liste.map((x) => `<button class="gm-zeile" onclick="gemerktOeffnen('${x.thread}','${x.id}')"><small>${esc(x.chat)} · ${esc(x.von)} · ${esc(zeitKurz(x.zeit))}</small>${esc(x.text)}</button>`).join("")
       : '<p class="hinweis">Noch nichts gemerkt. Nachricht antippen → „⭐ Merken“.</p>'}
@@ -9203,7 +9221,7 @@ async function cuStimmen(id, i) {
   const u = NA.nachrichten.get(id)?.umfrage; if (!u) return;
   const meine = u.optionen.map((o, j) => (o.meine ? j : -1)).filter((j) => j >= 0);
   const neu = u.mehrfach ? (meine.includes(i) ? meine.filter((j) => j !== i) : [...meine, i]) : (meine.length === 1 && meine[0] === i ? [] : [i]);
-  try { await api("chat_umfrage_stimmen", { id, optionen: neu }); chatStand = ""; await chatLaden(false); } catch (e) { melde(e.message, true); }
+  try { await api("chat_umfrage_stimmen", { id, optionen: neu }); chatStand = ""; await chatLaden(false); } catch (e) { meldeFehler(e); }
 }
 const cuFeld = (i) => `<input class="cu-ant" maxlength="80" placeholder="Antwort ${i + 1}" style="width:100%;box-sizing:border-box;padding:10px;margin:4px 0;border-radius:10px;border:1px solid var(--linie);font:inherit;background:var(--karte);color:inherit">`;
 function cuAntwortDazu() {
@@ -9229,7 +9247,7 @@ async function cuSenden() {
   if (new Set(optionen).size < 2) return melde("Bitte mindestens zwei verschiedene Antworten eingeben.", true);
   try { await api("nachricht_senden", { id: chatId, umfrage: { frage, optionen, mehrfach: $("cuMehrfach").checked }, wege: ["push", "email"].filter((w) => ZW[w]) });
     document.getElementById("cuFenster")?.remove(); melde("📊 Abstimmung gesendet"); await chatLaden(true); }
-  catch (e) { melde(e.message, true); }
+  catch (e) { meldeFehler(e); }
 }
 function kontaktKarteHtml(m) {
   const k = m.kontakt;
@@ -9237,7 +9255,7 @@ function kontaktKarteHtml(m) {
 }
 async function kontaktWahl() {
   if (!chatId) return melde("Bitte zuerst die Unterhaltung beginnen (erste Nachricht senden) – dann geht „Kontakt teilen“.", true);
-  if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return melde(e.message, true); }
+  if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return meldeFehler(e); }
   blattAuf("kwFenster", `<h3 style="margin-top:0">👤 Kontakt teilen</h3>
     <p class="hinweis" style="margin:0 0 6px">Die anderen sehen nur, was das Mitglied selbst für andere freigegeben hat.</p>
     <input id="kwSuche" type="search" placeholder="🔍 Name suchen …" autocomplete="off" oninput="kontaktListe()" style="width:100%;box-sizing:border-box;padding:10px;border-radius:12px;border:1px solid var(--linie);font:inherit;background:var(--karte);color:inherit">
@@ -9252,7 +9270,7 @@ function kontaktListe() {
 async function kontaktSenden(pid) {
   try { await api("nachricht_senden", { id: chatId, kontakt: pid, wege: ["push", "email"].filter((w) => ZW[w]) });
     document.getElementById("kwFenster")?.remove(); melde("👤 Kontakt gesendet"); await chatLaden(true); }
-  catch (e) { melde(e.message, true); }
+  catch (e) { meldeFehler(e); }
 }
 
 // KC-CLUB-SI-MUETZE (1.19.0): Mütze mit fortgesetzter Phase (negative Verzögerung = „läuft schon so lange“) – kein Neustart beim Neuzeichnen
@@ -9348,7 +9366,7 @@ async function sicherheitMelden() {
   try {
     await api("sicherheit_melden", { notiz, geraet: { verbindung: location.protocol === "https:", version: r.neueste == null ? null : r.neueste === APP_VERSION, serverMs: r.serverMs } }, { warten: true });
     melde("📨 Gesendet – " + adminName() + " bekommt das Prüfergebnis per Push und E-Mail");
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 // ---------- KC-CLUB-BEARBEITEN (1.9.0, Wunsch Hansi – wie WhatsApp): eigene Nachricht bis 15 Min. nach dem Senden ändern ----------
 function naBearbeiten(id) {
@@ -9369,7 +9387,7 @@ async function naBearbeitenSpeichern(id) {
   const text = $("naBearbText")?.value.trim() || "";
   if (!text) return melde("Bitte einen Text eingeben – zum Entfernen „Löschen“ benutzen.", true);
   try { await api("nachricht_bearbeiten", { id, text }); document.getElementById("naMenue")?.remove(); melde("✏️ Geändert"); chatStand = ""; await chatLaden(false); }
-  catch (e) { melde(e.message, true); }
+  catch (e) { meldeFehler(e); }
 }
 
 // ---------- KC-CLUB-STUMM (1.9.0, Wunsch Hansi): einzelne Unterhaltungen stummschalten – kein Push, keine Mail, kein Ton ----------
@@ -9394,7 +9412,7 @@ async function stummSetzen(dauer) {
   if (INIT) INIT.einstellungen = { ...(INIT.einstellungen || {}), stumm: w };
   $("chatBlatt").classList.add("versteckt");
   try { await api("einstellung_setzen", { schluessel: "stumm", wert: w }); melde(d ? `🔕 Stumm – ${d.id === "immer" ? "für immer" : "für " + d.t}` : "🔔 Wieder laut"); }
-  catch (e) { melde(e.message, true); }
+  catch (e) { meldeFehler(e); }
   chatStand = ""; chatLaden(false);
 }
 
@@ -9455,7 +9473,7 @@ async function naKopieren(id) {
   (await eingabe("Text markieren und kopieren:", t));
 }
 async function reagieren(id, emoji) {
-  try { await api("reaktion_setzen", { id, emoji }); chatStand = ""; await chatLaden(false); } catch (e) { melde(e.message, true); }
+  try { await api("reaktion_setzen", { id, emoji }); chatStand = ""; await chatLaden(false); } catch (e) { meldeFehler(e); }
 }
 function naAntworten(id) {
   const m = NA.nachrichten.get(id); if (!m) return;
@@ -9496,7 +9514,7 @@ const WL = { quelle: null, liste: [] };
 async function weiterleitenBlatt(id) {
   const m = NA.nachrichten.get(id); if (!m) return;
   WL.quelle = m;
-  try { await zeMitglieder(); WL.liste = ((await api("unterhaltungen")).unterhaltungen || []).slice(0, 12); } catch (e) { return melde(e.message, true); }
+  try { await zeMitglieder(); WL.liste = ((await api("unterhaltungen")).unterhaltungen || []).slice(0, 12); } catch (e) { return meldeFehler(e); }
   document.getElementById("wlFenster")?.remove();
   const f = document.createElement("div"); f.id = "wlFenster"; f.className = "blatt"; f.setAttribute("role", "dialog"); f.setAttribute("aria-modal", "true");
   f.innerHTML = `<div class="blatt-innen" style="max-height:88vh;overflow-y:auto">
@@ -9525,7 +9543,7 @@ async function weiterleiten(art, id) {
     document.getElementById("wlFenster")?.remove();
     melde("↪️ Weitergeleitet");
     WL.zuletzt = r.id;
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 // 🌙 Nicht stören
 function ruheZeigen() {
@@ -9542,7 +9560,7 @@ async function ruheSpeichern() {
   const wert = { an: $("ruheAn").checked, von: $("ruheVon").value || "22:00", bis: $("ruheBis").value || "07:00", erwaehnung: $("ruheErw").checked };
   try { const r = await api("einstellung_setzen", { schluessel: "ruhezeit", wert }); INIT.einstellungen = { ...(INIT.einstellungen || {}), ruhezeit: r.wert }; ruheZeigen();
     meinStatusZeigen(); melde(r.wert.an ? `🌙 Nicht stören: ${r.wert.von}–${r.wert.bis} Uhr` : "🔔 Nicht stören ist aus"); }
-  catch (e) { melde(e.message, true); ruheZeigen(); }
+  catch (e) { meldeFehler(e); ruheZeigen(); }
 }
 // 📱 Meine Geräte
 function geraetName(ua) {
@@ -9553,7 +9571,7 @@ function geraetName(ua) {
 }
 async function geraeteBlatt() {
   let eigen = ""; try { eigen = (await (await navigator.serviceWorker.ready).pushManager.getSubscription())?.endpoint || ""; } catch {}
-  let r; try { r = await api("geraete_liste", { endpoint: eigen }, { warten: true }); } catch (e) { return melde(e.message, true); }
+  let r; try { r = await api("geraete_liste", { endpoint: eigen }, { warten: true }); } catch (e) { return meldeFehler(e); }
   document.getElementById("geFenster")?.remove();
   const f = document.createElement("div"); f.id = "geFenster"; f.className = "blatt"; f.setAttribute("role", "dialog"); f.setAttribute("aria-modal", "true");
   f.innerHTML = `<div class="blatt-innen" style="max-height:88vh;overflow-y:auto">
@@ -9572,7 +9590,7 @@ async function geraeteBlatt() {
 async function geraetEntfernen(id, dieses) {
   if (!(await frage(dieses ? "Dieses Gerät bekommt dann keine Push-Meldungen mehr. Entfernen?" : "Dieses Gerät bekommt dann keine Push-Meldungen mehr. Entfernen?"))) return;
   try { await api("geraet_entfernen", { id }); melde("🗑️ Gerät entfernt"); if (dieses) try { await (await (await navigator.serviceWorker.ready).pushManager.getSubscription())?.unsubscribe(); } catch {} geraeteBlatt(); pushStatusZeigen?.(); }
-  catch (e) { melde(e.message, true); }
+  catch (e) { meldeFehler(e); }
 }
 
 // ---------- KC-CLUB-RECHTSCHREIBUNG (1.70.0, Wunsch Hansi): Tippfehler rot unterstreichen ----------
@@ -9696,7 +9714,7 @@ function niStatusText(w) {
   return "⏳ " + (w.status || "unterwegs");
 }
 async function nachrichtInfo(id) {
-  let r; try { r = await api("nachricht_details", { id }, { warten: true }); } catch (e) { return melde(e.message, true); }
+  let r; try { r = await api("nachricht_details", { id }, { warten: true }); } catch (e) { return meldeFehler(e); }
   document.getElementById("niFenster")?.remove();
   const f = document.createElement("div"); f.id = "niFenster"; f.className = "blatt"; f.setAttribute("role", "dialog"); f.setAttribute("aria-modal", "true");
   const gel = r.empfaenger.filter((e) => e.gelesen).length;
@@ -9919,7 +9937,7 @@ async function nfpArchivWahl() {
   const d = nfpLesen(); if (!nfpGefuellt(d)) return melde("Der Notfallpass ist noch leer.", true);
   if (!(await frage("🗄️ Notfallpass ins Archiv kopieren?\n\nBisher liegt dein Notfallpass nur auf diesem Handy.\nDie Kopie wird in deinem persönlichen Ordner gespeichert – also auch auf dem Vereins-Server, in der Spiegel-Datenbank und in Sicherungen.\n\nSehen kann sie nur du (und wem du deinen Ordner selbst freigibst).\n\nWeiter?"))) return;
   $("nfpInhalt").innerHTML = '<p class="hinweis">Lädt deine Ordner …</p>';
-  try { NFP_AR = await api("archiv_liste"); } catch (e) { melde(e.message, true); return nfpZeigen(); }
+  try { NFP_AR = await api("archiv_liste"); } catch (e) { meldeFehler(e); return nfpZeigen(); }
   const ordner = nfpEigeneOrdner(NFP_AR);
   if (!ordner.length) { melde("Dein persönlicher Ordner ist nicht verfügbar (liegt er im Papierkorb?).", true); return nfpZeigen(); }
   $("nfpInhalt").innerHTML = `<h3 style="margin-top:0">🗄️ In mein Archiv kopieren</h3>
@@ -9979,7 +9997,7 @@ async function nfpArchivKopieren() {
     nfpZu(); melde(`🗄️ Notfallpass liegt jetzt in deinem Ordner (Register „${register}“)`);
     AR.daten = null;
     if ((await frage(`Der Notfallpass liegt jetzt in deinem Ordner, Register „${register}“.\n\nArchiv jetzt öffnen?`))) { AR.ziel = ordner_id; arStart(); }
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 
 // ---------- KC-CLUB-WISCHEN (1.6.0, Wunsch Hansi – wie WhatsApp): Nachricht nach rechts wischen = antworten,
@@ -10033,12 +10051,12 @@ function naLoeschenFragen(id) {
 async function naLoeschen(id, fuerAlle) {
   document.getElementById("naLoeschen")?.remove();
   try { await api(fuerAlle ? "nachricht_loeschen" : "nachricht_ausblenden", { id }); chatStand = ""; melde(fuerAlle ? "🗑️ Für alle gelöscht" : "🙈 Für dich gelöscht"); chatLaden(false); }
-  catch (e) { melde(e.message, true); }
+  catch (e) { meldeFehler(e); }
 }
 // KC-CLUB-LOESCHEN: eigene Nachricht für alle löschen; Unterhaltung nur für mich entfernen oder (Admin) für alle löschen
 async function nachrichtLoeschen(id) {
   if (!(await frage("Diese Nachricht für alle löschen?"))) return;
-  try { await api("nachricht_loeschen", { id }); chatStand = ""; melde("🗑️ Gelöscht"); chatLaden(false); } catch (e) { melde(e.message, true); }
+  try { await api("nachricht_loeschen", { id }); chatStand = ""; melde("🗑️ Gelöscht"); chatLaden(false); } catch (e) { meldeFehler(e); }
 }
 function chatMenue() {
   const g = chatId && CHAT?.id === chatId ? CHAT.gruppe : null;
@@ -10059,7 +10077,7 @@ async function unterhaltungWeg(fuerAlle, gefragt) {
   if (!gefragt && await chatAblageFragen({ frage: "Vorher in dein persönliches Archiv ablegen?", ja: "Ja, ablegen – dann weiter", nein: "Nein, nur weiter", danach: () => unterhaltungWeg(fuerAlle, true) })) return;
   if (fuerAlle && !(await frage("Unterhaltung mit allen Nachrichten für ALLE Teilnehmer endgültig löschen?\nEine Sicherung bleibt im Änderungsprotokoll."))) return;
   try { await api(fuerAlle ? "unterhaltung_loeschen" : "unterhaltung_ausblenden", { id: chatId }); melde(fuerAlle ? "🗑️ Für alle gelöscht" : "🙈 Aus deiner Liste entfernt"); zeige("nachrichten"); neuLaden(); }
-  catch (e) { melde(e.message, true); }
+  catch (e) { meldeFehler(e); }
 }
 // KC-CLUB-BILD-LINK (1.42.1, Meldung Klaus 02.10. „img nicht geladen“): Der Server gibt Bild-Links 10 Minuten aus
 // (anlage_url, 600 s). Früher wurde der Link für immer gemerkt – nach 10 Minuten blieb das Bild beim Neuzeichnen leer.
@@ -10073,12 +10091,12 @@ async function bildLaden(img, frisch = false) {
     img.src = bildCache[id].url;
   } catch {}
 }
-async function anlageOeffnen(id) { try { const r = await api("anlage_url", { id }); window.open(r.url, "_blank"); } catch (e) { melde(e.message, true); } }
+async function anlageOeffnen(id) { try { const r = await api("anlage_url", { id }); window.open(r.url, "_blank"); } catch (e) { meldeFehler(e); } }
 
 let ONLINE_SICHTBAR = true; // KC-CLUB-ONLINEFILTER: sehe ich überhaupt, wer online ist? (Server: onlineSichtbar)
 async function mitgliederHolen() { const r = await api("mitglieder"); MITGLIEDER = r.mitglieder; AEMTER = r.aemter; ONLINE_SICHTBAR = r.onlineSichtbar !== false; return r; }
 async function neueNachricht() {
-  if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return melde(e.message, true); }
+  if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return meldeFehler(e); }
   empfWahl = { personen: [], aemter: [], alle: false, vorstand: false }; $("neuBetreff").value = ""; $("empfSuche").value = "";
   zeige("neu"); empfListe(); neuGruppenZeigen("neuGruppen", true);
 }
@@ -10124,7 +10142,7 @@ function gruppeWahl(a) {
 // Direkt: Nachricht an mich selbst schreiben (kommt als Push/Mail so, wie unter Einstellungen → Benachrichtigungen eingestellt)
 async function testAnMichStarten() {
   ZW = { push: false, email: false, whatsapp: false }; CHAT = null; setTimeout(zustellZeigen, 0);
-  if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return melde(e.message, true); }
+  if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return meldeFehler(e); }
   empfWahl = { personen: [ICH.person_id], aemter: [], alle: false, vorstand: false };
   neuEntwurf = { empfaenger: { ...empfWahl }, betreff: "🧪 Test an mich" };
   chatId = null; zeige("chat"); chatStand = "";
@@ -10201,7 +10219,7 @@ async function whatsappWeitergeben(text, ids) {
 const GR_SYMBOLE = ["👥", "👨‍🍳", "🍳", "🎖️", "🧳", "🎉", "📋", "🍷", "⭐", "🏠"];
 let GR = null; // { id?, name, symbol, personen[], vorher[] }
 async function gruppeForm(chat) {
-  if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return melde(e.message, true); }
+  if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return meldeFehler(e); }
   const personen = chat ? chat.teilnehmer.map((t) => t.person_id).filter((id) => id !== ICH.person_id) : [];
   GR = { id: chat?.id || null, name: chat?.gruppe?.name || "", symbol: chat?.gruppe?.symbol || "👥", personen, vorher: [...personen], ersteller: chat?.gruppe?.erstellt_von || ICH.person_id };
   $("grTitel").textContent = GR.id ? "✏️ Gruppe bearbeiten" : "👥 Neue Gruppe";
@@ -10234,7 +10252,7 @@ async function gruppeSpeichern() {
       const r = await api("gruppe_anlegen", { name, symbol: GR.symbol, personen: GR.personen });
       melde(`✅ Gruppe „${name}“ angelegt – die Mitglieder wurden benachrichtigt`); chatOeffnen(r.id);
     }
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
   $("grKnopf").disabled = false;
 }
 // KC-CLUB-GRUPPE-LOESCHEN (1.3.0): Gruppe für alle auflösen (angelegt von mir oder Clubsprecher/Kassenwart/Admin)
@@ -10243,13 +10261,13 @@ async function gruppeLoeschen(gefragt) {
   const g = CHAT?.gruppe; if (!g || !chatId) return;
   if (!gefragt && await chatAblageFragen({ frage: "Vorher in dein persönliches Archiv ablegen?", ja: "Ja, ablegen – dann weiter", nein: "Nein, nur weiter", danach: () => gruppeLoeschen(true) })) return; // 1.19.0
   if (!(await frage(`Die Gruppe „${g.name}“ für ALLE löschen?\n\nAlle Nachrichten darin verschwinden bei allen ${CHAT.teilnehmer.length} Mitgliedern. Die anderen bekommen einen kurzen Hinweis.`))) return;
-  try { await api("gruppe_loeschen", { id: chatId }); melde(`🗑️ Gruppe „${g.name}“ gelöscht`); zeige("nachrichten"); neuLaden(); } catch (e) { melde(e.message, true); }
+  try { await api("gruppe_loeschen", { id: chatId }); melde(`🗑️ Gruppe „${g.name}“ gelöscht`); zeige("nachrichten"); neuLaden(); } catch (e) { meldeFehler(e); }
 }
 async function gruppeVerlassen(gefragt) {
   $("chatBlatt").classList.add("versteckt");
   if (CHAT?.gruppe && !gefragt && await chatAblageFragen({ frage: "Vorher in dein persönliches Archiv ablegen?", ja: "Ja, ablegen – dann weiter", nein: "Nein, nur weiter", danach: () => gruppeVerlassen(true) })) return; // 1.19.0
   if (!CHAT?.gruppe || !(await frage(`Die Gruppe „${CHAT.gruppe.name}“ verlassen? Du bekommst dann keine Nachrichten mehr daraus.`))) return;
-  try { await api("gruppe_verlassen", { id: CHAT.id }); melde("🚪 Gruppe verlassen"); zeige("nachrichten"); neuLaden(); } catch (e) { melde(e.message, true); }
+  try { await api("gruppe_verlassen", { id: CHAT.id }); melde("🚪 Gruppe verlassen"); zeige("nachrichten"); neuLaden(); } catch (e) { meldeFehler(e); }
 }
 
 // KC-CLUB-WICHTIG (1.53.0, Wunsch Hansi): ❗ = „Wichtigkeit hoch“ für die nächste Nachricht (gilt nur für diesen Chat)
@@ -10284,7 +10302,7 @@ async function senden() {
     if (ZW.whatsapp && text) whatsappWeitergeben(text, empfIds.filter((id) => id !== ICH.person_id));
     if (!chatId) { chatId = r.id; history.replaceState({ v: "chat", id: r.id, tiefe: history.state?.tiefe }, "", location.pathname + "#nachricht=" + r.id); clearInterval(chatTimer); chatTimer = setInterval(chatTakt, CHAT_TAKT_MS); }
     await chatLaden(true);
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
   $("sendenKnopf").disabled = false;
 }
 
@@ -10327,7 +10345,7 @@ function teilenWahl(text, dateien) {
 function teilenFotos() { document.getElementById("teilenBlatt")?.remove(); faFilter = {}; faPapierkorb = false; faGeteilt = TEILEN.dateien; zeige("fotos");
   melde(`📥 ${TEILEN.dateien.length} Foto${TEILEN.dateien.length > 1 ? "s" : ""} – Thema wählen und „Hochladen“ tippen`); }
 async function teilenChatWahl() {
-  let liste = []; try { liste = (await api("unterhaltungen", {}, { warten: true })).unterhaltungen || []; } catch (e) { return melde(e.message, true); }
+  let liste = []; try { liste = (await api("unterhaltungen", {}, { warten: true })).unterhaltungen || []; } catch (e) { return meldeFehler(e); }
   blattAuf("teilenBlatt", `<h3 style="margin-top:0">💬 In welchen Chat?</h3>
     <div style="display:grid;gap:6px">${liste.slice(0, 30).map((u) => `<button class="knopf" style="text-align:left" onclick="teilenInChat('${u.id}')">${u.gruppe ? esc(u.gruppe.symbol) + " " : ""}${esc(u.gruppe?.name || u.betreff || u.teilnehmer.join(", "))}</button>`).join("")}</div>
     <div class="knoepfe" style="margin-top:8px"><button class="knopf haupt" onclick="teilenInChat(null)">＋ Neue Nachricht</button><button class="knopf" onclick="document.getElementById('teilenBlatt').remove();TEILEN=null">Abbrechen</button></div>`);
@@ -10458,7 +10476,7 @@ function bfDatei() {
 async function bfWeiter(wohin) {
   const zielChat = BF.chat; // bfEnde() unten setzt es zurück
   if (wohin === "nochmal") { $("bfBlatt")?.remove(); BF.bild = null; return melde("📸 Bereit – Auslöser drücken, wenn du so weit bist."); }
-  let datei; try { datei = await bfDatei(); } catch (e) { return melde(e.message, true); }
+  let datei; try { datei = await bfDatei(); } catch (e) { return meldeFehler(e); }
   if (wohin === "speichern") {
     try { if (navigator.canShare?.({ files: [datei] })) { await navigator.share({ files: [datei], title: datei.name }); return; } } catch (e) { if (e?.name === "AbortError") return; }
     const a = document.createElement("a"); a.href = URL.createObjectURL(datei); a.download = datei.name; document.body.appendChild(a); a.click(); a.remove();
@@ -10614,7 +10632,7 @@ async function dateienGewaehlt(input) {
     try {
       const r = await anlageHochladen(roh);
       Object.assign(eintrag, { id: r.id, name: r.name, laedt: false });
-    } catch (e) { anlagen.splice(anlagen.indexOf(eintrag), 1); melde(e.message, true); }
+    } catch (e) { anlagen.splice(anlagen.indexOf(eintrag), 1); meldeFehler(e); }
     chipsZeigen();
   }
   input.value = "";
@@ -10634,7 +10652,7 @@ async function aktionenLaden() {
     $("aktionListe").innerHTML = (kommend.length ? `<div class="raster">${kommend.map(aktionKachel).join("")}</div>` : '<div class="karte hinweis">Zurzeit ist keine Aktion geplant.</div>')
       + (vorbei.length ? `<div class="abschnitt"><h3>Vergangene Aktionen</h3></div><div class="raster">${vorbei.map(aktionKachel).join("")}</div>` : "")
       + `<p class="hinweis" style="font-size:.85rem">Die Angaben kommen aus dem KC Manager${stand ? ` (Stand ${esc(zeitKurz(stand))})` : " – Stand unbekannt"}. Änderungen bitte dort eintragen.</p>`;
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 const fKurzJahr = new Intl.DateTimeFormat("de-DE", { timeZone: "UTC", day: "2-digit", month: "2-digit", year: "numeric" });
 function aktionZeitraum(a) {
@@ -10650,7 +10668,7 @@ function aktionKachel(a) {
 }
 async function aktionOeffnen(id, ausHistorie) {
   aktionId = id;
-  if (!AKTIONEN) { try { const r = await api("aktionen_liste"); AKTIONEN = r.aktionen; AKTIONEN_STAND = r.stand; } catch (e) { return melde(e.message, true); } }
+  if (!AKTIONEN) { try { const r = await api("aktionen_liste"); AKTIONEN = r.aktionen; AKTIONEN_STAND = r.stand; } catch (e) { return meldeFehler(e); } }
   const a = AKTIONEN.find((x) => x.id === id);
   if (!a) return zeige("aktionen", ausHistorie);
   zeige("aktion", ausHistorie);
@@ -10708,7 +10726,7 @@ async function protokolleLaden() {
     $("protokollListe").innerHTML = auf + neu + `<div class="abschnitt"><h3>📄 Protokolle</h3></div>` + suche
       + (protokolle.length ? `<div class="mini-kacheln">${protokolle.map(protokollKarte).join("")}</div>` : "") + (protokolle.length ? "" : '<div class="karte hinweis">Noch keine Protokolle. Nach der nächsten Sitzung erscheint sie oben unter „Protokoll schreiben“.</div>');
     klappenMerken($("protokollListe")); // 1.46.0: Klappbereiche mit Pfeil und Schloss wie überall
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 function protokollFilter() {
   const q = $("prSuche").value.toLowerCase();
@@ -10726,7 +10744,7 @@ function protokollKarte(p) {
 }
 async function protokollAnlegen(treffenId) {
   try { const r = await api("protokoll_vorlage", treffenId ? { treffen_id: treffenId } : { titel: (await eingabe("Wofür ist das Protokoll? (z. B. Jahreshauptversammlung)", "Sitzung des Köcheclubs")) || "" }); protokollOeffnen(r.id); }
-  catch (e) { melde(e.message, true); }
+  catch (e) { meldeFehler(e); }
 }
 async function protokollNeu() {
   if (prListe?.treffenOhneProtokoll?.length) return melde("Tipp: Oben bei der Sitzung auf „＋ Anlegen“ tippen – dann ist die Vorlage schon ausgefüllt.");
@@ -10824,7 +10842,7 @@ async function prSpeichernJetzt(vonHand) {
     if ($("prGespeichert")) $("prGespeichert").textContent = "✔ gespeichert";
     if (vonHand) melde("Gespeichert ✔");
     if (daten.verfasser !== PR.protokoll.verfasser.person_id) PR.protokoll.verfasser = { person_id: daten.verfasser, name: nameVon(daten.verfasser) };
-  } catch (e) { melde(e.message, true); throw e; }
+  } catch (e) { meldeFehler(e); throw e; }
 }
 async function prNeuLaden() {
   PR = await api("protokoll_laden", { id: prId }); aufgabenMitGruppe(PR.aufgaben || []);
@@ -10836,13 +10854,13 @@ async function protokollDateien(input) {
   for (const roh of dateien) {
     $("prAnlagen").insertAdjacentHTML("beforeend", `<p class="hinweis prlaedt">⏳ ${esc(roh.name)} wird hochgeladen …</p>`);
     try { const r = await anlageHochladen(roh); await api("protokoll_anlage", { id: prId, attachment_id: r.id }); melde("📎 " + r.name + " angehängt"); }
-    catch (e) { melde(e.message, true); }
+    catch (e) { meldeFehler(e); }
   }
-  try { await prNeuLaden(); } catch (e) { melde(e.message, true); }
+  try { await prNeuLaden(); } catch (e) { meldeFehler(e); }
 }
 async function protokollAnlageWeg(aid) {
   if (!(await frage("Diese Anlage aus dem Protokoll entfernen?"))) return;
-  try { await api("protokoll_anlage", { id: prId, attachment_id: aid, entfernen: true }); await prNeuLaden(); } catch (e) { melde(e.message, true); }
+  try { await api("protokoll_anlage", { id: prId, attachment_id: aid, entfernen: true }); await prNeuLaden(); } catch (e) { meldeFehler(e); }
 }
 // KC-CLUB-AUFGABEN-MEHRERE (0.53.0): „Wer?“ per Häkchen – bei mehreren bekommt jeder seine eigene (verknüpfte) Aufgabe
 let AUF_WER = [];
@@ -10855,7 +10873,7 @@ async function aufgabeHinzu() {
   if (!AUF_WER.length || !text) return melde("Bitte „Wer?“ und „Was?“ ausfüllen.", true);
   try { await api("aufgabe_speichern", { protokoll_id: prId, person_ids: AUF_WER, text, faellig: $("aufBis").value });
     const n = AUF_WER.length; AUF_WER = []; if ($("aufWer")) $("aufWer").textContent = "👉 bitte wählen"; $("aufWas").value = ""; $("aufBis").value = ""; await prNeuLaden(); melde(n > 1 ? `Aufgabe für ${n} Personen eingetragen` : "Aufgabe eingetragen"); }
-  catch (e) { melde(e.message, true); }
+  catch (e) { meldeFehler(e); }
 }
 // gemeinsame Aufgaben: bei jeder Zeile die anderen Beteiligten nennen
 function aufgabenMitGruppe(liste) {
@@ -10870,7 +10888,7 @@ async function aufgabeErledigt(id, erledigt) {
     else if (aktuelleAnsicht === "buero" && BU.sicht === "nachher") await buNachherNeu(); // KC-CLUB-BUERO-NACHHER
     else if (aktuelleAnsicht === "protokolle") protokolleLaden();
     neuLaden();
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 async function aufgabeLoeschen(id) {
   if (!(await frage("Aufgabe löschen?"))) return;
@@ -10880,14 +10898,14 @@ async function aufgabeLoeschen(id) {
     else if (aktuelleAnsicht === "buero" && BU.sicht === "nachher") await buNachherNeu(); // KC-CLUB-BUERO-NACHHER
     else protokolleLaden();
     neuLaden();
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 async function protokollVeroeffentlichen() {
   try { await prSpeichernJetzt(false); } catch { return; }
   if (!PR.anlagen.length && !$("prK").value.trim() && !(await frage("Es ist noch kein Foto und keine Datei angehängt. Trotzdem veröffentlichen?"))) return;
   if (!(await frage("Protokoll jetzt veröffentlichen? Alle Mitglieder (ohne Aushilfen) bekommen Bescheid und haben 7 Tage Zeit für Einwände."))) return;
   try { const r = await api("protokoll_veroeffentlichen", { id: prId }); melde(`📢 Veröffentlicht – Einwände bis ${fKurz.format(new Date(r.einspruch_bis))}`); protokollOeffnen(prId, true); }
-  catch (e) { melde(e.message, true); }
+  catch (e) { meldeFehler(e); }
 }
 async function protokollLoeschen(id, veroeffentlicht) {
   id = id || prId;
@@ -10898,7 +10916,7 @@ async function protokollLoeschen(id, veroeffentlicht) {
     await api("protokoll_loeschen", { id }); if (id === prId) PR = null; melde("🗑️ Gelöscht");
     if (aktuelleAnsicht === "protokolle") protokolleLaden(); else zeige("protokolle");
     neuLaden();
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 function protokollLesen() {
   const p = PR.protokoll, einspruchOffen = p.einspruch_bis && new Date(p.einspruch_bis) > new Date() && p.roh === "veroeffentlicht";
@@ -10934,18 +10952,18 @@ function protokollLesen() {
 async function einwandSchreiben() {
   const text = (await eingabe("Was stimmt im Protokoll nicht? (Der Schriftführer und Clubsprecher/Kassenwart bekommen Bescheid.)"));
   if (!text || !text.trim()) return;
-  try { await api("protokoll_einwand", { id: prId, text }); melde("Einwand gesendet"); protokollOeffnen(prId, true); } catch (e) { melde(e.message, true); }
+  try { await api("protokoll_einwand", { id: prId, text }); melde("Einwand gesendet"); protokollOeffnen(prId, true); } catch (e) { meldeFehler(e); }
 }
 async function einwandLoeschen(id) {
   if (!(await frage("Diesen Einwand löschen?"))) return;
-  try { await api("einwand_loeschen", { id }); melde("🗑️ Gelöscht"); protokollOeffnen(prId, true); } catch (e) { melde(e.message, true); }
+  try { await api("einwand_loeschen", { id }); melde("🗑️ Gelöscht"); protokollOeffnen(prId, true); } catch (e) { meldeFehler(e); }
 }
 async function einwandErledigt(id) {
-  try { await api("einwand_erledigt", { id }); protokollOeffnen(prId, true); } catch (e) { melde(e.message, true); }
+  try { await api("einwand_erledigt", { id }); protokollOeffnen(prId, true); } catch (e) { meldeFehler(e); }
 }
 async function protokollKorrigieren() {
   if (!(await frage("Protokoll korrigieren? Die jetzige Fassung bleibt im Archiv erhalten. Nach dem erneuten Veröffentlichen beginnen die 7 Tage Einspruch von vorn."))) return;
-  try { await api("protokoll_korrigieren", { id: prId }); protokollOeffnen(prId, true); } catch (e) { melde(e.message, true); }
+  try { await api("protokoll_korrigieren", { id: prId }); protokollOeffnen(prId, true); } catch (e) { meldeFehler(e); }
 }
 
 // ---------- Mitglieder (+ Admin: Links und Ämter) ----------
@@ -10982,7 +11000,7 @@ function mgKachelnHtml(liste) {
 let MG_GRUPPEN = [], MG_GRUPPE = null;
 function mgGruppeSetzen(id) { MG_GRUPPE = MG_GRUPPE === id ? null : id; mitgliederZeichnen(); }
 async function mitgliederLaden() {
-  try { await mitgliederHolen(); mitgliederZeichnen(); } catch (e) { melde(e.message, true); }
+  try { await mitgliederHolen(); mitgliederZeichnen(); } catch (e) { meldeFehler(e); }
   try { MG_GRUPPEN = ((await api("unterhaltungen", {})).unterhaltungen || []).filter((u) => u.gruppe && Array.isArray(u.personen)); } catch { MG_GRUPPEN = []; }
   if (MG_GRUPPE && !MG_GRUPPEN.some((g) => g.id === MG_GRUPPE)) MG_GRUPPE = null;
   if (MITGLIEDER) mitgliederZeichnen();
@@ -11013,7 +11031,7 @@ function mitgliederZeichnen() {
       ${ICH.admin ? `<button class="knopf klein" onclick="linkTeilen('${m.person_id}')">🔗</button><button class="knopf klein" title="Einrichtungskarte drucken" onclick="einrichtungskarte('${m.person_id}')">🖨️</button><button class="knopf klein" onclick="rolleBearbeiten('${m.person_id}')">🎖️</button>` : ""}</div>`).join("")
       + '<p class="hinweis">Namen antippen für Details (Telefon, Adresse … sofern freigegeben).</p>'
       + (ICH.admin ? '<p class="hinweis">🔗 = persönlichen App-Link erzeugen und per WhatsApp schicken (ein neuer Link macht den alten ungültig). 🎖️ = Amt und Rechte.</p>' : "");
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 // KC-CLUB-WIEDERHOLUNG (1.1.0): Auswahl „🔁 Wiederholen“ für private Termine und Club-Terminreihen
 const WDH_WAHL = [["keine", "nicht wiederholen"], ["taeglich", "täglich"], ["werktags", "werktags (Mo–Fr)"], ["woechentlich", "wöchentlich"], ["zweiwoechentlich", "alle 2 Wochen"],
@@ -11081,12 +11099,12 @@ async function privatSpeichern(id) {
     await api("privattermin_speichern", { id: id || undefined, titel, beginn, ende, ganztaegig: ganz, ort: $("ptOrt").value.trim(), notiz: $("ptNotiz").value.trim(), erinnerung_min: Number($("ptErinnerung").value),
       wiederholung: $("ptWdh").value, wiederholung_bis: $("ptWdh").value !== "keine" ? $("ptWdhBis").value || null : null });
     $("treffenForm").classList.add("versteckt"); melde("🔒 Privater Termin gespeichert – nur du siehst ihn"); treffenLaden();
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 async function privatLoeschen(id, reihe) {
   if (reihe && PT.vorkommen) return privatLoeschenReihe(id);
   if (!(await frage("Diesen privaten Termin löschen?"))) return;
-  try { await api("privattermin_loeschen", { id }); PT.map.delete(id); $("treffenForm").classList.add("versteckt"); melde("🗑️ Gelöscht"); treffenLaden(); } catch (e) { melde(e.message, true); }
+  try { await api("privattermin_loeschen", { id }); PT.map.delete(id); $("treffenForm").classList.add("versteckt"); melde("🗑️ Gelöscht"); treffenLaden(); } catch (e) { meldeFehler(e); }
 }
 // Reihe: nur diesen einen Termin oder die ganze Reihe?
 function privatLoeschenReihe(id) {
@@ -11102,7 +11120,7 @@ function privatLoeschenReihe(id) {
 async function privatLoeschenTun(id, tag) {
   document.getElementById("ptLoeschFenster")?.remove();
   try { await api("privattermin_loeschen", { id, ...(tag ? { nur_tag: tag } : {}) }); if (!tag) PT.map.delete(id); $("treffenForm").classList.add("versteckt");
-    melde(tag ? "🗑️ Dieser eine Termin ist gelöscht – die Reihe bleibt" : "🗑️ Ganze Reihe gelöscht"); treffenLaden(); } catch (e) { melde(e.message, true); }
+    melde(tag ? "🗑️ Dieser eine Termin ist gelöscht – die Reihe bleibt" : "🗑️ Ganze Reihe gelöscht"); treffenLaden(); } catch (e) { meldeFehler(e); }
 }
 
 // KC-CLUB-NEU-EINHEITLICH (1.46.0, Wunsch Hansi „überall das gleiche Bedienkonzept“): EIN „＋ Neu“ oben rechts –
@@ -11157,12 +11175,12 @@ async function taAntwort(id, antwort) {
     if (r === null) return; notiz = r.trim().slice(0, 300);
   }
   try { await api("terminanfrage_antwort", { id, antwort, notiz }); melde(antwort === "keine" ? "↩️ Antwort zurückgenommen" : `${TA_ANTW[antwort]} – ist gemeldet`); TA.markiert = id; await taLaden(); neuLaden(); }
-  catch (e) { melde(e.message, true); }
+  catch (e) { meldeFehler(e); }
 }
 async function taAbsagen(id) {
   const grund = (await eingabe("Anfrage absagen? Alle, die nicht schon Nein gesagt haben, bekommen Bescheid.\n\nGrund (freiwillig):", ""));
   if (grund === null) return;
-  try { await api("terminanfrage_absagen", { id, grund: grund.trim() }); melde("🚫 Abgesagt – Bescheid ist raus"); await taLaden(); } catch (e) { melde(e.message, true); }
+  try { await api("terminanfrage_absagen", { id, grund: grund.trim() }); melde("🚫 Abgesagt – Bescheid ist raus"); await taLaden(); } catch (e) { meldeFehler(e); }
 }
 async function taGruppen() {
   if (TA.gruppen.length) return TA.gruppen;
@@ -11171,7 +11189,7 @@ async function taGruppen() {
 }
 function taAusZentrale() { taForm({ personen: ZE.gruppe ? [] : [...ZE.personen], gruppe: ZE.gruppe ? { ...ZE.gruppe } : null }); }
 async function taForm(vorwahl) {
-  try { await zeMitglieder(); } catch (e) { return melde(e.message, true); }
+  try { await zeMitglieder(); } catch (e) { return meldeFehler(e); }
   await taGruppen();
   if (!TR_ORTE.length) try { orteMerken((await api("treffen_liste")).treffen); } catch {}
   TA.wahl = { personen: [...(vorwahl?.personen || [])], gruppe: vorwahl?.gruppe || null };
@@ -11226,7 +11244,7 @@ async function taSenden() {
     $("terminanfrageForm").classList.add("versteckt");
     melde(`📨 Anfrage an ${r.empfaenger} ${r.empfaenger === 1 ? "Mitglied" : "Mitglieder"} gesendet`);
     TA.markiert = r.id; taLaden();
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 
 // ---------- KC-CLUB-STANDORT (0.92.0) ----------
@@ -11270,7 +11288,7 @@ async function stEinmal() {
     const text = `📍 Mein Standort (${fZeit.format(new Date())} Uhr${gen ? `, ± ${gen} m` : ""}):\n${stKarte(lat, lon)}`;
     await api("nachricht_senden", w.gruppe ? { id: w.gruppe.id, text } : { empfaenger: { personen: w.personen, aemter: [], alle: false, vorstand: false }, text });
     melde(`📍 Standort an ${stWahlText(w)} gesendet`);
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 async function stLive(minuten) {
   const w = ST.wahl; document.getElementById("stFenster")?.remove();
@@ -11280,7 +11298,7 @@ async function stLive(minuten) {
     ST.eigen = { id: r.id, bis: r.bis, an: stWahlText(w) }; ST.letzteMeldung = Date.now();
     try { localStorage.setItem("kc_club_standort_eigen", JSON.stringify(ST.eigen)); } catch {}
     stVerfolgen(); melde(`🔴 Du teilst deinen Standort mit ${ST.eigen.an}`);
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 function stVerfolgen() {
   stBalken();
@@ -11305,7 +11323,7 @@ function stAus(meldung) {
   if (aktuelleAnsicht === "standort") stLaden();
 }
 async function stBeenden() {
-  try { await api("standort_ende"); } catch (e) { return melde(e.message, true); }
+  try { await api("standort_ende"); } catch (e) { return meldeFehler(e); }
   stAus("📍 Standort teilen beendet – dein Standort ist gelöscht");
 }
 function stBalken() {
@@ -11348,7 +11366,7 @@ async function terminfindungLaden() {
     // 1.46.0: als Klappbereich mit Pfeil und Schloss (wie überall)
     $("terminfindung").innerHTML = UMFRAGEN.length ? `<details class="karte tm-klappe" data-klappe="tm_umfragen" data-ohne-unten open><summary>🗓️ Terminfindung <span class="marke">${UMFRAGEN.length}</span></summary>${UMFRAGEN.map(umfrageKarte).join("")}</details>` : "";
     klappenMerken($("terminfindung"));
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 function umfrageKarte(u) {
   const punkte = (o) => o.ja.length * 2 + o.vielleicht.length;
@@ -11372,17 +11390,17 @@ function umfrageKarte(u) {
     ${u.darfLoeschen ? `<div class="knoepfe"><button class="knopf klein" onclick="umfrageLoeschen('${u.id}')">🗑️ Löschen</button></div>` : ""}</div>`;
 }
 async function umfrageAntwort(optionId, antwort) {
-  try { await api("terminumfrage_antwort", { option_id: optionId, antwort }); await terminfindungLaden(); neuLaden(); } catch (e) { melde(e.message, true); }
+  try { await api("terminumfrage_antwort", { option_id: optionId, antwort }); await terminfindungLaden(); neuLaden(); } catch (e) { meldeFehler(e); }
 }
 async function umfrageFestlegen(id, optionId) {
   const u = UMFRAGEN.find((x) => x.id === id), o = u?.optionen.find((x) => x.id === optionId);
   if (!o || !(await frage(`„${u.titel}“ auf ${wann(o.beginn)} festlegen?\n\nDer Termin wird angelegt, alle bekommen die Einladung. Wer „passt“ angekreuzt hat, ist schon zugesagt.`))) return;
   try { const r = await api("terminumfrage_festlegen", { id, option_id: optionId }); melde(`📅 Festgelegt${r.versand ? ` – ${r.versand.gesendet} Mitglieder benachrichtigt` : ""}`); treffenLaden(); neuLaden(); }
-  catch (e) { melde(e.message, true); }
+  catch (e) { meldeFehler(e); }
 }
 async function umfrageLoeschen(id) {
   if (!(await frage("Diese Terminfindung endgültig löschen? Alle Antworten gehen mit verloren. Eine Sicherung bleibt im Änderungsprotokoll."))) return;
-  try { await api("terminumfrage_loeschen", { id }); melde("🗑️ Gelöscht"); terminfindungLaden(); neuLaden(); } catch (e) { melde(e.message, true); }
+  try { await api("terminumfrage_loeschen", { id }); melde("🗑️ Gelöscht"); terminfindungLaden(); neuLaden(); } catch (e) { meldeFehler(e); }
 }
 let tuArt = "treffen";
 const tuReihe = () => `<div class="zwei tuReihe"><label class="feld">Datum<input type="date" class="tuDatum"></label><label class="feld">Uhrzeit<input type="time" class="tuZeit" value="18:00"></label></div>`;
@@ -11413,7 +11431,7 @@ async function umfrageSpeichern() {
   try {
     const r = await api("terminumfrage_speichern", { titel: $("tuTitel").value, ort: $("tuOrt").value, beschreibung: $("tuBeschr").value, art: tuArt, optionen, frist, benachrichtigen: $("tuInfo").checked });
     $("terminumfrageForm").classList.add("versteckt"); melde(`🗓️ Gestartet${r.versand ? ` – ${r.versand.gesendet} Mitglieder benachrichtigt` : ""}`); terminfindungLaden();
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 
 // ---------- Mitfahrgelegenheiten (KC-CLUB-MITFAHREN) ----------
@@ -11489,7 +11507,7 @@ function mfBescheidFenster(art, bezugId, titel) {
 async function mfBescheidJa(art, bezugId) {
   $("mfBescheid")?.remove();
   try { await api("mitfahrt_suchen", { bezug_art: art, bezug_id: bezugId, an: true }, { warten: true }); melde("👀 Mach ich – du bekommst Bescheid, sobald jemand eine Mitfahrgelegenheit einstellt."); mitfahrtNeuLaden(art); }
-  catch (e) { melde(e.message, true); }
+  catch (e) { meldeFehler(e); }
 }
 // Schnellstart „🚗 Mitfahrt“: nach dem Sprung zum nächsten Treffen nachsehen – keine Fahrt mit freiem Platz → Meldungsfenster
 async function mfNaechstesPruefen(id) {
@@ -11501,7 +11519,7 @@ async function mfNaechstesPruefen(id) {
 }
 async function mitfahrtSuchen(art, bezugId, an) {
   try { const r = await api("mitfahrt_suchen", { bezug_art: art, bezug_id: bezugId, an }); melde(an ? `🙋 Eingetragen${r.fahrerBenachrichtigt ? ` – ${r.fahrerBenachrichtigt === 1 ? "ein Fahrer weiß" : r.fahrerBenachrichtigt + " Fahrer wissen"} Bescheid` : " – wer eine Fahrt anbietet, bekommt Bescheid"}` : "Suche zurückgenommen"); mitfahrtNeuLaden(art); }
-  catch (e) { melde(e.message, true); }
+  catch (e) { meldeFehler(e); }
 }
 async function mitfahrtNeuLaden(art) { if (art === "aktion") { AKTIONEN = null; aktionOeffnen(aktionId, true); } else treffenLaden(); }
 // KC-CLUB-DIALOG (1.46.0): Mitfahrt anbieten in EINEM Fenster – Plätze antippen (1–8), Treffpunkt dazu
@@ -11516,14 +11534,14 @@ function mitfahrtAnbieten(art, bezugId, plaetze, treffpunkt) {
 async function mitfahrtAnbietenSpeichern(art, bezugId, knopf) {
   knopf.disabled = true;
   try { await api("mitfahrt_anbieten", { bezug_art: art, bezug_id: bezugId, plaetze: Number(window.__mfP), treffpunkt: $("mfTreff").value.trim() }); $("mfAnbieten").remove(); melde("🚗 Eingetragen"); mitfahrtNeuLaden(art); }
-  catch (e) { melde(e.message, true); knopf.disabled = false; }
+  catch (e) { meldeFehler(e); knopf.disabled = false; }
 }
 async function mitfahrtPlatz(id, dabei) {
-  try { await api("mitfahrt_platz", { id, dabei }); melde(dabei ? "🚗 Du fährst mit – der Fahrer weiß Bescheid" : "Abgemeldet"); mitfahrtNeuLaden(aktuelleAnsicht === "aktion" ? "aktion" : "treffen"); } catch (e) { melde(e.message, true); }
+  try { await api("mitfahrt_platz", { id, dabei }); melde(dabei ? "🚗 Du fährst mit – der Fahrer weiß Bescheid" : "Abgemeldet"); mitfahrtNeuLaden(aktuelleAnsicht === "aktion" ? "aktion" : "treffen"); } catch (e) { meldeFehler(e); }
 }
 async function mitfahrtLoeschen(id, art) {
   if (!(await frage("Diese Mitfahrgelegenheit löschen? Wer schon mitfährt, bekommt Bescheid."))) return;
-  try { await api("mitfahrt_loeschen", { id }); melde("🗑️ Gelöscht"); mitfahrtNeuLaden(art); } catch (e) { melde(e.message, true); }
+  try { await api("mitfahrt_loeschen", { id }); melde("🗑️ Gelöscht"); mitfahrtNeuLaden(art); } catch (e) { meldeFehler(e); }
 }
 
 // ---------- Handy-Kalender (KC-CLUB-KALENDERABO) ----------
@@ -11584,14 +11602,14 @@ function kalenderAboZeigen(url) {
 async function kalenderAbo() {
   nzZaehlen("kalender_abo");
   if (INIT?.kalenderAbo && !(await frage("Neuen Kalender-Link erzeugen? Der alte Link funktioniert dann nicht mehr (z. B. auf einem alten Handy)."))) return;
-  try { const r = await api("kalender_abo"); INIT.kalenderAbo = { erstellt_am: new Date().toISOString(), zuletzt_abgerufen: null }; kalenderAboZeigen(r.url); } catch (e) { melde(e.message, true); }
+  try { const r = await api("kalender_abo"); INIT.kalenderAbo = { erstellt_am: new Date().toISOString(), zuletzt_abgerufen: null }; kalenderAboZeigen(r.url); } catch (e) { meldeFehler(e); }
 }
 
 // ---------- Notfallkontakt (KC-CLUB-NOTFALL) ----------
 function notfallZeigen() { const n = INIT?.notfall || {}; $("nfName").value = n.name || ""; $("nfTel").value = n.telefon || ""; $("nfBez").value = n.beziehung || ""; }
 async function notfallSpeichern() {
   const d = { name: $("nfName").value, telefon: $("nfTel").value, beziehung: $("nfBez").value };
-  try { await api("notfall_setzen", d); INIT.notfall = d.name || d.telefon ? d : null; melde(d.name || d.telefon ? "🆘 Notfallkontakt gespeichert" : "Notfallkontakt entfernt"); } catch (e) { melde(e.message, true); }
+  try { await api("notfall_setzen", d); INIT.notfall = d.name || d.telefon ? d : null; melde(d.name || d.telefon ? "🆘 Notfallkontakt gespeichert" : "Notfallkontakt entfernt"); } catch (e) { meldeFehler(e); }
 }
 
 // ---------- Fotoalbum (KC-CLUB-FOTOALBUM) ----------
@@ -11716,12 +11734,12 @@ async function faInsAlbum(id) {
     melde(`📸 ${r.hinzu} Foto${r.hinzu === 1 ? "" : "s"} in „${a?.name || "Album"}“${r.hinzu < ids.length ? " (Rest war schon drin)" : ""}`);
     if (FAW.ziel === id) return albumOeffnen(id, faHerkunft); // fertig hinzugefügt → Album zeigen
     FAW.ids.clear(); faWaehlen(false); fotosLaden();
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 async function faAusAlbum() {
   const a = FA?.album, ids = [...FAW.ids]; if (!a || !ids.length) return;
   if (!(await frage(`${ids.length} Foto${ids.length === 1 ? "" : "s"} aus „${a.name}“ entfernen?\nDie Fotos bleiben im Fotoalbum – nur nicht mehr in diesem Album.`, { gefahr: false, ja: "➖ Aus Album nehmen" }))) return;
-  try { await api("foto_album_fotos", { album_id: a.id, weg: ids }); melde("➖ Aus dem Album genommen"); faWaehlen(false); fotosLaden(); } catch (e) { melde(e.message, true); }
+  try { await api("foto_album_fotos", { album_id: a.id, weg: ids }); melde("➖ Aus dem Album genommen"); faWaehlen(false); fotosLaden(); } catch (e) { meldeFehler(e); }
 }
 function faEinzelnInsAlbum() { const f = FA?.fotos[faIndex]; if (!f) return; FAW.ids = new Set([f.id]); FAW.ziel = null; faAlbumWahl(); }
 // Album anlegen oder ändern: Name, Jahr, Sichtbarkeit (nur der Besitzer), Deckblatt (aus dem Album)
@@ -11749,7 +11767,7 @@ function faAlbumForm(id = null, fotos = []) {
       melde(`📸 Album „${name}“ angelegt${r.hinzu ? ` mit ${r.hinzu} Foto${r.hinzu === 1 ? "" : "s"}` : ""}`);
       if (fotos.length) return albumOeffnen(r.id);
       await fotosLaden(); faFotosHinzu(r.id); // leeres Album → gleich Fotos antippen
-    } catch (e) { melde(e.message, true); }
+    } catch (e) { meldeFehler(e); }
   };
   setTimeout(() => $("faAName")?.focus(), 50);
 }
@@ -11757,7 +11775,7 @@ async function faAlbumLoeschen(id) {
   const a = faAlbum(id) || FA?.album; if (!a) return;
   if (!(await frage(`Album „${a.name}“ löschen?\nDie Fotos bleiben im Fotoalbum. Das Album liegt 30 Tage im Papierkorb und lässt sich zurückholen.`))) return;
   try { await api("foto_album_loeschen", { id }); melde("🗑️ Album gelöscht – unter „📸 Alben → 🗑️ Gelöschte“ zurückholbar"); faFilter = {}; const her = faHerkunft; faHerkunft = ""; if (her === "archiv") { AR.daten = null; return zeige("archiv"); } fotosLaden(); }
-  catch (e) { melde(e.message, true); }
+  catch (e) { meldeFehler(e); }
 }
 async function faAlbenKorb() {
   try {
@@ -11766,12 +11784,12 @@ async function faAlbenKorb() {
       ${r.alben.length ? r.alben.map((a) => `<div class="zeile">📸 <span style="flex:1"><b>${esc(a.name)}</b> ${a.jahr}</span><button class="knopf klein" data-zurueck="${a.id}">♻️ Zurückholen</button></div>`).join("") : '<p class="hinweis">Keine gelöschten Alben.</p>'}
       <div class="knoepfe"><button class="knopf" data-zu="1">Schließen</button></div>`);
     f.querySelector("[data-zu]").onclick = () => f.remove();
-    f.querySelectorAll("[data-zurueck]").forEach((b) => (b.onclick = async () => { try { await api("foto_album_wiederherstellen", { id: b.dataset.zurueck }); f.remove(); melde("♻️ Album ist wieder da"); fotosLaden(); } catch (e) { melde(e.message, true); } }));
-  } catch (e) { melde(e.message, true); }
+    f.querySelectorAll("[data-zurueck]").forEach((b) => (b.onclick = async () => { try { await api("foto_album_wiederherstellen", { id: b.dataset.zurueck }); f.remove(); melde("♻️ Album ist wieder da"); fotosLaden(); } catch (e) { meldeFehler(e); } }));
+  } catch (e) { meldeFehler(e); }
 }
 async function fotoWiederherstellen(id) {
   if (!(await frage("Dieses Foto aus dem Papierkorb zurückholen?"))) return;
-  try { await api("foto_wiederherstellen", { id }); melde("♻️ Foto ist wieder im Album"); fotosLaden(); } catch (e) { melde(e.message, true); }
+  try { await api("foto_wiederherstellen", { id }); melde("♻️ Foto ist wieder im Album"); fotosLaden(); } catch (e) { meldeFehler(e); }
 }
 
 // Hochladen: mehrere Fotos auf einmal, gemeinsames Thema/Anlass; Datum je Foto aus den Bilddaten (EXIF)
@@ -11906,7 +11924,7 @@ async function fotoAnsehen(i, blaettern) {
   try {
     if (!faUrl.has(f.id)) faUrl.set(f.id, (await api("foto_oeffnen", { id: f.id })).url);
     if (faIndex === i) $("fbBild").src = faUrl.get(f.id);
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 // KC-CLUB-FOTO-META (0.45.0): Foto antippen (oder ℹ️) → Aufnahmedaten: wann, wo, Kamera, Belichtung, Größe, wer hochgeladen hat
 function fotoDetails(an) {
@@ -11941,7 +11959,7 @@ async function fotoOrtLaden(f) {
 }
 async function fotoOrtEntfernen() {
   const f = FA?.fotos?.[faIndex]; if (!f || !(await frage("Den Aufnahmeort bei diesem Foto für alle entfernen?\n\nDas lässt sich nicht rückgängig machen."))) return;
-  try { const r = await api("foto_ort", { id: f.id, entfernen: true }); f.meta = r.meta; melde("🚫 Ort entfernt"); fotoDetails(true); } catch (e) { melde(e.message, true); }
+  try { const r = await api("foto_ort", { id: f.id, entfernen: true }); f.meta = r.meta; melde("🚫 Ort entfernt"); fotoDetails(true); } catch (e) { meldeFehler(e); }
 }
 function fotoBlaettern(r) { const n = faIndex + r; if (FA && n >= 0 && n < FA.fotos.length) fotoAnsehen(n, true); }
 function fotoSchliessen(ausHistorie) {
@@ -11952,7 +11970,7 @@ function fotoSchliessen(ausHistorie) {
 async function fotoSpeichern() {
   const f = FA.fotos[faIndex];
   try { const r = await api("foto_oeffnen", { id: f.id, herunterladen: true }); const a = document.createElement("a"); a.href = r.url; a.download = r.name; document.body.appendChild(a); a.click(); a.remove(); melde("⬇️ Foto wird gespeichert"); }
-  catch (e) { melde(e.message, true); }
+  catch (e) { meldeFehler(e); }
 }
 async function fotoTeilen() {
   const f = FA.fotos[faIndex];
@@ -11979,7 +11997,7 @@ async function fotoAendern() {
     await api("foto_aendern", { id: f.id, thema, datum: $("fbDatum").value, beschreibung: $("fbBeschr").value, bezug_art: ba || null, bezug_id: ba ? bid.join("|") : null });
     Object.assign(f, { thema, datum: $("fbDatum").value, beschreibung: $("fbBeschr").value.trim(), bezug_art: ba || null, bezug_id: ba ? bid.join("|") : null });
     melde("Gespeichert ✔"); fotoAnsehen(faIndex);
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 async function fotoLoeschen() {
   const f = FA.fotos[faIndex];
@@ -11989,7 +12007,7 @@ async function fotoLoeschen() {
     FA.fotos.splice(faIndex, 1); melde("🗑️ Foto gelöscht");
     if (!FA.fotos.length) { fotoSchliessen(); fotosLaden(); return; }
     fotoAnsehen(Math.min(faIndex, FA.fotos.length - 1));
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 (function fotoWischen() {
   let x0 = null;
@@ -12087,7 +12105,7 @@ function druckHtml(vorschau) {
     <style>${css.replace(/@media print\s*\{/, "@media all {")} #druck{display:block!important} ${extra}</style></head><body>${$("druck").outerHTML}</body></html>`;
 }
 async function druckVorschau() {
-  try { if (!(await druckSeiteBauen())) return; } catch (e) { return melde(e.message, true); }
+  try { if (!(await druckSeiteBauen())) return; } catch (e) { return meldeFehler(e); }
   druckZu();
   const v = $("druckVorschau"), rahmen = $("druckVorschauRahmen");
   $("druckVorschauTitel").textContent = DRUCK.titel || "Vorschau";
@@ -12330,16 +12348,16 @@ async function fbSenden() {
     await api("feedback_senden", { antworten: FB.a, idee: FB.idee, mitteilung: FB.mitteilung, anonym: FB.anonym });
     FB.gesendet = new Date().toISOString(); FB.schritt = 0; fbZeigen(); scrollTo(0, 0);
     melde("🙏 Danke! Dein Feedback ist angekommen.");
-  } catch (e) { $("fbSenden").disabled = false; melde(e.message, true); }
+  } catch (e) { $("fbSenden").disabled = false; meldeFehler(e); }
 }
 // KC-CLUB-FEEDBACK-NEU: eigene Antworten löschen und neu anfangen / (Admin) neue Runde für alle – der Server sichert vorher eine Kopie
 async function fbNeu() {
   if (!(await frage("Neues Feedback starten?\n\nDeine bisherigen Antworten werden gelöscht und du fängst von vorn an."))) return;
-  try { await api("feedback_neu"); melde("🆕 Alte Antworten gelöscht – viel Spaß beim neuen Feedback!"); await fbLaden(); } catch (e) { melde(e.message, true); }
+  try { await api("feedback_neu"); melde("🆕 Alte Antworten gelöscht – viel Spaß beim neuen Feedback!"); await fbLaden(); } catch (e) { meldeFehler(e); }
 }
 async function fbRundeNeu(anzahl) {
   if (!(await frage(`Neue Feedback-Runde für alle starten?\n\nAlle ${anzahl} bisherigen Antworten werden gelöscht (eine Sicherungskopie bleibt im Archiv). Die Auswertung beginnt wieder bei null.`))) return;
-  try { const r = await api("feedback_runde_neu"); melde(`🆕 Neue Runde gestartet – ${r.geloescht} alte Antworten gelöscht`); await fbAuswertung(); } catch (e) { melde(e.message, true); }
+  try { const r = await api("feedback_runde_neu"); melde(`🆕 Neue Runde gestartet – ${r.geloescht} alte Antworten gelöscht`); await fbAuswertung(); } catch (e) { meldeFehler(e); }
 }
 async function fbAuswertung() {
   const el = $("feedbackInhalt"); el.innerHTML = '<div class="karte hinweis">Auswertung wird geladen …</div>';
@@ -12562,7 +12580,7 @@ async function korrekturMelden() {
     if (!admins.length) return melde("Kein Admin gefunden – bitte " + adminName() + " direkt Bescheid geben.", true);
     await api("nachricht_senden", { empfaenger: { personen: admins, aemter: [], alle: false, vorstand: false }, betreff: "📝 Korrektur meiner Daten", text: text.trim() });
     melde("📝 Danke – deine Korrektur ist bei " + adminName() + " angekommen");
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 // Einstellungen → Privatsphäre: was dürfen andere Mitglieder sehen?
 function kontaktSchalterZeigen() {
@@ -12571,12 +12589,12 @@ function kontaktSchalterZeigen() {
 }
 async function kontaktFreigabe(feld, an) {
   try { await api("kontakt_freigabe", { feld, erlaubt: an }); if (INIT) INIT.kontaktFreigabe = { ...(INIT.kontaktFreigabe || {}), [feld]: an }; melde(an ? `${KONTAKT_NAMEN[feld]}: für Mitglieder sichtbar` : `${KONTAKT_NAMEN[feld]}: nicht mehr sichtbar`); }
-  catch (e) { melde(e.message, true); $("setKontakt_" + feld).checked = !an; }
+  catch (e) { meldeFehler(e); $("setKontakt_" + feld).checked = !an; }
 }
 
 // Gratulieren (aus dem Geburtstags-Push, Kalender, Liste oder „Heute wichtig“): Chat mit vorbereitetem Glückwunsch
 async function gratulieren(pid, ohneFrage) {
-  if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return melde(e.message, true); }
+  if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return meldeFehler(e); }
   const m = MITGLIEDER.find((x) => x.person_id === pid);
   if (!m || pid === ICH?.person_id) return;
   if (!ohneFrage && !(await frage(`🎂 ${m.name} hat heute Geburtstag.\n\nMöchtest du gratulieren?`))) return;
@@ -12586,7 +12604,7 @@ async function gratulieren(pid, ohneFrage) {
 }
 async function direkt(pid) {
   ZW = { push: false, email: false, whatsapp: false }; CHAT = null; setTimeout(zustellZeigen, 0);
-  if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return melde(e.message, true); }
+  if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return meldeFehler(e); }
   empfWahl = { personen: [pid], aemter: [], alle: false, vorstand: false }; $("neuBetreff").value = ""; neuEntwurf = { empfaenger: { ...empfWahl }, betreff: "" };
   chatId = null; zeige("chat"); chatStand = ""; const m = MITGLIEDER.find((x) => x.person_id === pid);
   $("chatTitel").textContent = m?.name || ""; $("chatTeilnehmer").textContent = ""; $("chat").innerHTML = '<p class="hinweis">Schreib eine Nachricht und tippe auf ➤.</p>'; }
@@ -12598,12 +12616,12 @@ async function qrLaden() {
   await new Promise((ok, nein) => { const sc = document.createElement("script"); sc.src = "lib/qrcode/qrcode.js"; sc.onload = ok; sc.onerror = () => nein(new Error("QR-Baustein konnte nicht geladen werden.")); document.head.appendChild(sc); });
 }
 async function einrichtungskarte(pid) {
-  if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return melde(e.message, true); }
+  if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return meldeFehler(e); }
   const m = MITGLIEDER.find((x) => x.person_id === pid); if (!m) return;
   if (m.app && !(await frage(`${m.name} hat die App schon benutzt.\n\nFür die Karte wird ein NEUER Link erzeugt – der alte Link und angemeldete Geräte müssen sich danach neu anmelden (mit der Karte oder dem Code).\n\nTrotzdem Karte drucken?`))) return;
   document.getElementById("buTelBlatt")?.remove(); // Personenwahl aus dem Büro-Drucker schließen
   try { await qrLaden(); const { link } = await api("link_erzeugen", { person_id: pid }); druckStarten("einrichtungskarte", { name: m.name, vorname: m.vorname || m.name.split(" ")[0], link }); }
-  catch (e) { melde(e.message, true); }
+  catch (e) { meldeFehler(e); }
 }
 function druckEinrichtungskarte(k) {
   if (!k?.link || !window.qrcode) throw new Error("Bitte die Karte über das Mitglied neu starten.");
@@ -12638,7 +12656,7 @@ async function linkTeilen(pid) {
     f.querySelector('[data-w="kopie"]').onclick = async () => { f.remove(); try { await navigator.clipboard.writeText(text); melde("📋 Text mit Link kopiert"); } catch { await eingabe("Zum Kopieren:", text); } };
     f.querySelector('[data-w="zu"]').onclick = () => f.remove();
     mitgliederLaden();
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 // KC-CLUB-DIALOG (1.46.0): Amt & Rechte in EINEM Fenster (Häkchen statt Komma-Eingabe und drei Ja/Nein-Fragen)
 const AEMTER_VORSCHLAG = ["Clubsprecher", "Kassenwart", "Schriftführer", "Admin IT"];
@@ -12665,7 +12683,7 @@ async function rolleSpeichern(pid, knopf) {
   knopf.disabled = true;
   try { await api("rolle_setzen", { person_id: pid, vorstand: $("roLeitung").checked, protokolle: $("roProtokolle").checked, kontakte: $("roKontakte").checked, admin, aemter: [...new Set(aemter)].slice(0, 5) });
     $("rolleBlatt").remove(); MITGLIEDER = null; melde("🎖️ Gespeichert"); mitgliederLaden(); }
-  catch (e) { melde(e.message, true); knopf.disabled = false; }
+  catch (e) { meldeFehler(e); knopf.disabled = false; }
 }
 
 // ---------- Push & Ton ----------
@@ -12694,14 +12712,14 @@ async function pushEinschalten() {
     const sub = await reg.pushManager.getSubscription() || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64url(INIT.vapidPublicKey) });
     await api("push_anmelden", { subscription: sub.toJSON(), userAgent: navigator.userAgent });
     melde("Benachrichtigungen sind an 🔔"); pushStatusZeigen(); wichtigZeigen();
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 async function pushUmschalten() {
   const reg = await navigator.serviceWorker.ready, sub = await reg.pushManager.getSubscription();
-  if (sub && Notification.permission === "granted") { try { await api("push_abmelden", { endpoint: sub.endpoint }); await sub.unsubscribe(); melde("Benachrichtigungen aus"); } catch (e) { melde(e.message, true); } pushStatusZeigen(); }
+  if (sub && Notification.permission === "granted") { try { await api("push_abmelden", { endpoint: sub.endpoint }); await sub.unsubscribe(); melde("Benachrichtigungen aus"); } catch (e) { meldeFehler(e); } pushStatusZeigen(); }
   else pushEinschalten();
 }
-async function pushTest() { try { const r = await api("push_test"); melde(r.ok ? "Test-Push geschickt 🔔" : "Push ging nicht – ist er eingeschaltet?", !r.ok); } catch (e) { melde(e.message, true); } }
+async function pushTest() { try { const r = await api("push_test"); melde(r.ok ? "Test-Push geschickt 🔔" : "Push ging nicht – ist er eingeschaltet?", !r.ok); } catch (e) { meldeFehler(e); } }
 let audio;
 function ton() {
   try {
@@ -12784,7 +12802,7 @@ async function zugangKopieren() {
 // Link für den eigenen PC: über „Teilen“ (Mail, Notizen …) oder als Mail an mich
 // KC-CLUB-LINK-MAIL (0.78.0): eigenen Link mit einem Tipp an die eigene Club-Adresse schicken – gleicher Weg wie der Tablet/PC-Tipp, kein neuer Schlüssel
 async function zugangMailen() {
-  try { const r = await api("zugang_link_mailen", {}, { warten: true }); melde(r.ok ? `📧 Die Mail ist unterwegs an ${INIT?.einstieg?.mailMaske || "deine Adresse"} – auch im Spam-Ordner nachsehen` : "Die Mail konnte gerade nicht verschickt werden – bitte später unter ⚙️ Mehr → App-Installation versuchen.", !r.ok); } catch (e) { melde(e.message, true); }
+  try { const r = await api("zugang_link_mailen", {}, { warten: true }); melde(r.ok ? `📧 Die Mail ist unterwegs an ${INIT?.einstieg?.mailMaske || "deine Adresse"} – auch im Spam-Ordner nachsehen` : "Die Mail konnte gerade nicht verschickt werden – bitte später unter ⚙️ Mehr → App-Installation versuchen.", !r.ok); } catch (e) { meldeFehler(e); }
 }
 async function zugangSenden() {
   const link = APP_URL_CLUB + "?k=" + KEY, text = "Mein persönlicher Link zur Köcheclub-App (nicht weitergeben):\n" + link;
@@ -12993,7 +13011,7 @@ async function blOrdner(id) {
     for (const x of r.seiten) seiten.push({ ...x, art: /^image\//.test(x.mime || "") ? "bild" : /pdf/.test(x.mime || "") ? "pdf" : "datei" });
     if (!seiten.length) return melde("In diesem Ordner gibt es noch nichts zum Blättern.");
     blOeffnen(o ? `${o.titel} ${o.art === "chronik" ? "" : o.jahr}`.trim() : "Ordner", seiten, r.ordner.register || []);
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 // KC-CLUB-BLAETTERN (1.64.1, Fund Hansi „Blättern fehlt im Clubordner“): Clubleben hat keine Dateien – jede Zeile wird eine
 // Karten-Seite (Symbol, Titel, Datum, Text); Register = Termine, Protokolle, Abstimmungen … in zeitlicher Reihenfolge.
@@ -13094,7 +13112,7 @@ async function arChronikAnlegen() {
   const jahr = Number(String(j).trim());
   if (!(jahr >= 1950 && jahr <= new Date().getFullYear())) return melde("Bitte ein Jahr wie 1987 eingeben.", true);
   try { const r = await api("archiv_ordner_speichern", { art: "chronik", jahr, titel: "Clubchronik", farbe: 4, einreichen: true }); melde("📖 Clubchronik angelegt"); await arLaden(); arOrdnerOeffnen(r.id); }
-  catch (e) { melde(e.message, true); }
+  catch (e) { meldeFehler(e); }
 }
 function arAnzahl(o) { return o.auto ? AR.daten.auto.filter((x) => arJahr(x.datum) === String(o.jahr)).length : o.anzahl; }
 function arRuecken(o) {
@@ -13174,15 +13192,15 @@ async function arRegisterWeg(oid, r) {
     for (const x of drin) await api(weg === "papierkorb" ? "archiv_loeschen" : "archiv_aendern", weg === "papierkorb" ? { id: x.id } : { id: x.id, register: ziel });
     await api("archiv_ordner_speichern", o.besitzer ? { id: o.id, register: rest, farbe: o.farbe } : { id: o.id, art: o.art, jahr: o.jahr, titel: o.titel, farbe: o.farbe, register: rest, nur_vorstand: o.nur_vorstand });
     arBlattZu(); AR.register = ""; melde(`🗑️ Register „${r}“ gelöscht${drin.length ? (weg === "papierkorb" ? ` – ${drin.length} Dokument(e) im Papierkorb` : ` – Inhalt liegt jetzt in „${ziel}“`) : ""}`); await arLaden();
-  } catch (e) { melde(e.message, true); await arLaden(); }
+  } catch (e) { meldeFehler(e); await arLaden(); }
 }
 async function arEndgueltig(was, titel) {
   if (!(await frage(`„${titel}“ jetzt ENDGÜLTIG löschen?\n\nDas lässt sich nicht rückgängig machen. Der Speicherplatz wird sofort frei.`))) return;
-  try { await api("archiv_endgueltig", was); melde("❌ Endgültig gelöscht – Speicher frei"); await arLaden(); arKorbZeigen(); } catch (e) { melde(e.message, true); }
+  try { await api("archiv_endgueltig", was); melde("❌ Endgültig gelöscht – Speicher frei"); await arLaden(); arKorbZeigen(); } catch (e) { meldeFehler(e); }
 }
 async function arKorbLeeren(liste) {
   if (!liste.length || !(await frage(`Den ganzen Papierkorb (${liste.length} ${liste.length === 1 ? "Eintrag" : "Einträge"}) ENDGÜLTIG leeren?\n\nDas lässt sich nicht rückgängig machen.`))) return;
-  let n = 0; for (const w of liste) { try { await api("archiv_endgueltig", w); n++; } catch (e) { melde(e.message, true); } }
+  let n = 0; for (const w of liste) { try { await api("archiv_endgueltig", w); n++; } catch (e) { meldeFehler(e); } }
   melde(`❌ ${n} endgültig gelöscht – Speicher frei`); await arLaden(); arKorbZeigen();
 }
 // KC-CLUB-ARCHIV-SUCHE: Live-Filter im geöffneten Ordner (im gewählten Register; ab 2 Buchstaben)
@@ -13221,7 +13239,7 @@ function arZeile(x, auto, mitOrt, m) {
 }
 async function arAnlage(id, archivDok) {
   const datei = archivDok ? AR.daten.dokumente.find((x) => x.id === id)?.datei : id;
-  try { extOeffnen((await api("anlage_url", { id: datei })).url); } catch (e) { melde(e.message, true); }
+  try { extOeffnen((await api("anlage_url", { id: datei })).url); } catch (e) { meldeFehler(e); }
 }
 // KC-CLUB-ARCHIV-SUCHE (1.4.1): Live-Suche wie die globale Suche – ab 2 Buchstaben, Umlaut-tolerant (ä=a=ae, ß=ss),
 // alle Wörter müssen vorkommen (egal wo: Titel, Stichwort, Register, Dateiname, Ordner), Treffer markiert
@@ -13284,12 +13302,12 @@ async function arOrdnerSpeichern(id) {
     const r = await api("archiv_ordner_speichern", { id: id || undefined, art: $("arArt").value, jahr: Number($("arJahrWahl").value), titel: $("arTitel").value.trim(), farbe: Number(f?.dataset.f || 1), register: arReg, nur_vorstand: $("arLeitung").checked, einleitung: $("arEinleitung")?.value ?? undefined, einreichen: !!$("arEinreichen")?.checked && !$("arLeitung").checked });
     arBlattZu(); melde(id ? "✔ Ordner geändert" : "✔ Ordner angelegt");
     await arLaden(); if (!id) arOrdnerOeffnen(r.id);
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 async function arOrdnerLoeschen(id) {
   const o = AR.daten.ordner.find((x) => x.id === id); if (!o) return;
   if (!(await frage(`Ordner „${o.titel} ${o.jahr}“ mit ${o.anzahl} Dokument(en) in den Papierkorb legen?\n\nEr lässt sich ${AR.daten.papierkorbTage} Tage lang wiederherstellen.`))) return;
-  try { await api("archiv_ordner_loeschen", { id }); melde("🗑️ Im Papierkorb"); AR.ordner = null; await arLaden(); } catch (e) { melde(e.message, true); }
+  try { await api("archiv_ordner_loeschen", { id }); melde("🗑️ Im Papierkorb"); AR.ordner = null; await arLaden(); } catch (e) { meldeFehler(e); }
 }
 // ----- Dokument ablegen / ändern -----
 function arDokForm(id) {
@@ -13340,11 +13358,11 @@ async function arDokSpeichern(id) {
       if (r.pruefung) { arBlattZu(); melde(arOrdnerAktuell()?.besitzer ? "📥 Hineingelegt – wartet auf Prüfung durch den Besitzer" : "📥 Eingereicht – die Clubleitung prüft und gibt frei"); return await arLaden(); }
     }
     arBlattZu(); melde(id ? "✔ Gespeichert" : "📥 Abgelegt"); await arLaden();
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 async function arDokLoeschen(id) {
   if (!(await frage(`Dieses Dokument in den Papierkorb legen?\n\nEs lässt sich ${AR.daten.papierkorbTage} Tage lang wiederherstellen.`))) return;
-  try { await api("archiv_loeschen", { id }); arBlattZu(); melde("🗑️ Im Papierkorb"); await arLaden(); } catch (e) { melde(e.message, true); }
+  try { await api("archiv_loeschen", { id }); arBlattZu(); melde("🗑️ Im Papierkorb"); await arLaden(); } catch (e) { meldeFehler(e); }
 }
 // ---------- KC-CLUB-ARCHIV-ABLAGE (1.18.0, Wunsch Hansi): gemeinsame Rückfrage „Auch in deinen Archiv-Ordner legen?“ ----------
 // Wird nach einer erledigten Aktion angeboten (zuerst: Erstattungsantrag an den Kassenwart). Ziel sind nur eigene Ordner
@@ -13526,12 +13544,12 @@ async function arEigenSpeichern(id) {
   const f = document.querySelector(".ar-farben button.an");
   const weg = AR.daten.dokumente.filter((x) => x.ordner_id === id && !arReg.includes(x.register)).length;
   if (weg && !(await frage(`${weg} Dokument(e) liegen in einem Register, das du entfernt hast. Sie kommen ins Register „${arReg[0] || "Urkunden"}“. Weiter?`))) return;
-  try { await api("archiv_ordner_speichern", { id, register: arReg, farbe: Number(f?.dataset.f || 6) }); arBlattZu(); melde("✔ Ordner geändert"); await arLaden(); } catch (e) { melde(e.message, true); }
+  try { await api("archiv_ordner_speichern", { id, register: arReg, farbe: Number(f?.dataset.f || 6) }); arBlattZu(); melde("✔ Ordner geändert"); await arLaden(); } catch (e) { meldeFehler(e); }
 }
 async function arNeuesJahr() {
   const j = (await eingabe("Für welches Jahr soll ein weiterer eigener Ordner angelegt werden?", String(new Date().getFullYear() - 1)));
   if (j === null) return;
-  try { const r = await api("archiv_mein_ordner", { jahr: Number(j) }); await arLaden(); arOrdnerOeffnen(r.id); } catch (e) { melde(e.message, true); }
+  try { const r = await api("archiv_mein_ordner", { jahr: Number(j) }); await arLaden(); arOrdnerOeffnen(r.id); } catch (e) { meldeFehler(e); }
 }
 function arFreigabenListe(o) {
   if (!o.freigaben?.length) return "";
@@ -13568,19 +13586,19 @@ async function arFreigabeSpeichern(oid) {
     const r = await api("archiv_freigeben", { ordner_id: oid, register: w.startsWith("r:") ? w.slice(2) : undefined, dokument_id: w.startsWith("d:") ? w.slice(2) : undefined,
       personen, gruppen, bis: bis.toISOString(), hochladen: $("frHoch").checked });
     arBlattZu(); melde(`🔓 Freigegeben – ${r.benachrichtigt} ${r.benachrichtigt === 1 ? "Person" : "Personen"} benachrichtigt`); await arLaden();
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 async function arFreigabeBeenden(id) {
   if (!(await frage("Diese Freigabe jetzt beenden?"))) return;
-  try { await api("archiv_freigabe_beenden", { id }); melde("🔒 Freigabe beendet"); await arLaden(); } catch (e) { melde(e.message, true); }
+  try { await api("archiv_freigabe_beenden", { id }); melde("🔒 Freigabe beendet"); await arLaden(); } catch (e) { meldeFehler(e); }
 }
 async function arPruefung(id, annehmen) {
   if (!annehmen && !(await frage("Dieses Dokument ablehnen? Es wird gelöscht und der Absender bekommt Bescheid."))) return;
-  try { await api("archiv_pruefung", { id, annehmen }); melde(annehmen ? "✔ Angenommen" : "✖ Abgelehnt und gelöscht"); await arLaden(); } catch (e) { melde(e.message, true); }
+  try { await api("archiv_pruefung", { id, annehmen }); melde(annehmen ? "✔ Angenommen" : "✖ Abgelehnt und gelöscht"); await arLaden(); } catch (e) { meldeFehler(e); }
 }
 async function arEinreichungZurueck(id) {
   if (!(await frage("Deine Einreichung zurückziehen? Sie wird gelöscht."))) return;
-  try { await api("archiv_loeschen", { id }); melde("↩ Zurückgezogen"); await arLaden(); } catch (e) { melde(e.message, true); }
+  try { await api("archiv_loeschen", { id }); melde("↩ Zurückgezogen"); await arLaden(); } catch (e) { meldeFehler(e); }
 }
 // ----- Papierkorb -----
 async function arKorbZeigen() {
@@ -13597,7 +13615,7 @@ async function arKorbZeigen() {
         ...k.dokumente.map((x) => `<div class="ar-dok"><span class="sym">📄</span><div><b>${esc(x.titel)}</b><div class="hinweis">${esc(x.ordner)} · ${bis(x)}</div></div><span class="ar-dok-knoepfe"><button class="knopf klein" title="Wiederherstellen" onclick="arWiederher({id:'${x.id}'})">♻️</button><button class="knopf klein" title="Endgültig löschen" onclick="arEndgueltig({id:'${x.id}'}, ${esc(JSON.stringify(x.titel))})">❌</button></span></div>`)].join("")
         || (AR.daten.autoWeg?.length ? "" : '<p class="hinweis" style="margin:6px">Der Papierkorb ist leer.</p>')}</div>
       ${AR.daten.autoWeg?.length ? `<div class="abschnitt" style="margin-top:12px"><h3>🤖 Aus dem Clubleben entfernt</h3></div><div class="ar-blatt">${AR.daten.autoWeg.map((x) => `<div class="ar-dok"><span class="sym">${AR_AUTO[x.art]?.[0] || "📄"}</span><div><b>${esc(x.titel)}</b><div class="hinweis">${esc(arTag(x.datum))} · nur für dich ausgeblendet</div></div><span class="ar-dok-knoepfe"><button class="knopf klein" title="Zurückholen" onclick="arEinblenden('${x.art}', ${esc(JSON.stringify(x.id))})">♻️</button></span></div>`).join("")}</div>` : ""}`;
-  } catch (e) { melde(e.message, true); }
+  } catch (e) { meldeFehler(e); }
 }
 // KC-CLUB-ARCHIV-AUSBLENDEN (1.64.2, Wunsch Hansi „Löschen muss in allen Ordnern möglich sein“): im Clubleben entfernen.
 // Standard: nur für mich ausblenden (Termine, Protokolle … gehören anderen Bereichen und bleiben). Eigene Chat-Anlage: wahlweise
@@ -13611,15 +13629,15 @@ async function arAusblenden(x) {
         <button class="knopf dlg-gefahr" data-w="chat">💬 Auch im Chat löschen (für alle im Chat)</button><button class="knopf" data-w="zu">Abbrechen</button></div>`);
     f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = async () => { f.remove();
       try { if (b.dataset.w === "nur") await nur();
-        else if (b.dataset.w === "chat") { await api("nachricht_loeschen", { id: x.nachricht }); melde("🗑️ Im Chat gelöscht"); await arLaden(); } } catch (e) { melde(e.message, true); } }));
+        else if (b.dataset.w === "chat") { await api("nachricht_loeschen", { id: x.nachricht }); melde("🗑️ Im Chat gelöscht"); await arLaden(); } } catch (e) { meldeFehler(e); } }));
     return;
   }
   if (!(await frage(`„${x.titel}“ aus dem Clubleben entfernen?\nNur für dich – im eigentlichen Bereich (Termine, Protokolle …) bleibt alles. Zurückholen im 🗑️ Papierkorb.`, { ja: "🗑️ Entfernen" }))) return;
-  try { await nur(); } catch (e) { melde(e.message, true); }
+  try { await nur(); } catch (e) { meldeFehler(e); }
 }
-async function arEinblenden(art, id) { try { await api("archiv_ausblenden", { art, id, zurueck: true }); melde("♻️ Wieder im Clubleben"); await arLaden(); arKorbZeigen(); } catch (e) { melde(e.message, true); } }
+async function arEinblenden(art, id) { try { await api("archiv_ausblenden", { art, id, zurueck: true }); melde("♻️ Wieder im Clubleben"); await arLaden(); arKorbZeigen(); } catch (e) { meldeFehler(e); } }
 async function arWiederher(was) {
-  try { await api("archiv_wiederherstellen", was); melde("♻️ Wiederhergestellt"); await arLaden(); arKorbZeigen(); } catch (e) { melde(e.message, true); }
+  try { await api("archiv_wiederherstellen", was); melde("♻️ Wiederhergestellt"); await arLaden(); arKorbZeigen(); } catch (e) { meldeFehler(e); }
 }
 
 // ---------- KC-CLUB-SUCHE (1.4.0, Wunsch Hansi): kleine Lupe überall → Schnellsuche ab 2 Buchstaben, ⚙️ Filter = erweiterte Suche ----------
@@ -13855,7 +13873,7 @@ const nzOber = (b) => b.startsWith("buero_") ? "buero" : b.startsWith("helfen_")
 let NZ_TAGE = 7;
 async function nzAdmin(tage) {
   if (tage) NZ_TAGE = tage;
-  let r; try { r = await api("nutzung_statistik", { tage: NZ_TAGE }, { warten: true }); } catch (e) { return melde(e.message, true); }
+  let r; try { r = await api("nutzung_statistik", { tage: NZ_TAGE }, { warten: true }); } catch (e) { return meldeFehler(e); }
   const summe = new Map(); for (const z of r.zeilen) summe.set(z.bereich, (summe.get(z.bereich) || 0) + z.anzahl);
   const liste = [...summe.entries()].sort((a, b) => b[1] - a[1]), max = Math.max(1, ...liste.map((x) => x[1])), gesamt = liste.reduce((a, x) => a + x[1], 0);
   const tageMap = new Map(); for (const z of r.zeilen) tageMap.set(z.tag, (tageMap.get(z.tag) || 0) + z.anzahl);
@@ -13973,7 +13991,7 @@ async function fpProblemMelden() {
   try { await api("hilfe_anfordern", { text: text.trim(), info: { system: fpSystem(), browser: fpBrowser(), start: START_ART, speicher: !!window.KCFP?.speicherOk,
     push: "Notification" in window ? Notification.permission : "nicht_moeglich", online: navigator.onLine, bildschirm: `${screen.width}x${screen.height}`, sicht: aktuelleAnsicht } });
     melde("🆘 Danke – " + adminName() + " hat deine Meldung bekommen und meldet sich."); }
-  catch (e) { melde(e.message, true); }
+  catch (e) { meldeFehler(e); }
 }
 // ---- Admin: Fehlerprotokoll ansehen ----
 const FP_ARTEN = {
@@ -14007,11 +14025,11 @@ const FP_STUFE_ZEICHEN = { schwer: "🔴", hinweis: "🟡", info: "⚪" };
 async function fpLeeren(anzahl, schwer) {
   if (!(await frage(`Fehlerprotokoll leeren?\n\nEs sind ${anzahl} Einträge drin${schwer ? `, davon ${schwer} schwerwiegend` : ""}. Vorher wird eine Sicherung angelegt.`))) return;
   try { const r = await api("fehlerprotokoll_leeren", {}, { warten: true }); melde(`🗑️ Protokoll geleert – ${r.geloescht} Einträge (Sicherung angelegt)`); if (!$("adminBlatt").classList.contains("versteckt")) fpAdmin(); }
-  catch (e) { melde(e.message, true); }
+  catch (e) { meldeFehler(e); }
 }
 async function fpAdmin(tage) {
   if (tage) FP_ADMIN.tage = tage;
-  let r; try { r = await api("fehlerprotokoll", { tage: FP_ADMIN.tage }, { warten: true }); } catch (e) { return melde(e.message, true); }
+  let r; try { r = await api("fehlerprotokoll", { tage: FP_ADMIN.tage }, { warten: true }); } catch (e) { return meldeFehler(e); }
   const nurStarts = (x) => x.aktion === "diagnose_start";
   const gruppen = new Map();
   for (const x of r.eintraege) { const k = x.name || `anonym ${x.details?.geraet || ""}`; if (!gruppen.has(k)) gruppen.set(k, []); gruppen.get(k).push(x); }
