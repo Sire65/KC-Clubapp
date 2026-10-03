@@ -3220,6 +3220,12 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/function meldeFehler\(e\) \{/.test(html) && /e instanceof TypeError \|\| e instanceof ReferenceError/.test(html) && /window\.KCFP\?\.neu\("gefangen", \{ text: t, stack: fehlerStapel\(e\?\.stack\) \}\)/.test(html), "mit Stapel ins Protokoll");
   assert.ok(/if \(fehler && JS_FEHLER\.test\(String\(t\)\)\)/.test(html), "auch direkte Meldungen");
 }
+// 293. 2.5.0: Vorlesen bei Einweisung und Tipp des Tages (KC-CLUB-VORLESEN-HILFE)
+{
+  assert.ok(/<div class="einw-kopf">🎓 Kurz erklärt \$\{VORLESE_KNOPF\}/.test(html) && /<div class="tdt-kopf">💡 Tipp des Tages \$\{VORLESE_KNOPF\}/.test(html), "Knopf in beiden Karten");
+  const f = html.slice(html.indexOf("function vorlesenKarte("), html.indexOf("const VORLESE_KNOPF"));
+  assert.ok(/speechSynthesis\.speaking\) \{ speechSynthesis\.cancel\(\); return; \}/.test(f) && /sprechen\(t\)/.test(f) && !/fetch\(/.test(f), "an/aus, nur Handy-Sprache");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

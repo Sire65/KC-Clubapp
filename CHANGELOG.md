@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.5.0 – 2026-10-03 – 🔊 Vorlesen bei Einweisung und Tipp des Tages (Wunsch Hansi)
+- KC-CLUB-VORLESEN-HILFE: Knopf „🔊 Vorlesen“ oben rechts in jeder Einweisungs-Karte und im Tipp des Tages. Liest Überschrift
+  und Text mit der Sprachausgabe des Handys vor (vorhandene Funktion sprechen(), ohne Emojis/Pfeilzeichen); nochmal tippen =
+  aufhören; „Verstanden“/Schließen beendet das Vorlesen. Kein externer Dienst (Zero-Cost).
+
 ## 2.4.2 – 2026-10-03 – Programmfehler werden protokolliert und verständlich gezeigt (Fund Hansi)
 - KC-CLUB-FEHLER-FANG: Hansi sah nach dem Update auf 2.4.1 die rote Meldung „Cannot read properties of null (reading
   'person_id')“. Server-Protokolle sauber (kein 5xx, keine Fehler-Nr.), Fehlerprotokoll leer – der Fehler wurde in einem catch

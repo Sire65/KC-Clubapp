@@ -178,6 +178,8 @@
   .hero .inko-ameisen rect { fill: none; stroke: #000; stroke-width: 8; stroke-dasharray: 10 8; animation: ameisenLauf .7s linear infinite; }
   @media (prefers-reduced-motion: reduce) { .hero .inko-ameisen rect { animation-duration: 3s; } }
   #inkoKnopf { opacity: .45; } #inkoKnopf.an { opacity: 1; background: #2c3e50; box-shadow: 0 0 0 2px #f1c40f; }
+  /* KC-CLUB-VORLESEN-HILFE (2.5.0) */
+  .vorlese-knopf { float: right; margin: -4px 0 0 8px; border: 2px solid currentColor; border-radius: 14px; padding: 4px 10px; background: transparent; color: inherit; font: inherit; font-size: .85rem; font-weight: 800; text-transform: none; letter-spacing: 0; cursor: pointer; }
   /* KC-CLUB-EINWEISUNG (2.4.0) */
   .einw-karte { border: 2px solid var(--gruen); background: var(--gruenbg); }
   .einw-karte .einw-kopf { font-size: .8rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--textGruen); }
@@ -2415,7 +2417,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.4.2"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.5.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3101,11 +3103,11 @@ function einstiegHinweis() {
 // „👍 Verstanden“ = für diesen Bereich nie wieder, „Keine Einweisungen mehr“ = aus (⚙️ → „🎓 Einweisung“, Standard an,
 // „Alle nochmal zeigen“ setzt zurück). Gespeichert wie die Tipps in der Server-Einstellung „einweisung“ (geräteübergreifend).
 const EINWEISUNG = [
-  { id: "start", sym: "🏠", t: "Die Startseite", x: "Oben im farbigen Feld blätterst du mit <b>‹ ›</b> durch Infos – z. B. nächster Termin, Wetter, Neues für dich. Darunter die <b>Kacheln</b>: antippen öffnet den Bereich. Die <b>Leiste unten</b> bringt dich immer schnell zurück. Oben unter „KÖCHECLUB WERNE“ stellst du deinen <b>Status</b> ein (z. B. im Urlaub)." },
-  { id: "nachrichten", sym: "💬", t: "Nachrichten", x: "Hier schreibst du anderen Clubmitgliedern – einzeln oder in einer Gruppe. Mit <b>„＋ Neu“</b> beginnst du eine Unterhaltung, mit <b>„👥 Gruppe“</b> legst du eine Gruppe an. Vieles kennst du von WhatsApp: Haken zeigen, ob die Nachricht angekommen ist, nach rechts wischen = antworten. Mit <b>🎤</b> kannst du diktieren statt tippen." },
+  { id: "start", sym: "🏠", t: "Die Startseite", x: "Oben im farbigen Feld blätterst du mit den Pfeilen <b>‹ ›</b> durch Infos – z. B. nächster Termin, Wetter, Neues für dich. Darunter die <b>Kacheln</b>: antippen öffnet den Bereich. Die <b>Leiste unten</b> bringt dich immer schnell zurück. Oben unter „KÖCHECLUB WERNE“ stellst du deinen <b>Status</b> ein (z. B. im Urlaub)." },
+  { id: "nachrichten", sym: "💬", t: "Nachrichten", x: "Hier schreibst du anderen Clubmitgliedern – einzeln oder in einer Gruppe. Mit <b>„＋ Neu“</b> beginnst du eine Unterhaltung, mit <b>„👥 Gruppe“</b> legst du eine Gruppe an. Vieles kennst du von WhatsApp: Haken zeigen, ob die Nachricht angekommen ist, nach rechts wischen = antworten. Mit dem Mikrofon <b>🎤</b> kannst du diktieren statt tippen." },
   { id: "pinnwand", sym: "📌", t: "Pinnwand", x: "Wie das schwarze Brett im Clubheim: Mit <b>„＋ Zettel“</b> hängst du etwas für alle auf – Glückwünsche, Hinweise oder eine Bitte um Hilfe. Auf Zettel kannst du mit <b>Emojis</b> antworten. Wichtige Zettel (❗) sieht jeder beim Öffnen der App." },
-  { id: "termine", sym: "📅", t: "Termine", x: "Alle Club-Termine. Mit <b>✅ Ich komme</b> oder <b>❌</b> sagst du zu oder ab – nochmal antippen nimmt die Antwort zurück. Nach der Zusage kannst du eine <b>Mitfahrt</b> suchen oder anbieten. Mit <b>„＋ Neu“</b> legst du auch private Termine an, die nur du siehst. Oben wechselst du zwischen Liste und Kalender." },
-  { id: "mitglieder", sym: "👥", t: "Mitglieder", x: "Alle aktiven Clubmitglieder. Ein <b>grüner Punkt</b> heißt: gerade in der App. Mit <b>💬</b> schreibst du direkt, mit <b>👋</b> klopfst du bei jemandem an, der gerade online ist. Mit 🔲 / ☰ wechselst du zwischen Kacheln und Liste." },
+  { id: "termine", sym: "📅", t: "Termine", x: "Alle Club-Termine. Mit <b>✅ Ich komme</b> oder dem Kreuz <b>❌</b> sagst du zu oder ab – nochmal antippen nimmt die Antwort zurück. Nach der Zusage kannst du eine <b>Mitfahrt</b> suchen oder anbieten. Mit <b>„＋ Neu“</b> legst du auch private Termine an, die nur du siehst. Oben wechselst du zwischen Liste und Kalender." },
+  { id: "mitglieder", sym: "👥", t: "Mitglieder", x: "Alle aktiven Clubmitglieder. Ein <b>grüner Punkt</b> heißt: gerade in der App. Mit der Sprechblase <b>💬</b> schreibst du direkt, mit der Hand <b>👋</b> klopfst du bei jemandem an, der gerade online ist. Mit den Knöpfen 🔲 / ☰ oben wechselst du zwischen Kacheln und Liste." },
   { id: "fotos", sym: "📷", t: "Fotoalbum", x: "Fotos vom Clubleben. Mit <b>„＋ Neu“</b> lädst du eigene Bilder hoch. Mit <b>„☑️ Auswählen“</b> hakst du Bilder an und legst sie in ein eigenes Album – z. B. „Weihnachtsmarkt“." },
   { id: "helfen", sym: "🤝", t: "Helfen & Leihen", x: "Oben drei Bereiche: <b>🙋 Wer kann helfen?</b> – Helfer suchen oder Hilfe anbieten. <b>📦 Ausleihen</b> – Club-Sachen wie den Pavillon reservieren. <b>🛍️ Börse</b> – privat etwas anbieten oder suchen. Mit <b>„＋ Neu“</b> legst du etwas an." },
   { id: "archiv", sym: "🗄️", t: "Archiv", x: "Das Regal des Clubs: Ordner nach Jahren mit Terminen, Protokollen, Fotos und mehr – vieles wird automatisch abgelegt. Dort steht auch die <b>Clubchronik</b> zum Blättern. Und du hast einen <b>eigenen Ordner</b>, den nur du siehst." },
@@ -3132,12 +3134,12 @@ function einwZeigen(v) {
   document.querySelectorAll(".einw-karte").forEach((k) => k.remove());
   const sek = $("v-" + v); if (!sek || !einwOffen(v)) return;
   const e = EINWEISUNG.find((x) => x.id === v), k = document.createElement("div");
-  k.className = "karte einw-karte"; k.setAttribute("role", "note");
-  k.innerHTML = `<div class="einw-kopf">🎓 Kurz erklärt</div><h3>${e.sym} ${esc(e.t)}</h3><p>${e.x}</p>
+  k.className = "karte einw-karte vorlese-karte"; k.setAttribute("role", "note");
+  k.innerHTML = `<div class="einw-kopf">🎓 Kurz erklärt ${VORLESE_KNOPF}</div><h3>${e.sym} ${esc(e.t)}</h3><p>${e.x}</p>
     <div class="knoepfe"><button class="knopf haupt klein" onclick="einwVerstanden('${v}')">👍 Verstanden</button><button class="knopf klein" onclick="einwAlleAus()">Keine Einweisungen mehr</button></div>`;
   const nach = sek.querySelector(":scope > .kopf2, :scope > .hero"); nach ? nach.after(k) : sek.prepend(k);
 }
-function einwVerstanden(v) { document.querySelectorAll(".einw-karte").forEach((k) => k.remove()); einwSpeichern({ gesehen: { ...einwStand().gesehen, [v]: new Date().toISOString() } }); }
+function einwVerstanden(v) { try { speechSynthesis.cancel(); } catch {} document.querySelectorAll(".einw-karte").forEach((k) => k.remove()); einwSpeichern({ gesehen: { ...einwStand().gesehen, [v]: new Date().toISOString() } }); }
 function einwAlleAus() { document.querySelectorAll(".einw-karte").forEach((k) => k.remove()); einwSpeichern({ an: false }); einwSchalterZeigen(); melde("🎓 Keine Einweisungen mehr – wieder einschalten unter ⚙️ Einstellungen"); }
 function einwSchalter(an) { einwSpeichern({ an }); melde(an ? "🎓 Einweisungen sind an" : "🎓 Einweisungen sind aus"); }
 function einwZuruecksetzen() { einwSpeichern({ an: true, gesehen: {} }); einwSchalterZeigen(); einwZeigen(aktuelleAnsicht); melde("🎓 Alle Einweisungen kommen beim nächsten Öffnen der Bereiche wieder"); }
@@ -3197,8 +3199,9 @@ function tippDesTages() {
   const tipp = TIPPS.find((x) => !st.bekannt[x.id] && (!st.spaeter[x.id] || tageSeit(st.spaeter[x.id]) >= TIPP_SPAETER_TAGE) && (!x.nur || x.nur()));
   if (!tipp) return false;
   tippSpeichern({ zuletzt: new Date().toISOString() });
-  $("tdtText").innerHTML = `<div class="tdt-kopf">💡 Tipp des Tages</div><h3 style="margin:4px 0 6px">${tipp.sym} ${esc(typeof tipp.t === "function" ? tipp.t() : tipp.t)}</h3><p style="margin:0 0 4px">${tipp.x}</p>`;
-  const zu = () => $("tdtBlatt").classList.add("versteckt");
+  $("tdtText").classList.add("vorlese-karte");
+  $("tdtText").innerHTML = `<div class="tdt-kopf">💡 Tipp des Tages ${VORLESE_KNOPF}</div><h3 style="margin:4px 0 6px">${tipp.sym} ${esc(typeof tipp.t === "function" ? tipp.t() : tipp.t)}</h3><p style="margin:0 0 4px">${tipp.x}</p>`;
+  const zu = () => { $("tdtBlatt").classList.add("versteckt"); try { speechSynthesis.cancel(); } catch {} };
   $("tdtTesten").onclick = () => { zu(); tippSpeichern({ spaeter: { ...tippStand().spaeter, [tipp.id]: new Date().toISOString() } }); tipp.testen(); };
   $("tdtTesten").textContent = tipp.ja || "👉 Jetzt ausprobieren"; $("tdtKenne").textContent = tipp.nein || "✔ Kenne ich"; $("tdtSpaeter").classList.toggle("versteckt", !!tipp.neinSpaeter); $("tdtKenne").parentElement.style.gridTemplateColumns = tipp.neinSpaeter ? "1fr" : "";
   $("tdtKenne").onclick = tipp.neinSpaeter ? () => $("tdtSpaeter").onclick() : () => { zu(); tippSpeichern({ bekannt: { ...tippStand().bekannt, [tipp.id]: new Date().toISOString() } }); melde("👍 Alles klar – dieser Tipp kommt nicht wieder"); };
@@ -3259,6 +3262,19 @@ function sprechen(text) {
   try { if (!("speechSynthesis" in window)) return; const u = new SpeechSynthesisUtterance(text); u.lang = "de-DE";
     const st = speechSynthesis.getVoices().find((v) => /^de/i.test(v.lang)); if (st) u.voice = st; speechSynthesis.speak(u); } catch {}
 }
+// KC-CLUB-VORLESEN-HILFE (2.5.0, Wunsch Hansi): 🔊 an Einweisung und Tipp des Tages – liest Überschrift + Text vor
+// (ohne Emojis und Zeichen wie ‹ ›). Nochmal antippen = aufhören. Nur die Sprachausgabe des Handys, nichts geht nach außen.
+function vorlesenKarte(knopf) {
+  try {
+    if (!("speechSynthesis" in window)) return melde("Dieses Handy kann leider nicht vorlesen.");
+    if (speechSynthesis.speaking) { speechSynthesis.cancel(); return; }
+    const k = knopf?.closest(".vorlese-karte"), d = document.createElement("div");
+    d.innerHTML = [...(k?.querySelectorAll("h3, p") || [])].map((x) => x.innerHTML).join(". ");
+    const t = d.textContent.replace(/[\p{Extended_Pictographic}\uFE0F‹›«»＋☰🔲]/gu, " ").replace(/\s+/g, " ").replace(/\.\s*\./g, ".").trim();
+    if (t) sprechen(t);
+  } catch {}
+}
+const VORLESE_KNOPF = '<button class="vorlese-knopf" onclick="vorlesenKarte(this)" title="Vorlesen – nochmal tippen zum Aufhören" aria-label="Vorlesen">🔊 Vorlesen</button>';
 // ---------- KC-CLUB-SPRACHANSAGEN (1.71.0, Wunsch Hansi): das Handy sagt an, was mich betrifft ----------
 // Quelle ist der normale Push (der Service Worker reicht Titel/Text/Link an die offene App weiter) – also genau das, was das
 // Mitglied unter Benachrichtigungen bekommt; Anklopfen kommt direkt aus der App. Sprechen kann das Handy nur bei offener App
