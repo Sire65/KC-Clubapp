@@ -1302,6 +1302,45 @@
   .fotokachel { position: relative; aspect-ratio: 1; border: none; padding: 0; border-radius: 8px; overflow: hidden; background: var(--karte2); cursor: pointer; font-size: 1.6rem; }
   .fotokachel img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .fotokachel .fk-marke { position: absolute; right: 4px; bottom: 4px; background: rgba(0,0,0,.6); border-radius: 10px; padding: 2px 6px; font-size: 1rem; }
+  /* KC-CLUB-BLAETTERN (1.64.0): Ordner wie ein Prospekt – Vollbild, Umblättern, Lesezeichen je Register */
+  .bl { position: fixed; inset: 0; z-index: 2050; background: #2b2320; color: #fff; display: flex; flex-direction: column; }
+  .bl-kopf { display: flex; gap: 8px; align-items: center; padding: max(8px, env(safe-area-inset-top)) 10px 6px; }
+  .bl-kopf b { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bl-zahl { font-size: .85rem; opacity: .85; white-space: nowrap; }
+  .bl-kopf .knopf { background: rgba(255,255,255,.16); color: #fff; border: 1px solid rgba(255,255,255,.35); }
+  .bl-buehne { flex: 1; min-height: 0; display: flex; gap: 0; justify-content: center; align-items: stretch; padding: 4px 12px; perspective: 1600px; touch-action: pan-y; }
+  .bl-seite { flex: 1; max-width: 760px; min-width: 0; background: #fffdf6; color: #2b1a1c; border-radius: 6px; box-shadow: 0 8px 30px rgba(0,0,0,.5); display: flex; flex-direction: column; overflow: hidden; }
+  .bl-buehne.doppel .bl-seite:first-child { border-radius: 6px 1px 1px 6px; box-shadow: inset -16px 0 18px -14px rgba(0,0,0,.4), 0 8px 30px rgba(0,0,0,.5); }
+  .bl-buehne.doppel .bl-seite + .bl-seite { border-radius: 1px 6px 6px 1px; box-shadow: inset 16px 0 18px -14px rgba(0,0,0,.4), 0 8px 30px rgba(0,0,0,.5); }
+  .bl-seite.leer { background: transparent; box-shadow: none; }
+  .bl-skopf { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 8px 12px; border-bottom: 1px solid #e6dccf; font-size: .9rem; }
+  .bl-skopf b { flex: 1; min-width: 120px; overflow-wrap: anywhere; } .bl-skopf > span:not(.bl-reg) { white-space: nowrap; color: #6b5b53; }
+  .bl-reg { background: var(--rf); color: #fff; border-radius: 6px; padding: 1px 8px; font-size: .78rem; font-weight: 700; }
+  .bl-inhalt { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #f3ece2; }
+  .bl-inhalt img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; user-select: none; -webkit-user-drag: none; cursor: zoom-in; }
+  .bl-inhalt.zoom { overflow: auto; align-items: flex-start; justify-content: flex-start; }
+  .bl-inhalt.zoom img { max-width: none; max-height: none; width: 220%; cursor: zoom-out; }
+  .bl-text { padding: 8px 12px; font-size: .92rem; border-top: 1px solid #e6dccf; max-height: 30%; overflow-y: auto; }
+  .bl-html { padding: 16px 20px; overflow-y: auto; align-self: stretch; width: 100%; background: #fffdf6; }
+  .bl-deckblatt { text-align: center; padding: 8vh 10px 20px; } .bl-deckblatt .bl-muetze { width: 110px; height: 110px; border-radius: 50%; background: #5d4037; display: inline-flex; align-items: center; justify-content: center; }
+  .bl-deckblatt .bl-muetze img { width: 76px; } .bl-deckblatt h2 { font-size: 1.8rem; margin: 18px 0 4px; color: #5d4037; } .bl-deckblatt p { color: #6b5b53; margin: 0; }
+  .bl-datei { display: flex; flex-direction: column; align-items: center; gap: 10px; font-size: 2.6rem; padding: 20px; text-align: center; } .bl-datei b { font-size: 1rem; }
+  .bl-laden { font-size: 1.1rem; color: #6b5b53; }
+  .bl-fuss { padding: 6px 12px max(8px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 6px; }
+  .bl-zeichen { display: flex; gap: 6px; overflow-x: auto; padding-top: 3px; }
+  .bl-zeichen button { flex: 0 0 auto; border: none; border-radius: 8px 8px 2px 2px; background: var(--rf); color: #fff; font: inherit; font-size: .8rem; font-weight: 700; padding: 5px 10px; opacity: .7; cursor: pointer; }
+  .bl-zeichen button.an { opacity: 1; transform: translateY(-3px); box-shadow: 0 2px 6px rgba(0,0,0,.4); }
+  .bl-regel { display: flex; gap: 8px; align-items: center; } .bl-regel input { flex: 1; accent-color: #d4a017; }
+  .bl-pfeil { position: absolute; top: 50%; transform: translateY(-50%); width: 42px; height: 64px; border: none; border-radius: 10px; background: rgba(0,0,0,.4); color: #fff; font-size: 1.7rem; z-index: 2; cursor: pointer; }
+  .bl-pfeil.links { left: 2px; } .bl-pfeil.rechts { right: 2px; } .bl-pfeil:disabled { opacity: .15; }
+  @keyframes blVor { from { transform: rotateY(-32deg) translateX(40px); opacity: .3; } to { transform: none; opacity: 1; } }
+  @keyframes blZurueck { from { transform: rotateY(32deg) translateX(-40px); opacity: .3; } to { transform: none; opacity: 1; } }
+  .bl-buehne.vor .bl-seite { animation: blVor .38s ease-out; transform-origin: left center; }
+  .bl-buehne.zurueck .bl-seite { animation: blZurueck .38s ease-out; transform-origin: right center; }
+  @media (prefers-reduced-motion: reduce) { .bl-buehne.vor .bl-seite, .bl-buehne.zurueck .bl-seite { animation-duration: .12s; } }
+  .ar-blaettern { width: 100%; margin: 4px 0 8px; min-height: 48px; }
+  .ar-anleitung summary { cursor: pointer; } .ar-anl { margin: 8px 0 0; padding-left: 22px; } .ar-anl li { margin: 4px 0; }
+  .ar-beschr { margin-top: 3px; font-size: .88rem; white-space: pre-line; }
   /* KC-CLUB-FOTO-ALBEN (1.63.0): Alben-Leiste, Auswahl mit Haken, Auswahlleiste unten */
   .fa-alben { display: flex; gap: 10px; overflow-x: auto; padding: 4px 2px 10px; scroll-snap-type: x proximity; }
   .fa-album { flex: 0 0 118px; scroll-snap-align: start; border: none; border-radius: 12px; background: var(--karte); box-shadow: var(--schatten); padding: 6px; text-align: left; cursor: pointer; color: var(--text); font: inherit; }
@@ -2032,6 +2071,14 @@
 <!-- KC-CLUB-DRUCK (0.53.0): Auswahlfenster vor dem Drucken + unsichtbare Druckseite (nur im Druck sichtbar) -->
 <div class="blatt versteckt" id="druckBlatt" onclick="if(event.target===this)druckZu()"><div class="blatt-innen" style="max-height:88vh;overflow-y:auto"><h3 id="druckTitel">🖨️ Drucken</h3><div id="druckOptionen"></div><p class="hinweis" id="druckHinweis" style="margin:8px 0"></p><button class="knopf haupt" style="text-align:center" onclick="druckVorschau()">👁️ Vorschau ansehen</button><button class="knopf" style="text-align:center" onclick="druckZu()">Abbrechen</button></div></div>
 <!-- KC-CLUB-DRUCKVORSCHAU (0.61.0): so sieht der Ausdruck aus – gedruckt wird erst mit „🖨️ Drucken“ -->
+<!-- KC-CLUB-BLAETTERN (1.64.0): Ordner/Album wie ein Prospekt durchblättern -->
+<div class="bl versteckt" id="blaettern" role="dialog" aria-modal="true" aria-labelledby="blTitel">
+  <div class="bl-kopf"><button class="knopf klein" onclick="blZu()">✕ Schließen</button><b id="blTitel"></b><span id="blZahl" class="bl-zahl"></span></div>
+  <div class="bl-buehne" id="blBuehne"></div>
+  <button class="bl-pfeil links" id="blLinks" onclick="blWeiter(-1)" aria-label="Zurückblättern">‹</button><button class="bl-pfeil rechts" id="blRechts" onclick="blWeiter(1)" aria-label="Weiterblättern">›</button>
+  <div class="bl-fuss"><div class="bl-zeichen" id="blZeichen"></div>
+    <div class="bl-regel"><span>📖</span><input type="range" id="blRegler" min="0" max="0" value="0" oninput="blGehe(Number(this.value), 0)" aria-label="Seite wählen"></div></div>
+</div>
 <div class="versteckt" id="druckVorschau" role="dialog" aria-modal="true" aria-labelledby="druckVorschauTitel" style="position:fixed;inset:0;z-index:2100;display:flex;flex-direction:column;background:#7d7d7d">
   <div style="background:var(--karte);box-shadow:var(--schatten);padding:8px 12px;padding-top:max(8px,env(safe-area-inset-top))">
     <div style="display:flex;align-items:center;gap:8px"><button class="knopf klein" style="min-height:44px" onclick="druckVorschauZu()">✕ Schließen</button>
@@ -2168,7 +2215,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.63.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.64.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -4599,12 +4646,9 @@ async function dokAnzeigen(d, ausHistorie) {
     for (let n = 1; n <= pdf.numPages; n++) {
       if (lauf !== DOKA.lauf) return pdf.destroy();
       $("dokaStand").textContent = `Seite ${n} von ${pdf.numPages} wird geladen …`;
-      const seite = await pdf.getPage(n), vp = seite.getViewport({ scale: breite / seite.getViewport({ scale: 1 }).width });
-      const c = document.createElement("canvas"); c.width = Math.round(vp.width); c.height = Math.round(vp.height);
-      const cx = c.getContext("2d"); cx.fillStyle = "#fff"; cx.fillRect(0, 0, c.width, c.height);
-      await seite.render({ canvasContext: cx, viewport: vp }).promise;
+      const src = await pdfSeiteAlsBild(pdf, n, breite);
       if (lauf !== DOKA.lauf) return pdf.destroy();
-      const src = c.toDataURL("image/jpeg", 0.85); c.width = c.height = 0; DOKA.bilder.push(src);
+      DOKA.bilder.push(src);
       const img = new Image(); img.src = src; img.alt = `Seite ${n}`; img.className = "doka-seite"; $("dokaSeiten").appendChild(img);
     }
     $("dokaStand").textContent = `${pdf.numPages} Seite${pdf.numPages > 1 ? "n" : ""}${IST_IOS_APP() ? " · iPhone: Klappt Drucken nicht, „📤 Teilen“ und dort drucken." : ""}`;
@@ -4614,6 +4658,14 @@ async function dokAnzeigen(d, ausHistorie) {
     fpNeu("dokument", { text: "PDF-Anzeige: " + (e?.message || e) });
     $("dokaStand").innerHTML = `Die Anzeige klappt auf diesem Gerät nicht. <button class="knopf klein" onclick="dokExtern()">↗ Im PDF-Betrachter öffnen</button>`;
   }
+}
+// eine PDF-Seite als JPEG-Bild (data:) in der gewünschten Breite – gemeinsam für Dokument-Anzeige und „📖 Blättern“
+async function pdfSeiteAlsBild(pdf, n, breite) {
+  const seite = await pdf.getPage(n), vp = seite.getViewport({ scale: breite / seite.getViewport({ scale: 1 }).width });
+  const c = document.createElement("canvas"); c.width = Math.round(vp.width); c.height = Math.round(vp.height);
+  const cx = c.getContext("2d"); cx.fillStyle = "#fff"; cx.fillRect(0, 0, c.width, c.height);
+  await seite.render({ canvasContext: cx, viewport: vp }).promise;
+  const src = c.toDataURL("image/jpeg", 0.85); c.width = c.height = 0; return src;
 }
 function dokAufraeumen() { DOKA.lauf++; DOKA.id = null; DOKA.bilder = []; $("dokaSeiten").innerHTML = ""; }
 function dokExtern() { const d = dokAktuell(); if (d) extOeffnen(dokUrl(d)); }
@@ -5707,6 +5759,8 @@ function zeige(v, ausHistorie) {
 }
 let letztesZurueck = 0;
 window.addEventListener("popstate", (e) => {
+  if (BL.zurueck) { BL.zurueck = false; return; } // KC-CLUB-BLAETTERN: mit ✕ geschlossen
+  if (BL.offen) { blZu(true); return; } // „Zurück“ schließt zuerst das Blättern
   // Fotoalbum: „Zurück“ schließt zuerst nur die Großansicht
   if (faZurueck) { faZurueck = false; return; } // Großansicht wurde mit ✕ geschlossen
   if (SU.zurueck) { SU.zurueck = false; return; }
@@ -10300,7 +10354,7 @@ function faAlbenZeigen() {
   if (a) {
     el.innerHTML = `<div class="karte" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
       <div style="font-size:2rem">📸</div><div style="flex:1;min-width:150px"><b style="font-size:1.1rem">${esc(a.name)}</b><div class="hinweis">${a.jahr} · ${faSicht(a)} · ${a.anzahl} Foto${a.anzahl === 1 ? "" : "s"}${a.eigen ? "" : " · von " + esc(a.von)}</div></div>
-      <div class="knoepfe" style="margin:0;width:100%">${a.darfAendern ? `<button class="knopf haupt klein" onclick="faFotosHinzu('${a.id}')">＋ Fotos hinzufügen</button><button class="knopf klein" onclick="faAlbumForm('${a.id}')">✏️ Ändern</button><button class="knopf klein" onclick="faAlbumLoeschen('${a.id}')">🗑️ Album</button>` : ""}
+      <div class="knoepfe" style="margin:0;width:100%">${FA.fotos.length ? '<button class="knopf haupt klein" onclick="blAlbum()">📖 Blättern</button>' : ""}${a.darfAendern ? `<button class="knopf haupt klein" onclick="faFotosHinzu('${a.id}')">＋ Fotos hinzufügen</button><button class="knopf klein" onclick="faAlbumForm('${a.id}')">✏️ Ändern</button><button class="knopf klein" onclick="faAlbumLoeschen('${a.id}')">🗑️ Album</button>` : ""}
         <button class="knopf klein" onclick="faKopfZurueck()">‹ ${faHerkunft === "archiv" ? "Zurück zum Archiv" : "Alle Fotos"}</button></div></div>`;
     return;
   }
@@ -11508,7 +11562,11 @@ function arListeZeigen() {
       <div class="regal">${eigene.map(arRuecken).join("")}${arAlben(true).map(arAlbumRuecken).join("")}</div>
       <p class="hinweis" style="margin:2px 6px 10px">🔒 Nur du siehst deine Ordner – auch der Admin nicht. Mit 🔓 kannst du anderen etwas auf Zeit freigeben. Belegt: ${arGroesse(sp.belegt) || "0 KB"} von ${arGroesse(sp.grenze)}.</p>`
     + (geteilt.length ? `<div class="abschnitt"><h3>🤝 Mit mir geteilt</h3></div><div class="regal">${geteilt.map(arRuecken).join("")}</div>` : "");
-  const ordner = arAlleOrdner().filter((o) => !o.besitzer && arPasst(o));
+  // KC-CLUB-CHRONIK (1.64.0): die Clubchronik steht über allen Jahren (ein Ordner für alle Jahre)
+  const chroniken = d.ordner.filter((o) => !o.besitzer && o.art === "chronik" && (!AR.art || AR.art === "chronik"));
+  const chronikTeil = chroniken.length ? `<div class="abschnitt"><h3>📖 Clubchronik</h3></div><div class="regal">${chroniken.map(arRuecken).join("")}</div>`
+    : d.darf && !AR.art && !AR.jahr ? `<div class="karte hinweis" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">📖 <span style="flex:1;min-width:180px">Noch keine <b>Clubchronik</b>. Ein Ordner für alle Jahre – alle dürfen Beiträge einreichen.</span><button class="knopf klein haupt" onclick="arChronikAnlegen()">📖 Chronik anlegen</button></div>` : "";
+  const ordner = arAlleOrdner().filter((o) => !o.besitzer && arPasst(o) && o.art !== "chronik");
   const alben = arAlben(false).filter((a) => (!AR.jahr || String(a.jahr) === AR.jahr) && (!AR.art || AR.art === "alben")); // KC-CLUB-FOTO-ALBEN
   const jahre = [...new Set([...ordner.map((o) => o.jahr), ...alben.map((a) => a.jahr)])].sort((a, b) => b - a);
   const verein = !ordner.length && !alben.length
@@ -11517,7 +11575,7 @@ function arListeZeigen() {
       + `<p class="hinweis" style="margin-top:14px">🤖 <b>Vereinsleben</b> füllt sich von selbst mit dem, was vorbei ist.${d.darf ? "" : " Unterlagen legen Clubsprecher und Admin ab."}</p>`;
   const adminSicht = d.persoenlich?.length ? `<details class="karte" style="margin-top:12px"><summary><b>👤 Persönliche Ordner der Mitglieder (${d.persoenlich.length}) – nur Übersicht, kein Inhalt</b></summary>
       ${d.persoenlich.map((x) => `<div class="ar-dok"><span class="sym">👤</span><div><b>${esc(x.name)} ${x.jahr}</b><div class="hinweis">${x.anzahl} ${x.anzahl === 1 ? "Dokument" : "Dokumente"} · ${arGroesse(x.groesse) || "0 KB"}</div></div><span></span></div>`).join("")}</details>` : "";
-  $("arListe").innerHTML = pers + `<div class="abschnitt"><h3>🗄️ Vereinsarchiv</h3></div>` + verein + adminSicht;
+  $("arListe").innerHTML = pers + `<div class="abschnitt"><h3>🗄️ Vereinsarchiv</h3></div>` + chronikTeil + (chroniken.length && !ordner.length && !alben.length ? "" : verein) + adminSicht;
 }
 // KC-CLUB-FOTO-ALBEN (1.63.0, Wunsch Hansi): Fotoalben als eigene Rücken im Regal – antippen öffnet das Album unter Fotos
 const arAlben = (privat) => (AR.daten?.alben || []).filter((a) => privat ? a.eigen && a.sichtbar !== "alle" : a.sichtbar === "alle");
@@ -11526,6 +11584,108 @@ function arAlbumRuecken(a) {
     ${a.sichtbar === "alle" ? "" : '<span class="schloss">🔒</span>'}<span class="sym">📸</span>${a.deckel ? `<img class="deckel" src="${esc(a.deckel)}" alt="" loading="lazy">` : ""}
     <span class="schild"><span class="jahr">${a.jahr}</span><span class="name">${esc(a.name)}</span></span>
     <span class="anz">${a.anzahl} ${a.anzahl === 1 ? "Foto" : "Fotos"}</span><img class="muetze" src="kc-kochmuetze-weiss.webp" alt=""></button>`;
+}
+// ---------- KC-CLUB-BLAETTERN (1.64.0, Wunsch Hansi „wie Einkaufsprospekte“): jeden Ordner/jedes Album durchblättern ----------
+// Vollbild, eine Seite je Eintrag (quer auf dem Tablet zwei wie ein Buch), Wischen oder ‹ ›, Lesezeichen je Register, Regler zum
+// Springen. Fotos/Scans direkt, PDFs Seite für Seite (pdf.js, lokal), andere Dateien als Karte „📄 Öffnen“. Antippen = vergrößern.
+const BL = { offen: false, seiten: [], i: 0, titel: "", farben: {}, zurueck: false, lauf: 0, x: null };
+const blDoppel = () => innerWidth >= 900 && innerWidth > innerHeight;
+async function blOrdner(id) {
+  try {
+    const r = await api("archiv_blaettern", { ordner_id: id }, { warten: true }), o = arOrdnerAktuell();
+    const seiten = r.ordner.art === "chronik" ? [
+      { art: "html", titel: "", html: `<div class="bl-deckblatt"><span class="bl-muetze"><img src="kc-kochmuetze-weiss.webp" alt=""></span><h2>${esc(r.ordner.titel || "Clubchronik")}</h2><p>Köcheclub Werne · seit ${r.ordner.jahr}</p></div>` },
+      { art: "html", titel: "So füllen wir unsere Chronik", html: CHRONIK_ANLEITUNG }] : [];
+    for (const x of r.seiten) seiten.push({ ...x, art: /^image\//.test(x.mime || "") ? "bild" : /pdf/.test(x.mime || "") ? "pdf" : "datei" });
+    if (!seiten.length) return melde("In diesem Ordner gibt es noch nichts zum Blättern.");
+    blOeffnen(o ? `${o.titel} ${o.art === "chronik" ? "" : o.jahr}`.trim() : "Ordner", seiten, r.ordner.register || []);
+  } catch (e) { melde(e.message, true); }
+}
+function blAlbum() {
+  const a = FA?.album; if (!a || !FA.fotos.length) return;
+  blOeffnen(a.name, FA.fotos.map((f) => ({ art: "foto", id: f.id, url: f.vorschau, titel: f.thema || "", datum: f.datum, beschreibung: f.beschreibung || "" })), []);
+}
+function blOeffnen(titel, seiten, register) {
+  BL.titel = titel; BL.seiten = seiten; BL.i = 0; BL.offen = true; BL.lauf++;
+  BL.farben = Object.fromEntries(register.map((r, i) => [r, AR_FARBEN[i % AR_FARBEN.length]]));
+  $("blaettern").classList.remove("versteckt"); document.body.style.overflow = "hidden";
+  history.pushState({ ...(history.state || {}), blaettern: true }, "", location.href);
+  blZeigen(0);
+}
+function blZu(ausHistorie) {
+  if (!BL.offen) return;
+  BL.offen = false; BL.lauf++; BL.seiten = []; $("blaettern").classList.add("versteckt"); $("blBuehne").innerHTML = ""; document.body.style.overflow = "";
+  if (!ausHistorie && history.state?.blaettern) { BL.zurueck = true; history.back(); }
+}
+function blSeiteHtml(s) {
+  if (!s) return '<div class="bl-seite leer"></div>';
+  const kopf = s.titel || s.register || s.datum ? `<div class="bl-skopf">${s.register ? `<span class="bl-reg" style="--rf:${BL.farben[s.register] || "#6b5b53"}">${esc(s.register)}</span>` : ""}<b>${esc(s.titel || "")}</b>${s.datum ? `<span>${esc(fTagDe(String(s.datum).slice(0, 10)))}</span>` : ""}${s.teile > 1 ? `<span>Blatt ${s.teil}/${s.teile}</span>` : ""}</div>` : "";
+  const inhalt = s.art === "html" ? `<div class="bl-html">${s.html}</div>`
+    : ["bild", "foto", "pdfseite"].includes(s.art) && s.url ? `<img src="${esc(s.url)}" alt="${esc(s.titel || "Seite")}" draggable="false" onclick="this.parentNode.classList.toggle('zoom')">`
+    : s.art === "datei" ? `<div class="bl-datei">${arDateiSym(s.mime)}<b>${esc(s.name || s.titel || "Datei")}</b>${s.url ? `<button class="knopf haupt" data-url="${esc(s.url)}" onclick="extOeffnen(this.dataset.url)">📄 Öffnen</button>` : ""}</div>`
+    : `<div class="bl-laden">⏳ ${s.art === "pdf" ? "PDF wird geladen …" : "Lädt …"}</div>`;
+  return `<div class="bl-seite">${kopf}<div class="bl-inhalt">${inhalt}</div>${s.beschreibung && (s.teil || 1) === 1 ? `<div class="bl-text">${esc(s.beschreibung)}</div>` : ""}</div>`;
+}
+function blZeigen(richtung) {
+  const d = blDoppel(), n = BL.seiten.length;
+  BL.i = Math.max(0, Math.min(BL.i, n - 1)); if (d && BL.i % 2) BL.i--; // Doppelseite beginnt immer links
+  const b = $("blBuehne");
+  b.className = "bl-buehne" + (d ? " doppel" : "");
+  b.innerHTML = blSeiteHtml(BL.seiten[BL.i]) + (d ? blSeiteHtml(BL.seiten[BL.i + 1]) : "");
+  if (richtung) { void b.offsetWidth; b.classList.add(richtung > 0 ? "vor" : "zurueck"); }
+  $("blTitel").textContent = BL.titel;
+  $("blZahl").textContent = `${BL.i + 1}${d && BL.i + 1 < n ? "–" + (BL.i + 2) : ""} / ${n}`;
+  $("blRegler").max = Math.max(0, n - 1); $("blRegler").value = BL.i;
+  const zeichen = [], akt = BL.seiten[BL.i]?.register;
+  BL.seiten.forEach((s, k) => { if (s.register && !zeichen.some((z) => z[0] === s.register)) zeichen.push([s.register, k]); });
+  $("blZeichen").innerHTML = zeichen.map(([r, k]) => `<button class="${akt === r ? "an" : ""}" style="--rf:${BL.farben[r] || "#6b5b53"}" onclick="blGehe(${k})">${esc(r)}</button>`).join("");
+  $("blLinks").disabled = BL.i <= 0; $("blRechts").disabled = BL.i + (d ? 2 : 1) >= n;
+  blNachladen();
+}
+function blGehe(k, richtung) { const alt = BL.i; BL.i = k; blZeigen(richtung ?? Math.sign(k - alt)); }
+function blWeiter(r) { const schritt = blDoppel() ? 2 : 1, ziel = BL.i + r * schritt; if (ziel < 0 || ziel >= BL.seiten.length) return; blGehe(ziel, r); }
+async function blNachladen() {
+  const lauf = BL.lauf;
+  for (const k of [BL.i, BL.i + 1]) {
+    const s = BL.seiten[k]; if (!s || s.laedt) continue;
+    if (s.art === "pdf" && s.url) {
+      s.laedt = true;
+      try {
+        const pdfjs = await pdfjsHolen(), pdf = await pdfjs.getDocument({ url: s.url, isEvalSupported: false }).promise;
+        const breite = Math.min(1600, Math.round(innerWidth * Math.min(2, devicePixelRatio || 1)) / (blDoppel() ? 2 : 1)), bilder = [];
+        for (let n = 1; n <= pdf.numPages && n <= 60; n++) { bilder.push(await pdfSeiteAlsBild(pdf, n, breite)); if (lauf !== BL.lauf) return pdf.destroy(); }
+        pdf.destroy();
+        BL.seiten.splice(BL.seiten.indexOf(s), 1, ...bilder.map((u, j) => ({ ...s, art: "pdfseite", url: u, teil: j + 1, teile: bilder.length, laedt: false })));
+      } catch (e) { if (lauf !== BL.lauf) return; s.art = "datei"; fpNeu("blaettern", { text: "PDF beim Blättern: " + (e?.message || e) }); }
+      return blZeigen(0);
+    }
+    if (s.art === "foto" && !s.gross) { // Album: erst die kleine Vorschau, dann das große Foto
+      s.laedt = true;
+      try { const r = await api("foto_oeffnen", { id: s.id }); if (lauf !== BL.lauf) return; s.url = r.url; s.gross = true; s.laedt = false;
+        const img = $("blBuehne").querySelectorAll(".bl-seite")[k - BL.i]?.querySelector("img"); if (img) img.src = r.url; } catch { s.laedt = false; s.gross = true; }
+    }
+  }
+  const nx = BL.seiten[BL.i + (blDoppel() ? 2 : 1)]; if (nx?.art === "bild" && nx.url) new Image().src = nx.url; // nächste Seite vorladen
+}
+$("blBuehne").addEventListener("touchstart", (e) => { BL.x = e.touches.length === 1 && !e.target.closest(".zoom") ? e.touches[0].clientX : null; }, { passive: true });
+$("blBuehne").addEventListener("touchend", (e) => { if (BL.x === null) return; const dx = e.changedTouches[0].clientX - BL.x; BL.x = null; if (Math.abs(dx) > 50) blWeiter(dx < 0 ? 1 : -1); }, { passive: true });
+document.addEventListener("keydown", (e) => { if (!BL.offen) return; if (e.key === "ArrowRight") blWeiter(1); else if (e.key === "ArrowLeft") blWeiter(-1); else if (e.key === "Escape") blZu(); });
+addEventListener("resize", () => { if (BL.offen) blZeigen(0); });
+// KC-CLUB-CHRONIK (1.64.0): Anleitung oben im Ordner (und als erste Seite beim Blättern) + Anlegen mit Gründungsjahr
+const CHRONIK_ANLEITUNG = `<ol class="ar-anl">
+  <li>Zeitungsausschnitt oder altes Foto mit dem Handy <b>abfotografieren</b> – gerade, hell, ohne Schatten.</li>
+  <li><b>„＋ Dokument“</b> bzw. <b>„📥 Beitrag einreichen“</b> → Register wählen → <b>Datum des Ereignisses</b> eintragen.</li>
+  <li>Kurz schreiben, <b>was man sieht</b>: Wer, was, wo.</li>
+  <li><b>In Gedenken:</b> nur Name, Lebensdaten, Clubzeit und ein Foto – und nur mit Einverständnis der Familie.</li>
+  <li><b>Ausgeschiedene Mitglieder:</b> nur Name und Zeitraum, keine Gründe.</li>
+  <li>Eingereichtes sehen alle erst, wenn die Clubleitung es <b>angenommen</b> hat. Mit <b>„📖 Blättern“</b> liest man die Chronik wie ein Buch.</li></ol>`;
+async function arChronikAnlegen() {
+  const j = await eingabe("📖 Clubchronik anlegen\nIn welchem Jahr wurde der Köcheclub gegründet? (steht auf dem Ordnerrücken)", "", { zahl: true, ja: "📖 Anlegen" });
+  if (j === null) return;
+  const jahr = Number(String(j).trim());
+  if (!(jahr >= 1950 && jahr <= new Date().getFullYear())) return melde("Bitte ein Jahr wie 1987 eingeben.", true);
+  try { const r = await api("archiv_ordner_speichern", { art: "chronik", jahr, titel: "Clubchronik", farbe: 4, einreichen: true }); melde("📖 Clubchronik angelegt"); await arLaden(); arOrdnerOeffnen(r.id); }
+  catch (e) { melde(e.message, true); }
 }
 function arAnzahl(o) { return o.auto ? AR.daten.auto.filter((x) => arJahr(x.datum) === String(o.jahr)).length : o.anzahl; }
 function arRuecken(o) {
@@ -11565,6 +11725,7 @@ function arOrdnerZeigen() {
   const reg = o.auto ? o.register.filter((r) => eintraege.some((x) => x.register === r))
     : o.besitzer && !o.eigen ? o.register.filter((r) => arFreiRegister(o).includes(r) || eintraege.some((x) => x.register === r)) : o.register;
   if (AR.register && !reg.includes(AR.register)) AR.register = "";
+  if (o.art === "chronik") eintraege.sort((a, b) => String(a.datum || "9999").localeCompare(String(b.datum || "9999"))); // KC-CLUB-CHRONIK: Zeitleiste alt → neu
   const sichtbar = eintraege.filter((x) => !AR.register || x.register === AR.register);
   const art = o.auto ? "automatisch aus der App" : o.eigen ? "Dein persönlicher Ordner · nur du siehst ihn"
     : o.besitzer ? `freigegeben bis ${arBisText((o.geteilt || []).map((f) => f.bis).sort().pop())} · ${arDarfHinein(o) ? "ansehen + hineinlegen (zur Prüfung)" : "nur ansehen"}` : (d.arten[o.art]?.t || "");
@@ -11572,7 +11733,10 @@ function arOrdnerZeigen() {
     ${o.eigen ? `<div class="knoepfe" style="margin:8px 0"><button class="knopf klein haupt" onclick="arDokForm()">＋ Dokument</button><button class="knopf klein" onclick="arFreigabeForm('${o.id}')">🔓 Freigeben</button><button class="knopf klein" onclick="arOrdnerForm('${o.id}')">✏️ Register</button><button class="knopf klein" onclick="arOrdnerLoeschen('${o.id}')">🗑️ Ordner</button></div>
         ${o.pruefung ? `<div class="karte hinweis" style="border:2px solid #d68910">⏳ <b>${o.pruefung} ${o.pruefung === 1 ? "Dokument wartet" : "Dokumente warten"} auf deine Prüfung</b> – unten annehmen oder ablehnen.</div>` : ""}${arFreigabenListe(o)}`
       : o.besitzer ? (arDarfHinein(o) ? `<div class="knoepfe" style="margin:8px 0"><button class="knopf klein haupt" onclick="arDokForm()">📥 Dokument hineinlegen</button></div><p class="hinweis" style="margin:0 4px 8px">Was du hineinlegst, sieht ${esc(o.titel)} erst nach Prüfung – angenommen oder abgelehnt bekommst du Bescheid.</p>` : "")
-      : !o.auto && d.darf ? `<div class="knoepfe" style="margin:8px 0"><button class="knopf klein haupt" onclick="arDokForm()">＋ Dokument</button><button class="knopf klein" onclick="arOrdnerForm('${o.id}')">✏️ Ordner</button><button class="knopf klein" onclick="arOrdnerLoeschen('${o.id}')">🗑️ Ordner</button></div>` : ""}
+      : !o.auto && d.darf ? `<div class="knoepfe" style="margin:8px 0"><button class="knopf klein haupt" onclick="arDokForm()">＋ Dokument</button><button class="knopf klein" onclick="arOrdnerForm('${o.id}')">✏️ Ordner</button><button class="knopf klein" onclick="arOrdnerLoeschen('${o.id}')">🗑️ Ordner</button></div>`
+      : !o.auto && o.einreichen ? `<div class="knoepfe" style="margin:8px 0"><button class="knopf klein haupt" onclick="arDokForm()">📥 Beitrag einreichen</button></div>` : ""}
+    ${!o.auto && (o.art === "chronik" || eintraege.some((x) => x.status === "ok")) ? `<button class="knopf haupt ar-blaettern" onclick="blOrdner('${o.id}')">📖 Blättern${o.art === "chronik" ? " – die Chronik wie ein Buch" : ""}</button>` : ""}
+    ${o.art === "chronik" ? `<details class="karte ar-anleitung" ${eintraege.length ? "" : "open"}><summary><b>📌 So füllen wir unsere Chronik</b></summary>${CHRONIK_ANLEITUNG}</details>` : ""}
     ${eintraege.length > 3 ? `<input id="arOrdnerSuche" class="ar-ordnersuche" type="search" autocomplete="off" enterkeyhint="search" placeholder="🔍 In diesem Ordner suchen …" value="${esc(AR.ordnerSuche || "")}" oninput="AR.ordnerSuche=this.value;arOrdnerListe()" onkeydown="if(event.key==='Escape'){this.value='';AR.ordnerSuche='';arOrdnerListe()}">` : ""}
     <div class="ar-register">${[["", "Alle", eintraege.length], ...reg.map((r) => [r, r, eintraege.filter((x) => x.register === r).length])].map(([w, t, n], i) => `<button class="${AR.register === w ? "an" : ""}" style="--rf:${i ? AR_FARBEN[(i - 1) % AR_FARBEN.length] : "var(--grau)"}" onclick="AR.register=${esc(JSON.stringify(w))};arZeigen()">${esc(t)} <small>${n}</small></button>`).join("")}</div>
     ${AR.register && (o.eigen || (!o.besitzer && !o.auto && d.darf)) ? `<div class="knoepfe" style="margin:6px 0 0;justify-content:flex-end"><button class="knopf klein" onclick="arRegisterLoeschen()">🗑️ Register „${esc(AR.register)}“ löschen</button></div>` : ""}
@@ -11615,7 +11779,8 @@ function arOrdnerListe() {
   const o = arOrdnerAktuell(), d = AR.daten; if (!o || !$("arOrdnerListe")) return;
   const q = AR.ordnerSuche || "", suchen = arSuchLang(q), m = suchen ? suMusterFuer(arWoerter(q)) : null;
   const liste = arEintraege(o).filter((x) => (!AR.register || x.register === AR.register)
-    && (!suchen || (o.auto ? arPasstAlle(q, x.titel, x.text, x.voll) : arPasstAlle(q, x.titel, x.name, x.register, x.stichworte || []))));
+    && (!suchen || (o.auto ? arPasstAlle(q, x.titel, x.text, x.voll) : arPasstAlle(q, x.titel, x.name, x.register, x.stichworte || [], x.beschreibung || ""))));
+  if (o.art === "chronik") liste.sort((a, b) => String(a.datum || "9999").localeCompare(String(b.datum || "9999"))); // KC-CLUB-CHRONIK: Zeitleiste
   $("arOrdnerListe").innerHTML = (suchen ? `<p class="hinweis ar-zahl" style="margin:4px 6px">${liste.length} Treffer${AR.register ? ` im Register „${esc(AR.register)}“ <button class="knopf klein" onclick="AR.register='';arZeigen()">in allen suchen</button>` : ""}</p>` : "")
     + (liste.sort((a, b) => (b.status === "pruefung") - (a.status === "pruefung")).map((x) => arZeile(x, o.auto, false, m)).join("") || `<p class="hinweis" style="margin:6px">${suchen ? "Nichts gefunden." : o.auto ? "Hier ist nichts." : o.eigen || (!o.besitzer && d.darf) ? "Noch leer – tippe auf „＋ Dokument“." : "Noch leer."}</p>`);
 }
@@ -11633,10 +11798,12 @@ function arZeile(x, auto, mitOrt, m) {
   }
   const o = AR.daten.ordner.find((y) => y.id === x.ordner_id), pruef = x.status === "pruefung";
   const darfAendern = !pruef && (o?.eigen || (!o?.besitzer && AR.daten.darf));
+  const pruefer = o?.eigen || (!o?.besitzer && AR.daten.darf); // KC-CLUB-CHRONIK: im Vereinsordner prüft die Archiv-Pflege
   return `<div class="ar-dok klickbar" onclick="arAnlage('${x.id}', true)"><span class="sym">${arDateiSym(x.mime)}</span>
-    <div>${pruef ? `<span class="marke gelb">⏳ ${o?.eigen ? "zur Prüfung · von " + esc(x.von) : "wartet auf Prüfung"}</span><br>` : ""}<b>${mk(x.titel)}</b><div class="hinweis">${[arTag(x.datum), x.register, arGroesse(x.groesse)].filter(Boolean).map(mk).join(" · ")}${mitOrt && o ? ` · ${o.besitzer ? (o.eigen ? "👤 Mein Ordner" : "🤝 " + mk(o.titel)) : mk(o.titel)} ${o.jahr}` : ""}</div>
-    ${pruef && o?.eigen ? `<div class="knoepfe" style="margin:6px 0 0"><button class="knopf klein haupt" onclick="event.stopPropagation();einmal(this, () => arPruefung('${x.id}', true))">✔ Annehmen</button><button class="knopf klein" onclick="event.stopPropagation();einmal(this, () => arPruefung('${x.id}', false))">✖ Ablehnen</button></div>` : ""}
-    ${pruef && !o?.eigen && x.vonIch ? `<div class="knoepfe" style="margin:6px 0 0"><button class="knopf klein" onclick="event.stopPropagation();arEinreichungZurueck('${x.id}')">↩ Zurückziehen</button></div>` : ""}
+    <div>${pruef ? `<span class="marke gelb">⏳ ${pruefer ? "zur Prüfung · von " + esc(x.von) : "wartet auf Prüfung"}</span><br>` : ""}<b>${mk(x.titel)}</b><div class="hinweis">${[arTag(x.datum), x.register, arGroesse(x.groesse)].filter(Boolean).map(mk).join(" · ")}${mitOrt && o ? ` · ${o.besitzer ? (o.eigen ? "👤 Mein Ordner" : "🤝 " + mk(o.titel)) : mk(o.titel)} ${o.jahr}` : ""}</div>
+    ${x.beschreibung ? `<div class="hinweis ar-beschr">${mk(x.beschreibung)}</div>` : ""}
+    ${pruef && pruefer ? `<div class="knoepfe" style="margin:6px 0 0"><button class="knopf klein haupt" onclick="event.stopPropagation();einmal(this, () => arPruefung('${x.id}', true))">✔ Annehmen</button><button class="knopf klein" onclick="event.stopPropagation();einmal(this, () => arPruefung('${x.id}', false))">✖ Ablehnen</button></div>` : ""}
+    ${pruef && !pruefer && x.vonIch ? `<div class="knoepfe" style="margin:6px 0 0"><button class="knopf klein" onclick="event.stopPropagation();arEinreichungZurueck('${x.id}')">↩ Zurückziehen</button></div>` : ""}
     ${x.name && m && suPasstText(x.name, AR.suche) && !suPasstText(x.titel, AR.suche) ? `<div class="hinweis">📎 ${mk(x.name)}</div>` : ""}
     ${x.stichworte?.length ? `<div class="ar-stichworte">${x.stichworte.map((s) => `<span>#${mk(s)}</span>`).join("")}</div>` : ""}</div>
     ${darfAendern ? `<span class="ar-dok-knoepfe"><button class="knopf klein" onclick="event.stopPropagation();arDokForm('${x.id}')" title="Ändern" aria-label="Ändern">✏️</button><button class="knopf klein" onclick="event.stopPropagation();arDokLoeschen('${x.id}')" title="Löschen" aria-label="Löschen">🗑️</button></span>` : '<span class="pfeil">›</span>'}</div>`;
@@ -11686,12 +11853,13 @@ function arOrdnerForm(id) {
     <div class="feld">Register (Reiter im Ordner)<div class="chips" id="arRegChips"></div>
       <div class="ar-zeile"><input id="arRegNeu" maxlength="30" placeholder="weiteres Register, z. B. Gemeinde" onkeydown="if(event.key==='Enter')arRegDazu()"><button class="knopf klein" onclick="arRegDazu()">＋</button></div></div>
     <label class="schalter"><span><b>🔒 Nur Clubleitung</b> – nur Clubsprecher, Kassenwart und Admin sehen diesen Ordner</span><input type="checkbox" id="arLeitung" ${(o ? o.nur_vorstand : d.arten[art].vorstand) ? "checked" : ""}></label>
+    <label class="schalter"><span><b>📥 Alle dürfen einreichen</b> – Mitglieder können etwas hineinlegen; sichtbar erst nach Prüfung durch Clubsprecher/Admin</span><input type="checkbox" id="arEinreichen" ${(o ? o.einreichen : art === "chronik") ? "checked" : ""}></label>
     <div class="knoepfe"><button class="knopf haupt" onclick="einmal(this, () => arOrdnerSpeichern('${o?.id || ""}'))">Speichern</button><button class="knopf" onclick="arBlattZu()">Abbrechen</button></div>`);
   arRegZeigen();
 }
 function arArtGewaehlt(art) {
   const a = AR.daten.arten[art]; arReg = [...a.register]; arRegZeigen();
-  $("arTitel").placeholder = a.t; $("arLeitung").checked = !!a.vorstand;
+  $("arTitel").placeholder = a.t; $("arLeitung").checked = !!a.vorstand; if ($("arEinreichen")) $("arEinreichen").checked = art === "chronik";
 }
 function arRegZeigen() { $("arRegChips").innerHTML = arReg.map((r, i) => `<button class="chip" onclick="arReg.splice(${i},1);arRegZeigen()">${esc(r)} ✕</button>`).join("") || '<span class="hinweis">Ohne Register landet alles unter „Allgemein“.</span>'; }
 function arRegDazu() { const v = $("arRegNeu").value.trim().slice(0, 30); if (v && !arReg.includes(v) && arReg.length < 12) arReg.push(v); $("arRegNeu").value = ""; arRegZeigen(); }
@@ -11701,7 +11869,7 @@ async function arOrdnerSpeichern(id) {
   const weg = alt ? AR.daten.dokumente.filter((x) => x.ordner_id === id && !arReg.includes(x.register)).length : 0;
   if (weg && !(await frage(`${weg} Dokument(e) liegen in einem Register, das du entfernt hast. Sie kommen ins Register „${arReg[0] || "Allgemein"}“. Weiter?`))) return;
   try {
-    const r = await api("archiv_ordner_speichern", { id: id || undefined, art: $("arArt").value, jahr: Number($("arJahrWahl").value), titel: $("arTitel").value.trim(), farbe: Number(f?.dataset.f || 1), register: arReg, nur_vorstand: $("arLeitung").checked });
+    const r = await api("archiv_ordner_speichern", { id: id || undefined, art: $("arArt").value, jahr: Number($("arJahrWahl").value), titel: $("arTitel").value.trim(), farbe: Number(f?.dataset.f || 1), register: arReg, nur_vorstand: $("arLeitung").checked, einreichen: !!$("arEinreichen")?.checked && !$("arLeitung").checked });
     arBlattZu(); melde(id ? "✔ Ordner geändert" : "✔ Ordner angelegt");
     await arLaden(); if (!id) arOrdnerOeffnen(r.id);
   } catch (e) { melde(e.message, true); }
@@ -11718,17 +11886,19 @@ function arDokForm(id) {
   AR.datei = null;
   const regWahl = (ord, wert) => (ord.register.length ? ord.register : ["Allgemein"]).map((r) => `<option ${r === wert ? "selected" : ""}>${esc(r)}</option>`).join("");
   const hinein = !x && o.besitzer && !o.eigen, regListe = hinein ? arFreiRegister(o, true) : o.register;
+  const einreichen = !x && !o.besitzer && o.einreichen && !d.darf, chronik = o.art === "chronik"; // KC-CLUB-CHRONIK (1.64.0)
   const ordnerWahl = d.ordner.filter((y) => (y.besitzer || null) === (o.besitzer || null) && (!o.besitzer || y.eigen));
-  arBlatt(`<h3>${x ? "✏️ Dokument ändern" : hinein ? `📥 In den Ordner von ${esc(o.titel)} legen` : "📥 Dokument ablegen"}</h3>${hinein ? '<p class="hinweis" style="margin:0 0 6px">Erst sichtbar, wenn es angenommen wird.</p>' : ""}
+  arBlatt(`<h3>${x ? "✏️ Dokument ändern" : hinein ? `📥 In den Ordner von ${esc(o.titel)} legen` : einreichen ? `📥 Beitrag für „${esc(o.titel)}“ einreichen` : "📥 Dokument ablegen"}</h3>${hinein ? '<p class="hinweis" style="margin:0 0 6px">Erst sichtbar, wenn es angenommen wird.</p>' : einreichen ? '<p class="hinweis" style="margin:0 0 6px">Erst für alle sichtbar, wenn die Clubleitung den Beitrag annimmt. Danke fürs Mitmachen!</p>' : ""}
     ${x ? `<p class="hinweis" style="margin:0">${arDateiSym(x.mime)} ${esc(x.name || "")} · ${arGroesse(x.groesse)} · abgelegt von ${esc(x.von)}</p>` : `
     <div class="knoepfe"><button class="knopf" onclick="$('arDateiEin').click()">📄 Datei wählen</button><button class="knopf" onclick="$('arKameraEin').click()">📷 Papier fotografieren</button></div>
     <input type="file" id="arDateiEin" class="versteckt" accept="application/pdf,image/*,.doc,.docx,.xls,.xlsx,.txt" onchange="arDateiGewaehlt(this)">
     <input type="file" id="arKameraEin" class="versteckt" accept="image/*" capture="environment" onchange="arDateiGewaehlt(this)">
     <p class="hinweis" id="arDateiName" style="margin:0">Noch keine Datei gewählt (PDF, Foto, Word, Excel – höchstens 8 MB).</p>`}
-    <label class="feld">Titel<input id="arDokTitel" maxlength="120" value="${esc(x?.titel || "")}" placeholder="z. B. Satzung Fassung 2024"></label>
-    <div class="zwei"><label class="feld">Datum des Dokuments<input id="arDokDatum" type="date" value="${x ? x.datum || "" : heuteIso()}"></label>
+    <label class="feld">Titel<input id="arDokTitel" maxlength="120" value="${esc(x?.titel || "")}" placeholder="${chronik ? "z. B. Weltrekord: längste Mettwurst" : "z. B. Satzung Fassung 2024"}"></label>
+    <div class="zwei"><label class="feld">${chronik ? "Wann war das? (Datum des Ereignisses)" : "Datum des Dokuments"}<input id="arDokDatum" type="date" value="${x ? x.datum || "" : chronik ? "" : heuteIso()}"></label>
       <label class="feld">Register<select id="arDokReg">${regWahl({ register: regListe }, x?.register || (regListe.includes(AR.register) ? AR.register : regListe[0]))}</select></label></div>
     ${x ? `<label class="feld">Ordner<select id="arDokOrdner" onchange="arDokOrdnerWechsel(this.value)">${ordnerWahl.map((y) => `<option value="${y.id}" ${y.id === o.id ? "selected" : ""}>${esc(y.titel)} ${y.jahr}${y.nur_vorstand ? " 🔒" : ""}</option>`).join("")}</select></label>` : ""}
+    <label class="feld">${chronik ? "Was sieht man? Wer, was, wo" : "Beschreibung (freiwillig)"}<textarea id="arDokBeschr" rows="3" maxlength="1000" placeholder="${chronik ? "z. B. Auf dem Marktplatz haben wir 92 m Mettwurst am Stück gegrillt – Eintrag ins Rekordbuch." : "kurz, worum es geht"}">${esc(x?.beschreibung || "")}</textarea></label>
     <label class="feld">Stichworte (freiwillig, mit Komma trennen)<input id="arDokStich" maxlength="200" value="${esc((x?.stichworte || []).join(", "))}" placeholder="z. B. Gemeinde, Weihnachtsmarkt"></label>
     <div class="knoepfe"><button class="knopf haupt" onclick="einmal(this, () => arDokSpeichern('${x?.id || ""}'))">${x ? "Speichern" : "📥 Ablegen"}</button>
       ${x ? `<button class="knopf" onclick="arDokLoeschen('${x.id}')">🗑️ Löschen</button>` : ""}<button class="knopf" onclick="arBlattZu()">Abbrechen</button></div>`);
@@ -11747,7 +11917,7 @@ async function arDateiGewaehlt(input) {
   if (!$("arDokTitel").value.trim()) $("arDokTitel").value = roh.name.replace(/\.\w+$/, "").replace(/[_-]+/g, " ").slice(0, 120);
 }
 async function arDokSpeichern(id) {
-  const werte = { titel: $("arDokTitel").value.trim(), datum: $("arDokDatum").value || null, register: $("arDokReg").value, stichworte: $("arDokStich").value };
+  const werte = { titel: $("arDokTitel").value.trim(), datum: $("arDokDatum").value || null, register: $("arDokReg").value, stichworte: $("arDokStich").value, beschreibung: $("arDokBeschr")?.value.trim() || "" };
   try {
     if (id) await api("archiv_aendern", { id, ...werte, ordner_id: $("arDokOrdner")?.value });
     else {
@@ -11755,7 +11925,7 @@ async function arDokSpeichern(id) {
       const d = AR.datei;
       const r = await api("archiv_hochladen", { ordner_id: AR.ordner, ...werte, name: d.name, mime: d.type || "application/octet-stream", daten: base64(await d.arrayBuffer()) }, { warten: true });
       AR.datei = null;
-      if (r.pruefung) { arBlattZu(); melde("📥 Hineingelegt – wartet auf Prüfung durch den Besitzer"); return await arLaden(); }
+      if (r.pruefung) { arBlattZu(); melde(arOrdnerAktuell()?.besitzer ? "📥 Hineingelegt – wartet auf Prüfung durch den Besitzer" : "📥 Eingereicht – die Clubleitung prüft und gibt frei"); return await arLaden(); }
     }
     arBlattZu(); melde(id ? "✔ Gespeichert" : "📥 Abgelegt"); await arLaden();
   } catch (e) { melde(e.message, true); }

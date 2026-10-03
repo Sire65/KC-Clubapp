@@ -2678,6 +2678,25 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/if \(her === "archiv"\) return zeige\("archiv"\);/.test(html), "Zurück ins Archiv fehlt");
 }
 
+// 236. 1.64.0: Clubchronik (Einreichen mit Prüfung) + Blättern
+{
+  assert.ok(/chronik: \{ t: "Chronik", sym: "📖", register: \["Gründung", "Presse", "Rekorde & Höhepunkte", "Feste & Jubiläen", "Mitglieder im Wandel", "In Gedenken", "Ehrungen & Urkunden", "Sonstiges"\] \}/.test(server), "Chronik-Register fehlen");
+  assert.ok(/if \(!o\.besitzer\) return darfOrdnerSehen\(ich, o\) && \(d\.status !== "pruefung" \|\| d\.hochgeladen_von === ich\.person_id \|\| darfArchivPflegen\(ich\)\)/.test(server), "Einreichung erst nach Prüfung sichtbar");
+  assert.ok(/recht === "hochladen" && o\.einreichen && !darfArchivPflegen\(ich\)\) return \{ \.\.\.o, _eigen: false, _freigaben: \[\] as any\[\], _einreichung: true \}/.test(server), "Einreichen nur bei einreichen-Ordnern");
+  assert.ok(/status: einreichung \? "pruefung" : "ok"/.test(server) && /const einreichung = \(!!o\.besitzer && !o\._eigen\) \|\| vereinEinreichung;/.test(server), "Einreichung landet zur Prüfung");
+  assert.ok(/o\.besitzer \? !o\._eigen : !darfArchivPflegen\(ich\)/.test(server), "Prüfen im Vereinsordner nur Archiv-Pflege");
+  assert.ok(/\} else if \(darfDokSehen\(ich, o, x, \[\]\) && /.test(server), "Link zu fremder Einreichung gesperrt");
+  const bl = server.slice(server.indexOf('case "archiv_blaettern"'), server.indexOf('case "archiv_pruefung"'));
+  assert.ok(/archivOrdnerHolen\(ich, p\.ordner_id, false, "lesen"\)/.test(bl) && /\.eq\("status", "ok"\)/.test(bl) && /darfDokSehen\(ich, o, d, o\._freigaben\)/.test(bl), "Blättern nur Sichtbares");
+  const mig = fs.readFileSync(new URL("../supabase/migrations/20261003_kc_club_v1640_chronik.sql", import.meta.url), "utf8");
+  assert.ok(/add column if not exists einreichen boolean not null default false/.test(mig) && /add column if not exists beschreibung text not null default ''/.test(mig), "Migration Chronik fehlt");
+  assert.ok(/id="blaettern"/.test(html) && /function blOrdner\(id\)/.test(html) && /function blAlbum\(\)/.test(html) && /onclick="blOrdner\('\$\{o\.id\}'\)"/.test(html) && /onclick="blAlbum\(\)"/.test(html), "Blättern fehlt");
+  assert.ok(/if \(BL\.offen\) \{ blZu\(true\); return; \}/.test(html), "Zurück-Taste schließt Blättern");
+  assert.ok((html.match(/await pdfSeiteAlsBild\(pdf, n, breite\)/g) || []).length === 2 && (html.match(/async function pdfSeiteAlsBild\(/g) || []).length === 1, "ein gemeinsamer PDF-Helfer");
+  assert.ok(/function arChronikAnlegen\(\)/.test(html) && /const CHRONIK_ANLEITUNG = /.test(html) && /nur mit Einverständnis der Familie/.test(html) && /keine Gründe/.test(html), "Chronik anlegen / Anleitung fehlt");
+  assert.ok(/📥 Beitrag einreichen/.test(html) && /id="arEinreichen"/.test(html) && /id="arDokBeschr"/.test(html), "Einreichen/Beschreibung in der App fehlt");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.63.0";
+const SERVER_VERSION = "1.64.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -1139,7 +1139,8 @@ const ARCHIV_ARTEN: Record<string, { t: string; sym: string; register: string[];
   vertraege: { t: "Verträge & Versicherungen", sym: "🤝", register: ["Verträge", "Versicherungen", "Genehmigungen", "Sonstiges"], vorstand: true },
   finanzen: { t: "Finanzen", sym: "💶", register: ["Kassenbericht", "Kassenprüfung", "Belege", "Sonstiges"], vorstand: true },
   presse: { t: "Presse", sym: "📰", register: ["Zeitung", "Internet", "Sonstiges"] },
-  chronik: { t: "Chronik", sym: "📖", register: ["Chronik", "Urkunden", "Ehrungen", "Sonstiges"] },
+  // KC-CLUB-CHRONIK (1.64.0, Vorschlag + Freigabe Hansi): Register nach Themen; Einträge tragen das Ereignisdatum
+  chronik: { t: "Chronik", sym: "📖", register: ["Gründung", "Presse", "Rekorde & Höhepunkte", "Feste & Jubiläen", "Mitglieder im Wandel", "In Gedenken", "Ehrungen & Urkunden", "Sonstiges"] },
   sonstiges: { t: "Sonstiges", sym: "🗂️", register: ["Allgemein"] },
 };
 const ARCHIV_DATEITYPEN = /^(application\/pdf|image\/(jpeg|png|webp)|text\/plain|application\/msword|application\/vnd\.ms-excel|application\/vnd\.openxmlformats-officedocument\.(wordprocessingml\.document|spreadsheetml\.sheet))$/;
@@ -1147,6 +1148,12 @@ const ARCHIV_STOPP = 0.98; // Speicher: Archiv nimmt bis 98 % an (Fotos stoppen 
 const darfArchivPflegen = (ich: Ich) => ich.admin || ich.aemter.includes("Clubsprecher");
 const nurArchivPflege = (ich: Ich) => { if (!darfArchivPflegen(ich)) throw new Fehler("Das Archiv pflegen Clubsprecher und Admin.", 403); };
 const darfOrdnerSehen = (ich: Ich, o: any) => !o.nur_vorstand || ich.vorstand;
+// KC-CLUB-CHRONIK (1.64.0): Vereinsordner mit „einreichen“ – alle Mitglieder dürfen etwas hineinlegen, sichtbar erst nach Prüfung
+// durch die Archiv-Pflege (Clubsprecher/Admin). Wer prüfen darf, bekommt Bescheid.
+async function archivPflegerIds(): Promise<string[]> {
+  const { data } = await db.from("kc_club_rollen").select("person_id,ist_admin,aemter");
+  return (data ?? []).filter((r: any) => r.ist_admin || (r.aemter ?? []).includes("Clubsprecher")).map((r: any) => r.person_id);
+}
 function archivRegister(roh: unknown, art: string): string[] {
   const liste = (Array.isArray(roh) ? roh : []).map((x) => txt(x, 30)).filter(Boolean);
   const eindeutig = [...new Set(liste)].slice(0, 12);
@@ -1175,7 +1182,7 @@ async function archivFreigabenFuer(pid: string, ordnerIds?: string[], auchAbgela
 }
 const freigabeDeckt = (f: any, d: any) => (!f.dokument_id || f.dokument_id === d.id) && (!f.register || f.register === d.register);
 function darfDokSehen(ich: Ich, o: any, d: any, freigaben: any[]) {
-  if (!o.besitzer) return darfOrdnerSehen(ich, o);
+  if (!o.besitzer) return darfOrdnerSehen(ich, o) && (d.status !== "pruefung" || d.hochgeladen_von === ich.person_id || darfArchivPflegen(ich)); // 1.64.0: Einreichung erst nach Prüfung für alle
   if (o.besitzer === ich.person_id) return true;
   if (d.status === "pruefung") return d.hochgeladen_von === ich.person_id;
   return freigaben.some((f) => f.ordner_id === o.id && freigabeDeckt(f, d));
@@ -1260,6 +1267,7 @@ async function archivOrdnerHolen(ich: Ich, id: unknown, geloeschteAuch = false, 
     return { ...o, _eigen: false, _freigaben: fr };
   }
   if (!darfOrdnerSehen(ich, o) || (o.geloescht_am && !geloeschteAuch)) throw new Fehler("Ordner nicht gefunden.", 404);
+  if (recht === "hochladen" && o.einreichen && !darfArchivPflegen(ich)) return { ...o, _eigen: false, _freigaben: [] as any[], _einreichung: true }; // KC-CLUB-CHRONIK
   if (recht !== "lesen") nurArchivPflege(ich);
   return { ...o, _eigen: false, _freigaben: [] as any[] };
 }
@@ -1270,6 +1278,7 @@ async function archivDokHolen(ich: Ich, id: unknown, recht: ArchivRecht = "lesen
   const eigeneEinreichung = d.status === "pruefung" && d.hochgeladen_von === ich.person_id;
   const o = await archivOrdnerHolen(ich, d.ordner_id, true, eigeneEinreichung ? "lesen" : recht);
   if (o.besitzer && !darfDokSehen(ich, o, d, o._freigaben)) return await archivKeinZugriff(ich, o, "ein Dokument");
+  if (!o.besitzer && !darfDokSehen(ich, o, d, [])) throw new Fehler("Dokument nicht gefunden.", 404); // KC-CLUB-CHRONIK: fremde Einreichung
   return { d, o };
 }
 async function archivEigenerOrdner(ich: Ich, jahr: number) {
@@ -5988,7 +5997,7 @@ Köcheclub-App`,
               const fr = eigen || x.geloescht_am || o.geloescht_am ? [] : await archivFreigabenFuer(ich.person_id, [o.id]);
               if (eigen || (!x.geloescht_am && !o.geloescht_am && darfDokSehen(ich, o, x, fr))) { erlaubt = true; break; }
               fremd = o;
-            } else if (darfOrdnerSehen(ich, o) && ((!x.geloescht_am && !o.geloescht_am) || darfArchivPflegen(ich))) { erlaubt = true; break; }
+            } else if (darfDokSehen(ich, o, x, []) && ((!x.geloescht_am && !o.geloescht_am) || darfArchivPflegen(ich))) { erlaubt = true; break; }
           }
           if (!erlaubt && fremd) await archivKeinZugriff(ich, fremd, "ein Dokument");
         }
@@ -6316,12 +6325,12 @@ Köcheclub-App`,
           gruppen: meineGr.map((g: any) => ({ id: g.thread_id, name: `${g.symbol || "👥"} ${g.name}` })),
           ordner: ordner.map((o: any) => {
             const eigen = o.besitzer === ich.person_id, inhalt = dk.filter((d: any) => d.ordner_id === o.id);
-            return { id: o.id, art: o.art, jahr: o.jahr, titel: o.besitzer ? (leute.get(o.besitzer)?.display_name || o.titel) : o.titel, farbe: o.farbe, register: o.register, nur_vorstand: o.nur_vorstand,
+            return { id: o.id, art: o.art, jahr: o.jahr, titel: o.besitzer ? (leute.get(o.besitzer)?.display_name || o.titel) : o.titel, farbe: o.farbe, register: o.register, nur_vorstand: o.nur_vorstand, einreichen: !!o.einreichen,
               besitzer: o.besitzer || null, eigen, anzahl: inhalt.filter((d: any) => d.status === "ok").length, pruefung: inhalt.filter((d: any) => d.status === "pruefung").length,
               freigaben: eigen ? (meineFr ?? []).filter((f: any) => f.ordner_id === o.id).map(fAnzeige) : undefined,
               geteilt: !eigen && o.besitzer ? fr.filter((f: any) => f.ordner_id === o.id).map(fAnzeige) : undefined };
           }),
-          dokumente: dk.map((d: any) => ({ id: d.id, ordner_id: d.ordner_id, register: d.register, titel: d.titel, datum: d.datum, stichworte: d.stichworte, status: d.status,
+          dokumente: dk.map((d: any) => ({ id: d.id, ordner_id: d.ordner_id, register: d.register, titel: d.titel, datum: d.datum, stichworte: d.stichworte, status: d.status, beschreibung: d.beschreibung || "",
             name: d.datei_name, mime: d.mime, groesse: d.groesse, datei: d.attachment_id, von: leute.get(d.hochgeladen_von)?.display_name || d.hochgeladen_von, vonIch: d.hochgeladen_von === ich.person_id, am: d.hochgeladen_am })),
           auto, persoenlich, alben,
         });
@@ -6358,7 +6367,8 @@ Köcheclub-App`,
         const jahr = Math.round(Number(p.jahr));
         if (!(jahr >= 1950 && jahr <= new Date().getFullYear() + 1)) throw new Fehler("Bitte ein gültiges Jahr wählen.");
         const werte = { art, jahr, titel: txt(p.titel, 60) || ARCHIV_ARTEN[art].t, farbe: Math.min(8, Math.max(1, Math.round(Number(p.farbe)) || 1)),
-          register: archivRegister(p.register, art), nur_vorstand: !!p.nur_vorstand, geaendert_am: jetzt() };
+          register: archivRegister(p.register, art), nur_vorstand: !!p.nur_vorstand, geaendert_am: jetzt(),
+          einreichen: p.einreichen === undefined ? art === "chronik" : !!p.einreichen && !p.nur_vorstand }; // KC-CLUB-CHRONIK: Chronik standardmäßig „alle dürfen einreichen“
         if (p.id) {
           const o = await archivOrdnerHolen(ich, p.id, false, "pflegen");
           await db.from("kc_club_archiv_ordner").update(werte).eq("id", o.id);
@@ -6366,7 +6376,7 @@ Köcheclub-App`,
           const { data: weg } = await db.from("kc_club_archiv_dokumente").select("id,register").eq("ordner_id", o.id);
           const fehlt = (weg ?? []).filter((d: any) => !werte.register.includes(d.register)).map((d: any) => d.id);
           if (fehlt.length) await db.from("kc_club_archiv_dokumente").update({ register: werte.register[0] }).in("id", fehlt);
-          await protokoll(ich.person_id, "archiv_ordner_geaendert", { ordner: o.id, vorher: { art: o.art, jahr: o.jahr, titel: o.titel, register: o.register, nur_vorstand: o.nur_vorstand }, umgehaengt: fehlt.length });
+          await protokoll(ich.person_id, "archiv_ordner_geaendert", { ordner: o.id, vorher: { art: o.art, jahr: o.jahr, titel: o.titel, register: o.register, nur_vorstand: o.nur_vorstand, einreichen: o.einreichen }, umgehaengt: fehlt.length });
           return json({ ok: true, id: o.id });
         }
         const { data: neu, error } = await db.from("kc_club_archiv_ordner").insert({ ...werte, erstellt_von: ich.person_id }).select("id").single();
@@ -6385,8 +6395,9 @@ Köcheclub-App`,
       }
 
       case "archiv_hochladen": {
-        const o = await archivOrdnerHolen(ich, p.ordner_id, false, "hochladen");
-        const einreichung = !!o.besitzer && !o._eigen;
+        const o: any = await archivOrdnerHolen(ich, p.ordner_id, false, "hochladen");
+        const vereinEinreichung = !!o._einreichung; // KC-CLUB-CHRONIK (1.64.0): Mitglied legt in einen Vereinsordner zur Prüfung
+        const einreichung = (!!o.besitzer && !o._eigen) || vereinEinreichung;
         if (o.besitzer && (await archivBelegtVon(o.besitzer)) >= PERSOENLICH_GRENZE)
           throw new Fehler(einreichung ? "Der Ordner ist voll (50 MB) – bitte dem Besitzer Bescheid geben." : "Dein persönlicher Speicher ist voll (50 MB) – bitte zuerst Altes löschen.", 507);
         const sp = await speicherStand();
@@ -6396,15 +6407,31 @@ Köcheclub-App`,
           // Einreichung: nur in das freigegebene Register (bei Register-Freigabe), Status „zur Prüfung“
           const erlaubteReg = einreichung ? o._freigaben.filter((f: any) => f.hochladen && !f.dokument_id).map((f: any) => f.register) : [];
           let register = o.register.includes(String(p.register)) ? String(p.register) : o.register[0] ?? null;
-          if (einreichung && !erlaubteReg.includes(null) && !erlaubteReg.includes(register)) register = erlaubteReg[0];
+          if (einreichung && !vereinEinreichung && !erlaubteReg.includes(null) && !erlaubteReg.includes(register)) register = erlaubteReg[0];
           const { data: d, error } = await db.from("kc_club_archiv_dokumente").insert({
-            ordner_id: o.id, register, titel: txt(p.titel, 120) || datei.name, datum: archivDatum(p.datum), stichworte: archivStichworte(p.stichworte),
+            ordner_id: o.id, register, titel: txt(p.titel, 120) || datei.name, datum: archivDatum(p.datum), stichworte: archivStichworte(p.stichworte), beschreibung: txt(p.beschreibung, 1000),
             attachment_id: datei.id, datei_name: datei.name, mime: txt(p.mime, 100), groesse: datei.groesse, hochgeladen_von: ich.person_id,
             status: einreichung ? "pruefung" : "ok",
           }).select("id").single();
           if (error || !d) throw new Fehler("Dokument konnte nicht gespeichert werden.", 500);
           await protokoll(ich.person_id, einreichung ? "archiv_eingereicht" : "archiv_hochgeladen", { dokument: d.id, ordner: o.id, register, groesse: datei.groesse });
-          if (einreichung) {
+          if (vereinEinreichung) {
+            const titel = txt(p.titel, 120) || datei.name, url = `${APP_URL}#archiv`, an = (await archivPflegerIds()).filter((x) => x !== ich.person_id);
+            if (an.length) await senden("club_nachricht", an, {
+              titel: `📥 Neu für „${txt(o.titel, 40)}“ – bitte prüfen`, kurz: `${ich.name}: „${titel}“${register ? ` (${register})` : ""} – annehmen oder ablehnen`,
+              betreff: `Köcheclub Werne – ein Beitrag für „${txt(o.titel, 40)}“ wartet auf Prüfung`,
+              text: `Hallo,
+
+${ich.name} hat „${titel}“ für den Ordner „${txt(o.titel, 60)}“${register ? ` (Register ${register})` : ""} eingereicht.
+Alle sehen den Beitrag erst, wenn ihn jemand aus der Clubleitung annimmt.
+
+${url}
+
+Viele Grüße
+Köcheclub-App`,
+              url,
+            }, `club-archiv-pruefung:${d.id}`).catch(() => null);
+          } else if (einreichung) {
             const b = (await personen([o.besitzer])).get(o.besitzer), titel = txt(p.titel, 120) || datei.name, url = `${APP_URL}#archiv`;
             await senden("club_nachricht", [o.besitzer], {
               titel: "📥 Neues Dokument zur Prüfung", kurz: `${ich.name}: „${titel}“ in deinem Ordner ${o.jahr} – annehmen oder ablehnen`,
@@ -6417,10 +6444,29 @@ Köcheclub-App`,
         } catch (e) { await dateienEntfernen([datei.id]); throw e; }
       }
 
+      // KC-CLUB-BLAETTERN (1.64.0): alle sichtbaren Dokumente eines Ordners mit Link (1 Stunde) – für „📖 Blättern“ in einem Rutsch
+      case "archiv_blaettern": {
+        const o: any = await archivOrdnerHolen(ich, p.ordner_id, false, "lesen");
+        const { data: dk } = await db.from("kc_club_archiv_dokumente").select("id,register,titel,datum,beschreibung,mime,datei_name,attachment_id,status,hochgeladen_von")
+          .eq("ordner_id", o.id).is("geloescht_am", null).eq("status", "ok").order("datum", { ascending: true, nullsFirst: false }).limit(400);
+        const sicht = (dk ?? []).filter((d: any) => darfDokSehen(ich, o, d, o._freigaben));
+        const ids = sicht.map((d: any) => d.attachment_id), att: any[] = [];
+        for (let i = 0; i < ids.length; i += 100) { const { data } = await db.from("kc_communication_attachments").select("id,bucket,object_path").in("id", ids.slice(i, i + 100)); att.push(...(data ?? [])); }
+        const url = new Map<string, string>();
+        for (const bucket of [...new Set(att.map((a) => a.bucket))]) {
+          const liste = att.filter((a) => a.bucket === bucket);
+          const { data: su } = await db.storage.from(bucket).createSignedUrls(liste.map((a) => a.object_path), 3600);
+          for (const u of su ?? []) { const a = liste.find((x) => x.object_path === u.path); if (a && u.signedUrl) url.set(a.id, u.signedUrl); }
+        }
+        return json({ ordner: { id: o.id, titel: o.besitzer ? undefined : o.titel, jahr: o.jahr, art: o.art, register: o.register },
+          seiten: sicht.map((d: any) => ({ id: d.id, register: d.register, titel: d.titel, datum: d.datum, beschreibung: d.beschreibung || "", mime: d.mime, name: d.datei_name, url: url.get(d.attachment_id) ?? null })) });
+      }
+
       case "archiv_pruefung": {
         // Besitzer entscheidet über eine Einreichung: annehmen (sichtbar wie alles andere) oder ablehnen (wird gelöscht)
         const { d, o } = await archivDokHolen(ich, p.id, "pflegen");
-        if (!o.besitzer || !o._eigen) throw new Fehler("Das kann nur der Besitzer des Ordners.", 403);
+        // KC-CLUB-CHRONIK (1.64.0): im Vereinsordner prüft die Archiv-Pflege (Clubsprecher/Admin)
+        if (o.besitzer ? !o._eigen : !darfArchivPflegen(ich)) throw new Fehler(o.besitzer ? "Das kann nur der Besitzer des Ordners." : "Prüfen dürfen Clubsprecher und Admin.", 403);
         if (d.status !== "pruefung") return json({ ok: true, schon: true });
         const ja = p.annehmen === true, url = `${APP_URL}#archiv`;
         if (ja) await db.from("kc_club_archiv_dokumente").update({ status: "ok", geaendert_am: jetzt() }).eq("id", d.id);
@@ -6433,7 +6479,7 @@ Köcheclub-App`,
         if (d.hochgeladen_von !== ich.person_id) await senden("club_nachricht", [d.hochgeladen_von], {
           titel: ja ? "✅ Dokument angenommen" : "✖ Dokument abgelehnt", kurz: `${ich.name} hat „${txt(d.titel, 80)}“ ${ja ? "angenommen" : "abgelehnt"}.`,
           betreff: `Köcheclub Werne – dein Dokument wurde ${ja ? "angenommen" : "abgelehnt"}`,
-          text: `Hallo,\n\n${ich.name} hat dein Dokument „${txt(d.titel, 120)}“ ${ja ? "angenommen – es liegt jetzt in seinem/ihrem Ordner" : "abgelehnt – es wurde gelöscht"}.\n\n${url}\n\nViele Grüße\nKöcheclub-App`,
+          text: `Hallo,\n\n${ich.name} hat dein Dokument „${txt(d.titel, 120)}“ ${ja ? (o.besitzer ? "angenommen – es liegt jetzt in seinem/ihrem Ordner" : `angenommen – es steht jetzt für alle im Ordner „${txt(o.titel, 60)}“`) : "abgelehnt – es wurde gelöscht"}.\n\n${url}\n\nViele Grüße\nKöcheclub-App`,
           url,
         }, `club-archiv-entscheid:${d.id}`).catch(() => null);
         return json({ ok: true, angenommen: ja });
@@ -6504,10 +6550,11 @@ Köcheclub-App`,
         if (p.titel !== undefined) upd.titel = txt(p.titel, 120) || d.titel;
         if (p.datum !== undefined) upd.datum = archivDatum(p.datum);
         if (p.stichworte !== undefined) upd.stichworte = archivStichworte(p.stichworte);
+        if (p.beschreibung !== undefined) upd.beschreibung = txt(p.beschreibung, 1000); // KC-CLUB-CHRONIK
         const reg = p.register !== undefined ? String(p.register) : d.register;
         upd.register = ziel.register.includes(reg) ? reg : ziel.register[0] ?? null;
         await db.from("kc_club_archiv_dokumente").update(upd).eq("id", d.id);
-        await protokoll(ich.person_id, "archiv_geaendert", { dokument: d.id, vorher: { ordner: d.ordner_id, register: d.register, titel: d.titel, datum: d.datum, stichworte: d.stichworte } });
+        await protokoll(ich.person_id, "archiv_geaendert", { dokument: d.id, vorher: { ordner: d.ordner_id, register: d.register, titel: d.titel, datum: d.datum, stichworte: d.stichworte, beschreibung: d.beschreibung } });
         return json({ ok: true });
       }
 

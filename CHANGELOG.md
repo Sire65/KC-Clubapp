@@ -1,5 +1,21 @@
 # Änderungen
 
+## 1.64.0 – 2026-10-03
+- KC-CLUB-CHRONIK (Vorschlag + Freigabe Hansi): Clubchronik im Vereinsarchiv – ein Ordner für alle Jahre (Rücken: Gründungsjahr),
+  steht über allen Jahren. Anlegen mit „📖 Chronik anlegen“ (fragt das Gründungsjahr). Register: Gründung, Presse, Rekorde &
+  Höhepunkte, Feste & Jubiläen, Mitglieder im Wandel, In Gedenken, Ehrungen & Urkunden, Sonstiges. Einträge als Zeitleiste
+  (Datum des Ereignisses, alt → neu) mit kurzer Beschreibung („Was sieht man? Wer, was, wo“). Anleitung „📌 So füllen wir
+  unsere Chronik“ oben im Ordner (Datenschutz: In Gedenken nur mit Einverständnis der Familie, Ausgeschiedene ohne Gründe).
+- Einreichen mit Prüfung: Vereinsordner können „📥 Alle dürfen einreichen“ (Chronik: an). Mitglieder legen Beiträge hinein, alle
+  sehen sie erst nach „✔ Annehmen“ durch Clubsprecher/Admin (die bekommen Bescheid; der Einreicher auch nach der Entscheidung).
+  Einreicher kann zurückziehen. Fremde Einreichungen sind auch per Link nicht abrufbar.
+- KC-CLUB-BLAETTERN (Wunsch Hansi „wie Einkaufsprospekte“): „📖 Blättern“ in jedem Ordner (Verein, persönlich, geteilt) und in
+  jedem Fotoalbum – Vollbild, Umblätter-Effekt, Wischen oder ‹ ›, quer auf dem Tablet zwei Seiten wie ein Buch, Lesezeichen je
+  Register, Regler zum Springen, Antippen vergrößert. Fotos/Scans direkt, PDFs Seite für Seite (pdf.js lokal), Word/Excel als
+  Karte „📄 Öffnen“. Chronik beginnt mit Deckblatt und Anleitung. Zurück-Taste schließt das Blättern. Server: archiv_blaettern
+  (alle Links eines Ordners in einem Aufruf). PDF-Seite→Bild ist ein gemeinsamer Helfer (Dokument-Anzeige + Blättern).
+- DB: kc_club_archiv_ordner.einreichen, kc_club_archiv_dokumente.beschreibung (Migration 20261003_kc_club_v1640_chronik.sql).
+
 ## 1.63.0 – 2026-10-03
 - KC-CLUB-FOTO-ALBEN (Wunsch Hansi): eigene Fotoalben mit Namen (z. B. „Weihnachtsmarkt 2026“). Im Fotoalbum oben
   „📸 Alben“ mit „＋ Neues Album“; „☑️ Auswählen“ → Fotos antippen (grüner Haken) → unten „📸 Ins Album“ (vorhandenes
