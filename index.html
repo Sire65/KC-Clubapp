@@ -1564,8 +1564,9 @@
   .ge-dieses { box-shadow: 0 0 0 2px var(--gruen, #2fbf5b); }
   .ruhe-zeiten input:disabled { opacity: .5; }
   /* KC-CLUB-NUTZUNG (0.99.0) */
-  .nz-zeile { display: grid; grid-template-columns: 12em minmax(0, 1fr) 2.8em; gap: 8px; align-items: center; font-size: .92rem; }
+  .nz-zeile { display: grid; grid-template-columns: 11rem minmax(0, 1fr) 2.6rem; gap: 8px; align-items: center; font-size: .92rem; }
   .nz-zeile span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .nz-zeile b { text-align: right; }
+  .nz-zeile.nz-unter { font-size: .84rem; color: var(--grau, #666); } .nz-zeile.nz-unter span { padding-left: 1.1em; } .nz-zeile.nz-unter .nz-balken i { opacity: .55; }
   .nz-balken { height: 10px; background: var(--karte2, rgba(128,128,128,.2)); border-radius: 6px; overflow: hidden; }
   .nz-balken i { display: block; height: 100%; background: var(--rot); border-radius: 6px; }
   .nz-tage { display: flex; align-items: flex-end; gap: 2px; height: 60px; padding: 4px 0; border-bottom: 1px solid var(--linie); }
@@ -2345,7 +2346,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.88.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.89.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -6271,6 +6272,7 @@ function zeige(v, ausHistorie) {
   if (v !== "chat") $("nachUnten")?.classList.add("versteckt");
   aktuelleAnsicht = v; if (window.KCFP) KCFP.sicht = v;
   nzZaehlen(v); // KC-CLUB-NUTZUNG: nur „Bereich geöffnet“, ohne Namen
+  if (v !== "buero" && typeof BU !== "undefined") BU.nzSicht = null; // KC-CLUB-NUTZUNG-BEREICHE (1.89.0): beim nächsten Büro-Besuch wieder zählen
   if (vorher === "protokoll" && v !== "protokoll" && prTimer) prSpeichernJetzt(false).catch(() => {}); // ungespeicherte Eingaben sichern
   ["start", "dokumente", "dokansicht", "termine", "vorschlaege", "aktionen", "aktion", "fotos", "feedback", "gruppe", "mitglied", "protokolle", "protokoll", "dienste", "nachrichten", "chat", "neu", "mitglieder", "einstellungen", "pinnwand", "erstattung", "ueberblick", "programme", "standort", "archiv", "sos", "sicherheit", "helfen", "buero"].forEach((x) => $("v-" + x).classList.toggle("versteckt", x !== v));
   document.querySelectorAll("#fuss button").forEach((b) => b.classList.toggle("an", b.dataset.v === v || (v === "chat" && b.dataset.v === "nachrichten") || (v === "neu" && b.dataset.v === "nachrichten")));
@@ -6947,6 +6949,8 @@ async function buLaden() {
 }
 function buZurueck() { if (BU.sicht !== "start") { BU.sicht = "start"; buLaden(); window.scrollTo(0, 0); } else zeige("start"); }
 function buZeigen() { buZeigenRoh(); klappenMerken($("buInhalt")); }
+// KC-CLUB-NUTZUNG-BEREICHE (1.89.0): Büro-Fächer einmal je Öffnen zählen (nicht bei jedem Neuzeichnen); Fall/Neu zählen als Freud & Leid
+function buNzZaehlen() { const k = { fall: "fl", flneu: "fl" }[BU.sicht] || BU.sicht; if (!k || k === "start" || k === BU.nzSicht) return; BU.nzSicht = k; nzZaehlen("buero_" + k); }
 // ---------- KC-CLUB-LIVE-VORSCHAU (1.67.0, Wunsch Hansi „immer eine Vorschau, damit man sieht, wie die Vorlage aussieht“) ----------
 // Beim Bearbeiten steht unten ein kleines A4-Blatt, das sich bei jeder Änderung selbst erneuert – gebaut mit dem vorhandenen
 // Druck-Kern (DRUCKARTEN + druckSeiteBauen + druckHtml), also genau so, wie es gedruckt wird. Antippen = große Vorschau mit 🖨️.
@@ -6971,7 +6975,7 @@ async function lvJetzt() {
 function lvGross() { if (LV.art) druckStarten(LV.art); }
 // Bereich im Büro: Klappkarte mit Pfeil und Schloss wie in den Einstellungen (Zustand je Gerät gemerkt)
 const buBereich = (name, titel, inhalt) => `<details class="karte bu-bereich" data-klappe="buero_${name}" data-ohne-unten open><summary>${titel}</summary>${inhalt}</details>`;
-function buZeigenRoh() { if ($("buKopfGruss") && ICH) $("buKopfGruss").textContent = `${buTageszeit()}, ${ICH.vorname || ICH.name}!`; // 1.83.0: Begrüßung in der Kopfzeile
+function buZeigenRoh() { buNzZaehlen(); if ($("buKopfGruss") && ICH) $("buKopfGruss").textContent = `${buTageszeit()}, ${ICH.vorname || ICH.name}!`; // 1.83.0: Begrüßung in der Kopfzeile
   $("buInhalt").innerHTML = BU.sicht === "ordner" ? buOrdnerHtml() : BU.sicht === "sitzung" ? buSitzungHtml() : BU.sicht === "eingang" ? buEingangHtml() : BU.sicht === "brief" ? buBriefHtml() : BU.sicht === "termine" ? buTermineHtml() : BU.sicht === "kontakt" ? buKontaktHtml() : BU.sicht === "nachher" ? buNachherHtml() : BU.sicht === "feste" ? buFesteHtml() : BU.sicht === "liste" ? buListeHtml() : BU.sicht === "fl" ? buFlHtml() : BU.sicht === "flneu" ? buFlNeuHtml() : BU.sicht === "fall" ? buFallHtml() : BU.sicht === "rechte" ? buRechteHtml() : buStartHtml(); lvNachZeigen(); }
 // Nächster sinnvoller Schritt für eine Sitzung
 function buNaechster(t) {
@@ -8009,8 +8013,8 @@ let HL = { tab: "helfen", hilfe: null, leihen: null, form: null, angebotForm: nu
 const hlTag = (n) => tagPlus(heuteIso(), n);
 const hlTagName = (iso) => iso === hlTag(0) ? "Heute" : iso === hlTag(1) ? "Morgen" : fTagDp.format(new Date(iso + "T12:00:00Z"));
 const hlTagLang = (iso, slot, zf) => `${hlTagName(iso)}${iso === hlTag(0) || iso === hlTag(1) ? " " + fTagDp.format(new Date(iso + "T12:00:00Z")) : ""}${slot && zf?.[slot] ? " · " + zf[slot] : ""}`;
-function hlStart(tab) { if (tab) HL.tab = tab; HL.form = null; HL.angebotForm = null; HL.edit = false; BO.form = null; zeige("helfen"); }
-function hlTab(t) { HL.tab = t; HL.form = null; HL.angebotForm = null; HL.edit = false; BO.form = null; hlZeigen(); hlLaden(); }
+function hlStart(tab) { if (tab) HL.tab = tab; HL.form = null; HL.angebotForm = null; HL.edit = false; BO.form = null; zeige("helfen"); nzZaehlen("helfen_" + HL.tab); }
+function hlTab(t) { if (t !== HL.tab) nzZaehlen("helfen_" + t); HL.tab = t; HL.form = null; HL.angebotForm = null; HL.edit = false; BO.form = null; hlZeigen(); hlLaden(); }
 async function hlLaden() {
   try {
     if (HL.tab === "helfen") HL.hilfe = await api("hilfe_liste"); else if (HL.tab === "boerse") BO.d = await api("boerse_liste"); else HL.leihen = await api("leihen_liste");
@@ -11144,6 +11148,7 @@ function kalenderAboZeigen(url) {
   $("kalAboKnopf").textContent = a || url ? "🔄 Neuen Link erzeugen" : "📲 Kalender verbinden";
 }
 async function kalenderAbo() {
+  nzZaehlen("kalender_abo");
   if (INIT?.kalenderAbo && !(await frage("Neuen Kalender-Link erzeugen? Der alte Link funktioniert dann nicht mehr (z. B. auf einem alten Handy)."))) return;
   try { const r = await api("kalender_abo"); INIT.kalenderAbo = { erstellt_am: new Date().toISOString(), zuletzt_abgerufen: null }; kalenderAboZeigen(r.url); } catch (e) { melde(e.message, true); }
 }
@@ -11221,7 +11226,7 @@ function faKopfZurueck() {
   if (faFilter.album_id) { const her = faHerkunft; faHerkunft = ""; faFilter = {}; if (her === "archiv") return zeige("archiv"); return fotosLaden(); }
   zeige("start");
 }
-function albumOeffnen(id, herkunft = "") { faHerkunft = herkunft; FAW.an = false; FAW.ids.clear(); FAW.ziel = null; faFilter = { album_id: id }; faPapierkorb = false; if (aktuelleAnsicht === "fotos") fotosLaden(); else zeige("fotos"); }
+function albumOeffnen(id, herkunft = "") { nzZaehlen("fotoalbum"); faHerkunft = herkunft; FAW.an = false; FAW.ids.clear(); FAW.ziel = null; faFilter = { album_id: id }; faPapierkorb = false; if (aktuelleAnsicht === "fotos") fotosLaden(); else zeige("fotos"); }
 function faAlbenZeigen() {
   const el = $("fotoAlben"); if (!el || !FA) return;
   if (faPapierkorb) { el.innerHTML = ""; return; }
@@ -12507,6 +12512,7 @@ function arAlbumRuecken(a) {
 const BL = { offen: false, seiten: [], i: 0, titel: "", farben: {}, zurueck: false, lauf: 0, x: null };
 const blDoppel = () => innerWidth >= 900 && innerWidth > innerHeight;
 async function blOrdner(id) {
+  nzZaehlen("blaettern");
   if (String(id).startsWith("auto:")) return blVereinsleben(id); // 1.64.1: auch „🤖 Vereinsleben“ (Einträge als Karten-Seiten)
   try {
     const r = await api("archiv_blaettern", { ordner_id: id }, { warten: true }), o = arOrdnerAktuell();
@@ -12637,6 +12643,7 @@ function arFreiRegister(o, nurHochladen) {
   return fr.some((f) => !f.register && !f.dokument) ? o.register : [...new Set(fr.map((f) => f.register).filter(Boolean))];
 }
 function arOrdnerOeffnen(id) {
+  if (AR.daten?.ordner?.find((o) => o.id === id)?.art === "chronik") nzZaehlen("chronik"); // KC-CLUB-NUTZUNG-BEREICHE
   AR.ordner = id; AR.register = ""; AR.suche = ""; AR.ordnerSuche = "";
   history.pushState({ v: "archiv", id }, "", location.pathname + "#archiv");
   arZeigen(); window.scrollTo(0, 0);
@@ -13366,7 +13373,15 @@ document.addEventListener("visibilitychange", () => { if (document.hidden) nzSen
 const NZ_NAMEN = { start: "🏠 Startseite", termine: "📅 Termine", nachrichten: "💬 Nachrichten (Liste)", chat: "💬 Unterhaltung geöffnet", neu: "✍️ Neue Nachricht",
   pinnwand: "📌 Pinnwand", fotos: "📷 Fotoalbum", mitglieder: "👥 Mitglieder", mitglied: "👤 Mitglied angesehen", einstellungen: "⚙️ Einstellungen", dienste: "🗓️ Dienstpläne",
   aktionen: "🧳 Aktionen", aktion: "🧳 Aktion angesehen", protokolle: "📋 Protokolle", protokoll: "📋 Protokoll angesehen", vorschlaege: "🗳️ Vorschläge", dokumente: "📚 Dokumente",
-  standort: "📍 Standorte", erstattung: "💶 Erstattung", feedback: "💭 Feedback", programme: "💻 Programme", ueberblick: "🗺️ Überblick", gruppe: "👥 Gruppe", archiv: "🗄️ Archiv", suche: "🔍 Suche geöffnet" };
+  dokansicht: "📄 Dokument gelesen", standort: "📍 Standorte", erstattung: "💶 Erstattung", feedback: "💭 Feedback", programme: "💻 Programme", ueberblick: "🗺️ Überblick", gruppe: "👥 Gruppe",
+  archiv: "🗄️ Archiv", suche: "🔍 Suche geöffnet", sicherheit: "🛡️ Sicherheits-Check", sos: "🆘 SOS geöffnet", kalender_abo: "📆 Kalender-Abo",
+  // KC-CLUB-NUTZUNG-BEREICHE (1.89.0, Wunsch Hansi „Büro fehlt“): neue Bereiche + Unterbereiche (eingerückt unter dem Hauptbereich)
+  helfen: "🤝 Helfen & Leihen", helfen_helfen: "🙋 Wer kann helfen?", helfen_leihen: "📦 Ausleihen", helfen_boerse: "🛍️ Börse",
+  buero: "🗂️ Büro", buero_eingang: "📥 Eingang", buero_sitzung: "📝 Sitzung", buero_nachher: "✅ Nach der Sitzung", buero_kontakt: "📨 Einladen / Erinnern", buero_brief: "✉️ Briefe",
+  buero_termine: "📅 Termine planen", buero_feste: "🎂 Geburtstage", buero_fl: "🤍 Freud & Leid", buero_liste: "📇 Mitgliederliste", buero_ordner: "📂 Büro-Ordner", buero_rechte: "🔐 Freigaben",
+  chronik: "📖 Chronik", blaettern: "📖 Blättern", fotoalbum: "📸 Eigenes Fotoalbum" };
+// Unterbereich → Hauptbereich (für die Einrückung); Werte müssen zu NUTZUNG_BEREICHE im Server passen
+const nzOber = (b) => b.startsWith("buero_") ? "buero" : b.startsWith("helfen_") ? "helfen" : ({ chronik: "archiv", blaettern: "archiv", fotoalbum: "fotos", kalender_abo: "termine", chat: "nachrichten", neu: "nachrichten", mitglied: "mitglieder", aktion: "aktionen", protokoll: "protokolle", dokansicht: "dokumente" })[b] || "";
 let NZ_TAGE = 7;
 async function nzAdmin(tage) {
   if (tage) NZ_TAGE = tage;
@@ -13376,13 +13391,16 @@ async function nzAdmin(tage) {
   const tageMap = new Map(); for (const z of r.zeilen) tageMap.set(z.tag, (tageMap.get(z.tag) || 0) + z.anzahl);
   const tagListe = []; for (let i = r.tage - 1; i >= 0; i--) { const t = new Intl.DateTimeFormat("sv-SE", { timeZone: TZ }).format(new Date(Date.now() - i * 86400000)); tagListe.push([t, tageMap.get(t) || 0]); }
   const tmax = Math.max(1, ...tagListe.map((x) => x[1]));
-  const ungenutzt = Object.keys(NZ_NAMEN).filter((b) => !summe.has(b) && !["neu", "mitglied", "aktion", "protokoll", "gruppe"].includes(b));
+  const ungenutzt = Object.keys(NZ_NAMEN).filter((b) => !summe.has(b) && !nzOber(b) && !["gruppe", "sos", "sicherheit"].includes(b));
+  // Hauptbereiche nach Anzahl (inkl. Unterbereiche), darunter eingerückt ihre Unterbereiche
+  const haupt = new Map(); for (const [b, n] of liste) { const o = nzOber(b) || b; haupt.set(o, (haupt.get(o) || 0) + (nzOber(b) ? 0 : n)); }
+  const zeilen = [...haupt.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).flatMap(([o, n]) => [[o, n, false], ...liste.filter(([b]) => nzOber(b) === o).map(([b, m]) => [b, m, true])]);
   $("adminBlattInhalt").innerHTML = `<h3 style="margin:0">📊 Nutzung – ohne Namen</h3>
     <p class="hinweis" style="margin:0">Wie oft die Bereiche geöffnet wurden. Es wird nie gespeichert, wer – nur Tag, Bereich und Anzahl.</p>
     <div class="knoepfe">${[7, 30, 90].map((t) => `<button class="knopf klein${r.tage === t ? " haupt" : ""}" onclick="nzAdmin(${t})">${t} Tage</button>`).join("")}${INFO_DATEN.admin?.r ? `<button class="knopf klein" onclick="adminBlatt()">‹ Admin-Zentrale</button>` : ""}</div>
-    <b>Insgesamt ${gesamt} Öffnungen in ${r.tage} Tagen</b>
+    <b>Insgesamt ${gesamt} Öffnungen in ${r.tage} Tagen</b><span class="hinweis" style="margin:0">↳ = Teilbereich (z. B. Büro → Eingang). Die Zahl beim Hauptbereich zählt nur das Öffnen selbst.</span>
     <div class="nz-tage" title="Öffnungen je Tag">${tagListe.map(([t, n]) => `<div title="${esc(t.slice(8) + "." + t.slice(5, 7) + ".: " + n)}"><i style="height:${Math.round(n / tmax * 100)}%"></i></div>`).join("")}</div>
-    ${liste.length ? liste.map(([b, n]) => `<div class="nz-zeile"><span>${esc(NZ_NAMEN[b] || b)}</span><div class="nz-balken"><i style="width:${Math.round(n / max * 100)}%"></i></div><b>${n}</b></div>`).join("")
+    ${liste.length ? zeilen.map(([b, n, unter]) => `<div class="nz-zeile${unter ? " nz-unter" : ""}"><span>${unter ? "↳ " : ""}${esc(NZ_NAMEN[b] || b)}</span><div class="nz-balken"><i style="width:${Math.round(n / max * 100)}%"></i></div><b>${n}</b></div>`).join("")
       : '<p class="hinweis">Noch keine Zahlen – die Statistik füllt sich, sobald die Mitglieder die neue Version nutzen.</p>'}
     ${liste.length && ungenutzt.length ? `<p class="hinweis" style="margin:6px 0 0">Nicht geöffnet in diesem Zeitraum: ${ungenutzt.map((b) => esc(NZ_NAMEN[b])).join(", ")}</p>` : ""}`;
   $("adminBlatt").classList.remove("versteckt");

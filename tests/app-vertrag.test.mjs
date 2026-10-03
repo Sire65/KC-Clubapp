@@ -2988,6 +2988,19 @@ assert.ok(/<h2>🗂️ Büro<\/h2><span class="bu-kopfgruss" id="buKopfGruss"><\
   assert.ok(/onclick="einrichtungskarte\('\$\{m\.person_id\}'\)">🖨️ Einrichtungskarte<\/button>/.test(html), "Knopf beim Mitglied");
   assert.ok(/\{ id: "verlassen", sym: "🚪"/.test(html) && !/\{ id: "verlassen",[^\n]*an: true/.test(html) && /hat die Club-App verlassen\.` \}\);/.test(html), "Verlassen-Ansage, Standard aus");
 }
+// 269. 1.89.0: KC-CLUB-NUTZUNG-BEREICHE – jede Ansicht und jeder gezählte Teilbereich hat einen Namen und ist im Server erlaubt
+{
+  const erlaubt = new Set([...server.slice(server.indexOf("const NUTZUNG_BEREICHE"), server.indexOf("]);", server.indexOf("const NUTZUNG_BEREICHE"))).matchAll(/"([a-z_]+)"/g)].map((m) => m[1]));
+  const nzN = html.slice(html.indexOf("const NZ_NAMEN = {"), html.indexOf("};", html.indexOf("const NZ_NAMEN = {")));
+  const namen = new Set([...nzN.matchAll(/(?:^|[{,\s])([a-z_]+): "/g)].map((m) => m[1]));
+  const ansichten = [...html.matchAll(/<section id="v-([a-z]+)"/g)].map((m) => m[1]);
+  for (const v of ansichten) assert.ok(namen.has(v) && erlaubt.has(v), `Ansicht ohne Nutzungs-Namen/Server-Freigabe: ${v}`);
+  const gezaehlt = [...html.matchAll(/nzZaehlen\("([a-z_]+)"\)/g)].map((m) => m[1]);
+  for (const k of [...gezaehlt, ...[...namen]]) assert.ok(erlaubt.has(k), `Server verwirft Nutzungs-Schlüssel: ${k}`);
+  for (const k of ["buero_eingang", "buero_fl", "helfen_boerse", "chronik", "fotoalbum"]) assert.ok(namen.has(k), `Teilbereich fehlt: ${k}`);
+  assert.ok(/function buNzZaehlen\(\) \{[^\n]*k === BU\.nzSicht\) return;/.test(html) && /if \(v !== "buero" && typeof BU !== "undefined"\) BU\.nzSicht = null;/.test(html), "Büro-Fächer einmal je Öffnen zählen");
+  assert.ok(/class="nz-zeile\$\{unter \? " nz-unter" : ""\}"/.test(html), "Teilbereiche eingerückt");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

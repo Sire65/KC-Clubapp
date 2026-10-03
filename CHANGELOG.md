@@ -1,5 +1,14 @@
 # Änderungen
 
+## 1.89.0 – 2026-10-03
+- KC-CLUB-NUTZUNG-BEREICHE (Wunsch Hansi „Nutzung-Übersicht anpassen, z. B. Büro fehlt“): Die Statistik „📊 Nutzung – ohne Namen“
+  kennt jetzt alle Bereiche: 🗂️ Büro, 🤝 Helfen & Leihen, 📄 Dokument gelesen, 🛡️ Sicherheits-Check, 🆘 SOS, 📆 Kalender-Abo – dazu
+  Teilbereiche, eingerückt unter dem Hauptbereich (↳): Büro-Fächer (Eingang, Sitzung, Nach der Sitzung, Einladen, Briefe, Termine,
+  Geburtstage, Freud & Leid, Mitgliederliste, Büro-Ordner, Freigaben), Helfen-Reiter (Wer kann helfen?, Ausleihen, Börse),
+  📖 Chronik, 📖 Blättern, 📸 eigenes Fotoalbum; Chat/Mitglied/Aktion/Protokoll/Dokument stehen eingerückt unter ihrer Liste.
+  Büro-Fächer zählen einmal je Öffnen (nicht bei jedem Neuzeichnen). Weiterhin nur Tag + Bereich + Anzahl, nie wer.
+  Server: NUTZUNG_BEREICHE um die neuen Schlüssel erweitert (unbekannte Schlüssel werden weiter verworfen).
+
 ## 1.88.0 – 2026-10-03
 - KC-CLUB-EINRICHTUNGSKARTE (Wunsch Hansi): Einrichtungskarte zum Ausdrucken (A4) – großer QR-Code mit dem persönlichen Link,
   „Kamera drauf halten → Link antippen → App führt Schritt für Schritt“, darunter die Schritte für iPhone/iPad und Android

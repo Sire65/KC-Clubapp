@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.88.0";
+const SERVER_VERSION = "1.89.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -2445,7 +2445,10 @@ async function privatListe(ich: Ich, von: string, bis?: string) {
 
 // KC-CLUB-NUTZUNG (0.99.0): nur diese Bereiche werden gezählt (Ansichten der App)
 const NUTZUNG_BEREICHE = new Set(["start", "termine", "nachrichten", "chat", "neu", "pinnwand", "fotos", "mitglieder", "mitglied", "einstellungen", "dienste",
-  "aktionen", "aktion", "protokolle", "protokoll", "vorschlaege", "dokumente", "standort", "erstattung", "feedback", "programme", "ueberblick", "gruppe", "archiv", "suche"]);
+  "aktionen", "aktion", "protokolle", "protokoll", "vorschlaege", "dokumente", "standort", "erstattung", "feedback", "programme", "ueberblick", "gruppe", "archiv", "suche",
+  // KC-CLUB-NUTZUNG-BEREICHE (1.89.0): fehlende Bereiche + Unterbereiche (Büro-Fächer, Helfen-Reiter, Chronik, Alben)
+  "dokansicht", "sicherheit", "sos", "kalender_abo", "helfen", "helfen_helfen", "helfen_leihen", "helfen_boerse", "buero", "buero_eingang", "buero_sitzung", "buero_nachher",
+  "buero_kontakt", "buero_brief", "buero_termine", "buero_feste", "buero_fl", "buero_liste", "buero_ordner", "buero_rechte", "chronik", "blaettern", "fotoalbum"]);
 
 // ---------- Hauptprogramm ----------
 Deno.serve(async (req) => {
