@@ -43,8 +43,8 @@ p.txt { margin: 3mm 0 0; } h2.w { color: var(--blau); font-weight: 400; font-siz
 </style></head><body>
 <section class="titel"><img src="file://${B}/muetze.webp"><h1>Köcheclub Werne</h1><h2>Club-App — Anleitung</h2><div class="klein">Anleitung Version ${VERSION.anleitung} · Club-App ${VERSION.app} · Stand ${VERSION.stand}</div></section>
 <h2 class="ih">Inhalt</h2><div class="inhalt">${INHALT.map(([t, u]) => `<div><b>${t}</b> <span>– ${u}</span></div>`).join('')}</div>
-<div class="gut">${GUT_ZU_WISSEN.map((x) => `<p>${x}</p>`).join('')}<p>${NEU} markiert Funktionen, die in den letzten Tagen neu dazugekommen sind.</p></div>
-<section class="teil"><h1 class="t">So fängst du an</h1><p class="unter">Vom Link bis zur fertigen App – in vier Schritten</p>
+<div class="gut">${GUT_ZU_WISSEN.map((x) => `<p>${x}</p>`).join('')}</div>
+<section class="teil"><h1 class="t">So fängst du an</h1><p class="unter">Vom Link bis zur fertigen App – in ${START_SCHRITTE.length} Schritten</p>
 <table class="schritte">${START_SCHRITTE.map(([b, t, x], i) => `<tr><td style="width:12mm"><span class="sn">${i + 1}</span></td><td class="b"><img src="${datei(b)}"${b === '@icon' ? ' style="max-height:20mm"' : ''}></td><td><div class="zt">${t}</div>${x}</td></tr>`).join('')}</table></section>`;
 for (const t of TEILE) {
   html += `<section class="teil"><h1 class="t">${t.titel}</h1><p class="unter">${t.unter}</p>`;

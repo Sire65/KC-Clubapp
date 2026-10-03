@@ -51,9 +51,9 @@ await p.evaluate(() => window.scrollTo(0, 0));
 await p.close();
 // ---- Startseite erweitert
 p = await seite(b, { ansicht: 'erweitert' });
-await bild(p, 'start-erweitert', [{ sel: '#leds' }, { sel: '#herzKnopf' }, { sel: '#modusKnopf' }, { sel: '#aktualisierenKnopf' }, { sel: '.ipfeil.rechts.mit-sprung' }, { sel: '.ipfeil.rechts.sprung' },
+await bild(p, 'start-erweitert', [{ sel: '#leds' }, { sel: '#modusKnopf' }, { sel: '#aktualisierenKnopf' }, { sel: '.ipfeil.rechts.mit-sprung' }, { sel: '.ipfeil.rechts.sprung' },
   { sel: '#infoPunkte' }, { sel: '#register', fx: 0.05 }, { sel: '.kachel', i: 0, fx: 0.1 }]);
-await stueck(p, 'leds', { sel: '#leds' }, 6); await stueck(p, 'herz', { sel: '#herzKnopf' }, 6); await stueck(p, 'modus', { sel: '#modusKnopf' }, 6); await stueck(p, 'aktualisieren', { sel: '#aktualisierenKnopf' }, 6);
+await stueck(p, 'leds', { sel: '#leds' }, 6); await stueck(p, 'modus', { sel: '#modusKnopf' }, 6); await stueck(p, 'aktualisieren', { sel: '#aktualisierenKnopf' }, 6);
 await stueck(p, 'pfeile', { sel: '.ipfeil.rechts.mit-sprung' }, 6); await stueck(p, 'punkte', { sel: '#infoPunkte' }, 6); await stueck(p, 'register', { sel: '#register' }, 4);
 // ---- Nachrichten
 await p.evaluate(() => { window.scrollTo(0, 0); zeige('nachrichten'); });

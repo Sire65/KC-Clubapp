@@ -2640,7 +2640,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 232. 1.60.0: Bedienungsanleitung Club-App (PDF wie Kasse) in „Meine Dokumente“
 {
   // 1.81.0: Eintrag zeigt Version 2 (V1-Datei bleibt unverändert im Repo – Release-Artefakte sind unveränderlich)
-  assert.ok(/\{ id: "bedienung-club-app-v2", sym: "📖", t: "Bedienungsanleitung Club-App"[^}]*datei: "dokumente\/Koecheclub-App_Anleitung_V2\.pdf"(, neuBis: "[\d-]+")? \}/.test(html), "Eintrag Bedienungsanleitung fehlt");
+  assert.ok(/\{ id: "bedienung-club-app-v[23]", sym: "📖", t: "Bedienungsanleitung Club-App"[^}]*datei: "dokumente\/Koecheclub-App_Anleitung_V[23]\.pdf"(, neuBis: "[\d-]+")? \}/.test(html), "Eintrag Bedienungsanleitung fehlt"); // 2.1.2: Version 3 (V1/V2 bleiben unverändert im Repo)
   assert.ok(/datei: "dokumente\/Koecheclub-App_Kurzanleitung\.pdf"/.test(html), "Kurzanleitung muss bleiben");
   const pdf = fs.readFileSync(new URL("../dokumente/Koecheclub-App_Anleitung_V1.pdf", import.meta.url));
   assert.ok(pdf.subarray(0, 5).toString() === "%PDF-" && pdf.length < 8e6, "Anleitung-PDF fehlt oder zu groß");
@@ -2659,7 +2659,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.equal(dokNeu(DOKS[2]), false, "ohne neuBis nie neu");
   dokErledigt("a"); assert.equal(dokHinweis()?.id, "b", "nach Öffnen/✕ verschwindet der Hinweis");
   heute = "2026-11-01"; assert.equal(dokHinweis(), null, "nach neuBis kein Hinweis mehr");
-  assert.ok(/neuBis: "2026-10-31" \}/.test(html) && /if \(dokNeu\(d\)\) dokErledigt\(id\);/.test(html), "Anleitung als neu markiert / Öffnen merkt sich");
+  assert.ok(/neuBis: "20\d\d-\d\d-\d\d" \}/.test(html) /* 2.1.2: V3 bis 15.11. als neu */ && /if \(dokNeu\(d\)\) dokErledigt\(id\);/.test(html), "Anleitung als neu markiert / Öffnen merkt sich");
   const ruhig = html.slice(html.indexOf("// KC-CLUB-DOK-NEU (1.61.0"), html.indexOf("function dokOeffnen("));
   assert.ok(!/api\(|pushSenden|blattZeigen|melde\(|sprechen\(|Notification/.test(ruhig), "kein Push, kein Fenster, keine Ansage");
 }
@@ -2935,7 +2935,7 @@ assert.ok(/id: "emoji",[^\n]*unter dem Schreibfeld<\/b> auf <b>😊<\/b>/.test(h
   assert.ok(v2.subarray(0, 5).toString() === "%PDF-" && v2.length < 8e6, "Anleitung V2 fehlt oder zu groß");
   assert.ok(fs.existsSync(new URL("../dokumente/Koecheclub-App_Anleitung_V1.pdf", import.meta.url)), "V1 muss unverändert bleiben");
   const inh = fs.readFileSync(new URL("../tools/anleitung/inhalt.mjs", import.meta.url), "utf8"), f2 = fs.readFileSync(new URL("../tools/anleitung/fotos2.mjs", import.meta.url), "utf8");
-  assert.ok(/anleitung: 2/.test(inh) && /10\. Fotos & Alben/.test(inh) && /11\. Archiv & Chronik/.test(inh) && /<b>Club<\/b> = alles rund um den Club/.test(inh) && !/Programme<\/b> = Dienstplan/.test(inh), "Inhalt V2");
+  assert.ok(/anleitung: [23]/.test(inh) && /10\. Fotos & Alben/.test(inh) && /11\. Archiv & Chronik/.test(inh) && /<b>Club<\/b> = alles rund um den Club/.test(inh) && !/Programme<\/b> = Dienstplan/.test(inh), "Inhalt V2");
   assert.ok(!/ptblnpiroqftcvlsrhac|service_role|eyJ[A-Za-z0-9_-]{20}/.test(f2), "fotos2 ohne echte Zugänge");
 }
 // 262. 1.82.0: Protokoll-Vorlage – Protokollführer, Ort, Entschuldigt bzw. fehlend, Gäste, Nächster Termin
@@ -3141,6 +3141,16 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/if \(RUF \|\| SPR \|\| wartenZahl\) return false;/.test(html) && /ICH\?\.admin \? vbBlattZeigen\(\) : vbEinfachZeigen\(\)/.test(html), "Update ruhig / einfache Ansicht bleibt");
   assert.ok(/NEU_LADEN_FOLGE = NEU_LADEN_LAUF\.catch/.test(html) && /if \(e\.key === "Escape"\) \{ e\.preventDefault\(\); zu\(null\); \}/.test(html) && /String\(text\)\.split\(\/\[\?\\n\]\/\)\[0\]/.test(html), "Laden/Escape/Verb");
   assert.ok(/if \(zf\) \{ console\.error\("zugang_anfordern"/.test(server) && /zaehlUnsicher = true; return \{ t, n: 0 \}/.test(server) && /ungelesenUnsicher: zaehlUnsicher/.test(server), "Server-Funde");
+}
+// 284. 2.1.2: Bedienungsanleitung Version 3
+{
+  const v3 = fs.readFileSync(new URL("../dokumente/Koecheclub-App_Anleitung_V3.pdf", import.meta.url));
+  assert.ok(v3.subarray(0, 5).toString() === "%PDF-" && v3.length < 9e6, "Anleitung V3 fehlt oder zu groß");
+  for (const v of [1, 2]) assert.ok(fs.existsSync(new URL(`../dokumente/Koecheclub-App_Anleitung_V${v}.pdf`, import.meta.url)), `V${v} muss unverändert bleiben`);
+  const inh = fs.readFileSync(new URL("../tools/anleitung/inhalt.mjs", import.meta.url), "utf8"), f3 = fs.readFileSync(new URL("../tools/anleitung/fotos3.mjs", import.meta.url), "utf8");
+  assert.ok(/anleitung: 3/.test(inh) && /12\. Helfen & Leihen/.test(inh) && /13\. Bedienen, Anmelden & ohne Netz/.test(inh) && /Mit Code anmelden/.test(inh) && !/"s-herz"/.test(inh), "Inhalt V3");
+  assert.ok(!/ptblnpiroqftcvlsrhac|service_role|eyJ[A-Za-z0-9_-]{20}/.test(f3), "fotos3 ohne echte Zugänge");
+  assert.ok(/datei: "dokumente\/Koecheclub-App_Anleitung_V3\.pdf"/.test(html), "V3 in Meine Dokumente");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

@@ -1,20 +1,23 @@
 // Inhalt der Club-App-Anleitung (Texte). Bilder: bild/<name>.png (ganze Seite) und bild/s-<name>.png (Ausschnitt).
-export const VERSION = { anleitung: 2, app: "1.80.0", stand: "03.10.2026" };
+export const VERSION = { anleitung: 3, app: "2.1.1", stand: "03.10.2026" };
 export const INHALT = [
-  ["So fängst du an", "in 4 Schritten"], ["1. Startseite", "einfache Ansicht – das Wichtigste auf einen Blick"], ["2. Erweiterte Ansicht", "alle Funktionen, Anzeigen im Kopf"],
+  ["So fängst du an", "in 5 Schritten"], ["1. Startseite", "einfache Ansicht – das Wichtigste auf einen Blick"], ["2. Erweiterte Ansicht", "alle Funktionen, Anzeigen im Kopf"],
   ["3. Nachrichten", "Chats, Schreiben, Diktieren, Tippfehler, wichtige Nachrichten"], ["4. Termine", "zu- und absagen, Mitfahren, Kalender"], ["5. Mitglieder", "wer ist online, Status, Kontakt, Anklopfen"],
   ["6. Pinnwand", "kurze Zettel für alle oder einzelne"], ["7. SOS – Notfall", "Notrufnummern, Notfallpass, Kontakte"], ["8. Einstellungen", "Sprachansagen, Farbschemen, Benachrichtigungen, Privatsphäre"],
   ["9. Notbetrieb", "wenn der Server einmal ausfällt"], ["10. Fotos & Alben", "eigene Alben mit Namen"], ["11. Archiv & Chronik", "dein Ordner, die Clubchronik zum Blättern"],
+  ["12. Helfen & Leihen", "Hilfe suchen, helfen, „nach Absprache“"], ["13. Bedienen, Anmelden & ohne Netz", "Zurück-Taste, Rückfragen, neues Gerät, kein Internet"],
 ];
 export const GUT_ZU_WISSEN = [
   "<b>Gut zu wissen:</b> Alle Bilder zeigen <b>Beispieldaten</b> – Namen wie „Max Mustermann“ und alle Telefonnummern sind erfunden. In deiner App stehen die echten Mitglieder und Termine.",
-  "Die App hat eine <b>einfache</b> und eine <b>erweiterte Ansicht</b>. Die einfache zeigt nur das Wichtigste mit großen Knöpfen. Umschalten geht jederzeit (Teil 1 und 2).",
+  "Die App hat eine <b>einfache</b> und eine <b>erweiterte Ansicht</b> – Umschalten geht jederzeit (Teil 1 und 2).",
   "Die Farben kannst du in den Einstellungen ändern („Lieblingsfarbe“) – es gibt jetzt <b>22 Farbschemen</b>. Die Bilder zeigen „Köcheclub Klassik“ am Tag.",
+  "<b>Neu in Version 3</b> (mit <span class=\"neu\">NEU</span> markiert): Anmelden mit Code, Hilfe-Aushang an der Pinnwand, Emojis auf Zetteln, Nachrichten ohne Netz, klarere Zurück-Taste.",
   "<b><u>Beachte:</u></b> Die Club-App ist noch eine Beta-Version. Einige Funktionen können sich mit der Zeit noch ändern, weil ständig weiterentwickelt wird.",
 ];
 export const START_SCHRITTE = [
-  ["s-ohne-link", "Persönlichen Link öffnen", "Von Hansi bekommst du einen <b>persönlichen Link</b> (per WhatsApp oder Mail). Einfach antippen – die App öffnet sich und weiß, wer du bist. Den Link nicht weitergeben: Er ist dein Schlüssel."],
-  ["@icon", "Auf den Startbildschirm legen", "<b>iPhone (Safari):</b> unten auf Teilen ⬆️ → „Zum Home-Bildschirm“. <b>Android (Chrome):</b> oben ⋮ → „App installieren“. Danach die App immer über das Köcheclub-Symbol öffnen."],
+  ["s-ohne-link", "Persönlichen Link öffnen", "Von Hansi bekommst du einen <b>persönlichen Link</b> (per WhatsApp oder Mail) – oder eine <b>Einrichtungskarte</b> mit QR-Code: Kamera draufhalten und den Link antippen. Einfach antippen – die App öffnet sich und weiß, wer du bist. Den Link nicht weitergeben: Er ist dein Schlüssel."],
+  ["@icon", "Auf den Startbildschirm legen", "Die App zeigt dir mit <b>„📲 Köcheclub als App einrichten“</b> Schritt für Schritt, was du tippen musst – passend zu deinem Handy. Kurz: <b>iPhone (Safari):</b> Teilen ⬆️ → „Zum Home-Bildschirm“. <b>Android (Chrome):</b> ⋮ → „App installieren“. Danach die App immer über das Köcheclub-Symbol öffnen."],
+  ["s-kurzcode", "Mit Code anmelden", "Fragt die neue App nach einem Code: im Browser zeigt die App bei der Einrichtung einen <b>6-stelligen Code</b> – den hier eintippen. So brauchst du den langen Link nicht abzutippen. Auch für ein zweites Gerät (Tablet): ⚙️ → „🔢 Code für ein anderes Gerät“.", "neu"],
   ["s-benachr-ein", "Benachrichtigungen einschalten", "Damit Nachrichten und Termine aufs Handy kommen: unter <b>Heute wichtig</b> auf <b>Einschalten</b> tippen und erlauben."],
   ["s-status", "Status setzen", "Oben im Kopf zeigst du den anderen, ob du <b>verfügbar</b>, beschäftigt, im Urlaub, krank oder abwesend bist. Antippen und auswählen."],
 ];
@@ -27,7 +30,7 @@ export const TEILE = [
       { nr: 2, titel: "Termin-Karte und die drei Felder", zeilen: [
         ["s-termin-karte", "Termin-Karte", "Der nächste Termin mit Datum, Uhrzeit und Ort – und deine Antwort (z. B. ✅ Ich komme) mit der Zahl der Zusagen. Antippen öffnet den Termin."],
         ["s-mini0", "Neue Nachrichten", "Die Zahl der ungelesenen Nachrichten. Gibt es Neues, läuft ein <b>orangefarbener Rand</b> („Ameisenstraße“) um das Feld. Antippen öffnet die Nachrichten."],
-        ["s-mini1", "Mitglieder", "Wie viele Mitglieder es gibt – daneben der <b>grüne Punkt mit der Zahl</b>, wer gerade online ist. Grau = gerade niemand online."],
+        ["s-mini1", "Mitglieder", "Wie viele Mitglieder es gibt – daneben der <b>grüne Punkt mit der Zahl</b>, wer gerade online ist (grau = gerade niemand). <b>Antippen</b> öffnet direkt die Mitglieder-Seite <b>nur mit denen, die gerade online sind</b>.", "neu"],
         ["s-mini2", "Nächster Termin", "In wie vielen Tagen der nächste Termin ist. Ab 5 Tagen vorher läuft ein hellgrüner Rand, ab 3 Tagen ein orangefarbener, am Vortag und am Tag selbst ein roter."]] },
       { nr: 6, titel: "Ansicht, Version und Schnellzugriff", zeilen: [
         ["s-ansicht", "Einfache Ansicht", "Antippen schaltet zur <b>erweiterten Ansicht</b> mit allen Funktionen (Teil 2). Zurück geht es genauso."],
@@ -43,14 +46,13 @@ export const TEILE = [
         ["s-fuss", "Fußleiste", "Immer unten zu sehen: <b>Start</b>, <b>Termine</b>, <b>Nachrichten</b>, <b>Mitglieder</b> und <b>Mehr</b> (Einstellungen). Die roten Zahlen zeigen Neues, die grüne Zahl, wer online ist."]] },
     ] },
   { titel: "2. Erweiterte Ansicht", unter: "Alle Funktionen und die Anzeigen im Kopf", bild: "start-erweitert",
-    legende: [["LEDs", "Verbindung zum Server"], ["Herz", "Lebenszeichen"], ["Tag/Nacht", "hell oder dunkel"], ["Aktualisieren", "neu laden"], ["Blättern", "nächste Karte"], ["Springen", "zur letzten Karte"], ["Punkte", "welche Karte gerade gezeigt wird"], ["Register", "Club, Meins, Technik"], ["Kacheln", "alle Funktionen"]],
+    legende: [["Lämpchen", "Verbindung – grün ist alles gut"], ["Tag/Nacht", "hell oder dunkel"], ["Aktualisieren", "neu laden"], ["Blättern", "nächste Karte"], ["Springen", "zur letzten Karte"], ["Punkte", "welche Karte gerade gezeigt wird"], ["Register", "Club, Meins, Technik"], ["Kacheln", "alle Funktionen"]],
     abschnitte: [
       { nr: 1, titel: "Anzeigen und Knöpfe im Kopf", zeilen: [
-        ["s-leds", "LEDs", "<b>Oben</b> = Server: 🟢 verbunden · 🔴 keine Verbindung · 🔵 Wartung · ⚪ unbekannt. <b>Mitte</b> = Push und Mail (KC Communicator): 🟢 läuft · 🟡 eingeschränkt · 🔴 Störung. <b>Unten</b> flackert, wenn gerade Daten übertragen werden. Der Punkt ganz unten zeigt, wer online ist (antippen). Antippen der LEDs öffnet die Verbindungsprüfung."],
-        ["s-herz", "Herz", "Die App meldet regelmäßig ein Lebenszeichen. Antippen zeigt die letzten 15."],
+        ["s-leds", "Lämpchen", "Grün = <b>Verbindung in Ordnung</b> · Rot = keine Verbindung · Blau = Wartung · Grau = wird geprüft. Antippen zeigt kurz „✅ Verbindung in Ordnung“ oder „⚠️ Störung“ – mit <b>Test-Mitteilung an mich</b> und <b>Problem melden</b>. Der Punkt daneben zeigt, wer online ist.", "neu"],
         ["s-modus", "Tag/Nacht", "Schaltet zwischen hell und dunkel. Das „T“ heißt Tag, das „N“ Nacht, „A“ automatisch."],
         ["s-aktualisieren", "Aktualisieren", "Lädt alles neu vom Server."]] },
-      { nr: 5, titel: "Karten im Kopf und Register", zeilen: [
+      { nr: 4, titel: "Karten im Kopf und Register", zeilen: [
         ["s-pfeile", "Blättern", "Mit ‹ › blätterst du durch die Karten im Kopf: nächster Termin, Wetter, Schnellstart und mehr. « » springen zur ersten oder letzten Karte. Wischen geht auch."],
         ["s-punkte", "Punkte", "Zeigen, welche Karte gerade zu sehen ist."],
         ["s-register", "Register", "<b>Club</b> = alles rund um den Club, <b>Meins</b> = deine eigenen Sachen, <b>Technik</b> = Update, freigegebene Programme und Sicherheits-Check. Die Zahl zeigt, wie viele Kacheln darin sind. Beim Wechsel läuft kurz ein heller Rahmen um das gewählte Register (<b>Ameisenlauf</b>), danach bleibt er ruhig stehen. Kacheln lassen sich festhalten und verschieben.", "neu"]] },
@@ -80,6 +82,7 @@ export const TEILE = [
           ["s-wichtig-an", "So sieht „wichtig“ beim Schreiben aus", "Das Schreibfeld ist orange umrandet, der ❗-Knopf orange gefüllt."],
           ["s-k-wa", "WhatsApp", "Den Text an WhatsApp übergeben und dort verschicken."], ["s-k-waein", "Aus WhatsApp einfügen 📋", "In WhatsApp kopierte Nachrichten sauber einfügen."],
           ["s-k-bf", "Bildschirmfoto 📸", "Ein Bildschirmfoto machen und in diesen Chat schicken."], ["s-k-senden", "Senden ➤", "Schickt die Nachricht ab."],
+          ["s-ow-blase", "Ohne Netz geschrieben", "Kein Internet? Die Nachricht geht nicht verloren: Sie steht als Blase mit <b>„⏳ wartet auf Netz“</b> im Chat und wird <b>automatisch gesendet</b>, sobald du wieder Netz hast (nur Text, in bestehenden Chats).", "neu"],
           ["s-rechtschreibung", "Tippfehler rot unterstrichen", "Beim Schreiben zeigt eine rote Wellenlinie Tippfehler – antippen, dann kommen Vorschläge. Das macht die Tastatur deines Handys. Keine Linie? ⚙️ → „🖍️ Tippfehler rot unterstreichen“ → <b>Prüfen</b> zeigt einen Testsatz und wie du die Prüfung einschaltest.", "neu"]] },
       ] },
       { bild: "chat-menue", titel: "Nachricht antippen – was geht alles?", text: "Eine Nachricht <b>antippen</b> öffnet dieses Menü: oben eine schnelle Reaktion (👍 ❤️ 😂 …), darunter <b>Antworten</b>, <b>Oben anheften</b>, <b>Merken</b>, <b>Kopieren</b>, <b>🔊 Vorlesen</b>, <b>Weiterleiten</b>, <b>Details</b> (wann gesendet, angekommen, gelesen) und <b>Löschen</b>. Eigene Nachrichten lassen sich 15 Minuten lang <b>bearbeiten</b>." }] },
@@ -89,10 +92,13 @@ export const TEILE = [
       text: "Nochmal auf die eigene Antwort tippen nimmt sie wieder zurück. Bei „Ich komme“ kannst du danach eine Mitfahrt suchen oder anbieten und Plätze buchen." }] },
   { titel: "5. Mitglieder", unter: "Wer ist online, Status, Kontakt, Anklopfen", bild: "mitglieder",
     legende: [["Mein Status", "eigenen Status ändern"], ["Kacheln / Liste", "Ansicht umschalten"], ["Alle", "alle Mitglieder"], ["Online", "nur wer gerade da ist"], ["Gruppen", "nach Gruppe filtern"], ["Zeichen", "online · heute da · abwesend · noch nie"], ["Du", "deine eigene Kachel"], ["Online", "grüner Ring = gerade in der App"], ["Chat 💬", "sofort schreiben"], ["Anklopfen 👋", "kurz Bescheid geben, dass du sprechen möchtest"]],
-    text: "Eine Kachel antippen zeigt Telefon, Mail und Adresse – soweit das Mitglied sie freigegeben hat. <b>Anklopfen 👋</b> geht nur, wenn der andere gerade online ist. Er kann annehmen oder kurz antworten („Bin beschäftigt“). Nach einer Minute fragt die App, ob du weiter anklopfen, eine Nachricht senden oder auflegen möchtest." },
+    text: "Eine Kachel antippen zeigt Telefon, Mail und Adresse – soweit das Mitglied sie freigegeben hat. <b>Anklopfen 👋</b> geht nur, wenn der andere gerade online ist. Er kann annehmen oder kurz antworten („Bin beschäftigt“). Nach einer Minute fragt die App, ob du weiter anklopfen, eine Nachricht senden oder auflegen möchtest. <span class=\"neu\">NEU</span> Die Mitglieder-Kachel oben im Kopf öffnet direkt <b>nur die Online-Mitglieder</b>; „👥 Alle“ schaltet um." },
   { titel: "6. Pinnwand", unter: "Kurze Zettel für alle oder einzelne", bild: "pinnwand",
     legende: [["＋ Zettel", "neuen Zettel anheften (bis zu 4)"], ["Hinweis", "ein wichtiger Zettel wartet auf dich"], ["Wichtig", "rot umrandet"], ["Antworten", "auf den Zettel antworten"], ["✓ erl.", "als erledigt abhaken"], ["Gelesen", "wer deinen Zettel gelesen hat"], ["Abnehmen", "eigenen Zettel entfernen"]],
-    text: "Zettel sind für <b>alle</b>, nur <b>für dich</b> oder für <b>bestimmte Personen</b>. Wer einen neuen Zettel bekommt, sieht ihn beim Öffnen der App. Jeder darf höchstens 4 Zettel gleichzeitig anheften." },
+    text: "Zettel sind für <b>alle</b>, nur <b>für dich</b> oder für <b>bestimmte Personen</b>. Wer einen neuen Zettel bekommt, sieht ihn beim Öffnen der App. Jeder darf höchstens 4 Zettel gleichzeitig anheften.",
+    weiter: [{ bild: "pinnwand-hilfe", titel: "Hilfe-Aushang und Emojis", legende: [["Hilfe gesucht", "grüner Aushang – jemand sucht Helfer"], ["Ansehen & antworten", "öffnet die Zusammenfassung (Teil 12)"], ["Zettel mit Emojis", "z. B. Gute Besserung 🤒💐"]],
+      text: "Offene Hilfe-Aufrufe hängen als <b>grüner Aushang</b> vorne an der Pinnwand. Ist ein neuer Aufruf da, geht beim Öffnen der App einmal die Pinnwand mit dem Hinweis „🙋 Es wird Hilfe gesucht“ auf. Der Aushang zählt nicht zu deinen 4 Zetteln.",
+      abschnitte: [{ nr: 3, titel: "Emojis auf Zetteln", zeilen: [["s-pw-emoji", "Emojis einfügen", "Unter dem Textfeld eine Reihe für typische Anlässe: 🤒 💐 🍀 💪 ❤️ 🙏 🤗 🎂 🎉 👍 ☀️ 🍲 – antippen setzt das Emoji an die Stelle, an der du schreibst. <b>„😊 Mehr“</b> öffnet die volle Auswahl wie im Chat.", "neu"]] }] }] },
   { titel: "7. SOS – Notfall", unter: "Notrufnummern, Notfallpass, Kontakte", bild: "sos",
     legende: [["Lebensgefahr", "sofort 112 anrufen"], ["112", "Feuerwehr und Rettungsdienst"], ["110", "Polizei"], ["Weitere Nummern", "Bereitschaftsdienst, Giftnotruf, Apotheke, Seelsorge …"]],
     text: "Beim Antippen einer Nummer fragt die App <b>einmal nach</b> – erst dann wird wirklich angerufen. So passiert nichts aus Versehen.",
@@ -103,6 +109,7 @@ export const TEILE = [
       { nr: 1, titel: "Ansagen, Töne & Tipps", zeilen: [
         [null, "💡 Tipp des Tages", "Beim Öffnen ab und zu ein kurzer Tipp. „👉 Ja, zeig mir wo“ führt direkt zur passenden Stelle."],
         [null, "🗣️ Sprachansagen", "Unter <b>„Auswählen“</b> kreuzt du an, was dein Handy ansagen soll: <b>wer online kommt</b>, neue Nachrichten, Anklopfen, Pinnwand, Helfen/Leihen/Börse, Mitfahrt, Standort mit Entfernung (Luftlinie) und Termine. <b>▶</b> spielt ein Beispiel, z. B. „Christina hat dir ein Post-it an die Pinnwand gehängt“. Am Anfang sind nur Nachrichten und Anklopfen an.", "neu"],
+        [null, "Wer kommt, wer geht", "Neu ankreuzbar: <b>„🚪 Jemand verlässt die App“</b> („Klaus hat die Club-App verlassen“). Kommen mehrere gleichzeitig online, gibt es <b>eine</b> Ansage – bei mehr als 3: „5 Clubkameradinnen und Kameraden sind gerade online“.", "neu"],
         [null, "Wann spricht das Handy?", "Nur, solange die Köcheclub-App <b>offen</b> ist – nicht in deiner Ruhezeit und nicht für den Chat, den du gerade offen hast. Ist die App zu oder im Hintergrund, kommt der normale Push mit Ton (Android und iPhone erlauben Web-Apps im Hintergrund keine Sprache).", "neu"],
         [null, "🖍️ Tippfehler rot unterstreichen", "„Prüfen“ zeigt einen Testsatz mit zwei Fehlern und – passend zu deinem Handy – wie du die Rechtschreibprüfung einschaltest.", "neu"],
         [null, "🎤 Mikrofon im Chat", "Jedes Mal fragen, immer Sprachnachricht oder immer Diktieren.", "neu"],
@@ -137,4 +144,22 @@ export const TEILE = [
       text: "Register wie Gründung, Presse, Rekorde & Höhepunkte, Feste & Jubiläen oder In Gedenken ordnen die Einträge." },
       { bild: "chronik-blaettern", titel: "Blättern", legende: [["Schließen", "zurück zur App"], ["Umblättern", "‹ › antippen oder wischen"], ["Register", "springt direkt zu einem Teil, unten zeigt der Balken, wo du bist"]],
       text: "Blättern geht in jedem Ordner im Archiv – Fotos, PDF und Dokumente erscheinen als Seiten." }] },
+  { titel: "12. Helfen & Leihen", unter: "Hilfe suchen, helfen, „nach Absprache“ – über die Kachel „🤝 Helfen & Leihen“", bild: "hilfe-form",
+    legende: [["Wobei?", "Art der Hilfe – bei „Sonstiges“ kurz eintragen"], ["Nach Absprache", "kein fester Tag – ihr macht den Termin miteinander aus"], ["Egal wie viele", "keine Grenze, jede Zusage zählt"]],
+    text: "„🙋 Ich suche Hilfe“ öffnet dieses Formular. Bei <b>„📅 Bestimmter Tag“</b> wählst du Tag und Zeit, bei <b>„🤝 Nach Absprache“</b> bleibt der Aufruf 30 Tage offen. Alle Mitglieder bekommen eine Mitteilung und sehen den Aushang an der Pinnwand.",
+    abschnitte: [{ nr: 4, titel: "Beschreibung", zeilen: [["s-hilfe-text", "Was genau?", "Großes Textfeld (bis 1000 Zeichen): was zu tun ist, was man mitbringen soll, wie man dich erreicht.", "neu"]] }],
+    weiter: [{ bild: "hilfe-kurz", titel: "Einen Aufruf antippen", legende: [["Wer sucht", "Name"], ["Wobei", "was gebraucht wird"], ["Wann", "Tag oder „nach Absprache“"], ["Gesucht", "wie viele, wie viele schon dabei"], ["Beschreibung", "die Einzelheiten"], ["Ja, ich kann helfen", "zusagen"], ["Kann nicht", "absagen"], ["Mehr Details", "Nachricht an die Person, die sucht"]],
+      text: "Du siehst nur die <b>Zusammenfassung</b> – keine Eingabefelder. „❓ Ich brauche noch mehr Details“ öffnet eine Nachricht mit vorbereitetem Anfang. Antworten kannst du später zurücknehmen.",
+      abschnitte: [{ nr: 1, titel: "Dein eigener Aufruf", zeilen: [["s-hilfe-eigen", "So sehen ihn die Mitglieder", "Antippen zeigt dieselbe Zusammenfassung, darunter wer zugesagt hat und wie viele noch fehlen. <b>„✏️ Ändern“</b> öffnet das Formular (kein neuer Rundruf – nur wer zugesagt hat, erfährt von einer Tag- oder Ortsänderung). <b>„🔒 Aufruf schließen“</b> beendet ihn.", "neu"]] }] }] },
+  { titel: "13. Bedienen, Anmelden & ohne Netz", unter: "Was überall in der App gleich funktioniert",
+    abschnitte: [{ nr: 1, titel: "Zurück und Rückfragen", zeilen: [
+      [null, "‹ und die Zurück-Taste", "‹ oben links und die Zurück-Taste des Handys gehen <b>einen Schritt zurück</b> – dorthin, wo du vorher warst. Ist ein Fenster offen, schließt Zurück <b>nur das Fenster</b>; was du angefangen hast, bleibt stehen.", "neu"],
+      ["s-rueckfrage", "Rückfragen beim Löschen", "Der rote Knopf sagt, was passiert (<b>„🗑️ Löschen“</b>, „Absagen“ …). Vorausgewählt ist immer <b>„Abbrechen“</b> – so passiert nichts aus Versehen.", "neu"],
+      ["s-verbindung-einfach", "Verbindung prüfen", "Lämpchen oben antippen: „✅ Verbindung in Ordnung“ oder „⚠️ Störung“. Mit „🧪 Test-Mitteilung an mich“ prüfst du, ob Mitteilungen ankommen.", "neu"]] },
+      { nr: 2, titel: "Ohne Internet", zeilen: [
+      [null, "App ohne Netz öffnen", "Die App zeigt deinen <b>letzten Stand</b> – oben steht deutlich „📴 Kein Netz – das ist dein Stand von …“. Kommt das Netz zurück, lädt sie von selbst neu.", "neu"],
+      [null, "Nachrichten ohne Netz", "Werden vorgemerkt und automatisch gesendet (Teil 3).", "neu"]] },
+      { nr: 3, titel: "Neues Gerät, neue Version", zeilen: [
+      [null, "Einrichtungskarte", "Die Clubleitung kann dir eine Karte mit QR-Code ausdrucken: Kamera draufhalten, Link antippen – die App führt dich Schritt für Schritt. Kommt der Link aus WhatsApp oder Google Lens, sagt die App zuerst „In Safari/Chrome öffnen“.", "neu"],
+      [null, "Updates und Startprobleme", "Neue Versionen kommen von selbst: Holst du die App zurück und tippst gerade nichts, aktualisiert sie sich kurz. Startet sie einmal nicht, erscheint nach 12 Sekunden Hilfe mit „🧹 Speicher der App leeren“ – deine Anmeldung bleibt erhalten.", "neu"]] }] },
 ];

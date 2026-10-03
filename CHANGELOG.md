@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.1.2 – 2026-10-03
+- KC-CLUB-ANLEITUNG-V3 (Wunsch Hansi „Handbuch neu“): Bedienungsanleitung Version 3 (32 Seiten, Stand App 2.1.1) in
+  „Meine Dokumente“ – alle Bilder neu (Demodaten), neue Teile „12. Helfen & Leihen“ (Formular mit „nach Absprache“/„egal wie viele“,
+  Kurzansicht mit drei Antworten, eigener Aufruf) und „13. Bedienen, Anmelden & ohne Netz“ (Zurück-Taste, Rückfragen, Verbindung,
+  ohne Internet, Einrichtungskarte, Updates); Start in 5 Schritten mit „Mit Code anmelden“; Pinnwand mit Hilfe-Aushang und Emojis;
+  Nachrichten ohne Netz; Mitglieder-Kachel → nur Online; einfaches Verbindungs-Lämpchen; Sprachansagen „verlässt die App“ und
+  Zusammenfassung ab 4. V1/V2 bleiben unverändert im Repo. Werkzeug: tools/anleitung/fotos3.mjs (neu), fotos.mjs ohne Herz.
+
 ## 2.1.1 – 2026-10-03 – Nachprüfung der Versionen 1.88–2.1 (Funde behoben)
 - ‹ im Chat: Verlaufseintrag behält seine Tiefe – vorher Schleife Chat ↔ Nachrichten (kritisch).
 - Zeitgrenze: Lesen 25 s, Schreiben 140 s (Server speichert erst, benachrichtigt dann) – sonst doppelte Nachrichten bei langsamem
