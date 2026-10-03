@@ -480,8 +480,8 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   const fb = new Function("FB_GRUND_MAX", js + "return { FEEDBACK_FRAGEN, feedbackPruefen };")(Number(/const FB_GRUND_MAX = (\d+)/.exec(server)[1]));
   // 0.26.0: Anordnen/Farben sind umgesetzt → stehen nicht mehr als Wunsch, sondern unter „Schon umgesetzt“
   assert.ok(fb.FEEDBACK_FRAGEN.some((f) => f.schritt === 2 && f.optionen.length >= 8) && /anordnen/.test(server.slice(server.indexOf("const FEEDBACK_UMGESETZT"), server.indexOf("const FEEDBACK_UMGESETZT") + 300)), "Wunschliste oder „Schon umgesetzt“ fehlt");
-  assert.deepEqual(fb.feedbackPruefen({ gefallen: "👍 Ja", bedienung: "Quatsch", wuensche: ["🎂 Geburtstagsliste", "X", "🎂 Geburtstagsliste"], fremd: "a" }),
-    { gefallen: "👍 Ja", wuensche: ["🎂 Geburtstagsliste"] });
+  assert.deepEqual(fb.feedbackPruefen({ gefallen: "👍 Ja", bedienung: "Quatsch", wuensche: ["🍲 Rezepte-Sammlung vom Club", "X", "🍲 Rezepte-Sammlung vom Club"], fremd: "a" }),
+    { gefallen: "👍 Ja", wuensche: ["🍲 Rezepte-Sammlung vom Club"] }); // 1.73.0: Geburtstage sind umgesetzt → anderer Wunsch
   // 0.40.0: Begründung nur zur passenden Antwort, gekürzt
   assert.deepEqual(fb.feedbackPruefen({ dauerhaft: "👎 Nein", dauerhaft_grund: "  zu viele Apps  " }), { dauerhaft: "👎 Nein", dauerhaft_grund: "zu viele Apps" });
   assert.deepEqual(fb.feedbackPruefen({ dauerhaft: "👍 Ja", dauerhaft_grund: "egal" }), { dauerhaft: "👍 Ja" });
@@ -2857,6 +2857,16 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/const REGISTER_ALLE = \[\["verein", "Club"\], \["mein", "Meins"\], \["programme", "Technik"\]\]/.test(html), "Register-Namen");
   assert.ok(!/rgba\(90,15,25,\.72\)/.test(html) && /\.ipfeil \{[^}]*background: rgba\(255,255,255,\.16\)/.test(html), "Info-Pfeile ohne festes Weinrot");
   assert.ok(/\.bl-pfeil \{[^}]*border-radius: 50%; background: rgba\(255,255,255,\.82\)[^}]*color: var\(--grau\)/.test(html), "Blätter-Pfeile dezent");
+}
+// 252. 1.73.0: Feedback-Bogen gekürzt und an den Stand angepasst
+{
+  const f = server.slice(server.indexOf("const FEEDBACK_FRAGEN"), server.indexOf("const FEEDBACK_UMGESETZT"));
+  const u = server.slice(server.indexOf("const FEEDBACK_UMGESETZT"), server.indexOf("const FB_TEXT_MAX"));
+  assert.ok(/const FEEDBACK_BOGEN = "2026-2"/.test(server), "neue Bogen-Kennung");
+  assert.equal((f.match(/schritt: 1,/g) || []).length, 6, "Schritt 1 hat genau 6 Fragen");
+  for (const x of ["Sprache", "Geburtstag", "Schulung", "Fahrgemeinschaft", "Dokumente (Satzung"]) assert.ok(!f.includes(x), `„${x}“ ist umgesetzt und steht noch als Wunsch`);
+  for (const x of ["Sprachansagen", "Tippfehler", "Fotoalben", "Clubchronik", "Club-Börse", "Helfen & Leihen"]) assert.ok(u.includes(x), `„${x}“ fehlt unter „Schon umgesetzt“`);
+  assert.ok(/<details class="hinweis"[^>]*><summary[^>]*><b>✅ Schon umgesetzt \(\$\{FB\.umgesetzt\.length\}\)/.test(html), "„Schon umgesetzt“ zum Aufklappen");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

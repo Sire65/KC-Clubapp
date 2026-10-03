@@ -1,5 +1,16 @@
 # Änderungen
 
+## 1.73.0 – 2026-10-03
+- KC-CLUB-FEEDBACK (Wunsch Hansi: an die vielen neuen Funktionen anpassen, nicht zu viel fragen): neuer Bogen „2026-2“.
+  Schritt 1 nur noch 6 Fragen (vorher 10): Gefallen, „Findest du dich gut zurecht?“ (bei „Geht so/zu viel“ freiwillig warum,
+  mit Tipp „Einfache Ansicht“), Tempo, meistgenutzt (jetzt mit Fotos & Alben, Archiv & Chronik, Helfen/Leihen/Börse,
+  Dienstwünsche), Probleme (+ „Zu viele Funktionen“), dauerhaft einsetzen (Begründung bei Nein bleibt Pflicht).
+  Schrift, Farben, Nutzungshäufigkeit entfallen (Schrift/Farben stellt jeder selbst ein, Nutzung sieht der Server).
+- Wünsche abgeglichen: Gebautes (Dokumente/Archiv, Sprache, Fotoalben, Geburtstage, Schulung, Fahrgemeinschaften, Aufgaben)
+  wandert nach „✅ Schon umgesetzt“ (jetzt 22 Punkte, zum Aufklappen); offen bleiben/neu: Rezepte, Mitbringliste, Beiträge/Kasse,
+  Dienste tauschen, automatische Diashow, ohne Internet lesen, Club-Rundbrief, Meine Dienste & Teilnahmen.
+- Vertragstest 30: Beispiel-Wunsch „Geburtstagsliste“ (jetzt umgesetzt) durch „Rezepte-Sammlung“ ersetzt – Prüflogik unverändert.
+
 ## 1.72.0 – 2026-10-03
 - Register auf der Startseite (Wunsch Hansi): „Verein“ heißt jetzt „Club“, „Programme“ heißt „Technik“ (dort liegen Update,
   freigegebene Programme und Sicherheits-Check); auch im Überblick („🏠 Im Club“, „🛠️ Technik“). Interne IDs bleiben – eigene

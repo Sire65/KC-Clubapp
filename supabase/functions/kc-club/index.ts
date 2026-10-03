@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.72.0";
+const SERVER_VERSION = "1.73.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -676,30 +676,32 @@ const APP_ID = "KC_CLUBAPP";
 // KC-CLUB-FEEDBACK-DAUERHAFT (0.40.0): zu bestimmten Antworten fragt die App nach dem Warum (Text landet in antworten["<id>_grund"])
 type FbGrund = { bei: string[]; pflicht: string[]; t: string };
 const FB_GRUND_MAX = 500;
-const FEEDBACK_BOGEN = "2026-1"; // neue Frage ist nur eine Ergänzung → alte Antworten bleiben gültig, Bogen bleibt
+const FEEDBACK_BOGEN = "2026-2"; // 1.73.0 (Wunsch Hansi): Bogen an die vielen neuen Funktionen angepasst und gekürzt → neue Kennung (Runde 2026-1 liegt im Archiv)
 type FbFrage = { id: string; schritt: 1 | 2; t: string; art: "eins" | "mehr"; optionen: string[]; grund?: FbGrund };
+// Bewusst kurz („nicht zu viel fragen“): Schritt 1 sechs Fragen, Schritt 2 nur offene Wünsche – Gebautes steht unter „Schon umgesetzt“
 const FEEDBACK_FRAGEN: FbFrage[] = [
   { id: "gefallen", schritt: 1, art: "eins", t: "Gefällt dir die App?", optionen: ["👍 Ja", "🤏 Teils", "👎 Nein"] },
-  { id: "bedienung", schritt: 1, art: "eins", t: "Findest du sie bedienfreundlich?", optionen: ["Ja, einfach", "Geht so", "Nein, schwierig"] },
-  { id: "uebersicht", schritt: 1, art: "eins", t: "Ist sie übersichtlich?", optionen: ["Ja", "Geht so", "Nein, zu voll"] },
-  { id: "schrift", schritt: 1, art: "eins", t: "Ist die Schrift gut lesbar?", optionen: ["Ja", "Etwas zu klein", "Viel zu klein"] },
-  { id: "farben", schritt: 1, art: "eins", t: "Gefallen dir die Farbdesigns? (⚙️ Mehr → Darstellung)", optionen: ["Ja", "Geht so", "Nein"] },
+  { id: "zurecht", schritt: 1, art: "eins", t: "Findest du dich gut zurecht?", optionen: ["Ja, einfach", "Geht so", "Nein, zu viel"],
+    grund: { bei: ["Geht so", "Nein, zu viel"], pflicht: [], t: "Was ist dir zu viel oder unklar? Tipp: ⚙️ → „Einfache Ansicht“ zeigt nur das Wichtigste" } },
   { id: "tempo", schritt: 1, art: "eins", t: "Ist die App schnell genug?", optionen: ["Ja", "Manchmal langsam", "Oft langsam"] },
-  { id: "nutzung", schritt: 1, art: "eins", t: "Wie oft nutzt du die App?", optionen: ["Täglich", "Mehrmals pro Woche", "Selten"] },
   { id: "genutzt", schritt: 1, art: "mehr", t: "Was nutzt du am meisten? (mehrere möglich)",
-    optionen: ["📅 Termine", "💬 Nachrichten", "👥 Mitglieder", "🗳️ Vorschläge", "📄 Protokolle", "🗓️ Dienstpläne", "🧳 Aktionen", "📷 Fotoalbum", "📌 Pinnwand", "👥 Gruppen-Chats"] },
+    optionen: ["📅 Termine", "💬 Nachrichten", "👥 Mitglieder", "📌 Pinnwand", "📷 Fotos & Alben", "🗄️ Archiv & Chronik", "🤝 Helfen, Leihen & Börse",
+      "🗓️ Dienste & Dienstwünsche", "🗳️ Vorschläge & Abstimmungen", "📄 Protokolle"] },
   { id: "probleme", schritt: 1, art: "mehr", t: "Hattest du schon Probleme? (mehrere möglich)",
-    optionen: ["✅ Keine Probleme", "🔑 Anmeldung / Link", "🔔 Benachrichtigungen kommen nicht", "💬 WhatsApp / Route öffnen", "📷 Fotos hochladen", "⏳ App lädt nicht / hängt", "🔍 Etwas nicht gefunden"] },
+    optionen: ["✅ Keine Probleme", "🔑 Anmeldung / Link", "🔔 Benachrichtigungen kommen nicht", "💬 WhatsApp / Route öffnen", "📷 Fotos hochladen",
+      "⏳ App lädt nicht / hängt", "🔍 Etwas nicht gefunden", "🤯 Zu viele Funktionen"] },
   { id: "dauerhaft", schritt: 1, art: "eins", t: "Ich halte die Club-App für sinnvoll und werde sie dauerhaft einsetzen.", optionen: ["👍 Ja", "🤔 Vielleicht", "👎 Nein"],
     grund: { bei: ["🤔 Vielleicht", "👎 Nein"], pflicht: ["👎 Nein"], t: "Warum nicht? Gib doch einen hilfreichen Kommentar ab – was müsste anders sein?" } },
-  { id: "wuensche", schritt: 2, art: "mehr", t: "Welche Funktionen wünschst du dir noch? (mehrere möglich)",
-    optionen: ["🍲 Rezepte-Sammlung vom Club", "🛒 Mitbring-/Einkaufsliste für Treffen", "📂 Dokumente (Satzung, Formulare)", "💶 Beiträge / Kasse einsehen",
-      "🔁 Dienste untereinander tauschen", "🎤 Nachrichten per Sprache", "🖼️ Fotos als Diashow", "🎂 Geburtstagsliste", "📴 Auch ohne Internet nutzbar",
-      "🎓 Schulungsunterlagen", "🚗 Fahrgemeinschaften zu Treffen & Ausflügen", "✅ Aufgabenliste für Veranstaltungen", "📰 Club-Neuigkeiten / Rundbrief"] },
+  { id: "wuensche", schritt: 2, art: "mehr", t: "Was fehlt dir noch? (mehrere möglich)",
+    optionen: ["🍲 Rezepte-Sammlung vom Club", "🛒 Mitbring-/Einkaufsliste für Treffen", "💶 Beiträge / Kasse einsehen", "🔁 Dienste untereinander tauschen",
+      "▶️ Fotos als automatische Diashow", "📴 Auch ohne Internet lesen", "📰 Club-Rundbrief (monatlich)", "📊 Meine Dienste & Teilnahmen im Überblick"] },
 ];
-// Wünsche aus dem Fragebogen, die inzwischen gebaut sind – die App zeigt sie als „✅ Schon umgesetzt“ (0.26.0)
+// Wünsche aus dem Fragebogen und Funktionen, die inzwischen gebaut sind – die App zeigt sie als „✅ Schon umgesetzt“ (0.26.0, 1.73.0 aktualisiert)
 const FEEDBACK_UMGESETZT = ["🔀 Kacheln selbst anordnen (lange drücken & ziehen)", "🎨 Farbdesigns mit Tag-/Nachtmodus", "🔠 Große Schrift",
-  "📆 Monatskalender", "👥 Gruppen-Chats", "📌 Pinnwand"];
+  "📆 Monatskalender", "👥 Gruppen-Chats", "📌 Pinnwand", "📂 Dokumente & Archiv (Satzung, Formulare)", "🎤 Sprachnachricht, Diktieren & Vorlesen",
+  "🗣️ Sprachansagen", "🖍️ Tippfehler rot unterstreichen", "🖼️ Fotoalben & Blättern", "📖 Clubchronik", "🎂 Geburtstage im Kalender",
+  "🎓 Schulungsunterlagen (Kasse)", "🚗 Fahrgemeinschaften", "✅ Aufgaben aus Protokollen", "🤝 Helfen & Leihen", "🛍️ Club-Börse",
+  "🆘 SOS & Notfallpass", "📍 Standort teilen", "👋 Anklopfen", "📲 Termine im Handy-Kalender"];
 const FB_TEXT_MAX = 2000;
 function feedbackPruefen(roh: unknown) {
   const a = (roh && typeof roh === "object" ? roh : {}) as Record<string, unknown>, aus: Record<string, string | string[]> = {};
