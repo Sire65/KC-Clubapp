@@ -248,6 +248,7 @@
   .bsk-karte.rueck { background: radial-gradient(circle at 50% 50%, rgba(255,255,255,.22) 0 18%, transparent 19%), repeating-linear-gradient(45deg, var(--rot) 0 5px, var(--rot2, #8e1b2a) 5px 10px); border: 3px solid #fff; box-shadow: 0 0 0 1px #b9b2a4, 0 2px 4px rgba(0,0,0,.22); }
   .bsk-karte.klein { max-width: 60px; } .bsk-leer { width: 100%; max-width: 74px; aspect-ratio: 5 / 7; border: 2px dashed var(--linie); border-radius: 9px; }
   .bsk-mitte { display: grid; grid-template-columns: 90px 1fr; gap: 8px; align-items: center; padding: 6px; border-radius: 14px; background: #2e6b40; color: #fff; min-height: 110px; }
+  .bsk-letzter { grid-column: 2; text-align: center; font-size: .8rem; opacity: .85; margin-top: -2px; }
   .bsk-trumpf { text-align: center; font-size: .85rem; line-height: 1.25; } .bsk-trumpf b { font-size: 1.05rem; }
   .bsk-stich { display: flex; justify-content: center; gap: 10px; } .bsk-stich .bsk-karte { width: 64px; } .bsk-stich-karte.er { transform: rotate(-5deg); } .bsk-stich-karte.ich { transform: rotate(5deg) translateY(6px); }
   .bsk-ansage { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
@@ -2139,7 +2140,7 @@
       <!-- KC-CLUB-INKOGNITO (2.3.0): Hauptschalter nur für den Admin -->
       <div class="schalter" id="setInkognitoZeile"><div><b>🕶️ Inkognito (nur Admin)</b><div class="hinweis">Niemand sieht, dass du online oder heute da warst – kein grüner Punkt, keine Ansage, kein „zuletzt da“. Du selbst siehst die anderen weiter.</div></div><input type="checkbox" id="setInkognito" onchange="inkognitoSetzen(this.checked)"></div>
       <!-- KC-CLUB-SPIELE (2.7.0) -->
-      <div class="schalter"><div><b>🎲 Andere dürfen mich zu Spielen herausfordern</b><div class="hinweis">Tic-Tac-Toe und Schach – darunter wählst du, welche. Aus: Du erscheinst nicht in der Liste und bekommst keine Herausforderungen. Gegen den Computer spielen geht immer.</div></div><input type="checkbox" id="setSpiele" onchange="spBereitSetzen(this.checked)"></div>
+      <div class="schalter"><div><b>🎲 Andere dürfen mich zu Spielen herausfordern</b><div class="hinweis">Tic-Tac-Toe, Schach und Bauernskat – darunter wählst du, welche. Aus: Du erscheinst nicht in der Liste und bekommst keine Herausforderungen. Gegen den Computer spielen geht immer.</div></div><input type="checkbox" id="setSpiele" onchange="spBereitSetzen(this.checked)"></div>
       <div class="knoepfe versteckt" id="setSpieleArten" style="margin:-4px 0 10px" aria-label="Zu welchen Spielen darf man dich herausfordern?"></div>
       <!-- KC-CLUB-ANKLOPFEN-ERLAUBEN (1.8.0) -->
       <div class="schalter"><div><b>👋 Anklopfen erlauben</b><div class="hinweis">Andere dürfen bei dir anklopfen, wenn du online bist. Aus: Sie sehen 🔕 und schreiben dir stattdessen eine Nachricht.</div></div><input type="checkbox" id="setAnklopfen" checked onchange="anklopfenSetzen({ erlaubt: this.checked })"></div>
@@ -2514,7 +2515,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.9.3"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.10.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -4869,7 +4870,7 @@ function spListeZeigen() {
   const an = L.spiele.filter((g) => g.status === "angefragt" && !g.vonMir), meine = L.spiele.filter((g) => g.status === "angefragt" && g.vonMir);
   const laufend = L.spiele.filter((g) => g.status === "laeuft").sort((a, b) => b.ichDran - a.ichDran), fertig = L.spiele.filter((g) => g.status === "beendet").slice(0, 8);
   const zeile = (g, rechts) => `<div class="zeile sp-zeile" ${g.status === "laeuft" || g.status === "beendet" ? `style="cursor:pointer" onclick="spOeffnen('${g.id}')"` : ""}>${kreis(MITGLIEDER?.find((m) => m.person_id === g.gegner.person_id) || {}, g.gegner.name, 36)}
-    <div style="flex:1;min-width:0"><b>${esc(g.gegner.vorname)}</b><div class="hinweis" style="margin:0;font-size:.85rem">${g.spiel === "schach" ? "♟️ Schach" : `❌⭕ Tic-Tac-Toe ${g.groesse}×${g.groesse}`}</div>${spTerminKurz(g)}</div>${rechts}</div>`;
+    <div style="flex:1;min-width:0"><b>${esc(g.gegner.vorname)}</b><div class="hinweis" style="margin:0;font-size:.85rem">${spTitel(g)}</div>${spTerminKurz(g)}</div>${rechts}</div>`;
   $("spInhalt").innerHTML = `
     ${L.ichBereit ? "" : `<div class="karte" style="border:2px solid var(--gruen)"><b>🎲 Möchtest du auch herausgefordert werden?</b><p class="hinweis" style="margin:4px 0 8px">Dann sehen dich die anderen in der Liste und können dich zu einer Partie einladen.</p><button class="knopf haupt" onclick="spBereitSetzen(true)">✅ Ja, ich spiele mit</button></div>`}
     <button class="knopf haupt" style="width:100%" onclick="spHerausfordernBlatt()">🎲 Jemanden herausfordern</button>
@@ -4903,24 +4904,24 @@ function spEinstZeigen() {
   const an = INIT?.einstellungen?.spiele?.herausforderung === true, l = spMeineArten();
   if ($("setSpiele")) $("setSpiele").checked = an;
   if ($("setSpieleArten")) { $("setSpieleArten").classList.toggle("versteckt", !an);
-    $("setSpieleArten").innerHTML = [["ttt", "❌⭕ Tic-Tac-Toe"], ["schach", "♟️ Schach"]].map(([a, t]) => `<button class="knopf klein${l.includes(a) ? " haupt" : ""}" aria-pressed="${l.includes(a)}" onclick="spArtSchalten('${a}')">${l.includes(a) ? "✅" : "⬜"} ${t}</button>`).join(""); }
+    $("setSpieleArten").innerHTML = [["ttt", "❌⭕ Tic-Tac-Toe"], ["schach", "♟️ Schach"], ["bsk", "🃏 Bauernskat"]].map(([a, t]) => `<button class="knopf klein${l.includes(a) ? " haupt" : ""}" aria-pressed="${l.includes(a)}" onclick="spArtSchalten('${a}')">${l.includes(a) ? "✅" : "⬜"} ${t}</button>`).join(""); }
 }
 async function spHerausfordernBlatt(pid) {
   if (!SP.liste) await spLaden(true);
   const alle = SP.liste?.bereit || [];
   if (!alle.length) return melde("Noch niemand hat „Herausfordern erlauben“ eingeschaltet – frag doch mal im Club 🙂");
-  let gr = 3, art = SP.art === "schach" ? "schach" : "ttt"; // Bauernskat gegen Mitglieder folgt
+  let gr = 3, art = SP.art; // 2.10.0: auch Bauernskat
   const f = blattAuf("spHerausBlatt", `<div id="spHerausInhalt"></div><button class="knopf" onclick="fensterZu(document.getElementById('spHerausBlatt'))">Abbrechen</button>`);
   const zeichnen = () => {
     const b = alle.filter((m) => (m.spiele || ["ttt"]).includes(art));
     $("spHerausInhalt").innerHTML = `<h3 style="margin:0">🎲 Herausfordern</h3>
-      ${spWahl("Spiel", art, [["ttt", "❌⭕ Tic-Tac-Toe"], ["schach", "♟️ Schach"]], "spHerausArt")}
+      ${spWahl("Spiel", art, [["ttt", "❌⭕ Tic-Tac-Toe"], ["schach", "♟️ Schach"], ["bsk", "🃏 Bauernskat"]], "spHerausArt")}
       ${art === "ttt" ? spWahl("Feld", String(gr), [["3", "3 × 3"], ["4", "4 × 4"]], "spHerausGroesse") : ""}
-      <p class="hinweis" style="margin:0">Wen möchtest du herausfordern? Du fängst an (${art === "schach" ? "Weiß" : SP_ZEICHEN.x}).</p>
-      ${b.length ? b.map((m) => `<button class="zeile sp-wer${m.person_id === pid ? " an" : ""}" onclick="spHerausfordern('${m.person_id}')">${kreis(MITGLIEDER?.find((x) => x.person_id === m.person_id) || {}, m.name, 36)}<b style="flex:1;text-align:left">${esc(m.name)}</b><span>${art === "schach" ? "♟️" : "🎲"} ›</span></button>`).join("")
-        : `<p class="hinweis">Für ${art === "schach" ? "Schach" : "Tic-Tac-Toe"} hat sich noch niemand freigeschaltet.</p>`}`;
+      <p class="hinweis" style="margin:0">Wen möchtest du herausfordern? ${art === "bsk" ? "Du bist Vorhand und sagst Trumpf an. Die Karten mischt der Server – niemand sieht fremde Karten." : `Du fängst an (${art === "schach" ? "Weiß" : SP_ZEICHEN.x}).`}</p>
+      ${b.length ? b.map((m) => `<button class="zeile sp-wer${m.person_id === pid ? " an" : ""}" onclick="spHerausfordern('${m.person_id}')">${kreis(MITGLIEDER?.find((x) => x.person_id === m.person_id) || {}, m.name, 36)}<b style="flex:1;text-align:left">${esc(m.name)}</b><span>${art === "schach" ? "♟️" : art === "bsk" ? "🃏" : "🎲"} ›</span></button>`).join("")
+        : `<p class="hinweis">Für ${art === "schach" ? "Schach" : art === "bsk" ? "Bauernskat" : "Tic-Tac-Toe"} hat sich noch niemand freigeschaltet.</p>`}`;
   };
-  window.spHerausArt = (a) => { art = a === "schach" ? "schach" : "ttt"; zeichnen(); };
+  window.spHerausArt = (a) => { art = a === "schach" || a === "bsk" ? a : "ttt"; zeichnen(); };
   window.spHerausGroesse = (g) => { gr = Number(g) === 4 ? 4 : 3; zeichnen(); };
   zeichnen();
   window.spHerausfordern = async (an) => {
@@ -4938,6 +4939,7 @@ async function spOeffnen(id) {
   if (aktuelleAnsicht !== "spiele") zeige("spiele"); else spZeigen();
 }
 function spSpielZeigen() {
+  if (SP.offen.spiel === "bsk") { bskSpielZeigen(SP.offen); if (SP.offen.status === "laeuft" || SP.offen.status === "angefragt") SP.takt = setInterval(spNachsehen, SP_TAKT_MS); return; }
   if (SP.offen.spiel === "schach") { schSpielZeigen(SP.offen); if (SP.offen.status === "laeuft" || SP.offen.status === "angefragt") SP.takt = setInterval(spNachsehen, SP_TAKT_MS); return; }
   const g = SP.offen, n = g.groesse, ich = g.ichBin, er = ich === "x" ? "o" : "x";
   const banner = g.status === "beendet" ? (g.ergebnis === "gewonnen" ? `<div class="sp-banner sieg">🏆 Du hast gewonnen!${g.aufgegeben ? ` ${esc(g.gegner.vorname)} hat aufgegeben.` : ""}</div>` : g.ergebnis === "verloren" ? `<div class="sp-banner niederlage">${g.aufgegeben ? "Du hast aufgegeben." : `${esc(g.gegner.vorname)} hat gewonnen.`}</div>` : `<div class="sp-banner remis">🤝 Unentschieden</div>`)
@@ -5308,7 +5310,8 @@ function bskBrettHtml(z, ich, { klick, aus, gegnerName, ansageSicht }) {
     <div class="bsk-kopf"><span>${esc(gegnerName)} · ${z.sp[er].hand.length} Handkarten</span><span>Augen: <b>${aug[er]}</b></span></div>
     ${bskTischHtml(z, er)}
     <div class="bsk-mitte"><div class="bsk-trumpf">${z.trumpf ? `Trumpf<br><b>${z.trumpf === "grand" ? "Grand<br><small>nur Buben</small>" : BSK_SYM[z.trumpf] + " " + BSK_FNAME[z.trumpf]}</b>` : "Trumpf<br><b>?</b>"}<br><small>Ansager: ${z.vorhand === ich ? "Du" : esc(gegnerName)}</small></div>
-      <div class="bsk-stich">${stich.map((x) => `<div class="bsk-stich-karte ${x.s === ich ? "ich" : "er"}">${bskKarteHtml(x.k, { trumpf: z.trumpf })}</div>`).join("") || '<span class="hinweis">Stich</span>'}</div></div>
+      <div class="bsk-stich">${stich.map((x) => `<div class="bsk-stich-karte ${x.s === ich ? "ich" : "er"}">${bskKarteHtml(x.k, { trumpf: z.trumpf })}</div>`).join("") || '<span class="hinweis">Stich</span>'}</div>
+      ${!z.stich.length && stich.length ? `<div class="bsk-letzter">Letzter Stich – ${z.letzter.gewinner === ich ? "an dich" : "an " + esc(gegnerName)}</div>` : ""}</div>
     ${bskTischHtml(z, ich, { klick, erlaubt: erl, aus, ichDran: erl.length > 0 })}
     <div class="bsk-hand">${hand.map((k) => bskKarteHtml(k, { klick: erl.includes(k) ? klick : "", trumpf: z.trumpf, blass: erl.length > 0 && !erl.includes(k) })).join("")}${ansageSicht ? '<span class="bsk-karte rueck"></span>'.repeat(4) : ""}</div>
     <div class="bsk-kopf"><span>Du</span><span>Augen: <b>${aug[ich]}</b></span></div>
@@ -5361,6 +5364,48 @@ function bskPcComputer() {
     melde(`🤖 Der Computer sagt an: ${z.trumpf === "grand" ? "Grand – nur Buben" : BSK_SYM[z.trumpf] + " " + BSK_FNAME[z.trumpf]}`); bskZeichnen(); setTimeout(bskPcComputer, 800); return; }
   if (z.phase !== "spiel" || z.amZug !== 1) return;
   bskPcNachStich(bskSpielen(z, 1, bskZugComputer(z, 1, BSK.staerke)));
+}
+// ----- KC-CLUB-BAUERNSKAT-MG (2.10.0, Wunsch Hansi): gegen ein Mitglied -----
+// Der Server mischt und hält die verdeckten Karten; die App bekommt nur ihre eigene Sicht (ich = Spieler 0) und zeichnet sie mit
+// derselben Tischansicht wie gegen den Computer. Jede Karte prüft der Server nach denselben Regeln (wörtliche Kopie, bauernskat.js).
+function bskSpielZeigen(g) {
+  bskBilderVorladen();
+  const z = g.bsk, er = esc(g.gegner.vorname);
+  if (!z) { $("spInhalt").innerHTML = '<div class="karte hinweis">Spielstand fehlt – bitte „‹ Übersicht“ und neu öffnen.</div>'; return; }
+  let status;
+  if (g.status === "beendet") {
+    const a = [bskSumme(z.stiche[0]), bskSumme(z.stiche[1])], ansagerIch = z.vorhand === 0;
+    const zeile = g.aufgegeben ? "" : `<br><small>${a[0]} : ${a[1]} Augen · ${ansagerIch ? "du hast" : er + " hat"} angesagt – ${a[z.vorhand] >= 61 ? "61 geschafft" : "unter 61 geblieben"}</small>`;
+    status = g.ergebnis === "gewonnen" ? `<div class="sp-banner sieg">🏆 ${g.aufgegeben ? `${er} hat aufgegeben – du hast gewonnen!` : "Du hast gewonnen!"}${zeile}</div>`
+      : `<div class="sp-banner niederlage">${g.aufgegeben ? "Du hast aufgegeben." : `${er} hat gewonnen.`}${zeile}</div>`;
+  } else if (g.status === "angefragt") status = `<div class="sp-status">⏳ Warte, bis ${er} annimmt …</div>`;
+  else if (g.status !== "laeuft") status = `<div class="sp-status">Diese Partie findet nicht statt.</div>`;
+  else if (z.phase === "ansage") status = g.ichDran ? `<div class="sp-status sp-ichdran">Du bist Vorhand – sag Trumpf an:</div><div class="bsk-ansage">${BSK_FARBEN.map((f) => `<button class="${f === "he" || f === "ka" ? "rot" : ""}" onclick="bskMgAnsage('${f}')">${BSK_SYM[f]}<small>${BSK_FNAME[f]}</small></button>`).join("")}<button onclick="bskMgAnsage('grand')">🃏<small>Grand</small></button></div>`
+    : `<div class="sp-status">${er} ist Vorhand und sagt Trumpf an …</div>`;
+  else status = `<div class="sp-status${g.ichDran ? " sp-ichdran" : ""}">${g.ichDran ? (z.stich.length ? "Du bist dran – bedienen, wenn du kannst" : "Du spielst aus") : `${er} ist dran …`}</div>`;
+  $("spInhalt").innerHTML = `<div class="karte sp-karte">
+      <div class="zeile" style="border:none;padding:0"><button class="knopf klein" onclick="SP.offen=null;spZeigen();spLaden(true)">‹ Übersicht</button><b style="flex:1;text-align:right">🃏 Du gegen ${er}</b></div>
+      ${status}
+      ${spTerminHtml(g)}
+      ${bskBrettHtml(z, 0, { klick: "bskMgKarte", aus: !g.ichDran || z.phase !== "spiel", gegnerName: g.gegner.vorname, ansageSicht: z.phase === "ansage" })}
+      <p class="hinweis" style="text-align:center;margin:6px 0">Karte antippen zum Spielen. Du musst nicht warten – ${er} bekommt Bescheid.</p>
+      <div class="knoepfe">${g.status === "beendet" ? `<button class="knopf haupt" onclick="spRevanche('${g.id}')">↺ Revanche</button>` : g.status === "laeuft" ? `<button class="knopf" onclick="spAufgeben('${g.id}')">🏳️ Aufgeben</button>` : ""}</div>
+    </div>`;
+}
+async function bskMgZug(zug) {
+  const g = SP.offen; if (!g?.ichDran || SP.sendet) return;
+  SP.sendet = true; g.ichDran = false; bskSpielZeigen(g); // sofort sperren (kein Doppeltippen)
+  try { SP.offen = (await api("spiel_zug", { id: g.id, zug, zuege: g.zuege })).spiel; }
+  catch (e) { meldeFehler(e); try { SP.offen = (await api("spiel_holen", { id: g.id })).spiel; } catch {} }
+  finally { SP.sendet = false; }
+  if (aktuelleAnsicht === "spiele" && SP.offen) spZeigen();
+}
+function bskMgAnsage(t) { const z = SP.offen?.bsk; if (z?.phase === "ansage" && z.vorhand === 0) bskMgZug({ ansage: t }); }
+function bskMgKarte(k) {
+  const g = SP.offen, z = g?.bsk; if (!g?.ichDran || z?.phase !== "spiel" || !bskErlaubt(z, 0).includes(k)) return;
+  const p = z.sp[0], hi = p.hand.indexOf(k); // Karte sofort in den Stich legen (der verdeckte Bauer darunter kommt vom Server), Server rechnet ab
+  if (hi >= 0) p.hand.splice(hi, 1); else { const t = p.tisch.find((x) => x.oben === k); if (t) t.oben = null; }
+  z.stich.push({ s: 0, k }); bskMgZug({ karte: k });
 }
 
 // ---------- KC-CLUB-SPIEL-TERMIN (2.9.1, Wunsch Hansi): zu einer Partie einen Termin vereinbaren ----------
@@ -14540,7 +14585,7 @@ function suAppListe() {
     ["🔔", "Push-Benachrichtigungen", "push benachrichtigung mitteilung handy", ein("pushStatus")], ["🔊", "Ton", "ton klingel laut", ein("setTon")],
     ["🌙", "Nicht stören (Ruhezeit)", "nicht stören ruhezeit nacht stumm", ein("ruheAn")], ["🔠", "Schriftgröße", "schrift gross groß lesen", ein(einfach() ? "setGrossE" : "setGross")],
     ["🎨", "Farbe & Design", "farbe design aussehen", ein(einfach() ? "designWahlE" : "designWahl")], ["🌗", "Tag/Nacht umschalten", "dunkel hell nacht tag", () => dunkelUmschalten()],
-    ["🎂", "Geburtstag anzeigen", "geburtstag", ein("setGeburtstag")], ["🎉", "Runde Geburtstage (Alter für die Clubleitung)", "runder geburtstag alter jubiläum", ein("setRundGeburtstag")], ["🟢", "Online sichtbar", "online sichtbar unsichtbar", ein("setOnline")], ["🗣️", "Stimme zum Vorlesen", "stimme vorlesen sprache ansage roboter klang", ein("setStimme")], ["🎲", "Spiele: herausfordern erlauben", "spiele spiel tic tac toe herausfordern", ein("setSpiele")], ["🎓", "Einweisung beim ersten Öffnen", "einweisung erklärung hilfe anleitung neu", ein("setEinw")], ...(ICH?.admin ? [["🕶️", "Inkognito (nur Admin)", "inkognito unsichtbar versteckt online", ein("setInkognito")]] : []), ["🕒", "Zuletzt da anzeigen", "zuletzt da online gesehen", ein("setZuletzt")],
+    ["🎂", "Geburtstag anzeigen", "geburtstag", ein("setGeburtstag")], ["🎉", "Runde Geburtstage (Alter für die Clubleitung)", "runder geburtstag alter jubiläum", ein("setRundGeburtstag")], ["🟢", "Online sichtbar", "online sichtbar unsichtbar", ein("setOnline")], ["🗣️", "Stimme zum Vorlesen", "stimme vorlesen sprache ansage roboter klang", ein("setStimme")], ["🎲", "Spiele: herausfordern erlauben", "spiele spiel tic tac toe schach bauernskat skat karten herausfordern", ein("setSpiele")], ["🎓", "Einweisung beim ersten Öffnen", "einweisung erklärung hilfe anleitung neu", ein("setEinw")], ...(ICH?.admin ? [["🕶️", "Inkognito (nur Admin)", "inkognito unsichtbar versteckt online", ein("setInkognito")]] : []), ["🕒", "Zuletzt da anzeigen", "zuletzt da online gesehen", ein("setZuletzt")],
     ["🆘", "Notfallkontakt", "notfall kontakt", ein("nfName")], ["📆", "Kalender-Abo (Handy-Kalender)", "kalender abo handy ical", ein("kalAboKnopf")],
     ["📱", "Meine Geräte", "geräte handy tablet abmelden", () => geraeteBlatt()], ["📡", "Verbindung prüfen", "verbindung internet led server", () => verbindungBlatt()],
     ["🔄", "Update prüfen", "update version neu", () => updateKachel()], ["🟢", "Mein Status", "status urlaub verfügbar krank", () => statusBlatt()],

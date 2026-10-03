@@ -3322,6 +3322,25 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(!/<text/.test(lies("lib/karten/pi-A.svg")), "Pik-Ass ohne Fremdtext");
   assert.ok(/class="bsk-bildkarte" src="lib\/karten\/\$\{k\}\.svg\?v=1"[^>]*onerror="this\.remove\(\)"/.test(html) && /bskKartenbild\(c\) \+/.test(html), "Bild mit Fallback");
 }
+// 304. 2.10.0: Bauernskat gegen Mitglieder (KC-CLUB-BAUERNSKAT-MG) – Server hält verdeckte Karten, Regeln = Kopie aus index.html
+{
+  const kopie = lies("supabase/functions/kc-club/bauernskat.js"), a = html.indexOf("const BSK_FARBEN = "), b = html.indexOf("// ----- Computer -----", a);
+  assert.ok(kopie.includes(html.slice(a, b).trimEnd()), "bauernskat.js weicht von index.html ab – node tools/bauernskat/server-kopie.mjs");
+  assert.ok(/import \{ bskNeu, bskErlaubt, bskSpielen, bskStichAbschliessen, bskErgebnis \} from "\.\/bauernskat\.js"/.test(server), "Server nutzt die Kopie");
+  const mig = lies("supabase/migrations/20261003_kc_club_v2100_bauernskat_mitglieder.sql");
+  assert.ok(/add column if not exists bsk jsonb/.test(mig) && /spiel in \('ttt', 'schach', 'bsk'\)/.test(mig), "Migration");
+  const sicht = server.slice(server.indexOf("function bskSicht("), server.indexOf("const spielSicht"));
+  assert.ok(/i === s \? \(ansage \? \[\.\.\.z\.sp\[i\]\.hand\.slice\(0, 4\), null, null, null, null\] : z\.sp\[i\]\.hand\) : z\.sp\[i\]\.hand\.map\(\(\) => null\)/.test(sicht) && /unten: p\.unten \? true : null/.test(sicht), "fremde Hand + verdeckte Bauern bleiben geheim");
+  assert.ok(/bsk: g\.spiel === "bsk" \? bskSicht\(g\.bsk, g\.spieler_x === ich \? 0 : 1\) : null/.test(server) && !/bsk: g\.bsk[,\s}]/.test(server), "nur die Sicht verlässt den Server");
+  const zug = server.slice(server.indexOf('case "spiel_zug": {'), server.indexOf('case "spiel_aufgeben": {'));
+  assert.ok(/if \(!bskErlaubt\(z, s\)\.includes\(k\)\) throw/.test(zug) && /z\.vorhand !== s \|\| !BSK_TRUMPF\.has/.test(zug) && /gewinner: sieg \? ich\.person_id : niederlage \? gegner/.test(zug), "Zugprüfung + Wertung");
+  assert.ok(/function bskSpielZeigen\(g\)/.test(html) && /api\("spiel_zug", \{ id: g\.id, zug, zuege: g\.zuege \}\)/.test(html) && /\["bsk", "🃏 Bauernskat"\]\], "spHerausArt"/.test(html), "App: Ansicht + Herausfordern");
+  // ganze Partien mit der Server-Kopie: 120 Augen, nur erlaubte Karten
+  const E = await import(new URL("../supabase/functions/kc-club/bauernskat.js", import.meta.url));
+  for (let n = 0; n < 30; n++) { const z = E.bskNeu(0); z.trumpf = ["kr", "pi", "he", "ka", "grand"][n % 5]; z.phase = "spiel"; z.amZug = 0; let i = 0;
+    while (z.phase !== "ende") { const s = z.amZug, e = E.bskErlaubt(z, s), k = e[n % e.length]; if (E.bskSpielen(z, s, k)) E.bskStichAbschliessen(z); assert.ok(++i < 40); }
+    const r = E.bskErgebnis(z); assert.equal(r.augen[0] + r.augen[1], 120); }
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

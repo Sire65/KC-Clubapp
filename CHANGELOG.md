@@ -1,5 +1,17 @@
 # Änderungen
 
+## 2.10.0 – 2026-10-03 – 🃏 Bauernskat gegen Mitglieder (Wunsch Hansi)
+- KC-CLUB-BAUERNSKAT-MG: Bauernskat jetzt auch unter „👥 Gegen Mitglieder“ – herausfordern, annehmen, abwechselnd spielen,
+  Revanche (Vorhand wechselt), Aufgeben, Termin vereinbaren, zählt für Rangliste und Pokal des Monats. Einstellungen → 🎲 Spiele:
+  Bauernskat als drittes Spiel anhakbar.
+- Fair: Der Server mischt und hält alle verdeckten Karten (neue Spalte kc_club_spiele.bsk, verlässt nie den Server; Tabelle hat RLS
+  ohne Richtlinien). Die App bekommt nur ihre eigene Sicht (eigene Hand – vor der Ansage nur die ersten 4 –, offene Bauern, Stich,
+  gewonnene Stiche). Jede Karte prüft der Server nach denselben Regeln: supabase/functions/kc-club/bauernskat.js ist eine wörtliche
+  Kopie aus index.html (tools/bauernskat/server-kopie.mjs, Vertragstest wacht über Gleichheit) – kein zweiter Regel-Kern.
+- Voller Stich wird sofort abgerechnet; wer den Stich bekommt, ist gleich wieder dran (dann keine Push-Nachricht). Am Ende: Ansager
+  braucht 61 Augen (bei 60:60 gewinnt der Nicht-Ansager). Tischansicht zeigt „Letzter Stich – an …“.
+- Migration supabase/migrations/20261003_kc_club_v2100_bauernskat_mitglieder.sql (eingespielt).
+
 ## 2.9.3 – 2026-10-03 – Bauernskat-Karten noch näher am Original (Wunsch Hansi)
 - KC-CLUB-KARTEN-ECHT: echte französische Kartenbilder (32 SVG + Rückseite) in lib/karten/ – Vorlage Adrian Kennard über
   npm @letele/playing-cards 0.1.0, gemeinfrei (CC0, LICENSE/HERKUNFT.txt beiliegend, kostenfrei). Eckzeichen J/Q auf deutsche
