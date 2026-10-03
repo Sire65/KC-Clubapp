@@ -161,6 +161,13 @@
   .hk .hk-text { margin: 10px 0 0; white-space: pre-wrap; font-size: 1.02rem; background: var(--karte2); border-radius: 12px; padding: 10px 12px; }
   .hk .hk-knoepfe { display: grid; gap: 10px; margin-top: 14px; } .hk .hk-knoepfe .knopf { min-height: 52px; font-size: 1.05rem; justify-content: center; text-align: center; }
   .hk .hk-knoepfe .knopf.an:not(.haupt) { background: var(--rotbg, #fde2e2); }
+  /* KC-CLUB-OFFLINE (2.1.0) */
+  .offline-stand { border: 2px dashed var(--grau); background: var(--karte2); font-size: .95rem; }
+  .ow-warte { display: grid; justify-items: end; gap: 6px; margin: 8px 0; }
+  .ow-blase { max-width: 80%; background: var(--karte2); border: 1px dashed var(--grau); border-radius: 14px; padding: 8px 12px; white-space: pre-wrap; }
+  .ow-blase small { display: block; color: var(--grau); font-size: .78rem; margin-top: 4px; }
+  /* KC-CLUB-KOPF-EINFACH (2.1.0): Mitglieder ohne Technik-Lämpchen und Lebenszeichen-Herz (nur Admin) */
+  body:not(.ist-admin) #ledComm, body:not(.ist-admin) #ledDaten, body:not(.ist-admin) #herzKnopf { display: none; }
   textarea.hl-notiz { min-height: 8.5em; font-size: 1.02rem; line-height: 1.4; }
   .zettel .zfuss { margin-top: 8px; font-size: .74rem; color: #4a3d10; }
   .zettel .zknoepfe { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
@@ -2386,7 +2393,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.0.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.1.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -5033,7 +5040,18 @@ function rundinstrument(titel, wert, max, einheit, zonen, dezimal = 0) {
     <div class="i-wert">${zahl}<small> ${einheit}</small></div><div class="i-titel">${esc(titel)}</div></div>`;
 }
 const mittel = (a) => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
-function verbindungBlatt() { vbBlattZeigen(); $("verbindungBlatt").classList.remove("versteckt"); communicatorPruefen(); }
+// KC-CLUB-KOPF-EINFACH (2.1.0, Gesamtprüfung): Mitglieder sehen EIN Lämpchen und beim Antippen nur „in Ordnung / Störung“;
+// die Technik (Server, Communicator, Datenverkehr, Messwerte) bleibt für den Admin
+function verbindungBlatt() {
+  if (!ICH?.admin) {
+    const [farbe, text] = vbZustand(), gut = farbe === "gruen";
+    $("vbInhalt").innerHTML = `<div class="vb-status"><i class="led ${farbe}"></i><b>${gut ? "✅ Verbindung in Ordnung" : farbe === "blau" ? "🔧 " + esc(text) : farbe === "grau" ? "⏳ Verbindung wird geprüft …" : "⚠️ Gerade Störung – " + esc(text)}</b></div>
+      <p class="hinweis" style="margin:8px 0">${gut ? "Nachrichten, Termine und Mitteilungen kommen an." : "Bitte kurz warten. Bleibt es so, hilft „Problem melden“."}</p>
+      <div class="knoepfe"><button class="knopf" onclick="$('verbindungBlatt').classList.add('versteckt');testAnMichStarten()">🧪 Test-Mitteilung an mich</button><button class="knopf" onclick="$('verbindungBlatt').classList.add('versteckt');fpProblemMelden()">🆘 Problem melden</button></div>`;
+    $("verbindungBlatt").classList.remove("versteckt"); return;
+  }
+  vbBlattZeigen(); $("verbindungBlatt").classList.remove("versteckt"); communicatorPruefen();
+}
 async function communicatorPruefen() {
   try { vbCommSetzen(await api("communicator_status")); } catch { /* Serverfehler zeigt schon die obere LED */ }
 }
@@ -6340,7 +6358,7 @@ function neuLaden(vonHand) {
 }
 async function neuLadenRoh(vonHand) {
   try {
-    INIT = await api("init", {}, { warten: !!vonHand }); ICH = INIT.ich; adminNamenSetzen();
+    INIT = await api("init", {}, { warten: !!vonHand }); ICH = INIT.ich; adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); // KC-CLUB-KOPF-EINFACH
     fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln);
     if ($("setLiveTippen")) $("setLiveTippen").checked = liveTippen();
@@ -6357,7 +6375,61 @@ async function neuLadenRoh(vonHand) {
     $("neuTreffenKnopf").classList.remove("versteckt"); // KC-CLUB-PRIVATTERMIN: „＋ Neu“ für alle (Mitglieder: privat)
     heroZeigen(); registerZeigen(); kachelnZeigen(); wichtigZeigen(); zaehlerZeigen();
     if (vonHand) { melde("Aktualisiert"); updatePruefen(false); }
-  } catch (e) { melde(e.message, true); }
+    standMerken(); offlineStandZeigen(false); owSenden(); // KC-CLUB-OFFLINE (2.1.0)
+  } catch (e) { if (!offlineStandLaden(e)) melde(e.message, true); }
+}
+// ---------- KC-CLUB-OFFLINE (2.1.0, Gesamtprüfung) ----------
+// Start ohne Netz: der zuletzt geladene Stand (nur auf diesem Gerät) wird gezeigt – deutlich als „Stand von …“ markiert,
+// nie als aktuell (AGENTS Regel 11). Kommt das Netz zurück, lädt die App neu.
+const STAND_KEY = "kc_club_stand";
+function standMerken() {
+  if (!INIT || INIT._offline) return;
+  try { const t = JSON.stringify({ zeit: Date.now(), person: ICH?.person_id, schluessel: KEY.slice(-8), init: INIT }); if (t.length < 400000) localStorage.setItem(STAND_KEY, t); } catch {}
+}
+function offlineStandLaden(e) {
+  if (INIT || !(e?.leitung || !navigator.onLine)) return false;
+  let g = null; try { g = JSON.parse(localStorage.getItem(STAND_KEY) || "null"); } catch {}
+  if (!g?.init?.ich || g.schluessel !== KEY.slice(-8)) return false; // nur der eigene Stand (anderer Link auf dem Gerät → nichts zeigen)
+  try {
+    INIT = { ...g.init, _offline: g.zeit }; ICH = INIT.ich; adminNamenSetzen();
+    if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln); ansichtUebernehmen(INIT.einstellungen?.ansicht); designUebernehmen(INIT.einstellungen?.design);
+    $("begruessung").textContent = "Hallo " + ICH.vorname + "!"; meinStatusZeigen();
+    heroZeigen(); registerZeigen(); kachelnZeigen(); wichtigZeigen(); zaehlerZeigen();
+  } catch {}
+  offlineStandZeigen(true); return true;
+}
+function offlineStandZeigen(an) {
+  let el = $("offlineStand");
+  if (!an) { el?.remove(); if (INIT?._offline) INIT._offline = null; return; }
+  if (!el) { el = document.createElement("div"); el.id = "offlineStand"; el.className = "karte offline-stand"; $("v-start").prepend(el); }
+  const d = new Date(INIT._offline);
+  el.innerHTML = `📴 <b>Kein Netz – das ist dein Stand von ${esc(fKurz.format(d))} ${esc(fZeit.format(d))} Uhr.</b> Neues kommt, sobald du wieder Internet hast.`;
+}
+window.addEventListener("online", () => { if (INIT?._offline) INIT = null; if (KEY) neuLaden(); owSenden(); });
+// Nachrichten ohne Netz: nicht verlieren, sondern auf dem Gerät vormerken und bei Netz automatisch senden.
+// Nur wenn das Handy sicher offline ist (dann hat der Server die Nachricht garantiert nicht bekommen → nie doppelt).
+const OW_KEY = "kc_club_warteschlange";
+const owLesen = () => { try { return JSON.parse(localStorage.getItem(OW_KEY) || "[]"); } catch { return []; } };
+const owSchreiben = (l) => lsSetzen(OW_KEY, JSON.stringify(l));
+let OW_LAEUFT = false;
+async function owSenden() {
+  if (OW_LAEUFT || !navigator.onLine || !KEY) return;
+  const l = owLesen(); if (!l.length) return;
+  OW_LAEUFT = true; let ok = 0;
+  try {
+    for (const x of l) {
+      try { await api("nachricht_senden", { id: x.chat, text: x.text, wege: x.wege || [], ...(x.antwort_auf ? { antwort_auf: x.antwort_auf } : {}), ...(x.wichtig ? { wichtig: true } : {}) });
+        owSchreiben(owLesen().filter((y) => y.id !== x.id)); ok++; }
+      catch (e) { if (e?.leitung || !navigator.onLine) break; owSchreiben(owLesen().filter((y) => y.id !== x.id)); melde(`Eine vorgemerkte Nachricht ging nicht: ${e.message}`, true); }
+    }
+  } finally { OW_LAEUFT = false; }
+  if (ok) { melde(`📤 ${ok} vorgemerkte Nachricht${ok === 1 ? "" : "en"} gesendet`); if (chatId) chatLaden(false); }
+}
+function owZeigen() {
+  const z = $("chat"); if (!z || !chatId) return;
+  z.querySelector(".ow-warte")?.remove();
+  const l = owLesen().filter((x) => x.chat === chatId); if (!l.length) return;
+  z.insertAdjacentHTML("beforeend", `<div class="ow-warte">${l.map((x) => `<div class="ow-blase">${esc(x.text)}<small>⏳ wartet auf Netz – wird automatisch gesendet</small></div>`).join("")}</div>`);
 }
 function zaehlerZeigen() {
   const n = INIT?.ungelesen || 0;
@@ -6428,6 +6500,15 @@ function zeige(v, ausHistorie) {
   }
   window.scrollTo(0, 0);
 }
+// KC-CLUB-FENSTER-KERN (2.1.0, Gesamtprüfung: „18 Fenster-Arten“): EINE Regel zum Schließen für alle Fenster – fest im HTML
+// stehende werden versteckt, alle zur Laufzeit gebauten entfernt (Rückfragen über ihr „Abbrechen“). Gilt für Handy-Zurück und Escape.
+document.querySelectorAll(".blatt").forEach((b) => { b.dataset.fest = "1"; });
+function fensterZu(b) { if (b._zu) b._zu(); else if (b.dataset.fest) b.classList.add("versteckt"); else b.remove(); }
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape" || e.defaultPrevented) return;
+  const offen = [...document.querySelectorAll(".blatt:not(.versteckt)")]; if (!offen.length) return;
+  e.preventDefault(); fensterZu(offen[offen.length - 1]); // nur das oberste
+});
 let letztesZurueck = 0;
 // KC-CLUB-ZURUECK-KNOPF (1.98.0, Gesamtprüfung: „‹ legte einen neuen Verlaufseintrag an – Handy-Zurück öffnete die verlassene
 // Ansicht wieder“): ‹ geht im Verlauf zurück, wenn es eine vorige App-Ansicht gibt (Tiefe im Verlaufseintrag), sonst zur Zielansicht
@@ -6444,7 +6525,7 @@ window.addEventListener("popstate", (e) => {
   // (Rückfrage = „Abbrechen“) und die Ansicht bleibt stehen – vorher verschwand die Ansicht samt angefangener Eingabe
   const offen = [...document.querySelectorAll(".blatt:not(.versteckt)")];
   if (offen.length && VERLAUF.state) {
-    offen.forEach((b) => { if (b.dataset.dyn) { if (b._zu) b._zu(); else b.remove(); } else b.classList.add("versteckt"); });
+    offen.forEach(fensterZu);
     history.pushState(VERLAUF.state, "", VERLAUF.url); return;
   }
   VERLAUF.state = e.state; VERLAUF.url = location.href;
@@ -8813,7 +8894,7 @@ async function chatLaden(scrollen) {
   try {
     const fuer = chatId, u = await api("unterhaltung", { id: fuer });
     if (fuer !== chatId) return; // 1.97.0: inzwischen eine andere Unterhaltung geöffnet → alte Antwort verwerfen
-    CHAT = u;
+    CHAT = u; setTimeout(owZeigen, 0); // KC-CLUB-OFFLINE: vorgemerkte Nachrichten unten zeigen
     const andere = u.teilnehmer.filter((x) => x.person_id !== ICH.person_id);
     $("chatTitel").textContent = (u.gruppe ? `${u.gruppe.symbol} ${u.gruppe.name}` : u.betreff || andere.map((x) => x.name).join(", ")) + (stummAn(chatId) ? " 🔕" : "");
     zustellZeigen();
@@ -10050,6 +10131,13 @@ async function senden() {
   emoUmschalten(false); // KC-CLUB-EMOJI
   const text = $("text").value.trim();
   if (!text && !anlagen.length) return;
+  // KC-CLUB-OFFLINE (2.1.0): Handy ohne Netz → Text vormerken statt Fehlermeldung (nur bestehender Chat, ohne Anhänge)
+  if (!navigator.onLine && chatId && !anlagen.length && text) {
+    owSchreiben([...owLesen(), { id: crypto.randomUUID?.() || String(Date.now()), chat: chatId, text, wege: ["push", "email"].filter((w) => ZW[w]),
+      antwort_auf: NA.antwort?.id || null, wichtig: !!WICHTIG, zeit: Date.now() }]);
+    entwurfWeg(chatId); clearTimeout(entwurfTimer); $("text").value = ""; $("text").style.height = "auto"; entwurfMarkeZeigen(); naAntwortWeg(); wichtigUmschalten(false);
+    melde("📴 Kein Netz – deine Nachricht ist vorgemerkt und geht automatisch raus, sobald du wieder Internet hast."); owZeigen(); return;
+  }
   $("sendenKnopf").disabled = true;
   try {
     const daten = { text, anlagen: anlagen.map((a) => a.id), wege: ["push", "email"].filter((w) => ZW[w]),

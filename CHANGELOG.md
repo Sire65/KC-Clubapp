@@ -1,5 +1,17 @@
 # Änderungen
 
+## 2.1.0 – 2026-10-03 – Paket 5 (Gesamtprüfung)
+- KC-CLUB-OFFLINE: Nachricht schreiben ohne Netz → wird auf dem Gerät vorgemerkt (Blase „⏳ wartet auf Netz“) und automatisch
+  gesendet, sobald wieder Internet da ist (nur wenn das Handy sicher offline war – dann kann nichts doppelt ankommen; nur
+  bestehende Chats, ohne Anhänge). Start ohne Netz: der zuletzt geladene eigene Stand wird gezeigt, deutlich markiert
+  „📴 Kein Netz – das ist dein Stand von …“ (nie als aktuell, AGENTS Regel 11); nur passend zum eigenen Link auf dem Gerät.
+  Kommt das Netz zurück, lädt die App neu und schickt Vorgemerktes.
+- KC-CLUB-KOPF-EINFACH: Mitglieder sehen oben nur noch ein Verbindungs-Lämpchen; antippen zeigt „✅ Verbindung in Ordnung“ bzw.
+  „⚠️ Störung“ mit Test-Mitteilung und „Problem melden“. Technik-Lämpchen (Communicator, Datenverkehr), Messwerte und das
+  Lebenszeichen-Herz nur noch für den Admin.
+- KC-CLUB-FENSTER-KERN: eine Regel zum Schließen für alle Fenster (fest im HTML → verstecken, zur Laufzeit gebaut → entfernen,
+  Rückfragen → „Abbrechen“); gilt für Handy-Zurück und neu auch für die Escape-Taste (schließt nur das oberste Fenster).
+
 ## 2.0.0 – 2026-10-03 – Restpunkte der Gesamtprüfung (Paket 4)
 - Server: Versand über den Communicator stürzt bei Ausfall nicht mehr ab (20-s-Grenze, „0 gesendet“ statt Fehler → kein doppeltes
   Senden durch das Mitglied). Alarm „ohne Anmeldung“ an die Admins höchstens 3× je Stunde insgesamt; Links aus fremdem Text entfernt.

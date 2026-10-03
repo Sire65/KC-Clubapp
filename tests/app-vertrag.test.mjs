@@ -3126,6 +3126,13 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/if \(API_LESEN\.test\(action\)\) try \{ return await notApi\(action, daten\); \}/.test(html), "Notbetrieb nur Lesen automatisch");
   assert.ok(!/new Date\(\)\.toISOString\(\)\.slice\(0, 10\)/.test(html), "kein UTC-Tag mehr");
 }
+// 282. 2.1.0: Offline-Warteschlange, Offline-Stand, einfacher Kopf, Fenster-Kern
+{
+  assert.ok(/if \(!navigator\.onLine && chatId && !anlagen\.length && text\) \{/.test(html) && /async function owSenden\(\)/.test(html) && /window\.addEventListener\("online", \(\) => \{[^\n]*owSenden\(\)/.test(html), "Nachrichten ohne Netz vormerken + senden");
+  assert.ok(/function offlineStandLaden\(e\)/.test(html) && /g\.schluessel !== KEY\.slice\(-8\)/.test(html) && /📴 <b>Kein Netz – das ist dein Stand von/.test(html) && /if \(!INIT \|\| INIT\._offline\) return;/.test(html), "Offline-Stand markiert, nur eigener, nie zurückgespeichert");
+  assert.ok(/body:not\(\.ist-admin\) #ledComm, body:not\(\.ist-admin\) #ledDaten, body:not\(\.ist-admin\) #herzKnopf \{ display: none; \}/.test(html) && /if \(!ICH\?\.admin\) \{\n    const \[farbe, text\] = vbZustand\(\)/.test(html), "einfacher Kopf für Mitglieder");
+  assert.ok(/function fensterZu\(b\) \{ if \(b\._zu\) b\._zu\(\); else if \(b\.dataset\.fest\) b\.classList\.add\("versteckt"\); else b\.remove\(\); \}/.test(html) && /offen\.forEach\(fensterZu\);/.test(html) && /e\.key !== "Escape"/.test(html), "ein Fenster-Kern");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
