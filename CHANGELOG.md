@@ -1,5 +1,13 @@
 # Änderungen
 
+## 1.68.0 – 2026-10-03
+- KC-CLUB-DIKTAT (Wunsch Hansi): Das 🎤 im Chat fragt „🎤 Sprachnachricht“ (wie bisher, Ton) oder „✍️ Diktieren“ – das Handy
+  schreibt live ins Schreibfeld mit; „📤 Senden“ schickt es als normale Textnachricht, „✅ Fertig – noch prüfen“ lässt es zum
+  Korrigieren stehen, „✕ Verwerfen“ stellt den alten Text wieder her. Gesagte Satzzeichen („Punkt“, „Komma“, „Fragezeichen“,
+  „Ausrufezeichen“, „Doppelpunkt“, „neue Zeile“) werden ersetzt, Satzanfang groß. Nach Sprechpausen hört es weiter zu (bis 5 Min.).
+  „Immer so“ merkt die Wahl; ändern unter ⚙️ → „Ansagen, Töne & Tipps“ → „🎤 Mikrofon im Chat“. Ohne Spracherkennung auf dem
+  Gerät: wie bisher direkt die Sprachnachricht. Erkennung durch das Handy (kostenlos; nur solange das Fenster offen ist).
+
 ## 1.67.0 – 2026-10-03
 - KC-CLUB-LIVE-VORSCHAU (Wunsch Hansi „immer eine Vorschau, damit man sieht, wie die Vorlage aussieht“): Beim Bearbeiten steht
   unten ein kleines A4-Blatt „👁️ So sieht es aus“, das sich bei jeder Änderung selbst erneuert – in „Sitzung vorbereiten“

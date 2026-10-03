@@ -2781,6 +2781,19 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/BU\.f\.anmerkung=this\.value;lvAuffrischen\(\)/.test(html) && /function briefFeld\(k, el\) \{ BRIEF\[k\] = el\.value; briefMerken\(\); lvAuffrischen\(\); \}/.test(html) && /function buAnw\(id, an\) \{[^}]*lvAuffrischen\(\); \}/.test(html), "Tippen erneuert die Vorschau");
 }
 
+// 244. 1.68.0: Mikrofon im Chat – Sprachnachricht oder Diktieren (Sprache → Text)
+{
+  assert.ok(/id="mikroKnopf" onclick="mikroWahl\(\)"/.test(html) && /function mikroWahl\(\) \{\n  if \(!DIKTAT_GEHT\) return spracheStart\(\);/.test(html), "Wahl, ohne Erkennung wie bisher");
+  const code = html.slice(html.indexOf("function diktatSatz("), html.indexOf("const DT = {"));
+  const satz = new Function(`${code}; return diktatSatz;`)();
+  assert.equal(satz("hallo klaus komma kommst du morgen fragezeichen"), "Hallo klaus, kommst du morgen?");
+  assert.equal(satz("ich bringe den Glühwein mit punkt bis dann ausrufezeichen"), "Ich bringe den Glühwein mit. Bis dann!");
+  assert.equal(satz("erste zeile neue zeile zweite"), "Erste zeile\nZweite");
+  assert.ok(/if \(was === "senden"\) \{ if \(!feld\.value\) return melde\([^)]*\); return senden\(\); \}/.test(html), "Senden über den normalen Weg");
+  assert.ok(/if \(was === "weg"\) \{ feld\.value = DT\.basis;/.test(html), "Verwerfen stellt den alten Text her");
+  assert.ok(/id="setMikro" onchange="mikroArtSetzen\(this\.value\)"/.test(html), "Einstellung");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

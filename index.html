@@ -1088,6 +1088,12 @@
   .bu-mikro { display: flex; align-items: center; gap: 4px 10px; flex-wrap: wrap; width: 100%; margin-top: 8px; border: 1px dashed var(--linie); border-radius: 14px; background: var(--karte2); color: var(--text); padding: 8px 12px; font: inherit; text-align: left; cursor: pointer; }
   .bu-mikro span { font-size: 1.6rem; width: 46px; height: 46px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: #a65a4a; box-shadow: 0 2px 6px rgba(0,0,0,.25); }
   .bu-mikro b { flex: 1; } .bu-mikro small { flex-basis: 100%; color: var(--grau); padding-left: 56px; margin-top: -8px; }
+  .mikro-wahl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .mikro-wahl button { display: flex !important; flex-direction: column; align-items: center; justify-content: center; min-height: 130px; gap: 4px; text-align: center; padding: 10px 8px; min-width: 0; }
+  .mikro-wahl span { font-size: 2.2rem; line-height: 1; } .mikro-wahl b { display: block; font-size: 1.02rem; } .mikro-wahl small { display: block; font-weight: 400; font-size: .8rem; opacity: .92; line-height: 1.25; }
+  .mikro-merken { display: flex; gap: 8px; align-items: center; margin: 12px 0 0; font-size: .9rem; } .mikro-merken input { width: 20px; height: 20px; }
+  .diktat { text-align: center; } .diktat > b { display: block; font-size: 1.15rem; margin: 10px 0 6px; }
+  .diktat-text { text-align: left; background: var(--karte2); border-radius: 12px; padding: 10px 12px; min-height: 80px; max-height: 34vh; overflow-y: auto; white-space: pre-wrap; margin-bottom: 10px; font-size: 1.05rem; }
   .bu-hoeren { text-align: center; padding: 6px 0 2px; } .bu-hoeren b { display: block; font-size: 1.2rem; margin: 10px 0 4px; min-height: 1.5em; }
   .bu-hpunkt { font-size: 2.4rem; width: 84px; height: 84px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: #b4553f; animation: buHoeren 1.2s ease-in-out infinite; }
   @keyframes buHoeren { 0%, 100% { box-shadow: 0 0 0 0 rgba(180,85,63,.55); } 50% { box-shadow: 0 0 0 18px rgba(180,85,63,0); } }
@@ -1897,6 +1903,8 @@
       <!-- KC-CLUB-ONLINE-ANSAGE (1.56.0, Wunsch Hansi): Sprachansage „Klaus ist jetzt online“ – nur dieses Gerät, nur wenn die App offen ist -->
       <div class="schalter" id="setAnsageZeile"><div><b>🗣️ Ansage, wenn jemand online kommt</b><div class="hinweis">Das Handy sagt z. B. „Klaus ist jetzt online“ – nur solange die App offen ist, nicht in deiner Ruhezeit</div></div><input type="checkbox" id="setAnsage" onchange="ansageSchalter(this.checked)"></div>
       <!-- KC-CLUB-VORLESEN (1.59.0, Wunsch Hansi): neue Nachrichten im offenen Chat vorlesen (auch im Chat oben 🔇/🔊) -->
+      <div class="schalter" id="setMikroZeile"><div><b>🎤 Mikrofon im Chat</b><div class="hinweis">Sprachnachricht (Ton) oder Diktieren (das Handy schreibt mit, verschickt wird Text).</div></div>
+        <select id="setMikro" onchange="mikroArtSetzen(this.value)" style="max-width:150px"><option value="">Jedes Mal fragen</option><option value="sprach">🎤 Sprachnachricht</option><option value="diktat">✍️ Diktieren</option></select></div>
       <div class="schalter" id="setVorlesenZeile"><div><b>🔊 Neue Nachrichten vorlesen</b><div class="hinweis">Im offenen Chat liest das Handy neue Nachrichten vor. Einzelne Nachricht: antippen → „🔊 Vorlesen“. Schalter auch im Chat oben (🔇/🔊).</div></div><input type="checkbox" id="setVorlesen" onchange="vorlesenSchalter(this.checked)"></div>
       <div class="schalter versteckt" id="setAnmeldeTonZeile"><div><b>🔔 Ton, wenn sich jemand anmeldet (Admin)</b><div class="hinweis">Kurzer Doppelton, sobald ein Mitglied online kommt</div></div><input type="checkbox" id="setAnmeldeTon" onchange="anmeldeTonSchalter(this.checked)"></div>
       <!-- KC-CLUB-ONLINE-PUSH (1.57.0): auch bei geschlossener App – als Push mit dem normalen Benachrichtigungston -->
@@ -2067,7 +2075,7 @@
   <div class="eingabe-entwurf versteckt" id="entwurfMarke">✏️ Entwurf – noch nicht gesendet</div>
   <div class="innen">
     <button class="rund" title="Anlage" onclick="anlageMenue()">📎</button>
-    <button class="rund" title="Sprachnachricht aufnehmen" id="mikroKnopf" onclick="spracheStart()">🎤</button>
+    <button class="rund" title="Mikrofon: Sprachnachricht oder Diktieren" id="mikroKnopf" onclick="mikroWahl()">🎤</button>
     <button class="rund emo-knopf" title="Emoji einfügen" id="emoKnopf" aria-expanded="false" onclick="emoUmschalten()">😊</button>
     <button class="rund zustell-knopf" title="Wie benachrichtigen? (Push, E-Mail, WhatsApp)" id="zustellKnopf" aria-expanded="false" onclick="zustellUmschalten()">🔔</button>
     <!-- KC-CLUB-WICHTIG (1.53.0, Wunsch Hansi): Nachricht mit „Wichtigkeit hoch“ – wird beim Empfänger farbig umrandet -->
@@ -2279,7 +2287,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.67.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.68.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2990,6 +2998,7 @@ function anmeldeTon() {
 }
 function ansageSchalterZeigen() {
   if ($("setAnsage")) $("setAnsage").checked = ansageAn(); vorlesenZeigen();
+  if ($("setMikro")) { $("setMikro").value = mikroArt(); $("setMikroZeile").classList.toggle("versteckt", !DIKTAT_GEHT); }
   $("setAnmeldeTonZeile")?.classList.toggle("versteckt", !ICH?.admin); if ($("setAnmeldeTon")) $("setAnmeldeTon").checked = anmeldeTonAn();
   $("setOnlinePushZeile")?.classList.toggle("versteckt", !ICH?.admin); if ($("setOnlinePush")) $("setOnlinePush").checked = INIT?.einstellungen?.online_push?.an !== false;
 }
@@ -3945,6 +3954,68 @@ async function todoLoeschen(id) {
   try { await api("todo_loeschen", { id }); await todoLaden(); } catch (e) { melde(e.message, true); }
 }
 
+// ---------- KC-CLUB-DIKTAT (1.68.0, Wunsch Hansi): Mikrofon im Chat – Sprachnachricht ODER Diktieren (Sprache → Text) ----------
+// Diktieren: die Spracherkennung des Handys (Web Speech API, kostenlos; bei Chrome über Google, nur solange das Fenster offen ist)
+// schreibt live ins Schreibfeld. „✅ Fertig“ lässt den Text zum Prüfen stehen, „📤 Senden“ schickt ihn als normale Textnachricht.
+// Gesagte Satzzeichen („Punkt“, „Komma“, „Fragezeichen“, „neue Zeile“ …) werden ersetzt. Ohne Spracherkennung: wie bisher Sprachnachricht.
+const MIKRO_ART = "kc_club_mikro_art", DIKTAT_GEHT = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+const mikroArt = () => { const a = lsLesen(MIKRO_ART); return a === "sprach" || a === "diktat" ? a : ""; };
+function mikroArtSetzen(a) { lsSetzen(MIKRO_ART, a || ""); melde(a === "diktat" ? "✍️ Mikrofon im Chat: Diktieren" : a === "sprach" ? "🎤 Mikrofon im Chat: Sprachnachricht" : "🎤 Mikrofon im Chat fragt jedes Mal"); }
+function mikroWahl() {
+  if (!DIKTAT_GEHT) return spracheStart();
+  const a = mikroArt(); if (a === "sprach") return spracheStart(); if (a === "diktat") return diktatStart();
+  const f = blattAuf("mikroWahlBlatt", `<h3 style="margin-top:0">🎤 Was möchtest du?</h3>
+    <div class="mikro-wahl"><button class="knopf haupt" data-a="sprach"><span>🎤</span><b>Sprachnachricht</b><small>Deine Stimme wird verschickt</small></button>
+      <button class="knopf haupt" data-a="diktat"><span>✍️</span><b>Diktieren</b><small>Ich schreibe mit – verschickt wird Text</small></button></div>
+    <label class="mikro-merken"><input type="checkbox" id="mikroMerken"> Immer so (änderbar unter ⚙️ → Ansagen, Töne & Tipps)</label>
+    <div class="knoepfe"><button class="knopf" data-a="zu">Abbrechen</button></div>`);
+  f.querySelectorAll("[data-a]").forEach((b) => (b.onclick = () => { const w = b.dataset.a; const merken = $("mikroMerken")?.checked; f.remove();
+    if (w === "zu") return; if (merken) mikroArtSetzen(w); w === "diktat" ? diktatStart() : spracheStart(); }));
+}
+// gesagte Satzzeichen ersetzen, Leerzeichen ordnen, Satzanfang groß (rein, testbar)
+function diktatSatz(t) {
+  const ers = [[/\s*\bneue[rn]? (zeile|absatz)\b\s*/gi, "\n"], [/\s*\b(punkt)\b/gi, "."], [/\s*\b(komma)\b/gi, ","], [/\s*\b(fragezeichen)\b/gi, "?"],
+    [/\s*\b(ausrufezeichen)\b/gi, "!"], [/\s*\b(doppelpunkt)\b/gi, ":"], [/\s*\b(bindestrich)\b\s*/gi, "-"]];
+  let x = String(t || ""); for (const [r, z] of ers) x = x.replace(r, z);
+  x = x.replace(/[ \t]+/g, " ").replace(/ *\n */g, "\n").replace(/([.,?!:])(?=[^\s\n.,?!:])/g, "$1 ").trim();
+  return x.replace(/(^|[.?!]\s+|\n)([a-zäöü])/g, (m, a, b) => a + b.toUpperCase());
+}
+const DT = { erk: null, aktiv: false, basis: "", fertig: "", seit: 0 };
+function diktatStart() {
+  if (!DIKTAT_GEHT) return spracheStart();
+  if (DT.aktiv) return;
+  const feld = $("text"); DT.basis = feld.value; DT.fertig = ""; DT.aktiv = true; DT.seit = Date.now();
+  const f = blattAuf("diktatBlatt", `<div class="diktat"><span class="bu-hpunkt">✍️</span><b>Ich schreibe mit …</b>
+    <div class="diktat-text" id="diktatText"><span class="hinweis">Sprich einfach los. Satzzeichen sagen: „Punkt“, „Komma“, „Fragezeichen“, „neue Zeile“.</span></div>
+    <div class="knoepfe" style="justify-content:center"><button class="knopf haupt" data-d="senden">📤 Senden</button><button class="knopf" data-d="fertig">✅ Fertig – noch prüfen</button><button class="knopf" data-d="weg">✕ Verwerfen</button></div>
+    <p class="hinweis" style="font-size:.8rem;margin:6px 0 0">🔒 Das Handy hört nur zu, solange dieses Fenster offen ist.</p></div>`);
+  f.onclick = null; // nicht aus Versehen durch Tippen daneben schließen
+  f.querySelectorAll("[data-d]").forEach((b) => (b.onclick = () => diktatEnde(b.dataset.d)));
+  diktatHoeren();
+}
+function diktatHoeren() {
+  const Erk = window.SpeechRecognition || window.webkitSpeechRecognition, e = new Erk(); DT.erk = e;
+  e.lang = "de-DE"; e.continuous = true; e.interimResults = true;
+  e.onresult = (ev) => {
+    let neu = ""; for (let i = ev.resultIndex; i < ev.results.length; i++) { const r = ev.results[i]; if (r.isFinal) DT.fertig += " " + r[0].transcript; else neu += " " + r[0].transcript; }
+    const gesagt = diktatSatz(DT.fertig + neu), feld = $("text");
+    feld.value = (DT.basis ? DT.basis.replace(/\s*$/, " ") : "") + gesagt; feld.dispatchEvent(new Event("input", { bubbles: true }));
+    if ($("diktatText")) $("diktatText").textContent = gesagt || "…";
+  };
+  e.onerror = (ev) => { if (ev.error === "not-allowed" || ev.error === "service-not-allowed") { melde("✍️ Bitte das Mikrofon für die App erlauben (Handy-Einstellungen).", true); diktatEnde("fertig"); } };
+  // Chrome hört nach einer Pause von selbst auf – solange das Fenster offen ist, weiter zuhören (höchstens 5 Minuten)
+  e.onend = () => { if (DT.aktiv && Date.now() - DT.seit < 5 * 60000) { try { diktatHoeren(); } catch { diktatEnde("fertig"); } } else if (DT.aktiv) diktatEnde("fertig"); };
+  try { e.start(); } catch { melde("✍️ Mikrofon gerade nicht verfügbar.", true); diktatEnde("fertig"); }
+}
+function diktatEnde(was) {
+  DT.aktiv = false; try { DT.erk?.stop?.(); } catch {}
+  $("diktatBlatt")?.remove();
+  const feld = $("text");
+  if (was === "weg") { feld.value = DT.basis; feld.dispatchEvent(new Event("input", { bubbles: true })); return melde("✕ Diktat verworfen"); }
+  feld.value = feld.value.trim(); feld.dispatchEvent(new Event("input", { bubbles: true }));
+  if (was === "senden") { if (!feld.value) return melde("Es wurde nichts erkannt – bitte nochmal.", true); return senden(); }
+  feld.focus();
+}
 // ---------- KC-CLUB-SPRACHE (0.37.0): Sprachnachricht aufnehmen und senden (höchstens 3 Minuten) ----------
 // Aufnahme im Handy (MediaRecorder), dann wie ein normaler Anhang an dieselben Empfänger wie jede Nachricht (Person, Gruppe, alle).
 let SPR = null; // { rec, strom, teile, start, uhr }
