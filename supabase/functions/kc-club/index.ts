@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.83.0";
+const SERVER_VERSION = "1.84.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -1997,6 +1997,13 @@ async function protokollLeser(): Promise<string[]> {
   const [leute, { data: r }] = await Promise.all([aktiveMitglieder(), db.from("kc_club_rollen").select("person_id").eq("protokolle_lesen", false)]);
   const aus = new Set((r ?? []).map((x: any) => x.person_id));
   return leute.map((m) => m.person_id).filter((id) => !aus.has(id));
+}
+// KC-CLUB-PROTOKOLL-NAECHSTER-TERMIN (1.84.0, Wunsch Hansi): Vorschlag = die nächste geplante Sitzung nach dem Protokolldatum
+async function protokollNaechsterVorschlag(pr: any) {
+  const ab = new Date(`${pr.datum}T23:59:59Z`).toISOString();
+  const { data } = await db.from("kc_club_treffen").select("titel,beginn,ort").eq("art", "treffen").neq("status", "abgesagt").gt("beginn", ab).order("beginn").limit(1);
+  const t: any = data?.[0];
+  return t ? txt(`${t.titel} · ${wann(t.beginn)}${t.ort ? " · " + t.ort : ""}`, 200) : null;
 }
 async function protokollHolen(id: unknown) {
   const { data } = await db.from("kc_club_sitzungsprotokolle").select("*").eq("id", String(id || "")).maybeSingle();
@@ -5901,7 +5908,7 @@ Köcheclub-App`,
         aktuell.add(ich.person_id);
         return json({
           protokoll: {
-            id: pr.id, treffen_id: pr.treffen_id, titel: pr.titel, datum: pr.datum, ort: pr.ort, gaeste: pr.gaeste, kurzfassung: pr.kurzfassung,
+            id: pr.id, treffen_id: pr.treffen_id, titel: pr.titel, datum: pr.datum, ort: pr.ort, gaeste: pr.gaeste, kurzfassung: pr.kurzfassung, naechster_termin: pr.naechster_termin ?? null,
             tagesordnung: pr.tagesordnung, beschluesse: pr.beschluesse, version: pr.version, veroeffentlicht_am: pr.veroeffentlicht_am, einspruch_bis: pr.einspruch_bis,
             status: protokollStatus(pr, (ew ?? []).filter((x: any) => !x.erledigt_am).length), roh: pr.status,
             verfasser: { person_id: pr.verfasser, name: name(pr.verfasser) },
@@ -5915,6 +5922,7 @@ Köcheclub-App`,
           gelesen: leser.length ? { von: leser.filter((id) => aktuell.has(id)).map(name).sort(), fehlt: leser.filter((id) => !aktuell.has(id)).map(name).sort() } : null,
           fassungen: fa ?? [], darfBearbeiten: bearb, darfLoeschen: darfProtokollLoeschen(ich, pr), eigen: pr.verfasser === ich.person_id,
           schreiber: bearb ? (await protokollLeser()) : [],
+          naechsterVorschlag: bearb ? await protokollNaechsterVorschlag(pr) : null, // KC-CLUB-PROTOKOLL-NAECHSTER-TERMIN (1.84.0)
         });
       }
 
@@ -5930,7 +5938,7 @@ Köcheclub-App`,
         const anwesend = ids(p.anwesend);
         const upd: any = {
           titel: txt(p.titel, 120) || pr.titel, datum, ort: txt(p.ort, 200) || null, anwesend, entschuldigt: ids(p.entschuldigt).filter((id) => !anwesend.includes(id)),
-          gaeste: txt(p.gaeste, 300) || null, tagesordnung: zeilen(p.tagesordnung), beschluesse: zeilen(p.beschluesse), kurzfassung: txt(p.kurzfassung, 4000) || null, geaendert_am: jetzt(),
+          gaeste: txt(p.gaeste, 300) || null, naechster_termin: txt(p.naechster_termin, 200) || null, tagesordnung: zeilen(p.tagesordnung), beschluesse: zeilen(p.beschluesse), kurzfassung: txt(p.kurzfassung, 4000) || null, geaendert_am: jetzt(),
         };
         // Schriftführer wechseln (wer das Protokoll schreibt)
         if (p.verfasser && String(p.verfasser) !== pr.verfasser) {

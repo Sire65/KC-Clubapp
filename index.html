@@ -2321,7 +2321,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.83.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.84.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -10208,6 +10208,9 @@ function protokollFormular() {
       <label class="feld">Gäste (freiwillig)<input id="prG" maxlength="300" value="${esc(p.gaeste || "")}" oninput="prAendern()"></label>
       <label class="feld">Tagesordnung (ein Punkt pro Zeile)<textarea id="prTO" rows="3" oninput="prAendern()">${esc(p.tagesordnung.join("\n"))}</textarea></label>
       <label class="feld">Beschlüsse (einer pro Zeile)<textarea id="prB" rows="3" oninput="prAendern()">${esc(p.beschluesse.join("\n"))}</textarea></label>
+      <!-- KC-CLUB-PROTOKOLL-NAECHSTER-TERMIN (1.84.0, Wunsch Hansi): unten der nächste Termin – Vorschlag = nächste geplante Sitzung -->
+      <label class="feld">📅 Nächster Termin (freiwillig)<input id="prN" maxlength="200" placeholder="z. B. Do., 12.11., 19:30 Uhr · Vereinsheim" value="${esc(p.naechster_termin || "")}" oninput="prAendern()"></label>
+      ${PR.naechsterVorschlag && !p.naechster_termin ? `<button type="button" class="knopf klein" style="margin:2px 0 4px" onclick="$('prN').value=${esc(JSON.stringify(PR.naechsterVorschlag))};prAendern();this.remove()">📅 Übernehmen: ${esc(PR.naechsterVorschlag)}</button>` : ""}
     </div>
     <div class="karte"><h3>2 · Protokoll anhängen</h3>
       <div class="anhaengen">
@@ -10247,7 +10250,7 @@ async function prSpeichernJetzt(vonHand) {
   clearTimeout(prTimer); prTimer = null;
   if (!PR || !$("prT")) return;
   const daten = {
-    id: prId, titel: $("prT").value, datum: $("prD").value, ort: $("prO").value, verfasser: $("prV").value, gaeste: $("prG").value,
+    id: prId, titel: $("prT").value, datum: $("prD").value, ort: $("prO").value, verfasser: $("prV").value, gaeste: $("prG").value, naechster_termin: $("prN")?.value ?? "",
     anwesend: [...document.querySelectorAll("[data-da]:checked")].map((x) => x.dataset.da), entschuldigt: [...document.querySelectorAll("[data-ent]:checked")].map((x) => x.dataset.ent),
     tagesordnung: $("prTO").value.split("\n"), beschluesse: $("prB").value.split("\n"), kurzfassung: $("prK").value,
   };
@@ -10348,6 +10351,7 @@ function protokollLesen() {
       ${p.tagesordnung.length ? `<p style="margin:10px 0 0"><b>Tagesordnung</b></p>${liste(p.tagesordnung, "ol")}` : ""}
       ${p.beschluesse.length ? `<p style="margin:10px 0 0"><b>Beschlüsse</b></p>${liste(p.beschluesse, "ul")}` : ""}
       ${p.kurzfassung ? `<p style="margin:10px 0 0"><b>Kurzfassung</b></p><p style="white-space:pre-wrap;margin:4px 0 0">${esc(p.kurzfassung)}</p>` : ""}
+      ${p.naechster_termin ? `<p style="margin:10px 0 0"><b>📅 Nächster Termin:</b> ${esc(p.naechster_termin)}</p>` : ""}
     </div>
     ${PR.anlagen.length ? `<div class="karte"><h3>📎 Das Protokoll</h3><p class="hinweis" style="margin-top:0;font-size:.85rem">Antippen zum Vergrößern bzw. Öffnen.</p>${anlagenListe(false)}</div>` : ""}
     ${p.roh !== "entwurf" ? '<div class="knoepfe" style="margin:0 0 10px"><button class="knopf klein" onclick="protokollInsArchiv()">🗄️ In mein Archiv legen</button></div>' : ""}
@@ -11649,6 +11653,7 @@ function druckProtokoll() {
       ${PR.aufgaben.length ? `<h2>Aufgaben</h2><table><thead><tr><th style="width:9mm">✓</th><th>Aufgabe</th><th style="width:44mm">Wer</th><th style="width:22mm">bis</th></tr></thead><tbody>${druckAufgabenZeilen(PR.aufgaben)}</tbody></table>` : ""}
       ${PR.anlagen.length ? `<h2>Anlagen</h2><ul>${PR.anlagen.map((a) => `<li>${esc(a.name)}</li>`).join("")}</ul>` : ""}
       ${PR.einwaende.length ? `<h2>Einwände</h2><ul>${PR.einwaende.map((e) => `<li><b>${esc(e.name)}:</b> ${esc(e.text)}${e.erledigt_am ? " (erledigt)" : ""}</li>`).join("")}</ul>` : ""}
+      ${p.naechster_termin ? `<p style="margin:5mm 0 0"><b>Nächster Termin:</b> ${esc(p.naechster_termin)}</p>` : ""}
       <div class="unterschrift"><div>Datum, Unterschrift Schriftführer</div><div>Datum, Unterschrift Clubsprecher</div></div>` };
 }
 // gemeinsame Aufgaben (Gruppe) als eine Zeile mit allen Namen
@@ -12814,7 +12819,7 @@ function protokollText(p) {
   const l = (t, a) => a?.length ? [`${t}:`, ...a.map((x, i) => `  ${i + 1}. ${typeof x === "string" ? x : x.name}`), ""] : [];
   return [`Köcheclub Werne – Protokoll`, p.titel, `${tagKurz(p.datum)}${p.ort ? " · " + p.ort : ""} · geschrieben von ${p.verfasser?.name || ""}${p.version > 1 ? ` · Fassung ${p.version}` : ""}`, "────────────────────", "",
     ...(p.anwesend?.length ? [`Anwesend (${p.anwesend.length}): ${p.anwesend.map((x) => x.name).join(", ")}`] : []), ...(p.entschuldigt?.length ? [`Entschuldigt: ${p.entschuldigt.map((x) => x.name).join(", ")}`] : []),
-    ...(p.gaeste ? [`Gäste: ${p.gaeste}`] : []), "", ...l("Tagesordnung", p.tagesordnung), ...l("Beschlüsse", p.beschluesse), ...(p.kurzfassung ? ["Kurzfassung:", p.kurzfassung, ""] : []),
+    ...(p.gaeste ? [`Gäste: ${p.gaeste}`] : []), "", ...l("Tagesordnung", p.tagesordnung), ...l("Beschlüsse", p.beschluesse), ...(p.kurzfassung ? ["Kurzfassung:", p.kurzfassung, ""] : []), ...(p.naechster_termin ? [`Nächster Termin: ${p.naechster_termin}`, ""] : []),
     ...l("Anlagen", PR.anlagen), `Abgelegt am ${zeitDe(new Date().toISOString())} von ${ICH.name}`, ""].join("\n");
 }
 function protokollInsArchiv() {

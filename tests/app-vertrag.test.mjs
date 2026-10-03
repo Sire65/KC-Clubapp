@@ -2945,6 +2945,14 @@ assert.ok(/id: "emoji",[^\n]*unter dem Schreibfeld<\/b> auf <b>😊<\/b>/.test(h
 // 263. 1.83.0: Büro – Begrüßung in der Kopfzeile, Knöpfe nebeneinander, Ordner gleich hoch
 assert.ok(/<h2>🗂️ Büro<\/h2><span class="bu-kopfgruss" id="buKopfGruss"><\/span>/.test(html) && /\$\("buKopfGruss"\)\.textContent = `\$\{buTageszeit\(\)\}, /.test(html)
   && (html.match(/<div class="bu-knopfreihe">/g) || []).length === 2 && !/\.bu-ordner:nth-child\(3n\) \{ height/.test(html), "Büro-Kopf und gleich hohe Ordner");
+// 264. 1.84.0: „Nächster Termin“ im digitalen Protokoll
+{
+  assert.ok(/naechster_termin: txt\(p\.naechster_termin, 200\) \|\| null/.test(server) && /naechster_termin: pr\.naechster_termin \?\? null/.test(server) && /async function protokollNaechsterVorschlag\(pr: any\)/.test(server), "Server speichert/liefert, schlägt vor");
+  assert.ok(/<input id="prN" maxlength="200"/.test(html) && /naechster_termin: \$\("prN"\)\?\.value \?\? ""/.test(html), "Formular");
+  assert.ok(/<b>📅 Nächster Termin:<\/b> \$\{esc\(p\.naechster_termin\)\}/.test(html) && /<b>Nächster Termin:<\/b> \$\{esc\(p\.naechster_termin\)\}<\/p>` : ""\}\n      <div class="unterschrift">/.test(html), "Ansicht und Ausdruck");
+  const mig = fs.readFileSync(new URL("../supabase/migrations/20261003_kc_club_v1840_protokoll_naechster_termin.sql", import.meta.url), "utf8");
+  assert.ok(/add column if not exists naechster_termin text/.test(mig) && /Rückweg:/.test(mig), "Migration");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

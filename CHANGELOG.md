@@ -1,5 +1,11 @@
 # Änderungen
 
+## 1.84.0 – 2026-10-03
+- KC-CLUB-PROTOKOLL-NAECHSTER-TERMIN (Wunsch Hansi): Das digitale Protokoll hat unten das Feld „📅 Nächster Termin“ (freier
+  Text, max. 200 Zeichen). Beim Schreiben schlägt die App die nächste geplante Sitzung nach dem Protokolldatum vor
+  („📅 Übernehmen: …“). Erscheint in der Protokoll-Ansicht, im Ausdruck/PDF (vor den Unterschriften) und in der Archiv-Textfassung.
+- DB: Spalte `kc_club_sitzungsprotokolle.naechster_termin` (Migration 20261003_kc_club_v1840, nur Ergänzung; Rückweg im Kopf).
+
 ## 1.83.0 – 2026-10-03
 - KC-CLUB-BUERO-KOPF (Wunsch Hansi, kein Platz verschenken): Begrüßung („🌤️ Guten Tag, Hansi!“) steht oben in der Kopfzeile
   neben „🗂️ Büro“; „📋 Übersicht“ und „☰ Liste“ (bzw. „🗄️ Büro-Raum“) stehen nebeneinander in einer Reihe.
