@@ -1128,6 +1128,7 @@
   /* KC-CLUB-BUERO (1.25.0) */
   .bu-gruss { font-size: 1.05rem; line-height: 1.45; }
   /* KC-CLUB-BUERO-KOPF (1.83.0, Wunsch Hansi): Begrüßung oben neben „Büro“, Knöpfe nebeneinander – kein Platz verschenkt */
+  .ar-einleitung h3 { margin: 0 0 6px; } .ar-einleitung p { margin: 0 0 8px; line-height: 1.5; } /* KC-CLUB-ORDNER-EINLEITUNG */
   .bu-kopfgruss { margin-left: auto; font-weight: 800; font-size: .98rem; text-align: right; }
   .bu-knopfreihe { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; } .bu-knopfreihe .knopf { text-align: center; }
   .bu-tipp { margin-top: 8px; padding: 8px 10px; border-radius: 12px; background: var(--gelbbg); border: 2px solid var(--gelb); }
@@ -2324,7 +2325,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.85.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.86.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -12361,7 +12362,8 @@ async function blOrdner(id) {
     const r = await api("archiv_blaettern", { ordner_id: id }, { warten: true }), o = arOrdnerAktuell();
     const seiten = r.ordner.art === "chronik" ? [
       { art: "html", titel: "", html: `<div class="bl-deckblatt"><span class="bl-muetze"><img src="kc-kochmuetze-weiss.webp" alt=""></span><h2>${esc(r.ordner.titel || "Clubchronik")}</h2><p>Köcheclub Werne · seit ${r.ordner.jahr}</p></div>` },
-      { art: "html", titel: "So füllen wir unsere Chronik", html: CHRONIK_ANLEITUNG }] : [];
+      ...(r.ordner.einleitung ? [{ art: "html", titel: r.ordner.einleitung.trim().split("\n")[0], html: arEinleitungHtml(r.ordner.einleitung).replace(/<h3>.*?<\/h3>/, "") }] : []),
+      { art: "html", titel: "So füllen wir unsere Chronik", html: CHRONIK_ANLEITUNG }] : r.ordner.einleitung ? [{ art: "html", titel: r.ordner.einleitung.trim().split("\n")[0], html: arEinleitungHtml(r.ordner.einleitung).replace(/<h3>.*?<\/h3>/, "") }] : [];
     for (const x of r.seiten) seiten.push({ ...x, art: /^image\//.test(x.mime || "") ? "bild" : /pdf/.test(x.mime || "") ? "pdf" : "datei" });
     if (!seiten.length) return melde("In diesem Ordner gibt es noch nichts zum Blättern.");
     blOeffnen(o ? `${o.titel} ${o.art === "chronik" ? "" : o.jahr}`.trim() : "Ordner", seiten, r.ordner.register || []);
@@ -12447,6 +12449,12 @@ $("blBuehne").addEventListener("touchend", (e) => { if (BL.x === null) return; c
 document.addEventListener("keydown", (e) => { if (!BL.offen) return; if (e.key === "ArrowRight") blWeiter(1); else if (e.key === "ArrowLeft") blWeiter(-1); else if (e.key === "Escape") blZu(); });
 addEventListener("resize", () => { if (BL.offen) blZeigen(0); });
 // KC-CLUB-CHRONIK (1.64.0): Anleitung oben im Ordner (und als erste Seite beim Blättern) + Anlegen mit Gründungsjahr
+// KC-CLUB-ORDNER-EINLEITUNG (1.86.0, Wunsch Hansi): Einleitung eines Vereinsordners – erste Zeile Überschrift, Absätze durch Leerzeile
+function arEinleitungHtml(t) {
+  const [kopf, ...rest] = String(t || "").trim().split("\n");
+  const absaetze = rest.join("\n").split(/\n\s*\n/).map((a) => a.trim()).filter(Boolean);
+  return `<div class="ar-einleitung"><h3>${esc(kopf)}</h3>${absaetze.map((a) => `<p>${esc(a).replace(/\n/g, "<br>")}</p>`).join("")}</div>`;
+}
 const CHRONIK_ANLEITUNG = `<ol class="ar-anl">
   <li>Zeitungsausschnitt oder altes Foto mit dem Handy <b>abfotografieren</b> – gerade, hell, ohne Schatten.</li>
   <li><b>„＋ Dokument“</b> bzw. <b>„📥 Beitrag einreichen“</b> → Register wählen → <b>Datum des Ereignisses</b> eintragen.</li>
@@ -12511,6 +12519,7 @@ function arOrdnerZeigen() {
       : !o.auto && d.darf ? `<div class="knoepfe" style="margin:8px 0"><button class="knopf klein haupt" onclick="arDokForm()">＋ Dokument</button><button class="knopf klein" onclick="arOrdnerForm('${o.id}')">✏️ Ordner</button><button class="knopf klein" onclick="arOrdnerLoeschen('${o.id}')">🗑️ Ordner</button></div>`
       : !o.auto && o.einreichen ? `<div class="knoepfe" style="margin:8px 0"><button class="knopf klein haupt" onclick="arDokForm()">📥 Beitrag einreichen</button></div>` : ""}
     ${(o.auto ? eintraege.length : o.art === "chronik" || eintraege.some((x) => x.status === "ok")) ? `<button class="knopf haupt ar-blaettern" onclick="blOrdner('${o.id}')">📖 Blättern${o.art === "chronik" ? " – die Chronik wie ein Buch" : ""}</button>` : ""}
+    ${o.einleitung ? `<details class="karte ar-anleitung" open><summary><b>📜 ${esc(o.einleitung.trim().split("\n")[0])}</b></summary>${arEinleitungHtml(o.einleitung).replace(/<h3>.*?<\/h3>/, "")}</details>` : ""}
     ${o.art === "chronik" ? `<details class="karte ar-anleitung" ${eintraege.length ? "" : "open"}><summary><b>📌 So füllen wir unsere Chronik</b></summary>${CHRONIK_ANLEITUNG}</details>` : ""}
     ${eintraege.length > 3 ? `<input id="arOrdnerSuche" class="ar-ordnersuche" type="search" autocomplete="off" enterkeyhint="search" placeholder="🔍 In diesem Ordner suchen …" value="${esc(AR.ordnerSuche || "")}" oninput="AR.ordnerSuche=this.value;arOrdnerListe()" onkeydown="if(event.key==='Escape'){this.value='';AR.ordnerSuche='';arOrdnerListe()}">` : ""}
     <div class="ar-register">${[["", "Alle", eintraege.length], ...reg.map((r) => [r, r, eintraege.filter((x) => x.register === r).length])].map(([w, t, n], i) => `<button class="${AR.register === w ? "an" : ""}" style="--rf:${i ? AR_FARBEN[(i - 1) % AR_FARBEN.length] : "var(--grau)"}" onclick="AR.register=${esc(JSON.stringify(w))};arZeigen()">${esc(t)} <small>${n}</small></button>`).join("")}</div>
@@ -12628,6 +12637,7 @@ function arOrdnerForm(id) {
     <div class="feld">Register (Reiter im Ordner)<div class="chips" id="arRegChips"></div>
       <div class="ar-zeile"><input id="arRegNeu" maxlength="30" placeholder="weiteres Register, z. B. Gemeinde" onkeydown="if(event.key==='Enter')arRegDazu()"><button class="knopf klein" onclick="arRegDazu()">＋</button></div></div>
     <label class="schalter"><span><b>🔒 Nur Clubleitung</b> – nur Clubsprecher, Kassenwart und Admin sehen diesen Ordner</span><input type="checkbox" id="arLeitung" ${(o ? o.nur_vorstand : d.arten[art].vorstand) ? "checked" : ""}></label>
+    <label class="feld">📜 Einleitung (freiwillig) <small class="hinweis">– erste Zeile = Überschrift, Absätze mit Leerzeile</small><textarea id="arEinleitung" rows="5" maxlength="4000" placeholder="z. B. Wie alles begann">${esc(o?.einleitung || "")}</textarea></label>
     <label class="schalter"><span><b>📥 Alle dürfen einreichen</b> – Mitglieder können etwas hineinlegen; sichtbar erst nach Prüfung durch Clubsprecher/Admin</span><input type="checkbox" id="arEinreichen" ${(o ? o.einreichen : art === "chronik") ? "checked" : ""}></label>
     <div class="knoepfe"><button class="knopf haupt" onclick="einmal(this, () => arOrdnerSpeichern('${o?.id || ""}'))">Speichern</button><button class="knopf" onclick="arBlattZu()">Abbrechen</button></div>`);
   arRegZeigen();
@@ -12644,7 +12654,7 @@ async function arOrdnerSpeichern(id) {
   const weg = alt ? AR.daten.dokumente.filter((x) => x.ordner_id === id && !arReg.includes(x.register)).length : 0;
   if (weg && !(await frage(`${weg} Dokument(e) liegen in einem Register, das du entfernt hast. Sie kommen ins Register „${arReg[0] || "Allgemein"}“. Weiter?`))) return;
   try {
-    const r = await api("archiv_ordner_speichern", { id: id || undefined, art: $("arArt").value, jahr: Number($("arJahrWahl").value), titel: $("arTitel").value.trim(), farbe: Number(f?.dataset.f || 1), register: arReg, nur_vorstand: $("arLeitung").checked, einreichen: !!$("arEinreichen")?.checked && !$("arLeitung").checked });
+    const r = await api("archiv_ordner_speichern", { id: id || undefined, art: $("arArt").value, jahr: Number($("arJahrWahl").value), titel: $("arTitel").value.trim(), farbe: Number(f?.dataset.f || 1), register: arReg, nur_vorstand: $("arLeitung").checked, einleitung: $("arEinleitung")?.value ?? undefined, einreichen: !!$("arEinreichen")?.checked && !$("arLeitung").checked });
     arBlattZu(); melde(id ? "✔ Ordner geändert" : "✔ Ordner angelegt");
     await arLaden(); if (!id) arOrdnerOeffnen(r.id);
   } catch (e) { melde(e.message, true); }

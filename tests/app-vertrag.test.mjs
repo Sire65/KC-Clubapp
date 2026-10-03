@@ -2959,6 +2959,13 @@ assert.ok(/<h2>🗂️ Büro<\/h2><span class="bu-kopfgruss" id="buKopfGruss"><\
   assert.ok(/if \(!el \|\| el\.dataset\.zoomLos \|\| e\.defaultPrevented \|\| el\.disabled \|\| kaBearb \|\| ZIEHEN \|\| zogGerade\) return;/.test(html), "nicht beim Anordnen/Ziehen");
   assert.ok(html.indexOf("const ZOOM_ZIELE") > html.indexOf('document.addEventListener("click", (e) => { if (unterdruecken'), "Zoom-Abfang nach den Zieh-Sperren registriert");
 }
+// 266. 1.86.0: Einleitung für Vereinsordner (Chronik)
+{
+  assert.ok(/einleitung: o\.besitzer \? null : o\.einleitung \?\? null/.test(server) && /\(werte as any\)\.einleitung = String\(p\.einleitung/.test(server), "Server liefert/speichert Einleitung (nicht für persönliche Ordner)");
+  assert.ok(/function arEinleitungHtml\(t\)/.test(html) && /<textarea id="arEinleitung"/.test(html) && /\.\.\.\(r\.ordner\.einleitung \? \[\{ art: "html", titel: r\.ordner\.einleitung\.trim\(\)\.split/.test(html), "Ordner-Ansicht, Formular, Blättern");
+  const mig = fs.readFileSync(new URL("../supabase/migrations/20261003_kc_club_v1860_ordner_einleitung.sql", import.meta.url), "utf8");
+  assert.ok(/add column if not exists einleitung text/.test(mig) && /Rückweg:/.test(mig), "Migration");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.85.0";
+const SERVER_VERSION = "1.86.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -6502,6 +6502,7 @@ Köcheclub-App`,
           ordner: ordner.map((o: any) => {
             const eigen = o.besitzer === ich.person_id, inhalt = dk.filter((d: any) => d.ordner_id === o.id);
             return { id: o.id, art: o.art, jahr: o.jahr, titel: o.besitzer ? (leute.get(o.besitzer)?.display_name || o.titel) : o.titel, farbe: o.farbe, register: o.register, nur_vorstand: o.nur_vorstand, einreichen: !!o.einreichen,
+              einleitung: o.besitzer ? null : o.einleitung ?? null, // KC-CLUB-ORDNER-EINLEITUNG (1.86.0)
               besitzer: o.besitzer || null, eigen, anzahl: inhalt.filter((d: any) => d.status === "ok").length, pruefung: inhalt.filter((d: any) => d.status === "pruefung").length,
               freigaben: eigen ? (meineFr ?? []).filter((f: any) => f.ordner_id === o.id).map(fAnzeige) : undefined,
               geteilt: !eigen && o.besitzer ? fr.filter((f: any) => f.ordner_id === o.id).map(fAnzeige) : undefined };
@@ -6545,6 +6546,7 @@ Köcheclub-App`,
         const werte = { art, jahr, titel: txt(p.titel, 60) || ARCHIV_ARTEN[art].t, farbe: Math.min(8, Math.max(1, Math.round(Number(p.farbe)) || 1)),
           register: archivRegister(p.register, art), nur_vorstand: !!p.nur_vorstand, geaendert_am: jetzt(),
           einreichen: p.einreichen === undefined ? art === "chronik" : !!p.einreichen && !p.nur_vorstand }; // KC-CLUB-CHRONIK: Chronik standardmäßig „alle dürfen einreichen“
+        if (p.einleitung !== undefined) (werte as any).einleitung = String(p.einleitung ?? "").replace(/\r/g, "").trim().slice(0, 4000) || null; // KC-CLUB-ORDNER-EINLEITUNG (1.86.0)
         if (p.id) {
           const o = await archivOrdnerHolen(ich, p.id, false, "pflegen");
           await db.from("kc_club_archiv_ordner").update(werte).eq("id", o.id);
@@ -6647,7 +6649,7 @@ Köcheclub-App`,
           const { data: su } = await db.storage.from(bucket).createSignedUrls(liste.map((a) => a.object_path), 3600);
           for (const u of su ?? []) { const a = liste.find((x) => x.object_path === u.path); if (a && u.signedUrl) url.set(a.id, u.signedUrl); }
         }
-        return json({ ordner: { id: o.id, titel: o.besitzer ? undefined : o.titel, jahr: o.jahr, art: o.art, register: o.register },
+        return json({ ordner: { id: o.id, titel: o.besitzer ? undefined : o.titel, jahr: o.jahr, art: o.art, register: o.register, einleitung: o.besitzer ? null : o.einleitung ?? null },
           seiten: sicht.map((d: any) => ({ id: d.id, register: d.register, titel: d.titel, datum: d.datum, beschreibung: d.beschreibung || "", mime: d.mime, name: d.datei_name, url: url.get(d.attachment_id) ?? null })) });
       }
 

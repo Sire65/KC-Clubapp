@@ -1,5 +1,12 @@
 # Änderungen
 
+## 1.86.0 – 2026-10-03
+- KC-CLUB-ORDNER-EINLEITUNG (Wunsch Hansi: Einleitung für die Clubchronik): Vereinsordner können eine Einleitung haben (erste Zeile
+  = Überschrift, Absätze mit Leerzeile; Clubleitung pflegt sie unter „✏️ Ordner“). Sie steht oben im Ordner („📜 Wie alles begann“)
+  und beim Blättern als erste Seite nach dem Deckblatt. DB: Spalte `kc_club_archiv_ordner.einleitung` (Migration v1860, nur Ergänzung).
+- Daten (Wunsch Hansi): Clubchronik – Gründungsjahr 1991 (vorher 1995), Einleitung „Wie alles begann“ (Mai 1991 erstes Treffen in
+  der Gaststätte Ickorn, 1995 erstmals auf dem Weihnachtsmarkt; Grundlage: Text der Club-Website). Vorher-Stand im App-Protokoll.
+
 ## 1.85.0 – 2026-10-03
 - KC-CLUB-ZOOM-OEFFNEN (Wunsch Hansi „Button antippen – etwas zoomen, dann öffnen“): Kacheln auf der Startseite, Mini-Kacheln,
   Büro-Ordner, Schreibtisch-Gegenstände, die Felder im Kopf und Archiv-Ordner zoomen beim Antippen kurz (180 ms) und öffnen dann.
