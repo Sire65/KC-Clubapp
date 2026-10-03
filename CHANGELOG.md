@@ -1,5 +1,16 @@
 # Änderungen
 
+## 1.92.0 – 2026-10-03
+- KC-CLUB-HILFE-AENDERN (Wunsch Hansi: „Hilfe-Kachel antippen → alles öffnet sich, damit ich ändern kann“): Wer einen Aufruf
+  gestartet hat (oder die Clubleitung) bekommt beim Antippen der Kachel – auch vom Pinnwand-Aushang („✏️ Ansehen & ändern“) und
+  aus dem Büro-Eingang – das ganze Formular mit allen Angaben: Wobei, Wann (Tag/nach Absprache), Anzahl, Ort, Beschreibung; oben
+  der Stand der Zusagen; „💾 Änderungen speichern“ und „🔒 Aufruf schließen“. Kein neuer Rundruf; wer schon „Ich komme“ gesagt hat,
+  bekommt Bescheid, wenn sich Tag oder Ort ändern. Andere Mitglieder sehen weiter die Einzelheiten mit „Ich komme / Kann nicht“.
+  Server: neue Aktion `hilfe_aendern` (Rechte wie Schließen, protokolliert vorher/nachher).
+- KC-CLUB-HILFE-OHNE-GRENZE (Wunsch Hansi: „bei Anzahl muss es auch ohne geben, egal wie viele sich melden“): „♾️ Egal wie viele“
+  neben der Anzahl – dann keine Obergrenze, Anzeige „✋ 3 dabei“ statt „3 von 2“, der Aufruf wird nie „voll“.
+- DB: Migration 20261003_kc_club_v1920_hilfe_ohne_grenze.sql (anzahl darf leer sein; Rückweg in der Datei).
+
 ## 1.91.0 – 2026-10-03
 - KC-CLUB-ONLINE-SEITE (Wunsch Hansi): Die Kachel „Mitglieder · 🟢 online“ oben im Kopfbereich (ganze Kachel und die grüne
   Zahl) öffnet jetzt immer die Mitglieder-Seite nur mit den Online-Mitgliedern – statt Mitgliederliste mit gemerktem Filter bzw.

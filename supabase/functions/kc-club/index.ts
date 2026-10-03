@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.91.0";
+const SERVER_VERSION = "1.92.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -1625,6 +1625,9 @@ const LEIH_MAX_TAGE = 30, LEIH_VORLAUF_TAGE = 365, HILFE_VORLAUF_TAGE = 180;
 const HILFE_ABSPRACHE_TAGE = 30, HILFE_NOTIZ_ZEICHEN = 1000;
 const fWt = new Intl.DateTimeFormat("de-DE", { timeZone: "UTC", weekday: "short" });
 const hilfeWann = (h: any) => h.nach_absprache ? "nach Absprache" : leihTag(h.datum, h.slot);
+// KC-CLUB-HILFE-OHNE-GRENZE (1.92.0): anzahl null = egal wie viele (nie „voll“)
+const hilfeAnzahl = (v: unknown) => v === null || v === 0 || v === "ohne" ? null : Math.min(20, Math.max(1, Math.floor(Number(v) || 1)));
+const hilfeStand = (n: number, h: any) => h.anzahl ? `${n} von ${h.anzahl}` : `${n} dabei`;
 const leihTag = (iso: string, slot?: string | null) => `${fWt.format(new Date(iso + "T12:00:00Z"))} ${iso.split("-").reverse().join(".")}${slot && ZEITFENSTER[slot] ? " · " + ZEITFENSTER[slot] : ""}`;
 const tagDazu = (iso: string, n: number) => { const d = new Date(iso + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
 const isoTag = (v: unknown) => { const s = String(v || ""); return /^\d{4}-\d{2}-\d{2}$/.test(s) && !isNaN(Date.parse(s + "T12:00:00Z")) ? s : ""; };
@@ -4060,7 +4063,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const datum = absprache ? tagDazu(heute, HILFE_ABSPRACHE_TAGE) : isoTag(p.datum);
         if (!datum || datum < heute) throw new Fehler("Bitte einen Tag ab heute wählen.");
         if (datum > tagDazu(heute, HILFE_VORLAUF_TAGE)) throw new Fehler("Bitte höchstens ein halbes Jahr im Voraus.");
-        const slot = absprache ? null : slotWahl(p.slot), anzahl = Math.min(20, Math.max(1, Math.floor(Number(p.anzahl) || 1)));
+        const slot = absprache ? null : slotWahl(p.slot), anzahl = hilfeAnzahl(p.anzahl);
         const ziel = p.ziel === "online" ? "online" : "alle";
         const { data: h, error } = await db.from("kc_club_hilfe_aufrufe").insert({ von: ich.person_id, art, datum, slot, anzahl, ort: txt(p.ort, 80) || null,
           notiz: txt(p.notiz, HILFE_NOTIZ_ZEICHEN) || null, ziel, nach_absprache: absprache }).select().single();
@@ -4068,9 +4071,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const empf = (ziel === "online" ? [...await onlineJetzt()] : (await aktiveMitglieder()).map((m) => m.person_id)).filter((id) => id !== ich.person_id);
         const was = HILFE_ARTEN[art], wann2 = hilfeWann(h);
         const vars = {
-          titel: `🙋 Wer kann helfen? ${was}`, kurz: `${ich.name} sucht ${anzahl} Helfer · ${wann2}${h.ort ? " · " + h.ort : ""}`,
+          titel: `🙋 Wer kann helfen? ${was}`, kurz: `${ich.name} sucht ${anzahl ? anzahl + " " : ""}Helfer · ${wann2}${h.ort ? " · " + h.ort : ""}`,
           betreff: `Köcheclub Werne – Wer kann helfen? ${was.replace(/^\S+\s/, "")} ${absprache ? "(nach Absprache)" : "am " + datum.split("-").reverse().join(".")}`,
-          text: `Hallo,\n\n${ich.name} sucht Hilfe:\n\n${was}\nWann: ${wann2}\nGesucht: ${anzahl} ${anzahl === 1 ? "Person" : "Personen"}${h.ort ? `\nWo: ${h.ort}` : ""}${h.notiz ? `\n\n${h.notiz}` : ""}\n\nMit einem Tipp zusagen in der Köcheclub-App: ${APP_URL}#helfen\n\nViele Grüße\nKöcheclub Werne`,
+          text: `Hallo,\n\n${ich.name} sucht Hilfe:\n\n${was}\nWann: ${wann2}\nGesucht: ${anzahl ? `${anzahl} ${anzahl === 1 ? "Person" : "Personen"}` : "egal wie viele – jede Hilfe zählt"}${h.ort ? `\nWo: ${h.ort}` : ""}${h.notiz ? `\n\n${h.notiz}` : ""}\n\nMit einem Tipp zusagen in der Köcheclub-App: ${APP_URL}#helfen\n\nViele Grüße\nKöcheclub Werne`,
           url: APP_URL + "#helfen",
         };
         const versand = !empf.length ? { gesendet: 0 } : ziel === "online" ? await sendenGewaehlt("club_nachricht", empf, ["push"], vars, `club-hilfe:${h.id}`).catch(() => null)
@@ -4089,18 +4092,54 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         else await db.from("kc_club_hilfe_antworten").delete().eq("aufruf_id", h.id).eq("person_id", ich.person_id);
         if (antwort === "komme" && vorher?.antwort !== "komme" && h.von !== ich.person_id) {
           const { count } = await db.from("kc_club_hilfe_antworten").select("person_id", { count: "exact", head: true }).eq("aufruf_id", h.id).eq("antwort", "komme");
-          const voll = (count ?? 0) >= h.anzahl;
+          const voll = !!h.anzahl && (count ?? 0) >= h.anzahl;
           // „voll“ nur einmal melden
           const vollNeu = voll && !h.voll_gemeldet_am ? !!(await db.from("kc_club_hilfe_aufrufe").update({ voll_gemeldet_am: jetzt() }).eq("id", h.id).is("voll_gemeldet_am", null).select("id")).data?.length : false;
           await senden("club_nachricht", [h.von], {
-            titel: vollNeu ? "🎉 Genug Helfer!" : "✋ Zusage", kurz: `${ich.name} kommt – ${HILFE_ARTEN[h.art]} ${hilfeWann(h)} (${count ?? 0} von ${h.anzahl})`,
+            titel: vollNeu ? "🎉 Genug Helfer!" : "✋ Zusage", kurz: `${ich.name} kommt – ${HILFE_ARTEN[h.art]} ${hilfeWann(h)} (${hilfeStand(count ?? 0, h)})`,
             betreff: `Köcheclub Werne – ${vollNeu ? "genug Helfer" : "Zusage"}: ${HILFE_ARTEN[h.art].replace(/^\S+\s/, "")}`,
-            text: `Hallo,\n\n${ich.name} hat für deinen Aufruf zugesagt:\n${HILFE_ARTEN[h.art]} · ${hilfeWann(h)}\n\nZusagen: ${count ?? 0} von ${h.anzahl}${vollNeu ? "\n\n🎉 Damit sind genug Helfer zusammen." : ""}\n\n${APP_URL}#helfen\n\nViele Grüße\nKöcheclub-App`,
+            text: `Hallo,\n\n${ich.name} hat für deinen Aufruf zugesagt:\n${HILFE_ARTEN[h.art]} · ${hilfeWann(h)}\n\nZusagen: ${hilfeStand(count ?? 0, h)}${vollNeu ? "\n\n🎉 Damit sind genug Helfer zusammen." : ""}\n\n${APP_URL}#helfen\n\nViele Grüße\nKöcheclub-App`,
             url: APP_URL + "#helfen",
           }, `club-hilfe-zusage:${h.id}:${ich.person_id}`).catch(() => null);
         }
         await protokoll(ich.person_id, "hilfe_antwort", { aufruf: h.id, antwort });
         return json({ ok: true });
+      }
+
+      // KC-CLUB-HILFE-AENDERN (1.92.0, Wunsch Hansi: „Hilfe-Kachel antippen → alles öffnet sich, damit ich ändern kann“):
+      // wer den Aufruf gestartet hat (oder die Clubleitung) ändert Art, Wann, Anzahl, Ort, Beschreibung. Kein neuer Rundruf –
+      // nur wer schon „Ich komme“ gesagt hat, bekommt Bescheid, wenn sich Tag oder Ort ändert.
+      case "hilfe_aendern": {
+        const { data: h } = await db.from("kc_club_hilfe_aufrufe").select("*").eq("id", String(p.id || "")).maybeSingle();
+        if (!h) throw new Fehler("Aufruf nicht gefunden.", 404);
+        if (h.von !== ich.person_id && !ich.vorstand) throw new Fehler("Ändern kann nur, wer den Aufruf gestartet hat – oder die Clubleitung.", 403);
+        const heute = berlinTag(new Date());
+        if (h.geschlossen_am || h.datum < heute) throw new Fehler("Dieser Aufruf ist schon geschlossen.", 409);
+        const art = String(p.art || h.art);
+        if (!HILFE_ARTEN[art]) throw new Fehler("Bitte auswählen, wobei geholfen werden soll.");
+        const absprache = p.absprache === true;
+        const datum = absprache ? (h.nach_absprache ? h.datum : tagDazu(heute, HILFE_ABSPRACHE_TAGE)) : isoTag(p.datum);
+        if (!datum || datum < heute) throw new Fehler("Bitte einen Tag ab heute wählen.");
+        if (datum > tagDazu(heute, HILFE_VORLAUF_TAGE)) throw new Fehler("Bitte höchstens ein halbes Jahr im Voraus.");
+        const neu = { art, datum, slot: absprache ? null : slotWahl(p.slot), nach_absprache: absprache, anzahl: hilfeAnzahl(p.anzahl),
+          ort: txt(p.ort, 80) || null, notiz: txt(p.notiz, HILFE_NOTIZ_ZEICHEN) || null };
+        const { error } = await db.from("kc_club_hilfe_aufrufe").update({ ...neu, ...(neu.anzahl !== h.anzahl ? { voll_gemeldet_am: null } : {}) }).eq("id", h.id);
+        if (error) throw new Fehler("Änderung konnte nicht gespeichert werden.", 500);
+        const nachher = { ...h, ...neu }, wannNeu = hilfeWann(nachher) !== hilfeWann(h) || (neu.ort || "") !== (h.ort || "");
+        let versand = null;
+        if (wannNeu) {
+          const { data: dabei } = await db.from("kc_club_hilfe_antworten").select("person_id").eq("aufruf_id", h.id).eq("antwort", "komme");
+          const empf = (dabei ?? []).map((x: any) => x.person_id).filter((id: string) => id !== ich.person_id);
+          if (empf.length) versand = await senden("club_nachricht", empf, {
+            titel: `✏️ Geändert: ${HILFE_ARTEN[art]}`, kurz: `Neu: ${hilfeWann(nachher)}${nachher.ort ? " · " + nachher.ort : ""}`,
+            betreff: `Köcheclub Werne – Hilfe-Aufruf geändert: ${HILFE_ARTEN[art].replace(/^\S+\s/, "")}`,
+            text: `Hallo,\n\n${ich.name} hat den Hilfe-Aufruf geändert, für den du zugesagt hast:\n\n${HILFE_ARTEN[art]}\nWann: ${hilfeWann(nachher)}${nachher.ort ? `\nWo: ${nachher.ort}` : ""}\n\nDeine Zusage bleibt bestehen. Ändern kannst du sie in der Köcheclub-App: ${APP_URL}#helfen\n\nViele Grüße\nKöcheclub Werne`,
+            url: APP_URL + "#helfen",
+          }, `club-hilfe-aenderung:${h.id}:${Date.now()}`).catch(() => null);
+        }
+        await protokoll(ich.person_id, "hilfe_geaendert", { aufruf: h.id, vorher: { art: h.art, datum: h.datum, slot: h.slot, nach_absprache: h.nach_absprache, anzahl: h.anzahl, ort: h.ort },
+          nachher: { art, datum, slot: neu.slot, nach_absprache: absprache, anzahl: neu.anzahl, ort: neu.ort }, versand });
+        return json({ ok: true, benachrichtigt: !!versand });
       }
 
       case "hilfe_schliessen": {

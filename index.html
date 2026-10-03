@@ -142,6 +142,7 @@
   .zettel.aushang { background: #e3f6e6; outline: 3px solid #2e7d4f; padding-top: 24px; } .zettel.aushang .zwichtig { color: #1d5e33; position: static; display: block; margin: 0 0 4px; font-size: .74rem; }
   .zettel.aushang::before { background: radial-gradient(circle at 35% 35%, #9be7a8, #2e7d4f 60%, #144d26); }
   .zettel.aushang .zknoepfe button.antw { background: #2e7d4f; border-color: #2e7d4f; }
+  .hl-anzahl { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
   textarea.hl-notiz { min-height: 8.5em; font-size: 1.02rem; line-height: 1.4; }
   .zettel .zfuss { margin-top: 8px; font-size: .74rem; color: #4a3d10; }
   .zettel .zknoepfe { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
@@ -2351,7 +2352,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.91.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.92.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2596,7 +2597,7 @@ function pwUebernehmen(r) {
   if (aktuelleAnsicht === "start" && !kaBearb) kachelnZeigen();
 }
 // Aufrufe, auf die ich noch nicht geantwortet habe (eigene zählen nicht)
-const pwHilfeNeu = () => (PW.hilfe?.aufrufe || []).filter((a) => !a.eigen && !a.meine && a.komme.length < a.anzahl);
+const pwHilfeNeu = () => (PW.hilfe?.aufrufe || []).filter((a) => !a.eigen && !a.meine && !hlVoll(a));
 // Beim Öffnen der App: offene wichtige Zettel → Pinnwand zeigen
 async function pwStart(nurZaehlen) { // nurZaehlen: Begrüßung ist offen → Pinnwand nicht zusätzlich öffnen
   // 0.58.0: Zettel, die gekommen sind, während die App zu war, gehen direkt als Post-it-Fenster auf
@@ -2742,12 +2743,12 @@ function pwZeigen() {
 // KC-CLUB-HILFE-PINNWAND (1.90.0): offene Hilfe-Aufrufe als grüner Aushang (kein Post-it, zählt nicht zu den 4 Zetteln)
 function pwAushangHtml() {
   const h = PW.hilfe; if (!h?.aufrufe?.length) return "";
-  return h.aufrufe.map((a) => { const n = a.komme.length, voll = n >= a.anzahl, wobei = /^Wobei: (.+)/.exec(a.notiz || "")?.[1], was = wobei ? "🙋 " + wobei : (h.arten?.[a.art] || a.art);
+  return h.aufrufe.map((a) => { const voll = hlVoll(a), wobei = /^Wobei: (.+)/.exec(a.notiz || "")?.[1], was = wobei ? "🙋 " + wobei : (h.arten?.[a.art] || a.art);
     return `<div class="zettel aushang" style="--dreh:${pwDreh(a.id)}deg"><span class="zwichtig">🙋 HILFE GESUCHT</span>
       <div class="zkopf">von <b>${esc(a.eigen ? "dir" : a.von.name.split(" ")[0])}</b></div>
       <div class="ztext">${esc(was)}</div><div class="zfuss">${esc(hlWann(a, true, h.zeitfenster))}${a.ort ? ` · 📍 ${esc(a.ort)}` : ""}</div>
-      <div class="zfuss"><b>✋ ${n} von ${a.anzahl}</b>${voll ? " – genug 🎉" : ""}${a.meine === "komme" ? " · ✔ du kommst" : ""}</div>
-      <div class="zknoepfe"><button class="antw" onclick="hilfeVonPinnwand('${a.id}')">${a.eigen || a.meine ? "🙋 Ansehen" : "🙋 Ansehen & zusagen"}</button></div></div>`; }).join("");
+      <div class="zfuss"><b>✋ ${hlStand(a)}</b>${voll ? " – genug 🎉" : ""}${a.meine === "komme" ? " · ✔ du kommst" : ""}</div>
+      <div class="zknoepfe"><button class="antw" onclick="hilfeVonPinnwand('${a.id}')">${a.darfSchliessen ? "✏️ Ansehen & ändern" : a.meine ? "🙋 Ansehen" : "🙋 Ansehen & zusagen"}</button></div></div>`; }).join("");
 }
 function pwForm(an, antwort) {
   $("pwForm").classList.toggle("versteckt", !an);
@@ -7437,8 +7438,8 @@ function buEingangPosten() {
     P.push({ sym: "📤", gruppe: "Genehmigt – Abholung fällig", titel: leihWas(a), unter: `${a.eigen ? "Du" : a.wer} · ${hlTagName(a.abholung)}`, auf: `HL.tab='leihen';leihInfo('${a.id}')`, ordner: ["🤝", "Helfen & Leihen", "hlStart()"] });
   for (const x of (v || []).filter((y) => y.status === "offen"))
     P.push({ sym: x.art === "spende" ? "💝" : x.art === "abstimmung" ? "🗳️" : "💡", gruppe: x.art === "spende" ? "Spenden-Vorschlag" : "Offener Vorschlag", titel: x.art === "spende" ? (x.spenden?.[0]?.empfaenger || "Spende") : x.titel, unter: `von ${x.von?.name || "?"}`, auf: `vorschlagInfo('${x.id}')`, ordner: ["🗳️", "Vorschläge", "zeige('vorschlaege')"] });
-  for (const a of (h?.aufrufe || []).filter((x) => x.offen && x.komme.length < x.anzahl))
-    P.push({ sym: "🙋", gruppe: "Hilfe-Aufruf – noch Helfer gesucht", titel: (h.arten?.[a.art] || a.art).replace(/^\S+\s/, ""), unter: `${hlWann(a).replace(/^\S+\s/, "")} · ✋ ${a.komme.length} von ${a.anzahl}`, auf: `HL.tab='helfen';hilfeInfo('${a.id}')`, ordner: ["🤝", "Helfen & Leihen", "hlStart()"] });
+  for (const a of (h?.aufrufe || []).filter((x) => x.offen && !hlVoll(x)))
+    P.push({ sym: "🙋", gruppe: "Hilfe-Aufruf – noch Helfer gesucht", titel: (h.arten?.[a.art] || a.art).replace(/^\S+\s/, ""), unter: `${hlWann(a).replace(/^\S+\s/, "")} · ✋ ${hlStand(a)}`, auf: `HL.tab='helfen';hilfeOeffnen('${a.id}')`, ordner: ["🤝", "Helfen & Leihen", "hlStart()"] });
   if (ar?.darf) for (const d of (ar.dokumente || []).filter((x) => x.status === "pruefung")) {
     const o = (ar.ordner || []).find((y) => y.id === d.ordner_id); if (!o || o.besitzer) continue;
     P.push({ sym: "🗄️", gruppe: `Archiv: zur Prüfung · ${o.titel || "Ordner"}`, titel: d.titel, unter: `eingereicht von ${d.von || "?"}`, auf: `arAnlage('${d.id}', true)`,
@@ -8040,6 +8041,9 @@ let HL = { tab: "helfen", hilfe: null, leihen: null, form: null, angebotForm: nu
 const hlTag = (n) => tagPlus(heuteIso(), n);
 const hlTagName = (iso) => iso === hlTag(0) ? "Heute" : iso === hlTag(1) ? "Morgen" : fTagDp.format(new Date(iso + "T12:00:00Z"));
 // KC-CLUB-HILFE-ABSPRACHE (1.90.0): „nach Absprache“ statt Tag – überall dieselbe Anzeige
+// KC-CLUB-HILFE-OHNE-GRENZE (1.92.0): anzahl null = egal wie viele → nie „voll“
+const hlVoll = (a) => !!a.anzahl && a.komme.length >= a.anzahl;
+const hlStand = (a) => a.anzahl ? `${a.komme.length} von ${a.anzahl}` : `${a.komme.length} dabei`;
 const hlWann = (a, lang, zf) => a.nachAbsprache ? "🤝 nach Absprache" : "🗓️ " + (lang ? hlTagLang(a.datum, a.slot, zf) : hlTagName(a.datum));
 const hlTagLang = (iso, slot, zf) => `${hlTagName(iso)}${iso === hlTag(0) || iso === hlTag(1) ? " " + fTagDp.format(new Date(iso + "T12:00:00Z")) : ""}${slot && zf?.[slot] ? " · " + zf[slot] : ""}`;
 function hlStart(tab) { if (tab) HL.tab = tab; HL.form = null; HL.angebotForm = null; HL.edit = false; BO.form = null; zeige("helfen"); nzZaehlen("helfen_" + HL.tab); }
@@ -8050,7 +8054,7 @@ async function hlLaden() {
     hlZeigen();
     const li = document.getElementById("leihInfo"); if (li && HL.tab === "leihen") leihInfo(li.dataset.id);
     const hi = document.getElementById("hilfeInfo"); if (hi && HL.tab === "helfen") hilfeInfo(hi.dataset.id);
-    if (HL.tab === "helfen" && HL.oeffnen) { const id = HL.oeffnen; HL.oeffnen = null; hilfeInfo(id); } // KC-CLUB-HILFE-PINNWAND: Sprung vom Aushang
+    if (HL.tab === "helfen" && HL.oeffnen) { const id = HL.oeffnen; HL.oeffnen = null; hilfeOeffnen(id); } // KC-CLUB-HILFE-PINNWAND: Sprung vom Aushang
     const ai = document.getElementById("angebotInfo"); if (ai && HL.tab === "helfen") angebotInfo(ai.dataset.id);
     const bi = document.getElementById("boInfo"); if (bi && HL.tab === "boerse") boInfo(bi.dataset.id);
     if (HL.tab === "boerse" && BO.oeffnen) { const id = BO.oeffnen; BO.oeffnen = null; boInfo(id); } // Sprung aus Push/Mail (#boerse=…)
@@ -8093,22 +8097,35 @@ function hlNeuWahl() {
   neuWahlFenster("＋ Neu bei Helfen", [{ sym: "🙋", t: "Ich suche Hilfe", u: "Aufbau, Einkauf, Kochen … – alle bekommen Bescheid", los: () => hilfeNeu() }, { sym: "🤲", t: "Ich biete Hilfe an", u: "z. B. Club-App einrichten – als Kachel für alle", los: () => angebotNeu() }]);
 }
 // ----- 🙋 Wer kann helfen? -----
-function hilfeNeu() { HL.form = { art: "", artText: "", absprache: false, datum: hlTag(0), slot: "", anzahl: 2, ort: "", ortFrei: false, notiz: "", ziel: "alle" }; hlZeigen(); window.scrollTo(0, 0); }
+function hilfeNeu() { HL.form = { id: null, art: "", artText: "", absprache: false, datum: hlTag(0), slot: "", anzahl: 2, ohne: false, ort: "", ortFrei: false, notiz: "", ziel: "alle" }; hlZeigen(); window.scrollTo(0, 0); }
+// KC-CLUB-HILFE-AENDERN (1.92.0, Wunsch Hansi): eigene Kachel antippen → ganzes Formular mit allen Angaben zum Ändern;
+// andere Mitglieder sehen weiter die Einzelheiten mit „Ich komme / Kann nicht“
+function hilfeOeffnen(id) { const a = HL.hilfe?.aufrufe.find((x) => x.id === id); return a?.darfSchliessen ? hilfeBearbeiten(id) : hilfeInfo(id); }
+function hilfeBearbeiten(id) {
+  const a = HL.hilfe?.aufrufe.find((x) => x.id === id); if (!a) return;
+  const wobei = /^Wobei: (.*)(?:\n|$)/.exec(a.notiz || ""), orte = HL.hilfe.orte || [];
+  HL.form = { id, a, art: a.art, artText: wobei ? wobei[1] : "", absprache: !!a.nachAbsprache, datum: a.nachAbsprache ? hlTag(0) : a.datum, slot: a.slot || "",
+    anzahl: a.anzahl || 2, ohne: !a.anzahl, ort: a.ort || "", ortFrei: !!a.ort && !orte.includes(a.ort), notiz: wobei ? (a.notiz || "").slice(wobei[0].length) : a.notiz || "", ziel: a.ziel };
+  HL.tab = "helfen"; if (aktuelleAnsicht !== "helfen") zeige("helfen"); else hlZeigen(); window.scrollTo(0, 0);
+}
 function hilfeFormHtml() {
   const f = HL.form, d = HL.hilfe || {}, orte = d.orte || [];
-  return `<div class="karte hl-form"><h3 style="margin:0 0 6px">🙋 Hilfe suchen</h3>
+  return `<div class="karte hl-form"><h3 style="margin:0 0 6px">${f.id ? "✏️ Aufruf ändern" : "🙋 Hilfe suchen"}</h3>
+    ${f.id ? `<div class="hl-stand${hlVoll(f.a) ? " voll" : ""}" style="margin:0 0 8px"><b>✋ ${hlStand(f.a)}</b>${f.a.komme.length ? `<br><small>${esc(f.a.komme.join(", "))}</small>` : ""}${f.a.kannNicht ? `<br><small class="hinweis">🙅 ${f.a.kannNicht} kann nicht</small>` : ""}</div>` : ""}
     <div class="hl-frage">Wobei?</div>${hlChips("art", Object.entries(d.arten || {}).map(([w, t]) => ({ w, t })), f.art)}
     ${f.art === "sonstiges" ? `<label class="feld">Wobei genau?<input maxlength="80" placeholder="z. B. Zelt reparieren" value="${esc(f.artText)}" oninput="hlText('artText', this)"></label>` : ""}
     <div class="hl-frage">Wann?</div><div class="umschalter"><button class="${f.absprache ? "" : "an"}" onclick="hlSetze('absprache', false)">📅 Bestimmter Tag</button><button class="${f.absprache ? "an" : ""}" onclick="hlSetze('absprache', true)">🤝 Nach Absprache</button></div>
     ${f.absprache ? '<p class="hinweis" style="margin:4px 0 0">Kein fester Tag – wer helfen kann, sagt zu, und ihr macht den Termin miteinander aus. Der Aufruf bleibt 30 Tage offen (vorher schließbar).</p>' : hlTageWahl("datum", f.datum) + hlChips("slot", hlSlots(d.zeitfenster, true), f.slot)}
-    <div class="hl-frage">Wie viele Helfer?</div>${hlStepper(f.anzahl, 1, 20, "hlSetze('anzahl', HL.form.anzahl - 1)", "hlSetze('anzahl', HL.form.anzahl + 1)")}
+    <div class="hl-frage">Wie viele Helfer?</div><div class="hl-anzahl">${f.ohne ? "" : hlStepper(f.anzahl, 1, 20, "hlSetze('anzahl', HL.form.anzahl - 1)", "hlSetze('anzahl', HL.form.anzahl + 1)")}<button class="chip${f.ohne ? " an" : ""}" onclick="hlSetze('ohne', !HL.form.ohne)">♾️ Egal wie viele</button></div>
+    ${f.ohne ? '<p class="hinweis" style="margin:4px 0 0">Keine Grenze – jede Zusage zählt, der Aufruf wird nie „voll“.</p>' : ""}
     <div class="hl-frage">Wo? <small class="hinweis">(freiwillig)</small></div>
     ${hlChips("ort", [{ w: "", t: "– keine Angabe –" }, ...orte.map((o) => ({ w: o, t: "📍 " + o }))], f.ortFrei ? "\u0000" : f.ort)}
     ${f.ortFrei ? `<label class="feld"><input id="hfOrt" maxlength="80" placeholder="z. B. Vereinsheim" value="${esc(f.ort)}" oninput="hlText('ort', this)"></label>` : `<button class="knopf klein" onclick="HL.form.ortFrei=true;HL.form.ort='';hlZeigen();$('hfOrt')?.focus()">✏️ Anderer Ort</button>`}
-    <div class="hl-frage">An wen?</div>
-    <div class="umschalter"><button class="${f.ziel === "alle" ? "an" : ""}" onclick="hlSetze('ziel','alle')">👥 Alle Mitglieder</button><button class="${f.ziel === "online" ? "an" : ""}" onclick="hlSetze('ziel','online')">🟢 Alle gerade online</button></div>
+    ${f.id ? "" : `<div class="hl-frage">An wen?</div>
+    <div class="umschalter"><button class="${f.ziel === "alle" ? "an" : ""}" onclick="hlSetze('ziel','alle')">👥 Alle Mitglieder</button><button class="${f.ziel === "online" ? "an" : ""}" onclick="hlSetze('ziel','online')">🟢 Alle gerade online</button></div>`}
     <label class="feld">Beschreibung (freiwillig) – was genau, was mitbringen, wie erreichbar<textarea class="hl-notiz" rows="6" maxlength="900" placeholder="z. B. Für den Weihnachtsmarkt bauen wir den Stand auf. Bitte Arbeitshandschuhe mitbringen. Meldet euch kurz, wann es euch passt." oninput="hlText('notiz', this)">${esc(f.notiz)}</textarea></label>
-    <div class="knoepfe"><button class="knopf haupt" onclick="hilfeSenden(this)">📣 Aufruf senden</button><button class="knopf" onclick="HL.form=null;hlZeigen()">Abbrechen</button></div></div>`;
+    ${f.id ? '<p class="hinweis" style="margin:0">Kein neuer Rundruf. Wer schon zugesagt hat, bekommt Bescheid, wenn sich Tag oder Ort ändern.</p>' : ""}
+    <div class="knoepfe"><button class="knopf haupt" onclick="hilfeSenden(this)">${f.id ? "💾 Änderungen speichern" : "📣 Aufruf senden"}</button><button class="knopf" onclick="HL.form=null;hlZeigen()">Abbrechen</button>${f.id ? `<button class="knopf" onclick="hilfeSchliessen('${f.id}')">🔒 Aufruf schließen</button>` : ""}</div></div>`;
 }
 async function hilfeSenden(knopf) {
   const f = HL.form;
@@ -8116,30 +8133,32 @@ async function hilfeSenden(knopf) {
   await einmal(knopf, async () => {
     try {
       const notiz = [f.art === "sonstiges" && f.artText.trim() ? "Wobei: " + f.artText.trim() : "", f.notiz.trim()].filter(Boolean).join("\n").slice(0, 1000);
-      const r = await api("hilfe_aufruf", { art: f.art, absprache: !!f.absprache, datum: f.datum, slot: f.absprache ? null : f.slot || null, anzahl: f.anzahl, ort: f.ort || null, notiz: notiz || null, ziel: f.ziel });
+      const daten = { art: f.art, absprache: !!f.absprache, datum: f.datum, slot: f.absprache ? null : f.slot || null, anzahl: f.ohne ? null : f.anzahl, ort: f.ort || null, notiz: notiz || null };
+      if (f.id) { const r = await api("hilfe_aendern", { id: f.id, ...daten }); HL.form = null; melde(r.benachrichtigt ? "💾 Geändert – wer zugesagt hat, bekommt Bescheid" : "💾 Geändert"); hlLaden(); return; }
+      const r = await api("hilfe_aufruf", { ...daten, ziel: f.ziel });
       HL.form = null; melde(r.empfaenger ? `📣 Aufruf gesendet – an ${r.empfaenger} ${r.empfaenger === 1 ? "Mitglied" : "Mitglieder"}` : "📣 Aufruf gespeichert – gerade ist niemand sonst online"); hlLaden();
     } catch (e) { melde(e.message, true); }
   });
 }
 function hilfeKarte(a) {
-  const d = HL.hilfe || {}, n = a.komme.length, voll = n >= a.anzahl;
+  const d = HL.hilfe || {}, n = a.komme.length, voll = hlVoll(a);
   return `<div class="karte hl-karte${a.offen ? "" : " vorbei"}">
     <div class="hl-titel">${esc(d.arten?.[a.art] || a.art)}</div>
     <div>${esc(hlWann(a, true, d.zeitfenster))}${a.ort ? ` · 📍 ${esc(a.ort)}` : ""}</div>
     <div class="hinweis" style="font-size:.85rem">von ${esc(a.eigen ? "dir" : a.von.name)}${a.ziel === "online" ? " · an alle, die online waren" : ""}${a.geschlossen ? " · 🔒 geschlossen" : !a.offen ? " · vorbei" : ""}</div>
     ${a.notiz ? `<p style="margin:6px 0 0;white-space:pre-wrap">${esc(a.notiz)}</p>` : ""}
-    <div class="hl-stand${voll ? " voll" : ""}"><b>✋ ${n} von ${a.anzahl}</b>${voll ? " – genug Helfer 🎉" : ""}${n ? `<br><small>${esc(a.komme.join(", "))}</small>` : ""}${a.kannNicht ? `<br><small class="hinweis">🙅 ${a.kannNicht} kann nicht</small>` : ""}</div>
+    <div class="hl-stand${voll ? " voll" : ""}"><b>✋ ${hlStand(a)}</b>${voll ? " – genug Helfer 🎉" : ""}${n ? `<br><small>${esc(a.komme.join(", "))}</small>` : ""}${a.kannNicht ? `<br><small class="hinweis">🙅 ${a.kannNicht} kann nicht</small>` : ""}</div>
     ${a.offen && !a.eigen ? `<div class="hl-antwort"><button class="${a.meine === "komme" ? "an" : ""}" onclick="hilfeAntwort('${a.id}', '${a.meine === "komme" ? "" : "komme"}')">✋ Ich komme</button><button class="${a.meine === "kann_nicht" ? "an nein" : ""}" onclick="hilfeAntwort('${a.id}', '${a.meine === "kann_nicht" ? "" : "kann_nicht"}')">🙅 Kann nicht</button></div>` : ""}
-    ${a.darfSchliessen ? `<div class="knoepfe"><button class="knopf klein" onclick="hilfeSchliessen('${a.id}')">🔒 Aufruf schließen</button></div>` : ""}</div>`;
+    ${a.darfSchliessen ? `<div class="knoepfe"><button class="knopf klein haupt" onclick="$('hilfeInfo')?.remove();hilfeBearbeiten('${a.id}')">✏️ Ändern</button><button class="knopf klein" onclick="hilfeSchliessen('${a.id}')">🔒 Aufruf schließen</button></div>` : ""}</div>`;
 }
 // KC-CLUB-MINIKACHELN (1.23.2, Wunsch Hansi): Hilfe-Aufrufe als kleine Kacheln – Antippen öffnet alle Einzelheiten groß
 function hilfeKachel(a) {
   const d = HL.hilfe || {}, label = d.arten?.[a.art] || a.art, sym = label.split(" ")[0], was = label.slice(sym.length).trim() || label;
-  const n = a.komme.length, voll = n >= a.anzahl, slotSym = a.slot && d.zeitfenster?.[a.slot] ? " " + d.zeitfenster[a.slot].split(" ")[0] : "";
-  return `<button class="mini-kachel${a.meine === "komme" ? " mk-dabei" : voll && a.offen ? " mk-voll" : ""}" onclick="hilfeInfo('${a.id}')"><span class="mk-sym">${esc(sym)}</span>
+  const voll = hlVoll(a), slotSym = a.slot && d.zeitfenster?.[a.slot] ? " " + d.zeitfenster[a.slot].split(" ")[0] : "";
+  return `<button class="mini-kachel${a.meine === "komme" ? " mk-dabei" : voll && a.offen ? " mk-voll" : ""}" onclick="hilfeOeffnen('${a.id}')"><span class="mk-sym">${esc(sym)}</span>
     <span class="mk-titel">${esc(was)}</span><span class="mk-unter">${esc(hlWann(a))}${esc(a.nachAbsprache ? "" : slotSym)}${a.ort ? ` · 📍 ${esc(a.ort)}` : ""}</span>
     <span class="mk-unter">von ${esc(a.eigen ? "dir" : a.von.name)}</span>
-    <span class="marke ${voll ? "gruen" : "gelb"}">✋ ${n} von ${a.anzahl}${voll ? " 🎉" : ""}</span>${a.meine === "komme" ? '<span class="mk-unter"><b>✔ Du kommst</b></span>' : ""}</button>`;
+    <span class="marke ${voll ? "gruen" : "gelb"}">✋ ${hlStand(a)}${voll ? " 🎉" : ""}</span>${a.meine === "komme" ? '<span class="mk-unter"><b>✔ Du kommst</b></span>' : ""}</button>`;
 }
 function hilfeInfo(id) {
   const a = HL.hilfe?.aufrufe.find((x) => x.id === id);
@@ -8337,7 +8356,7 @@ async function hilfeAntwort(id, antwort) {
 }
 async function hilfeSchliessen(id) {
   if (!(await frage("Aufruf schließen? Danach kann niemand mehr zusagen."))) return;
-  try { await api("hilfe_schliessen", { id }); melde("🔒 Geschlossen"); hlLaden(); } catch (e) { melde(e.message, true); }
+  try { await api("hilfe_schliessen", { id }); melde("🔒 Geschlossen"); if (HL.form?.id === id) HL.form = null; hlLaden(); } catch (e) { melde(e.message, true); }
 }
 
 // ----- 📦 Ausleihen -----

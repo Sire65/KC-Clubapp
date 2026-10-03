@@ -1947,7 +1947,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 
 // 170. 1.23.2: Hilfe-Aufrufe als kleine Kacheln (KC-CLUB-MINIKACHELN)
 {
-  assert.ok(/l\.map\(hilfeKachel\)/.test(html) && /onclick="hilfeInfo\('\$\{a\.id\}'\)"/.test(html), "Hilfe-Aufrufe als Kacheln");
+  assert.ok(/l\.map\(hilfeKachel\)/.test(html) && /onclick="hilfe(Info|Oeffnen)\('\$\{a\.id\}'\)"/.test(html), "Hilfe-Aufrufe als Kacheln"); // 1.92.0: hilfeOeffnen → Info oder Formular (Test 272)
   assert.ok(/blattAuf\("hilfeInfo", `<div class="info-gross">\$\{hilfeKarte\(a\)\}/.test(html), "Info-Fenster mit Ich komme / Kann nicht");
 }
 
@@ -3025,6 +3025,18 @@ assert.ok(/<h2>🗂️ Büro<\/h2><span class="bu-kopfgruss" id="buKopfGruss"><\
   assert.ok(/function mgNurOnline\(\) \{ MG_EINMAL = "online"; zeige\("mitglieder"\); \}/.test(html) && /nurOnline = \(MG_EINMAL \|\| MG_FILTER\) === "online" && sichtbar/.test(html), "einmaliger Filter");
   assert.ok(html.indexOf("let MG_EINMAL = null;") < html.indexOf("function zeige(") && /if \(v !== "mitglieder" && v !== "mitglied"\) MG_EINMAL = null;/.test(html) && /function mgFilterSetzen\(f\) \{ MG_EINMAL = null;/.test(html), "zurücksetzen, gemerkte Wahl bleibt");
   assert.ok(/\{ id: "online", sym: "👋", t: "Online", los: \(\) => onlineBlatt\(\) \}/.test(html), "Online-Fenster bleibt erreichbar");
+}
+// 272. 1.92.0: Hilfe-Aufruf ändern + „egal wie viele“
+{
+  const mig = lies("supabase/migrations/20261003_kc_club_v1920_hilfe_ohne_grenze.sql");
+  assert.ok(/alter column anzahl drop not null/.test(mig) && /anzahl is null or anzahl between 1 and 20/.test(mig) && /Rückweg/.test(mig), "Migration ohne Grenze");
+  const ae = server.slice(server.indexOf('case "hilfe_aendern": {'), server.indexOf('case "hilfe_schliessen": {'));
+  assert.ok(/h\.von !== ich\.person_id && !ich\.vorstand\) throw new Fehler\("Ändern kann nur/.test(ae) && /h\.geschlossen_am \|\| h\.datum < heute/.test(ae) && /protokoll\(ich\.person_id, "hilfe_geaendert"/.test(ae), "Rechte, offen, Audit");
+  assert.ok(/\.eq\("antwort", "komme"\)/.test(ae) && !/aktiveMitglieder/.test(ae), "nur Zugesagte benachrichtigen, kein Rundruf");
+  assert.ok(/const voll = !!h\.anzahl && \(count \?\? 0\) >= h\.anzahl;/.test(server) && /const hilfeAnzahl = \(v: unknown\) => v === null/.test(server), "ohne Grenze nie voll");
+  assert.ok(/function hilfeOeffnen\(id\) \{[^\n]*a\?\.darfSchliessen \? hilfeBearbeiten\(id\) : hilfeInfo\(id\)/.test(html) && /class="mini-kachel[^\n]*onclick="hilfeOeffnen\('\$\{a\.id\}'\)"/.test(html), "Kachel → Formular für Berechtigte");
+  assert.ok(/api\("hilfe_aendern", \{ id: f\.id, \.\.\.daten \}\)/.test(html) && /anzahl: f\.ohne \? null : f\.anzahl/.test(html) && /♾️ Egal wie viele/.test(html), "Formular speichert Änderung / ohne Grenze");
+  assert.ok(!/komme\.length < [ax]\.anzahl/.test(html) && !/\$\{n\} von \$\{a\.anzahl\}/.test(html), "überall hlVoll/hlStand");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
