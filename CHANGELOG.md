@@ -1,5 +1,15 @@
 # Änderungen
 
+## 2.11.0 – 2026-10-03 – Spiele als Kacheln + Schach mit Küchenbrigade (Wunsch Hansi)
+- KC-CLUB-SPIELE-KACHELN: „🎲 Spiele“ zeigt zuerst je Spiel eine große Kachel (Tic-Tac-Toe, Schach, Bauernskat) mit gelber Zahl,
+  wenn dort jemand auf dich wartet (du bist dran / neue Herausforderung). Erst in der Kachel: Gegen den Computer / Gegen Mitglieder
+  und die Einstellungen. „‹“ führt Partie → Spiel → Übersicht → Startseite. Unter „Gegen Mitglieder“ stehen nur die Partien des
+  gewählten Spiels (Rangliste/Pokal unverändert für alle Spiele). Aus Push/Herausforderung öffnet sich direkt das richtige Spiel.
+- KC-CLUB-SCHACH-BRIGADE: Schachfiguren als Küchenbrigade – König = Küchenchef 👨‍🍳 (Goldrand), Dame = Kaltmamsell 👩‍🍳,
+  Turm = Souschef 🍲, Läufer = Patissier 🎂, Springer = Springer 🔪 (heißt in der Küche so), Bauer = Praktikant 🥄; runde Marken
+  hell/dunkel für Weiß/Schwarz, Legende unter dem Brett, Umwandlung „Der Praktikant wird befördert“. Knopf „♟️ Klassische Figuren“
+  schaltet um (merkt sich das Gerät). Regeln, Server und Computergegner unverändert.
+
 ## 2.10.0 – 2026-10-03 – 🃏 Bauernskat gegen Mitglieder (Wunsch Hansi)
 - KC-CLUB-BAUERNSKAT-MG: Bauernskat jetzt auch unter „👥 Gegen Mitglieder“ – herausfordern, annehmen, abwechselnd spielen,
   Revanche (Vorhand wechselt), Aufgeben, Termin vereinbaren, zählt für Rangliste und Pokal des Monats. Einstellungen → 🎲 Spiele:

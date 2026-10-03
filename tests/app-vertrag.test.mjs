@@ -3341,6 +3341,14 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
     while (z.phase !== "ende") { const s = z.amZug, e = E.bskErlaubt(z, s), k = e[n % e.length]; if (E.bskSpielen(z, s, k)) E.bskStichAbschliessen(z); assert.ok(++i < 40); }
     const r = E.bskErgebnis(z); assert.equal(r.augen[0] + r.augen[1], 120); }
 }
+// 305. 2.11.0: Spiele als Kacheln (KC-CLUB-SPIELE-KACHELN) + Schach-Küchenbrigade (KC-CLUB-SCHACH-BRIGADE)
+{
+  assert.ok(/let SP = \{ tab: "pc", art: null,/.test(html) && /function spKachelnZeigen\(\)/.test(html) && /onclick="spArtWahl\('\$\{a\}'\)"/.test(html), "Übersicht mit Kacheln");
+  assert.ok(/onclick="spZurueck\(\)"/.test(html) && /else if \(SP\.art\) \{ SP\.art = null; spZeigen\(\); \}/.test(html), "‹ führt zur Übersicht");
+  assert.ok(/SP\.offen = \(await api\("spiel_holen", \{ id \}, \{ warten: true \}\)\)\.spiel; SP\.art = SP\.offen\.spiel;/.test(html), "Push öffnet das richtige Spiel");
+  assert.ok(/SCH_BRIGADE_NAME = \{ k: "Küchenchef", q: "Kaltmamsell", r: "Souschef", b: "Patissier", n: "Springer", p: "Praktikant" \}/.test(html) && /function schStilWechseln\(\)/.test(html) && /\$\{schStilHtml\(\)\}/.test(html), "Küchenbrigade umschaltbar");
+  assert.ok(!/SCH_FIG\[f\.type\]/.test(html), "Brett zeichnet über schFigHtml");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
