@@ -3404,6 +3404,11 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/const KT_LESEN_MS = 3000;/.test(html) && /if \(!vonUhr && Date\.now\(\) < z\.seit\) return;/.test(html) && /if \(wahl >= 0 && ktLiest\(\)\) return;/.test(html), "App: Lesezeit, kein Antippen davor");
   assert.ok(/const KT_LESEN_MS = 3000;/.test(server) && /seit: Date\.now\(\) \+ KT_LESEN_MS/.test(server) && /lesenMs: Math\.max\(0, q\.offen\.seit - Date\.now\(\)\)/.test(server), "Server: Uhr startet nach der Lesezeit");
 }
+// 312. 2.17.1: Antworten frei antippbar (KC-CLUB-KUECHENTERROR-FREI)
+{
+  assert.ok(/body\.kt-aktiv \.su-klein, body\.kt-aktiv #fuss \{ display: none; \}/.test(html) && /function ktBildFrei\(an, schluessel\)/.test(html), "Fußleiste/Lupe während der Frage weg");
+  assert.ok(/document\.body\.classList\.remove\("kt-aktiv"\); \/\* 2\.17\.1/.test(html) && /function spZeigen\(\) \{\n  document\.body\.classList\.remove\("kt-aktiv"\);/.test(html), "danach wieder da");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.17.1 – 2026-10-03 – Küchenterror: alle Antworten frei antippbar (Fund Hansi)
+- KC-CLUB-KUECHENTERROR-FREI: Fund „ich konnte mehrmals die richtige Antwort nicht anklicken“ (keine Fehler im Protokoll) – Ursache:
+  die unterste Antwort lag teils hinter der Menüleiste unten, die schwebende 🔍-Lupe deckte rechts Antworten ab. Jetzt während einer
+  Quizfrage (gegen Computer und Mitglieder): Menüleiste und Lupe ausgeblendet, die Frage wird einmal nach oben geholt; danach
+  (Übersicht, Ergebnis, andere Ansicht) ist alles wieder da. Geprüft auf 360×640, 390×844 und 820×1180: alle 4 Antworten sichtbar und
+  der Tipp trifft genau den Knopf.
+- Klarer, wer dran ist: „👨‍🍳 Deine Frage – tippe die richtige Antwort an“ bzw. „🤖 Frage an den Computer – du schaust nur zu“
+  (Antworten dann blass und gestrichelt).
+
 ## 2.17.0 – 2026-10-03 – ⏱ Küchenterror: Zeit-Wächter + 3-2-1 Lesezeit (Fund/Wunsch Hansi)
 - KC-CLUB-KUECHENTERROR-WAECHTER: Fund „die Zeit läuft nicht gleichmäßig ab, einiges geht schneller“ – Ursache: der Balken war eine
   CSS-Animation, die beim Neuzeichnen, Ruckeln oder kurzem Hintergrund neu startet bzw. springt. Jetzt stellt ein Wächter alle 0,1 s

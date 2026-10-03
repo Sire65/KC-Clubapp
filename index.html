@@ -218,7 +218,7 @@
   .kt-antwort { min-height: 54px; padding: 10px 12px; border: 2px solid var(--linie); border-radius: 14px; background: var(--karte); color: var(--text); font: inherit; font-weight: 700; text-align: left; cursor: pointer; line-height: 1.3; }
   .kt-antwort:disabled { cursor: default; opacity: 1; color: var(--text); }
   .kt-antwort.richtig { background: #d5f5e3; border-color: #1e8449; color: #145a32; } .kt-antwort.falsch { background: #fadbd8; border-color: #c0392b; color: #7b241c; }
-  .kt-antwort.denkt { border-style: dashed; }
+  .kt-antwort.denkt { border-style: dashed; opacity: .6; }
   .kt-ergebnis { text-align: center; font-weight: 800; font-size: 1.1rem; margin: 10px 0 4px; } .kt-erkl { margin: 4px 0 8px; font-size: .95rem; }
   .kt-tafel { width: 100%; border-collapse: collapse; margin: 6px 0; font-size: .95rem; } .kt-tafel td, .kt-tafel th { padding: 4px 2px; text-align: center; border-bottom: 1px solid var(--linie); }
   .kt-tafel .ok { color: #1e8449; font-weight: 800; } .kt-tafel .nein { color: #c0392b; font-weight: 800; }
@@ -1500,6 +1500,10 @@
     background: var(--karte); color: var(--text); font-size: 1.15rem; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.22); opacity: .93; }
   .su-klein:active { transform: scale(.94); }
   body.im-chat .su-klein, body.su-auf .su-klein { display: none; }
+  /* 2.17.1 KC-CLUB-KUECHENTERROR-FREI (Fund Hansi „konnte die richtige Antwort nicht anklicken“): während einer Quizfrage nichts über
+     den Antworten – Lupe und Menüleiste unten weg, damit auch Antwort D ganz zu sehen und zu treffen ist */
+  body.kt-aktiv .su-klein, body.kt-aktiv #fuss { display: none; }
+  body.kt-aktiv main, body.kt-aktiv #v-spiele { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
   body.su-auf { overflow: hidden; }
   .su-fenster { position: fixed; inset: 0; z-index: 80; background: rgba(0,0,0,.45); display: flex; justify-content: center; align-items: flex-start; }
   .su-innen { width: 100%; max-width: 720px; max-height: 100%; overflow-y: auto; background: var(--bg); border-radius: 0 0 18px 18px; padding: max(10px, env(safe-area-inset-top)) 12px 16px; box-shadow: var(--schatten); }
@@ -2566,7 +2570,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.17.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.17.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -4960,6 +4964,7 @@ function spComputerZug(b, n, staerke) {
 function spStart(tab, art) { if (tab) SP.tab = tab; SP.art = art || null; SP.offen = null; zeige("spiele"); }
 function spTab(t) { SP.tab = t; SP.offen = null; spZeigen(); if (t === "mg") spLaden(); }
 function spZeigen() {
+  document.body.classList.remove("kt-aktiv"); // 2.17.1: nur während einer Küchenterror-Frage (setzt ktBildFrei)
   const uebersicht = !SP.art && !SP.offen;
   ["spEdition", "spTabs"].forEach((id) => $(id).classList.toggle("versteckt", uebersicht));
   if (uebersicht) { clearInterval(SP.takt); SP.takt = null; return spKachelnZeigen(); }
@@ -5686,6 +5691,12 @@ function ktUhrStart(lesenMs, restMs, lim, beiEnde) {
 }
 function ktUhrStopp() { clearInterval(KTU.t); KTU.t = null; KTU.aus = true; }
 const ktLiest = () => !KTU.aus && Date.now() < KTU.start; // während 3-2-1 keine Antwort
+// 2.17.1: Quizfrage im Bild – Fußleiste/Lupe ausblenden und die Frage nach oben holen (einmal je Frage)
+let KT_GESCROLLT = "";
+function ktBildFrei(an, schluessel) {
+  document.body.classList.toggle("kt-aktiv", !!an);
+  if (an && schluessel && KT_GESCROLLT !== schluessel) { KT_GESCROLLT = schluessel; requestAnimationFrame(() => { try { $("spInhalt").scrollIntoView({ block: "start" }); } catch {} }); }
+}
 // ----- gegen den Computer -----
 let KTP = (() => { let w = null; try { w = JSON.parse(localStorage.getItem(KT_KEY) || "null"); } catch {} return { staerke: "mittel", stand: { ich: 0, pc: 0, remis: 0 }, ...(w || {}), z: null, uhr: null, pcUhr: null }; })();
 const ktpMerken = () => { try { localStorage.setItem(KT_KEY, JSON.stringify({ staerke: KTP.staerke, stand: KTP.stand })); } catch {} };
@@ -5694,6 +5705,7 @@ const ktpSichtbar = () => aktuelleAnsicht === "spiele" && SP.tab === "pc" && SP.
 async function ktPcZeigen() {
   const F = await ktFragenLaden(); if (!ktpSichtbar()) return;
   const z = KTP.z, s = KTP.stand;
+  ktBildFrei(false);
   const stand = `<div class="sp-stand"><span>Du <b>${s.ich}</b></span><span>🤝 <b>${s.remis}</b></span><span><b>${s.pc}</b> Computer</span></div>`;
   if (!z) { $("spInhalt").innerHTML = `<div class="karte sp-karte">
       ${spWahl("Stufe", KTP.staerke, [["leicht", "😊 Leicht<br><small>20 s</small>"], ["mittel", "🙂 Mittel<br><small>15 s</small>"], ["schwer", "😎 Schwer<br><small>10 s</small>"]], "ktPcStaerke")}
@@ -5708,7 +5720,8 @@ async function ktPcZeigen() {
       <div class="knoepfe"><button class="knopf haupt" onclick="ktPcStart()">↺ Neues Spiel</button><button class="knopf" onclick="KTP.z=null;ktPcZeigen()">Stärke ändern</button></div></div>`; return; }
   const f = F.find((q) => q.id === z.ids[z.i]), alle = [f.r, ...f.x], fr = { f: f.f, a: z.perm.map((k) => alle[k]), restMs: ktpLimit() - (Date.now() - z.seit), m: !!f.m, limitMs: ktpLimit() };
   const wer = z.i % 2 === 0 ? "ich" : "pc";
-  const kopfWer = `<div class="sp-status${wer === "ich" && z.phase === "frage" ? " sp-ichdran" : ""}">${wer === "ich" ? "👨‍🍳 Deine Frage" : "🤖 Frage an den Computer"}</div>`;
+  const kopfWer = `<div class="sp-status${wer === "ich" && z.phase === "frage" ? " sp-ichdran" : ""}">${wer === "ich" ? "👨‍🍳 Deine Frage – tippe die richtige Antwort an" : "🤖 Frage an den Computer – du schaust nur zu"}</div>`;
+  ktBildFrei(true, "pc:" + z.ids.join() + ":" + z.i);
   $("spInhalt").innerHTML = `<div class="karte sp-karte">${kopf}${kopfWer}${ktFrageHtml(fr, { klick: wer === "ich" && z.phase === "frage" ? "ktPcAntwort" : "", aufl: z.phase === "aufl" ? z.aufl : null, denkt: wer === "pc" && z.phase === "frage" })}
     ${z.phase === "aufl" ? `<div class="knoepfe"><button class="knopf haupt" onclick="ktPcWeiter()">${z.i >= 11 ? "🏁 Ergebnis" : "Weiter ›"}</button></div>` : ""}</div>`;
   if (z.phase === "frage") ktPcUhren();
@@ -5756,11 +5769,13 @@ function ktSpielZeigen(g) {
   const zurueck = `<div class="zeile" style="border:none;padding:0"><button class="knopf klein" onclick="ktMgUebersicht()">‹ Übersicht</button><b style="flex:1;text-align:right">🔪 Du gegen ${er}<br><small class="hinweis">⏱ ${(q.limitMs || KT_MS) / 1000} Sekunden je Frage</small></b></div>`;
   if (KTM.frage || KTM.aufl) {
     const fr = KTM.frage || KTM.aufl.frage, rest = 0; /* Restzeit stellt der Wächter */
+    ktBildFrei(true, "mg:" + g.id + ":" + fr.nr);
     const kopf = `<div class="kt-kopf"><span>Frage ${fr.imZug}/${fr.vonImZug}</span><span>Runde ${Math.ceil(fr.nr / 3)} von 4</span></div>`;
     $("spInhalt").innerHTML = `<div class="karte sp-karte">${ktFrageHtml({ ...fr, restMs: rest }, { klick: KTM.frage ? "ktMgAntwort" : "", aufl: KTM.aufl, kopf })}
       ${KTM.aufl ? `<div class="knoepfe"><button class="knopf haupt" onclick="ktMgWeiter()">${g.ichDran && q.offenBeiMir > 0 ? "Nächste Frage ›" : "Fertig ›"}</button></div>` : ""}</div>`;
     return;
   }
+  ktBildFrei(false);
   const zelle = (x) => !x ? "–" : x.verdeckt ? "✔︎" : `<span class="${x.ok ? "ok" : "nein"}">${x.ok ? x.p : "0"}</span>`;
   const tafel = `<table class="kt-tafel"><tr><th></th><th colspan="3">Du</th><th colspan="3">${er}</th></tr>${q.runden.map((rd, i) => `<tr><th>R${i + 1}</th>${rd.map((k, j) => `<td${i * 3 + j === q.meisterNr ? ' class="meister" title="Meisterfrage"' : ""}>${zelle(k.ich)}</td>`).join("")}${rd.map((k, j) => `<td${i * 3 + j === q.meisterNr ? ' class="meister" title="Meisterfrage"' : ""}>${zelle(k.er)}</td>`).join("")}</tr>`).join("")}
     <tr><th>Σ</th><td colspan="3"><b>${q.summe[0]}</b></td><td colspan="3"><b>${q.summe[1]}</b>${q.ende ? "" : '<small class="hinweis"> *</small>'}</td></tr></table>
@@ -7908,6 +7923,7 @@ let startBereitLoesen; const startBereit = new Promise((ok) => { startBereitLoes
 let ZEIGE_WARTET = null;
 function zeige(v, ausHistorie) {
   if (v !== "chat" && CV.an) chatVorlesenStopp(true); /* KC-CLUB-CHAT-VORLESEN: nur im offenen Chat */
+  document.body.classList.remove("kt-aktiv"); /* 2.17.1: Fußleiste nach dem Quiz wieder zeigen */
   if (!ICH && !ZEIGE_OHNE_ICH.has(v)) {
     if (!ZEIGE_WARTET) melde("⏳ Einen Moment – die App meldet dich noch an …");
     ZEIGE_WARTET = { v, ausHistorie };
