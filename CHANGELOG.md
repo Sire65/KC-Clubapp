@@ -1,5 +1,20 @@
 # Änderungen
 
+## 2.7.0 – 2026-10-03 – 🎲 Spiele – Köcheclub Edition: Tic-Tac-Toe (Wunsch Hansi)
+- KC-CLUB-SPIELE: Neuer Bereich „🎲 Spiele“ (Kachel im Register Club und in der einfachen Ansicht, Sprunglink #spiele/#spiel=…).
+  Tic-Tac-Toe 3×3 (drei in einer Reihe) oder 4×4 (vier in einer Reihe), 🍅 Tomate gegen 🥦 Brokkoli, Gewinnreihe golden,
+  Siegerbanner, „↺ Neue Runde“ und „Spielstand zurücksetzen“.
+- 🤖 Gegen den Computer: nur auf dem Gerät, Stärke leicht/mittel/schwer (3×3 schwer unschlagbar – Alpha-Beta vollständig;
+  4×4 begrenzte Tiefe + Bewertung offener Reihen), Beginn Ich/Computer/Wechselnd, Spielstand bleibt auf dem Gerät.
+- 👥 Gegen Mitglieder: Herausfordern (Liste nur mit Mitgliedern, die es erlauben; auch auf der Mitgliederseite „🎲 Zu Tic-Tac-Toe
+  herausfordern“), Annehmen/Ablehnen, abwechselnd ziehen (Server prüft Reihenfolge, Feld, Stand-Zähler; Sieg/Unentschieden),
+  Aufgeben, Revanche (Rollen getauscht), Club-Rangliste (Sieg 2, Unentschieden 1 Punkt). Push „fordert dich heraus“/„Du bist
+  dran“ nur, wenn das Gegenüber die App nicht offen hat und keine Ruhezeit ist; offene Partie fragt alle 3 s nach.
+- Einstellungen → 🔒 Privatsphäre: „🎲 Andere dürfen mich zu Spielen herausfordern“ (Standard aus, Einstellung „spiele“).
+  Höchstens 8 offene Spiele je Person. Kachel-Zahl = Partien, in denen ich dran bin + Herausforderungen an mich.
+- Neue Tabelle kc_club_spiele (RLS ohne Policies), Migration supabase/migrations/20261003_kc_club_v2700_spiele.sql (eingespielt).
+  Einweisung „Spiele“, Nutzung „🎲 Spiele“. Schach und Bauernskat folgen als eigene Stufen.
+
 ## 2.6.2 – 2026-10-03 – Bessere Vorlese-Stimme, Stimme wählbar (Fund Hansi: iPad klingt schrecklich)
 - KC-CLUB-STIMME: Bisher nahm die App die erste deutsche Stimme – auf Apple-Geräten oft eine Spaß-/Roboterstimme (Eloquence/
   Novelty). Jetzt eine Stelle (deStimme/sprechAusgabe) für alle Ansagen und das Vorlesen: eigene Wahl je Gerät oder automatisch

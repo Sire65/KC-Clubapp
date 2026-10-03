@@ -1169,7 +1169,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/ansicht: ansicht\.get\(m\.person_id\) \?\? null \} : \{\}\)/.test(server), "Ansicht je Mitglied nur für den Admin");
   assert.ok(/const begruesst = ansichtPruefen\(\) \|\| begruessungPruefen\(\);/.test(html) && /INIT\?\.einstellungen\?\.ansicht\?\.gewaehlt\) return false/.test(html), "Frage beim Start fehlt / käme mehrfach");
   assert.ok(/id="ansichtBlatt" onclick="if\(event\.target===this\)ansichtSetzen\('einfach', true\)"/.test(html) && /Du kannst jederzeit umschalten/.test(html), "Überspringen = einfach / Umschalt-Hinweis fehlt");
-  assert.ok(/const EINFACH_KACHELN = \["termine", "kommunikation", "pinnwand", "meindienst", "mitglieder"(, "dokumente")?(, "sos")?\];/.test(html) && /const kacheln = \(r\) => einfach\(\) \? einfachKacheln\(\) : kaSortiert/.test(html), "Einfache Startseite fehlt");
+  assert.ok(/const EINFACH_KACHELN = \["termine", "kommunikation", "pinnwand", "meindienst", "mitglieder"(, "dokumente")?(, "spiele")?(, "sos")?\];/.test(html) && /const kacheln = \(r\) => einfach\(\) \? einfachKacheln\(\) : kaSortiert/.test(html), "Einfache Startseite fehlt");
   const alle = [...html.matchAll(/\{ id: "([a-z]+)", sym:/g)].map((m) => m[1]);
   for (const id of ["termine", "kommunikation", "pinnwand", "meindienst", "mitglieder", "dokumente"]) assert.ok(alle.includes(id), `Kachel ${id} fehlt in der Registry`);
   assert.ok(/id="ansichtKnopf"[^>]*onclick="ansichtWechseln\(\)"/.test(html) && /onclick="ansichtSetzen\('einfach'\)"/.test(html) && /onclick="ansichtSetzen\('erweitert'\)"/.test(html), "Umschalter fehlt");
@@ -2847,7 +2847,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 {
   const sw = lies("sw.js");
   assert.ok(/c\.postMessage\(\{ typ: "push", titel, text: d\.body \|\| d\.text \|\| "", url: d\.data\?\.url \|\| "" \}\)/.test(sw), "Service Worker gibt Text/Link weiter");
-  assert.ok(/if \(chatId\) chatLaden\(false\); ansageAusPush\(e\.data\); \}/.test(html), "Push → Ansage");
+  assert.ok(/if \(chatId\) chatLaden\(false\); ansageAusPush\(e\.data\);( if \(aktuelleAnsicht === "spiele"[^}]*)? \}/.test(html), "Push → Ansage"); // 2.7.0: + Spiel auffrischen
   assert.ok(/klopfTonSpielen\(klopfStand\(\)\.ton\);\n  ansageMelden\(\{ art: "anklopfen"/.test(html), "Anklopfen wird angesagt");
   for (const id of ["nachricht", "anklopfen", "pinnwand", "helfen", "mitfahrt", "standort", "termine"]) assert.ok(new RegExp(`\\{ id: "${id}", sym: "[^"]+", t: "[^"]+",[^\\n]*bsp: "`).test(html), "Ansage-Art " + id);
   assert.ok(/\{ id: "nachricht",[^\n]*an: true \}/.test(html) && /\{ id: "anklopfen",[^\n]*an: true \}/.test(html) && !/\{ id: "pinnwand",[^\n]*an: true/.test(html), "Standard nur Nachrichten + Anklopfen");
@@ -3253,6 +3253,23 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/function deStimme\(\)/.test(html) && /STIMME_SCHLECHT\.test\(v\.name\) \? -20/.test(html) && /const u = sprechAusgabe\(t\);/.test(html), "eine Stelle für die Stimme, Spaßstimmen raus");
   assert.ok(!/getVoices\(\)\.find\(\(\w\) => \/\^de\/i\.test/.test(html), "nirgends mehr „erste deutsche Stimme“");
   assert.ok(/id="setStimme" onchange="stimmeSetzen\(this\.value\)"/.test(html) && /onclick="stimmeProbe\(\)"/.test(html), "Wahl + Probe in den Einstellungen");
+}
+// 297. 2.7.0: Spiele – Köcheclub Edition, Tic-Tac-Toe (KC-CLUB-SPIELE)
+{
+  const mig = lies("supabase/migrations/20261003_kc_club_v2700_spiele.sql");
+  assert.ok(/create table if not exists kc_club_spiele/.test(mig) && /enable row level security/.test(mig) && /check \(groesse in \(3, 4\)\)/.test(mig) && /check \(von <> an\)/.test(mig), "Tabelle mit RLS und Prüfungen");
+  const zug = server.slice(server.indexOf('case "spiel_zug": {'), server.indexOf('case "spiel_aufgeben": {'));
+  assert.ok(/g\.dran !== ich\.person_id\) throw/.test(zug) && /Number\(p\.zuege\) !== g\.zuege\) throw/.test(zug) && /g\.brett\[feld\] !== "\."/.test(zug) && /\.eq\("zuege", g\.zuege\)\.eq\("status", "laeuft"\)/.test(zug), "Server prüft Zug, Reihenfolge, Doppelzug");
+  assert.ok(/spielBereitMap\(\[an\]\)\)\.get\(an\) !== true\) throw/.test(server) && /spiele: \(w\) => \(\{ herausforderung: w\?\.herausforderung === true/.test(server), "nur wer es erlaubt (Standard aus)");
+  assert.ok(/Date\.now\(\) - Date\.parse\(z\.zuletzt_gesehen\) < 45000\) return;/.test(server) && /ruhendePersonen\(\[an\]\)\)\.has\(an\)\) return;/.test(server), "Push nicht bei offener App/Ruhezeit");
+  assert.ok(/\{ id: "spiele", sym: "🎲", t: "Spiele"/.test(html) && /<section id="v-spiele"/.test(html) && /Köcheclub Edition/.test(html) && /id="setSpiele"/.test(html) && /<div id="mdSpiel"><\/div>/.test(html), "Kachel, Ansicht, Einstellung, Mitgliederseite");
+  // Computer: 3×3 schwer verliert nie (Stichprobe gegen Zufall)
+  const code = html.slice(html.indexOf("function spLinien(n)"), html.indexOf("// ----- Ansicht -----"));
+  const { spComputerZug, spAuswerten } = new Function(code + "; return { spComputerZug, spAuswerten };")();
+  for (let k = 0; k < 40; k++) { let b = ".........", x = k % 2 === 0;
+    for (;;) { const frei = [...b].map((c, i) => c === "." ? i : -1).filter((i) => i >= 0); const i = x ? frei[Math.floor(Math.random() * frei.length)] : spComputerZug(b, 3, "schwer");
+      b = b.slice(0, i) + (x ? "x" : "o") + b.slice(i + 1); const a = spAuswerten(b, 3); if (a.sieger || a.voll) { assert.ok(a.sieger !== "x", "Computer (schwer, 3×3) hat verloren: " + b); break; } x = !x; } }
+  assert.ok(spAuswerten("xxxx............", 4).sieger === "x" && spAuswerten("xxx.............", 4).sieger === null && spAuswerten("o....o....o....o", 4).sieger === "o", "4×4: vier in einer Reihe");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

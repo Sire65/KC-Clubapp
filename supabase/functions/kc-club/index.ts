@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "2.6.2";
+const SERVER_VERSION = "2.7.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -789,6 +789,8 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
   online: (w) => ({ zeigen: w?.zeigen !== false }),
   // KC-CLUB-INKOGNITO (2.3.0): nur Admins (Prüfung in einstellung_setzen) – Standard: aus
   inkognito: (w) => ({ an: w?.an === true }),
+  // KC-CLUB-SPIELE (2.7.0): darf man mich herausfordern (Standard: nein) + welche Spiele (bisher nur Tic-Tac-Toe)
+  spiele: (w) => ({ herausforderung: w?.herausforderung === true, spiele: (Array.isArray(w?.spiele) ? w.spiele : ["ttt"]).filter((x: unknown) => x === "ttt").slice(0, 3) }),
   // KC-CLUB-EINWEISUNG (2.4.0): Erklärkarte beim ersten Öffnen eines Bereichs – an/aus (Standard an) + welche schon gesehen
   einweisung: (w) => ({ an: w?.an !== false, gesehen: Object.fromEntries(Object.entries(w?.gesehen && typeof w.gesehen === "object" ? w.gesehen : {})
     .filter(([id, d]) => KA_ID.test(id) && typeof d === "string" && !isNaN(Date.parse(d))).slice(0, 40).map(([id, d]) => [id, new Date(String(d)).toISOString()])) }),
@@ -1159,6 +1161,45 @@ async function adminAnzahl(): Promise<number | null> {
   if (error) return null; // 2.6.1: unbekannt statt „0 Admins“
   const ids = new Set(aktiv.map((m) => m.person_id)); return (ro ?? []).filter((r: any) => ids.has(r.person_id)).length;
 }
+// ---------- KC-CLUB-SPIELE (2.7.0, Wunsch Hansi: „Spiele – Köcheclub Edition“) ----------
+// Tic-Tac-Toe 3×3 (3 in einer Reihe) oder 4×4 (4 in einer Reihe) zwischen zwei Mitgliedern. Wer herausgefordert werden möchte,
+// schaltet das in den Einstellungen ein (Einstellung „spiele“, Standard aus). Der Server prüft jeden Zug (Reihenfolge, Feld frei,
+// Spielstand-Zähler gegen doppelte Züge), erkennt Sieg/Unentschieden und schickt „Du bist dran“ nur, wenn das Gegenüber die App
+// gerade nicht offen hat und keine Ruhezeit ist. Gegen den Computer spielt die App ganz ohne Server.
+const SPIEL_NAMEN: Record<string, string> = { ttt: "Tic-Tac-Toe" };
+const SPIELE_OFFEN_MAX = 8; // laufende + angefragte Spiele je Person
+function tttLinien(n: number): number[][] {
+  const l: number[][] = [];
+  for (let i = 0; i < n; i++) { l.push([...Array(n)].map((_, j) => i * n + j)); l.push([...Array(n)].map((_, j) => j * n + i)); }
+  l.push([...Array(n)].map((_, j) => j * n + j)); l.push([...Array(n)].map((_, j) => j * n + (n - 1 - j)));
+  return l;
+}
+function tttAuswerten(brett: string, n: number): { sieger: "x" | "o" | null; linie: number[] | null; voll: boolean } {
+  for (const l of tttLinien(n)) { const c = brett[l[0]]; if (c !== "." && l.every((i) => brett[i] === c)) return { sieger: c as "x" | "o", linie: l, voll: false }; }
+  return { sieger: null, linie: null, voll: !brett.includes(".") };
+}
+async function spielBereitMap(ids?: string[]) {
+  let q = db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "spiele");
+  if (ids) q = q.in("person_id", ids);
+  const { data } = await q;
+  return new Map((data ?? []).map((x: any) => [x.person_id as string, x.wert?.herausforderung === true && (x.wert?.spiele ?? ["ttt"]).includes("ttt")]));
+}
+async function spielPush(an: string, vars: { titel: string; kurz: string; text: string }, spielId: string, schluessel: string, nurWennWeg = true) {
+  if (an.startsWith("KC-P-TEST")) return;
+  if (nurWennWeg) { // App gerade offen → sieht es ohnehin (die App fragt beim offenen Spiel alle paar Sekunden nach)
+    const { data: z } = await db.from("kc_club_zugang").select("zuletzt_gesehen").eq("person_id", an).maybeSingle();
+    if (z?.zuletzt_gesehen && Date.now() - Date.parse(z.zuletzt_gesehen) < 45000) return;
+  }
+  if ((await ruhendePersonen([an])).has(an)) return;
+  await routerSenden("club_nachricht_push", [an], { ...vars, betreff: vars.titel, url: `${APP_URL}#spiel=${spielId}` }, schluessel).catch(() => null);
+}
+const spielSicht = (g: any, ich: string, namen: Map<string, Person>) => ({
+  id: g.id, spiel: g.spiel, groesse: g.groesse, status: g.status, brett: g.brett, zuege: g.zuege, linie: g.linie ? String(g.linie).split(",").map(Number) : null,
+  ichBin: g.spieler_x === ich ? "x" : "o", ichDran: g.status === "laeuft" && g.dran === ich, vonMir: g.von === ich, aufgegeben: !!g.aufgegeben,
+  gegner: (() => { const id = g.von === ich ? g.an : g.von; return { person_id: id, vorname: vorname(namen.get(id) ?? null) || id, name: namen.get(id)?.display_name || id }; })(),
+  ergebnis: g.status !== "beendet" ? null : g.gewinner === "remis" ? "remis" : g.gewinner === ich ? "gewonnen" : "verloren",
+  geaendert: g.geaendert_am,
+});
 // KC-CLUB-NUTZUNG-PERSONEN (2.6.1, Prüfung): höchstens NZ_GERAETE_JE_TAG verschiedene Kennungen je Tag annehmen (flüchtig im
 // Speicher dieser Server-Instanz, ohne Personenbezug) – sonst könnte ein Skript die Zahl beliebig aufblähen
 const NZ_GERAETE_JE_TAG = 120;
@@ -2550,7 +2591,7 @@ async function privatListe(ich: Ich, von: string, bis?: string) {
 }
 
 // KC-CLUB-NUTZUNG (0.99.0): nur diese Bereiche werden gezählt (Ansichten der App)
-const NUTZUNG_BEREICHE = new Set(["start", "termine", "nachrichten", "chat", "neu", "pinnwand", "fotos", "mitglieder", "mitglied", "einstellungen", "dienste",
+const NUTZUNG_BEREICHE = new Set(["spiele", "start", "termine", "nachrichten", "chat", "neu", "pinnwand", "fotos", "mitglieder", "mitglied", "einstellungen", "dienste",
   "aktionen", "aktion", "protokolle", "protokoll", "vorschlaege", "dokumente", "standort", "erstattung", "feedback", "programme", "ueberblick", "gruppe", "archiv", "suche",
   // KC-CLUB-NUTZUNG-BEREICHE (1.89.0): fehlende Bereiche + Unterbereiche (Büro-Fächer, Helfen-Reiter, Chronik, Alben)
   "dokansicht", "sicherheit", "sos", "kalender_abo", "helfen", "helfen_helfen", "helfen_leihen", "helfen_boerse", "buero", "buero_eingang", "buero_sitzung", "buero_nachher",
@@ -3057,7 +3098,10 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const communicator = await communicatorStatus(ich).catch(() => null);
         const kontaktFreigabe = Object.fromEntries(KONTAKT_FELDER.map((f) => [f, !!(kf ?? []).find((x: any) => x.bereich === "kontakt_" + f)?.erlaubt]));
         const benachrichtigung = Object.fromEntries(BEREICHE.map((b) => { const x: any = (wahl ?? []).find((y: any) => y.bereich === b); return [b, x ? { push: x.push, email: x.email } : STANDARD_WAHL[b]]; }));
-        return json({ ich, status: meinStatus, server: SERVER_VERSION, adminName: await adminVorname(), ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, communicator, notfall: nf ?? null, einstellungen, kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
+        // KC-CLUB-SPIELE (2.7.0): Zahl auf der Kachel = Partien, in denen ich dran bin + Herausforderungen an mich (Fehler → 0, nur Hinweis-Zahl)
+        const { count: spieleDran } = await db.from("kc_club_spiele").select("id", { count: "exact", head: true })
+          .or(`and(status.eq.laeuft,dran.eq.${ich.person_id}),and(status.eq.angefragt,an.eq.${ich.person_id})`);
+        return json({ spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, adminName: await adminVorname(), ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, communicator, notfall: nf ?? null, einstellungen, kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
             // KC-CLUB-GERAETE-TIPP: wohin der Link ginge – nur teilweise (z. B. „h…@web.de“)
@@ -7155,6 +7199,110 @@ Köcheclub-App`,
       }
 
       // ----- KC-CLUB-KACHELN: persönliche Einstellung speichern -----
+      // ----- KC-CLUB-SPIELE (2.7.0) -----
+      case "spiele_liste": {
+        const { data: meine } = await db.from("kc_club_spiele").select("*").or(`von.eq.${ich.person_id},an.eq.${ich.person_id}`)
+          .or(`status.in.(angefragt,laeuft),geaendert_am.gte."${new Date(Date.now() - 14 * 86400000).toISOString()}"`).order("geaendert_am", { ascending: false }).limit(40);
+        const [aktiv, bereit, { data: fertig }] = await Promise.all([aktiveMitglieder(), spielBereitMap(),
+          db.from("kc_club_spiele").select("spieler_x,spieler_o,gewinner").eq("status", "beendet").limit(2000)]);
+        const aktivIds = new Set(aktiv.map((m) => m.person_id));
+        const namen = await personen([...new Set([...(meine ?? []).flatMap((g: any) => [g.von, g.an]), ...aktiv.map((m) => m.person_id)])]);
+        // Club-Rangliste: Siege (2 Punkte) und Unentschieden (1 Punkt) aller beendeten Spiele unter Mitgliedern
+        const tab = new Map<string, { s: number; u: number; n: number; sp: number }>();
+        for (const g of fertig ?? []) for (const pid of [g.spieler_x, g.spieler_o]) {
+          if (!aktivIds.has(pid)) continue;
+          const t = tab.get(pid) ?? { s: 0, u: 0, n: 0, sp: 0 }; t.sp++;
+          if (g.gewinner === "remis") t.u++; else if (g.gewinner === pid) t.s++; else t.n++; tab.set(pid, t);
+        }
+        const rang = [...tab.entries()].map(([pid, t]) => ({ person_id: pid, vorname: vorname(namen.get(pid) ?? null) || pid, siege: t.s, remis: t.u, niederlagen: t.n, spiele: t.sp, punkte: t.s * 2 + t.u }))
+          .sort((a, b) => b.punkte - a.punkte || b.siege - a.siege || a.spiele - b.spiele).slice(0, 10);
+        const ichDarf = (await spielBereitMap([ich.person_id])).get(ich.person_id) === true;
+        return json({ ichBereit: ichDarf, spiele: (meine ?? []).map((g: any) => spielSicht(g, ich.person_id, namen)), rangliste: rang,
+          bereit: aktiv.filter((m) => m.person_id !== ich.person_id && bereit.get(m.person_id) === true && !m.person_id.startsWith("KC-P-TEST"))
+            .map((m) => ({ person_id: m.person_id, vorname: vorname(m) || m.display_name, name: m.display_name })) });
+      }
+      case "spiel_holen": {
+        const { data: g } = await db.from("kc_club_spiele").select("*").eq("id", String(p.id || "")).maybeSingle();
+        if (!g || (g.von !== ich.person_id && g.an !== ich.person_id)) throw new Fehler("Spiel nicht gefunden.", 404);
+        return json({ spiel: spielSicht(g, ich.person_id, await personen([g.von, g.an])) });
+      }
+      case "spiel_herausfordern": {
+        const an = String(p.an || ""), groesse = Number(p.groesse) === 4 ? 4 : 3;
+        if (an === ich.person_id) throw new Fehler("Gegen dich selbst geht nicht – probier den Computer 🙂");
+        if (!(await aktiveMitglieder()).some((m) => m.person_id === an)) throw new Fehler("Mitglied nicht gefunden.", 404);
+        if ((await spielBereitMap([an])).get(an) !== true) throw new Fehler("Dieses Mitglied möchte gerade nicht herausgefordert werden.", 409);
+        const { data: offen } = await db.from("kc_club_spiele").select("id,von,an,status").or(`von.eq.${ich.person_id},an.eq.${ich.person_id}`).in("status", ["angefragt", "laeuft"]);
+        if ((offen ?? []).length >= SPIELE_OFFEN_MAX) throw new Fehler(`Du hast schon ${SPIELE_OFFEN_MAX} offene Spiele – bitte erst eins zu Ende spielen.`, 409);
+        const schon = (offen ?? []).find((g: any) => g.status === "angefragt" && ((g.von === ich.person_id && g.an === an) || (g.von === an && g.an === ich.person_id)));
+        if (schon) throw new Fehler(schon.von === ich.person_id ? "Du hast diese Person schon herausgefordert – warte auf die Antwort." : "Diese Person hat dich schon herausgefordert – nimm einfach an.", 409);
+        const { data: g, error } = await db.from("kc_club_spiele").insert({ spiel: "ttt", groesse, von: ich.person_id, an, spieler_x: ich.person_id, spieler_o: an,
+          brett: ".".repeat(groesse * groesse), dran: ich.person_id }).select("*").single();
+        if (error || !g) throw new Fehler("Die Herausforderung konnte nicht gespeichert werden.", 500);
+        await spielPush(an, { titel: `🎲 ${ich.vorname} fordert dich heraus`, kurz: `Tic-Tac-Toe ${groesse}×${groesse} – Köcheclub Edition. Annehmen?`, text: `${ich.name} fordert dich zu Tic-Tac-Toe (${groesse}×${groesse}) heraus.` }, g.id, `club-spiel:${g.id}:frage`, false);
+        await protokoll(ich.person_id, "spiel_herausgefordert", { an, groesse });
+        return json({ ok: true, spiel: spielSicht(g, ich.person_id, await personen([ich.person_id, an])) });
+      }
+      case "spiel_antwort": {
+        const { data: g } = await db.from("kc_club_spiele").select("*").eq("id", String(p.id || "")).eq("an", ich.person_id).maybeSingle();
+        if (!g) throw new Fehler("Herausforderung nicht gefunden.", 404);
+        if (g.status !== "angefragt") throw new Fehler("Diese Herausforderung ist schon erledigt.", 409);
+        const status = p.annehmen ? "laeuft" : "abgelehnt";
+        const { data: neu } = await db.from("kc_club_spiele").update({ status, geaendert_am: jetzt() }).eq("id", g.id).eq("status", "angefragt").select("*").maybeSingle();
+        if (!neu) throw new Fehler("Diese Herausforderung ist schon erledigt.", 409);
+        await spielPush(g.von, p.annehmen ? { titel: `🎲 ${ich.vorname} spielt mit!`, kurz: "Du fängst an – du bist dran.", text: `${ich.name} hat deine Herausforderung angenommen. Du bist dran.` }
+          : { titel: `🎲 ${ich.vorname} hat abgelehnt`, kurz: "Vielleicht ein andermal.", text: `${ich.name} möchte gerade nicht spielen.` }, g.id, `club-spiel:${g.id}:antwort`);
+        return json({ ok: true, spiel: spielSicht(neu, ich.person_id, await personen([g.von, g.an])) });
+      }
+      case "spiel_zug": {
+        const { data: g } = await db.from("kc_club_spiele").select("*").eq("id", String(p.id || "")).maybeSingle();
+        if (!g || (g.von !== ich.person_id && g.an !== ich.person_id)) throw new Fehler("Spiel nicht gefunden.", 404);
+        if (g.status !== "laeuft") throw new Fehler("Das Spiel läuft nicht mehr.", 409);
+        if (g.dran !== ich.person_id) throw new Fehler("Du bist gerade nicht dran.", 409);
+        if (Number(p.zuege) !== g.zuege) throw new Fehler("Das Spiel hat sich inzwischen geändert – bitte nochmal schauen.", 409);
+        const feld = Number(p.feld), n = g.groesse;
+        if (!Number.isInteger(feld) || feld < 0 || feld >= n * n || g.brett[feld] !== ".") throw new Fehler("Dieses Feld geht nicht.", 400);
+        const zeichen = g.spieler_x === ich.person_id ? "x" : "o", gegner = g.von === ich.person_id ? g.an : g.von;
+        const brett = g.brett.slice(0, feld) + zeichen + g.brett.slice(feld + 1), a = tttAuswerten(brett, n);
+        const ende = !!a.sieger || a.voll;
+        const { data: neu } = await db.from("kc_club_spiele").update({ brett, zuege: g.zuege + 1, dran: ende ? null : gegner, status: ende ? "beendet" : "laeuft",
+          gewinner: a.sieger ? ich.person_id : a.voll ? "remis" : null, linie: a.linie ? a.linie.join(",") : null, geaendert_am: jetzt() })
+          .eq("id", g.id).eq("zuege", g.zuege).eq("status", "laeuft").select("*").maybeSingle();
+        if (!neu) throw new Fehler("Das Spiel hat sich inzwischen geändert – bitte nochmal schauen.", 409);
+        await spielPush(gegner, a.sieger ? { titel: `🎲 ${ich.vorname} hat gewonnen`, kurz: "Revanche?", text: `${ich.name} hat Tic-Tac-Toe gewonnen.` }
+          : a.voll ? { titel: "🎲 Unentschieden!", kurz: `Gegen ${ich.vorname} – Revanche?`, text: `Euer Tic-Tac-Toe ist unentschieden.` }
+          : { titel: `🎲 Du bist dran`, kurz: `${ich.vorname} hat gezogen.`, text: `${ich.name} hat gezogen – du bist dran.` }, g.id, `club-spiel:${g.id}:${g.zuege + 1}`);
+        return json({ ok: true, spiel: spielSicht(neu, ich.person_id, await personen([g.von, g.an])) });
+      }
+      case "spiel_aufgeben": {
+        const { data: g } = await db.from("kc_club_spiele").select("*").eq("id", String(p.id || "")).maybeSingle();
+        if (!g || (g.von !== ich.person_id && g.an !== ich.person_id)) throw new Fehler("Spiel nicht gefunden.", 404);
+        const gegner = g.von === ich.person_id ? g.an : g.von;
+        let upd: Record<string, unknown> | null = null;
+        if (g.status === "angefragt" && g.von === ich.person_id) upd = { status: "abgebrochen" };
+        else if (g.status === "laeuft") upd = { status: "beendet", gewinner: gegner, dran: null, aufgegeben: true };
+        if (!upd) throw new Fehler("Das Spiel ist schon vorbei.", 409);
+        const { data: neu } = await db.from("kc_club_spiele").update({ ...upd, geaendert_am: jetzt() }).eq("id", g.id).eq("status", g.status).select("*").maybeSingle();
+        if (!neu) throw new Fehler("Das Spiel hat sich inzwischen geändert.", 409);
+        if (g.status === "laeuft") await spielPush(gegner, { titel: `🎲 ${ich.vorname} hat aufgegeben`, kurz: "Du hast gewonnen! 🏆", text: `${ich.name} hat das Spiel aufgegeben – du hast gewonnen.` }, g.id, `club-spiel:${g.id}:auf`);
+        return json({ ok: true, spiel: spielSicht(neu, ich.person_id, await personen([g.von, g.an])) });
+      }
+      case "spiel_revanche": {
+        const { data: g } = await db.from("kc_club_spiele").select("*").eq("id", String(p.id || "")).maybeSingle();
+        if (!g || (g.von !== ich.person_id && g.an !== ich.person_id)) throw new Fehler("Spiel nicht gefunden.", 404);
+        if (g.status !== "beendet") throw new Fehler("Revanche gibt es erst, wenn das Spiel vorbei ist.", 409);
+        const gegner = g.von === ich.person_id ? g.an : g.von;
+        if (!(await aktiveMitglieder()).some((m) => m.person_id === gegner)) throw new Fehler("Mitglied nicht gefunden.", 404);
+        const { data: offen } = await db.from("kc_club_spiele").select("id").or(`and(von.eq.${ich.person_id},an.eq.${gegner}),and(von.eq.${gegner},an.eq.${ich.person_id})`).in("status", ["angefragt", "laeuft"]).limit(1);
+        if (offen?.length) return json({ ok: true, schon: offen[0].id });
+        // Revanche: beide haben schon gespielt → läuft sofort; wer vorher zuerst gezogen hat, ist jetzt zweiter
+        const n = Number(p.groesse) === 4 ? 4 : Number(p.groesse) === 3 ? 3 : g.groesse;
+        const { data: neu, error } = await db.from("kc_club_spiele").insert({ spiel: "ttt", groesse: n, von: ich.person_id, an: gegner, spieler_x: g.spieler_o, spieler_o: g.spieler_x,
+          status: "laeuft", brett: ".".repeat(n * n), dran: g.spieler_o }).select("*").single();
+        if (error || !neu) throw new Fehler("Die Revanche konnte nicht gestartet werden.", 500);
+        await spielPush(gegner, { titel: `🎲 Revanche von ${ich.vorname}!`, kurz: neu.dran === gegner ? "Du fängst an." : `${ich.vorname} fängt an.`, text: `${ich.name} will eine Revanche (Tic-Tac-Toe ${n}×${n}).` }, neu.id, `club-spiel:${neu.id}:revanche`, false);
+        return json({ ok: true, spiel: spielSicht(neu, ich.person_id, await personen([ich.person_id, gegner])) });
+      }
+
       case "einstellung_setzen": {
         const schluessel = String(p.schluessel || "");
         const pruefen = EINSTELLUNGEN[schluessel];

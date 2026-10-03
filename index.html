@@ -182,6 +182,28 @@
   .gruss { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
   .gruss #begruessung { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
   #inkoKnopf { flex: none; width: 36px; height: 36px; border-radius: 50%; border: none; padding: 0; font-size: 1rem; line-height: 1; background: rgba(255,255,255,.18); color: inherit; cursor: pointer; } #inkoKnopf.an { opacity: 1; background: #2c3e50; box-shadow: 0 0 0 2px #f1c40f; }
+  /* KC-CLUB-SPIELE (2.7.0): Köcheclub Edition */
+  .sp-edition { display: flex; flex-direction: column; align-items: center; margin: 0 0 10px; padding: 10px 12px; border-radius: 18px; color: #fff;
+    background: var(--heroverlauf, linear-gradient(135deg, var(--hero1) 0%, var(--rot) 45%, var(--rot2) 75%, var(--hero4) 100%)); box-shadow: 0 6px 16px var(--heroschatten); }
+  .sp-edition b { font-size: 1.35rem; letter-spacing: .03em; } .sp-edition span { font-size: .9rem; font-weight: 700; opacity: .95; }
+  .sp-wahl { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 0 0 8px; } .sp-wahl > span { min-width: 4.5em; font-weight: 800; font-size: .9rem; }
+  .sp-wahl button { flex: 1 1 0; min-width: 0; padding: 4px 2px; min-height: 44px; border: 2px solid var(--linie); border-radius: 12px; background: var(--karte); color: var(--text); font: inherit; font-weight: 700; cursor: pointer; }
+  .sp-wahl button.an { border-color: var(--rot); background: var(--rot); color: #fff; }
+  .sp-stand { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; margin: 4px 0 8px; border-radius: 12px; background: var(--karte2); font-weight: 700; }
+  .sp-stand b { font-size: 1.3rem; }
+  .sp-brett { display: grid; gap: 8px; width: min(100%, 360px); margin: 10px auto; aspect-ratio: 1; }
+  .sp-brett.sp-3 { grid-template-columns: repeat(3, 1fr); } .sp-brett.sp-4 { grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .sp-feld { border: none; border-radius: 16px; background: var(--karte2); box-shadow: inset 0 0 0 2px var(--linie); font-size: clamp(2rem, 11vw, 3.4rem); line-height: 1; cursor: pointer; transition: transform .12s, background .2s; }
+  .sp-4 .sp-feld { font-size: clamp(1.6rem, 8vw, 2.6rem); border-radius: 12px; }
+  .sp-feld.frei:not(:disabled):active { transform: scale(.94); } .sp-feld:disabled { cursor: default; color: inherit; opacity: 1; }
+  .sp-feld:not(.frei) { animation: spRein .25s ease-out; } @keyframes spRein { from { transform: scale(.4); opacity: .2; } to { transform: scale(1); opacity: 1; } }
+  .sp-feld.sp-sieg { background: #f9e79f; box-shadow: inset 0 0 0 3px #d4ac0d; animation: spSieg .9s ease-in-out 2; } @keyframes spSieg { 50% { transform: scale(1.08); } }
+  .sp-status { text-align: center; font-weight: 800; padding: 8px; border-radius: 12px; background: var(--karte2); } .sp-status.sp-ichdran { background: var(--gruenbg); color: var(--textGruen); }
+  .sp-banner { text-align: center; font-size: 1.25rem; font-weight: 900; padding: 12px; border-radius: 14px; }
+  .sp-banner.sieg { background: #fdebd0; color: #7a4a00; box-shadow: inset 0 0 0 2px #f1c40f; } .sp-banner.niederlage { background: var(--karte2); } .sp-banner.remis { background: var(--gruenbg); color: var(--textGruen); }
+  .sp-dran { font-weight: 800; color: var(--textGruen); white-space: nowrap; }
+  .sp-wer { width: 100%; border: 2px solid var(--linie); border-radius: 14px; background: var(--karte); color: var(--text); font: inherit; margin: 4px 0; cursor: pointer; }
+  @media (prefers-reduced-motion: reduce) { .sp-feld, .sp-feld.sp-sieg { animation: none; } }
   /* KC-CLUB-NUTZUNG-PERSONEN (2.6.0) */
   .nz-wer { justify-self: start; padding: 1px 6px; border-radius: 9px; background: var(--gruenbg); color: var(--textGruen); font-size: .8rem; font-weight: 700; white-space: nowrap; }
   .nz-wer.nur1 { background: #fdebd0; color: #7a4a00; }
@@ -1758,6 +1780,14 @@
     <div id="hlInhalt"><div class="karte hinweis">Wird geladen …</div></div>
   </section>
 
+  <!-- KC-CLUB-SPIELE (2.7.0) -->
+  <section id="v-spiele" class="versteckt">
+    <div class="kopf2"><button class="zurueck" onclick="zurueck('start')" aria-label="Zurück">‹</button><h2>🎲 Spiele</h2></div>
+    <div class="sp-edition"><b>Tic-Tac-Toe</b><span>Köcheclub Edition · 🍅 gegen 🥦</span></div>
+    <div class="umschalter" id="spTabs"><button data-t="pc" onclick="spTab('pc')">🤖 Gegen den Computer</button><button data-t="mg" onclick="spTab('mg')">👥 Gegen Mitglieder</button></div>
+    <div id="spInhalt"><div class="karte hinweis">Wird geladen …</div></div>
+  </section>
+
   <!-- AKTIONEN / AUSFLÜGE (KC-CLUB-AKTIONEN) -->
   <section id="v-aktionen" class="versteckt">
     <div class="kopf2"><button class="zurueck" onclick="zurueck('start')" aria-label="Zurück">‹</button><h2>🧳 Aktionen</h2></div>
@@ -2055,6 +2085,8 @@
       <div class="schalter"><div><b>🟢 Anderen zeigen, wann ich online bin</b><div class="hinweis">Dann sehen andere einen grünen Punkt bei dir und können „anklopfen“. Ausgeschaltet siehst du auch selbst nicht, wer online ist.</div></div><input type="checkbox" id="setOnline" onchange="onlineZeigen(this.checked)"></div>
       <!-- KC-CLUB-INKOGNITO (2.3.0): Hauptschalter nur für den Admin -->
       <div class="schalter" id="setInkognitoZeile"><div><b>🕶️ Inkognito (nur Admin)</b><div class="hinweis">Niemand sieht, dass du online oder heute da warst – kein grüner Punkt, keine Ansage, kein „zuletzt da“. Du selbst siehst die anderen weiter.</div></div><input type="checkbox" id="setInkognito" onchange="inkognitoSetzen(this.checked)"></div>
+      <!-- KC-CLUB-SPIELE (2.7.0) -->
+      <div class="schalter"><div><b>🎲 Andere dürfen mich zu Spielen herausfordern</b><div class="hinweis">Zurzeit Tic-Tac-Toe. Aus: Du erscheinst nicht in der Liste und bekommst keine Herausforderungen. Gegen den Computer spielen geht immer.</div></div><input type="checkbox" id="setSpiele" onchange="spBereitSetzen(this.checked)"></div>
       <!-- KC-CLUB-ANKLOPFEN-ERLAUBEN (1.8.0) -->
       <div class="schalter"><div><b>👋 Anklopfen erlauben</b><div class="hinweis">Andere dürfen bei dir anklopfen, wenn du online bist. Aus: Sie sehen 🔕 und schreiben dir stattdessen eine Nachricht.</div></div><input type="checkbox" id="setAnklopfen" checked onchange="anklopfenSetzen({ erlaubt: this.checked })"></div>
       <div class="zwei"><label class="feld">🔔 Anklopfton<select id="setKlopfTon" onchange="anklopfenSetzen({ ton: this.value })"></select></label><button class="knopf klein" style="align-self:end" onclick="klopfTonSpielen($('setKlopfTon').value)">▶ Testton</button></div>
@@ -2428,7 +2460,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.6.2"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.7.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2937,7 +2969,7 @@ function begruessungFertig(weiter) {
 // Beim ersten Start (auch für Mitglieder, die schon drin waren) genau eine Frage; die Wahl gilt geräteübergreifend
 // (Server-Einstellung „ansicht“), umschaltbar unten auf der Startseite und in den Einstellungen. Einfach = 5 große Kacheln,
 // oben nur „Nächstes Treffen“, Einstellungen mit drei Dingen. Es wird nichts gelöscht – die erweiterte Ansicht zeigt alles.
-const EINFACH_KACHELN = ["termine", "kommunikation", "pinnwand", "meindienst", "mitglieder", "dokumente", "sos"];
+const EINFACH_KACHELN = ["termine", "kommunikation", "pinnwand", "meindienst", "mitglieder", "dokumente", "spiele", "sos"]; // 2.7.0: + Spiele
 // Dienstwünsche kommen in die einfache Ansicht erst, wenn DP2 die Wünsche abholt (Codex-Umbau) – dann nur in der Wunschphase
 const DIENSTWUNSCH_EINFACH = false;
 let ANSICHT = (() => { try { return localStorage.getItem("kc_club_ansicht") === "erweitert" ? "erweitert" : "einfach"; } catch { return "einfach"; } })();
@@ -3128,6 +3160,7 @@ const EINWEISUNG = [
   { id: "vorschlaege", sym: "🗳️", t: "Vorschläge", x: "Du hast eine Idee für den Club – ein Ausflug, ein Thema, ein Kochabend? Mit <b>„＋ Neu“</b> schlägst du sie vor, die anderen können abstimmen." },
   { id: "dienste", sym: "🗓️", t: "Dienstpläne", x: "Die Dienstpläne Woche für Woche. Mit <b>‹ Woche</b> / <b>Woche ›</b> blätterst du, <b>„Heute“</b> springt zurück." },
   { id: "aktionen", sym: "🧳", t: "Aktionen", x: "Ausflüge und besondere Aktionen des Clubs – antippen zeigt alle Einzelheiten." },
+  { id: "spiele", sym: "🎲", t: "Spiele – Köcheclub Edition", x: "Tic-Tac-Toe mit 🍅 gegen 🥦: wer zuerst drei (bei 4 × 4: vier) in einer Reihe hat, gewinnt. Oben wählst du <b>🤖 Gegen den Computer</b> – mit Feldgröße und Stärke – oder <b>👥 Gegen Mitglieder</b>: jemanden herausfordern, abwechselnd ziehen, du bekommst Bescheid, wenn du dran bist." },
   { id: "buero", sym: "🗂️", t: "Büro der Clubleitung", x: "Nur für die Clubleitung: Regal mit Ordnern, Schreibtisch für die laufende Arbeit, Freud & Leid (Glückwünsche, Genesungswünsche) und Briefe. Normale Mitglieder sehen das Büro nicht.", nur: () => !!ICH?.buero },
 ];
 const einwStand = () => ({ an: true, gesehen: {}, ...(INIT?.einstellungen?.einweisung || {}) });
@@ -4646,6 +4679,218 @@ async function spracheAbspielen(knopf, id) {
   } catch (e) { knopf.disabled = false; knopf.textContent = "▶️ Sprachnachricht anhören"; meldeFehler(e); }
 }
 
+// ---------- KC-CLUB-SPIELE (2.7.0, Wunsch Hansi: „Spiele – Köcheclub Edition“) ----------
+// Tic-Tac-Toe 3×3 (3 in einer Reihe) oder 4×4 (4 in einer Reihe). 🍅 Tomate gegen 🥦 Brokkoli.
+// Gegen den Computer: läuft nur auf dem Gerät (Stärke leicht/mittel/schwer, Spielstand bleibt auf dem Gerät, „Zurücksetzen“).
+// Gegen Mitglieder: Herausforderung → Annehmen → abwechselnd ziehen; der Server prüft jeden Zug (siehe Server KC-CLUB-SPIELE).
+// Wer herausgefordert werden möchte, schaltet das unter ⚙️ → 🎲 Spiele ein (Standard aus).
+const SP_ZEICHEN = { x: "🍅", o: "🥦" }, SP_NAME = { x: "Tomate", o: "Brokkoli" };
+const SP_KEY = "kc_club_spiel_pc", SP_TAKT_MS = 3000;
+let SP = { tab: "pc", liste: null, offen: null, takt: null, laedt: false };
+let SPC = (() => { let w = null; try { w = JSON.parse(localStorage.getItem(SP_KEY) || "null"); } catch {}
+  return { groesse: 3, staerke: "mittel", beginn: "ich", stand: { ich: 0, pc: 0, remis: 0 }, ...(w || {}), brett: null, ende: null, denkt: false }; })();
+const spcMerken = () => { try { localStorage.setItem(SP_KEY, JSON.stringify({ groesse: SPC.groesse, staerke: SPC.staerke, beginn: SPC.beginn, stand: SPC.stand })); } catch {} };
+function spLinien(n) {
+  const l = [];
+  for (let i = 0; i < n; i++) { l.push([...Array(n)].map((_, j) => i * n + j)); l.push([...Array(n)].map((_, j) => j * n + i)); }
+  l.push([...Array(n)].map((_, j) => j * n + j)); l.push([...Array(n)].map((_, j) => j * n + (n - 1 - j)));
+  return l;
+}
+function spAuswerten(b, n) {
+  for (const l of spLinien(n)) { const c = b[l[0]]; if (c !== "." && l.every((i) => b[i] === c)) return { sieger: c, linie: l }; }
+  return { sieger: null, linie: null, voll: !b.includes(".") };
+}
+// Computer: Bewertung über offene Reihen; Suche mit Alpha-Beta (3×3 vollständig = unschlagbar, 4×4 begrenzte Tiefe)
+function spHeuristik(b, n) {
+  let w = 0;
+  for (const l of spLinien(n)) {
+    let o = 0, x = 0; for (const i of l) { if (b[i] === "o") o++; else if (b[i] === "x") x++; }
+    if (o && !x) w += 10 ** o; else if (x && !o) w -= 10 ** x;
+  }
+  return w;
+}
+function spSuche(b, n, tiefe, amZug, alpha, beta) {
+  const a = spAuswerten(b, n);
+  if (a.sieger === "o") return 100000 + tiefe; if (a.sieger === "x") return -100000 - tiefe; if (a.voll) return 0;
+  if (tiefe === 0) return spHeuristik(b, n);
+  const frei = []; for (let i = 0; i < b.length; i++) if (b[i] === ".") frei.push(i);
+  if (amZug === "o") { let best = -Infinity; for (const i of frei) { best = Math.max(best, spSuche(b.slice(0, i) + "o" + b.slice(i + 1), n, tiefe - 1, "x", alpha, beta)); alpha = Math.max(alpha, best); if (alpha >= beta) break; } return best; }
+  let best = Infinity; for (const i of frei) { best = Math.min(best, spSuche(b.slice(0, i) + "x" + b.slice(i + 1), n, tiefe - 1, "o", alpha, beta)); beta = Math.min(beta, best); if (alpha >= beta) break; } return best;
+}
+function spComputerZug(b, n, staerke) {
+  const frei = []; for (let i = 0; i < b.length; i++) if (b[i] === ".") frei.push(i);
+  const zufall = () => frei[Math.floor(Math.random() * frei.length)];
+  const gewinntMit = (c) => frei.find((i) => spAuswerten(b.slice(0, i) + c + b.slice(i + 1), n).sieger === c);
+  const sieg = gewinntMit("o"), block = gewinntMit("x");
+  if (staerke === "leicht") return Math.random() < 0.4 && sieg !== undefined ? sieg : Math.random() < 0.25 && block !== undefined ? block : zufall();
+  if (staerke === "mittel" && Math.random() < 0.45) return Math.random() < 0.5 ? (sieg ?? block ?? zufall()) : zufall();
+  if (sieg !== undefined) return sieg; if (block !== undefined) return block;
+  const tiefe = n === 3 ? 9 : staerke === "schwer" ? 4 : 2;
+  let best = -Infinity, wahl = []; // gleich gute Züge zufällig wählen – sonst spielt er immer gleich
+  for (const i of frei) { const w = spSuche(b.slice(0, i) + "o" + b.slice(i + 1), n, tiefe - 1, "x", -Infinity, Infinity); if (w > best) { best = w; wahl = [i]; } else if (w === best) wahl.push(i); }
+  return wahl[Math.floor(Math.random() * wahl.length)] ?? zufall();
+}
+// ----- Ansicht -----
+function spStart(tab) { if (tab) SP.tab = tab; zeige("spiele"); }
+function spTab(t) { SP.tab = t; SP.offen = null; spZeigen(); if (t === "mg") spLaden(); }
+function spZeigen() {
+  document.querySelectorAll("#spTabs button").forEach((b) => b.classList.toggle("an", b.dataset.t === SP.tab));
+  clearInterval(SP.takt); SP.takt = null;
+  if (SP.tab === "pc") return spPcZeigen();
+  if (SP.offen) return spSpielZeigen();
+  spListeZeigen();
+}
+function spBrettHtml(b, n, { linie = null, klick = null, aus = false } = {}) {
+  return `<div class="sp-brett sp-${n}" role="grid" aria-label="Spielfeld ${n} mal ${n}">${[...b].map((c, i) =>
+    `<button class="sp-feld${linie?.includes(i) ? " sp-sieg" : ""}${c === "." ? " frei" : ""}" ${c !== "." || aus ? "disabled" : ""} onclick="${klick}(${i})" aria-label="Feld ${Math.floor(i / n) + 1}-${i % n + 1}${c !== "." ? ": " + SP_NAME[c] : " frei"}">${c === "." ? "" : SP_ZEICHEN[c]}</button>`).join("")}</div>`;
+}
+const spWahl = (name, wert, optionen, fn) => `<div class="sp-wahl" role="group" aria-label="${esc(name)}"><span>${esc(name)}</span>${optionen.map(([w, t]) => `<button class="${w === wert ? "an" : ""}" aria-pressed="${w === wert}" onclick="${fn}('${w}')">${t}</button>`).join("")}</div>`;
+function spPcZeigen() {
+  if (!SPC.brett || SPC.brett.length !== SPC.groesse ** 2) spPcNeu(false);
+  const n = SPC.groesse, s = SPC.stand, e = SPC.ende;
+  const status = e ? (e.sieger === "x" ? `<div class="sp-banner sieg">🏆 Du hast gewonnen!</div>` : e.sieger === "o" ? `<div class="sp-banner niederlage">🤖 Der Computer hat gewonnen</div>` : `<div class="sp-banner remis">🤝 Unentschieden</div>`)
+    : `<div class="sp-status">${SPC.denkt ? "🤖 Der Computer überlegt …" : `Du bist dran – du spielst ${SP_ZEICHEN.x} ${SP_NAME.x}`}</div>`;
+  $("spInhalt").innerHTML = `<div class="karte sp-karte">
+      ${spWahl("Feld", String(n), [["3", "3 × 3"], ["4", "4 × 4"]], "spPcGroesse")}
+      ${spWahl("Stärke", SPC.staerke, [["leicht", "😊 Leicht"], ["mittel", "🙂 Mittel"], ["schwer", "😎 Schwer"]], "spPcStaerke")}
+      ${spWahl("Beginn", SPC.beginn, [["ich", "Ich"], ["pc", "Computer"], ["wechsel", "Wechselnd"]], "spPcBeginn")}
+      <div class="sp-stand"><span>${SP_ZEICHEN.x} Du <b>${s.ich}</b></span><span>🤝 <b>${s.remis}</b></span><span><b>${s.pc}</b> Computer ${SP_ZEICHEN.o}</span></div>
+      ${status}
+      ${spBrettHtml(SPC.brett, n, { linie: e?.linie, klick: "spPcZug", aus: !!e || SPC.denkt })}
+      <p class="hinweis" style="text-align:center;margin:6px 0">${n === 3 ? "Drei" : "Vier"} in einer Reihe gewinnen – waagerecht, senkrecht oder schräg.</p>
+      <div class="knoepfe"><button class="knopf haupt" onclick="spPcNeu()">↺ Neue Runde</button><button class="knopf" onclick="spPcStandWeg()">🗑️ Spielstand zurücksetzen</button></div>
+    </div>`;
+}
+function spPcNeu(zeigen = true) {
+  const n = SPC.groesse; SPC.brett = ".".repeat(n * n); SPC.ende = null; SPC.denkt = false;
+  SPC.runde = (SPC.runde || 0) + 1;
+  const pcZuerst = SPC.beginn === "pc" || (SPC.beginn === "wechsel" && SPC.runde % 2 === 0);
+  if (pcZuerst) { SPC.denkt = true; setTimeout(spPcComputer, 500); }
+  if (zeigen) spPcZeigen();
+}
+const spPcGroesse = (g) => { SPC.groesse = Number(g) === 4 ? 4 : 3; spcMerken(); spPcNeu(); };
+const spPcStaerke = (w) => { SPC.staerke = ["leicht", "mittel", "schwer"].includes(w) ? w : "mittel"; spcMerken(); spPcNeu(); };
+const spPcBeginn = (w) => { SPC.beginn = ["ich", "pc", "wechsel"].includes(w) ? w : "ich"; spcMerken(); SPC.runde = 0; spPcNeu(); };
+async function spPcStandWeg() {
+  if (!(await frage("Spielstand gegen den Computer auf 0 : 0 zurücksetzen?", { ja: "🗑️ Zurücksetzen", nein: "Abbrechen" }))) return;
+  SPC.stand = { ich: 0, pc: 0, remis: 0 }; spcMerken(); spPcNeu();
+}
+function spPcEnde() {
+  const a = spAuswerten(SPC.brett, SPC.groesse);
+  if (!a.sieger && !a.voll) return false;
+  SPC.ende = a; SPC.denkt = false;
+  if (a.sieger === "x") SPC.stand.ich++; else if (a.sieger === "o") SPC.stand.pc++; else SPC.stand.remis++;
+  spcMerken(); try { navigator.vibrate?.(a.sieger === "x" ? [60, 40, 60] : 40); } catch {}
+  return true;
+}
+function spPcZug(i) {
+  if (SPC.ende || SPC.denkt || SPC.brett[i] !== ".") return;
+  SPC.brett = SPC.brett.slice(0, i) + "x" + SPC.brett.slice(i + 1);
+  if (!spPcEnde()) { SPC.denkt = true; setTimeout(spPcComputer, 450); }
+  spPcZeigen();
+}
+function spPcComputer() {
+  if (SPC.ende || aktuelleAnsicht !== "spiele") { SPC.denkt = false; return; }
+  const i = spComputerZug(SPC.brett, SPC.groesse, SPC.staerke);
+  if (i !== undefined) SPC.brett = SPC.brett.slice(0, i) + "o" + SPC.brett.slice(i + 1);
+  SPC.denkt = false; spPcEnde();
+  if (SP.tab === "pc") spPcZeigen();
+}
+// ----- gegen Mitglieder -----
+async function spLaden(still) {
+  if (SP.laedt) return; SP.laedt = true;
+  try { SP.liste = await api("spiele_liste", {}, { warten: !still }); } catch (e) { if (!still) meldeFehler(e); } finally { SP.laedt = false; }
+  if (aktuelleAnsicht === "spiele" && SP.tab === "mg" && !SP.offen) spListeZeigen();
+}
+function spErgebnisText(g) { return g.ergebnis === "gewonnen" ? (g.aufgegeben ? "🏆 gewonnen (aufgegeben)" : "🏆 gewonnen") : g.ergebnis === "verloren" ? (g.aufgegeben ? "aufgegeben" : "verloren") : g.ergebnis === "remis" ? "🤝 unentschieden" : ""; }
+function spListeZeigen() {
+  const L = SP.liste;
+  if (!L) { $("spInhalt").innerHTML = '<div class="karte hinweis">Wird geladen …</div>'; return; }
+  const an = L.spiele.filter((g) => g.status === "angefragt" && !g.vonMir), meine = L.spiele.filter((g) => g.status === "angefragt" && g.vonMir);
+  const laufend = L.spiele.filter((g) => g.status === "laeuft").sort((a, b) => b.ichDran - a.ichDran), fertig = L.spiele.filter((g) => g.status === "beendet").slice(0, 8);
+  const zeile = (g, rechts) => `<div class="zeile sp-zeile" ${g.status === "laeuft" || g.status === "beendet" ? `style="cursor:pointer" onclick="spOeffnen('${g.id}')"` : ""}>${kreis(MITGLIEDER?.find((m) => m.person_id === g.gegner.person_id) || {}, g.gegner.name, 36)}
+    <div style="flex:1;min-width:0"><b>${esc(g.gegner.vorname)}</b><div class="hinweis" style="margin:0;font-size:.85rem">Tic-Tac-Toe ${g.groesse}×${g.groesse}</div></div>${rechts}</div>`;
+  $("spInhalt").innerHTML = `
+    ${L.ichBereit ? "" : `<div class="karte" style="border:2px solid var(--gruen)"><b>🎲 Möchtest du auch herausgefordert werden?</b><p class="hinweis" style="margin:4px 0 8px">Dann sehen dich die anderen in der Liste und können dich zu einer Partie einladen.</p><button class="knopf haupt" onclick="spBereitSetzen(true)">✅ Ja, ich spiele mit</button></div>`}
+    <button class="knopf haupt" style="width:100%" onclick="spHerausfordernBlatt()">🎲 Jemanden herausfordern</button>
+    ${an.length ? `<div class="karte"><h3>📩 Herausforderungen an dich</h3>${an.map((g) => zeile(g, "") + `<div class="knoepfe" style="margin:0 0 8px"><button class="knopf haupt" onclick="spAntwort('${g.id}', true)">✅ Annehmen</button><button class="knopf" onclick="spAntwort('${g.id}', false)">Ablehnen</button></div>`).join("")}</div>` : ""}
+    ${laufend.length ? `<div class="karte"><h3>▶ Laufende Spiele</h3>${laufend.map((g) => zeile(g, g.ichDran ? '<span class="sp-dran">Du bist dran ›</span>' : '<span class="hinweis">wartet …</span>')).join("")}</div>` : ""}
+    ${meine.length ? `<div class="karte"><h3>⏳ Du hast herausgefordert</h3>${meine.map((g) => zeile(g, `<button class="knopf klein" onclick="spAufgeben('${g.id}', true)">Zurückziehen</button>`)).join("")}</div>` : ""}
+    ${fertig.length ? `<div class="karte"><h3>✅ Zuletzt gespielt</h3>${fertig.map((g) => zeile(g, `<span class="hinweis">${spErgebnisText(g)}</span>`)).join("")}</div>` : ""}
+    ${!an.length && !laufend.length && !meine.length && !fertig.length ? `<div class="karte hinweis">Noch keine Partie gegen Mitglieder. ${L.bereit.length ? `${L.bereit.length} Mitglied${L.bereit.length === 1 ? " spielt" : "er spielen"} gerne mit – fordere jemanden heraus!` : "Noch niemand hat „Herausfordern erlauben“ eingeschaltet."}</div>` : ""}
+    ${L.rangliste.length ? `<div class="karte"><h3>🏆 Club-Rangliste</h3><p class="hinweis" style="margin:0 0 6px">Sieg = 2 Punkte, Unentschieden = 1 Punkt.</p>${L.rangliste.map((r, i) => `<div class="zeile"><b style="width:1.8em">${["🥇", "🥈", "🥉"][i] || i + 1 + "."}</b><span style="flex:1">${esc(r.vorname)}</span><span class="hinweis">${r.siege} S · ${r.remis} U · ${r.niederlagen} N</span><b style="margin-left:8px">${r.punkte}</b></div>`).join("")}</div>` : ""}`;
+}
+async function spBereitSetzen(an) {
+  try { await einstSpeichern("spiele", { herausforderung: !!an, spiele: ["ttt"] }); INIT.einstellungen = { ...(INIT.einstellungen || {}), spiele: { herausforderung: !!an, spiele: ["ttt"] } };
+    melde(an ? "🎲 Andere dürfen dich jetzt herausfordern" : "🎲 Niemand kann dich mehr herausfordern"); spEinstZeigen(); if (SP.liste) SP.liste.ichBereit = !!an; if (aktuelleAnsicht === "spiele") spZeigen(); }
+  catch (e) { spEinstZeigen(); meldeFehler(e); }
+}
+function spEinstZeigen() { if ($("setSpiele")) $("setSpiele").checked = INIT?.einstellungen?.spiele?.herausforderung === true; }
+async function spHerausfordernBlatt(pid) {
+  if (!SP.liste) await spLaden(true);
+  const b = SP.liste?.bereit || [];
+  if (!b.length) return melde("Noch niemand hat „Herausfordern erlauben“ eingeschaltet – frag doch mal im Club 🙂");
+  let gr = 3;
+  const f = blattAuf("spHerausBlatt", `<h3 style="margin:0">🎲 Herausfordern – Tic-Tac-Toe</h3>
+    ${spWahl("Feld", "3", [["3", "3 × 3"], ["4", "4 × 4"]], "spHerausGroesse")}
+    <p class="hinweis" style="margin:0">Wen möchtest du herausfordern? Du fängst an (${SP_ZEICHEN.x}).</p>
+    ${b.map((m) => `<button class="zeile sp-wer${m.person_id === pid ? " an" : ""}" onclick="spHerausfordern('${m.person_id}')">${kreis(MITGLIEDER?.find((x) => x.person_id === m.person_id) || {}, m.name, 36)}<b style="flex:1;text-align:left">${esc(m.name)}</b><span>🎲 ›</span></button>`).join("")}
+    <button class="knopf" onclick="fensterZu(document.getElementById('spHerausBlatt'))">Abbrechen</button>`);
+  window.spHerausGroesse = (g) => { gr = Number(g) === 4 ? 4 : 3; f.querySelectorAll(".sp-wahl button").forEach((x) => { const an = x.textContent.startsWith(String(gr)); x.classList.toggle("an", an); x.setAttribute("aria-pressed", String(an)); }); };
+  window.spHerausfordern = async (an) => {
+    try { const r = await api("spiel_herausfordern", { an, groesse: gr }, { warten: true }); f.remove(); melde(`🎲 Herausforderung an ${r.spiel.gegner.vorname} geschickt`); SP.tab = "mg"; SP.offen = null; await spLaden(true); if (aktuelleAnsicht !== "spiele") zeige("spiele"); else spZeigen(); }
+    catch (e) { meldeFehler(e); }
+  };
+}
+async function spAntwort(id, annehmen) {
+  try { const r = await api("spiel_antwort", { id, annehmen }, { warten: true }); if (annehmen) { SP.offen = r.spiel; spZeigen(); } else { melde("Abgelehnt"); spLaden(true); } }
+  catch (e) { meldeFehler(e); spLaden(true); }
+}
+async function spOeffnen(id) {
+  SP.tab = "mg";
+  try { SP.offen = (await api("spiel_holen", { id }, { warten: true })).spiel; } catch (e) { SP.offen = null; meldeFehler(e); }
+  if (aktuelleAnsicht !== "spiele") zeige("spiele"); else spZeigen();
+}
+function spSpielZeigen() {
+  const g = SP.offen, n = g.groesse, ich = g.ichBin, er = ich === "x" ? "o" : "x";
+  const banner = g.status === "beendet" ? (g.ergebnis === "gewonnen" ? `<div class="sp-banner sieg">🏆 Du hast gewonnen!${g.aufgegeben ? ` ${esc(g.gegner.vorname)} hat aufgegeben.` : ""}</div>` : g.ergebnis === "verloren" ? `<div class="sp-banner niederlage">${g.aufgegeben ? "Du hast aufgegeben." : `${esc(g.gegner.vorname)} hat gewonnen.`}</div>` : `<div class="sp-banner remis">🤝 Unentschieden</div>`)
+    : g.status === "angefragt" ? `<div class="sp-status">⏳ Warte, bis ${esc(g.gegner.vorname)} annimmt …</div>`
+    : g.status !== "laeuft" ? `<div class="sp-status">Diese Partie findet nicht statt.</div>`
+    : `<div class="sp-status${g.ichDran ? " sp-ichdran" : ""}">${g.ichDran ? `Du bist dran – du spielst ${SP_ZEICHEN[ich]} ${SP_NAME[ich]}` : `${esc(g.gegner.vorname)} ist dran (${SP_ZEICHEN[er]}) …`}</div>`;
+  $("spInhalt").innerHTML = `<div class="karte sp-karte">
+      <div class="zeile" style="border:none;padding:0"><button class="knopf klein" onclick="SP.offen=null;spZeigen();spLaden(true)">‹ Übersicht</button><b style="flex:1;text-align:right">${SP_ZEICHEN[ich]} Du gegen ${esc(g.gegner.vorname)} ${SP_ZEICHEN[er]}</b></div>
+      ${banner}
+      ${spBrettHtml(g.brett, n, { linie: g.linie, klick: "spZug", aus: !g.ichDran })}
+      <p class="hinweis" style="text-align:center;margin:6px 0">${n === 3 ? "Drei" : "Vier"} in einer Reihe gewinnen. Du musst nicht warten – ${esc(g.gegner.vorname)} bekommt Bescheid.</p>
+      <div class="knoepfe">${g.status === "beendet" ? `<button class="knopf haupt" onclick="spRevanche('${g.id}')">↺ Revanche</button>` : g.status === "laeuft" ? `<button class="knopf" onclick="spAufgeben('${g.id}')">🏳️ Aufgeben</button>` : ""}</div>
+    </div>`;
+  if (g.status === "laeuft" || g.status === "angefragt") SP.takt = setInterval(spNachsehen, SP_TAKT_MS);
+}
+async function spNachsehen() {
+  if (!SP.offen || aktuelleAnsicht !== "spiele" || document.hidden) return;
+  try { const r = await api("spiel_holen", { id: SP.offen.id }); if (r.spiel.zuege !== SP.offen.zuege || r.spiel.status !== SP.offen.status) { const warDran = SP.offen.ichDran; SP.offen = r.spiel; spZeigen(); if (!warDran && r.spiel.ichDran) try { navigator.vibrate?.(40); } catch {} } } catch {}
+}
+async function spZug(i) {
+  const g = SP.offen; if (!g?.ichDran || g.brett[i] !== ".") return;
+  g.brett = g.brett.slice(0, i) + g.ichBin + g.brett.slice(i + 1); g.ichDran = false; spSpielZeigen(); // sofort zeigen
+  try { SP.offen = (await api("spiel_zug", { id: g.id, feld: i, zuege: g.zuege })).spiel; }
+  catch (e) { meldeFehler(e); try { SP.offen = (await api("spiel_holen", { id: g.id })).spiel; } catch {} }
+  if (aktuelleAnsicht === "spiele") spZeigen();
+}
+async function spAufgeben(id, zurueckziehen) {
+  if (!(await frage(zurueckziehen ? "Herausforderung zurückziehen?" : "Wirklich aufgeben? Dann hat dein Gegenüber gewonnen.", { ja: zurueckziehen ? "Zurückziehen" : "🏳️ Aufgeben", nein: "Weiterspielen" }))) return;
+  try { const r = await api("spiel_aufgeben", { id }, { warten: true }); if (SP.offen?.id === id) SP.offen = r.spiel; spZeigen(); spLaden(true); } catch (e) { meldeFehler(e); }
+}
+async function spRevanche(id) {
+  try { const r = await api("spiel_revanche", { id }, { warten: true }); if (r.schon) return spOeffnen(r.schon); SP.offen = r.spiel; melde("↺ Revanche gestartet"); spZeigen(); } catch (e) { meldeFehler(e); }
+}
+// Mitglieder-Seite: „🎲 Herausfordern“ nur bei Mitgliedern, die mitspielen möchten
+async function spMitgliedKnopf(pid) {
+  if (!SP.liste) await spLaden(true);
+  const ziel = $("mdSpiel"); if (!ziel || !SP.liste?.bereit?.some((m) => m.person_id === pid)) return;
+  ziel.innerHTML = `<button class="knopf" onclick="spHerausfordernBlatt('${pid}')">🎲 Zu Tic-Tac-Toe herausfordern</button>`;
+}
+
 // ---------- KC-CLUB-ERSTATTUNG (0.38.0): Fahrtkosten, vorgestreckter Einkauf, sonstige Auslagen beantragen ----------
 // Positionen sammeln → Summe → Mail an Kassenwart (An) + Clubsprecher (CC); Antragsteller und Admin bekommen eine Blindkopie.
 let ERS = { pos: [], art: "fahrt", kmSatz: 0.38, saetze: [], gruende: [], arten: [], belege: [], auszahlung: "ueberweisung", geladen: false };
@@ -5648,6 +5893,8 @@ const KACHELN = {
     { id: "helfen", sym: "🤝", t: "Helfen & Leihen", u: "Wer kann helfen? · Ausleihen", aktion: "hlStart()" },
     // KC-CLUB-BUERO (1.25.0): nur für die Clubleitung (Clubsprecher, Kassenwart, Admin)
     { id: "buero", sym: "🗂️", t: "Büro", u: "Sitzung vorbereiten · Einladung · Eingang", aktion: "buStart()", nur: () => !!ICH?.buero },
+    // KC-CLUB-SPIELE (2.7.0, Wunsch Hansi): Spiele – Köcheclub Edition (Zahl = Partien, in denen ich dran bin / Herausforderungen an mich)
+    { id: "spiele", sym: "🎲", t: "Spiele", u: "Tic-Tac-Toe · Köcheclub Edition", aktion: "spStart()", zahl: () => INIT?.spieleDran || 0 },
   ],
   mein: [
     { id: "status", sym: "🟢", t: "Mein Status", u: "verfügbar, Urlaub …", aktion: "statusBlatt()" },
@@ -6719,7 +6966,8 @@ function zeige(v, ausHistorie) {
   if (v !== "mitglieder" && v !== "mitglied") MG_EINMAL = null; // KC-CLUB-ONLINE-SEITE: nur für diesen Besuch
   if (v !== "buero" && typeof BU !== "undefined") BU.nzSicht = null; // KC-CLUB-NUTZUNG-BEREICHE (1.89.0): beim nächsten Büro-Besuch wieder zählen
   if (vorher === "protokoll" && v !== "protokoll" && prTimer) prSpeichernJetzt(false).catch(() => {}); // ungespeicherte Eingaben sichern
-  ["start", "dokumente", "dokansicht", "termine", "vorschlaege", "aktionen", "aktion", "fotos", "feedback", "gruppe", "mitglied", "protokolle", "protokoll", "dienste", "nachrichten", "chat", "neu", "mitglieder", "einstellungen", "pinnwand", "erstattung", "ueberblick", "programme", "standort", "archiv", "sos", "sicherheit", "helfen", "buero"].forEach((x) => $("v-" + x).classList.toggle("versteckt", x !== v));
+  ["start", "dokumente", "dokansicht", "termine", "vorschlaege", "aktionen", "aktion", "fotos", "feedback", "gruppe", "mitglied", "protokolle", "protokoll", "dienste", "nachrichten", "chat", "neu", "mitglieder", "einstellungen", "pinnwand", "erstattung", "ueberblick", "programme", "standort", "archiv", "sos", "sicherheit", "helfen", "buero", "spiele"].forEach((x) => $("v-" + x).classList.toggle("versteckt", x !== v));
+  if (v !== "spiele") { clearInterval(SP.takt); SP.takt = null; } else spZeigen(); // KC-CLUB-SPIELE (2.7.0)
   einwZeigen(v); // KC-CLUB-EINWEISUNG (2.4.0)
   document.querySelectorAll("#fuss button").forEach((b) => b.classList.toggle("an", b.dataset.v === v || (v === "chat" && b.dataset.v === "nachrichten") || (v === "neu" && b.dataset.v === "nachrichten")));
   $("eingabe").classList.toggle("versteckt", v !== "chat");
@@ -6746,7 +6994,7 @@ function zeige(v, ausHistorie) {
   if (v === "dienste") dienstLaden();
   if (v === "nachrichten") unterhLaden();
   if (v === "mitglieder") { mgAnsichtWahlZeigen(); mitgliederLaden(); }
-  if (v === "einstellungen") { notProbeZeigen(); infoStartZeigen(); tippSchalterZeigen(); einwSchalterZeigen(); stimmeWahlZeigen(); ansageSchalterZeigen(); ansStandZeigen(); ruheZeigen(); if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); anklopfenZeigen(); zuletztSchalterZeigen(); inkognitoZeigen(); schnellWahlZeigen(); mgAnsichtWahlZeigen(); }
+  if (v === "einstellungen") { notProbeZeigen(); infoStartZeigen(); tippSchalterZeigen(); einwSchalterZeigen(); stimmeWahlZeigen(); ansageSchalterZeigen(); ansStandZeigen(); ruheZeigen(); if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); anklopfenZeigen(); zuletztSchalterZeigen(); inkognitoZeigen(); spEinstZeigen(); schnellWahlZeigen(); mgAnsichtWahlZeigen(); }
   if (v === "start") neuLaden();
   // KC-CLUB-ZURUECK: jede Ansicht bekommt einen Verlaufseintrag, damit „Zurück“ eine Ansicht zurückgeht statt die App zu schließen
   const hash = v === "start" || v === "chat" ? "" : v === "protokoll" ? "#protokoll=" + prId : v === "aktion" ? "#aktion=" + aktionId : v === "mitglied" ? "#mitglied=" + mitgliedId : v === "dokansicht" ? "#dokument=" + encodeURIComponent(DOKA.id) : "#" + v;
@@ -12630,7 +12878,7 @@ async function mitgliedOeffnen(pid, ausHistorie) {
   mitgliedId = pid; MD = null;
   $("mitgliedInhalt").innerHTML = '<div class="karte hinweis">Wird geladen …</div>';
   zeige("mitglied", ausHistorie);
-  try { MD = await api("mitglied_details", { person_id: pid }); mitgliedZeigen(); }
+  try { MD = await api("mitglied_details", { person_id: pid }); mitgliedZeigen(); if (!MD.selbst) spMitgliedKnopf(pid); /* KC-CLUB-SPIELE */ }
   catch (e) { $("mitgliedInhalt").innerHTML = `<div class="karte hinweis">${esc(e.message)}</div>`; }
 }
 function mitgliedZeigen() {
@@ -12656,7 +12904,7 @@ function mitgliedZeigen() {
     ${m.notfall ? `<div class="karte"><h3>🆘 Notfallkontakt</h3><div class="zeile"><div style="flex:1"><b>${esc(m.notfall.name || "–")}</b>${m.notfall.beziehung ? ` <span class="hinweis">(${esc(m.notfall.beziehung)})</span>` : ""}<div class="hinweis">${esc(m.notfall.telefon || "")}</div></div>${m.notfall.telefon ? `<a class="knopf klein" href="tel:${esc(nurZiffern(m.notfall.telefon))}">📞</a>` : ""}</div><p class="hinweis" style="font-size:.85rem;margin-bottom:0">🔒 Nur für ${m.selbst ? "dich und " : ""}Clubsprecher, Kassenwart und Admin sichtbar.</p></div>` : m.selbst ? '<p class="hinweis">🆘 Noch kein Notfallkontakt – eintragen unter ⚙️ Mehr → Privatsphäre.</p>' : ""}
     <div class="knoepfe">
       ${!m.selbst && ONL.ids.has(m.person_id) ? `<button class="knopf haupt" onclick="anklopfen('${m.person_id}')">👋 Anklopfen – ist gerade online</button><div class="knoepfe"><button class="knopf" onclick="anrufen('${m.person_id}')">📞 Anrufen (Test)</button><button class="knopf" onclick="anrufen('${m.person_id}', true)">🎥 Video (Test)</button></div>` : ""}
-      ${m.selbst ? "" : `<button class="knopf ${ONL.ids.has(m.person_id) ? "" : "haupt"}" onclick="direkt('${m.person_id}')">💬 Nachricht in der App</button>`}
+      ${m.selbst ? "" : `<button class="knopf ${ONL.ids.has(m.person_id) ? "" : "haupt"}" onclick="direkt('${m.person_id}')">💬 Nachricht in der App</button><div id="mdSpiel"></div>`}
       ${ICH?.admin ? `<div class="knoepfe"><button class="knopf" onclick="linkTeilen('${m.person_id}')">🔗 App-Link</button><button class="knopf" onclick="einrichtungskarte('${m.person_id}')">🖨️ Einrichtungskarte</button><button class="knopf" onclick="rolleBearbeiten('${m.person_id}')">🎖️ Amt & Rechte</button></div>` : ""}
       ${zeilen ? '<button class="knopf" onclick="kontaktSpeichern()">📇 Ins Telefonbuch</button>' : ""}
     </div>
@@ -13772,7 +14020,7 @@ function suAppListe() {
     ["🔔", "Push-Benachrichtigungen", "push benachrichtigung mitteilung handy", ein("pushStatus")], ["🔊", "Ton", "ton klingel laut", ein("setTon")],
     ["🌙", "Nicht stören (Ruhezeit)", "nicht stören ruhezeit nacht stumm", ein("ruheAn")], ["🔠", "Schriftgröße", "schrift gross groß lesen", ein(einfach() ? "setGrossE" : "setGross")],
     ["🎨", "Farbe & Design", "farbe design aussehen", ein(einfach() ? "designWahlE" : "designWahl")], ["🌗", "Tag/Nacht umschalten", "dunkel hell nacht tag", () => dunkelUmschalten()],
-    ["🎂", "Geburtstag anzeigen", "geburtstag", ein("setGeburtstag")], ["🎉", "Runde Geburtstage (Alter für die Clubleitung)", "runder geburtstag alter jubiläum", ein("setRundGeburtstag")], ["🟢", "Online sichtbar", "online sichtbar unsichtbar", ein("setOnline")], ["🗣️", "Stimme zum Vorlesen", "stimme vorlesen sprache ansage roboter klang", ein("setStimme")], ["🎓", "Einweisung beim ersten Öffnen", "einweisung erklärung hilfe anleitung neu", ein("setEinw")], ...(ICH?.admin ? [["🕶️", "Inkognito (nur Admin)", "inkognito unsichtbar versteckt online", ein("setInkognito")]] : []), ["🕒", "Zuletzt da anzeigen", "zuletzt da online gesehen", ein("setZuletzt")],
+    ["🎂", "Geburtstag anzeigen", "geburtstag", ein("setGeburtstag")], ["🎉", "Runde Geburtstage (Alter für die Clubleitung)", "runder geburtstag alter jubiläum", ein("setRundGeburtstag")], ["🟢", "Online sichtbar", "online sichtbar unsichtbar", ein("setOnline")], ["🗣️", "Stimme zum Vorlesen", "stimme vorlesen sprache ansage roboter klang", ein("setStimme")], ["🎲", "Spiele: herausfordern erlauben", "spiele spiel tic tac toe herausfordern", ein("setSpiele")], ["🎓", "Einweisung beim ersten Öffnen", "einweisung erklärung hilfe anleitung neu", ein("setEinw")], ...(ICH?.admin ? [["🕶️", "Inkognito (nur Admin)", "inkognito unsichtbar versteckt online", ein("setInkognito")]] : []), ["🕒", "Zuletzt da anzeigen", "zuletzt da online gesehen", ein("setZuletzt")],
     ["🆘", "Notfallkontakt", "notfall kontakt", ein("nfName")], ["📆", "Kalender-Abo (Handy-Kalender)", "kalender abo handy ical", ein("kalAboKnopf")],
     ["📱", "Meine Geräte", "geräte handy tablet abmelden", () => geraeteBlatt()], ["📡", "Verbindung prüfen", "verbindung internet led server", () => verbindungBlatt()],
     ["🔄", "Update prüfen", "update version neu", () => updateKachel()], ["🟢", "Mein Status", "status urlaub verfügbar krank", () => statusBlatt()],
@@ -13994,7 +14242,7 @@ const NZ_NAMEN = { start: "🏠 Startseite", termine: "📅 Termine", nachrichte
   helfen: "🤝 Helfen & Leihen", helfen_helfen: "🙋 Wer kann helfen?", helfen_leihen: "📦 Ausleihen", helfen_boerse: "🛍️ Börse",
   buero: "🗂️ Büro", buero_eingang: "📥 Eingang", buero_sitzung: "📝 Sitzung", buero_nachher: "✅ Nach der Sitzung", buero_kontakt: "📨 Einladen / Erinnern", buero_brief: "✉️ Briefe",
   buero_termine: "📅 Termine planen", buero_feste: "🎂 Geburtstage", buero_fl: "🤍 Freud & Leid", buero_liste: "📇 Mitgliederliste", buero_ordner: "📂 Büro-Ordner", buero_rechte: "🔐 Freigaben",
-  chronik: "📖 Chronik", blaettern: "📖 Blättern", fotoalbum: "📸 Eigenes Fotoalbum" };
+  chronik: "📖 Chronik", blaettern: "📖 Blättern", fotoalbum: "📸 Eigenes Fotoalbum", spiele: "🎲 Spiele" };
 // Unterbereich → Hauptbereich (für die Einrückung); Werte müssen zu NUTZUNG_BEREICHE im Server passen
 const nzOber = (b) => b.startsWith("buero_") ? "buero" : b.startsWith("helfen_") ? "helfen" : ({ chronik: "archiv", blaettern: "archiv", fotoalbum: "fotos", kalender_abo: "termine", chat: "nachrichten", neu: "nachrichten", mitglied: "mitglieder", aktion: "aktionen", protokoll: "protokolle", dokansicht: "dokumente" })[b] || "";
 let NZ_TAGE = 7;
@@ -14200,7 +14448,7 @@ async function fpAdmin(tage) {
   history.replaceState({ basis: true }, "", url.pathname);
   history.pushState({ v: "start", tiefe: 1 }, "", url.pathname);
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.addEventListener("message", (e) => { if (e.data?.typ === "push") { neuLaden(); onlinePing(); if (chatId) chatLaden(false); ansageAusPush(e.data); }
+    navigator.serviceWorker.addEventListener("message", (e) => { if (e.data?.typ === "push") { neuLaden(); onlinePing(); if (chatId) chatLaden(false); ansageAusPush(e.data); if (aktuelleAnsicht === "spiele" && SP.tab === "mg") SP.offen ? spNachsehen() : spLaden(true); }
       if (e.data?.typ === "online-ansage") onlineAnsageSprechen([e.data.name]); }); // KC-CLUB-ONLINE-ANSAGE-PUSH
   }
   // Messung: wie wurde die App gestartet (einmal je Sitzung) – zeigt, ob die Installation geklappt hat
@@ -14221,6 +14469,8 @@ async function fpAdmin(tage) {
     else if (h === "#pinnwand") zeige("pinnwand");
     else if (h === "#standort") zeige("standort");
     else if (h === "#dienstwunsch") dwOeffnen();
+    else if (h.startsWith("#spiel=")) spOeffnen(decodeURIComponent(h.slice(7))); // KC-CLUB-SPIELE (2.7.0): aus dem Push
+    else if (h === "#spiele") spStart();
     else if (["#termine", "#vorschlaege", "#aktionen", "#fotos", "#protokolle", "#dienste", "#nachrichten", "#mitglieder", "#einstellungen", "#archiv", "#helfen"].includes(h)) zeige(h.slice(1));
     else if (h === "#buero" && ICH?.buero) buStart();
     if (!h || h === "#") setTimeout(() => buGrussFragen(), 1500); // KC-CLUB-BUERO: Begrüßung der Clubleitung
