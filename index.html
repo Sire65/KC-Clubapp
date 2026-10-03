@@ -170,6 +170,12 @@
   body:not(.ist-admin) #ledComm, body:not(.ist-admin) #ledDaten, body:not(.ist-admin) #herzKnopf { display: none; }
   body:not(.ist-admin) #setInkognitoZeile, body:not(.ist-admin) #inkoKnopf { display: none; }
   /* 2.3.1: Hauptschalter in der Kopfleiste – aus = blass, an = deutlich markiert */
+  /* 2.4.1 (Wunsch Hansi): Inkognito an → schwarzer Rahmen um den Kopfbereich, beim Einschalten kurz Ameisen (schwarz/gelb) */
+  body.inkognito #v-start .hero { box-shadow: 0 0 0 4px #000, 0 12px 30px var(--heroschatten); }
+  #v-start .hero.inko-lauf { position: relative; }
+  .hero .inko-ameisen { position: absolute; inset: -4px; width: calc(100% + 8px); height: calc(100% + 8px); pointer-events: none; overflow: hidden; border-radius: 30px; }
+  .hero .inko-ameisen rect { fill: none; stroke: #f1c40f; stroke-width: 8; stroke-dasharray: 10 8; animation: ameisenLauf .7s linear infinite; }
+  @media (prefers-reduced-motion: reduce) { .hero .inko-ameisen rect { animation-duration: 3s; } }
   #inkoKnopf { opacity: .45; } #inkoKnopf.an { opacity: 1; background: #2c3e50; box-shadow: 0 0 0 2px #f1c40f; }
   /* KC-CLUB-EINWEISUNG (2.4.0) */
   .einw-karte { border: 2px solid var(--gruen); background: var(--gruenbg); }
@@ -2408,7 +2414,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.4.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.4.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3647,8 +3653,18 @@ function zuletztText(z) {
 const inkognitoAn = () => !!(ICH?.admin && INIT?.einstellungen?.inkognito?.an);
 function inkognitoZeigen() {
   if ($("setInkognito")) $("setInkognito").checked = inkognitoAn();
+  document.body.classList.toggle("inkognito", inkognitoAn());
   const k = $("inkoKnopf"); if (k) { k.classList.toggle("an", inkognitoAn()); k.setAttribute("aria-pressed", String(inkognitoAn())); k.title = inkognitoAn() ? "Inkognito ist AN – niemand sieht dich online. Antippen zum Ausschalten" : "Inkognito ist aus – antippen zum Einschalten"; }
   try { if (INFO_FELDER[INFO_I]?.id === "treffen" || INFO_FELDER[INFO_I]?.id === "admin") heroZeigen(); } catch {}
+}
+// 2.4.1: beim Einschalten 4 s Ameisenrahmen um den Kopfbereich (danach bleibt der schwarze Rahmen)
+const INKO_AMEISEN_MS = 4000;
+function inkoAmeisen() {
+  const h = document.querySelector("#v-start .hero"); if (!h) return;
+  h.querySelector(".inko-ameisen")?.remove(); clearTimeout(inkoAmeisen.t);
+  h.classList.add("inko-lauf");
+  h.insertAdjacentHTML("beforeend", '<svg class="inko-ameisen" aria-hidden="true"><rect width="100%" height="100%" rx="30"/></svg>');
+  inkoAmeisen.t = setTimeout(() => { h.querySelector(".inko-ameisen")?.remove(); h.classList.remove("inko-lauf"); }, INKO_AMEISEN_MS);
 }
 async function inkognitoSetzen(an) {
   if (!ICH?.admin || !INIT) return;
@@ -3657,6 +3673,7 @@ async function inkognitoSetzen(an) {
   try {
     await api("einstellung_setzen", { schluessel: "inkognito", wert: { an: !!an } });
     melde(an ? "🕶️ Inkognito an – niemand sieht, dass du online bist" : "🟢 Inkognito aus – andere sehen dich wieder online"); MITGLIEDER = null;
+    if (an) inkoAmeisen();
   } catch (e) { INIT.einstellungen.inkognito = { an: vorher }; inkognitoZeigen(); melde(e.message, true); }
 }
 function zuletztSchalterZeigen() { if ($("setZuletzt")) $("setZuletzt").checked = INIT?.einstellungen?.zuletzt?.zeigen !== false; }

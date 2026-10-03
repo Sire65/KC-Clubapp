@@ -3208,6 +3208,11 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   const z = server.slice(server.indexOf("async function einweisungZahlen("), server.indexOf("async function adminAbwesendPruefen("));
   assert.ok(!/name|display_name/.test(z.replace("einweisungZahlen", "")) && /einweisung: await einweisungZahlen\(\)/.test(server), "Admin-Zahlen ohne Namen");
 }
+// 291. 2.4.1: Inkognito – schwarzer Rahmen + Ameisen beim Einschalten
+{
+  assert.ok(/body\.inkognito #v-start \.hero \{ box-shadow: 0 0 0 4px #000/.test(html) && /document\.body\.classList\.toggle\("inkognito", inkognitoAn\(\)\)/.test(html), "schwarzer Rahmen solange an");
+  assert.ok(/if \(an\) inkoAmeisen\(\);/.test(html) && /\.hero \.inko-ameisen rect \{[^}]*animation: ameisenLauf/.test(html) && /const INKO_AMEISEN_MS = 4000;/.test(html), "Ameisen beim Einschalten, dann aus");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

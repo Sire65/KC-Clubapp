@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.4.1 – 2026-10-03 – Inkognito sichtbar am Kopfbereich (Wunsch Hansi)
+- KC-CLUB-INKOGNITO: Solange Inkognito an ist, schwarzer Rahmen (4 px) um den oberen Kopfbereich der Startseite (body.inkognito).
+  Beim Einschalten läuft 4 s ein schwarz-gelber Ameisenrahmen (gleiche Animation ameisenLauf wie „Neue Nachr.“), danach bleibt
+  der schwarze Rahmen. Nur Admin (inkognitoAn setzt Admin voraus).
+
 ## 2.4.0 – 2026-10-03 – Einweisung beim ersten Öffnen eines Bereichs (Wunsch Hansi)
 - KC-CLUB-EINWEISUNG: Registry EINWEISUNG (15 Bereiche: Start, Nachrichten, Pinnwand, Termine, Mitglieder, Fotos, Helfen &
   Leihen, Archiv, Dokumente, Einstellungen, Protokolle, Vorschläge, Dienstpläne, Aktionen, Büro nur Clubleitung). Beim ersten
