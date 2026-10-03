@@ -1885,7 +1885,8 @@
       <!-- KC-CLUB-RUHEZEIT / -GERAETE (0.98.0) auch in der einfachen Ansicht -->
       <div class="schalter"><div><b>🌙 Nicht stören</b><div class="hinweis" id="ruheHinweisE">nachts kein Push</div></div><input type="checkbox" id="ruheAnE" onchange="ruheSchnell(this.checked)"></div>
       <div class="knoepfe" style="margin:0 0 10px"><button class="knopf klein" onclick="geraeteBlatt()">📱 Meine Geräte</button></div>
-      <div id="farbeE"><b>🎨 Lieblingsfarbe</b><div class="hinweis">Antippen – die App färbt sich sofort um</div><div class="designwahl" id="designWahlE"></div></div>
+      <div id="farbeE"><b>🎨 Lieblingsfarbe</b><div class="hinweis">Antippen – die App färbt sich sofort um</div><div class="designwahl" id="designWahlE"></div>
+        <details class="ds-mehr" id="designMehrKlappeE"><summary>🎨 Weitere Farbschemen</summary><div class="designwahl" id="designWahlMehrE"></div></details></div>
       <div class="schalter"><div><b>🔠 Große Schrift</b></div><input type="checkbox" id="setGrossE" onchange="einstellung('gross', this.checked); if ($('setGross')) $('setGross').checked = this.checked"></div>
       <div class="schalter"><div><b>🟢 Einfache Ansicht</b><div class="hinweis">Ausschalten zeigt alle Funktionen – du kannst jederzeit zurück.</div></div><button class="knopf klein" onclick="ansichtSetzen('erweitert')">🔧 Alle Funktionen</button></div>
       <div class="schalter"><div><b>📄 Kurzanleitung</b><div class="hinweis">Die App in 3 Schritten – zum Ansehen oder Ausdrucken</div></div><button class="knopf klein" onclick="druckStarten('anleitung')">Ansehen</button></div>
@@ -2308,7 +2309,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.76.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.77.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2463,7 +2464,8 @@ function anwendenDesign() {
 }
 function designWahlZeigen() {
   if (!$("designWahl")) return;
-  queueMicrotask(() => { if ($("designWahlE")) $("designWahlE").innerHTML = $("designWahl").innerHTML; }); // gleiche Farbwahl in „Das Wichtigste“
+  queueMicrotask(() => { if ($("designWahlE")) $("designWahlE").innerHTML = $("designWahl").innerHTML;
+    if ($("designWahlMehrE") && $("designWahlMehr")) { $("designWahlMehrE").innerHTML = $("designWahlMehr").innerHTML; if ($("designMehrKlappe").open) $("designMehrKlappeE").open = true; } }); // gleiche Farbwahl in „Das Wichtigste“
   const nacht = istNacht();
   const knopf = (d) => { const f = d[nacht ? "nacht" : "tag"];
     return `<button class="${d.id === DS.design ? "an" : ""}" onclick="designWaehlen('${d.id}')"><span class="vorschau" style="background:${f.bg}">`
@@ -2932,6 +2934,11 @@ function einstiegHinweis() {
 // (⚙️ Einstellungen → „💡 Tipp des Tages“, Standard an). Gespeichert in der Server-Einstellung „tipps“ (geräteübergreifend).
 const TIPP_SPAETER_TAGE = 3;
 const TIPPS = [
+  // 1.77.0 (Wunsch Hansi, für alle): persönlich angesprochen, ganz vorne = kommt als nächster Tipp. Nicht, wer schon ein neues Schema hat.
+  { id: "farbschemen_neu", sym: "🎨", t: () => `Hallo ${ICH?.vorname || ""}, hast du schon unsere 8 neuen Farbschemen entdeckt?`.replace("Hallo , ", "Hallo, "),
+    x: "Toskana, Weinberg, Salbei, Lavendel, Ocker, Schokolade, Petrol und Rosé – stell doch dein <b>Lieblingsschema</b> ein. Die App färbt sich sofort um.",
+    ja: "🎨 Jetzt einstellen", nein: "🙈 Nicht mehr anzeigen", nur: () => !DESIGNS.find((d) => d.id === DS.design)?.mehr,
+    testen: () => { const e = einfach(); einstiegHin(e ? "einfach" : "darstellung", e ? "designMehrKlappeE" : "designMehrKlappe"); setTimeout(() => { const k = $(e ? "designMehrKlappeE" : "designMehrKlappe"); if (k) k.open = true; }, 350); } },
   // 1.59.0 (Wunsch Hansi): Fragen „Soll ich dir zeigen, wo?“ – Ja führt genau hin, Nein = später nochmal anbieten
   { id: "sprachansage", sym: "🗣️", t: "Möchtest du hören, wenn sich jemand anmeldet?", x: "Unter ⚙️ → <b>„🗣️ Sprachansagen“</b> kreuzt du an, was dein Handy ansagen soll – z. B. „Klaus ist jetzt online“ oder „Christina hat dir eine Nachricht geschickt“. Mit ▶ hörst du ein Beispiel. <b>Soll ich dir zeigen, wo?</b>", ja: "👉 Ja, zeig mir wo", nein: "⏰ Nein, später", neinSpaeter: true, nur: () => !ansageAn(), testen: () => einstiegHin("ansagen", "setSprAnsZeile") }, // 1.75.0: Online-Ansage steht jetzt unter „Sprachansagen“
   { id: "vorlesen", sym: "🔊", t: "Nachrichten vorlesen lassen?", x: "Das Handy kann dir neue Nachrichten im Chat <b>vorlesen</b> – an- und ausschalten mit dem Lautsprecher 🔇/🔊 oben im Chat. <b>Soll ich dir zeigen, wo?</b>", ja: "👉 Ja, zeig mir wo", nein: "⏰ Nein, später", neinSpaeter: true, nur: () => !vorlesenAn(), testen: () => einstiegHin("ansagen", "setVorlesenZeile") },
@@ -2974,7 +2981,7 @@ function tippDesTages() {
   const tipp = TIPPS.find((x) => !st.bekannt[x.id] && (!st.spaeter[x.id] || tageSeit(st.spaeter[x.id]) >= TIPP_SPAETER_TAGE) && (!x.nur || x.nur()));
   if (!tipp) return false;
   tippSpeichern({ zuletzt: new Date().toISOString() });
-  $("tdtText").innerHTML = `<div class="tdt-kopf">💡 Tipp des Tages</div><h3 style="margin:4px 0 6px">${tipp.sym} ${tipp.t}</h3><p style="margin:0 0 4px">${tipp.x}</p>`;
+  $("tdtText").innerHTML = `<div class="tdt-kopf">💡 Tipp des Tages</div><h3 style="margin:4px 0 6px">${tipp.sym} ${esc(typeof tipp.t === "function" ? tipp.t() : tipp.t)}</h3><p style="margin:0 0 4px">${tipp.x}</p>`;
   const zu = () => $("tdtBlatt").classList.add("versteckt");
   $("tdtTesten").onclick = () => { zu(); tippSpeichern({ spaeter: { ...tippStand().spaeter, [tipp.id]: new Date().toISOString() } }); tipp.testen(); };
   $("tdtTesten").textContent = tipp.ja || "👉 Jetzt ausprobieren"; $("tdtKenne").textContent = tipp.nein || "✔ Kenne ich"; $("tdtSpaeter").classList.toggle("versteckt", !!tipp.neinSpaeter); $("tdtKenne").parentElement.style.gridTemplateColumns = tipp.neinSpaeter ? "1fr" : "";

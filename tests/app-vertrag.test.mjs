@@ -2898,6 +2898,13 @@ assert.ok(/id: "emoji",[^\n]*unter dem Schreibfeld<\/b> auf <b>😊<\/b>/.test(h
   for (const id of ["diktieren", "fotoalben", "chronik", "helfen_leihen"]) assert.ok(new RegExp(`\\{ id: "${id}", sym:`).test(html), "Tipp " + id);
   assert.ok(!/Google- oder Outlook-Kalender übernehmen/.test(html), "Kalender-Tipp veraltet");
 }
+// 257. 1.77.0: Tipp „neue Farbschemen“ – persönlich, zuerst, drei Wahlmöglichkeiten
+{
+  const t = html.slice(html.indexOf("const TIPPS = ["), html.indexOf("const tippStand"));
+  assert.ok(t.indexOf('id: "farbschemen_neu"') > 0 && t.indexOf('id: "farbschemen_neu"') < t.indexOf('id: "sprachansage"'), "Farbschemen-Tipp steht vorne");
+  assert.ok(/id: "farbschemen_neu"[^]*?Hallo \$\{ICH\?\.vorname[^]*?ja: "🎨 Jetzt einstellen", nein: "🙈 Nicht mehr anzeigen", nur: \(\) => !DESIGNS\.find/.test(t), "persönlich, Knöpfe, nur ohne neues Schema");
+  assert.ok(/\$\{esc\(typeof tipp\.t === "function" \? tipp\.t\(\) : tipp\.t\)\}/.test(html) && /id="designMehrKlappeE"/.test(html), "Titel-Funktion + Klappzone in der einfachen Ansicht");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

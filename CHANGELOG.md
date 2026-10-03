@@ -1,5 +1,12 @@
 # Änderungen
 
+## 1.77.0 – 2026-10-03
+- Tipp des Tages „Farbschemen“ für alle (Wunsch Hansi): „🎨 Hallo Klaus, hast du schon unsere 8 neuen Farbschemen entdeckt?“
+  – persönlich mit Vornamen, steht ganz vorne (kommt als nächster Tipp). Knöpfe: „🎨 Jetzt einstellen“ (öffnet ⚙️ und die
+  Klappzone „Weitere Farbschemen“), „⏰ Später“, „🙈 Nicht mehr anzeigen“. Nicht für Mitglieder, die schon ein neues Schema nutzen.
+- Tipp-Titel dürfen jetzt persönlich sein (Funktion statt fester Text); Titel werden dabei sicher dargestellt.
+- Einfache Ansicht: unter „🎨 Lieblingsfarbe“ ebenfalls die Klappzone „Weitere Farbschemen“.
+
 ## 1.76.0 – 2026-10-03
 - KC-CLUB-DESIGN-MEHR (Wunsch Hansi): 8 weitere Farbschemen – Toskana, Weinberg, Salbei, Lavendel, Ocker, Schokolade, Petrol,
   Rosé (je Tag und Nacht, Kontrast geprüft: Schrift ≥ 7:1, weiße Schrift auf Knöpfen ≥ 4,5:1). Sie stehen unter ⚙️ →
