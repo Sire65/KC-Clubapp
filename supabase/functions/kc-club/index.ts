@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.68.0";
+const SERVER_VERSION = "1.69.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -958,6 +958,32 @@ const ADMIN_DB_GRENZE = 500 * 1024 * 1024;
 // KC-CLUB-DIENSTWUNSCH (0.59.0): Veranstaltung/Vertrag des DP2-Wunsch-Eingangs (DP2 ist Eigentümer; Club-App liefert nur an)
 const DW = { vertrag: "KC_DP_WISH_INBOX_V1", projekt: "KC_DP", veranstaltung: "KC-WM-2026", name: "Weihnachtsmarkt Werne 2026",
   typen: ["available", "preferred", "if_needed", "unavailable"], zonen: ["V", "H", "B", "Z"], maxEintraege: 400 };
+// KC-CLUB-BESTAETIGUNG (1.69.0): eigene Dienstwünsche lesbar aufbereitet – je Tag „Kann / Am liebsten / Wenn nötig / Kann nicht / Bereitschaft“
+const DW_ART: Record<string, string> = { available: "Kann", preferred: "Am liebsten", if_needed: "Wenn nötig", unavailable: "Kann nicht" };
+const DW_ZONE: Record<string, string> = { V: "Bereich V", H: "Bereich H", B: "Bereich B", Z: "Bereich Z" };
+async function dienstwunschAufstellung(ich: Ich) {
+  const { data: m } = await db.from("kc_dp_wish_inbox").select("revision,status,entries,standby,share_with_colleagues,submitted_at,taken_at")
+    .eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("person_id", ich.person_id).eq("source", "club_app").maybeSingle();
+  const h = (x: unknown) => `${String(x).padStart(2, "0")}:00`;
+  const wt = new Intl.DateTimeFormat("de-DE", { weekday: "short", day: "2-digit", month: "2-digit", timeZone: "UTC" });
+  const je = new Map<string, any[]>();
+  for (const e of (m?.entries ?? []) as any[]) { if (!je.has(e.date)) je.set(e.date, []); je.get(e.date)!.push(e); }
+  for (const [tag, b] of Object.entries(m?.standby ?? {}) as [string, any][]) if (b?.answer === "yes" && !je.has(tag)) je.set(tag, []);
+  const bereit = (tag: string, liste: any[]) => {
+    const b: any = (m?.standby ?? {})[tag] ?? liste.map((e) => e.assistantDay?.standby).find((x: any) => x?.answer === "yes");
+    return b?.answer === "yes" ? (b.slots?.length ? b.slots.map((s: any) => `${h(s.start)}–${h(s.end)}`).join(", ") : "ja") : null;
+  };
+  const tage = [...je.keys()].sort().map((tag) => {
+    const liste = je.get(tag)!.slice().sort((a, b) => a.start - b.start);
+    const zeilen = liste.map((e) => `${DW_ART[e.wishType] ?? e.wishType}: ${e.scope === "day" ? "ganzer Tag" : `${h(e.start)}–${h(e.end)} Uhr`}${e.wishType !== "unavailable" && e.wishZone ? ` (${DW_ZONE[e.wishZone] ?? e.wishZone})` : ""}${e.comment ? ` – ${txt(e.comment, 120)}` : ""}`);
+    const bs = bereit(tag, liste); if (bs) zeilen.push(`Bereitschaft: ${bs}`);
+    return { datum: tag, tag: wt.format(new Date(tag + "T12:00:00Z")), zeilen,
+      spalten: Object.fromEntries(Object.keys(DW_ART).map((k) => [k, liste.filter((e) => e.wishType === k).map((e) => (e.scope === "day" ? "ganzer Tag" : `${h(e.start)}–${h(e.end)}`) + (k !== "unavailable" && e.wishZone ? ` ${e.wishZone}` : ""))])),
+      bereitschaft: bs };
+  });
+  const stand = m?.submitted_at ? new Intl.DateTimeFormat("de-DE", { timeZone: TZ, day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(m.submitted_at)) + " Uhr" : "–";
+  return { veranstaltung: DW.name, name: ich.name, stand, revision: m?.revision ?? 0, status: m?.status ?? null, uebernommen: !!m?.taken_at, freigabe: !!m?.share_with_colleagues, tage };
+}
 const NEON_GRENZE = 512 * 1024 * 1024; // Neon kostenlos: 0,5 GB Speicher je Projekt
 // Neon-Spiegel und Backup (0.48.0): liest nur die Protokolle des KC-Spiegels (kc_db_mirror_*, kc_neon_compute_policy) – steuert nichts
 async function adminSpiegel() {
@@ -3920,6 +3946,32 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
 
       // ----- Dienstzeiten aus dem Dienstplan (nur veröffentlichter Sollplan) -----
       // ----- KC-CLUB-DIENSTWUNSCH (0.59.0): Twinkey aus DP2 in der Club-App – Daten laden / Wunschstand in den Eingang legen -----
+      // ----- KC-CLUB-BESTAETIGUNG (1.69.0, Wunsch Hansi): Aufstellung der eigenen Eingaben als Bestätigung (App-Nachricht + E-Mail) -----
+      case "meine_eingaben": {
+        if (p.art === "erstattung") {
+          const { data: a } = await db.from("kc_club_erstattung").select("id,positionen,summe,auszahlung,bemerkung,status,erstellt_am").eq("id", String(p.id || "")).eq("person_id", ich.person_id).maybeSingle();
+          if (!a) throw new Fehler("Antrag nicht gefunden.", 404);
+          return json({ art: "erstattung", antrag: { id: a.id, summe: Number(a.summe), anzahl: (a.positionen || []).length, status: a.status, zeit: a.erstellt_am, auszahlung: a.auszahlung, positionen: a.positionen || [], bemerkung: a.bemerkung ?? null } });
+        }
+        return json({ art: "dienstwunsch", ...(await dienstwunschAufstellung(ich)) });
+      }
+      case "eingaben_bestaetigen": {
+        // nur Dienstwünsche (Erstattung bestätigt sich beim Senden selbst); höchstens 1× je 2 Minuten
+        const a = await dienstwunschAufstellung(ich);
+        if (!a.tage.length) throw new Fehler("Es sind noch keine Dienstwünsche gespeichert.", 409);
+        const { count } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("person_id", ich.person_id).eq("aktion", "dienstwunsch_bestaetigt").gte("zeit", new Date(Date.now() - 120_000).toISOString());
+        if (count) throw new Fehler("Die Bestätigung ist gerade erst verschickt worden – bitte kurz warten.", 429);
+        const zeilen = a.tage.map((t: any) => `${t.tag}:\n${t.zeilen.map((z: string) => "   " + z).join("\n")}`).join("\n\n");
+        const url = `${APP_URL}#bestaetigung=dienstwunsch`;
+        const text = `Hallo ${ich.vorname},\n\ndeine Dienstwünsche für „${DW.name}“ sind gespeichert (Stand ${a.stand}):\n\n${zeilen}\n\n────────────\n${a.tage.length} Tag${a.tage.length === 1 ? "" : "e"} · ${a.freigabe ? "Kollegen dürfen deine Zeiten sehen" : "nur für die Planung sichtbar"}\n\nDie Aufstellung zum Ansehen, Drucken oder als PDF:\n${url}\n\nÄnderungen sind jederzeit möglich, solange die Wunschphase läuft.\n\nViele Grüße\nKöcheclub-App`;
+        const versand = await routerSenden("club_nachricht_beide", [ich.person_id], {
+          titel: "✅ Deine Dienstwünsche sind gespeichert", kurz: `${a.tage.length} Tage · Stand ${a.stand} – 📄 Aufstellung öffnen`,
+          betreff: `Köcheclub Werne – Bestätigung deiner Dienstwünsche (${DW.name})`, text, url,
+        }, `club-bestaetigung-dw:${ich.person_id}:${a.revision}:${Date.now()}`);
+        await protokoll(ich.person_id, "dienstwunsch_bestaetigt", { revision: a.revision, tage: a.tage.length, versand });
+        return json({ ok: true, ...versand });
+      }
+
       case "dienstwunsch_laden": {
         const [{ data: phase }, { data: tage }, { data: meine }, { data: geteilt }, { data: freigaben }, { data: schichten }, { data: verz }] = await Promise.all([
           db.from("kc_dp_wish_phase_settings").select("status,close_at,deadline_date").eq("org_id", ORG).eq("project_id", DW.projekt).maybeSingle(),
@@ -5339,6 +5391,12 @@ Köcheclub-App`,
         }, `club-erstattung:${a.id}`, { cc, bcc });
         await db.from("kc_club_erstattung").update({ versand: { an, cc, bcc: bcc.length, ...versand } }).eq("id", a.id);
         await protokoll(ich.person_id, "erstattung_beantragt", { antrag: a.id, summe, positionen: pos.length, versand });
+        // KC-CLUB-BESTAETIGUNG (1.69.0): Antragsteller bekommt zusätzlich eine App-Nachricht mit Link zur Aufstellung (Mail kommt als BCC)
+        if (versand.gesendet) await routerSenden("club_nachricht_push", [ich.person_id], {
+          titel: `✅ Dein Erstattungsantrag über ${euro(summe)} ist eingegangen`, kurz: `${pos.length} Position${pos.length === 1 ? "" : "en"} · ${euro(summe)} – 📄 Aufstellung öffnen`,
+          betreff: `Köcheclub Werne – Bestätigung deines Erstattungsantrags (${euro(summe)})`, text: `Hallo ${ich.vorname},\n\ndein Antrag über ${euro(summe)} ist beim Kassenwart eingegangen.\n\n${zeilen}\n\nAufstellung: ${APP_URL}#bestaetigung=erstattung:${a.id}\n\nViele Grüße\nKöcheclub-App`,
+          url: `${APP_URL}#bestaetigung=erstattung:${a.id}`,
+        }, `club-bestaetigung-ers:${a.id}`).catch(() => null);
         if (!versand.gesendet) throw new Fehler("Der Antrag ist gespeichert, aber die Mail konnte nicht verschickt werden – bitte später nochmal versuchen oder Hansi Bescheid geben.", 502);
         const leute = await personen([...an, ...cc]);
         return json({ ok: true, id: a.id, summe, an: an.map((id) => leute.get(id)?.display_name || id), cc: cc.map((id) => leute.get(id)?.display_name || id) });

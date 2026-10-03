@@ -2794,6 +2794,16 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/id="setMikro" onchange="mikroArtSetzen\(this\.value\)"/.test(html), "Einstellung");
 }
 
+// 245. 1.69.0: Bestätigung der eigenen Eingaben (Dienstwünsche per Knopf, Erstattung beim Senden)
+{
+  const me = server.slice(server.indexOf('case "meine_eingaben"'), server.indexOf('case "dienstwunsch_laden"'));
+  assert.ok(/\.eq\("person_id", ich\.person_id\)/.test(me) && /dienstwunschAufstellung\(ich\)/.test(me), "nur eigene Eingaben");
+  assert.ok(/routerSenden\("club_nachricht_beide", \[ich\.person_id\]/.test(me) && /aktion", "dienstwunsch_bestaetigt"\)\.gte\("zeit", new Date\(Date\.now\(\) - 120_000\)/.test(me), "App + Mail nur an mich, höchstens 1× je 2 Min.");
+  assert.ok(/url: `\$\{APP_URL\}#bestaetigung=erstattung:\$\{a\.id\}`/.test(server) && /routerSenden\("club_nachricht_push", \[ich\.person_id\]/.test(server), "Erstattung: App-Nachricht an den Antragsteller");
+  assert.ok(/data-k="fertig"[^>]*>✅ Fertig – Bestätigung<\/button>/.test(html) && /bestaetigung: \{ bauen: \(\) => druckBestaetigung\(\) \}/.test(html) && /h\.startsWith\("#bestaetigung="\)/.test(html), "Knopf, Druckart, Link");
+  assert.ok(/quer: true, fuss: "Bestätigung aus der Köcheclub-App"/.test(html) && /return druckErstattung\(\{ antrag: b\.antrag\.id \}\)/.test(html), "Querformat / vorhandener Antrags-Ausdruck");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

@@ -2287,7 +2287,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.68.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.69.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -4711,17 +4711,45 @@ async function statusSpeichern() {
 // ---------- KC-CLUB-DIENSTWUNSCH (0.59.0): Twinkey aus DP2 im Vollbild ----------
 // dienstwunsch.html enthält DP2s Twinkey unverändert (dp2/, Nachweis dp2/QUELLE.json). Die Club-App zeigt ihn nur an –
 // wie DP2s eigene Twinkey-Seite mit „Zurück“ oben. Gespeichert wird in den Wunsch-Eingang, DP2 übernimmt von dort.
+// ---------- KC-CLUB-BESTAETIGUNG (1.69.0, Wunsch Hansi): Aufstellung der eigenen Eingaben als Bestätigung ----------
+// Dienstwünsche: „✅ Fertig – Bestätigung“ → App-Nachricht + E-Mail mit der Aufstellung; Link #bestaetigung=… öffnet sie als
+// A4-Blatt (Querformat) über den Druck-Kern – ansehen, drucken, als PDF speichern. Erstattung: Bestätigung kommt beim Senden.
+let BEST = null;
+async function dwBestaetigen() {
+  try { await api("eingaben_bestaetigen", { art: "dienstwunsch" }, { warten: true }); }
+  catch (e) { return melde(e.message, true); }
+  melde("✅ Bestätigung ist unterwegs – als App-Nachricht und per E-Mail");
+  if (await frage("✅ Deine Dienstwünsche sind gespeichert.\nDie Aufstellung bekommst du als App-Nachricht und per E-Mail.\n\nAufstellung jetzt ansehen?", { ja: "📄 Ansehen", nein: "Später" })) bestaetigungZeigen("dienstwunsch");
+}
+async function bestaetigungZeigen(was) {
+  const [art, id] = String(was || "").split(":");
+  try { BEST = await api("meine_eingaben", { art, id }, { warten: true }); } catch (e) { return melde(e.message, true); }
+  druckStarten("bestaetigung");
+}
+function druckBestaetigung() {
+  const b = BEST; if (!b) throw new Error("Bitte die Bestätigung erneut öffnen.");
+  if (b.art === "erstattung") { ERS.antraege = [b.antrag, ...(ERS.antraege || []).filter((x) => x.id !== b.antrag.id)]; return druckErstattung({ antrag: b.antrag.id }); }
+  const sp = [["available", "Kann"], ["preferred", "Am liebsten"], ["if_needed", "Wenn nötig"], ["unavailable", "Kann nicht"]];
+  const zelle = "padding:1.6mm 2mm;border:.2mm solid #999;vertical-align:top;font-size:3.4mm";
+  const html = `<p style="margin:0 0 3mm;font-size:3.6mm"><b>${esc(b.name)}</b> · Stand ${esc(b.stand)} · ${b.tage.length} Tag${b.tage.length === 1 ? "" : "e"}${b.uebernommen ? " · ✅ in den Dienstplan übernommen" : ""}</p>
+    <table style="width:100%;border-collapse:collapse"><thead><tr><th style="${zelle};background:#f1e7e2;width:24mm">Tag</th>${sp.map(([, t]) => `<th style="${zelle};background:#f1e7e2">${t}</th>`).join("")}<th style="${zelle};background:#f1e7e2">Bereitschaft</th></tr></thead>
+    <tbody>${b.tage.map((t) => `<tr><td style="${zelle};font-weight:700;white-space:nowrap">${esc(t.tag)}</td>${sp.map(([k]) => `<td style="${zelle}${k === "unavailable" && t.spalten[k].length ? ";background:#fbe9ea" : k === "preferred" && t.spalten[k].length ? ";background:#e8f4ea" : ""}">${t.spalten[k].map(esc).join("<br>") || "–"}</td>`).join("")}<td style="${zelle}">${esc(t.bereitschaft || "–")}</td></tr>`).join("")}</tbody></table>
+    <p style="margin:3mm 0 0;font-size:3mm;color:#555">Zeiten in Uhr · Buchstabe = Bereich · ${b.freigabe ? "Kollegen dürfen die Zeiten sehen" : "nur für die Planung sichtbar"} · Änderungen jederzeit in der App, solange die Wunschphase läuft.</p>`;
+  return { titel: `Meine Dienstwünsche – ${b.veranstaltung}`, unter: "Bestätigung meiner Eingaben", html, quer: true, fuss: "Bestätigung aus der Köcheclub-App" };
+}
 function dwOeffnen() {
   if (document.getElementById("dwFenster")) return;
   const f = document.createElement("div"); f.id = "dwFenster"; f.setAttribute("role", "dialog"); f.setAttribute("aria-modal", "true"); f.setAttribute("aria-label", "Dienstwünsche");
   f.style.cssText = "position:fixed;inset:0;z-index:2000;display:flex;flex-direction:column;background:#fff8ee";
   f.innerHTML = `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;padding-top:max(8px,env(safe-area-inset-top));background:var(--karte);box-shadow:var(--schatten)">
-    <button class="knopf klein" data-k="zu" style="min-height:44px">← Zurück zur Club-App</button><b style="flex:1;text-align:right;font-size:.95rem">📝 Dienstwünsche</b></div>
+    <button class="knopf klein" data-k="zu" style="min-height:44px">← Zurück zur Club-App</button><b style="flex:1;text-align:right;font-size:.95rem">📝 Dienstwünsche</b>
+    <button class="knopf haupt klein" data-k="fertig" style="min-height:44px" title="Aufstellung als Bestätigung per App-Nachricht und E-Mail">✅ Fertig – Bestätigung</button></div>
     <div style="flex:1;position:relative;display:flex">
       <!-- 1.40.0: drehende Mütze schon, während die Twinkey-Seite selbst noch lädt (danach zeigt die Seite ihre eigene) -->
       <div class="warten an" style="position:absolute;left:50%;top:42%;z-index:0"><div class="muetze"><img src="kc-kochmuetze-weiss.webp" alt=""></div><b>Twinkey wird geladen …</b></div>
       <iframe title="Dienstwünsche mit Twinkey" src="dienstwunsch.html?v=${APP_VERSION}" style="flex:1;border:0;width:100%;background:transparent;position:relative;z-index:1" allow="autoplay" onload="this.previousElementSibling?.remove();this.style.background='#fff8ee'"></iframe></div>`;
   f.querySelector('[data-k="zu"]').onclick = dwSchliessen;
+  f.querySelector('[data-k="fertig"]').onclick = (e) => einmal(e.currentTarget, dwBestaetigen);
   document.body.appendChild(f); document.body.style.overflow = "hidden";
 }
 function dwSchliessen() { document.getElementById("dwFenster")?.remove(); document.body.style.overflow = ""; }
@@ -11071,6 +11099,7 @@ const DRUCKARTEN = {
   anleitung: { bauen: () => druckAnleitung() },
   ueberblick: { bauen: () => druckUeberblick() },
   dokument: { bauen: () => dokDruckSeite() }, // KC-CLUB-DOK-ANZEIGE (1.62.0): PDF-Seiten randlos auf A4
+  bestaetigung: { bauen: () => druckBestaetigung() }, // KC-CLUB-BESTAETIGUNG (1.69.0): Aufstellung der eigenen Eingaben
 };
 // ---- KC-CLUB-KURZANLEITUNG (0.62.0): die App in 3 Schritten – für Einsteiger, zum Ausdrucken oder Verschicken ----
 function druckAnleitung() {
@@ -13017,6 +13046,7 @@ async function fpAdmin(tage) {
     else if (h === "#boerse" || h.startsWith("#boerse=")) { BO.oeffnen = h.slice(8) || null; hlStart("boerse"); } // KC-CLUB-BOERSE
     else if (h.startsWith("#mitglied=")) mitgliedOeffnen(decodeURIComponent(h.slice(10)));
     else if (h.startsWith("#dokument=")) dokOeffnen(decodeURIComponent(h.slice(10))); // KC-CLUB-DOK-ANZEIGE
+    else if (h.startsWith("#bestaetigung=")) bestaetigungZeigen(decodeURIComponent(h.slice(14))); // KC-CLUB-BESTAETIGUNG
     else if (h === "#geteilt") geteiltEmpfangen();
     else if (h === "#todo") { termineArt = "todo"; zeige("termine"); }
     else if (h === "#pinnwand") zeige("pinnwand");

@@ -1,5 +1,14 @@
 # Änderungen
 
+## 1.69.0 – 2026-10-03
+- KC-CLUB-BESTAETIGUNG (Wunsch Hansi, Fall Steven): Aufstellung der eigenen Eingaben als Bestätigung – **App-Nachricht + E-Mail**.
+  Dienstwünsche: neuer Knopf „✅ Fertig – Bestätigung“ oben im Dienstwunsch-Fenster (kein Versand bei jedem Zwischenspeichern;
+  höchstens 1× je 2 Min.). Die Mail enthält die Aufstellung je Tag (Kann / Am liebsten / Wenn nötig / Kann nicht / Bereitschaft –
+  Bereitschaft aus Tagesübersicht ODER Tageswunsch). Erstattung: der Antragsteller bekommt beim Senden zusätzlich eine
+  App-Nachricht (die Mail kam schon als BCC). Link „#bestaetigung=…“ öffnet die Aufstellung als A4-Blatt (Dienstwünsche im
+  Querformat, Erstattung wie der vorhandene Antrags-Ausdruck) – ansehen, drucken, als PDF speichern. Server: meine_eingaben,
+  eingaben_bestaetigen; Versand über den KC Communicator (club_nachricht_beide / club_nachricht_push).
+
 ## 1.68.0 – 2026-10-03
 - KC-CLUB-DIKTAT (Wunsch Hansi): Das 🎤 im Chat fragt „🎤 Sprachnachricht“ (wie bisher, Ton) oder „✍️ Diktieren“ – das Handy
   schreibt live ins Schreibfeld mit; „📤 Senden“ schickt es als normale Textnachricht, „✅ Fertig – noch prüfen“ lässt es zum
