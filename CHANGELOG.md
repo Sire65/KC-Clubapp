@@ -1,5 +1,12 @@
 # Änderungen
 
+## 1.60.0 – 2026-10-03
+- KC-CLUB-ANLEITUNG (Wunsch Hansi): Vollständige Bedienungsanleitung der Club-App als PDF mit Bildschirmfotos –
+  gleiche Gestaltung wie die Kasse-Anleitung (Kopf mit Kochmütze, nummerierte Bilder mit Legende, Zeilen „Bild – Erklärung“,
+  „Gut zu wissen“, NEU-Marken). 9 Teile: Startseite einfach/erweitert, Nachrichten (Haken, ❗ wichtig, Vorlesen), Termine,
+  Mitglieder, Pinnwand, SOS, Einstellungen, Notbetrieb. Nur erfundene Demodaten. In „Meine Dokumente“ als
+  „📖 Bedienungsanleitung Club-App“; die Kurzanleitung „In 3 Schritten zur App“ bleibt. Bau-Werkzeug: tools/anleitung/.
+
 ## 1.59.0 – 2026-10-03
 - KC-CLUB-VORLESEN (Wunsch Hansi): Nachrichten vorlesen lassen – Lautsprecher 🔇/🔊 oben im Chat (und Schalter „🔊 Neue
   Nachrichten vorlesen“ im Kasten „Ansagen, Töne & Tipps“): neue Nachrichten anderer im offenen Chat werden vorgelesen

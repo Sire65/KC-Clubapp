@@ -2623,6 +2623,16 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.match(html, /\.rund \{[^}]*display: inline-flex; align-items: center; justify-content: center; padding: 0;/, "Symbole mittig");
 }
 
+// 232. 1.60.0: Bedienungsanleitung Club-App (PDF wie Kasse) in „Meine Dokumente“
+{
+  assert.ok(/\{ id: "bedienung-club-app", sym: "📖", t: "Bedienungsanleitung Club-App"[^}]*datei: "dokumente\/Koecheclub-App_Anleitung_V1\.pdf" \}/.test(html), "Eintrag Bedienungsanleitung fehlt");
+  assert.ok(/datei: "dokumente\/Koecheclub-App_Kurzanleitung\.pdf"/.test(html), "Kurzanleitung muss bleiben");
+  const pdf = fs.readFileSync(new URL("../dokumente/Koecheclub-App_Anleitung_V1.pdf", import.meta.url));
+  assert.ok(pdf.subarray(0, 5).toString() === "%PDF-" && pdf.length < 8e6, "Anleitung-PDF fehlt oder zu groß");
+  const werkzeug = ["basis", "demo", "fotos", "inhalt", "bau"].map((n) => fs.readFileSync(new URL(`../tools/anleitung/${n}.mjs`, import.meta.url), "utf8")).join("\n");
+  assert.ok(!/ptblnpiroqftcvlsrhac|service_role|eyJ[A-Za-z0-9_-]{20}/.test(werkzeug), "Bau-Werkzeug darf keine echten Zugänge enthalten");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
