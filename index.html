@@ -901,7 +901,10 @@
   .ue-bereich { display: flex; gap: 10px; align-items: flex-start; min-width: 0; }
   .ue-sym { font-size: 1.4rem; line-height: 1.2; }
   .ue-bereich small { display: block; color: var(--grau); }
+  .doka-seite { display: block; width: 100%; height: auto; margin: 0 0 10px; border-radius: 6px; box-shadow: var(--schatten); background: #fff; }
   @media print {
+    #druck img.dseite { display: block; width: 210mm; height: 296mm; object-fit: contain; break-after: page; margin: 0; }
+    #druck img.dseite:last-child { break-after: auto; }
     @page { size: A4; margin: 13mm 12mm 15mm; @bottom-right { content: "Seite " counter(page) " / " counter(pages); font: 8pt sans-serif; color: #666; } }
     html, body { background: #fff !important; color: #000 !important; }
     body > *:not(#druck) { display: none !important; }
@@ -1607,8 +1610,17 @@
   <!-- KC-CLUB-DOKUMENTE (0.73.0): Anleitungen als PDF – ansehen und ausdrucken; neue Dokumente = Eintrag in DOKUMENTE -->
   <section id="v-dokumente" class="versteckt">
     <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>📚 Meine Dokumente</h2></div>
-    <p class="hinweis" style="margin:0 2px 10px">Antippen zum Ansehen. Im geöffneten Dokument kannst du es über <b>Teilen □↑</b> bzw. <b>⋮</b> ausdrucken oder speichern.</p>
+    <p class="hinweis" style="margin:0 2px 10px">Antippen zum Ansehen – das Dokument öffnet sich in der App. Oben kannst du es <b>drucken</b> oder <b>teilen</b>, mit <b>‹</b> geht es zurück.</p>
     <div class="raster" id="dokRaster"></div>
+  </section>
+
+  <!-- KC-CLUB-DOK-ANZEIGE (1.62.0): PDF in der App ansehen, drucken, teilen – ‹ führt zurück in die App -->
+  <section id="v-dokansicht" class="versteckt">
+    <div class="kopf2"><button class="zurueck" onclick="zeige('dokumente')" aria-label="Zurück zu Meine Dokumente">‹</button><h2 id="dokaTitel">Dokument</h2></div>
+    <div class="knoepfe" style="margin:0 0 8px"><button class="knopf haupt" id="dokaDrucken" onclick="dokDrucken()" disabled>🖨️ Drucken</button><button class="knopf" onclick="dokTeilen()">📤 Teilen / Speichern</button></div>
+    <p class="hinweis" id="dokaStand" style="margin:0 2px 8px"></p>
+    <div id="dokaSeiten"></div>
+    <div class="knoepfe" style="margin-top:10px"><button class="knopf" onclick="zeige('dokumente')">‹ Zurück zu „Meine Dokumente“</button><button class="knopf klein" onclick="dokExtern()">↗ Im PDF-Betrachter öffnen</button></div>
   </section>
 
   <!-- KC-CLUB-ARCHIV (1.2.0): Aktenordner mit Registern und Jahreszahl -->
@@ -2132,7 +2144,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.61.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.62.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -4529,12 +4541,74 @@ function dokErledigt(id) {
   const g = dokGesehen(); if (!g.includes(id)) { g.push(id); try { localStorage.setItem(DOK_GESEHEN, JSON.stringify(g.slice(-30))); } catch {} }
   if (typeof wichtigZeigen === "function" && INIT) { wichtigZeigen(); infoFelderAktualisieren(); }
 }
-function dokOeffnen(id) {
+function dokOeffnen(id, ausHistorie) {
   const d = DOKUMENTE.find((x) => x.id === id); if (!d) return;
   if (dokNeu(d)) dokErledigt(id);
   if (d.v) return zeige(d.v);
   if (!d.datei) return melde(`„${d.t}“ kommt bald.`);
-  extOeffnen(new URL(d.datei + "?v=" + APP_VERSION, location.href).href);
+  dokAnzeigen(d, ausHistorie);
+}
+// KC-CLUB-DOK-ANZEIGE (1.62.0, Fund Hansi: „Wenn ich das Dokument aufrufe, wie komme ich wieder in die App?“): PDFs aus
+// „Meine Dokumente“ in der App anzeigen – pdf.js (Mozilla, Apache-2.0) liegt in lib/pdfjs, nichts kommt von fremden Servern.
+// Oben ‹ Zurück, 🖨️ Drucken (eigener Druck-Kern, randlos A4), 📤 Teilen/Speichern (die PDF-Datei selbst).
+// Klappt die Anzeige nicht (alter Browser), bleibt der bisherige Weg: „↗ Im PDF-Betrachter öffnen“.
+const DOKA = { id: null, lauf: 0, bilder: [] };
+const PDFJS_BIB = "lib/pdfjs/pdf.min.js?v=4.10.38", PDFJS_WORKER = "lib/pdfjs/pdf.worker.min.js?v=4.10.38";
+let pdfjsLaden = null;
+function pdfjsHolen() {
+  pdfjsLaden ||= import(new URL(PDFJS_BIB, location.href).href)
+    .then((m) => { m.GlobalWorkerOptions.workerSrc = new URL(PDFJS_WORKER, location.href).href; return m; })
+    .catch((e) => { pdfjsLaden = null; throw e; });
+  return pdfjsLaden;
+}
+const dokUrl = (d) => new URL(d.datei + "?v=" + APP_VERSION, location.href).href;
+const dokAktuell = () => DOKUMENTE.find((x) => x.id === DOKA.id) || null;
+async function dokAnzeigen(d, ausHistorie) {
+  DOKA.id = d.id; DOKA.bilder = []; const lauf = ++DOKA.lauf;
+  $("dokaTitel").textContent = d.t; $("dokaSeiten").innerHTML = ""; $("dokaDrucken").disabled = true;
+  $("dokaStand").textContent = "Wird geladen …";
+  zeige("dokansicht", ausHistorie);
+  try {
+    const pdfjs = await pdfjsHolen();
+    const pdf = await pdfjs.getDocument({ url: dokUrl(d), isEvalSupported: false }).promise;
+    const breite = Math.min(1400, Math.round(($("dokaSeiten").clientWidth || innerWidth) * Math.min(2, devicePixelRatio || 1)));
+    for (let n = 1; n <= pdf.numPages; n++) {
+      if (lauf !== DOKA.lauf) return pdf.destroy();
+      $("dokaStand").textContent = `Seite ${n} von ${pdf.numPages} wird geladen …`;
+      const seite = await pdf.getPage(n), vp = seite.getViewport({ scale: breite / seite.getViewport({ scale: 1 }).width });
+      const c = document.createElement("canvas"); c.width = Math.round(vp.width); c.height = Math.round(vp.height);
+      const cx = c.getContext("2d"); cx.fillStyle = "#fff"; cx.fillRect(0, 0, c.width, c.height);
+      await seite.render({ canvasContext: cx, viewport: vp }).promise;
+      if (lauf !== DOKA.lauf) return pdf.destroy();
+      const src = c.toDataURL("image/jpeg", 0.85); c.width = c.height = 0; DOKA.bilder.push(src);
+      const img = new Image(); img.src = src; img.alt = `Seite ${n}`; img.className = "doka-seite"; $("dokaSeiten").appendChild(img);
+    }
+    $("dokaStand").textContent = `${pdf.numPages} Seite${pdf.numPages > 1 ? "n" : ""}${IST_IOS_APP() ? " · iPhone: Klappt Drucken nicht, „📤 Teilen“ und dort drucken." : ""}`;
+    $("dokaDrucken").disabled = false; pdf.destroy();
+  } catch (e) {
+    if (lauf !== DOKA.lauf) return;
+    fpNeu("dokument", { text: "PDF-Anzeige: " + (e?.message || e) });
+    $("dokaStand").innerHTML = `Die Anzeige klappt auf diesem Gerät nicht. <button class="knopf klein" onclick="dokExtern()">↗ Im PDF-Betrachter öffnen</button>`;
+  }
+}
+function dokAufraeumen() { DOKA.lauf++; DOKA.id = null; DOKA.bilder = []; $("dokaSeiten").innerHTML = ""; }
+function dokExtern() { const d = dokAktuell(); if (d) extOeffnen(dokUrl(d)); }
+function dokDruckSeite() {
+  const d = dokAktuell(); if (!d || !DOKA.bilder.length) return null;
+  return { ohneRahmen: true, randlos: true, titel: d.t, html: DOKA.bilder.map((b) => `<img class="dseite" src="${b}" alt="">`).join("") };
+}
+async function dokDrucken() {
+  DRUCK = { art: "dokument", param: DOKA.id };
+  try { if (!(await druckSeiteBauen())) return melde("Bitte warten, bis alle Seiten geladen sind."); } catch (e) { return melde(e.message, true); }
+  druckJetzt();
+}
+async function dokTeilen() {
+  const d = dokAktuell(); if (!d) return;
+  try {
+    const datei = new File([await (await fetch(dokUrl(d))).blob()], d.datei.split("/").pop(), { type: "application/pdf" });
+    if (navigator.canShare?.({ files: [datei] })) { await navigator.share({ files: [datei], title: d.t }); return; }
+  } catch (e) { if (e?.name === "AbortError") return; }
+  dokExtern(); // Teilen geht hier nicht → PDF-Betrachter (dort drucken/speichern)
 }
 // ohne „noopener“-Option (sonst liefert window.open immer null); Rückverweis danach selbst kappen
 function extOeffnen(url) { const w = window.open(url, "_blank"); if (w) w.opener = null; else location.href = url; } // Popup gesperrt → im selben Fenster
@@ -5562,12 +5636,14 @@ function zaehlerZeigen() {
 function zeige(v, ausHistorie) {
   if (kaBearb && v !== "start") kaBearbeiten(false); // Anordnen beim Verlassen der Startseite abschließen
   const vorher = aktuelleAnsicht;
+  if (v === "dokansicht" && !DOKA.id) v = "dokumente"; // KC-CLUB-DOK-ANZEIGE: ohne Dokument zur Liste
+  if (vorher === "dokansicht" && v !== "dokansicht") dokAufraeumen();
   if (v !== "chat" && typeof CS !== "undefined" && CS.offen) chatSucheZu();
   if (v !== "chat") $("nachUnten")?.classList.add("versteckt");
   aktuelleAnsicht = v; if (window.KCFP) KCFP.sicht = v;
   nzZaehlen(v); // KC-CLUB-NUTZUNG: nur „Bereich geöffnet“, ohne Namen
   if (vorher === "protokoll" && v !== "protokoll" && prTimer) prSpeichernJetzt(false).catch(() => {}); // ungespeicherte Eingaben sichern
-  ["start", "dokumente", "termine", "vorschlaege", "aktionen", "aktion", "fotos", "feedback", "gruppe", "mitglied", "protokolle", "protokoll", "dienste", "nachrichten", "chat", "neu", "mitglieder", "einstellungen", "pinnwand", "erstattung", "ueberblick", "programme", "standort", "archiv", "sos", "sicherheit", "helfen", "buero"].forEach((x) => $("v-" + x).classList.toggle("versteckt", x !== v));
+  ["start", "dokumente", "dokansicht", "termine", "vorschlaege", "aktionen", "aktion", "fotos", "feedback", "gruppe", "mitglied", "protokolle", "protokoll", "dienste", "nachrichten", "chat", "neu", "mitglieder", "einstellungen", "pinnwand", "erstattung", "ueberblick", "programme", "standort", "archiv", "sos", "sicherheit", "helfen", "buero"].forEach((x) => $("v-" + x).classList.toggle("versteckt", x !== v));
   document.querySelectorAll("#fuss button").forEach((b) => b.classList.toggle("an", b.dataset.v === v || (v === "chat" && b.dataset.v === "nachrichten") || (v === "neu" && b.dataset.v === "nachrichten")));
   $("eingabe").classList.toggle("versteckt", v !== "chat");
   document.body.classList.toggle("im-chat", v === "chat"); // KC-CLUB-SUCHE: Lupe nicht über dem Senden-Knopf
@@ -5596,9 +5672,9 @@ function zeige(v, ausHistorie) {
   if (v === "einstellungen") { notProbeZeigen(); infoStartZeigen(); tippSchalterZeigen(); ansageSchalterZeigen(); ruheZeigen(); if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); anklopfenZeigen(); zuletztSchalterZeigen(); schnellWahlZeigen(); mgAnsichtWahlZeigen(); }
   if (v === "start") neuLaden();
   // KC-CLUB-ZURUECK: jede Ansicht bekommt einen Verlaufseintrag, damit „Zurück“ eine Ansicht zurückgeht statt die App zu schließen
-  const hash = v === "start" || v === "chat" ? "" : v === "protokoll" ? "#protokoll=" + prId : v === "aktion" ? "#aktion=" + aktionId : v === "mitglied" ? "#mitglied=" + mitgliedId : "#" + v;
+  const hash = v === "start" || v === "chat" ? "" : v === "protokoll" ? "#protokoll=" + prId : v === "aktion" ? "#aktion=" + aktionId : v === "mitglied" ? "#mitglied=" + mitgliedId : v === "dokansicht" ? "#dokument=" + encodeURIComponent(DOKA.id) : "#" + v;
   if (!ausHistorie) {
-    const st = { v, id: v === "chat" ? chatId : v === "protokoll" ? prId : v === "aktion" ? aktionId : v === "mitglied" ? mitgliedId : null };
+    const st = { v, id: v === "chat" ? chatId : v === "protokoll" ? prId : v === "aktion" ? aktionId : v === "mitglied" ? mitgliedId : v === "dokansicht" ? DOKA.id : null };
     if (v === vorher && v !== "chat") history.replaceState(st, "", location.pathname + hash);
     else history.pushState(st, "", location.pathname + hash);
   }
@@ -5624,6 +5700,7 @@ window.addEventListener("popstate", (e) => {
   else if (s.v === "protokoll" && s.id) protokollOeffnen(s.id, true);
   else if (s.v === "aktion" && s.id) aktionOeffnen(s.id, true);
   else if (s.v === "mitglied" && s.id) mitgliedOeffnen(s.id, true);
+  else if (s.v === "dokansicht" && s.id) { if (DOKA.id === s.id && aktuelleAnsicht === "dokansicht") return; dokOeffnen(s.id, true); }
   else if (s.v === "archiv") { AR.ordner = s.id || null; AR.korb = false; if (aktuelleAnsicht === "archiv") arZeigen(); else zeige("archiv", true); }
   else if (s.v === "chat") zeige("nachrichten", true); // ungesendeter Entwurf lässt sich nicht wiederherstellen
   else zeige(s.v || "start", true);
@@ -10423,6 +10500,7 @@ const DRUCKARTEN = {
   erstattung: { titel: "🖨️ Erstattungsantrag drucken", optionen: () => druckErstattungOptionen(), bauen: (o) => druckErstattung(o) },
   anleitung: { bauen: () => druckAnleitung() },
   ueberblick: { bauen: () => druckUeberblick() },
+  dokument: { bauen: () => dokDruckSeite() }, // KC-CLUB-DOK-ANZEIGE (1.62.0): PDF-Seiten randlos auf A4
 };
 // ---- KC-CLUB-KURZANLEITUNG (0.62.0): die App in 3 Schritten – für Einsteiger, zum Ausdrucken oder Verschicken ----
 function druckAnleitung() {
@@ -10473,7 +10551,7 @@ async function druckSeiteBauen() {
     ${s.html}
     <div class="dfuss">Gedruckt am ${esc(wann(new Date().toISOString()))} von ${esc(ICH?.name || "")} · Köcheclub-App v${APP_VERSION}${s.fuss ? " · " + esc(s.fuss) : ""}</div>`;
   let st = $("druckSeitenformat"); if (!st) { st = document.createElement("style"); st.id = "druckSeitenformat"; document.head.appendChild(st); }
-  st.textContent = `@page { size: A4 ${s.quer ? "landscape" : "portrait"}; }`;
+  st.textContent = `@page { size: A4 ${s.quer ? "landscape" : "portrait"};${s.randlos ? " margin: 0;" : ""} }`;
   DRUCK.titel = s.titel; DRUCK.quer = !!s.quer;
   return true;
 }
@@ -12206,6 +12284,7 @@ async function fpAdmin(tage) {
     else if (h.startsWith("#aktion=")) aktionOeffnen(decodeURIComponent(h.slice(8)));
     else if (h === "#boerse" || h.startsWith("#boerse=")) { BO.oeffnen = h.slice(8) || null; hlStart("boerse"); } // KC-CLUB-BOERSE
     else if (h.startsWith("#mitglied=")) mitgliedOeffnen(decodeURIComponent(h.slice(10)));
+    else if (h.startsWith("#dokument=")) dokOeffnen(decodeURIComponent(h.slice(10))); // KC-CLUB-DOK-ANZEIGE
     else if (h === "#geteilt") geteiltEmpfangen();
     else if (h === "#todo") { termineArt = "todo"; zeige("termine"); }
     else if (h === "#pinnwand") zeige("pinnwand");

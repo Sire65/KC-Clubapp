@@ -1,5 +1,14 @@
 # Änderungen
 
+## 1.62.0 – 2026-10-03
+- KC-CLUB-DOK-ANZEIGE (Fund Hansi: „Wenn ich das Dokument aufrufe, wie komme ich wieder in die App?“): PDFs aus „Meine
+  Dokumente“ öffnen jetzt IN der App (eigene Ansicht, alle Seiten untereinander). Oben „‹“ und „🖨️ Drucken“ (über den
+  vorhandenen Druck-Kern, randlos A4) sowie „📤 Teilen / Speichern“ (die PDF-Datei selbst). Die Zurück-Taste des Handys
+  führt zurück zur Liste; Link #dokument=<id> öffnet direkt. Der bisherige Weg bleibt als „↗ Im PDF-Betrachter öffnen“
+  (und automatisch, wenn die Anzeige auf einem alten Gerät nicht klappt).
+- pdf.js 4.10.38 (Mozilla, Apache-2.0, kostenlos) liegt unverändert in lib/pdfjs und wird erst beim Öffnen eines Dokuments
+  geladen (isEvalSupported: false); keine fremden Server.
+
 ## 1.61.0 – 2026-10-03
 - KC-CLUB-DOK-NEU (Wunsch Hansi: alle sollen die neue Anleitung bekommen, aber nicht mit Meldungen überhäufen): Neue
   Dokumente bekommen in der Registry DOKUMENTE ein „neuBis“-Datum. Bis dahin erscheint leise genau EINE Zeile

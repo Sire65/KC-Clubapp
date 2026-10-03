@@ -2649,6 +2649,19 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(!/api\(|pushSenden|blattZeigen|melde\(|sprechen\(|Notification/.test(ruhig), "kein Push, kein Fenster, keine Ansage");
 }
 
+// 234. 1.62.0: PDFs in der App anzeigen (Zurück, Drucken, Teilen), pdf.js lokal
+{
+  assert.ok(/id="v-dokansicht"/.test(html) && /"start", "dokumente", "dokansicht",/.test(html), "Ansicht dokansicht fehlt");
+  const v = html.slice(html.indexOf('<section id="v-dokansicht"'), html.indexOf("</section>", html.indexOf('<section id="v-dokansicht"')));
+  assert.ok(/onclick="zeige\('dokumente'\)"/.test(v) && /onclick="dokDrucken\(\)"/.test(v) && /onclick="dokTeilen\(\)"/.test(v) && /onclick="dokExtern\(\)"/.test(v), "Zurück/Drucken/Teilen/Extern fehlen");
+  assert.ok(/  dokAnzeigen\(d, ausHistorie\);/.test(html) && /function dokExtern\(\) \{ const d = dokAktuell\(\); if \(d\) extOeffnen\(dokUrl\(d\)\); \}/.test(html), "Anzeige in der App bzw. alter Weg fehlt");
+  assert.ok(/dokument: \{ bauen: \(\) => dokDruckSeite\(\) \}/.test(html) && /s\.randlos \? " margin: 0;" : ""/.test(html), "Druck über den Druck-Kern fehlt");
+  assert.ok(/isEvalSupported: false/.test(html) && /PDFJS_BIB = "lib\/pdfjs\/pdf\.min\.js\?v=4\.10\.38"/.test(html), "pdf.js lokal und ohne eval");
+  for (const f of ["pdf.min.js", "pdf.worker.min.js", "LICENSE"]) assert.ok(fs.existsSync(new URL("../lib/pdfjs/" + f, import.meta.url)), "lib/pdfjs/" + f + " fehlt");
+  assert.ok(fs.readFileSync(new URL("../lib/pdfjs/pdf.min.js", import.meta.url), "utf8").includes('4.10.38'), "falsche pdf.js-Version");
+  assert.ok(/if \(vorher === "dokansicht" && v !== "dokansicht"\) dokAufraeumen\(\);/.test(html) && /h\.startsWith\("#dokument="\)/.test(html) && /s\.v === "dokansicht" && s\.id/.test(html), "Zurück/Link/Speicher freigeben fehlt");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
