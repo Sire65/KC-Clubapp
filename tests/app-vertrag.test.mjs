@@ -2771,6 +2771,16 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/const BSPR = \{ geht: !!\(window\.SpeechRecognition \|\| window\.webkitSpeechRecognition\)/.test(html) && /\$\{BSPR\.geht \? '<button class="bu-mikro"/.test(html), "Mikrofon nur, wenn das Gerät es kann");
 }
 
+// 243. 1.67.0: mitlaufende A4-Vorschau beim Bearbeiten (Sitzung, Brief, Mitgliederliste) über den Druck-Kern
+{
+  assert.ok(/const LV_ARTEN = \{ sitzung: "sitzung", brief: "brief", liste: "mitgliederliste" \};/.test(html), "Registry der Live-Vorschau");
+  assert.ok(/: buStartHtml\(\); lvNachZeigen\(\); \}/.test(html), "nach jedem Zeichnen auffrischen (Ende von buZeigenRoh)");
+  const lv = html.slice(html.indexOf("async function lvJetzt()"), html.indexOf("function lvGross()"));
+  assert.ok(/await druckSeiteBauen\(\)/.test(lv) && /druckHtml\(true\)/.test(lv) && /finally \{ DRUCK = alt; \}/.test(lv), "nutzt den Druck-Kern und stellt DRUCK wieder her");
+  assert.ok((html.match(/\$\{lvKasten\(\)\}/g) || []).length >= 2 && /\$\{d \? lvKasten\(\) : vorschau\}/.test(html), "in Sitzung, Brief und Mitgliederliste");
+  assert.ok(/BU\.f\.anmerkung=this\.value;lvAuffrischen\(\)/.test(html) && /function briefFeld\(k, el\) \{ BRIEF\[k\] = el\.value; briefMerken\(\); lvAuffrischen\(\); \}/.test(html) && /function buAnw\(id, an\) \{[^}]*lvAuffrischen\(\); \}/.test(html), "Tippen erneuert die Vorschau");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

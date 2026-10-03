@@ -1033,6 +1033,11 @@
   /* KC-CLUB-EINSTIEG: „dort ist es“ – kurz aufleuchten */
   .hervor { outline: 3px solid #1e8449 !important; outline-offset: 3px; border-radius: 12px; animation: hervor 0.9s ease-in-out 3; }
   @keyframes hervor { 50% { outline-color: transparent; } }
+  /* KC-CLUB-LIVE-VORSCHAU (1.67.0): kleines A4-Blatt, das beim Bearbeiten mitläuft */
+  .lv-kopf { display: flex; align-items: center; gap: 8px; } .lv-kopf b { flex: 1; } .lv-hin { margin: 2px 0 8px; font-size: .85rem; }
+  .lv-blatt { position: relative; background: #7d7d7d; border-radius: 10px; padding: 6px; }
+  .lv-blatt iframe { display: block; width: 100%; height: 360px; border: 0; background: #7d7d7d; border-radius: 6px; pointer-events: none; }
+  .lv-auf { position: absolute; inset: 0; border: none; background: transparent; cursor: zoom-in; }
   /* KC-CLUB-BUERO-RAUM (1.65.0): Regal mit schmalen Ordnern + Schreibtisch, dezente Farben */
   .bu-raum { border-radius: 18px; overflow: hidden; box-shadow: var(--schatten); margin-bottom: 12px; }
   .bu-wand { background: linear-gradient(180deg, #efe7dc, #e6dccd); padding: 12px 12px 0; }
@@ -2274,7 +2279,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.66.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.67.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -6463,9 +6468,31 @@ async function buLaden() {
 }
 function buZurueck() { if (BU.sicht !== "start") { BU.sicht = "start"; buLaden(); window.scrollTo(0, 0); } else zeige("start"); }
 function buZeigen() { buZeigenRoh(); klappenMerken($("buInhalt")); }
+// ---------- KC-CLUB-LIVE-VORSCHAU (1.67.0, Wunsch Hansi „immer eine Vorschau, damit man sieht, wie die Vorlage aussieht“) ----------
+// Beim Bearbeiten steht unten ein kleines A4-Blatt, das sich bei jeder Änderung selbst erneuert – gebaut mit dem vorhandenen
+// Druck-Kern (DRUCKARTEN + druckSeiteBauen + druckHtml), also genau so, wie es gedruckt wird. Antippen = große Vorschau mit 🖨️.
+// Neue Bereiche: Büro-Sicht → Druckart hier eintragen und lvKasten() in die Seite setzen.
+const LV_ARTEN = { sitzung: "sitzung", brief: "brief", liste: "mitgliederliste" };
+const LV = { art: null, t: 0 };
+const lvKasten = () => `<div class="karte lv" id="lvKasten"><div class="lv-kopf"><b>👁️ So sieht es aus</b><button class="knopf klein" onclick="lvGross()">🔍 Groß ansehen</button></div>
+  <p class="hinweis lv-hin">Ändert sich sofort mit – genau so wird es gedruckt.</p><div class="lv-blatt"><iframe id="lvRahmen" title="Vorschau" tabindex="-1" aria-hidden="true"></iframe><button class="lv-auf" onclick="lvGross()" aria-label="Vorschau groß ansehen"></button></div></div>`;
+function lvNachZeigen() { LV.art = aktuelleAnsicht === "buero" ? LV_ARTEN[BU.sicht] || null : null; if (LV.art && $("lvRahmen")) lvAuffrischen(0); }
+function lvAuffrischen(ms = 350) { if (!LV.art) return; clearTimeout(LV.t); LV.t = setTimeout(lvJetzt, ms); }
+async function lvJetzt() {
+  const r = $("lvRahmen"); if (!r || !LV.art) return;
+  const alt = DRUCK; DRUCK = { art: LV.art };
+  try {
+    if (!(await druckSeiteBauen())) return;
+    const zoom = Math.min(1, (r.parentNode.clientWidth || 300) / ((DRUCK.quer ? 297 : 210) * 3.78 + 20));
+    r.onload = () => { try { r.style.height = Math.min(4000, r.contentDocument.documentElement.scrollHeight + 4) + "px"; } catch {} };
+    r.srcdoc = druckHtml(true).replace("</style>", `html{zoom:${zoom.toFixed(3)}}body{padding:4px 0!important}</style>`);
+  } catch (e) { r.srcdoc = `<p style="font:15px sans-serif;color:#666;padding:12px">${esc(e.message)}</p>`; r.style.height = "60px"; }
+  finally { DRUCK = alt; }
+}
+function lvGross() { if (LV.art) druckStarten(LV.art); }
 // Bereich im Büro: Klappkarte mit Pfeil und Schloss wie in den Einstellungen (Zustand je Gerät gemerkt)
 const buBereich = (name, titel, inhalt) => `<details class="karte bu-bereich" data-klappe="buero_${name}" data-ohne-unten open><summary>${titel}</summary>${inhalt}</details>`;
-function buZeigenRoh() { $("buInhalt").innerHTML = BU.sicht === "ordner" ? buOrdnerHtml() : BU.sicht === "sitzung" ? buSitzungHtml() : BU.sicht === "eingang" ? buEingangHtml() : BU.sicht === "brief" ? buBriefHtml() : BU.sicht === "termine" ? buTermineHtml() : BU.sicht === "kontakt" ? buKontaktHtml() : BU.sicht === "nachher" ? buNachherHtml() : BU.sicht === "feste" ? buFesteHtml() : BU.sicht === "liste" ? buListeHtml() : BU.sicht === "fl" ? buFlHtml() : BU.sicht === "flneu" ? buFlNeuHtml() : BU.sicht === "fall" ? buFallHtml() : BU.sicht === "rechte" ? buRechteHtml() : buStartHtml(); }
+function buZeigenRoh() { $("buInhalt").innerHTML = BU.sicht === "ordner" ? buOrdnerHtml() : BU.sicht === "sitzung" ? buSitzungHtml() : BU.sicht === "eingang" ? buEingangHtml() : BU.sicht === "brief" ? buBriefHtml() : BU.sicht === "termine" ? buTermineHtml() : BU.sicht === "kontakt" ? buKontaktHtml() : BU.sicht === "nachher" ? buNachherHtml() : BU.sicht === "feste" ? buFesteHtml() : BU.sicht === "liste" ? buListeHtml() : BU.sicht === "fl" ? buFlHtml() : BU.sicht === "flneu" ? buFlNeuHtml() : BU.sicht === "fall" ? buFallHtml() : BU.sicht === "rechte" ? buRechteHtml() : buStartHtml(); lvNachZeigen(); }
 // Nächster sinnvoller Schritt für eine Sitzung
 function buNaechster(t) {
   if (!t) return null;
@@ -6768,7 +6795,7 @@ function buSitzungHtml() {
       <div class="bu-haken-liste">${rest.map(haken).join("")}</div>
       <p style="margin:10px 0 0"><b>Entschuldigt:</b> ${nein.length ? nein.map((x) => esc(x.name) + (x.notiz ? ` <small class="hinweis">(${esc(x.notiz)})</small>` : "")).join(", ") : "–"}</p></div>
     <div class="karte"><h3 style="margin-top:0">2️⃣ Anmerkung zum letzten Protokoll</h3>
-      <label class="feld" style="margin:0"><textarea id="buAnmerkung" rows="3" maxlength="1000" oninput="BU.f.anmerkung=this.value">${esc(f.anmerkung)}</textarea></label>
+      <label class="feld" style="margin:0"><textarea id="buAnmerkung" rows="3" maxlength="1000" oninput="BU.f.anmerkung=this.value;lvAuffrischen()">${esc(f.anmerkung)}</textarea></label>
       ${s.aufgaben.filter((a) => !a.erledigt).length ? `<p style="margin:8px 0 2px"><b>Offene Aufgaben aus dem letzten Protokoll:</b></p><ul style="margin:0;padding-left:20px">${s.aufgaben.filter((a) => !a.erledigt).map((a) => `<li>${esc(a.wer)}: ${esc(a.text)}</li>`).join("")}</ul>` : ""}</div>
     <div class="karte"><h3 style="margin-top:0">3️⃣ Tagesordnung</h3>
       <ol class="bu-top">${f.tagesordnung.map((t, i) => `<li class="bu-top-${t.art}"><span>${esc(t.t)}${t.art === "vorschlag" ? ' <small class="hinweis">· Vorschlag</small>' : ""}</span>
@@ -6777,10 +6804,11 @@ function buSitzungHtml() {
       <div class="zwei" style="align-items:end"><label class="feld">Eigener Punkt<input id="buNeu" maxlength="200" placeholder="z. B. Planung Weihnachtsmarkt" value="${esc(f.neu)}" oninput="BU.f.neu=this.value"></label><button class="knopf" onclick="buTopNeu()">＋ Dazu</button></div></div>
     <div class="karte"><h3 style="margin-top:0">4️⃣ Schreiblinien je Punkt</h3><div class="hl-chips">${s.zeilenWahl.map((z) => `<button class="chip${f.zeilen === z ? " an" : ""}" onclick="BU.f.zeilen=${z};buZeigen()">${z ? z + " Zeilen" : "keine"}</button>`).join("")}</div></div>
     ${s.protokoll && s.protokoll.status !== "entwurf" ? '<p class="hinweis">ℹ️ Das Protokoll dieser Sitzung ist schon veröffentlicht – es wird nicht verändert.</p>' : ""}
+    ${lvKasten()}
     ${buSchreiben() ? '<div class="bu-leiste"><button class="knopf haupt" style="width:100%;text-align:center" onclick="buSpeichern(this)">✅ Fertig – speichern</button></div>' : ""}</fieldset>
     ${buSchreiben() ? "" : '<div class="bu-leiste"><button class="knopf haupt" style="width:100%;text-align:center" onclick="buDruckWahl()">🖨️ Vorlage drucken</button></div>'}`;
 }
-function buAnw(id, an) { an ? BU.f.anwesend.add(id) : BU.f.anwesend.delete(id); }
+function buAnw(id, an) { an ? BU.f.anwesend.add(id) : BU.f.anwesend.delete(id); lvAuffrischen(); }
 function buTop(i, d) { const l = BU.f.tagesordnung, j = i + d; [l[i], l[j]] = [l[j], l[i]]; buZeigen(); }
 function buTopWeg(i) { BU.f.tagesordnung.splice(i, 1); buZeigen(); }
 // neue Punkte vor „Verschiedenes“ einreihen
@@ -6915,7 +6943,7 @@ function buBrief() {
   BU.sicht = "brief"; buZeigen(); window.scrollTo(0, 0);
   if (entwurf) melde("✏️ Dein letzter Brief-Entwurf ist wieder da");
 }
-function briefFeld(k, el) { BRIEF[k] = el.value; briefMerken(); }
+function briefFeld(k, el) { BRIEF[k] = el.value; briefMerken(); lvAuffrischen(); }
 let briefTimer = null;
 function briefMerken() { clearTimeout(briefTimer); briefTimer = setTimeout(() => { try { localStorage.setItem("kc_club_brief_entwurf", JSON.stringify(BRIEF)); } catch {} }, 400); }
 async function briefVorlage(k) {
@@ -6939,6 +6967,7 @@ function buBriefHtml() {
     <div class="karte"><h3 style="margin-top:0">4️⃣ Unterschrift & Absender</h3><div class="zwei">${fe("name", "Name", "Vor- und Nachname")}${fe("amt", "Amt", "z. B. Clubsprecher")}</div>
       ${fe("absender", "Absenderzeile (oben, klein)", "Köcheclub Werne · Straße · 59368 Werne")}${fe("fuss", "Fußzeile (freiwillig)", "z. B. Bankverbindung, E-Mail, Internet")}
       <button class="knopf klein" onclick="briefStandardSpeichern()">💾 Absender & Unterschrift für nächstes Mal merken</button></div>
+    ${lvKasten()}
     <div class="bu-leiste"><div class="knoepfe" style="margin:0"><button class="knopf haupt" style="flex:1;text-align:center" onclick="druckStarten('brief')">👁️ Vorschau & Drucken</button><button class="knopf" onclick="briefNeu()">🆕 Neu</button></div></div>`;
 }
 async function briefNeu() {
@@ -7261,8 +7290,8 @@ function buListeHtml() {
   return `<div class="karte bu-gruss">📇 <b>Mitgliederliste</b> – Art antippen, prüfen, drucken. ${d ? `${d.liste.length} aktive Mitglieder.` : ""}</div>
     <div class="mini-kacheln">${Object.entries(ML_ARTEN).map(([k, x]) => `<button class="mini-kachel${ML.art === k ? " mk-offen" : ""}" onclick="ML.art='${k}';buZeigen()"><span class="mk-sym">${x.sym}</span><span class="mk-titel">${esc(x.t)}</span><span class="mk-unter">${esc(x.u)}</span></button>`).join("")}</div>
     <div class="hl-chips" style="margin-top:8px"><button class="chip${ML.sort === "name" ? " an" : ""}" onclick="ML.sort='name';buZeigen()">🔤 nach Name</button><button class="chip${ML.sort === "eintritt" ? " an" : ""}" onclick="ML.sort='eintritt';buZeigen()">📅 nach Eintritt</button></div>
-    ${["unterschrift", "abhaken"].includes(ML.art) ? `<label class="feld">Überschrift (freiwillig)<input maxlength="100" placeholder="${ML.art === "unterschrift" ? "z. B. Anwesenheit Jahreshauptversammlung" : "z. B. Jahresbeitrag 2027"}" value="${esc(ML.titel)}" oninput="ML.titel=this.value"></label>` : ""}
-    ${hinweis}${vorschau}
+    ${["unterschrift", "abhaken"].includes(ML.art) ? `<label class="feld">Überschrift (freiwillig)<input maxlength="100" placeholder="${ML.art === "unterschrift" ? "z. B. Anwesenheit Jahreshauptversammlung" : "z. B. Jahresbeitrag 2027"}" value="${esc(ML.titel)}" oninput="ML.titel=this.value;lvAuffrischen()"></label>` : ""}
+    ${hinweis}${d ? lvKasten() : vorschau}
     <div class="bu-leiste"><div class="knoepfe" style="margin:0"><button class="knopf haupt" style="flex:1;text-align:center" ${d ? "" : "disabled"} onclick="druckStarten('mitgliederliste')">🖨️ Vorschau & Drucken</button><button class="knopf" onclick="buZurueck()">🗂️ Büro</button></div></div>`;
 }
 function druckMitgliederliste() {

@@ -1,5 +1,12 @@
 # Änderungen
 
+## 1.67.0 – 2026-10-03
+- KC-CLUB-LIVE-VORSCHAU (Wunsch Hansi „immer eine Vorschau, damit man sieht, wie die Vorlage aussieht“): Beim Bearbeiten steht
+  unten ein kleines A4-Blatt „👁️ So sieht es aus“, das sich bei jeder Änderung selbst erneuert – in „Sitzung vorbereiten“
+  (Anwesende, Anmerkung, Tagesordnung, Schreiblinien), im Briefbogen (jedes Feld) und in der Mitgliederliste (Art, Sortierung,
+  Überschrift; ersetzt dort die bisherige Tabellen-Vorschau). Gebaut mit dem vorhandenen Druck-Kern – genau so, wie gedruckt
+  wird. Antippen oder „🔍 Groß ansehen“ öffnet die große Vorschau mit 🖨️ Drucken. Registry LV_ARTEN für weitere Bereiche.
+
 ## 1.66.0 – 2026-10-03
 - Büro-Schreibtisch (Wunsch Hansi): neu **📨 Nachricht & Mail** (App, E-Mail, WhatsApp) – Person suchen → „💬 Nachricht in der App“,
   „✉️ E-Mail“ (wenn freigegeben, öffnet das Mailprogramm) oder „🟢 WhatsApp“ (vorhandener WhatsApp-Weg); oben „👥 An mehrere oder
