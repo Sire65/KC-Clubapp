@@ -2625,12 +2625,28 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 
 // 232. 1.60.0: Bedienungsanleitung Club-App (PDF wie Kasse) in „Meine Dokumente“
 {
-  assert.ok(/\{ id: "bedienung-club-app", sym: "📖", t: "Bedienungsanleitung Club-App"[^}]*datei: "dokumente\/Koecheclub-App_Anleitung_V1\.pdf" \}/.test(html), "Eintrag Bedienungsanleitung fehlt");
+  assert.ok(/\{ id: "bedienung-club-app", sym: "📖", t: "Bedienungsanleitung Club-App"[^}]*datei: "dokumente\/Koecheclub-App_Anleitung_V1\.pdf"(, neuBis: "[\d-]+")? \}/.test(html), "Eintrag Bedienungsanleitung fehlt");
   assert.ok(/datei: "dokumente\/Koecheclub-App_Kurzanleitung\.pdf"/.test(html), "Kurzanleitung muss bleiben");
   const pdf = fs.readFileSync(new URL("../dokumente/Koecheclub-App_Anleitung_V1.pdf", import.meta.url));
   assert.ok(pdf.subarray(0, 5).toString() === "%PDF-" && pdf.length < 8e6, "Anleitung-PDF fehlt oder zu groß");
   const werkzeug = ["basis", "demo", "fotos", "inhalt", "bau"].map((n) => fs.readFileSync(new URL(`../tools/anleitung/${n}.mjs`, import.meta.url), "utf8")).join("\n");
   assert.ok(!/ptblnpiroqftcvlsrhac|service_role|eyJ[A-Za-z0-9_-]{20}/.test(werkzeug), "Bau-Werkzeug darf keine echten Zugänge enthalten");
+}
+
+// 233. 1.61.0: neues Dokument leise anzeigen (eine Zeile, kein Fenster/Push), weg nach Öffnen/✕/Ablauf
+{
+  const code = html.slice(html.indexOf('const DOK_GESEHEN = "kc_club_dok_gesehen"'), html.indexOf("function dokOeffnen("));
+  const speicher = {}; let heute = "2026-10-03";
+  const run = new Function("DOKUMENTE", "lsLesen", "localStorage", "heuteIso", "INIT", `${code}; return { dokNeu, dokHinweis, dokErledigt };`);
+  const DOKS = [{ id: "a", datei: "dokumente/a.pdf", neuBis: "2026-10-31" }, { id: "b", datei: "dokumente/b.pdf", neuBis: "2026-10-31" }, { id: "c", datei: "dokumente/c.pdf" }];
+  const { dokNeu, dokHinweis, dokErledigt } = run(DOKS, (k) => speicher[k] ?? null, { setItem: (k, v) => { speicher[k] = v; } }, () => heute, null);
+  assert.equal(dokHinweis()?.id, "a", "höchstens ein Hinweis, der erste neue");
+  assert.equal(dokNeu(DOKS[2]), false, "ohne neuBis nie neu");
+  dokErledigt("a"); assert.equal(dokHinweis()?.id, "b", "nach Öffnen/✕ verschwindet der Hinweis");
+  heute = "2026-11-01"; assert.equal(dokHinweis(), null, "nach neuBis kein Hinweis mehr");
+  assert.ok(/neuBis: "2026-10-31" \}/.test(html) && /if \(dokNeu\(d\)\) dokErledigt\(id\);/.test(html), "Anleitung als neu markiert / Öffnen merkt sich");
+  const ruhig = html.slice(html.indexOf("// KC-CLUB-DOK-NEU (1.61.0"), html.indexOf("function dokOeffnen("));
+  assert.ok(!/api\(|pushSenden|blattZeigen|melde\(|sprechen\(|Notification/.test(ruhig), "kein Push, kein Fenster, keine Ansage");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

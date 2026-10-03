@@ -1,5 +1,12 @@
 # Änderungen
 
+## 1.61.0 – 2026-10-03
+- KC-CLUB-DOK-NEU (Wunsch Hansi: alle sollen die neue Anleitung bekommen, aber nicht mit Meldungen überhäufen): Neue
+  Dokumente bekommen in der Registry DOKUMENTE ein „neuBis“-Datum. Bis dahin erscheint leise genau EINE Zeile
+  „📖 Neu: … › ✕“ bei „Heute wichtig“ und ganz unten bei „🔔 Für dich“, dazu „NEU“ an der
+  Kachel. Kein Fenster, kein Push, keine Update-Meldung. Weg nach dem Öffnen, mit ✕ oder nach neuBis (je Gerät gemerkt).
+  Erstes Dokument: Bedienungsanleitung Club-App (bis 31.10.2026).
+
 ## 1.60.0 – 2026-10-03
 - KC-CLUB-ANLEITUNG (Wunsch Hansi): Vollständige Bedienungsanleitung der Club-App als PDF mit Bildschirmfotos –
   gleiche Gestaltung wie die Kasse-Anleitung (Kopf mit Kochmütze, nummerierte Bilder mit Legende, Zeilen „Bild – Erklärung“,

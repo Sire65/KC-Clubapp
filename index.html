@@ -2132,7 +2132,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.60.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.61.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -4510,16 +4510,28 @@ window.addEventListener("message", (e) => {
 const DOKUMENTE = [
   { id: "ueberblick", sym: "🗺️", t: "Club-App auf einen Blick", u: "Alle Bereiche & das Neueste", v: "ueberblick" },
   { id: "anleitung-club-app", sym: "📲", t: "Anleitung Club-App", u: "In 3 Schritten zur App", datei: "dokumente/Koecheclub-App_Kurzanleitung.pdf" },
-  { id: "bedienung-club-app", sym: "📖", t: "Bedienungsanleitung Club-App", u: "Alles erklärt, mit Bildern · 22 Seiten", datei: "dokumente/Koecheclub-App_Anleitung_V1.pdf" },
+  { id: "bedienung-club-app", sym: "📖", t: "Bedienungsanleitung Club-App", u: "Alles erklärt, mit Bildern · 22 Seiten", datei: "dokumente/Koecheclub-App_Anleitung_V1.pdf", neuBis: "2026-10-31" },
   { id: "bilderrechner", sym: "🧮", t: "Schnellanleitung Bilderrechner", u: "Kurzanleitung V4 · 28 Seiten", datei: "dokumente/Kurzanleitung_Bilderrechner_V4.pdf" },
 ];
 function dokumenteZeigen() {
   const da = (d) => !!(d.datei || d.v);
   $("dokRaster").innerHTML = DOKUMENTE.map((d) => `<button class="kachel${da(d) ? "" : " bald"}" onclick="dokOeffnen('${d.id}')">
-    <div class="sym">${d.sym}</div><b>${esc(d.t)}</b><small>${esc(d.u)}</small>${da(d) ? "" : '<span class="zahl">bald</span>'}</button>`).join("");
+    <div class="sym">${d.sym}</div><b>${esc(d.t)}</b><small>${esc(d.u)}</small>${da(d) ? (dokNeu(d) ? '<span class="zahl">NEU</span>' : "") : '<span class="zahl">bald</span>'}</button>`).join("");
+}
+// KC-CLUB-DOK-NEU (1.61.0, Wunsch Hansi: „nicht mit zu vielen Meldungen überhäufen“): Neues Dokument (neuBis im Eintrag)
+// wird nur leise angezeigt – eine Zeile bei „Für dich“/„Heute wichtig“ und „NEU“ an der Kachel. Kein Fenster, kein Push.
+// Höchstens EIN Dokument-Hinweis gleichzeitig; verschwindet nach dem Öffnen, mit ✕ oder nach neuBis. Merkt sich jedes Gerät.
+const DOK_GESEHEN = "kc_club_dok_gesehen";
+const dokGesehen = () => { try { return JSON.parse(lsLesen(DOK_GESEHEN) || "[]"); } catch { return []; } };
+function dokNeu(d) { return !!(d?.datei && d.neuBis && heuteIso() <= d.neuBis && !dokGesehen().includes(d.id)); }
+function dokHinweis() { return DOKUMENTE.find(dokNeu) || null; }
+function dokErledigt(id) {
+  const g = dokGesehen(); if (!g.includes(id)) { g.push(id); try { localStorage.setItem(DOK_GESEHEN, JSON.stringify(g.slice(-30))); } catch {} }
+  if (typeof wichtigZeigen === "function" && INIT) { wichtigZeigen(); infoFelderAktualisieren(); }
 }
 function dokOeffnen(id) {
   const d = DOKUMENTE.find((x) => x.id === id); if (!d) return;
+  if (dokNeu(d)) dokErledigt(id);
   if (d.v) return zeige(d.v);
   if (!d.datei) return melde(`„${d.t}“ kommt bald.`);
   extOeffnen(new URL(d.datei + "?v=" + APP_VERSION, location.href).href);
@@ -4918,6 +4930,8 @@ function infoFuerDich() {
   const nd = INIT?.naechsterDienst;
   if (nd) z.push(zeile("🗓️", `Nächster Dienst: <b>${nd.datum === heuteIso() ? "heute" : esc(fTagDp.format(new Date(nd.datum + "T12:00:00Z")))}, ${esc(nd.start)} Uhr</b>`, "dpNurIch()"));
   for (const g of (INIT?.geburtstageHeute || []).filter((x) => x.person_id !== ICH?.person_id)) z.push(zeile("🎂", `<b>${esc(g.name)}</b> hat heute Geburtstag`, `gratulieren('${g.person_id}', true)`));
+  const dn = dokHinweis(); // KC-CLUB-DOK-NEU: ganz unten, verdrängt nichts Wichtigeres
+  if (dn) z.push(zeile(dn.sym, `Neu: <b>${esc(dn.t)}</b> ansehen`, `dokOeffnen('${dn.id}')`));
   if (!z.length) return `<h2>👍 Alles erledigt</h2><div class="unter">Gerade ist nichts Offenes für dich. Schön!</div>`;
   const MAX = 4;
   return `<h2>🔔 Für dich</h2><div class="ifzliste">${z.slice(0, MAX).join("")}</div>${z.length > MAX ? `<div class="unter" style="font-size:.85rem">+ ${z.length - MAX} weitere unten bei „Heute wichtig“</div>` : ""}`;
@@ -5501,6 +5515,8 @@ function wichtigZeigen() {
     h.push(`<div class="zeile">📌 <span style="flex:1"><b>${esc(a.text)}</b> ${faelligText(a.faellig)}</span><button class="knopf klein" onclick="aufgabeErledigt('${a.id}', true)">✔ erledigt</button></div>`);
   for (const u of INIT?.terminfindungOffen || []) h.push(`<div class="zeile" style="cursor:pointer" onclick="zeige('termine')">🗓️ Bitte Termine ankreuzen: <b>${esc(u.titel)}</b><span style="margin-left:auto">›</span></div>`);
   if (INIT?.protokolleUngelesen) h.push(`<div class="zeile" style="cursor:pointer" onclick="zeige('protokolle')">📄 <b>${INIT.protokolleUngelesen === 1 ? "1 neues Protokoll" : INIT.protokolleUngelesen + " neue Protokolle"}</b> zum Lesen<span style="margin-left:auto">›</span></div>`);
+  const dn = dokHinweis(); // KC-CLUB-DOK-NEU: eine leise Zeile, ✕ = nicht mehr zeigen
+  if (dn) h.push(`<div class="zeile" style="cursor:pointer" onclick="dokOeffnen('${dn.id}')">${dn.sym} <span style="flex:1;min-width:0">Neu: <b>${esc(dn.t)}</b></span><span>›</span><button class="knopf klein" title="Nicht mehr zeigen" aria-label="Nicht mehr zeigen" onclick="event.stopPropagation();dokErledigt('${dn.id}')">✕</button></div>`);
   if (pushMoeglich() && Notification.permission !== "granted") h.push(`<div class="zeile">🔔 Benachrichtigungen sind aus<button class="knopf haupt klein" style="margin-left:auto" onclick="pushEinschalten()">Einschalten</button></div>`);
   $("wichtig").innerHTML = h.join("") || "Alles erledigt 👍";
 }
