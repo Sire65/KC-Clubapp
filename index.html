@@ -2865,17 +2865,26 @@ const lsLesen = (k) => { try { return localStorage.getItem(k); } catch { return 
 const lsSetzen = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
 const ansageAn = () => lsLesen(ANSAGE) === "1";
 const anmeldeTonAn = () => !!ICH?.admin && lsLesen(ANSAGE_TON) !== "0"; // Admin: Standard an
-const OA = { vorher: null, zuletzt: 0, gesehen: new Map() };
+const OA = { vorher: null, zuletzt: 0, gesehen: new Map(), gesagt: new Map() };
 function onlineAnsagen(liste) {
   const jetzt = Date.now(), andere = (liste || []).filter((x) => x.person_id !== ICH?.person_id);
   // nur echte Neuankömmlinge: vorige Liste ist frisch (sonst nach langer Pause nicht alle auf einmal) und Person war ≥ 10 Min. weg
   const neu = OA.vorher && jetzt - OA.zuletzt < ANSAGE_FRISCH_MS ? andere.filter((x) => !OA.vorher.has(x.person_id) && jetzt - (OA.gesehen.get(x.person_id) || 0) >= ANSAGE_PAUSE_MS) : [];
   for (const x of andere) OA.gesehen.set(x.person_id, jetzt);
   OA.vorher = new Set(andere.map((x) => x.person_id)); OA.zuletzt = jetzt;
-  if (!neu.length || document.hidden || inRuheJetzt(INIT?.einstellungen?.ruhezeit)) return;
+  if (!neu.length || document.hidden) return;
+  onlineAnsageSprechen(neu.map((x) => x.vorname || x.name));
+}
+// KC-CLUB-ONLINE-ANSAGE-PUSH (1.64.0, Fund Hansi „Steven angemeldet, keine Ansage“): Ton/Ansage auf DIESEM Gerät – aus dem
+// Online-Takt oder aus dem Admin-Push („🟢 X ist jetzt online“, den der Service Worker bei offener App hierher gibt).
+// Dieselbe Person höchstens einmal je 10 Min. (egal über welchen Weg); nie in der Ruhezeit.
+function onlineAnsageSprechen(namen) {
+  if (document.hidden || inRuheJetzt(INIT?.einstellungen?.ruhezeit)) return;
+  const jetzt = Date.now(), n = [...new Set(namen.filter(Boolean))].filter((x) => jetzt - (OA.gesagt.get(x) || 0) >= ANSAGE_PAUSE_MS);
+  if (!n.length) return;
+  n.forEach((x) => OA.gesagt.set(x, jetzt));
   const ton = anmeldeTonAn(); if (ton) anmeldeTon();
-  if (ansageAn()) { const n = neu.map((x) => x.vorname || x.name);
-    setTimeout(() => sprechen(n.length === 1 ? `${n[0]} ist jetzt online` : `${n.slice(0, -1).join(", ")} und ${n[n.length - 1]} sind jetzt online`), ton ? 700 : 0); }
+  if (ansageAn()) setTimeout(() => sprechen(n.length === 1 ? `${n[0]} ist jetzt online` : `${n.slice(0, -1).join(", ")} und ${n[n.length - 1]} sind jetzt online`), ton ? 700 : 0);
 }
 function sprechen(text) {
   try { if (!("speechSynthesis" in window)) return; const u = new SpeechSynthesisUtterance(text); u.lang = "de-DE";
@@ -12604,7 +12613,8 @@ async function fpAdmin(tage) {
   history.pushState({ v: "start" }, "", url.pathname);
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("sw.js").catch((e) => fpNeu("sw", { text: "Offline-Speicher (Service Worker) nicht eingerichtet: " + (e?.message || e) }));
-    navigator.serviceWorker.addEventListener("message", (e) => { if (e.data?.typ === "push") { neuLaden(); onlinePing(); if (chatId) chatLaden(false); } });
+    navigator.serviceWorker.addEventListener("message", (e) => { if (e.data?.typ === "push") { neuLaden(); onlinePing(); if (chatId) chatLaden(false); }
+      if (e.data?.typ === "online-ansage") onlineAnsageSprechen([e.data.name]); }); // KC-CLUB-ONLINE-ANSAGE-PUSH
   }
   // Messung: wie wurde die App gestartet (einmal je Sitzung) – zeigt, ob die Installation geklappt hat
   try { if (!sessionStorage.getItem("kc_club_start_gemeldet")) { sessionStorage.setItem("kc_club_start_gemeldet", "1"); setTimeout(() => api("diagnose", { art: "start", daten: { start: START_ART, referrer: (document.referrer || "").slice(0, 80) } }).catch(() => {}), 1500); } } catch {}

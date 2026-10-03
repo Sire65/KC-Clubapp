@@ -316,8 +316,10 @@ async function onlinePushMelden(wer: Ich) {
   if (!ids.length) return;
   const { data: wahl } = await db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "online_push").in("person_id", ids);
   const aus = new Set((wahl ?? []).filter((x: any) => x.wert?.an === false).map((x: any) => x.person_id));
-  const [ruhe, on] = await Promise.all([ruhendePersonen(ids), onlineJetzt()]);
-  ids = ids.filter((id) => !aus.has(id) && !ruhe.has(id) && !on.has(id));
+  // 1.64.0 (Fund Hansi): auch wenn der Admin gerade „online“ ist – bei mehreren Geräten (Handy + Tablet) entscheidet jedes Gerät
+  // selbst: App sichtbar → Ton/Ansage in der App (Service Worker), sonst normale Mitteilung.
+  const ruhe = await ruhendePersonen(ids);
+  ids = ids.filter((id) => !aus.has(id) && !ruhe.has(id));
   if (!ids.length) return;
   const name = wer.vorname || wer.name;
   await routerSenden("club_online", ids, { titel: `🟢 ${name} ist jetzt online`, kurz: `${wer.name} ist gerade in der Köcheclub-App`,

@@ -14,6 +14,10 @@
   Register, Regler zum Springen, Antippen vergrößert. Fotos/Scans direkt, PDFs Seite für Seite (pdf.js lokal), Word/Excel als
   Karte „📄 Öffnen“. Chronik beginnt mit Deckblatt und Anleitung. Zurück-Taste schließt das Blättern. Server: archiv_blaettern
   (alle Links eines Ordners in einem Aufruf). PDF-Seite→Bild ist ein gemeinsamer Helfer (Dokument-Anzeige + Blättern).
+- KC-CLUB-ONLINE-ANSAGE-PUSH (Fund Hansi: „Steven hat sich angemeldet, aber keine Ansage“): Der Admin-Push „🟢 X ist jetzt
+  online“ entfiel, sobald der Admin auf irgendeinem Gerät online war (z. B. Tablet offen) – das Handy bekam dann nichts. Jetzt geht
+  der Push immer (außer Ruhezeit/abgeschaltet); jedes Gerät entscheidet selbst: App sichtbar → Ton + Ansage in der App, sonst
+  Mitteilung. Dieselbe Person wird je Gerät höchstens einmal in 10 Min. angesagt (Online-Takt und Push zusammen).
 - DB: kc_club_archiv_ordner.einreichen, kc_club_archiv_dokumente.beschreibung (Migration 20261003_kc_club_v1640_chronik.sql).
 
 ## 1.63.0 – 2026-10-03

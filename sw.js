@@ -44,6 +44,9 @@ self.addEventListener("push", (e) => {
   const titel = d.title || "Köcheclub Werne";
   e.waitUntil((async () => {
     const fenster = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    // KC-CLUB-ONLINE-ANSAGE-PUSH (1.64.0): „🟢 X ist jetzt online“ bei offener, sichtbarer App → Ton/Ansage in der App statt Mitteilung
+    const online = /^🟢 (.+) ist jetzt online$/.exec(titel), sichtbar = fenster.filter((c) => c.visibilityState === "visible");
+    if (online && sichtbar.length) { sichtbar.forEach((c) => c.postMessage({ typ: "online-ansage", name: online[1] })); await quittung(d.data?.requestId, "displayed"); return; }
     fenster.forEach((c) => c.postMessage({ typ: "push", titel }));
     if (self.navigator.setAppBadge) try { await self.navigator.setAppBadge(); } catch {}
     await self.registration.showNotification(titel, {

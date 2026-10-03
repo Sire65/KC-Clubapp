@@ -2533,7 +2533,9 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.equal(gesagt[1], "Steven und Willfried sind jetzt online", "mehrere zusammen");
   assert.match(html, /id="setAnsage" onchange="ansageSchalter\(this\.checked\)"/, "Schalter in den Einstellungen");
   assert.match(html, /id="setAnmeldeTonZeile"[^\n]*id="setAnmeldeTon"/, "Admin-Ton-Schalter");
-  assert.match(code, /if \(!neu\.length \|\| document\.hidden \|\| inRuheJetzt\(INIT\?\.einstellungen\?\.ruhezeit\)\) return;/, "nicht in Ruhezeit / im Hintergrund");
+  // 1.64.0: Prüfung „Hintergrund/Ruhezeit“ sitzt in onlineAnsageSprechen (gemeinsam für Online-Takt und Admin-Push)
+  assert.match(code, /if \(!neu\.length \|\| document\.hidden\) return;/, "im Hintergrund nichts");
+  assert.match(code, /function onlineAnsageSprechen\(namen\) \{\n  if \(document\.hidden \|\| inRuheJetzt\(INIT\?\.einstellungen\?\.ruhezeit\)\) return;/, "nicht in Ruhezeit / im Hintergrund");
   assert.match(html, /onlineAnsagen\(ONL\.liste\); \/\/ KC-CLUB-ONLINE-ANSAGE/, "an der vorhandenen Online-Liste");
 }
 
@@ -2545,7 +2547,8 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   const f = srv.slice(srv.indexOf("async function onlinePushMelden("), srv.indexOf("async function onlineJetzt("));
   assert.match(f, /\.get\(wer\.person_id\) === false\) return;/, "unsichtbar → keine Meldung");
   assert.match(f, /eq\("ist_admin", true\)\.neq\("person_id", wer\.person_id\)/, "nur an Admins, nie an sich selbst");
-  assert.match(f, /ids = ids\.filter\(\(id\) => !aus\.has\(id\) && !ruhe\.has\(id\) && !on\.has\(id\)\);/, "abschaltbar, Ruhezeit, App offen");
+  // 1.64.0 (Fund Hansi): auch bei offener App senden – jedes Gerät entscheidet (sichtbar → Ansage in der App, sonst Mitteilung)
+  assert.match(f, /ids = ids\.filter\(\(id\) => !aus\.has\(id\) && !ruhe\.has\(id\)\);/, "abschaltbar, Ruhezeit");
   assert.match(f, /routerSenden\("club_online"/, "über den Communicator");
   assert.match(mig, /'vorher', v_vorher/, "Anmeldung liefert vorher");
   assert.match(mig, /'club_online', [^\n]*array\['push'\]/, "nur Push");
@@ -2695,6 +2698,22 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok((html.match(/await pdfSeiteAlsBild\(pdf, n, breite\)/g) || []).length === 2 && (html.match(/async function pdfSeiteAlsBild\(/g) || []).length === 1, "ein gemeinsamer PDF-Helfer");
   assert.ok(/function arChronikAnlegen\(\)/.test(html) && /const CHRONIK_ANLEITUNG = /.test(html) && /nur mit Einverständnis der Familie/.test(html) && /keine Gründe/.test(html), "Chronik anlegen / Anleitung fehlt");
   assert.ok(/📥 Beitrag einreichen/.test(html) && /id="arEinreichen"/.test(html) && /id="arDokBeschr"/.test(html), "Einreichen/Beschreibung in der App fehlt");
+}
+
+// 237. 1.64.0: Online-Push auch bei offener App – sichtbares Gerät sagt an, sonst Mitteilung; je Name nur einmal in 10 Min.
+{
+  const sw = lies("sw.js");
+  assert.match(sw, /const online = \/\^🟢 \(\.\+\) ist jetzt online\$\/\.exec\(titel\), sichtbar = fenster\.filter\(\(c\) => c\.visibilityState === "visible"\);/, "SW erkennt Online-Push");
+  assert.match(sw, /if \(online && sichtbar\.length\) \{ sichtbar\.forEach\(\(c\) => c\.postMessage\(\{ typ: "online-ansage", name: online\[1\] \}\)\);/, "sichtbare App bekommt die Ansage");
+  assert.match(html, /if \(e\.data\?\.typ === "online-ansage"\) onlineAnsageSprechen\(\[e\.data\.name\]\);/, "App sagt an");
+  const code = html.slice(html.indexOf("const ANSAGE = "), html.indexOf("function sprechen("));
+  const gesagt = [];
+  const run = new Function("ICH", "INIT", "document", "inRuheJetzt", "localStorage", "setTimeout", "sprechen", "anmeldeTon", `${code}; return { onlineAnsagen, onlineAnsageSprechen };`);
+  const ls = { getItem: (k) => ({ kc_club_online_ansage: "1" })[k] ?? null, setItem() {} };
+  const { onlineAnsagen, onlineAnsageSprechen } = run({ person_id: "ICH", admin: true }, {}, { hidden: false }, () => false, ls, (f) => f(), (t) => gesagt.push(t), () => {});
+  onlineAnsageSprechen(["Steven"]);
+  onlineAnsagen([{ person_id: "ICH" }]); onlineAnsagen([{ person_id: "ICH" }, { person_id: "S", vorname: "Steven" }]);
+  assert.deepEqual(gesagt, ["Steven ist jetzt online"], "Push und Online-Takt: nur eine Ansage");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
