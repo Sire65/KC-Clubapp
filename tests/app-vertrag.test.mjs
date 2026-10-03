@@ -96,7 +96,7 @@ assert.ok(server.includes('from("kc_club_dienst_erinnerung").upsert({ person_id:
 // 13. KC-CLUB-ZURUECK + Kopf: Verlaufseinträge, Kennzahlen führen in Bereiche, kein Zahnrad im Kopf.
 assert.ok(/history\.replaceState\(\{ basis: true \}/.test(html) && /addEventListener\("popstate"/.test(html), "Zurück-Steuerung fehlt");
 assert.ok(/history\.pushState\(st,/.test(html), "Ansichten legen keinen Verlaufseintrag an");
-for (const z of ["nachrichten", "mitglieder"]) assert.ok(html.includes(`<button class="mini" onclick="zeige('${z}')">`) || (z === "nachrichten" && html.includes(`<button class="mini\${n ? " mini-neu" : ""}" onclick="zeige('nachrichten')">`)), `Kennzahl → ${z} fehlt`); // 1.22.0: orange bei Neuem
+for (const z of ["nachrichten", "mitglieder"]) assert.ok(html.includes(`<button class="mini" onclick="zeige('${z}')">`) || (z === "mitglieder" && html.includes(`<button class="mini" onclick="mgNurOnline()">`)) || (z === "nachrichten" && html.includes(`<button class="mini\${n ? " mini-neu" : ""}" onclick="zeige('nachrichten')">`)), `Kennzahl → ${z} fehlt`); // 1.22.0: orange bei Neuem // 1.91.0: Mitglieder-Kachel → Seite nur online (mgNurOnline zeigt „mitglieder“, Test 271)
 // 0.27.2: „Nächstes Treffen“ führt über zumTreffen() in Termine (Kalender, Tag ausgewählt)
 assert.ok((html.includes(`<button class="mini" onclick="zumTreffen()">`) || html.includes(`<button class="mini\${frist ? " mini-frist frist-" + frist : ""}" onclick="zumTreffen()">`)) && /function zumTreffen\(mitfahrt\) \{[\s\S]{0,400}zeige\("termine"\)/.test(html), "Kennzahl → termine fehlt");
 const kopfHtml = html.slice(html.indexOf('<section id="v-start">'), html.indexOf('id="heroInfo"'));
@@ -677,7 +677,9 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/if \(NEUE_VERSION\) updateFenster\(\);/.test(html) && /onclick="updateFenster\(\)">Was ist neu\?/.test(html), "Update zeigt kein Neuigkeiten-Fenster");
   assert.ok(/nachUpdatePruefen\(begruesst\)/.test(html) && /kc_club_version_gesehen/.test(html), "Neuigkeiten nach automatischem Update fehlen");
   assert.ok(/🟢 \$\{ONL\.liste\.length\} online/.test(html), "Startseite zeigt nicht, wie viele online sind");
-  assert.ok(/onclick="event\.stopPropagation\(\); onlineBlatt\(\)"/.test(html) && /function onlineBlatt\(\)[\s\S]{0,900}anklopfen\('\$\{x\.person_id\}'\)[\s\S]{0,500}direkt\('\$\{x\.person_id\}'\)/.test(html), "„online“ antippen zeigt keine Liste mit Direktkontakt");
+  // 1.91.0 (KC-CLUB-ONLINE-SEITE, Wunsch Hansi): die Zahl im Kopf öffnet die Mitglieder-Seite nur online (dort 💬/👋 je Mitglied);
+  // das Online-Fenster mit Anklopfen/Direkt bleibt über Schnellzugriff „👋 Online“ und die Suche
+  assert.ok(/onclick="event\.stopPropagation\(\); (onlineBlatt|mgNurOnline)\(\)"/.test(html) && /function onlineBlatt\(\)[\s\S]{0,900}anklopfen\('\$\{x\.person_id\}'\)[\s\S]{0,500}direkt\('\$\{x\.person_id\}'\)/.test(html), "„online“ antippen zeigt keine Liste mit Direktkontakt");
 }
 
 // 52. 0.31.0: Anruf per Ton (Test) – nur Anrufer/Angerufener sehen den Anruf, SDP nur an die Gegenseite, Klingeln begrenzt
@@ -1273,7 +1275,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 93. 0.72.0: Mitgliederliste „Alle | Nur online“ (KC-CLUB-ONLINEFILTER)
 {
   assert.ok(/id="mgFilter"/.test(html) && /onclick="mgFilterSetzen\('alle'\)">👥 Alle<\/button><button data-f="online" onclick="mgFilterSetzen\('online'\)">/.test(html), "Umschalter fehlt");
-  assert.ok(/nurOnline = MG_FILTER === "online" && sichtbar/.test(html) && /MITGLIEDER\.filter\(\(m\) => m\.online\)/.test(html) && /ONLINE_SICHTBAR = r\.onlineSichtbar !== false/.test(html), "Filter / Online-Privatsphäre");
+  assert.ok(/nurOnline = (\(MG_EINMAL \|\| MG_FILTER\)|MG_FILTER) === "online" && sichtbar/.test(html) && /MITGLIEDER\.filter\(\(m\) => m\.online\)/.test(html) && /ONLINE_SICHTBAR = r\.onlineSichtbar !== false/.test(html), "Filter / Online-Privatsphäre");
   assert.ok(/Gerade ist niemand online\./.test(html), "leere Liste ohne Hinweis");
 }
 
@@ -3016,6 +3018,13 @@ assert.ok(/<h2>🗂️ Büro<\/h2><span class="bu-kopfgruss" id="buKopfGruss"><\
   assert.ok(/hlSetze\('absprache', true\)">🤝 Nach Absprache/.test(html) && /absprache: false, datum: hlTag\(0\)/.test(html) && /absprache: !!f\.absprache/.test(html), "Formular Absprache, Standard bestimmter Tag");
   assert.ok(/<textarea class="hl-notiz" rows="6" maxlength="900"/.test(html) && /\.slice\(0, 1000\)/.test(html), "großes Textfeld");
   assert.ok(!/🗓️ \$\{esc\(hlTagName\(a\.datum\)\)\}/.test(html) && /hlWann\(a\)/.test(html), "Anzeige überall über hlWann");
+}
+// 271. 1.91.0: KC-CLUB-ONLINE-SEITE – Kopf-Kachel öffnet Mitglieder nur online, ohne gemerkte Wahl zu ändern
+{
+  assert.ok(/<button class="mini" onclick="mgNurOnline\(\)">/.test(html) && /onclick="event\.stopPropagation\(\); mgNurOnline\(\)"/.test(html), "Kachel + Zahl → Online-Seite");
+  assert.ok(/function mgNurOnline\(\) \{ MG_EINMAL = "online"; zeige\("mitglieder"\); \}/.test(html) && /nurOnline = \(MG_EINMAL \|\| MG_FILTER\) === "online" && sichtbar/.test(html), "einmaliger Filter");
+  assert.ok(html.indexOf("let MG_EINMAL = null;") < html.indexOf("function zeige(") && /if \(v !== "mitglieder" && v !== "mitglied"\) MG_EINMAL = null;/.test(html) && /function mgFilterSetzen\(f\) \{ MG_EINMAL = null;/.test(html), "zurücksetzen, gemerkte Wahl bleibt");
+  assert.ok(/\{ id: "online", sym: "👋", t: "Online", los: \(\) => onlineBlatt\(\) \}/.test(html), "Online-Fenster bleibt erreichbar");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

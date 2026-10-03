@@ -1,5 +1,11 @@
 # Änderungen
 
+## 1.91.0 – 2026-10-03
+- KC-CLUB-ONLINE-SEITE (Wunsch Hansi): Die Kachel „Mitglieder · 🟢 online“ oben im Kopfbereich (ganze Kachel und die grüne
+  Zahl) öffnet jetzt immer die Mitglieder-Seite nur mit den Online-Mitgliedern – statt Mitgliederliste mit gemerktem Filter bzw.
+  dem kleinen Online-Fenster. Einmalig: Die gemerkte Wahl (👥 Alle / 🟢 Online) für „Mitglieder“ in der unteren Leiste bleibt
+  unverändert; „👥 Alle“ auf der Seite schaltet wie gewohnt um. Das Online-Fenster bleibt über Suche und Schnellzugriff „👋 Online“.
+
 ## 1.90.0 – 2026-10-03
 - KC-CLUB-HILFE-PINNWAND (Wunsch Hansi: „Hilferuf an die Pinnwand hängen, von dort gezielt zum Hilfebereich“): Offene
   Hilfe-Aufrufe hängen als grüner Aushang (grüne Nadel, „🙋 HILFE GESUCHT“, was · wann · ✋ x von y) vorne an der Pinnwand;

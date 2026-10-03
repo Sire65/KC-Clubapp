@@ -2351,7 +2351,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.90.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.91.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2381,6 +2381,7 @@ function kreis(m, name, groesse = 40, extra = "") {
 const kreisLegende = () => `<div class="kreislegende">${KREIS_ARTEN.filter((k) => !k.nurAdmin || ICH?.admin).map((k) =>
   `<span><i class="avatar k-${k.art}" style="width:14px;height:14px;${k.art === "unbekannt" ? "border-width:1px" : ""}"></i>${esc(k.text)}</span>`).join("")}</div>`;
 
+let MG_EINMAL = null; // KC-CLUB-ONLINE-SEITE (1.91.0): einmaliger Filter der Mitglieder-Seite (früh deklariert, zeige() nutzt ihn)
 let START_HASH = "", KEY = "", ICH = null, INIT = null, MITGLIEDER = null, AEMTER = [], aktuelleAnsicht = "start", reg = "verein";
 let chatId = null, chatTimer = null, empfWahl = { personen: [], aemter: [], alle: false, vorstand: false }, anlagen = [], letzteUngelesen = null;
 
@@ -6143,7 +6144,7 @@ function infoTreffen() {
   return `<div class="klick" onclick="zumTreffen()">${kopf}</div>
     <div class="kacheln3">
       <button class="mini${n ? " mini-neu" : ""}" onclick="zeige('nachrichten')">${n ? '<svg class="ameisen" aria-hidden="true"><rect width="100%" height="100%" rx="16"/></svg>' : ""}<b>${n}</b><span>Neue Nachr.</span><span class="mpfeil" aria-hidden="true">›</span></button>
-      <button class="mini" onclick="zeige('mitglieder')"><b class="mini-zeile">${INIT?.mitgliederAnzahl || "–"}${ONL.zeigen ? onlineZahlHtml() : ""}</b><span>Mitglieder</span><span class="mpfeil" aria-hidden="true">›</span></button>
+      <button class="mini" onclick="mgNurOnline()"><b class="mini-zeile">${INIT?.mitgliederAnzahl || "–"}${ONL.zeigen ? onlineZahlHtml() : ""}</b><span>Mitglieder</span><span class="mpfeil" aria-hidden="true">›</span></button>
       <button class="mini${frist ? " mini-frist frist-" + frist : ""}" onclick="zumTreffen()">${frist ? '<svg class="ameisen" aria-hidden="true"><rect width="100%" height="100%" rx="16"/></svg>' : ""}<b style="font-size:1.05rem">${bisTreffen}</b><span>Nächster Termin</span><span class="mpfeil" aria-hidden="true">›</span></button>
     </div>`;
 }
@@ -6153,7 +6154,7 @@ const fristStufe = (tage) => tage <= 1 ? "rot" : tage <= 3 ? "orange" : tage <= 
 function onlineZahlHtml() {
   const frisch = ONL.stand && Date.now() - ONL.stand < 3 * 60 * 1000, n = ONL.liste.length, an = frisch && n > 0;
   const t = !frisch ? "Online-Stand unbekannt" : n ? `${n} gerade online – antippen` : "Gerade ist sonst niemand online";
-  return `<span class="onzahl${an ? " an" : ""}" role="button" title="${t}" aria-label="${t}" onclick="event.stopPropagation(); onlineBlatt()"><i class="led ${an ? "gruen" : "grau"}"></i>${frisch ? n : "?"}</span>`;
+  return `<span class="onzahl${an ? " an" : ""}" role="button" title="${t}" aria-label="${t}" onclick="event.stopPropagation(); mgNurOnline()"><i class="led ${an ? "gruen" : "grau"}"></i>${frisch ? n : "?"}</span>`;
 }
 // Internetseite des Köcheclubs (Platzhalter, bis die Seite online ist)
 const WEBSEITE_URL = "";
@@ -6297,6 +6298,7 @@ function zeige(v, ausHistorie) {
   if (v !== "chat") $("nachUnten")?.classList.add("versteckt");
   aktuelleAnsicht = v; if (window.KCFP) KCFP.sicht = v;
   nzZaehlen(v); // KC-CLUB-NUTZUNG: nur „Bereich geöffnet“, ohne Namen
+  if (v !== "mitglieder" && v !== "mitglied") MG_EINMAL = null; // KC-CLUB-ONLINE-SEITE: nur für diesen Besuch
   if (v !== "buero" && typeof BU !== "undefined") BU.nzSicht = null; // KC-CLUB-NUTZUNG-BEREICHE (1.89.0): beim nächsten Büro-Besuch wieder zählen
   if (vorher === "protokoll" && v !== "protokoll" && prTimer) prSpeichernJetzt(false).catch(() => {}); // ungespeicherte Eingaben sichern
   ["start", "dokumente", "dokansicht", "termine", "vorschlaege", "aktionen", "aktion", "fotos", "feedback", "gruppe", "mitglied", "protokolle", "protokoll", "dienste", "nachrichten", "chat", "neu", "mitglieder", "einstellungen", "pinnwand", "erstattung", "ueberblick", "programme", "standort", "archiv", "sos", "sicherheit", "helfen", "buero"].forEach((x) => $("v-" + x).classList.toggle("versteckt", x !== v));
@@ -10552,7 +10554,10 @@ async function protokollKorrigieren() {
 // KC-CLUB-ONLINEFILTER (0.72.0, Wunsch Hansi): Umschalter „Alle | Nur online“ (je Gerät gemerkt). Wer die eigene
 // Online-Anzeige verborgen hat, sieht auch andere nicht online – dann ist der Filter gesperrt (nie eine falsche leere Liste).
 let MG_FILTER = (() => { try { return localStorage.getItem("kc_club_mg_filter") === "online" ? "online" : "alle"; } catch { return "alle"; } })();
-function mgFilterSetzen(f) { MG_FILTER = f === "online" ? "online" : "alle"; try { localStorage.setItem("kc_club_mg_filter", MG_FILTER); } catch {} mitgliederZeichnen(); }
+// KC-CLUB-ONLINE-SEITE (1.91.0, Wunsch Hansi): Kachel „Mitglieder/online“ oben im Kopf öffnet IMMER die Mitglieder-Seite nur mit den
+// Online-Mitgliedern – einmalig, ohne die gemerkte Wahl (👥 Alle / 🟢 Online) für die untere Leiste zu ändern
+function mgNurOnline() { MG_EINMAL = "online"; zeige("mitglieder"); }
+function mgFilterSetzen(f) { MG_EINMAL = null; MG_FILTER = f === "online" ? "online" : "alle"; try { localStorage.setItem("kc_club_mg_filter", MG_FILTER); } catch {} mitgliederZeichnen(); }
 // KC-CLUB-MG-KACHELN (1.45.0, Wunsch Hansi): Mitglieder als Kacheln oder Liste – jeder wählt selbst (⚙️ → Darstellung, je Gerät)
 let MG_ANSICHT = (() => { try { return localStorage.getItem("kc_club_mg_ansicht") === "liste" ? "liste" : "kacheln"; } catch { return "kacheln"; } })();
 function mgAnsichtSetzen(a) {
@@ -10593,7 +10598,7 @@ function mgGruppenZeichnen() {
 }
 function mitgliederZeichnen() {
   try {
-    const sichtbar = ONLINE_SICHTBAR !== false, anzahl = MITGLIEDER.filter((m) => m.online).length, nurOnline = MG_FILTER === "online" && sichtbar;
+    const sichtbar = ONLINE_SICHTBAR !== false, anzahl = MITGLIEDER.filter((m) => m.online).length, nurOnline = (MG_EINMAL || MG_FILTER) === "online" && sichtbar;
     document.querySelectorAll("#mgFilter button").forEach((b) => { b.classList.toggle("an", b.dataset.f === (nurOnline ? "online" : "alle")); if (b.dataset.f === "online") { b.disabled = !sichtbar; b.textContent = `🟢 Online${sichtbar ? ` (${anzahl})` : ""}`; b.title = sichtbar ? "" : "Du hast deine Online-Anzeige verborgen – dann siehst du auch andere nicht online (⚙️ → Privatsphäre)"; } });
     const gr = mgGruppenZeichnen();
     const liste = (nurOnline ? MITGLIEDER.filter((m) => m.online) : MITGLIEDER).filter((m) => !gr || gr.personen.includes(m.person_id));
