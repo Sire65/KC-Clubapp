@@ -1,5 +1,11 @@
 # Änderungen
 
+## 1.94.0 – 2026-10-03
+- KC-CLUB-PINNWAND-EMOJI (Wunsch Hansi: „auf Post-its Emojis einsetzen, z. B. jemand ist krank und man wünscht gute Besserung“):
+  Unter dem Zettel-Text eine Schnellreihe 🤒 💐 🍀 💪 ❤️ 🙏 🤗 🎂 🎉 👍 ☀️ 🍲 und „😊 Mehr“ für die volle Auswahl (gleiche Gruppen und
+  „Zuletzt“ wie im Chat). Tippen fügt an der Schreibstelle ein; Zeichenzähler läuft mit, ist der Zettel voll, kommt ein Hinweis.
+  Umsetzung über den vorhandenen Emoji-Kern (KC-CLUB-EMOJI) mit Zielfeld (EMO_ORTE) – kein zweiter Kern; Chat unverändert.
+
 ## 1.93.0 – 2026-10-03
 - KC-CLUB-HILFE-KURZ (Wunsch Hansi: „beim Anklicken nicht den kompletten Menüpunkt mit allen Eingabemöglichkeiten, sondern eine
   Zusammenfassung, was gesucht wird – dann: ich kann helfen / dabei kann ich nicht helfen / ich brauche noch mehr Details“):

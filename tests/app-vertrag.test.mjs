@@ -3049,6 +3049,15 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/else if \(h\.startsWith\("#hilfe="\)\) hilfeDirekt\(/.test(html) && /url: APP_URL \+ "#hilfe=" \+ h\.id/.test(server), "Push/Mail-Sprung");
   assert.ok(/function hilfeVonPinnwand\(id\) \{[^\n]*hilfeDirekt\(id\)/.test(html), "Pinnwand → Kurzansicht");
 }
+// 275. 1.94.0: KC-CLUB-PINNWAND-EMOJI – Emojis auf Zetteln über den vorhandenen Emoji-Kern (kein zweiter Kern)
+{
+  assert.ok(/const EMO_ORTE = \{ text: \{ feld: "emoFeld"[^\n]*pwText: \{ feld: "pwEmoFeld"/.test(html) && (html.match(/const EMO_GRUPPEN = \[/g) || []).length === 1, "ein Kern, zwei Orte");
+  assert.ok(/id="pwEmoSchnell"/.test(html) && /id="pwEmoFeld"/.test(html) && /onclick="emoEinfuegen\('\$\{e\}', 'pwText'\)"/.test(html) && /onclick="emoUmschalten\(undefined, 'pwText'\)">😊 Mehr/.test(html), "Schnellreihe + volle Auswahl am Zettel");
+  assert.ok(/const PW_EMO_SCHNELL = \["🤒", "💐", "🍀"/.test(html), "Besserungs-Emojis vorne");
+  assert.ok(/t\.maxLength > 0 && t\.value\.length \+ e\.length > t\.maxLength/.test(html) && /pwText: \{[^\n]*nachher: \(\) => pwZaehlen\(\)/.test(html), "Zeichengrenze + Zähler");
+  const chatFeld = html.slice(html.indexOf('<textarea id="text" rows="2"'), html.indexOf("</textarea>", html.indexOf('<textarea id="text" rows="2"')));
+  assert.ok(!/emoStelleMerken\(\)/.test(chatFeld) && /emoStelleMerken\('text'\)/.test(chatFeld), "Chat-Feld merkt sein eigenes Ziel");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
@@ -3132,7 +3141,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
 
 // 118. 0.95.0: Emoji-Auswahl im Chat (KC-CLUB-EMOJI)
 {
-  assert.ok(/id="emoKnopf"[^>]*onclick="emoUmschalten\(\)"/.test(html) && /id="emoFeld"/.test(html), "Emoji-Knopf/Feld fehlt");
+  assert.ok(/id="emoKnopf"[^>]*onclick="emoUmschalten\((undefined, 'text')?\)"/.test(html) /* 1.94.0: Ziel ausdrücklich (Test 275) */ && /id="emoFeld"/.test(html), "Emoji-Knopf/Feld fehlt");
   const gr = [...html.matchAll(/\{ sym: "[^"]+", name: "([^"]+)", liste: "([^"]+)"\.split\(" "\) \}/g)];
   assert.ok(gr.length === 7 && gr.every((g) => g[2].split(" ").length === 24), "7 Gruppen mit je 24 Emojis erwartet (übersichtlich)");
   assert.ok(/function emoEinfuegen\(/.test(html) && /selectionStart/.test(html) && /kc_club_emoji_zuletzt/.test(html), "Einfügen an der Schreibstelle / Zuletzt fehlt");
