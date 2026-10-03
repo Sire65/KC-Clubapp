@@ -1,5 +1,11 @@
 # Änderungen
 
+## 1.75.0 – 2026-10-03
+- Sprachansagen (Fund Hansi: „Steven eingeloggt, keine Ansage, obwohl eingeschaltet“): Die Online-Ansage („Steven ist jetzt
+  online“) hatte einen eigenen Schalter und fehlte in der neuen Liste „🗣️ Sprachansagen“. Jetzt steht sie dort als erste Zeile
+  „🟢 Jemand kommt online“ (mit ▶ Beispiel) – gespeichert weiter im bisherigen Schalter, nichts geht verloren. Die alte
+  Einzelzeile ist ausgeblendet (ein Ort statt zwei); der Tipp des Tages führt zur Zeile „Sprachansagen“ (Vertragstest angepasst).
+
 ## 1.74.0 – 2026-10-03
 - KC-CLUB-BUERO-ZETTEL (Wunsch Hansi): auf dem Schreibtisch zwei Zettel nebeneinander mit Pinnnadel – gelb „Nächster Schritt“
   (rote Nadel) und hellblau „Eingang – n Sachen warten auf dich“ (blaue Nadel; ohne Clubleitung: „Nächster Termin“).

@@ -2628,7 +2628,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.equal(gesagt[1], "Dieter, wichtig: Achtung", "wichtig wird angesagt");
   assert.match(html, /id="chatVorlesenKnopf"[^>]*onclick="vorlesenSchalter\(!vorlesenAn\(\)\)">🔇<\/button>/, "Lautsprecher im Chat");
   assert.match(html, /naVorlesen\('\$\{id\}'\)">🔊 Vorlesen<\/button>/, "Menüeintrag");
-  assert.match(html, /id: "sprachansage"[^\n]*ja: "👉 Ja, zeig mir wo", nein: "⏰ Nein, später", neinSpaeter: true, nur: \(\) => !ansageAn\(\), testen: \(\) => einstiegHin\("ansagen", "setAnsageZeile"\)/, "Tipp Sprachansage führt genau hin");
+  assert.match(html, /id: "sprachansage"[^\n]*ja: "👉 Ja, zeig mir wo", nein: "⏰ Nein, später", neinSpaeter: true, nur: \(\) => !ansageAn\(\), testen: \(\) => einstiegHin\("ansagen", "setSprAnsZeile"\)/, "Tipp Sprachansage führt genau hin"); // 1.75.0: Zeile „Sprachansagen“ (Online-Ansage dort zusammengefasst)
   assert.match(html, /id: "vorlesen"[^\n]*testen: \(\) => einstiegHin\("ansagen", "setVorlesenZeile"\)/, "Tipp Vorlesen");
   assert.match(html, /\$\("tdtKenne"\)\.onclick = tipp\.neinSpaeter \? \(\) => \$\("tdtSpaeter"\)\.onclick\(\)/, "Nein = später");
   assert.match(html, /\.rund \{[^}]*display: inline-flex; align-items: center; justify-content: center; padding: 0;/, "Symbole mittig");
@@ -2876,6 +2876,12 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/if \(!o \|\| o\.besitzer\) continue;/.test(html), "persönliche Ordner nicht im Eingang der Clubleitung");
   const be = server.slice(server.indexOf("async function bueroEingang"), server.indexOf("function bueroTopListe"));
   assert.ok(/from\("kc_club_archiv_ordner"\)\.select\("id"\)\.in\("id", ids\)\.is\("besitzer", null\)/.test(be), "Server zählt nur Vereinsordner");
+}
+// 254. 1.75.0: Online-Ansage in der Liste „Sprachansagen“ (gleiche Einstellung wie bisher)
+{
+  assert.ok(/\{ id: "online", sym: "🟢", t: "Jemand kommt online", k: "Online",[^\n]*bsp: "/.test(html), "Online-Ansage in der Liste");
+  assert.ok(/online: ansageAn\(\) \}; \}/.test(html) && /if \(id === "online"\) \{ lsSetzen\(ANSAGE, an \? "1" : "0"\)/.test(html), "nutzt den bisherigen Schalter");
+  assert.ok(/<div class="schalter versteckt" id="setAnsageZeile">/.test(html) && /id="setAnsage" onchange="ansageSchalter\(this\.checked\)"/.test(html), "alte Zeile nur ausgeblendet, Schalter bleibt");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

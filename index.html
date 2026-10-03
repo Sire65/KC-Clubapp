@@ -1915,10 +1915,10 @@
       <summary>🗣️ Ansagen, Töne &amp; Tipps</summary>
       <div class="schalter"><div><b>💡 Tipp des Tages</b><div class="hinweis">Beim Öffnen ab und zu ein kurzer Tipp zu neuen Funktionen</div></div><input type="checkbox" id="setTipps" checked onchange="tippSchalter(this.checked)"></div>
       <!-- KC-CLUB-ONLINE-ANSAGE (1.56.0, Wunsch Hansi): Sprachansage „Klaus ist jetzt online“ – nur dieses Gerät, nur wenn die App offen ist -->
-      <div class="schalter" id="setAnsageZeile"><div><b>🗣️ Ansage, wenn jemand online kommt</b><div class="hinweis">Das Handy sagt z. B. „Klaus ist jetzt online“ – nur solange die App offen ist, nicht in deiner Ruhezeit</div></div><input type="checkbox" id="setAnsage" onchange="ansageSchalter(this.checked)"></div>
+      <div class="schalter versteckt" id="setAnsageZeile"><div><b>🗣️ Ansage, wenn jemand online kommt</b><div class="hinweis">Das Handy sagt z. B. „Klaus ist jetzt online“ – nur solange die App offen ist, nicht in deiner Ruhezeit</div></div><input type="checkbox" id="setAnsage" onchange="ansageSchalter(this.checked)"></div>
       <!-- KC-CLUB-VORLESEN (1.59.0, Wunsch Hansi): neue Nachrichten im offenen Chat vorlesen (auch im Chat oben 🔇/🔊) -->
       <!-- KC-CLUB-SPRACHANSAGEN (1.71.0, Wunsch Hansi): „Christina hat dir eine Nachricht geschickt“ – eine Zeile, Auswahl im Fenster -->
-      <div class="schalter" id="setSprAnsZeile"><div><b>🗣️ Sprachansagen</b><div class="hinweis" id="sprAnsStand">Das Handy sagt an, was dich betrifft</div></div><button class="knopf klein" onclick="ansBlatt()">Auswählen</button></div>
+      <div class="schalter" id="setSprAnsZeile"><div><b>🗣️ Sprachansagen</b><div class="hinweis" id="sprAnsStand">Das Handy sagt an, was dich betrifft – auch wer online kommt</div></div><button class="knopf klein" onclick="ansBlatt()">Auswählen</button></div>
       <!-- KC-CLUB-RECHTSCHREIBUNG (1.70.0, Wunsch Hansi): Tippfehler rot unterstrichen – macht die Handy-Tastatur, die App schaltet es überall ein -->
       <div class="schalter" id="setRsZeile"><div><b>🖍️ Tippfehler rot unterstreichen</b><div class="hinweis">Beim Schreiben im Chat werden Fehler rot unterstrichen. Antippen zeigt Vorschläge.</div></div><button class="knopf klein" onclick="rsBlatt()">Prüfen</button></div>
       <div class="schalter" id="setMikroZeile"><div><b>🎤 Mikrofon im Chat</b><div class="hinweis">Sprachnachricht (Ton) oder Diktieren (das Handy schreibt mit, verschickt wird Text).</div></div>
@@ -2305,7 +2305,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.74.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.75.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2901,7 +2901,7 @@ function einstiegHinweis() {
 const TIPP_SPAETER_TAGE = 3;
 const TIPPS = [
   // 1.59.0 (Wunsch Hansi): Fragen „Soll ich dir zeigen, wo?“ – Ja führt genau hin, Nein = später nochmal anbieten
-  { id: "sprachansage", sym: "🗣️", t: "Möchtest du hören, wenn sich jemand anmeldet?", x: "Dann schalte doch die <b>Sprachansage</b> an – das Handy sagt z. B. „Klaus ist jetzt online“. <b>Soll ich dir zeigen, wo?</b>", ja: "👉 Ja, zeig mir wo", nein: "⏰ Nein, später", neinSpaeter: true, nur: () => !ansageAn(), testen: () => einstiegHin("ansagen", "setAnsageZeile") },
+  { id: "sprachansage", sym: "🗣️", t: "Möchtest du hören, wenn sich jemand anmeldet?", x: "Dann schalte doch die <b>Sprachansage</b> an – das Handy sagt z. B. „Klaus ist jetzt online“. <b>Soll ich dir zeigen, wo?</b>", ja: "👉 Ja, zeig mir wo", nein: "⏰ Nein, später", neinSpaeter: true, nur: () => !ansageAn(), testen: () => einstiegHin("ansagen", "setSprAnsZeile") }, // 1.75.0: Online-Ansage steht jetzt unter „Sprachansagen“
   { id: "vorlesen", sym: "🔊", t: "Nachrichten vorlesen lassen?", x: "Das Handy kann dir neue Nachrichten im Chat <b>vorlesen</b> – an- und ausschalten mit dem Lautsprecher 🔇/🔊 oben im Chat. <b>Soll ich dir zeigen, wo?</b>", ja: "👉 Ja, zeig mir wo", nein: "⏰ Nein, später", neinSpaeter: true, nur: () => !vorlesenAn(), testen: () => einstiegHin("ansagen", "setVorlesenZeile") },
   { id: "archiv_ordner", sym: "👤", t: "Kennst du schon deinen eigenen Archiv-Ordner?", x: "Im Archiv hast du einen persönlichen Ordner mit Registern – nur du siehst ihn. Mit 🔓 kannst du anderen etwas auf Zeit freigeben.", testen: () => arStart() },
   { id: "wischen", sym: "👉", t: "In Nachrichten kannst du jetzt wischen", x: "Eine Nachricht <b>nach rechts</b> wischen = antworten. <b>Nach links</b> wischen = löschen (mit Rückfrage).", testen: () => zeige("nachrichten") },
@@ -2988,6 +2988,9 @@ function sprechen(text) {
 // Nachrichten + Anklopfen. Nie in der Ruhezeit, nicht für den gerade offenen Chat, viele auf einmal → eine Sammelansage.
 // Standort: Entfernung als Luftlinie (eigener Standort nur auf diesem Gerät, wird nicht gesendet), Ansage bei Annäherung.
 const ANS_ARTEN = [
+  // 1.75.0 (Fund Hansi: „Steven eingeloggt, keine Ansage, obwohl eingeschaltet“): die Online-Ansage gehört mit in diese Liste –
+  // gespeichert weiter im bisherigen Schalter (ANSAGE), damit nichts verloren geht; der Weg dorthin bleibt die Online-Ansage
+  { id: "online", sym: "🟢", t: "Jemand kommt online", k: "Online", u: "„Steven ist jetzt online“", bsp: "Steven ist jetzt online." },
   { id: "nachricht", sym: "💬", t: "Nachrichten", u: "auch @Erwähnungen und Reaktionen", bsp: "Christina hat dir eine Nachricht geschickt.", an: true },
   { id: "anklopfen", sym: "👋", t: "Anklopfen", bsp: "Christina klopft gerade bei dir an.", an: true },
   { id: "pinnwand", sym: "📌", t: "Pinnwand", bsp: "Christina hat dir ein Post-it an die Pinnwand gehängt." },
@@ -2997,14 +3000,15 @@ const ANS_ARTEN = [
   { id: "termine", sym: "📅", t: "Termine & Abstimmungen", u: "neue Termine, Erinnerungen, Anfragen", bsp: "Morgen: Clubabend im Vereinsheim." },
 ];
 const ANS_KEY = "kc_club_sprachansagen", ANS = { q: [], t: null, gesagt: new Map(), st: null };
-function ansWahl() { let w = null; try { w = JSON.parse(lsLesen(ANS_KEY) || "null"); } catch {} return w && typeof w === "object" ? w : Object.fromEntries(ANS_ARTEN.map((a) => [a.id, !!a.an])); }
+function ansWahl() { let w = null; try { w = JSON.parse(lsLesen(ANS_KEY) || "null"); } catch {} return { ...(w && typeof w === "object" ? w : Object.fromEntries(ANS_ARTEN.map((a) => [a.id, !!a.an]))), online: ansageAn() }; }
 const ansAn = (id) => !!ansWahl()[id];
 function ansStandZeigen() {
   const w = ansWahl(), n = ANS_ARTEN.filter((a) => w[a.id]);
-  if ($("sprAnsStand")) $("sprAnsStand").textContent = n.length ? `An: ${n.map((a) => a.t.split(" ")[0].replace(/,$/, "")).join(", ")}` : "Aus – nichts wird angesagt";
+  if ($("sprAnsStand")) $("sprAnsStand").textContent = n.length ? `An: ${n.map((a) => a.k || a.t.split(" ")[0].replace(/,$/, "")).join(", ")}` : "Aus – nichts wird angesagt";
 }
 function ansSetzen(id, an) {
-  const w = { ...ansWahl(), [id]: !!an }; lsSetzen(ANS_KEY, JSON.stringify(w)); ansStandZeigen();
+  if (id === "online") { lsSetzen(ANSAGE, an ? "1" : "0"); if ($("setAnsage")) $("setAnsage").checked = !!an; return ansStandZeigen(); }
+  const { online, ...w } = { ...ansWahl(), [id]: !!an }; void online; lsSetzen(ANS_KEY, JSON.stringify(w)); ansStandZeigen();
   if (id === "standort" && an) ansMeinOrt().then((o) => { if (!o) melde("📍 Für die Entfernung bitte den Standort für die App erlauben.", true); });
 }
 function ansBlatt() {
