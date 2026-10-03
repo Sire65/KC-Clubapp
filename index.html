@@ -2401,7 +2401,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.3.2"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.3.3"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -4817,7 +4817,8 @@ async function api(action, daten = {}, opt = {}) {
   }
   catch (e) {
     // KC-CLUB-NOTBETRIEB: Server mehrmals nicht erreichbar (oder schon der Start scheitert) → Ersatz-Server versuchen
-    if (!NOT.an && e?.leitung && (++NOT.fehler >= NOT_FEHLER_GRENZE || action === "init") && (await notEinschalten("auto"))) {
+    // 2.3.3: vorher Gegenprobe – nur umschalten, wenn der Club-Server auch nach kurzer Pause wirklich nicht antwortet
+    if (!NOT.an && e?.leitung && (++NOT.fehler >= NOT_FEHLER_GRENZE || action === "init") && (await notGegenprobe()) && (await notEinschalten("auto"))) {
       if (action !== "init") setTimeout(() => neuLaden(), 0);
       // 2.0.0 (Gesamtprüfung): Schreib-Aktionen nicht still nachschieben – sie könnten den Server schon erreicht haben (doppelt)
       if (API_LESEN.test(action)) try { return await notApi(action, daten); } catch (e2) { e = e2; }
@@ -4839,6 +4840,29 @@ async function notKonfig(frisch) {
   if (!frisch && NOT.konfig && Date.now() - NOT.geholt < 5 * 60000) return NOT.konfig;
   try { const r = await fetch("notbetrieb.json?t=" + Date.now(), { cache: "no-store" }); if (r.ok) { NOT.konfig = await r.json(); NOT.geholt = Date.now(); } } catch {}
   return NOT.konfig;
+}
+// KC-CLUB-NOTBETRIEB-GEGENPROBE (2.3.3, Fund Hansi: oranges Notbetrieb-Band, obwohl der Server einwandfrei lief).
+// Zwei Aussetzer kurz nacheinander gibt es auf dem Handy oft (schwaches Netz, App gerade aus dem Hintergrund geholt – dann
+// scheitern mehrere Anfragen gleichzeitig). Darum vor dem Umschalten NOT_GEGEN_PAUSE_MS warten und den Club-Server einmal
+// direkt fragen (ohne Region). Antwortet er überhaupt (auch 401/400), läuft er → kein Notbetrieb. Handy offline → kein
+// Notbetrieb (das ist kein Serverausfall; dafür gibt es die Offline-Warteschlange). Mehrere Fehler teilen sich eine Probe.
+const NOT_GEGEN_PAUSE_MS = 3000;
+let notGegenLauf = null;
+function notGegenprobe() {
+  if (notErnstfall()) return Promise.resolve(true); // Simulation: muss umschalten wie im Ernstfall
+  if (!navigator.onLine) return Promise.resolve(false);
+  return notGegenLauf ||= (async () => {
+    try {
+      await new Promise((ok) => setTimeout(ok, NOT_GEGEN_PAUSE_MS));
+      if (!navigator.onLine) return false;
+      try {
+        const r = await fetch(API, { method: "POST", cache: "no-store", headers: { "Content-Type": "application/json", "x-club-token": KEY, "x-club-version": APP_VERSION }, body: JSON.stringify({ action: "ping" }), signal: AbortSignal.timeout?.(10000) });
+        const weg = (r.status >= 502 && r.status <= 504) || r.status >= 500 && !(await r.clone().json().catch(() => null));
+        if (!weg) NOT.fehler = 0;
+        return weg;
+      } catch { return navigator.onLine; }
+    } finally { setTimeout(() => { notGegenLauf = null; }, 0); }
+  })();
 }
 async function notEinschalten(grund) {
   const k = await notKonfig(true), url = String(k?.url || "").replace(/\/+$/, "");

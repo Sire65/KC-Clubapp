@@ -3189,6 +3189,13 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/aktuelleAnsicht === "start" && !chatId\) updatePruefen\(false\)\.then\(updateSelbst\); \}, UPDATE_TAKT_MS\)/.test(html) && /const UPDATE_TAKT_MS = 10 \* 60000;/.test(html), "Selbst-Update im Takt nur auf der Startseite");
   assert.ok(/if \(!NEUE_VERSION \|\| !updateRuhig\(\)\) return;/.test(html) && /Date\.now\(\) - z\.t < 10 \* 60000\) return;/.test(html), "Schutz bleibt");
 }
+// 289. 2.3.3: Gegenprobe vor dem automatischen Notbetrieb
+{
+  assert.ok(/\(await notGegenprobe\(\)\) && \(await notEinschalten\("auto"\)\)/.test(html), "Gegenprobe vor dem Umschalten");
+  const g = html.slice(html.indexOf("function notGegenprobe()"), html.indexOf("async function notEinschalten("));
+  assert.ok(/if \(notErnstfall\(\)\) return Promise\.resolve\(true\)/.test(g) && /if \(!navigator\.onLine\) return Promise\.resolve\(false\)/.test(g), "Simulation schaltet, offline nicht");
+  assert.ok(/fetch\(API, \{/.test(g) && /action: "ping"/.test(g) && /if \(!weg\) NOT\.fehler = 0;/.test(g) && /notGegenLauf \|\|=/.test(g), "direkte Probe, gemeinsam, Zähler zurück");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

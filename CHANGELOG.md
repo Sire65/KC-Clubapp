@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.3.3 – 2026-10-03 – Kein Fehlalarm-Notbetrieb mehr (Fund Hansi: oranges Band, Server lief einwandfrei)
+- KC-CLUB-NOTBETRIEB-GEGENPROBE: Vor dem automatischen Umschalten wartet die App 3 s und fragt den Club-Server einmal direkt
+  (ohne Region, 10 s). Antwortet er überhaupt (auch mit 400/401), bleibt sie im Normalbetrieb und setzt den Fehlerzähler zurück.
+  Handy offline → kein Notbetrieb (Offline-Warteschlange greift). Gleichzeitige Fehler teilen sich eine Probe.
+  Ernstfall-Simulation und Probe schalten unverändert um. Ursache vorher: 2 Aussetzer genügten (schwaches Netz / App aus dem
+  Hintergrund geholt, mehrere Anfragen scheitern gleichzeitig). Server-Protokolle 18:00–19:00 ohne einen einzigen 5xx.
+
 ## 2.3.2 – 2026-10-03 – Updates automatisch auch beim Start und bei offener App (Wunsch Hansi)
 - KC-CLUB-UPDATE-AUTO: Bisher aktualisierte sich die App nur beim Zurückholen aus dem Hintergrund selbst. Jetzt zusätzlich
   4 s nach dem Start und alle 10 Min., solange die App sichtbar auf der Startseite steht (kein Chat offen). Unverändert geschützt:
