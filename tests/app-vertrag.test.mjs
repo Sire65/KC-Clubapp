@@ -2979,6 +2979,15 @@ assert.ok(/<h2>🗂️ Büro<\/h2><span class="bu-kopfgruss" id="buKopfGruss"><\
   const mig = fs.readFileSync(new URL("../supabase/migrations/20261003_kc_club_v1870_kurzcode.sql", import.meta.url), "utf8");
   assert.ok(/enable row level security/.test(mig) && /revoke all on kc_club_kurzcodes from anon, authenticated/.test(mig), "Tabelle nur für den Server");
 }
+// 268. 1.88.0: Einrichtungskarte (QR) und „hat die Club-App verlassen“
+{
+  assert.ok(/einrichtungskarte: \{ bauen: \(o, param\) => druckEinrichtungskarte\(param\) \}/.test(html) && /sc\.src = "lib\/qrcode\/qrcode\.js"/.test(html), "Druckart + QR lokal");
+  assert.ok(fs.existsSync(new URL("../lib/qrcode/qrcode.js", import.meta.url)) && /MIT/.test(fs.readFileSync(new URL("../lib/qrcode/README.txt", import.meta.url), "utf8")), "QR-Baustein mit Lizenzhinweis");
+  const k = html.slice(html.indexOf("async function einrichtungskarte("), html.indexOf("async function linkTeilen("));
+  assert.ok(/if \(m\.app && !\(await frage\(/.test(k) && /api\("link_erzeugen"/.test(k) && !/kurzcode/.test(k.slice(k.indexOf("function druckEinrichtungskarte"))), "Rückfrage bei aktivem Link, kein Code auf Papier");
+  assert.ok(/onclick="einrichtungskarte\('\$\{m\.person_id\}'\)">🖨️ Einrichtungskarte<\/button>/.test(html), "Knopf beim Mitglied");
+  assert.ok(/\{ id: "verlassen", sym: "🚪"/.test(html) && !/\{ id: "verlassen",[^\n]*an: true/.test(html) && /hat die Club-App verlassen\.` \}\);/.test(html), "Verlassen-Ansage, Standard aus");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

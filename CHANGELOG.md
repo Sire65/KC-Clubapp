@@ -1,5 +1,16 @@
 # Änderungen
 
+## 1.88.0 – 2026-10-03
+- KC-CLUB-EINRICHTUNGSKARTE (Wunsch Hansi): Einrichtungskarte zum Ausdrucken (A4) – großer QR-Code mit dem persönlichen Link,
+  „Kamera drauf halten → Link antippen → App führt Schritt für Schritt“, darunter die Schritte für iPhone/iPad und Android
+  (inkl. Samsung-Browser), Hinweis „persönlich – nicht weitergeben“. Nur Admin: beim Mitglied „🖨️ Einrichtungskarte“, in der
+  Mitgliederliste 🖨️ und im Büro-Drucker. Erzeugt dafür einen neuen Link (bei Mitgliedern, die die App schon nutzen, mit
+  Rückfrage). Kein Code auf Papier – den zeigt die App nach dem Scannen. QR-Baustein: lib/qrcode (qrcode-generator 1.4.4, MIT,
+  liegt in der App, wird nur beim Drucken geladen). QR-Inhalt im Test mit jsQR gegengelesen.
+- KC-CLUB-VERLASSEN (Wunsch Hansi): neue Sprachansage „🚪 Jemand verlässt die App“ – z. B. „Hansi hat die Club-App verlassen“,
+  mit kurzer Meldung auf dem Bildschirm. Standard aus, unter ⚙️ → Sprachansagen ankreuzbar. Grundlage ist die Online-Liste
+  (wer dort fehlt, ist weg – kommt daher etwa 2–3 Minuten nach dem Schließen); höchstens 3 Namen auf einmal, nicht in der Ruhezeit.
+
 ## 1.87.0 – 2026-10-03
 - KC-CLUB-KURZCODE (Wunsch Hansi: „Installation einfacher – der lange Code schreckt ab“): Anmelden mit einem 6-stelligen Code
   statt Link kopieren/einfügen. Der Anmeldebildschirm zeigt oben „🔢 Mit Code anmelden“ (großes Zahlenfeld, meldet bei 6 Ziffern

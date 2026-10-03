@@ -2345,7 +2345,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.87.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.88.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3063,12 +3063,18 @@ const lsLesen = (k) => { try { return localStorage.getItem(k); } catch { return 
 const lsSetzen = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
 const ansageAn = () => lsLesen(ANSAGE) === "1";
 const anmeldeTonAn = () => !!ICH?.admin && lsLesen(ANSAGE_TON) !== "0"; // Admin: Standard an
-const OA = { vorher: null, zuletzt: 0, gesehen: new Map(), gesagt: new Map() };
+const OA = { vorher: null, zuletzt: 0, gesehen: new Map(), gesagt: new Map(), namen: new Map() };
 function onlineAnsagen(liste) {
   const jetzt = Date.now(), andere = (liste || []).filter((x) => x.person_id !== ICH?.person_id);
   // nur echte Neuankömmlinge: vorige Liste ist frisch (sonst nach langer Pause nicht alle auf einmal) und Person war ≥ 10 Min. weg
   const neu = OA.vorher && jetzt - OA.zuletzt < ANSAGE_FRISCH_MS ? andere.filter((x) => !OA.vorher.has(x.person_id) && jetzt - (OA.gesehen.get(x.person_id) || 0) >= ANSAGE_PAUSE_MS) : [];
   for (const x of andere) OA.gesehen.set(x.person_id, jetzt);
+  // KC-CLUB-VERLASSEN (1.88.0): wer in der letzten (frischen) Liste war und jetzt fehlt, hat die App verlassen
+  const weg = OA.vorher && jetzt - OA.zuletzt < ANSAGE_FRISCH_MS ? [...OA.vorher].filter((id) => !andere.some((x) => x.person_id === id)) : [];
+  for (const x of andere) OA.namen.set(x.person_id, x.vorname || x.name);
+  if (weg.length && typeof ansAn === "function" && ansAn("verlassen") && !document.hidden && !inRuheJetzt(INIT?.einstellungen?.ruhezeit)) for (const id of weg.slice(0, 3)) {
+    const n = OA.namen.get(id) || "Ein Mitglied"; melde(`🚪 ${n} hat die Club-App verlassen`); ansageMelden({ art: "verlassen", text: `${n} hat die Club-App verlassen.` });
+  }
   OA.vorher = new Set(andere.map((x) => x.person_id)); OA.zuletzt = jetzt;
   if (!neu.length || document.hidden) return;
   onlineAnsageSprechen(neu.map((x) => x.vorname || x.name));
@@ -3097,6 +3103,8 @@ function sprechen(text) {
 const ANS_ARTEN = [
   // 1.75.0 (Fund Hansi: „Steven eingeloggt, keine Ansage, obwohl eingeschaltet“): die Online-Ansage gehört mit in diese Liste –
   // gespeichert weiter im bisherigen Schalter (ANSAGE), damit nichts verloren geht; der Weg dorthin bleibt die Online-Ansage
+  // 1.88.0 (Wunsch Hansi): „Hansi hat die Club-App verlassen“ – Ansage + kurze Meldung; Standard aus
+  { id: "verlassen", sym: "🚪", t: "Jemand verlässt die App", k: "Verlassen", u: "„Hansi hat die Club-App verlassen“ – mit kurzer Meldung", bsp: "Hansi hat die Club-App verlassen." },
   { id: "online", sym: "🟢", t: "Jemand kommt online", k: "Online", u: "„Steven ist jetzt online“", bsp: "Steven ist jetzt online." },
   { id: "nachricht", sym: "💬", t: "Nachrichten", u: "auch @Erwähnungen und Reaktionen", bsp: "Christina hat dir eine Nachricht geschickt.", an: true },
   { id: "anklopfen", sym: "👋", t: "Anklopfen", bsp: "Christina klopft gerade bei dir an.", an: true },
@@ -7094,7 +7102,8 @@ function buFueller() {
 function buDrucker() {
   const L = !!ICH?.vorstand, S = buSchreiben();
   const w = [[true, "📝", "Sitzungs-Vorlage", "mit Schreiblinien", "buDruckWahl()"], [L, "📇", "Mitgliederliste", "Telefon · Adressen · Unterschriften", "buListe()"],
-    [true, "📅", "Termine", "Kalender oder To-do-Liste", "druckStarten('termine')"], [true, "🎂", "Geburtstage & Jubiläen", "Liste", "druckStarten('feste')"], [S, "✉️", "Briefbogen", "Brief mit Logo", "buBrief()"]].filter((x) => x[0]);
+    [true, "📅", "Termine", "Kalender oder To-do-Liste", "druckStarten('termine')"], [true, "🎂", "Geburtstage & Jubiläen", "Liste", "druckStarten('feste')"], [S, "✉️", "Briefbogen", "Brief mit Logo", "buBrief()"],
+    [!!ICH?.admin, "📲", "Einrichtungskarte", "QR-Code + Schritte für ein Mitglied", "buPersonWahl('🖨️ Einrichtungskarte für wen?', '📲', einrichtungskarte)"]].filter((x) => x[0]);
   const f = blattAuf("buDruckerBlatt", `<h3 style="margin-top:0">🖨️ Was möchtest du drucken?</h3>
     <div class="bu-wahl">${w.map(([, sym, t2, u, fn]) => `<button class="mini-kachel" data-fn="${esc(fn)}"><span class="mk-sym">${sym}</span><span class="mk-titel">${esc(t2)}</span><span class="mk-unter">${esc(u)}</span></button>`).join("")}</div>
     <div class="knoepfe"><button class="knopf" data-zu="1">Abbrechen</button></div>`);
@@ -10563,7 +10572,7 @@ function mitgliederZeichnen() {
         <div class="hinweis" style="font-size:.85rem">${m.online ? '<b style="color:var(--textGruen)">● online</b> · ' : ""}${m.status || m.aktiv ? `<span class="stmarke st-${statusArt(m.status)}">${esc(m.status ? statusText(m.status) : "🟢 verfügbar")}</span>` : "⚪ noch nicht in der App"}${m.aktiv ? " · 📲 aktiv" : ""}${!m.online && m.zuletztDa ? ` · 🕒 ${esc(zuletztText(m.zuletztDa))}` : ""}</div>
         ${ICH.admin && (m.app || m.push || !m.mail || m.protokolle === false || m.unerreichbar) ? `<div class="hinweis" style="font-size:.85rem">${[m.app && m.zuletzt ? "zuletzt " + zeitKurz(m.zuletzt) : m.app ? "Link verschickt" : "", m.push ? "🔔 Push" : "", m.unerreichbar ? "📵 nicht erreichbar – kein Push, keine Mail" : m.mail ? "" : "⚠️ keine Mail", m.protokolle === false ? "📄 ohne Protokolle" : "", m.app && m.zuletzt ? (m.ansicht === "einfach" ? "🟢 einfache Ansicht" : m.ansicht === "erweitert" ? "🔧 erweiterte Ansicht" : "❔ Ansicht noch nicht gewählt") : ""].filter(Boolean).join(" · ")}</div>` : ""}</div>
       ${m.online ? `<button class="knopf klein" title="Anklopfen – direkt schreiben" onclick="anklopfen('${m.person_id}')">👋</button>` : ""}${m.person_id !== ICH.person_id ? `<button class="knopf klein" onclick="direkt('${m.person_id}')">💬</button>` : ""}
-      ${ICH.admin ? `<button class="knopf klein" onclick="linkTeilen('${m.person_id}')">🔗</button><button class="knopf klein" onclick="rolleBearbeiten('${m.person_id}')">🎖️</button>` : ""}</div>`).join("")
+      ${ICH.admin ? `<button class="knopf klein" onclick="linkTeilen('${m.person_id}')">🔗</button><button class="knopf klein" title="Einrichtungskarte drucken" onclick="einrichtungskarte('${m.person_id}')">🖨️</button><button class="knopf klein" onclick="rolleBearbeiten('${m.person_id}')">🎖️</button>` : ""}</div>`).join("")
       + '<p class="hinweis">Namen antippen für Details (Telefon, Adresse … sofern freigegeben).</p>'
       + (ICH.admin ? '<p class="hinweis">🔗 = persönlichen App-Link erzeugen und per WhatsApp schicken (ein neuer Link macht den alten ungültig). 🎖️ = Amt und Rechte.</p>' : "");
   } catch (e) { melde(e.message, true); }
@@ -11572,7 +11581,8 @@ const DRUCKARTEN = {
   anleitung: { bauen: () => druckAnleitung() },
   ueberblick: { bauen: () => druckUeberblick() },
   dokument: { bauen: () => dokDruckSeite() }, // KC-CLUB-DOK-ANZEIGE (1.62.0): PDF-Seiten randlos auf A4
-  bestaetigung: { bauen: () => druckBestaetigung() }, // KC-CLUB-BESTAETIGUNG (1.69.0): Aufstellung der eigenen Eingaben
+  bestaetigung: { bauen: () => druckBestaetigung() },
+  einrichtungskarte: { bauen: (o, param) => druckEinrichtungskarte(param) }, // KC-CLUB-EINRICHTUNGSKARTE (1.88.0) // KC-CLUB-BESTAETIGUNG (1.69.0): Aufstellung der eigenen Eingaben
 };
 // ---- KC-CLUB-KURZANLEITUNG (0.62.0): die App in 3 Schritten – für Einsteiger, zum Ausdrucken oder Verschicken ----
 function druckAnleitung() {
@@ -12084,7 +12094,7 @@ function mitgliedZeigen() {
     <div class="knoepfe">
       ${!m.selbst && ONL.ids.has(m.person_id) ? `<button class="knopf haupt" onclick="anklopfen('${m.person_id}')">👋 Anklopfen – ist gerade online</button><div class="knoepfe"><button class="knopf" onclick="anrufen('${m.person_id}')">📞 Anrufen (Test)</button><button class="knopf" onclick="anrufen('${m.person_id}', true)">🎥 Video (Test)</button></div>` : ""}
       ${m.selbst ? "" : `<button class="knopf ${ONL.ids.has(m.person_id) ? "" : "haupt"}" onclick="direkt('${m.person_id}')">💬 Nachricht in der App</button>`}
-      ${ICH?.admin ? `<div class="knoepfe"><button class="knopf" onclick="linkTeilen('${m.person_id}')">🔗 App-Link</button><button class="knopf" onclick="rolleBearbeiten('${m.person_id}')">🎖️ Amt & Rechte</button></div>` : ""}
+      ${ICH?.admin ? `<div class="knoepfe"><button class="knopf" onclick="linkTeilen('${m.person_id}')">🔗 App-Link</button><button class="knopf" onclick="einrichtungskarte('${m.person_id}')">🖨️ Einrichtungskarte</button><button class="knopf" onclick="rolleBearbeiten('${m.person_id}')">🎖️ Amt & Rechte</button></div>` : ""}
       ${zeilen ? '<button class="knopf" onclick="kontaktSpeichern()">📇 Ins Telefonbuch</button>' : ""}
     </div>
     ${m.selbst ? `<div class="karte"><h3>Deine Daten</h3>
@@ -12141,6 +12151,40 @@ async function direkt(pid) {
   empfWahl = { personen: [pid], aemter: [], alle: false, vorstand: false }; $("neuBetreff").value = ""; neuEntwurf = { empfaenger: { ...empfWahl }, betreff: "" };
   chatId = null; zeige("chat"); chatStand = ""; const m = MITGLIEDER.find((x) => x.person_id === pid);
   $("chatTitel").textContent = m?.name || ""; $("chatTeilnehmer").textContent = ""; $("chat").innerHTML = '<p class="hinweis">Schreib eine Nachricht und tippe auf ➤.</p>'; }
+// ---------- KC-CLUB-EINRICHTUNGSKARTE (1.88.0, Wunsch Hansi): Karte zum Ausdrucken – QR-Code mit dem persönlichen Link + Schritte ----------
+// Nur Admin (wie „🔗 App-Link“): erzeugt dafür einen neuen Link (der alte gilt dann nicht mehr – bei aktiven Mitgliedern wird gefragt).
+// QR-Code: lib/qrcode (MIT, liegt in der App, nur beim Drucken geladen). Kein Code auf Papier – den zeigt die App nach dem Scannen.
+async function qrLaden() {
+  if (window.qrcode) return;
+  await new Promise((ok, nein) => { const sc = document.createElement("script"); sc.src = "lib/qrcode/qrcode.js"; sc.onload = ok; sc.onerror = () => nein(new Error("QR-Baustein konnte nicht geladen werden.")); document.head.appendChild(sc); });
+}
+async function einrichtungskarte(pid) {
+  if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return melde(e.message, true); }
+  const m = MITGLIEDER.find((x) => x.person_id === pid); if (!m) return;
+  if (m.app && !(await frage(`${m.name} hat die App schon benutzt.\n\nFür die Karte wird ein NEUER Link erzeugt – der alte Link und angemeldete Geräte müssen sich danach neu anmelden (mit der Karte oder dem Code).\n\nTrotzdem Karte drucken?`))) return;
+  document.getElementById("buTelBlatt")?.remove(); // Personenwahl aus dem Büro-Drucker schließen
+  try { await qrLaden(); const { link } = await api("link_erzeugen", { person_id: pid }); druckStarten("einrichtungskarte", { name: m.name, vorname: m.vorname || m.name.split(" ")[0], link }); }
+  catch (e) { melde(e.message, true); }
+}
+function druckEinrichtungskarte(k) {
+  if (!k?.link || !window.qrcode) throw new Error("Bitte die Karte über das Mitglied neu starten.");
+  const q = qrcode(0, "M"); q.addData(k.link); q.make();
+  const qr = q.createSvgTag({ cellSize: 6, margin: 2, scalable: true });
+  const box = (titel, zeilen) => `<div style="border:1.5px solid #bbb;border-radius:3mm;padding:3mm 4mm;break-inside:avoid"><b style="font-size:4.4mm">${titel}</b><ol style="margin:2mm 0 0;padding-left:5mm;font-size:3.8mm;line-height:1.45">${zeilen.map((z) => `<li>${z}</li>`).join("")}</ol></div>`;
+  return { titel: `Köcheclub-App einrichten – ${k.name}`, unter: "Persönliche Einrichtungskarte", fuss: "Einrichtungskarte · persönlich",
+    html: `<div style="display:grid;grid-template-columns:62mm 1fr;gap:7mm;align-items:center;margin:2mm 0 6mm">
+        <div style="width:62mm;height:62mm">${qr.replace("<svg ", '<svg style="width:62mm;height:62mm" ')}</div>
+        <div style="font-size:4.2mm;line-height:1.5"><p style="margin:0 0 3mm;font-size:5mm"><b>Hallo ${esc(k.vorname)},</b></p>
+          <p style="margin:0 0 2mm"><b>1.</b> Die <b>Kamera</b> deines Handys öffnen und auf den Code halten – nicht auslösen.</p>
+          <p style="margin:0 0 2mm"><b>2.</b> Den erscheinenden <b>Link antippen</b> – die Köcheclub-App öffnet sich.</p>
+          <p style="margin:0"><b>3.</b> Die App zeigt dir dann <b>Schritt für Schritt</b>, wie du sie auf den Startbildschirm legst.</p></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5mm">
+        ${box("🍎 iPhone / iPad", ["Teilen □↑ antippen (iPhone unten, iPad oben rechts – sonst erst „⋯“)", "„Zum Home-Bildschirm“ (nach unten wischen)", "„Hinzufügen“", "Die neue Kochmütze öffnen und den <b>6-stelligen Code</b> eintippen, den die App vorher angezeigt hat"])}
+        ${box("🤖 Android", ["Oben rechts <b>⋮</b> antippen", "„App installieren“ (oder „Zum Startbildschirm hinzufügen“ → „Installieren“)", "„Installieren“ bestätigen", "<b>Samsung-Browser:</b> unten ≡ → „Seite hinzufügen zu“ → „Startbildschirm“"])}
+      </div>
+      <p style="margin:6mm 0 0;font-size:3.8mm;padding:3mm 4mm;background:#fbf0d6;border-radius:2mm">🔒 <b>Persönlich – bitte nicht weitergeben.</b> Der QR-Code ist dein Schlüssel zur App. Er gilt, bis ein neuer Link für dich erzeugt wird.</p>
+      <p style="margin:3mm 0 0;font-size:3.8mm">❓ <b>Klappt etwas nicht?</b> Am Clubabend helfen wir gern – oder frag Hansi.</p>` };
+}
 async function linkTeilen(pid) {
   const m = MITGLIEDER.find((x) => x.person_id === pid);
   if (m.app && !(await frage(`${m.name} hat schon einen Link. Neuen erzeugen? Der alte funktioniert dann nicht mehr.`))) return;
