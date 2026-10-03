@@ -1,5 +1,9 @@
 # Änderungen
 
+## 1.58.1 – 2026-10-03
+- Wunsch Hansi: Schalter „💡 Tipp des Tages“ aus „Das Wichtigste“ (nur einfache Ansicht) in den Kasten „🗣️ Ansagen, Töne &
+  Tipps“ umgezogen – jetzt in beiden Ansichten sichtbar.
+
 ## 1.58.0 – 2026-10-03
 - KC-CLUB-FP-UEBERWACHUNG (Wunsch Hansi): Fehlerprotokoll mit Einstufung 🔴 schwerwiegend / 🟡 Hinweis / ⚪ Info (eine Regel
   im Server: Hilferuf, App startet gar nicht, echter Programmfehler, Sicherheitsbericht mit Problemen = schwer; Updates,

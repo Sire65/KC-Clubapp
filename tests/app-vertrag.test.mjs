@@ -2586,6 +2586,13 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.match(lies("notbetrieb/worker.js"), /pinnwand_neu: \(\) => \(\{ neu: \[\] \}\)/, "Ersatz-Server still");
 }
 
+// 229. 1.58.1: Tipp des Tages in beiden Ansichten
+{
+  const k0 = html.indexOf('<details class="karte" data-klappe="ansagen" data-einfach open>'), kasten = html.slice(k0, html.indexOf("</details>", k0));
+  assert.ok(kasten.includes('id="setTipps"'), "Tipp-Schalter im Kasten für beide Ansichten");
+  assert.equal((html.match(/id="setTipps"/g) || []).length, 1, "nur einmal");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
