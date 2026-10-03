@@ -3409,6 +3409,11 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/body\.kt-aktiv \.su-klein, body\.kt-aktiv #fuss \{ display: none; \}/.test(html) && /function ktBildFrei\(an, schluessel\)/.test(html), "Fußleiste/Lupe während der Frage weg");
   assert.ok(/document\.body\.classList\.remove\("kt-aktiv"\); \/\* 2\.17\.1/.test(html) && /function spZeigen\(\) \{\n  document\.body\.classList\.remove\("kt-aktiv"\);/.test(html), "danach wieder da");
 }
+// 313. 2.17.2: Tipp zählt beim Aufsetzen (KC-CLUB-KUECHENTERROR-TIPP)
+{
+  assert.ok(/onpointerdown="ktTipp\(this, \$\{i\}, '\$\{klick\}'\)" onclick="ktTipp\(this, \$\{i\}, '\$\{klick\}'\)"/.test(html) && /function ktTipp\(btn, i, fn\)/.test(html), "pointerdown + Klick über ktTipp");
+  assert.ok(/document\.querySelector\("\.kt-antwort\.getippt"\)\) return;/.test(html) && /touch-action: manipulation/.test(html), "genau einmal, ohne Verzögerung");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

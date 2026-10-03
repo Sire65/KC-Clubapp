@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.17.2 – 2026-10-03 – Küchenterror: Tipp zählt sofort (Fund Hansi „ich kann oft die Antworten nicht antippen“)
+- KC-CLUB-KUECHENTERROR-TIPP: Hansis Handy (Android/Chrome) lief beim Fund noch auf 2.17.0 (ohne die Freistellung aus 2.17.1).
+  Zusätzlich: Android wertet einen Tipp nicht als „Klick“, wenn der Finger dabei leicht verrutscht – unter Zeitdruck häufig. Jetzt zählt
+  die Antwort schon beim Aufsetzen des Fingers (pointerdown; Klick als Rückfall, genau einmal gezählt), touch-action: manipulation
+  (keine Doppeltipp-Verzögerung), gewählte Antwort sofort blau markiert, alle Knöpfe gesperrt; gegen Mitglieder „⏳ Antwort ist
+  angekommen – wird geprüft …“ bis der Server antwortet. Meldungen oben fangen während der Frage keine Tipps ab.
+- Geprüft: nur Aufsetzen ohne Klick → gewertet; Aufsetzen + Klick → einmal gezählt; während 3-2-1 → nichts.
+
 ## 2.17.1 – 2026-10-03 – Küchenterror: alle Antworten frei antippbar (Fund Hansi)
 - KC-CLUB-KUECHENTERROR-FREI: Fund „ich konnte mehrmals die richtige Antwort nicht anklicken“ (keine Fehler im Protokoll) – Ursache:
   die unterste Antwort lag teils hinter der Menüleiste unten, die schwebende 🔍-Lupe deckte rechts Antworten ab. Jetzt während einer

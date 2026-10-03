@@ -217,6 +217,10 @@
   .kt-antworten { display: grid; gap: 8px; }
   .kt-antwort { min-height: 54px; padding: 10px 12px; border: 2px solid var(--linie); border-radius: 14px; background: var(--karte); color: var(--text); font: inherit; font-weight: 700; text-align: left; cursor: pointer; line-height: 1.3; }
   .kt-antwort:disabled { cursor: default; opacity: 1; color: var(--text); }
+  /* 2.17.2 KC-CLUB-KUECHENTERROR-TIPP: Tipp zählt schon beim Aufsetzen des Fingers (verrutschen schadet nicht), sofort sichtbar */
+  .kt-antwort { touch-action: manipulation; -webkit-tap-highlight-color: rgba(46,134,222,.25); user-select: none; -webkit-user-select: none; }
+  .kt-antwort.getippt { border-color: #2e86de; background: #d6eaf8; box-shadow: 0 0 0 3px rgba(46,134,222,.35); }
+  body.kt-aktiv .meldung { pointer-events: none; }
   .kt-antwort.richtig { background: #d5f5e3; border-color: #1e8449; color: #145a32; } .kt-antwort.falsch { background: #fadbd8; border-color: #c0392b; color: #7b241c; }
   .kt-antwort.denkt { border-style: dashed; opacity: .6; }
   .kt-ergebnis { text-align: center; font-weight: 800; font-size: 1.1rem; margin: 10px 0 4px; } .kt-erkl { margin: 4px 0 8px; font-size: .95rem; }
@@ -2570,7 +2574,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.17.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.17.2"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -5661,7 +5665,8 @@ function ktFrageHtml(fr, { klick = "", aufl = null, kopf = "", denkt = false } =
   return `${kopf}${fr.m ? '<div class="kt-meister">🎖️ Meisterfrage – richtig zählt doppelt!</div>' : ""}<div class="kt-frage">${esc(fr.f)}</div>
     <div class="kt-zeit" role="timer" aria-label="Zeit: ${lim / 1000} Sekunden"><i ${aufl ? "" : 'id="ktBalken"'} style="width:${(rest / lim * 100).toFixed(1)}%;background:${rest / lim > 0.45 ? "#27ae60" : rest / lim > 0.2 ? "#f1c40f" : "#c0392b"}"></i></div>
     ${aufl ? "" : '<div class="kt-uhr"><span id="ktLesen" class="kt-lesen-zahl versteckt" aria-live="polite"></span><span id="ktSek"></span></div>'}
-    <div class="kt-antworten${aufl ? "" : " kt-lesen"}">${fr.a.map((t, i) => `<button class="kt-antwort${aufl ? (i === aufl.richtig ? " richtig" : i === aufl.gewaehlt ? " falsch" : "") : ""}${denkt ? " denkt" : ""}" ${aufl || !klick ? "disabled" : ""} onclick="${klick}(${i})">${"ABCD"[i]}) ${esc(t)}</button>`).join("")}</div>
+    <div class="kt-antworten${aufl ? "" : " kt-lesen"}">${fr.a.map((t, i) => `<button class="kt-antwort${aufl ? (i === aufl.richtig ? " richtig" : i === aufl.gewaehlt ? " falsch" : "") : ""}${denkt ? " denkt" : ""}" ${aufl || !klick ? "disabled" : ""} ${klick ? `onpointerdown="ktTipp(this, ${i}, '${klick}')" onclick="ktTipp(this, ${i}, '${klick}')"` : ""}>${"ABCD"[i]}) ${esc(t)}</button>`).join("")}</div>
+    ${aufl ? "" : '<div class="kt-uhr" id="ktGetippt" aria-live="polite"></div>'}
     ${aufl ? `<div class="kt-ergebnis">${aufl.ok ? `✅ Richtig in ${ktSek(aufl.ms)} s – <b>+${aufl.p} Punkte${fr.m ? " (doppelt!)" : ""}</b>` : aufl.gewaehlt < 0 || aufl.zuSpaet ? "⏰ Zeit abgelaufen – 0 Punkte" : "❌ Leider falsch – 0 Punkte"}</div>
       <p class="kt-erkl">💡 ${esc(aufl.e || "")}</p>` : ""}`;
 }
@@ -5691,6 +5696,14 @@ function ktUhrStart(lesenMs, restMs, lim, beiEnde) {
 }
 function ktUhrStopp() { clearInterval(KTU.t); KTU.t = null; KTU.aus = true; }
 const ktLiest = () => !KTU.aus && Date.now() < KTU.start; // während 3-2-1 keine Antwort
+// 2.17.2: ein Tipp – egal ob Finger aufsetzt (pointerdown) oder Klick kommt – zählt genau einmal; sofort blau markiert
+function ktTipp(btn, i, fn) {
+  if (btn.disabled || btn.closest(".kt-antworten")?.classList.contains("kt-lesen") || document.querySelector(".kt-antwort.getippt")) return;
+  if (ktLiest()) return;
+  btn.classList.add("getippt"); document.querySelectorAll(".kt-antwort").forEach((b) => (b.disabled = true));
+  const h = $("ktGetippt"); if (h && fn === "ktMgAntwort") h.textContent = "⏳ Antwort ist angekommen – wird geprüft …";
+  window[fn]?.(i);
+}
 // 2.17.1: Quizfrage im Bild – Fußleiste/Lupe ausblenden und die Frage nach oben holen (einmal je Frage)
 let KT_GESCROLLT = "";
 function ktBildFrei(an, schluessel) {
