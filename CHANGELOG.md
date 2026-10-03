@@ -1,5 +1,16 @@
 # Änderungen
 
+## 1.99.0 – 2026-10-03
+- KC-CLUB-ADMIN-NAME (Wunsch Hansi „Ja zu deinen Vorschlägen“): Ansprechpartner in Texten („bitte … Bescheid geben“, „Korrektur an …“,
+  „Problem an …“, Feedback, Sicherheits-Check, Einrichtung, Druck-Karte, „Link verloren?“-Mail) kommt vom Server (Vorname des Admins,
+  `init.adminName`, 10 Min. gemerkt; Rückfall „Hansi“). Feste HTML-Stellen tragen <span class="admin-name">, die nach dem Laden gefüllt
+  werden. Urheberschaft („Gebaut von Hansi“, Begrüßungsbrief) und Beispiele bleiben. Link-Nachricht ist mit dem Vornamen des
+  Absenders unterschrieben.
+- KC-CLUB-KACHEL-BALD: Kacheln mit „bald“ (z. B. 🎓 Meine Schulungen) erscheinen erst, wenn es die Funktion gibt; der Überblick
+  nennt sie weiter unter „Kommt bald“.
+- Manifest: App-Symbol getrennt als „any“ und „maskable“ (Empfehlung von Chrome; gleiches Bild – das Motiv liegt bereits im
+  sicheren Bereich, Aussehen unverändert).
+
 ## 1.98.0 – 2026-10-03 – Bedienung (Gesamtprüfung, Paket 3)
 - KC-CLUB-ZURUECK-KNOPF: Alle ‹-Knöpfe, die direkt eine Ansicht öffneten, gehen jetzt im Verlauf zurück (zurueck()), wenn es eine
   vorige App-Ansicht gibt – vorher legte ‹ einen neuen Eintrag an und die Handy-Zurück-Taste öffnete die verlassene Ansicht

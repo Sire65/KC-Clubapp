@@ -1737,7 +1737,7 @@
   <!-- FEEDBACK (KC-CLUB-FEEDBACK) -->
   <section id="v-feedback" class="versteckt">
     <div class="kopf2"><button class="zurueck" onclick="zurueck('start')" aria-label="Zurück">‹</button><h2>💭 Feedback</h2><button class="knopf klein versteckt" id="fbAuswertungKnopf" onclick="fbAuswertung()">📊 Auswertung</button></div>
-    <div class="karte beta"><b>🧪 Beta-Version</b><br>Die Club-App ist noch in der Testphase: Nicht alle Funktionen sind komplett getestet, und Funktionen oder Ansichten können sich noch ändern. Deshalb ist Hansi auf euer Feedback angewiesen – danke fürs Mitmachen!</div>
+    <div class="karte beta"><b>🧪 Beta-Version</b><br>Die Club-App ist noch in der Testphase: Nicht alle Funktionen sind komplett getestet, und Funktionen oder Ansichten können sich noch ändern. Deshalb ist <span class="admin-name">Hansi</span> auf euer Feedback angewiesen – danke fürs Mitmachen!</div>
     <div id="feedbackInhalt"><div class="karte hinweis">Wird geladen …</div></div>
   </section>
 
@@ -1952,7 +1952,7 @@
       <div class="schalter"><div><b>🔠 Große Schrift</b></div><input type="checkbox" id="setGrossE" onchange="einstellung('gross', this.checked); if ($('setGross')) $('setGross').checked = this.checked"></div>
       <div class="schalter"><div><b>🟢 Einfache Ansicht</b><div class="hinweis">Ausschalten zeigt alle Funktionen – du kannst jederzeit zurück.</div></div><button class="knopf klein" onclick="ansichtSetzen('erweitert')">🔧 Alle Funktionen</button></div>
       <div class="schalter"><div><b>📄 Kurzanleitung</b><div class="hinweis">Die App in 3 Schritten – zum Ansehen oder Ausdrucken</div></div><button class="knopf klein" onclick="druckStarten('anleitung')">Ansehen</button></div>
-      <div class="schalter"><div><b>💭 Feedback</b><div class="hinweis">Was gefällt dir, was ist zu kompliziert? Schreib es Hansi.</div></div><button class="knopf klein" onclick="zeige('feedback')">Schreiben</button></div>
+      <div class="schalter"><div><b>💭 Feedback</b><div class="hinweis">Was gefällt dir, was ist zu kompliziert? Schreib es <span class="admin-name">Hansi</span>.</div></div><button class="knopf klein" onclick="zeige('feedback')">Schreiben</button></div>
     </details>
     <!-- KC-CLUB-SCHNELLSTART (1.8.0): nur erweiterte Ansicht -->
     <details class="karte" data-klappe="schnellstart">
@@ -2127,7 +2127,7 @@
       <div class="zeile"><span>Version</span><b id="appVersion" style="margin-left:auto"></b></div><div class="zeile"><span>Angemeldet als</span><b id="ichName" style="margin-left:auto;text-align:right"></b></div>
       <div id="appInfo"></div>
       <div class="knoepfe"><button class="knopf klein" onclick="updateKachel()">Nach Update suchen</button><button class="knopf klein" onclick="appInfoKopieren()">📋 Infos kopieren</button><button class="knopf klein" onclick="fpProblemMelden()">🆘 Problem melden</button></div>
-      <p class="hinweis" style="font-size:.85rem;margin-bottom:0">„Infos kopieren“ hilft bei Fragen und Fehlern: einfach in eine Nachricht an Hansi einfügen. Es wird kein Zugangslink kopiert.<br>
+      <p class="hinweis" style="font-size:.85rem;margin-bottom:0">„Infos kopieren“ hilft bei Fragen und Fehlern: einfach in eine Nachricht an <span class="admin-name">Hansi</span> einfügen. Es wird kein Zugangslink kopiert.<br>
         © 2026 Köcheclub Werne · Entwicklung &amp; Design Hans-Joachim Koch · kostenlos und werbefrei · Daten nur für Clubmitglieder mit persönlichem Link.</p>
     </details>
     <button class="tuer" onclick="appSchliessen()">🚪 App schließen</button>
@@ -2374,7 +2374,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.98.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.99.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2405,6 +2405,10 @@ const kreisLegende = () => `<div class="kreislegende">${KREIS_ARTEN.filter((k) =
   `<span><i class="avatar k-${k.art}" style="width:14px;height:14px;${k.art === "unbekannt" ? "border-width:1px" : ""}"></i>${esc(k.text)}</span>`).join("")}</div>`;
 
 let MG_EINMAL = null;
+// KC-CLUB-ADMIN-NAME (1.99.0, Wunsch Hansi): Ansprechpartner in Texten = Vorname des Admins vom Server (fällt auf „Hansi“ zurück,
+// solange nichts geladen ist). Feste Stellen im HTML tragen <span class="admin-name">, die nach dem Laden gefüllt werden.
+const adminName = () => INIT?.adminName || "Hansi";
+const adminNamenSetzen = () => document.querySelectorAll(".admin-name").forEach((e) => { e.textContent = adminName(); });
 // KC-CLUB-ZURUECK-FENSTER (1.98.0): zuletzt gesetzter Verlaufseintrag (für „Zurück schließt nur das Fenster“)
 const VERLAUF = { state: null, url: "" };
 for (const m of ["pushState", "replaceState"]) { const o = history[m].bind(history); history[m] = (st, t, u) => { o(st, t, u); VERLAUF.state = history.state; VERLAUF.url = location.href; }; } // KC-CLUB-ONLINE-SEITE (1.91.0): einmaliger Filter der Mitglieder-Seite (früh deklariert, zeige() nutzt ihn)
@@ -2947,7 +2951,7 @@ function neuWahlZeigen() {
   const weg = pushWeg(), ohneMail = INIT && !INIT.hatMail;
   const k = (art, text, gesperrt) => `<button class="knopf${jetzt === art ? " an" : ""}" ${gesperrt ? "disabled" : ""} onclick="neuWahlSetzen('${art}')">${text}${jetzt === art ? " ✔" : ""}</button>`;
   $("neuWahl").innerHTML = k("handy", "📱 Aufs Handy", !!weg) + k("mail", "✉️ Per E-Mail", ohneMail) + k("beides", "📱 + ✉️ Beides", !!weg || ohneMail);
-  $("neuWahlHinweis").innerHTML = [weg, ohneMail ? "✉️ Für dich ist keine E-Mail-Adresse hinterlegt – bitte Hansi Bescheid geben." : "",
+  $("neuWahlHinweis").innerHTML = [weg, ohneMail ? "✉️ Für dich ist keine E-Mail-Adresse hinterlegt – bitte " + adminName() + " Bescheid geben." : "",
     jetzt === "genauer" ? "Du hast es genauer eingestellt (erweiterte Ansicht). Eine Wahl hier stellt es für alles gleich ein." : "",
     jetzt === "handy" ? "Kommt eine Nachricht nicht aufs Handy, schicken wir automatisch eine E-Mail." : ""].filter(Boolean).join("<br>");
 }
@@ -5352,7 +5356,7 @@ function ueberblickHtml(v, druck) {
     <div class="ue-kasten ue-neukasten"><h3>🆕 Das ist neu</h3>${neuHtml}</div>
     <div class="ue-kasten"><h3>💡 Warum Hansi die App gebaut hat</h3>${li(UE_TEXT.warum)}</div>
     <div class="ue-kasten"><h3>📱 Das kann die Club-App</h3>${bereiche}${bald.length ? `<p class="hinweis" style="margin:8px 0 0">Kommt bald: ${bald.map((k) => esc(k.sym + " " + k.t)).join(" · ")}</p>` : ""}</div>
-    <p class="hinweis" style="margin:10px 2px 0">Fragen zur App? Einfach Hansi ansprechen.</p>`;
+    <p class="hinweis" style="margin:10px 2px 0">Fragen zur App? Einfach ${adminName()} ansprechen.</p>`;
 }
 async function ueberblickLaden() {
   if (!VERSION_INFO) { try { VERSION_INFO = await (await fetch("version.json?x=" + Date.now(), { cache: "no-store" })).json(); } catch {} }
@@ -5400,7 +5404,7 @@ const KACHELN = {
   ],
 };
 // Kacheln, die für mich gelten (z. B. Protokolle nicht für Aushilfen)
-const kachelnAlle = (r) => KACHELN[r].filter((k) => !k.nur || k.nur());
+const kachelnAlle = (r) => KACHELN[r].filter((k) => !k.bald && (!k.nur || k.nur())); // 1.99.0 (Wunsch Hansi): „bald“-Kacheln erst zeigen, wenn es sie gibt (Überblick nennt sie weiter)
 // KC-CLUB-KACHELN: eigene Reihenfolge + ausgeblendete Kacheln je Mitglied (Server-Einstellung „kacheln“, hier zwischengespeichert).
 // Neue Kacheln (noch nicht in der gespeicherten Reihenfolge) erscheinen hinten; ausgeblendete bleiben über „Anordnen“ erreichbar.
 let KA = { reihenfolge: {}, aus: [], register: [] }, kaBearb = false, kaFrisch = null;
@@ -6230,7 +6234,7 @@ function wahlZeigen() {
   $("wahlTabelle").innerHTML = WAHL_BEREICHE.map(([b, t]) => `<tr><td>${t}</td>
     <td><input type="checkbox" ${w[b]?.push ? "checked" : ""} onchange="wahlSetzen('${b}')" id="w_${b}_push" aria-label="${t} per Push"></td>
     <td><input type="checkbox" ${w[b]?.email ? "checked" : ""} onchange="wahlSetzen('${b}')" id="w_${b}_email" aria-label="${t} per E-Mail" ${INIT && !INIT.hatMail ? "disabled" : ""}></td></tr>`).join("");
-  $("wahlHinweis").textContent = INIT && !INIT.hatMail ? "⚠️ Für dich ist keine E-Mail-Adresse hinterlegt – bitte Hansi Bescheid geben." : "Nur Push angehakt: Kommt der Push nicht an, schicken wir automatisch eine E-Mail. Nichts angehakt: keine Benachrichtigung.";
+  $("wahlHinweis").textContent = INIT && !INIT.hatMail ? "⚠️ Für dich ist keine E-Mail-Adresse hinterlegt – bitte " + adminName() + " Bescheid geben." : "Nur Push angehakt: Kommt der Push nicht an, schicken wir automatisch eine E-Mail. Nichts angehakt: keine Benachrichtigung.";
 }
 async function wahlSetzen(b) {
   const push = $(`w_${b}_push`).checked, email = $(`w_${b}_email`).checked;
@@ -6322,7 +6326,7 @@ function neuLaden(vonHand) {
 }
 async function neuLadenRoh(vonHand) {
   try {
-    INIT = await api("init", {}, { warten: !!vonHand }); ICH = INIT.ich;
+    INIT = await api("init", {}, { warten: !!vonHand }); ICH = INIT.ich; adminNamenSetzen();
     fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln);
     if ($("setLiveTippen")) $("setLiveTippen").checked = liveTippen();
@@ -6571,7 +6575,7 @@ function geburtstagSchalterZeigen() {
   s.checked = !!INIT.geburtstagFreigabe; s.disabled = !INIT.hatGeburtstag;
   const r = $("setRundGeburtstag"); if (r) { r.checked = !!INIT.runderGeburtstagFreigabe; r.disabled = !INIT.hatGeburtstag; }
   $("gebHinweis").textContent = INIT.hatGeburtstag ? "Andere sehen dann nur Tag und Monat – im Kalender, in der Terminliste und unter „Heute wichtig“."
-    : "⚠️ Für dich ist kein Geburtstag hinterlegt – bitte Hansi Bescheid geben.";
+    : "⚠️ Für dich ist kein Geburtstag hinterlegt – bitte " + adminName() + " Bescheid geben.";
 }
 async function runderGeburtstagFreigabe(an) {
   try { await api("runder_geburtstag_freigabe", { erlaubt: an }); INIT.runderGeburtstagFreigabe = an; melde(an ? "🎉 Bei runden Geburtstagen sieht die Clubleitung dein Alter." : "Die Clubleitung sieht dein Alter nicht mehr."); }
@@ -9067,7 +9071,7 @@ function sicherheitZeigen(schritt) {
     ? `<div class="si-ergebnis si-offen">${siMuetze("", "Prüfung läuft")}<div><b>Prüfung läuft …</b><span class="hinweis">${Math.min(schritt ?? 0, n)} von ${n} Punkten geprüft</span></div></div>`
     : !schlecht && !offen
       ? `<div class="si-ergebnis si-gut"><span class="gross">✅</span><div><b>Alle Systeme laufen einwandfrei</b><span class="hinweis">Deine Daten sind geschützt und gesichert · geprüft ${esc(SI.zeit)} Uhr</span></div></div>`
-      : `<div class="si-ergebnis ${schlecht ? "si-schlecht" : "si-mittel"}"><span class="gross">⚠️</span><div><b>${schlecht + offen} ${schlecht + offen === 1 ? "Punkt ist" : "Punkte sind"} gerade nicht bestätigt</b><span class="hinweis">Bitte in ein paar Minuten noch einmal prüfen. Bleibt es so, gib Hansi kurz Bescheid. · ${esc(SI.zeit || "")} Uhr</span></div></div>`;
+      : `<div class="si-ergebnis ${schlecht ? "si-schlecht" : "si-mittel"}"><span class="gross">⚠️</span><div><b>${schlecht + offen} ${schlecht + offen === 1 ? "Punkt ist" : "Punkte sind"} gerade nicht bestätigt</b><span class="hinweis">Bitte in ein paar Minuten noch einmal prüfen. Bleibt es so, gib ${adminName()} kurz Bescheid. · ${esc(SI.zeit || "")} Uhr</span></div></div>`;
   // KC-CLUB-SI-MUETZE (1.19.0, Hinweis Hansi „obere Mütze ruckelt“): nicht mehr alles neu zeichnen – Kopf, Uhren, Liste und Knöpfe
   // sind eigene Bereiche; während der Prüfung ändert sich nur der Zähler und die Zeilen, die fertig geworden sind. Die laufenden
   // Mützen bleiben unangetastet und drehen ungestört weiter.
@@ -9085,7 +9089,7 @@ function sicherheitZeigen(schritt) {
   if (lis.length !== zeilen.length) { $("siListe").innerHTML = zeilen.map((z) => z.html).join(""); [...$("siListe").children].forEach((li, i) => (li.dataset.key = zeilen[i].key)); }
   else zeilen.forEach((z, i) => { if (lis[i].dataset.key !== z.key) { lis[i].outerHTML = z.html; $("siListe").children[i].dataset.key = z.key; } });
   $("siKnoepfe").innerHTML = `<button class="knopf ${fertig && (schlecht || offen) ? "" : "haupt"}" style="margin-top:12px" ${SI.laeuft ? "disabled" : ""} onclick="sicherheitPruefen()">🔍 ${SI.r ? "Erneut prüfen" : "Jetzt prüfen"}</button>
-    ${fertig ? `<button class="knopf ${schlecht || offen ? "haupt" : ""}" style="margin-top:8px" onclick="sicherheitMelden()">📨 Ergebnis an Hansi (Admin) senden</button>` : ""}
+    ${fertig ? `<button class="knopf ${schlecht || offen ? "haupt" : ""}" style="margin-top:8px" onclick="sicherheitMelden()">📨 Ergebnis an ${adminName()} (Admin) senden</button>` : ""}
     <p class="hinweis" style="margin-top:8px">Die Prüfung schaut nur nach – sie verändert nichts und verrät keine Daten.</p>`;
 }
 async function sicherheitPruefen() {
@@ -9114,7 +9118,7 @@ async function sicherheitMelden() {
   if (notiz === null) return;
   try {
     await api("sicherheit_melden", { notiz, geraet: { verbindung: location.protocol === "https:", version: r.neueste == null ? null : r.neueste === APP_VERSION, serverMs: r.serverMs } }, { warten: true });
-    melde("📨 Gesendet – Hansi bekommt das Prüfergebnis per Push und E-Mail");
+    melde("📨 Gesendet – " + adminName() + " bekommt das Prüfergebnis per Push und E-Mail");
   } catch (e) { melde(e.message, true); }
 }
 // ---------- KC-CLUB-BEARBEITEN (1.9.0, Wunsch Hansi – wie WhatsApp): eigene Nachricht bis 15 Min. nach dem Senden ändern ----------
@@ -10192,7 +10196,7 @@ function bfVorschau() {
     <div class="knoepfe" style="flex-direction:column;align-items:stretch">
       ${BF.chat ? `<button class="knopf haupt" onclick="bfWeiter('zurueck')">💬 In den Chat mit ${esc(BF.chat.name)}</button>` : ""}
       <button class="knopf${BF.chat ? "" : " haupt"}" onclick="bfWeiter('chat')">💬 ${BF.chat ? "In einen anderen Chat" : "In einen Chat schicken"}</button>
-      <button class="knopf" onclick="bfWeiter('problem')">🆘 Als Problem an Hansi</button>
+      <button class="knopf" onclick="bfWeiter('problem')">🆘 Als Problem an ${adminName()}</button>
       <button class="knopf" onclick="bfWeiter('archiv')">🗄️ In mein Archiv</button>
       <button class="knopf" onclick="bfWeiter('speichern')">💾 Aufs Handy speichern / teilen</button>
       <button class="knopf" onclick="bfWeiter('nochmal')">📸 Neues Foto</button>
@@ -11787,7 +11791,7 @@ const DRUCKARTEN = {
 function druckAnleitung() {
   const k = (t) => `<span class="anl-taste">${t}</span>`;
   const schritt = (nr, titel, inhalt) => `<div class="anl-schritt"><div class="anl-nr">${nr}</div><div style="flex:1"><h2>${titel}</h2>${inhalt}</div></div>`;
-  const html = schritt(1, "📩 Link öffnen", `<p>Du bekommst von Hansi per <b>WhatsApp</b> oder <b>E-Mail</b> deinen <b>persönlichen Link</b>. Tippe ihn an.</p>
+  const html = schritt(1, "📩 Link öffnen", `<p>Du bekommst von ${adminName()} per <b>WhatsApp</b> oder <b>E-Mail</b> deinen <b>persönlichen Link</b>. Tippe ihn an.</p>
       <p>⚠️ Der Link gehört nur dir – bitte <b>nicht weitergeben</b>.</p>`)
     + schritt(2, "📲 Auf den Startbildschirm legen", `<p>Dann öffnet sich die App wie jede andere über ihr Symbol (die <b>Kochmütze</b>) – und Nachrichten kommen aufs Handy.</p>
       <div class="anl-zwei"><div><b class="kopf">🍎 iPhone</b>Den Link in <b>Safari</b> oder <b>Chrome</b> öffnen.<br>${k("Teilen □↑")} antippen<br>→ ${k("Zum Home-Bildschirm")}<br>→ ${k("Hinzufügen")}</div>
@@ -11799,7 +11803,7 @@ function druckAnleitung() {
       <li><b>Nachrichten aufs Handy oder per E-Mail?</b> Unten ${k("⚙️ Mehr")} → „Wie möchtest du Neuigkeiten bekommen?“</li>
       <li><b>Alle Funktionen sehen?</b> Ganz unten auf der Startseite ${k("🔧 Mehr Funktionen anzeigen")} – zurück jederzeit mit ${k("🟢 Einfache Ansicht")}.</li>
       <li><b>Diese Anleitung wiederfinden?</b> In der App unter ${k("📚 Meine Dokumente")}.</li>
-      <li><b>Hilfe?</b> Einfach Hansi fragen – oder in der App über ${k("💭 Feedback")} schreiben.</li></ul>`;
+      <li><b>Hilfe?</b> Einfach ${adminName()} fragen – oder in der App über ${k("💭 Feedback")} schreiben.</li></ul>`;
   return { titel: "Köcheclub-App in 3 Schritten", unter: "Kurzanleitung für den leichten Start", html };
 }
 // KC-CLUB-DRUCKVORSCHAU (0.61.0, Wunsch Hansi): jeder Ausdruck erst als Vorschau (A4-Blatt wie gedruckt), gedruckt wird erst
@@ -12078,13 +12082,13 @@ function fbSchritt(d) {
   if (FB.schritt === 2) FB.idee = $("fbIdeeS2")?.value ?? FB.idee;
   fbGruendeMerken();
   const fehlt = d > 0 && fbGrundFehlt();
-  if (fehlt) { melde("Bitte kurz schreiben, warum nicht – das hilft Hansi sehr.", true); $("fbGrund_" + fehlt.id)?.focus(); return; }
+  if (fehlt) { melde("Bitte kurz schreiben, warum nicht – das hilft " + adminName() + " sehr.", true); $("fbGrund_" + fehlt.id)?.focus(); return; }
   fbTexteMerken(); FB.schritt = Math.min(3, Math.max(1, FB.schritt + d)); fbZeigen(); scrollTo(0, 0);
 }
 async function fbSenden() {
   fbTexteMerken();
   const fehlt = FB.fragen.find((f) => f.grund?.pflicht.includes(FB.a[f.id]) && !String(FB.a[f.id + "_grund"] || "").trim());
-  if (fehlt) { FB.schritt = fehlt.schritt; fbZeigen(); melde("Bitte kurz schreiben, warum nicht – das hilft Hansi sehr.", true); return; }
+  if (fehlt) { FB.schritt = fehlt.schritt; fbZeigen(); melde("Bitte kurz schreiben, warum nicht – das hilft " + adminName() + " sehr.", true); return; }
   $("fbSenden").disabled = true;
   try {
     await api("feedback_senden", { antworten: FB.a, idee: FB.idee, mitteilung: FB.mitteilung, anonym: FB.anonym });
@@ -12298,7 +12302,7 @@ function mitgliedZeigen() {
     </div>
     ${m.selbst ? `<div class="karte"><h3>Deine Daten</h3>
       <p class="hinweis" style="margin-top:0">Oben steht alles, was über dich gespeichert ist. 🔒 = nicht freigegeben, sehen die anderen nicht. Freigeben kannst du unter ⚙️ Mehr → Privatsphäre.</p>
-      <div class="knoepfe"><button class="knopf" onclick="zeige('einstellungen')">🔒 Freigaben ändern</button><button class="knopf" onclick="korrekturMelden()">📝 Korrektur an Hansi melden</button></div></div>` : ""}`;
+      <div class="knoepfe"><button class="knopf" onclick="zeige('einstellungen')">🔒 Freigaben ändern</button><button class="knopf" onclick="korrekturMelden()">📝 Korrektur an ${adminName()} melden</button></div></div>` : ""}`;
 }
 // vCard, damit man den Kontakt mit einem Tipp ins Telefonbuch übernehmen kann
 function kontaktSpeichern() {
@@ -12319,9 +12323,9 @@ async function korrekturMelden() {
   try {
     if (!MITGLIEDER) await mitgliederHolen();
     const admins = MITGLIEDER.filter((x) => x.admin).map((x) => x.person_id);
-    if (!admins.length) return melde("Kein Admin gefunden – bitte Hansi direkt Bescheid geben.", true);
+    if (!admins.length) return melde("Kein Admin gefunden – bitte " + adminName() + " direkt Bescheid geben.", true);
     await api("nachricht_senden", { empfaenger: { personen: admins, aemter: [], alle: false, vorstand: false }, betreff: "📝 Korrektur meiner Daten", text: text.trim() });
-    melde("📝 Danke – deine Korrektur ist bei Hansi angekommen");
+    melde("📝 Danke – deine Korrektur ist bei " + adminName() + " angekommen");
   } catch (e) { melde(e.message, true); }
 }
 // Einstellungen → Privatsphäre: was dürfen andere Mitglieder sehen?
@@ -12382,7 +12386,7 @@ function druckEinrichtungskarte(k) {
         ${box("🤖 Android", ["Oben rechts <b>⋮</b> antippen", "„App installieren“ (oder „Zum Startbildschirm hinzufügen“ → „Installieren“)", "„Installieren“ bestätigen", "<b>Samsung-Browser:</b> unten ≡ → „Seite hinzufügen zu“ → „Startbildschirm“"])}
       </div>
       <p style="margin:6mm 0 0;font-size:3.8mm;padding:3mm 4mm;background:#fbf0d6;border-radius:2mm">🔒 <b>Persönlich – bitte nicht weitergeben.</b> Der QR-Code ist dein Schlüssel zur App. Er gilt, bis ein neuer Link für dich erzeugt wird.</p>
-      <p style="margin:3mm 0 0;font-size:3.8mm">❓ <b>Klappt etwas nicht?</b> Am Clubabend helfen wir gern – oder frag Hansi.</p>` };
+      <p style="margin:3mm 0 0;font-size:3.8mm">❓ <b>Klappt etwas nicht?</b> Am Clubabend helfen wir gern – oder frag ${adminName()}.</p>` };
 }
 async function linkTeilen(pid) {
   const m = MITGLIEDER.find((x) => x.person_id === pid);
@@ -12390,7 +12394,7 @@ async function linkTeilen(pid) {
   try {
     const { link } = await api("link_erzeugen", { person_id: pid });
     // 0.27.3: Anleitung wie unter ⚙️ → App-Installation (richtige App statt Verknüpfung)
-    const text = `Hallo ${m.vorname}, hier ist dein persönlicher Link zur Köcheclub-App:\n${link}\n\nSo geht's (Android): Link in Chrome öffnen → oben rechts ⋮ → „App installieren“ (bzw. „Zum Startbildschirm hinzufügen“ → „Installieren“, nicht „Verknüpfung“). Samsung-Browser „Internet“: unten ≡ → „Seite hinzufügen zu“ → „Startbildschirm“.\niPhone: den Link in *Safari* öffnen → unten Teilen □↑ → „Zum Home-Bildschirm“ → „Hinzufügen“. Danach die App über das neue Symbol öffnen.\n\nFunktioniert der Link nicht (z. B. weil es einen neueren gibt)? Die Seite zeigt dann „Link verloren?“ – dort deine E-Mail-Adresse eingeben, der neue Link kommt sofort per Mail.\n\nBitte nicht weitergeben – der Link ist dein persönlicher Zugang. Viele Grüße, Hansi`;
+    const text = `Hallo ${m.vorname}, hier ist dein persönlicher Link zur Köcheclub-App:\n${link}\n\nSo geht's (Android): Link in Chrome öffnen → oben rechts ⋮ → „App installieren“ (bzw. „Zum Startbildschirm hinzufügen“ → „Installieren“, nicht „Verknüpfung“). Samsung-Browser „Internet“: unten ≡ → „Seite hinzufügen zu“ → „Startbildschirm“.\niPhone: den Link in *Safari* öffnen → unten Teilen □↑ → „Zum Home-Bildschirm“ → „Hinzufügen“. Danach die App über das neue Symbol öffnen.\n\nFunktioniert der Link nicht (z. B. weil es einen neueren gibt)? Die Seite zeigt dann „Link verloren?“ – dort deine E-Mail-Adresse eingeben, der neue Link kommt sofort per Mail.\n\nBitte nicht weitergeben – der Link ist dein persönlicher Zugang. Viele Grüße, ${ICH?.vorname || adminName()}`;
     if ((await frage(`Link für ${m.name} erzeugt.\n\nOK = per WhatsApp schicken\nAbbrechen = in die Zwischenablage kopieren`))) window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank");
     else { try { await navigator.clipboard.writeText(text); melde("Text mit Link kopiert"); } catch { (await eingabe("Zum Kopieren:", text)); } }
     mitgliederLaden();
@@ -12523,7 +12527,7 @@ async function appInfoZeigen() {
 async function appInfoKopieren() {
   if (!APPINFO.length) APPINFO = await appInfoDaten();
   const text = ["Köcheclub-App – Info", `Angemeldet als: ${ICH?.name || "–"}`, ...APPINFO.map(([k, v]) => `${k.replace(/^\S+\s/, "")}: ${v}`), `Stand: ${new Date().toLocaleString("de-DE")}`].join("\n");
-  try { await navigator.clipboard.writeText(text); melde("📋 App-Infos kopiert – z. B. in eine Nachricht an Hansi einfügen"); } catch { (await eingabe("App-Infos:", text)); }
+  try { await navigator.clipboard.writeText(text); melde("📋 App-Infos kopiert – z. B. in eine Nachricht an " + adminName() + " einfügen"); } catch { (await eingabe("App-Infos:", text)); }
 }
 
 // Persönlichen Link kopieren (bleibt auf dem Handy – nur in die Zwischenablage), damit die App in Chrome geöffnet/installiert werden kann
@@ -13688,7 +13692,7 @@ const FP_HINWEISE = [
     schritte: () => [!navigator.onLine ? "📶 <b>Internet ist gerade aus</b> – WLAN oder mobile Daten einschalten" : "📶 Internet prüfen – WLAN oder mobile Daten an?",
       NEUE_VERSION ? "🔄 Oben <b>„Jetzt aktualisieren“</b> tippen – du hast noch eine ältere Version" : "🔄 App ganz schließen und neu öffnen",
       FP_IOS && START_ART !== "app" ? "📱 Auf dem iPhone die App am besten über das Symbol auf dem Home-Bildschirm öffnen" : "📱 Die App über das Köcheclub-Symbol öffnen, nicht über einen alten Link",
-      "🆘 Geht es immer noch nicht? <b>„Problem melden“</b> – Hansi sieht dann genau, woran es liegt"], melden: true },
+      "🆘 Geht es immer noch nicht? <b>„Problem melden“</b> – <span class='admin-name'>Hansi</span> sieht dann genau, woran es liegt"], melden: true },
 ];
 function fpHinweisPruefen() {
   if (document.getElementById("fpFenster")) return;
@@ -13716,13 +13720,13 @@ async function fpLinkKopieren() {
   melde(ok ? "🔗 Dein Link ist kopiert – jetzt in Safari/Chrome oben einfügen" : "Kopieren ging nicht – bitte den Link aus deiner Mail/WhatsApp nehmen", !ok);
 }
 async function fpProblemMelden() {
-  const text = (await eingabe("Was klappt nicht? (freiwillig, ein paar Worte reichen)\n\nHansi bekommt eine Nachricht und sieht automatisch, welches Handy, welcher Browser und welche Version du hast.", ""));
+  const text = (await eingabe("Was klappt nicht? (freiwillig, ein paar Worte reichen)\n\n" + adminName() + " bekommt eine Nachricht und sieht automatisch, welches Handy, welcher Browser und welche Version du hast.", ""));
   if (text === null) return;
   try { window.KCFP?.senden(true); } catch {}
-  if (!INIT) { fpNeu("hilferuf_anonym", { text: text.trim(), browser: fpBrowser(), system: fpSystem() }); window.KCFP?.senden(true); return melde("🆘 Deine Meldung ist unterwegs – Hansi meldet sich."); }
+  if (!INIT) { fpNeu("hilferuf_anonym", { text: text.trim(), browser: fpBrowser(), system: fpSystem() }); window.KCFP?.senden(true); return melde("🆘 Deine Meldung ist unterwegs – " + adminName() + " meldet sich."); }
   try { await api("hilfe_anfordern", { text: text.trim(), info: { system: fpSystem(), browser: fpBrowser(), start: START_ART, speicher: !!window.KCFP?.speicherOk,
     push: "Notification" in window ? Notification.permission : "nicht_moeglich", online: navigator.onLine, bildschirm: `${screen.width}x${screen.height}`, sicht: aktuelleAnsicht } });
-    melde("🆘 Danke – Hansi hat deine Meldung bekommen und meldet sich."); }
+    melde("🆘 Danke – " + adminName() + " hat deine Meldung bekommen und meldet sich."); }
   catch (e) { melde(e.message, true); }
 }
 // ---- Admin: Fehlerprotokoll ansehen ----

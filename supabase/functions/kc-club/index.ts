@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.98.0";
+const SERVER_VERSION = "1.99.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -1124,6 +1124,15 @@ async function adminSpiegel() {
   };
 } // kostenloser Supabase-Tarif (falls der System-Check keinen Wert liefert)
 
+// KC-CLUB-ADMIN-NAME (1.99.0): Vorname des (ersten) Admins für Texte wie „bitte … Bescheid geben“ – 10 Min. gemerkt
+let ADMIN_VORNAME: { name: string; bis: number } | null = null;
+async function adminVorname(): Promise<string> {
+  if (ADMIN_VORNAME && ADMIN_VORNAME.bis > Date.now()) return ADMIN_VORNAME.name;
+  let name = "Hansi";
+  try { const { data: ad } = await db.from("kc_club_rollen").select("person_id").eq("ist_admin", true).not("person_id", "like", "KC-P-TEST%").order("person_id").limit(1);
+    if (ad?.[0]) { const p = (await personen([ad[0].person_id])).get(ad[0].person_id); name = vorname(p ?? null) || name; } } catch { /* Rückfall „Hansi“ */ }
+  ADMIN_VORNAME = { name, bis: Date.now() + 600000 }; return name;
+}
 // ---------- Anmeldung ----------
 type Ich = { person_id: string; name: string; vorname: string; admin: boolean; vorstand: boolean; aemter: string[]; protokolle: boolean; kontakte: boolean; buero: BueroRecht;
   nurLesen?: boolean }; // KC-CLUB-NOTBETRIEB: true = Antwort nur für das Notfall-Paket berechnen, nichts schreiben
@@ -2767,7 +2776,7 @@ Köcheclub Werne`,
       const versand = await routerSenden("club_nachricht_mail", [pe.person_id], {
         titel: "🔑 Dein Link zur Köcheclub-App", kurz: "Hier ist dein neuer persönlicher Link.",
         betreff: "Köcheclub Werne – dein persönlicher Link zur App",
-        text: `Hallo,\n\nhier ist dein neuer persönlicher Link zur Köcheclub-App:\n\n${link}\n\nBitte antippen – die App zeigt dir dann Schritt für Schritt, wie du sie auf dein Handy legst (iPhone/iPad: in Safari öffnen, Android: in Chrome).\n\nDer Link ist nur für dich – bitte nicht weitergeben. Sobald du ihn öffnest, gilt ein früherer Link nicht mehr. Der Link gilt 24 Stunden.\nDu hast keinen neuen Link angefordert? Dann bitte kurz Hansi Bescheid geben.\n\nViele Grüße\nKöcheclub Werne`,
+        text: `Hallo,\n\nhier ist dein neuer persönlicher Link zur Köcheclub-App:\n\n${link}\n\nBitte antippen – die App zeigt dir dann Schritt für Schritt, wie du sie auf dein Handy legst (iPhone/iPad: in Safari öffnen, Android: in Chrome).\n\nDer Link ist nur für dich – bitte nicht weitergeben. Sobald du ihn öffnest, gilt ein früherer Link nicht mehr. Der Link gilt 24 Stunden.\nDu hast keinen neuen Link angefordert? Dann bitte kurz ${await adminVorname()} Bescheid geben.\n\nViele Grüße\nKöcheclub Werne`,
         url: link,
       }, `club-zugang:${pe.person_id}:${Date.now()}`);
       await db.rpc("kc_club_zugangslinks_schwaerzen").then(() => {}, () => {}); // KC-CLUB-LINKSCHUTZ: Schlüssel nicht im Mail-Speicher lassen
@@ -2956,7 +2965,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const communicator = await communicatorStatus(ich).catch(() => null);
         const kontaktFreigabe = Object.fromEntries(KONTAKT_FELDER.map((f) => [f, !!(kf ?? []).find((x: any) => x.bereich === "kontakt_" + f)?.erlaubt]));
         const benachrichtigung = Object.fromEntries(BEREICHE.map((b) => { const x: any = (wahl ?? []).find((y: any) => y.bereich === b); return [b, x ? { push: x.push, email: x.email } : STANDARD_WAHL[b]]; }));
-        return json({ ich, status: meinStatus, server: SERVER_VERSION, ungelesen, ungelesenLaut, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, communicator, notfall: nf ?? null, einstellungen, kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
+        return json({ ich, status: meinStatus, server: SERVER_VERSION, adminName: await adminVorname(), ungelesen, ungelesenLaut, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, communicator, notfall: nf ?? null, einstellungen, kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
             // KC-CLUB-GERAETE-TIPP: wohin der Link ginge – nur teilweise (z. B. „h…@web.de“)

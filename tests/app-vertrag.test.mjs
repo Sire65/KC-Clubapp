@@ -1664,7 +1664,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 {
   const sm = server.slice(server.indexOf('case "sicherheit_melden"'), server.indexOf('case "nachricht_ausblenden"'));
   assert.ok(/db\.rpc\("kc_club_sicherheit_status"\)/.test(sm) && /await adminIds\(\)/.test(sm) && /"fehler_sicherheit"/.test(sm) && /\(count \?\? 0\) >= 3\) throw/.test(sm), "Server prüft neu, an Admins, Fehlerprotokoll, Bremse");
-  assert.ok(/onclick="sicherheitMelden\(\)">📨 Ergebnis an Hansi \(Admin\) senden/.test(html), "Knopf vorhanden");
+  assert.ok(/onclick="sicherheitMelden\(\)">📨 Ergebnis an (Hansi|\$\{adminName\(\)\}) \(Admin\) senden/.test(html) /* 1.99.0: Admin-Name */, "Knopf vorhanden");
 }
 
 // 145. 1.16.0: Server neben der Datenbank (mit Rückweg) + paralleles Zählen
@@ -3104,6 +3104,16 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/:root\.gross \.fuss-leiste button \{ font-size: 10px;/.test(html) && /\.knopf\.klein \{ min-height: 40px; \}/.test(html), "große Schrift / Tippflächen");
   assert.ok(/const inapp = \/; wv\\\)\|FBAN\|FBAV\|Instagram\|Line\\\/\|GSA\\\/\/\.test\(ua\);/.test(html) && /Erst in Chrome öffnen/.test(html) && /Erst in Safari öffnen/.test(html), "Mini-Browser im Assistenten");
   assert.ok(/iPhone\/iPad: in Safari öffnen, Android: in Chrome/.test(server), "Mail nennt Safari/Chrome");
+}
+// 280. 1.99.0: Admin-Name statt fest „Hansi“, „bald“-Kacheln ausgeblendet, Manifest-Symbole getrennt
+{
+  assert.ok(/const adminName = \(\) => INIT\?\.adminName \|\| "Hansi";/.test(html) && /ICH = INIT\.ich; adminNamenSetzen\(\);/.test(html), "Admin-Name aus init");
+  assert.ok(/adminName: await adminVorname\(\)/.test(server) && /async function adminVorname\(\)/.test(server) && /bitte kurz \$\{await adminVorname\(\)\} Bescheid/.test(server), "Server liefert Admin-Namen");
+  assert.ok(/Gebaut von Hansi für uns alle/.test(html) && /„Hansi hat die Club-App verlassen“/.test(html), "Urheberschaft/Beispiel bleiben");
+  assert.ok(!/bitte Hansi Bescheid|bei Hansi angekommen|Korrektur an Hansi melden/.test(html), "keine festen Ansprechpartner mehr");
+  assert.ok(/const kachelnAlle = \(r\) => KACHELN\[r\]\.filter\(\(k\) => !k\.bald && /.test(html) && /Kommt bald: /.test(html), "bald-Kacheln aus, Überblick nennt sie");
+  const man = JSON.parse(lies("manifest.webmanifest"));
+  assert.ok(man.icons.every((i) => i.purpose === "any" || i.purpose === "maskable") && man.icons.filter((i) => i.purpose === "maskable").length === 2, "Symbole getrennt");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
