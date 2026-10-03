@@ -2868,6 +2868,15 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   for (const x of ["Sprachansagen", "Tippfehler", "Fotoalben", "Clubchronik", "Club-Börse", "Helfen & Leihen"]) assert.ok(u.includes(x), `„${x}“ fehlt unter „Schon umgesetzt“`);
   assert.ok(/<details class="hinweis"[^>]*><summary[^>]*><b>✅ Schon umgesetzt \(\$\{FB\.umgesetzt\.length\}\)/.test(html), "„Schon umgesetzt“ zum Aufklappen");
 }
+// 253. 1.74.0: Büro – zwei Zettel mit Pinnnadel, Eingang als Liste, Archiv-Zählung nur Vereinsordner
+{
+  assert.ok(/<div class="bu-zettelreihe">/.test(html) && /class="bu-zettel blau" onclick="buEingang\(\)"/.test(html) && /\.bu-zettel::before \{[^}]*radial-gradient/.test(html), "zwei Zettel mit Nadel");
+  assert.ok(/function buEingangPosten\(\)/.test(html) && /onclick="buEinPosten\(\$\{i\}\)"/.test(html), "Eingang als Liste");
+  assert.ok(/✏️ Öffnen &amp; bearbeiten/.test(html) && /📥 Zurück in den Eingang/.test(html) && /Zum Ordner „/.test(html), "Knöpfe bearbeiten / zurück / Ordner");
+  assert.ok(/if \(!o \|\| o\.besitzer\) continue;/.test(html), "persönliche Ordner nicht im Eingang der Clubleitung");
+  const be = server.slice(server.indexOf("async function bueroEingang"), server.indexOf("function bueroTopListe"));
+  assert.ok(/from\("kc_club_archiv_ordner"\)\.select\("id"\)\.in\("id", ids\)\.is\("besitzer", null\)/.test(be), "Server zählt nur Vereinsordner");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

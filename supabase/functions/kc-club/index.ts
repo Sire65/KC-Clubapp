@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.73.0";
+const SERVER_VERSION = "1.74.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -1868,7 +1868,16 @@ async function bueroEingang() {
     zahl(db.from("kc_club_ausleihen").select("id", { count: "exact", head: true }).eq("status", "angefragt")),
     zahl(db.from("kc_club_vorschlaege").select("id", { count: "exact", head: true }).eq("status", "offen")),
     zahl(db.from("kc_club_hilfe_aufrufe").select("id", { count: "exact", head: true }).is("geschlossen_am", null).gte("datum", berlinTag(new Date()))),
-    zahl(db.from("kc_club_archiv_dokumente").select("id", { count: "exact", head: true }).eq("status", "pruefung").is("geloescht_am", null)),
+    // 1.74.0 (Fund Hansi: Eingang zeigte 5, führte aber nur zu den Ordnern): nur Einreichungen in Vereinsordnern – in persönlichen
+    // Ordnern entscheidet allein der Besitzer, das ist keine Aufgabe für die Clubleitung
+    (async () => {
+      const { data } = await db.from("kc_club_archiv_dokumente").select("ordner_id").eq("status", "pruefung").is("geloescht_am", null);
+      const ids = [...new Set((data ?? []).map((x: any) => x.ordner_id))];
+      if (!ids.length) return 0;
+      const { data: vo } = await db.from("kc_club_archiv_ordner").select("id").in("id", ids).is("besitzer", null);
+      const verein = new Set((vo ?? []).map((x: any) => x.id));
+      return (data ?? []).filter((x: any) => verein.has(x.ordner_id)).length;
+    })().catch(() => 0),
     zahl(db.from("kc_club_aufgaben").select("id", { count: "exact", head: true }).is("erledigt_am", null)),
     zahl(db.from("kc_club_sitzungsprotokolle").select("id", { count: "exact", head: true }).eq("status", "entwurf")),
   ]);

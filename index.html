@@ -1077,6 +1077,20 @@
   .bu-zettel { display: block; width: min(260px, 100%); margin: 0 auto 12px; border: none; cursor: pointer; text-align: left; font: inherit; color: #4a3b1a;
     background: #f6e7a8; padding: 9px 12px 10px; transform: rotate(-1.5deg); box-shadow: 0 4px 8px rgba(0,0,0,.2); border-radius: 2px 2px 10px 2px; }
   .bu-zettel b { display: block; font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; opacity: .75; }
+  /* KC-CLUB-BUERO-ZETTEL (1.74.0, Wunsch Hansi): zwei Zettel nebeneinander, zwei Farben, mit Pinnnadel */
+  .bu-zettelreihe { display: flex; gap: 14px; justify-content: center; align-items: flex-start; margin: 6px auto 14px; max-width: 480px; }
+  .bu-zettelreihe .bu-zettel { position: relative; flex: 1 1 0; min-width: 0; width: auto; margin: 0; padding-top: 16px; }
+  .bu-zettel.blau { background: #d6e6ee; color: #23404f; transform: rotate(1.5deg); }
+  .bu-zettel.ruhig { cursor: default; }
+  .bu-zettel::before { content: ""; position: absolute; top: -6px; left: 50%; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%; z-index: 1;
+    background: radial-gradient(circle at 35% 30%, #f3a59a, #b4553f 55%, #6e2a1c); box-shadow: 0 2px 3px rgba(0,0,0,.35); }
+  .bu-zettel::after { content: ""; position: absolute; top: 8px; left: 50%; width: 6px; height: 3px; margin-left: -1px; border-radius: 50%; background: rgba(0,0,0,.18); }
+  .bu-zettel.blau::before { background: radial-gradient(circle at 35% 30%, #a9c8e8, #4a7fae 55%, #23445f); }
+  /* KC-CLUB-BUERO-EINGANGSLISTE (1.74.0): Eingang als Liste – antippen, bearbeiten, zurück in den Eingang oder zum Ordner */
+  .bu-ein-zeile { display: flex; align-items: center; gap: 10px; width: 100%; border: none; border-bottom: 1px solid var(--linie); background: none; padding: 11px 4px; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+  .bu-ein-zeile:last-child { border-bottom: none; } .bu-ein-zeile .sym { font-size: 1.5rem; flex: none; width: 34px; text-align: center; }
+  .bu-ein-zeile .txt { flex: 1; min-width: 0; } .bu-ein-zeile .txt b { display: block; } .bu-ein-zeile small { color: var(--grau); }
+  .bu-ein-zeile .pfeil { color: var(--grau); font-size: 1.4rem; }
   .bu-aufgeschlagen { border-radius: 14px; overflow: hidden; box-shadow: var(--schatten); margin-bottom: 12px; background: var(--karte); border-left: 10px solid var(--of); }
   .bu-auf-kopf { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: color-mix(in srgb, var(--of) 16%, var(--karte)); }
   .bu-auf-kopf span { font-size: 1.5rem; } .bu-auf-kopf b { flex: 1; font-size: 1.1rem; }
@@ -2291,7 +2305,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.73.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.74.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -6818,7 +6832,11 @@ function buRaumHtml() {
     <div class="bu-raum">
       <div class="bu-wand"><div class="bu-regal">${ordner.map(ruecken).join("")}</div><div class="bu-brett"></div></div>
       <div class="bu-tisch">
-        ${dran ? `<button class="bu-zettel" onclick="${dranFn}"><b>Nächster Schritt</b>${esc(dran.replace(/^\S+\s/, ""))}</button>` : ""}
+        <div class="bu-zettelreihe">
+          ${dran ? `<button class="bu-zettel" onclick="${dranFn}"><b>Nächster Schritt</b>${esc(dran.replace(/^\S+\s/, ""))}</button>` : `<div class="bu-zettel ruhig"><b>Nächster Schritt</b>${naechst ? "Sitzung ist vorbereitet 👍" : "Keine Sitzung geplant"}</div>`}
+          ${L ? `<button class="bu-zettel blau" onclick="buEingang()"><b>Eingang</b>${summe ? `${summe} ${summe === 1 ? "Sache wartet" : "Sachen warten"} auf dich` : "Alles erledigt 👍"}</button>`
+            : `<button class="bu-zettel blau" onclick="zeige('termine')"><b>Nächster Termin</b>${naechst ? esc(naechst.titel || "Sitzung") + " · " + esc(fTagDp.format(new Date(naechst.beginn))) : "Keiner geplant"}</button>`}
+        </div>
         <div class="bu-dinge">
           ${L ? ding("bu-korb", `<span class="bu-dsym">📥</span>${summe ? `<span class="bu-dzahl">${summe}</span>` : ""}`, "Eingang", "buEingang()") : ""}
           ${ding("bu-fueller", '<span class="bu-dsym">✒️</span>', "Schreiben", "buFueller()", S ? "" : '<span class="bu-nur">nur lesen</span>')}
@@ -7126,10 +7144,13 @@ async function buSenden(knopf, anzahl) {
 
 // ---------- KC-CLUB-BUERO-EINGANG (1.26.0): alles, was auf die Clubleitung wartet – direkt hier erledigen ----------
 // Nutzt die vorhandenen Listen/Info-Fenster (Ausleihen, Vorschläge, Hilfe) – keine zweite Datenhaltung.
-let BU_EIN = { leihen: null, vorschlaege: null, hilfe: null };
+let BU_EIN = { leihen: null, vorschlaege: null, hilfe: null, protokolle: null, archiv: null, posten: [] };
 function buEingang() { BU.sicht = "eingang"; buZeigen(); buEingangLaden(); window.scrollTo(0, 0); }
 async function buEingangLaden() {
-  const [l, v, h] = await Promise.allSettled([api("leihen_liste"), api("vorschlaege_liste"), api("hilfe_liste")]);
+  const [l, v, h, pr, ar] = await Promise.allSettled([api("leihen_liste"), api("vorschlaege_liste"), api("hilfe_liste"),
+    ICH?.protokolle === false ? Promise.reject(0) : api("protokolle_liste"), api("archiv_liste")]);
+  if (pr.status === "fulfilled") BU_EIN.protokolle = pr.value;
+  if (ar.status === "fulfilled") { BU_EIN.archiv = ar.value; if (!AR.daten) AR.daten = ar.value; }
   if (l.status === "fulfilled") { BU_EIN.leihen = l.value; HL.leihen = l.value; }
   if (v.status === "fulfilled") { BU_EIN.vorschlaege = v.value.vorschlaege; VORSCHLAG_MAP = new Map(v.value.vorschlaege.map((x) => [x.id, x])); VORSCHLAG_TREFFEN = v.value.treffen; }
   if (h.status === "fulfilled") { BU_EIN.hilfe = h.value; HL.hilfe = h.value; }
@@ -7138,23 +7159,58 @@ async function buEingangLaden() {
 }
 // nach einer Aktion in einem Info-Fenster (genehmigen, unterstützen …) den Eingang auffrischen
 function buEingangAuffrischen() { if (aktuelleAnsicht === "buero" && BU.sicht === "eingang") buEingangLaden(); }
+// KC-CLUB-BUERO-EINGANGSLISTE (1.74.0, Wunsch Hansi): eine Liste statt Kacheln – jede Zeile antippen → Bearbeiten, zurück in
+// den Eingang oder zum passenden Ordner. Nur, was die Clubleitung selbst erledigen kann (persönliche Ordner prüft der Besitzer).
+function buEingangPosten() {
+  const l = BU_EIN.leihen, v = BU_EIN.vorschlaege, h = BU_EIN.hilfe, pr = BU_EIN.protokolle, ar = BU_EIN.archiv, P = [];
+  const leihWas = (a) => a.positionen.length === 1 ? `${a.positionen[0].anzahl} × ${a.positionen[0].name}` : a.positionen.map((x) => `${x.anzahl}× ${x.name}`).join(", ");
+  for (const a of (l?.ausleihen || []).filter((x) => x.status === "angefragt"))
+    P.push({ sym: a.positionen[0]?.sym || "📦", gruppe: "Ausleihe – bitte entscheiden", titel: leihWas(a), unter: `${a.eigen ? "Du" : a.wer} · 📤 ${hlTagName(a.abholung)}`, auf: `HL.tab='leihen';leihInfo('${a.id}')`, ordner: ["🤝", "Helfen & Leihen", "hlStart()"] });
+  for (const a of (l?.ausleihen || []).filter((x) => x.status === "genehmigt" && x.abholung <= heuteIso()))
+    P.push({ sym: "📤", gruppe: "Genehmigt – Abholung fällig", titel: leihWas(a), unter: `${a.eigen ? "Du" : a.wer} · ${hlTagName(a.abholung)}`, auf: `HL.tab='leihen';leihInfo('${a.id}')`, ordner: ["🤝", "Helfen & Leihen", "hlStart()"] });
+  for (const x of (v || []).filter((y) => y.status === "offen"))
+    P.push({ sym: x.art === "spende" ? "💝" : x.art === "abstimmung" ? "🗳️" : "💡", gruppe: x.art === "spende" ? "Spenden-Vorschlag" : "Offener Vorschlag", titel: x.art === "spende" ? (x.spenden?.[0]?.empfaenger || "Spende") : x.titel, unter: `von ${x.von?.name || "?"}`, auf: `vorschlagInfo('${x.id}')`, ordner: ["🗳️", "Vorschläge", "zeige('vorschlaege')"] });
+  for (const a of (h?.aufrufe || []).filter((x) => x.offen && x.komme.length < x.anzahl))
+    P.push({ sym: "🙋", gruppe: "Hilfe-Aufruf – noch Helfer gesucht", titel: (h.arten?.[a.art] || a.art).replace(/^\S+\s/, ""), unter: `${hlTagName(a.datum)} · ✋ ${a.komme.length} von ${a.anzahl}`, auf: `HL.tab='helfen';hilfeInfo('${a.id}')`, ordner: ["🤝", "Helfen & Leihen", "hlStart()"] });
+  if (ar?.darf) for (const d of (ar.dokumente || []).filter((x) => x.status === "pruefung")) {
+    const o = (ar.ordner || []).find((y) => y.id === d.ordner_id); if (!o || o.besitzer) continue;
+    P.push({ sym: "🗄️", gruppe: `Archiv: zur Prüfung · ${o.titel || "Ordner"}`, titel: d.titel, unter: `eingereicht von ${d.von || "?"}`, auf: `arAnlage('${d.id}', true)`,
+      ordner: o.art === "chronik" ? ["📖", "Chronik", "arStartArt('chronik')"] : ["🗄️", "Archiv", "arStart()"],
+      schnell: [["✔ In den Ordner legen (annehmen)", `buEinArchiv('${d.id}', true)`, true], ["✖ Ablehnen", `buEinArchiv('${d.id}', false)`]] });
+  }
+  for (const p of (pr?.protokolle || []).filter((x) => x.status === "entwurf" && x.darfBearbeiten))
+    P.push({ sym: "📄", gruppe: "Protokoll-Entwurf", titel: p.titel, unter: `${tagKurz(p.datum)} · von ${p.verfasser?.name || "?"}`, auf: `protokollOeffnen('${p.id}')`, ordner: ["📄", "Protokolle", "zeige('protokolle')"] });
+  for (const a of (pr?.aufgaben || []))
+    P.push({ sym: "✔️", gruppe: "Offene Aufgabe", titel: a.text, unter: [a.name, faelligText(a.faellig).replace(/<[^>]+>/g, "").trim()].filter(Boolean).join(" · "), auf: "zeige('protokolle')", ordner: ["📄", "Protokolle", "zeige('protokolle')"],
+      schnell: a.meine || ICH?.vorstand ? [["✔ Erledigt", `buEinAufgabe('${a.id}')`, true]] : [] });
+  return P;
+}
 function buEingangHtml() {
-  const e = BU.start?.eingang || {}, l = BU_EIN.leihen, v = BU_EIN.vorschlaege, h = BU_EIN.hilfe;
-  const abschnitt = (sym, titel, anzahl, inhalt, leer) => `<div class="abschnitt"><h3>${sym} ${titel}${anzahl ? ` <span class="marke gelb">${anzahl}</span>` : ""}</h3></div>${anzahl ? inhalt : `<div class="karte hinweis">${leer}</div>`}`;
-  const anfr = (l?.ausleihen || []).filter((a) => a.status === "angefragt");
-  const lauf = (l?.ausleihen || []).filter((a) => a.status === "genehmigt" && a.abholung <= heuteIso());
-  const offenV = (v || []).filter((x) => x.status === "offen");
-  const hilfe = (h?.aufrufe || []).filter((a) => a.offen && a.komme.length < a.anzahl);
-  const link = (sym, titel, z, fn, u) => `<button class="mini-kachel${z ? " mk-offen" : ""}" onclick="${fn}"><span class="mk-sym">${sym}</span><span class="mk-titel">${titel}</span><span class="mk-gross">${z || "–"}</span><span class="mk-unter">${u}</span></button>`;
-  return `<div class="karte bu-gruss">📥 <b>Eingang</b> – hier landet alles, was auf eine Entscheidung oder Erledigung durch die Clubleitung wartet. Kachel antippen → Einzelheiten und Knöpfe.</div>
-    ${!l && !v && !h ? '<div class="karte hinweis">Wird geladen …</div>' : ""}
-    ${abschnitt("📦", "Ausleih-Anfragen – bitte entscheiden", anfr.length, `<div class="mini-kacheln">${anfr.map((a) => leihKachel(a, true).replace("leihInfo(", "HL.tab='leihen';leihInfo(")).join("")}</div>`, "Keine offenen Ausleih-Anfragen 👍")}
-    ${lauf.length ? abschnitt("📤", "Genehmigt – Abholung fällig", lauf.length, `<div class="mini-kacheln">${lauf.map((a) => leihKachel(a, true).replace("leihInfo(", "HL.tab='leihen';leihInfo(")).join("")}</div>`, "") : ""}
-    ${abschnitt("🗳️", "Offene Vorschläge", offenV.length, `<div class="mini-kacheln">${offenV.map((x) => x.art === "spende" ? spendeKachel(x) : `<button class="mini-kachel" onclick="vorschlagInfo('${x.id}')"><span class="mk-sym">${x.art === "abstimmung" ? "🗳️" : "💡"}</span><span class="mk-titel">${esc(x.titel)}</span><span class="mk-unter">${x.art === "abstimmung" ? `${x.stimmen} von ${x.berechtigt} abgestimmt` : `👍 ${x.ergebnis?.[0]?.anzahl || 0}`} · ${esc(x.von?.name || "")}</span></button>`).join("")}</div>`, "Keine offenen Vorschläge.")}
-    ${abschnitt("🙋", "Hilfe-Aufrufe – noch Helfer gesucht", hilfe.length, `<div class="mini-kacheln">${hilfe.map((a) => hilfeKachel(a).replace("hilfeInfo(", "HL.tab='helfen';hilfeInfo(")).join("")}</div>`, "Alle Hilfe-Aufrufe sind versorgt.")}
-    <div class="abschnitt"><h3>📋 Weiteres</h3></div>
-    <div class="mini-kacheln">${link("🗄️", "Archiv: zu prüfen", e.archiv, "arStart()", "Einreichungen freigeben")}${link("✔️", "Offene Aufgaben", e.aufgaben, "zeige('protokolle')", "aus den Protokollen")}${link("📄", "Protokoll-Entwürfe", e.entwuerfe, "zeige('protokolle')", "fertigstellen · veröffentlichen")}</div>
+  const geladen = BU_EIN.leihen || BU_EIN.vorschlaege || BU_EIN.hilfe, P = (BU_EIN.posten = buEingangPosten());
+  return `<div class="karte bu-gruss">📥 <b>Eingang${P.length ? ` – ${P.length} ${P.length === 1 ? "Sache wartet" : "Sachen warten"}` : ""}</b><br><span class="hinweis">Antippen → bearbeiten, zurück in den Eingang oder zum Ordner.</span></div>
+    ${!geladen ? '<div class="karte hinweis">Wird geladen …</div>' : P.length ? `<div class="karte" style="padding:4px 12px">${P.map((x, i) => `<button class="bu-ein-zeile" onclick="buEinPosten(${i})"><span class="sym">${esc(x.sym)}</span>
+      <span class="txt"><small>${esc(x.gruppe)}</small><b>${esc(x.titel)}</b><small>${esc(x.unter)}</small></span><span class="pfeil">›</span></button>`).join("")}</div>` : '<div class="karte hinweis">📭 Alles erledigt – im Eingang liegt nichts 👍</div>'}
     <div class="knoepfe"><button class="knopf" onclick="buEingangLaden()">↻ Neu laden</button><button class="knopf" onclick="buZurueck()">🗂️ Zurück ins Büro</button></div>`;
+}
+function buEinPosten(i) {
+  const x = BU_EIN.posten[i]; if (!x) return;
+  const f = blattAuf("buEinBlatt", `<div style="display:flex;gap:10px;align-items:center"><span style="font-size:2rem">${esc(x.sym)}</span><div><small class="hinweis">${esc(x.gruppe)}</small><h3 style="margin:2px 0">${esc(x.titel)}</h3><small class="hinweis">${esc(x.unter)}</small></div></div>
+    <div style="display:grid;gap:8px;margin-top:14px">
+      <button class="knopf haupt" data-fn="${esc(x.auf)}">✏️ Öffnen &amp; bearbeiten</button>
+      ${(x.schnell || []).map(([t, fn, haupt]) => `<button class="knopf${haupt ? " gruen" : ""}" data-fn="${esc(fn)}">${esc(t)}</button>`).join("")}
+      <button class="knopf" data-fn="${esc(x.ordner[2])}">${x.ordner[0]} Zum Ordner „${esc(x.ordner[1])}“</button>
+      <button class="knopf" data-zu="1">📥 Zurück in den Eingang</button></div>`);
+  f.querySelectorAll("[data-fn]").forEach((b) => (b.onclick = () => { f.remove(); new Function(b.dataset.fn)(); }));
+  f.querySelector("[data-zu]").onclick = () => f.remove();
+}
+async function buEinArchiv(id, annehmen) {
+  if (!annehmen && !(await frage("Dieses Dokument ablehnen? Es wird gelöscht und der Absender bekommt Bescheid."))) return;
+  try { await api("archiv_pruefung", { id, annehmen }); melde(annehmen ? "✔ Angenommen – liegt jetzt im Ordner" : "✖ Abgelehnt und gelöscht"); AR.daten = null; } catch (e) { melde(e.message, true); }
+  buEingangLaden();
+}
+async function buEinAufgabe(id) {
+  try { await api("aufgabe_erledigt", { id, erledigt: true }); melde("✔ Aufgabe erledigt"); } catch (e) { melde(e.message, true); }
+  buEingangLaden();
 }
 
 // ---------- KC-CLUB-BRIEFBOGEN (1.26.0, Wunsch Hansi): Brief mit Logo – Vorlage antippen, ausfüllen, Vorschau, drucken ----------

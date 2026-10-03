@@ -1,5 +1,15 @@
 # Änderungen
 
+## 1.74.0 – 2026-10-03
+- KC-CLUB-BUERO-ZETTEL (Wunsch Hansi): auf dem Schreibtisch zwei Zettel nebeneinander mit Pinnnadel – gelb „Nächster Schritt“
+  (rote Nadel) und hellblau „Eingang – n Sachen warten auf dich“ (blaue Nadel; ohne Clubleitung: „Nächster Termin“).
+- KC-CLUB-BUERO-EINGANGSLISTE (Fund Hansi: Korb zeigte 5, führte aber nur zu den Ordnern): Der Eingang ist jetzt eine Liste
+  aller wartenden Sachen (Ausleihen, Abholungen, Vorschläge, Hilfe-Aufrufe, Archiv-Einreichungen, Protokoll-Entwürfe, offene
+  Aufgaben). Zeile antippen → „✏️ Öffnen & bearbeiten“, Schnellknöpfe (Archiv: „In den Ordner legen“/„Ablehnen“, Aufgabe:
+  „Erledigt“), „Zum Ordner …“ oder „📥 Zurück in den Eingang“. Nutzt die vorhandenen Listen und Info-Fenster.
+- Server: „Archiv: zu prüfen“ zählt nur noch Einreichungen in Vereinsordnern – in persönlichen Ordnern entscheidet allein der
+  Besitzer (vorher zählten z. B. Stevens 2 Dokumente mit, obwohl die Clubleitung sie nicht annehmen kann).
+
 ## 1.73.0 – 2026-10-03
 - KC-CLUB-FEEDBACK (Wunsch Hansi: an die vielen neuen Funktionen anpassen, nicht zu viel fragen): neuer Bogen „2026-2“.
   Schritt 1 nur noch 6 Fragen (vorher 10): Gefallen, „Findest du dich gut zurecht?“ (bei „Geht so/zu viel“ freiwillig warum,
