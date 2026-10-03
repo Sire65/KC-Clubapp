@@ -2352,7 +2352,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.92.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.92.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -8054,7 +8054,8 @@ async function hlLaden() {
     hlZeigen();
     const li = document.getElementById("leihInfo"); if (li && HL.tab === "leihen") leihInfo(li.dataset.id);
     const hi = document.getElementById("hilfeInfo"); if (hi && HL.tab === "helfen") hilfeInfo(hi.dataset.id);
-    if (HL.tab === "helfen" && HL.oeffnen) { const id = HL.oeffnen; HL.oeffnen = null; hilfeOeffnen(id); } // KC-CLUB-HILFE-PINNWAND: Sprung vom Aushang
+    if (HL.tab === "helfen" && HL.oeffnen) { const id = HL.oeffnen; HL.oeffnen = null; hilfeOeffnen(id); }
+    if (HL.tab === "helfen" && HL.infoNach) { const id = HL.infoNach; HL.infoNach = null; hilfeInfo(id); } // KC-CLUB-HILFE-AENDERN 1.92.1: nach dem Speichern sichtbar „offen“ // KC-CLUB-HILFE-PINNWAND: Sprung vom Aushang
     const ai = document.getElementById("angebotInfo"); if (ai && HL.tab === "helfen") angebotInfo(ai.dataset.id);
     const bi = document.getElementById("boInfo"); if (bi && HL.tab === "boerse") boInfo(bi.dataset.id);
     if (HL.tab === "boerse" && BO.oeffnen) { const id = BO.oeffnen; BO.oeffnen = null; boInfo(id); } // Sprung aus Push/Mail (#boerse=…)
@@ -8134,7 +8135,7 @@ async function hilfeSenden(knopf) {
     try {
       const notiz = [f.art === "sonstiges" && f.artText.trim() ? "Wobei: " + f.artText.trim() : "", f.notiz.trim()].filter(Boolean).join("\n").slice(0, 1000);
       const daten = { art: f.art, absprache: !!f.absprache, datum: f.datum, slot: f.absprache ? null : f.slot || null, anzahl: f.ohne ? null : f.anzahl, ort: f.ort || null, notiz: notiz || null };
-      if (f.id) { const r = await api("hilfe_aendern", { id: f.id, ...daten }); HL.form = null; melde(r.benachrichtigt ? "💾 Geändert – wer zugesagt hat, bekommt Bescheid" : "💾 Geändert"); hlLaden(); return; }
+      if (f.id) { const r = await api("hilfe_aendern", { id: f.id, ...daten }); HL.form = null; HL.infoNach = f.id; melde(r.benachrichtigt ? "💾 Gespeichert – der Aufruf bleibt offen; wer zugesagt hat, bekommt Bescheid" : "💾 Gespeichert – der Aufruf bleibt offen"); hlLaden(); return; } // 1.92.1: danach den (weiter offenen) Aufruf zeigen
       const r = await api("hilfe_aufruf", { ...daten, ziel: f.ziel });
       HL.form = null; melde(r.empfaenger ? `📣 Aufruf gesendet – an ${r.empfaenger} ${r.empfaenger === 1 ? "Mitglied" : "Mitglieder"}` : "📣 Aufruf gespeichert – gerade ist niemand sonst online"); hlLaden();
     } catch (e) { melde(e.message, true); }
@@ -8145,7 +8146,7 @@ function hilfeKarte(a) {
   return `<div class="karte hl-karte${a.offen ? "" : " vorbei"}">
     <div class="hl-titel">${esc(d.arten?.[a.art] || a.art)}</div>
     <div>${esc(hlWann(a, true, d.zeitfenster))}${a.ort ? ` · 📍 ${esc(a.ort)}` : ""}</div>
-    <div class="hinweis" style="font-size:.85rem">von ${esc(a.eigen ? "dir" : a.von.name)}${a.ziel === "online" ? " · an alle, die online waren" : ""}${a.geschlossen ? " · 🔒 geschlossen" : !a.offen ? " · vorbei" : ""}</div>
+    <div class="hinweis" style="font-size:.85rem">von ${esc(a.eigen ? "dir" : a.von.name)}${a.ziel === "online" ? " · an alle, die online waren" : ""}${a.geschlossen ? " · 🔒 geschlossen" : !a.offen ? " · vorbei" : " · 🟢 offen"}</div>
     ${a.notiz ? `<p style="margin:6px 0 0;white-space:pre-wrap">${esc(a.notiz)}</p>` : ""}
     <div class="hl-stand${voll ? " voll" : ""}"><b>✋ ${hlStand(a)}</b>${voll ? " – genug Helfer 🎉" : ""}${n ? `<br><small>${esc(a.komme.join(", "))}</small>` : ""}${a.kannNicht ? `<br><small class="hinweis">🙅 ${a.kannNicht} kann nicht</small>` : ""}</div>
     ${a.offen && !a.eigen ? `<div class="hl-antwort"><button class="${a.meine === "komme" ? "an" : ""}" onclick="hilfeAntwort('${a.id}', '${a.meine === "komme" ? "" : "komme"}')">✋ Ich komme</button><button class="${a.meine === "kann_nicht" ? "an nein" : ""}" onclick="hilfeAntwort('${a.id}', '${a.meine === "kann_nicht" ? "" : "kann_nicht"}')">🙅 Kann nicht</button></div>` : ""}

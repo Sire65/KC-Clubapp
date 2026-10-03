@@ -3038,6 +3038,8 @@ assert.ok(/<h2>🗂️ Büro<\/h2><span class="bu-kopfgruss" id="buKopfGruss"><\
   assert.ok(/api\("hilfe_aendern", \{ id: f\.id, \.\.\.daten \}\)/.test(html) && /anzahl: f\.ohne \? null : f\.anzahl/.test(html) && /♾️ Egal wie viele/.test(html), "Formular speichert Änderung / ohne Grenze");
   assert.ok(!/komme\.length < [ax]\.anzahl/.test(html) && !/\$\{n\} von \$\{a\.anzahl\}/.test(html), "überall hlVoll/hlStand");
 }
+// 273. 1.92.1: nach dem Speichern bleibt der Aufruf sichtbar offen
+assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert – der Aufruf bleibt offen/.test(html) && /if \(HL\.tab === "helfen" && HL\.infoNach\)/.test(html) && /: " · 🟢 offen"\}<\/div>/.test(html), "Speichern zeigt offenen Aufruf");
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

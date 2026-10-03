@@ -1,5 +1,10 @@
 # Änderungen
 
+## 1.92.1 – 2026-10-03
+- KC-CLUB-HILFE-AENDERN (Fund Hansi: „ich hab geschlossen, wollte den Vorgang aber nicht schließen“ – tatsächlich wurde nur
+  gespeichert, das Formular ging zu und es sah aus wie „weg“): Nach „💾 Änderungen speichern“ geht jetzt der Aufruf selbst auf,
+  Meldung „Gespeichert – der Aufruf bleibt offen“; offene Aufrufe zeigen „🟢 offen“ (geschlossene weiter „🔒 geschlossen“).
+
 ## 1.92.0 – 2026-10-03
 - KC-CLUB-HILFE-AENDERN (Wunsch Hansi: „Hilfe-Kachel antippen → alles öffnet sich, damit ich ändern kann“): Wer einen Aufruf
   gestartet hat (oder die Clubleitung) bekommt beim Antippen der Kachel – auch vom Pinnwand-Aushang („✏️ Ansehen & ändern“) und
