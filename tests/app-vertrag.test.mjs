@@ -2730,6 +2730,18 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/function arEinblenden\(art, id\)/.test(html) && /Aus dem Vereinsleben entfernt/.test(html), "Zurückholen im Papierkorb");
 }
 
+// 240. 1.65.0: Büro als Raum (Regal + Schreibtisch) über den vorhandenen Büro-Funktionen
+{
+  assert.ok(/const BU_REGAL = \[/.test(html) && /function buRaumHtml\(\)/.test(html) && /function buStartHtml\(\) \{ return buRaumAn\(\) \? buRaumHtml\(\) : buStartListeHtml\(\); \}/.test(html), "Raum + Liste");
+  const reg = html.slice(html.indexOf("const BU_REGAL = ["), html.indexOf("const buRecht = "));
+  for (const id of ["sitzung", "protokolle", "feste", "fl", "liste", "chronik", "archiv"]) assert.ok(reg.includes(`id: "${id}"`), "Ordner fehlt: " + id);
+  assert.ok(/id: "fl"[^}]*recht: "L"/.test(reg) && /id: "liste"[^}]*recht: "L"/.test(reg) && /id: "verwaltung"[^}]*recht: "A"/.test(reg), "Rechte im Regal");
+  assert.ok(/tmp\.querySelector\(`\[data-klappe="buero_\$\{o\.bereich\}"\]`\)/.test(html), "Ordner zeigt den vorhandenen Bereich (keine zweite Oberfläche)");
+  assert.ok(/href="tel:\$\{esc\(nurZiffern\(nr\)\)\}"/.test(html) && /async function buTelefon\(\)/.test(html) && /api\("mitglied_details", \{ person_id: pid \}/.test(html), "Telefon wählt wirklich (nur freigegebene Nummer)");
+  assert.ok(/function buFueller\(\)/.test(html) && /function buDrucker\(\)/.test(html) && /function arStartArt\(art\)/.test(html), "Füller/Drucker/Chronik");
+  assert.ok(/onclick="buAnsichtWechseln\(\)">☰ Liste/.test(html) && /onclick="buAnsichtWechseln\(\)">🗄️ Büro-Raum/.test(html), "Umschalter in beiden Ansichten");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

@@ -1033,6 +1033,54 @@
   /* KC-CLUB-EINSTIEG: „dort ist es“ – kurz aufleuchten */
   .hervor { outline: 3px solid #1e8449 !important; outline-offset: 3px; border-radius: 12px; animation: hervor 0.9s ease-in-out 3; }
   @keyframes hervor { 50% { outline-color: transparent; } }
+  /* KC-CLUB-BUERO-RAUM (1.65.0): Regal mit schmalen Ordnern + Schreibtisch, dezente Farben */
+  .bu-raum { border-radius: 18px; overflow: hidden; box-shadow: var(--schatten); margin-bottom: 12px; }
+  .bu-wand { background: linear-gradient(180deg, #efe7dc, #e6dccd); padding: 12px 12px 0; }
+  :root.dunkel .bu-wand { background: linear-gradient(180deg, #3a3230, #322a28); }
+  /* mehrere Bretter: jede Reihe 226 px = Ordner (bis 210 px) + Brett (16 px); alle Ordner sofort sichtbar */
+  .bu-regal { display: grid; grid-template-columns: repeat(auto-fit, 48px); grid-auto-rows: 226px; justify-content: center; column-gap: 6px; margin: 0 -12px; padding: 0 12px;
+    background: repeating-linear-gradient(180deg, transparent 0 210px, #b9976d 210px 214px, #a4835b 214px 226px); }
+  .bu-brett { display: none; }
+  .bu-ordner { width: 48px; height: 204px; align-self: end; margin-bottom: 16px; position: relative; border: none; cursor: pointer; padding: 8px 0 10px; border-radius: 5px 5px 2px 2px;
+    background: linear-gradient(90deg, rgba(0,0,0,.18), transparent 22%, transparent 78%, rgba(0,0,0,.14)), var(--of); color: #fffdf8;
+    display: flex; flex-direction: column; align-items: center; gap: 6px; transition: transform .18s ease, box-shadow .18s ease; box-shadow: 0 1px 2px rgba(0,0,0,.25); }
+  .bu-ordner:nth-child(3n) { height: 190px; } .bu-ordner:nth-child(4n+1) { height: 198px; }
+  .bu-ordner:hover, .bu-ordner:focus-visible { transform: translateY(-8px); box-shadow: 0 8px 14px rgba(0,0,0,.25); }
+  .bu-ordner:active { transform: translateY(-12px) scale(1.02); }
+  .bu-osym { font-size: 1.25rem; line-height: 1; }
+  .bu-otext { flex: 1; writing-mode: vertical-rl; transform: rotate(180deg); background: #fbf7ef; color: #3b2f2a; border-radius: 3px; padding: 6px 3px; font-weight: 800; font-size: .86rem; letter-spacing: .02em;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-height: 150px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.06); }
+  .bu-oloch { width: 15px; height: 15px; border-radius: 50%; background: rgba(0,0,0,.25); box-shadow: inset 0 2px 3px rgba(0,0,0,.35); }
+  .bu-ozahl { position: absolute; top: -7px; right: -5px; min-width: 20px; height: 20px; border-radius: 10px; background: #c9894a; color: #fff; font-size: .75rem; font-weight: 800; display: flex; align-items: center; justify-content: center; padding: 0 5px; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+  .bu-tisch { position: relative; background: linear-gradient(180deg, #cdb08a 0, #c2a47c 60%, #b8996f); padding: 16px 12px 14px; }
+  :root.dunkel .bu-tisch { background: linear-gradient(180deg, #5a4836, #4e3e2f); }
+  .bu-tisch::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 6px; background: rgba(0,0,0,.12); }
+  .bu-dinge { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  @media (min-width: 640px) { .bu-dinge { grid-template-columns: repeat(6, 1fr); } }
+  .bu-ding { position: relative; border: none; border-radius: 14px; background: rgba(255,253,246,.55); color: #3b2f2a; cursor: pointer; padding: 10px 4px 8px; min-height: 96px;
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 6px; box-shadow: 0 2px 5px rgba(60,40,20,.18); transition: transform .15s ease; font: inherit; }
+  :root.dunkel .bu-ding { background: rgba(255,255,255,.08); color: #f4e9e4; }
+  .bu-ding:hover, .bu-ding:focus-visible { transform: translateY(-3px); } .bu-ding:active { transform: scale(.96); }
+  .bu-dsym { font-size: 2.3rem; line-height: 1; filter: drop-shadow(0 2px 2px rgba(0,0,0,.2)); }
+  .bu-dlabel { font-size: .82rem; font-weight: 800; text-align: center; line-height: 1.15; max-width: 100%; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .bu-dzahl { position: absolute; top: 6px; right: 8px; min-width: 22px; height: 22px; border-radius: 11px; background: #b4553f; color: #fff; font-size: .78rem; font-weight: 800; display: flex; align-items: center; justify-content: center; padding: 0 6px; }
+  .bu-nur { position: absolute; top: 6px; left: 6px; font-size: .62rem; background: rgba(0,0,0,.45); color: #fff; border-radius: 6px; padding: 1px 5px; }
+  .bu-fueller .bu-dsym { transform: rotate(-12deg); } .bu-karte .bu-dsym { transform: rotate(6deg); }
+  .bu-kal { width: 54px; border-radius: 6px; overflow: hidden; background: #fffdf8; box-shadow: 0 2px 4px rgba(0,0,0,.25); display: flex; flex-direction: column; align-items: center; color: #3b2f2a; }
+  .bu-kmon { width: 100%; background: #a65a4a; color: #fff; font-size: .7rem; font-weight: 800; text-transform: uppercase; text-align: center; padding: 2px 0; }
+  .bu-ktag { font-size: 1.45rem; font-weight: 900; line-height: 1.1; } .bu-kwt { font-size: .66rem; padding-bottom: 2px; color: #7a6a64; }
+  .bu-zettel { display: block; width: min(260px, 100%); margin: 0 auto 12px; border: none; cursor: pointer; text-align: left; font: inherit; color: #4a3b1a;
+    background: #f6e7a8; padding: 9px 12px 10px; transform: rotate(-1.5deg); box-shadow: 0 4px 8px rgba(0,0,0,.2); border-radius: 2px 2px 10px 2px; }
+  .bu-zettel b { display: block; font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; opacity: .75; }
+  .bu-aufgeschlagen { border-radius: 14px; overflow: hidden; box-shadow: var(--schatten); margin-bottom: 12px; background: var(--karte); border-left: 10px solid var(--of); }
+  .bu-auf-kopf { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: color-mix(in srgb, var(--of) 16%, var(--karte)); }
+  .bu-auf-kopf span { font-size: 1.5rem; } .bu-auf-kopf b { flex: 1; font-size: 1.1rem; }
+  .bu-auf-blatt { padding: 10px 12px 12px; }
+  .bu-wahl { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+  .bu-telliste { max-height: 52vh; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+  .bu-telzeile { display: flex; align-items: center; gap: 10px; border: none; background: var(--karte2); color: var(--text); border-radius: 10px; padding: 10px 12px; font: inherit; text-align: left; cursor: pointer; min-height: 48px; }
+  .bu-telzeile b { flex: 1; }
+  @media (prefers-reduced-motion: reduce) { .bu-ordner, .bu-ding { transition: none; } }
   /* KC-CLUB-BUERO (1.25.0) */
   .bu-gruss { font-size: 1.05rem; line-height: 1.45; }
   .bu-tipp { margin-top: 8px; padding: 8px 10px; border-radius: 12px; background: var(--gelbbg); border: 2px solid var(--gelb); }
@@ -2219,7 +2267,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.64.2"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.65.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -6410,7 +6458,7 @@ function buZurueck() { if (BU.sicht !== "start") { BU.sicht = "start"; buLaden()
 function buZeigen() { buZeigenRoh(); klappenMerken($("buInhalt")); }
 // Bereich im Büro: Klappkarte mit Pfeil und Schloss wie in den Einstellungen (Zustand je Gerät gemerkt)
 const buBereich = (name, titel, inhalt) => `<details class="karte bu-bereich" data-klappe="buero_${name}" data-ohne-unten open><summary>${titel}</summary>${inhalt}</details>`;
-function buZeigenRoh() { $("buInhalt").innerHTML = BU.sicht === "sitzung" ? buSitzungHtml() : BU.sicht === "eingang" ? buEingangHtml() : BU.sicht === "brief" ? buBriefHtml() : BU.sicht === "termine" ? buTermineHtml() : BU.sicht === "kontakt" ? buKontaktHtml() : BU.sicht === "nachher" ? buNachherHtml() : BU.sicht === "feste" ? buFesteHtml() : BU.sicht === "liste" ? buListeHtml() : BU.sicht === "fl" ? buFlHtml() : BU.sicht === "flneu" ? buFlNeuHtml() : BU.sicht === "fall" ? buFallHtml() : BU.sicht === "rechte" ? buRechteHtml() : buStartHtml(); }
+function buZeigenRoh() { $("buInhalt").innerHTML = BU.sicht === "ordner" ? buOrdnerHtml() : BU.sicht === "sitzung" ? buSitzungHtml() : BU.sicht === "eingang" ? buEingangHtml() : BU.sicht === "brief" ? buBriefHtml() : BU.sicht === "termine" ? buTermineHtml() : BU.sicht === "kontakt" ? buKontaktHtml() : BU.sicht === "nachher" ? buNachherHtml() : BU.sicht === "feste" ? buFesteHtml() : BU.sicht === "liste" ? buListeHtml() : BU.sicht === "fl" ? buFlHtml() : BU.sicht === "flneu" ? buFlNeuHtml() : BU.sicht === "fall" ? buFallHtml() : BU.sicht === "rechte" ? buRechteHtml() : buStartHtml(); }
 // Nächster sinnvoller Schritt für eine Sitzung
 function buNaechster(t) {
   if (!t) return null;
@@ -6419,7 +6467,13 @@ function buNaechster(t) {
   if (t.ohne && !t.erinnerung_am && new Date(t.beginn) - Date.now() < 7 * 86400000) return "erinnerung";
   return null;
 }
-function buStartHtml() {
+// KC-CLUB-BUERO-RAUM (1.65.0, Wunsch Hansi): Büro als Raum – oben ein Regal mit schmalen Ordnern (nachschlagen), unten der
+// Schreibtisch mit Gegenständen (erledigen). Nur eine neue Oberfläche über den vorhandenen Büro-Funktionen; „☰ Liste“ bleibt.
+const BU_ANSICHT = "kc_club_buero_ansicht";
+const buRaumAn = () => lsLesen(BU_ANSICHT) !== "liste";
+function buAnsichtWechseln() { lsSetzen(BU_ANSICHT, buRaumAn() ? "liste" : "raum"); buZeigen(); }
+function buStartHtml() { return buRaumAn() ? buRaumHtml() : buStartListeHtml(); }
+function buStartListeHtml() {
   const r = BU.start; if (!r) return '<div class="karte hinweis">Wird geladen …</div>';
   const S = buSchreiben(), L = !!ICH?.vorstand; // 1.37.0: S = Büro schreiben, L = Clubleitung (Kontakte, Freud & Leid, Eingang)
   const t = r.sitzungen[0], n = S ? buNaechster(t) : null, e = r.eingang;
@@ -6431,7 +6485,7 @@ function buStartHtml() {
     ["🗄️", "Archiv: zu prüfen", e.archiv, "arStart()"], ["✔️", "Offene Aufgaben", e.aufgaben, "zeige('protokolle')"], ["📄", "Protokoll-Entwürfe", e.entwuerfe, "zeige('protokolle')"]];
   const festHeute = BU_F ? [...BU_F.geburtstage.filter((f) => f.tage === 0).map((f) => f.alter ? `🎉 ${esc(f.vorname)} wird ${f.alter}` : `🎂 ${esc(f.vorname)} hat Geburtstag`), ...BU_F.jubilaeen.filter((f) => f.tage === 0).map((f) => `🏅 ${esc(f.vorname)}: ${f.jahre} Jahre im Club`)] : [];
   const festBald = BU_F ? BU_F.geburtstage.concat(BU_F.jubilaeen).filter((f) => f.tage >= 0 && f.tage <= 7).length : 0;
-  return `<div class="karte bu-gruss"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b>${buTageszeit()}, ${esc(ICH.vorname || ICH.name)}!</b>${ICH?.vorstand ? '<button class="knopf klein" style="margin-left:auto" onclick="tagesinfoZeigen(true)">📋 Übersicht</button>' : ""}</div>${festHeute.length ? `<div class="bu-tipp" style="margin:6px 0">🎉 Heute: ${festHeute.join(" · ")} – <button class="knopf klein" onclick="buFeste()">gratulieren</button></div>` : ""}${t ? `Nächste Sitzung: <b>${esc(t.titel)}</b> · ${esc(wann(t.beginn))}<br>✅ ${t.ja} zugesagt · ❌ ${t.nein} abgesagt · ❓ ${t.ohne} ohne Antwort` : "Gerade ist keine Sitzung geplant – lege sie unter 📅 Termine an."}
+  return `<div class="karte bu-gruss"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b>${buTageszeit()}, ${esc(ICH.vorname || ICH.name)}!</b>${ICH?.vorstand ? '<button class="knopf klein" style="margin-left:auto" onclick="tagesinfoZeigen(true)">📋 Übersicht</button>' : ""}<button class="knopf klein" ${ICH?.vorstand ? "" : 'style="margin-left:auto"'} onclick="buAnsichtWechseln()">🗄️ Büro-Raum</button></div>${festHeute.length ? `<div class="bu-tipp" style="margin:6px 0">🎉 Heute: ${festHeute.join(" · ")} – <button class="knopf klein" onclick="buFeste()">gratulieren</button></div>` : ""}${t ? `Nächste Sitzung: <b>${esc(t.titel)}</b> · ${esc(wann(t.beginn))}<br>✅ ${t.ja} zugesagt · ❌ ${t.nein} abgesagt · ❓ ${t.ohne} ohne Antwort` : "Gerade ist keine Sitzung geplant – lege sie unter 📅 Termine an."}
     ${!S ? '<div class="bu-tipp">👁️ Du hast im Büro <b>Leserechte</b>: ansehen und drucken. Ändern und Versenden schaltet der Admin frei.</div>' : dran ? `<div class="bu-tipp">👉 Nächster Schritt: <b>${dran}</b></div>` : t ? '<div class="bu-tipp">✅ Für diese Sitzung ist alles erledigt.</div>' : ""}</div>
     ${ICH?.admin ? buBereich("verwaltung", "🔐 Verwaltung", `<div class="mini-kacheln"><button class="mini-kachel" onclick="buRechte()"><span class="mk-sym">🔐</span><span class="mk-titel">Büro-Freigaben</span><span class="mk-unter">wer darf ins Büro – nur lesen oder lesen &amp; schreiben</span></button></div>`) : ""}
     ${buBereich("sitzung", "🗂️ Sitzung", `<div class="mini-kacheln">
@@ -6451,6 +6505,116 @@ function buStartHtml() {
     ${!S ? "" : buBereich("schreiben", "✉️ Schreiben", `<div class="mini-kacheln">${k("brief", "✉️", "Briefbogen", "Brief mit Logo – Spende, Dank, Einladung …", "buBrief()")}</div>`)}
     ${!L ? "" : buBereich("eingang", `📥 Eingang ${summe ? `<span class="marke gelb">${summe}</span>` : ""}`, `<button class="knopf haupt" style="width:100%;margin:0 0 8px" onclick="buEingang()">📥 Eingang öffnen – alles auf einen Blick erledigen</button>
     <div class="mini-kacheln">${eingang.map(([sym, t2, z, fn]) => `<button class="mini-kachel${z ? " mk-offen" : ""}" onclick="${fn}"><span class="mk-sym">${sym}</span><span class="mk-titel">${esc(t2)}</span><span class="mk-gross">${z || "–"}</span></button>`).join("")}</div>`)}`;
+}
+// ---------- KC-CLUB-BUERO-RAUM (1.65.0): Regal + Schreibtisch ----------
+// Registry der Ordner im Regal: wer sieht ihn (S = schreiben, L = Clubleitung, A = Admin), was passiert beim Antippen.
+// bereich = Teil der Listenansicht, der als „aufgeschlagener Ordner“ gezeigt wird (keine doppelte Oberfläche).
+const BU_REGAL = [
+  { id: "sitzung", sym: "🗂️", t: "Sitzung", farbe: "#6f7f6a", bereich: "sitzung" },
+  { id: "nachher", sym: "📸", t: "Nachbereitung", farbe: "#8a7560", bereich: "nachher", recht: "S" },
+  { id: "protokolle", sym: "📄", t: "Protokolle", farbe: "#5d6f82", fn: "zeige('protokolle')" },
+  { id: "feste", sym: "🎂", t: "Geburtstage", farbe: "#a1866f", fn: "buFeste()" },
+  { id: "fl", sym: "🤍", t: "Freud & Leid", farbe: "#7d6b7f", fn: "buFreudLeid()", recht: "L" },
+  { id: "liste", sym: "📇", t: "Mitglieder", farbe: "#6a7a74", fn: "buListe()", recht: "L" },
+  { id: "termine", sym: "📅", t: "Termine", farbe: "#8b6f5a", fn: "buTermine()", recht: "S" },
+  { id: "briefe", sym: "✉️", t: "Briefe", farbe: "#6e6a5c", fn: "buBrief()", recht: "S" },
+  { id: "erstattung", sym: "💶", t: "Erstattung", farbe: "#7a7f5e", fn: "zeige('erstattung')", recht: "L" },
+  { id: "chronik", sym: "📖", t: "Chronik", farbe: "#8a6d4e", fn: "arStartArt('chronik')" },
+  { id: "archiv", sym: "🗄️", t: "Archiv", farbe: "#5f5a57", fn: "arStart()" },
+  { id: "verwaltung", sym: "🔐", t: "Freigaben", farbe: "#55606b", fn: "buRechte()", recht: "A" },
+];
+const buRecht = (x) => !x.recht || (x.recht === "S" && buSchreiben()) || (x.recht === "L" && !!ICH?.vorstand) || (x.recht === "A" && !!ICH?.admin);
+function buRaumHtml() {
+  const r = BU.start; if (!r) return '<div class="karte hinweis">Wird geladen …</div>';
+  const S = buSchreiben(), L = !!ICH?.vorstand, t = r.sitzungen[0], n = S ? buNaechster(t) : null, e = r.eingang;
+  const summe = Object.values(e).reduce((a, b) => a + b, 0), nt = S ? buNachherTipp() : null;
+  const dran = nt ? nt.text : { vorbereiten: "📝 Sitzung vorbereiten", einladung: "📨 Einladung senden", erinnerung: `🔔 ${t?.ohne} Mitglieder erinnern` }[n];
+  const dranFn = nt ? `buNachherWahl(${esc(JSON.stringify(nt.text))})` : { vorbereiten: "buSitzungWahl()", einladung: "buEinladungWahl(false)", erinnerung: "buEinladungWahl(true)" }[n];
+  const fest = BU_F ? BU_F.geburtstage.concat(BU_F.jubilaeen).filter((f) => f.tage >= 0 && f.tage <= 7) : [], festHeute = fest.filter((f) => f.tage === 0);
+  const flOffen = FL.d ? FL.d.faelle.filter((f) => f.status === "offen").length : 0;
+  const zahl = { fl: flOffen, feste: fest.length, nachher: nt ? 1 : 0 };
+  const ordner = BU_REGAL.filter(buRecht);
+  const ruecken = (o) => `<button class="bu-ordner" style="--of:${o.farbe}" onclick="${o.bereich ? `buOrdner('${o.id}')` : o.fn}" aria-label="${esc(o.t)}"><span class="bu-osym">${o.sym}</span><span class="bu-otext">${esc(o.t)}</span>${zahl[o.id] ? `<span class="bu-ozahl">${zahl[o.id]}</span>` : ""}<span class="bu-oloch"></span></button>`;
+  const naechst = (r.sitzungen || []).find((x) => new Date(x.beginn) >= Date.now() - 6 * 3600000) || t;
+  const kal = naechst ? new Date(naechst.beginn) : null;
+  const ding = (cls, inhalt, label, fn, extra = "") => `<button class="bu-ding ${cls}" onclick="${fn}">${inhalt}<span class="bu-dlabel">${label}</span>${extra}</button>`;
+  return `<div class="karte bu-gruss"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b>${buTageszeit()}, ${esc(ICH.vorname || ICH.name)}!</b>
+      ${L ? '<button class="knopf klein" style="margin-left:auto" onclick="tagesinfoZeigen(true)">📋 Übersicht</button>' : ""}<button class="knopf klein" ${L ? "" : 'style="margin-left:auto"'} onclick="buAnsichtWechseln()">☰ Liste</button></div>
+      ${festHeute.length ? `<div class="bu-tipp" style="margin:6px 0 0">🎉 Heute: ${festHeute.map((f) => f.jahre ? `${esc(f.vorname)} – ${f.jahre} Jahre im Club` : `${esc(f.vorname)} hat Geburtstag`).join(" · ")}</div>` : ""}
+      ${!S ? '<div class="bu-tipp">👁️ Du hast im Büro <b>Leserechte</b>: ansehen und drucken.</div>' : ""}</div>
+    <div class="bu-raum">
+      <div class="bu-wand"><div class="bu-regal">${ordner.map(ruecken).join("")}</div><div class="bu-brett"></div></div>
+      <div class="bu-tisch">
+        ${dran ? `<button class="bu-zettel" onclick="${dranFn}"><b>Nächster Schritt</b>${esc(dran.replace(/^\S+\s/, ""))}</button>` : ""}
+        <div class="bu-dinge">
+          ${L ? ding("bu-korb", `<span class="bu-dsym">📥</span>${summe ? `<span class="bu-dzahl">${summe}</span>` : ""}`, "Eingang", "buEingang()") : ""}
+          ${ding("bu-fueller", '<span class="bu-dsym">✒️</span>', "Schreiben", "buFueller()", S ? "" : '<span class="bu-nur">nur lesen</span>')}
+          ${L ? ding("bu-telefon", '<span class="bu-dsym">☎️</span>', "Anrufen", "buTelefon()") : ""}
+          ${ding("bu-kalender", kal ? `<span class="bu-kal"><span class="bu-kmon">${esc(kal.toLocaleDateString("de-DE", { month: "short" }))}</span><span class="bu-ktag">${kal.getDate()}</span><span class="bu-kwt">${esc(kal.toLocaleDateString("de-DE", { weekday: "short" }))}</span></span>` : '<span class="bu-dsym">📅</span>', kal ? esc(naechst.titel || "Nächster Termin") : "Termine", S ? "buTermine()" : "zeige('termine')")}
+          ${ding("bu-drucker", '<span class="bu-dsym">🖨️</span>', "Drucken", "buDrucker()")}
+          ${fest.length ? ding("bu-karte", '<span class="bu-dsym">🎂</span>', fest.length === 1 ? "1 Glückwunsch" : `${fest.length} Glückwünsche`, "buFeste()") : ""}
+        </div>
+      </div>
+    </div>`;
+}
+// Ordner aus dem Regal „aufschlagen“: zeigt genau den Bereich der Listenansicht (eine Oberfläche, nicht zwei)
+function buOrdner(id) { BU.sicht = "ordner"; BU.ordner = id; buZeigen(); window.scrollTo(0, 0); }
+function buOrdnerHtml() {
+  const o = BU_REGAL.find((x) => x.id === BU.ordner); if (!o) return buRaumHtml();
+  const tmp = document.createElement("div"); tmp.innerHTML = buStartListeHtml();
+  const teil = tmp.querySelector(`[data-klappe="buero_${o.bereich}"]`);
+  const inhalt = teil ? [...teil.children].filter((c) => c.tagName !== "SUMMARY").map((c) => c.outerHTML).join("") : '<p class="hinweis">Hier ist gerade nichts.</p>';
+  return `<div class="bu-aufgeschlagen" style="--of:${o.farbe}"><div class="bu-auf-kopf"><span>${o.sym}</span><b>${esc(o.t)}</b><button class="knopf klein" onclick="buZurueck()">‹ Zurück ins Büro</button></div><div class="bu-auf-blatt">${inhalt}</div></div>`;
+}
+// ✒️ Füller: „Was möchtest du schreiben?“ – nur, was man darf
+function buFueller() {
+  const S = buSchreiben(), L = !!ICH?.vorstand;
+  const w = [[S, "✉️", "Brief", "mit Briefkopf – Dank, Spende, Einladung", "buBrief()"], [S, "📨", "Einladung zur Sitzung", "mit Tagesordnung an alle", "buEinladungWahl(false)"],
+    [true, "📄", "Protokoll", "schreiben · veröffentlichen", "zeige('protokolle')"], [L, "👥", "Nachricht an Mitglieder", "Gruppe wählen · schreiben", "buKontakt()"],
+    [true, "🎂", "Glückwunsch", "Geburtstag oder Jubiläum", "buFeste()"], [true, "📌", "Zettel an die Pinnwand", "für alle oder einzelne", "zeige('pinnwand')"]].filter((x) => x[0]);
+  const f = blattAuf("buFuellerBlatt", `<h3 style="margin-top:0">✒️ Was möchtest du schreiben?</h3>${S ? "" : '<p class="hinweis">👁️ Mit Leserechten kannst du Briefe und Einladungen nicht verschicken.</p>'}
+    <div class="bu-wahl">${w.map(([, sym, t2, u, fn]) => `<button class="mini-kachel" data-fn="${esc(fn)}"><span class="mk-sym">${sym}</span><span class="mk-titel">${esc(t2)}</span><span class="mk-unter">${esc(u)}</span></button>`).join("")}</div>
+    <div class="knoepfe"><button class="knopf" data-zu="1">Abbrechen</button></div>`);
+  f.querySelectorAll("[data-fn]").forEach((b) => (b.onclick = () => { f.remove(); new Function(b.dataset.fn)(); }));
+  f.querySelector("[data-zu]").onclick = () => f.remove();
+}
+// 🖨️ Drucker: alles, was das Büro drucken kann
+function buDrucker() {
+  const L = !!ICH?.vorstand, S = buSchreiben();
+  const w = [[true, "📝", "Sitzungs-Vorlage", "mit Schreiblinien", "buDruckWahl()"], [L, "📇", "Mitgliederliste", "Telefon · Adressen · Unterschriften", "buListe()"],
+    [true, "📅", "Termine", "Kalender oder To-do-Liste", "druckStarten('termine')"], [true, "🎂", "Geburtstage & Jubiläen", "Liste", "druckStarten('feste')"], [S, "✉️", "Briefbogen", "Brief mit Logo", "buBrief()"]].filter((x) => x[0]);
+  const f = blattAuf("buDruckerBlatt", `<h3 style="margin-top:0">🖨️ Was möchtest du drucken?</h3>
+    <div class="bu-wahl">${w.map(([, sym, t2, u, fn]) => `<button class="mini-kachel" data-fn="${esc(fn)}"><span class="mk-sym">${sym}</span><span class="mk-titel">${esc(t2)}</span><span class="mk-unter">${esc(u)}</span></button>`).join("")}</div>
+    <div class="knoepfe"><button class="knopf" data-zu="1">Abbrechen</button></div>`);
+  f.querySelectorAll("[data-fn]").forEach((b) => (b.onclick = () => { f.remove(); new Function(b.dataset.fn)(); }));
+  f.querySelector("[data-zu]").onclick = () => f.remove();
+}
+// ☎️ Telefon: Person aussuchen → freigegebene Nummer → das Handy wählt wirklich (tel:). Ohne Nummer: Nachricht anbieten.
+async function buTelefon() {
+  try { if (!MITGLIEDER) await mitgliederHolen(); } catch (e) { return melde(e.message, true); }
+  const f = blattAuf("buTelBlatt", `<h3 style="margin-top:0">☎️ Wen möchtest du anrufen?</h3>
+    <input id="buTelSuche" type="search" placeholder="🔍 Name …" autocomplete="off" style="width:100%;margin-bottom:8px">
+    <div id="buTelListe" class="bu-telliste"></div><div class="knoepfe"><button class="knopf" data-zu="1">Abbrechen</button></div>`);
+  f.querySelector("[data-zu]").onclick = () => f.remove();
+  const liste = () => { const q = suNorm($("buTelSuche").value || "");
+    $("buTelListe").innerHTML = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && (!q || suNorm(m.name).includes(q))).sort((a, b) => a.name.localeCompare(b.name))
+      .map((m) => `<button class="bu-telzeile" data-p="${m.person_id}"><span class="zpunkt ${ONL.ids?.has(m.person_id) ? "on" : ""}"></span><b>${esc(m.name)}</b><span class="pfeil">📞</span></button>`).join("") || '<p class="hinweis">Niemand gefunden.</p>';
+    $("buTelListe").querySelectorAll("[data-p]").forEach((b) => (b.onclick = () => buTelPerson(b.dataset.p))); };
+  $("buTelSuche").oninput = liste; liste();
+}
+async function buTelPerson(pid) {
+  const m = MITGLIEDER.find((x) => x.person_id === pid), name = m?.name || "";
+  try {
+    const d = await api("mitglied_details", { person_id: pid }, { warten: true }), k = d.kontakt || {};
+    const nummern = [["📱 Handy", k.handy], ["☎️ Festnetz", k.festnetz]].filter((x) => x[1]);
+    const f = blattAuf("buTelBlatt", `<h3 style="margin-top:0">☎️ ${esc(name)}</h3>
+      ${nummern.length ? `<div class="knoepfe" style="flex-direction:column;align-items:stretch">${nummern.map(([t2, nr]) => `<a class="knopf haupt" style="justify-content:center;min-height:52px;font-size:1.05rem" href="tel:${esc(nurZiffern(nr))}">${t2}: ${esc(nr)}</a>`).join("")}</div>
+        <p class="hinweis">Antippen – dein Handy wählt die Nummer.</p>` : `<p class="hinweis">${esc(name.split(" ")[0])} hat keine Telefonnummer freigegeben.</p>`}
+      <div class="knoepfe"><button class="knopf" data-nachricht="1">💬 Nachricht schreiben</button><button class="knopf" data-zurueck="1">‹ Andere Person</button><button class="knopf" data-zu="1">Schließen</button></div>`);
+    f.querySelector("[data-zu]").onclick = () => f.remove();
+    f.querySelector("[data-zurueck]").onclick = () => buTelefon();
+    f.querySelector("[data-nachricht]").onclick = () => { f.remove(); direkt(pid); };
+  } catch (e) { melde(e.message, true); }
 }
 // ---------- KC-CLUB-BUERO-RECHTE (1.37.0, Wunsch Hansi): Admin schaltet das Büro frei – erst WAS (lesen / schreiben / entziehen), dann WER ----------
 let BR = { liste: null, recht: null, wahl: new Set() };
@@ -11529,9 +11693,13 @@ let AR = { ziel: null, daten: null, ordner: null, register: "", suche: "", jahr:
 try { const f = JSON.parse(localStorage.getItem("kc_club_archiv_filter") || "null"); if (f) { AR.jahr = f.jahr || ""; AR.art = f.art || ""; } } catch {}
 const arFilterMerken = () => { try { localStorage.setItem("kc_club_archiv_filter", JSON.stringify({ jahr: AR.jahr, art: AR.art })); } catch {} };
 function arStart() { AR.ordner = null; AR.korb = false; AR.suche = ""; zeige("archiv"); }
+// 1.65.0: direkt einen Ordner einer Art öffnen (z. B. die Chronik aus dem Büro-Regal); fehlt er, bleibt das Regal offen
+function arStartArt(art) { AR.zielArt = art; arStart(); }
 async function arLaden() {
   if (!AR.daten) $("arInhalt").innerHTML = '<p class="hinweis">Lädt …</p>';
-  try { AR.daten = await api("archiv_liste"); if (AR.ziel) { const z = AR.ziel; AR.ziel = null; if (AR.daten.ordner.some((o) => o.id === z)) return arOrdnerOeffnen(z); } arZeigen(); } catch (e) { $("arInhalt").innerHTML = `<div class="karte hinweis">⚠️ ${esc(e.message)}</div>`; }
+  try { AR.daten = await api("archiv_liste");
+    if (AR.zielArt) { const za = AR.daten.ordner.find((o) => !o.besitzer && o.art === AR.zielArt); AR.zielArt = null; if (za) return arOrdnerOeffnen(za.id); }
+    if (AR.ziel) { const z = AR.ziel; AR.ziel = null; if (AR.daten.ordner.some((o) => o.id === z)) return arOrdnerOeffnen(z); } arZeigen(); } catch (e) { $("arInhalt").innerHTML = `<div class="karte hinweis">⚠️ ${esc(e.message)}</div>`; }
 }
 const arJahr = (datum) => String(datum || "").slice(0, 4);
 const arAutoOrdner = (jahr) => ({ id: "auto:" + jahr, auto: true, jahr: Number(jahr), titel: "Vereinsleben", farbe: 0, register: Object.keys(AR_AUTO).map((k) => AR_AUTO[k][1]) });

@@ -1,5 +1,17 @@
 # Änderungen
 
+## 1.65.0 – 2026-10-03
+- KC-CLUB-BUERO-RAUM (Wunsch Hansi): Das Büro als Raum – oben ein **Regal** mit schmalen Ordnern (quer beschriftet, dezente
+  Farben, leicht unterschiedliche Höhen; antippen zieht den Ordner heraus): Sitzung, Nachbereitung, Protokolle, Geburtstage,
+  Freud & Leid, Mitglieder(liste), Termine, Briefe, Erstattung, Chronik, Archiv, Freigaben – je nach Recht (Registry BU_REGAL).
+  Zahlen am Rücken (offene Fälle, Glückwünsche). Unten der **Schreibtisch**: 📥 Ablagekorb (Eingang mit Zahl), ✒️ Füller
+  („Was möchtest du schreiben?“ – Brief, Einladung, Protokoll, Nachricht, Glückwunsch, Pinnwand), ☎️ Telefon (Person suchen →
+  freigegebene Nummer → das Handy wählt wirklich; ohne Nummer „💬 Nachricht“), 📅 Tischkalender mit dem nächsten Datum,
+  🖨️ Drucker (Vorlage, Mitgliederliste, Termine, Geburtstage, Briefbogen), 🎂 Glückwunschkarte (nur wenn bald jemand feiert),
+  gelber Zettel „Nächster Schritt“. Leserechte: Füller mit Hinweis „nur lesen“.
+- Ein Ordner „aufgeschlagen“ zeigt genau den Bereich der bisherigen Büro-Liste (keine zweite Oberfläche). „☰ Liste“ /
+  „🗄️ Büro-Raum“ schaltet um (je Gerät gemerkt). Neu im Archiv: arStartArt() öffnet direkt einen Ordner einer Art (Chronik).
+
 ## 1.64.2 – 2026-10-03
 - KC-CLUB-ARCHIV-AUSBLENDEN (Wunsch Hansi „Löschen muss in allen Ordnern möglich sein“ – zwei Bildschirmfotos standen unter
   „🤖 Vereinsleben → Anhänge“ ohne Löschknopf): jede Zeile im Vereinsleben hat jetzt 🗑️. Standard: nur für mich entfernen –
