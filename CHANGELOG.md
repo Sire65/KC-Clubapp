@@ -1,5 +1,19 @@
 # Änderungen
 
+## 2.8.0 – 2026-10-03 – ♟️ Schach – Köcheclub Edition (Wunsch Hansi, Stufe 2 der Spiele)
+- KC-CLUB-SCHACH: Spielauswahl oben im Bereich „🎲 Spiele“ (❌⭕ Tic-Tac-Toe / ♟️ Schach). Regeln, Schach/Matt/Patt/Remis, Rochade,
+  en passant, Umwandlung über chess.js 1.4.0 (BSD-2-Clause, lokal in lib/chess und im Funktionsordner – keine fremden Server,
+  keine Kosten). Brett in Clubfarben, Figur antippen → erlaubte Felder leuchten, letzter Zug gelb, König im Schach rot,
+  geschlagene Figuren, Zugliste, Umwandlungs-Auswahl (Dame/Turm/Läufer/Springer).
+- 🤖 Gegen den Computer (nur auf dem Gerät): Leicht/Mittel/Schwer (Alpha-Beta Tiefe 1/2/3 + ruhige Suche für Schlagzüge,
+  Figurenwerte + Lagetabellen, Zeitgrenze 1,5/3 s), Farbe Weiß/Schwarz/Wechselnd, „↶ Zug zurück“, „↺ Neue Partie“,
+  Spielstand + Zurücksetzen; laufende Partie bleibt nach dem Schließen erhalten.
+- 👥 Gegen Mitglieder: wie Tic-Tac-Toe (Herausfordern mit Spielwahl, Annehmen, Revanche, Aufgeben, Push). Der Server prüft
+  jeden Zug mit chess.js (Farbe am Zug, Regeln) und erkennt Matt/Remis. Einstellungen: zu welchen Spielen man sich
+  herausfordern lässt (Tic-Tac-Toe / Schach). Rangliste und Pokal des Monats zählen alle Spiele.
+- Migration supabase/migrations/20261003_kc_club_v2800_spiele_schach.sql (eingespielt): Prüfregeln für Schach, Spalten
+  letzter_zug und verlauf.
+
 ## 2.7.1 – 2026-10-03 – 🏆 Pokal des Monats (Wunsch Hansi)
 - KC-CLUB-SPIELE-POKAL: In „👥 Gegen Mitglieder“ oben eine Pokal-Karte: Pokalgewinner des Vormonats (meiste Punkte, Gleichstand →
   mehrere) und „<Monat> – wer liegt vorn?“ (Top 5 des laufenden Monats, deutsche Zeit). Darunter die Rangliste aller Zeiten.

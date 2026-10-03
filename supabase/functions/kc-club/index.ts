@@ -15,12 +15,14 @@
 //           KC-CLUB-GRUPPEN, KC-CLUB-ZUSTELLWAHL (0.23.0)
 //           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0), KC-CLUB-KACHELN-ZIEHEN (0.26.0), KC-CLUB-FEEDBACK-NEU (0.27.1), KC-CLUB-BEGRUESSUNG (0.28.0), KC-CLUB-ONLINE (0.29.0), KC-CLUB-ANRUF (0.31.0), KC-CLUB-VIDEO (0.32.0), KC-CLUB-QUITTUNG (0.34.0), KC-CLUB-TODO + KC-CLUB-REGISTER-ZIEHEN (0.36.0), KC-CLUB-SPRACHE + KC-CLUB-TODO-ZUSTAENDIG (0.37.0), KC-CLUB-ERSTATTUNG (0.38.0), KC-CLUB-KMSATZ (0.39.0), KC-CLUB-FEEDBACK-DAUERHAFT (0.40.0), KC-CLUB-INFOFELD + KC-CLUB-WETTER (0.42.0), KC-CLUB-INFOFELD-DEMNAECHST/-FOTOS (0.43.0), KC-CLUB-ZENTRALE (0.44.0), KC-CLUB-FOTO-META (0.45.0), KC-CLUB-WETTER-TAGE (0.46.0), KC-CLUB-ADMINLAGE (0.47.0), KC-CLUB-ADMIN-SPIEGEL (0.48.0/0.49.0), KC-CLUB-TODO-MEHRERE (0.52.0), KC-CLUB-DRUCK + KC-CLUB-AUFGABEN-MEHRERE (0.53.0)
 import { createClient } from "npm:@supabase/supabase-js@2";
+// @ts-ignore: chess.js bringt keine Typdatei mit (in Deno ohne Bedeutung)
+import { Chess } from "./chess.js"; // KC-CLUB-SCHACH (2.8.0): chess.js 1.4.0 (BSD-2-Clause, Jeff Hlywa) – Zugprüfung, keine Kosten
 
 const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "2.7.1";
+const SERVER_VERSION = "2.8.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -790,7 +792,7 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
   // KC-CLUB-INKOGNITO (2.3.0): nur Admins (Prüfung in einstellung_setzen) – Standard: aus
   inkognito: (w) => ({ an: w?.an === true }),
   // KC-CLUB-SPIELE (2.7.0): darf man mich herausfordern (Standard: nein) + welche Spiele (bisher nur Tic-Tac-Toe)
-  spiele: (w) => ({ herausforderung: w?.herausforderung === true, spiele: (Array.isArray(w?.spiele) ? w.spiele : ["ttt"]).filter((x: unknown) => x === "ttt").slice(0, 3) }),
+  spiele: (w) => ({ herausforderung: w?.herausforderung === true, spiele: [...new Set((Array.isArray(w?.spiele) ? w.spiele : ["ttt"]).filter((x: unknown) => x === "ttt" || x === "schach"))].slice(0, 3) }),
   // KC-CLUB-EINWEISUNG (2.4.0): Erklärkarte beim ersten Öffnen eines Bereichs – an/aus (Standard an) + welche schon gesehen
   einweisung: (w) => ({ an: w?.an !== false, gesehen: Object.fromEntries(Object.entries(w?.gesehen && typeof w.gesehen === "object" ? w.gesehen : {})
     .filter(([id, d]) => KA_ID.test(id) && typeof d === "string" && !isNaN(Date.parse(d))).slice(0, 40).map(([id, d]) => [id, new Date(String(d)).toISOString()])) }),
@@ -1166,7 +1168,10 @@ async function adminAnzahl(): Promise<number | null> {
 // schaltet das in den Einstellungen ein (Einstellung „spiele“, Standard aus). Der Server prüft jeden Zug (Reihenfolge, Feld frei,
 // Spielstand-Zähler gegen doppelte Züge), erkennt Sieg/Unentschieden und schickt „Du bist dran“ nur, wenn das Gegenüber die App
 // gerade nicht offen hat und keine Ruhezeit ist. Gegen den Computer spielt die App ganz ohne Server.
-const SPIEL_NAMEN: Record<string, string> = { ttt: "Tic-Tac-Toe" };
+const SPIEL_NAMEN: Record<string, string> = { ttt: "Tic-Tac-Toe", schach: "Schach" };
+const SPIEL_ARTEN = ["ttt", "schach"];
+const spielTitel = (g: { spiel: string; groesse: number }) => g.spiel === "schach" ? "Schach" : `Tic-Tac-Toe ${g.groesse}×${g.groesse}`;
+const SCHACH_START = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 const SPIELE_OFFEN_MAX = 8; // laufende + angefragte Spiele je Person
 function tttLinien(n: number): number[][] {
   const l: number[][] = [];
@@ -1178,11 +1183,12 @@ function tttAuswerten(brett: string, n: number): { sieger: "x" | "o" | null; lin
   for (const l of tttLinien(n)) { const c = brett[l[0]]; if (c !== "." && l.every((i) => brett[i] === c)) return { sieger: c as "x" | "o", linie: l, voll: false }; }
   return { sieger: null, linie: null, voll: !brett.includes(".") };
 }
-async function spielBereitMap(ids?: string[]) {
+// 2.8.0: je Person die Spiele, zu denen sie sich herausfordern lässt (leer = gar nicht)
+async function spielBereitMap(ids?: string[]): Promise<Map<string, string[]>> {
   let q = db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "spiele");
   if (ids) q = q.in("person_id", ids);
   const { data } = await q;
-  return new Map((data ?? []).map((x: any) => [x.person_id as string, x.wert?.herausforderung === true && (x.wert?.spiele ?? ["ttt"]).includes("ttt")]));
+  return new Map((data ?? []).map((x: any) => [x.person_id as string, x.wert?.herausforderung === true ? (Array.isArray(x.wert?.spiele) ? x.wert.spiele : ["ttt"]).filter((s: string) => SPIEL_ARTEN.includes(s)) : []]));
 }
 async function spielPush(an: string, vars: { titel: string; kurz: string; text: string }, spielId: string, schluessel: string, nurWennWeg = true) {
   if (an.startsWith("KC-P-TEST")) return;
@@ -1198,7 +1204,7 @@ const spielSicht = (g: any, ich: string, namen: Map<string, Person>) => ({
   ichBin: g.spieler_x === ich ? "x" : "o", ichDran: g.status === "laeuft" && g.dran === ich, vonMir: g.von === ich, aufgegeben: !!g.aufgegeben,
   gegner: (() => { const id = g.von === ich ? g.an : g.von; return { person_id: id, vorname: vorname(namen.get(id) ?? null) || id, name: namen.get(id)?.display_name || id }; })(),
   ergebnis: g.status !== "beendet" ? null : g.gewinner === "remis" ? "remis" : g.gewinner === ich ? "gewonnen" : "verloren",
-  geaendert: g.geaendert_am,
+  geaendert: g.geaendert_am, letzterZug: g.letzter_zug ?? null, verlauf: g.verlauf ? String(g.verlauf).split(" ").filter(Boolean) : [],
 });
 // KC-CLUB-NUTZUNG-PERSONEN (2.6.1, Prüfung): höchstens NZ_GERAETE_JE_TAG verschiedene Kennungen je Tag annehmen (flüchtig im
 // Speicher dieser Server-Instanz, ohne Personenbezug) – sonst könnte ein Skript die Zahl beliebig aufblähen
@@ -7228,11 +7234,11 @@ Köcheclub-App`,
         const imMonat = (m: string) => tabelle((fertig ?? []).filter((g: any) => monatVon(new Date(g.geaendert_am)) === m));
         const diesen = imMonat(jetztM), vorher = imMonat(vorM);
         const pokal = (t: any[]) => t.length && t[0].punkte > 0 ? t.filter((x) => x.punkte === t[0].punkte && x.siege === t[0].siege) : [];
-        const ichDarf = (await spielBereitMap([ich.person_id])).get(ich.person_id) === true;
-        return json({ ichBereit: ichDarf, spiele: (meine ?? []).map((g: any) => spielSicht(g, ich.person_id, namen)), rangliste: rang,
+        const meineSpiele = (await spielBereitMap([ich.person_id])).get(ich.person_id) ?? [];
+        return json({ ichBereit: meineSpiele.length > 0, meineSpiele, spiele: (meine ?? []).map((g: any) => spielSicht(g, ich.person_id, namen)), rangliste: rang,
           monat: { name: monatName(jetztM), liste: diesen.slice(0, 5) }, pokalVormonat: { name: monatName(vorM), sieger: pokal(vorher) },
-          bereit: aktiv.filter((m) => m.person_id !== ich.person_id && bereit.get(m.person_id) === true && !m.person_id.startsWith("KC-P-TEST"))
-            .map((m) => ({ person_id: m.person_id, vorname: vorname(m) || m.display_name, name: m.display_name })) });
+          bereit: aktiv.filter((m) => m.person_id !== ich.person_id && (bereit.get(m.person_id) ?? []).length > 0 && !m.person_id.startsWith("KC-P-TEST"))
+            .map((m) => ({ person_id: m.person_id, vorname: vorname(m) || m.display_name, name: m.display_name, spiele: bereit.get(m.person_id) })) });
       }
       case "spiel_holen": {
         const { data: g } = await db.from("kc_club_spiele").select("*").eq("id", String(p.id || "")).maybeSingle();
@@ -7240,19 +7246,20 @@ Köcheclub-App`,
         return json({ spiel: spielSicht(g, ich.person_id, await personen([g.von, g.an])) });
       }
       case "spiel_herausfordern": {
-        const an = String(p.an || ""), groesse = Number(p.groesse) === 4 ? 4 : 3;
+        const art = p.spiel === "schach" ? "schach" : "ttt", groesse = art === "schach" ? 8 : Number(p.groesse) === 4 ? 4 : 3, an = String(p.an || "");
         if (an === ich.person_id) throw new Fehler("Gegen dich selbst geht nicht – probier den Computer 🙂");
         if (!(await aktiveMitglieder()).some((m) => m.person_id === an)) throw new Fehler("Mitglied nicht gefunden.", 404);
-        if ((await spielBereitMap([an])).get(an) !== true) throw new Fehler("Dieses Mitglied möchte gerade nicht herausgefordert werden.", 409);
+        if (!((await spielBereitMap([an])).get(an) ?? []).includes(art)) throw new Fehler(`Dieses Mitglied möchte gerade nicht zu ${SPIEL_NAMEN[art]} herausgefordert werden.`, 409);
         const { data: offen } = await db.from("kc_club_spiele").select("id,von,an,status").or(`von.eq.${ich.person_id},an.eq.${ich.person_id}`).in("status", ["angefragt", "laeuft"]);
         if ((offen ?? []).length >= SPIELE_OFFEN_MAX) throw new Fehler(`Du hast schon ${SPIELE_OFFEN_MAX} offene Spiele – bitte erst eins zu Ende spielen.`, 409);
         const schon = (offen ?? []).find((g: any) => g.status === "angefragt" && ((g.von === ich.person_id && g.an === an) || (g.von === an && g.an === ich.person_id)));
         if (schon) throw new Fehler(schon.von === ich.person_id ? "Du hast diese Person schon herausgefordert – warte auf die Antwort." : "Diese Person hat dich schon herausgefordert – nimm einfach an.", 409);
-        const { data: g, error } = await db.from("kc_club_spiele").insert({ spiel: "ttt", groesse, von: ich.person_id, an, spieler_x: ich.person_id, spieler_o: an,
-          brett: ".".repeat(groesse * groesse), dran: ich.person_id }).select("*").single();
+        const { data: g, error } = await db.from("kc_club_spiele").insert({ spiel: art, groesse, von: ich.person_id, an, spieler_x: ich.person_id, spieler_o: an,
+          brett: art === "schach" ? SCHACH_START : ".".repeat(groesse * groesse), dran: ich.person_id }).select("*").single();
         if (error || !g) throw new Fehler("Die Herausforderung konnte nicht gespeichert werden.", 500);
-        await spielPush(an, { titel: `🎲 ${ich.vorname} fordert dich heraus`, kurz: `Tic-Tac-Toe ${groesse}×${groesse} – Köcheclub Edition. Annehmen?`, text: `${ich.name} fordert dich zu Tic-Tac-Toe (${groesse}×${groesse}) heraus.` }, g.id, `club-spiel:${g.id}:frage`, false);
-        await protokoll(ich.person_id, "spiel_herausgefordert", { an, groesse });
+        const titel = spielTitel(g);
+        await spielPush(an, { titel: `${art === "schach" ? "♟️" : "🎲"} ${ich.vorname} fordert dich heraus`, kurz: `${titel} – Köcheclub Edition. Annehmen?`, text: `${ich.name} fordert dich zu ${titel} heraus.` }, g.id, `club-spiel:${g.id}:frage`, false);
+        await protokoll(ich.person_id, "spiel_herausgefordert", { an, spiel: art, groesse });
         return json({ ok: true, spiel: spielSicht(g, ich.person_id, await personen([ich.person_id, an])) });
       }
       case "spiel_antwort": {
@@ -7272,18 +7279,35 @@ Köcheclub-App`,
         if (g.status !== "laeuft") throw new Fehler("Das Spiel läuft nicht mehr.", 409);
         if (g.dran !== ich.person_id) throw new Fehler("Du bist gerade nicht dran.", 409);
         if (Number(p.zuege) !== g.zuege) throw new Fehler("Das Spiel hat sich inzwischen geändert – bitte nochmal schauen.", 409);
-        const feld = Number(p.feld), n = g.groesse;
-        if (!Number.isInteger(feld) || feld < 0 || feld >= n * n || g.brett[feld] !== ".") throw new Fehler("Dieses Feld geht nicht.", 400);
-        const zeichen = g.spieler_x === ich.person_id ? "x" : "o", gegner = g.von === ich.person_id ? g.an : g.von;
-        const brett = g.brett.slice(0, feld) + zeichen + g.brett.slice(feld + 1), a = tttAuswerten(brett, n);
-        const ende = !!a.sieger || a.voll;
-        const { data: neu } = await db.from("kc_club_spiele").update({ brett, zuege: g.zuege + 1, dran: ende ? null : gegner, status: ende ? "beendet" : "laeuft",
-          gewinner: a.sieger ? ich.person_id : a.voll ? "remis" : null, linie: a.linie ? a.linie.join(",") : null, geaendert_am: jetzt() })
+        const gegner = g.von === ich.person_id ? g.an : g.von, n = g.groesse;
+        let upd: Record<string, unknown>, sieg = false, remis = false, schachText = "";
+        if (g.spiel === "schach") {
+          // KC-CLUB-SCHACH (2.8.0): Zug mit chess.js prüfen (Farbe, Regeln, Umwandlung); Matt/Patt/Remis erkennen
+          const ch = new Chess(g.brett), farbe = g.spieler_x === ich.person_id ? "w" : "b";
+          if (ch.turn() !== farbe) throw new Fehler("Du bist gerade nicht dran.", 409);
+          const z = p.zug ?? {}, von = String(z.von || ""), nach = String(z.nach || ""), umw = ["q", "r", "b", "n"].includes(z.umwandlung) ? z.umwandlung : "q";
+          if (!/^[a-h][1-8]$/.test(von) || !/^[a-h][1-8]$/.test(nach)) throw new Fehler("Dieser Zug geht nicht.", 400);
+          let m: any; try { m = ch.move({ from: von, to: nach, promotion: umw }); } catch { m = null; }
+          if (!m) throw new Fehler("Dieser Zug ist nach den Schachregeln nicht erlaubt.", 400);
+          sieg = ch.isCheckmate(); remis = !sieg && ch.isDraw(); schachText = sieg ? "Schachmatt" : ch.isStalemate() ? "Patt" : remis ? "Remis" : ch.inCheck() ? "Schach!" : "";
+          const verlauf = (String(g.verlauf || "") + " " + m.san).trim();
+          upd = { brett: ch.fen(), letzter_zug: m.from + m.to + (m.promotion || ""), verlauf: verlauf.length > 6000 ? verlauf.slice(-6000) : verlauf };
+        } else {
+          const feld = Number(p.feld);
+          if (!Number.isInteger(feld) || feld < 0 || feld >= n * n || g.brett[feld] !== ".") throw new Fehler("Dieses Feld geht nicht.", 400);
+          const zeichen = g.spieler_x === ich.person_id ? "x" : "o";
+          const brett = g.brett.slice(0, feld) + zeichen + g.brett.slice(feld + 1), a = tttAuswerten(brett, n);
+          sieg = !!a.sieger; remis = !sieg && a.voll; upd = { brett, linie: a.linie ? a.linie.join(",") : null };
+        }
+        const ende = sieg || remis;
+        const { data: neu } = await db.from("kc_club_spiele").update({ ...upd, zuege: g.zuege + 1, dran: ende ? null : gegner, status: ende ? "beendet" : "laeuft",
+          gewinner: sieg ? ich.person_id : remis ? "remis" : null, geaendert_am: jetzt() })
           .eq("id", g.id).eq("zuege", g.zuege).eq("status", "laeuft").select("*").maybeSingle();
         if (!neu) throw new Fehler("Das Spiel hat sich inzwischen geändert – bitte nochmal schauen.", 409);
-        await spielPush(gegner, a.sieger ? { titel: `🎲 ${ich.vorname} hat gewonnen`, kurz: "Revanche?", text: `${ich.name} hat Tic-Tac-Toe gewonnen.` }
-          : a.voll ? { titel: "🎲 Unentschieden!", kurz: `Gegen ${ich.vorname} – Revanche?`, text: `Euer Tic-Tac-Toe ist unentschieden.` }
-          : { titel: `🎲 Du bist dran`, kurz: `${ich.vorname} hat gezogen.`, text: `${ich.name} hat gezogen – du bist dran.` }, g.id, `club-spiel:${g.id}:${g.zuege + 1}`);
+        const sym = g.spiel === "schach" ? "♟️" : "🎲", name = SPIEL_NAMEN[g.spiel] || "das Spiel";
+        await spielPush(gegner, sieg ? { titel: `${sym} ${ich.vorname} hat gewonnen${schachText ? " – " + schachText : ""}`, kurz: "Revanche?", text: `${ich.name} hat ${name} gewonnen.` }
+          : remis ? { titel: `${sym} Unentschieden${schachText && schachText !== "Remis" ? " – " + schachText : ""}!`, kurz: `Gegen ${ich.vorname} – Revanche?`, text: `Euer ${name} ist unentschieden.` }
+          : { titel: `${sym} Du bist dran${schachText === "Schach!" ? " – Schach!" : ""}`, kurz: `${ich.vorname} hat gezogen.`, text: `${ich.name} hat gezogen – du bist dran.` }, g.id, `club-spiel:${g.id}:${g.zuege + 1}`);
         return json({ ok: true, spiel: spielSicht(neu, ich.person_id, await personen([g.von, g.an])) });
       }
       case "spiel_aufgeben": {
@@ -7296,7 +7320,7 @@ Köcheclub-App`,
         if (!upd) throw new Fehler("Das Spiel ist schon vorbei.", 409);
         const { data: neu } = await db.from("kc_club_spiele").update({ ...upd, geaendert_am: jetzt() }).eq("id", g.id).eq("status", g.status).select("*").maybeSingle();
         if (!neu) throw new Fehler("Das Spiel hat sich inzwischen geändert.", 409);
-        if (g.status === "laeuft") await spielPush(gegner, { titel: `🎲 ${ich.vorname} hat aufgegeben`, kurz: "Du hast gewonnen! 🏆", text: `${ich.name} hat das Spiel aufgegeben – du hast gewonnen.` }, g.id, `club-spiel:${g.id}:auf`);
+        if (g.status === "laeuft") await spielPush(gegner, { titel: `${g.spiel === "schach" ? "♟️" : "🎲"} ${ich.vorname} hat aufgegeben`, kurz: "Du hast gewonnen! 🏆", text: `${ich.name} hat das Spiel aufgegeben – du hast gewonnen.` }, g.id, `club-spiel:${g.id}:auf`);
         return json({ ok: true, spiel: spielSicht(neu, ich.person_id, await personen([g.von, g.an])) });
       }
       case "spiel_revanche": {
@@ -7308,11 +7332,11 @@ Köcheclub-App`,
         const { data: offen } = await db.from("kc_club_spiele").select("id").or(`and(von.eq.${ich.person_id},an.eq.${gegner}),and(von.eq.${gegner},an.eq.${ich.person_id})`).in("status", ["angefragt", "laeuft"]).limit(1);
         if (offen?.length) return json({ ok: true, schon: offen[0].id });
         // Revanche: beide haben schon gespielt → läuft sofort; wer vorher zuerst gezogen hat, ist jetzt zweiter
-        const n = Number(p.groesse) === 4 ? 4 : Number(p.groesse) === 3 ? 3 : g.groesse;
-        const { data: neu, error } = await db.from("kc_club_spiele").insert({ spiel: "ttt", groesse: n, von: ich.person_id, an: gegner, spieler_x: g.spieler_o, spieler_o: g.spieler_x,
-          status: "laeuft", brett: ".".repeat(n * n), dran: g.spieler_o }).select("*").single();
+        const n = g.spiel === "schach" ? 8 : Number(p.groesse) === 4 ? 4 : Number(p.groesse) === 3 ? 3 : g.groesse;
+        const { data: neu, error } = await db.from("kc_club_spiele").insert({ spiel: g.spiel, groesse: n, von: ich.person_id, an: gegner, spieler_x: g.spieler_o, spieler_o: g.spieler_x,
+          status: "laeuft", brett: g.spiel === "schach" ? SCHACH_START : ".".repeat(n * n), dran: g.spieler_o }).select("*").single();
         if (error || !neu) throw new Fehler("Die Revanche konnte nicht gestartet werden.", 500);
-        await spielPush(gegner, { titel: `🎲 Revanche von ${ich.vorname}!`, kurz: neu.dran === gegner ? "Du fängst an." : `${ich.vorname} fängt an.`, text: `${ich.name} will eine Revanche (Tic-Tac-Toe ${n}×${n}).` }, neu.id, `club-spiel:${neu.id}:revanche`, false);
+        await spielPush(gegner, { titel: `${g.spiel === "schach" ? "♟️" : "🎲"} Revanche von ${ich.vorname}!`, kurz: neu.dran === gegner ? "Du fängst an." : `${ich.vorname} fängt an.`, text: `${ich.name} will eine Revanche (${spielTitel(neu)}).` }, neu.id, `club-spiel:${neu.id}:revanche`, false);
         return json({ ok: true, spiel: spielSicht(neu, ich.person_id, await personen([ich.person_id, gegner])) });
       }
 

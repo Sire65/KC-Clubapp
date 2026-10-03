@@ -204,6 +204,23 @@
   .sp-dran { font-weight: 800; color: var(--textGruen); white-space: nowrap; }
   .sp-wer { width: 100%; border: 2px solid var(--linie); border-radius: 14px; background: var(--karte); color: var(--text); font: inherit; margin: 4px 0; cursor: pointer; }
   @media (prefers-reduced-motion: reduce) { .sp-feld, .sp-feld.sp-sieg { animation: none; } }
+  /* KC-CLUB-SCHACH (2.8.0): Brett in Clubfarben */
+  .sch-brett { display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); width: min(100%, 440px); aspect-ratio: 1; margin: 6px auto; border-radius: 10px; overflow: hidden; box-shadow: 0 0 0 3px var(--rot), 0 6px 14px rgba(0,0,0,.25); }
+  .sch-feld { position: relative; border: none; padding: 0; margin: 0; min-width: 0; min-height: 0; aspect-ratio: 1; overflow: hidden; display: flex; align-items: center; justify-content: center; cursor: pointer; font: inherit; line-height: 1; }
+  .sch-feld.hell { background: #f3e5c8; } .sch-feld.dunkel { background: #b5835a; }
+  .sch-feld.letzter { box-shadow: inset 0 0 0 100px rgba(241,196,15,.38); } .sch-feld.gewaehlt { box-shadow: inset 0 0 0 4px #1e8449, inset 0 0 0 100px rgba(46,204,113,.35); }
+  .sch-feld.ziel::after { content: ""; width: 30%; height: 30%; border-radius: 50%; background: rgba(30,132,73,.65); position: absolute; }
+  .sch-feld.ziel.schlag::after { width: 86%; height: 86%; background: none; border: 4px solid rgba(30,132,73,.75); }
+  .sch-feld.imschach { background: radial-gradient(circle, #ff6b6b 0%, #c0392b 70%) !important; }
+  .sch-feld:disabled { cursor: default; color: inherit; opacity: 1; }
+  .sch-fig { font-size: clamp(1.7rem, 9.5vw, 2.6rem); font-family: "DejaVu Sans", "Segoe UI Symbol", "Noto Sans Symbols2", serif; position: relative; z-index: 1; }
+  .sch-fig.weiss { color: #fff; text-shadow: 0 0 1px #000, 0 0 2px #000, 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; }
+  .sch-fig.schwarz { color: #1b1b1b; text-shadow: 0 1px 1px rgba(255,255,255,.35); }
+  .sch-r, .sch-l { position: absolute; font-style: normal; font-size: .62rem; font-weight: 800; color: rgba(0,0,0,.55); } .sch-r { top: 2px; left: 3px; } .sch-l { bottom: 1px; right: 3px; }
+  .sch-geschlagen { display: flex; justify-content: space-between; gap: 8px; min-height: 1.6em; margin: 4px 0 0; } .sch-geschlagen .sch-fig { font-size: 1.15rem; }
+  .sch-umw { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; } .sch-umw button { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 4px; border: 2px solid var(--linie); border-radius: 14px; background: #f3e5c8; cursor: pointer; font: inherit; }
+  .sch-umw .sch-fig { font-size: 2.4rem; } .sch-verlauf { margin: 6px 0; } .sch-verlauf summary { cursor: pointer; font-weight: 800; } .sch-verlauf div { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: .9rem; margin-top: 4px; }
+  #spArt { margin-bottom: 6px; }
   .sp-pokal { border: 2px solid #d4ac0d; background: linear-gradient(180deg, #fef9e7, var(--karte) 60%); }
   .sp-pokal-kopf { display: flex; align-items: center; gap: 12px; } .sp-pokal-sym { font-size: 2.6rem; line-height: 1; filter: drop-shadow(0 2px 3px rgba(0,0,0,.25)); }
   /* KC-CLUB-NUTZUNG-PERSONEN (2.6.0) */
@@ -1785,7 +1802,8 @@
   <!-- KC-CLUB-SPIELE (2.7.0) -->
   <section id="v-spiele" class="versteckt">
     <div class="kopf2"><button class="zurueck" onclick="zurueck('start')" aria-label="Zurück">‹</button><h2>🎲 Spiele</h2></div>
-    <div class="sp-edition"><b>Tic-Tac-Toe</b><span>Köcheclub Edition · 🍅 gegen 🥦</span></div>
+    <div class="sp-edition" id="spEdition"><b>Tic-Tac-Toe</b><span>Köcheclub Edition · 🍅 gegen 🥦</span></div>
+    <div class="umschalter" id="spArt"><button data-a="ttt" onclick="spArtWahl('ttt')">❌⭕ Tic-Tac-Toe</button><button data-a="schach" onclick="spArtWahl('schach')">♟️ Schach</button></div>
     <div class="umschalter" id="spTabs"><button data-t="pc" onclick="spTab('pc')">🤖 Gegen den Computer</button><button data-t="mg" onclick="spTab('mg')">👥 Gegen Mitglieder</button></div>
     <div id="spInhalt"><div class="karte hinweis">Wird geladen …</div></div>
   </section>
@@ -2088,7 +2106,8 @@
       <!-- KC-CLUB-INKOGNITO (2.3.0): Hauptschalter nur für den Admin -->
       <div class="schalter" id="setInkognitoZeile"><div><b>🕶️ Inkognito (nur Admin)</b><div class="hinweis">Niemand sieht, dass du online oder heute da warst – kein grüner Punkt, keine Ansage, kein „zuletzt da“. Du selbst siehst die anderen weiter.</div></div><input type="checkbox" id="setInkognito" onchange="inkognitoSetzen(this.checked)"></div>
       <!-- KC-CLUB-SPIELE (2.7.0) -->
-      <div class="schalter"><div><b>🎲 Andere dürfen mich zu Spielen herausfordern</b><div class="hinweis">Zurzeit Tic-Tac-Toe. Aus: Du erscheinst nicht in der Liste und bekommst keine Herausforderungen. Gegen den Computer spielen geht immer.</div></div><input type="checkbox" id="setSpiele" onchange="spBereitSetzen(this.checked)"></div>
+      <div class="schalter"><div><b>🎲 Andere dürfen mich zu Spielen herausfordern</b><div class="hinweis">Tic-Tac-Toe und Schach – darunter wählst du, welche. Aus: Du erscheinst nicht in der Liste und bekommst keine Herausforderungen. Gegen den Computer spielen geht immer.</div></div><input type="checkbox" id="setSpiele" onchange="spBereitSetzen(this.checked)"></div>
+      <div class="knoepfe versteckt" id="setSpieleArten" style="margin:-4px 0 10px" aria-label="Zu welchen Spielen darf man dich herausfordern?"></div>
       <!-- KC-CLUB-ANKLOPFEN-ERLAUBEN (1.8.0) -->
       <div class="schalter"><div><b>👋 Anklopfen erlauben</b><div class="hinweis">Andere dürfen bei dir anklopfen, wenn du online bist. Aus: Sie sehen 🔕 und schreiben dir stattdessen eine Nachricht.</div></div><input type="checkbox" id="setAnklopfen" checked onchange="anklopfenSetzen({ erlaubt: this.checked })"></div>
       <div class="zwei"><label class="feld">🔔 Anklopfton<select id="setKlopfTon" onchange="anklopfenSetzen({ ton: this.value })"></select></label><button class="knopf klein" style="align-self:end" onclick="klopfTonSpielen($('setKlopfTon').value)">▶ Testton</button></div>
@@ -2462,7 +2481,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.7.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.8.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3162,7 +3181,7 @@ const EINWEISUNG = [
   { id: "vorschlaege", sym: "🗳️", t: "Vorschläge", x: "Du hast eine Idee für den Club – ein Ausflug, ein Thema, ein Kochabend? Mit <b>„＋ Neu“</b> schlägst du sie vor, die anderen können abstimmen." },
   { id: "dienste", sym: "🗓️", t: "Dienstpläne", x: "Die Dienstpläne Woche für Woche. Mit <b>‹ Woche</b> / <b>Woche ›</b> blätterst du, <b>„Heute“</b> springt zurück." },
   { id: "aktionen", sym: "🧳", t: "Aktionen", x: "Ausflüge und besondere Aktionen des Clubs – antippen zeigt alle Einzelheiten." },
-  { id: "spiele", sym: "🎲", t: "Spiele – Köcheclub Edition", x: "Tic-Tac-Toe mit 🍅 gegen 🥦: wer zuerst drei (bei 4 × 4: vier) in einer Reihe hat, gewinnt. Oben wählst du <b>🤖 Gegen den Computer</b> – mit Feldgröße und Stärke – oder <b>👥 Gegen Mitglieder</b>: jemanden herausfordern, abwechselnd ziehen, du bekommst Bescheid, wenn du dran bist." },
+  { id: "spiele", sym: "🎲", t: "Spiele – Köcheclub Edition", x: "Ganz oben wählst du das Spiel: <b>Tic-Tac-Toe</b> (🍅 gegen 🥦 – wer zuerst drei, bei 4 × 4 vier, in einer Reihe hat) oder <b>♟️ Schach</b> (Figur antippen, dann das Zielfeld – erlaubte Felder leuchten). Darunter wählst du <b>🤖 Gegen den Computer</b> – mit Feldgröße und Stärke – oder <b>👥 Gegen Mitglieder</b>: jemanden herausfordern, abwechselnd ziehen, du bekommst Bescheid, wenn du dran bist." },
   { id: "buero", sym: "🗂️", t: "Büro der Clubleitung", x: "Nur für die Clubleitung: Regal mit Ordnern, Schreibtisch für die laufende Arbeit, Freud & Leid (Glückwünsche, Genesungswünsche) und Briefe. Normale Mitglieder sehen das Büro nicht.", nur: () => !!ICH?.buero },
 ];
 const einwStand = () => ({ an: true, gesehen: {}, ...(INIT?.einstellungen?.einweisung || {}) });
@@ -4688,7 +4707,9 @@ async function spracheAbspielen(knopf, id) {
 // Wer herausgefordert werden möchte, schaltet das unter ⚙️ → 🎲 Spiele ein (Standard aus).
 const SP_ZEICHEN = { x: "🍅", o: "🥦" }, SP_NAME = { x: "Tomate", o: "Brokkoli" };
 const SP_KEY = "kc_club_spiel_pc", SP_TAKT_MS = 3000;
-let SP = { tab: "pc", liste: null, offen: null, takt: null, laedt: false };
+let SP = { tab: "pc", art: (() => { try { return localStorage.getItem("kc_club_spiel_art") === "schach" ? "schach" : "ttt"; } catch { return "ttt"; } })(), liste: null, offen: null, takt: null, laedt: false, ch: null };
+// KC-CLUB-SCHACH (2.8.0): Spielauswahl oben (gilt für „gegen den Computer“ und als Vorschlag beim Herausfordern)
+function spArtWahl(a) { SP.art = a === "schach" ? "schach" : "ttt"; try { localStorage.setItem("kc_club_spiel_art", SP.art); } catch {} if (SP.tab === "mg" && SP.offen) SP.offen = null; spZeigen(); }
 let SPC = (() => { let w = null; try { w = JSON.parse(localStorage.getItem(SP_KEY) || "null"); } catch {}
   return { groesse: 3, staerke: "mittel", beginn: "ich", stand: { ich: 0, pc: 0, remis: 0 }, ...(w || {}), brett: null, ende: null, denkt: false }; })();
 const spcMerken = () => { try { localStorage.setItem(SP_KEY, JSON.stringify({ groesse: SPC.groesse, staerke: SPC.staerke, beginn: SPC.beginn, stand: SPC.stand })); } catch {} };
@@ -4737,8 +4758,12 @@ function spStart(tab) { if (tab) SP.tab = tab; zeige("spiele"); }
 function spTab(t) { SP.tab = t; SP.offen = null; spZeigen(); if (t === "mg") spLaden(); }
 function spZeigen() {
   document.querySelectorAll("#spTabs button").forEach((b) => b.classList.toggle("an", b.dataset.t === SP.tab));
+  const art = SP.tab === "mg" && SP.offen ? SP.offen.spiel : SP.art;
+  document.querySelectorAll("#spArt button").forEach((b) => b.classList.toggle("an", b.dataset.a === art));
+  $("spArt").classList.toggle("versteckt", SP.tab === "mg" && !!SP.offen);
+  $("spEdition").innerHTML = art === "schach" ? "<b>♟️ Schach</b><span>Köcheclub Edition · Weiß gegen Schwarz</span>" : "<b>Tic-Tac-Toe</b><span>Köcheclub Edition · 🍅 gegen 🥦</span>";
   clearInterval(SP.takt); SP.takt = null;
-  if (SP.tab === "pc") return spPcZeigen();
+  if (SP.tab === "pc") return SP.art === "schach" ? schPcZeigen() : spPcZeigen();
   if (SP.offen) return spSpielZeigen();
   spListeZeigen();
 }
@@ -4792,11 +4817,11 @@ function spPcZug(i) {
   spPcZeigen();
 }
 function spPcComputer() {
-  if (SPC.ende || aktuelleAnsicht !== "spiele") { SPC.denkt = false; return; }
+  if (SPC.ende || aktuelleAnsicht !== "spiele" || SP.art === "schach") { SPC.denkt = false; return; }
   const i = spComputerZug(SPC.brett, SPC.groesse, SPC.staerke);
   if (i !== undefined) SPC.brett = SPC.brett.slice(0, i) + "o" + SPC.brett.slice(i + 1);
   SPC.denkt = false; spPcEnde();
-  if (SP.tab === "pc") spPcZeigen();
+  if (SP.tab === "pc" && SP.art !== "schach") spPcZeigen();
 }
 // ----- gegen Mitglieder -----
 async function spLaden(still) {
@@ -4811,7 +4836,7 @@ function spListeZeigen() {
   const an = L.spiele.filter((g) => g.status === "angefragt" && !g.vonMir), meine = L.spiele.filter((g) => g.status === "angefragt" && g.vonMir);
   const laufend = L.spiele.filter((g) => g.status === "laeuft").sort((a, b) => b.ichDran - a.ichDran), fertig = L.spiele.filter((g) => g.status === "beendet").slice(0, 8);
   const zeile = (g, rechts) => `<div class="zeile sp-zeile" ${g.status === "laeuft" || g.status === "beendet" ? `style="cursor:pointer" onclick="spOeffnen('${g.id}')"` : ""}>${kreis(MITGLIEDER?.find((m) => m.person_id === g.gegner.person_id) || {}, g.gegner.name, 36)}
-    <div style="flex:1;min-width:0"><b>${esc(g.gegner.vorname)}</b><div class="hinweis" style="margin:0;font-size:.85rem">Tic-Tac-Toe ${g.groesse}×${g.groesse}</div></div>${rechts}</div>`;
+    <div style="flex:1;min-width:0"><b>${esc(g.gegner.vorname)}</b><div class="hinweis" style="margin:0;font-size:.85rem">${g.spiel === "schach" ? "♟️ Schach" : `❌⭕ Tic-Tac-Toe ${g.groesse}×${g.groesse}`}</div></div>${rechts}</div>`;
   $("spInhalt").innerHTML = `
     ${L.ichBereit ? "" : `<div class="karte" style="border:2px solid var(--gruen)"><b>🎲 Möchtest du auch herausgefordert werden?</b><p class="hinweis" style="margin:4px 0 8px">Dann sehen dich die anderen in der Liste und können dich zu einer Partie einladen.</p><button class="knopf haupt" onclick="spBereitSetzen(true)">✅ Ja, ich spiele mit</button></div>`}
     <button class="knopf haupt" style="width:100%" onclick="spHerausfordernBlatt()">🎲 Jemanden herausfordern</button>
@@ -4833,25 +4858,40 @@ function spPokalHtml(L) {
     ${m?.liste?.length ? m.liste.map((r, i) => `<div class="zeile"><b style="width:1.8em">${["🥇", "🥈", "🥉"][i] || i + 1 + "."}</b><span style="flex:1">${esc(r.vorname)}</span><span class="hinweis">${r.siege} S · ${r.remis} U · ${r.niederlagen} N</span><b style="margin-left:8px">${r.punkte}</b></div>`).join("") : '<p class="hinweis" style="margin:0">Noch keine Partie in diesem Monat – der Pokal ist noch zu haben!</p>'}
     <p class="hinweis" style="margin:6px 0 0">Sieg = 2 Punkte, Unentschieden = 1 Punkt. Nur Partien gegen Mitglieder zählen.</p></div>`;
 }
-async function spBereitSetzen(an) {
-  try { await einstSpeichern("spiele", { herausforderung: !!an, spiele: ["ttt"] }); INIT.einstellungen = { ...(INIT.einstellungen || {}), spiele: { herausforderung: !!an, spiele: ["ttt"] } };
+const spMeineArten = () => { const w = INIT?.einstellungen?.spiele; return Array.isArray(w?.spiele) && w.spiele.length ? w.spiele : ["ttt", "schach"]; };
+function spArtSchalten(art) { const l = spMeineArten(), neu = l.includes(art) ? l.filter((x) => x !== art) : [...l, art]; if (!neu.length) return melde("Mindestens ein Spiel muss angehakt bleiben – sonst „Herausfordern erlauben“ ausschalten."); spBereitSetzen(true, neu); }
+async function spBereitSetzen(an, arten) {
+  const spiele = arten || spMeineArten();
+  try { await einstSpeichern("spiele", { herausforderung: !!an, spiele }); INIT.einstellungen = { ...(INIT.einstellungen || {}), spiele: { herausforderung: !!an, spiele } };
     melde(an ? "🎲 Andere dürfen dich jetzt herausfordern" : "🎲 Niemand kann dich mehr herausfordern"); spEinstZeigen(); if (SP.liste) SP.liste.ichBereit = !!an; if (aktuelleAnsicht === "spiele") spZeigen(); }
   catch (e) { spEinstZeigen(); meldeFehler(e); }
 }
-function spEinstZeigen() { if ($("setSpiele")) $("setSpiele").checked = INIT?.einstellungen?.spiele?.herausforderung === true; }
+function spEinstZeigen() {
+  const an = INIT?.einstellungen?.spiele?.herausforderung === true, l = spMeineArten();
+  if ($("setSpiele")) $("setSpiele").checked = an;
+  if ($("setSpieleArten")) { $("setSpieleArten").classList.toggle("versteckt", !an);
+    $("setSpieleArten").innerHTML = [["ttt", "❌⭕ Tic-Tac-Toe"], ["schach", "♟️ Schach"]].map(([a, t]) => `<button class="knopf klein${l.includes(a) ? " haupt" : ""}" aria-pressed="${l.includes(a)}" onclick="spArtSchalten('${a}')">${l.includes(a) ? "✅" : "⬜"} ${t}</button>`).join(""); }
+}
 async function spHerausfordernBlatt(pid) {
   if (!SP.liste) await spLaden(true);
-  const b = SP.liste?.bereit || [];
-  if (!b.length) return melde("Noch niemand hat „Herausfordern erlauben“ eingeschaltet – frag doch mal im Club 🙂");
-  let gr = 3;
-  const f = blattAuf("spHerausBlatt", `<h3 style="margin:0">🎲 Herausfordern – Tic-Tac-Toe</h3>
-    ${spWahl("Feld", "3", [["3", "3 × 3"], ["4", "4 × 4"]], "spHerausGroesse")}
-    <p class="hinweis" style="margin:0">Wen möchtest du herausfordern? Du fängst an (${SP_ZEICHEN.x}).</p>
-    ${b.map((m) => `<button class="zeile sp-wer${m.person_id === pid ? " an" : ""}" onclick="spHerausfordern('${m.person_id}')">${kreis(MITGLIEDER?.find((x) => x.person_id === m.person_id) || {}, m.name, 36)}<b style="flex:1;text-align:left">${esc(m.name)}</b><span>🎲 ›</span></button>`).join("")}
-    <button class="knopf" onclick="fensterZu(document.getElementById('spHerausBlatt'))">Abbrechen</button>`);
-  window.spHerausGroesse = (g) => { gr = Number(g) === 4 ? 4 : 3; f.querySelectorAll(".sp-wahl button").forEach((x) => { const an = x.textContent.startsWith(String(gr)); x.classList.toggle("an", an); x.setAttribute("aria-pressed", String(an)); }); };
+  const alle = SP.liste?.bereit || [];
+  if (!alle.length) return melde("Noch niemand hat „Herausfordern erlauben“ eingeschaltet – frag doch mal im Club 🙂");
+  let gr = 3, art = SP.art;
+  const f = blattAuf("spHerausBlatt", `<div id="spHerausInhalt"></div><button class="knopf" onclick="fensterZu(document.getElementById('spHerausBlatt'))">Abbrechen</button>`);
+  const zeichnen = () => {
+    const b = alle.filter((m) => (m.spiele || ["ttt"]).includes(art));
+    $("spHerausInhalt").innerHTML = `<h3 style="margin:0">🎲 Herausfordern</h3>
+      ${spWahl("Spiel", art, [["ttt", "❌⭕ Tic-Tac-Toe"], ["schach", "♟️ Schach"]], "spHerausArt")}
+      ${art === "ttt" ? spWahl("Feld", String(gr), [["3", "3 × 3"], ["4", "4 × 4"]], "spHerausGroesse") : ""}
+      <p class="hinweis" style="margin:0">Wen möchtest du herausfordern? Du fängst an (${art === "schach" ? "Weiß" : SP_ZEICHEN.x}).</p>
+      ${b.length ? b.map((m) => `<button class="zeile sp-wer${m.person_id === pid ? " an" : ""}" onclick="spHerausfordern('${m.person_id}')">${kreis(MITGLIEDER?.find((x) => x.person_id === m.person_id) || {}, m.name, 36)}<b style="flex:1;text-align:left">${esc(m.name)}</b><span>${art === "schach" ? "♟️" : "🎲"} ›</span></button>`).join("")
+        : `<p class="hinweis">Für ${art === "schach" ? "Schach" : "Tic-Tac-Toe"} hat sich noch niemand freigeschaltet.</p>`}`;
+  };
+  window.spHerausArt = (a) => { art = a === "schach" ? "schach" : "ttt"; zeichnen(); };
+  window.spHerausGroesse = (g) => { gr = Number(g) === 4 ? 4 : 3; zeichnen(); };
+  zeichnen();
   window.spHerausfordern = async (an) => {
-    try { const r = await api("spiel_herausfordern", { an, groesse: gr }, { warten: true }); f.remove(); melde(`🎲 Herausforderung an ${r.spiel.gegner.vorname} geschickt`); SP.tab = "mg"; SP.offen = null; await spLaden(true); if (aktuelleAnsicht !== "spiele") zeige("spiele"); else spZeigen(); }
+    try { const r = await api("spiel_herausfordern", { an, groesse: gr, spiel: art }, { warten: true }); f.remove(); melde(`🎲 Herausforderung an ${r.spiel.gegner.vorname} geschickt`); SP.tab = "mg"; SP.offen = null; await spLaden(true); if (aktuelleAnsicht !== "spiele") zeige("spiele"); else spZeigen(); }
     catch (e) { meldeFehler(e); }
   };
 }
@@ -4865,6 +4905,7 @@ async function spOeffnen(id) {
   if (aktuelleAnsicht !== "spiele") zeige("spiele"); else spZeigen();
 }
 function spSpielZeigen() {
+  if (SP.offen.spiel === "schach") { schSpielZeigen(SP.offen); if (SP.offen.status === "laeuft" || SP.offen.status === "angefragt") SP.takt = setInterval(spNachsehen, SP_TAKT_MS); return; }
   const g = SP.offen, n = g.groesse, ich = g.ichBin, er = ich === "x" ? "o" : "x";
   const banner = g.status === "beendet" ? (g.ergebnis === "gewonnen" ? `<div class="sp-banner sieg">🏆 Du hast gewonnen!${g.aufgegeben ? ` ${esc(g.gegner.vorname)} hat aufgegeben.` : ""}</div>` : g.ergebnis === "verloren" ? `<div class="sp-banner niederlage">${g.aufgegeben ? "Du hast aufgegeben." : `${esc(g.gegner.vorname)} hat gewonnen.`}</div>` : `<div class="sp-banner remis">🤝 Unentschieden</div>`)
     : g.status === "angefragt" ? `<div class="sp-status">⏳ Warte, bis ${esc(g.gegner.vorname)} annimmt …</div>`
@@ -4901,7 +4942,192 @@ async function spRevanche(id) {
 async function spMitgliedKnopf(pid) {
   if (!SP.liste) await spLaden(true);
   const ziel = $("mdSpiel"); if (!ziel || !SP.liste?.bereit?.some((m) => m.person_id === pid)) return;
-  ziel.innerHTML = `<button class="knopf" onclick="spHerausfordernBlatt('${pid}')">🎲 Zu Tic-Tac-Toe herausfordern</button>`;
+  ziel.innerHTML = `<button class="knopf" onclick="spHerausfordernBlatt('${pid}')">🎲 Zu einem Spiel herausfordern</button>`;
+}
+
+// ---------- KC-CLUB-SCHACH (2.8.0, Wunsch Hansi – Stufe 2 der Spiele): Schach – Köcheclub Edition ----------
+// Regeln (erlaubte Züge, Schach, Matt, Patt, Remis, Rochade, en passant, Umwandlung) liefert chess.js (BSD-2, liegt in lib/chess –
+// nichts kommt von fremden Servern). Antippen: Figur wählen → erlaubte Felder leuchten → Zielfeld antippen.
+// Gegen den Computer nur auf dem Gerät (Stärke: Suchtiefe 1/2/3 mit Alpha-Beta + Figurenwerte/Lagetabellen), mit „Zug zurück“.
+// Gegen Mitglieder über den Server (prüft jeden Zug ebenfalls mit chess.js).
+let CHESS = null;
+async function chessLaden() { if (!CHESS) CHESS = (await import("./lib/chess/chess.js?v=1.4.0")).Chess; return CHESS; }
+const SCH_FIG = { k: "♚", q: "♛", r: "♜", b: "♝", n: "♞", p: "♟" }, SCH_NAME = { k: "König", q: "Dame", r: "Turm", b: "Läufer", n: "Springer", p: "Bauer" };
+const SCH_KEY = "kc_club_schach_pc", SCH_WERT = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 0 };
+// Lagetabellen (aus Sicht von Weiß, Feld a8 = Index 0) – klassische einfache Werte
+const SCH_LAGE = {
+  p: [0,0,0,0,0,0,0,0, 50,50,50,50,50,50,50,50, 10,10,20,30,30,20,10,10, 5,5,10,25,25,10,5,5, 0,0,0,20,20,0,0,0, 5,-5,-10,0,0,-10,-5,5, 5,10,10,-20,-20,10,10,5, 0,0,0,0,0,0,0,0],
+  n: [-50,-40,-30,-30,-30,-30,-40,-50, -40,-20,0,0,0,0,-20,-40, -30,0,10,15,15,10,0,-30, -30,5,15,20,20,15,5,-30, -30,0,15,20,20,15,0,-30, -30,5,10,15,15,10,5,-30, -40,-20,0,5,5,0,-20,-40, -50,-40,-30,-30,-30,-30,-40,-50],
+  b: [-20,-10,-10,-10,-10,-10,-10,-20, -10,0,0,0,0,0,0,-10, -10,0,5,10,10,5,0,-10, -10,5,5,10,10,5,5,-10, -10,0,10,10,10,10,0,-10, -10,10,10,10,10,10,10,-10, -10,5,0,0,0,0,5,-10, -20,-10,-10,-10,-10,-10,-10,-20],
+  r: [0,0,0,0,0,0,0,0, 5,10,10,10,10,10,10,5, -5,0,0,0,0,0,0,-5, -5,0,0,0,0,0,0,-5, -5,0,0,0,0,0,0,-5, -5,0,0,0,0,0,0,-5, -5,0,0,0,0,0,0,-5, 0,0,0,5,5,0,0,0],
+  q: [-20,-10,-10,-5,-5,-10,-10,-20, -10,0,0,0,0,0,0,-10, -10,0,5,5,5,5,0,-10, -5,0,5,5,5,5,0,-5, 0,0,5,5,5,5,0,-5, -10,5,5,5,5,5,0,-10, -10,0,5,0,0,0,0,-10, -20,-10,-10,-5,-5,-10,-10,-20],
+  k: [-30,-40,-40,-50,-50,-40,-40,-30, -30,-40,-40,-50,-50,-40,-40,-30, -30,-40,-40,-50,-50,-40,-40,-30, -30,-40,-40,-50,-50,-40,-40,-30, -20,-30,-30,-40,-40,-30,-30,-20, -10,-20,-20,-20,-20,-20,-20,-10, 20,20,0,0,0,0,20,20, 20,30,10,0,0,10,30,20],
+};
+function schBewertung(ch) { // aus Sicht der Seite am Zug
+  let w = 0; const brett = ch.board();
+  for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) { const f = brett[r][c]; if (!f) continue;
+    const i = f.color === "w" ? r * 8 + c : (7 - r) * 8 + c, v = SCH_WERT[f.type] + SCH_LAGE[f.type][i]; w += f.color === "w" ? v : -v; }
+  return ch.turn() === "w" ? w : -w;
+}
+const schOrdnung = (m) => (m.captured ? 10 * SCH_WERT[m.captured] - SCH_WERT[m.piece] / 10 : 0) + (m.promotion ? 800 : 0) + (m.san.includes("+") ? 50 : 0);
+function schRuhig(ch, alpha, beta, q, stopp) { // nur Schlagzüge weiterrechnen – gegen „Figur einstellen“ am Suchhorizont
+  const stehen = schBewertung(ch); if (q <= 0 || Date.now() > stopp) return stehen;
+  if (stehen >= beta) return stehen; if (stehen > alpha) alpha = stehen;
+  for (const m of ch.moves({ verbose: true }).filter((x) => x.captured).sort((a, b) => schOrdnung(b) - schOrdnung(a)).slice(0, 8)) {
+    ch.move(m); const w = -schRuhig(ch, -beta, -alpha, q - 1, stopp); ch.undo(); if (w >= beta) return w; if (w > alpha) alpha = w; }
+  return alpha;
+}
+function schSuche(ch, tiefe, alpha, beta, stopp) {
+  const zuege = ch.moves({ verbose: true });
+  if (!zuege.length) return ch.inCheck() ? -100000 - tiefe : 0;
+  if (ch.isDraw()) return 0;
+  if (tiefe <= 0 || Date.now() > stopp) return schRuhig(ch, alpha, beta, 3, stopp);
+  zuege.sort((a, b) => schOrdnung(b) - schOrdnung(a));
+  for (const m of zuege) { ch.move(m); const w = -schSuche(ch, tiefe - 1, -beta, -alpha, stopp); ch.undo(); if (w >= beta) return w; if (w > alpha) alpha = w; }
+  return alpha;
+}
+function schComputerZug(ch, staerke) {
+  const zuege = ch.moves({ verbose: true }); if (!zuege.length) return null;
+  if (staerke === "leicht" && Math.random() < 0.35) { const s = zuege.filter((m) => m.captured), pool = s.length && Math.random() < 0.6 ? s : zuege; return pool[Math.floor(Math.random() * pool.length)]; }
+  const tiefe = { leicht: 1, mittel: 2, schwer: 3 }[staerke] || 2, stopp = Date.now() + (staerke === "schwer" ? 3000 : 1500);
+  zuege.sort((a, b) => schOrdnung(b) - schOrdnung(a));
+  let best = -Infinity, wahl = [];
+  for (const m of zuege) { ch.move(m); const w = -schSuche(ch, tiefe - 1, -Infinity, -best + 10, stopp) + (staerke === "leicht" ? Math.random() * 60 : Math.random() * 8); ch.undo();
+    if (w > best) { best = w; wahl = [m]; } else if (Math.abs(w - best) < 1) wahl.push(m); }
+  return wahl[Math.floor(Math.random() * wahl.length)];
+}
+// ----- Brett -----
+function schBrettHtml(ch, { unten = "w", auswahl = null, ziele = [], letzter = null, klick = "", aus = false } = {}) {
+  const brett = ch.board(), schachK = ch.inCheck() ? ch.turn() : null, reihen = unten === "w" ? [0, 1, 2, 3, 4, 5, 6, 7] : [7, 6, 5, 4, 3, 2, 1, 0];
+  const spalten = unten === "w" ? [0, 1, 2, 3, 4, 5, 6, 7] : [7, 6, 5, 4, 3, 2, 1, 0];
+  let h = "";
+  for (const r of reihen) for (const c of spalten) {
+    const feld = "abcdefgh"[c] + (8 - r), f = brett[r][c], hell = (r + c) % 2 === 0, ziel = ziele.includes(feld);
+    const kl = ["sch-feld", hell ? "hell" : "dunkel", auswahl === feld ? "gewaehlt" : "", letzter && (letzter.slice(0, 2) === feld || letzter.slice(2, 4) === feld) ? "letzter" : "",
+      ziel ? (f ? "ziel schlag" : "ziel") : "", f && f.type === "k" && f.color === schachK ? "imschach" : ""].filter(Boolean).join(" ");
+    const rand = (c === spalten[0] ? `<i class="sch-r">${8 - r}</i>` : "") + (r === reihen[7] ? `<i class="sch-l">${"abcdefgh"[c]}</i>` : "");
+    h += `<button class="${kl}" ${aus ? "disabled" : ""} onclick="${klick}('${feld}')" aria-label="${feld}${f ? ": " + (f.color === "w" ? "weißer " : "schwarzer ") + SCH_NAME[f.type] : ""}">${f ? `<span class="sch-fig ${f.color === "w" ? "weiss" : "schwarz"}">${SCH_FIG[f.type]}︎</span>` : ""}${rand}</button>`;
+  }
+  return `<div class="sch-brett" role="grid" aria-label="Schachbrett">${h}</div>`;
+}
+function schGeschlagenHtml(ch) {
+  const da = { w: { p: 0, n: 0, b: 0, r: 0, q: 0 }, b: { p: 0, n: 0, b: 0, r: 0, q: 0 } }, voll = { p: 8, n: 2, b: 2, r: 2, q: 1 };
+  for (const zeile of ch.board()) for (const f of zeile) if (f && f.type !== "k") da[f.color][f.type]++;
+  const fehlt = (farbe) => ["q", "r", "b", "n", "p"].map((t) => `<span class="sch-fig ${farbe === "w" ? "weiss" : "schwarz"}">${SCH_FIG[t]}︎</span>`.repeat(Math.max(0, voll[t] - da[farbe][t]))).join("");
+  return `<div class="sch-geschlagen"><div>${fehlt("b") || "&nbsp;"}</div><div>${fehlt("w") || "&nbsp;"}</div></div>`;
+}
+function schUmwandlung(farbe) {
+  return new Promise((fertig) => {
+    const f = blattAuf("schUmwBlatt", `<h3 style="margin:0">♟️ Bauer umwandeln – in welche Figur?</h3><div class="sch-umw">${["q", "r", "b", "n"].map((t) => `<button data-t="${t}"><span class="sch-fig ${farbe === "w" ? "weiss" : "schwarz"}">${SCH_FIG[t]}︎</span><small>${SCH_NAME[t]}</small></button>`).join("")}</div>`);
+    f.querySelectorAll("[data-t]").forEach((b) => (b.onclick = () => { f.remove(); fertig(b.dataset.t); }));
+    f.onclick = (e) => { if (e.target === f) { f.remove(); fertig(null); } };
+  });
+}
+const schStatusText = (ch, ichFarbe, wer) => ch.isCheckmate() ? "" : ch.turn() === ichFarbe ? `Du bist am Zug (${ichFarbe === "w" ? "Weiß" : "Schwarz"})${ch.inCheck() ? " – <b>Schach!</b>" : ""}` : `${wer} ist am Zug${ch.inCheck() ? " – Schach!" : ""}`;
+function schVerlaufHtml(san) {
+  if (!san.length) return "";
+  const z = []; for (let i = 0; i < san.length; i += 2) z.push(`<span><b>${i / 2 + 1}.</b> ${esc(san[i])}${san[i + 1] ? " " + esc(san[i + 1]) : ""}</span>`);
+  return `<details class="sch-verlauf"><summary>📜 Züge (${san.length})</summary><div>${z.join(" ")}</div></details>`;
+}
+// ----- gegen den Computer -----
+let SCH = (() => { let w = null; try { w = JSON.parse(localStorage.getItem(SCH_KEY) || "null"); } catch {}
+  return { farbe: "w", staerke: "mittel", stand: { ich: 0, pc: 0, remis: 0 }, pgn: "", ...(w || {}), ch: null, auswahl: null, ziele: [], denkt: false, gewertet: false, ichFarbe: "w" }; })();
+const schMerken = () => { try { localStorage.setItem(SCH_KEY, JSON.stringify({ farbe: SCH.farbe, staerke: SCH.staerke, stand: SCH.stand, pgn: SCH.ch?.pgn() || "", ichFarbe: SCH.ichFarbe, gewertet: SCH.gewertet })); } catch {} };
+async function schPcZeigen() {
+  if (!SCH.ch) { const C = await chessLaden(); SCH.ch = new C(); if (SCH.pgn) try { SCH.ch.loadPgn(SCH.pgn); } catch { SCH.ch = new C(); } }
+  const ch = SCH.ch, ich = SCH.ichFarbe, s = SCH.stand, ende = ch.isGameOver();
+  const banner = !ende ? `<div class="sp-status${ch.turn() === ich ? " sp-ichdran" : ""}">${SCH.denkt ? "🤖 Der Computer überlegt …" : schStatusText(ch, ich, "Der Computer")}</div>`
+    : ch.isCheckmate() ? (ch.turn() !== ich ? `<div class="sp-banner sieg">🏆 Schachmatt – du hast gewonnen!</div>` : `<div class="sp-banner niederlage">🤖 Schachmatt – der Computer gewinnt</div>`)
+    : `<div class="sp-banner remis">🤝 Remis${ch.isStalemate() ? " – Patt" : ch.isThreefoldRepetition() ? " – dreimal dieselbe Stellung" : ch.isInsufficientMaterial() ? " – zu wenig Material" : ""}</div>`;
+  $("spInhalt").innerHTML = `<div class="karte sp-karte">
+      ${spWahl("Stärke", SCH.staerke, [["leicht", "😊 Leicht"], ["mittel", "🙂 Mittel"], ["schwer", "😎 Schwer"]], "schPcStaerke")}
+      ${spWahl("Farbe", SCH.farbe, [["w", "♔ Weiß"], ["b", "♚ Schwarz"], ["wechsel", "Wechselnd"]], "schPcFarbe")}
+      <div class="sp-stand"><span>Du <b>${s.ich}</b></span><span>🤝 <b>${s.remis}</b></span><span><b>${s.pc}</b> Computer</span></div>
+      ${banner}
+      ${schGeschlagenHtml(ch)}
+      ${schBrettHtml(ch, { unten: ich, auswahl: SCH.auswahl, ziele: SCH.ziele, letzter: (() => { const h = ch.history({ verbose: true }).slice(-1)[0]; return h ? h.from + h.to : null; })(), klick: "schPcKlick", aus: ende || SCH.denkt })}
+      ${schVerlaufHtml(ch.history())}
+      <div class="knoepfe"><button class="knopf haupt" onclick="schPcNeu()">↺ Neue Partie</button><button class="knopf" onclick="schPcZurueck()" ${ch.history().length < 1 || SCH.denkt ? "disabled" : ""}>↶ Zug zurück</button><button class="knopf" onclick="schPcStandWeg()">🗑️ Spielstand zurücksetzen</button></div>
+    </div>`;
+}
+async function schPcNeu(fragen = true) {
+  const ch = SCH.ch;
+  if (fragen && ch && ch.history().length > 2 && !ch.isGameOver() && !(await frage("Neue Partie beginnen? Die laufende Partie wird nicht gewertet.", { ja: "↺ Neue Partie", nein: "Weiterspielen" }))) return;
+  const C = await chessLaden(); SCH.ch = new C(); SCH.auswahl = null; SCH.ziele = []; SCH.gewertet = false;
+  SCH.runde = (SCH.runde || 0) + 1; SCH.ichFarbe = SCH.farbe === "wechsel" ? (SCH.runde % 2 ? "w" : "b") : SCH.farbe;
+  schMerken(); schPcZeigen(); if (SCH.ichFarbe === "b") schPcComputerStart();
+}
+const schPcStaerke = (w) => { SCH.staerke = ["leicht", "mittel", "schwer"].includes(w) ? w : "mittel"; schMerken(); schPcZeigen(); };
+const schPcFarbe = (w) => { SCH.farbe = ["w", "b", "wechsel"].includes(w) ? w : "w"; SCH.runde = 0; schPcNeu(true); };
+async function schPcStandWeg() { if (!(await frage("Spielstand gegen den Computer auf 0 : 0 zurücksetzen?", { ja: "🗑️ Zurücksetzen", nein: "Abbrechen" }))) return; SCH.stand = { ich: 0, pc: 0, remis: 0 }; schMerken(); schPcZeigen(); }
+function schPcZurueck() {
+  const ch = SCH.ch; if (!ch || SCH.denkt) return;
+  ch.undo(); if (ch.turn() !== SCH.ichFarbe) ch.undo(); // bis ich wieder dran bin
+  SCH.auswahl = null; SCH.ziele = []; SCH.gewertet = false; schMerken(); schPcZeigen();
+}
+function schPcWerten() {
+  const ch = SCH.ch; if (!ch.isGameOver() || SCH.gewertet) return;
+  SCH.gewertet = true; if (ch.isCheckmate()) { if (ch.turn() !== SCH.ichFarbe) SCH.stand.ich++; else SCH.stand.pc++; } else SCH.stand.remis++;
+  try { navigator.vibrate?.(ch.isCheckmate() && ch.turn() !== SCH.ichFarbe ? [60, 40, 60] : 40); } catch {}
+}
+async function schPcKlick(feld) {
+  const ch = SCH.ch; if (!ch || SCH.denkt || ch.isGameOver() || ch.turn() !== SCH.ichFarbe) return;
+  const f = ch.get(feld);
+  if (SCH.auswahl && SCH.ziele.includes(feld)) {
+    const von = SCH.auswahl, bauer = ch.get(von)?.type === "p" && /[18]$/.test(feld);
+    const umw = bauer ? await schUmwandlung(SCH.ichFarbe) : undefined; if (bauer && !umw) return;
+    try { ch.move({ from: von, to: feld, promotion: umw || "q" }); } catch { return; }
+    SCH.auswahl = null; SCH.ziele = []; schPcWerten(); schMerken(); schPcZeigen();
+    if (!ch.isGameOver()) schPcComputerStart();
+    return;
+  }
+  if (f && f.color === SCH.ichFarbe) { SCH.auswahl = feld; SCH.ziele = ch.moves({ square: feld, verbose: true }).map((m) => m.to); }
+  else { SCH.auswahl = null; SCH.ziele = []; }
+  schPcZeigen();
+}
+function schPcComputerStart() {
+  SCH.denkt = true; schPcZeigen();
+  setTimeout(() => { // kurz warten, damit das Brett erst neu gezeichnet wird
+    const ch = SCH.ch; if (!ch || aktuelleAnsicht !== "spiele") { SCH.denkt = false; return; }
+    const m = schComputerZug(ch, SCH.staerke); if (m) ch.move(m);
+    SCH.denkt = false; schPcWerten(); schMerken(); if (SP.tab === "pc" && SP.art === "schach") schPcZeigen();
+  }, 350);
+}
+// ----- gegen Mitglieder -----
+let SCHM = { id: null, auswahl: null, ziele: [] };
+async function schSpielZeigen(g) {
+  const C = await chessLaden(), ch = new C(g.brett), ich = g.ichBin === "x" ? "w" : "b";
+  if (SCHM.id !== g.id + ":" + g.zuege) SCHM = { id: g.id + ":" + g.zuege, auswahl: null, ziele: [] };
+  const banner = g.status === "beendet" ? (g.ergebnis === "gewonnen" ? `<div class="sp-banner sieg">🏆 ${g.aufgegeben ? `${esc(g.gegner.vorname)} hat aufgegeben – du hast gewonnen!` : "Schachmatt – du hast gewonnen!"}</div>` : g.ergebnis === "verloren" ? `<div class="sp-banner niederlage">${g.aufgegeben ? "Du hast aufgegeben." : `Schachmatt – ${esc(g.gegner.vorname)} hat gewonnen.`}</div>` : `<div class="sp-banner remis">🤝 Remis${ch.isStalemate() ? " – Patt" : ""}</div>`)
+    : g.status === "angefragt" ? `<div class="sp-status">⏳ Warte, bis ${esc(g.gegner.vorname)} annimmt …</div>`
+    : `<div class="sp-status${g.ichDran ? " sp-ichdran" : ""}">${schStatusText(ch, ich, esc(g.gegner.vorname))}</div>`;
+  $("spInhalt").innerHTML = `<div class="karte sp-karte">
+      <div class="zeile" style="border:none;padding:0"><button class="knopf klein" onclick="SP.offen=null;spZeigen();spLaden(true)">‹ Übersicht</button><b style="flex:1;text-align:right">♟️ Du (${ich === "w" ? "Weiß" : "Schwarz"}) gegen ${esc(g.gegner.vorname)}</b></div>
+      ${banner}
+      ${schGeschlagenHtml(ch)}
+      ${schBrettHtml(ch, { unten: ich, auswahl: SCHM.auswahl, ziele: SCHM.ziele, letzter: g.letzterZug, klick: "schMgKlick", aus: !g.ichDran })}
+      ${schVerlaufHtml(g.verlauf || [])}
+      <p class="hinweis" style="text-align:center;margin:6px 0">Figur antippen, dann das Zielfeld. Du musst nicht warten – ${esc(g.gegner.vorname)} bekommt Bescheid.</p>
+      <div class="knoepfe">${g.status === "beendet" ? `<button class="knopf haupt" onclick="spRevanche('${g.id}')">↺ Revanche</button>` : g.status === "laeuft" ? `<button class="knopf" onclick="spAufgeben('${g.id}')">🏳️ Aufgeben</button>` : ""}</div>
+    </div>`;
+  SP.ch = ch;
+}
+async function schMgKlick(feld) {
+  const g = SP.offen, ch = SP.ch; if (!g?.ichDran || !ch) return;
+  const ich = g.ichBin === "x" ? "w" : "b", f = ch.get(feld);
+  if (SCHM.auswahl && SCHM.ziele.includes(feld)) {
+    const von = SCHM.auswahl, bauer = ch.get(von)?.type === "p" && /[18]$/.test(feld);
+    const umw = bauer ? await schUmwandlung(ich) : "q"; if (!umw) return;
+    try { ch.move({ from: von, to: feld, promotion: umw }); } catch { return; }
+    g.brett = ch.fen(); g.ichDran = false; g.letzterZug = von + feld; SCHM.auswahl = null; SCHM.ziele = []; spSpielZeigen(); // sofort zeigen
+    try { SP.offen = (await api("spiel_zug", { id: g.id, zug: { von, nach: feld, umwandlung: umw }, zuege: g.zuege })).spiel; }
+    catch (e) { meldeFehler(e); try { SP.offen = (await api("spiel_holen", { id: g.id })).spiel; } catch {} }
+    if (aktuelleAnsicht === "spiele") spZeigen();
+    return;
+  }
+  if (f && f.color === ich) { SCHM.auswahl = feld; SCHM.ziele = ch.moves({ square: feld, verbose: true }).map((m) => m.to); }
+  else { SCHM.auswahl = null; SCHM.ziele = []; }
+  schSpielZeigen(g);
 }
 
 // ---------- KC-CLUB-ERSTATTUNG (0.38.0): Fahrtkosten, vorgestreckter Einkauf, sonstige Auslagen beantragen ----------
@@ -5907,7 +6133,7 @@ const KACHELN = {
     // KC-CLUB-BUERO (1.25.0): nur für die Clubleitung (Clubsprecher, Kassenwart, Admin)
     { id: "buero", sym: "🗂️", t: "Büro", u: "Sitzung vorbereiten · Einladung · Eingang", aktion: "buStart()", nur: () => !!ICH?.buero },
     // KC-CLUB-SPIELE (2.7.0, Wunsch Hansi): Spiele – Köcheclub Edition (Zahl = Partien, in denen ich dran bin / Herausforderungen an mich)
-    { id: "spiele", sym: "🎲", t: "Spiele", u: "Tic-Tac-Toe · Köcheclub Edition", aktion: "spStart()", zahl: () => INIT?.spieleDran || 0 },
+    { id: "spiele", sym: "🎲", t: "Spiele", u: "Tic-Tac-Toe · Schach – Köcheclub Edition", aktion: "spStart()", zahl: () => INIT?.spieleDran || 0 },
   ],
   mein: [
     { id: "status", sym: "🟢", t: "Mein Status", u: "verfügbar, Urlaub …", aktion: "statusBlatt()" },

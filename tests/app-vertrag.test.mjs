@@ -3260,7 +3260,7 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/create table if not exists kc_club_spiele/.test(mig) && /enable row level security/.test(mig) && /check \(groesse in \(3, 4\)\)/.test(mig) && /check \(von <> an\)/.test(mig), "Tabelle mit RLS und Prüfungen");
   const zug = server.slice(server.indexOf('case "spiel_zug": {'), server.indexOf('case "spiel_aufgeben": {'));
   assert.ok(/g\.dran !== ich\.person_id\) throw/.test(zug) && /Number\(p\.zuege\) !== g\.zuege\) throw/.test(zug) && /g\.brett\[feld\] !== "\."/.test(zug) && /\.eq\("zuege", g\.zuege\)\.eq\("status", "laeuft"\)/.test(zug), "Server prüft Zug, Reihenfolge, Doppelzug");
-  assert.ok(/spielBereitMap\(\[an\]\)\)\.get\(an\) !== true\) throw/.test(server) && /spiele: \(w\) => \(\{ herausforderung: w\?\.herausforderung === true/.test(server), "nur wer es erlaubt (Standard aus)");
+  assert.ok(/spielBereitMap\(\[an\]\)\)\.get\(an\) \?\? \[\]\)\.includes\(art\)\) throw/.test(server) /* 2.8.0: je Spiel */ && /spiele: \(w\) => \(\{ herausforderung: w\?\.herausforderung === true/.test(server), "nur wer es erlaubt (Standard aus)");
   assert.ok(/Date\.now\(\) - Date\.parse\(z\.zuletzt_gesehen\) < 45000\) return;/.test(server) && /ruhendePersonen\(\[an\]\)\)\.has\(an\)\) return;/.test(server), "Push nicht bei offener App/Ruhezeit");
   assert.ok(/\{ id: "spiele", sym: "🎲", t: "Spiele"/.test(html) && /<section id="v-spiele"/.test(html) && /Köcheclub Edition/.test(html) && /id="setSpiele"/.test(html) && /<div id="mdSpiel"><\/div>/.test(html), "Kachel, Ansicht, Einstellung, Mitgliederseite");
   // Computer: 3×3 schwer verliert nie (Stichprobe gegen Zufall)
@@ -3275,6 +3275,20 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
 {
   assert.ok(/monat: \{ name: monatName\(jetztM\), liste: diesen\.slice\(0, 5\) \}, pokalVormonat: \{ name: monatName\(vorM\), sieger: pokal\(vorher\) \}/.test(server) && /const monatVon = \(d: Date\) => berlinTag\(d\)\.slice\(0, 7\)/.test(server), "Monat in deutscher Zeit, Vormonat vergeben");
   assert.ok(/function spPokalHtml\(L\)/.test(html) && /\$\{spPokalHtml\(L\)\}/.test(html), "Pokal-Karte");
+}
+// 299. 2.8.0: Schach – Köcheclub Edition (KC-CLUB-SCHACH)
+{
+  const mig = lies("supabase/migrations/20261003_kc_club_v2800_spiele_schach.sql");
+  assert.ok(/spiel in \('ttt', 'schach'\)/.test(mig) && /spiel = 'schach' and groesse = 8/.test(mig) && /add column if not exists letzter_zug/.test(mig), "DB kennt Schach");
+  assert.ok(/import \{ Chess \} from "\.\/chess\.js";/.test(server) && fs.existsSync(new URL("../supabase/functions/kc-club/chess.js", import.meta.url)) && fs.existsSync(new URL("../lib/chess/chess.js", import.meta.url)) && /BSD|Redistribution/.test(lies("lib/chess/LICENSE")), "chess.js lokal mit Lizenz");
+  const zug = server.slice(server.indexOf('case "spiel_zug": {'), server.indexOf('case "spiel_aufgeben": {'));
+  assert.ok(/if \(ch\.turn\(\) !== farbe\) throw/.test(zug) && /try \{ m = ch\.move\(\{ from: von, to: nach, promotion: umw \}\); \} catch \{ m = null; \}/.test(zug) && /sieg = ch\.isCheckmate\(\); remis = !sieg && ch\.isDraw\(\);/.test(zug), "Server prüft Schachzüge");
+  assert.ok(/import\("\.\/lib\/chess\/chess\.js\?v=1\.4\.0"\)/.test(html) && /function schComputerZug\(ch, staerke\)/.test(html) && /onclick="spArtWahl\('schach'\)"/.test(html) && /function schUmwandlung\(farbe\)/.test(html), "Schach in der App");
+  // Computer findet Matt in 1 (Stichprobe mit der echten Bibliothek)
+  const { Chess } = await import(new URL("../lib/chess/chess.js", import.meta.url));
+  const code = html.slice(html.indexOf("const SCH_FIG"), html.indexOf("// ----- Brett -----"));
+  const { schComputerZug } = new Function("Chess", code + "; return { schComputerZug };")(Chess);
+  assert.equal(schComputerZug(new Chess("6k1/5ppp/8/8/8/8/5PPP/3R2K1 w - - 0 1"), "mittel").san, "Rd8#", "Computer findet Matt in 1 nicht");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
