@@ -170,11 +170,12 @@
   body:not(.ist-admin) #ledComm, body:not(.ist-admin) #ledDaten, body:not(.ist-admin) #herzKnopf { display: none; }
   body:not(.ist-admin) #setInkognitoZeile, body:not(.ist-admin) #inkoKnopf { display: none; }
   /* 2.3.1: Hauptschalter in der Kopfleiste – aus = blass, an = deutlich markiert */
-  /* 2.4.1 (Wunsch Hansi): Inkognito an → schwarzer Rahmen um den Kopfbereich, beim Einschalten kurz Ameisen (schwarz/gelb) */
-  body.inkognito #v-start .hero { box-shadow: 0 0 0 4px #000, 0 12px 30px var(--heroschatten); }
+  /* 2.4.1 (Wunsch Hansi): Inkognito an → Rahmen um den Kopfbereich, beim Einschalten kurz Ameisen.
+     2.4.2 (Hansi: „schwarz sieht man nicht“ – im dunklen Design): gelber Rahmen, Ameisen schwarz auf gelb */
+  body.inkognito #v-start .hero { box-shadow: 0 0 0 4px #f1c40f, 0 12px 30px var(--heroschatten); }
   #v-start .hero.inko-lauf { position: relative; }
   .hero .inko-ameisen { position: absolute; inset: -4px; width: calc(100% + 8px); height: calc(100% + 8px); pointer-events: none; overflow: hidden; border-radius: 30px; }
-  .hero .inko-ameisen rect { fill: none; stroke: #f1c40f; stroke-width: 8; stroke-dasharray: 10 8; animation: ameisenLauf .7s linear infinite; }
+  .hero .inko-ameisen rect { fill: none; stroke: #000; stroke-width: 8; stroke-dasharray: 10 8; animation: ameisenLauf .7s linear infinite; }
   @media (prefers-reduced-motion: reduce) { .hero .inko-ameisen rect { animation-duration: 3s; } }
   #inkoKnopf { opacity: .45; } #inkoKnopf.an { opacity: 1; background: #2c3e50; box-shadow: 0 0 0 2px #f1c40f; }
   /* KC-CLUB-EINWEISUNG (2.4.0) */

@@ -7,6 +7,8 @@
   JS-Programmfehler (TypeError/ReferenceError) gehen mit Fundstelle (Stapel) als „fehler_gefangen“ ins Fehlerprotokoll; das
   Mitglied sieht „Da hat in der App etwas nicht geklappt – bitte nochmal versuchen. Der Fehler ist gemeldet.“ Fachliche
   Server-Meldungen bleiben wörtlich. Ursache wird mit dem nächsten Protokolleintrag an der Quelle behoben.
+- KC-CLUB-INKOGNITO: Rahmen um den Kopfbereich jetzt gelb (#f1c40f) statt schwarz – im dunklen Design war Schwarz nicht zu
+  sehen (Hansi). Ameisen beim Einschalten schwarz auf gelb.
 
 ## 2.4.1 – 2026-10-03 – Inkognito sichtbar am Kopfbereich (Wunsch Hansi)
 - KC-CLUB-INKOGNITO: Solange Inkognito an ist, schwarzer Rahmen (4 px) um den oberen Kopfbereich der Startseite (body.inkognito).
