@@ -1,5 +1,10 @@
 # Änderungen
 
+## 1.85.0 – 2026-10-03
+- KC-CLUB-ZOOM-OEFFNEN (Wunsch Hansi „Button antippen – etwas zoomen, dann öffnen“): Kacheln auf der Startseite, Mini-Kacheln,
+  Büro-Ordner, Schreibtisch-Gegenstände, die Felder im Kopf und Archiv-Ordner zoomen beim Antippen kurz (180 ms) und öffnen dann.
+  Nicht beim Anordnen/Ziehen von Kacheln und nicht, wenn ein Knopf innerhalb einer Kachel getippt wird.
+
 ## 1.84.0 – 2026-10-03
 - KC-CLUB-PROTOKOLL-NAECHSTER-TERMIN (Wunsch Hansi): Das digitale Protokoll hat unten das Feld „📅 Nächster Termin“ (freier
   Text, max. 200 Zeichen). Beim Schreiben schlägt die App die nächste geplante Sitzung nach dem Protokolldatum vor

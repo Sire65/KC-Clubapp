@@ -2953,6 +2953,12 @@ assert.ok(/<h2>🗂️ Büro<\/h2><span class="bu-kopfgruss" id="buKopfGruss"><\
   const mig = fs.readFileSync(new URL("../supabase/migrations/20261003_kc_club_v1840_protokoll_naechster_termin.sql", import.meta.url), "utf8");
   assert.ok(/add column if not exists naechster_termin text/.test(mig) && /Rückweg:/.test(mig), "Migration");
 }
+// 265. 1.85.0: Zoom beim Öffnen
+{
+  assert.ok(/@keyframes zoomOeffnen/.test(html) && /const ZOOM_ZIELE = "\.kachel, \.mini-kachel, \.bu-ordner, \.bu-ding, \.kacheln3 \.mini, \.ordner";/.test(html), "Zoom-Ziele");
+  assert.ok(/if \(!el \|\| el\.dataset\.zoomLos \|\| e\.defaultPrevented \|\| el\.disabled \|\| kaBearb \|\| ZIEHEN \|\| zogGerade\) return;/.test(html), "nicht beim Anordnen/Ziehen");
+  assert.ok(html.indexOf("const ZOOM_ZIELE") > html.indexOf('document.addEventListener("click", (e) => { if (unterdruecken'), "Zoom-Abfang nach den Zieh-Sperren registriert");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

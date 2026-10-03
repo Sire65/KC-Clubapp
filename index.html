@@ -479,6 +479,9 @@
      mit denselben runden Ecken wie der Knopf – liegt genau auf dem Rand. Beim Wechsel läuft er kurz (Ameisenlauf), danach bleibt er
      ruhig als heller Rahmen stehen. Farbe: hellerer Ton des eigenen Designs. */
   .register button { position: relative; }
+  /* KC-CLUB-ZOOM-OEFFNEN (1.85.0, Wunsch Hansi „Button antippen – etwas zoomen, dann öffnen“): kurzer Zoom, danach öffnet sich der Bereich */
+  @keyframes zoomOeffnen { 0% { transform: scale(1); } 55% { transform: scale(1.09); } 100% { transform: scale(1.05); } }
+  .zoomt { animation: zoomOeffnen .18s ease-out forwards; position: relative; z-index: 5; box-shadow: 0 10px 24px rgba(0,0,0,.22); }
   .register .reg-rahmen { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
   .register .reg-rahmen rect { fill: none; stroke: color-mix(in srgb, var(--rot) 40%, #fff); stroke-width: 3; }
   .register button.reg-lauf .reg-rahmen rect { stroke-dasharray: 9 6; animation: ameisenLauf .6s linear infinite; } /* dieselbe Animation wie „Neue Nachr.“ */
@@ -2321,7 +2324,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.84.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.85.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -5363,6 +5366,17 @@ function register(r, richtung) {
   if (neu) { const b = document.querySelector(`#register button[data-r="${r}"]`); if (b) { b.classList.add("reg-lauf"); setTimeout(() => b.classList.remove("reg-lauf"), 1600); } } // KC-CLUB-REGISTER-AMEISEN
   if (richtung) { const ra = $("raster"); ra.classList.remove("rein-links", "rein-rechts"); void ra.offsetWidth; ra.classList.add(richtung > 0 ? "rein-links" : "rein-rechts"); }
 }
+// KC-CLUB-ZOOM-OEFFNEN (1.85.0): Kacheln, Büro-Ordner/-Gegenstände und Archiv-Ordner zoomen kurz (180 ms), dann wird geöffnet.
+// Nicht beim Anordnen/Ziehen (die Klick-Sperren davor setzen preventDefault) und nicht, wenn ein Knopf IN der Kachel getippt wurde.
+const ZOOM_ZIELE = ".kachel, .mini-kachel, .bu-ordner, .bu-ding, .kacheln3 .mini, .ordner";
+document.addEventListener("click", (e) => {
+  const el = e.target.closest?.(ZOOM_ZIELE);
+  if (!el || el.dataset.zoomLos || e.defaultPrevented || el.disabled || kaBearb || ZIEHEN || zogGerade) return;
+  const innen = e.target.closest("button, a, input, select, textarea, label, summary"); if (innen && innen !== el && el.contains(innen)) return;
+  e.preventDefault(); e.stopImmediatePropagation();
+  el.classList.add("zoomt");
+  setTimeout(() => { el.classList.remove("zoomt"); el.dataset.zoomLos = "1"; try { el.click(); } finally { delete el.dataset.zoomLos; } }, 180);
+}, true);
 function registerWischen(schritt) {
   if (einfach()) return; // einfache Ansicht: keine Register
   const i = REGISTER.findIndex(([r]) => r === reg), n = i + schritt;
