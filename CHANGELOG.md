@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.3.1 – 2026-10-03 – Inkognito-Knopf in der Kopfleiste (Fund Hansi: „Wo ist der Schalter?“)
+- KC-CLUB-INKOGNITO: 🕶️-Knopf oben in der Kopfleiste neben 🌙 (nur Admin, auch in der einfachen Ansicht). Aus = blass,
+  an = dunkel mit gelbem Ring. Antippen schaltet um. Schalter in Admin-Zentrale und Einstellungen bleiben.
+
 ## 2.3.0 – 2026-10-03 – Inkognito-Hauptschalter für den Admin (Wunsch Hansi)
 - KC-CLUB-INKOGNITO: Neue Einstellung „inkognito“ (nur Admins, Server lehnt sonst mit 403 ab; jede Änderung wird als
   „inkognito_geaendert“ protokolliert). Ist sie an, sehen andere den Admin nicht online (onlineJetzt), nicht „heute da“,

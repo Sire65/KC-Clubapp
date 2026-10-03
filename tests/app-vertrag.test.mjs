@@ -3178,6 +3178,11 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/id="setInkognitoZeile"/.test(html) && /body:not\(\.ist-admin\) #setInkognitoZeile/.test(html) && /const inkognitoAn = \(\) => !!\(ICH\?\.admin &&/.test(html), "Schalter nur für Admin");
   assert.ok(/onclick="inkognitoSetzen\(!inkognitoAn\(\)\)"/.test(html) && /class="inko-marke"/.test(html), "Hauptschalter Admin-Zentrale + Marke");
 }
+// 287. 2.3.1: Inkognito-Knopf in der Kopfleiste
+{
+  assert.ok(/id="inkoKnopf"[^>]*onclick="inkognitoSetzen\(!inkognitoAn\(\)\)"/.test(html) && /body:not\(\.ist-admin\) #inkoKnopf/.test(html) && /k\.classList\.toggle\("an", inkognitoAn\(\)\)/.test(html), "Kopf-Knopf nur Admin, zeigt Zustand");
+  assert.ok(/classList\.toggle\("ist-admin", !!ICH\?\.admin\); inkognitoZeigen\(\);/.test(html), "Zustand nach dem Laden");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

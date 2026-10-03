@@ -168,7 +168,9 @@
   .ow-blase small { display: block; color: var(--grau); font-size: .78rem; margin-top: 4px; }
   /* KC-CLUB-KOPF-EINFACH (2.1.0): Mitglieder ohne Technik-Lämpchen und Lebenszeichen-Herz (nur Admin) */
   body:not(.ist-admin) #ledComm, body:not(.ist-admin) #ledDaten, body:not(.ist-admin) #herzKnopf { display: none; }
-  body:not(.ist-admin) #setInkognitoZeile { display: none; }
+  body:not(.ist-admin) #setInkognitoZeile, body:not(.ist-admin) #inkoKnopf { display: none; }
+  /* 2.3.1: Hauptschalter in der Kopfleiste – aus = blass, an = deutlich markiert */
+  #inkoKnopf { opacity: .45; } #inkoKnopf.an { opacity: 1; background: #2c3e50; box-shadow: 0 0 0 2px #f1c40f; }
   /* KC-CLUB-INKOGNITO (2.3.0) */
   .inko-marke { display: inline-block; margin-left: 4px; padding: 0 6px; border-radius: 9px; background: #34495e; color: #fff; font-size: .8rem; line-height: 1.4; vertical-align: middle; }
   textarea.hl-notiz { min-height: 8.5em; font-size: 1.02rem; line-height: 1.4; }
@@ -1659,6 +1661,7 @@
           <div class="knopfreihe">
             <button class="leds" id="leds" title="Verbindung zum Server" aria-label="Verbindung zum Server" onclick="verbindungBlatt()"><i class="led grau" id="ledStatus"></i><i class="led grau" id="ledComm"></i><i class="led daten" id="ledDaten"></i><i class="led-trenner" aria-hidden="true"></i><i class="led grau led-online" id="ledOnline" role="button" tabindex="0" title="Wer ist gerade online?" aria-label="Wer ist gerade online?" onclick="event.stopPropagation();onlineBlatt()"></i></button>
             <button class="herz" id="herzKnopf" title="Lebenszeichen – antippen: die letzten 15" aria-label="Lebenszeichen, antippen für die letzten 15" onclick="herzListe()">♥</button>
+            <button class="rund" id="inkoKnopf" title="Inkognito – antippen zum Umschalten" aria-label="Inkognito umschalten" aria-pressed="false" onclick="inkognitoSetzen(!inkognitoAn())">🕶️</button>
             <button class="rund" id="modusKnopf" title="Tag/Nacht umschalten" onclick="dunkelUmschalten()">🌙</button>
             <button class="rund" id="aktualisierenKnopf" title="Aktualisieren" onclick="neuLaden(true)">↻</button>
           </div>
@@ -2398,7 +2401,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.3.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.3.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3589,7 +3592,8 @@ function zuletztText(z) {
 const inkognitoAn = () => !!(ICH?.admin && INIT?.einstellungen?.inkognito?.an);
 function inkognitoZeigen() {
   if ($("setInkognito")) $("setInkognito").checked = inkognitoAn();
-  if (INFO_FELDER[INFO_I]?.id === "treffen" || INFO_FELDER[INFO_I]?.id === "admin") heroZeigen();
+  const k = $("inkoKnopf"); if (k) { k.classList.toggle("an", inkognitoAn()); k.setAttribute("aria-pressed", String(inkognitoAn())); k.title = inkognitoAn() ? "Inkognito ist AN – niemand sieht dich online. Antippen zum Ausschalten" : "Inkognito ist aus – antippen zum Einschalten"; }
+  try { if (INFO_FELDER[INFO_I]?.id === "treffen" || INFO_FELDER[INFO_I]?.id === "admin") heroZeigen(); } catch {}
 }
 async function inkognitoSetzen(an) {
   if (!ICH?.admin || !INIT) return;
@@ -6387,7 +6391,7 @@ function neuLaden(vonHand) {
 }
 async function neuLadenRoh(vonHand) {
   try {
-    INIT = await api("init", {}, { warten: !!vonHand }); ICH = INIT.ich; adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); // KC-CLUB-KOPF-EINFACH
+    INIT = await api("init", {}, { warten: !!vonHand }); ICH = INIT.ich; adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); // KC-CLUB-KOPF-EINFACH
     fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln);
     if ($("setLiveTippen")) $("setLiveTippen").checked = liveTippen();
