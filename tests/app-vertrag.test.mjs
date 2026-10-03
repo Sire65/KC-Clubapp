@@ -2537,6 +2537,21 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.match(html, /onlineAnsagen\(ONL\.liste\); \/\/ KC-CLUB-ONLINE-ANSAGE/, "an der vorhandenen Online-Liste");
 }
 
+// 226. 1.57.0: Push an Admin, wenn jemand online kommt (KC-CLUB-ONLINE-PUSH)
+{
+  const srv = lies("supabase/functions/kc-club/index.ts"), mig = lies("supabase/migrations/20261003_kc_club_v1570_online_push.sql");
+  assert.match(srv, /if \(!a\.vorher \|\| Date\.now\(\) - Date\.parse\(a\.vorher\) >= ONLINE_PUSH_PAUSE_MS\)/, "nur nach ≥ 10 Min. Pause");
+  assert.match(srv, /const ONLINE_PUSH_PAUSE_MS = 10 \* 60000;/, "10 Minuten");
+  const f = srv.slice(srv.indexOf("async function onlinePushMelden("), srv.indexOf("async function onlineJetzt("));
+  assert.match(f, /\.get\(wer\.person_id\) === false\) return;/, "unsichtbar → keine Meldung");
+  assert.match(f, /eq\("ist_admin", true\)\.neq\("person_id", wer\.person_id\)/, "nur an Admins, nie an sich selbst");
+  assert.match(f, /ids = ids\.filter\(\(id\) => !aus\.has\(id\) && !ruhe\.has\(id\) && !on\.has\(id\)\);/, "abschaltbar, Ruhezeit, App offen");
+  assert.match(f, /routerSenden\("club_online"/, "über den Communicator");
+  assert.match(mig, /'vorher', v_vorher/, "Anmeldung liefert vorher");
+  assert.match(mig, /'club_online', [^\n]*array\['push'\]/, "nur Push");
+  assert.match(html, /id="setOnlinePushZeile"[^\n]*id="setOnlinePush" onchange="onlinePushSchalter\(this\.checked\)"/, "Admin-Schalter");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

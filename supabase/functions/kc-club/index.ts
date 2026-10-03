@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.56.0";
+const SERVER_VERSION = "1.57.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -260,6 +260,27 @@ async function zuletztDaMap(ich: Ich, ids: string[]) {
       zeit: tag === heute ? new Intl.DateTimeFormat("de-DE", { timeZone: TZ, hour: "2-digit", minute: "2-digit" }).format(new Date(zg)) : null });
   }
   return aus;
+}
+// ---------- KC-CLUB-ONLINE-PUSH (1.57.0, Wunsch Hansi): „🟢 Klaus ist jetzt online“ als Push an Admins ----------
+// Auch bei geschlossener App (dann mit dem normalen Benachrichtigungston des Handys). Nicht an Admins, deren App gerade offen ist
+// (die hören Ton/Ansage in der App), nicht in deren Ruhezeit, nicht für Mitglieder, die ihren Online-Status verbergen.
+// Abschaltbar je Admin (Einstellung online_push). Nur Push – keine Mail.
+const ONLINE_PUSH_PAUSE_MS = 10 * 60000;
+async function onlinePushMelden(wer: Ich) {
+  if (wer.person_id.startsWith("KC-P-TEST")) return;
+  if ((await onlineZeigenMap([wer.person_id])).get(wer.person_id) === false) return;
+  const { data: ad } = await db.from("kc_club_rollen").select("person_id").eq("ist_admin", true).neq("person_id", wer.person_id);
+  let ids = (ad ?? []).map((x: any) => x.person_id as string);
+  if (!ids.length) return;
+  const { data: wahl } = await db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "online_push").in("person_id", ids);
+  const aus = new Set((wahl ?? []).filter((x: any) => x.wert?.an === false).map((x: any) => x.person_id));
+  const [ruhe, on] = await Promise.all([ruhendePersonen(ids), onlineJetzt()]);
+  ids = ids.filter((id) => !aus.has(id) && !ruhe.has(id) && !on.has(id));
+  if (!ids.length) return;
+  const name = wer.vorname || wer.name;
+  await routerSenden("club_online", ids, { titel: `🟢 ${name} ist jetzt online`, kurz: `${wer.name} ist gerade in der Köcheclub-App`,
+    betreff: `Köcheclub Werne – ${name} ist online`, text: `${wer.name} ist gerade in der Köcheclub-App.`, url: APP_URL },
+    `club-online:${wer.person_id}:${Math.floor(Date.now() / ONLINE_PUSH_PAUSE_MS)}`);
 }
 async function onlineJetzt(): Promise<Set<string>> {
   const seit = new Date(Date.now() - ONLINE_SEK * 1000).toISOString();
@@ -536,6 +557,8 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
   infofeld: (w) => ({ start: typeof w?.start === "string" && KA_ID.test(w.start) ? w.start : "zuletzt" }),
   // KC-CLUB-ONLINE (0.29.0): anderen zeigen, wann ich online bin (Standard: an)
   online: (w) => ({ zeigen: w?.zeigen !== false }),
+  // KC-CLUB-ONLINE-PUSH (1.57.0): Admin bekommt eine Push, wenn ein Mitglied online kommt (Standard: an)
+  online_push: (w) => ({ an: w?.an !== false }),
   // KC-CLUB-ZULETZT-DA (1.20.0): anderen zeigen, wann ich zuletzt in der App war (Standard: an, gegenseitig wie WhatsApp)
   zuletzt: (w) => ({ zeigen: w?.zeigen !== false }),
   // KC-CLUB-BRIEFBOGEN (1.26.0): eigene Absenderzeile/Fußzeile und Unterschrift je Person (Clubleitung)
@@ -903,6 +926,11 @@ async function anmeldenDb(hash: string, version: string | null): Promise<Ich> {
   if (!a) throw new Fehler("Kein Zugang – bitte den persönlichen Link neu öffnen.", 401);
   const p = a.person, r = a.rollen;
   if (!p?.active) throw new Fehler("Kein Zugang – bitte bei Hansi melden.", 401);
+  // KC-CLUB-ONLINE-PUSH (1.57.0): nach ≥ 10 Min. Pause (oder zum ersten Mal) wieder da → Admins benachrichtigen (im Hintergrund)
+  if (!a.vorher || Date.now() - Date.parse(a.vorher) >= ONLINE_PUSH_PAUSE_MS) {
+    const lauf = onlinePushMelden(ichAus(p, r)).catch((e) => console.error("online push", String(e)));
+    try { (globalThis as any).EdgeRuntime?.waitUntil?.(lauf); } catch { /* ohne Hintergrund-Hilfe läuft es trotzdem an */ }
+  }
   return ichAus(p, r);
 }
 // Person + Rollen → angemeldetes Mitglied (gemeinsam für Anmeldung und Notfall-Paket – eine Regel, nicht zwei)

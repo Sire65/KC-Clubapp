@@ -1,5 +1,12 @@
 # Änderungen
 
+## 1.57.0 – 2026-10-03
+- KC-CLUB-ONLINE-PUSH (Wunsch Hansi): Admin bekommt auch bei geschlossener App eine Push „🟢 Klaus ist jetzt online“ (normaler
+  Benachrichtigungston des Handys – eigener Ton/Sprache gehen bei geschlossener App technisch nicht). Nur wenn das Mitglied
+  ≥ 10 Min. weg war, nicht in der Ruhezeit des Admins, nicht wenn dessen App gerade offen ist, nicht für Mitglieder mit
+  verborgenem Online-Status. Schalter „📲 Push, wenn sich jemand anmeldet (Admin)“, Standard an. Nur Push, keine Mail.
+  DB: kc_club_anmeldung liefert zusätzlich „vorher“; Communicator-Regel club_online.
+
 ## 1.56.0 – 2026-10-03
 - KC-CLUB-ONLINE-ANSAGE (Wunsch Hansi): Einstellung „🗣️ Ansage, wenn jemand online kommt“ – das Handy sagt „Klaus ist jetzt
   online“ (mehrere: „Klaus und Dieter sind jetzt online“). Admin zusätzlich „🔔 Ton, wenn sich jemand anmeldet“ (Standard an).
