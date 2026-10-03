@@ -3334,7 +3334,7 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/bsk: g\.spiel === "bsk" \? bskSicht\(g\.bsk, g\.spieler_x === ich \? 0 : 1\) : null/.test(server) && !/bsk: g\.bsk[,\s}]/.test(server), "nur die Sicht verlässt den Server");
   const zug = server.slice(server.indexOf('case "spiel_zug": {'), server.indexOf('case "spiel_aufgeben": {'));
   assert.ok(/if \(!bskErlaubt\(z, s\)\.includes\(k\)\) throw/.test(zug) && /z\.vorhand !== s \|\| !BSK_TRUMPF\.has/.test(zug) && /gewinner: sieg \? ich\.person_id : niederlage \? gegner/.test(zug), "Zugprüfung + Wertung");
-  assert.ok(/function bskSpielZeigen\(g\)/.test(html) && /api\("spiel_zug", \{ id: g\.id, zug, zuege: g\.zuege \}\)/.test(html) && /\["bsk", "🃏 Bauernskat"\]\], "spHerausArt"/.test(html), "App: Ansicht + Herausfordern");
+  assert.ok(/function bskSpielZeigen\(g\)/.test(html) && /api\("spiel_zug", \{ id: g\.id, zug, zuege: g\.zuege \}\)/.test(html) && /\["bsk", "🃏 Bauernskat"\](, \[[^\]]*\])*\], "spHerausArt"/.test(html), "App: Ansicht + Herausfordern");
   // ganze Partien mit der Server-Kopie: 120 Augen, nur erlaubte Karten
   const E = await import(new URL("../supabase/functions/kc-club/bauernskat.js", import.meta.url));
   for (let n = 0; n < 30; n++) { const z = E.bskNeu(0); z.trumpf = ["kr", "pi", "he", "ka", "grand"][n % 5]; z.phase = "spiel"; z.amZug = 0; let i = 0;
@@ -3362,6 +3362,21 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/if \(z\.person_id !== ich\.person_id\) throw/.test(pw), "nur der Verfasser");
   assert.ok(/if \(wichtig && !z\.wichtig && p\.bescheid && z\.fuer !== "ich"\)/.test(pw) && /!fertig\.has\(id\)/.test(pw) && /senden\("club_pinnwand"/.test(pw), "Bescheid nur auf Wunsch, nur an noch nicht Erledigte");
   assert.ok(/if \(z\.vonMir\) knoepfe\.push\(`<button onclick="pwWichtig\(/.test(html) && /api\("pinnwand_wichtig", \{ id, wichtig: an, bescheid \}/.test(html), "App: Knopf");
+}
+// 308. 2.14.0: Küchenterror – Küchenquiz auf Zeit (KC-CLUB-KUECHENTERROR)
+{
+  const quelle = lies("lib/kuechenterror/fragen.js");
+  assert.equal(lies("supabase/functions/kc-club/kt-fragen.js"), quelle, "Server-Kopie der Fragen weicht ab – node tools/kuechenterror/server-kopie.mjs");
+  const { KT_FRAGEN } = await import(new URL("../lib/kuechenterror/fragen.js", import.meta.url));
+  assert.ok(KT_FRAGEN.length >= 100, "mindestens 100 Fragen");
+  assert.equal(new Set(KT_FRAGEN.map((q) => q.id)).size, KT_FRAGEN.length, "ids eindeutig");
+  for (const q of KT_FRAGEN) assert.ok(/^k\d{3}$/.test(q.id) && q.f && q.r && q.e && q.x.length === 3 && new Set([q.r, ...q.x]).size === 4, "Frage unvollständig: " + q.id);
+  assert.ok(/const KT_MS = 10000, KT_GNADE_MS = 800;/.test(server) && /\[\[0, \[0, 1, 2\]\], \[1, \[0, 1, 2, 3, 4, 5\]\], \[0, \[3, 4, 5, 6, 7, 8\]\], \[1, \[6, 7, 8, 9, 10, 11\]\], \[0, \[9, 10, 11\]\]\]/.test(server), "10 s, Runden abwechselnd");
+  const kz = server.slice(server.indexOf("async function ktZug("), server.indexOf("// ---------- Hauptprogramm ----------"));
+  assert.ok(/p = ok \? 100 \+ Math\.round\(100 \* \(1 - zeit \/ KT_MS\)\) : 0/.test(kz) && /seit: Date\.now\(\)/.test(kz) && /if \(!q\.offen\) \{/.test(kz), "Server misst Zeit, Neuladen setzt sie nicht zurück");
+  assert.ok(/a: q\.offen\.perm\.map\(\(k: number\) => alle\[k\]\)/.test(kz) && !/frage = \{[^}]*richtig/.test(kz), "Frage ohne Lösung");
+  assert.ok(/quiz: g\.spiel === "kt" \? ktSicht\(g\.quiz,/.test(server) && /if \(g\.spiel === "kt"\) return await ktZug\(g, ich, p\.zug \?\? \{\}\);/.test(server), "nur Sicht verlässt den Server");
+  assert.ok(/function ktPcZeigen\(\)/.test(html) && /function ktSpielZeigen\(g\)/.test(html) && /\["kt", "🔪", "Küchenterror"/.test(html) && /KTM\.frage \|\| KTM\.aufl\) return;/.test(html), "App: Kachel, Computer, Mitglieder, kein Neuzeichnen mitten in der Frage");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

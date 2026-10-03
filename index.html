@@ -200,6 +200,21 @@
   .sch-geschlagen .sch-fig.brigade { width: 1.55em; font-size: .85rem; border-width: 2px; }
   .sch-umw .sch-fig.brigade { width: 2.4em; font-size: 1.4rem; }
   .sch-legende { display: flex; flex-wrap: wrap; gap: 4px 10px; justify-content: center; margin: 6px 0 0; font-size: .85rem; }
+  /* 2.14.0 KC-CLUB-KUECHENTERROR: Küchenquiz auf Zeit */
+  .kt-kopf { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-weight: 800; margin: 0 0 6px; }
+  .kt-frage { font-size: 1.2rem; font-weight: 800; line-height: 1.35; text-align: center; margin: 4px 0 10px; }
+  .kt-zeit { height: 16px; border-radius: 8px; background: var(--linie); overflow: hidden; margin: 4px 0 12px; }
+  .kt-zeit i { display: block; height: 100%; width: 100%; border-radius: 8px; animation-name: ktZeit; animation-timing-function: linear; animation-fill-mode: forwards; }
+  .kt-zeit.stop i { animation-play-state: paused; }
+  @keyframes ktZeit { 0% { width: 100%; background: #27ae60; } 55% { background: #f1c40f; } 80% { background: #e67e22; } 100% { width: 0; background: #c0392b; } }
+  .kt-antworten { display: grid; gap: 8px; }
+  .kt-antwort { min-height: 54px; padding: 10px 12px; border: 2px solid var(--linie); border-radius: 14px; background: var(--karte); color: var(--text); font: inherit; font-weight: 700; text-align: left; cursor: pointer; line-height: 1.3; }
+  .kt-antwort:disabled { cursor: default; opacity: 1; color: var(--text); }
+  .kt-antwort.richtig { background: #d5f5e3; border-color: #1e8449; color: #145a32; } .kt-antwort.falsch { background: #fadbd8; border-color: #c0392b; color: #7b241c; }
+  .kt-antwort.denkt { border-style: dashed; }
+  .kt-ergebnis { text-align: center; font-weight: 800; font-size: 1.1rem; margin: 10px 0 4px; } .kt-erkl { margin: 4px 0 8px; font-size: .95rem; }
+  .kt-tafel { width: 100%; border-collapse: collapse; margin: 6px 0; font-size: .95rem; } .kt-tafel td, .kt-tafel th { padding: 4px 2px; text-align: center; border-bottom: 1px solid var(--linie); }
+  .kt-tafel .ok { color: #1e8449; font-weight: 800; } .kt-tafel .nein { color: #c0392b; font-weight: 800; }
   .sp-edition b { font-size: 1.35rem; letter-spacing: .03em; } .sp-edition span { font-size: .9rem; font-weight: 700; opacity: .95; }
   .sp-wahl { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 0 0 8px; } .sp-wahl > span { min-width: 4.5em; font-weight: 800; font-size: .9rem; }
   .sp-wahl button { flex: 1 1 0; min-width: 0; padding: 4px 2px; min-height: 44px; border: 2px solid var(--linie); border-radius: 12px; background: var(--karte); color: var(--text); font: inherit; font-weight: 700; cursor: pointer; }
@@ -2155,7 +2170,7 @@
       <!-- KC-CLUB-INKOGNITO (2.3.0): Hauptschalter nur für den Admin -->
       <div class="schalter" id="setInkognitoZeile"><div><b>🕶️ Inkognito (nur Admin)</b><div class="hinweis">Niemand sieht, dass du online oder heute da warst – kein grüner Punkt, keine Ansage, kein „zuletzt da“. Du selbst siehst die anderen weiter.</div></div><input type="checkbox" id="setInkognito" onchange="inkognitoSetzen(this.checked)"></div>
       <!-- KC-CLUB-SPIELE (2.7.0) -->
-      <div class="schalter"><div><b>🎲 Andere dürfen mich zu Spielen herausfordern</b><div class="hinweis">Tic-Tac-Toe, Schach und Bauernskat – darunter wählst du, welche. Aus: Du erscheinst nicht in der Liste und bekommst keine Herausforderungen. Gegen den Computer spielen geht immer.</div></div><input type="checkbox" id="setSpiele" onchange="spBereitSetzen(this.checked)"></div>
+      <div class="schalter"><div><b>🎲 Andere dürfen mich zu Spielen herausfordern</b><div class="hinweis">Tic-Tac-Toe, Schach, Bauernskat und Küchenterror – darunter wählst du, welche. Aus: Du erscheinst nicht in der Liste und bekommst keine Herausforderungen. Gegen den Computer spielen geht immer.</div></div><input type="checkbox" id="setSpiele" onchange="spBereitSetzen(this.checked)"></div>
       <div class="knoepfe versteckt" id="setSpieleArten" style="margin:-4px 0 10px" aria-label="Zu welchen Spielen darf man dich herausfordern?"></div>
       <div class="schalter"><div><b>🎲 Spiel-Einladung beim Start</b><div class="hinweis">Höchstens einmal am Tag: „Heute Lust auf eine Partie?“ – mit Ja, Nein, Später oder Keine Spiele</div></div><input type="checkbox" id="setSpielEinl" checked onchange="spEinlSchalter(this.checked)"></div>
       <!-- KC-CLUB-ANKLOPFEN-ERLAUBEN (1.8.0) -->
@@ -2531,7 +2546,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.13.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.14.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3241,7 +3256,7 @@ const EINWEISUNG = [
   { id: "vorschlaege", sym: "🗳️", t: "Vorschläge", x: "Du hast eine Idee für den Club – ein Ausflug, ein Thema, ein Kochabend? Mit <b>„＋ Neu“</b> schlägst du sie vor, die anderen können abstimmen." },
   { id: "dienste", sym: "🗓️", t: "Dienstpläne", x: "Die Dienstpläne Woche für Woche. Mit <b>‹ Woche</b> / <b>Woche ›</b> blätterst du, <b>„Heute“</b> springt zurück." },
   { id: "aktionen", sym: "🧳", t: "Aktionen", x: "Ausflüge und besondere Aktionen des Clubs – antippen zeigt alle Einzelheiten." },
-  { id: "spiele", sym: "🎲", t: "Spiele – Köcheclub Edition", x: "Tippe auf die Kachel deines Spiels: <b>Tic-Tac-Toe</b> (🍅 gegen 🥦 – wer zuerst drei, bei 4 × 4 vier, in einer Reihe hat), <b>♟️ Schach</b> mit der Küchenbrigade (Küchenchef = König, Kaltmamsell = Dame, Souschef = Turm, Patissier = Läufer, Springer, Praktikanten = Bauern; Figur antippen, dann das Zielfeld) oder <b>🃏 Bauernskat</b> zu zweit (spielbare Karten sind grün umrandet). Im Spiel wählst du <b>🤖 Gegen den Computer</b> – mit Feldgröße und Stärke – oder <b>👥 Gegen Mitglieder</b>: jemanden herausfordern, abwechselnd ziehen, du bekommst Bescheid, wenn du dran bist." },
+  { id: "spiele", sym: "🎲", t: "Spiele – Köcheclub Edition", x: "Tippe auf die Kachel deines Spiels: <b>Tic-Tac-Toe</b> (🍅 gegen 🥦 – wer zuerst drei, bei 4 × 4 vier, in einer Reihe hat), <b>♟️ Schach</b> mit der Küchenbrigade (Küchenchef = König, Kaltmamsell = Dame, Souschef = Turm, Patissier = Läufer, Springer, Praktikanten = Bauern; Figur antippen, dann das Zielfeld) , <b>🃏 Bauernskat</b> zu zweit (spielbare Karten sind grün umrandet) oder <b>🔪 Küchenterror</b> – das Küchenquiz auf Zeit (je Frage 10 Sekunden, schnell und richtig bringt die meisten Punkte). Im Spiel wählst du <b>🤖 Gegen den Computer</b> – mit Feldgröße und Stärke – oder <b>👥 Gegen Mitglieder</b>: jemanden herausfordern, abwechselnd ziehen, du bekommst Bescheid, wenn du dran bist." },
   { id: "buero", sym: "🗂️", t: "Büro der Clubleitung", x: "Nur für die Clubleitung: Regal mit Ordnern, Schreibtisch für die laufende Arbeit, Freud & Leid (Glückwünsche, Genesungswünsche) und Briefe. Normale Mitglieder sehen das Büro nicht.", nur: () => !!ICH?.buero },
 ];
 const einwStand = () => ({ an: true, gesehen: {}, ...(INIT?.einstellungen?.einweisung || {}) });
@@ -4769,9 +4784,9 @@ const SP_ZEICHEN = { x: "🍅", o: "🥦" }, SP_NAME = { x: "Tomate", o: "Brokko
 const SP_KEY = "kc_club_spiel_pc", SP_TAKT_MS = 3000;
 // 2.11.0 KC-CLUB-SPIELE-KACHELN (Wunsch Hansi): art = null → Übersicht mit einer Kachel je Spiel; erst in der Kachel Computer/Mitglieder usw.
 let SP = { tab: "pc", art: null, liste: null, offen: null, takt: null, laedt: false, ch: null };
-const SP_ARTEN = [["ttt", "❌⭕", "Tic-Tac-Toe", "🍅 gegen 🥦 · 3 × 3 oder 4 × 4"], ["schach", "♟️", "Schach", "Die Küchenbrigade tritt an"], ["bsk", "🃏", "Bauernskat", "Zu zweit · französisches Blatt"]];
+const SP_ARTEN = [["ttt", "❌⭕", "Tic-Tac-Toe", "🍅 gegen 🥦 · 3 × 3 oder 4 × 4"], ["schach", "♟️", "Schach", "Die Küchenbrigade tritt an"], ["bsk", "🃏", "Bauernskat", "Zu zweit · französisches Blatt"], ["kt", "🔪", "Küchenterror", "Küchenquiz auf Zeit · 10 Sekunden je Frage"]];
 // KC-CLUB-SCHACH (2.8.0): Spielauswahl oben (gilt für „gegen den Computer“ und als Vorschlag beim Herausfordern)
-function spArtWahl(a) { SP.art = a === "schach" || a === "bsk" ? a : "ttt"; if (SP.offen) SP.offen = null; spZeigen(); if (SP.tab === "mg") spLaden(true); }
+function spArtWahl(a) { SP.art = ["schach", "bsk", "kt"].includes(a) ? a : "ttt"; if (SP.offen) SP.offen = null; spZeigen(); if (SP.tab === "mg") spLaden(true); }
 function spZurueck() { // ‹ oben: Partie → Spiel → Übersicht → Startseite
   if (SP.offen) { SP.offen = null; spZeigen(); spLaden(true); }
   else if (SP.art) { SP.art = null; spZeigen(); }
@@ -4838,9 +4853,9 @@ function spZeigen() {
   const art = SP.tab === "mg" && SP.offen ? SP.offen.spiel : SP.art;
   document.querySelectorAll("#spArt button").forEach((b) => b.classList.toggle("an", b.dataset.a === art));
   $("spArt").classList.add("versteckt"); // Spielwechsel jetzt über die Kacheln (‹ zurück)
-  $("spEdition").innerHTML = art === "schach" ? `<b>♟️ Schach</b><span>Köcheclub Edition · ${schBrigade() ? "Küchenbrigade Weiß gegen Schwarz" : "Weiß gegen Schwarz"}</span>` : art === "bsk" ? "<b>🃏 Bauernskat</b><span>Köcheclub Edition · zu zweit</span>" : "<b>Tic-Tac-Toe</b><span>Köcheclub Edition · 🍅 gegen 🥦</span>";
+  $("spEdition").innerHTML = art === "schach" ? `<b>♟️ Schach</b><span>Köcheclub Edition · ${schBrigade() ? "Küchenbrigade Weiß gegen Schwarz" : "Weiß gegen Schwarz"}</span>` : art === "bsk" ? "<b>🃏 Bauernskat</b><span>Köcheclub Edition · zu zweit</span>" : art === "kt" ? "<b>🔪 Küchenterror</b><span>Köcheclub Edition · Küchenquiz auf Zeit</span>" : "<b>Tic-Tac-Toe</b><span>Köcheclub Edition · 🍅 gegen 🥦</span>";
   clearInterval(SP.takt); SP.takt = null;
-  if (SP.tab === "pc") return SP.art === "schach" ? schPcZeigen() : SP.art === "bsk" ? bskPcZeigen() : spPcZeigen();
+  if (SP.tab === "pc") return SP.art === "schach" ? schPcZeigen() : SP.art === "bsk" ? bskPcZeigen() : SP.art === "kt" ? ktPcZeigen() : spPcZeigen();
   if (SP.offen) return spSpielZeigen();
   spListeZeigen();
 }
@@ -4950,7 +4965,7 @@ function spEinstZeigen() {
   const an = INIT?.einstellungen?.spiele?.herausforderung === true, l = spMeineArten();
   if ($("setSpiele")) $("setSpiele").checked = an;
   if ($("setSpieleArten")) { $("setSpieleArten").classList.toggle("versteckt", !an);
-    $("setSpieleArten").innerHTML = [["ttt", "❌⭕ Tic-Tac-Toe"], ["schach", "♟️ Schach"], ["bsk", "🃏 Bauernskat"]].map(([a, t]) => `<button class="knopf klein${l.includes(a) ? " haupt" : ""}" aria-pressed="${l.includes(a)}" onclick="spArtSchalten('${a}')">${l.includes(a) ? "✅" : "⬜"} ${t}</button>`).join(""); }
+    $("setSpieleArten").innerHTML = [["ttt", "❌⭕ Tic-Tac-Toe"], ["schach", "♟️ Schach"], ["bsk", "🃏 Bauernskat"], ["kt", "🔪 Küchenterror"]].map(([a, t]) => `<button class="knopf klein${l.includes(a) ? " haupt" : ""}" aria-pressed="${l.includes(a)}" onclick="spArtSchalten('${a}')">${l.includes(a) ? "✅" : "⬜"} ${t}</button>`).join(""); }
 }
 async function spHerausfordernBlatt(pid) {
   if (!SP.liste) await spLaden(true);
@@ -4961,13 +4976,13 @@ async function spHerausfordernBlatt(pid) {
   const zeichnen = () => {
     const b = alle.filter((m) => (m.spiele || ["ttt"]).includes(art));
     $("spHerausInhalt").innerHTML = `<h3 style="margin:0">🎲 Herausfordern</h3>
-      ${spWahl("Spiel", art, [["ttt", "❌⭕ Tic-Tac-Toe"], ["schach", "♟️ Schach"], ["bsk", "🃏 Bauernskat"]], "spHerausArt")}
+      ${spWahl("Spiel", art, [["ttt", "❌⭕ Tic-Tac-Toe"], ["schach", "♟️ Schach"], ["bsk", "🃏 Bauernskat"], ["kt", "🔪 Küchenterror"]], "spHerausArt")}
       ${art === "ttt" ? spWahl("Feld", String(gr), [["3", "3 × 3"], ["4", "4 × 4"]], "spHerausGroesse") : ""}
-      <p class="hinweis" style="margin:0">Wen möchtest du herausfordern? ${art === "bsk" ? "Du bist Vorhand und sagst Trumpf an. Die Karten mischt der Server – niemand sieht fremde Karten." : `Du fängst an (${art === "schach" ? "Weiß" : SP_ZEICHEN.x}).`}</p>
-      ${b.length ? b.map((m) => `<button class="zeile sp-wer${m.person_id === pid ? " an" : ""}" onclick="spHerausfordern('${m.person_id}')">${kreis(MITGLIEDER?.find((x) => x.person_id === m.person_id) || {}, m.name, 36)}<b style="flex:1;text-align:left">${esc(m.name)}</b><span>${art === "schach" ? "♟️" : art === "bsk" ? "🃏" : "🎲"} ›</span></button>`).join("")
-        : `<p class="hinweis">Für ${art === "schach" ? "Schach" : art === "bsk" ? "Bauernskat" : "Tic-Tac-Toe"} hat sich noch niemand freigeschaltet.</p>`}`;
+      <p class="hinweis" style="margin:0">Wen möchtest du herausfordern? ${art === "bsk" ? "Du bist Vorhand und sagst Trumpf an. Die Karten mischt der Server – niemand sieht fremde Karten." : art === "kt" ? "12 Küchenfragen in 4 Runden, ihr spielt abwechselnd je eine Runde. 10 Sekunden je Frage – schnell und richtig gibt die meisten Punkte. Du fängst an." : `Du fängst an (${art === "schach" ? "Weiß" : SP_ZEICHEN.x}).`}</p>
+      ${b.length ? b.map((m) => `<button class="zeile sp-wer${m.person_id === pid ? " an" : ""}" onclick="spHerausfordern('${m.person_id}')">${kreis(MITGLIEDER?.find((x) => x.person_id === m.person_id) || {}, m.name, 36)}<b style="flex:1;text-align:left">${esc(m.name)}</b><span>${art === "schach" ? "♟️" : art === "bsk" ? "🃏" : art === "kt" ? "🔪" : "🎲"} ›</span></button>`).join("")
+        : `<p class="hinweis">Für ${art === "schach" ? "Schach" : art === "bsk" ? "Bauernskat" : art === "kt" ? "Küchenterror" : "Tic-Tac-Toe"} hat sich noch niemand freigeschaltet.</p>`}`;
   };
-  window.spHerausArt = (a) => { art = a === "schach" || a === "bsk" ? a : "ttt"; zeichnen(); };
+  window.spHerausArt = (a) => { art = ["schach", "bsk", "kt"].includes(a) ? a : "ttt"; zeichnen(); };
   window.spHerausGroesse = (g) => { gr = Number(g) === 4 ? 4 : 3; zeichnen(); };
   zeichnen();
   window.spHerausfordern = async (an) => {
@@ -4985,6 +5000,7 @@ async function spOeffnen(id) {
   if (aktuelleAnsicht !== "spiele") zeige("spiele"); else spZeigen();
 }
 function spSpielZeigen() {
+  if (SP.offen.spiel === "kt") { ktSpielZeigen(SP.offen); if (SP.offen.status === "laeuft" || SP.offen.status === "angefragt") SP.takt = setInterval(spNachsehen, SP_TAKT_MS); return; }
   if (SP.offen.spiel === "bsk") { bskSpielZeigen(SP.offen); if (SP.offen.status === "laeuft" || SP.offen.status === "angefragt") SP.takt = setInterval(spNachsehen, SP_TAKT_MS); return; }
   if (SP.offen.spiel === "schach") { schSpielZeigen(SP.offen); if (SP.offen.status === "laeuft" || SP.offen.status === "angefragt") SP.takt = setInterval(spNachsehen, SP_TAKT_MS); return; }
   const g = SP.offen, n = g.groesse, ich = g.ichBin, er = ich === "x" ? "o" : "x";
@@ -5003,7 +5019,7 @@ function spSpielZeigen() {
   if (g.status === "laeuft" || g.status === "angefragt") SP.takt = setInterval(spNachsehen, SP_TAKT_MS);
 }
 async function spNachsehen() {
-  if (!SP.offen || aktuelleAnsicht !== "spiele" || document.hidden) return;
+  if (!SP.offen || aktuelleAnsicht !== "spiele" || document.hidden || KTM.frage || KTM.aufl) return; // 2.14.0: nie mitten in eine Quizfrage
   try { const r = await api("spiel_holen", { id: SP.offen.id }); if (r.spiel.zuege !== SP.offen.zuege || r.spiel.status !== SP.offen.status) { const warDran = SP.offen.ichDran; SP.offen = r.spiel; spZeigen(); if (!warDran && r.spiel.ichDran) try { navigator.vibrate?.(40); } catch {} } } catch {}
 }
 async function spZug(i) {
@@ -5504,10 +5520,143 @@ async function spEinlSchalter(an) {
   spEinstZeigen();
 }
 
+// ---------- KC-CLUB-KUECHENTERROR (2.14.0, Wunsch Hansi): Küchenquiz auf Zeit – Fragen aus dem Profi-Küchenalltag ----------
+// 4 Antworten, nur eine richtig. Zeitbalken 10 Sekunden. Punkte: richtig = 100 + Zeitbonus bis 100 (je schneller, desto mehr),
+// falsch oder zu spät = 0. Gegen den Computer: abwechselnd je eine Frage (12 Fragen, je 6), nur auf dem Gerät.
+// Gegen Mitglieder: 4 Runden à 3 Fragen, abwechselnd wie beim Quizduell; der Server stellt die Fragen, misst die Zeit und wertet.
+// Fragen: lib/kuechenterror/fragen.js (eine Quelle, Server bekommt eine wörtliche Kopie).
+const KT_MS = 10000, KT_KEY = "kc_club_kuechenterror_pc";
+let KT_FRAGEN_L = null;
+async function ktFragenLaden() { if (!KT_FRAGEN_L) KT_FRAGEN_L = (await import("./lib/kuechenterror/fragen.js?v=1")).KT_FRAGEN; return KT_FRAGEN_L; }
+const ktMischen = (l) => { const a = [...l]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const ktPunkte = (ok, ms) => (ok && ms <= KT_MS ? 100 + Math.round(100 * (1 - ms / KT_MS)) : 0);
+const ktSek = (ms) => (ms / 1000).toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+// Frage mit Zeitbalken; aufl = Auflösung (richtig/gewaehlt/ok/p/ms/e) – dann sind die Knöpfe gesperrt und eingefärbt
+function ktFrageHtml(fr, { klick = "", aufl = null, kopf = "", denkt = false } = {}) {
+  const rest = Math.max(0, fr.restMs ?? KT_MS), weg = KT_MS - Math.min(rest, KT_MS);
+  return `${kopf}<div class="kt-frage">${esc(fr.f)}</div>
+    <div class="kt-zeit${aufl ? " stop" : ""}" role="timer" aria-label="Zeit: 10 Sekunden"><i style="animation-duration:${KT_MS}ms;animation-delay:-${weg}ms"></i></div>
+    <div class="kt-antworten">${fr.a.map((t, i) => `<button class="kt-antwort${aufl ? (i === aufl.richtig ? " richtig" : i === aufl.gewaehlt ? " falsch" : "") : ""}${denkt ? " denkt" : ""}" ${aufl || !klick ? "disabled" : ""} onclick="${klick}(${i})">${"ABCD"[i]}) ${esc(t)}</button>`).join("")}</div>
+    ${aufl ? `<div class="kt-ergebnis">${aufl.ok ? `✅ Richtig in ${ktSek(aufl.ms)} s – <b>+${aufl.p} Punkte</b>` : aufl.gewaehlt < 0 || aufl.zuSpaet ? "⏰ Zeit abgelaufen – 0 Punkte" : "❌ Leider falsch – 0 Punkte"}</div>
+      <p class="kt-erkl">💡 ${esc(aufl.e || "")}</p>` : ""}`;
+}
+// ----- gegen den Computer -----
+let KTP = (() => { let w = null; try { w = JSON.parse(localStorage.getItem(KT_KEY) || "null"); } catch {} return { staerke: "mittel", stand: { ich: 0, pc: 0, remis: 0 }, ...(w || {}), z: null, uhr: null, pcUhr: null }; })();
+const ktpMerken = () => { try { localStorage.setItem(KT_KEY, JSON.stringify({ staerke: KTP.staerke, stand: KTP.stand })); } catch {} };
+const KT_STAERKE = { leicht: { quote: 0.45, von: 3000, bis: 9000 }, mittel: { quote: 0.65, von: 2000, bis: 7000 }, schwer: { quote: 0.85, von: 1500, bis: 5000 } };
+const ktpSichtbar = () => aktuelleAnsicht === "spiele" && SP.tab === "pc" && SP.art === "kt";
+async function ktPcZeigen() {
+  const F = await ktFragenLaden(); if (!ktpSichtbar()) return;
+  const z = KTP.z, s = KTP.stand;
+  const stand = `<div class="sp-stand"><span>Du <b>${s.ich}</b></span><span>🤝 <b>${s.remis}</b></span><span><b>${s.pc}</b> Computer</span></div>`;
+  if (!z) { $("spInhalt").innerHTML = `<div class="karte sp-karte">
+      ${spWahl("Stärke", KTP.staerke, [["leicht", "😊 Leicht"], ["mittel", "🙂 Mittel"], ["schwer", "😎 Schwer"]], "ktPcStaerke")}
+      ${stand}
+      <p style="margin:6px 0">🔪 <b>Küchenterror</b> – ${F.length} Fragen aus dem Profi-Küchenalltag. Du und der Computer bekommt <b>abwechselnd</b> je eine Frage, insgesamt 12.
+        Jede Frage hat 4 Antworten, nur eine ist richtig. Der Zeitbalken läuft <b>10 Sekunden</b>: richtig gibt 100 Punkte plus bis zu 100 Punkte Zeitbonus – wer schneller ist, holt mehr.</p>
+      <div class="knoepfe"><button class="knopf haupt" onclick="ktPcStart()">▶ Los geht’s</button>${s.ich + s.pc + s.remis ? '<button class="knopf" onclick="ktPcStandWeg()">🗑️ Spielstand zurücksetzen</button>' : ""}</div></div>`; return; }
+  const kopf = `<div class="kt-kopf"><span>Du <b>${z.punkte[0]}</b></span><span>Frage ${Math.min(z.i + 1, 12)}/12</span><span><b>${z.punkte[1]}</b> Computer</span></div>`;
+  if (z.phase === "ende") {
+    const [a, b] = z.punkte, sieg = a > b, remis = a === b;
+    $("spInhalt").innerHTML = `<div class="karte sp-karte">${stand}<div class="sp-banner ${remis ? "remis" : sieg ? "sieg" : "niederlage"}">${remis ? "🤝 Unentschieden!" : sieg ? "🏆 Du hast gewonnen!" : "🤖 Der Computer hat gewonnen"}<br><small>${a} : ${b} Punkte</small></div>
+      <div class="knoepfe"><button class="knopf haupt" onclick="ktPcStart()">↺ Neues Spiel</button><button class="knopf" onclick="KTP.z=null;ktPcZeigen()">Stärke ändern</button></div></div>`; return; }
+  const f = F.find((q) => q.id === z.ids[z.i]), alle = [f.r, ...f.x], fr = { f: f.f, a: z.perm.map((k) => alle[k]), restMs: KT_MS - (Date.now() - z.seit) };
+  const wer = z.i % 2 === 0 ? "ich" : "pc";
+  const kopfWer = `<div class="sp-status${wer === "ich" && z.phase === "frage" ? " sp-ichdran" : ""}">${wer === "ich" ? "👨‍🍳 Deine Frage" : "🤖 Frage an den Computer"}</div>`;
+  $("spInhalt").innerHTML = `<div class="karte sp-karte">${kopf}${kopfWer}${ktFrageHtml(fr, { klick: wer === "ich" && z.phase === "frage" ? "ktPcAntwort" : "", aufl: z.phase === "aufl" ? z.aufl : null, denkt: wer === "pc" && z.phase === "frage" })}
+    ${z.phase === "aufl" ? `<div class="knoepfe"><button class="knopf haupt" onclick="ktPcWeiter()">${z.i >= 11 ? "🏁 Ergebnis" : "Weiter ›"}</button></div>` : ""}</div>`;
+  if (z.phase === "frage") ktPcUhren();
+}
+function ktPcUhren() { // Zeitablauf (und beim Computer: seine Antwort) – auch nach Wiederkommen in die Ansicht
+  const z = KTP.z; clearTimeout(KTP.uhr); clearTimeout(KTP.pcUhr);
+  const rest = KT_MS - (Date.now() - z.seit);
+  KTP.uhr = setTimeout(() => ktPcAntwort(-1, true), Math.max(0, rest) + 50);
+  if (z.i % 2 === 1) KTP.pcUhr = setTimeout(() => { const st = KT_STAERKE[KTP.staerke] || KT_STAERKE.mittel; ktPcAntwort(Math.random() < st.quote ? z.perm.indexOf(0) : [0, 1, 2, 3].filter((k) => z.perm[k] !== 0)[Math.floor(Math.random() * 3)], true); }, Math.max(0, z.pcZeit - (Date.now() - z.seit)));
+}
+async function ktPcStart() {
+  const F = await ktFragenLaden();
+  const st = KT_STAERKE[KTP.staerke] || KT_STAERKE.mittel;
+  KTP.z = { ids: ktMischen(F.map((q) => q.id)).slice(0, 12), i: 0, punkte: [0, 0], phase: "frage", seit: Date.now(), perm: ktMischen([0, 1, 2, 3]), aufl: null };
+  KTP.z.pcZeit = st.von + Math.random() * (st.bis - st.von);
+  ktPcZeigen();
+}
+function ktPcAntwort(wahl, vonUhr) {
+  const z = KTP.z; if (!z || z.phase !== "frage") return;
+  if (!vonUhr && z.i % 2 === 1) return; // beim Computer tippt nicht der Mensch
+  clearTimeout(KTP.uhr); clearTimeout(KTP.pcUhr);
+  const ms = Math.min(Date.now() - z.seit, KT_MS + 1), ok = wahl >= 0 && z.perm[wahl] === 0 && ms <= KT_MS, p = ktPunkte(ok, ms);
+  const f = KT_FRAGEN_L.find((q) => q.id === z.ids[z.i]);
+  z.punkte[z.i % 2] += p; z.phase = "aufl"; z.aufl = { richtig: z.perm.indexOf(0), gewaehlt: wahl, ok, p, ms, zuSpaet: ms > KT_MS, e: f?.e };
+  try { navigator.vibrate?.(ok ? 30 : [40, 30, 40]); } catch {}
+  if (ktpSichtbar()) ktPcZeigen();
+}
+function ktPcWeiter() {
+  const z = KTP.z; if (!z || z.phase !== "aufl") return;
+  z.i++;
+  if (z.i >= 12) { z.phase = "ende"; const [a, b] = z.punkte; if (a > b) KTP.stand.ich++; else if (b > a) KTP.stand.pc++; else KTP.stand.remis++; ktpMerken(); }
+  else { const st = KT_STAERKE[KTP.staerke] || KT_STAERKE.mittel; z.phase = "frage"; z.seit = Date.now(); z.perm = ktMischen([0, 1, 2, 3]); z.aufl = null; z.pcZeit = st.von + Math.random() * (st.bis - st.von); }
+  ktPcZeigen();
+}
+const ktPcStaerke = (w) => { KTP.staerke = KT_STAERKE[w] ? w : "mittel"; ktpMerken(); ktPcZeigen(); };
+async function ktPcStandWeg() { if (!(await frage("Spielstand Küchenterror auf 0 : 0 zurücksetzen?", { ja: "🗑️ Zurücksetzen", nein: "Abbrechen" }))) return; KTP.stand = { ich: 0, pc: 0, remis: 0 }; ktpMerken(); ktPcZeigen(); }
+// ----- gegen Mitglieder -----
+let KTM = { id: null, frage: null, aufl: null, uhr: null, sendet: false };
+function ktSpielZeigen(g) {
+  if (KTM.id !== g.id) { clearTimeout(KTM.uhr); KTM = { id: g.id, frage: null, aufl: null, uhr: null, sendet: false }; }
+  const q = g.quiz, er = esc(g.gegner.vorname);
+  if (!q) { $("spInhalt").innerHTML = '<div class="karte hinweis">Spielstand fehlt – bitte „‹“ und neu öffnen.</div>'; return; }
+  const zurueck = `<div class="zeile" style="border:none;padding:0"><button class="knopf klein" onclick="ktMgUebersicht()">‹ Übersicht</button><b style="flex:1;text-align:right">🔪 Du gegen ${er}</b></div>`;
+  if (KTM.frage || KTM.aufl) {
+    const fr = KTM.frage || KTM.aufl.frage, rest = KTM.frage ? KTM.frage.restMs - (Date.now() - KTM.frage.empfangen) : 0;
+    const kopf = `<div class="kt-kopf"><span>Frage ${fr.imZug}/${fr.vonImZug}</span><span>Runde ${Math.ceil(fr.nr / 3)} von 4</span></div>`;
+    $("spInhalt").innerHTML = `<div class="karte sp-karte">${ktFrageHtml({ ...fr, restMs: rest }, { klick: KTM.frage ? "ktMgAntwort" : "", aufl: KTM.aufl, kopf })}
+      ${KTM.aufl ? `<div class="knoepfe"><button class="knopf haupt" onclick="ktMgWeiter()">${g.ichDran && q.offenBeiMir > 0 ? "Nächste Frage ›" : "Fertig ›"}</button></div>` : ""}</div>`;
+    return;
+  }
+  const zelle = (x) => !x ? "–" : x.verdeckt ? "✔︎" : `<span class="${x.ok ? "ok" : "nein"}">${x.ok ? x.p : "0"}</span>`;
+  const tafel = `<table class="kt-tafel"><tr><th></th><th colspan="3">Du</th><th colspan="3">${er}</th></tr>${q.runden.map((rd, i) => `<tr><th>R${i + 1}</th>${rd.map((k) => `<td>${zelle(k.ich)}</td>`).join("")}${rd.map((k) => `<td>${zelle(k.er)}</td>`).join("")}</tr>`).join("")}
+    <tr><th>Σ</th><td colspan="3"><b>${q.summe[0]}</b></td><td colspan="3"><b>${q.summe[1]}</b>${q.ende ? "" : '<small class="hinweis"> *</small>'}</td></tr></table>
+    ${q.ende ? "" : '<p class="hinweis" style="margin:0">* Punkte des Gegenübers siehst du erst, wenn du dieselben Fragen auch gespielt hast (✔︎ = schon beantwortet).</p>'}`;
+  let status;
+  if (g.status === "beendet") status = g.ergebnis === "gewonnen" ? `<div class="sp-banner sieg">🏆 ${g.aufgegeben ? `${er} hat aufgegeben – du hast gewonnen!` : "Du hast gewonnen!"}<br><small>${q.summe[0]} : ${q.summe[1]} Punkte</small></div>`
+    : g.ergebnis === "verloren" ? `<div class="sp-banner niederlage">${g.aufgegeben ? "Du hast aufgegeben." : `${er} hat gewonnen.`}<br><small>${q.summe[0]} : ${q.summe[1]} Punkte</small></div>` : `<div class="sp-banner remis">🤝 Unentschieden!<br><small>${q.summe[0]} : ${q.summe[1]} Punkte</small></div>`;
+  else if (g.status === "angefragt") status = `<div class="sp-status">⏳ Warte, bis ${er} annimmt …</div>`;
+  else if (g.status !== "laeuft") status = `<div class="sp-status">Diese Partie findet nicht statt.</div>`;
+  else status = g.ichDran ? `<div class="sp-status sp-ichdran">Du bist dran – ${q.offenBeiMir} ${q.offenBeiMir === 1 ? "Frage" : "Fragen"} warten auf dich</div>
+      <div class="knoepfe"><button class="knopf haupt" style="width:100%" onclick="ktMgFrage()">${q.laeuft != null ? "▶ Weiter – deine Frage läuft noch!" : "▶ Los geht’s"}</button></div>
+      <p class="hinweis" style="margin:4px 0 0;text-align:center">Je Frage 10 Sekunden – erst tippen, wenn du bereit bist. Mittendrin aufhören zählt als „Zeit abgelaufen“.</p>`
+    : `<div class="sp-status">${er} ist dran …</div>`;
+  $("spInhalt").innerHTML = `<div class="karte sp-karte">${zurueck}${status}${spTerminHtml(g)}${tafel}
+    ${q.rueckblick ? `<details class="sch-verlauf"><summary>📖 Alle Fragen mit Lösung</summary>${q.rueckblick.filter(Boolean).map((x, i) => `<p style="margin:6px 0"><b>${i + 1}. ${esc(x.f)}</b><br>✅ ${esc(x.r)}<br><small class="hinweis">💡 ${esc(x.e)}</small></p>`).join("")}</details>` : ""}
+    <div class="knoepfe">${g.status === "beendet" ? `<button class="knopf haupt" onclick="spRevanche('${g.id}')">↺ Revanche</button>` : g.status === "laeuft" ? `<button class="knopf" onclick="spAufgeben('${g.id}')">🏳️ Aufgeben</button>` : ""}</div></div>`;
+}
+function ktMgUebersicht() { clearTimeout(KTM.uhr); KTM.frage = null; KTM.aufl = null; SP.offen = null; spZeigen(); spLaden(true); }
+async function ktMgFrage() {
+  const g = SP.offen; if (!g?.ichDran || KTM.sendet) return;
+  KTM.sendet = true;
+  try { const r = await api("spiel_zug", { id: g.id, zug: { kt: "frage" }, zuege: g.zuege }, { warten: true }); SP.offen = r.spiel;
+    if (r.verpasst) melde("⏰ Eine Frage war schon abgelaufen – 0 Punkte");
+    if (r.frage) { KTM.frage = { ...r.frage, empfangen: Date.now() }; KTM.aufl = null; clearTimeout(KTM.uhr); KTM.uhr = setTimeout(() => ktMgAntwort(-1), Math.max(0, r.frage.restMs) + 100); } }
+  catch (e) { meldeFehler(e); try { SP.offen = (await api("spiel_holen", { id: g.id })).spiel; } catch {} }
+  finally { KTM.sendet = false; }
+  if (aktuelleAnsicht === "spiele" && SP.offen) spZeigen();
+}
+async function ktMgAntwort(wahl) {
+  const g = SP.offen, fr = KTM.frage; if (!g || !fr || KTM.sendet) return;
+  KTM.sendet = true; clearTimeout(KTM.uhr);
+  document.querySelectorAll(".kt-antwort").forEach((b) => (b.disabled = true)); document.querySelector(".kt-zeit")?.classList.add("stop");
+  try { const r = await api("spiel_zug", { id: g.id, zug: { kt: "antwort", wahl }, zuege: g.zuege }, { warten: true }); SP.offen = r.spiel;
+    KTM.frage = null; KTM.aufl = r.antwort ? { ...r.antwort, frage: fr } : null; try { navigator.vibrate?.(r.antwort?.ok ? 30 : [40, 30, 40]); } catch {} }
+  catch (e) { meldeFehler(e); KTM.frage = null; KTM.aufl = null; try { SP.offen = (await api("spiel_holen", { id: g.id })).spiel; } catch {} }
+  finally { KTM.sendet = false; }
+  if (aktuelleAnsicht === "spiele" && SP.offen) spZeigen();
+}
+function ktMgWeiter() { const g = SP.offen; KTM.aufl = null; if (g?.ichDran && g.quiz?.offenBeiMir > 0) return ktMgFrage(); spZeigen(); }
+
 // ---------- KC-CLUB-SPIEL-TERMIN (2.9.1, Wunsch Hansi): zu einer Partie einen Termin vereinbaren ----------
 // Nutzt die vorhandene Terminanfrage (steht dann bei beiden im Kalender und im Kalender-Abo, Vortags-Erinnerung). Dazu eine
 // Erinnerung kurz vor Beginn an beide, sobald zugesagt ist. Zu-/Absagen direkt an der Partie.
-const spTitel = (g) => g.spiel === "schach" ? "♟️ Schach" : g.spiel === "bsk" ? "🃏 Bauernskat" : `❌⭕ Tic-Tac-Toe ${g.groesse}×${g.groesse}`;
+const spTitel = (g) => g.spiel === "schach" ? "♟️ Schach" : g.spiel === "bsk" ? "🃏 Bauernskat" : g.spiel === "kt" ? "🔪 Küchenterror" : `❌⭕ Tic-Tac-Toe ${g.groesse}×${g.groesse}`;
 const spTerminZeit = (t) => new Intl.DateTimeFormat("de-DE", { timeZone: TZ, weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }).format(new Date(t.beginn)) + " Uhr";
 function spTerminKurz(g) {
   const t = g.termin; if (!t) return "";
@@ -14681,7 +14830,7 @@ function suAppListe() {
     ["🔔", "Push-Benachrichtigungen", "push benachrichtigung mitteilung handy", ein("pushStatus")], ["🔊", "Ton", "ton klingel laut", ein("setTon")],
     ["🌙", "Nicht stören (Ruhezeit)", "nicht stören ruhezeit nacht stumm", ein("ruheAn")], ["🔠", "Schriftgröße", "schrift gross groß lesen", ein(einfach() ? "setGrossE" : "setGross")],
     ["🎨", "Farbe & Design", "farbe design aussehen", ein(einfach() ? "designWahlE" : "designWahl")], ["🌗", "Tag/Nacht umschalten", "dunkel hell nacht tag", () => dunkelUmschalten()],
-    ["🎂", "Geburtstag anzeigen", "geburtstag", ein("setGeburtstag")], ["🎉", "Runde Geburtstage (Alter für die Clubleitung)", "runder geburtstag alter jubiläum", ein("setRundGeburtstag")], ["🟢", "Online sichtbar", "online sichtbar unsichtbar", ein("setOnline")], ["🗣️", "Stimme zum Vorlesen", "stimme vorlesen sprache ansage roboter klang", ein("setStimme")], ["🎲", "Spiele: herausfordern erlauben", "spiele spiel tic tac toe schach bauernskat skat karten herausfordern", ein("setSpiele")], ["🎲", "Spiel-Einladung beim Start", "spiel einladung start lust partie keine spiele", ein("setSpielEinl")], ["🎓", "Einweisung beim ersten Öffnen", "einweisung erklärung hilfe anleitung neu", ein("setEinw")], ...(ICH?.admin ? [["🕶️", "Inkognito (nur Admin)", "inkognito unsichtbar versteckt online", ein("setInkognito")]] : []), ["🕒", "Zuletzt da anzeigen", "zuletzt da online gesehen", ein("setZuletzt")],
+    ["🎂", "Geburtstag anzeigen", "geburtstag", ein("setGeburtstag")], ["🎉", "Runde Geburtstage (Alter für die Clubleitung)", "runder geburtstag alter jubiläum", ein("setRundGeburtstag")], ["🟢", "Online sichtbar", "online sichtbar unsichtbar", ein("setOnline")], ["🗣️", "Stimme zum Vorlesen", "stimme vorlesen sprache ansage roboter klang", ein("setStimme")], ["🎲", "Spiele: herausfordern erlauben", "spiele spiel tic tac toe schach bauernskat skat karten küchenterror quiz herausfordern", ein("setSpiele")], ["🎲", "Spiel-Einladung beim Start", "spiel einladung start lust partie keine spiele", ein("setSpielEinl")], ["🎓", "Einweisung beim ersten Öffnen", "einweisung erklärung hilfe anleitung neu", ein("setEinw")], ...(ICH?.admin ? [["🕶️", "Inkognito (nur Admin)", "inkognito unsichtbar versteckt online", ein("setInkognito")]] : []), ["🕒", "Zuletzt da anzeigen", "zuletzt da online gesehen", ein("setZuletzt")],
     ["🆘", "Notfallkontakt", "notfall kontakt", ein("nfName")], ["📆", "Kalender-Abo (Handy-Kalender)", "kalender abo handy ical", ein("kalAboKnopf")],
     ["📱", "Meine Geräte", "geräte handy tablet abmelden", () => geraeteBlatt()], ["📡", "Verbindung prüfen", "verbindung internet led server", () => verbindungBlatt()],
     ["🔄", "Update prüfen", "update version neu", () => updateKachel()], ["🟢", "Mein Status", "status urlaub verfügbar krank", () => statusBlatt()],

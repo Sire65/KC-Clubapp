@@ -1,5 +1,21 @@
 # Änderungen
 
+## 2.14.0 – 2026-10-03 – 🔪 Küchenterror – das Küchenquiz auf Zeit (Wunsch Hansi)
+- KC-CLUB-KUECHENTERROR: viertes Spiel (eigene Kachel). 150 Fragen aus dem professionellen Küchenalltag (Garmethoden, Brigade,
+  Saucen, Schnittarten, Fleisch/Fisch, Patisserie, Hygiene/HACCP, Warenkunde, Klassiker) in lib/kuechenterror/fragen.js – je
+  4 Antworten, nur eine richtig, dazu eine kurze Erklärung nach der Antwort. Zeitbalken 10 Sekunden (grün → gelb → rot).
+  Punkte: richtig = 100 + Zeitbonus bis 100 (je schneller, desto mehr), falsch/zu spät = 0. Wer die meisten Punkte hat, gewinnt.
+- Gegen den Computer (nur auf dem Gerät): abwechselnd je eine Frage, 12 Fragen; Stärke leicht/mittel/schwer (Trefferquote und
+  Antwortzeit), Spielstand mit Zurücksetzen.
+- Gegen Mitglieder: 12 gleiche Fragen in 4 Runden à 3, abwechselnd wie beim Quizduell (x R1 → o R1+R2 → x R2+R3 → o R3+R4 → x R4).
+  Der Server wählt/mischt (crypto), merkt die Startzeit jeder Frage (Neuladen setzt sie nicht zurück, 0,8 s Übertragungs-Gnade),
+  verrät die Lösung erst nach dem Antworten und wertet selbst. Punkte des Gegenübers erst sichtbar, wenn man dieselbe Frage auch
+  hatte. Ende: Tafel je Runde + „Alle Fragen mit Lösung“. Herausfordern, Revanche, Aufgeben, Termin, Rangliste/Pokal wie gehabt;
+  in ⚙️ Einstellungen → 🎲 Spiele als viertes Spiel anhakbar.
+- Fragen eine Quelle: Server-Kopie supabase/functions/kc-club/kt-fragen.js (tools/kuechenterror/server-kopie.mjs), Vertragstest
+  prüft Gleichheit, eindeutige ids und je 3 verschiedene falsche Antworten. Neue Fragen nur hinten anfügen (ids nie ändern).
+- Migration supabase/migrations/20261003_kc_club_v2140_kuechenterror.sql (eingespielt): kc_club_spiele.quiz + Prüfregeln.
+
 ## 2.13.0 – 2026-10-03 – 📌 Pinnwand: Zettel nachträglich ❗ wichtig machen (Wunsch Hansi)
 - KC-CLUB-PINNWAND-WICHTIG-NACHTRAEGLICH: Auf eigenen Zetteln „❗ wichtig machen“ bzw. „❗ nicht mehr wichtig“. Beim Einschalten
   fragt die App, ob die Empfänger, die den Zettel noch nicht abgehakt haben, nochmal Bescheid bekommen (Push/Mail wie beim Anheften,
