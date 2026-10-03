@@ -1324,6 +1324,8 @@
   .bl-html { padding: 16px 20px; overflow-y: auto; align-self: stretch; width: 100%; background: #fffdf6; }
   .bl-deckblatt { text-align: center; padding: 8vh 10px 20px; } .bl-deckblatt .bl-muetze { width: 110px; height: 110px; border-radius: 50%; background: #5d4037; display: inline-flex; align-items: center; justify-content: center; }
   .bl-deckblatt .bl-muetze img { width: 76px; } .bl-deckblatt h2 { font-size: 1.8rem; margin: 18px 0 4px; color: #5d4037; } .bl-deckblatt p { color: #6b5b53; margin: 0; }
+  .bl-karte { text-align: center; padding: 6vh 8px 10px; } .bl-ksym { font-size: 3.4rem; } .bl-karte h2 { color: #5d4037; margin: 10px 0 8px; font-size: 1.45rem; }
+  .bl-karte p { color: #3b2b2c; font-size: 1.05rem; margin: 6px 0; } .bl-karte .bl-voll { text-align: left; white-space: pre-line; font-size: .95rem; color: #5b4b4c; }
   .bl-datei { display: flex; flex-direction: column; align-items: center; gap: 10px; font-size: 2.6rem; padding: 20px; text-align: center; } .bl-datei b { font-size: 1rem; }
   .bl-laden { font-size: 1.1rem; color: #6b5b53; }
   .bl-fuss { padding: 6px 12px max(8px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 6px; }
@@ -2215,7 +2217,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.64.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.64.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -11600,6 +11602,7 @@ function arAlbumRuecken(a) {
 const BL = { offen: false, seiten: [], i: 0, titel: "", farben: {}, zurueck: false, lauf: 0, x: null };
 const blDoppel = () => innerWidth >= 900 && innerWidth > innerHeight;
 async function blOrdner(id) {
+  if (String(id).startsWith("auto:")) return blVereinsleben(id); // 1.64.1: auch „🤖 Vereinsleben“ (Einträge als Karten-Seiten)
   try {
     const r = await api("archiv_blaettern", { ordner_id: id }, { warten: true }), o = arOrdnerAktuell();
     const seiten = r.ordner.art === "chronik" ? [
@@ -11609,6 +11612,15 @@ async function blOrdner(id) {
     if (!seiten.length) return melde("In diesem Ordner gibt es noch nichts zum Blättern.");
     blOeffnen(o ? `${o.titel} ${o.art === "chronik" ? "" : o.jahr}`.trim() : "Ordner", seiten, r.ordner.register || []);
   } catch (e) { melde(e.message, true); }
+}
+// KC-CLUB-BLAETTERN (1.64.1, Fund Hansi „Blättern fehlt im Clubordner“): Vereinsleben hat keine Dateien – jede Zeile wird eine
+// Karten-Seite (Symbol, Titel, Datum, Text); Register = Termine, Protokolle, Abstimmungen … in zeitlicher Reihenfolge.
+function blVereinsleben(id) {
+  const o = arAlleOrdner().find((x) => x.id === id); if (!o) return;
+  const liste = arEintraege(o).sort((a, b) => String(a.datum || "").localeCompare(String(b.datum || "")));
+  if (!liste.length) return melde("Hier gibt es noch nichts zum Blättern.");
+  blOeffnen(`Vereinsleben ${o.jahr}`, liste.map((x) => ({ art: "html", register: x.register, titel: x.titel, datum: x.datum,
+    html: `<div class="bl-karte"><div class="bl-ksym">${AR_AUTO[x.art]?.[0] || "📄"}</div><h2>${esc(x.titel)}</h2>${x.text ? `<p>${esc(x.text)}</p>` : ""}${x.voll && x.voll !== x.titel ? `<p class="bl-voll">${esc(x.voll)}</p>` : ""}</div>` })), o.register);
 }
 function blAlbum() {
   const a = FA?.album; if (!a || !FA.fotos.length) return;
@@ -11744,7 +11756,7 @@ function arOrdnerZeigen() {
       : o.besitzer ? (arDarfHinein(o) ? `<div class="knoepfe" style="margin:8px 0"><button class="knopf klein haupt" onclick="arDokForm()">📥 Dokument hineinlegen</button></div><p class="hinweis" style="margin:0 4px 8px">Was du hineinlegst, sieht ${esc(o.titel)} erst nach Prüfung – angenommen oder abgelehnt bekommst du Bescheid.</p>` : "")
       : !o.auto && d.darf ? `<div class="knoepfe" style="margin:8px 0"><button class="knopf klein haupt" onclick="arDokForm()">＋ Dokument</button><button class="knopf klein" onclick="arOrdnerForm('${o.id}')">✏️ Ordner</button><button class="knopf klein" onclick="arOrdnerLoeschen('${o.id}')">🗑️ Ordner</button></div>`
       : !o.auto && o.einreichen ? `<div class="knoepfe" style="margin:8px 0"><button class="knopf klein haupt" onclick="arDokForm()">📥 Beitrag einreichen</button></div>` : ""}
-    ${!o.auto && (o.art === "chronik" || eintraege.some((x) => x.status === "ok")) ? `<button class="knopf haupt ar-blaettern" onclick="blOrdner('${o.id}')">📖 Blättern${o.art === "chronik" ? " – die Chronik wie ein Buch" : ""}</button>` : ""}
+    ${(o.auto ? eintraege.length : o.art === "chronik" || eintraege.some((x) => x.status === "ok")) ? `<button class="knopf haupt ar-blaettern" onclick="blOrdner('${o.id}')">📖 Blättern${o.art === "chronik" ? " – die Chronik wie ein Buch" : ""}</button>` : ""}
     ${o.art === "chronik" ? `<details class="karte ar-anleitung" ${eintraege.length ? "" : "open"}><summary><b>📌 So füllen wir unsere Chronik</b></summary>${CHRONIK_ANLEITUNG}</details>` : ""}
     ${eintraege.length > 3 ? `<input id="arOrdnerSuche" class="ar-ordnersuche" type="search" autocomplete="off" enterkeyhint="search" placeholder="🔍 In diesem Ordner suchen …" value="${esc(AR.ordnerSuche || "")}" oninput="AR.ordnerSuche=this.value;arOrdnerListe()" onkeydown="if(event.key==='Escape'){this.value='';AR.ordnerSuche='';arOrdnerListe()}">` : ""}
     <div class="ar-register">${[["", "Alle", eintraege.length], ...reg.map((r) => [r, r, eintraege.filter((x) => x.register === r).length])].map(([w, t, n], i) => `<button class="${AR.register === w ? "an" : ""}" style="--rf:${i ? AR_FARBEN[(i - 1) % AR_FARBEN.length] : "var(--grau)"}" onclick="AR.register=${esc(JSON.stringify(w))};arZeigen()">${esc(t)} <small>${n}</small></button>`).join("")}</div>

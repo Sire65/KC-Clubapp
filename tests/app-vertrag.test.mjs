@@ -2716,6 +2716,12 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.deepEqual(gesagt, ["Steven ist jetzt online"], "Push und Online-Takt: nur eine Ansage");
 }
 
+// 238. 1.64.1: Blättern auch im Vereinsleben (ohne Dateien → Karten-Seiten)
+{
+  assert.ok(/\$\{\(o\.auto \? eintraege\.length : o\.art === "chronik" \|\| eintraege\.some\(\(x\) => x\.status === "ok"\)\) \? `<button/.test(html), "Blättern-Knopf auch bei Vereinsleben");
+  assert.ok(/if \(String\(id\)\.startsWith\("auto:"\)\) return blVereinsleben\(id\);/.test(html) && /function blVereinsleben\(id\)/.test(html), "Vereinsleben blättern");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

@@ -1,5 +1,9 @@
 # Änderungen
 
+## 1.64.1 – 2026-10-03
+- Fund Hansi „Blättern wird im Clubordner nicht angezeigt“: „📖 Blättern“ jetzt auch in „🤖 Vereinsleben“ – jeder Eintrag
+  (Termin, Protokoll, Abstimmung, Aktion …) wird eine Karten-Seite mit Symbol, Titel, Datum und Text; Lesezeichen je Bereich.
+
 ## 1.64.0 – 2026-10-03
 - KC-CLUB-CHRONIK (Vorschlag + Freigabe Hansi): Clubchronik im Vereinsarchiv – ein Ordner für alle Jahre (Rücken: Gründungsjahr),
   steht über allen Jahren. Anlegen mit „📖 Chronik anlegen“ (fragt das Gründungsjahr). Register: Gründung, Presse, Rekorde &
