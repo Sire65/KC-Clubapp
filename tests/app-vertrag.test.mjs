@@ -3435,6 +3435,12 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(!/z\.i % 2/.test(pc), "keine Fragen mehr nur für den Computer");
   assert.ok(/klick: z\.phase === "frage" \? "ktPcAntwort" : ""/.test(pc) && /function ktPcNeueFrage\(z\)/.test(pc) && /z\.punkte\[0\] \+= p; z\.punkte\[1\] \+= pcP;/.test(pc), "du antwortest immer, Computer zählt mit");
 }
+// 317. 2.18.2: keine Variable verdeckt eine zentrale Hilfsfunktion (KC-CLUB-LEIHEN-STORNO) – Fund: „const frage = …; await frage(frage)“
+{
+  const m = html.match(/\b(const|let|var) (frage|melde|api|zeige|meldeFehler|blattAuf|sprechen) = (?![^;\n]*=>)(?!\s*(async\s+)?function)/g);
+  assert.ok(!m, "Variable verdeckt Hilfsfunktion: " + (m || []).join(", "));
+  assert.ok(/if \(!\(await frage\(text\)\)\) return;/.test(html.slice(html.indexOf("async function leihStatus("), html.indexOf("async function leihStatus(") + 400)), "Storno fragt mit text");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

@@ -2583,7 +2583,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.18.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.18.2"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -8509,8 +8509,8 @@ async function stimme(id, wahl) {
   catch (e) { meldeFehler(e); }
 }
 async function vorschlagStatus(id, status, art) {
-  const frage = status === "zurueckgezogen" ? "Vorschlag wirklich zurückziehen?" : art === "abstimmung" ? "Abstimmung jetzt beenden? Alle bekommen das Ergebnis." : "Als erledigt markieren (z. B. in die Tagesordnung aufgenommen)?";
-  if (!(await frage(frage))) return;
+  const text = status === "zurueckgezogen" ? "Vorschlag wirklich zurückziehen?" : art === "abstimmung" ? "Abstimmung jetzt beenden? Alle bekommen das Ergebnis." : "Als erledigt markieren (z. B. in die Tagesordnung aufgenommen)?";
+  if (!(await frage(text))) return; // 2.18.2: Variable hieß „frage“ und verdeckte die Funktion frage()
   try { await api("vorschlag_status", { id, status }); melde("Gespeichert"); vorschlaegeLaden(); neuLaden(); } catch (e) { meldeFehler(e); }
 }
 async function vorschlagLoeschen(id) {
@@ -10282,8 +10282,8 @@ function leihAblehnen(id) {
     <div class="knoepfe"><button class="knopf" onclick="$('leihNein').remove()">Abbrechen</button></div>`);
 }
 async function leihStatus(id, status) {
-  const frage = { storniert: "Ausleihe stornieren?", abgeholt: "Als abgeholt markieren?", zurueck: "Alles zurückgegeben?" }[status];
-  if (!(await frage(frage))) return;
+  const text = { storniert: "Ausleihe stornieren?", abgeholt: "Als abgeholt markieren?", zurueck: "Alles zurückgegeben?" }[status]; // 2.18.2: hieß „frage“ und verdeckte die Funktion frage()
+  if (!(await frage(text))) return;
   try { await api("leihen_status", { id, status }); melde({ storniert: "🚫 Storniert", abgeholt: "📦 Abgeholt", zurueck: "↩️ Zurückgegeben – danke!" }[status]); hlLaden(); }
   catch (e) { meldeFehler(e); }
 }

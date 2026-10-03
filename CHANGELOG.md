@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.18.2 – 2026-10-03 – Storno bei der Ausleihe geht wieder (Fund Hansi)
+- KC-CLUB-LEIHEN-STORNO: Fund „Storno in Ausleihe klappt nicht“ – Ursache: in leihStatus hieß der Rückfragetext „frage“ und verdeckte
+  die Funktion frage() → „frage is not a function“, die App brach vor der Rückfrage ab (nichts ging an den Server). Gleicher Fehler in
+  vorschlagStatus (Vorschlag zurückziehen / Abstimmung beenden / erledigt). Beide umbenannt (text). Ganze App per Scope-Analyse
+  (acorn) geprüft: keine weiteren Überdeckungen (das Werkzeug findet in der Vorversion genau diese zwei). Neuer Vertragstest verbietet
+  Variablen, die zentrale Hilfsfunktionen verdecken (frage, melde, api, zeige, meldeFehler, blattAuf, sprechen).
+- Geprüft im Browser: Storno → Rückfrage „Ausleihe stornieren?“ → leihen_status gesendet; ebenso Vorschlag zurückziehen.
+
 ## 2.18.1 – 2026-10-03 – Küchenterror gegen den Computer: jede Frage ist deine (Fund Hansi)
 - KC-CLUB-KUECHENTERROR-GLEICHZEITIG: Fund „Antworten lassen sich immer noch manchmal nicht anklicken, kurz vor Ablauf ist B markiert“ –
   Ursache: gegen den Computer kam abwechselnd eine Frage an den Computer; dort war (gewollt) nichts antippbar und der Computer wählte
