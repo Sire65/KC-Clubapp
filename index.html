@@ -42,8 +42,8 @@
     sendetGerade = true;
     try {
       var h = { "Content-Type": "application/json", "x-club-version": window.KCFP.version || "" }; if (k) h["x-club-token"] = k;
-      if (window.fetch) fetch(API, { method: "POST", headers: h, body: body, keepalive: true }).then(function (r) { fertig(r.ok); }, function () { fertig(false); });
-      else { var x = new XMLHttpRequest(); x.open("POST", API); for (var n in h) x.setRequestHeader(n, h[n]); x.onload = function () { fertig(x.status < 300); }; x.onerror = function () { fertig(false); }; x.send(body); }
+      if (window.fetch) fetch(API, { method: "POST", headers: h, body: body, keepalive: true }).then(function (r) { fertig(r.ok || (r.status >= 400 && r.status < 500 && r.status !== 429)); }, function () { fertig(false); });
+      else { var x = new XMLHttpRequest(); x.open("POST", API); for (var n in h) x.setRequestHeader(n, h[n]); x.onload = function () { fertig(x.status < 300 || (x.status >= 400 && x.status < 500 && x.status !== 429)); }; /* 2.0.0: dauerhaft abgelehnte Einträge nicht endlos neu senden */ x.onerror = function () { fertig(false); }; x.send(body); }
     } catch (e) { sendetGerade = false; }
   }
   window.KCFP = { neu: neu, senden: senden, lies: lies, geraet: geraet, startOk: false, angemeldet: false, sicht: "", version: "", speicherOk: speicherOk, mehrfach: 0, start: START };
@@ -69,7 +69,9 @@
   // Start-Wächter: nach 12 s noch nicht fertig → mitschreiben; ist die App gar nicht angelaufen, einfache Hilfe anzeigen
   setTimeout(function () {
     if (window.KCFP.startOk) return;
-    var appDa = typeof window.zeige === "function";
+    // 2.0.0 (Gesamtprüfung): auch „Programm da, aber Bildschirm leer“ (Start abgebrochen) zählt als kaputt → Hilfe zeigen
+    var leer = (function () { var a = document.getElementById("app"), g = document.getElementById("gesperrt"); return !!(a && g && a.classList.contains("versteckt") && g.classList.contains("versteckt")); })();
+    var appDa = typeof window.zeige === "function" && !leer;
     neu(appDa ? "start_haengt" : "start_kaputt", { text: appDa ? "nach 12 s noch nicht angemeldet" : "App-Programm ist gar nicht angelaufen", bildschirm: screen.width + "x" + screen.height });
     senden(true);
     if (!appDa) {
@@ -80,10 +82,20 @@
       var d = document.createElement("div");
       d.setAttribute("style", "position:fixed;left:0;right:0;top:0;bottom:0;z-index:99999;background:#f5eee3;color:#222;font:18px/1.45 Arial,sans-serif;padding:24px;overflow:auto");
       d.innerHTML = "<h2 style='color:#741521;margin-top:0'>Die Club-App startet auf diesem Gerät nicht richtig</h2><p>" + tipp + "</p><p>Der Fehler wurde automatisch an Hansi gemeldet – er sieht, woran es liegt, und kann dir helfen.</p>"
-        + "<p><button style='font-size:18px;padding:12px 18px;border-radius:12px;border:0;background:#741521;color:#fff' onclick='location.reload()'>Nochmal versuchen</button></p>";
+        + "<p><button style='font-size:18px;padding:12px 18px;border-radius:12px;border:0;background:#741521;color:#fff' onclick='location.reload()'>Nochmal versuchen</button></p>"
+        + "<p><button style='font-size:16px;padding:10px 16px;border-radius:12px;border:1px solid #741521;background:#fff;color:#741521' onclick='window.KCFP_leeren()'>🧹 Speicher der App leeren und neu laden</button><br><small>Deine Anmeldung bleibt erhalten.</small></p>";
       document.body ? document.body.appendChild(d) : document.addEventListener("DOMContentLoaded", function () { document.body.appendChild(d); });
     }
   }, 12000);
+  // 2.0.0: alte Programmteile (Service Worker + Zwischenspeicher) entfernen und neu laden – der persönliche Schlüssel bleibt
+  window.KCFP_leeren = function () {
+    var fertig = function () { try { localStorage.setItem("kc_club_neustart_update", "1"); } catch (e) {} location.reload(); };
+    try {
+      var a = navigator.serviceWorker ? navigator.serviceWorker.getRegistrations().then(function (r) { return Promise.all(r.map(function (x) { return x.unregister(); })); }) : Promise.resolve();
+      var b = window.caches ? caches.keys().then(function (k) { return Promise.all(k.map(function (x) { return caches.delete(x); })); }) : Promise.resolve();
+      Promise.all([a, b]).then(fertig, fertig); setTimeout(fertig, 4000);
+    } catch (e) { fertig(); }
+  };
   setInterval(function () { senden(false); }, 60000);
   document.addEventListener("visibilitychange", function () { if (document.hidden) senden(false); });
 })();
@@ -2374,7 +2386,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.99.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.0.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -4774,7 +4786,9 @@ async function api(action, daten = {}, opt = {}) {
     // KC-CLUB-NOTBETRIEB: Server mehrmals nicht erreichbar (oder schon der Start scheitert) → Ersatz-Server versuchen
     if (!NOT.an && e?.leitung && (++NOT.fehler >= NOT_FEHLER_GRENZE || action === "init") && (await notEinschalten("auto"))) {
       if (action !== "init") setTimeout(() => neuLaden(), 0);
-      try { return await notApi(action, daten); } catch (e2) { e = e2; }
+      // 2.0.0 (Gesamtprüfung): Schreib-Aktionen nicht still nachschieben – sie könnten den Server schon erreicht haben (doppelt)
+      if (API_LESEN.test(action)) try { return await notApi(action, daten); } catch (e2) { e = e2; }
+      else e = Object.assign(new Error("Der Server war gerade nicht erreichbar – bitte prüfen, ob es angekommen ist, und sonst nochmal senden."), { leitung: true });
     }
     fpApiFehler(action, e); throw e; // KC-CLUB-FEHLERPROTOKOLL
   }
@@ -9745,7 +9759,7 @@ async function nfpArchivKopieren() {
   if (!nfpGefuellt(d) || !ordner_id) return;
   try {
     const bild = await nfpBild(d), stand = nfpStandText(d);
-    await api("archiv_hochladen", { ordner_id, titel: `Notfallpass (Stand ${stand})`, datum: new Date().toISOString().slice(0, 10), register, stichworte: "Notfallpass, Gesundheit",
+    await api("archiv_hochladen", { ordner_id, titel: `Notfallpass (Stand ${stand})`, datum: isoBerlin(new Date()), register, stichworte: "Notfallpass, Gesundheit",
       name: `Notfallpass-${stand.replace(/\./g, "-")}.png`, mime: "image/png", daten: base64(await bild.arrayBuffer()) }, { warten: true });
     nfpZu(); melde(`🗄️ Notfallpass liegt jetzt in deinem Ordner (Register „${register}“)`);
     AR.daten = null;
@@ -12487,7 +12501,7 @@ const START_ART = (() => {
 })();
 let installEreignis = null, schonInstalliert = false;
 window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); installEreignis = e; $("installKnopf").classList.remove("versteckt"); installStandZeigen(); if (INIT) wichtigZeigen(); });
-window.addEventListener("appinstalled", () => { installEreignis = null; schonInstalliert = true; localStorage.setItem("kc_club_als_app", "1"); installStandZeigen(); melde("✅ Köcheclub ist als App installiert – bitte ab jetzt über das neue Symbol öffnen und das alte löschen."); });
+window.addEventListener("appinstalled", () => { installEreignis = null; schonInstalliert = true; lsSetzen("kc_club_als_app", "1"); installStandZeigen(); melde("✅ Köcheclub ist als App installiert – bitte ab jetzt über das neue Symbol öffnen und das alte löschen."); });
 async function installieren() { if (!installEreignis) return; installEreignis.prompt(); await installEreignis.userChoice.catch(() => {}); installEreignis = null; $("installKnopf").classList.add("versteckt"); }
 (async () => { try { if (START_ART === "browser" && navigator.getInstalledRelatedApps) { schonInstalliert = (await navigator.getInstalledRelatedApps()).length > 0; installStandZeigen(); } } catch {} })();
 // ---------- App-Info (KC-CLUB-APPINFO): Programm, Handy, Browser – für Hilfe und Fehlersuche (ohne Zugangsdaten) ----------
@@ -13297,7 +13311,7 @@ function arFreigabenListe(o) {
 function arFreigabeForm(oid) {
   const d = AR.daten, o = d.ordner.find((x) => x.id === oid); if (!o) return;
   const doks = d.dokumente.filter((x) => x.ordner_id === oid && x.status !== "pruefung");
-  const tag = (n) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10);
+  const tag = (n) => isoBerlin(new Date(Date.now() + n * 86400000)); // 2.0.0: Berliner Tag (vorher UTC → kurz nach Mitternacht falsch)
   arBlatt(`<h3>🔓 Freigeben – Mein Ordner ${o.jahr}</h3>
     <label class="feld">Was?<select id="frWas" onchange="arFrWas()"><option value="o">🗂️ ganzer Ordner</option>${o.register.map((r) => `<option value="r:${esc(r)}">📑 Register „${esc(r)}“</option>`).join("")}${doks.map((x) => `<option value="d:${x.id}">📄 ${esc(x.titel)}</option>`).join("")}</select></label>
     <div class="feld">Für wen?
@@ -13698,7 +13712,7 @@ function fpHinweisPruefen() {
   if (document.getElementById("fpFenster")) return;
   const h = FP_HINWEISE.find((x) => { try { return x.wenn(); } catch { return false; } });
   if (!h) return;
-  const heute = new Date().toISOString().slice(0, 10);
+  const heute = isoBerlin(new Date()); // 2.0.0: Berliner Tag
   try { const z = localStorage.getItem("kc_club_hinweis_" + h.id);
     if (z === heute || (h.abstandTage && z && (Date.parse(heute) - Date.parse(z)) / 86400000 < h.abstandTage)) return; localStorage.setItem("kc_club_hinweis_" + h.id, heute); } catch {}
   fpNeu("hinweis", { id: h.id, browser: fpBrowser(), system: fpSystem(), start: START_ART, text: "Hilfe gezeigt: " + h.titel });
@@ -13791,6 +13805,8 @@ async function fpAdmin(tage) {
   try { if (k) localStorage.setItem("kc_club_key", k); KEY = k || localStorage.getItem("kc_club_key") || ""; } catch { KEY = k || ""; }
   if (k) { url.searchParams.delete("k"); history.replaceState(null, "", url.pathname + url.hash); }
   if (window.KCFP) KCFP.version = APP_VERSION;
+  // 2.0.0 (Gesamtprüfung): Service Worker zuerst – geht danach beim Aufbau etwas schief, kommt das nächste Update trotzdem an
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch((e) => fpNeu("sw", { text: "Offline-Speicher (Service Worker) nicht eingerichtet: " + (e?.message || e) }));
   // KC-CLUB-EINMAL-SENDEN (1.97.0): diese Aktionen gegen Doppeltippen sperren (gleiche Funktion, nur mit Sperre)
   todoAnlegen = nurEinmal("todoAnlegen", todoAnlegen); cuSenden = nurEinmal("cuSenden", cuSenden); kontaktSenden = nurEinmal("kontaktSenden", kontaktSenden);
   erstattungSenden = nurEinmal("erstattungSenden", erstattungSenden); statusSpeichern = nurEinmal("statusSpeichern", statusSpeichern);
@@ -13798,13 +13814,13 @@ async function fpAdmin(tage) {
   if (!KEY) { $("gesperrt").classList.remove("versteckt"); fpOhneLink(); return; }
   $("app").classList.remove("versteckt");
   iosStartMitSchluessel();
-  klappenMerken(); registerZeigen(); kachelnZeigen(); suLupenEinbauen();
+  // 2.0.0: jeder Aufbauschritt für sich – ein Fehler in einem Teil hält den Rest (und die Update-Prüfung) nicht auf
+  for (const f of [klappenMerken, registerZeigen, kachelnZeigen, suLupenEinbauen]) try { f(); } catch (e) { fpNeu("skript", { text: `Start: ${f.name}: ${e?.message || e}` }); }
   // Verlauf: unten ein „Basis“-Eintrag, darüber die Startseite → „Zurück“ bleibt in der App
   const sprung = location.hash; START_HASH = sprung;
   history.replaceState({ basis: true }, "", url.pathname);
   history.pushState({ v: "start", tiefe: 1 }, "", url.pathname);
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("sw.js").catch((e) => fpNeu("sw", { text: "Offline-Speicher (Service Worker) nicht eingerichtet: " + (e?.message || e) }));
     navigator.serviceWorker.addEventListener("message", (e) => { if (e.data?.typ === "push") { neuLaden(); onlinePing(); if (chatId) chatLaden(false); ansageAusPush(e.data); }
       if (e.data?.typ === "online-ansage") onlineAnsageSprechen([e.data.name]); }); // KC-CLUB-ONLINE-ANSAGE-PUSH
   }

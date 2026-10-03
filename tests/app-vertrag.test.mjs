@@ -362,7 +362,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   for (const a of ["fotos_liste", "foto_hochladen", "foto_oeffnen", "foto_aendern", "foto_loeschen", "foto_wiederherstellen"]) assert.ok(aktionen.has(a), `Server-Aktion ${a} fehlt`);
   // ein Kern für Dateien: Anlagen und Fotos laufen über dateiAblegen (kein zweiter Upload-Weg)
   assert.equal((server.match(/storage\.from\(BUCKET\)\.upload\(/g) || []).length, 1, "mehr als ein Upload-Weg");
-  assert.ok(/case "anlage_hochladen": \{\s*const r = await dateiAblegen\(/.test(server), "Anlagen nutzen nicht den gemeinsamen Kern");
+  assert.ok(/case "anlage_hochladen": \{[\s\S]{0,500}?const r = await dateiAblegen\(/.test(server) /* 2.0.0: davor Speicher-Prüfung */, "Anlagen nutzen nicht den gemeinsamen Kern");
   assert.ok(/dateiAblegen\(ich, p\.name, p\.mime, p\.daten, \/\^image\\\/\(jpeg\|png\|webp\)\$\/\)/.test(server), "Fotoalbum nimmt nicht nur Bilder an");
   // Speicher: Grenze kostenloser Plan, Stopp vor voll; Anzeige in der App
   assert.ok(/const SPEICHER_GRENZE = 1024 \* 1024 \* 1024;/.test(server) && /sp\.belegt >= SPEICHER_GRENZE \* FOTO_STOPP/.test(server), "Speicher-Stopp fehlt");
@@ -715,7 +715,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 55. 0.33.0: drehende Kochmütze bei längeren Anfragen – nicht bei Hintergrund-Abfragen, immer wieder ausgeblendet
 {
   assert.ok(/id="warten"/.test(html) && /kc-kochmuetze-weiss\.webp" alt=""><\/div><b id="wartenText">/.test(html), "Kochmütze fehlt");
-  assert.ok(/const warte = wartenStart\(action, opt\.warten\);\s*try \{[^]{0,900}\n  finally \{ if \(warte\) wartenEnde\(\); \}/ /* 0.93.0: catch nur zum Protokollieren, wirft weiter */.test(html), "Kochmütze wird bei Fehlern nicht ausgeblendet");
+  assert.ok(/const warte = wartenStart\(action, opt\.warten\);\s*try \{[^]{0,1400}\n  finally \{ if \(warte\) wartenEnde\(\); \}/ /* 2.0.0: api() etwas länger (Notbetrieb nur Lesen) */ /* 0.93.0: catch nur zum Protokollieren, wirft weiter */.test(html), "Kochmütze wird bei Fehlern nicht ausgeblendet");
   for (const a of ["online", "anruf_status", "unterhaltung", "protokoll_speichern", "init"]) assert.ok(new RegExp(`WARTEN_STILL = new Set\\([^)]*"${a}"`).test(html), `Hintergrund-Abfrage ${a} ließe die Mütze flackern`);
   assert.ok(/nachricht_senden: "Nachricht wird gesendet …"/.test(html), "Text beim Senden fehlt");
 }
@@ -3115,6 +3115,17 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   const man = JSON.parse(lies("manifest.webmanifest"));
   assert.ok(man.icons.every((i) => i.purpose === "any" || i.purpose === "maskable") && man.icons.filter((i) => i.purpose === "maskable").length === 2, "Symbole getrennt");
 }
+// 281. 2.0.0: Restpunkte der Gesamtprüfung
+{
+  assert.ok(/async function routerSenden\([^)]*\) \{\n  try \{ return await routerSendenRoh\(/.test(server) && /catch \(e\) \{ console\.error\("routerSenden"/.test(server), "Versand stürzt nicht ab");
+  assert.ok(/schonGemeldet = \(c \?\? 0\) > 0 \|\| \(cAlle \?\? 0\) >= 3;/.test(server) && /ohneLinks\(txt\(alarm\.text, 120\)\)/.test(server), "Alarm gedrosselt, ohne Links");
+  assert.ok(/ende: p\.ende \? isoZeitOderFehler\(p\.ende, "Ende"\)/.test(server) && /Fehler-Nr\. \$\{nr\}/.test(server) && /\|html\|svg\|xml\)\/i\.test\(mime\)/.test(server), "Server-Härtung");
+  assert.ok(/case "anlage_hochladen": \{[\s\S]{0,300}speicherStand\(\)/.test(server) && !/satzFuer\(saetze, new Date\(\)\.toISOString/.test(server), "Speicher-Grenze, Berliner Datum");
+  assert.ok(/var appDa = typeof window\.zeige === "function" && !leer;/.test(html) && /window\.KCFP_leeren = function/.test(html), "Start-Wächter mit Speicher leeren");
+  assert.ok(html.indexOf('navigator.serviceWorker.register("sw.js")') < html.indexOf("if (!KEY) {") && (html.match(/serviceWorker\.register\("sw\.js"\)/g) || []).length === 1, "Service Worker früh, einmal");
+  assert.ok(/if \(API_LESEN\.test\(action\)\) try \{ return await notApi\(action, daten\); \}/.test(html), "Notbetrieb nur Lesen automatisch");
+  assert.ok(!/new Date\(\)\.toISOString\(\)\.slice\(0, 10\)/.test(html), "kein UTC-Tag mehr");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
@@ -3179,7 +3190,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/FP_ANONYM_JE_STUNDE/.test(server) && /FP_GERAET_JE_STUNDE/.test(server), "Grenzen gegen Missbrauch fehlen");
   assert.ok(/token\|key\|schluessel\|passwort/.test(server) && /\[\?&\]k=/.test(server), "Zugangsdaten müssen herausgefiltert werden");
   assert.ok(/case "hilfe_anfordern"/.test(server) && /case "fehlerprotokoll": \{\s*nurAdmin\(ich\)/.test(server), "Hilfe/Adminansicht auf dem Server fehlt");
-  assert.ok(/catch \(e\) \{[^]{0,600}fpApiFehler\(action, e\); throw e; \/\/ KC-CLUB-FEHLERPROTOKOLL\n  \}/.test(html), "Serverfehler werden nicht protokolliert");
+  assert.ok(/catch \(e\) \{[^]{0,1000}fpApiFehler\(action, e\); throw e; \/\/ KC-CLUB-FEHLERPROTOKOLL\n  \}/ /* 2.0.0: länger */.test(html), "Serverfehler werden nicht protokolliert");
   assert.ok(/id: "ios_fremd"/.test(html) && /id: "ios_chrome"/.test(html) && !/nur in <b>Safari<\/b> richtig/.test(html) && /Teilen □↑/.test(html) && /id: "inapp"/.test(html) && /id: "privat"/.test(html) && /id: "mehrfach"/.test(html), "Hilfe-Schritte fehlen");
   assert.ok(/fpProblemMelden\(\)/.test(html) && /onclick="fpAdmin\(\)"/.test(html), "Problem melden / Admin-Knopf fehlt");
   assert.ok(/fpNeu\("alte_version"/.test(html) && /Jetzt aktualisieren<\/button>/.test(html), "alte Version: protokollieren + direkt aktualisieren");
@@ -3341,7 +3352,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   const f = server.slice(server.indexOf('case "suche"'), server.indexOf('case "', server.indexOf('case "suche"') + 10));
   assert.ok(f && /p_person: ich\.person_id, p_protokolle: ich\.protokolle, p_vorstand: ich\.vorstand/.test(f) && !/protokoll\(/.test(f), "Server: Rechte übergeben, Suchbegriff nie protokollieren");
   assert.ok(/length < 2\) return json\(\{ bereiche: \[\] \}\)/.test(f), "erst ab 2 Zeichen");
-  assert.ok(/class="su-klein" id="suLupe" onclick="sucheAuf\(\)"[^>]*>🔍/.test(html) && /suLupenEinbauen\(\);/.test(html) && !/id: "suche"/.test(html), "App: kleine Lupe (keine Kachel)");
+  assert.ok(/class="su-klein" id="suLupe" onclick="sucheAuf\(\)"[^>]*>🔍/.test(html) && /suLupenEinbauen(\(\);|\])/.test(html) && !/id: "suche"/.test(html), "App: kleine Lupe (keine Kachel)"); // 2.0.0: Startschritte einzeln abgesichert
   assert.ok(/SU\.timer = setTimeout\(suJetzt, 300\)/.test(html) && /function suFilterZeigen\(/.test(html) && /Wo suchen\?/.test(html), "App: Live-Suche/Filter fehlt");
 }
 

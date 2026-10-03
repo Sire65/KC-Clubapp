@@ -1,5 +1,18 @@
 # Änderungen
 
+## 2.0.0 – 2026-10-03 – Restpunkte der Gesamtprüfung (Paket 4)
+- Server: Versand über den Communicator stürzt bei Ausfall nicht mehr ab (20-s-Grenze, „0 gesendet“ statt Fehler → kein doppeltes
+  Senden durch das Mitglied). Alarm „ohne Anmeldung“ an die Admins höchstens 3× je Stunde insgesamt; Links aus fremdem Text entfernt.
+  Ungültige End-Zeit und gelöschte Nachricht → klare Meldung statt Absturz. Unerwartete Fehler zeigen eine kurze Fehler-Nr. statt
+  interner Texte (Details im Server-Log). Datei-Anlagen: SVG/XML gesperrt, unlesbare Datei = klare Meldung, Speicher-Grenze wie bei Fotos.
+  Kilometersatz nach Berliner Datum (1. Januar).
+- App-Start: Bleibt der Bildschirm nach 12 s leer, erscheint Hilfe mit „Nochmal versuchen“ und neu „🧹 Speicher der App leeren und
+  neu laden“ (Anmeldung bleibt). Service Worker wird als Erstes eingerichtet; jeder Aufbauschritt ist einzeln abgesichert.
+  Fehlerprotokoll: dauerhaft abgelehnte Einträge werden nicht endlos neu gesendet.
+- Notbetrieb: Nur Lese-Aktionen werden automatisch über den Ersatz-Server wiederholt (Schreiben → klare Meldung, nichts doppelt).
+- Datum nach Berliner Zeit statt UTC: Notfallpass im Archiv, Archiv-Freigaben, „einmal am Tag“-Hinweis. Speicherzugriff beim
+  Installieren abgesichert.
+
 ## 1.99.0 – 2026-10-03
 - KC-CLUB-ADMIN-NAME (Wunsch Hansi „Ja zu deinen Vorschlägen“): Ansprechpartner in Texten („bitte … Bescheid geben“, „Korrektur an …“,
   „Problem an …“, Feedback, Sicherheits-Check, Einrichtung, Druck-Karte, „Link verloren?“-Mail) kommt vom Server (Vorname des Admins,

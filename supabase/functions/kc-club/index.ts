@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.99.0";
+const SERVER_VERSION = "2.0.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -97,8 +97,14 @@ async function geloescht(ich: { person_id: string }, was: string, sicherung: Rec
 }
 
 // Versand über den KC Communicator (Push, sonst/zusätzlich Mail über web.de).
+// 2.0.0 (Gesamtprüfung): Communicator nicht erreichbar → KEIN Absturz (sonst meldet die App einen Fehler, obwohl die Nachricht
+// schon gespeichert ist, und das Mitglied schickt sie nochmal) – stattdessen „0 gesendet, n Fehler“ zurückgeben und protokollieren
 async function routerSenden(eventKey: string, personIds: string[], vars: Record<string, unknown>, korrelation: string, kopie?: { cc?: string[]; bcc?: string[] }) {
-  const r = await fetch(`${SUPA}/functions/v1/kc-communication-router`, {
+  try { return await routerSendenRoh(eventKey, personIds, vars, korrelation, kopie); }
+  catch (e) { console.error("routerSenden", eventKey, String(e)); return { gesendet: 0, fehler: personIds.length }; }
+}
+async function routerSendenRoh(eventKey: string, personIds: string[], vars: Record<string, unknown>, korrelation: string, kopie?: { cc?: string[]; bcc?: string[] }) {
+  const r = await fetch(`${SUPA}/functions/v1/kc-communication-router`, { signal: AbortSignal.timeout(20000),
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE}`, apikey: SERVICE },
     body: JSON.stringify({ sourceProgram: "kc-club", eventKey, recipients: personIds.map((personId) => ({ personId })), variables: vars, correlationId: korrelation,
@@ -408,10 +414,11 @@ async function gruppeHolen(ich: Ich, id: unknown) {
 async function dateiAblegen(ich: Ich, nameRoh: unknown, mimeRoh: unknown, datenRoh: unknown, erlaubt?: RegExp) {
   const name = txt(nameRoh, 150).replace(/[\\/]/g, "_") || "Anlage";
   const mime = txt(mimeRoh, 100) || "application/octet-stream";
-  if (/(x-msdownload|x-sh|javascript|x-executable|html)/i.test(mime) || /\.(exe|bat|cmd|js|sh|html?)$/i.test(name)) throw new Fehler("Dieser Dateityp ist nicht erlaubt.");
+  // 2.0.0 (Gesamtprüfung): auch SVG/XML (können Skripte enthalten) nicht annehmen
+  if (/(x-msdownload|x-sh|javascript|x-executable|html|svg|xml)/i.test(mime) || /\.(exe|bat|cmd|js|sh|html?|xhtml|svg|xml)$/i.test(name)) throw new Fehler("Dieser Dateityp ist nicht erlaubt.");
   if (erlaubt && !erlaubt.test(mime)) throw new Fehler("Dieser Dateityp ist hier nicht erlaubt.");
   const b64 = String(datenRoh || "");
-  const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+  const bytes = (() => { try { return Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)); } catch { throw new Fehler("Die Datei konnte nicht gelesen werden – bitte noch einmal auswählen."); } })();
   if (!bytes.length) throw new Fehler("Leere Datei.");
   if (bytes.length > MAX_ANLAGE) throw new Fehler("Die Datei ist zu groß (höchstens 8 MB).");
   const pfad = `club/${ich.person_id}/${crypto.randomUUID()}-${name.replace(/[^\w.\-äöüÄÖÜß ]/g, "_")}`;
@@ -1133,6 +1140,10 @@ async function adminVorname(): Promise<string> {
     if (ad?.[0]) { const p = (await personen([ad[0].person_id])).get(ad[0].person_id); name = vorname(p ?? null) || name; } } catch { /* Rückfall „Hansi“ */ }
   ADMIN_VORNAME = { name, bis: Date.now() + 600000 }; return name;
 }
+// 2.0.0: Zeitpunkt prüfen statt abstürzen („Invalid time value“)
+const isoZeitOderFehler = (v: unknown, was: string) => { const d = new Date(String(v)); if (isNaN(d.getTime())) throw new Fehler(`${was}: bitte eine gültige Zeit wählen.`); return d.toISOString(); };
+// 2.0.0: Text von Nicht-Angemeldeten ohne Links weitergeben (kein Weg für fremde Links in Admin-Push/Mail)
+const ohneLinks = (t: string) => t.replace(/(https?:\/\/|www\.)\S+/gi, "[Link entfernt]");
 // ---------- Anmeldung ----------
 type Ich = { person_id: string; name: string; vorname: string; admin: boolean; vorstand: boolean; aemter: string[]; protokolle: boolean; kontakte: boolean; buero: BueroRecht;
   nurLesen?: boolean }; // KC-CLUB-NOTBETRIEB: true = Antwort nur für das Notfall-Paket berechnen, nichts schreiben
@@ -2830,7 +2841,10 @@ Köcheclub Werne`,
       if (alarm) {
         const { count: c } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("aktion", "fehler_anonym_admin_benachrichtigt")
           .eq("details->>geraet", geraet).gte("zeit", new Date(Date.now() - 86400000).toISOString());
-        schonGemeldet = (c ?? 0) > 0;
+        // 2.0.0 (Gesamtprüfung): auch über alle Geräte höchstens 3 Alarme je Stunde (wechselnde Geräte-Kennungen)
+        const { count: cAlle } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("aktion", "fehler_anonym_admin_benachrichtigt")
+          .gte("zeit", new Date(Date.now() - 3600000).toISOString());
+        schonGemeldet = (c ?? 0) > 0 || (cAlle ?? 0) >= 3;
       }
       await db.from("kc_club_protokoll").insert(neu.map((e: any) => ({ person_id: null, aktion: "fehler_anonym_" + fpArt(e?.art), details: { ...fpSauber(e), geraet, ua, version } })));
       if (alarm && !schonGemeldet) {
@@ -2838,9 +2852,9 @@ Köcheclub Werne`,
         const { data: admins } = await db.from("kc_club_rollen").select("person_id").eq("ist_admin", true);
         const was = fpArt(alarm.art) === "start_kaputt" ? "Die Club-App startet bei jemandem gar nicht" : "Jemand meldet ohne Anmeldung ein Problem";
         await senden("club_nachricht", (admins ?? []).map((x: any) => x.person_id), {
-          titel: "🆘 " + was, kurz: `${txt(alarm.text, 120)} · Gerät ${geraet}`,
+          titel: "🆘 " + was, kurz: `${ohneLinks(txt(alarm.text, 120))} · Gerät ${geraet}`,
           betreff: `Köcheclub-App: ${was}`,
-          text: `Hallo,\n\n${was}.\n\n${txt(alarm.text, 300)}\nGerät-Kennung: ${geraet}\nHandy/Browser: ${ua}\nApp-Version: ${version || "?"}\n\nEinzelheiten: Admin-Zentrale → 🩺 Fehlerprotokoll\n${APP_URL}\n\nViele Grüße\nKöcheclub-App`,
+          text: `Hallo,\n\n${was}.\n\n${ohneLinks(txt(alarm.text, 300))}\nGerät-Kennung: ${geraet}\nHandy/Browser: ${ua}\nApp-Version: ${version || "?"}\n\nEinzelheiten: Admin-Zentrale → 🩺 Fehlerprotokoll\n${APP_URL}\n\nViele Grüße\nKöcheclub-App`,
           url: APP_URL,
         }, `club-fehler-alarm:${geraet}:${berlinTag(new Date())}`).catch(() => null);
       }
@@ -2853,8 +2867,10 @@ Köcheclub Werne`,
     return await aktionAusfuehren(a, p, ich, req, t0Anfrage, anmeldungMs);
   } catch (e) {
     if (e instanceof Fehler) return json({ error: e.message }, e.status);
-    console.error(e);
-    return json({ error: e instanceof Error ? e.message : String(e) }, 500);
+    // 2.0.0 (Gesamtprüfung): interne Fehlertexte nicht nach außen – kurze Nummer zum Wiederfinden im Server-Log
+    const nr = crypto.randomUUID().slice(0, 8);
+    console.error("Fehler-Nr.", nr, a, e);
+    return json({ error: `Da ist etwas schiefgelaufen – bitte gleich noch einmal versuchen. (Fehler-Nr. ${nr})` }, 500);
   }
 });
 
@@ -3051,7 +3067,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const beginn = new Date(String(p.beginn || ""));
         if (isNaN(beginn.getTime())) throw new Fehler("Bitte Datum und Uhrzeit angeben.");
         if (beginn.getTime() < Date.now() - 3600000) throw new Fehler("Das Treffen liegt in der Vergangenheit.");
-        const zeile = { titel, beginn: beginn.toISOString(), ende: p.ende ? new Date(String(p.ende)).toISOString() : null, ort: txt(p.ort, 200) || null,
+        const zeile = { titel, beginn: beginn.toISOString(), ende: p.ende ? isoZeitOderFehler(p.ende, "Ende") : null, ort: txt(p.ort, 200) || null,
           gastgeber_person_id: p.gastgeber_person_id ? String(p.gastgeber_person_id) : null, beschreibung: txt(p.beschreibung, 2000) || null, geaendert_am: jetzt(),
           art: p.art === "veranstaltung" ? "veranstaltung" : "treffen", ganztaegig: p.art === "veranstaltung" && !!p.ganztaegig };
         if (zeile.ende && zeile.ende < zeile.beginn) throw new Fehler("Das Ende liegt vor dem Beginn.");
@@ -4947,7 +4963,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       case "chat_umfrage_stimmen": {
         const { data: u } = await db.from("kc_club_chat_umfrage").select("message_id,optionen,mehrfach").eq("message_id", String(p.id || "")).maybeSingle();
         if (!u) throw new Fehler("Abstimmung nicht gefunden.", 404);
-        const { data: m } = await db.from("kc_communication_messages").select("thread_id").eq("id", u.message_id).single();
+        const { data: m } = await db.from("kc_communication_messages").select("thread_id").eq("id", u.message_id).maybeSingle();
+        if (!m) throw new Fehler("Die Nachricht gibt es nicht mehr.", 404); // 2.0.0: gelöschte Nachricht → klare Meldung statt Absturz
         await binTeilnehmer(m.thread_id, ich.person_id);
         let wahl = [...new Set<number>((Array.isArray(p.optionen) ? p.optionen : []).map(Number))].filter((i: number) => Number.isInteger(i) && i >= 0 && i < (u.optionen as unknown[]).length);
         if (!u.mehrfach) wahl = wahl.slice(0, 1);
@@ -5474,7 +5491,7 @@ Köcheclub-App`,
         const { data: rollen } = await db.from("kc_club_rollen").select("person_id,aemter");
         const hat = (amt: string) => (rollen ?? []).some((r: any) => (r.aemter || []).includes(amt));
         const saetze = await kmSaetze();
-        return json({ kmSatz: satzFuer(saetze, new Date().toISOString().slice(0, 10)), standard: ERSTATTUNG.kmSatzStandard, saetze, gruende: ERSTATTUNG.gruende, arten: ERSTATTUNG.arten, empfaengerDa: hat(ERSTATTUNG.empfaenger.an) || hat(ERSTATTUNG.empfaenger.cc),
+        return json({ kmSatz: satzFuer(saetze, berlinTag(new Date())), standard: ERSTATTUNG.kmSatzStandard, saetze, gruende: ERSTATTUNG.gruende, arten: ERSTATTUNG.arten, empfaengerDa: hat(ERSTATTUNG.empfaenger.an) || hat(ERSTATTUNG.empfaenger.cc),
           // KC-CLUB-DRUCK (0.53.0): Positionen und Bemerkung mitliefern – eigener Antrag lässt sich später ausdrucken
           antraege: (data ?? []).map((a: any) => ({ id: a.id, summe: Number(a.summe), anzahl: (a.positionen || []).length, status: a.status, zeit: a.erstellt_am, auszahlung: a.auszahlung,
             positionen: a.positionen || [], bemerkung: a.bemerkung ?? null })) });
@@ -5633,7 +5650,7 @@ Köcheclub-App`,
           ? `${i + 1}. 🚗 Fahrtkosten ${d(x.datum)}: ${String(x.km).replace(".", ",")} km × ${euro(x.satz)} = ${euro(x.betrag)}\n   Grund: ${x.grund}${x.ziel ? " · Ziel: " + x.ziel : ""}`
           : `${i + 1}. ${x.art === "einkauf" ? "🛒 Einkauf vorgestreckt" : "📦 Sonstige Auslage"} ${d(x.datum)}: ${euro(x.betrag)}\n   ${x.was}${x.geschaeft ? " · " + x.geschaeft : ""}${x.belege.length ? " · Beleg anbei" : ""}`).join("\n\n");
         const text = `Hallo,\n\n${ich.name} beantragt eine Erstattung über die Köcheclub-App:\n\n${zeilen}\n\n────────────\nSumme: ${euro(summe)}\nAuszahlung: ${auszahlung === "bar" ? "bar" : "per Überweisung"}${bemerkung ? "\nBemerkung: " + bemerkung : ""}\n\n(Kilometerpauschale je nach Fahrtdatum laut Club-Einstellung. Belege, falls vorhanden, sind angehängt.)\n\nViele Grüße\nKöcheclub Werne`;
-        const { data: a, error } = await db.from("kc_club_erstattung").insert({ person_id: ich.person_id, positionen: pos, summe, km_satz: satzFuer(saetze, new Date().toISOString().slice(0, 10)), auszahlung, bemerkung: bemerkung || null }).select("id").single();
+        const { data: a, error } = await db.from("kc_club_erstattung").insert({ person_id: ich.person_id, positionen: pos, summe, km_satz: satzFuer(saetze, berlinTag(new Date())), auszahlung, bemerkung: bemerkung || null }).select("id").single();
         if (error || !a) throw new Fehler("Antrag konnte nicht gespeichert werden.", 500);
         const versand = await routerSenden("club_nachricht_mail", an, {
           titel: `💶 Erstattung von ${ich.vorname}: ${euro(summe)}`, kurz: `${pos.length} Position${pos.length === 1 ? "" : "en"} · ${euro(summe)}`,
@@ -6265,6 +6282,9 @@ Köcheclub-App`,
 
       // ----- Anlagen -----
       case "anlage_hochladen": {
+        // 2.0.0 (Gesamtprüfung): wie bei Fotos – ist der kostenlose Speicher fast voll, keine weiteren Anlagen
+        const sp = await speicherStand();
+        if (sp.belegt >= SPEICHER_GRENZE * FOTO_STOPP) throw new Fehler(`Der kostenlose Speicher ist fast voll – bitte ${await adminVorname()} Bescheid geben.`, 507);
         const r = await dateiAblegen(ich, p.name, p.mime, p.daten);
         return json({ ok: true, ...r });
       }
