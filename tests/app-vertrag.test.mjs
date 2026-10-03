@@ -3183,6 +3183,12 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/id="inkoKnopf"[^>]*onclick="inkognitoSetzen\(!inkognitoAn\(\)\)"/.test(html) && /body:not\(\.ist-admin\) #inkoKnopf/.test(html) && /k\.classList\.toggle\("an", inkognitoAn\(\)\)/.test(html), "Kopf-Knopf nur Admin, zeigt Zustand");
   assert.ok(/classList\.toggle\("ist-admin", !!ICH\?\.admin\); inkognitoZeigen\(\);/.test(html), "Zustand nach dem Laden");
 }
+// 288. 2.3.2: Updates automatisch beim Start und alle 10 Min. auf der Startseite
+{
+  assert.ok(/updatePruefen\(false\)\.then\(\(\) => setTimeout\(updateSelbst, 4000\)\);/.test(html), "Selbst-Update beim Start");
+  assert.ok(/aktuelleAnsicht === "start" && !chatId\) updatePruefen\(false\)\.then\(updateSelbst\); \}, UPDATE_TAKT_MS\)/.test(html) && /const UPDATE_TAKT_MS = 10 \* 60000;/.test(html), "Selbst-Update im Takt nur auf der Startseite");
+  assert.ok(/if \(!NEUE_VERSION \|\| !updateRuhig\(\)\) return;/.test(html) && /Date\.now\(\) - z\.t < 10 \* 60000\) return;/.test(html), "Schutz bleibt");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

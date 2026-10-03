@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.3.2 – 2026-10-03 – Updates automatisch auch beim Start und bei offener App (Wunsch Hansi)
+- KC-CLUB-UPDATE-AUTO: Bisher aktualisierte sich die App nur beim Zurückholen aus dem Hintergrund selbst. Jetzt zusätzlich
+  4 s nach dem Start und alle 10 Min., solange die App sichtbar auf der Startseite steht (kein Chat offen). Unverändert geschützt:
+  nie während Anruf, Sprachaufnahme, Übertragung, offenem Fenster oder Eingabe; höchstens 1× je 10 Min. und Version.
+
 ## 2.3.1 – 2026-10-03 – Inkognito-Knopf in der Kopfleiste (Fund Hansi: „Wo ist der Schalter?“)
 - KC-CLUB-INKOGNITO: 🕶️-Knopf oben in der Kopfleiste neben 🌙 (nur Admin, auch in der einfachen Ansicht). Aus = blass,
   an = dunkel mit gelbem Ring. Antippen schaltet um. Schalter in Admin-Zentrale und Einstellungen bleiben.
