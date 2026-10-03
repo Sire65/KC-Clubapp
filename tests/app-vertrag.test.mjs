@@ -3310,6 +3310,10 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/\.gt\("erinnerung_min", 0\)\.is\("kurz_erinnert_am", null\)/.test(server) && /if \(!zu\.length\) continue;/.test(server), "Erinnerung kurz vorher nur nach Zusage");
   assert.ok(/function spTerminBlatt\(id\)/.test(html) && /api\("terminanfrage_senden", \{ anlass:/.test(html) && /spiel_id: g\.id, erinnerung_min: Number\(\$\("spTErin"\)\.value\)/.test(html) && /\$\{spTerminHtml\(g\)\}/.test(html), "App: Termin an der Partie");
 }
+// 302. 2.9.2: Karten wie französisches Blatt
+{
+  assert.ok(/function bskKartenbild\(c\)/.test(html) && /const BSK_FIGUR = \{ B: "👨‍🍳", D: "👸", K: "🤴" \};/.test(html) && /"10": \[\[25, 8\]/.test(html) && /\.bsk-ecke\.unten \{[^}]*rotate\(180deg\)/.test(html), "Eckzeichen, Pips, Bildkarten");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

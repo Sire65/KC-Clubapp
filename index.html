@@ -229,11 +229,20 @@
   .bsk-stapel.mit-unten { padding-bottom: 14px; } .bsk-stapel .bsk-karte.rueck.klein { position: absolute; bottom: 0; left: 50%; max-width: 64px; width: 88%; transform: translateX(-42%) rotate(5deg); }
   .bsk-karte.blass { background: #e9e4da; color: #a39d92 !important; border-color: #d8d2c6; box-shadow: none; } /* nicht durchsichtig – sonst scheint der verdeckte Bauer durch */
   .bsk-stapel > :last-child { position: relative; z-index: 1; }
-  .bsk-karte { width: 100%; max-width: 74px; aspect-ratio: 5 / 7; border-radius: 9px; border: 2px solid #c9c2b5; background: #fffdf8; color: #1b1b1b; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font: inherit; padding: 0; box-shadow: 0 2px 4px rgba(0,0,0,.18); }
-  .bsk-karte b { font-size: 1.35rem; line-height: 1; } .bsk-karte .bsk-sym { font-size: 1.7rem; line-height: 1; font-family: "DejaVu Sans", "Segoe UI Symbol", sans-serif; }
+  .bsk-karte { position: relative; width: 100%; max-width: 74px; aspect-ratio: 5 / 7; border-radius: 8px; border: 1px solid #b9b2a4; background: linear-gradient(160deg, #fff 0%, #fbf8f1 100%); color: #1b1b1b; display: block; font: inherit; padding: 0; box-shadow: 0 2px 4px rgba(0,0,0,.22); overflow: hidden; container-type: inline-size; }
+  /* Eckzeichen wie beim echten Blatt: Wert + Farbe übereinander, unten rechts auf dem Kopf */
+  .bsk-ecke { position: absolute; top: 3%; left: 5%; display: flex; flex-direction: column; align-items: center; line-height: .95; font-family: Georgia, "Times New Roman", serif; }
+  .bsk-ecke b { font-size: 19cqw; font-weight: 700; letter-spacing: -.04em; } .bsk-ecke i { font-style: normal; font-size: 17cqw; font-family: "DejaVu Sans", "Segoe UI Symbol", sans-serif; }
+  .bsk-ecke.unten { top: auto; left: auto; bottom: 3%; right: 5%; transform: rotate(180deg); }
+  .bsk-pips { position: absolute; inset: 14% 20% 14% 20%; } .bsk-pips i { position: absolute; transform: translate(-50%, -50%); font-style: normal; font-size: 21cqw; line-height: 1; font-family: "DejaVu Sans", "Segoe UI Symbol", sans-serif; }
+  .bsk-pips i.kopf { transform: translate(-50%, -50%) rotate(180deg); }
+  .bsk-mitte-ass { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 52cqw; line-height: 1; font-family: "DejaVu Sans", "Segoe UI Symbol", sans-serif; }
+  .bsk-bild { position: absolute; inset: 17% 17%; border: 1.5px solid currentColor; border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    background: linear-gradient(180deg, rgba(212,172,13,.18), rgba(212,172,13,.05)); }
+  .bsk-figur { font-size: 36cqw; line-height: 1; } .bsk-bild-sym { font-size: 20cqw; line-height: 1; font-family: "DejaVu Sans", "Segoe UI Symbol", sans-serif; }
   .bsk-karte.rot { color: #c0392b; } .bsk-karte.trumpf { box-shadow: 0 0 0 3px #d4ac0d, 0 2px 4px rgba(0,0,0,.18); }
   button.bsk-karte { cursor: pointer; transform: translateY(-4px); border-color: #1e8449; } button.bsk-karte:active { transform: translateY(0) scale(.96); }
-  .bsk-karte.rueck { background: repeating-linear-gradient(45deg, var(--rot) 0 6px, var(--rot2, #8e1b2a) 6px 12px); border-color: #fff; }
+  .bsk-karte.rueck { background: radial-gradient(circle at 50% 50%, rgba(255,255,255,.22) 0 18%, transparent 19%), repeating-linear-gradient(45deg, var(--rot) 0 5px, var(--rot2, #8e1b2a) 5px 10px); border: 3px solid #fff; box-shadow: 0 0 0 1px #b9b2a4, 0 2px 4px rgba(0,0,0,.22); }
   .bsk-karte.klein { max-width: 60px; } .bsk-leer { width: 100%; max-width: 74px; aspect-ratio: 5 / 7; border: 2px dashed var(--linie); border-radius: 9px; }
   .bsk-mitte { display: grid; grid-template-columns: 90px 1fr; gap: 8px; align-items: center; padding: 6px; border-radius: 14px; background: #2e6b40; color: #fff; min-height: 110px; }
   .bsk-trumpf { text-align: center; font-size: .85rem; line-height: 1.25; } .bsk-trumpf b { font-size: 1.05rem; }
@@ -2502,7 +2511,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.9.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.9.2"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -5254,10 +5263,28 @@ const BSK_KEY = "kc_club_bauernskat_pc";
 let BSK = (() => { let w = null; try { w = JSON.parse(localStorage.getItem(BSK_KEY) || "null"); } catch {}
   return { staerke: "mittel", stand: { ich: 0, pc: 0 }, runde: 0, z: null, ...(w || {}), denkt: false, gewertet: w?.gewertet || false }; })();
 const bskMerken = () => { try { localStorage.setItem(BSK_KEY, JSON.stringify({ staerke: BSK.staerke, stand: BSK.stand, runde: BSK.runde, z: BSK.z, gewertet: BSK.gewertet })); } catch {} };
+// 2.9.2 (Wunsch Hansi: „wie richtige Karten nach französischem Blatt“): Eckzeichen oben links + unten rechts (gedreht),
+// Zahlenkarten mit klassisch angeordneten Symbolen (untere Hälfte auf dem Kopf), Ass mit großem Symbol, Bildkarten mit Rahmen
+// und Figur – Köcheclub Edition: der Bube ist ein Koch 👨‍🍳, Dame 👸, König 🤴.
+const BSK_BILD = {
+  "7": [[25, 8], [75, 8], [50, 29], [25, 50], [75, 50], [25, 92], [75, 92]],
+  "8": [[25, 8], [75, 8], [50, 29], [25, 50], [75, 50], [50, 71], [25, 92], [75, 92]],
+  "9": [[25, 8], [75, 8], [25, 36], [75, 36], [50, 50], [25, 64], [75, 64], [25, 92], [75, 92]],
+  "10": [[25, 8], [75, 8], [50, 22], [25, 36], [75, 36], [25, 64], [75, 64], [50, 78], [25, 92], [75, 92]],
+};
+const BSK_FIGUR = { B: "👨‍🍳", D: "👸", K: "🤴" };
+function bskKartenbild(c) {
+  const sym = BSK_SYM[c.f], ecke = (u) => `<span class="bsk-ecke${u ? " unten" : ""}"><b>${c.w}</b><i>${sym}</i></span>`;
+  let mitte;
+  if (c.w === "A") mitte = `<span class="bsk-mitte-ass">${sym}</span>`;
+  else if (BSK_FIGUR[c.w]) mitte = `<span class="bsk-bild"><span class="bsk-figur">${BSK_FIGUR[c.w]}</span><span class="bsk-bild-sym">${sym}</span></span>`;
+  else mitte = `<span class="bsk-pips">${BSK_BILD[c.w].map(([x, y]) => `<i style="left:${x}%;top:${y}%"${y > 50 ? ' class="kopf"' : ""}>${sym}</i>`).join("")}</span>`;
+  return ecke(false) + mitte + ecke(true);
+}
 function bskKarteHtml(k, { klick = "", aus = false, klein = false, verdeckt = false, trumpf = null, blass = false } = {}) {
   if (verdeckt) return `<span class="bsk-karte rueck${klein ? " klein" : ""}" aria-label="verdeckte Karte"></span>`;
   const c = bskKarte(k), rot = c.f === "he" || c.f === "ka", tr = trumpf && bskTrumpf(k, trumpf);
-  const inhalt = `<b>${c.w}</b><span class="bsk-sym">${BSK_SYM[c.f]}</span>`;
+  const inhalt = bskKartenbild(c);
   return klick ? `<button class="bsk-karte${rot ? " rot" : ""}${klein ? " klein" : ""}${tr ? " trumpf" : ""}" ${aus ? "disabled" : ""} onclick="${klick}('${k}')" aria-label="${BSK_FNAME[c.f]} ${c.w}${tr ? ", Trumpf" : ""}">${inhalt}</button>`
     : `<span class="bsk-karte${rot ? " rot" : ""}${klein ? " klein" : ""}${tr ? " trumpf" : ""}${blass ? " blass" : ""}" aria-label="${BSK_FNAME[c.f]} ${c.w}${blass ? " (jetzt nicht spielbar)" : ""}">${inhalt}</span>`;
 }

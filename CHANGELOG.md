@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.9.2 – 2026-10-03 – Bauernskat-Karten wie ein echtes französisches Blatt (Wunsch Hansi)
+- KC-CLUB-BAUERNSKAT: Eckzeichen (Wert + Farbe) oben links und unten rechts gedreht, Zahlenkarten 7–10 mit klassisch angeordneten
+  Symbolen (untere Hälfte auf dem Kopf), Ass mit großem Mittelsymbol, Bildkarten mit Rahmen und Figur – Köcheclub Edition: Bube als
+  Koch 👨‍🍳, Dame 👸, König 🤴. Größen wachsen mit der Karte (Container-Einheiten). Rückseite in Clubfarben mit weißem Rand.
+
 ## 2.9.1 – 2026-10-03 – 📅 Termin zu einer Partie vereinbaren (Wunsch Hansi)
 - KC-CLUB-SPIEL-TERMIN: An jeder offenen Partie gegen ein Mitglied „📅 Termin vereinbaren“ (Tag, Uhrzeit, Ort, Erinnerung
   etwa 30 Min./1 Std./2 Std. vorher oder nur Vortag, Notiz). Nutzt die vorhandene Terminanfrage (kein Parallel-Kern): steht bei
