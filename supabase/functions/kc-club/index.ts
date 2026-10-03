@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.54.1";
+const SERVER_VERSION = "1.55.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -4064,8 +4064,21 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // KC-CLUB-QUITTUNG (0.34.0): Zustellung meiner Nachrichten aus dem Communicator (Push angezeigt/geöffnet, Mail verschickt)
         const eigeneIds = (msgs ?? []).filter((m: any) => m.sender_person_id === ich.person_id).slice(-60).map((m: any) => m.id);
         const kor = eigeneIds.flatMap((mid: string) => [`club-nachricht:${mid}`, `club-nachricht:${mid}:push`]);
-        const { data: auftr } = kor.length ? await db.from("kc_communication_requests").select("correlation_id,channel,status").in("correlation_id", kor) : { data: [] };
+        const { data: auftr } = kor.length ? await db.from("kc_communication_requests").select("correlation_id,channel,status,recipient_refs").in("correlation_id", kor) : { data: [] };
         const RANG: Record<string, number> = { sent: 1, delivered: 2, displayed: 3, opened: 4 };
+        // KC-CLUB-HAKEN (1.55.0, Wunsch Hansi „wie WhatsApp“): je Empfänger „auf dem Handy angekommen“ – Push dort angezeigt/geöffnet
+        // (Rückmeldung des Handys) oder seine App war nach der Nachricht online (hat sie geladen). Gelesen = Chat geöffnet.
+        const pushDa = new Map<string, Set<string>>();
+        for (const x of (auftr ?? []) as any[]) {
+          if (x.channel !== "push" || (RANG[x.status] ?? 0) < 3) continue;
+          const mid = String(x.correlation_id).split(":")[1], set = pushDa.get(mid) ?? new Set<string>();
+          for (const r of Array.isArray(x.recipient_refs) ? x.recipient_refs : []) if (r?.personId) set.add(String(r.personId));
+          pushDa.set(mid, set);
+        }
+        const { data: zgAndere } = eigeneIds.length && andere.length ? await db.from("kc_club_zugang").select("person_id,zuletzt_gesehen").in("person_id", andere.map((x: any) => x.person_id)).not("zuletzt_gesehen", "is", null) : { data: [] as any[] };
+        const zuletztDa = new Map<string, string>();
+        for (const z of zgAndere ?? []) if (!zuletztDa.has(z.person_id) || String(z.zuletzt_gesehen) > String(zuletztDa.get(z.person_id))) zuletztDa.set(z.person_id, String(z.zuletzt_gesehen));
+        const angekommenBei = (m: any) => andere.filter((x: any) => (x.last_read_at && x.last_read_at >= m.created_at) || pushDa.get(m.id)?.has(x.person_id) || (zuletztDa.get(x.person_id) ?? "") >= m.created_at).length;
         const zustellung = (mid: string) => {
           const a = (auftr ?? []).filter((x: any) => String(x.correlation_id).startsWith(`club-nachricht:${mid}`));
           if (!a.length) return null;
@@ -4122,7 +4135,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             id: m.id, eigen, von: eigen ? "Du" : leute.get(m.sender_person_id)?.display_name || m.sender_person_id, text: m.body, zeit: m.created_at,
             anlagen: (ma ?? []).filter((x: any) => x.message_id === m.id).map((x: any) => (att ?? []).find((y: any) => y.id === x.attachment_id)).filter(Boolean)
               .map((y: any) => ({ id: y.id, name: y.file_name, mime: y.mime_type, groesse: y.size_bytes })),
-            ...(eigen ? { gelesenVon, gelesenAlle: andere.length > 0 && gelesenVon.length === andere.length, zustellung: zustellung(m.id) } : {}),
+            ...(eigen ? { gelesenVon, gelesenAlle: andere.length > 0 && gelesenVon.length === andere.length, zustellung: zustellung(m.id),
+              // ✓ gesendet · ✓✓ auf allen Handys angekommen · blaue ✓✓ von allen gelesen (wie WhatsApp; Gruppe: erst wenn alle)
+              haken: andere.length > 0 && gelesenVon.length === andere.length ? "gelesen" : andere.length > 0 && angekommenBei(m) === andere.length ? "angekommen" : "gesendet" } : {}),
             reaktionen: reaktionen(m.id),
             antwortAuf: bezug ? { id: bezug.id, von: bezug.sender_person_id === ich.person_id ? "Du" : vorname(leute.get(bezug.sender_person_id)) || "?", text: txt(bezug.body, 90) } : null,
             erwaehnt: erw.map((x: any) => x.person_id === ich.person_id ? "dich" : vorname(rkLeute.get(x.person_id)) || "?"), erwaehntMich: erw.some((x: any) => x.person_id === ich.person_id),

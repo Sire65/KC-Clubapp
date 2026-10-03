@@ -769,6 +769,9 @@
   .eingabe .innen > #text.wichtig { border: 3px solid #ff9800; box-shadow: 0 0 0 3px rgba(255,152,0,.25); }
   .blase.wichtig { border: 3px solid #ff9800; box-shadow: 0 0 0 3px rgba(255,152,0,.30), var(--schatten); }
   .blase.wichtig .wichtig-marke { display: inline-block; margin: 0 0 4px; padding: 1px 8px; border-radius: 999px; background: #ff9800; color: #1f1300; font-weight: 800; font-size: .78rem; letter-spacing: .02em; }
+  /* KC-CLUB-HAKEN (1.55.0): Haken wie WhatsApp – grau gesendet/angekommen, blau gelesen */
+  .haken { display: inline-flex; vertical-align: -2px; margin: 0 2px 0 4px; color: var(--grau); } .blase.eigen .haken { color: rgba(255,255,255,.8); }
+  .haken.blau, .blase.eigen .haken.blau { color: #5fd3ff; filter: drop-shadow(0 0 1px rgba(0,0,0,.6)); } .haken-teil { opacity: .85; }
   .blase.wartet { opacity: .78; } .blase.wartet .fuss { font-style: italic; } /* KC-CLUB-NOTBETRIEB-STUFE2 */
   .ni-zeile.ni-wichtig { border: 2px solid #ff9800; border-radius: 12px; padding: 8px 10px; background: rgba(255,152,0,.12); font-weight: 700; }
   .unterh.wichtig-neu { box-shadow: inset 4px 0 0 #ff9800; background: rgba(255,152,0,.10); }
@@ -2116,7 +2119,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.54.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.55.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3584,6 +3587,17 @@ function anrufAufraeumen() {
 }
 
 // KC-CLUB-QUITTUNG (0.34.0): Rückmeldung zum Push/zur Mail unter eigenen Nachrichten
+// KC-CLUB-HAKEN (1.55.0, Wunsch Hansi „wie WhatsApp“): ✓ gesendet (noch nicht auf dem Handy) · ✓✓ angekommen · blaue ✓✓ gelesen.
+// In Gruppen erst grau/blau, wenn es für alle gilt; wer schon gelesen hat, steht klein daneben (z. B. 2/5). Mail-Hinweis bleibt;
+// Einzelheiten zu Push/Mail weiterhin unter ℹ️.
+const HAKEN_EINS = '<svg viewBox="0 0 13 11" width="15" height="12" aria-hidden="true"><path d="M1.5 6.2l3.3 3.3L11.5 1.8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const HAKEN_ZWEI = '<svg viewBox="0 0 19 11" width="21" height="12" aria-hidden="true"><path d="M1.5 6.2l3.3 3.3L11.5 1.8M8.2 8.6l.9.9L17.5 1.8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+function hakenHtml(m, anzahl) {
+  const h = m.haken || (m.gelesenAlle ? "gelesen" : "gesendet");
+  const zeichen = h === "gelesen" ? `<span class="haken blau" title="gelesen" aria-label="gelesen">${HAKEN_ZWEI}</span>` : h === "angekommen" ? `<span class="haken" title="auf dem Handy angekommen – noch nicht gelesen" aria-label="angekommen">${HAKEN_ZWEI}</span>` : `<span class="haken" title="gesendet – noch nicht auf dem Handy angekommen" aria-label="gesendet">${HAKEN_EINS}</span>`;
+  const teil = h !== "gelesen" && anzahl > 1 && m.gelesenVon?.length ? ` <small class="haken-teil" title="schon gelesen">${m.gelesenVon.length}/${anzahl}</small>` : "";
+  return zeichen + teil + (m.zustellung?.mail ? ' <span class="zustellung" title="auch per E-Mail verschickt">✉️</span>' : "");
+}
 function zustellText(z) {
   if (!z) return "";
   const p = z.push === "geoeffnet" ? "🔔 geöffnet" : z.push === "angezeigt" ? "🔔 angekommen" : z.push === "gesendet" ? "🔔 verschickt" : "";
@@ -7518,7 +7532,7 @@ async function chatLaden(scrollen) {
     $("chatAngeheftet").innerHTML = (u.angeheftet || []).map((a) => `<button class="pin-zeile" onclick="zuNachricht('${a.id}')">📌 <b>${esc(a.von)}:</b> ${esc(a.text)}</button>`).join(""); // KC-CLUB-ANHEFTEN
     tipptZeigen(u.tippt || [], u.entwurf || [], u.spricht || []); chatAbstand();
     if (u.tippt?.length && andere.length === 1) $("chatTeilnehmer").textContent = "✍️ schreibt …";
-    const stand = JSON.stringify(u.nachrichten.map((m) => [m.id, m.gelesenVon?.length, (m.reaktionen || []).map((x) => x.emoji + x.anzahl).join(""),
+    const stand = JSON.stringify(u.nachrichten.map((m) => [m.id, m.gelesenVon?.length, m.haken, (m.reaktionen || []).map((x) => x.emoji + x.anzahl).join(""),
       m.text, m.bearbeitet, m.gemerkt, m.angeheftet, m.umfrage?.optionen.map((o) => o.stimmen + (o.meine ? "*" : "")).join(",")])); // 1.12.0: auch Stimmen/Bearbeitungen anderer
     const idStand = u.nachrichten.map((m) => m.id).join(",");
     if (NA.antwort && !u.nachrichten.some((m) => m.id === NA.antwort.id)) naAntwortWeg(); // Antwort gehört zu einem anderen Chat
@@ -7536,7 +7550,7 @@ async function chatLaden(scrollen) {
       ${m.wichtig ? '<div class="wichtig-marke">❗ WICHTIG</div>' : ""}${!m.eigen && andere.length > 1 ? `<div class="von">${esc(m.von)}</div>` : ""}${m.antwortAuf ? `<div class="zitat" onclick="zuNachricht('${m.antwortAuf.id}')"><b>${esc(m.antwortAuf.von)}</b><span>${esc(m.antwortAuf.text)}</span></div>` : ""}${m.umfrage ? umfrageHtml(m) : m.kontakt ? kontaktKarteHtml(m) : m.text === "📎" && m.anlagen.length ? "" : `<div class="txt">${naText(m.text)}</div>`}
       ${m.anlagen.map((a) => /^image\//.test(a.mime || "") ? `<img data-anlage="${a.id}" alt="${esc(a.name)}" onclick="anlageOeffnen('${a.id}')">` : /^audio\//.test(a.mime || "") ? `<div class="sprache" data-sprache="${a.id}"><button onclick="spracheAbspielen(this, '${a.id}')">▶️ Sprachnachricht anhören</button></div>` : `<div class="anlage" onclick="anlageOeffnen('${a.id}')">📄 ${esc(a.name)}</div>`).join("")}
       <div class="na-seite"><button class="na-pfeil" title="Weiterleiten oder kopieren" aria-label="Weiterleiten oder kopieren" onclick="naPfeilMenue('${m.id}')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4.5l7.5 7.5-7.5 7.5v-4.3c-5.2 0-8.8 1.7-11.4 5.3 1-5.2 4.1-10.3 11.4-11.3V4.5z"/></svg></button><button class="na-info" title="Info: wer geschrieben, bekommen und gelesen hat" aria-label="Info zur Nachricht" onclick="nachrichtInfo('${m.id}')">i</button></div>
-      <div class="fuss">${m.angeheftet ? '<span title="oben angeheftet">📌</span> ' : ""}${m.gemerkt ? '<span title="gemerkt">⭐</span> ' : ""}${m.bearbeitet ? '<span class="bearb" title="nachträglich geändert">bearbeitet</span>' : ""}${zeitKurz(m.zeit)}${m.eigen ? " " + (m.gelesenAlle ? '<b title="gelesen">✓✓</b>' : m.gelesenVon?.length ? `✓✓ ${m.gelesenVon.length}/${andere.length}` : "✓") + zustellText(m.zustellung) : ""}${m.eigen || ICH.admin ? ` <button class="weg" title="Nachricht löschen" onclick="nachrichtLoeschen('${m.id}')">🗑️</button>` : ""}</div></div>`).join("") + notWartendeHtml(chatId) // KC-CLUB-NOTBETRIEB-STUFE2
+      <div class="fuss">${m.angeheftet ? '<span title="oben angeheftet">📌</span> ' : ""}${m.gemerkt ? '<span title="gemerkt">⭐</span> ' : ""}${m.bearbeitet ? '<span class="bearb" title="nachträglich geändert">bearbeitet</span>' : ""}${zeitKurz(m.zeit)}${m.eigen ? " " + hakenHtml(m, andere.length) : ""}${m.eigen || ICH.admin ? ` <button class="weg" title="Nachricht löschen" onclick="nachrichtLoeschen('${m.id}')">🗑️</button>` : ""}</div></div>`).join("") + notWartendeHtml(chatId) // KC-CLUB-NOTBETRIEB-STUFE2
       || '<p class="hinweis">Schreib die erste Nachricht.</p>';
     document.querySelectorAll("img[data-anlage]").forEach(bildLaden);
     naWischenEinrichten();

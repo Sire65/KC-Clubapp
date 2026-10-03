@@ -2496,6 +2496,23 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.match(html, /notErnstfall\(\) \? ` <button onclick="notErnstfallSetzen\(false\)">Simulation beenden<\/button>`/, "Beenden im Band");
 }
 
+// 224. 1.55.0: Haken wie WhatsApp (KC-CLUB-HAKEN)
+{
+  const srv = lies("supabase/functions/kc-club/index.ts");
+  assert.match(srv, /select\("correlation_id,channel,status,recipient_refs"\)/, "Push-Rückmeldung je Empfänger");
+  assert.match(srv, /\(x\.last_read_at && x\.last_read_at >= m\.created_at\) \|\| pushDa\.get\(m\.id\)\?\.has\(x\.person_id\) \|\| \(zuletztDa\.get\(x\.person_id\) \?\? ""\) >= m\.created_at/, "angekommen: gelesen, Push angezeigt oder App danach online");
+  assert.match(srv, /haken: andere\.length > 0 && gelesenVon\.length === andere\.length \? "gelesen" : andere\.length > 0 && angekommenBei\(m\) === andere\.length \? "angekommen" : "gesendet"/, "drei Stufen, Gruppe erst wenn alle");
+  const f = html.slice(html.indexOf("function hakenHtml("), html.indexOf("function zustellText("));
+  const f2 = html.slice(html.indexOf("const HAKEN_EINS"), html.indexOf("function hakenHtml("));
+  const hk = new Function(`${f2}; ${f}; return hakenHtml;`)();
+  assert.match(hk({ haken: "gesendet" }, 1), /^<span class="haken" title="gesendet[^"]*" aria-label="gesendet"><svg viewBox="0 0 13 11"/, "ein Haken");
+  assert.match(hk({ haken: "angekommen" }, 1), /^<span class="haken" title="auf dem Handy[^"]*" aria-label="angekommen"><svg viewBox="0 0 19 11"/, "zwei graue Haken");
+  assert.match(hk({ haken: "gelesen" }, 1), /^<span class="haken blau" title="gelesen" aria-label="gelesen"><svg viewBox="0 0 19 11"/, "zwei blaue Haken");
+  assert.match(hk({ haken: "angekommen", gelesenVon: ["A", "B"] }, 5), /2\/5<\/small>$/, "Gruppe: Teil gelesen");
+  assert.match(html, /\.haken\.blau, \.blase\.eigen \.haken\.blau \{ color: #5fd3ff;/, "blau wie WhatsApp (heller, gut sichtbar auf Rot)");
+  assert.match(html, /\[m\.id, m\.gelesenVon\?\.length, m\.haken,/, "Chat zeichnet bei neuem Haken neu");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

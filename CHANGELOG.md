@@ -1,5 +1,12 @@
 # Änderungen
 
+## 1.55.0 – 2026-10-03
+- KC-CLUB-HAKEN (Wunsch Hansi „wie WhatsApp“): Haken an eigenen Nachrichten – ✓ gesendet (noch nicht auf dem Handy des anderen),
+  ✓✓ grau angekommen, ✓✓ blau gelesen. „Angekommen“ je Empfänger: Push auf seinem Handy angezeigt/geöffnet (Rückmeldung des
+  Handys) oder seine App war nach der Nachricht online. In Gruppen erst grau/blau, wenn es für alle gilt; wer schon gelesen
+  hat, steht klein daneben (z. B. 2/5). Push-Text („🔔 angekommen“) aus der Zeile genommen (Einzelheiten weiter unter ℹ️),
+  ✉️ zeigt weiter, dass auch eine Mail ging. Server: unterhaltung liefert haken.
+
 ## 1.54.1 – 2026-10-03
 - KC-CLUB-NOTBETRIEB-ERNSTFALL (Wunsch Hansi): Admin-Knopf „🧯 Ernstfall simulieren (Supabase weg, nur dieses Gerät)“. Anders als
   die Probe schaltet nichts von Hand um: Auf diesem Gerät scheitert jede Anfrage an den Club-Server wie bei einem echten
