@@ -3356,6 +3356,13 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   for (const k of ["'ja'", "'spaeter'", "'nein'", "'aus'"]) assert.ok(html.includes(`spEinlAntwort(${k})`), "Knopf " + k);
   assert.ok(/if \(!h \|\| h === "#"\) setTimeout\(\(\) => spEinladung\(\), 4000\)/.test(html) && /id="setSpielEinl"/.test(html), "beim Start + Schalter in Einstellungen");
 }
+// 307. 2.13.0: Pinnwand-Zettel nachträglich wichtig (KC-CLUB-PINNWAND-WICHTIG-NACHTRAEGLICH)
+{
+  const pw = server.slice(server.indexOf('case "pinnwand_wichtig": {'), server.indexOf('case "pinnwand_abnehmen": {'));
+  assert.ok(/if \(z\.person_id !== ich\.person_id\) throw/.test(pw), "nur der Verfasser");
+  assert.ok(/if \(wichtig && !z\.wichtig && p\.bescheid && z\.fuer !== "ich"\)/.test(pw) && /!fertig\.has\(id\)/.test(pw) && /senden\("club_pinnwand"/.test(pw), "Bescheid nur auf Wunsch, nur an noch nicht Erledigte");
+  assert.ok(/if \(z\.vonMir\) knoepfe\.push\(`<button onclick="pwWichtig\(/.test(html) && /api\("pinnwand_wichtig", \{ id, wichtig: an, bescheid \}/.test(html), "App: Knopf");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

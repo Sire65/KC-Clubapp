@@ -24,7 +24,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "2.12.0";
+const SERVER_VERSION = "2.13.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -5941,6 +5941,30 @@ Köcheclub-App`,
         const erledigt_am = p.zurueck ? null : jetzt();
         await db.from("kc_club_pinnwand_gelesen").upsert({ zettel_id: z.id, person_id: ich.person_id, erledigt_am }, { onConflict: "zettel_id,person_id" });
         return json({ ok: true, erledigt: erledigt_am });
+      }
+
+      // KC-CLUB-PINNWAND-WICHTIG-NACHTRAEGLICH (2.13.0, Wunsch Hansi): eigenen Zettel nachträglich auf ❗ wichtig stellen (oder zurück).
+      // Auf Wunsch („bescheid“) bekommen die Empfänger, die ihn noch nicht abgehakt haben, eine Push/Mail wie beim Anheften.
+      case "pinnwand_wichtig": {
+        const { data: z } = await db.from("kc_club_pinnwand").select("id,person_id,text,fuer,personen,wichtig").eq("id", String(p.id)).is("entfernt_am", null).maybeSingle();
+        if (!z) throw new Fehler("Zettel nicht gefunden (vielleicht schon abgenommen).", 404);
+        if (z.person_id !== ich.person_id) throw new Fehler("Wichtig machen darf nur, wer den Zettel angeheftet hat.", 403);
+        const wichtig = !!p.wichtig;
+        if (z.wichtig !== wichtig) await db.from("kc_club_pinnwand").update({ wichtig }).eq("id", z.id);
+        let versand: any = { gesendet: 0 };
+        if (wichtig && !z.wichtig && p.bescheid && z.fuer !== "ich") {
+          const ziel = z.fuer === "alle" ? (await aktiveMitglieder()).map((m) => m.person_id).filter((id) => id !== ich.person_id) : (z.personen ?? []);
+          const { data: erl } = ziel.length ? await db.from("kc_club_pinnwand_gelesen").select("person_id").eq("zettel_id", z.id).not("erledigt_am", "is", null) : { data: [] as any[] };
+          const fertig = new Set((erl ?? []).map((x: any) => x.person_id));
+          const { data: mitApp } = ziel.length ? await db.from("kc_club_zugang").select("person_id").eq("aktiv", true).not("zuletzt_gesehen", "is", null).in("person_id", ziel) : { data: [] as any[] };
+          const an = (mitApp ?? []).map((x: any) => x.person_id).filter((id: string) => !fertig.has(id));
+          const kopf = pinnwandHinweis(ich.vorname, pinnwandPrivat(z), true);
+          if (an.length) versand = await senden("club_pinnwand", an, { titel: `📌 ${kopf}`, kurz: z.text, betreff: `Köcheclub Werne – ${kopf}`,
+            text: `Hallo,\n\n${kopf} (jetzt als wichtig markiert):\n\n„${z.text}“\n\nAnsehen in der Köcheclub-App: ${APP_URL}#pinnwand\n\nViele Grüße\nKöcheclub Werne`, url: `${APP_URL}#pinnwand` }, `club-pinnwand:${z.id}:wichtig`)
+              .catch((e) => { console.error("pinnwand wichtig push", String(e)); return { gesendet: 0, fehler: an.length }; });
+        }
+        await protokoll(ich.person_id, "pinnwand_wichtig", { zettel: z.id, wichtig, versand });
+        return json({ ok: true, wichtig, versand });
       }
 
       case "pinnwand_abnehmen": {

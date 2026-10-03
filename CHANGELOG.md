@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.13.0 – 2026-10-03 – 📌 Pinnwand: Zettel nachträglich ❗ wichtig machen (Wunsch Hansi)
+- KC-CLUB-PINNWAND-WICHTIG-NACHTRAEGLICH: Auf eigenen Zetteln „❗ wichtig machen“ bzw. „❗ nicht mehr wichtig“. Beim Einschalten
+  fragt die App, ob die Empfänger, die den Zettel noch nicht abgehakt haben, nochmal Bescheid bekommen (Push/Mail wie beim Anheften,
+  über die vorhandene Benachrichtigung „pinnwand“ – jede Person steuert das selbst; Standard-Antwort „Nur markieren“).
+  Wichtige offene Zettel öffnen beim Start wie bisher die Pinnwand. Nur der Verfasser darf das; Protokoll „pinnwand_wichtig“.
+- Server: neue Aktion pinnwand_wichtig (keine Datenbankänderung, Spalte wichtig gibt es schon).
+
 ## 2.12.0 – 2026-10-03 – 🎲 Spiel-Einladung beim App-Start (Wunsch Hansi)
 - KC-CLUB-SPIEL-EINLADUNG: Beim Start: „Hey <Vorname>, heute Lust auf eine Partie? Schach gegen den Computer – oder fordere doch ein
   anderes Mitglied heraus. Tic-Tac-Toe oder Bauernskat habe ich auch im Angebot.“ (plus „X Partien warten schon auf dich“, wenn ja).
