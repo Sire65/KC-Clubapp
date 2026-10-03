@@ -3445,10 +3445,12 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
 {
   const a = html.indexOf("const dtNorm = "), b = html.indexOf("\n}", html.indexOf("function diktatMerge(")) + 2;
   const { diktatMerge } = new Function(html.slice(a, b) + "; return { diktatMerge };")();
-  const kum = ["kannst du", "kannst du deinen Text", "kannst du deinen Text einsprechen", "kannst du deinen Text einsprechen der dann aber trotzdem"].reduce(diktatMerge, []);
+  const kum = ["kannst du", "kannst du deinen Text", "kannst du deinen Text einsprechen", "kannst du deinen Text einsprechen der dann aber trotzdem"].reduce((l, t) => diktatMerge(l, t, true), []);
   assert.equal(kum.join(" "), "kannst du deinen Text einsprechen der dann aber trotzdem", "kumulative Android-Stücke nicht doppelt");
-  assert.equal(["hallo zusammen", "wer kommt morgen"].reduce(diktatMerge, []).join(" "), "hallo zusammen wer kommt morgen", "normale Stücke");
-  assert.equal(["ja", "ja"].reduce(diktatMerge, []).join(" "), "ja ja", "kurze Wiederholung bleibt");
+  assert.equal(["hallo zusammen", "wer kommt morgen"].reduce((l, t) => diktatMerge(l, t, true), []).join(" "), "hallo zusammen wer kommt morgen", "normale Stücke");
+  assert.equal(["ja", "ja"].reduce((l, t) => diktatMerge(l, t), []).join(" "), "ja ja", "kurze Wiederholung zwischen Runden bleibt");
+  const st = ["Hi", "hi", "hi Steven", "hi Steven das ist seine neue", "hi Steven das ist eine neue Funktion"].reduce((l, t) => diktatMerge(l, t, true), []);
+  assert.equal(st.join(" "), "hi Steven das ist eine neue Funktion", "gleiche Runde: Wiederholung und Nachbesserung zusammengeführt");
   assert.ok(/e\.continuous = !DIKTAT_ANDROID;/.test(html) && /for \(let i = 0; i < ev\.results\.length; i\+\+\)/.test(html), "Android Satz für Satz, Runde neu zusammensetzen");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

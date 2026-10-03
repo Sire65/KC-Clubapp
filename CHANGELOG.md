@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.18.4 – 2026-10-03 – Diktat: auch nachgebesserte Wörter ohne Dopplung (Fund Hansi)
+- KC-CLUB-DIKTAT-DOPPELT (Nachtrag): zweites Bild „Hi hi hi hi Steven hi Steven das …“ (noch mit 2.18.2 aufgenommen). Nachgestellt mit
+  2.18.3 blieben zwei Sonderfälle: gleiches kurzes Stück zweimal in derselben Hör-Runde („Hi“, „hi“) und nachgebesserte Wörter
+  („… seine neue“ → „… eine neue Funktion“). diktatMerge kennt jetzt „gleiche Runde“: dort ersetzt ein gleiches Stück das alte, und ein
+  Stück mit gleichem Anfang (mind. die Hälfte der Wörter) gilt als Nachbesserung. Zwischen Runden bleibt es streng („ja ja“ bleibt).
+- Geprüft: Steven-Beispiel → „Hi Steven das ist eine neue Funktion du kannst einfach mal aus“, Android-kumulativ, Desktop, mehrere Runden.
+
 ## 2.18.3 – 2026-10-03 – Diktat: keine Wiederholungen mehr auf Android (Fund Hansi)
 - KC-CLUB-DIKTAT-DOPPELT: Fund (Bild): eingesprochener Text wiederholte sich „kannst du deinen Text kannst du deinen Text einsprechen …“.
   Ursache: Android-Chrome liefert beim Dauer-Zuhören jedes Stück erneut als ganzen bisherigen Satz und zählt neu – die App hängte jedes
