@@ -1,5 +1,10 @@
 # Änderungen
 
+## 1.58.2 – 2026-10-03
+- Fund Hansi: Die Update-Meldung zeigte bei jedem Update wieder den Text von 1.53.6 („🐜 Feld Nächster Termin …“), weil
+  version.json „neu“ beim Hochzählen nicht mitgezogen wurde. Jetzt wieder nur „🔧 Kleine Systemverbesserungen“; neuer
+  Vertragstest: „neu“ muss zum neuesten Eintrag im Verlauf passen.
+
 ## 1.58.1 – 2026-10-03
 - Wunsch Hansi: Schalter „💡 Tipp des Tages“ aus „Das Wichtigste“ (nur einfache Ansicht) in den Kasten „🗣️ Ansagen, Töne &
   Tipps“ umgezogen – jetzt in beiden Ansichten sichtbar.

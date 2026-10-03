@@ -2593,6 +2593,16 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.equal((html.match(/id="setTipps"/g) || []).length, 1, "nur einmal");
 }
 
+// 230. 1.58.2: Update-Meldung passt immer zur aktuellen Version (kein alter Text bei jedem Update)
+{
+  const vj = JSON.parse(lies("version.json"));
+  assert.equal(vj.verlauf[0].version, vj.version, "neuester Verlaufseintrag = aktuelle Version");
+  assert.deepEqual(vj.neu, vj.verlauf[0].neu, "„neu“ (Update-Meldung) = Text der aktuellen Version");
+  const f = html.slice(html.indexOf("function neuigkeitenSeit("), html.indexOf("function neuigkeitenZeigen("));
+  const neuigkeitenSeit = new Function("versionNeuer", `${f}; return neuigkeitenSeit;`)((a, b) => { const x = a.split(".").map(Number), y = b.split(".").map(Number); for (let i = 0; i < 3; i++) if (x[i] !== y[i]) return x[i] > y[i]; return false; });
+  assert.deepEqual(neuigkeitenSeit({ version: "2.0.1", neu: ["ALT"], verlauf: [{ version: "2.0.0", neu: ["x"] }] }, "2.0.0", "2.0.1"), [], "kein Verlaufseintrag im Bereich → kein alter Text");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
