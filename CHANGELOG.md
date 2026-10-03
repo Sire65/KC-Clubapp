@@ -1,5 +1,28 @@
 # Änderungen
 
+## 2.6.1 – 2026-10-03 – Gesamtprüfung 2 (Stand 2.6.0): Funde behoben
+- KC-CLUB-START-BEREIT (Ursache der Meldung „Cannot read properties of null (reading 'person_id')“ bei Hansi nach dem Auto-Update):
+  Kacheln waren vor der Anmeldung (init) antippbar, ICH = null. Bereiche außer Start/SOS warten jetzt auf die Anmeldung
+  („⏳ Einen Moment …“) und öffnen sich dann von selbst. Auch nach Offline-Start.
+- Selbst-Update nur angemeldet, auf der Startseite, ohne Chat/Anruf/Sprunglink; ohne funktionierenden Speicher nie (sonst
+  Schleife/Abmeldung); bleibt die Version nach einem Versuch alt → 6 Std. Pause + Fehlerprotokoll „update_misslungen“.
+- Notbetrieb: Gegenprobe nur, wenn der Notbetrieb eingerichtet ist (sonst sofort weiter, Zähler zurück); Umschalten nur einmal
+  gleichzeitig; Zeitgrenzen für notbetrieb.json/Status; zeitSignal() auch für ältere iPhones (ohne AbortSignal.timeout).
+- Einstellungen, deren Speichern noch läuft, werden von einem gleichzeitig ankommenden init nicht überschrieben (EINST_OFFEN).
+- Einweisung: Texte an die echte Oberfläche angepasst (Start einfache Ansicht ohne Pfeile, Termine ✅/❓/❌ + To-do, Dokumente
+  Pfeil ‹, Lupe unten rechts); nach 3 Tagen ohne „Verstanden“ nicht mehr zeigen (Tipp des Tages wartet sonst ewig); Speichern
+  wird abgewartet, Fehler gemeldet und zurückgesetzt; vorhandene Karte wird nicht neu gebaut.
+- Vorlesen: eigene Ausgabe, Knopf zeigt „⏹ Aufhören“, 44 px, stoppt beim Bereichswechsel/„Keine Einweisungen mehr“.
+- Inkognito: 🕶️ klein vor „Hallo …!“ statt in der vollen Knopfreihe; gilt nur, solange Admin (Entzug → sofort sichtbar,
+  Einstellung gelöscht; Ausschalten darf jeder); verrät den Admin nicht mehr über Zustellhaken, Admin-Zentrale anderer Admins,
+  „aktiv“; Hilfe-Aufruf „an alle online“ erreicht ihn trotzdem.
+- Server: rolle_setzen nur für aktive Mitglieder, Admin-Recht nur bei ausdrücklichem Feld (alte App entzieht nichts),
+  Speicherfehler → Abbruch; neuer Link macht alten sofort ungültig (Aufruf stand versehentlich im Kommentar);
+  „kein Admin seit 10 Tagen“ nur bei sicherem Stand, nur an aktive Clubleitung; adminAnzahl/Nutzung: unbekannt statt 0;
+  Nutzung: höchstens 120 neue Geräte-Kennungen je Tag, Fehler → App schickt später nochmal, Vortag geht nicht verloren.
+- Einfache Ansicht: keine Pfeile › auf dem Rand der drei oberen Kacheln (Wunsch Hansi). Begriffe „⚙️ Mehr → Einstellungen“,
+  📄 Protokolle in der Nutzung, aria-label für 🌙/↻.
+
 ## 2.6.0 – 2026-10-03 – Nutzung: von wie vielen verschiedenen Mitgliedern (ohne Namen, Wunsch Hansi)
 - KC-CLUB-NUTZUNG-PERSONEN: Hansi wollte ein Protokoll je Person; abgelehnt (heimliche Einzelüberwachung, DSGVO/Vertrauen).
   Sein Ziel „sehen, welche Funktionen genutzt werden“ jetzt ohne Namen: je Gerät eine zufällige Kennung (in der App erzeugt,

@@ -659,7 +659,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   const on = server.slice(server.indexOf('case "online": {'), server.indexOf('case "anklopfen": {'));
   assert.ok(/zeigen \? onlineJetzt\(\) : Promise\.resolve\(new Set/.test(on), "Wer sich verbirgt, sieht trotzdem andere");
   // 2.3.0: zusätzlich ohne Inkognito-Admin (KC-CLUB-INKOGNITO)
-  assert.ok(/filter\(\(id: string\) => zeigen\.get\(id\) !== false(\)| && !inko\.has\(id\)\))/.test(server), "Verborgene erscheinen als online");
+  assert.ok(/filter\(\(id: string\) => zeigen\.get\(id\) !== false(\)| && !inko\.has\(id\)\)| && \(mitInkognito \|\| !inko\.has\(id\)\)\)\))/.test(server), "Verborgene erscheinen als online");
   const aw = server.slice(server.indexOf('case "anklopfen_antwort"'), server.indexOf('case "anklopfen_antwort"') + 400);
   assert.ok(/\.eq\("an", ich\.person_id\)/.test(aw), "Fremde könnten ein Anklopfen beantworten");
   const ak = server.slice(server.indexOf('case "anklopfen": {'), server.indexOf('case "anklopfen_antwort"'));
@@ -1915,7 +1915,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   for (const a of ["hilfe_liste", "hilfe_aufruf", "hilfe_antwort", "hilfe_schliessen"]) assert.ok(aktionen.has(a) && aufrufe.has(a), `Hilfe-Aktion ${a} fehlt`);
   const h = server.slice(server.indexOf('case "hilfe_aufruf"'), server.indexOf('case "hilfe_antwort"'));
   assert.ok(/if \(!HILFE_ARTEN\[art\]\) throw/.test(h) && /slotWahl\(p\.slot\)/.test(h), "Auswahl aus Registry, kein Freitext-Typ");
-  assert.ok(/ziel === "online" \? \[\.\.\.await onlineJetzt\(\)\]/.test(h) && /\.filter\(\(id\) => id !== ich\.person_id\)/.test(h), "an alle oder alle gerade online, nie an sich selbst");
+  assert.ok(/ziel === "online" \? \[\.\.\.await onlineJetzt\((true)?\)\]/.test(h) && /\.filter\(\(id\) => id !== ich\.person_id\)/.test(h), "an alle oder alle gerade online, nie an sich selbst");
   assert.ok(/is\("voll_gemeldet_am", null\)/.test(server), "„genug Helfer“ nur einmal");
   const k = html.slice(html.indexOf("const KACHELN = {"), html.indexOf("  mein: ["));
   assert.ok(/\{ id: "helfen", sym: "🤝", t: "Helfen & Leihen", u: "Wer kann helfen\? · Ausleihen", aktion: "hlStart\(\)" \}/.test(k), "Kachel 🤝 im Register Verein");
@@ -3088,8 +3088,8 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(!/self\.addEventListener\("install"[^\n]*skipWaiting/.test(sw), "kein Sofort-Umschalten beim Einrichten (Mischstand)");
   const ja = html.slice(html.indexOf("async function jetztAktualisieren() {"), html.indexOf("function updateRuhig() {"));
   assert.ok(/addEventListener\("controllerchange", neu, \{ once: true \}\)/.test(ja) && /sw\.addEventListener\("statechange"/.test(ja) && !/setTimeout\(\(\) => location\.reload\(\), 400\)/.test(ja), "Update wartet auf Einrichtung + Übernahme");
-  assert.ok(/updatePruefen\(false\)\.then\(updateSelbst\)/.test(html) && /z\.v === NEUE_VERSION && Date\.now\(\) - z\.t < 10 \* 60000/.test(html), "Selbst-Update beim Zurückholen, mit Schleifenschutz");
-  assert.ok(/signal: AbortSignal\.timeout\?\.\(zeitMs\)/.test(html) && /fe\?\.name === "TimeoutError"/.test(html) && /if \(API_LESEN\.test\(action\)\) return apiRoh/.test(html), "Zeitgrenze + nur Lesen wiederholen");
+  assert.ok(/updatePruefen\(false\)\.then\(updateSelbst\)/.test(html) && (/z\.v === NEUE_VERSION && Date\.now\(\) - z\.t < 10 \* 60000/.test(html) || /UPDATE_PAUSE_MS = 10 \* 60000/.test(html) && /nochmal && Date\.now\(\) - z\.t < \(z\.misslungen \? UPDATE_MISSLUNGEN_MS : UPDATE_PAUSE_MS\)/.test(html)), "Selbst-Update beim Zurückholen, mit Schleifenschutz"); // 2.6.1: + 6-Std.-Pause nach misslungenem Versuch
+  assert.ok(/signal: (AbortSignal\.timeout\?\.|zeitSignal)\(zeitMs\)/.test(html) /* 2.6.1: zeitSignal (auch ältere iPhones) */ && /fe\?\.name === "TimeoutError"/.test(html) && /if \(API_LESEN\.test\(action\)\) return apiRoh/.test(html), "Zeitgrenze + nur Lesen wiederholen");
   assert.ok(/if \(NEU_LADEN_LAUF && !vonHand\) return (NEU_LADEN_LAUF;|NEU_LADEN_FOLGE \|\|)/.test(html) /* 2.1.1: mit Folge-Laden */ && /if \(fuer !== chatId\) return;/.test(html) && /clearInterval\(chatTimer\); if \(chatId === offenId/.test(html), "Laden/Chat nicht doppelt");
   assert.ok(/todoAnlegen = nurEinmal\("todoAnlegen", todoAnlegen\)/.test(html) && /erstattungSenden = nurEinmal/.test(html), "Doppeltippen gesperrt");
   assert.ok(/else if \(push\.zustand !== "ok" \|\| email\.zustand !== "ok"\) \{ farbe = "grau"/.test(server) && /ok: r\.status < 400/.test(server) && /if \(teilFehler\) throw new Fehler/.test(server), "unbekannt nie grün");
@@ -3159,7 +3159,7 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/schalter\("roAdmin", "🛡️ Admin \(Vertretung\)"/.test(html) && /ICH\?\.admin && pid !== ICH\.person_id \? schalter\("roAdmin"/.test(html), "Admin-Schalter nur für Admin, nicht für sich selbst");
   assert.ok(/if \(adminSchalter && admin && !m\?\.admin && !\(await frage\(/.test(html) && /kontakte: \$\("roKontakte"\)\.checked, admin, aemter/.test(html), "Rückfrage + senden");
   const rs = server.slice(server.indexOf('case "rolle_setzen": {'), server.indexOf('return json({ ok: true });', server.indexOf('case "rolle_setzen": {')));
-  assert.ok(/nurAdmin\(ich\)/.test(rs) && /pid === ich\.person_id \? null : !!p\.admin/.test(rs) && /"admin_recht_geaendert"/.test(rs), "Server: Admin-Recht protokolliert, nicht für sich selbst");
+  assert.ok(/nurAdmin\(ich\)/.test(rs) && /pid === ich\.person_id( \|\| typeof p\.admin !== "boolean")? \? null : (!!)?p\.admin/.test(rs) && /"admin_recht_geaendert"/.test(rs), "Server: Admin-Recht protokolliert, nicht für sich selbst");
   assert.ok(/admins: await adminAnzahl\(\)/.test(server) && /r\.admins != null && r\.admins < 2/.test(html), "Admin-Zentrale warnt");
   assert.ok(/await adminAbwesendPruefen\(\)\.catch/.test(server) && /eq\("aktion", "admin_abwesend_gemeldet"\)\.gte\("zeit", new Date\(Date\.now\(\) - 7 \* 86400000\)/.test(server), "Hinweis an Clubleitung gedrosselt");
   assert.ok(/\{ id: "vertretung", sym: "🛡️"[^\n]*nur: \(\) => !!ICH\?\.admin \}/.test(html) && /DOKUMENTE\.filter\(\(d\) => !d\.nur \|\| d\.nur\(\)\)/.test(html), "Dokument nur für Admins");
@@ -3169,8 +3169,8 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
 }
 // 286. 2.3.0: Inkognito-Hauptschalter (nur Admin, nicht gegenseitig)
 {
-  assert.ok(/inkognito: \(w\) => \(\{ an: w\?\.an === true \}\)/.test(server) && /schluessel === "inkognito" && !ich\.admin\) throw new Fehler\("Nur für den Admin\.", 403\)/.test(server), "nur Admin darf Inkognito setzen");
-  assert.ok(/zeigen\.get\(id\) !== false && !inko\.has\(id\)/.test(server), "onlineJetzt ohne Inkognito-Admin");
+  assert.ok(/inkognito: \(w\) => \(\{ an: w\?\.an === true \}\)/.test(server) && /schluessel === "inkognito" && !ich\.admin( && \(wert as any\)\.an)?\) throw new Fehler\("Nur für den Admin\.", 403\)/.test(server), "nur Admin darf Inkognito setzen");
+  assert.ok(/zeigen\.get\(id\) !== false && \(mitInkognito \|\| !inko\.has\(id\)\)/.test(server), "onlineJetzt ohne Inkognito-Admin"); // 2.6.1: außer als Empfänger
   assert.ok(/if \(\(await inkognitoSet\(\[wer\.person_id\]\)\)\.has\(wer\.person_id\)\) return;/.test(server), "kein Online-Push bei Inkognito");
   assert.ok(/x\.schluessel === "inkognito" \? !selbst && x\.wert\?\.an === true/.test(server) && /verborgen\(ich\.person_id, true\)/.test(server), "zuletzt da: verbirgt nur den Admin selbst");
   assert.ok(/zeigen\.get\(m\.person_id\) !== false && !inko\.has\(m\.person_id\)/.test(server), "kein „heute da“ bei Inkognito");
@@ -3187,11 +3187,11 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
 {
   assert.ok(/updatePruefen\(false\)\.then\(\(\) => setTimeout\(updateSelbst, 4000\)\);/.test(html), "Selbst-Update beim Start");
   assert.ok(/aktuelleAnsicht === "start" && !chatId\) updatePruefen\(false\)\.then\(updateSelbst\); \}, UPDATE_TAKT_MS\)/.test(html) && /const UPDATE_TAKT_MS = 10 \* 60000;/.test(html), "Selbst-Update im Takt nur auf der Startseite");
-  assert.ok(/if \(!NEUE_VERSION \|\| !updateRuhig\(\)\) return;/.test(html) && /Date\.now\(\) - z\.t < 10 \* 60000\) return;/.test(html), "Schutz bleibt");
+  assert.ok(/if \(!NEUE_VERSION \|\| !updateRuhig\(\)( \|\| !ICH[^)]*\)[^\n]*)?\) return;/.test(html) && (/Date\.now\(\) - z\.t < 10 \* 60000\) return;/.test(html) || /UPDATE_PAUSE_MS = 10 \* 60000/.test(html)), "Schutz bleibt"); // 2.6.1: als Konstante
 }
 // 289. 2.3.3: Gegenprobe vor dem automatischen Notbetrieb
 {
-  assert.ok(/\(await notGegenprobe\(\)\) && \(await notEinschalten\("auto"\)\)/.test(html), "Gegenprobe vor dem Umschalten");
+  assert.ok(/\(await notGegenprobe\(\)\) && \(await notEinschalten(Einmal)?\("auto"\)\)/.test(html), "Gegenprobe vor dem Umschalten");
   const g = html.slice(html.indexOf("function notGegenprobe()"), html.indexOf("async function notEinschalten("));
   assert.ok(/if \(notErnstfall\(\)\) return Promise\.resolve\(true\)/.test(g) && /if \(!navigator\.onLine\) return Promise\.resolve\(false\)/.test(g), "Simulation schaltet, offline nicht");
   assert.ok(/fetch\(API, \{/.test(g) && /action: "ping"/.test(g) && /if \(!weg\) NOT\.fehler = 0;/.test(g) && /notGegenLauf \|\|=/.test(g), "direkte Probe, gemeinsam, Zähler zurück");
@@ -3223,8 +3223,9 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
 // 293. 2.5.0: Vorlesen bei Einweisung und Tipp des Tages (KC-CLUB-VORLESEN-HILFE)
 {
   assert.ok(/<div class="einw-kopf">🎓 Kurz erklärt \$\{VORLESE_KNOPF\}/.test(html) && /<div class="tdt-kopf">💡 Tipp des Tages \$\{VORLESE_KNOPF\}/.test(html), "Knopf in beiden Karten");
-  const f = html.slice(html.indexOf("function vorlesenKarte("), html.indexOf("const VORLESE_KNOPF"));
-  assert.ok(/speechSynthesis\.speaking\) \{ speechSynthesis\.cancel\(\); return; \}/.test(f) && /sprechen\(t\)/.test(f) && !/fetch\(/.test(f), "an/aus, nur Handy-Sprache");
+  const f = html.slice(html.indexOf("let VORLESE = null;"), html.indexOf("const VORLESE_KNOPF"));
+  // 2.6.1: eigene Ausgabe, Knopf wechselt auf „⏹ Aufhören“
+  assert.ok(/if \(VORLESE\?\.knopf === knopf\) return vorlesenStopp\(\);/.test(f) && /speechSynthesis\.speak\(u\)/.test(f) && !/fetch\(/.test(f), "an/aus, nur Handy-Sprache");
 }
 // 294. 2.6.0: Nutzung – verschiedene Mitglieder ohne Namen (KC-CLUB-NUTZUNG-PERSONEN)
 {
@@ -3235,6 +3236,17 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/kc_club_nutzung_geraete"\)\.delete\(\)\.lt\("tag", berlinTag\(new Date\(Date\.now\(\) - 100 \* 86400000\)\)\)/.test(server), "100 Tage Aufbewahrung");
   assert.ok(/crypto\.getRandomValues\(a\)/.test(html) && /localStorage\.getItem\("kc_club_nz_geraet"\)/.test(html) && /geraet: NZ_GERAET, heute/.test(html), "zufällige Geräte-Kennung");
   assert.ok(/class="nz-wer/.test(html) && /🚫 Nie geöffnet in/.test(html), "Anzeige");
+}
+// 295. 2.6.1: Gesamtprüfung 2 – Start-Bereitschaft, Update-Schutz, Notbetrieb, Inkognito dichter
+{
+  assert.ok(/if \(!ICH && !ZEIGE_OHNE_ICH\.has\(v\)\) \{/.test(html) && /if \(ICH\) startBereitLoesen\(\); \/\/ KC-CLUB-START-BEREIT/.test(html) && /offlineStandZeigen\(true\); if \(ICH\) startBereitLoesen\(\);/.test(html), "Bereiche warten auf die Anmeldung");
+  assert.ok(/!ICH \|\| aktuelleAnsicht !== "start" \|\| chatId \|\| RUF/.test(html) && /if \(localStorage\.getItem\("kc_club_auto_update"\) !== neu\) return; \} catch \{ return; \}/.test(html) && /fpNeu\("update_misslungen"/.test(html), "Selbst-Update nur ruhig, mit Speicher, mit Rückzug");
+  assert.ok(/if \(!k\?\.url \|\| k\.modus === "aus"\) \{ NOT\.fehler = 0; return false; \}/.test(html) && /notEinschaltenEinmal\("auto"\)/.test(html) && /function zeitSignal\(ms\)/.test(html) && !/AbortSignal\.timeout\?\./.test(html), "Notbetrieb: Probe nur wenn sinnvoll, einmal, Zeitgrenzen");
+  assert.ok(/ICH = INIT\.ich; einstOffenAnwenden\(\); \/\*[^*]*\*\/ adminNamenSetzen\(\); document\.body\.classList\.toggle\("ist-admin", !!ICH\?\.admin\); inkognitoZeigen\(\);/.test(html) /* nie per //-Kommentar den Rest der Zeile abschneiden */ && /body\.einfach \.kacheln3 \.mini \.mpfeil \{ display: none; \}/.test(html), "Einstellungen gewinnen gegen init; einfache Ansicht ohne Randpfeile");
+  assert.ok(/\.from\("kc_club_rollen"\)\.select\("person_id"\)\.eq\("ist_admin", true\)\.in\("person_id", an\)/.test(server) && /!inkoAndere\.has\(z\.person_id\)/.test(server) && /mzS\.filter/.test(server), "Inkognito nur für Admins, nicht über Haken/Admin-Zentrale");
+  assert.ok(/typeof p\.admin !== "boolean" \? null : p\.admin/.test(server) && /if \(re\) throw new Fehler\("Die Rolle konnte nicht gespeichert werden/.test(server), "Rolle: alte App entzieht nichts, Fehler bricht ab");
+  assert.ok(/<div class="gruss"><button id="inkoKnopf"[^>]*>🕶️<\/button><span id="begruessung">/.test(html), "🕶️ vor dem Gruß, nicht in der vollen Knopfreihe");
+  assert.ok(/\n\s+anmeldungenVergessen\(\); \/\/ KC-CLUB-ANMELDECACHE: alter Link sofort ungültig/.test(server) && /if \(e3 \|\| count === null \|\| count > 0\) return;/.test(server), "Link-Cache, kein Fehlalarm");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

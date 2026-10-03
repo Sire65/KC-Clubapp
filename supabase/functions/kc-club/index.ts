@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "2.6.0";
+const SERVER_VERSION = "2.6.1";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -248,7 +248,11 @@ async function inkognitoSet(ids?: string[]) {
   let q = db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "inkognito");
   if (ids) q = q.in("person_id", ids);
   const { data } = await q;
-  return new Set((data ?? []).filter((x: any) => x.wert?.an === true).map((x: any) => x.person_id as string));
+  const an = (data ?? []).filter((x: any) => x.wert?.an === true).map((x: any) => x.person_id as string);
+  if (!an.length) return new Set<string>();
+  // 2.6.1 (Prüfung): gilt nur, solange die Person Admin ist (nach Entzug der Rechte sofort wieder sichtbar)
+  const { data: ad } = await db.from("kc_club_rollen").select("person_id").eq("ist_admin", true).in("person_id", an);
+  return new Set((ad ?? []).map((x: any) => x.person_id as string));
 }
 // KC-CLUB-STUMM (1.9.0): wer hat diese Unterhaltung gerade stummgeschaltet? („immer“ oder bis Zeitpunkt in der Zukunft)
 const stummJetzt = (wert: any, threadId: string) => { const b = wert?.threads?.[threadId]; return b === "immer" || (typeof b === "string" && Date.parse(b) > Date.now()); };
@@ -363,11 +367,12 @@ async function onlinePushMelden(wer: Ich) {
     betreff: `Köcheclub Werne – ${name} ist online`, text: `${wer.name} ist gerade in der Köcheclub-App.`, url: APP_URL },
     `club-online:${wer.person_id}:${Math.floor(Date.now() / ONLINE_PUSH_PAUSE_MS)}`);
 }
-async function onlineJetzt(): Promise<Set<string>> {
+// 2.6.1: mitInkognito = auch der unsichtbare Admin (z. B. als Empfänger eines Hilfe-Aufrufs „an alle online“ – nur sichtbar ist er nicht)
+async function onlineJetzt(mitInkognito = false): Promise<Set<string>> {
   const seit = new Date(Date.now() - ONLINE_SEK * 1000).toISOString();
   const { data } = await db.from("kc_club_zugang").select("person_id").eq("aktiv", true).gte("zuletzt_gesehen", seit).not("person_id", "like", "KC-P-TEST%");
   const ids = (data ?? []).map((x: any) => x.person_id), [zeigen, inko] = await Promise.all([onlineZeigenMap(ids), inkognitoSet(ids)]);
-  return new Set(ids.filter((id: string) => zeigen.get(id) !== false && !inko.has(id)));
+  return new Set(ids.filter((id: string) => zeigen.get(id) !== false && (mitInkognito || !inko.has(id))));
 }
 
 // ---------- KC-CLUB-ANRUF (0.31.0, Test): Sprechen per Ton, App zu App (WebRTC) ----------
@@ -1149,9 +1154,19 @@ async function adminSpiegel() {
 // KC-CLUB-VERTRETUNG (2.2.0, Konzept „Hansi ist der einzige Schlüssel“): Zahl der aktiven Admins + Warnung an die Clubleitung,
 // wenn länger kein Admin in der App war (Hinweis auf Notfall-Umschlag und Betriebsanleitung) – höchstens 1× je 7 Tage
 const ADMIN_ABWESEND_TAGE = 10;
-async function adminAnzahl(): Promise<number> {
-  const [{ data: ro }, aktiv] = await Promise.all([db.from("kc_club_rollen").select("person_id").eq("ist_admin", true).not("person_id", "like", "KC-P-TEST%"), aktiveMitglieder()]);
+async function adminAnzahl(): Promise<number | null> {
+  const [{ data: ro, error }, aktiv] = await Promise.all([db.from("kc_club_rollen").select("person_id").eq("ist_admin", true).not("person_id", "like", "KC-P-TEST%"), aktiveMitglieder()]);
+  if (error) return null; // 2.6.1: unbekannt statt „0 Admins“
   const ids = new Set(aktiv.map((m) => m.person_id)); return (ro ?? []).filter((r: any) => ids.has(r.person_id)).length;
+}
+// KC-CLUB-NUTZUNG-PERSONEN (2.6.1, Prüfung): höchstens NZ_GERAETE_JE_TAG verschiedene Kennungen je Tag annehmen (flüchtig im
+// Speicher dieser Server-Instanz, ohne Personenbezug) – sonst könnte ein Skript die Zahl beliebig aufblähen
+const NZ_GERAETE_JE_TAG = 120;
+let nzGeraeteMerk = { tag: "", g: new Set<string>() };
+function nzGeraetErlaubt(geraet: string) {
+  const tag = berlinTag(new Date()); if (nzGeraeteMerk.tag !== tag) nzGeraeteMerk = { tag, g: new Set<string>() };
+  if (!nzGeraeteMerk.g.has(geraet) && nzGeraeteMerk.g.size >= NZ_GERAETE_JE_TAG) return false;
+  nzGeraeteMerk.g.add(geraet); return true;
 }
 // KC-CLUB-EINWEISUNG (2.4.0): für die Admin-Zentrale – nur Zahlen, keine Namen (wie die Nutzungsstatistik)
 async function einweisungZahlen() {
@@ -1161,15 +1176,20 @@ async function einweisungZahlen() {
   return { personen: (data ?? []).filter((x: any) => Object.keys(x.wert?.gesehen ?? {}).length).length, aus: (data ?? []).filter((x: any) => x.wert?.an === false).length, bereiche };
 }
 async function adminAbwesendPruefen() {
-  const { data: ad } = await db.from("kc_club_rollen").select("person_id").eq("ist_admin", true).not("person_id", "like", "KC-P-TEST%");
+  // 2.6.1 (Prüfung, Regel 11): jede gescheiterte Abfrage = Stand unbekannt → keine Meldung (kein Fehlalarm)
+  const { data: ad, error: e1 } = await db.from("kc_club_rollen").select("person_id").eq("ist_admin", true).not("person_id", "like", "KC-P-TEST%");
+  if (e1) return;
   const ids = (ad ?? []).map((x: any) => x.person_id); if (!ids.length) return;
-  const { data: zg } = await db.from("kc_club_zugang").select("zuletzt_gesehen").in("person_id", ids).not("zuletzt_gesehen", "is", null).order("zuletzt_gesehen", { ascending: false }).limit(1);
+  const { data: zg, error: e2 } = await db.from("kc_club_zugang").select("zuletzt_gesehen").in("person_id", ids).not("zuletzt_gesehen", "is", null).order("zuletzt_gesehen", { ascending: false }).limit(1);
+  if (e2) return;
   const zuletzt = zg?.[0]?.zuletzt_gesehen ? Date.parse(zg[0].zuletzt_gesehen) : 0;
   if (Date.now() - zuletzt < ADMIN_ABWESEND_TAGE * 86400000) return;
-  const { count } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("aktion", "admin_abwesend_gemeldet").gte("zeit", new Date(Date.now() - 7 * 86400000).toISOString());
-  if ((count ?? 0) > 0) return;
-  const { data: lt } = await db.from("kc_club_rollen").select("person_id,aemter,ist_vorstand,ist_admin");
-  const leitung = (lt ?? []).filter((r: any) => !r.ist_admin && (r.ist_vorstand || (r.aemter ?? []).includes("Clubsprecher"))).map((r: any) => r.person_id);
+  const { count, error: e3 } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("aktion", "admin_abwesend_gemeldet").gte("zeit", new Date(Date.now() - 7 * 86400000).toISOString());
+  if (e3 || count === null || count > 0) return;
+  const [{ data: lt, error: e4 }, aktiv] = await Promise.all([db.from("kc_club_rollen").select("person_id,aemter,ist_vorstand,ist_admin"), aktiveMitglieder()]);
+  if (e4) return;
+  const aktivIds = new Set(aktiv.map((m) => m.person_id)); // 2.6.1: nur aktive Mitglieder, keine Testpersonen
+  const leitung = (lt ?? []).filter((r: any) => !r.ist_admin && aktivIds.has(r.person_id) && !String(r.person_id).startsWith("KC-P-TEST") && (r.ist_vorstand || (r.aemter ?? []).includes("Clubsprecher"))).map((r: any) => r.person_id);
   if (!leitung.length) return;
   const name = await adminVorname();
   await protokoll(null, "admin_abwesend_gemeldet", { tage: ADMIN_ABWESEND_TAGE, leitung: leitung.length });
@@ -2567,7 +2587,7 @@ Deno.serve(async (req) => {
       await postausgangLauf().catch((e) => console.error("postausgang", String(e))); // KC-CLUB-POSTAUSGANG (1.69.1)
       await adminAbwesendPruefen().catch((e) => console.error("admin abwesend", String(e))); // KC-CLUB-VERTRETUNG (2.2.0)
       // KC-CLUB-NUTZUNG-PERSONEN (2.6.0): Geräte-Kennungen nur 100 Tage aufbewahren
-      await db.from("kc_club_nutzung_geraete").delete().lt("tag", berlinTag(new Date(Date.now() - 100 * 86400000))).then(() => {}, () => {});
+      { const { error } = await db.from("kc_club_nutzung_geraete").delete().lt("tag", berlinTag(new Date(Date.now() - 100 * 86400000))); if (error) console.error("nutzung geraete loeschen", error.message); }
       // Abstimmungen mit abgelaufener Frist beenden (Ergebnis geht an alle)
       const { data: abgelaufen } = await db.from("kc_club_vorschlaege").select("*").eq("status", "offen").lt("frist", jetzt());
       let beendet = 0;
@@ -3095,8 +3115,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             heute: ichZeige && ((zeigen.get(m.person_id) !== false && !inko.has(m.person_id)) || m.person_id === ich.person_id) && !!(z.get(m.person_id) as any)?.zuletzt_gesehen && tag((z.get(m.person_id) as any).zuletzt_gesehen) === heute,
             wege: { push: ps.has(m.person_id), mail: !!m.email, whatsapp: hatTel.has(m.person_id) && (ich.admin || m.person_id === ich.person_id || (ich.kontakte && handyFrei.has(m.person_id))) },
             // für alle nur grob: in den letzten 14 Tagen in der App gewesen (genaue Zeit nur für den Admin)
-            aktiv: !!(z.get(m.person_id) as any)?.zuletzt_gesehen && Date.now() - new Date((z.get(m.person_id) as any).zuletzt_gesehen).getTime() < 14 * 86400000,
-            ...(ich.admin ? { kontakte: (r.get(m.person_id) as any)?.kontakte_sehen !== false, protokolle: (r.get(m.person_id) as any)?.protokolle_lesen !== false, app: !!(z.get(m.person_id) as any)?.aktiv, zuletzt: (z.get(m.person_id) as any)?.zuletzt_gesehen ?? null, push: ps.has(m.person_id), mail: !!m.email, fehler: fehler.get(m.person_id) ?? null,
+            aktiv: !(inko.has(m.person_id) && m.person_id !== ich.person_id) && !!(z.get(m.person_id) as any)?.zuletzt_gesehen && Date.now() - new Date((z.get(m.person_id) as any).zuletzt_gesehen).getTime() < 14 * 86400000,
+            ...(ich.admin ? { kontakte: (r.get(m.person_id) as any)?.kontakte_sehen !== false, protokolle: (r.get(m.person_id) as any)?.protokolle_lesen !== false, app: !!(z.get(m.person_id) as any)?.aktiv, zuletzt: inko.has(m.person_id) && m.person_id !== ich.person_id ? null : (z.get(m.person_id) as any)?.zuletzt_gesehen ?? null, push: ps.has(m.person_id), mail: !!m.email, fehler: fehler.get(m.person_id) ?? null,
               unerreichbar: !ps.has(m.person_id) && !m.email, /* kein Push, keine E-Mail: Hinweis statt roter Kreis */ ansicht: ansicht.get(m.person_id) ?? null } : {}),
           })),
         });
@@ -4173,7 +4193,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const { data: h, error } = await db.from("kc_club_hilfe_aufrufe").insert({ von: ich.person_id, art, datum, slot, anzahl, ort: txt(p.ort, 80) || null,
           notiz: txt(p.notiz, HILFE_NOTIZ_ZEICHEN) || null, ziel, nach_absprache: absprache }).select().single();
         if (error || !h) throw new Fehler("Aufruf konnte nicht gespeichert werden.", 500);
-        const empf = (ziel === "online" ? [...await onlineJetzt()] : (await aktiveMitglieder()).map((m) => m.person_id)).filter((id) => id !== ich.person_id);
+        const empf = (ziel === "online" ? [...await onlineJetzt(true)] : (await aktiveMitglieder()).map((m) => m.person_id)).filter((id) => id !== ich.person_id);
         const was = HILFE_ARTEN[art], wann2 = hilfeWann(h);
         const vars = {
           titel: `🙋 Wer kann helfen? ${was}`, kurz: `${ich.name} sucht ${anzahl ? anzahl + " " : ""}Helfer · ${wann2}${h.ort ? " · " + h.ort : ""}`,
@@ -4613,7 +4633,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         }
         const { data: zgAndere } = eigeneIds.length && andere.length ? await db.from("kc_club_zugang").select("person_id,zuletzt_gesehen").in("person_id", andere.map((x: any) => x.person_id)).not("zuletzt_gesehen", "is", null) : { data: [] as any[] };
         const zuletztDa = new Map<string, string>();
-        for (const z of zgAndere ?? []) if (!zuletztDa.has(z.person_id) || String(z.zuletzt_gesehen) > String(zuletztDa.get(z.person_id))) zuletztDa.set(z.person_id, String(z.zuletzt_gesehen));
+        // 2.6.1 (Prüfung): Inkognito-Admin nicht über den Haken verraten – bei ihm zählen nur Push-Rückmeldung und Lesen
+        const inkoAndere = (zgAndere ?? []).length ? await inkognitoSet((zgAndere ?? []).map((z: any) => z.person_id)) : new Set<string>();
+        for (const z of zgAndere ?? []) if (!inkoAndere.has(z.person_id) && (!zuletztDa.has(z.person_id) || String(z.zuletzt_gesehen) > String(zuletztDa.get(z.person_id)))) zuletztDa.set(z.person_id, String(z.zuletzt_gesehen));
         const angekommenBei = (m: any) => andere.filter((x: any) => (x.last_read_at && x.last_read_at >= m.created_at) || pushDa.get(m.id)?.has(x.person_id) || (zuletztDa.get(x.person_id) ?? "") >= m.created_at).length;
         const zustellung = (mid: string) => {
           const a = (auftr ?? []).filter((x: any) => String(x.correlation_id).startsWith(`club-nachricht:${mid}`));
@@ -4896,9 +4918,10 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // KC-CLUB-NUTZUNG-PERSONEN (2.6.0): zufällige Geräte-Kennung (aus der App, mit keiner Person verknüpft) je Tag + Bereich –
         // nur um „von wie vielen verschiedenen“ zu zählen. Die Person (ich) wird hier bewusst NICHT gespeichert.
         const geraet = String(p.geraet || ""), heute = (Array.isArray(p.heute) ? p.heute : []).map(String).filter((b: string) => NUTZUNG_BEREICHE.has(b)).slice(0, 40);
-        if (/^[a-z0-9]{16,40}$/.test(geraet) && heute.length) {
+        if (/^[a-z0-9]{16,40}$/.test(geraet) && heute.length && nzGeraetErlaubt(geraet)) {
           const tag = berlinTag(new Date());
-          await db.from("kc_club_nutzung_geraete").upsert([...new Set(heute)].map((bereich) => ({ tag, bereich, geraet })), { onConflict: "tag,bereich,geraet", ignoreDuplicates: true });
+          const { error } = await db.from("kc_club_nutzung_geraete").upsert([...new Set(heute)].map((bereich) => ({ tag, bereich, geraet })), { onConflict: "tag,bereich,geraet", ignoreDuplicates: true });
+          if (error) return json({ ok: true, heuteOk: false }); // 2.6.1: Zähler sind gespeichert; nur die Bereiche schickt die App später nochmal
         }
         return json({ ok: true });
       }
@@ -4906,10 +4929,11 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         nurAdmin(ich);
         const tage = Math.min(90, Math.max(1, Math.round(Number(p.tage) || 7)));
         const von = berlinTag(new Date(Date.now() - (tage - 1) * 86400000));
-        const [{ data }, { data: gz }] = await Promise.all([db.from("kc_club_nutzung").select("tag,bereich,anzahl").gte("tag", von).order("tag"),
+        const [{ data, error: fz }, { data: gz, error: fg }] = await Promise.all([db.from("kc_club_nutzung").select("tag,bereich,anzahl").gte("tag", von).order("tag"),
           db.rpc("kc_club_nutzung_geraete_zahlen", { p_von: von })]); // KC-CLUB-NUTZUNG-PERSONEN (2.6.0): nur Zahlen
-        const geraete = Object.fromEntries((gz ?? []).filter((x: any) => x.bereich !== "*").map((x: any) => [x.bereich, x.geraete]));
-        return json({ tage, von, zeilen: data ?? [], geraete, geraeteGesamt: (gz ?? []).find((x: any) => x.bereich === "*")?.geraete ?? 0, mitglieder: (await aktiveMitglieder()).length });
+        if (fz) throw new Fehler("Die Nutzung ist gerade nicht abrufbar – bitte gleich noch einmal versuchen.", 503);
+        const geraete = fg ? {} : Object.fromEntries((gz ?? []).filter((x: any) => x.bereich !== "*").map((x: any) => [x.bereich, x.geraete]));
+        return json({ tage, von, zeilen: data ?? [], geraete, geraeteGesamt: fg ? null : (gz ?? []).find((x: any) => x.bereich === "*")?.geraete ?? 0, mitglieder: (await aktiveMitglieder()).length });
       }
 
       // ----- KC-CLUB-REAKTION (0.97.0): je Person eine Reaktion je Nachricht; gleiche nochmal = weg; Autor bekommt Bescheid -----
@@ -7086,6 +7110,8 @@ Köcheclub-App`,
         const spiegel = await adminSpiegel().catch((e) => { console.error("adminSpiegel", String(e)); return null; });
         const namen = new Map(leute.map((x) => [x.person_id, x.display_name])), aktivIds = new Set(leute.map((x) => x.person_id));
         const mz = (zug ?? []).filter((x: any) => x.aktiv && aktivIds.has(x.person_id));
+        // 2.6.1 (Prüfung): ein anderer Inkognito-Admin erscheint hier weder als online noch in „zuletzt da“
+        const inkoL = await inkognitoSet(), mzS = mz.filter((x: any) => x.person_id === ich.person_id || !inkoL.has(x.person_id));
         const alter = (x: any) => (x.zuletzt_gesehen ? Date.now() - new Date(x.zuletzt_gesehen).getTime() : Infinity);
         const pushIds = new Set((push ?? []).map((x: any) => x.person_id));
         return json({
@@ -7096,9 +7122,9 @@ Köcheclub-App`,
           communicator: { farbe: comm.farbe, text: comm.text, erreichbar: comm.erreichbar, push: comm.push.zustand, email: comm.email.zustand, club: comm.club, bericht: comm.bericht },
           mitglieder: {
             gesamt: leute.length, mitZugang: mz.length, ohneZugang: leute.length - mz.length, nieAngemeldet: mz.filter((x: any) => !x.zuletzt_gesehen).length,
-            online: mz.filter((x: any) => alter(x) < ONLINE_SEK * 1000).length, heute: mz.filter((x: any) => alter(x) < 86400000).length, woche: mz.filter((x: any) => alter(x) < 7 * 86400000).length,
+            online: mzS.filter((x: any) => alter(x) < ONLINE_SEK * 1000).length, heute: mz.filter((x: any) => alter(x) < 86400000).length, woche: mz.filter((x: any) => alter(x) < 7 * 86400000).length,
             pushAbos: leute.filter((x) => pushIds.has(x.person_id)).length, alteVersion: mz.filter((x: any) => x.zuletzt_gesehen && x.app_version && x.app_version !== SERVER_VERSION).length,
-            zuletzt: mz.filter((x: any) => x.zuletzt_gesehen).sort((a: any, b: any) => alter(a) - alter(b)).slice(0, 8)
+            zuletzt: mzS.filter((x: any) => x.zuletzt_gesehen).sort((a: any, b: any) => alter(a) - alter(b)).slice(0, 8)
               .map((x: any) => ({ name: namen.get(x.person_id) ?? x.person_id, zuletzt: x.zuletzt_gesehen, version: x.app_version ?? null, online: alter(x) < ONLINE_SEK * 1000 })),
           },
           programme: ADMIN_PROGRAMME.map((x, i) => { const h = (hb ?? []).find((y: any) => y.program_id === x.id);
@@ -7133,8 +7159,8 @@ Köcheclub-App`,
         const schluessel = String(p.schluessel || "");
         const pruefen = EINSTELLUNGEN[schluessel];
         if (!pruefen) throw new Fehler("Unbekannte Einstellung.");
-        if (schluessel === "inkognito" && !ich.admin) throw new Fehler("Nur für den Admin.", 403);
         const wert = pruefen(p.wert);
+        if (schluessel === "inkognito" && !ich.admin && (wert as any).an) throw new Fehler("Nur für den Admin.", 403); // 2.6.1: Ausschalten darf jeder
         const { error } = await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel, wert, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
         if (error) throw new Fehler("Einstellung konnte nicht gespeichert werden.", 500);
         if (schluessel === "inkognito") await protokoll(ich.person_id, "inkognito_geaendert", { an: (wert as any).an });
@@ -7232,7 +7258,8 @@ Köcheclub-App`,
         if (!pe?.active) throw new Fehler("Mitglied nicht gefunden.", 404);
         const token = zufall();
         const { error: zf } = await db.from("kc_club_zugang").upsert({ person_id: pid, token_hash: await sha256(token), aktiv: true, erstellt_am: jetzt(), erstellt_von: ich.person_id, neu_token_hash: null, neu_bis: null });
-        if (zf) throw new Fehler("Der Link konnte nicht gespeichert werden – bitte gleich noch einmal versuchen.", 500); // 2.1.1 anmeldungenVergessen(); // KC-CLUB-ANMELDECACHE: Änderung sofort wirksam
+        if (zf) throw new Fehler("Der Link konnte nicht gespeichert werden – bitte gleich noch einmal versuchen.", 500); // 2.1.1
+        anmeldungenVergessen(); // KC-CLUB-ANMELDECACHE: alter Link sofort ungültig (2.6.1: stand vorher versehentlich im Kommentar)
         await protokoll(ich.person_id, "link_erzeugt", { fuer: pid });
         return json({ ok: true, link: `${APP_URL}?k=${token}` });
       }
@@ -7271,10 +7298,16 @@ Köcheclub-App`,
         const pid = String(p.person_id || "");
         const aemter = (Array.isArray(p.aemter) ? p.aemter : []).map((x: unknown) => txt(x, 40)).filter(Boolean).slice(0, 5);
         // KC-CLUB-VERTRETUNG (2.2.0): Admin-Recht für andere ist ab jetzt im Fenster schaltbar – Änderung wird protokolliert und gemeldet
+        // 2.6.1 (Prüfung): nur aktive Mitglieder; Admin-Recht nur ändern, wenn der Client es ausdrücklich schickt (alte App-Versionen
+        // schicken kein „admin“ → Recht bleibt, wie es ist); Speicherfehler → Abbruch, keine Meldung/Protokoll
+        const { data: pe } = await db.from("kc_core_people").select("active").eq("person_id", pid).maybeSingle();
+        if (!pe?.active) throw new Fehler("Mitglied nicht gefunden.", 404);
         const { data: vorher } = await db.from("kc_club_rollen").select("ist_admin").eq("person_id", pid).maybeSingle();
-        const adminNeu = pid === ich.person_id ? null : !!p.admin, adminAlt = !!vorher?.ist_admin;
-        await db.from("kc_club_rollen").upsert({ person_id: pid, ist_vorstand: !!p.vorstand, ...(pid === ich.person_id ? {} : { ist_admin: !!p.admin }), aemter,
+        const adminAlt = !!vorher?.ist_admin, adminNeu = pid === ich.person_id || typeof p.admin !== "boolean" ? null : p.admin;
+        const { error: re } = await db.from("kc_club_rollen").upsert({ person_id: pid, ist_vorstand: !!p.vorstand, ...(adminNeu === null ? {} : { ist_admin: adminNeu }), aemter,
           ...(typeof p.protokolle === "boolean" ? { protokolle_lesen: p.protokolle } : {}), ...(typeof p.kontakte === "boolean" ? { kontakte_sehen: p.kontakte } : {}), geaendert_am: jetzt() });
+        if (re) throw new Fehler("Die Rolle konnte nicht gespeichert werden – bitte gleich noch einmal versuchen.", 500);
+        if (adminNeu === false && adminAlt) await db.from("kc_club_person_einstellung").delete().eq("person_id", pid).eq("schluessel", "inkognito"); // KC-CLUB-INKOGNITO
         anmeldungenVergessen(); // KC-CLUB-ANMELDECACHE: neue Rolle sofort wirksam
         await protokoll(ich.person_id, "rolle_gesetzt", { fuer: pid, vorstand: !!p.vorstand, aemter, protokolle: p.protokolle ?? null, admin: adminNeu });
         if (adminNeu !== null && adminNeu !== adminAlt) {
