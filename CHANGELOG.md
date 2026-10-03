@@ -1,5 +1,10 @@
 # Änderungen
 
+## 1.69.3 – 2026-10-03
+- Dienstwunsch-Bestätigung (Wortlaut Hansi): „Vielen Dank für die Übermittlung deiner Dienstzeiten für den Weihnachtsmarkt Werne 2026.
+  Bitte beachte, dass es sich um deine Wünsche handelt – eine Abstimmung mit allen Clubmitgliedern erfolgt noch.“ – in App-Nachricht/
+  E-Mail, auf der A4-Aufstellung (umrandet oben) und in der Archiv-Datei; eine Stelle (DW_HINWEIS) für alle drei.
+
 ## 1.69.2 – 2026-10-03
 - KC-CLUB-EINGABEN-ARCHIV (Wunsch Hansi: Stevens Unterlagen in seinen Ordner, passendes Register): Aufstellungen (Erstattungsantrag →
   Register „Rechnungen“, Dienstwünsche → Register „Dienstplan“, wird bei Bedarf vor „Sonstiges“ ergänzt) als Textdatei in den

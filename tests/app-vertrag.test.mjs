@@ -2822,6 +2822,12 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/check \(art in \('erstattung_bestaetigung', 'archiv_ablage'\)\)/.test(lies("supabase/migrations/20261003_kc_club_v1692_postausgang_archiv.sql")), "Postausgang-Art");
 }
 
+// 248. 1.69.3: Hinweis „deine Wünsche – Abstimmung erfolgt noch“ in Bestätigung, Aufstellung und Archiv
+{
+  assert.ok(/const DW_HINWEIS = \(name: string\) => `Vielen Dank für die Übermittlung deiner Dienstzeiten für den \$\{name\}\. Bitte beachte, dass es sich um deine Wünsche handelt – eine Abstimmung mit allen Clubmitgliedern erfolgt noch\.`;/.test(server), "Wortlaut");
+  assert.ok(/hinweis: DW_HINWEIS\(DW\.name\)/.test(server) && /\$\{a\.hinweis\}\\n\\nDeine Dienstwünsche/.test(server) && /\$\{auf\.hinweis\}/.test(server) && /\$\{b\.hinweis \?/.test(html), "an allen drei Stellen");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

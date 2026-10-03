@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.69.2";
+const SERVER_VERSION = "1.69.3";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -591,7 +591,7 @@ async function eingabenArchivieren(besitzer: Ich, teile: string[], von: string) 
     } else if (art === "dienstwunsch") {
       const auf = await dienstwunschAufstellung(besitzer); if (!auf.tage.length) continue;
       docs.push({ art, titel: `Dienstwünsche ${DW.name} (Stand ${auf.stand})`, datum: berlinTag(new Date()), name: `Dienstwuensche-${DW.veranstaltung}.txt`, stichworte: "Dienstwunsch, Dienstplan",
-        text: `Köcheclub-App – Meine Dienstwünsche\n${DW.name} · ${besitzer.name} · Stand ${auf.stand}\n────────────────────\n\n${auf.tage.map((t: any) => `${t.tag}\n${t.zeilen.map((z: string) => "   " + z).join("\n")}`).join("\n\n")}\n` });
+        text: `Köcheclub-App – Meine Dienstwünsche\n${DW.name} · ${besitzer.name} · Stand ${auf.stand}\n────────────────────\n${auf.hinweis}\n\n${auf.tage.map((t: any) => `${t.tag}\n${t.zeilen.map((z: string) => "   " + z).join("\n")}`).join("\n\n")}\n` });
     }
   }
   if (!docs.length) return { abgelegt: 0 };
@@ -1042,6 +1042,8 @@ const ADMIN_DB_GRENZE = 500 * 1024 * 1024;
 const DW = { vertrag: "KC_DP_WISH_INBOX_V1", projekt: "KC_DP", veranstaltung: "KC-WM-2026", name: "Weihnachtsmarkt Werne 2026",
   typen: ["available", "preferred", "if_needed", "unavailable"], zonen: ["V", "H", "B", "Z"], maxEintraege: 400 };
 // KC-CLUB-BESTAETIGUNG (1.69.0): eigene Dienstwünsche lesbar aufbereitet – je Tag „Kann / Am liebsten / Wenn nötig / Kann nicht / Bereitschaft“
+// Wortlaut Hansi (1.69.3): steht in Bestätigung, Aufstellung und Archiv-Datei – eine Stelle für alle
+const DW_HINWEIS = (name: string) => `Vielen Dank für die Übermittlung deiner Dienstzeiten für den ${name}. Bitte beachte, dass es sich um deine Wünsche handelt – eine Abstimmung mit allen Clubmitgliedern erfolgt noch.`;
 const DW_ART: Record<string, string> = { available: "Kann", preferred: "Am liebsten", if_needed: "Wenn nötig", unavailable: "Kann nicht" };
 const DW_ZONE: Record<string, string> = { V: "Bereich V", H: "Bereich H", B: "Bereich B", Z: "Bereich Z" };
 async function dienstwunschAufstellung(ich: Ich) {
@@ -1065,7 +1067,7 @@ async function dienstwunschAufstellung(ich: Ich) {
       bereitschaft: bs };
   });
   const stand = m?.submitted_at ? new Intl.DateTimeFormat("de-DE", { timeZone: TZ, day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(m.submitted_at)) + " Uhr" : "–";
-  return { veranstaltung: DW.name, name: ich.name, stand, revision: m?.revision ?? 0, status: m?.status ?? null, uebernommen: !!m?.taken_at, freigabe: !!m?.share_with_colleagues, tage };
+  return { veranstaltung: DW.name, hinweis: DW_HINWEIS(DW.name), name: ich.name, stand, revision: m?.revision ?? 0, status: m?.status ?? null, uebernommen: !!m?.taken_at, freigabe: !!m?.share_with_colleagues, tage };
 }
 const NEON_GRENZE = 512 * 1024 * 1024; // Neon kostenlos: 0,5 GB Speicher je Projekt
 // Neon-Spiegel und Backup (0.48.0): liest nur die Protokolle des KC-Spiegels (kc_db_mirror_*, kc_neon_compute_policy) – steuert nichts
@@ -4047,7 +4049,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (count) throw new Fehler("Die Bestätigung ist gerade erst verschickt worden – bitte kurz warten.", 429);
         const zeilen = a.tage.map((t: any) => `${t.tag}:\n${t.zeilen.map((z: string) => "   " + z).join("\n")}`).join("\n\n");
         const url = `${APP_URL}#bestaetigung=dienstwunsch`;
-        const text = `Hallo ${ich.vorname},\n\ndeine Dienstwünsche für „${DW.name}“ sind gespeichert (Stand ${a.stand}):\n\n${zeilen}\n\n────────────\n${a.tage.length} Tag${a.tage.length === 1 ? "" : "e"} · ${a.freigabe ? "Kollegen dürfen deine Zeiten sehen" : "nur für die Planung sichtbar"}\n\nDie Aufstellung zum Ansehen, Drucken oder als PDF:\n${url}\n\nÄnderungen sind jederzeit möglich, solange die Wunschphase läuft.\n\nViele Grüße\nKöcheclub-App`;
+        const text = `Hallo ${ich.vorname},\n\n${a.hinweis}\n\nDeine Dienstwünsche (Stand ${a.stand}):\n\n${zeilen}\n\n────────────\n${a.tage.length} Tag${a.tage.length === 1 ? "" : "e"} · ${a.freigabe ? "Kollegen dürfen deine Zeiten sehen" : "nur für die Planung sichtbar"}\n\nDie Aufstellung zum Ansehen, Drucken oder als PDF:\n${url}\n\nÄnderungen sind jederzeit möglich, solange die Wunschphase läuft.\n\nViele Grüße\nKöcheclub-App`;
         const versand = await routerSenden("club_nachricht_beide", [ich.person_id], {
           titel: "✅ Deine Dienstwünsche sind gespeichert", kurz: `${a.tage.length} Tage · Stand ${a.stand} – 📄 Aufstellung öffnen`,
           betreff: `Köcheclub Werne – Bestätigung deiner Dienstwünsche (${DW.name})`, text, url,
