@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.17.3 – 2026-10-03 – App startet wieder auf älteren Browsern (Fund Hansi: „App startet nicht bei einem Mitglied“)
+- KC-CLUB-ALTGERAETE: Protokoll (anonym, 21:02 UTC): „SyntaxError: Unexpected token '='“, Zeile 6240, „App-Programm ist gar nicht
+  angelaufen“ – Gerät meldet sich als Chrome 116/Linux, kann aber keine logischen Zuweisungen (||=, ES2021). Ein einziger solcher
+  Ausdruck lässt das ganze App-Programm nicht starten. Ersetzt: 5× ||= und 4× ??= (gleiches Verhalten), .at(-1) → slice(-1)[0],
+  structuredClone → JSON-Kopie. Der App-Code ist jetzt geprüft gültig nach ES2020 (acorn) – neuer Vertragstest verbietet ||= ??= &&=,
+  .at(), structuredClone und Zahlen mit „_“ im App-Code dauerhaft.
+- Hinweis: chess.js (Fremdbibliothek, unverändert) braucht neuere Browser – wird nur beim Öffnen von Schach geladen, die App startet
+  davon unabhängig. Der Service Worker lädt die Startseite online immer frisch – das Gerät bekommt die Reparatur beim nächsten Öffnen.
+
 ## 2.17.2 – 2026-10-03 – Küchenterror: Tipp zählt sofort (Fund Hansi „ich kann oft die Antworten nicht antippen“)
 - KC-CLUB-KUECHENTERROR-TIPP: Hansis Handy (Android/Chrome) lief beim Fund noch auf 2.17.0 (ohne die Freistellung aus 2.17.1).
   Zusätzlich: Android wertet einen Tipp nicht als „Klick“, wenn der Finger dabei leicht verrutscht – unter Zeitdruck häufig. Jetzt zählt
