@@ -2662,6 +2662,22 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/if \(vorher === "dokansicht" && v !== "dokansicht"\) dokAufraeumen\(\);/.test(html) && /h\.startsWith\("#dokument="\)/.test(html) && /s\.v === "dokansicht" && s\.id/.test(html), "Zurück/Link/Speicher freigeben fehlt");
 }
 
+// 235. 1.63.0: Fotoalben (Auswahl, Name, privat/alle, Archiv-Regal)
+{
+  const mig = fs.readFileSync(new URL("../supabase/migrations/20261003_kc_club_v1630_foto_alben.sql", import.meta.url), "utf8");
+  assert.ok(/create table if not exists kc_club_foto_alben/.test(mig) && /sichtbar in \('privat', 'alle'\)/.test(mig) && /foto_id uuid not null references kc_club_fotos\(id\) on delete cascade/.test(mig) && /enable row level security/.test(mig), "Migration Alben fehlt");
+  for (const a of ["foto_album_speichern", "foto_album_fotos", "foto_album_loeschen", "foto_alben_papierkorb", "foto_album_wiederherstellen"]) assert.ok(server.includes(`case "${a}"`), "Server-Aktion fehlt: " + a);
+  assert.ok(/const darfAlbumSehen = \(ich: Ich, a: any\) => !a\.geloescht_am && \(a\.besitzer === ich\.person_id \|\| a\.sichtbar === "alle"\)/.test(server), "privat nur für Besitzer");
+  assert.ok(/const darfAlbumAendern = \(ich: Ich, a: any\) => a\.besitzer === ich\.person_id \|\| \(a\.sichtbar === "alle" && ich\.vorstand\)/.test(server), "Ändern nur Besitzer/Clubleitung");
+  assert.ok(/a\.besitzer !== ich\.person_id && sichtbar !== a\.sichtbar/.test(server), "Sichtbarkeit nur der Besitzer");
+  assert.ok(/const album = p\.album_id \? await albumHolen\(ich, p\.album_id\) : null;/.test(server) && /auto, persoenlich, alben,/.test(server), "Album-Filter / Archiv-Alben fehlen");
+  assert.ok(/geloescht\(ich, "foto_album"/.test(server), "Album löschen nur mit Sicherung (Papierkorb)");
+  assert.ok(/id="fotoAlben"/.test(html) && /id="faLeiste"/.test(html) && /faWaehlen\(\$\{!FAW\.an\}\)/.test(html) && /FAW\.an \? `faWahl\('\$\{f\.id\}', this\)` : `fotoAnsehen\(\$\{i\}\)`/.test(html), "Auswahl im Fotoalbum fehlt");
+  assert.ok(/name="faASicht" value="privat"/.test(html) && /name="faASicht" value="alle"/.test(html) && /placeholder="z\. B\. Weihnachtsmarkt 2026"/.test(html), "Album-Formular fehlt");
+  assert.ok(/function arAlbumRuecken\(a\)/.test(html) && /albumOeffnen\('\$\{a\.id\}', 'archiv'\)/.test(html) && /arAlben\(true\)\.map\(arAlbumRuecken\)/.test(html) && /chip\("alben", "📸 Fotoalben"\)/.test(html), "Alben im Archiv-Regal fehlen");
+  assert.ok(/if \(her === "archiv"\) return zeige\("archiv"\);/.test(html), "Zurück ins Archiv fehlt");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

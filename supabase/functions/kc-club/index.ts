@@ -20,7 +20,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "1.62.0";
+const SERVER_VERSION = "1.63.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -425,6 +425,64 @@ async function speicherStand() {
     fotosMoeglich: Math.max(0, Math.floor((SPEICHER_GRENZE * FOTO_STOPP - belegt) / FOTO_SCHNITT)) };
 }
 const darfFotoAendern = (ich: Ich, f: any) => f.hochgeladen_von === ich.person_id || ich.vorstand;
+// KC-CLUB-FOTO-ALBEN (1.63.0, Wunsch Hansi): benannte Alben aus Fotos des Fotoalbums (nur Verweise, keine Kopien).
+// privat = nur Besitzer · alle = alle Mitglieder; ändern: Besitzer, bei Club-Alben auch die Clubleitung. Sichtbarkeit nur der Besitzer.
+const ALBUM_MAX_FOTOS = 600, ALBUM_MAX_JE_PERSON = 200, ALBUM_JE_AUFRUF = 300;
+const UUID_ALBUM = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const darfAlbumSehen = (ich: Ich, a: any) => !a.geloescht_am && (a.besitzer === ich.person_id || a.sichtbar === "alle");
+const darfAlbumAendern = (ich: Ich, a: any) => a.besitzer === ich.person_id || (a.sichtbar === "alle" && ich.vorstand);
+const albumFotoIds = (v: unknown) => [...new Set((Array.isArray(v) ? v : []).map(String).filter((x) => UUID_ALBUM.test(x)))].slice(0, ALBUM_JE_AUFRUF);
+async function albumHolen(ich: Ich, id: unknown, aendern = false) {
+  if (!UUID_ALBUM.test(String(id || ""))) throw new Fehler("Album nicht gefunden.", 404);
+  const { data: a } = await db.from("kc_club_foto_alben").select("*").eq("id", String(id)).maybeSingle();
+  if (!a || !darfAlbumSehen(ich, a)) throw new Fehler("Album nicht gefunden.", 404);
+  if (aendern && !darfAlbumAendern(ich, a)) throw new Fehler("Ändern darf nur, wer das Album angelegt hat (bei Club-Alben auch die Clubleitung).", 403);
+  return a;
+}
+// sichtbare Alben mit Anzahl (nur Fotos außerhalb des Papierkorbs) und Deckblatt-Vorschau
+async function albenFuer(ich: Ich) {
+  const [{ data: eigene }, { data: club }] = await Promise.all([
+    db.from("kc_club_foto_alben").select("*").is("geloescht_am", null).eq("besitzer", ich.person_id),
+    db.from("kc_club_foto_alben").select("*").is("geloescht_am", null).eq("sichtbar", "alle"),
+  ]);
+  const alben = [...new Map([...(eigene ?? []), ...(club ?? [])].map((a: any) => [a.id, a])).values()];
+  if (!alben.length) return [];
+  const [{ data: zu }, { data: imKorb }] = await Promise.all([
+    db.from("kc_club_foto_album_fotos").select("album_id,foto_id,hinzugefuegt_am").in("album_id", alben.map((a: any) => a.id)).order("hinzugefuegt_am", { ascending: true }),
+    db.from("kc_club_fotos").select("id").not("geloescht_am", "is", null), // Papierkorb (wenige) zählt nicht mit
+  ]);
+  const weg = new Set((imKorb ?? []).map((f: any) => f.id)), je = new Map<string, string[]>();
+  for (const z of zu ?? []) { if (weg.has(z.foto_id)) continue; if (!je.has(z.album_id)) je.set(z.album_id, []); je.get(z.album_id)!.push(z.foto_id); }
+  // Deckblatt: gewähltes Titelfoto, sonst das zuerst hineingelegte
+  const deckelId = new Map(alben.map((a: any) => { const l = je.get(a.id) ?? []; return [a.id, l.includes(a.titelfoto) ? a.titelfoto : l[0] ?? null]; }));
+  const dIds = [...new Set([...deckelId.values()].filter(Boolean))] as string[];
+  const { data: df } = dIds.length ? await db.from("kc_club_fotos").select("id,vorschau_id,attachment_id").in("id", dIds) : { data: [] as any[] };
+  const dfm = new Map<string, any>((df ?? []).map((f: any) => [f.id, f]));
+  const deckel = new Map<string, any>([...deckelId.entries()].map(([k, v]) => [k, v ? dfm.get(v) ?? null : null]));
+  const attIds = [...new Set([...deckel.values()].filter(Boolean).map((f: any) => f.vorschau_id || f.attachment_id))];
+  const { data: att } = attIds.length ? await db.from("kc_communication_attachments").select("id,object_path").in("id", attIds) : { data: [] as any[] };
+  const pfad = new Map((att ?? []).map((x: any) => [x.id, x.object_path])), pfade = [...new Set([...pfad.values()])] as string[];
+  const { data: urls } = pfade.length ? await db.storage.from(BUCKET).createSignedUrls(pfade, 3600) : { data: [] as any[] };
+  const url = new Map((urls ?? []).map((u: any) => [u.path, u.signedUrl]));
+  const leute = await personen(alben.map((a: any) => a.besitzer));
+  return alben.map((a: any) => {
+    const d = deckel.get(a.id);
+    return { id: a.id, name: a.name, jahr: a.jahr, sichtbar: a.sichtbar, eigen: a.besitzer === ich.person_id, von: leute.get(a.besitzer)?.display_name ?? "",
+      darfAendern: darfAlbumAendern(ich, a), anzahl: (je.get(a.id) ?? []).length, titelfoto: a.titelfoto, deckel: d ? url.get(pfad.get(d.vorschau_id || d.attachment_id)) ?? null : null, geaendert: a.geaendert_am };
+  }).sort((x, y) => y.jahr - x.jahr || x.name.localeCompare(y.name));
+}
+async function albumFotosEintragen(ich: Ich, albumId: string, ids: string[]) {
+  if (!ids.length) return 0;
+  const { data: ok } = await db.from("kc_club_fotos").select("id").in("id", ids).is("geloescht_am", null);
+  const gueltig = (ok ?? []).map((f: any) => f.id);
+  const { count } = await db.from("kc_club_foto_album_fotos").select("foto_id", { count: "exact", head: true }).eq("album_id", albumId);
+  if ((count ?? 0) + gueltig.length > ALBUM_MAX_FOTOS) throw new Fehler(`Ein Album fasst höchstens ${ALBUM_MAX_FOTOS} Fotos.`, 409);
+  if (gueltig.length) {
+    const { error } = await db.from("kc_club_foto_album_fotos").upsert(gueltig.map((foto_id: string) => ({ album_id: albumId, foto_id, hinzugefuegt_von: ich.person_id })), { onConflict: "album_id,foto_id", ignoreDuplicates: true });
+    if (error) throw new Fehler("Fotos konnten nicht ins Album gelegt werden.", 500);
+  }
+  return gueltig.length;
+}
 // ----- KC-CLUB-FOTO-META (0.45.0): Aufnahmedaten eines Fotos (von der App aus dem Original gelesen) prüfen und begrenzen -----
 function fotoMetaPruefen(roh: any, mitOrt: boolean) {
   if (!roh || typeof roh !== "object") return null;
@@ -5964,13 +6022,24 @@ Köcheclub-App`,
         if (p.thema) q = q.eq("thema", txt(p.thema, 60));
         if (/^\d{4}$/.test(String(p.jahr || ""))) q = q.gte("datum", `${p.jahr}-01-01`).lte("datum", `${p.jahr}-12-31`);
         if (p.bezug_art && p.bezug_id) q = q.eq("bezug_art", String(p.bezug_art)).eq("bezug_id", String(p.bezug_id));
-        const [{ data: fotos }, { data: alle }, anlaesse, speicher, { count: imKorb }] = await Promise.all([
+        // KC-CLUB-FOTO-ALBEN (1.63.0): nur Fotos eines Albums (Sichtbarkeit prüft albumHolen)
+        const album = p.album_id ? await albumHolen(ich, p.album_id) : null;
+        let albumFotos: any[] | null = null;
+        if (album) {
+          const { data: zu } = await db.from("kc_club_foto_album_fotos").select("foto_id").eq("album_id", album.id).limit(ALBUM_MAX_FOTOS);
+          const ids = (zu ?? []).map((z: any) => z.foto_id); albumFotos = [];
+          for (let i = 0; i < ids.length; i += 150) { const { data } = await db.from("kc_club_fotos").select("*").in("id", ids.slice(i, i + 150)).is("geloescht_am", null); albumFotos.push(...(data ?? [])); }
+          albumFotos.sort((a, b) => String(b.datum).localeCompare(String(a.datum)) || String(b.hochgeladen_am).localeCompare(String(a.hochgeladen_am)));
+        }
+        const [{ data: fotos }, { data: alle }, anlaesse, speicher, { count: imKorb }, alben, { count: albenKorb }] = await Promise.all([
           q.order("datum", { ascending: false }).order("hochgeladen_am", { ascending: false }).limit(600),
           db.from("kc_club_fotos").select("thema,datum,bezug_art,bezug_id").is("geloescht_am", null),
           fotoAnlaesse(), speicherStand(),
           ich.admin ? db.from("kc_club_fotos").select("id", { count: "exact", head: true }).not("geloescht_am", "is", null) : Promise.resolve({ count: 0 }),
+          albenFuer(ich).catch((e) => { console.error("alben", String(e)); return [] as any[]; }),
+          db.from("kc_club_foto_alben").select("id", { count: "exact", head: true }).eq("besitzer", ich.person_id).not("geloescht_am", "is", null).gt("geloescht_am", new Date(Date.now() - PAPIERKORB_TAGE * 86400000).toISOString()),
         ]);
-        const liste = fotos ?? [];
+        const liste = albumFotos ?? fotos ?? [];
         const [leute, { data: att }] = await Promise.all([
           personen(liste.map((f: any) => f.hochgeladen_von)),
           liste.length ? db.from("kc_communication_attachments").select("id,object_path").in("id", liste.map((f: any) => f.vorschau_id || f.attachment_id)) : Promise.resolve({ data: [] as any[] }),
@@ -5994,7 +6063,71 @@ Köcheclub-App`,
           jahre: [...jahre.entries()].map(([jahr, anzahl]) => ({ jahr, anzahl })).sort((a, b) => b.jahr.localeCompare(a.jahr)),
           anlaesse: anlaesse.map((x) => ({ ...x, anzahl: bez.get(`${x.art}|${x.id}`) ?? 0 })),
           speicher, papierkorb: imKorb ?? 0,
+          alben, albenKorb: albenKorb ?? 0, album: album ? (alben.find((a: any) => a.id === album.id) ?? null) : null,
         });
+      }
+
+      // ----- KC-CLUB-FOTO-ALBEN (1.63.0) -----
+      case "foto_album_speichern": {
+        const name = txt(p.name, 60);
+        if (!name) throw new Fehler("Bitte dem Album einen Namen geben, z. B. „Weihnachtsmarkt 2026“.");
+        const jahr = Math.round(Number(p.jahr)) || Number(berlinTag(new Date()).slice(0, 4));
+        if (!(jahr >= 1950 && jahr <= 2100)) throw new Fehler("Bitte ein gültiges Jahr wählen.");
+        const sichtbar = p.sichtbar === "alle" ? "alle" : "privat";
+        if (p.id) {
+          const a = await albumHolen(ich, p.id, true);
+          if (a.besitzer !== ich.person_id && sichtbar !== a.sichtbar) throw new Fehler("Wer das Album sieht, legt nur fest, wer es angelegt hat.", 403);
+          const upd: Record<string, unknown> = { name, jahr, sichtbar, geaendert_am: jetzt() };
+          if (p.titelfoto !== undefined) {
+            const t = String(p.titelfoto || "");
+            if (t) { const { data: drin } = await db.from("kc_club_foto_album_fotos").select("foto_id").eq("album_id", a.id).eq("foto_id", t).maybeSingle(); if (!drin) throw new Fehler("Das Deckblatt muss ein Foto aus dem Album sein."); }
+            upd.titelfoto = t || null;
+          }
+          await db.from("kc_club_foto_alben").update(upd).eq("id", a.id);
+          await protokoll(ich.person_id, "foto_album_geaendert", { album: a.id, vorher: { name: a.name, jahr: a.jahr, sichtbar: a.sichtbar, titelfoto: a.titelfoto } });
+          return json({ ok: true, id: a.id });
+        }
+        const { count } = await db.from("kc_club_foto_alben").select("id", { count: "exact", head: true }).eq("besitzer", ich.person_id).is("geloescht_am", null);
+        if ((count ?? 0) >= ALBUM_MAX_JE_PERSON) throw new Fehler(`Höchstens ${ALBUM_MAX_JE_PERSON} Alben je Person – bitte alte Alben löschen.`, 409);
+        const { data: neu, error } = await db.from("kc_club_foto_alben").insert({ name, jahr, sichtbar, besitzer: ich.person_id }).select("id").single();
+        if (error || !neu) throw new Fehler("Album konnte nicht angelegt werden.", 500);
+        const n = await albumFotosEintragen(ich, neu.id, albumFotoIds(p.fotos));
+        await protokoll(ich.person_id, "foto_album_angelegt", { album: neu.id, name, jahr, sichtbar, fotos: n });
+        return json({ ok: true, id: neu.id, hinzu: n });
+      }
+
+      case "foto_album_fotos": {
+        const a = await albumHolen(ich, p.album_id, true);
+        const hinzu = await albumFotosEintragen(ich, a.id, albumFotoIds(p.hinzu));
+        const weg = albumFotoIds(p.weg);
+        if (weg.length) await db.from("kc_club_foto_album_fotos").delete().eq("album_id", a.id).in("foto_id", weg);
+        if (weg.length && a.titelfoto && weg.includes(a.titelfoto)) await db.from("kc_club_foto_alben").update({ titelfoto: null }).eq("id", a.id);
+        await db.from("kc_club_foto_alben").update({ geaendert_am: jetzt() }).eq("id", a.id);
+        await protokoll(ich.person_id, "foto_album_fotos", { album: a.id, hinzu, weg });
+        return json({ ok: true, hinzu, weg: weg.length });
+      }
+
+      case "foto_album_loeschen": {
+        // Papierkorb: die Fotos bleiben im Fotoalbum, nur die Sammlung verschwindet (30 Tage wiederherstellbar)
+        const a = await albumHolen(ich, p.id, true);
+        const { data: inhalt } = await db.from("kc_club_foto_album_fotos").select("foto_id").eq("album_id", a.id);
+        await geloescht(ich, "foto_album", { album: a, fotos: (inhalt ?? []).map((x: any) => x.foto_id) });
+        await db.from("kc_club_foto_alben").update({ geloescht_am: jetzt(), geloescht_von: ich.person_id }).eq("id", a.id);
+        return json({ ok: true, papierkorbTage: PAPIERKORB_TAGE });
+      }
+
+      case "foto_alben_papierkorb": {
+        const { data } = await db.from("kc_club_foto_alben").select("id,name,jahr,sichtbar,geloescht_am").eq("besitzer", ich.person_id).not("geloescht_am", "is", null)
+          .gt("geloescht_am", new Date(Date.now() - PAPIERKORB_TAGE * 86400000).toISOString()).order("geloescht_am", { ascending: false });
+        return json({ alben: data ?? [] });
+      }
+
+      case "foto_album_wiederherstellen": {
+        const { data: a } = await db.from("kc_club_foto_alben").select("*").eq("id", String(p.id || "")).eq("besitzer", ich.person_id).maybeSingle();
+        if (!a || !a.geloescht_am) throw new Fehler("Album nicht im Papierkorb.", 404);
+        await db.from("kc_club_foto_alben").update({ geloescht_am: null, geloescht_von: null }).eq("id", a.id);
+        await protokoll(ich.person_id, "foto_album_wiederhergestellt", { album: a.id });
+        return json({ ok: true });
       }
 
       case "foto_hochladen": {
@@ -6142,10 +6275,11 @@ Köcheclub-App`,
       case "archiv_liste": {
         // KC-CLUB-ARCHIV-PERSOENLICH (1.5.0): eigener Ordner des laufenden Jahres entsteht beim ersten Öffnen von selbst
         await archivEigenerOrdner(ich, Number(berlinTag(new Date()).slice(0, 4))).catch((e) => console.error("eigener Ordner", String(e)));
-        const [{ data: or }, auto, fr] = await Promise.all([
+        const [{ data: or }, auto, fr, alben] = await Promise.all([
           db.from("kc_club_archiv_ordner").select("*").is("geloescht_am", null).order("jahr", { ascending: false }).order("titel"),
           archivAuto(ich),
           archivFreigabenFuer(ich.person_id),
+          albenFuer(ich).catch((e) => { console.error("alben", String(e)); return [] as any[]; }), // KC-CLUB-FOTO-ALBEN (1.63.0): Alben als Rücken im Regal
         ]);
         const geteiltIds = new Set(fr.map((f: any) => f.ordner_id));
         const ordner = (or ?? []).filter((o: any) => o.besitzer ? (o.besitzer === ich.person_id || geteiltIds.has(o.id)) : darfOrdnerSehen(ich, o));
@@ -6189,7 +6323,7 @@ Köcheclub-App`,
           }),
           dokumente: dk.map((d: any) => ({ id: d.id, ordner_id: d.ordner_id, register: d.register, titel: d.titel, datum: d.datum, stichworte: d.stichworte, status: d.status,
             name: d.datei_name, mime: d.mime, groesse: d.groesse, datei: d.attachment_id, von: leute.get(d.hochgeladen_von)?.display_name || d.hochgeladen_von, vonIch: d.hochgeladen_von === ich.person_id, am: d.hochgeladen_am })),
-          auto, persoenlich,
+          auto, persoenlich, alben,
         });
       }
 

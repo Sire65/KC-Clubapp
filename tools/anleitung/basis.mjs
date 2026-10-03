@@ -8,8 +8,8 @@ export async function seite(b, opt = {}) {
   const antw = { ...ANTWORTEN, ...(opt.antworten || {}) };
   if (opt.ansicht) antw.init = { ...antw.init, einstellungen: { ...antw.init.einstellungen, ansicht: { art: opt.ansicht, gewaehlt: true } } };
   await p.route('**/functions/v1/kc-club*', async (r) => {
-    let a = ''; try { a = JSON.parse(r.request().postData() || '{}').action; } catch {}
-    const body = antw[a] ?? { ok: true };
+    let a = '', q = {}; try { q = JSON.parse(r.request().postData() || '{}'); a = q.action; } catch {}
+    const body = typeof antw[a] === 'function' ? antw[a](q) : antw[a] ?? { ok: true };
     await r.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*' }, body: JSON.stringify(body) });
   });
   await p.route('**/notbetrieb.json*', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: '{"modus":"aus","url":""}' }));

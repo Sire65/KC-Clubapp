@@ -1265,6 +1265,11 @@
   .ordner .muetze + .loch { margin-top: 4px; }
   .ar-dok-knoepfe { display: flex; gap: 4px; flex: none; } /* 1.19.0: ✏️ 🗑️ bzw. ♻️ ❌ nebeneinander */
   .ar-kopf .muetze { width: 46px; height: 46px; flex: none; object-fit: contain; margin-left: auto; opacity: .95; }
+  /* KC-CLUB-FOTO-ALBEN (1.63.0): Fotoalbum im Regal – breiter Buchrücken mit Bund und kleinem Deckblatt */
+  .ordner.album { border-radius: 4px 10px 10px 4px; background: linear-gradient(90deg, rgba(0,0,0,.32) 0 8px, rgba(255,255,255,.08) 8px 10px, transparent 10px calc(100% - 6px), rgba(0,0,0,.2) calc(100% - 6px)), var(--of); padding-left: 13px; }
+  .ordner.album .deckel { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 3px; border: 2px solid #fffdf6; box-shadow: 0 1px 3px rgba(0,0,0,.35); }
+  .ordner.album .sym { font-size: 1.1rem; }
+  .ordner.album .muetze { width: 30px; height: 30px; }
   .ordner .loch { margin-top: auto; width: 24px; height: 24px; border-radius: 50%; background: rgba(0,0,0,.28); box-shadow: inset 0 2px 3px rgba(0,0,0,.4); }
   .ordner .schloss { position: absolute; top: 4px; right: 6px; font-size: .9rem; }
   .ordner .ar-frei { position: absolute; top: 4px; left: 6px; font-size: .9rem; }
@@ -1297,6 +1302,23 @@
   .fotokachel { position: relative; aspect-ratio: 1; border: none; padding: 0; border-radius: 8px; overflow: hidden; background: var(--karte2); cursor: pointer; font-size: 1.6rem; }
   .fotokachel img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .fotokachel .fk-marke { position: absolute; right: 4px; bottom: 4px; background: rgba(0,0,0,.6); border-radius: 10px; padding: 2px 6px; font-size: 1rem; }
+  /* KC-CLUB-FOTO-ALBEN (1.63.0): Alben-Leiste, Auswahl mit Haken, Auswahlleiste unten */
+  .fa-alben { display: flex; gap: 10px; overflow-x: auto; padding: 4px 2px 10px; scroll-snap-type: x proximity; }
+  .fa-album { flex: 0 0 118px; scroll-snap-align: start; border: none; border-radius: 12px; background: var(--karte); box-shadow: var(--schatten); padding: 6px; text-align: left; cursor: pointer; color: var(--text); font: inherit; }
+  .fa-album .deckel { width: 100%; aspect-ratio: 1; border-radius: 8px; background: var(--karte2); display: flex; align-items: center; justify-content: center; font-size: 2rem; overflow: hidden; position: relative; }
+  .fa-album .deckel img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .fa-album .deckel .wer { position: absolute; left: 4px; top: 4px; background: rgba(0,0,0,.55); color: #fff; border-radius: 8px; padding: 1px 5px; font-size: .8rem; }
+  .fa-album b { display: block; font-size: .88rem; line-height: 1.2; margin-top: 5px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .fa-album small { color: var(--grau); font-size: .78rem; }
+  .fa-album.neu .deckel { border: 2px dashed var(--grau); background: transparent; font-size: 2.2rem; }
+  .fotokachel.gewaehlt::after { content: ""; position: absolute; inset: 0; border: 4px solid #34c759; border-radius: 8px; pointer-events: none; }
+  .fotokachel.gewaehlt img { opacity: .78; }
+  .fotokachel .fk-haken { position: absolute; left: 5px; top: 5px; width: 26px; height: 26px; border-radius: 50%; border: 2px solid #fff; background: rgba(0,0,0,.35); color: transparent; font-size: .95rem; display: flex; align-items: center; justify-content: center; }
+  .fotokachel.gewaehlt .fk-haken { background: #34c759; color: #fff; }
+  .fa-leiste { position: fixed; z-index: 22; left: 50%; transform: translateX(-50%); bottom: calc(84px + env(safe-area-inset-bottom)); width: min(720px, calc(100% - 16px)); background: var(--karte); color: var(--text); border-radius: 16px; box-shadow: 0 6px 22px rgba(0,0,0,.3); padding: 8px 10px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .fa-leiste b { flex: 1; min-width: 90px; }
+  body.fa-waehlen .su-klein { display: none; }
+  body.fa-waehlen #fotoListe { padding-bottom: 120px; }
   /* KC-CLUB-KAMERA: Kamera in der App (ohne fremde Kamera-App) */
   .appkamera { position: fixed; inset: 0; background: #000; z-index: 60; display: flex; flex-direction: column; }
   .appkamera video { flex: 1; min-height: 0; width: 100%; object-fit: contain; background: #000; }
@@ -1520,10 +1542,12 @@
 
   <!-- FOTOALBUM (KC-CLUB-FOTOALBUM) -->
   <section id="v-fotos" class="versteckt">
-    <div class="kopf2"><button class="zurueck" onclick="zeige('start')">‹</button><h2>📷 Fotoalbum</h2><button class="knopf haupt klein" onclick="fotoForm()">＋ Neu</button></div>
+    <div class="kopf2"><button class="zurueck" onclick="faKopfZurueck()">‹</button><h2>📷 Fotoalbum</h2><button class="knopf haupt klein" onclick="fotoForm()">＋ Neu</button></div>
     <div id="fotoForm" class="karte versteckt"></div>
     <div id="fotoSpeicher"></div>
+    <div id="fotoAlben"></div><!-- KC-CLUB-FOTO-ALBEN (1.63.0) -->
     <div id="fotoFilter" class="karte"></div>
+    <div id="faLeiste" class="fa-leiste versteckt" role="toolbar" aria-label="Auswahl"></div>
     <div id="fotoListe"><div class="karte hinweis">Wird geladen …</div></div>
   </section>
 
@@ -2144,7 +2168,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "1.62.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "1.63.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -5638,6 +5662,7 @@ function zeige(v, ausHistorie) {
   const vorher = aktuelleAnsicht;
   if (v === "dokansicht" && !DOKA.id) v = "dokumente"; // KC-CLUB-DOK-ANZEIGE: ohne Dokument zur Liste
   if (vorher === "dokansicht" && v !== "dokansicht") dokAufraeumen();
+  if (vorher === "fotos" && v !== "fotos" && FAW.an) { FAW.an = false; FAW.ziel = null; FAW.ids.clear(); $("faLeiste").classList.add("versteckt"); document.body.classList.remove("fa-waehlen"); } // KC-CLUB-FOTO-ALBEN
   if (v !== "chat" && typeof CS !== "undefined" && CS.offen) chatSucheZu();
   if (v !== "chat") $("nachUnten")?.classList.add("versteckt");
   aktuelleAnsicht = v; if (window.KCFP) KCFP.sicht = v;
@@ -10220,10 +10245,13 @@ async function fotosLaden(formBehalten) {
   catch (e) { $("fotoListe").innerHTML = `<div class="karte hinweis">${esc(e.message)}</div>`; }
 }
 function fotosZeigen() {
+  faAlbenZeigen(); faLeisteZeigen(); // KC-CLUB-FOTO-ALBEN (1.63.0)
   const sp = FA.speicher, voll = sp.prozent >= 80;
   $("fotoSpeicher").innerHTML = `<div class="karte"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><b>💾 ${mb(sp.belegt)} von ${mb(sp.grenze).replace("1.024 MB", "1 GB")} belegt</b><span class="hinweis">${sp.prozent.toLocaleString("de-DE")} %</span></div>
     <div class="speicherbalken"><i style="width:${Math.min(100, Math.max(1, sp.prozent))}%;${voll ? "background:var(--rot3)" : ""}"></i></div>
     <div class="hinweis" style="font-size:.9rem">${sp.fotosMoeglich ? `Platz für ca. <b>${sp.fotosMoeglich.toLocaleString("de-DE")}</b> weitere Fotos (kostenloser Speicher)` : "⚠️ Speicher fast voll – bitte alte Fotos löschen."}</div></div>`;
+  $("fotoFilter").classList.toggle("versteckt", !!faFilter.album_id);
+  if (faFilter.album_id && !FA.album) { faFilter = {}; return fotosLaden(); } // Album weg oder nicht sichtbar
   const opt = (wert, text, an) => `<option value="${esc(wert)}" ${an ? "selected" : ""}>${esc(text)}</option>`;
   const bez = faFilter.bezug_art ? `${faFilter.bezug_art}|${faFilter.bezug_id}` : "";
   $("fotoFilter").innerHTML = `<div class="fotofilter">
@@ -10231,10 +10259,10 @@ function fotosZeigen() {
       <label class="feld">Jahr<select onchange="faFilterSetzen('jahr', this.value)">${opt("", "Alle Jahre", !faFilter.jahr)}${FA.jahre.map((j) => opt(j.jahr, `${j.jahr} (${j.anzahl})`, j.jahr === faFilter.jahr)).join("")}</select></label>
       <label class="feld">Anlass<select onchange="faFilterSetzen('bezug', this.value)">${opt("", "Alle Anlässe", !bez)}${FA.anlaesse.filter((x) => x.anzahl || `${x.art}|${x.id}` === bez).map((x) => opt(`${x.art}|${x.id}`, `${anlassText(x)} (${x.anzahl})`, `${x.art}|${x.id}` === bez)).join("")}</select></label>
     </div>
-    <div class="knoepfe" style="margin-top:4px">${Object.keys(faFilter).length ? '<button class="knopf klein" onclick="faFilter={};fotosLaden()">✕ Filter zurücksetzen</button>' : ""}
+    <div class="knoepfe" style="margin-top:4px">${!faPapierkorb && FA.fotos.length ? `<button class="knopf klein ${FAW.an ? "haupt" : ""}" onclick="faWaehlen(${!FAW.an})">☑️ ${FAW.an ? "Auswahl beenden" : "Auswählen"}</button>` : ""}${Object.keys(faFilter).length ? '<button class="knopf klein" onclick="faFilter={};fotosLaden()">✕ Filter zurücksetzen</button>' : ""}
       ${ICH.admin && (FA.papierkorb || faPapierkorb) ? `<button class="knopf klein ${faPapierkorb ? "haupt" : ""}" onclick="faPapierkorb=!faPapierkorb;fotosLaden()">🗑️ Papierkorb (${FA.papierkorb})</button>` : ""}</div>`;
   if (!FA.fotos.length) {
-    $("fotoListe").innerHTML = `<div class="karte hinweis">${faPapierkorb ? "Der Papierkorb ist leer." : Object.keys(faFilter).length ? "Keine Fotos für diese Auswahl." : "Noch keine Fotos im Album. Tippe oben auf „＋ Neu“."}</div>`;
+    $("fotoListe").innerHTML = `<div class="karte hinweis">${faPapierkorb ? "Der Papierkorb ist leer." : faFilter.album_id ? "Dieses Album ist noch leer. Tippe oben auf „＋ Fotos hinzufügen“." : Object.keys(faFilter).length ? "Keine Fotos für diese Auswahl." : "Noch keine Fotos im Album. Tippe oben auf „＋ Neu“."}</div>`;
     return;
   }
   // nach Monaten gruppiert, neueste zuerst
@@ -10242,13 +10270,136 @@ function fotosZeigen() {
   FA.fotos.forEach((f, i) => { const k = f.datum.slice(0, 7); if (!gruppen.has(k)) gruppen.set(k, []); gruppen.get(k).push([f, i]); });
   $("fotoListe").innerHTML = (faPapierkorb ? '<p class="hinweis">🗑️ Gelöschte Fotos werden 30 Tage nach dem Löschen endgültig entfernt. ♻️ holt ein Foto zurück.</p>' : "") + [...gruppen.entries()].map(([k, liste]) => `
     <div class="abschnitt" style="margin-top:16px"><h3 style="font-size:1.05rem">${MONATE[Number(k.slice(5)) - 1]} ${k.slice(0, 4)}</h3><span class="hinweis">${liste.length} Foto${liste.length > 1 ? "s" : ""}</span></div>
-    <div class="fotoraster">${liste.map(([f, i]) => `<button class="fotokachel" onclick="${faPapierkorb ? `fotoWiederherstellen('${f.id}')` : `fotoAnsehen(${i})`}" title="${esc([f.thema, fTagDe(f.datum), f.beschreibung].filter(Boolean).join(" · "))}">
-      ${f.vorschau ? `<img src="${esc(f.vorschau)}" alt="${esc(f.beschreibung || f.thema || "Foto")}" loading="lazy">` : "📷"}${faPapierkorb ? '<span class="fk-marke">♻️</span>' : ""}</button>`).join("")}</div>`).join("");
+    <div class="fotoraster">${liste.map(([f, i]) => `<button class="fotokachel${FAW.an && FAW.ids.has(f.id) ? " gewaehlt" : ""}" data-id="${f.id}" onclick="${faPapierkorb ? `fotoWiederherstellen('${f.id}')` : FAW.an ? `faWahl('${f.id}', this)` : `fotoAnsehen(${i})`}" title="${esc([f.thema, fTagDe(f.datum), f.beschreibung].filter(Boolean).join(" · "))}">
+      ${f.vorschau ? `<img src="${esc(f.vorschau)}" alt="${esc(f.beschreibung || f.thema || "Foto")}" loading="lazy">` : "📷"}${faPapierkorb ? '<span class="fk-marke">♻️</span>' : ""}${FAW.an ? '<span class="fk-haken">✓</span>' : ""}</button>`).join("")}</div>`).join("");
 }
 function faFilterSetzen(was, wert) {
   if (was === "bezug") { delete faFilter.bezug_art; delete faFilter.bezug_id; if (wert) { const [a, ...id] = wert.split("|"); faFilter.bezug_art = a; faFilter.bezug_id = id.join("|"); } }
   else if (wert) faFilter[was] = wert; else delete faFilter[was];
   fotosLaden();
+}
+// ---------- KC-CLUB-FOTO-ALBEN (1.63.0, Wunsch Hansi): eigene Alben mit Namen („Weihnachtsmarkt 2026“) ----------
+// „☑️ Auswählen“ → Fotos antippen (Haken) → „📸 Ins Album“ (vorhandenes oder neues). Ein Album verweist nur auf die Fotos
+// (keine Kopien, kein Extra-Speicher). Sichtbarkeit beim Anlegen: 🔒 nur ich oder 👥 alle Mitglieder. Im Archiv stehen die
+// Alben als eigene Rücken im Regal (privat unter „Mein Ordner“, Club-Alben im Vereinsarchiv).
+const FAW = { an: false, ids: new Set(), ziel: null };
+let faHerkunft = "";
+const faAlbum = (id) => (FA?.alben || []).find((a) => a.id === id) || null;
+const faSicht = (a) => a.sichtbar === "alle" ? "👥 Alle" : "🔒 Nur ich";
+function faKopfZurueck() {
+  if (FAW.an && FAW.ziel) return albumOeffnen(FAW.ziel, faHerkunft); // „＋ Fotos hinzufügen“ abbrechen → zurück ins Album
+  if (FAW.an) return faWaehlen(false);
+  if (faFilter.album_id) { const her = faHerkunft; faHerkunft = ""; faFilter = {}; if (her === "archiv") return zeige("archiv"); return fotosLaden(); }
+  zeige("start");
+}
+function albumOeffnen(id, herkunft = "") { faHerkunft = herkunft; FAW.an = false; FAW.ids.clear(); FAW.ziel = null; faFilter = { album_id: id }; faPapierkorb = false; if (aktuelleAnsicht === "fotos") fotosLaden(); else zeige("fotos"); }
+function faAlbenZeigen() {
+  const el = $("fotoAlben"); if (!el || !FA) return;
+  if (faPapierkorb) { el.innerHTML = ""; return; }
+  const a = FA.album;
+  if (a) {
+    el.innerHTML = `<div class="karte" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+      <div style="font-size:2rem">📸</div><div style="flex:1;min-width:150px"><b style="font-size:1.1rem">${esc(a.name)}</b><div class="hinweis">${a.jahr} · ${faSicht(a)} · ${a.anzahl} Foto${a.anzahl === 1 ? "" : "s"}${a.eigen ? "" : " · von " + esc(a.von)}</div></div>
+      <div class="knoepfe" style="margin:0;width:100%">${a.darfAendern ? `<button class="knopf haupt klein" onclick="faFotosHinzu('${a.id}')">＋ Fotos hinzufügen</button><button class="knopf klein" onclick="faAlbumForm('${a.id}')">✏️ Ändern</button><button class="knopf klein" onclick="faAlbumLoeschen('${a.id}')">🗑️ Album</button>` : ""}
+        <button class="knopf klein" onclick="faKopfZurueck()">‹ ${faHerkunft === "archiv" ? "Zurück zum Archiv" : "Alle Fotos"}</button></div></div>`;
+    return;
+  }
+  const alben = FA.alben || [];
+  el.innerHTML = `<div class="abschnitt" style="margin-top:6px"><h3 style="font-size:1.05rem">📸 Alben</h3>${FA.albenKorb ? `<button class="knopf klein" onclick="faAlbenKorb()">🗑️ Gelöschte (${FA.albenKorb})</button>` : ""}</div>
+    <div class="fa-alben"><button class="fa-album neu" onclick="faAlbumForm()"><div class="deckel">＋</div><b>Neues Album</b><small>Fotos auswählen</small></button>
+    ${alben.map((x) => `<button class="fa-album" onclick="albumOeffnen('${x.id}')"><div class="deckel">${x.deckel ? `<img src="${esc(x.deckel)}" alt="" loading="lazy">` : "📸"}<span class="wer">${x.sichtbar === "alle" ? "👥" : "🔒"}</span></div><b>${esc(x.name)}</b><small>${x.jahr} · ${x.anzahl} Foto${x.anzahl === 1 ? "" : "s"}</small></button>`).join("")}</div>`;
+}
+function faWaehlen(an, ziel = null) {
+  FAW.an = !!an; FAW.ids.clear(); FAW.ziel = an ? ziel : null;
+  document.body.classList.toggle("fa-waehlen", FAW.an);
+  if (FA) fotosZeigen();
+  if (an) melde(ziel ? `Fotos antippen, die in „${faAlbum(ziel)?.name || "das Album"}“ sollen` : "Fotos antippen – dann unten „📸 Ins Album“");
+}
+function faWahl(id, el) {
+  if (FAW.ids.has(id)) FAW.ids.delete(id); else FAW.ids.add(id);
+  el?.classList.toggle("gewaehlt", FAW.ids.has(id)); faLeisteZeigen();
+}
+function faAlleWaehlen() { const alle = FA.fotos.map((f) => f.id), schon = alle.every((id) => FAW.ids.has(id)); alle.forEach((id) => schon ? FAW.ids.delete(id) : FAW.ids.add(id)); fotosZeigen(); }
+function faLeisteZeigen() {
+  const l = $("faLeiste"); if (!l) return;
+  const sichtbar = FAW.an && aktuelleAnsicht === "fotos"; l.classList.toggle("versteckt", !sichtbar);
+  document.body.classList.toggle("fa-waehlen", sichtbar);
+  if (!sichtbar) return;
+  const n = FAW.ids.size, ziel = faAlbum(FAW.ziel), imAlbum = FA?.album;
+  l.innerHTML = `<b>${n} ausgewählt</b><button class="knopf klein" onclick="faAlleWaehlen()">Alle</button>
+    ${imAlbum && !FAW.ziel ? (imAlbum.darfAendern ? `<button class="knopf klein" ${n ? "" : "disabled"} onclick="faAusAlbum()">➖ Aus Album nehmen</button>` : "")
+      : `<button class="knopf haupt klein" ${n ? "" : "disabled"} onclick="${ziel ? `faInsAlbum('${ziel.id}')` : "faAlbumWahl()"}">📸 ${ziel ? `In „${esc(ziel.name)}“ legen` : "Ins Album"}</button>`}
+    <button class="knopf klein" onclick="faWaehlen(false)" aria-label="Auswahl beenden">✕</button>`;
+}
+// „＋ Fotos hinzufügen“ im Album: alle Fotos zeigen, Auswahl zielt direkt auf dieses Album
+function faFotosHinzu(id) { const her = faHerkunft; faFilter = {}; FAW.an = true; FAW.ids.clear(); FAW.ziel = id; faHerkunft = her; fotosLaden().then(() => melde(`Fotos antippen, die in „${faAlbum(id)?.name || "das Album"}“ sollen`)); }
+function faAlbumWahl() {
+  const meine = (FA?.alben || []).filter((a) => a.darfAendern), n = FAW.ids.size;
+  const f = blattAuf("faAlbumBlatt", `<h3 style="margin-top:0">📸 ${n} Foto${n === 1 ? "" : "s"} in welches Album?</h3>
+    <div class="knoepfe" style="flex-direction:column;align-items:stretch">${meine.map((a) => `<button class="knopf" style="justify-content:flex-start;text-align:left" data-album="${a.id}">📸 <b>${esc(a.name)}</b>&nbsp;<span class="hinweis">${String(a.name).includes(String(a.jahr)) ? "" : a.jahr + " · "}${faSicht(a)} · ${a.anzahl}</span></button>`).join("")}
+      <button class="knopf haupt" data-neu="1">＋ Neues Album …</button><button class="knopf" data-zu="1">Abbrechen</button></div>`);
+  f.querySelectorAll("[data-album]").forEach((b) => (b.onclick = () => { f.remove(); faInsAlbum(b.dataset.album); }));
+  f.querySelector("[data-neu]").onclick = () => { f.remove(); faAlbumForm(null, [...FAW.ids]); };
+  f.querySelector("[data-zu]").onclick = () => f.remove();
+}
+async function faInsAlbum(id) {
+  const ids = [...FAW.ids]; if (!ids.length) return;
+  try { const r = await api("foto_album_fotos", { album_id: id, hinzu: ids }); const a = faAlbum(id);
+    melde(`📸 ${r.hinzu} Foto${r.hinzu === 1 ? "" : "s"} in „${a?.name || "Album"}“${r.hinzu < ids.length ? " (Rest war schon drin)" : ""}`);
+    if (FAW.ziel === id) return albumOeffnen(id, faHerkunft); // fertig hinzugefügt → Album zeigen
+    FAW.ids.clear(); faWaehlen(false); fotosLaden();
+  } catch (e) { melde(e.message, true); }
+}
+async function faAusAlbum() {
+  const a = FA?.album, ids = [...FAW.ids]; if (!a || !ids.length) return;
+  if (!(await frage(`${ids.length} Foto${ids.length === 1 ? "" : "s"} aus „${a.name}“ entfernen?\nDie Fotos bleiben im Fotoalbum – nur nicht mehr in diesem Album.`, { gefahr: false, ja: "➖ Aus Album nehmen" }))) return;
+  try { await api("foto_album_fotos", { album_id: a.id, weg: ids }); melde("➖ Aus dem Album genommen"); faWaehlen(false); fotosLaden(); } catch (e) { melde(e.message, true); }
+}
+function faEinzelnInsAlbum() { const f = FA?.fotos[faIndex]; if (!f) return; FAW.ids = new Set([f.id]); FAW.ziel = null; faAlbumWahl(); }
+// Album anlegen oder ändern: Name, Jahr, Sichtbarkeit (nur der Besitzer), Deckblatt (aus dem Album)
+function faAlbumForm(id = null, fotos = []) {
+  const a = id ? faAlbum(id) || FA?.album : null;
+  const jahrVorschlag = (() => { const f = (FA?.fotos || []).find((x) => fotos.includes(x.id)); return f ? Number(f.datum.slice(0, 4)) : new Date().getFullYear(); })();
+  const f = blattAuf("faAlbumForm", `<h3 style="margin-top:0">${a ? "✏️ Album ändern" : "📸 Neues Album"}</h3>
+    <label class="feld">Name<input id="faAName" maxlength="60" value="${esc(a?.name || "")}" placeholder="z. B. Weihnachtsmarkt 2026"></label>
+    <label class="feld">Jahr<input id="faAJahr" type="number" inputmode="numeric" min="1950" max="2100" value="${a?.jahr || jahrVorschlag}"></label>
+    ${!a || a.eigen ? `<b style="display:block;margin-top:8px">Wer sieht das Album?</b>
+      <div class="dwahl"><label><input type="radio" name="faASicht" value="privat" ${a?.sichtbar === "alle" ? "" : "checked"}> 🔒 Nur ich</label><label><input type="radio" name="faASicht" value="alle" ${a?.sichtbar === "alle" ? "checked" : ""}> 👥 Alle Mitglieder</label></div>` : `<p class="hinweis">${faSicht(a)} · angelegt von ${esc(a.von)}</p>`}
+    ${a && FA?.album?.id === a.id && FA.fotos.length ? `<b style="display:block;margin-top:8px">Deckblatt</b><div class="fotoraster" style="max-height:220px;overflow-y:auto">${FA.fotos.map((x) => `<button class="fotokachel${(a.titelfoto || "") === x.id ? " gewaehlt" : ""}" data-titel="${x.id}">${x.vorschau ? `<img src="${esc(x.vorschau)}" alt="" loading="lazy">` : "📷"}</button>`).join("")}</div>` : ""}
+    ${fotos.length ? `<p class="hinweis">${fotos.length} ausgewählte${fotos.length === 1 ? "s Foto kommt" : " Fotos kommen"} gleich hinein.</p>` : !a ? '<p class="hinweis">Danach tippst du die Fotos an, die hinein sollen.</p>' : ""}
+    <div class="knoepfe"><button class="knopf haupt" data-ok="1">${a ? "💾 Speichern" : "📸 Album anlegen"}</button><button class="knopf" data-zu="1">Abbrechen</button></div>`);
+  let titel = a?.titelfoto;
+  f.querySelectorAll("[data-titel]").forEach((b) => (b.onclick = () => { titel = b.dataset.titel; f.querySelectorAll("[data-titel]").forEach((x) => x.classList.toggle("gewaehlt", x === b)); }));
+  f.querySelector("[data-zu]").onclick = () => f.remove();
+  f.querySelector("[data-ok]").onclick = async () => {
+    const name = $("faAName").value.trim(); if (!name) return melde("Bitte einen Namen eingeben, z. B. „Weihnachtsmarkt 2026“.", true);
+    const sicht = f.querySelector('input[name="faASicht"]:checked')?.value || a?.sichtbar || "privat";
+    try {
+      const r = await api("foto_album_speichern", { id: a?.id, name, jahr: Number($("faAJahr").value), sichtbar: sicht, fotos, ...(a ? { titelfoto: titel || "" } : {}) });
+      f.remove();
+      if (a) { melde("💾 Album gespeichert"); return fotosLaden(); }
+      melde(`📸 Album „${name}“ angelegt${r.hinzu ? ` mit ${r.hinzu} Foto${r.hinzu === 1 ? "" : "s"}` : ""}`);
+      if (fotos.length) return albumOeffnen(r.id);
+      await fotosLaden(); faFotosHinzu(r.id); // leeres Album → gleich Fotos antippen
+    } catch (e) { melde(e.message, true); }
+  };
+  setTimeout(() => $("faAName")?.focus(), 50);
+}
+async function faAlbumLoeschen(id) {
+  const a = faAlbum(id) || FA?.album; if (!a) return;
+  if (!(await frage(`Album „${a.name}“ löschen?\nDie Fotos bleiben im Fotoalbum. Das Album liegt 30 Tage im Papierkorb und lässt sich zurückholen.`))) return;
+  try { await api("foto_album_loeschen", { id }); melde("🗑️ Album gelöscht – unter „📸 Alben → 🗑️ Gelöschte“ zurückholbar"); faFilter = {}; const her = faHerkunft; faHerkunft = ""; if (her === "archiv") { AR.daten = null; return zeige("archiv"); } fotosLaden(); }
+  catch (e) { melde(e.message, true); }
+}
+async function faAlbenKorb() {
+  try {
+    const r = await api("foto_alben_papierkorb");
+    const f = blattAuf("faAlbenKorb", `<h3 style="margin-top:0">🗑️ Gelöschte Alben</h3><p class="hinweis">Nach 30 Tagen sind sie endgültig weg (die Fotos bleiben immer im Fotoalbum).</p>
+      ${r.alben.length ? r.alben.map((a) => `<div class="zeile">📸 <span style="flex:1"><b>${esc(a.name)}</b> ${a.jahr}</span><button class="knopf klein" data-zurueck="${a.id}">♻️ Zurückholen</button></div>`).join("") : '<p class="hinweis">Keine gelöschten Alben.</p>'}
+      <div class="knoepfe"><button class="knopf" data-zu="1">Schließen</button></div>`);
+    f.querySelector("[data-zu]").onclick = () => f.remove();
+    f.querySelectorAll("[data-zurueck]").forEach((b) => (b.onclick = async () => { try { await api("foto_album_wiederherstellen", { id: b.dataset.zurueck }); f.remove(); melde("♻️ Album ist wieder da"); fotosLaden(); } catch (e) { melde(e.message, true); } }));
+  } catch (e) { melde(e.message, true); }
 }
 async function fotoWiederherstellen(id) {
   if (!(await frage("Dieses Foto aus dem Papierkorb zurückholen?"))) return;
@@ -10381,7 +10532,7 @@ async function fotoAnsehen(i, blaettern) {
   const an = anlassVon(f);
   $("fbInfo").innerHTML = `<div><b>${esc(f.thema || "Ohne Thema")}</b> · ${esc(fTagDe(f.datum))}${an ? `<br><span onclick="fotoSchliessen();faFilterSetzen('bezug','${esc(an.art + "|" + an.id)}')" style="text-decoration:underline;cursor:pointer">${esc(anlassText(an))}</span>` : ""}</div>
     ${f.beschreibung ? `<div>${esc(f.beschreibung)}</div>` : ""}<div class="fb-klein">📤 ${esc(f.von.name)}</div>
-    <div class="knoepfe"><button class="knopf klein" onclick="fotoDetails()">ℹ️ Details</button><button class="knopf klein" onclick="fotoSpeichern()">⬇️ Speichern</button><button class="knopf klein" onclick="fotoInsArchiv()">🗄️ Archiv</button>${navigator.share ? '<button class="knopf klein" onclick="fotoTeilen()">📤 Teilen</button>' : ""}
+    <div class="knoepfe"><button class="knopf klein" onclick="fotoDetails()">ℹ️ Details</button><button class="knopf klein" onclick="fotoSpeichern()">⬇️ Speichern</button><button class="knopf klein" onclick="fotoInsArchiv()">🗄️ Archiv</button><button class="knopf klein" onclick="faEinzelnInsAlbum()">📸 Album</button>${navigator.share ? '<button class="knopf klein" onclick="fotoTeilen()">📤 Teilen</button>' : ""}
       ${f.darfAendern ? '<button class="knopf klein" onclick="fotoAendernForm()">✏️ Ändern</button><button class="knopf klein" onclick="fotoLoeschen()">🗑️ Löschen</button>' : ""}</div>`;
   if (!$("fbDetails").classList.contains("versteckt")) fotoDetails(true);
   try {
@@ -11324,6 +11475,7 @@ function arAlleOrdner() {
 const arFarbe = (o) => o.auto ? "#6b5b53" : AR_FARBEN[(o.farbe || 1) - 1] || AR_FARBEN[0];
 const arSym = (o) => o.auto ? "🤖" : o.besitzer ? (o.eigen ? "👤" : "🤝") : AR.daten.arten[o.art]?.sym || "🗂️";
 function arPasst(o) {
+  if (AR.art === "alben") return false; // KC-CLUB-FOTO-ALBEN: nur Fotoalben zeigen
   if (AR.jahr && String(o.jahr) !== AR.jahr) return false;
   if (AR.art === "auto") return !!o.auto;
   if (AR.art === "vorstand") return !!o.nur_vorstand;
@@ -11335,13 +11487,13 @@ function arZeigen() {
   $("arKopf").textContent = AR.korb ? "🗑️ Archiv – Papierkorb" : "🗄️ Archiv";
   if (AR.korb) return arKorbZeigen();
   if (AR.ordner) return arOrdnerZeigen();
-  const alle = arAlleOrdner(), jahre = [...new Set(alle.map((o) => o.jahr))].sort((a, b) => b - a);
+  const alle = arAlleOrdner(), jahre = [...new Set([...alle.map((o) => o.jahr), ...(d.alben || []).map((a) => a.jahr)])].sort((a, b) => b - a);
   const chip = (wert, text) => `<button class="chip ${AR.art === wert ? "an" : ""}" onclick="AR.art='${wert}';arFilterMerken();arZeigen()">${text}</button>`;
   const kopf = `<div class="karte ar-filter">
       <input id="arSuche" type="search" placeholder="🔍 Suchen: Titel, Stichwort, Inhalt …" value="${esc(AR.suche)}" oninput="AR.suche=this.value;arListeZeigen()" onkeydown="if(event.key==='Escape'){this.value='';AR.suche='';arListeZeigen()}" autocomplete="off" enterkeyhint="search">
       <div class="ar-zeile"><label class="feld">Jahr<select onchange="AR.jahr=this.value;arFilterMerken();arZeigen()"><option value="">Alle Jahre</option>${jahre.map((j) => `<option ${String(j) === AR.jahr ? "selected" : ""}>${j}</option>`).join("")}</select></label>
         <div class="knoepfe">${d.darf ? `<button class="knopf klein haupt" onclick="arOrdnerForm()">＋ Ordner</button>` : ""}<button class="knopf klein" onclick="AR.korb=true;arZeigen()">🗑️ Papierkorb</button></div></div>
-      <div class="chips ar-chips">${chip("", "Alle")}${chip("auto", "🤖 Vereinsleben")}${Object.entries(d.arten).map(([k, a]) => chip(k, a.sym + " " + esc(a.t))).join("")}${d.vorstand ? chip("vorstand", "🔒 Nur Clubleitung") : ""}</div>
+      <div class="chips ar-chips">${chip("", "Alle")}${chip("auto", "🤖 Vereinsleben")}${(d.alben || []).some((a) => a.sichtbar === "alle") ? chip("alben", "📸 Fotoalben") : ""}${Object.entries(d.arten).map(([k, a]) => chip(k, a.sym + " " + esc(a.t))).join("")}${d.vorstand ? chip("vorstand", "🔒 Nur Clubleitung") : ""}</div>
     </div><div id="arListe"></div>`;
   $("arInhalt").innerHTML = kopf;
   arListeZeigen();
@@ -11353,17 +11505,27 @@ function arListeZeigen() {
   const eigene = d.ordner.filter((o) => o.eigen).sort((a, b) => b.jahr - a.jahr), geteilt = d.ordner.filter((o) => o.besitzer && !o.eigen);
   const sp = d.speicher || { belegt: 0, grenze: 1 };
   const pers = `<div class="abschnitt ar-pers"><h3>👤 Mein Ordner</h3><button class="knopf klein" onclick="arNeuesJahr()">＋ weiteres Jahr</button></div>
-      <div class="regal">${eigene.map(arRuecken).join("")}</div>
+      <div class="regal">${eigene.map(arRuecken).join("")}${arAlben(true).map(arAlbumRuecken).join("")}</div>
       <p class="hinweis" style="margin:2px 6px 10px">🔒 Nur du siehst deine Ordner – auch der Admin nicht. Mit 🔓 kannst du anderen etwas auf Zeit freigeben. Belegt: ${arGroesse(sp.belegt) || "0 KB"} von ${arGroesse(sp.grenze)}.</p>`
     + (geteilt.length ? `<div class="abschnitt"><h3>🤝 Mit mir geteilt</h3></div><div class="regal">${geteilt.map(arRuecken).join("")}</div>` : "");
-  const ordner = arAlleOrdner().filter((o) => !o.besitzer && arPasst(o)), jahre = [...new Set(ordner.map((o) => o.jahr))].sort((a, b) => b - a);
-  const verein = !ordner.length
+  const ordner = arAlleOrdner().filter((o) => !o.besitzer && arPasst(o));
+  const alben = arAlben(false).filter((a) => (!AR.jahr || String(a.jahr) === AR.jahr) && (!AR.art || AR.art === "alben")); // KC-CLUB-FOTO-ALBEN
+  const jahre = [...new Set([...ordner.map((o) => o.jahr), ...alben.map((a) => a.jahr)])].sort((a, b) => b - a);
+  const verein = !ordner.length && !alben.length
     ? `<div class="karte hinweis">${AR.jahr || AR.art ? "Für diese Auswahl gibt es keinen Vereinsordner. <button class=\"knopf klein\" onclick=\"AR.jahr='';AR.art='';arFilterMerken();arZeigen()\">✕ Filter zurücksetzen</button>" : "Im Vereinsarchiv ist noch nichts." + (d.darf ? " Tippe oben auf „＋ Ordner“." : "")}</div>`
-    : jahre.map((j) => `<div class="abschnitt"><h3>${j}</h3></div><div class="regal">${ordner.filter((o) => o.jahr === j).sort((a, b) => (b.auto ? 1 : 0) - (a.auto ? 1 : 0) || a.titel.localeCompare(b.titel)).map(arRuecken).join("")}</div>`).join("")
+    : jahre.map((j) => `<div class="abschnitt"><h3>${j}</h3></div><div class="regal">${ordner.filter((o) => o.jahr === j).sort((a, b) => (b.auto ? 1 : 0) - (a.auto ? 1 : 0) || a.titel.localeCompare(b.titel)).map(arRuecken).join("")}${alben.filter((a) => a.jahr === j).map(arAlbumRuecken).join("")}</div>`).join("")
       + `<p class="hinweis" style="margin-top:14px">🤖 <b>Vereinsleben</b> füllt sich von selbst mit dem, was vorbei ist.${d.darf ? "" : " Unterlagen legen Clubsprecher und Admin ab."}</p>`;
   const adminSicht = d.persoenlich?.length ? `<details class="karte" style="margin-top:12px"><summary><b>👤 Persönliche Ordner der Mitglieder (${d.persoenlich.length}) – nur Übersicht, kein Inhalt</b></summary>
       ${d.persoenlich.map((x) => `<div class="ar-dok"><span class="sym">👤</span><div><b>${esc(x.name)} ${x.jahr}</b><div class="hinweis">${x.anzahl} ${x.anzahl === 1 ? "Dokument" : "Dokumente"} · ${arGroesse(x.groesse) || "0 KB"}</div></div><span></span></div>`).join("")}</details>` : "";
   $("arListe").innerHTML = pers + `<div class="abschnitt"><h3>🗄️ Vereinsarchiv</h3></div>` + verein + adminSicht;
+}
+// KC-CLUB-FOTO-ALBEN (1.63.0, Wunsch Hansi): Fotoalben als eigene Rücken im Regal – antippen öffnet das Album unter Fotos
+const arAlben = (privat) => (AR.daten?.alben || []).filter((a) => privat ? a.eigen && a.sichtbar !== "alle" : a.sichtbar === "alle");
+function arAlbumRuecken(a) {
+  return `<button class="ordner album" style="--of:#5d4037" onclick="albumOeffnen('${a.id}', 'archiv')" title="Fotoalbum ${esc(a.name)} ${a.jahr}">
+    ${a.sichtbar === "alle" ? "" : '<span class="schloss">🔒</span>'}<span class="sym">📸</span>${a.deckel ? `<img class="deckel" src="${esc(a.deckel)}" alt="" loading="lazy">` : ""}
+    <span class="schild"><span class="jahr">${a.jahr}</span><span class="name">${esc(a.name)}</span></span>
+    <span class="anz">${a.anzahl} ${a.anzahl === 1 ? "Foto" : "Fotos"}</span><img class="muetze" src="kc-kochmuetze-weiss.webp" alt=""></button>`;
 }
 function arAnzahl(o) { return o.auto ? AR.daten.auto.filter((x) => arJahr(x.datum) === String(o.jahr)).length : o.anzahl; }
 function arRuecken(o) {

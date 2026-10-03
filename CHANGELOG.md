@@ -1,5 +1,18 @@
 # Änderungen
 
+## 1.63.0 – 2026-10-03
+- KC-CLUB-FOTO-ALBEN (Wunsch Hansi): eigene Fotoalben mit Namen (z. B. „Weihnachtsmarkt 2026“). Im Fotoalbum oben
+  „📸 Alben“ mit „＋ Neues Album“; „☑️ Auswählen“ → Fotos antippen (grüner Haken) → unten „📸 Ins Album“ (vorhandenes
+  oder neues Album). Im Album: „＋ Fotos hinzufügen“, „✏️ Ändern“ (Name, Jahr, Deckblatt), „➖ Aus Album nehmen“,
+  „🗑️ Album“ (30 Tage im Papierkorb, „♻️ Zurückholen“). In der Großansicht: „📸 Album“ für ein einzelnes Foto.
+  Sichtbarkeit beim Anlegen: „🔒 Nur ich“ oder „👥 Alle Mitglieder“ (nur der Besitzer ändert sie; Club-Alben pflegen
+  Besitzer und Clubleitung). Alben verweisen nur auf die Fotos – keine Kopien, kein zusätzlicher Speicher.
+- Archiv: Alben stehen als eigene Rücken (📸, Deckblatt, Jahr, Name, Anzahl) im Regal – private unter „👤 Mein Ordner“,
+  Club-Alben im Vereinsarchiv beim Jahr; neuer Filter „📸 Fotoalben“. Antippen öffnet das Album, „‹“ führt zurück ins Archiv.
+- DB: kc_club_foto_alben, kc_club_foto_album_fotos (Migration 20261003_kc_club_v1630_foto_alben.sql, nur Server-Zugriff).
+  Server: foto_album_speichern, foto_album_fotos, foto_album_loeschen, foto_alben_papierkorb, foto_album_wiederherstellen;
+  fotos_liste (album_id, alben) und archiv_liste (alben) erweitert.
+
 ## 1.62.0 – 2026-10-03
 - KC-CLUB-DOK-ANZEIGE (Fund Hansi: „Wenn ich das Dokument aufrufe, wie komme ich wieder in die App?“): PDFs aus „Meine
   Dokumente“ öffnen jetzt IN der App (eigene Ansicht, alle Seiten untereinander). Oben „‹“ und „🖨️ Drucken“ (über den
