@@ -1,5 +1,19 @@
 # Änderungen
 
+## 2.22.7 – 2026-10-04 – ✏️ Meine Daten haben sich geändert (Wunsch Hansi)
+- KC-CLUB-AENDERUNG: Kachel „✏️ Meine Daten geändert?“ im Register „Meins“ (und Knopf auf der eigenen Mitglieder-Seite). Antippen, was
+  sich geändert hat (Register AENDERUNG auf dem Server): 🏠 Anschrift, 🪪 Name, 📱 Handy, ☎️ Festnetz, ✉️ E-Mail, 🏦 Bankverbindung (IBAN geprüft),
+  🎂 Geburtsdatum, 🆘 Notfallkontakt, 👕 Kleidergröße (Kochjacke/Kochhose), ⏸️ Mitgliedschaft ruhen/austreten, 💬 Sonstiges (Empfänger wählbar).
+  Bisheriger Stand steht dabei, „gilt ab“ wo sinnvoll. Empfänger je Art aus den Ämtern (Clubsprecher/Kassenwart/Admin), Push + Mail – die Mail
+  nennt nur, WAS gemeldet wurde; Einzelheiten nur in der App. Bei Anschrift/Handy/Festnetz/E-Mail auf Wunsch „📣 allen Bescheid sagen“.
+- Notfallkontakt wird wie bisher sofort gespeichert, Kleidergröße nur hier geführt – beide gleich „erledigt“ (Info an die Clubleitung).
+- Clubleitung: „📬 Änderungen“ im Büro-Regal (Zahl offener Meldungen, auch an der Meins-Kachel), Link #aenderungen aus Push/Mail. Je Meldung
+  bisher/neu nebeneinander, „📋 Kopieren“ (für den KC Manager), „✅ Erledigt“ mit kurzer Antwort → Mitglied bekommt Bescheid. Jeder sieht nur,
+  was an ihn ging (Admin alles). Bankverbindung: nur Kassenwart/Admin, nach „Erledigt“ bleiben nur die letzten 4 Stellen gespeichert.
+  👕 Größen-Übersicht mit Summen je Größe und „Liste kopieren“ für die Bestellung. Mitglied kann offene Meldungen zurückziehen.
+- Datenbank: neue Tabelle kc_club_aenderungen (Migration 20261004_kc_club_v2227_aenderungen.sql, RLS ohne Policies). Höchstens 10 Meldungen
+  je Mitglied und Tag. Protokoll nur Art/Anzahl, keine Inhalte. Test 332.
+
 ## 2.22.6 – 2026-10-04 – Ameisenrahmen um „Innovation“, Spiele live, 🏙️ Termine der Stadt Werne (Wunsch Hansi)
 - KC-CLUB-GRUPPE-AMEISEN: beim Öffnen von „💬 Nachrichten“ läuft um die Gruppe „Innovation“ (Liste UH_HERVOR) 5 Sekunden ein roter
   Ameisenrahmen (gleiche Animation wie bei den Registern), danach ruhig; höchstens 1× je Minute, bleibt auch beim Neuzeichnen der Liste.

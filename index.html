@@ -1006,6 +1006,18 @@
   #alarmBlatt.blatt { z-index: 9990; } /* liegt über allen anderen Start-Fenstern (Einweisung, Spiel-Einladung …) */
   .alarm-blatt .blatt-innen { border: 6px solid #d50000; box-shadow: 0 0 0 6px rgba(213,0,0,.35); }
   .alarm-kopf { background: #d50000; color: #fff; border-radius: 12px; padding: 10px 12px; font-weight: 900; font-size: 1.15rem; text-align: center; animation: alarmPuls 1s ease-in-out 6; }
+  /* KC-CLUB-AENDERUNG (2.22.7) */
+  .ae-wahl { display: grid; gap: 6px; }
+  .ae-wahl .knopf { display: flex; gap: 10px; align-items: center; text-align: left; }
+  .ae-wahl small, .ae-meine small { display: block; opacity: .75; font-weight: 400; }
+  .ae-sym { font-size: 1.5rem; }
+  .ae-meine { display: flex; gap: 8px; align-items: center; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #8883; }
+  .ae-feld { display: grid; gap: 3px; font-weight: 600; }
+  .ae-feld input, .ae-feld select, .ae-feld textarea { background: var(--bg); color: var(--text); }
+  .ae-haken { display: flex; gap: 8px; align-items: center; }
+  .ae-haken input { width: 22px; height: 22px; flex: none; }
+  .ae-karte { display: grid; gap: 4px; }
+  .ae-neu { font-weight: 800; color: #43a047; }
   /* KC-CLUB-STADT-TERMINE (2.22.6) */
   .stadt-zeile { display: flex; gap: 8px; align-items: center; padding: 6px 4px; border-bottom: 1px solid #8883; cursor: pointer; }
   .stadt-zeile input { width: 22px; height: 22px; flex: none; }
@@ -2622,7 +2634,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.22.6"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.22.7"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -7130,6 +7142,8 @@ const KACHELN = {
     { id: "dienstwunsch", sym: "📝", t: "Dienstwünsche", u: "Mit Twinkey · Weihnachtsmarkt", aktion: "dwOeffnen()" },
     { id: "dokumente", sym: "📚", t: "Meine Dokumente", u: "Anleitungen zum Ansehen & Drucken", v: "dokumente" },
     { id: "erstattung", sym: "💶", t: "Erstattung", u: "Fahrtkosten & Auslagen", v: "erstattung" },
+    // KC-CLUB-AENDERUNG (2.22.7, Wunsch Hansi): Anschrift, Name, Telefon, Bank, Größe … melden; Clubleitung sieht offene Meldungen als Zahl
+    { id: "aenderung", sym: "✏️", t: "Meine Daten geändert?", u: "Anschrift, Telefon, Größe …", aktion: "aeStart()", zahl: () => (ICH?.vorstand || ICH?.admin ? AE.offen : 0) },
     { id: "schulungen", sym: "🎓", t: "Meine Schulungen", u: "Zusammenfassungen", bald: true },
     { id: "einstellungen", sym: "⚙️", t: "Einstellungen", u: "Push, Ton, Schrift", v: "einstellungen" },
     { id: "test", sym: "🧪", t: "Test an mich", u: "Push & Mail ausprobieren", aktion: "testAnMichStarten()" },
@@ -9373,7 +9387,7 @@ async function begruessungSenden(pid, vorname) {
 }
 function buStart() { BU.sicht = "start"; zeige("buero"); }
 async function buLaden() {
-  try { [BU.start] = await Promise.all([api("buero_start"), buNachherListe(), buFesteListe(BU_F?.tage || 60), flLaden()]); } catch (e) { $("buInhalt").innerHTML = `<div class="karte hinweis">${esc(e.message)}</div>`; return; }
+  try { [BU.start] = await Promise.all([api("buero_start"), buNachherListe(), buFesteListe(BU_F?.tage || 60), flLaden(), ICH?.vorstand || ICH?.admin ? aeEingangLaden().catch(() => null) : null]); } catch (e) { $("buInhalt").innerHTML = `<div class="karte hinweis">${esc(e.message)}</div>`; return; }
   buZeigen();
 }
 function buZurueck() { if (BU.sicht !== "start") { BU.sicht = "start"; buLaden(); window.scrollTo(0, 0); } else zeige("start"); }
@@ -9466,6 +9480,7 @@ const BU_REGAL = [
   { id: "termine", sym: "📅", t: "Termine", farbe: "#8b6f5a", fn: "buTermine()", recht: "S" },
   { id: "briefe", sym: "✉️", t: "Briefe", farbe: "#6e6a5c", fn: "buBrief()", recht: "S" },
   { id: "erstattung", sym: "💶", t: "Erstattung", farbe: "#7a7f5e", fn: "zeige('erstattung')", recht: "L" },
+  { id: "aenderungen", sym: "📬", t: "Änderungen", farbe: "#6b7a8a", fn: "aeEingang()", recht: "L" }, // KC-CLUB-AENDERUNG (2.22.7)
   { id: "chronik", sym: "📖", t: "Chronik", farbe: "#8a6d4e", fn: "arStartArt('chronik')" },
   { id: "archiv", sym: "🗄️", t: "Archiv", farbe: "#5f5a57", fn: "arStart()" },
   { id: "verwaltung", sym: "🔐", t: "Freigaben", farbe: "#55606b", fn: "buRechte()", recht: "A" },
@@ -9479,7 +9494,7 @@ function buRaumHtml() {
   const dranFn = nt ? `buNachherWahl(${esc(JSON.stringify(nt.text))})` : { vorbereiten: "buSitzungWahl()", einladung: "buEinladungWahl(false)", erinnerung: "buEinladungWahl(true)" }[n];
   const fest = BU_F ? BU_F.geburtstage.concat(BU_F.jubilaeen).filter((f) => f.tage >= 0 && f.tage <= 7) : [], festHeute = fest.filter((f) => f.tage === 0);
   const flOffen = FL.d ? FL.d.faelle.filter((f) => f.status === "offen").length : 0;
-  const zahl = { fl: flOffen, feste: fest.length, nachher: nt ? 1 : 0 };
+  const zahl = { fl: flOffen, feste: fest.length, nachher: nt ? 1 : 0, aenderungen: AE.offen };
   const ordner = BU_REGAL.filter(buRecht);
   const ruecken = (o) => `<button class="bu-ordner" style="--of:${o.farbe}" onclick="${o.bereich ? `buOrdner('${o.id}')` : o.fn}" aria-label="${esc(o.t)}"><span class="bu-osym">${o.sym}</span><span class="bu-otext">${esc(o.t)}</span>${zahl[o.id] ? `<span class="bu-ozahl">${zahl[o.id]}</span>` : ""}<span class="bu-oloch"></span></button>`;
   const naechst = (r.sitzungen || []).find((x) => new Date(x.beginn) >= Date.now() - 6 * 3600000) || t;
@@ -13689,6 +13704,129 @@ async function kalenderAbo() {
   try { const r = await api("kalender_abo"); INIT.kalenderAbo = { erstellt_am: new Date().toISOString(), zuletzt_abgerufen: null }; kalenderAboZeigen(r.url); } catch (e) { meldeFehler(e); }
 }
 
+// ---------- KC-CLUB-AENDERUNG (2.22.7, Wunsch Hansi): „✏️ Meine Daten haben sich geändert“ ----------
+// Mitglied tippt an, was sich geändert hat (Register AENDERUNG auf dem Server) → geht je Art an Clubsprecher/Kassenwart/Admin.
+// Die Clubleitung sieht die Meldungen unter „📬 Änderungen“ (Büro, Kachel, Push-Link #aenderungen) und hakt sie nach dem Eintragen ab.
+const AE = { d: null, art: null, eingang: null, sicht: "offen", offen: 0 };
+const aeDatum = (iso) => (iso ? String(iso).slice(0, 10).split("-").reverse().join(".") : "");
+const AE_STATUS = { offen: "⏳ wird bearbeitet", erledigt: "✅ eingetragen", zurueckgezogen: "↩️ zurückgezogen" };
+function aeWert(art, w) {
+  if (!w) return "–";
+  if (art === "anschrift") return `${w.strasse || ""}, ${w.plz || ""} ${w.ort || ""}`.trim();
+  if (art === "geburtstag") return aeDatum(w.datum);
+  if (art === "kleidung") return [w.kochjacke && "Kochjacke " + w.kochjacke, w.kochhose && "Kochhose " + w.kochhose].filter(Boolean).join(" · ") || "–";
+  return Object.values(w).filter(Boolean).join(" · ") || "–";
+}
+async function aeStart() {
+  blattAuf("aeBlatt", '<h3 style="margin:0">✏️ Meine Daten haben sich geändert</h3><p class="hinweis">⏳ Wird geladen …</p>');
+  try { AE.d = await api("aenderung_start", {}); AE.art = null; aeZeichnen(); } catch (e) { $("aeBlatt")?.remove(); meldeFehler(e); }
+}
+function aeZeichnen() {
+  const d = AE.d, b = $("aeBlatt"); if (!d || !b) return;
+  const art = AE.art && d.arten.find((a) => a.id === AE.art);
+  let html;
+  if (!art) {
+    html = `<h3 style="margin:0">✏️ Meine Daten haben sich geändert</h3>
+      <p class="hinweis" style="margin:0">Was hat sich geändert? Antippen – die Meldung geht gleich an die Richtigen im Club.</p>
+      <div class="ae-wahl">${d.arten.map((a) => `<button class="knopf" onclick="AE.art='${a.id}';aeZeichnen()"><span class="ae-sym">${a.sym}</span><span><b>${esc(a.t)}</b><small>an ${esc(a.anText.join(", "))}</small></span></button>`).join("")}</div>
+      ${d.meine.length ? `<b>Meine letzten Meldungen</b>${d.meine.map((x) => { const a = d.arten.find((y) => y.id === x.art);
+        return `<div class="ae-meine"><span>${a?.sym || ""} <b>${esc(a?.t || x.art)}</b><small>${esc(zeitKurz(x.erstellt_am))} · ${AE_STATUS[x.status] || ""}${x.antwort ? ` · „${esc(x.antwort)}“` : ""}</small></span>${x.status === "offen" ? `<button class="knopf klein" onclick="aeZurueck('${x.id}')">↩️ Zurückziehen</button>` : ""}</div>`; }).join("")}` : ""}
+      <div class="knoepfe">${ICH?.vorstand || ICH?.admin ? `<button class="knopf" onclick="$('aeBlatt').remove();aeEingang()">📬 Eingegangene Meldungen${AE.offen ? ` (${AE.offen})` : ""}</button>` : ""}<button class="knopf" onclick="$('aeBlatt').remove()">Schließen</button></div>`;
+  } else {
+    const alt = d.stand[art.id], leer = ["bank", "sonstiges", "mitgliedschaft"].includes(art.id);
+    const feld = (f) => {
+      const v = leer ? "" : alt?.[f.k] ?? "", id = "aeF_" + f.k;
+      if (f.typ === "wahl") return `<label class="ae-feld">${esc(f.t)}<select id="${id}"><option value="">– bitte wählen –</option>${f.opt.map((o) => `<option${o === v ? " selected" : ""}>${esc(o)}</option>`).join("")}</select></label>`;
+      if (f.typ === "lang") return `<label class="ae-feld">${esc(f.t)}<textarea id="${id}" maxlength="1000"></textarea></label>`;
+      const typ = { tel: "tel", email: "email", date: "date" }[f.typ] || "text";
+      return `<label class="ae-feld">${esc(f.t)}${f.pflicht ? "" : ' <small class="hinweis">(freiwillig)</small>'}<input id="${id}" type="${typ}"${f.typ === "plz" ? ' inputmode="numeric" maxlength="5"' : ""}${f.typ === "iban" ? ' autocomplete="off" autocapitalize="characters" spellcheck="false"' : ""} value="${esc(v)}"></label>`;
+    };
+    html = `<h3 style="margin:0">${art.sym} ${esc(art.t)}</h3>
+      ${!leer ? `<p class="hinweis" style="margin:0">Bisher: <b>${esc(aeWert(art.id, alt))}</b></p>` : ""}
+      ${art.felder.map(feld).join("")}
+      ${art.gilt ? `<label class="ae-feld">Gilt ab${art.giltPflicht ? "" : ' <small class="hinweis">(freiwillig)</small>'}<input id="aeGilt" type="date"></label>` : ""}
+      ${art.waehlbar ? `<p style="margin:0"><b>An wen?</b></p>${art.waehlbar.map((x) => `<label class="ae-haken"><input type="checkbox" class="aeAn" value="${esc(x)}" checked> ${esc(d.anNamen[x] || x)}</label>`).join("")}` : ""}
+      ${art.id !== "sonstiges" ? '<label class="ae-feld">Bemerkung <small class="hinweis">(freiwillig)</small><textarea id="aeBem" maxlength="1000" rows="2"></textarea></label>' : ""}
+      ${art.alle ? '<label class="ae-haken"><input type="checkbox" id="aeAlle"> 📣 Auch allen Mitgliedern Bescheid sagen (sie bekommen die neue Angabe als Nachricht)</label>' : ""}
+      <p class="hinweis" style="margin:0">${art.waehlbar ? "" : `Geht an: <b>${esc(art.anText.join(", "))}</b>. `}${art.auto ? "Wird sofort gespeichert – die Clubleitung bekommt nur eine Info." : "Du bekommst Bescheid, sobald es eingetragen ist."}
+        ${art.id === "bank" ? "<br>🔒 Die Bankverbindung sehen nur Kassenwart und Admin. Nach dem Eintragen bleiben in der App nur die letzten 4 Stellen gespeichert." : ""}</p>
+      <button class="knopf haupt" onclick="aeSenden(this)">📨 Änderung melden</button>
+      <button class="knopf" onclick="AE.art=null;aeZeichnen()">← Zurück</button>`;
+  }
+  b.querySelector(".blatt-innen").innerHTML = `<div style="display:grid;gap:8px">${html}</div>`;
+}
+async function aeSenden(knopf) {
+  const d = AE.d, art = d.arten.find((a) => a.id === AE.art); if (!art) return;
+  const neu = {}; for (const f of art.felder) { const v = ($("aeF_" + f.k)?.value || "").trim(); if (v) neu[f.k] = v; }
+  const alt = d.stand[art.id];
+  if (alt && !["bank", "sonstiges", "mitgliedschaft"].includes(art.id) && art.felder.every((f) => (neu[f.k] || "") === String(alt[f.k] ?? ""))) return melde("Da hat sich noch nichts geändert – bitte die neue Angabe eintragen.", true);
+  if (art.id === "mitgliedschaft" && !(await frage(`Wirklich melden: Mitgliedschaft „${neu.wunsch || "?"}“?\n\nClubsprecher und Admin melden sich dann bei dir.`, { ja: "Ja, melden" }))) return;
+  const an = [...document.querySelectorAll(".aeAn")].filter((x) => x.checked).map((x) => x.value);
+  await einmal(knopf, async () => {
+    try {
+      const r = await api("aenderung_senden", { art: art.id, neu, gilt_ab: $("aeGilt")?.value || null, bemerkung: $("aeBem")?.value || "", an_alle: !!$("aeAlle")?.checked, an });
+      if (art.id === "notfall" && INIT) INIT.notfall = neu.name || neu.telefon ? { name: neu.name || "", telefon: neu.telefon || "", beziehung: neu.beziehung || "" } : null;
+      melde(`✅ ${r.auto ? "Gespeichert – Info" : "Gemeldet"} an ${r.an.join(", ")}${r.alle != null ? ` · ${r.alle} Mitglieder benachrichtigt` : ""}`);
+      await aeStart();
+    } catch (e) { meldeFehler(e); }
+  });
+}
+async function aeZurueck(id) {
+  if (!(await frage("Meldung zurückziehen?"))) return;
+  try { await api("aenderung_zurueckziehen", { id }); melde("↩️ Meldung zurückgezogen"); aeStart(); } catch (e) { meldeFehler(e); }
+}
+// ---- Eingang der Clubleitung ----
+async function aeEingangLaden() { AE.eingang = await api("aenderungen_liste", {}); AE.offen = AE.eingang.meldungen.filter((x) => x.status === "offen").length; }
+async function aeEingang() {
+  if (!ICH?.vorstand && !ICH?.admin) return aeStart();
+  blattAuf("aeEingBlatt", '<h3 style="margin:0">📬 Änderungen</h3><p class="hinweis">⏳ Wird geladen …</p>');
+  try { await aeEingangLaden(); aeEingZeichnen(); } catch (e) { $("aeEingBlatt")?.remove(); meldeFehler(e); }
+}
+function aeEingZeichnen() {
+  const e = AE.eingang, b = $("aeEingBlatt"); if (!e || !b) return;
+  const art = (id) => e.arten.find((a) => a.id === id) || { sym: "", t: id, felder: [] };
+  const liste = e.meldungen.filter((x) => (AE.sicht === "offen" ? x.status === "offen" : x.status !== "offen"));
+  const karte = (x) => { const a = art(x.art);
+    const zeilen = a.felder.map((f) => { const n = x.neu?.[f.k] ?? "", o = x.alt?.[f.k] ?? ""; if (!n && !o) return "";
+      return `<tr><td>${esc(f.t)}</td><td class="hinweis">${esc(f.typ === "date" ? aeDatum(o) : o) || "–"}</td><td${n !== o ? ' class="ae-neu"' : ""}>${esc(f.typ === "date" ? aeDatum(n) : n) || "–"}</td></tr>`; }).join("");
+    return `<div class="karte innen ae-karte"><b>${a.sym} ${esc(a.t)} – ${esc(x.name)}</b>
+      <small class="hinweis">gemeldet ${esc(zeitKurz(x.erstellt_am))}${x.gilt_ab ? ` · gilt ab ${esc(aeDatum(x.gilt_ab))}` : ""}${x.an_alle ? " · 📣 alle informiert" : ""}</small>
+      <table class="todotab"><tr><th></th><th>bisher</th><th>neu</th></tr>${zeilen}</table>
+      ${x.bemerkung ? `<p style="margin:4px 0">📝 ${esc(x.bemerkung)}</p>` : ""}
+      ${x.status === "offen" ? `<div class="knoepfe"><button class="knopf" onclick="aeKopieren('${x.id}')">📋 Kopieren</button><button class="knopf haupt" onclick="aeErledigt('${x.id}', this)">✅ Erledigt – eingetragen</button></div>`
+        : `<small class="hinweis">${AE_STATUS[x.status] || ""}${x.erledigt_von ? ` von ${esc(x.erledigt_von)}` : ""}${x.erledigt_am ? ` · ${esc(zeitKurz(x.erledigt_am))}` : ""}${x.antwort ? ` · „${esc(x.antwort)}“` : ""}</small>`}</div>`; };
+  const gr = e.groessen, zaehl = (k) => { const z = {}; gr.forEach((g) => { if (g[k]) z[g[k]] = (z[g[k]] || 0) + 1; }); return Object.entries(z).map(([s, n]) => `${n}× ${s}`).join(", ") || "–"; };
+  b.querySelector(".blatt-innen").innerHTML = `<div style="display:grid;gap:8px">
+    <h3 style="margin:0">📬 Änderungen der Mitglieder</h3>
+    <div class="knoepfe"><button class="knopf${AE.sicht === "offen" ? " haupt" : ""}" onclick="AE.sicht='offen';aeEingZeichnen()">⏳ Offen (${AE.offen})</button><button class="knopf${AE.sicht === "erledigt" ? " haupt" : ""}" onclick="AE.sicht='erledigt';aeEingZeichnen()">✅ Erledigt</button></div>
+    ${liste.map(karte).join("") || `<p class="hinweis">${AE.sicht === "offen" ? "Keine offenen Meldungen – alles eingetragen. 👍" : "Noch nichts erledigt."}</p>`}
+    <details class="karte innen" style="margin:0"><summary>👕 Größen-Übersicht (${gr.length})</summary>
+      ${gr.length ? `<table class="todotab"><tr><th>Mitglied</th><th>Kochjacke</th><th>Kochhose</th></tr>${gr.map((g) => `<tr><td>${esc(g.name)}</td><td>${esc(g.kochjacke || "–")}</td><td>${esc(g.kochhose || "–")}</td></tr>`).join("")}</table>
+        <p class="hinweis" style="margin:4px 0">Summe Kochjacken: ${esc(zaehl("kochjacke"))}<br>Summe Kochhosen: ${esc(zaehl("kochhose"))}</p>
+        <button class="knopf" onclick="aeGroessenKopieren()">📋 Liste kopieren (für die Bestellung)</button>` : '<p class="hinweis">Noch keine Größen gemeldet. Mitglieder melden sie unter „Meins → ✏️ Meine Daten geändert? → 👕 Kleidergröße“.</p>'}</details>
+    <p class="hinweis" style="margin:0">Du siehst nur Meldungen, die an dich gingen. Bitte im KC Manager eintragen und dann „✅ Erledigt“ – das Mitglied bekommt Bescheid.</p>
+    <button class="knopf" onclick="$('aeEingBlatt').remove()">Schließen</button></div>`;
+}
+function aeKopieren(id) {
+  const x = AE.eingang.meldungen.find((m) => m.id === id); if (!x) return;
+  const a = AE.eingang.arten.find((y) => y.id === x.art);
+  const text = `${x.name} – ${a?.t || x.art}${x.gilt_ab ? " (ab " + aeDatum(x.gilt_ab) + ")" : ""}\n` + (a?.felder || []).filter((f) => x.neu?.[f.k]).map((f) => `${f.t}: ${f.typ === "date" ? aeDatum(x.neu[f.k]) : x.neu[f.k]}`).join("\n");
+  navigator.clipboard.writeText(text).then(() => melde("📋 Kopiert"), () => eingabe("Zum Kopieren:", text, { mehrzeilig: true }));
+}
+function aeGroessenKopieren() {
+  const text = "Größen Köcheclub (Kochjacke / Kochhose)\n" + AE.eingang.groessen.map((g) => `${g.name}: ${g.kochjacke || "–"} / ${g.kochhose || "–"}`).join("\n");
+  navigator.clipboard.writeText(text).then(() => melde("📋 Liste kopiert"), () => eingabe("Zum Kopieren:", text, { mehrzeilig: true }));
+}
+async function aeErledigt(id, knopf) {
+  const x = AE.eingang.meldungen.find((m) => m.id === id);
+  const antwort = await eingabe(`Im KC Manager eingetragen?\n\n${x ? x.name.split(" ")[0] : "Das Mitglied"} bekommt Bescheid. Kurze Antwort dazu (freiwillig):`, "");
+  if (antwort === null) return;
+  await einmal(knopf, async () => {
+    try { await api("aenderung_erledigt", { id, antwort }); melde("✅ Erledigt – Mitglied hat Bescheid bekommen"); await aeEingangLaden(); aeEingZeichnen(); }
+    catch (e) { meldeFehler(e); }
+  });
+}
+
 // ---------- Notfallkontakt (KC-CLUB-NOTFALL) ----------
 function notfallZeigen() { const n = INIT?.notfall || {}; $("nfName").value = n.name || ""; $("nfTel").value = n.telefon || ""; $("nfBez").value = n.beziehung || ""; }
 async function notfallSpeichern() {
@@ -14631,6 +14769,7 @@ function mitgliedZeigen() {
       ${m.zuletztDa ? `<div class="hinweis" style="margin-top:2px">${m.zuletztDa.online ? "🟢 gerade online" : "🕒 " + esc(zuletztText(m.zuletztDa).replace(/^zuletzt da/, "Zuletzt in der App:"))}</div>` : ""}
     </div>
     <div class="karte">${zeilen}${leer}</div>
+    ${m.selbst ? '<button class="knopf" onclick="aeStart()">✏️ Stimmt etwas nicht mehr? Änderung melden</button>' : ""}
     ${m.notfall ? `<div class="karte"><h3>🆘 Notfallkontakt</h3><div class="zeile"><div style="flex:1"><b>${esc(m.notfall.name || "–")}</b>${m.notfall.beziehung ? ` <span class="hinweis">(${esc(m.notfall.beziehung)})</span>` : ""}<div class="hinweis">${esc(m.notfall.telefon || "")}</div></div>${m.notfall.telefon ? `<a class="knopf klein" href="tel:${esc(nurZiffern(m.notfall.telefon))}">📞</a>` : ""}</div><p class="hinweis" style="font-size:.85rem;margin-bottom:0">🔒 Nur für ${m.selbst ? "dich und " : ""}Clubsprecher, Kassenwart und Admin sichtbar.</p></div>` : m.selbst ? '<p class="hinweis">🆘 Noch kein Notfallkontakt – eintragen unter ⚙️ Mehr → Privatsphäre.</p>' : ""}
     <div class="knoepfe">
       ${!m.selbst && ONL.ids.has(m.person_id) ? `<button class="knopf haupt" onclick="anklopfen('${m.person_id}')">👋 Anklopfen – ist gerade online</button><div class="knoepfe"><button class="knopf" onclick="anrufen('${m.person_id}')">📞 Anrufen (Test)</button><button class="knopf" onclick="anrufen('${m.person_id}', true)">🎥 Video (Test)</button></div>` : ""}
@@ -16203,6 +16342,7 @@ async function fpAdmin(tage) {
     else if (h === "#spiele") spStart();
     else if (["#termine", "#vorschlaege", "#aktionen", "#fotos", "#protokolle", "#dienste", "#nachrichten", "#mitglieder", "#einstellungen", "#archiv", "#helfen"].includes(h)) zeige(h.slice(1));
     else if (h === "#buero" && ICH?.buero) buStart();
+    else if (h === "#aenderungen") ICH?.vorstand || ICH?.admin ? aeEingang() : aeStart(); // KC-CLUB-AENDERUNG (2.22.7): aus Push/Mail
     if (!h || h === "#") setTimeout(() => buGrussFragen(), 1500); // KC-CLUB-BUERO: Begrüßung der Clubleitung
     if (!h || h === "#") setTimeout(() => spEinladung(), 4000); // KC-CLUB-SPIEL-EINLADUNG (2.12.0): nach Begrüßung/Neuigkeiten
   });

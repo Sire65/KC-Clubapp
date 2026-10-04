@@ -3560,6 +3560,25 @@ assert.ok(/const UH_HERVOR = \["Innovation"\];/.test(html) && /function uhAmeise
   assert.ok(/if \(!r\.ok \|\| \(text\.trim\(\) && !text\.includes\("BEGIN:VCALENDAR"\)\)\)/.test(server), "leerer Stadt-Kalender ist kein Fehler");
   assert.ok(/\["stadt", "🏙️", "Stadt-Termine", "app"\]/.test(html) && /if \(id === "stadt"\) return stadtTermine\(\);/.test(html) && /api\("stadt_termine_uebernehmen", \{ keys \}\)/.test(html), "Admin-Kachel Stadt-Termine");
 }
+// 332. 2.22.7: Meine Daten haben sich geändert (KC-CLUB-AENDERUNG)
+{
+  const mig = lies("supabase/migrations/20261004_kc_club_v2227_aenderungen.sql");
+  assert.ok(/create table if not exists kc_club_aenderungen/.test(mig) && /enable row level security/.test(mig) && /revoke all on table kc_club_aenderungen from anon, authenticated/.test(mig), "Tabelle nur für den Server");
+  for (const art of ["anschrift", "name", "handy", "festnetz", "mail", "bank", "geburtstag", "notfall", "kleidung", "mitgliedschaft", "sonstiges"])
+    assert.ok(new RegExp(`\\{ id: "${art}", sym:`).test(server) && mig.includes(`'${art}'`), `Art ${art} fehlt (Server oder Datenbank)`);
+  assert.ok(!/allergie/i.test(server.slice(server.indexOf("const AENDERUNG = {"), server.indexOf("proTag:"))), "keine Allergien (Wunsch Hansi)");
+  assert.ok(/\{ k: "kochjacke", t: "Kochjacke"/.test(server) && /\{ k: "kochhose", t: "Kochhose"/.test(server), "Kleidergröße Kochjacke/Kochhose");
+  assert.ok(/ibanOk\("DE89370400440532013000"\)|function ibanOk/.test(server) && /r === 1 \?/.test(server), "IBAN-Prüfung");
+  // Mail/Push nennen nur die Art, keine Inhalte
+  const senden = server.slice(server.indexOf('case "aenderung_senden"'), server.indexOf('case "aenderung_zurueckziehen"'));
+  assert.ok(/Die Einzelheiten stehen aus Datenschutzgründen nur in der App/.test(senden) && !/\$\{neu\.iban\}/.test(senden), "keine Inhalte in Mail/Push");
+  assert.ok(/const anAlle = !!art\.alle && p\.an_alle === true;/.test(senden), "„allen Bescheid“ nur bei erlaubten Arten");
+  // Eingang: nur eigene Empfänger (Admin alles); Bank nach Erledigt gekürzt
+  assert.ok(/case "aenderungen_liste": \{\s*if \(!ich\.vorstand && !ich\.admin\)/.test(server) && /if \(!ich\.admin\) q = q\.contains\("empfaenger", \[ich\.person_id\]\);/.test(server), "Eingang nur für Empfänger");
+  assert.ok(/const neu = x\.art === "bank" \? aeKurz/.test(server) && /iban: "…" \+ String/.test(server), "IBAN nach Erledigt gekürzt");
+  assert.ok(/\{ id: "aenderung", sym: "✏️", t: "Meine Daten geändert\?"/.test(html) && /\{ id: "aenderungen", sym: "📬", t: "Änderungen"/.test(html) && /h === "#aenderungen"/.test(html), "Kachel, Büro-Ordner, Link");
+  assert.ok(/api\("aenderung_senden", \{/.test(html) && /api\("aenderung_erledigt", \{ id, antwort \}\)/.test(html), "App ruft die Aktionen");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
