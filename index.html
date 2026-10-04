@@ -5727,9 +5727,9 @@ function spEinladung(versuch = 0) {
   try { if (localStorage.getItem(SPE_TAG) === heuteIso() || Date.now() < Number(localStorage.getItem(SPE_SPAETER) || 0)) return; } catch { return; }
   if (document.querySelector(".blatt:not(.versteckt)") || aktuelleAnsicht !== "start") { if (versuch < 24) setTimeout(() => spEinladung(versuch + 1), 5000); return; }
   const dran = INIT.spieleDran || 0;
-  const f = blattAuf("spEinlBlatt", `<div style="text-align:center"><div style="font-size:2.6rem;line-height:1.2" aria-hidden="true">♟️ 🃏 ❌⭕</div>
+  const f = blattAuf("spEinlBlatt", `<div style="text-align:center"><div style="font-size:2.6rem;line-height:1.2" aria-hidden="true">♟️ 🃏 ❌⭕ 🔪</div>
       <h3 style="margin:6px 0">Hey ${esc(ICH.vorname || ICH.name || "")}, heute Lust auf eine Partie?</h3>
-      <p style="margin:0 0 6px">Schach gegen den Computer – oder fordere doch ein anderes Mitglied heraus. Tic-Tac-Toe oder Bauernskat habe ich auch im Angebot.</p>
+      <p style="margin:0 0 6px">Schach gegen den Computer – oder fordere doch ein anderes Mitglied heraus. Tic-Tac-Toe, Bauernskat und das Küchen-Quiz 🔪 Küchenterror habe ich auch im Angebot.</p>
       ${dran ? `<p class="hinweis" style="margin:0 0 6px"><b>🎲 ${dran === 1 ? "Eine Partie wartet" : dran + " Partien warten"} schon auf dich.</b></p>` : ""}</div>
     <div class="knoepfe" style="flex-direction:column;align-items:stretch">
       <button class="knopf haupt" style="text-align:center" onclick="spEinlAntwort('ja')">✅ Ja, lass uns spielen</button>
@@ -7080,7 +7080,7 @@ const KACHELN = {
     // KC-CLUB-BUERO (1.25.0): nur für die Clubleitung (Clubsprecher, Kassenwart, Admin)
     { id: "buero", sym: "🗂️", t: "Büro", u: "Sitzung vorbereiten · Einladung · Eingang", aktion: "buStart()", nur: () => !!ICH?.buero },
     // KC-CLUB-SPIELE (2.7.0, Wunsch Hansi): Spiele – Köcheclub Edition (Zahl = Partien, in denen ich dran bin / Herausforderungen an mich)
-    { id: "spiele", sym: "🎲", t: "Spiele", u: "Tic-Tac-Toe · Schach · Bauernskat", aktion: "spStart()", zahl: () => INIT?.spieleDran || 0 },
+    { id: "spiele", sym: "🎲", t: "Spiele", u: "Tic-Tac-Toe · Schach · Bauernskat · Küchenterror", aktion: "spStart()", zahl: () => INIT?.spieleDran || 0 },
   ],
   mein: [
     { id: "status", sym: "🟢", t: "Mein Status", u: "verfügbar, Urlaub …", aktion: "statusBlatt()" },

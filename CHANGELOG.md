@@ -5,6 +5,8 @@
   Ameisenrahmen (gleiche Animation wie bei den Registern), danach ruhig; höchstens 1× je Minute, bleibt auch beim Neuzeichnen der Liste.
 - SOS: der WhatsApp-Knopf nennt die Club-Gruppe „KCW Köcheclub Werne“ (WA_GRUPPE), damit man sie in der WhatsApp-Auswahl sofort findet.
   (Eine bestimmte Gruppe direkt mit Text öffnen erlaubt WhatsApp nicht – Auswahl bleibt ein Tipp.) Test 329.
+- Spiel-Einladung beim Start nennt jetzt auch 🔪 Küchenterror („Tic-Tac-Toe, Bauernskat und das Küchen-Quiz 🔪 Küchenterror …“, Symbol 🔪 dazu);
+  Kachel „Spiele“: „Tic-Tac-Toe · Schach · Bauernskat · Küchenterror“ (Fund Hansi).
 
 ## 2.22.5 – 2026-10-04 – 👥 SOS für alle freigeben (Wunsch Hansi)
 - KC-CLUB-SOS-FREIGABE: im SOS-Fenster (nur beim Admin) Schalter „👥 SOS für alle Mitglieder freigeben“ – mit Rückfrage. Gespeichert als
