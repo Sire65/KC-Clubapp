@@ -3799,6 +3799,19 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/\["laeuft", "beendet", "angefragt"\]\.includes\(g\.status\) \? `style="cursor:pointer" onclick="if\(!event\.target\.closest\('button'\)\)spOeffnen/.test(html), "offene Herausforderung antippbar");
   assert.ok(/async function spSchonOffen\(e, an, f, mitTermin\)/.test(html) && /catch \(e\) \{ if \(!\(await spSchonOffen\(e, an, f, true\)\)\) meldeFehler\(e\); \}/.test(html) && /catch \(e\) \{ if \(!\(await spSchonOffen\(e, an, f, false\)\)\) meldeFehler\(e\); \}/.test(html), "statt Fehlermeldung zur offenen Herausforderung");
 }
+// 374. 2.23.28: Chats archivieren / wieder aktivieren / bei mir komplett löschen (KC-CLUB-CHAT-ARCHIV)
+{
+  const ua = server.slice(server.indexOf('case "unterhaltung_archivieren"'), server.indexOf('case "unterhaltung_loeschen"'));
+  assert.ok(/await binTeilnehmer\(id, ich\.person_id\);[\s\S]*if \(p\.zurueck\) delete archiv\[id\]; else archiv\[id\] = jetzt\(\);/.test(ua), "Archivieren nur als Teilnehmer, zurück = wieder aktivieren");
+  assert.ok(/case "unterhaltung_leeren"[\s\S]*await binTeilnehmer\(id, ich\.person_id\);[\s\S]*kc_communication_message_hidden"\)\.upsert\(ms\.map\(\(m: any\) => \(\{ person_id: ich\.person_id/.test(ua), "Komplett löschen nur für mich (message_hidden)");
+  assert.ok(!/\.delete\(\)/.test(ua), "Archivieren/Leeren löscht nichts für andere");
+  assert.ok(/\.\.\.\(archiv\[t\.id\] \? \{ archiviert: archiv\[t\.id\] \} : \{\}\)/.test(server), "Liste liefert archiviert");
+  assert.ok(/const zeigen = unterhaltungen\.filter\(\(u\) => !!u\.archiviert === !!UH\.archivAnsicht\)/.test(html) && /📦 Archiviert/.test(html), "Liste trennt Archiv");
+  assert.ok(/u\.archiviert \? "📤 Wieder aktivieren" : "📦 Archivieren"/.test(html) && /onclick="chatKomplettLoeschen\('\$\{u\.id\}'\)"/.test(html), "Aktionen in der Liste");
+  const kl = html.slice(html.indexOf("async function chatKomplettLoeschen"), html.indexOf("async function chatKomplettLoeschen") + 1400);
+  assert.ok(/if \(!\(await frage\(/.test(kl) && /api\("unterhaltung_leeren"/.test(kl), "Komplett löschen nur nach Rückfrage");
+  assert.ok(/id="chatArchivKnopf"/.test(html) && /id="chatKomplettKnopf"/.test(html) && /onclick="unterhaltungWeg\(false\)">🙈 Nur bei mir entfernen/.test(html), "Chat-Menü: neu + Bestehendes bleibt");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

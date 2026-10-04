@@ -41,7 +41,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.23.27";
+const SERVER_VERSION = "2.23.28";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -281,6 +281,17 @@ async function stummFuer(ids: string[], threadId: string) {
   if (!ids.length) return new Set<string>();
   const { data } = await db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "stumm").in("person_id", ids);
   return new Set((data ?? []).filter((x: any) => stummJetzt(x.wert, threadId)).map((x: any) => x.person_id as string));
+}
+// KC-CLUB-CHAT-ARCHIV (2.23.28, Wunsch Hansi): Chats archivieren (wie WhatsApp) – je Person „chat_archiv“ { threads: { id: seit } }.
+// Archivierte Chats bleiben archiviert, auch wenn jemand schreibt (Push wie bisher, Stummschalten getrennt); „📤 Wieder aktivieren“ holt sie zurück.
+async function chatArchivHolen(pid: string): Promise<Record<string, string>> {
+  const { data } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", pid).eq("schluessel", "chat_archiv").maybeSingle();
+  const t = data?.wert?.threads;
+  return t && typeof t === "object" ? Object.fromEntries(Object.entries(t).filter(([id]) => /^[0-9a-f-]{36}$/.test(id)).slice(-500)) as Record<string, string> : {};
+}
+async function chatArchivSetzen(pid: string, threads: Record<string, string>) {
+  const { error } = await db.from("kc_club_person_einstellung").upsert({ person_id: pid, schluessel: "chat_archiv", wert: { threads }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
+  if (error) throw new Fehler("Archiv konnte nicht gespeichert werden.", 500);
 }
 // KC-CLUB-BEARBEITEN (1.9.0): eigene Nachricht bis zu 15 Minuten nach dem Senden ändern (wie WhatsApp)
 const BEARBEITEN_MIN = 15;
@@ -5382,6 +5393,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const gelesen = new Map((meine ?? []).map((x: any) => [x.thread_id, x.last_read_at]));
         const { data: gr } = await db.from("kc_club_gruppen").select("thread_id,name,symbol").in("thread_id", ids);
         const gruppe = new Map((gr ?? []).map((g: any) => [g.thread_id, g]));
+        const archiv = await chatArchivHolen(ich.person_id); // KC-CLUB-CHAT-ARCHIV (2.23.28)
         // KC-CLUB-WICHTIG (1.53.0): ungelesene wichtige Nachrichten je Chat
         const ungelesenIds = (msgs ?? []).filter((x: any) => x.sender_person_id !== ich.person_id && (!gelesen.get(x.thread_id) || x.created_at > gelesen.get(x.thread_id))).map((x: any) => x.id).slice(0, 300);
         const { data: wi } = ungelesenIds.length ? await db.from("kc_club_nachricht_wichtig").select("message_id").in("message_id", ungelesenIds) : { data: [] as any[] };
@@ -5399,6 +5411,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             ungelesen: m.filter((x: any) => x.sender_person_id !== ich.person_id && (!lr || x.created_at > lr)).length,
             wichtigNeu: m.filter((x: any) => wichtigSet.has(x.id)).length,
             aktualisiert: m[0]?.created_at || t.updated_at,
+            ...(archiv[t.id] ? { archiviert: archiv[t.id] } : {}),
           };
         }).sort((x: any, y: any) => String(y.aktualisiert).localeCompare(String(x.aktualisiert)));
         return json({ unterhaltungen: liste });
@@ -5977,6 +5990,39 @@ Köcheclub-App`,
         await db.from("kc_communication_thread_participants").update({ hidden_at: jetzt() }).eq("thread_id", id).eq("person_id", ich.person_id);
         await protokoll(ich.person_id, "unterhaltung_ausgeblendet", { thread: id });
         return json({ ok: true });
+      }
+
+      case "unterhaltung_archivieren": {
+        // KC-CLUB-CHAT-ARCHIV (2.23.28): nur für mich; zurueck = wieder aktivieren
+        const id = String(p.id || "");
+        await binTeilnehmer(id, ich.person_id);
+        const archiv = await chatArchivHolen(ich.person_id);
+        if (p.zurueck) delete archiv[id]; else archiv[id] = jetzt();
+        await chatArchivSetzen(ich.person_id, archiv);
+        await protokoll(ich.person_id, p.zurueck ? "unterhaltung_aus_archiv" : "unterhaltung_archiviert", { thread: id });
+        return json({ ok: true });
+      }
+
+      case "unterhaltung_leeren": {
+        // KC-CLUB-CHAT-ARCHIV (2.23.28): „bei mir komplett löschen“ – alle bisherigen Nachrichten nur für mich weg (kc_communication_message_hidden,
+        // wie „Für mich löschen“) und Chat aus meiner Liste/meinem Archiv. Die anderen behalten alles. Schreibt jemand neu, kommt nur das Neue.
+        const id = String(p.id || "");
+        await binTeilnehmer(id, ich.person_id);
+        const am = jetzt();
+        let n = 0;
+        for (let seite = 0; seite < 10; seite++) {
+          const { data: ms, error: le } = await db.from("kc_communication_messages").select("id").eq("thread_id", id).lte("created_at", am).order("created_at").range(seite * 1000, seite * 1000 + 999);
+          if (le) throw new Fehler("Chat konnte nicht gelöscht werden.", 500);
+          if (!ms?.length) break;
+          const { error } = await db.from("kc_communication_message_hidden").upsert(ms.map((m: any) => ({ person_id: ich.person_id, message_id: m.id, hidden_at: am })), { onConflict: "person_id,message_id" });
+          if (error) throw new Fehler("Chat konnte nicht gelöscht werden.", 500);
+          n += ms.length; if (ms.length < 1000) break;
+        }
+        await db.from("kc_communication_thread_participants").update({ hidden_at: am, last_read_at: am }).eq("thread_id", id).eq("person_id", ich.person_id);
+        const archiv = await chatArchivHolen(ich.person_id);
+        if (archiv[id]) { delete archiv[id]; await chatArchivSetzen(ich.person_id, archiv); }
+        await protokoll(ich.person_id, "unterhaltung_bei_mir_geloescht", { thread: id, nachrichten: n });
+        return json({ ok: true, nachrichten: n });
       }
 
       case "unterhaltung_loeschen": {

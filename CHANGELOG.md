@@ -1,5 +1,18 @@
 # Änderungen
 
+## 2.23.28 – 2026-10-04 – Chats archivieren, wieder aktivieren, bei mir komplett löschen (Wunsch Hansi)
+- KC-CLUB-CHAT-ARCHIV: In der Chat-Liste (einmal tippen) und im Chat-Menü:
+  - „📦 Archivieren“ – der Chat verschwindet aus der Liste und steht oben unter „📦 Archiviert (n)“ (mit Zahl ungelesener Nachrichten).
+    Er bleibt archiviert, auch wenn jemand schreibt (Push wie bisher; Stummschalten bleibt getrennt). Nur für mich.
+  - „📤 Wieder aktivieren“ – holt ihn aus dem Archiv zurück in die Liste.
+  - „🗑️ Bei mir komplett löschen“ – alle bisherigen Nachrichten nur für mich weg (wie „Für mich löschen“, kc_communication_message_hidden),
+    Chat aus Liste und Archiv. Die anderen behalten alles; schreibt jemand neu, kommt nur das Neue. Aus dem offenen Chat wird vorher die
+    Ablage als Dokument im persönlichen Archiv angeboten.
+  - Bestehend unverändert: „🙈 Nur bei mir entfernen“, „⚠️ Für alle löschen“ (Admin), „🗄️ Chat in mein Archiv legen“ (Dokument).
+- Server: Aktionen unterhaltung_archivieren (zurueck) und unterhaltung_leeren; Liste „unterhaltungen“ liefert archiviert (Zeitpunkt).
+  Speicherung je Person in kc_club_person_einstellung („chat_archiv“) – keine neue Tabelle. Protokoll nur Aktionsart, keine Inhalte.
+- Hilfe-Eintrag „Chats archivieren, zurückholen und löschen“. Test 374.
+
 ## 2.23.27 – 2026-10-04 – Roter Ring auch bei Knöpfen, die sofort ein Fenster öffnen (Wunsch Hansi)
 - KC-CLUB-TIPP-PULS: Der Puls startet jetzt schon beim Aufsetzen des Fingers – so ist der rote Ring auch bei Knöpfen/Kacheln zu sehen,
   die sofort ein Fenster oder eine andere Ansicht öffnen. Wird gescrollt (Finger > 10 px bewegt), bricht der Puls ab.

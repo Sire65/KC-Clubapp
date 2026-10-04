@@ -929,6 +929,10 @@
   .uhaktion { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 4px 12px; border-bottom: 1px solid var(--linie); }
   .uhaktion button { flex: 1 1 120px; }
   .uhtipp { margin: 0 0 4px; font-size: .82rem; }
+  /* KC-CLUB-CHAT-ARCHIV (2.23.28) */
+  .uh-archiv-zeile { display: flex; align-items: center; gap: 10px; width: 100%; margin: 0 0 6px; padding: 10px 12px; border: 1px solid var(--linie); border-radius: 12px; background: transparent; color: inherit; font: inherit; font-weight: 700; text-align: left; cursor: pointer; }
+  .uh-archiv-zeile .hinweis { flex: 1; font-weight: 400; }
+  .uh-archiv-kopf { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 8px; }
   .unterh .mitte div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .punkt { background: var(--rot); color: #fff; border-radius: 12px; padding: 2px 9px; font-weight: 800; font-size: .85rem; }
   /* KC-CLUB-TIPPT (0.54.0): „schreibt …“ mit drei hüpfenden Punkten */
@@ -2740,7 +2744,9 @@
     <button class="knopf" onclick="$('chatBlatt').classList.add('versteckt');chatVorlesenStart('neu')">🔊 Vorlesen ab den neuen Nachrichten</button>
     <button class="knopf" onclick="$('chatBlatt').classList.add('versteckt');chatVorlesenStart('alles')">🔊 Ganzen Chat vorlesen</button>
     <button class="knopf" onclick="chatInsArchiv()">🗄️ Chat in mein Archiv legen</button>
+    <button class="knopf" id="chatArchivKnopf" onclick="chatArchivieren(chatId, !!UH.liste.find((u) => u.id === chatId)?.archiviert)">📦 Chat archivieren</button> <!-- KC-CLUB-CHAT-ARCHIV 2.23.28 -->
     <button class="knopf" onclick="unterhaltungWeg(false)">🙈 Nur bei mir entfernen</button>
+    <button class="knopf" id="chatKomplettKnopf" onclick="chatKomplettLoeschen(chatId)">🗑️ Bei mir komplett löschen</button>
     <p class="hinweis" style="margin:0 4px 6px;font-size:.85rem">Die anderen behalten sie. Schreibt jemand wieder, erscheint sie erneut.</p>
     <button class="knopf haupt versteckt" id="chatAllesLoeschen" onclick="unterhaltungWeg(true)">🗑️ Für alle löschen (Admin)</button>
     <button class="knopf" onclick="$('chatBlatt').classList.add('versteckt');hzFrage('chat')">❓ Hilfe zum Chat</button> <!-- 2.23.4 -->
@@ -2773,7 +2779,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.27"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.28"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3774,6 +3780,7 @@ const HILFE = [
   { id: "anheften", thema: "nachrichten", sym: "📌", t: "Wichtiges oben im Chat festhalten", x: "Damit eine wichtige Nachricht nicht nach oben wegrutscht: einfach antippen und <b>„📌 Oben anheften“</b> wählen. Bis zu drei Nachrichten bleiben so über dem Chat stehen. Mit „Lösen“ kommen sie wieder an ihren Platz.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
   { id: "merken", thema: "nachrichten", sym: "⭐", t: "Eine Nachricht für später merken", x: "Manchmal liest man etwas und möchte es später schnell wiederfinden. Tipp die Nachricht an und wähle <b>„⭐ Merken“</b>. Alles Gemerkte liegt in 💬 Nachrichten oben unter <b>„⭐ Gemerkt“</b> – diese Liste siehst nur du.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
   { id: "chat_abstimmung", thema: "nachrichten", sym: "📊", t: "Schnell mal abstimmen", x: "Grillen oder Pizza? Freitag oder Samstag? Über <b>📎</b> unter dem Schreibfeld → <b>„📊 Abstimmung“</b> stellst du eine Frage mit 2 bis 8 Antworten. Alle sehen gleich, wie es gerade steht.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
+  { id: "chat_archiv", thema: "nachrichten", sym: "📦", t: "Chats archivieren, zurückholen und löschen", x: "In der Chat-Liste einmal auf einen Chat tippen: <b>📦 Archivieren</b> räumt ihn aus der Liste – er bleibt dort, auch wenn jemand schreibt, und steht oben unter <b>„📦 Archiviert“</b>. Dort holst du ihn mit <b>📤 Wieder aktivieren</b> zurück. <b>🗑️ Bei mir komplett löschen</b> entfernt den Chat mit allen bisherigen Nachrichten – nur bei dir, die anderen behalten ihn. Dasselbe findest du im Chat oben im Menü.", zeig: () => zeige("nachrichten"), seit: "2.23.28" },
   { id: "kontakt_teilen", thema: "nachrichten", sym: "👤", t: "Eine Telefonnummer weitergeben", x: "Jemand fragt nach einer Nummer? Mit <b>📎 → „👤 Kontakt teilen“</b> schickst du eine Kontaktkarte in den Chat – der andere tippt sie an und hat alles beisammen.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
   { id: "kopieren", thema: "nachrichten", sym: "📋", t: "Text aus einer Nachricht übernehmen", x: "Nachricht antippen, <b>„📋 Kopieren“</b> wählen – schon liegt der Text in der Zwischenablage und lässt sich überall einfügen, etwa in eine Mail.", seit: "2.23.1" },
   { id: "weiterleiten", thema: "nachrichten", sym: "↪️", t: "Weitersagen leicht gemacht", x: "Soll jemand anderes eine Nachricht auch lesen? Antippen → <b>„↪️ Weiterleiten“</b> und die Person oder Unterhaltung aussuchen. Fertig.", seit: "2.23.1" },
@@ -12114,11 +12121,17 @@ async function unterhLaden() {
     UH.liste = unterhaltungen; if (!unterhaltungen.some((u) => u.id === UH.wahl)) UH.wahl = null;
     // KC-CLUB-KREISE: Zustandsfarben brauchen die Mitgliederliste – einmal nachladen, dann neu zeichnen
     if (!MITGLIEDER && !UH.kreiseGeholt) { UH.kreiseGeholt = true; mitgliederHolen().then(() => { if (aktuelleAnsicht === "nachrichten") unterhLaden(); }).catch(() => {}); }
-    $("unterhListe").innerHTML = (unterhaltungen.length ? '<p class="hinweis uhtipp">Einmal tippen = auswählen (🗑️ entfernen) · doppelt tippen = öffnen</p>' : "") + unterhaltungen.map((u) => `<div class="unterh${u.id === UH.wahl ? " gewaehlt" : ""}${u.wichtigNeu ? " wichtig-neu" : ""}" data-id="${u.id}" onclick="unterhTipp('${u.id}')">
+    // KC-CLUB-CHAT-ARCHIV (2.23.28): archivierte Chats stehen nicht in der Liste, sondern hinter „📦 Archiviert (n)“
+    const arch = unterhaltungen.filter((u) => u.archiviert);
+    if (UH.archivAnsicht && !arch.length) UH.archivAnsicht = false;
+    const zeigen = unterhaltungen.filter((u) => !!u.archiviert === !!UH.archivAnsicht), archNeu = arch.reduce((n, u) => n + (u.ungelesen || 0), 0);
+    const archKopf = UH.archivAnsicht ? `<div class="uh-archiv-kopf"><button class="knopf klein" onclick="uhArchivAnsicht(false)">← Zurück zu den Chats</button><b>📦 Archivierte Chats (${arch.length})</b></div>`
+      : arch.length ? `<button class="uh-archiv-zeile" onclick="uhArchivAnsicht(true)"><span>📦 Archiviert</span><span class="hinweis">${arch.length} Chat${arch.length === 1 ? "" : "s"}</span>${archNeu ? `<span class="punkt">${archNeu}</span>` : ""}</button>` : "";
+    $("unterhListe").innerHTML = archKopf + (zeigen.length ? `<p class="hinweis uhtipp">Einmal tippen = auswählen (${UH.archivAnsicht ? "📤 wieder aktivieren" : "📦 archivieren"}, 🗑️ löschen) · doppelt tippen = öffnen</p>` : "") + zeigen.map((u) => `<div class="unterh${u.id === UH.wahl ? " gewaehlt" : ""}${u.wichtigNeu ? " wichtig-neu" : ""}" data-id="${u.id}" onclick="unterhTipp('${u.id}')">
       ${u.gruppe || u.anzahl > 2 ? `<div class="avatar k-neutral">${u.gruppe ? esc(u.gruppe.symbol) : "👥"}</div>` : kreis(MITGLIEDER?.find((m) => m.name === u.teilnehmer[0]) || null, u.teilnehmer[0], 46)}
       <div class="mitte"><div><b>${esc(u.gruppe?.name || u.betreff || u.teilnehmer.join(", "))}</b>${stummAn(u.id) ? ' <span title="stummgeschaltet">🔕</span>' : ""}${u.gruppe ? ` <span class="hinweis" style="font-size:.8rem">· ${u.anzahl} Mitgl.</span>` : ""}</div><div class="hinweis">${entwurfAlle()[u.id]?.trim() ? `<span class="entwurf-marke">✏️ Entwurf:</span> ${esc(entwurfAlle()[u.id].trim().slice(0, 80))}` : u.letzte ? esc(u.letzte.von + ": " + u.letzte.text) : "Noch keine Nachricht"}</div></div>
       <div style="text-align:right"><div class="hinweis" style="font-size:.8rem">${u.letzte ? zeitKurz(u.letzte.zeit) : ""}</div>${u.ungelesen ? `<span class="punkt${u.wichtigNeu ? " wichtig" : ""}" title="${u.wichtigNeu ? "darunter wichtige Nachricht" : ""}">${u.wichtigNeu ? "❗ " : ""}${u.ungelesen}</span>` : ""}</div></div>${u.id === UH.wahl ? unterhAktionen(u) : ""}`).join("")
-      || '<p class="hinweis">Noch keine Nachrichten. Tippe oben auf „＋ Neu“.</p>';
+      || (arch.length ? '<p class="hinweis">Alle Chats sind archiviert – oben auf „📦 Archiviert“ tippen.</p>' : '<p class="hinweis">Noch keine Nachrichten. Tippe oben auf „＋ Neu“.</p>');
     uhAmeisen();
   } catch (e) { meldeFehler(e); }
 }
@@ -12146,7 +12159,32 @@ const DOPPELTIPP_MS = 400;
 const unterhName = (u) => u.gruppe?.name || u.betreff || u.teilnehmer.join(", ");
 function unterhAktionen(u) {
   return `<div class="uhaktion" onclick="event.stopPropagation()"><button class="knopf haupt klein" onclick="chatOeffnen('${u.id}')">💬 Öffnen</button>
-    <button class="knopf klein" onclick="unterhEntfernen('${u.id}', false)">🗑️ Aus meiner Liste</button>${ICH?.admin ? `<button class="knopf klein" onclick="unterhEntfernen('${u.id}', true)">⚠️ Für alle löschen</button>` : ""}</div>`;
+    <button class="knopf klein" onclick="chatArchivieren('${u.id}', ${u.archiviert ? "true" : "false"})">${u.archiviert ? "📤 Wieder aktivieren" : "📦 Archivieren"}</button>
+    <button class="knopf klein" onclick="unterhEntfernen('${u.id}', false)">🙈 Aus meiner Liste</button>
+    <button class="knopf klein" onclick="chatKomplettLoeschen('${u.id}')">🗑️ Bei mir komplett löschen</button>${ICH?.admin ? `<button class="knopf klein" onclick="unterhEntfernen('${u.id}', true)">⚠️ Für alle löschen</button>` : ""}</div>`;
+}
+// KC-CLUB-CHAT-ARCHIV (2.23.28, Wunsch Hansi): archivieren / wieder aktivieren / bei mir komplett löschen – alles nur für mich
+function uhArchivAnsicht(an) { UH.archivAnsicht = !!an; UH.wahl = null; unterhLaden(); }
+async function chatArchivieren(id, zurueck) {
+  $("chatBlatt")?.classList.add("versteckt");
+  try {
+    await api("unterhaltung_archivieren", { id, zurueck: !!zurueck });
+    melde(zurueck ? "📤 Chat ist wieder in deiner Liste" : "📦 Chat archiviert – zu finden oben unter „📦 Archiviert“");
+    UH.wahl = null;
+    if (aktuelleAnsicht === "nachrichten") await unterhLaden(); else { zeige("nachrichten"); neuLaden(); }
+  } catch (e) { meldeFehler(e); }
+}
+async function chatKomplettLoeschen(id, gefragt) {
+  $("chatBlatt")?.classList.add("versteckt");
+  const u = UH.liste.find((x) => x.id === id), name = u ? unterhName(u) : (CHAT?.id === id ? chatName() : "diesen Chat");
+  // wie beim Entfernen: aus dem offenen Chat vorher anbieten, ihn als Dokument ins persönliche Archiv zu legen (KC-CLUB-ARCHIV-ABLAGE)
+  if (!gefragt && chatId === id && aktuelleAnsicht === "chat" && await chatAblageFragen({ frage: "Vorher als Dokument in dein persönliches Archiv ablegen?", ja: "Ja, ablegen – dann weiter", nein: "Nein, nur weiter", danach: () => chatKomplettLoeschen(id, true) })) return;
+  if (!(await frage(`„${name}“ bei dir komplett löschen?\n\nAlle bisherigen Nachrichten verschwinden – nur bei dir. Die anderen behalten den Chat.\nSchreibt jemand neu, siehst du nur die neuen Nachrichten.`))) return;
+  try {
+    await api("unterhaltung_leeren", { id });
+    melde("🗑️ Chat bei dir gelöscht"); UH.wahl = null;
+    if (chatId === id) { chatStand = ""; zeige("nachrichten"); neuLaden(); } else await unterhLaden();
+  } catch (e) { meldeFehler(e); }
 }
 function unterhTipp(id) {
   const jetzt = Date.now(), lt = UH.letzterTipp;
@@ -13211,6 +13249,9 @@ function chatMenue() {
   $("chatGruppeRaus").classList.toggle("versteckt", !g);
   $("chatGruppeWeg").classList.toggle("versteckt", !g?.darfVerwalten); // KC-CLUB-GRUPPE-LOESCHEN
   $("chatAllesLoeschen").classList.toggle("versteckt", !ICH?.admin || !chatId || !!g?.darfVerwalten);
+  const archiviert = !!UH.liste.find((u) => u.id === chatId)?.archiviert; // KC-CLUB-CHAT-ARCHIV (2.23.28)
+  $("chatArchivKnopf").textContent = archiviert ? "📤 Aus dem Archiv holen (wieder aktivieren)" : "📦 Chat archivieren";
+  $("chatArchivKnopf").classList.toggle("versteckt", !chatId); $("chatKomplettKnopf").classList.toggle("versteckt", !chatId);
   stummBereichZeigen();
   $("chatBlatt").classList.remove("versteckt");
 }
