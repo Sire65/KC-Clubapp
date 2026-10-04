@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.22.17 – 2026-10-04 – Rochade einfacher, „ist jetzt online“-Push für alle wählbar (Wunsch Hansi)
+- Schach: Rochade geht wie bisher (König → Feld zwei weiter) und jetzt auch über den Turm: König antippen, dann den eigenen Turm – oder
+  erst den Turm, dann den König (schRochade / schZieleMitRochade, gegen Computer und Mitglieder; Server prüft wie immer mit chess.js).
+  Hinweis unter dem Brett „Rochade: König, dann Turm antippen“. Normale Turmzüge unverändert.
+- KC-CLUB-ONLINE-PUSH-ALLE: „📲 Push, wenn sich jemand anmeldet“ („🟢 Hansi ist jetzt online“) bisher nur für Admins – jetzt für alle Mitglieder
+  in den Einstellungen; Admins Standard an, alle anderen Standard aus (eigene Wahl). Unsichtbare/Inkognito-Mitglieder werden wie bisher nie
+  gemeldet, Ruhezeit gilt. Test zu „nur an Admins“ angepasst. Test 346.
+
 ## 2.22.16 – 2026-10-04 – 🔊 Spiele ansagen lassen (Wunsch Hansi)
 - KC-CLUB-SPIEL-ANSAGE: je Spiel ein Schalter „🔊 Ansage an / 🔇 aus“ (gilt für dieses Gerät, Standard aus), mit der vorhandenen Vorlese-Stimme:
   ♟️ Schach (gegen Computer und Mitglieder): jeder Zug – „Dein Bauer auf E 4“, „Schwarzer Läufer auf E 5 – hat gerade deinen Springer geschlagen“,

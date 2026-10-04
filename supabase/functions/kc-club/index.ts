@@ -26,7 +26,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "2.22.16";
+const SERVER_VERSION = "2.22.17";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -358,10 +358,14 @@ async function onlinePushMelden(wer: Ich) {
   if (wer.person_id.startsWith("KC-P-TEST")) return;
   if ((await onlineZeigenMap([wer.person_id])).get(wer.person_id) === false) return;
   if ((await inkognitoSet([wer.person_id])).has(wer.person_id)) return; // KC-CLUB-INKOGNITO
-  const { data: ad } = await db.from("kc_club_rollen").select("person_id").eq("ist_admin", true).neq("person_id", wer.person_id);
-  let ids = (ad ?? []).map((x: any) => x.person_id as string);
+  // KC-CLUB-ONLINE-PUSH-ALLE (2.22.17, Wunsch Hansi): Admins wie bisher (Standard an), alle anderen Mitglieder, die es selbst
+  // eingeschaltet haben (Standard aus) – z. B. Klaus bekommt „🟢 Hansi ist jetzt online“.
+  const [{ data: ad }, { data: wahl }, aktiv] = await Promise.all([db.from("kc_club_rollen").select("person_id").eq("ist_admin", true),
+    db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "online_push"), aktiveMitglieder()]);
+  const aktivIds = new Set(aktiv.map((m) => m.person_id)), admins = new Set((ad ?? []).map((x: any) => x.person_id as string));
+  const freiwillig = (wahl ?? []).filter((x: any) => x.wert?.an === true).map((x: any) => x.person_id as string);
+  let ids = [...new Set([...admins, ...freiwillig])].filter((id) => id !== wer.person_id && aktivIds.has(id) && !id.startsWith("KC-P-TEST"));
   if (!ids.length) return;
-  const { data: wahl } = await db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "online_push").in("person_id", ids);
   const aus = new Set((wahl ?? []).filter((x: any) => x.wert?.an === false).map((x: any) => x.person_id));
   // 1.64.0 (Fund Hansi): auch wenn der Admin gerade „online“ ist – bei mehreren Geräten (Handy + Tablet) entscheidet jedes Gerät
   // selbst: App sichtbar → Ton/Ansage in der App (Service Worker), sonst normale Mitteilung.

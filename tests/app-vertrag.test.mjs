@@ -2560,7 +2560,10 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.match(srv, /const ONLINE_PUSH_PAUSE_MS = 10 \* 60000;/, "10 Minuten");
   const f = srv.slice(srv.indexOf("async function onlinePushMelden("), srv.indexOf("async function onlineJetzt("));
   assert.match(f, /\.get\(wer\.person_id\) === false\) return;/, "unsichtbar → keine Meldung");
-  assert.match(f, /eq\("ist_admin", true\)\.neq\("person_id", wer\.person_id\)/, "nur an Admins, nie an sich selbst");
+  // 2.22.17 (Wunsch Hansi, KC-CLUB-ONLINE-PUSH-ALLE): Admins (Standard an) + Mitglieder, die es selbst einschalten – nie an sich selbst
+  assert.match(f, /eq\("ist_admin", true\)/, "Admins bekommen die Meldung");
+  assert.match(f, /filter\(\(x: any\) => x\.wert\?\.an === true\)/, "andere nur, wenn selbst eingeschaltet");
+  assert.match(f, /filter\(\(id\) => id !== wer\.person_id && aktivIds\.has\(id\)/, "nie an sich selbst, nur aktive");
   // 1.64.0 (Fund Hansi): auch bei offener App senden – jedes Gerät entscheidet (sichtbar → Ansage in der App, sonst Mitteilung)
   assert.match(f, /ids = ids\.filter\(\(id\) => !aus\.has\(id\) && !ruhe\.has\(id\)\);/, "abschaltbar, Ruhezeit");
   assert.match(f, /routerSenden\("club_online"/, "über den Communicator");
@@ -3667,6 +3670,11 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/spSag\("kt", ktFrageSprache\(fr, z\.i \+ 1\)/.test(html) && /spSag\("bsk", `Der Computer spielt \$\{bskKarteWort\(kc\)\}\.`\)/.test(html), "Küchenterror-Frage, Bauernskat-Karte");
   const regeln = html.slice(html.indexOf("const BSK_FARBEN = "), html.indexOf("// ----- Computer -----", html.indexOf("const BSK_FARBEN = ")));
   assert.ok(!/bskKarteWort|BSK_WNAME/.test(regeln), "Ansage-Helfer nicht in den Regeln (Server-Kopie bleibt gleich)");
+}
+// 346. 2.22.17: Rochade über den Turm, Online-Push für alle wählbar
+{
+  assert.ok(/function schRochade\(ch, von, feld\)/.test(html) && (html.match(/const r = schRochade\(ch, SCHM?\.auswahl, feld\)/g) || []).length === 2 && (html.match(/= schZieleMitRochade\(ch, feld\)/g) || []).length === 2, "Rochade über den Turm (Computer + Mitglieder)");
+  assert.ok(/\$\("setOnlinePushZeile"\)\?\.classList\.remove\("versteckt"\)/.test(html) && /checked = ICH\?\.admin \? INIT\?\.einstellungen\?\.online_push\?\.an !== false : INIT\?\.einstellungen\?\.online_push\?\.an === true;/.test(html), "Online-Push-Schalter für alle, Standard je Rolle");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

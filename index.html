@@ -2246,7 +2246,7 @@
       <div class="schalter" id="setVorlesenZeile"><div><b>🔊 Neue Nachrichten vorlesen</b><div class="hinweis">Im offenen Chat liest das Handy neue Nachrichten vor. Einzelne Nachricht: antippen → „🔊 Vorlesen“. Schalter auch im Chat oben (🔇/🔊).</div></div><input type="checkbox" id="setVorlesen" onchange="vorlesenSchalter(this.checked)"></div>
       <div class="schalter versteckt" id="setAnmeldeTonZeile"><div><b>🔔 Ton, wenn sich jemand anmeldet (Admin)</b><div class="hinweis">Kurzer Doppelton, sobald ein Mitglied online kommt</div></div><input type="checkbox" id="setAnmeldeTon" onchange="anmeldeTonSchalter(this.checked)"></div>
       <!-- KC-CLUB-ONLINE-PUSH (1.57.0): auch bei geschlossener App – als Push mit dem normalen Benachrichtigungston -->
-      <div class="schalter versteckt" id="setOnlinePushZeile"><div><b>📲 Push, wenn sich jemand anmeldet (Admin)</b><div class="hinweis">Auch wenn die App zu ist: „🟢 Klaus ist jetzt online“ – mit dem normalen Ton des Handys. Nicht in deiner Ruhezeit, nicht wenn die App gerade offen ist.</div></div><input type="checkbox" id="setOnlinePush" onchange="onlinePushSchalter(this.checked)"></div>
+      <div class="schalter versteckt" id="setOnlinePushZeile"><div><b>📲 Push, wenn sich jemand anmeldet</b><div class="hinweis">Auch wenn die App zu ist: „🟢 Klaus ist jetzt online“ – mit dem normalen Ton des Handys. Nicht in deiner Ruhezeit, nicht wenn die App gerade offen ist.</div></div><input type="checkbox" id="setOnlinePush" onchange="onlinePushSchalter(this.checked)"></div>
     </details>
     <details class="karte" data-klappe="privat" data-einfach>
       <summary>🔒 Privatsphäre</summary>
@@ -2638,7 +2638,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.22.16"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.22.17"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3846,7 +3846,8 @@ function ansageSchalterZeigen() {
   if ($("setAnsage")) $("setAnsage").checked = ansageAn(); vorlesenZeigen();
   if ($("setMikro")) { $("setMikro").value = mikroArt(); $("setMikroZeile").classList.toggle("versteckt", !DIKTAT_GEHT); }
   $("setAnmeldeTonZeile")?.classList.toggle("versteckt", !ICH?.admin); if ($("setAnmeldeTon")) $("setAnmeldeTon").checked = anmeldeTonAn();
-  $("setOnlinePushZeile")?.classList.toggle("versteckt", !ICH?.admin); if ($("setOnlinePush")) $("setOnlinePush").checked = INIT?.einstellungen?.online_push?.an !== false;
+  // 2.22.17 (KC-CLUB-ONLINE-PUSH-ALLE): für alle sichtbar – Admins Standard an, alle anderen Standard aus
+  $("setOnlinePushZeile")?.classList.remove("versteckt"); if ($("setOnlinePush")) $("setOnlinePush").checked = ICH?.admin ? INIT?.einstellungen?.online_push?.an !== false : INIT?.einstellungen?.online_push?.an === true;
 }
 function ansageSchalter(an) {
   lsSetzen(ANSAGE, an ? "1" : "0");
@@ -5422,6 +5423,20 @@ const SCH_WEIBLICH = { q: true };
 const schFigWort = (t) => (schBrigade() ? SCH_BRIGADE_NAME : SCH_NAME)[t];
 const schFigAkk = (t) => (t === "p" ? (schBrigade() ? "Praktikanten" : "Bauern") : schFigWort(t));
 const schFeldWort = (f) => `${f[0].toUpperCase()} ${f[1]}`;
+// 2.22.17 (Wunsch Hansi „Rochade muss möglich sein“): Rochade auch so – König antippen, dann den eigenen Turm (statt das Feld zwei weiter),
+// oder erst den Turm, dann den König. Gibt { von, nach } des Königszugs zurück, sonst null.
+function schRochade(ch, von, feld) {
+  const a = ch.get(von), b = ch.get(feld); if (!a || !b || a.color !== b.color) return null;
+  const k = a.type === "k" ? von : b.type === "k" ? feld : null, turm = a.type === "r" ? von : b.type === "r" ? feld : null; if (!k || !turm) return null;
+  const m = ch.moves({ square: k, verbose: true }).find((x) => /[kq]/.test(x.flags) && (turm[0] === "h" ? x.flags.includes("k") : x.flags.includes("q")));
+  return m ? { von: k, nach: m.to } : null;
+}
+// Ziele des ausgewählten Königs: auch die Türme, mit denen eine Rochade geht
+function schZieleMitRochade(ch, feld) {
+  const z = ch.moves({ square: feld, verbose: true }).map((m) => m.to), f = ch.get(feld);
+  if (f?.type === "k") for (const m of ch.moves({ square: feld, verbose: true }).filter((x) => /[kq]/.test(x.flags))) z.push((m.flags.includes("k") ? "h" : "a") + feld[1]);
+  return z;
+}
 function schZugAnsage(m, ch, ich) {
   const fem = (t) => !!SCH_WEIBLICH[t], eigen = m.color === ich, weiss = m.color === "w";
   let s;
@@ -5552,6 +5567,7 @@ async function schPcZeigen() {
       ${schBrettHtml(ch, { unten: ich, auswahl: SCH.auswahl, ziele: SCH.ziele, letzter: (() => { const h = ch.history({ verbose: true }).slice(-1)[0]; return h ? h.from + h.to : null; })(), klick: "schPcKlick", aus: ende || SCH.denkt })}
       ${schVerlaufHtml(ch.history())}
       ${schStilHtml()}
+      <p class="hinweis" style="text-align:center;margin:6px 0">Figur antippen, dann das Zielfeld. Rochade: König, dann Turm antippen.</p>
       <div class="knoepfe" style="justify-content:center">${spAnsageKnopf("schach")}</div>
       <div class="knoepfe"><button class="knopf haupt" onclick="schPcNeu()">↺ Neue Partie</button><button class="knopf" onclick="schPcZurueck()" ${ch.history().length < 1 || SCH.denkt ? "disabled" : ""}>↶ Zug zurück</button><button class="knopf" onclick="schPcStandWeg()">🗑️ Spielstand zurücksetzen</button></div>
     </div>`;
@@ -5578,6 +5594,7 @@ function schPcWerten() {
 }
 async function schPcKlick(feld) {
   const ch = SCH.ch; if (!ch || SCH.denkt || ch.isGameOver() || ch.turn() !== SCH.ichFarbe) return;
+  if (SCH.auswahl) { const r = schRochade(ch, SCH.auswahl, feld); if (r) { SCH.auswahl = r.von; SCH.ziele = [r.nach]; feld = r.nach; } } // 2.22.17: Rochade über den Turm
   const f = ch.get(feld);
   if (SCH.auswahl && SCH.ziele.includes(feld)) {
     const von = SCH.auswahl, bauer = ch.get(von)?.type === "p" && /[18]$/.test(feld);
@@ -5588,7 +5605,7 @@ async function schPcKlick(feld) {
     if (!ch.isGameOver()) schPcComputerStart();
     return;
   }
-  if (f && f.color === SCH.ichFarbe) { SCH.auswahl = feld; SCH.ziele = ch.moves({ square: feld, verbose: true }).map((m) => m.to); }
+  if (f && f.color === SCH.ichFarbe) { SCH.auswahl = feld; SCH.ziele = schZieleMitRochade(ch, feld); }
   else { SCH.auswahl = null; SCH.ziele = []; }
   schPcZeigen();
 }
@@ -5626,14 +5643,16 @@ async function schSpielZeigen(g) {
       ${schVerlaufHtml(g.verlauf || [])}
       ${schStilHtml()}
       <div class="knoepfe" style="justify-content:center">${spAnsageKnopf("schach")}</div>
-      <p class="hinweis" style="text-align:center;margin:6px 0">Figur antippen, dann das Zielfeld. Du musst nicht warten – ${esc(g.gegner.vorname)} bekommt Bescheid.</p>
+      <p class="hinweis" style="text-align:center;margin:6px 0">Figur antippen, dann das Zielfeld. Rochade: König, dann Turm antippen. Du musst nicht warten – ${esc(g.gegner.vorname)} bekommt Bescheid.</p>
       <div class="knoepfe">${g.status === "beendet" ? `<button class="knopf haupt" onclick="spRevanche('${g.id}')">↺ Revanche</button>` : g.status === "laeuft" ? `<button class="knopf" onclick="spAufgeben('${g.id}')">🏳️ Aufgeben</button>` : ""}</div>
     </div>`;
   SP.ch = ch;
 }
 async function schMgKlick(feld) {
   const g = SP.offen, ch = SP.ch; if (!g?.ichDran || !ch) return;
-  const ich = g.ichBin === "x" ? "w" : "b", f = ch.get(feld);
+  const ich = g.ichBin === "x" ? "w" : "b";
+  if (SCHM.auswahl) { const r = schRochade(ch, SCHM.auswahl, feld); if (r) { SCHM.auswahl = r.von; SCHM.ziele = [r.nach]; feld = r.nach; } } // 2.22.17: Rochade über den Turm
+  const f = ch.get(feld);
   if (SCHM.auswahl && SCHM.ziele.includes(feld)) {
     const von = SCHM.auswahl, bauer = ch.get(von)?.type === "p" && /[18]$/.test(feld);
     const umw = bauer ? await schUmwandlung(ich) : "q"; if (!umw) return;
@@ -5645,7 +5664,7 @@ async function schMgKlick(feld) {
     if (aktuelleAnsicht === "spiele") spZeigen();
     return;
   }
-  if (f && f.color === ich) { SCHM.auswahl = feld; SCHM.ziele = ch.moves({ square: feld, verbose: true }).map((m) => m.to); }
+  if (f && f.color === ich) { SCHM.auswahl = feld; SCHM.ziele = schZieleMitRochade(ch, feld); }
   else { SCHM.auswahl = null; SCHM.ziele = []; }
   schSpielZeigen(g);
 }
