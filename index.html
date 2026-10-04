@@ -3335,7 +3335,7 @@ const EINWEISUNG = [
   { id: "vorschlaege", sym: "🗳️", t: "Vorschläge", x: "Du hast eine Idee für den Club – ein Ausflug, ein Thema, ein Kochabend? Mit <b>„＋ Neu“</b> schlägst du sie vor, die anderen können abstimmen." },
   { id: "dienste", sym: "🗓️", t: "Dienstpläne", x: "Die Dienstpläne Woche für Woche. Mit <b>‹ Woche</b> / <b>Woche ›</b> blätterst du, <b>„Heute“</b> springt zurück." },
   { id: "aktionen", sym: "🧳", t: "Aktionen", x: "Ausflüge und besondere Aktionen des Clubs – antippen zeigt alle Einzelheiten." },
-  { id: "spiele", sym: "🎲", t: "Spiele – Köcheclub Edition", x: "Tippe auf die Kachel deines Spiels: <b>Tic-Tac-Toe</b> (🍅 gegen 🥦 – wer zuerst drei, bei 4 × 4 vier, in einer Reihe hat), <b>♟️ Schach</b> mit der Küchenbrigade (Küchenchef = König, Kaltmamsell = Dame, Souschef = Turm, Patissier = Läufer, Springer, Praktikanten = Bauern; Figur antippen, dann das Zielfeld) , <b>🃏 Bauernskat</b> zu zweit (spielbare Karten sind grün umrandet) oder <b>🔪 Küchenterror</b> – das Küchenquiz auf Zeit (je Frage 10 Sekunden, schnell und richtig bringt die meisten Punkte). Im Spiel wählst du <b>🤖 Gegen den Computer</b> – mit Feldgröße und Stärke – oder <b>👥 Gegen Mitglieder</b>: jemanden herausfordern, abwechselnd ziehen, du bekommst Bescheid, wenn du dran bist." },
+  { id: "spiele", sym: "🎲", t: "Spiele – Köcheclub Edition", x: "Tippe auf die Kachel deines Spiels: <b>Tic-Tac-Toe</b> (🍅 gegen 🥦 – wer zuerst drei, bei 4 × 4 vier, in einer Reihe hat), <b>♟️ Schach</b> mit der Küchenbrigade (Küchenchef = König, Kaltmamsell = Dame, Souschef = Turm, Patissier = Läufer, Springer, Praktikanten = Bauern; Figur antippen, dann das Zielfeld) , <b>🃏 Bauernskat</b> zu zweit (spielbare Karten sind grün umrandet) oder <b>🔪 Küchenterror</b> – das Küchenquiz auf Zeit (je Frage 20, 15 oder 10 Sekunden – je nach Stufe; schnell und richtig bringt die meisten Punkte). Im Spiel wählst du <b>🤖 Gegen den Computer</b> – mit Feldgröße und Stärke – oder <b>👥 Gegen Mitglieder</b>: jemanden herausfordern, abwechselnd ziehen, du bekommst Bescheid, wenn du dran bist." },
   { id: "buero", sym: "🗂️", t: "Büro der Clubleitung", x: "Nur für die Clubleitung: Regal mit Ordnern, Schreibtisch für die laufende Arbeit, Freud & Leid (Glückwünsche, Genesungswünsche) und Briefe. Normale Mitglieder sehen das Büro nicht.", nur: () => !!ICH?.buero },
 ];
 const einwStand = () => ({ an: true, gesehen: {}, ...(INIT?.einstellungen?.einweisung || {}) });
@@ -3835,6 +3835,7 @@ async function onlinePing() {
     onlineAnsagen(ONL.liste); // KC-CLUB-ONLINE-ANSAGE
     if ($("setOnline")) $("setOnline").checked = r.zeigen;
     onlineLeisteZeigen(); if (INIT) heroZeigen();
+    spielLive(r.spielAnfragen); // KC-CLUB-SPIEL-LIVE
     // jemand klopft bei mir an → Fenster (jedes Anklopfen nur einmal)
     const ruf = (r.anrufe || []).find((x) => !ONL.erledigt.has("r" + x.id));
     if (ruf && !RUF) { ONL.erledigt.add("r" + ruf.id); anrufEingehend(ruf.id); }
@@ -5208,17 +5209,54 @@ async function spHerausfordernBlatt(pid) {
       ${art === "ttt" ? spWahl("Feld", String(gr), [["3", "3 × 3"], ["4", "4 × 4"]], "spHerausGroesse") : ""}
       ${art === "kt" ? spWahl("Zeit", stufe, [["leicht", "😊 20 s"], ["mittel", "🙂 15 s"], ["schwer", "😎 10 s"]], "spHerausStufe") : ""}
       <p class="hinweis" style="margin:0">Wen möchtest du herausfordern? ${art === "bsk" ? "Du bist Vorhand und sagst Trumpf an. Die Karten mischt der Server – niemand sieht fremde Karten." : art === "kt" ? "12 Küchenfragen in 4 Runden, ihr spielt abwechselnd je eine Runde. Die Zeit je Frage wählst du oben – schnell und richtig gibt die meisten Punkte. Die letzte ist eine 🎖️ Meisterfrage und zählt doppelt. Du fängst an." : `Du fängst an (${art === "schach" ? "Weiß" : SP_ZEICHEN.x}).`}</p>
-      ${b.length ? b.map((m) => `<button class="zeile sp-wer${m.person_id === pid ? " an" : ""}" onclick="spHerausfordern('${m.person_id}')">${kreis(MITGLIEDER?.find((x) => x.person_id === m.person_id) || {}, m.name, 36)}<b style="flex:1;text-align:left">${esc(m.name)}</b><span>${art === "schach" ? "♟️" : art === "bsk" ? "🃏" : art === "kt" ? "🔪" : "🎲"} ›</span></button>`).join("")
-        : `<p class="hinweis">Für ${art === "schach" ? "Schach" : art === "bsk" ? "Bauernskat" : art === "kt" ? "Küchenterror" : "Tic-Tac-Toe"} hat sich noch niemand freigeschaltet.</p>`}`;
+      ${(() => {
+        // KC-CLUB-SPIEL-LIVE (2.22.6, Wunsch Hansi): sofort herausfordern nur, wer gerade online ist; sonst Person suchen → Terminanfrage
+        const sym = art === "schach" ? "♟️" : art === "bsk" ? "🃏" : art === "kt" ? "🔪" : "🎲";
+        const on = b.filter((m) => ONL?.ids?.has(m.person_id)), weg = b.filter((m) => !ONL?.ids?.has(m.person_id));
+        const q = spHerausSuche.trim().toLowerCase(), treffer = q ? weg.filter((m) => m.name.toLowerCase().includes(q)) : [];
+        const person = (m, knopf) => `<div class="zeile sp-wer${m.person_id === pid ? " an" : ""}">${kreis(MITGLIEDER?.find((x) => x.person_id === m.person_id) || {}, m.name, 36)}<b style="flex:1;text-align:left">${esc(m.name)}</b>${knopf}</div>`;
+        if (!b.length) return `<p class="hinweis">Für ${art === "schach" ? "Schach" : art === "bsk" ? "Bauernskat" : art === "kt" ? "Küchenterror" : "Tic-Tac-Toe"} hat sich noch niemand freigeschaltet.</p>`;
+        return `<b>🟢 Gerade online – sofort spielen</b>
+          ${on.length ? on.map((m) => person(m, `<button class="knopf haupt klein" onclick="spHerausfordern('${m.person_id}')">${sym} Herausfordern</button>`)).join("") : '<p class="hinweis" style="margin:0">Gerade ist niemand online, der mitspielt.</p>'}
+          ${weg.length ? `<b style="margin-top:8px;display:block">📅 Nicht online? Termin anfragen</b>
+          <input id="spHerausSucheFeld" type="search" placeholder="🔎 Person suchen …" value="${esc(spHerausSuche)}" oninput="spHerausSuchen(this.value)" style="width:100%;box-sizing:border-box;padding:10px;border-radius:12px;border:1px solid var(--linie);background:var(--bg);color:var(--text)">
+          ${q ? (treffer.length ? treffer.map((m) => person(m, `<button class="knopf klein" onclick="spHerausTermin('${m.person_id}')">📅 Terminanfrage</button>`)).join("") : '<p class="hinweis" style="margin:0">Niemand gefunden.</p>') : `<p class="hinweis" style="margin:0">${weg.length} weitere${weg.length === 1 ? "s Mitglied spielt" : " Mitglieder spielen"} mit – Namen eingeben.</p>`}` : ""}`;
+      })()}`;
   };
+  let spHerausSuche = "";
+  window.spHerausSuchen = (v) => { spHerausSuche = v; zeichnen(); const e = $("spHerausSucheFeld"); if (e) { e.focus(); e.setSelectionRange(v.length, v.length); } };
   window.spHerausArt = (a) => { art = ["schach", "bsk", "kt"].includes(a) ? a : "ttt"; zeichnen(); };
   window.spHerausGroesse = (g) => { gr = Number(g) === 4 ? 4 : 3; zeichnen(); };
   window.spHerausStufe = (w) => { stufe = KT_ZEIT[w] ? w : "mittel"; zeichnen(); };
   zeichnen();
+  // nicht online: Herausforderung anlegen und gleich den Termin vorschlagen (vorhandene Terminanfrage für Partien)
+  window.spHerausTermin = async (an) => {
+    try { const r = await api("spiel_herausfordern", { an, groesse: gr, spiel: art, ...(art === "kt" ? { stufe } : {}) }, { warten: true }); f.remove();
+      SP.tab = "mg"; SP.offen = null; SP.art = art; await spLaden(true); spTerminBlatt(r.spiel.id); }
+    catch (e) { meldeFehler(e); }
+  };
   window.spHerausfordern = async (an) => {
     try { const r = await api("spiel_herausfordern", { an, groesse: gr, spiel: art, ...(art === "kt" ? { stufe } : {}) }, { warten: true }); f.remove(); melde(`🎲 Herausforderung an ${r.spiel.gegner.vorname} geschickt`); SP.tab = "mg"; SP.offen = null; SP.art = art; await spLaden(true); if (aktuelleAnsicht !== "spiele") zeige("spiele"); else spZeigen(); }
     catch (e) { meldeFehler(e); }
   };
+}
+// KC-CLUB-SPIEL-LIVE (2.22.6, Wunsch Hansi): bin ich online und jemand fordert mich heraus, erscheint sofort ein Fenster (jede Anfrage einmal)
+const SP_NAMEN = { ttt: "❌⭕ Tic-Tac-Toe", schach: "♟️ Schach", bsk: "🃏 Bauernskat", kt: "🔪 Küchenterror" };
+function spielLive(liste) {
+  const a = (liste || []).find((x) => !ONL.erledigt.has("s" + x.id)); if (!a || document.getElementById("spLiveBlatt")) return;
+  ONL.erledigt.add("s" + a.id);
+  try { navigator.vibrate?.([200, 100, 200]); } catch {}
+  blattAuf("spLiveBlatt", `<div style="text-align:center;display:grid;gap:8px"><div style="font-size:2.6rem" aria-hidden="true">${esc((SP_NAMEN[a.spiel] || "🎲").split(" ")[0])}</div>
+    <h3 style="margin:0">${esc(a.von.vorname)} fordert dich heraus!</h3>
+    <p style="margin:0"><b>${esc(SP_NAMEN[a.spiel] || "Spiel")}</b>${a.spiel === "ttt" && a.groesse ? ` · ${a.groesse} × ${a.groesse}` : ""} – Köcheclub Edition. Lust auf eine Partie?</p>
+    <button class="knopf haupt" onclick="spLiveAntwort('${a.id}', true)">✅ Annehmen & los</button>
+    <button class="knopf" onclick="$('spLiveBlatt').remove();melde('⏰ Die Herausforderung wartet unter 🎲 Spiele')">⏰ Später</button>
+    <button class="knopf" onclick="spLiveAntwort('${a.id}', false)">Ablehnen</button></div>`);
+}
+async function spLiveAntwort(id, annehmen) {
+  $("spLiveBlatt")?.remove();
+  if (!annehmen) return spAntwort(id, false);
+  try { await api("spiel_antwort", { id, annehmen: true }, { warten: true }); await spOeffnen(id); } catch (e) { meldeFehler(e); }
 }
 async function spAntwort(id, annehmen) {
   try { const r = await api("spiel_antwort", { id, annehmen }, { warten: true }); if (annehmen) { SP.offen = r.spiel; spZeigen(); } else { melde("Abgelehnt"); spLaden(true); } }

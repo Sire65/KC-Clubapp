@@ -5500,6 +5500,9 @@ Köcheclub-App`,
           db.from("kc_club_anklopfen").select("id,von,erstellt_am").eq("an", ich.person_id).eq("status", "offen").gte("erstellt_am", seit).order("erstellt_am", { ascending: false }).limit(3),
           db.from("kc_club_anklopfen").select("id,an,status,thread_id,beantwortet_am,antwort").eq("von", ich.person_id).gte("erstellt_am", new Date(Date.now() - 600000).toISOString()),
         ]);
+        // KC-CLUB-SPIEL-LIVE (2.22.6, Wunsch Hansi): frische Herausforderungen an mich (15 Min.) – die App zeigt sie sofort als Fenster
+        const { data: spAn } = await db.from("kc_club_spiele").select("id,von,spiel,groesse,erstellt_am").eq("an", ich.person_id).eq("status", "angefragt")
+          .gte("erstellt_am", new Date(Date.now() - 15 * 60000).toISOString()).order("erstellt_am", { ascending: false }).limit(3);
         const { data: rufe } = await db.from("kc_club_anruf").select("id,von,art,erstellt_am").eq("an", ich.person_id).eq("status", "klingelt").eq("automatisch", false).gte("erstellt_am", new Date(Date.now() - ANRUF_KLINGEL_SEK * 1000).toISOString()).order("erstellt_am", { ascending: false }).limit(1);
         // KC-CLUB-ANRUF-VERPASST (0.81.0): nicht angenommen, nicht selbst abgelehnt, Hinweis noch nicht gesehen (letzte 24 h).
         // Nicht melden, wenn wir danach doch miteinander telefoniert haben (z. B. nach gleichzeitigem Anrufen).
@@ -5514,12 +5517,13 @@ Köcheclub-App`,
         }
         on.delete(ich.person_id);
         const klopfbar = await anklopfenErlaubtMap([...on]);
-        const leute = await personen([...on, ...(anMich ?? []).map((x: any) => x.von), ...(vonMir ?? []).map((x: any) => x.an), ...(rufe ?? []).map((x: any) => x.von), ...verp.map((x: any) => x.von)]);
+        const leute = await personen([...on, ...(anMich ?? []).map((x: any) => x.von), ...(vonMir ?? []).map((x: any) => x.an), ...(rufe ?? []).map((x: any) => x.von), ...verp.map((x: any) => x.von), ...(spAn ?? []).map((x: any) => x.von)]);
         const wer = (id: string) => ({ person_id: id, name: leute.get(id)?.display_name || id, vorname: vorname(leute.get(id) ?? null) || id });
         return json({ zeigen, verpasst: verp.map((x: any) => ({ id: x.id, von: wer(x.von), art: x.art, zeit: x.erstellt_am })), online: [...on].map((id) => ({ ...wer(id), klopfbar: klopfbar.get(id) !== false })), klopfen: (anMich ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), zeit: x.erstellt_am })),
           klopfAntworten: (anMich ?? []).length ? Object.entries(KLOPF_ANTWORTEN).map(([id, text]) => ({ id, text })) : undefined,
           antworten: (vonMir ?? []).map((x: any) => ({ id: x.id, an: wer(x.an), status: x.status, thread: x.thread_id, antwort: x.antwort ?? null })),
-          anrufe: (rufe ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), art: x.art, zeit: x.erstellt_am })) });
+          anrufe: (rufe ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), art: x.art, zeit: x.erstellt_am })),
+          spielAnfragen: (spAn ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), spiel: x.spiel, groesse: x.groesse, zeit: x.erstellt_am })) });
       }
 
       case "anklopfen": {

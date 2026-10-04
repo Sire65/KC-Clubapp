@@ -7,6 +7,12 @@
   (Eine bestimmte Gruppe direkt mit Text öffnen erlaubt WhatsApp nicht – Auswahl bleibt ein Tipp.) Test 329.
 - Spiel-Einladung beim Start nennt jetzt auch 🔪 Küchenterror („Tic-Tac-Toe, Bauernskat und das Küchen-Quiz 🔪 Küchenterror …“, Symbol 🔪 dazu);
   Kachel „Spiele“: „Tic-Tac-Toe · Schach · Bauernskat · Küchenterror“ (Fund Hansi).
+- KC-CLUB-SPIEL-LIVE: Bin ich online und jemand fordert mich heraus, erscheint sofort ein Fenster „Klaus fordert dich heraus!“ mit Spiel
+  (z. B. ❌⭕ Tic-Tac-Toe · 3 × 3) und „✅ Annehmen & los“ (öffnet die Partie) / „⏰ Später“ / „Ablehnen“ – je Anfrage einmal, Handy vibriert.
+  Server: „online“ liefert frische Herausforderungen an mich (15 Min.). Push wie bisher.
+- Herausfordern (Wunsch Hansi): sofort nur, wer gerade online ist („🟢 Gerade online – sofort spielen“). Alle anderen über „🔎 Person suchen“
+  → „📅 Terminanfrage“: legt die Herausforderung an und öffnet gleich die vorhandene Terminanfrage für Partien (steht dann bei beiden im Kalender).
+- Spiele-Erklärung: Küchenterror „je Frage 20, 15 oder 10 Sekunden – je nach Stufe“ (war noch „10 Sekunden“). Test 330.
 
 ## 2.22.5 – 2026-10-04 – 👥 SOS für alle freigeben (Wunsch Hansi)
 - KC-CLUB-SOS-FREIGABE: im SOS-Fenster (nur beim Admin) Schalter „👥 SOS für alle Mitglieder freigeben“ – mit Rückfrage. Gespeichert als

@@ -3542,6 +3542,12 @@ assert.ok(/#notfallText \{[^}]*background: var\(--bg\); color: var\(--text\);/.t
 }
 // 329. 2.22.6: Ameisenrahmen um die Gruppe „Innovation“ beim Öffnen von Nachrichten (KC-CLUB-GRUPPE-AMEISEN)
 assert.ok(/const UH_HERVOR = \["Innovation"\];/.test(html) && /function uhAmeisen\(\)[\s\S]{0,900}setTimeout\(\(\) => \{ el\.classList\.remove\("uh-ameisen"\)/.test(html) && /\.unterh \.uh-rahmen rect \{[^}]*animation: ameisenLauf/.test(html), "kurzer Ameisenrahmen, danach ruhig");
+// 330. 2.22.6: Herausforderung live + sofort nur online, sonst Person suchen → Terminanfrage (KC-CLUB-SPIEL-LIVE)
+{
+  assert.ok(/spielAnfragen: \(spAn \?\? \[\]\)\.map/.test(server) && /from\("kc_club_spiele"\)\.select\("id,von,spiel,groesse,erstellt_am"\)\.eq\("an", ich\.person_id\)\.eq\("status", "angefragt"\)/.test(server), "online liefert frische Herausforderungen an mich");
+  assert.ok(/spielLive\(r\.spielAnfragen\); \/\/ KC-CLUB-SPIEL-LIVE/.test(html) && /ONL\.erledigt\.add\("s" \+ a\.id\)/.test(html), "Fenster je Anfrage einmal");
+  assert.ok(/const on = b\.filter\(\(m\) => ONL\?\.ids\?\.has\(m\.person_id\)\)/.test(html) && /spHerausTermin\('\$\{m\.person_id\}'\)">📅 Terminanfrage/.test(html) && /spTerminBlatt\(r\.spiel\.id\)/.test(html), "sofort nur online, sonst suchen + Termin");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
