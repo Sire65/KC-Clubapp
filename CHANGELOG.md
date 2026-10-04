@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.23.36 – 2026-10-04 – 🔽 Protokolle filtern nach Jahr, Monat, Ort, Protokollführer (Wunsch Hansi)
+- KC-CLUB-PROTOKOLL-FILTER: In „📄 Protokolle“ oben das Symbol 🔽 – antippen öffnet die Filterfelder ordentlich in zwei Spalten:
+  📅 Jahr, 🗓️ Monat, 📍 Ort, ✍️ Protokollführer (Auswahl nur aus vorhandenen Protokollen), darunter „x von y Protokollen“ und
+  „↺ Alle zeigen“. Die Zahl am Symbol zeigt aktive Filter. Wirkt zusammen mit dem bisherigen Suchfeld; bleibt beim Neuladen erhalten.
+  Kopfzeile bleibt einzeilig. Nur App (keine Server-Änderung). Test 385.
+- Daten: Protokoll „Sitzung des Köcheclubs, 04.09.26“ (handschriftlich von Anne Reinkober) als Entwurf angelegt, ohne Nachricht;
+  Hansi hat den Scan angehängt und veröffentlicht.
+
 ## 2.23.35 – 2026-10-04 – „Schnellzugriff“ führt zu den Schnellstart-Symbolen oben (Wunsch Hansi)
 - KC-CLUB-SCHNELLZUGRIFF-LINK: Das Wort „Schnellzugriff“ auf der Startseite ist antippbar (gepunktet unterstrichen) und blättert oben im
   Kopf zur Karte „⚡ Schnellstart“ mit den Lieblings-Symbolen, scrollt nach oben und lässt den Kopf kurz aufleuchten (Farbe wie der Tipp-Puls).

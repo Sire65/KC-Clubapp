@@ -3904,6 +3904,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/INFO_FELDER\.findIndex\(\(f\) => f\.id === "schnellstart"\)/.test(f) && /infoGehe\(i\)/.test(f) && /window\.scrollTo\(\{ top: 0/.test(f), "springt zur Karte");
   assert.ok(/if \(einfach\(\)\) \{/.test(f) && /await ansichtSetzen\("erweitert"\)/.test(f) && /data-klappe="schnellstart"/.test(f), "einfache Ansicht / ausgeschaltet bedacht");
 }
+// 385. 2.23.36: Protokolle filtern (KC-CLUB-PROTOKOLL-FILTER)
+{
+  assert.ok(/id="prFilterKnopf" onclick="prFilterUmschalten\(\)"/.test(html) && /id="prfJahr"/.test(html) && /id="prfMonat"/.test(html) && /id="prfOrt"/.test(html) && /id="prfWer"/.test(html), "Symbol + vier Felder");
+  assert.ok(/\.pr-filter-raster \{ display: grid; grid-template-columns: 1fr 1fr;/.test(html), "zwei Spalten");
+  const f = html.slice(html.indexOf("function prFilterAnwenden()"), html.indexOf("function prFilterLeeren()"));
+  assert.ok(/!q \|\| k\.dataset\.suche\.includes\(q\)/.test(f) && /d\.slice\(0, 4\) === PRF\.jahr/.test(f) && /d\.slice\(5, 7\) === PRF\.monat/.test(f) && /p\?\.verfasser\?\.name === PRF\.wer/.test(f), "Suche + Jahr/Monat/Ort/Protokollführer");
+  assert.ok(/function protokollFilter\(\) \{ prFilterAnwenden\(\); \}/.test(html) && /data-id="\$\{p\.id\}" data-suche=/.test(html), "Suchfeld wirkt mit");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

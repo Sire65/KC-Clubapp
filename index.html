@@ -1296,6 +1296,12 @@
     #druck .anl-kacheln span { border: 1pt solid #c9a37a; border-radius: 6pt; padding: 4pt 7pt; font-size: 11pt; background: #fff; }
     #druck .anl-tipps { font-size: 11pt; margin: 4pt 0 0; padding-left: 14pt; } #druck .anl-tipps li { margin: 2pt 0; }
   }
+  /* KC-CLUB-PROTOKOLL-FILTER (2.23.36) */
+  .pr-filter-raster { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 10px; } .pr-filter-raster .feld { margin: 0; font-weight: 700; font-size: .9rem; } .pr-filter-raster select { width: 100%; margin-top: 4px; }
+  .pr-filter-fuss { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; } .pr-filter-fuss .knopf { margin: 0; }
+  .pr-filter-knopf { position: relative; min-width: 44px; min-height: 44px; font-size: 1.1rem; padding: 4px 8px; margin: 0; } .pr-filter-knopf .anz { margin-left: 6px; background: var(--rot); color: #fff; border-radius: 9px; padding: 0 6px; font-size: .75rem; }
+  @media (max-width: 340px) { .pr-filter-raster { grid-template-columns: 1fr; } }
+  #v-protokolle .kopf2 { gap: 8px; } #v-protokolle .kopf2 > h2 { white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; font-size: 1.2rem; }
   .kopf2 { display: flex; align-items: center; gap: 10px; margin: 6px 0 4px; flex-wrap: wrap; } /* 1.32.1: bei großer Schrift umbrechen statt Knöpfe aus dem Bild schieben */
   .kopf2 > h2 { flex: 1 1 0; }
   .kopf2 > .knopf.haupt:last-child { margin-left: auto; } /* Hauptknopf bleibt rechts – auch nach dem Umbruch */
@@ -2135,7 +2141,17 @@
 
   <!-- SITZUNGSPROTOKOLLE (KC-CLUB-PROTOKOLLE) -->
   <section id="v-protokolle" class="versteckt">
-    <div class="kopf2"><button class="zurueck" onclick="zurueck('start')" aria-label="Zurück">‹</button><h2>📄 Protokolle</h2><button class="knopf haupt klein" onclick="protokollNeu()">＋ Neu</button></div>
+    <div class="kopf2"><button class="zurueck" onclick="zurueck('start')" aria-label="Zurück">‹</button><h2>📄 Protokolle</h2><button class="knopf klein pr-filter-knopf" id="prFilterKnopf" onclick="prFilterUmschalten()" title="Protokolle filtern (Jahr, Monat, Ort, Protokollführer)" aria-label="Protokolle filtern" aria-expanded="false">🔽<span class="anz versteckt" id="prFilterAnz"></span></button><button class="knopf haupt klein" onclick="protokollNeu()">＋ Neu</button></div>
+    <!-- KC-CLUB-PROTOKOLL-FILTER (2.23.36, Wunsch Hansi): Filter nach Jahr, Monat, Ort, Protokollführer – Felder in zwei Spalten -->
+    <div class="karte pr-filter versteckt" id="prFilterFeld">
+      <div class="pr-filter-raster">
+        <label class="feld">📅 Jahr<select id="prfJahr" onchange="prFilterAnwenden()"></select></label>
+        <label class="feld">🗓️ Monat<select id="prfMonat" onchange="prFilterAnwenden()"></select></label>
+        <label class="feld">📍 Ort<select id="prfOrt" onchange="prFilterAnwenden()"></select></label>
+        <label class="feld">✍️ Protokollführer<select id="prfWer" onchange="prFilterAnwenden()"></select></label>
+      </div>
+      <div class="pr-filter-fuss"><span class="hinweis" id="prfTreffer"></span><button class="knopf klein" onclick="prFilterLeeren()">↺ Alle zeigen</button></div>
+    </div>
     <div id="protokollListe"><div class="karte hinweis">Wird geladen …</div></div>
   </section>
   <section id="v-protokoll" class="versteckt">
@@ -2801,7 +2817,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.35"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.36"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -14110,18 +14126,49 @@ async function protokolleLaden() {
     $("protokollListe").innerHTML = auf + neu + `<div class="abschnitt"><h3>📄 Protokolle</h3></div>` + suche
       + (protokolle.length ? `<div class="mini-kacheln">${protokolle.map(protokollKarte).join("")}</div>` : "") + (protokolle.length ? "" : '<div class="karte hinweis">Noch keine Protokolle. Nach der nächsten Sitzung erscheint sie oben unter „Protokoll schreiben“.</div>');
     klappenMerken($("protokollListe")); // 1.46.0: Klappbereiche mit Pfeil und Schloss wie überall
+    if (!$("prFilterFeld").classList.contains("versteckt")) prFilterFuellen(); else prFilterAnwenden(); // 2.23.36: Filter bleibt nach dem Neuladen
   } catch (e) { meldeFehler(e); }
 }
-function protokollFilter() {
-  const q = $("prSuche").value.toLowerCase();
-  document.querySelectorAll("#protokollListe .prkarte").forEach((k) => k.classList.toggle("versteckt", !!q && !k.dataset.suche.includes(q)));
+function protokollFilter() { prFilterAnwenden(); } // Suchfeld + Filter wirken zusammen (2.23.36)
+// ---------- KC-CLUB-PROTOKOLL-FILTER (2.23.36, Wunsch Hansi): oben „🔽 Filter“ → Jahr, Monat, Ort, Protokollführer (2 × 2 Felder) ----------
+// Die Auswahl entsteht aus den vorhandenen Protokollen (nur was es gibt). Die Zahl am Knopf zeigt, wie viele Filter aktiv sind.
+const PR_MONATE = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
+const PRF = { jahr: "", monat: "", ort: "", wer: "" };
+function prFilterUmschalten(an) {
+  const f = $("prFilterFeld"), zeigen = an ?? f.classList.contains("versteckt");
+  f.classList.toggle("versteckt", !zeigen); $("prFilterKnopf").setAttribute("aria-expanded", String(zeigen));
+  if (zeigen) prFilterFuellen();
 }
+function prFilterFuellen() {
+  const L = prListe?.protokolle || [], uniq = (a) => [...new Set(a.filter(Boolean))];
+  const opt = (id, wert, liste, alle) => { $(id).innerHTML = `<option value="">${alle}</option>` + liste.map(([v, t]) => `<option value="${esc(v)}"${v === wert ? " selected" : ""}>${esc(t)}</option>`).join(""); };
+  opt("prfJahr", PRF.jahr, uniq(L.map((p) => String(p.datum).slice(0, 4))).sort().reverse().map((j) => [j, j]), "Alle Jahre");
+  opt("prfMonat", PRF.monat, PR_MONATE.map((m, i) => [String(i + 1).padStart(2, "0"), m]).filter(([v]) => L.some((p) => String(p.datum).slice(5, 7) === v)), "Alle Monate");
+  opt("prfOrt", PRF.ort, uniq(L.map((p) => (p.ort || "").trim())).sort((a, b) => a.localeCompare(b, "de")).map((o) => [o, o]), "Alle Orte");
+  opt("prfWer", PRF.wer, uniq(L.map((p) => p.verfasser?.name)).sort((a, b) => a.localeCompare(b, "de")).map((n) => [n, n]), "Alle");
+  prFilterAnwenden();
+}
+function prFilterAnwenden() {
+  if ($("prfJahr")?.options.length) Object.assign(PRF, { jahr: $("prfJahr").value, monat: $("prfMonat").value, ort: $("prfOrt").value, wer: $("prfWer").value });
+  const q = ($("prSuche")?.value || "").toLowerCase(), L = prListe?.protokolle || [];
+  let n = 0;
+  document.querySelectorAll("#protokollListe .prkarte").forEach((k) => {
+    const p = L.find((x) => x.id === k.dataset.id), d = String(p?.datum || "");
+    const ok = (!q || k.dataset.suche.includes(q)) && (!PRF.jahr || d.slice(0, 4) === PRF.jahr) && (!PRF.monat || d.slice(5, 7) === PRF.monat)
+      && (!PRF.ort || (p?.ort || "").trim() === PRF.ort) && (!PRF.wer || p?.verfasser?.name === PRF.wer);
+    k.classList.toggle("versteckt", !ok); if (ok) n++;
+  });
+  const aktiv = [PRF.jahr, PRF.monat, PRF.ort, PRF.wer].filter(Boolean).length;
+  $("prFilterAnz").textContent = aktiv; $("prFilterAnz").classList.toggle("versteckt", !aktiv);
+  if ($("prfTreffer")) $("prfTreffer").textContent = `${n} von ${L.length} Protokoll${L.length === 1 ? "" : "en"}`;
+}
+function prFilterLeeren() { Object.assign(PRF, { jahr: "", monat: "", ort: "", wer: "" }); if ($("prSuche")) $("prSuche").value = ""; prFilterFuellen(); }
 // KC-CLUB-PROTOKOLL-KACHELN (1.46.0, Wunsch Hansi „nichts überladen“): Protokolle als kleine Kacheln – antippen öffnet
 // das Protokoll (dort auch Löschen, Einwand, Drucken). Fremde Entwürfe sind sichtbar, aber nicht zu öffnen.
 function protokollKarte(p) {
   const offen = p.status !== "entwurf" || p.darfBearbeiten;
   const info = [p.anlagen ? `📎 ${p.anlagen}` : "", p.aufgabenOffen ? `📌 ${p.aufgabenOffen} offen` : "", p.einwaende ? `⚠️ ${p.einwaende}` : ""].filter(Boolean).join(" · ");
-  return `<button class="mini-kachel prkarte${!p.gelesen ? " mk-offen" : ""}" data-suche="${esc((p.titel + " " + (p.ort || "") + " " + p.datum).toLowerCase())}" ${offen ? `onclick="protokollOeffnen('${p.id}')"` : 'disabled style="opacity:.75;cursor:default"'}>
+  return `<button class="mini-kachel prkarte${!p.gelesen ? " mk-offen" : ""}" data-id="${p.id}" data-suche="${esc((p.titel + " " + (p.ort || "") + " " + p.datum).toLowerCase())}" ${offen ? `onclick="protokollOeffnen('${p.id}')"` : 'disabled style="opacity:.75;cursor:default"'}>
     <span class="mk-sym">📄</span><span class="mk-titel">${esc(p.titel)}</span><span class="mk-unter">🗓️ ${esc(tagKurz(p.datum))}${p.ort ? " · " + esc(p.ort) : ""}</span>
     <span>${prStatusMarke(p)}${!p.gelesen ? ' <span class="marke rot">🆕 neu</span>' : ""}</span>
     <span class="mk-unter">${p.status === "entwurf" && !p.darfBearbeiten ? "✍️ schreibt " : "von "}${esc(p.verfasser.name.split(" ")[0])}${p.version > 1 ? ` · Fassung ${p.version}` : ""}</span>${info ? `<span class="mk-unter">${info}</span>` : ""}</button>`;
