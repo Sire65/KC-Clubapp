@@ -15,8 +15,22 @@ Deno.serve(async(req)=>{
   const sb=createClient(Deno.env.get("SUPABASE_URL")!,Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,{auth:{persistSession:false,autoRefreshToken:false}});
   const tok=req.headers.get("x-kc-mirror-token")??"";
   const {data:expectedToken,error:te}=await sb.rpc("kc_db_mirror_worker_token");
-  if(te||!expectedToken||tok.length<32||tok!==expectedToken)return fail(401,"mirror worker authentication failed");
   let body:any; try{body=await req.json()}catch{return fail(400,"invalid JSON body")}
+  // KC-CORE-SPIEGEL-EXTERN (04.10.2026, Freigabe Hansi): Wächter von außen (GitHub-Zeitplan, ohne Schlüssel).
+  // Entscheidet allein die Datenbank (kc_db_mirror_extern_plan: Wartung, letzter Lauf älter als 390 Min., Sperre 60 Min.).
+  // Nur dann werden die Pakete direkt an diesen Arbeiter geschickt – ohne pg_net. Antwort enthält nie den Schlüssel.
+  if(body?.aktion==="extern_pruefen"){
+    const {data:plan,error:pe}=await sb.rpc("kc_db_mirror_extern_plan");
+    if(pe||!plan)return fail(503,"mirror plan unavailable");
+    if(plan.status!=="angestossen")return new Response(JSON.stringify({ok:true,status:plan.status,letzter_lauf:plan.letzter_lauf??null}),{status:200,headers:jsonHeaders});
+    if(te||!expectedToken)return fail(503,"mirror worker token unavailable");
+    const ziel=`${Deno.env.get("SUPABASE_URL")}/functions/v1/kc-db-mirror-worker`;
+    const pakete:string[][]=Array.isArray(plan.pakete)?plan.pakete:[];
+    const auftraege=pakete.map(p=>fetch(ziel,{method:"POST",headers:{...jsonHeaders,"x-kc-mirror-token":String(expectedToken)},body:JSON.stringify({tables:p})}).then(r=>r.status).catch(()=>0));
+    EdgeRuntime.waitUntil(Promise.allSettled(auftraege));
+    return new Response(JSON.stringify({ok:true,status:"angestossen",letzter_lauf:plan.letzter_lauf??null,tabellen:plan.tabellen,pakete:pakete.length}),{status:202,headers:jsonHeaders});
+  }
+  if(te||!expectedToken||tok.length<32||tok!==expectedToken)return fail(401,"mirror worker authentication failed");
   const requested=[...new Set<string>(Array.isArray(body.tables)?body.tables:[])];
   if(!requested.length||requested.length>48)return fail(400,"tables must contain 1..48 names");
   for(const t of requested) if(!/^[a-z0-9_]+$/.test(t)) return fail(400,`invalid table name: ${t}`);

@@ -1,0 +1,41 @@
+# KC-CORE-SPIEGEL-EXTERN (04.10.2026): lädt die Edge Function „kc-db-mirror-worker“ (Neon-Spiegelung) zu Supabase hoch,
+# sobald sich ihr Code auf main ändert (oder per Hand über „Run workflow“). Gleicher Weg wie „Server hochladen“.
+# Schlüssel: Repository-Secret SUPABASE_ACCESS_TOKEN (nur Edge Functions). Kostenlos.
+name: Spiegel-Arbeiter hochladen
+on:
+  push:
+    branches: [main]
+    paths:
+      - "supabase/functions/kc-db-mirror-worker/**"
+  workflow_dispatch:
+concurrency:
+  group: spiegel-arbeiter-hochladen
+  cancel-in-progress: false
+jobs:
+  hochladen:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      PROJEKT: ptblnpiroqftcvlsrhac
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # erst die Tests – ein roter Test verhindert das Hochladen
+      - run: node tests/app-vertrag.test.mjs
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.118.0
+      - name: Edge Function hochladen
+        run: supabase functions deploy kc-db-mirror-worker --project-ref "$PROJEKT" --no-verify-jwt --use-api
+      - name: Prüfen, ob der Spiegel-Arbeiter antwortet
+        run: |
+          for i in 1 2 3 4 5 6; do
+            code=$(curl -s -o /tmp/antwort -w "%{http_code}" -X POST "https://$PROJEKT.supabase.co/functions/v1/kc-db-mirror-worker" -H "content-type: application/json" -d '{"tables":[]}' || true)
+            echo "HTTP $code: $(head -c 200 /tmp/antwort)"
+            # ohne Schlüssel antwortet der Arbeiter mit 401 – Hauptsache, er läuft
+            if [ "$code" = "401" ]; then exit 0; fi
+            sleep 10
+          done
+          echo "Spiegel-Arbeiter antwortet nicht"; exit 1

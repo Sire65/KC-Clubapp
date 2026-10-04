@@ -1,0 +1,31 @@
+# KC-CORE-SPIEGEL-EXTERN (04.10.2026, Freigabe Hansi): Spiegel-Wächter von außen.
+# Fragt stündlich beim Spiegel-Arbeiter nach, ob die Neon-Spiegelung pünktlich gelaufen ist (Fenster 390 Min.).
+# Nur wenn der normale 6-Stunden-Lauf ausgefallen ist (z. B. weil der Supabase-Zeitplan nichts nach außen schicken kann),
+# stößt der Arbeiter die Spiegelung selbst an. Im Normalbetrieb wird Neon NICHT geweckt (keine Extra-Rechenzeit).
+# Braucht keine Secrets – die Entscheidung trifft allein die Datenbank (kc_db_mirror_extern_plan).
+# Kostenlos: öffentliches Repository, ein curl-Aufruf je Lauf (< 1 Min.).
+name: Spiegel-Wächter
+on:
+  schedule:
+    - cron: "41 * * * *"
+  workflow_dispatch:
+concurrency:
+  group: spiegel-waechter
+  cancel-in-progress: false
+permissions: {}
+jobs:
+  pruefen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Spiegel prüfen und bei Bedarf anstoßen
+        run: |
+          code=$(curl -s -o antwort.json -w "%{http_code}" --max-time 90 -X POST \
+            "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-db-mirror-worker" \
+            -H "content-type: application/json" -d '{"aktion":"extern_pruefen"}' || true)
+          echo "HTTP $code: $(head -c 300 antwort.json 2>/dev/null)"
+          case "$code" in
+            200) echo "Spiegel ist aktuell – nichts zu tun." ;;
+            202) echo "::notice::Spiegel-Lauf war überfällig – von außen angestoßen." ;;
+            *)   echo "::warning::Spiegel-Wächter: Server gerade nicht erreichbar (HTTP $code). Nächster Versuch in einer Stunde." ;;
+          esac

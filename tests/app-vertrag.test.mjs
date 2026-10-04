@@ -3461,6 +3461,20 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/setze\("db", "⚪"/.test(d) && /setze\("anbieter", "⚪"/.test(d) && !/fetch\([^)]*method: "(PUT|DELETE)"/.test(d), "nicht Geprüftes ⚪, nur lesend");
   assert.ok(/onclick="serverDiagnose\(\)">🩺 Server-Diagnose/.test(html), "Admin-Knopf in den Einstellungen");
 }
+// 320. Spiegel-Wächter von außen (KC-CORE-SPIEGEL-EXTERN): GitHub stößt nur bei überfälligem Spiegel an
+{
+  const wf = lies(".github/workflows/spiegel-waechter.yml");
+  assert.ok(/schedule:\s*\n\s*- cron: "41 \* \* \* \*"/.test(wf) && /"aktion":"extern_pruefen"/.test(wf), "stündlicher Zeitplan ruft extern_pruefen");
+  assert.ok(!/secrets\./.test(wf) && /permissions: \{\}/.test(wf), "Wächter braucht keine Secrets und keine Rechte");
+  const w = lies("supabase/functions/kc-db-mirror-worker/index.ts");
+  const ext = w.slice(w.indexOf('if(body?.aktion==="extern_pruefen")'), w.indexOf("mirror worker authentication failed"));
+  assert.ok(ext.length > 100 && ext.includes('sb.rpc("kc_db_mirror_extern_plan")') && ext.includes('plan.status!=="angestossen"'), "Arbeiter handelt nur nach Datenbank-Plan");
+  assert.ok(!/JSON\.stringify\(\{[^}]*expectedToken/.test(ext) && ext.includes("EdgeRuntime.waitUntil"), "Schlüssel nie in der Antwort, Pakete im Hintergrund");
+  const sql = lies("supabase/migrations/20261004_kc_core_spiegel_extern.sql");
+  assert.ok(/interval '390 minutes'/.test(sql) && /interval '60 minutes'/.test(sql) && /pg_advisory_xact_lock/.test(sql) && /maintenance_until/.test(sql), "Fenster, Sperre, Wartung");
+  assert.ok(/v_pakete := public\.kc_db_mirror_pakete_vorbereiten\(\);[\s\S]*kc_db_mirror_dispatch/.test(sql.slice(sql.indexOf("function public.kc_neon_low_compute_cycle()"))), "Cron-Lauf nutzt dieselbe Paketbildung (kein Parallel-Kern)");
+  for (const f of ["kc_db_mirror_pakete_vorbereiten", "kc_db_mirror_extern_plan"]) assert.ok(new RegExp(`revoke all on function public\\.${f}\\(\\) from public, anon, authenticated;[\\s\\S]*grant execute on function public\\.${f}\\(\\) to service_role;`).test(sql), "nur service_role: " + f);
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
