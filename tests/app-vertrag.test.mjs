@@ -3937,3 +3937,30 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/id="arOrdnerSuche"[^>]*oninput="AR\.ordnerSuche=this\.value;arOrdnerListe\(\)"/.test(html), "Archiv: Suche im Ordner fehlt");
   assert.ok(/t\.split\(muster\)\.map\(\(teil, i\) => i % 2 \? `<mark>\$\{esc\(teil\)\}<\/mark>` : esc\(teil\)\)/.test(html), "Markierung muss vor dem Escapen teilen");
 }
+
+// 349. 2.23.0: Hilfe-Zentrum (KC-CLUB-HILFEZENTRUM) – alle Tipps/Hinweise nach Themen, Kachel im Register Technik, passt sich selbst an
+{
+  const block = (start, ende = "\n];") => { const i = html.indexOf(start); assert.ok(i >= 0, `${start} fehlt`); return html.slice(i, html.indexOf(ende, i)); };
+  const themen = new Set([...block("const HILFE_THEMEN = [").matchAll(/\{ id: "([a-z]+)"/g)].map((m) => m[1]));
+  assert.ok(themen.size >= 8 && themen.has("weitere") && themen.has("bereiche"), "Themen fehlen (inkl. Auffang „weitere“ und „bereiche“)");
+  const zuordnung = Object.fromEntries([...block("const HILFE_TIPP_THEMA = {", "\n};").matchAll(/([a-z_]+): "([a-z]+)"/g)].map((m) => [m[1], m[2]]));
+  // jeder Tipp des Tages hat ein bekanntes Thema – neue Tipps landen sonst nur unter „Weitere Tipps“
+  for (const m of block("const TIPPS = [").matchAll(/\n  \{ id: "([a-z_]+)"(?:, thema: "([a-z]+)")?/g)) {
+    const th = m[2] || zuordnung[m[1]];
+    assert.ok(th && themen.has(th), `Tipp „${m[1]}“ hat kein Hilfe-Thema (HILFE_TIPP_THEMA ergänzen)`);
+  }
+  const hilfe = [...block("const HILFE = [").matchAll(/\n  \{ id: "([^"]+)", thema: "([^"]+)", sym: "[^"]+", t: "[^"]+", x: /g)];
+  assert.ok(hilfe.length >= 25, "zu wenige Hilfetexte");
+  assert.equal(new Set(hilfe.map((m) => m[1])).size, hilfe.length, "Hilfe-IDs doppelt");
+  for (const [, id, th] of hilfe) { assert.match(id, /^[a-z_]+$/, `Hilfe-ID „${id}“ (wird in onclick verwendet)`); assert.ok(themen.has(th), `Hilfe „${id}“: Thema „${th}“ unbekannt`); }
+  assert.ok(/kachel_lang", thema: "start"[^\n]*lange/.test(html) && /id: "farbe", thema: "darstellung"[^\n]*Darstellung/.test(html), "Beispiele aus dem Wunsch: Lang-Drücken und Farbe einstellen");
+  // gesammelt zur Laufzeit aus allen drei Registries (nichts doppelt gepflegt), Anzahl je Thema berechnet
+  const f = html.slice(html.indexOf("function hzEintraege()"), html.indexOf("const hzGesehen"));
+  assert.ok(/\.\.\.HILFE\.filter/.test(f) && /\.\.\.TIPPS\.map/.test(f) && /\.\.\.EINWEISUNG\.filter/.test(f), "Hilfe muss TIPPS, EINWEISUNG und HILFE sammeln");
+  assert.ok(/hzThemaId\(/.test(f) && /\(HILFE_THEMEN\.some\(\(x\) => x\.id === t\) \? t : "weitere"\)/.test(html), "unbekanntes Thema → „Weitere Tipps“");
+  assert.ok(/📖 Inhalt\$\{anz\(alle\.length\)\}/.test(html) && /<ul class="hz-inhalt">\$\{themen\.map/.test(html) && /onclick="hzThema\('\$\{t\.id\}'\)"/.test(html), "Deckblatt mit Inhalt, Anzahl und Link je Thema");
+  assert.ok(/\{ id: "hilfezentrum", sym: "❓", t: "Hilfe & Tipps"[^\n]*aktion: "hzStart\(\)"/.test(block("  programme: [", "\n  ],")), "Kachel im Register Technik");
+  assert.ok(/<section id="v-hilfezentrum"/.test(html) && /"spiele", "hilfezentrum"\]\.forEach/.test(html) && /if \(v === "hilfezentrum"\) hzOeffnen\(\);/.test(html), "Ansicht fehlt");
+  assert.ok(/h === "#hilfezentrum" \|\| h\.startsWith\("#hilfezentrum="\)/.test(html), "Sprung #hilfezentrum fehlt");
+  assert.ok(/onclick="hzStart\(\)">Öffnen<\/button>/.test(html), "Link in den Einstellungen fehlt");
+}
