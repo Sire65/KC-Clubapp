@@ -3791,7 +3791,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 372. 2.23.24: alles Anklickbare pulsiert kurz beim Antippen (KC-CLUB-TIPP-PULS)
 {
   assert.ok(/const TIPP_ZIEL = 'button, \[role="button"\], \[role="tab"\]/.test(html) && /\(function tippPuls\(\) \{/.test(html), "zentrale Stelle");
-  assert.ok(/try \{ return z\.animate\(\[\{ scale: "1", boxShadow: `0 0 0 0 \$\{ring\}\.55\)` \}/.test(html) && /Math\.hypot\(e\.clientX - x0, e\.clientY - y0\) > 10\) \{ try \{ lauf\.a\?\.cancel\(\); \}/.test(html) && /if \(!tastatur\) \{ const z = finden\(document\.elementFromPoint\(x, y\)\);/.test(html), "Puls beim Aufsetzen, Abbruch beim Scrollen, neu gezeichnete Reiter");
+  assert.ok(/try \{ return z\.animate\(\[\{ scale: "1", boxShadow: `0 0 0 0 \$\{ring\}\.55\)` \}/.test(html) && /Math\.hypot\(e\.clientX - x0, e\.clientY - y0\) > 10\) \{ try \{ lauf\.a\?\.cancel\(\); \}/.test(html) && /if \(vorher\.isConnected && vorher\.getClientRects\(\)\.length\) \{/.test(html) && /if \(!tastatur\) \{ const z = finden\(document\.elementFromPoint\(x, y\)\); if \(z && z !== vorher\) pulsen\(z\); \}/.test(html), "Puls beim Aufsetzen, Abbruch beim Scrollen, neu gezeichnete Reiter");
   assert.ok(/const schreiben = \(t\) => t\.matches\?\.\('input:not\(\[type="checkbox"\]\):not\(\[type="radio"\]\), textarea, select, \[contenteditable="true"\]'\);/.test(html) && /if \(schreiben\(e\.target\)\) return;/.test(html), "Eingabefelder nie");
 }
 // 373. 2.23.25: offene Herausforderung erreichbar (KC-CLUB-SPIEL-SCHON-OFFEN)

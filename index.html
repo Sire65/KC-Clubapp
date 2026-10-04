@@ -9602,8 +9602,10 @@ const TIPP_ZIEL = 'button, [role="button"], [role="tab"], [role="radio"], [role=
     const vorher = finden(e.target), x = e.clientX, y = e.clientY, tastatur = e.detail === 0, schon = lauf?.z === vorher;
     lauf = null; if (!vorher) return;
     requestAnimationFrame(() => setTimeout(() => {
-      if (vorher.isConnected) { if (!schon || tastatur) pulsen(vorher); return; } // läuft schon seit dem Aufsetzen
-      if (!tastatur) { const z = finden(document.elementFromPoint(x, y)); if (z) pulsen(z); } // neu gezeichnet → Element an derselben Stelle
+      // 2.23.28 (Hansi: Schriftzug „Einfache/Erweiterte Ansicht“): wird der Knopf beim Antippen unsichtbar (gegen seinen Partner getauscht),
+      // zählt er wie neu gezeichnet → das pulst, was jetzt an derselben Stelle steht
+      if (vorher.isConnected && vorher.getClientRects().length) { if (!schon || tastatur) pulsen(vorher); return; } // läuft schon seit dem Aufsetzen
+      if (!tastatur) { const z = finden(document.elementFromPoint(x, y)); if (z && z !== vorher) pulsen(z); } // neu gezeichnet → Element an derselben Stelle
     }, 0));
   }, true);
 })();

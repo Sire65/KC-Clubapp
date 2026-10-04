@@ -12,6 +12,9 @@
 - Server: Aktionen unterhaltung_archivieren (zurueck) und unterhaltung_leeren; Liste „unterhaltungen“ liefert archiviert (Zeitpunkt).
   Speicherung je Person in kc_club_person_einstellung („chat_archiv“) – keine neue Tabelle. Protokoll nur Aktionsart, keine Inhalte.
 - Hilfe-Eintrag „Chats archivieren, zurückholen und löschen“. Test 374.
+- KC-CLUB-TIPP-PULS (Wunsch Hansi): Der Schriftzug „> Einfache Ansicht <“ / „< Erweiterte Ansicht >“ pulst jetzt auch (größer + roter Ring).
+  Er tauscht sich beim Antippen gegen seinen Partner – ein Knopf, der dabei unsichtbar wird, zählt wie neu gezeichnet; es pulst,
+  was an derselben Stelle steht. Gilt zentral für alle so getauschten Knöpfe. Test 2.23.24 erweitert.
 
 ## 2.23.27 – 2026-10-04 – Roter Ring auch bei Knöpfen, die sofort ein Fenster öffnen (Wunsch Hansi)
 - KC-CLUB-TIPP-PULS: Der Puls startet jetzt schon beim Aufsetzen des Fingers – so ist der rote Ring auch bei Knöpfen/Kacheln zu sehen,
