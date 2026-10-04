@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.23.7 – 2026-10-04 – Hilfe-Zentrum kennt die Neuerungen aus 2.23.6
+- KC-CLUB-HILFEZENTRUM: fünf neue Hilfen (mit „neu“-Marke und „Zeig mir wo“): 📥 Eingangskorb, 🗄️ in mehrere Ordner ablegen,
+  💬 neue Nachricht im Büro (Clubleitung/Büro), 🔊 Tic-Tac-Toe mit Tönen (alle), 🕶️ Brille blinkt rot (nur Admin). Test 357.
+
 ## 2.23.6 – 2026-10-04 – Eingangskorb mit Mehrfach-Ablage, Inkognito-Brille blinkt, Tic-Tac-Toe-Töne (Wunsch Hansi)
 - Zusammengeführt auf das Hilfe-Zentrum (2.23.5); die Entwürfe 2.22.21/2.22.22 wurden nie eingespielt und kommen hiermit live.
 

@@ -3727,6 +3727,11 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/spTttTonMg\(g\); \/\/ KC-CLUB-TTT-TOENE/.test(html) && /if \(neu >= 0\) spTttTon\(g\.brett\[neu\] === g\.ichBin \? "ich" : "gegner"\);/.test(html), "Mitglieder: Zug + Ende");
   assert.ok(/if \(art === "ttt"\) \{ if \(an\) spTttTon\("sieg"\); return melde/.test(html), "TTT-Schalter spricht nicht");
 }
+// 357. 2.23.7: Hilfen zu den Neuerungen aus 2.23.6
+{
+  for (const id of ["eingangskorb", "ablage_mehrere", "buero_neue_nachricht", "ttt_toene", "inkognito_blinkt"]) assert.ok(new RegExp(`\\{ id: "${id}", thema: "(club|privat)",[^\\n]*seit: "2\\.23\\.7" \\}`).test(html), `Hilfe ${id}`);
+  assert.ok(/\{ id: "inkognito_blinkt",[^\n]*nur: \(\) => !!ICH\?\.admin/.test(html) && /\{ id: "eingangskorb",[^\n]*nur: \(\) => !!\(ICH\?\.vorstand \|\| ICH\?\.admin\)/.test(html), "Clubleitung/Admin-Hilfen nur für sie");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
