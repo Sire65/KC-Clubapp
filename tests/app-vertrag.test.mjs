@@ -3791,7 +3791,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 372. 2.23.24: alles Anklickbare pulsiert kurz beim Antippen (KC-CLUB-TIPP-PULS)
 {
   assert.ok(/const TIPP_ZIEL = 'button, \[role="button"\], \[role="tab"\]/.test(html) && /\(function tippPuls\(\) \{/.test(html), "zentrale Stelle");
-  assert.ok(/try \{ return z\.animate\(\[\{ scale: "1", boxShadow: `0 0 0 0 \$\{ring\}\.55\)` \}/.test(html) && /Math\.hypot\(e\.clientX - x0, e\.clientY - y0\) > 10\) \{ try \{ lauf\.a\?\.cancel\(\); \}/.test(html) && /if \(vorher\.isConnected && vorher\.getClientRects\(\)\.length\) \{/.test(html) && /if \(!tastatur\) \{ const z = finden\(document\.elementFromPoint\(x, y\)\); if \(z && z !== vorher\) pulsen\(z\); \}/.test(html), "Puls beim Aufsetzen, Abbruch beim Scrollen, neu gezeichnete Reiter");
+  assert.ok(/try \{ return z\.animate\(\[\{ scale: "1", boxShadow: `0 0 0 0 \$\{ring\}\$\{ra\}\)` \}/.test(html) && /Math\.hypot\(e\.clientX - x0, e\.clientY - y0\) > 10\) \{ try \{ lauf\.a\?\.cancel\(\); \}/.test(html) && /if \(vorher\.isConnected && vorher\.getClientRects\(\)\.length\) \{/.test(html) && /if \(!tastatur\) \{ const z = finden\(document\.elementFromPoint\(x, y\)\); if \(z && z !== vorher\) pulsen\(z\); \}/.test(html), "Puls beim Aufsetzen, Abbruch beim Scrollen, neu gezeichnete Reiter");
   assert.ok(/const schreiben = \(t\) => t\.matches\?\.\('input:not\(\[type="checkbox"\]\):not\(\[type="radio"\]\), textarea, select, \[contenteditable="true"\]'\);/.test(html) && /if \(schreiben\(e\.target\)\) return;/.test(html), "Eingabefelder nie");
 }
 // 373. 2.23.25: offene Herausforderung erreichbar (KC-CLUB-SPIEL-SCHON-OFFEN)
@@ -3824,6 +3824,22 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/"wunschbogen_gemailt"\)\.gte\("zeit", new Date\(Date\.now\(\) - 120_000\)/.test(wm), "Bremse 2 Minuten");
   assert.ok(/data-k="bogen"/.test(html) && /function wbStart\(\)/.test(html) && /wunschbogen: \{ bauen: \(\) => wbDruckSeite\(\) \}/.test(html) && /api\("wunschbogen_mailen"/.test(html), "Club-App: Knopf, Druck, Mail");
   assert.ok(/#druck img\.dseite\.quer \{ width: 297mm; height: 209mm; \}/.test(html), "Querformat randlos");
+}
+// 376. 2.23.29: Puls-Ring kontrastreich in allen Farbdesigns, auch nachts (KC-CLUB-PULS-KONTRAST)
+{
+  assert.ok(/--pulsRing: 208, 2, 27; --pulsRingA: \.55;/.test(html) && /:root\.dunkel \{ --pulsRing: 255, 77, 94; --pulsRingA: \.9; \}/.test(html), "Ringfarbe je Tag/Nacht");
+  assert.ok(/@keyframes vsPuls \{[^}]*rgba\(var\(--pulsRing\), var\(--pulsRingA\)\)/.test(html) && !/rgba\(208, 2, 27/.test(html), "keine fest eingebaute Ringfarbe mehr");
+  assert.ok(/const ringFarbe = \(z\) => \{/.test(html) && /bg\[i\] \* \(1 - a\)\), bg\) >= 2\.5\)/.test(html), "Kontrast zum echten Hintergrund geprüft");
+  // alle Designs: Nacht-Ring auf bg/karte/karte2 mindestens 3:1
+  const blk = html.slice(html.indexOf("const DESIGNS = ["), html.indexOf("\n];", html.indexOf("const DESIGNS = [")));
+  const lum = (c) => { const f = (v) => ((v /= 255) <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4); return 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2]); };
+  const kr = (a, b) => (Math.max(lum(a), lum(b)) + 0.05) / (Math.min(lum(a), lum(b)) + 0.05);
+  const nacht = [...blk.matchAll(/nacht: \{([^}]*)\}/g)].map((m) => m[1]);
+  assert.ok(nacht.length >= 20, "Designs gefunden");
+  for (const n of nacht) for (const [, hex] of n.matchAll(/(?:bg|karte|karte2): "#([0-9a-fA-F]{6})"/g)) {
+    const bg = [0, 2, 4].map((k) => parseInt(hex.slice(k, k + 2), 16)), ring = [255, 77, 94].map((v, i) => v * 0.9 + bg[i] * 0.1);
+    assert.ok(kr(ring, bg) >= 3, "Nacht-Ring zu schwach auf #" + hex);
+  }
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.23.29 – 2026-10-04 – Roter Puls-Ring auch nachts gut sichtbar; Kontrastprüfung aller Farbdesigns (Wunsch Hansi)
+- Kontrastprüfung aller 22 Farbdesigns (Tag + Nacht): Text, grauer Text, weiße Knopfschrift, rote Schrift – überall ausreichend (≥ 4,5:1).
+  Einziger Fund: der rote Puls-Ring war nachts in allen Designs zu schwach (≈ 1,6:1).
+- KC-CLUB-PULS-KONTRAST: Ringfarbe zentral als Variable --pulsRing/--pulsRingA – Tag unverändert (208,2,27 · 0,55), Nacht kräftiges
+  Hellrot (255,77,94 · 0,9; in allen Designs ≥ 3,5:1). Gilt für den Tipp-Puls und die pulsierenden Knöpfe (vsPuls).
+  Der Tipp-Puls prüft zusätzlich den echten Hintergrund hinter dem Element (auch Verläufe, z. B. dunkler Kopf) und nimmt bei zu wenig
+  Kontrast (< 2,5:1) die nächste Farbe (Hellrot → Rot → Gelb → Weiß). Test 376 (rechnet alle Nacht-Designs nach).
+
 ## 2.23.28 – 2026-10-04 – Chats archivieren, wieder aktivieren, bei mir komplett löschen (Wunsch Hansi)
 - KC-CLUB-CHAT-ARCHIV: In der Chat-Liste (einmal tippen) und im Chat-Menü:
   - „📦 Archivieren“ – der Chat verschwindet aus der Liste und steht oben unter „📦 Archiviert (n)“ (mit Zahl ungelesener Nachrichten).

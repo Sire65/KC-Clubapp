@@ -118,7 +118,10 @@
     --radius: 18px; --fs: 16px;
     --hero1: #4d0c16; --hero4: #b5705a; --heroschatten: rgba(116, 21, 33, .35);
     --blau: #1f5f99; --blaubg: #e3edf7; --lila: #7b3fa0; --lilabg: #f1e6f7; --tuerkis: #0e7c86; --tuerkisbg: #dcf1f3;
+    /* KC-CLUB-PULS-KONTRAST (2.23.29, Wunsch Hansi): roter Ring beim Antippen/Pulsieren – je Tag/Nacht kontrastreich (≥ 3:1 in allen Designs) */
+    --pulsRing: 208, 2, 27; --pulsRingA: .55;
   }
+  :root.dunkel { --pulsRing: 255, 77, 94; --pulsRingA: .9; }
   :root.dunkel { --textRot: #ff9fae; --textGruen: #7bd88f; --textOrange: #ffbe5c; --textNotruf: #ff8a7a; --bg: #1b1415; --karte: #2a2021; --karte2: #33282a; --text: #f4e9e4; --grau: #b9a8a3; --linie: #45393a; --gruenbg: #1f3a2a; --gelbbg: #3a2f17; --rotbg: #4a2126; --schatten: 0 6px 18px rgba(0,0,0,.35); --blau: #8cbbe8; --blaubg: #1d2c3d; --lila: #cfa3e8; --lilabg: #33203d; --tuerkis: #6fd0d8; --tuerkisbg: #173338; }
   /* Kalender (KC-CLUB-KALENDER) */
   .umschalter { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: var(--karte2); padding: 5px; border-radius: 16px; margin: 4px 0 12px; }
@@ -1538,7 +1541,7 @@
   /* KC-CLUB-THEMA-FRAGE (1.24.1) */
   .vs-hinweis { background: var(--gelbbg); color: var(--text); font-size: 1.05rem; line-height: 1.45; border: 2px solid var(--gelb); }
   .vs-puls { animation: vsPuls 1s ease-in-out 6; }
-  @keyframes vsPuls { 0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(208, 2, 27, .55); } 50% { transform: scale(1.12); box-shadow: 0 0 0 10px rgba(208, 2, 27, 0); } }
+  @keyframes vsPuls { 0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(var(--pulsRing), var(--pulsRingA)); } 50% { transform: scale(1.12); box-shadow: 0 0 0 10px rgba(var(--pulsRing), 0); } }
   @media (prefers-reduced-motion: reduce) { .vs-puls { animation: none; outline: 3px solid var(--gelb); outline-offset: 3px; } }
   @media (prefers-reduced-motion: reduce) { .hervor { animation: none; } }
   /* KC-CLUB-WETTERORT */
@@ -2782,7 +2785,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.28"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.29"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -9652,11 +9655,32 @@ const TIPP_ZIEL = 'button, [role="button"], [role="tab"], [role="radio"], [role=
   if (!Element.prototype.animate) return;
   const ruhig = matchMedia("(prefers-reduced-motion: reduce)");
   const finden = (t) => { const z = t?.closest?.(TIPP_ZIEL); return z && !z.disabled && !z.classList.contains("blatt") && z !== document.body ? z : null; };
+  // KC-CLUB-PULS-KONTRAST (2.23.29, Wunsch Hansi „in der Nachtansicht nicht“): Ringfarbe aus dem Design (--pulsRing, Tag/Nacht) –
+  // reicht der Kontrast zum echten Hintergrund hinter dem Element nicht (≥ 2,5:1, z. B. dunkler Kopf), nimmt er die nächste Farbe.
+  const hell = (c) => { const f = (v) => ((v /= 255) <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4); return 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2]); };
+  const kontrast = (a, b) => { const x = hell(a), y = hell(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+  const zahlen = (t) => (String(t).match(/[\d.]+/g) || []).map(Number);
+  const hinter = (z) => {
+    for (let e = z.parentElement; e; e = e.parentElement) {
+      const st = getComputedStyle(e), c = zahlen(st.backgroundColor);
+      if (c.length >= 3 && (c.length < 4 || c[3] > 0.5)) return c.slice(0, 3);
+      const g = /rgba?\([^)]*\)/.exec(st.backgroundImage); if (g) return zahlen(g[0]).slice(0, 3); // Verlauf: erste Farbe
+    }
+    return zahlen(getComputedStyle(document.body).backgroundColor).slice(0, 3);
+  };
+  const ringFarbe = (z) => {
+    const cs = getComputedStyle(document.documentElement), eigen = [zahlen(cs.getPropertyValue("--pulsRing")), Number(cs.getPropertyValue("--pulsRingA")) || 0.55];
+    const wahl = [eigen, [[255, 77, 94], 0.9], [[208, 2, 27], 0.55], [[255, 212, 0], 0.9], [[255, 255, 255], 0.9]].filter(([c]) => c.length === 3);
+    let bg; try { bg = hinter(z); } catch { bg = null; }
+    if (!bg || bg.length < 3) return [eigen[0].join(", ") || "208, 2, 27", eigen[1]];
+    const passt = wahl.find(([c, a]) => kontrast(c.map((v, i) => v * a + bg[i] * (1 - a)), bg) >= 2.5) || wahl[0];
+    return [passt[0].join(", "), passt[1]];
+  };
   const pulsen = (z) => {
     const r = z.getBoundingClientRect(); if (!r.width || (r.width > innerWidth * 0.95 && r.height > innerHeight * 0.5)) return; // ganze Seiten/Fenster nicht
     // 2.23.26 (Hansi: „wie die Buttons“): derselbe Puls wie bei den pulsierenden Knöpfen (vsPuls) – zweimal größer mit rotem Ring
-    const gross = ruhig.matches ? 1 : r.width > 260 || r.height > 140 ? 1.03 : 1.12, ring = "rgba(208, 2, 27, ";
-    try { return z.animate([{ scale: "1", boxShadow: `0 0 0 0 ${ring}.55)` }, { scale: String(gross), boxShadow: `0 0 0 10px ${ring}0)`, offset: 0.5 }, { scale: "1", boxShadow: `0 0 0 0 ${ring}0)` }],
+    const gross = ruhig.matches ? 1 : r.width > 260 || r.height > 140 ? 1.03 : 1.12, [rf, ra] = ringFarbe(z), ring = `rgba(${rf}, `;
+    try { return z.animate([{ scale: "1", boxShadow: `0 0 0 0 ${ring}${ra})` }, { scale: String(gross), boxShadow: `0 0 0 10px ${ring}0)`, offset: 0.5 }, { scale: "1", boxShadow: `0 0 0 0 ${ring}0)` }],
       { duration: 420, iterations: ruhig.matches ? 1 : 2, easing: "ease-in-out" }); } catch { return null; }
   };
   // 2.23.25 (Fund Hansi „die Tabs pulsierten nicht“): viele Reiter zeichnen sich beim Antippen neu – dann pulst nach dem Klick das
