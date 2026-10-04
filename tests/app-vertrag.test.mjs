@@ -1040,7 +1040,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/if \(!chatId \|\| !ONL\.zeigen\) return;/.test(html) && /abstand = live \? 1000 : 3000/.test(html) && /Date\.now\(\) - TIPP\.zuletzt < abstand/.test(html), "Tipp-Meldung ohne Privatsphäre/Drosselung");
   assert.ok(/tippenMelden\(\)(;entwurfMerken\(\))?(;entwurfMarkeZeigen\(\))?"><\/textarea>/.test(html) && /id="tipptAnzeige"/.test(html) && /"tippen"(, "[a-z_]+")*\]\);/.test(html), "Anzeige/Eingabe/WARTEN_STILL fehlt");
   assert.ok(/tipptZeigen\(u\.tippt \|\| \[\], u\.entwurf \|\| \[\](, u\.spricht \|\| \[\])?\);( chatAbstand\(\);)?\n    if \(u\.tippt\?\.length && andere\.length === 1\)[^\n]*\n    const stand = /.test(html), "Anzeige muss vor dem frühen Ausstieg aktualisiert werden");
-  assert.ok(/if \(chatTakt\.laeuft\) return;/.test(html) && !/setInterval\(chatTakt, 4000\)/.test(html), "Chat-Takt überlappt / alter Takt");
+  assert.ok(/if \(chatTakt\.laeuft( \|\| document\.hidden)?\) return;/.test(html) && !/setInterval\(chatTakt, 4000\)/.test(html), "Chat-Takt überlappt / alter Takt");
   assert.ok(/if \(v !== "chat" && TIPP\.id\) tippenAus\(\);/.test(html), "Verlassen beendet „schreibt …“ nicht");
   assert.ok(/mirror_enabled, backup_enabled, note, updated_at\)\nvalues \('kc_club_tippen', 'Club-App', 'sensitive', false, false, false/.test(lies("supabase/migrations/20260929_kc_club_v54_tippen.sql")), "Spiegel-Regel für kc_club_tippen fehlt");
   // Neon-Größe
@@ -3581,7 +3581,7 @@ assert.ok(/const UH_HERVOR = \["Innovation"\];/.test(html) && /function uhAmeise
   assert.ok(/case "aenderungen_liste": \{\s*if \(!ich\.vorstand && !ich\.admin\)/.test(server) && /if \(!ich\.admin\) q = q\.contains\("empfaenger", \[ich\.person_id\]\);/.test(server), "Eingang nur für Empfänger");
   assert.ok(/const neu = x\.art === "bank" \? aeKurz/.test(server) && /iban: "…" \+ String/.test(server), "IBAN nach Erledigt gekürzt");
   assert.ok(/\{ id: "aenderung", sym: "✏️", t: "Meine Daten geändert\?"/.test(html) && /📬 Änderungsmeldungen\$\{AE\.offen/.test(html) && /h === "#aenderungen"/.test(html), "Kachel, Büro-Ordner, Link");
-  assert.ok(/api\("aenderung_senden", \{/.test(html) && /api\("aenderung_erledigt", \{ id, antwort \}\)/.test(html), "App ruft die Aktionen");
+  assert.ok(/api\("aenderung_senden", \{/.test(html) && /api\("aenderung_freigeben", \{ id \}\)/.test(html), "App ruft die Aktionen"); // 2.23.9: „Erledigt“ ist seit 2.22.19 die Freigabe
 }
 // 333. 2.22.8: Änderungsmeldungen im Büro-Posteingang + Archiv (Register „Meldungen“)
 {
@@ -3731,6 +3731,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   for (const id of ["eingangskorb", "ablage_mehrere", "buero_neue_nachricht", "ttt_toene", "inkognito_blinkt"]) assert.ok(new RegExp(`\\{ id: "${id}", thema: "(club|privat)",[^\\n]*seit: "2\\.23\\.8" \\}`).test(html), `Hilfe ${id}`);
   assert.ok(/\{ id: "inkognito_blinkt",[^\n]*nur: \(\) => !!ICH\?\.admin/.test(html) && /\{ id: "eingangskorb",[^\n]*nur: \(\) => !!\(ICH\?\.vorstand \|\| ICH\?\.admin\)/.test(html), "Clubleitung/Admin-Hilfen nur für sie");
+}
+// 359. 2.23.9: Spar-Takt (KC-CLUB-SPARTAKT) – weniger Server-Aufrufe, damit die kostenlose Grenze sicher hält
+{
+  assert.ok(/if \(chatTakt\.laeuft \|\| document\.hidden\) return;/.test(html), "Chat im Hintergrund nicht nachfragen");
+  assert.ok(/const frisch = Date\.now\(\) - CHAT_AKTIV < 90000, ruhig = PUSH_AKTIV \? 10 : 6;/.test(html) && /CHAT\?\.tippt\?\.length \|\| \(jemandDa && ONL\.takt % \(frisch \? 2 : 4\) === 0\)/.test(html), "Tippen bleibt sofort, sonst seltener");
+  assert.ok(/NA\.idStand = idStand; CHAT_AKTIV = Date\.now\(\);/.test(html), "neue Nachricht → wieder schnell");
+  assert.ok(/if \(SP\.offen\.ichDran \? SPT_TAKT\.n % 5 : SPT_TAKT\.ruhig > 40 && SPT_TAKT\.n % 3\) return;/.test(html) && /SPT_TAKT\.ruhig = 0; const warDran/.test(html), "Spiele-Takt");
+  assert.ok(!/function aeErledigt/.test(html), "alter Knopf „Im KC Manager eingetragen“ entfernt");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

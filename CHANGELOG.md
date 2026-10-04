@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.23.9 – 2026-10-04 – Spar-Takt: weniger Server-Aufrufe (Prüfung „Optimierung“, Freigabe Hansi)
+- Anlass: 15.646 Server-Aufrufe in 24 Std. (davon 9.929 Club-App) → hochgerechnet ~470.000/Monat, kostenlose Grenze 500.000 (Zero-Cost-Gate).
+- KC-CLUB-SPARTAKT Chat: tippt jemand → weiter alle 2 s; anderer online und in den letzten 90 s geschrieben → 4 s, sonst 8 s;
+  niemand da → 12 s, mit Push 20 s (Push bringt neue Nachrichten sofort). Im Hintergrund keine Abfragen (beim Zurückholen lädt der Chat neu).
+- Spiele gegen Mitglieder: ich bin dran → alle 15 s, Gegner dran → 3 s, nach 2 Min. ohne Zug 9 s; jede Änderung → wieder schnell.
+- Aufgeräumt: alte Funktion aeErledigt (Knopf „Im KC Manager eingetragen“, seit 2.22.19 durch Freigabe ersetzt, nirgends mehr aufgerufen).
+  Die vermeintlich ungenutzten Wisch-/Zieh-/Lang-Drücken-Funktionen starten sich selbst und bleiben. Test 359.
+
 ## 2.23.8 – 2026-10-04 – Hilfe-Zentrum kennt die Neuerungen aus 2.23.6
 - KC-CLUB-HILFEZENTRUM: fünf neue Hilfen (mit „neu“-Marke und „Zeig mir wo“): 📥 Eingangskorb, 🗄️ in mehrere Ordner ablegen,
   💬 neue Nachricht im Büro (Clubleitung/Büro), 🔊 Tic-Tac-Toe mit Tönen (alle), 🕶️ Brille blinkt rot (nur Admin). Test 358.
