@@ -26,7 +26,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "2.22.9";
+const SERVER_VERSION = "2.22.10";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -964,8 +964,8 @@ async function aenderungStand(ich: Ich) {
     kleidung: kl?.[0]?.neu ?? null,
   } as Record<string, any>;
 }
-// Ablage ins Archiv (wie Ausleihe): Vereinsordner „Admin <Jahr>“ und persönlicher Ordner des Mitglieds, jeweils Register „Meldungen“.
-// Bankverbindung im Archiv nur mit den letzten 4 Stellen (Admin-Ordner sieht die ganze Clubleitung).
+// Ablage ins Archiv (wie Ausleihe): Vereinsordner „Mitglieder <Jahr>“ (2.22.10, vorher „Admin“) und persönlicher Ordner des Mitglieds,
+// jeweils Register „Meldungen“. Bankverbindung im Archiv nur mit den letzten 4 Stellen (den Vereinsordner sieht die ganze Clubleitung).
 const AE_REGISTER = "Meldungen";
 async function aeAblegen(ich: Ich, x: any, art: "Meldung" | "Erledigt") {
   const a = AENDERUNG.arten.find((y) => y.id === x.art); if (!a) return { verein: false, persoenlich: false };
@@ -982,7 +982,7 @@ async function aeAblegen(ich: Ich, x: any, art: "Meldung" | "Erledigt") {
   const titel = `${art === "Erledigt" ? "✅ Eingetragen" : "Meldung"}: ${a.t}${x.gilt_ab ? ` ab ${d(x.gilt_ab)}` : ""}`;
   const dateiname = `Aenderung-${a.id}-${art}-${heute}-${vorname(p.get(x.person_id) ?? null) || "Mitglied"}.txt`, stichworte = `Änderungsmeldung, ${a.t}, ${wer}`;
   const erg = { verein: false, persoenlich: false };
-  try { await archivTextAblegen(ich, await adminOrdner(jahr, AE_REGISTER), AE_REGISTER, `${wer}: ${titel}`, dateiname, text, stichworte); erg.verein = true; }
+  try { await archivTextAblegen(ich, await vereinsOrdner(MITGLIEDER_ORDNER, jahr, AE_REGISTER), AE_REGISTER, `${wer}: ${titel}`, dateiname, text, stichworte); erg.verein = true; }
   catch (e) { console.error("aenderung ablegen verein", String(e)); }
   try { const o = await persoenlicherOrdner(x.person_id, wer, jahr, AE_REGISTER); if (o) { await archivTextAblegen(ich, o, AE_REGISTER, titel, dateiname, text, stichworte); erg.persoenlich = true; } }
   catch (e) { console.error("aenderung ablegen persoenlich", String(e)); }
@@ -1764,18 +1764,21 @@ function darfDokSehen(ich: Ich, o: any, d: any, freigaben: any[]) {
 }
 // KC-CLUB-SICHERHEIT-ARCHIV (1.22.1): Vereinsordner „Admin <Jahr>“ (art sonstiges, nur Clubleitung) – entsteht beim ersten Bericht
 const ADMIN_ORDNER = { art: "sonstiges", titel: "Admin", farbe: 8, register: ["Sicherheitscheck", "Sonstiges"] };
-async function adminOrdner(jahr: number, register: string) {
-  const { data: da } = await db.from("kc_club_archiv_ordner").select("id,register").is("besitzer", null).eq("art", ADMIN_ORDNER.art).eq("titel", ADMIN_ORDNER.titel)
+// KC-CLUB-AENDERUNG (2.22.10, Wunsch Hansi): eigener Vereinsordner „Mitglieder <Jahr>“ (nur Clubleitung) für Änderungsmeldungen
+const MITGLIEDER_ORDNER = { art: "sonstiges", titel: "Mitglieder", farbe: 3, register: ["Meldungen", "Sonstiges"] };
+const adminOrdner = (jahr: number, register: string) => vereinsOrdner(ADMIN_ORDNER, jahr, register);
+async function vereinsOrdner(def: typeof ADMIN_ORDNER, jahr: number, register: string) {
+  const { data: da } = await db.from("kc_club_archiv_ordner").select("id,register").is("besitzer", null).eq("art", def.art).eq("titel", def.titel)
     .eq("jahr", jahr).is("geloescht_am", null).order("erstellt_am").limit(1).maybeSingle();
   if (da) {
     if (!(da.register || []).includes(register)) await db.from("kc_club_archiv_ordner").update({ register: [register, ...(da.register || [])], geaendert_am: jetzt() }).eq("id", da.id);
     return da.id as string;
   }
   const [admin] = await adminIds();
-  const { data: neu, error } = await db.from("kc_club_archiv_ordner").insert({ art: ADMIN_ORDNER.art, jahr, titel: ADMIN_ORDNER.titel, farbe: ADMIN_ORDNER.farbe,
-    register: [...new Set([register, ...ADMIN_ORDNER.register])], nur_vorstand: true, erstellt_von: admin }).select("id").single();
-  if (error || !neu) throw new Error("Admin-Ordner konnte nicht angelegt werden");
-  await protokoll(null, "archiv_ordner_angelegt", { ordner: neu.id, art: ADMIN_ORDNER.art, jahr, titel: ADMIN_ORDNER.titel, nur_vorstand: true, automatisch: true });
+  const { data: neu, error } = await db.from("kc_club_archiv_ordner").insert({ art: def.art, jahr, titel: def.titel, farbe: def.farbe,
+    register: [...new Set([register, ...def.register])], nur_vorstand: true, erstellt_von: admin }).select("id").single();
+  if (error || !neu) throw new Error(`${def.titel}-Ordner konnte nicht angelegt werden`);
+  await protokoll(null, "archiv_ordner_angelegt", { ordner: neu.id, art: def.art, jahr, titel: def.titel, nur_vorstand: true, automatisch: true });
   return neu.id as string;
 }
 async function sicherheitAblegen(ich: Ich, zeilen: string[], probleme: number, ms: number | null, notiz: string, version: string) {

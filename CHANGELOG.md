@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.22.10 – 2026-10-04 – Änderungsmeldungen: Eingangskorb + Ordner „Mitglieder“ (Wunsch Hansi)
+- KC-CLUB-AENDERUNG: der eigene Regal-Ordner „📬 Änderungen“ entfällt. Meldungen kommen in den 📥 Eingangskorb (wie bisher, Liste mit
+  „✔ Erledigt“ – Weg führt jetzt zum Ordner „📇 Mitglieder“) und in den Büro-Ordner „📇 Mitglieder“: oben Knopf „📬 Änderungsmeldungen – n offen
+  · 👕 Größen“, Zahl offener Meldungen am Ordnerrücken.
+- Archiv: eigener Vereinsordner „Mitglieder <Jahr>“ (nur Clubleitung, Register „Meldungen“) statt „Admin <Jahr>“; persönlicher Ordner wie bisher.
+  adminOrdner() ist jetzt vereinsOrdner(ADMIN_ORDNER, …) – gleiche Regel für beide Ordner (Ausleihe/Sicherheits-Check unverändert).
+  Schon abgelegte Meldungen bleiben, wo sie sind. Test 335 (Test zu adminOrdner angepasst).
+
 ## 2.22.9 – 2026-10-04 – Fehlende Erklärungsfenster (🎓 Kurz erklärt + 🔊 Vorlesen) ergänzt (Wunsch Hansi)
 - KC-CLUB-EINWEISUNG: Bereiche ohne Einweisung ergänzt – 💶 Erstattung, 💭 Feedback, 🆘 SOS, 💻 Programme, 🛡️ Sicherheits-Check, 📍 Standorte.
 - Neu: Einweisung auch in Fenstern (Registry-Einträge mit blatt: true, einwHtml()): ✏️ Meine Daten geändert, 📬 Änderungen (Clubleitung),

@@ -2634,7 +2634,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.22.9"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.22.10"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3361,7 +3361,7 @@ const EINWEISUNG = [
   { id: "standort", sym: "📍", t: "Standorte", x: "Hier siehst du, wer gerade seinen Standort mit dir teilt – auf einer Karte. Mit <b>„📍 Teilen“</b> oben teilst du deinen eigenen Standort für eine bestimmte Zeit; danach verschwindet er von selbst." },
   // Fenster (blatt: true) – Karte steht oben im Fenster, siehe einwHtml()
   { id: "b-aenderung", blatt: true, sym: "✏️", t: "Meine Daten haben sich geändert", x: "Neue Anschrift, neue Telefonnummer, neuer Name oder eine andere Kleidergröße? Tippe an, was sich geändert hat, und trag das Neue ein. Die Meldung geht von selbst an die Richtigen im Club. Sobald alles eingetragen ist, bekommst du Bescheid – eine Kopie liegt in deinem Archiv-Ordner (Register „Meldungen“)." },
-  { id: "b-aenderungen", blatt: true, sym: "📬", t: "Änderungen der Mitglieder", x: "Hier landen die Änderungen, die Mitglieder melden – nur die, die an dich gehen. Links steht <b>bisher</b>, rechts <b>neu</b> (grün). Bitte im KC Manager eintragen und dann <b>✅ Erledigt</b> tippen – das Mitglied bekommt Bescheid. Unten die <b>👕 Größen-Übersicht</b> für Bestellungen.", nur: () => !!(ICH?.vorstand || ICH?.admin) },
+  { id: "b-aenderungen", blatt: true, sym: "📬", t: "Änderungen der Mitglieder", x: "Hier landen die Änderungen, die Mitglieder melden – nur die, die an dich gehen. Links steht <b>bisher</b>, rechts <b>neu</b> (grün). Bitte im KC Manager eintragen und dann <b>✅ Erledigt</b> tippen – das Mitglied bekommt Bescheid. Unten die <b>👕 Größen-Übersicht</b> für Bestellungen. Zu finden im Büro im <b>📥 Eingangskorb</b> und im Ordner <b>📇 Mitglieder</b>.", nur: () => !!(ICH?.vorstand || ICH?.admin) },
   { id: "b-stadt", blatt: true, sym: "🏙️", t: "Termine der Stadt Werne", x: "Die Termine aus dem Veranstaltungskalender der Stadt Werne. Ankreuzen, was in unseren Clubkalender soll – die Mitglieder bekommen dabei keine Nachricht. Unter <b>🔁 Automatisch</b> holt die App neue Stadt-Termine einmal pro Woche selbst.", nur: () => !!ICH?.admin },
   { id: "b-admin", blatt: true, sym: "🛠️", t: "Admin-Register", x: "Dein Leitstand: Das Lämpchen jeder Kachel zeigt, ob alles läuft – 🟢 gut, 🟡 aufpassen, 🔴 Problem, ⚪ unbekannt. Antippen öffnet Einzelheiten und die passenden Werkzeuge. Im Ernstfall zuerst <b>🧯 Notfall</b> öffnen.", nur: () => !!ICH?.admin },
   { id: "b-notfall", blatt: true, sym: "🚨", t: "SOS-Nachricht an alle", x: "Nur für echte Notfälle: Dein Text geht sofort an <b>alle</b> Mitglieder – als Push und E-Mail, auch in der Ruhezeit – und wird bei ihnen laut vorgelesen. Danach kannst du ihn noch per WhatsApp oder SMS schicken. Zum Ausprobieren: <b>🧪 Probe nur an mich</b>. 112 und 110 rufen direkt an." },
@@ -9498,7 +9498,6 @@ const BU_REGAL = [
   { id: "termine", sym: "📅", t: "Termine", farbe: "#8b6f5a", fn: "buTermine()", recht: "S" },
   { id: "briefe", sym: "✉️", t: "Briefe", farbe: "#6e6a5c", fn: "buBrief()", recht: "S" },
   { id: "erstattung", sym: "💶", t: "Erstattung", farbe: "#7a7f5e", fn: "zeige('erstattung')", recht: "L" },
-  { id: "aenderungen", sym: "📬", t: "Änderungen", farbe: "#6b7a8a", fn: "aeEingang()", recht: "L" }, // KC-CLUB-AENDERUNG (2.22.7)
   { id: "chronik", sym: "📖", t: "Chronik", farbe: "#8a6d4e", fn: "arStartArt('chronik')" },
   { id: "archiv", sym: "🗄️", t: "Archiv", farbe: "#5f5a57", fn: "arStart()" },
   { id: "verwaltung", sym: "🔐", t: "Freigaben", farbe: "#55606b", fn: "buRechte()", recht: "A" },
@@ -9512,7 +9511,7 @@ function buRaumHtml() {
   const dranFn = nt ? `buNachherWahl(${esc(JSON.stringify(nt.text))})` : { vorbereiten: "buSitzungWahl()", einladung: "buEinladungWahl(false)", erinnerung: "buEinladungWahl(true)" }[n];
   const fest = BU_F ? BU_F.geburtstage.concat(BU_F.jubilaeen).filter((f) => f.tage >= 0 && f.tage <= 7) : [], festHeute = fest.filter((f) => f.tage === 0);
   const flOffen = FL.d ? FL.d.faelle.filter((f) => f.status === "offen").length : 0;
-  const zahl = { fl: flOffen, feste: fest.length, nachher: nt ? 1 : 0, aenderungen: AE.offen };
+  const zahl = { fl: flOffen, feste: fest.length, nachher: nt ? 1 : 0, liste: AE.offen }; // 2.22.10: Änderungsmeldungen im Ordner „Mitglieder“
   const ordner = BU_REGAL.filter(buRecht);
   const ruecken = (o) => `<button class="bu-ordner" style="--of:${o.farbe}" onclick="${o.bereich ? `buOrdner('${o.id}')` : o.fn}" aria-label="${esc(o.t)}"><span class="bu-osym">${o.sym}</span><span class="bu-otext">${esc(o.t)}</span>${zahl[o.id] ? `<span class="bu-ozahl">${zahl[o.id]}</span>` : ""}<span class="bu-oloch"></span></button>`;
   const naechst = (r.sitzungen || []).find((x) => new Date(x.beginn) >= Date.now() - 6 * 3600000) || t;
@@ -9885,7 +9884,7 @@ function buEingangPosten() {
   for (const x of (AE.eingang?.meldungen || []).filter((y) => y.status === "offen")) {
     const a = AE.eingang.arten.find((y) => y.id === x.art) || { sym: "✏️", t: x.art };
     P.push({ sym: a.sym, gruppe: "Änderungsmeldung – bitte eintragen", titel: a.t, unter: `${x.name} · ${zeitKurz(x.erstellt_am)}${x.gilt_ab ? " · ab " + aeDatum(x.gilt_ab) : ""}`,
-      auf: "aeEingang()", ordner: ["📬", "Änderungen", "aeEingang()"], schnell: [["✔ Erledigt – eingetragen", `aeErledigt('${x.id}', null)`, true]] });
+      auf: "aeEingang()", ordner: ["📇", "Mitglieder", "buListe()"], schnell: [["✔ Erledigt – eingetragen", `aeErledigt('${x.id}', null)`, true]] });
   }
   for (const p of (pr?.protokolle || []).filter((x) => x.status === "entwurf" && x.darfBearbeiten))
     P.push({ sym: "📄", gruppe: "Protokoll-Entwurf", titel: p.titel, unter: `${tagKurz(p.datum)} · von ${p.verfasser?.name || "?"}`, auf: `protokollOeffnen('${p.id}')`, ordner: ["📄", "Protokolle", "zeige('protokolle')"] });
@@ -10273,7 +10272,7 @@ const ML_SPALTEN = { nr: "Nr.", name: "Name", aemter: "Ämter", eintritt: "Mitgl
 let ML = { daten: null, art: "uebersicht", sort: "name", titel: "" };
 async function buListe() {
   BU.sicht = "liste"; buZeigen(); window.scrollTo(0, 0);
-  try { ML.daten = await api("buero_mitgliederliste"); } catch (e) { return meldeFehler(e); }
+  try { [ML.daten] = await Promise.all([api("buero_mitgliederliste"), ICH?.vorstand || ICH?.admin ? aeEingangLaden().catch(() => null) : null]); } catch (e) { return meldeFehler(e); }
   if (aktuelleAnsicht === "buero" && BU.sicht === "liste") buZeigen();
 }
 function mlZeilen() {
@@ -10290,7 +10289,9 @@ function buListeHtml() {
   const vorschau = d ? `<div class="karte" style="overflow-x:auto"><table class="ml-tab"><thead><tr>${a.spalten.map((s) => `<th>${esc(ML_SPALTEN[s])}</th>`).join("")}</tr></thead>
     <tbody>${mlZeilen().map((m, i) => `<tr>${a.spalten.map((s) => `<td>${esc(mlWert(m, s, i))}</td>`).join("")}</tr>`).join("")}</tbody></table></div>` : '<div class="karte hinweis">Wird geladen …</div>';
   const hinweis = d && d.verborgen && ["telefon", "adressen"].includes(ML.art) ? `<p class="hinweis">🔒 ${d.verborgen} Angabe${d.verborgen === 1 ? " ist" : "n sind"} nicht freigegeben und ${d.verborgen === 1 ? "bleibt" : "bleiben"} leer.</p>` : "";
-  return `<div class="karte bu-gruss">📇 <b>Mitgliederliste</b> – Art antippen, prüfen, drucken. ${d ? `${d.liste.length} aktive Mitglieder.` : ""}</div>
+  // KC-CLUB-AENDERUNG (2.22.10, Wunsch Hansi): Änderungsmeldungen + Größen gehören in den Ordner „Mitglieder“ (vorher eigener Ordner)
+  const ae = `<button class="knopf${AE.offen ? " haupt" : ""}" style="width:100%;margin-bottom:8px" onclick="aeEingang()">📬 Änderungsmeldungen${AE.offen ? ` – ${AE.offen} offen` : ""} · 👕 Größen</button>`;
+  return `${ae}<div class="karte bu-gruss">📇 <b>Mitgliederliste</b> – Art antippen, prüfen, drucken. ${d ? `${d.liste.length} aktive Mitglieder.` : ""}</div>
     <div class="mini-kacheln">${Object.entries(ML_ARTEN).map(([k, x]) => `<button class="mini-kachel${ML.art === k ? " mk-offen" : ""}" onclick="ML.art='${k}';buZeigen()"><span class="mk-sym">${x.sym}</span><span class="mk-titel">${esc(x.t)}</span><span class="mk-unter">${esc(x.u)}</span></button>`).join("")}</div>
     <div class="hl-chips" style="margin-top:8px"><button class="chip${ML.sort === "name" ? " an" : ""}" onclick="ML.sort='name';buZeigen()">🔤 nach Name</button><button class="chip${ML.sort === "eintritt" ? " an" : ""}" onclick="ML.sort='eintritt';buZeigen()">📅 nach Eintritt</button></div>
     ${["unterschrift", "abhaken"].includes(ML.art) ? `<label class="feld">Überschrift (freiwillig)<input maxlength="100" placeholder="${ML.art === "unterschrift" ? "z. B. Anwesenheit Jahreshauptversammlung" : "z. B. Jahresbeitrag 2027"}" value="${esc(ML.titel)}" oninput="ML.titel=this.value;lvAuffrischen()"></label>` : ""}
@@ -13830,7 +13831,7 @@ function aeEingZeichnen() {
         <p class="hinweis" style="margin:4px 0">Summe Kochjacken: ${esc(zaehl("kochjacke"))}<br>Summe Kochhosen: ${esc(zaehl("kochhose"))}</p>
         <button class="knopf" onclick="aeGroessenKopieren()">📋 Liste kopieren (für die Bestellung)</button>` : '<p class="hinweis">Noch keine Größen gemeldet. Mitglieder melden sie unter „Meins → ✏️ Meine Daten geändert? → 👕 Kleidergröße“.</p>'}</details>
     <p class="hinweis" style="margin:0">Du siehst nur Meldungen, die an dich gingen. Bitte im KC Manager eintragen und dann „✅ Erledigt“ – das Mitglied bekommt Bescheid.
-      Jede Meldung liegt außerdem im Archiv: Ordner „Admin“ und im persönlichen Ordner des Mitglieds, jeweils Register „Meldungen“.</p>
+      Jede Meldung liegt außerdem im Archiv: Ordner „Mitglieder“ und im persönlichen Ordner des Mitglieds, jeweils Register „Meldungen“.</p>
     <button class="knopf" onclick="$('aeEingBlatt').remove()">Schließen</button></div>`;
 }
 function aeKopieren(id) {

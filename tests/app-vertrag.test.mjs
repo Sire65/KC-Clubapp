@@ -1901,7 +1901,8 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/await leihAblegen\(ich, a, "Antrag"\)/.test(an), "Antrag wird abgelegt");
   const ab = server.slice(server.indexOf("async function leihAblegen"), server.indexOf("async function leihenListe"));
   assert.ok(/adminOrdner\(jahr, "Ausleihe"\), "Ausleihe"/.test(ab) && /persoenlicherOrdner\(a\.person_id, wer, jahr, "Ausleihe"\)/.test(ab), "Ablage: Admin <Jahr> + persönlicher Ordner, Register Ausleihe");
-  assert.ok(/register: \[\.\.\.new Set\(\[register, \.\.\.ADMIN_ORDNER\.register\]\)\]/.test(server), "neuer Admin-Ordner hat das gewünschte Register");
+  // 2.22.10: adminOrdner() → vereinsOrdner(ADMIN_ORDNER, …) – gleiche Regel für alle Vereinsordner
+  assert.ok(/register: \[\.\.\.new Set\(\[register, \.\.\.def\.register\]\)\]/.test(server) && /const adminOrdner = \(jahr: number, register: string\) => vereinsOrdner\(ADMIN_ORDNER, jahr, register\);/.test(server), "neuer Admin-Ordner hat das gewünschte Register");
   const en = server.slice(server.indexOf('case "leihen_entscheiden"'), server.indexOf('case "leihen_status"'));
   assert.ok(/nurVorstand\(ich\)/.test(en) && /\.eq\("id", a\.id\)\.eq\("status", "angefragt"\)/.test(en), "eine Zusage genügt (nur wer zuerst entscheidet)");
   assert.ok(/Über die eigene Anfrage entscheidet jemand anderes/.test(en) && /await leihAblegen\(ich, neu, "Bescheid"\)/.test(en), "nicht über eigene Anfrage; Bescheid abgelegt");
@@ -3576,13 +3577,13 @@ assert.ok(/const UH_HERVOR = \["Innovation"\];/.test(html) && /function uhAmeise
   // Eingang: nur eigene Empfänger (Admin alles); Bank nach Erledigt gekürzt
   assert.ok(/case "aenderungen_liste": \{\s*if \(!ich\.vorstand && !ich\.admin\)/.test(server) && /if \(!ich\.admin\) q = q\.contains\("empfaenger", \[ich\.person_id\]\);/.test(server), "Eingang nur für Empfänger");
   assert.ok(/const neu = x\.art === "bank" \? aeKurz/.test(server) && /iban: "…" \+ String/.test(server), "IBAN nach Erledigt gekürzt");
-  assert.ok(/\{ id: "aenderung", sym: "✏️", t: "Meine Daten geändert\?"/.test(html) && /\{ id: "aenderungen", sym: "📬", t: "Änderungen"/.test(html) && /h === "#aenderungen"/.test(html), "Kachel, Büro-Ordner, Link");
+  assert.ok(/\{ id: "aenderung", sym: "✏️", t: "Meine Daten geändert\?"/.test(html) && /📬 Änderungsmeldungen\$\{AE\.offen/.test(html) && /h === "#aenderungen"/.test(html), "Kachel, Büro-Ordner, Link");
   assert.ok(/api\("aenderung_senden", \{/.test(html) && /api\("aenderung_erledigt", \{ id, antwort \}\)/.test(html), "App ruft die Aktionen");
 }
 // 333. 2.22.8: Änderungsmeldungen im Büro-Posteingang + Archiv (Register „Meldungen“)
 {
   assert.ok(/async function bueroEingang\(ich\?: Ich\)/.test(server) && /if \(ich && !ich\.admin\) aeQ = aeQ\.contains\("empfaenger", \[ich\.person_id\]\);/.test(server) && /return \{ ausleihen, vorschlaege, hilfe, archiv, aufgaben, entwuerfe, aenderungen \};/.test(server), "Posteingang zählt Änderungsmeldungen");
-  assert.ok(/const AE_REGISTER = "Meldungen";/.test(server) && /await adminOrdner\(jahr, AE_REGISTER\)/.test(server) && /await persoenlicherOrdner\(x\.person_id, wer, jahr, AE_REGISTER\)/.test(server), "Ablage Admin-Ordner + persönlicher Ordner, Register Meldungen");
+  assert.ok(/const AE_REGISTER = "Meldungen";/.test(server) && /await vereinsOrdner\(MITGLIEDER_ORDNER, jahr, AE_REGISTER\)/.test(server) && /await persoenlicherOrdner\(x\.person_id, wer, jahr, AE_REGISTER\)/.test(server), "Ablage Admin-Ordner + persönlicher Ordner, Register Meldungen");
   const abl = server.slice(server.indexOf("async function aeAblegen"), server.indexOf("const aeKurz ="));
   assert.ok(/const neu = x\.art === "bank" \? aeKurz\(\{ \.\.\.x, status: "erledigt" \}\)/.test(abl) && /const alt = |alt = x\.art === "bank" \? \{\}/.test(abl), "Bank im Archiv gekürzt");
   assert.ok(/await aeAblegen\(ich, voll, "Meldung"\)/.test(server) && /await aeAblegen\(ich, \{ \.\.\.x, status: "erledigt"/.test(server), "Ablage beim Melden und Erledigen");
@@ -3599,6 +3600,12 @@ assert.ok(/const UH_HERVOR = \["Innovation"\];/.test(html) && /function uhAmeise
   const ohne = ["chat", "mitglied", "aktion", "protokoll", "dokansicht", "neu", "gruppe", "ueberblick"];
   for (const v of [...html.matchAll(/<section id="v-([a-z_-]+)"/g)].map((m) => m[1]).filter((v) => !ohne.includes(v)))
     assert.ok(reg.includes(`{ id: "${v}",`), `Bereich ${v} hat keine Einweisung`);
+}
+// 335. 2.22.10: Änderungsmeldungen → Eingangskorb + Büro-Ordner „Mitglieder“; Archiv-Ordner „Mitglieder <Jahr>“ statt „Admin“
+{
+  assert.ok(/const MITGLIEDER_ORDNER = \{ art: "sonstiges", titel: "Mitglieder", farbe: 3, register: \["Meldungen", "Sonstiges"\] \};/.test(server) && /const adminOrdner = \(jahr: number, register: string\) => vereinsOrdner\(ADMIN_ORDNER, jahr, register\);/.test(server), "Vereinsordner Mitglieder, Admin-Ordner unverändert nutzbar");
+  assert.ok(!/id: "aenderungen", sym: "📬", t: "Änderungen", farbe/.test(html), "kein eigener Regal-Ordner mehr");
+  assert.ok(/const zahl = \{ fl: flOffen, feste: fest\.length, nachher: nt \? 1 : 0, liste: AE\.offen \};/.test(html) && /ordner: \["📇", "Mitglieder", "buListe\(\)"\]/.test(html), "Zahl am Ordner Mitglieder, Eingangskorb führt dorthin");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
