@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.23.27 – 2026-10-04 – Roter Ring auch bei Knöpfen, die sofort ein Fenster öffnen (Wunsch Hansi)
+- KC-CLUB-TIPP-PULS: Der Puls startet jetzt schon beim Aufsetzen des Fingers – so ist der rote Ring auch bei Knöpfen/Kacheln zu sehen,
+  die sofort ein Fenster oder eine andere Ansicht öffnen. Wird gescrollt (Finger > 10 px bewegt), bricht der Puls ab.
+  Neu gezeichnete Reiter pulsieren weiterhin an derselben Stelle nach. Eingabefelder nie. Test 2.23.24 erweitert.
+
 ## 2.23.26 – 2026-10-04 – Tipp-Puls wie die pulsierenden Knöpfe (Wunsch Hansi)
 - KC-CLUB-TIPP-PULS: statt kurzem Zusammenziehen jetzt derselbe Puls wie bei den pulsierenden Knöpfen (vsPuls): zweimal größer werden
   (kleine Elemente 1,12, große Flächen 1,03) mit rotem Ring, gut 0,8 s. „Weniger Bewegung“: nur einmal der Ring, ohne Größerwerden.

@@ -2773,7 +2773,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.26"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.27"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -9564,7 +9564,7 @@ function fensterZu(b) { if (b._zu) b._zu(); else if (b.dataset.fest) b.classList
 // KC-CLUB-TIPP-PULS (2.23.24, Wunsch Hansi): alles Anklickbare – Knöpfe, Reiter, Kacheln, Chips, Links, Zeilen mit onclick – pulsiert beim
 // Antippen kurz (zusammenziehen, etwas heller, zurück). Eine Stelle für die ganze App; neue Elemente bekommen es automatisch.
 // Web Animations mit „scale“ (eigene Eigenschaft): läuft neben vorhandenen CSS-Animationen und transform, ohne sie zu stören.
-// Scrollen löst keinen Puls aus (nur echte Klicks). Große Flächen pulsieren nur leicht, „weniger Bewegung“ nur angedeutet.
+// Scrollen bricht den Puls sofort ab. Große Flächen pulsieren nur leicht, „weniger Bewegung“ nur angedeutet.
 const TIPP_ZIEL = 'button, [role="button"], [role="tab"], [role="radio"], [role="option"], [role="menuitem"], a[href], summary, label.schalter, .chip, .kachel, .mini, [onclick]';
 (function tippPuls() {
   if (!Element.prototype.animate) return;
@@ -9574,20 +9574,29 @@ const TIPP_ZIEL = 'button, [role="button"], [role="tab"], [role="radio"], [role=
     const r = z.getBoundingClientRect(); if (!r.width || (r.width > innerWidth * 0.95 && r.height > innerHeight * 0.5)) return; // ganze Seiten/Fenster nicht
     // 2.23.26 (Hansi: „wie die Buttons“): derselbe Puls wie bei den pulsierenden Knöpfen (vsPuls) – zweimal größer mit rotem Ring
     const gross = ruhig.matches ? 1 : r.width > 260 || r.height > 140 ? 1.03 : 1.12, ring = "rgba(208, 2, 27, ";
-    try { z.animate([{ scale: "1", boxShadow: `0 0 0 0 ${ring}.55)` }, { scale: String(gross), boxShadow: `0 0 0 10px ${ring}0)`, offset: 0.5 }, { scale: "1", boxShadow: `0 0 0 0 ${ring}0)` }],
-      { duration: 420, iterations: ruhig.matches ? 1 : 2, easing: "ease-in-out" }); } catch {}
+    try { return z.animate([{ scale: "1", boxShadow: `0 0 0 0 ${ring}.55)` }, { scale: String(gross), boxShadow: `0 0 0 10px ${ring}0)`, offset: 0.5 }, { scale: "1", boxShadow: `0 0 0 0 ${ring}0)` }],
+      { duration: 420, iterations: ruhig.matches ? 1 : 2, easing: "ease-in-out" }); } catch { return null; }
   };
-  // 2.23.25 (Fund Hansi „die Tabs pulsierten nicht“): viele Reiter zeichnen sich beim Antippen neu – der Puls lief am alten, schon
-  // entfernten Element. Jetzt nach dem Klick: erst wenn die App fertig gezeichnet hat, pulst das Element, das dann an der Stelle steht.
-  // „click“ kommt nur bei einem echten Tipp, nie beim Scrollen.
+  // 2.23.25 (Fund Hansi „die Tabs pulsierten nicht“): viele Reiter zeichnen sich beim Antippen neu – dann pulst nach dem Klick das
+  // Element, das an derselben Stelle steht. 2.23.27 (Hansi: „die anderen Knöpfe auch“): viele Knöpfe öffnen sofort ein Fenster oder
+  // eine andere Seite – darum beginnt der Puls schon beim Aufsetzen des Fingers (sichtbar, bevor sich etwas öffnet); bewegt sich der
+  // Finger (Scrollen), wird er sofort abgebrochen.
+  const schreiben = (t) => t.matches?.('input:not([type="checkbox"]):not([type="radio"]), textarea, select, [contenteditable="true"]');
+  let lauf = null, x0 = 0, y0 = 0;
+  document.addEventListener("pointerdown", (e) => {
+    if (schreiben(e.target)) return;
+    const z = finden(e.target); if (!z) return;
+    x0 = e.clientX; y0 = e.clientY; lauf = { z, a: pulsen(z) };
+  }, { capture: true, passive: true });
+  document.addEventListener("pointermove", (e) => { if (lauf && Math.hypot(e.clientX - x0, e.clientY - y0) > 10) { try { lauf.a?.cancel(); } catch {} lauf = null; } }, { capture: true, passive: true });
+  document.addEventListener("pointercancel", () => { try { lauf?.a?.cancel(); } catch {} lauf = null; }, true);
   document.addEventListener("click", (e) => {
-    if (e.target.matches?.('input:not([type="checkbox"]):not([type="radio"]), textarea, select, [contenteditable="true"]')) return; // Schreiben nicht stören
-    const vorher = finden(e.target), x = e.clientX, y = e.clientY, tastatur = e.detail === 0;
-    if (!vorher) return;
+    if (schreiben(e.target)) return;
+    const vorher = finden(e.target), x = e.clientX, y = e.clientY, tastatur = e.detail === 0, schon = lauf?.z === vorher;
+    lauf = null; if (!vorher) return;
     requestAnimationFrame(() => setTimeout(() => {
-      let z = vorher.isConnected ? vorher : null;
-      if (!z && !tastatur) z = finden(document.elementFromPoint(x, y)); // neu gezeichnet → das Element an derselben Stelle
-      if (z) pulsen(z);
+      if (vorher.isConnected) { if (!schon || tastatur) pulsen(vorher); return; } // läuft schon seit dem Aufsetzen
+      if (!tastatur) { const z = finden(document.elementFromPoint(x, y)); if (z) pulsen(z); } // neu gezeichnet → Element an derselben Stelle
     }, 0));
   }, true);
 })();
