@@ -3836,6 +3836,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const kr = (a, b) => (Math.max(lum(a), lum(b)) + 0.05) / (Math.min(lum(a), lum(b)) + 0.05);
   const nacht = [...blk.matchAll(/nacht: \{([^}]*)\}/g)].map((m) => m[1]);
   assert.ok(nacht.length >= 20, "Designs gefunden");
+  assert.ok(/\.su-klein \{[^}]*border: 2px solid var\(--textRot, var\(--rot\)\);/.test(html) && /\.hz-frage \{[^}]*border: 2px solid var\(--textRot, var\(--rot\)\);/.test(html), "Lupe und ? mit Kontrastring");
   for (const n of nacht) for (const [, hex] of n.matchAll(/(?:bg|karte|karte2): "#([0-9a-fA-F]{6})"/g)) {
     const bg = [0, 2, 4].map((k) => parseInt(hex.slice(k, k + 2), 16)), ring = [255, 77, 94].map((v, i) => v * 0.9 + bg[i] * 0.1);
     assert.ok(kr(ring, bg) >= 3, "Nacht-Ring zu schwach auf #" + hex);

@@ -7,6 +7,8 @@
   Hellrot (255,77,94 · 0,9; in allen Designs ≥ 3,5:1). Gilt für den Tipp-Puls und die pulsierenden Knöpfe (vsPuls).
   Der Tipp-Puls prüft zusätzlich den echten Hintergrund hinter dem Element (auch Verläufe, z. B. dunkler Kopf) und nimmt bei zu wenig
   Kontrast (< 2,5:1) die nächste Farbe (Hellrot → Rot → Gelb → Weiß). Test 376 (rechnet alle Nacht-Designs nach).
+- KC-CLUB-LUPE-RING (Wunsch Hansi): Die runde Lupe unten rechts bekommt einen Kontrastring (vorher ohne Rand); das „?“ daneben nutzt
+  dieselbe Ringfarbe --textRot statt --rot (nachts war dessen dunkelroter Rand kaum zu sehen). Kontrast in allen Designs: Tag ≥ 8,7:1, Nacht ≥ 6,9:1.
 
 ## 2.23.28 – 2026-10-04 – Chats archivieren, wieder aktivieren, bei mir komplett löschen (Wunsch Hansi)
 - KC-CLUB-CHAT-ARCHIV: In der Chat-Liste (einmal tippen) und im Chat-Menü:

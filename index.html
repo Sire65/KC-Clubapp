@@ -1182,7 +1182,7 @@
   .hz-reg .anz { display: inline-block; min-width: 1.4em; margin-left: 5px; padding: 0 5px; border-radius: 9px; background: var(--karte); font-size: .8rem; }
   .hz-reg button.an .anz { background: var(--karte2); }
   /* 2.23.4: „?“ unten rechts neben der Lupe – in jeder Ansicht an derselben Stelle, engt keine Kopfzeile ein */
-  .hz-frage { position: fixed; z-index: 21; right: calc(max(12px, calc(50% - 372px)) + 54px); bottom: calc(84px + env(safe-area-inset-bottom)); width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--rot); background: var(--karte); color: var(--textRot, var(--rot)); font: 900 1.3rem/1 system-ui, sans-serif; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.25); }
+  .hz-frage { position: fixed; z-index: 21; right: calc(max(12px, calc(50% - 372px)) + 54px); bottom: calc(84px + env(safe-area-inset-bottom)); width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--textRot, var(--rot)); background: var(--karte); color: var(--textRot, var(--rot)); font: 900 1.3rem/1 system-ui, sans-serif; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.25); }
   .hz-frage:active { transform: scale(.92); }
   .hz-frage.versteckt, body.im-chat .hz-frage, body.su-auf .hz-frage, body.kt-aktiv .hz-frage, body.fa-waehlen .hz-frage { display: none; }
   .hz-suchfeld { display: block; background: var(--karte); border-radius: var(--radius); box-shadow: var(--schatten); padding: 10px 12px 12px; margin: 0 0 12px; border-left: 5px solid var(--rot); }
@@ -1682,7 +1682,9 @@
   .speicherbalken { height: 10px; border-radius: 6px; background: var(--karte2); overflow: hidden; margin: 8px 0 6px; }
   .speicherbalken i { display: block; height: 100%; background: var(--gruen); border-radius: 6px; }
   /* KC-CLUB-SUCHE (1.4.0): kleine Lupe + Suchfenster */
-  .su-klein { position: fixed; z-index: 21; right: max(12px, calc(50% - 372px)); bottom: calc(84px + env(safe-area-inset-bottom)); width: 44px; height: 44px; border-radius: 50%; border: none;
+  .su-klein { position: fixed; z-index: 21; right: max(12px, calc(50% - 372px)); bottom: calc(84px + env(safe-area-inset-bottom)); width: 44px; height: 44px; border-radius: 50%;
+    /* KC-CLUB-LUPE-RING (2.23.29, Wunsch Hansi): Kontrastring wie beim „?“ – --textRot ist in Tag und Nacht kontrastreich */
+    border: 2px solid var(--textRot, var(--rot));
     background: var(--karte); color: var(--text); font-size: 1.15rem; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.22); opacity: .93; }
   .su-klein:active { transform: scale(.94); }
   body.im-chat .su-klein, body.su-auf .su-klein { display: none; }
