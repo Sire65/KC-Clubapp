@@ -2637,7 +2637,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.22.12"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.22.13"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -5132,7 +5132,7 @@ function spComputerZug(b, n, staerke) {
   return wahl[Math.floor(Math.random() * wahl.length)] ?? zufall();
 }
 // ----- Ansicht -----
-function spStart(tab, art) { if (tab) SP.tab = tab; SP.art = art || null; SP.offen = null; zeige("spiele"); }
+function spStart(tab, art) { if (tab) SP.tab = tab; SP.art = art || null; SP.offen = null; zeige("spiele"); setTimeout(spHinweisEinmal, 600); /* 2.22.13 */ }
 function spTab(t) { SP.tab = t; SP.offen = null; spZeigen(); if (t === "mg") spLaden(); }
 function spZeigen() {
   document.body.classList.remove("kt-aktiv"); // 2.17.1: nur während einer Küchenterror-Frage (setzt ktBildFrei)
@@ -5244,7 +5244,19 @@ function spPokalHtml(L) {
     ${m?.liste?.length ? m.liste.map((r, i) => `<div class="zeile"><b style="width:1.8em">${["🥇", "🥈", "🥉"][i] || i + 1 + "."}</b><span style="flex:1">${esc(r.vorname)}</span><span class="hinweis">${r.siege} S · ${r.remis} U · ${r.niederlagen} N</span><b style="margin-left:8px">${r.punkte}</b></div>`).join("") : '<p class="hinweis" style="margin:0">Noch keine Partie in diesem Monat – der Pokal ist noch zu haben!</p>'}
     <p class="hinweis" style="margin:6px 0 0">Sieg = 2 Punkte, Unentschieden = 1 Punkt. Nur Partien gegen Mitglieder zählen.</p></div>`;
 }
-const spMeineArten = () => { const w = INIT?.einstellungen?.spiele; return Array.isArray(w?.spiele) && w.spiele.length ? w.spiele : ["ttt", "schach"]; };
+// KC-CLUB-SPIELE-STANDARD-AN (2.22.13, Wunsch Hansi): nichts eingestellt = für alle Spiele herausforderbar (eigenes „Aus“ bleibt aus)
+const SP_ALLE_ARTEN = ["ttt", "schach", "bsk", "kt"];
+const spMeineArten = () => { const w = INIT?.einstellungen?.spiele; if (!w) return [...SP_ALLE_ARTEN]; return Array.isArray(w?.spiele) && w.spiele.length ? w.spiele : ["ttt", "schach"]; };
+const spHerausAn = () => { const w = INIT?.einstellungen?.spiele; return w ? w.herausforderung === true : true; };
+// beim ersten Mal sagen, dass es an ist und wo man es abstellt (je Gerät einmal; nicht, wer selbst schon etwas eingestellt hat)
+const SP_HINWEIS = "kc_club_sp_standard_hinweis";
+const spHinweisText = "🎲 Herausforderungen sind jetzt bei allen eingeschaltet – andere Mitglieder können dich zu Tic-Tac-Toe, Schach, Bauernskat und Küchenterror herausfordern. Möchtest du das nicht, kannst du es jederzeit abstellen: ⚙️ Einstellungen → „Privatsphäre“ → „🎲 Andere dürfen mich zu Spielen herausfordern“.";
+const spHinweisFaellig = () => !INIT?.einstellungen?.spiele && lsLesen(SP_HINWEIS) !== "1";
+async function spHinweisEinmal() {
+  if (!spHinweisFaellig()) return;
+  lsSetzen(SP_HINWEIS, "1");
+  if (await frage(spHinweisText, { ja: "👍 Passt so", nein: "⚙️ Abstellen / einstellen" }) === false) einstiegHin("privat", "setSpiele");
+}
 function spArtSchalten(art) { const l = spMeineArten(), neu = l.includes(art) ? l.filter((x) => x !== art) : [...l, art]; if (!neu.length) return melde("Mindestens ein Spiel muss angehakt bleiben – sonst „Herausfordern erlauben“ ausschalten."); spBereitSetzen(true, neu); }
 async function spBereitSetzen(an, arten) {
   const spiele = arten || spMeineArten();
@@ -5254,7 +5266,7 @@ async function spBereitSetzen(an, arten) {
 }
 function spEinstZeigen() {
   if ($("setSpielEinl")) $("setSpielEinl").checked = spEinlAn();
-  const an = INIT?.einstellungen?.spiele?.herausforderung === true, l = spMeineArten();
+  const an = spHerausAn(), l = spMeineArten(); // 2.22.13: Standard an
   if ($("setSpiele")) $("setSpiele").checked = an;
   if ($("setSpieleArten")) { $("setSpieleArten").classList.toggle("versteckt", !an);
     $("setSpieleArten").innerHTML = [["ttt", "❌⭕ Tic-Tac-Toe"], ["schach", "♟️ Schach"], ["bsk", "🃏 Bauernskat"], ["kt", "🔪 Küchenterror"]].map(([a, t]) => `<button class="knopf klein${l.includes(a) ? " haupt" : ""}" aria-pressed="${l.includes(a)}" onclick="spArtSchalten('${a}')">${l.includes(a) ? "✅" : "⬜"} ${t}</button>`).join(""); }
@@ -5314,7 +5326,9 @@ function spielLive(liste) {
     <p style="margin:0"><b>${esc(SP_NAMEN[a.spiel] || "Spiel")}</b>${a.spiel === "ttt" && a.groesse ? ` · ${a.groesse} × ${a.groesse}` : ""} – Köcheclub Edition. Lust auf eine Partie?</p>
     <button class="knopf haupt" onclick="spLiveAntwort('${a.id}', true)">✅ Annehmen & los</button>
     <button class="knopf" onclick="$('spLiveBlatt').remove();melde('⏰ Die Herausforderung wartet unter 🎲 Spiele')">⏰ Später</button>
-    <button class="knopf" onclick="spLiveAntwort('${a.id}', false)">Ablehnen</button></div>`);
+    <button class="knopf" onclick="spLiveAntwort('${a.id}', false)">Ablehnen</button>
+    ${spHinweisFaellig() ? `<p class="hinweis" style="margin:4px 0 0;font-size:.85rem;text-align:left">${esc(spHinweisText)}</p>` : ""}</div>`);
+  if (spHinweisFaellig()) lsSetzen(SP_HINWEIS, "1"); // 2.22.13: Hinweis einmal (hier im Fenster)
 }
 async function spLiveAntwort(id, annehmen) {
   $("spLiveBlatt")?.remove();
@@ -8623,7 +8637,7 @@ function neuLaden(vonHand) {
 }
 async function neuLadenRoh(vonHand) {
   try {
-    INIT = await api("init", { fotosSeit: kzSeit("fotos"), dienstSeit: kzSeit("dienste") }, { warten: !!vonHand }); // KC-CLUB-KACHEL-ZAHLEN ICH = INIT.ich; einstOffenAnwenden(); /* 2.6.1: noch laufende Speicherungen nicht überschreiben */ adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); einwZeigen(aktuelleAnsicht); // KC-CLUB-KOPF-EINFACH
+    INIT = await api("init", { fotosSeit: kzSeit("fotos"), dienstSeit: kzSeit("dienste") }, { warten: !!vonHand }); /* KC-CLUB-KACHEL-ZAHLEN */ ICH = INIT.ich; einstOffenAnwenden(); /* 2.6.1: noch laufende Speicherungen nicht überschreiben */ adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); einwZeigen(aktuelleAnsicht); // KC-CLUB-KOPF-EINFACH
     alarmPruefen(); /* KC-CLUB-NOTFALL-MELDUNG */ document.body.classList.toggle("sos-frei", !!INIT?.sosFuerAlle); /* KC-CLUB-SOS-FREIGABE */ fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln);
     if ($("setLiveTippen")) $("setLiveTippen").checked = liveTippen();

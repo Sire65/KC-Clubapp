@@ -1,5 +1,16 @@
 # Änderungen
 
+## 2.22.13 – 2026-10-04 – Fehlerbehebung Anmeldung nach Neuladen; Herausforderungen zu Spielen bei allen an (Wunsch Hansi)
+- FEHLER aus 2.22.12 behoben: in neuLadenRoh hatte ein Zeilenkommentar („// KC-CLUB-KACHEL-ZAHLEN“) den Rest der Zeile auskommentiert
+  (ICH = INIT.ich, Einstellungen, Admin-Name, Klassen …) → nach dem Laden galt man als „nicht angemeldet“ („Einen Moment – die App meldet dich
+  noch an …“). Jetzt Blockkommentar; Test 341 verhindert das künftig.
+- KC-CLUB-SPIELE-STANDARD-AN: wer nichts eingestellt hat, ist jetzt für alle vier Spiele (Tic-Tac-Toe, Schach, Bauernskat, Küchenterror)
+  herausforderbar (Server spielBereitMap: aktive Mitglieder ohne Einstellung = alle Spiele; App: Schalter steht dann auf „an“).
+  Wer es selbst ausgeschaltet hat, bleibt aus – die eigene Wahl geht immer vor. Keine Datenbank-Änderung, keine Einstellungen überschrieben.
+- Beim ersten Mal (je Gerät, nur ohne eigene Einstellung) der Hinweis, dass es an ist und wo man es abstellt (⚙️ Einstellungen → Privatsphäre →
+  „🎲 Andere dürfen mich zu Spielen herausfordern“): als Fenster beim Öffnen von 🎲 Spiele („👍 Passt so“ / „⚙️ Abstellen / einstellen“ führt
+  direkt hin) oder im Herausforderungs-Fenster, wenn die erste Herausforderung zuerst kommt. Test 340.
+
 ## 2.22.12 – 2026-10-04 – Zahlen auf weiteren großen Kacheln, Mikrofon-Freigabe vor dem Diktieren (Wunsch Hansi)
 - KC-CLUB-KACHEL-ZAHLEN: in der erweiterten Ansicht zeigen jetzt auch diese Kacheln, ob etwas auf mich wartet (einfache Ansicht bleibt ruhig):
   📅 Termine (Treffen und Terminanfragen ohne meine Antwort + offene Terminfindungen), 🤝 Helfen & Leihen (offene Hilfe-Aufrufe anderer ohne

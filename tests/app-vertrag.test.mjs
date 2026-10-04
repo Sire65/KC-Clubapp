@@ -3637,6 +3637,18 @@ assert.ok(/const UH_HERVOR = \["Innovation"\];/.test(html) && /function uhAmeise
   const mf = html.slice(html.indexOf("async function mikroFreigabe"), html.indexOf("function mikroHilfe"));
   assert.ok(/if \(zustand === "granted"\) return true;/.test(mf) && /if \(zustand === "denied"\) \{ mikroHilfe\(\); return false; \}/.test(mf) && /await frage\("🎙️ Zum Diktieren braucht die App dein Mikrofon/.test(mf) && /getUserMedia\(\{ audio: true \}\)/.test(mf) && /forEach\(\(x\) => x\.stop\(\)\)/.test(mf), "Erklärung, Abfrage, Mikrofon sofort wieder aus");
 }
+// 340. 2.22.13: Herausforderungen standardmäßig an, Hinweis wo man es abstellt (KC-CLUB-SPIELE-STANDARD-AN)
+{
+  const bm = server.slice(server.indexOf("async function spielBereitMap"), server.indexOf("async function spielPush"));
+  assert.ok(/new Map<string, string\[\]>\(alle\.map\(\(id\) => \[id, \[\.\.\.SPIEL_ARTEN\]\]\)\)/.test(bm) && /x\.wert\?\.herausforderung === true \?[\s\S]{0,140}: \[\]\);/.test(bm), "ohne Einstellung alle Spiele, eigenes Aus bleibt aus");
+  assert.ok(/const spHerausAn = \(\) => \{ const w = INIT\?\.einstellungen\?\.spiele; return w \? w\.herausforderung === true : true; \};/.test(html) && /const an = spHerausAn\(\), l = spMeineArten\(\);/.test(html), "Schalter zeigt Standard an");
+  assert.ok(/const spHinweisFaellig = \(\) => !INIT\?\.einstellungen\?\.spiele && lsLesen\(SP_HINWEIS\) !== "1";/.test(html) && /setTimeout\(spHinweisEinmal, 600\)/.test(html) && /einstiegHin\("privat", "setSpiele"\)/.test(html) && /Privatsphäre“ → „🎲 Andere dürfen mich zu Spielen herausfordern“/.test(html), "Hinweis beim ersten Mal mit Weg zum Abstellen");
+}
+// 341. 2.22.13 (Fehler aus 2.22.12): nach dem Laden muss ICH gesetzt werden – kein Zeilenkommentar darf den Rest der Zeile verschlucken
+{
+  const z = html.split("\n").find((l) => l.includes('INIT = await api("init"')) || "";
+  assert.ok(/ICH = INIT\.ich;/.test(z) && !/\/\/[^\n]*ICH = INIT\.ich/.test(z), "ICH = INIT.ich wird ausgeführt (nicht auskommentiert)");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

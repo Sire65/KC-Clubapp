@@ -26,7 +26,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "2.22.12";
+const SERVER_VERSION = "2.22.13";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -1475,11 +1475,15 @@ function tttAuswerten(brett: string, n: number): { sieger: "x" | "o" | null; lin
   return { sieger: null, linie: null, voll: !brett.includes(".") };
 }
 // 2.8.0: je Person die Spiele, zu denen sie sich herausfordern lässt (leer = gar nicht)
+// KC-CLUB-SPIELE-STANDARD-AN (2.22.13, Wunsch Hansi): wer nichts eingestellt hat, ist für ALLE Spiele herausforderbar;
+// wer es selbst ausgeschaltet hat, bleibt draußen (eigene Wahl geht immer vor).
 async function spielBereitMap(ids?: string[]): Promise<Map<string, string[]>> {
   let q = db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "spiele");
   if (ids) q = q.in("person_id", ids);
-  const { data } = await q;
-  return new Map((data ?? []).map((x: any) => [x.person_id as string, x.wert?.herausforderung === true ? (Array.isArray(x.wert?.spiele) ? x.wert.spiele : ["ttt"]).filter((s: string) => SPIEL_ARTEN.includes(s)) : []]));
+  const [{ data }, alle] = await Promise.all([q, ids ? Promise.resolve(ids) : aktiveMitglieder().then((l) => l.map((m) => m.person_id))]);
+  const m = new Map<string, string[]>(alle.map((id) => [id, [...SPIEL_ARTEN]]));
+  for (const x of (data ?? []) as any[]) m.set(x.person_id, x.wert?.herausforderung === true ? (Array.isArray(x.wert?.spiele) ? x.wert.spiele : ["ttt"]).filter((s: string) => SPIEL_ARTEN.includes(s)) : []);
+  return m;
 }
 async function spielPush(an: string, vars: { titel: string; kurz: string; text: string }, spielId: string, schluessel: string, nurWennWeg = true) {
   if (an.startsWith("KC-P-TEST")) return;
