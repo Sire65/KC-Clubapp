@@ -26,7 +26,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "2.20.0";
+const SERVER_VERSION = "2.21.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -190,12 +190,12 @@ async function senden(eventKey: string, personIds: string[], vars: Record<string
 // KC-CLUB-ZUSTELLWAHL: Absender wählt ausdrücklich, wie benachrichtigt wird (🔔 Push und/oder ✉️ E-Mail).
 // Leer = wie jedes Mitglied es eingestellt hat (senden). Wer die App noch nie geöffnet hat, bekommt immer eine Mail.
 const ZUSTELLWEGE = ["push", "email"];
-async function sendenGewaehlt(eventKey: string, personIds: string[], wege: string[], vars: Record<string, unknown>, korrelation: string, opt: { erwaehnung?: boolean } = {}) {
+async function sendenGewaehlt(eventKey: string, personIds: string[], wege: string[], vars: Record<string, unknown>, korrelation: string, opt: { erwaehnung?: boolean; notfall?: boolean } = {}) {
   const w = [...new Set(wege.filter((x) => ZUSTELLWEGE.includes(x)))];
   if (!w.length) return await senden(eventKey, personIds, vars, korrelation);
   if (!personIds.length) return { gesendet: 0 };
   // KC-CLUB-RUHEZEIT: wer gerade „Nicht stören“ hat, bekommt keinen Push – Mail, wenn gewählt; sonst später gesammelt
-  if (w.includes("push")) {
+  if (w.includes("push") && !opt.notfall) { // KC-CLUB-NOTFALL-MELDUNG: Notfall kommt auch in der Ruhezeit
     const ruhe = await ruhendePersonen(personIds, !!opt.erwaehnung);
     if (ruhe.size) {
       const still = personIds.filter((id) => ruhe.has(id)); personIds = personIds.filter((id) => !ruhe.has(id));
@@ -2497,6 +2497,25 @@ async function binTeilnehmer(threadId: string, person: string) {
 // KC-CLUB-ZENTRALE (0.44.0): Wer darf wen erreichen? Beschluss Admin 29.09.2026: alle Mitglieder dürfen alle anschreiben,
 // anrufen und anklopfen (vorher „Alle“ nur Clubleitung). Umschaltbar an dieser einen Stelle.
 const KOMMUNIKATION = { alleDarfJeder: true };
+// KC-CLUB-NOTFALL-MELDUNG (2.21.0, Wunsch Hansi): Alarmstufe Rot – eine Unterhaltung „🚨 Notfall-Meldungen“ mit allen aktiven Mitgliedern.
+// Erkennungszeichen im Text (nur der Admin darf es setzen; bei anderen wird es entfernt).
+const NOTFALL_MARKE = "🚨 NOTFALL:", NOTFALL_RE = /^\s*🚨\s*NOTFALL\s*:?\s*/i, NOTFALL_BETREFF = "🚨 Notfall-Meldungen";
+async function notfallUnterhaltung(ich: Ich): Promise<string> {
+  const { data: alt } = await db.from("kc_communication_threads").select("id").eq("org_id", ORG).eq("subject", NOTFALL_BETREFF).order("created_at").limit(1).maybeSingle();
+  let id = alt?.id as string | undefined;
+  if (!id) {
+    const { data: th, error } = await db.from("kc_communication_threads").insert({ org_id: ORG, subject: NOTFALL_BETREFF, created_by_person_id: ich.person_id }).select("id").single();
+    if (error || !th) throw new Fehler("Notfall-Unterhaltung konnte nicht angelegt werden.", 500);
+    id = th.id as string;
+  }
+  // alle aktiven Mitglieder (auch neue) sind dabei
+  const alle = [ich.person_id, ...(await aktiveMitglieder()).map((m) => m.person_id)];
+  const { data: tn } = await db.from("kc_communication_thread_participants").select("person_id").eq("thread_id", id);
+  const da = new Set((tn ?? []).map((x: any) => x.person_id));
+  const fehlt = [...new Set(alle)].filter((x) => !da.has(x));
+  if (fehlt.length) await db.from("kc_communication_thread_participants").insert(fehlt.map((person_id) => ({ thread_id: id, person_id })));
+  return id;
+}
 async function empfaengerAufloesen(ich: Ich, e: any): Promise<string[]> {
   const ids = new Set<string>((Array.isArray(e?.personen) ? e.personen : []).map(String));
   if (e?.alle) { if (!KOMMUNIKATION.alleDarfJeder) nurVorstand(ich); (await aktiveMitglieder()).forEach((p) => ids.add(p.person_id)); }
@@ -3149,6 +3168,13 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           ungelesen += n;
           if (!stummJetzt(stummE?.wert, t.thread_id)) ungelesenLaut += n; // KC-CLUB-STUMM: stumme Chats ohne Ton
         }
+        // KC-CLUB-NOTFALL-MELDUNG (2.21.0): ungelesene Notfall-Meldung der letzten 48 Std. → App zeigt sie sofort groß in Rot
+        let alarm: any = null;
+        { const offen = zahlen.filter((z) => z.n > 0).map((z) => z.t.thread_id);
+          const { data: nt } = offen.length ? await db.from("kc_communication_threads").select("id").in("id", offen).eq("subject", NOTFALL_BETREFF).limit(1).maybeSingle() : { data: null };
+          if (nt) { const { data: nm } = await db.from("kc_communication_messages").select("id,body,sender_person_id,created_at").eq("thread_id", nt.id).neq("sender_person_id", ich.person_id)
+              .gte("created_at", new Date(Date.now() - 48 * 3600000).toISOString()).order("created_at", { ascending: false }).limit(1).maybeSingle();
+            if (nm && NOTFALL_RE.test(nm.body ?? "")) alarm = { id: nm.id, thread: nt.id, text: String(nm.body).replace(NOTFALL_RE, ""), von: vorname((await personen([nm.sender_person_id])).get(nm.sender_person_id)) || "Admin", zeit: nm.created_at }; } }
         const { data: pk } = await db.rpc("kc_communication_get_server_secret", { p_name: "kc_communication_vapid_public_key" });
         const meinStatus = (await statusMap([ich.person_id])).get(ich.person_id) ?? { status: "verfuegbar", hinweis: null, bis: null };
         // offene Abstimmungen, bei denen ich noch nicht abgestimmt habe
@@ -3217,7 +3243,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // KC-CLUB-SPIELE (2.7.0): Zahl auf der Kachel = Partien, in denen ich dran bin + Herausforderungen an mich (Fehler → 0, nur Hinweis-Zahl)
         const { count: spieleDran } = await db.from("kc_club_spiele").select("id", { count: "exact", head: true })
           .or(`and(status.eq.laeuft,dran.eq.${ich.person_id}),and(status.eq.angefragt,an.eq.${ich.person_id})`);
-        return json({ spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, adminName: await adminVorname(), ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, communicator, notfall: nf ?? null, einstellungen, kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
+        return json({ alarm, spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, adminName: await adminVorname(), ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, communicator, notfall: nf ?? null, einstellungen, kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
             // KC-CLUB-GERAETE-TIPP: wohin der Link ginge – nur teilweise (z. B. „h…@web.de“)
@@ -4951,9 +4977,16 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           kontaktPid = k.person_id; text = `👤 Kontakt: ${k.display_name}`;
         }
         if (!text && !anlagen.length) throw new Fehler("Bitte eine Nachricht schreiben oder eine Anlage anhängen.");
+        // KC-CLUB-NOTFALL-MELDUNG (2.21.0): nur Admin/Vertretung; an alle, immer Push + Mail, auch stumm/Ruhezeit
+        const notfall = !!p.notfall;
+        if (notfall) {
+          if (!ich.admin) throw new Fehler("Notfall-Meldungen an alle darf nur der Admin senden.", 403);
+          if (!text.replace(NOTFALL_RE, "").trim() || umfrage || kontaktPid) throw new Fehler("Bitte die Notfall-Meldung schreiben.");
+          text = `${NOTFALL_MARKE} ${text.replace(NOTFALL_RE, "").trim()}`.slice(0, 4000);
+        } else if (NOTFALL_RE.test(text)) text = text.replace(NOTFALL_RE, "").trim() || "…";
         // KC-CLUB-WICHTIG (1.53.0): „Wichtigkeit hoch“ – nur für normale Nachrichten (nicht Abstimmung/Kontaktkarte)
-        const wichtig = !!p.wichtig && !umfrage && !kontaktPid;
-        let threadId = String(p.id || ""), neu = false;
+        const wichtig = (!!p.wichtig || notfall) && !umfrage && !kontaktPid;
+        let threadId = notfall ? await notfallUnterhaltung(ich) : String(p.id || ""), neu = false;
         if (threadId) await binTeilnehmer(threadId, ich.person_id);
         else {
           // Test an mich selbst: nur ich als Empfänger → eigene Unterhaltung, Benachrichtigung an mich (prüft Push/Mail)
@@ -5012,7 +5045,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           const { error: we } = await db.from("kc_club_nachricht_wichtig").insert({ message_id: m.id, person_id: ich.person_id });
           if (we) { await db.from("kc_communication_messages").delete().eq("id", m.id); throw new Fehler("Wichtige Nachricht konnte nicht gespeichert werden.", 500); }
         }
-        const wMarke = wichtig ? "❗ Wichtig – " : "";
+        const wMarke = notfall ? "🚨 NOTFALL – " : wichtig ? "❗ Wichtig – " : "";
         await Promise.all([
           // neue Nachricht: wer die Unterhaltung ausgeblendet hatte, sieht sie wieder (wie bei WhatsApp)
           db.from("kc_communication_thread_participants").update({ hidden_at: null }).eq("thread_id", threadId).not("hidden_at", "is", null),
@@ -5026,7 +5059,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           const { count } = await db.from("kc_communication_thread_participants").select("person_id", { count: "exact", head: true }).eq("thread_id", threadId);
           if (count === 1) ziel.push(ich.person_id); // Test-Unterhaltung nur mit mir
         }
-        const wege = zustellwege(p.wege);
+        const wege = notfall ? ["push", "email"] : zustellwege(p.wege);
         const { data: grp } = await db.from("kc_club_gruppen").select("name,symbol").eq("thread_id", threadId).maybeSingle();
         // KC-CLUB-ERWAEHNUNG (0.97.0): @Erwähnte (nur Teilnehmer dieser Unterhaltung) bekommen eine eigene, deutliche Meldung –
         // immer aufs Handy (bzw. Mail, wenn sie die App noch nie geöffnet haben), statt der normalen Nachrichten-Meldung.
@@ -5046,14 +5079,15 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         }
         // KC-CLUB-STUMM (1.9.0): wer diese Unterhaltung stummgeschaltet hat, bekommt keinen Push/keine Mail (@Erwähnung kommt trotzdem)
         const stumm = await stummFuer(ziel.filter((x: string) => x !== ich.person_id), threadId);
+        if (notfall) stumm.clear(); // KC-CLUB-NOTFALL-MELDUNG: Notfall erreicht auch stummgeschaltete Chats
         for (let i = ziel.length - 1; i >= 0; i--) if (stumm.has(ziel[i])) ziel.splice(i, 1);
         const versand = await sendenGewaehlt("club_nachricht", ziel, wege, {
-          titel: wMarke + (grp ? `${grp.symbol} ${grp.name}: ${ich.vorname}` : `💬 ${ich.name}`), kurz: wichtig ? txt(text, 140) || "Wichtige Nachricht im Köcheclub" : th?.subject ? `Neue Nachricht in „${th.subject}“` : "Neue Nachricht im Köcheclub",
+          titel: notfall ? `🚨 NOTFALL – ${ich.vorname}` : wMarke + (grp ? `${grp.symbol} ${grp.name}: ${ich.vorname}` : `💬 ${ich.name}`), kurz: notfall ? txt(text.replace(NOTFALL_RE, ""), 140) : wichtig ? txt(text, 140) || "Wichtige Nachricht im Köcheclub" : th?.subject ? `Neue Nachricht in „${th.subject}“` : "Neue Nachricht im Köcheclub",
           betreff: `${wMarke}Köcheclub Werne – ${wichtig ? "wichtige" : "neue"} Nachricht von ${ich.name}${th?.subject ? ": " + th.subject : ""}`,
           text: `Hallo,\n\n${ich.name} hat dir im Köcheclub geschrieben${th?.subject ? ` („${th.subject}“)` : ""}:\n\n${text}${anlagen.length ? `\n\n📎 ${anlagen.length} Anlage(n) – in der App ansehen.` : ""}\n\nAntworten in der Köcheclub-App: ${APP_URL}#nachricht=${threadId}\n\nViele Grüße\nKöcheclub Werne`,
           url: `${APP_URL}#nachricht=${threadId}`,
-        }, `club-nachricht:${m.id}`);
-        await protokoll(ich.person_id, weiterVon ? "nachricht_weitergeleitet" : "nachricht_gesendet", { thread: threadId, neu, empfaenger: ziel.length, stumm: stumm.size, umfrage: !!umfrage, kontakt: !!kontaktPid, anlagen: anlagen.length, wege, versand, antwort: !!antwortAuf, erwaehnt: erwaehnt.length, versandErw, wichtig, ...(weiterVon ? { von_nachricht: weiterVon.id } : {}) });
+        }, `club-nachricht:${m.id}`, { notfall });
+        await protokoll(ich.person_id, notfall ? "notfall_meldung" : weiterVon ? "nachricht_weitergeleitet" : "nachricht_gesendet", { thread: threadId, neu, empfaenger: ziel.length, stumm: stumm.size, umfrage: !!umfrage, kontakt: !!kontaktPid, anlagen: anlagen.length, wege, versand, antwort: !!antwortAuf, erwaehnt: erwaehnt.length, versandErw, wichtig, ...(weiterVon ? { von_nachricht: weiterVon.id } : {}) });
         return json({ ok: true, id: threadId, versand });
       }
 

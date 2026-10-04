@@ -995,6 +995,16 @@
   .cv-leiste span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
   .cv-leiste button { flex: none; min-height: 40px; padding: 4px 12px; border: none; border-radius: 999px; background: rgba(255,255,255,.18); color: #fff; font: inherit; font-weight: 800; cursor: pointer; }
   .blase.wichtig { border: 3px solid #ff9800; box-shadow: 0 0 0 3px rgba(255,152,0,.30), var(--schatten); }
+  /* KC-CLUB-NOTFALL-MELDUNG (2.21.0): Alarmstufe Rot – roter Rand, rote Marke; Alarm-Fenster beim Öffnen der App */
+  .blase.notfall { border: 4px solid #d50000; box-shadow: 0 0 0 4px rgba(213,0,0,.30), var(--schatten); }
+  .blase .notfall-marke { display: inline-block; margin: 0 0 4px; padding: 2px 10px; border-radius: 999px; background: #d50000; color: #fff; font-weight: 900; font-size: .82rem; letter-spacing: .04em; animation: alarmPuls 1s ease-in-out 4; }
+  @keyframes alarmPuls { 50% { transform: scale(1.08); box-shadow: 0 0 10px #ff1744; } }
+  .blatt.alarm-blatt { z-index: 9990; } /* liegt über allen anderen Start-Fenstern (Einweisung, Spiel-Einladung …) */
+  .alarm-blatt .blatt-innen { border: 6px solid #d50000; box-shadow: 0 0 0 6px rgba(213,0,0,.35); }
+  .alarm-kopf { background: #d50000; color: #fff; border-radius: 12px; padding: 10px 12px; font-weight: 900; font-size: 1.15rem; text-align: center; animation: alarmPuls 1s ease-in-out 6; }
+  .alarm-text { font-size: 1.15rem; line-height: 1.4; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .knopf.alarm-knopf { background: #d50000; color: #fff; font-weight: 900; border: none; }
+  #notfallText { width: 100%; min-height: 120px; font-size: 1.05rem; border: 3px solid #d50000; border-radius: 12px; padding: 10px; box-sizing: border-box; }
   .blase.wichtig .wichtig-marke { display: inline-block; margin: 0 0 4px; padding: 1px 8px; border-radius: 999px; background: #ff9800; color: #1f1300; font-weight: 800; font-size: .78rem; letter-spacing: .02em; }
   /* KC-CLUB-HAKEN (1.55.0): Haken wie WhatsApp – grau gesendet/angekommen, blau gelesen */
   .haken { display: inline-flex; vertical-align: -2px; margin: 0 2px 0 4px; color: var(--grau); } .blase.eigen .haken { color: rgba(255,255,255,.8); }
@@ -2603,7 +2613,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.20.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.21.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -7682,7 +7692,7 @@ const AD_DIENSTE = {
   kicc: { sym: "🛰️", t: "KICC", links: [["🛰️", "KICC Kontrollzentrum öffnen (große Leitstelle)", "https://sire65.github.io/KC-Infrastructure-Control-Center/"],
     ["🐙", "KICC auf GitHub", AD_GH + "/KC-Infrastructure-Control-Center"]] },
 };
-const adLage = () => INFO_DATEN.admin?.r || null;
+const adLage = () => (INFO_DATEN.admin?.r?.server && INFO_DATEN.admin.r.mitglieder ? INFO_DATEN.admin.r : null); // unvollständig = unbekannt (grau)
 const adAlt = () => { const r = adLage(); return !r || Date.now() - new Date(r.zeit) > AD_ALT_MIN * 60000; };
 // öffentliche Prüfungen ohne Schlüssel (CORS offen): Notbetrieb-Server, Kassen-Gateway, Störungsseite Supabase
 async function adExternPruefen(erzwingen) {
@@ -7746,6 +7756,7 @@ function adZustand(id) {
     case "nutzung": return ["keine", r ? `${m.heute} heute · ${m.online} online` : "Nutzung der App"];
     case "fehler": return ["keine", "Startprobleme der Mitglieder"];
     case "notfall": return ["keine", "Fahrplan · Diagnose · Neustart"];
+    case "alarm": return ["keine", "Notfall-Meldung sofort an alle"];
     case "lage": { if (!r) return gemessen(); const ids = AD_UEBERWACHT.map(adZustand).map((z) => z[0]);
       const rot = ids.filter((x) => x === "rot").length, gelb = ids.filter((x) => x === "gelb").length, grau = ids.filter((x) => x === "grau").length;
       return [rot ? "rot" : gelb ? "gelb" : grau ? "grau" : "gruen", rot || gelb ? `${rot ? rot + " rot" : ""}${rot && gelb ? " · " : ""}${gelb ? gelb + " gelb" : ""}` : grau ? `${grau} unbekannt` : "alles grün"]; }
@@ -7755,7 +7766,7 @@ function adZustand(id) {
 const AD_UEBERWACHT = ["server", "supabase", "neon", "backup", "b2", "not", "comm", "mail", "push", "kasse", "programme"];
 // Kacheln: Gruppe (Farbstreifen oben) + Lämpchen rechts oben; Dienste-Kacheln öffnen ihre Direktsprünge
 const AD_KACHELN = [
-  ["lage", "📊", "Lage", "ueb"], ["notfall", "🧯", "Notfall", "not"], ["server", "🖥️", "Server", "ueb"], ["supabase", "🗄️", "Supabase", "ueb"],
+  ["alarm", "🚨", "Alarm an alle", "not"], ["lage", "📊", "Lage", "ueb"], ["notfall", "🧯", "Notfall", "not"], ["server", "🖥️", "Server", "ueb"], ["supabase", "🗄️", "Supabase", "ueb"],
   ["neon", "🪞", "Neon-Spiegel", "ueb"], ["backup", "🛟", "Backups", "ueb"], ["b2", "💾", "B2-Backup", "ueb"], ["not", "🚑", "Notbetrieb", "ueb"],
   ["comm", "📨", "Communicator", "dienst"], ["mail", "✉️", "Mail · Brevo", "dienst"], ["push", "🔔", "Push", "dienst"], ["kasse", "🧾", "Kasse · Gateway", "dienst"],
   ["programme", "💻", "KC-Programme", "dienst"], ["versionen", "📱", "Versionen", "app"], ["fehler", "🩺", "Fehler", "app"], ["nutzung", "👥", "Nutzung", "app"],
@@ -7789,6 +7800,7 @@ const adZeile = (f, name, text) => `<div class="azeile">${f === "keine" ? "" : l
 const adKnopf = (t, fn, haupt) => `<button class="knopf${haupt ? " haupt" : ""}" onclick="${fn}">${t}</button>`;
 const adLinks = (k) => { const d = AD_DIENSTE[k]; return `<details class="karte innen" style="margin:0"><summary>${d.sym} ${esc(d.t)} – direkt zur Verwaltung</summary><div style="display:grid;gap:6px;margin-top:6px">${d.links.map(([s, t, u]) => `<a class="knopf" href="${esc(u)}" target="_blank" rel="noopener">${s} ${esc(t)} ↗</a>`).join("")}</div></details>`; };
 function adBlatt(id) {
+  if (id === "alarm") return notfallMeldung(); // KC-CLUB-NOTFALL-MELDUNG
   AD.offen = id;
   const r = adLage(), z = adZustand(id), m = r?.mitglieder, c = r?.communicator, e = AD.ext;
   const kopf = (sym, t) => `<h3 style="margin:0">${sym} ${esc(t)}</h3><p class="hinweis" style="margin:0">${r ? `Stand ${esc(zeitKurz(r.zeit))} Uhr${adAlt() ? " · ⚠️ veraltet" : ""}` : "Noch keine Daten"}${e.zeit ? ` · Prüfung ${esc(fZeit.format(new Date(e.zeit)))} Uhr` : ""}</p>`;
@@ -7820,6 +7832,7 @@ function adBlatt(id) {
           <li><b>Länger als 30 Minuten</b> „Datenbank rot“? Dann das Projekt neu starten (schadet den Daten nicht, 3–5 Min. offline).<br>${adKnopf("🔄 Supabase neu starten …", "adNeustart()")}</li>
           <li>Danach prüfen: ${adKnopf("🩺 Diagnose wiederholen", "serverDiagnose()")}</li>
           <li><b>Hilft nichts?</b> Ergebnis der Diagnose kopieren und an Claude schicken.</li></ol>
+        <button class="knopf alarm-knopf" onclick="$('adBlatt').remove();notfallMeldung()">🚨 Alarm an alle Mitglieder</button>
         <b>Weitere Notfall-Werkzeuge</b>
         <div class="knoepfe">${adKnopf("🪞 Spiegel jetzt anstoßen", "adminSpiegeln()")}${adKnopf("🧪 Notbetrieb-Probe (dieses Gerät)", "notProbeSetzen(!notProbe())")}${adKnopf("🧯 Ernstfall simulieren (dieses Gerät)", "notErnstfallSetzen(!notErnstfall())")}</div>
         ${adLinks("supabase")}`;
@@ -7926,6 +7939,49 @@ async function adNeustart() {
   if (!(await frage(`Supabase-Projekt neu starten?\n\nJetzt: ${z[1]}\n\n• Alle Daten bleiben erhalten.\n• Die App ist 3–5 Minuten nicht erreichbar (der Notbetrieb springt ein).\n• Sinnvoll, wenn die Diagnose länger als 30 Minuten „Datenbank rot“ zeigt.\n\nEs öffnet sich die Supabase-Verwaltung: dort „Restart project“ antippen und bestätigen.`, { ja: "🔄 Weiter zur Verwaltung" }))) return;
   api("admin_eingriff", { art: "neustart_geoeffnet" }).catch(() => {});
   window.open(AD_SB + "/settings/general", "_blank", "noopener");
+}
+// ---------- KC-CLUB-NOTFALL-MELDUNG (2.21.0, Wunsch Hansi): Alarmstufe Rot – nur Admin/Vertretung ----------
+// Schreiben → „Jetzt an alle senden“ → einmal bestätigen. Geht an alle aktiven Mitglieder in die Unterhaltung „🚨 Notfall-Meldungen“,
+// immer Push + Mail, auch bei stummem Chat und in der Ruhezeit. Empfänger sehen beim Öffnen der App sofort ein rotes Alarm-Fenster.
+const NOTFALL_RE = /^\s*🚨\s*NOTFALL\s*:?\s*/i;
+const istNotfall = (m) => !!m?.wichtig && NOTFALL_RE.test(m.text || "");
+function notfallMeldung() {
+  if (!ICH?.admin) return melde("Notfall-Meldungen an alle darf nur der Admin senden.", true);
+  const n = (MITGLIEDER || []).filter((x) => x.person_id !== ICH.person_id).length;
+  blattAuf("notfallBlatt", `<div style="display:grid;gap:8px"><div class="alarm-kopf">🚨 ALARM AN ALLE</div>
+    <textarea id="notfallText" maxlength="1000" placeholder="Was ist passiert? Was sollen alle jetzt tun?"></textarea>
+    <p class="hinweis" style="margin:0">Geht sofort an <b>alle${n ? ` ${n}` : ""} Mitglieder</b> – als Push aufs Handy und als E-Mail, auch bei stummgeschaltetem Chat und in der Ruhezeit. Bei allen erscheint sie mit rotem Rand.</p>
+    <button class="knopf alarm-knopf" style="padding:14px;font-size:1.1rem" onclick="notfallSenden()">🚨 JETZT AN ALLE SENDEN</button>
+    <button class="knopf" onclick="$('notfallBlatt').remove()">Abbrechen</button></div>`).classList.add("alarm-blatt");
+  setTimeout(() => $("notfallText")?.focus(), 80);
+}
+async function notfallSenden() {
+  const text = ($("notfallText")?.value || "").trim();
+  if (!text) { melde("Bitte zuerst die Meldung schreiben.", true); $("notfallText")?.focus(); return; }
+  if (!(await frage(`🚨 Wirklich an ALLE Mitglieder senden?\n\n„${text.slice(0, 200)}${text.length > 200 ? " …" : ""}“\n\nPush + E-Mail, sofort.`, { ja: "🚨 Ja, an alle senden" }))) return;
+  try {
+    const r = await api("nachricht_senden", { notfall: true, text, empfaenger: { alle: true } }, { warten: true });
+    $("notfallBlatt")?.remove();
+    melde(`🚨 Notfall-Meldung gesendet${r.versand?.gesendet != null ? ` – ${r.versand.gesendet} Zustellungen` : ""}${r.versand?.fehler ? `, ${r.versand.fehler} fehlgeschlagen` : ""}`);
+    chatStand = ""; if (r.id) chatOeffnen(r.id);
+  } catch (e) { meldeFehler(e); }
+}
+// beim Öffnen der App: ungelesene Notfall-Meldung (48 Std.) groß in Rot – jede Meldung nur einmal
+function alarmPruefen() {
+  const a = INIT?.alarm; if (!a?.id) return;
+  let gesehen = ""; try { gesehen = localStorage.getItem("kc_club_alarm_gesehen") || ""; } catch {}
+  if (gesehen === a.id || document.getElementById("alarmBlatt")) return;
+  try { navigator.vibrate?.([400, 200, 400, 200, 800]); } catch {}
+  blattAuf("alarmBlatt", `<div style="display:grid;gap:10px"><div class="alarm-kopf">🚨 NOTFALL-MELDUNG</div>
+    <div class="hinweis" style="margin:0">von ${esc(a.von)} · ${esc(zeitKurz(a.zeit))} Uhr</div>
+    <div class="alarm-text">${esc(a.text)}</div>
+    <button class="knopf alarm-knopf" onclick="alarmGelesen(true)">💬 Öffnen und antworten</button>
+    <button class="knopf" onclick="alarmGelesen(false)">✅ Gelesen</button></div>`).classList.add("alarm-blatt");
+}
+function alarmGelesen(oeffnen) {
+  const a = INIT?.alarm; try { if (a?.id) localStorage.setItem("kc_club_alarm_gesehen", a.id); } catch {}
+  $("alarmBlatt")?.remove();
+  if (oeffnen && a?.thread) { zeige("nachrichten"); chatOeffnen(a.thread); }
 }
 async function adWartung() {
   const r = adLage(); if (r) VB.wartung = r.wartung;
@@ -8301,7 +8357,7 @@ function neuLaden(vonHand) {
 async function neuLadenRoh(vonHand) {
   try {
     INIT = await api("init", {}, { warten: !!vonHand }); ICH = INIT.ich; einstOffenAnwenden(); /* 2.6.1: noch laufende Speicherungen nicht überschreiben */ adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); einwZeigen(aktuelleAnsicht); // KC-CLUB-KOPF-EINFACH
-    fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
+    alarmPruefen(); /* KC-CLUB-NOTFALL-MELDUNG */ fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln);
     if ($("setLiveTippen")) $("setLiveTippen").checked = liveTippen();
     ansichtUebernehmen(INIT.einstellungen?.ansicht);
@@ -10889,8 +10945,8 @@ async function chatLaden(scrollen) {
       NA.trennerVor = erste && u.gelesenBis ? erste.id : null; NA.trennerSprung = !!NA.trennerVor;
     }
     NA.nachrichten = new Map(u.nachrichten.map((m) => [m.id, m]));
-    $("chat").innerHTML = u.nachrichten.map((m) => `${m.id === NA.trennerVor ? '<div class="neu-trenner" id="neuTrenner">⬇ Neue Nachrichten</div>' : ""}<div data-id="${m.id}" class="blase${m.eigen ? " eigen" : ""}${m.erwaehntMich ? " erwaehnt-mich" : ""}${m.wichtig ? " wichtig" : ""}${!m.eigen && andere.length > 1 ? " farbig" : ""}"${!m.eigen && andere.length > 1 ? ` style="${gruppenFarbe(m.von)}"` : ""} id="msg-${m.id}" title="Antippen: reagieren, antworten, Details" onclick="if(!event.target.closest('button,img,a,audio,video,.sprache,.zitat'))nachrichtMenue('${m.id}')">
-      ${m.wichtig ? '<div class="wichtig-marke">❗ WICHTIG</div>' : ""}${!m.eigen && andere.length > 1 ? `<div class="von">${esc(m.von)}</div>` : ""}${m.antwortAuf ? `<div class="zitat" onclick="zuNachricht('${m.antwortAuf.id}')"><b>${esc(m.antwortAuf.von)}</b><span>${esc(m.antwortAuf.text)}</span></div>` : ""}${m.umfrage ? umfrageHtml(m) : m.kontakt ? kontaktKarteHtml(m) : m.text === "📎" && m.anlagen.length ? "" : `<div class="txt">${naText(m.text)}</div>`}
+    $("chat").innerHTML = u.nachrichten.map((m) => `${m.id === NA.trennerVor ? '<div class="neu-trenner" id="neuTrenner">⬇ Neue Nachrichten</div>' : ""}<div data-id="${m.id}" class="blase${m.eigen ? " eigen" : ""}${istNotfall(m) ? " notfall" : ""}${m.erwaehntMich ? " erwaehnt-mich" : ""}${m.wichtig ? " wichtig" : ""}${!m.eigen && andere.length > 1 ? " farbig" : ""}"${!m.eigen && andere.length > 1 ? ` style="${gruppenFarbe(m.von)}"` : ""} id="msg-${m.id}" title="Antippen: reagieren, antworten, Details" onclick="if(!event.target.closest('button,img,a,audio,video,.sprache,.zitat'))nachrichtMenue('${m.id}')">
+      ${istNotfall(m) ? '<div class="notfall-marke">🚨 NOTFALL</div>' : m.wichtig ? '<div class="wichtig-marke">❗ WICHTIG</div>' : ""}${!m.eigen && andere.length > 1 ? `<div class="von">${esc(m.von)}</div>` : ""}${m.antwortAuf ? `<div class="zitat" onclick="zuNachricht('${m.antwortAuf.id}')"><b>${esc(m.antwortAuf.von)}</b><span>${esc(m.antwortAuf.text)}</span></div>` : ""}${m.umfrage ? umfrageHtml(m) : m.kontakt ? kontaktKarteHtml(m) : m.text === "📎" && m.anlagen.length ? "" : `<div class="txt">${naText(istNotfall(m) ? m.text.replace(NOTFALL_RE, "") : m.text)}</div>`}
       ${m.anlagen.map((a) => /^image\//.test(a.mime || "") ? `<img data-anlage="${a.id}" alt="${esc(a.name)}" onclick="anlageOeffnen('${a.id}')">` : /^audio\//.test(a.mime || "") ? `<div class="sprache" data-sprache="${a.id}"><button onclick="spracheAbspielen(this, '${a.id}')">▶️ Sprachnachricht anhören</button></div>` : `<div class="anlage" onclick="anlageOeffnen('${a.id}')">📄 ${esc(a.name)}</div>`).join("")}
       <div class="na-seite"><button class="na-pfeil" title="Weiterleiten oder kopieren" aria-label="Weiterleiten oder kopieren" onclick="naPfeilMenue('${m.id}')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4.5l7.5 7.5-7.5 7.5v-4.3c-5.2 0-8.8 1.7-11.4 5.3 1-5.2 4.1-10.3 11.4-11.3V4.5z"/></svg></button><button class="na-info" title="Info: wer geschrieben, bekommen und gelesen hat" aria-label="Info zur Nachricht" onclick="nachrichtInfo('${m.id}')">i</button></div>
       <div class="fuss">${m.angeheftet ? '<span title="oben angeheftet">📌</span> ' : ""}${m.gemerkt ? '<span title="gemerkt">⭐</span> ' : ""}${m.bearbeitet ? '<span class="bearb" title="nachträglich geändert">bearbeitet</span>' : ""}${zeitKurz(m.zeit)}${m.eigen ? " " + hakenHtml(m, andere.length) : ""}${m.eigen || ICH.admin ? ` <button class="weg" title="Nachricht löschen" onclick="nachrichtLoeschen('${m.id}')">🗑️</button>` : ""}</div></div>`).join("") + notWartendeHtml(chatId) // KC-CLUB-NOTBETRIEB-STUFE2
@@ -11604,7 +11660,7 @@ function sosInfo(id) {
 function sosZeigen() {
   if (!$("sosInhalt")) return;
   const d = SOS.daten, nf = INIT?.notfall;
-  const notrufe = `<div class="karte sos-warn"><b>🚨 Bei Lebensgefahr sofort 112 anrufen.</b><div class="hinweis" style="color:inherit;opacity:.9">Beim Antippen fragt die App einmal nach – dann wird wirklich gewählt.</div></div>
+  const notrufe = `${ICH?.admin ? '<button class="knopf alarm-knopf" style="width:100%;margin-bottom:8px" onclick="notfallMeldung()">🚨 Alarm an alle Mitglieder (nur Admin)</button>' : ""}<div class="karte sos-warn"><b>🚨 Bei Lebensgefahr sofort 112 anrufen.</b><div class="hinweis" style="color:inherit;opacity:.9">Beim Antippen fragt die App einmal nach – dann wird wirklich gewählt.</div></div>
     <div class="sos-nummern">${NOTRUFE.map((n) => `<button class="sos-nr${n.haupt ? " haupt" : ""}" onclick="sosAnrufen('${n.nr}')"><span class="sym">${n.sym}</span>
       <span class="txt"><b>${esc(n.anzeige)}</b><span>${esc(n.t)}</span><small>${esc(n.u)}</small></span><span class="ruf">📞</span></button>`).join("")}</div>`;
   const eigen = nf ? "" : `<div class="karte hinweis">🆘 Du hast noch keinen eigenen Notfallkontakt hinterlegt. <button class="knopf klein" onclick="einstiegHin('privat','nfName')">Jetzt eintragen</button></div>`;

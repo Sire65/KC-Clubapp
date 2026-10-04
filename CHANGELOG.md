@@ -1,5 +1,19 @@
 # Änderungen
 
+## 2.21.0 – 2026-10-04 – 🚨 Alarm an alle: Notfall-Meldung mit Alarmstufe Rot (Wunsch Hansi)
+- KC-CLUB-NOTFALL-MELDUNG: nur Admin/Vertretung. Schreiben → „🚨 JETZT AN ALLE SENDEN“ → einmal bestätigen. Zu finden als erste Kachel
+  „🚨 Alarm an alle“ im Register Admin, im Notfall-Fahrplan und oben auf der SOS-Seite (Mitglieder sehen den Knopf nicht; ihre SOS-Seite
+  bleibt wie sie ist – Notrufe + Kontakte).
+- Versand über die vorhandene Nachrichten-Strecke (kein zweites System): eine feste Unterhaltung „🚨 Notfall-Meldungen“ mit allen aktiven
+  Mitgliedern (neue kommen automatisch dazu), Nachricht ist immer ❗ wichtig mit Marke „🚨 NOTFALL:“, immer Push + E-Mail – auch bei
+  stummgeschaltetem Chat und in der Ruhezeit (bewusste Ausnahme nur für den Notfall; sonst bleibt stumm stumm). Push-Titel
+  „🚨 NOTFALL – <Vorname>“. Die Marke kann nur der Admin setzen – bei allen anderen wird sie entfernt (nicht fälschbar).
+- Empfänger: im Chat roter Rand + rote, pulsierende Marke „🚨 NOTFALL“; beim Öffnen der App ein rotes Alarm-Fenster über allem anderen
+  (ungelesene Notfall-Meldung der letzten 48 Std., je Meldung einmal, Handy vibriert) mit „💬 Öffnen und antworten“ / „✅ Gelesen“.
+  Server: init liefert dafür „alarm“. Protokoll: notfall_meldung (Anzahl Empfänger/Zustellungen, keine Inhalte).
+- Robustheit Admin-Register: unvollständige Lage-Daten gelten als unbekannt (grau) statt Absturz der Kacheln.
+- Test 322 (Stufe 2 – Verlauf/Neustart über GitHub – liegt fertig auf Zweig claude/admin-stufe2 und kommt danach als 2.22.0).
+
 ## 2.20.0 – 2026-10-04 – 🛡️ Register „Admin“: Cockpit für Wartung, Überwachung und Notfall (Wunsch Hansi), Stufe 1
 - KC-CLUB-ADMIN-REGISTER: auf der Startseite neben Club · Meins · Technik ein viertes Register „Admin“ – nur für Admin/Vertretung
   (Mitglieder sehen weiter drei Register; jede Admin-Kachel auch in Suche/Schnellstart nur für Admins). Mit vier Registern passen alle in

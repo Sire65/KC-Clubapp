@@ -2418,12 +2418,12 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.match(html, /\$\{m\.wichtig \? " wichtig" : ""\}/, "Blase bekommt Klasse wichtig");
   assert.match(html, /\.blase\.wichtig \{ border: 3px solid #ff9800/, "wichtige Nachricht orange umrandet");
   assert.match(html, /u\.wichtigNeu \? " wichtig-neu" : ""/, "Chat-Liste markiert ungelesene wichtige Nachricht");
-  assert.match(srv, /const wichtig = !!p\.wichtig && !umfrage && !kontaktPid;/, "Server: nur normale Nachrichten");
+  assert.match(srv, /const wichtig = \(!!p\.wichtig( \|\| notfall)?\) && !umfrage && !kontaktPid;|const wichtig = !!p\.wichtig && !umfrage && !kontaktPid;/, "Server: nur normale Nachrichten"); // 2.21.0: Notfall ist immer wichtig
   assert.match(srv, /from\("kc_club_nachricht_wichtig"\)\.insert\(\{ message_id: m\.id, person_id: ich\.person_id \}\)/, "Server speichert Kennzeichen");
   assert.match(srv, /if \(we\) \{ await db\.from\("kc_communication_messages"\)\.delete\(\)\.eq\("id", m\.id\)/, "kein halber Zustand");
   assert.match(srv, /wichtig: wichtigIds\.has\(m\.id\)/, "Chat liefert wichtig");
   assert.match(srv, /wichtigNeu: m\.filter/, "Liste liefert wichtigNeu");
-  assert.match(srv, /titel: wMarke \+ \(grp/, "Push-Titel mit ❗");
+  assert.match(srv, /titel: (notfall \? `🚨 NOTFALL – \$\{ich\.vorname\}` : )?wMarke \+ \(grp/, "Push-Titel mit ❗"); // 2.21.0: Notfall eigener Titel
   assert.match(mig, /references kc_communication_messages\(id\) on delete cascade/, "hängt an der Nachricht");
   assert.match(mig, /enable row level security/, "RLS an");
   assert.match(mig, /revoke all on kc_club_nachricht_wichtig from anon, authenticated/, "kein Direktzugriff");
@@ -3489,6 +3489,19 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/case "admin_eingriff": \{\s*nurAdmin\(ich\);[\s\S]{0,200}\["neustart_geoeffnet"\]\.includes\(art\)[\s\S]{0,200}protokoll\(ich\.person_id, "admin_eingriff"/.test(server), "Eingriff nur Admin, feste Arten, protokolliert");
   assert.ok(/b2: b2 \?\? null/.test(server) && /from\("kc_backup_machine_telemetry"\)\.select\(/.test(server), "B2-Stand nur lesend in admin_lage");
   assert.ok(/#raster\.ad-raster \{ grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/.test(html) && /\.register\.vier \{ grid-template-columns: repeat\(4/.test(html), "3 Kacheln je Reihe, 4 Register in einer Reihe");
+}
+// 322. 2.21.0: Notfall-Meldung an alle (KC-CLUB-NOTFALL-MELDUNG) – nur Admin, Push + Mail, auch stumm/Ruhezeit, Marke nicht fälschbar
+{
+  const ns = server.slice(server.indexOf('case "nachricht_senden": {'), server.indexOf('case "privattermin_speichern"'));
+  assert.ok(/if \(notfall\) \{\s*if \(!ich\.admin\) throw new Fehler\("Notfall-Meldungen an alle darf nur der Admin senden\.", 403\);/.test(ns), "nur Admin");
+  assert.ok(/\} else if \(NOTFALL_RE\.test\(text\)\) text = text\.replace\(NOTFALL_RE, ""\)/.test(ns), "Marke bei anderen entfernt");
+  assert.ok(/if \(notfall\) stumm\.clear\(\);/.test(ns) && /const wege = notfall \? \["push", "email"\]/.test(ns) && /\{ notfall \}\);/.test(ns), "an alle, Push + Mail, auch stumm");
+  assert.ok(/if \(w\.includes\("push"\) && !opt\.notfall\)/.test(server), "auch in der Ruhezeit");
+  assert.ok(/async function notfallUnterhaltung\(ich: Ich\)/.test(server) && /return json\(\{ alarm, /.test(server), "eine Notfall-Unterhaltung, Alarm beim Start");
+  assert.ok(/function notfallSenden\(\)[\s\S]{0,400}await frage\(/.test(html) && /api\("nachricht_senden", \{ notfall: true, text, empfaenger: \{ alle: true \} \}/.test(html), "einmal bestätigen, dann senden");
+  assert.ok(/\.blase\.notfall \{ border: 4px solid #d50000/.test(html) && /istNotfall\(m\) \? " notfall" : ""/.test(html), "roter Rand im Chat");
+  assert.ok(/alarmPruefen\(\); \/\* KC-CLUB-NOTFALL-MELDUNG \*\//.test(html) && /localStorage\.setItem\("kc_club_alarm_gesehen", a\.id\)/.test(html), "Alarm-Fenster einmal je Meldung");
+  assert.ok(/\["alarm", "🚨", "Alarm an alle", "not"\]/.test(html) && /ICH\?\.admin \? '<button class="knopf alarm-knopf"[^']*onclick="notfallMeldung\(\)"/.test(html), "Knopf im Admin-Register und auf der SOS-Seite (nur Admin)");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
