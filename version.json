@@ -1,10 +1,16 @@
 {
-  "version": "2.23.14",
+  "version": "2.23.15",
   "datum": "2026-10-04",
   "neu": [
-    "🎓 „Meine Daten haben sich geändert“: die Erklärkarte „Kurz erklärt“ jetzt auch nach dem Antippen, z. B. bei „Neue Anschrift“ – passend zur gewählten Änderung"
+    "🎓 „Kurz erklärt“ jetzt auch in 26 weiteren Fenstern – z. B. Abstimmung, Fotoalbum, Mitfahrt, Herausfordern, Teilen und im Büro"
   ],
   "verlauf": [
+    {
+      "version": "2.23.15",
+      "neu": [
+        "🎓 „Kurz erklärt“ jetzt auch in 26 weiteren Fenstern – z. B. Abstimmung, Fotoalbum, Mitfahrt, Herausfordern, Teilen und im Büro"
+      ]
+    },
     {
       "version": "2.23.14",
       "neu": [

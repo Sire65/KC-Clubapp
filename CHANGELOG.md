@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.23.15 – 2026-10-04 – „Kurz erklärt“ in allen Arbeitsfenstern (Wunsch Hansi)
+- KC-CLUB-EINWEISUNG: Prüfung „Haben alle Unterpunkte eine Karte?“ – 23 von 31 Ansichten (8 Unterseiten bewusst ohne) und 5 von 62 Fenstern
+  hatten eine. Jetzt haben 26 weitere Arbeitsfenster eine eigene Karte oben (mit Vorlesen, „Verstanden“, „Keine Einweisungen mehr“):
+  Archiv ablegen, Bildschirmfoto, Kurze Abstimmung, Gemerkte Nachrichten, Kontakt teilen, Mikrofon-Wahl, ＋ Neu, Mitfahrt anbieten,
+  Fotoalbum (wählen / anlegen), Herausfordern, Termin für die Partie, Mit Köcheclub geteilt; Büro (nur Büro-Berechtigte): Drucken,
+  Schreiben, Person wählen, Sitzung wählen, Einladung, Eingangskorb-Eintrag, Erstattung, Dienstzeiten, Ablegen, Freud &amp; Leid (Angaben,
+  Informieren); Admin: Persönlicher Link, Ämter und Rechte. Ohne Karte bleiben kleine Info-/Rückfragefenster und Fenster, die selbst
+  schon erklären (Diktat, Einrichten, Code, Mikrofon-Hilfe, Server-Störung). Test 364.
+
 ## 2.23.14 – 2026-10-04 – „Kurz erklärt“ auch in den Schritten von „Meine Daten haben sich geändert“ (Wunsch Hansi)
 - KC-CLUB-EINWEISUNG: Bisher stand die Karte „🎓 Kurz erklärt“ nur auf der Auswahlseite. Jetzt erscheint sie auch nach dem
   Antippen einer Art (Anschrift, Name, Handy, Festnetz, E-Mail, Geburtsdatum, Notfallkontakt, Kleidergröße, Mitgliedschaft,

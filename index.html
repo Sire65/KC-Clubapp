@@ -2710,7 +2710,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.14"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.15"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3453,6 +3453,34 @@ const EINWEISUNG = [
       mitgliedschaft: "Wähle, ob du die Mitgliedschaft <b>ruhen lassen</b> oder <b>austreten</b> möchtest, und ab wann. Danach meldet sich die Clubleitung bei dir.",
       sonstiges: "Schreib kurz, <b>was sich geändert hat</b>, und hake an, an wen die Meldung gehen soll.",
     })[AE.art] || "Trag unten die <b>neue Angabe</b> ein.") + " Dann <b>„📨 Änderung melden“</b> antippen – wer die Meldung bekommt, steht unten. <b>„← Zurück“</b> führt zur Auswahl." },
+  // 2.23.15 (Wunsch Hansi „alle Unterpunkte mit Karte“): Arbeitsfenster mit eigener „Kurz erklärt“-Karte. Kleine Info-/Rückfrage-
+  // fenster und Fenster, die selbst schon erklären (Diktat, Einrichten, Code, Mikrofon-Hilfe, Server-Störung), bleiben ohne.
+  { id: "b-ablage", blatt: true, sym: "🗄️", t: "In dein Archiv ablegen", x: "Hier legst du etwas in deinen eigenen <b>Archiv-Ordner</b>: Ordner und, wenn es passt, ein Register antippen. Deinen Ordner siehst nur du – und wem du ihn selbst freigibst." },
+  { id: "b-bildschirmfoto", blatt: true, sym: "📸", t: "Bildschirmfoto", x: "Mit dem Finger <b>rot einkreisen</b> oder Pfeile malen, wo das Problem ist (↩️ Rückgängig, 🧽 Alles weg). Dann <b>🆘 als Problem schicken</b>, <b>🗄️ in dein Archiv</b> legen oder <b>💾 aufs Handy speichern</b>." },
+  { id: "b-bu-drucker", blatt: true, sym: "🖨️", t: "Drucken im Büro", x: "Wähle, was gedruckt werden soll – z. B. die <b>Sitzungs-Vorlage</b> mit Schreiblinien, die <b>Mitgliederliste</b> oder die <b>Termine</b>. Es öffnet sich die Druckansicht; dort druckst du oder speicherst als PDF.", nur: () => !!ICH?.buero },
+  { id: "b-bu-eingang", blatt: true, sym: "📥", t: "Eintrag im Eingangskorb", x: "Ein Eintrag aus dem Eingang, z. B. eine Erstattung oder gemeldete Dienstzeiten. <b>✏️ Öffnen &amp; bearbeiten</b> zeigt alles; die Knöpfe darunter erledigen es gleich. Er bleibt im Eingang, bis er erledigt ist – alle drei der Clubleitung sehen ihn.", nur: () => !!ICH?.buero },
+  { id: "b-bu-einladung", blatt: true, sym: "📨", t: "Einladung zur Sitzung", x: "Der Text ist schon vorbereitet – mit der Bitte um Zu- oder Absage in der App. Du kannst eine <b>persönliche Zeile</b> ergänzen und wählen, <b>wie</b> benachrichtigt wird: wie jeder es eingestellt hat, Push, E-Mail oder beides.", nur: () => !!ICH?.buero },
+  { id: "b-bu-schreiben", blatt: true, sym: "✒️", t: "Schreiben im Büro", x: "Wähle, was du schreiben möchtest: <b>Brief</b> mit Briefkopf, <b>Einladung</b> zur Sitzung, <b>Protokoll</b>, Nachricht an Mitglieder, <b>Glückwunsch</b> oder einen Zettel an die Pinnwand. Unter jedem Punkt steht kurz, wofür er da ist.", nur: () => !!ICH?.buero },
+  { id: "b-bu-person", blatt: true, sym: "👤", t: "Person auswählen", x: "Oben den <b>Namen eintippen</b>, dann die Person antippen. Beim ☎️ Telefon wählt das Handy die freigegebene Nummer; ist keine freigegeben, bietet die App eine Nachricht an.", nur: () => !!ICH?.buero },
+  { id: "b-abstimmung", blatt: true, sym: "📊", t: "Kurze Abstimmung", x: "Frage eintragen (vorgeschlagen ist „Wer kommt?“) und die Antworten anpassen – mit <b>＋ Antwort</b> kommen weitere dazu. Haken bei <b>Mehrere Antworten erlauben</b>, wenn man mehr als eins wählen darf. <b>📤 Abstimmung senden</b> stellt sie in den Chat." },
+  { id: "b-ek-ablage", blatt: true, sym: "🗄️", t: "Ablegen im Archiv", x: "<b>Häkchen</b> bei einem oder mehreren Ordnern setzen – z. B. Club-Ordner, Ordner des Mitglieds oder dein eigener. Die App merkt sich deine Wahl. Wurde es schon einmal abgelegt, kommt eine neue Fassung dazu.", nur: () => !!ICH?.buero },
+  { id: "b-ek-dienstzeiten", blatt: true, sym: "📅", t: "Gemeldete Dienstzeiten", x: "Hier siehst du, wann das Mitglied Dienst machen kann – mit Stand und Fassung. Eingeplant wird im <b>Dienstplan-Programm (DP2)</b>. <b>👁️ Zur Kenntnis genommen</b> nimmt es aus dem Eingang (meldet das Mitglied etwas Neues, kommt es wieder), <b>🗄️ Ablegen</b> legt es ins Archiv.", nur: () => !!ICH?.buero },
+  { id: "b-ek-erstattung", blatt: true, sym: "💶", t: "Erstattung bearbeiten", x: "Oben stehen die Auslagen mit Datum und Betrag und wie das Geld gewünscht ist (bar oder Überweisung). <b>✅ Erstattet</b>, wenn das Geld raus ist – das Mitglied bekommt Bescheid. <b>✖ Ablehnen</b> fragt nach dem Grund. Belege kamen zusätzlich per Mail.", nur: () => !!ICH?.buero },
+  { id: "b-fa-album-wahl", blatt: true, sym: "📸", t: "In ein Album legen", x: "<b>Album antippen</b> – die ausgewählten Fotos kommen dort hinein. Mit <b>＋ Neues Album</b> legst du gleich ein neues an." },
+  { id: "b-fa-album", blatt: true, sym: "📸", t: "Album anlegen oder ändern", x: "<b>Name</b> und <b>Jahr</b> eintragen und wählen, wer das Album sieht: <b>🔒 nur du</b> oder <b>👥 alle Mitglieder</b>. Bei einem bestehenden Album kannst du ein Foto als <b>Deckblatt</b> antippen." },
+  { id: "b-fl-angaben", blatt: true, sym: "✏️", t: "Angaben zu Freud &amp; Leid", x: "Hier ergänzt oder änderst du <b>Notiz, Termin mit Uhrzeit, Ort</b> und <b>Betrag</b> (z. B. für ein Geschenk) zu diesem Anlass. <b>Speichern</b> übernimmt es.", nur: () => !!ICH?.buero },
+  { id: "b-fl-informieren", blatt: true, sym: "📣", t: "Mitglieder informieren", x: "Der Text ist vorbereitet – ändere ihn, wie es passt. Bei einem Trauerfall bitte <b>erst senden, wenn die Familie einverstanden ist</b>; auf Wunsch fragt die App, wer zur Beerdigung mitkommt. Dann wählen, <b>wie</b> benachrichtigt wird.", nur: () => !!ICH?.buero },
+  { id: "b-gemerkt", blatt: true, sym: "⭐", t: "Gemerkte Nachrichten", x: "Hier stehen die Nachrichten, die du dir mit <b>⭐ Merken</b> markiert hast. Antippen öffnet den Chat genau an dieser Stelle." },
+  { id: "b-kontakt-teilen", blatt: true, sym: "👤", t: "Kontakt teilen", x: "Mitglied <b>suchen und antippen</b> – seine Kontaktkarte wird in den Chat geschickt. Die anderen sehen nur, was das Mitglied selbst freigegeben hat." },
+  { id: "b-link", blatt: true, sym: "🔗", t: "Persönlicher Link", x: "Für das Mitglied wurde ein <b>neuer persönlicher Link</b> zur App erzeugt – der alte gilt ab jetzt nicht mehr. Schick ihn per <b>🟢 WhatsApp</b> oder <b>📋 kopiere</b> ihn; eine Anleitung zum Installieren ist im Text schon dabei.", nur: () => !!ICH?.admin },
+  { id: "b-mitfahrt", blatt: true, sym: "🚗", t: "Mitfahrgelegenheit anbieten", x: "Wähle, wie viele <b>Plätze</b> du frei hast, und trag auf Wunsch einen <b>Treffpunkt</b> ein. Andere können sich dann bei diesem Termin einen Platz nehmen; wer eine Mitfahrt gesucht hat, bekommt Bescheid." },
+  { id: "b-mikro-wahl", blatt: true, sym: "🎤", t: "Sprachnachricht oder Diktieren", x: "<b>🎤 Sprachnachricht</b>: deine Stimme wird verschickt. <b>✍️ Diktieren</b>: die App schreibt mit, verschickt wird Text. Mit <b>Immer so</b> fragt die App nicht mehr – ändern unter ⚙️ → Ansagen, Töne &amp; Tipps." },
+  { id: "b-neu-wahl", blatt: true, sym: "＋", t: "Etwas Neues anlegen", x: "Wähle, was du neu anlegen möchtest – unter jedem Punkt steht kurz, wofür er da ist. <b>Abbrechen</b> schließt das Fenster, ohne etwas anzulegen." },
+  { id: "b-rolle", blatt: true, sym: "🎖️", t: "Ämter und Rechte", x: "Hier legst du fest, welche <b>Ämter</b> das Mitglied hat und was es darf – z. B. Termine anlegen, Protokolle lesen und schreiben oder Kontaktdaten anderer sehen. Schalter aus heißt: darf das nicht. <b>💾 Speichern</b> übernimmt es.", nur: () => !!ICH?.admin },
+  { id: "b-sp-herausfordern", blatt: true, sym: "🎲", t: "Herausfordern", x: "<b>Spiel wählen</b> (Tic-Tac-Toe, Schach, Bauernskat, Küchenterror), je nach Spiel Feldgröße oder Zeit, dann antippen, <b>wen</b> du herausfordern möchtest. Das Mitglied bekommt die Einladung und kann annehmen oder ablehnen." },
+  { id: "b-sp-termin", blatt: true, sym: "📅", t: "Termin für die Partie", x: "<b>Tag, Uhrzeit</b> und <b>Ort</b> wählen. Dein Mitspieler bekommt die Anfrage und kann zu- oder absagen; danach steht der Termin bei euch beiden im Kalender – auf Wunsch mit Erinnerung." },
+  { id: "b-teilen", blatt: true, sym: "📥", t: "Mit Köcheclub geteilt", x: "Du hast etwas aus einer anderen App mit dem Köcheclub geteilt. Wähle, wohin es soll: in einen <b>💬 Club-Chat</b>, bei Fotos ins <b>📷 Fotoalbum</b> oder in <b>🗄️ dein Archiv</b>." },
+  { id: "b-bu-sitzung", blatt: true, sym: "📝", t: "Sitzung auswählen", x: "Tippe die <b>Sitzung</b> an, um die es gehen soll. Dahinter steht, ob sie schon vorbereitet ist bzw. ob es schon ein Protokoll gibt.", nur: () => !!ICH?.buero },
   { id: "b-aenderungen", blatt: true, sym: "📬", t: "Änderungen der Mitglieder", x: "Hier landen die Änderungen, die Mitglieder melden – nur die, die an dich gehen. Links steht <b>bisher</b>, rechts <b>neu</b> (grün). Tippe <b>👁️ Zur Kenntnis genommen</b>; Clubsprecher oder Admin <b>✅ geben frei</b> – dann trägt der KC Manager die Änderung ein und das Mitglied bekommt Bescheid. Unten die <b>👕 Größen-Übersicht</b> für Bestellungen. Zu finden im Büro im <b>📥 Eingangskorb</b> und im Ordner <b>📇 Mitglieder</b>; abgelegt wird alles im Archiv-Ordner <b>Personal</b>.", nur: () => !!(ICH?.vorstand || ICH?.admin) },
   { id: "b-stadt", blatt: true, sym: "🏙️", t: "Termine der Stadt Werne", x: "Die Termine aus dem Veranstaltungskalender der Stadt Werne. Ankreuzen, was in unseren Clubkalender soll – die Mitglieder bekommen dabei keine Nachricht. Unter <b>🔁 Automatisch</b> holt die App neue Stadt-Termine einmal pro Woche selbst.", nur: () => !!ICH?.admin },
   { id: "b-admin", blatt: true, sym: "🛠️", t: "Admin-Register", x: "Dein Leitstand: Das Lämpchen jeder Kachel zeigt, ob alles läuft – 🟢 gut, 🟡 aufpassen, 🔴 Problem, ⚪ unbekannt. Antippen öffnet Einzelheiten und die passenden Werkzeuge. Im Ernstfall zuerst <b>🧯 Notfall</b> öffnen.", nur: () => !!ICH?.admin },
@@ -5306,7 +5334,7 @@ function mikroArtSetzen(a) { lsSetzen(MIKRO_ART, a || ""); melde(a === "diktat" 
 function mikroWahl() {
   if (!DIKTAT_GEHT) return spracheStart();
   const a = mikroArt(); if (a === "sprach") return spracheStart(); if (a === "diktat") return diktatStart();
-  const f = blattAuf("mikroWahlBlatt", `<h3 style="margin-top:0">🎤 Was möchtest du?</h3>
+  const f = blattAuf("mikroWahlBlatt", `${einwHtml("b-mikro-wahl")}<h3 style="margin-top:0">🎤 Was möchtest du?</h3>
     <div class="mikro-wahl"><button class="knopf haupt" data-a="sprach"><span>🎤</span><b>Sprachnachricht</b><small>Deine Stimme wird verschickt</small></button>
       <button class="knopf haupt" data-a="diktat"><span>✍️</span><b>Diktieren</b><small>Ich schreibe mit – verschickt wird Text</small></button></div>
     <label class="mikro-merken"><input type="checkbox" id="mikroMerken"> Immer so (änderbar unter ⚙️ → Ansagen, Töne & Tipps)</label>
@@ -5747,7 +5775,7 @@ async function spHerausfordernBlatt(pid) {
   const alle = SP.liste?.bereit || [];
   if (!alle.length) return melde("Noch niemand hat „Herausfordern erlauben“ eingeschaltet – frag doch mal im Club 🙂");
   let gr = 3, art = SP.art || "ttt", stufe = "mittel"; // 2.10.0: auch Bauernskat; 2.16.0: Zeitstufe für Küchenterror
-  const f = blattAuf("spHerausBlatt", `<div id="spHerausInhalt"></div><button class="knopf" onclick="fensterZu(document.getElementById('spHerausBlatt'))">Abbrechen</button>`);
+  const f = blattAuf("spHerausBlatt", `${einwHtml("b-sp-herausfordern")}<div id="spHerausInhalt"></div><button class="knopf" onclick="fensterZu(document.getElementById('spHerausBlatt'))">Abbrechen</button>`);
   const zeichnen = () => {
     const b = alle.filter((m) => (m.spiele || ["ttt"]).includes(art));
     $("spHerausInhalt").innerHTML = `<h3 style="margin:0">🎲 Herausfordern</h3>
@@ -6717,7 +6745,7 @@ function spTerminHtml(g) {
 function spTerminBlatt(id) {
   const g = SP.offen?.id === id ? SP.offen : SP.liste?.spiele?.find((x) => x.id === id); if (!g) return;
   const morgen = new Date(Date.now() + 86400000), tag = new Intl.DateTimeFormat("sv-SE", { timeZone: TZ }).format(morgen);
-  const f = blattAuf("spTerminBlatt", `<h3 style="margin:0">📅 Termin für die Partie</h3>
+  const f = blattAuf("spTerminBlatt", `${einwHtml("b-sp-termin")}<h3 style="margin:0">📅 Termin für die Partie</h3>
     <p class="hinweis" style="margin:0">${esc(spTitel(g))} mit ${esc(g.gegner.vorname)} – ${esc(g.gegner.vorname)} bekommt die Anfrage und kann zu- oder absagen. Der Termin steht dann bei euch beiden im Kalender.</p>
     <div class="zwei"><label class="feld">Tag<input type="date" id="spTTag" value="${tag}" min="${new Intl.DateTimeFormat("sv-SE", { timeZone: TZ }).format(new Date())}"></label>
       <label class="feld">Uhrzeit<input type="time" id="spTZeit" value="18:00" step="900"></label></div>
@@ -10271,7 +10299,7 @@ function buFueller() {
   const w = [[S, "✉️", "Brief", "mit Briefkopf – Dank, Spende, Einladung", "buBrief()"], [S, "📨", "Einladung zur Sitzung", "mit Tagesordnung an alle", "buEinladungWahl(false)"],
     [true, "📄", "Protokoll", "schreiben · veröffentlichen", "zeige('protokolle')"], [L, "👥", "Nachricht an Mitglieder", "Gruppe wählen · schreiben", "buKontakt()"],
     [true, "🎂", "Glückwunsch", "Geburtstag oder Jubiläum", "buFeste()"], [true, "📌", "Zettel an die Pinnwand", "für alle oder einzelne", "zeige('pinnwand')"]].filter((x) => x[0]);
-  const f = blattAuf("buFuellerBlatt", `<h3 style="margin-top:0">✒️ Was möchtest du schreiben?</h3>${S ? "" : '<p class="hinweis">👁️ Mit Leserechten kannst du Briefe und Einladungen nicht verschicken.</p>'}
+  const f = blattAuf("buFuellerBlatt", `${einwHtml("b-bu-schreiben")}<h3 style="margin-top:0">✒️ Was möchtest du schreiben?</h3>${S ? "" : '<p class="hinweis">👁️ Mit Leserechten kannst du Briefe und Einladungen nicht verschicken.</p>'}
     <div class="bu-wahl">${w.map(([, sym, t2, u, fn]) => `<button class="mini-kachel" data-fn="${esc(fn)}"><span class="mk-sym">${sym}</span><span class="mk-titel">${esc(t2)}</span><span class="mk-unter">${esc(u)}</span></button>`).join("")}</div>
     <div class="knoepfe"><button class="knopf" data-zu="1">Abbrechen</button></div>`);
   f.querySelectorAll("[data-fn]").forEach((b) => (b.onclick = () => { f.remove(); new Function(b.dataset.fn)(); }));
@@ -10283,7 +10311,7 @@ function buDrucker() {
   const w = [[true, "📝", "Sitzungs-Vorlage", "mit Schreiblinien", "buDruckWahl()"], [L, "📇", "Mitgliederliste", "Telefon · Adressen · Unterschriften", "buListe()"],
     [true, "📅", "Termine", "Kalender oder To-do-Liste", "druckStarten('termine')"], [true, "🎂", "Geburtstage & Jubiläen", "Liste", "druckStarten('feste')"], [S, "✉️", "Briefbogen", "Brief mit Logo", "buBrief()"],
     [!!ICH?.admin, "📲", "Einrichtungskarte", "QR-Code + Schritte für ein Mitglied", "buPersonWahl('🖨️ Einrichtungskarte für wen?', '📲', einrichtungskarte)"]].filter((x) => x[0]);
-  const f = blattAuf("buDruckerBlatt", `<h3 style="margin-top:0">🖨️ Was möchtest du drucken?</h3>
+  const f = blattAuf("buDruckerBlatt", `${einwHtml("b-bu-drucker")}<h3 style="margin-top:0">🖨️ Was möchtest du drucken?</h3>
     <div class="bu-wahl">${w.map(([, sym, t2, u, fn]) => `<button class="mini-kachel" data-fn="${esc(fn)}"><span class="mk-sym">${sym}</span><span class="mk-titel">${esc(t2)}</span><span class="mk-unter">${esc(u)}</span></button>`).join("")}</div>
     <div class="knoepfe"><button class="knopf" data-zu="1">Abbrechen</button></div>`);
   f.querySelectorAll("[data-fn]").forEach((b) => (b.onclick = () => { f.remove(); new Function(b.dataset.fn)(); }));
@@ -10293,7 +10321,7 @@ function buDrucker() {
 // Personenwahl (gemeinsam für ☎️ Telefon und 📨 Nachricht): suchen, antippen; oben optional zusätzliche Knöpfe
 async function buPersonWahl(titel, sym, weiter, oben = "") {
   try { if (!MITGLIEDER) await mitgliederHolen(); } catch (e) { return meldeFehler(e); }
-  const f = blattAuf("buTelBlatt", `<h3 style="margin-top:0">${titel}</h3>${oben}
+  const f = blattAuf("buTelBlatt", `<h3 style="margin-top:0">${titel}</h3>${einwHtml("b-bu-person")}${oben}
     <input id="buTelSuche" type="search" placeholder="🔍 Name …" autocomplete="off" style="width:100%;margin-bottom:8px">
     <div id="buTelListe" class="bu-telliste"></div><div class="knoepfe"><button class="knopf" data-zu="1">Abbrechen</button></div>`);
   f.querySelector("[data-zu]").onclick = () => f.remove();
@@ -10432,7 +10460,7 @@ function buSitzungWaehlen(titel, weiter) {
   if (!l.length) return melde("Es ist keine Sitzung geplant – bitte zuerst unter 📅 Termine anlegen.", true);
   if (l.length === 1) return weiter(l[0].id);
   window.__buWeiter = weiter;
-  blattAuf("buWahl", `<h3 style="margin-top:0">${titel}</h3><div class="wahl">${l.map((t) => `<button onclick="$('buWahl').remove();window.__buWeiter('${t.id}')">${esc(t.titel)}<br><small>${esc(wann(t.beginn))}${t.vorbereitet ? " · ✅ vorbereitet" : ""}</small></button>`).join("")}</div>
+  blattAuf("buWahl", `${einwHtml("b-bu-sitzung")}<h3 style="margin-top:0">${titel}</h3><div class="wahl">${l.map((t) => `<button onclick="$('buWahl').remove();window.__buWeiter('${t.id}')">${esc(t.titel)}<br><small>${esc(wann(t.beginn))}${t.vorbereitet ? " · ✅ vorbereitet" : ""}</small></button>`).join("")}</div>
     <div class="knoepfe"><button class="knopf" onclick="$('buWahl').remove()">Abbrechen</button></div>`);
 }
 const buSitzungWahl = () => buSitzungWaehlen("📝 Welche Sitzung vorbereiten?", buSitzungOeffnen);
@@ -10533,7 +10561,7 @@ async function buEinladung(id, nurOffen) {
   const anzahl = nurOffen ? ohne : s.mitglieder.length;
   const schon = nurOffen ? s.vorbereitung?.erinnerung_am : s.vorbereitung?.einladung_am;
   window.__buSend = { id, nurOffen, wege: [] };
-  blattAuf("buEinladung", `<h3 style="margin-top:0">${nurOffen ? "🔔 Erinnerung" : "📨 Einladung"}: ${esc(s.treffen.titel)}</h3>
+  blattAuf("buEinladung", `${einwHtml("b-bu-einladung")}<h3 style="margin-top:0">${nurOffen ? "🔔 Erinnerung" : "📨 Einladung"}: ${esc(s.treffen.titel)}</h3>
     ${schon ? `<p class="hinweis" style="margin:0">ℹ️ Schon einmal gesendet: ${esc(zeitKurz(schon))}</p>` : ""}
     <div class="karte" style="margin:0;white-space:pre-wrap;font-size:.95rem">${esc(nurOffen ? `Kommst du? ${s.treffen.titel}\n${wann(s.treffen.beginn, true)}\nBitte kurz in der App zu- oder absagen.` : `Einladung: ${s.treffen.titel}\n${wann(s.treffen.beginn, true)}${s.treffen.ort ? "\n" + s.treffen.ort : ""}${top.length ? "\n\nTagesordnung:\n" + top.join("\n") : ""}`)}</div>
     <label class="feld">Persönliche Zeile (freiwillig)<input id="buZusatz" maxlength="500" placeholder="z. B. Bitte Kassenbuch mitbringen"></label>
@@ -10619,7 +10647,7 @@ function buEingangHtml() {
 }
 function buEinPosten(i) {
   const x = BU_EIN.posten[i]; if (!x) return;
-  const f = blattAuf("buEinBlatt", `<div style="display:flex;gap:10px;align-items:center"><span style="font-size:2rem">${esc(x.sym)}</span><div><small class="hinweis">${esc(x.gruppe)}</small><h3 style="margin:2px 0">${esc(x.titel)}</h3><small class="hinweis">${esc(x.unter)}</small></div></div>
+  const f = blattAuf("buEinBlatt", `${einwHtml("b-bu-eingang")}<div style="display:flex;gap:10px;align-items:center"><span style="font-size:2rem">${esc(x.sym)}</span><div><small class="hinweis">${esc(x.gruppe)}</small><h3 style="margin:2px 0">${esc(x.titel)}</h3><small class="hinweis">${esc(x.unter)}</small></div></div>
     <div style="display:grid;gap:8px;margin-top:14px">
       <button class="knopf haupt" data-fn="${esc(x.auf)}">✏️ Öffnen &amp; bearbeiten</button>
       ${(x.schnell || []).map(([t, fn, haupt]) => `<button class="knopf${haupt ? " gruen" : ""}" data-fn="${esc(fn)}">${esc(t)}</button>`).join("")}
@@ -10654,7 +10682,7 @@ async function ekKenntnis(art, id) {
 }
 function ekErstInfo(id) {
   const x = ekErst(id); if (!x) return melde("Nicht mehr im Eingang – schon bearbeitet?");
-  const f = blattAuf("ekErstBlatt", `<h3 style="margin-top:0">💶 Erstattung ${esc(x.name)}</h3>
+  const f = blattAuf("ekErstBlatt", `<h3 style="margin-top:0">💶 Erstattung ${esc(x.name)}</h3>${einwHtml("b-ek-erstattung")}
     <p class="hinweis">Eingereicht ${esc(zeitKurz(x.erstellt_am))} · Auszahlung gewünscht: <b>${x.auszahlung === "bar" ? "bar" : "per Überweisung"}</b></p>
     <div class="karte" style="padding:6px 12px">${x.positionen.map((y) => `<div class="zeile" style="display:flex;justify-content:space-between;gap:8px"><span>${esc(aeDatum(y.datum))} · ${esc(y.text)}</span><b>${euro(y.betrag)}</b></div>`).join("")}
       <div class="zeile" style="display:flex;justify-content:space-between;border-top:1px solid var(--linie);margin-top:4px;padding-top:4px"><b>Summe</b><b>${euro(x.summe)}</b></div></div>
@@ -10688,7 +10716,7 @@ async function ekErledigen(id, status, ausgezahlt, antwort) {
 }
 async function ekDienstInfo(id) {
   let d; try { d = await api("eingang_dienstwunsch", { id }); } catch (e) { return meldeFehler(e); }
-  const f = blattAuf("ekDwBlatt", `<h3 style="margin-top:0">📅 Dienstzeiten ${esc(d.name)}</h3>
+  const f = blattAuf("ekDwBlatt", `${einwHtml("b-ek-dienstzeiten")}<h3 style="margin-top:0">📅 Dienstzeiten ${esc(d.name)}</h3>
     <p class="hinweis">${esc(d.veranstaltung)} · Stand ${esc(d.stand)} · Fassung ${esc(String(d.revision))}${d.uebernommen ? " · ✅ im Dienstplan übernommen" : " · noch nicht im Dienstplan"}</p>
     ${d.tage.length ? `<div class="karte" style="padding:6px 12px">${d.tage.map((t) => `<div class="zeile"><b>${esc(t.tag)}</b>${t.zeilen.map((z) => `<br><small>${esc(z)}</small>`).join("")}</div>`).join("")}</div>` : '<p class="hinweis">Keine Zeiten eingetragen.</p>'}
     ${d.comment ? `<p>💬 ${esc(d.comment)}</p>` : ""}<p class="hinweis">Eingeplant wird im Dienstplan-Programm (DP2).</p>
@@ -10701,7 +10729,7 @@ async function ekAblage(art, id, frage) {
   let d; try { d = await api("eingang_ablage_ziele", { art, id }); } catch (e) { return meldeFehler(e); }
   let w = null; try { w = JSON.parse(localStorage.getItem(EK_WAHL_KEY(art)) || "null"); } catch {}
   const an = (o) => w ? (w.ordner || []).includes(o.id) : o.vorschlag, reg = (o) => (w?.reg?.[o.id] && o.register.includes(w.reg[o.id]) ? w.reg[o.id] : o.registerVor);
-  const f = blattAuf("ekAblageBlatt", `<h3 style="margin-top:0">🗄️ ${esc(frage || "Wo ablegen?")}</h3>
+  const f = blattAuf("ekAblageBlatt", `${einwHtml("b-ek-ablage")}<h3 style="margin-top:0">🗄️ ${esc(frage || "Wo ablegen?")}</h3>
     <p style="margin:0 0 6px"><b>${esc(d.titel)}</b></p>${d.schonAbgelegt ? `<p class="hinweis">Schon ${d.schonAbgelegt}× abgelegt (zuletzt ${esc(zeitKurz(d.zuletzt))}) – nochmal ablegen legt eine neue Fassung dazu.</p>` : ""}
     <p class="hinweis" style="margin:4px 0">Häkchen setzen – mehrere Ordner gehen.</p>
     ${d.mitglied ? `<label class="schalter"><span>👤 Im Ordner von <b>${esc(d.mitglied.name)}</b> (zum Nachvollziehen)</span><input type="checkbox" id="ekM"${w ? (w.mitglied ? " checked" : "") : " checked"}></label>` : ""}
@@ -10934,7 +10962,7 @@ function buNachherWahl(titel) {
   const l = (BU_N.liste || []).filter((x) => new Date(x.beginn) < Date.now() + 6 * 3600000);
   if (!l.length) return melde("Es gab in den letzten Wochen keine Sitzung.", true);
   if (l.length === 1) return buNachher(l[0].id);
-  blattAuf("buWahl", `<h3 style="margin-top:0">${titel}</h3><div class="wahl">${l.map((t) => `<button onclick="$('buWahl').remove();buNachher('${t.id}')">${esc(t.titel)}<br><small>${esc(wann(t.beginn))} · ${t.protokoll ? (t.protokoll.status === "entwurf" ? "📝 Entwurf" : "✅ veröffentlicht") : "noch kein Protokoll"}${t.fotos ? ` · 📸 ${t.fotos}` : ""}${t.aufgaben ? ` · ✔️ ${t.aufgaben}` : ""}</small></button>`).join("")}</div>
+  blattAuf("buWahl", `${einwHtml("b-bu-sitzung")}<h3 style="margin-top:0">${titel}</h3><div class="wahl">${l.map((t) => `<button onclick="$('buWahl').remove();buNachher('${t.id}')">${esc(t.titel)}<br><small>${esc(wann(t.beginn))} · ${t.protokoll ? (t.protokoll.status === "entwurf" ? "📝 Entwurf" : "✅ veröffentlicht") : "noch kein Protokoll"}${t.fotos ? ` · 📸 ${t.fotos}` : ""}${t.aufgaben ? ` · ✔️ ${t.aufgaben}` : ""}</small></button>`).join("")}</div>
     <div class="knoepfe"><button class="knopf" onclick="$('buWahl').remove()">Abbrechen</button></div>`);
 }
 async function buNachher(tid) {
@@ -11238,7 +11266,7 @@ const flSchrittNeu = (id) => { const t = ($("flNeuSchritt")?.value || "").trim()
 function flAngaben(id) {
   const f = FL.d.faelle.find((x) => x.id === id); if (!f) return;
   const tag = f.termin ? berlinIso(f.termin) : "", zeit = f.termin ? fZeit.format(new Date(f.termin)) : "11:00";
-  blattAuf("flAng", `<h3 style="margin-top:0">✏️ Angaben ändern</h3>
+  blattAuf("flAng", `${einwHtml("b-fl-angaben")}<h3 style="margin-top:0">✏️ Angaben ändern</h3>
     <label class="feld">Notiz<input id="flAN" maxlength="500" value="${esc(f.notiz || "")}"></label>
     <div class="zwei"><label class="feld">Termin<input id="flAT" type="date" value="${tag}"></label><label class="feld">Uhrzeit<input id="flAZ" type="time" value="${zeit}"></label></div>
     <label class="feld">Ort<input id="flAO" maxlength="120" value="${esc(f.termin_ort || "")}"></label>
@@ -11259,7 +11287,7 @@ function flInformieren(id) {
     : leid ? `${vn} geht es gerade nicht gut${f.notiz ? ` (${f.notiz})` : ""}. Ein kurzer Gruß oder eine Nachricht freut sicher sehr.`
     : `schöne Nachricht: ${f.name} – ${flArt(f.art).t}${f.notiz ? ` (${f.notiz})` : ""}! Herzlichen Glückwunsch vom ganzen Club. 🎉`;
   window.__flSend = { id, wege: [] };
-  blattAuf("flInfo", `<h3 style="margin-top:0">📣 Mitglieder informieren</h3>
+  blattAuf("flInfo", `${einwHtml("b-fl-informieren")}<h3 style="margin-top:0">📣 Mitglieder informieren</h3>
     <label class="feld">Text (ändern, wie es passt)<textarea id="flIT" rows="6" maxlength="1000">${esc(vorschlag)}</textarea></label>
     ${tod && !f.aufruf ? `<label class="schalter"><span><b>🚶 Fragen, wer zur Beerdigung mitkommt</b><br><small class="hinweis">Mitglieder sagen mit „✋ Ich komme“ zu</small></span><input type="checkbox" id="flIA" checked></label>` : ""}
     ${leid ? `<label class="schalter fl-abgesprochen"><span><b>Mit der Familie abgesprochen?</b><br><small class="hinweis">Bitte erst senden, wenn die Familie einverstanden ist.</small></span><input type="checkbox" id="flIOK"></label>` : ""}
@@ -12154,7 +12182,7 @@ async function naMerken(id, an) {
 }
 async function gemerktZeigen() {
   let r; try { r = await api("gemerkte_nachrichten", {}, { warten: true }); } catch (e) { return meldeFehler(e); }
-  blattAuf("gmFenster", `<h3 style="margin-top:0">⭐ Gemerkte Nachrichten</h3>
+  blattAuf("gmFenster", `${einwHtml("b-gemerkt")}<h3 style="margin-top:0">⭐ Gemerkte Nachrichten</h3>
     ${r.liste.length ? r.liste.map((x) => `<button class="gm-zeile" onclick="gemerktOeffnen('${x.thread}','${x.id}')"><small>${esc(x.chat)} · ${esc(x.von)} · ${esc(zeitKurz(x.zeit))}</small>${esc(x.text)}</button>`).join("")
       : '<p class="hinweis">Noch nichts gemerkt. Nachricht antippen → „⭐ Merken“.</p>'}
     <button class="knopf" style="margin-top:8px" onclick="document.getElementById('gmFenster').remove()">Schließen</button>`);
@@ -12182,7 +12210,7 @@ function cuAntwortDazu() {
 }
 function cuForm() {
   if (!chatId) return melde("Bitte zuerst die Unterhaltung beginnen (erste Nachricht senden) – dann geht die Abstimmung.", true);
-  blattAuf("cuFenster", `<h3 style="margin-top:0">📊 Kurze Abstimmung</h3>
+  blattAuf("cuFenster", `${einwHtml("b-abstimmung")}<h3 style="margin-top:0">📊 Kurze Abstimmung</h3>
     <label class="feld">Frage<input id="cuFrage" maxlength="200" placeholder="z. B. Wer kommt zum Grillen?"></label>
     <div id="cuAntworten">${[0, 1, 2].map(cuFeld).join("")}</div>
     <button class="knopf klein" onclick="cuAntwortDazu()">＋ Antwort</button>
@@ -12207,7 +12235,7 @@ function kontaktKarteHtml(m) {
 async function kontaktWahl() {
   if (!chatId) return melde("Bitte zuerst die Unterhaltung beginnen (erste Nachricht senden) – dann geht „Kontakt teilen“.", true);
   if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return meldeFehler(e); }
-  blattAuf("kwFenster", `<h3 style="margin-top:0">👤 Kontakt teilen</h3>
+  blattAuf("kwFenster", `${einwHtml("b-kontakt-teilen")}<h3 style="margin-top:0">👤 Kontakt teilen</h3>
     <p class="hinweis" style="margin:0 0 6px">Die anderen sehen nur, was das Mitglied selbst für andere freigegeben hat.</p>
     <input id="kwSuche" type="search" placeholder="🔍 Name suchen …" autocomplete="off" oninput="kontaktListe()" style="width:100%;box-sizing:border-box;padding:10px;border-radius:12px;border:1px solid var(--linie);font:inherit;background:var(--karte);color:inherit">
     <div class="kw-liste" id="kwListe"></div>
@@ -13283,7 +13311,7 @@ const teilenWaExport = (d) => /whatsapp/i.test(d.name) && /\.(txt|zip)$/i.test(d
 function teilenWahl(text, dateien) {
   TEILEN = { text, dateien };
   const nurFotos = dateien.length && dateien.every((d) => /^image\//.test(d.type)), export_ = dateien.some(teilenWaExport);
-  blattAuf("teilenBlatt", `<h3 style="margin-top:0">📥 Mit Köcheclub geteilt</h3>
+  blattAuf("teilenBlatt", `<h3 style="margin-top:0">📥 Mit Köcheclub geteilt</h3>${einwHtml("b-teilen")}
     ${text ? `<div class="karte" style="margin:0 0 8px;white-space:pre-wrap;max-height:30vh;overflow:auto">${esc(text.slice(0, 1500))}${text.length > 1500 ? " …" : ""}</div>` : ""}
     ${dateien.length ? `<p class="hinweis" style="margin:0 0 8px">📎 ${dateien.map((d) => esc(d.name)).join(", ")}</p>` : ""}
     ${export_ ? '<p class="hinweis" style="margin:0 0 8px">💡 Das sieht nach einem WhatsApp-Chat-Export aus – am besten ins Archiv legen.</p>' : ""}
@@ -13394,7 +13422,7 @@ function bfKlonGlaetten(d) {
   }
 }
 function bfVorschau() {
-  const f = blattAuf("bfBlatt", `<h3 style="margin-top:0">📸 Dein Bildschirmfoto</h3>
+  const f = blattAuf("bfBlatt", `${einwHtml("b-bildschirmfoto")}<h3 style="margin-top:0">📸 Dein Bildschirmfoto</h3>
     <p class="hinweis" style="margin:0">✏️ Mit dem Finger rot einkreisen oder Pfeile malen, wo das Problem ist.</p>
     <div class="bf-rahmen"><canvas id="bfLeinwand"></canvas></div>
     <div class="knoepfe" style="margin:0"><button class="knopf klein" onclick="bfZurueck()">↩️ Rückgängig</button><button class="knopf klein" onclick="BF.striche=[];bfMalen()">🧽 Alles weg</button></div>
@@ -14078,7 +14106,7 @@ async function privatLoeschenTun(id, tag) {
 // bei mehreren Möglichkeiten erst ein kleines Auswahlfenster (statt mehrerer Knöpfe in der Kopfzeile)
 function neuWahlFenster(titel, optionen) {
   window.__neuW = optionen.map((o) => o.los);
-  blattAuf("neuWahlBlatt", `<h3 style="margin-top:0">${titel}</h3><div class="wahl">${optionen.map((o, i) => `<button onclick="$('neuWahlBlatt').remove();window.__neuW[${i}]()">${o.sym} <b>${esc(o.t)}</b><br><small>${esc(o.u)}</small></button>`).join("")}</div>
+  blattAuf("neuWahlBlatt", `${einwHtml("b-neu-wahl")}<h3 style="margin-top:0">${titel}</h3><div class="wahl">${optionen.map((o, i) => `<button onclick="$('neuWahlBlatt').remove();window.__neuW[${i}]()">${o.sym} <b>${esc(o.t)}</b><br><small>${esc(o.u)}</small></button>`).join("")}</div>
     <button class="knopf" style="width:100%;text-align:center;margin-top:8px" onclick="$('neuWahlBlatt').remove()">Abbrechen</button>`);
 }
 function termineNeuWahl() {
@@ -14477,7 +14505,7 @@ async function mitfahrtNeuLaden(art) { if (art === "aktion") { AKTIONEN = null; 
 function mitfahrtAnbieten(art, bezugId, plaetze, treffpunkt) {
   window.__mfP = plaetze || 3;
   const knoepfe = () => Array.from({ length: 8 }, (_, i) => `<button class="chip${window.__mfP === i + 1 ? " an" : ""}" onclick="window.__mfP=${i + 1};this.parentNode.querySelectorAll('.chip').forEach((b,k)=>b.classList.toggle('an',k===${i}))">${i + 1}</button>`).join("");
-  blattAuf("mfAnbieten", `<h3 style="margin-top:0">🚗 Mitfahrgelegenheit anbieten</h3>
+  blattAuf("mfAnbieten", `${einwHtml("b-mitfahrt")}<h3 style="margin-top:0">🚗 Mitfahrgelegenheit anbieten</h3>
     <div class="hl-frage">Wie viele freie Plätze?</div><div class="hl-chips">${knoepfe()}</div>
     <label class="feld">Treffpunkt / Abfahrt (freiwillig)<input id="mfTreff" maxlength="150" placeholder="z. B. Marktplatz 17:30" value="${esc(treffpunkt || "")}"></label>
     <div class="dlg-knoepfe"><button class="knopf haupt" onclick="mitfahrtAnbietenSpeichern('${art}', '${esc(bezugId)}', this)">✅ ${plaetze ? "Speichern" : "Anbieten"}</button><button class="knopf" onclick="$('mfAnbieten').remove()">Abbrechen</button></div>`);
@@ -14814,7 +14842,7 @@ function faLeisteZeigen() {
 function faFotosHinzu(id) { const her = faHerkunft; faFilter = {}; FAW.an = true; FAW.ids.clear(); FAW.ziel = id; faHerkunft = her; fotosLaden().then(() => melde(`Fotos antippen, die in „${faAlbum(id)?.name || "das Album"}“ sollen`)); }
 function faAlbumWahl() {
   const meine = (FA?.alben || []).filter((a) => a.darfAendern), n = FAW.ids.size;
-  const f = blattAuf("faAlbumBlatt", `<h3 style="margin-top:0">📸 ${n} Foto${n === 1 ? "" : "s"} in welches Album?</h3>
+  const f = blattAuf("faAlbumBlatt", `${einwHtml("b-fa-album-wahl")}<h3 style="margin-top:0">📸 ${n} Foto${n === 1 ? "" : "s"} in welches Album?</h3>
     <div class="knoepfe" style="flex-direction:column;align-items:stretch">${meine.map((a) => `<button class="knopf" style="justify-content:flex-start;text-align:left" data-album="${a.id}">📸 <b>${esc(a.name)}</b>&nbsp;<span class="hinweis">${String(a.name).includes(String(a.jahr)) ? "" : a.jahr + " · "}${faSicht(a)} · ${a.anzahl}</span></button>`).join("")}
       <button class="knopf haupt" data-neu="1">＋ Neues Album …</button><button class="knopf" data-zu="1">Abbrechen</button></div>`);
   f.querySelectorAll("[data-album]").forEach((b) => (b.onclick = () => { f.remove(); faInsAlbum(b.dataset.album); }));
@@ -14839,7 +14867,7 @@ function faEinzelnInsAlbum() { const f = FA?.fotos[faIndex]; if (!f) return; FAW
 function faAlbumForm(id = null, fotos = []) {
   const a = id ? faAlbum(id) || FA?.album : null;
   const jahrVorschlag = (() => { const f = (FA?.fotos || []).find((x) => fotos.includes(x.id)); return f ? Number(f.datum.slice(0, 4)) : new Date().getFullYear(); })();
-  const f = blattAuf("faAlbumForm", `<h3 style="margin-top:0">${a ? "✏️ Album ändern" : "📸 Neues Album"}</h3>
+  const f = blattAuf("faAlbumForm", `${einwHtml("b-fa-album")}<h3 style="margin-top:0">${a ? "✏️ Album ändern" : "📸 Neues Album"}</h3>
     <label class="feld">Name<input id="faAName" maxlength="60" value="${esc(a?.name || "")}" placeholder="z. B. Weihnachtsmarkt 2026"></label>
     <label class="feld">Jahr<input id="faAJahr" type="number" inputmode="numeric" min="1950" max="2100" value="${a?.jahr || jahrVorschlag}"></label>
     ${!a || a.eigen ? `<b style="display:block;margin-top:8px">Wer sieht das Album?</b>
@@ -15745,7 +15773,7 @@ async function linkTeilen(pid) {
     // 0.27.3: Anleitung wie unter ⚙️ → App-Installation (richtige App statt Verknüpfung)
     const text = `Hallo ${m.vorname}, hier ist dein persönlicher Link zur Köcheclub-App:\n${link}\n\nSo geht's (Android): Link in Chrome öffnen → oben rechts ⋮ → „App installieren“ (bzw. „Zum Startbildschirm hinzufügen“ → „Installieren“, nicht „Verknüpfung“). Samsung-Browser „Internet“: unten ≡ → „Seite hinzufügen zu“ → „Startbildschirm“.\niPhone: den Link in *Safari* öffnen → unten Teilen □↑ → „Zum Home-Bildschirm“ → „Hinzufügen“. Danach die App über das neue Symbol öffnen.\n\nFunktioniert der Link nicht (z. B. weil es einen neueren gibt)? Die Seite zeigt dann „Link verloren?“ – dort deine E-Mail-Adresse eingeben, der neue Link kommt sofort per Mail.\n\nBitte nicht weitergeben – der Link ist dein persönlicher Zugang. Viele Grüße, ${ICH?.vorname || adminName()}`;
     // 2.2.0 (Gesamtprüfung): zwei echte Knöpfe statt „Abbrechen = kopieren“
-    const f = blattAuf("linkBlatt", `<h3 style="margin-top:0">🔗 Link für ${esc(m.name)} erzeugt</h3><p class="hinweis">Der alte Link gilt ab jetzt nicht mehr. Wie soll er zu ${esc(m.vorname || m.name)}?</p>
+    const f = blattAuf("linkBlatt", `${einwHtml("b-link")}<h3 style="margin-top:0">🔗 Link für ${esc(m.name)} erzeugt</h3><p class="hinweis">Der alte Link gilt ab jetzt nicht mehr. Wie soll er zu ${esc(m.vorname || m.name)}?</p>
       <div class="dlg-knoepfe"><button class="knopf haupt" data-w="wa">🟢 Per WhatsApp schicken</button><button class="knopf" data-w="kopie">📋 Kopieren</button><button class="knopf" data-w="zu">Schließen</button></div>`);
     f.querySelector('[data-w="wa"]').onclick = () => { f.remove(); window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank"); };
     f.querySelector('[data-w="kopie"]').onclick = async () => { f.remove(); try { await navigator.clipboard.writeText(text); melde("📋 Text mit Link kopiert"); } catch { await eingabe("Zum Kopieren:", text); } };
@@ -15759,7 +15787,7 @@ function rolleBearbeiten(pid) {
   const m = MITGLIEDER.find((x) => x.person_id === pid); if (!m) return;
   const liste = [...new Set([...AEMTER_VORSCHLAG, ...(AEMTER || []), ...(m.aemter || [])])];
   const schalter = (id, titel, hinweis, an) => `<label class="schalter"><div><b>${titel}</b><div class="hinweis">${hinweis}</div></div><input type="checkbox" id="${id}" ${an ? "checked" : ""}></label>`;
-  blattAuf("rolleBlatt", `<h3 style="margin-top:0">🎖️ ${esc(m.name)}</h3>
+  blattAuf("rolleBlatt", `${einwHtml("b-rolle")}<h3 style="margin-top:0">🎖️ ${esc(m.name)}</h3>
     <div class="hl-frage">Ämter</div><div class="bu-haken-liste">${liste.map((a) => `<label class="bu-haken"><input type="checkbox" class="roAmt" value="${esc(a)}" ${(m.aemter || []).includes(a) ? "checked" : ""}> ${esc(a)}</label>`).join("")}</div>
     <label class="feld">Weiteres Amt (freiwillig)<input id="roNeu" maxlength="40" placeholder="z. B. Beisitzer"></label>
     <div class="hl-frage">Rechte</div>
@@ -16498,7 +16526,7 @@ async function archivAblageFragen(art, { titel, datum, hinweis, dateien, frage, 
   const ordner = nfpEigeneOrdner(d); if (!ordner.length) return false;
   const jahr = Number(String(datum || heuteIso()).slice(0, 4)), vor = ordner.find((o) => o.jahr === jahr) || ordner[0];
   ABL = { a, d, titel, datum: datum || heuteIso(), dateien, danach };
-  blattAuf("ablageBlatt", `<h3 style="margin-top:0">🗄️ ${esc(frage || "Auch in deinen Archiv-Ordner legen?")}</h3>
+  blattAuf("ablageBlatt", `${einwHtml("b-ablage")}<h3 style="margin-top:0">🗄️ ${esc(frage || "Auch in deinen Archiv-Ordner legen?")}</h3>
     <p style="margin:0 0 8px">${a.sym} <b>${esc(titel)}</b>${hinweis ? `<br><span class="hinweis">${esc(hinweis)}</span>` : ""}</p>
     <label class="feld">Ordner<select id="ablOrdner" onchange="ablRegister()">${ordner.map((o) => `<option value="${esc(o.id)}"${o.id === vor.id ? " selected" : ""}>👤 Mein Ordner ${esc(String(o.jahr))}</option>`).join("")}</select></label>
     <label class="feld">Register<select id="ablReg"></select></label>

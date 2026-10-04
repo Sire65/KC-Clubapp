@@ -4139,3 +4139,21 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/html = `\$\{einwHtml\("b-aenderung-schritt"\)\}<h3 style="margin:0">\$\{art\.sym\} \$\{esc\(art\.t\)\}<\/h3>/.test(html), "Karte oben im Schritt fehlt");
   assert.ok("b-aenderung-schritt".length <= 30, "Server speichert nur IDs bis 30 Zeichen (KA_ID)");
 }
+
+// 364. 2.23.15: „Kurz erklärt“ in allen Arbeitsfenstern (KC-CLUB-EINWEISUNG, Wunsch Hansi „alle Unterpunkte mit Karte“)
+{
+  const reg = html.slice(html.indexOf("const EINWEISUNG = ["), html.indexOf("const einwStand ="));
+  const fenster = { "b-ablage": "ablageBlatt", "b-bildschirmfoto": "bfBlatt", "b-bu-drucker": "buDruckerBlatt", "b-bu-eingang": "buEinBlatt",
+    "b-bu-einladung": "buEinladung", "b-bu-schreiben": "buFuellerBlatt", "b-bu-person": "buTelBlatt", "b-abstimmung": "cuFenster",
+    "b-ek-ablage": "ekAblageBlatt", "b-ek-dienstzeiten": "ekDwBlatt", "b-ek-erstattung": "ekErstBlatt", "b-fa-album-wahl": "faAlbumBlatt",
+    "b-fa-album": "faAlbumForm", "b-fl-angaben": "flAng", "b-fl-informieren": "flInfo", "b-gemerkt": "gmFenster", "b-kontakt-teilen": "kwFenster",
+    "b-link": "linkBlatt", "b-mitfahrt": "mfAnbieten", "b-mikro-wahl": "mikroWahlBlatt", "b-neu-wahl": "neuWahlBlatt", "b-rolle": "rolleBlatt",
+    "b-sp-herausfordern": "spHerausBlatt", "b-sp-termin": "spTerminBlatt", "b-teilen": "teilenBlatt", "b-bu-sitzung": "buWahl" };
+  for (const [id, blatt] of Object.entries(fenster)) {
+    assert.ok(reg.includes(`{ id: "${id}", blatt: true,`), `Einweisung ${id} fehlt`);
+    assert.ok(new RegExp(`blattAuf\\("${blatt}", \`[^\`]{0,80}\\$\\{einwHtml\\("${id}"\\)\\}`).test(html), `Karte ${id} nicht oben im Fenster ${blatt}`);
+    assert.ok(id.length <= 30, `${id} zu lang für den Server (KA_ID)`);
+  }
+  for (const id of ["b-bu-drucker", "b-bu-eingang", "b-ek-erstattung", "b-fl-informieren", "b-bu-sitzung"]) assert.ok(new RegExp(`\\{ id: "${id}"[^\\n]*nur: \\(\\) => !!ICH\\?\\.buero \\},`).test(reg), `${id}: nur fürs Büro`);
+  for (const id of ["b-link", "b-rolle"]) assert.ok(new RegExp(`\\{ id: "${id}"[^\\n]*nur: \\(\\) => !!ICH\\?\\.admin \\},`).test(reg), `${id}: nur für den Admin`);
+}
