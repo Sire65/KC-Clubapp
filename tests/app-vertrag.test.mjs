@@ -3649,6 +3649,8 @@ assert.ok(/const UH_HERVOR = \["Innovation"\];/.test(html) && /function uhAmeise
   const z = html.split("\n").find((l) => l.includes('INIT = await api("init"')) || "";
   assert.ok(/ICH = INIT\.ich;/.test(z) && !/\/\/[^\n]*ICH = INIT\.ich/.test(z), "ICH = INIT.ich wird ausgeführt (nicht auskommentiert)");
 }
+// 342. 2.22.14: Kachel-Zahl oben rechts (verdeckt keinen Text)
+assert.ok(/\.kachel \.zahl \{ position: absolute; right: 12px; top: 12px;/.test(html), "Kachel-Zahl oben rechts");
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

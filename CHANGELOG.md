@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.22.14 – 2026-10-04 – Zahl auf den Kacheln oben rechts (Fund Hansi)
+- Die Zahl auf den großen Kacheln stand unten rechts und verdeckte den Untertitel (z. B. „Zu- & Absagen“). Jetzt oben rechts neben dem
+  Symbol (im Deko-Kreis), mit leichtem Schatten. Nur CSS (.kachel .zahl). Test 342.
+
 ## 2.22.13 – 2026-10-04 – Fehlerbehebung Anmeldung nach Neuladen; Herausforderungen zu Spielen bei allen an (Wunsch Hansi)
 - FEHLER aus 2.22.12 behoben: in neuLadenRoh hatte ein Zeilenkommentar („// KC-CLUB-KACHEL-ZAHLEN“) den Rest der Zeile auskommentiert
   (ICH = INIT.ich, Einstellungen, Admin-Name, Klassen …) → nach dem Laden galt man als „nicht angemeldet“ („Einen Moment – die App meldet dich

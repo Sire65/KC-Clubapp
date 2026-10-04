@@ -698,7 +698,8 @@
   :root.dunkel .kachel.neu-da { background: linear-gradient(135deg, #1d4a2c, #1b6b3c); box-shadow: 0 0 0 3px #3ddc84 inset, var(--schatten); } :root.dunkel .kachel.neu-da small { color: #c9f5d8; }
   @keyframes neuDa { 50% { filter: brightness(1.06); } }
   @media (prefers-reduced-motion: reduce) { .kachel.neu-da { animation: none; } }
-  .kachel .zahl { position: absolute; right: 12px; bottom: 12px; background: var(--rot); color: #fff; border-radius: 12px; padding: 2px 9px; font-weight: 800; font-size: .85rem; z-index: 1; }
+  /* 2.22.14 (Fund Hansi): Zahl oben rechts (neben dem Symbol, im Deko-Kreis) – unten rechts verdeckte sie den Untertitel */
+  .kachel .zahl { position: absolute; right: 12px; top: 12px; background: var(--rot); color: #fff; border-radius: 12px; padding: 2px 9px; font-weight: 800; font-size: .85rem; z-index: 1; box-shadow: 0 1px 3px #0003; }
   .kachel.bald { opacity: .55; }
   /* KC-CLUB-KACHELN: eigene Anordnung (lange drücken → Bearbeiten) */
   .kachel { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
@@ -2637,7 +2638,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.22.13"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.22.14"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
