@@ -2637,7 +2637,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.22.11"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.22.12"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -7136,6 +7136,16 @@ async function ueberblickZeigen() { $("ueInhalt").innerHTML = ueberblickHtml(awa
 async function druckUeberblick() { return { titel: "Unsere Club-App auf einen Blick", unter: `Stand: Version ${APP_VERSION}`, html: ueberblickHtml(await ueberblickLaden(), true) }; }
 
 // ---------- Start ----------
+// KC-CLUB-KACHEL-ZAHLEN (2.22.12, Wunsch Hansi): weitere Zahlen (Termine, Helfen & Leihen, Büro, Fotoalbum, Dienstpläne) – nur in der
+// erweiterten Ansicht. Server rechnet (INIT.kz); null = unbekannt → keine Zahl. „Zuletzt geöffnet“ für Fotos/Dienste merkt sich das Gerät.
+const KZ_SEIT = { fotos: "kc_club_kz_fotos", dienste: "kc_club_kz_dienste" };
+function kzSeit(k) { try { let v = localStorage.getItem(KZ_SEIT[k]); if (!v) { v = new Date().toISOString(); localStorage.setItem(KZ_SEIT[k], v); } return v; } catch { return null; } }
+function kzGesehen(v) {
+  const k = v === "fotos" ? "fotos" : v === "dienste" ? "dienste" : null; if (!k) return;
+  try { localStorage.setItem(KZ_SEIT[k], new Date().toISOString()); } catch {}
+  if (INIT?.kz) INIT.kz[k] = 0;
+}
+const kzZahl = (k, plus = 0) => (einfach() || INIT?.kz?.[k] == null ? 0 : INIT.kz[k] + plus);
 const KACHELN = {
   verein: [
     { id: "termine", sym: "📅", t: "Termine", u: "Termine · Zu- & Absagen", v: "termine" },
@@ -7180,6 +7190,10 @@ const KACHELN = {
   // Antippen öffnet ein Blatt mit Einzelheiten, Grafik und den Werkzeugen für genau diese Stelle (siehe AD_KACHELN weiter unten)
   admin: [],
 };
+// KC-CLUB-KACHEL-ZAHLEN (2.22.12): Zahl-Funktionen an die bestehenden Kacheln hängen (Kachel-Einträge selbst bleiben unverändert)
+const KZ_KACHELN = { termine: () => kzZahl("termine", INIT?.terminfindungOffen?.length || 0), helfen: () => kzZahl("helfen"), buero: () => kzZahl("buero"),
+  fotos: () => kzZahl("fotos"), dienste: () => kzZahl("dienste") };
+for (const k of KACHELN.verein) if (KZ_KACHELN[k.id] && !k.zahl) k.zahl = KZ_KACHELN[k.id];
 // Kacheln, die für mich gelten (z. B. Protokolle nicht für Aushilfen)
 const kachelnAlle = (r) => KACHELN[r].filter((k) => !k.bald && (!k.nur || k.nur())); // 1.99.0 (Wunsch Hansi): „bald“-Kacheln erst zeigen, wenn es sie gibt (Überblick nennt sie weiter)
 // KC-CLUB-KACHELN: eigene Reihenfolge + ausgeblendete Kacheln je Mitglied (Server-Einstellung „kacheln“, hier zwischengespeichert).
@@ -8584,7 +8598,7 @@ function neuLaden(vonHand) {
 }
 async function neuLadenRoh(vonHand) {
   try {
-    INIT = await api("init", {}, { warten: !!vonHand }); ICH = INIT.ich; einstOffenAnwenden(); /* 2.6.1: noch laufende Speicherungen nicht überschreiben */ adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); einwZeigen(aktuelleAnsicht); // KC-CLUB-KOPF-EINFACH
+    INIT = await api("init", { fotosSeit: kzSeit("fotos"), dienstSeit: kzSeit("dienste") }, { warten: !!vonHand }); // KC-CLUB-KACHEL-ZAHLEN ICH = INIT.ich; einstOffenAnwenden(); /* 2.6.1: noch laufende Speicherungen nicht überschreiben */ adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); einwZeigen(aktuelleAnsicht); // KC-CLUB-KOPF-EINFACH
     alarmPruefen(); /* KC-CLUB-NOTFALL-MELDUNG */ document.body.classList.toggle("sos-frei", !!INIT?.sosFuerAlle); /* KC-CLUB-SOS-FREIGABE */ fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln);
     if ($("setLiveTippen")) $("setLiveTippen").checked = liveTippen();
@@ -8717,6 +8731,7 @@ function zeige(v, ausHistorie) {
   ["start", "dokumente", "dokansicht", "termine", "vorschlaege", "aktionen", "aktion", "fotos", "feedback", "gruppe", "mitglied", "protokolle", "protokoll", "dienste", "nachrichten", "chat", "neu", "mitglieder", "einstellungen", "pinnwand", "erstattung", "ueberblick", "programme", "standort", "archiv", "sos", "sicherheit", "helfen", "buero", "spiele"].forEach((x) => $("v-" + x).classList.toggle("versteckt", x !== v));
   if (v !== "spiele") { clearInterval(SP.takt); SP.takt = null; } else spZeigen(); // KC-CLUB-SPIELE (2.7.0)
   einwZeigen(v); // KC-CLUB-EINWEISUNG (2.4.0)
+  kzGesehen(v); // KC-CLUB-KACHEL-ZAHLEN (2.22.12): Fotoalbum/Dienstpläne geöffnet → Zahl weg
   document.querySelectorAll("#fuss button").forEach((b) => b.classList.toggle("an", b.dataset.v === v || (v === "chat" && b.dataset.v === "nachrichten") || (v === "neu" && b.dataset.v === "nachrichten")));
   $("eingabe").classList.toggle("versteckt", v !== "chat");
   document.body.classList.toggle("im-chat", v === "chat"); // KC-CLUB-SUCHE: Lupe nicht über dem Senden-Knopf

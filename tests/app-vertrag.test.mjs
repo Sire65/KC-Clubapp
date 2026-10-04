@@ -953,7 +953,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 {
   assert.ok(/function wartenStart\(action, erzwingen\) \{\s*if \(WARTEN_STILL\.has\(action\) && !erzwingen\) return false;/.test(html), "Erzwingen der Kochmütze fehlt");
   assert.ok(/async function api\(action, daten = \{\}, opt = \{\}\) \{\s*const warte = wartenStart\(action, opt\.warten\);/.test(html), "api reicht warten nicht durch");
-  assert.ok(/api\("init", \{\}, \{ warten: !!vonHand \}\)/.test(html), "Aktualisieren ohne Kochmütze");
+  assert.ok(/api\("init", \{[^}]*\}, \{ warten: !!vonHand \}\)/.test(html), "Aktualisieren ohne Kochmütze"); // 2.22.12: init bekommt fotosSeit/dienstSeit
   assert.ok(/api\("wetter", \{\}, \{ warten: !!sichtbar \}\)/.test(html) && /wetterLaden\(erzwingen\)/.test(html), "Wetter ohne Kochmütze");
   assert.ok(/infoDatenLaden\(f, erzwingen\)/.test(html) && /const warte = sichtbar && wartenStart\(f\.id, true\)/.test(html) && /finally \{ if \(warte\) wartenEnde\(\); \}/.test(html), "Info-Karten ohne Kochmütze");
   assert.ok(/infoDatenLaden\(INFO_FELDER\[INFO_I\], true\)/.test(html), "Admin „Neu prüfen“ ohne Kochmütze");
@@ -3622,6 +3622,14 @@ assert.ok(/const UH_HERVOR = \["Innovation"\];/.test(html) && /function uhAmeise
   assert.ok(/insert\(\{ antworten: p\.antworten !== false,/.test(server) && /fuer: z\.fuer, antworten: z\.antworten !== false,/.test(server) && /zeit: z\.erstellt_am, antworten: z\.antworten !== false \}/.test(server), "Server speichert und liefert die Wahl");
   assert.ok(/if \(!z\.vonMir && z\.antworten !== false\) knoepfe\.push\(`<button class="antw"/.test(html) && /z\.vonId && z\.antworten !== false \? `<div class="zknoepfe">/.test(html), "Knopf nur, wenn erlaubt (Wand + Fenster)");
   assert.ok(/antworten: PW\.form\.antworten !== false,/.test(html) && /id="pwAntw"/.test(html), "Auswahl beim Anheften");
+}
+// 338. 2.22.12: Zahlen auf weiteren großen Kacheln, nur erweiterte Ansicht (KC-CLUB-KACHEL-ZAHLEN)
+{
+  assert.ok(/async function kachelZahlen\(ich: Ich, p: any\)/.test(server) && /return \{ termine, helfen, buero, fotos, dienste \};/.test(server) && /const kz = await kachelZahlen\(ich, p\)\.catch\(\(\) => null\);/.test(server), "Server rechnet die Zahlen");
+  assert.ok(/catch \(e\) \{ console\.error\("kachel zahl", String\(e\)\); return null; \}/.test(server), "Fehler → null, keine falsche 0");
+  assert.ok(/const kzZahl = \(k, plus = 0\) => \(einfach\(\) \|\| INIT\?\.kz\?\.\[k\] == null \? 0 :/.test(html), "nur erweiterte Ansicht, unbekannt → keine Zahl");
+  assert.ok(/for \(const k of KACHELN\.verein\) if \(KZ_KACHELN\[k\.id\] && !k\.zahl\) k\.zahl = KZ_KACHELN\[k\.id\];/.test(html) && /termine: .*helfen: .*buero: [\s\S]{0,60}fotos: .*dienste:/.test(html), "fünf Kacheln");
+  assert.ok(/kzGesehen\(v\); \/\/ KC-CLUB-KACHEL-ZAHLEN/.test(html) && /api\("init", \{ fotosSeit: kzSeit\("fotos"\), dienstSeit: kzSeit\("dienste"\) \}/.test(html), "zuletzt geöffnet");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

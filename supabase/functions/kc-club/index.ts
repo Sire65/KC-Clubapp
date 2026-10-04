@@ -26,7 +26,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "2.22.11";
+const SERVER_VERSION = "2.22.12";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -2291,6 +2291,48 @@ function hilfeLeser(x: any, antworten: any[], gesehen: any[], aktiv: any[], n: (
   const kreis = x.ziel === "online" ? null : aktiv.map((m: any) => m.person_id).filter((id: string) => id !== x.von && !id.startsWith("KC-P-TEST"));
   return { leser, nichtGesehen: kreis ? kreis.filter((id: string) => !erst.has(id)).map((id: string) => aktiv.find((m: any) => m.person_id === id)?.display_name || id).sort() : null, kreis: kreis?.length ?? null };
 }
+// KC-CLUB-KACHEL-ZAHLEN (2.22.12, Wunsch Hansi): Zahlen auf weiteren großen Kacheln (nur erweiterte Ansicht) – nur, wo etwas auf mich wartet.
+// Jede Zahl einzeln abgesichert: Fehler → null (die App zeigt dann keine Zahl, nie eine falsche „0 = alles erledigt“).
+// fotosSeit / dienstSeit: wann ich Fotoalbum / Dienstpläne zuletzt geöffnet habe (merkt sich das Gerät).
+async function kachelZahlen(ich: Ich, p: any) {
+  const jetztIso = jetzt(), heute = berlinTag(new Date());
+  const seit = (v: unknown) => { const d = new Date(String(v || "")); return isNaN(d.getTime()) ? null : d.toISOString(); };
+  const sicher = async (fn: () => Promise<number>) => { try { return await fn(); } catch (e) { console.error("kachel zahl", String(e)); return null; } };
+  const ok = <T>(r: { data: T | null; error: any }) => { if (r.error) throw new Error(r.error.message); return r.data as T; };
+  const [termine, helfen, buero, fotos, dienste] = await Promise.all([
+    // 📅 Treffen ohne meine Antwort + Terminanfragen an mich ohne Antwort (Terminfindungen zählt die App dazu)
+    sicher(async () => {
+      const tr = ok(await db.from("kc_club_treffen").select("id").eq("status", "geplant").eq("art", "treffen").gte("beginn", jetztIso).limit(100)) as any[];
+      const ids = tr.map((x) => x.id);
+      const tn = ids.length ? ok(await db.from("kc_club_teilnahme").select("treffen_id,antwort").eq("person_id", ich.person_id).in("treffen_id", ids)) as any[] : [];
+      const beantwortet = new Set(tn.filter((x) => x.antwort).map((x) => x.treffen_id));
+      const em = ok(await db.from("kc_club_terminanfrage_empfaenger").select("anfrage_id").eq("person_id", ich.person_id).is("antwort", null)) as any[];
+      const an = em.length ? ok(await db.from("kc_club_terminanfragen").select("id").eq("status", "offen").gte("beginn", jetztIso).in("id", em.map((x) => x.anfrage_id))) as any[] : [];
+      return ids.filter((id) => !beantwortet.has(id)).length + an.length;
+    }),
+    // 🤝 offene Hilfe-Aufrufe anderer ohne meine Antwort (nicht voll) + bei der Clubleitung Ausleih-Anfragen zum Entscheiden
+    sicher(async () => {
+      const au = ok(await db.from("kc_club_hilfe_aufrufe").select("id,von,anzahl,ziel").gte("datum", heute).is("geschlossen_am", null).neq("von", ich.person_id).limit(100)) as any[];
+      const ids = au.map((x) => x.id);
+      const ant = ids.length ? ok(await db.from("kc_club_hilfe_antworten").select("aufruf_id,person_id,antwort").in("aufruf_id", ids)) as any[] : [];
+      const ges = ids.length ? ok(await db.from("kc_club_hilfe_gesehen").select("aufruf_id").eq("person_id", ich.person_id).in("aufruf_id", ids)) as any[] : [];
+      const gesehen = new Set(ges.map((x) => x.aufruf_id));
+      const offen = au.filter((x) => (x.ziel !== "online" || gesehen.has(x.id)) && !ant.some((y) => y.aufruf_id === x.id && y.person_id === ich.person_id)
+        && !(x.anzahl && ant.filter((y) => y.aufruf_id === x.id && y.antwort === "komme").length >= x.anzahl)).length;
+      const leih = ich.vorstand ? ((await db.from("kc_club_ausleihen").select("id", { count: "exact", head: true }).eq("status", "angefragt")).count ?? 0) : 0;
+      return offen + leih;
+    }),
+    // 🗂️ Büro: alles im Eingangskorb (nur wer ins Büro darf)
+    ich.buero ? sicher(async () => Object.values(await bueroEingang(ich)).reduce((a: number, b: any) => a + Number(b || 0), 0)) : Promise.resolve(0),
+    // 📷 neue Fotos anderer seit meinem letzten Besuch
+    seit(p?.fotosSeit) ? sicher(async () => { const r = await db.from("kc_club_fotos").select("id", { count: "exact", head: true }).is("geloescht_am", null)
+      .gt("hochgeladen_am", seit(p.fotosSeit)!).neq("hochgeladen_von", ich.person_id); if (r.error) throw new Error(r.error.message); return r.count ?? 0; }) : Promise.resolve(0),
+    // 🗓️ meine Dienste ab heute, die seit meinem letzten Blick neu veröffentlicht oder geändert wurden
+    seit(p?.dienstSeit) ? sicher(async () => { const r = await db.from("kc_dp_plan_published").select("id", { count: "exact", head: true }).eq("org_id", ORG)
+      .eq("person_id", ich.person_id).eq("status", "published").gte("work_date", heute).gt("updated_at", seit(p.dienstSeit)!); if (r.error) throw new Error(r.error.message); return r.count ?? 0; }) : Promise.resolve(0),
+  ]);
+  return { termine, helfen, buero, fotos, dienste };
+}
 const HILFE_ANGEBOT_SYMBOLE = ["🤲", "📱", "🧮", "💻", "🍳", "🔪", "🚗", "🛠️", "📸", "🎓", "🧾", "🌿"];
 
 // ---------- KC-CLUB-BUERO (1.25.0, Wunsch Hansi): Büro für die Clubleitung (Clubsprecher, Kassenwart, Admin) ----------
@@ -3513,7 +3555,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // KC-CLUB-SPIELE (2.7.0): Zahl auf der Kachel = Partien, in denen ich dran bin + Herausforderungen an mich (Fehler → 0, nur Hinweis-Zahl)
         const { count: spieleDran } = await db.from("kc_club_spiele").select("id", { count: "exact", head: true })
           .or(`and(status.eq.laeuft,dran.eq.${ich.person_id}),and(status.eq.angefragt,an.eq.${ich.person_id})`);
-        return json({ alarm, sosFuerAlle: await sosFuerAlle(), spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, adminName: await adminVorname(), ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, communicator, notfall: nf ?? null, einstellungen, kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
+        const kz = await kachelZahlen(ich, p).catch(() => null); // KC-CLUB-KACHEL-ZAHLEN (2.22.12)
+        return json({ alarm, kz, sosFuerAlle: await sosFuerAlle(), spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, adminName: await adminVorname(), ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, communicator, notfall: nf ?? null, einstellungen, kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
             // KC-CLUB-GERAETE-TIPP: wohin der Link ginge – nur teilweise (z. B. „h…@web.de“)
