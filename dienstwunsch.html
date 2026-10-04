@@ -16,7 +16,11 @@
 #dwLaden .muetze{width:84px;height:84px;border-radius:50%;margin:0 auto 14px;display:grid;place-items:center;background:linear-gradient(135deg,#4d0c16,#741521);box-shadow:0 4px 14px rgba(77,12,22,.35);animation:dwDreh 1.1s linear infinite}
 #dwLaden .muetze img{width:54px;height:54px;display:block}
 @keyframes dwDreh{from{transform:rotateY(0deg)}to{transform:rotateY(360deg)}}
-@media (prefers-reduced-motion:reduce){#dwLaden .muetze{animation-duration:3s}}</style>
+@media (prefers-reduced-motion:reduce){#dwLaden .muetze{animation-duration:3s}}
+/* KC-CLUB-MUETZE-SINCE (2.23.29, Fund Hansi): auch hier hinten „since 1991“ – wie in der Club-App (vorne Mütze, hinten Spruch) */
+#dwLaden .muetze{position:relative;transform-style:preserve-3d;animation-duration:1.6s}
+#dwLaden .muetze img{backface-visibility:hidden;-webkit-backface-visibility:hidden}
+#dwLaden .muetze::after{content:"since\A 1991";white-space:pre;position:absolute;inset:0;display:grid;place-items:center;transform:rotateY(180deg);backface-visibility:hidden;-webkit-backface-visibility:hidden;color:#fff;font-weight:800;font-size:.85rem;line-height:1.05;text-align:center;letter-spacing:.02em}</style>
 </head>
 <body>
 <div id="dwLaden" role="status"><div><div class="muetze"><img src="../kc-kochmuetze-weiss.webp" alt=""></div>Twinkey wird geladen …</div></div>

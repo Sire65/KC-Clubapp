@@ -3850,6 +3850,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(!p\.annehmen\) await spielTerminAbsagen\(ich, g\.id, "Herausforderung abgelehnt", false\);/.test(server), "Ablehnen sagt Termin ab");
   assert.ok(/anfragen: anfragen\.filter\(\(x: any\) => x\.status !== "abgesagt"/.test(server), "Kalender zeigt Abgesagtes nicht");
 }
+// 378. 2.23.29: Twinkey-Fenster – Mütze hinten „since 1991“, Kopf in zwei Reihen, Meldungen sichtbar, Mail-Bestätigung im Fenster
+{
+  const dw = fs.readFileSync(new URL("../dienstwunsch.html", import.meta.url), "utf8");
+  assert.ok(/#dwLaden \.muetze::after\{content:"since\\A 1991"/.test(dw) && /#dwLaden \.muetze img\{backface-visibility:hidden/.test(dw), "Twinkey-Ladeseite: Rückseite since 1991");
+  assert.ok(/<div class="dw-kopf"><div class="dw-reihe">/.test(html) && /\.dw-aktionen \{ display: grid; grid-template-columns: 1fr 1fr;/.test(html), "Kopf in zwei Reihen");
+  assert.ok(/\.meldung \{[^}]*z-index: 2300;/.test(html), "Meldungen über Vollbild-Fenstern");
+  assert.ok(/Die E-Mail wurde an dich geschickt\./.test(html) && /id="wbStatus" role="status"/.test(html), "Mail-Bestätigung im Fenster");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

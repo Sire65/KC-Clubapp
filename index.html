@@ -936,6 +936,11 @@
   .uh-archiv-zeile { display: flex; align-items: center; gap: 10px; width: 100%; margin: 0 0 6px; padding: 10px 12px; border: 1px solid var(--linie); border-radius: 12px; background: transparent; color: inherit; font: inherit; font-weight: 700; text-align: left; cursor: pointer; }
   .uh-archiv-zeile .hinweis { flex: 1; font-weight: 400; }
   .wb-seiten { display: grid; gap: 8px; margin: 0 0 10px; } .wb-seiten img { width: 100%; border: 1px solid var(--linie); border-radius: 6px; background: #fff; } /* KC-CLUB-WUNSCHBOGEN */
+  .wb-ok, .wb-fehler { margin: 10px 0 0; padding: 10px 12px; border-radius: 12px; font-size: .95rem; line-height: 1.35; }
+  .wb-ok { background: var(--gruenbg); color: var(--textGruen); border: 2px solid var(--gruen); } .wb-fehler { background: var(--rotbg); color: var(--textRot); border: 2px solid var(--rot); }
+  .dw-kopf { display: grid; gap: 6px; padding: 8px 12px; padding-top: max(8px, env(safe-area-inset-top)); background: var(--karte); box-shadow: var(--schatten); }
+  .dw-reihe { display: flex; align-items: center; gap: 10px; } .dw-reihe .knopf { min-height: 44px; margin: 0; } .dw-titel { flex: 1; text-align: right; font-size: .95rem; }
+  .dw-aktionen { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } /* KC-CLUB-WUNSCHBOGEN 2.23.29: zwei gleich breite Knöpfe */
   .wb-knoepfe { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } .wb-knoepfe .knopf { margin: 0; }
   .uh-archiv-kopf { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 8px; }
   .unterh .mitte div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -1295,7 +1300,7 @@
   .chat-kopf { position: sticky; top: 0; z-index: 30; background: var(--bg); padding: 2px 0 4px; margin: 0 -4px; padding-left: 4px; padding-right: 4px; box-shadow: 0 6px 8px -8px rgba(0,0,0,.35); }
   #chat > * { scroll-margin-top: var(--chatKopfHoehe, 120px); }
   .zurueck { width: 44px; height: 44px; border-radius: 50%; border: none; background: var(--karte); box-shadow: var(--schatten); font-size: 1.2rem; cursor: pointer; }
-  .meldung { position: fixed; left: 50%; transform: translateX(-50%); top: calc(14px + var(--notH, 0px)); background: #2b1a1c; color: #fff; padding: 12px 18px; border-radius: 14px; z-index: 50; max-width: 92%; box-shadow: 0 8px 24px rgba(0,0,0,.25); }
+  .meldung { position: fixed; left: 50%; transform: translateX(-50%); top: calc(14px + var(--notH, 0px)); background: #2b1a1c; color: #fff; padding: 12px 18px; border-radius: 14px; z-index: 2300; max-width: 92%; box-shadow: 0 8px 24px rgba(0,0,0,.25); } /* 2.23.29 (Fund Hansi): auch über Vollbild-Fenstern wie Twinkey (2000) sichtbar */
   .meldung.fehler { background: #a51d1d; }
   .updatebalken { background: var(--gelbbg); color: var(--gelb); border-radius: 14px; padding: 12px; margin-top: 10px; display: flex; gap: 10px; align-items: center; font-weight: 700; }
   .schalter { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--linie); }
@@ -7748,10 +7753,11 @@ function dwOeffnen() {
   if (document.getElementById("dwFenster")) return;
   const f = document.createElement("div"); f.id = "dwFenster"; f.setAttribute("role", "dialog"); f.setAttribute("aria-modal", "true"); f.setAttribute("aria-label", "Dienstwünsche");
   f.style.cssText = "position:fixed;inset:0;z-index:2000;display:flex;flex-direction:column;background:#fff8ee";
-  f.innerHTML = `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;padding-top:max(8px,env(safe-area-inset-top));background:var(--karte);box-shadow:var(--schatten)">
-    <button class="knopf klein" data-k="zu" style="min-height:44px">← Zurück zur Club-App</button><b style="flex:1;text-align:right;font-size:.95rem">📝 Dienstwünsche</b>
-    <button class="knopf klein" data-k="bogen" style="min-height:44px" title="Leeren persönlichen Wunschbogen mit QR-Code drucken oder per E-Mail schicken">🖨️ Leerer Bogen</button>
-    <button class="knopf haupt klein" data-k="fertig" style="min-height:44px" title="Aufstellung als Bestätigung per App-Nachricht und E-Mail">✅ Fertig – Bestätigung</button></div>
+  // 2.23.29 (Hansi: „Drucker-Symbol reingequetscht“): Kopf in zwei geordneten Reihen – oben Zurück + Titel, darunter die zwei Aktionen
+  f.innerHTML = `<div class="dw-kopf"><div class="dw-reihe">
+    <button class="knopf klein" data-k="zu">← Zurück zur Club-App</button><b class="dw-titel">📝 Dienstwünsche</b></div><div class="dw-reihe dw-aktionen">
+    <button class="knopf klein" data-k="bogen" title="Leeren persönlichen Wunschbogen mit QR-Code drucken oder per E-Mail schicken">🖨️ Leerer Bogen</button>
+    <button class="knopf haupt klein" data-k="fertig" title="Aufstellung als Bestätigung per App-Nachricht und E-Mail">✅ Fertig – Bestätigung</button></div></div>
     <div style="flex:1;position:relative;display:flex">
       <!-- 1.40.0: drehende Mütze schon, während die Twinkey-Seite selbst noch lädt (danach zeigt die Seite ihre eigene) -->
       <div class="warten an" style="position:absolute;left:50%;top:42%;z-index:0"><div class="muetze"><img src="kc-kochmuetze-weiss.webp" alt=""></div><b>Twinkey wird geladen …</b></div>
@@ -7794,6 +7800,7 @@ async function wbAntwort(d) {
       <button class="knopf" onclick="wbMailen(this)">✉️ Per E-Mail an mich</button>
       <button class="knopf" onclick="wbTeilen()">📤 Teilen / Speichern</button>
       <button class="knopf" onclick="fensterZu($('wbBlatt'))">Schließen</button></div>
+    <div id="wbStatus" role="status" aria-live="polite"></div>
     <p class="hinweis" style="margin:6px 0 0;font-size:.85rem">Kein Drucker da? „✉️ Per E-Mail an mich“ – dann kommt der Bogen als PDF an deine hinterlegte Adresse und du druckst ihn später.</p>`);
   f.style.zIndex = "2100"; // über dem Twinkey-Fenster
   const lauf = ++WB.lauf;
@@ -7826,8 +7833,12 @@ async function wbMailen(knopf) {
   if (!WB.pdf) return;
   if (!(await frage("Den leeren Wunschbogen als PDF an deine hinterlegte E-Mail-Adresse schicken?", { ja: "✉️ Ja, schicken", nein: "Abbrechen" }))) return;
   await einmal(knopf, async () => {
-    try { await api("wunschbogen_mailen", { daten: base64(await WB.pdf.arrayBuffer()) }, { warten: true }); melde("✉️ Der Bogen ist unterwegs – schau gleich in dein Postfach (auch im Spam-Ordner)."); }
-    catch (e) { meldeFehler(e); }
+    try {
+      await api("wunschbogen_mailen", { daten: base64(await WB.pdf.arrayBuffer()) }, { warten: true });
+      // 2.23.29 (Wunsch Hansi): deutliche Bestätigung im Fenster selbst (nicht nur kurz oben)
+      $("wbStatus").innerHTML = '<div class="wb-ok">✅ <b>Die E-Mail wurde an dich geschickt.</b><br>Der Bogen hängt als PDF an – schau gleich in dein Postfach (auch im Spam-Ordner).</div>';
+      melde("✉️ E-Mail mit deinem Wunschbogen wurde an dich geschickt");
+    } catch (e) { $("wbStatus").innerHTML = `<div class="wb-fehler">⚠️ ${esc(e?.message || "Die E-Mail konnte nicht verschickt werden.")}</div>`; meldeFehler(e); }
   });
 }
 window.addEventListener("message", (e) => {

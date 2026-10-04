@@ -12,6 +12,11 @@
   die Absage). Lehnt der Herausgeforderte ab, wird die Terminanfrage still mit abgesagt (die Spiel-Push meldet die Ablehnung schon).
   Absagen an einer Stelle (anfrageAbsagen) – „🚫 Absagen“ unverändert. Abgesagte Anfragen stehen nicht mehr im Kalender, in der Liste
   „Terminanfragen“ mit „🚫 abgesagt“. Datenkorrektur: die eine betroffene Anfrage (Hansi, 06.10.) auf abgesagt gesetzt, ohne Nachricht. Test 377.
+- Twinkey-Fenster (Funde Hansi): Die drehende Mütze beim Twinkey-Laden (eigene Seite dienstwunsch.html) zeigt jetzt auch hinten
+  „since 1991“. Kopfleiste in zwei Reihen (oben Zurück + Titel, darunter „🖨️ Leerer Bogen“ und „✅ Fertig – Bestätigung“ gleich breit).
+  „✉️ Per E-Mail an mich“: deutliche grüne Bestätigung im Fenster „Die E-Mail wurde an dich geschickt“ (Fehler rot).
+- Fund dabei: Kurzmeldungen (melde) lagen unter Vollbild-Fenstern wie Twinkey (z-index 50 < 2000) und waren dort unsichtbar – jetzt
+  z-index 2300, überall sichtbar. Test 378.
 - KC-CLUB-LUPE-RING (Wunsch Hansi): Die runde Lupe unten rechts bekommt einen Kontrastring (vorher ohne Rand); das „?“ daneben nutzt
   dieselbe Ringfarbe --textRot statt --rot (nachts war dessen dunkelroter Rand kaum zu sehen). Kontrast in allen Designs: Tag ≥ 8,7:1, Nacht ≥ 6,9:1.
 
