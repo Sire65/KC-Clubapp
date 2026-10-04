@@ -3526,6 +3526,14 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
 }
 // 326. 2.22.3: SOS-Textfeld lesbar in Tag- und Nachtmodus (Fund Hansi)
 assert.ok(/#notfallText \{[^}]*background: var\(--bg\); color: var\(--text\);/.test(html) && /#notfallText::placeholder \{ color: var\(--grau\)/.test(html), "SOS-Textfeld: Farben aus dem Design (Kontrast)");
+// 327. 2.22.4: Notfall-Meldung sofort vorlesen (KC-CLUB-NOTFALL-VORLESEN)
+{
+  assert.ok(/onclick="alarmGelesen\(false\)">✅ Gelesen<\/button><\/div>`\)\.classList\.add\("alarm-blatt"\);\s*alarmVorlesen\(a, true\);/.test(html), "Alarm-Fenster liest sofort vor");
+  assert.ok(/function alarmVorlesen\(a, automatisch\)[\s\S]{0,300}sprechAusgabe\(alarmSprechText\(a\)\)/.test(html) && /document\.addEventListener\("pointerdown", nachTipp, true\)/.test(html), "vorhandene Stimme, sonst beim ersten Antippen");
+  assert.ok(/function alarmGelesen\(oeffnen\) \{\s*try \{ speechSynthesis\.cancel\(\); \} catch \{\}/.test(html), "Gelesen beendet das Vorlesen");
+  const f = new Function(html.slice(html.indexOf("function alarmSprechText(a) {"), html.indexOf("function alarmVorlesen(")) + "; return alarmSprechText;")();
+  assert.equal(f({ von: "Hansi", text: "Unfall!\n\n📍 Mein Standort (07:00 Uhr): Bahnhofstraße 1, 59368 Werne – 51.66380, 7.63360 – Karte: https://www.openstreetmap.org/?mlat=51" }), "Achtung, Notfall-Meldung von Hansi. Unfall! Mein Standort (07:00 Uhr): Bahnhofstraße 1, 59368 Werne", "Link und Koordinaten werden nicht vorgelesen");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

@@ -2615,7 +2615,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.22.3"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.22.4"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -8017,7 +8017,9 @@ async function notfallProbe() {
     blattAuf("alarmVorschau", `<div style="display:grid;gap:10px"><div class="alarm-kopf">🚨 NOTFALL-MELDUNG</div>
       <div class="hinweis" style="margin:0">🧪 Vorschau – so sehen es alle beim Öffnen der App · von ${esc(ICH?.vorname || "")}</div>
       <div class="alarm-text">${esc(text)}</div>
-      <button class="knopf" onclick="$('alarmVorschau').remove()">✅ Vorschau schließen</button></div>`).classList.add("alarm-blatt");
+      <button class="knopf" onclick="alarmVorlesen({ text: $('alarmVorschau').dataset.text, von: ICH?.vorname })">🔊 Vorlesen</button>
+      <button class="knopf" onclick="try{speechSynthesis.cancel()}catch{};$('alarmVorschau').remove()">✅ Vorschau schließen</button></div>`).classList.add("alarm-blatt");
+    $("alarmVorschau").dataset.text = text; alarmVorlesen({ text, von: ICH?.vorname });
     chatStand = "";
   } catch (e) { meldeFehler(e); }
 }
@@ -8032,9 +8034,29 @@ function alarmPruefen() {
     <div class="hinweis" style="margin:0">von ${esc(a.von)} · ${esc(zeitKurz(a.zeit))} Uhr</div>
     <div class="alarm-text">${esc(a.text)}</div>
     <button class="knopf alarm-knopf" onclick="alarmGelesen(true)">💬 Öffnen und antworten</button>
+    <button class="knopf" onclick="alarmVorlesen(INIT?.alarm)">🔊 Nochmal vorlesen</button>
     <button class="knopf" onclick="alarmGelesen(false)">✅ Gelesen</button></div>`).classList.add("alarm-blatt");
+  alarmVorlesen(a, true);
+}
+// KC-CLUB-NOTFALL-VORLESEN (2.22.4, Wunsch Hansi): Notfall-Meldung sofort vorlesen (vorhandene Vorlese-Stimme des Geräts).
+// Manche Handys erlauben Sprechen erst nach einer Berührung – dann liest die App beim ersten Antippen vor; „🔊 Nochmal vorlesen“ geht immer.
+function alarmSprechText(a) {
+  const t = String(a?.text || "").replace(/https?:\/\/\S+/g, "").replace(/–\s*Karte:\s*/g, "").replace(/\b\d{1,2}\.\d{4,}, \d{1,3}\.\d{4,}\b/g, "").replace(/[📍🚨]/gu, "").replace(/\s+–(?=\s*(\n|$))/g, "").replace(/\s+/g, " ").trim().replace(/\s*–$/, "");
+  return `Achtung, Notfall-Meldung${a?.von ? " von " + a.von : ""}. ${t}`;
+}
+function alarmVorlesen(a, automatisch) {
+  if (!a || !("speechSynthesis" in window)) return;
+  try { speechSynthesis.cancel(); } catch {}
+  const u = sprechAusgabe(alarmSprechText(a)); let gestartet = false;
+  u.onstart = () => { gestartet = true; };
+  try { speechSynthesis.speak(u); } catch {}
+  if (automatisch) {
+    const nachTipp = () => { document.removeEventListener("pointerdown", nachTipp, true); if (!gestartet && document.getElementById("alarmBlatt") && !speechSynthesis.speaking) { try { speechSynthesis.speak(sprechAusgabe(alarmSprechText(a))); } catch {} } };
+    setTimeout(() => { if (!gestartet) document.addEventListener("pointerdown", nachTipp, true); }, 600);
+  }
 }
 function alarmGelesen(oeffnen) {
+  try { speechSynthesis.cancel(); } catch {}
   const a = INIT?.alarm; try { if (a?.id) localStorage.setItem("kc_club_alarm_gesehen", a.id); } catch {}
   $("alarmBlatt")?.remove();
   if (oeffnen && a?.thread) { zeige("nachrichten"); chatOeffnen(a.thread); }

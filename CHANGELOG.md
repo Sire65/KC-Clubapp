@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.22.4 – 2026-10-04 – 🔊 Notfall-Meldung wird sofort vorgelesen (Wunsch Hansi)
+- KC-CLUB-NOTFALL-VORLESEN: das rote Alarm-Fenster liest die Meldung sofort vor („Achtung, Notfall-Meldung von … “) – mit der vorhandenen
+  Vorlese-Stimme des Geräts (sprechAusgabe). Links und Koordinaten werden nicht vorgelesen, die Adresse schon. Erlaubt ein Handy das
+  Sprechen erst nach einer Berührung, liest die App beim ersten Antippen vor; zusätzlich „🔊 Nochmal vorlesen“. „Gelesen“ beendet das Vorlesen.
+  Die SOS-Probe liest die Vorschau ebenfalls vor. Test 327.
+
 ## 2.22.3 – 2026-10-04 – SOS-Textfeld lesbar im Nachtmodus (Fund Hansi)
 - Im Nachtmodus war der Text beim Schreiben nicht zu sehen (helle Schrift erbt, Feld blieb weiß). Das Textfeld nimmt jetzt Hintergrund und
   Schrift aus dem gewählten Design (var(--bg)/var(--text)), Platzhalter in Grau, roter Schreibstrich. Geprüft: Klassik und Küchengrün,
