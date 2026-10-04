@@ -26,7 +26,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "2.22.10";
+const SERVER_VERSION = "2.22.11";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -2247,9 +2247,20 @@ async function hilfeListe(ich: Ich) {
   const { data: auf } = await db.from("kc_club_hilfe_aufrufe").select("*").gte("datum", tagDazu(heute, -14)).order("datum").order("erstellt_am").limit(100);
   const ids = (auf ?? []).map((x: any) => x.id);
   const { data: ant } = ids.length ? await db.from("kc_club_hilfe_antworten").select("*").in("aufruf_id", ids) : { data: [] as any[] };
+  // KC-CLUB-HILFE-GESEHEN (2.22.11, Wunsch Hansi): wer einen offenen Aufruf angezeigt bekommt (Pinnwand-Aushang, Helfen & Leihen, Push-Link),
+  // hat ihn gesehen – erste Zeit bleibt stehen (wie Pinnwand-Zettel). Eigene Aufrufe zählen nicht; Notfall-Paket schreibt nichts.
+  const zuMerken = (auf ?? []).filter((x: any) => x.von !== ich.person_id && x.datum >= heute && !x.geschlossen_am).map((x: any) => x.id);
+  if (zuMerken.length && !ich.nurLesen) {
+    const { error } = await db.from("kc_club_hilfe_gesehen").upsert(zuMerken.map((aufruf_id: string) => ({ aufruf_id, person_id: ich.person_id })), { onConflict: "aufruf_id,person_id", ignoreDuplicates: true });
+    if (error) console.error("hilfe gesehen", error.message);
+  }
+  // Leser nur für eigene Aufrufe bzw. die Clubleitung
+  const lesbar = (auf ?? []).filter((x: any) => x.von === ich.person_id || ich.vorstand).map((x: any) => x.id);
+  const [{ data: ges }, alleAktiv] = lesbar.length ? await Promise.all([db.from("kc_club_hilfe_gesehen").select("aufruf_id,person_id,gesehen_am").in("aufruf_id", lesbar), aktiveMitglieder()])
+    : [{ data: [] as any[] }, [] as any[]];
   // KC-CLUB-HILFE-ANGEBOT (1.42.0): aktive Angebote („Ich biete Hilfe an“)
   const { data: ang } = await db.from("kc_club_hilfe_angebote").select("*").eq("aktiv", true).order("erstellt_am").limit(60);
-  const leute = await personen([...(auf ?? []).map((x: any) => x.von), ...(ant ?? []).map((x: any) => x.person_id), ...(ang ?? []).map((x: any) => x.von)]);
+  const leute = await personen([...(auf ?? []).map((x: any) => x.von), ...(ant ?? []).map((x: any) => x.person_id), ...(ang ?? []).map((x: any) => x.von), ...(ges ?? []).map((x: any) => x.person_id)]);
   const { data: orte } = await db.from("kc_club_hilfe_aufrufe").select("ort").not("ort", "is", null).order("erstellt_am", { ascending: false }).limit(50);
   const ortListe: string[] = []; for (const o of orte ?? []) if (o.ort && !ortListe.some((x) => x.toLowerCase() === o.ort.toLowerCase()) && ortListe.length < 6) ortListe.push(o.ort);
   const n = (pid: string) => leute.get(pid)?.display_name || pid;
@@ -2260,13 +2271,25 @@ async function hilfeListe(ich: Ich) {
       return { id: x.id, art: x.art, datum: x.datum, slot: x.slot, nachAbsprache: !!x.nach_absprache, anzahl: x.anzahl, ort: x.ort, notiz: x.notiz, ziel: x.ziel, erstellt_am: x.erstellt_am,
         von: { person_id: x.von, name: n(x.von) }, eigen: x.von === ich.person_id, offen: !vorbei, geschlossen: !!x.geschlossen_am, wichtig: !!x.wichtig,
         komme: komme.map((y: any) => n(y.person_id)).sort(), kannNicht: a.filter((y: any) => y.antwort === "kann_nicht").length,
-        meine: a.find((y: any) => y.person_id === ich.person_id)?.antwort ?? null, darfSchliessen: !vorbei && (x.von === ich.person_id || ich.vorstand) };
+        meine: a.find((y: any) => y.person_id === ich.person_id)?.antwort ?? null, darfSchliessen: !vorbei && (x.von === ich.person_id || ich.vorstand),
+        ...(lesbar.includes(x.id) ? hilfeLeser(x, a, (ges ?? []).filter((g: any) => g.aufruf_id === x.id), alleAktiv, n) : {}) };
     }).filter((x: any) => x.offen || x.eigen || ich.vorstand),
     angebote: (ang ?? []).map((x: any) => ({ id: x.id, sym: x.sym, titel: x.titel, text: x.text, erstellt_am: x.erstellt_am,
       von: { person_id: x.von, name: n(x.von), vorname: vorname(leute.get(x.von)) || n(x.von).split(" ")[0] }, eigen: x.von === ich.person_id, darfAendern: x.von === ich.person_id || ich.vorstand })),
     angebotSymbole: HILFE_ANGEBOT_SYMBOLE,
     arten: HILFE_ARTEN, zeitfenster: ZEITFENSTER, orte: ortListe,
   };
+}
+// Gesehen / noch nicht gesehen (wer geantwortet hat, hat ihn auch gesehen). „Noch nicht“ nur bei Aufrufen an alle – bei „gerade online“
+// ist der Empfängerkreis nicht mehr bekannt.
+function hilfeLeser(x: any, antworten: any[], gesehen: any[], aktiv: any[], n: (pid: string) => string) {
+  const erst = new Map<string, string>();
+  for (const g of gesehen) erst.set(g.person_id, g.gesehen_am);
+  for (const y of antworten) if (!erst.has(y.person_id) || String(y.am) < String(erst.get(y.person_id))) erst.set(y.person_id, y.am);
+  erst.delete(x.von);
+  const leser = [...erst].map(([pid, am]) => ({ name: n(pid), gesehen: am })).sort((a, b) => String(a.gesehen).localeCompare(String(b.gesehen)));
+  const kreis = x.ziel === "online" ? null : aktiv.map((m: any) => m.person_id).filter((id: string) => id !== x.von && !id.startsWith("KC-P-TEST"));
+  return { leser, nichtGesehen: kreis ? kreis.filter((id: string) => !erst.has(id)).map((id: string) => aktiv.find((m: any) => m.person_id === id)?.display_name || id).sort() : null, kreis: kreis?.length ?? null };
 }
 const HILFE_ANGEBOT_SYMBOLE = ["🤲", "📱", "🧮", "💻", "🍳", "🔪", "🚗", "🛠️", "📸", "🎓", "🧾", "🌿"];
 

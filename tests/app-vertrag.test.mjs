@@ -3607,6 +3607,15 @@ assert.ok(/const UH_HERVOR = \["Innovation"\];/.test(html) && /function uhAmeise
   assert.ok(!/id: "aenderungen", sym: "📬", t: "Änderungen", farbe/.test(html), "kein eigener Regal-Ordner mehr");
   assert.ok(/const zahl = \{ fl: flOffen, feste: fest\.length, nachher: nt \? 1 : 0, liste: AE\.offen \};/.test(html) && /ordner: \["📇", "Mitglieder", "buListe\(\)"\]/.test(html), "Zahl am Ordner Mitglieder, Eingangskorb führt dorthin");
 }
+// 336. 2.22.11: Hilfe-Aufrufe – wer hat ihn gesehen (KC-CLUB-HILFE-GESEHEN)
+{
+  const mig = lies("supabase/migrations/20261004_kc_club_v22211_hilfe_gesehen.sql");
+  assert.ok(/create table if not exists kc_club_hilfe_gesehen/.test(mig) && /primary key \(aufruf_id, person_id\)/.test(mig) && /revoke all on table kc_club_hilfe_gesehen from anon, authenticated/.test(mig), "Tabelle nur für den Server");
+  const hl = server.slice(server.indexOf("async function hilfeListe"), server.indexOf("const HILFE_ANGEBOT_SYMBOLE"));
+  assert.ok(/x\.von !== ich\.person_id/.test(hl) && /!ich\.nurLesen/.test(hl) && /ignoreDuplicates: true/.test(hl), "eigene zählen nicht, Notfall-Paket schreibt nicht, erste Zeit bleibt");
+  assert.ok(/x\.von === ich\.person_id \|\| ich\.vorstand/.test(hl) && /\.\.\.\(lesbar\.includes\(x\.id\) \? hilfeLeser\(/.test(hl), "Leser nur für Verfasser und Clubleitung");
+  assert.ok(/function hilfeLeserHtml\(a\)/.test(html) && (html.match(/\$\{hilfeLeserHtml\(a\)\}/g) || []).length === 2, "Anzeige im Aufruf (offen + vorbei)");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.22.11 – 2026-10-04 – Hilfe-Aufrufe: wer hat ihn gesehen? (Wunsch Hansi)
+- KC-CLUB-HILFE-GESEHEN: wie bei Pinnwand-Zetteln merkt sich die App, wer einen offenen Hilfe-Aufruf angezeigt bekommen hat (Pinnwand-Aushang,
+  Helfen & Leihen, Link aus Push/Mail) – erste Zeit bleibt stehen, eigene Aufrufe zählen nicht, Notfall-Paket schreibt nichts.
+  Wer geantwortet hat, gilt ebenfalls als „gesehen“.
+- Verfasser und Clubleitung sehen im Aufruf „👁️ gesehen n/m“ mit Namen und Zeit sowie „Noch nicht gesehen: …“ (bei Aufrufen an alle;
+  bei „gerade online“ ist der Empfängerkreis nicht mehr bekannt). Erfassung erst ab diesem Update – frühere Ansichten sind nicht bekannt.
+- Datenbank: neue Tabelle kc_club_hilfe_gesehen (Migration 20261004_kc_club_v22211_hilfe_gesehen.sql, RLS ohne Policies). Test 336.
+
 ## 2.22.10 – 2026-10-04 – Änderungsmeldungen: Eingangskorb + Ordner „Mitglieder“ (Wunsch Hansi)
 - KC-CLUB-AENDERUNG: der eigene Regal-Ordner „📬 Änderungen“ entfällt. Meldungen kommen in den 📥 Eingangskorb (wie bisher, Liste mit
   „✔ Erledigt“ – Weg führt jetzt zum Ordner „📇 Mitglieder“) und in den Büro-Ordner „📇 Mitglieder“: oben Knopf „📬 Änderungsmeldungen – n offen

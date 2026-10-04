@@ -2634,7 +2634,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.22.10"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.22.11"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -10586,6 +10586,14 @@ async function hilfeSenden(knopf) {
 }
 // KC-CLUB-HILFE-KURZ (1.93.0, Wunsch Hansi): Wer einen fremden, offenen Aufruf antippt, sieht nur eine Zusammenfassung
 // (wer sucht, was, wann, wo, Beschreibung, Stand) und drei große Antworten – nicht den ganzen Bereich mit allen Eingaben.
+// KC-CLUB-HILFE-GESEHEN (2.22.11, Wunsch Hansi): wer hat den Aufruf gesehen – nur Verfasser und Clubleitung (wie bei Pinnwand-Zetteln)
+function hilfeLeserHtml(a) {
+  if (!a.leser) return "";
+  const vn = (n) => esc(String(n).split(" ")[0]);
+  return `<details class="hk-leser" style="margin-top:8px"><summary>👁️ gesehen ${a.leser.length}${a.kreis != null ? "/" + a.kreis : ""}</summary>
+    ${a.leser.map((l) => `<div>${vn(l.name)}: ${esc(zeitKurz(l.gesehen))}</div>`).join("") || '<div class="hinweis">Noch niemand.</div>'}
+    ${a.nichtGesehen?.length ? `<div style="margin-top:4px">Noch nicht gesehen: ${a.nichtGesehen.map(vn).join(", ")}</div>` : a.nichtGesehen ? '<div style="margin-top:4px">✅ Alle haben ihn gesehen.</div>' : '<div class="hinweis" style="margin-top:4px">Ging an alle, die gerade online waren.</div>'}</details>`;
+}
 function hilfeKurzHtml(a) {
   const d = HL.hilfe || {}, voll = hlVoll(a), wobei = /^Wobei: (.*)(?:\n|$)/.exec(a.notiz || ""), rest = wobei ? (a.notiz || "").slice(wobei[0].length).trim() : (a.notiz || "");
   const was = wobei ? wobei[1] : (d.arten?.[a.art] || a.art).replace(/^\S+\s/, ""), zeile = (sym, t, w) => w ? `<div class="hk-zeile"><span>${sym}</span><div><small>${t}</small><b>${esc(w)}</b></div></div>` : "";
@@ -10596,6 +10604,7 @@ function hilfeKurzHtml(a) {
     ${rest ? `<p class="hk-text">${esc(rest)}</p>` : ""}
     ${voll ? '<p class="hinweis" style="margin:6px 0 0">🎉 Es haben schon genug zugesagt – weitere Hilfe ist trotzdem willkommen.</p>' : ""}
     ${verw ? `<div class="hl-stand${voll ? " voll" : ""}" style="margin-top:10px"><b>✋ ${a.komme.length ? esc(a.komme.join(", ")) : "Noch niemand hat zugesagt"}</b>${a.kannNicht ? `<br><small class="hinweis">🙅 ${a.kannNicht} kann nicht</small>` : ""}${a.anzahl && !voll ? `<br><small>Es fehlen noch ${a.anzahl - a.komme.length}</small>` : ""}</div>` : ""}
+    ${hilfeLeserHtml(a)}
     ${eigen ? `<div class="hk-knoepfe"><button class="knopf haupt" onclick="$('hilfeInfo')?.remove();hilfeBearbeiten('${a.id}')">✏️ Ändern</button><button class="knopf" onclick="$('hilfeInfo')?.remove();hilfeSchliessen('${a.id}')">🔒 Aufruf schließen</button></div>` : `<div class="hk-knoepfe">
       <button class="knopf haupt${a.meine === "komme" ? " an" : ""}" onclick="hilfeKurzAntwort('${a.id}', '${a.meine === "komme" ? "" : "komme"}')">${a.meine === "komme" ? "✔ Du hilfst – zurücknehmen" : "✋ Ja, ich kann helfen"}</button>
       <button class="knopf${a.meine === "kann_nicht" ? " an" : ""}" onclick="hilfeKurzAntwort('${a.id}', '${a.meine === "kann_nicht" ? "" : "kann_nicht"}')">${a.meine === "kann_nicht" ? "✔ Du kannst nicht – zurücknehmen" : "🙅 Dabei kann ich nicht helfen"}</button>
@@ -10630,6 +10639,7 @@ function hilfeKarte(a) {
     ${a.notiz ? `<p style="margin:6px 0 0;white-space:pre-wrap">${esc(a.notiz)}</p>` : ""}
     <div class="hl-stand${voll ? " voll" : ""}"><b>✋ ${hlStand(a)}</b>${voll ? " – genug Helfer 🎉" : ""}${n ? `<br><small>${esc(a.komme.join(", "))}</small>` : ""}${a.kannNicht ? `<br><small class="hinweis">🙅 ${a.kannNicht} kann nicht</small>` : ""}</div>
     ${a.offen && !a.eigen ? `<div class="hl-antwort"><button class="${a.meine === "komme" ? "an" : ""}" onclick="hilfeAntwort('${a.id}', '${a.meine === "komme" ? "" : "komme"}')">✋ Ich komme</button><button class="${a.meine === "kann_nicht" ? "an nein" : ""}" onclick="hilfeAntwort('${a.id}', '${a.meine === "kann_nicht" ? "" : "kann_nicht"}')">🙅 Kann nicht</button></div>` : ""}
+    ${hilfeLeserHtml(a)}
     ${a.darfSchliessen ? `<div class="knoepfe"><button class="knopf klein haupt" onclick="$('hilfeInfo')?.remove();hilfeBearbeiten('${a.id}')">✏️ Ändern</button><button class="knopf klein" onclick="hilfeSchliessen('${a.id}')">🔒 Aufruf schließen</button></div>` : ""}</div>`;
 }
 // KC-CLUB-MINIKACHELN (1.23.2, Wunsch Hansi): Hilfe-Aufrufe als kleine Kacheln – Antippen öffnet alle Einzelheiten groß
