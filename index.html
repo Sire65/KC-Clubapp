@@ -908,6 +908,9 @@
 
   /* Nachrichten */
   .unterh { display: flex; gap: 12px; align-items: center; padding: 12px 4px; border-bottom: 1px solid var(--linie); cursor: pointer; }
+  /* KC-CLUB-GRUPPE-AMEISEN (2.22.6, Wunsch Hansi): hervorgehobene Gruppe (z. B. „Innovation“) – kurzer Ameisenrahmen beim Öffnen von Nachrichten */
+  .unterh.uh-ameisen { position: relative; } .unterh .uh-rahmen { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+  .unterh .uh-rahmen rect { fill: none; stroke: var(--rot); stroke-width: 3; stroke-dasharray: 9 6; animation: ameisenLauf .6s linear infinite; }
   .avatar { width: 46px; height: 46px; border-radius: 50%; background: var(--rot); color: #fff; display: grid; place-items: center; font-weight: 800; flex: none; }
   .unterh .mitte { flex: 1; min-width: 0; }
   .unterh.gewaehlt { background: var(--karte2); border-radius: 14px; outline: 2px solid var(--gold); outline-offset: -2px; }
@@ -2615,7 +2618,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.22.5"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.22.6"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -7988,6 +7991,7 @@ async function notfallStandort(knopf) {
 }
 // WhatsApp/SMS: kein kostenloser automatischer Versand möglich (WhatsApp-Business-Schnittstelle kostet) – deshalb fertig vorbereitet:
 // ein Tipp öffnet WhatsApp bzw. SMS mit dem Text, dort Club-Gruppe/Empfänger wählen und senden.
+const WA_GRUPPE = "KCW Köcheclub Werne"; // 2.22.6: Name der WhatsApp-Gruppe des Clubs (zum Wiederfinden in der WhatsApp-Auswahl)
 const notfallTeilText = (text) => `🚨 NOTFALL – Köcheclub Werne (${ICH?.vorname || "Admin"}):\n${text}\n\nMehr in der Club-App.`;
 async function notfallSenden() {
   const text = ($("notfallText")?.value || "").trim();
@@ -7999,7 +8003,7 @@ async function notfallSenden() {
     blattAuf("notfallBlatt", `<div style="display:grid;gap:8px"><div class="alarm-kopf">✅ AN ALLE GESENDET</div>
       <p style="margin:0">🔔 Push und ✉️ E-Mail sind raus${r.versand?.gesendet != null ? ` (${r.versand.gesendet} Zustellungen${r.versand?.fehler ? `, ${r.versand.fehler} fehlgeschlagen` : ""})` : ""}.</p>
       <b>Jetzt noch auf den anderen Kanälen:</b>
-      <a class="knopf alarm-knopf" href="https://wa.me/?text=${t}" target="_blank" rel="noopener" onclick="api('admin_eingriff',{art:'notfall_whatsapp'}).catch(()=>{})">🟢 In WhatsApp senden (Club-Gruppe wählen) ↗</a>
+      <a class="knopf alarm-knopf" href="https://wa.me/?text=${t}" target="_blank" rel="noopener" onclick="api('admin_eingriff',{art:'notfall_whatsapp'}).catch(()=>{})">🟢 In WhatsApp senden – Gruppe „${esc(WA_GRUPPE)}“ wählen ↗</a>
       <a class="knopf" href="sms:?&body=${t}" onclick="api('admin_eingriff',{art:'notfall_sms'}).catch(()=>{})">💬 Als SMS senden ↗</a>
       <button class="knopf" onclick="notfallKopieren()">📋 Text kopieren (für andere Wege)</button>
       <button class="knopf haupt" onclick="$('notfallBlatt').remove();${r.id ? `chatOeffnen('${esc(r.id)}')` : ""}">💬 Zur Notfall-Unterhaltung</button></div>`).classList.add("alarm-blatt");
@@ -8009,7 +8013,7 @@ async function notfallSenden() {
     meldeFehler(e); const t = encodeURIComponent(notfallTeilText(text));
     blattAuf("notfallBlatt", `<div style="display:grid;gap:8px"><div class="alarm-kopf">⚠️ CLUB-SERVER GERADE NICHT ERREICHBAR</div>
       <p style="margin:0">Push und E-Mail gehen im Moment nicht. <b>Sende die Meldung jetzt direkt:</b></p>
-      <a class="knopf alarm-knopf" href="https://wa.me/?text=${t}" target="_blank" rel="noopener">🟢 In WhatsApp senden (Club-Gruppe wählen) ↗</a>
+      <a class="knopf alarm-knopf" href="https://wa.me/?text=${t}" target="_blank" rel="noopener">🟢 In WhatsApp senden – Gruppe „${esc(WA_GRUPPE)}“ wählen ↗</a>
       <a class="knopf" href="sms:?&body=${t}">💬 Als SMS senden ↗</a>
       <button class="knopf" onclick="notfallKopieren()">📋 Text kopieren</button>
       <button class="knopf" onclick="$('notfallBlatt').remove()">Schließen</button></div>`).classList.add("alarm-blatt");
@@ -10954,7 +10958,24 @@ async function unterhLaden() {
       <div class="mitte"><div><b>${esc(u.gruppe?.name || u.betreff || u.teilnehmer.join(", "))}</b>${stummAn(u.id) ? ' <span title="stummgeschaltet">🔕</span>' : ""}${u.gruppe ? ` <span class="hinweis" style="font-size:.8rem">· ${u.anzahl} Mitgl.</span>` : ""}</div><div class="hinweis">${entwurfAlle()[u.id]?.trim() ? `<span class="entwurf-marke">✏️ Entwurf:</span> ${esc(entwurfAlle()[u.id].trim().slice(0, 80))}` : u.letzte ? esc(u.letzte.von + ": " + u.letzte.text) : "Noch keine Nachricht"}</div></div>
       <div style="text-align:right"><div class="hinweis" style="font-size:.8rem">${u.letzte ? zeitKurz(u.letzte.zeit) : ""}</div>${u.ungelesen ? `<span class="punkt${u.wichtigNeu ? " wichtig" : ""}" title="${u.wichtigNeu ? "darunter wichtige Nachricht" : ""}">${u.wichtigNeu ? "❗ " : ""}${u.ungelesen}</span>` : ""}</div></div>${u.id === UH.wahl ? unterhAktionen(u) : ""}`).join("")
       || '<p class="hinweis">Noch keine Nachrichten. Tippe oben auf „＋ Neu“.</p>';
+    uhAmeisen();
   } catch (e) { meldeFehler(e); }
+}
+// KC-CLUB-GRUPPE-AMEISEN (2.22.6): Gruppen aus UH_HERVOR bekommen beim Öffnen von „Nachrichten“ ~5 s einen laufenden Rahmen (höchstens 1× je Minute)
+const UH_HERVOR = ["Innovation"];
+function uhAmeisen() {
+  const jetzt = Date.now();
+  if (!UH.ameisenBis || jetzt - UH.ameisenBis > 60000) UH.ameisenBis = jetzt + 5000; // neues 5-s-Fenster höchstens 1× je Minute
+  if (jetzt >= UH.ameisenBis) return;
+  const ziele = UH.liste.filter((u) => u.gruppe && UH_HERVOR.some((n) => n.toLowerCase() === String(u.gruppe.name || "").toLowerCase()));
+  for (const u of ziele) {
+    const el = document.querySelector(`#unterhListe .unterh[data-id="${u.id}"]`); if (!el || el.querySelector(".uh-rahmen")) continue;
+    el.classList.add("uh-ameisen");
+    el.insertAdjacentHTML("beforeend", '<svg class="uh-rahmen" aria-hidden="true"><rect></rect></svg>');
+    const r = el.querySelector(".uh-rahmen rect"), s = 1.5;
+    Object.entries({ x: s, y: s, width: Math.max(0, el.offsetWidth - 2 * s), height: Math.max(0, el.offsetHeight - 2 * s), rx: 12, ry: 12 }).forEach(([k, v]) => r.setAttribute(k, v));
+    setTimeout(() => { el.classList.remove("uh-ameisen"); el.querySelector(".uh-rahmen")?.remove(); }, UH.ameisenBis - jetzt);
+  }
 }
 // KC-CLUB-CHATLISTE (0.41.0): einmal tippen wählt die Unterhaltung aus (Öffnen / aus Liste entfernen), doppelt tippen öffnet sie.
 // „Entfernen“ blendet nur für mich aus (Server: unterhaltung_ausblenden) – schreibt jemand wieder, erscheint sie erneut.

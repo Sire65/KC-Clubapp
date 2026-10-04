@@ -3540,6 +3540,8 @@ assert.ok(/#notfallText \{[^}]*background: var\(--bg\); color: var\(--text\);/.t
   assert.ok(/sosFuerAlle: await sosFuerAlle\(\)/.test(server) && /classList\.toggle\("sos-frei", !!INIT\?\.sosFuerAlle\)/.test(html), "App kennt die Freigabe");
   assert.ok(/\$\{ICH\?\.admin \? `<label[^`]*onchange="sosFreigabe\(this\.checked, this\)"/.test(html) && /async function sosFreigabe\(alle, feld\)[\s\S]{0,600}await frage\(/.test(html), "Schalter nur beim Admin, mit Rückfrage");
 }
+// 329. 2.22.6: Ameisenrahmen um die Gruppe „Innovation“ beim Öffnen von Nachrichten (KC-CLUB-GRUPPE-AMEISEN)
+assert.ok(/const UH_HERVOR = \["Innovation"\];/.test(html) && /function uhAmeisen\(\)[\s\S]{0,900}setTimeout\(\(\) => \{ el\.classList\.remove\("uh-ameisen"\)/.test(html) && /\.unterh \.uh-rahmen rect \{[^}]*animation: ameisenLauf/.test(html), "kurzer Ameisenrahmen, danach ruhig");
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

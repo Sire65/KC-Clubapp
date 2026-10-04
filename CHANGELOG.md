@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.22.6 – 2026-10-04 – Ameisenrahmen um „Innovation“, WhatsApp-Gruppe beim SOS benannt (Wunsch Hansi)
+- KC-CLUB-GRUPPE-AMEISEN: beim Öffnen von „💬 Nachrichten“ läuft um die Gruppe „Innovation“ (Liste UH_HERVOR) 5 Sekunden ein roter
+  Ameisenrahmen (gleiche Animation wie bei den Registern), danach ruhig; höchstens 1× je Minute, bleibt auch beim Neuzeichnen der Liste.
+- SOS: der WhatsApp-Knopf nennt die Club-Gruppe „KCW Köcheclub Werne“ (WA_GRUPPE), damit man sie in der WhatsApp-Auswahl sofort findet.
+  (Eine bestimmte Gruppe direkt mit Text öffnen erlaubt WhatsApp nicht – Auswahl bleibt ein Tipp.) Test 329.
+
 ## 2.22.5 – 2026-10-04 – 👥 SOS für alle freigeben (Wunsch Hansi)
 - KC-CLUB-SOS-FREIGABE: im SOS-Fenster (nur beim Admin) Schalter „👥 SOS für alle Mitglieder freigeben“ – mit Rückfrage. Gespeichert als
   Club-Einstellung „sos“ (kc_club_konfig, keine Datenbank-Änderung), protokolliert (sos_freigabe). Bei Freigabe sehen alle den roten
