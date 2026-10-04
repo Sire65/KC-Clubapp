@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.22.9 – 2026-10-04 – Fehlende Erklärungsfenster (🎓 Kurz erklärt + 🔊 Vorlesen) ergänzt (Wunsch Hansi)
+- KC-CLUB-EINWEISUNG: Bereiche ohne Einweisung ergänzt – 💶 Erstattung, 💭 Feedback, 🆘 SOS, 💻 Programme, 🛡️ Sicherheits-Check, 📍 Standorte.
+- Neu: Einweisung auch in Fenstern (Registry-Einträge mit blatt: true, einwHtml()): ✏️ Meine Daten geändert, 📬 Änderungen (Clubleitung),
+  🏙️ Stadt-Termine (Admin), 🛠️ Admin-Register (Admin), 🚨 SOS-Nachricht (Karte UNTEN – im Ernstfall nicht im Weg).
+  Gleiche Karte, gleiche Regeln wie bisher (👍 Verstanden, „Keine Einweisungen mehr“, nach 3 Tagen ohne Antippen nicht mehr), 🔊 Vorlesen.
+  einwZeigen() baut die Karte jetzt aus einwHtml() (eine Stelle). Test 334.
+
 ## 2.22.8 – 2026-10-04 – Änderungsmeldungen im Büro-Posteingang und im Archiv (Wunsch Hansi)
 - KC-CLUB-AENDERUNG: offene Änderungsmeldungen stehen jetzt im Büro-Posteingang – als Kachel „✏️ Änderungsmeldungen“ (Zahl) und in der
   Eingangsliste je Meldung („Änderungsmeldung – bitte eintragen“, Schnellknopf „✔ Erledigt – eingetragen“, Ordner „📬 Änderungen“).

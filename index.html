@@ -2634,7 +2634,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.22.8"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.22.9"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3352,6 +3352,19 @@ const EINWEISUNG = [
   { id: "dienste", sym: "🗓️", t: "Dienstpläne", x: "Die Dienstpläne Woche für Woche. Mit <b>‹ Woche</b> / <b>Woche ›</b> blätterst du, <b>„Heute“</b> springt zurück." },
   { id: "aktionen", sym: "🧳", t: "Aktionen", x: "Ausflüge und besondere Aktionen des Clubs – antippen zeigt alle Einzelheiten." },
   { id: "spiele", sym: "🎲", t: "Spiele – Köcheclub Edition", x: "Tippe auf die Kachel deines Spiels: <b>Tic-Tac-Toe</b> (🍅 gegen 🥦 – wer zuerst drei, bei 4 × 4 vier, in einer Reihe hat), <b>♟️ Schach</b> mit der Küchenbrigade (Küchenchef = König, Kaltmamsell = Dame, Souschef = Turm, Patissier = Läufer, Springer, Praktikanten = Bauern; Figur antippen, dann das Zielfeld) , <b>🃏 Bauernskat</b> zu zweit (spielbare Karten sind grün umrandet) oder <b>🔪 Küchenterror</b> – das Küchenquiz auf Zeit (je Frage 20, 15 oder 10 Sekunden – je nach Stufe; schnell und richtig bringt die meisten Punkte). Im Spiel wählst du <b>🤖 Gegen den Computer</b> – mit Feldgröße und Stärke – oder <b>👥 Gegen Mitglieder</b>: jemanden herausfordern, abwechselnd ziehen, du bekommst Bescheid, wenn du dran bist." },
+  // 2.22.9 (Wunsch Hansi: „wo fehlen Erklärungsfenster?“) – Bereiche ohne Einweisung ergänzt
+  { id: "erstattung", sym: "💶", t: "Erstattung", x: "Hier bekommst du Geld zurück, das du für den Club ausgelegt hast: <b>🚗 Fahrtkosten</b> (die Kilometer rechnet die App aus), <b>🛒 Einkauf</b> oder <b>📦 sonstige Auslagen</b>. Mehrere Posten passen in einen Antrag, Belege fotografierst du einfach dazu. Der Antrag geht an den Kassenwart – du bekommst eine Bestätigung." },
+  { id: "feedback", sym: "💭", t: "Feedback", x: "Was gefällt dir, was stört, was fehlt? Schreib es hier hinein – es geht direkt an den Admin. Jede Rückmeldung hilft, die App besser zu machen." },
+  { id: "sos", sym: "🆘", t: "SOS – Notfall", x: "Für den Notfall: oben die <b>Notrufnummern</b> (112, 110 …) zum direkten Anrufen. Mit <b>📍 Wo bin ich?</b> siehst du deinen Standort, um ihn am Telefon durchzugeben. Darunter dein eigener Notfallkontakt und die Kontakte der Mitglieder." },
+  { id: "programme", sym: "💻", t: "Freigegebene Programme", x: "Programme, die der Club für dich freigeschaltet hat – z. B. die Kassen-Schulung. Antippen öffnet das Programm." },
+  { id: "sicherheit", sym: "🛡️", t: "Sicherheits-Check", x: "Hier prüfst du mit einem Tipp, ob die App auf deinem Gerät sicher und richtig läuft. <b>Grüne Haken</b> heißen: alles gut. Ist etwas nicht in Ordnung, steht dabei, was zu tun ist. Das Ergebnis bekommt der Admin." },
+  { id: "standort", sym: "📍", t: "Standorte", x: "Hier siehst du, wer gerade seinen Standort mit dir teilt – auf einer Karte. Mit <b>„📍 Teilen“</b> oben teilst du deinen eigenen Standort für eine bestimmte Zeit; danach verschwindet er von selbst." },
+  // Fenster (blatt: true) – Karte steht oben im Fenster, siehe einwHtml()
+  { id: "b-aenderung", blatt: true, sym: "✏️", t: "Meine Daten haben sich geändert", x: "Neue Anschrift, neue Telefonnummer, neuer Name oder eine andere Kleidergröße? Tippe an, was sich geändert hat, und trag das Neue ein. Die Meldung geht von selbst an die Richtigen im Club. Sobald alles eingetragen ist, bekommst du Bescheid – eine Kopie liegt in deinem Archiv-Ordner (Register „Meldungen“)." },
+  { id: "b-aenderungen", blatt: true, sym: "📬", t: "Änderungen der Mitglieder", x: "Hier landen die Änderungen, die Mitglieder melden – nur die, die an dich gehen. Links steht <b>bisher</b>, rechts <b>neu</b> (grün). Bitte im KC Manager eintragen und dann <b>✅ Erledigt</b> tippen – das Mitglied bekommt Bescheid. Unten die <b>👕 Größen-Übersicht</b> für Bestellungen.", nur: () => !!(ICH?.vorstand || ICH?.admin) },
+  { id: "b-stadt", blatt: true, sym: "🏙️", t: "Termine der Stadt Werne", x: "Die Termine aus dem Veranstaltungskalender der Stadt Werne. Ankreuzen, was in unseren Clubkalender soll – die Mitglieder bekommen dabei keine Nachricht. Unter <b>🔁 Automatisch</b> holt die App neue Stadt-Termine einmal pro Woche selbst.", nur: () => !!ICH?.admin },
+  { id: "b-admin", blatt: true, sym: "🛠️", t: "Admin-Register", x: "Dein Leitstand: Das Lämpchen jeder Kachel zeigt, ob alles läuft – 🟢 gut, 🟡 aufpassen, 🔴 Problem, ⚪ unbekannt. Antippen öffnet Einzelheiten und die passenden Werkzeuge. Im Ernstfall zuerst <b>🧯 Notfall</b> öffnen.", nur: () => !!ICH?.admin },
+  { id: "b-notfall", blatt: true, sym: "🚨", t: "SOS-Nachricht an alle", x: "Nur für echte Notfälle: Dein Text geht sofort an <b>alle</b> Mitglieder – als Push und E-Mail, auch in der Ruhezeit – und wird bei ihnen laut vorgelesen. Danach kannst du ihn noch per WhatsApp oder SMS schicken. Zum Ausprobieren: <b>🧪 Probe nur an mich</b>. 112 und 110 rufen direkt an." },
   { id: "buero", sym: "🗂️", t: "Büro der Clubleitung", x: "Nur für die Clubleitung: Regal mit Ordnern, Schreibtisch für die laufende Arbeit, Freud & Leid (Glückwünsche, Genesungswünsche) und Briefe. Normale Mitglieder sehen das Büro nicht.", nur: () => !!ICH?.buero },
 ];
 const einwStand = () => ({ an: true, gesehen: {}, ...(INIT?.einstellungen?.einweisung || {}) });
@@ -3379,12 +3392,16 @@ function einwZeigen(v) {
   if (sek && einwOffen(v) && sek.querySelector(`:scope > .einw-karte[data-v="${v}"]`)) return; // schon da – nicht neu bauen
   einwKarteWeg();
   if (!sek || !einwOffen(v)) return;
-  einwTagMerken(v);
-  const e = EINWEISUNG.find((x) => x.id === v), k = document.createElement("div");
-  k.className = "karte einw-karte vorlese-karte"; k.setAttribute("role", "note"); k.dataset.v = v;
-  k.innerHTML = `<div class="einw-kopf">🎓 Kurz erklärt ${VORLESE_KNOPF}</div><h3>${e.sym} ${esc(e.t)}</h3><p>${typeof e.x === "function" ? e.x() : e.x}</p>
-    <div class="knoepfe"><button class="knopf haupt klein" onclick="einwVerstanden('${v}')">👍 Verstanden</button><button class="knopf klein" onclick="einwAlleAus()">Keine Einweisungen mehr</button></div>`;
+  const tpl = document.createElement("template"); tpl.innerHTML = einwHtml(v); const k = tpl.content.firstElementChild; if (!k) return;
   const nach = sek.querySelector(":scope > .kopf2, :scope > .hero"); nach ? nach.after(k) : sek.prepend(k);
+}
+// 2.22.9: gleiche Karte als HTML – auch oben in Fenstern (Registry-Einträge mit blatt: true, z. B. einwHtml("b-stadt"))
+function einwHtml(v) {
+  if (!einwOffen(v)) return "";
+  einwTagMerken(v);
+  const e = EINWEISUNG.find((x) => x.id === v);
+  return `<div class="karte einw-karte vorlese-karte" role="note" data-v="${v}"><div class="einw-kopf">🎓 Kurz erklärt ${VORLESE_KNOPF}</div><h3>${e.sym} ${esc(e.t)}</h3><p>${typeof e.x === "function" ? e.x() : e.x}</p>
+    <div class="knoepfe"><button class="knopf haupt klein" onclick="einwVerstanden('${v}')">👍 Verstanden</button><button class="knopf klein" onclick="einwAlleAus()">Keine Einweisungen mehr</button></div></div>`;
 }
 function einwVerstanden(v) { einwKarteWeg(); einwSpeichern({ gesehen: { ...einwStand().gesehen, [v]: new Date().toISOString() } }); }
 async function einwAlleAus() { einwKarteWeg(); if (await einwSpeichern({ an: false })) { einwSchalterZeigen(); melde("🎓 Keine Einweisungen mehr – wieder einschalten unter ⚙️ Mehr → Einstellungen"); } }
@@ -7994,7 +8011,7 @@ function adBlatt(id) {
     case "fehler": case "nutzung":
       AD.offen = null; $("adBlatt")?.remove(); return id === "fehler" ? fpAdmin() : nzAdmin();
   }
-  blattAuf("adBlatt", `<div class="adblatt" style="display:grid;gap:8px">${html}${fuss}</div>`);
+  blattAuf("adBlatt", `<div class="adblatt" style="display:grid;gap:8px">${einwHtml("b-admin")}${html}${fuss}</div>`);
 }
 const kanalF = (k) => ({ ok: "gruen", stoerung: "rot", aus: "grau" }[k?.zustand] || "grau");
 // Neustart: nur über die Supabase-Verwaltung (Anmeldung dort) – vorher sagen, was passiert (kritische Aktion)
@@ -8024,7 +8041,7 @@ function notfallMeldung() {
     <details class="karte innen" style="margin:0"><summary>Weitere Nummern (Bereitschaftsarzt, Giftnotruf …)</summary><div class="nf-rufe" style="margin-top:6px">${NOTRUFE.filter((r) => !r.haupt).map((r) => ruf(r.nr)).join("")}</div></details>
     <div class="knoepfe"><button class="knopf" onclick="notfallProbe()">🧪 Probe nur an mich</button><button class="knopf" onclick="$('notfallBlatt').remove()">Abbrechen</button></div>
     ${ICH?.admin ? `<label class="karte innen" style="margin:0;display:flex;gap:8px;align-items:center"><input type="checkbox" ${INIT?.sosFuerAlle ? "checked" : ""} onchange="sosFreigabe(this.checked, this)"> <span><b>👥 SOS für alle Mitglieder freigeben</b><br><small class="hinweis">Dann sehen alle den roten SOS-Knopf in „Nachrichten“ und können im Notfall alle alarmieren.</small></span></label>` : ""}
-    <p class="hinweis" style="margin:0;font-size:.82rem"><b>Neue Nachricht an alle auf allen Kanälen:</b> sofort an alle${n ? ` ${n}` : ""} Mitglieder als 🔔 Push und ✉️ E-Mail (auch stumm/Ruhezeit), danach mit einem Tipp in 🟢 WhatsApp und 💬 SMS. Bei allen mit rotem Rand. Notrufe fragen vor dem Wählen einmal nach.</p></div>`).classList.add("alarm-blatt");
+    <p class="hinweis" style="margin:0;font-size:.82rem"><b>Neue Nachricht an alle auf allen Kanälen:</b> sofort an alle${n ? ` ${n}` : ""} Mitglieder als 🔔 Push und ✉️ E-Mail (auch stumm/Ruhezeit), danach mit einem Tipp in 🟢 WhatsApp und 💬 SMS. Bei allen mit rotem Rand. Notrufe fragen vor dem Wählen einmal nach.</p>${einwHtml("b-notfall") /* 2.22.9: unten – im Ernstfall nicht im Weg */}</div>`).classList.add("alarm-blatt");
   setTimeout(() => $("notfallText")?.focus(), 80);
 }
 async function sosFreigabe(alle, feld) {
@@ -8060,7 +8077,7 @@ function stadtZeichnen() {
   }).join("");
   const n = STADT_T.wahl.size;
   $("stadtBlatt").querySelector(".blatt-innen").innerHTML = `<div style="display:grid;gap:6px">
-    <h3 style="margin:0">🏙️ Termine der Stadt Werne</h3>
+    ${einwHtml("b-stadt")}<h3 style="margin:0">🏙️ Termine der Stadt Werne</h3>
     <p class="hinweis" style="margin:0">Aus dem Veranstaltungskalender der Stadt (Feste, Märkte, Sim-Jü, Theater …). Ankreuzen, was in unseren Clubkalender soll – es erscheint dort als Veranstaltung mit 🏙️. Die Mitglieder bekommen <b>keine</b> Nachricht.</p>
     ${d.fehler.length ? `<p class="hinweis" style="margin:0">⚠️ Gerade nicht abrufbar: ${esc(d.fehler.join(", "))} – später nochmal versuchen.</p>` : ""}
     ${zeilen || '<p class="hinweis">Die Stadt hat im Moment keine kommenden Termine eingetragen.</p>'}
@@ -13734,7 +13751,7 @@ function aeZeichnen() {
   const art = AE.art && d.arten.find((a) => a.id === AE.art);
   let html;
   if (!art) {
-    html = `<h3 style="margin:0">✏️ Meine Daten haben sich geändert</h3>
+    html = `${einwHtml("b-aenderung")}<h3 style="margin:0">✏️ Meine Daten haben sich geändert</h3>
       <p class="hinweis" style="margin:0">Was hat sich geändert? Antippen – die Meldung geht gleich an die Richtigen im Club.</p>
       <div class="ae-wahl">${d.arten.map((a) => `<button class="knopf" onclick="AE.art='${a.id}';aeZeichnen()"><span class="ae-sym">${a.sym}</span><span><b>${esc(a.t)}</b><small>an ${esc(a.anText.join(", "))}</small></span></button>`).join("")}</div>
       ${d.meine.length ? `<b>Meine letzten Meldungen</b>${d.meine.map((x) => { const a = d.arten.find((y) => y.id === x.art);
@@ -13805,7 +13822,7 @@ function aeEingZeichnen() {
         : `<small class="hinweis">${AE_STATUS[x.status] || ""}${x.erledigt_von ? ` von ${esc(x.erledigt_von)}` : ""}${x.erledigt_am ? ` · ${esc(zeitKurz(x.erledigt_am))}` : ""}${x.antwort ? ` · „${esc(x.antwort)}“` : ""}</small>`}</div>`; };
   const gr = e.groessen, zaehl = (k) => { const z = {}; gr.forEach((g) => { if (g[k]) z[g[k]] = (z[g[k]] || 0) + 1; }); return Object.entries(z).map(([s, n]) => `${n}× ${s}`).join(", ") || "–"; };
   b.querySelector(".blatt-innen").innerHTML = `<div style="display:grid;gap:8px">
-    <h3 style="margin:0">📬 Änderungen der Mitglieder</h3>
+    ${einwHtml("b-aenderungen")}<h3 style="margin:0">📬 Änderungen der Mitglieder</h3>
     <div class="knoepfe"><button class="knopf${AE.sicht === "offen" ? " haupt" : ""}" onclick="AE.sicht='offen';aeEingZeichnen()">⏳ Offen (${AE.offen})</button><button class="knopf${AE.sicht === "erledigt" ? " haupt" : ""}" onclick="AE.sicht='erledigt';aeEingZeichnen()">✅ Erledigt</button></div>
     ${liste.map(karte).join("") || `<p class="hinweis">${AE.sicht === "offen" ? "Keine offenen Meldungen – alles eingetragen. 👍" : "Noch nichts erledigt."}</p>`}
     <details class="karte innen" style="margin:0"><summary>👕 Größen-Übersicht (${gr.length})</summary>

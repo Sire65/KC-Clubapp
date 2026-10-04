@@ -3588,6 +3588,18 @@ assert.ok(/const UH_HERVOR = \["Innovation"\];/.test(html) && /function uhAmeise
   assert.ok(/await aeAblegen\(ich, voll, "Meldung"\)/.test(server) && /await aeAblegen\(ich, \{ \.\.\.x, status: "erledigt"/.test(server), "Ablage beim Melden und Erledigen");
   assert.ok(/\["✏️", "Änderungsmeldungen", e\.aenderungen \|\| 0, "aeEingang\(\)"\]/.test(html) && /gruppe: "Änderungsmeldung – bitte eintragen"/.test(html), "Büro-Posteingang zeigt Meldungen");
 }
+// 334. 2.22.9: fehlende Erklärungsfenster ergänzt (KC-CLUB-EINWEISUNG, auch in Fenstern)
+{
+  const reg = html.slice(html.indexOf("const EINWEISUNG = ["), html.indexOf("const einwStand ="));
+  for (const id of ["erstattung", "feedback", "sos", "programme", "sicherheit", "standort", "b-aenderung", "b-aenderungen", "b-stadt", "b-admin", "b-notfall"])
+    assert.ok(reg.includes(`{ id: "${id}",`), `Einweisung ${id} fehlt`);
+  assert.ok(/function einwHtml\(v\) \{\s*if \(!einwOffen\(v\)\) return "";/.test(html) && /\$\{VORLESE_KNOPF\}/.test(html.slice(html.indexOf("function einwHtml"))), "Fenster-Einweisung mit Vorlesen");
+  for (const id of ["b-aenderung", "b-aenderungen", "b-stadt", "b-admin", "b-notfall"]) assert.ok(html.includes(`einwHtml("${id}")`), `${id} nicht eingebaut`);
+  // jede Ansicht mit eigener Seite (außer Unterseiten) hat eine Einweisung
+  const ohne = ["chat", "mitglied", "aktion", "protokoll", "dokansicht", "neu", "gruppe", "ueberblick"];
+  for (const v of [...html.matchAll(/<section id="v-([a-z_-]+)"/g)].map((m) => m[1]).filter((v) => !ohne.includes(v)))
+    assert.ok(reg.includes(`{ id: "${v}",`), `Bereich ${v} hat keine Einweisung`);
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
