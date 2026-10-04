@@ -1,10 +1,16 @@
 {
-  "version": "2.23.6",
+  "version": "2.23.7",
   "datum": "2026-10-04",
   "neu": [
-    "🔧 Kleine Systemverbesserungen"
+    "❓ Das „?“ zeigt jetzt genau die Hilfen zum Bereich, in dem du gerade bist – zuerst die Kurz-Erklärung, dann die passenden Tipps"
   ],
   "verlauf": [
+    {
+      "version": "2.23.7",
+      "neu": [
+        "❓ Das „?“ zeigt jetzt genau die Hilfen zum Bereich, in dem du gerade bist – zuerst die Kurz-Erklärung, dann die passenden Tipps"
+      ]
+    },
     {
       "version": "2.23.6",
       "neu": [

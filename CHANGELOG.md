@@ -1,5 +1,15 @@
 # Änderungen
 
+## 2.23.7 – 2026-10-04 – Hilfe-Zentrum: „?“ zeigt genau die Hilfen zum Bereich (Prüfung Hansi)
+- KC-CLUB-HILFEZENTRUM: Prüfung „passen die Hilfen zum gerade Angezeigten?“ – alle 31 Ansichten gegen alle Hilfen abgeglichen.
+  Befund: Protokolle, Aktionen, Standort öffneten „Clubleben“, Dokumente/Überblick „Technik“ – dort stand nichts dazu; Pinnwand,
+  Fotos, Mitglieder, Spiele … landeten im ganzen Kapitel „Clubleben“ (21 gemischte Hilfen), Einstellungen nur bei „Aussehen“.
+- Neu: das „?“ öffnet „Hilfe zu diesem Bereich“ – zuerst die Kurz-Erklärung des Bereichs, dann genau die passenden Hilfen (Registry
+  HZ_SICHT_HILFEN, quer über alle Kapitel, mit ihrer Nummer), darunter „Ganzes Kapitel n ›“ und „📖 Inhalt“. „Zeig mir wo“ →
+  „Zurück zur Hilfe“ kehrt auf diese Seite zurück. Dokumente/Überblick verweisen jetzt auf Kapitel „Startseite & Bedienung“.
+- Zwei neue Hilfen für bisher unversorgte Bereiche: „Deine Aufgaben aus dem Protokoll“ und „Ausflüge und Reisen auf einen Blick“.
+- Aufgesetzt auf 2.23.6 (Eingangskorb, Inkognito-Brille, Tic-Tac-Toe-Töne). Server nur Versionsnummer. Test 355.
+
 ## 2.23.6 – 2026-10-04 – Eingangskorb mit Mehrfach-Ablage, Inkognito-Brille blinkt, Tic-Tac-Toe-Töne (Wunsch Hansi)
 - Zusammengeführt auf das Hilfe-Zentrum (2.23.5); die Entwürfe 2.22.21/2.22.22 wurden nie eingespielt und kommen hiermit live.
 
