@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.23.21 – 2026-10-04 – Gruppen auf der Mitglieder-Seite fallen auf (Wunsch Hansi)
+- KC-CLUB-GRUPPEN-AMEISEN: Beim Öffnen der Mitglieder-Seite läuft 4 Sekunden lang ein oranger Ameisenrahmen um die Gruppen-Knöpfe
+  (z. B. „📋 Innovation“), danach ruhig. Bei jedem neuen Öffnen wieder; „weniger Bewegung“ → langsamer. Test 369.
+
 ## 2.23.20 – 2026-10-04 – ✕ oben rechts in langen Fenstern (Wunsch Hansi)
 - KC-CLUB-BLATT-X: Jedes Fenster, dessen Schließen-Knopf erst nach Scrollen erreichbar ist, bekommt oben rechts ein rundes ✕ in einer
   schmalen Leiste, die beim Scrollen oben stehen bleibt – der Inhalt rutscht darunter durch, nichts wird verdeckt. Es schließt wie „Zurück“

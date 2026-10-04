@@ -410,6 +410,11 @@
   /* KC-CLUB-MG-GRUPPEN (1.34.0, Wunsch Hansi): „Mein Status“ als kleine Überschrift im Status-Knopf */
   .st-titel { display: block; font-size: .72rem; font-weight: 700; opacity: .85; line-height: 1.1; text-align: left; }
   .mg-gruppen { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 0 0 8px; }
+  /* KC-CLUB-GRUPPEN-AMEISEN (2.23.21, Wunsch Hansi): beim Öffnen der Mitglieder-Seite läuft kurz (4 s) ein Ameisenrahmen um die Gruppen-Knöpfe */
+  .mg-gruppen .knopf { position: relative; }
+  .mg-gruppen .ameisen { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; border-radius: inherit; }
+  .mg-gruppen .ameisen rect { fill: none; stroke: #ff9800; stroke-width: 6; stroke-dasharray: 9 6; animation: ameisenLauf 1s linear infinite; }
+  @media (prefers-reduced-motion: reduce) { .mg-gruppen .ameisen rect { animation-duration: 3s; } }
   .mg-gruppen .knopf.an { background: var(--karte); box-shadow: var(--schatten); color: var(--rot); outline: 2px solid var(--rot); }
   .statuschip { margin-top: 6px; border: none; border-radius: 12px; padding: 4px 10px; background: rgba(255,255,255,.18); color: #fff; font-weight: 700; font-size: .82rem; cursor: pointer; }
   .statuschip.st-verfuegbar { background: var(--gruenbg); color: var(--textGruen); } .statuschip.st-beschaeftigt { background: var(--gelbbg); color: var(--gelb); }
@@ -2743,7 +2748,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.20"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.21"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -9493,7 +9498,7 @@ function zeige(v, ausHistorie) {
   if (v === "buero") { BU.sicht = "start"; buZeigen(); buLaden(); if (vorher !== "chat" || !BNN.seit) BNN.seit = Date.now() - 60000; buNeuPruefen(); } // KC-CLUB-BUERO, KC-CLUB-BUERO-NEU-NACHRICHT
   if (v === "dienste") dienstLaden();
   if (v === "nachrichten") unterhLaden();
-  if (v === "mitglieder") { mgAnsichtWahlZeigen(); mitgliederLaden(); }
+  if (v === "mitglieder") { MG_AMEISEN.bis = 0; MG_AMEISEN.neu = true; mgAnsichtWahlZeigen(); mitgliederLaden(); } // KC-CLUB-GRUPPEN-AMEISEN
   if (v === "einstellungen") { notProbeZeigen(); infoStartZeigen(); tippSchalterZeigen(); einwSchalterZeigen(); stimmeWahlZeigen(); ansageSchalterZeigen(); ansStandZeigen(); ruheZeigen(); if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); anklopfenZeigen(); zuletztSchalterZeigen(); inkognitoZeigen(); spEinstZeigen(); schnellWahlZeigen(); mgAnsichtWahlZeigen(); }
   if (v === "start") neuLaden();
   // KC-CLUB-ZURUECK: jede Ansicht bekommt einen Verlaufseintrag, damit „Zurück“ eine Ansicht zurückgeht statt die App zu schließen
@@ -14059,10 +14064,15 @@ async function mitgliederLaden() {
   if (MG_GRUPPE && !MG_GRUPPEN.some((g) => g.id === MG_GRUPPE)) MG_GRUPPE = null;
   if (MITGLIEDER) mitgliederZeichnen();
 }
+const MG_AMEISEN = { bis: 0, neu: false, t: 0, MS: 4000 };
 function mgGruppenZeichnen() {
   const z = $("mgGruppen"); if (!z) return null;
+  // KC-CLUB-GRUPPEN-AMEISEN: Zeitfenster beginnt, sobald die Gruppen beim Öffnen der Seite das erste Mal da sind (Neuzeichnen hält es)
+  if (MG_AMEISEN.neu && MG_GRUPPEN.length) { MG_AMEISEN.neu = false; MG_AMEISEN.bis = Date.now() + MG_AMEISEN.MS; clearTimeout(MG_AMEISEN.t);
+    MG_AMEISEN.t = setTimeout(() => document.querySelectorAll(".mg-gruppen .ameisen").forEach((x) => x.remove()), MG_AMEISEN.MS); }
+  const ameisen = Date.now() < MG_AMEISEN.bis ? '<svg class="ameisen" aria-hidden="true"><rect width="100%" height="100%" rx="12"/></svg>' : "";
   const g = MG_GRUPPEN.find((x) => x.id === MG_GRUPPE) || null;
-  z.innerHTML = MG_GRUPPEN.length ? `<div class="mg-gruppen"><span class="hinweis">Gruppen:</span>${MG_GRUPPEN.map((x) => `<button class="knopf klein${x.id === MG_GRUPPE ? " an" : ""}" onclick="mgGruppeSetzen('${x.id}')">${esc(x.gruppe.symbol || "👥")} ${esc(x.gruppe.name)} <small>(${x.personen.length})</small></button>`).join("")}</div>`
+  z.innerHTML = MG_GRUPPEN.length ? `<div class="mg-gruppen"><span class="hinweis">Gruppen:</span>${MG_GRUPPEN.map((x) => `<button class="knopf klein${x.id === MG_GRUPPE ? " an" : ""}" onclick="mgGruppeSetzen('${x.id}')">${esc(x.gruppe.symbol || "👥")} ${esc(x.gruppe.name)} <small>(${x.personen.length})</small>${ameisen}</button>`).join("")}</div>`
     + (g ? `<div class="karte" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center"><b style="flex:1 1 160px">${esc(g.gruppe.symbol || "👥")} ${esc(g.gruppe.name)} · ${g.personen.length} Mitglieder</b><button class="knopf haupt klein" onclick="chatOeffnen('${g.id}')">💬 In die Gruppe schreiben</button><button class="knopf klein" onclick="mgGruppeSetzen(null)">✖ Alle zeigen</button></div>` : "") : "";
   return g;
 }

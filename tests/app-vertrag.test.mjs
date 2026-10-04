@@ -3766,6 +3766,11 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const BLATT_X_OHNE = new Set\(\["alarmBlatt"\]\);/.test(html) && /if \(da \|\| blattHatObenX\(sc\.innen\)\) continue;/.test(html), "nicht doppelt, nie beim Notfall-Fenster");
   assert.ok(/\.blatt-x-leiste \{ position: sticky;[^}]*background: var\(--karte\)/.test(html), "Leiste mit Hintergrund – verdeckt nichts");
 }
+// 369. 2.23.21: Ameisenrahmen um die Gruppen-Knöpfe (KC-CLUB-GRUPPEN-AMEISEN)
+{
+  assert.ok(/if \(v === "mitglieder"\) \{ MG_AMEISEN\.bis = 0; MG_AMEISEN\.neu = true;/.test(html) && /const MG_AMEISEN = \{ bis: 0, neu: false, t: 0, MS: 4000 \};/.test(html), "beim Öffnen 4 s");
+  assert.ok(/<small>\(\$\{x\.personen\.length\}\)<\/small>\$\{ameisen\}<\/button>/.test(html) && /\.mg-gruppen \.ameisen rect \{[^}]*animation: ameisenLauf/.test(html), "Rahmen um jeden Gruppen-Knopf");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
