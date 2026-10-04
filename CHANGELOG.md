@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.22.15 – 2026-10-04 – Erklärung „Termine“: Handy-Kalender (Wunsch Hansi)
+- KC-CLUB-EINWEISUNG: die Erklärung zu 📅 Termine nennt jetzt auch ⚙️ Einstellungen → „📲 Termine im Handy-Kalender“ (alle Club-Termine
+  automatisch im Handy-Kalender) – mit dem Hinweis „leider nicht umgekehrt“. Wird wie alle Erklärungen auch vorgelesen. Test 343.
+
 ## 2.22.14 – 2026-10-04 – Zahl auf den Kacheln oben rechts (Fund Hansi)
 - Die Zahl auf den großen Kacheln stand unten rechts und verdeckte den Untertitel (z. B. „Zu- & Absagen“). Jetzt oben rechts neben dem
   Symbol (im Deko-Kreis), mit leichtem Schatten. Nur CSS (.kachel .zahl). Test 342.

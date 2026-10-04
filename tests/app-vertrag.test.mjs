@@ -3651,6 +3651,8 @@ assert.ok(/const UH_HERVOR = \["Innovation"\];/.test(html) && /function uhAmeise
 }
 // 342. 2.22.14: Kachel-Zahl oben rechts (verdeckt keinen Text)
 assert.ok(/\.kachel \.zahl \{ position: absolute; right: 12px; top: 12px;/.test(html), "Kachel-Zahl oben rechts");
+// 343. 2.22.15: Erklärung Termine nennt den Handy-Kalender (nur eine Richtung)
+assert.ok(/\{ id: "termine", sym: "📅", t: "Termine", x: "[^"]*📲 Termine im Handy-Kalender[^"]*leider nicht umgekehrt/.test(html), "Termine-Erklärung: Handy-Kalender");
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
