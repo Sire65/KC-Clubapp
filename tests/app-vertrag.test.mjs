@@ -3977,7 +3977,8 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(!/function hzSuchen\(q\) \{[^}]*hzNeuerGruss/.test(html), "beim Suchen darf die Einleitung nicht wechseln");
   assert.ok(/id: "buero_sprache"[^\n]*nur: \(\) => !!ICH\?\.buero/.test(html), "Büro-Hilfe nur für die Clubleitung");
   // nicht aufdringlich: das Hilfe-Zentrum öffnet keine Fenster und meldet nichts von selbst
-  const hz = html.slice(html.indexOf("const HZ = {"), html.indexOf("// ---------- KC-CLUB-ONLINE-ANSAGE"));
+  // Ausnahme (2.23.5): Rückmeldung, nachdem man das „?“ selbst aus-/eingeschaltet hat
+  const hz = html.slice(html.indexOf("const HZ = {"), html.indexOf("// ---------- KC-CLUB-ONLINE-ANSAGE")).replace(/function hzFrageSchalter\(an\) \{[\s\S]*?\n\}/, "");
   assert.ok(!/melde\(|blattAuf\(|\.classList\.remove\("versteckt"\)/.test(hz), "Hilfe-Zentrum darf sich nicht aufdrängen");
 }
 
@@ -4016,8 +4017,19 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
     assert.ok(v in zuordnung, `Ansicht „${v}“ hat kein Hilfe-Kapitel (HZ_SICHT_THEMA ergänzen)`);
     if (zuordnung[v]) assert.ok(themen.has(zuordnung[v]), `Ansicht „${v}“: Kapitel „${zuordnung[v]}“ unbekannt`);
   }
-  assert.ok(/hzFrageEinsetzen\(v\); \/\/ KC-CLUB-HILFEZENTRUM/.test(html) && /class="hz-frage" id="hzFrage" onclick="hzFrage\(this\.dataset\.v\)"[^>]*>\?<\/button>/.test(html), "„?“ fehlt");
+  assert.ok(/hzFrageEinsetzen\(v\); \/\/ KC-CLUB-HILFEZENTRUM/.test(html) && /class="hz-frage" id="hzFrage"[^>]*>\?<\/button>/.test(html) && /k\.addEventListener\("click", \(\) => \{ if \(lang\) \{ lang = false; return; \} hzFrage\(k\.dataset\.v\); \}\)/.test(html), "„?“ fehlt");
   assert.ok(/\.hz-frage \{ position: fixed;[^}]*bottom: calc\(84px/.test(html) && !/body\.einfach[^{]*\.hz-frage/.test(html), "„?“ unten rechts, auch in der einfachen Ansicht");
   assert.ok(/onclick="\$\('chatBlatt'\)\.classList\.add\('versteckt'\);hzFrage\('chat'\)">❓ Hilfe zum Chat<\/button>/.test(html), "Chat: Hilfe im ⋮-Menü");
   assert.ok(/else if \(HZ\.herkunft\?\.chat\) \{ const c = HZ\.herkunft\.chat; HZ\.herkunft = null; chatOeffnen\(c\); \}/.test(html), "Zurück in den Chat");
+}
+
+// 354. 2.23.5: „?“ per Lang-Drücken ausblenden, Rückfrage erklärt den Rückweg, Schalter in beiden Ansichten
+{
+  assert.ok(/const HZ_FRAGE_AUS = "kc_club_hz_frage_aus"[^\n]*HZ_LANG_MS = 600;/.test(html) && /k\.addEventListener\("pointerdown"[^\n]*hzFrageLang\(\); \}, HZ_LANG_MS\)/.test(html), "Lang-Drücken fehlt");
+  assert.ok(/async function hzFrageLang\(\) \{\n  if \(!\(await frage\("❓ Fragezeichen ausblenden\?[^"]*Zurückholen kannst du es jederzeit unter ⚙️ Einstellungen → „❓ Fragezeichen unten rechts“/.test(html), "Rückfrage mit Rückweg");
+  assert.ok(/k\.classList\.toggle\("versteckt", !HZ_SICHT_THEMA\[v\] \|\| hzFrageAus\(\)\)/.test(html), "ausgeblendet bleibt ausgeblendet");
+  for (const id of ["setHzFrage", "setHzFrageE"]) assert.ok(new RegExp(`id="${id}" checked onchange="hzFrageSchalter\\(this\\.checked\\)"`).test(html), `Schalter ${id} fehlt`);
+  const einfachKlappe = html.slice(html.indexOf('data-klappe="einfach"'), html.indexOf('data-klappe="schnellstart"')); // bis zum nächsten Bereich (innen gibt es geschachtelte <details>)
+  assert.ok(einfachKlappe.includes('id="setHzFrageE"'), "Schalter muss in der einfachen Ansicht erreichbar sein");
+  assert.ok(/id: "frage_knopf", thema: "start"/.test(html), "Hilfe-Eintrag zum Fragezeichen");
 }

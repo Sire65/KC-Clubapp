@@ -2256,6 +2256,7 @@
         <details class="ds-mehr" id="designMehrKlappeE"><summary>🎨 Weitere Farbschemen</summary><div class="designwahl" id="designWahlMehrE"></div></details>
         <details class="ds-mehr" id="designBuntKlappeE"><summary>✨ Ausgefallene Farbschemen</summary><div class="designwahl" id="designWahlBuntE"></div></details></div>
       <div class="schalter"><div><b>🔠 Große Schrift</b></div><input type="checkbox" id="setGrossE" onchange="einstellung('gross', this.checked); if ($('setGross')) $('setGross').checked = this.checked"></div>
+      <div class="schalter"><div><b>❓ Fragezeichen unten rechts</b><div class="hinweis">Öffnet die passende Hilfe zum Bereich. Ausblenden geht auch: lange auf das „?“ drücken</div></div><input type="checkbox" id="setHzFrageE" checked onchange="hzFrageSchalter(this.checked)"></div> <!-- KC-CLUB-HILFEZENTRUM (2.23.5) -->
       <div class="schalter"><div><b>🟢 Einfache Ansicht</b><div class="hinweis">Ausschalten zeigt alle Funktionen – du kannst jederzeit zurück.</div></div><button class="knopf klein" onclick="ansichtSetzen('erweitert')">🔧 Alle Funktionen</button></div>
       <div class="schalter"><div><b>📄 Kurzanleitung</b><div class="hinweis">Die App in 3 Schritten – zum Ansehen oder Ausdrucken</div></div><button class="knopf klein" onclick="druckStarten('anleitung')">Ansehen</button></div>
       <div class="schalter"><div><b>💭 Feedback</b><div class="hinweis">Was gefällt dir, was ist zu kompliziert? Schreib es <span class="admin-name">Hansi</span>.</div></div><button class="knopf klein" onclick="zeige('feedback')">Schreiben</button></div>
@@ -2285,6 +2286,7 @@
     <details class="karte" data-klappe="ansagen" data-einfach open>
       <summary>🗣️ Ansagen, Töne &amp; Tipps</summary>
       <div class="schalter"><div><b>💡 Tipp des Tages</b><div class="hinweis">Beim Öffnen ab und zu ein kurzer Tipp zu neuen Funktionen</div></div><input type="checkbox" id="setTipps" checked onchange="tippSchalter(this.checked)"></div>
+      <div class="schalter"><div><b>❓ Fragezeichen unten rechts</b><div class="hinweis">Öffnet die passende Hilfe zum Bereich. Ausblenden geht auch: lange auf das „?“ drücken</div></div><input type="checkbox" id="setHzFrage" checked onchange="hzFrageSchalter(this.checked)"></div> <!-- KC-CLUB-HILFEZENTRUM (2.23.5) -->
       <div class="schalter"><div><b>❓ Alle Tipps nachlesen</b><div class="hinweis">Hilfe-Zentrum: alle Tipps und Erklärungen nach Themen – auch im Register Technik</div></div><button class="knopf klein" onclick="hzStart()">Öffnen</button></div>
       <!-- KC-CLUB-EINWEISUNG (2.4.0) -->
       <div class="schalter"><div><b>🎓 Einweisung beim ersten Öffnen</b><div class="hinweis">Beim ersten Besuch eines Bereichs eine kurze Erklärung, was man dort machen kann</div></div><input type="checkbox" id="setEinw" checked onchange="einwSchalter(this.checked)"></div>
@@ -2702,7 +2704,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.4"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.5"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3590,6 +3592,7 @@ const HILFE = [
   { id: "ansicht", thema: "start", sym: "🟢", t: "Einfache oder erweiterte Ansicht", x: "Die <b>einfache Ansicht</b> zeigt nur das Wichtigste mit großen Knöpfen, die <b>erweiterte</b> alle Funktionen mit Registern. Umschalten: ⚙️ Einstellungen → <b>🎨 Darstellung</b> → „🟢 Einfache Ansicht“ – oder ganz unten auf der Startseite. Zurück geht es mit „🔧 Mehr Funktionen anzeigen“.", zeig: () => einstiegHin(einfach() ? "einfach" : "darstellung") },
   { id: "infofeld", thema: "start", sym: "🪧", t: "Das farbige Info-Feld oben", x: "Oben auf der Startseite blätterst du mit <b>‹ ›</b> (oder Wischen im Feld) durch den nächsten Termin, das Wetter und Neues für dich. Ob das Feld beim Start erscheint, stellst du unter ⚙️ → Darstellung → „🪧 Info-Feld oben beim Start“ ein.", zeig: () => einstiegHin("darstellung", "setInfoStart") },
   { id: "zurueck", thema: "start", sym: "‹", t: "„Zurück“ bleibt in der App", x: "Die Zurück-Taste deines Handys oder der Pfeil <b>‹</b> oben links geht eine Ansicht zurück – die App schließt sich dabei nicht. Ist ein Fenster offen, schließt „Zurück“ zuerst nur das Fenster, deine Eingabe bleibt stehen." },
+  { id: "frage_knopf", thema: "start", sym: "❓", t: "Das Fragezeichen unten rechts", x: "Das runde <b>„?“</b> neben der Lupe öffnet in jedem Bereich gleich die passende Hilfe. Stört es dich? <b>Lange darauf drücken</b> blendet es aus. Zurück holst du es unter ⚙️ Einstellungen → <b>„❓ Fragezeichen unten rechts“</b>.", zeig: () => einstiegHin(einfach() ? "einfach" : "ansagen", einfach() ? "setHzFrageE" : "setHzFrage"), seit: "2.23.5" },
   { id: "einstellung_suchen", thema: "start", sym: "🔍", t: "Jede Einstellung schnell finden", x: "In den Einstellungen findest du mit der <b>Lupe 🔍 unten rechts</b> jede Einstellung – z. B. „Ton“ oder „Farbe“ eingeben. Bereiche öffnest du durch Antippen der Überschrift, mit dem Schloss 🔒 hältst du sie offen oder zu.", zeig: () => zeige("einstellungen") },
   { id: "kurzanleitung", thema: "start", sym: "📄", t: "Kurzanleitung zum Ausdrucken", x: "Die App in 3 Schritten – zum Ansehen oder Ausdrucken, z. B. für jemanden, der neu ist. Zu finden unter ⚙️ → Darstellung → „📄 Kurzanleitung“.", zeig: () => druckStarten("anleitung") },
   { id: "ueberblick", thema: "start", sym: "🗺️", t: "Die Club-App auf einen Blick", x: "Was kann die App, und was ist zuletzt dazugekommen? Das steht in „🗺️ Club-App auf einen Blick“ unter <b>📚 Meine Dokumente</b> – es aktualisiert sich mit jeder Version selbst.", zeig: () => zeige("ueberblick") },
@@ -3727,10 +3730,30 @@ const HZ_SICHT_THEMA = {
   sicherheit: "technik", programme: "technik", dokumente: "technik", dokansicht: "technik", ueberblick: "technik",
   hilfezentrum: null, // in der Hilfe selbst kein „?“
 };
+// 2.23.5 (Wunsch Hansi): lange auf das „?“ drücken → ausblenden (mit Rückfrage, die sagt, wie man es zurückholt).
+// Zurück: ⚙️ → „Das Wichtigste“ (einfache Ansicht) bzw. „🗣️ Ansagen, Töne & Tipps“ → „❓ Fragezeichen unten rechts“. Je Gerät gespeichert.
+const HZ_FRAGE_AUS = "kc_club_hz_frage_aus", hzFrageAus = () => lsLesen(HZ_FRAGE_AUS) === "1", HZ_LANG_MS = 600;
 function hzFrageEinsetzen(v) {
   let k = $("hzFrage");
-  if (!k) { document.body.insertAdjacentHTML("beforeend", `<button type="button" class="hz-frage" id="hzFrage" onclick="hzFrage(this.dataset.v)" title="Hilfe zu diesem Bereich" aria-label="Hilfe zu diesem Bereich">?</button>`); k = $("hzFrage"); }
-  k.dataset.v = v; k.classList.toggle("versteckt", !HZ_SICHT_THEMA[v]);
+  if (!k) {
+    document.body.insertAdjacentHTML("beforeend", `<button type="button" class="hz-frage" id="hzFrage" title="Hilfe zu diesem Bereich – lange drücken zum Ausblenden" aria-label="Hilfe zu diesem Bereich">?</button>`); k = $("hzFrage");
+    let t = null, lang = false;
+    const stopp = () => { clearTimeout(t); t = null; };
+    k.addEventListener("pointerdown", () => { lang = false; stopp(); t = setTimeout(() => { t = null; lang = true; try { navigator.vibrate?.(25); } catch {} hzFrageLang(); }, HZ_LANG_MS); });
+    ["pointerup", "pointerleave", "pointercancel"].forEach((e) => k.addEventListener(e, stopp));
+    k.addEventListener("contextmenu", (e) => e.preventDefault());
+    k.addEventListener("click", () => { if (lang) { lang = false; return; } hzFrage(k.dataset.v); });
+  }
+  k.dataset.v = v; k.classList.toggle("versteckt", !HZ_SICHT_THEMA[v] || hzFrageAus());
+  for (const id of ["setHzFrage", "setHzFrageE"]) if ($(id)) $(id).checked = !hzFrageAus();
+}
+async function hzFrageLang() {
+  if (!(await frage("❓ Fragezeichen ausblenden?\nZurückholen kannst du es jederzeit unter ⚙️ Einstellungen → „❓ Fragezeichen unten rechts“. Die Hilfe selbst bleibt unter Technik → ❓ Hilfe & Tipps.", { ja: "🙈 Ausblenden", nein: "Behalten" }))) return;
+  hzFrageSchalter(false);
+}
+function hzFrageSchalter(an) {
+  lsSetzen(HZ_FRAGE_AUS, an ? "0" : "1"); hzFrageEinsetzen(aktuelleAnsicht);
+  melde(an ? "❓ Das Fragezeichen ist wieder da" : "🙈 Fragezeichen ausgeblendet – zurückholen unter ⚙️ Einstellungen");
 }
 function hzFrage(v) {
   HZ.herkunft = { v, chat: v === "chat" ? chatId : null };

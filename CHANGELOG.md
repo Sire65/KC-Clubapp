@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.23.5 – 2026-10-04 – Hilfe-Zentrum: „?“ per Lang-Drücken ausblenden (Wunsch Hansi)
+- KC-CLUB-HILFEZENTRUM: lange (0,6 s) auf das „?“ drücken → Rückfrage „❓ Fragezeichen ausblenden?“, die gleich sagt, wie man es
+  zurückholt; „🙈 Ausblenden“ oder „Behalten“. Der Fingertipp nach dem Lang-Drücken öffnet die Hilfe nicht.
+- Zurückholen: ⚙️ Einstellungen → „❓ Fragezeichen unten rechts“ – in der einfachen Ansicht unter „Das Wichtigste“, in der erweiterten
+  unter „🗣️ Ansagen, Töne & Tipps“ (beide Schalter zeigen denselben Stand). Gespeichert je Gerät. Neue Hilfe 2.x „Das Fragezeichen
+  unten rechts“ mit „Zeig mir wo“. Server nur Versionsnummer. Test 354.
+
 ## 2.23.4 – 2026-10-04 – Hilfe-Zentrum: „?“ in jeder Ansicht (Wunsch Hansi)
 - KC-CLUB-HILFEZENTRUM: in allen Ansichten (erweitert und einfach) ein rundes „?“ unten rechts neben der Lupe 🔍 (engt keine
   Kopfzeile ein; im Chat stattdessen ⋮ → „❓ Hilfe zum Chat“). Antippen öffnet direkt das
