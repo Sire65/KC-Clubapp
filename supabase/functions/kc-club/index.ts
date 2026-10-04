@@ -41,7 +41,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.23.38";
+const SERVER_VERSION = "2.23.39";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -1092,7 +1092,7 @@ const aeKurz = (x: any) => x.art === "bank" && x.status === "erledigt" ? { ...x.
 // und der eigene persönliche Ordner. Registry: neue Arten = Eintrag in EK_ARTEN + ekDoku.
 const EK_ARTEN: Record<string, { sym: string; t: string; register: string[]; persReg: string; ordnerArt?: string }> = { // persReg: Register im persönlichen Ordner
   erstattung: { sym: "💶", t: "Erstattung", register: ["Belege", "Rechnungen", "Sonstiges"], persReg: "Rechnungen", ordnerArt: "finanzen" },
-  dienstwunsch: { sym: "📅", t: "Dienstzeiten", register: ["Dienste", "Sonstiges", "Allgemein"], persReg: "Dienste" },
+  dienstwunsch: { sym: "📅", t: "Dienstzeiten", register: ["Wünsche", "Dienste", "Sonstiges", "Allgemein"], persReg: "Dienstpläne" }, // 2.23.39: Register „Dienstpläne“ (Wunsch Hansi)
   vorschlag: { sym: "💡", t: "Vorschlag", register: ["Vorschläge", "Sonstiges", "Allgemein"], persReg: "Sonstiges" },
   aenderung: { sym: "✏️", t: "Änderungsmeldung", register: ["Meldungen", "Sonstiges"], persReg: "Meldungen" },
 };
@@ -2013,6 +2013,10 @@ const ADMIN_ORDNER = { art: "sonstiges", titel: "Admin", farbe: 8, register: ["S
 // KC-CLUB-AENDERUNG (2.22.10, Wunsch Hansi): eigener Vereinsordner „Mitglieder <Jahr>“ (nur Clubleitung) für Änderungsmeldungen
 const MITGLIEDER_ORDNER = { art: "sonstiges", titel: "Personal", farbe: 3, register: ["Meldungen", "Sonstiges"] }; // 2.22.19 (Wunsch Hansi): „Personal“ statt „Mitglieder“
 const adminOrdner = (jahr: number, register: string) => vereinsOrdner(ADMIN_ORDNER, jahr, register);
+// KC-CLUB-DIENST-ABLAGE (2.23.39, Wunsch Hansi): Büro-Ordner „Dienstpläne <Jahr>“ (nur Clubleitung) – Wünsche je Mitglied + Gesamtplan
+const DIENSTPLAN_ORDNER = { art: "sonstiges", titel: "Dienstpläne", farbe: 5, register: ["Wünsche", "Gesamtplan", "Sonstiges"] };
+const DIENST_REG = { wunsch: "Wünsche", gesamt: "Gesamtplan", persoenlich: "Dienstpläne" };
+const dwJahr = () => Number(DW.veranstaltung.match(/\d{4}/)?.[0]) || Number(berlinTag(new Date()).slice(0, 4));
 async function vereinsOrdner(def: typeof ADMIN_ORDNER, jahr: number, register: string) {
   const { data: da } = await db.from("kc_club_archiv_ordner").select("id,register").is("besitzer", null).eq("art", def.art).eq("titel", def.titel)
     .eq("jahr", jahr).is("geloescht_am", null).order("erstellt_am").limit(1).maybeSingle();
@@ -6939,6 +6943,47 @@ Köcheclub Werne`,
         });
       }
 
+      // KC-CLUB-DIENST-UEBERSICHT (2.23.39, Wunsch Hansi): alle Dienstzeiten der Veranstaltung auf einen Blick (Name × Tag, Zeitbalken)
+      case "dienst_uebersicht": {
+        nurLeitung(ich);
+        const { data: rows, error } = await db.from("kc_dp_wish_inbox").select("id,person_id,revision,status,entries,updated_at,taken_at").eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("source", "club_app").limit(300);
+        if (error) throw new Fehler("Die Dienstzeiten konnten gerade nicht geladen werden.", 503); // Regel 11: unbekannt ≠ leer
+        const liste = (rows ?? []).filter((x: any) => !String(x.person_id).startsWith("KC-P-TEST"));
+        const leute = await personen(liste.map((x: any) => x.person_id));
+        return json({ veranstaltung: DW.name, personen: liste.map((x: any) => ({ id: x.id, name: leute.get(x.person_id)?.display_name || x.person_id, revision: x.revision, status: x.status,
+          uebernommen: !!x.taken_at, zuletzt: x.updated_at,
+          eintraege: (x.entries ?? []).filter((e: any) => DW.typen.includes(e?.wishType) && /^\d{4}-\d{2}-\d{2}$/.test(String(e?.date)) && Number.isFinite(Number(e?.start)) && Number.isFinite(Number(e?.end)))
+            .map((e: any) => ({ d: e.date, s: Number(e.start), e: Number(e.end), t: e.wishType })) })) });
+      }
+      // KC-CLUB-DIENST-ABLAGE (2.23.39, Wunsch Hansi): jede Dienstzeiten-Aufstellung in den Ordner des Mitglieds (Register „Dienstpläne“) und ins
+      // Büro „Dienstpläne <Jahr>“ (Register „Wünsche“). Schon abgelegte Fassungen (gleicher Titel im Ordner) werden nicht doppelt abgelegt.
+      // Gibt den Büro-Ordner zurück – die App legt dort danach das Bild des Gesamtplans ab (Register „Gesamtplan“).
+      case "dienst_ablegen": {
+        nurLeitung(ich);
+        const jahr = dwJahr(), buero = await vereinsOrdner(DIENSTPLAN_ORDNER, jahr, DIENST_REG.wunsch);
+        await vereinsOrdner(DIENSTPLAN_ORDNER, jahr, DIENST_REG.gesamt); // Register sicherstellen
+        const { data: rows, error } = await db.from("kc_dp_wish_inbox").select("id,person_id").eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("source", "club_app").limit(300);
+        if (error) throw new Fehler("Die Dienstzeiten konnten gerade nicht geladen werden.", 503);
+        const { data: da } = await db.from("kc_club_archiv_dokumente").select("ordner_id,titel").ilike("titel", "%Dienstzeiten%").is("geloescht_am", null).limit(2000);
+        const schon = new Set((da ?? []).map((x: any) => `${x.ordner_id}|${x.titel}`));
+        let neu = 0, vorhanden = 0, fehler = 0;
+        for (const r of (rows ?? []).filter((x: any) => !String(x.person_id).startsWith("KC-P-TEST"))) {
+          const doku = await ekDoku("dienstwunsch", r.id); if (!doku) continue;
+          const ziele: [string | null, string, string][] = [[buero, DIENST_REG.wunsch, `${doku.wer}: ${doku.titel}`]];
+          try { ziele.push([await persoenlicherOrdner(r.person_id, doku.wer, jahr, DIENST_REG.persoenlich), DIENST_REG.persoenlich, doku.titel]); } catch { fehler++; }
+          const abgelegt: any[] = [];
+          for (const [o, reg, titel] of ziele) {
+            if (!o) { fehler++; continue; } // persönlicher Ordner im Papierkorb → nicht anfassen
+            if (schon.has(`${o}|${titel.slice(0, 120)}`)) { vorhanden++; continue; }
+            try { await archivTextAblegen(ich, o, reg, titel, doku.dateiname, doku.text, doku.stichworte); neu++; abgelegt.push({ ordner_id: o, register: reg }); }
+            catch (e) { console.error("dienst ablegen", String(e)); fehler++; }
+          }
+          if (abgelegt.length) await ekStandSetzen("dienstwunsch", r.id, (alt) => ({ gemeldet_rev: alt.gemeldet_rev ?? null, gemeldet_am: alt.gemeldet_am ?? null, kenntnis: alt.kenntnis ?? [],
+            ablagen: [...(alt.ablagen ?? []), ...abgelegt.map((a) => ({ ...a, von: ich.person_id, am: jetzt() }))].slice(-40) }));
+        }
+        await protokoll(ich.person_id, "dienst_abgelegt", { neu, vorhanden, fehler });
+        return json({ ok: fehler === 0, neu, vorhanden, fehler, ordner_id: buero, register: DIENST_REG.gesamt, jahr });
+      }
       case "eingang_dienstwunsch": { // Einzelansicht: die Aufstellung wie beim Mitglied
         nurLeitung(ich);
         const m = await dwZeile(String(p.id || "")); if (!m) throw new Fehler("Nicht gefunden.", 404);
@@ -6989,7 +7034,7 @@ Köcheclub Werne`,
         const def = EK_ARTEN[art], jahr = Number(berlinTag(new Date()).slice(0, 4));
         const liste = (ordner ?? []).filter((o: any) => darfOrdnerSehen(ich, o) && o.art !== "chronik" && o.jahr >= jahr - 1)
           .map((o: any) => ({ id: o.id, titel: o.titel || ARCHIV_ARTEN[o.art]?.t || "Ordner", sym: ARCHIV_ARTEN[o.art]?.sym || "🗂️", jahr: o.jahr, register: ekRegister(o),
-            vorschlag: (def.ordnerArt ? o.art === def.ordnerArt : false) || (art === "aenderung" && o.titel === MITGLIEDER_ORDNER.titel) }))
+            vorschlag: (def.ordnerArt ? o.art === def.ordnerArt : false) || (art === "aenderung" && o.titel === MITGLIEDER_ORDNER.titel) || (art === "dienstwunsch" && o.titel === DIENSTPLAN_ORDNER.titel) }))
           .map((o: any) => ({ ...o, registerVor: def.register.find((r) => o.register.includes(r)) || o.register[0] }));
         const abl = (st.get(id)?.ablagen ?? []) as any[];
         return json({ titel: doku.titel, mitglied: doku.person_id && doku.person_id !== ich.person_id ? { name: doku.wer } : null, ordner: liste,

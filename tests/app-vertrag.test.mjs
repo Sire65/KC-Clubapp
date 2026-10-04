@@ -3935,6 +3935,18 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/class="sch-tisch\$\{st \? " mit-uhr" : ""\}"/.test(html) && /grid-template-areas: "links mitte rechts"/.test(html) && /\.sch-leiste \{ display: flex; flex-wrap: wrap; justify-content: center;/.test(html) && /<div class="sch-einst">/.test(html), "Brett mittig, Uhren links/rechts, schmale Knöpfe");
   assert.ok(/spWahl\("Uhr", uhr, \[\["0", "📨 Fern"\]/.test(html) && /\.\.\.\(art === "schach" && uhr !== "0" \? \{ uhr: Number\(uhr\) \} : \{\}\)/.test(html), "Herausfordern mit Uhr");
 }
+// 388. 2.23.39: Eingang filtern (KC-CLUB-EINGANG-FILTER), Dienstzeiten-Übersicht (KC-CLUB-DIENST-UEBERSICHT), Ablage (KC-CLUB-DIENST-ABLAGE)
+{
+  assert.ok(/onclick="ekfUmschalten\(\)" title="Eingang filtern/.test(html) && /class="pr-filter-zu" onclick="ekfUmschalten\(false\)"/.test(html) && /const ekfPasst = \(x\) =>/.test(html) && /zeig\.map\(\(\[x, i\]\) =>/.test(html), "Filter mit 🔽, ✕ und gefilterter Liste (Index bleibt)");
+  assert.ok(/📅 Jahr\$\{wahl\("jahr"/.test(html) && /🗓️ Monat\$\{wahl\("monat"/.test(html) && /🏷️ Art\$\{wahl\("art"/.test(html) && /👤 Name\$\{wahl\("wer"/.test(html), "Jahr, Monat, Art, Name");
+  assert.ok((html.match(/P\.push\(\{ wer: /g) || []).length >= 10, "Einträge tragen Name + Datum");
+  assert.ok(/case "dienst_uebersicht": \{\s*nurLeitung\(ich\);/.test(server) && /case "dienst_ablegen": \{\s*nurLeitung\(ich\);/.test(server), "nur Clubleitung");
+  const ab = server.slice(server.indexOf('case "dienst_ablegen": {'), server.indexOf('case "eingang_dienstwunsch": {'));
+  assert.ok(/vereinsOrdner\(DIENSTPLAN_ORDNER, jahr, DIENST_REG\.wunsch\)/.test(ab) && /persoenlicherOrdner\(r\.person_id, doku\.wer, jahr, DIENST_REG\.persoenlich\)/.test(ab) && /if \(schon\.has\(/.test(ab) && /startsWith\("KC-P-TEST"\)/.test(ab), "Ordner des Mitglieds + Büro, nichts doppelt, ohne Testpersonen");
+  assert.ok(/persoenlich: "Dienstpläne"/.test(server) && /titel: "Dienstpläne", farbe: 5, register: \["Wünsche", "Gesamtplan", "Sonstiges"\]/.test(server), "Register Dienstpläne / Büro-Ordner Dienstpläne");
+  assert.ok(/dienstuebersicht: \{ bauen: \(\) => druckDienstUebersicht\(\) \}/.test(html) && /quer: true, html: dvLegende\(\) \+ dvGanttHtml\(\)/.test(html) && /api\("archiv_hochladen", \{ ordner_id: r\.ordner_id, register: r\.register/.test(html), "Druck A4 quer über den Druck-Kern + Gesamtplan ins Büro");
+  assert.ok(/#druck \.dv-gantt, \.dv-gantt \{/.test(html), "Druck-CSS auch fürs Teilen am iPhone");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

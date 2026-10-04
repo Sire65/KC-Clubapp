@@ -1,5 +1,17 @@
 # Änderungen
 
+## 2.23.39 – 2026-10-04 – 🔽 Eingang filtern, 📊 Dienstzeiten-Übersicht quer, Dienstpläne in die Ordner (Wunsch Hansi)
+- KC-CLUB-EINGANG-FILTER: Im Büro-Eingang oben 🔽 (wie bei den Protokollen) → Jahr, Monat, Art, Name (Auswahl nur aus dem, was im Eingang
+  liegt), „x von y Sachen“, „↺ Alle zeigen“, ✕ oben rechts schließt (Auswahl bleibt, Zahl am 🔽).
+- KC-CLUB-DIENST-UEBERSICHT: 📊 im Eingang (nur Clubleitung) – alle Dienstzeiten quer: vorne Name, oben Tage (Wochenende dunkler), je Tag
+  ein Zeitbalken 8–24 Uhr (Kann / Wunsch / Wenn nötig / Sperre) mit Uhrzeit, rechts Gesamtstunden (+ Wunsch), unten Stunden und Personen
+  je Tag (≤ 2 Personen rot). Sortieren nach Name oder Stunden, Feld antippen = genaue Zeiten, 🖨️ Drucken A4 quer über den Druck-Kern.
+  Server-Aktion dienst_uebersicht (Fehler beim Laden = Meldung, nie „leer“).
+- KC-CLUB-DIENST-ABLAGE: „🗄️ In Ordner ablegen“ legt jede Aufstellung in den persönlichen Ordner des Mitglieds (Register „Dienstpläne“) und ins
+  Büro „Dienstpläne <Jahr>“ (Register „Wünsche“), dazu die Übersicht als Bild (Register „Gesamtplan“). Schon Abgelegtes nicht doppelt.
+  Ablegen aus dem Eingang schlägt den Büro-Ordner vor; persönliches Register heißt jetzt „Dienstpläne“ (Stevens Register „Dienstplan“ umbenannt).
+- Test 388.
+
 ## 2.23.38 – 2026-10-04 – ⏱️ Schachuhr + aufgeräumtes Schachfenster (Wunsch Hansi)
 - KC-CLUB-SCHACH-UHR: Bedenkzeit je Spieler „Ohne“, 5, 10 oder 15 Minuten (FIDE: Blitz bis 10 Min., Schnellschach über 10 bis unter 60 Min.).
   Wie im Turnier: nach jedem Zug hält die eigene Uhr an und die des Gegners läuft; beide ersten Züge sind frei. Letzte Minute: Uhr rot,

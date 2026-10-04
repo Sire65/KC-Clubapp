@@ -1322,7 +1322,28 @@
   .pr-filter-fuss { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; } .pr-filter-fuss .knopf { margin: 0; }
   .pr-filter-knopf { position: relative; min-width: 44px; min-height: 44px; font-size: 1.1rem; padding: 4px 8px; margin: 0; } .pr-filter-knopf .anz { margin-left: 6px; background: var(--rot); color: #fff; border-radius: 9px; padding: 0 6px; font-size: .75rem; }
   @media (max-width: 340px) { .pr-filter-raster { grid-template-columns: 1fr; } }
-  .pr-filter { position: relative; padding-top: 44px; } .pr-filter-zu { position: absolute; top: 6px; right: 6px; min-width: 40px; min-height: 40px; border: 2px solid var(--linie); border-radius: 50%; background: var(--karte); color: var(--text); font-size: 1.1rem; font-weight: 700; cursor: pointer; line-height: 1; } /* 2.23.37: Schließkreuz oben rechts */
+  .pr-filter { position: relative; padding-top: 44px; }
+  /* 2.23.39 KC-CLUB-EINGANG-FILTER + KC-CLUB-DIENST-UEBERSICHT */
+  .ek-kopf { display: flex; align-items: center; gap: 8px; margin: 12px 0 0; } .ek-kopf > b { flex: 1; font-size: 1.15rem; }
+  .dv-blatt { align-items: stretch; } .dv-blatt .blatt-innen { width: 100%; max-height: 100vh !important; height: 100%; border-radius: 0; display: flex; flex-direction: column; gap: 8px; }
+  .dv-kopf { display: flex; align-items: center; gap: 8px; } .dv-kopf h3 { flex: 1; margin: 0; } .dv-kopf .pr-filter-zu { position: static; flex: none; }
+  .dv-leiste { display: flex; flex-wrap: wrap; gap: 6px; } .dv-leiste .knopf { margin: 0; width: auto; padding: 6px 12px !important; min-height: 40px; font-size: .9rem !important; text-align: center !important; }
+  .dv-rahmen { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  #druck .dv-leg, .dv-leg { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; font-size: .8rem; margin: 2px 0 6px; } #druck .dv-leg .dv-bal, .dv-leg .dv-bal { position: static; display: inline-block; width: 22px; height: 10px; vertical-align: middle; margin-right: 4px; }
+  #druck .dv-gantt, .dv-gantt { display: grid; min-width: 760px; border: 1px solid #d9c9b3; border-radius: 10px; overflow: hidden; background: #fff; color: #2b1d14; font-size: .72rem; }
+  #druck .dv-gantt > div, .dv-gantt > div { position: relative; min-height: 34px; border-right: 1px solid #e6d9c6; border-bottom: 1px solid #e6d9c6; }
+  #druck .dv-h, .dv-h { background: #efe4d4; font-weight: 800; text-align: center; padding: 3px 0; min-height: 0 !important; } #druck .dv-h small, .dv-h small { display: block; font-weight: 600; opacity: .75; }
+  #druck .dv-we, .dv-we { background-color: #f3eadd; } #druck .dv-h.dv-we, .dv-h.dv-we { background: #e4d5bf; }
+  #druck .dv-name, .dv-name { position: sticky !important; left: 0; z-index: 2; background: #fff; font-weight: 800; padding: 6px 8px; display: flex; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: .8rem; }
+  #druck .dv-h.dv-name, .dv-h.dv-name { background: #efe4d4; }
+  #druck .dv-zelle, .dv-zelle { background-image: repeating-linear-gradient(90deg, transparent 0, transparent calc(25% - 1px), rgba(0,0,0,.06) calc(25% - 1px), rgba(0,0,0,.06) 25%); cursor: pointer; }
+  #druck .dv-zelle small, .dv-zelle small { position: absolute; left: 1px; right: 1px; bottom: 0; text-align: center; font-size: .55rem; color: #555; line-height: 1.05; white-space: nowrap; overflow: hidden; }
+  #druck .dv-bal, .dv-bal { position: absolute; top: 6px; bottom: 12px; border-radius: 4px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  #druck .dv-bal.kann, .dv-bal.kann { background: #a9dfbf; } #druck .dv-bal.wunsch, .dv-bal.wunsch { background: #1e8449; top: 10px; bottom: 16px; } #druck .dv-bal.noetig, .dv-bal.noetig { background: #f7dc6f; }
+  #druck .dv-bal.sperre, .dv-bal.sperre { background: repeating-linear-gradient(45deg, #e74c3c 0, #e74c3c 3px, #f5b7b1 3px, #f5b7b1 6px); }
+  #druck .dv-ges, .dv-ges { font-weight: 900; text-align: center; display: flex; flex-direction: column; justify-content: center; font-size: .85rem; } #druck .dv-ges small, .dv-ges small { font-weight: 600; font-size: .62rem; opacity: .75; }
+  #druck .dv-summe, .dv-summe { background: #efe4d4; font-weight: 800; text-align: center; display: flex; flex-direction: column; justify-content: center; font-size: .7rem; } #druck .dv-summe small, .dv-summe small { font-weight: 600; }
+  #druck .dv-summe.dv-duenn, .dv-summe.dv-duenn { background: #fadbd8; color: #922b21; } .pr-filter-zu { position: absolute; top: 6px; right: 6px; min-width: 40px; min-height: 40px; border: 2px solid var(--linie); border-radius: 50%; background: var(--karte); color: var(--text); font-size: 1.1rem; font-weight: 700; cursor: pointer; line-height: 1; } /* 2.23.37: Schließkreuz oben rechts */
   #v-protokolle .kopf2 { gap: 8px; } #v-protokolle .kopf2 > h2 { white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; font-size: 1.2rem; }
   .kopf2 { display: flex; align-items: center; gap: 10px; margin: 6px 0 4px; flex-wrap: wrap; } /* 1.32.1: bei großer Schrift umbrechen statt Knöpfe aus dem Bild schieben */
   .kopf2 > h2 { flex: 1 1 0; }
@@ -2840,7 +2861,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.38"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.39"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3921,7 +3942,7 @@ const HILFE = [
   // nur für die Clubleitung
   { id: "buero_sprache", thema: "club", sym: "🎙️", t: "Im Büro einfach sagen, was du brauchst", x: "Im Büro gibt es das Mikrofon <b>„🎙️ Sag mir, was du brauchst“</b> – zum Beispiel „Öffne Ordner Protokolle“. Das spart Tipperei, wenn es schnell gehen soll.", nur: () => !!ICH?.buero, zeig: () => buStart(), seit: "2.23.1" },
   // 2.23.8: Hilfen zu den Neuerungen aus 2.23.6 (Eingangskorb, Ablage, Büro-Hinweis, Töne, Inkognito)
-  { id: "eingangskorb", thema: "club", sym: "📥", t: "Der Eingangskorb im Büro", x: "Alles, was für die Clubleitung neu hereinkommt, liegt im Büro im <b>📥 Eingangskorb</b>: Erstattungen (Fahrtkosten), Dienstzeiten, Vorschläge, Änderungsmeldungen, Ausleihen und mehr. Clubsprecher, Kassenwart und Admin bekommen dazu eine Meldung. Es bleibt im Eingang, bis es erledigt ist – zum Beispiel mit <b>„✅ Erstattet“</b> oder <b>„👁️ Zur Kenntnis genommen“</b>.", nur: () => !!(ICH?.vorstand || ICH?.admin), zeig: () => { buStart(); buEingang(); }, seit: "2.23.8" },
+  { id: "eingangskorb", thema: "club", sym: "📥", t: "Der Eingangskorb im Büro", x: "Alles, was für die Clubleitung neu hereinkommt, liegt im Büro im <b>📥 Eingangskorb</b>: Erstattungen (Fahrtkosten), Dienstzeiten, Vorschläge, Änderungsmeldungen, Ausleihen und mehr. Clubsprecher, Kassenwart und Admin bekommen dazu eine Meldung. Es bleibt im Eingang, bis es erledigt ist – zum Beispiel mit <b>„✅ Erstattet“</b> oder <b>„👁️ Zur Kenntnis genommen“</b>. Oben rechts: <b>🔽</b> filtert nach Jahr, Monat, Art und Name, <b>📊</b> zeigt alle Dienstzeiten als Übersicht quer (Name, Tage, Zeitbalken, Stunden) – mit Drucken und „🗄️ In Ordner ablegen“ (Ordner des Mitglieds, Register Dienstpläne, und im Büro „Dienstpläne“).", nur: () => !!(ICH?.vorstand || ICH?.admin), zeig: () => { buStart(); buEingang(); }, seit: "2.23.8" },
   { id: "ablage_mehrere", thema: "club", sym: "🗄️", t: "In mehrere Ordner ablegen", x: "Ist etwas im Eingangskorb erledigt, fragt die App <b>„Wo ablegen?“</b>. Setz einfach Häkchen – es dürfen mehrere sein: im Ordner des Mitglieds (zum Nachvollziehen), in unseren Club-Ordnern mit passendem Register oder in deinem eigenen Ordner. Die App merkt sich deine Wahl fürs nächste Mal. Nachträglich geht es über <b>„🗄️ Ablegen …“</b>.", nur: () => !!(ICH?.vorstand || ICH?.admin), zeig: () => { buStart(); buEingang(); }, seit: "2.23.8" },
   { id: "buero_neue_nachricht", thema: "club", sym: "💬", t: "Neue Nachricht, während du im Büro bist", x: "Kommt eine Nachricht, während du im Büro arbeitest, erscheint oben ein grüner Hinweis <b>„💬 Neue Nachricht von …“</b>. Ein Tipp darauf öffnet die Unterhaltung genau an der richtigen Stelle; mit Zurück bist du wieder im Büro.", nur: () => !!ICH?.buero, zeig: () => buStart(), seit: "2.23.8" },
   { id: "ttt_toene", thema: "club", sym: "🔊", t: "Tic-Tac-Toe mit Tönen", x: "Unter dem Spielfeld gibt es den Knopf <b>„🔊 Töne an / 🔇 aus“</b>. Dann klingt jeder Zug – deiner hell, der des Gegners tiefer – und am Ende hörst du, ob du gewonnen, verloren oder unentschieden gespielt hast. Gilt nur auf diesem Gerät.", zeig: () => { zeige("spiele"); spArtWahl("ttt"); }, seit: "2.23.8" },
@@ -11101,39 +11122,142 @@ function buEingangPosten() {
   ekPosten(P); // KC-CLUB-EINGANGSKORB (2.23.6): Erstattungen + Dienstzeiten zuerst
   const leihWas = (a) => a.positionen.length === 1 ? `${a.positionen[0].anzahl} × ${a.positionen[0].name}` : a.positionen.map((x) => `${x.anzahl}× ${x.name}`).join(", ");
   for (const a of (l?.ausleihen || []).filter((x) => x.status === "angefragt"))
-    P.push({ sym: a.positionen[0]?.sym || "📦", gruppe: "Ausleihe – bitte entscheiden", titel: leihWas(a), unter: `${a.eigen ? "Du" : a.wer} · 📤 ${hlTagName(a.abholung)}`, auf: `HL.tab='leihen';leihInfo('${a.id}')`, ordner: ["🤝", "Helfen & Leihen", "hlStart()"] });
+    P.push({ wer: a.eigen ? ICH?.name : a.wer, datum: a.abholung, sym: a.positionen[0]?.sym || "📦", gruppe: "Ausleihe – bitte entscheiden", titel: leihWas(a), unter: `${a.eigen ? "Du" : a.wer} · 📤 ${hlTagName(a.abholung)}`, auf: `HL.tab='leihen';leihInfo('${a.id}')`, ordner: ["🤝", "Helfen & Leihen", "hlStart()"] });
   for (const a of (l?.ausleihen || []).filter((x) => x.status === "genehmigt" && x.abholung <= heuteIso()))
-    P.push({ sym: "📤", gruppe: "Genehmigt – Abholung fällig", titel: leihWas(a), unter: `${a.eigen ? "Du" : a.wer} · ${hlTagName(a.abholung)}`, auf: `HL.tab='leihen';leihInfo('${a.id}')`, ordner: ["🤝", "Helfen & Leihen", "hlStart()"] });
+    P.push({ wer: a.eigen ? ICH?.name : a.wer, datum: a.abholung, sym: "📤", gruppe: "Genehmigt – Abholung fällig", titel: leihWas(a), unter: `${a.eigen ? "Du" : a.wer} · ${hlTagName(a.abholung)}`, auf: `HL.tab='leihen';leihInfo('${a.id}')`, ordner: ["🤝", "Helfen & Leihen", "hlStart()"] });
   for (const x of (v || []).filter((y) => y.status === "offen"))
-    P.push({ sym: x.art === "spende" ? "💝" : x.art === "abstimmung" ? "🗳️" : "💡", gruppe: x.art === "spende" ? "Spenden-Vorschlag" : "Offener Vorschlag", titel: x.art === "spende" ? (x.spenden?.[0]?.empfaenger || "Spende") : x.titel, unter: `von ${x.von?.name || "?"}`, auf: `vorschlagInfo('${x.id}')`, schnell: ICH?.vorstand || ICH?.admin ? [["🗄️ Ablegen …", `ekAblage('vorschlag','${x.id}')`]] : [], ordner: ["🗳️", "Vorschläge", "zeige('vorschlaege')"] });
+    P.push({ wer: x.von?.name, datum: x.erstellt_am, sym: x.art === "spende" ? "💝" : x.art === "abstimmung" ? "🗳️" : "💡", gruppe: x.art === "spende" ? "Spenden-Vorschlag" : "Offener Vorschlag", titel: x.art === "spende" ? (x.spenden?.[0]?.empfaenger || "Spende") : x.titel, unter: `von ${x.von?.name || "?"}`, auf: `vorschlagInfo('${x.id}')`, schnell: ICH?.vorstand || ICH?.admin ? [["🗄️ Ablegen …", `ekAblage('vorschlag','${x.id}')`]] : [], ordner: ["🗳️", "Vorschläge", "zeige('vorschlaege')"] });
   for (const a of (h?.aufrufe || []).filter((x) => x.offen && !hlVoll(x)))
-    P.push({ sym: "🙋", gruppe: "Hilfe-Aufruf – noch Helfer gesucht", titel: (h.arten?.[a.art] || a.art).replace(/^\S+\s/, ""), unter: `${hlWann(a).replace(/^\S+\s/, "")} · ✋ ${hlStand(a)}`, auf: `HL.tab='helfen';hilfeOeffnen('${a.id}')`, ordner: ["🤝", "Helfen & Leihen", "hlStart()"] });
+    P.push({ wer: a.von?.name, datum: a.datum || a.erstellt_am, sym: "🙋", gruppe: "Hilfe-Aufruf – noch Helfer gesucht", titel: (h.arten?.[a.art] || a.art).replace(/^\S+\s/, ""), unter: `${hlWann(a).replace(/^\S+\s/, "")} · ✋ ${hlStand(a)}`, auf: `HL.tab='helfen';hilfeOeffnen('${a.id}')`, ordner: ["🤝", "Helfen & Leihen", "hlStart()"] });
   if (ar?.darf) for (const d of (ar.dokumente || []).filter((x) => x.status === "pruefung")) {
     const o = (ar.ordner || []).find((y) => y.id === d.ordner_id); if (!o || o.besitzer) continue;
-    P.push({ sym: "🗄️", gruppe: `Archiv: zur Prüfung · ${o.titel || "Ordner"}`, titel: d.titel, unter: `eingereicht von ${d.von || "?"}`, auf: `arAnlage('${d.id}', true)`,
+    P.push({ wer: d.von, datum: d.datum, sym: "🗄️", gruppe: `Archiv: zur Prüfung · ${o.titel || "Ordner"}`, titel: d.titel, unter: `eingereicht von ${d.von || "?"}`, auf: `arAnlage('${d.id}', true)`,
       ordner: o.art === "chronik" ? ["📖", "Chronik", "arStartArt('chronik')"] : ["🗄️", "Archiv", "arStart()"],
       schnell: [["✔ In den Ordner legen (annehmen)", `buEinArchiv('${d.id}', true)`, true], ["✖ Ablehnen", `buEinArchiv('${d.id}', false)`]] });
   }
   // KC-CLUB-AENDERUNG (2.22.8, Wunsch Hansi): Änderungsmeldungen der Mitglieder (nur die an mich gerichteten; Admin alle)
   for (const x of (AE.eingang?.meldungen || []).filter((y) => y.wartetAufMich ?? y.status === "offen")) {
     const a = AE.eingang.arten.find((y) => y.id === x.art) || { sym: "✏️", t: x.art };
-    P.push({ sym: a.sym, gruppe: "Änderungsmeldung – bitte ansehen", titel: a.t, unter: `${x.name} · ${zeitKurz(x.erstellt_am)}${x.gilt_ab ? " · ab " + aeDatum(x.gilt_ab) : ""}`,
+    P.push({ wer: x.name, datum: x.erstellt_am, sym: a.sym, gruppe: "Änderungsmeldung – bitte ansehen", titel: a.t, unter: `${x.name} · ${zeitKurz(x.erstellt_am)}${x.gilt_ab ? " · ab " + aeDatum(x.gilt_ab) : ""}`,
       auf: "aeEingang()", ordner: ["📇", "Mitglieder", "buListe()"],
       schnell: [...(x.kenntnisIch ? [] : [["👁️ Zur Kenntnis genommen", `aeKenntnis('${x.id}', null)`, !x.darfFreigeben]]), ...(x.darfFreigeben ? [["✅ Freigeben", `aeFreigeben('${x.id}', null)`, true]] : []), ["🗄️ Ablegen …", `ekAblage('aenderung','${x.id}')`]] }); // 2.22.19, 2.23.6
   }
   for (const p of (pr?.protokolle || []).filter((x) => x.status === "entwurf" && x.darfBearbeiten))
-    P.push({ sym: "📄", gruppe: "Protokoll-Entwurf", titel: p.titel, unter: `${tagKurz(p.datum)} · von ${p.verfasser?.name || "?"}`, auf: `protokollOeffnen('${p.id}')`, ordner: ["📄", "Protokolle", "zeige('protokolle')"] });
+    P.push({ wer: p.verfasser?.name, datum: p.datum, sym: "📄", gruppe: "Protokoll-Entwurf", titel: p.titel, unter: `${tagKurz(p.datum)} · von ${p.verfasser?.name || "?"}`, auf: `protokollOeffnen('${p.id}')`, ordner: ["📄", "Protokolle", "zeige('protokolle')"] });
   for (const a of (pr?.aufgaben || []))
-    P.push({ sym: "✔️", gruppe: "Offene Aufgabe", titel: a.text, unter: [a.name, faelligText(a.faellig).replace(/<[^>]+>/g, "").trim()].filter(Boolean).join(" · "), auf: "zeige('protokolle')", ordner: ["📄", "Protokolle", "zeige('protokolle')"],
+    P.push({ wer: a.name, datum: a.faellig, sym: "✔️", gruppe: "Offene Aufgabe", titel: a.text, unter: [a.name, faelligText(a.faellig).replace(/<[^>]+>/g, "").trim()].filter(Boolean).join(" · "), auf: "zeige('protokolle')", ordner: ["📄", "Protokolle", "zeige('protokolle')"],
       schnell: a.meine || ICH?.vorstand ? [["✔ Erledigt", `buEinAufgabe('${a.id}')`, true]] : [] });
   return P;
 }
 function buEingangHtml() {
   const geladen = BU_EIN.leihen || BU_EIN.vorschlaege || BU_EIN.hilfe, P = (BU_EIN.posten = buEingangPosten());
-  return `<div class="karte bu-gruss">📥 <b>Eingang${P.length ? ` – ${P.length} ${P.length === 1 ? "Sache wartet" : "Sachen warten"}` : ""}</b><br><span class="hinweis">Antippen → bearbeiten, zurück in den Eingang oder zum Ordner. Es bleibt hier, bis es erledigt ist; mit 🗄️ Ablegen in einen oder mehrere Ordner legen (auch in den Ordner des Mitglieds).</span></div>
-    ${!geladen ? '<div class="karte hinweis">Wird geladen …</div>' : P.length ? `<div class="karte" style="padding:4px 12px">${P.map((x, i) => `<button class="bu-ein-zeile" onclick="buEinPosten(${i})"><span class="sym">${esc(x.sym)}</span>
+  const zeig = P.map((x, i) => [x, i]).filter(([x]) => ekfPasst(x)), aktiv = ["jahr", "monat", "art", "wer"].filter((k) => EKF[k]).length;
+  return `<div class="ek-kopf"><b>📥 Eingang${P.length ? ` – ${P.length} ${P.length === 1 ? "Sache" : "Sachen"}` : ""}</b>${ICH?.vorstand || ICH?.admin ? `<button class="knopf klein pr-filter-knopf" onclick="dvStart()" title="Dienstzeiten-Übersicht (alle Namen und Tage)" aria-label="Dienstzeiten-Übersicht">📊</button>` : ""}<button class="knopf klein pr-filter-knopf" onclick="ekfUmschalten()" title="Eingang filtern (Jahr, Monat, Art, Name)" aria-label="Eingang filtern" aria-expanded="${EKF.offen}">🔽${aktiv ? `<span class="anz">${aktiv}</span>` : ""}</button></div>
+    ${EKF.offen ? ekfHtml(P, zeig.length) : ""}
+    <div class="karte bu-gruss"><span class="hinweis">Antippen → bearbeiten, zurück in den Eingang oder zum Ordner. Es bleibt hier, bis es erledigt ist; mit 🗄️ Ablegen in einen oder mehrere Ordner legen (auch in den Ordner des Mitglieds).</span></div>
+    ${!geladen ? '<div class="karte hinweis">Wird geladen …</div>' : !zeig.length && P.length ? '<div class="karte hinweis">Zu diesem Filter liegt nichts im Eingang – <button class="knopf klein" onclick="ekfLeeren()">↺ Alle zeigen</button></div>' : P.length ? `<div class="karte" style="padding:4px 12px">${zeig.map(([x, i]) => `<button class="bu-ein-zeile" onclick="buEinPosten(${i})"><span class="sym">${esc(x.sym)}</span>
       <span class="txt"><small>${esc(x.gruppe)}</small><b>${esc(x.titel)}</b><small>${esc(x.unter)}</small></span><span class="pfeil">›</span></button>`).join("")}</div>` : '<div class="karte hinweis">📭 Alles erledigt – im Eingang liegt nichts 👍</div>'}
     <div class="knoepfe"><button class="knopf" onclick="buEingangLaden()">↻ Neu laden</button><button class="knopf" onclick="buZurueck()">🗂️ Zurück ins Büro</button></div>`;
+}
+// ---------- KC-CLUB-EINGANG-FILTER (2.23.39, Wunsch Hansi): Eingang filtern nach Jahr, Monat, Art, Name – wie bei den Protokollen ----------
+// Auswahl nur aus dem, was gerade im Eingang liegt (keine Tipparbeit). ✕ schließt das Feld, die Auswahl bleibt (Zahl am 🔽).
+const EKF = { jahr: "", monat: "", art: "", wer: "", offen: false };
+const EKF_ART = { Genehmigt: "Ausleihe", "Spenden-Vorschlag": "Vorschlag", "Offener Vorschlag": "Vorschlag", "Protokoll-Entwurf": "Protokoll", "Offene Aufgabe": "Aufgabe", Archiv: "Archiv-Prüfung" };
+const ekfArt = (x) => { const g = String(x.gruppe || "").split(/ – |: | · /)[0]; return EKF_ART[g] || g; };
+const ekfTag = (x) => (/^\d{4}-\d{2}/.test(String(x.datum || "")) ? isoBerlin(new Date(String(x.datum).length > 10 ? x.datum : x.datum + "T12:00:00Z")) : "");
+const ekfPasst = (x) => { const t = ekfTag(x); return (!EKF.jahr || t.slice(0, 4) === EKF.jahr) && (!EKF.monat || t.slice(5, 7) === EKF.monat) && (!EKF.art || ekfArt(x) === EKF.art) && (!EKF.wer || x.wer === EKF.wer); };
+const EKF_MONATE = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
+function ekfHtml(P, treffer) {
+  const wahl = (k, alle, werte, name = (w) => w) => `<select onchange="ekfSetzen('${k}', this.value)"><option value="">${alle}</option>${werte.map((w) => `<option value="${esc(w)}"${w === EKF[k] ? " selected" : ""}>${esc(name(w))}</option>`).join("")}</select>`;
+  const uniq = (l) => [...new Set(l.filter(Boolean))];
+  return `<div class="karte pr-filter ek-filter"><button type="button" class="pr-filter-zu" onclick="ekfUmschalten(false)" aria-label="Filter schließen" title="Filter schließen">✕</button>
+    <div class="pr-filter-raster">
+      <label class="feld">📅 Jahr${wahl("jahr", "Alle Jahre", uniq(P.map((x) => ekfTag(x).slice(0, 4))).sort().reverse())}</label>
+      <label class="feld">🗓️ Monat${wahl("monat", "Alle Monate", uniq(P.map((x) => ekfTag(x).slice(5, 7))).sort(), (m) => EKF_MONATE[Number(m) - 1])}</label>
+      <label class="feld">🏷️ Art${wahl("art", "Alle Arten", uniq(P.map(ekfArt)).sort((a, b) => a.localeCompare(b, "de")))}</label>
+      <label class="feld">👤 Name${wahl("wer", "Alle Namen", uniq(P.map((x) => x.wer)).sort((a, b) => a.localeCompare(b, "de")))}</label>
+    </div>
+    <div class="pr-filter-fuss"><span class="hinweis">${treffer} von ${P.length} ${P.length === 1 ? "Sache" : "Sachen"}</span><button class="knopf klein" onclick="ekfLeeren()">↺ Alle zeigen</button></div></div>`;
+}
+function ekfUmschalten(an) { EKF.offen = an ?? !EKF.offen; buZeigen(); }
+function ekfSetzen(k, v) { EKF[k] = String(v || ""); buZeigen(); }
+function ekfLeeren() { Object.assign(EKF, { jahr: "", monat: "", art: "", wer: "" }); buZeigen(); }
+
+// ---------- KC-CLUB-DIENST-UEBERSICHT (2.23.39, Wunsch Hansi): alle Dienstzeiten quer – vorne Name, oben die Tage, Zeitbalken, Stunden ----------
+// Jedes Tagesfeld zeigt 8–24 Uhr: hellgrün = Kann, dunkelgrün = Wunsch, gelb = Wenn nötig, rot gestreift = Sperre. „Gesamt“ = Stunden Kann
+// (Kann ∪ Wunsch ∪ Wenn nötig, ohne Doppelzählung). Unten: Stunden und Personen je Tag. Drucken: A4 quer über den zentralen Druck-Kern.
+// 🗄️ Ablegen: jede Aufstellung in den Ordner des Mitglieds (Register „Dienstpläne“) und ins Büro „Dienstpläne <Jahr>“ (Wünsche) + Gesamtplan als Bild.
+const DV = { daten: null, sort: "name" };
+const DV_TYP = { available: "kann", preferred: "wunsch", if_needed: "noetig", unavailable: "sperre" };
+const dvTage = (P) => { const alle = P.flatMap((x) => x.eintraege.map((e) => e.d)).sort(); if (!alle.length) return [];
+  const t = [], ende = new Date(alle[alle.length - 1] + "T12:00:00Z"); for (let d = new Date(alle[0] + "T12:00:00Z"); d <= ende && t.length < 62; d.setUTCDate(d.getUTCDate() + 1)) t.push(d.toISOString().slice(0, 10)); return t; };
+const dvStunden = (eintr) => { const h = new Set(); for (const e of eintr) if (e.t !== "unavailable") for (let i = Math.max(0, e.s); i < Math.min(24, e.e); i++) h.add(e.d + ":" + i); return h.size; };
+function dvGanttHtml() {
+  const P = [...(DV.daten?.personen || [])].filter((x) => x.eintraege.length);
+  const std = new Map(P.map((x) => [x.id, dvStunden(x.eintraege)]));
+  P.sort((a, b) => (DV.sort === "stunden" ? std.get(b.id) - std.get(a.id) : 0) || a.name.localeCompare(b.name, "de"));
+  const tage = dvTage(P), WT = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"], x = (h) => ((Math.max(8, Math.min(24, h)) - 8) / 16) * 100;
+  if (!tage.length) return '<p class="hinweis">Noch keine Dienstzeiten eingegangen.</p>';
+  const we = (t) => [0, 6].includes(new Date(t + "T12:00:00Z").getUTCDay());
+  let h = `<div class="dv-gantt" style="grid-template-columns:minmax(120px,170px) repeat(${tage.length},minmax(46px,1fr)) 70px"><div class="dv-h dv-name">Name</div>`;
+  h += tage.map((t) => `<div class="dv-h${we(t) ? " dv-we" : ""}">${t.slice(8)}.${t.slice(5, 7)}.<small>${WT[new Date(t + "T12:00:00Z").getUTCDay()]}</small></div>`).join("") + `<div class="dv-h">Gesamt</div>`;
+  for (const p of P) {
+    h += `<div class="dv-name">${esc(p.name)}</div>`;
+    for (const t of tage) {
+      const e = p.eintraege.filter((y) => y.d === t), kann = e.filter((y) => y.t === "available").map((y) => `${y.s}–${y.e}`);
+      const bal = ["unavailable", "available", "if_needed", "preferred"].flatMap((typ) => e.filter((y) => y.t === typ).map((y) => `<i class="dv-bal ${DV_TYP[typ]}" style="left:${x(y.s)}%;width:${Math.max(2, x(y.e) - x(y.s))}%"></i>`)).join("");
+      const titel = e.map((y) => `${{ available: "Kann", preferred: "Wunsch", if_needed: "Wenn nötig", unavailable: "Sperre" }[y.t]} ${y.s}–${y.e} Uhr`).join(", ");
+      h += `<div class="dv-zelle${we(t) ? " dv-we" : ""}"${titel ? ` title="${esc(titel)}" onclick="melde('${esc(p.name.split(" ")[0])} ${t.slice(8)}.${t.slice(5, 7)}.: ${esc(titel)}')"` : ""}>${bal}${kann.length ? `<small>${kann.join(" ")}</small>` : ""}</div>`;
+    }
+    const wunsch = dvStunden(p.eintraege.filter((y) => y.t === "preferred"));
+    h += `<div class="dv-ges">${std.get(p.id)} Std${wunsch ? `<small>Wunsch ${wunsch}</small>` : ""}</div>`;
+  }
+  h += `<div class="dv-summe dv-name">Summe je Tag</div>`;
+  for (const t of tage) { const am = P.filter((p) => p.eintraege.some((y) => y.d === t && y.t !== "unavailable"));
+    h += `<div class="dv-summe${am.length <= 2 ? " dv-duenn" : ""}">${am.reduce((s, p) => s + dvStunden(p.eintraege.filter((y) => y.d === t)), 0)} Std<small>${am.length} Pers.</small></div>`; }
+  h += `<div class="dv-summe">${[...std.values()].reduce((a, b) => a + b, 0)} Std</div></div>`;
+  return h;
+}
+const dvLegende = () => `<div class="dv-leg"><span><i class="dv-bal kann"></i>Kann</span><span><i class="dv-bal wunsch"></i>Wunsch</span><span><i class="dv-bal noetig"></i>Wenn nötig</span><span><i class="dv-bal sperre"></i>Sperre</span><span class="hinweis">Tagesfeld = 8 bis 24 Uhr · Gesamt = Stunden „Kann“</span></div>`;
+function dvZeichnen() {
+  const z = $("dvInhalt"); if (!z) return;
+  const P = DV.daten?.personen || [];
+  z.innerHTML = `<p class="hinweis" style="margin:0">${esc(DV.daten?.veranstaltung || "")} · ${P.filter((x) => x.eintraege.length).length} Personen · Stand ${esc(zeitKurz(new Date().toISOString()))}</p>
+    ${dvLegende()}
+    <div class="dv-leiste"><button class="knopf klein${DV.sort === "name" ? " haupt" : ""}" onclick="DV.sort='name';dvZeichnen()">🔤 Name</button><button class="knopf klein${DV.sort === "stunden" ? " haupt" : ""}" onclick="DV.sort='stunden';dvZeichnen()">⏱️ Stunden</button>
+      <button class="knopf klein" onclick="dvDrucken()">🖨️ Drucken (A4 quer)</button><button class="knopf klein" onclick="dvAblegen()">🗄️ In Ordner ablegen</button></div>
+    <div class="dv-rahmen">${dvGanttHtml()}</div>
+    <p class="hinweis" style="margin:0">Feld antippen = genaue Uhrzeiten. Auf dem Handy am besten quer halten – sonst seitlich wischen.</p>`;
+}
+async function dvStart() {
+  const f = blattAuf("dvBlatt", `<div class="dv-kopf"><h3>📊 Dienstzeiten-Übersicht</h3><button type="button" class="pr-filter-zu" aria-label="Übersicht schließen" title="Schließen" onclick="$('dvBlatt').remove()">✕</button></div><div id="dvInhalt"><p class="hinweis">Wird geladen …</p></div>`);
+  f.classList.add("dv-blatt");
+  try { DV.daten = await api("dienst_uebersicht", {}, { warten: true }); } catch (e) { f.remove(); return meldeFehler(e); }
+  dvZeichnen();
+}
+function druckDienstUebersicht() {
+  if (!DV.daten) return null;
+  return { titel: `Dienstzeiten-Übersicht ${DV.daten.veranstaltung}`, unter: "Kann · Wunsch · Wenn nötig · Sperre – je Tag 8 bis 24 Uhr", quer: true, html: dvLegende() + dvGanttHtml() };
+}
+async function dvDrucken() {
+  DRUCK = { art: "dienstuebersicht" };
+  try { if (!(await druckSeiteBauen())) return; } catch (e) { return meldeFehler(e); }
+  druckJetzt();
+}
+async function dvAblegen() {
+  if (!(await frage("Alle Dienstzeiten ablegen?\n\n• jede Aufstellung in den Ordner des Mitglieds (Register „Dienstpläne“)\n• ins Büro „Dienstpläne“ (Register „Wünsche“)\n• dazu diese Übersicht als Gesamtplan (Bild)\n\nSchon Abgelegtes wird nicht doppelt abgelegt.", { ja: "🗄️ Ablegen", nein: "Abbrechen" }))) return;
+  let r; try { r = await api("dienst_ablegen", {}, { warten: true }); } catch (e) { return meldeFehler(e); }
+  let bild = false;
+  try { // Gesamtplan als Bild (html2canvas liegt lokal in lib/)
+    await bfBibliothek();
+    const el = document.querySelector("#dvInhalt .dv-gantt");
+    const c = await window.html2canvas(el, { scale: 2, backgroundColor: "#ffffff", logging: false, width: el.scrollWidth, height: el.scrollHeight, windowWidth: el.scrollWidth + 40, onclone: bfKlonGlaetten });
+    const daten = c.toDataURL("image/png").split(",")[1], heute = isoBerlin(new Date());
+    await api("archiv_hochladen", { ordner_id: r.ordner_id, register: r.register, titel: `Gesamtplan Dienstzeiten ${DV.daten.veranstaltung} (Stand ${zeitKurz(new Date().toISOString())})`, datum: heute,
+      stichworte: `Dienstplan, Gesamtplan, ${DV.daten.veranstaltung}`, name: `Dienstzeiten-Gesamtplan-${heute}.png`, mime: "image/png", daten }, { warten: true });
+    bild = true;
+  } catch (e) { console.warn("Gesamtplan-Bild", e); }
+  melde(`🗄️ Abgelegt: ${r.neu} neu${r.vorhanden ? `, ${r.vorhanden} schon da` : ""}${bild ? " + Gesamtplan" : " – Gesamtplan-Bild ging nicht"}${r.fehler ? ` · ⚠️ ${r.fehler} ging nicht` : ""}`, !!r.fehler || !bild);
 }
 function buEinPosten(i) {
   const x = BU_EIN.posten[i]; if (!x) return;
@@ -11154,13 +11278,13 @@ const ekErst = (id) => (BU_EIN.korb?.erstattungen || []).find((x) => x.id === id
 function ekPosten(P) {
   const k = BU_EIN.korb; if (!k) return;
   for (const x of k.erstattungen || [])
-    P.push({ sym: "💶", gruppe: "Erstattung – bitte bearbeiten", titel: `${x.name}: ${euro(x.summe)}`,
+    P.push({ wer: x.name, datum: x.erstellt_am, sym: "💶", gruppe: "Erstattung – bitte bearbeiten", titel: `${x.name}: ${euro(x.summe)}`,
       unter: `${zeitKurz(x.erstellt_am)} · ${x.positionen.length} Position${x.positionen.length === 1 ? "" : "en"} · ${x.auszahlung === "bar" ? "bar" : "Überweisung"}${x.kenntnis.length ? " · 👁️ " + x.kenntnis.join(", ") : ""}`,
       auf: `ekErstInfo('${x.id}')`, ordner: ["🗄️", "Archiv", "arStart()"],
       schnell: [...(x.kenntnisIch ? [] : [["👁️ Zur Kenntnis genommen", `ekKenntnis('erstattung','${x.id}')`]]), ["✅ Erstattet", `ekErstattet('${x.id}')`, true],
         ["✖ Ablehnen", `ekErstAblehnen('${x.id}')`], ["🗄️ Ablegen …", `ekAblage('erstattung','${x.id}')`]] });
   for (const x of k.dienstwuensche || [])
-    P.push({ sym: "📅", gruppe: x.geaendert ? "Dienstzeiten – geändert" : "Dienstzeiten – neu", titel: x.name,
+    P.push({ wer: x.name, datum: x.zuletzt, sym: "📅", gruppe: x.geaendert ? "Dienstzeiten – geändert" : "Dienstzeiten – neu", titel: x.name,
       unter: `${x.tage} Tag${x.tage === 1 ? "" : "e"} · zuletzt ${zeitKurz(x.zuletzt)}${x.uebernommen ? " · im Dienstplan übernommen" : ""}${x.kenntnis.length ? " · 👁️ " + x.kenntnis.join(", ") : ""}`,
       auf: `ekDienstInfo('${x.id}')`, ordner: ["📅", "Dienste", "zeige('dienste')"],
       schnell: [["👁️ Zur Kenntnis genommen", `ekKenntnis('dienstwunsch','${x.id}')`, true], ["🗄️ Ablegen …", `ekAblage('dienstwunsch','${x.id}')`]] });
@@ -15786,7 +15910,8 @@ const DRUCKARTEN = {
   ueberblick: { bauen: () => druckUeberblick() },
   hilfe: { titel: "🖨️ Hilfe drucken / als PDF", optionen: () => hzDruckOptionen(), bauen: (o) => hzDruck(o) }, // KC-CLUB-HILFEZENTRUM (2.23.2)
   dokument: { bauen: () => dokDruckSeite() }, // KC-CLUB-DOK-ANZEIGE (1.62.0): PDF-Seiten randlos auf A4
-  wunschbogen: { bauen: () => wbDruckSeite() }, // KC-CLUB-WUNSCHBOGEN (2.23.28): leerer persönlicher Bogen, randlos A4 quer
+  wunschbogen: { bauen: () => wbDruckSeite() },
+  dienstuebersicht: { bauen: () => druckDienstUebersicht() }, // KC-CLUB-DIENST-UEBERSICHT (2.23.39): A4 quer // KC-CLUB-WUNSCHBOGEN (2.23.28): leerer persönlicher Bogen, randlos A4 quer
   bestaetigung: { bauen: () => druckBestaetigung() },
   einrichtungskarte: { bauen: (o, param) => druckEinrichtungskarte(param) }, // KC-CLUB-EINRICHTUNGSKARTE (1.88.0) // KC-CLUB-BESTAETIGUNG (1.69.0): Aufstellung der eigenen Eingaben
 };
