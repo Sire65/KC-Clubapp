@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.23.32 – 2026-10-04 – 👨‍🍳 Über die App: Entwickler mit Passbild (Wunsch Hansi)
+- KC-CLUB-ENTWICKLER: Fenster „Über die App“ mit Passbild und Lebenslauf von Hans-Joachim Koch – wie „Entwickler“ in KC Futura Academy
+  (Text von dort, letzter Absatz für die Club-App). Foto aus KC Futura Academy (shared/hans-joachim-koch.jpg, dort bereits öffentlich)
+  als entwickler-hans-joachim-koch.webp (20 KB, ohne Kameradaten/EXIF). Rund mit Goldrand. Knopf „💬 Hansi schreiben“ (nicht bei ihm selbst).
+  Erreichbar: ⚙️ Mehr → ℹ️ App-Info „👨‍🍳 Über den Entwickler“, einfache Ansicht „👨‍🍳 Über die App“, Hilfe-Zentrum (Technik),
+  Schnellsuche. Test 381.
+
 ## 2.23.31 – 2026-10-04 – Tagesübersicht: „Heute nicht mehr anzeigen“ (Wunsch Hansi)
 - KC-CLUB-TAGESINFO-HEUTE-AUS: In der Tagesübersicht (Clubleitung, beim Start) neuer Knopf „🌙 Heute nicht mehr anzeigen“ – bis Mitternacht
   erscheint sie beim Start nicht mehr (je Gerät, localStorage), morgen wieder wie gewohnt. „📋 Übersicht“ öffnet sie jederzeit.

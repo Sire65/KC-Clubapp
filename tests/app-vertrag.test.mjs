@@ -3869,6 +3869,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/localStorage\.getItem\(TI_HEUTE_AUS\) === heuteIso\(\)\) return;/.test(html), "beim Start heute nicht mehr");
   assert.ok(/Auf diesem Gerät nicht mehr beim Start zeigen/.test(html), "dauerhafter Schalter bleibt");
 }
+// 381. 2.23.32: Über die App – Entwickler mit Passbild (KC-CLUB-ENTWICKLER)
+{
+  assert.ok(fs.existsSync(new URL("../entwickler-hans-joachim-koch.webp", import.meta.url)), "Foto liegt in der App");
+  const foto = fs.readFileSync(new URL("../entwickler-hans-joachim-koch.webp", import.meta.url));
+  assert.ok(foto.slice(8, 12).toString() === "WEBP" && !foto.includes("Exif") && foto.length < 60000, "WebP, klein, ohne Kameradaten");
+  assert.ok(/function entwicklerZeigen\(\)/.test(html) && /onclick="entwicklerZeigen\(\)">👨‍🍳 Über den Entwickler<\/button>/.test(html), "Fenster + Knopf in App-Info");
+  assert.ok(/\{ id: "entwickler", thema: "technik"/.test(html) && /\["👨‍🍳", "Über die App \(Entwickler\)"/.test(html), "Hilfe + Suche");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

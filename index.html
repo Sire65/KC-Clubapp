@@ -936,6 +936,9 @@
   .uh-archiv-zeile { display: flex; align-items: center; gap: 10px; width: 100%; margin: 0 0 6px; padding: 10px 12px; border: 1px solid var(--linie); border-radius: 12px; background: transparent; color: inherit; font: inherit; font-weight: 700; text-align: left; cursor: pointer; }
   .uh-archiv-zeile .hinweis { flex: 1; font-weight: 400; }
   .wb-seiten { display: grid; gap: 8px; margin: 0 0 10px; } .wb-seiten img { width: 100%; border: 1px solid var(--linie); border-radius: 6px; background: #fff; } /* KC-CLUB-WUNSCHBOGEN */
+  /* KC-CLUB-ENTWICKLER (2.23.32): Passbild rund mit Goldrand wie in KC Futura Academy */
+  .ew-kopf { display: flex; align-items: center; gap: 16px; margin: 0 0 8px; }
+  .ew-foto { width: 120px; height: 120px; object-fit: cover; object-position: center 22%; border-radius: 50%; border: 4px solid var(--karte); outline: 3px solid var(--gold); box-shadow: 0 0 0 7px var(--rot), 0 10px 24px rgba(0,0,0,.25); flex: none; }
   .wb-ok, .wb-fehler { margin: 10px 0 0; padding: 10px 12px; border-radius: 12px; font-size: .95rem; line-height: 1.35; }
   .wb-ok { background: var(--gruenbg); color: var(--textGruen); border: 2px solid var(--gruen); } .wb-fehler { background: var(--rotbg); color: var(--textRot); border: 2px solid var(--rot); }
   .dw-kopf { display: grid; gap: 6px; padding: 8px 12px; padding-top: max(8px, env(safe-area-inset-top)); background: var(--karte); box-shadow: var(--schatten); }
@@ -2345,6 +2348,7 @@
       <div class="schalter"><div><b>❓ Fragezeichen unten rechts</b><div class="hinweis">Öffnet die passende Hilfe zum Bereich. Ausblenden geht auch: lange auf das „?“ drücken</div></div><input type="checkbox" id="setHzFrageE" checked onchange="hzFrageSchalter(this.checked)"></div> <!-- KC-CLUB-HILFEZENTRUM (2.23.5) -->
       <div class="schalter"><div><b>🟢 Einfache Ansicht</b><div class="hinweis">Ausschalten zeigt alle Funktionen – du kannst jederzeit zurück.</div></div><button class="knopf klein" onclick="ansichtSetzen('erweitert')">🔧 Alle Funktionen</button></div>
       <div class="schalter"><div><b>📄 Kurzanleitung</b><div class="hinweis">Die App in 3 Schritten – zum Ansehen oder Ausdrucken</div></div><button class="knopf klein" onclick="druckStarten('anleitung')">Ansehen</button></div>
+      <div class="schalter"><div><b>👨‍🍳 Über die App</b><div class="hinweis">Wer die Club-App gebaut hat</div></div><button class="knopf klein" onclick="entwicklerZeigen()">Ansehen</button></div>
       <div class="schalter"><div><b>💭 Feedback</b><div class="hinweis">Was gefällt dir, was ist zu kompliziert? Schreib es <span class="admin-name">Hansi</span>.</div></div><button class="knopf klein" onclick="zeige('feedback')">Schreiben</button></div>
     </details>
     <!-- KC-CLUB-SCHNELLSTART (1.8.0): nur erweiterte Ansicht -->
@@ -2536,7 +2540,8 @@
     <details class="karte" data-klappe="app">
       <summary>ℹ️ App-Info</summary>
       <div style="text-align:center;margin:6px 0 12px"><img src="icon-192.png" alt="" style="width:64px;height:64px;border-radius:16px"><div style="font-weight:800;font-size:1.15rem;margin-top:6px">Köcheclub Werne – Club-App</div>
-        <div class="hinweis" style="margin:2px 0 0">Entwicklung &amp; Design: <b>Hans-Joachim Koch</b></div></div>
+        <div class="hinweis" style="margin:2px 0 0">Entwicklung &amp; Design: <b>Hans-Joachim Koch</b></div>
+        <button class="knopf klein" style="margin-top:8px" onclick="entwicklerZeigen()">👨‍🍳 Über den Entwickler</button></div>
       <div class="zeile"><span>Version</span><b id="appVersion" style="margin-left:auto"></b></div><div class="zeile"><span>Angemeldet als</span><b id="ichName" style="margin-left:auto;text-align:right"></b></div>
       <div id="appInfo"></div>
       <div class="knoepfe"><button class="knopf klein" onclick="updateKachel()">Nach Update suchen</button><button class="knopf klein" onclick="appInfoKopieren()">📋 Infos kopieren</button><button class="knopf klein" onclick="fpProblemMelden()">🆘 Problem melden</button></div>
@@ -2792,7 +2797,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.31"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.32"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2827,6 +2832,22 @@ let MG_EINMAL = null;
 // solange nichts geladen ist). Feste Stellen im HTML tragen <span class="admin-name">, die nach dem Laden gefüllt werden.
 const adminName = () => INIT?.adminName || "Hansi";
 const adminNamenSetzen = () => document.querySelectorAll(".admin-name").forEach((e) => { e.textContent = adminName(); });
+// ---------- KC-CLUB-ENTWICKLER (2.23.32, Wunsch Hansi): „Über die App“ mit Passbild und Lebenslauf – wie „Entwickler“ in KC Futura Academy ----------
+// Foto aus KC Futura Academy (shared/hans-joachim-koch.jpg, dort schon öffentlich) als WebP ohne Kameradaten. Text wie dort, letzter Absatz für die Club-App.
+const ENTWICKLER = { person_id: "KC-P-002", name: "Hans-Joachim Koch", bild: "entwickler-hans-joachim-koch.webp" };
+function entwicklerZeigen() {
+  const ich = ICH?.person_id === ENTWICKLER.person_id;
+  blattAuf("entwicklerBlatt", `<div class="ew-kopf"><img class="ew-foto" src="${ENTWICKLER.bild}" alt="${esc(ENTWICKLER.name)}" width="120" height="161"><div>
+      <h3 style="margin:0">${esc(ENTWICKLER.name)}</h3><div class="hinweis">Entwickler und Designer der Köcheclub-App</div>
+      <div class="hinweis" style="margin-top:4px">👨‍🍳 Köcheclub Werne · since 1991</div></div></div>
+    <p>Hans-Joachim Koch wurde 1961 in Holzwickede geboren. Bereits mit 16 Jahren begann er seine Ausbildung zum Koch. Nach mehreren Jahren Berufserfahrung legte er im Alter von 25 Jahren erfolgreich seine Meisterprüfung ab. Anschließend absolvierte er die Weiterbildung zum diätetisch geschulten Koch.</p>
+    <p>Seine beruflichen Stationen führten ihn durch verschiedene Restaurants sowie Großküchen in Krankenhäusern, Altenheimen, Einrichtungen der Behindertenhilfe, Kindergärten und Schulen, in denen er bis zu seinem Ruhestand tätig war.</p>
+    <p>Seit der Gründung des Köcheclubs Werne im Jahr 1991 ist er aktives Gründungsmitglied. Neben seiner Leidenschaft für das Kochen begeisterte ihn schon immer die Computertechnik.</p>
+    <p>Die <b>Köcheclub-App</b> entwickelte er, damit alle Mitglieder einfach in Verbindung bleiben – Termine, Nachrichten, Dienstwünsche und vieles mehr an einem Ort, verständlich und kostenlos.</p>
+    <p class="hinweis" style="margin:0 0 10px">Version ${esc(APP_VERSION)} · © 2026 Köcheclub Werne · kostenlos und werbefrei</p>
+    <div class="knoepfe" style="flex-direction:column;align-items:stretch">${ich ? "" : `<button class="knopf haupt" onclick="fensterZu($('entwicklerBlatt'));direkt('${ENTWICKLER.person_id}')">💬 Hansi schreiben</button>`}
+      <button class="knopf" onclick="fensterZu($('entwicklerBlatt'))">Schließen</button></div>`);
+}
 // KC-CLUB-ZURUECK-FENSTER (1.98.0): zuletzt gesetzter Verlaufseintrag (für „Zurück schließt nur das Fenster“)
 const VERLAUF = { state: null, url: "" };
 for (const m of ["pushState", "replaceState"]) { const o = history[m].bind(history); history[m] = (st, t, u) => { o(st, t, u); VERLAUF.state = history.state; VERLAUF.url = location.href; }; } // KC-CLUB-ONLINE-SEITE (1.91.0): einmaliger Filter der Mitglieder-Seite (früh deklariert, zeige() nutzt ihn)
@@ -3793,6 +3814,7 @@ const HILFE = [
   { id: "anheften", thema: "nachrichten", sym: "📌", t: "Wichtiges oben im Chat festhalten", x: "Damit eine wichtige Nachricht nicht nach oben wegrutscht: einfach antippen und <b>„📌 Oben anheften“</b> wählen. Bis zu drei Nachrichten bleiben so über dem Chat stehen. Mit „Lösen“ kommen sie wieder an ihren Platz.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
   { id: "merken", thema: "nachrichten", sym: "⭐", t: "Eine Nachricht für später merken", x: "Manchmal liest man etwas und möchte es später schnell wiederfinden. Tipp die Nachricht an und wähle <b>„⭐ Merken“</b>. Alles Gemerkte liegt in 💬 Nachrichten oben unter <b>„⭐ Gemerkt“</b> – diese Liste siehst nur du.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
   { id: "chat_abstimmung", thema: "nachrichten", sym: "📊", t: "Schnell mal abstimmen", x: "Grillen oder Pizza? Freitag oder Samstag? Über <b>📎</b> unter dem Schreibfeld → <b>„📊 Abstimmung“</b> stellst du eine Frage mit 2 bis 8 Antworten. Alle sehen gleich, wie es gerade steht.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
+  { id: "entwickler", thema: "technik", sym: "👨‍🍳", t: "Wer hat die Club-App gebaut?", x: "Die Club-App hat <b>Hans-Joachim Koch</b> entwickelt und gestaltet – Koch, Küchenmeister und Gründungsmitglied des Köcheclubs. Mehr über ihn mit Foto: <b>⚙️ Mehr → 👨‍🍳 Über die App</b>.", zeig: () => entwicklerZeigen(), seit: "2.23.32" },
   { id: "wunschbogen", thema: "termine", sym: "🖨️", t: "Leeren Wunschbogen drucken oder mailen", x: "Unter <b>📝 Dienstwünsche</b> oben auf <b>„🖨️ Leerer Bogen“</b> tippen. Du bekommst deinen persönlichen Bogen mit Namen und oben rechts einem QR-Code mit deiner Mitglieds-ID. <b>🖨️ Drucken</b> – oder ohne Drucker <b>✉️ Per E-Mail an mich</b>, dann kommt er als PDF in dein Postfach. Von Hand ausfüllen und die Zeiten danach mit Twinkey eintragen.", zeig: () => wbStart(), seit: "2.23.28" },
   { id: "chat_archiv", thema: "nachrichten", sym: "📦", t: "Chats archivieren, zurückholen und löschen", x: "In der Chat-Liste einmal auf einen Chat tippen: <b>📦 Archivieren</b> räumt ihn aus der Liste – er bleibt dort, auch wenn jemand schreibt, und steht oben unter <b>„📦 Archiviert“</b>. Dort holst du ihn mit <b>📤 Wieder aktivieren</b> zurück. <b>🗑️ Bei mir komplett löschen</b> entfernt den Chat mit allen bisherigen Nachrichten – nur bei dir, die anderen behalten ihn. Dasselbe findest du im Chat oben im Menü.", zeig: () => zeige("nachrichten"), seit: "2.23.28" },
   { id: "kontakt_teilen", thema: "nachrichten", sym: "👤", t: "Eine Telefonnummer weitergeben", x: "Jemand fragt nach einer Nummer? Mit <b>📎 → „👤 Kontakt teilen“</b> schickst du eine Kontaktkarte in den Chat – der andere tippt sie an und hat alles beisammen.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
@@ -17193,6 +17215,7 @@ function suAppListe() {
     ["🆘", "Notfallkontakt", "notfall kontakt", ein("nfName")], ["📆", "Kalender-Abo (Handy-Kalender)", "kalender abo handy ical", ein("kalAboKnopf")],
     ["📱", "Meine Geräte", "geräte handy tablet abmelden", () => geraeteBlatt()], ["📡", "Verbindung prüfen", "verbindung internet led server", () => verbindungBlatt()],
     ["🔄", "Update prüfen", "update version neu", () => updateKachel()], ["🟢", "Mein Status", "status urlaub verfügbar krank", () => statusBlatt()],
+    ["👨‍🍳", "Über die App (Entwickler)", "über app entwickler hansi koch info autor wer gebaut", () => entwicklerZeigen()], // KC-CLUB-ENTWICKLER (2.23.32)
     ["🖨️", "Leeren Wunschbogen drucken (Dienstwünsche)", "wunschbogen bogen drucken dienstwunsch matrix papier qr", () => wbStart()], // KC-CLUB-WUNSCHBOGEN (2.23.28)
     ["👀", "Ansicht wechseln (einfach/erweitert)", "ansicht einfach erweitert kacheln", () => ansichtWechseln()], ["🧪", "Test an mich", "test push mail ausprobieren", () => testAnMichStarten()],
     ["🆘", "Problem melden", "problem fehler hilfe melden", () => fpProblemMelden()], ["👥", "Wer ist online?", "online wer", () => onlineBlatt()],
