@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.23.3 – 2026-10-04 – Hilfe-Zentrum: Kapitel 1 „Erste Schritte“ (Text Hansi)
+- KC-CLUB-HILFEZENTRUM: neues Thema „👋 Erste Schritte“ ganz vorne (= Kapitel 1, die übrigen rücken auf), fünf Hilfen nach Hansis Text:
+  1.1 Herzlich willkommen · 1.2 Zuerst: deine Einstellungen (⚙️, „Zeig mir wo“) · 1.3 Mit der einfachen Ansicht beginnen ·
+  1.4 Kurze Hilfetexte in jedem Bereich (auch vorlesen) · 1.5 Dein Feedback ist mir wichtig (Register „Club“, Gruß von Hansi).
+  Erscheint auch im Ausdruck/PDF als erstes Kapitel. Server nur Versionsnummer. Test 352.
+
 ## 2.23.2 – 2026-10-04 – Hilfe-Zentrum: Suchfeld, Kapitel, Zurück-Leiste, Ausdruck/PDF (Wunsch Hansi)
 - KC-CLUB-HILFEZENTRUM: Suchfeld deutlicher – eigene Karte „🔍 Wonach suchst du?“ mit rotem Rand, größerer Schrift und Fokus-Rahmen.
 - Kapitel: Themen heißen jetzt „Kapitel 1, 2, 3 …“ (Inhalt mit runder Nummer, Register mit Nummer, Kapitelkopf mit „KAPITEL n“),

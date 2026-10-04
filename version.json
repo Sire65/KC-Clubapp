@@ -1,10 +1,16 @@
 {
-  "version": "2.23.2",
+  "version": "2.23.3",
   "datum": "2026-10-04",
   "neu": [
-    "❓ Hilfe & Tipps: deutlicheres Suchfeld, Kapitel 1, 2, 3 … mit Nummern, nach „Zeig mir wo“ oben rechts „Zurück zur Hilfe“ oder „Abbrechen“, Ausdruck und PDF über 🖨️"
+    "👋 Hilfe & Tipps: neues Kapitel 1 „Erste Schritte“ – Willkommen, Einstellungen, einfache Ansicht, Hilfetexte und Feedback"
   ],
   "verlauf": [
+    {
+      "version": "2.23.3",
+      "neu": [
+        "👋 Hilfe & Tipps: neues Kapitel 1 „Erste Schritte“ – Willkommen, Einstellungen, einfache Ansicht, Hilfetexte und Feedback"
+      ]
+    },
     {
       "version": "2.23.2",
       "neu": [
