@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.23.34 – 2026-10-04 – 👍/👎 „Hat dir das weitergeholfen?“ unter jeder Hilfe (Wunsch Hansi)
+- KC-CLUB-HILFE-BEWERTUNG: Unter jeder Hilfe im Hilfe-Zentrum (auch beim „?“ und in der Suche) „Hat dir das weitergeholfen? 👍 Ja / 👎 Nein“.
+  Bei 👎 freiwillig „Was hat gefehlt?“ (Vorschläge: zu kurz, schwer verständlich …). Danach „Danke …“ mit „ändern“.
+- Admin: im Inhalt „📊 Bewertungen der Hilfen“ – Summen je Hilfe (am wenigsten hilfreich zuerst) und die Hinweise OHNE Namen.
+- DB: kc_club_hilfe_bewertung (je Person + Hilfe eine Zeile, RLS an, nur über kc-club), Migration 20261004_kc_club_v22334_hilfe_bewertung.sql
+  (eingespielt). Server: hilfe_bewerten, hilfe_bewertungen (nur Admin). Protokoll nur Art + Wert. Test 383.
+
 ## 2.23.33 – 2026-10-04 – 📖 Bedienungsanleitung Version 4 (Wunsch Hansi)
 - KC-CLUB-ANLEITUNG-V4: dokumente/Koecheclub-App_Anleitung_V4.pdf (43 Seiten, Stand 2.23.32) in „Meine Dokumente“ (neue id → leise „NEU“
   bis 30.11.). V1–V3 bleiben unverändert im Repo (Release-Artefakte unveränderlich).

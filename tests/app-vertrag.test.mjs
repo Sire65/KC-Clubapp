@@ -3887,6 +3887,16 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(!/ptblnpiroqftcvlsrhac|service_role|eyJ[A-Za-z0-9_-]{20}|KC-P-\d/.test(f4), "fotos4 nur Demodaten, ohne echte Zugänge/IDs");
   assert.ok(/\{ id: "bedienung-club-app-v4",[^}]*datei: "dokumente\/Koecheclub-App_Anleitung_V4\.pdf"/.test(html), "V4 in Meine Dokumente");
 }
+// 383. 2.23.34: „Hat dir das weitergeholfen?“ unter jeder Hilfe (KC-CLUB-HILFE-BEWERTUNG)
+{
+  assert.ok(/\$\{VORLESE_KNOPF\}<\/div>\$\{hzBewHtml\(e\.id\)\}<\/div>`;/.test(html) && /Hat dir das weitergeholfen\?/.test(html), "unter jeder Hilfe");
+  assert.ok(/if \(wert < 0\) \{ const r = await eingabe\("Was hat gefehlt/.test(html) && /api\("hilfe_bewerten", \{ id, wert, notiz \}\)/.test(html), "Nein fragt freiwillig nach");
+  const hb = server.slice(server.indexOf('case "hilfe_bewerten"'), server.indexOf('case "wunschbogen_mailen"'));
+  assert.ok(/\^\[a-z\]:\[a-z0-9_-\]\{1,48\}\$/.test(hb) && /onConflict: "person_id,hilfe_id"/.test(hb) && /nurAdmin\(ich\);/.test(hb), "Server: prüfen, je Person eine Zeile, Auswertung nur Admin");
+  assert.ok(!/person_id/.test(hb.slice(hb.indexOf('case "hilfe_bewertungen"'), hb.indexOf("return json({ bewertungen"))) || /select\("hilfe_id,wert,notiz,geaendert_am"\)/.test(hb), "Auswertung ohne Namen");
+  const mig = fs.readFileSync(new URL("../supabase/migrations/20261004_kc_club_v22334_hilfe_bewertung.sql", import.meta.url), "utf8");
+  assert.ok(/enable row level security/.test(mig) && /revoke all on table kc_club_hilfe_bewertung from anon, authenticated/.test(mig), "RLS an, kein Direktzugriff");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
@@ -4165,7 +4175,8 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/id: "buero_sprache"[^\n]*nur: \(\) => !!ICH\?\.buero/.test(html), "Büro-Hilfe nur für die Clubleitung");
   // nicht aufdringlich: das Hilfe-Zentrum öffnet keine Fenster und meldet nichts von selbst
   // Ausnahme (2.23.5): Rückmeldung, nachdem man das „?“ selbst aus-/eingeschaltet hat
-  const hz = html.slice(html.indexOf("const HZ = {"), html.indexOf("// ---------- KC-CLUB-ONLINE-ANSAGE")).replace(/function hzFrageSchalter\(an\) \{[\s\S]*?\n\}/, "");
+  const hz = html.slice(html.indexOf("const HZ = {"), html.indexOf("// ---------- KC-CLUB-ONLINE-ANSAGE")).replace(/function hzFrageSchalter\(an\) \{[\s\S]*?\n\}/, "")
+    .replace(/async function hzBewerten\(id, wert\) \{[\s\S]*?\n\}/, "").replace(/async function hzBewertungenZeigen\(\) \{[\s\S]*?\n\}/, ""); // 2.23.34: nur nach eigenem Tippen (👍/👎, 📊)
   assert.ok(!/melde\(|blattAuf\(|\.classList\.remove\("versteckt"\)/.test(hz), "Hilfe-Zentrum darf sich nicht aufdrängen");
 }
 

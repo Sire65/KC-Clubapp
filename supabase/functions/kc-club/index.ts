@@ -41,7 +41,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.23.33";
+const SERVER_VERSION = "2.23.34";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -5128,6 +5128,32 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         }, `club-bestaetigung-dw:${ich.person_id}:${a.revision}:${Date.now()}`);
         await protokoll(ich.person_id, "dienstwunsch_bestaetigt", { revision: a.revision, tage: a.tage.length, versand });
         return json({ ok: true, ...versand });
+      }
+
+      case "hilfe_bewerten": {
+        // KC-CLUB-HILFE-BEWERTUNG (2.23.34, Wunsch Hansi): „Hat dir das weitergeholfen?“ – 1 = 👍, -1 = 👎, 0 = zurücknehmen
+        const id = String(p.id || ""), wert = Number(p.wert);
+        if (!/^[a-z]:[a-z0-9_-]{1,48}$/.test(id) || ![1, -1, 0].includes(wert)) throw new Fehler("Unbekannte Hilfe.", 400);
+        if (wert === 0) await db.from("kc_club_hilfe_bewertung").delete().eq("person_id", ich.person_id).eq("hilfe_id", id);
+        else {
+          const { error } = await db.from("kc_club_hilfe_bewertung").upsert({ person_id: ich.person_id, hilfe_id: id, wert, notiz: wert < 0 ? (txt(p.notiz, 300) || null) : null, geaendert_am: jetzt() }, { onConflict: "person_id,hilfe_id" });
+          if (error) throw new Fehler("Bewertung konnte nicht gespeichert werden.", 500);
+        }
+        await protokoll(ich.person_id, "hilfe_bewertet", { hilfe: id, wert }); // nur Art + Wert, kein Hinweistext
+        return json({ ok: true });
+      }
+
+      case "hilfe_bewertungen": {
+        // Admin: Summen je Hilfe + Hinweise ohne Namen (neueste zuerst)
+        nurAdmin(ich);
+        const { data, error } = await db.from("kc_club_hilfe_bewertung").select("hilfe_id,wert,notiz,geaendert_am").order("geaendert_am", { ascending: false }).limit(5000);
+        if (error) throw new Fehler("Bewertungen konnten nicht geladen werden.", 500);
+        const je = new Map<string, { id: string; ja: number; nein: number; hinweise: { text: string; am: string }[] }>();
+        for (const x of data ?? []) {
+          const e = je.get(x.hilfe_id) ?? { id: x.hilfe_id, ja: 0, nein: 0, hinweise: [] as { text: string; am: string }[] }; je.set(x.hilfe_id, e);
+          if (x.wert > 0) e.ja++; else { e.nein++; if (x.notiz && e.hinweise.length < 20) e.hinweise.push({ text: x.notiz, am: x.geaendert_am }); }
+        }
+        return json({ bewertungen: [...je.values()].sort((a, b) => b.nein - a.nein || a.ja - b.ja), gesamt: (data ?? []).length });
       }
 
       case "wunschbogen_mailen": {

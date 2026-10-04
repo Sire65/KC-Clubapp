@@ -1219,6 +1219,9 @@
   .hz-inhalt .anz { margin-left: auto; font-weight: 800; white-space: nowrap; color: var(--grau); }
   .hz-eintrag h3 { display: flex; gap: 8px; align-items: baseline; }
   .hz-eintrag p { margin: 0 0 8px; }
+  .hz-bew { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--linie); font-size: .9rem; color: var(--grau); } /* KC-CLUB-HILFE-BEWERTUNG */
+  .hz-bew span { flex: 1 1 100%; } .hz-bew .knopf { margin: 0; }
+  .hz-bew-zeile { padding: 8px 0; border-bottom: 1px solid var(--linie); }
   .hz-eintrag .hz-wo { font-size: .8rem; color: var(--grau); font-weight: 700; }
   .hz-neu { background: var(--gold); color: #fff; border-radius: 8px; padding: 1px 6px; font-size: .75rem; font-weight: 800; }
   /* KC-CLUB-UEBERBLICK (0.79.0) */
@@ -2797,7 +2800,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.33"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.34"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -4026,7 +4029,38 @@ function hzZurueckZurHilfe() {
 function hzKarte(e, nr, themaZeigen) {
   const th = HILFE_THEMEN.find((x) => x.id === e.thema);
   return `<div class="karte hz-eintrag vorlese-karte" data-hz="${e.id}">${themaZeigen && th ? `<div class="hz-wo">Kapitel ${esc(nr.split(".")[0])} · ${th.sym} ${esc(th.t)}</div>` : ""}<h3><span class="hz-nr">${esc(nr)}</span><span>${e.sym} ${esc(e.t)}${hzIstNeu(e, HZ.vorher) ? ' <span class="hz-neu">neu</span>' : ""}</span></h3><p>${e.x}</p>
-    <div class="knoepfe">${e.los ? `<button class="knopf haupt klein" onclick="hzLos('${e.id}')">👉 Zeig mir wo</button>` : ""}${VORLESE_KNOPF}</div></div>`;
+    <div class="knoepfe">${e.los ? `<button class="knopf haupt klein" onclick="hzLos('${e.id}')">👉 Zeig mir wo</button>` : ""}${VORLESE_KNOPF}</div>${hzBewHtml(e.id)}</div>`;
+}
+// ---------- KC-CLUB-HILFE-BEWERTUNG (2.23.34, Wunsch Hansi): „Hat dir das weitergeholfen? 👍 / 👎“ unter jeder Hilfe ----------
+// Eigene Wahl merkt das Gerät (Anzeige), gespeichert wird auf dem Server (je Person + Hilfe eine Zeile). Bei 👎 freiwillig: was hat gefehlt?
+// Der Admin sieht im Inhalt „📊 Bewertungen“: Summen je Hilfe (am wenigsten hilfreich zuerst) und die Hinweise ohne Namen.
+const HZ_BEW_KEY = "kc_club_hilfe_bewertung";
+const hzBewMeine = () => { try { return JSON.parse(lsLesen(HZ_BEW_KEY) || "{}") || {}; } catch { return {}; } };
+function hzBewHtml(id) {
+  const w = hzBewMeine()[id];
+  return `<div class="hz-bew" data-hz-bew="${id}">${w ? `<span>${w > 0 ? "👍 Danke – schön, dass es geholfen hat!" : "👎 Danke für die Rückmeldung – wir verbessern das."}</span><button class="knopf klein" onclick="hzBewerten('${id}', 0)">ändern</button>`
+    : `<span>Hat dir das weitergeholfen?</span><button class="knopf klein" onclick="hzBewerten('${id}', 1)" aria-label="Ja, hat geholfen">👍 Ja</button><button class="knopf klein" onclick="hzBewerten('${id}', -1)" aria-label="Nein, hat nicht geholfen">👎 Nein</button>`}</div>`;
+}
+async function hzBewerten(id, wert) {
+  let notiz = "";
+  if (wert < 0) { const r = await eingabe("Was hat gefehlt oder war unklar? (freiwillig)", "", { vorschlaege: ["zu kurz", "schwer verständlich", "passt nicht zu meinem Handy", "Bild fehlt"] }); if (r === null) return; notiz = r.trim().slice(0, 300); }
+  try {
+    await api("hilfe_bewerten", { id, wert, notiz });
+    const m = hzBewMeine(); if (wert) m[id] = wert; else delete m[id];
+    try { localStorage.setItem(HZ_BEW_KEY, JSON.stringify(m)); } catch {}
+    document.querySelectorAll(`[data-hz-bew="${id}"]`).forEach((el) => { el.outerHTML = hzBewHtml(id); });
+    if (wert) melde(wert > 0 ? "👍 Danke!" : "👎 Danke – das hilft, die Hilfe besser zu machen.");
+  } catch (e) { meldeFehler(e); }
+}
+async function hzBewertungenZeigen() {
+  if (!ICH?.admin) return;
+  let r; try { r = await api("hilfe_bewertungen", {}, { warten: true }); } catch (e) { return meldeFehler(e); }
+  const alle = hzEintraege(), { nr } = hzGliederung(alle), name = (id) => { const e = alle.find((x) => x.id === id); return e ? `${esc(nr[e.id] || "")} ${e.sym} ${esc(e.t)}` : esc(id); };
+  blattAuf("hzBewBlatt", `<h3 style="margin-top:0">📊 Bewertungen der Hilfen</h3>
+    <p class="hinweis" style="margin:0 0 8px">${r.gesamt} Bewertung${r.gesamt === 1 ? "" : "en"} – am wenigsten hilfreich zuerst. Hinweise stehen ohne Namen.</p>
+    ${r.bewertungen.length ? r.bewertungen.map((b) => `<div class="hz-bew-zeile"><div><b>${name(b.id)}</b><span class="hinweis"> · 👍 ${b.ja} · 👎 ${b.nein}</span></div>
+      ${b.hinweise.map((h) => `<div class="hinweis" style="margin:2px 0 0 10px">„${esc(h.text)}“ <small>(${esc(zeitKurz(h.am))})</small></div>`).join("")}</div>`).join("") : '<p class="hinweis">Noch keine Bewertungen.</p>'}
+    <div class="knoepfe"><button class="knopf" onclick="fensterZu($('hzBewBlatt'))">Schließen</button></div>`);
 }
 function hzZeigen() {
   if (!$("hzInhalt")) return;
@@ -4053,6 +4087,7 @@ function hzZeigen() {
     html = `<div class="karte" style="margin-top:0"><h3>📖 Inhalt</h3><p style="margin:0 0 4px">${esc(HZ_GRUSS[HZ.gruss % HZ_GRUSS.length](ICH?.vorname || ""))}</p><p class="hinweis" style="margin:0 0 6px">${alle.length} Hilfen in ${themen.length} Kapiteln · Stand Version ${esc(APP_VERSION)}. Tippe ein Kapitel an – oder such oben nach einem Wort.</p>
       <ul class="hz-inhalt">${themen.map((t) => `<li><button onclick="hzThema('${t.id}')"><span class="nr">${t.nr}</span><span class="sym">${t.sym}</span><span><b>${esc(t.t)}</b><small>${esc(t.u)}</small></span><span class="anz">${t.es.length} ${t.es.length === 1 ? "Hilfe" : "Hilfen"}</span></button></li>`).join("")}</ul></div>`
       + (neu.length ? `<div class="karte"><h3>🆕 Neu seit deinem letzten Besuch (${neu.length})</h3>${neu.map((e) => `<p style="margin:0 0 4px">${esc(nr[e.id])} ${e.sym} <a href="#" onclick="hzThema('${e.thema}');return false">${esc(e.t)}</a></p>`).join("")}</div>` : "")
+      + (ICH?.admin ? `<div class="knoepfe" style="margin-top:10px"><button class="knopf klein" onclick="hzBewertungenZeigen()">📊 Bewertungen der Hilfen (nur Admin)</button></div>` : "") // KC-CLUB-HILFE-BEWERTUNG
       + `<p class="hinweis" style="margin:10px 2px 0">Die Hilfe wächst mit der App: neue Funktionen, Tipps und Erklärungen erscheinen hier von selbst. Zum Ausdrucken oder als PDF: 🖨️ oben rechts. Etwas fehlt? Sag es über <a href="#" onclick="zeige('feedback');return false">💭 Feedback</a>.</p>`;
   }
   $("hzInhalt").innerHTML = html;
@@ -7485,7 +7520,7 @@ const SERVER_REGION = "eu-west-2", REGION_PAUSE_MS = 10 * 60 * 1000;
 let REGION_AUS_BIS = 0;
 const apiAdresse = () => (Date.now() < REGION_AUS_BIS ? API : `${API}?forceFunctionRegion=${SERVER_REGION}`);
 // Aktionen, die nur lesen – nur diese dürfen nach einer Störung still wiederholt werden
-const API_LESEN = /^(init|ping|lebenszeichen|online|tagesinfo|pinnwand|pinnwand_neu|unterhaltung|unterhaltungen|mitglieder|mitglied_details|kalender|kalender_daten|protokoll_laden|fotos_neueste|anlage_url|suche|buero_start|.*_liste|.*_statistik|.*_holen|.*_info|.*_stand)$/; // 2.1.1: kein „*_start“ mehr (anruf_start/standort_start schreiben)
+const API_LESEN = /^(init|hilfe_bewertungen|ping|lebenszeichen|online|tagesinfo|pinnwand|pinnwand_neu|unterhaltung|unterhaltungen|mitglieder|mitglied_details|kalender|kalender_daten|protokoll_laden|fotos_neueste|anlage_url|suche|buero_start|.*_liste|.*_statistik|.*_holen|.*_info|.*_stand)$/; // 2.1.1: kein „*_start“ mehr (anruf_start/standort_start schreiben)
 async function apiRoh(action, daten = {}, zweiterVersuch = false) {
   // KC-CLUB-NOTBETRIEB-ERNSTFALL: simulierter Ausfall – genau der Fehler, den ein unerreichbarer Club-Server liefert
   if (notErnstfall()) { vbStart(); await new Promise((ok) => setTimeout(ok, 300)); vbEnde(false, 0, "Server nicht erreichbar (Simulation)"); throw Object.assign(new Error("Keine Verbindung zum Server – bitte gleich nochmal versuchen."), { leitung: true }); }
