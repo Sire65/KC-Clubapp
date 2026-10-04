@@ -5,7 +5,10 @@
   „Du hast diese Person schon herausgefordert“, und die offene Herausforderung ließ sich in der Liste nicht antippen.
 - KC-CLUB-SPIEL-SCHON-OFFEN: Offene Herausforderungen (von dir und an dich) sind in der Liste antippbar → darin „📅 Termin vereinbaren“.
   Kommt beim Herausfordern „schon herausgefordert“, öffnet die App direkt die vorhandene Herausforderung bzw. beim Termin-Weg gleich deren
-  Termin-Fenster (statt nur der Fehlermeldung). Test 373.
+  Termin-Fenster (statt nur der Fehlermeldung).
+- KC-CLUB-TIPP-PULS nachgebessert (Fund Hansi „die Tabs pulsierten nicht“): Reiter zeichnen sich beim Antippen neu – der Puls lief am alten,
+  schon entfernten Element. Jetzt pulst nach dem Klick das Element, das dann an der Stelle steht (Register, Mitglieder, Termine geprüft).
+  Puls etwas deutlicher (0,9 statt 0,92, heller). Auslöser ist der Klick – Scrollen löst nie einen Puls aus. Test 373.
 
 ## 2.23.24 – 2026-10-04 – Alles Anklickbare pulsiert kurz beim Antippen (Wunsch Hansi)
 - KC-CLUB-TIPP-PULS: Knöpfe, Reiter (Register, Termine, Mitglieder …), Kacheln, Info-Feld, Chips, Links, Schalter-Zeilen und Zeilen mit

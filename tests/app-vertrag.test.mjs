@@ -3791,7 +3791,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 372. 2.23.24: alles Anklickbare pulsiert kurz beim Antippen (KC-CLUB-TIPP-PULS)
 {
   assert.ok(/const TIPP_ZIEL = 'button, \[role="button"\], \[role="tab"\]/.test(html) && /\(function tippPuls\(\) \{/.test(html), "zentrale Stelle");
-  assert.ok(/z\.animate\(\[\{ scale: "1" \}, \{ scale: String\(tief\)/.test(html) && /Math\.hypot\(e\.clientX - x0, e\.clientY - y0\) > 10\) ziel = null;/.test(html), "eigene scale-Animation, nicht beim Scrollen");
+  assert.ok(/z\.animate\(\[\{ scale: "1" \}, \{ scale: String\(tief\)/.test(html) && /if \(!z && !tastatur\) z = finden\(document\.elementFromPoint\(x, y\)\);/.test(html), "eigene scale-Animation, nicht beim Scrollen");
   assert.ok(/textarea, select, \[contenteditable="true"\]'\)\) return;/.test(html), "Eingabefelder nie");
 }
 // 373. 2.23.25: offene Herausforderung erreichbar (KC-CLUB-SPIEL-SCHON-OFFEN)
