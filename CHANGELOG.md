@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.23.17 – 2026-10-04 – Nutzung nach Uhrzeit und Wochentag (Wunsch Hansi)
+- KC-CLUB-NUTZUNG-UHRZEIT: „📊 Nutzung – ohne Namen“ (Admin) zeigt jetzt auch, **zu welchen Uhrzeiten** die App genutzt wird:
+  24 Stunden-Säulen (stärkste Stunde rot), die drei stärksten Stunden, Tageszeiten (morgens/mittags/nachmittags/abends/nachts)
+  mit Anteil, dazu **Wochentage** (aus den vorhandenen Tageszahlen, auch rückwirkend). „Wie oft was aufgerufen“ wie bisher.
+- Gezählt wird beim Antippen nur die Stunde (Berliner Zeit) – in eigener Tabelle `kc_club_nutzung_stunden` (Tag, Stunde, Anzahl),
+  bewusst ohne Person, Gerät und ohne Bereich. Migration 20261004_kc_club_v22317_nutzung_stunden.sql (angewendet). Test 365.
+
 ## 2.23.16 – 2026-10-04 – Ansichtsname größer, mit < > und > < (Wunsch Hansi)
 - KC-CLUB-ANSICHT-NAME: Der Name hinter „Schnellzugriff“ ist etwas größer (.66 → .82rem). Statt Klammern zeigen Pfeile die Richtung:
   erweitert „< Erweiterte Ansicht >“ (nach außen), einfach „> Einfache Ansicht <“ (nach innen). Antippen schaltet weiter um.

@@ -4157,3 +4157,16 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   for (const id of ["b-bu-drucker", "b-bu-eingang", "b-ek-erstattung", "b-fl-informieren", "b-bu-sitzung"]) assert.ok(new RegExp(`\\{ id: "${id}"[^\\n]*nur: \\(\\) => !!ICH\\?\\.buero \\},`).test(reg), `${id}: nur fürs Büro`);
   for (const id of ["b-link", "b-rolle"]) assert.ok(new RegExp(`\\{ id: "${id}"[^\\n]*nur: \\(\\) => !!ICH\\?\\.admin \\},`).test(reg), `${id}: nur für den Admin`);
 }
+
+// 365. 2.23.17: Nutzung nach Uhrzeit (KC-CLUB-NUTZUNG-UHRZEIT, Wunsch Hansi „zu welchen Uhrzeiten am meisten genutzt“)
+{
+  const mig = lies("supabase/migrations/20261004_kc_club_v22317_nutzung_stunden.sql");
+  const tab = /create table if not exists kc_club_nutzung_stunden \(([\s\S]*?)\);/.exec(mig)?.[1] || "";
+  assert.ok(tab && !/person|geraet|bereich|user|ip/i.test(tab) && /stunde smallint not null check \(stunde between 0 and 23\)/.test(tab), "Stunden-Tabelle: nur Tag, Stunde, Anzahl");
+  assert.ok(/enable row level security/.test(mig) && /revoke all on function kc_club_nutzung_stunden_zaehlen[^;]*from public, anon, authenticated/.test(mig), "nur über den Server");
+  const f = server.slice(server.indexOf('case "nutzung_melden"'), server.indexOf('case "nutzung_statistik"'));
+  assert.ok(/kc_club_nutzung_stunden_zaehlen/.test(f) && /\^\(\[01\]\?\\d\|2\[0-3\]\)\$/.test(f) && /Math\.min\(200/.test(f), "Server: nur Stunden 0–23, gedeckelt");
+  assert.ok(/from\("kc_club_nutzung_stunden"\)\.select\("tag,stunde,anzahl"\)/.test(server) && /stunden: fs \? null : sz \?\? \[\]/.test(server), "Statistik liefert Stunden");
+  assert.ok(/nzStdPuffer\[st\] = \(nzStdPuffer\[st\] \|\| 0\) \+ 1/.test(html) && /stunden: std/.test(html), "App zählt die Stunde beim Antippen und schickt sie mit");
+  assert.ok(/function nzZeitHtml\(r\)/.test(html) && /\$\{nzZeitHtml\(r\)\}/.test(html) && /🕐 Zu welchen Uhrzeiten wird die App genutzt\?/.test(html) && /📅 An welchen Wochentagen\?/.test(html), "Anzeige Uhrzeit/Wochentage");
+}

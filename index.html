@@ -1886,6 +1886,13 @@
   .nz-tage { display: flex; align-items: flex-end; gap: 2px; height: 60px; padding: 4px 0; border-bottom: 1px solid var(--linie); }
   .nz-tage div { flex: 1; height: 100%; display: flex; align-items: flex-end; }
   .nz-tage i { display: block; width: 100%; min-height: 2px; background: var(--gold, #d4a017); border-radius: 3px 3px 0 0; }
+  /* KC-CLUB-NUTZUNG-UHRZEIT (2.23.17): 24 Stunden-Säulen, stärkste Stunde rot */
+  .nz-std { display: flex; align-items: flex-end; gap: 2px; height: 70px; padding: 4px 0 0; border-bottom: 1px solid var(--linie); }
+  .nz-std div { flex: 1; height: 100%; display: flex; align-items: flex-end; }
+  .nz-std i { display: block; width: 100%; min-height: 2px; background: var(--gold, #d4a017); border-radius: 3px 3px 0 0; }
+  .nz-std i.spitze { background: var(--rot); }
+  .nz-std-achse { position: relative; height: 1.1rem; margin: 0 0 6px; font-size: .72rem; color: var(--grau, #666); }
+  .nz-std-achse span { position: absolute; transform: translateX(-50%); }
   /* KC-CLUB-PRIVATTERMIN (1.0.0) */
   .p-privat { background: #5b7fa6; } .ktag.privat { outline: 2px dashed #5b7fa6; outline-offset: -2px; }
   .pt-privat { background: rgba(91,127,166,.14); border-radius: 10px; padding: 10px 12px !important; margin-bottom: 6px; }
@@ -2711,7 +2718,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.16"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.17"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -16980,6 +16987,10 @@ function suLupenEinbauen() {
 
 const NZ_TAKT_MS = 120000;
 let nzPuffer = (() => { try { return JSON.parse(localStorage.getItem("kc_club_nutzung") || "{}"); } catch { return {}; } })();
+// KC-CLUB-NUTZUNG-UHRZEIT (2.23.17, Wunsch Hansi): je Stunde (0–23, Berliner Zeit beim Antippen) nur die Anzahl – getrennt vom Bereich
+let nzStdPuffer = (() => { try { return JSON.parse(localStorage.getItem("kc_club_nutzung_std") || "{}"); } catch { return {}; } })();
+const nzStunde = () => Number(new Intl.DateTimeFormat("de-DE", { timeZone: TZ, hour: "2-digit", hourCycle: "h23" }).format(new Date())) % 24;
+const nzStdSchreiben = () => { try { localStorage.setItem("kc_club_nutzung_std", JSON.stringify(nzStdPuffer)); } catch {} };
 // KC-CLUB-NUTZUNG-PERSONEN (2.6.0, Wunsch Hansi: „welche Funktionen sie nutzen“, ohne Namen): je Gerät eine ZUFÄLLIGE Kennung
 // (nur hier erzeugt, nicht der Zugangsschlüssel, nicht die Fehlerprotokoll-Kennung) und je Tag einmal „Bereich genutzt“ –
 // der Server zählt daraus nur „von wie vielen verschiedenen Geräten“. Wer, wird nirgends gespeichert.
@@ -16990,16 +17001,19 @@ const nzHeuteLesen = () => { const tag = heuteIso(); let h = null; try { h = JSO
 const nzHeuteSchreiben = (h) => { try { localStorage.setItem("kc_club_nz_heute", JSON.stringify(h)); } catch {} };
 function nzZaehlen(v) {
   if (!v) return; nzPuffer[v] = (nzPuffer[v] || 0) + 1; try { localStorage.setItem("kc_club_nutzung", JSON.stringify(nzPuffer)); } catch {}
+  const st = nzStunde(); nzStdPuffer[st] = (nzStdPuffer[st] || 0) + 1; nzStdSchreiben();
   const h = nzHeuteLesen(); if (!h.offen.includes(v) && !h.gesendet.includes(v)) { h.offen.push(v); nzHeuteSchreiben(h); }
 }
 async function nzSenden() {
   const h = nzHeuteLesen(), heute = h.offen.slice(0, 40);
   if (!INIT || (!Object.keys(nzPuffer).length && !heute.length)) return;
   const z = nzPuffer; nzPuffer = {}; try { localStorage.setItem("kc_club_nutzung", "{}"); } catch {}
+  const std = nzStdPuffer; nzStdPuffer = {}; nzStdSchreiben();
   try {
-    const r = await api("nutzung_melden", { zaehler: z, ...(NZ_GERAET && heute.length ? { geraet: NZ_GERAET, heute } : {}) });
+    const r = await api("nutzung_melden", { zaehler: z, ...(Object.keys(std).length ? { stunden: std } : {}), ...(NZ_GERAET && heute.length ? { geraet: NZ_GERAET, heute } : {}) });
     const n = nzHeuteLesen(); if (n.tag === h.tag && r?.heuteOk !== false) { n.gesendet = [...new Set([...n.gesendet, ...heute])]; n.offen = n.offen.filter((b) => !heute.includes(b)); nzHeuteSchreiben(n); }
-  } catch { for (const [k, n] of Object.entries(z)) nzPuffer[k] = (nzPuffer[k] || 0) + n; try { localStorage.setItem("kc_club_nutzung", JSON.stringify(nzPuffer)); } catch {} }
+  } catch { for (const [k, n] of Object.entries(z)) nzPuffer[k] = (nzPuffer[k] || 0) + n; try { localStorage.setItem("kc_club_nutzung", JSON.stringify(nzPuffer)); } catch {}
+    for (const [k, n] of Object.entries(std)) nzStdPuffer[k] = (nzStdPuffer[k] || 0) + n; nzStdSchreiben(); }
 }
 setInterval(nzSenden, NZ_TAKT_MS);
 document.addEventListener("visibilitychange", () => { if (document.hidden) nzSenden(); });
@@ -17016,6 +17030,28 @@ const NZ_NAMEN = { start: "🏠 Startseite", hilfezentrum: "❓ Hilfe & Tipps", 
 // Unterbereich → Hauptbereich (für die Einrückung); Werte müssen zu NUTZUNG_BEREICHE im Server passen
 const nzOber = (b) => b.startsWith("buero_") ? "buero" : b.startsWith("helfen_") ? "helfen" : ({ chronik: "archiv", blaettern: "archiv", fotoalbum: "fotos", kalender_abo: "termine", chat: "nachrichten", neu: "nachrichten", mitglied: "mitglieder", aktion: "aktionen", protokoll: "protokolle", dokansicht: "dokumente" })[b] || "";
 let NZ_TAGE = 7;
+// KC-CLUB-NUTZUNG-UHRZEIT (2.23.17, Wunsch Hansi): „zu welchen Uhrzeiten am meisten genutzt“ – 24 Stunden-Säulen + Wochentage
+function nzZeitHtml(r) {
+  const std = Array(24).fill(0); for (const z of r.stunden || []) std[z.stunde] += z.anzahl;
+  const sSum = std.reduce((a, n) => a + n, 0), sMax = Math.max(1, ...std);
+  const uhr = (h) => `${h}–${(h + 1) % 24} Uhr`;
+  const top = std.map((n, h) => [h, n]).filter((x) => x[1]).sort((a, b) => b[1] - a[1] || a[0] - b[0]).slice(0, 3);
+  // Tageszeiten zusammengefasst – leichter zu lesen als 24 Säulen
+  const zeiten = [["🌅 Morgens", 6, 11], ["☀️ Mittags", 11, 14], ["🌤️ Nachmittags", 14, 18], ["🌆 Abends", 18, 22], ["🌙 Nachts", 22, 30]]
+    .map(([t, v, b]) => [t, `${v % 24}–${b % 24} Uhr`, std.filter((_, h) => (h >= v && h < b) || (b > 24 && h < b - 24)).reduce((a, n) => a + n, 0)]);
+  const wt = Array(7).fill(0); for (const z of r.zeilen) wt[(new Date(z.tag + "T12:00:00Z").getUTCDay() + 6) % 7] += z.anzahl;
+  const wMax = Math.max(1, ...wt), wName = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
+  const wTop = wt.map((n, i) => [i, n]).filter((x) => x[1]).sort((a, b) => b[1] - a[1])[0];
+  return `<div class="karte nz-zeit" style="margin:6px 0 0"><b>🕐 Zu welchen Uhrzeiten wird die App genutzt?</b>
+    ${sSum ? `<div class="hinweis" style="margin:2px 0 6px">Am meisten: <b>${top.map(([h, n]) => `${uhr(h)} (${n})`).join(" · ")}</b></div>
+    <div class="nz-std" title="Öffnungen je Stunde">${std.map((n, h) => `<div title="${uhr(h)}: ${n}"><i style="height:${Math.round(n / sMax * 100)}%"${top[0]?.[0] === h ? ' class="spitze"' : ""}></i></div>`).join("")}</div>
+    <div class="nz-std-achse">${[0, 3, 6, 9, 12, 15, 18, 21].map((h) => `<span style="left:${h / 24 * 100}%">${h}</span>`).join("")}<span style="left:100%">24</span></div>
+    ${zeiten.map(([t, z, n]) => `<div class="nz-zeile"><span>${t} <small class="hinweis">${z}</small></span><div class="nz-balken"><i style="width:${Math.round(n / Math.max(1, ...zeiten.map((x) => x[2])) * 100)}%"></i></div><b>${n}</b><small class="hinweis">${Math.round(n / sSum * 100)} %</small></div>`).join("")}`
+      : '<p class="hinweis" style="margin:4px 0 0">Die Uhrzeiten werden ab Version 2.23.17 gezählt – die Übersicht füllt sich, sobald die Mitglieder die neue Version nutzen.</p>'}
+    </div>
+    ${r.zeilen.length ? `<div class="karte" style="margin:6px 0 0"><b>📅 An welchen Wochentagen?</b>${wTop ? ` <span class="hinweis">– am meisten am <b>${["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"][wTop[0]]}</b></span>` : ""}
+      ${wt.map((n, i) => `<div class="nz-zeile"><span>${wName[i]}</span><div class="nz-balken"><i style="width:${Math.round(n / wMax * 100)}%"></i></div><b>${n}</b><span></span></div>`).join("")}</div>` : ""}`;
+}
 async function nzAdmin(tage) {
   if (tage) NZ_TAGE = tage;
   let r; try { r = await api("nutzung_statistik", { tage: NZ_TAGE }, { warten: true }); } catch (e) { return meldeFehler(e); }
@@ -17030,11 +17066,12 @@ async function nzAdmin(tage) {
   const haupt = new Map(); for (const [b, n] of liste) { const o = nzOber(b) || b; haupt.set(o, (haupt.get(o) || 0) + (nzOber(b) ? 0 : n)); }
   const zeilen = [...haupt.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).flatMap(([o, n]) => [[o, n, false], ...liste.filter(([b]) => nzOber(b) === o).map(([b, m]) => [b, m, true])]);
   $("adminBlattInhalt").innerHTML = `<h3 style="margin:0">📊 Nutzung – ohne Namen</h3>
-    <p class="hinweis" style="margin:0">Wie oft die Bereiche geöffnet wurden und <b>👤 von wie vielen verschiedenen Mitgliedern</b>. Es wird nie gespeichert, wer – nur Tag, Bereich, Anzahl und eine zufällige Geräte-Kennung.</p>
+    <p class="hinweis" style="margin:0">Wie oft die Bereiche geöffnet wurden und <b>👤 von wie vielen verschiedenen Mitgliedern</b>. Es wird nie gespeichert, wer – nur Tag, Bereich, Anzahl und eine zufällige Geräte-Kennung; die Uhrzeit nur als Stunde, getrennt vom Bereich.</p>
     <div class="knoepfe">${[7, 30, 90].map((t) => `<button class="knopf klein${r.tage === t ? " haupt" : ""}" onclick="nzAdmin(${t})">${t} Tage</button>`).join("")}${INFO_DATEN.admin?.r ? `<button class="knopf klein" onclick="adminBlatt()">‹ Admin-Zentrale</button>` : ""}</div>
     <b>Insgesamt ${gesamt} Öffnungen in ${r.tage} Tagen${r.geraeteGesamt == null ? " · 👤 unbekannt" : r.geraeteGesamt ? ` · 👤 ${r.geraeteGesamt} verschiedene Geräte (≈ Mitglieder${r.mitglieder ? `, ${r.mitglieder} im Club` : ""})` : ""}</b>
     <span class="hinweis" style="margin:0">👤 = verschiedene Mitglieder (genau: Geräte – wer Handy und Tablet nutzt, zählt doppelt). Gezählt ab Version 2.6.0. <span class="nz-wer nur1">👤 1</span> = nur ein einziges Mitglied. Bei 30/90 Tagen zählen die Öffnungen auch aus der Zeit davor.</span><span class="hinweis" style="margin:0">↳ = Teilbereich (z. B. Büro → Eingang). Die Zahl beim Hauptbereich zählt nur das Öffnen selbst.</span>
     <div class="nz-tage" title="Öffnungen je Tag">${tagListe.map(([t, n]) => `<div title="${esc(t.slice(8) + "." + t.slice(5, 7) + ".: " + n)}"><i style="height:${Math.round(n / tmax * 100)}%"></i></div>`).join("")}</div>
+    ${nzZeitHtml(r)}
     ${liste.length ? zeilen.map(([b, n, unter]) => `<div class="nz-zeile${unter ? " nz-unter" : ""}"><span>${unter ? "↳ " : ""}${esc(NZ_NAMEN[b] || b)}</span><div class="nz-balken"><i style="width:${Math.round(n / max * 100)}%"></i></div><b>${n}</b>${werZ(b)}</div>`).join("")
       : '<p class="hinweis">Noch keine Zahlen – die Statistik füllt sich, sobald die Mitglieder die neue Version nutzen.</p>'}
     ${liste.length && ungenutzt.length ? `<div class="karte nz-nie" style="margin:6px 0 0"><b>🚫 Nie geöffnet in ${r.tage} Tagen</b> <span class="hinweis">– vielleicht erklären oder vereinfachen</span><div style="margin-top:6px">${ungenutzt.map((b) => `<span class="stmarke" style="display:inline-block;margin:2px 4px 2px 0">${esc(NZ_NAMEN[b])}</span>`).join("")}</div></div>` : ""}`;

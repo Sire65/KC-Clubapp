@@ -41,7 +41,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.23.16";
+const SERVER_VERSION = "2.23.17";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -5674,6 +5674,11 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const paare = Object.entries(z).filter(([b, n]) => NUTZUNG_BEREICHE.has(String(b)) && Number.isFinite(Number(n)) && Number(n) > 0).slice(0, 40)
           .map(([b, n]) => [String(b), Math.min(200, Math.round(Number(n)))] as [string, number]);
         if (paare.length) await db.rpc("kc_club_nutzung_zaehlen", { p_tag: berlinTag(new Date()), p_bereiche: paare.map((x) => x[0]), p_anzahlen: paare.map((x) => x[1]) });
+        // KC-CLUB-NUTZUNG-UHRZEIT (2.23.17, Wunsch Hansi): je Stunde (0–23, beim Antippen) nur die Anzahl – ohne Person, Gerät und Bereich
+        const st = (p.stunden && typeof p.stunden === "object") ? p.stunden : {};
+        const sp = Object.entries(st).filter(([h, n]) => /^([01]?\d|2[0-3])$/.test(String(h)) && Number.isFinite(Number(n)) && Number(n) > 0).slice(0, 24)
+          .map(([h, n]) => [Number(h), Math.min(200, Math.round(Number(n)))] as [number, number]);
+        if (sp.length) { const { error } = await db.rpc("kc_club_nutzung_stunden_zaehlen", { p_tag: berlinTag(new Date()), p_stunden: sp.map((x) => x[0]), p_anzahlen: sp.map((x) => x[1]) }); if (error) console.error("nutzung stunden", error.message); }
         // KC-CLUB-NUTZUNG-PERSONEN (2.6.0): zufällige Geräte-Kennung (aus der App, mit keiner Person verknüpft) je Tag + Bereich –
         // nur um „von wie vielen verschiedenen“ zu zählen. Die Person (ich) wird hier bewusst NICHT gespeichert.
         const geraet = String(p.geraet || ""), heute = (Array.isArray(p.heute) ? p.heute : []).map(String).filter((b: string) => NUTZUNG_BEREICHE.has(b)).slice(0, 40);
@@ -5688,11 +5693,12 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         nurAdmin(ich);
         const tage = Math.min(90, Math.max(1, Math.round(Number(p.tage) || 7)));
         const von = berlinTag(new Date(Date.now() - (tage - 1) * 86400000));
-        const [{ data, error: fz }, { data: gz, error: fg }] = await Promise.all([db.from("kc_club_nutzung").select("tag,bereich,anzahl").gte("tag", von).order("tag"),
-          db.rpc("kc_club_nutzung_geraete_zahlen", { p_von: von })]); // KC-CLUB-NUTZUNG-PERSONEN (2.6.0): nur Zahlen
+        const [{ data, error: fz }, { data: gz, error: fg }, { data: sz, error: fs }] = await Promise.all([db.from("kc_club_nutzung").select("tag,bereich,anzahl").gte("tag", von).order("tag"),
+          db.rpc("kc_club_nutzung_geraete_zahlen", { p_von: von }), // KC-CLUB-NUTZUNG-PERSONEN (2.6.0): nur Zahlen
+          db.from("kc_club_nutzung_stunden").select("tag,stunde,anzahl").gte("tag", von)]); // KC-CLUB-NUTZUNG-UHRZEIT (2.23.17)
         if (fz) throw new Fehler("Die Nutzung ist gerade nicht abrufbar – bitte gleich noch einmal versuchen.", 503);
         const geraete = fg ? {} : Object.fromEntries((gz ?? []).filter((x: any) => x.bereich !== "*").map((x: any) => [x.bereich, x.geraete]));
-        return json({ tage, von, zeilen: data ?? [], geraete, geraeteGesamt: fg ? null : (gz ?? []).find((x: any) => x.bereich === "*")?.geraete ?? 0, mitglieder: (await aktiveMitglieder()).length });
+        return json({ tage, von, zeilen: data ?? [], geraete, geraeteGesamt: fg ? null : (gz ?? []).find((x: any) => x.bereich === "*")?.geraete ?? 0, mitglieder: (await aktiveMitglieder()).length, stunden: fs ? null : sz ?? [] });
       }
 
       // ----- KC-CLUB-REAKTION (0.97.0): je Person eine Reaktion je Nachricht; gleiche nochmal = weg; Autor bekommt Bescheid -----
