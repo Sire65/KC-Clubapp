@@ -2713,7 +2713,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/add column if not exists einreichen boolean not null default false/.test(mig) && /add column if not exists beschreibung text not null default ''/.test(mig), "Migration Chronik fehlt");
   assert.ok(/id="blaettern"/.test(html) && /function blOrdner\(id\)/.test(html) && /function blAlbum\(\)/.test(html) && /onclick="blOrdner\('\$\{o\.id\}'\)"/.test(html) && /onclick="blAlbum\(\)"/.test(html), "Blättern fehlt");
   assert.ok(/if \(BL\.offen\) \{ blZu\(true\); return; \}/.test(html), "Zurück-Taste schließt Blättern");
-  assert.ok((html.match(/await pdfSeiteAlsBild\(pdf, n, breite\)/g) || []).length === 2 && (html.match(/async function pdfSeiteAlsBild\(/g) || []).length === 1, "ein gemeinsamer PDF-Helfer");
+  assert.ok((html.match(/await pdfSeiteAlsBild\(pdf, n, breite\)/g) || []).length >= 2 && (html.match(/async function pdfSeiteAlsBild\(/g) || []).length === 1, "ein gemeinsamer PDF-Helfer");
   assert.ok(/function arChronikAnlegen\(\)/.test(html) && /const CHRONIK_ANLEITUNG = /.test(html) && /nur mit Einverständnis der Familie/.test(html) && /keine Gründe/.test(html), "Chronik anlegen / Anleitung fehlt");
   assert.ok(/📥 Beitrag einreichen/.test(html) && /id="arEinreichen"/.test(html) && /id="arDokBeschr"/.test(html), "Einreichen/Beschreibung in der App fehlt");
 }
@@ -3811,6 +3811,19 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const kl = html.slice(html.indexOf("async function chatKomplettLoeschen"), html.indexOf("async function chatKomplettLoeschen") + 1400);
   assert.ok(/if \(!\(await frage\(/.test(kl) && /api\("unterhaltung_leeren"/.test(kl), "Komplett löschen nur nach Rückfrage");
   assert.ok(/id="chatArchivKnopf"/.test(html) && /id="chatKomplettKnopf"/.test(html) && /onclick="unterhaltungWeg\(false\)">🙈 Nur bei mir entfernen/.test(html), "Chat-Menü: neu + Bestehendes bleibt");
+}
+// 375. 2.23.28: leerer persönlicher Wunschbogen (DP2-Matrix, QR = Mitglieds-ID) drucken / an mich mailen (KC-CLUB-WUNSCHBOGEN)
+{
+  const daten = fs.readFileSync(new URL("../dp2-club/daten.js", import.meta.url), "utf8");
+  assert.ok(/K\.people = \(K\.people \|\| \[\]\)\.map\(\(p\) => \(p\.personId === ich \? \{ \.\.\.p, formProfileId: ich \} : p\)\);/.test(daten), "QR-Profil = Mitglieds-ID");
+  assert.ok(/await F\.downloadPdf\("matrix", ich\);/.test(daten) && /finally \{ P\.download = herunterladen; \}/.test(daten), "DP2s eigener Druckteil (Matrix), Download zurückgesetzt");
+  assert.ok(/e\.origin !== location\.origin \|\| e\.source !== parent/.test(daten), "nur Anfragen der Club-App");
+  const wm = server.slice(server.indexOf('case "wunschbogen_mailen"'), server.indexOf('case "eingaben_ablegen"'));
+  assert.ok(/daten\.startsWith\("JVBERi"\)/.test(wm) && /\/\^application\\\/pdf\$\//.test(wm), "nur PDF");
+  assert.ok(/routerSenden\("club_nachricht_mail", \[ich\.person_id\]/.test(wm) && /attachmentIds: \[datei\.id\]/.test(wm), "nur an mich, als Anhang");
+  assert.ok(/"wunschbogen_gemailt"\)\.gte\("zeit", new Date\(Date\.now\(\) - 120_000\)/.test(wm), "Bremse 2 Minuten");
+  assert.ok(/data-k="bogen"/.test(html) && /function wbStart\(\)/.test(html) && /wunschbogen: \{ bauen: \(\) => wbDruckSeite\(\) \}/.test(html) && /api\("wunschbogen_mailen"/.test(html), "Club-App: Knopf, Druck, Mail");
+  assert.ok(/#druck img\.dseite\.quer \{ width: 297mm; height: 209mm; \}/.test(html), "Querformat randlos");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

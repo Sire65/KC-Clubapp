@@ -932,6 +932,8 @@
   /* KC-CLUB-CHAT-ARCHIV (2.23.28) */
   .uh-archiv-zeile { display: flex; align-items: center; gap: 10px; width: 100%; margin: 0 0 6px; padding: 10px 12px; border: 1px solid var(--linie); border-radius: 12px; background: transparent; color: inherit; font: inherit; font-weight: 700; text-align: left; cursor: pointer; }
   .uh-archiv-zeile .hinweis { flex: 1; font-weight: 400; }
+  .wb-seiten { display: grid; gap: 8px; margin: 0 0 10px; } .wb-seiten img { width: 100%; border: 1px solid var(--linie); border-radius: 6px; background: #fff; } /* KC-CLUB-WUNSCHBOGEN */
+  .wb-knoepfe { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } .wb-knoepfe .knopf { margin: 0; }
   .uh-archiv-kopf { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 8px; }
   .unterh .mitte div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .punkt { background: var(--rot); color: #fff; border-radius: 12px; padding: 2px 9px; font-weight: 800; font-size: .85rem; }
@@ -1227,6 +1229,7 @@
   @media print {
     #druck img.dseite { display: block; width: 210mm; height: 296mm; object-fit: contain; break-after: page; margin: 0; }
     #druck img.dseite:last-child { break-after: auto; }
+    #druck img.dseite.quer { width: 297mm; height: 209mm; } /* KC-CLUB-WUNSCHBOGEN (2.23.28) */
     @page { size: A4; margin: 13mm 12mm 15mm; @bottom-right { content: "Seite " counter(page) " / " counter(pages); font: 8pt sans-serif; color: #666; } }
     html, body { background: #fff !important; color: #000 !important; }
     body > *:not(#druck) { display: none !important; }
@@ -3780,6 +3783,7 @@ const HILFE = [
   { id: "anheften", thema: "nachrichten", sym: "📌", t: "Wichtiges oben im Chat festhalten", x: "Damit eine wichtige Nachricht nicht nach oben wegrutscht: einfach antippen und <b>„📌 Oben anheften“</b> wählen. Bis zu drei Nachrichten bleiben so über dem Chat stehen. Mit „Lösen“ kommen sie wieder an ihren Platz.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
   { id: "merken", thema: "nachrichten", sym: "⭐", t: "Eine Nachricht für später merken", x: "Manchmal liest man etwas und möchte es später schnell wiederfinden. Tipp die Nachricht an und wähle <b>„⭐ Merken“</b>. Alles Gemerkte liegt in 💬 Nachrichten oben unter <b>„⭐ Gemerkt“</b> – diese Liste siehst nur du.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
   { id: "chat_abstimmung", thema: "nachrichten", sym: "📊", t: "Schnell mal abstimmen", x: "Grillen oder Pizza? Freitag oder Samstag? Über <b>📎</b> unter dem Schreibfeld → <b>„📊 Abstimmung“</b> stellst du eine Frage mit 2 bis 8 Antworten. Alle sehen gleich, wie es gerade steht.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
+  { id: "wunschbogen", thema: "termine", sym: "🖨️", t: "Leeren Wunschbogen drucken oder mailen", x: "Unter <b>📝 Dienstwünsche</b> oben auf <b>„🖨️ Leerer Bogen“</b> tippen. Du bekommst deinen persönlichen Bogen mit Namen und oben rechts einem QR-Code mit deiner Mitglieds-ID. <b>🖨️ Drucken</b> – oder ohne Drucker <b>✉️ Per E-Mail an mich</b>, dann kommt er als PDF in dein Postfach. Von Hand ausfüllen und die Zeiten danach mit Twinkey eintragen.", zeig: () => wbStart(), seit: "2.23.28" },
   { id: "chat_archiv", thema: "nachrichten", sym: "📦", t: "Chats archivieren, zurückholen und löschen", x: "In der Chat-Liste einmal auf einen Chat tippen: <b>📦 Archivieren</b> räumt ihn aus der Liste – er bleibt dort, auch wenn jemand schreibt, und steht oben unter <b>„📦 Archiviert“</b>. Dort holst du ihn mit <b>📤 Wieder aktivieren</b> zurück. <b>🗑️ Bei mir komplett löschen</b> entfernt den Chat mit allen bisherigen Nachrichten – nur bei dir, die anderen behalten ihn. Dasselbe findest du im Chat oben im Menü.", zeig: () => zeige("nachrichten"), seit: "2.23.28" },
   { id: "kontakt_teilen", thema: "nachrichten", sym: "👤", t: "Eine Telefonnummer weitergeben", x: "Jemand fragt nach einer Nummer? Mit <b>📎 → „👤 Kontakt teilen“</b> schickst du eine Kontaktkarte in den Chat – der andere tippt sie an und hat alles beisammen.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
   { id: "kopieren", thema: "nachrichten", sym: "📋", t: "Text aus einer Nachricht übernehmen", x: "Nachricht antippen, <b>„📋 Kopieren“</b> wählen – schon liegt der Text in der Zwischenablage und lässt sich überall einfügen, etwa in eine Mail.", seit: "2.23.1" },
@@ -7741,6 +7745,7 @@ function dwOeffnen() {
   f.style.cssText = "position:fixed;inset:0;z-index:2000;display:flex;flex-direction:column;background:#fff8ee";
   f.innerHTML = `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;padding-top:max(8px,env(safe-area-inset-top));background:var(--karte);box-shadow:var(--schatten)">
     <button class="knopf klein" data-k="zu" style="min-height:44px">← Zurück zur Club-App</button><b style="flex:1;text-align:right;font-size:.95rem">📝 Dienstwünsche</b>
+    <button class="knopf klein" data-k="bogen" style="min-height:44px" title="Leeren persönlichen Wunschbogen mit QR-Code drucken oder per E-Mail schicken">🖨️ Leerer Bogen</button>
     <button class="knopf haupt klein" data-k="fertig" style="min-height:44px" title="Aufstellung als Bestätigung per App-Nachricht und E-Mail">✅ Fertig – Bestätigung</button></div>
     <div style="flex:1;position:relative;display:flex">
       <!-- 1.40.0: drehende Mütze schon, während die Twinkey-Seite selbst noch lädt (danach zeigt die Seite ihre eigene) -->
@@ -7748,11 +7753,81 @@ function dwOeffnen() {
       <iframe title="Dienstwünsche mit Twinkey" src="dienstwunsch.html?v=${APP_VERSION}" style="flex:1;border:0;width:100%;background:transparent;position:relative;z-index:1" allow="autoplay" onload="this.previousElementSibling?.remove();this.style.background='#fff8ee'"></iframe></div>`;
   f.querySelector('[data-k="zu"]').onclick = dwSchliessen;
   f.querySelector('[data-k="fertig"]').onclick = (e) => einmal(e.currentTarget, dwBestaetigen);
+  f.querySelector('[data-k="bogen"]').onclick = () => wbStart();
   document.body.appendChild(f); document.body.style.overflow = "hidden";
 }
 function dwSchliessen() { document.getElementById("dwFenster")?.remove(); document.body.style.overflow = ""; }
+// ---------- KC-CLUB-WUNSCHBOGEN (2.23.28, Wunsch Hansi): leeren persönlichen Wunschbogen drucken oder an mich mailen ----------
+// Der Bogen ist DP2s „Persönliche Verfügbarkeitsmatrix“ (Kann/Wunsch/Sperre je Tag + Bereitschaft/Anleitung), erzeugt von DP2s
+// eigenem Druckteil im Twinkey-Fenster (dp2-club/daten.js) – Name oben, QR-Code oben rechts mit der Mitglieds-ID (KC-P-…).
+// Zum Ausfüllen von Hand; die Zeiten trägt man danach mit Twinkey ein. Anzeige/Druck über pdf.js + Druck-Kern (Querformat).
+const WB = { lauf: 0, wartet: false, pdf: null, name: "", bilder: [] };
+function wbStart() {
+  if (!document.getElementById("dwFenster")) dwOeffnen();
+  const lauf = ++WB.lauf, bis = Date.now() + 30000; WB.wartet = true;
+  melde("🖨️ Dein Bogen wird erstellt …");
+  // Die Twinkey-Seite lädt eventuell noch – so lange anklopfen, bis sie „wunschbogen-start“ meldet
+  const klopfen = () => {
+    if (lauf !== WB.lauf || !WB.wartet) return;
+    if (Date.now() > bis) { WB.wartet = false; return meldeFehler(new Error("Der Bogen konnte nicht erstellt werden – bitte noch einmal versuchen.")); }
+    document.querySelector("#dwFenster iframe")?.contentWindow?.postMessage({ art: "wunschbogen" }, location.origin);
+    setTimeout(klopfen, 600);
+  };
+  klopfen();
+}
+async function wbAntwort(d) {
+  if (d.art === "wunschbogen-start") { WB.wartet = false; return; }
+  if (d.art === "wunschbogen-fehler") { WB.wartet = false; return meldeFehler(new Error(d.text || "Der Bogen konnte nicht erstellt werden.")); }
+  if (d.art !== "wunschbogen-fertig" || !d.bytes) return;
+  WB.pdf = new Blob([d.bytes], { type: "application/pdf" }); WB.name = String(d.name || "Wunschbogen.pdf").replace(/[^\wäöüÄÖÜß.() -]+/g, "_"); WB.bilder = [];
+  const f = blattAuf("wbBlatt", `<h3 style="margin-top:0">🖨️ Dein leerer Wunschbogen</h3>
+    <p class="hinweis" style="margin:0 0 8px">Mit deinem Namen und oben rechts dem QR-Code mit deiner Mitglieds-ID – daran erkennt die Dienstplanung deinen Bogen.
+      Von Hand ausfüllen, danach die Zeiten hier mit Twinkey eintragen.</p>
+    <div id="wbSeiten" class="wb-seiten"><p class="hinweis">Vorschau wird geladen …</p></div>
+    <div class="wb-knoepfe">
+      <button class="knopf haupt" id="wbDrucken" onclick="wbDrucken()" disabled>🖨️ Drucken</button>
+      <button class="knopf" onclick="wbMailen(this)">✉️ Per E-Mail an mich</button>
+      <button class="knopf" onclick="wbTeilen()">📤 Teilen / Speichern</button>
+      <button class="knopf" onclick="fensterZu($('wbBlatt'))">Schließen</button></div>
+    <p class="hinweis" style="margin:6px 0 0;font-size:.85rem">Kein Drucker da? „✉️ Per E-Mail an mich“ – dann kommt der Bogen als PDF an deine hinterlegte Adresse und du druckst ihn später.</p>`);
+  f.style.zIndex = "2100"; // über dem Twinkey-Fenster
+  const lauf = ++WB.lauf;
+  try {
+    const pdfjs = await pdfjsHolen(), pdf = await pdfjs.getDocument({ data: new Uint8Array(await WB.pdf.arrayBuffer()), isEvalSupported: false }).promise;
+    const breite = Math.min(1600, Math.round(1200 * Math.min(2, devicePixelRatio || 1) / 1.4));
+    for (let n = 1; n <= pdf.numPages; n++) { if (lauf !== WB.lauf) return pdf.destroy(); WB.bilder.push(await pdfSeiteAlsBild(pdf, n, breite)); }
+    pdf.destroy();
+    $("wbSeiten").innerHTML = WB.bilder.map((b, i) => `<img src="${b}" alt="Seite ${i + 1} des Wunschbogens">`).join("");
+    $("wbDrucken").disabled = false;
+  } catch { $("wbSeiten").innerHTML = '<p class="hinweis">Die Vorschau geht hier nicht – „📤 Teilen / Speichern“ öffnet das PDF, dort kannst du drucken.</p>'; }
+}
+function wbDruckSeite() {
+  if (!WB.bilder.length) return null;
+  return { ohneRahmen: true, randlos: true, quer: true, titel: "Mein Wunschbogen", html: WB.bilder.map((b) => `<img class="dseite quer" src="${b}" alt="">`).join("") };
+}
+async function wbDrucken() {
+  DRUCK = { art: "wunschbogen" };
+  try { if (!(await druckSeiteBauen())) return melde("Bitte warten, bis die Vorschau geladen ist."); } catch (e) { return meldeFehler(e); }
+  druckJetzt();
+}
+async function wbTeilen() {
+  if (!WB.pdf) return;
+  const datei = new File([WB.pdf], WB.name, { type: "application/pdf" });
+  try { if (navigator.canShare?.({ files: [datei] })) { await navigator.share({ files: [datei], title: "Mein Wunschbogen" }); return; } } catch (e) { if (e?.name === "AbortError") return; }
+  const url = URL.createObjectURL(WB.pdf), a = document.createElement("a"); a.href = url; a.download = WB.name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+async function wbMailen(knopf) {
+  if (!WB.pdf) return;
+  if (!(await frage("Den leeren Wunschbogen als PDF an deine hinterlegte E-Mail-Adresse schicken?", { ja: "✉️ Ja, schicken", nein: "Abbrechen" }))) return;
+  await einmal(knopf, async () => {
+    try { await api("wunschbogen_mailen", { daten: base64(await WB.pdf.arrayBuffer()) }, { warten: true }); melde("✉️ Der Bogen ist unterwegs – schau gleich in dein Postfach (auch im Spam-Ordner)."); }
+    catch (e) { meldeFehler(e); }
+  });
+}
 window.addEventListener("message", (e) => {
   if (e.origin !== location.origin || !document.getElementById("dwFenster")) return;
+  if (String(e.data?.art || "").startsWith("wunschbogen")) return wbAntwort(e.data);
   if (e.data === "dienstwunsch-zu") dwSchliessen();
   else if (e.data === "dienstwunsch-gespeichert") melde("✓ Dienstwünsche gespeichert – DP2 übernimmt sie");
 });
@@ -15437,6 +15512,7 @@ const DRUCKARTEN = {
   ueberblick: { bauen: () => druckUeberblick() },
   hilfe: { titel: "🖨️ Hilfe drucken / als PDF", optionen: () => hzDruckOptionen(), bauen: (o) => hzDruck(o) }, // KC-CLUB-HILFEZENTRUM (2.23.2)
   dokument: { bauen: () => dokDruckSeite() }, // KC-CLUB-DOK-ANZEIGE (1.62.0): PDF-Seiten randlos auf A4
+  wunschbogen: { bauen: () => wbDruckSeite() }, // KC-CLUB-WUNSCHBOGEN (2.23.28): leerer persönlicher Bogen, randlos A4 quer
   bestaetigung: { bauen: () => druckBestaetigung() },
   einrichtungskarte: { bauen: (o, param) => druckEinrichtungskarte(param) }, // KC-CLUB-EINRICHTUNGSKARTE (1.88.0) // KC-CLUB-BESTAETIGUNG (1.69.0): Aufstellung der eigenen Eingaben
 };
@@ -17070,6 +17146,7 @@ function suAppListe() {
     ["🆘", "Notfallkontakt", "notfall kontakt", ein("nfName")], ["📆", "Kalender-Abo (Handy-Kalender)", "kalender abo handy ical", ein("kalAboKnopf")],
     ["📱", "Meine Geräte", "geräte handy tablet abmelden", () => geraeteBlatt()], ["📡", "Verbindung prüfen", "verbindung internet led server", () => verbindungBlatt()],
     ["🔄", "Update prüfen", "update version neu", () => updateKachel()], ["🟢", "Mein Status", "status urlaub verfügbar krank", () => statusBlatt()],
+    ["🖨️", "Leeren Wunschbogen drucken (Dienstwünsche)", "wunschbogen bogen drucken dienstwunsch matrix papier qr", () => wbStart()], // KC-CLUB-WUNSCHBOGEN (2.23.28)
     ["👀", "Ansicht wechseln (einfach/erweitert)", "ansicht einfach erweitert kacheln", () => ansichtWechseln()], ["🧪", "Test an mich", "test push mail ausprobieren", () => testAnMichStarten()],
     ["🆘", "Problem melden", "problem fehler hilfe melden", () => fpProblemMelden()], ["👥", "Wer ist online?", "online wer", () => onlineBlatt()],
     ["📍", "Standort teilen", "standort teilen wo bin ich", () => stBlatt()],
@@ -17545,6 +17622,7 @@ async function fpAdmin(tage) {
     else if (h === "#pinnwand") zeige("pinnwand");
     else if (h === "#standort") zeige("standort");
     else if (h === "#dienstwunsch") dwOeffnen();
+    else if (h === "#wunschbogen") wbStart(); // KC-CLUB-WUNSCHBOGEN (2.23.28)
     else if (h.startsWith("#spiel=")) spOeffnen(decodeURIComponent(h.slice(7))); // KC-CLUB-SPIELE (2.7.0): aus dem Push
     else if (h === "#spiele") spStart();
     else if (h === "#hilfezentrum" || h.startsWith("#hilfezentrum=")) hzStart(decodeURIComponent(h.slice(14))); // KC-CLUB-HILFEZENTRUM (2.23.0)

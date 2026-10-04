@@ -12,6 +12,14 @@
 - Server: Aktionen unterhaltung_archivieren (zurueck) und unterhaltung_leeren; Liste „unterhaltungen“ liefert archiviert (Zeitpunkt).
   Speicherung je Person in kc_club_person_einstellung („chat_archiv“) – keine neue Tabelle. Protokoll nur Aktionsart, keine Inhalte.
 - Hilfe-Eintrag „Chats archivieren, zurückholen und löschen“. Test 374.
+- KC-CLUB-WUNSCHBOGEN (Wunsch Hansi): Unter „📝 Dienstwünsche“ oben „🖨️ Leerer Bogen“ (auch Schnellsuche, Hilfe, Link #wunschbogen):
+  der leere, persönliche Bogen zum Ausfüllen von Hand – DP2s „Persönliche Verfügbarkeitsmatrix V12“ (Kann/Wunsch/Sperre je Tag, Seite 2
+  Bereitschaft + Anleitung), erzeugt mit DP2s eigenem Druckteil (DP2-Code unverändert). Name oben, QR oben rechts mit der Mitglieds-ID:
+  {"schema":"KCDP-FORM-PROFILE-1","profileId":"KC-P-…","periodId":"…"} – nur ID und Zeitraum, kein Zugang. Profil-Nummer = Mitglieds-ID
+  (dp2-club/daten.js), dadurch auch beim DP2-Ausdruck „Meine Angaben“ dieselbe, feste Nummer.
+  Vorschau in der App, „🖨️ Drucken“ (Druck-Kern, randlos A4 quer), „📤 Teilen / Speichern“, „✉️ Per E-Mail an mich“ (Server-Aktion
+  wunschbogen_mailen: nur PDF, nur an die eigene hinterlegte Adresse als Anhang, höchstens 1× je 2 Min.). Test 375; Test 1.64.0
+  (gemeinsamer PDF-Helfer) zählt jetzt „mindestens 2“ Nutzer.
 - KC-CLUB-TIPP-PULS (Wunsch Hansi): Der Schriftzug „> Einfache Ansicht <“ / „< Erweiterte Ansicht >“ pulst jetzt auch (größer + roter Ring).
   Er tauscht sich beim Antippen gegen seinen Partner – ein Knopf, der dabei unsichtbar wird, zählt wie neu gezeichnet; es pulst,
   was an derselben Stelle steht. Gilt zentral für alle so getauschten Knöpfe. Test 2.23.24 erweitert.

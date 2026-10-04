@@ -43,6 +43,9 @@
   // --- Person: DP2-Personenliste (model.js) – fehlt das Mitglied dort, wird es wie in DP2 als Mitglied ergänzt ---
   if (ich && !(K.people || []).some((p) => p.personId === ich))
     K.people = [...(K.people || []), { personId: ich, name: D.ich.name, skills: "", personType: "member", active: true, expanded: false, maxHours: 8, preferences: {}, availability: [] }];
+  // KC-CLUB-WUNSCHBOGEN (2.23.28, Wunsch Hansi): Profil-Nummer im QR-Code des Papierbogens = Mitglieds-ID (KC-P-…) –
+  // fest, ohne Zufallsnummer; damit wird ein abgegebener Bogen beim Einlesen eindeutig zugeordnet. DP2-Code bleibt unverändert.
+  if (ich) K.people = (K.people || []).map((p) => (p.personId === ich ? { ...p, formProfileId: ich } : p));
   K.currentUser = { personId: ich, displayName: D.ich?.name || "", role: "employee" };
   K.state = { ...K.state, wishPhase: D.wunschphase?.status === "open" ? "open" : "closed", date: K.days[0]?.date, dayIndex: 0, view: "day", layer: "wish" };
   K.day = () => K.days[0]; K.person = (id) => K.people.find((p) => p.personId === id);
@@ -87,6 +90,24 @@
     laeuft = (async () => { do { nochmal = false; await senden(); } while (nochmal); return true; })().finally(() => { laeuft = null; });
     return laeuft;
   };
+  // KC-CLUB-WUNSCHBOGEN (2.23.28): leerer persönlicher Bogen (DP2s „Persönliche Verfügbarkeitsmatrix“, Name + QR oben rechts) auf
+  // Anfrage der Club-App erzeugen – mit DP2s eigenem Druckteil (personalizedForms + pdfAdapter); die Club-App zeigt/druckt/mailt ihn.
+  const bogenBauen = async () => {
+    for (let i = 0; i < 100 && !(K.personalizedForms?.downloadPdf && K.pdfAdapter?.bytes && K.pdfAdapter?.download); i++) await new Promise((ok) => setTimeout(ok, 200));
+    const F = K.personalizedForms, P = K.pdfAdapter;
+    if (!F?.downloadPdf || !P?.bytes) throw new Error("Der Druckteil von DP2 ist nicht geladen.");
+    let doc = null; const herunterladen = P.download;
+    P.download = (d) => { doc = d; return null; }; // DP2s Weg „Matrix als PDF“ – nur das fertige Dokument abgreifen, nicht herunterladen
+    try { await F.downloadPdf("matrix", ich); } finally { P.download = herunterladen; }
+    if (!doc) throw new Error("Der Bogen konnte nicht erstellt werden.");
+    return { bytes: await P.bytes(doc), name: doc.fileName || "Wunschbogen.pdf" };
+  };
+  window.addEventListener("message", async (e) => {
+    if (e.origin !== location.origin || e.source !== parent || e.data?.art !== "wunschbogen") return;
+    parent.postMessage({ art: "wunschbogen-start" }, location.origin);
+    try { const r = await bogenBauen(); parent.postMessage({ art: "wunschbogen-fertig", bytes: r.bytes, name: r.name }, location.origin); }
+    catch (f) { parent.postMessage({ art: "wunschbogen-fehler", text: String(f?.message || f) }, location.origin); }
+  });
   K.sync = { enqueue() {}, snapshot: () => ({ outbox: [] }) };
   K.memberAccess = { configured: () => false, cachePublicConfig() {} };
   // Freigabe „Kollegen dürfen meine Zeiten sehen“ (Twinkey-Frage): wie DP2 über supabaseConnection, gespeichert mit dem Wunschstand

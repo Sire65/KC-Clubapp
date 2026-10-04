@@ -5121,6 +5121,29 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         return json({ ok: true, ...versand });
       }
 
+      case "wunschbogen_mailen": {
+        // KC-CLUB-WUNSCHBOGEN (2.23.28, Wunsch Hansi): den leeren, persönlichen Wunschbogen (PDF aus DP2s Druckteil, QR = Mitglieds-ID)
+        // an die eigene hinterlegte Adresse – falls gerade kein Drucker da ist. Nur PDF, nur an mich, höchstens 1× je 2 Minuten.
+        const daten = String(p.daten || "");
+        if (!daten.startsWith("JVBERi")) throw new Fehler("Das ist kein PDF-Bogen – bitte den Bogen neu erstellen.", 400); // „%PDF“ in Base64
+        const { data: pe } = await db.from("kc_core_people").select("email").eq("person_id", ich.person_id).maybeSingle();
+        if (!pe?.email) throw new Fehler(`Für dich ist keine E-Mail-Adresse hinterlegt – bitte ${await adminVorname()} Bescheid geben.`, 409);
+        const { count } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("person_id", ich.person_id).eq("aktion", "wunschbogen_gemailt").gte("zeit", new Date(Date.now() - 120_000).toISOString());
+        if (count) throw new Fehler("Der Bogen ist gerade erst verschickt worden – bitte im Posteingang (auch im Spam-Ordner) nachsehen.", 429);
+        const sp = await speicherStand();
+        if (sp.belegt >= SPEICHER_GRENZE * FOTO_STOPP) throw new Fehler(`Der kostenlose Speicher ist fast voll – bitte ${await adminVorname()} Bescheid geben.`, 507);
+        const datei = await dateiAblegen(ich, `Wunschbogen_${DW.name}_${ich.name}.pdf`.replace(/[^\wäöüÄÖÜß. -]+/g, "_").slice(0, 120), "application/pdf", daten, /^application\/pdf$/);
+        const versand = await routerSenden("club_nachricht_mail", [ich.person_id], {
+          titel: "📝 Dein Wunschbogen zum Ausdrucken", kurz: "Der leere Bogen hängt als PDF an.",
+          betreff: `Köcheclub Werne – dein Wunschbogen (${DW.name})`,
+          text: `Hallo ${ich.vorname},\n\nim Anhang ist dein persönlicher, leerer Wunschbogen für „${DW.name}“ als PDF – zum Ausdrucken und Ausfüllen von Hand.\n\nOben rechts steht dein QR-Code mit deiner Mitglieds-ID: Daran erkennt die Dienstplanung, dass der Bogen von dir ist.\n\nWenn du ihn ausgefüllt hast, kannst du die Zeiten in der Club-App unter „📝 Dienstwünsche“ mit Twinkey eintragen.\n\nViele Grüße\nKöcheclub Werne`,
+          url: `${APP_URL}#dienstwunsch`, attachmentIds: [datei.id],
+        }, `club-wunschbogen:${ich.person_id}:${Date.now()}`);
+        await protokoll(ich.person_id, "wunschbogen_gemailt", { versand });
+        if (!versand.gesendet) throw new Fehler("Die E-Mail konnte gerade nicht verschickt werden – bitte später noch einmal.", 502);
+        return json({ ok: true, ...versand });
+      }
+
       case "eingaben_ablegen": {
         // KC-CLUB-EINGABEN-ARCHIV (1.69.2): eigene Aufstellung in den eigenen Archiv-Ordner (sofort sichtbar)
         const teil = p.art === "erstattung" ? `erstattung:${txt(p.id, 60)}` : "dienstwunsch";
