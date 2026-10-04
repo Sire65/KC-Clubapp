@@ -7,6 +7,11 @@
   Hellrot (255,77,94 · 0,9; in allen Designs ≥ 3,5:1). Gilt für den Tipp-Puls und die pulsierenden Knöpfe (vsPuls).
   Der Tipp-Puls prüft zusätzlich den echten Hintergrund hinter dem Element (auch Verläufe, z. B. dunkler Kopf) und nimmt bei zu wenig
   Kontrast (< 2,5:1) die nächste Farbe (Hellrot → Rot → Gelb → Weiß). Test 376 (rechnet alle Nacht-Designs nach).
+- KC-CLUB-SPIEL-TERMIN-ABSAGE (Fund Hansi: Herausforderung zurückgezogen, der Termin dazu stand noch im Kalender): Wird eine
+  Spiel-Herausforderung zurückgezogen, sagt die App die offene Terminanfrage dazu mit ab (Beteiligte bekommen wie bei „🚫 Absagen“
+  die Absage). Lehnt der Herausgeforderte ab, wird die Terminanfrage still mit abgesagt (die Spiel-Push meldet die Ablehnung schon).
+  Absagen an einer Stelle (anfrageAbsagen) – „🚫 Absagen“ unverändert. Abgesagte Anfragen stehen nicht mehr im Kalender, in der Liste
+  „Terminanfragen“ mit „🚫 abgesagt“. Datenkorrektur: die eine betroffene Anfrage (Hansi, 06.10.) auf abgesagt gesetzt, ohne Nachricht. Test 377.
 - KC-CLUB-LUPE-RING (Wunsch Hansi): Die runde Lupe unten rechts bekommt einen Kontrastring (vorher ohne Rand); das „?“ daneben nutzt
   dieselbe Ringfarbe --textRot statt --rot (nachts war dessen dunkelroter Rand kaum zu sehen). Kontrast in allen Designs: Tag ≥ 8,7:1, Nacht ≥ 6,9:1.
 

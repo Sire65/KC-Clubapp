@@ -3086,6 +3086,26 @@ async function zielPersonen(ich: Ich, an: any): Promise<string[]> {
   const aktiv = new Set((await aktiveMitglieder()).map((x) => x.person_id));
   return [...ids].filter((id) => aktiv.has(id));
 }
+// Terminanfrage absagen – eine Stelle für „🚫 Absagen“ und für Spiel-Termine, deren Herausforderung endet, bevor gespielt wurde
+// (KC-CLUB-SPIEL-TERMIN-ABSAGE 2.23.29). Benachrichtigt werden alle Beteiligten außer mir (Empfänger ohne „nein“, ggf. wer angefragt hat).
+async function anfrageAbsagen(ich: Ich, a: any, grund: string, benachrichtigen: boolean) {
+  const { data: weg } = await db.from("kc_club_terminanfragen").update({ status: "abgesagt", geaendert_am: jetzt() }).eq("id", a.id).eq("status", "offen").select("id");
+  if (!weg?.length) return null; // schon abgesagt
+  const { data: e } = await db.from("kc_club_terminanfrage_empfaenger").select("person_id,antwort").eq("anfrage_id", a.id);
+  const ziel = [...new Set([...(e ?? []).filter((x: any) => x.antwort !== "nein").map((x: any) => x.person_id), a.erstellt_von])].filter((id) => id !== ich.person_id) as string[];
+  const versand = benachrichtigen && ziel.length ? await senden("club_treffen", ziel, {
+    titel: `🚫 Abgesagt: ${a.anlass}`, kurz: `${ich.vorname} hat die Anfrage für ${wann(a.beginn)} abgesagt${grund ? " – " + grund : ""}`,
+    betreff: `Köcheclub Werne – abgesagt: ${a.anlass} (${wann(a.beginn)})`,
+    text: `Hallo,\n\n${ich.name} hat die Terminanfrage abgesagt:\n\n📌 ${a.anlass}\n📅 ${anfrageWann(a)}${grund ? "\n📝 " + grund : ""}\n\nViele Grüße\nKöcheclub Werne`,
+    url: APP_URL + "#termine",
+  }, `club-terminanfrage-absage:${a.id}`) : null;
+  await protokoll(ich.person_id, "terminanfrage_abgesagt", { anfrage: a.id, versand, ...(a.spiel_id ? { spiel: a.spiel_id } : {}) });
+  return versand;
+}
+async function spielTerminAbsagen(ich: Ich, spielId: string, grund: string, benachrichtigen: boolean) {
+  const { data: offen } = await db.from("kc_club_terminanfragen").select("*").eq("spiel_id", spielId).eq("status", "offen");
+  for (const a of offen ?? []) await anfrageAbsagen(ich, a, grund, benachrichtigen);
+}
 async function terminanfragenListe(ich: Ich, zeitraum?: { von: string; bis: string }) {
   const von = zeitraum?.von ?? new Date(Date.now() - 14 * 86400000).toISOString();
   const { data: empf } = await db.from("kc_club_terminanfrage_empfaenger").select("anfrage_id").eq("person_id", ich.person_id);
@@ -4079,18 +4099,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (!a) throw new Fehler("Anfrage nicht gefunden.", 404);
         if (a.erstellt_von !== ich.person_id) throw new Fehler("Absagen kann nur, wer angefragt hat.", 403);
         if (a.status === "abgesagt") return json({ ok: true });
-        await db.from("kc_club_terminanfragen").update({ status: "abgesagt", geaendert_am: jetzt() }).eq("id", a.id);
-        const { data: e } = await db.from("kc_club_terminanfrage_empfaenger").select("person_id,antwort").eq("anfrage_id", a.id);
-        const ziel = (e ?? []).filter((x: any) => x.antwort !== "nein").map((x: any) => x.person_id);
-        const grund = txt(p.grund, 300);
-        const versand = ziel.length ? await senden("club_treffen", ziel, {
-          titel: `🚫 Abgesagt: ${a.anlass}`, kurz: `${ich.vorname} hat die Anfrage für ${wann(a.beginn)} abgesagt${grund ? " – " + grund : ""}`,
-          betreff: `Köcheclub Werne – abgesagt: ${a.anlass} (${wann(a.beginn)})`,
-          text: `Hallo,\n\n${ich.name} hat die Terminanfrage abgesagt:\n\n📌 ${a.anlass}\n📅 ${anfrageWann(a)}${grund ? "\n📝 " + grund : ""}\n\nViele Grüße\nKöcheclub Werne`,
-          url: APP_URL + "#termine",
-        }, `club-terminanfrage-absage:${a.id}`) : null;
-        await protokoll(ich.person_id, "terminanfrage_abgesagt", { anfrage: a.id, versand });
-        return json({ ok: true, versand });
+        return json({ ok: true, versand: await anfrageAbsagen(ich, a, txt(p.grund, 300), true) });
       }
 
       // ----- KC-CLUB-STANDORT (0.92.0) -----
@@ -8498,6 +8507,7 @@ Köcheclub-App`,
         const status = p.annehmen ? "laeuft" : "abgelehnt";
         const { data: neu } = await db.from("kc_club_spiele").update({ status, geaendert_am: jetzt() }).eq("id", g.id).eq("status", "angefragt").select("*").maybeSingle();
         if (!neu) throw new Fehler("Diese Herausforderung ist schon erledigt.", 409);
+        if (!p.annehmen) await spielTerminAbsagen(ich, g.id, "Herausforderung abgelehnt", false); // 2.23.29: Ablehnung meldet die Spiel-Push schon
         await spielPush(g.von, p.annehmen ? { titel: `🎲 ${ich.vorname} spielt mit!`, kurz: "Du fängst an – du bist dran.", text: `${ich.name} hat deine Herausforderung angenommen. Du bist dran.` }
           : { titel: `🎲 ${ich.vorname} hat abgelehnt`, kurz: "Vielleicht ein andermal.", text: `${ich.name} möchte gerade nicht spielen.` }, g.id, `club-spiel:${g.id}:antwort`);
         return json({ ok: true, spiel: spielSicht(neu, ich.person_id, await personen([g.von, g.an])) });
@@ -8570,6 +8580,8 @@ Köcheclub-App`,
         if (!upd) throw new Fehler("Das Spiel ist schon vorbei.", 409);
         const { data: neu } = await db.from("kc_club_spiele").update({ ...upd, geaendert_am: jetzt() }).eq("id", g.id).eq("status", g.status).select("*").maybeSingle();
         if (!neu) throw new Fehler("Das Spiel hat sich inzwischen geändert.", 409);
+        // KC-CLUB-SPIEL-TERMIN-ABSAGE (2.23.29, Fund Hansi: zurückgezogen, Termin stand noch im Kalender): Termin dazu mit absagen
+        if (g.status === "angefragt") await spielTerminAbsagen(ich, g.id, "Herausforderung zurückgezogen", true);
         if (g.status === "laeuft") await spielPush(gegner, { titel: `${spielSym(g.spiel)} ${ich.vorname} hat aufgegeben`, kurz: "Du hast gewonnen! 🏆", text: `${ich.name} hat das Spiel aufgegeben – du hast gewonnen.` }, g.id, `club-spiel:${g.id}:auf`);
         return json({ ok: true, spiel: spielSicht(neu, ich.person_id, await personen([g.von, g.an])) });
       }
