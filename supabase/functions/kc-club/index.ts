@@ -24,9 +24,24 @@ import { KT_FRAGEN } from "./kt-fragen.js"; // KC-CLUB-KUECHENTERROR (2.14.0): F
 
 const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
+// KC-CLUB-DB-ZEITGRENZE (2.23.10, Ausfall 04.10. 3:55–5:40 Uhr: Anfragen hingen bis 150 s): jede Datenbank-Abfrage (REST/RPC)
+// bricht nach DB_ZEIT_MS ab. Ist während einer Anfrage eine Abfrage hängen geblieben, antwortet der Server mit 503 – nie mit einem
+// halben Ergebnis (UNKNOWN ≠ OK) – und die App schaltet schneller auf Notbetrieb/gespeicherten Stand. Speicher (Dateien) unverändert.
+const DB_ZEIT_MS = 15000;
+const DB_AUS = { n: 0 }; // zählt abgebrochene Abfragen (je Anfrage vorher/nachher verglichen)
+const dbFetch: typeof fetch = (input, init) => {
+  const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+  if (!url.includes("/rest/v1/")) return fetch(input, init);
+  const zeit = AbortSignal.timeout(DB_ZEIT_MS);
+  return fetch(input, { ...init, signal: init?.signal ? AbortSignal.any([init.signal, zeit]) : zeit }).catch((e) => {
+    if (zeit.aborted) { DB_AUS.n++; console.error("DB-Zeitgrenze", DB_ZEIT_MS, "ms"); }
+    throw e;
+  });
+};
+const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
+const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.23.9";
+const SERVER_VERSION = "2.23.10";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -3223,6 +3238,7 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "POST erwartet" }, 405);
   const t0Anfrage = Date.now(); // KC-CLUB-ANMELDECACHE: Server-Zeit im ping zurückmelden
   let p: any; try { p = await req.json(); } catch { return json({ error: "Ungültige Anfrage" }, 400); }
+  const dbAusVorher = DB_AUS.n; // KC-CLUB-DB-ZEITGRENZE
   const a = String(p?.action || "");
   try {
     // ----- KC-CLUB-NOTBETRIEB (1.52.0): Notfall-Paket bauen und beim Ersatz-Server ablegen (Zeitplaner, alle 15 Min.) -----
@@ -3618,8 +3634,10 @@ Köcheclub Werne`,
     const tAnm = Date.now();
     const ich = await anmelden(req);
     const anmeldungMs = Date.now() - tAnm;
-    return await aktionAusfuehren(a, p, ich, req, t0Anfrage, anmeldungMs);
+    const antwort = await aktionAusfuehren(a, p, ich, req, t0Anfrage, anmeldungMs);
+    return DB_AUS.n !== dbAusVorher ? dbWeg() : antwort; // KC-CLUB-DB-ZEITGRENZE: kein halbes Ergebnis
   } catch (e) {
+    if (DB_AUS.n !== dbAusVorher) return dbWeg(); // KC-CLUB-DB-ZEITGRENZE
     if (e instanceof Fehler) return json({ error: e.message }, e.status);
     // 2.0.0 (Gesamtprüfung): interne Fehlertexte nicht nach außen – kurze Nummer zum Wiederfinden im Server-Log
     const nr = crypto.randomUUID().slice(0, 8);
@@ -8759,7 +8777,9 @@ async function notpaketLauf(erzwingen: boolean) {
       await db.from("kc_club_notbetrieb").update({ bestaetigt_am: erstellt, fehler: null }).eq("id", 1);
       return { ok: true, unveraendert: true };
     }
-    const t0 = Date.now(), paket = await notpaketBauen();
+    const dbVorher = DB_AUS.n, t0 = Date.now(), paket = await notpaketBauen();
+    // KC-CLUB-DB-ZEITGRENZE: hing die Datenbank beim Bauen, das gute alte Paket NICHT durch ein lückenhaftes ersetzen
+    if (DB_AUS.n !== dbVorher) throw new Error("Datenbank antwortet nicht – Notfall-Paket bleibt auf dem letzten guten Stand");
     const roh = await gzip(JSON.stringify({ format: 1, erstellt, stand: erstellt, fingerabdruck: fp, server: SERVER_VERSION, mitglieder: paket.mitglieder }));
     await senden("/paket", roh, "application/gzip");
     await db.from("kc_club_notbetrieb").update({ fingerabdruck: fp, hochgeladen_am: erstellt, bestaetigt_am: erstellt, groesse: roh.length, mitglieder: paket.anzahl, dauer_ms: Date.now() - t0, fehler: null }).eq("id", 1);

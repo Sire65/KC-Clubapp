@@ -2381,7 +2381,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 {
   const worker = lies("notbetrieb/worker.js"), wf = lies(".github/workflows/notbetrieb-hochladen.yml"), mig = lies("supabase/migrations/20261002_kc_club_v1520_notbetrieb.sql");
   // Server: eine Regel – dieselben Aktionen intern, nur lesend; Paket nur bei Änderung, signiert
-  assert.ok(/async function aktionAusfuehren\(a: string, p: any, ich: Ich, req: Request/.test(server) && /return await aktionAusfuehren\(a, p, ich, req, t0Anfrage, anmeldungMs\);/.test(server), "Aktionen in einer Funktion (auch intern nutzbar)");
+  assert.ok(/async function aktionAusfuehren\(a: string, p: any, ich: Ich, req: Request/.test(server) && /(return await|const antwort = await) aktionAusfuehren\(a, p, ich, req, t0Anfrage, anmeldungMs\);/.test(server), "Aktionen in einer Funktion (auch intern nutzbar)");
   assert.ok(/nurLesen: true/.test(server) && /if \(!ich\.nurLesen\) await protokoll\(ich\.person_id, "sos_geoeffnet"/.test(server) && /fremd\.length && !ich\.nurLesen/.test(server) && /if \(!ich\.nurLesen\) await db\.from\("kc_communication_thread_participants"\)\.update/.test(server), "Paket-Bau schreibt nichts");
   assert.ok(/st\.fingerabdruck === fp/.test(server) && /name: "Ed25519"/.test(server) && /if \(!st\.url\) return \{ ok: true, aus:/.test(server), "nur bei Änderung, signiert, aus solange nicht eingerichtet");
   assert.ok(/'secret', false, false, false/.test(mig) && /cron\.schedule\('kc-club-notpaket-15min'/.test(mig), "Schlüssel nie gespiegelt, Lauf alle 15 Min.");
@@ -3739,6 +3739,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/NA\.idStand = idStand; CHAT_AKTIV = Date\.now\(\);/.test(html), "neue Nachricht → wieder schnell");
   assert.ok(/if \(SP\.offen\.ichDran \? SPT_TAKT\.n % 5 : SPT_TAKT\.ruhig > 40 && SPT_TAKT\.n % 3\) return;/.test(html) && /SPT_TAKT\.ruhig = 0; const warDran/.test(html), "Spiele-Takt");
   assert.ok(!/function aeErledigt/.test(html), "alter Knopf „Im KC Manager eingetragen“ entfernt");
+}
+// 360. 2.23.10: Datenbank-Zeitgrenze (KC-CLUB-DB-ZEITGRENZE) – nach dem nächtlichen Ausfall am 04.10.
+{
+  assert.ok(/const DB_ZEIT_MS = 15000;/.test(server) && /if \(!url\.includes\("\/rest\/v1\/"\)\) return fetch\(input, init\);/.test(server), "nur Datenbank-Abfragen, Dateien unverändert");
+  assert.ok(/global: \{ fetch: dbFetch \}/.test(server) && /if \(zeit\.aborted\) \{ DB_AUS\.n\+\+;/.test(server), "Client nutzt Zeitgrenze, Abbruch wird gezählt");
+  assert.ok(/return DB_AUS\.n !== dbAusVorher \? dbWeg\(\) : antwort;/.test(server) && /if \(DB_AUS\.n !== dbAusVorher\) return dbWeg\(\);/.test(server), "nie halbes Ergebnis");
+  assert.ok(/json\(\{ error: "Die Datenbank antwortet gerade nicht[^"]*", db: "weg" \}, 503\)/.test(server) && /const leitungKaputt = \(r\.status >= 502 && r\.status <= 504\)/.test(html), "503 → App wertet als Leitung gestört (Notbetrieb)");
+  assert.ok(/if \(DB_AUS\.n !== dbVorher\) throw new Error\("Datenbank antwortet nicht – Notfall-Paket bleibt/.test(server), "Notfall-Paket wird nicht durch lückenhaftes ersetzt");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

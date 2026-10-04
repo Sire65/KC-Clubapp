@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.23.10 – 2026-10-04 – Datenbank-Zeitgrenze: schneller in den Notbetrieb (Freigabe Hansi)
+- Anlass: Nacht 03./04.10. – Supabase-Störung 3:55–5:40 Uhr (Anfragen hingen 80–150 s, dann 503/546) und Datenbank-Neustart 5:36 Uhr.
+- KC-CLUB-DB-ZEITGRENZE: Jede Datenbank-Abfrage des Servers (REST/RPC) bricht nach 15 s ab. Ist dabei während einer Anfrage etwas
+  hängen geblieben, antwortet der Server mit 503 „Die Datenbank antwortet gerade nicht“ – nie mit einem halben Ergebnis (Regel 11).
+  Die App wertet 503 schon als „Leitung gestört“ → schneller Notbetrieb bzw. gespeicherter Stand. Datei-Speicher (Fotos, Archiv) unverändert.
+- Notfall-Paket: hängt die Datenbank beim Bauen, bleibt das letzte gute Paket stehen (kein lückenhaftes Paket). Test 360.
+
 ## 2.23.9 – 2026-10-04 – Spar-Takt: weniger Server-Aufrufe (Prüfung „Optimierung“, Freigabe Hansi)
 - Anlass: 15.646 Server-Aufrufe in 24 Std. (davon 9.929 Club-App) → hochgerechnet ~470.000/Monat, kostenlose Grenze 500.000 (Zero-Cost-Gate).
 - KC-CLUB-SPARTAKT Chat: tippt jemand → weiter alle 2 s; anderer online und in den letzten 90 s geschrieben → 4 s, sonst 8 s;
