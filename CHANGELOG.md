@@ -1,12 +1,15 @@
 # Änderungen
 
-## 2.22.12 – 2026-10-04 – Zahlen auf weiteren großen Kacheln (Wunsch Hansi)
+## 2.22.12 – 2026-10-04 – Zahlen auf weiteren großen Kacheln, Mikrofon-Freigabe vor dem Diktieren (Wunsch Hansi)
 - KC-CLUB-KACHEL-ZAHLEN: in der erweiterten Ansicht zeigen jetzt auch diese Kacheln, ob etwas auf mich wartet (einfache Ansicht bleibt ruhig):
   📅 Termine (Treffen und Terminanfragen ohne meine Antwort + offene Terminfindungen), 🤝 Helfen & Leihen (offene Hilfe-Aufrufe anderer ohne
   meine Antwort, nicht voll; Clubleitung + Ausleih-Anfragen), 🗂️ Büro (alles im Eingangskorb), 📷 Fotoalbum (neue Fotos anderer seit dem letzten
   Öffnen), 🗓️ Dienstpläne (meine Dienste ab heute, neu/geändert seit dem letzten Öffnen). „Zuletzt geöffnet“ merkt sich das Gerät.
 - Server: init liefert kz (kachelZahlen) – jede Zahl einzeln abgesichert, Fehler → null → keine Zahl (nie „0 = erledigt“ aus fehlenden Daten).
   Kachel-Einträge unverändert, Zahlen über KZ_KACHELN angehängt. Test zu init angepasst (Parameter). Test 338.
+- KC-CLUB-MIKRO-FREIGABE (Wunsch Hansi): vor dem Diktieren zuerst die Mikrofon-Freigabe – kurzes Erklärfenster („Gleich fragt dein Handy …
+  bitte Zulassen tippen“), dann die Abfrage des Handys, erst danach das Diktat-Fenster. Schon erlaubt → sofort los (ohne Fenster);
+  gesperrt → Anleitung zum Freischalten (Android, iPhone, PC) statt der kurzen Meldung. Gilt für alle 🎙️-Diktate (Chat, SOS …). Test 339.
 
 ## 2.22.11 – 2026-10-04 – Hilfe-Aufrufe: wer hat ihn gesehen? Pinnwand: Antwort-Knopf wählbar (Wunsch Hansi)
 - KC-CLUB-HILFE-GESEHEN: wie bei Pinnwand-Zetteln merkt sich die App, wer einen offenen Hilfe-Aufruf angezeigt bekommen hat (Pinnwand-Aushang,

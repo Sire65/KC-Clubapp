@@ -4872,9 +4872,34 @@ function diktatMerge(liste, t, gleicheRunde) { // gleicheRunde: Stücke derselbe
   else l.push(t);
   return l;
 }
-function diktatStart(ziel, nachSenden) { // 2.22.0: auch für andere Felder (z. B. Notfall-Meldung) – ziel = Feld-ID, nachSenden = was „Senden“ tut
+// KC-CLUB-MIKRO-FREIGABE (2.22.12, Wunsch Hansi): vor dem ersten Diktieren erst erklären und die Mikrofon-Freigabe des Handys holen –
+// erst danach öffnet sich das Diktat-Fenster. Ist das Mikrofon schon erlaubt, geht es sofort los; ist es gesperrt, kommt eine Anleitung.
+const MIKRO_OK = "kc_club_mikro_ok";
+async function mikroFreigabe() {
+  let zustand = null;
+  try { zustand = (await navigator.permissions?.query({ name: "microphone" }))?.state || null; } catch { /* z. B. iPhone: nicht abfragbar */ }
+  if (zustand === "granted") return true;
+  if (zustand === "denied") { mikroHilfe(); return false; }
+  if (!zustand && lsLesen(MIKRO_OK) === "1") return true; // schon einmal erlaubt (Handy merkt es sich)
+  if (!(await frage("🎙️ Zum Diktieren braucht die App dein Mikrofon.\n\nGleich fragt dein Handy, ob die Köcheclub-App das Mikrofon benutzen darf – bitte „Zulassen“ bzw. „Erlauben“ tippen.\n\nDas Handy hört nur zu, solange das Diktat-Fenster offen ist.", { ja: "🎙️ Weiter" }))) return false;
+  if (!navigator.mediaDevices?.getUserMedia) return true; // dann fragt die Spracherkennung selbst
+  try { const s = await navigator.mediaDevices.getUserMedia({ audio: true }); s.getTracks().forEach((x) => x.stop()); lsSetzen(MIKRO_OK, "1"); return true; }
+  catch { mikroHilfe(); return false; }
+}
+function mikroHilfe() {
+  blattAuf("mikroHilfe", `<h3 style="margin:0">🎙️ Mikrofon ist gesperrt</h3>
+    <p style="margin:6px 0">Das Handy hat der Köcheclub-App das Mikrofon nicht erlaubt. So schaltest du es frei:</p>
+    <p style="margin:4px 0"><b>Android (Chrome):</b> oben neben der Adresse auf das Schloss bzw. ⓘ tippen → <b>Berechtigungen</b> → <b>Mikrofon</b> → <b>Zulassen</b>. Bei der installierten App: lange auf das App-Symbol drücken → <b>App-Info</b> → <b>Berechtigungen</b> → <b>Mikrofon</b>.</p>
+    <p style="margin:4px 0"><b>iPhone:</b> <b>Einstellungen</b> → <b>Safari</b> → <b>Mikrofon</b> → <b>Fragen</b> oder <b>Erlauben</b>.</p>
+    <p style="margin:4px 0"><b>PC:</b> links neben der Adresse auf das Schloss klicken → <b>Mikrofon</b> → <b>Zulassen</b>.</p>
+    <p class="hinweis" style="margin:6px 0">Danach die App einmal neu laden und nochmal auf 🎙️ tippen.</p>
+    <button class="knopf haupt" onclick="$('mikroHilfe').remove()">Verstanden</button>`);
+}
+async function diktatStart(ziel, nachSenden) { // 2.22.0: auch für andere Felder (z. B. Notfall-Meldung) – ziel = Feld-ID, nachSenden = was „Senden“ tut
   if (!DIKTAT_GEHT) return ziel ? melde("Dieses Handy kann nicht diktieren – bitte tippen.", true) : spracheStart();
-  if (DT.aktiv) return;
+  if (DT.aktiv || DT.fragt) return;
+  DT.fragt = true; let frei = false; try { frei = await mikroFreigabe(); } finally { DT.fragt = false; } // KC-CLUB-MIKRO-FREIGABE
+  if (!frei || DT.aktiv) return;
   DT.ziel = ziel || "text"; DT.nachSenden = nachSenden || null;
   const feld = $(DT.ziel); DT.basis = feld.value; DT.fertig = ""; DT.aktiv = true; DT.seit = Date.now(); DT.vorher = []; DT.sitzung = []; DT.zwischen = "";
   const f = blattAuf("diktatBlatt", `<div class="diktat"><span class="bu-hpunkt">✍️</span><b>Ich schreibe mit …</b>
@@ -4898,7 +4923,7 @@ function diktatHoeren() {
     feld.value = (DT.basis ? DT.basis.replace(/\s*$/, " ") : "") + gesagt; feld.dispatchEvent(new Event("input", { bubbles: true }));
     if ($("diktatText")) $("diktatText").textContent = gesagt || "…";
   };
-  e.onerror = (ev) => { if (ev.error === "not-allowed" || ev.error === "service-not-allowed") { melde("✍️ Bitte das Mikrofon für die App erlauben (Handy-Einstellungen).", true); diktatEnde("fertig"); } };
+  e.onerror = (ev) => { if (ev.error === "not-allowed" || ev.error === "service-not-allowed") { lsSetzen(MIKRO_OK, ""); diktatEnde("fertig"); mikroHilfe(); } }; // 2.22.12: Anleitung statt kurzer Meldung
   // Chrome hört nach einer Pause von selbst auf – solange das Fenster offen ist, weiter zuhören (höchstens 5 Minuten)
   e.onend = () => { for (const t of [...DT.sitzung, DT.zwischen]) DT.vorher = diktatMerge(DT.vorher, t); DT.sitzung = []; DT.zwischen = ""; // Runde abschließen
     if (DT.aktiv && Date.now() - DT.seit < 5 * 60000) { try { diktatHoeren(); } catch { diktatEnde("fertig"); } } else if (DT.aktiv) diktatEnde("fertig"); };
