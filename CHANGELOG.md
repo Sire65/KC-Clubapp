@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.23.35 – 2026-10-04 – „Schnellzugriff“ führt zu den Schnellstart-Symbolen oben (Wunsch Hansi)
+- KC-CLUB-SCHNELLZUGRIFF-LINK: Das Wort „Schnellzugriff“ auf der Startseite ist antippbar (gepunktet unterstrichen) und blättert oben im
+  Kopf zur Karte „⚡ Schnellstart“ mit den Lieblings-Symbolen, scrollt nach oben und lässt den Kopf kurz aufleuchten (Farbe wie der Tipp-Puls).
+  Einfache Ansicht: Rückfrage, ob zur erweiterten Ansicht gewechselt werden soll. Schnellstart aus: öffnet ⚙️ → „⚡ Schnellstart“ zum Einschalten.
+  Test 384.
+
 ## 2.23.34 – 2026-10-04 – 👍/👎 „Hat dir das weitergeholfen?“ unter jeder Hilfe (Wunsch Hansi)
 - KC-CLUB-HILFE-BEWERTUNG: Unter jeder Hilfe im Hilfe-Zentrum (auch beim „?“ und in der Suche) „Hat dir das weitergeholfen? 👍 Ja / 👎 Nein“.
   Bei 👎 freiwillig „Was hat gefehlt?“ (Vorschläge: zu kurz, schwer verständlich …). Danach „Danke …“ mit „ändern“.

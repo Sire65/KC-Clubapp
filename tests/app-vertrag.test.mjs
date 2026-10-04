@@ -3897,6 +3897,13 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const mig = fs.readFileSync(new URL("../supabase/migrations/20261004_kc_club_v22334_hilfe_bewertung.sql", import.meta.url), "utf8");
   assert.ok(/enable row level security/.test(mig) && /revoke all on table kc_club_hilfe_bewertung from anon, authenticated/.test(mig), "RLS an, kein Direktzugriff");
 }
+// 384. 2.23.35: „Schnellzugriff“ → Schnellstart-Karte oben (KC-CLUB-SCHNELLZUGRIFF-LINK)
+{
+  assert.ok(/<h3><button type="button" class="sz-link" onclick="schnellstartOben\(\)"[^>]*>Schnellzugriff<\/button>/.test(html), "Wort ist antippbar");
+  const f = html.slice(html.indexOf("async function schnellstartOben"), html.indexOf("function infoBlaettern(d)"));
+  assert.ok(/INFO_FELDER\.findIndex\(\(f\) => f\.id === "schnellstart"\)/.test(f) && /infoGehe\(i\)/.test(f) && /window\.scrollTo\(\{ top: 0/.test(f), "springt zur Karte");
+  assert.ok(/if \(einfach\(\)\) \{/.test(f) && /await ansichtSetzen\("erweitert"\)/.test(f) && /data-klappe="schnellstart"/.test(f), "einfache Ansicht / ausgeschaltet bedacht");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

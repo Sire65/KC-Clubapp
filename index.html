@@ -1405,6 +1405,7 @@
      2.23.16 (Wunsch Hansi): etwas größer (.66 → .82rem); erweitert „< … >“ (nach außen), einfach „> … <“ (nach innen) statt Klammern */
   .ansichtname { font-size: .82rem; font-weight: 700; margin-left: 2px; vertical-align: middle; white-space: nowrap; border: none; background: none; padding: 6px 2px; font-family: inherit; cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; }
   #versionMarke { white-space: nowrap; flex: none; }
+  .sz-link { border: none; background: none; padding: 4px 0; font: inherit; color: inherit; cursor: pointer; text-decoration: underline dotted; text-underline-offset: 4px; } /* KC-CLUB-SCHNELLZUGRIFF-LINK */
   .ansichtname.ein { color: var(--textGruen); } .ansichtname.erw { color: var(--textRot); } /* 1.23.0: im Nacht-Design lesbar */
   body.einfach .ansichtname.erw, body:not(.einfach) .ansichtname.ein { display: none; }
   /* KC-CLUB-EINSTIEG: „dort ist es“ – kurz aufleuchten */
@@ -2021,7 +2022,7 @@
       <div class="ipunkte" id="infoPunkte"></div>
     </div>
     <div id="updateHinweis"></div>
-    <div class="abschnitt"><h3>Schnellzugriff <button type="button" class="ansichtname ein" onclick="ansichtWechseln()" title="Antippen: zur erweiterten Ansicht wechseln">&gt; Einfache Ansicht &lt;</button><button type="button" class="ansichtname erw" onclick="ansichtWechseln()" title="Antippen: zur einfachen Ansicht wechseln">&lt; Erweiterte Ansicht &gt;</button></h3><button class="marke" id="versionMarke" style="border:none;cursor:pointer" title="Update prüfen" onclick="updateKachel()">v–</button></div>
+    <div class="abschnitt"><h3><button type="button" class="sz-link" onclick="schnellstartOben()" title="Antippen: oben die Schnellstart-Symbole zeigen">Schnellzugriff</button> <button type="button" class="ansichtname ein" onclick="ansichtWechseln()" title="Antippen: zur erweiterten Ansicht wechseln">&gt; Einfache Ansicht &lt;</button><button type="button" class="ansichtname erw" onclick="ansichtWechseln()" title="Antippen: zur einfachen Ansicht wechseln">&lt; Erweiterte Ansicht &gt;</button></h3><button class="marke" id="versionMarke" style="border:none;cursor:pointer" title="Update prüfen" onclick="updateKachel()">v–</button></div>
     <div class="register" id="register"></div>
     <div class="kachelleiste versteckt" id="kachelLeiste"><p>✏️ <b>Kacheln anordnen:</b> <span class="kl-erw">Kachel <b>kurz festhalten</b>, an den neuen Platz <b>ziehen</b> und loslassen (oder ◀ ▲ ▼ ▶ antippen). ✕ blendet aus, 👁️ wieder ein. Ausgeblendete bleiben hier blass an ihrem Platz.</span><span class="kl-ein">Kachel <b>festhalten</b> und nach oben oder unten <b>ziehen</b> – oder ▲ ▼ antippen.</span></p>
       <button class="knopf haupt klein" onclick="kaBearbeiten(false)">✅ Fertig</button><button class="knopf klein" onclick="kaStandard()">↺ Standard</button></div>
@@ -2800,7 +2801,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.34"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.35"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -8433,6 +8434,24 @@ function infoGehe(i, richtung) {
   if (!richtung) richtung = neu >= INFO_I ? 1 : -1;
   INFO_I = neu; try { localStorage.setItem("kc_club_infofeld", INFO_FELDER[neu].id); } catch {}
   heroZeigen(richtung);
+}
+// KC-CLUB-SCHNELLZUGRIFF-LINK (2.23.35, Wunsch Hansi): Wort „Schnellzugriff“ antippen → oben im Kopf die Karte „⚡ Schnellstart“ mit den Symbolen
+async function schnellstartOben() {
+  if (einfach()) {
+    if (!(await frage("⚡ Die Schnellstart-Symbole oben gibt es in der erweiterten Ansicht.\nJetzt zur erweiterten Ansicht wechseln?", { ja: "🔧 Ja, wechseln", nein: "Nein" }))) return;
+    await ansichtSetzen("erweitert");
+  }
+  if (schnellStand().an === false || !schnellAuswahl().length) {
+    melde("⚡ Schnellstart ist ausgeschaltet – hier kannst du ihn einschalten und Symbole wählen.");
+    zeige("einstellungen"); const k = document.querySelector('details[data-klappe="schnellstart"]'); if (k) { k.open = true; setTimeout(() => k.scrollIntoView({ block: "start", behavior: "smooth" }), 200); }
+    return;
+  }
+  infoFelderAktualisieren();
+  const i = INFO_FELDER.findIndex((f) => f.id === "schnellstart"); if (i < 0) return;
+  if (i !== INFO_I) infoGehe(i);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  const h = document.querySelector("#v-start .hero"); if (h?.animate) setTimeout(() => { try { const cs = getComputedStyle(document.documentElement), f = cs.getPropertyValue("--pulsRing").trim() || "208, 2, 27", a = cs.getPropertyValue("--pulsRingA").trim() || ".55";
+    h.animate([{ boxShadow: `0 0 0 0 rgba(${f}, ${a})` }, { boxShadow: `0 0 0 10px rgba(${f}, 0)` }], { duration: 700, iterations: 2 }); } catch {} }, 350); // kurz aufleuchten (Farbe wie der Tipp-Puls)
 }
 function infoBlaettern(d) { if (einfach()) return; infoGehe(INFO_I + d, d); } // einfache Ansicht: nur „Nächstes Treffen“
 // KC-CLUB-INFO-SPRUNG (1.19.0): « sofort zur ersten, » sofort zur letzten Karte (schon dort → nichts tun)
