@@ -1,5 +1,15 @@
 # Änderungen
 
+## 2.23.12 – 2026-10-04 – Tipp des Tages auch aus dem Hilfe-Zentrum (Wunsch Hansi)
+- KC-CLUB-TIPP / KC-CLUB-HILFEZENTRUM: der Tipp des Tages nimmt jetzt außer den 26 TIPPS auch die Hilfen aus HILFE (ohne Kapitel
+  „Erste Schritte“, nur was für mich gilt, z. B. Büro nur Clubleitung) – Vorrat für Monate. Reihenfolge: Hilfen, die nach dem ersten
+  Tipp-Tag neu dazukommen (seit > stand), zuerst; sonst wie in den Listen. Es geht reihum durch die Kapitel (Startseite, Darstellung,
+  Nachrichten, Termine, Clubleben …). Weiter höchstens einer je Tag, „Kenne ich“, „Später“, „Keine Tipps mehr“ wie bisher (bisherige
+  Antworten bleiben gültig). Neu im Tipp: „❓ Mehr dazu“ öffnet das Hilfe-Zentrum genau bei dieser Hilfe; Hilfen mit „Zeig mir wo“
+  haben das als Hauptknopf, sonst „📖 In der Hilfe ansehen“.
+- Server: Einstellung „tipps“ nimmt Schlüssel „h:id“ an (bis 40 Zeichen, bis 400 Einträge statt 80) und speichert „stand“ und
+  „letztesThema“ – sonst wären „Kenne ich“ für die neuen Tipps verloren gegangen. Test 356.
+
 ## 2.23.11 – 2026-10-04 – Inkognito: auch der gelbe Rahmen blinkt (Wunsch Hansi)
 - KC-CLUB-INKO-BLINKEN: Der gelbe Rahmen um den Kopfbereich der Startseite blinkt im Takt der Brille gelb ↔ rot (1,2 s; bei
   „weniger Bewegung“ 2,4 s). Die Ameisen beim Einschalten bleiben wie bisher. Test 361.
