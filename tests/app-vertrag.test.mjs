@@ -3995,3 +3995,11 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/hilfe: \{ titel: "🖨️ Hilfe drucken \/ als PDF", optionen: \(\) => hzDruckOptionen\(\), bauen: \(o\) => hzDruck\(o\) \}/.test(html) && /onclick="druckStarten\('hilfe'\)"/.test(html), "Druck/PDF fehlt");
   assert.ok(/#druck \.hz-d-kap \{ break-before: page; \}/.test(html) && /<table class="hz-d-inhalt">/.test(html), "Druck: Inhaltsverzeichnis, Kapitel je Seite");
 }
+
+// 352. 2.23.3: Kapitel 1 „Erste Schritte“ (Text Hansi) – ganz vorne, fünf Schritte, Gruß von Hansi
+{
+  assert.ok(/const HILFE_THEMEN = \[\n  \{ id: "erste", sym: "👋", t: "Erste Schritte"/.test(html), "„Erste Schritte“ muss Kapitel 1 sein");
+  const ids = [...html.matchAll(/\n  \{ id: "([a-z_]+)", thema: "erste"/g)].map((m) => m[1]);
+  assert.deepEqual(ids, ["willkommen", "erst_einstellungen", "erst_einfach", "erst_hilfetexte", "erst_feedback"], "Schritte/Reihenfolge");
+  assert.ok(/id: "erst_feedback"[^\n]*Register <b>„Club“<\/b>[^\n]*Liebe Grüße<br><b>Hansi<\/b>/.test(html) && /id: "erst_einstellungen"[^\n]*Zahnrad ⚙️/.test(html), "Inhalt nach Hansis Text");
+}

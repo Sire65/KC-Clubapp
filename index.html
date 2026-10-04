@@ -2697,7 +2697,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.2"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.3"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3547,6 +3547,7 @@ function tippDesTages() {
 // Neues Thema = ein Eintrag in HILFE_THEMEN. Ohne bekanntes Thema landet ein Eintrag unter „📦 Weitere Tipps“ (geht nie verloren).
 // „seit: "x.y.z"“ markiert einen Eintrag als 🆕 für alle, die das Hilfe-Zentrum zuletzt mit einer älteren Version geöffnet haben.
 const HILFE_THEMEN = [
+  { id: "erste", sym: "👋", t: "Erste Schritte", u: "Willkommen – so fängst du gut an" }, // 2.23.3 (Wunsch Hansi): Kapitel 1, persönlich von Hansi
   { id: "start", sym: "🏠", t: "Startseite & Bedienung", u: "Kacheln, Register, Ansichten, Zurück" },
   { id: "darstellung", sym: "🎨", t: "Aussehen & Darstellung", u: "Farbe, Tag/Nacht, Schrift, Wetter" },
   { id: "nachrichten", sym: "💬", t: "Nachrichten & Chat", u: "Schreiben, Reagieren, Diktieren" },
@@ -3570,6 +3571,12 @@ const HILFE_TIPP_THEMA = {
 const hzDesign = () => { const e = einfach(); einstiegHin(e ? "einfach" : "darstellung", e ? "farbeE" : "designWahl"); };
 const hzTechnik = () => { zeige("start"); if (!einfach()) register("programme"); };
 const HILFE = [
+  // 👋 Erste Schritte (2.23.3, Text von Hansi)
+  { id: "willkommen", thema: "erste", sym: "👋", t: "Herzlich willkommen!", x: "Nach dem Installieren begrüßt dich die App. Schön, dass du dabei bist! Auf dieser Seite stehen die ersten Schritte, mit denen du gut in die Club-App startest.", seit: "2.23.3" },
+  { id: "erst_einstellungen", thema: "erste", sym: "⚙️", t: "Zuerst: deine Einstellungen", x: "Am Anfang solltest du erst einmal deine Einstellungen vornehmen – hinter dem <b>Zahnrad ⚙️</b> (unten in der Leiste bei „Mehr“). Dort stellst du zum Beispiel Töne, Benachrichtigungen, Schriftgröße und Farben ganz nach deinem Geschmack ein.", zeig: () => zeige("einstellungen"), seit: "2.23.3" },
+  { id: "erst_einfach", thema: "erste", sym: "🟢", t: "Mit der einfachen Ansicht beginnen", x: "Danach wählst du für den Anfang am besten die <b>einfache Ansicht</b> – nur das Wichtigste, mit großen Knöpfen. Zur erweiterten Ansicht kannst du jederzeit umschalten. Nach kurzer Zeit wirst du dich sicherlich gut zurechtfinden.", zeig: () => einstiegHin(einfach() ? "einfach" : "darstellung"), seit: "2.23.3" },
+  { id: "erst_hilfetexte", thema: "erste", sym: "🎓", t: "Kurze Hilfetexte in jedem Bereich", x: "In jedem Bereich habe ich kurze Hilfetexte eingebaut, die dir den Einstieg erleichtern. Bei Bedarf kannst du sie dir auch <b>vorlesen lassen</b> – einfach auf „🔊 Vorlesen“ tippen. Hier im Hilfe-Zentrum findest du alles noch einmal zum Nachlesen.", seit: "2.23.3" },
+  { id: "erst_feedback", thema: "erste", sym: "💭", t: "Dein Feedback ist mir wichtig", x: "Wenn du eine Zeit lang mit der App gearbeitet hast, würde ich mich sehr über dein <b>Feedback</b> freuen. Den Feedback-Knopf findest du in der erweiterten Ansicht im Register <b>„Club“</b>.<br><br>Viel Spaß beim Entdecken!<br>Liebe Grüße<br><b>Hansi</b>", zeig: () => zeige("feedback"), seit: "2.23.3" },
   // 🏠 Startseite & Bedienung
   { id: "kachel_lang", thema: "start", sym: "🧩", t: "Startseite aufräumen: Kacheln verschieben", x: "Du möchtest deinen Bildschirm aufräumen oder umorganisieren? Drück auf der Startseite eine Kachel <b>lange</b> (gut eine halbe Sekunde) – dann öffnet sich „Anordnen“ und die Kachel hängt an deinem Finger. Zieh sie an den neuen Platz und lass los. Mit ◀ ▶ ▲ ▼ geht es auch Schritt für Schritt. Fertig? „✅ Fertig“ tippen.", zeig: () => { zeige("start"); kaBearbeiten(true); } },
   { id: "kachel_aus", thema: "start", sym: "🙈", t: "Kacheln ausblenden und wieder holen", x: "Beim Anordnen hat jede Kachel oben ein <b>✕</b> – damit blendest du sie aus, deine Daten bleiben erhalten. Ausgeblendete Kacheln stehen blass dazwischen und kommen mit <b>👁️ Einblenden</b> zurück. Unter den Kacheln steht außerdem „🙈 … ausgeblendete Kacheln – anzeigen“. (Nur in der erweiterten Ansicht.)", zeig: () => { zeige("start"); kaBearbeiten(true); } },
