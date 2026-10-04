@@ -3727,9 +3727,9 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/spTttTonMg\(g\); \/\/ KC-CLUB-TTT-TOENE/.test(html) && /if \(neu >= 0\) spTttTon\(g\.brett\[neu\] === g\.ichBin \? "ich" : "gegner"\);/.test(html), "Mitglieder: Zug + Ende");
   assert.ok(/if \(art === "ttt"\) \{ if \(an\) spTttTon\("sieg"\); return melde/.test(html), "TTT-Schalter spricht nicht");
 }
-// 357. 2.23.7: Hilfen zu den Neuerungen aus 2.23.6
+// 358. 2.23.8: Hilfen zu den Neuerungen aus 2.23.6
 {
-  for (const id of ["eingangskorb", "ablage_mehrere", "buero_neue_nachricht", "ttt_toene", "inkognito_blinkt"]) assert.ok(new RegExp(`\\{ id: "${id}", thema: "(club|privat)",[^\\n]*seit: "2\\.23\\.7" \\}`).test(html), `Hilfe ${id}`);
+  for (const id of ["eingangskorb", "ablage_mehrere", "buero_neue_nachricht", "ttt_toene", "inkognito_blinkt"]) assert.ok(new RegExp(`\\{ id: "${id}", thema: "(club|privat)",[^\\n]*seit: "2\\.23\\.8" \\}`).test(html), `Hilfe ${id}`);
   assert.ok(/\{ id: "inkognito_blinkt",[^\n]*nur: \(\) => !!ICH\?\.admin/.test(html) && /\{ id: "eingangskorb",[^\n]*nur: \(\) => !!\(ICH\?\.vorstand \|\| ICH\?\.admin\)/.test(html), "Clubleitung/Admin-Hilfen nur für sie");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
@@ -4005,7 +4005,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.equal(new Set(es.map((e) => e.t)).size, es.length, "Hilfe-Titel doppelt");
   const anf = {}; for (const e of es) (anf[e.anfang] ||= []).push(e.id);
   for (const [a, ids] of Object.entries(anf)) assert.ok(ids.length === 1, `Hilfetexte beginnen gleich („${a}“): ${ids.join(", ")} – bitte abwechslungsreich formulieren`);
-  assert.ok(/const HZ_GRUSS = \[/.test(html) && /const HZ_THEMA_EINL = \[/.test(html) && /function hzOeffnen\(\) \{[^\n]*hzNeuerGruss\(\);/.test(html) && /if \(t !== HZ\.thema\) hzNeuerGruss\(\);/.test(html), "wechselnde Einleitungen fehlen");
+  assert.ok(/const HZ_GRUSS = \[/.test(html) && /const HZ_THEMA_EINL = \[/.test(html) && /function hzOeffnen\(\) \{[^\n]*hzNeuerGruss\(\);/.test(html) && /if \(t !== HZ\.thema( \|\| HZ\.sicht)?\) hzNeuerGruss\(\);/.test(html), "wechselnde Einleitungen fehlen");
   assert.ok(!/function hzSuchen\(q\) \{[^}]*hzNeuerGruss/.test(html), "beim Suchen darf die Einleitung nicht wechseln");
   assert.ok(/id: "buero_sprache"[^\n]*nur: \(\) => !!ICH\?\.buero/.test(html), "Büro-Hilfe nur für die Clubleitung");
   // nicht aufdringlich: das Hilfe-Zentrum öffnet keine Fenster und meldet nichts von selbst
@@ -4020,7 +4020,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/function hzGliederung\(alle\)/.test(html) && /nr\[e\.id\] = `\$\{t\.nr\}\.\$\{i \+ 1\}`/.test(html) && /<div class="hz-kap-nr">Kapitel \$\{th\.nr\}<\/div>/.test(html), "Kapitel/Nummern fehlen");
   assert.ok(/\.karte\.hz-eintrag \{ margin-top: 20px;/.test(html), "Abstand zwischen den Abschnitten");
   const los = html.slice(html.indexOf("function hzLos(id)"), html.indexOf("function hzKarte("));
-  assert.ok(/HZ\.unterwegs = \{ id, thema: HZ\.q \? null : HZ\.thema, q: HZ\.q/.test(los) && /e\.los\(\); hzLeiste\(\);/.test(los), "Leiste nach „Zeig mir wo“");
+  assert.ok(/HZ\.unterwegs = \{ id, thema: HZ\.q \? null : HZ\.thema,( sicht: HZ\.q \? null : HZ\.sicht,)? q: HZ\.q/.test(los) && /e\.los\(\); hzLeiste\(\);/.test(los), "Leiste nach „Zeig mir wo“");
   assert.ok(/↩️ Zurück zur Hilfe<\/button>/.test(los) && /onclick="hzLeisteZu\(\)"[^>]*>✕ Abbrechen<\/button>/.test(los), "Knöpfe Zurück/Abbrechen");
   assert.ok(/document\.querySelectorAll\("\.blatt:not\(\.versteckt\)"\)\.forEach\(fensterZu\)/.test(los) && /#hzInhalt \[data-hz="\$\{u\.id\}"\]/.test(los), "Zurück: Fenster schließen, an dieselbe Stelle");
   assert.ok(/\.hz-leiste \{ position: fixed; top: calc\(env\(safe-area-inset-top, 0px\) \+ 8px\); right: 8px;/.test(html), "Leiste oben rechts");
@@ -4064,4 +4064,27 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   const einfachKlappe = html.slice(html.indexOf('data-klappe="einfach"'), html.indexOf('data-klappe="schnellstart"')); // bis zum nächsten Bereich (innen gibt es geschachtelte <details>)
   assert.ok(einfachKlappe.includes('id="setHzFrageE"'), "Schalter muss in der einfachen Ansicht erreichbar sein");
   assert.ok(/id: "frage_knopf", thema: "start"/.test(html), "Hilfe-Eintrag zum Fragezeichen");
+}
+
+// 355. 2.23.7: „?“ zeigt genau die Hilfen zum Bereich – jede Ansicht hat eine Liste, jede ID existiert, Kurz-Erklärung vorne
+{
+  const liste = html.match(/\[("start", "dokumente", "dokansicht"[^\]]*)\]\.forEach\(\(x\) => \$\("v-" \+ x\)/)[1];
+  const ansichten = [...liste.matchAll(/"([a-z]+)"/g)].map((m) => m[1]).filter((v) => v !== "hilfezentrum");
+  const block = (start, ende = "\n];") => html.slice(html.indexOf(start), html.indexOf(ende, html.indexOf(start)));
+  const ids = new Set([
+    ...[...block("const HILFE = [").matchAll(/\n  \{ id: "([a-z_]+)", thema:/g)].map((m) => "h:" + m[1]),
+    ...[...block("const TIPPS = [").matchAll(/\n  \{ id: "([a-z_]+)"/g)].map((m) => "t:" + m[1]),
+    ...[...block("const EINWEISUNG = [").matchAll(/\n  \{ id: "([a-z-]+)"/g)].map((m) => "e:" + m[1]),
+  ]);
+  const map = block("const HZ_SICHT_HILFEN = {", "\n};");
+  const zu = Object.fromEntries([...map.matchAll(/\n  "([a-z]+)": \[([^\]]*)\]/g)].map((m) => [m[1], [...m[2].matchAll(/"([^"]+)"/g)].map((x) => x[1])]));
+  const einw = new Set([...block("const EINWEISUNG = [").matchAll(/\n  \{ id: "([a-z]+)"/g)].map((m) => m[1]));
+  for (const v of ansichten) {
+    assert.ok(zu[v]?.length, `Ansicht „${v}“: keine Hilfen für das „?“ (HZ_SICHT_HILFEN ergänzen)`);
+    for (const id of zu[v]) assert.ok(ids.has(id), `Ansicht „${v}“: Hilfe „${id}“ gibt es nicht`);
+    assert.equal(new Set(zu[v]).size, zu[v].length, `Ansicht „${v}“: Hilfe doppelt`);
+    if (einw.has(v)) assert.equal(zu[v][0], "e:" + v, `Ansicht „${v}“: Kurz-Erklärung des Bereichs gehört nach vorne`);
+  }
+  assert.ok(/HZ\.sicht = HZ_SICHT_HILFEN\[v\] \? v : null;/.test(html) && /<div class="hz-kap-nr">Hilfe zu diesem Bereich<\/div>/.test(html), "Bereichsseite fehlt");
+  assert.ok(/sicht: HZ\.q \? null : HZ\.sicht/.test(html) && /HZ\.sicht = u\.sicht \|\| null;/.test(html), "Zurück zur Hilfe → Bereichsseite");
 }
