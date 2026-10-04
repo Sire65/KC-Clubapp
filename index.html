@@ -2634,7 +2634,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.22.7"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.22.8"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -9443,7 +9443,8 @@ function buStartListeHtml() {
   const dran = nt ? nt.text : { vorbereiten: "📝 Sitzung vorbereiten", einladung: "📨 Einladung mit Tagesordnung senden", erinnerung: `🔔 ${t?.ohne} Mitglieder an die Antwort erinnern` }[n];
   const summe = Object.values(e).reduce((a, b) => a + b, 0);
   const eingang = [["📦", "Ausleih-Anfragen", e.ausleihen, "buEingang()"], ["🗳️", "Offene Vorschläge", e.vorschlaege, "buEingang()"], ["🙋", "Hilfe-Aufrufe", e.hilfe, "buEingang()"],
-    ["🗄️", "Archiv: zu prüfen", e.archiv, "arStart()"], ["✔️", "Offene Aufgaben", e.aufgaben, "zeige('protokolle')"], ["📄", "Protokoll-Entwürfe", e.entwuerfe, "zeige('protokolle')"]];
+    ["🗄️", "Archiv: zu prüfen", e.archiv, "arStart()"], ["✔️", "Offene Aufgaben", e.aufgaben, "zeige('protokolle')"], ["📄", "Protokoll-Entwürfe", e.entwuerfe, "zeige('protokolle')"],
+    ["✏️", "Änderungsmeldungen", e.aenderungen || 0, "aeEingang()"]]; // KC-CLUB-AENDERUNG (2.22.8)
   const festHeute = BU_F ? [...BU_F.geburtstage.filter((f) => f.tage === 0).map((f) => f.alter ? `🎉 ${esc(f.vorname)} wird ${f.alter}` : `🎂 ${esc(f.vorname)} hat Geburtstag`), ...BU_F.jubilaeen.filter((f) => f.tage === 0).map((f) => `🏅 ${esc(f.vorname)}: ${f.jahre} Jahre im Club`)] : [];
   const festBald = BU_F ? BU_F.geburtstage.concat(BU_F.jubilaeen).filter((f) => f.tage >= 0 && f.tage <= 7).length : 0;
   return `<div class="karte bu-gruss"><div class="bu-knopfreihe">${ICH?.vorstand ? '<button class="knopf klein" onclick="tagesinfoZeigen(true)">📋 Übersicht</button>' : ""}<button class="knopf klein" onclick="buAnsichtWechseln()">🗄️ Büro-Raum</button></div>${festHeute.length ? `<div class="bu-tipp" style="margin:6px 0">🎉 Heute: ${festHeute.join(" · ")} – <button class="knopf klein" onclick="buFeste()">gratulieren</button></div>` : ""}${t ? `Nächste Sitzung: <b>${esc(t.titel)}</b> · ${esc(wann(t.beginn))}<br>✅ ${t.ja} zugesagt · ❌ ${t.nein} abgesagt · ❓ ${t.ohne} ohne Antwort` : "Gerade ist keine Sitzung geplant – lege sie unter 📅 Termine an."}
@@ -9832,7 +9833,8 @@ let BU_EIN = { leihen: null, vorschlaege: null, hilfe: null, protokolle: null, a
 function buEingang() { BU.sicht = "eingang"; buZeigen(); buEingangLaden(); window.scrollTo(0, 0); }
 async function buEingangLaden() {
   const [l, v, h, pr, ar] = await Promise.allSettled([api("leihen_liste"), api("vorschlaege_liste"), api("hilfe_liste"),
-    ICH?.protokolle === false ? Promise.reject(0) : api("protokolle_liste"), api("archiv_liste")]);
+    ICH?.protokolle === false ? Promise.reject(0) : api("protokolle_liste"), api("archiv_liste"),
+    ICH?.vorstand || ICH?.admin ? aeEingangLaden() : Promise.reject(0)]); // KC-CLUB-AENDERUNG (2.22.8): Meldungen im Posteingang
   if (pr.status === "fulfilled") BU_EIN.protokolle = pr.value;
   if (ar.status === "fulfilled") { BU_EIN.archiv = ar.value; if (!AR.daten) AR.daten = ar.value; }
   if (l.status === "fulfilled") { BU_EIN.leihen = l.value; HL.leihen = l.value; }
@@ -9861,6 +9863,12 @@ function buEingangPosten() {
     P.push({ sym: "🗄️", gruppe: `Archiv: zur Prüfung · ${o.titel || "Ordner"}`, titel: d.titel, unter: `eingereicht von ${d.von || "?"}`, auf: `arAnlage('${d.id}', true)`,
       ordner: o.art === "chronik" ? ["📖", "Chronik", "arStartArt('chronik')"] : ["🗄️", "Archiv", "arStart()"],
       schnell: [["✔ In den Ordner legen (annehmen)", `buEinArchiv('${d.id}', true)`, true], ["✖ Ablehnen", `buEinArchiv('${d.id}', false)`]] });
+  }
+  // KC-CLUB-AENDERUNG (2.22.8, Wunsch Hansi): Änderungsmeldungen der Mitglieder (nur die an mich gerichteten; Admin alle)
+  for (const x of (AE.eingang?.meldungen || []).filter((y) => y.status === "offen")) {
+    const a = AE.eingang.arten.find((y) => y.id === x.art) || { sym: "✏️", t: x.art };
+    P.push({ sym: a.sym, gruppe: "Änderungsmeldung – bitte eintragen", titel: a.t, unter: `${x.name} · ${zeitKurz(x.erstellt_am)}${x.gilt_ab ? " · ab " + aeDatum(x.gilt_ab) : ""}`,
+      auf: "aeEingang()", ordner: ["📬", "Änderungen", "aeEingang()"], schnell: [["✔ Erledigt – eingetragen", `aeErledigt('${x.id}', null)`, true]] });
   }
   for (const p of (pr?.protokolle || []).filter((x) => x.status === "entwurf" && x.darfBearbeiten))
     P.push({ sym: "📄", gruppe: "Protokoll-Entwurf", titel: p.titel, unter: `${tagKurz(p.datum)} · von ${p.verfasser?.name || "?"}`, auf: `protokollOeffnen('${p.id}')`, ordner: ["📄", "Protokolle", "zeige('protokolle')"] });
@@ -13766,7 +13774,7 @@ async function aeSenden(knopf) {
     try {
       const r = await api("aenderung_senden", { art: art.id, neu, gilt_ab: $("aeGilt")?.value || null, bemerkung: $("aeBem")?.value || "", an_alle: !!$("aeAlle")?.checked, an });
       if (art.id === "notfall" && INIT) INIT.notfall = neu.name || neu.telefon ? { name: neu.name || "", telefon: neu.telefon || "", beziehung: neu.beziehung || "" } : null;
-      melde(`✅ ${r.auto ? "Gespeichert – Info" : "Gemeldet"} an ${r.an.join(", ")}${r.alle != null ? ` · ${r.alle} Mitglieder benachrichtigt` : ""}`);
+      melde(`✅ ${r.auto ? "Gespeichert – Info" : "Gemeldet"} an ${r.an.join(", ")}${r.alle != null ? ` · ${r.alle} Mitglieder benachrichtigt` : ""}${r.abgelegt ? " · liegt in deinem Archiv-Ordner (Register „Meldungen“)" : ""}`);
       await aeStart();
     } catch (e) { meldeFehler(e); }
   });
@@ -13804,7 +13812,8 @@ function aeEingZeichnen() {
       ${gr.length ? `<table class="todotab"><tr><th>Mitglied</th><th>Kochjacke</th><th>Kochhose</th></tr>${gr.map((g) => `<tr><td>${esc(g.name)}</td><td>${esc(g.kochjacke || "–")}</td><td>${esc(g.kochhose || "–")}</td></tr>`).join("")}</table>
         <p class="hinweis" style="margin:4px 0">Summe Kochjacken: ${esc(zaehl("kochjacke"))}<br>Summe Kochhosen: ${esc(zaehl("kochhose"))}</p>
         <button class="knopf" onclick="aeGroessenKopieren()">📋 Liste kopieren (für die Bestellung)</button>` : '<p class="hinweis">Noch keine Größen gemeldet. Mitglieder melden sie unter „Meins → ✏️ Meine Daten geändert? → 👕 Kleidergröße“.</p>'}</details>
-    <p class="hinweis" style="margin:0">Du siehst nur Meldungen, die an dich gingen. Bitte im KC Manager eintragen und dann „✅ Erledigt“ – das Mitglied bekommt Bescheid.</p>
+    <p class="hinweis" style="margin:0">Du siehst nur Meldungen, die an dich gingen. Bitte im KC Manager eintragen und dann „✅ Erledigt“ – das Mitglied bekommt Bescheid.
+      Jede Meldung liegt außerdem im Archiv: Ordner „Admin“ und im persönlichen Ordner des Mitglieds, jeweils Register „Meldungen“.</p>
     <button class="knopf" onclick="$('aeEingBlatt').remove()">Schließen</button></div>`;
 }
 function aeKopieren(id) {
@@ -13822,7 +13831,7 @@ async function aeErledigt(id, knopf) {
   const antwort = await eingabe(`Im KC Manager eingetragen?\n\n${x ? x.name.split(" ")[0] : "Das Mitglied"} bekommt Bescheid. Kurze Antwort dazu (freiwillig):`, "");
   if (antwort === null) return;
   await einmal(knopf, async () => {
-    try { await api("aenderung_erledigt", { id, antwort }); melde("✅ Erledigt – Mitglied hat Bescheid bekommen"); await aeEingangLaden(); aeEingZeichnen(); }
+    try { await api("aenderung_erledigt", { id, antwort }); melde("✅ Erledigt – Mitglied hat Bescheid bekommen, im Archiv abgelegt"); await aeEingangLaden(); aeEingZeichnen(); buEingangAuffrischen(); }
     catch (e) { meldeFehler(e); }
   });
 }

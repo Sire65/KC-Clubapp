@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.22.8 – 2026-10-04 – Änderungsmeldungen im Büro-Posteingang und im Archiv (Wunsch Hansi)
+- KC-CLUB-AENDERUNG: offene Änderungsmeldungen stehen jetzt im Büro-Posteingang – als Kachel „✏️ Änderungsmeldungen“ (Zahl) und in der
+  Eingangsliste je Meldung („Änderungsmeldung – bitte eintragen“, Schnellknopf „✔ Erledigt – eingetragen“, Ordner „📬 Änderungen“).
+  Zählung serverseitig nur für die Meldungen an mich (Admin: alle).
+- Ablage ins Archiv wie bei der Ausleihe (archivTextAblegen): beim Melden und beim Erledigen je eine Textdatei in den Vereinsordner
+  „Admin <Jahr>“ (nur Clubleitung) und in den persönlichen Ordner des Mitglieds, jeweils Register „Meldungen“ (wird bei Bedarf ergänzt).
+  Bankverbindung im Archiv nur mit den letzten 4 Stellen. Ablage-Fehler halten die Meldung nicht auf (Protokoll „ablage“). Test 333.
+
 ## 2.22.7 – 2026-10-04 – ✏️ Meine Daten haben sich geändert (Wunsch Hansi)
 - KC-CLUB-AENDERUNG: Kachel „✏️ Meine Daten geändert?“ im Register „Meins“ (und Knopf auf der eigenen Mitglieder-Seite). Antippen, was
   sich geändert hat (Register AENDERUNG auf dem Server): 🏠 Anschrift, 🪪 Name, 📱 Handy, ☎️ Festnetz, ✉️ E-Mail, 🏦 Bankverbindung (IBAN geprüft),

@@ -26,7 +26,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "2.22.7";
+const SERVER_VERSION = "2.22.8";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -963,6 +963,30 @@ async function aenderungStand(ich: Ich) {
     notfall: nf ? { name: nf.name || "", telefon: nf.telefon || "", beziehung: nf.beziehung || "" } : null,
     kleidung: kl?.[0]?.neu ?? null,
   } as Record<string, any>;
+}
+// Ablage ins Archiv (wie Ausleihe): Vereinsordner „Admin <Jahr>“ und persönlicher Ordner des Mitglieds, jeweils Register „Meldungen“.
+// Bankverbindung im Archiv nur mit den letzten 4 Stellen (Admin-Ordner sieht die ganze Clubleitung).
+const AE_REGISTER = "Meldungen";
+async function aeAblegen(ich: Ich, x: any, art: "Meldung" | "Erledigt") {
+  const a = AENDERUNG.arten.find((y) => y.id === x.art); if (!a) return { verein: false, persoenlich: false };
+  const p = await personen([x.person_id, x.erledigt_von]), wer = p.get(x.person_id)?.display_name || x.person_id;
+  const heute = berlinTag(new Date()), jahr = Number(heute.slice(0, 4)), d = (iso: string) => String(iso).slice(0, 10).split("-").reverse().join(".");
+  const neu = x.art === "bank" ? aeKurz({ ...x, status: "erledigt" }) : x.neu || {}, alt = x.art === "bank" ? {} : x.alt || {};
+  const wert = (f: any, w: any) => (w?.[f.k] ? (f.typ === "date" ? d(w[f.k]) : String(w[f.k])) : "–");
+  const text = [`Köcheclub Werne – Änderungsmeldung (${art === "Meldung" ? "gemeldet" : "eingetragen"})`, "────────────────────", "",
+    `Mitglied:  ${wer}`, `Was:       ${a.sym} ${a.t}`, `Gemeldet:  ${wann(x.erstellt_am)}`, ...(x.gilt_ab ? [`Gilt ab:   ${d(x.gilt_ab)}`] : []), "",
+    ...(a.felder as any[]).map((f) => `${f.t}: ${wert(f, alt)} → ${wert(f, neu)}`), ...(x.bemerkung ? ["", `Bemerkung: ${x.bemerkung}`] : []), "",
+    art === "Erledigt" ? `Eingetragen von ${p.get(x.erledigt_von)?.display_name || "?"} am ${wann(x.erledigt_am || jetzt())}${x.antwort ? `\nAntwort: ${x.antwort}` : ""}`
+      : a.auto ? "Sofort gespeichert – Info an die Clubleitung." : `Status: wartet auf Eintragung (${(a.an.length ? a.an : a.waehlbar ?? []).map((y) => AE_AN_NAME[y] || y).join(", ")})`,
+    ...(x.art === "bank" ? ["", "Bankverbindung hier nur mit den letzten 4 Stellen."] : []), "", `Vorgang: ${x.id}`, ""].join("\n");
+  const titel = `${art === "Erledigt" ? "✅ Eingetragen" : "Meldung"}: ${a.t}${x.gilt_ab ? ` ab ${d(x.gilt_ab)}` : ""}`;
+  const dateiname = `Aenderung-${a.id}-${art}-${heute}-${vorname(p.get(x.person_id) ?? null) || "Mitglied"}.txt`, stichworte = `Änderungsmeldung, ${a.t}, ${wer}`;
+  const erg = { verein: false, persoenlich: false };
+  try { await archivTextAblegen(ich, await adminOrdner(jahr, AE_REGISTER), AE_REGISTER, `${wer}: ${titel}`, dateiname, text, stichworte); erg.verein = true; }
+  catch (e) { console.error("aenderung ablegen verein", String(e)); }
+  try { const o = await persoenlicherOrdner(x.person_id, wer, jahr, AE_REGISTER); if (o) { await archivTextAblegen(ich, o, AE_REGISTER, titel, dateiname, text, stichworte); erg.persoenlich = true; } }
+  catch (e) { console.error("aenderung ablegen persoenlich", String(e)); }
+  return erg;
 }
 const aeKurz = (x: any) => x.art === "bank" && x.status === "erledigt" ? { ...x.neu, iban: "…" + String(x.neu?.iban || "").slice(-4) } : x.neu;
 const ERSTATTUNG = {
@@ -2303,10 +2327,13 @@ async function bueroSitzung(ich: Ich, tid: string) {
     zeilenWahl: BUERO_ZEILEN,
   };
 }
-async function bueroEingang() {
+async function bueroEingang(ich?: Ich) {
   const leer = { count: 0 };
   const zahl = async (q: any) => { try { const r = await q; return r.count ?? 0; } catch { return 0; } };
-  const [ausleihen, vorschlaege, hilfe, archiv, aufgaben, entwuerfe] = await Promise.all([
+  // KC-CLUB-AENDERUNG (2.22.8, Wunsch Hansi): offene Änderungsmeldungen gehören in den Posteingang
+  let aeQ = db.from("kc_club_aenderungen").select("id", { count: "exact", head: true }).eq("status", "offen");
+  if (ich && !ich.admin) aeQ = aeQ.contains("empfaenger", [ich.person_id]);
+  const [ausleihen, vorschlaege, hilfe, archiv, aufgaben, entwuerfe, aenderungen] = await Promise.all([
     zahl(db.from("kc_club_ausleihen").select("id", { count: "exact", head: true }).eq("status", "angefragt")),
     zahl(db.from("kc_club_vorschlaege").select("id", { count: "exact", head: true }).eq("status", "offen")),
     zahl(db.from("kc_club_hilfe_aufrufe").select("id", { count: "exact", head: true }).is("geschlossen_am", null).gte("datum", berlinTag(new Date()))),
@@ -2322,9 +2349,10 @@ async function bueroEingang() {
     })().catch(() => 0),
     zahl(db.from("kc_club_aufgaben").select("id", { count: "exact", head: true }).is("erledigt_am", null)),
     zahl(db.from("kc_club_sitzungsprotokolle").select("id", { count: "exact", head: true }).eq("status", "entwurf")),
+    ich && (ich.vorstand || ich.admin) ? zahl(aeQ) : Promise.resolve(0),
   ]);
   void leer;
-  return { ausleihen, vorschlaege, hilfe, archiv, aufgaben, entwuerfe };
+  return { ausleihen, vorschlaege, hilfe, archiv, aufgaben, entwuerfe, aenderungen };
 }
 function bueroTopListe(roh: unknown) {
   const l = (Array.isArray(roh) ? roh : []).map((x: any) => ({ t: txt(x?.t, 200), art: ["fest", "vorschlag", "eigen"].includes(x?.art) ? x.art : "eigen", ...(x?.id ? { id: String(x.id).slice(0, 40) } : {}) }))
@@ -3962,7 +3990,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       // ----- KC-CLUB-BUERO (1.25.0): Büro für die Clubleitung -----
       case "buero_start": {
         nurBueroLesen(ich);
-        const [sitzungen, eingang] = await Promise.all([bueroNaechste(), bueroEingang()]);
+        const [sitzungen, eingang] = await Promise.all([bueroNaechste(), bueroEingang(ich)]);
         const ids = sitzungen.map((t: any) => t.id);
         const [{ data: prep }, { data: teil }] = ids.length ? await Promise.all([
           db.from("kc_club_buero_sitzung").select("treffen_id,einladung_am,erinnerung_am,geaendert_am").in("treffen_id", ids),
@@ -4281,7 +4309,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const seit = new Date(Number.isFinite(seitRoh) ? Math.max(seitRoh, jetztMs - 7 * 86400000) : jetztMs - 86400000).toISOString();
         const heute = berlinTag(new Date());
         const [eingang, { data: auf }] = await Promise.all([
-          bueroEingang(),
+          bueroEingang(ich),
           db.from("kc_club_aufgaben").select("id,text,faellig").eq("person_id", ich.person_id).is("erledigt_am", null).order("faellig", { nullsFirst: false }).limit(30),
         ]);
         const aufgaben = (auf ?? []).filter((a: any) => a.faellig && a.faellig <= heute).map((a: any) => ({ text: a.text, faellig: a.faellig, ueberfaellig: a.faellig < heute }));
@@ -6292,9 +6320,11 @@ Köcheclub-App`,
             url: APP_URL }, `club-aenderung-alle:${a.id}`);
         }
         await db.from("kc_club_aenderungen").update({ versand: { ...versand, alle } }).eq("id", a.id);
-        await protokoll(ich.person_id, "aenderung_gemeldet", { meldung: a.id, art: art.id, empfaenger: empfaenger.length, anAlle });
+        const { data: voll } = await db.from("kc_club_aenderungen").select("*").eq("id", a.id).single();
+        const ablage = voll ? await aeAblegen(ich, voll, "Meldung") : null;
+        await protokoll(ich.person_id, "aenderung_gemeldet", { meldung: a.id, art: art.id, empfaenger: empfaenger.length, anAlle, ablage });
         const leute = await personen(empfaenger);
-        return json({ ok: true, id: a.id, an: empfaenger.map((id) => vorname(leute.get(id) ?? null) || id), alle: alle?.gesendet ?? null, auto: !!art.auto });
+        return json({ ok: true, id: a.id, an: empfaenger.map((id) => vorname(leute.get(id) ?? null) || id), alle: alle?.gesendet ?? null, auto: !!art.auto, abgelegt: !!ablage?.persoenlich });
       }
 
       case "aenderung_zurueckziehen": {
@@ -6337,7 +6367,8 @@ Köcheclub-App`,
           betreff: `Köcheclub Werne – deine Änderung ist eingetragen: ${art.t}`,
           text: `Hallo,\n\ndeine Änderung „${art.sym} ${art.t}“ hat ${ich.name} eingetragen – danke für die Meldung!${antwort ? `\n\n${antwort}` : ""}\n\nViele Grüße\nKöcheclub Werne`, url: APP_URL,
         }, `club-aenderung-erledigt:${x.id}`);
-        await protokoll(ich.person_id, "aenderung_erledigt", { meldung: x.id, art: x.art, versand });
+        const ablage = await aeAblegen(ich, { ...x, status: "erledigt", erledigt_von: ich.person_id, erledigt_am: jetzt(), antwort }, "Erledigt");
+        await protokoll(ich.person_id, "aenderung_erledigt", { meldung: x.id, art: x.art, versand, ablage });
         return json({ ok: true });
       }
 

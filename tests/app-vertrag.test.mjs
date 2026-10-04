@@ -3579,6 +3579,15 @@ assert.ok(/const UH_HERVOR = \["Innovation"\];/.test(html) && /function uhAmeise
   assert.ok(/\{ id: "aenderung", sym: "✏️", t: "Meine Daten geändert\?"/.test(html) && /\{ id: "aenderungen", sym: "📬", t: "Änderungen"/.test(html) && /h === "#aenderungen"/.test(html), "Kachel, Büro-Ordner, Link");
   assert.ok(/api\("aenderung_senden", \{/.test(html) && /api\("aenderung_erledigt", \{ id, antwort \}\)/.test(html), "App ruft die Aktionen");
 }
+// 333. 2.22.8: Änderungsmeldungen im Büro-Posteingang + Archiv (Register „Meldungen“)
+{
+  assert.ok(/async function bueroEingang\(ich\?: Ich\)/.test(server) && /if \(ich && !ich\.admin\) aeQ = aeQ\.contains\("empfaenger", \[ich\.person_id\]\);/.test(server) && /return \{ ausleihen, vorschlaege, hilfe, archiv, aufgaben, entwuerfe, aenderungen \};/.test(server), "Posteingang zählt Änderungsmeldungen");
+  assert.ok(/const AE_REGISTER = "Meldungen";/.test(server) && /await adminOrdner\(jahr, AE_REGISTER\)/.test(server) && /await persoenlicherOrdner\(x\.person_id, wer, jahr, AE_REGISTER\)/.test(server), "Ablage Admin-Ordner + persönlicher Ordner, Register Meldungen");
+  const abl = server.slice(server.indexOf("async function aeAblegen"), server.indexOf("const aeKurz ="));
+  assert.ok(/const neu = x\.art === "bank" \? aeKurz\(\{ \.\.\.x, status: "erledigt" \}\)/.test(abl) && /const alt = |alt = x\.art === "bank" \? \{\}/.test(abl), "Bank im Archiv gekürzt");
+  assert.ok(/await aeAblegen\(ich, voll, "Meldung"\)/.test(server) && /await aeAblegen\(ich, \{ \.\.\.x, status: "erledigt"/.test(server), "Ablage beim Melden und Erledigen");
+  assert.ok(/\["✏️", "Änderungsmeldungen", e\.aenderungen \|\| 0, "aeEingang\(\)"\]/.test(html) && /gruppe: "Änderungsmeldung – bitte eintragen"/.test(html), "Büro-Posteingang zeigt Meldungen");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
