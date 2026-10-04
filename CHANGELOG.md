@@ -1,5 +1,16 @@
 # Änderungen
 
+## 2.22.16 – 2026-10-04 – 🔊 Spiele ansagen lassen (Wunsch Hansi)
+- KC-CLUB-SPIEL-ANSAGE: je Spiel ein Schalter „🔊 Ansage an / 🔇 aus“ (gilt für dieses Gerät, Standard aus), mit der vorhandenen Vorlese-Stimme:
+  ♟️ Schach (gegen Computer und Mitglieder): jeder Zug – „Dein Bauer auf E 4“, „Schwarzer Läufer auf E 5 – hat gerade deinen Springer geschlagen“,
+  „schlägt den schwarzen Bauern“, Rochade, Umwandlung, Schach / Schachmatt / Remis; Figurennamen passend zum Stil (klassisch / Küchenbrigade).
+  Den Zug des Gegenübers rechnet die App aus der zuletzt gesehenen Stellung nach.
+  🔪 Küchenterror: Frage mit allen vier Antworten (A–D), danach die Auflösung mit richtiger Antwort und Erklärung (die Zeit läuft wie immer weiter).
+  🃏 Bauernskat: Trumpf-Ansage, Karten des Gegners („Der Computer spielt Herz Ass“), wer den Stich mit wie vielen Augen bekommt, Ergebnis.
+  ❌⭕ Tic-Tac-Toe bewusst ohne. Erklärung „Spiele“ nennt den Schalter. Ansage-Helfer für Bauernskat stehen außerhalb der Regeln
+  (Server-Kopie bauernskat.js unverändert).
+- Schutz: Test 344 findet „// KC-…“-Kommentare, die Code dahinter verschlucken (Fehlerart aus 2.22.12) – in App und Server. Test 345.
+
 ## 2.22.15 – 2026-10-04 – Erklärung „Termine“: Handy-Kalender (Wunsch Hansi)
 - KC-CLUB-EINWEISUNG: die Erklärung zu 📅 Termine nennt jetzt auch ⚙️ Einstellungen → „📲 Termine im Handy-Kalender“ (alle Club-Termine
   automatisch im Handy-Kalender) – mit dem Hinweis „leider nicht umgekehrt“. Wird wie alle Erklärungen auch vorgelesen. Test 343.

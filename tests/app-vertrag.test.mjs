@@ -3653,6 +3653,21 @@ assert.ok(/const UH_HERVOR = \["Innovation"\];/.test(html) && /function uhAmeise
 assert.ok(/\.kachel \.zahl \{ position: absolute; right: 12px; top: 12px;/.test(html), "Kachel-Zahl oben rechts");
 // 343. 2.22.15: Erklärung Termine nennt den Handy-Kalender (nur eine Richtung)
 assert.ok(/\{ id: "termine", sym: "📅", t: "Termine", x: "[^"]*📲 Termine im Handy-Kalender[^"]*leider nicht umgekehrt/.test(html), "Termine-Erklärung: Handy-Kalender");
+// 344. Schutz (Fehler 2.22.12 / 2.22.16-Entwurf): ein „// KC-…“-Kommentar darf in keiner Zeile Code hinter sich verschlucken
+for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
+  const schlecht = txt.split("\n").map((l, i) => [i + 1, l]).filter(([, l]) => { const m = /\/\/ KC-[A-Z0-9-]+[^\n]*$/.exec(l); if (!m) return false;
+    const rest = l.slice(m.index); return /[;{}]\s*(if|else|try|const|let|return|await|[A-Za-z_$][\w$.]*\()/.test(rest.replace(/„[^“]*“|"[^"]*"|`[^`]*`/g, "")); });
+  assert.ok(!schlecht.length, `${name}: Kommentar verschluckt Code in Zeile ${schlecht.map((x) => x[0]).join(", ")}`);
+}
+// 345. 2.22.16: Spiele ansagen lassen (KC-CLUB-SPIEL-ANSAGE)
+{
+  assert.ok(/function spSag\(art, text, schluessel, vorrang = false\) \{\s*if \(!spAnsageAn\(art\) \|\| !text \|\| aktuelleAnsicht !== "spiele"\) return;/.test(html), "Ansage nur wenn eingeschaltet und in den Spielen");
+  assert.ok(/function schZugAnsage\(m, ch, ich\)/.test(html) && /hat gerade \$\{fem\(o\) \? "deine" : "deinen"\} \$\{schFigAkk\(o\)\} geschlagen/.test(html), "Schach: Züge und Schlagen");
+  assert.ok((html.match(/spAnsageKnopf\("schach"\)/g) || []).length === 2 && (html.match(/spAnsageKnopf\("kt"\)/g) || []).length >= 3 && (html.match(/spAnsageKnopf\("bsk"\)/g) || []).length === 2 && !/spAnsageKnopf\("ttt"\)/.test(html), "Schalter bei Schach, Küchenterror, Bauernskat – nicht Tic-Tac-Toe");
+  assert.ok(/spSag\("kt", ktFrageSprache\(fr, z\.i \+ 1\)/.test(html) && /spSag\("bsk", `Der Computer spielt \$\{bskKarteWort\(kc\)\}\.`\)/.test(html), "Küchenterror-Frage, Bauernskat-Karte");
+  const regeln = html.slice(html.indexOf("const BSK_FARBEN = "), html.indexOf("// ----- Computer -----", html.indexOf("const BSK_FARBEN = ")));
+  assert.ok(!/bskKarteWort|BSK_WNAME/.test(regeln), "Ansage-Helfer nicht in den Regeln (Server-Kopie bleibt gleich)");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

@@ -2638,7 +2638,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.22.15"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.22.16"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3357,7 +3357,7 @@ const EINWEISUNG = [
   { id: "vorschlaege", sym: "🗳️", t: "Vorschläge", x: "Du hast eine Idee für den Club – ein Ausflug, ein Thema, ein Kochabend? Mit <b>„＋ Neu“</b> schlägst du sie vor, die anderen können abstimmen." },
   { id: "dienste", sym: "🗓️", t: "Dienstpläne", x: "Die Dienstpläne Woche für Woche. Mit <b>‹ Woche</b> / <b>Woche ›</b> blätterst du, <b>„Heute“</b> springt zurück." },
   { id: "aktionen", sym: "🧳", t: "Aktionen", x: "Ausflüge und besondere Aktionen des Clubs – antippen zeigt alle Einzelheiten." },
-  { id: "spiele", sym: "🎲", t: "Spiele – Köcheclub Edition", x: "Tippe auf die Kachel deines Spiels: <b>Tic-Tac-Toe</b> (🍅 gegen 🥦 – wer zuerst drei, bei 4 × 4 vier, in einer Reihe hat), <b>♟️ Schach</b> mit der Küchenbrigade (Küchenchef = König, Kaltmamsell = Dame, Souschef = Turm, Patissier = Läufer, Springer, Praktikanten = Bauern; Figur antippen, dann das Zielfeld) , <b>🃏 Bauernskat</b> zu zweit (spielbare Karten sind grün umrandet) oder <b>🔪 Küchenterror</b> – das Küchenquiz auf Zeit (je Frage 20, 15 oder 10 Sekunden – je nach Stufe; schnell und richtig bringt die meisten Punkte). Im Spiel wählst du <b>🤖 Gegen den Computer</b> – mit Feldgröße und Stärke – oder <b>👥 Gegen Mitglieder</b>: jemanden herausfordern, abwechselnd ziehen, du bekommst Bescheid, wenn du dran bist." },
+  { id: "spiele", sym: "🎲", t: "Spiele – Köcheclub Edition", x: "Tippe auf die Kachel deines Spiels: <b>Tic-Tac-Toe</b> (🍅 gegen 🥦 – wer zuerst drei, bei 4 × 4 vier, in einer Reihe hat), <b>♟️ Schach</b> mit der Küchenbrigade (Küchenchef = König, Kaltmamsell = Dame, Souschef = Turm, Patissier = Läufer, Springer, Praktikanten = Bauern; Figur antippen, dann das Zielfeld) , <b>🃏 Bauernskat</b> zu zweit (spielbare Karten sind grün umrandet) oder <b>🔪 Küchenterror</b> – das Küchenquiz auf Zeit (je Frage 20, 15 oder 10 Sekunden – je nach Stufe; schnell und richtig bringt die meisten Punkte). Im Spiel wählst du <b>🤖 Gegen den Computer</b> – mit Feldgröße und Stärke – oder <b>👥 Gegen Mitglieder</b>: jemanden herausfordern, abwechselnd ziehen, du bekommst Bescheid, wenn du dran bist. Bei Schach, Küchenterror und Bauernskat kannst du dir mit <b>🔊 Ansage</b> alles ansagen lassen – Züge, Fragen und Antworten, Karten und Stiche." },
   // 2.22.9 (Wunsch Hansi: „wo fehlen Erklärungsfenster?“) – Bereiche ohne Einweisung ergänzt
   { id: "erstattung", sym: "💶", t: "Erstattung", x: "Hier bekommst du Geld zurück, das du für den Club ausgelegt hast: <b>🚗 Fahrtkosten</b> (die Kilometer rechnet die App aus), <b>🛒 Einkauf</b> oder <b>📦 sonstige Auslagen</b>. Mehrere Posten passen in einen Antrag, Belege fotografierst du einfach dazu. Der Antrag geht an den Kassenwart – du bekommst eine Bestätigung." },
   { id: "feedback", sym: "💭", t: "Feedback", x: "Was gefällt dir, was stört, was fehlt? Schreib es hier hinein – es geht direkt an den Admin. Jede Rückmeldung hilft, die App besser zu machen." },
@@ -5392,6 +5392,54 @@ async function spMitgliedKnopf(pid) {
 // ---------- KC-CLUB-SCHACH (2.8.0, Wunsch Hansi – Stufe 2 der Spiele): Schach – Köcheclub Edition ----------
 // Regeln (erlaubte Züge, Schach, Matt, Patt, Remis, Rochade, en passant, Umwandlung) liefert chess.js (BSD-2, liegt in lib/chess –
 // nichts kommt von fremden Servern). Antippen: Figur wählen → erlaubte Felder leuchten → Zielfeld antippen.
+// ---------- KC-CLUB-SPIEL-ANSAGE (2.22.16, Wunsch Hansi): Spiele ansagen lassen – je Spiel ein eigener 🔊-Schalter (Gerät) ----------
+// Schach: jeder Zug („Dein Bauer auf C 6“, „Schwarzer Läufer auf E 5 – hat gerade deinen Springer geschlagen“, Schach/Matt),
+// Küchenterror: Frage + Antworten und die Auflösung, Bauernskat: Trumpf, Karten des Gegners, wer den Stich bekommt, Ergebnis.
+// Tic-Tac-Toe bewusst ohne. Nutzt die vorhandene Vorlese-Stimme (sprechen); jede Ansage nur einmal (SP_GESAGT).
+const SP_ANSAGE_KEY = "kc_club_sp_ansage", SP_ANSAGE_NAME = { schach: "Schach", kt: "Küchenterror", bsk: "Bauernskat" };
+const spAnsageAn = (art) => { try { return !!JSON.parse(localStorage.getItem(SP_ANSAGE_KEY) || "{}")[art]; } catch { return false; } };
+function spAnsageKnopf(art) {
+  const an = spAnsageAn(art);
+  return `<button class="knopf klein${an ? " haupt" : ""} sp-ansage" data-art="${art}" aria-pressed="${an}" onclick="spAnsageSetzen('${art}', ${!an})">${an ? "🔊 Ansage an" : "🔇 Ansage aus"}</button>`;
+}
+function spAnsageSetzen(art, an) {
+  let w = {}; try { w = JSON.parse(localStorage.getItem(SP_ANSAGE_KEY) || "{}") || {}; } catch {}
+  w[art] = !!an; lsSetzen(SP_ANSAGE_KEY, JSON.stringify(w));
+  document.querySelectorAll(`.sp-ansage[data-art="${art}"]`).forEach((b) => (b.outerHTML = spAnsageKnopf(art)));
+  try { speechSynthesis.cancel(); } catch {}
+  if (an) { if (!("speechSynthesis" in window)) return melde("Dieses Gerät kann leider nicht vorlesen.", true); sprechen(`Ansage für ${SP_ANSAGE_NAME[art]} ist an.`); }
+  else melde(`🔇 Ansage für ${SP_ANSAGE_NAME[art]} aus`);
+}
+const SP_GESAGT = new Set();
+function spSag(art, text, schluessel, vorrang = false) {
+  if (!spAnsageAn(art) || !text || aktuelleAnsicht !== "spiele") return;
+  if (schluessel) { if (SP_GESAGT.has(schluessel)) return; SP_GESAGT.add(schluessel); if (SP_GESAGT.size > 300) SP_GESAGT.clear(); }
+  if (vorrang) try { speechSynthesis.cancel(); } catch {}
+  sprechen(text);
+}
+// Schach: Zug in Worten (m = Zug aus chess.js mit verbose-Angaben, ch = Stellung danach, ich = meine Farbe)
+const SCH_WEIBLICH = { q: true };
+const schFigWort = (t) => (schBrigade() ? SCH_BRIGADE_NAME : SCH_NAME)[t];
+const schFigAkk = (t) => (t === "p" ? (schBrigade() ? "Praktikanten" : "Bauern") : schFigWort(t));
+const schFeldWort = (f) => `${f[0].toUpperCase()} ${f[1]}`;
+function schZugAnsage(m, ch, ich) {
+  const fem = (t) => !!SCH_WEIBLICH[t], eigen = m.color === ich, weiss = m.color === "w";
+  let s;
+  if (/[kq]/.test(m.flags)) s = `${eigen ? "Du machst" : (weiss ? "Weiß" : "Schwarz") + " macht"} die ${m.flags.includes("k") ? "kurze" : "lange"} Rochade.`;
+  else {
+    s = eigen ? `${fem(m.piece) ? "Deine" : "Dein"} ${schFigWort(m.piece)} auf ${schFeldWort(m.to)}`
+      : `${weiss ? (fem(m.piece) ? "Weiße" : "Weißer") : (fem(m.piece) ? "Schwarze" : "Schwarzer")} ${schFigWort(m.piece)} auf ${schFeldWort(m.to)}`;
+    if (m.captured) { const o = m.captured;
+      s += eigen ? ` – schlägt ${fem(o) ? "die" : "den"} ${weiss ? (fem(o) ? "schwarze" : "schwarzen") : (fem(o) ? "weiße" : "weißen")} ${schFigAkk(o)}`
+        : ` – hat gerade ${fem(o) ? "deine" : "deinen"} ${schFigAkk(o)} geschlagen`; }
+    if (m.promotion) s += ` und wird ${fem(m.promotion) ? "zur" : "zum"} ${schFigWort(m.promotion)}`;
+    s += ".";
+  }
+  if (ch.isCheckmate()) s += eigen ? " Schachmatt – gewonnen!" : " Schachmatt.";
+  else if (ch.isCheck()) s += eigen ? " Schach!" : " Schach – dein König wird angegriffen!";
+  else if (ch.isDraw()) s += " Remis.";
+  return s;
+}
 // Gegen den Computer nur auf dem Gerät (Stärke: Suchtiefe 1/2/3 mit Alpha-Beta + Figurenwerte/Lagetabellen), mit „Zug zurück“.
 // Gegen Mitglieder über den Server (prüft jeden Zug ebenfalls mit chess.js).
 let CHESS = null;
@@ -5504,6 +5552,7 @@ async function schPcZeigen() {
       ${schBrettHtml(ch, { unten: ich, auswahl: SCH.auswahl, ziele: SCH.ziele, letzter: (() => { const h = ch.history({ verbose: true }).slice(-1)[0]; return h ? h.from + h.to : null; })(), klick: "schPcKlick", aus: ende || SCH.denkt })}
       ${schVerlaufHtml(ch.history())}
       ${schStilHtml()}
+      <div class="knoepfe" style="justify-content:center">${spAnsageKnopf("schach")}</div>
       <div class="knoepfe"><button class="knopf haupt" onclick="schPcNeu()">↺ Neue Partie</button><button class="knopf" onclick="schPcZurueck()" ${ch.history().length < 1 || SCH.denkt ? "disabled" : ""}>↶ Zug zurück</button><button class="knopf" onclick="schPcStandWeg()">🗑️ Spielstand zurücksetzen</button></div>
     </div>`;
 }
@@ -5533,7 +5582,8 @@ async function schPcKlick(feld) {
   if (SCH.auswahl && SCH.ziele.includes(feld)) {
     const von = SCH.auswahl, bauer = ch.get(von)?.type === "p" && /[18]$/.test(feld);
     const umw = bauer ? await schUmwandlung(SCH.ichFarbe) : undefined; if (bauer && !umw) return;
-    try { ch.move({ from: von, to: feld, promotion: umw || "q" }); } catch { return; }
+    let mz; try { mz = ch.move({ from: von, to: feld, promotion: umw || "q" }); } catch { return; }
+    spSag("schach", schZugAnsage(mz, ch, SCH.ichFarbe), null, true); // KC-CLUB-SPIEL-ANSAGE
     SCH.auswahl = null; SCH.ziele = []; schPcWerten(); schMerken(); schPcZeigen();
     if (!ch.isGameOver()) schPcComputerStart();
     return;
@@ -5547,14 +5597,22 @@ function schPcComputerStart() {
   setTimeout(() => { // kurz warten, damit das Brett erst neu gezeichnet wird
     const ch = SCH.ch; if (!ch || aktuelleAnsicht !== "spiele") { SCH.denkt = false; return; }
     if (spPauseHalt(schPcComputerStart)) { SCH.denkt = false; return; } // 2.18.0: Pause
-    const m = schComputerZug(ch, SCH.staerke); if (m) ch.move(m);
+    const m = schComputerZug(ch, SCH.staerke); if (m) { const mz = ch.move(m); spSag("schach", schZugAnsage(mz, ch, SCH.ichFarbe)); } // KC-CLUB-SPIEL-ANSAGE
     SCH.denkt = false; schPcWerten(); schMerken(); if (SP.tab === "pc" && SP.art === "schach") schPcZeigen();
   }, 350);
 }
 // ----- gegen Mitglieder -----
 let SCHM = { id: null, auswahl: null, ziele: [] };
+const SCH_STELLUNG = new Map(); // KC-CLUB-SPIEL-ANSAGE: letzte gesehene Stellung je Partie
 async function schSpielZeigen(g) {
   const C = await chessLaden(), ch = new C(g.brett), ich = g.ichBin === "x" ? "w" : "b";
+  // KC-CLUB-SPIEL-ANSAGE: neuer Zug des Gegenübers seit dem letzten Blick → aus der vorigen Stellung nachvollziehen und ansagen
+  const vor = SCH_STELLUNG.get(g.id);
+  if (vor && vor.zuege === g.zuege - 1 && g.letzterZug && spAnsageAn("schach")) {
+    try { const alt = new C(vor.fen); if (alt.turn() !== ich) { const mz = alt.move({ from: g.letzterZug.slice(0, 2), to: g.letzterZug.slice(2, 4), promotion: g.letzterZug[4] || "q" });
+      spSag("schach", schZugAnsage(mz, alt, ich), `sch:${g.id}:${g.zuege}`); } } catch { /* Zug nicht nachvollziehbar – still */ }
+  }
+  SCH_STELLUNG.set(g.id, { fen: g.brett, zuege: g.zuege });
   if (SCHM.id !== g.id + ":" + g.zuege) SCHM = { id: g.id + ":" + g.zuege, auswahl: null, ziele: [] };
   const banner = g.status === "beendet" ? (g.ergebnis === "gewonnen" ? `<div class="sp-banner sieg">🏆 ${g.aufgegeben ? `${esc(g.gegner.vorname)} hat aufgegeben – du hast gewonnen!` : "Schachmatt – du hast gewonnen!"}</div>` : g.ergebnis === "verloren" ? `<div class="sp-banner niederlage">${g.aufgegeben ? "Du hast aufgegeben." : `Schachmatt – ${esc(g.gegner.vorname)} hat gewonnen.`}</div>` : `<div class="sp-banner remis">🤝 Remis${ch.isStalemate() ? " – Patt" : ""}</div>`)
     : g.status === "angefragt" ? `<div class="sp-status">⏳ Warte, bis ${esc(g.gegner.vorname)} annimmt …</div>`
@@ -5567,6 +5625,7 @@ async function schSpielZeigen(g) {
       ${schBrettHtml(ch, { unten: ich, auswahl: SCHM.auswahl, ziele: SCHM.ziele, letzter: g.letzterZug, klick: "schMgKlick", aus: !g.ichDran })}
       ${schVerlaufHtml(g.verlauf || [])}
       ${schStilHtml()}
+      <div class="knoepfe" style="justify-content:center">${spAnsageKnopf("schach")}</div>
       <p class="hinweis" style="text-align:center;margin:6px 0">Figur antippen, dann das Zielfeld. Du musst nicht warten – ${esc(g.gegner.vorname)} bekommt Bescheid.</p>
       <div class="knoepfe">${g.status === "beendet" ? `<button class="knopf haupt" onclick="spRevanche('${g.id}')">↺ Revanche</button>` : g.status === "laeuft" ? `<button class="knopf" onclick="spAufgeben('${g.id}')">🏳️ Aufgeben</button>` : ""}</div>
     </div>`;
@@ -5578,7 +5637,8 @@ async function schMgKlick(feld) {
   if (SCHM.auswahl && SCHM.ziele.includes(feld)) {
     const von = SCHM.auswahl, bauer = ch.get(von)?.type === "p" && /[18]$/.test(feld);
     const umw = bauer ? await schUmwandlung(ich) : "q"; if (!umw) return;
-    try { ch.move({ from: von, to: feld, promotion: umw }); } catch { return; }
+    let mz; try { mz = ch.move({ from: von, to: feld, promotion: umw }); } catch { return; }
+    spSag("schach", schZugAnsage(mz, ch, ich), `sch:${g.id}:${g.zuege + 1}`, true); // KC-CLUB-SPIEL-ANSAGE
     g.brett = ch.fen(); g.ichDran = false; g.letzterZug = von + feld; SCHM.auswahl = null; SCHM.ziele = []; spSpielZeigen(); // sofort zeigen
     try { SP.offen = (await api("spiel_zug", { id: g.id, zug: { von, nach: feld, umwandlung: umw }, zuege: g.zuege })).spiel; }
     catch (e) { meldeFehler(e); try { SP.offen = (await api("spiel_holen", { id: g.id })).spiel; } catch {} }
@@ -5641,6 +5701,15 @@ function bskStichAbschliessen(z) {
 const bskSumme = (l) => l.reduce((a, k) => a + bskAugen(k), 0);
 function bskErgebnis(z) { const a = z.vorhand, aug = [bskSumme(z.stiche[0]), bskSumme(z.stiche[1])]; return { augen: aug, ansager: a, gewinner: aug[a] >= 61 ? a : 1 - a }; }
 // ----- Computer -----
+// KC-CLUB-SPIEL-ANSAGE (2.22.16): Karten in Worten
+const BSK_WNAME = { A: "Ass", 10: "Zehn", K: "König", D: "Dame", B: "Bube", 9: "Neun", 8: "Acht", 7: "Sieben" };
+const bskKarteWort = (k) => { const c = { f: k.split("-")[0], w: k.split("-")[1] }; return `${BSK_FNAME[c.f]} ${BSK_WNAME[c.w]}`; };
+const bskTrumpfWort = (t) => (t === "grand" ? "Grand, nur Buben sind Trumpf" : `${BSK_FNAME[t]} ist Trumpf`);
+function bskStichWort(z, er) { // nach einem vollen Stich (z.letzter)
+  const l = z.letzter; if (!l) return "";
+  const augen = l.stich.reduce((a, x) => a + bskAugen(x.k), 0);
+  return `${l.gewinner === 0 ? "Du bekommst" : er + " bekommt"} den Stich${augen ? `, ${augen} Augen` : ""}.`;
+}
 function bskAnsageWahl(karten) { // wählt Trumpf nach Stärke der sichtbaren Karten
   const buben = karten.filter((k) => bskKarte(k).w === "B").length;
   let best = "grand", wert = buben >= 3 ? buben * 4 + karten.filter((k) => bskKarte(k).w === "A").length * 2 : -1;
@@ -5755,6 +5824,7 @@ function bskPcZeigen() {
       <div class="sp-stand"><span>Du <b>${s.ich}</b></span><span><b>${s.pc}</b> Computer</span></div>
       ${status}
       ${bskBrettHtml(z, 0, { klick: "bskPcKarte", aus: BSK.denkt || z.phase !== "spiel" || z.amZug !== 0, gegnerName: "Computer", ansageSicht: z.phase === "ansage" })}
+      <div class="knoepfe" style="justify-content:center">${spAnsageKnopf("bsk")}</div>
       <div class="knoepfe"><button class="knopf haupt" onclick="bskPcNeu()">↺ Neues Spiel</button><button class="knopf" onclick="bskPcStandWeg()">🗑️ Spielstand zurücksetzen</button></div>
       <details class="sch-verlauf"><summary>📖 Regeln kurz</summary><p class="hinweis" style="margin:4px 0">Jeder hat 8 Karten auf der Hand und 4 Bauern auf dem Tisch (offen auf verdeckt). Vorhand sagt nach den ersten Karten Trumpf an – eine Farbe oder Grand (nur Buben). Buben sind die höchsten Trümpfe (♣ ♠ ♥ ♦), dann Ass, Zehn, König, Dame, 9, 8, 7. Farbe bedienen, wenn möglich – sonst stechen oder abwerfen. Wird ein Bauer gespielt, wird die Karte darunter aufgedeckt. Der Ansager braucht 61 Augen (Ass 11, Zehn 10, König 4, Dame 3, Bube 2).</p></details>
     </div>`;
@@ -5767,13 +5837,14 @@ async function bskPcNeu(fragen = true) {
 }
 const bskPcStaerke = (w) => { BSK.staerke = ["leicht", "mittel", "schwer"].includes(w) ? w : "mittel"; bskMerken(); bskPcZeigen(); };
 async function bskPcStandWeg() { if (!(await frage("Spielstand Bauernskat auf 0 : 0 zurücksetzen?", { ja: "🗑️ Zurücksetzen", nein: "Abbrechen" }))) return; BSK.stand = { ich: 0, pc: 0 }; bskMerken(); bskPcZeigen(); }
-function bskPcAnsage(t) { const z = BSK.z; if (z.phase !== "ansage" || z.vorhand !== 0) return; z.trumpf = t; z.phase = "spiel"; z.amZug = 0; bskMerken(); melde(`Trumpf: ${t === "grand" ? "Grand – nur Buben" : BSK_SYM[t] + " " + BSK_FNAME[t]}`); bskPcZeigen(); }
-function bskPcWerten() { const z = BSK.z; if (z.phase !== "ende" || BSK.gewertet) return; BSK.gewertet = true; const e = bskErgebnis(z); if (e.gewinner === 0) BSK.stand.ich++; else BSK.stand.pc++; try { navigator.vibrate?.(e.gewinner === 0 ? [60, 40, 60] : 40); } catch {} }
+function bskPcAnsage(t) { const z = BSK.z; if (z.phase !== "ansage" || z.vorhand !== 0) return; spSag("bsk", `Du sagst an: ${bskTrumpfWort(t)}.`, null, true); z.trumpf = t; z.phase = "spiel"; z.amZug = 0; bskMerken(); melde(`Trumpf: ${t === "grand" ? "Grand – nur Buben" : BSK_SYM[t] + " " + BSK_FNAME[t]}`); bskPcZeigen(); }
+function bskPcWerten() { const z = BSK.z; if (z.phase !== "ende" || BSK.gewertet) return; BSK.gewertet = true; const e = bskErgebnis(z);
+  spSag("bsk", `Spiel vorbei. ${e.augen[0]} zu ${e.augen[1]} Augen. ${e.gewinner === 0 ? "Du hast gewonnen!" : "Der Computer hat gewonnen."}`); /* KC-CLUB-SPIEL-ANSAGE */ if (e.gewinner === 0) BSK.stand.ich++; else BSK.stand.pc++; try { navigator.vibrate?.(e.gewinner === 0 ? [60, 40, 60] : 40); } catch {} }
 const bskZeichnen = () => { if (aktuelleAnsicht === "spiele" && SP.tab === "pc" && SP.art === "bsk") bskPcZeigen(); }; // nur, wenn Bauernskat gerade sichtbar ist
 function bskPcNachStich(voll) {
   const z = BSK.z;
   if (voll) { z.letzterZeigen = true; bskMerken(); bskZeichnen(); BSK.denkt = true;
-    setTimeout(() => { bskStichAbschliessen(z); z.letzterZeigen = false; BSK.denkt = false; bskPcWerten(); bskMerken(); bskZeichnen(); if (z.phase === "spiel" && z.amZug === 1) setTimeout(bskPcComputer, 500); }, 1100);
+    setTimeout(() => { bskStichAbschliessen(z); z.letzterZeigen = false; BSK.denkt = false; spSag("bsk", bskStichWort(z, "Der Computer")); bskPcWerten(); bskMerken(); bskZeichnen(); if (z.phase === "spiel" && z.amZug === 1) setTimeout(bskPcComputer, 500); }, 1100);
     return; }
   bskMerken(); bskZeichnen(); if (z.amZug === 1) setTimeout(bskPcComputer, 600);
 }
@@ -5785,16 +5856,30 @@ function bskPcComputer() {
   if (spPauseHalt(bskPcComputer)) return; // 2.18.0: Pause
   const z = BSK.z; if (!z || aktuelleAnsicht !== "spiele" || SP.art !== "bsk") return; // weiter, sobald Bauernskat wieder offen ist (siehe bskPcZeigen)
   if (z.phase === "ansage" && z.vorhand === 1) { z.trumpf = bskAnsageWahl(bskSichtbarAnsage(z, 1)); z.phase = "spiel"; z.amZug = 1; bskMerken();
-    melde(`🤖 Der Computer sagt an: ${z.trumpf === "grand" ? "Grand – nur Buben" : BSK_SYM[z.trumpf] + " " + BSK_FNAME[z.trumpf]}`); bskZeichnen(); setTimeout(bskPcComputer, 800); return; }
+    melde(`🤖 Der Computer sagt an: ${z.trumpf === "grand" ? "Grand – nur Buben" : BSK_SYM[z.trumpf] + " " + BSK_FNAME[z.trumpf]}`); spSag("bsk", `Der Computer sagt an: ${bskTrumpfWort(z.trumpf)}.`); bskZeichnen(); setTimeout(bskPcComputer, 800); return; }
   if (z.phase !== "spiel" || z.amZug !== 1) return;
-  bskPcNachStich(bskSpielen(z, 1, bskZugComputer(z, 1, BSK.staerke)));
+  const kc = bskZugComputer(z, 1, BSK.staerke); spSag("bsk", `Der Computer spielt ${bskKarteWort(kc)}.`); // KC-CLUB-SPIEL-ANSAGE
+  bskPcNachStich(bskSpielen(z, 1, kc));
 }
 // ----- KC-CLUB-BAUERNSKAT-MG (2.10.0, Wunsch Hansi): gegen ein Mitglied -----
 // Der Server mischt und hält die verdeckten Karten; die App bekommt nur ihre eigene Sicht (ich = Spieler 0) und zeichnet sie mit
 // derselben Tischansicht wie gegen den Computer. Jede Karte prüft der Server nach denselben Regeln (wörtliche Kopie, bauernskat.js).
+const BSK_GESEHEN = new Map(); // KC-CLUB-SPIEL-ANSAGE: was je Partie schon angesagt ist
+function bskMgAnsagen(g, z) {
+  const er = g.gegner.vorname, alt = BSK_GESEHEN.get(g.id), neu = { zuege: g.zuege, trumpf: z.trumpf, letzter: JSON.stringify(z.letzter || null), stich: JSON.stringify(z.stich || []) };
+  BSK_GESEHEN.set(g.id, neu);
+  if (!alt || alt.zuege === g.zuege || !spAnsageAn("bsk")) return; // erster Blick: nichts Altes vorlesen
+  const teile = [];
+  if (!alt.trumpf && z.trumpf && z.vorhand === 1) teile.push(`${er} sagt an: ${bskTrumpfWort(z.trumpf)}.`);
+  if (neu.letzter !== alt.letzter && z.letzter) { const seine = z.letzter.stich.find((x) => x.s === 1); if (seine && !JSON.parse(alt.stich).some((x) => x.s === 1 && x.k === seine.k)) teile.push(`${er} spielt ${bskKarteWort(seine.k)}.`); teile.push(bskStichWort(z, er)); }
+  const offen = (z.stich || []).find((x) => x.s === 1); if (offen && neu.stich !== alt.stich) teile.push(`${er} spielt ${bskKarteWort(offen.k)}.`);
+  if (g.status === "beendet" && !g.aufgegeben) teile.push(g.ergebnis === "gewonnen" ? "Du hast gewonnen!" : `${er} hat gewonnen.`);
+  if (teile.length) spSag("bsk", teile.join(" "), `bsk:${g.id}:${g.zuege}`);
+}
 function bskSpielZeigen(g) {
   bskBilderVorladen();
   const z = g.bsk, er = esc(g.gegner.vorname);
+  if (z) bskMgAnsagen(g, z); // KC-CLUB-SPIEL-ANSAGE
   if (!z) { $("spInhalt").innerHTML = '<div class="karte hinweis">Spielstand fehlt – bitte „‹ Übersicht“ und neu öffnen.</div>'; return; }
   let status;
   if (g.status === "beendet") {
@@ -5812,6 +5897,7 @@ function bskSpielZeigen(g) {
       ${status}
       ${spTerminHtml(g)}
       ${bskBrettHtml(z, 0, { klick: "bskMgKarte", aus: !g.ichDran || z.phase !== "spiel", gegnerName: g.gegner.vorname, ansageSicht: z.phase === "ansage" })}
+      <div class="knoepfe" style="justify-content:center">${spAnsageKnopf("bsk")}</div>
       <p class="hinweis" style="text-align:center;margin:6px 0">Karte antippen zum Spielen. Du musst nicht warten – ${er} bekommt Bescheid.</p>
       <div class="knoepfe">${g.status === "beendet" ? `<button class="knopf haupt" onclick="spRevanche('${g.id}')">↺ Revanche</button>` : g.status === "laeuft" ? `<button class="knopf" onclick="spAufgeben('${g.id}')">🏳️ Aufgeben</button>` : ""}</div>
     </div>`;
@@ -5933,6 +6019,12 @@ function ktBildFrei(an, schluessel) {
   document.body.classList.toggle("kt-aktiv", !!an);
   if (an && schluessel && KT_GESCROLLT !== schluessel) { KT_GESCROLLT = schluessel; requestAnimationFrame(() => { try { $("spInhalt").scrollIntoView({ block: "start" }); } catch {} }); }
 }
+// KC-CLUB-SPIEL-ANSAGE (2.22.16): Frage + Antworten vorlesen, danach die Auflösung (die Zeit läuft dabei wie immer weiter)
+const ktFrageSprache = (fr, nr) => `${fr.m ? "Meisterfrage" : "Frage " + nr}. ${fr.f} ${fr.a.map((x, i) => `${"ABCD"[i]}: ${x}.`).join(" ")}`;
+function ktAuflSprache(fr, a) {
+  const richtig = fr.a[a.richtig];
+  return `${a.ok ? `Richtig! Plus ${a.p} Punkte.` : a.gewaehlt < 0 || a.zuSpaet ? "Zeit abgelaufen." : "Leider falsch."} ${a.ok ? "" : `Richtig ist ${"ABCD"[a.richtig]}: ${richtig}.`} ${a.e || ""}`.replace(/\s+/g, " ").trim();
+}
 // ----- gegen den Computer -----
 let KTP = (() => { let w = null; try { w = JSON.parse(localStorage.getItem(KT_KEY) || "null"); } catch {} return { staerke: "mittel", stand: { ich: 0, pc: 0, remis: 0 }, ...(w || {}), z: null, uhr: null, pcUhr: null }; })();
 const ktpMerken = () => { try { localStorage.setItem(KT_KEY, JSON.stringify({ staerke: KTP.staerke, stand: KTP.stand })); } catch {} };
@@ -5948,6 +6040,7 @@ async function ktPcZeigen() {
       ${stand}
       <p style="margin:6px 0">🔪 <b>Küchenterror</b> – ${F.length} Fragen aus dem Profi-Küchenalltag. Du beantwortest <b>alle 12 Fragen</b> – der Computer rät jedes Mal <b>gleichzeitig mit</b>.
         Jede Frage hat 4 Antworten, nur eine ist richtig. Der Zeitbalken läuft je nach Stufe <b>20, 15 oder 10 Sekunden</b>: richtig gibt 100 Punkte plus bis zu 100 Punkte Zeitbonus – wer schneller ist, holt mehr. Die letzte ist eine schwere <b>🎖️ Meisterfrage</b> – die zählt doppelt!</p>
+      <div class="knoepfe" style="justify-content:center">${spAnsageKnopf("kt")}</div>
       <div class="knoepfe"><button class="knopf haupt" onclick="ktPcStart()">▶ Los geht’s</button>${s.ich + s.pc + s.remis ? '<button class="knopf" onclick="ktPcStandWeg()">🗑️ Spielstand zurücksetzen</button>' : ""}</div></div>`; return; }
   const kopf = `<div class="kt-kopf"><span>Du <b>${z.punkte[0]}</b></span><span>Frage ${Math.min(z.i + 1, 12)}/12</span><span><b>${z.punkte[1]}</b> Computer</span></div>`;
   if (z.phase === "ende") {
@@ -5958,8 +6051,11 @@ async function ktPcZeigen() {
   const kopfWer = z.phase === "frage" ? `<div class="sp-status sp-ichdran">👨‍🍳 Tippe die richtige Antwort an – 🤖 der Computer rät mit <span id="ktPcStatus"></span></div>` : "";
   const pc = z.aufl?.pc, pcZeile = z.phase === "aufl" && pc ? `<div class="kt-ergebnis" style="font-size:1rem">🤖 Computer: ${pc.wahl < 0 ? "keine Antwort" : `${"ABCD"[pc.wahl]}) ` + (pc.ok ? `richtig in ${ktSek(pc.ms)} s – +${pc.p}` : "falsch – 0")}</div>` : "";
   ktBildFrei(true, "pc:" + z.ids.join() + ":" + z.i);
+  const ktSchl = "ktp:" + z.ids.join() + ":" + z.i; // KC-CLUB-SPIEL-ANSAGE
+  if (z.phase === "frage") spSag("kt", ktFrageSprache(fr, z.i + 1), ktSchl + ":f", true);
+  else if (z.phase === "aufl" && z.aufl) spSag("kt", ktAuflSprache(fr, z.aufl) + (z.aufl.pc ? ` Der Computer: ${z.aufl.pc.wahl < 0 ? "keine Antwort" : z.aufl.pc.ok ? "richtig" : "falsch"}.` : ""), ktSchl + ":a", true);
   $("spInhalt").innerHTML = `<div class="karte sp-karte">${kopf}${kopfWer}${ktFrageHtml(fr, { klick: z.phase === "frage" ? "ktPcAntwort" : "", aufl: z.phase === "aufl" ? z.aufl : null })}${pcZeile}
-    ${z.phase === "aufl" ? `<div class="knoepfe"><button class="knopf haupt" onclick="ktPcWeiter()">${z.i >= 11 ? "🏁 Ergebnis" : "Weiter ›"}</button></div>` : ""}</div>`;
+    ${z.phase === "aufl" ? `<div class="knoepfe"><button class="knopf haupt" onclick="ktPcWeiter()">${z.i >= 11 ? "🏁 Ergebnis" : "Weiter ›"}</button>${spAnsageKnopf("kt")}</div>` : ""}</div>`;
   if (z.phase === "frage" && z.pausiert && !SP.pause) return ktPcFortsetzen(); // 2.18.0: nach Rückkehr weiter
   if (z.phase === "frage" && !SP.pause) ktPcUhren();
   spPauseZeigen();
@@ -6030,8 +6126,10 @@ function ktSpielZeigen(g) {
     const fr = KTM.frage || KTM.aufl.frage, rest = 0; /* Restzeit stellt der Wächter */
     ktBildFrei(true, "mg:" + g.id + ":" + fr.nr);
     const kopf = `<div class="kt-kopf"><span>Frage ${fr.imZug}/${fr.vonImZug}</span><span>Runde ${Math.ceil(fr.nr / 3)} von 4</span></div>`;
+    if (KTM.frage) spSag("kt", ktFrageSprache(fr, fr.nr), `ktm:${g.id}:${fr.nr}:f`, true); // KC-CLUB-SPIEL-ANSAGE
+    else if (KTM.aufl) spSag("kt", ktAuflSprache(fr, KTM.aufl), `ktm:${g.id}:${fr.nr}:a`, true);
     $("spInhalt").innerHTML = `<div class="karte sp-karte">${ktFrageHtml({ ...fr, restMs: rest }, { klick: KTM.frage ? "ktMgAntwort" : "", aufl: KTM.aufl, kopf })}
-      ${KTM.aufl ? `<div class="knoepfe"><button class="knopf haupt" onclick="ktMgWeiter()">${g.ichDran && q.offenBeiMir > 0 ? "Nächste Frage ›" : "Fertig ›"}</button></div>` : ""}</div>`;
+      ${KTM.aufl ? `<div class="knoepfe"><button class="knopf haupt" onclick="ktMgWeiter()">${g.ichDran && q.offenBeiMir > 0 ? "Nächste Frage ›" : "Fertig ›"}</button>${spAnsageKnopf("kt")}</div>` : ""}</div>`;
     return;
   }
   ktBildFrei(false);
@@ -6048,7 +6146,7 @@ function ktSpielZeigen(g) {
       <div class="knoepfe"><button class="knopf haupt" style="width:100%" onclick="ktMgFrage()">${q.laeuft != null ? "▶ Weiter – deine Frage läuft noch!" : "▶ Los geht’s"}</button></div>
       <p class="hinweis" style="margin:4px 0 0;text-align:center">Je Frage ${(q.limitMs || KT_MS) / 1000} Sekunden – erst tippen, wenn du bereit bist. Mittendrin aufhören zählt als „Zeit abgelaufen“.</p>`
     : `<div class="sp-status">${er} ist dran …</div>`;
-  $("spInhalt").innerHTML = `<div class="karte sp-karte">${zurueck}${status}${spTerminHtml(g)}${tafel}
+  $("spInhalt").innerHTML = `<div class="karte sp-karte">${zurueck}${status}<div class="knoepfe" style="justify-content:center">${spAnsageKnopf("kt")}</div>${spTerminHtml(g)}${tafel}
     ${q.rueckblick ? `<details class="sch-verlauf"><summary>📖 Alle Fragen mit Lösung</summary>${q.rueckblick.filter(Boolean).map((x, i) => `<p style="margin:6px 0"><b>${i + 1}. ${x.m ? "🎖️ " : ""}${esc(x.f)}</b><br>✅ ${esc(x.r)}<br><small class="hinweis">💡 ${esc(x.e)}</small></p>`).join("")}</details>` : ""}
     <div class="knoepfe">${g.status === "beendet" ? `<button class="knopf haupt" onclick="spRevanche('${g.id}')">↺ Revanche</button>` : g.status === "laeuft" ? `<button class="knopf" onclick="spAufgeben('${g.id}')">🏳️ Aufgeben</button>` : ""}</div></div>`;
 }
