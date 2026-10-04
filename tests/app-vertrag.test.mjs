@@ -3783,6 +3783,11 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/1 · Wann möchtest du erinnert werden\?/.test(html) && /2 · Wie\?/.test(html) && /"TRIGGER:-PT\$\{minuten\}M"|`TRIGGER:-PT\$\{minuten\}M`/.test(html), "gegliedertes Fenster, Kalender-Alarm");
   assert.ok(/requireInteraction: \/\^⏰\/\.test\(titel\)/.test(lies("sw.js")), "Erinnerungs-Push bleibt stehen");
 }
+// 371. 2.23.23: „since 1991“ auf der Rückseite der drehenden Kochmütze (KC-CLUB-MUETZE-SINCE)
+{
+  assert.ok(html.includes('.warten .muetze::after, .si-muetze:not(.klein) > span::after { content: "since\\A 1991";') && /content: "since[^"]*1991";[^}]*transform: rotateY\(180deg\); backface-visibility: hidden;/.test(html), "Rückseite mit Spruch");
+  assert.ok(/\.warten \.muetze img, \.si-muetze:not\(\.klein\) > span img \{ backface-visibility: hidden;/.test(html), "Mütze nur vorne");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

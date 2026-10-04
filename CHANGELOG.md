@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.23.23 – 2026-10-04 – „since 1991“ auf der Rückseite der Kochmütze (Wunsch Hansi)
+- KC-CLUB-MUETZE-SINCE: Die drehende Kochmütze zeigt vorne die Mütze, hinten „since 1991“ – beim Warten („Einen Moment …“), beim
+  Twinkey-Laden und im Sicherheits-Check (kleine Mütze ohne Text). Zentral per CSS (Rückseite, backface-visibility).
+  Drehung beim Warten etwas ruhiger (1,6 s statt 1,1 s), damit man den Spruch lesen kann. Test 371.
+
 ## 2.23.22 – 2026-10-04 – ⏰ Eigene Erinnerung zu jeder Terminanfrage (Wunsch Hansi)
 - KC-CLUB-ERINNERUNG-WAHL: Nach der Zusage (Ja/Vielleicht) und nach dem Vorschlagen fragt die App „⏰ Erinnerung für dich“ – für alle
   Terminanfragen, auch Spiel-Termine. Ordentlich gegliedert: Kopf (Anlass, Zeit, Ort) · „1 · Wann?“ (Keine/15/30 Min./1/2 Std. + Schalter
