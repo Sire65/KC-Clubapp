@@ -2860,7 +2860,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 }
 // 251. 1.72.0: Register „Club“/„Technik“, dezente Blätter-Pfeile
 {
-  assert.ok(/const REGISTER_ALLE = \[\["verein", "Club"\], \["mein", "Meins"\], \["programme", "Technik"\]\]/.test(html), "Register-Namen");
+  assert.ok(/const REGISTER_ALLE = \[\["verein", "Club"\], \["mein", "Meins"\], \["programme", "Technik"\](\]|, \["admin", "Admin"\]\])/.test(html), "Register-Namen"); // 2.20.0: + Admin (nur Admins)
   assert.ok(!/rgba\(90,15,25,\.72\)/.test(html) && /\.ipfeil \{[^}]*background: rgba\(255,255,255,\.16\)/.test(html), "Info-Pfeile ohne festes Weinrot");
   assert.ok(/\.bl-pfeil \{[^}]*border-radius: 50%; background: rgba\(255,255,255,\.82\)[^}]*color: var\(--grau\)/.test(html), "Blätter-Pfeile dezent");
 }
@@ -3474,6 +3474,21 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/interval '390 minutes'/.test(sql) && /interval '60 minutes'/.test(sql) && /pg_advisory_xact_lock/.test(sql) && /maintenance_until/.test(sql), "Fenster, Sperre, Wartung");
   assert.ok(/v_pakete := public\.kc_db_mirror_pakete_vorbereiten\(\);[\s\S]*kc_db_mirror_dispatch/.test(sql.slice(sql.indexOf("function public.kc_neon_low_compute_cycle()"))), "Cron-Lauf nutzt dieselbe Paketbildung (kein Parallel-Kern)");
   for (const f of ["kc_db_mirror_pakete_vorbereiten", "kc_db_mirror_extern_plan"]) assert.ok(new RegExp(`revoke all on function public\\.${f}\\(\\) from public, anon, authenticated;[\\s\\S]*grant execute on function public\\.${f}\\(\\) to service_role;`).test(sql), "nur service_role: " + f);
+}
+// 321. 2.20.0: Register „Admin“ (KC-CLUB-ADMIN-REGISTER) – nur für Admins, Lämpchen nie grün ohne Messung, keine Schlüssel in der App
+{
+  assert.ok(/REGISTER_ALLE\.filter\(\(r\) => r\[0\] !== "admin" \|\| !!ICH\?\.admin\)/.test(html), "Register Admin nur für Admins");
+  assert.ok(/KACHELN\.admin = AD_KACHELN\.map\([^\n]*nur: \(\) => !!ICH\?\.admin/.test(html), "jede Admin-Kachel nur für Admins (auch in Suche/Schnellstart)");
+  const ad = html.slice(html.indexOf("// ---------- KC-CLUB-ADMIN-REGISTER (2.20.0"), html.indexOf("// Feld 4 (0.43.0): Demnächst"));
+  assert.ok(ad.length > 5000 && /const gemessen = \(z\) => \(!r \? \["grau"[^\n]*: alt \? \["grau", "⚠️ veraltet · "/.test(ad), "unbekannt/veraltet = grau, nie grün");
+  for (const k of ["lage", "notfall", "server", "supabase", "neon", "backup", "b2", "not", "comm", "mail", "push", "kasse", "programme", "versionen", "fehler", "nutzung", "zugang", "wartung", "inkognito"])
+    assert.ok(ad.includes(`["${k}", `), "Kachel fehlt: " + k);
+  for (const d of ["supabase", "neon", "cloudflare", "github", "b2", "brevo", "kicc"]) assert.ok(new RegExp(`\\n  ${d}: \\{ sym:`).test(ad), "Direktsprung fehlt: " + d);
+  assert.ok(!/(sb_secret_|service_role|SUPABASE_ACCESS_TOKEN|apikey|Bearer )/i.test(ad), "keine Schlüssel im Admin-Register");
+  assert.ok(/rel="noopener"/.test(ad) && /async function adNeustart\(\) \{\s*const z = adZustand\("supabase"\);\s*if \(!\(await frage\(/.test(ad), "Neustart nur nach Rückfrage, Verwaltung in neuem Fenster");
+  assert.ok(/case "admin_eingriff": \{\s*nurAdmin\(ich\);[\s\S]{0,200}\["neustart_geoeffnet"\]\.includes\(art\)[\s\S]{0,200}protokoll\(ich\.person_id, "admin_eingriff"/.test(server), "Eingriff nur Admin, feste Arten, protokolliert");
+  assert.ok(/b2: b2 \?\? null/.test(server) && /from\("kc_backup_machine_telemetry"\)\.select\(/.test(server), "B2-Stand nur lesend in admin_lage");
+  assert.ok(/#raster\.ad-raster \{ grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/.test(html) && /\.register\.vier \{ grid-template-columns: repeat\(4/.test(html), "3 Kacheln je Reihe, 4 Register in einer Reihe");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

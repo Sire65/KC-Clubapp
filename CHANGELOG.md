@@ -1,5 +1,23 @@
 # Änderungen
 
+## 2.20.0 – 2026-10-04 – 🛡️ Register „Admin“: Cockpit für Wartung, Überwachung und Notfall (Wunsch Hansi), Stufe 1
+- KC-CLUB-ADMIN-REGISTER: auf der Startseite neben Club · Meins · Technik ein viertes Register „Admin“ – nur für Admin/Vertretung
+  (Mitglieder sehen weiter drei Register; jede Admin-Kachel auch in Suche/Schnellstart nur für Admins). Mit vier Registern passen alle in
+  eine Reihe. Kleinere Kacheln, 3 je Reihe, Farbstreifen je Gruppe (blau Überwachung, lila Dienste, grün App, grau Direktsprünge,
+  rot Notfall) und Lämpchen rechts oben (grün/gelb/rot gemessen; grau = unbekannt oder älter als 15 Min. – nie grün).
+- Kacheln: 📊 Lage (Ringe für Supabase/Neon/Fotos/B2, alle Lämpchen, Säulen Mitglieder) · 🧯 Notfall-Fahrplan (Diagnose → Störungsseite →
+  nach 30 Min. Neustart → Diagnose → Claude; Spiegel, Notbetrieb-Probe, Ernstfall) · 🖥️ Server · 🗄️ Supabase (Belegung, Störungsseite,
+  Neustart …) · 🪞 Neon-Spiegel · 🛟 Backups · 💾 B2-Backup (Stand des Backup-PCs, Ring von 10 GB) · 🚑 Notbetrieb · 📨 Communicator (Säulen
+  gesendet/wartet/Fehler) · ✉️ Mail · Brevo (alle Mail-Wege) · 🔔 Push · 🧾 Kasse · Gateway (öffentliche Gesundheitsabfrage + Hinweis
+  Regression) · 💻 KC-Programme · 📱 Versionen · 🩺 Fehler · 👥 Nutzung · 🔑 Zugänge · 🛠️ Wartung · 🕶️ Inkognito.
+- Direktsprünge (Registry AD_DIENSTE): Supabase (u. a. Neustart, API-Schlüssel, Geheimnisse der Server-Funktionen, Logs, Cron, SQL,
+  Konto-Zugangsschlüssel), Neon, Cloudflare, GitHub (Abläufe, Spiegel-Wächter, Secrets), Backblaze B2, Brevo, KICC. Keine Passwörter oder
+  Schlüssel in der App – Anmeldung beim Anbieter. Neustart nur nach Rückfrage (was passiert, wann sinnvoll), Eingriff wird protokolliert
+  (neue Server-Aktion admin_eingriff, nur Admin, feste Arten).
+- Server: admin_lage liefert zusätzlich den B2-Stand (kc_backup_machine_telemetry, nur lesend). Grafiken selbst gezeichnet (SVG), kostenlos.
+- Stufe 2 (später): Verlaufsmessung für Linien/Säulen über die Zeit, Neustart-Knopf direkt über GitHub (braucht einmal einen Schlüssel).
+- Test 321.
+
 ## DB/Spiegel – 2026-10-04 (ohne App-Build) – 🛡️ Spiegel-Wächter von außen (Wunsch/Freigabe Hansi)
 - Anlass: Störung 04.10. nachts – der Supabase-Zeitplan konnte nichts nach außen schicken (pg_net-DNS-Timeouts). Die Neon-Spiegelung
   hing bisher allein an diesem Anstoß.

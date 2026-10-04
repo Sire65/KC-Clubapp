@@ -26,7 +26,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "2.19.0";
+const SERVER_VERSION = "2.20.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -7333,6 +7333,9 @@ Köcheclub-App`,
           wartungLesen(),
         ]);
         const spiegel = await adminSpiegel().catch((e) => { console.error("adminSpiegel", String(e)); return null; });
+        // KC-CLUB-ADMIN-REGISTER (2.20.0): Backup-Stand des Backup-PCs (pc-backup-vault → Backblaze B2), nur lesend; fehlt er → null (grau)
+        const { data: b2 } = await db.from("kc_backup_machine_telemetry").select("status,app_version,last_backup_at,last_backup_status,last_backup_stored_bytes,last_integrity_at,integrity_result,last_restore_test_at,restore_result,storage_target,b2_status,b2_object_count,b2_stored_bytes,b2_newest_object_at,measured_at")
+          .order("measured_at", { ascending: false }).limit(1).maybeSingle();
         const namen = new Map(leute.map((x) => [x.person_id, x.display_name])), aktivIds = new Set(leute.map((x) => x.person_id));
         const mz = (zug ?? []).filter((x: any) => x.aktiv && aktivIds.has(x.person_id));
         // 2.6.1 (Prüfung): ein anderer Inkognito-Admin erscheint hier weder als online noch in „zuletzt da“
@@ -7343,7 +7346,7 @@ Köcheclub-App`,
           zeit: jetzt(), server: { version: SERVER_VERSION, dbMs, ok: !dbFehler },
           datenbank: { bytes: dbFehler ? null : Number(dbBytes), grenze: Number(health?.free_db_reference_bytes) || ADMIN_DB_GRENZE,
             warnPct: health?.warning_threshold_pct ?? 75, kritPct: health?.critical_threshold_pct ?? 90, check: health ? { status: health.status, zeit: health.last_check_at } : null },
-          speicher, wartung, spiegel, admins: await adminAnzahl(), einweisung: await einweisungZahlen(),
+          speicher, wartung, spiegel, b2: b2 ?? null, admins: await adminAnzahl(), einweisung: await einweisungZahlen(),
           communicator: { farbe: comm.farbe, text: comm.text, erreichbar: comm.erreichbar, push: comm.push.zustand, email: comm.email.zustand, club: comm.club, bericht: comm.bericht },
           mitglieder: {
             gesamt: leute.length, mitZugang: mz.length, ohneZugang: leute.length - mz.length, nieAngemeldet: mz.filter((x: any) => !x.zuletzt_gesehen).length,
@@ -7364,6 +7367,15 @@ Köcheclub-App`,
         if (error) throw new Fehler("Spiegel konnte nicht angestoßen werden.", 500);
         await protokoll(ich.person_id, "admin_spiegel_notfall", { ergebnis: data });
         return json({ ok: true, ergebnis: data });
+      }
+
+      // KC-CLUB-ADMIN-REGISTER (2.20.0): Eingriffe beim Anbieter (z. B. Neustart-Seite geöffnet) für das Protokoll festhalten – nur feste Arten
+      case "admin_eingriff": {
+        nurAdmin(ich);
+        const art = String(p.art ?? "");
+        if (!["neustart_geoeffnet"].includes(art)) throw new Fehler("Unbekannter Eingriff.", 400);
+        await protokoll(ich.person_id, "admin_eingriff", { art });
+        return json({ ok: true });
       }
 
       case "communicator_status": {

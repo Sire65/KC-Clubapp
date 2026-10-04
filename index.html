@@ -676,6 +676,8 @@
   .register button.reg-lauf .reg-rahmen rect { stroke-dasharray: 9 6; animation: ameisenLauf .6s linear infinite; } /* dieselbe Animation wie „Neue Nachr.“ */
   .register .anz { display: inline-block; min-width: 20px; margin-left: 5px; padding: 0 6px; border-radius: 10px; font-size: .72rem; line-height: 18px; background: rgba(0,0,0,.08); vertical-align: 1px; }
   .register button.an .anz { background: rgba(255,255,255,.25); }
+  /* 2.20.0: mit Register „Admin“ vier in einer Reihe (nur beim Admin) */
+  .register.vier { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; } .register.vier button { padding: 11px 2px; font-size: .9rem; } .register.vier .anz { margin-left: 3px; padding: 0 4px; min-width: 16px; }
   .raster { touch-action: pan-y; }
   .rein-links { animation: reinLinks .22s ease-out; }
   .rein-rechts { animation: reinRechts .22s ease-out; }
@@ -699,6 +701,23 @@
   .kachel.bald { opacity: .55; }
   /* KC-CLUB-KACHELN: eigene Anordnung (lange drücken → Bearbeiten) */
   .kachel { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  /* KC-CLUB-ADMIN-REGISTER (2.20.0): kleinere Kacheln (3 je Reihe), Farbstreifen je Gruppe, Lämpchen rechts oben */
+  #raster.ad-raster { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+  #raster.ad-raster .kachel { min-height: 0; padding: 9px 7px 8px; border-top: 4px solid transparent; }
+  #raster.ad-raster .kachel .sym { font-size: 1.3rem; }
+  #raster.ad-raster .kachel b { font-size: .8rem; margin-top: 4px; line-height: 1.15; }
+  #raster.ad-raster .kachel small { font-size: .66rem; line-height: 1.2; display: block; margin-top: 2px; overflow-wrap: anywhere; }
+  #raster.ad-raster .kachel.ad-ueb { border-top-color: #2e86de; } #raster.ad-raster .kachel.ad-dienst { border-top-color: #8e44ad; } #raster.ad-raster .kachel.ad-app { border-top-color: #16a085; }
+  #raster.ad-raster .kachel.ad-link { border-top-color: #95a5a6; } #raster.ad-raster .kachel.ad-not { border-top-color: #c0392b; } .kachel.l-keine::after, .kachel.ad-link::after { display: none; }
+  .kachel.ad::after { content: ""; position: absolute; top: 9px; right: 8px; width: 10px; height: 10px; border-radius: 50%; }
+  .kachel.l-gruen::after { background: #27ae60; box-shadow: 0 0 6px #27ae60; } .kachel.l-gelb::after { background: #e6a800; box-shadow: 0 0 6px #e6a800; }
+  .kachel.l-rot::after { background: #e74c3c; box-shadow: 0 0 6px #e74c3c; } .kachel.l-grau::after { background: #9a9a9a; }
+  .adblatt .azeile { grid-template-columns: auto auto 1fr; font-size: .9rem; padding: 3px 0; border-bottom: 1px solid #8882; }
+  .adblatt .azeile span { white-space: normal; text-align: right; }
+  .adblatt .aspur { background: #8883; } .adblatt .alampe.grau { background: #9a9a9a; }
+  .adringe { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; }
+  .adring { display: grid; justify-items: center; text-align: center; gap: 2px; } .adring b { font-size: .82rem; } .adring small { font-size: .72rem; opacity: .75; }
+  .adsaeulen { width: 100%; max-height: 150px; }
   .kachel.gedrueckt { transform: scale(.96); transition: transform .3s; }
   .kachel.bearb { cursor: default; outline: 2px dashed var(--gold); outline-offset: -2px; padding-bottom: 58px; animation: wackeln .5s ease-in-out infinite alternate; }
   .kachel.bearb.frisch { outline: 3px solid var(--rot); }
@@ -2584,7 +2603,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.19.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.20.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -7062,6 +7081,9 @@ const KACHELN = {
     // KC-CLUB-SICHERHEIT (1.14.0, Wunsch Hansi): Prüfreihe „ist alles sicher und läuft?“ für alle Mitglieder
     { id: "sicherheit", sym: "🛡️", t: "Sicherheits-Check", u: "Läuft alles sicher? Jetzt prüfen", aktion: "sicherheitStart()" },
   ],
+  // KC-CLUB-ADMIN-REGISTER (2.20.0, Wunsch Hansi): Register „Admin“ – nur Admin/Vertretung; kleine Kacheln (3 je Reihe) mit Lämpchen,
+  // Antippen öffnet ein Blatt mit Einzelheiten, Grafik und den Werkzeugen für genau diese Stelle (siehe AD_KACHELN weiter unten)
+  admin: [],
 };
 // Kacheln, die für mich gelten (z. B. Protokolle nicht für Aushilfen)
 const kachelnAlle = (r) => KACHELN[r].filter((k) => !k.bald && (!k.nur || k.nur())); // 1.99.0 (Wunsch Hansi): „bald“-Kacheln erst zeigen, wenn es sie gibt (Überblick nennt sie weiter)
@@ -7212,13 +7234,16 @@ let REGZ = null, regZogGerade = false;
   document.addEventListener("touchmove", (e) => { if (REGZ && e.cancelable) e.preventDefault(); }, { passive: false });
 })();
 // Register mit kleiner Anzahl der Kacheln; per Wischen links/rechts wechselbar
-const REGISTER_ALLE = [["verein", "Club"], ["mein", "Meins"], ["programme", "Technik"]]; // 1.72.0 (Wunsch Hansi): „Club“ statt „Verein“, „Technik“ statt „Programme“; 1.53.2: „Meins“ statt „Mein Bereich“ – kürzer, Zahl bricht nicht um
+const REGISTER_ALLE = [["verein", "Club"], ["mein", "Meins"], ["programme", "Technik"], ["admin", "Admin"]]; // 1.72.0 (Wunsch Hansi): „Club“ statt „Verein“, „Technik“ statt „Programme“; 1.53.2: „Meins“ statt „Mein Bereich“ – kürzer, Zahl bricht nicht um; 2.20.0: „Admin“ nur für Admins
 // KC-CLUB-REGISTER-ZIEHEN (0.36.0): eigene Reihenfolge der Register (festhalten und nach links/rechts ziehen)
-const registerReihe = () => { const o = KA.register || []; const pos = (r) => { const i = o.indexOf(r[0]); return i < 0 ? 100 + REGISTER_ALLE.indexOf(r) : i; }; return [...REGISTER_ALLE].sort((a, b) => pos(a) - pos(b)); };
+const registerReihe = () => { const o = KA.register || []; const pos = (r) => { const i = o.indexOf(r[0]); return i < 0 ? 100 + REGISTER_ALLE.indexOf(r) : i; };
+  return REGISTER_ALLE.filter((r) => r[0] !== "admin" || !!ICH?.admin).sort((a, b) => pos(a) - pos(b)); };
 let REGISTER = registerReihe();
 function registerZeigen() {
   // Anzahl: „8/10“ = 8 sichtbar von 10 (2 ausgeblendet); ohne Ausgeblendete nur die Zahl
   REGISTER = registerReihe();
+  if (!REGISTER.some(([r]) => r === reg)) reg = REGISTER[0][0]; // z. B. Admin-Rechte weg → zurück auf das erste Register
+  $("register").classList.toggle("vier", REGISTER.length > 3);
   $("register").innerHTML = REGISTER.map(([r, t]) => { const da = kacheln(r).length, alle = kaSortiert(r).length;
     return `<button data-r="${r}" class="${r === reg ? "an" : ""}" onclick="register('${r}')" title="${da < alle ? `${alle - da} ausgeblendet` : ""}">${t}<span class="anz">${da < alle ? `${da}/${alle}` : da}</span>${r === reg ? '<svg class="reg-rahmen" aria-hidden="true"><rect></rect></svg>' : ""}</button>`; }).join("");
   regRahmenMessen();
@@ -7231,7 +7256,7 @@ function regRahmenMessen() {
 }
 addEventListener("resize", regRahmenMessen);
 function register(r, richtung) {
-  const neu = r !== reg; reg = r; registerZeigen(); kachelnZeigen();
+  const neu = r !== reg; reg = r; registerZeigen(); kachelnZeigen(); if (reg === "admin") adLaden(); /* KC-CLUB-ADMIN-REGISTER: Lage holen (höchstens alle 2 Min.) */
   if (neu) { const b = document.querySelector(`#register button[data-r="${r}"]`); if (b) { b.classList.add("reg-lauf"); setTimeout(() => b.classList.remove("reg-lauf"), 1600); } } // KC-CLUB-REGISTER-AMEISEN
   if (richtung) { const ra = $("raster"); ra.classList.remove("rein-links", "rein-rechts"); void ra.offsetWidth; ra.classList.add(richtung > 0 ? "rein-links" : "rein-rechts"); }
 }
@@ -7268,6 +7293,7 @@ function registerWischen(schritt) {
 })();
 function kachelnZeigen() {
   if (ZIEHEN) return; // nicht neu zeichnen, während eine Kachel am Finger hängt
+  $("raster").classList.toggle("ad-raster", reg === "admin" && !einfach()); // KC-CLUB-ADMIN-REGISTER: kleinere Kacheln, 3 je Reihe
   if (kaBearb) {
     $("kaAusHinweis").innerHTML = "";
     if (einfach()) { // einfache Ansicht: untereinander, nur ▲ / ▼ (kein Ausblenden)
@@ -7290,7 +7316,8 @@ function kachelnZeigen() {
   $("kaAusHinweis").innerHTML = ausN ? `<button class="kaausgeblendet" onclick="kaBearbeiten(true)">🙈 ${ausN} ausgeblendete Kachel${ausN > 1 ? "n" : ""} – anzeigen</button>` : "";
   $("raster").innerHTML = kacheln(reg).map((k, i) => {
     const z = k.zahl ? k.zahl() : 0;
-    return `<button class="kachel${k.bald ? " bald" : ""}${k.klasse ? " " + k.klasse : ""}${k.neuFarbe && z ? " neu-da" : ""}" data-id="${k.id}" onclick="${k.bald ? `melde('„${k.t}“ kommt in einer der nächsten Versionen.')` : k.aktion || `zeige('${k.v}')`}">
+    const kl = typeof k.klasse === "function" ? k.klasse() : k.klasse; // 2.20.0: Klasse auch berechnet (Lämpchen im Admin-Register)
+    return `<button class="kachel${k.bald ? " bald" : ""}${kl ? " " + kl : ""}${k.neuFarbe && z ? " neu-da" : ""}" data-id="${k.id}" onclick="${k.bald ? `melde('„${k.t}“ kommt in einer der nächsten Versionen.')` : k.aktion || `zeige('${k.v}')`}">
       <div class="sym">${k.sym}</div><b>${esc(k.t)}</b><small>${esc(typeof k.u === "function" ? k.u() : k.u)}</small>${k.bald ? '<span class="zahl">bald</span>' : z ? `<span class="zahl">${z}</span>` : ""}</button>`;
   }).join("");
 }
@@ -7619,6 +7646,290 @@ function adminBlatt() {
     <p class="hinweis" style="margin:0">${r.datenbank.bytes != null ? `${mb(r.datenbank.bytes)} von ${mb(r.datenbank.grenze)} (kostenloser Tarif) · Warnung ab ${r.datenbank.warnPct} %, kritisch ab ${r.datenbank.kritPct} %` : "Größe gerade nicht abrufbar"}${r.datenbank.check ? ` · täglicher System-Check: ${esc(r.datenbank.check.status)} (${esc(seitText(r.datenbank.check.zeit))})` : ""}</p>
     <p class="hinweis" style="margin:0">📁 Dateien: ${mb(r.speicher.belegt)} von ${mb(r.speicher.grenze)} · Platz für ca. ${r.speicher.fotosMoeglich} weitere Fotos</p>`;
   $("adminBlatt").classList.remove("versteckt");
+}
+
+// ---------- KC-CLUB-ADMIN-REGISTER (2.20.0, Wunsch Hansi): Register „Admin“ – Cockpit für Wartung, Überwachung und Notfall ----------
+// Nur für Admin/Vertretung. Daten: admin_lage (Server, wie die Admin-Zentrale) + öffentliche Prüfungen ohne Schlüssel (Notbetrieb-Server,
+// Kassen-Gateway, Störungsseite des Anbieters). Keine Schlüssel/Passwörter in der App: Eingriffe beim Anbieter laufen über
+// Direktsprünge in dessen Verwaltung (Anmeldung dort wie gewohnt). Lämpchen: grün/gelb/rot gemessen, grau = unbekannt oder veraltet (nie grün).
+const AD = { ext: {}, extZeit: 0, laedt: false, offen: null };
+const AD_ALT_MIN = 15, AD_EXT_MIN = 3, AD_B2_FREI = 10 * 1024 ** 3;
+const AD_REF = (API.match(/^https:\/\/([a-z0-9]+)\.supabase\.co/) || [])[1] || "";
+const AD_SB = `https://supabase.com/dashboard/project/${AD_REF}`, AD_GH = "https://github.com/Sire65";
+// Direktsprünge je Dienst (Registry – neuer Dienst = neuer Eintrag); Anmeldung jeweils beim Anbieter
+const AD_DIENSTE = {
+  supabase: { sym: "🗄️", t: "Supabase", links: [
+    ["🏠", "Projekt-Übersicht", AD_SB], ["🔄", "Projekt neu starten (Einstellungen → Restart project)", AD_SB + "/settings/general"],
+    ["🔑", "API-Schlüssel anlegen/erneuern", AD_SB + "/settings/api-keys"], ["🔐", "Geheimnisse der Server-Funktionen", AD_SB + "/functions/secrets"],
+    ["⚙️", "Server-Funktionen (Edge Functions)", AD_SB + "/functions"], ["📜", "Protokolle API-Gateway", AD_SB + "/logs/edge-logs"],
+    ["⏰", "Zeitpläne (Cron)", AD_SB + "/integrations/cron/jobs"], ["🧮", "SQL-Editor", AD_SB + "/sql/new"],
+    ["🔑", "Zugangsschlüssel des Kontos (Access Tokens)", "https://supabase.com/dashboard/account/tokens"], ["🌐", "Störungsseite Supabase", "https://status.supabase.com"]] },
+  neon: { sym: "🪞", t: "Neon", links: [["🏠", "Neon-Konsole (Projekte, Zweige, Sicherungen)", "https://console.neon.tech/app/projects"],
+    ["🔑", "API-Schlüssel des Kontos", "https://console.neon.tech/app/settings/api-keys"], ["🌐", "Störungsseite Neon", "https://neonstatus.com"]] },
+  cloudflare: { sym: "☁️", t: "Cloudflare", links: [["🏠", "Cloudflare-Übersicht", "https://dash.cloudflare.com/"],
+    ["⚙️", "Workers (Notbetrieb, Kassen-Gateway)", "https://dash.cloudflare.com/?to=/:account/workers-and-pages"],
+    ["🔑", "API-Schlüssel (Tokens)", "https://dash.cloudflare.com/profile/api-tokens"], ["🌐", "Störungsseite Cloudflare", "https://www.cloudflarestatus.com"]] },
+  github: { sym: "🐙", t: "GitHub", links: [["⚙️", "Club-App: Abläufe (hochladen, Tests, Spiegel-Wächter)", AD_GH + "/KC-Clubapp/actions"],
+    ["🪞", "Spiegel-Wächter von Hand starten", AD_GH + "/KC-Clubapp/actions/workflows/spiegel-waechter.yml"],
+    ["🔐", "Club-App: Geheimnisse (Secrets) anlegen", AD_GH + "/KC-Clubapp/settings/secrets/actions"],
+    ["🧾", "Kasse (Repository)", AD_GH + "/kasse"], ["🛰️", "KICC (Repository)", AD_GH + "/KC-Infrastructure-Control-Center"],
+    ["📨", "Communicator (Repository)", AD_GH + "/kc-communication"], ["🔑", "Persönliche Zugangsschlüssel", "https://github.com/settings/tokens"],
+    ["🌐", "Störungsseite GitHub", "https://www.githubstatus.com"]] },
+  b2: { sym: "💾", t: "Backblaze B2", links: [["🪣", "Speicher (Buckets)", "https://secure.backblaze.com/b2_buckets.htm"],
+    ["🔑", "Anwendungsschlüssel (App Keys)", "https://secure.backblaze.com/app_keys.htm"], ["🌐", "Störungsseite Backblaze", "https://status.backblaze.com"]] },
+  brevo: { sym: "✉️", t: "Brevo", links: [["🏠", "Brevo-Übersicht", "https://app.brevo.com/"], ["🔑", "API-Schlüssel / SMTP", "https://app.brevo.com/settings/keys/api"],
+    ["🌐", "Störungsseite Brevo", "https://status.brevo.com"]] },
+  kicc: { sym: "🛰️", t: "KICC", links: [["🛰️", "KICC Kontrollzentrum öffnen (große Leitstelle)", "https://sire65.github.io/KC-Infrastructure-Control-Center/"],
+    ["🐙", "KICC auf GitHub", AD_GH + "/KC-Infrastructure-Control-Center"]] },
+};
+const adLage = () => INFO_DATEN.admin?.r || null;
+const adAlt = () => { const r = adLage(); return !r || Date.now() - new Date(r.zeit) > AD_ALT_MIN * 60000; };
+// öffentliche Prüfungen ohne Schlüssel (CORS offen): Notbetrieb-Server, Kassen-Gateway, Störungsseite Supabase
+async function adExternPruefen(erzwingen) {
+  if (!erzwingen && Date.now() - AD.extZeit < AD_EXT_MIN * 60000) return;
+  AD.extZeit = Date.now();
+  let notUrl = NOT.konfig?.url; if (!notUrl) try { notUrl = (await (await fetch("notbetrieb.json?d=" + Date.now(), { cache: "no-store", signal: zeitSignal(6000) })).json()).url; } catch {}
+  const json = async (m) => { try { return m.da && m.status === 200 ? await m.r.json() : null; } catch { return null; } };
+  const [n, g, s] = await Promise.all([notUrl ? diagMessen(notUrl, {}, 8000) : Promise.resolve(null),
+    diagMessen("https://kc-failover-gateway.ha-joko.workers.dev/health", {}, 8000), diagMessen("https://status.supabase.com/api/v2/summary.json", {}, 8000)]);
+  AD.ext = { zeit: Date.now(), not: n ? { ok: n.da && n.status < 500, ms: n.ms, status: n.status } : null, gw: await json(g), gwDa: !!g?.da, status: await json(s) };
+}
+async function adLaden(erzwingen) {
+  if (!ICH?.admin || AD.laedt) return;
+  const f = INFO_ALLE.find((x) => x.id === "admin");
+  if (erzwingen && INFO_DATEN.admin) INFO_DATEN.admin.geholt = 0;
+  AD.laedt = true;
+  try { await Promise.all([infoDatenLaden(f, true), adExternPruefen(erzwingen)]); } finally { AD.laedt = false; }
+  if (reg === "admin" && aktuelleAnsicht === "start" && !kaBearb) kachelnZeigen();
+  if (AD.offen && document.getElementById("adBlatt")) adBlatt(AD.offen);
+}
+setInterval(() => { if (reg === "admin" && aktuelleAnsicht === "start" && !document.hidden) adLaden(); }, 60000);
+const adStd = (iso) => (iso ? (Date.now() - new Date(iso)) / 3600000 : Infinity);
+const adGr = (b) => (b == null ? "unbekannt" : b < 1048576 ? Math.max(1, Math.round(b / 1024)) + " KB" : mb(b));
+const adPct = (b, g) => (b == null || !g ? null : (b / g) * 100);
+// Zustand je Kachel: [Lämpchen, kurzer Text]; „keine“ = Werkzeug ohne Messung (kein Lämpchen)
+function adZustand(id) {
+  const r = adLage(), alt = adAlt(), e = AD.ext;
+  const gemessen = (z) => (!r ? ["grau", INFO_DATEN.admin?.fehler ? "⚠️ nicht abrufbar" : "wird geladen …"] : alt ? ["grau", "⚠️ veraltet · " + z[1]] : z);
+  const m = r?.mitglieder, c = r?.communicator, sf = r ? adminSpiegelFarben(r.spiegel) : null;
+  const kanal = (k) => ({ ok: "gruen", stoerung: "rot", aus: "grau" }[k?.zustand] || "grau");
+  switch (id) {
+    case "server": return !r ? gemessen() : gemessen(!r.server.ok ? ["rot", "Datenbank antwortet nicht"] : [r.server.dbMs > 1500 ? "gelb" : "gruen", `v${r.server.version} · ${r.server.dbMs} ms`]);
+    case "supabase": {
+      if (!r) return gemessen();
+      const p = adPct(r.datenbank.bytes, r.datenbank.grenze), st = e.status?.status?.indicator;
+      const f = !r.server.ok ? "rot" : p == null ? "grau" : p >= r.datenbank.kritPct ? "rot" : p >= r.datenbank.warnPct || (st && st !== "none") ? "gelb" : "gruen";
+      return gemessen([f, `${p == null ? "?" : String(Math.round(p * 10) / 10).replace(".", ",")} % belegt${st && st !== "none" ? " · Anbieter meldet Störung" : ""}`]);
+    }
+    case "neon": return gemessen(sf?.neon);
+    case "backup": return gemessen(sf?.backup);
+    case "b2": {
+      if (!r) return gemessen();
+      const b = r.b2; if (!b) return ["grau", "noch keine Meldung"];
+      const h = adStd(b.last_backup_at), ok = /success/i.test(b.last_backup_status || "");
+      return [!ok ? "rot" : h <= 48 ? "gruen" : h <= 7 * 24 ? "gelb" : "rot", `letztes ${seitText(b.last_backup_at)}`];
+    }
+    case "not": return !e.zeit ? ["grau", "wird geprüft …"] : !e.not ? ["grau", "nicht eingerichtet"] : e.not.ok ? ["gruen", `bereit · ${e.not.ms} ms`] : ["rot", "antwortet nicht"];
+    case "comm": return gemessen(!r ? null : [{ gruen: "gruen", gelb: "gelb", rot: "rot", blau: "gelb" }[c.farbe] || "grau", c.text]);
+    case "mail": { if (!r) return gemessen(); const br = (c.email?.wege || []).find((w) => /brevo/i.test(w.anbieter));
+      return gemessen([kanal(c.email), `${{ ok: "läuft", stoerung: "Störung", aus: "aus" }[c.email?.zustand] || "unbekannt"}${br ? ` · Brevo ${br.zustand === "healthy" ? "bereit" : br.zustand || "?"}` : ""}`]); }
+    case "push": return gemessen(!r ? null : [kanal(c.push), `${{ ok: "läuft", stoerung: "Störung", aus: "aus" }[c.push?.zustand] || "unbekannt"} · ${m.pushAbos} Abos`]);
+    case "kasse": { const g = e.gw; if (!e.zeit) return ["grau", "wird geprüft …"]; if (!g) return ["grau", e.gwDa ? "Antwort unlesbar" : "nicht erreichbar"];
+      return [g.status === "OK" ? "gruen" : g.status === "DEGRADED" ? "gelb" : "rot", `Gateway ${g.status === "OK" ? "läuft" : g.status} · ${g.activeBackend || "?"}`]; }
+    case "programme": { if (!r) return gemessen(); const fs = r.programme.map((p) => adminProgrammFarbe(p)[0]);
+      const f = fs.includes("rot") ? "rot" : fs.includes("gelb") ? "gelb" : fs.every((x) => x === "gruen") ? "gruen" : "grau";
+      return gemessen([f, `${fs.filter((x) => x === "gruen").length} von ${fs.length} melden sich`]); }
+    case "versionen": return gemessen(!r ? null : m.alteVersion ? ["gelb", `${m.alteVersion} mit alter Version`] : ["gruen", "alle aktuell"]);
+    case "zugang": return gemessen(!r ? null : [m.nieAngemeldet ? "gelb" : "gruen", `${m.mitZugang} von ${m.gesamt} mit Zugang`]);
+    case "wartung": return gemessen(!r ? null : r.wartung?.an ? ["gelb", "AN – Mitglieder sehen Blau"] : ["gruen", "aus"]);
+    case "inkognito": return ["keine", inkognitoAn() ? "🕶️ AN" : "aus"];
+    case "nutzung": return ["keine", r ? `${m.heute} heute · ${m.online} online` : "Nutzung der App"];
+    case "fehler": return ["keine", "Startprobleme der Mitglieder"];
+    case "notfall": return ["keine", "Fahrplan · Diagnose · Neustart"];
+    case "lage": { if (!r) return gemessen(); const ids = AD_UEBERWACHT.map(adZustand).map((z) => z[0]);
+      const rot = ids.filter((x) => x === "rot").length, gelb = ids.filter((x) => x === "gelb").length, grau = ids.filter((x) => x === "grau").length;
+      return [rot ? "rot" : gelb ? "gelb" : grau ? "grau" : "gruen", rot || gelb ? `${rot ? rot + " rot" : ""}${rot && gelb ? " · " : ""}${gelb ? gelb + " gelb" : ""}` : grau ? `${grau} unbekannt` : "alles grün"]; }
+  }
+  return ["keine", ""];
+}
+const AD_UEBERWACHT = ["server", "supabase", "neon", "backup", "b2", "not", "comm", "mail", "push", "kasse", "programme"];
+// Kacheln: Gruppe (Farbstreifen oben) + Lämpchen rechts oben; Dienste-Kacheln öffnen ihre Direktsprünge
+const AD_KACHELN = [
+  ["lage", "📊", "Lage", "ueb"], ["notfall", "🧯", "Notfall", "not"], ["server", "🖥️", "Server", "ueb"], ["supabase", "🗄️", "Supabase", "ueb"],
+  ["neon", "🪞", "Neon-Spiegel", "ueb"], ["backup", "🛟", "Backups", "ueb"], ["b2", "💾", "B2-Backup", "ueb"], ["not", "🚑", "Notbetrieb", "ueb"],
+  ["comm", "📨", "Communicator", "dienst"], ["mail", "✉️", "Mail · Brevo", "dienst"], ["push", "🔔", "Push", "dienst"], ["kasse", "🧾", "Kasse · Gateway", "dienst"],
+  ["programme", "💻", "KC-Programme", "dienst"], ["versionen", "📱", "Versionen", "app"], ["fehler", "🩺", "Fehler", "app"], ["nutzung", "👥", "Nutzung", "app"],
+  ["zugang", "🔑", "Zugänge", "app"], ["wartung", "🛠️", "Wartung", "app"], ["inkognito", "🕶️", "Inkognito", "app"],
+  ...Object.entries(AD_DIENSTE).map(([k, d]) => ["l-" + k, d.sym, d.t, "link"]),
+];
+KACHELN.admin = AD_KACHELN.map(([id, sym, t, gr]) => ({ id: "ad-" + id, sym, t, nur: () => !!ICH?.admin, aktion: `adBlatt('${id}')`,
+  u: () => (gr === "link" ? "Direkt zur Verwaltung" : adZustand(id)[1]),
+  klasse: () => `ad ad-${gr}${gr === "link" ? "" : " l-" + adZustand(id)[0]}` }));
+// ---------- Grafiken (selbst gezeichnet, ohne fremde Bausteine) ----------
+const AD_FARBE = { gruen: "#27ae60", gelb: "#e6a800", rot: "#e74c3c", grau: "#9a9a9a" };
+const adFarbeFuer = (p, warn = 75, krit = 90) => (p == null ? "grau" : p >= krit ? "rot" : p >= warn ? "gelb" : "gruen");
+// Ring: belegter Anteil
+function adRing(pct, f, titel, unter) {
+  const r = 26, u = 2 * Math.PI * r, p = pct == null ? 0 : Math.max(0, Math.min(100, pct));
+  return `<div class="adring"><svg viewBox="0 0 64 64" width="64" height="64" aria-hidden="true"><circle cx="32" cy="32" r="${r}" fill="none" stroke="#8884" stroke-width="8"/>
+    ${p >= 0.5 ? `<circle cx="32" cy="32" r="${r}" fill="none" stroke="${AD_FARBE[f]}" stroke-width="8" stroke-linecap="round" stroke-dasharray="${(u * p / 100).toFixed(1)} ${u.toFixed(1)}" transform="rotate(-90 32 32)"/>` : ""}
+    <text x="32" y="37" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor">${pct == null ? "?" : pct > 0 && pct < 1 ? "&lt;1%" : String(Math.round(pct)) + "%"}</text></svg><b>${esc(titel)}</b><small>${esc(unter)}</small></div>`;
+}
+// Säulen: Werte nebeneinander (Höhe relativ zum größten Wert)
+function adSaeulen(werte) {
+  const max = Math.max(1, ...werte.map((w) => w[1])), h = 56, b = 200 / werte.length;
+  return `<svg class="adsaeulen" viewBox="0 0 200 ${h + 26}" role="img" aria-label="Säulendiagramm">${werte.map(([t, v, f], i) => {
+    const hh = Math.max(1, (v / max) * h), x = i * b + b * 0.2, w = b * 0.6;
+    return `<rect x="${x.toFixed(1)}" y="${(h - hh + 10).toFixed(1)}" width="${w.toFixed(1)}" height="${hh.toFixed(1)}" rx="2" fill="${AD_FARBE[f || "gruen"]}"/>
+      <text x="${(x + w / 2).toFixed(1)}" y="${(h - hh + 8).toFixed(1)}" text-anchor="middle" font-size="8" font-weight="700" fill="currentColor">${v}</text>
+      <text x="${(x + w / 2).toFixed(1)}" y="${h + 22}" text-anchor="middle" font-size="7.5" fill="currentColor">${esc(t)}</text>`; }).join("")}</svg>`;
+}
+// ---------- Blätter mit Einzelheiten und Werkzeugen ----------
+const adZeile = (f, name, text) => `<div class="azeile">${f === "keine" ? "" : lampe(f)}<b>${esc(name)}</b><span>${esc(text)}</span></div>`;
+const adKnopf = (t, fn, haupt) => `<button class="knopf${haupt ? " haupt" : ""}" onclick="${fn}">${t}</button>`;
+const adLinks = (k) => { const d = AD_DIENSTE[k]; return `<details class="karte innen" style="margin:0"><summary>${d.sym} ${esc(d.t)} – direkt zur Verwaltung</summary><div style="display:grid;gap:6px;margin-top:6px">${d.links.map(([s, t, u]) => `<a class="knopf" href="${esc(u)}" target="_blank" rel="noopener">${s} ${esc(t)} ↗</a>`).join("")}</div></details>`; };
+function adBlatt(id) {
+  AD.offen = id;
+  const r = adLage(), z = adZustand(id), m = r?.mitglieder, c = r?.communicator, e = AD.ext;
+  const kopf = (sym, t) => `<h3 style="margin:0">${sym} ${esc(t)}</h3><p class="hinweis" style="margin:0">${r ? `Stand ${esc(zeitKurz(r.zeit))} Uhr${adAlt() ? " · ⚠️ veraltet" : ""}` : "Noch keine Daten"}${e.zeit ? ` · Prüfung ${esc(fZeit.format(new Date(e.zeit)))} Uhr` : ""}</p>`;
+  const fuss = `<div class="knoepfe">${adKnopf("↻ Aktualisieren", "adLaden(true)")}${adKnopf("Schließen", "AD.offen=null;$('adBlatt').remove()", true)}</div>`;
+  const sf = r ? adminSpiegelFarben(r.spiegel) : null;
+  let html = "";
+  if (id.startsWith("l-")) { const k = id.slice(2), d = AD_DIENSTE[k];
+    html = `<h3 style="margin:0">${d.sym} ${esc(d.t)}</h3><p class="hinweis" style="margin:0">Öffnet die Verwaltung beim Anbieter – dort wie gewohnt anmelden. In der App werden keine Passwörter oder Schlüssel gespeichert.</p>
+      <div style="display:grid;gap:6px">${d.links.map(([s, t, u]) => `<a class="knopf" href="${esc(u)}" target="_blank" rel="noopener">${s} ${esc(t)} ↗</a>`).join("")}</div>`;
+  } else switch (id) {
+    case "lage": {
+      const ringe = r ? [[adPct(r.datenbank.bytes, r.datenbank.grenze), "Supabase", r.datenbank.bytes != null ? `${mb(r.datenbank.bytes)} / ${mb(r.datenbank.grenze)}` : "unbekannt", r.datenbank.warnPct, r.datenbank.kritPct],
+        [adPct(r.spiegel?.groesse?.bytes, r.spiegel?.groesse?.grenze || 512 * 1048576), "Neon", r.spiegel?.groesse?.bytes ? `${mb(r.spiegel.groesse.bytes)} / ${mb(r.spiegel.groesse.grenze || 512 * 1048576)}` : "unbekannt"],
+        [adPct(r.speicher.belegt, r.speicher.grenze), "Fotos/Dateien", `${mb(r.speicher.belegt)} / ${mb(r.speicher.grenze)}`],
+        [adPct(r.b2?.b2_stored_bytes ?? null, AD_B2_FREI), "B2 (10 GB frei)", r.b2?.b2_stored_bytes != null ? adGr(r.b2.b2_stored_bytes) : "unbekannt"]] : [];
+      html = `${kopf("📊", "Lage auf einen Blick")}
+        <div class="adringe">${ringe.map(([p, t, u, w, k]) => adRing(p, adAlt() ? "grau" : adFarbeFuer(p, w, k), t, u)).join("")}</div>
+        <div class="adisplay" style="margin:0">${AD_UEBERWACHT.map((x) => { const [f, t] = adZustand(x); const k = AD_KACHELN.find((y) => y[0] === x); return adZeile(f, k[1] + " " + k[2], t); }).join("")}</div>
+        ${r ? `<b>👥 Mitglieder</b>${adSaeulen([["online", m.online, "gruen"], ["heute", m.heute, "gruen"], ["7 Tage", m.woche, "gruen"], ["Zugang", m.mitZugang, "gelb"], ["alle", m.gesamt, "grau"]])}` : ""}
+        <p class="hinweis" style="margin:0">⚪ = unbekannt oder älter als ${AD_ALT_MIN} Minuten – nie als „in Ordnung“ gewertet.</p>`;
+      break;
+    }
+    case "notfall":
+      html = `${kopf("🧯", "Notfall-Fahrplan")}
+        <ol style="margin:0;padding-left:20px;display:grid;gap:6px">
+          <li><b>Ruhe bewahren.</b> Die App schaltet bei Ausfall selbst in den Notbetrieb, Eingaben gehen nicht verloren.</li>
+          <li><b>Diagnose</b> starten – sie sagt in einem Satz, wo es hakt.<br>${adKnopf("🩺 Server-Diagnose", "serverDiagnose()", true)}</li>
+          <li><b>Störungsseite</b> des Anbieters ansehen: <a href="https://status.supabase.com" target="_blank" rel="noopener">status.supabase.com ↗</a></li>
+          <li><b>Länger als 30 Minuten</b> „Datenbank rot“? Dann das Projekt neu starten (schadet den Daten nicht, 3–5 Min. offline).<br>${adKnopf("🔄 Supabase neu starten …", "adNeustart()")}</li>
+          <li>Danach prüfen: ${adKnopf("🩺 Diagnose wiederholen", "serverDiagnose()")}</li>
+          <li><b>Hilft nichts?</b> Ergebnis der Diagnose kopieren und an Claude schicken.</li></ol>
+        <b>Weitere Notfall-Werkzeuge</b>
+        <div class="knoepfe">${adKnopf("🪞 Spiegel jetzt anstoßen", "adminSpiegeln()")}${adKnopf("🧪 Notbetrieb-Probe (dieses Gerät)", "notProbeSetzen(!notProbe())")}${adKnopf("🧯 Ernstfall simulieren (dieses Gerät)", "notErnstfallSetzen(!notErnstfall())")}</div>
+        ${adLinks("supabase")}`;
+      break;
+    case "server":
+      html = `${kopf("🖥️", "Club-Server")}${adZeile(z[0], "Zustand", z[1])}
+        ${r ? adZeile("keine", "Server-Version", "v" + r.server.version) + adZeile("keine", "App-Version (dieses Gerät)", "v" + APP_VERSION) + adZeile("keine", "Datenbank-Antwort", r.server.dbMs + " ms") : ""}
+        <div class="knoepfe">${adKnopf("🩺 Server-Diagnose", "serverDiagnose()", true)}${adKnopf("🔄 Update prüfen", "updateKachel()")}</div>${adLinks("supabase")}`;
+      break;
+    case "supabase": {
+      const st = e.status, schlecht = (st?.components || []).filter((k) => k.status !== "operational" && !k.group).map((k) => k.name);
+      html = `${kopf("🗄️", "Supabase (Haupt-Datenbank)")}${adZeile(z[0], "Zustand", z[1])}
+        ${r ? adminBalken("🗄️ Datenbank", r.datenbank.bytes, r.datenbank.grenze, r.datenbank.warnPct, r.datenbank.kritPct) : ""}
+        ${adZeile(!st ? "grau" : st.status?.indicator === "none" ? "gruen" : "gelb", "Störungsseite", !st ? "nicht abrufbar" : (st.status?.description || "?") + (schlecht.length ? " · " + schlecht.slice(0, 3).join(", ") : ""))}
+        ${r?.datenbank.check ? adZeile("keine", "Täglicher System-Check", `${r.datenbank.check.status} · ${seitText(r.datenbank.check.zeit)}`) : ""}
+        <div class="knoepfe">${adKnopf("🩺 Server-Diagnose", "serverDiagnose()", true)}${adKnopf("🔄 Projekt neu starten …", "adNeustart()")}</div>${adLinks("supabase")}`;
+      break;
+    }
+    case "neon": case "backup":
+      html = `${kopf(id === "neon" ? "🪞" : "🛟", id === "neon" ? "Neon-Spiegel" : "Backups")}
+        ${sf ? adZeile(adAlt() ? "grau" : sf.neon[0], "Neon-Spiegel", sf.neon[1]) + adZeile(adAlt() ? "grau" : sf.backup[0], "Tägliche Sicherung (Neon)", sf.backup[1]) + adZeile(adAlt() ? "grau" : sf.watchdog[0], "Watchdog", sf.watchdog[1]) + adZeile(adAlt() ? "grau" : sf.abdeckung[0], "Abdeckung", sf.abdeckung[1]) : adZeile("grau", "Spiegel", "unbekannt")}
+        ${r?.spiegel?.backup?.restoreTest ? adZeile("keine", "Letzter Wiederherstellungs-Test", seitText(r.spiegel.backup.restoreTest) + " · bestanden") : ""}
+        ${adZeile(adZustand("b2")[0], "B2-Backup (Backup-PC)", adZustand("b2")[1])}
+        ${r?.spiegel?.groesse?.bytes ? adminBalken("🪞 Neon-Speicher", r.spiegel.groesse.bytes, r.spiegel.groesse.grenze || 512 * 1048576, r.datenbank.warnPct, r.datenbank.kritPct, r.spiegel.groesse.zeit) : ""}
+        <p class="hinweis" style="margin:0">Der Spiegel läuft alle 6 Stunden von selbst; fällt der Anstoß aus, springt stündlich der Spiegel-Wächter (GitHub) ein.</p>
+        <div class="knoepfe">${adKnopf("🪞 Jetzt spiegeln – nur im Notfall", "adminSpiegeln()")}${adKnopf("📋 Alle Einzelheiten", "adminBlatt()")}</div>${adLinks("neon")}${adLinks("github")}`;
+      break;
+    case "b2": {
+      const b = r?.b2, d = (iso) => (iso ? `${zeitKurz(iso)} (${seitText(iso)})` : "–");
+      html = `${kopf("💾", "B2-Backup (Backblaze)")}${adZeile(z[0], "Zustand", z[1])}
+        ${b ? adRing(adPct(b.b2_stored_bytes ?? null, AD_B2_FREI), adFarbeFuer(adPct(b.b2_stored_bytes ?? null, AD_B2_FREI)), "Belegt von 10 GB (kostenlos)", b.b2_stored_bytes != null ? adGr(b.b2_stored_bytes) : "unbekannt")
+          + adZeile("keine", "Letzte Sicherung", `${d(b.last_backup_at)} · ${b.last_backup_status || "?"}`)
+          + adZeile(/pass/i.test(b.integrity_result || "") ? "gruen" : "grau", "Prüfung (Integrität)", `${b.integrity_result || "?"} · ${d(b.last_integrity_at)}`)
+          + adZeile(/pass/i.test(b.restore_result || "") ? "gruen" : "grau", "Wiederherstellungs-Test", `${b.restore_result || "?"} · ${d(b.last_restore_test_at)}`)
+          + adZeile("keine", "Gemeldet vom Backup-PC", `${d(b.measured_at)} · Programm v${b.app_version || "?"}`)
+          : '<p class="hinweis">Der Backup-PC hat noch keinen Stand gemeldet.</p>'}
+        <p class="hinweis" style="margin:0">Die Sicherung zu B2 macht der Backup-PC (PC-Backup-Tresor). Er muss dafür eingeschaltet sein.</p>${adLinks("b2")}`;
+      break;
+    }
+    case "not":
+      html = `${kopf("🚑", "Notbetrieb (Cloudflare)")}${adZeile(z[0], "Ersatz-Server", z[1])}${adZeile(NOT.an ? "gelb" : "gruen", "Auf diesem Gerät", NOT.an ? "Notbetrieb ist AN" : "normal verbunden")}
+        <p class="hinweis" style="margin:0">Fällt der Club-Server aus, zeigt die App den letzten Stand vom Ersatz-Server und nimmt Nachrichten, Zusagen, Status und Zettel an.</p>
+        <div class="knoepfe">${adKnopf("🧪 Probe auf diesem Gerät", "notProbeSetzen(!notProbe())")}${adKnopf("🧯 Ernstfall simulieren", "notErnstfallSetzen(!notErnstfall())")}${NOT.an ? adKnopf("ℹ️ Was ist los?", "notInfo()") : ""}</div>${adLinks("cloudflare")}`;
+      break;
+    case "comm": {
+      const k = c?.club;
+      html = `${kopf("📨", "KC Communicator")}${adZeile(z[0], "Zustand", z[1])}
+        ${c ? adZeile(kanalF(c.push), "Push", c.push?.zustand || "?") + adZeile(kanalF(c.email), "E-Mail", c.email?.zustand || "?") : ""}
+        ${k ? `<b>Club-App, letzte 7 Tage</b>${adSaeulen([["gesendet", k.gesendet, "gruen"], ["wartet", k.offen, "gelb"], ["Fehler", k.fehler, "rot"]])}${adZeile("keine", "Zuletzt gesendet", k.letzte ? seitText(k.letzte) : "–")}` : ""}
+        <div class="knoepfe">${adKnopf("🧪 Test an mich (Push & Mail)", "testAnMichStarten()")}</div>${adLinks("github")}`;
+      break;
+    }
+    case "mail": case "push": {
+      const kn = id === "mail" ? c?.email : c?.push;
+      html = `${kopf(id === "mail" ? "✉️" : "🔔", id === "mail" ? "Mail-Versand (Brevo & Co.)" : "Push-Mitteilungen")}${adZeile(z[0], "Zustand", z[1])}
+        ${(kn?.wege || []).map((w) => adZeile(w.zustand === "healthy" && (w.fehlerInFolge || 0) < 3 ? "gruen" : (w.fehlerInFolge || 0) >= 3 ? "rot" : "grau", `${w.anbieter} (${w.rolle === "primary" ? "zuerst" : "Ersatz"})`, `${w.zustand || "unbekannt"}${w.fehlerInFolge ? ` · ${w.fehlerInFolge} Fehler in Folge` : ""}`)).join("") || '<p class="hinweis">Keine Wege gemeldet.</p>'}
+        ${kn?.letzterErfolg ? adZeile("keine", "Letzter Erfolg", seitText(kn.letzterErfolg)) : ""}
+        <div class="knoepfe">${adKnopf("🧪 Test an mich", "testAnMichStarten()")}</div>${id === "mail" ? adLinks("brevo") : ""}`;
+      break;
+    }
+    case "kasse": {
+      const g = e.gw;
+      html = `${kopf("🧾", "Kasse · Failover-Gateway")}${adZeile(z[0], "Gateway", z[1])}
+        ${g ? adZeile(g.primary?.reachable ? "gruen" : "rot", "Supabase (Haupt)", `${g.primary?.reachable ? "erreichbar" : "nicht erreichbar"}${g.primary?.latencyMs ? ` · ${g.primary.latencyMs} ms` : ""}`)
+          + adZeile(g.fallback?.reachable ? "gruen" : "rot", "Neon (Ersatz)", `${g.fallback?.reachable ? "erreichbar" : "nicht erreichbar"}${g.fallback?.latencyMs ? ` · ${g.fallback.latencyMs} ms` : ""}`)
+          + adZeile(g.durablePosJournal ? "gruen" : "grau", "Kassen-Journal", g.durablePosJournal ? "vorhanden" : "unbekannt") : ""}
+        <p class="hinweis" style="margin:0">⚠️ Stand 04.10.: Das Gateway prüft Supabase nur oberflächlich, und die Kasse ruft die Umschaltung auf Neon derzeit nicht auf (Reparatur ist beauftragt). Die Kasse speichert jede Buchung zuerst auf dem Gerät.</p>
+        ${adLinks("cloudflare")}${adLinks("github")}`;
+      break;
+    }
+    case "programme":
+      html = `${kopf("💻", "KC-Programme")}${r ? r.programme.map((p) => { const [f, t] = adminProgrammFarbe(p); return adZeile(adAlt() ? "grau" : f, p.name, t + (p.version ? ` · v${p.version}` : "") + (p.datenstand ? ` · Daten ${seitText(p.datenstand)}` : "")); }).join("") : adZeile("grau", "Programme", "unbekannt")}
+        ${adLinks("kicc")}`;
+      break;
+    case "versionen":
+      html = `${kopf("📱", "App-Versionen")}${adZeile(z[0], "Zustand", z[1])}${r ? adZeile("keine", "Aktuell", "v" + r.server.version) : ""}
+        ${r ? `<table class="todotab">${m.zuletzt.map((x) => `<tr><td>${x.online ? "🟢" : "⚪"} ${esc(x.name)}</td><td>${esc(seitText(x.zuletzt))}</td><td class="hinweis">${x.version ? (x.version === r.server.version ? "✅ " : "🔄 ") + "v" + esc(x.version) : "–"}</td></tr>`).join("")}</table>` : ""}
+        <p class="hinweis" style="margin:0">Die App holt sich die neue Version beim nächsten Öffnen selbst. Bleibt jemand länger alt: App einmal ganz schließen und neu öffnen lassen.</p>`;
+      break;
+    case "zugang":
+      html = `${kopf("🔑", "Zugänge")}${r ? adSaeulen([["alle", m.gesamt, "grau"], ["Zugang", m.mitZugang, "gruen"], ["nie da", m.nieAngemeldet, "gelb"], ["ohne Link", m.ohneZugang, "rot"]])
+          + adZeile("keine", "Mit persönlichem Link", `${m.mitZugang} von ${m.gesamt}`) + adZeile(m.nieAngemeldet ? "gelb" : "gruen", "Link, aber nie angemeldet", String(m.nieAngemeldet)) + adZeile("keine", "Ohne Link", String(m.ohneZugang)) : ""}
+        <p class="hinweis" style="margin:0">Links und Einrichtungskarten gibt es bei Mitglieder → Mitglied antippen → 🔗 / 🖨️.</p>
+        <div class="knoepfe">${adKnopf("👥 Zu den Mitgliedern", "$('adBlatt').remove();zeige('mitglieder')", true)}</div>`;
+      break;
+    case "wartung":
+      html = `${kopf("🛠️", "Wartung")}${adZeile(z[0], "Wartungsmodus", z[1] + (r?.wartung?.hinweis ? " – " + r.wartung.hinweis : ""))}
+        <p class="hinweis" style="margin:0">Wartung ankündigen: Alle Mitglieder sehen die blaue LED und deinen Hinweis (z. B. „bis 20 Uhr“).</p>
+        <div class="knoepfe">${adKnopf(r?.wartung?.an ? "✅ Wartung beenden" : "🔧 Wartung ankündigen", "adWartung()", true)}</div>`;
+      break;
+    case "inkognito":
+      html = `${kopf("🕶️", "Inkognito")}${adZeile("keine", "Inkognito", inkognitoAn() ? "AN – du erscheinst nicht als online" : "aus")}
+        <div class="knoepfe">${adKnopf(inkognitoAn() ? "🕶️ Inkognito ausschalten" : "🕶️ Inkognito einschalten", "inkognitoSetzen(!inkognitoAn()).then(()=>adBlatt('inkognito'))", true)}</div>`;
+      break;
+    case "fehler": case "nutzung":
+      AD.offen = null; $("adBlatt")?.remove(); return id === "fehler" ? fpAdmin() : nzAdmin();
+  }
+  blattAuf("adBlatt", `<div class="adblatt" style="display:grid;gap:8px">${html}${fuss}</div>`);
+}
+const kanalF = (k) => ({ ok: "gruen", stoerung: "rot", aus: "grau" }[k?.zustand] || "grau");
+// Neustart: nur über die Supabase-Verwaltung (Anmeldung dort) – vorher sagen, was passiert (kritische Aktion)
+async function adNeustart() {
+  const z = adZustand("supabase");
+  if (!(await frage(`Supabase-Projekt neu starten?\n\nJetzt: ${z[1]}\n\n• Alle Daten bleiben erhalten.\n• Die App ist 3–5 Minuten nicht erreichbar (der Notbetrieb springt ein).\n• Sinnvoll, wenn die Diagnose länger als 30 Minuten „Datenbank rot“ zeigt.\n\nEs öffnet sich die Supabase-Verwaltung: dort „Restart project“ antippen und bestätigen.`, { ja: "🔄 Weiter zur Verwaltung" }))) return;
+  api("admin_eingriff", { art: "neustart_geoeffnet" }).catch(() => {});
+  window.open(AD_SB + "/settings/general", "_blank", "noopener");
+}
+async function adWartung() {
+  const r = adLage(); if (r) VB.wartung = r.wartung;
+  await wartungUmschalten(); adLaden(true);
 }
 
 // Feld 4 (0.43.0): Demnächst – die nächsten Termine aus dem Kalender (Treffen, Aktionen, Geburtstage, meine Dienste, Abstimmungsfristen)
