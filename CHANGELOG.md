@@ -1,5 +1,20 @@
 # Änderungen
 
+## 2.22.21 – 2026-10-04 – Eingangskorb: Erstattungen, Dienstzeiten, Vorschläge + Ablage in mehrere Ordner (Wunsch Hansi)
+- KC-CLUB-EINGANGSKORB: Clubsprecher, Kassenwart und Admin bekommen alles und dürfen alles bearbeiten.
+  - 💶 Erstattung (Fahrtkosten/Auslagen): Push „📥 Erstattung von …“ an alle drei (Mail wie bisher). Im Eingang bis erledigt:
+    „👁️ Zur Kenntnis“, „✅ Erstattet“ (🏦 überwiesen / 💵 bar, freiwillige Nachricht) oder „✖ Ablehnen“ (mit Grund) – das Mitglied bekommt Bescheid.
+  - 📅 Dienstzeiten (Dienstwünsche aus der Club-App): Push an alle drei, sobald das Mitglied 10 Minuten nichts mehr geändert hat
+    (die Seite speichert laufend). Im Eingang bis „👁️ Zur Kenntnis“; ändert das Mitglied danach etwas, kommt es als „geändert“ wieder.
+    Einzelansicht mit allen Tagen. Eingeplant wird weiter im DP2 (kc_dp_wish_inbox unverändert).
+  - 💡 Themen-/Spendenvorschläge: Meldung jetzt auch an den Admin (bisher nur Clubsprecher/Kassenwart).
+  - Büro-Übersicht zählt „Erstattungen“ und „Dienstzeiten“ mit; Push führt mit #eingang direkt in den Eingangskorb.
+- „🗄️ Ablegen …“ bei Erstattung, Dienstzeiten, Vorschlag und Änderungsmeldung (nach „Erstattet/Abgelehnt“ und „Zur Kenntnis“ automatisch
+  gefragt): Ordner per Häkchen, mehrere möglich – Club-Ordner mit Register, Ordner des Mitglieds (zum Nachvollziehen), eigener Ordner.
+  Die App merkt sich die Wahl je Art; passender Ordner vorausgewählt (Erstattung → Finanzen). Ablage als Textdatei, im Vorgang vermerkt.
+- Migration 20261004_kc_club_v22221_eingangskorb.sql (kc_club_eingang_stand; kc_club_erstattung: erledigt_von/_am, antwort, ausgezahlt).
+- aeAblegen nutzt jetzt aeDoku (gleicher Text, auch für „Ablegen …“). Tests 333/335 angepasst, Test 349.
+
 ## 2.22.20 – 2026-10-04 – Büro: Hinweis bei neuer Nachricht (Wunsch Hansi)
 - KC-CLUB-BUERO-NEU-NACHRICHT: Kommt eine neue Nachricht, während man im Büro ist, erscheint oben ein Hinweis
   „💬 Neue Nachricht von Klaus“ (Gruppe: „von Reinhilde in „Vorstand““, wichtige mit ❗ und rotem Rand) mit den ersten Worten.

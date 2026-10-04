@@ -26,7 +26,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "2.22.20";
+const SERVER_VERSION = "2.22.21";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -972,8 +972,9 @@ async function aenderungStand(ich: Ich) {
 // Ablage ins Archiv (wie Ausleihe): Vereinsordner „Mitglieder <Jahr>“ (2.22.10, vorher „Admin“) und persönlicher Ordner des Mitglieds,
 // jeweils Register „Meldungen“. Bankverbindung im Archiv nur mit den letzten 4 Stellen (den Vereinsordner sieht die ganze Clubleitung).
 const AE_REGISTER = "Meldungen";
-async function aeAblegen(ich: Ich, x: any, art: "Meldung" | "Erledigt" | "Freigegeben" | "Eingetragen") {
-  const a = AENDERUNG.arten.find((y) => y.id === x.art); if (!a) return { verein: false, persoenlich: false };
+// KC-CLUB-EINGANGSKORB (2.22.21): Text der Ablage-Datei als eigene Funktion – auch für „🗄️ Ablegen …“ im Eingangskorb
+async function aeDoku(x: any, art: "Meldung" | "Erledigt" | "Freigegeben" | "Eingetragen") {
+  const a = AENDERUNG.arten.find((y) => y.id === x.art); if (!a) return null;
   const p = await personen([x.person_id, x.erledigt_von]), wer = p.get(x.person_id)?.display_name || x.person_id;
   const heute = berlinTag(new Date()), jahr = Number(heute.slice(0, 4)), d = (iso: string) => String(iso).slice(0, 10).split("-").reverse().join(".");
   const neu = x.art === "bank" ? aeKurz({ ...x, status: "erledigt" }) : x.neu || {}, alt = x.art === "bank" ? {} : x.alt || {};
@@ -988,6 +989,11 @@ async function aeAblegen(ich: Ich, x: any, art: "Meldung" | "Erledigt" | "Freige
     ...(x.art === "bank" ? ["", "Bankverbindung hier nur mit den letzten 4 Stellen."] : []), "", `Vorgang: ${x.id}`, ""].join("\n");
   const titel = `${{ Meldung: "Meldung", Erledigt: "✅ Eingetragen", Freigegeben: "👍 Freigegeben", Eingetragen: x.status === "abgelehnt" ? "⚠️ Nicht übernommen" : "✅ Übernommen" }[art]}: ${a.t}${x.gilt_ab ? ` ab ${d(x.gilt_ab)}` : ""}`;
   const dateiname = `Aenderung-${a.id}-${art}-${heute}-${vorname(p.get(x.person_id) ?? null) || "Mitglied"}.txt`, stichworte = `Änderungsmeldung, ${a.t}, ${wer}`;
+  return { wer, jahr, titel, dateiname, text, stichworte };
+}
+async function aeAblegen(ich: Ich, x: any, art: "Meldung" | "Erledigt" | "Freigegeben" | "Eingetragen") {
+  const doku = await aeDoku(x, art); if (!doku) return { verein: false, persoenlich: false };
+  const { wer, jahr, titel, dateiname, text, stichworte } = doku;
   const erg = { verein: false, persoenlich: false };
   try { await archivTextAblegen(ich, await vereinsOrdner(MITGLIEDER_ORDNER, jahr, AE_REGISTER), AE_REGISTER, `${wer}: ${titel}`, dateiname, text, stichworte); erg.verein = true; }
   catch (e) { console.error("aenderung ablegen verein", String(e)); }
@@ -1042,6 +1048,115 @@ async function aeUebernahmeMelden() {
   }
 }
 const aeKurz = (x: any) => x.art === "bank" && x.status === "erledigt" ? { ...x.neu, iban: "…" + String(x.neu?.iban || "").slice(-4) } : x.neu;
+
+// ---------- KC-CLUB-EINGANGSKORB (2.22.21, Wunsch Hansi): Erstattungen, Dienstzeiten, Vorschläge im Büro-Eingang ----------
+// Clubleitung = Clubsprecher, Kassenwart, Admin – alle drei bekommen alles und dürfen alles bearbeiten. Je Vorgang merkt sich
+// kc_club_eingang_stand: wer hat zur Kenntnis genommen (Dienstwünsche je Revision), wann wurde gemeldet, wohin wurde abgelegt.
+// Ablage: mehrere Ordner wählbar – Vereinsordner (die die Clubleitung sieht), der persönliche Ordner des Mitglieds (zum Nachvollziehen)
+// und der eigene persönliche Ordner. Registry: neue Arten = Eintrag in EK_ARTEN + ekDoku.
+const EK_ARTEN: Record<string, { sym: string; t: string; register: string[]; persReg: string; ordnerArt?: string }> = { // persReg: Register im persönlichen Ordner
+  erstattung: { sym: "💶", t: "Erstattung", register: ["Belege", "Rechnungen", "Sonstiges"], persReg: "Rechnungen", ordnerArt: "finanzen" },
+  dienstwunsch: { sym: "📅", t: "Dienstzeiten", register: ["Dienste", "Sonstiges", "Allgemein"], persReg: "Dienste" },
+  vorschlag: { sym: "💡", t: "Vorschlag", register: ["Vorschläge", "Sonstiges", "Allgemein"], persReg: "Sonstiges" },
+  aenderung: { sym: "✏️", t: "Änderungsmeldung", register: ["Meldungen", "Sonstiges"], persReg: "Meldungen" },
+};
+const ERST_STATUS: Record<string, string> = { eingereicht: "eingereicht", erstattet: "erstattet", abgelehnt: "abgelehnt" };
+const nurLeitung = (ich: Ich) => { if (!ich.vorstand && !ich.admin) throw new Fehler("Das darf nur die Clubleitung.", 403); };
+async function ekStaende(art: string, ids: string[]) {
+  if (!ids.length) return new Map<string, any>();
+  const { data } = await db.from("kc_club_eingang_stand").select("*").eq("art", art).in("ref_id", ids);
+  return new Map<string, any>((data ?? []).map((x: any) => [x.ref_id, x]));
+}
+const ekKenntnisVon = (st: any, pid: string, rev = 0) => (Array.isArray(st?.kenntnis) ? st.kenntnis : []).some((k: any) => k.person_id === pid && Number(k.rev ?? 0) >= rev);
+async function ekStandSetzen(art: string, ref: string, f: (alt: any) => Record<string, unknown>) {
+  const { data: alt } = await db.from("kc_club_eingang_stand").select("*").eq("art", art).eq("ref_id", ref).maybeSingle();
+  const neu = { art, ref_id: ref, ...f(alt ?? { kenntnis: [], ablagen: [] }), geaendert_am: jetzt() };
+  const { error } = await db.from("kc_club_eingang_stand").upsert(neu, { onConflict: "art,ref_id" });
+  if (error) throw new Fehler("Konnte nicht gespeichert werden.", 500);
+}
+const ekNamen = (st: any, leute: Map<string, any>) => (Array.isArray(st?.kenntnis) ? st.kenntnis : []).map((k: any) => vorname(leute.get(k.person_id) ?? null) || "?");
+const euroText = (n: number) => Number(n).toFixed(2).replace(".", ",") + " €";
+async function dwZeile(id: string) {
+  const { data } = await db.from("kc_dp_wish_inbox").select("id,person_id,revision,status,entries,standby,comment,share_with_colleagues,submitted_at,updated_at,taken_at")
+    .eq("id", id).eq("org_id", ORG).eq("source", "club_app").maybeSingle();
+  return data;
+}
+// Ablage-Datei je Art (Text, UTF-8) – nur, was die Clubleitung ohnehin im Eingang sieht
+async function ekDoku(art: string, id: string): Promise<{ person_id: string | null; wer: string; titel: string; dateiname: string; text: string; stichworte: string; datum: string } | null> {
+  const heute = berlinTag(new Date()), d = (iso: string) => String(iso || "").slice(0, 10).split("-").reverse().join(".");
+  if (art === "erstattung") {
+    const { data: a } = await db.from("kc_club_erstattung").select("*").eq("id", id).maybeSingle(); if (!a) return null;
+    const p = await personen([a.person_id, a.erledigt_von].filter(Boolean)), wer = p.get(a.person_id)?.display_name || a.person_id;
+    const zeilen = (a.positionen ?? []).map((x: any, i: number) => x.art === "fahrt"
+      ? `${i + 1}. 🚗 Fahrtkosten ${d(x.datum)}: ${String(x.km).replace(".", ",")} km × ${euroText(x.satz)} = ${euroText(x.betrag)} – ${x.grund || ""}${x.ziel ? " · Ziel: " + x.ziel : ""}`
+      : `${i + 1}. ${x.art === "einkauf" ? "🛒 Einkauf vorgestreckt" : "📦 Sonstige Auslage"} ${d(x.datum)}: ${euroText(x.betrag)} – ${x.was || ""}${x.geschaeft ? " · " + x.geschaeft : ""}`);
+    const stand = a.status === "eingereicht" ? "Status: eingereicht – noch nicht erstattet"
+      : `Status: ${ERST_STATUS[a.status] ?? a.status}${a.ausgezahlt ? ` (${a.ausgezahlt === "bar" ? "bar" : "überwiesen"})` : ""} von ${p.get(a.erledigt_von)?.display_name || "?"} am ${wann(a.erledigt_am || jetzt())}${a.antwort ? `\nAntwort: ${a.antwort}` : ""}`;
+    const text = ["Köcheclub Werne – Erstattungsantrag", "────────────────────", `Mitglied:  ${wer}`, `Eingereicht: ${wann(a.erstellt_am)}`,
+      `Auszahlung gewünscht: ${a.auszahlung === "bar" ? "bar" : "per Überweisung"}`, "", ...zeilen, "", `Summe: ${euroText(a.summe)}`,
+      ...(a.bemerkung ? ["", `Bemerkung: ${a.bemerkung}`] : []), "", stand, "", `Vorgang: ${a.id}`, ""].join("\n");
+    return { person_id: a.person_id, wer, datum: String(a.erstellt_am).slice(0, 10), titel: `Erstattung ${euroText(a.summe)} (${ERST_STATUS[a.status] ?? a.status})`,
+      dateiname: `Erstattung-${String(a.erstellt_am).slice(0, 10)}-${vorname(p.get(a.person_id) ?? null) || "Mitglied"}.txt`, text, stichworte: `Erstattung, Fahrtkosten, ${wer}` };
+  }
+  if (art === "dienstwunsch") {
+    const m = await dwZeile(id); if (!m) return null;
+    const p = await personen([m.person_id]), wer = p.get(m.person_id)?.display_name || m.person_id;
+    const auf = await dienstwunschAufstellung({ person_id: m.person_id, name: wer } as Ich);
+    const text = [`Köcheclub Werne – Dienstzeiten ${auf.veranstaltung}`, "────────────────────", `Mitglied:  ${wer}`, `Stand:     ${auf.stand} (Fassung ${auf.revision})`,
+      `Im Dienstplan übernommen: ${auf.uebernommen ? "ja" : "noch nicht"}`, `Kollegen dürfen die Zeiten sehen: ${auf.freigabe ? "ja" : "nein"}`, "",
+      ...auf.tage.flatMap((t: any) => [`${t.tag}`, ...t.zeilen.map((z: string) => "   " + z)]), ...(m.comment ? ["", `Bemerkung: ${m.comment}`] : []), "", `Vorgang: ${m.id}`, ""].join("\n");
+    return { person_id: m.person_id, wer, datum: heute, titel: `Dienstzeiten ${auf.veranstaltung} (Fassung ${auf.revision})`,
+      dateiname: `Dienstzeiten-${heute}-${vorname(p.get(m.person_id) ?? null) || "Mitglied"}.txt`, text, stichworte: `Dienstzeiten, ${auf.veranstaltung}, ${wer}` };
+  }
+  if (art === "vorschlag") {
+    const { data: v } = await db.from("kc_club_vorschlaege").select("*").eq("id", id).maybeSingle(); if (!v) return null;
+    const p = await personen([v.erstellt_von]), wer = p.get(v.erstellt_von)?.display_name || v.erstellt_von;
+    const was = v.art === "spende" ? "Spendenvorschlag" : v.art === "abstimmung" ? "Abstimmung" : "Themenvorschlag";
+    const text = [`Köcheclub Werne – ${was}`, "────────────────────", `Von:       ${wer}`, `Am:        ${wann(v.erstellt_am)}`, `Titel:     ${v.titel}`,
+      ...(v.beschreibung ? ["", v.beschreibung] : []), ...((v.spenden ?? []).length ? ["", ...(v.spenden as any[]).map((x) => `💝 ${x.empfaenger}: ${euroText(x.betrag)}`)] : []),
+      "", `Status: ${v.status}${v.abgeschlossen_am ? ` (${wann(v.abgeschlossen_am)})` : ""}`, "", `Vorgang: ${v.id}`, ""].join("\n");
+    return { person_id: v.erstellt_von, wer, datum: String(v.erstellt_am).slice(0, 10), titel: `${was}: ${v.titel}`.slice(0, 110),
+      dateiname: `Vorschlag-${String(v.erstellt_am).slice(0, 10)}-${vorname(p.get(v.erstellt_von) ?? null) || "Mitglied"}.txt`, text, stichworte: `${was}, ${wer}` };
+  }
+  if (art === "aenderung") {
+    const { data: x } = await db.from("kc_club_aenderungen").select("*").eq("id", id).maybeSingle(); if (!x) return null;
+    const doku = await aeDoku(x, x.status === "freigegeben" ? "Freigegeben" : x.status === "uebernommen" || x.status === "abgelehnt" ? "Eingetragen" : x.status === "erledigt" ? "Erledigt" : "Meldung");
+    if (!doku) return null;
+    return { person_id: x.person_id, wer: doku.wer, datum: heute, titel: doku.titel, dateiname: doku.dateiname, text: doku.text, stichworte: doku.stichworte };
+  }
+  return null;
+}
+// Darf ich diesen Vorgang sehen? (Änderungen: nur, wenn sie an mich gingen – wie im Eingang)
+async function ekPruefen(ich: Ich, art: string, id: string) {
+  nurLeitung(ich);
+  if (!EK_ARTEN[art] || !/^[0-9a-f-]{36}$/i.test(id)) throw new Fehler("Unbekannter Vorgang.", 400);
+  if (art === "aenderung" && !ich.admin) {
+    const { data } = await db.from("kc_club_aenderungen").select("empfaenger").eq("id", id).maybeSingle();
+    if (!data || !(data.empfaenger || []).includes(ich.person_id)) throw new Fehler("Vorgang nicht gefunden.", 404);
+  }
+}
+const ekRegister = (o: any) => (o.register?.length ? o.register : ARCHIV_ARTEN[o.art]?.register ?? ["Sonstiges"]) as string[];
+// Dienstwünsche: die Clubleitung erst informieren, wenn das Mitglied 10 Minuten nichts mehr geändert hat (die Seite speichert laufend)
+async function ekDienstwunschMelden() {
+  const { data } = await db.from("kc_dp_wish_inbox").select("id,person_id,revision,status,updated_at").eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("source", "club_app")
+    .lt("updated_at", new Date(Date.now() - 10 * 60000).toISOString()).gt("updated_at", new Date(Date.now() - 3 * 86400000).toISOString()).limit(100);
+  if (!data?.length) return 0;
+  const st = await ekStaende("dienstwunsch", data.map((x: any) => x.id));
+  const neu = data.filter((x: any) => Number(st.get(x.id)?.gemeldet_rev ?? 0) < Number(x.revision));
+  if (!neu.length) return 0;
+  const [leitung, leute] = await Promise.all([leitungIds(), personen(neu.map((x: any) => x.person_id))]);
+  for (const x of neu) {
+    const erst = !st.get(x.id)?.gemeldet_rev, wer = leute.get(x.person_id)?.display_name || "Ein Mitglied";
+    await ekStandSetzen("dienstwunsch", x.id, (alt) => ({ gemeldet_rev: x.revision, gemeldet_am: jetzt(), kenntnis: alt.kenntnis ?? [], ablagen: alt.ablagen ?? [] }));
+    const an = leitung.filter((id) => id !== x.person_id);
+    if (an.length) await sendenGewaehlt("club_nachricht", an, ["push"], { titel: `📅 Dienstzeiten ${erst ? "eingegangen" : "geändert"}: ${wer}`,
+      kurz: `${DW.name} – liegt im Büro-Eingangskorb`, betreff: `Köcheclub Werne – Dienstzeiten von ${wer}`,
+      text: `${wer} hat Dienstzeiten für den ${DW.name} ${erst ? "eingereicht" : "geändert"}. Bitte im Büro → 📥 Eingangskorb ansehen.`, url: APP_URL + "#eingang" },
+      `club-dw-eingang:${x.id}:${x.revision}`).catch(() => null);
+  }
+  await protokoll(null, "eingang_dienstwunsch_gemeldet", { anzahl: neu.length });
+  return neu.length;
+}
 const ERSTATTUNG = {
   kmSatzStandard: 0.38, // € je km, nur falls in kc_club_km_satz nichts eingetragen ist (0.39.0: Satz pflegt der Admin mit „gilt ab“)
   gruende: ["Kochen in Dortmund", "Fahrt zum Budendienst", "Einkaufsfahrt für den Club", "Club-Treffen / Sitzung", "Veranstaltung / Weihnachtsmarkt", "Schulung / Fortbildung", "Abholen / Liefern von Material"],
@@ -2464,7 +2579,16 @@ async function bueroEingang(ich?: Ich) {
     const { data, error } = await q; if (error) throw new Error(error.message);
     return { count: (data ?? []).filter((x: any) => aeWartetAufMich(ich, x)).length };
   })();
-  const [ausleihen, vorschlaege, hilfe, archiv, aufgaben, entwuerfe, aenderungen] = await Promise.all([
+  // KC-CLUB-EINGANGSKORB (2.22.21): offene Erstattungen und Dienstzeiten, die ich noch nicht (in dieser Fassung) gesehen habe
+  const ekQ = (async () => {
+    if (!ich || (!ich.vorstand && !ich.admin)) return { erst: 0, dw: 0 };
+    const [{ count: erst }, { data: dw }] = await Promise.all([
+      db.from("kc_club_erstattung").select("id", { count: "exact", head: true }).eq("status", "eingereicht"),
+      db.from("kc_dp_wish_inbox").select("id,revision").eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("source", "club_app").limit(300)]);
+    const st = await ekStaende("dienstwunsch", (dw ?? []).map((x: any) => x.id));
+    return { erst: erst ?? 0, dw: (dw ?? []).filter((x: any) => !ekKenntnisVon(st.get(x.id), ich.person_id, x.revision)).length };
+  })().catch(() => ({ erst: 0, dw: 0 }));
+  const [ausleihen, vorschlaege, hilfe, archiv, aufgaben, entwuerfe, aenderungen, ek] = await Promise.all([
     zahl(db.from("kc_club_ausleihen").select("id", { count: "exact", head: true }).eq("status", "angefragt")),
     zahl(db.from("kc_club_vorschlaege").select("id", { count: "exact", head: true }).eq("status", "offen")),
     zahl(db.from("kc_club_hilfe_aufrufe").select("id", { count: "exact", head: true }).is("geschlossen_am", null).gte("datum", berlinTag(new Date()))),
@@ -2481,9 +2605,10 @@ async function bueroEingang(ich?: Ich) {
     zahl(db.from("kc_club_aufgaben").select("id", { count: "exact", head: true }).is("erledigt_am", null)),
     zahl(db.from("kc_club_sitzungsprotokolle").select("id", { count: "exact", head: true }).eq("status", "entwurf")),
     ich && (ich.vorstand || ich.admin) ? zahl(aeQ) : Promise.resolve(0),
+    ekQ,
   ]);
   void leer;
-  return { ausleihen, vorschlaege, hilfe, archiv, aufgaben, entwuerfe, aenderungen };
+  return { ausleihen, vorschlaege, hilfe, archiv, aufgaben, entwuerfe, aenderungen, erstattungen: ek.erst, dienstzeiten: ek.dw };
 }
 function bueroTopListe(roh: unknown) {
   const l = (Array.isArray(roh) ? roh : []).map((x: any) => ({ t: txt(x?.t, 200), art: ["fest", "vorschlag", "eigen"].includes(x?.art) ? x.art : "eigen", ...(x?.id ? { id: String(x.id).slice(0, 40) } : {}) }))
@@ -3117,7 +3242,8 @@ Deno.serve(async (req) => {
       await postausgangLauf().catch((e) => console.error("postausgang", String(e))); // KC-CLUB-POSTAUSGANG (1.69.1)
       await adminAbwesendPruefen().catch((e) => console.error("admin abwesend", String(e))); // KC-CLUB-VERTRETUNG (2.2.0)
       await stadtAutoLauf().catch((e) => console.error("stadt termine", String(e)));
-      await aeUebernahmeMelden().catch((e) => console.error("aenderung uebernahme", String(e))); /* KC-CLUB-AENDERUNG-FREIGABE (2.22.19) */ // KC-CLUB-STADT-TERMINE (2.22.6): wöchentlich, nur wenn eingeschaltet
+      await aeUebernahmeMelden().catch((e) => console.error("aenderung uebernahme", String(e)));
+      await ekDienstwunschMelden().catch((e) => console.error("eingang dienstwunsch", String(e))); /* KC-CLUB-EINGANGSKORB (2.22.21) */ /* KC-CLUB-AENDERUNG-FREIGABE (2.22.19) */ // KC-CLUB-STADT-TERMINE (2.22.6): wöchentlich, nur wenn eingeschaltet
       // KC-CLUB-NUTZUNG-PERSONEN (2.6.0): Geräte-Kennungen nur 100 Tage aufbewahren
       { const { error } = await db.from("kc_club_nutzung_geraete").delete().lt("tag", berlinTag(new Date(Date.now() - 100 * 86400000))); if (error) console.error("nutzung geraete loeschen", error.message); }
       // Abstimmungen mit abgelaufener Frist beenden (Ergebnis geht an alle)
@@ -4048,7 +4174,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         let versand = null;
         if (p.benachrichtigen !== false) {
           const ziel = art === "abstimmung" ? (await aktiveMitglieder()).map((x) => x.person_id)
-            : ((await db.from("kc_club_rollen").select("person_id").eq("ist_vorstand", true)).data ?? []).map((r: any) => r.person_id);
+            : await leitungIds(); // KC-CLUB-EINGANGSKORB (2.22.21): Clubsprecher, Kassenwart UND Admin
           const fristText = v.frist ? ` Abstimmen bis ${wann(v.frist)}.` : "";
           const spText = spenden ? "\n\n" + spenden.map((x) => `💝 ${x.empfaenger}: ${euroRund(x.betrag)}`).join("\n") + (spenden.length > 1 ? `\nZusammen: ${euroRund(spendenSumme(spenden))}` : "") : "";
           versand = await senden("club_vorschlag", ziel.filter((id: string) => id !== ich.person_id), art === "abstimmung" ? {
@@ -6402,6 +6528,11 @@ Köcheclub-App`,
         }, `club-erstattung:${a.id}`, { cc, bcc });
         await db.from("kc_club_erstattung").update({ versand: { an, cc, bcc: bcc.length, ...versand } }).eq("id", a.id);
         await protokoll(ich.person_id, "erstattung_beantragt", { antrag: a.id, summe, positionen: pos.length, versand });
+        // KC-CLUB-EINGANGSKORB (2.22.21): alle drei der Clubleitung bekommen zusätzlich eine Push-Meldung – bearbeitet wird im Büro-Eingang
+        { const leitung = (await leitungIds()).filter((id) => id !== ich.person_id);
+          if (leitung.length) await sendenGewaehlt("club_nachricht", leitung, ["push"], { titel: `📥 Erstattung von ${ich.vorname}: ${euro(summe)}`, kurz: "Liegt im Büro-Eingangskorb",
+            betreff: `Köcheclub Werne – Erstattung von ${ich.name}`, text: `${ich.name} hat eine Erstattung über ${euro(summe)} eingereicht. Bitte im Büro → 📥 Eingangskorb bearbeiten.`,
+            url: APP_URL + "#eingang" }, `club-erstattung-eingang:${a.id}`).catch(() => null); }
         // KC-CLUB-BESTAETIGUNG (1.69.0): Antragsteller bekommt zusätzlich eine App-Nachricht mit Link zur Aufstellung (Mail kommt als BCC)
         if (versand.gesendet) await routerSenden("club_nachricht_push", [ich.person_id], erstattungBestaetigung(ich.vorname, { id: a.id, positionen: pos, summe, auszahlung }), `club-bestaetigung-ers:${a.id}`).catch(() => null);
         if (!versand.gesendet) throw new Fehler("Der Antrag ist gespeichert, aber die Mail konnte nicht verschickt werden – bitte später nochmal versuchen oder Hansi Bescheid geben.", 502);
@@ -6547,6 +6678,120 @@ Köcheclub Werne`,
         }, `club-aenderung-rueckfrage:${x.id}`);
         await protokoll(ich.person_id, "aenderung_rueckfrage", { meldung: x.id, art: x.art });
         return json({ ok: true });
+      }
+
+      // ----- KC-CLUB-EINGANGSKORB (2.22.21): Erstattungen + Dienstzeiten im Büro-Eingang, Ablage in mehrere Ordner -----
+      case "eingang_korb": {
+        nurLeitung(ich);
+        const [{ data: ers }, { data: dw }] = await Promise.all([
+          db.from("kc_club_erstattung").select("id,person_id,positionen,summe,auszahlung,bemerkung,status,erstellt_am").eq("status", "eingereicht").order("erstellt_am").limit(100),
+          db.from("kc_dp_wish_inbox").select("id,person_id,revision,status,entries,standby,comment,updated_at,submitted_at,taken_at").eq("org_id", ORG).eq("event_id", DW.veranstaltung)
+            .eq("source", "club_app").order("updated_at", { ascending: false }).limit(200),
+        ]);
+        const [stE, stD] = await Promise.all([ekStaende("erstattung", (ers ?? []).map((x: any) => x.id)), ekStaende("dienstwunsch", (dw ?? []).map((x: any) => x.id))]);
+        const ids = [...(ers ?? []).map((x: any) => x.person_id), ...(dw ?? []).map((x: any) => x.person_id),
+          ...[...stE.values(), ...stD.values()].flatMap((st: any) => (st.kenntnis ?? []).map((k: any) => k.person_id))];
+        const leute = await personen([...new Set(ids)] as string[]);
+        const nm = (id: string) => leute.get(id)?.display_name || id;
+        const posKurz = (x: any) => x.art === "fahrt" ? `🚗 ${String(x.km).replace(".", ",")} km · ${x.grund || ""}` : `${x.art === "einkauf" ? "🛒" : "📦"} ${x.was || ""}`;
+        return json({
+          erstattungen: (ers ?? []).map((x: any) => ({ id: x.id, name: nm(x.person_id), summe: Number(x.summe), auszahlung: x.auszahlung, bemerkung: x.bemerkung, erstellt_am: x.erstellt_am,
+            positionen: (x.positionen ?? []).map((y: any) => ({ datum: y.datum, betrag: Number(y.betrag), text: posKurz(y) })),
+            kenntnis: ekNamen(stE.get(x.id), leute), kenntnisIch: ekKenntnisVon(stE.get(x.id), ich.person_id), abgelegt: (stE.get(x.id)?.ablagen ?? []).length })),
+          // Dienstzeiten: im Eingang, bis ich die aktuelle Fassung zur Kenntnis genommen habe (Änderung → wieder im Eingang)
+          dienstwuensche: (dw ?? []).filter((x: any) => !ekKenntnisVon(stD.get(x.id), ich.person_id, x.revision)).map((x: any) => {
+            const tage = new Set([...(x.entries ?? []).map((e: any) => e.date), ...Object.entries(x.standby ?? {}).filter(([, b]: any) => b?.answer === "yes").map(([t]) => t)]);
+            return { id: x.id, name: nm(x.person_id), revision: x.revision, tage: tage.size, eintraege: (x.entries ?? []).length, zuletzt: x.updated_at, uebernommen: !!x.taken_at,
+              status: x.status, geaendert: Number(stD.get(x.id)?.kenntnis?.length ?? 0) > 0, kenntnis: ekNamen(stD.get(x.id), leute) };
+          }),
+        });
+      }
+
+      case "eingang_dienstwunsch": { // Einzelansicht: die Aufstellung wie beim Mitglied
+        nurLeitung(ich);
+        const m = await dwZeile(String(p.id || "")); if (!m) throw new Fehler("Nicht gefunden.", 404);
+        const wer = (await personen([m.person_id])).get(m.person_id)?.display_name || m.person_id;
+        return json({ ...(await dienstwunschAufstellung({ person_id: m.person_id, name: wer } as Ich)), comment: m.comment ?? null, id: m.id });
+      }
+
+      case "eingang_kenntnis": {
+        const art = String(p.art || ""), id = String(p.id || "");
+        if (art !== "erstattung" && art !== "dienstwunsch") throw new Fehler("Unbekannter Vorgang.", 400);
+        await ekPruefen(ich, art, id);
+        let rev = 0;
+        if (art === "dienstwunsch") { const m = await dwZeile(id); if (!m) throw new Fehler("Nicht gefunden.", 404); rev = Number(m.revision); }
+        else { const { data } = await db.from("kc_club_erstattung").select("id").eq("id", id).maybeSingle(); if (!data) throw new Fehler("Nicht gefunden.", 404); }
+        await ekStandSetzen(art, id, (alt) => ({ gemeldet_rev: alt.gemeldet_rev ?? null, gemeldet_am: alt.gemeldet_am ?? null, ablagen: alt.ablagen ?? [],
+          kenntnis: [...(alt.kenntnis ?? []).filter((k: any) => k.person_id !== ich.person_id), { person_id: ich.person_id, am: jetzt(), rev }] }));
+        await protokoll(ich.person_id, "eingang_kenntnis", { art, vorgang: id, rev });
+        return json({ ok: true });
+      }
+
+      // ✅ Erstattet / ✖ Abgelehnt – alle drei der Clubleitung dürfen das (Wunsch Hansi); das Mitglied bekommt Bescheid
+      case "erstattung_erledigen": {
+        nurLeitung(ich);
+        const status = p.status === "erstattet" ? "erstattet" : p.status === "abgelehnt" ? "abgelehnt" : null;
+        if (!status) throw new Fehler("Unbekannter Status.");
+        const antwort = txt(p.antwort, 500), ausgezahlt = status === "erstattet" ? (p.ausgezahlt === "bar" ? "bar" : "ueberweisung") : null;
+        if (status === "abgelehnt" && !antwort) throw new Fehler("Bitte kurz den Grund schreiben – das Mitglied bekommt ihn.");
+        const { data: ok } = await db.from("kc_club_erstattung").update({ status, ausgezahlt, antwort: antwort || null, erledigt_von: ich.person_id, erledigt_am: jetzt() })
+          .eq("id", String(p.id || "")).eq("status", "eingereicht").select("id,person_id,summe").maybeSingle();
+        if (!ok) throw new Fehler("Der Antrag ist schon bearbeitet.", 409);
+        const titel = status === "erstattet" ? `✅ Erstattung ${euroText(ok.summe)} ${ausgezahlt === "bar" ? "wird bar ausgezahlt" : "wird überwiesen"}` : `❌ Erstattung ${euroText(ok.summe)} abgelehnt`;
+        const versand = await sendenGewaehlt("club_nachricht", [ok.person_id], ["push", "email"], { titel, kurz: antwort || (status === "erstattet" ? "Danke für deinen Einsatz!" : ""),
+          betreff: `Köcheclub Werne – ${titel.replace(/^\S+\s/, "")}`,
+          text: `Hallo,\n\n${status === "erstattet" ? `dein Erstattungsantrag über ${euroText(ok.summe)} ist bearbeitet: ${ausgezahlt === "bar" ? "Du bekommst das Geld bar." : "Das Geld wird überwiesen."}` : `dein Erstattungsantrag über ${euroText(ok.summe)} wurde leider abgelehnt.`}${antwort ? `\n\n${ich.name}: ${antwort}` : ""}\n\nViele Grüße\nKöcheclub Werne`,
+          url: APP_URL }, `club-erstattung-erledigt:${ok.id}`).catch(() => null);
+        await protokoll(ich.person_id, "erstattung_" + status, { antrag: ok.id, ausgezahlt, informiert: !!versand });
+        return json({ ok: true });
+      }
+
+      // 🗄️ Wohin ablegen? – Auswahl (kein Freitext): Vereinsordner, Ordner des Mitglieds, mein Ordner
+      case "eingang_ablage_ziele": {
+        const art = String(p.art || ""), id = String(p.id || "");
+        await ekPruefen(ich, art, id);
+        const doku = await ekDoku(art, id); if (!doku) throw new Fehler("Vorgang nicht gefunden.", 404);
+        const [{ data: ordner }, st] = await Promise.all([
+          db.from("kc_club_archiv_ordner").select("id,art,jahr,titel,register,nur_vorstand").is("besitzer", null).is("geloescht_am", null).order("jahr", { ascending: false }).order("titel").limit(200),
+          ekStaende(art, [id])]);
+        const def = EK_ARTEN[art], jahr = Number(berlinTag(new Date()).slice(0, 4));
+        const liste = (ordner ?? []).filter((o: any) => darfOrdnerSehen(ich, o) && o.art !== "chronik" && o.jahr >= jahr - 1)
+          .map((o: any) => ({ id: o.id, titel: o.titel || ARCHIV_ARTEN[o.art]?.t || "Ordner", sym: ARCHIV_ARTEN[o.art]?.sym || "🗂️", jahr: o.jahr, register: ekRegister(o),
+            vorschlag: (def.ordnerArt ? o.art === def.ordnerArt : false) || (art === "aenderung" && o.titel === MITGLIEDER_ORDNER.titel) }))
+          .map((o: any) => ({ ...o, registerVor: def.register.find((r) => o.register.includes(r)) || o.register[0] }));
+        const abl = (st.get(id)?.ablagen ?? []) as any[];
+        return json({ titel: doku.titel, mitglied: doku.person_id && doku.person_id !== ich.person_id ? { name: doku.wer } : null, ordner: liste,
+          registerVor: def.register[0], schonAbgelegt: abl.length, zuletzt: abl.slice(-1)[0]?.am ?? null });
+      }
+
+      case "eingang_ablegen": {
+        const art = String(p.art || ""), id = String(p.id || "");
+        await ekPruefen(ich, art, id);
+        const doku = await ekDoku(art, id); if (!doku) throw new Fehler("Vorgang nicht gefunden.", 404);
+        const ziele = (Array.isArray(p.ziele) ? p.ziele : []).slice(0, 8).map((z: any) => ({ ordner_id: String(z?.ordner_id || ""), register: txt(z?.register, 60) }));
+        if (!ziele.length && !p.mitglied && !p.mein) throw new Fehler("Bitte mindestens einen Ordner wählen.");
+        const jahr = Number(berlinTag(new Date()).slice(0, 4)), persReg = EK_ARTEN[art].persReg;
+        const erg: { ordner: string; ok: boolean }[] = [], abgelegt: any[] = [];
+        const { data: os } = ziele.length ? await db.from("kc_club_archiv_ordner").select("id,art,titel,jahr,register,nur_vorstand,besitzer,geloescht_am").in("id", ziele.map((z: any) => z.ordner_id)) : { data: [] };
+        for (const z of ziele) {
+          const o = (os ?? []).find((y: any) => y.id === z.ordner_id);
+          if (!o || o.besitzer || o.geloescht_am || !darfOrdnerSehen(ich, o)) { erg.push({ ordner: "?", ok: false }); continue; }
+          const register = ekRegister(o).includes(z.register) ? z.register : ekRegister(o)[0];
+          try { await archivTextAblegen(ich, o.id, register, `${doku.wer}: ${doku.titel}`, doku.dateiname, doku.text, doku.stichworte); erg.push({ ordner: `${o.titel} ${o.jahr}`, ok: true }); abgelegt.push({ ordner_id: o.id, register }); }
+          catch (e) { console.error("eingang ablegen", String(e)); erg.push({ ordner: `${o.titel} ${o.jahr}`, ok: false }); }
+        }
+        // persönlicher Ordner des Mitglieds (zum Nachvollziehen) und mein eigener – Register nach Art
+        const persoenlich = async (pid: string, name: string, was: string, titel: string) => {
+          try { const o = await persoenlicherOrdner(pid, name, jahr, persReg); if (!o) { erg.push({ ordner: was, ok: false }); return; }
+            await archivTextAblegen(ich, o, persReg, titel, doku.dateiname, doku.text, doku.stichworte); erg.push({ ordner: was, ok: true }); abgelegt.push({ ordner_id: o, register: persReg }); }
+          catch (e) { console.error("eingang ablegen persoenlich", String(e)); erg.push({ ordner: was, ok: false }); }
+        };
+        if (p.mitglied && doku.person_id && doku.person_id !== ich.person_id) await persoenlich(doku.person_id, doku.wer, `Ordner von ${doku.wer}`, doku.titel);
+        if (p.mein) await persoenlich(ich.person_id, ich.name, "Mein Ordner", `${doku.wer}: ${doku.titel}`);
+        if (abgelegt.length) await ekStandSetzen(art, id, (alt) => ({ gemeldet_rev: alt.gemeldet_rev ?? null, gemeldet_am: alt.gemeldet_am ?? null, kenntnis: alt.kenntnis ?? [],
+          ablagen: [...(alt.ablagen ?? []), ...abgelegt.map((a) => ({ ...a, von: ich.person_id, am: jetzt() }))].slice(-40) }));
+        await protokoll(ich.person_id, "eingang_abgelegt", { art, vorgang: id, ok: erg.filter((x) => x.ok).length, fehler: erg.filter((x) => !x.ok).length });
+        return json({ ok: erg.every((x) => x.ok), ergebnis: erg });
       }
 
       case "aenderung_erledigt": {

@@ -2648,7 +2648,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.22.20"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.22.21"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -9682,7 +9682,8 @@ function buStartListeHtml() {
   const summe = Object.values(e).reduce((a, b) => a + b, 0);
   const eingang = [["📦", "Ausleih-Anfragen", e.ausleihen, "buEingang()"], ["🗳️", "Offene Vorschläge", e.vorschlaege, "buEingang()"], ["🙋", "Hilfe-Aufrufe", e.hilfe, "buEingang()"],
     ["🗄️", "Archiv: zu prüfen", e.archiv, "arStart()"], ["✔️", "Offene Aufgaben", e.aufgaben, "zeige('protokolle')"], ["📄", "Protokoll-Entwürfe", e.entwuerfe, "zeige('protokolle')"],
-    ["✏️", "Änderungsmeldungen", e.aenderungen || 0, "aeEingang()"]]; // KC-CLUB-AENDERUNG (2.22.8)
+    ["✏️", "Änderungsmeldungen", e.aenderungen || 0, "aeEingang()"], // KC-CLUB-AENDERUNG (2.22.8)
+    ["💶", "Erstattungen", e.erstattungen || 0, "buEingang()"], ["📅", "Dienstzeiten", e.dienstzeiten || 0, "buEingang()"]]; // KC-CLUB-EINGANGSKORB (2.22.21)
   const festHeute = BU_F ? [...BU_F.geburtstage.filter((f) => f.tage === 0).map((f) => f.alter ? `🎉 ${esc(f.vorname)} wird ${f.alter}` : `🎂 ${esc(f.vorname)} hat Geburtstag`), ...BU_F.jubilaeen.filter((f) => f.tage === 0).map((f) => `🏅 ${esc(f.vorname)}: ${f.jahre} Jahre im Club`)] : [];
   const festBald = BU_F ? BU_F.geburtstage.concat(BU_F.jubilaeen).filter((f) => f.tage >= 0 && f.tage <= 7).length : 0;
   return `<div class="karte bu-gruss"><div class="bu-knopfreihe">${ICH?.vorstand ? '<button class="knopf klein" onclick="tagesinfoZeigen(true)">📋 Übersicht</button>' : ""}<button class="knopf klein" onclick="buAnsichtWechseln()">🗄️ Büro-Raum</button></div>${festHeute.length ? `<div class="bu-tipp" style="margin:6px 0">🎉 Heute: ${festHeute.join(" · ")} – <button class="knopf klein" onclick="buFeste()">gratulieren</button></div>` : ""}${t ? `Nächste Sitzung: <b>${esc(t.titel)}</b> · ${esc(wann(t.beginn))}<br>✅ ${t.ja} zugesagt · ❌ ${t.nein} abgesagt · ❓ ${t.ohne} ohne Antwort` : "Gerade ist keine Sitzung geplant – lege sie unter 📅 Termine an."}
@@ -10071,7 +10072,8 @@ function buEingang() { BU.sicht = "eingang"; buZeigen(); buEingangLaden(); windo
 async function buEingangLaden() {
   const [l, v, h, pr, ar] = await Promise.allSettled([api("leihen_liste"), api("vorschlaege_liste"), api("hilfe_liste"),
     ICH?.protokolle === false ? Promise.reject(0) : api("protokolle_liste"), api("archiv_liste"),
-    ICH?.vorstand || ICH?.admin ? aeEingangLaden() : Promise.reject(0)]); // KC-CLUB-AENDERUNG (2.22.8): Meldungen im Posteingang
+    ICH?.vorstand || ICH?.admin ? aeEingangLaden() : Promise.reject(0), // KC-CLUB-AENDERUNG (2.22.8): Meldungen im Posteingang
+    ICH?.vorstand || ICH?.admin ? api("eingang_korb").then((k) => { BU_EIN.korb = k; }) : Promise.reject(0)]); // KC-CLUB-EINGANGSKORB (2.22.21)
   if (pr.status === "fulfilled") BU_EIN.protokolle = pr.value;
   if (ar.status === "fulfilled") { BU_EIN.archiv = ar.value; if (!AR.daten) AR.daten = ar.value; }
   if (l.status === "fulfilled") { BU_EIN.leihen = l.value; HL.leihen = l.value; }
@@ -10086,13 +10088,14 @@ function buEingangAuffrischen() { if (aktuelleAnsicht === "buero" && BU.sicht ==
 // den Eingang oder zum passenden Ordner. Nur, was die Clubleitung selbst erledigen kann (persönliche Ordner prüft der Besitzer).
 function buEingangPosten() {
   const l = BU_EIN.leihen, v = BU_EIN.vorschlaege, h = BU_EIN.hilfe, pr = BU_EIN.protokolle, ar = BU_EIN.archiv, P = [];
+  ekPosten(P); // KC-CLUB-EINGANGSKORB (2.22.21): Erstattungen + Dienstzeiten zuerst
   const leihWas = (a) => a.positionen.length === 1 ? `${a.positionen[0].anzahl} × ${a.positionen[0].name}` : a.positionen.map((x) => `${x.anzahl}× ${x.name}`).join(", ");
   for (const a of (l?.ausleihen || []).filter((x) => x.status === "angefragt"))
     P.push({ sym: a.positionen[0]?.sym || "📦", gruppe: "Ausleihe – bitte entscheiden", titel: leihWas(a), unter: `${a.eigen ? "Du" : a.wer} · 📤 ${hlTagName(a.abholung)}`, auf: `HL.tab='leihen';leihInfo('${a.id}')`, ordner: ["🤝", "Helfen & Leihen", "hlStart()"] });
   for (const a of (l?.ausleihen || []).filter((x) => x.status === "genehmigt" && x.abholung <= heuteIso()))
     P.push({ sym: "📤", gruppe: "Genehmigt – Abholung fällig", titel: leihWas(a), unter: `${a.eigen ? "Du" : a.wer} · ${hlTagName(a.abholung)}`, auf: `HL.tab='leihen';leihInfo('${a.id}')`, ordner: ["🤝", "Helfen & Leihen", "hlStart()"] });
   for (const x of (v || []).filter((y) => y.status === "offen"))
-    P.push({ sym: x.art === "spende" ? "💝" : x.art === "abstimmung" ? "🗳️" : "💡", gruppe: x.art === "spende" ? "Spenden-Vorschlag" : "Offener Vorschlag", titel: x.art === "spende" ? (x.spenden?.[0]?.empfaenger || "Spende") : x.titel, unter: `von ${x.von?.name || "?"}`, auf: `vorschlagInfo('${x.id}')`, ordner: ["🗳️", "Vorschläge", "zeige('vorschlaege')"] });
+    P.push({ sym: x.art === "spende" ? "💝" : x.art === "abstimmung" ? "🗳️" : "💡", gruppe: x.art === "spende" ? "Spenden-Vorschlag" : "Offener Vorschlag", titel: x.art === "spende" ? (x.spenden?.[0]?.empfaenger || "Spende") : x.titel, unter: `von ${x.von?.name || "?"}`, auf: `vorschlagInfo('${x.id}')`, schnell: ICH?.vorstand || ICH?.admin ? [["🗄️ Ablegen …", `ekAblage('vorschlag','${x.id}')`]] : [], ordner: ["🗳️", "Vorschläge", "zeige('vorschlaege')"] });
   for (const a of (h?.aufrufe || []).filter((x) => x.offen && !hlVoll(x)))
     P.push({ sym: "🙋", gruppe: "Hilfe-Aufruf – noch Helfer gesucht", titel: (h.arten?.[a.art] || a.art).replace(/^\S+\s/, ""), unter: `${hlWann(a).replace(/^\S+\s/, "")} · ✋ ${hlStand(a)}`, auf: `HL.tab='helfen';hilfeOeffnen('${a.id}')`, ordner: ["🤝", "Helfen & Leihen", "hlStart()"] });
   if (ar?.darf) for (const d of (ar.dokumente || []).filter((x) => x.status === "pruefung")) {
@@ -10106,7 +10109,7 @@ function buEingangPosten() {
     const a = AE.eingang.arten.find((y) => y.id === x.art) || { sym: "✏️", t: x.art };
     P.push({ sym: a.sym, gruppe: "Änderungsmeldung – bitte ansehen", titel: a.t, unter: `${x.name} · ${zeitKurz(x.erstellt_am)}${x.gilt_ab ? " · ab " + aeDatum(x.gilt_ab) : ""}`,
       auf: "aeEingang()", ordner: ["📇", "Mitglieder", "buListe()"],
-      schnell: [...(x.kenntnisIch ? [] : [["👁️ Zur Kenntnis genommen", `aeKenntnis('${x.id}', null)`, !x.darfFreigeben]]), ...(x.darfFreigeben ? [["✅ Freigeben", `aeFreigeben('${x.id}', null)`, true]] : [])] }); // 2.22.19
+      schnell: [...(x.kenntnisIch ? [] : [["👁️ Zur Kenntnis genommen", `aeKenntnis('${x.id}', null)`, !x.darfFreigeben]]), ...(x.darfFreigeben ? [["✅ Freigeben", `aeFreigeben('${x.id}', null)`, true]] : []), ["🗄️ Ablegen …", `ekAblage('aenderung','${x.id}')`]] }); // 2.22.19, 2.22.21
   }
   for (const p of (pr?.protokolle || []).filter((x) => x.status === "entwurf" && x.darfBearbeiten))
     P.push({ sym: "📄", gruppe: "Protokoll-Entwurf", titel: p.titel, unter: `${tagKurz(p.datum)} · von ${p.verfasser?.name || "?"}`, auf: `protokollOeffnen('${p.id}')`, ordner: ["📄", "Protokolle", "zeige('protokolle')"] });
@@ -10117,7 +10120,7 @@ function buEingangPosten() {
 }
 function buEingangHtml() {
   const geladen = BU_EIN.leihen || BU_EIN.vorschlaege || BU_EIN.hilfe, P = (BU_EIN.posten = buEingangPosten());
-  return `<div class="karte bu-gruss">📥 <b>Eingang${P.length ? ` – ${P.length} ${P.length === 1 ? "Sache wartet" : "Sachen warten"}` : ""}</b><br><span class="hinweis">Antippen → bearbeiten, zurück in den Eingang oder zum Ordner.</span></div>
+  return `<div class="karte bu-gruss">📥 <b>Eingang${P.length ? ` – ${P.length} ${P.length === 1 ? "Sache wartet" : "Sachen warten"}` : ""}</b><br><span class="hinweis">Antippen → bearbeiten, zurück in den Eingang oder zum Ordner. Es bleibt hier, bis es erledigt ist; mit 🗄️ Ablegen in einen oder mehrere Ordner legen (auch in den Ordner des Mitglieds).</span></div>
     ${!geladen ? '<div class="karte hinweis">Wird geladen …</div>' : P.length ? `<div class="karte" style="padding:4px 12px">${P.map((x, i) => `<button class="bu-ein-zeile" onclick="buEinPosten(${i})"><span class="sym">${esc(x.sym)}</span>
       <span class="txt"><small>${esc(x.gruppe)}</small><b>${esc(x.titel)}</b><small>${esc(x.unter)}</small></span><span class="pfeil">›</span></button>`).join("")}</div>` : '<div class="karte hinweis">📭 Alles erledigt – im Eingang liegt nichts 👍</div>'}
     <div class="knoepfe"><button class="knopf" onclick="buEingangLaden()">↻ Neu laden</button><button class="knopf" onclick="buZurueck()">🗂️ Zurück ins Büro</button></div>`;
@@ -10132,6 +10135,105 @@ function buEinPosten(i) {
       <button class="knopf" data-zu="1">📥 Zurück in den Eingang</button></div>`);
   f.querySelectorAll("[data-fn]").forEach((b) => (b.onclick = () => { f.remove(); new Function(b.dataset.fn)(); }));
   f.querySelector("[data-zu]").onclick = () => f.remove();
+}
+// ---------- KC-CLUB-EINGANGSKORB (2.22.21, Wunsch Hansi): Erstattungen + Dienstzeiten im Eingang, Ablage in mehrere Ordner ----------
+// Alle drei der Clubleitung (Clubsprecher, Kassenwart, Admin) sehen alles und dürfen alles. Es bleibt im Eingang, bis es erledigt ist:
+// Erstattung bis „✅ Erstattet“ oder „✖ Ablehnen“, Dienstzeiten bis „👁️ Zur Kenntnis“ (geändert → wieder im Eingang).
+// „🗄️ Ablegen …“: Ordner per Häkchen wählen (mehrere) – Club-Ordner, Ordner des Mitglieds, mein Ordner. Die App merkt sich die Wahl je Art.
+const ekErst = (id) => (BU_EIN.korb?.erstattungen || []).find((x) => x.id === id);
+function ekPosten(P) {
+  const k = BU_EIN.korb; if (!k) return;
+  for (const x of k.erstattungen || [])
+    P.push({ sym: "💶", gruppe: "Erstattung – bitte bearbeiten", titel: `${x.name}: ${euro(x.summe)}`,
+      unter: `${zeitKurz(x.erstellt_am)} · ${x.positionen.length} Position${x.positionen.length === 1 ? "" : "en"} · ${x.auszahlung === "bar" ? "bar" : "Überweisung"}${x.kenntnis.length ? " · 👁️ " + x.kenntnis.join(", ") : ""}`,
+      auf: `ekErstInfo('${x.id}')`, ordner: ["🗄️", "Archiv", "arStart()"],
+      schnell: [...(x.kenntnisIch ? [] : [["👁️ Zur Kenntnis genommen", `ekKenntnis('erstattung','${x.id}')`]]), ["✅ Erstattet", `ekErstattet('${x.id}')`, true],
+        ["✖ Ablehnen", `ekErstAblehnen('${x.id}')`], ["🗄️ Ablegen …", `ekAblage('erstattung','${x.id}')`]] });
+  for (const x of k.dienstwuensche || [])
+    P.push({ sym: "📅", gruppe: x.geaendert ? "Dienstzeiten – geändert" : "Dienstzeiten – neu", titel: x.name,
+      unter: `${x.tage} Tag${x.tage === 1 ? "" : "e"} · zuletzt ${zeitKurz(x.zuletzt)}${x.uebernommen ? " · im Dienstplan übernommen" : ""}${x.kenntnis.length ? " · 👁️ " + x.kenntnis.join(", ") : ""}`,
+      auf: `ekDienstInfo('${x.id}')`, ordner: ["📅", "Dienste", "zeige('dienste')"],
+      schnell: [["👁️ Zur Kenntnis genommen", `ekKenntnis('dienstwunsch','${x.id}')`, true], ["🗄️ Ablegen …", `ekAblage('dienstwunsch','${x.id}')`]] });
+}
+async function ekNach(text) { if (text) melde(text); await buEingangLaden().catch(() => {}); }
+async function ekKenntnis(art, id) {
+  try { await api("eingang_kenntnis", { art, id }); await ekNach("👁️ Zur Kenntnis genommen"); } catch (e) { return meldeFehler(e); }
+  if (art === "dienstwunsch") ekAblage(art, id, "Erledigt – wo soll es abgelegt werden?");
+}
+function ekErstInfo(id) {
+  const x = ekErst(id); if (!x) return melde("Nicht mehr im Eingang – schon bearbeitet?");
+  const f = blattAuf("ekErstBlatt", `<h3 style="margin-top:0">💶 Erstattung ${esc(x.name)}</h3>
+    <p class="hinweis">Eingereicht ${esc(zeitKurz(x.erstellt_am))} · Auszahlung gewünscht: <b>${x.auszahlung === "bar" ? "bar" : "per Überweisung"}</b></p>
+    <div class="karte" style="padding:6px 12px">${x.positionen.map((y) => `<div class="zeile" style="display:flex;justify-content:space-between;gap:8px"><span>${esc(aeDatum(y.datum))} · ${esc(y.text)}</span><b>${euro(y.betrag)}</b></div>`).join("")}
+      <div class="zeile" style="display:flex;justify-content:space-between;border-top:1px solid var(--linie);margin-top:4px;padding-top:4px"><b>Summe</b><b>${euro(x.summe)}</b></div></div>
+    ${x.bemerkung ? `<p>💬 ${esc(x.bemerkung)}</p>` : ""}${x.kenntnis.length ? `<p class="hinweis">👁️ Gesehen: ${esc(x.kenntnis.join(", "))}</p>` : ""}
+    <p class="hinweis">Belege und Aufstellung kamen zusätzlich per Mail.</p>
+    <div style="display:grid;gap:8px">${x.kenntnisIch ? "" : `<button class="knopf" data-fn="ekKenntnis('erstattung','${x.id}')">👁️ Zur Kenntnis genommen</button>`}
+      <button class="knopf haupt" data-fn="ekErstattet('${x.id}')">✅ Erstattet</button><button class="knopf" data-fn="ekErstAblehnen('${x.id}')">✖ Ablehnen</button>
+      <button class="knopf" data-fn="ekAblage('erstattung','${x.id}')">🗄️ Ablegen …</button><button class="knopf" data-fn="">Schließen</button></div>`);
+  f.querySelectorAll("[data-fn]").forEach((b) => (b.onclick = () => { f.remove(); if (b.dataset.fn) new Function(b.dataset.fn)(); }));
+}
+function ekErstattet(id) {
+  const x = ekErst(id); if (!x) return;
+  const bar = x.auszahlung === "bar", vor = esc(x.name.split(" ")[0]);
+  const f = blattAuf("ekErstBlatt", `<h3 style="margin-top:0">✅ Erstattung ${esc(x.name)}: ${euro(x.summe)}</h3>
+    <p class="hinweis">Gewünscht: ${bar ? "bar" : "per Überweisung"} · ${vor} bekommt Bescheid (Push + Mail).</p>
+    <label class="feld">Kurze Nachricht an ${vor} (freiwillig)<input id="ekAntw" maxlength="500" placeholder="z. B. Danke fürs Fahren!"></label>
+    <div style="display:grid;gap:8px">${(bar ? ["bar", "ueberweisung"] : ["ueberweisung", "bar"]).map((w, i) => `<button class="knopf${i ? "" : " haupt"}" data-w="${w}">${w === "bar" ? "💵 Bar ausgezahlt" : "🏦 Wird überwiesen"}</button>`).join("")}
+      <button class="knopf" data-w="">Abbrechen</button></div>`);
+  f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => { const w = b.dataset.w, antwort = f.querySelector("#ekAntw").value; f.remove(); if (w) ekErledigen(id, "erstattet", w, antwort); }));
+}
+async function ekErstAblehnen(id) {
+  const x = ekErst(id); if (!x) return;
+  const grund = await eingabe(`Erstattung von ${x.name.split(" ")[0]} ablehnen – warum? (${x.name.split(" ")[0]} bekommt den Grund)`, "", { mehrzeilig: true });
+  if (!grund || !grund.trim()) return;
+  ekErledigen(id, "abgelehnt", null, grund);
+}
+async function ekErledigen(id, status, ausgezahlt, antwort) {
+  try { await api("erstattung_erledigen", { id, status, ausgezahlt, antwort }); } catch (e) { return meldeFehler(e); }
+  await ekNach(status === "erstattet" ? "✅ Erstattet – Mitglied hat Bescheid bekommen" : "✖ Abgelehnt – Mitglied hat Bescheid bekommen");
+  ekAblage("erstattung", id, "Erledigt – wo soll es abgelegt werden?");
+}
+async function ekDienstInfo(id) {
+  let d; try { d = await api("eingang_dienstwunsch", { id }); } catch (e) { return meldeFehler(e); }
+  const f = blattAuf("ekDwBlatt", `<h3 style="margin-top:0">📅 Dienstzeiten ${esc(d.name)}</h3>
+    <p class="hinweis">${esc(d.veranstaltung)} · Stand ${esc(d.stand)} · Fassung ${esc(String(d.revision))}${d.uebernommen ? " · ✅ im Dienstplan übernommen" : " · noch nicht im Dienstplan"}</p>
+    ${d.tage.length ? `<div class="karte" style="padding:6px 12px">${d.tage.map((t) => `<div class="zeile"><b>${esc(t.tag)}</b>${t.zeilen.map((z) => `<br><small>${esc(z)}</small>`).join("")}</div>`).join("")}</div>` : '<p class="hinweis">Keine Zeiten eingetragen.</p>'}
+    ${d.comment ? `<p>💬 ${esc(d.comment)}</p>` : ""}<p class="hinweis">Eingeplant wird im Dienstplan-Programm (DP2).</p>
+    <div style="display:grid;gap:8px"><button class="knopf haupt" data-fn="ekKenntnis('dienstwunsch','${d.id}')">👁️ Zur Kenntnis genommen</button>
+      <button class="knopf" data-fn="ekAblage('dienstwunsch','${d.id}')">🗄️ Ablegen …</button><button class="knopf" data-fn="">Schließen</button></div>`);
+  f.querySelectorAll("[data-fn]").forEach((b) => (b.onclick = () => { f.remove(); if (b.dataset.fn) new Function(b.dataset.fn)(); }));
+}
+const EK_WAHL_KEY = (art) => "kc_club_ek_ablage_" + art;
+async function ekAblage(art, id, frage) {
+  let d; try { d = await api("eingang_ablage_ziele", { art, id }); } catch (e) { return meldeFehler(e); }
+  let w = null; try { w = JSON.parse(localStorage.getItem(EK_WAHL_KEY(art)) || "null"); } catch {}
+  const an = (o) => w ? (w.ordner || []).includes(o.id) : o.vorschlag, reg = (o) => (w?.reg?.[o.id] && o.register.includes(w.reg[o.id]) ? w.reg[o.id] : o.registerVor);
+  const f = blattAuf("ekAblageBlatt", `<h3 style="margin-top:0">🗄️ ${esc(frage || "Wo ablegen?")}</h3>
+    <p style="margin:0 0 6px"><b>${esc(d.titel)}</b></p>${d.schonAbgelegt ? `<p class="hinweis">Schon ${d.schonAbgelegt}× abgelegt (zuletzt ${esc(zeitKurz(d.zuletzt))}) – nochmal ablegen legt eine neue Fassung dazu.</p>` : ""}
+    <p class="hinweis" style="margin:4px 0">Häkchen setzen – mehrere Ordner gehen.</p>
+    ${d.mitglied ? `<label class="schalter"><span>👤 Im Ordner von <b>${esc(d.mitglied.name)}</b> (zum Nachvollziehen)</span><input type="checkbox" id="ekM"${w ? (w.mitglied ? " checked" : "") : " checked"}></label>` : ""}
+    ${d.ordner.length ? d.ordner.map((o) => `<div class="ek-ordner" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:6px 0;border-bottom:1px solid var(--linie)">
+      <label style="flex:1;min-width:160px;display:flex;gap:8px;align-items:center"><input type="checkbox" data-o="${esc(o.id)}"${an(o) ? " checked" : ""}> ${esc(o.sym)} ${esc(o.titel)} ${esc(String(o.jahr))}</label>
+      <select data-r="${esc(o.id)}" aria-label="Register">${o.register.map((r) => `<option${r === reg(o) ? " selected" : ""}>${esc(r)}</option>`).join("")}</select></div>`).join("")
+      : '<p class="hinweis">Noch keine Club-Ordner – Clubsprecher oder Admin legen sie im 🗄️ Archiv an.</p>'}
+    <label class="schalter"><span>👤 In meinen eigenen Ordner</span><input type="checkbox" id="ekMein"${w?.mein ? " checked" : ""}></label>
+    <div style="display:grid;gap:8px;margin-top:10px"><button class="knopf haupt" id="ekAblegenKnopf">🗄️ Ablegen</button><button class="knopf" id="ekNichtKnopf">Nicht ablegen</button></div>`);
+  f.querySelector("#ekNichtKnopf").onclick = () => f.remove();
+  f.querySelector("#ekAblegenKnopf").onclick = (e) => einmal(e.target, async () => {
+    const ordner = [...f.querySelectorAll("[data-o]")].filter((c) => c.checked).map((c) => c.dataset.o);
+    const regs = Object.fromEntries([...f.querySelectorAll("[data-r]")].map((s) => [s.dataset.r, s.value]));
+    const mitglied = !!f.querySelector("#ekM")?.checked, mein = !!f.querySelector("#ekMein")?.checked;
+    if (!ordner.length && !mitglied && !mein) return melde("Bitte mindestens einen Ordner ankreuzen.", true);
+    try { localStorage.setItem(EK_WAHL_KEY(art), JSON.stringify({ ordner, reg: regs, mitglied, mein })); } catch {}
+    try {
+      const r = await api("eingang_ablegen", { art, id, ziele: ordner.map((o) => ({ ordner_id: o, register: regs[o] })), mitglied, mein }, { warten: true });
+      f.remove(); AR.daten = null;
+      const gut = r.ergebnis.filter((x) => x.ok).length, schlecht = r.ergebnis.filter((x) => !x.ok);
+      if (schlecht.length) melde(`🗄️ ${gut} abgelegt – nicht geklappt: ${schlecht.map((x) => x.ordner).join(", ")}`, true);
+      else melde(`🗄️ Abgelegt in ${gut} Ordner${gut === 1 ? "" : "n"}`);
+    } catch (err) { meldeFehler(err); }
+  });
 }
 async function buEinArchiv(id, annehmen) {
   if (!annehmen && !(await frage("Dieses Dokument ablehnen? Es wird gelöscht und der Absender bekommt Bescheid."))) return;
@@ -16628,6 +16730,7 @@ async function fpAdmin(tage) {
     else if (h === "#spiele") spStart();
     else if (["#termine", "#vorschlaege", "#aktionen", "#fotos", "#protokolle", "#dienste", "#nachrichten", "#mitglieder", "#einstellungen", "#archiv", "#helfen"].includes(h)) zeige(h.slice(1));
     else if (h === "#buero" && ICH?.buero) buStart();
+    else if (h === "#eingang" && ICH?.buero) { buStart(); buEingang(); } // KC-CLUB-EINGANGSKORB (2.22.21): Push führt direkt in den Eingang
     else if (h === "#aenderungen") ICH?.vorstand || ICH?.admin ? aeEingang() : aeStart(); // KC-CLUB-AENDERUNG (2.22.7): aus Push/Mail
     if (!h || h === "#") setTimeout(() => buGrussFragen(), 1500); // KC-CLUB-BUERO: Begrüßung der Clubleitung
     if (!h || h === "#") setTimeout(() => spEinladung(), 4000); // KC-CLUB-SPIEL-EINLADUNG (2.12.0): nach Begrüßung/Neuigkeiten

@@ -3585,9 +3585,9 @@ assert.ok(/const UH_HERVOR = \["Innovation"\];/.test(html) && /function uhAmeise
 }
 // 333. 2.22.8: Änderungsmeldungen im Büro-Posteingang + Archiv (Register „Meldungen“)
 {
-  assert.ok(/async function bueroEingang\(ich\?: Ich\)/.test(server) && /return \{ count: \(data \?\? \[\]\)\.filter\(\(x: any\) => aeWartetAufMich\(ich, x\)\)\.length \};/.test(server) && /return \{ ausleihen, vorschlaege, hilfe, archiv, aufgaben, entwuerfe, aenderungen \};/.test(server), "Posteingang zählt Änderungsmeldungen");
+  assert.ok(/async function bueroEingang\(ich\?: Ich\)/.test(server) && /return \{ count: \(data \?\? \[\]\)\.filter\(\(x: any\) => aeWartetAufMich\(ich, x\)\)\.length \};/.test(server) && /return \{ ausleihen, vorschlaege, hilfe, archiv, aufgaben, entwuerfe, aenderungen, erstattungen: ek\.erst, dienstzeiten: ek\.dw \};/.test(server), "Posteingang zählt Änderungsmeldungen");
   assert.ok(/const AE_REGISTER = "Meldungen";/.test(server) && /await vereinsOrdner\(MITGLIEDER_ORDNER, jahr, AE_REGISTER\)/.test(server) && /await persoenlicherOrdner\(x\.person_id, wer, jahr, AE_REGISTER\)/.test(server), "Ablage Admin-Ordner + persönlicher Ordner, Register Meldungen");
-  const abl = server.slice(server.indexOf("async function aeAblegen"), server.indexOf("const aeKurz ="));
+  const abl = server.slice(server.indexOf("async function aeDoku"), server.indexOf("const aeKurz ="));
   assert.ok(/const neu = x\.art === "bank" \? aeKurz\(\{ \.\.\.x, status: "erledigt" \}\)/.test(abl) && /const alt = |alt = x\.art === "bank" \? \{\}/.test(abl), "Bank im Archiv gekürzt");
   assert.ok(/await aeAblegen\(ich, voll, "Meldung"\)/.test(server) && /await aeAblegen\(ich, \{ \.\.\.x, status: "erledigt"/.test(server), "Ablage beim Melden und Erledigen");
   assert.ok(/\["✏️", "Änderungsmeldungen", e\.aenderungen \|\| 0, "aeEingang\(\)"\]/.test(html) && /gruppe: "Änderungsmeldung – bitte ansehen"/.test(html), "Büro-Posteingang zeigt Meldungen");
@@ -3699,6 +3699,25 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/u\.ungelesen && u\.letzte && u\.letzte\.von !== "Du" && !stummAn\(u\.id\)/.test(html), "nur fremde, nicht stumme Unterhaltungen");
   assert.ok(/function buNeuOeffnen\(\) \{[^}]*chatOeffnen\(u\.id\);/.test(html), "Tippen öffnet die Unterhaltung");
   assert.ok(/<span><b>Neue Nachricht von \$\{esc\(von\)\}<\/b><small>\$\{esc\(u\.letzte\.text/.test(html), "Text escaped");
+}
+// 349 KC-CLUB-EINGANGSKORB (2.22.21): Erstattungen + Dienstzeiten im Eingang, alle drei der Clubleitung, Ablage in mehrere Ordner
+{
+  const mig = lies("supabase/migrations/20261004_kc_club_v22221_eingangskorb.sql");
+  assert.ok(/create table if not exists kc_club_eingang_stand/.test(mig) && /revoke all on table kc_club_eingang_stand from anon, authenticated;/.test(mig) && !/kc_dp_wish_inbox\s+add/.test(mig), "Stand-Tabelle, DP-Vertrag unverändert");
+  for (const a of ["eingang_korb", "eingang_dienstwunsch", "eingang_kenntnis", "erstattung_erledigen", "eingang_ablage_ziele", "eingang_ablegen"]) {
+    assert.ok(server.includes(`case "${a}":`) && html.includes(`api("${a}"`), `Aktion ${a}`);
+    const block = server.slice(server.indexOf(`case "${a}":`), server.indexOf(`case "${a}":`) + 400);
+    assert.ok(/nurLeitung\(ich\)|ekPruefen\(ich, art, id\)/.test(block), `${a}: nur Clubleitung`);
+  }
+  assert.ok(/const nurLeitung = \(ich: Ich\) => \{ if \(!ich\.vorstand && !ich\.admin\) throw/.test(server), "Clubleitung = Vorstand oder Admin");
+  assert.ok(/\.eq\("id", String\(p\.id \|\| ""\)\)\.eq\("status", "eingereicht"\)\.select/.test(server), "Erstattung nur einmal erledigen");
+  assert.ok(/if \(status === "abgelehnt" && !antwort\) throw/.test(server), "Ablehnen braucht Grund");
+  assert.ok(/!o \|\| o\.besitzer \|\| o\.geloescht_am \|\| !darfOrdnerSehen\(ich, o\)/.test(server), "nur sichtbare Club-Ordner als Ziel");
+  assert.ok(/if \(p\.mitglied && doku\.person_id && doku\.person_id !== ich\.person_id\) await persoenlich\(doku\.person_id/.test(server), "Ordner des Mitglieds");
+  assert.ok(/\.lt\("updated_at", new Date\(Date\.now\(\) - 10 \* 60000\)\.toISOString\(\)\)/.test(server) && /await ekDienstwunschMelden\(\)\.catch/.test(server), "Dienstzeiten erst nach 10 Min. Ruhe melden");
+  assert.ok(/: await leitungIds\(\); \/\/ KC-CLUB-EINGANGSKORB/.test(server) && /`club-erstattung-eingang:\$\{a\.id\}`/.test(server), "alle drei bekommen Meldung");
+  assert.ok(/ekPosten\(P\);/.test(html) && /data-o="\$\{esc\(o\.id\)\}"/.test(html) && /localStorage\.setItem\(EK_WAHL_KEY\(art\)/.test(html), "Eingang + Mehrfach-Ablage im Client");
+  assert.ok(/else if \(h === "#eingang" && ICH\?\.buero\)/.test(html), "#eingang");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
