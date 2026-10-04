@@ -3964,3 +3964,19 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/h === "#hilfezentrum" \|\| h\.startsWith\("#hilfezentrum="\)/.test(html), "Sprung #hilfezentrum fehlt");
   assert.ok(/onclick="hzStart\(\)">Öffnen<\/button>/.test(html), "Link in den Einstellungen fehlt");
 }
+
+// 350. 2.23.1: Hilfe-Zentrum erweitert – abwechslungsreich formuliert, wechselnde Einleitungen, nichts drängt sich auf
+{
+  const b = html.slice(html.indexOf("const HILFE = ["), html.indexOf("\n];", html.indexOf("const HILFE = [")));
+  const es = [...b.matchAll(/\n  \{ id: "([^"]+)",[^\n]*? t: "([^"]+)", x: (?:\(\) => `|")([^"`]+)/g)].map((m) => ({ id: m[1], t: m[2], anfang: m[3].replace(/<[^>]+>/g, "").split(/\s+/).slice(0, 3).join(" ") }));
+  assert.ok(es.length >= 80, "zu wenige Hilfetexte");
+  assert.equal(new Set(es.map((e) => e.t)).size, es.length, "Hilfe-Titel doppelt");
+  const anf = {}; for (const e of es) (anf[e.anfang] ||= []).push(e.id);
+  for (const [a, ids] of Object.entries(anf)) assert.ok(ids.length === 1, `Hilfetexte beginnen gleich („${a}“): ${ids.join(", ")} – bitte abwechslungsreich formulieren`);
+  assert.ok(/const HZ_GRUSS = \[/.test(html) && /const HZ_THEMA_EINL = \[/.test(html) && /function hzOeffnen\(\) \{ hzNeuerGruss\(\);/.test(html) && /if \(t !== HZ\.thema\) hzNeuerGruss\(\);/.test(html), "wechselnde Einleitungen fehlen");
+  assert.ok(!/function hzSuchen\(q\) \{[^}]*hzNeuerGruss/.test(html), "beim Suchen darf die Einleitung nicht wechseln");
+  assert.ok(/id: "buero_sprache"[^\n]*nur: \(\) => !!ICH\?\.buero/.test(html), "Büro-Hilfe nur für die Clubleitung");
+  // nicht aufdringlich: das Hilfe-Zentrum öffnet keine Fenster und meldet nichts von selbst
+  const hz = html.slice(html.indexOf("const HZ = {"), html.indexOf("// ---------- KC-CLUB-ONLINE-ANSAGE"));
+  assert.ok(!/melde\(|blattAuf\(|\.classList\.remove\("versteckt"\)/.test(hz), "Hilfe-Zentrum darf sich nicht aufdrängen");
+}
