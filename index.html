@@ -2278,6 +2278,7 @@
     <summary>🛠️ Admin-Einstellungen</summary>
     <button class="knopf" onclick="fpAdmin()">🩺 Fehlerprotokoll &amp; Startprobleme der Mitglieder</button>
     <button class="knopf" onclick="nzAdmin()">📊 Nutzung der App – ohne Namen</button>
+    <button class="knopf haupt" onclick="serverDiagnose()">🩺 Server-Diagnose – wo hakt es?</button>
     <button class="knopf" id="notProbeKnopf" onclick="notProbeSetzen(!notProbe())">🧪 Notbetrieb-Probe auf diesem Gerät</button>
     <!-- KC-CLUB-NOTBETRIEB-ERNSTFALL (1.54.1, Wunsch Hansi): Ausfall nur auf diesem Gerät nachstellen – die App muss selbst umschalten -->
     <button class="knopf" id="notErnstfallKnopf" onclick="notErnstfallSetzen(!notErnstfall())">🧯 Ernstfall simulieren (Supabase weg, nur dieses Gerät)</button>
@@ -2583,7 +2584,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.18.4"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.19.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -6371,8 +6372,76 @@ async function notEinschalten(grund) {
   clearInterval(NOT.timer); NOT.timer = setInterval(notZurueckPruefen, NOT_PRUEF_MS);
   return true;
 }
+// ---------- KC-CLUB-NOTBETRIEB-INFO + KC-CLUB-SERVER-DIAGNOSE (2.19.0, Wunsch Hansi nach der Anbieter-Störung 04.10. 03:43) ----------
+// Mitglieder: „ℹ️ Was ist los?“ im Notbetrieb-Band – ruhige Erklärung, nichts geht verloren, nichts tun.
+// Admin: „🩺 Server-Diagnose“ prüft selbst Schritt für Schritt (Internet → Club-Server → Datenbank → Notbetrieb-Server → Störungsseite
+// des Anbieters) und sagt in einem Satz, wo es hakt und was zu tun ist. Nicht geprüft = ⚪ (nie grün). Nur lesen, sendet nichts.
+function notInfo() {
+  const seit = NOT.seit ? fZeit.format(new Date(NOT.seit)) + " Uhr" : "", st = NOT.stand ? fZeit.format(new Date(NOT.stand)) + " Uhr" : "", w = notWartet().length;
+  blattAuf("notInfoBlatt", `<h3 style="margin:0">ℹ️ Was ist los?</h3>
+    <p style="margin:8px 0">Unser <b>Club-Server ist gerade nicht erreichbar</b>${seit ? ` (seit etwa ${esc(seit)})` : ""}. Das liegt an einer Störung bei unserem Server-Anbieter – <b>nicht an deinem Handy</b>. Es wird mit Hochdruck daran gearbeitet.</p>
+    <div class="karte" style="margin:0 0 8px">
+      <div>✅ <b>Ansehen geht weiter</b>${st ? ` – mit dem Stand von ${esc(st)}` : ""}.</div>
+      <div>📨 <b>Nichts geht verloren:</b> Nachrichten, Zu-/Absagen, Status und Zettel, die du jetzt schreibst, werden automatisch übertragen, sobald der Server wieder da ist.${w ? ` (Gerade ${w === 1 ? "wartet 1 Eintrag" : `warten ${w} Einträge`}.)` : ""}</div>
+      <div>📷 Fotos hochladen und Push-Mitteilungen gehen erst danach wieder.</div>
+      <div>🔄 <b>Du musst nichts tun.</b> Die App schaltet von selbst zurück, sobald alles wieder läuft.</div>
+    </div>
+    ${ICH?.admin ? '<button class="knopf" style="width:100%" onclick="$(\'notInfoBlatt\').remove();serverDiagnose()">🩺 Server-Diagnose (Admin)</button>' : ""}
+    <button class="knopf haupt" style="width:100%" onclick="$('notInfoBlatt').remove()">👍 Verstanden</button>`);
+}
+async function diagMessen(url, opt = {}, ms = 10000) {
+  const t0 = performance.now();
+  try { const r = await fetch(url, { cache: "no-store", ...opt, signal: zeitSignal(ms) }); return { da: true, status: r.status, ms: Math.round(performance.now() - t0), r }; }
+  catch (e) { return { da: false, zeit: e?.name === "TimeoutError" || e?.name === "AbortError", ms: Math.round(performance.now() - t0) }; }
+}
+let DIAG_TEXT = "";
+async function serverDiagnose() {
+  const zeilen = [["netz", "📶 Internet am Handy"], ["server", "🖥️ Club-Server"], ["db", "🗄️ Datenbank (Daten lesen/schreiben)"], ["not", "🛟 Notbetrieb-Server"], ["anbieter", "🌐 Störungsseite des Anbieters"]];
+  const f = blattAuf("diagBlatt", `<h3 style="margin:0">🩺 Server-Diagnose</h3><p class="hinweis" style="margin:4px 0 8px">${esc(new Intl.DateTimeFormat("de-DE", { dateStyle: "short", timeStyle: "medium" }).format(new Date()))} · App ${esc(APP_VERSION)}${NOT.an ? " · Notbetrieb ist an" : ""}</p>
+    <div id="diagZeilen">${zeilen.map(([id, t]) => `<div class="zeile" id="diag-${id}"><span style="width:1.6em">⏳</span><span style="flex:1"><b>${t}</b><br><small class="hinweis">wird geprüft …</small></span></div>`).join("")}</div>
+    <div class="karte" id="diagFazit" style="margin:8px 0"><b>⏳ Prüfe …</b></div>
+    <div class="knoepfe"><button class="knopf" onclick="serverDiagnose()">↻ Nochmal prüfen</button><button class="knopf" onclick="diagKopieren()">📋 Ergebnis kopieren</button><button class="knopf haupt" onclick="$('diagBlatt').remove()">Schließen</button></div>`);
+  const setze = (id, ampel, text) => { const z = $("diag-" + id); if (z) z.innerHTML = `<span style="width:1.6em">${ampel}</span><span style="flex:1"><b>${zeilen.find((x) => x[0] === id)[1]}</b><br><small class="hinweis">${esc(text)}</small></span>`; return { id, ampel, text }; };
+  const erg = {};
+  // 1) Internet: eigene App-Seite (GitHub) holen
+  const n = await diagMessen("version.json?d=" + Date.now(), {}, 8000);
+  erg.netz = n.da && n.status === 200 ? setze("netz", "🟢", `ok (${n.ms} ms)`) : setze("netz", "🔴", n.zeit ? "keine Antwort – Internet sehr langsam oder weg" : "kein Internet");
+  // 2) Club-Server: ohne Anmeldung anklopfen – ein laufender Server antwortet sofort mit „nicht angemeldet“ (401)
+  const s = await diagMessen(API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "ping" }) }, 12000);
+  erg.server = s.da && s.status < 500 ? setze("server", s.ms > 4000 ? "🟡" : "🟢", `läuft (${s.ms} ms)`) : setze("server", "🔴", s.da ? `Fehler ${s.status}` : s.zeit ? "keine Antwort (Zeitüberschreitung)" : "nicht erreichbar");
+  // 3) Datenbank: angemeldet „ping“ – der Server misst, wie schnell die Datenbank antwortet
+  let d = null;
+  if (KEY) { d = await diagMessen(API, { method: "POST", headers: { "Content-Type": "application/json", "x-club-token": KEY, "x-club-version": APP_VERSION }, body: JSON.stringify({ action: "ping" }) }, 20000);
+    let j = null; try { j = d.da && d.status === 200 ? await d.r.json() : null; } catch {}
+    erg.db = j ? setze("db", (j.dbMs ?? 0) > 2000 ? "🟡" : "🟢", `antwortet (${j.dbMs ?? "?"} ms in der Datenbank, ${d.ms} ms gesamt)`)
+      : setze("db", "🔴", d.da ? `Fehler ${d.status} – der Server kommt nicht an die Daten` : d.zeit ? "keine Antwort in 20 s – der Server kommt nicht an die Daten" : "nicht erreichbar"); }
+  else erg.db = setze("db", "⚪", "nicht prüfbar (dieses Gerät ist nicht angemeldet)");
+  // 4) Notbetrieb-Server (Cloudflare)
+  let notUrl = NOT.konfig?.url; if (!notUrl) try { notUrl = (await (await fetch("notbetrieb.json?d=" + Date.now(), { cache: "no-store", signal: zeitSignal(6000) })).json()).url; } catch {}
+  if (notUrl) { const o = await diagMessen(notUrl, {}, 8000); erg.not = o.da && o.status < 500 ? setze("not", "🟢", `erreichbar (${o.ms} ms) – springt ein, wenn der Club-Server fehlt`) : setze("not", "🔴", o.da ? `Fehler ${o.status}` : "nicht erreichbar"); }
+  else erg.not = setze("not", "⚪", "nicht eingerichtet oder nicht prüfbar");
+  // 5) Störungsseite des Anbieters (öffentlich)
+  const a = await diagMessen("https://status.supabase.com/api/v2/summary.json", {}, 8000);
+  let aText = null, aStoerung = false;
+  try { if (a.da && a.status === 200) { const j = await a.r.json(), schlecht = (j.components || []).filter((c) => c.status !== "operational" && !c.group).map((c) => c.name), vorf = (j.incidents || []).map((i) => i.name);
+    aStoerung = j.status?.indicator !== "none"; aText = (aStoerung ? `meldet: ${j.status?.description || "Störung"}` : "meldet: alles in Ordnung") + (schlecht.length ? ` · betroffen: ${schlecht.slice(0, 4).join(", ")}` : "") + (vorf.length ? ` · ${vorf[0]}` : ""); } } catch {}
+  erg.anbieter = aText ? setze("anbieter", aStoerung ? "🟡" : "🟢", aText) : setze("anbieter", "⚪", "nicht abrufbar – bitte selbst nachsehen: status.supabase.com");
+  // Fazit in einem Satz
+  const rot = (k) => erg[k]?.ampel === "🔴";
+  const fazit = rot("netz") ? "📵 Dein Handy hat gerade kein (gutes) Internet – das Problem liegt beim Handy/WLAN, nicht beim Club. WLAN/Mobile Daten prüfen."
+    : rot("server") ? "🔴 Der Club-Server ist nicht erreichbar – Störung beim Server-Anbieter. Nichts tun, der Notbetrieb übernimmt. Wenn es länger als 2 Stunden dauert: Claude Bescheid geben."
+    : rot("db") ? "🔴 Der Server läuft, kommt aber nicht an die Daten (wie bei der Störung am 04.10. nachts) – Störung beim Server-Anbieter. Nichts tun, der Notbetrieb übernimmt, Eingaben werden später übertragen."
+    : erg.db?.ampel === "⚪" ? "⚪ Datenbank nicht geprüft – Ergebnis unvollständig."
+    : erg.server?.ampel === "🟡" || erg.db?.ampel === "🟡" ? "🟡 Alles erreichbar, aber langsam – meist vorübergehend beim Anbieter."
+    : NOT.an ? "✅ Alles wieder erreichbar – der Notbetrieb schaltet in Kürze von selbst zurück (oder App einmal neu öffnen)."
+    : "✅ Alles in Ordnung.";
+  if ($("diagFazit")) $("diagFazit").innerHTML = `<b>${esc(fazit)}</b>${rot("not") ? '<div class="hinweis" style="margin-top:4px">⚠️ Auch der Notbetrieb-Server antwortet nicht – dann geht im Ausfall gar nichts. Claude Bescheid geben.</div>' : ""}`;
+  DIAG_TEXT = `Server-Diagnose ${new Date().toLocaleString("de-DE")} · App ${APP_VERSION}${NOT.an ? " · Notbetrieb an" : ""}\n` + zeilen.map(([id, t]) => `${erg[id]?.ampel || "⚪"} ${t}: ${erg[id]?.text || "?"}`).join("\n") + `\nFazit: ${fazit}`;
+  return f;
+}
+async function diagKopieren() { try { await navigator.clipboard.writeText(DIAG_TEXT); melde("📋 Ergebnis kopiert – einfach an Claude schicken"); } catch { melde("Kopieren ging nicht – bitte Bildschirmfoto machen", true); } }
 function notAus(meldung) {
-  NOT.an = false; NOT.grund = ""; NOT.fehler = 0; clearInterval(NOT.timer); NOT.timer = null;
+  NOT.an = false; NOT.grund = ""; NOT.fehler = 0; NOT.seit = 0; clearInterval(NOT.timer); NOT.timer = null; $("notInfoBlatt")?.remove();
   document.getElementById("notBand")?.remove(); document.body.classList.remove("im-notbetrieb"); document.documentElement.style.removeProperty("--notH");
   if (meldung) melde(meldung);
   neuLaden(true);
@@ -6429,10 +6498,11 @@ function notBandZeigen() {
   let el = document.getElementById("notBand");
   if (!el) { el = document.createElement("div"); el.id = "notBand"; el.className = "not-band"; el.setAttribute("role", "status"); document.body.prepend(el); }
   document.body.classList.add("im-notbetrieb");
+  if (!NOT.seit) NOT.seit = Date.now(); // 2.19.0: seit wann (für „Was ist los?“)
   const st = NOT.stand ? new Date(NOT.stand) : null, heute = st && st.toDateString() === new Date().toDateString();
   const standText = st ? `Stand von ${heute ? "" : fKurz.format(st) + ", "}${fZeit.format(st)} Uhr` : "Stand unbekannt";
   const w = notWartet().length; // KC-CLUB-NOTBETRIEB-STUFE2: was hier geschrieben wird, wartet und wird später übertragen
-  el.innerHTML = `⚠️ <b>${NOT.grund === "probe" ? "Notbetrieb-Probe" : notErnstfall() ? "Notbetrieb (Ernstfall-Simulation)" : "Notbetrieb"}</b> – ${esc(standText)}. Ansehen geht. Nachrichten, Zu-/Absagen, Status und Zettel werden später übertragen. Fotos und Push gerade nicht.${w ? ` <b>📨 ${w} ${w > 1 ? "warten" : "wartet"}</b>` : ""}${NOT.grund === "probe" ? ` <button onclick="notProbeSetzen(false)">Probe beenden</button>` : notErnstfall() ? ` <button onclick="notErnstfallSetzen(false)">Simulation beenden</button>` : ""}`;
+  el.innerHTML = `⚠️ <b>${NOT.grund === "probe" ? "Notbetrieb-Probe" : notErnstfall() ? "Notbetrieb (Ernstfall-Simulation)" : "Notbetrieb"}</b> – ${esc(standText)}. Ansehen geht. Nachrichten, Zu-/Absagen, Status und Zettel werden später übertragen. Fotos und Push gerade nicht.${w ? ` <b>📨 ${w} ${w > 1 ? "warten" : "wartet"}</b>` : ""} <button onclick="notInfo()">ℹ️ Was ist los?</button>${NOT.grund === "probe" ? ` <button onclick="notProbeSetzen(false)">Probe beenden</button>` : notErnstfall() ? ` <button onclick="notErnstfallSetzen(false)">Simulation beenden</button>` : ""}`;
   notBandHoehe(el);
 }
 // Meldungen (rot/dunkel) und SOS-Balken rutschen unter das orange Band statt davon verdeckt zu werden

@@ -3453,6 +3453,14 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.equal(st.join(" "), "hi Steven das ist eine neue Funktion", "gleiche Runde: Wiederholung und Nachbesserung zusammengeführt");
   assert.ok(/e\.continuous = !DIKTAT_ANDROID;/.test(html) && /for \(let i = 0; i < ev\.results\.length; i\+\+\)/.test(html), "Android Satz für Satz, Runde neu zusammensetzen");
 }
+// 319. 2.19.0: „Was ist los?“ + Server-Diagnose (KC-CLUB-NOTBETRIEB-INFO, KC-CLUB-SERVER-DIAGNOSE)
+{
+  assert.ok(/<button onclick="notInfo\(\)">ℹ️ Was ist los\?<\/button>/.test(html) && /function notInfo\(\)/.test(html) && /nicht an deinem Handy/.test(html), "Info-Knopf für Mitglieder");
+  const d = html.slice(html.indexOf("async function serverDiagnose()"), html.indexOf("async function diagKopieren()"));
+  for (const k of ["netz", "server", "db", "not", "anbieter"]) assert.ok(d.includes(`erg.${k} =`), "Diagnose-Schritt fehlt: " + k);
+  assert.ok(/setze\("db", "⚪"/.test(d) && /setze\("anbieter", "⚪"/.test(d) && !/fetch\([^)]*method: "(PUT|DELETE)"/.test(d), "nicht Geprüftes ⚪, nur lesend");
+  assert.ok(/onclick="serverDiagnose\(\)">🩺 Server-Diagnose/.test(html), "Admin-Knopf in den Einstellungen");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

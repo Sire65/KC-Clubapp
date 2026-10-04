@@ -1,5 +1,16 @@
 # Änderungen
 
+## 2.19.0 – 2026-10-04 – ℹ️ „Was ist los?“ im Notbetrieb + 🩺 Server-Diagnose für den Admin (Wunsch Hansi)
+- Anlass: Störung beim Anbieter (Supabase eu-west-2, „API Gateway degraded“) ab 04.10. 03:43 Uhr – Datenschnittstelle (REST) 504,
+  Datenbank selbst gesund; Notbetrieb sprang korrekt ein.
+- KC-CLUB-NOTBETRIEB-INFO: im Notbetrieb-Band Knopf „ℹ️ Was ist los?“ – ruhige Erklärung für Mitglieder: Club-Server gerade nicht
+  erreichbar (seit …), Störung beim Anbieter, nicht am Handy, es wird mit Hochdruck gearbeitet; Ansehen geht (Stand …), nichts geht
+  verloren (wartende Einträge gezählt), Fotos/Push erst danach, nichts tun – schaltet von selbst zurück.
+- KC-CLUB-SERVER-DIAGNOSE: Admin (⚙️ Admin-Bereich bzw. im „Was ist los?“-Fenster) „🩺 Server-Diagnose“ prüft der Reihe nach:
+  Internet (eigene App-Seite), Club-Server (Anklopfen ohne Anmeldung → 401 = läuft), Datenbank (angemeldeter ping, dbMs), Notbetrieb-
+  Server (Cloudflare), Störungsseite des Anbieters (status.supabase.com, öffentlich). Ampeln, nicht Geprüftes ⚪ (nie grün), Fazit in einem
+  Satz mit Handlungsempfehlung, „📋 Ergebnis kopieren“ zum Weitergeben. Nur lesend, keine Server-Änderung nötig.
+
 ## 2.18.4 – 2026-10-03 – Diktat: auch nachgebesserte Wörter ohne Dopplung (Fund Hansi)
 - KC-CLUB-DIKTAT-DOPPELT (Nachtrag): zweites Bild „Hi hi hi hi Steven hi Steven das …“ (noch mit 2.18.2 aufgenommen). Nachgestellt mit
   2.18.3 blieben zwei Sonderfälle: gleiches kurzes Stück zweimal in derselben Hör-Runde („Hi“, „hi“) und nachgebesserte Wörter
