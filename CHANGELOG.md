@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.22.20 – 2026-10-04 – Büro: Hinweis bei neuer Nachricht (Wunsch Hansi)
+- KC-CLUB-BUERO-NEU-NACHRICHT: Kommt eine neue Nachricht, während man im Büro ist, erscheint oben ein Hinweis
+  „💬 Neue Nachricht von Klaus“ (Gruppe: „von Reinhilde in „Vorstand““, wichtige mit ❗ und rotem Rand) mit den ersten Worten.
+  Tippen öffnet die Unterhaltung direkt an der ersten ungelesenen Nachricht; ✕ schließt den Hinweis. Mehrere → „＋ n weitere“.
+  Stummgeschaltete Unterhaltungen und eigene Nachrichten lösen keinen Hinweis aus. Mit Push sofort, ohne Push spätestens nach etwa 1 Minute.
+  Nur App-Logik (Server nur Versionsnummer). Test 348.
+
 ## 2.22.19 – 2026-10-04 – Änderungsmeldung: zur Kenntnis nehmen → freigeben → für KC-Programme bereit (Wunsch Hansi)
 - KC-CLUB-AENDERUNG-FREIGABE: im Büro-Eingangskorb je Meldung „👁️ Zur Kenntnis genommen“, „✅ Freigeben“, „↩️ Rückfrage“, „📋 Kopieren“.
   Freigeben darf der Clubsprecher (an den die Meldung ging) oder der Admin; Bankverbindung nur Kassenwart oder Admin.

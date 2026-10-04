@@ -3691,6 +3691,15 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/\.eq\("status", "offen"\)\.select\("id"\);\s*\n\s*if \(!ok\?\.length\) throw new Fehler\("Die Meldung ist schon bearbeitet\.", 409\);\s*\n\s*const ablage = await aeAblegen\(ich, \{ \.\.\.x, \.\.\.upd \}, "Freigegeben"\);/.test(server), "Freigabe atomar + Ablage Personal");
   assert.ok(/await aeUebernahmeMelden\(\)\.catch/.test(server) && /\.is\("mitglied_informiert_am", null\)\.select\("id"\)/.test(server), "Rückmeldung einmalig");
 }
+// 348 KC-CLUB-BUERO-NEU-NACHRICHT (2.22.20): Hinweis im Büro bei neuer Nachricht, Tippen öffnet die Unterhaltung an der ersten ungelesenen
+{
+  assert.ok(/<div id="buNeuNachr" class="bnn versteckt" aria-live="polite"><\/div>\s*<div id="buInhalt">/.test(html), "Hinweis-Platz im Büro außerhalb von buInhalt");
+  assert.ok(/if \(letzteUngelesen !== null && laut > letzteUngelesen && aktuelleAnsicht === "buero"\) buNeuPruefen\(\);/.test(html), "bei neuer Nachricht im Büro prüfen");
+  assert.ok(/if \(aktuelleAnsicht === "buero" && !PUSH_AKTIV && Date\.now\(\) - BNN\.zuletzt > 55000\) buNeuPruefen\(\);/.test(html), "ohne Push selbst nachsehen");
+  assert.ok(/u\.ungelesen && u\.letzte && u\.letzte\.von !== "Du" && !stummAn\(u\.id\)/.test(html), "nur fremde, nicht stumme Unterhaltungen");
+  assert.ok(/function buNeuOeffnen\(\) \{[^}]*chatOeffnen\(u\.id\);/.test(html), "Tippen öffnet die Unterhaltung");
+  assert.ok(/<span><b>Neue Nachricht von \$\{esc\(von\)\}<\/b><small>\$\{esc\(u\.letzte\.text/.test(html), "Text escaped");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

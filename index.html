@@ -1389,6 +1389,15 @@
   .er-liste { display: flex; flex-direction: column; gap: 4px; max-width: 280px; } .er-liste span { padding: 7px 10px; background: var(--karte2); border-radius: 10px; } .er-liste span.er-ziel { background: var(--karte); }
   .ar-einleitung h3 { margin: 0 0 6px; } .ar-einleitung p { margin: 0 0 8px; line-height: 1.5; } /* KC-CLUB-ORDNER-EINLEITUNG */
   .bu-kopfgruss { margin-left: auto; font-weight: 800; font-size: .98rem; text-align: right; }
+  /* KC-CLUB-BUERO-NEU-NACHRICHT (2.22.20) */
+  .bnn { display: flex; gap: 6px; align-items: stretch; margin: 0 0 12px; }
+  .bnn-auf { flex: 1; display: flex; gap: 10px; align-items: center; text-align: left; padding: 10px 12px; border-radius: 14px; border: 2px solid var(--gruen, #2e7d32);
+    background: var(--karte, #fff); color: inherit; font: inherit; cursor: pointer; animation: aufblitzen 1.5s ease; }
+  .bnn-auf.wichtig { border-color: #c62828; }
+  .bnn-auf > span:nth-child(2) { flex: 1; min-width: 0; }
+  .bnn-auf small { display: block; opacity: .8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bnn-sym { font-size: 1.6rem; } .bnn-los { font-weight: 800; white-space: nowrap; }
+  .bnn-weg { border: 0; background: none; font-size: 1.2rem; padding: 0 8px; cursor: pointer; color: inherit; }
   .bu-knopfreihe { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; } .bu-knopfreihe .knopf { text-align: center; }
   .bu-tipp { margin-top: 8px; padding: 8px 10px; border-radius: 12px; background: var(--gelbbg); border: 2px solid var(--gelb); }
   .mini-kachel.bu-dran { border-color: var(--rot); animation: vsPuls 1.2s ease-in-out 4; }
@@ -1933,6 +1942,7 @@
   <!-- BÜRO DER CLUBLEITUNG (KC-CLUB-BUERO – 1.25.0) -->
   <section id="v-buero" class="versteckt">
     <div class="kopf2"><button class="zurueck" onclick="buZurueck()" aria-label="Zurück">‹</button><h2>🗂️ Büro</h2><span class="bu-kopfgruss" id="buKopfGruss"></span></div>
+    <div id="buNeuNachr" class="bnn versteckt" aria-live="polite"></div>
     <div id="buInhalt"><div class="karte hinweis">Wird geladen …</div></div>
   </section>
 
@@ -2638,7 +2648,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.22.19"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.22.20"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3876,6 +3886,7 @@ async function onlinePing() {
     if ($("setOnline")) $("setOnline").checked = r.zeigen;
     onlineLeisteZeigen(); if (INIT) heroZeigen();
     spielLive(r.spielAnfragen); // KC-CLUB-SPIEL-LIVE
+    if (aktuelleAnsicht === "buero" && !PUSH_AKTIV && Date.now() - BNN.zuletzt > 55000) buNeuPruefen(); /* KC-CLUB-BUERO-NEU-NACHRICHT: ohne Push selbst nachsehen */
     // jemand klopft bei mir an → Fenster (jedes Anklopfen nur einmal)
     const ruf = (r.anrufe || []).find((x) => !ONL.erledigt.has("r" + x.id));
     if (ruf && !RUF) { ONL.erledigt.add("r" + ruf.id); anrufEingehend(ruf.id); }
@@ -8847,6 +8858,7 @@ function zaehlerZeigen() {
   // KC-CLUB-STUMM (1.9.0): Ton nur für neue Nachrichten aus nicht stummgeschalteten Unterhaltungen
   const laut = INIT?.ungelesenLaut ?? n;
   if (letzteUngelesen !== null && laut > letzteUngelesen && einst("ton", true)) ton();
+  if (letzteUngelesen !== null && laut > letzteUngelesen && aktuelleAnsicht === "buero") buNeuPruefen(); /* KC-CLUB-BUERO-NEU-NACHRICHT */
   letzteUngelesen = laut;
 }
 
@@ -8912,7 +8924,7 @@ function zeige(v, ausHistorie) {
   if (v === "erstattung") erstattungLaden();
   if (v === "archiv") arLaden(); // KC-CLUB-ARCHIV
   if (v === "helfen") { hlZeigen(); hlLaden(); } // KC-CLUB-HELFEN / KC-CLUB-LEIHEN
-  if (v === "buero") { BU.sicht = "start"; buZeigen(); buLaden(); } // KC-CLUB-BUERO
+  if (v === "buero") { BU.sicht = "start"; buZeigen(); buLaden(); if (vorher !== "chat" || !BNN.seit) BNN.seit = Date.now() - 60000; buNeuPruefen(); } // KC-CLUB-BUERO, KC-CLUB-BUERO-NEU-NACHRICHT
   if (v === "dienste") dienstLaden();
   if (v === "nachrichten") unterhLaden();
   if (v === "mitglieder") { mgAnsichtWahlZeigen(); mitgliederLaden(); }
@@ -9582,6 +9594,36 @@ async function begruessungSenden(pid, vorname) {
   } catch (e) { meldeFehler(e); }
 }
 function buStart() { BU.sicht = "start"; zeige("buero"); }
+// KC-CLUB-BUERO-NEU-NACHRICHT (2.22.20, Wunsch Hansi): im Büro oben ein Hinweis, sobald eine neue Nachricht kommt.
+// Tippen öffnet die Unterhaltung direkt an der ersten ungelesenen Nachricht (KC-CLUB-NEU-LINIE). Stummgeschaltete zählen nicht.
+const BNN = { seit: 0, zuletzt: 0, lauf: null, weg: new Set(), liste: [] };
+const bnnSchluessel = (u) => u.id + "|" + u.letzte.zeit;
+function buNeuPruefen() {
+  if (aktuelleAnsicht !== "buero" || BNN.lauf || !ICH) return;
+  BNN.zuletzt = Date.now();
+  BNN.lauf = api("unterhaltungen").then(({ unterhaltungen }) => {
+    if (aktuelleAnsicht !== "buero") return;
+    buNeuZeigen((unterhaltungen || []).filter((u) => u.ungelesen && u.letzte && u.letzte.von !== "Du" && !stummAn(u.id)
+      && Date.parse(u.letzte.zeit) >= BNN.seit && !BNN.weg.has(bnnSchluessel(u))).sort((a, b) => Date.parse(b.letzte.zeit) - Date.parse(a.letzte.zeit)));
+  }).catch(() => {}).finally(() => { BNN.lauf = null; });
+}
+function buNeuZeigen(neu) {
+  const el = $("buNeuNachr"); if (!el) return;
+  BNN.liste = neu;
+  if (!neu.length) { el.classList.add("versteckt"); el.innerHTML = ""; return; }
+  const u = neu[0], gruppe = u.gruppe || u.anzahl > 2;
+  const von = gruppe ? `${u.letzte.von} in „${u.gruppe?.name || u.betreff || "Gruppe"}“` : u.letzte.von;
+  el.innerHTML = `<button type="button" class="bnn-auf${u.wichtigNeu ? " wichtig" : ""}" onclick="buNeuOeffnen()"><span class="bnn-sym">${u.wichtigNeu ? "❗" : "💬"}</span>`
+    + `<span><b>Neue Nachricht von ${esc(von)}</b><small>${esc(u.letzte.text || "📎")}</small>${neu.length > 1 ? `<small>＋ ${neu.length - 1} weitere neue Unterhaltung${neu.length > 2 ? "en" : ""}</small>` : ""}</span>`
+    + `<span class="bnn-los">Öffnen ›</span></button><button type="button" class="bnn-weg" aria-label="Hinweis schließen" onclick="buNeuWeg()">✕</button>`;
+  el.classList.remove("versteckt");
+}
+function buNeuOeffnen() {
+  const u = BNN.liste[0]; if (!u) return;
+  BNN.weg.add(bnnSchluessel(u)); buNeuZeigen(BNN.liste.slice(1));
+  chatOeffnen(u.id); // springt zur ersten ungelesenen Nachricht
+}
+function buNeuWeg() { BNN.liste.forEach((u) => BNN.weg.add(bnnSchluessel(u))); buNeuZeigen([]); }
 async function buLaden() {
   try { [BU.start] = await Promise.all([api("buero_start"), buNachherListe(), buFesteListe(BU_F?.tage || 60), flLaden(), ICH?.vorstand || ICH?.admin ? aeEingangLaden().catch(() => null) : null]); } catch (e) { $("buInhalt").innerHTML = `<div class="karte hinweis">${esc(e.message)}</div>`; return; }
   buZeigen();
