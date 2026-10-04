@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.23.16 – 2026-10-04 – Ansichtsname größer, mit < > und > < (Wunsch Hansi)
+- KC-CLUB-ANSICHT-NAME: Der Name hinter „Schnellzugriff“ ist etwas größer (.66 → .82rem). Statt Klammern zeigen Pfeile die Richtung:
+  erweitert „< Erweiterte Ansicht >“ (nach außen), einfach „> Einfache Ansicht <“ (nach innen). Antippen schaltet weiter um.
+  Hinweistext in der Hilfe angepasst, Test 88 angepasst.
+
 ## 2.23.15 – 2026-10-04 – „Kurz erklärt“ in allen Arbeitsfenstern (Wunsch Hansi)
 - KC-CLUB-EINWEISUNG: Prüfung „Haben alle Unterpunkte eine Karte?“ – 23 von 31 Ansichten (8 Unterseiten bewusst ohne) und 5 von 62 Fenstern
   hatten eine. Jetzt haben 26 weitere Arbeitsfenster eine eigene Karte oben (mit Vorlesen, „Verstanden“, „Keine Einweisungen mehr“):

@@ -1,10 +1,16 @@
 {
-  "version": "2.23.15",
+  "version": "2.23.16",
   "datum": "2026-10-04",
   "neu": [
-    "🎓 „Kurz erklärt“ jetzt auch in 26 weiteren Fenstern – z. B. Abstimmung, Fotoalbum, Mitfahrt, Herausfordern, Teilen und im Büro"
+    "🔤 „Einfache Ansicht“ / „Erweiterte Ansicht“ oben bei Schnellzugriff etwas größer – erweitert mit < >, einfach mit > <"
   ],
   "verlauf": [
+    {
+      "version": "2.23.16",
+      "neu": [
+        "🔤 „Einfache Ansicht“ / „Erweiterte Ansicht“ oben bei Schnellzugriff etwas größer – erweitert mit < >, einfach mit > <"
+      ]
+    },
     {
       "version": "2.23.15",
       "neu": [

@@ -1214,7 +1214,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 88. 0.66.0: aktive Ansicht hinter „Schnellzugriff“ (KC-CLUB-ANSICHT-NAME)
 {
   // 0.69.0: Ansichtsname ist ein Knopf und schaltet auf die andere Ansicht
-  assert.ok(/<h3>Schnellzugriff <button type="button" class="ansichtname ein" onclick="ansichtWechseln\(\)"[^>]*>\(Einfache Ansicht\)<\/button><button type="button" class="ansichtname erw" onclick="ansichtWechseln\(\)"[^>]*>\(Erweiterte Ansicht\)<\/button><\/h3>/.test(html), "Ansichtsname fehlt / schaltet nicht um");
+  assert.ok(/<h3>Schnellzugriff <button type="button" class="ansichtname ein" onclick="ansichtWechseln\(\)"[^>]*>&gt; Einfache Ansicht &lt;<\/button><button type="button" class="ansichtname erw" onclick="ansichtWechseln\(\)"[^>]*>&lt; Erweiterte Ansicht &gt;<\/button><\/h3>/.test(html), "Ansichtsname fehlt / schaltet nicht um");
   assert.ok(/body\.einfach \.ansichtname\.erw, body:not\(\.einfach\) \.ansichtname\.ein \{ display: none; \}/.test(html), "zeigt nicht nur die aktive Ansicht");
 }
 
