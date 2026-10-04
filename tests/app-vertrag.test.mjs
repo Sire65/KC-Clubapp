@@ -2872,8 +2872,8 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 {
   const f = server.slice(server.indexOf("const FEEDBACK_FRAGEN"), server.indexOf("const FEEDBACK_UMGESETZT"));
   const u = server.slice(server.indexOf("const FEEDBACK_UMGESETZT"), server.indexOf("const FB_TEXT_MAX"));
-  assert.ok(/const FEEDBACK_BOGEN = "2026-2"/.test(server), "neue Bogen-Kennung");
-  assert.equal((f.match(/schritt: 1,/g) || []).length, 6, "Schritt 1 hat genau 6 Fragen");
+  assert.ok(/const FEEDBACK_BOGEN = "2026-3"/.test(server), "neue Bogen-Kennung"); // 2.23.13
+  assert.equal((f.match(/schritt: 1,/g) || []).length, 7, "Schritt 1 hat genau 7 Fragen (2.23.13: + Hilfe)");
   for (const x of ["Sprache", "Geburtstag", "Schulung", "Fahrgemeinschaft", "Dokumente (Satzung"]) assert.ok(!f.includes(x), `„${x}“ ist umgesetzt und steht noch als Wunsch`);
   for (const x of ["Sprachansagen", "Tippfehler", "Fotoalben", "Clubchronik", "Club-Börse", "Helfen & Leihen"]) assert.ok(u.includes(x), `„${x}“ fehlt unter „Schon umgesetzt“`);
   assert.ok(/<details class="hinweis"[^>]*><summary[^>]*><b>✅ Schon umgesetzt \(\$\{FB\.umgesetzt\.length\}\)/.test(html), "„Schon umgesetzt“ zum Aufklappen");
@@ -3751,6 +3751,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 361. 2.23.11: gelber Inkognito-Rahmen blinkt im Takt der Brille
 {
   assert.ok(/body\.inkognito #v-start \.hero \{ box-shadow: 0 0 0 4px #f1c40f, 0 12px 30px var\(--heroschatten\); animation: inkoRandBlink 1\.2s ease-in-out infinite; \}/.test(html) && /@keyframes inkoRandBlink \{[^\n]*50% \{ box-shadow: 0 0 0 4px #d32f2f/.test(html), "Rahmen blinkt gelb/rot");
+}
+// 362. 2.23.13: Feedback-Bogen 2026-3 – neue Bereiche, Hilfe-Frage, „Schon umgesetzt“ ergänzt
+{
+  const f = server.slice(server.indexOf("const FEEDBACK_FRAGEN"), server.indexOf("const FEEDBACK_UMGESETZT"));
+  const u = server.slice(server.indexOf("const FEEDBACK_UMGESETZT"), server.indexOf("const FB_TEXT_MAX"));
+  for (const x of ["🎲 Spiele", "❓ Hilfe-Zentrum", "🏙️ Termine der Stadt", "💶 Erstattung", "✏️ Meine Daten geändert", "🎤 Diktieren / Mikrofon", "🔔 Weniger Benachrichtigungen"]) assert.ok(f.includes(x), `Fragebogen: ${x}`);
+  assert.ok(/\{ id: "hilfe", schritt: 1, art: "eins", t: "Hilft dir die Hilfe/.test(f) && !f.includes("Auch ohne Internet lesen"), "Hilfe-Frage, Umgesetztes nicht mehr als Wunsch");
+  for (const x of ["Spiele (Tic-Tac-Toe", "Hilfe-Zentrum", "Einfache Ansicht", "Termine der Stadt", "Änderungsmeldung", "Erstattung", "ohne Internet"]) assert.ok(u.includes(x), `Schon umgesetzt: ${x}`);
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

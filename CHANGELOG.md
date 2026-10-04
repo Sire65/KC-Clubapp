@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.23.13 – 2026-10-04 – Feedback-Bogen an den heutigen Stand angepasst (Wunsch Hansi)
+- KC-CLUB-FEEDBACK: neuer Bogen „2026-3“ (2026-2 hatte noch keine Antworten). „Was nutzt du?“ + Spiele, Hilfe-Zentrum, Termine der Stadt,
+  Erstattung, Meine Daten geändert; „Probleme“ + Diktieren/Mikrofon; neue Frage „Hilft dir die Hilfe?“ (bei Teils/Nein: was fehlt?).
+  Wünsche: „Auch ohne Internet lesen“ raus (gibt es), neu „Weniger Benachrichtigungen“, „Weitere Spiele“.
+  „✅ Schon umgesetzt“ um acht Punkte ergänzt. Test 252 angepasst, Test 362.
+
 ## 2.23.12 – 2026-10-04 – Tipp des Tages auch aus dem Hilfe-Zentrum (Wunsch Hansi)
 - KC-CLUB-TIPP / KC-CLUB-HILFEZENTRUM: der Tipp des Tages nimmt jetzt außer den 26 TIPPS auch die Hilfen aus HILFE (ohne Kapitel
   „Erste Schritte“, nur was für mich gilt, z. B. Büro nur Clubleitung) – Vorrat für Monate. Reihenfolge: Hilfen, die nach dem ersten
