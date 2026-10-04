@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.22.18 – 2026-10-04 – Diktieren: bei „gesperrt“ trotzdem versuchen (Fund Hansi)
+- KC-CLUB-MIKRO-FREIGABE: Android meldete „Mikrofon gesperrt“ → die App zeigte nur die Anleitung („Verstanden“) und diktierte nicht – obwohl die
+  Google-Spracherkennung auf manchen Handys trotzdem hört. Jetzt: bei „gesperrt“ oder abgelehnter Abfrage trotzdem diktieren; nur wenn die
+  Spracherkennung selbst „nicht erlaubt“ meldet, kommt die Anleitung (wie bisher). Erklärfenster vor der ersten Abfrage bleibt. Test 339 angepasst.
+
 ## 2.22.17 – 2026-10-04 – Rochade einfacher, „ist jetzt online“-Push für alle wählbar (Wunsch Hansi)
 - Schach: Rochade geht wie bisher (König → Feld zwei weiter) und jetzt auch über den Turm: König antippen, dann den eigenen Turm – oder
   erst den Turm, dann den König (schRochade / schZieleMitRochade, gegen Computer und Mitglieder; Server prüft wie immer mit chess.js).

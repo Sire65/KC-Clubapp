@@ -2638,7 +2638,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.22.17"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.22.18"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -4881,12 +4881,14 @@ async function mikroFreigabe() {
   let zustand = null;
   try { zustand = (await navigator.permissions?.query({ name: "microphone" }))?.state || null; } catch { /* z. B. iPhone: nicht abfragbar */ }
   if (zustand === "granted") return true;
-  if (zustand === "denied") { mikroHilfe(); return false; }
+  // 2.22.18 (Fund Hansi): „gesperrt“ melden manche Android-Handys auch, wenn die Google-Spracherkennung trotzdem hört – dann einfach
+  // versuchen; klappt es nicht, zeigt die Spracherkennung selbst die Anleitung (onerror → mikroHilfe)
+  if (zustand === "denied") return true;
   if (!zustand && lsLesen(MIKRO_OK) === "1") return true; // schon einmal erlaubt (Handy merkt es sich)
   if (!(await frage("🎙️ Zum Diktieren braucht die App dein Mikrofon.\n\nGleich fragt dein Handy, ob die Köcheclub-App das Mikrofon benutzen darf – bitte „Zulassen“ bzw. „Erlauben“ tippen.\n\nDas Handy hört nur zu, solange das Diktat-Fenster offen ist.", { ja: "🎙️ Weiter" }))) return false;
   if (!navigator.mediaDevices?.getUserMedia) return true; // dann fragt die Spracherkennung selbst
   try { const s = await navigator.mediaDevices.getUserMedia({ audio: true }); s.getTracks().forEach((x) => x.stop()); lsSetzen(MIKRO_OK, "1"); return true; }
-  catch { mikroHilfe(); return false; }
+  catch { return true; } // 2.22.18: trotzdem versuchen – die Spracherkennung meldet sich selbst, wenn es wirklich nicht geht
 }
 function mikroHilfe() {
   blattAuf("mikroHilfe", `<h3 style="margin:0">🎙️ Mikrofon ist gesperrt</h3>
