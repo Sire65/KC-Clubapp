@@ -1,5 +1,17 @@
 # Änderungen
 
+## 2.23.2 – 2026-10-04 – Hilfe-Zentrum: Suchfeld, Kapitel, Zurück-Leiste, Ausdruck/PDF (Wunsch Hansi)
+- KC-CLUB-HILFEZENTRUM: Suchfeld deutlicher – eigene Karte „🔍 Wonach suchst du?“ mit rotem Rand, größerer Schrift und Fokus-Rahmen.
+- Kapitel: Themen heißen jetzt „Kapitel 1, 2, 3 …“ (Inhalt mit runder Nummer, Register mit Nummer, Kapitelkopf mit „KAPITEL n“),
+  jede Hilfe hat ihre Nummer (1.1, 1.2 …), auch in den Suchtreffern („Kapitel 3 · 💬 …“). Mehr Abstand zwischen den Abschnitten.
+  Unten im Kapitel „Kapitel n+1 ›“ zum Weiterblättern. Nummern ergeben sich von selbst aus den Themen mit Inhalt.
+- „👉 Zeig mir wo“: oben rechts erscheint eine Leiste „↩️ Zurück zur Hilfe“ (schließt offene Fenster, zurück an dieselbe Hilfe,
+  kurz hervorgehoben; nach einer Suche zurück zur Trefferliste) und „✕ Abbrechen“ (Leiste weg, man bleibt und stellt gleich ein).
+- 🖨️ oben rechts: Drucken oder „Als PDF speichern“ über den vorhandenen Druckweg (Vorschau, iPhone „Druckseite teilen“). Auswahl
+  „📖 Ganze Hilfe“ (Inhaltsverzeichnis mit Kapiteln und Anzahl, jedes Kapitel auf neuer Seite) oder ein einzelnes Kapitel
+  (vorausgewählt, wenn man gerade in einem Kapitel ist). Druckart DRUCKARTEN.hilfe.
+- Server nur Versionsnummer. Test 351.
+
 ## 2.23.1 – 2026-10-04 – Hilfe-Zentrum: 53 weitere Hilfen aus der ganzen App (Wunsch Hansi)
 - KC-CLUB-HILFEZENTRUM: ganze App nach Funktionen durchsucht (Funktions-IDs + CHANGELOG, Bezeichnungen gegen den aktuellen Code geprüft) und
   53 neue Einträge in der Registry HILFE ergänzt (jetzt 86 eigene, zusammen mit Tipps und Einweisungen rund 140 Hilfen):

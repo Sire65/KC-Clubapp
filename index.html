@@ -1151,7 +1151,23 @@
   .hz-reg button.an { background: var(--karte); box-shadow: var(--schatten); color: var(--textRot, var(--rot)); }
   .hz-reg .anz { display: inline-block; min-width: 1.4em; margin-left: 5px; padding: 0 5px; border-radius: 9px; background: var(--karte); font-size: .8rem; }
   .hz-reg button.an .anz { background: var(--karte2); }
-  .hz-suche { width: 100%; padding: 11px 14px; border-radius: 14px; border: 1px solid var(--linie); background: var(--karte); color: inherit; font-size: 1rem; margin: 0 0 10px; }
+  .hz-suchfeld { display: block; background: var(--karte); border-radius: var(--radius); box-shadow: var(--schatten); padding: 10px 12px 12px; margin: 0 0 12px; border-left: 5px solid var(--rot); }
+  .hz-such-titel { display: block; font-weight: 800; margin: 0 0 6px; color: var(--textRot, var(--rot)); }
+  .hz-suche { width: 100%; padding: 13px 14px; border-radius: 12px; border: 2px solid var(--rot); background: var(--bg); color: inherit; font-size: 1.05rem; }
+  .hz-suche:focus { outline: 3px solid var(--gold); outline-offset: 1px; background: var(--karte); }
+  .hz-suche::placeholder { color: var(--grau); opacity: 1; }
+  /* 2.23.2: Kapitel 1, 2 … mit Nummern 1.1, 1.2 …, mehr Abstand zwischen den Abschnitten */
+  .hz-kapitel { margin-top: 0; border-top: 5px solid var(--rot); }
+  .hz-kapitel .hz-kap-nr { font-size: .8rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--grau); }
+  .hz-kapitel h3 { font-size: 1.3rem; margin: 2px 0 6px; }
+  .karte.hz-eintrag { margin-top: 20px; padding-top: 18px; }
+  .hz-eintrag .hz-nr { flex: none; min-width: 2.6em; padding: 2px 6px; border-radius: 8px; background: var(--karte2); color: var(--textRot, var(--rot)); font-size: .85rem; font-weight: 800; text-align: center; }
+  .hz-inhalt .nr { flex: none; width: 1.8em; height: 1.8em; border-radius: 50%; display: grid; place-items: center; background: var(--rot); color: #fff; font-weight: 800; }
+  /* 2.23.2: nach „Zeig mir wo“ oben rechts „Zurück zur Hilfe“ / „Abbrechen“ */
+  .hz-leiste { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 8px); right: 8px; z-index: 99990; display: flex; gap: 6px; align-items: center; background: var(--karte); border: 2px solid var(--rot); border-radius: 16px; padding: 5px; box-shadow: 0 6px 22px rgba(0,0,0,.3); }
+  .hz-leiste button { border: none; border-radius: 12px; padding: 9px 11px; font-weight: 800; font-size: .92rem; cursor: pointer; }
+  .hz-leiste .hz-l-zurueck { background: var(--rot); color: #fff; }
+  .hz-leiste .hz-l-ab { background: var(--karte2); color: var(--text); }
   .hz-inhalt { list-style: none; padding: 0; margin: 0; }
   .hz-inhalt li + li { border-top: 1px solid var(--karte2); }
   .hz-inhalt button { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 4px; border: none; background: none; color: inherit; text-align: left; cursor: pointer; font-size: 1rem; }
@@ -1215,6 +1231,9 @@
     #druck .unterschrift div { flex: 1; border-top: .8pt solid #000; padding-top: 3pt; font-size: 8.5pt; }
     #druck .dfuss { margin-top: 12pt; border-top: .6pt solid #999; padding-top: 4pt; font-size: 8pt; color: #555; }
     /* KC-CLUB-KURZANLEITUNG (0.62.0): große Schritte mit Bildern */
+    #druck .hz-d-inhalt { width: 100%; border-collapse: collapse; margin: 0 0 6pt; } #druck .hz-d-inhalt td { padding: 3pt 4pt; border-bottom: .5pt solid #d8c7ad; } #druck .hz-d-inhalt td:first-child { width: 2.2em; font-weight: 700; color: #741521; } #druck .hz-d-inhalt td:last-child { text-align: right; white-space: nowrap; }
+    #druck .hz-d-kap { break-before: page; } #druck .hz-d-kap.erstes { break-before: auto; } #druck .hz-d-kap h2 { color: #741521; font-size: 15pt; margin: 0 0 2pt; border-bottom: 1.5pt solid #741521; padding-bottom: 2pt; }
+    #druck .hz-d-kap > p { margin: 0 0 8pt; color: #555; } #druck .hz-d-e { break-inside: avoid-page; margin: 0 0 9pt; } #druck .hz-d-e h3 { font-size: 11.5pt; margin: 0 0 2pt; } #druck .hz-d-e h3 span { color: #741521; margin-right: 4pt; } #druck .hz-d-e p { margin: 0; } #druck .hz-d-e .hz-neu { color: #b07d2e; font-size: 8pt; }
     #druck .ue-einl { margin: 0 0 8pt; } #druck .ue-kasten { border: 1pt solid #b98f52; border-radius: 6pt; padding: 6pt 10pt; margin: 0 0 8pt; break-inside: avoid-page; }
     #druck .ue-kasten h3 { margin: 0 0 4pt; color: #741521; font-size: 12pt; } #druck .ue-version { font-weight: 700; margin: 5pt 0 2pt; color: #2f6b3a; }
     #druck .ue-liste { display: grid; grid-template-columns: 1fr 1fr; gap: 3pt 12pt; } #druck .ue-bereich { display: flex; gap: 6pt; break-inside: avoid; } #druck .ue-bereich small { display: block; color: #555; }
@@ -2128,8 +2147,10 @@
 
   <!-- KC-CLUB-HILFEZENTRUM (2.23.0, Wunsch Hansi): alle Tipps und Hinweise nach Themen – Deckblatt mit Inhalt, Register je Thema -->
   <section id="v-hilfezentrum" class="versteckt">
-    <div class="kopf2"><button class="zurueck" onclick="hzZurueck()" aria-label="Zurück">‹</button><h2>❓ Hilfe &amp; Tipps</h2></div>
-    <input type="search" id="hzSuche" class="hz-suche" placeholder="🔍 Hilfe durchsuchen – z. B. „Farbe“ oder „Ton“" oninput="hzSuchen(this.value)" autocomplete="off">
+    <div class="kopf2"><button class="zurueck" onclick="hzZurueck()" aria-label="Zurück">‹</button><h2>❓ Hilfe &amp; Tipps</h2><button type="button" class="druckknopf" title="Hilfe drucken / als PDF speichern" aria-label="Hilfe drucken oder als PDF speichern" onclick="druckStarten('hilfe')"></button></div>
+    <!-- 2.23.2 (Wunsch Hansi): Suchfeld deutlicher – eigene Karte mit Überschrift, kräftigem Rand und Lupe -->
+    <label class="hz-suchfeld" for="hzSuche"><span class="hz-such-titel">🔍 Wonach suchst du?</span>
+      <input type="search" id="hzSuche" class="hz-suche" placeholder="Hier tippen – z. B. „Farbe“ oder „Ton“" oninput="hzSuchen(this.value)" autocomplete="off" enterkeyhint="search"></label>
     <nav class="hz-reg" id="hzRegister" aria-label="Hilfe-Themen"></nav>
     <div id="hzInhalt"></div>
   </section>
@@ -2676,7 +2697,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.2"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3652,7 +3673,7 @@ const HILFE = [
   // nur für die Clubleitung
   { id: "buero_sprache", thema: "club", sym: "🎙️", t: "Im Büro einfach sagen, was du brauchst", x: "Im Büro gibt es das Mikrofon <b>„🎙️ Sag mir, was du brauchst“</b> – zum Beispiel „Öffne Ordner Protokolle“. Das spart Tipperei, wenn es schnell gehen soll.", nur: () => !!ICH?.buero, zeig: () => buStart(), seit: "2.23.1" },
 ];
-const HZ = { thema: null, q: "", vorher: null, gruss: 0 };
+const HZ = { thema: null, q: "", vorher: null, gruss: 0, unterwegs: null };
 // 2.23.1 (Wunsch Hansi: „immer etwas anders formuliert, freundlich, nicht aufdringlich“): wechselnde Einleitungen – neu gewählt
 // beim Öffnen und bei jedem Themenwechsel (nicht beim Tippen in der Suche, damit nichts flackert)
 const HZ_GRUSS = [
@@ -3683,42 +3704,82 @@ const hzIstNeu = (e, seit) => !!(e.seit && seit && versionNeuer(e.seit, seit) &&
 const hzAnzahl = () => { try { return hzEintraege().length; } catch { return 0; } };
 const hzNeuZahl = () => { const g = hzGesehen(); if (!g) return 0; try { return hzEintraege().filter((e) => hzIstNeu(e, g)).length; } catch { return 0; } };
 function hzStart(thema) { HZ.thema = thema && HILFE_THEMEN.some((x) => x.id === thema) ? thema : null; HZ.q = ""; if ($("hzSuche")) $("hzSuche").value = ""; zeige("hilfezentrum"); }
-function hzOeffnen() { hzNeuerGruss(); HZ.vorher = hzGesehen(); lsSetzen(HZ_GESEHEN, APP_VERSION); hzZeigen(); } // aus zeige(): „neu“ gilt bis zum nächsten Besuch
+function hzOeffnen() { $("hzLeiste")?.remove(); HZ.unterwegs = null; hzNeuerGruss(); HZ.vorher = hzGesehen(); lsSetzen(HZ_GESEHEN, APP_VERSION); hzZeigen(); } // aus zeige(): „neu“ gilt bis zum nächsten Besuch
 function hzThema(t) { if (t !== HZ.thema) hzNeuerGruss(); HZ.thema = t; HZ.q = ""; $("hzSuche").value = ""; hzZeigen(); window.scrollTo(0, 0); }
 function hzSuchen(q) { HZ.q = q; hzZeigen(); }
 function hzZurueck() { if (HZ.q) { HZ.q = ""; $("hzSuche").value = ""; hzZeigen(); } else if (HZ.thema) hzThema(null); else zurueck("start"); }
-function hzLos(id) { const e = hzEintraege().find((x) => x.id === id); if (e?.los) e.los(); }
-function hzKarte(e, themaZeigen) {
+// 2.23.2 (Wunsch Hansi): Kapitel 1, 2 … (nur Themen mit Inhalt, in der Reihenfolge von HILFE_THEMEN), Einträge 1.1, 1.2 …
+function hzGliederung(alle) {
+  const themen = HILFE_THEMEN.filter((t) => alle.some((e) => e.thema === t.id)).map((t, i) => ({ ...t, nr: i + 1, es: alle.filter((e) => e.thema === t.id) }));
+  const nr = {}; themen.forEach((t) => t.es.forEach((e, i) => { nr[e.id] = `${t.nr}.${i + 1}`; }));
+  return { themen, nr };
+}
+// 2.23.2 (Wunsch Hansi): „Zeig mir wo“ → oben rechts „↩️ Zurück zur Hilfe“ (genau an diese Stelle) oder „✕ Abbrechen“ (Leiste weg, hier bleiben und gleich einstellen)
+function hzLos(id) {
+  const e = hzEintraege().find((x) => x.id === id); if (!e?.los) return;
+  HZ.unterwegs = { id, thema: HZ.q ? null : HZ.thema, q: HZ.q, y: window.scrollY };
+  e.los(); hzLeiste();
+}
+function hzLeiste() {
+  $("hzLeiste")?.remove();
+  document.body.insertAdjacentHTML("beforeend", `<div class="hz-leiste" id="hzLeiste" role="toolbar" aria-label="Hilfe">
+    <button class="hz-l-zurueck" onclick="hzZurueckZurHilfe()" title="Zurück an dieselbe Stelle in der Hilfe">↩️ Zurück zur Hilfe</button>
+    <button class="hz-l-ab" onclick="hzLeisteZu()" title="Leiste schließen und hier bleiben – z. B. um gleich die Einstellung vorzunehmen">✕ Abbrechen</button></div>`);
+}
+function hzLeisteZu() { $("hzLeiste")?.remove(); HZ.unterwegs = null; }
+function hzZurueckZurHilfe() {
+  const u = HZ.unterwegs; hzLeisteZu(); if (!u) return hzStart();
+  document.querySelectorAll(".blatt:not(.versteckt)").forEach(fensterZu); // z. B. „Mein Status“ war offen
+  HZ.thema = u.thema; HZ.q = u.q || ""; if ($("hzSuche")) $("hzSuche").value = HZ.q;
+  zeige("hilfezentrum");
+  setTimeout(() => { const k = document.querySelector(`#hzInhalt [data-hz="${u.id}"]`); if (k) { k.scrollIntoView({ block: "center" }); k.classList.add("hervor"); setTimeout(() => k.classList.remove("hervor"), 2200); } else window.scrollTo(0, u.y || 0); }, 120);
+}
+function hzKarte(e, nr, themaZeigen) {
   const th = HILFE_THEMEN.find((x) => x.id === e.thema);
-  return `<div class="karte hz-eintrag vorlese-karte">${themaZeigen && th ? `<div class="hz-wo">${th.sym} ${esc(th.t)}</div>` : ""}<h3><span>${e.sym}</span><span>${esc(e.t)}${hzIstNeu(e, HZ.vorher) ? ' <span class="hz-neu">neu</span>' : ""}</span></h3><p>${e.x}</p>
+  return `<div class="karte hz-eintrag vorlese-karte" data-hz="${e.id}">${themaZeigen && th ? `<div class="hz-wo">Kapitel ${esc(nr.split(".")[0])} · ${th.sym} ${esc(th.t)}</div>` : ""}<h3><span class="hz-nr">${esc(nr)}</span><span>${e.sym} ${esc(e.t)}${hzIstNeu(e, HZ.vorher) ? ' <span class="hz-neu">neu</span>' : ""}</span></h3><p>${e.x}</p>
     <div class="knoepfe">${e.los ? `<button class="knopf haupt klein" onclick="hzLos('${e.id}')">👉 Zeig mir wo</button>` : ""}${VORLESE_KNOPF}</div></div>`;
 }
 function hzZeigen() {
   if (!$("hzInhalt")) return;
-  const alle = hzEintraege(), zahl = (id) => alle.filter((e) => e.thema === id).length;
-  const themen = HILFE_THEMEN.filter((t) => zahl(t.id));
-  if (HZ.thema && !zahl(HZ.thema)) HZ.thema = null;
+  const alle = hzEintraege(), { themen, nr } = hzGliederung(alle);
+  if (HZ.thema && !themen.some((t) => t.id === HZ.thema)) HZ.thema = null;
   const anz = (n) => `<span class="anz">${n}</span>`;
   $("hzRegister").innerHTML = `<button class="${!HZ.thema && !HZ.q ? "an" : ""}" onclick="hzThema(null)">📖 Inhalt${anz(alle.length)}</button>`
-    + themen.map((t) => `<button class="${HZ.thema === t.id && !HZ.q ? "an" : ""}" onclick="hzThema('${t.id}')">${t.sym} ${esc(t.t)}${anz(zahl(t.id))}</button>`).join("");
+    + themen.map((t) => `<button class="${HZ.thema === t.id && !HZ.q ? "an" : ""}" onclick="hzThema('${t.id}')">${t.nr} ${t.sym} ${esc(t.t)}${anz(t.es.length)}</button>`).join("");
   let html;
   if (HZ.q && suNorm(HZ.q).trim().length >= 2) {
     const w = suNorm(HZ.q).split(/\s+/).filter(Boolean), treffer = alle.filter((e) => { const th = HILFE_THEMEN.find((x) => x.id === e.thema); const s = suNorm(`${e.t} ${e.x.replace(/<[^>]+>/g, " ")} ${th?.t || ""}`); return w.every((x) => s.includes(x)); })
       .map((e, i) => ({ e, i, titel: w.every((x) => suNorm(e.t).includes(x)) })).sort((a, b) => b.titel - a.titel || a.i - b.i).map((x) => x.e); // Treffer im Titel zuerst
-    html = `<p class="hinweis" style="margin:0 2px 6px">${treffer.length ? `${treffer.length} Treffer für „${esc(HZ.q)}“` : `Nichts gefunden für „${esc(HZ.q)}“ – versuch ein anderes Wort oder schau ins <a href="#" onclick="hzThema(null);return false">📖 Inhalt</a>.`}</p>` + treffer.map((e) => hzKarte(e, true)).join("");
+    html = `<p class="hinweis" style="margin:0 2px 6px">${treffer.length ? `${treffer.length} Treffer für „${esc(HZ.q)}“` : `Nichts gefunden für „${esc(HZ.q)}“ – versuch ein anderes Wort oder schau ins <a href="#" onclick="hzThema(null);return false">📖 Inhalt</a>.`}</p>` + treffer.map((e) => hzKarte(e, nr[e.id], true)).join("");
   } else if (HZ.thema) {
-    const th = HILFE_THEMEN.find((x) => x.id === HZ.thema), es = alle.filter((e) => e.thema === HZ.thema);
-    html = `<div class="karte" style="margin-top:0"><h3>${th.sym} ${esc(th.t)}</h3><p style="margin:0 0 4px">${esc(HZ_THEMA_EINL[HZ.gruss % HZ_THEMA_EINL.length](th.t))}</p><p class="hinweis" style="margin:0">${es.length} ${es.length === 1 ? "Hilfe" : "Hilfen"} · ${esc(th.u)}</p></div>` + es.map((e) => hzKarte(e)).join("")
-      + `<div class="knoepfe" style="margin-top:12px"><button class="knopf klein" onclick="hzThema(null)">📖 Zurück zum Inhalt</button></div>`;
+    const th = themen.find((x) => x.id === HZ.thema), weiter = themen[themen.indexOf(th) + 1];
+    html = `<div class="karte hz-kapitel"><div class="hz-kap-nr">Kapitel ${th.nr}</div><h3>${th.sym} ${esc(th.t)}</h3><p style="margin:0 0 4px">${esc(HZ_THEMA_EINL[HZ.gruss % HZ_THEMA_EINL.length](th.t))}</p><p class="hinweis" style="margin:0">${th.es.length} ${th.es.length === 1 ? "Hilfe" : "Hilfen"} · ${esc(th.u)}</p></div>` + th.es.map((e) => hzKarte(e, nr[e.id])).join("")
+      + `<div class="knoepfe" style="margin-top:18px"><button class="knopf klein" onclick="hzThema(null)">📖 Zurück zum Inhalt</button>${weiter ? `<button class="knopf klein" onclick="hzThema('${weiter.id}')">Kapitel ${weiter.nr}: ${weiter.sym} ${esc(weiter.t)} ›</button>` : ""}</div>`;
   } else {
     const neu = alle.filter((e) => hzIstNeu(e, HZ.vorher));
-    html = `<div class="karte" style="margin-top:0"><h3>📖 Inhalt</h3><p style="margin:0 0 4px">${esc(HZ_GRUSS[HZ.gruss % HZ_GRUSS.length](ICH?.vorname || ""))}</p><p class="hinweis" style="margin:0 0 6px">${alle.length} Hilfen in ${themen.length} Themen · Stand Version ${esc(APP_VERSION)}. Tippe ein Thema an – oder such oben nach einem Wort.</p>
-      <ul class="hz-inhalt">${themen.map((t) => `<li><button onclick="hzThema('${t.id}')"><span class="sym">${t.sym}</span><span><b>${esc(t.t)}</b><small>${esc(t.u)}</small></span><span class="anz">${zahl(t.id)} ${zahl(t.id) === 1 ? "Hilfe" : "Hilfen"}</span></button></li>`).join("")}</ul></div>`
-      + (neu.length ? `<div class="karte"><h3>🆕 Neu seit deinem letzten Besuch (${neu.length})</h3>${neu.map((e) => `<p style="margin:0 0 4px">${e.sym} <a href="#" onclick="hzThema('${e.thema}');return false">${esc(e.t)}</a></p>`).join("")}</div>` : "")
-      + `<p class="hinweis" style="margin:10px 2px 0">Die Hilfe wächst mit der App: neue Funktionen, Tipps und Erklärungen erscheinen hier von selbst. Etwas fehlt? Sag es über <a href="#" onclick="zeige('feedback');return false">💭 Feedback</a>.</p>`;
+    html = `<div class="karte" style="margin-top:0"><h3>📖 Inhalt</h3><p style="margin:0 0 4px">${esc(HZ_GRUSS[HZ.gruss % HZ_GRUSS.length](ICH?.vorname || ""))}</p><p class="hinweis" style="margin:0 0 6px">${alle.length} Hilfen in ${themen.length} Kapiteln · Stand Version ${esc(APP_VERSION)}. Tippe ein Kapitel an – oder such oben nach einem Wort.</p>
+      <ul class="hz-inhalt">${themen.map((t) => `<li><button onclick="hzThema('${t.id}')"><span class="nr">${t.nr}</span><span class="sym">${t.sym}</span><span><b>${esc(t.t)}</b><small>${esc(t.u)}</small></span><span class="anz">${t.es.length} ${t.es.length === 1 ? "Hilfe" : "Hilfen"}</span></button></li>`).join("")}</ul></div>`
+      + (neu.length ? `<div class="karte"><h3>🆕 Neu seit deinem letzten Besuch (${neu.length})</h3>${neu.map((e) => `<p style="margin:0 0 4px">${esc(nr[e.id])} ${e.sym} <a href="#" onclick="hzThema('${e.thema}');return false">${esc(e.t)}</a></p>`).join("")}</div>` : "")
+      + `<p class="hinweis" style="margin:10px 2px 0">Die Hilfe wächst mit der App: neue Funktionen, Tipps und Erklärungen erscheinen hier von selbst. Zum Ausdrucken oder als PDF: 🖨️ oben rechts. Etwas fehlt? Sag es über <a href="#" onclick="zeige('feedback');return false">💭 Feedback</a>.</p>`;
   }
   $("hzInhalt").innerHTML = html;
   document.querySelector("#hzRegister button.an")?.scrollIntoView({ block: "nearest", inline: "center" });
+}
+// 2.23.2 (Wunsch Hansi): Ausdruck / PDF – ganze Hilfe (Deckblatt mit Inhaltsverzeichnis, jedes Kapitel auf neuer Seite) oder ein Kapitel
+function hzDruckOptionen() {
+  const { themen } = hzGliederung(hzEintraege()), wahl = HZ.thema && themen.some((t) => t.id === HZ.thema) ? HZ.thema : "alle";
+  const r = (v, t) => `<label><input type="radio" name="dArt" value="${v}" ${v === wahl ? "checked" : ""}> ${t}</label>`;
+  return `<b>Was drucken?</b><div class="dwahl" style="display:grid;gap:4px">${r("alle", `📖 Ganze Hilfe – alle ${themen.length} Kapitel mit Inhaltsverzeichnis`)}${themen.map((t) => r(t.id, `Kapitel ${t.nr}: ${t.sym} ${esc(t.t)} (${t.es.length})`)).join("")}</div>`;
+}
+function hzDruck(o) {
+  const alle = hzEintraege(), { themen, nr } = hzGliederung(alle), nur = themen.find((t) => t.id === o.art);
+  const strip = (x) => String(x).replace(/<(?!\/?(b|i|br|span)\b)[^>]*>/g, "");
+  const kapitel = (t, i) => `<section class="hz-d-kap${i === 0 ? " erstes" : ""}"><h2>Kapitel ${t.nr} · ${t.sym} ${esc(t.t)}</h2><p>${esc(t.u)} · ${t.es.length} ${t.es.length === 1 ? "Hilfe" : "Hilfen"}</p>
+    ${t.es.map((e) => `<div class="hz-d-e"><h3><span>${esc(nr[e.id])}</span>${e.sym} ${esc(e.t)}</h3><p>${strip(e.x)}</p></div>`).join("")}</section>`;
+  if (nur) return { titel: `Hilfe & Tipps – Kapitel ${nur.nr}`, unter: `${nur.sym} ${nur.t} · Stand Version ${APP_VERSION}`, html: kapitel(nur, 0) };
+  const inhalt = `<div class="ue-kasten"><h3>📖 Inhalt</h3><table class="hz-d-inhalt">${themen.map((t) => `<tr><td>${t.nr}</td><td>${t.sym} ${esc(t.t)}<br><small>${esc(t.u)}</small></td><td>${t.es.length} ${t.es.length === 1 ? "Hilfe" : "Hilfen"}</td></tr>`).join("")}</table>
+    <p style="margin:4pt 0 0">${alle.length} Hilfen in ${themen.length} Kapiteln. In der App findest du alles unter Technik → ❓ Hilfe &amp; Tipps – mit Suche und „Zeig mir wo“.</p></div>`;
+  return { titel: "Hilfe & Tipps", unter: `Alle Tipps und Erklärungen der Club-App · Stand Version ${APP_VERSION}`, html: inhalt + themen.map((t) => kapitel(t, 1)).join("") };
 }
 // ---------- KC-CLUB-ONLINE-ANSAGE (1.56.0, Wunsch Hansi): „Klaus ist jetzt online“ als Sprachansage, Admin zusätzlich ein Ton ----------
 // Nutzt die vorhandene Online-Liste (gleiche Privatsphäre: wer sich verbirgt, wird nicht angesagt; wer selbst unsichtbar ist,
@@ -14777,6 +14838,7 @@ const DRUCKARTEN = {
   erstattung: { titel: "🖨️ Erstattungsantrag drucken", optionen: () => druckErstattungOptionen(), bauen: (o) => druckErstattung(o) },
   anleitung: { bauen: () => druckAnleitung() },
   ueberblick: { bauen: () => druckUeberblick() },
+  hilfe: { titel: "🖨️ Hilfe drucken / als PDF", optionen: () => hzDruckOptionen(), bauen: (o) => hzDruck(o) }, // KC-CLUB-HILFEZENTRUM (2.23.2)
   dokument: { bauen: () => dokDruckSeite() }, // KC-CLUB-DOK-ANZEIGE (1.62.0): PDF-Seiten randlos auf A4
   bestaetigung: { bauen: () => druckBestaetigung() },
   einrichtungskarte: { bauen: (o, param) => druckEinrichtungskarte(param) }, // KC-CLUB-EINRICHTUNGSKARTE (1.88.0) // KC-CLUB-BESTAETIGUNG (1.69.0): Aufstellung der eigenen Eingaben
