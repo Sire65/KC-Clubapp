@@ -1,6 +1,6 @@
 // KC Club-App – Service Worker: Seite zuerst aus dem Netz (offline aus dem Speicher), Push-Benachrichtigungen, Update.
 // VERSION muss bei jeder neuen Version mit version.json und APP_VERSION in index.html übereinstimmen.
-const VERSION = "2.23.21";
+const VERSION = "2.23.22";
 const CACHE = "kc-club-" + VERSION;
 const DATEIEN = ["./", "index.html", "manifest.webmanifest", "kc-kochmuetze-weiss.webp", "icon-192.png", "icon-512.png"];
 
@@ -59,7 +59,8 @@ self.addEventListener("push", (e) => {
     if (self.navigator.setAppBadge) try { await self.navigator.setAppBadge(); } catch {}
     await self.registration.showNotification(titel, {
       body: d.body || d.text || "", icon: "icon-192.png", badge: "icon-192.png", tag: d.data?.url || "kc-club",
-      renotify: true, silent: false, vibrate: [120, 60, 120], data: { url: d.data?.url || "./", requestId: d.data?.requestId || "" },
+      // KC-CLUB-ERINNERUNG-WAHL (2.23.22): Erinnerungen (⏰) bleiben stehen, bis man sie antippt, und vibrieren kräftiger
+      renotify: true, silent: false, requireInteraction: /^⏰/.test(titel), vibrate: /^⏰/.test(titel) ? [400, 200, 400, 200, 400] : [120, 60, 120], data: { url: d.data?.url || "./", requestId: d.data?.requestId || "" },
     });
     await quittung(d.data?.requestId, "displayed");
   })());

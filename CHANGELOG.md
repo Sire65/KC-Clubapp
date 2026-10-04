@@ -1,5 +1,16 @@
 # Änderungen
 
+## 2.23.22 – 2026-10-04 – ⏰ Eigene Erinnerung zu jeder Terminanfrage (Wunsch Hansi)
+- KC-CLUB-ERINNERUNG-WAHL: Nach der Zusage (Ja/Vielleicht) und nach dem Vorschlagen fragt die App „⏰ Erinnerung für dich“ – für alle
+  Terminanfragen, auch Spiel-Termine. Ordentlich gegliedert: Kopf (Anlass, Zeit, Ort) · „1 · Wann?“ (Keine/15/30 Min./1/2 Std. + Schalter
+  „Zusätzlich am Vortag“) · „2 · Wie?“ (Kacheln 🔔 Push, ✉️ E-Mail, 📅 Handy-Kalender) · Knöpfe „Erinnerung speichern“ / „Keine Erinnerung“.
+  Jede Person stellt selbst ein; die App merkt sich die Wahl als Vorschlag. An der Anfrage/Partie: „⏰ Erinnerung: … ✏️ Ändern“.
+- Handy-Kalender: Termin-Datei mit eingebautem Alarm (klingelt auch ohne Internet). Wecker stellen kann eine Web-App nicht (gesperrt).
+- Server: neue Tabelle kc_club_erinnerungen, Aktion erinnerung_setzen; Wartung schickt eigene Erinnerungen per gewähltem Weg (bis 7 Min.
+  früher wegen 15-Min.-Takt, Text nennt die echte Restzeit), Standard-Erinnerung nur noch an Personen ohne eigene Einstellung,
+  „am Vortag“ abwählbar. Erinnerungs-Pushes (⏰) bleiben stehen und vibrieren kräftiger (Service Worker).
+- Spiel-Termin-Formular: Auswahl „Erinnerung kurz vorher“ entfällt (jeder stellt selbst ein, Standard 1 Std.). Test 2.9.10 angepasst, Test 370.
+
 ## 2.23.21 – 2026-10-04 – Gruppen auf der Mitglieder-Seite fallen auf (Wunsch Hansi)
 - KC-CLUB-GRUPPEN-AMEISEN: Beim Öffnen der Mitglieder-Seite läuft 4 Sekunden lang ein oranger Ameisenrahmen um die Gruppen-Knöpfe
   (z. B. „📋 Innovation“), danach ruhig. Bei jedem neuen Öffnen wieder; „weniger Bewegung“ → langsamer. Test 369.

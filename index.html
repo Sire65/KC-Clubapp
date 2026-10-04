@@ -1302,6 +1302,24 @@
   .knopf.haupt.dlg-gefahr { background: #b3261e; border-color: #b3261e; color: #fff; }
   .blatt-innen { background: var(--karte); width: min(560px, 100%); border-radius: 22px 22px 0 0; padding: 18px 16px calc(18px + env(safe-area-inset-bottom)); display: grid; gap: 10px; }
   .blatt-innen h3 { margin: 0 0 4px; }
+  /* KC-CLUB-ERINNERUNG-WAHL (2.23.22): Erinnerungs-Fenster – klar gegliedert: Kopf, 1 · Wann?, 2 · Wie?, Knöpfe */
+  .erin-kopf { display: flex; gap: 12px; align-items: center; }
+  .erin-kopf .erin-sym { font-size: 2.2rem; line-height: 1; }
+  .erin-kopf h3 { margin: 0; } .erin-kopf small { display: block; color: var(--grau); margin-top: 2px; }
+  .erin-teil { border: 1px solid var(--linie); border-radius: 16px; padding: 12px; display: grid; gap: 10px; background: var(--karte2); }
+  .erin-titel { font-weight: 800; font-size: 1rem; }
+  .erin-wahl { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .erin-wahl button { min-height: 48px; border-radius: 12px; border: 2px solid var(--linie); background: var(--karte); color: var(--text); font: inherit; font-weight: 700; font-size: .9rem; cursor: pointer; padding: 4px; }
+  .erin-wahl button.an { border-color: var(--gruen); background: var(--gruenbg); }
+  .erin-wege { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .erin-weg { display: grid; justify-items: center; gap: 2px; text-align: center; min-height: 92px; padding: 8px 4px; border-radius: 14px; border: 2px solid var(--linie);
+    background: var(--karte); color: var(--text); font: inherit; cursor: pointer; position: relative; }
+  .erin-weg .erin-wsym { font-size: 1.7rem; line-height: 1.2; } .erin-weg b { font-size: .95rem; } .erin-weg small { color: var(--grau); font-size: .75rem; line-height: 1.2; }
+  .erin-weg.an { border-color: var(--gruen); background: var(--gruenbg); }
+  .erin-weg.an::after { content: "✓"; position: absolute; top: 4px; right: 8px; font-weight: 900; color: var(--gruen); }
+  .erin-knoepfe { display: grid; grid-template-columns: 2fr 1fr; gap: 8px; } .erin-knoepfe .knopf { text-align: center; }
+  @media (max-width: 380px) { .erin-wahl { grid-template-columns: repeat(3, 1fr); } .erin-knoepfe { grid-template-columns: 1fr; } }
+  .erin-zeile { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 6px; font-size: .9rem; }
   /* KC-CLUB-BLATT-X (2.23.20, Wunsch Hansi): lange Fenster (Schließen-Knopf erst nach Scrollen) bekommen oben rechts ein ✕ –
      als schmale Leiste, die beim Scrollen oben stehen bleibt; der Inhalt rutscht darunter durch, nichts wird verdeckt */
   .blatt-x-leiste { position: sticky; top: -18px; z-index: 3; display: flex; justify-content: flex-end; margin: -18px -16px -4px; padding: 8px 10px 6px;
@@ -2748,7 +2766,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.21"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.22"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -6778,7 +6796,16 @@ function spTerminHtml(g) {
   const wer = esc(g.gegner.vorname);
   const st = t.antwort === "ja" ? `✅ ${t.vonMir ? wer + " hat zugesagt" : "du hast zugesagt"}` : t.antwort === "nein" ? `❌ ${t.vonMir ? wer + " kann nicht" : "du hast abgesagt"}` : t.vonMir ? `⏳ wartet auf ${wer}` : "Passt dir der Termin?";
   const knoepfe = !t.vonMir && !t.antwort ? `<div class="knoepfe" style="margin:6px 0 0"><button class="knopf haupt klein" onclick="spTerminAntwort('${t.id}', 'ja')">✅ Passt</button><button class="knopf klein" onclick="spTerminAntwort('${t.id}', 'nein')">❌ Passt nicht</button></div>` : "";
-  return `<div class="sp-termin"><b>📅 ${esc(spTerminZeit(t))}</b>${t.ort ? ` · ${esc(t.ort)}` : ""}<div class="hinweis" style="margin:2px 0 0">${st}${t.erinnerungMin && t.antwort === "ja" ? ` · ⏰ Erinnerung etwa ${t.erinnerungMin >= 60 ? t.erinnerungMin / 60 + " Std." : t.erinnerungMin + " Min."} vorher` : ""}</div>${knoepfe}${t.antwort === "nein" || t.vonMir ? `<div style="margin-top:6px">${neu}</div>` : ""}</div>`;
+  return `<div class="sp-termin"><b>📅 ${esc(spTerminZeit(t))}</b>${t.ort ? ` · ${esc(t.ort)}` : ""}<div class="hinweis" style="margin:2px 0 0">${st}</div>${spErinZeile(g)}${knoepfe}${t.antwort === "nein" || t.vonMir ? `<div style="margin-top:6px">${neu}</div>` : ""}</div>`;
+}
+// KC-CLUB-ERINNERUNG-WAHL: eigene Erinnerung unter dem Spiel-Termin (zugesagt oder selbst vorgeschlagen)
+function spErinZeile(g) {
+  const t = g.termin; if (!t || !(t.vonMir || t.antwort === "ja")) return "";
+  return erinZeileHtml(t.erinnerung, `erinSpiel('${g.id}')`, t.erinnerungMin);
+}
+function erinSpiel(gid) {
+  const g = SP.offen?.id === gid ? SP.offen : SP.liste?.spiele?.find((x) => x.id === gid); if (!g?.termin) return;
+  erinFragen({ ...g.termin, anlass: g.termin.anlass || spTitel(g) + " mit " + g.gegner.vorname, spielId: g.id });
 }
 function spTerminBlatt(id) {
   const g = SP.offen?.id === id ? SP.offen : SP.liste?.spiele?.find((x) => x.id === id); if (!g) return;
@@ -6788,7 +6815,6 @@ function spTerminBlatt(id) {
     <div class="zwei"><label class="feld">Tag<input type="date" id="spTTag" value="${tag}" min="${new Intl.DateTimeFormat("sv-SE", { timeZone: TZ }).format(new Date())}"></label>
       <label class="feld">Uhrzeit<input type="time" id="spTZeit" value="18:00" step="900"></label></div>
     <label class="feld">Wo?<select id="spTOrt"><option>In der Köcheclub-App (jeder bei sich)</option><option>Im Clubheim</option><option>Bei mir</option><option>Beim Treffen</option></select></label>
-    <label class="feld">Erinnerung kurz vorher<select id="spTErin"><option value="30">etwa 30 Minuten vorher</option><option value="60" selected>etwa 1 Stunde vorher</option><option value="120">etwa 2 Stunden vorher</option><option value="0">keine (nur am Vortag)</option></select></label>
     <label class="feld">Notiz (freiwillig)<input id="spTNotiz" maxlength="200" placeholder="z. B. Revanche vom letzten Mal 😉"></label>
     <div class="knoepfe"><button class="knopf haupt" id="spTSenden">📨 Termin vorschlagen</button><button class="knopf" onclick="fensterZu(document.getElementById('spTerminBlatt'))">Abbrechen</button></div>`);
   f.querySelector("#spTSenden").onclick = async () => {
@@ -6798,15 +6824,17 @@ function spTerminBlatt(id) {
     if (isNaN(beginn.getTime()) || beginn.getTime() < Date.now()) return melde("Der Termin liegt in der Vergangenheit.", true);
     try {
       await api("terminanfrage_senden", { anlass: `${spTitel(g)}-Partie: ${ICH?.vorname || ""} & ${g.gegner.vorname}`.replace(/ ×/, "×"), beginn: beginn.toISOString(), ende: new Date(beginn.getTime() + (g.spiel === "ttt" ? 30 : 90) * 60000).toISOString(),
-        ort: $("spTOrt").value, notiz: $("spTNotiz").value.trim(), spiel_id: g.id, erinnerung_min: Number($("spTErin").value) }, { warten: true });
+        ort: $("spTOrt").value, notiz: $("spTNotiz").value.trim(), spiel_id: g.id, erinnerung_min: 60 }, { warten: true }); // 2.23.22: jeder stellt seine Erinnerung selbst ein (Standard 1 Std.)
       f.remove(); melde(`📅 Termin an ${g.gegner.vorname} geschickt – steht in deinem Kalender`); await spLaden(true);
       if (SP.offen?.id === g.id) { SP.offen.termin = SP.liste?.spiele?.find((x) => x.id === g.id)?.termin || null; spZeigen(); }
+      const t = SP.liste?.spiele?.find((x) => x.id === g.id)?.termin; if (t) erinFragen({ ...t, anlass: t.anlass || spTitel(g) + " mit " + g.gegner.vorname, spielId: g.id }); // KC-CLUB-ERINNERUNG-WAHL
     } catch (e) { meldeFehler(e); }
   };
 }
 async function spTerminAntwort(anfrageId, antwort) {
   try { await api("terminanfrage_antwort", { id: anfrageId, antwort }, { warten: true }); melde(antwort === "ja" ? "✅ Zugesagt – steht in deinem Kalender" : "Abgesagt – schlag gern einen anderen Termin vor");
-    await spLaden(true); if (SP.offen) { SP.offen.termin = SP.liste?.spiele?.find((x) => x.id === SP.offen.id)?.termin || null; spZeigen(); } }
+    await spLaden(true); if (SP.offen) { SP.offen.termin = SP.liste?.spiele?.find((x) => x.id === SP.offen.id)?.termin || null; spZeigen(); }
+    if (antwort === "ja") { const g = SP.liste?.spiele?.find((x) => x.termin?.id === anfrageId); if (g) erinFragen({ ...g.termin, anlass: g.termin.anlass || spTitel(g) + " mit " + g.gegner.vorname, spielId: g.id }); } } // KC-CLUB-ERINNERUNG-WAHL
   catch (e) { meldeFehler(e); }
 }
 // ---------- KC-CLUB-ERSTATTUNG (0.38.0): Fahrtkosten, vorgestreckter Einkauf, sonstige Auslagen beantragen ----------
@@ -14230,6 +14258,7 @@ function taKarte(a) {
     ${!a.vonMir && !ab ? `<div class="ta-antw">${k("ja")}${k("vielleicht")}${k("nein")}</div>
       ${a.meine ? `<div class="hinweis" style="font-size:.8rem;margin-top:4px">Nochmal auf deine Antwort tippen nimmt sie zurück.${a.meineNotiz ? ` Deine Notiz: „${esc(a.meineNotiz)}“` : ""}</div>` : ""}` : ""}
     <details style="margin-top:8px"${a.vonMir ? " open" : ""}><summary class="hinweis">✅ ${n("ja")} · 🤔 ${n("vielleicht")} · ❌ ${n("nein")} · ⏳ ${offen} offen</summary>${wer}</details>
+    ${!ab && (a.vonMir || a.meine === "ja" || a.meine === "vielleicht") ? erinZeileHtml(a.erinnerung, `erinAnfrage('${a.id}')`, a.erinnerungStandard) : ""}
     ${a.vonMir && !ab ? `<div class="knoepfe"><button class="knopf klein" onclick="taAbsagen('${a.id}')">🚫 Absagen</button></div>` : ""}</div>`;
 }
 async function taAntwort(id, antwort) {
@@ -14238,8 +14267,71 @@ async function taAntwort(id, antwort) {
     const r = await eingabe(antwort === "nein" ? "Kurze Begründung (freiwillig)" : "Kurze Notiz (freiwillig)", "", { vorschlaege: antwort === "nein" ? ["Urlaub", "krank", "Arbeit", "anderer Termin"] : ["erst später", "nur kurz", "noch unsicher"] });
     if (r === null) return; notiz = r.trim().slice(0, 300);
   }
-  try { await api("terminanfrage_antwort", { id, antwort, notiz }); melde(antwort === "keine" ? "↩️ Antwort zurückgenommen" : `${TA_ANTW[antwort]} – ist gemeldet`); TA.markiert = id; await taLaden(); neuLaden(); }
+  try { await api("terminanfrage_antwort", { id, antwort, notiz }); melde(antwort === "keine" ? "↩️ Antwort zurückgenommen" : `${TA_ANTW[antwort]} – ist gemeldet`); TA.markiert = id; await taLaden(); neuLaden();
+    if (antwort === "ja" || antwort === "vielleicht") erinAnfrage(id); } // KC-CLUB-ERINNERUNG-WAHL
   catch (e) { meldeFehler(e); }
+}
+// ---------- KC-CLUB-ERINNERUNG-WAHL (2.23.22, Wunsch Hansi): eigene Erinnerung zu jeder Terminanfrage (auch Spiel-Termine) ----------
+// Fragt nach Zusage bzw. nach dem Vorschlagen: Wann (keine/15/30 Min./1/2 Std., zusätzlich Vortag) und Wie (Push, E-Mail, Handy-Kalender).
+// Push/E-Mail schickt der Server; der Handy-Kalender bekommt eine Datei mit eingebautem Alarm – der klingelt laut, auch ohne Internet.
+// Einen Wecker kann eine Web-App nicht stellen (Android/Chrome und Apple sperren das) – dafür ist der Kalender-Alarm da.
+const ERIN_ZEITEN = [[0, "Keine"], [15, "15 Min."], [30, "30 Min."], [60, "1 Std."], [120, "2 Std."]];
+const ERIN_WEGE = [["push", "🔔", "Push", "Ton & Vibration"], ["email", "✉️", "E-Mail", "ins Postfach"], ["kalender", "📅", "Handy-Kalender", "klingelt auch offline"]];
+const ERIN_KEY = "kc_club_erinnerung_wahl";
+const erinTextKurz = (e) => !e || (!e.minuten && !e.vortag) ? "keine" : [e.minuten ? (e.minuten >= 60 ? e.minuten / 60 + " Std." : e.minuten + " Min.") + " vorher" : "", e.vortag ? "am Vortag" : ""].filter(Boolean).join(" + ")
+  + (e.wege?.length ? " · " + e.wege.map((w) => (ERIN_WEGE.find((x) => x[0] === w) || [, "", w])[1]).join(" ") : "");
+function erinZeileHtml(e, fn, standard) {
+  const text = e ? erinTextKurz(e) : standard ? `etwa ${standard >= 60 ? standard / 60 + " Std." : standard + " Min."} vorher (Standard)` : "nur am Vortag (Standard)";
+  return `<div class="erin-zeile"><span>⏰ Erinnerung: <b>${esc(text)}</b></span><button class="knopf klein" onclick="${fn}">${e ? "✏️ Ändern" : "⏰ Einstellen"}</button></div>`;
+}
+function erinAnfrage(id) { const a = TA.liste.find((x) => x.id === id); if (a) erinFragen({ id: a.id, anlass: a.anlass, beginn: a.beginn, ende: a.ende, ort: a.ort, erinnerung: a.erinnerung }); }
+function erinFragen(t) {
+  if (!t?.id || !t.beginn || new Date(t.beginn).getTime() < Date.now()) return;
+  let w = null; try { w = JSON.parse(localStorage.getItem(ERIN_KEY) || "null"); } catch {}
+  const st = { minuten: t.erinnerung?.minuten ?? w?.minuten ?? 60, vortag: t.erinnerung?.vortag ?? w?.vortag ?? true, wege: new Set(t.erinnerung?.wege ?? w?.wege ?? ["push"]) };
+  if (w?.kalender && !t.erinnerung) st.wege.add("kalender");
+  const f = blattAuf("erinBlatt", `<div class="erin-kopf"><span class="erin-sym">⏰</span><div><h3>Erinnerung für dich</h3><small>📌 ${esc(t.anlass || "Termin")}<br>📅 ${esc(wann(t.beginn))}${t.ort ? " · 📍 " + esc(t.ort) : ""}</small></div></div>
+    <section class="erin-teil"><div class="erin-titel">1 · Wann möchtest du erinnert werden?</div>
+      <div class="erin-wahl" role="radiogroup" aria-label="Wie lange vorher">${ERIN_ZEITEN.map(([m, x]) => `<button type="button" role="radio" data-min="${m}">${x}</button>`).join("")}</div>
+      <label class="schalter"><span>📆 Zusätzlich am Vortag (ab 9 Uhr)</span><input type="checkbox" id="erinVortag"${st.vortag ? " checked" : ""}></label></section>
+    <section class="erin-teil"><div class="erin-titel">2 · Wie? <small class="hinweis">(mehrere möglich)</small></div>
+      <div class="erin-wege">${ERIN_WEGE.map(([k, sym, x, u]) => `<button type="button" class="erin-weg" data-weg="${k}" aria-pressed="false"><span class="erin-wsym">${sym}</span><b>${x}</b><small>${u}</small></button>`).join("")}</div>
+      <p class="hinweis" style="margin:0;font-size:.8rem">Am lautesten ist der 📅 Handy-Kalender – er klingelt wie ein Wecker. Push nutzt den Mitteilungston deines Handys.</p></section>
+    <div class="erin-knoepfe"><button class="knopf haupt" id="erinOk">⏰ Erinnerung speichern</button><button class="knopf" id="erinNein">Keine Erinnerung</button></div>`);
+  const zeichnen = () => {
+    f.querySelectorAll("[data-min]").forEach((b) => { const an = Number(b.dataset.min) === st.minuten; b.classList.toggle("an", an); b.setAttribute("aria-checked", String(an)); });
+    f.querySelectorAll("[data-weg]").forEach((b) => { const an = st.wege.has(b.dataset.weg); b.classList.toggle("an", an); b.setAttribute("aria-pressed", String(an)); });
+  };
+  f.querySelectorAll("[data-min]").forEach((b) => (b.onclick = () => { st.minuten = Number(b.dataset.min); zeichnen(); }));
+  f.querySelectorAll("[data-weg]").forEach((b) => (b.onclick = () => { const k = b.dataset.weg; st.wege.has(k) ? st.wege.delete(k) : st.wege.add(k); zeichnen(); }));
+  zeichnen();
+  const speichern = async (keine) => {
+    const vortag = !keine && f.querySelector("#erinVortag").checked, minuten = keine ? 0 : st.minuten;
+    const wege = keine ? [] : [...st.wege].filter((x) => x !== "kalender"), kal = !keine && st.wege.has("kalender");
+    if (!keine && (minuten || vortag) && !wege.length && !kal) return melde("Bitte wähle, wie du erinnert werden möchtest.", true);
+    try {
+      await api("erinnerung_setzen", { anfrage_id: t.id, minuten: wege.length ? minuten : 0, vortag: wege.length ? vortag : false, wege }, { warten: true });
+      try { if (!keine) localStorage.setItem(ERIN_KEY, JSON.stringify({ minuten, vortag, wege, kalender: kal })); } catch {}
+      f.remove();
+      melde(keine ? "Keine Erinnerung – du siehst den Termin trotzdem im Kalender" : `⏰ Erinnerung gespeichert: ${erinTextKurz({ minuten, vortag, wege: [...wege, ...(kal ? ["kalender"] : [])] })}`);
+      if (kal) setTimeout(() => erinKalender(t, minuten || 60), 1200); // Datei danach – ihre Meldung soll man lesen können
+      if (t.spielId) { await spLaden(true); if (SP.offen) { SP.offen.termin = SP.liste?.spiele?.find((x) => x.id === SP.offen.id)?.termin || SP.offen.termin; spZeigen(); } } else if (TA.liste.some((x) => x.id === t.id)) taLaden();
+    } catch (e) { meldeFehler(e); }
+  };
+  f.querySelector("#erinOk").onclick = (e) => einmal(e.target, () => speichern(false));
+  f.querySelector("#erinNein").onclick = (e) => einmal(e.target, () => speichern(true));
+}
+// Termin-Datei mit eingebautem Alarm für den Handy-Kalender (klingelt auch ohne Internet)
+function erinKalender(t, minuten) {
+  const z = (iso) => new Date(iso).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, ""), e = (x) => String(x || "").replace(/[\;,]/g, (c) => "\\" + c).replace(/\n/g, "\\n");
+  const ende = t.ende || new Date(new Date(t.beginn).getTime() + 3600000).toISOString();
+  const ics = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Koecheclub Werne//Club-App//DE", "BEGIN:VEVENT", `UID:anfrage-${t.id}@koecheclub-werne`, `DTSTAMP:${z(new Date().toISOString())}`,
+    `SUMMARY:${e(t.anlass || "Termin")}`, `DTSTART:${z(t.beginn)}`, `DTEND:${z(ende)}`, ...(t.ort ? [`LOCATION:${e(t.ort)}`] : []),
+    `DESCRIPTION:${e(location.origin + location.pathname + (t.spielId ? "#spiel=" + t.spielId : "#termine"))}`,
+    "BEGIN:VALARM", "ACTION:DISPLAY", `DESCRIPTION:${e(t.anlass || "Termin")}`, `TRIGGER:-PT${minuten}M`, "END:VALARM", "END:VEVENT", "END:VCALENDAR"].join("\r\n");
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([ics], { type: "text/calendar" })); a.download = String(t.anlass || "Termin").replace(/[^\wäöüÄÖÜß ]/g, "").trim().slice(0, 60) + ".ics";
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  melde("📅 Termin-Datei erstellt – antippen, dann „Zum Kalender hinzufügen“. Der Kalender erinnert dich mit Ton.");
 }
 async function taAbsagen(id) {
   const grund = (await eingabe("Anfrage absagen? Alle, die nicht schon Nein gesagt haben, bekommen Bescheid.\n\nGrund (freiwillig):", ""));
@@ -14307,7 +14399,7 @@ async function taSenden() {
       ort: $("taOrt").value.trim(), notiz: $("taNotiz").value.trim(), frist: frist ? taZeitpunkt(frist, "23:59") : null });
     $("terminanfrageForm").classList.add("versteckt");
     melde(`📨 Anfrage an ${r.empfaenger} ${r.empfaenger === 1 ? "Mitglied" : "Mitglieder"} gesendet`);
-    TA.markiert = r.id; taLaden();
+    TA.markiert = r.id; await taLaden(); erinAnfrage(r.id); // KC-CLUB-ERINNERUNG-WAHL
   } catch (e) { meldeFehler(e); }
 }
 

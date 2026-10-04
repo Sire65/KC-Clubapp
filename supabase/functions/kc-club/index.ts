@@ -41,7 +41,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.23.21";
+const SERVER_VERSION = "2.23.22";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -3088,7 +3088,8 @@ async function terminanfragenListe(ich: Ich, zeitraum?: { von: string; bis: stri
   for (const a of [...(eigene ?? []), ...(fremde ?? [])]) alle.set(a.id, a);
   const liste = [...alle.values()].sort((a, b) => String(a.beginn).localeCompare(String(b.beginn)));
   if (!liste.length) return [];
-  const { data: zeilen } = await db.from("kc_club_terminanfrage_empfaenger").select("*").in("anfrage_id", liste.map((a) => a.id));
+  const [{ data: zeilen }, erin] = await Promise.all([db.from("kc_club_terminanfrage_empfaenger").select("*").in("anfrage_id", liste.map((a) => a.id)),
+    meineErinnerungen(ich.person_id, liste.map((a) => a.id))]); // KC-CLUB-ERINNERUNG-WAHL
   const leute = await personen([...liste.map((a) => a.erstellt_von), ...(zeilen ?? []).map((z: any) => z.person_id)]);
   const name = (id: string) => leute.get(id)?.display_name || "Mitglied";
   return liste.map((a) => {
@@ -3097,13 +3098,23 @@ async function terminanfragenListe(ich: Ich, zeitraum?: { von: string; bis: stri
     return {
       id: a.id, anlass: a.anlass, beginn: a.beginn, ende: a.ende, ort: a.ort, notiz: a.notiz, frist: a.frist, status: a.status,
       vonMir: a.erstellt_von === ich.person_id, von: { person_id: a.erstellt_von, name: name(a.erstellt_von), vorname: vorname(leute.get(a.erstellt_von)) || name(a.erstellt_von) },
-      meine: mein?.antwort ?? null, meineNotiz: mein?.notiz ?? null,
+      meine: mein?.antwort ?? null, meineNotiz: mein?.notiz ?? null, erinnerung: erin.get(a.id) ?? null, erinnerungStandard: a.erinnerung_min || 0,
       empfaenger: e.map((z: any) => ({ person_id: z.person_id, name: name(z.person_id), antwort: z.antwort, notiz: z.notiz, geantwortet_am: z.geantwortet_am }))
         .sort((x: any, y: any) => x.name.localeCompare(y.name, "de")),
     };
   });
 }
 const ANTWORT_TEXT: Record<string, string> = { ja: "✅ Ja", vielleicht: "🤔 Vielleicht", nein: "❌ Nein" };
+// ---------- KC-CLUB-ERINNERUNG-WAHL (2.23.22, Wunsch Hansi): jede Person stellt ihre Erinnerung zu einer Terminanfrage selbst ein ----------
+// wann: 15/30/60/120 Min. vorher (0 = keine), zusätzlich am Vortag; wie: Push und/oder E-Mail. Kalender mit Alarm macht die App selbst.
+// Ohne eigene Zeile gilt wie bisher die Erinnerung der Anfrage (erinnerung_min) über die allgemeinen Benachrichtigungs-Einstellungen.
+const ERIN_MINUTEN = [0, 15, 30, 60, 120];
+async function meineErinnerungen(pid: string, ids: string[]) {
+  if (!ids.length) return new Map<string, any>();
+  const { data } = await db.from("kc_club_erinnerungen").select("anfrage_id,minuten,vortag,wege").eq("person_id", pid).in("anfrage_id", ids);
+  return new Map<string, any>((data ?? []).map((x: any) => [x.anfrage_id, { minuten: x.minuten, vortag: x.vortag, wege: x.wege }]));
+}
+const erinText = (min: number) => min >= 60 ? `${Math.round(min / 60)} Std.` : `${min} Min.`;
 function anfrageWann(a: any) { return wann(a.beginn, true) + (a.ende ? ` bis ${fZeit.format(new Date(a.ende))} Uhr` : ""); }
 
 // ---------- KC-CLUB-STANDORT (0.92.0) ----------
@@ -3404,6 +3415,32 @@ Köcheclub Werne`,
       }
       // KC-CLUB-SPIEL-TERMIN (2.9.1): Erinnerung kurz vor Beginn (erinnerung_min) an Absender + Zugesagte – Lauf alle 15 Min.,
       // daher „etwa“; nie nach Beginn + 10 Min. (dann ist es zu spät)
+      // KC-CLUB-ERINNERUNG-WAHL (2.23.22): eigene Erinnerungen – je Person, Weg nach Wahl. Der Zeitplan läuft alle 15 Min.; darum wird
+      // geschickt, sobald der Zeitpunkt höchstens 7 Min. entfernt ist (mittlere Abweichung am kleinsten), der Text nennt die echte Restzeit.
+      const eigeneErin = new Set<string>(); // "anfrage|person" mit eigener Einstellung → nicht zusätzlich die Standard-Erinnerung
+      { const { data: an } = await db.from("kc_club_terminanfragen").select("id,anlass,beginn,ende,ort,spiel_id,erstellt_von").eq("status", "offen")
+          .gte("beginn", new Date(Date.now() - 10 * 60000).toISOString()).lte("beginn", new Date(Date.now() + 130 * 60000).toISOString());
+        if ((an ?? []).length) {
+          const ids = (an ?? []).map((x: any) => x.id);
+          const [{ data: er }, { data: em }] = await Promise.all([db.from("kc_club_erinnerungen").select("*").in("anfrage_id", ids),
+            db.from("kc_club_terminanfrage_empfaenger").select("anfrage_id,person_id,antwort").in("anfrage_id", ids)]);
+          for (const r of er ?? []) eigeneErin.add(r.anfrage_id + "|" + r.person_id);
+          for (const r of er ?? []) {
+            const x = (an ?? []).find((y: any) => y.id === r.anfrage_id); if (!x || !r.minuten || r.gesendet_am || !(r.wege ?? []).length) continue;
+            const dabei = x.erstellt_von === r.person_id || (em ?? []).some((y: any) => y.anfrage_id === x.id && y.person_id === r.person_id && (y.antwort === "ja" || y.antwort === "vielleicht"));
+            if (!dabei || new Date(x.beginn).getTime() - r.minuten * 60000 > Date.now() + 7 * 60000) continue;
+            const { data: ok } = await db.from("kc_club_erinnerungen").update({ gesendet_am: jetzt() }).eq("person_id", r.person_id).eq("anfrage_id", r.anfrage_id).is("gesendet_am", null).select("person_id");
+            if (!ok?.length) continue;
+            const min = Math.max(0, Math.round((new Date(x.beginn).getTime() - Date.now()) / 60000));
+            await sendenGewaehlt("club_erinnerung", [r.person_id], r.wege, {
+              betreff: `Köcheclub Werne – Erinnerung: ${x.anlass}, ${fZeit.format(new Date(x.beginn))} Uhr`,
+              titel: `⏰ ${min > 5 ? "In " + erinText(min) : "Jetzt"}: ${x.anlass}`, kurz: `${fZeit.format(new Date(x.beginn))} Uhr${x.ort ? " – " + x.ort : ""}`,
+              text: `Hallo,\n\ndeine Erinnerung:\n\n📌 ${x.anlass}\n📅 ${anfrageWann(x)}${x.ort ? "\n📍 " + x.ort : ""}\n\nViel Spaß!\nKöcheclub Werne`,
+              url: x.spiel_id ? `${APP_URL}#spiel=${x.spiel_id}` : APP_URL + "#termine",
+            }, `club-erinnerung-eigen:${r.anfrage_id}:${r.person_id}`).catch(() => null);
+          }
+        }
+      }
       { const { data: ku } = await db.from("kc_club_terminanfragen").select("*").eq("status", "offen").gt("erinnerung_min", 0).is("kurz_erinnert_am", null)
           .gte("beginn", new Date(Date.now() - 10 * 60000).toISOString()).lte("beginn", new Date(Date.now() + 125 * 60000).toISOString());
         for (const x of ku ?? []) {
@@ -3414,7 +3451,8 @@ Köcheclub Werne`,
           const zu = (e ?? []).filter((y: any) => y.antwort === "ja").map((y: any) => y.person_id);
           if (!zu.length) continue; // noch niemand hat zugesagt → keine „gleich geht's los“-Erinnerung
           const min = Math.max(0, Math.round((new Date(x.beginn).getTime() - Date.now()) / 60000));
-          await senden("club_erinnerung", [x.erstellt_von, ...zu], {
+          const an = [x.erstellt_von, ...zu].filter((pid) => !eigeneErin.has(x.id + "|" + pid)); // eigene Einstellung hat Vorrang
+          if (an.length) await senden("club_erinnerung", an, {
             betreff: `Köcheclub Werne – gleich: ${x.anlass}, ${fZeit.format(new Date(x.beginn))} Uhr`,
             titel: `⏰ ${min > 5 ? "In " + (min >= 90 ? Math.round(min / 60) + " Std." : min + " Min.") : "Jetzt"}: ${x.anlass}`, kurz: `${fZeit.format(new Date(x.beginn))} Uhr${x.ort ? " – " + x.ort : ""}`,
             text: `Hallo,\n\ngleich geht es los:\n\n📌 ${x.anlass}\n📅 ${anfrageWann(x)}${x.ort ? "\n📍 " + x.ort : ""}\n\nViel Spaß!\nKöcheclub Werne`,
@@ -3433,10 +3471,12 @@ Köcheclub Werne`,
           const { data: ok } = await db.from("kc_club_terminanfragen").update({ erinnerung_gesendet_am: jetzt() }).eq("id", x.id).is("erinnerung_gesendet_am", null).select("id");
           if (!ok?.length) continue;
           const { data: e } = await db.from("kc_club_terminanfrage_empfaenger").select("person_id,antwort").eq("anfrage_id", x.id);
-          const dabei = [x.erstellt_von, ...(e ?? []).filter((y: any) => y.antwort === "ja" || y.antwort === "vielleicht").map((y: any) => y.person_id)];
+          const { data: ohneVortag } = await db.from("kc_club_erinnerungen").select("person_id").eq("anfrage_id", x.id).eq("vortag", false); // KC-CLUB-ERINNERUNG-WAHL
+          const nein = new Set((ohneVortag ?? []).map((y: any) => y.person_id));
+          const dabei = [x.erstellt_von, ...(e ?? []).filter((y: any) => y.antwort === "ja" || y.antwort === "vielleicht").map((y: any) => y.person_id)].filter((pid) => !nein.has(pid));
           const offen = (e ?? []).filter((y: any) => !y.antwort).map((y: any) => y.person_id);
           const ort = x.ort ? "\n📍 " + x.ort : "";
-          await senden("club_erinnerung", dabei, {
+          if (dabei.length) await senden("club_erinnerung", dabei, {
             betreff: `Köcheclub Werne – Erinnerung: morgen ${x.anlass}, ${fZeit.format(new Date(x.beginn))} Uhr`,
             titel: "⏰ Morgen: " + x.anlass, kurz: `${wann(x.beginn)}${x.ort ? " – " + x.ort : ""}`,
             text: `Hallo,\n\nkurze Erinnerung an morgen:\n\n📌 ${x.anlass}\n📅 ${anfrageWann(x)}${ort}\n\nDetails in der Köcheclub-App: ${APP_URL}#termine\n\nViele Grüße\nKöcheclub Werne`,
@@ -4005,6 +4045,22 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         }
         await protokoll(ich.person_id, "terminanfrage_antwort", { anfrage: a.id, antwort });
         return json({ ok: true, anfrage: (await terminanfragenListe(ich, { von: new Date(new Date(a.beginn).getTime() - 1000).toISOString(), bis: new Date(new Date(a.beginn).getTime() + 1000).toISOString() })).find((x: any) => x.id === a.id) });
+      }
+
+      // KC-CLUB-ERINNERUNG-WAHL (2.23.22): eigene Erinnerung zu einer Terminanfrage (nur Absender oder Empfänger)
+      case "erinnerung_setzen": {
+        const id = String(p.anfrage_id || "");
+        const { data: a } = /^[0-9a-f-]{36}$/i.test(id) ? await db.from("kc_club_terminanfragen").select("id,erstellt_von,status,beginn").eq("id", id).maybeSingle() : { data: null };
+        const { data: z } = a && a.erstellt_von !== ich.person_id ? await db.from("kc_club_terminanfrage_empfaenger").select("person_id").eq("anfrage_id", a.id).eq("person_id", ich.person_id).maybeSingle() : { data: a ? { person_id: ich.person_id } : null };
+        if (!a || !z) throw new Fehler("Termin nicht gefunden.", 404);
+        if (a.status !== "offen") throw new Fehler("Dieser Termin wurde abgesagt.", 409);
+        const minuten = ERIN_MINUTEN.includes(Number(p.minuten)) ? Number(p.minuten) : 0, vortag = p.vortag === true;
+        const wege = [...new Set((Array.isArray(p.wege) ? p.wege : []).map(String).filter((w: string) => w === "push" || w === "email"))];
+        if ((minuten || vortag) && !wege.length) throw new Fehler("Bitte Push oder E-Mail wählen – sonst kann die Erinnerung nicht kommen.");
+        const { error } = await db.from("kc_club_erinnerungen").upsert({ person_id: ich.person_id, anfrage_id: a.id, minuten, vortag, wege, gesendet_am: null, geaendert_am: jetzt() }, { onConflict: "person_id,anfrage_id" });
+        if (error) throw new Fehler("Konnte nicht gespeichert werden.", 500);
+        await protokoll(ich.person_id, "erinnerung_gesetzt", { anfrage: a.id, minuten, vortag, wege });
+        return json({ ok: true, erinnerung: { minuten, vortag, wege } });
       }
 
       case "terminanfrage_absagen": {
@@ -8329,12 +8385,14 @@ Köcheclub-App`,
         const offeneIds = (meine ?? []).filter((g: any) => ["angefragt", "laeuft"].includes(g.status)).map((g: any) => g.id);
         const termine = new Map<string, any>();
         if (offeneIds.length) {
-          const { data: ta } = await db.from("kc_club_terminanfragen").select("id,spiel_id,beginn,ort,erstellt_von,erinnerung_min").eq("status", "offen").in("spiel_id", offeneIds)
+          const { data: ta } = await db.from("kc_club_terminanfragen").select("id,spiel_id,beginn,ende,anlass,ort,erstellt_von,erinnerung_min").eq("status", "offen").in("spiel_id", offeneIds)
             .gte("beginn", new Date(Date.now() - 3 * 3600000).toISOString()).order("beginn");
           const { data: te } = (ta ?? []).length ? await db.from("kc_club_terminanfrage_empfaenger").select("anfrage_id,person_id,antwort").in("anfrage_id", (ta ?? []).map((x: any) => x.id)) : { data: [] as any[] };
+          const erin = await meineErinnerungen(ich.person_id, (ta ?? []).map((x: any) => x.id)); // KC-CLUB-ERINNERUNG-WAHL
           for (const x of ta ?? []) if (!termine.has(x.spiel_id)) {
             const emp = (te ?? []).find((y: any) => y.anfrage_id === x.id);
-            termine.set(x.spiel_id, { id: x.id, beginn: x.beginn, ort: x.ort, vonMir: x.erstellt_von === ich.person_id, antwort: emp?.antwort ?? null, erinnerungMin: x.erinnerung_min });
+            termine.set(x.spiel_id, { id: x.id, beginn: x.beginn, ende: x.ende ?? null, ort: x.ort, anlass: x.anlass ?? null, vonMir: x.erstellt_von === ich.person_id, antwort: emp?.antwort ?? null, erinnerungMin: x.erinnerung_min,
+              erinnerung: erin.get(x.id) ?? null });
           }
         }
         return json({ ichBereit: meineSpiele.length > 0, meineSpiele, spiele: (meine ?? []).map((g: any) => ({ ...spielSicht(g, ich.person_id, namen), termin: termine.get(g.id) ?? null })), rangliste: rang,

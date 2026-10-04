@@ -3312,7 +3312,7 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   const ts = server.slice(server.indexOf('case "terminanfrage_senden": {'), server.indexOf('case "terminanfragen_liste": {'));
   assert.ok(/sg\.von !== ich\.person_id && sg\.an !== ich\.person_id\)\) throw/.test(ts) && /ziel = \[sg\.von === ich\.person_id \? sg\.an : sg\.von\]/.test(ts), "nur eigene Partie, nur an das Gegenüber");
   assert.ok(/\.gt\("erinnerung_min", 0\)\.is\("kurz_erinnert_am", null\)/.test(server) && /if \(!zu\.length\) continue;/.test(server), "Erinnerung kurz vorher nur nach Zusage");
-  assert.ok(/function spTerminBlatt\(id\)/.test(html) && /api\("terminanfrage_senden", \{ anlass:/.test(html) && /spiel_id: g\.id, erinnerung_min: Number\(\$\("spTErin"\)\.value\)/.test(html) && /\$\{spTerminHtml\(g\)\}/.test(html), "App: Termin an der Partie");
+  assert.ok(/function spTerminBlatt\(id\)/.test(html) && /api\("terminanfrage_senden", \{ anlass:/.test(html) && /spiel_id: g\.id, erinnerung_min: 60 \}/.test(html) /* 2.23.22: jeder stellt seine Erinnerung selbst ein */ && /\$\{spTerminHtml\(g\)\}/.test(html), "App: Termin an der Partie");
 }
 // 302. 2.9.2: Karten wie französisches Blatt
 {
@@ -3770,6 +3770,18 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.ok(/if \(v === "mitglieder"\) \{ MG_AMEISEN\.bis = 0; MG_AMEISEN\.neu = true;/.test(html) && /const MG_AMEISEN = \{ bis: 0, neu: false, t: 0, MS: 4000 \};/.test(html), "beim Öffnen 4 s");
   assert.ok(/<small>\(\$\{x\.personen\.length\}\)<\/small>\$\{ameisen\}<\/button>/.test(html) && /\.mg-gruppen \.ameisen rect \{[^}]*animation: ameisenLauf/.test(html), "Rahmen um jeden Gruppen-Knopf");
+}
+// 370. 2.23.22: eigene Erinnerung zu jeder Terminanfrage (KC-CLUB-ERINNERUNG-WAHL)
+{
+  const mig = lies("supabase/migrations/20261004_kc_club_v22322_erinnerungen.sql");
+  assert.ok(/create table if not exists kc_club_erinnerungen/.test(mig) && /on delete cascade/.test(mig) && /revoke all on table kc_club_erinnerungen from anon, authenticated;/.test(mig), "Tabelle");
+  assert.ok(server.includes('case "erinnerung_setzen":') && html.includes('api("erinnerung_setzen"'), "Aktion");
+  assert.ok(/a\.erstellt_von !== ich\.person_id \? await db\.from\("kc_club_terminanfrage_empfaenger"\)/.test(server), "nur Absender oder Empfänger");
+  assert.ok(/const an = \[x\.erstellt_von, \.\.\.zu\]\.filter\(\(pid\) => !eigeneErin\.has\(x\.id \+ "\|" \+ pid\)\);/.test(server), "Standard nur ohne eigene Einstellung");
+  assert.ok(/\.eq\("vortag", false\)/.test(server) && /sendenGewaehlt\("club_erinnerung", \[r\.person_id\], r\.wege/.test(server), "Vortag abwählbar, Weg nach Wahl");
+  assert.ok(/if \(antwort === "ja" \|\| antwort === "vielleicht"\) erinAnfrage\(id\);/.test(html) && /TA\.markiert = r\.id; await taLaden\(\); erinAnfrage\(r\.id\);/.test(html), "fragt nach Zusage und nach dem Vorschlagen");
+  assert.ok(/1 · Wann möchtest du erinnert werden\?/.test(html) && /2 · Wie\?/.test(html) && /"TRIGGER:-PT\$\{minuten\}M"|`TRIGGER:-PT\$\{minuten\}M`/.test(html), "gegliedertes Fenster, Kalender-Alarm");
+  assert.ok(/requireInteraction: \/\^⏰\/\.test\(titel\)/.test(lies("sw.js")), "Erinnerungs-Push bleibt stehen");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
