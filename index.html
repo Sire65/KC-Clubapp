@@ -186,7 +186,7 @@
   .gruss { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
   .gruss #begruessung { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
   #inkoKnopf { flex: none; width: 36px; height: 36px; border-radius: 50%; border: none; padding: 0; font-size: 1rem; line-height: 1; background: rgba(255,255,255,.18); color: inherit; cursor: pointer; } #inkoKnopf.an { opacity: 1; background: #2c3e50; box-shadow: 0 0 0 2px #f1c40f; animation: inkoBlink 1.2s ease-in-out infinite; }
-  /* KC-CLUB-INKO-BLINKEN (2.22.22, Wunsch Hansi): solange Inkognito an ist, blinkt die Brille rot – auch bei „weniger Bewegung“ (dann langsamer) */
+  /* KC-CLUB-INKO-BLINKEN (2.23.6, Wunsch Hansi): solange Inkognito an ist, blinkt die Brille rot – auch bei „weniger Bewegung“ (dann langsamer) */
   @keyframes inkoBlink { 0%, 100% { background: #2c3e50; box-shadow: 0 0 0 2px #f1c40f; } 50% { background: #d32f2f; box-shadow: 0 0 0 3px #ff5252, 0 0 12px #ff1744; } }
   @media (prefers-reduced-motion: reduce) { #inkoKnopf.an { animation-duration: 2.4s; } }
   /* KC-CLUB-SPIELE (2.7.0): Köcheclub Edition */
@@ -1147,6 +1147,45 @@
   .dwahl.senkrecht { flex-direction: column; }
   .dhaken { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 6px; margin: 6px 0 4px; }
   #druck { display: none; }
+  /* KC-CLUB-HILFEZENTRUM (2.23.0, Wunsch Hansi): alle Tipps/Hinweise nach Themen – Deckblatt mit Inhalt, Register je Thema */
+  .hz-reg { display: flex; gap: 6px; overflow-x: auto; padding: 2px 2px 8px; margin: 0 0 6px; scrollbar-width: none; }
+  .hz-reg::-webkit-scrollbar { display: none; }
+  .hz-reg button { flex: 0 0 auto; border: none; border-radius: 12px; padding: 8px 11px; font-weight: 800; background: var(--karte2); color: inherit; cursor: pointer; white-space: nowrap; }
+  .hz-reg button.an { background: var(--karte); box-shadow: var(--schatten); color: var(--textRot, var(--rot)); }
+  .hz-reg .anz { display: inline-block; min-width: 1.4em; margin-left: 5px; padding: 0 5px; border-radius: 9px; background: var(--karte); font-size: .8rem; }
+  .hz-reg button.an .anz { background: var(--karte2); }
+  /* 2.23.4: „?“ unten rechts neben der Lupe – in jeder Ansicht an derselben Stelle, engt keine Kopfzeile ein */
+  .hz-frage { position: fixed; z-index: 21; right: calc(max(12px, calc(50% - 372px)) + 54px); bottom: calc(84px + env(safe-area-inset-bottom)); width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--rot); background: var(--karte); color: var(--textRot, var(--rot)); font: 900 1.3rem/1 system-ui, sans-serif; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.25); }
+  .hz-frage:active { transform: scale(.92); }
+  .hz-frage.versteckt, body.im-chat .hz-frage, body.su-auf .hz-frage, body.kt-aktiv .hz-frage, body.fa-waehlen .hz-frage { display: none; }
+  .hz-suchfeld { display: block; background: var(--karte); border-radius: var(--radius); box-shadow: var(--schatten); padding: 10px 12px 12px; margin: 0 0 12px; border-left: 5px solid var(--rot); }
+  .hz-such-titel { display: block; font-weight: 800; margin: 0 0 6px; color: var(--textRot, var(--rot)); }
+  .hz-suche { width: 100%; padding: 13px 14px; border-radius: 12px; border: 2px solid var(--rot); background: var(--bg); color: inherit; font-size: 1.05rem; }
+  .hz-suche:focus { outline: 3px solid var(--gold); outline-offset: 1px; background: var(--karte); }
+  .hz-suche::placeholder { color: var(--grau); opacity: 1; }
+  /* 2.23.2: Kapitel 1, 2 … mit Nummern 1.1, 1.2 …, mehr Abstand zwischen den Abschnitten */
+  .hz-kapitel { margin-top: 0; border-top: 5px solid var(--rot); }
+  .hz-kapitel .hz-kap-nr { font-size: .8rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--grau); }
+  .hz-kapitel h3 { font-size: 1.3rem; margin: 2px 0 6px; }
+  .karte.hz-eintrag { margin-top: 20px; padding-top: 18px; }
+  .hz-eintrag .hz-nr { flex: none; min-width: 2.6em; padding: 2px 6px; border-radius: 8px; background: var(--karte2); color: var(--textRot, var(--rot)); font-size: .85rem; font-weight: 800; text-align: center; }
+  .hz-inhalt .nr { flex: none; width: 1.8em; height: 1.8em; border-radius: 50%; display: grid; place-items: center; background: var(--rot); color: #fff; font-weight: 800; }
+  /* 2.23.2: nach „Zeig mir wo“ oben rechts „Zurück zur Hilfe“ / „Abbrechen“ */
+  .hz-leiste { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 8px); right: 8px; z-index: 99990; display: flex; gap: 6px; align-items: center; background: var(--karte); border: 2px solid var(--rot); border-radius: 16px; padding: 5px; box-shadow: 0 6px 22px rgba(0,0,0,.3); }
+  .hz-leiste button { border: none; border-radius: 12px; padding: 9px 11px; font-weight: 800; font-size: .92rem; cursor: pointer; }
+  .hz-leiste .hz-l-zurueck { background: var(--rot); color: #fff; }
+  .hz-leiste .hz-l-ab { background: var(--karte2); color: var(--text); }
+  .hz-inhalt { list-style: none; padding: 0; margin: 0; }
+  .hz-inhalt li + li { border-top: 1px solid var(--karte2); }
+  .hz-inhalt button { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 4px; border: none; background: none; color: inherit; text-align: left; cursor: pointer; font-size: 1rem; }
+  .hz-inhalt .sym { font-size: 1.6rem; width: 1.6em; text-align: center; }
+  .hz-inhalt b { display: block; color: var(--textRot, var(--rot)); text-decoration: underline; text-underline-offset: 3px; }
+  .hz-inhalt small { display: block; color: var(--grau); }
+  .hz-inhalt .anz { margin-left: auto; font-weight: 800; white-space: nowrap; color: var(--grau); }
+  .hz-eintrag h3 { display: flex; gap: 8px; align-items: baseline; }
+  .hz-eintrag p { margin: 0 0 8px; }
+  .hz-eintrag .hz-wo { font-size: .8rem; color: var(--grau); font-weight: 700; }
+  .hz-neu { background: var(--gold); color: #fff; border-radius: 8px; padding: 1px 6px; font-size: .75rem; font-weight: 800; }
   /* KC-CLUB-UEBERBLICK (0.79.0) */
   .ue-einl { margin: 0 2px 12px; color: var(--grau); }
   .ue-kasten { background: var(--karte); border-radius: var(--radius); box-shadow: var(--schatten); padding: 14px 16px; margin-bottom: 12px; }
@@ -1199,6 +1238,9 @@
     #druck .unterschrift div { flex: 1; border-top: .8pt solid #000; padding-top: 3pt; font-size: 8.5pt; }
     #druck .dfuss { margin-top: 12pt; border-top: .6pt solid #999; padding-top: 4pt; font-size: 8pt; color: #555; }
     /* KC-CLUB-KURZANLEITUNG (0.62.0): große Schritte mit Bildern */
+    #druck .hz-d-inhalt { width: 100%; border-collapse: collapse; margin: 0 0 6pt; } #druck .hz-d-inhalt td { padding: 3pt 4pt; border-bottom: .5pt solid #d8c7ad; } #druck .hz-d-inhalt td:first-child { width: 2.2em; font-weight: 700; color: #741521; } #druck .hz-d-inhalt td:last-child { text-align: right; white-space: nowrap; }
+    #druck .hz-d-kap { break-before: page; } #druck .hz-d-kap.erstes { break-before: auto; } #druck .hz-d-kap h2 { color: #741521; font-size: 15pt; margin: 0 0 2pt; border-bottom: 1.5pt solid #741521; padding-bottom: 2pt; }
+    #druck .hz-d-kap > p { margin: 0 0 8pt; color: #555; } #druck .hz-d-e { break-inside: avoid-page; margin: 0 0 9pt; } #druck .hz-d-e h3 { font-size: 11.5pt; margin: 0 0 2pt; } #druck .hz-d-e h3 span { color: #741521; margin-right: 4pt; } #druck .hz-d-e p { margin: 0; } #druck .hz-d-e .hz-neu { color: #b07d2e; font-size: 8pt; }
     #druck .ue-einl { margin: 0 0 8pt; } #druck .ue-kasten { border: 1pt solid #b98f52; border-radius: 6pt; padding: 6pt 10pt; margin: 0 0 8pt; break-inside: avoid-page; }
     #druck .ue-kasten h3 { margin: 0 0 4pt; color: #741521; font-size: 12pt; } #druck .ue-version { font-weight: 700; margin: 5pt 0 2pt; color: #2f6b3a; }
     #druck .ue-liste { display: grid; grid-template-columns: 1fr 1fr; gap: 3pt 12pt; } #druck .ue-bereich { display: flex; gap: 6pt; break-inside: avoid; } #druck .ue-bereich small { display: block; color: #555; }
@@ -2110,6 +2152,16 @@
     <div id="ueInhalt"><p class="hinweis">Lädt …</p></div>
   </section>
 
+  <!-- KC-CLUB-HILFEZENTRUM (2.23.0, Wunsch Hansi): alle Tipps und Hinweise nach Themen – Deckblatt mit Inhalt, Register je Thema -->
+  <section id="v-hilfezentrum" class="versteckt">
+    <div class="kopf2"><button class="zurueck" onclick="hzZurueck()" aria-label="Zurück">‹</button><h2>❓ Hilfe &amp; Tipps</h2><button type="button" class="druckknopf" title="Hilfe drucken / als PDF speichern" aria-label="Hilfe drucken oder als PDF speichern" onclick="druckStarten('hilfe')"></button></div>
+    <!-- 2.23.2 (Wunsch Hansi): Suchfeld deutlicher – eigene Karte mit Überschrift, kräftigem Rand und Lupe -->
+    <label class="hz-suchfeld" for="hzSuche"><span class="hz-such-titel">🔍 Wonach suchst du?</span>
+      <input type="search" id="hzSuche" class="hz-suche" placeholder="Hier tippen – z. B. „Farbe“ oder „Ton“" oninput="hzSuchen(this.value)" autocomplete="off" enterkeyhint="search"></label>
+    <nav class="hz-reg" id="hzRegister" aria-label="Hilfe-Themen"></nav>
+    <div id="hzInhalt"></div>
+  </section>
+
   <!-- KC-CLUB-STANDORT (0.92.0) -->
   <!-- KC-CLUB-SOS (1.6.0): Notrufnummern + Kontakte im Notfall -->
   <section id="v-sos" class="versteckt">
@@ -2207,6 +2259,7 @@
         <details class="ds-mehr" id="designMehrKlappeE"><summary>🎨 Weitere Farbschemen</summary><div class="designwahl" id="designWahlMehrE"></div></details>
         <details class="ds-mehr" id="designBuntKlappeE"><summary>✨ Ausgefallene Farbschemen</summary><div class="designwahl" id="designWahlBuntE"></div></details></div>
       <div class="schalter"><div><b>🔠 Große Schrift</b></div><input type="checkbox" id="setGrossE" onchange="einstellung('gross', this.checked); if ($('setGross')) $('setGross').checked = this.checked"></div>
+      <div class="schalter"><div><b>❓ Fragezeichen unten rechts</b><div class="hinweis">Öffnet die passende Hilfe zum Bereich. Ausblenden geht auch: lange auf das „?“ drücken</div></div><input type="checkbox" id="setHzFrageE" checked onchange="hzFrageSchalter(this.checked)"></div> <!-- KC-CLUB-HILFEZENTRUM (2.23.5) -->
       <div class="schalter"><div><b>🟢 Einfache Ansicht</b><div class="hinweis">Ausschalten zeigt alle Funktionen – du kannst jederzeit zurück.</div></div><button class="knopf klein" onclick="ansichtSetzen('erweitert')">🔧 Alle Funktionen</button></div>
       <div class="schalter"><div><b>📄 Kurzanleitung</b><div class="hinweis">Die App in 3 Schritten – zum Ansehen oder Ausdrucken</div></div><button class="knopf klein" onclick="druckStarten('anleitung')">Ansehen</button></div>
       <div class="schalter"><div><b>💭 Feedback</b><div class="hinweis">Was gefällt dir, was ist zu kompliziert? Schreib es <span class="admin-name">Hansi</span>.</div></div><button class="knopf klein" onclick="zeige('feedback')">Schreiben</button></div>
@@ -2236,6 +2289,8 @@
     <details class="karte" data-klappe="ansagen" data-einfach open>
       <summary>🗣️ Ansagen, Töne &amp; Tipps</summary>
       <div class="schalter"><div><b>💡 Tipp des Tages</b><div class="hinweis">Beim Öffnen ab und zu ein kurzer Tipp zu neuen Funktionen</div></div><input type="checkbox" id="setTipps" checked onchange="tippSchalter(this.checked)"></div>
+      <div class="schalter"><div><b>❓ Fragezeichen unten rechts</b><div class="hinweis">Öffnet die passende Hilfe zum Bereich. Ausblenden geht auch: lange auf das „?“ drücken</div></div><input type="checkbox" id="setHzFrage" checked onchange="hzFrageSchalter(this.checked)"></div> <!-- KC-CLUB-HILFEZENTRUM (2.23.5) -->
+      <div class="schalter"><div><b>❓ Alle Tipps nachlesen</b><div class="hinweis">Hilfe-Zentrum: alle Tipps und Erklärungen nach Themen – auch im Register Technik</div></div><button class="knopf klein" onclick="hzStart()">Öffnen</button></div>
       <!-- KC-CLUB-EINWEISUNG (2.4.0) -->
       <div class="schalter"><div><b>🎓 Einweisung beim ersten Öffnen</b><div class="hinweis">Beim ersten Besuch eines Bereichs eine kurze Erklärung, was man dort machen kann</div></div><input type="checkbox" id="setEinw" checked onchange="einwSchalter(this.checked)"></div>
       <button class="knopf klein" onclick="einwZuruecksetzen()">🎓 Alle Einweisungen nochmal zeigen</button>
@@ -2622,6 +2677,7 @@
     <button class="knopf" onclick="unterhaltungWeg(false)">🙈 Nur bei mir entfernen</button>
     <p class="hinweis" style="margin:0 4px 6px;font-size:.85rem">Die anderen behalten sie. Schreibt jemand wieder, erscheint sie erneut.</p>
     <button class="knopf haupt versteckt" id="chatAllesLoeschen" onclick="unterhaltungWeg(true)">🗑️ Für alle löschen (Admin)</button>
+    <button class="knopf" onclick="$('chatBlatt').classList.add('versteckt');hzFrage('chat')">❓ Hilfe zum Chat</button> <!-- 2.23.4 -->
     <button class="knopf" onclick="$('chatBlatt').classList.add('versteckt')">Abbrechen</button></div>
 </div>
 <div class="blatt versteckt" id="anlageBlatt" onclick="if(event.target===this)this.classList.add('versteckt')">
@@ -2651,7 +2707,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.22.22"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.6"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3384,6 +3440,7 @@ const EINWEISUNG = [
   { id: "b-stadt", blatt: true, sym: "🏙️", t: "Termine der Stadt Werne", x: "Die Termine aus dem Veranstaltungskalender der Stadt Werne. Ankreuzen, was in unseren Clubkalender soll – die Mitglieder bekommen dabei keine Nachricht. Unter <b>🔁 Automatisch</b> holt die App neue Stadt-Termine einmal pro Woche selbst.", nur: () => !!ICH?.admin },
   { id: "b-admin", blatt: true, sym: "🛠️", t: "Admin-Register", x: "Dein Leitstand: Das Lämpchen jeder Kachel zeigt, ob alles läuft – 🟢 gut, 🟡 aufpassen, 🔴 Problem, ⚪ unbekannt. Antippen öffnet Einzelheiten und die passenden Werkzeuge. Im Ernstfall zuerst <b>🧯 Notfall</b> öffnen.", nur: () => !!ICH?.admin },
   { id: "b-notfall", blatt: true, sym: "🚨", t: "SOS-Nachricht an alle", x: "Nur für echte Notfälle: Dein Text geht sofort an <b>alle</b> Mitglieder – als Push und E-Mail, auch in der Ruhezeit – und wird bei ihnen laut vorgelesen. Danach kannst du ihn noch per WhatsApp oder SMS schicken. Zum Ausprobieren: <b>🧪 Probe nur an mich</b>. 112 und 110 rufen direkt an." },
+  { id: "hilfezentrum", sym: "❓", t: "Hilfe & Tipps", x: "Hier findest du alle Tipps und Erklärungen der App an einem Ort. Ganz vorne steht das <b>📖 Inhalt</b> mit allen Themen und wie viele Hilfen darin liegen – antippen springt hin. Oben kannst du nach einem Wort suchen, z. B. „Farbe“. Mit <b>👉 Zeig mir wo</b> führt dich die App direkt an die richtige Stelle." }, // KC-CLUB-HILFEZENTRUM (2.23.0)
   { id: "buero", sym: "🗂️", t: "Büro der Clubleitung", x: "Nur für die Clubleitung: Regal mit Ordnern, Schreibtisch für die laufende Arbeit, Freud & Leid (Glückwünsche, Genesungswünsche) und Briefe. Normale Mitglieder sehen das Büro nicht.", nur: () => !!ICH?.buero },
 ];
 const einwStand = () => ({ an: true, gesehen: {}, ...(INIT?.einstellungen?.einweisung || {}) });
@@ -3492,6 +3549,297 @@ function tippDesTages() {
   $("tdtAus").onclick = () => { zu(); tippSpeichern({ an: false }); melde("🔕 Keine Tipps mehr – einschalten kannst du sie unter ⚙️ Einstellungen"); };
   $("tdtBlatt").classList.remove("versteckt");
   return true;
+}
+// ---------- KC-CLUB-HILFEZENTRUM (2.23.0, Wunsch Hansi): alle Tipps und Hinweise an einem Ort – Kachel „❓ Hilfe & Tipps“ im Register Technik ----------
+// Deckblatt „📖 Inhalt“ mit allen Themen (Link + Anzahl), darunter ein Register je Thema und eine Suche. Passt sich selbst an:
+// gesammelt wird zur Laufzeit aus TIPPS (Tipp des Tages), EINWEISUNG (Bereiche kurz erklärt) und HILFE (eigene Hilfetexte, hier).
+// Erweitern: neuen Eintrag in HILFE (oder TIPPS/EINWEISUNG) anlegen – Thema über „thema“ (bei TIPPS ersatzweise HILFE_TIPP_THEMA).
+// Neues Thema = ein Eintrag in HILFE_THEMEN. Ohne bekanntes Thema landet ein Eintrag unter „📦 Weitere Tipps“ (geht nie verloren).
+// „seit: "x.y.z"“ markiert einen Eintrag als 🆕 für alle, die das Hilfe-Zentrum zuletzt mit einer älteren Version geöffnet haben.
+const HILFE_THEMEN = [
+  { id: "erste", sym: "👋", t: "Erste Schritte", u: "Willkommen – so fängst du gut an" }, // 2.23.3 (Wunsch Hansi): Kapitel 1, persönlich von Hansi
+  { id: "start", sym: "🏠", t: "Startseite & Bedienung", u: "Kacheln, Register, Ansichten, Zurück" },
+  { id: "darstellung", sym: "🎨", t: "Aussehen & Darstellung", u: "Farbe, Tag/Nacht, Schrift, Wetter" },
+  { id: "nachrichten", sym: "💬", t: "Nachrichten & Chat", u: "Schreiben, Reagieren, Diktieren" },
+  { id: "termine", sym: "📅", t: "Termine & Kalender", u: "Zusagen, Mitfahren, Handy-Kalender" },
+  { id: "club", sym: "🤝", t: "Clubleben", u: "Pinnwand, Fotos, Archiv, Helfen, Spiele" },
+  { id: "toene", sym: "🔔", t: "Benachrichtigungen & Töne", u: "Push, Ansagen, Ruhezeit, Tipps" },
+  { id: "privat", sym: "🔒", t: "Privatsphäre & Zugang", u: "Wer sieht was, dein Link" },
+  { id: "notfall", sym: "🆘", t: "Notfall", u: "SOS, Notfallpass, Standort" },
+  { id: "technik", sym: "🛠️", t: "Technik & Probleme lösen", u: "Update, Installieren, Sicherheit" },
+  { id: "bereiche", sym: "🎓", t: "Bereiche kurz erklärt", u: "Was kann ich wo machen?" },
+  { id: "weitere", sym: "📦", t: "Weitere Tipps", u: "Noch keinem Thema zugeordnet" },
+];
+// Tipp des Tages → Thema (neue Tipps hier eintragen oder direkt „thema“ am Tipp setzen; der Vertragstest prüft das)
+const HILFE_TIPP_THEMA = {
+  farbschemen_neu: "darstellung", sprachansage: "toene", vorlesen: "toene", archiv_ordner: "club", wischen: "nachrichten", emoji: "nachrichten",
+  reaktion: "nachrichten", erwaehnung: "nachrichten", sos: "notfall", bearbeiten: "nachrichten", stumm: "nachrichten", schnellstart: "start",
+  anklopfen: "nachrichten", notfallpass: "notfall", lupe: "start", ruhe: "toene", antwort_zurueck: "termine", mitfahren: "termine",
+  kalender: "termine", klappe: "start", rechtschreibung: "nachrichten", private_termine: "termine", diktieren: "nachrichten", fotoalben: "club",
+  chronik: "club", helfen_leihen: "club",
+};
+const hzDesign = () => { const e = einfach(); einstiegHin(e ? "einfach" : "darstellung", e ? "farbeE" : "designWahl"); };
+const hzTechnik = () => { zeige("start"); if (!einfach()) register("programme"); };
+const HILFE = [
+  // 👋 Erste Schritte (2.23.3, Text von Hansi)
+  { id: "willkommen", thema: "erste", sym: "👋", t: "Herzlich willkommen!", x: "Nach dem Installieren begrüßt dich die App. Schön, dass du dabei bist! Auf dieser Seite stehen die ersten Schritte, mit denen du gut in die Club-App startest.", seit: "2.23.3" },
+  { id: "erst_einstellungen", thema: "erste", sym: "⚙️", t: "Zuerst: deine Einstellungen", x: "Am Anfang solltest du erst einmal deine Einstellungen vornehmen – hinter dem <b>Zahnrad ⚙️</b> (unten in der Leiste bei „Mehr“). Dort stellst du zum Beispiel Töne, Benachrichtigungen, Schriftgröße und Farben ganz nach deinem Geschmack ein.", zeig: () => zeige("einstellungen"), seit: "2.23.3" },
+  { id: "erst_einfach", thema: "erste", sym: "🟢", t: "Mit der einfachen Ansicht beginnen", x: "Danach wählst du für den Anfang am besten die <b>einfache Ansicht</b> – nur das Wichtigste, mit großen Knöpfen. Zur erweiterten Ansicht kannst du jederzeit umschalten. Nach kurzer Zeit wirst du dich sicherlich gut zurechtfinden.", zeig: () => einstiegHin(einfach() ? "einfach" : "darstellung"), seit: "2.23.3" },
+  { id: "erst_hilfetexte", thema: "erste", sym: "🎓", t: "Kurze Hilfetexte in jedem Bereich", x: "In jedem Bereich habe ich kurze Hilfetexte eingebaut, die dir den Einstieg erleichtern. Bei Bedarf kannst du sie dir auch <b>vorlesen lassen</b> – einfach auf „🔊 Vorlesen“ tippen. Hier im Hilfe-Zentrum findest du alles noch einmal zum Nachlesen.", seit: "2.23.3" },
+  { id: "erst_feedback", thema: "erste", sym: "💭", t: "Dein Feedback ist mir wichtig", x: "Wenn du eine Zeit lang mit der App gearbeitet hast, würde ich mich sehr über dein <b>Feedback</b> freuen. Den Feedback-Knopf findest du in der erweiterten Ansicht im Register <b>„Club“</b>.<br><br>Viel Spaß beim Entdecken!<br>Liebe Grüße<br><b>Hansi</b>", zeig: () => zeige("feedback"), seit: "2.23.3" },
+  // 🏠 Startseite & Bedienung
+  { id: "kachel_lang", thema: "start", sym: "🧩", t: "Startseite aufräumen: Kacheln verschieben", x: "Du möchtest deinen Bildschirm aufräumen oder umorganisieren? Drück auf der Startseite eine Kachel <b>lange</b> (gut eine halbe Sekunde) – dann öffnet sich „Anordnen“ und die Kachel hängt an deinem Finger. Zieh sie an den neuen Platz und lass los. Mit ◀ ▶ ▲ ▼ geht es auch Schritt für Schritt. Fertig? „✅ Fertig“ tippen.", zeig: () => { zeige("start"); kaBearbeiten(true); } },
+  { id: "kachel_aus", thema: "start", sym: "🙈", t: "Kacheln ausblenden und wieder holen", x: "Beim Anordnen hat jede Kachel oben ein <b>✕</b> – damit blendest du sie aus, deine Daten bleiben erhalten. Ausgeblendete Kacheln stehen blass dazwischen und kommen mit <b>👁️ Einblenden</b> zurück. Unter den Kacheln steht außerdem „🙈 … ausgeblendete Kacheln – anzeigen“. (Nur in der erweiterten Ansicht.)", zeig: () => { zeige("start"); kaBearbeiten(true); } },
+  { id: "register_ziehen", thema: "start", sym: "↔️", t: "Register umsortieren (Club, Meins, Technik …)", x: "Ein Register oben auf der Startseite <b>festhalten</b>, bis es sich hebt – dann nach links oder rechts ziehen und loslassen. Die App merkt sich deine Reihenfolge auf allen deinen Geräten. (Nur in der erweiterten Ansicht.)", zeig: () => zeige("start") },
+  { id: "register_wischen", thema: "start", sym: "👆", t: "Zwischen den Registern wischen", x: "Auf der Startseite wischst du über die Kacheln nach <b>links oder rechts</b> und kommst zum nächsten Register. Die kleine Zahl am Register zeigt, wie viele Kacheln darin liegen – „8/10“ heißt: 2 sind ausgeblendet.", zeig: () => zeige("start") },
+  { id: "ansicht", thema: "start", sym: "🟢", t: "Einfache oder erweiterte Ansicht", x: "Die <b>einfache Ansicht</b> zeigt nur das Wichtigste mit großen Knöpfen, die <b>erweiterte</b> alle Funktionen mit Registern. Umschalten: ⚙️ Einstellungen → <b>🎨 Darstellung</b> → „🟢 Einfache Ansicht“ – oder ganz unten auf der Startseite. Zurück geht es mit „🔧 Mehr Funktionen anzeigen“.", zeig: () => einstiegHin(einfach() ? "einfach" : "darstellung") },
+  { id: "infofeld", thema: "start", sym: "🪧", t: "Das farbige Info-Feld oben", x: "Oben auf der Startseite blätterst du mit <b>‹ ›</b> (oder Wischen im Feld) durch den nächsten Termin, das Wetter und Neues für dich. Ob das Feld beim Start erscheint, stellst du unter ⚙️ → Darstellung → „🪧 Info-Feld oben beim Start“ ein.", zeig: () => einstiegHin("darstellung", "setInfoStart") },
+  { id: "zurueck", thema: "start", sym: "‹", t: "„Zurück“ bleibt in der App", x: "Die Zurück-Taste deines Handys oder der Pfeil <b>‹</b> oben links geht eine Ansicht zurück – die App schließt sich dabei nicht. Ist ein Fenster offen, schließt „Zurück“ zuerst nur das Fenster, deine Eingabe bleibt stehen." },
+  { id: "frage_knopf", thema: "start", sym: "❓", t: "Das Fragezeichen unten rechts", x: "Das runde <b>„?“</b> neben der Lupe öffnet in jedem Bereich gleich die passende Hilfe. Stört es dich? <b>Lange darauf drücken</b> blendet es aus. Zurück holst du es unter ⚙️ Einstellungen → <b>„❓ Fragezeichen unten rechts“</b>.", zeig: () => einstiegHin(einfach() ? "einfach" : "ansagen", einfach() ? "setHzFrageE" : "setHzFrage"), seit: "2.23.5" },
+  { id: "einstellung_suchen", thema: "start", sym: "🔍", t: "Jede Einstellung schnell finden", x: "In den Einstellungen findest du mit der <b>Lupe 🔍 unten rechts</b> jede Einstellung – z. B. „Ton“ oder „Farbe“ eingeben. Bereiche öffnest du durch Antippen der Überschrift, mit dem Schloss 🔒 hältst du sie offen oder zu.", zeig: () => zeige("einstellungen") },
+  { id: "kurzanleitung", thema: "start", sym: "📄", t: "Kurzanleitung zum Ausdrucken", x: "Die App in 3 Schritten – zum Ansehen oder Ausdrucken, z. B. für jemanden, der neu ist. Zu finden unter ⚙️ → Darstellung → „📄 Kurzanleitung“.", zeig: () => druckStarten("anleitung") },
+  { id: "ueberblick", thema: "start", sym: "🗺️", t: "Die Club-App auf einen Blick", x: "Was kann die App, und was ist zuletzt dazugekommen? Das steht in „🗺️ Club-App auf einen Blick“ unter <b>📚 Meine Dokumente</b> – es aktualisiert sich mit jeder Version selbst.", zeig: () => zeige("ueberblick") },
+  // 🎨 Aussehen & Darstellung
+  { id: "farbe", thema: "darstellung", sym: "🎨", t: "Die Farbe der App ändern", x: "Du kannst die Farbe einstellen: ⚙️ Einstellungen → Register <b>🎨 Darstellung</b> → „🎨 Farbdesign“. Unter „Weitere Farbschemen“ und „✨ Ausgefallene Farbschemen“ gibt es noch mehr. Antippen – die App färbt sich sofort um.", zeig: hzDesign },
+  { id: "nacht", thema: "darstellung", sym: "🌗", t: "Tag- und Nachtmodus", x: "⚙️ → Darstellung → „🌗 Tag- und Nachtmodus“: <b>🔄 Automatisch</b> (folgt deinem Handy), <b>☀️ Immer Tag</b> oder <b>🌙 Immer Nacht</b>. Nachts ist der dunkle Modus angenehmer für die Augen.", zeig: () => einstiegHin("darstellung", "modusWahl") },
+  { id: "schrift", thema: "darstellung", sym: "🔠", t: "Größere Schrift", x: "Ist dir die Schrift zu klein? ⚙️ → Darstellung → „🔠 Große Schrift“ einschalten – alles wird etwas größer.", zeig: () => einstiegHin("darstellung", "setGross") },
+  { id: "mitglieder_ansicht", thema: "darstellung", sym: "👥", t: "Mitglieder als Kacheln oder Liste", x: "Ob du die Mitglieder als <b>🔲 Kacheln</b> oder als <b>☰ Liste</b> siehst, wählst du unter ⚙️ → Darstellung oder direkt oben bei den Mitgliedern.", zeig: () => einstiegHin("darstellung", "mgAnsichtWahl") },
+  { id: "feiertage", thema: "darstellung", sym: "🇩🇪", t: "Feiertage im Kalender", x: "Die Feiertage in NRW kannst du im Club-Kalender ein- oder ausblenden: ⚙️ → Darstellung → „🇩🇪 Feiertage NRW im Kalender“.", zeig: () => einstiegHin("darstellung", "setFeiertage") },
+  { id: "wetter", thema: "darstellung", sym: "🌦️", t: "Wetter für deinen Ort", x: "Im Info-Feld oben steht das Wetter. Unter ⚙️ → Darstellung → „🌦️ Wetter für“ wählst du deinen eigenen Ort.", zeig: () => einstiegHin("darstellung", "meinWetterort") },
+  // 🔔 Benachrichtigungen & Töne
+  { id: "push", thema: "toene", sym: "🔔", t: "Benachrichtigungen je Bereich", x: "Unter ⚙️ → <b>„🔔 Benachrichtigungen“</b> legst du für jeden Bereich fest, ob du eine Push-Nachricht, eine E-Mail oder nichts bekommst.", zeig: () => einstiegHin("benachrichtigung") },
+  { id: "test_an_mich", thema: "toene", sym: "🧪", t: "Kommt meine Benachrichtigung an?", x: "Im Register <b>Meins</b> schickt dir „🧪 Test an mich“ einen Probe-Push und eine Probe-Mail. So siehst du sofort, ob alles ankommt.", zeig: () => { zeige("start"); if (!einfach()) register("mein"); } },
+  { id: "tipps_schalter", thema: "toene", sym: "💡", t: "Tipp des Tages an- oder ausschalten", x: "Beim Öffnen zeigt die App ab und zu einen Tipp. Ein- und ausschalten unter ⚙️ → „🗣️ Ansagen, Töne &amp; Tipps“ → „💡 Tipp des Tages“. Alle Tipps kannst du jederzeit hier im Hilfe-Zentrum nachlesen.", zeig: () => einstiegHin("ansagen", "setTipps") },
+  { id: "einweisung_wieder", thema: "toene", sym: "🎓", t: "Die Erklärungen nochmal sehen", x: "Beim ersten Öffnen eines Bereichs erklärt die App kurz, was man dort machen kann. Unter ⚙️ → „🗣️ Ansagen, Töne &amp; Tipps“ → „🎓 Einweisung“ holst du alle Erklärungen zurück. Nachlesen kannst du sie hier im Register <b>„🎓 Bereiche kurz erklärt“</b>.", zeig: () => einstiegHin("ansagen", "setEinw") },
+  // 🔒 Privatsphäre & Zugang
+  { id: "privatsphaere", thema: "privat", sym: "🔒", t: "Wer sieht was von mir?", x: "Du entscheidest selbst: Unter ⚙️ → <b>„🔒 Privatsphäre“</b> legst du z. B. fest, ob andere sehen, dass du online bist oder wann du zuletzt da warst, ob dein Geburtstag angezeigt wird, ob man bei dir anklopfen darf und ob andere dich zu Spielen herausfordern dürfen.", zeig: () => einstiegHin("privat") },
+  { id: "zugangslink", thema: "privat", sym: "🔗", t: "Dein persönlicher Zugangslink", x: () => `Die App öffnest du über deinen persönlichen Link. Gib ihn bitte <b>nicht weiter</b> – wer ihn hat, ist in der App als du angemeldet. Neues Handy oder Link verloren? ${esc(adminName())} erzeugt dir einen neuen.` },
+  // 🛠️ Technik & Probleme lösen
+  { id: "update", thema: "technik", sym: "🔄", t: "Neue Version holen", x: "Register <b>Technik</b> → „🔄 Update prüfen“. Steht dort „Neu“, einfach antippen – die App lädt die neue Version komplett und startet neu. Meist macht sie das auch von selbst.", zeig: hzTechnik },
+  { id: "installieren", thema: "technik", sym: "📲", t: "Die App auf den Startbildschirm legen", x: "Dann startet die Club-App wie jede andere App mit eigenem Symbol. Die Anleitung für dein Handy steht unter ⚙️ → <b>„📲 App-Installation“</b>.", zeig: () => einstiegHin("install") },
+  { id: "sicherheitscheck", thema: "technik", sym: "🛡️", t: "Läuft alles sicher?", x: "Ein gutes Gefühl mit einem Tipp: Register Technik → „🛡️ Sicherheits-Check“ prüft, ob die App auf deinem Gerät sicher und richtig läuft. Grüne Haken = alles gut; sonst steht dabei, was zu tun ist.", zeig: () => sicherheitStart() },
+  { id: "haengt", thema: "technik", sym: "🧯", t: "Die App hängt oder zeigt Altes", x: "Zuerst die App ganz schließen und neu öffnen. Hilft das nicht: Register Technik → „🔄 Update prüfen“. Bleibt das Problem, schreib kurz über <b>💭 Feedback</b>, was passiert ist. Fehler beim Starten meldet die App außerdem selbst an den Admin – nur Technik, keine Inhalte.", zeig: () => zeige("feedback") },
+  { id: "mikrofon", thema: "technik", sym: "🎤", t: "Diktieren oder Sprachnachricht klappt nicht", x: "Fragt das Handy nach dem Mikrofon, tippe <b>„Zulassen“</b>. Wurde es einmal abgelehnt, zeigt die App beim nächsten Versuch eine Anleitung, wie du das Mikrofon in den Handy-Einstellungen wieder erlaubst." },
+  { id: "version", thema: "technik", sym: "ℹ️", t: "Welche Version habe ich?", x: () => `Du hast gerade <b>Version ${esc(APP_VERSION)}</b>. Mehr dazu unter ⚙️ → „ℹ️ App-Info“.`, zeig: () => einstiegHin("app") },
+  { id: "programme_frei", thema: "technik", sym: "💻", t: "Freigegebene Programme", x: "Programme, die der Club für dich freigeschaltet hat (z. B. die Kassen-Schulung), liegen im Register Technik unter „💻 Freigegebene Programme“.", zeig: () => zeige("programme") },
+  // 🤝 Clubleben
+  { id: "feedback", thema: "club", sym: "💭", t: "Wunsch oder Fehler melden", x: "Dir fehlt etwas, oder etwas stört? Über die Kachel <b>💭 Feedback</b> geht deine Meinung direkt an den Admin – viele Funktionen der App sind so entstanden.", zeig: () => zeige("feedback") },
+  { id: "daten_geaendert", thema: "club", sym: "✏️", t: "Neue Anschrift oder Telefonnummer?", x: "Umgezogen oder eine neue Nummer? Im Register Meins → „✏️ Meine Daten geändert?“ meldest du es in wenigen Schritten. Die Meldung geht von selbst an die Richtigen im Club, und du bekommst Bescheid, sobald alles eingetragen ist.", zeig: () => aeStart() },
+  { id: "erstattung", thema: "club", sym: "💶", t: "Auslagen zurückbekommen", x: "Fahrtkosten, Einkäufe oder andere Auslagen für den Club beantragst du unter <b>💶 Erstattung</b> im Register Meins – Belege einfach abfotografieren.", zeig: () => zeige("erstattung") },
+  // 🆘 Notfall
+  { id: "wo_bin_ich", thema: "notfall", sym: "📍", t: "Im Notfall: Wo bin ich?", x: "In der roten <b>🆘 SOS</b>-Kachel zeigt „📍 Wo bin ich?“ deinen Standort als Adresse – zum Vorlesen am Telefon. Die Notrufnummern 112 und 110 rufst du dort direkt an.", zeig: () => sosStart() },
+  // 2.23.1 (Wunsch Hansi: „ganze App durchsuchen, weitere Hilfen – immer etwas anders formuliert, freundlich, nicht aufdringlich“)
+  // 💬 Nachrichten & Chat
+  { id: "anheften", thema: "nachrichten", sym: "📌", t: "Wichtiges oben im Chat festhalten", x: "Damit eine wichtige Nachricht nicht nach oben wegrutscht: einfach antippen und <b>„📌 Oben anheften“</b> wählen. Bis zu drei Nachrichten bleiben so über dem Chat stehen. Mit „Lösen“ kommen sie wieder an ihren Platz.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
+  { id: "merken", thema: "nachrichten", sym: "⭐", t: "Eine Nachricht für später merken", x: "Manchmal liest man etwas und möchte es später schnell wiederfinden. Tipp die Nachricht an und wähle <b>„⭐ Merken“</b>. Alles Gemerkte liegt in 💬 Nachrichten oben unter <b>„⭐ Gemerkt“</b> – diese Liste siehst nur du.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
+  { id: "chat_abstimmung", thema: "nachrichten", sym: "📊", t: "Schnell mal abstimmen", x: "Grillen oder Pizza? Freitag oder Samstag? Über <b>📎</b> unter dem Schreibfeld → <b>„📊 Abstimmung“</b> stellst du eine Frage mit 2 bis 8 Antworten. Alle sehen gleich, wie es gerade steht.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
+  { id: "kontakt_teilen", thema: "nachrichten", sym: "👤", t: "Eine Telefonnummer weitergeben", x: "Jemand fragt nach einer Nummer? Mit <b>📎 → „👤 Kontakt teilen“</b> schickst du eine Kontaktkarte in den Chat – der andere tippt sie an und hat alles beisammen.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
+  { id: "kopieren", thema: "nachrichten", sym: "📋", t: "Text aus einer Nachricht übernehmen", x: "Nachricht antippen, <b>„📋 Kopieren“</b> wählen – schon liegt der Text in der Zwischenablage und lässt sich überall einfügen, etwa in eine Mail.", seit: "2.23.1" },
+  { id: "weiterleiten", thema: "nachrichten", sym: "↪️", t: "Weitersagen leicht gemacht", x: "Soll jemand anderes eine Nachricht auch lesen? Antippen → <b>„↪️ Weiterleiten“</b> und die Person oder Unterhaltung aussuchen. Fertig.", seit: "2.23.1" },
+  { id: "neue_linie", thema: "nachrichten", sym: "⬇️", t: "Wo hatte ich aufgehört?", x: "Öffnest du einen Chat, zeigt eine Linie <b>„Neue Nachrichten“</b>, ab wo es für dich Neues gibt. Hast du weit nach oben geblättert, bringt dich der Knopf <b>⬇️</b> mit einem Tipp wieder ans Ende.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
+  { id: "entwurf", thema: "nachrichten", sym: "✏️", t: "Angefangener Text geht nicht verloren", x: "Mitten im Schreiben klingelt es an der Tür? Kein Problem – dein halb geschriebener Text bleibt in diesem Chat auf deinem Handy liegen. Der Hinweis <b>„✏️ Entwurf – noch nicht gesendet“</b> erinnert dich später daran.", seit: "2.23.1" },
+  { id: "ohne_netz", thema: "nachrichten", sym: "📵", t: "Schreiben, auch wenn das Netz weg ist", x: "Im Keller oder unterwegs kein Empfang? Schreib ruhig trotzdem. Die Nachricht zeigt <b>„⏳ wartet auf Netz“</b> und geht von ganz allein raus, sobald wieder Verbindung da ist.", seit: "2.23.1" },
+  { id: "haken", thema: "nachrichten", sym: "✔️", t: "Was die Haken an deinen Nachrichten bedeuten", x: "Wie bei WhatsApp: <b>graue Haken</b> heißen gesendet bzw. angekommen, <b>blaue Haken</b> heißen gelesen. Willst du es genau wissen, tipp deine Nachricht an – unter <b>„ℹ️ Nachricht – Einzelheiten“</b> steht mehr.", seit: "2.23.1" },
+  { id: "sprachtempo", thema: "nachrichten", sym: "⏩", t: "Lange Sprachnachrichten schneller hören", x: "Sprachnachrichten kannst du auch in <b>1,5×</b> oder <b>2×</b> abspielen – der kleine Tempo-Knopf sitzt direkt an der Sprachnachricht. Deine Wahl merkt sich das Handy.", seit: "2.23.1" },
+  { id: "chat_vorlesen", thema: "nachrichten", sym: "🔊", t: "Hände voll? Chat vorlesen lassen", x: "Gerade beim Kochen praktisch: im Chat oben <b>⋮</b> → <b>„🔊 Vorlesen ab den neuen Nachrichten“</b> oder <b>„🔊 Ganzen Chat vorlesen“</b>. Das Handy liest vor, du hörst einfach zu.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
+  { id: "whatsapp", thema: "nachrichten", sym: "🟢", t: "Text zusätzlich per WhatsApp schicken", x: "Ist jemand in der App noch nicht so oft unterwegs? Der grüne Knopf <b>„WA“</b> unter dem Schreibfeld übernimmt deinen Text nach WhatsApp – du musst ihn nicht nochmal tippen.", seit: "2.23.1" },
+  { id: "gruppe_loeschen", thema: "nachrichten", sym: "👥", t: "Eine Gruppe wieder auflösen", x: "Eine Gruppe wird nicht mehr gebraucht? Wer sie verwaltet, findet im Gruppenchat oben unter <b>⋮</b> den Punkt <b>„🗑️ Gruppe löschen (für alle)“</b>. Vorher fragt die App lieber noch einmal nach.", seit: "2.23.1" },
+  // 📅 Termine & Kalender
+  { id: "wiederholen", thema: "termine", sym: "🔁", t: "Termine, die immer wiederkommen", x: "Jeden Dienstag Chorprobe? Beim Anlegen eines privaten Termins wählst du unter <b>„🔁 Wiederholen“</b> täglich, werktags, wöchentlich, alle 2 Wochen und mehr – dann trägst du ihn nur einmal ein.", zeig: () => zeige("termine"), seit: "2.23.1" },
+  { id: "todo", thema: "termine", sym: "✅", t: "Gemeinsame To-do-Liste", x: "In den Terminen gibt es oben den Reiter <b>„✅ To-do“</b> – zum Beispiel für Einkäufe oder Bestellungen. Mit <b>„👉 Wer soll es machen?“</b> kannst du eine Aufgabe auch an mehrere Leute verteilen.", zeig: () => { termineArt = "todo"; zeige("termine"); }, seit: "2.23.1" },
+  { id: "terminanfrage", thema: "termine", sym: "📨", t: "Mit jemandem einen Termin ausmachen", x: "Statt hin und her zu schreiben: Termine → <b>„＋ Neu“</b> → <b>Terminanfrage</b>. Tag, Uhrzeit und Anlass eintragen – der andere antwortet bequem mit Ja, Nein oder Vielleicht.", zeig: () => zeige("termine"), seit: "2.23.1" },
+  { id: "terminfindung", thema: "termine", sym: "🗓️", t: "Einen Tag finden, der allen passt", x: "Ihr sucht einen gemeinsamen Termin? Unter Termine → <b>„＋ Neu“</b> → <b>Terminfindung</b> schlägst du mehrere Tage vor, und jeder kreuzt an, was bei ihm geht.", zeig: () => zeige("termine"), seit: "2.23.1" },
+  { id: "kalender_blaettern", thema: "termine", sym: "📆", t: "Liste oder Kalender – wie du magst", x: "Oben in den Terminen schaltest du zwischen <b>Liste</b> und <b>Kalender</b> um; die App merkt sich deine Wahl. Im Kalender blätterst du mit <b>‹ ›</b> durch die Monate und mit <b>« »</b> durch die Jahre.", zeig: () => zeige("termine"), seit: "2.23.1" },
+  { id: "drucken", thema: "termine", sym: "🖨️", t: "Termine auf Papier", x: "Lieber etwas zum Anheften am Kühlschrank? Das schmale <b>Druckersymbol</b> rechts in der Kopfzeile druckt Termine, Kalender oder To-dos – oder speichert sie als PDF.", zeig: () => zeige("termine"), seit: "2.23.1" },
+  { id: "naechstes_treffen", thema: "termine", sym: "⏳", t: "Direkt zum nächsten Treffen", x: "Das Feld <b>„Nächster Termin“</b> oben auf der Startseite ist mehr als eine Anzeige: Antippen öffnet die Termine gleich beim nächsten Treffen.", zeig: () => zeige("start"), seit: "2.23.1" },
+  { id: "dienst_erinnerung", thema: "termine", sym: "🗓️", t: "Erinnerung an deinen Dienst", x: "Am Vorabend denkt die App an deine Dienste aus dem veröffentlichten Dienstplan und erinnert dich daran. Ob als Push oder E-Mail, bestimmst du unter ⚙️ → „🔔 Benachrichtigungen“.", zeig: () => einstiegHin("benachrichtigung"), seit: "2.23.1" },
+  // 🤝 Clubleben
+  { id: "status", thema: "club", sym: "🟢", t: "Zeig den anderen, wie es dir geht", x: "Ob Urlaub oder eine volle Woche: Im Register Meins setzt du unter <b>„🟢 Mein Status“</b>, ob du verfügbar, beschäftigt, im Urlaub, krank oder abwesend bist – auf Wunsch mit einem „bis“. So wissen alle Bescheid, ohne dass du extra schreiben musst.", zeig: () => statusBlatt(), seit: "2.23.1" },
+  { id: "wer_online", thema: "club", sym: "🟢", t: "Wer ist gerade in der App?", x: "Bei den Mitgliedern schaltest du oben zwischen <b>👥 Alle</b> und <b>🟢 Online</b> um. Ein grüner Punkt am Namen heißt: Die Person ist gerade da – vielleicht ein guter Moment für eine kurze Nachricht.", zeig: () => zeige("mitglieder"), seit: "2.23.1" },
+  { id: "gratulieren", thema: "club", sym: "🎂", t: "Geburtstagsgrüße mit einem Tipp", x: "Hat jemand Geburtstag, zeigt es dir die App – antippen und gratulieren. Deinen eigenen Geburtstag (ohne Jahr) sehen die anderen nur, wenn du es unter ⚙️ → „🔒 Privatsphäre“ erlaubst.", seit: "2.23.1" },
+  { id: "pinnwand_antwort", thema: "club", sym: "✍️", t: "Auf einen Zettel an der Pinnwand antworten", x: "An fremden Zetteln findest du <b>„✍️ Antworten“</b> – so reagierst du direkt auf genau diesen Zettel. Für einen kurzen Gruß reicht auch ein Emoji.", zeig: () => zeige("pinnwand"), seit: "2.23.1" },
+  { id: "pinnwand_wichtig", thema: "club", sym: "❗", t: "Einen eigenen Zettel hervorheben", x: "Ist dir ein Zettel besonders wichtig, kannst du ihn nachträglich mit <b>„❗ wichtig machen“</b> markieren – dann sieht ihn jeder beim Öffnen der App. Genauso leicht nimmst du die Markierung wieder weg.", zeig: () => zeige("pinnwand"), seit: "2.23.1" },
+  { id: "pinnwand_alt", thema: "club", sym: "📌", t: "Wenn ein Zettel schon länger hängt", x: "Die App fragt nach einiger Zeit freundlich nach, ob dein Zettel noch hängen soll. Ein Tipp auf <b>„Hängen lassen“</b> genügt – oder du nimmst ihn ab, und die Wand bleibt übersichtlich.", zeig: () => zeige("pinnwand"), seit: "2.23.1" },
+  { id: "foto_details", thema: "club", sym: "ℹ️", t: "Wann und wo war das?", x: "Im Fotoalbum ein Bild groß öffnen und auf <b>„ℹ️ Details“</b> tippen – dann siehst du, wann das Foto aufgenommen wurde und, falls bekannt, wo.", zeig: () => zeige("fotos"), seit: "2.23.1" },
+  { id: "foto_teilen", thema: "club", sym: "📥", t: "Fotos direkt aus der Galerie schicken", x: "Ist die Club-App installiert, taucht sie beim Teilen in der Handy-Galerie auf: Foto auswählen → <b>Teilen → Köcheclub</b>. Kein Umweg über das Fotoalbum nötig.", seit: "2.23.1" },
+  { id: "hilfe_anbieten", thema: "club", sym: "🤲", t: "Du kannst etwas besonders gut?", x: "Unter 🤝 Helfen &amp; Leihen → <b>„＋ Neu“</b> → <b>„🤲 Ich biete Hilfe an“</b> machst du ein Angebot, zum Beispiel beim Einrichten der App. Es erscheint als Kachel für alle.", zeig: () => hlStart(), seit: "2.23.1" },
+  { id: "hilfe_absprache", thema: "club", sym: "🙋", t: "Hilfe gesucht, aber noch ohne festen Tag", x: "Beim Hilfe-Aufruf musst du dich nicht auf ein Datum festlegen – „nach Absprache“ geht auch. Und wenn jede helfende Hand willkommen ist, wähle bei der Anzahl <b>„♾️ Egal wie viele“</b>.", zeig: () => hlStart(), seit: "2.23.1" },
+  { id: "vorschlag_unterstuetzen", thema: "club", sym: "👍", t: "Gute Ideen unterstützen", x: "Bei den <b>🗳️ Vorschlägen</b> kannst du Themen anderer mit 👍 unterstützen. So sieht die Clubleitung schnell, was vielen am Herzen liegt.", zeig: () => zeige("vorschlaege"), seit: "2.23.1" },
+  { id: "spende", thema: "club", sym: "💝", t: "Ein Spendenprojekt vorschlagen", x: "Kennst du ein Projekt, das der Club unterstützen könnte? Bei den Vorschlägen gibt es dafür die Art <b>„💝 Spende“</b> – die Projekte kommen dann in die nächste Sitzung.", zeig: () => zeige("vorschlaege"), seit: "2.23.1" },
+  { id: "spiel_mitglieder", thema: "club", sym: "🎲", t: "Gegen andere Mitglieder spielen", x: "In den Spielen unter <b>„👥 Gegen Mitglieder“</b> forderst du jemanden heraus – ihr zieht abwechselnd, und du bekommst Bescheid, wenn du dran bist. An offenen Partien lässt sich sogar <b>„📅 Termin vereinbaren“</b>. Oben steht der 🏆 Pokal des Monats.", zeig: () => spStart(), seit: "2.23.1" },
+  { id: "spiel_pause", thema: "club", sym: "⏸", t: "Spiel kurz anhalten", x: "Kommt beim Spielen gegen den Computer etwas dazwischen? Unten auf <b>„⏸ Pause“</b> tippen – mit <b>„▶ Weiter“</b> geht es genau dort weiter.", zeig: () => spStart(), seit: "2.23.1" },
+  // 🔔 Benachrichtigungen & Töne
+  { id: "meine_geraete", thema: "toene", sym: "📱", t: "Auf welchen Geräten kommt Push an?", x: "Kommt auf dem Tablet nichts an? Unter ⚙️ → „🔔 Benachrichtigungen“ zeigt <b>„📱 Meine Geräte“</b>, welche deiner Handys und Tablets Benachrichtigungen bekommen. Daneben schickt „Test-Push senden“ eine Probe.", zeig: () => einstiegHin("benachrichtigung"), seit: "2.23.1" },
+  { id: "anklopfton", thema: "toene", sym: "🔔", t: "Ein Anklopfton nach deinem Geschmack", x: "Holz-Klopfen, Ding-Dong, Gong oder Glöckchen: Welcher Ton erklingt, wenn jemand bei dir anklopft, suchst du dir unter ⚙️ → „🔒 Privatsphäre“ aus.", zeig: () => einstiegHin("privat"), seit: "2.23.1" },
+  { id: "ansage_verlassen", thema: "toene", sym: "🚪", t: "Ansage, wenn jemand die App verlässt", x: "Neben „… ist jetzt online“ kann das Handy auch ansagen, wenn jemand die App verlässt. Das ist zunächst aus – unter ⚙️ → „🗣️ Ansagen, Töne &amp; Tipps“ kannst du es dazunehmen, wenn du magst.", zeig: () => einstiegHin("ansagen"), seit: "2.23.1" },
+  // 🔒 Privatsphäre & Zugang
+  { id: "live_tippen", thema: "privat", sym: "👁️", t: "Sehen andere, was ich tippe?", x: "Nein – solange du es nicht willst. Die Einstellung <b>„👁️ Andere sehen live, was ich tippe“</b> unter ⚙️ → „🔒 Privatsphäre“ ist von Haus aus aus. Normal sehen die anderen nur „schreibt …“.", zeig: () => einstiegHin("privat", "setLiveTippen"), seit: "2.23.1" },
+  { id: "zuletzt_da", thema: "privat", sym: "🕒", t: "„Zuletzt da“ lieber für dich behalten?", x: "Wie bei WhatsApp kannst du entscheiden, ob andere sehen, wann du zuletzt in der App warst: ⚙️ → „🔒 Privatsphäre“ → <b>„🕒 Anderen zeigen, wann ich zuletzt da war“</b>.", zeig: () => einstiegHin("privat"), seit: "2.23.1" },
+  { id: "link_verloren", thema: "privat", sym: "✉️", t: "Link verloren – was nun?", x: "Keine Sorge. Auf der Anmeldeseite gibt es <b>„Link verloren?“</b>: E-Mail-Adresse eingeben, und ein neuer persönlicher Link kommt per Mail. Ausgesperrt wirst du dabei nicht.", seit: "2.23.1" },
+  { id: "code_geraet", thema: "privat", sym: "🔢", t: "Zweites Gerät ganz ohne Link anmelden", x: "Bist du auf einem Gerät schon angemeldet, holst du dir dort unter ⚙️ → „📲 App-Installation“ → <b>„🔢 Code für ein anderes Gerät“</b> einen 6-stelligen Code. Den tippst du auf dem neuen Gerät ein – fertig.", zeig: () => einstiegHin("install"), seit: "2.23.1" },
+  // 🆘 Notfall
+  { id: "notfallkontakt", thema: "notfall", sym: "☎️", t: "Wen sollen wir im Notfall anrufen?", x: "Hoffentlich brauchst du es nie – aber für alle Fälle: In der roten SOS-Kachel steht vorne deine eigene Kachel <b>„(du)“</b>. Dort siehst du, ob ein Notfallkontakt hinterlegt ist, und kannst ihn eintragen oder ändern. Den Kontakt sieht nur die Clubleitung.", zeig: () => sosStart(), seit: "2.23.1" },
+  { id: "notfallpass_sichern", thema: "notfall", sym: "🗄️", t: "Den Notfallpass zusätzlich sichern", x: "Dein Notfallpass liegt nur auf deinem Handy. Mit <b>„🗄️ In mein Archiv kopieren“</b> legst du eine Kopie in deinen persönlichen Archiv-Ordner – falls das Handy einmal gewechselt wird.", zeig: () => { sosStart(); nfpBearbeiten(); }, seit: "2.23.1" },
+  // 🏠 Startseite & Bedienung
+  { id: "info_springen", thema: "start", sym: "⏭️", t: "Im Info-Feld schnell springen", x: "Unter dem einfachen Pfeil ‹ › im farbigen Feld sitzt jeweils ein Doppelpfeil <b>« »</b> – damit landest du sofort bei der ersten oder letzten Karte, etwa bei „🗓️ Demnächst“ oder „📷 Neueste Fotos“.", zeig: () => zeige("start"), seit: "2.23.1" },
+  { id: "modus_knopf", thema: "darstellung", sym: "🌓", t: "Tag und Nacht mit einem Tipp", x: "In der erweiterten Ansicht sitzt oben im Kopf ein Sonne/Mond-Knopf. Jeder Tipp schaltet reihum: <b>A</b> (Automatik) → <b>T</b> (immer Tag) → <b>N</b> (immer Nacht). Das kleine Schild am Knopf verrät, was gerade gilt.", zeig: () => zeige("start"), seit: "2.23.1" },
+  { id: "wetter_tage", thema: "darstellung", sym: "🌤️", t: "Wetter für die ganze Woche", x: "Die Wetterkarte im Info-Feld lässt sich zur Seite schieben: Sieben Tage stehen nebeneinander, der Tag des nächsten Treffens ist mit 📅 markiert. Einen Tag antippen zeigt mehr.", zeig: () => zeige("start"), seit: "2.23.1" },
+  { id: "verbindung", thema: "technik", sym: "🟢", t: "Das kleine Lämpchen oben", x: "Oben im Kopf zeigt ein Lämpchen, ob die App Verbindung hat. Im Zweifel einfach antippen – dann steht da zum Beispiel <b>„✅ Verbindung in Ordnung“</b>.", zeig: () => zeige("start"), seit: "2.23.1" },
+  { id: "app_schliessen", thema: "technik", sym: "🚪", t: "Die App ganz schließen", x: "Wenn du fertig bist, findest du <b>„🚪 App schließen“</b> ganz unten auf der Startseite und in den Einstellungen. Nötig ist das aber nicht – die App darf auch einfach im Hintergrund bleiben.", seit: "2.23.1" },
+  { id: "pc_tablet", thema: "technik", sym: "💻", t: "Auch am PC oder Tablet", x: "Auf dem großen Bildschirm liest es sich manchmal angenehmer. Unter ⚙️ → „📲 App-Installation“ → <b>„💻 Auch am PC oder Tablet nutzen“</b> steht, wie das klappt.", zeig: () => einstiegHin("install"), seit: "2.23.1" },
+  { id: "was_ist_neu", thema: "technik", sym: "🆕", t: "Was hat sich geändert?", x: "Neugierig, was die letzte Version gebracht hat? Ein Tipp auf <b>„🔄 Update prüfen“</b> im Register Technik zeigt auch <b>„Was ist neu?“</b>. Neue Hilfen sind hier im Hilfe-Zentrum außerdem mit <span class=\"hz-neu\">neu</span> markiert.", zeig: hzTechnik, seit: "2.23.1" },
+  // nur für die Clubleitung
+  { id: "buero_sprache", thema: "club", sym: "🎙️", t: "Im Büro einfach sagen, was du brauchst", x: "Im Büro gibt es das Mikrofon <b>„🎙️ Sag mir, was du brauchst“</b> – zum Beispiel „Öffne Ordner Protokolle“. Das spart Tipperei, wenn es schnell gehen soll.", nur: () => !!ICH?.buero, zeig: () => buStart(), seit: "2.23.1" },
+];
+const HZ = { thema: null, q: "", vorher: null, gruss: 0, unterwegs: null, herkunft: null };
+// 2.23.1 (Wunsch Hansi: „immer etwas anders formuliert, freundlich, nicht aufdringlich“): wechselnde Einleitungen – neu gewählt
+// beim Öffnen und bei jedem Themenwechsel (nicht beim Tippen in der Suche, damit nichts flackert)
+const HZ_GRUSS = [
+  (n) => `Schön, dass du reinschaust${n ? ", " + n : ""}!`, () => "Hier kannst du in Ruhe stöbern – merken musst du dir nichts davon.",
+  (n) => `${n ? n + ", such" : "Such"} dir einfach ein Thema aus.`, () => "Keine Eile: Alles steht hier, wann immer du es brauchst.",
+  () => "Vielleicht ist ja etwas dabei, das dir den Alltag mit der App leichter macht.", (n) => `Hallo${n ? " " + n : ""}! Stöbern ausdrücklich erwünscht.`,
+];
+const HZ_THEMA_EINL = [
+  (t) => `Rund um „${t}“ – vielleicht ist etwas Neues für dich dabei.`, (t) => `Ein paar Handgriffe zu „${t}“, ganz ohne Eile.`,
+  (t) => `Alles zu „${t}“ auf einen Blick. Probier aus, was dir gefällt.`, (t) => `Hier ein paar Ideen zu „${t}“ – nimm dir, was dir hilft.`,
+  (t) => `„${t}“ – kurz erklärt, zum Nachlesen und Ausprobieren.`,
+];
+const hzNeuerGruss = () => { HZ.gruss = Math.floor(Math.random() * 1000); };
+const HZ_GESEHEN = "kc_club_hz_gesehen";
+const hzTxt = (x) => (typeof x === "function" ? x() : x) || "";
+const hzThemaId = (t) => (HILFE_THEMEN.some((x) => x.id === t) ? t : "weitere");
+// alle Einträge (für mich) – wird bei jedem Öffnen neu zusammengestellt, damit neue Tipps/Bereiche sofort mitgezählt werden
+function hzEintraege() {
+  const eintrag = (q, e, thema, los) => { try { return { id: q + ":" + e.id, thema, sym: e.sym, t: hzTxt(e.t), x: hzTxt(e.x), los: los || null, seit: e.seit || null }; } catch { return null; } };
+  return [
+    ...HILFE.filter((e) => !e.nur || e.nur()).map((e) => eintrag("h", e, hzThemaId(e.thema), e.zeig)),
+    ...TIPPS.map((e) => eintrag("t", e, hzThemaId(e.thema || HILFE_TIPP_THEMA[e.id]), e.testen)),
+    ...EINWEISUNG.filter((e) => !e.nur || e.nur()).map((e) => eintrag("e", e, e.thema ? hzThemaId(e.thema) : "bereiche", e.blatt || !$("v-" + e.id) ? null : () => zeige(e.id))),
+  ].filter(Boolean);
+}
+const hzGesehen = () => lsLesen(HZ_GESEHEN);
+const hzIstNeu = (e, seit) => !!(e.seit && seit && versionNeuer(e.seit, seit) && !versionNeuer(e.seit, APP_VERSION));
+const hzAnzahl = () => { try { return hzEintraege().length; } catch { return 0; } };
+const hzNeuZahl = () => { const g = hzGesehen(); if (!g) return 0; try { return hzEintraege().filter((e) => hzIstNeu(e, g)).length; } catch { return 0; } };
+// 2.23.4 (Wunsch Hansi): „?“ in jeder Ansicht – öffnet das passende Kapitel. Neue Ansicht = hier eintragen (Vertragstest prüft das).
+// Ein runder „?“-Knopf unten rechts neben der Lupe (wird beim ersten Öffnen einer Ansicht angelegt). Im Chat (dort ist unten das
+// Schreibfeld) steht „❓ Hilfe zum Chat“ im ⋮-Menü.
+const HZ_SICHT_THEMA = {
+  start: "start", einstellungen: "darstellung", sos: "notfall",
+  nachrichten: "nachrichten", chat: "nachrichten", neu: "nachrichten", gruppe: "nachrichten",
+  termine: "termine", dienste: "termine",
+  mitglieder: "club", mitglied: "club", pinnwand: "club", fotos: "club", helfen: "club", archiv: "club", vorschlaege: "club", spiele: "club",
+  aktionen: "club", aktion: "club", erstattung: "club", feedback: "club", protokolle: "club", protokoll: "club", buero: "club", standort: "club",
+  sicherheit: "technik", programme: "technik", dokumente: "technik", dokansicht: "technik", ueberblick: "technik",
+  hilfezentrum: null, // in der Hilfe selbst kein „?“
+};
+// 2.23.5 (Wunsch Hansi): lange auf das „?“ drücken → ausblenden (mit Rückfrage, die sagt, wie man es zurückholt).
+// Zurück: ⚙️ → „Das Wichtigste“ (einfache Ansicht) bzw. „🗣️ Ansagen, Töne & Tipps“ → „❓ Fragezeichen unten rechts“. Je Gerät gespeichert.
+const HZ_FRAGE_AUS = "kc_club_hz_frage_aus", hzFrageAus = () => lsLesen(HZ_FRAGE_AUS) === "1", HZ_LANG_MS = 600;
+function hzFrageEinsetzen(v) {
+  let k = $("hzFrage");
+  if (!k) {
+    document.body.insertAdjacentHTML("beforeend", `<button type="button" class="hz-frage" id="hzFrage" title="Hilfe zu diesem Bereich – lange drücken zum Ausblenden" aria-label="Hilfe zu diesem Bereich">?</button>`); k = $("hzFrage");
+    let t = null, lang = false;
+    const stopp = () => { clearTimeout(t); t = null; };
+    k.addEventListener("pointerdown", () => { lang = false; stopp(); t = setTimeout(() => { t = null; lang = true; try { navigator.vibrate?.(25); } catch {} hzFrageLang(); }, HZ_LANG_MS); });
+    ["pointerup", "pointerleave", "pointercancel"].forEach((e) => k.addEventListener(e, stopp));
+    k.addEventListener("contextmenu", (e) => e.preventDefault());
+    k.addEventListener("click", () => { if (lang) { lang = false; return; } hzFrage(k.dataset.v); });
+  }
+  k.dataset.v = v; k.classList.toggle("versteckt", !HZ_SICHT_THEMA[v] || hzFrageAus());
+  for (const id of ["setHzFrage", "setHzFrageE"]) if ($(id)) $(id).checked = !hzFrageAus();
+}
+async function hzFrageLang() {
+  if (!(await frage("❓ Fragezeichen ausblenden?\nZurückholen kannst du es jederzeit unter ⚙️ Einstellungen → „❓ Fragezeichen unten rechts“. Die Hilfe selbst bleibt unter Technik → ❓ Hilfe & Tipps.", { ja: "🙈 Ausblenden", nein: "Behalten" }))) return;
+  hzFrageSchalter(false);
+}
+function hzFrageSchalter(an) {
+  lsSetzen(HZ_FRAGE_AUS, an ? "0" : "1"); hzFrageEinsetzen(aktuelleAnsicht);
+  melde(an ? "❓ Das Fragezeichen ist wieder da" : "🙈 Fragezeichen ausgeblendet – zurückholen unter ⚙️ Einstellungen");
+}
+function hzFrage(v) {
+  HZ.herkunft = { v, chat: v === "chat" ? chatId : null };
+  HZ.q = ""; if ($("hzSuche")) $("hzSuche").value = "";
+  HZ.thema = HZ_SICHT_THEMA[v] || null; zeige("hilfezentrum");
+}
+function hzStart(thema) { HZ.herkunft = null; HZ.thema = thema && HILFE_THEMEN.some((x) => x.id === thema) ? thema : null; HZ.q = ""; if ($("hzSuche")) $("hzSuche").value = ""; zeige("hilfezentrum"); }
+function hzOeffnen() { $("hzLeiste")?.remove(); HZ.unterwegs = null; hzNeuerGruss(); HZ.vorher = hzGesehen(); lsSetzen(HZ_GESEHEN, APP_VERSION); hzZeigen(); } // aus zeige(): „neu“ gilt bis zum nächsten Besuch
+function hzThema(t) { if (t !== HZ.thema) hzNeuerGruss(); HZ.thema = t; HZ.q = ""; $("hzSuche").value = ""; hzZeigen(); window.scrollTo(0, 0); }
+function hzSuchen(q) { HZ.q = q; hzZeigen(); }
+function hzZurueck() { if (HZ.q) { HZ.q = ""; $("hzSuche").value = ""; hzZeigen(); } else if (HZ.thema && !HZ.herkunft) hzThema(null); else if (HZ.herkunft?.chat) { const c = HZ.herkunft.chat; HZ.herkunft = null; chatOeffnen(c); } else { HZ.herkunft = null; zurueck("start"); } }
+// 2.23.2 (Wunsch Hansi): Kapitel 1, 2 … (nur Themen mit Inhalt, in der Reihenfolge von HILFE_THEMEN), Einträge 1.1, 1.2 …
+function hzGliederung(alle) {
+  const themen = HILFE_THEMEN.filter((t) => alle.some((e) => e.thema === t.id)).map((t, i) => ({ ...t, nr: i + 1, es: alle.filter((e) => e.thema === t.id) }));
+  const nr = {}; themen.forEach((t) => t.es.forEach((e, i) => { nr[e.id] = `${t.nr}.${i + 1}`; }));
+  return { themen, nr };
+}
+// 2.23.2 (Wunsch Hansi): „Zeig mir wo“ → oben rechts „↩️ Zurück zur Hilfe“ (genau an diese Stelle) oder „✕ Abbrechen“ (Leiste weg, hier bleiben und gleich einstellen)
+function hzLos(id) {
+  const e = hzEintraege().find((x) => x.id === id); if (!e?.los) return;
+  HZ.unterwegs = { id, thema: HZ.q ? null : HZ.thema, q: HZ.q, y: window.scrollY };
+  e.los(); hzLeiste();
+}
+function hzLeiste() {
+  $("hzLeiste")?.remove();
+  document.body.insertAdjacentHTML("beforeend", `<div class="hz-leiste" id="hzLeiste" role="toolbar" aria-label="Hilfe">
+    <button class="hz-l-zurueck" onclick="hzZurueckZurHilfe()" title="Zurück an dieselbe Stelle in der Hilfe">↩️ Zurück zur Hilfe</button>
+    <button class="hz-l-ab" onclick="hzLeisteZu()" title="Leiste schließen und hier bleiben – z. B. um gleich die Einstellung vorzunehmen">✕ Abbrechen</button></div>`);
+}
+function hzLeisteZu() { $("hzLeiste")?.remove(); HZ.unterwegs = null; }
+function hzZurueckZurHilfe() {
+  const u = HZ.unterwegs; hzLeisteZu(); if (!u) return hzStart();
+  document.querySelectorAll(".blatt:not(.versteckt)").forEach(fensterZu); // z. B. „Mein Status“ war offen
+  HZ.thema = u.thema; HZ.q = u.q || ""; if ($("hzSuche")) $("hzSuche").value = HZ.q;
+  zeige("hilfezentrum");
+  setTimeout(() => { const k = document.querySelector(`#hzInhalt [data-hz="${u.id}"]`); if (k) { k.scrollIntoView({ block: "center" }); k.classList.add("hervor"); setTimeout(() => k.classList.remove("hervor"), 2200); } else window.scrollTo(0, u.y || 0); }, 120);
+}
+function hzKarte(e, nr, themaZeigen) {
+  const th = HILFE_THEMEN.find((x) => x.id === e.thema);
+  return `<div class="karte hz-eintrag vorlese-karte" data-hz="${e.id}">${themaZeigen && th ? `<div class="hz-wo">Kapitel ${esc(nr.split(".")[0])} · ${th.sym} ${esc(th.t)}</div>` : ""}<h3><span class="hz-nr">${esc(nr)}</span><span>${e.sym} ${esc(e.t)}${hzIstNeu(e, HZ.vorher) ? ' <span class="hz-neu">neu</span>' : ""}</span></h3><p>${e.x}</p>
+    <div class="knoepfe">${e.los ? `<button class="knopf haupt klein" onclick="hzLos('${e.id}')">👉 Zeig mir wo</button>` : ""}${VORLESE_KNOPF}</div></div>`;
+}
+function hzZeigen() {
+  if (!$("hzInhalt")) return;
+  const alle = hzEintraege(), { themen, nr } = hzGliederung(alle);
+  if (HZ.thema && !themen.some((t) => t.id === HZ.thema)) HZ.thema = null;
+  const anz = (n) => `<span class="anz">${n}</span>`;
+  $("hzRegister").innerHTML = `<button class="${!HZ.thema && !HZ.q ? "an" : ""}" onclick="hzThema(null)">📖 Inhalt${anz(alle.length)}</button>`
+    + themen.map((t) => `<button class="${HZ.thema === t.id && !HZ.q ? "an" : ""}" onclick="hzThema('${t.id}')">${t.nr} ${t.sym} ${esc(t.t)}${anz(t.es.length)}</button>`).join("");
+  let html;
+  if (HZ.q && suNorm(HZ.q).trim().length >= 2) {
+    const w = suNorm(HZ.q).split(/\s+/).filter(Boolean), treffer = alle.filter((e) => { const th = HILFE_THEMEN.find((x) => x.id === e.thema); const s = suNorm(`${e.t} ${e.x.replace(/<[^>]+>/g, " ")} ${th?.t || ""}`); return w.every((x) => s.includes(x)); })
+      .map((e, i) => ({ e, i, titel: w.every((x) => suNorm(e.t).includes(x)) })).sort((a, b) => b.titel - a.titel || a.i - b.i).map((x) => x.e); // Treffer im Titel zuerst
+    html = `<p class="hinweis" style="margin:0 2px 6px">${treffer.length ? `${treffer.length} Treffer für „${esc(HZ.q)}“` : `Nichts gefunden für „${esc(HZ.q)}“ – versuch ein anderes Wort oder schau ins <a href="#" onclick="hzThema(null);return false">📖 Inhalt</a>.`}</p>` + treffer.map((e) => hzKarte(e, nr[e.id], true)).join("");
+  } else if (HZ.thema) {
+    const th = themen.find((x) => x.id === HZ.thema), weiter = themen[themen.indexOf(th) + 1];
+    html = `<div class="karte hz-kapitel"><div class="hz-kap-nr">Kapitel ${th.nr}</div><h3>${th.sym} ${esc(th.t)}</h3><p style="margin:0 0 4px">${esc(HZ_THEMA_EINL[HZ.gruss % HZ_THEMA_EINL.length](th.t))}</p><p class="hinweis" style="margin:0">${th.es.length} ${th.es.length === 1 ? "Hilfe" : "Hilfen"} · ${esc(th.u)}</p></div>` + th.es.map((e) => hzKarte(e, nr[e.id])).join("")
+      + `<div class="knoepfe" style="margin-top:18px"><button class="knopf klein" onclick="hzThema(null)">📖 Zurück zum Inhalt</button>${weiter ? `<button class="knopf klein" onclick="hzThema('${weiter.id}')">Kapitel ${weiter.nr}: ${weiter.sym} ${esc(weiter.t)} ›</button>` : ""}</div>`;
+  } else {
+    const neu = alle.filter((e) => hzIstNeu(e, HZ.vorher));
+    html = `<div class="karte" style="margin-top:0"><h3>📖 Inhalt</h3><p style="margin:0 0 4px">${esc(HZ_GRUSS[HZ.gruss % HZ_GRUSS.length](ICH?.vorname || ""))}</p><p class="hinweis" style="margin:0 0 6px">${alle.length} Hilfen in ${themen.length} Kapiteln · Stand Version ${esc(APP_VERSION)}. Tippe ein Kapitel an – oder such oben nach einem Wort.</p>
+      <ul class="hz-inhalt">${themen.map((t) => `<li><button onclick="hzThema('${t.id}')"><span class="nr">${t.nr}</span><span class="sym">${t.sym}</span><span><b>${esc(t.t)}</b><small>${esc(t.u)}</small></span><span class="anz">${t.es.length} ${t.es.length === 1 ? "Hilfe" : "Hilfen"}</span></button></li>`).join("")}</ul></div>`
+      + (neu.length ? `<div class="karte"><h3>🆕 Neu seit deinem letzten Besuch (${neu.length})</h3>${neu.map((e) => `<p style="margin:0 0 4px">${esc(nr[e.id])} ${e.sym} <a href="#" onclick="hzThema('${e.thema}');return false">${esc(e.t)}</a></p>`).join("")}</div>` : "")
+      + `<p class="hinweis" style="margin:10px 2px 0">Die Hilfe wächst mit der App: neue Funktionen, Tipps und Erklärungen erscheinen hier von selbst. Zum Ausdrucken oder als PDF: 🖨️ oben rechts. Etwas fehlt? Sag es über <a href="#" onclick="zeige('feedback');return false">💭 Feedback</a>.</p>`;
+  }
+  $("hzInhalt").innerHTML = html;
+  document.querySelector("#hzRegister button.an")?.scrollIntoView({ block: "nearest", inline: "center" });
+}
+// 2.23.2 (Wunsch Hansi): Ausdruck / PDF – ganze Hilfe (Deckblatt mit Inhaltsverzeichnis, jedes Kapitel auf neuer Seite) oder ein Kapitel
+function hzDruckOptionen() {
+  const { themen } = hzGliederung(hzEintraege()), wahl = HZ.thema && themen.some((t) => t.id === HZ.thema) ? HZ.thema : "alle";
+  const r = (v, t) => `<label><input type="radio" name="dArt" value="${v}" ${v === wahl ? "checked" : ""}> ${t}</label>`;
+  return `<b>Was drucken?</b><div class="dwahl" style="display:grid;gap:4px">${r("alle", `📖 Ganze Hilfe – alle ${themen.length} Kapitel mit Inhaltsverzeichnis`)}${themen.map((t) => r(t.id, `Kapitel ${t.nr}: ${t.sym} ${esc(t.t)} (${t.es.length})`)).join("")}</div>`;
+}
+function hzDruck(o) {
+  const alle = hzEintraege(), { themen, nr } = hzGliederung(alle), nur = themen.find((t) => t.id === o.art);
+  const strip = (x) => String(x).replace(/<(?!\/?(b|i|br|span)\b)[^>]*>/g, "");
+  const kapitel = (t, i) => `<section class="hz-d-kap${i === 0 ? " erstes" : ""}"><h2>Kapitel ${t.nr} · ${t.sym} ${esc(t.t)}</h2><p>${esc(t.u)} · ${t.es.length} ${t.es.length === 1 ? "Hilfe" : "Hilfen"}</p>
+    ${t.es.map((e) => `<div class="hz-d-e"><h3><span>${esc(nr[e.id])}</span>${e.sym} ${esc(e.t)}</h3><p>${strip(e.x)}</p></div>`).join("")}</section>`;
+  if (nur) return { titel: `Hilfe & Tipps – Kapitel ${nur.nr}`, unter: `${nur.sym} ${nur.t} · Stand Version ${APP_VERSION}`, html: kapitel(nur, 0) };
+  const inhalt = `<div class="ue-kasten"><h3>📖 Inhalt</h3><table class="hz-d-inhalt">${themen.map((t) => `<tr><td>${t.nr}</td><td>${t.sym} ${esc(t.t)}<br><small>${esc(t.u)}</small></td><td>${t.es.length} ${t.es.length === 1 ? "Hilfe" : "Hilfen"}</td></tr>`).join("")}</table>
+    <p style="margin:4pt 0 0">${alle.length} Hilfen in ${themen.length} Kapiteln. In der App findest du alles unter Technik → ❓ Hilfe &amp; Tipps – mit Suche und „Zeig mir wo“.</p></div>`;
+  return { titel: "Hilfe & Tipps", unter: `Alle Tipps und Erklärungen der Club-App · Stand Version ${APP_VERSION}`, html: inhalt + themen.map((t) => kapitel(t, 1)).join("") };
 }
 // ---------- KC-CLUB-ONLINE-ANSAGE (1.56.0, Wunsch Hansi): „Klaus ist jetzt online“ als Sprachansage, Admin zusätzlich ein Ton ----------
 // Nutzt die vorhandene Online-Liste (gleiche Privatsphäre: wer sich verbirgt, wird nicht angesagt; wer selbst unsichtbar ist,
@@ -5419,19 +5767,19 @@ const SP_ANSAGE_KEY = "kc_club_sp_ansage", SP_ANSAGE_NAME = { schach: "Schach", 
 const spAnsageAn = (art) => { try { return !!JSON.parse(localStorage.getItem(SP_ANSAGE_KEY) || "{}")[art]; } catch { return false; } };
 function spAnsageKnopf(art) {
   const an = spAnsageAn(art);
-  const was = art === "ttt" ? "Töne" : "Ansage"; // 2.22.22: Tic-Tac-Toe nur Töne, keine Sprache
+  const was = art === "ttt" ? "Töne" : "Ansage"; // 2.23.6: Tic-Tac-Toe nur Töne, keine Sprache
   return `<button class="knopf klein${an ? " haupt" : ""} sp-ansage" data-art="${art}" aria-pressed="${an}" onclick="spAnsageSetzen('${art}', ${!an})">${an ? "🔊 " + was + " an" : "🔇 " + was + " aus"}</button>`;
 }
 function spAnsageSetzen(art, an) {
   let w = {}; try { w = JSON.parse(localStorage.getItem(SP_ANSAGE_KEY) || "{}") || {}; } catch {}
   w[art] = !!an; lsSetzen(SP_ANSAGE_KEY, JSON.stringify(w));
   document.querySelectorAll(`.sp-ansage[data-art="${art}"]`).forEach((b) => (b.outerHTML = spAnsageKnopf(art)));
-  if (art === "ttt") { if (an) spTttTon("sieg"); return melde(an ? "🔊 Töne für Tic-Tac-Toe an" : "🔇 Töne für Tic-Tac-Toe aus"); } // KC-CLUB-TTT-TOENE (2.22.22)
+  if (art === "ttt") { if (an) spTttTon("sieg"); return melde(an ? "🔊 Töne für Tic-Tac-Toe an" : "🔇 Töne für Tic-Tac-Toe aus"); } // KC-CLUB-TTT-TOENE (2.23.6)
   try { speechSynthesis.cancel(); } catch {}
   if (an) { if (!("speechSynthesis" in window)) return melde("Dieses Gerät kann leider nicht vorlesen.", true); sprechen(`Ansage für ${SP_ANSAGE_NAME[art]} ist an.`); }
   else melde(`🔇 Ansage für ${SP_ANSAGE_NAME[art]} aus`);
 }
-// KC-CLUB-TTT-TOENE (2.22.22, Wunsch Hansi): Tic-Tac-Toe mit Lautsprecher – nur Töne: eigener Zug (hell), Zug des Gegners/Computers
+// KC-CLUB-TTT-TOENE (2.23.6, Wunsch Hansi): Tic-Tac-Toe mit Lautsprecher – nur Töne: eigener Zug (hell), Zug des Gegners/Computers
 // (tiefer), Spielende (Sieg aufsteigend, Niederlage absteigend, Unentschieden zwei gleiche). Schalter gilt für dieses Gerät, Standard aus.
 const SP_TTT_TOENE = { ich: [[660, 0, 0.1]], gegner: [[392, 0, 0.14]], sieg: [[523, 0, 0.14], [659, 0.14, 0.14], [784, 0.28, 0.14], [1047, 0.42, 0.32]],
   niederlage: [[523, 0, 0.2], [440, 0.2, 0.2], [349, 0.4, 0.4]], remis: [[523, 0, 0.16], [523, 0.24, 0.16]] };
@@ -7386,7 +7734,8 @@ const KACHELN = {
     { id: "update", sym: "🔄", t: "Update prüfen", u: () => NEUE_VERSION ? `Neu: v${NEUE_VERSION} – antippen` : `Installiert: v${APP_VERSION}`, aktion: "updateKachel()", zahl: () => NEUE_VERSION ? "neu" : 0 },
     { id: "programme", sym: "💻", t: "Freigegebene Programme", u: "Kassen-Schulung …", v: "programme" },
     // KC-CLUB-SICHERHEIT (1.14.0, Wunsch Hansi): Prüfreihe „ist alles sicher und läuft?“ für alle Mitglieder
-    { id: "sicherheit", sym: "🛡️", t: "Sicherheits-Check", u: "Läuft alles sicher? Jetzt prüfen", aktion: "sicherheitStart()" },
+    { id: "sicherheit", sym: "🛡️", t: "Sicherheits-Check", u: "Läuft alles sicher? Jetzt prüfen", aktion: "sicherheitStart()" },    // KC-CLUB-HILFEZENTRUM (2.23.0, Wunsch Hansi): alle Tipps und Hinweise nach Themen (Zahl = neue Hilfen seit dem letzten Besuch)
+    { id: "hilfezentrum", sym: "❓", t: "Hilfe & Tipps", u: () => `${hzAnzahl()} Hilfen nach Themen`, aktion: "hzStart()", zahl: () => hzNeuZahl() },
   ],
   // KC-CLUB-ADMIN-REGISTER (2.20.0, Wunsch Hansi): Register „Admin“ – nur Admin/Vertretung; kleine Kacheln (3 je Reihe) mit Lämpchen,
   // Antippen öffnet ein Blatt mit Einzelheiten, Grafik und den Werkzeugen für genau diese Stelle (siehe AD_KACHELN weiter unten)
@@ -8931,9 +9280,10 @@ function zeige(v, ausHistorie) {
   if (v !== "mitglieder" && v !== "mitglied") MG_EINMAL = null; // KC-CLUB-ONLINE-SEITE: nur für diesen Besuch
   if (v !== "buero" && typeof BU !== "undefined") BU.nzSicht = null; // KC-CLUB-NUTZUNG-BEREICHE (1.89.0): beim nächsten Büro-Besuch wieder zählen
   if (vorher === "protokoll" && v !== "protokoll" && prTimer) prSpeichernJetzt(false).catch(() => {}); // ungespeicherte Eingaben sichern
-  ["start", "dokumente", "dokansicht", "termine", "vorschlaege", "aktionen", "aktion", "fotos", "feedback", "gruppe", "mitglied", "protokolle", "protokoll", "dienste", "nachrichten", "chat", "neu", "mitglieder", "einstellungen", "pinnwand", "erstattung", "ueberblick", "programme", "standort", "archiv", "sos", "sicherheit", "helfen", "buero", "spiele"].forEach((x) => $("v-" + x).classList.toggle("versteckt", x !== v));
+  ["start", "dokumente", "dokansicht", "termine", "vorschlaege", "aktionen", "aktion", "fotos", "feedback", "gruppe", "mitglied", "protokolle", "protokoll", "dienste", "nachrichten", "chat", "neu", "mitglieder", "einstellungen", "pinnwand", "erstattung", "ueberblick", "programme", "standort", "archiv", "sos", "sicherheit", "helfen", "buero", "spiele", "hilfezentrum"].forEach((x) => $("v-" + x).classList.toggle("versteckt", x !== v));
   if (v !== "spiele") { clearInterval(SP.takt); SP.takt = null; } else spZeigen(); // KC-CLUB-SPIELE (2.7.0)
   einwZeigen(v); // KC-CLUB-EINWEISUNG (2.4.0)
+  hzFrageEinsetzen(v); // KC-CLUB-HILFEZENTRUM (2.23.4): „?“ unten rechts, passend zur Ansicht
   kzGesehen(v); // KC-CLUB-KACHEL-ZAHLEN (2.22.12): Fotoalbum/Dienstpläne geöffnet → Zahl weg
   document.querySelectorAll("#fuss button").forEach((b) => b.classList.toggle("an", b.dataset.v === v || (v === "chat" && b.dataset.v === "nachrichten") || (v === "neu" && b.dataset.v === "nachrichten")));
   $("eingabe").classList.toggle("versteckt", v !== "chat");
@@ -8951,6 +9301,7 @@ function zeige(v, ausHistorie) {
   if (v === "dokumente") dokumenteZeigen();
   if (v === "ueberblick") ueberblickZeigen();
   if (v === "programme") programmeZeigen();
+  if (v === "hilfezentrum") hzOeffnen(); // KC-CLUB-HILFEZENTRUM (2.23.0)
   if (v === "pinnwand") { pwForm(false); pwLaden(); }
   if (v === "standort") stLaden(); else stAnsichtStopp();
   if (v === "erstattung") erstattungLaden();
@@ -9715,7 +10066,7 @@ function buStartListeHtml() {
   const eingang = [["📦", "Ausleih-Anfragen", e.ausleihen, "buEingang()"], ["🗳️", "Offene Vorschläge", e.vorschlaege, "buEingang()"], ["🙋", "Hilfe-Aufrufe", e.hilfe, "buEingang()"],
     ["🗄️", "Archiv: zu prüfen", e.archiv, "arStart()"], ["✔️", "Offene Aufgaben", e.aufgaben, "zeige('protokolle')"], ["📄", "Protokoll-Entwürfe", e.entwuerfe, "zeige('protokolle')"],
     ["✏️", "Änderungsmeldungen", e.aenderungen || 0, "aeEingang()"], // KC-CLUB-AENDERUNG (2.22.8)
-    ["💶", "Erstattungen", e.erstattungen || 0, "buEingang()"], ["📅", "Dienstzeiten", e.dienstzeiten || 0, "buEingang()"]]; // KC-CLUB-EINGANGSKORB (2.22.21)
+    ["💶", "Erstattungen", e.erstattungen || 0, "buEingang()"], ["📅", "Dienstzeiten", e.dienstzeiten || 0, "buEingang()"]]; // KC-CLUB-EINGANGSKORB (2.23.6)
   const festHeute = BU_F ? [...BU_F.geburtstage.filter((f) => f.tage === 0).map((f) => f.alter ? `🎉 ${esc(f.vorname)} wird ${f.alter}` : `🎂 ${esc(f.vorname)} hat Geburtstag`), ...BU_F.jubilaeen.filter((f) => f.tage === 0).map((f) => `🏅 ${esc(f.vorname)}: ${f.jahre} Jahre im Club`)] : [];
   const festBald = BU_F ? BU_F.geburtstage.concat(BU_F.jubilaeen).filter((f) => f.tage >= 0 && f.tage <= 7).length : 0;
   return `<div class="karte bu-gruss"><div class="bu-knopfreihe">${ICH?.vorstand ? '<button class="knopf klein" onclick="tagesinfoZeigen(true)">📋 Übersicht</button>' : ""}<button class="knopf klein" onclick="buAnsichtWechseln()">🗄️ Büro-Raum</button></div>${festHeute.length ? `<div class="bu-tipp" style="margin:6px 0">🎉 Heute: ${festHeute.join(" · ")} – <button class="knopf klein" onclick="buFeste()">gratulieren</button></div>` : ""}${t ? `Nächste Sitzung: <b>${esc(t.titel)}</b> · ${esc(wann(t.beginn))}<br>✅ ${t.ja} zugesagt · ❌ ${t.nein} abgesagt · ❓ ${t.ohne} ohne Antwort` : "Gerade ist keine Sitzung geplant – lege sie unter 📅 Termine an."}
@@ -10105,7 +10456,7 @@ async function buEingangLaden() {
   const [l, v, h, pr, ar] = await Promise.allSettled([api("leihen_liste"), api("vorschlaege_liste"), api("hilfe_liste"),
     ICH?.protokolle === false ? Promise.reject(0) : api("protokolle_liste"), api("archiv_liste"),
     ICH?.vorstand || ICH?.admin ? aeEingangLaden() : Promise.reject(0), // KC-CLUB-AENDERUNG (2.22.8): Meldungen im Posteingang
-    ICH?.vorstand || ICH?.admin ? api("eingang_korb").then((k) => { BU_EIN.korb = k; }) : Promise.reject(0)]); // KC-CLUB-EINGANGSKORB (2.22.21)
+    ICH?.vorstand || ICH?.admin ? api("eingang_korb").then((k) => { BU_EIN.korb = k; }) : Promise.reject(0)]); // KC-CLUB-EINGANGSKORB (2.23.6)
   if (pr.status === "fulfilled") BU_EIN.protokolle = pr.value;
   if (ar.status === "fulfilled") { BU_EIN.archiv = ar.value; if (!AR.daten) AR.daten = ar.value; }
   if (l.status === "fulfilled") { BU_EIN.leihen = l.value; HL.leihen = l.value; }
@@ -10120,7 +10471,7 @@ function buEingangAuffrischen() { if (aktuelleAnsicht === "buero" && BU.sicht ==
 // den Eingang oder zum passenden Ordner. Nur, was die Clubleitung selbst erledigen kann (persönliche Ordner prüft der Besitzer).
 function buEingangPosten() {
   const l = BU_EIN.leihen, v = BU_EIN.vorschlaege, h = BU_EIN.hilfe, pr = BU_EIN.protokolle, ar = BU_EIN.archiv, P = [];
-  ekPosten(P); // KC-CLUB-EINGANGSKORB (2.22.21): Erstattungen + Dienstzeiten zuerst
+  ekPosten(P); // KC-CLUB-EINGANGSKORB (2.23.6): Erstattungen + Dienstzeiten zuerst
   const leihWas = (a) => a.positionen.length === 1 ? `${a.positionen[0].anzahl} × ${a.positionen[0].name}` : a.positionen.map((x) => `${x.anzahl}× ${x.name}`).join(", ");
   for (const a of (l?.ausleihen || []).filter((x) => x.status === "angefragt"))
     P.push({ sym: a.positionen[0]?.sym || "📦", gruppe: "Ausleihe – bitte entscheiden", titel: leihWas(a), unter: `${a.eigen ? "Du" : a.wer} · 📤 ${hlTagName(a.abholung)}`, auf: `HL.tab='leihen';leihInfo('${a.id}')`, ordner: ["🤝", "Helfen & Leihen", "hlStart()"] });
@@ -10141,7 +10492,7 @@ function buEingangPosten() {
     const a = AE.eingang.arten.find((y) => y.id === x.art) || { sym: "✏️", t: x.art };
     P.push({ sym: a.sym, gruppe: "Änderungsmeldung – bitte ansehen", titel: a.t, unter: `${x.name} · ${zeitKurz(x.erstellt_am)}${x.gilt_ab ? " · ab " + aeDatum(x.gilt_ab) : ""}`,
       auf: "aeEingang()", ordner: ["📇", "Mitglieder", "buListe()"],
-      schnell: [...(x.kenntnisIch ? [] : [["👁️ Zur Kenntnis genommen", `aeKenntnis('${x.id}', null)`, !x.darfFreigeben]]), ...(x.darfFreigeben ? [["✅ Freigeben", `aeFreigeben('${x.id}', null)`, true]] : []), ["🗄️ Ablegen …", `ekAblage('aenderung','${x.id}')`]] }); // 2.22.19, 2.22.21
+      schnell: [...(x.kenntnisIch ? [] : [["👁️ Zur Kenntnis genommen", `aeKenntnis('${x.id}', null)`, !x.darfFreigeben]]), ...(x.darfFreigeben ? [["✅ Freigeben", `aeFreigeben('${x.id}', null)`, true]] : []), ["🗄️ Ablegen …", `ekAblage('aenderung','${x.id}')`]] }); // 2.22.19, 2.23.6
   }
   for (const p of (pr?.protokolle || []).filter((x) => x.status === "entwurf" && x.darfBearbeiten))
     P.push({ sym: "📄", gruppe: "Protokoll-Entwurf", titel: p.titel, unter: `${tagKurz(p.datum)} · von ${p.verfasser?.name || "?"}`, auf: `protokollOeffnen('${p.id}')`, ordner: ["📄", "Protokolle", "zeige('protokolle')"] });
@@ -10168,7 +10519,7 @@ function buEinPosten(i) {
   f.querySelectorAll("[data-fn]").forEach((b) => (b.onclick = () => { f.remove(); new Function(b.dataset.fn)(); }));
   f.querySelector("[data-zu]").onclick = () => f.remove();
 }
-// ---------- KC-CLUB-EINGANGSKORB (2.22.21, Wunsch Hansi): Erstattungen + Dienstzeiten im Eingang, Ablage in mehrere Ordner ----------
+// ---------- KC-CLUB-EINGANGSKORB (2.23.6, Wunsch Hansi): Erstattungen + Dienstzeiten im Eingang, Ablage in mehrere Ordner ----------
 // Alle drei der Clubleitung (Clubsprecher, Kassenwart, Admin) sehen alles und dürfen alles. Es bleibt im Eingang, bis es erledigt ist:
 // Erstattung bis „✅ Erstattet“ oder „✖ Ablehnen“, Dienstzeiten bis „👁️ Zur Kenntnis“ (geändert → wieder im Eingang).
 // „🗄️ Ablegen …“: Ordner per Häkchen wählen (mehrere) – Club-Ordner, Ordner des Mitglieds, mein Ordner. Die App merkt sich die Wahl je Art.
@@ -14679,6 +15030,7 @@ const DRUCKARTEN = {
   erstattung: { titel: "🖨️ Erstattungsantrag drucken", optionen: () => druckErstattungOptionen(), bauen: (o) => druckErstattung(o) },
   anleitung: { bauen: () => druckAnleitung() },
   ueberblick: { bauen: () => druckUeberblick() },
+  hilfe: { titel: "🖨️ Hilfe drucken / als PDF", optionen: () => hzDruckOptionen(), bauen: (o) => hzDruck(o) }, // KC-CLUB-HILFEZENTRUM (2.23.2)
   dokument: { bauen: () => dokDruckSeite() }, // KC-CLUB-DOK-ANZEIGE (1.62.0): PDF-Seiten randlos auf A4
   bestaetigung: { bauen: () => druckBestaetigung() },
   einrichtungskarte: { bauen: (o, param) => druckEinrichtungskarte(param) }, // KC-CLUB-EINRICHTUNGSKARTE (1.88.0) // KC-CLUB-BESTAETIGUNG (1.69.0): Aufstellung der eigenen Eingaben
@@ -16522,7 +16874,7 @@ async function nzSenden() {
 }
 setInterval(nzSenden, NZ_TAKT_MS);
 document.addEventListener("visibilitychange", () => { if (document.hidden) nzSenden(); });
-const NZ_NAMEN = { start: "🏠 Startseite", termine: "📅 Termine", nachrichten: "💬 Nachrichten (Liste)", chat: "💬 Unterhaltung geöffnet", neu: "✍️ Neue Nachricht",
+const NZ_NAMEN = { start: "🏠 Startseite", hilfezentrum: "❓ Hilfe & Tipps", termine: "📅 Termine", nachrichten: "💬 Nachrichten (Liste)", chat: "💬 Unterhaltung geöffnet", neu: "✍️ Neue Nachricht",
   pinnwand: "📌 Pinnwand", fotos: "📷 Fotoalbum", mitglieder: "👥 Mitglieder", mitglied: "👤 Mitglied angesehen", einstellungen: "⚙️ Einstellungen", dienste: "🗓️ Dienstpläne",
   aktionen: "🧳 Aktionen", aktion: "🧳 Aktion angesehen", protokolle: "📄 Protokolle", protokoll: "📄 Protokoll angesehen", vorschlaege: "🗳️ Vorschläge", dokumente: "📚 Dokumente",
   dokansicht: "📄 Dokument gelesen", standort: "📍 Standorte", erstattung: "💶 Erstattung", feedback: "💭 Feedback", programme: "💻 Programme", ueberblick: "🗺️ Überblick", gruppe: "👥 Gruppe",
@@ -16760,9 +17112,10 @@ async function fpAdmin(tage) {
     else if (h === "#dienstwunsch") dwOeffnen();
     else if (h.startsWith("#spiel=")) spOeffnen(decodeURIComponent(h.slice(7))); // KC-CLUB-SPIELE (2.7.0): aus dem Push
     else if (h === "#spiele") spStart();
+    else if (h === "#hilfezentrum" || h.startsWith("#hilfezentrum=")) hzStart(decodeURIComponent(h.slice(14))); // KC-CLUB-HILFEZENTRUM (2.23.0)
     else if (["#termine", "#vorschlaege", "#aktionen", "#fotos", "#protokolle", "#dienste", "#nachrichten", "#mitglieder", "#einstellungen", "#archiv", "#helfen"].includes(h)) zeige(h.slice(1));
     else if (h === "#buero" && ICH?.buero) buStart();
-    else if (h === "#eingang" && ICH?.buero) { buStart(); buEingang(); } // KC-CLUB-EINGANGSKORB (2.22.21): Push führt direkt in den Eingang
+    else if (h === "#eingang" && ICH?.buero) { buStart(); buEingang(); } // KC-CLUB-EINGANGSKORB (2.23.6): Push führt direkt in den Eingang
     else if (h === "#aenderungen") ICH?.vorstand || ICH?.admin ? aeEingang() : aeStart(); // KC-CLUB-AENDERUNG (2.22.7): aus Push/Mail
     if (!h || h === "#") setTimeout(() => buGrussFragen(), 1500); // KC-CLUB-BUERO: Begrüßung der Clubleitung
     if (!h || h === "#") setTimeout(() => spEinladung(), 4000); // KC-CLUB-SPIEL-EINLADUNG (2.12.0): nach Begrüßung/Neuigkeiten

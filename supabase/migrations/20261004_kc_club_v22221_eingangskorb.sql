@@ -1,4 +1,4 @@
--- KC Club-App – Version 2.22.21 (Wunsch Hansi)
+-- KC Club-App – Version 2.23.6 (Entwurf 2.22.21) (Wunsch Hansi)
 -- KC-CLUB-EINGANGSKORB: Erstattungen (Fahrtkosten/Auslagen), Dienstzeiten (Dienstwünsche aus der Club-App) und Vorschläge landen im
 --   Büro-Eingangskorb der Clubleitung (Clubsprecher, Kassenwart, Admin – alle drei bekommen alles) und werden dort bearbeitet.
 --   kc_club_eingang_stand merkt je Vorgang: wer hat zur Kenntnis genommen (je Stand/Revision), wann wurde die Clubleitung informiert

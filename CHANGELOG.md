@@ -1,12 +1,15 @@
 # Änderungen
 
-## 2.22.22 – 2026-10-04 – Inkognito-Brille blinkt, Tic-Tac-Toe mit Tönen (Wunsch Hansi)
+## 2.23.6 – 2026-10-04 – Eingangskorb mit Mehrfach-Ablage, Inkognito-Brille blinkt, Tic-Tac-Toe-Töne (Wunsch Hansi)
+- Zusammengeführt auf das Hilfe-Zentrum (2.23.5); die Entwürfe 2.22.21/2.22.22 wurden nie eingespielt und kommen hiermit live.
+
+### (Entwurf 2.22.22) Inkognito-Brille blinkt, Tic-Tac-Toe mit Tönen (Wunsch Hansi)
 - KC-CLUB-INKO-BLINKEN: Solange Inkognito an ist, blinkt die 🕶️-Brille oben rot (bei „weniger Bewegung“ langsamer). Nur Admin sieht sie.
 - KC-CLUB-TTT-TOENE: Tic-Tac-Toe bekommt den Lautsprecher-Schalter („🔊 Töne an / 🔇 aus“, je Gerät, Standard aus) – nur Töne, keine Sprache:
   eigener Zug hell, Zug des Gegners/Computers tiefer, Spielende: Sieg aufsteigend, Niederlage absteigend, Unentschieden zwei gleiche Töne.
-  Gegen Computer und Mitglieder. Schalter-Test (2.22.16) angepasst, Test 350.
+  Gegen Computer und Mitglieder. Schalter-Test (2.22.16) angepasst, Test 356.
 
-## 2.22.21 – 2026-10-04 – Eingangskorb: Erstattungen, Dienstzeiten, Vorschläge + Ablage in mehrere Ordner (Wunsch Hansi)
+### (Entwurf 2.22.21) Eingangskorb: Erstattungen, Dienstzeiten, Vorschläge + Ablage in mehrere Ordner (Wunsch Hansi)
 - KC-CLUB-EINGANGSKORB: Clubsprecher, Kassenwart und Admin bekommen alles und dürfen alles bearbeiten.
   - 💶 Erstattung (Fahrtkosten/Auslagen): Push „📥 Erstattung von …“ an alle drei (Mail wie bisher). Im Eingang bis erledigt:
     „👁️ Zur Kenntnis“, „✅ Erstattet“ (🏦 überwiesen / 💵 bar, freiwillige Nachricht) oder „✖ Ablehnen“ (mit Grund) – das Mitglied bekommt Bescheid.
@@ -19,7 +22,64 @@
   gefragt): Ordner per Häkchen, mehrere möglich – Club-Ordner mit Register, Ordner des Mitglieds (zum Nachvollziehen), eigener Ordner.
   Die App merkt sich die Wahl je Art; passender Ordner vorausgewählt (Erstattung → Finanzen). Ablage als Textdatei, im Vorgang vermerkt.
 - Migration 20261004_kc_club_v22221_eingangskorb.sql (kc_club_eingang_stand; kc_club_erstattung: erledigt_von/_am, antwort, ausgezahlt).
-- aeAblegen nutzt jetzt aeDoku (gleicher Text, auch für „Ablegen …“). Tests 333/335 angepasst, Test 349.
+- aeAblegen nutzt jetzt aeDoku (gleicher Text, auch für „Ablegen …“). Tests 333/335 angepasst, Test 355.
+## 2.23.5 – 2026-10-04 – Hilfe-Zentrum: „?“ per Lang-Drücken ausblenden (Wunsch Hansi)
+- KC-CLUB-HILFEZENTRUM: lange (0,6 s) auf das „?“ drücken → Rückfrage „❓ Fragezeichen ausblenden?“, die gleich sagt, wie man es
+  zurückholt; „🙈 Ausblenden“ oder „Behalten“. Der Fingertipp nach dem Lang-Drücken öffnet die Hilfe nicht.
+- Zurückholen: ⚙️ Einstellungen → „❓ Fragezeichen unten rechts“ – in der einfachen Ansicht unter „Das Wichtigste“, in der erweiterten
+  unter „🗣️ Ansagen, Töne & Tipps“ (beide Schalter zeigen denselben Stand). Gespeichert je Gerät. Neue Hilfe 2.x „Das Fragezeichen
+  unten rechts“ mit „Zeig mir wo“. Server nur Versionsnummer. Test 354.
+
+## 2.23.4 – 2026-10-04 – Hilfe-Zentrum: „?“ in jeder Ansicht (Wunsch Hansi)
+- KC-CLUB-HILFEZENTRUM: in allen Ansichten (erweitert und einfach) ein rundes „?“ unten rechts neben der Lupe 🔍 (engt keine
+  Kopfzeile ein; im Chat stattdessen ⋮ → „❓ Hilfe zum Chat“). Antippen öffnet direkt das
+  passende Kapitel (Registry HZ_SICHT_THEMA, z. B. Nachrichten/Chat → „Nachrichten & Chat“, SOS → „Notfall“, Einstellungen →
+  „Aussehen & Darstellung“). „‹“ in der Hilfe führt zurück in die Ansicht, aus einem Chat wieder genau in diesen Chat.
+- Nichts öffnet sich von selbst. Vertragstest: jede Ansicht aus zeige() hat eine Zuordnung. Server nur Versionsnummer. Test 353.
+
+## 2.23.3 – 2026-10-04 – Hilfe-Zentrum: Kapitel 1 „Erste Schritte“ (Text Hansi)
+- KC-CLUB-HILFEZENTRUM: neues Thema „👋 Erste Schritte“ ganz vorne (= Kapitel 1, die übrigen rücken auf), fünf Hilfen nach Hansis Text:
+  1.1 Herzlich willkommen · 1.2 Zuerst: deine Einstellungen (⚙️, „Zeig mir wo“) · 1.3 Mit der einfachen Ansicht beginnen ·
+  1.4 Kurze Hilfetexte in jedem Bereich (auch vorlesen) · 1.5 Dein Feedback ist mir wichtig (Register „Club“, Gruß von Hansi).
+  Erscheint auch im Ausdruck/PDF als erstes Kapitel. Server nur Versionsnummer. Test 352.
+
+## 2.23.2 – 2026-10-04 – Hilfe-Zentrum: Suchfeld, Kapitel, Zurück-Leiste, Ausdruck/PDF (Wunsch Hansi)
+- KC-CLUB-HILFEZENTRUM: Suchfeld deutlicher – eigene Karte „🔍 Wonach suchst du?“ mit rotem Rand, größerer Schrift und Fokus-Rahmen.
+- Kapitel: Themen heißen jetzt „Kapitel 1, 2, 3 …“ (Inhalt mit runder Nummer, Register mit Nummer, Kapitelkopf mit „KAPITEL n“),
+  jede Hilfe hat ihre Nummer (1.1, 1.2 …), auch in den Suchtreffern („Kapitel 3 · 💬 …“). Mehr Abstand zwischen den Abschnitten.
+  Unten im Kapitel „Kapitel n+1 ›“ zum Weiterblättern. Nummern ergeben sich von selbst aus den Themen mit Inhalt.
+- „👉 Zeig mir wo“: oben rechts erscheint eine Leiste „↩️ Zurück zur Hilfe“ (schließt offene Fenster, zurück an dieselbe Hilfe,
+  kurz hervorgehoben; nach einer Suche zurück zur Trefferliste) und „✕ Abbrechen“ (Leiste weg, man bleibt und stellt gleich ein).
+- 🖨️ oben rechts: Drucken oder „Als PDF speichern“ über den vorhandenen Druckweg (Vorschau, iPhone „Druckseite teilen“). Auswahl
+  „📖 Ganze Hilfe“ (Inhaltsverzeichnis mit Kapiteln und Anzahl, jedes Kapitel auf neuer Seite) oder ein einzelnes Kapitel
+  (vorausgewählt, wenn man gerade in einem Kapitel ist). Druckart DRUCKARTEN.hilfe.
+- Server nur Versionsnummer. Test 351.
+
+## 2.23.1 – 2026-10-04 – Hilfe-Zentrum: 53 weitere Hilfen aus der ganzen App (Wunsch Hansi)
+- KC-CLUB-HILFEZENTRUM: ganze App nach Funktionen durchsucht (Funktions-IDs + CHANGELOG, Bezeichnungen gegen den aktuellen Code geprüft) und
+  53 neue Einträge in der Registry HILFE ergänzt (jetzt 86 eigene, zusammen mit Tipps und Einweisungen rund 140 Hilfen):
+  Chat (anheften, merken, Abstimmung, Kontakt teilen, kopieren, weiterleiten, Linie „Neue Nachrichten“, Entwurf, ohne Netz, Haken,
+  Sprachtempo, Chat vorlesen, WA, Gruppe löschen), Termine (Wiederholen, To-do, Terminanfrage, Terminfindung, Liste/Kalender, Drucken,
+  Nächster Termin, Dienst-Erinnerung), Clubleben (Status, wer ist online, Gratulieren, Pinnwand antworten/wichtig/alte Zettel, Foto-Details,
+  Teilen → Köcheclub, Hilfe anbieten/nach Absprache, Vorschläge unterstützen, Spende, Spiele gegen Mitglieder/Pause), Töne (Meine Geräte,
+  Anklopfton, Ansage „verlässt die App“), Privatsphäre (Live-Tippen, zuletzt da, Link verloren, Code für weiteres Gerät), Notfall
+  (Notfallkontakt, Notfallpass sichern), Bedienung/Technik (Info-Feld « », Sonne/Mond-Knopf, Wetter-Woche, Lämpchen, App schließen,
+  PC/Tablet, Was ist neu) und für die Clubleitung die Büro-Sprachsteuerung (nur mit Büro-Recht).
+- Ton: freundlich, nicht drängend, jeder Text beginnt anders (Vertragstest prüft die ersten drei Wörter). Deckblatt und Themenseiten haben
+  wechselnde Einleitungen (neu gewählt beim Öffnen und Themenwechsel, auf Wunsch mit Vornamen). Neue Einträge `seit: "2.23.1"` → 🆕.
+- Keine neuen Meldungen oder Fenster: alles bleibt im Hilfe-Zentrum zum Nachlesen. Server nur Versionsnummer. Test 350.
+
+## 2.23.0 – 2026-10-04 – Hilfe-Zentrum: alle Tipps und Hinweise nach Themen (Wunsch Hansi)
+- KC-CLUB-HILFEZENTRUM: neue Kachel „❓ Hilfe & Tipps“ im Register Technik (zusätzlich ⚙️ → „🗣️ Ansagen, Töne & Tipps“ → „❓ Alle Tipps nachlesen“,
+  Sprung `#hilfezentrum` bzw. `#hilfezentrum=<thema>`). Vorne ein Deckblatt „📖 Inhalt“: jedes Thema als Link mit Anzahl der Hilfen;
+  darüber die Register je Thema (mit Zahl), eine Suche (umlaut-tolerant, Treffer im Titel zuerst) und bei jeder Hilfe „👉 Zeig mir wo“ + 🔊 Vorlesen.
+- Themen: Startseite & Bedienung, Aussehen & Darstellung, Nachrichten & Chat, Termine & Kalender, Clubleben, Benachrichtigungen & Töne,
+  Privatsphäre & Zugang, Notfall, Technik & Probleme lösen, Bereiche kurz erklärt (+ Auffang „Weitere Tipps“, nur wenn nötig).
+- Passt sich selbst an: gesammelt wird bei jedem Öffnen aus TIPPS (Tipp des Tages), EINWEISUNG (Bereiche kurz erklärt) und der neuen Registry HILFE
+  (33 neue Hilfetexte, z. B. Kacheln lange drücken zum Anordnen, Farbe unter Darstellung einstellen, Register ziehen). Anzahlen werden gezählt,
+  nichts doppelt gepflegt. Neue Einträge mit `seit: "x.y.z"` erscheinen als 🆕 und als Zahl auf der Kachel.
+- Die Tipps des Tages und die Einweisungskarten bleiben unverändert (zusätzlich jetzt jederzeit nachlesbar).
+- Server: nur Versionsnummer und Nutzungsbereich „hilfezentrum“ (NUTZUNG_BEREICHE). Test 349.
 
 ## 2.22.20 – 2026-10-04 – Büro: Hinweis bei neuer Nachricht (Wunsch Hansi)
 - KC-CLUB-BUERO-NEU-NACHRICHT: Kommt eine neue Nachricht, während man im Büro ist, erscheint oben ein Hinweis

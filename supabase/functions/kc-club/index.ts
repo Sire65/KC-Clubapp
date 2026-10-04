@@ -26,7 +26,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "2.22.22";
+const SERVER_VERSION = "2.23.6";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -972,7 +972,7 @@ async function aenderungStand(ich: Ich) {
 // Ablage ins Archiv (wie Ausleihe): Vereinsordner „Mitglieder <Jahr>“ (2.22.10, vorher „Admin“) und persönlicher Ordner des Mitglieds,
 // jeweils Register „Meldungen“. Bankverbindung im Archiv nur mit den letzten 4 Stellen (den Vereinsordner sieht die ganze Clubleitung).
 const AE_REGISTER = "Meldungen";
-// KC-CLUB-EINGANGSKORB (2.22.21): Text der Ablage-Datei als eigene Funktion – auch für „🗄️ Ablegen …“ im Eingangskorb
+// KC-CLUB-EINGANGSKORB (2.23.6): Text der Ablage-Datei als eigene Funktion – auch für „🗄️ Ablegen …“ im Eingangskorb
 async function aeDoku(x: any, art: "Meldung" | "Erledigt" | "Freigegeben" | "Eingetragen") {
   const a = AENDERUNG.arten.find((y) => y.id === x.art); if (!a) return null;
   const p = await personen([x.person_id, x.erledigt_von]), wer = p.get(x.person_id)?.display_name || x.person_id;
@@ -1049,7 +1049,7 @@ async function aeUebernahmeMelden() {
 }
 const aeKurz = (x: any) => x.art === "bank" && x.status === "erledigt" ? { ...x.neu, iban: "…" + String(x.neu?.iban || "").slice(-4) } : x.neu;
 
-// ---------- KC-CLUB-EINGANGSKORB (2.22.21, Wunsch Hansi): Erstattungen, Dienstzeiten, Vorschläge im Büro-Eingang ----------
+// ---------- KC-CLUB-EINGANGSKORB (2.23.6, Wunsch Hansi): Erstattungen, Dienstzeiten, Vorschläge im Büro-Eingang ----------
 // Clubleitung = Clubsprecher, Kassenwart, Admin – alle drei bekommen alles und dürfen alles bearbeiten. Je Vorgang merkt sich
 // kc_club_eingang_stand: wer hat zur Kenntnis genommen (Dienstwünsche je Revision), wann wurde gemeldet, wohin wurde abgelegt.
 // Ablage: mehrere Ordner wählbar – Vereinsordner (die die Clubleitung sieht), der persönliche Ordner des Mitglieds (zum Nachvollziehen)
@@ -2579,7 +2579,7 @@ async function bueroEingang(ich?: Ich) {
     const { data, error } = await q; if (error) throw new Error(error.message);
     return { count: (data ?? []).filter((x: any) => aeWartetAufMich(ich, x)).length };
   })();
-  // KC-CLUB-EINGANGSKORB (2.22.21): offene Erstattungen und Dienstzeiten, die ich noch nicht (in dieser Fassung) gesehen habe
+  // KC-CLUB-EINGANGSKORB (2.23.6): offene Erstattungen und Dienstzeiten, die ich noch nicht (in dieser Fassung) gesehen habe
   const ekQ = (async () => {
     if (!ich || (!ich.vorstand && !ich.admin)) return { erst: 0, dw: 0 };
     const [{ count: erst }, { data: dw }] = await Promise.all([
@@ -3169,7 +3169,7 @@ async function privatListe(ich: Ich, von: string, bis?: string) {
 }
 
 // KC-CLUB-NUTZUNG (0.99.0): nur diese Bereiche werden gezählt (Ansichten der App)
-const NUTZUNG_BEREICHE = new Set(["spiele", "start", "termine", "nachrichten", "chat", "neu", "pinnwand", "fotos", "mitglieder", "mitglied", "einstellungen", "dienste",
+const NUTZUNG_BEREICHE = new Set(["spiele", "hilfezentrum", "start", "termine", "nachrichten", "chat", "neu", "pinnwand", "fotos", "mitglieder", "mitglied", "einstellungen", "dienste",
   "aktionen", "aktion", "protokolle", "protokoll", "vorschlaege", "dokumente", "standort", "erstattung", "feedback", "programme", "ueberblick", "gruppe", "archiv", "suche",
   // KC-CLUB-NUTZUNG-BEREICHE (1.89.0): fehlende Bereiche + Unterbereiche (Büro-Fächer, Helfen-Reiter, Chronik, Alben)
   "dokansicht", "sicherheit", "sos", "kalender_abo", "helfen", "helfen_helfen", "helfen_leihen", "helfen_boerse", "buero", "buero_eingang", "buero_sitzung", "buero_nachher",
@@ -3243,7 +3243,7 @@ Deno.serve(async (req) => {
       await adminAbwesendPruefen().catch((e) => console.error("admin abwesend", String(e))); // KC-CLUB-VERTRETUNG (2.2.0)
       await stadtAutoLauf().catch((e) => console.error("stadt termine", String(e)));
       await aeUebernahmeMelden().catch((e) => console.error("aenderung uebernahme", String(e)));
-      await ekDienstwunschMelden().catch((e) => console.error("eingang dienstwunsch", String(e))); /* KC-CLUB-EINGANGSKORB (2.22.21) */ /* KC-CLUB-AENDERUNG-FREIGABE (2.22.19) */ // KC-CLUB-STADT-TERMINE (2.22.6): wöchentlich, nur wenn eingeschaltet
+      await ekDienstwunschMelden().catch((e) => console.error("eingang dienstwunsch", String(e))); /* KC-CLUB-EINGANGSKORB (2.23.6) */ /* KC-CLUB-AENDERUNG-FREIGABE (2.22.19) */ // KC-CLUB-STADT-TERMINE (2.22.6): wöchentlich, nur wenn eingeschaltet
       // KC-CLUB-NUTZUNG-PERSONEN (2.6.0): Geräte-Kennungen nur 100 Tage aufbewahren
       { const { error } = await db.from("kc_club_nutzung_geraete").delete().lt("tag", berlinTag(new Date(Date.now() - 100 * 86400000))); if (error) console.error("nutzung geraete loeschen", error.message); }
       // Abstimmungen mit abgelaufener Frist beenden (Ergebnis geht an alle)
@@ -4174,7 +4174,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         let versand = null;
         if (p.benachrichtigen !== false) {
           const ziel = art === "abstimmung" ? (await aktiveMitglieder()).map((x) => x.person_id)
-            : await leitungIds(); // KC-CLUB-EINGANGSKORB (2.22.21): Clubsprecher, Kassenwart UND Admin
+            : await leitungIds(); // KC-CLUB-EINGANGSKORB (2.23.6): Clubsprecher, Kassenwart UND Admin
           const fristText = v.frist ? ` Abstimmen bis ${wann(v.frist)}.` : "";
           const spText = spenden ? "\n\n" + spenden.map((x) => `💝 ${x.empfaenger}: ${euroRund(x.betrag)}`).join("\n") + (spenden.length > 1 ? `\nZusammen: ${euroRund(spendenSumme(spenden))}` : "") : "";
           versand = await senden("club_vorschlag", ziel.filter((id: string) => id !== ich.person_id), art === "abstimmung" ? {
@@ -6528,7 +6528,7 @@ Köcheclub-App`,
         }, `club-erstattung:${a.id}`, { cc, bcc });
         await db.from("kc_club_erstattung").update({ versand: { an, cc, bcc: bcc.length, ...versand } }).eq("id", a.id);
         await protokoll(ich.person_id, "erstattung_beantragt", { antrag: a.id, summe, positionen: pos.length, versand });
-        // KC-CLUB-EINGANGSKORB (2.22.21): alle drei der Clubleitung bekommen zusätzlich eine Push-Meldung – bearbeitet wird im Büro-Eingang
+        // KC-CLUB-EINGANGSKORB (2.23.6): alle drei der Clubleitung bekommen zusätzlich eine Push-Meldung – bearbeitet wird im Büro-Eingang
         { const leitung = (await leitungIds()).filter((id) => id !== ich.person_id);
           if (leitung.length) await sendenGewaehlt("club_nachricht", leitung, ["push"], { titel: `📥 Erstattung von ${ich.vorname}: ${euro(summe)}`, kurz: "Liegt im Büro-Eingangskorb",
             betreff: `Köcheclub Werne – Erstattung von ${ich.name}`, text: `${ich.name} hat eine Erstattung über ${euro(summe)} eingereicht. Bitte im Büro → 📥 Eingangskorb bearbeiten.`,
@@ -6680,7 +6680,7 @@ Köcheclub Werne`,
         return json({ ok: true });
       }
 
-      // ----- KC-CLUB-EINGANGSKORB (2.22.21): Erstattungen + Dienstzeiten im Büro-Eingang, Ablage in mehrere Ordner -----
+      // ----- KC-CLUB-EINGANGSKORB (2.23.6): Erstattungen + Dienstzeiten im Büro-Eingang, Ablage in mehrere Ordner -----
       case "eingang_korb": {
         nurLeitung(ich);
         const [{ data: ers }, { data: dw }] = await Promise.all([

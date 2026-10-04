@@ -3700,7 +3700,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/function buNeuOeffnen\(\) \{[^}]*chatOeffnen\(u\.id\);/.test(html), "Tippen öffnet die Unterhaltung");
   assert.ok(/<span><b>Neue Nachricht von \$\{esc\(von\)\}<\/b><small>\$\{esc\(u\.letzte\.text/.test(html), "Text escaped");
 }
-// 349 KC-CLUB-EINGANGSKORB (2.22.21): Erstattungen + Dienstzeiten im Eingang, alle drei der Clubleitung, Ablage in mehrere Ordner
+// 355 KC-CLUB-EINGANGSKORB (2.23.6): Erstattungen + Dienstzeiten im Eingang, alle drei der Clubleitung, Ablage in mehrere Ordner
 {
   const mig = lies("supabase/migrations/20261004_kc_club_v22221_eingangskorb.sql");
   assert.ok(/create table if not exists kc_club_eingang_stand/.test(mig) && /revoke all on table kc_club_eingang_stand from anon, authenticated;/.test(mig) && !/kc_dp_wish_inbox\s+add/.test(mig), "Stand-Tabelle, DP-Vertrag unverändert");
@@ -3719,7 +3719,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/ekPosten\(P\);/.test(html) && /data-o="\$\{esc\(o\.id\)\}"/.test(html) && /localStorage\.setItem\(EK_WAHL_KEY\(art\)/.test(html), "Eingang + Mehrfach-Ablage im Client");
   assert.ok(/else if \(h === "#eingang" && ICH\?\.buero\)/.test(html), "#eingang");
 }
-// 350 KC-CLUB-INKO-BLINKEN + KC-CLUB-TTT-TOENE (2.22.22)
+// 356 KC-CLUB-INKO-BLINKEN + KC-CLUB-TTT-TOENE (2.23.6)
 {
   assert.ok(/#inkoKnopf\.an \{[^}]*animation: inkoBlink 1\.2s ease-in-out infinite; \}/.test(html) && /@keyframes inkoBlink \{[^}]*\} 50% \{ background: #d32f2f;/.test(html), "Brille blinkt rot, solange Inkognito an");
   assert.ok(/if \(!spAnsageAn\("ttt"\) \|\| aktuelleAnsicht !== "spiele"\) return;/.test(html), "Töne nur mit Schalter und nur im Spiel");
@@ -3963,4 +3963,100 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/function arPasstAlle\(q, \.\.\.felder\) \{ const n = suNorm\(/.test(html), "Archiv: Umlaut-tolerant wie globale Suche");
   assert.ok(/id="arOrdnerSuche"[^>]*oninput="AR\.ordnerSuche=this\.value;arOrdnerListe\(\)"/.test(html), "Archiv: Suche im Ordner fehlt");
   assert.ok(/t\.split\(muster\)\.map\(\(teil, i\) => i % 2 \? `<mark>\$\{esc\(teil\)\}<\/mark>` : esc\(teil\)\)/.test(html), "Markierung muss vor dem Escapen teilen");
+}
+
+// 349. 2.23.0: Hilfe-Zentrum (KC-CLUB-HILFEZENTRUM) – alle Tipps/Hinweise nach Themen, Kachel im Register Technik, passt sich selbst an
+{
+  const block = (start, ende = "\n];") => { const i = html.indexOf(start); assert.ok(i >= 0, `${start} fehlt`); return html.slice(i, html.indexOf(ende, i)); };
+  const themen = new Set([...block("const HILFE_THEMEN = [").matchAll(/\{ id: "([a-z]+)"/g)].map((m) => m[1]));
+  assert.ok(themen.size >= 8 && themen.has("weitere") && themen.has("bereiche"), "Themen fehlen (inkl. Auffang „weitere“ und „bereiche“)");
+  const zuordnung = Object.fromEntries([...block("const HILFE_TIPP_THEMA = {", "\n};").matchAll(/([a-z_]+): "([a-z]+)"/g)].map((m) => [m[1], m[2]]));
+  // jeder Tipp des Tages hat ein bekanntes Thema – neue Tipps landen sonst nur unter „Weitere Tipps“
+  for (const m of block("const TIPPS = [").matchAll(/\n  \{ id: "([a-z_]+)"(?:, thema: "([a-z]+)")?/g)) {
+    const th = m[2] || zuordnung[m[1]];
+    assert.ok(th && themen.has(th), `Tipp „${m[1]}“ hat kein Hilfe-Thema (HILFE_TIPP_THEMA ergänzen)`);
+  }
+  const hilfe = [...block("const HILFE = [").matchAll(/\n  \{ id: "([^"]+)", thema: "([^"]+)", sym: "[^"]+", t: "[^"]+", x: /g)];
+  assert.ok(hilfe.length >= 25, "zu wenige Hilfetexte");
+  assert.equal(new Set(hilfe.map((m) => m[1])).size, hilfe.length, "Hilfe-IDs doppelt");
+  for (const [, id, th] of hilfe) { assert.match(id, /^[a-z_]+$/, `Hilfe-ID „${id}“ (wird in onclick verwendet)`); assert.ok(themen.has(th), `Hilfe „${id}“: Thema „${th}“ unbekannt`); }
+  assert.ok(/kachel_lang", thema: "start"[^\n]*lange/.test(html) && /id: "farbe", thema: "darstellung"[^\n]*Darstellung/.test(html), "Beispiele aus dem Wunsch: Lang-Drücken und Farbe einstellen");
+  // gesammelt zur Laufzeit aus allen drei Registries (nichts doppelt gepflegt), Anzahl je Thema berechnet
+  const f = html.slice(html.indexOf("function hzEintraege()"), html.indexOf("const hzGesehen"));
+  assert.ok(/\.\.\.HILFE\.filter/.test(f) && /\.\.\.TIPPS\.map/.test(f) && /\.\.\.EINWEISUNG\.filter/.test(f), "Hilfe muss TIPPS, EINWEISUNG und HILFE sammeln");
+  assert.ok(/hzThemaId\(/.test(f) && /\(HILFE_THEMEN\.some\(\(x\) => x\.id === t\) \? t : "weitere"\)/.test(html), "unbekanntes Thema → „Weitere Tipps“");
+  assert.ok(/📖 Inhalt\$\{anz\(alle\.length\)\}/.test(html) && /<ul class="hz-inhalt">\$\{themen\.map/.test(html) && /onclick="hzThema\('\$\{t\.id\}'\)"/.test(html), "Deckblatt mit Inhalt, Anzahl und Link je Thema");
+  assert.ok(/\{ id: "hilfezentrum", sym: "❓", t: "Hilfe & Tipps"[^\n]*aktion: "hzStart\(\)"/.test(block("  programme: [", "\n  ],")), "Kachel im Register Technik");
+  assert.ok(/<section id="v-hilfezentrum"/.test(html) && /"spiele", "hilfezentrum"\]\.forEach/.test(html) && /if \(v === "hilfezentrum"\) hzOeffnen\(\);/.test(html), "Ansicht fehlt");
+  assert.ok(/h === "#hilfezentrum" \|\| h\.startsWith\("#hilfezentrum="\)/.test(html), "Sprung #hilfezentrum fehlt");
+  assert.ok(/onclick="hzStart\(\)">Öffnen<\/button>/.test(html), "Link in den Einstellungen fehlt");
+}
+
+// 350. 2.23.1: Hilfe-Zentrum erweitert – abwechslungsreich formuliert, wechselnde Einleitungen, nichts drängt sich auf
+{
+  const b = html.slice(html.indexOf("const HILFE = ["), html.indexOf("\n];", html.indexOf("const HILFE = [")));
+  const es = [...b.matchAll(/\n  \{ id: "([^"]+)",[^\n]*? t: "([^"]+)", x: (?:\(\) => `|")([^"`]+)/g)].map((m) => ({ id: m[1], t: m[2], anfang: m[3].replace(/<[^>]+>/g, "").split(/\s+/).slice(0, 3).join(" ") }));
+  assert.ok(es.length >= 80, "zu wenige Hilfetexte");
+  assert.equal(new Set(es.map((e) => e.t)).size, es.length, "Hilfe-Titel doppelt");
+  const anf = {}; for (const e of es) (anf[e.anfang] ||= []).push(e.id);
+  for (const [a, ids] of Object.entries(anf)) assert.ok(ids.length === 1, `Hilfetexte beginnen gleich („${a}“): ${ids.join(", ")} – bitte abwechslungsreich formulieren`);
+  assert.ok(/const HZ_GRUSS = \[/.test(html) && /const HZ_THEMA_EINL = \[/.test(html) && /function hzOeffnen\(\) \{[^\n]*hzNeuerGruss\(\);/.test(html) && /if \(t !== HZ\.thema\) hzNeuerGruss\(\);/.test(html), "wechselnde Einleitungen fehlen");
+  assert.ok(!/function hzSuchen\(q\) \{[^}]*hzNeuerGruss/.test(html), "beim Suchen darf die Einleitung nicht wechseln");
+  assert.ok(/id: "buero_sprache"[^\n]*nur: \(\) => !!ICH\?\.buero/.test(html), "Büro-Hilfe nur für die Clubleitung");
+  // nicht aufdringlich: das Hilfe-Zentrum öffnet keine Fenster und meldet nichts von selbst
+  // Ausnahme (2.23.5): Rückmeldung, nachdem man das „?“ selbst aus-/eingeschaltet hat
+  const hz = html.slice(html.indexOf("const HZ = {"), html.indexOf("// ---------- KC-CLUB-ONLINE-ANSAGE")).replace(/function hzFrageSchalter\(an\) \{[\s\S]*?\n\}/, "");
+  assert.ok(!/melde\(|blattAuf\(|\.classList\.remove\("versteckt"\)/.test(hz), "Hilfe-Zentrum darf sich nicht aufdrängen");
+}
+
+// 351. 2.23.2: Hilfe-Zentrum – deutliches Suchfeld, Kapitel mit Nummern, Zurück-Leiste nach „Zeig mir wo“, Ausdruck/PDF
+{
+  assert.ok(/<label class="hz-suchfeld" for="hzSuche"><span class="hz-such-titel">🔍 Wonach suchst du\?<\/span>/.test(html) && /\.hz-suche \{[^}]*border: 2px solid var\(--rot\)/.test(html), "Suchfeld deutlich");
+  assert.ok(/function hzGliederung\(alle\)/.test(html) && /nr\[e\.id\] = `\$\{t\.nr\}\.\$\{i \+ 1\}`/.test(html) && /<div class="hz-kap-nr">Kapitel \$\{th\.nr\}<\/div>/.test(html), "Kapitel/Nummern fehlen");
+  assert.ok(/\.karte\.hz-eintrag \{ margin-top: 20px;/.test(html), "Abstand zwischen den Abschnitten");
+  const los = html.slice(html.indexOf("function hzLos(id)"), html.indexOf("function hzKarte("));
+  assert.ok(/HZ\.unterwegs = \{ id, thema: HZ\.q \? null : HZ\.thema, q: HZ\.q/.test(los) && /e\.los\(\); hzLeiste\(\);/.test(los), "Leiste nach „Zeig mir wo“");
+  assert.ok(/↩️ Zurück zur Hilfe<\/button>/.test(los) && /onclick="hzLeisteZu\(\)"[^>]*>✕ Abbrechen<\/button>/.test(los), "Knöpfe Zurück/Abbrechen");
+  assert.ok(/document\.querySelectorAll\("\.blatt:not\(\.versteckt\)"\)\.forEach\(fensterZu\)/.test(los) && /#hzInhalt \[data-hz="\$\{u\.id\}"\]/.test(los), "Zurück: Fenster schließen, an dieselbe Stelle");
+  assert.ok(/\.hz-leiste \{ position: fixed; top: calc\(env\(safe-area-inset-top, 0px\) \+ 8px\); right: 8px;/.test(html), "Leiste oben rechts");
+  assert.ok(/function hzOeffnen\(\) \{ \$\("hzLeiste"\)\?\.remove\(\);/.test(html), "Leiste weg, wenn die Hilfe wieder offen ist");
+  assert.ok(/hilfe: \{ titel: "🖨️ Hilfe drucken \/ als PDF", optionen: \(\) => hzDruckOptionen\(\), bauen: \(o\) => hzDruck\(o\) \}/.test(html) && /onclick="druckStarten\('hilfe'\)"/.test(html), "Druck/PDF fehlt");
+  assert.ok(/#druck \.hz-d-kap \{ break-before: page; \}/.test(html) && /<table class="hz-d-inhalt">/.test(html), "Druck: Inhaltsverzeichnis, Kapitel je Seite");
+}
+
+// 352. 2.23.3: Kapitel 1 „Erste Schritte“ (Text Hansi) – ganz vorne, fünf Schritte, Gruß von Hansi
+{
+  assert.ok(/const HILFE_THEMEN = \[\n  \{ id: "erste", sym: "👋", t: "Erste Schritte"/.test(html), "„Erste Schritte“ muss Kapitel 1 sein");
+  const ids = [...html.matchAll(/\n  \{ id: "([a-z_]+)", thema: "erste"/g)].map((m) => m[1]);
+  assert.deepEqual(ids, ["willkommen", "erst_einstellungen", "erst_einfach", "erst_hilfetexte", "erst_feedback"], "Schritte/Reihenfolge");
+  assert.ok(/id: "erst_feedback"[^\n]*Register <b>„Club“<\/b>[^\n]*Liebe Grüße<br><b>Hansi<\/b>/.test(html) && /id: "erst_einstellungen"[^\n]*Zahnrad ⚙️/.test(html), "Inhalt nach Hansis Text");
+}
+
+// 353. 2.23.4: „?“ in jeder Ansicht – jede Ansicht hat ein Hilfe-Kapitel (neue Ansichten in HZ_SICHT_THEMA eintragen)
+{
+  const liste = html.match(/\[("start", "dokumente", "dokansicht"[^\]]*)\]\.forEach\(\(x\) => \$\("v-" \+ x\)/)?.[1];
+  assert.ok(liste, "Ansichtenliste in zeige() nicht gefunden");
+  const ansichten = [...liste.matchAll(/"([a-z]+)"/g)].map((m) => m[1]);
+  const map = html.slice(html.indexOf("const HZ_SICHT_THEMA = {"), html.indexOf("};", html.indexOf("const HZ_SICHT_THEMA = {")));
+  const zuordnung = Object.fromEntries([...map.matchAll(/([a-z]+): ("([a-z]+)"|null)/g)].map((m) => [m[1], m[3] || null]));
+  const themen = new Set([...html.slice(html.indexOf("const HILFE_THEMEN = ["), html.indexOf("\n];", html.indexOf("const HILFE_THEMEN = ["))).matchAll(/\{ id: "([a-z]+)"/g)].map((m) => m[1]));
+  for (const v of ansichten) {
+    assert.ok(v in zuordnung, `Ansicht „${v}“ hat kein Hilfe-Kapitel (HZ_SICHT_THEMA ergänzen)`);
+    if (zuordnung[v]) assert.ok(themen.has(zuordnung[v]), `Ansicht „${v}“: Kapitel „${zuordnung[v]}“ unbekannt`);
+  }
+  assert.ok(/hzFrageEinsetzen\(v\); \/\/ KC-CLUB-HILFEZENTRUM/.test(html) && /class="hz-frage" id="hzFrage"[^>]*>\?<\/button>/.test(html) && /k\.addEventListener\("click", \(\) => \{ if \(lang\) \{ lang = false; return; \} hzFrage\(k\.dataset\.v\); \}\)/.test(html), "„?“ fehlt");
+  assert.ok(/\.hz-frage \{ position: fixed;[^}]*bottom: calc\(84px/.test(html) && !/body\.einfach[^{]*\.hz-frage/.test(html), "„?“ unten rechts, auch in der einfachen Ansicht");
+  assert.ok(/onclick="\$\('chatBlatt'\)\.classList\.add\('versteckt'\);hzFrage\('chat'\)">❓ Hilfe zum Chat<\/button>/.test(html), "Chat: Hilfe im ⋮-Menü");
+  assert.ok(/else if \(HZ\.herkunft\?\.chat\) \{ const c = HZ\.herkunft\.chat; HZ\.herkunft = null; chatOeffnen\(c\); \}/.test(html), "Zurück in den Chat");
+}
+
+// 354. 2.23.5: „?“ per Lang-Drücken ausblenden, Rückfrage erklärt den Rückweg, Schalter in beiden Ansichten
+{
+  assert.ok(/const HZ_FRAGE_AUS = "kc_club_hz_frage_aus"[^\n]*HZ_LANG_MS = 600;/.test(html) && /k\.addEventListener\("pointerdown"[^\n]*hzFrageLang\(\); \}, HZ_LANG_MS\)/.test(html), "Lang-Drücken fehlt");
+  assert.ok(/async function hzFrageLang\(\) \{\n  if \(!\(await frage\("❓ Fragezeichen ausblenden\?[^"]*Zurückholen kannst du es jederzeit unter ⚙️ Einstellungen → „❓ Fragezeichen unten rechts“/.test(html), "Rückfrage mit Rückweg");
+  assert.ok(/k\.classList\.toggle\("versteckt", !HZ_SICHT_THEMA\[v\] \|\| hzFrageAus\(\)\)/.test(html), "ausgeblendet bleibt ausgeblendet");
+  for (const id of ["setHzFrage", "setHzFrageE"]) assert.ok(new RegExp(`id="${id}" checked onchange="hzFrageSchalter\\(this\\.checked\\)"`).test(html), `Schalter ${id} fehlt`);
+  const einfachKlappe = html.slice(html.indexOf('data-klappe="einfach"'), html.indexOf('data-klappe="schnellstart"')); // bis zum nächsten Bereich (innen gibt es geschachtelte <details>)
+  assert.ok(einfachKlappe.includes('id="setHzFrageE"'), "Schalter muss in der einfachen Ansicht erreichbar sein");
+  assert.ok(/id: "frage_knopf", thema: "start"/.test(html), "Hilfe-Eintrag zum Fragezeichen");
 }
