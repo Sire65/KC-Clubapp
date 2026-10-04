@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.23.18 – 2026-10-04 – Randpfeile farbig, bei Neuem 5× blinken (Wunsch Hansi)
+- KC-CLUB-MINI-PFEIL-BLINK: Die drei Pfeile „›“ auf dem Rand der Felder oben (erweiterte Ansicht) sind farbig, sobald im Feld etwas
+  ist: Neue Nachr. gelb (ungelesene Nachrichten), Mitglieder grün (jemand online), Nächster Termin hellblau – mit Frist grün/orange/rot
+  wie die Ameisenstraße. Bei neuem Stand (mehr Nachrichten, mehr Leute online, anderer Termin/andere Frist) blinkt der Pfeil 5×
+  hintereinander (5 × 0,8 s), danach bleibt er ruhig farbig. Neuzeichnen setzt das Blinken nicht neu an. Ist nichts da: weiß wie bisher.
+  Tests 202/207 an den neuen Aufbau angepasst, Test 366.
+
 ## 2.23.17 – 2026-10-04 – Nutzung nach Uhrzeit und Wochentag (Wunsch Hansi)
 - KC-CLUB-NUTZUNG-UHRZEIT: „📊 Nutzung – ohne Namen“ (Admin) zeigt jetzt auch, **zu welchen Uhrzeiten** die App genutzt wird:
   24 Stunden-Säulen (stärkste Stunde rot), die drei stärksten Stunden, Tageszeiten (morgens/mittags/nachmittags/abends/nachts)

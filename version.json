@@ -1,10 +1,16 @@
 {
-  "version": "2.23.17",
+  "version": "2.23.18",
   "datum": "2026-10-04",
   "neu": [
-    "🔧 Kleine Systemverbesserungen"
+    "✨ Die Pfeile an „Neue Nachr.“, „Mitglieder“ und „Nächster Termin“ leuchten farbig, wenn dort etwas ist – bei Neuem blinken sie 5×"
   ],
   "verlauf": [
+    {
+      "version": "2.23.18",
+      "neu": [
+        "✨ Die Pfeile an „Neue Nachr.“, „Mitglieder“ und „Nächster Termin“ leuchten farbig, wenn dort etwas ist – bei Neuem blinken sie 5×"
+      ]
+    },
     {
       "version": "2.23.17",
       "neu": [

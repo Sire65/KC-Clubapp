@@ -2289,7 +2289,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/onclick="termineNeuWahl\(\)"[^>]*>＋ Neu<\/button>/.test(html) && !/id="neuAnfrageKnopf"/.test(html) && /onclick="hlNeuWahl\(\)">＋ Neu<\/button>/.test(html), "ein ＋ Neu oben rechts");
   assert.ok(/protokolle\.length \? `<div class="mini-kacheln">\$\{protokolle\.map\(protokollKarte\)/.test(html) && /data-klappe="pr_aufgaben"/.test(html), "Protokolle als Kacheln, Aufgaben klappbar");
   assert.ok(/data-klappe="tm_umfragen"/.test(html) && /data-klappe="tm_anfragen"/.test(html) && /data-klappe="tm_privat"/.test(html), "Termine-Bereiche klappbar");
-  assert.ok(!/>Zurzeit ist kein Treffen geplant\.</.test(html) && /<span>Nächster Termin<\/span><span class=\"mpfeil\"/.test(html), "Begriffe: Termin / Sitzung / Veranstaltung");
+  assert.ok(!/>Zurzeit ist kein Treffen geplant\.</.test(html) && /<span>Nächster Termin<\/span>\$\{mpfeil\("termin"/.test(html), "Begriffe: Termin / Sitzung / Veranstaltung");
 }
 
 // 203. 1.46.1: Themen und Abstimmungen als kleine Kacheln (KC-CLUB-VORSCHLAG-KACHELN)
@@ -2323,7 +2323,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 
 // 207. 1.47.3: Pfeile der drei Startfelder rechts mittig auf dem Rand (KC-CLUB-MINI-PFEIL)
 {
-  assert.ok((html.match(/<span class="mpfeil" aria-hidden="true">›<\/span><\/button>/g) || []).length === 3 && !/Nachr\. ›|Mitglieder ›<|Termin ›</.test(html), "drei Randpfeile, keine kleinen Pfeile im Text");
+  assert.ok((html.match(/\$\{mpfeil\("(nachrichten|mitglieder|termin)", [^\n]*?\)\}<\/button>/g) || []).length === 3 && /return '<span class="mpfeil" aria-hidden="true">›<\/span>';/.test(html) && !/Nachr\. ›|Mitglieder ›<|Termin ›</.test(html), "drei Randpfeile, keine kleinen Pfeile im Text");
   assert.ok(/\.kacheln3 \.mini \.mpfeil \{[^}]*transform: translate\(50%, -50%\)/.test(html), "Pfeil mittig auf dem rechten Rand");
 }
 
@@ -4169,4 +4169,13 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/from\("kc_club_nutzung_stunden"\)\.select\("tag,stunde,anzahl"\)/.test(server) && /stunden: fs \? null : sz \?\? \[\]/.test(server), "Statistik liefert Stunden");
   assert.ok(/nzStdPuffer\[st\] = \(nzStdPuffer\[st\] \|\| 0\) \+ 1/.test(html) && /stunden: std/.test(html), "App zählt die Stunde beim Antippen und schickt sie mit");
   assert.ok(/function nzZeitHtml\(r\)/.test(html) && /\$\{nzZeitHtml\(r\)\}/.test(html) && /🕐 Zu welchen Uhrzeiten wird die App genutzt\?/.test(html) && /📅 An welchen Wochentagen\?/.test(html), "Anzeige Uhrzeit/Wochentage");
+}
+
+// 366. 2.23.18: Randpfeile farbig, bei Neuem 5× blinken, dann ruhig farbig (KC-CLUB-MINI-PFEIL-BLINK)
+{
+  const f = html.slice(html.indexOf("function mpfeil("), html.indexOf("// KC-CLUB-FRIST-AMEISEN (1.53.6)"));
+  assert.ok(/const MP_BLINK_MS = 5 \* 800/.test(html) && /\.mpfeil\.mp-blink \{ animation: mpBlink \.8s ease-in-out 5; \}/.test(html), "5× blinken (5 × 0,8 s)");
+  assert.ok(/typeof stand === "number" \? stand > alt\.stand : stand !== alt\.stand/.test(f) && /animation-delay:-\$\{lauf\}ms/.test(f), "nur bei Neuem blinken, beim Neuzeichnen weiterlaufen");
+  assert.ok(/mpfeil\("nachrichten", n > 0, n\)/.test(html) && /mpfeil\("mitglieder", ONL\.zeigen && mpOnline\(\) > 0, mpOnline\(\)\)/.test(html) && /mpfeil\("termin", !!t,/.test(html), "drei Felder: Nachricht, online, Termin");
+  assert.ok(/\.mpfeil\.mp-nachrichten \{ color:/.test(html) && /\.mpfeil\.mp-mitglieder \{ color:/.test(html) && /\.mpfeil\.mp-termin \{ color:/.test(html), "Farben");
 }
