@@ -172,6 +172,7 @@
   /* KC-CLUB-KOPF-EINFACH (2.1.0): Mitglieder ohne Technik-Lämpchen und Lebenszeichen-Herz (nur Admin) */
   body:not(.ist-admin) #ledComm, body:not(.ist-admin) #ledDaten, body:not(.ist-admin) #herzKnopf { display: none; }
   body:not(.ist-admin) #setInkognitoZeile, body:not(.ist-admin) #inkoKnopf { display: none; }
+  body:not(.ist-admin) #naSosKnopf { display: none; } #naSosKnopf { margin: 0; padding: 8px 10px; } #v-nachrichten .kopf2 > h2 { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } #v-nachrichten .kopf2 > #naSosKnopf + .knopf.haupt { margin-left: 0; } /* 2.22.0 KC-CLUB-NOTFALL-KANAELE: SOS im Nachrichten-Kopf nur für den Admin */
   /* 2.3.1: Hauptschalter in der Kopfleiste – aus = blass, an = deutlich markiert */
   /* 2.4.1 (Wunsch Hansi): Inkognito an → Rahmen um den Kopfbereich, beim Einschalten kurz Ameisen.
      2.4.2 (Hansi: „schwarz sieht man nicht“ – im dunklen Design): gelber Rahmen, Ameisen schwarz auf gelb */
@@ -999,7 +1000,7 @@
   .blase.notfall { border: 4px solid #d50000; box-shadow: 0 0 0 4px rgba(213,0,0,.30), var(--schatten); }
   .blase .notfall-marke { display: inline-block; margin: 0 0 4px; padding: 2px 10px; border-radius: 999px; background: #d50000; color: #fff; font-weight: 900; font-size: .82rem; letter-spacing: .04em; animation: alarmPuls 1s ease-in-out 4; }
   @keyframes alarmPuls { 50% { transform: scale(1.08); box-shadow: 0 0 10px #ff1744; } }
-  .blatt.alarm-blatt { z-index: 9990; } /* liegt über allen anderen Start-Fenstern (Einweisung, Spiel-Einladung …) */
+  #alarmBlatt.blatt { z-index: 9990; } /* liegt über allen anderen Start-Fenstern (Einweisung, Spiel-Einladung …) */
   .alarm-blatt .blatt-innen { border: 6px solid #d50000; box-shadow: 0 0 0 6px rgba(213,0,0,.35); }
   .alarm-kopf { background: #d50000; color: #fff; border-radius: 12px; padding: 10px 12px; font-weight: 900; font-size: 1.15rem; text-align: center; animation: alarmPuls 1s ease-in-out 6; }
   .alarm-text { font-size: 1.15rem; line-height: 1.4; white-space: pre-wrap; overflow-wrap: anywhere; }
@@ -1996,7 +1997,7 @@
   <!-- NACHRICHTEN -->
   <section id="v-nachrichten" class="versteckt">
     <!-- 1.32.1 (Hinweis Hansi): „＋ Neu“ immer sichtbar in der Kopfzeile, die übrigen Knöpfe beschriftet in einer eigenen Reihe -->
-    <div class="kopf2"><button class="zurueck" onclick="zurueck('start')" aria-label="Zurück">‹</button><h2>💬 Nachrichten</h2><button class="knopf haupt klein" onclick="neueNachricht()">＋ Neu</button></div>
+    <div class="kopf2"><button class="zurueck" onclick="zurueck('start')" aria-label="Zurück">‹</button><h2>💬 Nachrichten</h2><button class="knopf klein alarm-knopf" id="naSosKnopf" onclick="notfallMeldung()" title="Notfall-Meldung sofort an alle – Push, E-Mail, WhatsApp, SMS">🚨 SOS</button><button class="knopf haupt klein" onclick="neueNachricht()">＋ Neu</button></div>
     <div class="kom-leiste"><button class="knopf klein" onclick="gruppeForm()">👥 Gruppe</button><button class="knopf klein" onclick="gemerktZeigen()" title="Nachrichten, die du mit „⭐ merken“ markiert hast">⭐ Gemerkt</button><button class="knopf klein" onclick="testAnMichStarten()" title="Nachricht an dich selbst – prüft Push und Mail">🧪 Test</button></div>
     <div id="onlineLeiste"></div>
     <div class="karte" id="unterhListe"><span class="hinweis">Wird geladen …</span></div>
@@ -2613,7 +2614,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.21.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.22.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -4828,10 +4829,11 @@ function diktatMerge(liste, t, gleicheRunde) { // gleicheRunde: Stücke derselbe
   else l.push(t);
   return l;
 }
-function diktatStart() {
-  if (!DIKTAT_GEHT) return spracheStart();
+function diktatStart(ziel, nachSenden) { // 2.22.0: auch für andere Felder (z. B. Notfall-Meldung) – ziel = Feld-ID, nachSenden = was „Senden“ tut
+  if (!DIKTAT_GEHT) return ziel ? melde("Dieses Handy kann nicht diktieren – bitte tippen.", true) : spracheStart();
   if (DT.aktiv) return;
-  const feld = $("text"); DT.basis = feld.value; DT.fertig = ""; DT.aktiv = true; DT.seit = Date.now(); DT.vorher = []; DT.sitzung = []; DT.zwischen = "";
+  DT.ziel = ziel || "text"; DT.nachSenden = nachSenden || null;
+  const feld = $(DT.ziel); DT.basis = feld.value; DT.fertig = ""; DT.aktiv = true; DT.seit = Date.now(); DT.vorher = []; DT.sitzung = []; DT.zwischen = "";
   const f = blattAuf("diktatBlatt", `<div class="diktat"><span class="bu-hpunkt">✍️</span><b>Ich schreibe mit …</b>
     <div class="diktat-text" id="diktatText"><span class="hinweis">Sprich einfach los. Satzzeichen sagen: „Punkt“, „Komma“, „Fragezeichen“, „neue Zeile“.</span></div>
     <div class="knoepfe" style="justify-content:center"><button class="knopf haupt" data-d="senden">📤 Senden</button><button class="knopf" data-d="fertig">✅ Fertig – noch prüfen</button><button class="knopf" data-d="weg">✕ Verwerfen</button></div>
@@ -4849,7 +4851,7 @@ function diktatHoeren() {
     for (let i = 0; i < ev.results.length; i++) { const r = ev.results[i], t = (r[0]?.transcript || "").trim(); if (!t) continue; if (r.isFinal) fin = diktatMerge(fin, t, true); else neu = t; }
     DT.sitzung = fin; DT.zwischen = neu;
     let teile = [...DT.vorher]; fin.forEach((t, i) => { teile = diktatMerge(teile, t, i > 0); }); if (neu) teile = diktatMerge(teile, neu, fin.length > 0);
-    const gesagt = diktatSatz(teile.join(" ")), feld = $("text");
+    const gesagt = diktatSatz(teile.join(" ")), feld = $(DT.ziel || "text");
     feld.value = (DT.basis ? DT.basis.replace(/\s*$/, " ") : "") + gesagt; feld.dispatchEvent(new Event("input", { bubbles: true }));
     if ($("diktatText")) $("diktatText").textContent = gesagt || "…";
   };
@@ -4862,9 +4864,10 @@ function diktatHoeren() {
 function diktatEnde(was) {
   DT.aktiv = false; try { DT.erk?.stop?.(); } catch {}
   $("diktatBlatt")?.remove();
-  const feld = $("text");
+  const feld = $(DT.ziel || "text"); if (!feld) return;
   if (was === "weg") { feld.value = DT.basis; feld.dispatchEvent(new Event("input", { bubbles: true })); return melde("✕ Diktat verworfen"); }
   feld.value = feld.value.trim(); feld.dispatchEvent(new Event("input", { bubbles: true }));
+  if (was === "senden" && DT.nachSenden) { if (!feld.value) return melde("Es wurde nichts erkannt – bitte nochmal.", true); return DT.nachSenden(); } // 2.22.0: z. B. Notfall-Meldung
   if (was === "senden") { if (!feld.value) return melde("Es wurde nichts erkannt – bitte nochmal.", true); return senden(); }
   feld.focus();
 }
@@ -7948,24 +7951,45 @@ const istNotfall = (m) => !!m?.wichtig && NOTFALL_RE.test(m.text || "");
 function notfallMeldung() {
   if (!ICH?.admin) return melde("Notfall-Meldungen an alle darf nur der Admin senden.", true);
   const n = (MITGLIEDER || []).filter((x) => x.person_id !== ICH.person_id).length;
-  blattAuf("notfallBlatt", `<div style="display:grid;gap:8px"><div class="alarm-kopf">🚨 ALARM AN ALLE</div>
+  blattAuf("notfallBlatt", `<div style="display:grid;gap:8px"><div class="alarm-kopf">🚨 SOS – NACHRICHT AN ALLE</div>
+    <p class="hinweis" style="margin:0"><b>Neue Nachricht an alle auf allen Kanälen.</b> Schreiben oder einsprechen, dann „Senden“ – sie geht sofort an <b>alle${n ? ` ${n}` : ""} Mitglieder</b>: 🔔 Push und ✉️ E-Mail automatisch (auch bei stummem Chat und in der Ruhezeit), danach mit einem Tipp in 🟢 WhatsApp und 💬 SMS. Bei allen erscheint sie mit rotem Rand.</p>
     <textarea id="notfallText" maxlength="1000" placeholder="Was ist passiert? Was sollen alle jetzt tun?"></textarea>
-    <p class="hinweis" style="margin:0">Geht sofort an <b>alle${n ? ` ${n}` : ""} Mitglieder</b> – als Push aufs Handy und als E-Mail, auch bei stummgeschaltetem Chat und in der Ruhezeit. Bei allen erscheint sie mit rotem Rand.</p>
+    ${DIKTAT_GEHT ? '<button class="knopf" onclick="diktatStart(\'notfallText\', notfallSenden)">🎙️ Einsprechen statt tippen</button>' : ""}
     <button class="knopf alarm-knopf" style="padding:14px;font-size:1.1rem" onclick="notfallSenden()">🚨 JETZT AN ALLE SENDEN</button>
     <button class="knopf" onclick="$('notfallBlatt').remove()">Abbrechen</button></div>`).classList.add("alarm-blatt");
   setTimeout(() => $("notfallText")?.focus(), 80);
 }
+// WhatsApp/SMS: kein kostenloser automatischer Versand möglich (WhatsApp-Business-Schnittstelle kostet) – deshalb fertig vorbereitet:
+// ein Tipp öffnet WhatsApp bzw. SMS mit dem Text, dort Club-Gruppe/Empfänger wählen und senden.
+const notfallTeilText = (text) => `🚨 NOTFALL – Köcheclub Werne (${ICH?.vorname || "Admin"}):\n${text}\n\nMehr in der Club-App.`;
 async function notfallSenden() {
   const text = ($("notfallText")?.value || "").trim();
-  if (!text) { melde("Bitte zuerst die Meldung schreiben.", true); $("notfallText")?.focus(); return; }
-  if (!(await frage(`🚨 Wirklich an ALLE Mitglieder senden?\n\n„${text.slice(0, 200)}${text.length > 200 ? " …" : ""}“\n\nPush + E-Mail, sofort.`, { ja: "🚨 Ja, an alle senden" }))) return;
+  if (!text) { melde("Bitte zuerst die Meldung schreiben oder einsprechen.", true); $("notfallText")?.focus(); return; }
+  if (!(await frage(`🚨 Wirklich an ALLE Mitglieder senden?\n\n„${text.slice(0, 200)}${text.length > 200 ? " …" : ""}“\n\nPush + E-Mail sofort, danach WhatsApp/SMS mit einem Tipp.`, { ja: "🚨 Ja, an alle senden" }))) return;
   try {
     const r = await api("nachricht_senden", { notfall: true, text, empfaenger: { alle: true } }, { warten: true });
-    $("notfallBlatt")?.remove();
-    melde(`🚨 Notfall-Meldung gesendet${r.versand?.gesendet != null ? ` – ${r.versand.gesendet} Zustellungen` : ""}${r.versand?.fehler ? `, ${r.versand.fehler} fehlgeschlagen` : ""}`);
-    chatStand = ""; if (r.id) chatOeffnen(r.id);
-  } catch (e) { meldeFehler(e); }
+    const t = encodeURIComponent(notfallTeilText(text));
+    blattAuf("notfallBlatt", `<div style="display:grid;gap:8px"><div class="alarm-kopf">✅ AN ALLE GESENDET</div>
+      <p style="margin:0">🔔 Push und ✉️ E-Mail sind raus${r.versand?.gesendet != null ? ` (${r.versand.gesendet} Zustellungen${r.versand?.fehler ? `, ${r.versand.fehler} fehlgeschlagen` : ""})` : ""}.</p>
+      <b>Jetzt noch auf den anderen Kanälen:</b>
+      <a class="knopf alarm-knopf" href="https://wa.me/?text=${t}" target="_blank" rel="noopener" onclick="api('admin_eingriff',{art:'notfall_whatsapp'}).catch(()=>{})">🟢 In WhatsApp senden (Club-Gruppe wählen) ↗</a>
+      <a class="knopf" href="sms:?&body=${t}" onclick="api('admin_eingriff',{art:'notfall_sms'}).catch(()=>{})">💬 Als SMS senden ↗</a>
+      <button class="knopf" onclick="notfallKopieren()">📋 Text kopieren (für andere Wege)</button>
+      <button class="knopf haupt" onclick="$('notfallBlatt').remove();${r.id ? `chatOeffnen('${esc(r.id)}')` : ""}">💬 Zur Notfall-Unterhaltung</button></div>`).classList.add("alarm-blatt");
+    $("notfallBlatt").dataset.text = text; chatStand = "";
+  } catch (e) {
+    // Server gestört (z. B. Notbetrieb): sofort auf WhatsApp/SMS ausweichen – die Meldung darf nicht hängen bleiben
+    meldeFehler(e); const t = encodeURIComponent(notfallTeilText(text));
+    blattAuf("notfallBlatt", `<div style="display:grid;gap:8px"><div class="alarm-kopf">⚠️ CLUB-SERVER GERADE NICHT ERREICHBAR</div>
+      <p style="margin:0">Push und E-Mail gehen im Moment nicht. <b>Sende die Meldung jetzt direkt:</b></p>
+      <a class="knopf alarm-knopf" href="https://wa.me/?text=${t}" target="_blank" rel="noopener">🟢 In WhatsApp senden (Club-Gruppe wählen) ↗</a>
+      <a class="knopf" href="sms:?&body=${t}">💬 Als SMS senden ↗</a>
+      <button class="knopf" onclick="notfallKopieren()">📋 Text kopieren</button>
+      <button class="knopf" onclick="$('notfallBlatt').remove()">Schließen</button></div>`).classList.add("alarm-blatt");
+    $("notfallBlatt").dataset.text = text;
+  }
 }
+async function notfallKopieren() { try { await navigator.clipboard.writeText(notfallTeilText($("notfallBlatt")?.dataset.text || "")); melde("📋 Kopiert"); } catch { melde("Kopieren ging nicht.", true); } }
 // beim Öffnen der App: ungelesene Notfall-Meldung (48 Std.) groß in Rot – jede Meldung nur einmal
 function alarmPruefen() {
   const a = INIT?.alarm; if (!a?.id) return;

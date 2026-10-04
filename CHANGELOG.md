@@ -1,5 +1,17 @@
 # Änderungen
 
+## 2.22.0 – 2026-10-04 – 🚨 SOS in „Nachrichten“: an alle auf allen Kanälen (Wunsch Hansi)
+- KC-CLUB-NOTFALL-KANAELE: in „💬 Nachrichten“ oben rechts neben „＋ Neu“ der rote Knopf „🚨 SOS“ – nur beim Admin/Vertretung (Mitglieder
+  sehen ihn nicht). Öffnet die Notfall-Meldung mit kurzer Erklärung („Neue Nachricht an alle auf allen Kanälen“).
+- Schreiben oder 🎙️ einsprechen: das vorhandene Diktat schreibt jetzt auch in andere Felder (diktatStart(ziel, nachSenden)); „📤 Senden“ im
+  Diktat-Fenster sendet die Notfall-Meldung direkt. Der Chat-Weg bleibt unverändert.
+- Senden: 🔔 Push + ✉️ E-Mail automatisch an alle (wie 2.21.0). Danach sofort „🟢 In WhatsApp senden (Club-Gruppe wählen)“ und
+  „💬 Als SMS senden“ mit fertigem Text sowie „📋 Text kopieren“. Automatischer WhatsApp-/SMS-Versand ohne Zutun bräuchte kostenpflichtige
+  Schnittstellen (WhatsApp Business, SMS-Anbieter) – Zero-Cost-Regel; deshalb fertig vorbereitet mit einem Tipp. Weitergabe wird protokolliert.
+- Ist der Club-Server gestört, bleibt die Meldung nicht hängen: Hinweis + direkt WhatsApp/SMS/Kopieren.
+- Nur das Alarm-Fenster beim Empfänger liegt über allem (z-index nur für #alarmBlatt), Rückfragen und Diktat bleiben beim Absender bedienbar.
+- Test 323.
+
 ## 2.21.0 – 2026-10-04 – 🚨 Alarm an alle: Notfall-Meldung mit Alarmstufe Rot (Wunsch Hansi)
 - KC-CLUB-NOTFALL-MELDUNG: nur Admin/Vertretung. Schreiben → „🚨 JETZT AN ALLE SENDEN“ → einmal bestätigen. Zu finden als erste Kachel
   „🚨 Alarm an alle“ im Register Admin, im Notfall-Fahrplan und oben auf der SOS-Seite (Mitglieder sehen den Knopf nicht; ihre SOS-Seite

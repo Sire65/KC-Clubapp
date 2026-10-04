@@ -26,7 +26,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "2.21.0";
+const SERVER_VERSION = "2.22.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -7407,7 +7407,7 @@ Köcheclub-App`,
       case "admin_eingriff": {
         nurAdmin(ich);
         const art = String(p.art ?? "");
-        if (!["neustart_geoeffnet"].includes(art)) throw new Fehler("Unbekannter Eingriff.", 400);
+        if (!["neustart_geoeffnet", "notfall_whatsapp", "notfall_sms"].includes(art)) throw new Fehler("Unbekannter Eingriff.", 400);
         await protokoll(ich.person_id, "admin_eingriff", { art });
         return json({ ok: true });
       }

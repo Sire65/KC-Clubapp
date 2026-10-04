@@ -2093,7 +2093,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 
 // 182. 1.32.1: „＋ Neu“ immer sichtbar, Kopfzeilen brechen um (KC-CLUB-KOPFZEILE)
 {
-  assert.ok(/<h2>💬 (Kommunikation|Nachrichten)<\/h2><button class="knopf haupt klein" onclick="neueNachricht\(\)">＋ Neu<\/button><\/div>/.test(html), "＋ Neu direkt in der Kopfzeile");
+  assert.ok(/<h2>💬 (Kommunikation|Nachrichten)<\/h2>(<button[^>]*id="naSosKnopf"[^>]*>🚨 SOS<\/button>)?<button class="knopf haupt klein" onclick="neueNachricht\(\)">＋ Neu<\/button><\/div>/.test(html), "＋ Neu direkt in der Kopfzeile"); // 2.22.0: davor nur beim Admin 🚨 SOS
   assert.ok(/⭐ Gemerkt<\/button>/.test(html) && /\.kopf2 \{ display: flex; align-items: center; gap: 10px; margin: 6px 0 4px; flex-wrap: wrap; \}/.test(html), "Stern beschriftet, Kopfzeile bricht um");
 }
 
@@ -3486,7 +3486,7 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   for (const d of ["supabase", "neon", "cloudflare", "github", "b2", "brevo", "kicc"]) assert.ok(new RegExp(`\\n  ${d}: \\{ sym:`).test(ad), "Direktsprung fehlt: " + d);
   assert.ok(!/(sb_secret_|service_role|SUPABASE_ACCESS_TOKEN|apikey|Bearer )/i.test(ad), "keine Schlüssel im Admin-Register");
   assert.ok(/rel="noopener"/.test(ad) && /async function adNeustart\(\) \{\s*const z = adZustand\("supabase"\);\s*if \(!\(await frage\(/.test(ad), "Neustart nur nach Rückfrage, Verwaltung in neuem Fenster");
-  assert.ok(/case "admin_eingriff": \{\s*nurAdmin\(ich\);[\s\S]{0,200}\["neustart_geoeffnet"\]\.includes\(art\)[\s\S]{0,200}protokoll\(ich\.person_id, "admin_eingriff"/.test(server), "Eingriff nur Admin, feste Arten, protokolliert");
+  assert.ok(/case "admin_eingriff": \{\s*nurAdmin\(ich\);[\s\S]{0,200}\["neustart_geoeffnet"[^\]]*\]\.includes\(art\)[\s\S]{0,200}protokoll\(ich\.person_id, "admin_eingriff"/.test(server), "Eingriff nur Admin, feste Arten, protokolliert");
   assert.ok(/b2: b2 \?\? null/.test(server) && /from\("kc_backup_machine_telemetry"\)\.select\(/.test(server), "B2-Stand nur lesend in admin_lage");
   assert.ok(/#raster\.ad-raster \{ grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/.test(html) && /\.register\.vier \{ grid-template-columns: repeat\(4/.test(html), "3 Kacheln je Reihe, 4 Register in einer Reihe");
 }
@@ -3502,6 +3502,14 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/\.blase\.notfall \{ border: 4px solid #d50000/.test(html) && /istNotfall\(m\) \? " notfall" : ""/.test(html), "roter Rand im Chat");
   assert.ok(/alarmPruefen\(\); \/\* KC-CLUB-NOTFALL-MELDUNG \*\//.test(html) && /localStorage\.setItem\("kc_club_alarm_gesehen", a\.id\)/.test(html), "Alarm-Fenster einmal je Meldung");
   assert.ok(/\["alarm", "🚨", "Alarm an alle", "not"\]/.test(html) && /ICH\?\.admin \? '<button class="knopf alarm-knopf"[^']*onclick="notfallMeldung\(\)"/.test(html), "Knopf im Admin-Register und auf der SOS-Seite (nur Admin)");
+}
+// 323. 2.22.0: SOS im Nachrichten-Kopf (KC-CLUB-NOTFALL-KANAELE) – nur Admin, einsprechen, danach WhatsApp/SMS mit einem Tipp
+{
+  assert.ok(/<h2>💬 Nachrichten<\/h2><button class="knopf klein alarm-knopf" id="naSosKnopf" onclick="notfallMeldung\(\)"/.test(html) && /body:not\(\.ist-admin\) #naSosKnopf \{ display: none; \}/.test(html), "SOS neben ＋ Neu, nur Admin");
+  assert.ok(/diktatStart\(\\'notfallText\\', notfallSenden\)/.test(html) && /function diktatStart\(ziel, nachSenden\)/.test(html) && /if \(was === "senden" && DT\.nachSenden\)[^\n]*return DT\.nachSenden\(\); \}/.test(html), "Einsprechen über das vorhandene Diktat");
+  assert.ok(/href="https:\/\/wa\.me\/\?text=\$\{t\}"/.test(html) && /href="sms:\?&body=\$\{t\}"/.test(html), "WhatsApp und SMS mit fertigem Text");
+  assert.ok(/"notfall_whatsapp", "notfall_sms"/.test(server), "Weitergabe wird protokolliert");
+  assert.ok(/#alarmBlatt\.blatt \{ z-index: 9990; \}/.test(html), "nur das Empfänger-Alarmfenster liegt über allem (Rückfragen/Diktat bleiben bedienbar)");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
