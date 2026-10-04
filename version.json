@@ -1,10 +1,16 @@
 {
-  "version": "2.22.20",
+  "version": "2.23.0",
   "datum": "2026-10-04",
   "neu": [
-    "🔧 Kleine Systemverbesserungen"
+    "❓ Neu im Register Technik: „Hilfe & Tipps“ – alle Tipps und Erklärungen nach Themen, mit Inhaltsverzeichnis, Suche und „Zeig mir wo“"
   ],
   "verlauf": [
+    {
+      "version": "2.23.0",
+      "neu": [
+        "❓ Neu im Register Technik: „Hilfe & Tipps“ – alle Tipps und Erklärungen nach Themen, mit Inhaltsverzeichnis, Suche und „Zeig mir wo“"
+      ]
+    },
     {
       "version": "2.22.20",
       "neu": [

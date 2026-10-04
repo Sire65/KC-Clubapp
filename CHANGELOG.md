@@ -1,5 +1,17 @@
 # Änderungen
 
+## 2.23.0 – 2026-10-04 – Hilfe-Zentrum: alle Tipps und Hinweise nach Themen (Wunsch Hansi)
+- KC-CLUB-HILFEZENTRUM: neue Kachel „❓ Hilfe & Tipps“ im Register Technik (zusätzlich ⚙️ → „🗣️ Ansagen, Töne & Tipps“ → „❓ Alle Tipps nachlesen“,
+  Sprung `#hilfezentrum` bzw. `#hilfezentrum=<thema>`). Vorne ein Deckblatt „📖 Inhalt“: jedes Thema als Link mit Anzahl der Hilfen;
+  darüber die Register je Thema (mit Zahl), eine Suche (umlaut-tolerant, Treffer im Titel zuerst) und bei jeder Hilfe „👉 Zeig mir wo“ + 🔊 Vorlesen.
+- Themen: Startseite & Bedienung, Aussehen & Darstellung, Nachrichten & Chat, Termine & Kalender, Clubleben, Benachrichtigungen & Töne,
+  Privatsphäre & Zugang, Notfall, Technik & Probleme lösen, Bereiche kurz erklärt (+ Auffang „Weitere Tipps“, nur wenn nötig).
+- Passt sich selbst an: gesammelt wird bei jedem Öffnen aus TIPPS (Tipp des Tages), EINWEISUNG (Bereiche kurz erklärt) und der neuen Registry HILFE
+  (33 neue Hilfetexte, z. B. Kacheln lange drücken zum Anordnen, Farbe unter Darstellung einstellen, Register ziehen). Anzahlen werden gezählt,
+  nichts doppelt gepflegt. Neue Einträge mit `seit: "x.y.z"` erscheinen als 🆕 und als Zahl auf der Kachel.
+- Die Tipps des Tages und die Einweisungskarten bleiben unverändert (zusätzlich jetzt jederzeit nachlesbar).
+- Server: nur Versionsnummer und Nutzungsbereich „hilfezentrum“ (NUTZUNG_BEREICHE). Test 349.
+
 ## 2.22.20 – 2026-10-04 – Büro: Hinweis bei neuer Nachricht (Wunsch Hansi)
 - KC-CLUB-BUERO-NEU-NACHRICHT: Kommt eine neue Nachricht, während man im Büro ist, erscheint oben ein Hinweis
   „💬 Neue Nachricht von Klaus“ (Gruppe: „von Reinhilde in „Vorstand““, wichtige mit ❗ und rotem Rand) mit den ersten Worten.
