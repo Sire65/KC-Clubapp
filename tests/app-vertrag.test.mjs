@@ -3748,6 +3748,10 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/json\(\{ error: "Die Datenbank antwortet gerade nicht[^"]*", db: "weg" \}, 503\)/.test(server) && /const leitungKaputt = \(r\.status >= 502 && r\.status <= 504\)/.test(html), "503 → App wertet als Leitung gestört (Notbetrieb)");
   assert.ok(/if \(DB_AUS\.n !== dbVorher\) throw new Error\("Datenbank antwortet nicht – Notfall-Paket bleibt/.test(server), "Notfall-Paket wird nicht durch lückenhaftes ersetzt");
 }
+// 361. 2.23.11: gelber Inkognito-Rahmen blinkt im Takt der Brille
+{
+  assert.ok(/body\.inkognito #v-start \.hero \{ box-shadow: 0 0 0 4px #f1c40f, 0 12px 30px var\(--heroschatten\); animation: inkoRandBlink 1\.2s ease-in-out infinite; \}/.test(html) && /@keyframes inkoRandBlink \{[^\n]*50% \{ box-shadow: 0 0 0 4px #d32f2f/.test(html), "Rahmen blinkt gelb/rot");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

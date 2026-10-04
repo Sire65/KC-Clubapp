@@ -176,7 +176,10 @@
   /* 2.3.1: Hauptschalter in der Kopfleiste – aus = blass, an = deutlich markiert */
   /* 2.4.1 (Wunsch Hansi): Inkognito an → Rahmen um den Kopfbereich, beim Einschalten kurz Ameisen.
      2.4.2 (Hansi: „schwarz sieht man nicht“ – im dunklen Design): gelber Rahmen, Ameisen schwarz auf gelb */
-  body.inkognito #v-start .hero { box-shadow: 0 0 0 4px #f1c40f, 0 12px 30px var(--heroschatten); }
+  body.inkognito #v-start .hero { box-shadow: 0 0 0 4px #f1c40f, 0 12px 30px var(--heroschatten); animation: inkoRandBlink 1.2s ease-in-out infinite; }
+  /* KC-CLUB-INKO-BLINKEN (2.23.11, Wunsch Hansi): der gelbe Rahmen blinkt im Takt der Brille rot */
+  @keyframes inkoRandBlink { 0%, 100% { box-shadow: 0 0 0 4px #f1c40f, 0 0 0 0 rgba(255, 23, 68, 0), 0 12px 30px var(--heroschatten); } 50% { box-shadow: 0 0 0 4px #d32f2f, 0 0 16px 0 #ff1744, 0 12px 30px var(--heroschatten); } }
+  @media (prefers-reduced-motion: reduce) { body.inkognito #v-start .hero { animation-duration: 2.4s; } }
   #v-start .hero.inko-lauf { position: relative; }
   .hero .inko-ameisen { position: absolute; inset: -4px; width: calc(100% + 8px); height: calc(100% + 8px); pointer-events: none; overflow: hidden; border-radius: 30px; }
   .hero .inko-ameisen rect { fill: none; stroke: #000; stroke-width: 8; stroke-dasharray: 10 8; animation: ameisenLauf .7s linear infinite; }
@@ -2707,7 +2710,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.10"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.11"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);

@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.23.11 – 2026-10-04 – Inkognito: auch der gelbe Rahmen blinkt (Wunsch Hansi)
+- KC-CLUB-INKO-BLINKEN: Der gelbe Rahmen um den Kopfbereich der Startseite blinkt im Takt der Brille gelb ↔ rot (1,2 s; bei
+  „weniger Bewegung“ 2,4 s). Die Ameisen beim Einschalten bleiben wie bisher. Test 361.
+
 ## 2.23.10 – 2026-10-04 – Datenbank-Zeitgrenze: schneller in den Notbetrieb (Freigabe Hansi)
 - Anlass: Nacht 03./04.10. – Supabase-Störung 3:55–5:40 Uhr (Anfragen hingen 80–150 s, dann 503/546) und Datenbank-Neustart 5:36 Uhr.
 - KC-CLUB-DB-ZEITGRENZE: Jede Datenbank-Abfrage des Servers (REST/RPC) bricht nach 15 s ab. Ist dabei während einer Anfrage etwas

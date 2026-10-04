@@ -24,7 +24,7 @@ import { KT_FRAGEN } from "./kt-fragen.js"; // KC-CLUB-KUECHENTERROR (2.14.0): F
 
 const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-// KC-CLUB-DB-ZEITGRENZE (2.23.10, Ausfall 04.10. 3:55–5:40 Uhr: Anfragen hingen bis 150 s): jede Datenbank-Abfrage (REST/RPC)
+// KC-CLUB-DB-ZEITGRENZE (2.23.11, Ausfall 04.10. 3:55–5:40 Uhr: Anfragen hingen bis 150 s): jede Datenbank-Abfrage (REST/RPC)
 // bricht nach DB_ZEIT_MS ab. Ist während einer Anfrage eine Abfrage hängen geblieben, antwortet der Server mit 503 – nie mit einem
 // halben Ergebnis (UNKNOWN ≠ OK) – und die App schaltet schneller auf Notbetrieb/gespeicherten Stand. Speicher (Dateien) unverändert.
 const DB_ZEIT_MS = 15000;
