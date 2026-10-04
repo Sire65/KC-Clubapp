@@ -3863,6 +3863,12 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/kommend\.filter\(\(a\) => a\.status !== "abgesagt"\)\.length/.test(html), "Zahl ohne Abgesagte");
   assert.ok(/\$\{ab \? "" : `<details style="margin-top:8px"/.test(html), "keine Antwortzeile bei Absage");
 }
+// 380. 2.23.31: Tagesübersicht „Heute nicht mehr anzeigen“ (KC-CLUB-TAGESINFO-HEUTE-AUS)
+{
+  assert.ok(/onclick="tiHeuteAus\(\)">🌙 Heute nicht mehr anzeigen<\/button>/.test(html) && /localStorage\.setItem\(TI_HEUTE_AUS, heuteIso\(\)\)/.test(html), "Knopf merkt den Tag");
+  assert.ok(/localStorage\.getItem\(TI_HEUTE_AUS\) === heuteIso\(\)\) return;/.test(html), "beim Start heute nicht mehr");
+  assert.ok(/Auf diesem Gerät nicht mehr beim Start zeigen/.test(html), "dauerhafter Schalter bleibt");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.23.31 – 2026-10-04 – Tagesübersicht: „Heute nicht mehr anzeigen“ (Wunsch Hansi)
+- KC-CLUB-TAGESINFO-HEUTE-AUS: In der Tagesübersicht (Clubleitung, beim Start) neuer Knopf „🌙 Heute nicht mehr anzeigen“ – bis Mitternacht
+  erscheint sie beim Start nicht mehr (je Gerät, localStorage), morgen wieder wie gewohnt. „📋 Übersicht“ öffnet sie jederzeit.
+  Der bisherige Schalter „Auf diesem Gerät nicht mehr beim Start zeigen“ (dauerhaft) bleibt. Test 380.
+
 ## 2.23.30 – 2026-10-04 – Abgesagte Terminanfragen als Stornierung, ohne Zahl und ohne „offen“ (Wunsch Hansi)
 - KC-CLUB-TERMINANFRAGE: Abgesagte Anfragen bleiben in der Liste blass mit „🚫 abgesagt“ stehen, bis der Termin vorbei ist (wie bisher),
   zählen aber nicht mehr in der Zahl neben „📨 Terminanfragen“ und zeigen keine Antwortzeile („✅ 0 · 🤔 0 · ❌ 0 · ⏳ 1 offen“) mehr.

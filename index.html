@@ -2792,7 +2792,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.30"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.31"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -10302,7 +10302,7 @@ const buSchreiben = () => ICH?.buero === "schreiben";
 // Beim Start (einmal je App-Start, nur Clubleitung, nicht nach einem Sprung-Link) – Tages-Übersicht bleibt Clubleitung
 function buGrussFragen(nochmal) {
   if (!ICH?.vorstand || !buDarf()) return;
-  try { if (sessionStorage.getItem("kc_buero_gefragt") || localStorage.getItem("kc_buero_frage_aus")) return; } catch {}
+  try { if (sessionStorage.getItem("kc_buero_gefragt") || localStorage.getItem("kc_buero_frage_aus") || localStorage.getItem(TI_HEUTE_AUS) === heuteIso()) return; } catch {}
   if (document.querySelector(".blatt:not(.versteckt)") || aktuelleAnsicht !== "start") { if (!nochmal) setTimeout(() => buGrussFragen(true), 5000); return; }
   try { sessionStorage.setItem("kc_buero_gefragt", "1"); } catch {}
   tagesinfoZeigen();
@@ -10318,6 +10318,13 @@ const tiZeile = (sym, html, fn) => `<button class="ti-zeile" onclick="$('buGruss
 // KC-CLUB-TAGESINFO-MANUELL (1.38.0, Wunsch Hansi): nochmal aufrufbar (📋 Übersicht bei „Heute wichtig“ und im Büro).
 // Manuell: „Seit deinem letzten Besuch“ bezieht sich weiter auf denselben Zeitpunkt wie beim Start – der Merkpunkt wird nicht verschoben.
 const TI_SEIT_SITZUNG = "kc_club_tagesinfo_seit_sitzung";
+// KC-CLUB-TAGESINFO-HEUTE-AUS (2.23.31, Wunsch Hansi): „🌙 Heute nicht mehr anzeigen“ – bis Mitternacht kommt die Übersicht beim Start
+// nicht mehr (je Gerät); über „📋 Übersicht“ bleibt sie jederzeit erreichbar. Morgen erscheint sie wieder wie gewohnt.
+const TI_HEUTE_AUS = "kc_club_tagesinfo_heute_aus";
+function tiHeuteAus() {
+  try { localStorage.setItem(TI_HEUTE_AUS, heuteIso()); } catch {}
+  $("buGruss")?.remove(); melde("🌙 Heute nicht mehr – morgen kommt die Übersicht wieder. Jederzeit über „📋 Übersicht“.");
+}
 async function tagesinfoZeigen(manuell = false) {
   if (!ICH?.vorstand) return;
   const jetzt = new Date(), rolleText = ICH.admin ? "Admin" : (ICH.aemter || []).find((a) => /^(clubsprecher|kassenwart)/i.test(a)) || "Clubleitung";
@@ -10326,7 +10333,8 @@ async function tagesinfoZeigen(manuell = false) {
     <p style="margin:2px 0 0">Heute ist <b>${esc(datum)}</b>, es ist <b>${esc(fZeit.format(jetzt))} Uhr</b>.</p>
     <div id="tiInhalt"><p class="hinweis">⏳ Ich schaue kurz nach, was es Neues gibt …</p></div></div>
     <div class="knoepfe" style="flex-direction:column;align-items:stretch"><button class="knopf haupt" style="text-align:center" onclick="$('buGruss').remove();buStart()">🗂️ Ins Büro</button>
-    <button class="knopf" style="text-align:center" onclick="$('buGruss').remove()">Zur Club-App</button></div>
+    <button class="knopf" style="text-align:center" onclick="$('buGruss').remove()">Zur Club-App</button>
+    <button class="knopf" style="text-align:center" onclick="tiHeuteAus()">🌙 Heute nicht mehr anzeigen</button></div>
     <label class="schalter" style="margin-top:4px"><span><small>Auf diesem Gerät nicht mehr beim Start zeigen</small></span><input type="checkbox" onchange="try{this.checked?localStorage.setItem('kc_buero_frage_aus','1'):localStorage.removeItem('kc_buero_frage_aus')}catch{}"></label>`);
   let seit = null;
   try {
