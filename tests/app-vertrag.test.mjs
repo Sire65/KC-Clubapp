@@ -3616,6 +3616,13 @@ assert.ok(/const UH_HERVOR = \["Innovation"\];/.test(html) && /function uhAmeise
   assert.ok(/x\.von === ich\.person_id \|\| ich\.vorstand/.test(hl) && /\.\.\.\(lesbar\.includes\(x\.id\) \? hilfeLeser\(/.test(hl), "Leser nur für Verfasser und Clubleitung");
   assert.ok(/function hilfeLeserHtml\(a\)/.test(html) && (html.match(/\$\{hilfeLeserHtml\(a\)\}/g) || []).length === 2, "Anzeige im Aufruf (offen + vorbei)");
 }
+// 337. 2.22.11: Pinnwand – Verfasser entscheidet über den Antwort-Knopf (KC-CLUB-PINNWAND-ANTWORTKNOPF)
+{
+  assert.ok(/add column if not exists antworten boolean not null default true/.test(lies("supabase/migrations/20261004_kc_club_v22211_pinnwand_antworten.sql")), "Spalte mit Standard wie bisher");
+  assert.ok(/insert\(\{ antworten: p\.antworten !== false,/.test(server) && /fuer: z\.fuer, antworten: z\.antworten !== false,/.test(server) && /zeit: z\.erstellt_am, antworten: z\.antworten !== false \}/.test(server), "Server speichert und liefert die Wahl");
+  assert.ok(/if \(!z\.vonMir && z\.antworten !== false\) knoepfe\.push\(`<button class="antw"/.test(html) && /z\.vonId && z\.antworten !== false \? `<div class="zknoepfe">/.test(html), "Knopf nur, wenn erlaubt (Wand + Fenster)");
+  assert.ok(/antworten: PW\.form\.antworten !== false,/.test(html) && /id="pwAntw"/.test(html), "Auswahl beim Anheften");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

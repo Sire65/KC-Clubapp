@@ -6413,7 +6413,7 @@ Köcheclub-App`,
           const vonMir = z.person_id === ich.person_id, meine = (gl ?? []).find((g: any) => g.zettel_id === z.id && g.person_id === ich.person_id);
           const empf = z.fuer === "alle" ? aktiv.map((m) => m.person_id).filter((id) => id !== z.person_id) : z.fuer === "personen" ? (z.personen || []) : [];
           const lese = (gl ?? []).filter((g: any) => g.zettel_id === z.id && g.person_id !== z.person_id);
-          return { id: z.id, text: z.text, wichtig: z.wichtig, fuer: z.fuer, erstellt_am: z.erstellt_am, vonMir, farbe: z.farbe ?? 1,
+          return { id: z.id, text: z.text, wichtig: z.wichtig, fuer: z.fuer, antworten: z.antworten !== false, erstellt_am: z.erstellt_am, vonMir, farbe: z.farbe ?? 1,
             von: { person_id: z.person_id, vorname: vorname(leute.get(z.person_id) ?? null) || nm(z.person_id) },
             empfaenger: z.fuer === "personen" ? empf.map(nm) : [],
             erledigt: z.fuer === "ich" ? null : meine?.erledigt_am ?? null,
@@ -6443,7 +6443,8 @@ Köcheclub-App`,
         const belegt = new Set((haengt ?? []).map((x: any) => x.farbe));
         const farbe = [1, 2, 3, 4].find((n) => !belegt.has(n)) ?? 1;
         const antwortAuf = p.antwort_auf ? String(p.antwort_auf).slice(0, 40) : null; // nur fürs Protokoll
-        const { data: z, error } = await db.from("kc_club_pinnwand").insert({ person_id: ich.person_id, text, wichtig: !!p.wichtig, fuer, personen: empf, farbe }).select("id").single();
+        const { data: z, error } = await db.from("kc_club_pinnwand").insert({ antworten: p.antworten !== false, // KC-CLUB-PINNWAND-ANTWORTKNOPF (2.22.11): Verfasser entscheidet
+          person_id: ich.person_id, text, wichtig: !!p.wichtig, fuer, personen: empf, farbe }).select("id").single();
         if (error?.code === "23505") throw new Fehler("Gerade wurde schon ein Zettel angeheftet – bitte kurz neu laden.", 409);
         if (error || !z) throw new Fehler("Zettel konnte nicht angeheftet werden.", 500);
         // Push an alle Empfänger, die die App schon geöffnet haben (Bereich „pinnwand“, jedes Mitglied steuert es selbst)
@@ -6471,7 +6472,7 @@ Köcheclub-App`,
         const neu = fremd.filter((z: any) => !gesehen.has(z.id)).slice(0, 10);
         const leute = await personen(neu.map((z: any) => z.person_id));
         return json({ neu: neu.map((z: any) => { const von = vorname(leute.get(z.person_id)) || "jemandem";
-          return { id: z.id, von, vonId: z.person_id, farbe: z.farbe ?? 1, wichtig: !!z.wichtig, privat: pinnwandPrivat(z), hinweis: pinnwandHinweis(von, pinnwandPrivat(z), !!z.wichtig), text: z.text, zeit: z.erstellt_am }; }) });
+          return { id: z.id, von, vonId: z.person_id, farbe: z.farbe ?? 1, wichtig: !!z.wichtig, privat: pinnwandPrivat(z), hinweis: pinnwandHinweis(von, pinnwandPrivat(z), !!z.wichtig), text: z.text, zeit: z.erstellt_am, antworten: z.antworten !== false }; }) });
       }
       // KC-CLUB-PINNWAND-DIREKT (0.58.0): der Zettel wurde im Post-it-Fenster angezeigt → als gesehen erfassen (nur sichtbare fremde Zettel)
       case "pinnwand_gesehen": {

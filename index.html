@@ -2128,6 +2128,9 @@
       <div id="pwPersonen" class="versteckt">
         <label class="feld">Name suchen<input id="pwSuche" placeholder="🔍 z. B. Anne" oninput="pwListe()"></label>
         <div class="wahlliste" id="pwListe"></div><div class="hinweis" id="pwGewaehlt"></div></div>
+      <!-- KC-CLUB-PINNWAND-ANTWORTKNOPF (2.22.11, Wunsch Hansi): Verfasser entscheidet, ob „✍️ Antworten“ auf dem Zettel steht -->
+      <div id="pwAntwZeile"><div class="hinweis" style="margin:4px 0 4px">Sollen andere darauf antworten können?</div>
+      <div class="umschalter" id="pwAntw"><button data-a="1" onclick="pwAntw(true)">✍️ Mit Antwort-Knopf</button><button data-a="0" onclick="pwAntw(false)">🚫 Ohne Antwort-Knopf</button></div></div>
       <div class="knoepfe"><button class="knopf haupt" id="pwSpeichernKnopf" onclick="pwAnheften()">📌 Anheften</button><button class="knopf" onclick="pwForm(false)">Abbrechen</button></div>
     </div>
     <div class="kork" id="pwWand"><div class="leer">Einen Moment …</div></div>
@@ -2931,7 +2934,7 @@ function pwFenster(neu) {
     <div class="pwfenster-zettel">${liste.map((z, i) => `<div class="zettel${z.wichtig ? " wichtig" : ""}${pwFarbe(z)}" style="--dreh:${pwDreh(z.id)}deg">
       ${z.wichtig ? '<span class="zwichtig">❗ WICHTIG</span>' : ""}${pwKopf(z.von, z.zeit)}<div class="ztext">${esc(z.text || "")}</div>
       ${z.privat ? '<div class="zfuss">nur für dich</div>' : ""}
-      ${z.vonId ? `<div class="zknoepfe"><button class="antw" data-antw="${i}">✍️ Antworten</button></div>` : ""}</div>`).join("")}</div>
+      ${z.vonId && z.antworten !== false ? `<div class="zknoepfe"><button class="antw" data-antw="${i}">✍️ Antworten</button></div>` : ""}</div>`).join("")}</div>
     ${neu.length > liste.length ? `<p class="hinweis" style="margin:0">… und ${neu.length - liste.length} weitere an der Pinnwand</p>` : ""}
     <button class="knopf haupt" style="text-align:center" data-k="gelesen">✓ Gelesen</button>
     <button class="knopf" style="text-align:center" data-k="wand">📌 Zur Pinnwand</button></div>`;
@@ -3017,7 +3020,7 @@ function pwZeigen() {
   if (!PW.zettel.length) return ($("pwWand").innerHTML = aushang + (aushang ? "" : `<div class="leer">Noch keine Zettel an der Pinnwand.<br>Mit „＋ Zettel“ einen anheften.</div>`));
   $("pwWand").innerHTML = aushang + PW.zettel.map((z) => {
     const knoepfe = [];
-    if (!z.vonMir) knoepfe.push(`<button class="antw" onclick="pwAntworten('${z.id}','${esc(z.von.person_id)}','${esc(z.von.vorname).replace(/'/g, "")}')">✍️ Antworten</button>`);
+    if (!z.vonMir && z.antworten !== false) knoepfe.push(`<button class="antw" onclick="pwAntworten('${z.id}','${esc(z.von.person_id)}','${esc(z.von.vorname).replace(/'/g, "")}')">✍️ Antworten</button>`);
     if (!z.vonMir) knoepfe.push(z.erledigt ? `<button class="erl" onclick="pwErledigt('${z.id}', true)">✓ erl. ${zeitKurz(z.erledigt)}</button>` : `<button onclick="pwErledigt('${z.id}')">✓ erl.</button>`);
     if (z.vonMir) knoepfe.push(`<button onclick="pwWichtig('${z.id}', ${!z.wichtig})">${z.wichtig ? "❗ nicht mehr wichtig" : "❗ wichtig machen"}</button>`); // 2.13.0
     if (z.vonMir || ICH?.vorstand) knoepfe.push(`<button onclick="pwAbnehmen('${z.id}')">🗑️ abnehmen</button>`);
@@ -3043,10 +3046,10 @@ function pwAushangHtml() {
 function pwForm(an, antwort) {
   $("pwForm").classList.toggle("versteckt", !an);
   if (!an) { $("pwEmoFeld")?.classList.add("versteckt"); return; }
-  PW.form = { wichtig: false, fuer: "", personen: [], antwortAuf: antwort?.id || null }; $("pwText").value = ""; $("pwSuche").value = "";
+  PW.form = { wichtig: false, fuer: "", personen: [], antwortAuf: antwort?.id || null, antworten: true }; $("pwText").value = ""; $("pwSuche").value = "";
   $("pwAntwortAn").innerHTML = antwort ? `↩️ Antwort an <b>${esc(antwort.name)}</b> – vorausgewählt nur für ${esc(antwort.name)} (privat). Für alle? Unten „👥 Für alle“ tippen.` : "";
   $("pwAntwortAn").classList.toggle("versteckt", !antwort);
-  pwVoll(); pwZaehlen(); pwWichtig(false); pwEmoSchnell(); // KC-CLUB-PINNWAND-EMOJI
+  pwVoll(); pwZaehlen(); pwWichtig(false); pwAntw(true); pwEmoSchnell(); // KC-CLUB-PINNWAND-EMOJI
   if (antwort) { PW.form.personen = [antwort.personId]; pwFuer("personen"); } else pwFuer("");
   $("pwText").focus();
 }
@@ -3076,10 +3079,12 @@ function pwZaehlen() {
   const n = [...$("pwText").value].length, max = PW.zeichen, el = $("pwZaehler");
   el.textContent = `${n}/${max}`; el.classList.toggle("knapp", n >= max - 20 && n < max); el.classList.toggle("voll", n >= max);
 }
+function pwAntw(an) { PW.form.antworten = an; document.querySelectorAll("#pwAntw button").forEach((b) => b.classList.toggle("an", (b.dataset.a === "1") === an)); }
 function pwWichtig(an) { PW.form.wichtig = an; document.querySelectorAll("#pwWichtig button").forEach((b) => b.classList.toggle("an", (b.dataset.w === "1") === an)); }
 async function pwFuer(f) {
   PW.form.fuer = f; document.querySelectorAll("#pwFuer button").forEach((b) => b.classList.toggle("an", b.dataset.f === f));
   $("pwPersonen").classList.toggle("versteckt", f !== "personen");
+  $("pwAntwZeile")?.classList.toggle("versteckt", f === "ich"); // Zettel nur für mich: niemand antwortet
   if (f === "personen") { if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return meldeFehler(e); } pwListe(); }
 }
 function pwListe() {
@@ -3097,7 +3102,7 @@ async function pwAnheften() {
   if (!PW.form.fuer) return melde("Bitte wählen: nur für mich, für alle oder bestimmte Personen.", true);
   if (PW.form.fuer === "personen" && !PW.form.personen.length) return melde("Bitte mindestens eine Person auswählen.", true);
   $("pwSpeichernKnopf").disabled = true;
-  try { await api("pinnwand_anheften", { text, wichtig: PW.form.wichtig, fuer: PW.form.fuer, personen: PW.form.personen, ...(PW.form.antwortAuf ? { antwort_auf: PW.form.antwortAuf } : {}) });
+  try { await api("pinnwand_anheften", { text, wichtig: PW.form.wichtig, fuer: PW.form.fuer, personen: PW.form.personen, antworten: PW.form.antworten !== false, ...(PW.form.antwortAuf ? { antwort_auf: PW.form.antwortAuf } : {}) });
     melde(PW.form.antwortAuf ? "📌 Antwort angeheftet" : "📌 Angeheftet"); pwForm(false); await pwLaden(); }
   catch (e) { meldeFehler(e); } finally { $("pwSpeichernKnopf").disabled = false; }
 }
