@@ -2638,7 +2638,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.22.18"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.22.19"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3367,7 +3367,7 @@ const EINWEISUNG = [
   { id: "standort", sym: "📍", t: "Standorte", x: "Hier siehst du, wer gerade seinen Standort mit dir teilt – auf einer Karte. Mit <b>„📍 Teilen“</b> oben teilst du deinen eigenen Standort für eine bestimmte Zeit; danach verschwindet er von selbst." },
   // Fenster (blatt: true) – Karte steht oben im Fenster, siehe einwHtml()
   { id: "b-aenderung", blatt: true, sym: "✏️", t: "Meine Daten haben sich geändert", x: "Neue Anschrift, neue Telefonnummer, neuer Name oder eine andere Kleidergröße? Tippe an, was sich geändert hat, und trag das Neue ein. Die Meldung geht von selbst an die Richtigen im Club. Sobald alles eingetragen ist, bekommst du Bescheid – eine Kopie liegt in deinem Archiv-Ordner (Register „Meldungen“)." },
-  { id: "b-aenderungen", blatt: true, sym: "📬", t: "Änderungen der Mitglieder", x: "Hier landen die Änderungen, die Mitglieder melden – nur die, die an dich gehen. Links steht <b>bisher</b>, rechts <b>neu</b> (grün). Bitte im KC Manager eintragen und dann <b>✅ Erledigt</b> tippen – das Mitglied bekommt Bescheid. Unten die <b>👕 Größen-Übersicht</b> für Bestellungen. Zu finden im Büro im <b>📥 Eingangskorb</b> und im Ordner <b>📇 Mitglieder</b>.", nur: () => !!(ICH?.vorstand || ICH?.admin) },
+  { id: "b-aenderungen", blatt: true, sym: "📬", t: "Änderungen der Mitglieder", x: "Hier landen die Änderungen, die Mitglieder melden – nur die, die an dich gehen. Links steht <b>bisher</b>, rechts <b>neu</b> (grün). Tippe <b>👁️ Zur Kenntnis genommen</b>; Clubsprecher oder Admin <b>✅ geben frei</b> – dann trägt der KC Manager die Änderung ein und das Mitglied bekommt Bescheid. Unten die <b>👕 Größen-Übersicht</b> für Bestellungen. Zu finden im Büro im <b>📥 Eingangskorb</b> und im Ordner <b>📇 Mitglieder</b>; abgelegt wird alles im Archiv-Ordner <b>Personal</b>.", nur: () => !!(ICH?.vorstand || ICH?.admin) },
   { id: "b-stadt", blatt: true, sym: "🏙️", t: "Termine der Stadt Werne", x: "Die Termine aus dem Veranstaltungskalender der Stadt Werne. Ankreuzen, was in unseren Clubkalender soll – die Mitglieder bekommen dabei keine Nachricht. Unter <b>🔁 Automatisch</b> holt die App neue Stadt-Termine einmal pro Woche selbst.", nur: () => !!ICH?.admin },
   { id: "b-admin", blatt: true, sym: "🛠️", t: "Admin-Register", x: "Dein Leitstand: Das Lämpchen jeder Kachel zeigt, ob alles läuft – 🟢 gut, 🟡 aufpassen, 🔴 Problem, ⚪ unbekannt. Antippen öffnet Einzelheiten und die passenden Werkzeuge. Im Ernstfall zuerst <b>🧯 Notfall</b> öffnen.", nur: () => !!ICH?.admin },
   { id: "b-notfall", blatt: true, sym: "🚨", t: "SOS-Nachricht an alle", x: "Nur für echte Notfälle: Dein Text geht sofort an <b>alle</b> Mitglieder – als Push und E-Mail, auch in der Ruhezeit – und wird bei ihnen laut vorgelesen. Danach kannst du ihn noch per WhatsApp oder SMS schicken. Zum Ausprobieren: <b>🧪 Probe nur an mich</b>. 112 und 110 rufen direkt an." },
@@ -10060,10 +10060,11 @@ function buEingangPosten() {
       schnell: [["✔ In den Ordner legen (annehmen)", `buEinArchiv('${d.id}', true)`, true], ["✖ Ablehnen", `buEinArchiv('${d.id}', false)`]] });
   }
   // KC-CLUB-AENDERUNG (2.22.8, Wunsch Hansi): Änderungsmeldungen der Mitglieder (nur die an mich gerichteten; Admin alle)
-  for (const x of (AE.eingang?.meldungen || []).filter((y) => y.status === "offen")) {
+  for (const x of (AE.eingang?.meldungen || []).filter((y) => y.wartetAufMich ?? y.status === "offen")) {
     const a = AE.eingang.arten.find((y) => y.id === x.art) || { sym: "✏️", t: x.art };
-    P.push({ sym: a.sym, gruppe: "Änderungsmeldung – bitte eintragen", titel: a.t, unter: `${x.name} · ${zeitKurz(x.erstellt_am)}${x.gilt_ab ? " · ab " + aeDatum(x.gilt_ab) : ""}`,
-      auf: "aeEingang()", ordner: ["📇", "Mitglieder", "buListe()"], schnell: [["✔ Erledigt – eingetragen", `aeErledigt('${x.id}', null)`, true]] });
+    P.push({ sym: a.sym, gruppe: "Änderungsmeldung – bitte ansehen", titel: a.t, unter: `${x.name} · ${zeitKurz(x.erstellt_am)}${x.gilt_ab ? " · ab " + aeDatum(x.gilt_ab) : ""}`,
+      auf: "aeEingang()", ordner: ["📇", "Mitglieder", "buListe()"],
+      schnell: [...(x.kenntnisIch ? [] : [["👁️ Zur Kenntnis genommen", `aeKenntnis('${x.id}', null)`, !x.darfFreigeben]]), ...(x.darfFreigeben ? [["✅ Freigeben", `aeFreigeben('${x.id}', null)`, true]] : [])] }); // 2.22.19
   }
   for (const p of (pr?.protokolle || []).filter((x) => x.status === "entwurf" && x.darfBearbeiten))
     P.push({ sym: "📄", gruppe: "Protokoll-Entwurf", titel: p.titel, unter: `${tagKurz(p.datum)} · von ${p.verfasser?.name || "?"}`, auf: `protokollOeffnen('${p.id}')`, ordner: ["📄", "Protokolle", "zeige('protokolle')"] });
@@ -13924,7 +13925,8 @@ async function kalenderAbo() {
 // Die Clubleitung sieht die Meldungen unter „📬 Änderungen“ (Büro, Kachel, Push-Link #aenderungen) und hakt sie nach dem Eintragen ab.
 const AE = { d: null, art: null, eingang: null, sicht: "offen", offen: 0 };
 const aeDatum = (iso) => (iso ? String(iso).slice(0, 10).split("-").reverse().join(".") : "");
-const AE_STATUS = { offen: "⏳ wird bearbeitet", erledigt: "✅ eingetragen", zurueckgezogen: "↩️ zurückgezogen" };
+const AE_STATUS = { offen: "⏳ gemeldet – wird geprüft", freigegeben: "👍 freigegeben – wird eingetragen", uebernommen: "✅ eingetragen", abgelehnt: "⏳ wird geprüft",
+  rueckfrage: "❓ Rückfrage – bitte neu melden", erledigt: "✅ eingetragen", zurueckgezogen: "↩️ zurückgezogen" }; // 2.22.19
 function aeWert(art, w) {
   if (!w) return "–";
   if (art === "anschrift") return `${w.strasse || ""}, ${w.plz || ""} ${w.ort || ""}`.trim();
@@ -13943,7 +13945,8 @@ function aeZeichnen() {
   if (!art) {
     html = `${einwHtml("b-aenderung")}<h3 style="margin:0">✏️ Meine Daten haben sich geändert</h3>
       <p class="hinweis" style="margin:0">Was hat sich geändert? Antippen – die Meldung geht gleich an die Richtigen im Club.</p>
-      <div class="ae-wahl">${d.arten.map((a) => `<button class="knopf" onclick="AE.art='${a.id}';aeZeichnen()"><span class="ae-sym">${a.sym}</span><span><b>${esc(a.t)}</b><small>an ${esc(a.anText.join(", "))}</small></span></button>`).join("")}</div>
+      <div class="ae-wahl">${d.arten.map((a) => a.aus ? `<button class="knopf" disabled style="opacity:.45" aria-disabled="true"><span class="ae-sym">${a.sym}</span><span><b>${esc(a.t)}</b><small>zurzeit nicht nötig</small></span></button>` // 2.22.19: Bank ausgegraut
+        : `<button class="knopf" onclick="AE.art='${a.id}';aeZeichnen()"><span class="ae-sym">${a.sym}</span><span><b>${esc(a.t)}</b><small>an ${esc(a.anText.join(", "))}</small></span></button>`).join("")}</div>
       ${d.meine.length ? `<b>Meine letzten Meldungen</b>${d.meine.map((x) => { const a = d.arten.find((y) => y.id === x.art);
         return `<div class="ae-meine"><span>${a?.sym || ""} <b>${esc(a?.t || x.art)}</b><small>${esc(zeitKurz(x.erstellt_am))} · ${AE_STATUS[x.status] || ""}${x.antwort ? ` · „${esc(x.antwort)}“` : ""}</small></span>${x.status === "offen" ? `<button class="knopf klein" onclick="aeZurueck('${x.id}')">↩️ Zurückziehen</button>` : ""}</div>`; }).join("")}` : ""}
       <div class="knoepfe">${ICH?.vorstand || ICH?.admin ? `<button class="knopf" onclick="$('aeBlatt').remove();aeEingang()">📬 Eingegangene Meldungen${AE.offen ? ` (${AE.offen})` : ""}</button>` : ""}<button class="knopf" onclick="$('aeBlatt').remove()">Schließen</button></div>`;
@@ -13991,7 +13994,8 @@ async function aeZurueck(id) {
   try { await api("aenderung_zurueckziehen", { id }); melde("↩️ Meldung zurückgezogen"); aeStart(); } catch (e) { meldeFehler(e); }
 }
 // ---- Eingang der Clubleitung ----
-async function aeEingangLaden() { AE.eingang = await api("aenderungen_liste", {}); AE.offen = AE.eingang.meldungen.filter((x) => x.status === "offen").length; }
+// 2.22.19: Zahl = was auf mich wartet (noch nicht zur Kenntnis genommen, oder ich darf freigeben)
+async function aeEingangLaden() { AE.eingang = await api("aenderungen_liste", {}); AE.offen = AE.eingang.meldungen.filter((x) => x.wartetAufMich ?? x.status === "offen").length; }
 async function aeEingang() {
   if (!ICH?.vorstand && !ICH?.admin) return aeStart();
   blattAuf("aeEingBlatt", '<h3 style="margin:0">📬 Änderungen</h3><p class="hinweis">⏳ Wird geladen …</p>');
@@ -14000,7 +14004,8 @@ async function aeEingang() {
 function aeEingZeichnen() {
   const e = AE.eingang, b = $("aeEingBlatt"); if (!e || !b) return;
   const art = (id) => e.arten.find((a) => a.id === id) || { sym: "", t: id, felder: [] };
-  const liste = e.meldungen.filter((x) => (AE.sicht === "offen" ? x.status === "offen" : x.status !== "offen"));
+  const imGang = (x) => ["offen", "freigegeben", "abgelehnt"].includes(x.status); // 2.22.19: freigegeben = wartet auf die KC-Programme
+  const liste = e.meldungen.filter((x) => (AE.sicht === "offen" ? imGang(x) : !imGang(x)));
   const karte = (x) => { const a = art(x.art);
     const zeilen = a.felder.map((f) => { const n = x.neu?.[f.k] ?? "", o = x.alt?.[f.k] ?? ""; if (!n && !o) return "";
       return `<tr><td>${esc(f.t)}</td><td class="hinweis">${esc(f.typ === "date" ? aeDatum(o) : o) || "–"}</td><td${n !== o ? ' class="ae-neu"' : ""}>${esc(f.typ === "date" ? aeDatum(n) : n) || "–"}</td></tr>`; }).join("");
@@ -14008,7 +14013,13 @@ function aeEingZeichnen() {
       <small class="hinweis">gemeldet ${esc(zeitKurz(x.erstellt_am))}${x.gilt_ab ? ` · gilt ab ${esc(aeDatum(x.gilt_ab))}` : ""}${x.an_alle ? " · 📣 alle informiert" : ""}</small>
       <table class="todotab"><tr><th></th><th>bisher</th><th>neu</th></tr>${zeilen}</table>
       ${x.bemerkung ? `<p style="margin:4px 0">📝 ${esc(x.bemerkung)}</p>` : ""}
-      ${x.status === "offen" ? `<div class="knoepfe"><button class="knopf" onclick="aeKopieren('${x.id}')">📋 Kopieren</button><button class="knopf haupt" onclick="aeErledigt('${x.id}', this)">✅ Erledigt – eingetragen</button></div>`
+      ${x.kenntnis?.length ? `<small class="hinweis">👁️ zur Kenntnis: ${x.kenntnis.map((k) => `${esc(k.name.split(" ")[0])} ${esc(zeitKurz(k.am))}`).join(", ")}</small>` : ""}
+      ${x.status === "offen" ? `<div class="knoepfe">${x.kenntnisIch ? "" : `<button class="knopf${x.darfFreigeben ? "" : " haupt"}" onclick="aeKenntnis('${x.id}', this)">👁️ Zur Kenntnis genommen</button>`}${x.darfFreigeben ? `<button class="knopf haupt" onclick="aeFreigeben('${x.id}', this)">✅ Freigeben</button>` : ""}<button class="knopf" onclick="aeRueckfrage('${x.id}', this)">↩️ Rückfrage</button><button class="knopf" onclick="aeKopieren('${x.id}')">📋 Kopieren</button></div>
+        ${x.darfFreigeben ? "" : '<small class="hinweis">Freigeben: Clubsprecher oder Admin.</small>'}`
+        : x.status === "freigegeben" ? `<small class="hinweis">👍 Freigegeben von ${esc(x.freigegeben_von || "?")} · ${esc(zeitKurz(x.freigegeben_am))} – liegt für den KC Manager bereit, wird dort übernommen.</small>`
+        : x.status === "abgelehnt" ? `<small class="hinweis">⚠️ ${esc(x.uebernommen_von || "KC-Programm")} hat die Änderung nicht übernommen – bitte prüfen.</small>`
+        : x.status === "uebernommen" ? `<small class="hinweis">✅ Übernommen von ${esc(x.uebernommen_von || "KC-Programm")} · ${esc(zeitKurz(x.uebernommen_am))}${x.freigegeben_von ? ` · freigegeben von ${esc(x.freigegeben_von)}` : ""}</small>`
+        : x.status === "rueckfrage" ? `<small class="hinweis">❓ Rückfrage${x.erledigt_von ? ` von ${esc(x.erledigt_von)}` : ""}: „${esc(x.rueckfrage || "")}“</small>`
         : `<small class="hinweis">${AE_STATUS[x.status] || ""}${x.erledigt_von ? ` von ${esc(x.erledigt_von)}` : ""}${x.erledigt_am ? ` · ${esc(zeitKurz(x.erledigt_am))}` : ""}${x.antwort ? ` · „${esc(x.antwort)}“` : ""}</small>`}</div>`; };
   const gr = e.groessen, zaehl = (k) => { const z = {}; gr.forEach((g) => { if (g[k]) z[g[k]] = (z[g[k]] || 0) + 1; }); return Object.entries(z).map(([s, n]) => `${n}× ${s}`).join(", ") || "–"; };
   b.querySelector(".blatt-innen").innerHTML = `<div style="display:grid;gap:8px">
@@ -14019,8 +14030,9 @@ function aeEingZeichnen() {
       ${gr.length ? `<table class="todotab"><tr><th>Mitglied</th><th>Kochjacke</th><th>Kochhose</th></tr>${gr.map((g) => `<tr><td>${esc(g.name)}</td><td>${esc(g.kochjacke || "–")}</td><td>${esc(g.kochhose || "–")}</td></tr>`).join("")}</table>
         <p class="hinweis" style="margin:4px 0">Summe Kochjacken: ${esc(zaehl("kochjacke"))}<br>Summe Kochhosen: ${esc(zaehl("kochhose"))}</p>
         <button class="knopf" onclick="aeGroessenKopieren()">📋 Liste kopieren (für die Bestellung)</button>` : '<p class="hinweis">Noch keine Größen gemeldet. Mitglieder melden sie unter „Meins → ✏️ Meine Daten geändert? → 👕 Kleidergröße“.</p>'}</details>
-    <p class="hinweis" style="margin:0">Du siehst nur Meldungen, die an dich gingen. Bitte im KC Manager eintragen und dann „✅ Erledigt“ – das Mitglied bekommt Bescheid.
-      Jede Meldung liegt außerdem im Archiv: Ordner „Mitglieder“ und im persönlichen Ordner des Mitglieds, jeweils Register „Meldungen“.</p>
+    <p class="hinweis" style="margin:0">So geht’s: <b>👁️ Zur Kenntnis genommen</b> → <b>✅ Freigeben</b> (Clubsprecher oder Admin) → die Änderung liegt für den KC Manager bereit,
+      der sie einträgt und zurückmeldet – dann bekommt das Mitglied Bescheid. Du siehst nur Meldungen, die an dich gingen.
+      Jede Meldung liegt außerdem im Archiv: Ordner „Personal“ und im persönlichen Ordner des Mitglieds, jeweils Register „Meldungen“.</p>
     <button class="knopf" onclick="$('aeEingBlatt').remove()">Schließen</button></div>`;
 }
 function aeKopieren(id) {
@@ -14032,6 +14044,22 @@ function aeKopieren(id) {
 function aeGroessenKopieren() {
   const text = "Größen Köcheclub (Kochjacke / Kochhose)\n" + AE.eingang.groessen.map((g) => `${g.name}: ${g.kochjacke || "–"} / ${g.kochhose || "–"}`).join("\n");
   navigator.clipboard.writeText(text).then(() => melde("📋 Liste kopiert"), () => eingabe("Zum Kopieren:", text, { mehrzeilig: true }));
+}
+// KC-CLUB-AENDERUNG-FREIGABE (2.22.19)
+async function aeNachAktion(text) { melde(text); await aeEingangLaden(); aeEingZeichnen(); buEingangAuffrischen(); kachelnZeigen?.(); }
+async function aeKenntnis(id, knopf) {
+  await einmal(knopf, async () => { try { await api("aenderung_kenntnis", { id }); await aeNachAktion("👁️ Zur Kenntnis genommen"); } catch (e) { meldeFehler(e); } });
+}
+async function aeFreigeben(id, knopf) {
+  const x = AE.eingang.meldungen.find((m) => m.id === id);
+  if (!(await frage(`Änderung freigeben?\n\n${x ? x.name : ""} – danach liegt sie für den KC Manager zum Eintragen bereit.`, { ja: "✅ Freigeben" }))) return;
+  await einmal(knopf, async () => { try { const r = await api("aenderung_freigeben", { id }); await aeNachAktion(r.uebergabe ? "✅ Freigegeben – liegt für den KC Manager bereit" : "✅ Freigegeben und erledigt"); } catch (e) { meldeFehler(e); } });
+}
+async function aeRueckfrage(id, knopf) {
+  const x = AE.eingang.meldungen.find((m) => m.id === id);
+  const text = await eingabe(`Rückfrage an ${x ? x.name.split(" ")[0] : "das Mitglied"} – was ist unklar?`, "", { mehrzeilig: true });
+  if (!text || !text.trim()) return;
+  await einmal(knopf, async () => { try { await api("aenderung_rueckfrage", { id, text }); await aeNachAktion("↩️ Rückfrage gesendet"); } catch (e) { meldeFehler(e); } });
 }
 async function aeErledigt(id, knopf) {
   const x = AE.eingang.meldungen.find((m) => m.id === id);

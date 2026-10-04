@@ -26,7 +26,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "2.22.18";
+const SERVER_VERSION = "2.22.19";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -902,7 +902,8 @@ const AENDERUNG = {
     { id: "handy", sym: "📱", t: "Neue Handynummer", an: ["Kassenwart", "admin"], alle: true, felder: [{ k: "nummer", t: "Handynummer", typ: "tel", pflicht: true }] },
     { id: "festnetz", sym: "☎️", t: "Neue Festnetznummer", an: ["Kassenwart", "admin"], alle: true, felder: [{ k: "nummer", t: "Festnetznummer", typ: "tel", pflicht: true }] },
     { id: "mail", sym: "✉️", t: "Neue E-Mail-Adresse", an: ["admin"], alle: true, felder: [{ k: "mail", t: "E-Mail-Adresse", typ: "email", pflicht: true }] },
-    { id: "bank", sym: "🏦", t: "Neue Bankverbindung", an: ["Kassenwart", "admin"], gilt: true,
+    // 2.22.19 (Wunsch Hansi): Bankverbindung im Moment nicht nötig – ausgegraut (aus: true), bleibt beim Kassenwart, nie an andere Programme
+    { id: "bank", sym: "🏦", t: "Neue Bankverbindung", an: ["Kassenwart", "admin"], gilt: true, aus: true,
       felder: [{ k: "inhaber", t: "Kontoinhaber", pflicht: true }, { k: "iban", t: "IBAN", typ: "iban", pflicht: true }, { k: "bank", t: "Bank (freiwillig)" }] },
     { id: "geburtstag", sym: "🎂", t: "Geburtsdatum falsch", an: ["admin"], felder: [{ k: "datum", t: "Richtiges Geburtsdatum", typ: "date", pflicht: true }] },
     { id: "notfall", sym: "🆘", t: "Notfallkontakt", an: ["Clubsprecher", "admin"], auto: true,
@@ -971,19 +972,21 @@ async function aenderungStand(ich: Ich) {
 // Ablage ins Archiv (wie Ausleihe): Vereinsordner „Mitglieder <Jahr>“ (2.22.10, vorher „Admin“) und persönlicher Ordner des Mitglieds,
 // jeweils Register „Meldungen“. Bankverbindung im Archiv nur mit den letzten 4 Stellen (den Vereinsordner sieht die ganze Clubleitung).
 const AE_REGISTER = "Meldungen";
-async function aeAblegen(ich: Ich, x: any, art: "Meldung" | "Erledigt") {
+async function aeAblegen(ich: Ich, x: any, art: "Meldung" | "Erledigt" | "Freigegeben" | "Eingetragen") {
   const a = AENDERUNG.arten.find((y) => y.id === x.art); if (!a) return { verein: false, persoenlich: false };
   const p = await personen([x.person_id, x.erledigt_von]), wer = p.get(x.person_id)?.display_name || x.person_id;
   const heute = berlinTag(new Date()), jahr = Number(heute.slice(0, 4)), d = (iso: string) => String(iso).slice(0, 10).split("-").reverse().join(".");
   const neu = x.art === "bank" ? aeKurz({ ...x, status: "erledigt" }) : x.neu || {}, alt = x.art === "bank" ? {} : x.alt || {};
   const wert = (f: any, w: any) => (w?.[f.k] ? (f.typ === "date" ? d(w[f.k]) : String(w[f.k])) : "–");
-  const text = [`Köcheclub Werne – Änderungsmeldung (${art === "Meldung" ? "gemeldet" : "eingetragen"})`, "────────────────────", "",
+  const text = [`Köcheclub Werne – Änderungsmeldung (${{ Meldung: "gemeldet", Erledigt: "eingetragen", Freigegeben: "freigegeben", Eingetragen: "von den KC-Programmen übernommen" }[art]})`, "────────────────────", "",
     `Mitglied:  ${wer}`, `Was:       ${a.sym} ${a.t}`, `Gemeldet:  ${wann(x.erstellt_am)}`, ...(x.gilt_ab ? [`Gilt ab:   ${d(x.gilt_ab)}`] : []), "",
     ...(a.felder as any[]).map((f) => `${f.t}: ${wert(f, alt)} → ${wert(f, neu)}`), ...(x.bemerkung ? ["", `Bemerkung: ${x.bemerkung}`] : []), "",
-    art === "Erledigt" ? `Eingetragen von ${p.get(x.erledigt_von)?.display_name || "?"} am ${wann(x.erledigt_am || jetzt())}${x.antwort ? `\nAntwort: ${x.antwort}` : ""}`
+    art === "Freigegeben" ? `Freigegeben von ${p.get(x.freigegeben_von)?.display_name || "?"} am ${wann(x.freigegeben_am || jetzt())}${x.uebergabe ? " – liegt für die KC-Programme bereit" : ""}`
+      : art === "Eingetragen" ? `${x.status === "abgelehnt" ? "Nicht übernommen" : "Übernommen"} von ${String(x.uebernommen_von || "KC-Programm").split(":")[0]} am ${wann(x.uebernommen_am || jetzt())}`
+      : art === "Erledigt" ? `Eingetragen von ${p.get(x.erledigt_von)?.display_name || "?"} am ${wann(x.erledigt_am || jetzt())}${x.antwort ? `\nAntwort: ${x.antwort}` : ""}`
       : a.auto ? "Sofort gespeichert – Info an die Clubleitung." : `Status: wartet auf Eintragung (${(a.an.length ? a.an : a.waehlbar ?? []).map((y) => AE_AN_NAME[y] || y).join(", ")})`,
     ...(x.art === "bank" ? ["", "Bankverbindung hier nur mit den letzten 4 Stellen."] : []), "", `Vorgang: ${x.id}`, ""].join("\n");
-  const titel = `${art === "Erledigt" ? "✅ Eingetragen" : "Meldung"}: ${a.t}${x.gilt_ab ? ` ab ${d(x.gilt_ab)}` : ""}`;
+  const titel = `${{ Meldung: "Meldung", Erledigt: "✅ Eingetragen", Freigegeben: "👍 Freigegeben", Eingetragen: x.status === "abgelehnt" ? "⚠️ Nicht übernommen" : "✅ Übernommen" }[art]}: ${a.t}${x.gilt_ab ? ` ab ${d(x.gilt_ab)}` : ""}`;
   const dateiname = `Aenderung-${a.id}-${art}-${heute}-${vorname(p.get(x.person_id) ?? null) || "Mitglied"}.txt`, stichworte = `Änderungsmeldung, ${a.t}, ${wer}`;
   const erg = { verein: false, persoenlich: false };
   try { await archivTextAblegen(ich, await vereinsOrdner(MITGLIEDER_ORDNER, jahr, AE_REGISTER), AE_REGISTER, `${wer}: ${titel}`, dateiname, text, stichworte); erg.verein = true; }
@@ -991,6 +994,52 @@ async function aeAblegen(ich: Ich, x: any, art: "Meldung" | "Erledigt") {
   try { const o = await persoenlicherOrdner(x.person_id, wer, jahr, AE_REGISTER); if (o) { await archivTextAblegen(ich, o, AE_REGISTER, titel, dateiname, text, stichworte); erg.persoenlich = true; } }
   catch (e) { console.error("aenderung ablegen persoenlich", String(e)); }
   return erg;
+}
+// KC-CLUB-AENDERUNG-FREIGABE (2.22.19): nach der Freigabe liegt die Änderung für die KC-Programme bereit – Felder im Format der
+// zentralen Personendaten (kc_core_people). Bank, Kleidergröße, Notfallkontakt gehen nie an andere Programme (null = nichts zu übergeben).
+function aeUebergabe(x: any): Record<string, unknown> | null {
+  const n = x.neu || {};
+  switch (x.art) {
+    case "anschrift": return { street: n.strasse, postal_code: n.plz, city: n.ort };
+    case "name": return { ...(n.vorname ? { given_name: n.vorname } : {}), ...(n.nachname ? { family_name: n.nachname } : {}) };
+    case "handy": return { phone: n.nummer };
+    case "festnetz": return { landline: n.nummer };
+    case "mail": return { email: n.mail };
+    case "geburtstag": return { birth_date: n.datum };
+    case "mitgliedschaft": return { membership: n.wunsch === "austreten" ? "austritt" : "ruhend" };
+    case "sonstiges": return { hinweis: n.text };
+    default: return null;
+  }
+}
+// Freigeben dürfen: Admin oder Clubsprecher (Bank: Kassenwart oder Admin) – und nur, wenn die Meldung an sie ging
+const aeDarfFreigeben = (ich: Ich, x: any) => ich.admin || ((x.empfaenger || []).includes(ich.person_id)
+  && (ich.aemter || []).some((a: string) => (x.art === "bank" ? /^kassenwart/i : /^clubsprecher/i).test(a)));
+const aeKenntnisVon = (x: any, pid: string) => (Array.isArray(x.kenntnis) ? x.kenntnis : []).some((k: any) => k.person_id === pid);
+// wartet auf mich? offen und (noch nicht zur Kenntnis genommen oder ich darf freigeben)
+const aeWartetAufMich = (ich: Ich, x: any) => x.status === "offen" && (!aeKenntnisVon(x, ich.person_id) || aeDarfFreigeben(ich, x));
+// Zeitplaner: hat ein KC-Programm „übernommen“ (oder „abgelehnt“) zurückgemeldet → Mitglied bekommt Bescheid, Ablage ins Archiv
+async function aeUebernahmeMelden() {
+  const { data } = await db.from("kc_club_aenderungen").select("*").in("status", ["uebernommen", "abgelehnt"]).is("mitglied_informiert_am", null).limit(20);
+  for (const x of data ?? []) {
+    const { data: ok } = await db.from("kc_club_aenderungen").update({ mitglied_informiert_am: jetzt() }).eq("id", x.id).is("mitglied_informiert_am", null).select("id");
+    if (!ok?.length) continue;
+    const art = AENDERUNG.arten.find((a) => a.id === x.art); if (!art) continue;
+    const prog = String(x.uebernommen_von || "KC-Programm").split(":")[0];
+    const uebernommen = x.status === "uebernommen";
+    if (uebernommen) await sendenGewaehlt("club_nachricht", [x.person_id], ["push", "email"], {
+      titel: `✅ Eingetragen: ${art.t}`, kurz: "Deine Änderung ist überall eingetragen – danke!", betreff: `Köcheclub Werne – deine Änderung ist eingetragen: ${art.t}`,
+      text: `Hallo,\n\ndeine Änderung „${art.sym} ${art.t}“ ist jetzt eingetragen (${prog}) – danke für die Meldung!\n\nViele Grüße\nKöcheclub Werne`, url: APP_URL,
+    }, `club-aenderung-uebernommen:${x.id}`).catch(() => null);
+    else { // abgelehnt → nicht das Mitglied verunsichern, sondern die Freigebenden informieren
+      const an = [x.freigegeben_von, ...(await adminIds())].filter(Boolean);
+      await sendenGewaehlt("club_nachricht", [...new Set(an)] as string[], ["push"], { titel: `⚠️ ${prog} hat eine Änderung nicht übernommen`, kurz: art.t,
+        betreff: `Köcheclub Werne – Änderung nicht übernommen: ${art.t}`, text: `${prog} hat die Änderung „${art.t}“ nicht übernommen. Bitte im Büro → 📬 Änderungen ansehen.`, url: APP_URL + "#aenderungen" },
+        `club-aenderung-abgelehnt:${x.id}`).catch(() => null);
+    }
+    const admin = (await adminIds())[0];
+    if (admin) await aeAblegen({ person_id: admin } as Ich, x, "Eingetragen").catch(() => null);
+    await protokoll(null, "aenderung_uebernahme_gemeldet", { meldung: x.id, art: x.art, status: x.status });
+  }
 }
 const aeKurz = (x: any) => x.art === "bank" && x.status === "erledigt" ? { ...x.neu, iban: "…" + String(x.neu?.iban || "").slice(-4) } : x.neu;
 const ERSTATTUNG = {
@@ -1773,7 +1822,7 @@ function darfDokSehen(ich: Ich, o: any, d: any, freigaben: any[]) {
 // KC-CLUB-SICHERHEIT-ARCHIV (1.22.1): Vereinsordner „Admin <Jahr>“ (art sonstiges, nur Clubleitung) – entsteht beim ersten Bericht
 const ADMIN_ORDNER = { art: "sonstiges", titel: "Admin", farbe: 8, register: ["Sicherheitscheck", "Sonstiges"] };
 // KC-CLUB-AENDERUNG (2.22.10, Wunsch Hansi): eigener Vereinsordner „Mitglieder <Jahr>“ (nur Clubleitung) für Änderungsmeldungen
-const MITGLIEDER_ORDNER = { art: "sonstiges", titel: "Mitglieder", farbe: 3, register: ["Meldungen", "Sonstiges"] };
+const MITGLIEDER_ORDNER = { art: "sonstiges", titel: "Personal", farbe: 3, register: ["Meldungen", "Sonstiges"] }; // 2.22.19 (Wunsch Hansi): „Personal“ statt „Mitglieder“
 const adminOrdner = (jahr: number, register: string) => vereinsOrdner(ADMIN_ORDNER, jahr, register);
 async function vereinsOrdner(def: typeof ADMIN_ORDNER, jahr: number, register: string) {
   const { data: da } = await db.from("kc_club_archiv_ordner").select("id,register").is("besitzer", null).eq("art", def.art).eq("titel", def.titel)
@@ -2407,8 +2456,14 @@ async function bueroEingang(ich?: Ich) {
   const leer = { count: 0 };
   const zahl = async (q: any) => { try { const r = await q; return r.count ?? 0; } catch { return 0; } };
   // KC-CLUB-AENDERUNG (2.22.8, Wunsch Hansi): offene Änderungsmeldungen gehören in den Posteingang
-  let aeQ = db.from("kc_club_aenderungen").select("id", { count: "exact", head: true }).eq("status", "offen");
-  if (ich && !ich.admin) aeQ = aeQ.contains("empfaenger", [ich.person_id]);
+  // 2.22.19: nur, was auf mich wartet (noch nicht zur Kenntnis genommen – oder ich darf freigeben)
+  const aeQ = (async () => {
+    if (!ich) return { count: 0 };
+    let q = db.from("kc_club_aenderungen").select("id,status,art,empfaenger,kenntnis").eq("status", "offen").limit(200);
+    if (!ich.admin) q = q.contains("empfaenger", [ich.person_id]);
+    const { data, error } = await q; if (error) throw new Error(error.message);
+    return { count: (data ?? []).filter((x: any) => aeWartetAufMich(ich, x)).length };
+  })();
   const [ausleihen, vorschlaege, hilfe, archiv, aufgaben, entwuerfe, aenderungen] = await Promise.all([
     zahl(db.from("kc_club_ausleihen").select("id", { count: "exact", head: true }).eq("status", "angefragt")),
     zahl(db.from("kc_club_vorschlaege").select("id", { count: "exact", head: true }).eq("status", "offen")),
@@ -3061,7 +3116,8 @@ Deno.serve(async (req) => {
       await fpUeberwachen().catch((e) => console.error("fp ueberwachung", String(e)));
       await postausgangLauf().catch((e) => console.error("postausgang", String(e))); // KC-CLUB-POSTAUSGANG (1.69.1)
       await adminAbwesendPruefen().catch((e) => console.error("admin abwesend", String(e))); // KC-CLUB-VERTRETUNG (2.2.0)
-      await stadtAutoLauf().catch((e) => console.error("stadt termine", String(e))); // KC-CLUB-STADT-TERMINE (2.22.6): wöchentlich, nur wenn eingeschaltet
+      await stadtAutoLauf().catch((e) => console.error("stadt termine", String(e)));
+      await aeUebernahmeMelden().catch((e) => console.error("aenderung uebernahme", String(e))); /* KC-CLUB-AENDERUNG-FREIGABE (2.22.19) */ // KC-CLUB-STADT-TERMINE (2.22.6): wöchentlich, nur wenn eingeschaltet
       // KC-CLUB-NUTZUNG-PERSONEN (2.6.0): Geräte-Kennungen nur 100 Tage aufbewahren
       { const { error } = await db.from("kc_club_nutzung_geraete").delete().lt("tag", berlinTag(new Date(Date.now() - 100 * 86400000))); if (error) console.error("nutzung geraete loeschen", error.message); }
       // Abstimmungen mit abgelaufener Frist beenden (Ergebnis geht an alle)
@@ -6364,6 +6420,7 @@ Köcheclub-App`,
       case "aenderung_senden": {
         const art = AENDERUNG.arten.find((a) => a.id === String(p.art));
         if (!art) throw new Fehler("Bitte auswählen, was sich geändert hat.");
+        if ((art as any).aus) throw new Fehler("Das wird im Moment nicht gebraucht.", 409);
         const neu = aenderungPruefen(art, p.neu);
         const giltAb = art.gilt && /^\d{4}-\d{2}-\d{2}$/.test(String(p.gilt_ab || "")) ? String(p.gilt_ab) : null;
         if ((art as any).giltPflicht && !giltAb) throw new Fehler("Bitte angeben, ab wann das gelten soll.");
@@ -6382,9 +6439,9 @@ Köcheclub-App`,
         if (error || !a) throw new Fehler("Meldung konnte nicht gespeichert werden.", 500);
         const wann = giltAb ? ` (gilt ab ${giltAb.split("-").reverse().join(".")})` : "";
         const versand = await sendenGewaehlt("club_nachricht", empfaenger, ["push", "email"], {
-          titel: `✏️ ${ich.vorname}: ${art.t}`, kurz: art.auto ? "Zur Info – ist schon gespeichert" : "Bitte eintragen und als erledigt markieren",
+          titel: `✏️ ${ich.vorname}: ${art.t}`, kurz: art.auto ? "Zur Info – ist schon gespeichert" : "Bitte im Büro zur Kenntnis nehmen und freigeben",
           betreff: `Köcheclub Werne – Änderungsmeldung ${ich.name}: ${art.t}`,
-          text: `Hallo,\n\n${ich.name} hat in der Köcheclub-App gemeldet: ${art.sym} ${art.t}${wann}.\n\n${art.auto ? "Das ist schon gespeichert – nur zur Info." : `Bitte im KC Manager eintragen und danach in der App auf „✅ Erledigt“ tippen – ${ich.vorname} bekommt dann Bescheid.`}\nDie Einzelheiten stehen aus Datenschutzgründen nur in der App: ${APP_URL}#aenderungen\n\nViele Grüße\nKöcheclub-App`,
+          text: `Hallo,\n\n${ich.name} hat in der Köcheclub-App gemeldet: ${art.sym} ${art.t}${wann}.\n\n${art.auto ? "Das ist schon gespeichert – nur zur Info." : `Bitte im Büro (📥 Eingangskorb) zur Kenntnis nehmen und freigeben – danach übernehmen die KC-Programme die Änderung, und ${ich.vorname} bekommt Bescheid.`}\nDie Einzelheiten stehen aus Datenschutzgründen nur in der App: ${APP_URL}#aenderungen\n\nViele Grüße\nKöcheclub-App`,
           url: APP_URL + "#aenderungen",
         }, `club-aenderung:${a.id}`);
         // auf Wunsch des Mitglieds: kurze Nachricht an alle (neue Nummer/Anschrift/E-Mail) – wie jedes Mitglied es eingestellt hat
@@ -6417,15 +6474,79 @@ Köcheclub-App`,
         let q = db.from("kc_club_aenderungen").select("*").neq("status", "zurueckgezogen").order("erstellt_am", { ascending: false }).limit(150);
         if (!ich.admin) q = q.contains("empfaenger", [ich.person_id]);
         const { data: liste } = await q;
-        const leute = await personen([...(liste ?? []).map((x: any) => x.person_id), ...(liste ?? []).map((x: any) => x.erledigt_von)]);
+        const leute = await personen([...(liste ?? []).map((x: any) => x.person_id), ...(liste ?? []).map((x: any) => x.erledigt_von), ...(liste ?? []).map((x: any) => x.freigegeben_von),
+          ...(liste ?? []).flatMap((x: any) => (Array.isArray(x.kenntnis) ? x.kenntnis : []).map((k: any) => k.person_id))]);
         const nm = (id: string) => leute.get(id)?.display_name || id;
         // Größen-Übersicht (Kochjacke/Kochhose): je Mitglied die letzte Meldung
         const groessen = new Map<string, any>();
         for (const x of liste ?? []) if (x.art === "kleidung" && !groessen.has(x.person_id)) groessen.set(x.person_id, { name: nm(x.person_id), ...x.neu, am: x.erstellt_am });
         await protokoll(ich.person_id, "aenderungen_angesehen", { anzahl: (liste ?? []).length });
         return json({ meldungen: (liste ?? []).map((x: any) => ({ id: x.id, art: x.art, name: nm(x.person_id), person_id: x.person_id, alt: x.art === "bank" ? null : x.alt, neu: aeKurz(x),
-          gilt_ab: x.gilt_ab, bemerkung: x.bemerkung, status: x.status, erstellt_am: x.erstellt_am, erledigt_am: x.erledigt_am, erledigt_von: x.erledigt_von ? nm(x.erledigt_von) : null, antwort: x.antwort, an_alle: x.an_alle })),
+          gilt_ab: x.gilt_ab, bemerkung: x.bemerkung, status: x.status, erstellt_am: x.erstellt_am, erledigt_am: x.erledigt_am, erledigt_von: x.erledigt_von ? nm(x.erledigt_von) : null, antwort: x.antwort, an_alle: x.an_alle,
+          // KC-CLUB-AENDERUNG-FREIGABE (2.22.19)
+          kenntnis: (Array.isArray(x.kenntnis) ? x.kenntnis : []).map((k: any) => ({ name: nm(k.person_id), am: k.am })), kenntnisIch: aeKenntnisVon(x, ich.person_id),
+          darfFreigeben: aeDarfFreigeben(ich, x), wartetAufMich: aeWartetAufMich(ich, x), uebergabe: !!aeUebergabe(x),
+          freigegeben_von: x.freigegeben_von ? nm(x.freigegeben_von) : null, freigegeben_am: x.freigegeben_am, uebernommen_am: x.uebernommen_am,
+          uebernommen_von: x.uebernommen_von ? String(x.uebernommen_von).split(":")[0] : null, rueckfrage: x.rueckfrage })),
           groessen: [...groessen.values()].sort((a, b) => a.name.localeCompare(b.name, "de")), arten: AENDERUNG.arten.map((a) => ({ id: a.id, sym: a.sym, t: a.t, felder: a.felder })) });
+      }
+
+      // KC-CLUB-AENDERUNG-FREIGABE (2.22.19): 👁️ zur Kenntnis genommen (wer, wann – jeder Empfänger einmal)
+      case "aenderung_kenntnis": {
+        if (!ich.vorstand && !ich.admin) throw new Fehler("Das darf nur die Clubleitung.", 403);
+        const { data: x } = await db.from("kc_club_aenderungen").select("*").eq("id", String(p.id || "")).maybeSingle();
+        if (!x || (!ich.admin && !(x.empfaenger || []).includes(ich.person_id))) throw new Fehler("Meldung nicht gefunden.", 404);
+        if (aeKenntnisVon(x, ich.person_id)) return json({ ok: true, schon: true });
+        const kenntnis = [...(Array.isArray(x.kenntnis) ? x.kenntnis : []), { person_id: ich.person_id, am: jetzt() }];
+        const { error } = await db.from("kc_club_aenderungen").update({ kenntnis }).eq("id", x.id);
+        if (error) throw new Fehler("Konnte nicht gespeichert werden.", 500);
+        await protokoll(ich.person_id, "aenderung_kenntnis", { meldung: x.id, art: x.art });
+        return json({ ok: true });
+      }
+
+      // ✅ Freigeben: Admin oder Clubsprecher – danach liegt die Änderung für die KC-Programme bereit (Übergabe)
+      case "aenderung_freigeben": {
+        const { data: x } = await db.from("kc_club_aenderungen").select("*").eq("id", String(p.id || "")).maybeSingle();
+        if (!x) throw new Fehler("Meldung nicht gefunden.", 404);
+        if (!aeDarfFreigeben(ich, x)) throw new Fehler(x.art === "bank" ? "Die Bankverbindung gibt nur der Kassenwart oder der Admin frei." : "Freigeben darf der Clubsprecher oder der Admin.", 403);
+        if (x.status !== "offen") throw new Fehler("Die Meldung ist schon bearbeitet.", 409);
+        const uebergabe = aeUebergabe(x), kenntnis = aeKenntnisVon(x, ich.person_id) ? x.kenntnis : [...(x.kenntnis || []), { person_id: ich.person_id, am: jetzt() }];
+        // ohne Übergabe (z. B. Bank, nur in der Club-App) ist die Freigabe zugleich „erledigt“
+        const upd = uebergabe ? { status: "freigegeben", freigegeben_von: ich.person_id, freigegeben_am: jetzt(), uebergabe, kenntnis }
+          : { status: "erledigt", freigegeben_von: ich.person_id, freigegeben_am: jetzt(), erledigt_von: ich.person_id, erledigt_am: jetzt(), kenntnis };
+        const { data: ok } = await db.from("kc_club_aenderungen").update(upd).eq("id", x.id).eq("status", "offen").select("id");
+        if (!ok?.length) throw new Fehler("Die Meldung ist schon bearbeitet.", 409);
+        const ablage = await aeAblegen(ich, { ...x, ...upd }, "Freigegeben");
+        await protokoll(ich.person_id, "aenderung_freigegeben", { meldung: x.id, art: x.art, uebergabe: !!uebergabe, ablage });
+        return json({ ok: true, uebergabe: !!uebergabe });
+      }
+
+      // ↩️ Rückfrage an das Mitglied (z. B. etwas unklar) – Meldung bleibt beim Mitglied sichtbar, es kann neu melden
+      case "aenderung_rueckfrage": {
+        const { data: x } = await db.from("kc_club_aenderungen").select("*").eq("id", String(p.id || "")).maybeSingle();
+        if (!x || (!ich.admin && !(x.empfaenger || []).includes(ich.person_id)) || (!ich.vorstand && !ich.admin)) throw new Fehler("Meldung nicht gefunden.", 404);
+        if (x.status !== "offen") throw new Fehler("Die Meldung ist schon bearbeitet.", 409);
+        const rueckfrage = txt(p.text, 500);
+        if (!rueckfrage) throw new Fehler("Bitte kurz schreiben, was unklar ist.");
+        const { data: ok } = await db.from("kc_club_aenderungen").update({ status: "rueckfrage", rueckfrage, erledigt_von: ich.person_id, erledigt_am: jetzt() }).eq("id", x.id).eq("status", "offen").select("id");
+        if (!ok?.length) throw new Fehler("Die Meldung ist schon bearbeitet.", 409);
+        const art = AENDERUNG.arten.find((a) => a.id === x.art)!;
+        await sendenGewaehlt("club_nachricht", [x.person_id], ["push", "email"], {
+          titel: `❓ Rückfrage zu deiner Änderung: ${art.t}`, kurz: rueckfrage, betreff: `Köcheclub Werne – Rückfrage zu deiner Änderung: ${art.t}`,
+          text: `Hallo,
+
+${ich.name} hat eine Rückfrage zu deiner Änderung „${art.sym} ${art.t}“:
+
+${rueckfrage}
+
+Bitte melde die Änderung danach in der App einfach neu (Meins → ✏️ Meine Daten geändert?).
+
+Viele Grüße
+Köcheclub Werne`,
+          url: APP_URL,
+        }, `club-aenderung-rueckfrage:${x.id}`);
+        await protokoll(ich.person_id, "aenderung_rueckfrage", { meldung: x.id, art: x.art });
+        return json({ ok: true });
       }
 
       case "aenderung_erledigt": {

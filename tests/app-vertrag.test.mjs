@@ -3585,12 +3585,12 @@ assert.ok(/const UH_HERVOR = \["Innovation"\];/.test(html) && /function uhAmeise
 }
 // 333. 2.22.8: Änderungsmeldungen im Büro-Posteingang + Archiv (Register „Meldungen“)
 {
-  assert.ok(/async function bueroEingang\(ich\?: Ich\)/.test(server) && /if \(ich && !ich\.admin\) aeQ = aeQ\.contains\("empfaenger", \[ich\.person_id\]\);/.test(server) && /return \{ ausleihen, vorschlaege, hilfe, archiv, aufgaben, entwuerfe, aenderungen \};/.test(server), "Posteingang zählt Änderungsmeldungen");
+  assert.ok(/async function bueroEingang\(ich\?: Ich\)/.test(server) && /return \{ count: \(data \?\? \[\]\)\.filter\(\(x: any\) => aeWartetAufMich\(ich, x\)\)\.length \};/.test(server) && /return \{ ausleihen, vorschlaege, hilfe, archiv, aufgaben, entwuerfe, aenderungen \};/.test(server), "Posteingang zählt Änderungsmeldungen");
   assert.ok(/const AE_REGISTER = "Meldungen";/.test(server) && /await vereinsOrdner\(MITGLIEDER_ORDNER, jahr, AE_REGISTER\)/.test(server) && /await persoenlicherOrdner\(x\.person_id, wer, jahr, AE_REGISTER\)/.test(server), "Ablage Admin-Ordner + persönlicher Ordner, Register Meldungen");
   const abl = server.slice(server.indexOf("async function aeAblegen"), server.indexOf("const aeKurz ="));
   assert.ok(/const neu = x\.art === "bank" \? aeKurz\(\{ \.\.\.x, status: "erledigt" \}\)/.test(abl) && /const alt = |alt = x\.art === "bank" \? \{\}/.test(abl), "Bank im Archiv gekürzt");
   assert.ok(/await aeAblegen\(ich, voll, "Meldung"\)/.test(server) && /await aeAblegen\(ich, \{ \.\.\.x, status: "erledigt"/.test(server), "Ablage beim Melden und Erledigen");
-  assert.ok(/\["✏️", "Änderungsmeldungen", e\.aenderungen \|\| 0, "aeEingang\(\)"\]/.test(html) && /gruppe: "Änderungsmeldung – bitte eintragen"/.test(html), "Büro-Posteingang zeigt Meldungen");
+  assert.ok(/\["✏️", "Änderungsmeldungen", e\.aenderungen \|\| 0, "aeEingang\(\)"\]/.test(html) && /gruppe: "Änderungsmeldung – bitte ansehen"/.test(html), "Büro-Posteingang zeigt Meldungen");
 }
 // 334. 2.22.9: fehlende Erklärungsfenster ergänzt (KC-CLUB-EINWEISUNG, auch in Fenstern)
 {
@@ -3606,7 +3606,7 @@ assert.ok(/const UH_HERVOR = \["Innovation"\];/.test(html) && /function uhAmeise
 }
 // 335. 2.22.10: Änderungsmeldungen → Eingangskorb + Büro-Ordner „Mitglieder“; Archiv-Ordner „Mitglieder <Jahr>“ statt „Admin“
 {
-  assert.ok(/const MITGLIEDER_ORDNER = \{ art: "sonstiges", titel: "Mitglieder", farbe: 3, register: \["Meldungen", "Sonstiges"\] \};/.test(server) && /const adminOrdner = \(jahr: number, register: string\) => vereinsOrdner\(ADMIN_ORDNER, jahr, register\);/.test(server), "Vereinsordner Mitglieder, Admin-Ordner unverändert nutzbar");
+  assert.ok(/const MITGLIEDER_ORDNER = \{ art: "sonstiges", titel: "Personal", farbe: 3, register: \["Meldungen", "Sonstiges"\] \};/.test(server) && /const adminOrdner = \(jahr: number, register: string\) => vereinsOrdner\(ADMIN_ORDNER, jahr, register\);/.test(server), "Vereinsordner Mitglieder, Admin-Ordner unverändert nutzbar");
   assert.ok(!/id: "aenderungen", sym: "📬", t: "Änderungen", farbe/.test(html), "kein eigener Regal-Ordner mehr");
   assert.ok(/const zahl = \{ fl: flOffen, feste: fest\.length, nachher: nt \? 1 : 0, liste: AE\.offen \};/.test(html) && /ordner: \["📇", "Mitglieder", "buListe\(\)"\]/.test(html), "Zahl am Ordner Mitglieder, Eingangskorb führt dorthin");
 }
@@ -3675,6 +3675,21 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.ok(/function schRochade\(ch, von, feld\)/.test(html) && (html.match(/const r = schRochade\(ch, SCHM?\.auswahl, feld\)/g) || []).length === 2 && (html.match(/= schZieleMitRochade\(ch, feld\)/g) || []).length === 2, "Rochade über den Turm (Computer + Mitglieder)");
   assert.ok(/\$\("setOnlinePushZeile"\)\?\.classList\.remove\("versteckt"\)/.test(html) && /checked = ICH\?\.admin \? INIT\?\.einstellungen\?\.online_push\?\.an !== false : INIT\?\.einstellungen\?\.online_push\?\.an === true;/.test(html), "Online-Push-Schalter für alle, Standard je Rolle");
+}
+// 347 KC-CLUB-AENDERUNG-FREIGABE (2.22.19): Kenntnis → Freigabe → Übergabe an KC-Programme über DB-Funktionen
+{
+  const mig = lies("supabase/migrations/20261004_kc_club_v22219_aenderung_freigabe.sql");
+  assert.ok(/function public\.kc_core_person_aenderungen_offen\(p_org_id text\)/.test(mig) && /function public\.kc_core_person_aenderung_quittieren\(p_id uuid, p_status text, p_programm text, p_ergebnis jsonb default null\)/.test(mig), "Übergabe-Funktionen fehlen");
+  assert.ok((mig.match(/kc_private\.kc_core_is_admin\([^)]*\) or kc_private\.kc_core_has_app_access\([^,]+, 'KC_MANAGER', array\['manager', 'admin'\]\)/g) || []).length === 2, "Rechteprüfung in beiden Funktionen");
+  assert.ok(/where id = p_id and status = 'freigegeben'/.test(mig) && /p_status not in \('uebernommen', 'abgelehnt'\)/.test(mig), "Quittieren nur aus freigegeben");
+  assert.ok(/revoke all on function public\.kc_core_person_aenderungen_offen\(text\) from public, anon;/.test(mig) && /revoke all on function public\.kc_core_person_aenderung_quittieren\(uuid, text, text, jsonb\) from public, anon;/.test(mig), "anon darf nicht");
+  assert.ok(!/kc_core_people/.test(server.slice(server.indexOf("function aeUebergabe"), server.indexOf("const aeKurz ="))), "Club-App schreibt kc_core_people nicht selbst");
+  assert.ok(/id: "bank"[^\n]*aus: true/.test(server) && /if \(\(art as any\)\.aus\) throw new Fehler/.test(server) && /a\.aus \? `<button class="knopf" disabled/.test(html), "Bank ausgegraut");
+  assert.ok(!/case "bank":/.test(server.slice(server.indexOf("function aeUebergabe"), server.indexOf("const aeDarfFreigeben"))), "Bank keine Übergabe");
+  assert.ok(/x\.art === "bank" \? \/\^kassenwart\/i : \/\^clubsprecher\/i/.test(server), "Bank nur Kassenwart");
+  for (const a of ["aenderung_kenntnis", "aenderung_freigeben", "aenderung_rueckfrage"]) assert.ok(server.includes(`case "${a}":`) && html.includes(`api("${a}"`), `Aktion ${a}`);
+  assert.ok(/\.eq\("status", "offen"\)\.select\("id"\);\s*\n\s*if \(!ok\?\.length\) throw new Fehler\("Die Meldung ist schon bearbeitet\.", 409\);\s*\n\s*const ablage = await aeAblegen\(ich, \{ \.\.\.x, \.\.\.upd \}, "Freigegeben"\);/.test(server), "Freigabe atomar + Ablage Personal");
+  assert.ok(/await aeUebernahmeMelden\(\)\.catch/.test(server) && /\.is\("mitglied_informiert_am", null\)\.select\("id"\)/.test(server), "Rückmeldung einmalig");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

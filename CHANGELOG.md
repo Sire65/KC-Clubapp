@@ -1,5 +1,17 @@
 # Änderungen
 
+## 2.22.19 – 2026-10-04 – Änderungsmeldung: zur Kenntnis nehmen → freigeben → für KC-Programme bereit (Wunsch Hansi)
+- KC-CLUB-AENDERUNG-FREIGABE: im Büro-Eingangskorb je Meldung „👁️ Zur Kenntnis genommen“, „✅ Freigeben“, „↩️ Rückfrage“, „📋 Kopieren“.
+  Freigeben darf der Clubsprecher (an den die Meldung ging) oder der Admin; Bankverbindung nur Kassenwart oder Admin.
+  Ablage im Vereinsordner „Personal“ (bisher „Mitglieder“), Register Meldungen.
+- Nach der Freigabe liegt die Änderung als Übergabe (Felder wie street/postal_code/city, phone, email …) in der Datenbank bereit.
+  Die KC-Programme (KC Manager) holen sie über `kc_core_person_aenderungen_offen(org)` und melden mit `kc_core_person_aenderung_quittieren`
+  „uebernommen“ oder „abgelehnt“ zurück. Die Club-App schreibt kc_core_people weiterhin nicht selbst.
+- Übernommen → Mitglied bekommt „✅ Eingetragen“; abgelehnt → Freigebende und Admins werden informiert (nicht das Mitglied).
+- Bankverbindung zurzeit nicht nötig: in „Meine Daten geändert?“ ausgegraut, Server lehnt sie ab.
+- Migration 20261004_kc_club_v22219_aenderung_freigabe.sql (neue Spalten, Status, 2 Funktionen nur für Admin/KC-Manager, anon gesperrt).
+- Enthält 2.22.18. Tests 333/335 angepasst, Test 347.
+
 ## 2.22.18 – 2026-10-04 – Diktieren: bei „gesperrt“ trotzdem versuchen (Fund Hansi)
 - KC-CLUB-MIKRO-FREIGABE: Android meldete „Mikrofon gesperrt“ → die App zeigte nur die Anleitung („Verstanden“) und diktierte nicht – obwohl die
   Google-Spracherkennung auf manchen Handys trotzdem hört. Jetzt: bei „gesperrt“ oder abgelehnter Abfrage trotzdem diktieren; nur wenn die
