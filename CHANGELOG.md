@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.23.26 – 2026-10-04 – Tipp-Puls wie die pulsierenden Knöpfe (Wunsch Hansi)
+- KC-CLUB-TIPP-PULS: statt kurzem Zusammenziehen jetzt derselbe Puls wie bei den pulsierenden Knöpfen (vsPuls): zweimal größer werden
+  (kleine Elemente 1,12, große Flächen 1,03) mit rotem Ring, gut 0,8 s. „Weniger Bewegung“: nur einmal der Ring, ohne Größerwerden.
+  Gilt für alle Reiter, Knöpfe, Kacheln usw. (zentrale Stelle). Test 2.23.24 angepasst.
+
 ## 2.23.25 – 2026-10-04 – Spiele: offene Herausforderung erreichbar, Termin dafür vereinbaren (Fund Hansi)
 - Fund: Herausforderung an Klaus zurückgezogen, später erneut herausgefordert (offen) – der nächste Versuch „Termin vereinbaren“ meldete nur
   „Du hast diese Person schon herausgefordert“, und die offene Herausforderung ließ sich in der Liste nicht antippen.

@@ -2773,7 +2773,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.25"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.26"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -9572,8 +9572,10 @@ const TIPP_ZIEL = 'button, [role="button"], [role="tab"], [role="radio"], [role=
   const finden = (t) => { const z = t?.closest?.(TIPP_ZIEL); return z && !z.disabled && !z.classList.contains("blatt") && z !== document.body ? z : null; };
   const pulsen = (z) => {
     const r = z.getBoundingClientRect(); if (!r.width || (r.width > innerWidth * 0.95 && r.height > innerHeight * 0.5)) return; // ganze Seiten/Fenster nicht
-    const tief = ruhig.matches ? 0.985 : r.width > 260 || r.height > 140 ? 0.97 : 0.9;
-    try { z.animate([{ scale: "1" }, { scale: String(tief), filter: "brightness(1.15)", offset: 0.35 }, { scale: "1" }], { duration: 300, easing: "ease-out" }); } catch {}
+    // 2.23.26 (Hansi: „wie die Buttons“): derselbe Puls wie bei den pulsierenden Knöpfen (vsPuls) – zweimal größer mit rotem Ring
+    const gross = ruhig.matches ? 1 : r.width > 260 || r.height > 140 ? 1.03 : 1.12, ring = "rgba(208, 2, 27, ";
+    try { z.animate([{ scale: "1", boxShadow: `0 0 0 0 ${ring}.55)` }, { scale: String(gross), boxShadow: `0 0 0 10px ${ring}0)`, offset: 0.5 }, { scale: "1", boxShadow: `0 0 0 0 ${ring}0)` }],
+      { duration: 420, iterations: ruhig.matches ? 1 : 2, easing: "ease-in-out" }); } catch {}
   };
   // 2.23.25 (Fund Hansi „die Tabs pulsierten nicht“): viele Reiter zeichnen sich beim Antippen neu – der Puls lief am alten, schon
   // entfernten Element. Jetzt nach dem Klick: erst wenn die App fertig gezeichnet hat, pulst das Element, das dann an der Stelle steht.
