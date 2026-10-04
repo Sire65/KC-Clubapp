@@ -3524,6 +3524,8 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/onclick="sosAnrufen\('\$\{x\.nr\}'\)"/.test(nf) && /ruf\("112"\)\}\$\{ruf\("110"\)/.test(nf), "112/110 über die vorhandene Rückfrage");
   assert.ok(/async function notfallStandort\(knopf\)[\s\S]{0,400}stPositionWarten\(\)[\s\S]{0,400}api\("sos_ort"/.test(html), "Standort wie „Wo bin ich?“");
 }
+// 326. 2.22.3: SOS-Textfeld lesbar in Tag- und Nachtmodus (Fund Hansi)
+assert.ok(/#notfallText \{[^}]*background: var\(--bg\); color: var\(--text\);/.test(html) && /#notfallText::placeholder \{ color: var\(--grau\)/.test(html), "SOS-Textfeld: Farben aus dem Design (Kontrast)");
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.22.3 – 2026-10-04 – SOS-Textfeld lesbar im Nachtmodus (Fund Hansi)
+- Im Nachtmodus war der Text beim Schreiben nicht zu sehen (helle Schrift erbt, Feld blieb weiß). Das Textfeld nimmt jetzt Hintergrund und
+  Schrift aus dem gewählten Design (var(--bg)/var(--text)), Platzhalter in Grau, roter Schreibstrich. Geprüft: Klassik und Küchengrün,
+  Tag und Nacht; Alarm-Fenster und Knöpfe ebenfalls gut lesbar. Test 326.
+
 ## 2.22.2 – 2026-10-04 – 🚨 SOS-Fenster: Senden nach oben, Standort, Notrufe (Wunsch Hansi)
 - KC-CLUB-NOTFALL-ORT-RUF: „🚨 JETZT AN ALLE SENDEN“ steht direkt unter dem Textfeld; Erklärung klein nach unten.
 - „📍 Meinen Standort anhängen“: bestimmt den Standort wie „Wo bin ich?“ (Adresse über den vorhandenen kostenlosen Adapter, nichts gespeichert)

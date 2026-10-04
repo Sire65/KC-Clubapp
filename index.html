@@ -1006,7 +1006,7 @@
   .alarm-text { font-size: 1.15rem; line-height: 1.4; white-space: pre-wrap; overflow-wrap: anywhere; }
   .knopf.alarm-knopf { background: #d50000; color: #fff; font-weight: 900; border: none; }
   .nf-rufe { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; } .nf-rufe .knopf { padding: 10px 6px; font-size: .9rem; }
-  #notfallText { width: 100%; min-height: 120px; font-size: 1.05rem; border: 3px solid #d50000; border-radius: 12px; padding: 10px; box-sizing: border-box; }
+  #notfallText { width: 100%; min-height: 120px; font-size: 1.05rem; border: 3px solid #d50000; border-radius: 12px; padding: 10px; box-sizing: border-box;  background: var(--bg); color: var(--text); caret-color: #d50000; } #notfallText::placeholder { color: var(--grau); opacity: 1; } /* 2.22.3: Kontrast in Tag- und Nachtmodus (Fund Hansi) */
   .blase.wichtig .wichtig-marke { display: inline-block; margin: 0 0 4px; padding: 1px 8px; border-radius: 999px; background: #ff9800; color: #1f1300; font-weight: 800; font-size: .78rem; letter-spacing: .02em; }
   /* KC-CLUB-HAKEN (1.55.0): Haken wie WhatsApp – grau gesendet/angekommen, blau gelesen */
   .haken { display: inline-flex; vertical-align: -2px; margin: 0 2px 0 4px; color: var(--grau); } .blase.eigen .haken { color: rgba(255,255,255,.8); }
@@ -2615,7 +2615,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.22.2"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.22.3"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
