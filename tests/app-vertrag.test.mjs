@@ -3548,7 +3548,7 @@ assert.ok(/#notfallText \{[^}]*background: var\(--bg\); color: var\(--text\);/.t
 assert.ok(/const UH_HERVOR = \["Innovation"\];/.test(html) && /function uhAmeisen\(\)[\s\S]{0,900}setTimeout\(\(\) => \{ el\.classList\.remove\("uh-ameisen"\)/.test(html) && /\.unterh \.uh-rahmen rect \{[^}]*animation: ameisenLauf/.test(html), "kurzer Ameisenrahmen, danach ruhig");
 // 330. 2.22.6: Herausforderung live + sofort nur online, sonst Person suchen → Terminanfrage (KC-CLUB-SPIEL-LIVE)
 {
-  assert.ok(/spielAnfragen: \(spAn \?\? \[\]\)\.map/.test(server) && /from\("kc_club_spiele"\)\.select\("id,von,spiel,groesse,erstellt_am"\)\.eq\("an", ich\.person_id\)\.eq\("status", "angefragt"\)/.test(server), "online liefert frische Herausforderungen an mich");
+  assert.ok(/spielAnfragen: \(spAn \?\? \[\]\)\.map/.test(server) && /from\("kc_club_spiele"\)\.select\("id,von,spiel,groesse,uhr,erstellt_am"\)\.eq\("an", ich\.person_id\)\.eq\("status", "angefragt"\)/.test(server), "online liefert frische Herausforderungen an mich");
   assert.ok(/spielLive\(r\.spielAnfragen\); \/\/ KC-CLUB-SPIEL-LIVE/.test(html) && /ONL\.erledigt\.add\("s" \+ a\.id\)/.test(html), "Fenster je Anfrage einmal");
   assert.ok(/const on = b\.filter\(\(m\) => ONL\?\.ids\?\.has\(m\.person_id\)\)/.test(html) && /spHerausTermin\('\$\{m\.person_id\}'\)">📅 Terminanfrage/.test(html) && /spTerminBlatt\(r\.spiel\.id\)/.test(html), "sofort nur online, sonst suchen + Termin");
 }
@@ -3737,7 +3737,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(chatTakt\.laeuft \|\| document\.hidden\) return;/.test(html), "Chat im Hintergrund nicht nachfragen");
   assert.ok(/const frisch = Date\.now\(\) - CHAT_AKTIV < 90000, ruhig = PUSH_AKTIV \? 10 : 6;/.test(html) && /CHAT\?\.tippt\?\.length \|\| \(jemandDa && ONL\.takt % \(frisch \? 2 : 4\) === 0\)/.test(html), "Tippen bleibt sofort, sonst seltener");
   assert.ok(/NA\.idStand = idStand; CHAT_AKTIV = Date\.now\(\);/.test(html), "neue Nachricht → wieder schnell");
-  assert.ok(/if \(SP\.offen\.ichDran \? SPT_TAKT\.n % 5 : SPT_TAKT\.ruhig > 40 && SPT_TAKT\.n % 3\) return;/.test(html) && /SPT_TAKT\.ruhig = 0; const warDran/.test(html), "Spiele-Takt");
+  assert.ok(/if \(SP\.offen\.ichDran \? SPT_TAKT\.n % 5 : SPT_TAKT\.ruhig > 40 && !SP\.offen\.uhr\?\.laeuft && SPT_TAKT\.n % 3\) return;/.test(html) && /SPT_TAKT\.ruhig = 0; const warDran/.test(html), "Spiele-Takt");
   assert.ok(!/function aeErledigt/.test(html), "alter Knopf „Im KC Manager eingetragen“ entfernt");
 }
 // 360. 2.23.10: Datenbank-Zeitgrenze (KC-CLUB-DB-ZEITGRENZE) – nach dem nächtlichen Ausfall am 04.10.
@@ -3917,6 +3917,23 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const feld = html.slice(html.indexOf('id="prFilterFeld"'), html.indexOf('class="pr-filter-raster"'));
   assert.ok(/class="pr-filter-zu" onclick="prFilterUmschalten\(false\)" aria-label="Filter schließen"[^>]*>✕<\/button>/.test(feld), "Kreuz schließt den Filter");
   assert.ok(/\.pr-filter-zu \{ position: absolute; top: 6px; right: 6px; min-width: 40px; min-height: 40px;/.test(html), "oben rechts, groß genug");
+}
+// 387. 2.23.38: Schachuhr (KC-CLUB-SCHACH-UHR) + aufgeräumtes Schachfenster (KC-CLUB-SCHACH-AUFGERAEUMT)
+{
+  const mig = lies("supabase/migrations/20261004_kc_club_v22338_schach_uhr.sql");
+  assert.ok(/add column if not exists uhr jsonb/.test(mig) && /uhr is null or \(spiel = 'schach'/.test(mig) && /in \(5, 10, 15\)/.test(mig), "Migration: Spalte uhr nur für Schach");
+  assert.ok(/const SCHACH_UHR_MIN = \[5, 10, 15\], SCHACH_UHR_GNADE_MS = 1500;/.test(server) && /function schachKannMatt\(fen: string, farbe: "w" \| "b"\)/.test(server) && /async function schachUhrPruefen\(g: any\)/.test(server), "Server: Uhr, Material, Zeitprüfung");
+  const zp = server.slice(server.indexOf("async function schachUhrPruefen"), server.indexOf("// ---------- Eigener Status"));
+  assert.ok(/remis = !schachKannMatt\(g\.brett, s === "x" \? "b" : "w"\)/.test(zp) && /gewinner: remis \? "remis" : gewinner/.test(zp) && /\.eq\("zuege", g\.zuege\)\.eq\("status", "laeuft"\)/.test(zp), "Zeit abgelaufen: verloren oder Remis (FIDE 6.9), ohne Doppel-Ende");
+  const zug = server.slice(server.indexOf('case "spiel_zug": {'), server.indexOf('case "spiel_aufgeben": {'));
+  assert.ok(/const g = await schachUhrPruefen\(g0\);/.test(zug) && /seit: !sieg && !remis && g\.zuege \+ 1 >= 2 \? jetzt\(\) : null/.test(zug), "Zug hält eigene Uhr an, startet die des Gegners (erste Züge frei)");
+  assert.ok(/uhr: art === "schach" \? schachUhrNeu\(p\.uhr\) : null/.test(server) && /uhr: g\.spiel === "schach" && g\.uhr \? schachUhrNeu\(g\.uhr\.min\) : null/.test(server) && /const g = await schachUhrPruefen\(g0\); \/\/ KC-CLUB-SCHACH-UHR: Zeit abgelaufen/.test(server), "Herausfordern/Revanche/Holen");
+  // Material-Regel mit echten Stellungen prüfen (gleiche Logik wie im Server)
+  const kann = (fen, farbe) => { const fig = [...fen.split(" ")[0]].filter((c) => /[a-z]/i.test(c) && c !== "k" && c !== "K" && (farbe === "w" ? c === c.toUpperCase() : c === c.toLowerCase())).map((c) => c.toLowerCase()); return fig.some((c) => c === "p" || c === "q" || c === "r") || fig.length >= 2; };
+  assert.ok(!kann("8/8/8/4k3/8/8/8/4K2N w - - 0 1", "w") && kann("8/8/8/4k3/8/8/8/4K2R w - - 0 1", "w") && !kann("8/8/8/4k3/8/8/8/4K3 w - - 0 1", "w") && kann("8/8/8/4k3/8/8/8/2B1K1N1 w - - 0 1", "w"), "Material-Regel");
+  assert.ok(/function schKannMatt\(ch, farbe\)/.test(html) && /function schUhrTakt\(\)/.test(html) && /function schPcUhrAbgleich\(\)/.test(html) && /SCH\.uhr \? "" : `<button class="knopf klein" onclick="schPcZurueck\(\)"/.test(html), "App: Uhr gegen den Computer, kein Zurücknehmen mit Uhr");
+  assert.ok(/class="sch-tisch\$\{st \? " mit-uhr" : ""\}"/.test(html) && /grid-template-areas: "links mitte rechts"/.test(html) && /\.sch-leiste \{ display: flex; flex-wrap: wrap; justify-content: center;/.test(html) && /<div class="sch-einst">/.test(html), "Brett mittig, Uhren links/rechts, schmale Knöpfe");
+  assert.ok(/spWahl\("Uhr", uhr, \[\["0", "📨 Fern"\]/.test(html) && /\.\.\.\(art === "schach" && uhr !== "0" \? \{ uhr: Number\(uhr\) \} : \{\}\)/.test(html), "Herausfordern mit Uhr");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

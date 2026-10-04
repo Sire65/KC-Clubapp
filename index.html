@@ -213,6 +213,27 @@
   .sch-geschlagen .sch-fig.brigade { width: 1.55em; font-size: .85rem; border-width: 2px; }
   .sch-umw .sch-fig.brigade { width: 2.4em; font-size: 1.4rem; }
   .sch-legende { display: flex; flex-wrap: wrap; gap: 4px 10px; justify-content: center; margin: 6px 0 0; font-size: .85rem; }
+  /* 2.23.38 KC-CLUB-SCHACH-AUFGERAEUMT + KC-CLUB-SCHACH-UHR: Einstellungen in einer Zeile, Brett mittig, Uhren links/rechts, schmale Knöpfe */
+  .sch-karte { display: flex; flex-direction: column; gap: 8px; } .sch-karte > * { margin-top: 0; margin-bottom: 0; }
+  .sch-einst { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .sch-einst label { display: flex; flex-direction: column; gap: 3px; min-width: 0; font-weight: 800; font-size: .8rem; }
+  .sch-einst select { width: 100%; min-height: 40px; padding: 4px 6px; border-radius: 10px; border: 2px solid var(--linie); background: var(--karte); color: var(--text); font: inherit; font-size: .92rem; font-weight: 700; }
+  .sch-karte .sp-stand { padding: 4px 10px; } .sch-karte .sp-stand b { font-size: 1.1rem; }
+  .sch-kopf { display: flex; align-items: center; gap: 8px; } .sch-kopf .knopf { margin: 0; flex: none; } .sch-kopf b { flex: 1; text-align: right; font-size: .95rem; }
+  .sch-tisch { display: grid; grid-template-columns: 1fr; justify-items: center; gap: 8px; }
+  .sch-tisch .sch-mitte { width: min(100%, 440px); } .sch-tisch .sch-brett { width: 100%; margin: 4px 0 0; }
+  .sch-tisch.mit-uhr { grid-template-columns: 1fr 1fr; grid-template-areas: "links rechts" "mitte mitte"; }
+  .sch-tisch.mit-uhr .sch-mitte { grid-area: mitte; } .sch-uhr-platz.links { grid-area: links; justify-self: end; } .sch-uhr-platz.rechts { grid-area: rechts; justify-self: start; }
+  @media (min-width: 700px) { .sch-tisch.mit-uhr { grid-template-columns: 1fr auto 1fr; grid-template-areas: "links mitte rechts"; align-items: center; } }
+  .sch-uhr { min-width: 124px; padding: 6px 12px; border-radius: 14px; border: 3px solid var(--linie); background: var(--karte2); color: var(--text); text-align: center; opacity: .7; transition: opacity .2s, background .2s; }
+  .sch-uhr small { display: block; font-weight: 800; font-size: .8rem; max-width: 9em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin: 0 auto; }
+  .sch-uhr b { display: block; font-size: 1.9rem; line-height: 1.1; font-variant-numeric: tabular-nums; font-family: ui-monospace, "DejaVu Sans Mono", Menlo, monospace; }
+  .sch-uhr.laeuft { opacity: 1; border-color: var(--gruen); background: var(--gruenbg); color: var(--textGruen); box-shadow: 0 0 0 3px rgba(39,174,96,.25); }
+  .sch-uhr.knapp b { color: var(--textRot); } .sch-uhr.laeuft.knapp { border-color: var(--rot); background: var(--rotbg); color: var(--textRot); animation: schUhrPuls 1s ease-in-out infinite; }
+  .sch-uhr.aus { opacity: 1; border-color: var(--rot); background: var(--rotbg); color: var(--textRot); }
+  @keyframes schUhrPuls { 50% { box-shadow: 0 0 0 6px rgba(192,57,43,.25); } } @media (prefers-reduced-motion: reduce) { .sch-uhr.laeuft.knapp { animation: none; } }
+  .sch-leiste { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; } .sch-leiste .knopf { margin: 0; flex: 0 0 auto; width: auto; min-height: 40px; padding: 6px 12px; font-size: .9rem; }
+  .sch-wer summary { cursor: pointer; font-weight: 800; text-align: center; } .sch-tipp { text-align: center; margin: 0; font-size: .85rem; }
   /* 2.14.0 KC-CLUB-KUECHENTERROR: Küchenquiz auf Zeit */
   .kt-kopf { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-weight: 800; margin: 0 0 6px; }
   .kt-meister { text-align: center; font-weight: 800; padding: 6px 10px; margin: 0 0 6px; border-radius: 12px; background: linear-gradient(135deg, #f7dc6f, #d4a017); color: #3d2b00; }
@@ -2819,7 +2840,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.37"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.38"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3554,7 +3575,7 @@ const EINWEISUNG = [
   { id: "vorschlaege", sym: "🗳️", t: "Vorschläge", x: "Du hast eine Idee für den Club – ein Ausflug, ein Thema, ein Kochabend? Mit <b>„＋ Neu“</b> schlägst du sie vor, die anderen können abstimmen." },
   { id: "dienste", sym: "🗓️", t: "Dienstpläne", x: "Die Dienstpläne Woche für Woche. Mit <b>‹ Woche</b> / <b>Woche ›</b> blätterst du, <b>„Heute“</b> springt zurück." },
   { id: "aktionen", sym: "🧳", t: "Aktionen", x: "Ausflüge und besondere Aktionen des Clubs – antippen zeigt alle Einzelheiten." },
-  { id: "spiele", sym: "🎲", t: "Spiele – Köcheclub Edition", x: "Tippe auf die Kachel deines Spiels: <b>Tic-Tac-Toe</b> (🍅 gegen 🥦 – wer zuerst drei, bei 4 × 4 vier, in einer Reihe hat), <b>♟️ Schach</b> mit der Küchenbrigade (Küchenchef = König, Kaltmamsell = Dame, Souschef = Turm, Patissier = Läufer, Springer, Praktikanten = Bauern; Figur antippen, dann das Zielfeld) , <b>🃏 Bauernskat</b> zu zweit (spielbare Karten sind grün umrandet) oder <b>🔪 Küchenterror</b> – das Küchenquiz auf Zeit (je Frage 20, 15 oder 10 Sekunden – je nach Stufe; schnell und richtig bringt die meisten Punkte). Im Spiel wählst du <b>🤖 Gegen den Computer</b> – mit Feldgröße und Stärke – oder <b>👥 Gegen Mitglieder</b>: jemanden herausfordern, abwechselnd ziehen, du bekommst Bescheid, wenn du dran bist. Bei Schach, Küchenterror und Bauernskat kannst du dir mit <b>🔊 Ansage</b> alles ansagen lassen – Züge, Fragen und Antworten, Karten und Stiche." },
+  { id: "spiele", sym: "🎲", t: "Spiele – Köcheclub Edition", x: "Tippe auf die Kachel deines Spiels: <b>Tic-Tac-Toe</b> (🍅 gegen 🥦 – wer zuerst drei, bei 4 × 4 vier, in einer Reihe hat), <b>♟️ Schach</b> mit der Küchenbrigade (Küchenchef = König, Kaltmamsell = Dame, Souschef = Turm, Patissier = Läufer, Springer, Praktikanten = Bauern; Figur antippen, dann das Zielfeld) , <b>🃏 Bauernskat</b> zu zweit (spielbare Karten sind grün umrandet) oder <b>🔪 Küchenterror</b> – das Küchenquiz auf Zeit (je Frage 20, 15 oder 10 Sekunden – je nach Stufe; schnell und richtig bringt die meisten Punkte). Im Spiel wählst du <b>🤖 Gegen den Computer</b> – mit Feldgröße und Stärke – oder <b>👥 Gegen Mitglieder</b>: jemanden herausfordern, abwechselnd ziehen, du bekommst Bescheid, wenn du dran bist. Bei Schach, Küchenterror und Bauernskat kannst du dir mit <b>🔊 Ansage</b> alles ansagen lassen – Züge, Fragen und Antworten, Karten und Stiche. Schach geht auch mit <b>⏱️ Schachuhr</b> (5, 10 oder 15 Minuten je Spieler): oben bei „⏱️ Uhr“ gegen den Computer, beim Herausfordern als Live-Partie. Nach jedem Zug hält deine Uhr an und die des Gegners läuft; in der letzten Minute wird sie rot und tickt. Wer keine Zeit mehr hat, verliert." },
   // 2.22.9 (Wunsch Hansi: „wo fehlen Erklärungsfenster?“) – Bereiche ohne Einweisung ergänzt
   { id: "erstattung", sym: "💶", t: "Erstattung", x: "Hier bekommst du Geld zurück, das du für den Club ausgelegt hast: <b>🚗 Fahrtkosten</b> (die Kilometer rechnet die App aus), <b>🛒 Einkauf</b> oder <b>📦 sonstige Auslagen</b>. Mehrere Posten passen in einen Antrag, Belege fotografierst du einfach dazu. Der Antrag geht an den Kassenwart – du bekommst eine Bestätigung." },
   { id: "feedback", sym: "💭", t: "Feedback", x: "Was gefällt dir, was stört, was fehlt? Schreib es hier hinein – es geht direkt an den Admin. Jede Rückmeldung hilft, die App besser zu machen." },
@@ -5934,7 +5955,7 @@ async function spHerausfordernBlatt(pid) {
   if (!SP.liste) await spLaden(true);
   const alle = SP.liste?.bereit || [];
   if (!alle.length) return melde("Noch niemand hat „Herausfordern erlauben“ eingeschaltet – frag doch mal im Club 🙂");
-  let gr = 3, art = SP.art || "ttt", stufe = "mittel"; // 2.10.0: auch Bauernskat; 2.16.0: Zeitstufe für Küchenterror
+  let gr = 3, art = SP.art || "ttt", stufe = "mittel", uhr = "0"; // 2.10.0: auch Bauernskat; 2.16.0: Zeitstufe für Küchenterror; 2.23.38: Schachuhr
   const f = blattAuf("spHerausBlatt", `${einwHtml("b-sp-herausfordern")}<div id="spHerausInhalt"></div><button class="knopf" onclick="fensterZu(document.getElementById('spHerausBlatt'))">Abbrechen</button>`);
   const zeichnen = () => {
     const b = alle.filter((m) => (m.spiele || ["ttt"]).includes(art));
@@ -5942,7 +5963,8 @@ async function spHerausfordernBlatt(pid) {
       ${spWahl("Spiel", art, [["ttt", "❌⭕ Tic-Tac-Toe"], ["schach", "♟️ Schach"], ["bsk", "🃏 Bauernskat"], ["kt", "🔪 Küchenterror"]], "spHerausArt")}
       ${art === "ttt" ? spWahl("Feld", String(gr), [["3", "3 × 3"], ["4", "4 × 4"]], "spHerausGroesse") : ""}
       ${art === "kt" ? spWahl("Zeit", stufe, [["leicht", "😊 20 s"], ["mittel", "🙂 15 s"], ["schwer", "😎 10 s"]], "spHerausStufe") : ""}
-      <p class="hinweis" style="margin:0">Wen möchtest du herausfordern? ${art === "bsk" ? "Du bist Vorhand und sagst Trumpf an. Die Karten mischt der Server – niemand sieht fremde Karten." : art === "kt" ? "12 Küchenfragen in 4 Runden, ihr spielt abwechselnd je eine Runde. Die Zeit je Frage wählst du oben – schnell und richtig gibt die meisten Punkte. Die letzte ist eine 🎖️ Meisterfrage und zählt doppelt. Du fängst an." : `Du fängst an (${art === "schach" ? "Weiß" : SP_ZEICHEN.x}).`}</p>
+      ${art === "schach" ? spWahl("Uhr", uhr, [["0", "📨 Fern"], ...SCH_UHR_MIN.map((m) => [String(m), `⏱️ ${m}′`])], "spHerausUhr") : ""}
+      <p class="hinweis" style="margin:0">Wen möchtest du herausfordern? ${art === "bsk" ? "Du bist Vorhand und sagst Trumpf an. Die Karten mischt der Server – niemand sieht fremde Karten." : art === "kt" ? "12 Küchenfragen in 4 Runden, ihr spielt abwechselnd je eine Runde. Die Zeit je Frage wählst du oben – schnell und richtig gibt die meisten Punkte. Die letzte ist eine 🎖️ Meisterfrage und zählt doppelt. Du fängst an." : `Du fängst an (${art === "schach" ? "Weiß" : SP_ZEICHEN.x}).${art === "schach" ? (uhr === "0" ? " 📨 Fernpartie: jeder zieht, wann er Zeit hat." : ` ⏱️ Live mit Schachuhr: ${uhr} Minuten je Spieler – am besten, wenn ihr beide gerade Zeit habt.`) : ""}`}</p>
       ${(() => {
         // KC-CLUB-SPIEL-LIVE (2.22.6, Wunsch Hansi): sofort herausfordern nur, wer gerade online ist; sonst Person suchen → Terminanfrage
         const sym = art === "schach" ? "♟️" : art === "bsk" ? "🃏" : art === "kt" ? "🔪" : "🎲";
@@ -5962,15 +5984,16 @@ async function spHerausfordernBlatt(pid) {
   window.spHerausArt = (a) => { art = ["schach", "bsk", "kt"].includes(a) ? a : "ttt"; zeichnen(); };
   window.spHerausGroesse = (g) => { gr = Number(g) === 4 ? 4 : 3; zeichnen(); };
   window.spHerausStufe = (w) => { stufe = KT_ZEIT[w] ? w : "mittel"; zeichnen(); };
+  window.spHerausUhr = (w) => { uhr = SCH_UHR_MIN.includes(Number(w)) ? String(w) : "0"; zeichnen(); };
   zeichnen();
   // nicht online: Herausforderung anlegen und gleich den Termin vorschlagen (vorhandene Terminanfrage für Partien)
   window.spHerausTermin = async (an) => {
-    try { const r = await api("spiel_herausfordern", { an, groesse: gr, spiel: art, ...(art === "kt" ? { stufe } : {}) }, { warten: true }); f.remove();
+    try { const r = await api("spiel_herausfordern", { an, groesse: gr, spiel: art, ...(art === "kt" ? { stufe } : {}), ...(art === "schach" && uhr !== "0" ? { uhr: Number(uhr) } : {}) }, { warten: true }); f.remove();
       SP.tab = "mg"; SP.offen = null; SP.art = art; await spLaden(true); spTerminBlatt(r.spiel.id); }
     catch (e) { if (!(await spSchonOffen(e, an, f, true))) meldeFehler(e); }
   };
   window.spHerausfordern = async (an) => {
-    try { const r = await api("spiel_herausfordern", { an, groesse: gr, spiel: art, ...(art === "kt" ? { stufe } : {}) }, { warten: true }); f.remove(); melde(`🎲 Herausforderung an ${r.spiel.gegner.vorname} geschickt`); SP.tab = "mg"; SP.offen = null; SP.art = art; await spLaden(true); if (aktuelleAnsicht !== "spiele") zeige("spiele"); else spZeigen(); }
+    try { const r = await api("spiel_herausfordern", { an, groesse: gr, spiel: art, ...(art === "kt" ? { stufe } : {}), ...(art === "schach" && uhr !== "0" ? { uhr: Number(uhr) } : {}) }, { warten: true }); f.remove(); melde(`🎲 Herausforderung an ${r.spiel.gegner.vorname} geschickt`); SP.tab = "mg"; SP.offen = null; SP.art = art; await spLaden(true); if (aktuelleAnsicht !== "spiele") zeige("spiele"); else spZeigen(); }
     catch (e) { if (!(await spSchonOffen(e, an, f, false))) meldeFehler(e); }
   };
 }
@@ -5993,7 +6016,7 @@ function spielLive(liste) {
   try { navigator.vibrate?.([200, 100, 200]); } catch {}
   blattAuf("spLiveBlatt", `<div style="text-align:center;display:grid;gap:8px"><div style="font-size:2.6rem" aria-hidden="true">${esc((SP_NAMEN[a.spiel] || "🎲").split(" ")[0])}</div>
     <h3 style="margin:0">${esc(a.von.vorname)} fordert dich heraus!</h3>
-    <p style="margin:0"><b>${esc(SP_NAMEN[a.spiel] || "Spiel")}</b>${a.spiel === "ttt" && a.groesse ? ` · ${a.groesse} × ${a.groesse}` : ""} – Köcheclub Edition. Lust auf eine Partie?</p>
+    <p style="margin:0"><b>${esc(SP_NAMEN[a.spiel] || "Spiel")}</b>${a.spiel === "ttt" && a.groesse ? ` · ${a.groesse} × ${a.groesse}` : ""}${a.uhrMin ? ` · ⏱️ ${a.uhrMin} Min. Schachuhr` : ""} – Köcheclub Edition. Lust auf eine Partie?</p>
     <button class="knopf haupt" onclick="spLiveAntwort('${a.id}', true)">✅ Annehmen & los</button>
     <button class="knopf" onclick="$('spLiveBlatt').remove();melde('⏰ Die Herausforderung wartet unter 🎲 Spiele')">⏰ Später</button>
     <button class="knopf" onclick="spLiveAntwort('${a.id}', false)">Ablehnen</button>
@@ -6040,7 +6063,7 @@ const SPT_TAKT = { n: 0, ruhig: 0 };
 async function spNachsehen() {
   if (!SP.offen || aktuelleAnsicht !== "spiele" || document.hidden || KTM.frage || KTM.aufl) return; // 2.14.0: nie mitten in eine Quizfrage
   SPT_TAKT.n++; SPT_TAKT.ruhig++;
-  if (SP.offen.ichDran ? SPT_TAKT.n % 5 : SPT_TAKT.ruhig > 40 && SPT_TAKT.n % 3) return;
+  if (SP.offen.ichDran ? SPT_TAKT.n % 5 : SPT_TAKT.ruhig > 40 && !SP.offen.uhr?.laeuft && SPT_TAKT.n % 3) return; // 2.23.38: läuft eine Schachuhr, bleibt es schnell
   try { const r = await api("spiel_holen", { id: SP.offen.id }); if (r.spiel.zuege !== SP.offen.zuege || r.spiel.status !== SP.offen.status) { SPT_TAKT.ruhig = 0; const warDran = SP.offen.ichDran; SP.offen = r.spiel; spZeigen(); if (!warDran && r.spiel.ichDran) try { navigator.vibrate?.(40); } catch {} } } catch {}
 }
 async function spZug(i) {
@@ -6215,8 +6238,9 @@ const schFigName = (t) => schBrigade() ? SCH_BRIGADE_NAME[t] : SCH_NAME[t];
 const schFigHtml = (t, farbe) => schBrigade() ? `<span class="sch-fig brigade ${farbe === "w" ? "weiss" : "schwarz"}${t === "k" ? " chef" : ""}" title="${SCH_BRIGADE_NAME[t]}">${SCH_BRIGADE[t]}</span>`
   : `<span class="sch-fig ${farbe === "w" ? "weiss" : "schwarz"}">${SCH_FIG[t]}︎</span>`;
 function schStilWechseln() { SCH_STIL = schBrigade() ? "klassisch" : "brigade"; try { localStorage.setItem("kc_club_schach_stil", SCH_STIL); } catch {} spZeigen(); }
-const schStilHtml = () => `<div class="knoepfe" style="justify-content:center;margin:6px 0 0"><button class="knopf klein" onclick="schStilWechseln()">${schBrigade() ? "♟️ Klassische Figuren" : "👨‍🍳 Küchenbrigade"}</button></div>
-  ${schBrigade() ? `<div class="sch-legende" aria-label="Wer ist wer">${["k", "q", "r", "b", "n", "p"].map((t) => `<span>${SCH_BRIGADE[t]} ${SCH_BRIGADE_NAME[t]}${SCH_BRIGADE_NAME[t] !== SCH_NAME[t] ? ` <small class="hinweis">(${SCH_NAME[t]})</small>` : ""}</span>`).join("")}</div>` : ""}`;
+// 2.23.38 KC-CLUB-SCHACH-AUFGERAEUMT: Umschalt-Knopf schmal in der Knopfleiste, „Wer ist wer“ eingeklappt unter dem Brett
+const schStilKnopf = () => `<button class="knopf klein" onclick="schStilWechseln()">${schBrigade() ? "♟️ Klassisch" : "👨‍🍳 Brigade"}</button>`;
+const schStilHtml = () => schBrigade() ? `<details class="sch-wer"><summary>👨‍🍳 Wer ist wer?</summary><div class="sch-legende" aria-label="Wer ist wer">${["k", "q", "r", "b", "n", "p"].map((t) => `<span>${SCH_BRIGADE[t]} ${SCH_BRIGADE_NAME[t]}${SCH_BRIGADE_NAME[t] !== SCH_NAME[t] ? ` <small class="hinweis">(${SCH_NAME[t]})</small>` : ""}</span>`).join("")}</div></details>` : "";
 function schBrettHtml(ch, { unten = "w", auswahl = null, ziele = [], letzter = null, klick = "", aus = false } = {}) {
   const brett = ch.board(), schachK = ch.inCheck() ? ch.turn() : null, reihen = unten === "w" ? [0, 1, 2, 3, 4, 5, 6, 7] : [7, 6, 5, 4, 3, 2, 1, 0];
   const spalten = unten === "w" ? [0, 1, 2, 3, 4, 5, 6, 7] : [7, 6, 5, 4, 3, 2, 1, 0];
@@ -6249,60 +6273,130 @@ function schVerlaufHtml(san) {
   const z = []; for (let i = 0; i < san.length; i += 2) z.push(`<span><b>${i / 2 + 1}.</b> ${esc(san[i])}${san[i + 1] ? " " + esc(san[i + 1]) : ""}</span>`);
   return `<details class="sch-verlauf"><summary>📜 Züge (${san.length})</summary><div>${z.join(" ")}</div></details>`;
 }
+// ---------- KC-CLUB-SCHACH-UHR (2.23.38, Wunsch Hansi): Schachuhr wie im Turnier (FIDE: Blitz bis 10 Min., Schnellschach 10–60 Min.) ----------
+// Je Spieler 5/10/15 Minuten. Beide ersten Züge sind frei, danach hält jeder Zug die eigene Uhr an und startet die des Gegners.
+// Zeit abgelaufen = verloren – außer der Gegner kann nicht mehr mattsetzen (nur König, König + Läufer, König + Springer) → Remis.
+// Gegen den Computer zählt die App (Uhr hält an, wenn das Fenster nicht zu sehen ist); gegen Mitglieder misst der Server.
+// In der letzten Minute wird die eigene Uhr rot und tickt leise.
+const SCH_UHR_MIN = [5, 10, 15];
+const schUhrText = (ms) => { const s = Math.max(0, Math.ceil(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; };
+function schKannMatt(ch, farbe) { // genug Material, um überhaupt mattsetzen zu können?
+  const fig = ch.board().flat().filter((f) => f && f.color === farbe && f.type !== "k").map((f) => f.type);
+  return fig.some((t) => t === "p" || t === "q" || t === "r") || fig.length >= 2;
+}
+const schUhrHtml = (wer, name, st) => `<div class="sch-uhr${st.laeuft === wer ? " laeuft" : ""}${st[wer] < 60000 ? " knapp" : ""}${st.aus === wer ? " aus" : ""}" data-uhr="${wer}" role="timer" aria-label="Bedenkzeit ${esc(name)}"><small>${esc(name)}</small><b>${schUhrText(st[wer])}</b></div>`;
+// Brett in der Mitte, Uhren links (Gegner) und rechts (du) – auf dem Handy nebeneinander über dem Brett
+const schTischHtml = (mitte, st, nameEr) => `<div class="sch-tisch${st ? " mit-uhr" : ""}">${st ? `<div class="sch-uhr-platz links">${schUhrHtml("er", nameEr, st)}</div>` : ""}<div class="sch-mitte">${mitte}</div>${st ? `<div class="sch-uhr-platz rechts">${schUhrHtml("ich", "Du", st)}</div>` : ""}</div>`;
+function schUhrStand() { // { ich, er (ms), laeuft: "ich"|"er"|null, aus } der gerade gezeigten Partie
+  if (SP.tab === "pc" && SP.art === "schach") {
+    const u = SCH.uhr, ch = SCH.ch; if (!u || !ch) return null;
+    const ich = SCH.ichFarbe, er = ich === "w" ? "b" : "w", r = (f) => Math.max(0, u.rest[f] - (u.seit && ch.turn() === f ? Date.now() - u.seit : 0));
+    return { ich: r(ich), er: r(er), laeuft: u.seit ? (ch.turn() === ich ? "ich" : "er") : null, aus: u.aus ? (u.aus === ich ? "ich" : "er") : null };
+  }
+  const g = SP.offen, u = g?.spiel === "schach" ? g.uhr : null; if (!u) return null;
+  const weg = u._t ? Date.now() - u._t : 0;
+  return { ich: Math.max(0, u.ich - (u.laeuft === "ich" ? weg : 0)), er: Math.max(0, u.er - (u.laeuft === "er" ? weg : 0)), laeuft: u.laeuft, aus: u.aus };
+}
+let SCH_UHR_TAKT = null, SCH_UHR_SEK = -1;
+function schUhrTaktStarten() { if (!SCH_UHR_TAKT) SCH_UHR_TAKT = setInterval(schUhrTakt, 250); }
+function schUhrTakt() {
+  schPcUhrAbgleich(); // hält die Computer-Uhr an, sobald das Schachfenster nicht mehr zu sehen ist
+  const el = document.querySelectorAll("#spInhalt [data-uhr]"), st = el.length && aktuelleAnsicht === "spiele" ? schUhrStand() : null;
+  if (!st) { clearInterval(SCH_UHR_TAKT); SCH_UHR_TAKT = null; return; }
+  for (const e of el) { const w = e.dataset.uhr; e.querySelector("b").textContent = schUhrText(st[w]); e.classList.toggle("knapp", st[w] < 60000); e.classList.toggle("laeuft", st.laeuft === w); }
+  if (st.laeuft === "ich" && st.ich > 0 && st.ich < 60000) { const sek = Math.ceil(st.ich / 1000); if (sek !== SCH_UHR_SEK) { SCH_UHR_SEK = sek; schUhrTon(sek <= 10); } }
+  if (st.laeuft && st[st.laeuft] <= 0) schUhrAbgelaufen();
+}
+function schUhrTon(laut) { // leises Ticken (Holz-Klick)
+  try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); audio.resume?.();
+    const o = audio.createOscillator(), g = audio.createGain(), t = audio.currentTime; o.type = "square"; o.frequency.value = laut ? 1400 : 1000;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(laut ? 0.08 : 0.035, t + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.04);
+    o.connect(g).connect(audio.destination); o.start(t); o.stop(t + 0.06); } catch {}
+}
+async function schUhrAbgelaufen() {
+  if (SP.tab === "pc" && SP.art === "schach") {
+    const u = SCH.uhr, ch = SCH.ch; if (!u || u.aus) return;
+    const f = ch.turn(); u.rest[f] = 0; u.seit = null; u.aus = f; SCH.denkt = false; SCH.auswahl = null; SCH.ziele = [];
+    schPcWerten(); schMerken(); schPcZeigen(); try { navigator.vibrate?.([200, 80, 200]); } catch {} return;
+  }
+  const g = SP.offen; if (!g?.uhr || g.uhr._gefragt) return;
+  g.uhr._gefragt = true; // der Server entscheidet (mit 1,5 s Übertragungs-Gnade) – einmal kurz danach nachfragen
+  setTimeout(async () => { try { const r = await api("spiel_holen", { id: g.id }); if (SP.offen?.id === g.id) { SP.offen = r.spiel; if (aktuelleAnsicht === "spiele") spZeigen(); } } catch {} }, 1800);
+}
+// gegen den Computer: Uhr läuft genau dann, wenn die Partie läuft, beide ersten Züge gemacht sind und das Schachfenster zu sehen ist
+function schPcUhrAbgleich() {
+  const u = SCH.uhr, ch = SCH.ch; if (!u || !ch) return;
+  const soll = !u.aus && !ch.isGameOver() && ch.history().length >= 2 && !document.hidden && aktuelleAnsicht === "spiele" && SP.tab === "pc" && SP.art === "schach" && !$("v-spiele")?.classList.contains("pausiert");
+  if (soll && !u.seit) u.seit = Date.now();
+  else if (!soll && u.seit) { schPcUhrAnhalten(); schMerken(); }
+}
+function schPcUhrAnhalten() { const u = SCH.uhr; if (!u?.seit) return; const f = SCH.ch.turn(); u.rest[f] = Math.max(0, u.rest[f] - (Date.now() - u.seit)); u.seit = null; }
+const schPcUhrNeu = () => (SCH.uhrMin ? { rest: { w: SCH.uhrMin * 60000, b: SCH.uhrMin * 60000 }, seit: null, aus: null } : null);
 // ----- gegen den Computer -----
 let SCH = (() => { let w = null; try { w = JSON.parse(localStorage.getItem(SCH_KEY) || "null"); } catch {}
-  return { farbe: "w", staerke: "mittel", stand: { ich: 0, pc: 0, remis: 0 }, pgn: "", ...(w || {}), ch: null, auswahl: null, ziele: [], denkt: false, gewertet: false, ichFarbe: "w" }; })();
-const schMerken = () => { try { localStorage.setItem(SCH_KEY, JSON.stringify({ farbe: SCH.farbe, staerke: SCH.staerke, stand: SCH.stand, pgn: SCH.ch?.pgn() || "", ichFarbe: SCH.ichFarbe, gewertet: SCH.gewertet })); } catch {} };
+  return { farbe: "w", staerke: "mittel", uhrMin: 0, uhr: null, stand: { ich: 0, pc: 0, remis: 0 }, pgn: "", ...(w || {}), ch: null, auswahl: null, ziele: [], denkt: false, gewertet: false, ichFarbe: "w" }; })();
+if (SCH.uhr) SCH.uhr.seit = null; // 2.23.38: nach dem Neuladen ist die Uhr angehalten, bis das Fenster wieder zu sehen ist
+const schMerken = () => { try { const u = SCH.uhr ? { ...SCH.uhr, rest: { ...SCH.uhr.rest } } : null; if (u?.seit) { const f = SCH.ch.turn(); u.rest[f] = Math.max(0, u.rest[f] - (Date.now() - u.seit)); u.seit = null; }
+  localStorage.setItem(SCH_KEY, JSON.stringify({ farbe: SCH.farbe, staerke: SCH.staerke, uhrMin: SCH.uhrMin, uhr: u, stand: SCH.stand, pgn: SCH.ch?.pgn() || "", ichFarbe: SCH.ichFarbe, gewertet: SCH.gewertet })); } catch {} };
 async function schPcZeigen() {
   if (!SCH.ch) { const C = await chessLaden(); SCH.ch = new C(); if (SCH.pgn) try { SCH.ch.loadPgn(SCH.pgn); } catch { SCH.ch = new C(); } }
-  const ch = SCH.ch, ich = SCH.ichFarbe, s = SCH.stand, ende = ch.isGameOver();
+  const ch = SCH.ch, ich = SCH.ichFarbe, s = SCH.stand, aus = SCH.uhr?.aus, ende = ch.isGameOver() || !!aus;
+  const zeitRemis = aus && !schKannMatt(ch, aus === "w" ? "b" : "w");
   const banner = !ende ? `<div class="sp-status${ch.turn() === ich ? " sp-ichdran" : ""}">${SCH.denkt ? "🤖 Der Computer überlegt …" : schStatusText(ch, ich, "Der Computer")}</div>`
+    : aus ? (zeitRemis ? `<div class="sp-banner remis">⏱️ Zeit abgelaufen – Remis (${aus === ich ? "der Computer" : "du"} kann nicht mehr mattsetzen)</div>`
+      : aus === ich ? `<div class="sp-banner niederlage">⏱️ Deine Zeit ist abgelaufen – der Computer gewinnt</div>` : `<div class="sp-banner sieg">⏱️ Die Zeit des Computers ist abgelaufen – du hast gewonnen!</div>`)
     : ch.isCheckmate() ? (ch.turn() !== ich ? `<div class="sp-banner sieg">🏆 Schachmatt – du hast gewonnen!</div>` : `<div class="sp-banner niederlage">🤖 Schachmatt – der Computer gewinnt</div>`)
     : `<div class="sp-banner remis">🤝 Remis${ch.isStalemate() ? " – Patt" : ch.isThreefoldRepetition() ? " – dreimal dieselbe Stellung" : ch.isInsufficientMaterial() ? " – zu wenig Material" : ""}</div>`;
-  $("spInhalt").innerHTML = `<div class="karte sp-karte">
-      ${spWahl("Stärke", SCH.staerke, [["leicht", "😊 Leicht"], ["mittel", "🙂 Mittel"], ["schwer", "😎 Schwer"]], "schPcStaerke")}
-      ${spWahl("Farbe", SCH.farbe, [["w", "♔ Weiß"], ["b", "♚ Schwarz"], ["wechsel", "Wechselnd"]], "schPcFarbe")}
+  const wahl = (name, fn, wert, opt) => `<label>${name}<select onchange="${fn}(this.value)">${opt.map(([w, t]) => `<option value="${w}"${String(wert) === w ? " selected" : ""}>${t}</option>`).join("")}</select></label>`;
+  const st = SCH.uhr ? schUhrStand() : null;
+  $("spInhalt").innerHTML = `<div class="karte sp-karte sch-karte">
+      <div class="sch-einst">${wahl("😊 Stärke", "schPcStaerke", SCH.staerke, [["leicht", "Leicht"], ["mittel", "Mittel"], ["schwer", "Schwer"]])}${wahl("♟️ Farbe", "schPcFarbe", SCH.farbe, [["w", "Weiß"], ["b", "Schwarz"], ["wechsel", "Wechselnd"]])}${wahl("⏱️ Uhr", "schPcUhrMin", String(SCH.uhrMin || 0), [["0", "Ohne"], ...SCH_UHR_MIN.map((m) => [String(m), m + " Min."])])}</div>
       <div class="sp-stand"><span>Du <b>${s.ich}</b></span><span>🤝 <b>${s.remis}</b></span><span><b>${s.pc}</b> Computer</span></div>
       ${banner}
-      ${schGeschlagenHtml(ch)}
-      ${schBrettHtml(ch, { unten: ich, auswahl: SCH.auswahl, ziele: SCH.ziele, letzter: (() => { const h = ch.history({ verbose: true }).slice(-1)[0]; return h ? h.from + h.to : null; })(), klick: "schPcKlick", aus: ende || SCH.denkt })}
+      ${schTischHtml(schGeschlagenHtml(ch) + schBrettHtml(ch, { unten: ich, auswahl: SCH.auswahl, ziele: SCH.ziele, letzter: (() => { const h = ch.history({ verbose: true }).slice(-1)[0]; return h ? h.from + h.to : null; })(), klick: "schPcKlick", aus: ende || SCH.denkt }), st, "🤖 Computer")}
+      <div class="sch-leiste"><button class="knopf haupt klein" onclick="schPcNeu()">↺ Neue Partie</button>${SCH.uhr ? "" : `<button class="knopf klein" onclick="schPcZurueck()" ${ch.history().length < 1 || SCH.denkt ? "disabled" : ""}>↶ Zug zurück</button>`}${spAnsageKnopf("schach")}${schStilKnopf()}<button class="knopf klein" onclick="schPcStandWeg()" title="Spielstand zurücksetzen">🗑️ Stand</button></div>
       ${schVerlaufHtml(ch.history())}
       ${schStilHtml()}
-      <p class="hinweis" style="text-align:center;margin:6px 0">Figur antippen, dann das Zielfeld. Rochade: König, dann Turm antippen.</p>
-      <div class="knoepfe" style="justify-content:center">${spAnsageKnopf("schach")}</div>
-      <div class="knoepfe"><button class="knopf haupt" onclick="schPcNeu()">↺ Neue Partie</button><button class="knopf" onclick="schPcZurueck()" ${ch.history().length < 1 || SCH.denkt ? "disabled" : ""}>↶ Zug zurück</button><button class="knopf" onclick="schPcStandWeg()">🗑️ Spielstand zurücksetzen</button></div>
+      <p class="hinweis sch-tipp">Figur antippen, dann das Zielfeld. Rochade: König, dann Turm antippen.${SCH.uhr ? " Mit Uhr gibt es kein „Zug zurück“ – wie im Turnier." : ""}</p>
     </div>`;
+  if (st) schUhrTaktStarten();
 }
 async function schPcNeu(fragen = true) {
   const ch = SCH.ch;
-  if (fragen && ch && ch.history().length > 2 && !ch.isGameOver() && !(await frage("Neue Partie beginnen? Die laufende Partie wird nicht gewertet.", { ja: "↺ Neue Partie", nein: "Weiterspielen" }))) return;
-  const C = await chessLaden(); SCH.ch = new C(); SCH.auswahl = null; SCH.ziele = []; SCH.gewertet = false;
+  if (fragen && ch && ch.history().length > 2 && !ch.isGameOver() && !SCH.uhr?.aus && !(await frage("Neue Partie beginnen? Die laufende Partie wird nicht gewertet.", { ja: "↺ Neue Partie", nein: "Weiterspielen" }))) return;
+  const C = await chessLaden(); SCH.ch = new C(); SCH.auswahl = null; SCH.ziele = []; SCH.gewertet = false; SCH.uhr = schPcUhrNeu(); SCH.denkt = false;
   SCH.runde = (SCH.runde || 0) + 1; SCH.ichFarbe = SCH.farbe === "wechsel" ? (SCH.runde % 2 ? "w" : "b") : SCH.farbe;
   schMerken(); schPcZeigen(); if (SCH.ichFarbe === "b") schPcComputerStart();
 }
 const schPcStaerke = (w) => { SCH.staerke = ["leicht", "mittel", "schwer"].includes(w) ? w : "mittel"; schMerken(); schPcZeigen(); };
 const schPcFarbe = (w) => { SCH.farbe = ["w", "b", "wechsel"].includes(w) ? w : "w"; SCH.runde = 0; schPcNeu(true); };
+const schPcUhrMin = async (w) => { const alt = SCH.uhrMin; SCH.uhrMin = SCH_UHR_MIN.includes(Number(w)) ? Number(w) : 0; await schPcNeu(true);
+  if (SCH.ch?.history().length) { SCH.uhrMin = alt; schPcZeigen(); } }; // „Weiterspielen“ gewählt → alte Einstellung bleibt
 async function schPcStandWeg() { if (!(await frage("Spielstand gegen den Computer auf 0 : 0 zurücksetzen?", { ja: "🗑️ Zurücksetzen", nein: "Abbrechen" }))) return; SCH.stand = { ich: 0, pc: 0, remis: 0 }; schMerken(); schPcZeigen(); }
 function schPcZurueck() {
-  const ch = SCH.ch; if (!ch || SCH.denkt) return;
+  const ch = SCH.ch; if (!ch || SCH.denkt || SCH.uhr) return; // mit Uhr kein Zurücknehmen (wie im Turnier)
   ch.undo(); if (ch.turn() !== SCH.ichFarbe) ch.undo(); // bis ich wieder dran bin
   SCH.auswahl = null; SCH.ziele = []; SCH.gewertet = false; schMerken(); schPcZeigen();
 }
 function schPcWerten() {
-  const ch = SCH.ch; if (!ch.isGameOver() || SCH.gewertet) return;
-  SCH.gewertet = true; if (ch.isCheckmate()) { if (ch.turn() !== SCH.ichFarbe) SCH.stand.ich++; else SCH.stand.pc++; } else SCH.stand.remis++;
-  try { navigator.vibrate?.(ch.isCheckmate() && ch.turn() !== SCH.ichFarbe ? [60, 40, 60] : 40); } catch {}
+  const ch = SCH.ch, aus = SCH.uhr?.aus; if (!(ch.isGameOver() || aus) || SCH.gewertet) return;
+  SCH.gewertet = true; if (SCH.uhr) SCH.uhr.seit = null;
+  const verlierer = aus ? (schKannMatt(ch, aus === "w" ? "b" : "w") ? aus : null) : ch.isCheckmate() ? ch.turn() : null; // KC-CLUB-SCHACH-UHR: Zeit
+  if (!verlierer) SCH.stand.remis++; else if (verlierer !== SCH.ichFarbe) SCH.stand.ich++; else SCH.stand.pc++;
+  try { navigator.vibrate?.(verlierer && verlierer !== SCH.ichFarbe ? [60, 40, 60] : 40); } catch {}
 }
 async function schPcKlick(feld) {
-  const ch = SCH.ch; if (!ch || SCH.denkt || ch.isGameOver() || ch.turn() !== SCH.ichFarbe) return;
+  const ch = SCH.ch; if (!ch || SCH.denkt || ch.isGameOver() || SCH.uhr?.aus || ch.turn() !== SCH.ichFarbe) return;
   if (SCH.auswahl) { const r = schRochade(ch, SCH.auswahl, feld); if (r) { SCH.auswahl = r.von; SCH.ziele = [r.nach]; feld = r.nach; } } // 2.22.17: Rochade über den Turm
   const f = ch.get(feld);
   if (SCH.auswahl && SCH.ziele.includes(feld)) {
     const von = SCH.auswahl, bauer = ch.get(von)?.type === "p" && /[18]$/.test(feld);
     const umw = bauer ? await schUmwandlung(SCH.ichFarbe) : undefined; if (bauer && !umw) return;
-    let mz; try { mz = ch.move({ from: von, to: feld, promotion: umw || "q" }); } catch { return; }
+    if (SCH.uhr?.aus) return; // während der Umwandlungs-Auswahl abgelaufen
+    schPcUhrAnhalten(); // KC-CLUB-SCHACH-UHR: eigene Uhr anhalten …
+    let mz; try { mz = ch.move({ from: von, to: feld, promotion: umw || "q" }); } catch { schPcUhrAbgleich(); return; }
     spSag("schach", schZugAnsage(mz, ch, SCH.ichFarbe), null, true); // KC-CLUB-SPIEL-ANSAGE
-    SCH.auswahl = null; SCH.ziele = []; schPcWerten(); schMerken(); schPcZeigen();
+    SCH.auswahl = null; SCH.ziele = []; schPcWerten(); schPcUhrAbgleich(); /* … die des Computers starten */ schMerken(); schPcZeigen();
     if (!ch.isGameOver()) schPcComputerStart();
     return;
   }
@@ -6313,10 +6407,12 @@ async function schPcKlick(feld) {
 function schPcComputerStart() {
   SCH.denkt = true; schPcZeigen();
   setTimeout(() => { // kurz warten, damit das Brett erst neu gezeichnet wird
-    const ch = SCH.ch; if (!ch || aktuelleAnsicht !== "spiele") { SCH.denkt = false; return; }
+    const ch = SCH.ch; if (!ch || aktuelleAnsicht !== "spiele" || SCH.uhr?.aus) { SCH.denkt = false; return; }
     if (spPauseHalt(schPcComputerStart)) { SCH.denkt = false; return; } // 2.18.0: Pause
-    const m = schComputerZug(ch, SCH.staerke); if (m) { const mz = ch.move(m); spSag("schach", schZugAnsage(mz, ch, SCH.ichFarbe)); } // KC-CLUB-SPIEL-ANSAGE
-    SCH.denkt = false; schPcWerten(); schMerken(); if (SP.tab === "pc" && SP.art === "schach") schPcZeigen();
+    const m = schComputerZug(ch, SCH.staerke); if (SCH.uhr?.aus) { SCH.denkt = false; return; }
+    schPcUhrAnhalten(); // KC-CLUB-SCHACH-UHR: die Bedenkzeit des Computers zählt mit
+    if (m) { const mz = ch.move(m); spSag("schach", schZugAnsage(mz, ch, SCH.ichFarbe)); } // KC-CLUB-SPIEL-ANSAGE
+    SCH.denkt = false; schPcWerten(); schPcUhrAbgleich(); schMerken(); if (SP.tab === "pc" && SP.art === "schach") schPcZeigen();
   }, 350);
 }
 // ----- gegen Mitglieder -----
@@ -6332,22 +6428,26 @@ async function schSpielZeigen(g) {
   }
   SCH_STELLUNG.set(g.id, { fen: g.brett, zuege: g.zuege });
   if (SCHM.id !== g.id + ":" + g.zuege) SCHM = { id: g.id + ":" + g.zuege, auswahl: null, ziele: [] };
-  const banner = g.status === "beendet" ? (g.ergebnis === "gewonnen" ? `<div class="sp-banner sieg">🏆 ${g.aufgegeben ? `${esc(g.gegner.vorname)} hat aufgegeben – du hast gewonnen!` : "Schachmatt – du hast gewonnen!"}</div>` : g.ergebnis === "verloren" ? `<div class="sp-banner niederlage">${g.aufgegeben ? "Du hast aufgegeben." : `Schachmatt – ${esc(g.gegner.vorname)} hat gewonnen.`}</div>` : `<div class="sp-banner remis">🤝 Remis${ch.isStalemate() ? " – Patt" : ""}</div>`)
-    : g.status === "angefragt" ? `<div class="sp-status">⏳ Warte, bis ${esc(g.gegner.vorname)} annimmt …</div>`
-    : `<div class="sp-status${g.ichDran ? " sp-ichdran" : ""}">${schStatusText(ch, ich, esc(g.gegner.vorname))}</div>`;
-  $("spInhalt").innerHTML = `<div class="karte sp-karte">
-      <div class="zeile" style="border:none;padding:0"><button class="knopf klein" onclick="SP.offen=null;spZeigen();spLaden(true)">‹ Übersicht</button><b style="flex:1;text-align:right">♟️ Du (${ich === "w" ? "Weiß" : "Schwarz"}) gegen ${esc(g.gegner.vorname)}</b></div>
+  if (g.uhr && !g.uhr._t) g.uhr._t = Date.now(); // KC-CLUB-SCHACH-UHR: Restzeiten gelten ab Empfang
+  const er = esc(g.gegner.vorname), zeitAus = g.uhr?.aus;
+  const banner = g.status === "beendet" ? (zeitAus ? (g.ergebnis === "remis" ? `<div class="sp-banner remis">⏱️ Zeit abgelaufen – Remis (zu wenig Material zum Mattsetzen)</div>`
+      : g.ergebnis === "gewonnen" ? `<div class="sp-banner sieg">⏱️ Die Zeit von ${er} ist abgelaufen – du hast gewonnen!</div>` : `<div class="sp-banner niederlage">⏱️ Deine Zeit ist abgelaufen – ${er} hat gewonnen.</div>`)
+    : g.ergebnis === "gewonnen" ? `<div class="sp-banner sieg">🏆 ${g.aufgegeben ? `${er} hat aufgegeben – du hast gewonnen!` : "Schachmatt – du hast gewonnen!"}</div>` : g.ergebnis === "verloren" ? `<div class="sp-banner niederlage">${g.aufgegeben ? "Du hast aufgegeben." : `Schachmatt – ${er} hat gewonnen.`}</div>` : `<div class="sp-banner remis">🤝 Remis${ch.isStalemate() ? " – Patt" : ""}</div>`)
+    : g.status === "angefragt" ? `<div class="sp-status">⏳ Warte, bis ${er} annimmt …</div>`
+    : `<div class="sp-status${g.ichDran ? " sp-ichdran" : ""}">${schStatusText(ch, ich, er)}</div>`;
+  const st = g.uhr ? schUhrStand() : null;
+  $("spInhalt").innerHTML = `<div class="karte sp-karte sch-karte">
+      <div class="sch-kopf"><button class="knopf klein" onclick="SP.offen=null;spZeigen();spLaden(true)">‹ Übersicht</button><b>♟️ Du (${ich === "w" ? "Weiß" : "Schwarz"}) gegen ${er}${g.uhr ? ` · ⏱️ ${g.uhr.min} Min.` : ""}</b></div>
       ${banner}
       ${spTerminHtml(g)}
-      ${schGeschlagenHtml(ch)}
-      ${schBrettHtml(ch, { unten: ich, auswahl: SCHM.auswahl, ziele: SCHM.ziele, letzter: g.letzterZug, klick: "schMgKlick", aus: !g.ichDran })}
+      ${schTischHtml(schGeschlagenHtml(ch) + schBrettHtml(ch, { unten: ich, auswahl: SCHM.auswahl, ziele: SCHM.ziele, letzter: g.letzterZug, klick: "schMgKlick", aus: !g.ichDran }), st, g.gegner.vorname)}
+      <div class="sch-leiste">${g.status === "beendet" ? `<button class="knopf haupt klein" onclick="spRevanche('${g.id}')">↺ Revanche</button>` : g.status === "laeuft" ? `<button class="knopf klein" onclick="spAufgeben('${g.id}')">🏳️ Aufgeben</button>` : ""}${spAnsageKnopf("schach")}${schStilKnopf()}</div>
       ${schVerlaufHtml(g.verlauf || [])}
       ${schStilHtml()}
-      <div class="knoepfe" style="justify-content:center">${spAnsageKnopf("schach")}</div>
-      <p class="hinweis" style="text-align:center;margin:6px 0">Figur antippen, dann das Zielfeld. Rochade: König, dann Turm antippen. Du musst nicht warten – ${esc(g.gegner.vorname)} bekommt Bescheid.</p>
-      <div class="knoepfe">${g.status === "beendet" ? `<button class="knopf haupt" onclick="spRevanche('${g.id}')">↺ Revanche</button>` : g.status === "laeuft" ? `<button class="knopf" onclick="spAufgeben('${g.id}')">🏳️ Aufgeben</button>` : ""}</div>
+      <p class="hinweis sch-tipp">Figur antippen, dann das Zielfeld. Rochade: König, dann Turm antippen. ${g.uhr ? "Live-Partie mit Uhr: beide ersten Züge sind frei, danach läuft die Zeit – auch wenn die App zu ist." : `Du musst nicht warten – ${er} bekommt Bescheid.`}</p>
     </div>`;
   SP.ch = ch;
+  if (st) schUhrTaktStarten();
 }
 async function schMgKlick(feld) {
   const g = SP.offen, ch = SP.ch; if (!g?.ichDran || !ch) return;
@@ -6359,6 +6459,7 @@ async function schMgKlick(feld) {
     const umw = bauer ? await schUmwandlung(ich) : "q"; if (!umw) return;
     let mz; try { mz = ch.move({ from: von, to: feld, promotion: umw }); } catch { return; }
     spSag("schach", schZugAnsage(mz, ch, ich), `sch:${g.id}:${g.zuege + 1}`, true); // KC-CLUB-SPIEL-ANSAGE
+    if (g.uhr) { const st = schUhrStand(); g.uhr = { ...g.uhr, ich: st.ich, er: st.er, laeuft: !ch.isGameOver() && g.zuege + 1 >= 2 ? "er" : null, _t: Date.now() }; } // Uhr sofort umschalten
     g.brett = ch.fen(); g.ichDran = false; g.letzterZug = von + feld; SCHM.auswahl = null; SCHM.ziele = []; spSpielZeigen(); // sofort zeigen
     try { SP.offen = (await api("spiel_zug", { id: g.id, zug: { von, nach: feld, umwandlung: umw }, zuege: g.zuege })).spiel; }
     catch (e) { meldeFehler(e); try { SP.offen = (await api("spiel_holen", { id: g.id })).spiel; } catch {} }

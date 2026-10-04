@@ -1,5 +1,19 @@
 # Änderungen
 
+## 2.23.38 – 2026-10-04 – ⏱️ Schachuhr + aufgeräumtes Schachfenster (Wunsch Hansi)
+- KC-CLUB-SCHACH-UHR: Bedenkzeit je Spieler „Ohne“, 5, 10 oder 15 Minuten (FIDE: Blitz bis 10 Min., Schnellschach über 10 bis unter 60 Min.).
+  Wie im Turnier: nach jedem Zug hält die eigene Uhr an und die des Gegners läuft; beide ersten Züge sind frei. Letzte Minute: Uhr rot,
+  leises Ticken. Zeit abgelaufen = verloren – außer der Gegner kann nicht mehr mattsetzen (nur König, König+Läufer, König+Springer) → Remis
+  (FIDE-Regeln Art. 6.9).
+  - 🤖 Gegen den Computer: Auswahl „⏱️ Uhr“ oben; die App zählt, die Uhr hält an, wenn das Schachfenster nicht zu sehen ist (auch bei ⏸ Pause).
+    Mit Uhr kein „Zug zurück“. Zählt im Spielstand.
+  - 👥 Gegen Mitglieder: beim Herausfordern „📨 Fern“ (wie bisher, ohne Uhr) oder „⏱️ 5′/10′/15′“ (Live). Der SERVER misst die Zeit
+    (App zu = Uhr läuft weiter) und beendet die Partie bei Zeitüberschreitung, egal wer nachsieht; beide bekommen Bescheid.
+    Revanche übernimmt die Uhr. Läuft eine Uhr, schaut die App weiter alle 3 s nach.
+- KC-CLUB-SCHACH-AUFGERAEUMT: Stärke/Farbe/Uhr in einer Zeile als Auswahlfelder, Brett mittig, Uhren links (Gegner) und rechts (du) –
+  auf dem Handy nebeneinander über dem Brett, auf breiten Bildschirmen neben dem Brett. Knöpfe schmal in einer Leiste, „Wer ist wer“ eingeklappt.
+- Migration supabase/migrations/20261004_kc_club_v22338_schach_uhr.sql (eingespielt, nur Spalte uhr + Prüfregel). Test 387.
+
 ## 2.23.37 – 2026-10-04 – ✕ Schließkreuz im Protokoll-Filter (Wunsch Hansi)
 - KC-CLUB-PROTOKOLL-FILTER-ZU: Das Filterfenster in „📄 Protokolle“ hat oben rechts ein rundes ✕ (40 px, Farben je Design).
   Es schließt nur das Fenster; gewählte Filter bleiben aktiv (Zahl am 🔽). Nur App. Test 386.

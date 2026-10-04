@@ -41,7 +41,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.23.37";
+const SERVER_VERSION = "2.23.38";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -1666,6 +1666,23 @@ function bskSicht(z: any, s: number) {
     letzter: z.letzter ? { stich: z.letzter.stich.map((x: any) => ({ s: um(x.s), k: x.k })), gewinner: um(z.letzter.gewinner) } : null };
 }
 const SCHACH_START = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+// KC-CLUB-SCHACH-UHR (2.23.38, Wunsch Hansi): Live-Partie mit Schachuhr wie im Turnier. uhr = { min, rest: { x, o } (ms), seit (ISO,
+// Uhr dessen, der dran ist, läuft seitdem) oder null, aus: "x"|"o"|null }. Beide ersten Züge sind frei (wie bei Online-Partien), danach
+// hält jeder Zug die eigene Uhr an und startet die des Gegners. Der SERVER misst die Zeit (App zu = Uhr läuft weiter, kein Schummeln).
+// Zeit abgelaufen = verloren – außer der Gegner kann gar nicht mehr mattsetzen (nur König, König + Läufer, König + Springer) → Remis
+// (FIDE-Regeln Artikel 6.9). Ohne uhr (null) bleibt alles wie bisher: Fernpartie.
+const SCHACH_UHR_MIN = [5, 10, 15], SCHACH_UHR_GNADE_MS = 1500;
+const schachUhrNeu = (min: unknown) => SCHACH_UHR_MIN.includes(Number(min)) ? { min: Number(min), rest: { x: Number(min) * 60000, o: Number(min) * 60000 }, seit: null, aus: null } : null;
+function schachKannMatt(fen: string, farbe: "w" | "b") { // hat diese Farbe noch genug Material, um überhaupt mattsetzen zu können?
+  const fig = [...String(fen).split(" ")[0]].filter((c) => /[a-z]/i.test(c) && c !== "k" && c !== "K" && (farbe === "w" ? c === c.toUpperCase() : c === c.toLowerCase())).map((c) => c.toLowerCase());
+  return fig.some((c) => c === "p" || c === "q" || c === "r") || fig.length >= 2;
+}
+const schachUhrSeite = (g: any, pid: string) => (g.spieler_x === pid ? "x" : "o");
+function schachUhrRest(g: any, seite: "x" | "o") { // Restzeit jetzt (die Uhr dessen, der dran ist, läuft)
+  const u = g.uhr; if (!u) return null;
+  const laeuft = g.status === "laeuft" && u.seit && g.dran && schachUhrSeite(g, g.dran) === seite;
+  return Math.max(0, Number(u.rest?.[seite]) - (laeuft ? Date.now() - Date.parse(u.seit) : 0));
+}
 const BSK_TRUMPF = new Set(["kr", "pi", "he", "ka", "grand"]);
 const SPIELE_OFFEN_MAX = 8; // laufende + angefragte Spiele je Person
 function tttLinien(n: number): number[][] {
@@ -1706,6 +1723,10 @@ const spielSicht = (g: any, ich: string, namen: Map<string, Person>) => ({
   geaendert: g.geaendert_am, letzterZug: g.letzter_zug ?? null, verlauf: g.verlauf ? String(g.verlauf).split(" ").filter(Boolean) : [],
   bsk: g.spiel === "bsk" ? bskSicht(g.bsk, g.spieler_x === ich ? 0 : 1) : null,
   quiz: g.spiel === "kt" ? ktSicht(g.quiz, g.spieler_x === ich ? 0 : 1) : null,
+  // KC-CLUB-SCHACH-UHR (2.23.38): Restzeiten in ms (Stand jetzt), wessen Uhr läuft, wem die Zeit abgelaufen ist
+  uhr: g.spiel === "schach" && g.uhr ? (() => { const me = schachUhrSeite(g, ich), er = me === "x" ? "o" : "x";
+    return { min: g.uhr.min, ich: schachUhrRest(g, me), er: schachUhrRest(g, er), laeuft: g.status === "laeuft" && g.uhr.seit && g.dran ? (g.dran === ich ? "ich" : "er") : null,
+      aus: g.uhr.aus ? (g.uhr.aus === me ? "ich" : "er") : null }; })() : null,
 });
 // KC-CLUB-NUTZUNG-PERSONEN (2.6.1, Prüfung): höchstens NZ_GERAETE_JE_TAG verschiedene Kennungen je Tag annehmen (flüchtig im
 // Speicher dieser Server-Instanz, ohne Personenbezug) – sonst könnte ein Skript die Zahl beliebig aufblähen
@@ -1832,6 +1853,23 @@ const nurBueroSchreiben = (ich: Ich) => { nurBueroLesen(ich); if (ich.buero !== 
 // Termine anlegen/ändern/absagen: Clubleitung wie bisher – oder Büro mit Schreibrecht (endgültig löschen bleibt Clubleitung)
 const nurTermineSchreiben = (ich: Ich) => { if (!ich.vorstand && ich.buero !== "schreiben") nurVorstand(ich); };
 const nurAdmin = (ich: Ich) => { if (!ich.admin) throw new Fehler("Das darf nur der Admin.", 403); };
+
+// ---------- KC-CLUB-SCHACH-UHR (2.23.38): Zeitüberschreitung ----------
+// Zeit abgelaufen? Dann die Partie beenden (egal wer gerade nachsieht) und beiden Bescheid geben. Gibt die aktuelle Zeile zurück.
+async function schachUhrPruefen(g: any) {
+  if (g?.spiel !== "schach" || !g.uhr?.seit || g.status !== "laeuft" || !g.dran) return g;
+  const s = schachUhrSeite(g, g.dran), ueber = Date.now() - Date.parse(g.uhr.seit) - Number(g.uhr.rest?.[s]);
+  if (!(ueber > SCHACH_UHR_GNADE_MS)) return g;
+  const verlierer = g.dran, gewinner = g.von === verlierer ? g.an : g.von, remis = !schachKannMatt(g.brett, s === "x" ? "b" : "w");
+  const { data: neu } = await db.from("kc_club_spiele").update({ status: "beendet", dran: null, gewinner: remis ? "remis" : gewinner,
+    uhr: { ...g.uhr, rest: { ...g.uhr.rest, [s]: 0 }, seit: null, aus: s }, geaendert_am: jetzt() })
+    .eq("id", g.id).eq("zuege", g.zuege).eq("status", "laeuft").select("*").maybeSingle();
+  if (!neu) { const { data: jetztG } = await db.from("kc_club_spiele").select("*").eq("id", g.id).maybeSingle(); return jetztG ?? g; }
+  const titel = remis ? "♟️ Zeit abgelaufen – Remis" : null;
+  await spielPush(verlierer, { titel: titel ?? "♟️ Deine Zeit ist abgelaufen", kurz: remis ? "Zu wenig Material zum Mattsetzen – unentschieden." : "Die Partie ist verloren – Revanche?", text: remis ? "Deine Bedenkzeit ist abgelaufen, aber dein Gegenüber konnte nicht mehr mattsetzen – Remis." : "Deine Bedenkzeit im Schach ist abgelaufen – die Partie ist verloren." }, g.id, `club-spiel:${g.id}:zeit`);
+  await spielPush(gewinner, { titel: titel ?? "♟️ Zeit abgelaufen – du hast gewonnen!", kurz: remis ? "Zu wenig Material zum Mattsetzen – unentschieden." : "Die Bedenkzeit deines Gegenübers ist um.", text: remis ? "Die Bedenkzeit deines Gegenübers ist abgelaufen, du konntest aber nicht mehr mattsetzen – Remis." : "Die Bedenkzeit deines Gegenübers ist abgelaufen – du hast gewonnen." }, g.id, `club-spiel:${g.id}:zeit`);
+  return neu;
+}
 
 // ---------- Eigener Status ----------
 const STATUS = ["verfuegbar", "beschaeftigt", "urlaub", "krank", "abwesend"];
@@ -6193,7 +6231,7 @@ Köcheclub-App`,
           db.from("kc_club_anklopfen").select("id,an,status,thread_id,beantwortet_am,antwort").eq("von", ich.person_id).gte("erstellt_am", new Date(Date.now() - 600000).toISOString()),
         ]);
         // KC-CLUB-SPIEL-LIVE (2.22.6, Wunsch Hansi): frische Herausforderungen an mich (15 Min.) – die App zeigt sie sofort als Fenster
-        const { data: spAn } = await db.from("kc_club_spiele").select("id,von,spiel,groesse,erstellt_am").eq("an", ich.person_id).eq("status", "angefragt")
+        const { data: spAn } = await db.from("kc_club_spiele").select("id,von,spiel,groesse,uhr,erstellt_am").eq("an", ich.person_id).eq("status", "angefragt")
           .gte("erstellt_am", new Date(Date.now() - 15 * 60000).toISOString()).order("erstellt_am", { ascending: false }).limit(3);
         const { data: rufe } = await db.from("kc_club_anruf").select("id,von,art,erstellt_am").eq("an", ich.person_id).eq("status", "klingelt").eq("automatisch", false).gte("erstellt_am", new Date(Date.now() - ANRUF_KLINGEL_SEK * 1000).toISOString()).order("erstellt_am", { ascending: false }).limit(1);
         // KC-CLUB-ANRUF-VERPASST (0.81.0): nicht angenommen, nicht selbst abgelehnt, Hinweis noch nicht gesehen (letzte 24 h).
@@ -6215,7 +6253,7 @@ Köcheclub-App`,
           klopfAntworten: (anMich ?? []).length ? Object.entries(KLOPF_ANTWORTEN).map(([id, text]) => ({ id, text })) : undefined,
           antworten: (vonMir ?? []).map((x: any) => ({ id: x.id, an: wer(x.an), status: x.status, thread: x.thread_id, antwort: x.antwort ?? null })),
           anrufe: (rufe ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), art: x.art, zeit: x.erstellt_am })),
-          spielAnfragen: (spAn ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), spiel: x.spiel, groesse: x.groesse, zeit: x.erstellt_am })) });
+          spielAnfragen: (spAn ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), spiel: x.spiel, groesse: x.groesse, uhrMin: x.uhr?.min ?? null, zeit: x.erstellt_am })) });
       }
 
       case "anklopfen": {
@@ -8459,6 +8497,7 @@ Köcheclub-App`,
       case "spiele_liste": {
         const { data: meine } = await db.from("kc_club_spiele").select("*").or(`von.eq.${ich.person_id},an.eq.${ich.person_id}`)
           .or(`status.in.(angefragt,laeuft),geaendert_am.gte."${new Date(Date.now() - 14 * 86400000).toISOString()}"`).order("geaendert_am", { ascending: false }).limit(40);
+        for (let i = 0; i < (meine ?? []).length; i++) (meine as any[])[i] = await schachUhrPruefen((meine as any[])[i]); // KC-CLUB-SCHACH-UHR
         const [aktiv, bereit, { data: fertig }] = await Promise.all([aktiveMitglieder(), spielBereitMap(),
           db.from("kc_club_spiele").select("spieler_x,spieler_o,gewinner,geaendert_am").eq("status", "beendet").limit(5000)]);
         const aktivIds = new Set(aktiv.map((m) => m.person_id));
@@ -8505,8 +8544,9 @@ Köcheclub-App`,
             .map((m) => ({ person_id: m.person_id, vorname: vorname(m) || m.display_name, name: m.display_name, spiele: bereit.get(m.person_id) })) });
       }
       case "spiel_holen": {
-        const { data: g } = await db.from("kc_club_spiele").select("*").eq("id", String(p.id || "")).maybeSingle();
-        if (!g || (g.von !== ich.person_id && g.an !== ich.person_id)) throw new Fehler("Spiel nicht gefunden.", 404);
+        const { data: g0 } = await db.from("kc_club_spiele").select("*").eq("id", String(p.id || "")).maybeSingle();
+        if (!g0 || (g0.von !== ich.person_id && g0.an !== ich.person_id)) throw new Fehler("Spiel nicht gefunden.", 404);
+        const g = await schachUhrPruefen(g0); // KC-CLUB-SCHACH-UHR: Zeit abgelaufen → hier beenden
         return json({ spiel: spielSicht(g, ich.person_id, await personen([g.von, g.an])) });
       }
       case "spiel_herausfordern": {
@@ -8519,11 +8559,11 @@ Köcheclub-App`,
         const schon = (offen ?? []).find((g: any) => g.status === "angefragt" && ((g.von === ich.person_id && g.an === an) || (g.von === an && g.an === ich.person_id)));
         if (schon) throw new Fehler(schon.von === ich.person_id ? "Du hast diese Person schon herausgefordert – warte auf die Antwort." : "Diese Person hat dich schon herausgefordert – nimm einfach an.", 409);
         const { data: g, error } = await db.from("kc_club_spiele").insert({ spiel: art, groesse, von: ich.person_id, an, spieler_x: ich.person_id, spieler_o: an,
-          ...spielStart(art, groesse, { stufe: p.stufe }), dran: ich.person_id }).select("*").single();
+          ...spielStart(art, groesse, { stufe: p.stufe }), uhr: art === "schach" ? schachUhrNeu(p.uhr) : null, dran: ich.person_id }).select("*").single();
         if (error || !g) throw new Fehler("Die Herausforderung konnte nicht gespeichert werden.", 500);
-        const titel = spielTitel(g);
+        const titel = spielTitel(g) + (g.uhr ? ` (⏱️ ${g.uhr.min} Min.)` : "");
         await spielPush(an, { titel: `${spielSym(art)} ${ich.vorname} fordert dich heraus`, kurz: `${titel} – Köcheclub Edition. Annehmen?`, text: `${ich.name} fordert dich zu ${titel} heraus.` }, g.id, `club-spiel:${g.id}:frage`, false);
-        await protokoll(ich.person_id, "spiel_herausgefordert", { an, spiel: art, groesse });
+        await protokoll(ich.person_id, "spiel_herausgefordert", { an, spiel: art, groesse, ...(g.uhr ? { uhr: g.uhr.min } : {}) });
         return json({ ok: true, spiel: spielSicht(g, ich.person_id, await personen([ich.person_id, an])) });
       }
       case "spiel_antwort": {
@@ -8539,8 +8579,10 @@ Köcheclub-App`,
         return json({ ok: true, spiel: spielSicht(neu, ich.person_id, await personen([g.von, g.an])) });
       }
       case "spiel_zug": {
-        const { data: g } = await db.from("kc_club_spiele").select("*").eq("id", String(p.id || "")).maybeSingle();
-        if (!g || (g.von !== ich.person_id && g.an !== ich.person_id)) throw new Fehler("Spiel nicht gefunden.", 404);
+        const { data: g0 } = await db.from("kc_club_spiele").select("*").eq("id", String(p.id || "")).maybeSingle();
+        if (!g0 || (g0.von !== ich.person_id && g0.an !== ich.person_id)) throw new Fehler("Spiel nicht gefunden.", 404);
+        const g = await schachUhrPruefen(g0); // KC-CLUB-SCHACH-UHR
+        if (g.uhr?.aus && g.status === "beendet") throw new Fehler(g.uhr.aus === schachUhrSeite(g, ich.person_id) ? "⏱️ Deine Bedenkzeit ist abgelaufen." : "⏱️ Die Bedenkzeit deines Gegenübers ist abgelaufen.", 409);
         if (g.status !== "laeuft") throw new Fehler("Das Spiel läuft nicht mehr.", 409);
         if (g.dran !== ich.person_id) throw new Fehler("Du bist gerade nicht dran.", 409);
         if (g.spiel === "kt") return await ktZug(g, ich, p.zug ?? {});
@@ -8574,6 +8616,11 @@ Köcheclub-App`,
           sieg = ch.isCheckmate(); remis = !sieg && ch.isDraw(); schachText = sieg ? "Schachmatt" : ch.isStalemate() ? "Patt" : remis ? "Remis" : ch.inCheck() ? "Schach!" : "";
           const verlauf = (String(g.verlauf || "") + " " + m.san).trim();
           upd = { brett: ch.fen(), letzter_zug: m.from + m.to + (m.promotion || ""), verlauf: verlauf.length > 6000 ? verlauf.slice(-6000) : verlauf };
+          if (g.uhr) { // KC-CLUB-SCHACH-UHR: eigene Uhr anhalten, die des Gegners starten (erst ab dem 3. Halbzug – beide ersten Züge frei)
+            const s = farbe === "w" ? "x" : "o", rest = { ...g.uhr.rest };
+            if (g.uhr.seit) rest[s] = Math.max(0, Number(rest[s]) - (Date.now() - Date.parse(g.uhr.seit)));
+            upd.uhr = { ...g.uhr, rest, seit: !sieg && !remis && g.zuege + 1 >= 2 ? jetzt() : null };
+          }
         } else {
           const feld = Number(p.feld);
           if (!Number.isInteger(feld) || feld < 0 || feld >= n * n || g.brett[feld] !== ".") throw new Fehler("Dieses Feld geht nicht.", 400);
@@ -8622,7 +8669,7 @@ Köcheclub-App`,
         // Revanche: beide haben schon gespielt → läuft sofort; wer vorher zuerst gezogen hat, ist jetzt zweiter
         const n = g.spiel === "schach" ? 8 : g.spiel === "bsk" ? 32 : g.spiel === "kt" ? 12 : Number(p.groesse) === 4 ? 4 : Number(p.groesse) === 3 ? 3 : g.groesse;
         const { data: neu, error } = await db.from("kc_club_spiele").insert({ spiel: g.spiel, groesse: n, von: ich.person_id, an: gegner, spieler_x: g.spieler_o, spieler_o: g.spieler_x,
-          status: "laeuft", ...spielStart(g.spiel, n, { stufe: p.stufe ?? g.quiz?.stufe }), dran: g.spieler_o }).select("*").single();
+          status: "laeuft", ...spielStart(g.spiel, n, { stufe: p.stufe ?? g.quiz?.stufe }), uhr: g.spiel === "schach" && g.uhr ? schachUhrNeu(g.uhr.min) : null, dran: g.spieler_o }).select("*").single();
         if (error || !neu) throw new Fehler("Die Revanche konnte nicht gestartet werden.", 500);
         await spielPush(gegner, { titel: `${spielSym(g.spiel)} Revanche von ${ich.vorname}!`, kurz: neu.dran === gegner ? "Du fängst an." : `${ich.vorname} fängt an.`, text: `${ich.name} will eine Revanche (${spielTitel(neu)}).` }, neu.id, `club-spiel:${neu.id}:revanche`, false);
         return json({ ok: true, spiel: spielSicht(neu, ich.person_id, await personen([ich.person_id, gegner])) });
