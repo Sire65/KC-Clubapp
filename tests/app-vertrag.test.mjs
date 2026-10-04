@@ -3794,6 +3794,11 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/z\.animate\(\[\{ scale: "1" \}, \{ scale: String\(tief\)/.test(html) && /Math\.hypot\(e\.clientX - x0, e\.clientY - y0\) > 10\) ziel = null;/.test(html), "eigene scale-Animation, nicht beim Scrollen");
   assert.ok(/textarea, select, \[contenteditable="true"\]'\)\) return;/.test(html), "Eingabefelder nie");
 }
+// 373. 2.23.25: offene Herausforderung erreichbar (KC-CLUB-SPIEL-SCHON-OFFEN)
+{
+  assert.ok(/\["laeuft", "beendet", "angefragt"\]\.includes\(g\.status\) \? `style="cursor:pointer" onclick="if\(!event\.target\.closest\('button'\)\)spOeffnen/.test(html), "offene Herausforderung antippbar");
+  assert.ok(/async function spSchonOffen\(e, an, f, mitTermin\)/.test(html) && /catch \(e\) \{ if \(!\(await spSchonOffen\(e, an, f, true\)\)\) meldeFehler\(e\); \}/.test(html) && /catch \(e\) \{ if \(!\(await spSchonOffen\(e, an, f, false\)\)\) meldeFehler\(e\); \}/.test(html), "statt Fehlermeldung zur offenen Herausforderung");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

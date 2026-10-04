@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.23.25 – 2026-10-04 – Spiele: offene Herausforderung erreichbar, Termin dafür vereinbaren (Fund Hansi)
+- Fund: Herausforderung an Klaus zurückgezogen, später erneut herausgefordert (offen) – der nächste Versuch „Termin vereinbaren“ meldete nur
+  „Du hast diese Person schon herausgefordert“, und die offene Herausforderung ließ sich in der Liste nicht antippen.
+- KC-CLUB-SPIEL-SCHON-OFFEN: Offene Herausforderungen (von dir und an dich) sind in der Liste antippbar → darin „📅 Termin vereinbaren“.
+  Kommt beim Herausfordern „schon herausgefordert“, öffnet die App direkt die vorhandene Herausforderung bzw. beim Termin-Weg gleich deren
+  Termin-Fenster (statt nur der Fehlermeldung). Test 373.
+
 ## 2.23.24 – 2026-10-04 – Alles Anklickbare pulsiert kurz beim Antippen (Wunsch Hansi)
 - KC-CLUB-TIPP-PULS: Knöpfe, Reiter (Register, Termine, Mitglieder …), Kacheln, Info-Feld, Chips, Links, Schalter-Zeilen und Zeilen mit
   Tipp-Funktion ziehen sich beim Antippen kurz zusammen und werden etwas heller (0,28 s). Eine Stelle für die ganze App – neue Elemente

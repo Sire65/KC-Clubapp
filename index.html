@@ -2773,7 +2773,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.24"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.25"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -5783,7 +5783,7 @@ function spListeZeigen() {
   const art = SP.art, alle = L.spiele.filter((g) => !art || g.spiel === art); // 2.11.0: nur Partien des gewählten Spiels
   const an = alle.filter((g) => g.status === "angefragt" && !g.vonMir), meine = alle.filter((g) => g.status === "angefragt" && g.vonMir);
   const laufend = alle.filter((g) => g.status === "laeuft").sort((a, b) => b.ichDran - a.ichDran), fertig = alle.filter((g) => g.status === "beendet").slice(0, 8);
-  const zeile = (g, rechts) => `<div class="zeile sp-zeile" ${g.status === "laeuft" || g.status === "beendet" ? `style="cursor:pointer" onclick="spOeffnen('${g.id}')"` : ""}>${kreis(MITGLIEDER?.find((m) => m.person_id === g.gegner.person_id) || {}, g.gegner.name, 36)}
+  const zeile = (g, rechts) => `<div class="zeile sp-zeile" ${["laeuft", "beendet", "angefragt"].includes(g.status) ? `style="cursor:pointer" onclick="if(!event.target.closest('button'))spOeffnen('${g.id}')"` : ""}>${kreis(MITGLIEDER?.find((m) => m.person_id === g.gegner.person_id) || {}, g.gegner.name, 36)}
     <div style="flex:1;min-width:0"><b>${esc(g.gegner.vorname)}</b><div class="hinweis" style="margin:0;font-size:.85rem">${spTitel(g)}</div>${spTerminKurz(g)}</div>${rechts}</div>`;
   $("spInhalt").innerHTML = `
     ${L.ichBereit ? "" : `<div class="karte" style="border:2px solid var(--gruen)"><b>🎲 Möchtest du auch herausgefordert werden?</b><p class="hinweis" style="margin:4px 0 8px">Dann sehen dich die anderen in der Liste und können dich zu einer Partie einladen.</p><button class="knopf haupt" onclick="spBereitSetzen(true)">✅ Ja, ich spiele mit</button></div>`}
@@ -5870,12 +5870,23 @@ async function spHerausfordernBlatt(pid) {
   window.spHerausTermin = async (an) => {
     try { const r = await api("spiel_herausfordern", { an, groesse: gr, spiel: art, ...(art === "kt" ? { stufe } : {}) }, { warten: true }); f.remove();
       SP.tab = "mg"; SP.offen = null; SP.art = art; await spLaden(true); spTerminBlatt(r.spiel.id); }
-    catch (e) { meldeFehler(e); }
+    catch (e) { if (!(await spSchonOffen(e, an, f, true))) meldeFehler(e); }
   };
   window.spHerausfordern = async (an) => {
     try { const r = await api("spiel_herausfordern", { an, groesse: gr, spiel: art, ...(art === "kt" ? { stufe } : {}) }, { warten: true }); f.remove(); melde(`🎲 Herausforderung an ${r.spiel.gegner.vorname} geschickt`); SP.tab = "mg"; SP.offen = null; SP.art = art; await spLaden(true); if (aktuelleAnsicht !== "spiele") zeige("spiele"); else spZeigen(); }
-    catch (e) { meldeFehler(e); }
+    catch (e) { if (!(await spSchonOffen(e, an, f, false))) meldeFehler(e); }
   };
+}
+// KC-CLUB-SPIEL-SCHON-OFFEN (2.23.25, Fund Hansi): gibt es schon eine offene Herausforderung mit dieser Person, statt nur „schon
+// herausgefordert“ zu melden direkt dorthin – beim Termin-Weg gleich das Termin-Fenster der vorhandenen Herausforderung
+async function spSchonOffen(e, an, f, mitTermin) {
+  if (!/schon herausgefordert/i.test(String(e?.message || ""))) return false;
+  await spLaden(true);
+  const g = (SP.liste?.spiele || []).find((x) => x.status === "angefragt" && x.gegner?.person_id === an); if (!g) return false;
+  f?.remove(); SP.tab = "mg"; SP.art = g.spiel;
+  if (mitTermin && g.vonMir) { melde(`Es gibt schon eine offene Herausforderung an ${g.gegner.vorname} – Termin dafür vorschlagen:`); spTerminBlatt(g.id); }
+  else { melde(g.vonMir ? `Du hast ${g.gegner.vorname} schon herausgefordert – hier ist die offene Herausforderung` : `${g.gegner.vorname} hat dich schon herausgefordert – nimm einfach an`); await spOeffnen(g.id); }
+  return true;
 }
 // KC-CLUB-SPIEL-LIVE (2.22.6, Wunsch Hansi): bin ich online und jemand fordert mich heraus, erscheint sofort ein Fenster (jede Anfrage einmal)
 const SP_NAMEN = { ttt: "❌⭕ Tic-Tac-Toe", schach: "♟️ Schach", bsk: "🃏 Bauernskat", kt: "🔪 Küchenterror" };
