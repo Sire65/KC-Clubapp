@@ -3517,6 +3517,13 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/let threadId = notfall && !probe \? await notfallUnterhaltung\(ich\)/.test(server) && /probe \? "notfall_probe"/.test(server), "Probe nicht in die Notfall-Unterhaltung, eigenes Protokoll");
   assert.ok(/onclick="notfallProbe\(\)">🧪 Probe nur an mich/.test(html) && /api\("nachricht_senden", \{ notfall: true, probe: true, text \}/.test(html), "Knopf im SOS-Fenster");
 }
+// 325. 2.22.2: SOS-Fenster – Senden oben, Standort anhängen, Notrufe (KC-CLUB-NOTFALL-ORT-RUF)
+{
+  const nf = html.slice(html.indexOf("function notfallMeldung() {"), html.indexOf("async function notfallStandort("));
+  assert.ok(nf.indexOf('id="notfallText"') < nf.indexOf("JETZT AN ALLE SENDEN") && nf.indexOf("JETZT AN ALLE SENDEN") < nf.indexOf("Notruf direkt anrufen"), "Senden direkt unter dem Textfeld");
+  assert.ok(/onclick="sosAnrufen\('\$\{x\.nr\}'\)"/.test(nf) && /ruf\("112"\)\}\$\{ruf\("110"\)/.test(nf), "112/110 über die vorhandene Rückfrage");
+  assert.ok(/async function notfallStandort\(knopf\)[\s\S]{0,400}stPositionWarten\(\)[\s\S]{0,400}api\("sos_ort"/.test(html), "Standort wie „Wo bin ich?“");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

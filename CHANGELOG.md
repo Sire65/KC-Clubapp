@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.22.2 – 2026-10-04 – 🚨 SOS-Fenster: Senden nach oben, Standort, Notrufe (Wunsch Hansi)
+- KC-CLUB-NOTFALL-ORT-RUF: „🚨 JETZT AN ALLE SENDEN“ steht direkt unter dem Textfeld; Erklärung klein nach unten.
+- „📍 Meinen Standort anhängen“: bestimmt den Standort wie „Wo bin ich?“ (Adresse über den vorhandenen kostenlosen Adapter, nichts gespeichert)
+  und hängt Adresse, Koordinaten und Karten-Link an die Meldung – damit geht er per Push, Mail, WhatsApp und SMS mit.
+- „📞 Notruf direkt anrufen“: 🚑 112 Feuerwehr & Rettungsdienst, 🚓 110 Polizei; weitere Nummern (Bereitschaftsarzt, Giftnotruf, Apotheken,
+  Seelsorge, Sperr-Notruf) aufklappbar. Gleiche Nummernliste und gleiche Sicherheitsabfrage („ECHTER ANRUF – KEIN TEST“) wie auf der SOS-Seite.
+- Test 325.
+
 ## 2.22.1 – 2026-10-04 – 🧪 SOS-Probe nur an mich (Wunsch Hansi)
 - KC-CLUB-NOTFALL-PROBE: im SOS-Fenster „🧪 Probe nur an mich“ – dieselbe Meldung (roter Rand, „🚨 NOTFALL-PROBE – <Vorname>“, Push + Mail
   auch in Ruhezeit) geht nur an den Admin selbst (eigene Unterhaltung „🧪 SOS-Probe“, nicht in die Notfall-Unterhaltung aller). Danach zeigt

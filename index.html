@@ -1005,6 +1005,7 @@
   .alarm-kopf { background: #d50000; color: #fff; border-radius: 12px; padding: 10px 12px; font-weight: 900; font-size: 1.15rem; text-align: center; animation: alarmPuls 1s ease-in-out 6; }
   .alarm-text { font-size: 1.15rem; line-height: 1.4; white-space: pre-wrap; overflow-wrap: anywhere; }
   .knopf.alarm-knopf { background: #d50000; color: #fff; font-weight: 900; border: none; }
+  .nf-rufe { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; } .nf-rufe .knopf { padding: 10px 6px; font-size: .9rem; }
   #notfallText { width: 100%; min-height: 120px; font-size: 1.05rem; border: 3px solid #d50000; border-radius: 12px; padding: 10px; box-sizing: border-box; }
   .blase.wichtig .wichtig-marke { display: inline-block; margin: 0 0 4px; padding: 1px 8px; border-radius: 999px; background: #ff9800; color: #1f1300; font-weight: 800; font-size: .78rem; letter-spacing: .02em; }
   /* KC-CLUB-HAKEN (1.55.0): Haken wie WhatsApp – grau gesendet/angekommen, blau gelesen */
@@ -2614,7 +2615,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.22.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.22.2"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -7951,14 +7952,30 @@ const istNotfall = (m) => !!m?.wichtig && NOTFALL_RE.test(m.text || "");
 function notfallMeldung() {
   if (!ICH?.admin) return melde("Notfall-Meldungen an alle darf nur der Admin senden.", true);
   const n = (MITGLIEDER || []).filter((x) => x.person_id !== ICH.person_id).length;
+  // 2.22.2 (Wunsch Hansi): Senden direkt unter dem Textfeld (oben), darunter Standort + Notrufe, Erklärung klein unten
+  const ruf = (nr) => { const x = NOTRUFE.find((r) => r.nr === nr); return `<button class="knopf${x.haupt ? " alarm-knopf" : ""}" onclick="sosAnrufen('${x.nr}')">${x.sym} ${esc(x.anzeige)} ${esc(x.t)}</button>`; };
   blattAuf("notfallBlatt", `<div style="display:grid;gap:8px"><div class="alarm-kopf">🚨 SOS – NACHRICHT AN ALLE</div>
-    <p class="hinweis" style="margin:0"><b>Neue Nachricht an alle auf allen Kanälen.</b> Schreiben oder einsprechen, dann „Senden“ – sie geht sofort an <b>alle${n ? ` ${n}` : ""} Mitglieder</b>: 🔔 Push und ✉️ E-Mail automatisch (auch bei stummem Chat und in der Ruhezeit), danach mit einem Tipp in 🟢 WhatsApp und 💬 SMS. Bei allen erscheint sie mit rotem Rand.</p>
     <textarea id="notfallText" maxlength="1000" placeholder="Was ist passiert? Was sollen alle jetzt tun?"></textarea>
-    ${DIKTAT_GEHT ? '<button class="knopf" onclick="diktatStart(\'notfallText\', notfallSenden)">🎙️ Einsprechen statt tippen</button>' : ""}
     <button class="knopf alarm-knopf" style="padding:14px;font-size:1.1rem" onclick="notfallSenden()">🚨 JETZT AN ALLE SENDEN</button>
-    <button class="knopf" onclick="notfallProbe()">🧪 Probe nur an mich</button>
-    <button class="knopf" onclick="$('notfallBlatt').remove()">Abbrechen</button></div>`).classList.add("alarm-blatt");
+    <div class="knoepfe">${DIKTAT_GEHT ? '<button class="knopf" onclick="diktatStart(\'notfallText\', notfallSenden)">🎙️ Einsprechen</button>' : ""}<button class="knopf" id="notfallOrtKnopf" onclick="notfallStandort(this)">📍 Meinen Standort anhängen</button></div>
+    <b style="margin-top:4px">📞 Notruf direkt anrufen</b>
+    <div class="nf-rufe">${ruf("112")}${ruf("110")}</div>
+    <details class="karte innen" style="margin:0"><summary>Weitere Nummern (Bereitschaftsarzt, Giftnotruf …)</summary><div class="nf-rufe" style="margin-top:6px">${NOTRUFE.filter((r) => !r.haupt).map((r) => ruf(r.nr)).join("")}</div></details>
+    <div class="knoepfe"><button class="knopf" onclick="notfallProbe()">🧪 Probe nur an mich</button><button class="knopf" onclick="$('notfallBlatt').remove()">Abbrechen</button></div>
+    <p class="hinweis" style="margin:0;font-size:.82rem"><b>Neue Nachricht an alle auf allen Kanälen:</b> sofort an alle${n ? ` ${n}` : ""} Mitglieder als 🔔 Push und ✉️ E-Mail (auch stumm/Ruhezeit), danach mit einem Tipp in 🟢 WhatsApp und 💬 SMS. Bei allen mit rotem Rand. Notrufe fragen vor dem Wählen einmal nach.</p></div>`).classList.add("alarm-blatt");
   setTimeout(() => $("notfallText")?.focus(), 80);
+}
+// Standort an die Meldung hängen (gleiche Bestimmung wie „📍 Wo bin ich?“ auf der SOS-Seite; nichts wird gespeichert)
+async function notfallStandort(knopf) {
+  if (knopf) { knopf.disabled = true; knopf.textContent = "⏳ Standort wird bestimmt …"; }
+  try {
+    const p = await stPositionWarten(), c = p.coords, zeit = new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+    SOS.wo = { lat: c.latitude, lon: c.longitude, genau: Math.max(1, Math.round(c.accuracy || 0)), zeit };
+    try { const r = await api("sos_ort", { lat: SOS.wo.lat, lon: SOS.wo.lon, genau: SOS.wo.genau }, { warten: true }); SOS.wo.adresse = r.adresse || null; } catch {}
+    const f = $("notfallText"); if (!f) return;
+    f.value = (f.value.trim() ? f.value.trim() + "\n\n" : "") + "📍 " + sosWoText();
+    if (knopf) knopf.textContent = "✅ Standort angehängt";
+  } catch (e) { if (knopf) { knopf.disabled = false; knopf.textContent = "📍 Meinen Standort anhängen"; } melde("📍 " + e.message, true); }
 }
 // WhatsApp/SMS: kein kostenloser automatischer Versand möglich (WhatsApp-Business-Schnittstelle kostet) – deshalb fertig vorbereitet:
 // ein Tipp öffnet WhatsApp bzw. SMS mit dem Text, dort Club-Gruppe/Empfänger wählen und senden.
