@@ -1,5 +1,22 @@
 # Änderungen
 
+## DB/Spiegel – 2026-10-04 (ohne App-Build) – 🛡️ Spiegel-Wächter von außen (Wunsch/Freigabe Hansi)
+- Anlass: Störung 04.10. nachts – der Supabase-Zeitplan konnte nichts nach außen schicken (pg_net-DNS-Timeouts). Die Neon-Spiegelung
+  hing bisher allein an diesem Anstoß.
+- KC-CORE-SPIEGEL-EXTERN: GitHub-Zeitplan „Spiegel-Wächter“ (.github/workflows/spiegel-waechter.yml, stündlich, ohne Secrets) fragt
+  den Spiegel-Arbeiter (kc-db-mirror-worker, aktion extern_pruefen). Die Datenbank entscheidet (kc_db_mirror_extern_plan): nur wenn
+  keine Wartung, der letzte Spiegel-Lauf älter als 390 Min. (Watchdog-Fenster) und kein externer Anstoß in den letzten 60 Min. → der
+  Arbeiter schickt die Pakete selbst an sich (Edge → Edge, ohne pg_net), Protokollzeile run_type „extern_anstoss“. Im Normalbetrieb wird
+  Neon nicht geweckt (keine Extra-Rechenzeit). Die Antwort enthält nie den Arbeiter-Schlüssel.
+- Kein Parallel-Kern: Paketbildung jetzt in kc_db_mirror_pakete_vorbereiten(), genutzt vom Cron-Lauf kc_neon_low_compute_cycle und vom
+  Wächter (Cron-Lauf unverändert: max. 25 Tabellen / 8 MB je Paket). Alle drei Funktionen nur service_role.
+- Neu: Workflow „Spiegel-Arbeiter hochladen“ (wie „Server hochladen“) – der Arbeiter kommt jetzt immer aus dem Repository.
+- Grenze (ehrlich): ist die Datenschnittstelle selbst gestört (wie am 04.10.), kann auch der Arbeiter nicht lesen – dann ändern sich aber
+  auch keine Daten, der letzte Spiegel ist vollständig. Der Wächter hilft, wenn nur der Zeitplan-Anstoß ausfällt.
+- Probelauf mit Rückrollen: frisch → nichts; überfällig → 224 Tabellen in 10 Paketen; sofort danach → Sperre. Test 320.
+- Rückweg: alte kc_neon_low_compute_cycle (eigene Schleife) einspielen, drop function kc_db_mirror_extern_plan(),
+  kc_db_mirror_pakete_vorbereiten(); Workflow spiegel-waechter.yml löschen.
+
 ## 2.19.0 – 2026-10-04 – ℹ️ „Was ist los?“ im Notbetrieb + 🩺 Server-Diagnose für den Admin (Wunsch Hansi)
 - Anlass: Störung beim Anbieter (Supabase eu-west-2, „API Gateway degraded“) ab 04.10. 03:43 Uhr – Datenschnittstelle (REST) 504,
   Datenbank selbst gesund; Notbetrieb sprang korrekt ein.
