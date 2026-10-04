@@ -1,10 +1,16 @@
 {
-  "version": "2.23.13",
+  "version": "2.23.14",
   "datum": "2026-10-04",
   "neu": [
-    "🔧 Kleine Systemverbesserungen"
+    "🎓 „Meine Daten haben sich geändert“: die Erklärkarte „Kurz erklärt“ jetzt auch nach dem Antippen, z. B. bei „Neue Anschrift“ – passend zur gewählten Änderung"
   ],
   "verlauf": [
+    {
+      "version": "2.23.14",
+      "neu": [
+        "🎓 „Meine Daten haben sich geändert“: die Erklärkarte „Kurz erklärt“ jetzt auch nach dem Antippen, z. B. bei „Neue Anschrift“ – passend zur gewählten Änderung"
+      ]
+    },
     {
       "version": "2.23.13",
       "neu": [

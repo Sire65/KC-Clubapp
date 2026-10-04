@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.23.14 – 2026-10-04 – „Kurz erklärt“ auch in den Schritten von „Meine Daten haben sich geändert“ (Wunsch Hansi)
+- KC-CLUB-EINWEISUNG: Bisher stand die Karte „🎓 Kurz erklärt“ nur auf der Auswahlseite. Jetzt erscheint sie auch nach dem
+  Antippen einer Art (Anschrift, Name, Handy, Festnetz, E-Mail, Geburtsdatum, Notfallkontakt, Kleidergröße, Mitgliedschaft,
+  Sonstiges) oben im Fenster – Text passend zur Art, mit Vorlesen, „Verstanden“ und „Keine Einweisungen mehr“ wie überall.
+  Neue Einweisung `b-aenderung-schritt` (auch im Hilfe-Zentrum). Empfänger nennt die Karte nicht (stehen weiter unten, vom Server). Test 363.
+
 ## 2.23.13 – 2026-10-04 – Feedback-Bogen an den heutigen Stand angepasst (Wunsch Hansi)
 - KC-CLUB-FEEDBACK: neuer Bogen „2026-3“ (2026-2 hatte noch keine Antworten). „Was nutzt du?“ + Spiele, Hilfe-Zentrum, Termine der Stadt,
   Erstattung, Meine Daten geändert; „Probleme“ + Diktieren/Mikrofon; neue Frage „Hilft dir die Hilfe?“ (bei Teils/Nein: was fehlt?).

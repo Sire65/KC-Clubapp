@@ -4129,3 +4129,13 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   const sv = server.slice(server.indexOf("  tipps: (w) => {"), server.indexOf("  einstieg: (w) =>"));
   assert.ok(/\/\^\[a-z0-9_:-\]\{1,40\}\$\//.test(sv) && /\.slice\(0, 400\)/.test(sv) && /stand:/.test(sv) && /letztesThema:/.test(sv), "Server muss h:-Schlüssel, mehr Einträge, stand und letztesThema speichern");
 }
+
+// 363. 2.23.14: „Kurz erklärt“ auch in den einzelnen Schritten von „Meine Daten haben sich geändert“ (KC-CLUB-EINWEISUNG)
+{
+  const reg = html.slice(html.indexOf("const EINWEISUNG = ["), html.indexOf("const einwStand ="));
+  assert.ok(/\{ id: "b-aenderung-schritt", blatt: true, sym: "✏️", t: "Änderung eintragen", x: \(\) =>/.test(reg), "Einweisung b-aenderung-schritt fehlt");
+  for (const art of ["anschrift", "name", "handy", "festnetz", "mail", "geburtstag", "notfall", "kleidung", "mitgliedschaft", "sonstiges"])
+    assert.ok(new RegExp(`\\n      ${art}: "`).test(reg), `Text für ${art} fehlt`);
+  assert.ok(/html = `\$\{einwHtml\("b-aenderung-schritt"\)\}<h3 style="margin:0">\$\{art\.sym\} \$\{esc\(art\.t\)\}<\/h3>/.test(html), "Karte oben im Schritt fehlt");
+  assert.ok("b-aenderung-schritt".length <= 30, "Server speichert nur IDs bis 30 Zeichen (KA_ID)");
+}

@@ -2710,7 +2710,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.13"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.14"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3439,6 +3439,20 @@ const EINWEISUNG = [
   { id: "standort", sym: "📍", t: "Standorte", x: "Hier siehst du, wer gerade seinen Standort mit dir teilt – auf einer Karte. Mit <b>„📍 Teilen“</b> oben teilst du deinen eigenen Standort für eine bestimmte Zeit; danach verschwindet er von selbst." },
   // Fenster (blatt: true) – Karte steht oben im Fenster, siehe einwHtml()
   { id: "b-aenderung", blatt: true, sym: "✏️", t: "Meine Daten haben sich geändert", x: "Neue Anschrift, neue Telefonnummer, neuer Name oder eine andere Kleidergröße? Tippe an, was sich geändert hat, und trag das Neue ein. Die Meldung geht von selbst an die Richtigen im Club. Sobald alles eingetragen ist, bekommst du Bescheid – eine Kopie liegt in deinem Archiv-Ordner (Register „Meldungen“)." },
+  // 2.23.14 (Wunsch Hansi): „Kurz erklärt“ auch in den einzelnen Schritten (nach dem Antippen z. B. von „Neue Anschrift“).
+  // Text passt sich der gewählten Art an; wer die Meldung bekommt, steht weiter unten im Fenster (kommt vom Server).
+  { id: "b-aenderung-schritt", blatt: true, sym: "✏️", t: "Änderung eintragen", x: () => (({
+      anschrift: "Trag deine <b>neue Anschrift</b> ein – Straße mit Hausnummer, PLZ und Ort – und ab wann sie gilt. Wenn du magst, sagen wir es auch allen Mitgliedern.",
+      name: "Trag deinen <b>neuen Vor- und/oder Nachnamen</b> ein und ab wann er gilt.",
+      handy: "Trag deine <b>neue Handynummer</b> ein. Wenn du magst, bekommen alle Mitglieder die neue Nummer als Nachricht.",
+      festnetz: "Trag deine <b>neue Festnetznummer</b> ein. Wenn du magst, bekommen alle Mitglieder die neue Nummer als Nachricht.",
+      mail: "Trag deine <b>neue E-Mail-Adresse</b> ein – dorthin schickt die App z. B. Erinnerungen und Einladungen.",
+      geburtstag: "Stimmt dein Geburtsdatum nicht? Trag das <b>richtige Datum</b> ein – es wird dann korrigiert.",
+      notfall: "Wen sollen wir im Notfall anrufen? <b>Name, Telefon und Beziehung</b> eintragen. Das wird sofort gespeichert, die Clubleitung bekommt nur eine Info.",
+      kleidung: "Wähle deine Größe für <b>Kochjacke und Kochhose</b>. Das wird sofort gespeichert, die Clubleitung bekommt nur eine Info.",
+      mitgliedschaft: "Wähle, ob du die Mitgliedschaft <b>ruhen lassen</b> oder <b>austreten</b> möchtest, und ab wann. Danach meldet sich die Clubleitung bei dir.",
+      sonstiges: "Schreib kurz, <b>was sich geändert hat</b>, und hake an, an wen die Meldung gehen soll.",
+    })[AE.art] || "Trag unten die <b>neue Angabe</b> ein.") + " Dann <b>„📨 Änderung melden“</b> antippen – wer die Meldung bekommt, steht unten. <b>„← Zurück“</b> führt zur Auswahl." },
   { id: "b-aenderungen", blatt: true, sym: "📬", t: "Änderungen der Mitglieder", x: "Hier landen die Änderungen, die Mitglieder melden – nur die, die an dich gehen. Links steht <b>bisher</b>, rechts <b>neu</b> (grün). Tippe <b>👁️ Zur Kenntnis genommen</b>; Clubsprecher oder Admin <b>✅ geben frei</b> – dann trägt der KC Manager die Änderung ein und das Mitglied bekommt Bescheid. Unten die <b>👕 Größen-Übersicht</b> für Bestellungen. Zu finden im Büro im <b>📥 Eingangskorb</b> und im Ordner <b>📇 Mitglieder</b>; abgelegt wird alles im Archiv-Ordner <b>Personal</b>.", nur: () => !!(ICH?.vorstand || ICH?.admin) },
   { id: "b-stadt", blatt: true, sym: "🏙️", t: "Termine der Stadt Werne", x: "Die Termine aus dem Veranstaltungskalender der Stadt Werne. Ankreuzen, was in unseren Clubkalender soll – die Mitglieder bekommen dabei keine Nachricht. Unter <b>🔁 Automatisch</b> holt die App neue Stadt-Termine einmal pro Woche selbst.", nur: () => !!ICH?.admin },
   { id: "b-admin", blatt: true, sym: "🛠️", t: "Admin-Register", x: "Dein Leitstand: Das Lämpchen jeder Kachel zeigt, ob alles läuft – 🟢 gut, 🟡 aufpassen, 🔴 Problem, ⚪ unbekannt. Antippen öffnet Einzelheiten und die passenden Werkzeuge. Im Ernstfall zuerst <b>🧯 Notfall</b> öffnen.", nur: () => !!ICH?.admin },
@@ -14581,7 +14595,7 @@ function aeZeichnen() {
       const typ = { tel: "tel", email: "email", date: "date" }[f.typ] || "text";
       return `<label class="ae-feld">${esc(f.t)}${f.pflicht ? "" : ' <small class="hinweis">(freiwillig)</small>'}<input id="${id}" type="${typ}"${f.typ === "plz" ? ' inputmode="numeric" maxlength="5"' : ""}${f.typ === "iban" ? ' autocomplete="off" autocapitalize="characters" spellcheck="false"' : ""} value="${esc(v)}"></label>`;
     };
-    html = `<h3 style="margin:0">${art.sym} ${esc(art.t)}</h3>
+    html = `${einwHtml("b-aenderung-schritt")}<h3 style="margin:0">${art.sym} ${esc(art.t)}</h3>
       ${!leer ? `<p class="hinweis" style="margin:0">Bisher: <b>${esc(aeWert(art.id, alt))}</b></p>` : ""}
       ${art.felder.map(feld).join("")}
       ${art.gilt ? `<label class="ae-feld">Gilt ab${art.giltPflicht ? "" : ' <small class="hinweis">(freiwillig)</small>'}<input id="aeGilt" type="date"></label>` : ""}
