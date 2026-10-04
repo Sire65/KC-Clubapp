@@ -959,6 +959,135 @@ async function wetterKonfig() {
   let ort = WETTER.standardOrt; try { if (w.ort) ort = wetterOrtPruefen(w.ort); } catch { /* Voreinstellung */ }
   return { ort, quelle: WETTER_QUELLEN[w.quelle] ? String(w.quelle) : WETTER.standardQuelle, app: WETTER_APPS[w.app] ? String(w.app) : WETTER.standardApp, geaendert: data?.geaendert_am ?? null };
 }
+// KC-CLUB-STADT-TERMINE (2.22.6): Termine der Stadt Werne aus ihren offiziellen Kalender-Abos (iCal) – der Admin wählt aus,
+// was als „Stadt-Termin“ (Veranstaltung) in den Clubkalender kommt; auf Wunsch einmal pro Woche von selbst. Kostenlos, ohne Schlüssel.
+// Einstellungen + bereits übernommene Termine stehen in kc_club_konfig „stadt_termine“ (keine eigene Tabelle). Nie Benachrichtigung an Mitglieder.
+const STADT = {
+  basis: "https://www.werne.de/de/veranstaltungen/kalender-abonnement/",
+  quellen: [
+    { id: "feste", t: "Feste & Events", datei: "feste-und-events.ics", standard: true },
+    { id: "maerkte", t: "Märkte", datei: "maerkte.ics", standard: true },
+    { id: "simjue", t: "Sim-Jü", datei: "simjue.ics", standard: true },
+    { id: "sonstige", t: "Sonstige Veranstaltungen", datei: "sonstige-veranstaltungen.ics", standard: true },
+    { id: "theater", t: "Theater & Konzerte", datei: "theater-und-konzerte.ics", standard: false },
+    { id: "fuehrungen", t: "Führungen & Ausstellungen", datei: "fuehrungen-und-ausstellungen.ics", standard: false },
+    { id: "sport", t: "Sport", datei: "sport.ics", standard: false },
+    { id: "kinder", t: "Kinder & Jugend", datei: "kinder-und-jugend.ics", standard: false },
+  ],
+  auslassen: [/wochenmarkt/i], // jede Woche – gehört nicht in den Clubkalender
+  zeichen: "🏙️ ",
+  tageVoraus: 400,
+};
+type StadtTermin = { key: string; quelle: string; titel: string; beginn: string; ende: string | null; ganztaegig: boolean; ort: string | null; url: string | null; tag: string; bisTag: string };
+const stadtCache = new Map<string, { zeit: number; liste: StadtTermin[] }>();
+function icsZeilen(text: string) { return text.replace(/\r\n?/g, "\n").replace(/\n[ \t]/g, "").split("\n"); }
+const icsWert = (v: string) => v.replace(/\\n/gi, "\n").replace(/\\([,;\\])/g, "$1").trim();
+// DTSTART/DTEND: „20261024“, „20261024T160000“ (Ortszeit Werne) oder „…Z“ (UTC)
+function stadtIcsZeit(wert: string): { tag: string; zeit: Date; mitZeit: boolean } | null {
+  const m = wert.match(/^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})?(Z)?)?$/);
+  if (!m) return null;
+  const [y, mo, d] = [+m[1], +m[2], +m[3]], h = m[4] ? +m[4] : 0, mi = m[5] ? +m[5] : 0;
+  const zeit = m[7] ? new Date(Date.UTC(y, mo - 1, d, h, mi)) : berlinZuUtc(y, mo, d, h, mi);
+  return { tag: m[7] ? berlinTag(zeit) : `${m[1]}-${m[2]}-${m[3]}`, zeit, mitZeit: !!m[4] && (h > 0 || mi > 0) }; // Werne schreibt Ganztägiges als „T000000“
+}
+const tagPlusS = (tag: string, n: number) => new Date(Date.UTC(+tag.slice(0, 4), +tag.slice(5, 7) - 1, +tag.slice(8, 10) + n)).toISOString().slice(0, 10);
+const stadtSchluessel = (tag: string, titel: string) => `${tag}|${titel.toLowerCase().replace(/[^a-z0-9äöüß]+/g, " ").trim().slice(0, 60)}`;
+function stadtIcsLesen(text: string, quelle: string): StadtTermin[] {
+  const out: StadtTermin[] = [];
+  let e: Record<string, [string, string]> | null = null;
+  for (const z of icsZeilen(text)) {
+    if (z === "BEGIN:VEVENT") { e = {}; continue; }
+    if (z === "END:VEVENT" && e) {
+      const titel = txt(icsWert(e.SUMMARY?.[1] || ""), 120), s = e.DTSTART ? stadtIcsZeit(e.DTSTART[1]) : null;
+      if (e.STATUS?.[1] !== "CANCELLED" && titel && s && !STADT.auslassen.some((r) => r.test(titel))) {
+        const en = e.DTEND ? stadtIcsZeit(e.DTEND[1]) : null;
+        // ganztägig: ohne Uhrzeit (Ende ist dann der Folgetag) oder 00:00–00:00
+        const ganz = !s.mitZeit && (!en || !en.mitZeit);
+        let bisTag = s.tag;
+        // Ende ohne Uhrzeit zählt nach iCal-Regel nicht mehr mit
+        if (en && ganz && en.tag > s.tag) bisTag = /T/.test(e.DTEND![1]) ? en.tag : tagPlusS(en.tag, -1);
+        out.push({ key: stadtSchluessel(s.tag, titel), quelle, titel, tag: s.tag, bisTag, ganztaegig: ganz,
+          beginn: ganz ? berlinZuUtc(+s.tag.slice(0, 4), +s.tag.slice(5, 7), +s.tag.slice(8, 10), 0, 0).toISOString() : s.zeit.toISOString(),
+          ende: ganz ? null : en && en.zeit > s.zeit ? en.zeit.toISOString() : null,
+          ort: txt(icsWert(e.LOCATION?.[1] || ""), 200) || null, url: /^https:\/\/www\.werne\.de\//.test(e.URL?.[1] || "") ? e.URL![1].replace(/ /g, "%20").slice(0, 400) : null });
+      }
+      e = null; continue;
+    }
+    if (!e) continue;
+    const i = z.indexOf(":"); if (i < 1) continue;
+    const kopf = z.slice(0, i), [name, ...param] = kopf.split(";");
+    if (["SUMMARY", "DTSTART", "DTEND", "LOCATION", "URL", "STATUS"].includes(name)) e[name] = [param.join(";"), z.slice(i + 1)];
+  }
+  return out;
+}
+// Mehrtägige Feste kommen als einzelne Tage (z. B. Sim-Jü) – gleicher Name an Folgetagen wird ein Termin
+function stadtZusammenfassen(liste: StadtTermin[]): StadtTermin[] {
+  const s = [...liste].sort((a, b) => a.beginn.localeCompare(b.beginn)), out: StadtTermin[] = [];
+  for (const t of s) {
+    const v = out.find((x) => x.ganztaegig && t.ganztaegig && x.titel === t.titel && tagPlusS(x.bisTag, 1) >= t.tag && x.tag <= t.tag);
+    if (v) { if (t.bisTag > v.bisTag) v.bisTag = t.bisTag; continue; }
+    if (out.some((x) => x.key === t.key)) continue; // doppelt in zwei Kalendern
+    out.push({ ...t });
+  }
+  for (const t of out) if (t.ganztaegig) t.ende = berlinZuUtc(+t.bisTag.slice(0, 4), +t.bisTag.slice(5, 7), +t.bisTag.slice(8, 10), 23, 59).toISOString();
+  return out;
+}
+async function stadtHolen(quellen: string[]): Promise<{ termine: StadtTermin[]; fehler: string[] }> {
+  const fehler: string[] = [], alle: StadtTermin[] = [];
+  await Promise.all(STADT.quellen.filter((q) => quellen.includes(q.id)).map(async (q) => {
+    const c = stadtCache.get(q.id);
+    if (c && Date.now() - c.zeit < 10 * 60000) { alle.push(...c.liste); return; }
+    try {
+      const r = await fetch(STADT.basis + q.datei, { headers: { "User-Agent": "KC-Clubapp (Koecheclub Werne, sire65.github.io/KC-Clubapp)" }, signal: AbortSignal.timeout(8000) });
+      const text = r.ok ? await r.text() : "";
+      // leere Antwort = die Stadt hat dort gerade nichts eingetragen (kein Fehler)
+      if (!r.ok || (text.trim() && !text.includes("BEGIN:VCALENDAR"))) throw new Error("HTTP " + r.status);
+      const liste = stadtIcsLesen(text.slice(0, 2_000_000), q.id);
+      stadtCache.set(q.id, { zeit: Date.now(), liste }); alle.push(...liste);
+    } catch (e) { console.error("stadt-termine", q.id, String(e).slice(0, 120)); fehler.push(q.t); }
+  }));
+  const heute = berlinTag(new Date()), grenze = tagPlusS(heute, STADT.tageVoraus);
+  return { termine: stadtZusammenfassen(alle).filter((t) => t.bisTag >= heute && t.tag <= grenze), fehler };
+}
+async function stadtKonfig() {
+  const { data } = await db.from("kc_club_konfig").select("wert").eq("schluessel", "stadt_termine").maybeSingle();
+  const w = data?.wert ?? {}, ids = STADT.quellen.map((q) => q.id);
+  const quellen = Array.isArray(w.quellen) ? w.quellen.filter((x: any) => ids.includes(x)) : STADT.quellen.filter((q) => q.standard).map((q) => q.id);
+  return { auto: !!w.auto, quellen: quellen as string[], uebernommen: (w.uebernommen && typeof w.uebernommen === "object" ? w.uebernommen : {}) as Record<string, string>,
+    autoZuletzt: (w.autoZuletzt as string) || null, autoVon: (w.autoVon as string) || null };
+}
+async function stadtKonfigSpeichern(k: Awaited<ReturnType<typeof stadtKonfig>>, von: string | null) {
+  // alte Einträge (über 60 Tage vorbei) vergessen, damit die Liste klein bleibt
+  const alt = tagPlusS(berlinTag(new Date()), -60);
+  const uebernommen = Object.fromEntries(Object.entries(k.uebernommen).filter(([key]) => key.slice(0, 10) >= alt).slice(-500));
+  const { error } = await db.from("kc_club_konfig").upsert({ schluessel: "stadt_termine", wert: { auto: k.auto, quellen: k.quellen, uebernommen, autoZuletzt: k.autoZuletzt, autoVon: k.autoVon }, geaendert_von: von, geaendert_am: jetzt() });
+  if (error) throw new Fehler("Einstellung konnte nicht gespeichert werden.", 500);
+}
+// Übernimmt die gewählten Termine (ohne Benachrichtigung) – gibt die Anzahl neu eingetragener zurück
+async function stadtUebernehmen(liste: StadtTermin[], k: Awaited<ReturnType<typeof stadtKonfig>>, von: string) {
+  const neu = liste.filter((t) => !k.uebernommen[t.key]);
+  if (!neu.length) return 0;
+  const { data, error } = await db.from("kc_club_treffen").insert(neu.map((t) => ({
+    titel: (STADT.zeichen + t.titel).slice(0, 120), beginn: t.beginn, ende: t.ende, ort: t.ort, art: "veranstaltung", ganztaegig: t.ganztaegig,
+    beschreibung: `Stadt-Termin – aus dem Veranstaltungskalender der Stadt Werne übernommen.${t.url ? "\n" + t.url : ""}`, erstellt_von: von, geaendert_am: jetzt(),
+  }))).select("id");
+  if (error || (data ?? []).length !== neu.length) throw new Fehler("Stadt-Termine konnten nicht eingetragen werden.", 500);
+  neu.forEach((t, i) => { k.uebernommen[t.key] = data![i].id; });
+  return neu.length;
+}
+// Zeitplaner: einmal pro Woche, nur wenn der Admin „automatisch“ eingeschaltet hat
+async function stadtAutoLauf() {
+  const k = await stadtKonfig();
+  if (!k.auto || (k.autoZuletzt && Date.now() - new Date(k.autoZuletzt).getTime() < 7 * 86400000)) return null;
+  const { termine, fehler } = await stadtHolen(k.quellen);
+  // eingetragen im Namen des Admins, der „automatisch“ eingeschaltet hat
+  if (!k.autoVon) return null;
+  const anzahl = fehler.length === k.quellen.length ? 0 : await stadtUebernehmen(termine, k, k.autoVon);
+  k.autoZuletzt = jetzt();
+  await stadtKonfigSpeichern(k, null);
+  await protokoll(null, "stadt_termine_auto", { anzahl, fehler: fehler.length });
+  return anzahl;
+}
 const wetterCache = new Map<string, { zeit: number; daten: WetterDaten }>();
 async function kmSaetze(): Promise<KmSatz[]> {
   const { data } = await db.from("kc_club_km_satz").select("id,satz,gilt_ab").order("gilt_ab", { ascending: true });
@@ -2747,6 +2876,7 @@ Deno.serve(async (req) => {
       await fpUeberwachen().catch((e) => console.error("fp ueberwachung", String(e)));
       await postausgangLauf().catch((e) => console.error("postausgang", String(e))); // KC-CLUB-POSTAUSGANG (1.69.1)
       await adminAbwesendPruefen().catch((e) => console.error("admin abwesend", String(e))); // KC-CLUB-VERTRETUNG (2.2.0)
+      await stadtAutoLauf().catch((e) => console.error("stadt termine", String(e))); // KC-CLUB-STADT-TERMINE (2.22.6): wöchentlich, nur wenn eingeschaltet
       // KC-CLUB-NUTZUNG-PERSONEN (2.6.0): Geräte-Kennungen nur 100 Tage aufbewahren
       { const { error } = await db.from("kc_club_nutzung_geraete").delete().lt("tag", berlinTag(new Date(Date.now() - 100 * 86400000))); if (error) console.error("nutzung geraete loeschen", error.message); }
       // Abstimmungen mit abgelaufener Frist beenden (Ergebnis geht an alle)
@@ -5907,6 +6037,43 @@ Köcheclub-App`,
         if (error) throw new Fehler("Antworten konnten nicht gespeichert werden.", 500);
         await protokoll(ich.person_id, "anruf_antworten_gesetzt", { vorher: alt.texte, nachher: texte });
         return json({ ok: true, texte });
+      }
+
+      // KC-CLUB-STADT-TERMINE (2.22.6): Liste aus den Kalendern der Stadt Werne, Übernehmen, Einstellungen – nur Admin
+      case "stadt_termine": {
+        nurAdmin(ich);
+        const k = await stadtKonfig(), quellen = Array.isArray(p.quellen) ? p.quellen.map(String) : STADT.quellen.map((q) => q.id);
+        const { termine, fehler } = await stadtHolen(quellen);
+        const ids = Object.values(k.uebernommen);
+        const { data: da } = ids.length ? await db.from("kc_club_treffen").select("id").in("id", ids.slice(-500)) : { data: [] as any[] };
+        const noch = new Set((da ?? []).map((x: any) => x.id));
+        return json({ termine: termine.map((x) => ({ ...x, uebernommen: !!k.uebernommen[x.key], imKalender: noch.has(k.uebernommen[x.key]) })), fehler,
+          quellen: STADT.quellen.map((q) => ({ id: q.id, t: q.t, auto: k.quellen.includes(q.id) })), auto: k.auto, autoZuletzt: k.autoZuletzt });
+      }
+
+      case "stadt_termine_uebernehmen": {
+        nurAdmin(ich);
+        const keys = new Set((Array.isArray(p.keys) ? p.keys : []).map(String).slice(0, 100));
+        if (!keys.size) throw new Fehler("Bitte mindestens einen Termin ankreuzen.");
+        const k = await stadtKonfig();
+        const { termine } = await stadtHolen(STADT.quellen.map((q) => q.id));
+        const wahl = termine.filter((x) => keys.has(x.key));
+        if (!wahl.length) throw new Fehler("Die Termine sind bei der Stadt nicht mehr zu finden – bitte neu laden.");
+        const anzahl = await stadtUebernehmen(wahl, k, ich.person_id);
+        await stadtKonfigSpeichern(k, ich.person_id);
+        await protokoll(ich.person_id, "stadt_termine_uebernommen", { anzahl });
+        return json({ ok: true, anzahl });
+      }
+
+      case "stadt_termine_einstellen": {
+        nurAdmin(ich);
+        const k = await stadtKonfig(), ids = STADT.quellen.map((q) => q.id);
+        if (Array.isArray(p.quellen)) k.quellen = p.quellen.map(String).filter((x: string) => ids.includes(x));
+        if (typeof p.auto === "boolean") { if (p.auto && !k.auto) k.autoZuletzt = null; k.auto = p.auto; k.autoVon = p.auto ? ich.person_id : null; }
+        if (k.auto && !k.quellen.length) throw new Fehler("Bitte mindestens einen Kalender für „automatisch“ ankreuzen.");
+        await stadtKonfigSpeichern(k, ich.person_id);
+        await protokoll(ich.person_id, "stadt_termine_eingestellt", { auto: k.auto, quellen: k.quellen });
+        return json({ ok: true, auto: k.auto, quellen: k.quellen });
       }
 
       case "sos_freigabe_setzen": {

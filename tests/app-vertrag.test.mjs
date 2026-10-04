@@ -3548,6 +3548,18 @@ assert.ok(/const UH_HERVOR = \["Innovation"\];/.test(html) && /function uhAmeise
   assert.ok(/spielLive\(r\.spielAnfragen\); \/\/ KC-CLUB-SPIEL-LIVE/.test(html) && /ONL\.erledigt\.add\("s" \+ a\.id\)/.test(html), "Fenster je Anfrage einmal");
   assert.ok(/const on = b\.filter\(\(m\) => ONL\?\.ids\?\.has\(m\.person_id\)\)/.test(html) && /spHerausTermin\('\$\{m\.person_id\}'\)">📅 Terminanfrage/.test(html) && /spTerminBlatt\(r\.spiel\.id\)/.test(html), "sofort nur online, sonst suchen + Termin");
 }
+// 331. 2.22.6: Termine der Stadt Werne in den Clubkalender übernehmen (KC-CLUB-STADT-TERMINE)
+{
+  assert.ok(/basis: "https:\/\/www\.werne\.de\/de\/veranstaltungen\/kalender-abonnement\/"/.test(server) && /auslassen: \[\/wochenmarkt\/i\]/.test(server), "Quellen-Register der Stadt / Wochenmarkt-Ausschluss fehlt");
+  for (const a of ["stadt_termine", "stadt_termine_uebernehmen", "stadt_termine_einstellen"])
+    assert.ok(new RegExp(`case "${a}": \\{\\s*nurAdmin\\(ich\\);`).test(server), `${a}: nur Admin`);
+  // still übernehmen: Veranstaltung, kein senden(), Doppelschutz über „uebernommen“
+  const ueb = server.slice(server.indexOf("async function stadtUebernehmen"), server.indexOf("async function stadtAutoLauf"));
+  assert.ok(/art: "veranstaltung"/.test(ueb) && !/senden\(/.test(ueb) && /filter\(\(t\) => !k\.uebernommen\[t\.key\]\)/.test(ueb), "Stadt-Termine: still, als Veranstaltung, ohne Doppelte");
+  assert.ok(/await stadtAutoLauf\(\)\.catch/.test(server) && /if \(!k\.auto \|\| \(k\.autoZuletzt && Date\.now\(\) - new Date\(k\.autoZuletzt\)\.getTime\(\) < 7 \* 86400000\)\) return null;/.test(server), "Wochenlauf nur wenn eingeschaltet");
+  assert.ok(/if \(!r\.ok \|\| \(text\.trim\(\) && !text\.includes\("BEGIN:VCALENDAR"\)\)\)/.test(server), "leerer Stadt-Kalender ist kein Fehler");
+  assert.ok(/\["stadt", "🏙️", "Stadt-Termine", "app"\]/.test(html) && /if \(id === "stadt"\) return stadtTermine\(\);/.test(html) && /api\("stadt_termine_uebernehmen", \{ keys \}\)/.test(html), "Admin-Kachel Stadt-Termine");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

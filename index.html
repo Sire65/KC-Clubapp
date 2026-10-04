@@ -1006,6 +1006,10 @@
   #alarmBlatt.blatt { z-index: 9990; } /* liegt über allen anderen Start-Fenstern (Einweisung, Spiel-Einladung …) */
   .alarm-blatt .blatt-innen { border: 6px solid #d50000; box-shadow: 0 0 0 6px rgba(213,0,0,.35); }
   .alarm-kopf { background: #d50000; color: #fff; border-radius: 12px; padding: 10px 12px; font-weight: 900; font-size: 1.15rem; text-align: center; animation: alarmPuls 1s ease-in-out 6; }
+  /* KC-CLUB-STADT-TERMINE (2.22.6) */
+  .stadt-zeile { display: flex; gap: 8px; align-items: center; padding: 6px 4px; border-bottom: 1px solid #8883; cursor: pointer; }
+  .stadt-zeile input { width: 22px; height: 22px; flex: none; }
+  .stadt-zeile small { display: block; opacity: .8; }
   .alarm-text { font-size: 1.15rem; line-height: 1.4; white-space: pre-wrap; overflow-wrap: anywhere; }
   .knopf.alarm-knopf { background: #d50000; color: #fff; font-weight: 900; border: none; }
   .nf-rufe { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; } .nf-rufe .knopf { padding: 10px 6px; font-size: .9rem; }
@@ -7815,7 +7819,7 @@ const AD_KACHELN = [
   ["neon", "🪞", "Neon-Spiegel", "ueb"], ["backup", "🛟", "Backups", "ueb"], ["b2", "💾", "B2-Backup", "ueb"], ["not", "🚑", "Notbetrieb", "ueb"],
   ["comm", "📨", "Communicator", "dienst"], ["mail", "✉️", "Mail · Brevo", "dienst"], ["push", "🔔", "Push", "dienst"], ["kasse", "🧾", "Kasse · Gateway", "dienst"],
   ["programme", "💻", "KC-Programme", "dienst"], ["versionen", "📱", "Versionen", "app"], ["fehler", "🩺", "Fehler", "app"], ["nutzung", "👥", "Nutzung", "app"],
-  ["zugang", "🔑", "Zugänge", "app"], ["wartung", "🛠️", "Wartung", "app"], ["inkognito", "🕶️", "Inkognito", "app"],
+  ["zugang", "🔑", "Zugänge", "app"], ["wartung", "🛠️", "Wartung", "app"], ["inkognito", "🕶️", "Inkognito", "app"], ["stadt", "🏙️", "Stadt-Termine", "app"],
   ...Object.entries(AD_DIENSTE).map(([k, d]) => ["l-" + k, d.sym, d.t, "link"]),
 ];
 KACHELN.admin = AD_KACHELN.map(([id, sym, t, gr]) => ({ id: "ad-" + id, sym, t, nur: () => !!ICH?.admin, aktion: `adBlatt('${id}')`,
@@ -7846,6 +7850,7 @@ const adKnopf = (t, fn, haupt) => `<button class="knopf${haupt ? " haupt" : ""}"
 const adLinks = (k) => { const d = AD_DIENSTE[k]; return `<details class="karte innen" style="margin:0"><summary>${d.sym} ${esc(d.t)} – direkt zur Verwaltung</summary><div style="display:grid;gap:6px;margin-top:6px">${d.links.map(([s, t, u]) => `<a class="knopf" href="${esc(u)}" target="_blank" rel="noopener">${s} ${esc(t)} ↗</a>`).join("")}</div></details>`; };
 function adBlatt(id) {
   if (id === "alarm") return notfallMeldung(); // KC-CLUB-NOTFALL-MELDUNG
+  if (id === "stadt") return stadtTermine(); // KC-CLUB-STADT-TERMINE
   AD.offen = id;
   const r = adLage(), z = adZustand(id), m = r?.mitglieder, c = r?.communicator, e = AD.ext;
   const kopf = (sym, t) => `<h3 style="margin:0">${sym} ${esc(t)}</h3><p class="hinweis" style="margin:0">${r ? `Stand ${esc(zeitKurz(r.zeit))} Uhr${adAlt() ? " · ⚠️ veraltet" : ""}` : "Noch keine Daten"}${e.zeit ? ` · Prüfung ${esc(fZeit.format(new Date(e.zeit)))} Uhr` : ""}</p>`;
@@ -8014,6 +8019,64 @@ async function sosFreigabe(alle, feld) {
   try { await api("sos_freigabe_setzen", { alle }); if (INIT) INIT.sosFuerAlle = alle; document.body.classList.toggle("sos-frei", alle);
     melde(alle ? "👥 SOS ist für alle Mitglieder freigegeben" : "🔒 SOS nur noch für den Admin"); }
   catch (e) { if (feld) feld.checked = !alle; meldeFehler(e); }
+}
+// ---------- KC-CLUB-STADT-TERMINE (2.22.6): Termine der Stadt Werne in den Clubkalender übernehmen (nur Admin) ----------
+// Der Server liest die offiziellen Kalender-Abos der Stadt; hier wird angekreuzt. Übernommen wird still (ohne Nachricht an die Mitglieder).
+const STADT_T = { daten: null, wahl: new Set() };
+const fMonatJahr = new Intl.DateTimeFormat("de-DE", { timeZone: TZ, month: "long", year: "numeric" });
+function stadtWann(x) {
+  const b = new Date(x.beginn);
+  if (x.ganztaegig) return x.bisTag !== x.tag ? `${fTag.format(b)} – ${fTag.format(new Date(x.ende))}` : `${fTag.format(b)}, ganztägig`;
+  return `${fTag.format(b)}, ${fZeit.format(b)}${x.ende ? "–" + fZeit.format(new Date(x.ende)) : ""} Uhr`;
+}
+async function stadtTermine() {
+  blattAuf("stadtBlatt", '<h3 style="margin:0">🏙️ Termine der Stadt Werne</h3><p class="hinweis">⏳ Kalender der Stadt werden abgefragt …</p>');
+  try { STADT_T.daten = await api("stadt_termine", {}); STADT_T.wahl.clear(); stadtZeichnen(); }
+  catch (e) { $("stadtBlatt")?.remove(); meldeFehler(e); }
+}
+function stadtZeichnen() {
+  const d = STADT_T.daten; if (!d || !$("stadtBlatt")) return;
+  const qn = Object.fromEntries(d.quellen.map((q) => [q.id, q.t]));
+  let monat = "";
+  const zeilen = d.termine.map((x) => {
+    const m = fMonatJahr.format(new Date(x.beginn)), kopf = m !== monat ? `<b style="margin-top:6px">${esc(m)}</b>` : ""; monat = m;
+    const zustand = x.imKalender ? '<span class="hinweis">✅ im Kalender</span>' : x.uebernommen ? '<span class="hinweis">früher übernommen</span>' : "";
+    return `${kopf}<label class="stadt-zeile">${x.uebernommen ? '<span style="width:22px"></span>' : `<input type="checkbox" ${STADT_T.wahl.has(x.key) ? "checked" : ""} onchange="stadtWahl('${esc(x.key).replace(/'/g, "&#39;")}',this.checked)">`}
+      <span style="flex:1"><b>${esc(x.titel)}</b><small>${esc(stadtWann(x))}${x.ort ? " · 📍 " + esc(x.ort) : ""} · ${esc(qn[x.quelle] || "")}</small></span>${zustand}</label>`;
+  }).join("");
+  const n = STADT_T.wahl.size;
+  $("stadtBlatt").querySelector(".blatt-innen").innerHTML = `<div style="display:grid;gap:6px">
+    <h3 style="margin:0">🏙️ Termine der Stadt Werne</h3>
+    <p class="hinweis" style="margin:0">Aus dem Veranstaltungskalender der Stadt (Feste, Märkte, Sim-Jü, Theater …). Ankreuzen, was in unseren Clubkalender soll – es erscheint dort als Veranstaltung mit 🏙️. Die Mitglieder bekommen <b>keine</b> Nachricht.</p>
+    ${d.fehler.length ? `<p class="hinweis" style="margin:0">⚠️ Gerade nicht abrufbar: ${esc(d.fehler.join(", "))} – später nochmal versuchen.</p>` : ""}
+    ${zeilen || '<p class="hinweis">Die Stadt hat im Moment keine kommenden Termine eingetragen.</p>'}
+    <button class="knopf haupt" ${n ? "" : "disabled"} onclick="stadtUebernehmen(this)">📅 ${n ? n + " Termin" + (n === 1 ? "" : "e") + " in den Clubkalender" : "Termine ankreuzen"}</button>
+    <details class="karte innen" style="margin:0"><summary>🔁 Automatisch übernehmen ${d.auto ? "(an)" : "(aus)"}</summary><div style="display:grid;gap:6px;margin-top:6px">
+      <label class="schalter"><span>Einmal pro Woche neue Termine von selbst eintragen</span><input type="checkbox" id="stadtAuto" ${d.auto ? "checked" : ""}></label>
+      <p class="hinweis" style="margin:0">Aus diesen Kalendern:</p>
+      ${d.quellen.map((q) => `<label class="stadt-zeile"><input type="checkbox" class="stadtQuelle" value="${esc(q.id)}" ${q.auto ? "checked" : ""}><span>${esc(q.t)}</span></label>`).join("")}
+      ${d.autoZuletzt ? `<p class="hinweis" style="margin:0">Zuletzt automatisch geprüft: ${esc(zeitKurz(d.autoZuletzt))} Uhr</p>` : ""}
+      <button class="knopf" onclick="stadtEinstellen(this)">💾 Einstellung speichern</button>
+      <p class="hinweis" style="margin:0">Wochenmärkte werden nie übernommen. Ein gelöschter Stadt-Termin kommt nicht wieder.</p></div></details>
+    <div class="knoepfe"><a class="knopf" href="https://www.werne.de/de/veranstaltungen/" target="_blank" rel="noopener">🌐 Kalender der Stadt ↗</a><button class="knopf" onclick="stadtTermine()">↻ Neu laden</button><button class="knopf" onclick="$('stadtBlatt').remove()">Schließen</button></div></div>`;
+}
+function stadtWahl(key, an) { if (an) STADT_T.wahl.add(key); else STADT_T.wahl.delete(key); stadtZeichnen(); }
+async function stadtUebernehmen(knopf) {
+  const keys = [...STADT_T.wahl]; if (!keys.length) return;
+  await einmal(knopf, async () => {
+    try { const r = await api("stadt_termine_uebernehmen", { keys });
+      melde(r.anzahl ? `🏙️ ${r.anzahl} Stadt-Termin${r.anzahl === 1 ? "" : "e"} im Clubkalender eingetragen` : "Diese Termine waren schon eingetragen");
+      if (typeof treffenLaden === "function") treffenLaden(); await stadtTermine(); }
+    catch (e) { meldeFehler(e); }
+  });
+}
+async function stadtEinstellen(knopf) {
+  const quellen = [...document.querySelectorAll(".stadtQuelle")].filter((x) => x.checked).map((x) => x.value), auto = !!$("stadtAuto")?.checked;
+  await einmal(knopf, async () => {
+    try { await api("stadt_termine_einstellen", { auto, quellen }); STADT_T.daten.auto = auto; STADT_T.daten.quellen.forEach((q) => { q.auto = quellen.includes(q.id); });
+      melde(auto ? "🔁 Neue Stadt-Termine kommen jetzt einmal pro Woche von selbst" : "💾 Gespeichert – automatisch ist aus"); stadtZeichnen(); }
+    catch (e) { meldeFehler(e); }
+  });
 }
 // Standort an die Meldung hängen (gleiche Bestimmung wie „📍 Wo bin ich?“ auf der SOS-Seite; nichts wird gespeichert)
 async function notfallStandort(knopf) {

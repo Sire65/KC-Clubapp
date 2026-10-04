@@ -1,6 +1,6 @@
 # Änderungen
 
-## 2.22.6 – 2026-10-04 – Ameisenrahmen um „Innovation“, WhatsApp-Gruppe beim SOS benannt (Wunsch Hansi)
+## 2.22.6 – 2026-10-04 – Ameisenrahmen um „Innovation“, Spiele live, 🏙️ Termine der Stadt Werne (Wunsch Hansi)
 - KC-CLUB-GRUPPE-AMEISEN: beim Öffnen von „💬 Nachrichten“ läuft um die Gruppe „Innovation“ (Liste UH_HERVOR) 5 Sekunden ein roter
   Ameisenrahmen (gleiche Animation wie bei den Registern), danach ruhig; höchstens 1× je Minute, bleibt auch beim Neuzeichnen der Liste.
 - SOS: der WhatsApp-Knopf nennt die Club-Gruppe „KCW Köcheclub Werne“ (WA_GRUPPE), damit man sie in der WhatsApp-Auswahl sofort findet.
@@ -13,6 +13,12 @@
 - Herausfordern (Wunsch Hansi): sofort nur, wer gerade online ist („🟢 Gerade online – sofort spielen“). Alle anderen über „🔎 Person suchen“
   → „📅 Terminanfrage“: legt die Herausforderung an und öffnet gleich die vorhandene Terminanfrage für Partien (steht dann bei beiden im Kalender).
 - Spiele-Erklärung: Küchenterror „je Frage 20, 15 oder 10 Sekunden – je nach Stufe“ (war noch „10 Sekunden“). Test 330.
+- KC-CLUB-STADT-TERMINE (Wunsch Hansi): Admin-Kachel „🏙️ Stadt-Termine“. Der Server liest die offiziellen Kalender-Abos der Stadt Werne
+  (Feste & Events, Märkte, Sim-Jü, Sonstige, Theater & Konzerte, Führungen, Sport, Kinder & Jugend – Register STADT, kostenlos, ohne Schlüssel),
+  fasst mehrtägige Feste zusammen (Sim-Jü 24.–27.10. = ein Termin) und lässt Wochenmärkte weg. Der Admin kreuzt an, was als Veranstaltung
+  „🏙️ …“ in den Clubkalender kommt – still, ohne Nachricht an die Mitglieder; nichts wird doppelt eingetragen, ein gelöschter Stadt-Termin kommt
+  nicht wieder. Auf Wunsch „🔁 automatisch“: einmal pro Woche neue Termine aus den gewählten Kalendern (Zeitplaner „wartung“).
+  Gespeichert als Club-Einstellung „stadt_termine“ (kc_club_konfig – keine Datenbank-Änderung), protokolliert. Test 331.
 
 ## 2.22.5 – 2026-10-04 – 👥 SOS für alle freigeben (Wunsch Hansi)
 - KC-CLUB-SOS-FREIGABE: im SOS-Fenster (nur beim Admin) Schalter „👥 SOS für alle Mitglieder freigeben“ – mit Rückfrage. Gespeichert als
