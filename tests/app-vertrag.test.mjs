@@ -3486,9 +3486,25 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   for (const d of ["supabase", "neon", "cloudflare", "github", "b2", "brevo", "kicc"]) assert.ok(new RegExp(`\\n  ${d}: \\{ sym:`).test(ad), "Direktsprung fehlt: " + d);
   assert.ok(!/(sb_secret_|service_role|SUPABASE_ACCESS_TOKEN|apikey|Bearer )/i.test(ad), "keine Schlüssel im Admin-Register");
   assert.ok(/rel="noopener"/.test(ad) && /async function adNeustart\(\) \{\s*const z = adZustand\("supabase"\);\s*if \(!\(await frage\(/.test(ad), "Neustart nur nach Rückfrage, Verwaltung in neuem Fenster");
-  assert.ok(/case "admin_eingriff": \{\s*nurAdmin\(ich\);[\s\S]{0,200}\["neustart_geoeffnet"\]\.includes\(art\)[\s\S]{0,200}protokoll\(ich\.person_id, "admin_eingriff"/.test(server), "Eingriff nur Admin, feste Arten, protokolliert");
+  assert.ok(/case "admin_eingriff": \{\s*nurAdmin\(ich\);[\s\S]{0,200}\["neustart_geoeffnet"(, "neustart_github")?\]\.includes\(art\)[\s\S]{0,200}protokoll\(ich\.person_id, "admin_eingriff"/.test(server), "Eingriff nur Admin, feste Arten, protokolliert");
   assert.ok(/b2: b2 \?\? null/.test(server) && /from\("kc_backup_machine_telemetry"\)\.select\(/.test(server), "B2-Stand nur lesend in admin_lage");
   assert.ok(/#raster\.ad-raster \{ grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/.test(html) && /\.register\.vier \{ grid-template-columns: repeat\(4/.test(html), "3 Kacheln je Reihe, 4 Register in einer Reihe");
+}
+// 322. 2.21.0: Admin-Register Stufe 2 – Verlauf (KC-CLUB-ADMIN-VERLAUF) + Neustart über GitHub (KC-CLUB-NEUSTART-GITHUB)
+{
+  const sql = lies("supabase/migrations/20261004_kc_club_v2210_messwerte.sql");
+  assert.ok(/enable row level security/.test(sql) && /revoke all on table public\.kc_club_messwerte from anon, authenticated/.test(sql), "Messwerte nur für den Server");
+  assert.ok(/cron\.schedule\('kc-club-messung-10min', '\*\/10 \* \* \* \*'/.test(sql) && /net\._http_response/.test(sql) && /interval '35 days'/.test(sql), "DB-Messung alle 10 Min. ohne Datenschnittstelle, 35 Tage");
+  assert.ok(/'kc_club_messwerte', 'Club-App', 'sensitive', false, false, false/.test(sql), "Spiegel-Regel vorhanden (Abdeckung vollständig)");
+  assert.ok(/case "admin_verlauf": \{\s*nurAdmin\(ich\);/.test(server) && /\[1, 7, 30\]\.includes\(Number\(p\.tage\)\)/.test(server), "Verlauf nur für Admins, feste Zeiträume");
+  assert.ok(/from\("kc_club_messwerte"\)\.insert\(\{ quelle: "api", db_ms:/.test(server.slice(server.indexOf('if (a === "wartung")'))), "API-Messung im Wartungslauf");
+  const v = html.slice(html.indexOf("function adAbschnitte(d)"), html.indexOf("const adVerfuegbar"));
+  assert.ok(/if \(bis <= seit\) f = "leer";\s*else if \(!b\.dbN && !b\.apiN\) f = bis > jetzt \? "jetzt" : "rot";/.test(v), "ohne Messung nie grün (leer/jetzt/rot)");
+  assert.ok(/\["verlauf", "📈", "Verlauf", "ueb"\]/.test(html) && /function adLinie\(/.test(html) && /function adBand\(/.test(html), "Kachel Verlauf mit Band und Linie");
+  const wf = lies(".github/workflows/supabase-neustart.yml");
+  assert.ok(/workflow_dispatch:/.test(wf) && !/schedule:/.test(wf) && /secrets\.SUPABASE_NEUSTART_TOKEN/.test(wf) && /permissions: \{\}/.test(wf), "Neustart nur per Hand, Schlüssel nur als Secret");
+  assert.ok(/gut" -ge 2 \] && \[ "\$ERZWINGEN" != "true" \]/.test(wf) && /concurrency:\s*\n\s*group: supabase-neustart/.test(wf), "erst prüfen, nie zwei Läufe gleichzeitig");
+  assert.ok(/api\.supabase\.com\/v1\/projects\/\$PROJEKT\/restart/.test(wf) && /Warten, bis alles wieder läuft/.test(wf), "offizielle API, danach Erfolg prüfen");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

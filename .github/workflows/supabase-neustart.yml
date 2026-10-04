@@ -1,0 +1,72 @@
+# KC-CLUB-NEUSTART-GITHUB (2.21.0, Wunsch Hansi): Supabase-Projekt neu starten – per Hand („Run workflow“), z. B. aus dem
+# Admin-Register der Club-App (Notfall → „Supabase neu starten“ → „Automatisch über GitHub“).
+# Ablauf: 1) prüfen, ob die Datenschnittstelle wirklich hängt (Spiegel-Arbeiter liest über sie; 200 = in Ordnung)
+#         2) nur bei Störung (oder „erzwingen“) neu starten – offizielle Supabase-Verwaltungs-API
+#         3) warten, bis die Datenschnittstelle wieder antwortet (höchstens 12 Min.), Ergebnis ✅/❌ in der Zusammenfassung
+# Kritische Aktion: Daten bleiben erhalten, App 3–5 Min. offline (Notbetrieb springt ein). Nie zwei Läufe gleichzeitig.
+# Braucht das Repository-Secret SUPABASE_NEUSTART_TOKEN (Supabase-Zugangsschlüssel, nur von Hansi angelegt).
+# Fehlt es, wird nichts getan (Lauf grün mit Hinweis). Kostenlos: öffentliches Repository.
+name: Supabase neu starten
+on:
+  workflow_dispatch:
+    inputs:
+      erzwingen:
+        description: "Auch neu starten, wenn die Datenbank gerade antwortet"
+        type: boolean
+        default: false
+concurrency:
+  group: supabase-neustart
+  cancel-in-progress: false
+permissions: {}
+jobs:
+  neustart:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      TOKEN: ${{ secrets.SUPABASE_NEUSTART_TOKEN }}
+      PROJEKT: ptblnpiroqftcvlsrhac
+      ERZWINGEN: ${{ inputs.erzwingen }}
+    steps:
+      - name: Eingerichtet?
+        id: pruef
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "::warning::Noch nicht eingerichtet: Secret SUPABASE_NEUSTART_TOKEN fehlt – nichts getan."
+            echo "### ⚪ Noch nicht eingerichtet – Secret SUPABASE_NEUSTART_TOKEN fehlt" >> "$GITHUB_STEP_SUMMARY"
+            echo "los=nein" >> "$GITHUB_OUTPUT"
+          else echo "los=ja" >> "$GITHUB_OUTPUT"; fi
+      - name: Hängt die Datenbank wirklich?
+        id: zustand
+        if: steps.pruef.outputs.los == 'ja'
+        run: |
+          probe() { curl -s -o /dev/null -w "%{http_code}" --max-time 40 -X POST "https://$PROJEKT.supabase.co/functions/v1/kc-db-mirror-worker" -H "content-type: application/json" -d '{"aktion":"extern_pruefen"}' || echo 000; }
+          gut=0; for i in 1 2 3; do c=$(probe); echo "Probe $i: HTTP $c"; [ "$c" = "200" ] || [ "$c" = "202" ] && gut=$((gut+1)); sleep 5; done
+          if [ "$gut" -ge 2 ] && [ "$ERZWINGEN" != "true" ]; then
+            echo "### ✅ Datenbank antwortet ($gut von 3 Proben) – kein Neustart nötig" >> "$GITHUB_STEP_SUMMARY"
+            echo "neu=nein" >> "$GITHUB_OUTPUT"
+          else
+            echo "Datenbank gestört ($gut von 3 Proben in Ordnung) oder erzwungen ($ERZWINGEN) → Neustart"
+            echo "neu=ja" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Neu starten
+        if: steps.zustand.outputs.neu == 'ja'
+        run: |
+          code=$(curl -s -o /tmp/antwort -w "%{http_code}" --max-time 60 -X POST "https://api.supabase.com/v1/projects/$PROJEKT/restart" -H "Authorization: Bearer $TOKEN" || echo 000)
+          echo "Supabase-Verwaltung: HTTP $code"
+          if [ "$code" -ge 300 ]; then
+            echo "### ❌ Neustart abgelehnt (HTTP $code) – Schlüssel prüfen oder selbst in der Supabase-Verwaltung neu starten" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          echo "Neustart angestoßen – warte, bis die Datenbank wieder antwortet …"
+      - name: Warten, bis alles wieder läuft
+        if: steps.zustand.outputs.neu == 'ja'
+        run: |
+          sleep 60
+          for i in $(seq 1 33); do
+            c=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 -X POST "https://$PROJEKT.supabase.co/functions/v1/kc-db-mirror-worker" -H "content-type: application/json" -d '{"aktion":"extern_pruefen"}' || echo 000)
+            echo "$(date -u +%H:%M:%S) HTTP $c"
+            if [ "$c" = "200" ] || [ "$c" = "202" ]; then echo "### ✅ Neu gestartet – Datenbank antwortet wieder" >> "$GITHUB_STEP_SUMMARY"; exit 0; fi
+            sleep 20
+          done
+          echo "### ❌ Nach 12 Minuten antwortet die Datenbank noch nicht – Störung beim Anbieter? status.supabase.com ansehen, Claude Bescheid geben" >> "$GITHUB_STEP_SUMMARY"
+          exit 1

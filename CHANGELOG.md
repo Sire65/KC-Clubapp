@@ -1,5 +1,21 @@
 # Änderungen
 
+## 2.21.0 – 2026-10-04 – 📈 Admin-Register Stufe 2: Verlauf + Supabase-Neustart über GitHub (Wunsch Hansi)
+- KC-CLUB-ADMIN-VERLAUF: neue Tabelle kc_club_messwerte (nur Zahlen, RLS ohne Richtlinien, 35 Tage). Messpunkt „db“ alle 10 Min. direkt
+  in der Datenbank (pg_cron kc-club-messung-10min, ohne Datenschnittstelle): Größe, Verbindungen, Hintergrund-Aufrufe ok/fehlgeschlagen.
+  Messpunkt „api“ alle 15 Min. im Wartungslauf des Club-Servers: Antwortzeit über die Datenschnittstelle. Fehlt „api“, während „db“
+  weiterläuft → rot (genau die Störung vom 04.10.). Spiegel-Regel: bewusst nicht gespiegelt (Messwerte), Abdeckung bleibt vollständig.
+- Neue Kachel 📈 Verlauf (zählt zur Lage): 24 Std. / 7 Tage / 30 Tage – Erreichbarkeitsband (je Abschnitt grün/gelb/rot, grau = keine
+  Messung, nie grün ohne Messung), Linie Antwortzeit der Datenbank, rote Säulen für fehlgeschlagene Hintergrund-Aufrufe, Linie Größe der
+  Datenbank, „x % erreichbar“. Server-Aktion admin_verlauf (nur Admin, feste Zeiträume, zusammengefasst in Abschnitte).
+- KC-CLUB-NEUSTART-GITHUB: Workflow „Supabase neu starten“ (.github/workflows/supabase-neustart.yml, nur per Hand): prüft erst dreimal,
+  ob die Datenbank wirklich hängt, startet nur dann (oder „erzwingen“) über die offizielle Supabase-Verwaltungs-API neu und wartet bis
+  zu 12 Min., bis alles wieder antwortet (✅/❌ in der Zusammenfassung). Nie zwei Läufe gleichzeitig. Schlüssel nur als Repository-Secret
+  SUPABASE_NEUSTART_TOKEN (legt Hansi einmal an; fehlt er → nichts getan, grün mit Hinweis).
+- Admin-Register: „Supabase neu starten“ fragt erst nach und bietet dann zwei Wege – 🤖 automatisch über GitHub (empfohlen) oder
+  🖐️ selbst in der Supabase-Verwaltung – plus Anleitung „Einmalig einrichten“. Beide Wege werden protokolliert (admin_eingriff).
+- Test 322.
+
 ## 2.20.0 – 2026-10-04 – 🛡️ Register „Admin“: Cockpit für Wartung, Überwachung und Notfall (Wunsch Hansi), Stufe 1
 - KC-CLUB-ADMIN-REGISTER: auf der Startseite neben Club · Meins · Technik ein viertes Register „Admin“ – nur für Admin/Vertretung
   (Mitglieder sehen weiter drei Register; jede Admin-Kachel auch in Suche/Schnellstart nur für Admins). Mit vier Registern passen alle in
