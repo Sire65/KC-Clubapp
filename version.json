@@ -1,10 +1,16 @@
 {
-  "version": "2.23.18",
+  "version": "2.23.19",
   "datum": "2026-10-04",
   "neu": [
-    "✨ Die Pfeile an „Neue Nachr.“, „Mitglieder“ und „Nächster Termin“ leuchten farbig, wenn dort etwas ist – bei Neuem blinken sie 5×"
+    "🟢 Mitglieder: wer gerade online ist, hat einen hellgrünen, leicht pulsierenden Rand um den Namenskreis"
   ],
   "verlauf": [
+    {
+      "version": "2.23.19",
+      "neu": [
+        "🟢 Mitglieder: wer gerade online ist, hat einen hellgrünen, leicht pulsierenden Rand um den Namenskreis"
+      ]
+    },
     {
       "version": "2.23.18",
       "neu": [

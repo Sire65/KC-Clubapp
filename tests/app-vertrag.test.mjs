@@ -4179,3 +4179,10 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/mpfeil\("nachrichten", n > 0, n\)/.test(html) && /mpfeil\("mitglieder", ONL\.zeigen && mpOnline\(\) > 0, mpOnline\(\)\)/.test(html) && /mpfeil\("termin", !!t,/.test(html), "drei Felder: Nachricht, online, Termin");
   assert.ok(/\.mpfeil\.mp-nachrichten \{ color:/.test(html) && /\.mpfeil\.mp-mitglieder \{ color:/.test(html) && /\.mpfeil\.mp-termin \{ color:/.test(html), "Farben");
 }
+
+// 367. 2.23.19: Online-Mitglieder – Namenskreis mit hellgrünem Rand, pulsiert leicht (KC-CLUB-MG-ONLINE-PULS)
+{
+  assert.ok(/\.mg-kacheln \.mg-online \.avatar, #mitgliederListe \.zeile\.mg-online \.avatar \{[^}]*#6ee87a[^}]*animation: mgOnlinePuls 2\.4s ease-in-out infinite;/.test(html), "hellgrüner Rand + Pulsieren (Kacheln und Liste)");
+  assert.ok(/@keyframes mgOnlinePuls \{/.test(html) && /@keyframes mgOnlinePulsKlein \{/.test(html) && /prefers-reduced-motion: reduce\) \{ \.mg-kacheln \.mg-online \.avatar, #mitgliederListe \.zeile\.mg-online \.avatar \{ animation: none; \}/.test(html), "Keyframes, ruhig bei „Bewegung reduzieren“");
+  assert.ok(/liste\.map\(\(m\) => `<div class="zeile\$\{m\.online \? " mg-online" : ""\}">/.test(html) && /class="mini-kachel mg-kachel\$\{on \? " mg-online" : ""\}"/.test(html), "beide Ansichten markieren online");
+}

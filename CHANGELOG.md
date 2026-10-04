@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.23.19 – 2026-10-04 – Online-Mitglieder fallen mehr auf (Wunsch Hansi)
+- KC-CLUB-MG-ONLINE-PULS: In der Mitglieder-Übersicht hat der Namenskreis aller, die gerade online sind, einen hellgrünen Rand
+  (#6ee87a) und pulsiert leicht (2,4 s, um 6 % größer, mit sanftem Lichtring) – in der Kachel- und in der Listenansicht.
+  Bei „Bewegung reduzieren“ nur der Rand. Test 367.
+
 ## 2.23.18 – 2026-10-04 – Randpfeile farbig, bei Neuem 5× blinken (Wunsch Hansi)
 - KC-CLUB-MINI-PFEIL-BLINK: Die drei Pfeile „›“ auf dem Rand der Felder oben (erweiterte Ansicht) sind farbig, sobald im Feld etwas
   ist: Neue Nachr. gelb (ungelesene Nachrichten), Mitglieder grün (jemand online), Nächster Termin hellblau – mit Frist grün/orange/rot
