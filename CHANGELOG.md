@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.23.24 – 2026-10-04 – Alles Anklickbare pulsiert kurz beim Antippen (Wunsch Hansi)
+- KC-CLUB-TIPP-PULS: Knöpfe, Reiter (Register, Termine, Mitglieder …), Kacheln, Info-Feld, Chips, Links, Schalter-Zeilen und Zeilen mit
+  Tipp-Funktion ziehen sich beim Antippen kurz zusammen und werden etwas heller (0,28 s). Eine Stelle für die ganze App – neue Elemente
+  bekommen es automatisch. Läuft neben vorhandenen Animationen (eigene „scale“-Animation), Scrollen löst keinen Puls aus, große Flächen
+  pulsieren nur leicht, „weniger Bewegung“ nur angedeutet, Eingabefelder nie. Test 372.
+
 ## 2.23.23 – 2026-10-04 – „since 1991“ auf der Rückseite der Kochmütze (Wunsch Hansi)
 - KC-CLUB-MUETZE-SINCE: Die drehende Kochmütze zeigt vorne die Mütze, hinten „since 1991“ – beim Warten („Einen Moment …“), beim
   Twinkey-Laden und im Sicherheits-Check (kleine Mütze ohne Text). Zentral per CSS (Rückseite, backface-visibility).

@@ -2773,7 +2773,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.23"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.24"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -9550,6 +9550,31 @@ function zeige(v, ausHistorie) {
 // stehende werden versteckt, alle zur Laufzeit gebauten entfernt (Rückfragen über ihr „Abbrechen“). Gilt für Handy-Zurück und Escape.
 document.querySelectorAll(".blatt").forEach((b) => { b.dataset.fest = "1"; });
 function fensterZu(b) { if (b._zu) b._zu(); else if (b.dataset.fest) b.classList.add("versteckt"); else b.remove(); }
+// KC-CLUB-TIPP-PULS (2.23.24, Wunsch Hansi): alles Anklickbare – Knöpfe, Reiter, Kacheln, Chips, Links, Zeilen mit onclick – pulsiert beim
+// Antippen kurz (zusammenziehen, etwas heller, zurück). Eine Stelle für die ganze App; neue Elemente bekommen es automatisch.
+// Web Animations mit „scale“ (eigene Eigenschaft): läuft neben vorhandenen CSS-Animationen und transform, ohne sie zu stören.
+// Wer scrollt (Finger bewegt sich > 10 px), löst keinen Puls aus. Große Flächen pulsieren nur leicht, „weniger Bewegung“ nur angedeutet.
+const TIPP_ZIEL = 'button, [role="button"], [role="tab"], [role="radio"], [role="option"], [role="menuitem"], a[href], summary, label.schalter, .chip, .kachel, .mini, [onclick]';
+(function tippPuls() {
+  if (!Element.prototype.animate) return;
+  const ruhig = matchMedia("(prefers-reduced-motion: reduce)");
+  let ziel = null, x0 = 0, y0 = 0;
+  const finden = (t) => { const z = t?.closest?.(TIPP_ZIEL); return z && !z.disabled && !z.classList.contains("blatt") && z !== document.body ? z : null; };
+  const pulsen = (z) => {
+    const r = z.getBoundingClientRect(); if (!r.width || (r.width > innerWidth * 0.95 && r.height > innerHeight * 0.5)) return; // ganze Seiten/Fenster nicht
+    const tief = ruhig.matches ? 0.985 : r.width > 260 || r.height > 140 ? 0.97 : 0.92;
+    try { z.animate([{ scale: "1" }, { scale: String(tief), filter: "brightness(1.1)", offset: 0.35 }, { scale: "1" }], { duration: 280, easing: "ease-out" }); } catch {}
+  };
+  document.addEventListener("pointerdown", (e) => {
+    if (e.target.matches?.('input:not([type="checkbox"]):not([type="radio"]), textarea, select, [contenteditable="true"]')) return; // Schreiben nicht stören
+    const z = finden(e.target); if (!z) return;
+    ziel = z; x0 = e.clientX; y0 = e.clientY;
+    setTimeout(() => { if (ziel === z) { ziel = null; pulsen(z); } }, 60);
+  }, { capture: true, passive: true });
+  document.addEventListener("pointermove", (e) => { if (ziel && Math.hypot(e.clientX - x0, e.clientY - y0) > 10) ziel = null; }, { capture: true, passive: true });
+  document.addEventListener("pointercancel", () => { ziel = null; }, true);
+  document.addEventListener("click", (e) => { if (e.detail === 0) { const z = finden(e.target); if (z) pulsen(z); } }, true); // Tastatur (Enter/Leertaste)
+})();
 // KC-CLUB-BLATT-X (2.23.20, Wunsch Hansi): Fenster, deren Schließen-Knopf erst nach Scrollen erreichbar ist, bekommen oben rechts
 // ein rundes ✕ (schließt wie „Zurück“ über fensterZu). Nicht, wenn oben schon ein ✕/Schließen sitzt, nicht bei kurzen Fenstern,
 // nie beim Notfall-Fenster (data-ohne-x). Eine Stelle für alle Fenster – neue Fenster bekommen es automatisch.

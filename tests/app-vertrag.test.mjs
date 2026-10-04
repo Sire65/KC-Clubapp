@@ -3788,6 +3788,12 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(html.includes('.warten .muetze::after, .si-muetze:not(.klein) > span::after { content: "since\\A 1991";') && /content: "since[^"]*1991";[^}]*transform: rotateY\(180deg\); backface-visibility: hidden;/.test(html), "Rückseite mit Spruch");
   assert.ok(/\.warten \.muetze img, \.si-muetze:not\(\.klein\) > span img \{ backface-visibility: hidden;/.test(html), "Mütze nur vorne");
 }
+// 372. 2.23.24: alles Anklickbare pulsiert kurz beim Antippen (KC-CLUB-TIPP-PULS)
+{
+  assert.ok(/const TIPP_ZIEL = 'button, \[role="button"\], \[role="tab"\]/.test(html) && /\(function tippPuls\(\) \{/.test(html), "zentrale Stelle");
+  assert.ok(/z\.animate\(\[\{ scale: "1" \}, \{ scale: String\(tief\)/.test(html) && /Math\.hypot\(e\.clientX - x0, e\.clientY - y0\) > 10\) ziel = null;/.test(html), "eigene scale-Animation, nicht beim Scrollen");
+  assert.ok(/textarea, select, \[contenteditable="true"\]'\)\) return;/.test(html), "Eingabefelder nie");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
