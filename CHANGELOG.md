@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.22.1 – 2026-10-04 – 🧪 SOS-Probe nur an mich (Wunsch Hansi)
+- KC-CLUB-NOTFALL-PROBE: im SOS-Fenster „🧪 Probe nur an mich“ – dieselbe Meldung (roter Rand, „🚨 NOTFALL-PROBE – <Vorname>“, Push + Mail
+  auch in Ruhezeit) geht nur an den Admin selbst (eigene Unterhaltung „🧪 SOS-Probe“, nicht in die Notfall-Unterhaltung aller). Danach zeigt
+  die App das rote Alarm-Fenster als Vorschau, wie es alle sehen würden. Ohne Text: „Das ist eine SOS-Probe. Bitte nicht reagieren.“
+  Protokoll: notfall_probe. Test 324.
+
 ## 2.22.0 – 2026-10-04 – 🚨 SOS in „Nachrichten“: an alle auf allen Kanälen (Wunsch Hansi)
 - KC-CLUB-NOTFALL-KANAELE: in „💬 Nachrichten“ oben rechts neben „＋ Neu“ der rote Knopf „🚨 SOS“ – nur beim Admin/Vertretung (Mitglieder
   sehen ihn nicht). Öffnet die Notfall-Meldung mit kurzer Erklärung („Neue Nachricht an alle auf allen Kanälen“).

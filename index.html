@@ -2614,7 +2614,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.22.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.22.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -7956,6 +7956,7 @@ function notfallMeldung() {
     <textarea id="notfallText" maxlength="1000" placeholder="Was ist passiert? Was sollen alle jetzt tun?"></textarea>
     ${DIKTAT_GEHT ? '<button class="knopf" onclick="diktatStart(\'notfallText\', notfallSenden)">🎙️ Einsprechen statt tippen</button>' : ""}
     <button class="knopf alarm-knopf" style="padding:14px;font-size:1.1rem" onclick="notfallSenden()">🚨 JETZT AN ALLE SENDEN</button>
+    <button class="knopf" onclick="notfallProbe()">🧪 Probe nur an mich</button>
     <button class="knopf" onclick="$('notfallBlatt').remove()">Abbrechen</button></div>`).classList.add("alarm-blatt");
   setTimeout(() => $("notfallText")?.focus(), 80);
 }
@@ -7988,6 +7989,20 @@ async function notfallSenden() {
       <button class="knopf" onclick="$('notfallBlatt').remove()">Schließen</button></div>`).classList.add("alarm-blatt");
     $("notfallBlatt").dataset.text = text;
   }
+}
+// KC-CLUB-NOTFALL-PROBE (2.22.1, Wunsch Hansi): dieselbe Meldung nur an mich – Push + Mail wie echt, danach das Alarm-Fenster als Vorschau
+async function notfallProbe() {
+  const text = ($("notfallText")?.value || "").trim() || "Das ist eine SOS-Probe. Bitte nicht reagieren.";
+  try {
+    const r = await api("nachricht_senden", { notfall: true, probe: true, text }, { warten: true });
+    $("notfallBlatt")?.remove();
+    melde(`🧪 Probe an dich gesendet${r.versand?.gesendet != null ? ` (${r.versand.gesendet} Zustellungen)` : ""} – Push und Mail kommen gleich`);
+    blattAuf("alarmVorschau", `<div style="display:grid;gap:10px"><div class="alarm-kopf">🚨 NOTFALL-MELDUNG</div>
+      <div class="hinweis" style="margin:0">🧪 Vorschau – so sehen es alle beim Öffnen der App · von ${esc(ICH?.vorname || "")}</div>
+      <div class="alarm-text">${esc(text)}</div>
+      <button class="knopf" onclick="$('alarmVorschau').remove()">✅ Vorschau schließen</button></div>`).classList.add("alarm-blatt");
+    chatStand = "";
+  } catch (e) { meldeFehler(e); }
 }
 async function notfallKopieren() { try { await navigator.clipboard.writeText(notfallTeilText($("notfallBlatt")?.dataset.text || "")); melde("📋 Kopiert"); } catch { melde("Kopieren ging nicht.", true); } }
 // beim Öffnen der App: ungelesene Notfall-Meldung (48 Std.) groß in Rot – jede Meldung nur einmal

@@ -2423,7 +2423,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.match(srv, /if \(we\) \{ await db\.from\("kc_communication_messages"\)\.delete\(\)\.eq\("id", m\.id\)/, "kein halber Zustand");
   assert.match(srv, /wichtig: wichtigIds\.has\(m\.id\)/, "Chat liefert wichtig");
   assert.match(srv, /wichtigNeu: m\.filter/, "Liste liefert wichtigNeu");
-  assert.match(srv, /titel: (notfall \? `🚨 NOTFALL – \$\{ich\.vorname\}` : )?wMarke \+ \(grp/, "Push-Titel mit ❗"); // 2.21.0: Notfall eigener Titel
+  assert.match(srv, /titel: (notfall \? `🚨 NOTFALL(\$\{probe \? "-PROBE" : ""\})? – \$\{ich\.vorname\}` : )?wMarke \+ \(grp/, "Push-Titel mit ❗"); // 2.21.0: Notfall eigener Titel
   assert.match(mig, /references kc_communication_messages\(id\) on delete cascade/, "hängt an der Nachricht");
   assert.match(mig, /enable row level security/, "RLS an");
   assert.match(mig, /revoke all on kc_club_nachricht_wichtig from anon, authenticated/, "kein Direktzugriff");
@@ -3510,6 +3510,12 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/href="https:\/\/wa\.me\/\?text=\$\{t\}"/.test(html) && /href="sms:\?&body=\$\{t\}"/.test(html), "WhatsApp und SMS mit fertigem Text");
   assert.ok(/"notfall_whatsapp", "notfall_sms"/.test(server), "Weitergabe wird protokolliert");
   assert.ok(/#alarmBlatt\.blatt \{ z-index: 9990; \}/.test(html), "nur das Empfänger-Alarmfenster liegt über allem (Rückfragen/Diktat bleiben bedienbar)");
+}
+// 324. 2.22.1: SOS-Probe nur an mich (KC-CLUB-NOTFALL-PROBE)
+{
+  assert.ok(/probe = notfall && !!p\.probe;[^\n]*\n\s*if \(probe\) \{ p\.empfaenger = \{ personen: \[ich\.person_id\] \}; p\.betreff = "🧪 SOS-Probe"; p\.id = ""; \}/.test(server), "Probe geht nur an mich");
+  assert.ok(/let threadId = notfall && !probe \? await notfallUnterhaltung\(ich\)/.test(server) && /probe \? "notfall_probe"/.test(server), "Probe nicht in die Notfall-Unterhaltung, eigenes Protokoll");
+  assert.ok(/onclick="notfallProbe\(\)">🧪 Probe nur an mich/.test(html) && /api\("nachricht_senden", \{ notfall: true, probe: true, text \}/.test(html), "Knopf im SOS-Fenster");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

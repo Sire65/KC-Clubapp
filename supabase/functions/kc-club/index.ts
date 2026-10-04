@@ -26,7 +26,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "2.22.0";
+const SERVER_VERSION = "2.22.1";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -4978,7 +4978,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         }
         if (!text && !anlagen.length) throw new Fehler("Bitte eine Nachricht schreiben oder eine Anlage anhängen.");
         // KC-CLUB-NOTFALL-MELDUNG (2.21.0): nur Admin/Vertretung; an alle, immer Push + Mail, auch stumm/Ruhezeit
-        const notfall = !!p.notfall;
+        const notfall = !!p.notfall, probe = notfall && !!p.probe; // 2.22.1 KC-CLUB-NOTFALL-PROBE: nur an mich selbst, alles andere wie echt
+        if (probe) { p.empfaenger = { personen: [ich.person_id] }; p.betreff = "🧪 SOS-Probe"; p.id = ""; }
         if (notfall) {
           if (!ich.admin) throw new Fehler("Notfall-Meldungen an alle darf nur der Admin senden.", 403);
           if (!text.replace(NOTFALL_RE, "").trim() || umfrage || kontaktPid) throw new Fehler("Bitte die Notfall-Meldung schreiben.");
@@ -4986,7 +4987,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         } else if (NOTFALL_RE.test(text)) text = text.replace(NOTFALL_RE, "").trim() || "…";
         // KC-CLUB-WICHTIG (1.53.0): „Wichtigkeit hoch“ – nur für normale Nachrichten (nicht Abstimmung/Kontaktkarte)
         const wichtig = (!!p.wichtig || notfall) && !umfrage && !kontaktPid;
-        let threadId = notfall ? await notfallUnterhaltung(ich) : String(p.id || ""), neu = false;
+        let threadId = notfall && !probe ? await notfallUnterhaltung(ich) : String(p.id || ""), neu = false;
         if (threadId) await binTeilnehmer(threadId, ich.person_id);
         else {
           // Test an mich selbst: nur ich als Empfänger → eigene Unterhaltung, Benachrichtigung an mich (prüft Push/Mail)
@@ -5082,12 +5083,12 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (notfall) stumm.clear(); // KC-CLUB-NOTFALL-MELDUNG: Notfall erreicht auch stummgeschaltete Chats
         for (let i = ziel.length - 1; i >= 0; i--) if (stumm.has(ziel[i])) ziel.splice(i, 1);
         const versand = await sendenGewaehlt("club_nachricht", ziel, wege, {
-          titel: notfall ? `🚨 NOTFALL – ${ich.vorname}` : wMarke + (grp ? `${grp.symbol} ${grp.name}: ${ich.vorname}` : `💬 ${ich.name}`), kurz: notfall ? txt(text.replace(NOTFALL_RE, ""), 140) : wichtig ? txt(text, 140) || "Wichtige Nachricht im Köcheclub" : th?.subject ? `Neue Nachricht in „${th.subject}“` : "Neue Nachricht im Köcheclub",
+          titel: notfall ? `🚨 NOTFALL${probe ? "-PROBE" : ""} – ${ich.vorname}` : wMarke + (grp ? `${grp.symbol} ${grp.name}: ${ich.vorname}` : `💬 ${ich.name}`), kurz: notfall ? txt(text.replace(NOTFALL_RE, ""), 140) : wichtig ? txt(text, 140) || "Wichtige Nachricht im Köcheclub" : th?.subject ? `Neue Nachricht in „${th.subject}“` : "Neue Nachricht im Köcheclub",
           betreff: `${wMarke}Köcheclub Werne – ${wichtig ? "wichtige" : "neue"} Nachricht von ${ich.name}${th?.subject ? ": " + th.subject : ""}`,
           text: `Hallo,\n\n${ich.name} hat dir im Köcheclub geschrieben${th?.subject ? ` („${th.subject}“)` : ""}:\n\n${text}${anlagen.length ? `\n\n📎 ${anlagen.length} Anlage(n) – in der App ansehen.` : ""}\n\nAntworten in der Köcheclub-App: ${APP_URL}#nachricht=${threadId}\n\nViele Grüße\nKöcheclub Werne`,
           url: `${APP_URL}#nachricht=${threadId}`,
         }, `club-nachricht:${m.id}`, { notfall });
-        await protokoll(ich.person_id, notfall ? "notfall_meldung" : weiterVon ? "nachricht_weitergeleitet" : "nachricht_gesendet", { thread: threadId, neu, empfaenger: ziel.length, stumm: stumm.size, umfrage: !!umfrage, kontakt: !!kontaktPid, anlagen: anlagen.length, wege, versand, antwort: !!antwortAuf, erwaehnt: erwaehnt.length, versandErw, wichtig, ...(weiterVon ? { von_nachricht: weiterVon.id } : {}) });
+        await protokoll(ich.person_id, probe ? "notfall_probe" : notfall ? "notfall_meldung" : weiterVon ? "nachricht_weitergeleitet" : "nachricht_gesendet", { thread: threadId, neu, empfaenger: ziel.length, stumm: stumm.size, umfrage: !!umfrage, kontakt: !!kontaktPid, anlagen: anlagen.length, wege, versand, antwort: !!antwortAuf, erwaehnt: erwaehnt.length, versandErw, wichtig, ...(weiterVon ? { von_nachricht: weiterVon.id } : {}) });
         return json({ ok: true, id: threadId, versand });
       }
 
