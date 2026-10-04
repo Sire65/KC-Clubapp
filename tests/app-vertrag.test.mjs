@@ -3973,10 +3973,25 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.equal(new Set(es.map((e) => e.t)).size, es.length, "Hilfe-Titel doppelt");
   const anf = {}; for (const e of es) (anf[e.anfang] ||= []).push(e.id);
   for (const [a, ids] of Object.entries(anf)) assert.ok(ids.length === 1, `Hilfetexte beginnen gleich („${a}“): ${ids.join(", ")} – bitte abwechslungsreich formulieren`);
-  assert.ok(/const HZ_GRUSS = \[/.test(html) && /const HZ_THEMA_EINL = \[/.test(html) && /function hzOeffnen\(\) \{ hzNeuerGruss\(\);/.test(html) && /if \(t !== HZ\.thema\) hzNeuerGruss\(\);/.test(html), "wechselnde Einleitungen fehlen");
+  assert.ok(/const HZ_GRUSS = \[/.test(html) && /const HZ_THEMA_EINL = \[/.test(html) && /function hzOeffnen\(\) \{[^\n]*hzNeuerGruss\(\);/.test(html) && /if \(t !== HZ\.thema\) hzNeuerGruss\(\);/.test(html), "wechselnde Einleitungen fehlen");
   assert.ok(!/function hzSuchen\(q\) \{[^}]*hzNeuerGruss/.test(html), "beim Suchen darf die Einleitung nicht wechseln");
   assert.ok(/id: "buero_sprache"[^\n]*nur: \(\) => !!ICH\?\.buero/.test(html), "Büro-Hilfe nur für die Clubleitung");
   // nicht aufdringlich: das Hilfe-Zentrum öffnet keine Fenster und meldet nichts von selbst
   const hz = html.slice(html.indexOf("const HZ = {"), html.indexOf("// ---------- KC-CLUB-ONLINE-ANSAGE"));
   assert.ok(!/melde\(|blattAuf\(|\.classList\.remove\("versteckt"\)/.test(hz), "Hilfe-Zentrum darf sich nicht aufdrängen");
+}
+
+// 351. 2.23.2: Hilfe-Zentrum – deutliches Suchfeld, Kapitel mit Nummern, Zurück-Leiste nach „Zeig mir wo“, Ausdruck/PDF
+{
+  assert.ok(/<label class="hz-suchfeld" for="hzSuche"><span class="hz-such-titel">🔍 Wonach suchst du\?<\/span>/.test(html) && /\.hz-suche \{[^}]*border: 2px solid var\(--rot\)/.test(html), "Suchfeld deutlich");
+  assert.ok(/function hzGliederung\(alle\)/.test(html) && /nr\[e\.id\] = `\$\{t\.nr\}\.\$\{i \+ 1\}`/.test(html) && /<div class="hz-kap-nr">Kapitel \$\{th\.nr\}<\/div>/.test(html), "Kapitel/Nummern fehlen");
+  assert.ok(/\.karte\.hz-eintrag \{ margin-top: 20px;/.test(html), "Abstand zwischen den Abschnitten");
+  const los = html.slice(html.indexOf("function hzLos(id)"), html.indexOf("function hzKarte("));
+  assert.ok(/HZ\.unterwegs = \{ id, thema: HZ\.q \? null : HZ\.thema, q: HZ\.q/.test(los) && /e\.los\(\); hzLeiste\(\);/.test(los), "Leiste nach „Zeig mir wo“");
+  assert.ok(/↩️ Zurück zur Hilfe<\/button>/.test(los) && /onclick="hzLeisteZu\(\)"[^>]*>✕ Abbrechen<\/button>/.test(los), "Knöpfe Zurück/Abbrechen");
+  assert.ok(/document\.querySelectorAll\("\.blatt:not\(\.versteckt\)"\)\.forEach\(fensterZu\)/.test(los) && /#hzInhalt \[data-hz="\$\{u\.id\}"\]/.test(los), "Zurück: Fenster schließen, an dieselbe Stelle");
+  assert.ok(/\.hz-leiste \{ position: fixed; top: calc\(env\(safe-area-inset-top, 0px\) \+ 8px\); right: 8px;/.test(html), "Leiste oben rechts");
+  assert.ok(/function hzOeffnen\(\) \{ \$\("hzLeiste"\)\?\.remove\(\);/.test(html), "Leiste weg, wenn die Hilfe wieder offen ist");
+  assert.ok(/hilfe: \{ titel: "🖨️ Hilfe drucken \/ als PDF", optionen: \(\) => hzDruckOptionen\(\), bauen: \(o\) => hzDruck\(o\) \}/.test(html) && /onclick="druckStarten\('hilfe'\)"/.test(html), "Druck/PDF fehlt");
+  assert.ok(/#druck \.hz-d-kap \{ break-before: page; \}/.test(html) && /<table class="hz-d-inhalt">/.test(html), "Druck: Inhaltsverzeichnis, Kapitel je Seite");
 }

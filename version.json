@@ -1,10 +1,16 @@
 {
-  "version": "2.23.1",
+  "version": "2.23.2",
   "datum": "2026-10-04",
   "neu": [
-    "❓ Hilfe & Tipps: 53 weitere Hilfen aus der ganzen App (Chat, Termine, Pinnwand, Spiele, Privatsphäre, Notfall …), freundlich und abwechslungsreich formuliert"
+    "❓ Hilfe & Tipps: deutlicheres Suchfeld, Kapitel 1, 2, 3 … mit Nummern, nach „Zeig mir wo“ oben rechts „Zurück zur Hilfe“ oder „Abbrechen“, Ausdruck und PDF über 🖨️"
   ],
   "verlauf": [
+    {
+      "version": "2.23.2",
+      "neu": [
+        "❓ Hilfe & Tipps: deutlicheres Suchfeld, Kapitel 1, 2, 3 … mit Nummern, nach „Zeig mir wo“ oben rechts „Zurück zur Hilfe“ oder „Abbrechen“, Ausdruck und PDF über 🖨️"
+      ]
+    },
     {
       "version": "2.23.1",
       "neu": [
