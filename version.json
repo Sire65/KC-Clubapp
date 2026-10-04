@@ -1,10 +1,16 @@
 {
-  "version": "2.23.0",
+  "version": "2.23.1",
   "datum": "2026-10-04",
   "neu": [
-    "❓ Neu im Register Technik: „Hilfe & Tipps“ – alle Tipps und Erklärungen nach Themen, mit Inhaltsverzeichnis, Suche und „Zeig mir wo“"
+    "❓ Hilfe & Tipps: 53 weitere Hilfen aus der ganzen App (Chat, Termine, Pinnwand, Spiele, Privatsphäre, Notfall …), freundlich und abwechslungsreich formuliert"
   ],
   "verlauf": [
+    {
+      "version": "2.23.1",
+      "neu": [
+        "❓ Hilfe & Tipps: 53 weitere Hilfen aus der ganzen App (Chat, Termine, Pinnwand, Spiele, Privatsphäre, Notfall …), freundlich und abwechslungsreich formuliert"
+      ]
+    },
     {
       "version": "2.23.0",
       "neu": [

@@ -1,5 +1,19 @@
 # Änderungen
 
+## 2.23.1 – 2026-10-04 – Hilfe-Zentrum: 53 weitere Hilfen aus der ganzen App (Wunsch Hansi)
+- KC-CLUB-HILFEZENTRUM: ganze App nach Funktionen durchsucht (Funktions-IDs + CHANGELOG, Bezeichnungen gegen den aktuellen Code geprüft) und
+  53 neue Einträge in der Registry HILFE ergänzt (jetzt 86 eigene, zusammen mit Tipps und Einweisungen rund 140 Hilfen):
+  Chat (anheften, merken, Abstimmung, Kontakt teilen, kopieren, weiterleiten, Linie „Neue Nachrichten“, Entwurf, ohne Netz, Haken,
+  Sprachtempo, Chat vorlesen, WA, Gruppe löschen), Termine (Wiederholen, To-do, Terminanfrage, Terminfindung, Liste/Kalender, Drucken,
+  Nächster Termin, Dienst-Erinnerung), Clubleben (Status, wer ist online, Gratulieren, Pinnwand antworten/wichtig/alte Zettel, Foto-Details,
+  Teilen → Köcheclub, Hilfe anbieten/nach Absprache, Vorschläge unterstützen, Spende, Spiele gegen Mitglieder/Pause), Töne (Meine Geräte,
+  Anklopfton, Ansage „verlässt die App“), Privatsphäre (Live-Tippen, zuletzt da, Link verloren, Code für weiteres Gerät), Notfall
+  (Notfallkontakt, Notfallpass sichern), Bedienung/Technik (Info-Feld « », Sonne/Mond-Knopf, Wetter-Woche, Lämpchen, App schließen,
+  PC/Tablet, Was ist neu) und für die Clubleitung die Büro-Sprachsteuerung (nur mit Büro-Recht).
+- Ton: freundlich, nicht drängend, jeder Text beginnt anders (Vertragstest prüft die ersten drei Wörter). Deckblatt und Themenseiten haben
+  wechselnde Einleitungen (neu gewählt beim Öffnen und Themenwechsel, auf Wunsch mit Vornamen). Neue Einträge `seit: "2.23.1"` → 🆕.
+- Keine neuen Meldungen oder Fenster: alles bleibt im Hilfe-Zentrum zum Nachlesen. Server nur Versionsnummer. Test 350.
+
 ## 2.23.0 – 2026-10-04 – Hilfe-Zentrum: alle Tipps und Hinweise nach Themen (Wunsch Hansi)
 - KC-CLUB-HILFEZENTRUM: neue Kachel „❓ Hilfe & Tipps“ im Register Technik (zusätzlich ⚙️ → „🗣️ Ansagen, Töne & Tipps“ → „❓ Alle Tipps nachlesen“,
   Sprung `#hilfezentrum` bzw. `#hilfezentrum=<thema>`). Vorne ein Deckblatt „📖 Inhalt“: jedes Thema als Link mit Anzahl der Hilfen;
