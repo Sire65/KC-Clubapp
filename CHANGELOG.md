@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.22.22 – 2026-10-04 – Inkognito-Brille blinkt, Tic-Tac-Toe mit Tönen (Wunsch Hansi)
+- KC-CLUB-INKO-BLINKEN: Solange Inkognito an ist, blinkt die 🕶️-Brille oben rot (bei „weniger Bewegung“ langsamer). Nur Admin sieht sie.
+- KC-CLUB-TTT-TOENE: Tic-Tac-Toe bekommt den Lautsprecher-Schalter („🔊 Töne an / 🔇 aus“, je Gerät, Standard aus) – nur Töne, keine Sprache:
+  eigener Zug hell, Zug des Gegners/Computers tiefer, Spielende: Sieg aufsteigend, Niederlage absteigend, Unentschieden zwei gleiche Töne.
+  Gegen Computer und Mitglieder. Schalter-Test (2.22.16) angepasst, Test 350.
+
 ## 2.22.21 – 2026-10-04 – Eingangskorb: Erstattungen, Dienstzeiten, Vorschläge + Ablage in mehrere Ordner (Wunsch Hansi)
 - KC-CLUB-EINGANGSKORB: Clubsprecher, Kassenwart und Admin bekommen alles und dürfen alles bearbeiten.
   - 💶 Erstattung (Fahrtkosten/Auslagen): Push „📥 Erstattung von …“ an alle drei (Mail wie bisher). Im Eingang bis erledigt:

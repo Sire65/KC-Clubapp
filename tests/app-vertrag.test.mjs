@@ -3666,7 +3666,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.ok(/function spSag\(art, text, schluessel, vorrang = false\) \{\s*if \(!spAnsageAn\(art\) \|\| !text \|\| aktuelleAnsicht !== "spiele"\) return;/.test(html), "Ansage nur wenn eingeschaltet und in den Spielen");
   assert.ok(/function schZugAnsage\(m, ch, ich\)/.test(html) && /hat gerade \$\{fem\(o\) \? "deine" : "deinen"\} \$\{schFigAkk\(o\)\} geschlagen/.test(html), "Schach: Züge und Schlagen");
-  assert.ok((html.match(/spAnsageKnopf\("schach"\)/g) || []).length === 2 && (html.match(/spAnsageKnopf\("kt"\)/g) || []).length >= 3 && (html.match(/spAnsageKnopf\("bsk"\)/g) || []).length === 2 && !/spAnsageKnopf\("ttt"\)/.test(html), "Schalter bei Schach, Küchenterror, Bauernskat – nicht Tic-Tac-Toe");
+  assert.ok((html.match(/spAnsageKnopf\("schach"\)/g) || []).length === 2 && (html.match(/spAnsageKnopf\("kt"\)/g) || []).length >= 3 && (html.match(/spAnsageKnopf\("bsk"\)/g) || []).length === 2 && (html.match(/spAnsageKnopf\("ttt"\)/g) || []).length === 2 && !/spSag\("ttt"/.test(html), "Schalter bei Schach, Küchenterror, Bauernskat; Tic-Tac-Toe nur Töne (2.22.22), keine Sprache");
   assert.ok(/spSag\("kt", ktFrageSprache\(fr, z\.i \+ 1\)/.test(html) && /spSag\("bsk", `Der Computer spielt \$\{bskKarteWort\(kc\)\}\.`\)/.test(html), "Küchenterror-Frage, Bauernskat-Karte");
   const regeln = html.slice(html.indexOf("const BSK_FARBEN = "), html.indexOf("// ----- Computer -----", html.indexOf("const BSK_FARBEN = ")));
   assert.ok(!/bskKarteWort|BSK_WNAME/.test(regeln), "Ansage-Helfer nicht in den Regeln (Server-Kopie bleibt gleich)");
@@ -3718,6 +3718,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/: await leitungIds\(\); \/\/ KC-CLUB-EINGANGSKORB/.test(server) && /`club-erstattung-eingang:\$\{a\.id\}`/.test(server), "alle drei bekommen Meldung");
   assert.ok(/ekPosten\(P\);/.test(html) && /data-o="\$\{esc\(o\.id\)\}"/.test(html) && /localStorage\.setItem\(EK_WAHL_KEY\(art\)/.test(html), "Eingang + Mehrfach-Ablage im Client");
   assert.ok(/else if \(h === "#eingang" && ICH\?\.buero\)/.test(html), "#eingang");
+}
+// 350 KC-CLUB-INKO-BLINKEN + KC-CLUB-TTT-TOENE (2.22.22)
+{
+  assert.ok(/#inkoKnopf\.an \{[^}]*animation: inkoBlink 1\.2s ease-in-out infinite; \}/.test(html) && /@keyframes inkoBlink \{[^}]*\} 50% \{ background: #d32f2f;/.test(html), "Brille blinkt rot, solange Inkognito an");
+  assert.ok(/if \(!spAnsageAn\("ttt"\) \|\| aktuelleAnsicht !== "spiele"\) return;/.test(html), "Töne nur mit Schalter und nur im Spiel");
+  assert.ok(/if \(!spPcEnde\(\)\) \{ spTttTon\("ich"\);/.test(html) && /if \(!spPcEnde\(\) && i !== undefined\) spTttTon\("gegner"\);/.test(html) && /spTttTon\(a\.sieger === "x" \? "sieg"/.test(html), "Computer: Zug + Ende");
+  assert.ok(/spTttTonMg\(g\); \/\/ KC-CLUB-TTT-TOENE/.test(html) && /if \(neu >= 0\) spTttTon\(g\.brett\[neu\] === g\.ichBin \? "ich" : "gegner"\);/.test(html), "Mitglieder: Zug + Ende");
+  assert.ok(/if \(art === "ttt"\) \{ if \(an\) spTttTon\("sieg"\); return melde/.test(html), "TTT-Schalter spricht nicht");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

@@ -185,7 +185,10 @@
   /* 2.6.1 (Prüfung: Kopfleiste zu voll – Titel/Status gequetscht): 🕶️ klein vor „Hallo …!“ statt in der Knopfreihe */
   .gruss { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
   .gruss #begruessung { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-  #inkoKnopf { flex: none; width: 36px; height: 36px; border-radius: 50%; border: none; padding: 0; font-size: 1rem; line-height: 1; background: rgba(255,255,255,.18); color: inherit; cursor: pointer; } #inkoKnopf.an { opacity: 1; background: #2c3e50; box-shadow: 0 0 0 2px #f1c40f; }
+  #inkoKnopf { flex: none; width: 36px; height: 36px; border-radius: 50%; border: none; padding: 0; font-size: 1rem; line-height: 1; background: rgba(255,255,255,.18); color: inherit; cursor: pointer; } #inkoKnopf.an { opacity: 1; background: #2c3e50; box-shadow: 0 0 0 2px #f1c40f; animation: inkoBlink 1.2s ease-in-out infinite; }
+  /* KC-CLUB-INKO-BLINKEN (2.22.22, Wunsch Hansi): solange Inkognito an ist, blinkt die Brille rot – auch bei „weniger Bewegung“ (dann langsamer) */
+  @keyframes inkoBlink { 0%, 100% { background: #2c3e50; box-shadow: 0 0 0 2px #f1c40f; } 50% { background: #d32f2f; box-shadow: 0 0 0 3px #ff5252, 0 0 12px #ff1744; } }
+  @media (prefers-reduced-motion: reduce) { #inkoKnopf.an { animation-duration: 2.4s; } }
   /* KC-CLUB-SPIELE (2.7.0): Köcheclub Edition */
   .sp-edition { display: flex; flex-direction: column; align-items: center; margin: 0 0 10px; padding: 10px 12px; border-radius: 18px; color: #fff;
     background: var(--heroverlauf, linear-gradient(135deg, var(--hero1) 0%, var(--rot) 45%, var(--rot2) 75%, var(--hero4) 100%)); box-shadow: 0 6px 16px var(--heroschatten); }
@@ -2648,7 +2651,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.22.21"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.22.22"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -5183,7 +5186,7 @@ function spPcZeigen() {
       ${status}
       ${spBrettHtml(SPC.brett, n, { linie: e?.linie, klick: "spPcZug", aus: !!e || SPC.denkt })}
       <p class="hinweis" style="text-align:center;margin:6px 0">${n === 3 ? "Drei" : "Vier"} in einer Reihe gewinnen – waagerecht, senkrecht oder schräg.</p>
-      <div class="knoepfe"><button class="knopf haupt" onclick="spPcNeu()">↺ Neue Runde</button><button class="knopf" onclick="spPcStandWeg()">🗑️ Spielstand zurücksetzen</button></div>
+      <div class="knoepfe"><button class="knopf haupt" onclick="spPcNeu()">↺ Neue Runde</button><button class="knopf" onclick="spPcStandWeg()">🗑️ Spielstand zurücksetzen</button>${spAnsageKnopf("ttt")}</div>
     </div>`;
 }
 function spPcNeu(zeigen = true) {
@@ -5206,12 +5209,13 @@ function spPcEnde() {
   SPC.ende = a; SPC.denkt = false;
   if (a.sieger === "x") SPC.stand.ich++; else if (a.sieger === "o") SPC.stand.pc++; else SPC.stand.remis++;
   spcMerken(); try { navigator.vibrate?.(a.sieger === "x" ? [60, 40, 60] : 40); } catch {}
+  spTttTon(a.sieger === "x" ? "sieg" : a.sieger === "o" ? "niederlage" : "remis"); // KC-CLUB-TTT-TOENE
   return true;
 }
 function spPcZug(i) {
   if (SPC.ende || SPC.denkt || SPC.brett[i] !== ".") return;
   SPC.brett = SPC.brett.slice(0, i) + "x" + SPC.brett.slice(i + 1);
-  if (!spPcEnde()) { SPC.denkt = true; setTimeout(spPcComputer, 450); }
+  if (!spPcEnde()) { spTttTon("ich"); SPC.denkt = true; setTimeout(spPcComputer, 450); }
   spPcZeigen();
 }
 function spPcComputer() {
@@ -5219,7 +5223,7 @@ function spPcComputer() {
   if (SPC.ende || aktuelleAnsicht !== "spiele" || SP.art !== "ttt") { SPC.denkt = false; return; }
   const i = spComputerZug(SPC.brett, SPC.groesse, SPC.staerke);
   if (i !== undefined) SPC.brett = SPC.brett.slice(0, i) + "o" + SPC.brett.slice(i + 1);
-  SPC.denkt = false; spPcEnde();
+  SPC.denkt = false; if (!spPcEnde() && i !== undefined) spTttTon("gegner");
   if (SP.tab === "pc" && SP.art === "ttt") spPcZeigen();
 }
 // ----- gegen Mitglieder -----
@@ -5364,6 +5368,7 @@ function spSpielZeigen() {
   if (SP.offen.spiel === "bsk") { bskSpielZeigen(SP.offen); if (SP.offen.status === "laeuft" || SP.offen.status === "angefragt") SP.takt = setInterval(spNachsehen, SP_TAKT_MS); return; }
   if (SP.offen.spiel === "schach") { schSpielZeigen(SP.offen); if (SP.offen.status === "laeuft" || SP.offen.status === "angefragt") SP.takt = setInterval(spNachsehen, SP_TAKT_MS); return; }
   const g = SP.offen, n = g.groesse, ich = g.ichBin, er = ich === "x" ? "o" : "x";
+  spTttTonMg(g); // KC-CLUB-TTT-TOENE
   const banner = g.status === "beendet" ? (g.ergebnis === "gewonnen" ? `<div class="sp-banner sieg">🏆 Du hast gewonnen!${g.aufgegeben ? ` ${esc(g.gegner.vorname)} hat aufgegeben.` : ""}</div>` : g.ergebnis === "verloren" ? `<div class="sp-banner niederlage">${g.aufgegeben ? "Du hast aufgegeben." : `${esc(g.gegner.vorname)} hat gewonnen.`}</div>` : `<div class="sp-banner remis">🤝 Unentschieden</div>`)
     : g.status === "angefragt" ? `<div class="sp-status">⏳ Warte, bis ${esc(g.gegner.vorname)} annimmt …</div>`
     : g.status !== "laeuft" ? `<div class="sp-status">Diese Partie findet nicht statt.</div>`
@@ -5374,7 +5379,7 @@ function spSpielZeigen() {
       ${spTerminHtml(g)}
       ${spBrettHtml(g.brett, n, { linie: g.linie, klick: "spZug", aus: !g.ichDran })}
       <p class="hinweis" style="text-align:center;margin:6px 0">${n === 3 ? "Drei" : "Vier"} in einer Reihe gewinnen. Du musst nicht warten – ${esc(g.gegner.vorname)} bekommt Bescheid.</p>
-      <div class="knoepfe">${g.status === "beendet" ? `<button class="knopf haupt" onclick="spRevanche('${g.id}')">↺ Revanche</button>` : g.status === "laeuft" ? `<button class="knopf" onclick="spAufgeben('${g.id}')">🏳️ Aufgeben</button>` : ""}</div>
+      <div class="knoepfe">${g.status === "beendet" ? `<button class="knopf haupt" onclick="spRevanche('${g.id}')">↺ Revanche</button>` : g.status === "laeuft" ? `<button class="knopf" onclick="spAufgeben('${g.id}')">🏳️ Aufgeben</button>` : ""}${spAnsageKnopf("ttt")}</div>
     </div>`;
   if (g.status === "laeuft" || g.status === "angefragt") SP.takt = setInterval(spNachsehen, SP_TAKT_MS);
 }
@@ -5410,19 +5415,46 @@ async function spMitgliedKnopf(pid) {
 // Schach: jeder Zug („Dein Bauer auf C 6“, „Schwarzer Läufer auf E 5 – hat gerade deinen Springer geschlagen“, Schach/Matt),
 // Küchenterror: Frage + Antworten und die Auflösung, Bauernskat: Trumpf, Karten des Gegners, wer den Stich bekommt, Ergebnis.
 // Tic-Tac-Toe bewusst ohne. Nutzt die vorhandene Vorlese-Stimme (sprechen); jede Ansage nur einmal (SP_GESAGT).
-const SP_ANSAGE_KEY = "kc_club_sp_ansage", SP_ANSAGE_NAME = { schach: "Schach", kt: "Küchenterror", bsk: "Bauernskat" };
+const SP_ANSAGE_KEY = "kc_club_sp_ansage", SP_ANSAGE_NAME = { schach: "Schach", kt: "Küchenterror", bsk: "Bauernskat", ttt: "Tic-Tac-Toe" };
 const spAnsageAn = (art) => { try { return !!JSON.parse(localStorage.getItem(SP_ANSAGE_KEY) || "{}")[art]; } catch { return false; } };
 function spAnsageKnopf(art) {
   const an = spAnsageAn(art);
-  return `<button class="knopf klein${an ? " haupt" : ""} sp-ansage" data-art="${art}" aria-pressed="${an}" onclick="spAnsageSetzen('${art}', ${!an})">${an ? "🔊 Ansage an" : "🔇 Ansage aus"}</button>`;
+  const was = art === "ttt" ? "Töne" : "Ansage"; // 2.22.22: Tic-Tac-Toe nur Töne, keine Sprache
+  return `<button class="knopf klein${an ? " haupt" : ""} sp-ansage" data-art="${art}" aria-pressed="${an}" onclick="spAnsageSetzen('${art}', ${!an})">${an ? "🔊 " + was + " an" : "🔇 " + was + " aus"}</button>`;
 }
 function spAnsageSetzen(art, an) {
   let w = {}; try { w = JSON.parse(localStorage.getItem(SP_ANSAGE_KEY) || "{}") || {}; } catch {}
   w[art] = !!an; lsSetzen(SP_ANSAGE_KEY, JSON.stringify(w));
   document.querySelectorAll(`.sp-ansage[data-art="${art}"]`).forEach((b) => (b.outerHTML = spAnsageKnopf(art)));
+  if (art === "ttt") { if (an) spTttTon("sieg"); return melde(an ? "🔊 Töne für Tic-Tac-Toe an" : "🔇 Töne für Tic-Tac-Toe aus"); } // KC-CLUB-TTT-TOENE (2.22.22)
   try { speechSynthesis.cancel(); } catch {}
   if (an) { if (!("speechSynthesis" in window)) return melde("Dieses Gerät kann leider nicht vorlesen.", true); sprechen(`Ansage für ${SP_ANSAGE_NAME[art]} ist an.`); }
   else melde(`🔇 Ansage für ${SP_ANSAGE_NAME[art]} aus`);
+}
+// KC-CLUB-TTT-TOENE (2.22.22, Wunsch Hansi): Tic-Tac-Toe mit Lautsprecher – nur Töne: eigener Zug (hell), Zug des Gegners/Computers
+// (tiefer), Spielende (Sieg aufsteigend, Niederlage absteigend, Unentschieden zwei gleiche). Schalter gilt für dieses Gerät, Standard aus.
+const SP_TTT_TOENE = { ich: [[660, 0, 0.1]], gegner: [[392, 0, 0.14]], sieg: [[523, 0, 0.14], [659, 0.14, 0.14], [784, 0.28, 0.14], [1047, 0.42, 0.32]],
+  niederlage: [[523, 0, 0.2], [440, 0.2, 0.2], [349, 0.4, 0.4]], remis: [[523, 0, 0.16], [523, 0.24, 0.16]] };
+function spTttTon(was) {
+  if (!spAnsageAn("ttt") || aktuelleAnsicht !== "spiele") return;
+  try {
+    audio = audio || new (window.AudioContext || window.webkitAudioContext)(); audio.resume?.();
+    for (const [f, t, d] of SP_TTT_TOENE[was] || []) {
+      const o = audio.createOscillator(), g = audio.createGain(), s = audio.currentTime + t;
+      o.type = was === "gegner" ? "triangle" : "sine"; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, s); g.gain.exponentialRampToValueAtTime(0.22, s + 0.015); g.gain.exponentialRampToValueAtTime(0.0001, s + d);
+      o.connect(g).connect(audio.destination); o.start(s); o.stop(s + d + 0.03);
+    }
+  } catch {}
+}
+const SPT = { id: null, brett: null, status: null }; // zuletzt gezeigte Partie gegen Mitglieder – daraus: wer hat gezogen?
+function spTttTonMg(g) {
+  const vor = SPT.id === g.id ? { brett: SPT.brett, status: SPT.status } : null;
+  SPT.id = g.id; SPT.brett = g.brett; SPT.status = g.status;
+  if (!vor?.brett || (vor.brett === g.brett && vor.status === g.status)) return;
+  if (g.status === "beendet" && vor.status !== "beendet") return spTttTon(g.ergebnis === "gewonnen" ? "sieg" : g.ergebnis === "verloren" ? "niederlage" : "remis");
+  const neu = [...g.brett].findIndex((c, i) => c !== "." && vor.brett[i] === ".");
+  if (neu >= 0) spTttTon(g.brett[neu] === g.ichBin ? "ich" : "gegner");
 }
 const SP_GESAGT = new Set();
 function spSag(art, text, schluessel, vorrang = false) {
