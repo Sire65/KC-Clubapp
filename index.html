@@ -172,7 +172,7 @@
   /* KC-CLUB-KOPF-EINFACH (2.1.0): Mitglieder ohne Technik-Lämpchen und Lebenszeichen-Herz (nur Admin) */
   body:not(.ist-admin) #ledComm, body:not(.ist-admin) #ledDaten, body:not(.ist-admin) #herzKnopf { display: none; }
   body:not(.ist-admin) #setInkognitoZeile, body:not(.ist-admin) #inkoKnopf { display: none; }
-  body:not(.ist-admin) #naSosKnopf { display: none; } #naSosKnopf { margin: 0; padding: 8px 10px; } #v-nachrichten .kopf2 > h2 { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } #v-nachrichten .kopf2 > #naSosKnopf + .knopf.haupt { margin-left: 0; } /* 2.22.0 KC-CLUB-NOTFALL-KANAELE: SOS im Nachrichten-Kopf nur für den Admin */
+  body:not(.ist-admin):not(.sos-frei) #naSosKnopf { display: none; } #naSosKnopf { margin: 0; padding: 8px 10px; } #v-nachrichten .kopf2 > h2 { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } #v-nachrichten .kopf2 > #naSosKnopf + .knopf.haupt { margin-left: 0; } /* 2.22.0 KC-CLUB-NOTFALL-KANAELE: SOS im Nachrichten-Kopf nur für den Admin */
   /* 2.3.1: Hauptschalter in der Kopfleiste – aus = blass, an = deutlich markiert */
   /* 2.4.1 (Wunsch Hansi): Inkognito an → Rahmen um den Kopfbereich, beim Einschalten kurz Ameisen.
      2.4.2 (Hansi: „schwarz sieht man nicht“ – im dunklen Design): gelber Rahmen, Ameisen schwarz auf gelb */
@@ -2615,7 +2615,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.22.4"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.22.5"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -7949,8 +7949,9 @@ async function adNeustart() {
 // immer Push + Mail, auch bei stummem Chat und in der Ruhezeit. Empfänger sehen beim Öffnen der App sofort ein rotes Alarm-Fenster.
 const NOTFALL_RE = /^\s*🚨\s*NOTFALL\s*:?\s*/i;
 const istNotfall = (m) => !!m?.wichtig && NOTFALL_RE.test(m.text || "");
+const sosDarf = () => !!(ICH?.admin || INIT?.sosFuerAlle); // 2.22.5 KC-CLUB-SOS-FREIGABE
 function notfallMeldung() {
-  if (!ICH?.admin) return melde("Notfall-Meldungen an alle darf nur der Admin senden.", true);
+  if (!sosDarf()) return melde("Notfall-Meldungen an alle darf nur der Admin senden.", true);
   const n = (MITGLIEDER || []).filter((x) => x.person_id !== ICH.person_id).length;
   // 2.22.2 (Wunsch Hansi): Senden direkt unter dem Textfeld (oben), darunter Standort + Notrufe, Erklärung klein unten
   const ruf = (nr) => { const x = NOTRUFE.find((r) => r.nr === nr); return `<button class="knopf${x.haupt ? " alarm-knopf" : ""}" onclick="sosAnrufen('${x.nr}')">${x.sym} ${esc(x.anzeige)} ${esc(x.t)}</button>`; };
@@ -7962,8 +7963,16 @@ function notfallMeldung() {
     <div class="nf-rufe">${ruf("112")}${ruf("110")}</div>
     <details class="karte innen" style="margin:0"><summary>Weitere Nummern (Bereitschaftsarzt, Giftnotruf …)</summary><div class="nf-rufe" style="margin-top:6px">${NOTRUFE.filter((r) => !r.haupt).map((r) => ruf(r.nr)).join("")}</div></details>
     <div class="knoepfe"><button class="knopf" onclick="notfallProbe()">🧪 Probe nur an mich</button><button class="knopf" onclick="$('notfallBlatt').remove()">Abbrechen</button></div>
+    ${ICH?.admin ? `<label class="karte innen" style="margin:0;display:flex;gap:8px;align-items:center"><input type="checkbox" ${INIT?.sosFuerAlle ? "checked" : ""} onchange="sosFreigabe(this.checked, this)"> <span><b>👥 SOS für alle Mitglieder freigeben</b><br><small class="hinweis">Dann sehen alle den roten SOS-Knopf in „Nachrichten“ und können im Notfall alle alarmieren.</small></span></label>` : ""}
     <p class="hinweis" style="margin:0;font-size:.82rem"><b>Neue Nachricht an alle auf allen Kanälen:</b> sofort an alle${n ? ` ${n}` : ""} Mitglieder als 🔔 Push und ✉️ E-Mail (auch stumm/Ruhezeit), danach mit einem Tipp in 🟢 WhatsApp und 💬 SMS. Bei allen mit rotem Rand. Notrufe fragen vor dem Wählen einmal nach.</p></div>`).classList.add("alarm-blatt");
   setTimeout(() => $("notfallText")?.focus(), 80);
+}
+async function sosFreigabe(alle, feld) {
+  const frage1 = alle ? "SOS für ALLE Mitglieder freigeben?\n\nDann kann jedes Mitglied im Notfall alle alarmieren (Push + Mail, auch in der Ruhezeit). Fehlalarme sind möglich – bitte im Club kurz erklären." : "SOS wieder nur für dich (und die Admin-Vertretung)?";
+  if (!(await frage(frage1, { ja: alle ? "👥 Ja, für alle freigeben" : "🔒 Ja, nur Admin" }))) { if (feld) feld.checked = !alle; return; }
+  try { await api("sos_freigabe_setzen", { alle }); if (INIT) INIT.sosFuerAlle = alle; document.body.classList.toggle("sos-frei", alle);
+    melde(alle ? "👥 SOS ist für alle Mitglieder freigegeben" : "🔒 SOS nur noch für den Admin"); }
+  catch (e) { if (feld) feld.checked = !alle; meldeFehler(e); }
 }
 // Standort an die Meldung hängen (gleiche Bestimmung wie „📍 Wo bin ich?“ auf der SOS-Seite; nichts wird gespeichert)
 async function notfallStandort(knopf) {
@@ -8435,7 +8444,7 @@ function neuLaden(vonHand) {
 async function neuLadenRoh(vonHand) {
   try {
     INIT = await api("init", {}, { warten: !!vonHand }); ICH = INIT.ich; einstOffenAnwenden(); /* 2.6.1: noch laufende Speicherungen nicht überschreiben */ adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); einwZeigen(aktuelleAnsicht); // KC-CLUB-KOPF-EINFACH
-    alarmPruefen(); /* KC-CLUB-NOTFALL-MELDUNG */ fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
+    alarmPruefen(); /* KC-CLUB-NOTFALL-MELDUNG */ document.body.classList.toggle("sos-frei", !!INIT?.sosFuerAlle); /* KC-CLUB-SOS-FREIGABE */ fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln);
     if ($("setLiveTippen")) $("setLiveTippen").checked = liveTippen();
     ansichtUebernehmen(INIT.einstellungen?.ansicht);
@@ -11738,7 +11747,7 @@ function sosInfo(id) {
 function sosZeigen() {
   if (!$("sosInhalt")) return;
   const d = SOS.daten, nf = INIT?.notfall;
-  const notrufe = `${ICH?.admin ? '<button class="knopf alarm-knopf" style="width:100%;margin-bottom:8px" onclick="notfallMeldung()">🚨 Alarm an alle Mitglieder (nur Admin)</button>' : ""}<div class="karte sos-warn"><b>🚨 Bei Lebensgefahr sofort 112 anrufen.</b><div class="hinweis" style="color:inherit;opacity:.9">Beim Antippen fragt die App einmal nach – dann wird wirklich gewählt.</div></div>
+  const notrufe = `${sosDarf() ? `<button class="knopf alarm-knopf" style="width:100%;margin-bottom:8px" onclick="notfallMeldung()">🚨 Alarm an alle Mitglieder${ICH?.admin && !INIT?.sosFuerAlle ? " (nur Admin)" : ""}</button>` : ""}<div class="karte sos-warn"><b>🚨 Bei Lebensgefahr sofort 112 anrufen.</b><div class="hinweis" style="color:inherit;opacity:.9">Beim Antippen fragt die App einmal nach – dann wird wirklich gewählt.</div></div>
     <div class="sos-nummern">${NOTRUFE.map((n) => `<button class="sos-nr${n.haupt ? " haupt" : ""}" onclick="sosAnrufen('${n.nr}')"><span class="sym">${n.sym}</span>
       <span class="txt"><b>${esc(n.anzeige)}</b><span>${esc(n.t)}</span><small>${esc(n.u)}</small></span><span class="ruf">📞</span></button>`).join("")}</div>`;
   const eigen = nf ? "" : `<div class="karte hinweis">🆘 Du hast noch keinen eigenen Notfallkontakt hinterlegt. <button class="knopf klein" onclick="einstiegHin('privat','nfName')">Jetzt eintragen</button></div>`;

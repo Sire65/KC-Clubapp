@@ -26,7 +26,7 @@ const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
-const SERVER_VERSION = "2.22.4";
+const SERVER_VERSION = "2.22.5";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -996,6 +996,11 @@ const PINNWAND_MAX = 4, PINNWAND_ZEICHEN = 200;
 // KC-CLUB-PINNWAND-FRISTEN (0.65.0): Erinnerung an eigene Zettel – vom Admin einstellbar (kc_club_konfig „pinnwand“)
 const PINNWAND_FRISTEN_STANDARD = { erinnernTage: 3, pauseTage: 7 };
 const PINNWAND_FRISTEN_GRENZEN = { erinnernTage: [1, 30], pauseTage: [1, 60] } as const;
+// KC-CLUB-SOS-FREIGABE (2.22.5, Wunsch Hansi): der Admin kann „🚨 SOS an alle“ für alle Mitglieder freigeben (Club-Einstellung „sos“)
+async function sosFuerAlle(): Promise<boolean> {
+  const { data } = await db.from("kc_club_konfig").select("wert").eq("schluessel", "sos").maybeSingle();
+  return !!(data?.wert as any)?.alle;
+}
 async function pinnwandFristen() {
   const { data } = await db.from("kc_club_konfig").select("wert,geaendert_am").eq("schluessel", "pinnwand").maybeSingle();
   const w: any = data?.wert ?? {}, zahl = (k: keyof typeof PINNWAND_FRISTEN_GRENZEN) => {
@@ -3243,7 +3248,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // KC-CLUB-SPIELE (2.7.0): Zahl auf der Kachel = Partien, in denen ich dran bin + Herausforderungen an mich (Fehler → 0, nur Hinweis-Zahl)
         const { count: spieleDran } = await db.from("kc_club_spiele").select("id", { count: "exact", head: true })
           .or(`and(status.eq.laeuft,dran.eq.${ich.person_id}),and(status.eq.angefragt,an.eq.${ich.person_id})`);
-        return json({ alarm, spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, adminName: await adminVorname(), ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, communicator, notfall: nf ?? null, einstellungen, kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
+        return json({ alarm, sosFuerAlle: await sosFuerAlle(), spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, adminName: await adminVorname(), ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, communicator, notfall: nf ?? null, einstellungen, kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
             // KC-CLUB-GERAETE-TIPP: wohin der Link ginge – nur teilweise (z. B. „h…@web.de“)
@@ -4981,7 +4986,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const notfall = !!p.notfall, probe = notfall && !!p.probe; // 2.22.1 KC-CLUB-NOTFALL-PROBE: nur an mich selbst, alles andere wie echt
         if (probe) { p.empfaenger = { personen: [ich.person_id] }; p.betreff = "🧪 SOS-Probe"; p.id = ""; }
         if (notfall) {
-          if (!ich.admin) throw new Fehler("Notfall-Meldungen an alle darf nur der Admin senden.", 403);
+          if (!ich.admin && !(await sosFuerAlle())) throw new Fehler("Notfall-Meldungen an alle darf nur der Admin senden.", 403);
           if (!text.replace(NOTFALL_RE, "").trim() || umfrage || kontaktPid) throw new Fehler("Bitte die Notfall-Meldung schreiben.");
           text = `${NOTFALL_MARKE} ${text.replace(NOTFALL_RE, "").trim()}`.slice(0, 4000);
         } else if (NOTFALL_RE.test(text)) text = text.replace(NOTFALL_RE, "").trim() || "…";
@@ -5898,6 +5903,15 @@ Köcheclub-App`,
         if (error) throw new Fehler("Antworten konnten nicht gespeichert werden.", 500);
         await protokoll(ich.person_id, "anruf_antworten_gesetzt", { vorher: alt.texte, nachher: texte });
         return json({ ok: true, texte });
+      }
+
+      case "sos_freigabe_setzen": {
+        nurAdmin(ich);
+        const alle = !!p.alle;
+        const { error } = await db.from("kc_club_konfig").upsert({ schluessel: "sos", wert: { alle }, geaendert_von: ich.person_id, geaendert_am: jetzt() });
+        if (error) throw new Fehler("Freigabe konnte nicht gespeichert werden.", 500);
+        await protokoll(ich.person_id, "sos_freigabe", { alle });
+        return json({ ok: true, alle });
       }
 
       case "pinnwand_fristen_setzen": {

@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.22.5 – 2026-10-04 – 👥 SOS für alle freigeben (Wunsch Hansi)
+- KC-CLUB-SOS-FREIGABE: im SOS-Fenster (nur beim Admin) Schalter „👥 SOS für alle Mitglieder freigeben“ – mit Rückfrage. Gespeichert als
+  Club-Einstellung „sos“ (kc_club_konfig, keine Datenbank-Änderung), protokolliert (sos_freigabe). Bei Freigabe sehen alle den roten
+  „🚨 SOS“-Knopf in „Nachrichten“ und auf der SOS-Seite; Notfall-Meldung (inkl. Probe) erlaubt der Server dann allen. Ausschalten = wieder nur
+  Admin/Vertretung. Admin-Register und Freigabe-Schalter bleiben nur beim Admin. Test 328.
+
 ## 2.22.4 – 2026-10-04 – 🔊 Notfall-Meldung wird sofort vorgelesen (Wunsch Hansi)
 - KC-CLUB-NOTFALL-VORLESEN: das rote Alarm-Fenster liest die Meldung sofort vor („Achtung, Notfall-Meldung von … “) – mit der vorhandenen
   Vorlese-Stimme des Geräts (sprechAusgabe). Links und Koordinaten werden nicht vorgelesen, die Adresse schon. Erlaubt ein Handy das

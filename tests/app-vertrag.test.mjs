@@ -3493,7 +3493,7 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
 // 322. 2.21.0: Notfall-Meldung an alle (KC-CLUB-NOTFALL-MELDUNG) – nur Admin, Push + Mail, auch stumm/Ruhezeit, Marke nicht fälschbar
 {
   const ns = server.slice(server.indexOf('case "nachricht_senden": {'), server.indexOf('case "privattermin_speichern"'));
-  assert.ok(/if \(notfall\) \{\s*if \(!ich\.admin\) throw new Fehler\("Notfall-Meldungen an alle darf nur der Admin senden\.", 403\);/.test(ns), "nur Admin");
+  assert.ok(/if \(notfall\) \{\s*if \(!ich\.admin && !\(await sosFuerAlle\(\)\)\) throw new Fehler\("Notfall-Meldungen an alle darf nur der Admin senden\.", 403\);/.test(ns), "nur Admin");
   assert.ok(/\} else if \(NOTFALL_RE\.test\(text\)\) text = text\.replace\(NOTFALL_RE, ""\)/.test(ns), "Marke bei anderen entfernt");
   assert.ok(/if \(notfall\) stumm\.clear\(\);/.test(ns) && /const wege = notfall \? \["push", "email"\]/.test(ns) && /\{ notfall \}\);/.test(ns), "an alle, Push + Mail, auch stumm");
   assert.ok(/if \(w\.includes\("push"\) && !opt\.notfall\)/.test(server), "auch in der Ruhezeit");
@@ -3501,11 +3501,11 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/function notfallSenden\(\)[\s\S]{0,400}await frage\(/.test(html) && /api\("nachricht_senden", \{ notfall: true, text, empfaenger: \{ alle: true \} \}/.test(html), "einmal bestätigen, dann senden");
   assert.ok(/\.blase\.notfall \{ border: 4px solid #d50000/.test(html) && /istNotfall\(m\) \? " notfall" : ""/.test(html), "roter Rand im Chat");
   assert.ok(/alarmPruefen\(\); \/\* KC-CLUB-NOTFALL-MELDUNG \*\//.test(html) && /localStorage\.setItem\("kc_club_alarm_gesehen", a\.id\)/.test(html), "Alarm-Fenster einmal je Meldung");
-  assert.ok(/\["alarm", "🚨", "Alarm an alle", "not"\]/.test(html) && /ICH\?\.admin \? '<button class="knopf alarm-knopf"[^']*onclick="notfallMeldung\(\)"/.test(html), "Knopf im Admin-Register und auf der SOS-Seite (nur Admin)");
+  assert.ok(/\["alarm", "🚨", "Alarm an alle", "not"\]/.test(html) && /sosDarf\(\) \? `<button class="knopf alarm-knopf"[^`]*onclick="notfallMeldung\(\)"/.test(html), "Knopf im Admin-Register und auf der SOS-Seite (Admin bzw. bei Freigabe alle)");
 }
 // 323. 2.22.0: SOS im Nachrichten-Kopf (KC-CLUB-NOTFALL-KANAELE) – nur Admin, einsprechen, danach WhatsApp/SMS mit einem Tipp
 {
-  assert.ok(/<h2>💬 Nachrichten<\/h2><button class="knopf klein alarm-knopf" id="naSosKnopf" onclick="notfallMeldung\(\)"/.test(html) && /body:not\(\.ist-admin\) #naSosKnopf \{ display: none; \}/.test(html), "SOS neben ＋ Neu, nur Admin");
+  assert.ok(/<h2>💬 Nachrichten<\/h2><button class="knopf klein alarm-knopf" id="naSosKnopf" onclick="notfallMeldung\(\)"/.test(html) && /body:not\(\.ist-admin\):not\(\.sos-frei\) #naSosKnopf \{ display: none; \}/.test(html), "SOS neben ＋ Neu, nur Admin");
   assert.ok(/diktatStart\(\\'notfallText\\', notfallSenden\)/.test(html) && /function diktatStart\(ziel, nachSenden\)/.test(html) && /if \(was === "senden" && DT\.nachSenden\)[^\n]*return DT\.nachSenden\(\); \}/.test(html), "Einsprechen über das vorhandene Diktat");
   assert.ok(/href="https:\/\/wa\.me\/\?text=\$\{t\}"/.test(html) && /href="sms:\?&body=\$\{t\}"/.test(html), "WhatsApp und SMS mit fertigem Text");
   assert.ok(/"notfall_whatsapp", "notfall_sms"/.test(server), "Weitergabe wird protokolliert");
@@ -3533,6 +3533,12 @@ assert.ok(/#notfallText \{[^}]*background: var\(--bg\); color: var\(--text\);/.t
   assert.ok(/function alarmGelesen\(oeffnen\) \{\s*try \{ speechSynthesis\.cancel\(\); \} catch \{\}/.test(html), "Gelesen beendet das Vorlesen");
   const f = new Function(html.slice(html.indexOf("function alarmSprechText(a) {"), html.indexOf("function alarmVorlesen(")) + "; return alarmSprechText;")();
   assert.equal(f({ von: "Hansi", text: "Unfall!\n\n📍 Mein Standort (07:00 Uhr): Bahnhofstraße 1, 59368 Werne – 51.66380, 7.63360 – Karte: https://www.openstreetmap.org/?mlat=51" }), "Achtung, Notfall-Meldung von Hansi. Unfall! Mein Standort (07:00 Uhr): Bahnhofstraße 1, 59368 Werne", "Link und Koordinaten werden nicht vorgelesen");
+}
+// 328. 2.22.5: SOS für alle freigeben (KC-CLUB-SOS-FREIGABE) – nur der Admin schaltet, gespeichert als Club-Einstellung
+{
+  assert.ok(/case "sos_freigabe_setzen": \{\s*nurAdmin\(ich\);[\s\S]{0,300}schluessel: "sos", wert: \{ alle \}/.test(server) && /protokoll\(ich\.person_id, "sos_freigabe"/.test(server), "Freigabe nur Admin, protokolliert");
+  assert.ok(/sosFuerAlle: await sosFuerAlle\(\)/.test(server) && /classList\.toggle\("sos-frei", !!INIT\?\.sosFuerAlle\)/.test(html), "App kennt die Freigabe");
+  assert.ok(/\$\{ICH\?\.admin \? `<label[^`]*onchange="sosFreigabe\(this\.checked, this\)"/.test(html) && /async function sosFreigabe\(alle, feld\)[\s\S]{0,600}await frage\(/.test(html), "Schalter nur beim Admin, mit Rückfrage");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
