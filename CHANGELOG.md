@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.23.37 – 2026-10-04 – ✕ Schließkreuz im Protokoll-Filter (Wunsch Hansi)
+- KC-CLUB-PROTOKOLL-FILTER-ZU: Das Filterfenster in „📄 Protokolle“ hat oben rechts ein rundes ✕ (40 px, Farben je Design).
+  Es schließt nur das Fenster; gewählte Filter bleiben aktiv (Zahl am 🔽). Nur App. Test 386.
+
 ## 2.23.36 – 2026-10-04 – 🔽 Protokolle filtern nach Jahr, Monat, Ort, Protokollführer (Wunsch Hansi)
 - KC-CLUB-PROTOKOLL-FILTER: In „📄 Protokolle“ oben das Symbol 🔽 – antippen öffnet die Filterfelder ordentlich in zwei Spalten:
   📅 Jahr, 🗓️ Monat, 📍 Ort, ✍️ Protokollführer (Auswahl nur aus vorhandenen Protokollen), darunter „x von y Protokollen“ und

@@ -3912,6 +3912,12 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/!q \|\| k\.dataset\.suche\.includes\(q\)/.test(f) && /d\.slice\(0, 4\) === PRF\.jahr/.test(f) && /d\.slice\(5, 7\) === PRF\.monat/.test(f) && /p\?\.verfasser\?\.name === PRF\.wer/.test(f), "Suche + Jahr/Monat/Ort/Protokollführer");
   assert.ok(/function protokollFilter\(\) \{ prFilterAnwenden\(\); \}/.test(html) && /data-id="\$\{p\.id\}" data-suche=/.test(html), "Suchfeld wirkt mit");
 }
+// 386. 2.23.37: Schließkreuz oben rechts im Filterfenster (KC-CLUB-PROTOKOLL-FILTER-ZU)
+{
+  const feld = html.slice(html.indexOf('id="prFilterFeld"'), html.indexOf('class="pr-filter-raster"'));
+  assert.ok(/class="pr-filter-zu" onclick="prFilterUmschalten\(false\)" aria-label="Filter schließen"[^>]*>✕<\/button>/.test(feld), "Kreuz schließt den Filter");
+  assert.ok(/\.pr-filter-zu \{ position: absolute; top: 6px; right: 6px; min-width: 40px; min-height: 40px;/.test(html), "oben rechts, groß genug");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

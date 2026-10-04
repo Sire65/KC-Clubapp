@@ -1301,6 +1301,7 @@
   .pr-filter-fuss { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; } .pr-filter-fuss .knopf { margin: 0; }
   .pr-filter-knopf { position: relative; min-width: 44px; min-height: 44px; font-size: 1.1rem; padding: 4px 8px; margin: 0; } .pr-filter-knopf .anz { margin-left: 6px; background: var(--rot); color: #fff; border-radius: 9px; padding: 0 6px; font-size: .75rem; }
   @media (max-width: 340px) { .pr-filter-raster { grid-template-columns: 1fr; } }
+  .pr-filter { position: relative; padding-top: 44px; } .pr-filter-zu { position: absolute; top: 6px; right: 6px; min-width: 40px; min-height: 40px; border: 2px solid var(--linie); border-radius: 50%; background: var(--karte); color: var(--text); font-size: 1.1rem; font-weight: 700; cursor: pointer; line-height: 1; } /* 2.23.37: Schließkreuz oben rechts */
   #v-protokolle .kopf2 { gap: 8px; } #v-protokolle .kopf2 > h2 { white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; font-size: 1.2rem; }
   .kopf2 { display: flex; align-items: center; gap: 10px; margin: 6px 0 4px; flex-wrap: wrap; } /* 1.32.1: bei großer Schrift umbrechen statt Knöpfe aus dem Bild schieben */
   .kopf2 > h2 { flex: 1 1 0; }
@@ -2144,6 +2145,7 @@
     <div class="kopf2"><button class="zurueck" onclick="zurueck('start')" aria-label="Zurück">‹</button><h2>📄 Protokolle</h2><button class="knopf klein pr-filter-knopf" id="prFilterKnopf" onclick="prFilterUmschalten()" title="Protokolle filtern (Jahr, Monat, Ort, Protokollführer)" aria-label="Protokolle filtern" aria-expanded="false">🔽<span class="anz versteckt" id="prFilterAnz"></span></button><button class="knopf haupt klein" onclick="protokollNeu()">＋ Neu</button></div>
     <!-- KC-CLUB-PROTOKOLL-FILTER (2.23.36, Wunsch Hansi): Filter nach Jahr, Monat, Ort, Protokollführer – Felder in zwei Spalten -->
     <div class="karte pr-filter versteckt" id="prFilterFeld">
+      <button type="button" class="pr-filter-zu" onclick="prFilterUmschalten(false)" aria-label="Filter schließen" title="Filter schließen">✕</button><!-- 2.23.37 KC-CLUB-PROTOKOLL-FILTER-ZU -->
       <div class="pr-filter-raster">
         <label class="feld">📅 Jahr<select id="prfJahr" onchange="prFilterAnwenden()"></select></label>
         <label class="feld">🗓️ Monat<select id="prfMonat" onchange="prFilterAnwenden()"></select></label>
@@ -2817,7 +2819,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.36"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.37"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
