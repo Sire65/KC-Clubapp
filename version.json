@@ -1,10 +1,16 @@
 {
-  "version": "2.23.3",
+  "version": "2.23.4",
   "datum": "2026-10-04",
   "neu": [
-    "👋 Hilfe & Tipps: neues Kapitel 1 „Erste Schritte“ – Willkommen, Einstellungen, einfache Ansicht, Hilfetexte und Feedback"
+    "❓ In jedem Bereich unten rechts ein „?“ (im Chat unter ⋮) – ein Tipp öffnet die passende Hilfe, „‹“ bringt dich wieder zurück"
   ],
   "verlauf": [
+    {
+      "version": "2.23.4",
+      "neu": [
+        "❓ In jedem Bereich unten rechts ein „?“ (im Chat unter ⋮) – ein Tipp öffnet die passende Hilfe, „‹“ bringt dich wieder zurück"
+      ]
+    },
     {
       "version": "2.23.3",
       "neu": [

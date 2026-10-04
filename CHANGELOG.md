@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.23.4 – 2026-10-04 – Hilfe-Zentrum: „?“ in jeder Ansicht (Wunsch Hansi)
+- KC-CLUB-HILFEZENTRUM: in allen Ansichten (erweitert und einfach) ein rundes „?“ unten rechts neben der Lupe 🔍 (engt keine
+  Kopfzeile ein; im Chat stattdessen ⋮ → „❓ Hilfe zum Chat“). Antippen öffnet direkt das
+  passende Kapitel (Registry HZ_SICHT_THEMA, z. B. Nachrichten/Chat → „Nachrichten & Chat“, SOS → „Notfall“, Einstellungen →
+  „Aussehen & Darstellung“). „‹“ in der Hilfe führt zurück in die Ansicht, aus einem Chat wieder genau in diesen Chat.
+- Nichts öffnet sich von selbst. Vertragstest: jede Ansicht aus zeige() hat eine Zuordnung. Server nur Versionsnummer. Test 353.
+
 ## 2.23.3 – 2026-10-04 – Hilfe-Zentrum: Kapitel 1 „Erste Schritte“ (Text Hansi)
 - KC-CLUB-HILFEZENTRUM: neues Thema „👋 Erste Schritte“ ganz vorne (= Kapitel 1, die übrigen rücken auf), fünf Hilfen nach Hansis Text:
   1.1 Herzlich willkommen · 1.2 Zuerst: deine Einstellungen (⚙️, „Zeig mir wo“) · 1.3 Mit der einfachen Ansicht beginnen ·
