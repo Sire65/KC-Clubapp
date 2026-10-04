@@ -1,5 +1,15 @@
 # Änderungen
 
+## 2.23.33 – 2026-10-04 – 📖 Bedienungsanleitung Version 4 (Wunsch Hansi)
+- KC-CLUB-ANLEITUNG-V4: dokumente/Koecheclub-App_Anleitung_V4.pdf (43 Seiten, Stand 2.23.32) in „Meine Dokumente“ (neue id → leise „NEU“
+  bis 30.11.). V1–V3 bleiben unverändert im Repo (Release-Artefakte unveränderlich).
+  - Alle Bildschirmfotos neu (aktuelles Aussehen: Ringe, „?“ und Lupe, Kopfleiste) – nur Demodaten („Max Mustermann“ …).
+  - Neue Kapitel: 14. Spiele, 15. Hilfe & Tipps, 16. Dienstwünsche (Twinkey + leerer Wunschbogen), 17. Meine Daten haben sich geändert.
+  - Ergänzt: 3. Nachrichten (Chats archivieren/löschen), 4. Termine (Terminanfragen + eigene Erinnerung), 7. SOS (Nachricht an alle –
+    Admin bzw. nach Freigabe), 8. Einstellungen (Über die App). „NEU“ markiert nur noch die V4-Neuerungen.
+  - Baukasten tools/anleitung: fotos4.mjs (neue Bilder), basis.mjs (Startfenster „Kurz erklärt“/Spiel-Einladung für Bilder aus,
+    sonst verdecken sie die Ansicht), inhalt.mjs V4, README. Tests 232/261/284 auf V4 erweitert, Test 382.
+
 ## 2.23.32 – 2026-10-04 – 👨‍🍳 Über die App: Entwickler mit Passbild (Wunsch Hansi)
 - KC-CLUB-ENTWICKLER: Fenster „Über die App“ mit Passbild und Lebenslauf von Hans-Joachim Koch – wie „Entwickler“ in KC Futura Academy
   (Text von dort, letzter Absatz für die Club-App). Foto aus KC Futura Academy (shared/hans-joachim-koch.jpg, dort bereits öffentlich)

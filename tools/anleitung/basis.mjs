@@ -7,6 +7,8 @@ export async function seite(b, opt = {}) {
   p.fehler = []; p.on('pageerror', (e) => p.fehler.push(String(e).slice(0, 160)));
   const antw = { ...ANTWORTEN, ...(opt.antworten || {}) };
   if (opt.ansicht) antw.init = { ...antw.init, einstellungen: { ...antw.init.einstellungen, ansicht: { art: opt.ansicht, gewaehlt: true } } };
+  // V4: Startfenster (Kurz erklärt, Spiel-Einladung) verdecken sonst die Bilder – nur wo gewollt (opt.mitEinweisung) an
+  antw.init = { ...antw.init, einstellungen: { ...antw.init.einstellungen, ...(opt.mitEinweisung ? {} : { einweisung: { an: false, gesehen: {} } }), spiel_einladung: { an: false } } };
   await p.route('**/functions/v1/kc-club*', async (r) => {
     let a = '', q = {}; try { q = JSON.parse(r.request().postData() || '{}'); a = q.action; } catch {}
     const body = typeof antw[a] === 'function' ? antw[a](q) : antw[a] ?? { ok: true };
