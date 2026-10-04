@@ -41,7 +41,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.23.10";
+const SERVER_VERSION = "2.23.12";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -853,8 +853,10 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
   // KC-CLUB-TIPP (1.6.0): Tipp des Tages – an/aus (Standard an), „kenne ich“ und „später“ je Tipp, zuletzt gezeigt (höchstens 1× am Tag)
   tipps: (w) => {
     const liste = (x: any) => Object.fromEntries(Object.entries(x && typeof x === "object" ? x : {})
-      .filter(([k, v]) => /^[a-z0-9_-]{1,30}$/.test(k) && !isNaN(Date.parse(String(v)))).slice(0, 80).map(([k, v]) => [k, new Date(String(v)).toISOString()]));
-    return { an: w?.an !== false, bekannt: liste(w?.bekannt), spaeter: liste(w?.spaeter), zuletzt: !isNaN(Date.parse(String(w?.zuletzt))) ? new Date(String(w.zuletzt)).toISOString() : null };
+      .filter(([k, v]) => /^[a-z0-9_:-]{1,40}$/.test(k) && !isNaN(Date.parse(String(v)))).slice(0, 400).map(([k, v]) => [k, new Date(String(v)).toISOString()]));
+    // 2.23.12: Tipp des Tages auch aus dem Hilfe-Zentrum – Schlüssel „h:id“, mehr Einträge, Stand (Version) und zuletzt gezeigtes Thema
+    return { an: w?.an !== false, bekannt: liste(w?.bekannt), spaeter: liste(w?.spaeter), zuletzt: !isNaN(Date.parse(String(w?.zuletzt))) ? new Date(String(w.zuletzt)).toISOString() : null,
+      stand: /^\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(String(w?.stand)) ? String(w.stand) : null, letztesThema: /^[a-z_]{1,20}$/.test(String(w?.letztesThema)) ? String(w.letztesThema) : null };
   },
   einstieg: (w) => ({ schritte: Object.fromEntries(Object.entries(w?.schritte && typeof w.schritte === "object" ? w.schritte : {})
     .filter(([k, v]: [string, any]) => ["farbe", "privat", "erweitert", "feedback", "geraete"].includes(k) && ["ja", "nein", "spaeter"].includes(v?.antwort) && !isNaN(Date.parse(v?.am)))

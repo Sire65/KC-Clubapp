@@ -1,10 +1,16 @@
 {
-  "version": "2.23.11",
+  "version": "2.23.12",
   "datum": "2026-10-04",
   "neu": [
-    "🔧 Kleine Systemverbesserungen"
+    "💡 Tipp des Tages: jetzt auch mit den Hilfen aus „❓ Hilfe & Tipps“ – Themen wechseln sich ab, Neues zuerst, mit „❓ Mehr dazu“"
   ],
   "verlauf": [
+    {
+      "version": "2.23.12",
+      "neu": [
+        "💡 Tipp des Tages: jetzt auch mit den Hilfen aus „❓ Hilfe & Tipps“ – Themen wechseln sich ab, Neues zuerst, mit „❓ Mehr dazu“"
+      ]
+    },
     {
       "version": "2.23.11",
       "neu": [

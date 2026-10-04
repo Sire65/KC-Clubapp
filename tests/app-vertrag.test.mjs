@@ -4108,3 +4108,16 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/HZ\.sicht = HZ_SICHT_HILFEN\[v\] \? v : null;/.test(html) && /<div class="hz-kap-nr">Hilfe zu diesem Bereich<\/div>/.test(html), "Bereichsseite fehlt");
   assert.ok(/sicht: HZ\.q \? null : HZ\.sicht/.test(html) && /HZ\.sicht = u\.sicht \|\| null;/.test(html), "Zurück zur Hilfe → Bereichsseite");
 }
+
+// 356. 2.23.12: Tipp des Tages auch aus dem Hilfe-Zentrum – Themen wechseln, Neues zuerst, „Mehr dazu“, Server speichert die Schlüssel
+{
+  const t = html.slice(html.indexOf("function tippDesTages()"), html.indexOf("// ---------- KC-CLUB-HILFEZENTRUM (2.23.0"));
+  assert.ok(/const tipp = tippWaehlen\(st\);/.test(t) && !/TIPPS\.find\(/.test(t), "Tipp des Tages muss aus dem gemeinsamen Vorrat wählen");
+  assert.ok(/\.\.\.alt, \.\.\.neu/.test(t) && /HILFE\.filter\(\(x\) => x\.thema !== "erste" && \(!x\.nur \|\| x\.nur\(\)\)\)/.test(t), "Vorrat: TIPPS + HILFE (ohne Erste Schritte, nur was für mich gilt)");
+  assert.ok(/const alt = TIPPS\.map\(\(x\) => \(\{ \.\.\.x, key: x\.id,/.test(t), "alte Tipps behalten ihre Schlüssel (Kenne ich/Später bleiben gültig)");
+  assert.ok(/const th = ordnung\[\(ab \+ i \+ ordnung\.length\) % ordnung\.length\], x = reihe\.find\(\(y\) => y\.thema === th\)/.test(t) && /\[\.\.\.frei\.filter\(istNeu\), \.\.\.frei\.filter\(\(x\) => !istNeu\(x\)\)\]/.test(t), "reihum durch die Kapitel, Neues zuerst");
+  assert.ok(/id="tdtMehr"[^>]*>❓ Mehr dazu<\/button>/.test(t) && /hzZuEintrag\(tipp\.hz\)/.test(t), "„Mehr dazu“ fehlt");
+  assert.ok(/st\.zuletzt && new Date\(st\.zuletzt\)[^\n]*=== heute\) return false; \/\/ einer je Tag/.test(t), "weiter höchstens einer je Tag");
+  const sv = server.slice(server.indexOf("  tipps: (w) => {"), server.indexOf("  einstieg: (w) =>"));
+  assert.ok(/\/\^\[a-z0-9_:-\]\{1,40\}\$\//.test(sv) && /\.slice\(0, 400\)/.test(sv) && /stand:/.test(sv) && /letztesThema:/.test(sv), "Server muss h:-Schlüssel, mehr Einträge, stand und letztesThema speichern");
+}

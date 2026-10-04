@@ -2710,7 +2710,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.11"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.12"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3539,19 +3539,52 @@ function tippDesTages() {
   if (einwOffen("start")) return false; // KC-CLUB-EINWEISUNG: erst die Startseite erklären, Tipps danach
   const heute = heuteIso();
   if (st.zuletzt && new Date(st.zuletzt).toLocaleDateString("sv-SE", { timeZone: TZ }) === heute) return false; // einer je Tag
-  const tipp = TIPPS.find((x) => !st.bekannt[x.id] && (!st.spaeter[x.id] || tageSeit(st.spaeter[x.id]) >= TIPP_SPAETER_TAGE) && (!x.nur || x.nur()));
+  if (!st.stand) { st.stand = APP_VERSION; tippSpeichern({ stand: APP_VERSION }); } // 2.23.12: ab hier gilt „neu“ für später hinzukommende Hilfen
+  const tipp = tippWaehlen(st);
   if (!tipp) return false;
-  tippSpeichern({ zuletzt: new Date().toISOString() });
+  tippSpeichern({ zuletzt: new Date().toISOString(), letztesThema: tipp.thema });
+  const txt = (v) => (typeof v === "function" ? v() : v) || "";
   $("tdtText").classList.add("vorlese-karte");
-  $("tdtText").innerHTML = `<div class="tdt-kopf">💡 Tipp des Tages ${VORLESE_KNOPF}</div><h3 style="margin:4px 0 6px">${tipp.sym} ${esc(typeof tipp.t === "function" ? tipp.t() : tipp.t)}</h3><p style="margin:0 0 4px">${tipp.x}</p>`;
+  $("tdtText").innerHTML = `<div class="tdt-kopf">💡 Tipp des Tages ${VORLESE_KNOPF}</div><h3 style="margin:4px 0 6px">${tipp.sym} ${esc(typeof tipp.t === "function" ? tipp.t() : tipp.t)}</h3><p style="margin:0 0 4px">${txt(tipp.x)}</p>`
+    + (tipp.ohneMehr ? "" : `<button class="knopf klein" id="tdtMehr" style="margin:2px 0 6px">❓ Mehr dazu</button>`);
   const zu = () => { $("tdtBlatt").classList.add("versteckt"); vorlesenStopp(); };
-  $("tdtTesten").onclick = () => { zu(); tippSpeichern({ spaeter: { ...tippStand().spaeter, [tipp.id]: new Date().toISOString() } }); tipp.testen(); };
+  const spaeterMerken = () => tippSpeichern({ spaeter: { ...tippStand().spaeter, [tipp.key]: new Date().toISOString() } });
+  if ($("tdtMehr")) $("tdtMehr").onclick = () => { zu(); spaeterMerken(); hzZuEintrag(tipp.hz); };
+  $("tdtTesten").onclick = () => { zu(); spaeterMerken(); tipp.testen(); };
   $("tdtTesten").textContent = tipp.ja || "👉 Jetzt ausprobieren"; $("tdtKenne").textContent = tipp.nein || "✔ Kenne ich"; $("tdtSpaeter").classList.toggle("versteckt", !!tipp.neinSpaeter); $("tdtKenne").parentElement.style.gridTemplateColumns = tipp.neinSpaeter ? "1fr" : "";
-  $("tdtKenne").onclick = tipp.neinSpaeter ? () => $("tdtSpaeter").onclick() : () => { zu(); tippSpeichern({ bekannt: { ...tippStand().bekannt, [tipp.id]: new Date().toISOString() } }); melde("👍 Alles klar – dieser Tipp kommt nicht wieder"); };
-  $("tdtSpaeter").onclick = () => { zu(); tippSpeichern({ spaeter: { ...tippStand().spaeter, [tipp.id]: new Date().toISOString() } }); melde(`⏰ Ich erinnere dich in ${TIPP_SPAETER_TAGE} Tagen`); };
+  $("tdtKenne").onclick = tipp.neinSpaeter ? () => $("tdtSpaeter").onclick() : () => { zu(); tippSpeichern({ bekannt: { ...tippStand().bekannt, [tipp.key]: new Date().toISOString() } }); melde("👍 Alles klar – dieser Tipp kommt nicht wieder"); };
+  $("tdtSpaeter").onclick = () => { zu(); spaeterMerken(); melde(`⏰ Ich erinnere dich in ${TIPP_SPAETER_TAGE} Tagen`); };
   $("tdtAus").onclick = () => { zu(); tippSpeichern({ an: false }); melde("🔕 Keine Tipps mehr – einschalten kannst du sie unter ⚙️ Einstellungen"); };
   $("tdtBlatt").classList.remove("versteckt");
   return true;
+}
+// 2.23.12 (Wunsch Hansi): Tipp des Tages auch aus den Hilfen des Hilfe-Zentrums. Vorrat = TIPPS (Schlüssel wie bisher = id, damit
+// „Kenne ich“/„Später“ erhalten bleiben) + HILFE (Schlüssel „h:id“, ohne Kapitel „Erste Schritte“, nur was für mich gilt).
+// Reihenfolge: zuerst Hilfen, die nach dem ersten Tipp-Tag dazugekommen sind (seit > stand), sonst wie in den Listen;
+// dabei geht es reihum durch die Kapitel (Startseite, Darstellung, Nachrichten, Termine …). Weiter höchstens einer je Tag.
+function tippVorrat() {
+  const alt = TIPPS.map((x) => ({ ...x, key: x.id, hz: "t:" + x.id, thema: x.thema || HILFE_TIPP_THEMA[x.id] || "weitere" }));
+  const neu = HILFE.filter((x) => x.thema !== "erste" && (!x.nur || x.nur())).map((x) => ({ key: "h:" + x.id, hz: "h:" + x.id, sym: x.sym, t: x.t, x: x.x, thema: x.thema, seit: x.seit,
+    testen: x.zeig || (() => hzZuEintrag("h:" + x.id)), ja: x.zeig ? "👉 Zeig mir wo" : "📖 In der Hilfe ansehen", ohneMehr: !x.zeig }));
+  return [...alt, ...neu];
+}
+function tippWaehlen(st) {
+  const frei = tippVorrat().filter((x) => !st.bekannt[x.key] && (!st.spaeter[x.key] || tageSeit(st.spaeter[x.key]) >= TIPP_SPAETER_TAGE) && (!x.nur || x.nur()));
+  if (!frei.length) return null;
+  const istNeu = (x) => !!(x.seit && st.stand && versionNeuer(x.seit, st.stand));
+  const reihe = [...frei.filter(istNeu), ...frei.filter((x) => !istNeu(x))];
+  // reihum durch die Kapitel: das nächste Kapitel nach dem zuletzt gezeigten, das noch einen Tipp hat (Neues bleibt vorne)
+  if (reihe[0] && (istNeu(reihe[0]) || !st.letztesThema)) return reihe[0]; // ganz am Anfang: wie bisher der erste Tipp der Liste (Farbschemen)
+  const ordnung = HILFE_THEMEN.map((t) => t.id), ab = ordnung.indexOf(st.letztesThema);
+  for (let i = 1; i <= ordnung.length; i++) { const th = ordnung[(ab + i + ordnung.length) % ordnung.length], x = reihe.find((y) => y.thema === th); if (x) return x; }
+  return reihe[0];
+}
+// aus dem Tipp des Tages: Hilfe-Zentrum genau bei dieser Hilfe öffnen (Kapitel, hinscrollen, kurz hervorheben)
+function hzZuEintrag(id) {
+  const e = hzEintraege().find((x) => x.id === id); if (!e) return hzStart();
+  HZ.herkunft = null; HZ.sicht = null; HZ.q = ""; if ($("hzSuche")) $("hzSuche").value = ""; HZ.thema = e.thema;
+  zeige("hilfezentrum");
+  setTimeout(() => { const k = document.querySelector(`#hzInhalt [data-hz="${id}"]`); if (k) { k.scrollIntoView({ block: "center" }); k.classList.add("hervor"); setTimeout(() => k.classList.remove("hervor"), 2200); } }, 120);
 }
 // ---------- KC-CLUB-HILFEZENTRUM (2.23.0, Wunsch Hansi): alle Tipps und Hinweise an einem Ort – Kachel „❓ Hilfe & Tipps“ im Register Technik ----------
 // Deckblatt „📖 Inhalt“ mit allen Themen (Link + Anzahl), darunter ein Register je Thema und eine Suche. Passt sich selbst an:
