@@ -4003,3 +4003,21 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.deepEqual(ids, ["willkommen", "erst_einstellungen", "erst_einfach", "erst_hilfetexte", "erst_feedback"], "Schritte/Reihenfolge");
   assert.ok(/id: "erst_feedback"[^\n]*Register <b>„Club“<\/b>[^\n]*Liebe Grüße<br><b>Hansi<\/b>/.test(html) && /id: "erst_einstellungen"[^\n]*Zahnrad ⚙️/.test(html), "Inhalt nach Hansis Text");
 }
+
+// 353. 2.23.4: „?“ in jeder Ansicht – jede Ansicht hat ein Hilfe-Kapitel (neue Ansichten in HZ_SICHT_THEMA eintragen)
+{
+  const liste = html.match(/\[("start", "dokumente", "dokansicht"[^\]]*)\]\.forEach\(\(x\) => \$\("v-" \+ x\)/)?.[1];
+  assert.ok(liste, "Ansichtenliste in zeige() nicht gefunden");
+  const ansichten = [...liste.matchAll(/"([a-z]+)"/g)].map((m) => m[1]);
+  const map = html.slice(html.indexOf("const HZ_SICHT_THEMA = {"), html.indexOf("};", html.indexOf("const HZ_SICHT_THEMA = {")));
+  const zuordnung = Object.fromEntries([...map.matchAll(/([a-z]+): ("([a-z]+)"|null)/g)].map((m) => [m[1], m[3] || null]));
+  const themen = new Set([...html.slice(html.indexOf("const HILFE_THEMEN = ["), html.indexOf("\n];", html.indexOf("const HILFE_THEMEN = ["))).matchAll(/\{ id: "([a-z]+)"/g)].map((m) => m[1]));
+  for (const v of ansichten) {
+    assert.ok(v in zuordnung, `Ansicht „${v}“ hat kein Hilfe-Kapitel (HZ_SICHT_THEMA ergänzen)`);
+    if (zuordnung[v]) assert.ok(themen.has(zuordnung[v]), `Ansicht „${v}“: Kapitel „${zuordnung[v]}“ unbekannt`);
+  }
+  assert.ok(/hzFrageEinsetzen\(v\); \/\/ KC-CLUB-HILFEZENTRUM/.test(html) && /class="hz-frage" id="hzFrage" onclick="hzFrage\(this\.dataset\.v\)"[^>]*>\?<\/button>/.test(html), "„?“ fehlt");
+  assert.ok(/\.hz-frage \{ position: fixed;[^}]*bottom: calc\(84px/.test(html) && !/body\.einfach[^{]*\.hz-frage/.test(html), "„?“ unten rechts, auch in der einfachen Ansicht");
+  assert.ok(/onclick="\$\('chatBlatt'\)\.classList\.add\('versteckt'\);hzFrage\('chat'\)">❓ Hilfe zum Chat<\/button>/.test(html), "Chat: Hilfe im ⋮-Menü");
+  assert.ok(/else if \(HZ\.herkunft\?\.chat\) \{ const c = HZ\.herkunft\.chat; HZ\.herkunft = null; chatOeffnen\(c\); \}/.test(html), "Zurück in den Chat");
+}
