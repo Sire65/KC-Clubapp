@@ -2792,7 +2792,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.29"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.30"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -14449,8 +14449,10 @@ const TA_ANTW = { ja: "✅ Ja", vielleicht: "🤔 Vielleicht", nein: "❌ Nein" 
 const TA = { liste: [], wahl: { personen: [], gruppe: null }, gruppen: [], markiert: null };
 async function taLaden() {
   try { TA.liste = (await api("terminanfragen_liste")).anfragen || []; } catch (e) { $("terminanfragen").innerHTML = ""; return; }
+  // 2.23.30 (Wunsch Hansi): abgesagte Anfragen bleiben blass als Stornierung stehen, bis der Termin vorbei ist – sie zählen nicht mit
+  // und zeigen keine Antwortzeile („⏳ offen“) mehr
   const kommend = TA.liste.filter((a) => new Date(a.ende || a.beginn) > Date.now() - 3 * 3600000);
-  $("terminanfragen").innerHTML = kommend.length ? `<details class="karte tm-klappe" data-klappe="tm_anfragen" data-ohne-unten open><summary>📨 Terminanfragen <span class="marke">${kommend.length}</span></summary>${kommend.map(taKarte).join("")}</details>` : ""; // 1.46.0
+  $("terminanfragen").innerHTML = kommend.length ? `<details class="karte tm-klappe" data-klappe="tm_anfragen" data-ohne-unten open><summary>📨 Terminanfragen${kommend.some((a) => a.status !== "abgesagt") ? ` <span class="marke">${kommend.filter((a) => a.status !== "abgesagt").length}</span>` : ""}</summary>${kommend.map(taKarte).join("")}</details>` : ""; // 1.46.0
   klappenMerken($("terminanfragen"));
   if (TA.markiert) { const k = document.getElementById("ta-" + TA.markiert); if (k) { k.classList.add("ta-markiert"); k.scrollIntoView({ behavior: "smooth", block: "center" }); } TA.markiert = null; }
 }
@@ -14469,7 +14471,7 @@ function taKarte(a) {
     ${a.notiz ? `<p class="hinweis" style="white-space:pre-wrap;margin:6px 0 0">📝 ${esc(a.notiz)}</p>` : ""}
     ${!a.vonMir && !ab ? `<div class="ta-antw">${k("ja")}${k("vielleicht")}${k("nein")}</div>
       ${a.meine ? `<div class="hinweis" style="font-size:.8rem;margin-top:4px">Nochmal auf deine Antwort tippen nimmt sie zurück.${a.meineNotiz ? ` Deine Notiz: „${esc(a.meineNotiz)}“` : ""}</div>` : ""}` : ""}
-    <details style="margin-top:8px"${a.vonMir ? " open" : ""}><summary class="hinweis">✅ ${n("ja")} · 🤔 ${n("vielleicht")} · ❌ ${n("nein")} · ⏳ ${offen} offen</summary>${wer}</details>
+    ${ab ? "" : `<details style="margin-top:8px"${a.vonMir ? " open" : ""}><summary class="hinweis">✅ ${n("ja")} · 🤔 ${n("vielleicht")} · ❌ ${n("nein")} · ⏳ ${offen} offen</summary>${wer}</details>`}
     ${!ab && (a.vonMir || a.meine === "ja" || a.meine === "vielleicht") ? erinZeileHtml(a.erinnerung, `erinAnfrage('${a.id}')`, a.erinnerungStandard) : ""}
     ${a.vonMir && !ab ? `<div class="knoepfe"><button class="knopf klein" onclick="taAbsagen('${a.id}')">🚫 Absagen</button></div>` : ""}</div>`;
 }

@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.23.30 – 2026-10-04 – Abgesagte Terminanfragen als Stornierung, ohne Zahl und ohne „offen“ (Wunsch Hansi)
+- KC-CLUB-TERMINANFRAGE: Abgesagte Anfragen bleiben in der Liste blass mit „🚫 abgesagt“ stehen, bis der Termin vorbei ist (wie bisher),
+  zählen aber nicht mehr in der Zahl neben „📨 Terminanfragen“ und zeigen keine Antwortzeile („✅ 0 · 🤔 0 · ❌ 0 · ⏳ 1 offen“) mehr.
+  Im Kalender stehen sie weiterhin nicht. Test 379.
+
 ## 2.23.29 – 2026-10-04 – Roter Puls-Ring auch nachts gut sichtbar; Kontrastprüfung aller Farbdesigns (Wunsch Hansi)
 - Kontrastprüfung aller 22 Farbdesigns (Tag + Nacht): Text, grauer Text, weiße Knopfschrift, rote Schrift – überall ausreichend (≥ 4,5:1).
   Einziger Fund: der rote Puls-Ring war nachts in allen Designs zu schwach (≈ 1,6:1).

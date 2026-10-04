@@ -3858,6 +3858,11 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/\.meldung \{[^}]*z-index: 2300;/.test(html), "Meldungen über Vollbild-Fenstern");
   assert.ok(/Die E-Mail wurde an dich geschickt\./.test(html) && /id="wbStatus" role="status"/.test(html), "Mail-Bestätigung im Fenster");
 }
+// 379. 2.23.30: abgesagte Terminanfrage – keine Zahl, keine Antwortzeile (KC-CLUB-TERMINANFRAGE)
+{
+  assert.ok(/kommend\.filter\(\(a\) => a\.status !== "abgesagt"\)\.length/.test(html), "Zahl ohne Abgesagte");
+  assert.ok(/\$\{ab \? "" : `<details style="margin-top:8px"/.test(html), "keine Antwortzeile bei Absage");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
