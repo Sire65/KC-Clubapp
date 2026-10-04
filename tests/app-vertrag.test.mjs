@@ -3760,6 +3760,12 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/\{ id: "hilfe", schritt: 1, art: "eins", t: "Hilft dir die Hilfe/.test(f) && !f.includes("Auch ohne Internet lesen"), "Hilfe-Frage, Umgesetztes nicht mehr als Wunsch");
   for (const x of ["Spiele (Tic-Tac-Toe", "Hilfe-Zentrum", "Einfache Ansicht", "Termine der Stadt", "Änderungsmeldung", "Erstattung", "ohne Internet"]) assert.ok(u.includes(x), `Schon umgesetzt: ${x}`);
 }
+// 368. 2.23.20: ✕ oben rechts in langen Fenstern (KC-CLUB-BLATT-X)
+{
+  assert.ok(/function blattXPruefen\(\)/.test(html) && /sc\.innen\.querySelector\("\.blatt-x"\)\.onclick = \(e\) => \{ e\.stopPropagation\(\); fensterZu\(b\); \};/.test(html), "✕ schließt wie Zurück");
+  assert.ok(/const BLATT_X_OHNE = new Set\(\["alarmBlatt"\]\);/.test(html) && /if \(da \|\| blattHatObenX\(sc\.innen\)\) continue;/.test(html), "nicht doppelt, nie beim Notfall-Fenster");
+  assert.ok(/\.blatt-x-leiste \{ position: sticky;[^}]*background: var\(--karte\)/.test(html), "Leiste mit Hintergrund – verdeckt nichts");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

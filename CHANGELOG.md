@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.23.20 – 2026-10-04 – ✕ oben rechts in langen Fenstern (Wunsch Hansi)
+- KC-CLUB-BLATT-X: Jedes Fenster, dessen Schließen-Knopf erst nach Scrollen erreichbar ist, bekommt oben rechts ein rundes ✕ in einer
+  schmalen Leiste, die beim Scrollen oben stehen bleibt – der Inhalt rutscht darunter durch, nichts wird verdeckt. Es schließt wie „Zurück“
+  (fensterZu, Rückfragen = Abbrechen). Nicht bei kurzen Fenstern, nicht wenn oben schon ein ✕/Schließen sitzt, nie beim Notfall-Fenster.
+  Zentral an einer Stelle – auch künftige Fenster bekommen es automatisch. Test 368.
+
 ## 2.23.19 – 2026-10-04 – Online-Mitglieder fallen mehr auf (Wunsch Hansi)
 - KC-CLUB-MG-ONLINE-PULS: In der Mitglieder-Übersicht hat der Namenskreis aller, die gerade online sind, einen hellgrünen Rand
   (#6ee87a) und pulsiert leicht (2,4 s, um 6 % größer, mit sanftem Lichtring) – in der Kachel- und in der Listenansicht.

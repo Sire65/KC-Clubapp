@@ -1297,6 +1297,12 @@
   .knopf.haupt.dlg-gefahr { background: #b3261e; border-color: #b3261e; color: #fff; }
   .blatt-innen { background: var(--karte); width: min(560px, 100%); border-radius: 22px 22px 0 0; padding: 18px 16px calc(18px + env(safe-area-inset-bottom)); display: grid; gap: 10px; }
   .blatt-innen h3 { margin: 0 0 4px; }
+  /* KC-CLUB-BLATT-X (2.23.20, Wunsch Hansi): lange Fenster (Schließen-Knopf erst nach Scrollen) bekommen oben rechts ein ✕ –
+     als schmale Leiste, die beim Scrollen oben stehen bleibt; der Inhalt rutscht darunter durch, nichts wird verdeckt */
+  .blatt-x-leiste { position: sticky; top: -18px; z-index: 3; display: flex; justify-content: flex-end; margin: -18px -16px -4px; padding: 8px 10px 6px;
+    background: var(--karte); border-radius: 22px 22px 0 0; border-bottom: 1px solid var(--linie); }
+  .blatt-x { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--linie); background: var(--karte); color: var(--text);
+    font-size: 1.15rem; line-height: 1; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
   .begruessung { max-height: 92vh; overflow-y: auto; }
   /* KC-CLUB-ONLINE: grüner Punkt, Online-Leiste, Anklopf-Fenster */
   .onpunkt { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #2ecc71; box-shadow: 0 0 0 2px var(--karte), 0 0 6px #2ecc71; margin-right: 6px; vertical-align: middle; }
@@ -2737,7 +2743,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.19"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.20"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -9504,6 +9510,35 @@ function zeige(v, ausHistorie) {
 // stehende werden versteckt, alle zur Laufzeit gebauten entfernt (Rückfragen über ihr „Abbrechen“). Gilt für Handy-Zurück und Escape.
 document.querySelectorAll(".blatt").forEach((b) => { b.dataset.fest = "1"; });
 function fensterZu(b) { if (b._zu) b._zu(); else if (b.dataset.fest) b.classList.add("versteckt"); else b.remove(); }
+// KC-CLUB-BLATT-X (2.23.20, Wunsch Hansi): Fenster, deren Schließen-Knopf erst nach Scrollen erreichbar ist, bekommen oben rechts
+// ein rundes ✕ (schließt wie „Zurück“ über fensterZu). Nicht, wenn oben schon ein ✕/Schließen sitzt, nicht bei kurzen Fenstern,
+// nie beim Notfall-Fenster (data-ohne-x). Eine Stelle für alle Fenster – neue Fenster bekommen es automatisch.
+const BLATT_X_OHNE = new Set(["alarmBlatt"]);
+function blattScroller(b) {
+  const i = b.querySelector(":scope > .blatt-innen") || b.firstElementChild;
+  for (const el of [i, b]) if (el && el.scrollHeight > el.clientHeight + 24 && /(auto|scroll)/.test(getComputedStyle(el).overflowY)) return { el, innen: i };
+  return null;
+}
+function blattHatObenX(innen) { // sitzt in den obersten 80 px des Fensters schon ein ✕ / „Schließen“?
+  const t0 = innen.getBoundingClientRect().top - innen.scrollTop;
+  return [...innen.querySelectorAll("button, [role=button], a")].some((k) => !k.closest(".blatt-x-leiste")
+    && (/^(✕|×|✖️?|❌|x)$/i.test(k.textContent.trim()) || /schlie(ß|ss)en|^zu$/i.test(k.getAttribute("aria-label") || ""))
+    && k.getBoundingClientRect().top - t0 < 80);
+}
+function blattXPruefen() {
+  for (const b of document.querySelectorAll(".blatt:not(.versteckt)")) {
+    if (BLATT_X_OHNE.has(b.id) || b.dataset.ohneX) continue;
+    const sc = blattScroller(b), da = b.querySelector(".blatt-x-leiste");
+    if (!sc?.innen) { da?.remove(); continue; }
+    if (da || blattHatObenX(sc.innen)) continue;
+    sc.innen.insertAdjacentHTML("afterbegin", '<div class="blatt-x-leiste"><button type="button" class="blatt-x" aria-label="Fenster schließen" title="Schließen">✕</button></div>');
+    sc.innen.querySelector(".blatt-x").onclick = (e) => { e.stopPropagation(); fensterZu(b); };
+  }
+}
+let blattXPlan = 0;
+new MutationObserver(() => { if (blattXPlan || !document.querySelector(".blatt:not(.versteckt)")) return; blattXPlan = requestAnimationFrame(() => { blattXPlan = 0; try { blattXPruefen(); } catch {} }); })
+  .observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["class"] });
+addEventListener("resize", () => { try { blattXPruefen(); } catch {} });
 document.addEventListener("keydown", (e) => {
   if (e.key !== "Escape" || e.defaultPrevented) return;
   const offen = [...document.querySelectorAll(".blatt:not(.versteckt)")]; if (!offen.length) return;
