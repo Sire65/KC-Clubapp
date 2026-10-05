@@ -1797,6 +1797,8 @@
     border: 2px solid var(--textRot, var(--rot));
     background: var(--karte); color: var(--text); font-size: 1.15rem; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.22); opacity: .93; }
   .su-klein:active { transform: scale(.94); }
+  /* 2.23.73 (Fund Hansi): unten in jeder Ansicht Platz für ❓ und 🔍 – die letzte Zeile (z. B. „Server erreichbar · OK“) lässt sich darüber schieben */
+  section[id^="v-"]::after { content: ""; display: block; height: 64px; }
   body.im-chat .su-klein, body.su-auf .su-klein { display: none; }
   /* 2.17.1 KC-CLUB-KUECHENTERROR-FREI (Fund Hansi „konnte die richtige Antwort nicht anklicken“): während einer Quizfrage nichts über
      den Antworten – Lupe und Menüleiste unten weg, damit auch Antwort D ganz zu sehen und zu treffen ist */
@@ -13612,7 +13614,7 @@ const SICHERHEIT_PRUEFUNGEN = [
 ];
 // Rundinstrumente: Grenzen je Messung (ms) – schnell / normal / langsam, immer mit Wort (nicht nur Farbe)
 const SI_UHREN = [
-  { id: "server", t: "App ↔ Server", max: 2000, gut: 700, mittel: 1500, wert: (r) => r.serverMs },
+  { id: "server", t: "App ↔ Server", max: 2500, gut: 1000, mittel: 2000, wert: (r) => r.serverMs }, // 2.23.73 (Wunsch Hansi): Handy-Netz realistisch – bis 1 s grün
   { id: "datenbank", t: "Daten-Speicher", max: 1000, gut: 300, mittel: 700, wert: (r) => r.s?.dbMs ?? null },
 ];
 let SI = { laeuft: false, r: null, zeit: null };

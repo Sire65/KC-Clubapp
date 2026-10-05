@@ -6,6 +6,8 @@
 - Server: Nur die Ausgewählten (und wer sie angelegt hat; Admin sieht alle) sehen die Abstimmung, dürfen abstimmen und bekommen
   Push/Mail – auch das Ergebnis am Ende. „x von n“ rechnet mit der Zielgruppe; Kachel-Zahl „offene Abstimmungen“ ebenso.
   Kachel zeigt „🔐 Gruppe …“ bzw. „🔐 n ausgewählte Mitglieder“. Migration 20261005_kc_club_v22373_abstimmung_ziel.sql (2 leere Spalten).
+- Sicherheits-Check (Fund Hansi „orange Problem“): Rundinstrument „App ↔ Server“ realistisch fürs Handy-Netz – bis 1 s grün „schnell“,
+  bis 2 s „normal“, darüber „langsam“ (vorher 0,7 / 1,5 s). Unten in jeder Ansicht 64 px Platz, damit ❓ und 🔍 nichts mehr verdecken.
 - Enthält 2.23.72 (🧭 Mikrofon-Assistent). Test 423.
 
 ## 2.23.72 – 2026-10-05 – 🧭 Mikrofon-Assistent (Wunsch Hansi: „so wie heute mit mir, Schritt für Schritt“)
