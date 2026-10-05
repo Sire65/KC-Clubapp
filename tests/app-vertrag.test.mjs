@@ -4378,6 +4378,28 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(!/p\.(person|id|pid)\b/.test(c), "keine fremde Person abfragbar");
   assert.ok(/meinedaten: \{ bauen: \(\) => druckMeineDaten\(\) \}/.test(html) && /function mdatSichern\(\)/.test(html) && /aeStart\(\)">✏️ Änderung melden/.test(html), "drucken, sichern, Änderung melden");
 }
+// 434. 2.23.83: Club-Rezeptbuch – Portionen umrechnen, Einkaufsliste, drucken, teilen (KC-CLUB-REZEPTBUCH)
+{
+  assert.ok(/\{ id: "rezepte", sym: "📖", t: "Rezeptbuch",[^\n]*aktion: "rzStart\(\)" \}/.test(html), "Kachel im Verein");
+  const k = html.slice(html.indexOf("// ---------- KC-CLUB-REZEPTBUCH (2.23.83"), html.indexOf("// ---------- KC-CLUB-MEINE-DATEN (2.23.82"));
+  // Zutaten-Zeilen lesen und umrechnen (wie im Code)
+  const rzZahl = new Function("return " + k.slice(k.indexOf("function rzZahl"), k.indexOf("function rzZeileLesen")).trim())();
+  const RZ_EINHEIT = new Function("return " + /const RZ_EINHEIT = (\/[^\n]*\/i);/.exec(k)[1])();
+  const rzZeileLesen = new Function("rzZahl", "RZ_EINHEIT", "return " + k.slice(k.indexOf("function rzZeileLesen"), k.indexOf("function rzMenge")).trim())(rzZahl, RZ_EINHEIT);
+  assert.deepEqual(rzZeileLesen("500 g Mehl"), { m: 500, e: "g", n: "Mehl" });
+  assert.deepEqual(rzZeileLesen("1 1/2 EL Öl"), { m: 1.5, e: "EL", n: "Öl" });
+  assert.deepEqual(rzZeileLesen("½ TL Salz"), { m: 0.5, e: "TL", n: "Salz" });
+  assert.deepEqual(rzZeileLesen("2 Eier"), { m: 2, e: "", n: "Eier" });
+  assert.deepEqual(rzZeileLesen("Salz und Pfeffer"), { m: null, e: "", n: "Salz und Pfeffer" });
+  assert.ok(/RZ\.port \/ r\.portionen/.test(k) && /function rzEinkauf\(id\)/.test(k) && /rezept: \{ bauen: \(o, id\) => druckRezept\(id\) \}/.test(html), "umrechnen, Einkaufsliste, Drucken");
+  const s = server.slice(server.indexOf('case "rezepte_liste"'), server.indexOf('case "boerse_liste"'));
+  assert.ok(/alt\.von !== ich\.person_id && !ich\.admin\) throw new Fehler\("Ändern darf nur/.test(s) && /alt\.von !== ich\.person_id && !ich\.admin\) throw new Fehler\("Löschen darf nur/.test(s), "ändern/löschen nur eigene (Admin alle)");
+  assert.ok(/geloescht_am: jetzt\(\)/.test(s) && !/\.delete\(\)/.test(s) && !/senden\(|routerSenden/.test(s), "nichts löschen, nichts an alle schicken");
+  assert.ok(/startsWith\(`club\/\$\{ich\.person_id\}\/`\)/.test(s), "nur eigene Fotos");
+  assert.ok(/from\("kc_club_rezepte"\)\.select\("id"\)\.eq\("foto", att\.id\)\.is\("geloescht_am", null\)/.test(server), "Rezeptfotos für alle sichtbar");
+  const mig = lies("supabase/migrations/20261005_kc_club_v22383_rezeptbuch.sql");
+  assert.ok(/enable row level security/.test(mig) && /revoke all on kc_club_rezepte from anon, authenticated/.test(mig), "Tabelle geschützt");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

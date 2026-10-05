@@ -41,7 +41,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.23.82";
+const SERVER_VERSION = "2.23.83";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -2132,6 +2132,7 @@ async function adminIds(): Promise<string[]> {
 }
 // KC-CLUB-PERSON-SPERRE (2.23.77, Wunsch Hansi): vorübergehend gesperrte Personen sehen nur ein Hinweisfenster (Wartung / nicht erreichbar).
 // Liste je Server-Instanz 15 s im Speicher; Lesefehler → alte Liste behalten (nie den ganzen Betrieb blockieren, Regel 12). Admins nie gesperrt.
+const REZEPT_KATEGORIEN = ["vorspeise", "suppe", "hauptgericht", "beilage", "dessert", "gebaeck", "getraenk", "sonstiges"]; // KC-CLUB-REZEPTBUCH (2.23.83)
 const SPERRE_TEXT: Record<string, string> = {
   wartung: "Zur Zeit führen wir für Sie Wartungsarbeiten durch. Bitte versuchen Sie es später nochmals. Wir bitten um Verständnis.",
   stoerung: "Unser Server ist zurzeit nicht erreichbar. Bitte versuchen Sie es später nochmals. Wir bitten um Verständnis.",
@@ -5331,6 +5332,55 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       case "hilfe_liste": return json(await hilfeListe(ich));
 
       // ----- KC-CLUB-BOERSE (1.43.0) -----
+      // ----- KC-CLUB-REZEPTBUCH (2.23.83, Wunsch Hansi): gemeinsames Club-Rezeptbuch -----
+      // Alle sehen alle Rezepte; ändern/löschen nur, wer es eingestellt hat (und der Admin). Beim Einstellen geht nichts an alle raus.
+      case "rezepte_liste": {
+        const { data } = await db.from("kc_club_rezepte").select("id,von,titel,kategorie,portionen,zutaten,zubereitung,dauer,foto,stichworte,erstellt_am,geaendert_am")
+          .is("geloescht_am", null).order("titel").limit(1000);
+        const leute = await personen([...new Set<string>((data ?? []).map((x: any) => String(x.von)))]);
+        return json({ rezepte: (data ?? []).map((x: any) => ({ ...x, vonName: leute.get(x.von)?.display_name || "Mitglied", eigen: x.von === ich.person_id, darf: x.von === ich.person_id || ich.admin })) });
+      }
+      case "rezept_speichern": {
+        const titel = txt(p.titel, 100); if (titel.length < 2) throw new Fehler("Bitte einen Namen für das Rezept eintragen.");
+        const kategorie = REZEPT_KATEGORIEN.includes(String(p.kategorie)) ? String(p.kategorie) : "sonstiges";
+        const portionen = Math.round(Number(p.portionen)); if (!(portionen >= 1 && portionen <= 500)) throw new Fehler("Portionen bitte zwischen 1 und 500.");
+        const zutaten = (Array.isArray(p.zutaten) ? p.zutaten : []).slice(0, 80).map((z: any) => {
+          const m = z?.m === null || z?.m === undefined || z?.m === "" ? null : Number(z.m);
+          return { m: m !== null && Number.isFinite(m) && m >= 0 && m < 100000 ? Math.round(m * 1000) / 1000 : null, e: txt(z?.e, 20), n: txt(z?.n, 80) };
+        }).filter((z: any) => z.n);
+        const dauer = p.dauer ? Math.round(Number(p.dauer)) : null; if (dauer !== null && !(dauer >= 1 && dauer <= 2880)) throw new Fehler("Dauer bitte in Minuten (1–2880).");
+        let foto: string | null = p.foto ? String(p.foto) : null;
+        if (foto) { // nur ein eigenes hochgeladenes Bild
+          const { data: att } = await db.from("kc_communication_attachments").select("id,object_path,mime_type").eq("id", foto).maybeSingle();
+          const vorher = p.id ? (await db.from("kc_club_rezepte").select("foto").eq("id", String(p.id)).maybeSingle()).data?.foto : null;
+          if (foto !== vorher && !(att && String(att.object_path).startsWith(`club/${ich.person_id}/`) && /^image\//.test(String(att.mime_type)))) foto = null;
+        }
+        const zeile = { titel, kategorie, portionen, zutaten, zubereitung: txt(p.zubereitung, 6000) || null, dauer, foto, stichworte: txt(p.stichworte, 200) || null, geaendert_am: jetzt() };
+        let id: string;
+        if (p.id) {
+          const { data: alt } = await db.from("kc_club_rezepte").select("id,von").eq("id", String(p.id)).is("geloescht_am", null).maybeSingle();
+          if (!alt) throw new Fehler("Rezept nicht gefunden.", 404);
+          if (alt.von !== ich.person_id && !ich.admin) throw new Fehler("Ändern darf nur, wer das Rezept eingestellt hat.", 403);
+          const { error } = await db.from("kc_club_rezepte").update(zeile).eq("id", alt.id); if (error) throw new Fehler("Rezept konnte nicht gespeichert werden.", 500);
+          id = alt.id;
+        } else {
+          const { count } = await db.from("kc_club_rezepte").select("id", { count: "exact", head: true }).eq("von", ich.person_id).gte("erstellt_am", new Date(Date.now() - 3600000).toISOString());
+          if ((count ?? 0) >= 20) throw new Fehler("Du hast gerade sehr viele Rezepte eingestellt – bitte etwas später weitermachen.", 429);
+          const { data: neu, error } = await db.from("kc_club_rezepte").insert({ ...zeile, von: ich.person_id }).select("id").single();
+          if (error || !neu) throw new Fehler("Rezept konnte nicht gespeichert werden.", 500);
+          id = neu.id;
+        }
+        await protokoll(ich.person_id, p.id ? "rezept_geaendert" : "rezept_angelegt", { rezept: id });
+        return json({ ok: true, id });
+      }
+      case "rezept_loeschen": {
+        const { data: alt } = await db.from("kc_club_rezepte").select("id,von").eq("id", String(p.id || "")).is("geloescht_am", null).maybeSingle();
+        if (!alt) throw new Fehler("Rezept nicht gefunden.", 404);
+        if (alt.von !== ich.person_id && !ich.admin) throw new Fehler("Löschen darf nur, wer das Rezept eingestellt hat.", 403);
+        await db.from("kc_club_rezepte").update({ geloescht_am: jetzt(), geloescht_von: ich.person_id }).eq("id", alt.id);
+        await protokoll(ich.person_id, "rezept_geloescht", { rezept: alt.id });
+        return json({ ok: true });
+      }
       case "boerse_liste": return json(await boerseListe(ich));
       case "boerse_speichern": {
         const art = p.art === "suche" ? "suche" : p.art === "biete" ? "biete" : "";
@@ -8560,6 +8610,11 @@ Köcheclub Werne`,
           // KC-CLUB-BOERSE (1.43.0): Fotos aktiver Börsen-Anzeigen dürfen alle Mitglieder sehen
           const { data: bo } = await db.from("kc_club_boerse").select("id").eq("status", "aktiv").contains("fotos", JSON.stringify([att.id])).limit(1); // jsonb: JSON-Text, kein {…}-Array
           if (bo?.length) erlaubt = true;
+        }
+        if (!erlaubt) {
+          // KC-CLUB-REZEPTBUCH (2.23.83): Fotos von Rezepten im Club-Rezeptbuch dürfen alle Mitglieder sehen
+          const { data: rz } = await db.from("kc_club_rezepte").select("id").eq("foto", att.id).is("geloescht_am", null).limit(1);
+          if (rz?.length) erlaubt = true;
         }
         if (!erlaubt && ich.protokolle) {
           // Anlage eines Sitzungsprotokolls: veröffentlicht → alle Leser; Entwurf → wer es bearbeiten darf

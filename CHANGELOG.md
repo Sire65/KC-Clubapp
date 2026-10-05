@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.23.83 – 2026-10-05 – 📖 Club-Rezeptbuch (Wunsch Hansi)
+- KC-CLUB-REZEPTBUCH: Neue Kachel „📖 Rezeptbuch“ (Verein). Gemeinsame Club-Rezepte mit Foto, Kategorie, Portionen, Dauer, Zutaten und
+  Zubereitung. Suche (auch nach Zutaten) und Kategorie-Chips. Im Rezept: Portionen −/＋ oder 2/4/6/10/20/50 – alle Mengen werden umgerechnet;
+  Zutaten antippen = abhaken; „🛒 Einkaufsliste“ (nur nicht abgehakte, umgerechnet) teilen/kopieren; „🖨️ Drucken“ (Druckvorschau, mit Foto);
+  „📤 Teilen“. Zutaten als Zeilen („500 g Mehl“, „1 1/2 EL Öl“, „½ TL Salz“) – Menge/Einheit werden erkannt. Ändern/löschen nur, wer es
+  eingestellt hat (Admin alle); Löschen = ausblenden; beim Einstellen geht nichts an alle raus. Rezeptfotos dürfen alle Mitglieder sehen.
+  Migration 20261005_kc_club_v22383_rezeptbuch.sql (neue Tabelle, RLS an). Test 434.
+
 ## 2.23.82 – 2026-10-05 – 🔐 Meine Daten (Wunsch Hansi)
 - KC-CLUB-MEINE-DATEN: Neue Kachel „🔐 Meine Daten“ in Meins (vor „Meine Daten geändert?“): zeigt, was über mich gespeichert ist –
   👤 Stammdaten, 🔑 Zugang (erstellt, zuerst/zuletzt da, Version), 🛡️ Rollen & Rechte, 🔔 Benachrichtigungen/Status/Geräte für Push,

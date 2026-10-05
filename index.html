@@ -973,6 +973,14 @@
   .ps-gesperrt { flex-wrap: wrap; justify-content: flex-end; } .ps-gesperrt .knopf { margin: 0; }
   .ps-symbol { flex: none; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--linie); background: var(--karte); font-size: 1.25rem; cursor: pointer; }
   .ps-symbol.aus { background: #fde8ea; border-color: #c0485a; }
+  /* KC-CLUB-REZEPTBUCH (2.23.83) */
+  .rz-liste { display: grid; gap: 6px; margin-top: 6px; }
+  .rz-karte { display: flex; align-items: center; gap: 10px; padding: 8px; border: 1px solid var(--linie); border-radius: 14px; background: var(--karte); color: inherit; font: inherit; text-align: left; cursor: pointer; }
+  .rz-karte img, .rz-sym { flex: none; width: 58px; height: 58px; border-radius: 10px; object-fit: cover; display: grid; place-items: center; font-size: 1.8rem; background: var(--grund, #f3ece4); }
+  .rz-text { display: grid; gap: 2px; min-width: 0; } .rz-text small { color: var(--grau); }
+  .rz-foto { width: 100%; max-height: 240px; object-fit: cover; border-radius: 14px; }
+  .rz-zutat { display: flex; align-items: center; gap: 10px; padding: 6px 2px; border-bottom: 1px solid var(--linie); cursor: pointer; } .rz-zutat input { width: 22px; height: 22px; }
+  .rz-zutat.weg { color: var(--grau); text-decoration: line-through; }
   .vb-knoepfe { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } .vb-knoepfe .knopf { margin: 0; } /* KC-CLUB-VERBINDUNG-MELDEN 2.23.76 */
   .dw-tipp { margin: 0; padding: 5px 10px; border-radius: 10px; background: #fff3d6; color: #4a3a12; border: 1px solid var(--gold); font-size: .8rem; line-height: 1.3; } /* KC-CLUB-SPERRZEIT-PRUEFUNG 2.23.75 */
   .wb-knoepfe { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } .wb-knoepfe .knopf { margin: 0; }
@@ -2942,7 +2950,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.82"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.83"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -8876,6 +8884,8 @@ const KACHELN = {
     { id: "schulung_admin", sym: "🎓", t: "Schulungen", u: "Termine · Einladungen · Freigeben", aktion: "scStart()", nur: () => !!ICH?.admin }, // 2.23.60 KC-CLUB-SCHULUNG-ADMIN (nur Admin)
     // KC-CLUB-SPIELE (2.7.0, Wunsch Hansi): Spiele – Köcheclub Edition (Zahl = Partien, in denen ich dran bin / Herausforderungen an mich)
     { id: "spiele", sym: "🎲", t: "Spiele", u: "Tic-Tac-Toe · Schach · Bauernskat · Küchenterror", aktion: "spStart()", zahl: () => INIT?.spieleDran || 0 },
+    // KC-CLUB-REZEPTBUCH (2.23.83, Wunsch Hansi): gemeinsames Club-Rezeptbuch – Portionen umrechnen, Einkaufsliste, drucken, teilen
+    { id: "rezepte", sym: "📖", t: "Rezeptbuch", u: () => (RZ?.liste ? `${RZ.liste.length} Rezept${RZ.liste.length === 1 ? "" : "e"} · Portionen umrechnen` : "Club-Rezepte · Einkaufsliste"), aktion: "rzStart()" },
   ],
   mein: [
     { id: "status", sym: "🟢", t: "Mein Status", u: "verfügbar, Urlaub …", aktion: "statusBlatt()" },
@@ -9876,6 +9886,150 @@ async function sperreAufheben(pid, knopf) {
     try { await api("sperre_aufheben", { ids: [pid] }, { warten: true }); melde(`🔓 ${vfName(pid)} ist wieder freigegeben`); sperrenLaden(); }
     catch (e) { meldeFehler(e); }
   });
+}
+// ---------- KC-CLUB-REZEPTBUCH (2.23.83, Wunsch Hansi): gemeinsames Club-Rezeptbuch ----------
+// Liste (Suche, Kategorie) → Rezept (Foto, Portionen −/＋ rechnet alle Mengen um, Zutaten abhaken, Einkaufsliste kopieren/teilen, Drucken)
+// → eigenes Rezept anlegen/ändern/löschen. Zutaten als Zeilen „500 g Mehl“ – Menge und Einheit werden erkannt, damit das Umrechnen geht.
+var RZ = { liste: null, kat: "", q: "", offen: null, port: 4, haken: new Set(), form: null }; // var: die Kachel fragt RZ schon beim ersten Zeichnen ab
+const RZ_KAT = { vorspeise: "🥗 Vorspeise", suppe: "🍲 Suppe", hauptgericht: "🍖 Hauptgericht", beilage: "🥔 Beilage", dessert: "🍰 Dessert", gebaeck: "🥨 Gebäck", getraenk: "🍹 Getränk", sonstiges: "🍴 Sonstiges" };
+const RZ_EINHEIT = /^(kg|g|mg|l|ml|cl|dl|el|tl|msp|prise[n]?|stk|stück|st\.?|bund|dose[n]?|becher|pck|pkt|päckchen|tasse[n]?|zehe[n]?|scheibe[n]?|blatt|blätter|zweig[e]?|glas|gläser|handvoll|schuss|würfel|kopf|köpfe|stange[n]?)\.?$/i;
+function rzZahl(t) { t = String(t).trim().replace(",", "."); const b = { "½": 0.5, "¼": 0.25, "¾": 0.75, "⅓": 1 / 3, "⅔": 2 / 3 };
+  if (b[t] != null) return b[t]; const g = /^(\d+)\s*([½¼¾⅓⅔])$/.exec(t); if (g) return +g[1] + b[g[2]];
+  const f = /^(\d+)\/(\d+)$/.exec(t); if (f) return +f[1] / +f[2]; const n = Number(t); return Number.isFinite(n) ? n : null; }
+function rzZeileLesen(z) { // „500 g Mehl“ → { m: 500, e: "g", n: "Mehl" }; „Salz“ → { m: null, e: "", n: "Salz" }
+  const w = String(z).trim().split(/\s+/); if (!w[0]) return null;
+  let m = rzZahl(w[0]), i = m === null ? 0 : 1;
+  if (m !== null && w[1] && /^\d+\/\d+$|^[½¼¾⅓⅔]$/.test(w[1])) { m += rzZahl(w[1]) || 0; i = 2; }
+  const e = m !== null && w[i] && RZ_EINHEIT.test(w[i]) ? w[i++] : "";
+  const n = w.slice(i).join(" "); return n ? { m, e, n } : null;
+}
+function rzMenge(m, f) { // umgerechnete Menge hübsch: ab 10 ganze Zahl, darunter eine Nachkommastelle, Komma
+  if (m == null) return ""; const x = m * f; const r = x >= 10 ? Math.round(x) : Math.round(x * 100) / 100;
+  return r.toLocaleString("de-DE", { maximumFractionDigits: 2, useGrouping: false });
+}
+// große Mengen in die nächste Einheit (1250 g → 1,25 kg; 1500 ml → 1,5 l); Löffel/Stück/ohne Einheit auf halbe runden (3,8 EL → 4 EL)
+function rzZutatText(z, f) {
+  let m = z.m == null ? null : z.m * f, e = z.e || "";
+  if (m != null && /^g$/i.test(e) && m >= 1000) { m /= 1000; e = "kg"; } else if (m != null && /^ml$/i.test(e) && m >= 1000) { m /= 1000; e = "l"; }
+  if (m != null && (!e || /^(el|tl|stk|stück|st\.?|zehe[n]?|prise[n]?|dose[n]?|becher|bund|scheibe[n]?|tasse[n]?)$/i.test(e))) m = Math.max(0.5, Math.round(m * 2) / 2);
+  return [rzMenge(m, 1), e, z.n].filter(Boolean).join(" ");
+}
+async function rzStart() {
+  const f = blattAuf("rzBlatt", `<h3 style="margin:0">📖 Club-Rezeptbuch</h3><div id="rzInhalt"><p class="hinweis">Wird geladen …</p></div>`);
+  f.classList.add("sc-blatt");
+  await rzLaden();
+}
+async function rzLaden() {
+  try { RZ.liste = (await api("rezepte_liste")).rezepte; } catch (e) { if ($("rzInhalt")) $("rzInhalt").innerHTML = `<div class="karte ta-st-nein">⚠️ ${esc(e.message)}</div>`; return; }
+  rzListeZeigen();
+}
+function rzListeZeigen() {
+  const z = $("rzInhalt"); if (!z) return; RZ.offen = null; RZ.form = null;
+  const q = RZ.q.toLowerCase(), treffer = (RZ.liste || []).filter((r) => (!RZ.kat || r.kategorie === RZ.kat) && (!q || [r.titel, r.stichworte, r.vonName, ...(r.zutaten || []).map((x) => x.n)].join(" ").toLowerCase().includes(q)));
+  const zaehl = (k) => (RZ.liste || []).filter((r) => r.kategorie === k).length;
+  z.innerHTML = `<div class="na-pfeil-knoepfe" style="margin:6px 0"><button class="knopf haupt" onclick="rzForm()">＋ Neues Rezept</button><button class="knopf" onclick="fensterZu($('rzBlatt'))">Schließen</button></div>
+    <input type="search" id="rzSuche" placeholder="🔍 Rezept oder Zutat suchen …" value="${esc(RZ.q)}" style="width:100%;box-sizing:border-box;margin:0 0 6px">
+    <div class="hl-chips"><button type="button" class="chip${RZ.kat ? "" : " an"}" onclick="RZ.kat='';rzListeZeigen()">Alle (${(RZ.liste || []).length})</button>${Object.entries(RZ_KAT).filter(([k]) => zaehl(k)).map(([k, t]) => `<button type="button" class="chip${RZ.kat === k ? " an" : ""}" onclick="RZ.kat='${k}';rzListeZeigen()">${t} (${zaehl(k)})</button>`).join("")}</div>
+    <div class="rz-liste">${treffer.map((r) => `<button type="button" class="rz-karte" onclick="rzZeigen('${r.id}')">${r.foto ? `<img data-anlage="${esc(r.foto)}" alt="">` : `<span class="rz-sym">${(RZ_KAT[r.kategorie] || "🍴").split(" ")[0]}</span>`}
+        <span class="rz-text"><b>${esc(r.titel)}</b><small>${esc((RZ_KAT[r.kategorie] || "").replace(/^\S+ /, ""))} · ${r.portionen} Port.${r.dauer ? ` · ${r.dauer} Min.` : ""} · von ${esc(r.vonName.split(" ")[0])}</small></span></button>`).join("")
+      || `<p class="hinweis">${(RZ.liste || []).length ? "Nichts gefunden." : "Noch keine Rezepte – leg das erste an: „＋ Neues Rezept“."}</p>`}</div>`;
+  $("rzSuche").oninput = (e) => { RZ.q = e.target.value; const pos = e.target.selectionStart; rzListeZeigen(); const s = $("rzSuche"); s.focus(); try { s.setSelectionRange(pos, pos); } catch {} };
+  z.querySelectorAll("img[data-anlage]").forEach((i) => bildLaden(i));
+}
+function rzZeigen(id) {
+  const r = (RZ.liste || []).find((x) => x.id === id); if (!r) return;
+  if (RZ.offen !== id) { RZ.offen = id; RZ.port = r.portionen; RZ.haken = new Set(); }
+  const f = RZ.port / r.portionen, z = $("rzInhalt");
+  z.innerHTML = `<div class="na-pfeil-knoepfe" style="margin:6px 0"><button class="knopf" onclick="rzListeZeigen()">← Alle Rezepte</button><button class="knopf" onclick="fensterZu($('rzBlatt'))">Schließen</button></div>
+    ${r.foto ? `<img class="rz-foto" data-anlage="${esc(r.foto)}" alt="Foto: ${esc(r.titel)}">` : ""}
+    <h3 style="margin:6px 0 2px">${esc(r.titel)}</h3>
+    <p class="hinweis" style="margin:0 0 6px">${esc(RZ_KAT[r.kategorie] || "")}${r.dauer ? ` · ⏱️ ${r.dauer} Min.` : ""} · von ${esc(r.vonName)}${r.stichworte ? ` · ${esc(r.stichworte)}` : ""}</p>
+    <div class="ps-schritt"><div style="display:flex;align-items:center;gap:10px"><b style="flex:1">🍽️ Portionen</b>
+      <button class="ps-symbol" aria-label="weniger Portionen" onclick="RZ.port=Math.max(1,RZ.port-1);rzZeigen('${r.id}')">−</button><b style="min-width:2.5em;text-align:center;font-size:1.2rem">${RZ.port}</b>
+      <button class="ps-symbol" aria-label="mehr Portionen" onclick="RZ.port=Math.min(500,RZ.port+1);rzZeigen('${r.id}')">＋</button></div>
+      <div class="hl-chips">${[2, 4, 6, 10, 20, 50].map((n) => `<button type="button" class="chip${RZ.port === n ? " an" : ""}" onclick="RZ.port=${n};rzZeigen('${r.id}')">${n}</button>`).join("")}</div>
+      ${RZ.port !== r.portionen ? `<p class="hinweis" style="margin:0">Umgerechnet von ${r.portionen} auf ${RZ.port} Portionen.</p>` : ""}</div>
+    <div class="ps-schritt"><b>🧺 Zutaten</b> <small class="hinweis">antippen = abhaken</small>
+      ${(r.zutaten || []).map((x, i) => `<label class="rz-zutat${RZ.haken.has(i) ? " weg" : ""}"><input type="checkbox" ${RZ.haken.has(i) ? "checked" : ""} onchange="RZ.haken[this.checked?'add':'delete'](${i});rzZeigen('${r.id}')"> ${esc(rzZutatText(x, f))}</label>`).join("") || '<p class="hinweis" style="margin:0">Keine Zutaten eingetragen.</p>'}</div>
+    ${r.zubereitung ? `<div class="ps-schritt"><b>👨‍🍳 Zubereitung</b><div style="white-space:pre-wrap;line-height:1.45">${esc(r.zubereitung)}</div></div>` : ""}
+    <div class="na-pfeil-knoepfe"><button class="knopf haupt" onclick="rzEinkauf('${r.id}')">🛒 Einkaufsliste</button><button class="knopf" onclick="druckStarten('rezept','${r.id}')">🖨️ Drucken</button>
+      <button class="knopf" onclick="rzTeilen('${r.id}')">📤 Teilen</button>${r.darf ? `<button class="knopf" onclick="rzForm('${r.id}')">✏️ Ändern</button><button class="knopf" onclick="rzLoeschen('${r.id}')">🗑️ Löschen</button>` : ""}</div>`;
+  z.querySelectorAll("img[data-anlage]").forEach((i) => bildLaden(i));
+  $("rzBlatt").querySelector(".blatt-innen")?.scrollTo?.({ top: 0 });
+}
+function rzText(r, mitZubereitung) {
+  const f = RZ.offen === r.id ? RZ.port / r.portionen : 1, port = RZ.offen === r.id ? RZ.port : r.portionen;
+  return [`${r.titel} (${port} Portionen)`, "", "Zutaten:", ...(r.zutaten || []).map((x) => `• ${rzZutatText(x, f)}`), ...(mitZubereitung && r.zubereitung ? ["", "Zubereitung:", r.zubereitung] : []), "", "Aus dem Club-Rezeptbuch des Köcheclub Werne"].join("\n");
+}
+async function rzEinkauf(id) { // Einkaufsliste: nur noch nicht abgehakte Zutaten, umgerechnet
+  const r = (RZ.liste || []).find((x) => x.id === id); if (!r) return;
+  const f = RZ.port / r.portionen, rest = (r.zutaten || []).filter((_, i) => !RZ.haken.has(i));
+  if (!rest.length) return melde("Alles abgehakt – nichts mehr einzukaufen 🙂");
+  const t = [`🛒 Einkaufsliste: ${r.titel} (${RZ.port} Portionen)`, ...rest.map((x) => `☐ ${rzZutatText(x, f)}`)].join("\n");
+  try { if (navigator.share) { await navigator.share({ title: "Einkaufsliste", text: t }); return; } } catch (e) { if (e?.name === "AbortError") return; }
+  try { await navigator.clipboard.writeText(t); return melde("🛒 Einkaufsliste kopiert – z. B. in WhatsApp oder einen Chat einfügen"); } catch {}
+  await eingabe("Einkaufsliste markieren und kopieren:", t);
+}
+async function rzTeilen(id) {
+  const r = (RZ.liste || []).find((x) => x.id === id); if (!r) return; const t = rzText(r, true);
+  try { if (navigator.share) { await navigator.share({ title: r.titel, text: t }); return; } } catch (e) { if (e?.name === "AbortError") return; }
+  try { await navigator.clipboard.writeText(t); return melde("📋 Rezept kopiert – im Chat oder in WhatsApp einfügen"); } catch {}
+  await eingabe("Rezept markieren und kopieren:", t);
+}
+function druckRezept(id) {
+  const r = (RZ.liste || []).find((x) => x.id === id); if (!r) return null;
+  const f = RZ.offen === r.id ? RZ.port / r.portionen : 1, port = RZ.offen === r.id ? RZ.port : r.portionen, bild = r.foto && bildCache[r.foto]?.url;
+  return { titel: r.titel, unter: `${(RZ_KAT[r.kategorie] || "").replace(/^\S+ /, "")} · ${port} Portionen${r.dauer ? ` · ${r.dauer} Min.` : ""} · von ${r.vonName}`, fuss: "Club-Rezeptbuch",
+    html: `${bild ? `<img src="${esc(bild)}" alt="" style="max-width:70mm;max-height:50mm;float:right;margin:0 0 3mm 4mm;border-radius:2mm">` : ""}
+      <h3 style="margin:0 0 2mm;font-size:4.2mm">Zutaten</h3><ul style="margin:0 0 4mm;padding-left:5mm;font-size:3.8mm;line-height:1.5">${(r.zutaten || []).map((x) => `<li>${esc(rzZutatText(x, f))}</li>`).join("")}</ul>
+      ${r.zubereitung ? `<h3 style="margin:0 0 2mm;font-size:4.2mm;clear:both">Zubereitung</h3><div style="white-space:pre-wrap;font-size:3.8mm;line-height:1.5">${esc(r.zubereitung)}</div>` : ""}` };
+}
+function rzForm(id) {
+  const r = id ? (RZ.liste || []).find((x) => x.id === id) : null;
+  RZ.form = r ? { id: r.id, titel: r.titel, kategorie: r.kategorie, portionen: r.portionen, zutaten: (r.zutaten || []).map((x) => rzZutatText(x, 1)).join("\n"), zubereitung: r.zubereitung || "", dauer: r.dauer || "", foto: r.foto || null, stichworte: r.stichworte || "", laedt: 0 }
+    : { titel: "", kategorie: "hauptgericht", portionen: 4, zutaten: "", zubereitung: "", dauer: "", foto: null, stichworte: "", laedt: 0 };
+  rzFormZeigen();
+}
+function rzFormZeigen() {
+  const F = RZ.form, z = $("rzInhalt"); if (!F || !z) return;
+  z.innerHTML = `<h3 style="margin:6px 0">${F.id ? "✏️ Rezept ändern" : "＋ Neues Rezept"}</h3>
+    <label class="feld">Name des Rezepts<input id="rzfTitel" maxlength="100" value="${esc(F.titel)}" placeholder="z. B. Westfälischer Pickert"></label>
+    <div class="feld"><b>Kategorie</b><div class="hl-chips">${Object.entries(RZ_KAT).map(([k, t]) => `<button type="button" class="chip${F.kategorie === k ? " an" : ""}" onclick="rzfMerken();RZ.form.kategorie='${k}';rzFormZeigen()">${t}</button>`).join("")}</div></div>
+    <div class="zwei"><label class="feld">Portionen<input id="rzfPort" type="number" min="1" max="500" inputmode="numeric" value="${esc(String(F.portionen))}"></label>
+      <label class="feld">Dauer (Min.)<input id="rzfDauer" type="number" min="1" max="2880" inputmode="numeric" value="${esc(String(F.dauer))}"></label></div>
+    <label class="feld">Zutaten – eine pro Zeile, z. B. „500 g Mehl“, „2 EL Öl“, „1 Prise Salz“<textarea id="rzfZutaten" rows="7" placeholder="500 g Mehl&#10;2 Eier&#10;250 ml Milch&#10;1 Prise Salz">${esc(F.zutaten)}</textarea></label>
+    <label class="feld">Zubereitung<textarea id="rzfZub" rows="7" maxlength="6000" placeholder="1. Mehl und Eier verrühren …">${esc(F.zubereitung)}</textarea></label>
+    <label class="feld">Stichworte (freiwillig)<input id="rzfStich" maxlength="200" value="${esc(F.stichworte)}" placeholder="z. B. vegetarisch, Weihnachtsmarkt"></label>
+    <div class="feld"><b>Foto (freiwillig)</b><div class="bo-fotos">${F.foto ? `<span class="bo-mini"><img data-anlage="${esc(F.foto)}" alt=""><button onclick="rzfMerken();RZ.form.foto=null;rzFormZeigen()" aria-label="Foto entfernen">✕</button></span>`
+      : `<label class="bo-plus">${F.laedt ? "⏳" : "📷 ＋"}<input type="file" accept="image/*" hidden onchange="rzfFoto(this)"></label>`}</div></div>
+    <p class="hinweis" style="margin:4px 0 8px">Alle Mitglieder sehen das Rezept im Rezeptbuch. Beim Einstellen wird nichts verschickt.</p>
+    <div class="na-pfeil-knoepfe bs-fuss"><button class="knopf haupt" ${F.laedt ? "disabled" : ""} onclick="einmal(this, rzSpeichern)">💾 Speichern</button><button class="knopf" onclick="${F.id ? `rzZeigen('${F.id}')` : "rzListeZeigen()"}">Abbrechen</button></div>`;
+  z.querySelectorAll("img[data-anlage]").forEach((i) => bildLaden(i));
+}
+function rzfMerken() {
+  const F = RZ.form; if (!F || !$("rzfTitel")) return;
+  Object.assign(F, { titel: $("rzfTitel").value, portionen: $("rzfPort").value, dauer: $("rzfDauer").value, zutaten: $("rzfZutaten").value, zubereitung: $("rzfZub").value, stichworte: $("rzfStich").value });
+}
+async function rzfFoto(input) {
+  const F = RZ.form, roh = input.files?.[0]; if (!F || !roh) return;
+  rzfMerken(); F.laedt = 1; rzFormZeigen();
+  try { const r = await anlageHochladen(roh); if (r?.id) F.foto = r.id; } catch (e) { meldeFehler(e); }
+  F.laedt = 0; if (RZ.form === F) rzFormZeigen();
+}
+async function rzSpeichern() {
+  rzfMerken(); const F = RZ.form; if (!F) return;
+  if (F.titel.trim().length < 2) return melde("Bitte einen Namen für das Rezept eintragen.", true);
+  const zutaten = F.zutaten.split("\n").map(rzZeileLesen).filter(Boolean);
+  try {
+    const r = await api("rezept_speichern", { id: F.id, titel: F.titel.trim(), kategorie: F.kategorie, portionen: Number(F.portionen) || 4, zutaten, zubereitung: F.zubereitung.trim(), dauer: Number(F.dauer) || null, foto: F.foto, stichworte: F.stichworte.trim() }, { warten: true });
+    melde(F.id ? "💾 Rezept gespeichert" : "📖 Rezept ist im Rezeptbuch");
+    RZ.form = null; await rzLaden(); RZ.offen = null; rzZeigen(r.id);
+  } catch (e) { meldeFehler(e); }
+}
+async function rzLoeschen(id) {
+  const r = (RZ.liste || []).find((x) => x.id === id); if (!r) return;
+  if (!(await frage(`Rezept „${r.titel}“ löschen?\n\nEs verschwindet für alle aus dem Rezeptbuch.`))) return;
+  try { await api("rezept_loeschen", { id }, { warten: true }); melde("🗑️ Rezept gelöscht"); await rzLaden(); } catch (e) { meldeFehler(e); }
 }
 // ---------- KC-CLUB-MEINE-DATEN (2.23.82, Wunsch Hansi): was über mich gespeichert ist – ansehen, drucken, als Datei sichern ----------
 let MDAT = null;
@@ -17870,6 +18024,7 @@ const DRUCKARTEN = {
   verbindung: { bauen: () => druckVerbindung() }, // KC-CLUB-VERBINDUNG-MELDEN (2.23.76)
   chat: { bauen: () => druckChat() }, // 2.23.80: ganzer Chat
   meinedaten: { bauen: () => druckMeineDaten() }, // KC-CLUB-MEINE-DATEN (2.23.82)
+  rezept: { bauen: (o, id) => druckRezept(id) }, // KC-CLUB-REZEPTBUCH (2.23.83)
   einrichtungskarte: { bauen: (o, param) => druckEinrichtungskarte(param) }, // KC-CLUB-EINRICHTUNGSKARTE (1.88.0) // KC-CLUB-BESTAETIGUNG (1.69.0): Aufstellung der eigenen Eingaben
 };
 // ---- KC-CLUB-KURZANLEITUNG (0.62.0): die App in 3 Schritten – für Einsteiger, zum Ausdrucken oder Verschicken ----
