@@ -41,7 +41,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.23.59";
+const SERVER_VERSION = "2.23.60";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -3041,6 +3041,22 @@ async function schulungenListe(ich: Ich, von: string, bis: string) {
     ichDabei: (x.e.person_ids ?? []).includes(ich.person_id) })).sort((a: any, b: any) => String(a.beginn).localeCompare(String(b.beginn)));
 }
 
+// ---------- KC-CLUB-SCHULUNG-ADMIN (2.23.60, Wunsch Hansi): Termin-Programm als Admin-Bereich „🎓 Schulungen“ der Club-App ----------
+// Die Bedienung gehört jetzt zur Club-App (kein zweites Programm, keine zweite Anmeldung). Die Termin-Logik bleibt EIN Kern:
+// der vorhandene Baustein kc-termine (sichere Platzvergabe, Fristen, Erinnerungen, Mails mit Link für Mitglieder ohne App,
+// Google-Abgleich) – die Club-App ruft ihn intern mit dem Admin-Schlüssel aus dem Vault auf. Nichts wird doppelt gebaut.
+const SCHULUNG_AKTIONEN = new Set(["t_init", "t_chronologie", "t_slots_anlegen", "t_slot_absagen", "t_slot_loeschen", "t_einladen", "t_erneut_einladen",
+  "t_link", "t_buchung_entscheiden", "t_vorschlag_entscheiden", "t_zurueckziehen", "t_besuch_termin"]);
+async function schulungAufruf(a: string, daten: Record<string, unknown>) {
+  const { data: token } = await db.rpc("kc_communication_get_server_secret", { p_name: "kc_termine_admin_token" });
+  if (!token) throw new Fehler("Der Termin-Baustein ist nicht erreichbar (Schlüssel fehlt).", 503);
+  const r = await fetch(`${SUPA}/functions/v1/kc-termine`, { method: "POST", signal: AbortSignal.timeout(25000),
+    headers: { "Content-Type": "application/json", "x-kc-termine-admin-token": String(token) }, body: JSON.stringify({ ...daten, action: a, test: false }) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Fehler(String(j?.error || "Der Termin-Baustein antwortet nicht."), r.status >= 500 ? 502 : r.status === 401 ? 503 : r.status);
+  return j;
+}
+
 // ---------- Handy-Kalender (KC-CLUB-KALENDERABO) ----------
 // Persönlicher, geheimer Abo-Link (nur Hash gespeichert). Enthält Treffen/Veranstaltungen, Aktionen und freigegebene Geburtstage.
 const icsText = (s: unknown) => String(s ?? "").replace(/\\/g, "\\\\").replace(/;/g, "\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
@@ -5141,6 +5157,21 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           return json({ ok: true });
         }
         throw new Fehler("Unbekannte Aktion.");
+      }
+
+      // KC-CLUB-SCHULUNG-ADMIN (2.23.60): nur Admin; Aktionen des Termin-Bausteins durchreichen, dazu die Besuche für „🎓 geschult“
+      case "schulung": {
+        nurAdmin(ich);
+        const a = String(p.a || "");
+        if (!SCHULUNG_AKTIONEN.has(a)) throw new Fehler("Unbekannte Schulungs-Aktion.");
+        const { action: _x, a: _y, ...daten } = p as Record<string, unknown>;
+        const j = await schulungAufruf(a, daten);
+        if (a === "t_init") {
+          const { data: bes } = await db.from("kc_besuche").select("besuch_id,person_ids,status,datum").order("datum", { ascending: false }).limit(500);
+          j.besuche = bes ?? [];
+          j.mitglieder = (j.mitglieder ?? []).map((m: any) => ({ person_id: m.person_id, display_name: m.display_name, given_name: m.given_name, family_name: m.family_name, hat_email: !!m.hat_email, test: !!m.test }));
+        } else await protokoll(ich.person_id, "schulung_" + a.slice(2), {}); // nur die Art – Inhalte stehen im Protokoll des Termin-Bausteins
+        return json(j);
       }
 
       // KC-CLUB-TWINKEY-FRAGEN (2.23.49): Wissen für alle, eigene Fragen mit Antwort, für den Admin die offenen Fragen

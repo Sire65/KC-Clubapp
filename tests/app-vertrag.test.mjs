@@ -4137,6 +4137,19 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/schulungen,\n\s+\}\);/.test(server) && /UID:schulung-\$\{x\.id\}@koecheclub-werne/.test(server), "Kalender + Abo");
   assert.ok(/for \(const x of Q\.schulungen \|\| \[\]\)/.test(html) && /x\.art === "schulung"/.test(html) && /for \(const x of k\.schulungen \|\| \[\]\)/.test(html), "App zeigt sie im Kalender und in Demnächst");
 }
+// 409. 2.23.60: „🎓 Schulungen“ – Termin-Programm als Admin-Bereich, ein Kern (KC-CLUB-SCHULUNG-ADMIN)
+{
+  const g = server.slice(server.indexOf('case "schulung"'), server.indexOf('// KC-CLUB-TWINKEY-FRAGEN (2.23.49): Wissen für alle'));
+  assert.ok(/nurAdmin\(ich\);/.test(g) && /SCHULUNG_AKTIONEN\.has\(a\)/.test(g), "nur Admin, nur erlaubte Aktionen");
+  const f = server.slice(server.indexOf("async function schulungAufruf"), server.indexOf("// ---------- Handy-Kalender (KC-CLUB-KALENDERABO)"));
+  assert.ok(/kc_termine_admin_token/.test(f) && /functions\/v1\/kc-termine/.test(f) && /test: false/.test(f), "vorhandener Termin-Baustein, Schlüssel aus dem Vault");
+  assert.ok(!/t_kalender_schluessel|m_waehlen/.test(server.slice(server.indexOf("const SCHULUNG_AKTIONEN"), server.indexOf("async function schulungAufruf"))), "keine Kalender-Schlüssel, keine Mitglieder-Aktionen");
+  assert.ok(/protokoll\(ich\.person_id, "schulung_" \+ a\.slice\(2\), \{\}\)/.test(g), "Club-Protokoll ohne Inhalte");
+  const k = html.slice(html.indexOf("// ---------- KC-CLUB-SCHULUNG-ADMIN (2.23.60"), html.indexOf("// KC-CLUB-TERMINANFRAGE-HINWEIS (2.23.52"));
+  assert.ok(/\{ id: "schulung_admin", sym: "🎓", t: "Schulungen"[^\n]*nur: \(\) => !!ICH\?\.admin/.test(html) && /if \(!ICH\?\.admin\) return;/.test(k), "Kachel und Bereich nur für den Admin");
+  for (const x of ["⏳ Wartet auf dich", "➕ Termin anbieten", "📅 Meine Termine", "✉️ Mitglieder einladen", "📨 Einladungen", "📜 Ablauf", "🔗 Link erneuern & teilen"]) assert.ok(k.includes(x), "Teil fehlt: " + x);
+  assert.ok(!/\bconfirm\(|\bprompt\(/.test(k), "App-eigene Rückfragen statt Browser-Fenster");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

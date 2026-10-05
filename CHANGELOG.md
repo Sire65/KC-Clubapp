@@ -1,5 +1,15 @@
 # Änderungen
 
+## 2.23.60 – 2026-10-05 – 🎓 Schulungen: Termin-Programm in der Club-App (Wunsch Hansi, Stufe 1)
+- KC-CLUB-SCHULUNG-ADMIN: Neue Kachel „🎓 Schulungen“ (nur Admin) – die Bedienung des Termin-Programms gehört jetzt zur Club-App:
+  ⏳ Wartet auf dich (gewählt → ✅ Bestätigen / ✖ Ablehnen, Gegenvorschläge annehmen oder neue Termine anbieten, Frist vorbei → erneut
+  einladen), ➕ Termin anbieten (bei mir / beim Mitglied / Mitglied wählt, 1–3 Plätze, Notiz), 📅 Meine Termine (absagen/löschen),
+  ✉️ Mitglieder einladen (einzeln oder gemeinsam bis 3, Stand je Mitglied: 🎓 geschult, ✅ Termin, ⏳ gewählt, 💬 Gegenvorschlag,
+  ✉️ eingeladen, ⌛ keine Antwort), 📨 Einladungen mit 📜 Ablauf, 🔗 Link erneuern & teilen (WhatsApp), Google-Kalender-Stand, Protokoll.
+  Ein Kern: der Club-App-Server ruft den vorhandenen Termin-Baustein kc-termine intern mit dem Admin-Schlüssel aus dem Vault auf
+  (Aktion „schulung“, feste Liste erlaubter Aktionen, nur Admin) – sichere Platzvergabe, Fristen, Erinnerungen, Mails mit Link für
+  Mitglieder ohne App und Google-Abgleich laufen unverändert. Club-Protokoll nur mit der Art. Hilfe-Eintrag. Test 409.
+
 ## 2.23.59 – 2026-10-05 – 🎓 Schulungstermine aus dem Termin-Programm im Club-Kalender (Wunsch Hansi)
 - KC-CLUB-SCHULUNGSTERMINE: Gebuchte Schulungs-/Besuchstermine aus Hansis Termin-Programm (kc_termin_slots/_buchungen/_einladungen,
   vorgemerkt oder bestätigt, nicht abgesagt, keine Tests) erscheinen automatisch im Club-Kalender (lila, „🎓 14:00–17:30 Schulung: Karla,
