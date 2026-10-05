@@ -1475,6 +1475,12 @@
   .avatar { position: relative; } .avatar .onpunkt { position: absolute; right: -2px; bottom: -2px; margin: 0; }
   /* KC-CLUB-KREISE (0.60.0): ganzer Namenskreis farbig nach Zustand (Registry KREIS_ARTEN) */
   .avatar.k-neutral { background: #8d6e63; }
+  .avatar.mit-figur { padding: 3px; box-sizing: border-box; overflow: hidden; } .avatar.mit-figur svg { display: block; width: 100%; height: 100%; border-radius: 50%; } /* KC-CLUB-AVATAR 2.23.85 */
+  .av-raster { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 8px; }
+  .av-raster button { border: 3px solid transparent; border-radius: 50%; padding: 0; background: none; cursor: pointer; aspect-ratio: 1; }
+  .av-raster button.an { border-color: var(--rot); box-shadow: 0 0 0 3px var(--karte), 0 0 0 5px var(--rot); }
+  .av-raster svg { width: 100%; height: 100%; display: block; }
+  .av-keins { display: grid; place-items: center; width: 100%; height: 100%; border-radius: 50%; background: var(--rot); color: #fff; font-weight: 800; font-size: 1.1rem; }
   .avatar.k-online { background: #1e8449; } .avatar.k-heute { background: #2471a3; } .avatar.k-weg { background: #d68910; }
   .avatar.k-fehler { background: #c0392b; } .avatar.k-selten { background: #5f6b6d; }
   .avatar.k-unbekannt { background: transparent; color: var(--grau); border: 2px dashed #95a5a6; }
@@ -2955,7 +2961,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.84"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.85"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2966,6 +2972,58 @@ const fKurz = new Intl.DateTimeFormat("de-DE", { timeZone: TZ, day: "2-digit", m
 const wann = (iso) => `${fTag.format(new Date(iso))}, ${fZeit.format(new Date(iso))} Uhr`;
 const zeitKurz = (iso) => { const d = new Date(iso), h = new Date(); return d.toDateString() === h.toDateString() ? fZeit.format(d) : fKurz.format(d) + " " + fZeit.format(d); };
 const initialen = (n) => String(n || "?").split(/\s+/).map((x) => x[0]).slice(0, 2).join("").toUpperCase();
+// ---------- KC-CLUB-AVATAR (2.23.85, Wunsch Hansi): 30 selbst gezeichnete Koch-Figuren (15 Frauen, 15 Männer) ----------
+// Reine SVG-Zeichnung im Code – keine fremden Bilder, keine Rechte Dritter, keine Kosten. Gespeichert wird nur der Code (z. B. „w03“).
+// Später als Update: eigener Baukasten (dieselben Teile frei kombinierbar).
+const AV_HAUT = ["#f7d7bd", "#ecc19c", "#d59d6f", "#a96d45", "#6f452a"];
+const AV_HAAR = { schwarz: "#241812", braun: "#5b3a26", hell: "#9b6634", blond: "#dcb46a", rot: "#b5462a", grau: "#9ea3a8", weiss: "#e9e5dd" };
+// [haut, frisur, haarfarbe, kopf, bart, brille, hintergrund, halstuch]
+const AV_FIGUREN = {
+  w01: [0, "lang", "blond", "koch", 0, 0, "#741521", "#c8102e"], w02: [1, "dutt", "braun", "koch", 0, 1, "#1d4f91", "#ffcc00"],
+  w03: [2, "locken", "schwarz", "tuch", 0, 0, "#2e7d4f", "#e8792b"], w04: [0, "bob", "rot", "koch", 0, 0, "#6d4aa3", "#2e7d4f"],
+  w05: [3, "zopf", "schwarz", "koch", 0, 0, "#b8860b", "#741521"], w06: [1, "lang", "braun", "kappe", 0, 1, "#00796b", "#ffffff"],
+  w07: [4, "locken", "schwarz", "koch", 0, 0, "#c2185b", "#ffcc00"], w08: [0, "bob", "grau", "koch", 0, 1, "#455a64", "#c8102e"],
+  w09: [2, "dutt", "hell", "tuch", 0, 0, "#8d6e63", "#1d4f91"], w10: [1, "zopf", "blond", "keine", 0, 0, "#e8792b", "#741521"],
+  w11: [3, "lang", "schwarz", "koch", 0, 1, "#3949ab", "#ffcc00"], w12: [0, "locken", "rot", "kappe", 0, 0, "#558b2f", "#ffffff"],
+  w13: [2, "bob", "braun", "koch", 0, 0, "#ad1457", "#2e7d4f"], w14: [1, "dutt", "weiss", "koch", 0, 1, "#5d4037", "#c8102e"],
+  w15: [4, "lang", "schwarz", "tuch", 0, 0, "#0277bd", "#e8792b"],
+  m01: [0, "kurz", "braun", "koch", "voll", 0, "#741521", "#c8102e"], m02: [1, "kurz", "schwarz", "koch", 0, 1, "#1d4f91", "#ffcc00"],
+  m03: [2, "glatze", "schwarz", "keine", "voll", 0, "#2e7d4f", "#e8792b"], m04: [0, "wuschel", "blond", "kappe", 0, 0, "#6d4aa3", "#ffffff"],
+  m05: [3, "kurz", "schwarz", "koch", "schnurr", 0, "#b8860b", "#741521"], m06: [1, "seiten", "grau", "koch", "voll", 1, "#455a64", "#c8102e"],
+  m07: [4, "locken", "schwarz", "koch", 0, 0, "#c2185b", "#ffcc00"], m08: [0, "kurz", "rot", "koch", "stoppel", 0, "#00796b", "#2e7d4f"],
+  m09: [2, "wuschel", "braun", "tuch", 0, 1, "#8d6e63", "#1d4f91"], m10: [1, "seiten", "weiss", "keine", "schnurr", 1, "#e8792b", "#741521"],
+  m11: [3, "kurz", "schwarz", "kappe", "voll", 0, "#3949ab", "#ffcc00"], m12: [0, "locken", "hell", "koch", 0, 0, "#558b2f", "#c8102e"],
+  m13: [2, "glatze", "grau", "koch", "schnurr", 1, "#ad1457", "#ffffff"], m14: [1, "kurz", "blond", "koch", 0, 0, "#5d4037", "#2e7d4f"],
+  m15: [4, "wuschel", "schwarz", "koch", "stoppel", 0, "#0277bd", "#e8792b"],
+};
+function avatarSvg(code, gr = 40) {
+  const f = AV_FIGUREN[code]; if (!f) return "";
+  const [h, frisur, hf, kopf, bart, brille, bg, tuch] = f, haut = AV_HAUT[h], haar = AV_HAAR[hf], dunkel = h >= 3, frau = code[0] === "w";
+  const hinten = { lang: `<path d="M18 26 Q18 12 32 12 Q46 12 46 26 L48 50 Q32 56 16 50 Z" fill="${haar}"/>`, zopf: `<path d="M41 26 Q50 34 46 48 Q44 52 42 48 Q45 38 39 30Z" fill="${haar}"/>`,
+    locken: `<g fill="${haar}"><circle cx="20" cy="28" r="6"/><circle cx="44" cy="28" r="6"/><circle cx="21" cy="37" r="5"/><circle cx="43" cy="37" r="5"/></g>`, dutt: "", bob: `<path d="M19 27 Q19 13 32 13 Q45 13 45 27 L45 38 Q40 40 39 34 L25 34 Q24 40 19 38Z" fill="${haar}"/>` }[frisur] || "";
+  const vorne = { lang: `<path d="M20 26 Q22 15 32 15 Q42 15 44 26 Q38 20 32 21 Q25 21 20 26Z" fill="${haar}"/>`, zopf: `<path d="M20 26 Q22 15 32 15 Q42 15 44 26 Q36 19 28 22 Q23 23 20 26Z" fill="${haar}"/>`,
+    dutt: `<circle cx="32" cy="12" r="6" fill="${haar}"/><path d="M20 26 Q22 15 32 15 Q42 15 44 26 Q38 21 32 21 Q26 21 20 26Z" fill="${haar}"/>`,
+    bob: `<path d="M20 25 Q22 15 32 15 Q42 15 44 25 Q38 19 26 22Z" fill="${haar}"/>`, locken: `<g fill="${haar}"><circle cx="24" cy="18" r="5"/><circle cx="32" cy="16" r="5.5"/><circle cx="40" cy="18" r="5"/><circle cx="21" cy="23" r="4"/><circle cx="43" cy="23" r="4"/></g>`,
+    kurz: `<path d="M20 25 Q21 14 32 14 Q43 14 44 25 Q40 19 32 19 Q24 19 20 25Z" fill="${haar}"/>`, wuschel: `<path d="M19 26 L21 17 L25 20 L27 13 L31 18 L34 12 L37 18 L41 14 L42 20 L45 18 L45 26 Q38 20 32 20 Q26 20 19 26Z" fill="${haar}"/>`,
+    seiten: `<path d="M20 30 Q19 22 22 20 L23 29Z M44 30 Q45 22 42 20 L41 29Z" fill="${haar}"/>`, glatze: "" }[frisur] || "";
+  const muetze = { koch: `<g fill="#fff" stroke="#d9d4cc" stroke-width=".8"><rect x="22.5" y="10" width="19" height="7" rx="1.5"/><circle cx="25.5" cy="7.5" r="4.6"/><circle cx="32" cy="5" r="5.6"/><circle cx="38.5" cy="7.5" r="4.6"/><rect x="21.5" y="14" width="21" height="4.5" rx="2" stroke="none"/></g><path d="M21.5 18.3 H42.5" stroke="#d9d4cc" stroke-width=".8"/>`,
+    tuch: `<path d="M18 26 Q18 12 32 12 Q46 12 46 26 Q40 20 32 20 Q24 20 18 26Z" fill="${tuch}"/><path d="M44 22 L50 27 L45 29Z" fill="${tuch}"/><g fill="rgba(255,255,255,.55)"><circle cx="27" cy="16" r="1.2"/><circle cx="33" cy="15" r="1.2"/><circle cx="39" cy="17" r="1.2"/></g>`,
+    kappe: `<path d="M19 23 Q19 11 32 11 Q45 11 45 23Z" fill="${tuch === "#ffffff" ? "#741521" : tuch}"/><path d="M30 22 Q44 21 52 24 Q44 26 30 25Z" fill="${tuch === "#ffffff" ? "#4d0c16" : "rgba(0,0,0,.35)"}"/>`, keine: "" }[kopf] || "";
+  const bartSvg = { voll: `<path d="M21 31 Q22 45 32 46 Q42 45 43 31 Q41 39 32 40 Q23 39 21 31Z" fill="${haar}"/>`, schnurr: `<path d="M26 37 Q32 33 38 37 Q32 35.5 26 37Z" fill="${haar}"/>`,
+    stoppel: `<path d="M22 33 Q24 44 32 44.5 Q40 44 42 33 Q40 41 32 41.5 Q24 41 22 33Z" fill="${haar}" opacity=".45"/>` }[bart] || "";
+  const auge = dunkel ? "#120b07" : "#2b1d14";
+  return `<svg viewBox="0 0 64 64" width="${gr}" height="${gr}" role="img" aria-hidden="true"><circle cx="32" cy="32" r="32" fill="${bg}"/>
+    <path d="M9 64 Q10 49 32 47 Q54 49 55 64Z" fill="#fff"/><path d="M26 47 L32 54 L38 47Z" fill="${tuch}"/><circle cx="29" cy="57" r="1.2" fill="#c9c2b6"/><circle cx="35" cy="57" r="1.2" fill="#c9c2b6"/>
+    ${hinten}<rect x="28" y="38" width="8" height="10" rx="3" fill="${haut}"/><circle cx="19.5" cy="30" r="3" fill="${haut}"/><circle cx="44.5" cy="30" r="3" fill="${haut}"/>
+    <ellipse cx="32" cy="29" rx="12.5" ry="13.5" fill="${haut}"/>${vorne}
+    ${frau && frisur !== "locken" ? `<path d="M19.5 21 Q18 30 20.5 39 L23 38 Q21.5 30 22.5 22Z M44.5 21 Q46 30 43.5 39 L41 38 Q42.5 30 41.5 22Z" fill="${haar}"/>` : ""}${muetze}
+    <circle cx="27" cy="29.5" r="1.6" fill="${auge}"/><circle cx="37" cy="29.5" r="1.6" fill="${auge}"/>
+    <path d="M24.5 26 Q27 24.6 29.5 25.6 M34.5 25.6 Q37 24.6 39.5 26" stroke="${frisur === "glatze" ? "#6b5a4e" : haar}" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+    <circle cx="23.5" cy="34" r="2.2" fill="#e8796b" opacity=".28"/><circle cx="40.5" cy="34" r="2.2" fill="#e8796b" opacity=".28"/>
+    ${bartSvg}${frau ? `<path d="M28 36.6 Q32 35.4 36 36.6 Q32 40.6 28 36.6Z" fill="#cf4a5f"/><path d="M24.6 28.3 L23.4 27.2 M39.4 28.3 L40.6 27.2" stroke="${auge}" stroke-width="1" stroke-linecap="round"/>`
+      : `<path d="M27.5 36.5 Q32 40.5 36.5 36.5" stroke="#8a3b2e" stroke-width="1.4" fill="none" stroke-linecap="round"/>`}
+    ${brille ? `<g fill="none" stroke="#2b2b2b" stroke-width="1.2"><circle cx="27" cy="29.5" r="3.6"/><circle cx="37" cy="29.5" r="3.6"/><path d="M30.6 29.5 H33.4"/></g>` : ""}</svg>`;
+}
 // ---------- KC-CLUB-KREISE (0.60.0): Namenskreis ganz farbig nach Zustand – eine Registry für alle Listen ----------
 // Reihenfolge = Vorrang. „fehler“ nur für den Admin (Server liefert fehler nur ihm). Unbekannt wird nie als OK gezeigt.
 const KREIS_ARTEN = [
@@ -2980,7 +3038,9 @@ function kreisArt(m) { const k = m ? KREIS_ARTEN.find((x) => (!x.nurAdmin || ICH
 // Kreis-HTML: m = Mitglied aus MITGLIEDER (oder Online-Liste), groesse in px, extra = zusätzliche Attribute
 function kreis(m, name, groesse = 40, extra = "") {
   const k = kreisArt(m), titel = k.info ? `${k.text} – ${k.info(m)}` : k.text;
-  return `<div class="avatar k-${k.art}" style="width:${groesse}px;height:${groesse}px${groesse > 60 ? ";font-size:1.6rem;margin:0 auto" : ""}${extra.includes("onclick") ? ";cursor:pointer" : ""}" title="${esc(titel)}" aria-label="${esc((name || "") + ": " + titel)}" ${extra}>${esc(initialen(name))}</div>`;
+  // KC-CLUB-AVATAR (2.23.85): gewählte Koch-Figur im Kreis – die Zustandsfarbe bleibt als Ring drumherum sichtbar
+  const fig = m?.avatar || (m?.person_id && MITGLIEDER?.find?.((x) => x.person_id === m.person_id)?.avatar) || (m?.person_id && m.person_id === ICH?.person_id ? INIT?.einstellungen?.avatar?.figur : null);
+  return `<div class="avatar k-${k.art}${fig && AV_FIGUREN[fig] ? " mit-figur" : ""}" style="width:${groesse}px;height:${groesse}px${groesse > 60 ? ";font-size:1.6rem;margin:0 auto" : ""}${extra.includes("onclick") ? ";cursor:pointer" : ""}" title="${esc(titel)}" aria-label="${esc((name || "") + ": " + titel)}" ${extra}>${fig && AV_FIGUREN[fig] ? avatarSvg(fig, groesse - 6) : esc(initialen(name))}</div>`;
 }
 const kreisLegende = () => `<div class="kreislegende">${KREIS_ARTEN.filter((k) => !k.nurAdmin || ICH?.admin).map((k) =>
   `<span><i class="avatar k-${k.art}" style="width:14px;height:14px;${k.art === "unbekannt" ? "border-width:1px" : ""}"></i>${esc(k.text)}</span>`).join("")}</div>`;
@@ -8896,6 +8956,8 @@ const KACHELN = {
   ],
   mein: [
     { id: "status", sym: "🟢", t: "Mein Status", u: "verfügbar, Urlaub …", aktion: "statusBlatt()" },
+    // KC-CLUB-AVATAR (2.23.85, Wunsch Hansi): eigene Koch-Figur statt Buchstaben – später als Update selbst zusammenbauen
+    { id: "avatar", sym: "🧑‍🍳", t: "Mein Bild", u: () => (INIT?.einstellungen?.avatar?.figur ? "Koch-Figur gewählt · ändern" : "Koch-Figur aussuchen"), aktion: "avWahl()" },
     // KC-CLUB-MEIN-DIENST (2.23.74, Wunsch Hansi): erweiterte Ansicht = EINE Kachel „🗓️ Mein Dienst“ (Wunsch → Soll → Ist);
     // die zwei bisherigen Kacheln bleiben für die einfache Ansicht und als Ziel der Knöpfe erhalten
     { id: "mein_dienst", sym: "🗓️", t: "Mein Dienst", u: () => mdUnter(), aktion: "mdStart()", nur: () => !einfach() },
@@ -9893,6 +9955,27 @@ async function sperreAufheben(pid, knopf) {
     try { await api("sperre_aufheben", { ids: [pid] }, { warten: true }); melde(`🔓 ${vfName(pid)} ist wieder freigegeben`); sperrenLaden(); }
     catch (e) { meldeFehler(e); }
   });
+}
+// KC-CLUB-AVATAR (2.23.85): Auswahl – 30 Figuren antippen, „Keins“ = wie bisher Buchstaben. Gespeichert wie andere Einstellungen (geräteübergreifend).
+function avWahl() {
+  const jetzt = INIT?.einstellungen?.avatar?.figur || null;
+  const f = blattAuf("avBlatt", `<h3 style="margin:0">🧑‍🍳 Mein Bild</h3>
+    <p class="hinweis" style="margin:4px 0 8px">Such dir eine Koch-Figur aus – sie erscheint bei den Mitgliedern, im Chat und bei „Wer ist online“. Der farbige Ring zeigt weiter, ob du gerade da bist.</p>
+    <b>👩‍🍳 Köchinnen</b><div class="av-raster" style="margin:6px 0 10px">${Object.keys(AV_FIGUREN).filter((k) => k[0] === "w").map((k) => `<button type="button" class="${jetzt === k ? "an" : ""}" aria-label="Figur ${k}" onclick="avSetzen('${k}')">${avatarSvg(k, 64)}</button>`).join("")}</div>
+    <b>👨‍🍳 Köche</b><div class="av-raster" style="margin:6px 0 10px">${Object.keys(AV_FIGUREN).filter((k) => k[0] === "m").map((k) => `<button type="button" class="${jetzt === k ? "an" : ""}" aria-label="Figur ${k}" onclick="avSetzen('${k}')">${avatarSvg(k, 64)}</button>`).join("")}</div>
+    <b>Kein Bild</b><div class="av-raster" style="margin:6px 0 10px"><button type="button" class="${jetzt ? "" : "an"}" aria-label="Kein Bild – Buchstaben" onclick="avSetzen(null)"><span class="av-keins">${esc(initialen(ICH?.name))}</span></button></div>
+    <p class="hinweis" style="margin:0 0 8px;font-size:.85rem">Demnächst: Figur selbst zusammenstellen (Frisur, Bart, Brille, Mütze …).</p>
+    <button class="knopf" onclick="fensterZu($('avBlatt'))">Schließen</button>`);
+  f.classList.add("sc-blatt");
+}
+async function avSetzen(figur) {
+  try {
+    await api("einstellung_setzen", { schluessel: "avatar", wert: { figur } });
+    if (INIT) INIT.einstellungen = { ...(INIT.einstellungen || {}), avatar: { figur } };
+    const ich = MITGLIEDER?.find?.((x) => x.person_id === ICH?.person_id); if (ich) ich.avatar = figur;
+    melde(figur ? "🧑‍🍳 Dein Bild ist gespeichert" : "Bild entfernt – wieder deine Buchstaben");
+    fensterZu($("avBlatt")); try { kachelnZeigen?.(); } catch {}
+  } catch (e) { meldeFehler(e); }
 }
 // ---------- KC-CLUB-REZEPTBUCH (2.23.83, Wunsch Hansi): gemeinsames Club-Rezeptbuch ----------
 // Liste (Suche, Kategorie) → Rezept (Foto, Portionen −/＋ rechnet alle Mengen um, Zutaten abhaken, Einkaufsliste kopieren/teilen, Drucken)

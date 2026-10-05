@@ -41,7 +41,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.23.84";
+const SERVER_VERSION = "2.23.85";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -838,6 +838,7 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
   infofeld: (w) => ({ start: typeof w?.start === "string" && KA_ID.test(w.start) ? w.start : "zuletzt" }),
   // KC-CLUB-ONLINE (0.29.0): anderen zeigen, wann ich online bin (Standard: an)
   online: (w) => ({ zeigen: w?.zeigen !== false }),
+  avatar: (w) => ({ figur: typeof w?.figur === "string" && /^[wm](0[1-9]|1[0-5])$/.test(w.figur) ? w.figur : null }), // KC-CLUB-AVATAR (2.23.85)
   // KC-CLUB-INKOGNITO (2.3.0): nur Admins (Prüfung in einstellung_setzen) – Standard: aus
   inkognito: (w) => ({ an: w?.an === true }),
   // KC-CLUB-SPIELE (2.7.0): darf man mich herausfordern (Standard: nein) + welche Spiele (bisher nur Tic-Tac-Toe)
@@ -4236,6 +4237,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           db.from("kc_core_people").select("person_id").eq("active", true).eq("org_id", ORG).not("phone", "is", null).neq("phone", ""),
           db.from("kc_club_freigaben").select("person_id").eq("bereich", "kontakt_handy").eq("erlaubt", true),
         ]);
+        // KC-CLUB-AVATAR (2.23.85): gewählte Koch-Figur je Mitglied (nur der Code, z. B. „w03“)
+        const { data: avs } = await db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "avatar");
+        const avatar = new Map((avs ?? []).map((x: any) => [x.person_id, typeof x.wert?.figur === "string" ? x.wert.figur : null]));
         // KC-CLUB-ZUSTELLWAHL: wie ist jemand erreichbar? (nur ja/nein – keine Nummern/Adressen)
         const hatTel = new Set((tel ?? []).map((x: any) => x.person_id)), handyFrei = new Set((hfr ?? []).map((x: any) => x.person_id));
         const r = new Map((rollen ?? []).map((x: any) => [x.person_id, x]));
@@ -4273,7 +4277,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         return json({
           aemter, onlineSichtbar: ichZeige,
           mitglieder: leute.map((m) => ({
-            person_id: m.person_id, name: m.display_name, vorname: vorname(m),
+            person_id: m.person_id, name: m.display_name, vorname: vorname(m), avatar: avatar.get(m.person_id) ?? null,
             vorstand: !!(r.get(m.person_id) as any)?.ist_vorstand, aemter: (r.get(m.person_id) as any)?.aemter ?? [], admin: !!(r.get(m.person_id) as any)?.ist_admin,
             status: st.get(m.person_id) ?? null, online: on.has(m.person_id) && m.person_id !== ich.person_id, zuletztDa: zd.get(m.person_id) ?? null,
             verborgen: m.person_id !== ich.person_id && (!ichZeige || zeigen.get(m.person_id) === false),

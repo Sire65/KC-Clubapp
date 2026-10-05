@@ -4410,6 +4410,18 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.equal(trennen("Schnellanleitung Bilderrechner"), "Schnell­anleitung Bilder­rechner");
   assert.ok(/const w = MD_D\?\.wunsch \|\| \{\}/.test(html) && /d = \{ \.\.\.d, rollen: d\?\.rollen \|\| \{\}/.test(html), "Mein Dienst / Meine Daten stürzen nicht ab");
 }
+// 436. 2.23.85: 30 Koch-Figuren als Mitgliederbild (KC-CLUB-AVATAR)
+{
+  const k = html.slice(html.indexOf("// ---------- KC-CLUB-AVATAR (2.23.85"), html.indexOf("// ---------- KC-CLUB-KREISE (0.60.0)"));
+  const AV = new Function(k + "; return { AV_FIGUREN, avatarSvg };")();
+  const codes = Object.keys(AV.AV_FIGUREN);
+  assert.equal(codes.length, 30, "30 Figuren"); assert.equal(codes.filter((c) => c[0] === "w").length, 15, "15 Köchinnen");
+  for (const c of codes) assert.ok(/^<svg viewBox="0 0 64 64"/.test(AV.avatarSvg(c)) && !/<image|href=|url\(/.test(AV.avatarSvg(c)), "selbst gezeichnet, keine fremden Bilder: " + c);
+  assert.equal(AV.avatarSvg("x99"), "", "unbekannter Code → nichts");
+  assert.ok(/fig && AV_FIGUREN\[fig\] \? avatarSvg\(fig, groesse - 6\) : esc\(initialen\(name\)\)/.test(html), "Kreis zeigt Figur, sonst Buchstaben");
+  assert.ok(/\{ id: "avatar", sym: "🧑‍🍳", t: "Mein Bild",/.test(html) && /api\("einstellung_setzen", \{ schluessel: "avatar", wert: \{ figur \} \}\)/.test(html), "Auswahl in Meins");
+  assert.ok(/avatar: \(w\) => \(\{ figur: typeof w\?\.figur === "string" && \/\^\[wm\]\(0\[1-9\]\|1\[0-5\]\)\$\/\.test\(w\.figur\)/.test(server) && /avatar: avatar\.get\(m\.person_id\) \?\? null/.test(server), "Server prüft den Code, liefert ihn in der Mitgliederliste");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

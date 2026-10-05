@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.23.85 – 2026-10-05 – 🧑‍🍳 Mein Bild – 30 Koch-Figuren (Wunsch Hansi)
+- KC-CLUB-AVATAR: Neue Kachel „🧑‍🍳 Mein Bild“ in Meins – 30 selbst gezeichnete Koch-Figuren (15 Köchinnen, 15 Köche; Hauttöne,
+  Frisuren, Bart, Brille, Kochmütze/Kopftuch/Kappe) oder „Kein Bild“ (Buchstaben wie bisher). Die Figur erscheint überall im Namenskreis
+  (Mitglieder, Chat-Liste, Wer ist online …); die Zustandsfarbe (online, heute da, abwesend …) bleibt als Ring sichtbar. Reine SVG-Zeichnung
+  im Code – keine fremden Bilder, keine Rechte Dritter, keine Kosten; gespeichert wird nur der Code (Einstellung „avatar“, Server prüft w01–w15/m01–m15).
+  DP2-Decknamen werden bewusst NICHT verwendet (Urheberrecht, und sie sollen anonym bleiben). Später als Update: Figur selbst zusammenstellen. Test 436.
+
 ## 2.23.84 – 2026-10-05 – 🔍 Gesamtprüfung 3
 - Gesamtprüfung 3 (Wunsch Hansi): automatischer Rundgang durch alle Kacheln in hell, dunkel und großer Schrift, erweiterte und einfache
   Ansicht (Fehler, Überlappungen, zu breite Seiten, abgeschnittene Texte). Behoben: Hilfe & Tipps – „x Hilfen“ ragte rechts über den Rand
