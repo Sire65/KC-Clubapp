@@ -4237,6 +4237,11 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const g = server.slice(server.indexOf('if (a === "liste") {'), server.indexOf('if (a === "speichern") {'));
   assert.ok(!/delete\(/.test(g), "Liste löscht nichts");
 }
+// 420. 2.23.71: Besuchsliste – erledigte Besuche zugeklappt über den abgesagten
+{
+  assert.ok(/🗂️ Vergangene Termine \(\$\{vorbei\.length\}\)/.test(html) && html.indexOf("🗂️ Vergangene Termine") < html.indexOf("✖ Abgesagte Termine"), "Vergangene über Abgesagte");
+  assert.ok(/oben = bs\.filter\(\(b\) => b\.status === "geplant"\)/.test(html), "oben nur Geplantes/Protokoll fehlt");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
