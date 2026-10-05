@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.23.75 – 2026-10-05 – 💡 Sperrzeit: Beispiel + Prüfung nach jedem Tag (Fund Hansi)
+- KC-CLUB-SPERRZEIT-PRUEFUNG: Mitglieder trugen zusätzlich zur Kann-Zeit den Rest des Tages als Sperrzeit ein (unnötig – außerhalb der
+  Kann-Zeit plant DP2 ohnehin nicht). Im Dienstwunsch-Fenster steht jetzt kurz mit Beispiel: „Sperrzeit nur, wenn du innerhalb deiner Kann-Zeit
+  kurz weg musst – Kann 10–18 Uhr, Arzt 13–14 Uhr → Sperrzeit 13–14 Uhr.“ Nach jedem gespeicherten Tag prüft die Club-App (dp2-club/daten.js),
+  ob eine Sperrzeit außerhalb der Kann-Zeit liegt, und zeigt dann „💡 Sperrzeit nicht nötig“ mit Tag, Zeiten und dem Weg zum Entfernen
+  (je Tag einmal pro Sitzung). Die Angaben selbst ändert die Club-App nicht; DP2-Dateien unverändert. Dauerhafte Lösung im Assistenten: Auftrag an DP2.
+  Test 426.
+
 ## 2.23.74 – 2026-10-05 – 🗓️ Mein Dienst (Wunsch → Soll → Ist) + Küchenterror fairer (Wunsch Hansi)
 - KC-CLUB-MEIN-DIENST: Im Register Meins (erweiterte Ansicht) ersetzt EINE Kachel „🗓️ Mein Dienst“ die Kacheln „Mein Dienstplan“ und
   „Dienstwünsche“ (Unterzeile: nächster Dienst). Fenster mit drei Stufen: 📝 Wunschplan (Stand: abgegeben / übernommen, Wunschphase, „📝 Wünsche

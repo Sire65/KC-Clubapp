@@ -4280,6 +4280,19 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const g = server.slice(server.indexOf('case "mein_dienst"'), server.indexOf('case "dienstwunsch_laden"'));
   assert.ok(!/\.(insert|update|upsert|delete)\(/.test(g), "mein_dienst schreibt nichts (DP2 pflegt den Plan)");
 }
+// 426. 2.23.75: Sperrzeit – Beispiel im Dienstwunsch-Fenster + Prüfung nach jedem gespeicherten Tag (KC-CLUB-SPERRZEIT-PRUEFUNG)
+{
+  const d = lies("dp2-club/daten.js");
+  assert.ok(/sperrePruefen\(s\.entries\);/.test(d) && /kann\.some\(\(k\) => sp\.start < k\.end && sp\.end > k\.start\)\) continue;/.test(d), "Prüfung nach dem Speichern: nur Sperren außerhalb der Kann-Zeit");
+  assert.ok(/gemeldet\.has\(schluessel\)/.test(d) && /art: "dw-sperre"/.test(d), "je Tag einmal, Meldung an die Club-App");
+  const f = d.slice(d.indexOf("function sperrePruefen"), d.indexOf("K.persistAll = async"));
+  assert.ok(!/K\.wishes\s*=|\.splice\(|persistAll\(/.test(f), "Prüfung ändert keine Angaben");
+  // Rechenprobe wie im Code: Kann 10–14 + Sperre 14–22 = unnötig; Arzt 12–13 in Kann 10–18 = sinnvoll
+  const noetig = (sp, kann) => kann.some((k) => sp.start < k.end && sp.end > k.start);
+  assert.ok(!noetig({ start: 14, end: 22 }, [{ start: 10, end: 14 }]) && noetig({ start: 12, end: 13 }, [{ start: 10, end: 18 }]), "Rechenprobe");
+  assert.ok(/<p class="dw-tipp">💡 <b>Sperrzeit nur, wenn du innerhalb deiner Kann-Zeit kurz weg musst\.<\/b> Beispiel: Kann 10–18 Uhr, Arzt 13–14 Uhr → Sperrzeit 13–14 Uhr\./.test(html), "Beispiel im Fenster");
+  assert.ok(/if \(e\.data\?\.art === "dw-sperre"\) return dwSperreHinweis\(e\.data\.funde\);/.test(html) && /function dwSperreHinweis\(funde\)/.test(html) && /„Sperren ändern“ → „✓ Ich kann an diesem Tag“/.test(html), "Hinweis mit Weg zum Ändern");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

@@ -965,6 +965,7 @@
   .dw-kopf { display: grid; gap: 6px; padding: 8px 12px; padding-top: max(8px, env(safe-area-inset-top)); background: var(--karte); box-shadow: var(--schatten); }
   .dw-reihe { display: flex; align-items: center; gap: 10px; } .dw-reihe .knopf { min-height: 44px; margin: 0; } .dw-titel { flex: 1; text-align: right; font-size: .95rem; }
   .dw-aktionen { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } /* KC-CLUB-WUNSCHBOGEN 2.23.29: zwei gleich breite Knöpfe */
+  .dw-tipp { margin: 0; padding: 5px 10px; border-radius: 10px; background: #fff3d6; color: #4a3a12; border: 1px solid var(--gold); font-size: .8rem; line-height: 1.3; } /* KC-CLUB-SPERRZEIT-PRUEFUNG 2.23.75 */
   .wb-knoepfe { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } .wb-knoepfe .knopf { margin: 0; }
   .uh-archiv-kopf { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 8px; }
   .unterh .mitte div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -2923,7 +2924,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.74"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.75"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -8508,7 +8509,9 @@ function dwOeffnen() {
   f.innerHTML = `<div class="dw-kopf"><div class="dw-reihe">
     <button class="knopf klein" data-k="zu">← Zurück zur Club-App</button><b class="dw-titel">📝 Dienstwünsche</b></div><div class="dw-reihe dw-aktionen">
     <button class="knopf klein" data-k="bogen" title="Leeren persönlichen Wunschbogen mit QR-Code drucken oder per E-Mail schicken">🖨️ Leerer Bogen</button>
-    <button class="knopf haupt klein" data-k="fertig" title="Aufstellung als Bestätigung per App-Nachricht und E-Mail">✅ Fertig – Bestätigung</button></div></div>
+    <button class="knopf haupt klein" data-k="fertig" title="Aufstellung als Bestätigung per App-Nachricht und E-Mail">✅ Fertig – Bestätigung</button></div>
+    <p class="dw-tipp">💡 <b>Sperrzeit nur, wenn du innerhalb deiner Kann-Zeit kurz weg musst.</b> Beispiel: Kann 10–18 Uhr, Arzt 13–14 Uhr → Sperrzeit 13–14 Uhr.
+      Außerhalb der Kann-Zeit bist du automatisch frei.</p></div>
     <div style="flex:1;position:relative;display:flex">
       <!-- 1.40.0: drehende Mütze schon, während die Twinkey-Seite selbst noch lädt (danach zeigt die Seite ihre eigene) -->
       <div class="warten an" style="position:absolute;left:50%;top:42%;z-index:0"><div class="muetze"><img src="kc-kochmuetze-weiss.webp" alt=""></div><b>Twinkey wird geladen …</b></div>
@@ -8519,6 +8522,19 @@ function dwOeffnen() {
   document.body.appendChild(f); document.body.style.overflow = "hidden";
 }
 function dwSchliessen() { document.getElementById("dwFenster")?.remove(); document.body.style.overflow = ""; }
+// KC-CLUB-SPERRZEIT-PRUEFUNG (2.23.75, Fund Hansi): Twinkey meldet nach jedem gespeicherten Tag Sperrzeiten außerhalb der Kann-Zeit
+// (dp2-club/daten.js). Nur Hinweis mit Beispiel und Weg zum Ändern – die Club-App ändert die Angaben nicht selbst.
+function dwSperreHinweis(funde) {
+  if (!Array.isArray(funde) || !funde.length) return;
+  const tag = (d) => { const x = new Date(String(d) + "T12:00:00"); return isNaN(x) ? esc(d) : x.toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "numeric" }); };
+  const f = blattAuf("dwSperreBlatt", `<h3 style="margin-top:0">💡 Sperrzeit nicht nötig</h3>
+    <p style="margin:0 0 8px">Außerhalb deiner Kann-Zeit wirst du sowieso nicht eingeplant. Eine Sperrzeit brauchst du nur, wenn du <b>innerhalb</b> der Kann-Zeit kurz weg musst.</p>
+    <ul style="margin:0 0 8px;padding-left:20px">${funde.slice(0, 20).map((x) => `<li><b>${tag(x.datum)}</b>: Sperrzeit ${esc(x.sperre)} Uhr${x.kann ? ` · Kann ${esc(x.kann)} Uhr` : " · keine Kann-Zeit"}</li>`).join("")}</ul>
+    <p class="hinweis" style="margin:0 0 8px">Beispiel richtig: Kann 10–18 Uhr, Arzt 13–14 Uhr → Sperrzeit 13–14 Uhr.<br>
+      Zum Entfernen: den Tag öffnen → „Sperren ändern“ → „✓ Ich kann an diesem Tag“. Schaden entsteht keiner, wenn du es so lässt.</p>
+    <button class="knopf haupt" onclick="fensterZu($('dwSperreBlatt'))">Verstanden</button>`);
+  f.style.zIndex = "2100"; // über dem Twinkey-Fenster
+}
 // ---------- KC-CLUB-WUNSCHBOGEN (2.23.28, Wunsch Hansi): leeren persönlichen Wunschbogen drucken oder an mich mailen ----------
 // Der Bogen ist DP2s „Persönliche Verfügbarkeitsmatrix“ (Kann/Wunsch/Sperre je Tag + Bereitschaft/Anleitung), erzeugt von DP2s
 // eigenem Druckteil im Twinkey-Fenster (dp2-club/daten.js) – Name oben, QR-Code oben rechts mit der Mitglieds-ID (KC-P-…).
@@ -8595,6 +8611,7 @@ async function wbMailen(knopf) {
 window.addEventListener("message", (e) => {
   if (e.origin !== location.origin || !document.getElementById("dwFenster")) return;
   if (String(e.data?.art || "").startsWith("wunschbogen")) return wbAntwort(e.data);
+  if (e.data?.art === "dw-sperre") return dwSperreHinweis(e.data.funde);
   if (e.data === "dienstwunsch-zu") dwSchliessen();
   else if (e.data === "dienstwunsch-gespeichert") melde("✓ Dienstwünsche gespeichert – DP2 übernimmt sie");
 });

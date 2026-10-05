@@ -83,7 +83,25 @@
     await window.KC_CLUB_DW_API("dienstwunsch_speichern", s);
     zuletzt = j;
     try { parent !== window && parent.postMessage("dienstwunsch-gespeichert", location.origin); } catch {}
+    sperrePruefen(s.entries);
     return true;
+  }
+  // KC-CLUB-SPERRZEIT-PRUEFUNG (2.23.75, Fund Hansi): Nach jedem gespeicherten Tag prüfen, ob eine Sperrzeit außerhalb der Kann-Zeit
+  // liegt (z. B. Kann 10–14, Sperre 14–22). Das ist unnötig – außerhalb der Kann-Zeit plant DP2 ohnehin nicht. Nur ein Hinweis an die
+  // Club-App (je Tag + Sperre einmal pro Sitzung); die Angaben bleiben unverändert – ändern kann sie nur das Mitglied selbst in Twinkey.
+  const gemeldet = new Set();
+  const uhr = (h) => { const m = Math.round(h * 60); return `${Math.floor(m / 60)}${m % 60 ? ":" + String(m % 60).padStart(2, "0") : ""}`; };
+  function sperrePruefen(eintraege) {
+    const funde = [];
+    for (const sp of eintraege.filter((e) => e.wishType === "unavailable" && e.scope !== "day")) {
+      const kann = eintraege.filter((e) => e.date === sp.date && (e.wishType === "available" || e.wishType === "if_needed") && e.scope !== "day");
+      if (kann.some((k) => sp.start < k.end && sp.end > k.start)) continue; // liegt (teilweise) in der Kann-Zeit → sinnvoll
+      const schluessel = `${sp.date}|${sp.start}|${sp.end}`;
+      if (gemeldet.has(schluessel)) continue;
+      gemeldet.add(schluessel);
+      funde.push({ datum: sp.date, sperre: `${uhr(sp.start)}–${uhr(sp.end)}`, kann: kann.map((k) => `${uhr(k.start)}–${uhr(k.end)}`).join(", ") });
+    }
+    if (funde.length) try { parent !== window && parent.postMessage({ art: "dw-sperre", funde }, location.origin); } catch {}
   }
   K.persistAll = async () => {
     if (laeuft) { nochmal = true; return laeuft; }
