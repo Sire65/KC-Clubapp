@@ -1332,7 +1332,7 @@
   /* 2.23.60 KC-CLUB-SCHULUNG-ADMIN */
   .sc-blatt .blatt-innen { max-height: 94vh !important; } .sc-blatt .karte { margin: 8px 0; } .sc-blatt h4 { margin: 0 0 6px; } .sc-blatt summary { cursor: pointer; padding: 2px 0; }
   .sc-eintrag { border-top: 1px solid #8883; padding: 8px 0; } .sc-eintrag:first-child { border-top: 0; } .sc-eintrag .knoepfe { margin-top: 6px; } .sc-eintrag .knopf { width: auto; }
-  .sc-mliste { max-height: 40vh; overflow: auto; } .sc-mliste .marke { font-size: .75rem; } .sc-prot { padding: 4px 0; border-top: 1px solid #8882; } .sc-fehler { color: var(--rot); }
+  .sc-mliste { max-height: 40vh; overflow: auto; } .sc-mliste .marke { font-size: .75rem; } .sc-prot { padding: 4px 0; border-top: 1px solid #8882; } .sc-prot > summary { cursor: pointer; } .sc-schluessel { display: block; word-break: break-all; padding: 8px; border-radius: 8px; background: #8881; user-select: all; } .sc-fehler { color: var(--rot); }
   /* 2.23.61 KC-CLUB-BESUCHE */
   .sc-tabs { margin: 6px 0; } .bs-kpi { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 6px 0; } .bs-kpi div { background: var(--karte2, #0001); border-radius: 10px; padding: 6px; text-align: center; }
   .bs-kpi b { display: block; font-size: 1.2rem; } .bs-kpi span { font-size: .8rem; } .bs-frage { margin: 8px 0; } .bs-frage input { width: 100%; box-sizing: border-box; }
@@ -2908,7 +2908,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.64"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.65"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -15702,7 +15702,7 @@ function scEinladungen() {
     const fk = { blau: "ta-st-ge", gelb: "ta-st-gv", gruen: "ta-st-ja", rot: "ta-st-nein", grau: "ta-st-ab" }[f] || "";
     return `<div class="sc-eintrag"><b>${esc(scGruppe(e.person_ids))}</b> <span class="marke ${fk}">${t}</span>
       <div class="hinweis">eingeladen ${esc(zeitKurz(e.erstellt_am))}${e.gesendet_am ? ` · Mail ${esc(zeitKurz(e.gesendet_am))}` : ""}${e.status === "offen" ? ` · Frist bis ${esc(zeitKurz(e.gueltig_bis))}` : ""}${e.geoeffnet_am ? ` · Link geöffnet ${esc(zeitKurz(e.geoeffnet_am))}` : " · Link noch nicht geöffnet"}${s ? ` · ${esc(scZeit(s.beginn, s.ende))}` : ""}</div>
-      ${e.mail_link_status === "veraltet" ? '<div class="ta-st-nein">⚠️ Die zuletzt verschickte Mail enthält einen alten Link.</div>' : ""}
+      ${e.mail_link_status === "veraltet" ? '<div class="ta-st-nein">⚠️ Die zuletzt verschickte Mail enthält einen alten Link.</div>' : e.mail_link_status === "kein_link" ? '<div class="ta-st-nein">⚠️ Die Mail enthielt keinen gültigen Termin-Link.</div>' : e.mail_link_status === "aktuell" ? `<div class="hinweis">✉️ Mail-Link aktuell${e.mail_link_gesendet_am ? " · " + esc(zeitKurz(e.mail_link_gesendet_am)) : ""}</div>` : ""}
       ${e.bemerkung ? `<div class="hinweis">„${esc(e.bemerkung)}“</div>` : ""}
       <div class="knoepfe"><button class="knopf klein" onclick="scChronik('${e.id}')">📜 Ablauf</button>
         ${["offen", "gewaehlt", "gegenvorschlag"].includes(e.status) ? `<button class="knopf klein" onclick="scLinkNeu(this,'${e.id}')">🔗 Link erneuern & teilen</button>` : ""}
@@ -15717,15 +15717,40 @@ function scKalender() {
     : alter === null ? '<p class="ta-st-gv" style="margin:0">Schlüssel erzeugt, aber das Google-Skript hat sich noch nie gemeldet.</p>'
     : alter > 20 ? `<p class="ta-st-nein" style="margin:0">⚠️ Abgleich läuft nicht – letzter Abruf ${esc(zeitKurz(k.letzter_abruf))}. Der Google-Kalender ist veraltet.</p>`
     : `<p class="ta-st-ja" style="margin:0">✅ Abgleich läuft – letzter Abruf vor ${Math.max(0, Math.round(alter))} Min.${k.offen ? ` · ${k.offen} Änderung(en) folgen` : " · alles eingetragen"}</p>`;
+  // 2.23.65: verbinden wie im alten Programm (Schlüssel erzeugen, Skript kopieren, Schritte)
+  $("scKalender").innerHTML += `<div class="knoepfe"><button class="knopf klein" onclick="scKalVerbinden(this)">🔑 ${k.verbunden ? "Neuen Schlüssel erzeugen" : "Google-Kalender verbinden"}</button></div><div id="scKalSchritte"></div>`;
+}
+const SC_SKRIPT = "https://raw.githubusercontent.com/Sire65/KC-Besuchsprotokoll/main/google/KalenderAbgleich.gs";
+async function scKopieren(text, was) { try { await navigator.clipboard.writeText(text); melde(`📋 ${was} kopiert`); } catch { eingabe(`${was} zum Kopieren:`, text); } }
+async function scKalVerbinden(k) {
+  if (SC.T.kalender?.verbunden && !(await frage("Neuen Schlüssel erzeugen?\nDer alte funktioniert dann nicht mehr – du musst ihn im Google-Skript ersetzen.", { ja: "🔑 Neuer Schlüssel" }))) return;
+  k.disabled = true;
+  try {
+    const r = await scApi("t_kalender_schluessel"); SC.kalSchluessel = r.schluessel; // nur jetzt sichtbar, wird nirgends gespeichert
+    $("scKalSchritte").innerHTML = `<p style="margin:8px 0 4px"><b>Dein Kalender-Schlüssel</b> (nur jetzt sichtbar):</p><code class="sc-schluessel">${esc(r.schluessel)}</code>
+      <div class="knoepfe"><button class="knopf klein" onclick="scKopieren(SC.kalSchluessel,'Schlüssel')">📋 Schlüssel kopieren</button><button class="knopf klein" onclick="scSkriptKopieren()">📋 Skript kopieren</button></div>
+      <ol class="hinweis" style="padding-left:18px"><li>Am PC <b>script.google.com → Neues Projekt</b> öffnen (mit deinem Google-Konto).</li>
+        <li>Alles im Editor löschen, <b>Skript kopieren</b> und einfügen, Namen „KC Termine“ geben, speichern.</li>
+        <li>Links ⚙️ <b>Projekteinstellungen</b> → <b>Skripteigenschaft hinzufügen</b>: Name <code>KC_KALENDER_SCHLUESSEL</code>, Wert = Schlüssel von oben. Speichern.</li>
+        <li>Im Editor Funktion <b>einrichten</b> auswählen → <b>Ausführen</b> → Kalender und Internet erlauben.</li>
+        <li>Fertig: alle 5 Minuten trägt das Skript die Termine in deinen Google-Kalender ein. Hier wird es dann grün.</li></ol>`;
+    melde("🔑 Schlüssel erzeugt – jetzt die Schritte erledigen");
+  } catch (e) { meldeFehler(e); } finally { k.disabled = false; }
+}
+async function scSkriptKopieren() {
+  try { const r = await fetch(SC_SKRIPT, { cache: "no-store" }); if (!r.ok) throw new Error(); await scKopieren(await r.text(), "Skript"); }
+  catch { melde("Skript konnte nicht geladen werden – bitte später nochmal.", true); }
 }
 // ----- Protokoll + Chronologie -----
 const SC_P = { termin_angeboten: "Termin eingestellt", termin_geloescht: "Termin gelöscht", termin_abgesagt: "Termin abgesagt", eingeladen: "Eingeladen", erneut_eingeladen: "Erneut eingeladen",
   link_erneuert: "Neuer Link", link_geoeffnet: "Termin-Link geöffnet", termin_gewaehlt: "Termin gewählt", gegenvorschlag: "Gegenvorschlag", abgesagt: "Kein Besuch gewünscht",
   antwort_zurueckgenommen: "Antwort zurückgenommen", buchung_bestaetigt: "Bestätigt", buchung_abgelehnt: "Abgelehnt", gegenvorschlag_angenommen: "Vorschlag angenommen",
   neue_termine_angeboten: "Neue Termine angeboten", buchung_storniert_termin_abgesagt: "Buchung storniert (Termin fiel aus)", einladung_zurueckgezogen: "Einladung zurückgezogen",
-  frist_abgelaufen: "Frist abgelaufen", erinnerung_gesendet: "Erinnerung verschickt", hansi_benachrichtigt: "Dich benachrichtigt", termin_direkt_bestaetigt: "Direkt bestätigt",
+  frist_abgelaufen: "Frist abgelaufen", erinnerung_gesendet: "Erinnerung verschickt", hansi_benachrichtigt: "Dich benachrichtigt", termin_direkt_bestaetigt: "Direkt bestätigt", kalender_schluessel_neu: "Kalender-Schlüssel erzeugt",
   termin_geaendert: "Termin geändert", person_nachgetragen: "Person nachgetragen", termin_vorgemerkt: "Termin vorgemerkt", google_abgeglichen: "Google-Kalender abgeglichen" };
 const SC_WER = { hansi: "Du", mitglied: "Mitglied", system: "System", kalender: "Google" };
+const SC_VERSAND = { termin_einladung: "Einladung / aktueller Termin-Link", termin_bestaetigung: "Terminbestätigung", termin_info_mitglied: "Termin-Information", termin_erinnerung: "Terminerinnerung" };
+const SC_ZUSTELLUNG = { delivered: "zugestellt", opened: "Mail geöffnet", displayed: "Push angezeigt", clicked: "angeklickt", bounced: "nicht zustellbar", failed: "fehlgeschlagen", complaint: "Spam-Beschwerde", deferred: "verzögert" };
 function scProtokoll() {
   $("scProtokoll").innerHTML = (SC.T.protokoll || []).slice(0, 60).map((p) => { const d = p.details || {}, e = p.einladung_id && scEinl(p.einladung_id);
     const info = [d.namen || (e ? scGruppe(e.person_ids) : ""), d.wann, d.versand].filter(Boolean).map(esc).join(" · ");
@@ -15738,9 +15763,24 @@ async function scChronik(eid) {
   try {
     const r = await scApi("t_chronologie", { einladung_id: eid });
     $("scChronikInhalt").innerHTML = (r.ereignisse || []).map((x) => {
-      const titel = x.typ === "aktion" ? (SC_P[x.aktion] || x.aktion) : x.typ === "versand" ? `${x.channel === "email" ? "✉️ Mail" : "📲 Push"} ${x.status === "sent" ? "gesendet" : x.status === "failed" ? "fehlgeschlagen" : x.status || ""}` : `${x.channel === "email" ? "✉️" : "📲"} ${x.event_type || ""}`;
-      const d = x.details || {}, det = [d.namen, d.wann, d.versand, d.bemerkung && `„${d.bemerkung}“`, x.fehler].filter(Boolean).join(" · ");
-      return `<div class="sc-prot"><small class="hinweis">${esc(zeitKurz(x.zeit))}${x.wer ? " · " + esc(SC_WER[x.wer] || x.wer) : ""}${x.person ? " · " + esc(x.person) : ""}</small><br><b>${esc(titel)}</b>${det ? `<br><small>${esc(det)}</small>` : ""}</div>`;
+      const d = x.details || {}, kanal = x.channel === "email" ? "Mail" : x.channel === "push" ? "Push" : x.channel || "";
+      let titel, det;
+      if (x.typ === "aktion") {
+        const t = SC_P[x.aktion] || x.aktion, a = String(x.aktion || "");
+        const ico = /eingeladen/.test(a) ? "✉️" : a === "link_geoeffnet" ? "🔗" : /gewaehlt|gegenvorschlag$/.test(a) ? "🗓️" : /bestaetigt|angenommen/.test(a) ? "✅" : /abgesagt|storniert|zurueckgezogen|abgelehnt/.test(a) ? "❌" : /erinnerung/.test(a) ? "⏰" : "•";
+        titel = a === "link_geoeffnet" && x.wer === "system" && /nicht von/i.test(String(d.hinweis || "")) ? "🛠️ Technische Linkprüfung" : ico + " " + t;
+        det = [d.namen && "Person: " + d.namen, d.wann && "Termin: " + d.wann, d.vorschlaege && "Vorschläge: " + (Array.isArray(d.vorschlaege) ? d.vorschlaege.join(" / ") : d.vorschlaege),
+          d.bemerkung && "Bemerkung: " + d.bemerkung, d.grund && "Grund: " + d.grund, d.hinweis && "Hinweis: " + d.hinweis, d.versand && "Versand: " + d.versand,
+          d.neue_frist && "Neue Frist: " + zeitKurz(d.neue_frist), d.frist && "Frist: " + zeitKurz(d.frist), d.vorher && "Vorheriger Status: " + d.vorher];
+      } else if (x.typ === "versand") {
+        titel = `${x.channel === "email" ? "✉️" : "📲"} ${SC_VERSAND[x.event_key] || x.event_key || "Nachricht"}: ${kanal} ${x.status === "sent" ? "gesendet" : x.status === "failed" ? "fehlgeschlagen" : x.status || ""}`;
+        det = [x.betreff && "Betreff: " + x.betreff, x.provider && "Anbieter: " + x.provider, x.fehler && "Fehler: " + x.fehler];
+      } else {
+        titel = `${x.channel === "email" ? "✉️" : "📲"} ${kanal}: ${SC_ZUSTELLUNG[x.event_type] || x.event_type || ""}`;
+        det = [x.provider && "Anbieter: " + x.provider, x.detail_text];
+      }
+      det = det.filter(Boolean).join("\n");
+      return `<details class="sc-prot"><summary><small class="hinweis">${esc(zeitKurz(x.zeit))}${x.wer ? " · " + esc(SC_WER[x.wer] || x.wer) : ""}${x.person ? " · " + esc(x.person) : ""}</small><br><b>${esc(titel)}</b></summary><div class="hinweis" style="white-space:pre-line">${esc(det || "Keine weiteren Details.")}</div></details>`;
     }).join("") || '<p class="hinweis">Noch keine Einträge.</p>';
   } catch (err) { $("scChronikInhalt").innerHTML = `<p class="ta-st-nein">⚠️ ${esc(err?.message || "Nicht erreichbar")}</p>`; }
 }
@@ -15761,19 +15801,22 @@ const BS_FRAGEN = [
 const BS_GERAETE = [["tablet", "📱 Tablet"], ["pc", "💻 PC"], ["handy", "📞 Handy"]];
 const bsHm = (min) => Math.floor(min / 60) + ":" + String(min % 60).padStart(2, "0");
 const bsKm = (x) => Number(x || 0).toLocaleString("de-DE", { maximumFractionDigits: 1 });
+// bestätigter Termin zum Besuch (aus dem Termin-Baustein; 2.23.65 wie im alten Programm)
+function bsTermin(bid) { const b = bid && SC.T?.buchungen.find((x) => x.besuch_id === bid && x.status === "bestaetigt"); return b ? { buchung: b, slot: scSlot(b.slot_id) } : null; }
 async function bsLaden() {
   try { const r = await api("besuch", { a: "liste" }, { warten: true }); BS.liste = r.besuche || []; BS.mitglieder = r.mitglieder || []; BS.anreden = r.anreden || {}; }
   catch (e) { meldeFehler(e); }
 }
 function bsListeHtml() {
   const jahre = [...new Set(BS.liste.map((b) => b.datum.slice(0, 4)))].sort().reverse();
-  const bs = BS.liste.filter((b) => !BS.jahr || b.datum.startsWith(BS.jahr)), zaehlt = bs.filter((b) => b.status !== "geplant");
+  const bs = BS.liste.filter((b) => !BS.jahr || b.datum.startsWith(BS.jahr)), zaehlt = bs.filter((b) => b.status !== "geplant"), nGeplant = bs.length - zaehlt.length;
   return `<div class="knoepfe"><button class="knopf haupt klein" onclick="bsFormular()">➕ Neuer Besuch</button><button class="knopf klein" onclick="bsFormular(null,{geplant:true})">📅 Abgesprochenen Termin eintragen</button></div>
     <div class="hl-chips" style="margin:6px 0">${["", ...jahre].map((j) => `<button type="button" class="chip${BS.jahr === j ? " an" : ""}" onclick="BS.jahr='${j}';scZeigen()">${j || "Alle"}</button>`).join("")}</div>
     <div class="bs-kpi"><div><b>${zaehlt.length}</b><span>Besuche</span></div><div><b>${bsHm(zaehlt.reduce((s, b) => s + (b.dauer_min || 0), 0))}</b><span>Stunden</span></div><div><b>${bsKm(zaehlt.reduce((s, b) => s + Number(b.km_gesamt || 0), 0))}</b><span>km gesamt</span></div></div>
+    ${nGeplant ? `<p class="hinweis" style="margin:4px 0">Dazu ${nGeplant} geplante${nGeplant === 1 ? "r Besuch – zählt" : " Besuche – zählen"} erst nach dem Besuch.</p>` : ""}
     ${bs.map((b) => `<button type="button" class="ti-zeile bs-zeile" onclick="bsFormular('${esc(b.besuch_id)}')">📝 <span><b>${esc(b.mitglied)}</b> <small class="hinweis">${esc(b.besuch_id)}</small><br>
       <small>${esc(b.datum.split("-").reverse().join("."))}${b.zeit_von ? " · " + b.zeit_von.slice(0, 5) + (b.zeit_bis ? "–" + b.zeit_bis.slice(0, 5) : "") : ""}${b.dauer_min ? ` (${bsHm(b.dauer_min)} Std.)` : ""}${b.km_gesamt != null ? ` · ${bsKm(b.km_gesamt)} km` : ""}
-      ${b.status === "geplant" ? " · 📅 geplant" : ""}${b.besuchsart === "bei_hansi" ? " · 🏠 kam zu mir" : ""}${b.push_gesendet_am || b.mail_gesendet_am ? " · ✉️ verschickt" : ""}${b.fotos?.length ? ` · 📷 ${b.fotos.length}` : ""}</small></span><b>›</b></button>`).join("") || '<p class="hinweis">Noch keine Besuche eingetragen.</p>'}`;
+      ${b.status === "geplant" ? " · 📅 geplant" : ""}${bsTermin(b.besuch_id) ? " · ✅ Termin bestätigt" : ""}${b.besuchsart === "bei_hansi" ? " · 🏠 kam zu mir" : ""}${b.push_gesendet_am || b.mail_gesendet_am ? " · ✉️ verschickt" : ""}${b.fotos?.length ? ` · 📷 ${b.fotos.length}` : ""}</small></span><b>›</b></button>`).join("") || '<p class="hinweis">Noch keine Besuche eingetragen.</p>'}`;
 }
 // Formular: neu (optional vorbelegt aus einem Termin) oder bearbeiten
 function bsFormular(id, vorgabe = {}) {
@@ -15813,7 +15856,34 @@ function bsFormular(id, vorgabe = {}) {
     <div class="karte" id="bsVersand"></div>
     <button class="knopf haupt" id="bsSpeichern" onclick="bsSpeichern(this)">Speichern</button><button class="knopf" onclick="$('bsBlatt').remove()">Abbrechen</button>`);
   f.style.zIndex = "2100"; f.classList.add("sc-blatt"); f.onclick = null; // 2.23.63: nicht aus Versehen schließen
+  // 2.23.65: Entwurf eines neuen Besuchs wie im alten Programm – bleibt auf diesem Gerät, falls die App zugeht
+  if (!b && !Object.keys(vorgabe).length) bsEntwurfLaden();
+  if (!b) { f.addEventListener("input", bsEntwurfSichern); f.addEventListener("click", () => setTimeout(bsEntwurfSichern, 0)); }
   bsZeigen();
+}
+const BS_ENTWURF = "kc_club_bs_entwurf", BS_TEXTE = ["bsMitglied", "bsOrt", "bsAnwesende", "bsDatum", "bsVon", "bsBis", "bsKm", "bsSpruch", "bsF7Thema", "bsF7Antwort", "bsThema", "bsNotizen", "bsVereinb", "bsBem"];
+function bsEntwurfSichern() {
+  if (!BS.f || BS.f.id || !$("bsBlatt")) return;
+  lsSetzen(BS_ENTWURF, JSON.stringify({ felder: Object.fromEntries(BS_TEXTE.map((id) => [id, $(id)?.value || ""])), antworten: BS.f.antworten, personen: BS.f.personen, art: BS.f.art, geraete: BS.f.geraete, geplant: BS.f.geplant }));
+}
+function bsEntwurfLaden() {
+  let e = null; try { e = JSON.parse(lsLesen(BS_ENTWURF) || "null"); } catch {}
+  if (!e || !Object.values(e.felder || {}).some((v) => v && v !== heuteIso())) return;
+  Object.entries(e.felder).forEach(([id, v]) => { if ($(id) && v) $(id).value = v; });
+  Object.assign(BS.f, { antworten: { ...BS.f.antworten, ...(e.antworten || {}) }, personen: e.personen || [], art: e.art || BS.f.art, geraete: e.geraete || [], geplant: !!e.geplant });
+  const h = document.createElement("div"); h.className = "karte"; h.id = "bsEntwurfHinweis";
+  h.innerHTML = `📝 Dein nicht gespeicherter Entwurf ist wieder da. <button type="button" class="knopf klein" onclick="bsEntwurfWeg()">🗑️ Entwurf verwerfen</button>`;
+  $("bsBlatt").querySelector("h3").after(h);
+}
+async function bsEntwurfWeg() {
+  if (!(await frage("Entwurf verwerfen?\nDie Eingaben werden gelöscht.", { ja: "🗑️ Verwerfen" }))) return;
+  lsSetzen(BS_ENTWURF, ""); $("bsBlatt")?.remove(); bsFormular();
+}
+async function bsDirekt(id) { // #besuch=B-…
+  if (!ICH?.admin) return;
+  await scStart("besuche");
+  if (!BS.liste.some((x) => x.besuch_id === id)) await bsLaden();
+  if (BS.liste.some((x) => x.besuch_id === id)) bsFormular(id); else melde(`Besuch ${id} nicht gefunden.`, true);
 }
 function bsPerson(pid) {
   $("bsWahl").value = ""; if (!pid || BS.f.personen.includes(pid)) return;
@@ -15846,10 +15916,10 @@ function bsZeigen() {
   $("bsFotos").innerHTML = F.fotos.map((p) => `<span class="chip"><button type="button" class="tw-nicht" onclick="bsFotoOeffnen('${esc(p)}')">📄 ansehen</button> <button type="button" class="tw-nicht" onclick="bsFotoWeg('${esc(p)}')">✕</button></span>`).join("")
     + F.neueFotos.map((x, i) => `<span class="chip">${x.vorschau ? `<img src="${x.vorschau}" alt="" class="bs-mini">` : "PDF"} <button type="button" class="tw-nicht" onclick="BS.f.neueFotos.splice(${i},1);bsZeigen()">✕</button></span>`).join("");
   const n = F.personen.length, namen = F.personen.map((p) => BS.mitglieder.find((m) => m.person_id === p)?.display_name || p).join(", ");
-  const ohneMail = F.personen.filter((p) => !BS.mitglieder.find((m) => m.person_id === p)?.hat_email).length;
+  const ohneMail = F.personen.filter((p) => !BS.mitglieder.find((m) => m.person_id === p)?.hat_email).length, tz = bsTermin(F.id);
   $("bsVersand").innerHTML = F.geplant
-    ? `<h4>📅 Terminbestätigung</h4><label class="tw-check"><input type="checkbox" id="bsTerminSenden" ${n ? "" : "disabled"} onchange="bsZeigenKnopf()"> Terminbestätigung per Push + Mail senden</label>
-       <p class="hinweis" style="margin:0">${n ? `Geht an ${esc(namen)}: Push + Mail mit Kalenderdatei, Eintrag im Kalender. Die Zusammenfassung kommt erst nach dem Besuch.${ohneMail ? ` ⚠️ ${ohneMail} ohne E-Mail – bitte selbst Bescheid geben.` : ""}` : "Erst oben ein Mitglied auswählen."}</p>`
+    ? `<h4>📅 Terminbestätigung</h4><label class="tw-check"><input type="checkbox" id="bsTerminSenden" ${n ? "" : "disabled"} onchange="bsZeigenKnopf()"> ${tz ? "Geänderten Termin erneut bestätigen" : "Terminbestätigung per Push + Mail senden"}</label>
+       <p class="hinweis" style="margin:0">${tz ? `Schon bestätigt${tz.buchung.bestaetigung_gesendet_am ? " am " + esc(zeitKurz(tz.buchung.bestaetigung_gesendet_am)) : ""}${tz.slot ? " für " + esc(scZeit(tz.slot.beginn, tz.slot.ende)) : ""}. Änderungen an Datum/Uhrzeit werden beim Speichern übernommen; nur mit Haken geht eine neue Bestätigung raus. ` : ""}${n ? `Geht an ${esc(namen)}: Push + Mail mit Kalenderdatei, Eintrag im Kalender. Die Zusammenfassung kommt erst nach dem Besuch.${ohneMail ? ` ⚠️ ${ohneMail} ohne E-Mail – bitte selbst Bescheid geben.` : ""}` : "Erst oben ein Mitglied auswählen."}</p>`
     : F.gesendet ? `<h4>✉️ Zusammenfassung</h4><p class="hinweis" style="margin:0">Schon verschickt: ${esc(F.gesendet)}</p>`
     : `<h4>✉️ Zusammenfassung ans Mitglied</h4><label class="tw-check"><input type="checkbox" id="bsSenden" ${n ? "checked" : "disabled"} onchange="bsZeigenKnopf()"> Nach dem Speichern schicken</label>
        <p class="hinweis" style="margin:0">${n ? `Geht an ${esc(namen)}: Push und E-Mail, du bekommst die Mail als BCC. Eine Kopie liegt danach in ihrem Archiv-Ordner (Register „Schulung“).${ohneMail ? ` ⚠️ ${ohneMail} ohne E-Mail.` : ""}` : "Erst oben ein Mitglied auswählen."}</p>`;
@@ -15898,7 +15968,7 @@ async function bsSpeichern(k) {
     let r = await api("besuch", { a: "speichern", besuch_id: F.id, daten: d, termin_senden: terminSenden, termin_abgleich: F.geplant && !!F.id }, { warten: true });
     F.id = r.besuch.besuch_id; F.terminRaus = F.terminRaus || !!r.termin?.gesendet; F.gesendet = F.gesendet || (r.versand ? "gerade eben" : ""); // 2.23.63: ab jetzt bearbeiten statt neu anlegen (kein Doppel, wenn ein Foto hängt)
     while (F.neueFotos.length) { k.textContent = `Foto hochladen … (noch ${F.neueFotos.length})`; r = { ...r, besuch: (await api("besuch", { a: "foto", besuch_id: F.id, mime: F.neueFotos[0].mime, data: F.neueFotos[0].data })).besuch }; F.neueFotos.shift(); F.fotos = r.besuch.fotos || F.fotos; }
-    $("bsBlatt")?.remove();
+    $("bsBlatt")?.remove(); lsSetzen(BS_ENTWURF, ""); // Entwurf erledigt
     const t = r.termin?.fehler ? `Gespeichert (${r.besuch.besuch_id}) – aber Terminbestätigung: ${r.termin.fehler}` : r.termin?.gesendet ? `📅 Gespeichert und Termin bestätigt – ${r.besuch.besuch_id}`
       : d.status === "geplant" ? `📅 Als geplant gespeichert – ${r.besuch.besuch_id}` : r.versand ? `✅ Gespeichert – ${r.versand.join(" · ")}` : `✅ Gespeichert – ${r.besuch.besuch_id}`;
     melde(t, !!r.termin?.fehler);
@@ -19272,6 +19342,8 @@ async function fpAdmin(tage) {
     else if (h === "#dienstwunsch") dwOeffnen();
     else if (h === "#wunschbogen") wbStart(); // KC-CLUB-WUNSCHBOGEN (2.23.28)
     else if (h === "#schulung") smStart(); // KC-CLUB-SCHULUNG-MITGLIED (2.23.62)
+    else if (h.startsWith("#besuch=")) bsDirekt(decodeURIComponent(h.slice(8))); // KC-CLUB-BESUCHE (2.23.65): „Protokoll öffnen“ aus Mails wie im alten Programm
+    else if (h === "#schulungen") scStart();
     else if (h === "#twinkey") ICH?.admin ? twOffenStart() : twFrageStart();
     else if (h === "#mfrage") twFrageStart(); // KC-CLUB-MITGLIEDER-FRAGEN (2.23.51): Push/Mail → Fragen an mich bzw. Antworten // KC-CLUB-TWINKEY-FRAGEN (2.23.49): Push/Mail → Frage bzw. Antwort
     else if (h.startsWith("#spiel=")) spOeffnen(decodeURIComponent(h.slice(7))); // KC-CLUB-SPIELE (2.7.0): aus dem Push

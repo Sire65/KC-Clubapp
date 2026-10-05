@@ -41,7 +41,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.23.64";
+const SERVER_VERSION = "2.23.65";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -3047,7 +3047,8 @@ async function schulungenListe(ich: Ich, von: string, bis: string) {
 // Google-Abgleich) – die Club-App ruft ihn intern mit dem Admin-Schlüssel aus dem Vault auf. Nichts wird doppelt gebaut.
 const SCHULUNG_AKTIONEN = new Set([ // nur Admin-Aktionen; Mitglieder gehen über schulung_meine/schulung_antwort
   "t_init", "t_chronologie", "t_slots_anlegen", "t_slot_absagen", "t_slot_loeschen", "t_einladen", "t_erneut_einladen",
-  "t_link", "t_buchung_entscheiden", "t_vorschlag_entscheiden", "t_zurueckziehen", "t_besuch_termin"]);
+  "t_link", "t_buchung_entscheiden", "t_vorschlag_entscheiden", "t_zurueckziehen", "t_besuch_termin",
+  "t_kalender_schluessel"]); // 2.23.65: Google-Kalender verbinden (Schlüssel wird nur einmal angezeigt, nicht protokolliert)
 async function schulungAufruf(a: string, daten: Record<string, unknown>) {
   const { data: token } = await db.rpc("kc_communication_get_server_secret", { p_name: "kc_termine_admin_token" });
   if (!token) throw new Fehler("Der Termin-Baustein ist nicht erreichbar (Schlüssel fehlt).", 503);

@@ -4143,7 +4143,8 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/nurAdmin\(ich\);/.test(g) && /SCHULUNG_AKTIONEN\.has\(a\)/.test(g), "nur Admin, nur erlaubte Aktionen");
   const f = server.slice(server.indexOf("async function schulungAufruf"), server.indexOf("// ---------- Handy-Kalender (KC-CLUB-KALENDERABO)"));
   assert.ok(/kc_termine_admin_token/.test(f) && /functions\/v1\/kc-termine/.test(f) && /test: false/.test(f), "vorhandener Termin-Baustein, Schlüssel aus dem Vault");
-  assert.ok(!/t_kalender_schluessel|m_waehlen/.test(server.slice(server.indexOf("const SCHULUNG_AKTIONEN"), server.indexOf("async function schulungAufruf"))), "keine Kalender-Schlüssel, keine Mitglieder-Aktionen");
+  // 2.23.65: Kalender-Schlüssel ist jetzt erlaubt (Admin, wie im alten Programm – Test 414); Mitglieder-Aktionen bleiben draußen
+  assert.ok(!/m_waehlen|m_absagen|m_gegenvorschlag/.test(server.slice(server.indexOf("const SCHULUNG_AKTIONEN"), server.indexOf("async function schulungAufruf"))), "keine Mitglieder-Aktionen");
   assert.ok(/protokoll\(ich\.person_id, "schulung_" \+ a\.slice\(2\), \{\}\)/.test(g), "Club-Protokoll ohne Inhalte");
   const k = html.slice(html.indexOf("// ---------- KC-CLUB-SCHULUNG-ADMIN (2.23.60"), html.indexOf("// KC-CLUB-TERMINANFRAGE-HINWEIS (2.23.52"));
   assert.ok(/\{ id: "schulung_admin", sym: "🎓", t: "Schulungen"[^\n]*nur: \(\) => !!ICH\?\.admin/.test(html) && /if \(!ICH\?\.admin\) return;/.test(k), "Kachel und Bereich nur für den Admin");
@@ -4185,6 +4186,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 413. 2.23.64: Admin-Knopf „Schulungen verwalten“ in „Meine Schulung“ (KC-CLUB-SCHULUNG-MITGLIED)
 {
   assert.ok(/onclick="\$\('smBlatt'\)\.remove\(\);scStart\(\)">🎓 Schulungen verwalten/.test(html), "Admin kommt aus „Meine Schulung“ zur Verwaltung");
+}
+// 414. 2.23.65: alles aus dem alten Besuchsprotokoll/Termin-Programm übernommen (Kalender verbinden, Entwurf, Sprung, Ablauf)
+{
+  const k = html.slice(html.indexOf("// ---------- KC-CLUB-SCHULUNG-ADMIN (2.23.60"), html.indexOf("// KC-CLUB-TERMINANFRAGE-HINWEIS (2.23.52"));
+  for (const x of ["Google-Kalender verbinden", "Schlüssel kopieren", "Skript kopieren", "KC_KALENDER_SCHLUESSEL", "Entwurf verwerfen", "Geänderten Termin erneut bestätigen", "✅ Termin bestätigt", "erst nach dem Besuch.", "Mail-Link aktuell", "Technische Linkprüfung"]) assert.ok(k.includes(x), "Teil fehlt: " + x);
+  assert.ok(/scApi\("t_kalender_schluessel"\)/.test(k) && /"t_kalender_schluessel"\]\);/.test(server), "Kalender-Schlüssel nur über die Admin-Aktion");
+  assert.ok(/h\.startsWith\("#besuch="\)\) bsDirekt\(/.test(html) && /async function bsDirekt\(id\) \{ \/\/ #besuch=B-…\n  if \(!ICH\?\.admin\) return;/.test(k), "Sprung #besuch= nur für Admin");
+  assert.ok(/lsSetzen\(BS_ENTWURF, ""\); \/\/ Entwurf erledigt/.test(k), "Entwurf wird nach dem Speichern gelöscht");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

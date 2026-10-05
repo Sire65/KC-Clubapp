@@ -1,5 +1,16 @@
 # Änderungen
 
+## 2.23.65 – 2026-10-05 – Schulungen: alles aus dem alten Programm übernommen (Wunsch Hansi „alle Funktionen übernommen?“)
+Abgleich Funktion für Funktion mit dem bisherigen Besuchsprotokoll/Termin-Programm; was fehlte, ist jetzt in der Club-App:
+- KC-CLUB-SCHULUNG-ADMIN: „📆 Google-Kalender“ – „🔑 Google-Kalender verbinden“ / „Neuen Schlüssel erzeugen“ (Schlüssel nur einmal sichtbar,
+  📋 Schlüssel kopieren, 📋 Skript kopieren, 5 Schritte). Server: t_kalender_schluessel freigegeben (nur Admin, Inhalt nicht protokolliert).
+  Einladungen zeigen den Mail-Link-Stand (aktuell / veraltet / ohne gültigen Link). „📜 Ablauf“ wie bisher mit Symbolen, Art der Nachricht
+  (Einladung, Bestätigung, Erinnerung …), Zustellung (zugestellt, geöffnet, nicht zustellbar …) und Details zum Aufklappen.
+- KC-CLUB-BESUCHE: Entwurf eines neuen Besuchs bleibt auf dem Gerät, falls die App zugeht („📝 Entwurf ist wieder da“ + „🗑️ Verwerfen“).
+  Bei geplantem Besuch mit bestätigtem Termin: „Schon bestätigt am … für …“ und „Geänderten Termin erneut bestätigen“. Liste: „✅ Termin
+  bestätigt“ und „Dazu n geplante Besuche – zählen erst nach dem Besuch“. Sprung #besuch=B-… öffnet den Besuch (wie im alten Programm), #schulungen.
+- Bewusst nicht übernommen: „Foto auswerten“ (kostenpflichtig, Wunsch Hansi). Test 414.
+
 ## 2.23.64 – 2026-10-05 – „🎓 Schulungen verwalten“ auch aus „Meine Schulung“ (Hansi: „Ich lande im Archiv“)
 - KC-CLUB-SCHULUNG-MITGLIED: Für den Admin oben in „🎓 Meine Schulung“ der Knopf „🎓 Schulungen verwalten“ (vorher nur der Archiv-Link –
   so landete man im Archiv). Die Admin-Kachel „🎓 Schulungen“ steht bei eigener Kachel-Reihenfolge wie jede neue Kachel ganz unten im
