@@ -1,5 +1,15 @@
 # Änderungen
 
+## 2.23.79 – 2026-10-05 – 🔒 Sperren in drei klaren Schritten + Uhrzeit + 🔔/📵 je Person (Wunsch Hansi)
+- KC-CLUB-PERSON-SPERRE Stufe 2 (Hansi: „Weg nicht ganz klar“): Wartungs-Blatt in zwei Kästen – „📢 Für alle: Wartung ankündigen“ und
+  „🔒 Nur einzelne Personen sperren“ (mit Liste „Zurzeit gesperrt“). Sperren in drei Schritten: ① Was sehen sie? (🔵 Wartungsarbeiten /
+  ⚪ Server nicht erreichbar) → ② Bis wann? (🔓 bis ich freigebe / 🕘 bis Datum + Uhrzeit – danach automatisch frei) → ③ Wer? – neben
+  jedem Namen 🔔/📵 zum Antippen (📵 = keine Push, keine E-Mail; Antippen kreuzt die Person mit an). In der Liste der Gesperrten ist 🔔/📵
+  weiter umschaltbar (Server-Aktion sperre_stumm). Das Sperrfenster zeigt „Voraussichtlich wieder erreichbar: …“, wenn eine Uhrzeit gesetzt ist.
+  Migration 20261005_kc_club_v22379_sperre_bis.sql (eine leere Spalte). Test 430.
+- KC-CLUB-BLATT-HAKEN Nachbesserung: der grüne ✓ erscheint nur noch für einen Knopf UNTERHALB des sichtbaren Bereichs (vorher auch für
+  einen schon nach oben weggescrollten, z. B. „Verstanden“ der Einweisung).
+
 ## 2.23.78 – 2026-10-05 – ✓ Grüner Haken oben in langen Fenstern (Wunsch Hansi)
 - KC-CLUB-BLATT-HAKEN: Lange Fenster mit genau einem Bestätigungs-Knopf (Übernehmen, OK, Speichern, Fertig, Bestätigen, Anwenden,
   Verstanden) bekommen oben links in der vorhandenen ✕-Leiste (KC-CLUB-BLATT-X, ein Kern) einen grünen ✓, der diesen Knopf antippt –

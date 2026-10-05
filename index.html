@@ -965,6 +965,14 @@
   .dw-kopf { display: grid; gap: 6px; padding: 8px 12px; padding-top: max(8px, env(safe-area-inset-top)); background: var(--karte); box-shadow: var(--schatten); }
   .dw-reihe { display: flex; align-items: center; gap: 10px; } .dw-reihe .knopf { min-height: 44px; margin: 0; } .dw-titel { flex: 1; text-align: right; font-size: .95rem; }
   .dw-aktionen { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } /* KC-CLUB-WUNSCHBOGEN 2.23.29: zwei gleich breite Knöpfe */
+  /* KC-CLUB-PERSON-SPERRE Stufe 2 (2.23.79): Schritte ①②③, Zeile mit Name + 🔔/📵 */
+  .ps-schritt { display: grid; gap: 6px; padding: 10px 12px; border: 1px solid var(--linie); border-radius: 14px; background: var(--karte); }
+  .ps-liste { display: grid; gap: 4px; max-height: 40vh; overflow: auto; }
+  .ps-zeile { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border: 1px solid var(--linie); border-radius: 12px; background: var(--karte); }
+  .ps-zeile.an { border-color: var(--rot); }
+  .ps-gesperrt { flex-wrap: wrap; justify-content: flex-end; } .ps-gesperrt .knopf { margin: 0; }
+  .ps-symbol { flex: none; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--linie); background: var(--karte); font-size: 1.25rem; cursor: pointer; }
+  .ps-symbol.aus { background: #fde8ea; border-color: #c0485a; }
   .vb-knoepfe { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } .vb-knoepfe .knopf { margin: 0; } /* KC-CLUB-VERBINDUNG-MELDEN 2.23.76 */
   .dw-tipp { margin: 0; padding: 5px 10px; border-radius: 10px; background: #fff3d6; color: #4a3a12; border: 1px solid var(--gold); font-size: .8rem; line-height: 1.3; } /* KC-CLUB-SPERRZEIT-PRUEFUNG 2.23.75 */
   .wb-knoepfe { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } .wb-knoepfe .knopf { margin: 0; }
@@ -2930,7 +2938,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.78"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.79"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -8245,7 +8253,7 @@ async function apiRoh(action, daten = {}, zweiterVersuch = false) {
   const leitungKaputt = (r.status >= 502 && r.status <= 504) || (r.status >= 500 && !j);
   vbEnde(!leitungKaputt, performance.now() - t0, leitungKaputt ? "Serverfehler " + r.status : "");
   if (!j && !leitungKaputt && r.ok) throw new Error("Unerwartete Antwort vom Server.");
-  if (r.status === 423 && j?.gesperrt) { sperreZeigen(j.gesperrt, j.error); throw Object.assign(new Error(j.error || "Zurzeit nicht verfügbar."), { gesperrt: true }); } // KC-CLUB-PERSON-SPERRE (2.23.77)
+  if (r.status === 423 && j?.gesperrt) { sperreZeigen(j.gesperrt, j.error, j.bis); throw Object.assign(new Error(j.error || "Zurzeit nicht verfügbar."), { gesperrt: true }); } // KC-CLUB-PERSON-SPERRE (2.23.77)
   if (r.status === 401) { $("app").classList.add("versteckt"); $("gesperrt").classList.remove("versteckt"); $("linkUngueltig").classList.remove("versteckt"); throw new Error(j?.error || "Kein Zugang"); }
   if (!r.ok) throw Object.assign(new Error(j?.error || (leitungKaputt ? "Der Server ist gerade kurz nicht erreichbar – bitte gleich nochmal versuchen." : "Fehler " + r.status)), { leitung: leitungKaputt });
   return j;
@@ -9740,13 +9748,14 @@ function adBlatt(id) {
         <div class="knoepfe">${adKnopf("👥 Zu den Mitgliedern", "$('adBlatt').remove();zeige('mitglieder')", true)}</div>`;
       break;
     case "wartung":
-      html = `${kopf("🛠️", "Wartung")}${adZeile(z[0], "Wartungsmodus", z[1] + (r?.wartung?.hinweis ? " – " + r.wartung.hinweis : ""))}
-        <p class="hinweis" style="margin:0">Wartung ankündigen: Alle Mitglieder sehen die blaue LED und deinen Hinweis (z. B. „bis 20 Uhr“).</p>
-        <div class="knoepfe">${adKnopf(r?.wartung?.an ? "✅ Wartung beenden" : "🔧 Wartung ankündigen", "adWartung()", true)}</div>
-        <b style="margin-top:6px">🔒 Einzelne Personen sperren</b>
-        <p class="hinweis" style="margin:0">Gesperrte sehen beim Öffnen nur ein Hinweisfenster (🔵 Wartungsarbeiten oder ⚪ Server nicht erreichbar). Alle anderen merken nichts. Admins können nicht gesperrt werden.</p>
-        <div id="adSperren"><p class="hinweis" style="margin:0">Wird geladen …</p></div>
-        <div class="knoepfe">${adKnopf("🔒 Personen sperren", "sperreAuswahl()", true)}</div>`;
+      html = `${kopf("🛠️", "Wartung")}
+        <div class="ps-schritt"><b>📢 Für alle: Wartung ankündigen</b>${adZeile(z[0], "Wartungsmodus", z[1] + (r?.wartung?.hinweis ? " – " + r.wartung.hinweis : ""))}
+        <p class="hinweis" style="margin:0">Alle Mitglieder sehen die blaue LED und deinen Hinweis (z. B. „bis 20 Uhr“). Die App bleibt benutzbar.</p>
+        <div class="knoepfe">${adKnopf(r?.wartung?.an ? "✅ Wartung beenden" : "🔧 Wartung ankündigen", "adWartung()", true)}</div></div>
+        <div class="ps-schritt"><b>🔒 Nur einzelne Personen sperren</b>
+        <p class="hinweis" style="margin:0">In drei Schritten: ① was sie sehen (🔵 Wartungsarbeiten oder ⚪ Server nicht erreichbar) → ② bis wann → ③ wer – je Person 🔔/📵 für Push und E-Mail. Alle anderen merken nichts; Admins können nicht gesperrt werden.</p>
+        <div class="knoepfe">${adKnopf("🔒 Personen sperren", "sperreAuswahl()", true)}</div>
+        <b style="font-size:.95rem">Zurzeit gesperrt</b><div id="adSperren"><p class="hinweis" style="margin:0">Wird geladen …</p></div></div>`;
       setTimeout(sperrenLaden, 0);
       break;
     case "inkognito":
@@ -9762,55 +9771,81 @@ function adBlatt(id) {
 // Der Server antwortet Gesperrten mit 423 + Art; die App zeigt dann nur das Hinweisfenster. Sperren/Freigeben nur Admin (Wartungs-Blatt).
 const SPERRE_ART = { wartung: { sym: "🔧", t: "Wartungsarbeiten", farbe: "linear-gradient(160deg,#1d4f91,#2f6fc1)", kurz: "🔵 Wartungsarbeiten" },
   stoerung: { sym: "📡", t: "Server nicht erreichbar", farbe: "linear-gradient(160deg,#4a5563,#6b7685)", kurz: "⚪ Server nicht erreichbar" } };
-function sperreZeigen(art, text) {
+function sperreZeigen(art, text, bis) {
   if (document.getElementById("sperreFenster")) return;
-  const a = SPERRE_ART[art] || SPERRE_ART.wartung;
+  const a = SPERRE_ART[art] || SPERRE_ART.wartung, ab = bis && Date.parse(bis) > Date.now() ? wann(bis) : "";
   const f = document.createElement("div"); f.id = "sperreFenster"; f.setAttribute("role", "alertdialog"); f.setAttribute("aria-modal", "true");
   f.style.cssText = `position:fixed;inset:0;z-index:99999;display:grid;place-items:center;padding:24px;background:${a.farbe};color:#fff;text-align:center`;
   f.innerHTML = `<div style="max-width:420px"><div style="font-size:3.4rem">${a.sym}</div><h2 style="margin:8px 0 12px;color:#fff">${esc(a.t)}</h2>
-    <p style="font-size:1.15rem;line-height:1.45;margin:0 0 22px">${esc(text || "Bitte versuchen Sie es später nochmals.")}</p>
+    <p style="font-size:1.15rem;line-height:1.45;margin:0 0 ${ab ? 10 : 22}px">${esc(text || "Bitte versuchen Sie es später nochmals.")}</p>
+    ${ab ? `<p style="font-size:1.05rem;margin:0 0 22px"><b>Voraussichtlich wieder erreichbar: ${esc(ab)}</b></p>` : ""}
     <button class="knopf" style="background:#fff;color:#1d2b44;min-height:48px" onclick="location.reload()">↻ Später nochmal versuchen</button></div>`;
   document.body.appendChild(f); document.body.style.overflow = "hidden";
 }
+// 2.23.79 (Hansi: „neben jeder Person ein Icon“): 🔔 = Push/E-Mail laufen weiter · 📵 = keine Push, keine E-Mail
+const sperreSymbol = (stumm) => (stumm ? "📵" : "🔔");
+const sperreSymbolTitel = (stumm) => (stumm ? "Keine Push, keine E-Mail – antippen zum Einschalten" : "Push/E-Mail laufen weiter – antippen zum Abschalten");
 async function sperrenLaden() {
   const z = $("adSperren"); if (!z) return;
   try {
     const [{ sperren }] = await Promise.all([api("sperre_liste"), MITGLIEDER ? null : mitgliederHolen().catch(() => null)]);
     if (!$("adSperren")) return;
-    $("adSperren").innerHTML = sperren.length ? `<div style="display:grid;gap:6px">${sperren.map((x) => `<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--linie);border-radius:12px;background:var(--karte)">
-        <span style="flex:1"><b>${esc(vfName(x.person_id))}</b><br><small class="hinweis">${SPERRE_ART[x.art]?.kurz || esc(x.art)}${x.stumm ? " · 📵 keine Push/E-Mail" : ""} · seit ${esc(zeitKurz(x.seit))} Uhr</small></span>
-        <button class="knopf klein" onclick="sperreAufheben('${esc(x.person_id)}', this)">🔓 Freigeben</button></div>`).join("")}</div>`
+    $("adSperren").innerHTML = sperren.length ? `<div style="display:grid;gap:6px">${sperren.map((x) => `<div class="ps-zeile ps-gesperrt">
+        <span style="flex:1 1 100%;min-width:0"><b>${esc(vfName(x.person_id))}</b><br><small class="hinweis">${SPERRE_ART[x.art]?.kurz || esc(x.art)} · ${x.bis ? "bis " + esc(wann(x.bis)) : "bis du freigibst"}</small></span>
+        <button type="button" class="ps-symbol${x.stumm ? " aus" : ""}" title="${sperreSymbolTitel(x.stumm)}" aria-label="${sperreSymbolTitel(x.stumm)}" onclick="sperreStumm('${esc(x.person_id)}', ${!x.stumm}, this)">${sperreSymbol(x.stumm)}</button>
+        <button class="knopf klein" onclick="sperreAufheben('${esc(x.person_id)}', this)">🔓 Freigeben</button></div>`).join("")}</div>
+        <p class="hinweis" style="margin:4px 0 0;font-size:.85rem">🔔 Push/E-Mail laufen weiter · 📵 keine Push, keine E-Mail – Symbol antippen zum Umschalten.</p>`
       : '<p class="hinweis" style="margin:0">Zurzeit ist niemand gesperrt.</p>';
   } catch (e) { if ($("adSperren")) $("adSperren").innerHTML = `<p class="hinweis" style="margin:0">⚠️ Liste nicht geladen: ${esc(e.message)}</p>`; }
 }
+async function sperreStumm(pid, stumm, knopf) {
+  await einmal(knopf, async () => {
+    try { await api("sperre_stumm", { id: pid, stumm }, { warten: true }); melde(stumm ? `📵 ${vfName(pid)}: keine Push, keine E-Mail` : `🔔 ${vfName(pid)}: Push/E-Mail wieder an`); sperrenLaden(); }
+    catch (e) { meldeFehler(e); }
+  });
+}
+// Ablauf in drei Schritten (Wunsch Hansi): ① Was sehen sie? → ② Bis wann? → ③ Wer? (je Person 🔔/📵)
 async function sperreAuswahl() {
   if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return meldeFehler(e); }
-  const gew = new Set(), alle = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id);
-  let art = "wartung";
-  const f = blattAuf("sperreBlatt", `<h3 style="margin:0">🔒 Wen sperren?</h3>
-    <div class="feld" style="margin:6px 0 0"><b>Was sehen die Gesperrten?</b><div class="hl-chips" id="psArt"></div></div>
-    <label class="schalter" style="margin:6px 0 0"><span><b>📵 Auch Benachrichtigungen abschalten</b><br><small class="hinweis">Keine Push-Nachrichten und keine E-Mails aus der Club-App an die Gesperrten</small></span><input type="checkbox" id="psStumm"></label>
-    <input id="psSuche" type="search" placeholder="🔍 Name suchen …" style="width:100%;box-sizing:border-box;margin:6px 0">
-    <div id="psListe" class="ta-liste wahlliste" style="max-height:40vh;overflow:auto"></div>
+  const gew = new Map(), alle = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id); // person_id → stumm
+  let art = "wartung", ende = "frei";
+  const h = new Date(Date.now() + 2 * 3600000); h.setMinutes(0, 0, 0);
+  const f = blattAuf("sperreBlatt", `<h3 style="margin:0">🔒 Personen sperren</h3>
+    <div class="ps-schritt"><b>① Was sehen die Gesperrten?</b><div class="hl-chips" id="psArt"></div></div>
+    <div class="ps-schritt"><b>② Bis wann?</b><div class="hl-chips" id="psEnde"></div>
+      <div id="psZeit" class="zwei versteckt" style="margin-top:6px"><label class="feld" style="margin:0">Datum<input type="date" id="psDatum" value="${berlinIso(h.toISOString())}"></label>
+        <label class="feld" style="margin:0">Uhrzeit<input type="time" id="psUhr" value="${String(h.getHours()).padStart(2, "0")}:00"></label></div></div>
+    <div class="ps-schritt"><b>③ Wer?</b> <small class="hinweis">Antippen = sperren · 🔔/📵 = Push/E-Mail weiter oder aus</small>
+      <input id="psSuche" type="search" placeholder="🔍 Name suchen …" style="width:100%;box-sizing:border-box;margin:6px 0">
+      <div id="psListe" class="ps-liste"></div></div>
     <div class="knoepfe bs-fuss"><button class="knopf haupt" id="psOk">🔒 Sperren</button><button class="knopf" onclick="$('sperreBlatt').remove()">Abbrechen</button></div>`);
   f.style.zIndex = "2100"; f.classList.add("sc-blatt"); f.onclick = null;
-  const artZeigen = () => { $("psArt").innerHTML = Object.entries(SPERRE_ART).map(([k, a]) => `<button type="button" class="chip${art === k ? " an" : ""}" data-art="${k}">${a.kurz}</button>`).join("");
-    $("psArt").querySelectorAll("[data-art]").forEach((b) => (b.onclick = () => { art = b.dataset.art; artZeigen(); })); };
+  const chips = (ziel, werte, jetzt, setzen) => { $(ziel).innerHTML = werte.map(([k, t]) => `<button type="button" class="chip${jetzt === k ? " an" : ""}" data-k="${k}">${t}</button>`).join("");
+    $(ziel).querySelectorAll("[data-k]").forEach((b) => (b.onclick = () => setzen(b.dataset.k))); };
+  const artZeigen = () => chips("psArt", Object.entries(SPERRE_ART).map(([k, a]) => [k, a.kurz]), art, (k) => { art = k; artZeigen(); });
+  const endeZeigen = () => { chips("psEnde", [["frei", "🔓 Bis ich freigebe"], ["zeit", "🕘 Bis Uhrzeit"]], ende, (k) => { ende = k; endeZeigen(); }); $("psZeit").classList.toggle("versteckt", ende !== "zeit"); };
+  const zaehlen = () => { $("psOk").textContent = `🔒 Sperren (${gew.size})`; };
   const zeichnen = () => { const q = $("psSuche").value.toLowerCase();
-    $("psListe").innerHTML = alle.filter((m) => !q || m.name.toLowerCase().includes(q)).map((m) => `<label><input type="checkbox" data-p="${esc(m.person_id)}" ${gew.has(m.person_id) ? "checked" : ""}> <span style="flex:1">${esc(m.name)}</span></label>`).join("");
-    $("psListe").querySelectorAll("[data-p]").forEach((c) => (c.onchange = () => { c.checked ? gew.add(c.dataset.p) : gew.delete(c.dataset.p); $("psOk").textContent = `🔒 Sperren (${gew.size})`; }));
-    $("psOk").textContent = `🔒 Sperren (${gew.size})`; };
+    $("psListe").innerHTML = alle.filter((m) => !q || m.name.toLowerCase().includes(q)).map((m) => { const an = gew.has(m.person_id), st = gew.get(m.person_id) === true;
+      return `<div class="ps-zeile${an ? " an" : ""}"><label style="flex:1;display:flex;align-items:center;gap:10px;min-width:0;cursor:pointer"><input type="checkbox" data-p="${esc(m.person_id)}" ${an ? "checked" : ""}> <span>${esc(m.name)}</span></label>
+        <button type="button" class="ps-symbol${st ? " aus" : ""}" data-s="${esc(m.person_id)}" title="${sperreSymbolTitel(st)}" aria-label="${esc(m.name)}: ${sperreSymbolTitel(st)}">${sperreSymbol(st)}</button></div>`; }).join("");
+    $("psListe").querySelectorAll("[data-p]").forEach((c) => (c.onchange = () => { c.checked ? gew.set(c.dataset.p, false) : gew.delete(c.dataset.p); zeichnen(); }));
+    $("psListe").querySelectorAll("[data-s]").forEach((b) => (b.onclick = () => { const id = b.dataset.s; gew.set(id, !(gew.get(id) === true)); zeichnen(); })); // Symbol antippen kreuzt die Person mit an
+    zaehlen(); };
   $("psSuche").oninput = zeichnen;
   $("psOk").onclick = async (e) => {
-    if (!gew.size) return melde("Bitte mindestens eine Person ankreuzen.", true);
-    const namen = [...gew].map(vfName).join(", ");
-    if (!(await frage(`${namen} sperren?\n\nSie sehen dann beim Öffnen nur: ${SPERRE_ART[art].kurz}.${$("psStumm").checked ? " Push und E-Mail aus der Club-App sind für sie aus." : ""} Freigeben jederzeit hier unter 🛠️ Wartung.`, { ja: "🔒 Ja, sperren", nein: "Abbrechen" }))) return;
+    if (!gew.size) return melde("Bitte bei ③ mindestens eine Person antippen.", true);
+    let bis = null;
+    if (ende === "zeit") { const d = $("psDatum").value, u = $("psUhr").value; if (!d || !u) return melde("Bitte bei ② Datum und Uhrzeit wählen.", true);
+      const t = new Date(`${d}T${u}:00`); if (!(t.getTime() > Date.now() + 60000)) return melde("Die Uhrzeit bei ② muss in der Zukunft liegen.", true); bis = t.toISOString(); }
+    const leise = [...gew].filter(([, st]) => st).map(([id]) => vfName(id));
+    if (!(await frage(`${[...gew.keys()].map(vfName).join(", ")} sperren?\n\nSie sehen beim Öffnen nur: ${SPERRE_ART[art].kurz}${bis ? ` – bis ${wann(bis)}` : " – bis du freigibst"}.${leise.length ? ` Keine Push/E-Mail an: ${leise.join(", ")}.` : ""} Freigeben jederzeit hier unter 🛠️ Wartung.`, { ja: "🔒 Ja, sperren", nein: "Abbrechen" }))) return;
     await einmal(e.currentTarget, async () => {
-      try { const r = await api("sperre_setzen", { ids: [...gew], art, stumm: $("psStumm").checked }, { warten: true }); f.remove(); melde(`🔒 ${r.gesperrt} Person${r.gesperrt === 1 ? "" : "en"} gesperrt`); sperrenLaden(); }
+      try { const r = await api("sperre_setzen", { personen: [...gew].map(([id, stumm]) => ({ id, stumm })), art, bis }, { warten: true }); f.remove(); melde(`🔒 ${r.gesperrt} Person${r.gesperrt === 1 ? "" : "en"} gesperrt`); sperrenLaden(); }
       catch (x) { meldeFehler(x); }
     });
   };
-  artZeigen(); zeichnen();
+  artZeigen(); endeZeigen(); zeichnen();
 }
 async function sperreAufheben(pid, knopf) {
   await einmal(knopf, async () => {
@@ -10692,7 +10727,7 @@ function blattHakenZiel(innen) {
 function blattHakenSicht(b) {
   const sc = blattScroller(b), h = b.querySelector(".blatt-haken"); if (!sc?.innen || !h) return;
   const z = blattHakenZiel(sc.innen), r = z?.getBoundingClientRect(), f = sc.el.getBoundingClientRect();
-  const sichtbar = !z || (r.top < f.bottom - 8 && r.bottom > f.top + 56); // Knopf schon zu sehen → kein Haken nötig
+  const sichtbar = !z || r.top < f.bottom - 8; // Knopf zu sehen oder schon oben vorbei → kein Haken (nur für Knöpfe unten)
   h.hidden = sichtbar && !!h.parentElement.querySelector(".blatt-x"); // Leiste nur mit ✓ (Fenster hat eigenes ✕): ✓ bleibt stehen, sonst springt der Inhalt
   if (z) { h.disabled = z.disabled; h.title = z.textContent.trim(); h.setAttribute("aria-label", z.textContent.trim()); }
 }

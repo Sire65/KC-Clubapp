@@ -41,7 +41,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.23.78";
+const SERVER_VERSION = "2.23.79";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -2063,15 +2063,18 @@ const SPERRE_TEXT: Record<string, string> = {
   wartung: "Zur Zeit führen wir für Sie Wartungsarbeiten durch. Bitte versuchen Sie es später nochmals. Wir bitten um Verständnis.",
   stoerung: "Unser Server ist zurzeit nicht erreichbar. Bitte versuchen Sie es später nochmals. Wir bitten um Verständnis.",
 };
-const SPERREN = { bis: 0, liste: new Map<string, string>(), stumm: new Set<string>() };
+// 2.23.79: „bis“ (Uhrzeit) – abgelaufene Sperren gelten sofort nicht mehr (Prüfung bei jedem Zugriff, auch aus dem Speicher)
+const SPERREN = { bis: 0, zeilen: [] as { person_id: string; art: string; stumm: boolean; bis: string | null }[] };
+const sperreGilt = (x: { bis: string | null }) => !x.bis || Date.parse(x.bis) > Date.now();
 async function sperrenAktuell() {
   if (Date.now() > SPERREN.bis) {
-    const { data, error } = await db.from("kc_club_person_sperre").select("person_id,art,stumm").eq("aktiv", true);
-    if (!error) { SPERREN.liste = new Map((data ?? []).map((x: any) => [x.person_id, x.art])); SPERREN.stumm = new Set((data ?? []).filter((x: any) => x.stumm).map((x: any) => x.person_id)); SPERREN.bis = Date.now() + 15_000; }
+    const { data, error } = await db.from("kc_club_person_sperre").select("person_id,art,stumm,bis").eq("aktiv", true);
+    if (!error) { SPERREN.zeilen = (data ?? []) as any[]; SPERREN.bis = Date.now() + 15_000; }
   }
-  return SPERREN;
+  const gilt = SPERREN.zeilen.filter(sperreGilt);
+  return { liste: new Map(gilt.map((x) => [x.person_id, x])), stumm: new Set(gilt.filter((x) => x.stumm).map((x) => x.person_id)) };
 }
-async function sperreFuer(personId: string): Promise<string | null> {
+async function sperreFuer(personId: string) {
   return (await sperrenAktuell()).liste.get(personId) ?? null;
 }
 async function archivFremdversuch(ich: Ich, o: any, was: string) {
@@ -4009,7 +4012,7 @@ Köcheclub Werne`,
     const tAnm = Date.now();
     const ich = await anmelden(req);
     const gesperrt = ich.admin ? null : await sperreFuer(ich.person_id); // KC-CLUB-PERSON-SPERRE (2.23.77)
-    if (gesperrt) return json({ error: SPERRE_TEXT[gesperrt] || SPERRE_TEXT.wartung, gesperrt }, 423);
+    if (gesperrt) return json({ error: SPERRE_TEXT[gesperrt.art] || SPERRE_TEXT.wartung, gesperrt: gesperrt.art, bis: gesperrt.bis }, 423);
     const anmeldungMs = Date.now() - tAnm;
     const antwort = await aktionAusfuehren(a, p, ich, req, t0Anfrage, anmeldungMs);
     return DB_AUS.n !== dbAusVorher ? dbWeg() : antwort; // KC-CLUB-DB-ZEITGRENZE: kein halbes Ergebnis
@@ -9205,23 +9208,45 @@ Köcheclub-App`,
       // ----- KC-CLUB-PERSON-SPERRE (2.23.77, Wunsch Hansi): eine oder mehrere Personen vorübergehend sperren -----
       case "sperre_liste": {
         nurAdmin(ich);
-        const { data } = await db.from("kc_club_person_sperre").select("person_id,art,stumm,seit").eq("aktiv", true).order("seit", { ascending: false });
-        return json({ sperren: data ?? [] });
+        const { data } = await db.from("kc_club_person_sperre").select("person_id,art,stumm,seit,bis").eq("aktiv", true).order("seit", { ascending: false });
+        return json({ sperren: (data ?? []).filter(sperreGilt) });
       }
       case "sperre_setzen": {
         nurAdmin(ich);
-        const art = p.art === "stoerung" ? "stoerung" : "wartung", stumm = p.stumm === true;
+        const art = p.art === "stoerung" ? "stoerung" : "wartung";
+        // 2.23.79: bis (Uhrzeit, Zukunft, höchstens 30 Tage) oder null = bis zur Freigabe
+        let bis: string | null = null;
+        if (p.bis) {
+          const t = Date.parse(String(p.bis));
+          if (!Number.isFinite(t) || t <= Date.now() + 60_000) throw new Fehler("Die Uhrzeit „bis“ muss in der Zukunft liegen.", 400);
+          if (t > Date.now() + 30 * 86400000) throw new Fehler("Höchstens 30 Tage im Voraus.", 400);
+          bis = new Date(t).toISOString();
+        }
+        // je Person eigener Schalter „Benachrichtigungen aus“ (personen: [{ id, stumm }]); ids + stumm wie in 2.23.77 bleibt möglich
+        const wahl = new Map<string, boolean>();
+        if (Array.isArray(p.personen)) for (const x of p.personen.slice(0, 100)) { const id = txt(x?.id, 40); if (id) wahl.set(id, x?.stumm === true); }
+        else for (const x of (Array.isArray(p.ids) ? p.ids : []).slice(0, 100)) { const id = txt(x, 40); if (id) wahl.set(id, p.stumm === true); }
         const admins = new Set(await adminIds());
-        const ids: string[] = [...new Set<string>((Array.isArray(p.ids) ? p.ids : []).map((x: unknown) => txt(x, 40)))].filter((x) => x && x !== ich.person_id && !admins.has(x)).slice(0, 100);
+        const ids: string[] = [...wahl.keys()].filter((x) => x !== ich.person_id && !admins.has(x));
         if (!ids.length) throw new Fehler("Bitte mindestens eine Person auswählen (Admins können nicht gesperrt werden).", 400);
         const { data: leute } = await db.from("kc_core_people").select("person_id").in("person_id", ids);
         const gueltig = (leute ?? []).map((x: any) => x.person_id);
         if (!gueltig.length) throw new Fehler("Diese Personen gibt es nicht.", 400);
-        const { error } = await db.from("kc_club_person_sperre").upsert(gueltig.map((id: string) => ({ person_id: id, aktiv: true, art, stumm, seit: jetzt(), von: ich.person_id, aufgehoben_am: null })), { onConflict: "person_id" });
+        const { error } = await db.from("kc_club_person_sperre").upsert(gueltig.map((id: string) => ({ person_id: id, aktiv: true, art, stumm: wahl.get(id) === true, bis, seit: jetzt(), von: ich.person_id, aufgehoben_am: null })), { onConflict: "person_id" });
         if (error) throw new Fehler("Sperre konnte nicht gespeichert werden.", 500);
         SPERREN.bis = 0;
-        await protokoll(ich.person_id, "person_gesperrt", { ids: gueltig, art, stumm });
+        await protokoll(ich.person_id, "person_gesperrt", { ids: gueltig, art, bis, stumm: gueltig.filter((id: string) => wahl.get(id)) });
         return json({ ok: true, gesperrt: gueltig.length });
+      }
+      case "sperre_stumm": {
+        // 2.23.79: bei einer bestehenden Sperre Push/E-Mail an- oder abschalten (📵/🔔 neben dem Namen)
+        nurAdmin(ich);
+        const id = txt(p.id, 40), stumm = p.stumm === true;
+        const { data, error } = await db.from("kc_club_person_sperre").update({ stumm }).eq("person_id", id).eq("aktiv", true).select("person_id");
+        if (error || !data?.length) throw new Fehler("Diese Person ist nicht gesperrt.", 404);
+        SPERREN.bis = 0;
+        await protokoll(ich.person_id, "person_sperre_stumm", { id, stumm });
+        return json({ ok: true, stumm });
       }
       case "sperre_aufheben": {
         nurAdmin(ich);

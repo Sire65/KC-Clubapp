@@ -4306,17 +4306,17 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 // 428. 2.23.77: einzelne Personen sperren – Hinweisfenster Wartung / nicht erreichbar (KC-CLUB-PERSON-SPERRE)
 {
-  assert.ok(/const gesperrt = ich\.admin \? null : await sperreFuer\(ich\.person_id\);[^\n]*\n\s*if \(gesperrt\) return json\(\{ error: SPERRE_TEXT\[gesperrt\] \|\| SPERRE_TEXT\.wartung, gesperrt \}, 423\);/.test(server), "Server sperrt nach der Anmeldung, nie Admins");
+  assert.ok(/const gesperrt = ich\.admin \? null : await sperreFuer\(ich\.person_id\);[^\n]*\n\s*if \(gesperrt\) return json\(\{ error: SPERRE_TEXT\[gesperrt\.art\] \|\| SPERRE_TEXT\.wartung, gesperrt: gesperrt\.art, bis: gesperrt\.bis \}, 423\);/.test(server), "Server sperrt nach der Anmeldung, nie Admins");
   assert.ok(/Zur Zeit führen wir für Sie Wartungsarbeiten durch\. Bitte versuchen Sie es später nochmals\. Wir bitten um Verständnis\./.test(server), "Wortlaut Wartung");
-  assert.ok(/if \(!error\) \{ SPERREN\.liste = /.test(server), "Lesefehler sperren nie alle");
+  assert.ok(/if \(!error\) \{ SPERREN\.zeilen = /.test(server), "Lesefehler sperren nie alle");
   const g = server.slice(server.indexOf('case "sperre_liste"'), server.indexOf('case "wartung_setzen"'));
-  assert.equal((g.match(/nurAdmin\(ich\);/g) || []).length, 3, "alle drei Aktionen nur Admin");
+  assert.equal((g.match(/nurAdmin\(ich\);/g) || []).length, 4, "alle Sperr-Aktionen nur Admin (2.23.79: + sperre_stumm)");
   assert.ok(/x !== ich\.person_id && !admins\.has\(x\)/.test(g) && /aktiv: false, aufgehoben_am: jetzt\(\)/.test(g) && /"person_gesperrt"/.test(g) && /"person_entsperrt"/.test(g), "nicht sich selbst/Admins, Aufheben ohne Löschen, Protokoll");
-  assert.ok(/if \(r\.status === 423 && j\?\.gesperrt\) \{ sperreZeigen\(j\.gesperrt, j\.error\);/.test(html) && /function sperreZeigen\(art, text\)/.test(html), "App zeigt das Hinweisfenster");
-  assert.ok(/adKnopf\("🔒 Personen sperren", "sperreAuswahl\(\)", true\)/.test(html) && /api\("sperre_setzen", \{ ids: \[\.\.\.gew\], art, stumm/.test(html) && /api\("sperre_aufheben"/.test(html), "Verwaltung im Wartungs-Blatt");
+  assert.ok(/if \(r\.status === 423 && j\?\.gesperrt\) \{ sperreZeigen\(j\.gesperrt, j\.error, j\.bis\);/.test(html) && /function sperreZeigen\(art, text, bis\)/.test(html), "App zeigt das Hinweisfenster");
+  assert.ok(/adKnopf\("🔒 Personen sperren", "sperreAuswahl\(\)", true\)/.test(html) && /api\("sperre_setzen", \{ personen: \[\.\.\.gew\]\.map/.test(html) && /api\("sperre_aufheben"/.test(html), "Verwaltung im Wartungs-Blatt");
   const rs = server.slice(server.indexOf("async function routerSendenRoh"), server.indexOf("const r = await fetch(`${SUPA}/functions/v1/kc-communication-router`"));
   assert.ok(/const stumm = \(await sperrenAktuell\(\)\)\.stumm;/.test(rs) && /personIds = personIds\.filter\(\(id\) => !stumm\.has\(id\)\)/.test(rs), "Benachrichtigungen aus: zentral im Versandweg gefiltert");
-  assert.ok(/stumm: \$\("psStumm"\)\.checked/.test(html) && /id="psStumm"/.test(html), "Schalter zum Anklicken");
+  assert.ok(/data-s="\$\{esc\(m\.person_id\)\}"/.test(html), "2.23.79: je Person 🔔/📵 zum Anklicken");
   const mig = lies("supabase/migrations/20261005_kc_club_v22377_person_sperre.sql");
   assert.ok(/enable row level security/.test(mig) && /revoke all on kc_club_person_sperre from anon, authenticated/.test(mig) && /check \(art in \('wartung', 'stoerung'\)\)/.test(mig), "Tabelle geschützt");
 }
@@ -4329,6 +4329,20 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(z && !z\.disabled\) z\.click\(\);/.test(k) && /h\.disabled = z\.disabled;/.test(k), "tippt den echten Knopf an, gesperrt bleibt gesperrt");
   assert.ok(/try \{ blattXPruefen\(\); \} catch \{\} try \{ blattHakenPruefen\(\); \} catch \{\}/.test(html), "im selben Fenster-Kern wie das ✕");
   assert.ok(/\.blatt-haken \{ margin-right: auto;/.test(html), "links in der Leiste, ✕ bleibt rechts");
+}
+// 430. 2.23.79: Sperren in drei Schritten, bis Uhrzeit, 🔔/📵 je Person (KC-CLUB-PERSON-SPERRE Stufe 2)
+{
+  const k = html.slice(html.indexOf("async function sperreAuswahl()"), html.indexOf("async function sperreAufheben("));
+  const i1 = k.indexOf("① Was sehen die Gesperrten?"), i2 = k.indexOf("② Bis wann?"), i3 = k.indexOf("③ Wer?");
+  assert.ok(i1 > 0 && i2 > i1 && i3 > i2, "Reihenfolge ① Was → ② Bis wann → ③ Wer");
+  assert.ok(/\["frei", "🔓 Bis ich freigebe"\], \["zeit", "🕘 Bis Uhrzeit"\]/.test(k) && /muss in der Zukunft liegen/.test(k), "Uhrzeit wählbar und geprüft");
+  assert.ok(/gew\.set\(id, !\(gew\.get\(id\) === true\)\)/.test(k), "Symbol schaltet je Person und kreuzt mit an");
+  assert.ok(/const sperreGilt = \(x: \{ bis: string \| null \}\) => !x\.bis \|\| Date\.parse\(x\.bis\) > Date\.now\(\);/.test(server), "abgelaufene Sperre gilt sofort nicht mehr");
+  const g = server.slice(server.indexOf('case "sperre_setzen"'), server.indexOf('case "sperre_aufheben"'));
+  assert.ok(/t > Date\.now\(\) \+ 30 \* 86400000/.test(g) && /stumm: wahl\.get\(id\) === true, bis/.test(g) && /case "sperre_stumm"/.test(g) && /"person_sperre_stumm"/.test(g), "Server: bis ≤ 30 Tage, stumm je Person, umschaltbar mit Protokoll");
+  assert.ok(/onclick="sperreStumm\('\$\{esc\(x\.person_id\)\}', \$\{!x\.stumm\}, this\)"/.test(html), "in der Liste umschaltbar");
+  assert.ok(/Voraussichtlich wieder erreichbar: /.test(html), "Sperrfenster nennt die Uhrzeit");
+  assert.ok(/add column if not exists bis timestamptz/.test(lies("supabase/migrations/20261005_kc_club_v22379_sperre_bis.sql")), "Migration");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
