@@ -3639,7 +3639,7 @@ assert.ok(/const UH_HERVOR = \["Innovation"\];/.test(html) && /function uhAmeise
 {
   assert.ok(/async function diktatStart\(ziel, nachSenden(, opt = \{\})?\) \{[\s\S]{0,400}frei = await mikroFreigabe\(\);[\s\S]{0,120}if \(!frei \|\| DT\.aktiv\) return;/.test(html), "erst Freigabe, dann Diktat");
   const mf = html.slice(html.indexOf("async function mikroFreigabe"), html.indexOf("function mikroHilfe"));
-  assert.ok(/if \(zustand === "granted"\) return true;/.test(mf) && /catch \{ return true; \}/.test(mf) && /onerror = \(ev\) => \{ if \(ev\.error === "not-allowed"[\s\S]{0,240}mikroHilfe\((weiter)?\)/.test(html) && /await frage\("🎙️ Zum Diktieren braucht die App dein Mikrofon/.test(mf) && /getUserMedia\(\{ audio: true \}\)/.test(mf) && /forEach\(\(x\) => x\.stop\(\)\)/.test(mf), "Erklärung, Abfrage, Mikrofon sofort wieder aus");
+  assert.ok(/if \(zustand === "granted"\) return true;/.test(mf) && /catch \{ return true; \}/.test(mf) && /onerror = \(ev\) => \{ if \(ev\.error === "not-allowed"[\s\S]{0,700}mikroHilfe\((weiter(, \{ sprache: ev\.error \})?)?\)/.test(html) && /await frage\("🎙️ Zum Diktieren braucht die App dein Mikrofon/.test(mf) && /getUserMedia\(\{ audio: true \}\)/.test(mf) && /forEach\(\(x\) => x\.stop\(\)\)/.test(mf), "Erklärung, Abfrage, Mikrofon sofort wieder aus");
 }
 // 340. 2.22.13: Herausforderungen standardmäßig an, Hinweis wo man es abstellt (KC-CLUB-SPIELE-STANDARD-AN)
 {
@@ -4088,7 +4088,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const k = html.slice(html.indexOf("// KC-CLUB-MIKRO-SOFORT (2.23.53"), html.indexOf("async function diktatStart("));
   for (const t of ["🎙️ Jetzt freischalten", "🔄 Nochmal probieren", "⌨️ Weiter tippen"]) assert.ok(k.includes(t), "Knopf fehlt: " + t);
   assert.ok(/getUserMedia\(\{ audio: true \}\)/.test(k) && /s\.getTracks\(\)\.forEach\(\(x\) => x\.stop\(\)\)/.test(k), "fragt das Handy erneut und gibt das Mikrofon gleich wieder frei");
-  assert.ok(/diktatStart\(w\.ziel, w\.nachSenden, \{ einmal: w\.einmal \}\)/.test(k) && /mikroHilfe\(weiter\)/.test(html), "danach geht das Diktat im selben Feld weiter");
+  assert.ok(/diktatStart\(w\.ziel, w\.nachSenden, \{ einmal: w\.einmal \}\)/.test(k) && /mikroHilfe\(weiter[,)]/.test(html), "danach geht das Diktat im selben Feld weiter");
   assert.ok(/st\.onchange = /.test(k) && /#mikroHilfe\.blatt \{ z-index: 9100; \}/.test(html), "Erlaubnis aus den Einstellungen wird erkannt, Fenster liegt oben");
 }
 // 403. 2.23.54: Diktieren fragt das Handy direkt – auch bei Stand „gesperrt“ (KC-CLUB-MIKRO-WIE-CHAT)
@@ -4096,6 +4096,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const mf = html.slice(html.indexOf("async function mikroFreigabe"), html.indexOf("// KC-CLUB-MIKRO-SOFORT (2.23.53"));
   assert.ok(!/if \(zustand === "denied"\) return true;/.test(mf), "„gesperrt“ überspringt die Handy-Abfrage nicht mehr");
   assert.ok(/zustand !== "denied" && !erklaert && !\(await frage\(/.test(mf) && /getUserMedia\(\{ audio: true \}\)/.test(mf), "Erklärung nur beim ersten Mal, dann immer Handy-Abfrage");
+}
+// 404. 2.23.55: Diktieren – Mikrofon der App vs. Spracherkennung von Google unterscheiden (KC-CLUB-MIKRO-URSACHE)
+{
+  const k = html.slice(html.indexOf("// KC-CLUB-MIKRO-URSACHE (2.23.55"), html.indexOf("async function diktatStart("));
+  assert.ok(/if \(MIKRO_DIAG\.stand === "granted" && IST_ANDROID\) return mikroHilfeGoogle\(\);/.test(k) && /Apps<\/b> → <b>Google<\/b> → <b>Berechtigungen<\/b> → <b>Mikrofon<\/b>/.test(k), "Google-Spracherkennung als Ursache mit Anleitung");
+  assert.ok(/🎤 Tastatur-Mikrofon nutzen/.test(k) && /NotReadable\|Abort\|TrackStart/.test(k), "Tastatur-Mikrofon als sicherer Weg, belegt ≠ gesperrt");
+  assert.ok(/api\("diagnose", \{ art: "mikro", daten: \{ sprache: MIKRO_DIAG\.sprache/.test(k), "Ursache als Code ins Fehlerprotokoll");
+  assert.ok(/if \(zweiter && IST_ANDROID\)[^\n]*mikroHilfeGoogle\(\)/.test(html) && /e\.onresult = \(ev\) => \{ DT\.zweiter = false;/.test(html), "nach erfolgreicher Freigabe erneut gesperrt → Google-Anleitung");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

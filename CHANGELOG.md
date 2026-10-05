@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.23.55 – 2026-10-05 – 🎙️ Diktieren: richtige Ursache erkennen (Fund Hansi)
+- KC-CLUB-MIKRO-URSACHE: Sprachnachrichten brauchen nur das Mikrofon, Diktieren zusätzlich die Spracherkennung von Google – die hat auf
+  Android eine eigene Mikrofon-Erlaubnis. Darf Chrome das Mikrofon (Stand „granted“ oder „Jetzt freischalten“ klappt) und die
+  Spracherkennung meldet trotzdem „gesperrt“, zeigt die App jetzt „Die Spracherkennung darf nicht zuhören“ mit der Anleitung
+  (Einstellungen → Apps → Google bzw. Google-Sprachdienste → Berechtigungen → Mikrofon → Zulassen) und „🔄 Nochmal probieren“.
+  Immer dabei: „🎤 Tastatur-Mikrofon nutzen“ (geht auf jedem Handy) und „⌨️ Weiter tippen“. „Jetzt freischalten“ versucht es bei belegtem
+  Mikrofon ein zweites Mal; „belegt“ wird nicht mehr als „gesperrt“ gemeldet. Kleine Code-Zeile im Fenster und diagnose_mikro im
+  Fehlerprotokoll (nur Codes). Test 404.
+
 ## 2.23.54 – 2026-10-05 – 🎙️ Diktieren fragt das Handy wie die Sprachnachricht (Fund Hansi)
 - KC-CLUB-MIKRO-WIE-CHAT: Beim Diktieren (z. B. Frag Twinkey) fragt die App das Handy jetzt immer direkt nach dem Mikrofon – wie die
   Sprachnachricht im Chat („Nur dieses Mal“ / „Bei Nutzung der App erlauben“). Bisher wurde bei Stand „gesperrt“ die Abfrage übersprungen

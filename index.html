@@ -2895,7 +2895,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.54"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.55"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -5648,42 +5648,74 @@ async function mikroFreigabe() {
 // „🎙️ Jetzt freischalten“ fragt das Handy erneut (geht, solange die Sperre nicht endgültig ist); klappt es, läuft das Diktat im selben
 // Feld sofort weiter. Sonst zeigt das Fenster die Anleitung für genau dieses Gerät; ändert man die Erlaubnis in den Einstellungen,
 // merkt die App das (permissions.onchange) und macht von selbst weiter. „⌨️ Weiter tippen“ schließt und setzt den Cursor ins Feld.
-let MIKRO_WEITER = null;
-function mikroHilfe(weiter) {
-  MIKRO_WEITER = weiter || null;
+let MIKRO_WEITER = null, MIKRO_DIAG = {};
+// KC-CLUB-MIKRO-URSACHE (2.23.55, Fund Hansi): Die Sprachnachricht im Chat braucht nur das Mikrofon (Chrome fragt „Nur dieses Mal /
+// Bei Nutzung erlauben“). Diktieren braucht zusätzlich die Spracherkennung von Google – die hat auf Android eine EIGENE Mikrofon-Erlaubnis.
+// Darf Chrome das Mikrofon (Stand „granted“ bzw. Abfrage klappt), meldet die Spracherkennung aber „not-allowed“, liegt es an Google:
+// dann die passende Anleitung (Google-App → Berechtigungen → Mikrofon) und als sicherer Weg das 🎤 der Handy-Tastatur.
+// Die genauen Codes gehen als diagnose_mikro ins Fehlerprotokoll (nur Codes, kein Inhalt).
+const MIKRO_ANL = { android: "<b>Android:</b> oben neben der Adresse auf das Schloss bzw. ⓘ tippen → <b>Berechtigungen</b> → <b>Mikrofon</b> → <b>Zulassen</b>. Bei der installierten App: lange auf das App-Symbol drücken → <b>App-Info</b> → <b>Berechtigungen</b> → <b>Mikrofon</b> → <b>Zulassen</b>.",
+  ios: "<b>iPhone/iPad:</b> <b>Einstellungen</b> → <b>Safari</b> → <b>Mikrofon</b> → <b>Fragen</b> oder <b>Erlauben</b>. Dann zurück in die App.",
+  pc: "<b>PC:</b> links neben der Adresse auf das Schloss klicken → <b>Mikrofon</b> → <b>Zulassen</b>." };
+async function mikroStand() { try { return (await navigator.permissions?.query({ name: "microphone" }))?.state || "?"; } catch { return "?"; } }
+async function mikroHilfe(weiter, diag = {}) {
+  MIKRO_WEITER = weiter || null; MIKRO_DIAG = { ...diag, stand: await mikroStand() };
+  // Chrome darf das Mikrofon schon → es liegt an der Spracherkennung (Google), nicht an der App
+  if (MIKRO_DIAG.stand === "granted" && IST_ANDROID) return mikroHilfeGoogle();
   const geraet = IST_IOS ? "ios" : IST_ANDROID ? "android" : "pc";
-  const anl = { android: "<b>Android:</b> oben neben der Adresse auf das Schloss bzw. ⓘ tippen → <b>Berechtigungen</b> → <b>Mikrofon</b> → <b>Zulassen</b>. Bei der installierten App: lange auf das App-Symbol drücken → <b>App-Info</b> → <b>Berechtigungen</b> → <b>Mikrofon</b> → <b>Zulassen</b>.",
-    ios: "<b>iPhone/iPad:</b> <b>Einstellungen</b> → <b>Safari</b> → <b>Mikrofon</b> → <b>Fragen</b> oder <b>Erlauben</b>. Dann zurück in die App.",
-    pc: "<b>PC:</b> links neben der Adresse auf das Schloss klicken → <b>Mikrofon</b> → <b>Zulassen</b>." };
   const f = blattAuf("mikroHilfe", `<h3 style="margin:0">🎙️ Mikrofon ist gesperrt</h3>
     <p style="margin:6px 0">Die Köcheclub-App darf dein Mikrofon gerade nicht benutzen. Tippe auf <b>„🎙️ Jetzt freischalten“</b> und dann bei deinem Handy auf <b>„Zulassen“</b> bzw. <b>„Erlauben“</b> – danach geht es gleich weiter.</p>
     <button class="knopf haupt" data-m="frei">🎙️ Jetzt freischalten</button>
-    <div id="mikroAnl" class="versteckt"><p style="margin:6px 0"><b>Das Handy fragt nicht mehr nach – dann einmal selbst erlauben:</b></p><p style="margin:4px 0">${anl[geraet]}</p>
-      <details><summary class="hinweis">Andere Geräte</summary>${Object.entries(anl).filter(([k]) => k !== geraet).map(([, t]) => `<p style="margin:4px 0">${t}</p>`).join("")}</details>
+    <div id="mikroAnl" class="versteckt"><p style="margin:6px 0"><b>Das Handy fragt nicht mehr nach – dann einmal selbst erlauben:</b></p><p style="margin:4px 0">${MIKRO_ANL[geraet]}</p>
+      <details><summary class="hinweis">Andere Geräte</summary>${Object.entries(MIKRO_ANL).filter(([k]) => k !== geraet).map(([, t]) => `<p style="margin:4px 0">${t}</p>`).join("")}</details>
       <p class="hinweis" style="margin:6px 0">Sobald du es erlaubt hast, macht die App von selbst weiter – oder tippe auf <b>„🔄 Nochmal probieren“</b>.</p>
       <button class="knopf haupt" data-m="nochmal">🔄 Nochmal probieren</button></div>
-    <button class="knopf" data-m="tippen">⌨️ Weiter tippen</button>`);
-  f.querySelectorAll("[data-m]").forEach((b) => (b.onclick = () => (b.dataset.m === "tippen" ? mikroWeiterTippen() : mikroJetztFrei(b))));
+    ${MIKRO_TASTATUR}<button class="knopf" data-m="tippen">⌨️ Weiter tippen</button>${mikroCodeHtml()}`);
+  mikroKnoepfe(f);
   try { navigator.permissions?.query({ name: "microphone" }).then((st) => { st.onchange = () => { if (st.state === "granted" && $("mikroHilfe")) mikroWeiterDiktieren(); }; }).catch(() => {}); } catch {}
+  mikroMelden();
 }
+function mikroHilfeGoogle() {
+  const f = blattAuf("mikroHilfe", `<h3 style="margin:0">🎙️ Die Spracherkennung darf nicht zuhören</h3>
+    <p style="margin:6px 0">Die Köcheclub-App darf dein Mikrofon benutzen (deshalb klappen Sprachnachrichten). Zum <b>Diktieren</b> wandelt aber die <b>Spracherkennung von Google</b> deine Worte in Text um – und die hat auf deinem Handy keine Mikrofon-Erlaubnis.</p>
+    <p style="margin:4px 0"><b>So schaltest du sie frei:</b> Handy-<b>Einstellungen</b> → <b>Apps</b> → <b>Google</b> → <b>Berechtigungen</b> → <b>Mikrofon</b> → <b>Zulassen</b>. Bei manchen Handys heißt die App <b>„Google-Sprachdienste“</b> bzw. <b>„Speech Services by Google“</b> – dort genauso.</p>
+    <p class="hinweis" style="margin:6px 0">Danach zurück in die Köcheclub-App und <b>„🔄 Nochmal probieren“</b> tippen.</p>
+    <button class="knopf haupt" data-m="nochmal">🔄 Nochmal probieren</button>
+    ${MIKRO_TASTATUR}<button class="knopf" data-m="tippen">⌨️ Weiter tippen</button>${mikroCodeHtml()}`);
+  mikroKnoepfe(f); mikroMelden();
+}
+const MIKRO_TASTATUR = `<p class="hinweis" style="margin:8px 0 4px">💡 Geht immer: <b>Mit dem Tastatur-Mikrofon sprechen</b> – ins Feld tippen und auf der Handy-Tastatur das 🎤 antippen.</p><button class="knopf" data-m="tastatur">🎤 Tastatur-Mikrofon nutzen</button>`;
+const mikroCodeHtml = () => `<p class="hinweis" style="font-size:.75rem;margin:8px 0 0">Code: ${esc([MIKRO_DIAG.sprache, MIKRO_DIAG.gum, MIKRO_DIAG.stand].filter(Boolean).join(" · ") || "–")}</p>`;
+function mikroKnoepfe(f) {
+  f.querySelectorAll("[data-m]").forEach((b) => (b.onclick = () => (b.dataset.m === "tippen" ? mikroWeiterTippen() : b.dataset.m === "tastatur" ? mikroWeiterTippen(true) : mikroJetztFrei(b))));
+}
+function mikroMelden() { api("diagnose", { art: "mikro", daten: { sprache: MIKRO_DIAG.sprache || "", gum: MIKRO_DIAG.gum || "", stand: MIKRO_DIAG.stand || "", android: IST_ANDROID } }).catch(() => {}); }
 async function mikroJetztFrei(knopf) {
   knopf.disabled = true;
-  let ok = false;
-  try { const s = await navigator.mediaDevices.getUserMedia({ audio: true }); s.getTracks().forEach((x) => x.stop()); ok = true; } catch {}
-  knopf.disabled = false;
+  let ok = false, name = "";
+  for (let v = 0; v < 2 && !ok; v++) { // belegt (z. B. Spracherkennung gibt das Mikrofon gerade frei) → kurz warten, nochmal
+    try { const s = await navigator.mediaDevices.getUserMedia({ audio: true }); s.getTracks().forEach((x) => x.stop()); ok = true; }
+    catch (e) { name = e?.name || "Fehler"; if (!/NotReadable|Abort|TrackStart/.test(name)) break; await new Promise((r) => setTimeout(r, 900)); }
+  }
+  knopf.disabled = false; MIKRO_DIAG.gum = ok ? "ok" : name; MIKRO_DIAG.stand = await mikroStand();
   if (ok) return mikroWeiterDiktieren();
-  $("mikroAnl")?.classList.remove("versteckt"); knopf.classList.add("versteckt");
-  melde("🎙️ Das Handy hat nicht gefragt – bitte einmal selbst erlauben (Anleitung im Fenster).", true);
+  if (/NotAllowed|Security/.test(name)) { $("mikroAnl")?.classList.remove("versteckt"); if (knopf.dataset.m === "frei") knopf.classList.add("versteckt");
+    melde("🎙️ Das Handy hat nicht gefragt – bitte einmal selbst erlauben (Anleitung im Fenster).", true); }
+  else melde("🎙️ Das Mikrofon ist gerade belegt – z. B. von einem Anruf oder einer anderen App. Bitte gleich nochmal.", true);
+  mikroMelden();
 }
 function mikroWeiterDiktieren() {
   lsSetzen(MIKRO_OK, "1"); $("mikroHilfe")?.remove();
   const w = MIKRO_WEITER; MIKRO_WEITER = null;
+  // klappte das Mikrofon schon und die Spracherkennung meldet sich gleich wieder → beim nächsten Fehler die Google-Anleitung
+  if (w) w.zweiter = true;
   melde("🎙️ Mikrofon ist frei – sprich einfach los.");
-  if (w && $(w.ziel)) diktatStart(w.ziel, w.nachSenden, { einmal: w.einmal });
+  if (w && $(w.ziel)) { DT.zweiter = true; diktatStart(w.ziel, w.nachSenden, { einmal: w.einmal }); }
 }
-function mikroWeiterTippen() {
+function mikroWeiterTippen(tastatur) {
   const w = MIKRO_WEITER; MIKRO_WEITER = null; $("mikroHilfe")?.remove();
   const feld = w && $(w.ziel); if (feld) { feld.focus(); try { feld.setSelectionRange(feld.value.length, feld.value.length); } catch {} }
+  if (tastatur) melde("⌨️ Jetzt auf der Handy-Tastatur das 🎤 antippen und sprechen.");
 }
 async function diktatStart(ziel, nachSenden, opt = {}) { // 2.22.0: auch für andere Felder (z. B. Notfall-Meldung) – ziel = Feld-ID, nachSenden = was „Senden“ tut
   if (!DIKTAT_GEHT) return ziel ? melde("Dieses Handy kann nicht diktieren – bitte tippen.", true) : spracheStart();
@@ -5703,7 +5735,7 @@ async function diktatStart(ziel, nachSenden, opt = {}) { // 2.22.0: auch für an
 function diktatHoeren() {
   const Erk = window.SpeechRecognition || window.webkitSpeechRecognition, e = new Erk(); DT.erk = e;
   e.lang = "de-DE"; e.continuous = !DIKTAT_ANDROID; e.interimResults = true;
-  e.onresult = (ev) => {
+  e.onresult = (ev) => { DT.zweiter = false;
     // jedes Mal alle Ergebnisse dieser Hör-Runde neu zusammensetzen (nicht anhängen) – so entstehen keine Wiederholungen
     let fin = [], neu = "";
     for (let i = 0; i < ev.results.length; i++) { const r = ev.results[i], t = (r[0]?.transcript || "").trim(); if (!t) continue; if (r.isFinal) fin = diktatMerge(fin, t, true); else neu = t; }
@@ -5713,7 +5745,11 @@ function diktatHoeren() {
     feld.value = (DT.basis ? DT.basis.replace(/\s*$/, " ") : "") + gesagt; feld.dispatchEvent(new Event("input", { bubbles: true }));
     if ($("diktatText")) $("diktatText").textContent = gesagt || "…";
   };
-  e.onerror = (ev) => { if (ev.error === "not-allowed" || ev.error === "service-not-allowed") { const weiter = { ziel: DT.ziel, nachSenden: DT.nachSenden, einmal: DT.einmal }; lsSetzen(MIKRO_OK, ""); diktatEnde("fertig"); mikroHilfe(weiter); } }; // 2.22.12: Anleitung statt kurzer Meldung
+  e.onerror = (ev) => { if (ev.error === "not-allowed" || ev.error === "service-not-allowed") { const weiter = { ziel: DT.ziel, nachSenden: DT.nachSenden, einmal: DT.einmal }, zweiter = DT.zweiter; DT.zweiter = false;
+    lsSetzen(MIKRO_OK, ""); diktatEnde("fertig");
+    // KC-CLUB-MIKRO-URSACHE: Mikrofon war gerade frei und trotzdem „not-allowed“ → Spracherkennung (Google) ist gesperrt
+    if (zweiter && IST_ANDROID) { MIKRO_WEITER = weiter; MIKRO_DIAG = { sprache: ev.error, gum: "ok", stand: "nach-freigabe" }; return mikroHilfeGoogle(); }
+    mikroHilfe(weiter, { sprache: ev.error }); } else if (ev.error === "audio-capture") { diktatEnde("fertig"); melde("🎙️ Das Mikrofon ist gerade belegt – z. B. von einem Anruf oder einer anderen App. Bitte gleich nochmal.", true); } }; // 2.22.12: Anleitung statt kurzer Meldung
   // Chrome hört nach einer Pause von selbst auf – solange das Fenster offen ist, weiter zuhören (höchstens 5 Minuten)
   e.onend = () => { for (const t of [...DT.sitzung, DT.zwischen]) DT.vorher = diktatMerge(DT.vorher, t); DT.sitzung = []; DT.zwischen = ""; // Runde abschließen
     if (DT.aktiv && DT.einmal && DT.vorher.length) return diktatEnde("fertig"); // 2.23.47: Suche – nach der ersten Pause fertig
