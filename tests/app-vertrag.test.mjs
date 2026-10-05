@@ -4304,6 +4304,19 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/sendenGewaehlt\("club_nachricht", ziel, \["push", "email"\]/.test(g) && /const ziel = await adminIds\(\)/.test(g), "Push und E-Mail an die Admins");
   assert.ok(/"verbindung_gemeldet"\)\.gte\("zeit"/.test(g) && /\(count \?\? 0\) >= 3\) throw/.test(g) && /\.slice\(0, 30\)/.test(g) && /txt\(w\[1\], 200\)/.test(g), "Bremse und Längengrenzen");
 }
+// 428. 2.23.77: einzelne Personen sperren – Hinweisfenster Wartung / nicht erreichbar (KC-CLUB-PERSON-SPERRE)
+{
+  assert.ok(/const gesperrt = ich\.admin \? null : await sperreFuer\(ich\.person_id\);[^\n]*\n\s*if \(gesperrt\) return json\(\{ error: SPERRE_TEXT\[gesperrt\] \|\| SPERRE_TEXT\.wartung, gesperrt \}, 423\);/.test(server), "Server sperrt nach der Anmeldung, nie Admins");
+  assert.ok(/Zur Zeit führen wir für Sie Wartungsarbeiten durch\. Bitte versuchen Sie es später nochmals\. Wir bitten um Verständnis\./.test(server), "Wortlaut Wartung");
+  assert.ok(/if \(!error\) \{ SPERREN\.liste = /.test(server), "Lesefehler sperren nie alle");
+  const g = server.slice(server.indexOf('case "sperre_liste"'), server.indexOf('case "wartung_setzen"'));
+  assert.equal((g.match(/nurAdmin\(ich\);/g) || []).length, 3, "alle drei Aktionen nur Admin");
+  assert.ok(/x !== ich\.person_id && !admins\.has\(x\)/.test(g) && /aktiv: false, aufgehoben_am: jetzt\(\)/.test(g) && /"person_gesperrt"/.test(g) && /"person_entsperrt"/.test(g), "nicht sich selbst/Admins, Aufheben ohne Löschen, Protokoll");
+  assert.ok(/if \(r\.status === 423 && j\?\.gesperrt\) \{ sperreZeigen\(j\.gesperrt, j\.error\);/.test(html) && /function sperreZeigen\(art, text\)/.test(html), "App zeigt das Hinweisfenster");
+  assert.ok(/adKnopf\("🔒 Personen sperren", "sperreAuswahl\(\)", true\)/.test(html) && /api\("sperre_setzen", \{ ids: \[\.\.\.gew\], art \}/.test(html) && /api\("sperre_aufheben"/.test(html), "Verwaltung im Wartungs-Blatt");
+  const mig = lies("supabase/migrations/20261005_kc_club_v22377_person_sperre.sql");
+  assert.ok(/enable row level security/.test(mig) && /revoke all on kc_club_person_sperre from anon, authenticated/.test(mig) && /check \(art in \('wartung', 'stoerung'\)\)/.test(mig), "Tabelle geschützt");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

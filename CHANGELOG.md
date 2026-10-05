@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.23.77 – 2026-10-05 – 🔒 Einzelne Personen sperren (Wunsch Hansi)
+- KC-CLUB-PERSON-SPERRE: Admin-Register → 🛠️ Wartung → „🔒 Personen sperren“: eine oder mehrere Personen ankreuzen (Suche), wählen, was sie
+  sehen – 🔵 „Wartungsarbeiten“ („Zur Zeit führen wir für Sie Wartungsarbeiten durch. Bitte versuchen Sie es später nochmals. Wir bitten um
+  Verständnis.“) oder ⚪ „Server nicht erreichbar“ – Rückfrage, sperren. Liste der Gesperrten mit „🔓 Freigeben“.
+  Server: nach der Anmeldung Antwort 423 mit Art für Gesperrte (alle Aktionen); Admins und man selbst können nicht gesperrt werden;
+  Liste je Instanz 15 s im Speicher, Lesefehler sperren nie alle (Regel 12). Protokoll person_gesperrt / person_entsperrt.
+  Migration 20261005_kc_club_v22377_person_sperre.sql (neue Tabelle, RLS an, keine Policies; Aufheben = aktiv false). Test 428.
+
 ## 2.23.76 – 2026-10-05 – 📶 LED-Fenster: Drucken + an Admin senden (Wunsch Hansi)
 - KC-CLUB-VERBINDUNG-MELDEN: Im Verbindungs-Fenster (Tippen auf die LEDs) „🖨️ Drucken“ (A4-Bericht über die Druckvorschau) und
   „📨 An Admin senden“; Mitglieder haben in ihrer einfachen Ansicht „📨 Ergebnis an Hansi senden“. Inhalt: Server-LED, Communicator-LED,

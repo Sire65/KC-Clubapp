@@ -41,7 +41,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.23.76";
+const SERVER_VERSION = "2.23.77";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -2050,6 +2050,20 @@ async function adminIds(): Promise<string[]> {
   const { data } = await db.from("kc_club_rollen").select("person_id").eq("ist_admin", true);
   return (data ?? []).map((x: any) => x.person_id);
 }
+// KC-CLUB-PERSON-SPERRE (2.23.77, Wunsch Hansi): vorübergehend gesperrte Personen sehen nur ein Hinweisfenster (Wartung / nicht erreichbar).
+// Liste je Server-Instanz 15 s im Speicher; Lesefehler → alte Liste behalten (nie den ganzen Betrieb blockieren, Regel 12). Admins nie gesperrt.
+const SPERRE_TEXT: Record<string, string> = {
+  wartung: "Zur Zeit führen wir für Sie Wartungsarbeiten durch. Bitte versuchen Sie es später nochmals. Wir bitten um Verständnis.",
+  stoerung: "Unser Server ist zurzeit nicht erreichbar. Bitte versuchen Sie es später nochmals. Wir bitten um Verständnis.",
+};
+const SPERREN = { bis: 0, liste: new Map<string, string>() };
+async function sperreFuer(personId: string): Promise<string | null> {
+  if (Date.now() > SPERREN.bis) {
+    const { data, error } = await db.from("kc_club_person_sperre").select("person_id,art").eq("aktiv", true);
+    if (!error) { SPERREN.liste = new Map((data ?? []).map((x: any) => [x.person_id, x.art])); SPERREN.bis = Date.now() + 15_000; }
+  }
+  return SPERREN.liste.get(personId) ?? null;
+}
 async function archivFremdversuch(ich: Ich, o: any, was: string) {
   // je Person und Ordner höchstens eine Meldung pro Stunde (Protokoll immer)
   const { count } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("aktion", "archiv_fremdzugriff")
@@ -3984,6 +3998,8 @@ Köcheclub Werne`,
 
     const tAnm = Date.now();
     const ich = await anmelden(req);
+    const gesperrt = ich.admin ? null : await sperreFuer(ich.person_id); // KC-CLUB-PERSON-SPERRE (2.23.77)
+    if (gesperrt) return json({ error: SPERRE_TEXT[gesperrt] || SPERRE_TEXT.wartung, gesperrt }, 423);
     const anmeldungMs = Date.now() - tAnm;
     const antwort = await aktionAusfuehren(a, p, ich, req, t0Anfrage, anmeldungMs);
     return DB_AUS.n !== dbAusVorher ? dbWeg() : antwort; // KC-CLUB-DB-ZEITGRENZE: kein halbes Ergebnis
@@ -9174,6 +9190,38 @@ Köcheclub-App`,
 
       case "communicator_status": {
         return json(await communicatorStatus(ich, true));
+      }
+
+      // ----- KC-CLUB-PERSON-SPERRE (2.23.77, Wunsch Hansi): eine oder mehrere Personen vorübergehend sperren -----
+      case "sperre_liste": {
+        nurAdmin(ich);
+        const { data } = await db.from("kc_club_person_sperre").select("person_id,art,seit").eq("aktiv", true).order("seit", { ascending: false });
+        return json({ sperren: data ?? [] });
+      }
+      case "sperre_setzen": {
+        nurAdmin(ich);
+        const art = p.art === "stoerung" ? "stoerung" : "wartung";
+        const admins = new Set(await adminIds());
+        const ids: string[] = [...new Set<string>((Array.isArray(p.ids) ? p.ids : []).map((x: unknown) => txt(x, 40)))].filter((x) => x && x !== ich.person_id && !admins.has(x)).slice(0, 100);
+        if (!ids.length) throw new Fehler("Bitte mindestens eine Person auswählen (Admins können nicht gesperrt werden).", 400);
+        const { data: leute } = await db.from("kc_core_people").select("person_id").in("person_id", ids);
+        const gueltig = (leute ?? []).map((x: any) => x.person_id);
+        if (!gueltig.length) throw new Fehler("Diese Personen gibt es nicht.", 400);
+        const { error } = await db.from("kc_club_person_sperre").upsert(gueltig.map((id: string) => ({ person_id: id, aktiv: true, art, seit: jetzt(), von: ich.person_id, aufgehoben_am: null })), { onConflict: "person_id" });
+        if (error) throw new Fehler("Sperre konnte nicht gespeichert werden.", 500);
+        SPERREN.bis = 0;
+        await protokoll(ich.person_id, "person_gesperrt", { ids: gueltig, art });
+        return json({ ok: true, gesperrt: gueltig.length });
+      }
+      case "sperre_aufheben": {
+        nurAdmin(ich);
+        const ids = (Array.isArray(p.ids) ? p.ids : [p.id]).map((x: unknown) => txt(x, 40)).filter(Boolean).slice(0, 100);
+        if (!ids.length) throw new Fehler("Keine Person angegeben.", 400);
+        const { error } = await db.from("kc_club_person_sperre").update({ aktiv: false, aufgehoben_am: jetzt() }).in("person_id", ids).eq("aktiv", true);
+        if (error) throw new Fehler("Sperre konnte nicht aufgehoben werden.", 500);
+        SPERREN.bis = 0;
+        await protokoll(ich.person_id, "person_entsperrt", { ids });
+        return json({ ok: true });
       }
 
       case "wartung_setzen": {

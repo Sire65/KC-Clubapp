@@ -2925,7 +2925,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.76"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.77"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -8240,6 +8240,7 @@ async function apiRoh(action, daten = {}, zweiterVersuch = false) {
   const leitungKaputt = (r.status >= 502 && r.status <= 504) || (r.status >= 500 && !j);
   vbEnde(!leitungKaputt, performance.now() - t0, leitungKaputt ? "Serverfehler " + r.status : "");
   if (!j && !leitungKaputt && r.ok) throw new Error("Unerwartete Antwort vom Server.");
+  if (r.status === 423 && j?.gesperrt) { sperreZeigen(j.gesperrt, j.error); throw Object.assign(new Error(j.error || "Zurzeit nicht verfügbar."), { gesperrt: true }); } // KC-CLUB-PERSON-SPERRE (2.23.77)
   if (r.status === 401) { $("app").classList.add("versteckt"); $("gesperrt").classList.remove("versteckt"); $("linkUngueltig").classList.remove("versteckt"); throw new Error(j?.error || "Kein Zugang"); }
   if (!r.ok) throw Object.assign(new Error(j?.error || (leitungKaputt ? "Der Server ist gerade kurz nicht erreichbar – bitte gleich nochmal versuchen." : "Fehler " + r.status)), { leitung: leitungKaputt });
   return j;
@@ -9736,7 +9737,12 @@ function adBlatt(id) {
     case "wartung":
       html = `${kopf("🛠️", "Wartung")}${adZeile(z[0], "Wartungsmodus", z[1] + (r?.wartung?.hinweis ? " – " + r.wartung.hinweis : ""))}
         <p class="hinweis" style="margin:0">Wartung ankündigen: Alle Mitglieder sehen die blaue LED und deinen Hinweis (z. B. „bis 20 Uhr“).</p>
-        <div class="knoepfe">${adKnopf(r?.wartung?.an ? "✅ Wartung beenden" : "🔧 Wartung ankündigen", "adWartung()", true)}</div>`;
+        <div class="knoepfe">${adKnopf(r?.wartung?.an ? "✅ Wartung beenden" : "🔧 Wartung ankündigen", "adWartung()", true)}</div>
+        <b style="margin-top:6px">🔒 Einzelne Personen sperren</b>
+        <p class="hinweis" style="margin:0">Gesperrte sehen beim Öffnen nur ein Hinweisfenster (🔵 Wartungsarbeiten oder ⚪ Server nicht erreichbar). Alle anderen merken nichts. Admins können nicht gesperrt werden.</p>
+        <div id="adSperren"><p class="hinweis" style="margin:0">Wird geladen …</p></div>
+        <div class="knoepfe">${adKnopf("🔒 Personen sperren", "sperreAuswahl()", true)}</div>`;
+      setTimeout(sperrenLaden, 0);
       break;
     case "inkognito":
       html = `${kopf("🕶️", "Inkognito")}${adZeile("keine", "Inkognito", inkognitoAn() ? "AN – du erscheinst nicht als online" : "aus")}
@@ -9746,6 +9752,65 @@ function adBlatt(id) {
       AD.offen = null; $("adBlatt")?.remove(); return id === "fehler" ? fpAdmin() : nzAdmin();
   }
   blattAuf("adBlatt", `<div class="adblatt" style="display:grid;gap:8px">${einwHtml("b-admin")}${html}${fuss}</div>`);
+}
+// ---------- KC-CLUB-PERSON-SPERRE (2.23.77, Wunsch Hansi): eine oder mehrere Personen vorübergehend sperren ----------
+// Der Server antwortet Gesperrten mit 423 + Art; die App zeigt dann nur das Hinweisfenster. Sperren/Freigeben nur Admin (Wartungs-Blatt).
+const SPERRE_ART = { wartung: { sym: "🔧", t: "Wartungsarbeiten", farbe: "linear-gradient(160deg,#1d4f91,#2f6fc1)", kurz: "🔵 Wartungsarbeiten" },
+  stoerung: { sym: "📡", t: "Server nicht erreichbar", farbe: "linear-gradient(160deg,#4a5563,#6b7685)", kurz: "⚪ Server nicht erreichbar" } };
+function sperreZeigen(art, text) {
+  if (document.getElementById("sperreFenster")) return;
+  const a = SPERRE_ART[art] || SPERRE_ART.wartung;
+  const f = document.createElement("div"); f.id = "sperreFenster"; f.setAttribute("role", "alertdialog"); f.setAttribute("aria-modal", "true");
+  f.style.cssText = `position:fixed;inset:0;z-index:99999;display:grid;place-items:center;padding:24px;background:${a.farbe};color:#fff;text-align:center`;
+  f.innerHTML = `<div style="max-width:420px"><div style="font-size:3.4rem">${a.sym}</div><h2 style="margin:8px 0 12px;color:#fff">${esc(a.t)}</h2>
+    <p style="font-size:1.15rem;line-height:1.45;margin:0 0 22px">${esc(text || "Bitte versuchen Sie es später nochmals.")}</p>
+    <button class="knopf" style="background:#fff;color:#1d2b44;min-height:48px" onclick="location.reload()">↻ Später nochmal versuchen</button></div>`;
+  document.body.appendChild(f); document.body.style.overflow = "hidden";
+}
+async function sperrenLaden() {
+  const z = $("adSperren"); if (!z) return;
+  try {
+    const [{ sperren }] = await Promise.all([api("sperre_liste"), MITGLIEDER ? null : mitgliederHolen().catch(() => null)]);
+    if (!$("adSperren")) return;
+    $("adSperren").innerHTML = sperren.length ? `<div style="display:grid;gap:6px">${sperren.map((x) => `<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--linie);border-radius:12px;background:var(--karte)">
+        <span style="flex:1"><b>${esc(vfName(x.person_id))}</b><br><small class="hinweis">${SPERRE_ART[x.art]?.kurz || esc(x.art)} · seit ${esc(zeitKurz(x.seit))} Uhr</small></span>
+        <button class="knopf klein" onclick="sperreAufheben('${esc(x.person_id)}', this)">🔓 Freigeben</button></div>`).join("")}</div>`
+      : '<p class="hinweis" style="margin:0">Zurzeit ist niemand gesperrt.</p>';
+  } catch (e) { if ($("adSperren")) $("adSperren").innerHTML = `<p class="hinweis" style="margin:0">⚠️ Liste nicht geladen: ${esc(e.message)}</p>`; }
+}
+async function sperreAuswahl() {
+  if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return meldeFehler(e); }
+  const gew = new Set(), alle = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id);
+  let art = "wartung";
+  const f = blattAuf("sperreBlatt", `<h3 style="margin:0">🔒 Wen sperren?</h3>
+    <div class="feld" style="margin:6px 0 0"><b>Was sehen die Gesperrten?</b><div class="hl-chips" id="psArt"></div></div>
+    <input id="psSuche" type="search" placeholder="🔍 Name suchen …" style="width:100%;box-sizing:border-box;margin:6px 0">
+    <div id="psListe" class="ta-liste wahlliste" style="max-height:40vh;overflow:auto"></div>
+    <div class="knoepfe bs-fuss"><button class="knopf haupt" id="psOk">🔒 Sperren</button><button class="knopf" onclick="$('sperreBlatt').remove()">Abbrechen</button></div>`);
+  f.style.zIndex = "2100"; f.classList.add("sc-blatt"); f.onclick = null;
+  const artZeigen = () => { $("psArt").innerHTML = Object.entries(SPERRE_ART).map(([k, a]) => `<button type="button" class="chip${art === k ? " an" : ""}" data-art="${k}">${a.kurz}</button>`).join("");
+    $("psArt").querySelectorAll("[data-art]").forEach((b) => (b.onclick = () => { art = b.dataset.art; artZeigen(); })); };
+  const zeichnen = () => { const q = $("psSuche").value.toLowerCase();
+    $("psListe").innerHTML = alle.filter((m) => !q || m.name.toLowerCase().includes(q)).map((m) => `<label><input type="checkbox" data-p="${esc(m.person_id)}" ${gew.has(m.person_id) ? "checked" : ""}> <span style="flex:1">${esc(m.name)}</span></label>`).join("");
+    $("psListe").querySelectorAll("[data-p]").forEach((c) => (c.onchange = () => { c.checked ? gew.add(c.dataset.p) : gew.delete(c.dataset.p); $("psOk").textContent = `🔒 Sperren (${gew.size})`; }));
+    $("psOk").textContent = `🔒 Sperren (${gew.size})`; };
+  $("psSuche").oninput = zeichnen;
+  $("psOk").onclick = async (e) => {
+    if (!gew.size) return melde("Bitte mindestens eine Person ankreuzen.", true);
+    const namen = [...gew].map(vfName).join(", ");
+    if (!(await frage(`${namen} sperren?\n\nSie sehen dann beim Öffnen nur: ${SPERRE_ART[art].kurz}. Freigeben jederzeit hier unter 🛠️ Wartung.`, { ja: "🔒 Ja, sperren", nein: "Abbrechen" }))) return;
+    await einmal(e.currentTarget, async () => {
+      try { const r = await api("sperre_setzen", { ids: [...gew], art }, { warten: true }); f.remove(); melde(`🔒 ${r.gesperrt} Person${r.gesperrt === 1 ? "" : "en"} gesperrt`); sperrenLaden(); }
+      catch (x) { meldeFehler(x); }
+    });
+  };
+  artZeigen(); zeichnen();
+}
+async function sperreAufheben(pid, knopf) {
+  await einmal(knopf, async () => {
+    try { await api("sperre_aufheben", { ids: [pid] }, { warten: true }); melde(`🔓 ${vfName(pid)} ist wieder freigegeben`); sperrenLaden(); }
+    catch (e) { meldeFehler(e); }
+  });
 }
 const kanalF = (k) => ({ ok: "gruen", stoerung: "rot", aus: "grau" }[k?.zustand] || "grau");
 // Neustart: nur über die Supabase-Verwaltung (Anmeldung dort) – vorher sagen, was passiert (kritische Aktion)
