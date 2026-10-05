@@ -41,7 +41,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.23.49";
+const SERVER_VERSION = "2.23.50";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -3178,10 +3178,12 @@ async function terminanfragenListe(ich: Ich, zeitraum?: { von: string; bis: stri
     const e = (zeilen ?? []).filter((z: any) => z.anfrage_id === a.id);
     const mein = e.find((z: any) => z.person_id === ich.person_id);
     return {
-      id: a.id, anlass: a.anlass, beginn: a.beginn, ende: a.ende, ort: a.ort, notiz: a.notiz, frist: a.frist, status: a.status,
+      id: a.id, anlass: a.anlass, beginn: a.beginn, ende: a.ende, ort: a.ort, notiz: a.notiz, frist: a.frist, status: a.status, spiel: !!a.spiel_id,
       vonMir: a.erstellt_von === ich.person_id, von: { person_id: a.erstellt_von, name: name(a.erstellt_von), vorname: vorname(leute.get(a.erstellt_von)) || name(a.erstellt_von) },
-      meine: mein?.antwort ?? null, meineNotiz: mein?.notiz ?? null, erinnerung: erin.get(a.id) ?? null, erinnerungStandard: a.erinnerung_min || 0,
-      empfaenger: e.map((z: any) => ({ person_id: z.person_id, name: name(z.person_id), antwort: z.antwort, notiz: z.notiz, geantwortet_am: z.geantwortet_am }))
+      meine: mein?.antwort ?? null, meineNotiz: mein?.notiz ?? null, meinGelesen: mein?.gelesen_am ?? null, // KC-CLUB-TERMINANFRAGE-STATUS (2.23.50)
+      meinVorschlag: mein?.vorschlag_beginn ? { beginn: mein.vorschlag_beginn, ende: mein.vorschlag_ende } : null, erinnerung: erin.get(a.id) ?? null, erinnerungStandard: a.erinnerung_min || 0,
+      empfaenger: e.map((z: any) => ({ person_id: z.person_id, name: name(z.person_id), vorname: vorname(leute.get(z.person_id)) || name(z.person_id), antwort: z.antwort, notiz: z.notiz, geantwortet_am: z.geantwortet_am,
+        gelesen_am: z.gelesen_am, vorschlag: z.vorschlag_beginn ? { beginn: z.vorschlag_beginn, ende: z.vorschlag_ende } : null }))
         .sort((x: any, y: any) => x.name.localeCompare(y.name, "de")),
     };
   });
@@ -4115,7 +4117,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (a.status !== "offen") throw new Fehler("Diese Anfrage wurde abgesagt.", 409);
         if (new Date(a.ende || a.beginn).getTime() < Date.now() - 3 * 3600000) throw new Fehler("Der Termin ist schon vorbei.", 409);
         const notiz = antwort === "keine" ? null : txt(p.notiz, 300) || null;
-        await db.from("kc_club_terminanfrage_empfaenger").update({ antwort: antwort === "keine" ? null : antwort, notiz, geantwortet_am: antwort === "keine" ? null : jetzt() })
+        await db.from("kc_club_terminanfrage_empfaenger").update({ antwort: antwort === "keine" ? null : antwort, notiz, geantwortet_am: antwort === "keine" ? null : jetzt(),
+          gelesen_am: z.gelesen_am || jetzt(), vorschlag_beginn: null, vorschlag_ende: null }) // Antwort ersetzt einen Gegenvorschlag
           .eq("anfrage_id", a.id).eq("person_id", ich.person_id);
         if (antwort !== "keine" && (antwort !== z.antwort || notiz !== z.notiz)) {
           await senden("club_treffen", [a.erstellt_von], {
@@ -4127,6 +4130,78 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         }
         await protokoll(ich.person_id, "terminanfrage_antwort", { anfrage: a.id, antwort });
         return json({ ok: true, anfrage: (await terminanfragenListe(ich, { von: new Date(new Date(a.beginn).getTime() - 1000).toISOString(), bis: new Date(new Date(a.beginn).getTime() + 1000).toISOString() })).find((x: any) => x.id === a.id) });
+      }
+
+      // KC-CLUB-TERMINANFRAGE-STATUS (2.23.50, Wunsch Hansi): „👁️ gelesen“ – die App meldet, wenn sie dem Empfänger die Anfrage anzeigt
+      case "terminanfrage_gelesen": {
+        const ids = (Array.isArray(p.ids) ? p.ids : []).map(String).filter((x: string) => /^[0-9a-f-]{36}$/i.test(x)).slice(0, 100);
+        if (ids.length) await db.from("kc_club_terminanfrage_empfaenger").update({ gelesen_am: jetzt() }).eq("person_id", ich.person_id).in("anfrage_id", ids).is("gelesen_am", null);
+        return json({ ok: true });
+      }
+      // Gegenvorschlag: der Empfänger schlägt eine andere Zeit vor (nicht bei Spiel-Terminen – dort gilt „Passt / Passt nicht“)
+      case "terminanfrage_gegenvorschlag": {
+        const { data: a } = await db.from("kc_club_terminanfragen").select("*").eq("id", String(p.id || "")).maybeSingle();
+        const { data: z } = a ? await db.from("kc_club_terminanfrage_empfaenger").select("*").eq("anfrage_id", a.id).eq("person_id", ich.person_id).maybeSingle() : { data: null };
+        if (!a || !z) throw new Fehler("Anfrage nicht gefunden.", 404);
+        if (a.status !== "offen") throw new Fehler("Diese Anfrage wurde abgesagt.", 409);
+        if (a.spiel_id) throw new Fehler("Bei Spiel-Terminen bitte „Passt nicht“ wählen und einen neuen Termin vorschlagen.", 409);
+        const vb = new Date(String(p.beginn || "")), ve = p.ende ? new Date(String(p.ende)) : null;
+        if (isNaN(vb.getTime())) throw new Fehler("Bitte Datum und Uhrzeit angeben.");
+        if (vb.getTime() < Date.now()) throw new Fehler("Der Vorschlag liegt in der Vergangenheit.");
+        if (ve && (isNaN(ve.getTime()) || ve < vb)) throw new Fehler("Das Ende liegt vor dem Beginn.");
+        const notiz = txt(p.notiz, 300) || null;
+        await db.from("kc_club_terminanfrage_empfaenger").update({ antwort: null, notiz, geantwortet_am: jetzt(), gelesen_am: z.gelesen_am || jetzt(),
+          vorschlag_beginn: vb.toISOString(), vorschlag_ende: ve ? ve.toISOString() : null }).eq("anfrage_id", a.id).eq("person_id", ich.person_id);
+        const vWann = wann(vb.toISOString()) + (ve ? ` bis ${fZeit.format(ve)} Uhr` : "");
+        const versand = await senden("club_treffen", [a.erstellt_von], {
+          titel: `🔄 Gegenvorschlag von ${ich.vorname}`, kurz: `${a.anlass}: lieber ${vWann}${notiz ? " · „" + notiz + "“" : ""}`,
+          betreff: `Köcheclub Werne – ${ich.name} schlägt eine andere Zeit vor (${a.anlass})`,
+          text: `Hallo,\n\n${ich.name} hat auf deine Terminanfrage mit einem Gegenvorschlag geantwortet:\n\n📌 ${a.anlass}\n📅 angefragt: ${anfrageWann(a)}\n🔄 Vorschlag: ${vWann}${notiz ? `\n📝 „${notiz}“` : ""}\n\nAnnehmen oder ablehnen in der Köcheclub-App: ${APP_URL}#termine\n\nViele Grüße\nKöcheclub Werne`,
+          url: APP_URL + "#termine",
+        }, `club-terminanfrage-vorschlag:${a.id}:${ich.person_id}:${Date.now()}`).catch(() => null);
+        await protokoll(ich.person_id, "terminanfrage_gegenvorschlag", { anfrage: a.id, versand });
+        return json({ ok: true });
+      }
+      // Wer angefragt hat, nimmt einen Gegenvorschlag an (neue Zeit für alle) oder lehnt ihn ab
+      case "terminanfrage_vorschlag_entscheiden": {
+        const { data: a } = await db.from("kc_club_terminanfragen").select("*").eq("id", String(p.id || "")).maybeSingle();
+        if (!a) throw new Fehler("Anfrage nicht gefunden.", 404);
+        if (a.erstellt_von !== ich.person_id) throw new Fehler("Entscheiden kann nur, wer angefragt hat.", 403);
+        if (a.status !== "offen") throw new Fehler("Diese Anfrage wurde abgesagt.", 409);
+        const { data: z } = await db.from("kc_club_terminanfrage_empfaenger").select("*").eq("anfrage_id", a.id).eq("person_id", String(p.person_id || "")).maybeSingle();
+        if (!z?.vorschlag_beginn) throw new Fehler("Der Gegenvorschlag ist nicht mehr da.", 409);
+        const annehmen = p.annehmen === true;
+        if (annehmen) {
+          if (new Date(z.vorschlag_beginn).getTime() < Date.now()) throw new Fehler("Der vorgeschlagene Termin ist schon vorbei.", 409);
+          await db.from("kc_club_terminanfragen").update({ beginn: z.vorschlag_beginn, ende: z.vorschlag_ende, erinnerung_gesendet_am: null, kurz_erinnert_am: null, geaendert_am: jetzt() }).eq("id", a.id);
+          // neue Zeit: alle anderen werden neu gefragt, der Vorschlagende hat damit zugesagt; Erinnerungen laufen neu
+          await db.from("kc_club_terminanfrage_empfaenger").update({ antwort: null, notiz: null, geantwortet_am: null, gelesen_am: null, vorschlag_beginn: null, vorschlag_ende: null })
+            .eq("anfrage_id", a.id).neq("person_id", z.person_id);
+          await db.from("kc_club_terminanfrage_empfaenger").update({ antwort: "ja", geantwortet_am: jetzt(), vorschlag_beginn: null, vorschlag_ende: null }).eq("anfrage_id", a.id).eq("person_id", z.person_id);
+          await db.from("kc_club_erinnerungen").update({ gesendet_am: null }).eq("anfrage_id", a.id);
+          const neu = { ...a, beginn: z.vorschlag_beginn, ende: z.vorschlag_ende };
+          const { data: alle } = await db.from("kc_club_terminanfrage_empfaenger").select("person_id").eq("anfrage_id", a.id);
+          const andere = (alle ?? []).map((x: any) => x.person_id).filter((id: string) => id !== z.person_id);
+          await senden("club_treffen", [z.person_id], {
+            titel: `✅ ${ich.vorname} hat deinen Vorschlag angenommen`, kurz: `${a.anlass} – jetzt ${wann(neu.beginn)}`,
+            betreff: `Köcheclub Werne – Vorschlag angenommen: ${a.anlass}`,
+            text: `Hallo,\n\n${ich.name} hat deinen Gegenvorschlag angenommen:\n\n📌 ${a.anlass}\n📅 ${anfrageWann(neu)}\n\nViele Grüße\nKöcheclub Werne`, url: APP_URL + "#termine",
+          }, `club-terminanfrage-vorschlag-ja:${a.id}:${z.person_id}:${Date.now()}`).catch(() => null);
+          if (andere.length) await senden("club_treffen", andere, {
+            titel: `📨 Neue Zeit: ${a.anlass}`, kurz: `${ich.vorname} fragt jetzt für ${wann(neu.beginn)} an – bitte neu antworten`,
+            betreff: `Köcheclub Werne – neue Zeit für die Terminanfrage: ${a.anlass}`,
+            text: `Hallo,\n\n${ich.name} hat die Zeit der Terminanfrage geändert:\n\n📌 ${a.anlass}\n📅 neu: ${anfrageWann(neu)}\n\nBitte in der Köcheclub-App neu antworten: ${APP_URL}#termine\n\nViele Grüße\nKöcheclub Werne`, url: APP_URL + "#termine",
+          }, `club-terminanfrage-neuzeit:${a.id}:${Date.now()}`).catch(() => null);
+        } else {
+          await db.from("kc_club_terminanfrage_empfaenger").update({ vorschlag_beginn: null, vorschlag_ende: null, geantwortet_am: null }).eq("anfrage_id", a.id).eq("person_id", z.person_id);
+          await senden("club_treffen", [z.person_id], {
+            titel: `❌ Dein Vorschlag passt ${ich.vorname} leider nicht`, kurz: `${a.anlass} – es bleibt bei ${wann(a.beginn)}`,
+            betreff: `Köcheclub Werne – Vorschlag passt nicht: ${a.anlass}`,
+            text: `Hallo,\n\n${ich.name} kann deinen Gegenvorschlag leider nicht annehmen. Es bleibt bei:\n\n📌 ${a.anlass}\n📅 ${anfrageWann(a)}\n\nBitte in der Köcheclub-App antworten: ${APP_URL}#termine\n\nViele Grüße\nKöcheclub Werne`, url: APP_URL + "#termine",
+          }, `club-terminanfrage-vorschlag-nein:${a.id}:${z.person_id}:${Date.now()}`).catch(() => null);
+        }
+        await protokoll(ich.person_id, "terminanfrage_vorschlag_entschieden", { anfrage: a.id, an: z.person_id, annehmen });
+        return json({ ok: true });
       }
 
       // KC-CLUB-ERINNERUNG-WAHL (2.23.22): eigene Erinnerung zu einer Terminanfrage (nur Absender oder Empfänger)

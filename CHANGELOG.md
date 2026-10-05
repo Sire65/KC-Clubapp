@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.23.50 – 2026-10-05 – 📨 Terminanfrage: an wen und wie steht es (Wunsch Hansi)
+- KC-CLUB-TERMINANFRAGE-STATUS: Eigene Anfragen zeigen „Anfrage an Klaus“ (Liste, Kalender, Demnächst) und den Stand je Empfänger:
+  📨 angefragt · 👁️ gelesen · ✅ bestätigt · 🤔 vielleicht · ❌ abgelehnt · 🔄 Gegenvorschlag · ⌛ abgelaufen (keine Antwort bis zur Frist
+  bzw. bis zum Termin). Bei einem Empfänger steht der Stand als Marke oben auf der Karte. „Gelesen“ = die Anfrage wurde dem Empfänger in
+  den Terminen angezeigt (terminanfrage_gelesen).
+- Gegenvorschlag: Empfänger tippen „🔄 Andere Zeit vorschlagen“ (Tag, von/bis, Notiz) → wer angefragt hat, bekommt Bescheid und wählt
+  „✅ Neue Zeit annehmen“ (Termin wird verlegt, der Vorschlagende hat zugesagt, die anderen werden neu gefragt, Erinnerungen laufen neu)
+  oder „❌ Passt nicht“ (es bleibt bei der Zeit). Nicht bei Spiel-Terminen. Spalten gelesen_am, vorschlag_beginn/_ende. Hilfe-Eintrag. Test 399.
+
 ## 2.23.49 – 2026-10-05 – 🧑‍🍳 Frag Twinkey (Wunsch Hansi, Stufe 2 – löst „Frag den Küchenchef“ ab)
 - KC-CLUB-TWINKEY: „Frag den Küchenchef“ heißt jetzt „🧑‍🍳 Frag Twinkey“ (früher waren viele Twinkeys auch Küchenchefs) – Kachel, Knopf im
   Hilfe-Zentrum, Hilfe-Eintrag, Tagestipp. 35 eigene Fragen + Antworten (TW_FAQ: Nachricht, Gruppe, Foto, Zusage, Mitfahrt, Anrufen, Zettel,

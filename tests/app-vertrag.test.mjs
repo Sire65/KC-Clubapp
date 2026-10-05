@@ -4044,6 +4044,21 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const mig = lies("supabase/migrations/20261005_kc_club_v22349_twinkey_fragen.sql");
   assert.ok(/enable row level security/.test(mig) && /revoke all on kc_club_twinkey_fragen from anon, authenticated/.test(mig) && !/create policy/i.test(mig), "Tabelle nur über den Server");
 }
+// 399. 2.23.50: Terminanfrage zeigt „Anfrage an …“ und den Stand je Empfänger, Gegenvorschlag (KC-CLUB-TERMINANFRAGE-STATUS)
+{
+  const st = html.slice(html.indexOf("function taStatus(a, e)"), html.indexOf("const taVWann"));
+  for (const w of ["angefragt", "gelesen", "bestätigt", "vielleicht", "abgelehnt", "Gegenvorschlag", "abgelaufen"]) assert.ok(st.includes(`"${w}`), "Stand fehlt: " + w);
+  assert.ok(st.indexOf("abgelaufen") < st.indexOf('"gelesen"') && st.indexOf('"bestätigt"') < st.indexOf("abgelaufen"), "Antwort vor abgelaufen, abgelaufen vor gelesen");
+  assert.ok(/<b>Anfrage an \$\{esc\(taAnWen\(a\)\)\}<\/b>/.test(html) && /"Anfrage an " \+ esc\(taAnWen\(x\.x\)\)/.test(html), "„Anfrage an …“ in Liste und Kalender");
+  assert.ok(/api\("terminanfrage_gelesen", \{ ids: ungelesen \}\)/.test(html) && /!a\.vonMir && !a\.meinGelesen/.test(html), "gelesen nur vom Empfänger gemeldet");
+  const g = server.slice(server.indexOf('case "terminanfrage_gelesen"'), server.indexOf('case "erinnerung_setzen"'));
+  assert.ok(/\.eq\("person_id", ich\.person_id\)\.in\("anfrage_id", ids\)\.is\("gelesen_am", null\)/.test(g), "gelesen nur eigene Zeilen, nur einmal");
+  assert.ok(/if \(a\.spiel_id\) throw/.test(g) && /if \(a\.erstellt_von !== ich\.person_id\) throw new Fehler\("Entscheiden kann nur, wer angefragt hat\.", 403\)/.test(g), "Gegenvorschlag: nicht bei Spielen, entscheiden nur der Absender");
+  assert.ok(/erinnerung_gesendet_am: null, kurz_erinnert_am: null/.test(g) && /kc_club_erinnerungen"\)\.update\(\{ gesendet_am: null \}\)/.test(g), "nach dem Verlegen laufen Erinnerungen neu");
+  assert.ok(/vorschlag_beginn: null, vorschlag_ende: null \}\) \/\/ Antwort ersetzt einen Gegenvorschlag/.test(server), "Antwort räumt den Gegenvorschlag weg");
+  const mig = lies("supabase/migrations/20261005_kc_club_v22350_terminanfrage_status.sql");
+  assert.ok(/add column if not exists gelesen_am timestamptz/.test(mig) && /add column if not exists vorschlag_beginn timestamptz/.test(mig) && !/drop column|delete|truncate/i.test(mig.replace(/^--.*$/gm, "")), "nur Spalten ergänzt");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
