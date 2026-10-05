@@ -1,5 +1,5 @@
 // Inhalt der Club-App-Anleitung (Texte). Bilder: bild/<name>.png (ganze Seite) und bild/s-<name>.png (Ausschnitt).
-export const VERSION = { anleitung: 4, app: "2.23.32", stand: "04.10.2026" };
+export const VERSION = { anleitung: 5, app: "2.23.42", stand: "05.10.2026" };
 export const INHALT = [
   ["So fängst du an", "in 5 Schritten"], ["1. Startseite", "einfache Ansicht – das Wichtigste auf einen Blick"], ["2. Erweiterte Ansicht", "alle Funktionen, Anzeigen im Kopf"],
   ["3. Nachrichten", "Chats, Schreiben, Diktieren, wichtige Nachrichten, Chats archivieren"], ["4. Termine", "zu- und absagen, Mitfahren, Kalender, Terminanfragen mit Erinnerung"], ["5. Mitglieder", "wer ist online, Status, Kontakt, Anklopfen"],
@@ -63,6 +63,7 @@ export const TEILE = [
     legende: [["＋ Neu", "neue Nachricht an ein Mitglied"], ["Gruppe", "eine Gruppe anlegen"], ["Gemerkt", "deine gemerkten Nachrichten"], ["Test", "Nachricht an dich selbst (zum Ausprobieren)"], ["Chat", "einmal tippen = auswählen, doppelt = öffnen"], ["❗ Wichtig", "ungelesene wichtige Nachricht"], ["Gruppenchat", "mit Symbol und Zahl der Mitglieder"]],
     abschnitte: [
       { nr: 5, titel: "Die Chat-Liste", zeilen: [["s-chat-zeile", "Chat mit ungelesener wichtiger Nachricht", "Eine <b>orangefarbene Kante</b> links und <b>❗</b> an der Zahl zeigen: Darin wartet eine wichtige Nachricht. Die Zahl zeigt, wie viele Nachrichten ungelesen sind."]] },
+      { nr: "+", titel: "Neue Gruppe", zeilen: [[null, "👥 Gruppe anlegen", "Über <b>„Gruppe“</b>: oben <b>👥 Deine Gruppen</b> (antippen = gleich hineinschreiben), darunter <b>✏️ Name &amp; Symbol</b> und <b>👤 Wer ist dabei?</b>. Jeder Bereich klappt mit dem Pfeil ▾ auf und zu, mit dem Schloss 🔒 bleibt er so – die App merkt es sich.", "neu"]] },
     ],
     weiter: [{ bild: "chat", titel: "Der Chat", legende: [["Zurück", "zur Chat-Liste"], ["Name", "mit wem du schreibst"], ["Online / Status", "ist der andere gerade da?"], ["Lautsprecher", "neue Nachrichten vorlesen 🔇/🔊"], ["Lupe", "im Chat suchen"], ["Menü ⋮", "stummschalten, Gruppe, Archiv …"], ["Nachricht", "vom anderen (links)"], ["Deine Nachricht", "rechts, mit Haken"], ["Wichtig", "orange umrandet mit „❗ WICHTIG“"], ["Antwort", "zitiert die Nachricht, auf die du antwortest"], ["Weiterleiten / Info", "↪️ weiterleiten, ℹ️ Einzelheiten"], ["Schreibfeld", "hier schreiben"], ["Senden", "Nachricht abschicken"], ["Knopfleiste", "Anlage, Sprache, Emoji, …"]],
       abschnitte: [
@@ -135,6 +136,8 @@ export const TEILE = [
         [null, "🎨 Weitere Farbschemen", "Unter den 8 bekannten Farben klappt „Weitere Farbschemen“ 8 ruhige Töne auf: Toskana, Weinberg, Salbei, Lavendel, Ocker, Schokolade, Petrol, Rosé."],
         ["s-farben-bunt", "✨ Ausgefallene Farbschemen", "6 Schemen mit Farbverlauf oben: Sonnenuntergang, Polarlicht, Kirschblüte, Tiefsee, Glut, Retro 70er. Antippen – die App färbt sich sofort um."]] },
       { nr: 5, titel: "Über die App", zeilen: [["s-ueber-app", "👨‍🍳 Über die App", "Wer die Club-App gebaut hat – mit Foto und Lebenslauf. Unter <b>⚙️ Mehr → ℹ️ App-Info → „Über den Entwickler“</b> (einfache Ansicht: „👨‍🍳 Über die App“). Mit <b>💬 Hansi schreiben</b> erreichst du ihn direkt.", "neu"]] },
+      { nr: "+", titel: "Bereiche auf- und zuklappen", zeilen: [[null, "▾ Alle auf / ▴ Alle zu", "Oben rechts unter der Überschrift: ein Tipp öffnet <b>alle</b> Bereiche, danach heißt der Knopf „▴ Alle zu“ und klappt alle wieder zu.", "neu"],
+        [null, "🔓 / 🔒 Schloss", "Mit dem Schloss stellst du einen Bereich fest – er bleibt offen oder zu, auch bei „Alle auf / Alle zu“. Nochmal antippen löst ihn wieder."]] },
     ] },
   { titel: "9. Notbetrieb", unter: "Wenn der Server einmal ausfällt", bild: "notbetrieb",
     legende: [["Oranges Band", "die App läuft gerade im Notbetrieb"]],
@@ -179,7 +182,8 @@ export const TEILE = [
     abschnitte: [{ nr: "+", titel: "Spielen", zeilen: [
       ["s-ttt", "Tic-Tac-Toe", "Feld antippen – dann ist der andere dran. Wer zuerst eine Reihe hat, gewinnt.", "neu"],
       ["s-schach", "Schach", "Figur antippen, dann das Zielfeld. Spielbare Felder werden markiert. Mit 🔊 <b>Ansage</b> liest die App die Züge vor.", "neu"],
-      [null, "⏸ Pause", "In jedem Spiel: „⏸ Pause“ hält an, „▶ Weiter“ geht genau dort weiter.", "neu"]] }],
+      [null, "⏸ Pause", "In jedem Spiel: „⏸ Pause“ hält an, „▶ Weiter“ geht genau dort weiter.", "neu"],
+      [null, "⏱️ Schachuhr", "Bedenkzeit 5, 10 oder 15 Minuten je Spieler – oben bei „⏱️ Uhr“ oder beim Herausfordern („⏱️ Live“). Nach jedem Zug hält deine Uhr an und die des Gegners läuft; in der letzten Minute wird sie rot. Wer keine Zeit mehr hat, verliert.", "neu"]] }],
     weiter: [{ bild: "spiele-mg", titel: "Gegen Mitglieder und der Pokal", legende: [],
       text: "<b>🎲 Jemanden herausfordern</b>: Mitglied wählen – es bekommt eine Mitteilung und kann annehmen. Ihr zieht abwechselnd, du bekommst Bescheid, wenn du dran bist. Mit <b>📅 Termin vereinbaren</b> verabredet ihr euch zu einer festen Zeit. Für Siege gibt es Punkte: <b>🏆 Pokal des Monats</b> und die <b>Club-Rangliste</b>. Beim Start fragt die App manchmal „Lust auf eine Partie?“ – mit „Keine Spiele“ ist das aus." }] },
   { titel: "15. Hilfe & Tipps", unter: "Das „?“ unten rechts, das Hilfe-Zentrum und „Kurz erklärt“", bild: "hilfezentrum",
@@ -187,7 +191,8 @@ export const TEILE = [
     text: "Im <b>Hilfe-Zentrum</b> stehen über 160 kurze Hilfen in Kapiteln – von „Erste Schritte“ bis „Notfall“. Jede Hilfe hat einen Knopf <b>„Zeig es mir“</b>, der gleich an die richtige Stelle springt. Alles lässt sich auch ausdrucken.",
     abschnitte: [{ nr: "+", titel: "So findest du Hilfe", zeilen: [
       ["s-frage-lupe", "„?“ und Lupe", "Unten rechts auf jeder Seite: <b>?</b> öffnet genau die Hilfen zu dem Bereich, in dem du gerade bist. Die <b>🔍 Lupe</b> sucht in der ganzen App. Lange auf das „?“ drücken blendet es aus (zurück unter ⚙️ Mehr).", "neu"],
-      ["s-kurz-erklaert", "🎓 Kurz erklärt", "Beim ersten Besuch eines Bereichs erklärt eine Karte kurz, was man dort machen kann – mit <b>🔊 Vorlesen</b>. „Verstanden“ blendet sie aus, „Keine Einweisungen mehr“ für immer.", "neu"]] }] },
+      ["s-kurz-erklaert", "🎓 Kurz erklärt", "Beim ersten Besuch eines Bereichs erklärt eine Karte kurz, was man dort machen kann – mit <b>🔊 Vorlesen</b>. „Verstanden“ blendet sie aus, „Keine Einweisungen mehr“ für immer.", "neu"],
+      [null, "👍 / 👎 Hat es geholfen?", "Unter jeder Hilfe kannst du sagen, ob sie dir weitergeholfen hat – so werden die Hilfen besser.", "neu"]] }] },
   { titel: "16. Dienstwünsche", unter: "Mit Twinkey eintragen – oder erst auf Papier", bild: "dienstwuensche",
     legende: [["Zurück zur Club-App", "Fenster schließen"], ["Leerer Bogen", "deinen persönlichen Bogen drucken oder mailen"], ["Fertig – Bestätigung", "Aufstellung per App-Nachricht und E-Mail"]],
     text: "Die Kachel <b>📝 Dienstwünsche</b> öffnet <b>Twinkey</b> – den Assistenten aus der Dienstplanung. Er fragt Tag für Tag, wann du kannst und wann du am liebsten arbeitest. Gespeichert wird von selbst.",

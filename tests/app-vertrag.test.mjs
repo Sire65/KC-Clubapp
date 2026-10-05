@@ -2646,7 +2646,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 232. 1.60.0: Bedienungsanleitung Club-App (PDF wie Kasse) in „Meine Dokumente“
 {
   // 1.81.0: Eintrag zeigt Version 2 (V1-Datei bleibt unverändert im Repo – Release-Artefakte sind unveränderlich)
-  assert.ok(/\{ id: "bedienung-club-app-v[234]", sym: "📖", t: "Bedienungsanleitung Club-App"[^}]*datei: "dokumente\/Koecheclub-App_Anleitung_V[234]\.pdf"(, neuBis: "[\d-]+")? \}/.test(html), "Eintrag Bedienungsanleitung fehlt"); // 2.1.2: Version 3 (V1/V2 bleiben unverändert im Repo)
+  assert.ok(/\{ id: "bedienung-club-app-v[2345]", sym: "📖", t: "Bedienungsanleitung Club-App"[^}]*datei: "dokumente\/Koecheclub-App_Anleitung_V[2345]\.pdf"(, neuBis: "[\d-]+")? \}/.test(html), "Eintrag Bedienungsanleitung fehlt"); // 2.1.2: Version 3 (V1/V2 bleiben unverändert im Repo)
   assert.ok(/datei: "dokumente\/Koecheclub-App_Kurzanleitung\.pdf"/.test(html), "Kurzanleitung muss bleiben");
   const pdf = fs.readFileSync(new URL("../dokumente/Koecheclub-App_Anleitung_V1.pdf", import.meta.url));
   assert.ok(pdf.subarray(0, 5).toString() === "%PDF-" && pdf.length < 8e6, "Anleitung-PDF fehlt oder zu groß");
@@ -2941,7 +2941,7 @@ assert.ok(/id: "emoji",[^\n]*unter dem Schreibfeld<\/b> auf <b>😊<\/b>/.test(h
   assert.ok(v2.subarray(0, 5).toString() === "%PDF-" && v2.length < 8e6, "Anleitung V2 fehlt oder zu groß");
   assert.ok(fs.existsSync(new URL("../dokumente/Koecheclub-App_Anleitung_V1.pdf", import.meta.url)), "V1 muss unverändert bleiben");
   const inh = fs.readFileSync(new URL("../tools/anleitung/inhalt.mjs", import.meta.url), "utf8"), f2 = fs.readFileSync(new URL("../tools/anleitung/fotos2.mjs", import.meta.url), "utf8");
-  assert.ok(/anleitung: [234]/.test(inh) && /10\. Fotos & Alben/.test(inh) && /11\. Archiv & Chronik/.test(inh) && /<b>Club<\/b> = alles rund um den Club/.test(inh) && !/Programme<\/b> = Dienstplan/.test(inh), "Inhalt V2");
+  assert.ok(/anleitung: [2345]/.test(inh) && /10\. Fotos & Alben/.test(inh) && /11\. Archiv & Chronik/.test(inh) && /<b>Club<\/b> = alles rund um den Club/.test(inh) && !/Programme<\/b> = Dienstplan/.test(inh), "Inhalt V2");
   assert.ok(!/ptblnpiroqftcvlsrhac|service_role|eyJ[A-Za-z0-9_-]{20}/.test(f2), "fotos2 ohne echte Zugänge");
 }
 // 262. 1.82.0: Protokoll-Vorlage – Protokollführer, Ort, Entschuldigt bzw. fehlend, Gäste, Nächster Termin
@@ -3154,9 +3154,9 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(v3.subarray(0, 5).toString() === "%PDF-" && v3.length < 9e6, "Anleitung V3 fehlt oder zu groß");
   for (const v of [1, 2]) assert.ok(fs.existsSync(new URL(`../dokumente/Koecheclub-App_Anleitung_V${v}.pdf`, import.meta.url)), `V${v} muss unverändert bleiben`);
   const inh = fs.readFileSync(new URL("../tools/anleitung/inhalt.mjs", import.meta.url), "utf8"), f3 = fs.readFileSync(new URL("../tools/anleitung/fotos3.mjs", import.meta.url), "utf8");
-  assert.ok(/anleitung: [34]/.test(inh) && /12\. Helfen & Leihen/.test(inh) && /13\. Bedienen, Anmelden & ohne Netz/.test(inh) && /Mit Code anmelden/.test(inh) && !/"s-herz"/.test(inh), "Inhalt V3");
+  assert.ok(/anleitung: [345]/.test(inh) && /12\. Helfen & Leihen/.test(inh) && /13\. Bedienen, Anmelden & ohne Netz/.test(inh) && /Mit Code anmelden/.test(inh) && !/"s-herz"/.test(inh), "Inhalt V3");
   assert.ok(!/ptblnpiroqftcvlsrhac|service_role|eyJ[A-Za-z0-9_-]{20}/.test(f3), "fotos3 ohne echte Zugänge");
-  assert.ok(/datei: "dokumente\/Koecheclub-App_Anleitung_V[34]\.pdf"/.test(html), "Anleitung in Meine Dokumente"); // 2.23.33: V4 löst V3 ab
+  assert.ok(/datei: "dokumente\/Koecheclub-App_Anleitung_V[345]\.pdf"/.test(html), "Anleitung in Meine Dokumente"); // 2.23.33: V4 löst V3 ab
 }
 // 285. 2.2.0: Vertretung des Admins vorbereitet
 {
@@ -3883,9 +3883,9 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(v4.subarray(0, 5).toString() === "%PDF-" && v4.length < 9e6, "Anleitung V4 fehlt oder zu groß");
   for (const v of [1, 2, 3]) assert.ok(fs.existsSync(new URL(`../dokumente/Koecheclub-App_Anleitung_V${v}.pdf`, import.meta.url)), `V${v} muss unverändert bleiben`);
   const inh = fs.readFileSync(new URL("../tools/anleitung/inhalt.mjs", import.meta.url), "utf8"), f4 = fs.readFileSync(new URL("../tools/anleitung/fotos4.mjs", import.meta.url), "utf8");
-  assert.ok(/anleitung: 4/.test(inh) && /14\. Spiele/.test(inh) && /15\. Hilfe & Tipps/.test(inh) && /16\. Dienstwünsche/.test(inh) && /17\. Meine Daten haben sich geändert/.test(inh), "Inhalt V4");
+  assert.ok(/anleitung: [45]/.test(inh) && /14\. Spiele/.test(inh) && /15\. Hilfe & Tipps/.test(inh) && /16\. Dienstwünsche/.test(inh) && /17\. Meine Daten haben sich geändert/.test(inh), "Inhalt V4");
   assert.ok(!/ptblnpiroqftcvlsrhac|service_role|eyJ[A-Za-z0-9_-]{20}|KC-P-\d/.test(f4), "fotos4 nur Demodaten, ohne echte Zugänge/IDs");
-  assert.ok(/\{ id: "bedienung-club-app-v4",[^}]*datei: "dokumente\/Koecheclub-App_Anleitung_V4\.pdf"/.test(html), "V4 in Meine Dokumente");
+  // 2.23.42: in „Meine Dokumente“ steht jetzt V5 (Test 391); die V4-Datei bleibt unverändert liegen
 }
 // 383. 2.23.34: „Hat dir das weitergeholfen?“ unter jeder Hilfe (KC-CLUB-HILFE-BEWERTUNG)
 {
@@ -3959,6 +3959,18 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const v = html.slice(html.indexOf('<section id="v-gruppe"'), html.indexOf('<section id="v-neu"'));
   assert.ok(/<details class="karte" data-klappe="gr_name" data-ohne-unten open><summary>✏️ Name &amp; Symbol<\/summary>/.test(v) && /<details class="karte" data-klappe="gr_wer" open><summary>👤 Wer ist dabei\?<\/summary>/.test(v), "Name/Symbol + Wer ist dabei klappbar");
   assert.ok(/data-klappe="gruppen_\$\{ziel\}" data-ohne-unten open><summary>👥 Deine Gruppen<\/summary>/.test(html) && /klappenMerken\(z\); \/\/ 2\.23\.41/.test(html), "Deine Gruppen klappbar (auch bei Neue Nachricht)");
+}
+// 391. 2.23.42: Kurz erklärt, Tagestipp, Hilfe und Anleitung V5 zu „Alle auf/zu“ und Neue Gruppe (KC-CLUB-ANLEITUNG-V5)
+{
+  assert.ok(/oder alle auf einmal mit <b>„▾ Alle auf“<\/b>/.test(html) && /\{ id: "gruppe", sym: "👥", t: "Neue Gruppe", x: /.test(html), "Kurz erklärt: Einstellungen + Neue Gruppe");
+  assert.ok(/\{ id: "alle_klappen", sym: "▾"/.test(html) && /jetzt auch bei <b>👥 Neue Gruppe<\/b>/.test(html), "Tagestipps");
+  assert.ok(/\{ id: "klappen_alle", thema: "start"/.test(html) && /\{ id: "gruppe_bereiche", thema: "nachrichten"/.test(html) && /"gruppe": \["e:gruppe", "h:gruppe_bereiche"/.test(html), "Hilfe-Zentrum + ?-Zuordnung");
+  const v5 = fs.readFileSync(new URL("../dokumente/Koecheclub-App_Anleitung_V5.pdf", import.meta.url));
+  assert.ok(v5.subarray(0, 5).toString() === "%PDF-" && v5.length < 9e6, "Anleitung V5 fehlt oder zu groß");
+  for (const v of [1, 2, 3, 4]) assert.ok(fs.existsSync(new URL(`../dokumente/Koecheclub-App_Anleitung_V${v}.pdf`, import.meta.url)), `V${v} muss unverändert bleiben`);
+  const inh = fs.readFileSync(new URL("../tools/anleitung/inhalt.mjs", import.meta.url), "utf8");
+  assert.ok(/anleitung: 5/.test(inh) && /▾ Alle auf \/ ▴ Alle zu/.test(inh) && /titel: "Neue Gruppe"/.test(inh), "Inhalt V5");
+  assert.ok(/\{ id: "bedienung-club-app-v5",[^}]*datei: "dokumente\/Koecheclub-App_Anleitung_V5\.pdf"/.test(html) && !/bedienung-club-app-v4/.test(html), "V5 in Meine Dokumente");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

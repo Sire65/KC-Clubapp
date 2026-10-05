@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.23.42 – 2026-10-05 – Texte zu „Alle auf/zu“ und Neue Gruppe + Bedienungsanleitung V5 (Wunsch Hansi)
+- 🎓 Kurz erklärt: Einstellungen nennt „▾ Alle auf / ▴ Alle zu“ und das Schloss; neu „👥 Neue Gruppe“ (Deine Gruppen, Name & Symbol,
+  Wer ist dabei?, Pfeil und Schloss).
+- 💡 Tagestipps: „Bereiche festhalten“ erwähnt Neue Gruppe; neuer Tipp „Alle Bereiche auf einmal öffnen?“ (mit „Zeig mir wo“).
+- ❓ Hilfe-Zentrum: neu „Alle Bereiche auf einmal auf- oder zuklappen“ (seit 2.23.40) und „Neue Gruppe: Bereiche auf- und zuklappen“
+  (seit 2.23.41); das „?“ bei Neue Gruppe zeigt jetzt die eigene Einweisung.
+- KC-CLUB-ANLEITUNG-V5: Bedienungsanleitung Version 5 (44 Seiten) – neu: Neue Gruppe (Kap. 3), Alle auf/zu + Schloss (Kap. 8),
+  Schachuhr (Kap. 14), 👍/👎 bei den Hilfen (Kap. 15). Ersetzt V4 in „Meine Dokumente“; V1–V4 bleiben unverändert. Test 391.
+
 ## 2.23.41 – 2026-10-05 – Neue Gruppe: Bereiche mit Pfeil und Schloss (Wunsch Hansi)
 - KC-CLUB-GRUPPE-KLAPPEN: „👥 Deine Gruppen“, „✏️ Name & Symbol“ und „👤 Wer ist dabei?“ sind Klappbereiche mit ▾-Pfeil und 🔓/🔒-Schloss
   wie überall (Stand wird gemerkt). „Deine Gruppen“ auch bei „Neue Nachricht“. Kurze Bereiche ohne unteren „Zuklappen“-Knopf. Nur App. Test 390.

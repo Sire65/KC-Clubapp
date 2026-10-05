@@ -2864,7 +2864,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.41"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.42"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3594,7 +3594,8 @@ const EINWEISUNG = [
   { id: "helfen", sym: "🤝", t: "Helfen & Leihen", x: "Oben drei Bereiche: <b>🙋 Wer kann helfen?</b> – Helfer suchen oder Hilfe anbieten. <b>📦 Ausleihen</b> – Club-Sachen wie den Pavillon reservieren. <b>🛍️ Börse</b> – privat etwas anbieten oder suchen. Mit <b>„＋ Neu“</b> legst du etwas an." },
   { id: "archiv", sym: "🗄️", t: "Archiv", x: "Das Regal des Clubs: Ordner nach Jahren mit Terminen, Protokollen, Fotos und mehr – vieles wird automatisch abgelegt. Dort steht auch die <b>Clubchronik</b> zum Blättern. Und du hast einen <b>eigenen Ordner</b>, den nur du siehst." },
   { id: "dokumente", sym: "📚", t: "Meine Dokumente", x: "Anleitungen und wichtige Unterlagen zum Lesen – z. B. die <b>Bedienungsanleitung</b> der App. Antippen öffnet das Dokument – dort kannst du es auch drucken oder teilen. Mit dem Pfeil <b>‹</b> oben links geht es wieder hierher." },
-  { id: "einstellungen", sym: "⚙️", t: "Einstellungen", x: "Hier stellst du die App für dich ein – Töne, Benachrichtigungen, Farben, Privatsphäre. Bereiche öffnest du durch Antippen der Überschrift. Tipp: Mit der <b>Lupe 🔍 unten rechts</b> findest du jede Einstellung – z. B. „Ton“ eingeben." },
+  { id: "einstellungen", sym: "⚙️", t: "Einstellungen", x: "Hier stellst du die App für dich ein – Töne, Benachrichtigungen, Farben, Privatsphäre. Bereiche öffnest du durch Antippen der Überschrift – oder alle auf einmal mit <b>„▾ Alle auf“</b> oben rechts (danach heißt der Knopf <b>„▴ Alle zu“</b>). Mit dem Schloss 🔒 hältst du einen Bereich offen oder zu. Tipp: Mit der <b>Lupe 🔍 unten rechts</b> findest du jede Einstellung – z. B. „Ton“ eingeben." },
+  { id: "gruppe", sym: "👥", t: "Neue Gruppe", x: "Oben siehst du <b>deine Gruppen</b> – antippen, und du schreibst gleich hinein. Darunter legst du eine weitere an: <b>✏️ Name &amp; Symbol</b> wählen, bei <b>👤 Wer ist dabei?</b> die Mitglieder anhaken, dann <b>„👥 Gruppe anlegen“</b>. Jeder Bereich klappt mit dem Pfeil ▾ auf und zu, mit dem Schloss 🔒 bleibt er so." },
   { id: "protokolle", sym: "📄", t: "Protokolle", x: "Die Protokolle der Clubsitzungen zum Nachlesen. Neue Protokolle sind markiert, bis du sie geöffnet hast." },
   { id: "vorschlaege", sym: "🗳️", t: "Vorschläge", x: "Du hast eine Idee für den Club – ein Ausflug, ein Thema, ein Kochabend? Mit <b>„＋ Neu“</b> schlägst du sie vor, die anderen können abstimmen." },
   { id: "dienste", sym: "🗓️", t: "Dienstpläne", x: "Die Dienstpläne Woche für Woche. Mit <b>‹ Woche</b> / <b>Woche ›</b> blätterst du, <b>„Heute“</b> springt zurück." },
@@ -3730,7 +3731,8 @@ const TIPPS = [
   { id: "antwort_zurueck", sym: "↩️", t: "Termin-Antwort zurücknehmen", x: "Bei einem Termin nochmal auf deine farbige Antwort tippen – dann ist sie zurückgenommen.", testen: () => zeige("termine") },
   { id: "mitfahren", sym: "🚗", t: "Mitfahrgelegenheit suchen oder anbieten", x: "Nach „✅ Ich komme“ kannst du bei jedem Termin eine Mitfahrt suchen oder anbieten und Plätze buchen.", testen: () => zeige("termine") },
   { id: "kalender", sym: "📆", t: "Termine im eigenen Kalender", x: "Alle Club-Termine erscheinen auf Wunsch automatisch im normalen Kalender deines Handys – immer aktuell. Einmal unter ⚙️ → „📲 Termine im Handy-Kalender“ verbinden.", testen: () => einstiegHin("handykalender") },
-  { id: "klappe", sym: "🔒", t: "Bereiche festhalten", x: "In den Einstellungen kannst du jeden Bereich mit dem Schloss offen oder zu feststellen. Lange Bereiche klappst du jetzt auch unten mit „▴ Zuklappen“ zu.", testen: () => zeige("einstellungen") },
+  { id: "klappe", sym: "🔒", t: "Bereiche festhalten", x: "In den Einstellungen – und jetzt auch bei <b>👥 Neue Gruppe</b> – kannst du jeden Bereich mit dem Schloss offen oder zu feststellen. Lange Bereiche klappst du auch unten mit „▴ Zuklappen“ zu.", testen: () => zeige("einstellungen") },
+  { id: "alle_klappen", sym: "▾", t: "Alle Bereiche auf einmal öffnen?", x: "In den ⚙️ Einstellungen steht oben rechts <b>„▾ Alle auf“</b> – ein Tipp öffnet alle Bereiche, <b>„▴ Alle zu“</b> klappt sie wieder zu. Festgestellte Bereiche (🔒) bleiben, wie sie sind. <b>Soll ich dir zeigen, wo?</b>", ja: "👉 Ja, zeig mir wo", nein: "⏰ Nein, später", testen: () => zeige("einstellungen") },
   { id: "rechtschreibung", sym: "🖍️", t: "Tippfehler werden rot unterstrichen", x: "Beim Schreiben im Chat zeigt eine rote Wellenlinie Tippfehler – antippen, dann kommen Vorschläge. Siehst du keine Linie? Unter ⚙️ → „🖍️ Tippfehler rot unterstreichen“ → Prüfen.", testen: () => rsBlatt() },
   { id: "private_termine", sym: "🗓️", t: "Eigene private Termine", x: "Unter Termine kannst du mit „＋ Neu“ auch private Einträge anlegen – nur du siehst sie.", testen: () => zeige("termine") },
   // 1.76.0 (Wunsch Hansi: Tipps an den heutigen Stand anpassen) – neue Funktionen, je ein kurzer Tipp
@@ -3823,7 +3825,7 @@ const HILFE_TIPP_THEMA = {
   farbschemen_neu: "darstellung", sprachansage: "toene", vorlesen: "toene", archiv_ordner: "club", wischen: "nachrichten", emoji: "nachrichten",
   reaktion: "nachrichten", erwaehnung: "nachrichten", sos: "notfall", bearbeiten: "nachrichten", stumm: "nachrichten", schnellstart: "start",
   anklopfen: "nachrichten", notfallpass: "notfall", lupe: "start", ruhe: "toene", antwort_zurueck: "termine", mitfahren: "termine",
-  kalender: "termine", klappe: "start", rechtschreibung: "nachrichten", private_termine: "termine", diktieren: "nachrichten", fotoalben: "club",
+  kalender: "termine", klappe: "start", alle_klappen: "start", rechtschreibung: "nachrichten", private_termine: "termine", diktieren: "nachrichten", fotoalben: "club",
   chronik: "club", helfen_leihen: "club",
 };
 const hzDesign = () => { const e = einfach(); einstiegHin(e ? "einfach" : "darstellung", e ? "farbeE" : "designWahl"); };
@@ -3845,6 +3847,8 @@ const HILFE = [
   { id: "zurueck", thema: "start", sym: "‹", t: "„Zurück“ bleibt in der App", x: "Die Zurück-Taste deines Handys oder der Pfeil <b>‹</b> oben links geht eine Ansicht zurück – die App schließt sich dabei nicht. Ist ein Fenster offen, schließt „Zurück“ zuerst nur das Fenster, deine Eingabe bleibt stehen." },
   { id: "frage_knopf", thema: "start", sym: "❓", t: "Das Fragezeichen unten rechts", x: "Das runde <b>„?“</b> neben der Lupe öffnet in jedem Bereich gleich die passende Hilfe. Stört es dich? <b>Lange darauf drücken</b> blendet es aus. Zurück holst du es unter ⚙️ Einstellungen → <b>„❓ Fragezeichen unten rechts“</b>.", zeig: () => einstiegHin(einfach() ? "einfach" : "ansagen", einfach() ? "setHzFrageE" : "setHzFrage"), seit: "2.23.5" },
   { id: "einstellung_suchen", thema: "start", sym: "🔍", t: "Jede Einstellung schnell finden", x: "In den Einstellungen findest du mit der <b>Lupe 🔍 unten rechts</b> jede Einstellung – z. B. „Ton“ oder „Farbe“ eingeben. Bereiche öffnest du durch Antippen der Überschrift, mit dem Schloss 🔒 hältst du sie offen oder zu.", zeig: () => zeige("einstellungen") },
+  { id: "klappen_alle", thema: "start", sym: "▾", t: "Alle Bereiche auf einmal auf- oder zuklappen", x: "In den ⚙️ Einstellungen oben rechts: <b>„▾ Alle auf“</b> öffnet alle Bereiche, danach heißt der Knopf <b>„▴ Alle zu“</b> und klappt alle wieder zu. Bereiche mit 🔒 bleiben, wie du sie festgestellt hast.", zeig: () => zeige("einstellungen"), seit: "2.23.40" },
+  { id: "gruppe_bereiche", thema: "nachrichten", sym: "👥", t: "Neue Gruppe: Bereiche auf- und zuklappen", x: "Bei <b>👥 Neue Gruppe</b> hat jeder Bereich – <b>Deine Gruppen</b>, <b>Name &amp; Symbol</b>, <b>Wer ist dabei?</b> – einen Pfeil ▾ zum Auf- und Zuklappen und ein Schloss 🔓. Mit 🔒 bleibt der Bereich so, wie er ist; die App merkt es sich.", zeig: () => gruppeForm(null), seit: "2.23.41" },
   { id: "kurzanleitung", thema: "start", sym: "📄", t: "Kurzanleitung zum Ausdrucken", x: "Die App in 3 Schritten – zum Ansehen oder Ausdrucken, z. B. für jemanden, der neu ist. Zu finden unter ⚙️ → Darstellung → „📄 Kurzanleitung“.", zeig: () => druckStarten("anleitung") },
   { id: "ueberblick", thema: "start", sym: "🗺️", t: "Die Club-App auf einen Blick", x: "Was kann die App, und was ist zuletzt dazugekommen? Das steht in „🗺️ Club-App auf einen Blick“ unter <b>📚 Meine Dokumente</b> – es aktualisiert sich mit jeder Version selbst.", zeig: () => zeige("ueberblick") },
   // 🎨 Aussehen & Darstellung
@@ -4023,12 +4027,12 @@ function hzFrageSchalter(an) {
 // darunter der Weg zum ganzen Kapitel (HZ_SICHT_THEMA). Neue Ansicht/Hilfe = hier eintragen; der Vertragstest prüft jede ID.
 const HZ_SICHT_HILFEN = {
   "start": ["e:start", "h:kachel_lang", "h:kachel_aus", "h:register_ziehen", "h:register_wischen", "h:ansicht", "h:infofeld", "h:info_springen", "t:schnellstart", "t:lupe", "h:frage_knopf", "h:status", "h:modus_knopf", "h:verbindung"],
-  "einstellungen": ["e:einstellungen", "h:einstellung_suchen", "t:klappe", "h:farbe", "h:schrift", "h:nacht", "h:push", "h:meine_geraete", "t:ruhe", "h:privatsphaere", "h:tipps_schalter", "h:einweisung_wieder", "h:frage_knopf", "h:installieren"],
+  "einstellungen": ["e:einstellungen", "h:einstellung_suchen", "h:klappen_alle", "t:alle_klappen", "t:klappe", "h:farbe", "h:schrift", "h:nacht", "h:push", "h:meine_geraete", "t:ruhe", "h:privatsphaere", "h:tipps_schalter", "h:einweisung_wieder", "h:frage_knopf", "h:installieren"],
   "sos": ["e:sos", "t:sos", "h:wo_bin_ich", "h:notfallkontakt", "t:notfallpass", "h:notfallpass_sichern", "e:b-notfall"],
   "nachrichten": ["e:nachrichten", "t:wischen", "h:merken", "h:neue_linie", "t:stumm", "t:anklopfen", "h:ohne_netz", "t:emoji", "t:diktieren", "h:gruppe_loeschen"],
   "chat": ["e:nachrichten", "t:reaktion", "t:bearbeiten", "h:anheften", "h:merken", "h:kopieren", "h:weiterleiten", "t:erwaehnung", "t:emoji", "t:diktieren", "h:mikrofon", "h:chat_abstimmung", "h:kontakt_teilen", "h:haken", "h:sprachtempo", "h:chat_vorlesen", "h:whatsapp", "h:entwurf", "h:ohne_netz", "t:rechtschreibung", "t:stumm", "h:gruppe_loeschen"],
   "neu": ["e:nachrichten", "t:erwaehnung", "t:emoji", "t:diktieren", "h:entwurf"],
-  "gruppe": ["e:nachrichten", "t:erwaehnung", "t:stumm", "h:gruppe_loeschen"],
+  "gruppe": ["e:gruppe", "h:gruppe_bereiche", "t:klappe", "t:erwaehnung", "t:stumm", "h:gruppe_loeschen"],
   "termine": ["e:termine", "t:antwort_zurueck", "t:mitfahren", "t:private_termine", "h:wiederholen", "h:todo", "h:terminanfrage", "h:terminfindung", "h:kalender_blaettern", "h:drucken", "t:kalender", "h:naechstes_treffen", "h:feiertage"],
   "dienste": ["e:dienste", "h:dienst_erinnerung", "h:push"],
   "mitglieder": ["e:mitglieder", "h:wer_online", "h:mitglieder_ansicht", "h:status", "t:anklopfen", "h:gratulieren", "h:zuletzt_da"],
@@ -8058,7 +8062,7 @@ const DOKUMENTE = [
   // 1.81.0: Version 2 (Register Club/Technik, Sprachansagen, Diktieren, Tippfehler, Farbschemen, Fotoalben, Archiv & Chronik) – V1 bleibt als Datei unverändert;
   // neue id, damit die leise „NEU“-Zeile (KC-CLUB-DOK-NEU) einmal wieder erscheint
   // KC-CLUB-ANLEITUNG-V4 (2.23.33): Version 4 mit Spielen, Hilfe-Zentrum, Wunschbogen, Meine Daten, Erinnerung, Chats archivieren, SOS an alle – V3 bleibt als Datei
-  { id: "bedienung-club-app-v4", sym: "📖", t: "Bedienungsanleitung Club-App", u: "Version 4 · alles erklärt, mit Bildern · 43 Seiten", datei: "dokumente/Koecheclub-App_Anleitung_V4.pdf", neuBis: "2026-11-30" },
+  { id: "bedienung-club-app-v5", sym: "📖", t: "Bedienungsanleitung Club-App", u: "Version 5 · alles erklärt, mit Bildern · 44 Seiten", datei: "dokumente/Koecheclub-App_Anleitung_V5.pdf", neuBis: "2026-11-30" },
   // KC-CLUB-VERTRETUNG (2.2.0): Betriebsanleitung für die Admin-Vertretung + Notfall-Umschlag (ohne Zugangsdaten) – nur für Admins sichtbar
   { id: "vertretung", sym: "🛡️", t: "Vertretung des Admins", u: "Betriebsanleitung + Notfall-Umschlag zum Ausfüllen", datei: "dokumente/Vertretung_Admin_V1.pdf", nur: () => !!ICH?.admin },
   { id: "bilderrechner", sym: "🧮", t: "Schnellanleitung Bilderrechner", u: "Kurzanleitung V4 · 28 Seiten", datei: "dokumente/Kurzanleitung_Bilderrechner_V4.pdf" },
