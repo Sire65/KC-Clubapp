@@ -4000,6 +4000,12 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/🔢 Mit Code anmelden/.test(t) && /APP_URL_CLUB/.test(t) && /Zum Startbildschirm hinzufügen/.test(t) && /App installieren/.test(t) && /bitte nicht weitergeben/.test(t), "Schritte: Code, Adresse, Startbildschirm, Hinweis");
   assert.ok(/ja: "🔢 Code holen"/.test(t) && /testen: \(\) => kurzcodeBlatt\(\)/.test(t) && /tablet_pc: "technik"/.test(html), "Code holen + Hilfe-Kapitel");
 }
+// 395. 2.23.46: Clubleitung beim Start – Tages-Übersicht und Eingang-Hinweis an/aus (KC-CLUB-LEITUNG-START-SCHALTER)
+{
+  assert.ok(/<details class="karte versteckt" data-klappe="leitung_start" id="leitungStart">/.test(html) && /id="setTagesinfo" onchange="leitungStartSetzen\('tagesinfo', this\.checked\)"/.test(html) && /id="setEkHinweis" onchange="leitungStartSetzen\('eingang', this\.checked\)"/.test(html), "zwei Schalter");
+  assert.ok(/const key = was === "tagesinfo" \? "kc_buero_frage_aus" : EKH_AUS;/.test(html) && /localStorage\.getItem\("kc_buero_frage_aus"\)/.test(html), "Tages-Übersicht nutzt den vorhandenen Merker (kein zweiter)");
+  assert.ok(/!buDarf\(\) \|\| ekhLies\(EKH_AUS\) === "1"\) return;/.test(html) && /if \(v === "einstellungen"\) \{ leitungStartZeigen\(\);/.test(html) && /k\.classList\.toggle\("versteckt", !darf\)/.test(html), "Hinweis respektiert Aus; nur Clubleitung sieht den Bereich");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

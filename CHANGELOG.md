@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.23.46 – 2026-10-05 – 🗂️ Clubleitung beim Start: Tages-Übersicht und Eingang-Hinweis an/aus (Wunsch Hansi)
+- KC-CLUB-LEITUNG-START-SCHALTER: neuer Bereich in ⚙️ Einstellungen „🗂️ Clubleitung beim Start“ (nur Clubsprecher, Kassenwart, Admin):
+  „📋 Tages-Übersicht beim Start“ und „📥 Hinweis: viel im Eingangskorb“ – je Gerät an/aus, Start: an (wie bisher). Die Tages-Übersicht
+  nutzt den vorhandenen Merker (gleich wie „Auf diesem Gerät nicht mehr beim Start zeigen“ im Fenster). Hilfe ergänzt. Nur App. Test 395.
+
 ## 2.23.45 – 2026-10-05 – 💡 Tipp des Tages: Club-App auch auf Tablet oder PC (Wunsch Hansi)
 - KC-CLUB-TIPP-TABLET-PC: neuer Tipp „💻 Club-App auch auf Tablet oder PC nutzen?“ (kommt als nächster): 1. „🔢 Code holen“ (6-stelliger
   Code, kurz gültig, einmal), 2. am Tablet/PC im Browser die Club-Adresse öffnen und „🔢 Mit Code anmelden“, 3. im Browser-Menü „Zum

@@ -2528,6 +2528,13 @@
       <div class="umschalter" id="mgAnsichtWahl"><button data-a="kacheln" onclick="mgAnsichtSetzen('kacheln')">🔲 Kacheln</button><button data-a="liste" onclick="mgAnsichtSetzen('liste')">☰ Liste</button></div>
       <div class="schalter"><div><b>🇩🇪 Feiertage NRW im Kalender</b><div class="hinweis">Gesetzliche Feiertage in Nordrhein-Westfalen</div></div><input type="checkbox" id="setFeiertage" onchange="einstellung('feiertage', this.checked); if (KAL) kalZeichnen()"></div>
     </details>
+    <!-- 2.23.46 KC-CLUB-LEITUNG-START-SCHALTER (Wunsch Hansi): was beim App-Start für die Clubleitung erscheint – je Gerät an/aus -->
+    <details class="karte versteckt" data-klappe="leitung_start" id="leitungStart">
+      <summary>🗂️ Clubleitung beim Start</summary>
+      <p class="hinweis" style="margin:0 0 6px">Nur für Clubsprecher, Kassenwart und Admin. Gilt für dieses Gerät.</p>
+      <div class="schalter"><div><b>📋 Tages-Übersicht beim Start</b><div class="hinweis">Eingang, Aufgaben, Geburtstage, nächste Sitzung – einmal je Start. Jederzeit über „📋 Übersicht“ erreichbar.</div></div><input type="checkbox" id="setTagesinfo" onchange="leitungStartSetzen('tagesinfo', this.checked)"></div>
+      <div class="schalter"><div><b>📥 Hinweis: viel im Eingangskorb</b><div class="hinweis">Liegen mehr als 5 Sachen im Eingangskorb, kommt beim Start eine kurze Liste mit „Jetzt bearbeiten / Später / Heute nicht mehr“.</div></div><input type="checkbox" id="setEkHinweis" onchange="leitungStartSetzen('eingang', this.checked)"></div>
+    </details>
     <details class="karte" data-klappe="install" data-einfach>
       <summary>📲 App-Installation</summary>
       <div id="installStand"></div>
@@ -2865,7 +2872,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.45"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.46"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3962,7 +3969,7 @@ const HILFE = [
   { id: "buero_sprache", thema: "club", sym: "🎙️", t: "Im Büro einfach sagen, was du brauchst", x: "Im Büro gibt es das Mikrofon <b>„🎙️ Sag mir, was du brauchst“</b> – zum Beispiel „Öffne Ordner Protokolle“. Das spart Tipperei, wenn es schnell gehen soll.", nur: () => !!ICH?.buero, zeig: () => buStart(), seit: "2.23.1" },
   // 2.23.8: Hilfen zu den Neuerungen aus 2.23.6 (Eingangskorb, Ablage, Büro-Hinweis, Töne, Inkognito)
   { id: "eingangskorb", thema: "club", sym: "📥", t: "Der Eingangskorb im Büro", x: "Alles, was für die Clubleitung neu hereinkommt, liegt im Büro im <b>📥 Eingangskorb</b>: Erstattungen (Fahrtkosten), Dienstzeiten, Vorschläge, Änderungsmeldungen, Ausleihen und mehr. Clubsprecher, Kassenwart und Admin bekommen dazu eine Meldung. Es bleibt im Eingang, bis es erledigt ist – zum Beispiel mit <b>„✅ Erstattet“</b> oder <b>„👁️ Zur Kenntnis genommen“</b>. Oben rechts: <b>🔽</b> filtert nach Jahr, Monat, Art und Name, <b>📊</b> zeigt alle Dienstzeiten als Übersicht quer (Name, Tage, Zeitbalken, Stunden) – mit Drucken und „🗄️ In Ordner ablegen“ (Ordner des Mitglieds, Register Dienstpläne, und im Büro „Dienstpläne“).", nur: () => !!(ICH?.vorstand || ICH?.admin), zeig: () => { buStart(); buEingang(); }, seit: "2.23.8" },
-  { id: "eingang_hinweis", thema: "club", sym: "📥", t: "Hinweis: viel im Eingangskorb", x: "Liegen <b>mehr als 5 Sachen</b> im Eingangskorb, zeigt die App der Clubleitung beim Start eine kleine Liste – z. B. „5 Dienstpläne, 1 Kostenerstattung, 1 Hilfegesuch“. Eine Zeile antippen öffnet den Eingangskorb gleich mit dieser Art. Darunter: <b>„✅ Ja, jetzt bearbeiten“</b>, <b>„⏰ Später“</b> (in ein paar Stunden wieder) oder <b>„🌙 Heute nicht mehr“</b>.", nur: () => !!(ICH?.vorstand || ICH?.admin), zeig: () => { buStart(); buEingang(); }, seit: "2.23.43" },
+  { id: "eingang_hinweis", thema: "club", sym: "📥", t: "Hinweis: viel im Eingangskorb", x: "Liegen <b>mehr als 5 Sachen</b> im Eingangskorb, zeigt die App der Clubleitung beim Start eine kleine Liste – z. B. „5 Dienstpläne, 1 Kostenerstattung, 1 Hilfegesuch“. Eine Zeile antippen öffnet den Eingangskorb gleich mit dieser Art. Darunter: <b>„✅ Ja, jetzt bearbeiten“</b>, <b>„⏰ Später“</b> (in ein paar Stunden wieder) oder <b>„🌙 Heute nicht mehr“</b>. Ganz ausschalten (und die Tages-Übersicht beim Start): ⚙️ → <b>„🗂️ Clubleitung beim Start“</b>.", nur: () => !!(ICH?.vorstand || ICH?.admin), zeig: () => einstiegHin("leitung_start"), seit: "2.23.43" },
   { id: "ablage_mehrere", thema: "club", sym: "🗄️", t: "In mehrere Ordner ablegen", x: "Ist etwas im Eingangskorb erledigt, fragt die App <b>„Wo ablegen?“</b>. Setz einfach Häkchen – es dürfen mehrere sein: im Ordner des Mitglieds (zum Nachvollziehen), in unseren Club-Ordnern mit passendem Register oder in deinem eigenen Ordner. Die App merkt sich deine Wahl fürs nächste Mal. Nachträglich geht es über <b>„🗄️ Ablegen …“</b>.", nur: () => !!(ICH?.vorstand || ICH?.admin), zeig: () => { buStart(); buEingang(); }, seit: "2.23.8" },
   { id: "buero_neue_nachricht", thema: "club", sym: "💬", t: "Neue Nachricht, während du im Büro bist", x: "Kommt eine Nachricht, während du im Büro arbeitest, erscheint oben ein grüner Hinweis <b>„💬 Neue Nachricht von …“</b>. Ein Tipp darauf öffnet die Unterhaltung genau an der richtigen Stelle; mit Zurück bist du wieder im Büro.", nur: () => !!ICH?.buero, zeig: () => buStart(), seit: "2.23.8" },
   { id: "ttt_toene", thema: "club", sym: "🔊", t: "Tic-Tac-Toe mit Tönen", x: "Unter dem Spielfeld gibt es den Knopf <b>„🔊 Töne an / 🔇 aus“</b>. Dann klingt jeder Zug – deiner hell, der des Gegners tiefer – und am Ende hörst du, ob du gewonnen, verloren oder unentschieden gespielt hast. Gilt nur auf diesem Gerät.", zeig: () => { zeige("spiele"); spArtWahl("ttt"); }, seit: "2.23.8" },
@@ -9897,7 +9904,7 @@ function zeige(v, ausHistorie) {
   if (v === "dienste") dienstLaden();
   if (v === "nachrichten") unterhLaden();
   if (v === "mitglieder") { MG_AMEISEN.bis = 0; MG_AMEISEN.neu = true; mgAnsichtWahlZeigen(); mitgliederLaden(); } // KC-CLUB-GRUPPEN-AMEISEN
-  if (v === "einstellungen") { notProbeZeigen(); infoStartZeigen(); tippSchalterZeigen(); einwSchalterZeigen(); stimmeWahlZeigen(); ansageSchalterZeigen(); ansStandZeigen(); ruheZeigen(); if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); anklopfenZeigen(); zuletztSchalterZeigen(); inkognitoZeigen(); spEinstZeigen(); schnellWahlZeigen(); mgAnsichtWahlZeigen(); }
+  if (v === "einstellungen") { leitungStartZeigen(); notProbeZeigen(); infoStartZeigen(); tippSchalterZeigen(); einwSchalterZeigen(); stimmeWahlZeigen(); ansageSchalterZeigen(); ansStandZeigen(); ruheZeigen(); if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); anklopfenZeigen(); zuletztSchalterZeigen(); inkognitoZeigen(); spEinstZeigen(); schnellWahlZeigen(); mgAnsichtWahlZeigen(); }
   if (v === "start") neuLaden();
   // KC-CLUB-ZURUECK: jede Ansicht bekommt einen Verlaufseintrag, damit „Zurück“ eine Ansicht zurückgeht statt die App zu schließen
   const hash = v === "start" || v === "chat" ? "" : v === "protokoll" ? "#protokoll=" + prId : v === "aktion" ? "#aktion=" + aktionId : v === "mitglied" ? "#mitglied=" + mitgliedId : v === "dokansicht" ? "#dokument=" + encodeURIComponent(DOKA.id) : "#" + v;
@@ -10571,8 +10578,9 @@ const EKH_ARTEN = [["dienstzeiten", "📅", "Dienstplan", "Dienstpläne", "Diens
   ["aenderungen", "✏️", "Änderungsmeldung", "Änderungsmeldungen", "Änderungsmeldung"], ["archiv", "🗄️", "Dokument zur Prüfung", "Dokumente zur Prüfung", "Archiv-Prüfung"],
   ["entwuerfe", "📄", "Protokoll-Entwurf", "Protokoll-Entwürfe", "Protokoll"], ["aufgaben", "✔️", "offene Aufgabe", "offene Aufgaben", "Aufgabe"]];
 const ekhLies = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
+const EKH_AUS = "kc_club_ek_hinweis_aus"; // 2.23.46: dauerhaft aus (⚙️ → „🗂️ Clubleitung beim Start“)
 async function ekHinweisPruefen(versuch = 0) {
-  if (!(ICH?.vorstand || ICH?.admin) || !buDarf()) return;
+  if (!(ICH?.vorstand || ICH?.admin) || !buDarf() || ekhLies(EKH_AUS) === "1") return;
   try { if (sessionStorage.getItem("kc_ek_hinweis_gezeigt")) return; } catch {}
   if (ekhLies(EKH_HEUTE) === heuteIso() || Date.now() < Number(ekhLies(EKH_SPAETER) || 0)) return;
   if (document.querySelector(".blatt:not(.versteckt)") || aktuelleAnsicht !== "start") { if (versuch < 15) setTimeout(() => ekHinweisPruefen(versuch + 1), 6000); return; }
@@ -10594,6 +10602,17 @@ async function ekHinweisPruefen(versuch = 0) {
     try { if (w === "heute") localStorage.setItem(EKH_HEUTE, heuteIso()); else localStorage.setItem(EKH_SPAETER, String(Date.now() + EKH_RUHE_MS)); } catch {}
     melde(w === "heute" ? "🌙 Heute nicht mehr – der Eingangskorb bleibt im Büro erreichbar." : "⏰ Später – in ein paar Stunden erinnere ich dich wieder.");
   }));
+}
+// KC-CLUB-LEITUNG-START-SCHALTER (2.23.46, Wunsch Hansi): Tages-Übersicht (vorhandener Merker kc_buero_frage_aus) und Eingang-Hinweis an/aus
+function leitungStartZeigen() {
+  const k = $("leitungStart"); if (!k) return;
+  const darf = !!(ICH?.vorstand || ICH?.admin) && buDarf(); k.classList.toggle("versteckt", !darf); if (!darf) return;
+  $("setTagesinfo").checked = ekhLies("kc_buero_frage_aus") !== "1"; $("setEkHinweis").checked = ekhLies(EKH_AUS) !== "1";
+}
+function leitungStartSetzen(was, an) {
+  const key = was === "tagesinfo" ? "kc_buero_frage_aus" : EKH_AUS;
+  try { an ? localStorage.removeItem(key) : localStorage.setItem(key, "1"); } catch {}
+  melde(`${was === "tagesinfo" ? "📋 Tages-Übersicht" : "📥 Eingang-Hinweis"} beim Start ${an ? "an" : "aus"} (dieses Gerät)`);
 }
 function ekHinweisOeffnen(art) { Object.assign(EKF, { jahr: "", monat: "", wer: "", art: art || "", offen: !!art }); buStart(); buEingang(); }
 // ---------- KC-CLUB-TAGESINFO (1.33.0, Wunsch Hansi): Tages-Übersicht beim Start – alles Wichtige, jede Zeile antippbar ----------
