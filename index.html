@@ -2908,7 +2908,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.62"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.63"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -15490,14 +15490,15 @@ async function scStart(tab) {
   await scLaden();
 }
 async function scLaden() {
-  if (!BS.liste.length && !BS.geladen) { BS.geladen = true; bsLaden().then(() => scZeigen()); } // KC-CLUB-BESUCHE: für „🎓 geschult“ und die Liste
+  // KC-CLUB-BESUCHE: für „🎓 geschult“ und die Liste – danach nur die betroffenen Teile neu zeigen (Eingaben bleiben stehen; 2.23.63)
+  if (!BS.liste.length && !BS.geladen) { BS.geladen = true; bsLaden().then(() => { if ((SC.tab || "termine") === "besuche") scZeigen(); else if ($("scMListe") && SC.T) scMitglieder(); }); }
   try { SC.T = await scApi("t_init"); } catch (e) { const z = $("scInhalt"); if (z) z.innerHTML = `<div class="karte sc-fehler">⚠️ ${esc(e?.message || "Nicht erreichbar")}</div>`; return; }
   scZeigen();
 }
 function scZeigen() {
   const z = $("scInhalt"); if (!z || !SC.T) return;
   const tab = SC.tab || "termine";
-  $("scTabs").innerHTML = [["termine", "📅 Termine & Einladungen"], ["besuche", "📝 Besuche"]].map(([k, t]) => `<button type="button" class="chip${tab === k ? " an" : ""}" onclick="SC.tab='${k}';scZeigen()">${t}${k === "termine" && SC.wartet ? ` (${SC.wartet})` : ""}</button>`).join("");
+  scTabs();
   if (tab === "besuche") { z.innerHTML = `<div class="karte">${bsListeHtml()}</div>`; return; }
   const offen = z.querySelectorAll("details[open]"), auf = new Set([...offen].map((d) => d.dataset.k));
   z.innerHTML = `
@@ -15522,7 +15523,12 @@ function scZeigen() {
     <details class="karte" data-k="einladungen"${auf.has("einladungen") ? " open" : ""}><summary><b>📨 Einladungen</b></summary><div id="scEinladungen"></div></details>
     <details class="karte" data-k="kalender"${auf.has("kalender") ? " open" : ""}><summary><b>📆 Google-Kalender</b></summary><div id="scKalender"></div></details>
     <details class="karte" data-k="protokoll"${auf.has("protokoll") ? " open" : ""}><summary><b>📜 Protokoll</b></summary><div id="scProtokoll"></div></details>`;
-  scWartet(); scArtZeigen(); scTermine(); scMitglieder(); scEinladungen(); scKalender(); scProtokoll();
+  scWartet(); scTabs(); scArtZeigen(); scTermine(); scMitglieder(); scEinladungen(); scKalender(); scProtokoll();
+}
+// Reiter; die Zahl „wartet auf dich“ erst nach scWartet() (2.23.63: zeigte vorher den alten Stand)
+function scTabs() {
+  const tab = SC.tab || "termine", z = $("scTabs"); if (!z) return;
+  z.innerHTML = [["termine", "📅 Termine & Einladungen"], ["besuche", "📝 Besuche"]].map(([k, t]) => `<button type="button" class="chip${tab === k ? " an" : ""}" onclick="SC.tab='${k}';scZeigen()">${t}${k === "termine" && SC.wartet ? ` (${SC.wartet})` : ""}</button>`).join("");
 }
 // ----- Wartet auf dich -----
 function scWartet() {
@@ -15775,7 +15781,7 @@ function bsFormular(id, vorgabe = {}) {
   const heute = heuteIso();
   BS.f = { id: b?.besuch_id || null, art: b?.besuchsart || vorgabe.art || "beim_mitglied", personen: [...(b?.person_ids || vorgabe.personen || [])],
     antworten: Object.fromEntries(BS_FRAGEN.map((q) => [q.f, b?.[q.f] || null])), geraete: [...(b?.installiert_auf || [])], fotos: [...(b?.fotos || [])], neueFotos: [],
-    geplant: b ? b.status === "geplant" : !!vorgabe.geplant || (vorgabe.datum || heute) > heute,
+    geplant: b ? b.status === "geplant" && b.datum > heute : !!vorgabe.geplant || (vorgabe.datum || heute) > heute, // 2.23.63: Tag vorbei → Besuch hat stattgefunden
     gesendet: b ? [b.push_gesendet_am && "Push " + zeitKurz(b.push_gesendet_am), b.mail_gesendet_am && "Mail " + zeitKurz(b.mail_gesendet_am)].filter(Boolean).join(" · ") : "" };
   const w = (k, d = "") => esc(b?.[k] ?? vorgabe[k] ?? d);
   const f = blattAuf("bsBlatt", `<h3 style="margin:0">📝 ${b ? (BS.f.geplant ? "Geplanter Besuch " : "Besuch ") + esc(b.besuch_id) : "Neuer Besuch"}</h3>
@@ -15806,7 +15812,7 @@ function bsFormular(id, vorgabe = {}) {
       <div id="bsFotos" class="bs-fotos"></div></div>
     <div class="karte" id="bsVersand"></div>
     <button class="knopf haupt" id="bsSpeichern" onclick="bsSpeichern(this)">Speichern</button><button class="knopf" onclick="$('bsBlatt').remove()">Abbrechen</button>`);
-  f.style.zIndex = "2100"; f.classList.add("sc-blatt");
+  f.style.zIndex = "2100"; f.classList.add("sc-blatt"); f.onclick = null; // 2.23.63: nicht aus Versehen schließen
   bsZeigen();
 }
 function bsPerson(pid) {
@@ -15886,21 +15892,23 @@ async function bsSpeichern(k) {
   if (d.zeit_von && d.zeit_bis && d.zeit_bis <= d.zeit_von) return melde("„Bis“ muss nach „Von“ liegen.", true);
   d.status = F.geplant ? "geplant" : "fertig";
   d.zusammenfassung_senden = !!F.gesendet || (!F.geplant && !!$("bsSenden")?.checked && F.personen.length > 0);
-  const terminSenden = F.geplant && !!$("bsTerminSenden")?.checked;
+  const terminSenden = F.geplant && !!$("bsTerminSenden")?.checked && !F.terminRaus; // 2.23.63: beim erneuten Versuch nicht doppelt bestätigen
   k.disabled = true; k.textContent = "Wird gespeichert …";
   try {
     let r = await api("besuch", { a: "speichern", besuch_id: F.id, daten: d, termin_senden: terminSenden, termin_abgleich: F.geplant && !!F.id }, { warten: true });
-    for (let i = 0; i < F.neueFotos.length; i++) { k.textContent = `Foto ${i + 1} von ${F.neueFotos.length} …`; r = { ...r, besuch: (await api("besuch", { a: "foto", besuch_id: r.besuch.besuch_id, mime: F.neueFotos[i].mime, data: F.neueFotos[i].data })).besuch }; }
+    F.id = r.besuch.besuch_id; F.terminRaus = F.terminRaus || !!r.termin?.gesendet; F.gesendet = F.gesendet || (r.versand ? "gerade eben" : ""); // 2.23.63: ab jetzt bearbeiten statt neu anlegen (kein Doppel, wenn ein Foto hängt)
+    while (F.neueFotos.length) { k.textContent = `Foto hochladen … (noch ${F.neueFotos.length})`; r = { ...r, besuch: (await api("besuch", { a: "foto", besuch_id: F.id, mime: F.neueFotos[0].mime, data: F.neueFotos[0].data })).besuch }; F.neueFotos.shift(); F.fotos = r.besuch.fotos || F.fotos; }
     $("bsBlatt")?.remove();
     const t = r.termin?.fehler ? `Gespeichert (${r.besuch.besuch_id}) – aber Terminbestätigung: ${r.termin.fehler}` : r.termin?.gesendet ? `📅 Gespeichert und Termin bestätigt – ${r.besuch.besuch_id}`
       : d.status === "geplant" ? `📅 Als geplant gespeichert – ${r.besuch.besuch_id}` : r.versand ? `✅ Gespeichert – ${r.versand.join(" · ")}` : `✅ Gespeichert – ${r.besuch.besuch_id}`;
     melde(t, !!r.termin?.fehler);
     await bsLaden(); await scLaden();
-  } catch (e) { meldeFehler(e); k.disabled = false; bsZeigenKnopf(); }
+  } catch (e) { meldeFehler(e); k.disabled = false; if ($("bsBlatt")) bsZeigen(); }
 }
 // aus „Meine Termine“: bestätigten Termin als Besuch öffnen/anlegen
-function bsAusTermin(bid) {
+async function bsAusTermin(bid) {
   const b = SC.T.buchungen.find((x) => x.id === bid), s = b && scSlot(b.slot_id), e = b && scEinl(b.einladung_id); if (!s || !e) return;
+  if ((b.besuch_id && !BS.liste.some((x) => x.besuch_id === b.besuch_id)) || !BS.mitglieder.length) await bsLaden(); // 2.23.63: sonst doppelter Besuch
   if (b.besuch_id && BS.liste.some((x) => x.besuch_id === b.besuch_id)) return bsFormular(b.besuch_id);
   const datum = berlinIso(s.beginn), personen = e.person_ids.filter((p) => BS.mitglieder.some((m) => m.person_id === p));
   bsFormular(null, { datum, von: fZeit.format(new Date(s.beginn)), bis: fZeit.format(new Date(s.ende)), personen, art: b.besuchsart, geplant: new Date(s.beginn) > new Date(),
@@ -15914,7 +15922,10 @@ function bsAusTermin(bid) {
 const SM = { liste: null };
 const SM_ART = { bei_hansi: "🏠 bei Hansi", beim_mitglied: "🚗 Hansi kommt zu dir", wahl: "📍 du wählst: bei dir oder bei Hansi", egal: "Ort egal" };
 const SM_KEY = "kc_club_sm_hinweis";
-async function smLaden(oeffnen = false) { try { SM.liste = (await api("schulung_meine", { oeffnen })).einladungen || []; } catch { SM.liste = SM.liste || []; } return SM.liste; }
+async function smLaden(oeffnen = false) { // 2.23.63: Fehler sichtbar – nie „keine Einladung“ anzeigen, wenn der Stand unbekannt ist
+  try { const r = await api("schulung_meine", { oeffnen }); SM.liste = r.einladungen || []; SM.fehler = !!r.unvollstaendig; } catch { SM.liste = SM.liste || []; SM.fehler = true; }
+  return SM.liste;
+}
 async function smStart() {
   blattAuf("smBlatt", `<h3 style="margin:0">🎓 Meine Schulung</h3><div id="smInhalt"><p class="hinweis">Wird geladen …</p></div>
     <button type="button" class="tw-nicht" onclick="$('smBlatt').remove();zeige('archiv')">📄 Meine Zusammenfassungen im Archiv (Register „Schulung“)</button>
@@ -15923,8 +15934,9 @@ async function smStart() {
 }
 function smZeigen() {
   const z = $("smInhalt"); if (!z) return;
-  if (!SM.liste?.length) { z.innerHTML = '<p>Zurzeit gibt es keine offene Einladung zur Schulung. Hansi meldet sich, wenn er neue Termine anbietet.</p>'; return; }
-  z.innerHTML = SM.liste.map((e) => {
+  const warn = SM.fehler ? `<div class="karte ta-st-nein">⚠️ Der Stand konnte gerade nicht vollständig geladen werden. <button class="knopf klein" onclick="smLaden(true).then(smZeigen)">🔄 Nochmal versuchen</button></div>` : "";
+  if (!SM.liste?.length) { z.innerHTML = warn || '<p>Zurzeit gibt es keine offene Einladung zur Schulung. Hansi meldet sich, wenn er neue Termine anbietet.</p>'; return; }
+  z.innerHTML = warn + SM.liste.map((e) => {
     const zeit = (b, en) => scZeit(b, en), namen = e.anzahl > 1 ? e.namen.join(" und ") : "";
     const kopf = namen ? `<p class="hinweis" style="margin:0">Einladung für ${esc(namen)} – ihr kommt zusammen.</p>` : "";
     if (e.status === "offen") return `<div class="karte" data-e="${esc(e.id)}">${kopf}<b>Such dir einen Termin aus:</b>
@@ -15974,7 +15986,7 @@ function smVorschlag(id) {
   const f = blattAuf("smVBlatt", `<h3 style="margin:0">💬 Kein Termin passt</h3><p class="hinweis" style="margin:0">Schlag Hansi bis zu zwei Termine vor.</p>${zeile(1)}${zeile(2)}
     <label class="feld">Bemerkung (freiwillig)<input id="smBem" maxlength="500" data-diktat placeholder="z. B. vormittags geht es bei mir nicht"></label>
     <button class="knopf haupt" id="smVOk">📨 Vorschlag schicken</button><button class="knopf" onclick="$('smVBlatt').remove()">Abbrechen</button>`);
-  f.style.zIndex = "2100";
+  f.style.zIndex = "2100"; f.onclick = null; // 2.23.63: nicht aus Versehen schließen
   f.querySelectorAll("[data-ort]").forEach((g) => g.querySelectorAll(".chip").forEach((c) => (c.onclick = () => g.querySelectorAll(".chip").forEach((x) => x.classList.toggle("an", x === c)))));
   f.querySelector("#smVOk").onclick = async function () {
     const v = [1, 2].map((n) => ({ datum: $("smD" + n).value, von: $("smV" + n).value, bis: $("smB" + n).value, besuchsart: f.querySelector(`[data-ort="${n}"] .chip.an`)?.dataset.w || "egal" })).filter((x) => x.datum && x.von);
@@ -15985,7 +15997,7 @@ function smVorschlag(id) {
 }
 function smKalender(id) {
   const e = SM.liste.find((x) => x.id === id); if (!e?.buchung) return;
-  erinKalender({ id: "schulung-" + id, anlass: "🎓 Schulung bei " + (e.buchung.besuchsart === "bei_hansi" ? "Hansi" : "dir"), beginn: e.buchung.beginn, ende: e.buchung.ende, ort: e.buchung.ort }, 60);
+  erinKalender({ id: "schulung-" + id, hash: "#schulung", anlass: "🎓 Schulung bei " + (e.buchung.besuchsart === "bei_hansi" ? "Hansi" : "dir"), beginn: e.buchung.beginn, ende: e.buchung.ende, ort: e.buchung.ort }, 60);
 }
 // Hinweis beim Start, solange eine Einladung offen ist (nicht über offenen Fenstern; später = 4 Std., heute nicht mehr)
 async function smHinweisPruefen() {
@@ -16122,7 +16134,7 @@ function erinKalender(t, minuten) {
   const ics = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Koecheclub Werne//Club-App//DE", "BEGIN:VEVENT", `UID:anfrage-${t.id}@koecheclub-werne`, `DTSTAMP:${z(new Date().toISOString())}`,
     `SEQUENCE:${Math.floor(Date.now() / 60000) % 100000000}`, `SUMMARY:${e((t.anlass || "Termin") + (t.vorbehalt ? " (unter Vorbehalt)" : ""))}`, `DTSTART:${z(t.beginn)}`, `DTEND:${z(ende)}`, ...(t.ort ? [`LOCATION:${e(t.ort)}`] : []),
     ...(t.vorbehalt ? ["STATUS:TENTATIVE"] : []),
-    `DESCRIPTION:${e(location.origin + location.pathname + (t.spielId ? "#spiel=" + t.spielId : "#termine"))}`,
+    `DESCRIPTION:${e(location.origin + location.pathname + (t.spielId ? "#spiel=" + t.spielId : t.hash || "#termine"))}`,
     "BEGIN:VALARM", "ACTION:DISPLAY", `DESCRIPTION:${e(t.anlass || "Termin")}`, `TRIGGER:-PT${minuten}M`, "END:VALARM", "END:VEVENT", "END:VCALENDAR"].join("\r\n");
   const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([ics], { type: "text/calendar" })); a.download = String(t.anlass || "Termin").replace(/[^\wäöüÄÖÜß ]/g, "").trim().slice(0, 60) + ".ics";
   document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);

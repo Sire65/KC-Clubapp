@@ -1,5 +1,16 @@
 # Änderungen
 
+## 2.23.63 – 2026-10-05 – Schulungen: Prüfung nach dem Einspielen (Wunsch Hansi „alles noch mal prüfen“)
+- KC-CLUB-SCHULUNG-ADMIN: Die Zahl am Reiter „📅 Termine & Einladungen (n)“ zeigte den vorherigen Stand – jetzt erst nach dem Zählen.
+  Das Nachladen der Besuche baut die Seite nicht mehr komplett neu (Suchtext und persönliche Zeile bleiben stehen).
+- KC-CLUB-BESUCHE: Ging nach dem Speichern ein Foto nicht hoch, legte „Speichern“ beim zweiten Versuch einen doppelten Besuch an
+  (und hätte die Terminbestätigung doppelt geschickt) – jetzt wird der gespeicherte Besuch weiterbearbeitet, nur die fehlenden Fotos folgen.
+  Tippen neben das Formular schließt es nicht mehr (Eingaben gingen verloren; auch „Kein Termin passt“). Ein geplanter Besuch, dessen Tag
+  vorbei ist, öffnet als stattgefunden (Gesprächspunkte + Zusammenfassung). „📝 Protokoll öffnen“ lädt die Besuche, falls noch nicht da
+  (sonst doppelter Besuch).
+- KC-CLUB-SCHULUNG-MITGLIED: Konnte der Stand nicht (vollständig) geladen werden, stand dort „keine offene Einladung“ – jetzt
+  „⚠️ Stand konnte nicht geladen werden“ + „🔄 Nochmal versuchen“ (UNKNOWN nie als OK). Handy-Kalender-Eintrag führt zu „Meine Schulung“. Test 412.
+
 ## 2.23.62 – 2026-10-05 – 🎓 Meine Schulung: Termin in der Club-App aussuchen (Wunsch Hansi, Stufe 3)
 - KC-CLUB-SCHULUNG-MITGLIED: Die bisherige „bald“-Kachel „🎓 Meine Schulung“ (Register Meins) ist jetzt aktiv: Eingeladene sehen die freien
   Termine und tippen „✅ Diesen Termin nehmen“ (bei „Mitglied wählt“: bei mir / bei Hansi), „💬 Kein Termin passt“ mit bis zu 2 Vorschlägen

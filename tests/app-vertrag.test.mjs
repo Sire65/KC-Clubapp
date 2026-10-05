@@ -4172,6 +4172,16 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   for (const x of ["✅ Diesen Termin nehmen", "💬 Kein Termin passt", "✖ Zurzeit kein Besuch", "🔄 Anders wählen", "📅 In meinen Handy-Kalender", "👀 Ja, Termin aussuchen", "🌙 Heute nicht mehr fragen"]) assert.ok(k.includes(x), "Teil fehlt: " + x);
   assert.ok(/\{ id: "schulungen", sym: "🎓", t: "Meine Schulung", u: "Termin aussuchen · Zusammenfassungen", aktion: "smStart\(\)"/.test(html) && /smHinweisPruefen\(\), 7000/.test(html), "Kachel aktiv, Hinweis beim Start");
 }
+// 412. 2.23.63: Schulungen nach Prüfung – kein doppelter Besuch, Stand unbekannt sichtbar, Formular schließt nicht aus Versehen
+{
+  const k = html.slice(html.indexOf("// ---------- KC-CLUB-SCHULUNG-ADMIN (2.23.60"), html.indexOf("// KC-CLUB-TERMINANFRAGE-HINWEIS (2.23.52"));
+  assert.ok(/scWartet\(\); scTabs\(\);/.test(k) && /function scTabs\(\)/.test(k), "Reiter-Zahl nach dem Zählen");
+  assert.ok(/F\.id = r\.besuch\.besuch_id;/.test(k) && /while \(F\.neueFotos\.length\)/.test(k) && /!F\.terminRaus/.test(k), "zweiter Versuch bearbeitet statt neu anzulegen");
+  assert.ok((k.match(/f\.onclick = null;/g) || []).length >= 2, "Formulare schließen nicht beim Tippen daneben");
+  assert.ok(/SM\.fehler = true/.test(k) && /Nochmal versuchen/.test(k), "Stand unbekannt wird angezeigt");
+  const g = server.slice(server.indexOf('case "schulung_meine"'), server.indexOf('case "schulung_antwort"'));
+  assert.ok(/catch \{ unvollstaendig = true; \}/.test(g) && /json\(\{ einladungen: liste, unvollstaendig \}\)/.test(g), "Server meldet unvollständigen Stand");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

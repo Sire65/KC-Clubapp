@@ -41,7 +41,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.23.62";
+const SERVER_VERSION = "2.23.63";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -5254,15 +5254,15 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       case "schulung_meine": {
         const { data: el } = await db.from("kc_termin_einladungen").select("id,status,erstellt_am").contains("person_ids", [ich.person_id]).eq("ist_test", false)
           .in("status", ["offen", "gewaehlt", "gegenvorschlag", "bestaetigt", "abgelaufen"]).order("erstellt_am", { ascending: false }).limit(3);
-        const liste: any[] = [];
+        const liste: any[] = []; let unvollstaendig = false; // 2.23.63: nicht lesbare Einladung → App zeigt „Stand unbekannt“ statt „keine Einladung“
         for (const e of el ?? []) {
           try {
             const st = await schulungAufruf("m_laden", { einladung_id: e.id, person_id: ich.person_id, client: "club_app", page_open: p.oeffnen === true });
             const kommend = st.buchung && new Date(st.buchung.ende || st.buchung.beginn).getTime() > Date.now();
             if (["offen", "gewaehlt", "gegenvorschlag"].includes(st.status) || (st.status === "bestaetigt" && kommend) || (st.status === "abgelaufen" && Date.now() - new Date(st.gueltig_bis).getTime() < 14 * 86400000)) liste.push({ id: e.id, ...st });
-          } catch { /* einzelne Einladung nicht lesbar → weglassen */ }
+          } catch { unvollstaendig = true; }
         }
-        return json({ einladungen: liste });
+        return json({ einladungen: liste, unvollstaendig });
       }
       case "schulung_antwort": {
         const was = String(p.was || ""), aktion = ({ waehlen: "m_waehlen", gegenvorschlag: "m_gegenvorschlag", absagen: "m_absagen", aendern: "m_aendern" } as Record<string, string>)[was];
