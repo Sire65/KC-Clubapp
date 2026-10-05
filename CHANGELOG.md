@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.23.45 – 2026-10-05 – 💡 Tipp des Tages: Club-App auch auf Tablet oder PC (Wunsch Hansi)
+- KC-CLUB-TIPP-TABLET-PC: neuer Tipp „💻 Club-App auch auf Tablet oder PC nutzen?“ (kommt als nächster): 1. „🔢 Code holen“ (6-stelliger
+  Code, kurz gültig, einmal), 2. am Tablet/PC im Browser die Club-Adresse öffnen und „🔢 Mit Code anmelden“, 3. im Browser-Menü „Zum
+  Startbildschirm hinzufügen“ bzw. „App installieren“. Hinweis: Zugangsdaten persönlich, nicht weitergeben. Knopf „🔢 Code holen“ öffnet
+  den vorhandenen Code für ein anderes Gerät. Steht auch im Hilfe-Zentrum (Kapitel Technik). Nur App. Test 394.
+
 ## 2.23.44 – 2026-10-05 – 📣 Hilfe veröffentlichen: Pinnwand, Push, E-Mail + Anfrage mit Betreff (Wunsch Hansi)
 - KC-CLUB-HILFE-KANAELE: Beim Einstellen eines Hilfe-Aufrufs („Ich suche Hilfe“) und eines Angebots („Ich biete Hilfe an“) fragt die App
   „📣 Wie möchtest du es veröffentlichen?“ – 📌 Pinnwand, 🔔 Push, ✉️ E-Mail (mehrere möglich, Wahl je Gerät gemerkt; Start: Pinnwand + Push).

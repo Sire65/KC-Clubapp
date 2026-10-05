@@ -2865,7 +2865,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.44"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.45"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3714,6 +3714,10 @@ function einwSchalterZeigen() { if ($("setEinw")) $("setEinw").checked = einwSta
 // (⚙️ Einstellungen → „💡 Tipp des Tages“, Standard an). Gespeichert in der Server-Einstellung „tipps“ (geräteübergreifend).
 const TIPP_SPAETER_TAGE = 3;
 const TIPPS = [
+  // KC-CLUB-TIPP-TABLET-PC (2.23.45, Wunsch Hansi): ganz vorne = kommt als nächster Tipp. Weg über den vorhandenen 6-stelligen Anmelde-Code.
+  { id: "tablet_pc", sym: "💻", t: "Club-App auch auf Tablet oder PC nutzen?",
+    x: () => `Du kannst die Köcheclub-App zusätzlich auf deinem <b>Tablet</b> oder <b>PC</b> einrichten – mit deinen Nachrichten, Terminen und Einstellungen.<br><b>1.</b> Tippe hier auf <b>„🔢 Code holen“</b> – du bekommst einen 6-stelligen Code (gilt nur kurz und nur einmal).<br><b>2.</b> Öffne am Tablet oder PC den Internet-Browser und gib diese Adresse ein: <b>${esc(APP_URL_CLUB.replace(/^https?:\/\//, ""))}</b>. Tippe dort auf <b>„🔢 Mit Code anmelden“</b> und gib den Code ein.<br><b>3.</b> Damit die App dort ein eigenes Symbol bekommt: im Browser-Menü <b>„Zum Startbildschirm hinzufügen“</b> (Tablet) bzw. <b>„App installieren“</b> (PC) wählen.<br>🔒 Deine Zugangsdaten sind persönlich – bitte nicht weitergeben.`,
+    ja: "🔢 Code holen", nein: "⏰ Nein, später", neinSpaeter: true, testen: () => kurzcodeBlatt(), seit: "2.23.45" }, // seit = gilt als neu → kommt zuerst
   // 1.77.0 (Wunsch Hansi, für alle): persönlich angesprochen, ganz vorne = kommt als nächster Tipp. Nicht, wer schon ein neues Schema hat.
   { id: "farbschemen_neu", sym: "🎨", t: () => `Hallo ${ICH?.vorname || ""}, hast du schon unsere ${DESIGNS.filter((d) => d.mehr).length} neuen Farbschemen entdeckt?`.replace("Hallo , ", "Hallo, "),
     x: "<b>🎨 Ruhig:</b> Toskana, Weinberg, Salbei, Lavendel, Ocker, Schokolade, Petrol, Rosé<br><b>✨ Ausgefallen:</b> Sonnenuntergang, Polarlicht, Kirschblüte, Tiefsee, Glut, Retro 70er<br>Stell doch dein <b>Lieblingsschema</b> ein – die App färbt sich sofort um.",
@@ -3832,7 +3836,7 @@ const HILFE_TIPP_THEMA = {
   farbschemen_neu: "darstellung", sprachansage: "toene", vorlesen: "toene", archiv_ordner: "club", wischen: "nachrichten", emoji: "nachrichten",
   reaktion: "nachrichten", erwaehnung: "nachrichten", sos: "notfall", bearbeiten: "nachrichten", stumm: "nachrichten", schnellstart: "start",
   anklopfen: "nachrichten", notfallpass: "notfall", lupe: "start", ruhe: "toene", antwort_zurueck: "termine", mitfahren: "termine",
-  kalender: "termine", klappe: "start", alle_klappen: "start", rechtschreibung: "nachrichten", private_termine: "termine", diktieren: "nachrichten", fotoalben: "club",
+  kalender: "termine", klappe: "start", alle_klappen: "start", tablet_pc: "technik", rechtschreibung: "nachrichten", private_termine: "termine", diktieren: "nachrichten", fotoalben: "club",
   chronik: "club", helfen_leihen: "club",
 };
 const hzDesign = () => { const e = einfach(); einstiegHin(e ? "einfach" : "darstellung", e ? "farbeE" : "designWahl"); };

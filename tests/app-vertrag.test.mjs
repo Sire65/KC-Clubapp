@@ -3993,6 +3993,13 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const pwAufrufAnPinnwand = \(a\) => !a\.kanaele \|\| a\.kanaele\.includes\("pinnwand"\)/.test(html) && /🤲 HILFE ANGEBOTEN/.test(html) && /onclick="angebotDirekt\('\$\{a\.id\}'\)"/.test(html), "Pinnwand: nur gewählt, antippbar");
   assert.ok(/const angebotBetreff = \(a\) => `Dein Angebot „\$\{a\.titel\}“\$\{a\.erstellt_am \? " vom "/.test(html) && /t\.value = `Betreff: \$\{angebotBetreff\(a\)\}/.test(html) && /h\.startsWith\("#angebot="\)/.test(html), "Anfrage mit Betreff + Sprung #angebot=");
 }
+// 394. 2.23.45: Tipp des Tages „Club-App auch auf Tablet oder PC?“ (KC-CLUB-TIPP-TABLET-PC)
+{
+  const t = html.slice(html.indexOf('{ id: "tablet_pc"'), html.indexOf('{ id: "farbschemen_neu"'));
+  assert.ok(html.indexOf('{ id: "tablet_pc"') < html.indexOf('{ id: "farbschemen_neu"') && /seit: "2\.23\.45"/.test(t), "ganz vorne, gilt als neu");
+  assert.ok(/🔢 Mit Code anmelden/.test(t) && /APP_URL_CLUB/.test(t) && /Zum Startbildschirm hinzufügen/.test(t) && /App installieren/.test(t) && /bitte nicht weitergeben/.test(t), "Schritte: Code, Adresse, Startbildschirm, Hinweis");
+  assert.ok(/ja: "🔢 Code holen"/.test(t) && /testen: \(\) => kurzcodeBlatt\(\)/.test(t) && /tablet_pc: "technik"/.test(html), "Code holen + Hilfe-Kapitel");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
