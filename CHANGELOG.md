@@ -5,7 +5,8 @@
   „🔒 Nur einzelne Personen sperren“ (mit Liste „Zurzeit gesperrt“). Sperren in drei Schritten: ① Was sehen sie? (🔵 Wartungsarbeiten /
   ⚪ Server nicht erreichbar) → ② Bis wann? (🔓 bis ich freigebe / 🕘 bis Datum + Uhrzeit – danach automatisch frei) → ③ Wer? – neben
   jedem Namen 🔔/📵 zum Antippen (📵 = keine Push, keine E-Mail; Antippen kreuzt die Person mit an). In der Liste der Gesperrten ist 🔔/📵
-  weiter umschaltbar (Server-Aktion sperre_stumm). Das Sperrfenster zeigt „Voraussichtlich wieder erreichbar: …“, wenn eine Uhrzeit gesetzt ist.
+  weiter umschaltbar (Server-Aktion sperre_stumm). Bei ③ Schnellwahl: 👥 Alle, jede Chat-Gruppe, „📵 Alle Angekreuzten ohne Push/E-Mail“, ✖ Keiner
+  (Admins werden vom Server nie gesperrt). Das Sperrfenster zeigt „Voraussichtlich wieder erreichbar: …“, wenn eine Uhrzeit gesetzt ist.
   Migration 20261005_kc_club_v22379_sperre_bis.sql (eine leere Spalte). Test 430.
 - KC-CLUB-BLATT-HAKEN Nachbesserung: der grüne ✓ erscheint nur noch für einen Knopf UNTERHALB des sichtbaren Bereichs (vorher auch für
   einen schon nach oben weggescrollten, z. B. „Verstanden“ der Einweisung).

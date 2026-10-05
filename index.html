@@ -9816,6 +9816,7 @@ async function sperreAuswahl() {
       <div id="psZeit" class="zwei versteckt" style="margin-top:6px"><label class="feld" style="margin:0">Datum<input type="date" id="psDatum" value="${berlinIso(h.toISOString())}"></label>
         <label class="feld" style="margin:0">Uhrzeit<input type="time" id="psUhr" value="${String(h.getHours()).padStart(2, "0")}:00"></label></div></div>
     <div class="ps-schritt"><b>③ Wer?</b> <small class="hinweis">Antippen = sperren · 🔔/📵 = Push/E-Mail weiter oder aus</small>
+      <div class="hl-chips" id="psSchnell"></div>
       <input id="psSuche" type="search" placeholder="🔍 Name suchen …" style="width:100%;box-sizing:border-box;margin:6px 0">
       <div id="psListe" class="ps-liste"></div></div>
     <div class="knoepfe bs-fuss"><button class="knopf haupt" id="psOk">🔒 Sperren</button><button class="knopf" onclick="$('sperreBlatt').remove()">Abbrechen</button></div>`);
@@ -9832,6 +9833,20 @@ async function sperreAuswahl() {
     $("psListe").querySelectorAll("[data-p]").forEach((c) => (c.onchange = () => { c.checked ? gew.set(c.dataset.p, false) : gew.delete(c.dataset.p); zeichnen(); }));
     $("psListe").querySelectorAll("[data-s]").forEach((b) => (b.onclick = () => { const id = b.dataset.s; gew.set(id, !(gew.get(id) === true)); zeichnen(); })); // Symbol antippen kreuzt die Person mit an
     zaehlen(); };
+  // 2.23.79 (Wunsch Hansi „oder alle oder Gruppen“): 👥 Alle / je Chat-Gruppe auf einmal ankreuzen, ✖ Keiner, 📵 für alle Angekreuzten
+  const schnell = () => {
+    const ziel = $("psSchnell"); if (!ziel) return;
+    ziel.innerHTML = `<button type="button" class="chip" data-q="alle">👥 Alle</button>${MG_GRUPPEN.map((g, i) => `<button type="button" class="chip" data-q="g${i}">🧑‍🤝‍🧑 ${esc(g.gruppe.name)}</button>`).join("")}
+      <button type="button" class="chip" data-q="leise">📵 Alle Angekreuzten ohne Push/E-Mail</button><button type="button" class="chip" data-q="keiner">✖ Keiner</button>`;
+    ziel.querySelectorAll("[data-q]").forEach((b) => (b.onclick = () => { const q = b.dataset.q;
+      if (q === "alle") alle.forEach((m) => { if (!gew.has(m.person_id)) gew.set(m.person_id, false); });
+      else if (q === "keiner") gew.clear();
+      else if (q === "leise") [...gew.keys()].forEach((id) => gew.set(id, true));
+      else { const g = MG_GRUPPEN[Number(q.slice(1))]; (g?.personen || []).filter((id) => alle.some((m) => m.person_id === id)).forEach((id) => { if (!gew.has(id)) gew.set(id, false); }); }
+      zeichnen(); }));
+  };
+  schnell();
+  if (!MG_GRUPPEN.length) api("unterhaltungen", {}).then((r) => { MG_GRUPPEN = (r.unterhaltungen || []).filter((u) => u.gruppe && Array.isArray(u.personen)); schnell(); }).catch(() => {});
   $("psSuche").oninput = zeichnen;
   $("psOk").onclick = async (e) => {
     if (!gew.size) return melde("Bitte bei ③ mindestens eine Person antippen.", true);
@@ -9839,7 +9854,8 @@ async function sperreAuswahl() {
     if (ende === "zeit") { const d = $("psDatum").value, u = $("psUhr").value; if (!d || !u) return melde("Bitte bei ② Datum und Uhrzeit wählen.", true);
       const t = new Date(`${d}T${u}:00`); if (!(t.getTime() > Date.now() + 60000)) return melde("Die Uhrzeit bei ② muss in der Zukunft liegen.", true); bis = t.toISOString(); }
     const leise = [...gew].filter(([, st]) => st).map(([id]) => vfName(id));
-    if (!(await frage(`${[...gew.keys()].map(vfName).join(", ")} sperren?\n\nSie sehen beim Öffnen nur: ${SPERRE_ART[art].kurz}${bis ? ` – bis ${wann(bis)}` : " – bis du freigibst"}.${leise.length ? ` Keine Push/E-Mail an: ${leise.join(", ")}.` : ""} Freigeben jederzeit hier unter 🛠️ Wartung.`, { ja: "🔒 Ja, sperren", nein: "Abbrechen" }))) return;
+    const wer = gew.size === alle.length ? `Alle ${gew.size} Mitglieder` : gew.size > 8 ? `${gew.size} Personen` : [...gew.keys()].map(vfName).join(", ");
+    if (!(await frage(`${wer} sperren?\n\nSie sehen beim Öffnen nur: ${SPERRE_ART[art].kurz}${bis ? ` – bis ${wann(bis)}` : " – bis du freigibst"}.${leise.length ? ` Keine Push/E-Mail an: ${leise.length > 8 ? leise.length + " Personen" : leise.join(", ")}.` : ""} Freigeben jederzeit hier unter 🛠️ Wartung.`, { ja: "🔒 Ja, sperren", nein: "Abbrechen" }))) return;
     await einmal(e.currentTarget, async () => {
       try { const r = await api("sperre_setzen", { personen: [...gew].map(([id, stumm]) => ({ id, stumm })), art, bis }, { warten: true }); f.remove(); melde(`🔒 ${r.gesperrt} Person${r.gesperrt === 1 ? "" : "en"} gesperrt`); sperrenLaden(); }
       catch (x) { meldeFehler(x); }

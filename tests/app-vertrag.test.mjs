@@ -4342,6 +4342,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/t > Date\.now\(\) \+ 30 \* 86400000/.test(g) && /stumm: wahl\.get\(id\) === true, bis/.test(g) && /case "sperre_stumm"/.test(g) && /"person_sperre_stumm"/.test(g), "Server: bis ≤ 30 Tage, stumm je Person, umschaltbar mit Protokoll");
   assert.ok(/onclick="sperreStumm\('\$\{esc\(x\.person_id\)\}', \$\{!x\.stumm\}, this\)"/.test(html), "in der Liste umschaltbar");
   assert.ok(/Voraussichtlich wieder erreichbar: /.test(html), "Sperrfenster nennt die Uhrzeit");
+  assert.ok(/data-q="alle">👥 Alle</.test(k) && /MG_GRUPPEN\.map\(\(g, i\) => `<button type="button" class="chip" data-q="g\$\{i\}">/.test(k) && /data-q="leise"/.test(k), "Schnellwahl Alle / Gruppe / alle ohne Push");
   assert.ok(/add column if not exists bis timestamptz/.test(lies("supabase/migrations/20261005_kc_club_v22379_sperre_bis.sql")), "Migration");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
