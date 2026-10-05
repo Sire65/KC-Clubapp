@@ -2921,7 +2921,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.67"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.68"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -8741,6 +8741,7 @@ const KACHELN = {
 // KC-CLUB-KACHEL-ZAHLEN (2.22.12): Zahl-Funktionen an die bestehenden Kacheln hängen (Kachel-Einträge selbst bleiben unverändert)
 const KZ_KACHELN = { termine: () => kzZahl("termine", INIT?.terminfindungOffen?.length || 0), helfen: () => kzZahl("helfen"), buero: () => kzZahl("buero"),
   fotos: () => kzZahl("fotos"), dienste: () => kzZahl("dienste") };
+KZ_KACHELN.schulung_admin = () => kzZahl("schulung"); // KC-CLUB-SCHULUNG-HINWEIS (2.23.68): wartet auf den Admin
 for (const k of KACHELN.verein) if (KZ_KACHELN[k.id] && !k.zahl) k.zahl = KZ_KACHELN[k.id];
 // Kacheln, die für mich gelten (z. B. Protokolle nicht für Aushilfen)
 const kachelnAlle = (r) => KACHELN[r].filter((k) => !k.bald && (!k.nur || k.nur())); // 1.99.0 (Wunsch Hansi): „bald“-Kacheln erst zeigen, wenn es sie gibt (Überblick nennt sie weiter)
@@ -15811,7 +15812,7 @@ const SC_P = { termin_angeboten: "Termin eingestellt", termin_geloescht: "Termin
   antwort_zurueckgenommen: "Antwort zurückgenommen", buchung_bestaetigt: "Bestätigt", buchung_abgelehnt: "Abgelehnt", gegenvorschlag_angenommen: "Vorschlag angenommen",
   neue_termine_angeboten: "Neue Termine angeboten", buchung_storniert_termin_abgesagt: "Buchung storniert (Termin fiel aus)", einladung_zurueckgezogen: "Einladung zurückgezogen",
   frist_abgelaufen: "Frist abgelaufen", erinnerung_gesendet: "Erinnerung verschickt", hansi_benachrichtigt: "Dich benachrichtigt", termin_direkt_bestaetigt: "Direkt bestätigt", kalender_schluessel_neu: "Kalender-Schlüssel erzeugt",
-  termin_geaendert: "Termin geändert", person_nachgetragen: "Person nachgetragen", termin_vorgemerkt: "Termin vorgemerkt", google_abgeglichen: "Google-Kalender abgeglichen" };
+  termin_geaendert: "Termin geändert", hansi_erinnert: "Dich erinnert", person_nachgetragen: "Person nachgetragen", termin_vorgemerkt: "Termin vorgemerkt", google_abgeglichen: "Google-Kalender abgeglichen" };
 const SC_WER = { hansi: "Du", mitglied: "Mitglied", system: "System", kalender: "Google" };
 const SC_VERSAND = { termin_einladung: "Einladung / aktueller Termin-Link", termin_bestaetigung: "Terminbestätigung", termin_info_mitglied: "Termin-Information", termin_erinnerung: "Terminerinnerung" };
 const SC_ZUSTELLUNG = { delivered: "zugestellt", opened: "Mail geöffnet", displayed: "Push angezeigt", clicked: "angeklickt", bounced: "nicht zustellbar", failed: "fehlgeschlagen", complaint: "Spam-Beschwerde", deferred: "verzögert" };
@@ -16146,6 +16147,30 @@ async function smHinweisPruefen() {
   f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => { f.remove(); const w = b.dataset.w;
     if (w === "jetzt") return smStart();
     lsSetzen(SM_KEY, JSON.stringify(w === "heute" ? { heute: heuteIso() } : { bis: Date.now() + 4 * 3600000 })); }));
+}
+
+// KC-CLUB-SCHULUNG-HINWEIS (2.23.68, Wunsch Hansi): beim Start für den Admin – was wartet, was ist neu (Stand-Weg), was steht an.
+// Jetzt / Später (4 Std.) / Heute nicht mehr. „Neu“ zählt ab dem letzten Mal, das der Hinweis gezeigt wurde (merkt sich das Gerät).
+const SCHU_KEY = "kc_club_sch_hinweis", SCHU_SEIT = "kc_club_sch_seit";
+const SCHU_NEU = { link_geoeffnet: "👀 hat den Link geöffnet", termin_gewaehlt: "⏳ hat einen Termin gewählt", gegenvorschlag: "💬 schlägt einen anderen Termin vor",
+  abgesagt: "✖ möchte zurzeit keinen Termin", antwort_zurueckgenommen: "🔄 wählt neu", frist_abgelaufen: "⌛ hat nicht geantwortet (Frist vorbei)", erinnerung_gesendet: "⏰ wurde an den Termin erinnert" };
+const SCHU_WARTET = { gewaehlt: "⏳ hat gewählt – bitte freigeben", gegenvorschlag: "💬 Gegenvorschlag – bitte entscheiden", abgelaufen: "⌛ keine Antwort – erneut einladen?" };
+async function scHinweisPruefen() {
+  if (!ICH?.admin || document.querySelector(".blatt:not(.versteckt)")) return;
+  let ruhe = {}; try { ruhe = JSON.parse(lsLesen(SCHU_KEY) || "{}") || {}; } catch {}
+  if (ruhe.heute === heuteIso() || Date.now() < Number(ruhe.bis || 0)) return;
+  let r; try { r = await api("schulung_hinweis", { seit: lsLesen(SCHU_SEIT) || null }); } catch { return; }
+  if ((!r.wartet?.length && !r.neu?.length && !r.bald?.length) || document.querySelector(".blatt:not(.versteckt)")) return;
+  const tag = (iso) => { const t = berlinIso(iso); return t === heuteIso() ? "Heute" : t === tagPlus(heuteIso(), 1) ? "Morgen" : fTag.format(new Date(iso)); };
+  const f = blattAuf("scHinweisBlatt", `<h3 style="margin:0">🎓 Schulungen</h3>
+    ${r.wartet?.length ? `<div class="karte"><b>Wartet auf dich (${r.wartet.length})</b>${r.wartet.map((w) => `<div>• <b>${esc(w.namen)}</b> ${SCHU_WARTET[w.art] || ""}${w.beginn ? ` <span class="hinweis">(${esc(tag(w.beginn))}, ${esc(fZeit.format(new Date(w.beginn)))})</span>` : ""}</div>`).join("")}</div>` : ""}
+    ${r.bald?.length ? `<div class="karte"><b>📅 Steht an</b>${r.bald.map((x) => `<div>• <b>${esc(tag(x.beginn))} ${esc(fZeit.format(new Date(x.beginn)))}</b> ${esc(x.namen)} <span class="hinweis">${esc(x.art || "")}</span></div>`).join("")}</div>` : ""}
+    ${r.neu?.length ? `<div class="karte"><b>Neu seit dem letzten Mal</b>${r.neu.slice(0, 8).map((x) => `<div>• <b>${esc(x.namen || "")}</b> ${SCHU_NEU[x.aktion] || esc(x.aktion)} <span class="hinweis">${esc(zeitKurz(x.zeit))}</span></div>`).join("")}</div>` : ""}
+    <div class="knoepfe"><button class="knopf haupt" data-w="jetzt">👀 Jetzt ansehen</button><button class="knopf" data-w="spaeter">⏰ Später</button><button class="knopf" data-w="heute">🌙 Heute nicht mehr</button></div>`);
+  f.classList.add("sc-blatt");
+  f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => { f.remove(); lsSetzen(SCHU_SEIT, new Date().toISOString()); const w = b.dataset.w;
+    if (w === "jetzt") return scStart("termine");
+    lsSetzen(SCHU_KEY, JSON.stringify(w === "heute" ? { heute: heuteIso() } : { bis: Date.now() + 4 * 3600000 })); }));
 }
 
 // KC-CLUB-TERMINANFRAGE-HINWEIS (2.23.52, Wunsch Hansi): Beim Öffnen der App und zwischendurch (zurück in die App, nach einem Push,
@@ -19421,6 +19446,7 @@ async function fpAdmin(tage) {
     if (!h || h === "#") setTimeout(() => buGrussFragen(), 1500); // KC-CLUB-BUERO: Begrüßung der Clubleitung
     if (!h || h === "#") setTimeout(() => ekHinweisPruefen(), 3000); // KC-CLUB-EINGANG-HINWEIS: viel im Eingangskorb?
     if (!h || h === "#") setTimeout(() => taHinweisPruefen(), 5000);
+    if (!h || h === "#") setTimeout(() => scHinweisPruefen(), 9000); // KC-CLUB-SCHULUNG-HINWEIS (2.23.68): Admin
     if (!h || h === "#") setTimeout(() => smHinweisPruefen(), 7000); // KC-CLUB-SCHULUNG-MITGLIED (2.23.62): offene Schulungs-Einladung? // KC-CLUB-TERMINANFRAGE-HINWEIS (2.23.52): neue Terminanfrage?
     if (!h || h === "#") setTimeout(() => twAntwortPruefen(), 6000); // KC-CLUB-TWINKEY-FRAGEN: Antwort „in der Club-App“
     if (!h || h === "#") setTimeout(() => spEinladung(), 4000); // KC-CLUB-SPIEL-EINLADUNG (2.12.0): nach Begrüßung/Neuigkeiten

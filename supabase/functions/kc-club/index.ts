@@ -41,7 +41,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.23.67";
+const SERVER_VERSION = "2.23.68";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -3041,6 +3041,36 @@ async function schulungenListe(ich: Ich, von: string, bis: string) {
     ichDabei: (x.e.person_ids ?? []).includes(ich.person_id) })).sort((a: any, b: any) => String(a.beginn).localeCompare(String(b.beginn)));
 }
 
+// ---------- KC-CLUB-SCHULUNG-HINWEIS (2.23.68, Wunsch Hansi): was wartet, was ist neu, was steht an – nur lesend ----------
+const SCHULUNG_NEU = ["link_geoeffnet", "termin_gewaehlt", "gegenvorschlag", "abgesagt", "antwort_zurueckgenommen", "frist_abgelaufen", "erinnerung_gesendet"];
+async function schulungStand(ich: Ich, seit: string | null) {
+  const [{ data: vb }, { data: ei }] = await Promise.all([
+    db.from("kc_termin_buchungen").select("id,slot_id,einladung_id").eq("status", "vorgemerkt").limit(100),
+    db.from("kc_termin_einladungen").select("id,person_ids,status,ist_test").in("status", ["gegenvorschlag", "abgelaufen"]).eq("ist_test", false).limit(100)]);
+  const ids = [...new Set((vb ?? []).map((b: any) => b.einladung_id))];
+  const { data: ve } = ids.length ? await db.from("kc_termin_einladungen").select("id,person_ids,ist_test").in("id", ids) : { data: [] as any[] };
+  const { data: vs } = (vb ?? []).length ? await db.from("kc_termin_slots").select("id,beginn").in("id", (vb ?? []).map((b: any) => b.slot_id)) : { data: [] as any[] };
+  let neu: any[] = [];
+  if (seit) {
+    const { data: pr } = await db.from("kc_termin_protokoll").select("zeit,aktion,einladung_id,details").in("wer", ["mitglied", "system"]).in("aktion", SCHULUNG_NEU)
+      .gt("zeit", seit).order("zeit", { ascending: false }).limit(20);
+    neu = pr ?? [];
+  }
+  const alleE = new Map([...(ve ?? []), ...(ei ?? [])].map((e: any) => [e.id, e]));
+  const fehlend = [...new Set(neu.map((x) => x.einladung_id).filter((id) => id && !alleE.has(id)))];
+  if (fehlend.length) { const { data: ne } = await db.from("kc_termin_einladungen").select("id,person_ids,ist_test").in("id", fehlend); for (const e of ne ?? []) alleE.set(e.id, e); }
+  const leute = await personen([...alleE.values()].flatMap((e: any) => e.person_ids ?? []));
+  const namen = (e: any) => (e?.person_ids ?? []).map((id: string) => vorname(leute.get(id)) || leute.get(id)?.display_name || "Mitglied").join(" & ");
+  const wartet = [
+    ...(vb ?? []).filter((b: any) => alleE.get(b.einladung_id) && !alleE.get(b.einladung_id).ist_test)
+      .map((b: any) => ({ art: "gewaehlt", namen: namen(alleE.get(b.einladung_id)), beginn: (vs ?? []).find((s: any) => s.id === b.slot_id)?.beginn || null })),
+    ...(ei ?? []).map((e: any) => ({ art: e.status, namen: namen(e), beginn: null }))];
+  const jetztMs = Date.now();
+  const bald = (await schulungenListe(ich, new Date(jetztMs).toISOString(), new Date(jetztMs + 2 * 86400000).toISOString())).filter((x: any) => x.status === "bestaetigt")
+    .map((x: any) => ({ beginn: x.beginn, ende: x.ende, namen: x.namen.join(" & "), art: x.art }));
+  return { wartet, bald, neu: neu.filter((x) => !alleE.get(x.einladung_id)?.ist_test).map((x) => ({ zeit: x.zeit, aktion: x.aktion, namen: (x.details?.namen as string) || namen(alleE.get(x.einladung_id)) })) };
+}
+
 // ---------- KC-CLUB-SCHULUNG-ADMIN (2.23.60, Wunsch Hansi): Termin-Programm als Admin-Bereich „🎓 Schulungen“ der Club-App ----------
 // Die Bedienung gehört jetzt zur Club-App (kein zweites Programm, keine zweite Anmeldung). Die Termin-Logik bleibt EIN Kern:
 // der vorhandene Baustein kc-termine (sichere Platzvergabe, Fristen, Erinnerungen, Mails mit Link für Mitglieder ohne App,
@@ -4064,6 +4094,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const { count: spieleDran } = await db.from("kc_club_spiele").select("id", { count: "exact", head: true })
           .or(`and(status.eq.laeuft,dran.eq.${ich.person_id}),and(status.eq.angefragt,an.eq.${ich.person_id})`);
         const kz = await kachelZahlen(ich, p).catch(() => null); // KC-CLUB-KACHEL-ZAHLEN (2.22.12)
+        // 🎓 Schulungen: was auf den Admin wartet (gewählt – freigeben, Gegenvorschlag, keine Antwort) – KC-CLUB-SCHULUNG-HINWEIS (2.23.68); Fehler → keine Zahl
+        if (kz && ich.admin) (kz as any).schulung = await schulungStand(ich, null).then((x) => x.wartet.length).catch(() => null);
         return json({ alarm, kz, sosFuerAlle: await sosFuerAlle(), spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, adminName: await adminVorname(), ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, communicator, notfall: nf ?? null, einstellungen, kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
@@ -5252,6 +5284,12 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       }
 
       // KC-CLUB-SCHULUNG-MITGLIED (2.23.62): meine Schulungs-Einladung direkt in der Club-App (Wahl über den Termin-Baustein)
+      // KC-CLUB-SCHULUNG-HINWEIS (2.23.68): Hinweis beim Start für den Admin – nur lesend
+      case "schulung_hinweis": {
+        nurAdmin(ich);
+        const seit = p.seit && !isNaN(new Date(String(p.seit)).getTime()) ? new Date(String(p.seit)).toISOString() : new Date(Date.now() - 86400000).toISOString();
+        return json(await schulungStand(ich, seit));
+      }
       case "schulung_meine": {
         const { data: el } = await db.from("kc_termin_einladungen").select("id,status,erstellt_am").contains("person_ids", [ich.person_id]).eq("ist_test", false)
           .in("status", ["offen", "gewaehlt", "gegenvorschlag", "bestaetigt", "abgelaufen"]).order("erstellt_am", { ascending: false }).limit(3);

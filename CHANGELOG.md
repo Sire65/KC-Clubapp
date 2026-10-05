@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.23.68 – 2026-10-05 – Hinweise zu Schulungsterminen für den Admin (Wunsch Hansi)
+- KC-CLUB-SCHULUNG-HINWEIS: Beim Start (Admin) ein Hinweis „🎓 Schulungen“ mit „Wartet auf dich“ (⏳ gewählt – freigeben, 💬 Gegenvorschlag,
+  ⌛ keine Antwort), „📅 Steht an“ (bestätigte Termine heute/morgen) und „Neu seit dem letzten Mal“ (👀 Link geöffnet, ⏳ gewählt, 💬, ✖, 🔄,
+  ⌛, ⏰ erinnert) – 👀 Jetzt ansehen / ⏰ Später (4 Std.) / 🌙 Heute nicht mehr. Server-Aktion schulung_hinweis (nur Admin, nur lesend).
+  Zahl auf der Kachel „🎓 Schulungen“ = was auf dich wartet (init.kz.schulung; Fehler → keine Zahl).
+- kc-termine 1.3.11 (KC-Besuchsprotokoll, über .github/deploy/kc-termine.ref): Push an Hansi am Vorabend ab 18 Uhr (alle Termine von morgen)
+  und 1 Std. vor jedem bestätigten Termin; Links in Meldungen an Hansi und im Google-Kalender führen in die Club-App (🎓 Schulungen).
+  Migration 20261005_kc_club_v22368_termine_hansi_erinnerung.sql (2 leere Spalten, Versand-Regel termin_erinnerung_hansi nur Push). Test 417.
+
 ## 2.23.67 – 2026-10-05 – 📞 / 🎥 bei jedem Namen in der Mitgliederliste (Wunsch Hansi)
 - KC-CLUB-ANRUF-LISTE: In 👥 Mitglieder (Listenansicht) stehen bei jedem Namen 💬 📞 🎥 (online zusätzlich 👋). Ist die Person online,
   startet 📞 den Anruf, 🎥 den Videoanruf (vorhandener Anruf-Kern, App zu App, kostenlos). Nicht online: Knöpfe blass, Antippen erklärt

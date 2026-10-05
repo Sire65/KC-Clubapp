@@ -4210,6 +4210,16 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/on \? `anrufen\('\$\{m\.person_id\}'\)` : aus/.test(f) && /on \? `anrufen\('\$\{m\.person_id\}', true\)` : aus/.test(f), "nur online wird angerufen, sonst Erklärung");
   assert.ok(/<div class="mg-akt\$\{ICH\.admin \? " mg-akt3" : ""\}">/.test(html) && /title="App-Link" onclick="linkTeilen/.test(html), "kompakter Block, Admin-Knöpfe bleiben");
 }
+// 417. 2.23.68: Hinweise zu Schulungsterminen für den Admin (KC-CLUB-SCHULUNG-HINWEIS)
+{
+  const g = server.slice(server.indexOf('case "schulung_hinweis"'), server.indexOf('case "schulung_meine"'));
+  assert.ok(/nurAdmin\(ich\);/.test(g) && /schulungStand\(ich, seit\)/.test(g), "nur Admin, nur lesend");
+  assert.ok(/\(kz as any\)\.schulung = await schulungStand\(ich, null\)\.then\(\(x\) => x\.wartet\.length\)\.catch\(\(\) => null\)/.test(server) && /KZ_KACHELN\.schulung_admin = \(\) => kzZahl\("schulung"\)/.test(html), "Zahl auf der Kachel, Fehler → keine Zahl");
+  const k = html.slice(html.indexOf("// KC-CLUB-SCHULUNG-HINWEIS (2.23.68, Wunsch Hansi): beim Start"), html.indexOf("// KC-CLUB-TERMINANFRAGE-HINWEIS (2.23.52"));
+  for (const x of ["Wartet auf dich", "📅 Steht an", "Neu seit dem letzten Mal", "👀 Jetzt ansehen", "⏰ Später", "🌙 Heute nicht mehr"]) assert.ok(k.includes(x), "Teil fehlt: " + x);
+  assert.ok(/if \(!ICH\?\.admin \|\| document\.querySelector\("\.blatt:not\(\.versteckt\)"\)\) return;/.test(k) && /scHinweisPruefen\(\), 9000/.test(html), "nur Admin, nicht über offenen Fenstern");
+  assert.ok(/^[0-9a-f]{40}$/m.test(lies(".github/deploy/kc-termine.ref").split("\n").filter(Boolean).pop()), "kc-termine-Stand vorgemerkt");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
