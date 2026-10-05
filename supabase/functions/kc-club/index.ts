@@ -41,7 +41,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.23.68";
+const SERVER_VERSION = "2.23.69";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -3043,6 +3043,24 @@ async function schulungenListe(ich: Ich, von: string, bis: string) {
 
 // ---------- KC-CLUB-SCHULUNG-HINWEIS (2.23.68, Wunsch Hansi): was wartet, was ist neu, was steht an – nur lesend ----------
 const SCHULUNG_NEU = ["link_geoeffnet", "termin_gewaehlt", "gegenvorschlag", "abgesagt", "antwort_zurueckgenommen", "frist_abgelaufen", "erinnerung_gesendet"];
+// KC-CLUB-SCHULUNG-PROTOKOLL (2.23.69): bestätigte Termine der letzten 30 Tage, deren Besuchsprotokoll noch fehlt (kein Besuch oder noch „geplant“)
+async function schulungProtokollFehlt() {
+  const jetztMs = Date.now();
+  const { data: sl } = await db.from("kc_termin_slots").select("id,beginn,ende").eq("ist_test", false).lt("ende", new Date(jetztMs).toISOString()).gt("ende", new Date(jetztMs - 30 * 86400000).toISOString()).limit(200);
+  if (!sl?.length) return [];
+  const { data: bu } = await db.from("kc_termin_buchungen").select("id,slot_id,einladung_id,besuch_id").eq("status", "bestaetigt").in("slot_id", sl.map((x: any) => x.id));
+  if (!bu?.length) return [];
+  const bids = bu.map((b: any) => b.besuch_id).filter(Boolean);
+  const { data: be } = bids.length ? await db.from("kc_besuche").select("besuch_id,status").in("besuch_id", bids) : { data: [] as any[] };
+  const fertig = new Set((be ?? []).filter((x: any) => x.status !== "geplant").map((x: any) => x.besuch_id));
+  const offen = bu.filter((b: any) => !b.besuch_id || !fertig.has(b.besuch_id));
+  if (!offen.length) return [];
+  const { data: ei } = await db.from("kc_termin_einladungen").select("id,person_ids,ist_test").in("id", offen.map((b: any) => b.einladung_id));
+  const em = new Map<string, any>((ei ?? []).filter((e: any) => !e.ist_test).map((e: any) => [e.id, e]));
+  const leute = await personen([...em.values()].flatMap((e: any) => e.person_ids ?? []));
+  return offen.filter((b: any) => em.has(b.einladung_id)).map((b: any) => ({ beginn: sl.find((x: any) => x.id === b.slot_id)?.beginn || null,
+    namen: (em.get(b.einladung_id).person_ids ?? []).map((id: string) => vorname(leute.get(id)) || leute.get(id)?.display_name || "Mitglied").join(" & ") }));
+}
 async function schulungStand(ich: Ich, seit: string | null) {
   const [{ data: vb }, { data: ei }] = await Promise.all([
     db.from("kc_termin_buchungen").select("id,slot_id,einladung_id").eq("status", "vorgemerkt").limit(100),
@@ -3064,7 +3082,8 @@ async function schulungStand(ich: Ich, seit: string | null) {
   const wartet = [
     ...(vb ?? []).filter((b: any) => alleE.get(b.einladung_id) && !alleE.get(b.einladung_id).ist_test)
       .map((b: any) => ({ art: "gewaehlt", namen: namen(alleE.get(b.einladung_id)), beginn: (vs ?? []).find((s: any) => s.id === b.slot_id)?.beginn || null })),
-    ...(ei ?? []).map((e: any) => ({ art: e.status, namen: namen(e), beginn: null }))];
+    ...(ei ?? []).map((e: any) => ({ art: e.status, namen: namen(e), beginn: null })),
+    ...(await schulungProtokollFehlt()).map((x: any) => ({ art: "protokoll", namen: x.namen, beginn: x.beginn }))]; // 2.23.69
   const jetztMs = Date.now();
   const bald = (await schulungenListe(ich, new Date(jetztMs).toISOString(), new Date(jetztMs + 2 * 86400000).toISOString())).filter((x: any) => x.status === "bestaetigt")
     .map((x: any) => ({ beginn: x.beginn, ende: x.ende, namen: x.namen.join(" & "), art: x.art }));

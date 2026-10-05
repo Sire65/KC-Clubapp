@@ -4220,6 +4220,16 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(!ICH\?\.admin \|\| document\.querySelector\("\.blatt:not\(\.versteckt\)"\)\) return;/.test(k) && /scHinweisPruefen\(\), 9000/.test(html), "nur Admin, nicht über offenen Fenstern");
   assert.ok(/^[0-9a-f]{40}$/m.test(lies(".github/deploy/kc-termine.ref").split("\n").filter(Boolean).pop()), "kc-termine-Stand vorgemerkt");
 }
+// 418. 2.23.69: Schulungstermine rund (Protokoll fehlt, Verschieben, Terminauswahl, 1 Platz, Reihenfolge)
+{
+  const k = html.slice(html.indexOf("// ---------- KC-CLUB-SCHULUNG-ADMIN (2.23.60"), html.indexOf("// ---------- KC-CLUB-BESUCHE (2.23.61"));
+  assert.ok(/📝 Termin war – Protokoll fehlt/.test(k) && /bsAusTermin\('\$\{b\.id\}'\)">📝 Besuch eintragen/.test(k), "Protokoll fehlt mit Knopf");
+  assert.ok(/async function scVerschieben\(bid\)/.test(k) && /termin_senden: true, termin_abgleich: true/.test(k) && /mehrere Einladungen/.test(k), "Verschieben über den gleichen Kern, Schutz bei mehreren");
+  assert.ok(/slot_ids: SC\.angebot && auswahl\.length < alleFrei\.length \? auswahl\.map/.test(k) && /Diese Termine anbieten:/.test(k), "Terminauswahl beim Einladen");
+  assert.ok(/plaetze: 1, gewaehlt: \[\]/.test(k), "1 Platz vorbelegt");
+  assert.ok(k.indexOf('data-k="termine"') < k.indexOf('data-k="einladen"') && k.indexOf('data-k="einladen"') < k.indexOf('data-k="anbieten"') && k.indexOf('data-k="anbieten"') < k.indexOf('data-k="einladungen"'), "Reihenfolge");
+  assert.ok(/async function schulungProtokollFehlt\(\)/.test(server) && /art: "protokoll"/.test(server), "Server zählt fehlende Protokolle");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

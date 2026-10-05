@@ -1,5 +1,15 @@
 # Änderungen
 
+## 2.23.69 – 2026-10-05 – Schulungstermine: Ablauf rund gemacht (Wunsch Hansi, 5 Punkte)
+- KC-CLUB-SCHULUNG-PROTOKOLL: Nach einem bestätigten Termin (letzte 30 Tage) steht unter „⏳ Wartet auf dich“ „📝 Termin war – Protokoll fehlt“
+  mit „📝 Besuch eintragen“, bis das Protokoll gespeichert ist. Zählt auch im Start-Hinweis und auf der Kachel.
+- KC-CLUB-SCHULUNG-VERSCHIEBEN: „🔁 Verschieben“ bei gebuchten Terminen – neue Zeit, Mitglied bekommt die geänderte Bestätigung (Push + Mail
+  mit Kalenderdatei); Erinnerungen gelten für die neue Zeit (kc-termine 1.3.12). Bei mehreren Einladungen im selben Termin: Hinweis „Absagen + neu“.
+- KC-CLUB-SCHULUNG-ANGEBOT: Beim Einladen „Diese Termine anbieten“ mit Häkchen (vorbelegt: alle) – das Mitglied sieht und wählt nur diese
+  (kc-termine 1.3.12, Spalte slot_ids; Migration 20261005_kc_club_v22369_termine_einladung_slots.sql).
+- Plätze beim Anbieten vorbelegt mit 1 (statt 2). Reihenfolge: ⏳ Wartet → 📅 Meine Termine → ✉️ Einladen → ➕ Anbieten → 📨 Einladungen →
+  Google-Kalender/Protokoll (zugeklappt). Hilfe ergänzt. Test 418.
+
 ## 2.23.68 – 2026-10-05 – Hinweise zu Schulungsterminen für den Admin (Wunsch Hansi)
 - KC-CLUB-SCHULUNG-HINWEIS: Beim Start (Admin) ein Hinweis „🎓 Schulungen“ mit „Wartet auf dich“ (⏳ gewählt – freigeben, 💬 Gegenvorschlag,
   ⌛ keine Antwort), „📅 Steht an“ (bestätigte Termine heute/morgen) und „Neu seit dem letzten Mal“ (👀 Link geöffnet, ⏳ gewählt, 💬, ✖, 🔄,

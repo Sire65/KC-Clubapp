@@ -2921,7 +2921,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.68"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.69"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3922,7 +3922,7 @@ const HILFE = [
   { id: "anfrage_hinweis", thema: "termine", sym: "📨", t: "Hinweis: neue Terminanfrage", x: "Fragt dich jemand nach einem Termin, sagt dir die App das beim Öffnen und zwischendurch: <b>„📨 Du hast eine neue Terminanfrage“</b>. <b>👀 Ja, jetzt ansehen</b> bringt dich hin, <b>⏰ Später</b> erinnert in 2 Stunden, <b>🌙 Heute nicht mehr fragen</b> wartet bis morgen. Sobald du geantwortet hast, kommt der Hinweis nicht mehr.", zeig: () => zeige("termine"), seit: "2.23.52" },
   { id: "meine_schulung", thema: "termine", sym: "🎓", t: "Termin für die Schulung aussuchen", x: "Hat Hansi dich zur Schulung eingeladen, tippst du auf die Kachel <b>🎓 Meine Schulung</b> (Register „Meins“) – oder auf den Hinweis beim Start. Dort siehst du die freien Termine und tippst <b>„✅ Diesen Termin nehmen“</b>. Passt keiner: <b>„💬 Kein Termin passt“</b> und bis zu zwei eigene Vorschläge machen. Hansi bestätigt den Termin, dann steht er dort mit Ort und du kannst ihn in deinen Handy-Kalender übernehmen. Der Link aus der Mail funktioniert weiterhin.", zeig: () => smStart(), seit: "2.23.62" },
   { id: "besuche", thema: "termine", sym: "📝", t: "Besuchsprotokoll (Admin)", x: "In <b>🎓 Schulungen</b> → <b>📝 Besuche</b> trägst du jeden Besuch ein: Mitglied, Ort, Datum, Zeit, km, Gesprächspunkte 1–7, Notizen und ein Foto vom Papierprotokoll. Oben siehst du Besuche, Stunden und km je Jahr. Mit <b>„📅 Geplant“</b> merkst du einen Besuch vor – auf Wunsch mit Terminbestätigung ans Mitglied. Nach dem Besuch: Häkchen raus, ausfüllen, <b>Speichern &amp; senden</b> – das Mitglied bekommt die Zusammenfassung per Push und Mail (du als BCC), eine Kopie liegt in seinem Archiv-Ordner.", zeig: () => scStart("besuche"), nur: () => !!ICH?.admin, seit: "2.23.61" },
-  { id: "schulungen", thema: "termine", sym: "🎓", t: "Schulungen verwalten (Admin)", x: "Unter der Kachel <b>🎓 Schulungen</b> (nur für den Admin) stellst du Termine ein (bei mir, beim Mitglied oder Mitglied wählt; 1–3 Plätze), lädst Mitglieder einzeln oder gemeinsam ein und gibst ihre Wahl mit <b>✅ Bestätigen</b> frei. Bei jedem Mitglied siehst du den Stand (🎓 geschult, ✅ Termin, ✉️ eingeladen …). Wer die Club-App nicht hat, wählt über den Link in der Mail – ohne E-Mail mit <b>🔗 Link teilen</b> (z. B. WhatsApp). Schon abgesprochen? Mitglied ankreuzen und <b>📅 Festen Termin geben</b> – die Bestätigung geht sofort raus.", zeig: () => scStart(), nur: () => !!ICH?.admin, seit: "2.23.60" },
+  { id: "schulungen", thema: "termine", sym: "🎓", t: "Schulungen verwalten (Admin)", x: "Unter der Kachel <b>🎓 Schulungen</b> (nur für den Admin) stellst du Termine ein (bei mir, beim Mitglied oder Mitglied wählt; 1–3 Plätze), lädst Mitglieder einzeln oder gemeinsam ein und gibst ihre Wahl mit <b>✅ Bestätigen</b> frei. Bei jedem Mitglied siehst du den Stand (🎓 geschult, ✅ Termin, ✉️ eingeladen …). Wer die Club-App nicht hat, wählt über den Link in der Mail – ohne E-Mail mit <b>🔗 Link teilen</b> (z. B. WhatsApp). Schon abgesprochen? Mitglied ankreuzen und <b>📅 Festen Termin geben</b> – die Bestätigung geht sofort raus. Beim Einladen wählst du per Häkchen, welche Termine das Mitglied sieht. Gebuchte Termine lassen sich mit <b>🔁 Verschieben</b> ändern; nach dem Termin erinnert „⏳ Wartet auf dich“ an das fehlende Protokoll.", zeig: () => scStart(), nur: () => !!ICH?.admin, seit: "2.23.60" },
   { id: "twinkey", thema: "start", sym: "🧑‍🍳", t: "Frag Twinkey", x: "Du weißt nicht, wo etwas ist? Tippe auf <b>🧑‍🍳 Frag Twinkey</b> (Kachel oder oben im Hilfe-Zentrum) und stell deine Frage in eigenen Worten – getippt oder mit 🎤 gesprochen, z. B. „Wie ändere ich die Farben?“. Twinkey zeigt die passende Antwort, liest sie auf Wunsch vor und bringt dich mit <b>„👉 Zeig es mir“</b> genau an die Stelle. Weiß er es noch nicht, tippst du auf <b>➤ Fragen</b>: Twinkey recherchiert, du bekommst die Antwort später per Push, E-Mail oder in der App – und unter <b>📬 Deine Fragen</b>. Danach kennt Twinkey die Antwort auch für alle anderen.", zeig: () => twFrageStart(), seit: "2.23.49" },
   { id: "diktat_feld", thema: "start", sym: "🎤", t: "Sprechen statt tippen", x: "Wo rechts im Feld ein <b>🎤</b> steht, kannst du diktieren: antippen, sprechen – der Text erscheint im Feld. <b>„✅ Fertig“</b> beendet, bei der Suche geht es nach dem ersten Satz von selbst. Verschickt wird nichts – du prüfst und tippst selbst auf Senden. Das 🎤 gibt es bei der <b>Lupe</b>, im <b>Hilfe-Zentrum</b>, beim <b>Pinnwand-Zettel</b> und bei <b>Hilfe-Aufruf und Angebot</b>; bei SOS heißt es „🎙️ Einsprechen“.", zeig: () => zeige("hilfezentrum"), seit: "2.23.47" },
   { id: "klappen_alle", thema: "start", sym: "▾", t: "Alle Bereiche auf einmal auf- oder zuklappen", x: "In den ⚙️ Einstellungen oben rechts: <b>„▾ Alle auf“</b> öffnet alle Bereiche, danach heißt der Knopf <b>„▴ Alle zu“</b> und klappt alle wieder zu. Bereiche mit 🔒 bleiben, wie du sie festgestellt hast.", zeig: () => zeige("einstellungen"), seit: "2.23.40" },
@@ -15487,7 +15487,7 @@ function taVorschlagBlatt(id, pid, wahl) {
 // Termine anbieten, Mitglieder einladen (einzeln oder gemeinsam bis 3), Antworten freigeben, Gegenvorschläge, Chronologie.
 // Bedienung hier, Logik im vorhandenen Termin-Baustein (Server: Aktion „schulung“ → kc-termine). Mitglieder ohne Club-App wählen
 // weiter über ihren Mail-Link; Mails, Fristen (3 Tage), Erinnerung am Vortag und Google-Kalender laufen wie bisher.
-const SC = { T: null, art: "bei_hansi", plaetze: 2, gewaehlt: [], wartet: 0 };
+const SC = { T: null, art: "bei_hansi", plaetze: 1, gewaehlt: [], wartet: 0, angebot: null }; // 2.23.69: 1 Platz vorbelegt; angebot = ausgewählte Termine (null = alle)
 const SC_ART = { bei_hansi: "🏠 bei mir", beim_mitglied: "🚗 beim Mitglied", wahl: "📍 Mitglied wählt", egal: "Ort egal" };
 const SC_E = { offen: ["✉️ eingeladen", "blau"], gewaehlt: ["⏳ gewählt – freigeben", "gelb"], gegenvorschlag: ["💬 Gegenvorschlag", "gelb"],
   bestaetigt: ["✅ bestätigt", "gruen"], abgesagt: ["✖ möchte zurzeit nicht", "grau"], abgelaufen: ["⌛ keine Antwort", "rot"], zurueckgezogen: ["zurückgezogen", "grau"] };
@@ -15524,6 +15524,15 @@ function scZeigen() {
   const offen = z.querySelectorAll("details[open]"), auf = new Set([...offen].map((d) => d.dataset.k));
   z.innerHTML = `
     <div class="karte"><h4>⏳ Wartet auf dich</h4><div id="scWartet"></div></div>
+    <details class="karte" data-k="termine" open><summary><b>📅 Meine Termine</b></summary><div id="scTermine"></div></details>
+    <details class="karte" data-k="einladen"${auf.has("einladen") ? " open" : ""}><summary><b>✉️ Mitglieder einladen</b></summary>
+      <input id="scSuche" type="search" placeholder="🔍 Name suchen …" oninput="scMitglieder()" style="margin:6px 0">
+      <div id="scMListe" class="ta-liste wahlliste sc-mliste"></div>
+      <div id="scAngebot"></div>
+      <label class="feld">Persönliche Zeile in der Mail (freiwillig)<textarea id="scNachricht" data-diktat rows="2" maxlength="1000" placeholder="z. B. Ich zeige dir die neue Kasse."></textarea></label>
+      <div class="knoepfe"><button class="knopf haupt" id="scEinzeln" onclick="scEinladen(false, this)">Einladen</button><button class="knopf" id="scGemeinsam" onclick="scEinladen(true, this)">Gemeinsam einladen</button><button class="knopf" id="scFest" onclick="scFestStart()">📅 Festen Termin geben</button></div>
+      <p class="hinweis" style="margin:4px 0 0">Einzeln: jeder bekommt eine eigene Einladung. Gemeinsam: bis zu 3 Personen kommen zusammen (z. B. ein Ehepaar). Antwortfrist: ${SC.T.frist_tage || 3} Tage.</p>
+      <div id="scErgebnis"></div></details>
     <details class="karte" data-k="anbieten"${auf.has("anbieten") ? " open" : ""}><summary><b>➕ Termin anbieten</b></summary>
       <div class="hl-chips" id="scArt"></div>
       <div class="zwei"><label class="feld">Datum<input id="scDatum" type="date" min="${heuteIso()}" value="${esc(SC.datum || tagPlus(heuteIso(), 1))}"></label>
@@ -15533,18 +15542,10 @@ function scZeigen() {
       <label class="feld">Notiz (sehen die Mitglieder, freiwillig)<input id="scNotiz" maxlength="300" placeholder="z. B. Kassenprogramm"></label>
       <button class="knopf haupt" onclick="einmal(this, scAnlegen)">➕ Termin einstellen</button>
 </details>
-    <details class="karte" data-k="termine" open><summary><b>📅 Meine Termine</b></summary><div id="scTermine"></div></details>
-    <details class="karte" data-k="einladen"${auf.has("einladen") ? " open" : ""}><summary><b>✉️ Mitglieder einladen</b></summary>
-      <input id="scSuche" type="search" placeholder="🔍 Name suchen …" oninput="scMitglieder()" style="margin:6px 0">
-      <div id="scMListe" class="ta-liste wahlliste sc-mliste"></div>
-      <label class="feld">Persönliche Zeile in der Mail (freiwillig)<textarea id="scNachricht" data-diktat rows="2" maxlength="1000" placeholder="z. B. Ich zeige dir die neue Kasse."></textarea></label>
-      <div class="knoepfe"><button class="knopf haupt" id="scEinzeln" onclick="scEinladen(false, this)">Einladen</button><button class="knopf" id="scGemeinsam" onclick="scEinladen(true, this)">Gemeinsam einladen</button><button class="knopf" id="scFest" onclick="scFestStart()">📅 Festen Termin geben</button></div>
-      <p class="hinweis" style="margin:4px 0 0">Einzeln: jeder bekommt eine eigene Einladung. Gemeinsam: bis zu 3 Personen kommen zusammen (z. B. ein Ehepaar). Antwortfrist: ${SC.T.frist_tage || 3} Tage.</p>
-      <div id="scErgebnis"></div></details>
     <details class="karte" data-k="einladungen"${auf.has("einladungen") ? " open" : ""}><summary><b>📨 Einladungen</b></summary><div id="scEinladungen"></div></details>
     <details class="karte" data-k="kalender"${auf.has("kalender") ? " open" : ""}><summary><b>📆 Google-Kalender</b></summary><div id="scKalender"></div></details>
     <details class="karte" data-k="protokoll"${auf.has("protokoll") ? " open" : ""}><summary><b>📜 Protokoll</b></summary><div id="scProtokoll"></div></details>`;
-  scWartet(); scTabs(); scArtZeigen(); scTermine(); scMitglieder(); scEinladungen(); scKalender(); scProtokoll();
+  scWartet(); scTabs(); scArtZeigen(); scTermine(); scMitglieder(); scAngebot(); scEinladungen(); scKalender(); scProtokoll();
 }
 // Reiter; die Zahl „wartet auf dich“ erst nach scWartet() (2.23.63: zeigte vorher den alten Stand)
 function scTabs() {
@@ -15570,6 +15571,15 @@ function scWartet() {
   for (const e of T.einladungen.filter((x) => x.status === "abgelaufen")) {
     h.push(`<div class="sc-eintrag"><b>${esc(scGruppe(e.person_ids))}</b> hat nicht geantwortet (Frist vorbei)
       <div class="knoepfe"><button class="knopf haupt klein" onclick="scErneut(this,'${e.id}')">📨 Neu einladen</button><button class="knopf klein" onclick="scZurueck(this,'${e.id}')">✔ Erledigt</button></div></div>`);
+  }
+  // KC-CLUB-SCHULUNG-PROTOKOLL (2.23.69, Wunsch Hansi): Termin war – Besuchsprotokoll fehlt noch (letzte 30 Tage)
+  const besuchStatus = (id) => (BS.liste.length ? BS.liste : T.besuche || []).find((x) => x.besuch_id === id)?.status;
+  for (const b of T.buchungen.filter((x) => x.status === "bestaetigt")) {
+    const s = scSlot(b.slot_id), e = scEinl(b.einladung_id); if (!s || !e || e.ist_test) continue;
+    const endeMs = new Date(s.ende).getTime(); if (endeMs > Date.now() || Date.now() - endeMs > 30 * 86400000) continue;
+    const st = b.besuch_id ? besuchStatus(b.besuch_id) : null; if (st && st !== "geplant") continue;
+    h.push(`<div class="sc-eintrag"><b>${esc(scGruppe(e.person_ids))}</b>: 📝 Termin war – Protokoll fehlt<div>${esc(scZeit(s.beginn, s.ende))}</div>
+      <div class="knoepfe"><button class="knopf haupt klein" onclick="bsAusTermin('${b.id}')">📝 Besuch eintragen</button></div></div>`);
   }
   SC.wartet = h.length;
   $("scWartet").innerHTML = h.join("") || '<p class="hinweis" style="margin:0">Nichts offen. 👍</p>';
@@ -15635,11 +15645,42 @@ function scTermine() {
     return `<div class="sc-eintrag"><b>${esc(scZeit(s.beginn, s.ende))}</b> ${marke}${s.herkunft === "gegenvorschlag" ? ' <span class="marke">Vorschlag</span>' : ""}
       <div class="hinweis">${SC_ART[art] || ""} · ${s.belegt}/${s.plaetze} Plätze${s.status === "offen" && frei > 0 && !s.hat_hausbesuch && !vorbei ? ` · ${frei} frei` : ""}${s.notiz ? " · " + esc(s.notiz) : ""}</div>
       ${bs.map((b) => { const e = scEinl(b.einladung_id); return `<div>• ${esc(e ? scGruppe(e.person_ids) : "?")} – ${b.status === "bestaetigt" ? "✅ gebucht" : "⏳ wartet auf Freigabe"}</div>`; }).join("")}
-      <div class="knoepfe">${bs.filter((b) => b.status === "bestaetigt").map((b) => `<button type="button" class="knopf klein" onclick="bsAusTermin('${b.id}')">📝 ${b.besuch_id ? "Protokoll" : "Besuch eintragen"}</button>`).join("")}${s.status === "offen" && !vorbei ? (jemals ? `<button class="knopf klein" onclick="scAbsagen(this,'${s.id}',${bs.length})">🚫 Absagen</button>` : `<button class="knopf klein" onclick="scLoeschen(this,'${s.id}')">🗑️ Löschen</button>`) : ""}</div></div>`;
+      <div class="knoepfe">${bs.filter((b) => b.status === "bestaetigt").map((b) => `<button type="button" class="knopf klein" onclick="bsAusTermin('${b.id}')">📝 ${b.besuch_id ? "Protokoll" : "Besuch eintragen"}</button>${!vorbei && s.status === "offen" ? `<button type="button" class="knopf klein" onclick="scVerschieben('${b.id}')">🔁 Verschieben</button>` : ""}`).join("")}${s.status === "offen" && !vorbei ? (jemals ? `<button class="knopf klein" onclick="scAbsagen(this,'${s.id}',${bs.length})">🚫 Absagen</button>` : `<button class="knopf klein" onclick="scLoeschen(this,'${s.id}')">🗑️ Löschen</button>`) : ""}</div></div>`;
   };
   const kommend = T.slots.filter((s) => new Date(s.ende).getTime() >= jetztMs), alt = T.slots.filter((s) => new Date(s.ende).getTime() < jetztMs).reverse();
   $("scTermine").innerHTML = (kommend.map(karte).join("") || '<p class="hinweis" style="margin:0">Noch keine Termine eingestellt.</p>')
     + (alt.length ? `<details style="margin-top:8px"><summary class="hinweis">Vergangene (14 Tage)</summary>${alt.map(karte).join("")}</details>` : "");
+}
+// KC-CLUB-SCHULUNG-VERSCHIEBEN (2.23.69, Wunsch Hansi): gebuchten Termin auf neue Zeit legen – Mitglied bekommt die geänderte
+// Bestätigung (Push + Mail mit Kalenderdatei), Erinnerungen gelten für die neue Zeit. Kern: geplanter Besuch + Terminbestätigung.
+async function scVerschieben(bid) {
+  const b = SC.T.buchungen.find((x) => x.id === bid), s = b && scSlot(b.slot_id), e = b && scEinl(b.einladung_id); if (!s || !e) return;
+  if (SC.T.buchungen.filter((x) => x.slot_id === s.id && ["vorgemerkt", "bestaetigt"].includes(x.status)).length > 1) return melde("Zu diesem Termin kommen mehrere Einladungen – bitte „🚫 Absagen“ und neu anbieten.", true);
+  if (!b.besuch_id) return melde("Zu diesem Termin gibt es noch keinen geplanten Besuch – bitte erst „📝 Besuch eintragen“.", true);
+  if (!BS.liste.some((x) => x.besuch_id === b.besuch_id)) await bsLaden();
+  const be = BS.liste.find((x) => x.besuch_id === b.besuch_id); if (!be) return melde("Besuch nicht gefunden.", true);
+  const f = blattAuf("scVerBlatt", `<h3 style="margin:0">🔁 Termin verschieben</h3>
+    <p style="margin:4px 0"><b>${esc(scGruppe(e.person_ids))}</b><br><span class="hinweis">bisher: ${esc(scZeit(s.beginn, s.ende))}</span></p>
+    <div class="zwei"><label class="feld">Neuer Tag<input id="scVerDatum" type="date" min="${heuteIso()}" value="${esc(berlinIso(s.beginn))}"></label><span></span></div>
+    <div class="zwei"><label class="feld">Von<input id="scVerVon" type="time" step="900" value="${esc(fZeit.format(new Date(s.beginn)))}"></label><label class="feld">Bis<input id="scVerBis" type="time" step="900" value="${esc(fZeit.format(new Date(s.ende)))}"></label></div>
+    <p class="hinweis" style="margin:4px 0">Geht sofort raus: 🔔 Push + ✉️ Mail mit der neuen Zeit und Kalenderdatei. Erinnerungen gelten für die neue Zeit.</p>
+    <div class="knoepfe bs-fuss"><button class="knopf haupt" id="scVerOk">🔁 Verschieben</button><button class="knopf" onclick="$('scVerBlatt').remove()">Abbrechen</button></div>`);
+  f.style.zIndex = "2100"; f.classList.add("sc-blatt"); f.onclick = null;
+  $("scVerOk").onclick = async () => {
+    const datum = $("scVerDatum").value, von = $("scVerVon").value, bis = $("scVerBis").value, k = $("scVerOk");
+    if (!datum || !von || !bis) return melde("Bitte Tag, Von und Bis ausfüllen.", true);
+    if (bis <= von) return melde("„Bis“ muss nach „Von“ liegen.", true);
+    if (new Date(`${datum}T${von}:00`) <= new Date()) return melde("Die neue Zeit liegt in der Vergangenheit.", true);
+    const wann = `${datum.split("-").reverse().join(".")}, ${von}–${bis} Uhr`;
+    if (!(await frage(`Termin verschieben?\n${scGruppe(e.person_ids)}: ${wann}\nDie geänderte Bestätigung geht sofort raus.`, { ja: "🔁 Verschieben", gefahr: false }))) return;
+    k.disabled = true; k.textContent = "Wird verschoben …";
+    try {
+      const r = await api("besuch", { a: "speichern", besuch_id: be.besuch_id, daten: { mitglied: be.mitglied, datum, zeit_von: von, zeit_bis: bis, status: "geplant" }, termin_senden: true, termin_abgleich: true }, { warten: true });
+      $("scVerBlatt")?.remove();
+      if (r.termin?.fehler) melde(`Besuch geändert – aber Termin: ${r.termin.fehler}`, true); else scVersand(r.termin, `🔁 Verschoben auf ${wann}`);
+      await bsLaden(); await scLaden();
+    } catch (err) { meldeFehler(err); k.disabled = false; k.textContent = "🔁 Verschieben"; }
+  };
 }
 async function scAbsagen(k, id, betroffen) {
   const s = scSlot(id);
@@ -15682,17 +15723,32 @@ function scMitglieder() {
   $("scGemeinsam").textContent = `Gemeinsam einladen${n > 1 ? ` (${n})` : ""}`; $("scGemeinsam").disabled = n < 2 || n > 3;
   if ($("scFest")) $("scFest").disabled = !n || n > 3; // KC-CLUB-SCHULUNG-FEST (2.23.66)
 }
+// KC-CLUB-SCHULUNG-ANGEBOT (2.23.69, Wunsch Hansi): beim Einladen festlegen, welche freien Termine das Mitglied sieht
+const scFreie = () => SC.T.slots.filter((s) => s.status === "offen" && !s.ist_test && new Date(s.beginn) > new Date() && s.belegt < s.plaetze && !s.hat_hausbesuch);
+function scAngebot() {
+  const z = $("scAngebot"); if (!z) return;
+  const fr = scFreie(); if (!fr.length) { z.innerHTML = '<p class="hinweis ta-st-gv" style="margin:4px 0">Gerade ist kein Termin frei – erst unter „➕ Termin anbieten“ einstellen, sonst können sie nur Vorschläge machen.</p>'; return; }
+  const an = (id) => !SC.angebot || SC.angebot.includes(id);
+  z.innerHTML = `<div class="hinweis" style="margin:6px 0 2px">Diese Termine anbieten:</div><div class="hl-chips">${fr.map((s) => `<button type="button" class="chip${an(s.id) ? " an" : ""}" onclick="scAngebotWahl('${s.id}')">${an(s.id) ? "☑️" : "⬜"} ${esc(fTag.format(new Date(s.beginn)).replace(/\.\d{4}$/, ""))} ${esc(fZeit.format(new Date(s.beginn)))}</button>`).join("")}</div>`;
+}
+function scAngebotWahl(id) {
+  const fr = scFreie().map((s) => s.id), akt = SC.angebot || fr;
+  const neu = akt.includes(id) ? akt.filter((x) => x !== id) : [...akt, id];
+  SC.angebot = neu.length === fr.length && fr.every((x) => neu.includes(x)) ? null : neu; scAngebot();
+}
 function scWahl(pid, an) { SC.gewaehlt = an ? [...new Set([...SC.gewaehlt, pid])] : SC.gewaehlt.filter((p) => p !== pid); scMitglieder(); }
 async function scEinladen(gemeinsam, knopf) {
   if (!SC.gewaehlt.length) return melde("Bitte Mitglieder auswählen.", true);
   if (gemeinsam && SC.gewaehlt.length > 3) return melde("Gemeinsam höchstens 3 Personen.", true);
-  const frei = SC.T.slots.filter((s) => s.status === "offen" && !s.ist_test && new Date(s.beginn) > new Date() && s.belegt < s.plaetze).length;
+  const alleFrei = scFreie(), auswahl = SC.angebot ? alleFrei.filter((s) => SC.angebot.includes(s.id)) : alleFrei;
+  if (SC.angebot && alleFrei.length && !auswahl.length) return melde("Bitte mindestens einen Termin ankreuzen – oder alle.", true);
+  const frei = auswahl.length;
   const gruppen = gemeinsam ? [SC.gewaehlt] : SC.gewaehlt.map((p) => [p]);
-  if (!(await frage(`${gemeinsam ? scGruppe(SC.gewaehlt) + " gemeinsam einladen?" : gruppen.length + " Einladung(en) verschicken?"}\nZurzeit ${frei} freie Termine.${frei ? "" : " Tipp: erst Termine einstellen – sonst können sie nur Gegenvorschläge machen."} Antwortfrist: 3 Tage.`, { ja: "📨 Einladen", gefahr: false }))) return;
+  if (!(await frage(`${gemeinsam ? scGruppe(SC.gewaehlt) + " gemeinsam einladen?" : gruppen.length + " Einladung(en) verschicken?"}\n${SC.angebot && frei < alleFrei.length ? `Angeboten: ${frei} von ${alleFrei.length} freien Terminen.` : `Zurzeit ${frei} freie Termine.`}${frei ? "" : " Tipp: erst Termine einstellen – sonst können sie nur Gegenvorschläge machen."} Antwortfrist: 3 Tage.`, { ja: "📨 Einladen", gefahr: false }))) return;
   knopf.disabled = true;
   try {
-    const r = await scApi("t_einladen", { gruppen, nachricht: $("scNachricht").value });
-    SC.ergebnis = r.ergebnisse || []; SC.gewaehlt = [];
+    const r = await scApi("t_einladen", { gruppen, nachricht: $("scNachricht").value, slot_ids: SC.angebot && auswahl.length < alleFrei.length ? auswahl.map((s) => s.id) : undefined });
+    SC.ergebnis = r.ergebnisse || []; SC.gewaehlt = []; SC.angebot = null;
     melde(`📨 ${SC.ergebnis.filter((x) => !x.fehler).length} Einladung(en) verschickt`);
     await scLaden(); scErgebnis();
   } catch (e) { meldeFehler(e); } finally { knopf.disabled = false; }
@@ -16154,7 +16210,7 @@ async function smHinweisPruefen() {
 const SCHU_KEY = "kc_club_sch_hinweis", SCHU_SEIT = "kc_club_sch_seit";
 const SCHU_NEU = { link_geoeffnet: "👀 hat den Link geöffnet", termin_gewaehlt: "⏳ hat einen Termin gewählt", gegenvorschlag: "💬 schlägt einen anderen Termin vor",
   abgesagt: "✖ möchte zurzeit keinen Termin", antwort_zurueckgenommen: "🔄 wählt neu", frist_abgelaufen: "⌛ hat nicht geantwortet (Frist vorbei)", erinnerung_gesendet: "⏰ wurde an den Termin erinnert" };
-const SCHU_WARTET = { gewaehlt: "⏳ hat gewählt – bitte freigeben", gegenvorschlag: "💬 Gegenvorschlag – bitte entscheiden", abgelaufen: "⌛ keine Antwort – erneut einladen?" };
+const SCHU_WARTET = { gewaehlt: "⏳ hat gewählt – bitte freigeben", gegenvorschlag: "💬 Gegenvorschlag – bitte entscheiden", abgelaufen: "⌛ keine Antwort – erneut einladen?", protokoll: "📝 Termin war – Protokoll fehlt" };
 async function scHinweisPruefen() {
   if (!ICH?.admin || document.querySelector(".blatt:not(.versteckt)")) return;
   let ruhe = {}; try { ruhe = JSON.parse(lsLesen(SCHU_KEY) || "{}") || {}; } catch {}
