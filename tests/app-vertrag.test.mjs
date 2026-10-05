@@ -3023,7 +3023,7 @@ assert.ok(/<h2>🗂️ Büro<\/h2><span class="bu-kopfgruss" id="buKopfGruss"><\
   assert.ok(/if \(HL\.tab === "helfen" && HL\.oeffnen\)/.test(html), "Aufruf nach Laden öffnen");
   assert.ok(/PW\.offen = PW\.zettel\.filter\(\(z\) => !z\.vonMir && !z\.erledigt\)\.length \+ pwHilfeNeu\(\)\.length/.test(html) && /PW_GEMELDET\.has\("hilfe:" \+ a\.id\)/.test(html), "Zählen + Start-Hinweis einmal je Aufruf");
   assert.ok(/hlSetze\('absprache', true\)">🤝 Nach Absprache/.test(html) && /absprache: false, datum: hlTag\(0\)/.test(html) && /absprache: !!f\.absprache/.test(html), "Formular Absprache, Standard bestimmter Tag");
-  assert.ok(/<textarea class="hl-notiz" rows="6" maxlength="900"/.test(html) && /\.slice\(0, 1000\)/.test(html), "großes Textfeld");
+  assert.ok(/<textarea id="hfNotiz" data-diktat class="hl-notiz" rows="6" maxlength="900"/.test(html) && /\.slice\(0, 1000\)/.test(html), "großes Textfeld");
   assert.ok(!/🗓️ \$\{esc\(hlTagName\(a\.datum\)\)\}/.test(html) && /hlWann\(a\)/.test(html), "Anzeige überall über hlWann");
 }
 // 271. 1.91.0: KC-CLUB-ONLINE-SEITE – Kopf-Kachel öffnet Mitglieder nur online, ohne gemerkte Wahl zu ändern
@@ -3511,7 +3511,7 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
 // 323. 2.22.0: SOS im Nachrichten-Kopf (KC-CLUB-NOTFALL-KANAELE) – nur Admin, einsprechen, danach WhatsApp/SMS mit einem Tipp
 {
   assert.ok(/<h2>💬 Nachrichten<\/h2><button class="knopf klein alarm-knopf" id="naSosKnopf" onclick="notfallMeldung\(\)"/.test(html) && /body:not\(\.ist-admin\):not\(\.sos-frei\) #naSosKnopf \{ display: none; \}/.test(html), "SOS neben ＋ Neu, nur Admin");
-  assert.ok(/diktatStart\(\\'notfallText\\', notfallSenden\)/.test(html) && /function diktatStart\(ziel, nachSenden\)/.test(html) && /if \(was === "senden" && DT\.nachSenden\)[^\n]*return DT\.nachSenden\(\); \}/.test(html), "Einsprechen über das vorhandene Diktat");
+  assert.ok(/diktatStart\(\\'notfallText\\', notfallSenden\)/.test(html) && /function diktatStart\(ziel, nachSenden(, opt = \{\})?\)/.test(html) && /if \(was === "senden" && DT\.nachSenden\)[^\n]*return DT\.nachSenden\(\); \}/.test(html), "Einsprechen über das vorhandene Diktat");
   assert.ok(/href="https:\/\/wa\.me\/\?text=\$\{t\}"/.test(html) && /href="sms:\?&body=\$\{t\}"/.test(html), "WhatsApp und SMS mit fertigem Text");
   assert.ok(/"notfall_whatsapp", "notfall_sms"/.test(server), "Weitergabe wird protokolliert");
   assert.ok(/#alarmBlatt\.blatt \{ z-index: 9990; \}/.test(html), "nur das Empfänger-Alarmfenster liegt über allem (Rückfragen/Diktat bleiben bedienbar)");
@@ -3637,7 +3637,7 @@ assert.ok(/const UH_HERVOR = \["Innovation"\];/.test(html) && /function uhAmeise
 }
 // 339. 2.22.12: Mikrofon-Freigabe vor dem Diktieren (KC-CLUB-MIKRO-FREIGABE)
 {
-  assert.ok(/async function diktatStart\(ziel, nachSenden\) \{[\s\S]{0,400}frei = await mikroFreigabe\(\);[\s\S]{0,120}if \(!frei \|\| DT\.aktiv\) return;/.test(html), "erst Freigabe, dann Diktat");
+  assert.ok(/async function diktatStart\(ziel, nachSenden(, opt = \{\})?\) \{[\s\S]{0,400}frei = await mikroFreigabe\(\);[\s\S]{0,120}if \(!frei \|\| DT\.aktiv\) return;/.test(html), "erst Freigabe, dann Diktat");
   const mf = html.slice(html.indexOf("async function mikroFreigabe"), html.indexOf("function mikroHilfe"));
   assert.ok(/if \(zustand === "granted"\) return true;/.test(mf) && /if \(zustand === "denied"\) return true;/.test(mf) && /onerror = \(ev\) => \{ if \(ev\.error === "not-allowed"[\s\S]{0,120}mikroHilfe\(\)/.test(html) && /await frage\("🎙️ Zum Diktieren braucht die App dein Mikrofon/.test(mf) && /getUserMedia\(\{ audio: true \}\)/.test(mf) && /forEach\(\(x\) => x\.stop\(\)\)/.test(mf), "Erklärung, Abfrage, Mikrofon sofort wieder aus");
 }
@@ -4005,6 +4005,15 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/<details class="karte versteckt" data-klappe="leitung_start" id="leitungStart">/.test(html) && /id="setTagesinfo" onchange="leitungStartSetzen\('tagesinfo', this\.checked\)"/.test(html) && /id="setEkHinweis" onchange="leitungStartSetzen\('eingang', this\.checked\)"/.test(html), "zwei Schalter");
   assert.ok(/const key = was === "tagesinfo" \? "kc_buero_frage_aus" : EKH_AUS;/.test(html) && /localStorage\.getItem\("kc_buero_frage_aus"\)/.test(html), "Tages-Übersicht nutzt den vorhandenen Merker (kein zweiter)");
   assert.ok(/!buDarf\(\) \|\| ekhLies\(EKH_AUS\) === "1"\) return;/.test(html) && /if \(v === "einstellungen"\) \{ leitungStartZeigen\(\);/.test(html) && /k\.classList\.toggle\("versteckt", !darf\)/.test(html), "Hinweis respektiert Aus; nur Clubleitung sieht den Bereich");
+}
+// 396. 2.23.47: 🎤 Diktieren in Feldern (KC-CLUB-DIKTAT-FELD)
+{
+  for (const id of ["suEingabe", "hzSuche", "pwText", "hfNotiz", "afText"]) assert.ok(new RegExp(`id="${id}"[^>]*data-diktat|data-diktat[^>]*id="${id}"|id="${id}" data-diktat`).test(html), `🎤 an ${id}`);
+  assert.ok(/id="suEingabe" data-diktat="einmal"/.test(html) && /id="hzSuche" data-diktat="einmal"/.test(html), "Suchfelder: nach dem ersten Satz fertig");
+  const f = html.slice(html.indexOf("function diktatAnbauen("), html.indexOf("// ---------- KC-CLUB-SPRACHE (0.37.0)"));
+  assert.ok(/if \(!DIKTAT_GEHT\) return;/.test(f) && /diktatStart\(feld\.id, null, \{ einmal: feld\.dataset\.diktat === "einmal" \}\)/.test(f) && /new MutationObserver/.test(f), "ein Baustein über den vorhandenen Diktier-Kern, nur wenn das Gerät kann");
+  assert.ok(/\$\{!ziel \|\| nachSenden \? '<button class="knopf haupt" data-d="senden">📤 Senden<\/button>' : ""\}/.test(html) && /if \(DT\.aktiv && DT\.einmal && DT\.vorher\.length\) return diktatEnde\("fertig"\);/.test(html), "kein Senden in Feldern, Suche endet von selbst");
+  assert.ok(/#diktatBlatt\.blatt \{ z-index: 9000; \}/.test(html) && /\{ id: "diktat_feld", thema: "start"/.test(html), "über der Suche + Hilfe");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

@@ -1325,7 +1325,14 @@
   .pr-filter { position: relative; padding-top: 44px; }
   .klappen-alle-zeile { display: flex; justify-content: flex-end; margin: -4px 0 -4px; } .klappen-alle-zeile .klappen-alle { margin: 0; width: auto; min-height: 38px; padding: 4px 14px; white-space: nowrap; } /* 2.23.40 KC-CLUB-KLAPPEN-ALLE */
   /* 2.23.39 KC-CLUB-EINGANG-FILTER + KC-CLUB-DIENST-UEBERSICHT */
-  .ekh-liste { display: grid; gap: 6px; } /* 2.23.43 KC-CLUB-EINGANG-HINWEIS */
+  .ekh-liste { display: grid; gap: 6px; }
+  #diktatBlatt.blatt { z-index: 9000; } /* 2.23.47: Diktier-Fenster auch über der Suche (z-index 80) */
+  /* 2.23.47 KC-CLUB-DIKTAT-FELD: 🎤 rechts im Feld */
+  .diktat-wrap { position: relative; display: block; width: 100%; } .diktat-wrap > input, .diktat-wrap > textarea { width: 100%; box-sizing: border-box; padding-right: 52px !important; }
+  .su-kopf .diktat-wrap, .hz-suche-wrap .diktat-wrap { flex: 1; min-width: 0; }
+  .diktat-feld { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--linie); background: var(--karte); color: var(--text); font-size: 1.15rem; line-height: 1; cursor: pointer; padding: 0; z-index: 2; }
+  .diktat-wrap.gross .diktat-feld { top: 6px; transform: none; }
+  .diktat-feld:active { transform: translateY(-50%) scale(.92); } .diktat-wrap.gross .diktat-feld:active { transform: scale(.92); } /* 2.23.43 KC-CLUB-EINGANG-HINWEIS */
   .ek-kopf { display: flex; align-items: center; gap: 8px; margin: 12px 0 0; } .ek-kopf > b { flex: 1; font-size: 1.15rem; }
   .dv-blatt { align-items: stretch; } .dv-blatt .blatt-innen { width: 100%; max-height: 100vh !important; height: 100%; border-radius: 0; display: flex; flex-direction: column; gap: 8px; }
   .dv-kopf { display: flex; align-items: center; gap: 8px; } .dv-kopf h3 { flex: 1; margin: 0; } .dv-kopf .pr-filter-zu { position: static; flex: none; }
@@ -2309,7 +2316,7 @@
     <div class="kopf2"><button class="zurueck" onclick="hzZurueck()" aria-label="Zurück">‹</button><h2>❓ Hilfe &amp; Tipps</h2><button type="button" class="druckknopf" title="Hilfe drucken / als PDF speichern" aria-label="Hilfe drucken oder als PDF speichern" onclick="druckStarten('hilfe')"></button></div>
     <!-- 2.23.2 (Wunsch Hansi): Suchfeld deutlicher – eigene Karte mit Überschrift, kräftigem Rand und Lupe -->
     <label class="hz-suchfeld" for="hzSuche"><span class="hz-such-titel">🔍 Wonach suchst du?</span>
-      <input type="search" id="hzSuche" class="hz-suche" placeholder="Hier tippen – z. B. „Farbe“ oder „Ton“" oninput="hzSuchen(this.value)" autocomplete="off" enterkeyhint="search"></label>
+      <input type="search" id="hzSuche" data-diktat="einmal" class="hz-suche" placeholder="Hier tippen – z. B. „Farbe“ oder „Ton“" oninput="hzSuchen(this.value)" autocomplete="off" enterkeyhint="search"></label>
     <nav class="hz-reg" id="hzRegister" aria-label="Hilfe-Themen"></nav>
     <div id="hzInhalt"></div>
   </section>
@@ -2334,7 +2341,7 @@
     <div id="pwForm" class="karte versteckt">
       <div id="pwAntwortAn" class="hinweis versteckt" style="margin:0 0 8px"></div>
       <div id="pwVoll" class="hinweis versteckt" style="margin:0 0 8px;border:2px solid #d68910;border-radius:10px;padding:8px"></div>
-      <label class="feld">Kurze Nachricht<textarea id="pwText" rows="3" maxlength="200" placeholder="z. B. Schürzen bitte bis Freitag abgeben" oninput="pwZaehlen()" onblur="emoStelleMerken('pwText')" onkeyup="emoStelleMerken('pwText')" onclick="emoStelleMerken('pwText')"></textarea></label>
+      <label class="feld">Kurze Nachricht<textarea id="pwText" data-diktat rows="3" maxlength="200" placeholder="z. B. Schürzen bitte bis Freitag abgeben" oninput="pwZaehlen()" onblur="emoStelleMerken('pwText')" onkeyup="emoStelleMerken('pwText')" onclick="emoStelleMerken('pwText')"></textarea></label>
       <!-- KC-CLUB-PINNWAND-EMOJI (1.94.0, Wunsch Hansi: „auf Post-its Emojis, z. B. jemand ist krank → gute Besserung“) -->
       <div class="pw-emo" id="pwEmoSchnell"></div>
       <div class="emo-feld pw-emo-feld versteckt" id="pwEmoFeld" role="dialog" aria-label="Emoji auswählen"><div class="emo-reiter" id="pwEmoReiter"></div><div class="emo-gitter" id="pwEmoGitter"></div></div>
@@ -2872,7 +2879,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.46"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.47"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3865,6 +3872,7 @@ const HILFE = [
   { id: "zurueck", thema: "start", sym: "‹", t: "„Zurück“ bleibt in der App", x: "Die Zurück-Taste deines Handys oder der Pfeil <b>‹</b> oben links geht eine Ansicht zurück – die App schließt sich dabei nicht. Ist ein Fenster offen, schließt „Zurück“ zuerst nur das Fenster, deine Eingabe bleibt stehen." },
   { id: "frage_knopf", thema: "start", sym: "❓", t: "Das Fragezeichen unten rechts", x: "Das runde <b>„?“</b> neben der Lupe öffnet in jedem Bereich gleich die passende Hilfe. Stört es dich? <b>Lange darauf drücken</b> blendet es aus. Zurück holst du es unter ⚙️ Einstellungen → <b>„❓ Fragezeichen unten rechts“</b>.", zeig: () => einstiegHin(einfach() ? "einfach" : "ansagen", einfach() ? "setHzFrageE" : "setHzFrage"), seit: "2.23.5" },
   { id: "einstellung_suchen", thema: "start", sym: "🔍", t: "Jede Einstellung schnell finden", x: "In den Einstellungen findest du mit der <b>Lupe 🔍 unten rechts</b> jede Einstellung – z. B. „Ton“ oder „Farbe“ eingeben. Bereiche öffnest du durch Antippen der Überschrift, mit dem Schloss 🔒 hältst du sie offen oder zu.", zeig: () => zeige("einstellungen") },
+  { id: "diktat_feld", thema: "start", sym: "🎤", t: "Sprechen statt tippen", x: "Wo rechts im Feld ein <b>🎤</b> steht, kannst du diktieren: antippen, sprechen – der Text erscheint im Feld. <b>„✅ Fertig“</b> beendet, bei der Suche geht es nach dem ersten Satz von selbst. Verschickt wird nichts – du prüfst und tippst selbst auf Senden. Das 🎤 gibt es bei der <b>Lupe</b>, im <b>Hilfe-Zentrum</b>, beim <b>Pinnwand-Zettel</b> und bei <b>Hilfe-Aufruf und Angebot</b>; bei SOS heißt es „🎙️ Einsprechen“.", zeig: () => zeige("hilfezentrum"), seit: "2.23.47" },
   { id: "klappen_alle", thema: "start", sym: "▾", t: "Alle Bereiche auf einmal auf- oder zuklappen", x: "In den ⚙️ Einstellungen oben rechts: <b>„▾ Alle auf“</b> öffnet alle Bereiche, danach heißt der Knopf <b>„▴ Alle zu“</b> und klappt alle wieder zu. Bereiche mit 🔒 bleiben, wie du sie festgestellt hast.", zeig: () => zeige("einstellungen"), seit: "2.23.40" },
   { id: "gruppe_bereiche", thema: "nachrichten", sym: "👥", t: "Neue Gruppe: Bereiche auf- und zuklappen", x: "Bei <b>👥 Neue Gruppe</b> hat jeder Bereich – <b>Deine Gruppen</b>, <b>Name &amp; Symbol</b>, <b>Wer ist dabei?</b> – einen Pfeil ▾ zum Auf- und Zuklappen und ein Schloss 🔓. Mit 🔒 bleibt der Bereich so, wie er ist; die App merkt es sich.", zeig: () => gruppeForm(null), seit: "2.23.41" },
   { id: "kurzanleitung", thema: "start", sym: "📄", t: "Kurzanleitung zum Ausdrucken", x: "Die App in 3 Schritten – zum Ansehen oder Ausdrucken, z. B. für jemanden, der neu ist. Zu finden unter ⚙️ → Darstellung → „📄 Kurzanleitung“.", zeig: () => druckStarten("anleitung") },
@@ -5622,16 +5630,16 @@ function mikroHilfe() {
     <p class="hinweis" style="margin:6px 0">Danach die App einmal neu laden und nochmal auf 🎙️ tippen.</p>
     <button class="knopf haupt" onclick="$('mikroHilfe').remove()">Verstanden</button>`);
 }
-async function diktatStart(ziel, nachSenden) { // 2.22.0: auch für andere Felder (z. B. Notfall-Meldung) – ziel = Feld-ID, nachSenden = was „Senden“ tut
+async function diktatStart(ziel, nachSenden, opt = {}) { // 2.22.0: auch für andere Felder (z. B. Notfall-Meldung) – ziel = Feld-ID, nachSenden = was „Senden“ tut
   if (!DIKTAT_GEHT) return ziel ? melde("Dieses Handy kann nicht diktieren – bitte tippen.", true) : spracheStart();
   if (DT.aktiv || DT.fragt) return;
   DT.fragt = true; let frei = false; try { frei = await mikroFreigabe(); } finally { DT.fragt = false; } // KC-CLUB-MIKRO-FREIGABE
   if (!frei || DT.aktiv) return;
-  DT.ziel = ziel || "text"; DT.nachSenden = nachSenden || null;
+  DT.ziel = ziel || "text"; DT.nachSenden = nachSenden || null; DT.einmal = !!opt.einmal; // 2.23.47: einmal = Suchfeld, nach dem ersten Satz fertig
   const feld = $(DT.ziel); DT.basis = feld.value; DT.fertig = ""; DT.aktiv = true; DT.seit = Date.now(); DT.vorher = []; DT.sitzung = []; DT.zwischen = "";
   const f = blattAuf("diktatBlatt", `<div class="diktat"><span class="bu-hpunkt">✍️</span><b>Ich schreibe mit …</b>
     <div class="diktat-text" id="diktatText"><span class="hinweis">Sprich einfach los. Satzzeichen sagen: „Punkt“, „Komma“, „Fragezeichen“, „neue Zeile“.</span></div>
-    <div class="knoepfe" style="justify-content:center"><button class="knopf haupt" data-d="senden">📤 Senden</button><button class="knopf" data-d="fertig">✅ Fertig – noch prüfen</button><button class="knopf" data-d="weg">✕ Verwerfen</button></div>
+    <div class="knoepfe" style="justify-content:center">${!ziel || nachSenden ? '<button class="knopf haupt" data-d="senden">📤 Senden</button>' : ""}<button class="knopf${!ziel || nachSenden ? "" : " haupt"}" data-d="fertig">✅ Fertig${!ziel || nachSenden ? " – noch prüfen" : ""}</button><button class="knopf" data-d="weg">✕ Verwerfen</button></div>
     <p class="hinweis" style="font-size:.8rem;margin:6px 0 0">🔒 Das Handy hört nur zu, solange dieses Fenster offen ist.</p></div>`);
   f.onclick = null; // nicht aus Versehen durch Tippen daneben schließen
   f.querySelectorAll("[data-d]").forEach((b) => (b.onclick = () => diktatEnde(b.dataset.d)));
@@ -5653,6 +5661,7 @@ function diktatHoeren() {
   e.onerror = (ev) => { if (ev.error === "not-allowed" || ev.error === "service-not-allowed") { lsSetzen(MIKRO_OK, ""); diktatEnde("fertig"); mikroHilfe(); } }; // 2.22.12: Anleitung statt kurzer Meldung
   // Chrome hört nach einer Pause von selbst auf – solange das Fenster offen ist, weiter zuhören (höchstens 5 Minuten)
   e.onend = () => { for (const t of [...DT.sitzung, DT.zwischen]) DT.vorher = diktatMerge(DT.vorher, t); DT.sitzung = []; DT.zwischen = ""; // Runde abschließen
+    if (DT.aktiv && DT.einmal && DT.vorher.length) return diktatEnde("fertig"); // 2.23.47: Suche – nach der ersten Pause fertig
     if (DT.aktiv && Date.now() - DT.seit < 5 * 60000) { try { diktatHoeren(); } catch { diktatEnde("fertig"); } } else if (DT.aktiv) diktatEnde("fertig"); };
   try { e.start(); } catch { melde("✍️ Mikrofon gerade nicht verfügbar.", true); diktatEnde("fertig"); }
 }
@@ -5666,6 +5675,24 @@ function diktatEnde(was) {
   if (was === "senden") { if (!feld.value) return melde("Es wurde nichts erkannt – bitte nochmal.", true); return senden(); }
   feld.focus();
 }
+// ---------- KC-CLUB-DIKTAT-FELD (2.23.47, Wunsch Hansi): 🎤 rechts im Feld zum Diktieren – ein Baustein für alle Felder mit data-diktat ----------
+// data-diktat="einmal" = Suchfeld (nach dem ersten Satz fertig), sonst längerer Text. Nutzt den Diktier-Kern des Chats (diktatStart):
+// Text erscheint im Feld, nichts wird verschickt. Kann das Gerät nicht diktieren, erscheint kein Mikrofon. Neue Felder bekommen den Knopf
+// von selbst (Beobachter), auch wenn sie später gezeichnet werden.
+function diktatAnbauen(wurzel = document) {
+  if (!DIKTAT_GEHT) return;
+  wurzel.querySelectorAll?.("[data-diktat]:not([data-diktat-an])").forEach((feld) => {
+    if (!feld.id) return; feld.dataset.diktatAn = "1";
+    const w = document.createElement("span"); w.className = "diktat-wrap" + (feld.tagName === "TEXTAREA" ? " gross" : "");
+    feld.parentNode.insertBefore(w, feld); w.appendChild(feld);
+    const b = document.createElement("button"); b.type = "button"; b.className = "diktat-feld"; b.textContent = "🎤"; b.title = "Diktieren – sprechen statt tippen"; b.setAttribute("aria-label", "Diktieren");
+    b.onclick = (e) => { e.preventDefault(); e.stopPropagation(); diktatStart(feld.id, null, { einmal: feld.dataset.diktat === "einmal" }); };
+    w.appendChild(b);
+  });
+}
+new MutationObserver((l) => { if (!DIKTAT_GEHT) return; for (const m of l) for (const n of m.addedNodes) if (n.nodeType === 1) { if (n.matches?.("[data-diktat]")) diktatAnbauen(n.parentNode || document); else if (n.querySelector?.("[data-diktat]")) diktatAnbauen(n); } })
+  .observe(document.documentElement, { childList: true, subtree: true });
+document.addEventListener("DOMContentLoaded", () => diktatAnbauen());
 // ---------- KC-CLUB-SPRACHE (0.37.0): Sprachnachricht aufnehmen und senden (höchstens 3 Minuten) ----------
 // Aufnahme im Handy (MediaRecorder), dann wie ein normaler Anhang an dieselben Empfänger wie jede Nachricht (Person, Gruppe, alle).
 let SPR = null; // { rec, strom, teile, start, uhr }
@@ -12130,7 +12157,7 @@ function hilfeFormHtml() {
     ${f.ortFrei ? `<label class="feld"><input id="hfOrt" maxlength="80" placeholder="z. B. Vereinsheim" value="${esc(f.ort)}" oninput="hlText('ort', this)"></label>` : `<button class="knopf klein" onclick="HL.form.ortFrei=true;HL.form.ort='';hlZeigen();$('hfOrt')?.focus()">✏️ Anderer Ort</button>`}
     ${f.id ? "" : `<div class="hl-frage">An wen?</div>
     <div class="umschalter"><button class="${f.ziel === "alle" ? "an" : ""}" onclick="hlSetze('ziel','alle')">👥 Alle Mitglieder</button><button class="${f.ziel === "online" ? "an" : ""}" onclick="hlSetze('ziel','online')">🟢 Alle gerade online</button></div>${hkHtml("form")}`}
-    <label class="feld">Beschreibung (freiwillig) – was genau, was mitbringen, wie erreichbar<textarea class="hl-notiz" rows="6" maxlength="900" placeholder="z. B. Für den Weihnachtsmarkt bauen wir den Stand auf. Bitte Arbeitshandschuhe mitbringen. Meldet euch kurz, wann es euch passt." oninput="hlText('notiz', this)">${esc(f.notiz)}</textarea></label>
+    <label class="feld">Beschreibung (freiwillig) – was genau, was mitbringen, wie erreichbar<textarea id="hfNotiz" data-diktat class="hl-notiz" rows="6" maxlength="900" placeholder="z. B. Für den Weihnachtsmarkt bauen wir den Stand auf. Bitte Arbeitshandschuhe mitbringen. Meldet euch kurz, wann es euch passt." oninput="hlText('notiz', this)">${esc(f.notiz)}</textarea></label>
     ${f.id ? '<p class="hinweis" style="margin:0">Kein neuer Rundruf. Wer schon zugesagt hat, bekommt Bescheid, wenn sich Tag oder Ort ändern.</p>' : ""}
     <div class="knoepfe"><button class="knopf haupt" onclick="hilfeSenden(this)">${f.id ? "💾 Änderungen speichern" : "📣 Aufruf veröffentlichen"}</button><button class="knopf" onclick="HL.form=null;hlZeigen()">Abbrechen</button>${f.id ? `<button class="knopf" onclick="hilfeSchliessen('${f.id}')">🔒 Aufruf schließen</button>` : ""}</div></div>`;
 }
@@ -12287,7 +12314,7 @@ function angebotFormHtml() {
     <div class="hl-chips">${ANGEBOT_IDEEN.map((t) => `<button class="chip${f.titel === t ? " an" : ""}" onclick="HL.angebotForm.titel=${JSON.stringify(t).replace(/"/g, "&quot;")};hlZeigen()">${esc(t)}</button>`).join("")}</div>
     <label class="feld">oder eigener Text<input maxlength="80" placeholder="z. B. Einführung in den Bilderrechner" value="${esc(f.titel)}" oninput="HL.angebotForm.titel=this.value"></label>
     <div class="hl-frage">Symbol</div><div class="symbolwahl">${sy.map((x) => `<button class="${x === f.sym ? "an" : ""}" onclick="HL.angebotForm.sym='${x}';hlZeigen()">${x}</button>`).join("")}</div>
-    <label class="feld">Was genau? (freiwillig)<textarea rows="3" maxlength="600" placeholder="z. B. Ich komme vorbei oder wir treffen uns im Vereinsheim – ca. 30 Minuten, Handy bitte mitbringen." oninput="HL.angebotForm.text=this.value">${esc(f.text)}</textarea></label>
+    <label class="feld">Was genau? (freiwillig)<textarea id="afText" data-diktat rows="3" maxlength="600" placeholder="z. B. Ich komme vorbei oder wir treffen uns im Vereinsheim – ca. 30 Minuten, Handy bitte mitbringen." oninput="HL.angebotForm.text=this.value">${esc(f.text)}</textarea></label>
     <p class="hinweis" style="margin:4px 0 8px">Dein Angebot erscheint als Kachel unter „🤲 Hilfe-Angebote“. Mitglieder tippen es an und fragen dich per Terminanfrage oder Nachricht.</p>
     ${f.id ? "" : hkHtml("angebotForm")}
     <div class="knoepfe"><button class="knopf haupt" onclick="einmal(this, angebotSpeichern)">${f.id ? "✅ Speichern" : "📣 Angebot veröffentlichen"}</button><button class="knopf" onclick="HL.angebotForm=null;hlZeigen()">Abbrechen</button></div></div>`;
@@ -17713,7 +17740,7 @@ function sucheAuf(start) {
   if (!$("suFenster")) {
     const f = document.createElement("div"); f.id = "suFenster"; f.className = "su-fenster versteckt"; f.setAttribute("role", "dialog"); f.setAttribute("aria-modal", "true"); f.setAttribute("aria-label", "Suche");
     f.innerHTML = `<div class="su-innen">
-      <div class="su-kopf"><span class="su-lupe" aria-hidden="true">🔍</span><input id="suEingabe" type="search" enterkeyhint="search" autocomplete="off" placeholder="Suchen … (ab 2 Buchstaben)" oninput="suTippen(this.value)" onkeydown="if(event.key==='Escape')sucheZu();if(event.key==='Enter'){this.blur();suJetzt()}">
+      <div class="su-kopf"><span class="su-lupe" aria-hidden="true">🔍</span><input id="suEingabe" data-diktat="einmal" type="search" enterkeyhint="search" autocomplete="off" placeholder="Suchen … (ab 2 Buchstaben)" oninput="suTippen(this.value)" onkeydown="if(event.key==='Escape')sucheZu();if(event.key==='Enter'){this.blur();suJetzt()}">
         <button class="su-filterknopf" id="suFilterKnopf" onclick="suFilterUmschalten()" title="Erweiterte Suche mit Filtern">⚙️<span>Filter</span></button><button class="su-zu" onclick="sucheZu()" aria-label="Suche schließen">✕</button></div>
       <div id="suFilter" class="su-filter versteckt"></div><div id="suErgebnis" class="su-ergebnis"></div></div>`;
     f.onclick = (e) => { if (e.target === f) sucheZu(); };

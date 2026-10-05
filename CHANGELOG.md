@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.23.47 – 2026-10-05 – 🎤 Sprechen statt tippen an 5 Stellen (Wunsch Hansi)
+- KC-CLUB-DIKTAT-FELD: kleines 🎤 rechts im Feld bei 🔍 Lupe (Suche überall), ❓ Hilfe-Zentrum, 📌 Pinnwand-Zettel, 🙋 Hilfe-Aufruf
+  (Beschreibung) und 🤲 Angebot („Was genau?“). Antippen → „Ich schreibe mit …“, der Text erscheint im Feld; Suchfelder sind nach dem
+  ersten Satz fertig. In Feldern kein „Senden“ – nichts wird verschickt. Ein Baustein (data-diktat) über den vorhandenen Diktier-Kern des
+  Chats; kann das Gerät nicht diktieren, erscheint kein 🎤. SOS behält „🎙️ Einsprechen“. Diktier-Fenster liegt jetzt auch über der Suche.
+  Hilfe „Sprechen statt tippen“. Nur App. Test 396.
+
 ## 2.23.46 – 2026-10-05 – 🗂️ Clubleitung beim Start: Tages-Übersicht und Eingang-Hinweis an/aus (Wunsch Hansi)
 - KC-CLUB-LEITUNG-START-SCHALTER: neuer Bereich in ⚙️ Einstellungen „🗂️ Clubleitung beim Start“ (nur Clubsprecher, Kassenwart, Admin):
   „📋 Tages-Übersicht beim Start“ und „📥 Hinweis: viel im Eingangskorb“ – je Gerät an/aus, Start: an (wie bisher). Die Tages-Übersicht
