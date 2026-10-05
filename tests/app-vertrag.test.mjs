@@ -3639,7 +3639,7 @@ assert.ok(/const UH_HERVOR = \["Innovation"\];/.test(html) && /function uhAmeise
 {
   assert.ok(/async function diktatStart\(ziel, nachSenden(, opt = \{\})?\) \{[\s\S]{0,400}frei = await mikroFreigabe\(\);[\s\S]{0,120}if \(!frei \|\| DT\.aktiv\) return;/.test(html), "erst Freigabe, dann Diktat");
   const mf = html.slice(html.indexOf("async function mikroFreigabe"), html.indexOf("function mikroHilfe"));
-  assert.ok(/if \(zustand === "granted"\) return true;/.test(mf) && /if \(zustand === "denied"\) return true;/.test(mf) && /onerror = \(ev\) => \{ if \(ev\.error === "not-allowed"[\s\S]{0,240}mikroHilfe\((weiter)?\)/.test(html) && /await frage\("🎙️ Zum Diktieren braucht die App dein Mikrofon/.test(mf) && /getUserMedia\(\{ audio: true \}\)/.test(mf) && /forEach\(\(x\) => x\.stop\(\)\)/.test(mf), "Erklärung, Abfrage, Mikrofon sofort wieder aus");
+  assert.ok(/if \(zustand === "granted"\) return true;/.test(mf) && /catch \{ return true; \}/.test(mf) && /onerror = \(ev\) => \{ if \(ev\.error === "not-allowed"[\s\S]{0,240}mikroHilfe\((weiter)?\)/.test(html) && /await frage\("🎙️ Zum Diktieren braucht die App dein Mikrofon/.test(mf) && /getUserMedia\(\{ audio: true \}\)/.test(mf) && /forEach\(\(x\) => x\.stop\(\)\)/.test(mf), "Erklärung, Abfrage, Mikrofon sofort wieder aus");
 }
 // 340. 2.22.13: Herausforderungen standardmäßig an, Hinweis wo man es abstellt (KC-CLUB-SPIELE-STANDARD-AN)
 {
@@ -4090,6 +4090,12 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/getUserMedia\(\{ audio: true \}\)/.test(k) && /s\.getTracks\(\)\.forEach\(\(x\) => x\.stop\(\)\)/.test(k), "fragt das Handy erneut und gibt das Mikrofon gleich wieder frei");
   assert.ok(/diktatStart\(w\.ziel, w\.nachSenden, \{ einmal: w\.einmal \}\)/.test(k) && /mikroHilfe\(weiter\)/.test(html), "danach geht das Diktat im selben Feld weiter");
   assert.ok(/st\.onchange = /.test(k) && /#mikroHilfe\.blatt \{ z-index: 9100; \}/.test(html), "Erlaubnis aus den Einstellungen wird erkannt, Fenster liegt oben");
+}
+// 403. 2.23.54: Diktieren fragt das Handy direkt – auch bei Stand „gesperrt“ (KC-CLUB-MIKRO-WIE-CHAT)
+{
+  const mf = html.slice(html.indexOf("async function mikroFreigabe"), html.indexOf("// KC-CLUB-MIKRO-SOFORT (2.23.53"));
+  assert.ok(!/if \(zustand === "denied"\) return true;/.test(mf), "„gesperrt“ überspringt die Handy-Abfrage nicht mehr");
+  assert.ok(/zustand !== "denied" && !erklaert && !\(await frage\(/.test(mf) && /getUserMedia\(\{ audio: true \}\)/.test(mf), "Erklärung nur beim ersten Mal, dann immer Handy-Abfrage");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

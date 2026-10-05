@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.23.54 – 2026-10-05 – 🎙️ Diktieren fragt das Handy wie die Sprachnachricht (Fund Hansi)
+- KC-CLUB-MIKRO-WIE-CHAT: Beim Diktieren (z. B. Frag Twinkey) fragt die App das Handy jetzt immer direkt nach dem Mikrofon – wie die
+  Sprachnachricht im Chat („Nur dieses Mal“ / „Bei Nutzung der App erlauben“). Bisher wurde bei Stand „gesperrt“ die Abfrage übersprungen
+  (2.22.18) und es kam gleich „Mikrofon ist gesperrt“. Die Erklärung vorab kommt nur noch beim allerersten Mal (nicht nach jedem
+  „Nur dieses Mal“). Klappt es trotzdem nicht, kommt wie bisher das Fenster mit „🎙️ Jetzt freischalten“. Test 339 angepasst, Test 403.
+
 ## 2.23.53 – 2026-10-05 – 🎙️ Mikrofon gleich freischalten und weiter (Wunsch Hansi)
 - KC-CLUB-MIKRO-SOFORT: Das Fenster „🎙️ Mikrofon ist gesperrt“ (z. B. bei Frag Twinkey) hat jetzt „🎙️ Jetzt freischalten“ – das Handy
   fragt erneut, nach „Zulassen“ läuft das Diktat im selben Feld sofort weiter. Fragt das Handy nicht mehr (endgültig gesperrt), zeigt das
