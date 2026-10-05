@@ -4128,6 +4128,15 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/taKalMerken\(t\.id, t\.beginn\)/.test(html) && /UID:anfrage-\$\{t\.id\}@koecheclub-werne/.test(html) && /\(unter Vorbehalt\)/.test(html), "gleiche UID, gemerkte Zeit, Vorbehalt im Titel");
   assert.ok(/x\.vorbehalt \? " – unter Vorbehalt" : ""/.test(server) && /x\.meine === "vielleicht" \|\| x\.vorbehalt \? "TENTATIVE"/.test(server), "Kalender-Abo kennt den Vorbehalt");
 }
+// 408. 2.23.59: Schulungstermine aus dem Termin-Programm im Club-Kalender (KC-CLUB-SCHULUNGSTERMINE)
+{
+  const f = server.slice(server.indexOf("async function schulungenListe"), server.indexOf("// ---------- Handy-Kalender (KC-CLUB-KALENDERABO)"));
+  assert.ok(f.length > 200 && !/\.(insert|update|upsert|delete)\(/.test(f), "nur lesend – das Termin-Programm bleibt führend");
+  assert.ok(/eq\("ist_test", false\)/.test(f) && /in\("status", \["vorgemerkt", "bestaetigt"\]\)/.test(f) && /ich\.admin \|\| \(x\.e\.person_ids \?\? \[\]\)\.includes\(ich\.person_id\)/.test(f), "nur gebuchte, keine Tests, Mitglieder nur eigene");
+  assert.ok(!/email|phone|telefon/i.test(f), "keine Kontaktdaten");
+  assert.ok(/schulungen,\n\s+\}\);/.test(server) && /UID:schulung-\$\{x\.id\}@koecheclub-werne/.test(server), "Kalender + Abo");
+  assert.ok(/for \(const x of Q\.schulungen \|\| \[\]\)/.test(html) && /x\.art === "schulung"/.test(html) && /for \(const x of k\.schulungen \|\| \[\]\)/.test(html), "App zeigt sie im Kalender und in Demnächst");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

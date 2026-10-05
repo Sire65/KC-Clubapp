@@ -41,7 +41,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.23.58";
+const SERVER_VERSION = "2.23.59";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -3022,6 +3022,25 @@ async function terminumfragenListe(ich: Ich) {
   });
 }
 
+// ---------- KC-CLUB-SCHULUNGSTERMINE (2.23.59, Wunsch Hansi): Schulungs-/Besuchstermine aus Hansis Termin-Programm (kc_termin_*) ----------
+// Nur lesend (Adapter auf die Tabellen des Termin-Programms – es bleibt die führende Stelle). Admin sieht alle, Mitglieder nur ihre eigenen.
+// Gebucht = vorgemerkt/bestätigt, Termin nicht abgesagt, keine Testtermine. Namen aus kc_core_people, keine Kontaktdaten.
+const SCHULUNG_ART: Record<string, string> = { bei_hansi: "bei Hansi", beim_mitglied: "beim Mitglied" };
+async function schulungenListe(ich: Ich, von: string, bis: string) {
+  const { data: sl, error } = await db.from("kc_termin_slots").select("id,beginn,ende,besuchsart,status,ist_test").eq("status", "offen").eq("ist_test", false).gte("beginn", von).lt("beginn", bis).limit(300);
+  if (error || !sl?.length) return [];
+  const { data: bu } = await db.from("kc_termin_buchungen").select("id,slot_id,einladung_id,personen,besuchsart,status,besuch_id").in("slot_id", sl.map((x: any) => x.id)).in("status", ["vorgemerkt", "bestaetigt"]);
+  if (!bu?.length) return [];
+  const { data: ei } = await db.from("kc_termin_einladungen").select("id,person_ids,ist_test").in("id", bu.map((b: any) => b.einladung_id).filter(Boolean));
+  const einl = new Map((ei ?? []).map((e: any) => [e.id, e]));
+  const liste = bu.map((b: any) => ({ b, s: sl.find((x: any) => x.id === b.slot_id), e: einl.get(b.einladung_id) as any }))
+    .filter((x: any) => x.s && x.e && !x.e.ist_test && (ich.admin || (x.e.person_ids ?? []).includes(ich.person_id)));
+  const leute = await personen(liste.flatMap((x: any) => x.e.person_ids ?? []));
+  return liste.map((x: any) => ({ id: x.b.id, beginn: x.s.beginn, ende: x.s.ende, status: x.b.status, art: SCHULUNG_ART[x.b.besuchsart || x.s.besuchsart] || "",
+    besuch: x.b.besuch_id || null, namen: (x.e.person_ids ?? []).map((id: string) => vorname(leute.get(id)) || leute.get(id)?.display_name || "Mitglied"),
+    ichDabei: (x.e.person_ids ?? []).includes(ich.person_id) })).sort((a: any, b: any) => String(a.beginn).localeCompare(String(b.beginn)));
+}
+
 // ---------- Handy-Kalender (KC-CLUB-KALENDERABO) ----------
 // Persönlicher, geheimer Abo-Link (nur Hash gespeichert). Enthält Treffen/Veranstaltungen, Aktionen und freigegebene Geburtstage.
 const icsText = (s: unknown) => String(s ?? "").replace(/\\/g, "\\\\").replace(/;/g, "\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
@@ -3068,6 +3087,13 @@ async function kalenderIcs(token: string) {
       `DTSTART:${icsZeit(x.beginn)}`, `DTEND:${icsZeit(x.ende || new Date(new Date(x.beginn).getTime() + 3600000).toISOString())}`);
     if (x.ort) z.push(`LOCATION:${icsText(x.ort)}`);
     z.push(`DESCRIPTION:${icsText((x.notiz ? x.notiz + "\n\n" : "") + APP_URL + "#termine")}`, `STATUS:${x.status === "abgesagt" ? "CANCELLED" : x.meine === "vielleicht" || x.vorbehalt ? "TENTATIVE" : "CONFIRMED"}`, "END:VEVENT");
+  }
+  // KC-CLUB-SCHULUNGSTERMINE (2.23.59): Schulungs-/Besuchstermine (Admin alle, Mitglieder ihre eigenen) – Verlegen/Absagen kommt von selbst
+  const { data: rolleAbo } = await db.from("kc_club_rollen").select("ist_admin").eq("person_id", ich.person_id).maybeSingle(); // nur für die Schulungstermine
+  for (const x of await schulungenListe({ ...ich, admin: !!rolleAbo?.ist_admin }, new Date(Date.now() - 60 * 86400000).toISOString(), new Date(Date.now() + 500 * 86400000).toISOString()).catch(() => [])) {
+    z.push("BEGIN:VEVENT", `UID:schulung-${x.id}@koecheclub-werne`, `DTSTAMP:${stamp}`, `SEQUENCE:${Math.floor(new Date(x.beginn).getTime() / 60000) % 100000000}`,
+      `SUMMARY:${icsText("🎓 Schulung: " + x.namen.join(", ") + (x.art ? " (" + x.art + ")" : ""))}`, `DTSTART:${icsZeit(x.beginn)}`, `DTEND:${icsZeit(x.ende)}`,
+      `STATUS:${x.status === "bestaetigt" ? "CONFIRMED" : "TENTATIVE"}`, "END:VEVENT");
   }
   // KC-CLUB-PRIVATTERMIN (1.0.0): eigene private Einträge im eigenen Abo
   const { data: pReihen } = await db.from("kc_club_privattermine").select("*").eq("person_id", ich.person_id).neq("wiederholung", "keine").limit(200);
@@ -5614,6 +5640,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           terminanfragenListe(ich, zeitraum), // KC-CLUB-TERMINANFRAGE (0.92.0)
           privatListe(ich, zeitraum.von, zeitraum.bis), // KC-CLUB-PRIVATTERMIN (1.0.0) – nur meine
         ]);
+        const schulungen = await schulungenListe(ich, zeitraum.von, zeitraum.bis).catch(() => []); // KC-CLUB-SCHULUNGSTERMINE (2.23.59)
         const tids = treffen.map((t: any) => t.id);
         const { data: themen } = tids.length ? await db.from("kc_club_vorschlaege").select("treffen_id,titel").in("art", ["thema", "spende"]).neq("status", "zurueckgezogen").in("treffen_id", tids) : { data: [] as any[] };
         return json({
@@ -5628,6 +5655,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           // KC-CLUB-TERMINANFRAGE: eigene und empfangene, abgelehnte (Nein) nicht
           anfragen: anfragen.filter((x: any) => x.status !== "abgesagt" && (x.vonMir || x.meine !== "nein")),
           privat,
+          schulungen,
         });
       }
 

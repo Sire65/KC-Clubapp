@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.23.59 – 2026-10-05 – 🎓 Schulungstermine aus dem Termin-Programm im Club-Kalender (Wunsch Hansi)
+- KC-CLUB-SCHULUNGSTERMINE: Gebuchte Schulungs-/Besuchstermine aus Hansis Termin-Programm (kc_termin_slots/_buchungen/_einladungen,
+  vorgemerkt oder bestätigt, nicht abgesagt, keine Tests) erscheinen automatisch im Club-Kalender (lila, „🎓 14:00–17:30 Schulung: Karla,
+  Ruth · bei Hansi · ✅ bestätigt“), in „Demnächst“ und im Kalender-Abo (UID je Buchung – Verlegen/Absagen kommt dort von selbst).
+  Nur lesend, das Termin-Programm bleibt führend. Admin sieht alle, Mitglieder nur ihre eigenen. Nur Vornamen, keine Kontaktdaten. Test 408.
+- Daten (kein Build): Termin 06.10. B-2026-006 – Ruth Kazik in Einladung/Buchung nachgetragen (2 Personen, 2 Plätze), Protokoll
+  „person_nachgetragen“, Sicherung vorher. Erinnerung an Karla kam am 05.10. nicht an (keine Mail, kein Push) – Hansi per WhatsApp.
+
 ## 2.23.58 – 2026-10-05 – 📅 Terminanfrage im Handy-Kalender, auch nach Verlegen (Wunsch Hansi)
 - KC-CLUB-ANFRAGE-KALENDER: Jede eigene bzw. zugesagte Terminanfrage hat „📅 In meinen Handy-Kalender“ (Datei mit Erinnerung, feste UID).
   Die App merkt sich, welche Zeit eingetragen wurde. Wird der Termin verlegt (Gegenvorschlag angenommen), zeigt die Karte

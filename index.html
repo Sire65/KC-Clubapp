@@ -2050,6 +2050,7 @@
   .nz-std-achse { position: relative; height: 1.1rem; margin: 0 0 6px; font-size: .72rem; color: var(--grau, #666); }
   .nz-std-achse span { position: absolute; transform: translateX(-50%); }
   /* KC-CLUB-PRIVATTERMIN (1.0.0) */
+  .p-schulung { background: #7d3c98; } .ktag.schulung { outline: 2px solid #7d3c98; outline-offset: -2px; } /* 2.23.59 */
   .p-privat { background: #5b7fa6; } .ktag.privat { outline: 2px dashed #5b7fa6; outline-offset: -2px; }
   .pt-privat { background: rgba(91,127,166,.14); border-radius: 10px; padding: 10px 12px !important; margin-bottom: 6px; }
   .pt-karte { border-left: 6px solid #5b7fa6; }
@@ -2134,7 +2135,7 @@
         <div class="legende">
           <span><i style="background:var(--rot)"></i>Sitzung</span><span><i style="background:var(--gruenbg);outline:1px solid var(--gruen)"></i>🎪 Veranstaltung</span><span><i style="background:var(--tuerkisbg);outline:1px solid var(--tuerkis)"></i>🧳 Aktion / Ausflug</span><span><i style="background:var(--blaubg);outline:1px solid var(--blau)"></i>mein Dienst</span>
           <span><i style="background:var(--gelbbg);outline:1px solid #d19a22"></i>Abstimmungs-Frist</span><span><i style="background:var(--lilabg);outline:1px solid var(--lila)"></i>🎂 Geburtstag</span><span><i style="background:var(--rotbg);outline:1px solid var(--rot3)"></i>🇩🇪 Feiertag NRW</span>
-          <span><i style="background:var(--gold)"></i>📨 Anfrage</span><span><i style="outline:2px dashed #5b7fa6"></i>🔒 Privat</span>
+          <span><i style="background:var(--gold)"></i>📨 Anfrage</span><span><i style="outline:2px dashed #5b7fa6"></i>🔒 Privat</span><span><i style="background:#7d3c98"></i>🎓 Schulung</span>
           <span><i style="outline:2px solid var(--gold)"></i>heute</span>
         </div>
       </div>
@@ -2899,7 +2900,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.58"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.59"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -9780,6 +9781,7 @@ function demnaechstListe(k) {
   for (const v of k.fristen || []) if (v.offen) e.push({ tag: berlinIso(v.frist), sym: "🗳️", text: "Abstimmung endet: " + v.titel });
   for (const x of k.anfragen || []) e.push({ tag: berlinIso(x.beginn), zeit: fZeit.format(new Date(x.beginn)), sym: "📨", text: x.anlass + (x.vonMir ? " (an " + taAnWen(x) + ")" : " (" + x.von.vorname + ")") });
   for (const x of k.privat || []) e.push({ tag: berlinIso(x.beginn), zeit: x.ganztaegig ? "" : fZeit.format(new Date(x.beginn)), sym: "🔒", text: x.titel });
+  for (const x of k.schulungen || []) e.push({ tag: berlinIso(x.beginn), zeit: fZeit.format(new Date(x.beginn)), sym: "🎓", text: "Schulung" + (x.ichDabei && !ICH?.admin ? "" : ": " + x.namen.join(", ")) }); // KC-CLUB-SCHULUNGSTERMINE
   for (const g of k.geburtstage || []) { // nächster Geburtstag im Zeitraum (nur Tag/Monat)
     for (const j of [heute.slice(0, 4), String(+heute.slice(0, 4) + 1)]) { const tag = `${j}-${g.md}`; if (tag >= heute && tag <= bis) { e.push({ tag, sym: "🎂", text: `${g.name} hat Geburtstag` }); break; } }
   }
@@ -10542,12 +10544,13 @@ function kalEintraege(tag, Q = KAL, mitFeiertagen = einst("feiertage", true)) { 
   for (const f of Q.fristen) if (berlinIso(f.frist) === tag) e.push({ art: "frist", f });
   for (const x of Q.anfragen || []) if (berlinIso(x.beginn) === tag) e.push({ art: "anfrage", x }); // KC-CLUB-TERMINANFRAGE
   for (const x of Q.privat || []) { const v = berlinIso(x.beginn), b = x.ende ? berlinIso(x.ende) : v; if (tag >= v && tag <= b) e.push({ art: "privat", x }); } // KC-CLUB-PRIVATTERMIN
+  for (const x of Q.schulungen || []) if (berlinIso(x.beginn) === tag) e.push({ art: "schulung", x }); // KC-CLUB-SCHULUNGSTERMINE (2.23.59)
   const md = tag.slice(5), schalt = new Date(Date.UTC(+tag.slice(0, 4), 1, 29)).getUTCDate() === 29;
   for (const g of Q.geburtstage) if (g.md === md || (!schalt && md === "02-28" && g.md === "02-29")) e.push({ art: "geb", g });
   return e;
 }
 function kalZeichnen() {
-  const heute = heuteIso(), rang = ["treffen", "anfrage", "privat", "aktion", "veranst", "dienst", "feiertag", "frist", "geb"];
+  const heute = heuteIso(), rang = ["treffen", "schulung", "anfrage", "privat", "aktion", "veranst", "dienst", "feiertag", "frist", "geb"];
   const tage = [...Array(42)].map((_, i) => tagPlus(KAL.start, i));
   // letzte Woche weglassen, wenn sie ganz im Folgemonat liegt
   const sichtbar = +tage[35].slice(5, 7) - 1 !== kalM ? tage.slice(0, 35) : tage;
@@ -10570,6 +10573,7 @@ function kalTagZeigen() {
   if (!e.length) { $("kalTag").innerHTML = `<div class="karte">${kopf}<p class="hinweis" style="margin:6px 0 0">Keine Termine an diesem Tag.</p></div>`; return; }
   const zeilen = e.filter((x) => x.art !== "treffen" && x.art !== "veranst").map((x) => {
     if (x.art === "privat") return `<div class="keintrag" onclick="privatForm(PT.nachId('${x.x.id}'),'${kalTagWahl}')"><div class="farbe" style="background:#5b7fa6"></div><div style="flex:1"><b>🔒 ${x.x.ganztaegig ? "" : esc(fZeit.format(new Date(x.x.beginn))) + " "}${esc(x.x.titel)}</b><small>privat – nur du siehst das${x.x.wiederholung && x.x.wiederholung !== "keine" ? " · 🔁 " + esc(WDH_KURZ[x.x.wiederholung]) : ""}${x.x.ort ? " · 📍 " + esc(x.x.ort) : ""}${x.x.erinnerung_min ? " · ⏰" : ""}</small></div></div>`;
+    if (x.art === "schulung") return `<div class="keintrag"><div class="farbe" style="background:#7d3c98"></div><div style="flex:1"><b>🎓 ${esc(fZeit.format(new Date(x.x.beginn)))}–${esc(fZeit.format(new Date(x.x.ende)))} Schulung${x.x.ichDabei && !ICH?.admin ? "" : ": " + esc(x.x.namen.join(", "))}</b><small>${esc(x.x.art || "")}${x.x.status === "vorgemerkt" ? " · ⏳ vorgemerkt" : " · ✅ bestätigt"}${x.x.besuch ? " · " + esc(x.x.besuch) : ""} · aus dem Termin-Programm</small></div></div>`; // KC-CLUB-SCHULUNGSTERMINE
     if (x.art === "anfrage") return `<div class="keintrag" onclick="taZeigen('${x.x.id}')"><div class="farbe" style="background:var(--gold)"></div><div style="flex:1"><b>📨 ${esc(fZeit.format(new Date(x.x.beginn)))} ${esc(x.x.anlass)}</b><small>${x.x.vonMir ? "Anfrage an " + esc(taAnWen(x.x)) + (x.x.empfaenger.length === 1 && x.x.status !== "abgesagt" ? " · " + taStatus(x.x, x.x.empfaenger[0]).sym + " " + esc(taStatus(x.x, x.x.empfaenger[0]).t) : "") : "von " + esc(x.x.von.vorname)}${x.x.ort ? " · 📍 " + esc(x.x.ort) : ""}${x.x.meine ? " · " + TA_ANTW[x.x.meine] : ""}</small></div></div>`;
     if (x.art === "feiertag") return `<div class="keintrag"><div class="farbe" style="background:var(--rot3)"></div><div style="flex:1"><b>🇩🇪 Feiertag: ${esc(x.name)}</b><small>gesetzlicher Feiertag in NRW</small></div></div>`;
     if (x.art === "aktion") { const n = Math.round((new Date(kalTagWahl + "T12:00:00Z") - new Date(x.a.von + "T12:00:00Z")) / 86400000) + 1, ges = Math.round((new Date(x.a.bis + "T12:00:00Z") - new Date(x.a.von + "T12:00:00Z")) / 86400000) + 1;
