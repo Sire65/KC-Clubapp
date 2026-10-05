@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.23.41 – 2026-10-05 – Neue Gruppe: Bereiche mit Pfeil und Schloss (Wunsch Hansi)
+- KC-CLUB-GRUPPE-KLAPPEN: „👥 Deine Gruppen“, „✏️ Name & Symbol“ und „👤 Wer ist dabei?“ sind Klappbereiche mit ▾-Pfeil und 🔓/🔒-Schloss
+  wie überall (Stand wird gemerkt). „Deine Gruppen“ auch bei „Neue Nachricht“. Kurze Bereiche ohne unteren „Zuklappen“-Knopf. Nur App. Test 390.
+
 ## 2.23.40 – 2026-10-05 – ▾ Alle auf / ▴ Alle zu in den Einstellungen (Wunsch Hansi)
 - KC-CLUB-KLAPPEN-ALLE: Oben in ⚙️ Einstellungen ein Umschalter „▾ Alle auf“ / „▴ Alle zu“ (Beschriftung passt sich dem Stand an).
   Wirkt auf alle sichtbaren Bereiche; mit 🔒 festgestellte Bereiche bleiben, wie sie sind. Allgemein gebaut (data-wurzel), für

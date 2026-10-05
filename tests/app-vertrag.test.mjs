@@ -3954,6 +3954,12 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/filter\(\(d\) => !klappeFest\(d\)\)/.test(f) && /l\.forEach\(\(d\) => \(d\.open = auf\)\)/.test(f), "öffnet/schließt alle, Festgestellte bleiben");
   assert.ok(/!d\.parentElement\.closest\("details\[data-klappe\]"\)/.test(html) && /d\.offsetParent !== null/.test(html), "nur sichtbare oberste Bereiche");
 }
+// 390. 2.23.41: Neue Gruppe – Bereiche mit Pfeil und Schloss (KC-CLUB-GRUPPE-KLAPPEN)
+{
+  const v = html.slice(html.indexOf('<section id="v-gruppe"'), html.indexOf('<section id="v-neu"'));
+  assert.ok(/<details class="karte" data-klappe="gr_name" data-ohne-unten open><summary>✏️ Name &amp; Symbol<\/summary>/.test(v) && /<details class="karte" data-klappe="gr_wer" open><summary>👤 Wer ist dabei\?<\/summary>/.test(v), "Name/Symbol + Wer ist dabei klappbar");
+  assert.ok(/data-klappe="gruppen_\$\{ziel\}" data-ohne-unten open><summary>👥 Deine Gruppen<\/summary>/.test(html) && /klappenMerken\(z\); \/\/ 2\.23\.41/.test(html), "Deine Gruppen klappbar (auch bei Neue Nachricht)");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
