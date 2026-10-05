@@ -41,7 +41,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.23.61";
+const SERVER_VERSION = "2.23.62";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -3045,7 +3045,8 @@ async function schulungenListe(ich: Ich, von: string, bis: string) {
 // Die Bedienung gehört jetzt zur Club-App (kein zweites Programm, keine zweite Anmeldung). Die Termin-Logik bleibt EIN Kern:
 // der vorhandene Baustein kc-termine (sichere Platzvergabe, Fristen, Erinnerungen, Mails mit Link für Mitglieder ohne App,
 // Google-Abgleich) – die Club-App ruft ihn intern mit dem Admin-Schlüssel aus dem Vault auf. Nichts wird doppelt gebaut.
-const SCHULUNG_AKTIONEN = new Set(["t_init", "t_chronologie", "t_slots_anlegen", "t_slot_absagen", "t_slot_loeschen", "t_einladen", "t_erneut_einladen",
+const SCHULUNG_AKTIONEN = new Set([ // nur Admin-Aktionen; Mitglieder gehen über schulung_meine/schulung_antwort
+  "t_init", "t_chronologie", "t_slots_anlegen", "t_slot_absagen", "t_slot_loeschen", "t_einladen", "t_erneut_einladen",
   "t_link", "t_buchung_entscheiden", "t_vorschlag_entscheiden", "t_zurueckziehen", "t_besuch_termin"]);
 async function schulungAufruf(a: string, daten: Record<string, unknown>) {
   const { data: token } = await db.rpc("kc_communication_get_server_secret", { p_name: "kc_termine_admin_token" });
@@ -5247,6 +5248,31 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           return json({ ok: true });
         }
         throw new Fehler("Unbekannte Aktion.");
+      }
+
+      // KC-CLUB-SCHULUNG-MITGLIED (2.23.62): meine Schulungs-Einladung direkt in der Club-App (Wahl über den Termin-Baustein)
+      case "schulung_meine": {
+        const { data: el } = await db.from("kc_termin_einladungen").select("id,status,erstellt_am").contains("person_ids", [ich.person_id]).eq("ist_test", false)
+          .in("status", ["offen", "gewaehlt", "gegenvorschlag", "bestaetigt", "abgelaufen"]).order("erstellt_am", { ascending: false }).limit(3);
+        const liste: any[] = [];
+        for (const e of el ?? []) {
+          try {
+            const st = await schulungAufruf("m_laden", { einladung_id: e.id, person_id: ich.person_id, client: "club_app", page_open: p.oeffnen === true });
+            const kommend = st.buchung && new Date(st.buchung.ende || st.buchung.beginn).getTime() > Date.now();
+            if (["offen", "gewaehlt", "gegenvorschlag"].includes(st.status) || (st.status === "bestaetigt" && kommend) || (st.status === "abgelaufen" && Date.now() - new Date(st.gueltig_bis).getTime() < 14 * 86400000)) liste.push({ id: e.id, ...st });
+          } catch { /* einzelne Einladung nicht lesbar → weglassen */ }
+        }
+        return json({ einladungen: liste });
+      }
+      case "schulung_antwort": {
+        const was = String(p.was || ""), aktion = ({ waehlen: "m_waehlen", gegenvorschlag: "m_gegenvorschlag", absagen: "m_absagen", aendern: "m_aendern" } as Record<string, string>)[was];
+        if (!aktion) throw new Fehler("Unbekannte Antwort.");
+        const { data: e } = await db.from("kc_termin_einladungen").select("id,person_ids").eq("id", String(p.einladung_id || "")).maybeSingle();
+        if (!e || !(e.person_ids ?? []).includes(ich.person_id)) throw new Fehler("Einladung nicht gefunden.", 404);
+        const st = await schulungAufruf(aktion, { einladung_id: e.id, person_id: ich.person_id, slot_id: p.slot_id, besuchsart: p.besuchsart,
+          vorschlaege: Array.isArray(p.vorschlaege) ? p.vorschlaege.slice(0, 2) : undefined, bemerkung: txt(p.bemerkung, 500) });
+        await protokoll(ich.person_id, "schulung_" + was, { einladung: e.id }); // nur die Art
+        return json({ ok: true, stand: { id: e.id, ...st } });
       }
 
       // KC-CLUB-BESUCHE (2.23.61): Besuchsprotokoll – nur Admin

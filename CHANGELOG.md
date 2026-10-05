@@ -1,5 +1,15 @@
 # Änderungen
 
+## 2.23.62 – 2026-10-05 – 🎓 Meine Schulung: Termin in der Club-App aussuchen (Wunsch Hansi, Stufe 3)
+- KC-CLUB-SCHULUNG-MITGLIED: Die bisherige „bald“-Kachel „🎓 Meine Schulung“ (Register Meins) ist jetzt aktiv: Eingeladene sehen die freien
+  Termine und tippen „✅ Diesen Termin nehmen“ (bei „Mitglied wählt“: bei mir / bei Hansi), „💬 Kein Termin passt“ mit bis zu 2 Vorschlägen
+  (Tag, Von/Bis, Ort, Bemerkung), „✖ Zurzeit kein Besuch“, „🔄 Anders wählen“. Bestätigt: Termin, Ort, Tablet-Hinweis, „📅 In meinen
+  Handy-Kalender“. Abgelaufen: Hinweis + „💬 Hansi schreiben“. Beim Start ein Hinweis, solange eine Einladung offen ist (jetzt / später 4 Std. /
+  heute nicht mehr). Link zu den Zusammenfassungen im Archiv. Zahl auf der Kachel = offene Einladungen.
+- Ein Kern: Wahl, Vorschlag, Absage laufen über den Termin-Baustein kc-termine (sichere Platzvergabe, Meldung an Hansi). Dafür nimmt kc-termine
+  (KC-Besuchsprotokoll 1.3.10) die Mitglieder-Aktionen zusätzlich mit dem internen Schlüssel + Person der Einladung an; der Mail-Link gilt
+  weiter. Server prüft, dass die Einladung dem angemeldeten Mitglied gehört. Hilfe-Eintrag. Test 411.
+
 ## 2.23.61 – 2026-10-05 – 📝 Besuchsprotokoll in der Club-App (Wunsch Hansi, Stufe 2)
 - KC-CLUB-BESUCHE: In „🎓 Schulungen“ zweiter Reiter „📝 Besuche“ (nur Admin): Liste mit Besuchen, Stunden und km je Jahr, ➕ Neuer Besuch,
   📅 Abgesprochenen Termin eintragen, bearbeiten. Formular wie im bisherigen Besuchsprotokoll: Ort (Ich fahre hin / Mitglied kommt zu mir),

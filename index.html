@@ -2908,7 +2908,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.61"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.62"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3907,6 +3907,7 @@ const HILFE = [
   { id: "einstellung_suchen", thema: "start", sym: "🔍", t: "Jede Einstellung schnell finden", x: "In den Einstellungen findest du mit der <b>Lupe 🔍 unten rechts</b> jede Einstellung – z. B. „Ton“ oder „Farbe“ eingeben. Bereiche öffnest du durch Antippen der Überschrift, mit dem Schloss 🔒 hältst du sie offen oder zu.", zeig: () => zeige("einstellungen") },
   { id: "anfrage_status", thema: "termine", sym: "📨", t: "Wie steht meine Terminanfrage?", x: "Unter <b>📅 Termine</b> steht bei deiner Anfrage <b>„Anfrage an …“</b> und der Stand: <b>📨 angefragt</b>, <b>👁️ gelesen</b>, <b>✅ bestätigt</b>, <b>🤔 vielleicht</b>, <b>❌ abgelehnt</b>, <b>🔄 Gegenvorschlag</b> (eine andere Zeit – mit <b>„✅ Neue Zeit annehmen“</b> oder <b>„❌ Passt nicht“</b> entscheidest du) oder <b>⌛ abgelaufen</b>, wenn bis zur Frist bzw. bis zum Termin keine Antwort kam. Wirst du angefragt, kannst du mit <b>„🔄 Andere Zeit vorschlagen“</b> selbst eine Zeit vorschlagen.", zeig: () => zeige("termine"), seit: "2.23.50" },
   { id: "anfrage_hinweis", thema: "termine", sym: "📨", t: "Hinweis: neue Terminanfrage", x: "Fragt dich jemand nach einem Termin, sagt dir die App das beim Öffnen und zwischendurch: <b>„📨 Du hast eine neue Terminanfrage“</b>. <b>👀 Ja, jetzt ansehen</b> bringt dich hin, <b>⏰ Später</b> erinnert in 2 Stunden, <b>🌙 Heute nicht mehr fragen</b> wartet bis morgen. Sobald du geantwortet hast, kommt der Hinweis nicht mehr.", zeig: () => zeige("termine"), seit: "2.23.52" },
+  { id: "meine_schulung", thema: "termine", sym: "🎓", t: "Termin für die Schulung aussuchen", x: "Hat Hansi dich zur Schulung eingeladen, tippst du auf die Kachel <b>🎓 Meine Schulung</b> (Register „Meins“) – oder auf den Hinweis beim Start. Dort siehst du die freien Termine und tippst <b>„✅ Diesen Termin nehmen“</b>. Passt keiner: <b>„💬 Kein Termin passt“</b> und bis zu zwei eigene Vorschläge machen. Hansi bestätigt den Termin, dann steht er dort mit Ort und du kannst ihn in deinen Handy-Kalender übernehmen. Der Link aus der Mail funktioniert weiterhin.", zeig: () => smStart(), seit: "2.23.62" },
   { id: "besuche", thema: "termine", sym: "📝", t: "Besuchsprotokoll (Admin)", x: "In <b>🎓 Schulungen</b> → <b>📝 Besuche</b> trägst du jeden Besuch ein: Mitglied, Ort, Datum, Zeit, km, Gesprächspunkte 1–7, Notizen und ein Foto vom Papierprotokoll. Oben siehst du Besuche, Stunden und km je Jahr. Mit <b>„📅 Geplant“</b> merkst du einen Besuch vor – auf Wunsch mit Terminbestätigung ans Mitglied. Nach dem Besuch: Häkchen raus, ausfüllen, <b>Speichern &amp; senden</b> – das Mitglied bekommt die Zusammenfassung per Push und Mail (du als BCC), eine Kopie liegt in seinem Archiv-Ordner.", zeig: () => scStart("besuche"), nur: () => !!ICH?.admin, seit: "2.23.61" },
   { id: "schulungen", thema: "termine", sym: "🎓", t: "Schulungen verwalten (Admin)", x: "Unter der Kachel <b>🎓 Schulungen</b> (nur für den Admin) stellst du Termine ein (bei mir, beim Mitglied oder Mitglied wählt; 1–3 Plätze), lädst Mitglieder einzeln oder gemeinsam ein und gibst ihre Wahl mit <b>✅ Bestätigen</b> frei. Bei jedem Mitglied siehst du den Stand (🎓 geschult, ✅ Termin, ✉️ eingeladen …). Wer die Club-App nicht hat, wählt über den Link in der Mail – ohne E-Mail mit <b>🔗 Link teilen</b> (z. B. WhatsApp).", zeig: () => scStart(), nur: () => !!ICH?.admin, seit: "2.23.60" },
   { id: "twinkey", thema: "start", sym: "🧑‍🍳", t: "Frag Twinkey", x: "Du weißt nicht, wo etwas ist? Tippe auf <b>🧑‍🍳 Frag Twinkey</b> (Kachel oder oben im Hilfe-Zentrum) und stell deine Frage in eigenen Worten – getippt oder mit 🎤 gesprochen, z. B. „Wie ändere ich die Farben?“. Twinkey zeigt die passende Antwort, liest sie auf Wunsch vor und bringt dich mit <b>„👉 Zeig es mir“</b> genau an die Stelle. Weiß er es noch nicht, tippst du auf <b>➤ Fragen</b>: Twinkey recherchiert, du bekommst die Antwort später per Push, E-Mail oder in der App – und unter <b>📬 Deine Fragen</b>. Danach kennt Twinkey die Antwort auch für alle anderen.", zeig: () => twFrageStart(), seit: "2.23.49" },
@@ -8708,7 +8709,7 @@ const KACHELN = {
     { id: "erstattung", sym: "💶", t: "Erstattung", u: "Fahrtkosten & Auslagen", v: "erstattung" },
     // KC-CLUB-AENDERUNG (2.22.7, Wunsch Hansi): Anschrift, Name, Telefon, Bank, Größe … melden; Clubleitung sieht offene Meldungen als Zahl
     { id: "aenderung", sym: "✏️", t: "Meine Daten geändert?", u: "Anschrift, Telefon, Größe …", aktion: "aeStart()", zahl: () => (ICH?.vorstand || ICH?.admin ? AE.offen : 0) },
-    { id: "schulungen", sym: "🎓", t: "Meine Schulungen", u: "Zusammenfassungen", bald: true },
+    { id: "schulungen", sym: "🎓", t: "Meine Schulung", u: "Termin aussuchen · Zusammenfassungen", aktion: "smStart()", zahl: () => (SM.liste || []).filter((e) => e.status === "offen").length }, // 2.23.62 KC-CLUB-SCHULUNG-MITGLIED
     { id: "einstellungen", sym: "⚙️", t: "Einstellungen", u: "Push, Ton, Schrift", v: "einstellungen" },
     { id: "test", sym: "🧪", t: "Test an mich", u: "Push & Mail ausprobieren", aktion: "testAnMichStarten()" },
   ],
@@ -15906,6 +15907,101 @@ function bsAusTermin(bid) {
     mitglied: scGruppe(e.person_ids), ort: b.besuchsart === "bei_hansi" ? "bei Hansi" : BS.mitglieder.find((m) => m.person_id === personen[0])?.adresse || "" });
 }
 
+// ---------- KC-CLUB-SCHULUNG-MITGLIED (2.23.62, Wunsch Hansi): „🎓 Meine Schulung“ – Termin direkt in der Club-App aussuchen ----------
+// Wer eingeladen ist, wählt hier statt über den Mail-Link (der gilt weiter): freie Termine antippen, „Kein Termin passt“ mit bis zu
+// 2 Vorschlägen, „Zurzeit kein Besuch“, Antwort zurücknehmen. Bestätigt: Termin, Ort, Tablet-Hinweis, Handy-Kalender.
+// Beim Start ein Hinweis, solange eine Einladung offen ist (jetzt / später / heute nicht mehr). Kein Admin-Recht nötig.
+const SM = { liste: null };
+const SM_ART = { bei_hansi: "🏠 bei Hansi", beim_mitglied: "🚗 Hansi kommt zu dir", wahl: "📍 du wählst: bei dir oder bei Hansi", egal: "Ort egal" };
+const SM_KEY = "kc_club_sm_hinweis";
+async function smLaden(oeffnen = false) { try { SM.liste = (await api("schulung_meine", { oeffnen })).einladungen || []; } catch { SM.liste = SM.liste || []; } return SM.liste; }
+async function smStart() {
+  blattAuf("smBlatt", `<h3 style="margin:0">🎓 Meine Schulung</h3><div id="smInhalt"><p class="hinweis">Wird geladen …</p></div>
+    <button type="button" class="tw-nicht" onclick="$('smBlatt').remove();zeige('archiv')">📄 Meine Zusammenfassungen im Archiv (Register „Schulung“)</button>
+    <button class="knopf" onclick="$('smBlatt').remove()">Schließen</button>`).classList.add("sc-blatt");
+  await smLaden(true); smZeigen();
+}
+function smZeigen() {
+  const z = $("smInhalt"); if (!z) return;
+  if (!SM.liste?.length) { z.innerHTML = '<p>Zurzeit gibt es keine offene Einladung zur Schulung. Hansi meldet sich, wenn er neue Termine anbietet.</p>'; return; }
+  z.innerHTML = SM.liste.map((e) => {
+    const zeit = (b, en) => scZeit(b, en), namen = e.anzahl > 1 ? e.namen.join(" und ") : "";
+    const kopf = namen ? `<p class="hinweis" style="margin:0">Einladung für ${esc(namen)} – ihr kommt zusammen.</p>` : "";
+    if (e.status === "offen") return `<div class="karte" data-e="${esc(e.id)}">${kopf}<b>Such dir einen Termin aus:</b>
+      <p class="hinweis" style="margin:2px 0 6px">Antwort bis ${esc(zeitKurz(e.gueltig_bis))}. Wer zuerst wählt, bekommt den Termin.</p>
+      ${(e.frei || []).map((s) => `<div class="sc-eintrag"><b>${esc(zeit(s.beginn, s.ende))}</b><div class="hinweis">${SM_ART[s.besuchsart] || ""}${s.notiz ? " · " + esc(s.notiz) : ""}</div>
+        <div class="knoepfe">${s.besuchsart === "wahl" ? `<button class="knopf haupt klein" onclick="smWaehlen(this,'${esc(e.id)}','${esc(s.id)}','beim_mitglied')">✅ Nehmen – bei mir</button><button class="knopf haupt klein" onclick="smWaehlen(this,'${esc(e.id)}','${esc(s.id)}','bei_hansi')">✅ Nehmen – bei Hansi</button>`
+          : `<button class="knopf haupt klein" onclick="smWaehlen(this,'${esc(e.id)}','${esc(s.id)}','')">✅ Diesen Termin nehmen</button>`}</div></div>`).join("") || '<p class="hinweis">Gerade ist kein Termin frei – schlag Hansi einfach einen vor.</p>'}
+      <div class="knoepfe" style="margin-top:8px"><button class="knopf klein" onclick="smVorschlag('${esc(e.id)}')">💬 Kein Termin passt – Vorschlag machen</button><button class="knopf klein" onclick="smAbsagen(this,'${esc(e.id)}')">✖ Zurzeit kein Besuch</button></div></div>`;
+    if (e.status === "gewaehlt") return `<div class="karte">${kopf}<b>⏳ Du hast gewählt:</b><div>${esc(zeit(e.buchung.beginn, e.buchung.ende))} · ${SM_ART[e.buchung.besuchsart] || ""}</div>
+      <p class="hinweis" style="margin:4px 0">Hansi bestätigt den Termin noch – du bekommst Bescheid.</p>
+      ${e.frist_offen ? `<button class="knopf klein" onclick="smAendern(this,'${esc(e.id)}')">🔄 Anders wählen</button>` : ""}</div>`;
+    if (e.status === "gegenvorschlag") return `<div class="karte">${kopf}<b>💬 Dein Vorschlag:</b>${(e.vorschlaege || []).map((v) => `<div>${esc(zeit(v.beginn, v.ende))} · ${SM_ART[v.besuchsart] || ""}</div>`).join("")}
+      ${e.bemerkung ? `<p class="hinweis" style="margin:4px 0">„${esc(e.bemerkung)}“</p>` : ""}<p class="hinweis" style="margin:4px 0">Hansi meldet sich bei dir.</p>
+      ${e.frist_offen ? `<button class="knopf klein" onclick="smAendern(this,'${esc(e.id)}')">🔄 Doch einen Termin aussuchen</button>` : ""}</div>`;
+    if (e.status === "bestaetigt" && e.buchung) return `<div class="karte">${kopf}<b>✅ Dein Termin ist bestätigt:</b><div style="font-size:1.1rem;font-weight:800">${esc(zeit(e.buchung.beginn, e.buchung.ende))}</div>
+      <div>📍 ${esc(e.buchung.ort || SM_ART[e.buchung.besuchsart] || "")}</div>
+      <p class="hinweis" style="margin:4px 0">💡 ${e.buchung.besuchsart === "bei_hansi" ? "Bring bitte dein Tablet mit" : "Leg bitte dein Tablet bereit"} – Hansi installiert die Schulungsversion der Programme darauf.</p>
+      <button class="knopf klein" onclick="smKalender('${esc(e.id)}')">📅 In meinen Handy-Kalender</button></div>`;
+    return `<div class="karte">${kopf}<b>⌛ Die Antwortfrist ist abgelaufen.</b><p class="hinweis" style="margin:4px 0">Melde dich einfach bei Hansi – er schickt dir neue Termine.</p>
+      <button class="knopf klein" onclick="$('smBlatt').remove();direkt(ENTWICKLER.person_id)">💬 Hansi schreiben</button></div>`;
+  }).join("");
+}
+async function smTun(knopf, daten, ok) {
+  if (knopf) knopf.disabled = true;
+  try { await api("schulung_antwort", daten, { warten: true }); melde(ok); await smLaden(); smZeigen(); }
+  catch (e) { meldeFehler(e); await smLaden(); smZeigen(); }
+  finally { if (knopf && document.body.contains(knopf)) knopf.disabled = false; }
+}
+async function smWaehlen(k, id, slot, art) {
+  const e = SM.liste.find((x) => x.id === id), s = e?.frei.find((x) => x.id === slot); if (!s) return;
+  if (!(await frage(`Diesen Termin nehmen?\n${scZeit(s.beginn, s.ende)}${art ? " · " + (art === "bei_hansi" ? "bei Hansi" : "bei dir") : ""}\nHansi bestätigt ihn danach.`, { ja: "✅ Nehmen", gefahr: false }))) return;
+  smTun(k, { einladung_id: id, was: "waehlen", slot_id: slot, besuchsart: art }, "✅ Gewählt – Hansi bestätigt den Termin noch");
+}
+async function smAbsagen(k, id) {
+  const b = await eingabe("Zurzeit keinen Besuch?\nHansi bekommt Bescheid. Möchtest du noch etwas dazu schreiben? (freiwillig)", ""); if (b === null) return;
+  smTun(k, { einladung_id: id, was: "absagen", bemerkung: b }, "👍 Hansi weiß Bescheid");
+}
+async function smAendern(k, id) {
+  if (!(await frage("Antwort zurücknehmen und neu wählen?", { ja: "🔄 Neu wählen", gefahr: false }))) return;
+  smTun(k, { einladung_id: id, was: "aendern" }, "🔄 Du kannst jetzt neu wählen");
+}
+function smVorschlag(id) {
+  const morgen = tagPlus(heuteIso(), 1), zeile = (n) => `<div class="karte"><b>Vorschlag ${n}${n > 1 ? " (freiwillig)" : ""}</b>
+    <label class="feld">Tag<input type="date" id="smD${n}" min="${morgen}" ${n === 1 ? `value="${morgen}"` : ""}></label>
+    <div class="zwei"><label class="feld">Von<input type="time" id="smV${n}" step="900" ${n === 1 ? 'value="15:00"' : ""}></label><label class="feld">Bis<input type="time" id="smB${n}" step="900" ${n === 1 ? 'value="16:30"' : ""}></label></div>
+    <div class="hl-chips" data-ort="${n}">${[["egal", "egal"], ["beim_mitglied", "bei mir"], ["bei_hansi", "bei Hansi"]].map(([k, t]) => `<button type="button" class="chip${k === "egal" ? " an" : ""}" data-w="${k}">${t}</button>`).join("")}</div></div>`;
+  const f = blattAuf("smVBlatt", `<h3 style="margin:0">💬 Kein Termin passt</h3><p class="hinweis" style="margin:0">Schlag Hansi bis zu zwei Termine vor.</p>${zeile(1)}${zeile(2)}
+    <label class="feld">Bemerkung (freiwillig)<input id="smBem" maxlength="500" data-diktat placeholder="z. B. vormittags geht es bei mir nicht"></label>
+    <button class="knopf haupt" id="smVOk">📨 Vorschlag schicken</button><button class="knopf" onclick="$('smVBlatt').remove()">Abbrechen</button>`);
+  f.style.zIndex = "2100";
+  f.querySelectorAll("[data-ort]").forEach((g) => g.querySelectorAll(".chip").forEach((c) => (c.onclick = () => g.querySelectorAll(".chip").forEach((x) => x.classList.toggle("an", x === c)))));
+  f.querySelector("#smVOk").onclick = async function () {
+    const v = [1, 2].map((n) => ({ datum: $("smD" + n).value, von: $("smV" + n).value, bis: $("smB" + n).value, besuchsart: f.querySelector(`[data-ort="${n}"] .chip.an`)?.dataset.w || "egal" })).filter((x) => x.datum && x.von);
+    if (!v.length) return melde("📅 Bitte mindestens einen Tag und eine Uhrzeit eintragen.", true);
+    if (v.some((x) => x.bis && x.bis <= x.von)) return melde("„Bis“ muss nach „Von“ liegen.", true);
+    f.remove(); smTun(null, { einladung_id: id, was: "gegenvorschlag", vorschlaege: v, bemerkung: $("smBem")?.value || "" }, "📨 Vorschlag ist bei Hansi");
+  };
+}
+function smKalender(id) {
+  const e = SM.liste.find((x) => x.id === id); if (!e?.buchung) return;
+  erinKalender({ id: "schulung-" + id, anlass: "🎓 Schulung bei " + (e.buchung.besuchsart === "bei_hansi" ? "Hansi" : "dir"), beginn: e.buchung.beginn, ende: e.buchung.ende, ort: e.buchung.ort }, 60);
+}
+// Hinweis beim Start, solange eine Einladung offen ist (nicht über offenen Fenstern; später = 4 Std., heute nicht mehr)
+async function smHinweisPruefen() {
+  if (!ICH || document.querySelector(".blatt:not(.versteckt)")) return;
+  let ruhe = {}; try { ruhe = JSON.parse(lsLesen(SM_KEY) || "{}") || {}; } catch {}
+  if (ruhe.heute === heuteIso() || Date.now() < Number(ruhe.bis || 0)) return;
+  const offen = (await smLaden()).filter((e) => e.status === "offen");
+  if (!offen.length || document.querySelector(".blatt:not(.versteckt)")) return;
+  const f = blattAuf("smHinweisBlatt", `<h3 style="margin:0">🎓 Du bist zur Schulung eingeladen</h3>
+    <p style="margin:6px 0">Hansi zeigt dir die Programme des Clubs. Such dir einfach einen Termin aus – die Antwort ist bis ${esc(zeitKurz(offen[0].gueltig_bis))} möglich.</p>
+    <button class="knopf haupt" data-w="jetzt">👀 Ja, Termin aussuchen</button><button class="knopf" data-w="spaeter">⏰ Später</button><button class="knopf" data-w="heute">🌙 Heute nicht mehr fragen</button>`);
+  f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => { f.remove(); const w = b.dataset.w;
+    if (w === "jetzt") return smStart();
+    lsSetzen(SM_KEY, JSON.stringify(w === "heute" ? { heute: heuteIso() } : { bis: Date.now() + 4 * 3600000 })); }));
+}
+
 // KC-CLUB-TERMINANFRAGE-HINWEIS (2.23.52, Wunsch Hansi): Beim Öffnen der App und zwischendurch (zurück in die App, nach einem Push,
 // alle 5 Min.) – „📨 Du hast eine neue Terminanfrage“ mit „👀 Ja, jetzt ansehen“, „⏰ Später“ (2 Std.) und „🌙 Heute nicht mehr fragen“.
 // Gilt für Anfragen an mich ohne Antwort und ohne Gegenvorschlag, die noch nicht abgelaufen sind (Spiel-Termine laufen über das Spiel).
@@ -19163,6 +19259,7 @@ async function fpAdmin(tage) {
     else if (h === "#standort") zeige("standort");
     else if (h === "#dienstwunsch") dwOeffnen();
     else if (h === "#wunschbogen") wbStart(); // KC-CLUB-WUNSCHBOGEN (2.23.28)
+    else if (h === "#schulung") smStart(); // KC-CLUB-SCHULUNG-MITGLIED (2.23.62)
     else if (h === "#twinkey") ICH?.admin ? twOffenStart() : twFrageStart();
     else if (h === "#mfrage") twFrageStart(); // KC-CLUB-MITGLIEDER-FRAGEN (2.23.51): Push/Mail → Fragen an mich bzw. Antworten // KC-CLUB-TWINKEY-FRAGEN (2.23.49): Push/Mail → Frage bzw. Antwort
     else if (h.startsWith("#spiel=")) spOeffnen(decodeURIComponent(h.slice(7))); // KC-CLUB-SPIELE (2.7.0): aus dem Push
@@ -19174,7 +19271,8 @@ async function fpAdmin(tage) {
     else if (h === "#aenderungen") ICH?.vorstand || ICH?.admin ? aeEingang() : aeStart(); // KC-CLUB-AENDERUNG (2.22.7): aus Push/Mail
     if (!h || h === "#") setTimeout(() => buGrussFragen(), 1500); // KC-CLUB-BUERO: Begrüßung der Clubleitung
     if (!h || h === "#") setTimeout(() => ekHinweisPruefen(), 3000); // KC-CLUB-EINGANG-HINWEIS: viel im Eingangskorb?
-    if (!h || h === "#") setTimeout(() => taHinweisPruefen(), 5000); // KC-CLUB-TERMINANFRAGE-HINWEIS (2.23.52): neue Terminanfrage?
+    if (!h || h === "#") setTimeout(() => taHinweisPruefen(), 5000);
+    if (!h || h === "#") setTimeout(() => smHinweisPruefen(), 7000); // KC-CLUB-SCHULUNG-MITGLIED (2.23.62): offene Schulungs-Einladung? // KC-CLUB-TERMINANFRAGE-HINWEIS (2.23.52): neue Terminanfrage?
     if (!h || h === "#") setTimeout(() => twAntwortPruefen(), 6000); // KC-CLUB-TWINKEY-FRAGEN: Antwort „in der Club-App“
     if (!h || h === "#") setTimeout(() => spEinladung(), 4000); // KC-CLUB-SPIEL-EINLADUNG (2.12.0): nach Begrüßung/Neuigkeiten
   });

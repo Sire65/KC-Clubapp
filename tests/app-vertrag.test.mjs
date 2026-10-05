@@ -4162,6 +4162,16 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   for (const x of ["➕ Neuer Besuch", "📅 Geplant", "Gesprächspunkte", "📷 Foto vom Papierprotokoll", "Speichern & senden", "Stunden", "km gesamt"]) assert.ok(k.includes(x), "Teil fehlt: " + x);
   assert.ok(!/auswerten/i.test(k) && /\["termine", "📅 Termine & Einladungen"\], \["besuche", "📝 Besuche"\]/.test(html), "ohne Auswertung, zweiter Reiter");
 }
+// 411. 2.23.62: „🎓 Meine Schulung“ – Mitglieder wählen ihren Termin in der Club-App (KC-CLUB-SCHULUNG-MITGLIED)
+{
+  const g = server.slice(server.indexOf('case "schulung_meine"'), server.indexOf('// KC-CLUB-BESUCHE (2.23.61): Besuchsprotokoll – nur Admin'));
+  assert.ok(/contains\("person_ids", \[ich\.person_id\]\)/.test(g) && /eq\("ist_test", false\)/.test(g), "nur eigene, echte Einladungen");
+  assert.ok(/if \(!e \|\| !\(e\.person_ids \?\? \[\]\)\.includes\(ich\.person_id\)\) throw/.test(g) && /person_id: ich\.person_id/.test(g), "Antwort nur für die eigene Einladung");
+  assert.ok(/waehlen: "m_waehlen", gegenvorschlag: "m_gegenvorschlag", absagen: "m_absagen", aendern: "m_aendern"/.test(g), "nur die Mitglieder-Aktionen");
+  const k = html.slice(html.indexOf("// ---------- KC-CLUB-SCHULUNG-MITGLIED (2.23.62"), html.indexOf("// KC-CLUB-TERMINANFRAGE-HINWEIS (2.23.52"));
+  for (const x of ["✅ Diesen Termin nehmen", "💬 Kein Termin passt", "✖ Zurzeit kein Besuch", "🔄 Anders wählen", "📅 In meinen Handy-Kalender", "👀 Ja, Termin aussuchen", "🌙 Heute nicht mehr fragen"]) assert.ok(k.includes(x), "Teil fehlt: " + x);
+  assert.ok(/\{ id: "schulungen", sym: "🎓", t: "Meine Schulung", u: "Termin aussuchen · Zusammenfassungen", aktion: "smStart\(\)"/.test(html) && /smHinweisPruefen\(\), 7000/.test(html), "Kachel aktiv, Hinweis beim Start");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

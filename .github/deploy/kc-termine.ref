@@ -1,4 +1,5 @@
 # KC-TERMINE-DEPLOY: welcher Stand von Sire65/KC-Besuchsprotokoll als Edge Function „kc-termine“ hochgeladen wird.
 # Neue Zeile mit dem Commit (40 Zeichen) eintragen und pushen → Workflow „Termin-Programm hochladen“ läuft.
 # 1.3.9 (29.09.2026): Erinnerung nach Terminänderung zuverlässig
-744e542a8589d3927d3f4014ba644887eb44149f
+# 2.23.62: KC-Besuchsprotokoll 1.3.10 – Mitglieder-Aktionen auch intern über die Club-App (KC-CLUB-SCHULUNG-MITGLIED)
+cabe06d8956bdbb320c9f01712c9ed8b820dd77a
