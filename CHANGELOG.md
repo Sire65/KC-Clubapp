@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.23.44 – 2026-10-05 – 📣 Hilfe veröffentlichen: Pinnwand, Push, E-Mail + Anfrage mit Betreff (Wunsch Hansi)
+- KC-CLUB-HILFE-KANAELE: Beim Einstellen eines Hilfe-Aufrufs („Ich suche Hilfe“) und eines Angebots („Ich biete Hilfe an“) fragt die App
+  „📣 Wie möchtest du es veröffentlichen?“ – 📌 Pinnwand, 🔔 Push, ✉️ E-Mail (mehrere möglich, Wahl je Gerät gemerkt; Start: Pinnwand + Push).
+  Nichts gewählt = nur in Helfen & Leihen, nichts wird verschickt. Knöpfe „📣 Aufruf / Angebot veröffentlichen“.
+  - Pinnwand: Aufrufe wie bisher als grüner Aushang (nur noch, wenn gewählt; ältere unverändert), Angebote neu als „🤲 HILFE ANGEBOTEN“ –
+    antippen öffnet das Angebot. Push/E-Mail an alle Mitglieder mit Sprung #hilfe=… bzw. neu #angebot=….
+  - Angebot anfragen: „💬 Nachricht“ beginnt mit „Betreff: Dein Angebot „…“ vom TT.MM.JJJJ“, „📨 Termin anfragen“ trägt das als Anlass ein.
+- Migration supabase/migrations/20261005_kc_club_v22344_hilfe_kanaele.sql (eingespielt: Spalte kanaele + Prüfregel). Hilfe-Eintrag. Test 393.
+
 ## 2.23.43 – 2026-10-05 – 📥 Hinweis an die Clubleitung: viel im Eingangskorb (Wunsch Hansi)
 - KC-CLUB-EINGANG-HINWEIS: Liegen mehr als 5 Sachen im Eingangskorb, zeigt die App Clubsprecher, Kassenwart und Admin beim Start ein Fenster
   „📥 Im Eingangskorb liegen 10 Sachen“ mit kleiner Liste je Art (z. B. 4 Dienstpläne, 1 Kostenerstattung, 1 Hilfegesuch). Zeile antippen =

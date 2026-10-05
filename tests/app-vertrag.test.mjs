@@ -2213,7 +2213,8 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   const mig = lies("supabase/migrations/20261002_kc_club_v1420_hilfe_angebote.sql");
   assert.ok(/enable row level security/.test(mig) && /revoke all on kc_club_hilfe_angebote from anon, authenticated/.test(mig) && /kc_db_mirror_table_rules/.test(mig) && /kc_neon_resume_tables/.test(mig), "RLS + Spiegel");
   const sp = server.slice(server.indexOf('case "hilfe_angebot_speichern"'), server.indexOf('case "hilfe_aufruf"'));
-  assert.ok(!/senden\(|sendenGewaehlt\(/.test(sp), "Anlegen verschickt nichts");
+  // 2.23.44 (Wunsch Hansi, KC-CLUB-HILFE-KANAELE): verschickt nur, wenn beim Einstellen Push/E-Mail gewählt wurde – nie nach Voreinstellung
+  assert.ok(!/[^.]senden\(/.test(sp) && /if \(wege\.length\) \{[^]*sendenGewaehlt\("club_nachricht", empf, wege,/.test(sp), "Anlegen verschickt nur auf Wunsch");
   assert.ok(/a\.von !== ich\.person_id && !ich\.vorstand/.test(sp), "Ändern/Beenden nur eigenes (oder Clubleitung)");
   assert.ok(/🤲 Ich biete Hilfe an<\/button>/.test(html) && /function angebotKachel\(a\)/.test(html), "Knopf + Kacheln");
   assert.ok(/await taForm\(\{ personen: \[a\.von\.person_id\] \}\);/.test(html) && /await direkt\(a\.von\.person_id\);/.test(html), "Termin anfragen (Terminanfrage) oder Nachricht");
@@ -3980,6 +3981,17 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/✅ Ja, jetzt bearbeiten/.test(f) && /⏰ Später/.test(f) && /🌙 Heute nicht mehr/.test(f) && /localStorage\.setItem\(EKH_HEUTE, heuteIso\(\)\)/.test(f), "Ja / Später / Heute nicht mehr");
   assert.ok(/document\.querySelector\("\.blatt:not\(\.versteckt\)"\) \|\| aktuelleAnsicht !== "start"/.test(f) && /setTimeout\(\(\) => ekHinweisPruefen\(\), 3000\)/.test(html), "beim Start, nicht über andere Fenster");
   assert.ok(/\["dienstzeiten", "📅", "Dienstplan", "Dienstpläne", "Dienstzeiten"\]/.test(html) && /ekHinweisOeffnen\(b\.dataset\.art\)/.test(f) && /Object\.assign\(EKF, \{ jahr: "", monat: "", wer: "", art: art \|\| "", offen: !!art \}\); buStart\(\); buEingang\(\);/.test(html), "Zeile öffnet den Eingangskorb mit Filter");
+}
+// 393. 2.23.44: Hilfe-Aufruf/Angebot – „Wie veröffentlichen?“ + Anfrage mit Betreff (KC-CLUB-HILFE-KANAELE)
+{
+  const mig = lies("supabase/migrations/20261005_kc_club_v22344_hilfe_kanaele.sql");
+  assert.ok(/kc_club_hilfe_aufrufe add column if not exists kanaele text\[\]/.test(mig) && /kc_club_hilfe_angebote add column if not exists kanaele text\[\]/.test(mig) && /<@ array\['pinnwand', 'push', 'email'\]/.test(mig), "Migration");
+  const auf = server.slice(server.indexOf('case "hilfe_aufruf": {'), server.indexOf('case "hilfe_wichtig": {'));
+  assert.ok(/kanaele = hilfeKanaele\(p\.kanaele\)/.test(auf) && /\(wege && !wege\.length\) \? \{ gesendet: 0 \}/.test(auf) && /sendenGewaehlt\("club_nachricht", empf, wege,/.test(auf), "Aufruf: nur gewählte Wege, nichts gewählt = nichts senden");
+  assert.ok(/function hkHtml\(wo\)/.test(html) && /📣 Wie möchtest du es veröffentlichen\?/.test(html) && /\["pinnwand", "📌 Pinnwand"\], \["push", "🔔 Push"\], \["email", "✉️ E-Mail"\]/.test(html), "Auswahl mehrfach");
+  assert.ok(/\$\{hkHtml\("form"\)\}/.test(html) && /\$\{f\.id \? "" : hkHtml\("angebotForm"\)\}/.test(html) && /📣 Angebot veröffentlichen/.test(html) && /📣 Aufruf veröffentlichen/.test(html), "bei Aufruf und Angebot");
+  assert.ok(/const pwAufrufAnPinnwand = \(a\) => !a\.kanaele \|\| a\.kanaele\.includes\("pinnwand"\)/.test(html) && /🤲 HILFE ANGEBOTEN/.test(html) && /onclick="angebotDirekt\('\$\{a\.id\}'\)"/.test(html), "Pinnwand: nur gewählt, antippbar");
+  assert.ok(/const angebotBetreff = \(a\) => `Dein Angebot „\$\{a\.titel\}“\$\{a\.erstellt_am \? " vom "/.test(html) && /t\.value = `Betreff: \$\{angebotBetreff\(a\)\}/.test(html) && /h\.startsWith\("#angebot="\)/.test(html), "Anfrage mit Betreff + Sprung #angebot=");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

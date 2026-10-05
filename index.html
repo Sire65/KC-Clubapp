@@ -2865,7 +2865,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.43"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.44"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3133,7 +3133,8 @@ function pwUebernehmen(r) {
   if (aktuelleAnsicht === "start" && !kaBearb) kachelnZeigen();
 }
 // Aufrufe, auf die ich noch nicht geantwortet habe (eigene zählen nicht)
-const pwHilfeNeu = () => (PW.hilfe?.aufrufe || []).filter((a) => !a.eigen && !a.meine && !hlVoll(a));
+const pwAufrufAnPinnwand = (a) => !a.kanaele || a.kanaele.includes("pinnwand"); // KC-CLUB-HILFE-KANAELE (2.23.44)
+const pwHilfeNeu = () => (PW.hilfe?.aufrufe || []).filter((a) => pwAufrufAnPinnwand(a) && !a.eigen && !a.meine && !hlVoll(a));
 // Beim Öffnen der App: offene wichtige Zettel → Pinnwand zeigen
 async function pwStart(nurZaehlen) { // nurZaehlen: Begrüßung ist offen → Pinnwand nicht zusätzlich öffnen
   // 0.58.0: Zettel, die gekommen sind, während die App zu war, gehen direkt als Post-it-Fenster auf
@@ -3279,8 +3280,13 @@ function pwZeigen() {
 }
 // KC-CLUB-HILFE-PINNWAND (1.90.0): offene Hilfe-Aufrufe als grüner Aushang (kein Post-it, zählt nicht zu den 4 Zetteln)
 function pwAushangHtml() {
-  const h = PW.hilfe; if (!h?.aufrufe?.length) return "";
-  return h.aufrufe.map((a) => { const voll = hlVoll(a), wobei = /^Wobei: (.+)/.exec(a.notiz || "")?.[1], was = wobei ? "🙋 " + wobei : (h.arten?.[a.art] || a.art);
+  const h = PW.hilfe; if (!h) return "";
+  // KC-CLUB-HILFE-KANAELE (2.23.44): nur, was an die Pinnwand soll (ältere ohne Wahl wie bisher); Angebote als „🤲 HILFE ANGEBOTEN“
+  const ang = (h.angebote || []).filter((a) => (a.kanaele || []).includes("pinnwand")).map((a) => `<div class="zettel aushang" style="--dreh:${pwDreh(a.id)}deg"><span class="zwichtig">🤲 HILFE ANGEBOTEN</span>
+      <div class="zkopf">von <b>${esc(a.eigen ? "dir" : a.von.vorname || a.von.name.split(" ")[0])}</b></div>
+      <div class="ztext">${esc(a.sym)} ${esc(a.titel)}</div>${a.text ? `<div class="zfuss">${esc(a.text.length > 120 ? a.text.slice(0, 118) + " …" : a.text)}</div>` : ""}
+      <div class="zknoepfe"><button class="antw" onclick="angebotDirekt('${a.id}')">${a.eigen ? "🤲 Ansehen" : "🤲 Ansehen & anfragen"}</button></div></div>`).join("");
+  return ang + (h.aufrufe || []).filter(pwAufrufAnPinnwand).map((a) => { const voll = hlVoll(a), wobei = /^Wobei: (.+)/.exec(a.notiz || "")?.[1], was = wobei ? "🙋 " + wobei : (h.arten?.[a.art] || a.art);
     return `<div class="zettel aushang${a.wichtig ? " wichtig" : ""}" style="--dreh:${pwDreh(a.id)}deg"><span class="zwichtig">${a.wichtig ? "❗ WICHTIG · " : ""}🙋 HILFE GESUCHT</span>
       <div class="zkopf">von <b>${esc(a.eigen ? "dir" : a.von.name.split(" ")[0])}</b></div>
       <div class="ztext">${esc(was)}</div><div class="zfuss">${esc(hlWann(a, true, h.zeitfenster))}${a.ort ? ` · 📍 ${esc(a.ort)}` : ""}</div>
@@ -3919,6 +3925,7 @@ const HILFE = [
   { id: "foto_details", thema: "club", sym: "ℹ️", t: "Wann und wo war das?", x: "Im Fotoalbum ein Bild groß öffnen und auf <b>„ℹ️ Details“</b> tippen – dann siehst du, wann das Foto aufgenommen wurde und, falls bekannt, wo.", zeig: () => zeige("fotos"), seit: "2.23.1" },
   { id: "foto_teilen", thema: "club", sym: "📥", t: "Fotos direkt aus der Galerie schicken", x: "Ist die Club-App installiert, taucht sie beim Teilen in der Handy-Galerie auf: Foto auswählen → <b>Teilen → Köcheclub</b>. Kein Umweg über das Fotoalbum nötig.", seit: "2.23.1" },
   { id: "hilfe_anbieten", thema: "club", sym: "🤲", t: "Du kannst etwas besonders gut?", x: "Unter 🤝 Helfen &amp; Leihen → <b>„＋ Neu“</b> → <b>„🤲 Ich biete Hilfe an“</b> machst du ein Angebot, zum Beispiel beim Einrichten der App. Es erscheint als Kachel für alle.", zeig: () => hlStart(), seit: "2.23.1" },
+  { id: "hilfe_veroeffentlichen", thema: "club", sym: "📣", t: "Hilfe-Aufruf oder Angebot veröffentlichen", x: "Beim Einstellen fragt die App: <b>„📣 Wie möchtest du es veröffentlichen?“</b> – <b>📌 Pinnwand</b> (grüner Aushang, antippbar), <b>🔔 Push</b> und/oder <b>✉️ E-Mail</b> an alle Mitglieder. Mehrere gehen, die Wahl merkt sich dein Handy. Nichts angehakt: nur in Helfen &amp; Leihen sichtbar. Bei einem fremden Angebot schreibt <b>„💬 Nachricht“</b> gleich den Betreff „Dein Angebot … vom …“ für dich.", zeig: () => hlStart("helfen"), seit: "2.23.44" },
   { id: "hilfe_absprache", thema: "club", sym: "🙋", t: "Hilfe gesucht, aber noch ohne festen Tag", x: "Beim Hilfe-Aufruf musst du dich nicht auf ein Datum festlegen – „nach Absprache“ geht auch. Und wenn jede helfende Hand willkommen ist, wähle bei der Anzahl <b>„♾️ Egal wie viele“</b>.", zeig: () => hlStart(), seit: "2.23.1" },
   { id: "vorschlag_unterstuetzen", thema: "club", sym: "👍", t: "Gute Ideen unterstützen", x: "Bei den <b>🗳️ Vorschlägen</b> kannst du Themen anderer mit 👍 unterstützen. So sieht die Clubleitung schnell, was vielen am Herzen liegt.", zeig: () => zeige("vorschlaege"), seit: "2.23.1" },
   { id: "spende", thema: "club", sym: "💝", t: "Ein Spendenprojekt vorschlagen", x: "Kennst du ein Projekt, das der Club unterstützen könnte? Bei den Vorschlägen gibt es dafür die Art <b>„💝 Spende“</b> – die Projekte kommen dann in die nächste Sitzung.", zeig: () => zeige("vorschlaege"), seit: "2.23.1" },
@@ -12059,7 +12066,21 @@ function hlNeuWahl() {
   neuWahlFenster("＋ Neu bei Helfen", [{ sym: "🙋", t: "Ich suche Hilfe", u: "Aufbau, Einkauf, Kochen … – alle bekommen Bescheid", los: () => hilfeNeu() }, { sym: "🤲", t: "Ich biete Hilfe an", u: "z. B. Club-App einrichten – als Kachel für alle", los: () => angebotNeu() }]);
 }
 // ----- 🙋 Wer kann helfen? -----
-function hilfeNeu() { HL.form = { id: null, art: "", artText: "", absprache: false, datum: hlTag(0), slot: "", anzahl: 2, ohne: false, ort: "", ortFrei: false, notiz: "", ziel: "alle" }; hlZeigen(); window.scrollTo(0, 0); }
+function hilfeNeu() { HL.form = { id: null, art: "", artText: "", absprache: false, datum: hlTag(0), slot: "", anzahl: 2, ohne: false, ort: "", ortFrei: false, notiz: "", ziel: "alle", kanaele: hkStandard() }; hlZeigen(); window.scrollTo(0, 0); }
+// ---------- KC-CLUB-HILFE-KANAELE (2.23.44, Wunsch Hansi): „📣 Wie möchtest du es veröffentlichen?“ – Pinnwand, Push, E-Mail (mehrere möglich)
+// Gilt für neue Hilfe-Aufrufe und neue Angebote. Die Wahl merkt sich das Gerät. Nichts gewählt = nur hier in Helfen & Leihen sichtbar.
+const HK_KEY = "kc_club_hilfe_kanaele", HK_ARTEN = [["pinnwand", "📌 Pinnwand"], ["push", "🔔 Push"], ["email", "✉️ E-Mail"]];
+const hkStandard = () => { try { const w = JSON.parse(localStorage.getItem(HK_KEY) || "null"); if (Array.isArray(w)) return w.filter((k) => HK_ARTEN.some(([x]) => x === k)); } catch {} return ["pinnwand", "push"]; };
+function hkHtml(wo) {
+  const f = HL[wo], k = f.kanaele || [];
+  const was = [k.includes("pinnwand") ? "hängt als grüner Aushang an der Pinnwand (antippbar)" : "", k.includes("push") ? "kommt als Mitteilung aufs Handy" : "", k.includes("email") ? "geht per E-Mail raus" : ""].filter(Boolean);
+  return `<div class="hl-frage">📣 Wie möchtest du es veröffentlichen? <small class="hinweis">(mehrere möglich)</small></div>
+    <div class="hl-chips hk-wahl">${HK_ARTEN.map(([x, t]) => `<button class="chip${k.includes(x) ? " an" : ""}" aria-pressed="${k.includes(x)}" onclick="hkUmschalten('${wo}','${x}')">${k.includes(x) ? "☑️" : "⬜"} ${t}</button>`).join("")}</div>
+    <p class="hinweis" style="margin:2px 0 8px">${was.length ? "Es " + was.join(", ") + "." : "Nichts gewählt: nur hier in Helfen &amp; Leihen sichtbar – es wird nichts verschickt."}</p>`;
+}
+function hkUmschalten(wo, x) { const f = HL[wo]; if (!f) return; const k = f.kanaele || []; f.kanaele = k.includes(x) ? k.filter((y) => y !== x) : [...k, x]; hlZeigen(); }
+const hkMerken = (k) => lsSetzen(HK_KEY, JSON.stringify(k || []));
+const hkMeldung = (k, n) => { const w = (k || []).filter((x) => x !== "pinnwand"); return [(k || []).includes("pinnwand") ? "📌 an der Pinnwand" : "", w.length ? `${w.map((x) => (x === "push" ? "🔔 Push" : "✉️ E-Mail")).join(" + ")} an ${n} ${n === 1 ? "Mitglied" : "Mitglieder"}` : ""].filter(Boolean).join(" · ") || "nur hier in Helfen & Leihen"; };
 // KC-CLUB-HILFE-AENDERN (1.92.0, Wunsch Hansi): eigene Kachel antippen → ganzes Formular mit allen Angaben zum Ändern;
 // andere Mitglieder sehen weiter die Einzelheiten mit „Ich komme / Kann nicht“
 // 1.95.0 (Wunsch Hansi): auch der eigene Aufruf öffnet zuerst die Kurzansicht (wie die Mitglieder sie sehen) – mit Stand und ✏️ Ändern
@@ -12085,10 +12106,10 @@ function hilfeFormHtml() {
     ${hlChips("ort", [{ w: "", t: "– keine Angabe –" }, ...orte.map((o) => ({ w: o, t: "📍 " + o }))], f.ortFrei ? "\u0000" : f.ort)}
     ${f.ortFrei ? `<label class="feld"><input id="hfOrt" maxlength="80" placeholder="z. B. Vereinsheim" value="${esc(f.ort)}" oninput="hlText('ort', this)"></label>` : `<button class="knopf klein" onclick="HL.form.ortFrei=true;HL.form.ort='';hlZeigen();$('hfOrt')?.focus()">✏️ Anderer Ort</button>`}
     ${f.id ? "" : `<div class="hl-frage">An wen?</div>
-    <div class="umschalter"><button class="${f.ziel === "alle" ? "an" : ""}" onclick="hlSetze('ziel','alle')">👥 Alle Mitglieder</button><button class="${f.ziel === "online" ? "an" : ""}" onclick="hlSetze('ziel','online')">🟢 Alle gerade online</button></div>`}
+    <div class="umschalter"><button class="${f.ziel === "alle" ? "an" : ""}" onclick="hlSetze('ziel','alle')">👥 Alle Mitglieder</button><button class="${f.ziel === "online" ? "an" : ""}" onclick="hlSetze('ziel','online')">🟢 Alle gerade online</button></div>${hkHtml("form")}`}
     <label class="feld">Beschreibung (freiwillig) – was genau, was mitbringen, wie erreichbar<textarea class="hl-notiz" rows="6" maxlength="900" placeholder="z. B. Für den Weihnachtsmarkt bauen wir den Stand auf. Bitte Arbeitshandschuhe mitbringen. Meldet euch kurz, wann es euch passt." oninput="hlText('notiz', this)">${esc(f.notiz)}</textarea></label>
     ${f.id ? '<p class="hinweis" style="margin:0">Kein neuer Rundruf. Wer schon zugesagt hat, bekommt Bescheid, wenn sich Tag oder Ort ändern.</p>' : ""}
-    <div class="knoepfe"><button class="knopf haupt" onclick="hilfeSenden(this)">${f.id ? "💾 Änderungen speichern" : "📣 Aufruf senden"}</button><button class="knopf" onclick="HL.form=null;hlZeigen()">Abbrechen</button>${f.id ? `<button class="knopf" onclick="hilfeSchliessen('${f.id}')">🔒 Aufruf schließen</button>` : ""}</div></div>`;
+    <div class="knoepfe"><button class="knopf haupt" onclick="hilfeSenden(this)">${f.id ? "💾 Änderungen speichern" : "📣 Aufruf veröffentlichen"}</button><button class="knopf" onclick="HL.form=null;hlZeigen()">Abbrechen</button>${f.id ? `<button class="knopf" onclick="hilfeSchliessen('${f.id}')">🔒 Aufruf schließen</button>` : ""}</div></div>`;
 }
 async function hilfeSenden(knopf) {
   const f = HL.form;
@@ -12098,8 +12119,9 @@ async function hilfeSenden(knopf) {
       const notiz = [f.art === "sonstiges" && f.artText.trim() ? "Wobei: " + f.artText.trim() : "", f.notiz.trim()].filter(Boolean).join("\n").slice(0, 1000);
       const daten = { art: f.art, absprache: !!f.absprache, datum: f.datum, slot: f.absprache ? null : f.slot || null, anzahl: f.ohne ? null : f.anzahl, ort: f.ort || null, notiz: notiz || null };
       if (f.id) { const r = await api("hilfe_aendern", { id: f.id, ...daten }); HL.form = null; HL.infoNach = f.id; melde(r.benachrichtigt ? "💾 Gespeichert – der Aufruf bleibt offen; wer zugesagt hat, bekommt Bescheid" : "💾 Gespeichert – der Aufruf bleibt offen"); hlLaden(); return; } // 1.92.1: danach den (weiter offenen) Aufruf zeigen
-      const r = await api("hilfe_aufruf", { ...daten, ziel: f.ziel });
-      HL.form = null; melde(r.empfaenger ? `📣 Aufruf gesendet – an ${r.empfaenger} ${r.empfaenger === 1 ? "Mitglied" : "Mitglieder"}` : "📣 Aufruf gespeichert – gerade ist niemand sonst online"); hlLaden();
+      const kanaele = f.kanaele || [];
+      const r = await api("hilfe_aufruf", { ...daten, ziel: f.ziel, kanaele }); hkMerken(kanaele);
+      HL.form = null; melde(`📣 Aufruf veröffentlicht – ${hkMeldung(kanaele, r.empfaenger || 0)}`); hlLaden();
     } catch (e) { meldeFehler(e); }
   });
 }
@@ -12210,7 +12232,7 @@ async function angebotAnfragen(id) {
   $("angebotInfo")?.remove();
   await taForm({ personen: [a.von.person_id] });
   const w = $("taAnlassWahl"), f = $("taAnlass");
-  if (w && f) { w.value = "__eigen"; comboWahl("taAnlass"); f.value = `${a.sym} ${a.titel}`.slice(0, 120); }
+  if (w && f) { w.value = "__eigen"; comboWahl("taAnlass"); f.value = angebotBetreff(a).slice(0, 120); } // 2.23.44: „Dein Angebot … vom …“
   melde(`📨 ${a.von.vorname || a.von.name.split(" ")[0]} ist schon ausgewählt – Tag und Uhrzeit vorschlagen, dann „Anfrage senden“.`);
 }
 async function angebotNachricht(id) {
@@ -12218,13 +12240,21 @@ async function angebotNachricht(id) {
   $("angebotInfo")?.remove();
   await direkt(a.von.person_id);
   const t = $("text"); if (!t) return;
-  t.value = `Hallo ${a.von.vorname || a.von.name.split(" ")[0]}, ich hätte gern deine Hilfe bei „${a.titel}“. Wann würde es dir passen?`;
+  t.value = `Betreff: ${angebotBetreff(a)}\n\nHallo ${a.von.vorname || a.von.name.split(" ")[0]}, ich hätte gern deine Hilfe bei „${a.titel}“. Wann würde es dir passen?`; // 2.23.44: mit Betreff
   t.style.height = "auto"; t.style.height = t.scrollHeight + "px"; try { entwurfMarkeZeigen(); } catch {}
+}
+// KC-CLUB-HILFE-KANAELE (2.23.44, Wunsch Hansi): Anfrage an den Einsteller mit Betreff „Dein Angebot „…“ vom TT.MM.JJJJ“
+const angebotBetreff = (a) => `Dein Angebot „${a.titel}“${a.erstellt_am ? " vom " + fKurzJahr.format(new Date(a.erstellt_am)) : ""}`;
+// Sprung aus Pinnwand, Push oder E-Mail (#angebot=…): Angebot holen und anzeigen
+async function angebotDirekt(id) {
+  try { HL.hilfe = await api("hilfe_liste"); } catch (e) { return meldeFehler(e); }
+  if (!HL.hilfe.angebote?.some((x) => x.id === id)) return melde("Dieses Angebot gibt es nicht mehr.");
+  angebotInfo(id);
 }
 function angebotNeu(id) {
   const a = id ? HL.hilfe?.angebote?.find((x) => x.id === id) : null;
   $("angebotInfo")?.remove();
-  HL.angebotForm = { id: a?.id || null, sym: a?.sym || "🤲", titel: a?.titel || "", text: a?.text || "" }; hlZeigen(); window.scrollTo(0, 0);
+  HL.angebotForm = { id: a?.id || null, sym: a?.sym || "🤲", titel: a?.titel || "", text: a?.text || "", kanaele: a ? null : hkStandard() }; hlZeigen(); window.scrollTo(0, 0);
 }
 const ANGEBOT_IDEEN = ["Einrichtung der Club-App", "Einführung in den Bilderrechner", "Hilfe am Handy", "Messer schleifen", "Fahrdienst"];
 function angebotFormHtml() {
@@ -12235,13 +12265,15 @@ function angebotFormHtml() {
     <label class="feld">oder eigener Text<input maxlength="80" placeholder="z. B. Einführung in den Bilderrechner" value="${esc(f.titel)}" oninput="HL.angebotForm.titel=this.value"></label>
     <div class="hl-frage">Symbol</div><div class="symbolwahl">${sy.map((x) => `<button class="${x === f.sym ? "an" : ""}" onclick="HL.angebotForm.sym='${x}';hlZeigen()">${x}</button>`).join("")}</div>
     <label class="feld">Was genau? (freiwillig)<textarea rows="3" maxlength="600" placeholder="z. B. Ich komme vorbei oder wir treffen uns im Vereinsheim – ca. 30 Minuten, Handy bitte mitbringen." oninput="HL.angebotForm.text=this.value">${esc(f.text)}</textarea></label>
-    <p class="hinweis" style="margin:4px 0 8px">Dein Angebot erscheint als Kachel unter „🤲 Hilfe-Angebote“. Es wird nichts verschickt – Mitglieder tippen es an und fragen dich per Terminanfrage oder Nachricht.</p>
-    <div class="knoepfe"><button class="knopf haupt" onclick="einmal(this, angebotSpeichern)">✅ ${f.id ? "Speichern" : "Angebot einstellen"}</button><button class="knopf" onclick="HL.angebotForm=null;hlZeigen()">Abbrechen</button></div></div>`;
+    <p class="hinweis" style="margin:4px 0 8px">Dein Angebot erscheint als Kachel unter „🤲 Hilfe-Angebote“. Mitglieder tippen es an und fragen dich per Terminanfrage oder Nachricht.</p>
+    ${f.id ? "" : hkHtml("angebotForm")}
+    <div class="knoepfe"><button class="knopf haupt" onclick="einmal(this, angebotSpeichern)">${f.id ? "✅ Speichern" : "📣 Angebot veröffentlichen"}</button><button class="knopf" onclick="HL.angebotForm=null;hlZeigen()">Abbrechen</button></div></div>`;
 }
 async function angebotSpeichern() {
   const f = HL.angebotForm; if (!f) return;
   if (!f.titel.trim()) return melde("Bitte kurz schreiben, wobei du helfen kannst.", true);
-  try { await api("hilfe_angebot_speichern", { id: f.id, sym: f.sym, titel: f.titel.trim(), text: f.text.trim() }, { warten: true }); HL.angebotForm = null; melde(f.id ? "✅ Gespeichert" : "🤲 Danke! Dein Angebot ist eingestellt."); hlLaden(); }
+  try { const r = await api("hilfe_angebot_speichern", { id: f.id, sym: f.sym, titel: f.titel.trim(), text: f.text.trim(), ...(f.id ? {} : { kanaele: f.kanaele || [] }) }, { warten: true });
+    if (!f.id) hkMerken(f.kanaele); HL.angebotForm = null; melde(f.id ? "✅ Gespeichert" : `🤲 Danke! Dein Angebot ist veröffentlicht – ${hkMeldung(f.kanaele, r.empfaenger || 0)}`); hlLaden(); }
   catch (e) { meldeFehler(e); }
 }
 async function angebotBeenden(id) {
@@ -18075,6 +18107,7 @@ async function fpAdmin(tage) {
     else if (h.startsWith("#protokoll=")) protokollOeffnen(h.slice(11));
     else if (h.startsWith("#aktion=")) aktionOeffnen(decodeURIComponent(h.slice(8)));
     else if (h === "#boerse" || h.startsWith("#boerse=")) { BO.oeffnen = h.slice(8) || null; hlStart("boerse"); } // KC-CLUB-BOERSE
+    else if (h.startsWith("#angebot=")) angebotDirekt(decodeURIComponent(h.slice(9))); // KC-CLUB-HILFE-KANAELE (2.23.44): Push/Mail → Angebot
     else if (h.startsWith("#hilfe=")) hilfeDirekt(decodeURIComponent(h.slice(7))); // KC-CLUB-HILFE-KURZ (1.93.0): Push/Mail → Kurzansicht
     else if (h.startsWith("#mitglied=")) mitgliedOeffnen(decodeURIComponent(h.slice(10)));
     else if (h.startsWith("#dokument=")) dokOeffnen(decodeURIComponent(h.slice(10))); // KC-CLUB-DOK-ANZEIGE

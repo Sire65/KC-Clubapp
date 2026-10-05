@@ -41,7 +41,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.23.43";
+const SERVER_VERSION = "2.23.44";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -2518,13 +2518,13 @@ async function hilfeListe(ich: Ich) {
     aufrufe: (auf ?? []).map((x: any) => {
       const a = (ant ?? []).filter((y: any) => y.aufruf_id === x.id), komme = a.filter((y: any) => y.antwort === "komme");
       const vorbei = x.datum < heute || !!x.geschlossen_am;
-      return { id: x.id, art: x.art, datum: x.datum, slot: x.slot, nachAbsprache: !!x.nach_absprache, anzahl: x.anzahl, ort: x.ort, notiz: x.notiz, ziel: x.ziel, erstellt_am: x.erstellt_am,
+      return { id: x.id, art: x.art, datum: x.datum, slot: x.slot, nachAbsprache: !!x.nach_absprache, anzahl: x.anzahl, ort: x.ort, notiz: x.notiz, ziel: x.ziel, erstellt_am: x.erstellt_am, kanaele: x.kanaele ?? null,
         von: { person_id: x.von, name: n(x.von) }, eigen: x.von === ich.person_id, offen: !vorbei, geschlossen: !!x.geschlossen_am, wichtig: !!x.wichtig,
         komme: komme.map((y: any) => n(y.person_id)).sort(), kannNicht: a.filter((y: any) => y.antwort === "kann_nicht").length,
         meine: a.find((y: any) => y.person_id === ich.person_id)?.antwort ?? null, darfSchliessen: !vorbei && (x.von === ich.person_id || ich.vorstand),
         ...(lesbar.includes(x.id) ? hilfeLeser(x, a, (ges ?? []).filter((g: any) => g.aufruf_id === x.id), alleAktiv, n) : {}) };
     }).filter((x: any) => x.offen || x.eigen || ich.vorstand),
-    angebote: (ang ?? []).map((x: any) => ({ id: x.id, sym: x.sym, titel: x.titel, text: x.text, erstellt_am: x.erstellt_am,
+    angebote: (ang ?? []).map((x: any) => ({ id: x.id, sym: x.sym, titel: x.titel, text: x.text, erstellt_am: x.erstellt_am, kanaele: x.kanaele ?? null,
       von: { person_id: x.von, name: n(x.von), vorname: vorname(leute.get(x.von)) || n(x.von).split(" ")[0] }, eigen: x.von === ich.person_id, darfAendern: x.von === ich.person_id || ich.vorstand })),
     angebotSymbole: HILFE_ANGEBOT_SYMBOLE,
     arten: HILFE_ARTEN, zeitfenster: ZEITFENSTER, orte: ortListe,
@@ -2583,6 +2583,10 @@ async function kachelZahlen(ich: Ich, p: any) {
   ]);
   return { termine, helfen, buero, fotos, dienste };
 }
+// KC-CLUB-HILFE-KANAELE (2.23.44, Wunsch Hansi): wie ein Hilfe-Aufruf/-Angebot veröffentlicht wird – mehrere möglich.
+// null (ältere App) = bisheriges Verhalten. Leere Auswahl = nur in Helfen & Leihen sichtbar, nichts wird verschickt.
+const HILFE_KANAELE = ["pinnwand", "push", "email"];
+const hilfeKanaele = (roh: unknown): string[] | null => Array.isArray(roh) ? [...new Set(roh.map(String).filter((k) => HILFE_KANAELE.includes(k)))] : null;
 const HILFE_ANGEBOT_SYMBOLE = ["🤲", "📱", "🧮", "💻", "🍳", "🔪", "🚗", "🛠️", "📸", "🎓", "🧾", "🌿"];
 
 // ---------- KC-CLUB-BUERO (1.25.0, Wunsch Hansi): Büro für die Clubleitung (Clubsprecher, Kassenwart, Admin) ----------
@@ -5012,10 +5016,22 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         }
         const { count } = await db.from("kc_club_hilfe_angebote").select("id", { count: "exact", head: true }).eq("von", ich.person_id).eq("aktiv", true);
         if ((count ?? 0) >= 10) throw new Fehler("Du hast schon 10 Angebote – bitte erst eines beenden.");
-        const { data: neu, error } = await db.from("kc_club_hilfe_angebote").insert({ von: ich.person_id, sym, titel, text }).select("id").single();
+        const kanaele = hilfeKanaele(p.kanaele); // KC-CLUB-HILFE-KANAELE (2.23.44)
+        const { data: neu, error } = await db.from("kc_club_hilfe_angebote").insert({ von: ich.person_id, sym, titel, text, kanaele }).select("id").single();
         if (error || !neu) throw new Fehler("Angebot konnte nicht gespeichert werden.", 500);
-        await protokoll(ich.person_id, "hilfe_angebot_angelegt", { angebot: neu.id, titel });
-        return json({ ok: true, id: neu.id });
+        const wege = (kanaele ?? []).filter((k) => k !== "pinnwand");
+        let versand: any = { gesendet: 0 }, empfaenger = 0;
+        if (wege.length) {
+          const empf = (await aktiveMitglieder()).map((m) => m.person_id).filter((id) => id !== ich.person_id && !id.startsWith("KC-P-TEST"));
+          empfaenger = empf.length;
+          if (empf.length) versand = await sendenGewaehlt("club_nachricht", empf, wege, {
+            titel: `🤲 ${ich.vorname} bietet Hilfe an: ${titel}`, kurz: text ? text.slice(0, 120) : "Antippen und anfragen",
+            betreff: `Köcheclub Werne – Hilfe-Angebot von ${ich.name}: ${titel}`,
+            text: `Hallo,\n\n${ich.name} bietet Hilfe an:\n\n${sym} ${titel}${text ? `\n\n${text}` : ""}\n\nAnfragen in der Köcheclub-App: ${APP_URL}#angebot=${neu.id}\n\nViele Grüße\nKöcheclub Werne`,
+            url: `${APP_URL}#angebot=${neu.id}` }, `club-hilfe-angebot:${neu.id}`).catch(() => null);
+        }
+        await protokoll(ich.person_id, "hilfe_angebot_angelegt", { angebot: neu.id, titel, kanaele, empfaenger, versand });
+        return json({ ok: true, id: neu.id, kanaele, empfaenger });
       }
       case "hilfe_angebot_beenden": {
         const { data: a } = await db.from("kc_club_hilfe_angebote").select("von,titel,aktiv").eq("id", String(p.id || "")).maybeSingle();
@@ -5035,9 +5051,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (!datum || datum < heute) throw new Fehler("Bitte einen Tag ab heute wählen.");
         if (datum > tagDazu(heute, HILFE_VORLAUF_TAGE)) throw new Fehler("Bitte höchstens ein halbes Jahr im Voraus.");
         const slot = absprache ? null : slotWahl(p.slot), anzahl = hilfeAnzahl(p.anzahl);
-        const ziel = p.ziel === "online" ? "online" : "alle";
+        const ziel = p.ziel === "online" ? "online" : "alle", kanaele = hilfeKanaele(p.kanaele); // KC-CLUB-HILFE-KANAELE
         const { data: h, error } = await db.from("kc_club_hilfe_aufrufe").insert({ von: ich.person_id, art, datum, slot, anzahl, ort: txt(p.ort, 80) || null,
-          notiz: txt(p.notiz, HILFE_NOTIZ_ZEICHEN) || null, ziel, nach_absprache: absprache }).select().single();
+          notiz: txt(p.notiz, HILFE_NOTIZ_ZEICHEN) || null, ziel, nach_absprache: absprache, kanaele }).select().single();
         if (error || !h) throw new Fehler("Aufruf konnte nicht gespeichert werden.", 500);
         const empf = (ziel === "online" ? [...await onlineJetzt(true)] : (await aktiveMitglieder()).map((m) => m.person_id)).filter((id) => id !== ich.person_id);
         const was = HILFE_ARTEN[art], wann2 = hilfeWann(h);
@@ -5047,10 +5063,13 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           text: `Hallo,\n\n${ich.name} sucht Hilfe:\n\n${was}\nWann: ${wann2}\nGesucht: ${anzahl ? `${anzahl} ${anzahl === 1 ? "Person" : "Personen"}` : "egal wie viele – jede Hilfe zählt"}${h.ort ? `\nWo: ${h.ort}` : ""}${h.notiz ? `\n\n${h.notiz}` : ""}\n\nMit einem Tipp zusagen in der Köcheclub-App: ${APP_URL}#hilfe=${h.id}\n\nViele Grüße\nKöcheclub Werne`,
           url: APP_URL + "#hilfe=" + h.id, // KC-CLUB-HILFE-KURZ (1.93.0): direkt zur Kurzansicht
         };
-        const versand = !empf.length ? { gesendet: 0 } : ziel === "online" ? await sendenGewaehlt("club_nachricht", empf, ["push"], vars, `club-hilfe:${h.id}`).catch(() => null)
+        const wege = kanaele ? kanaele.filter((k) => k !== "pinnwand") : null; // gewählte Wege (ohne Pinnwand – der Aushang hängt von selbst)
+        const versand = !empf.length || (wege && !wege.length) ? { gesendet: 0 }
+          : wege ? await sendenGewaehlt("club_nachricht", empf, wege, vars, `club-hilfe:${h.id}`).catch(() => null)
+          : ziel === "online" ? await sendenGewaehlt("club_nachricht", empf, ["push"], vars, `club-hilfe:${h.id}`).catch(() => null)
           : await senden("club_nachricht", empf, vars, `club-hilfe:${h.id}`).catch(() => null);
-        await protokoll(ich.person_id, "hilfe_aufruf", { aufruf: h.id, art, datum, absprache, anzahl, ziel, empfaenger: empf.length, versand });
-        return json({ ok: true, id: h.id, versand, empfaenger: empf.length });
+        await protokoll(ich.person_id, "hilfe_aufruf", { aufruf: h.id, art, datum, absprache, anzahl, ziel, kanaele, empfaenger: empf.length, versand });
+        return json({ ok: true, id: h.id, versand, empfaenger: wege && !wege.length ? 0 : empf.length, kanaele });
       }
 
       // KC-CLUB-HILFE-WICHTIG (2.15.0, Wunsch Hansi): Hilfe-Aufruf als ❗ wichtig markieren (Ersteller oder Clubleitung, nur offene).
