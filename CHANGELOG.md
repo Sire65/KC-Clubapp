@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.23.84 – 2026-10-05 – 🔍 Gesamtprüfung 3
+- Gesamtprüfung 3 (Wunsch Hansi): automatischer Rundgang durch alle Kacheln in hell, dunkel und großer Schrift, erweiterte und einfache
+  Ansicht (Fehler, Überlappungen, zu breite Seiten, abgeschnittene Texte). Behoben: Hilfe & Tipps – „x Hilfen“ ragte rechts über den Rand
+  (Seite seitlich verschiebbar); Erstattung und alle Dreier-Umschalter – bei großer Schrift breiter als der Bildschirm; Mitglieder – „Alle /
+  Online“ bei großer Schrift zu breit; Dokumente/Programme – lange Wörter wurden abgeschnitten, jetzt sauber getrennt (Bedienungs-anleitung,
+  Schnell-anleitung, Bilder-rechner); Mein Dienst und Meine Daten zeigen bei unvollständiger Server-Antwort „unbekannt“ statt abzubrechen.
+  Geprüft und in Ordnung: Farbauswahl, Admin-Blätter, Rezeptbuch, Wochenbericht, Sperren, Nachrichten-Menüs. Test 435.
+
 ## 2.23.83 – 2026-10-05 – 📖 Club-Rezeptbuch (Wunsch Hansi)
 - KC-CLUB-REZEPTBUCH: Neue Kachel „📖 Rezeptbuch“ (Verein). Gemeinsame Club-Rezepte mit Foto, Kategorie, Portionen, Dauer, Zutaten und
   Zubereitung. Suche (auch nach Zutaten) und Kategorie-Chips. Im Rezept: Portionen −/＋ oder 2/4/6/10/20/50 – alle Mengen werden umgerechnet;

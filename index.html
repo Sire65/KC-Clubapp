@@ -134,7 +134,9 @@
   .designwahl button.an { border-color: var(--rot); box-shadow: 0 0 0 2px var(--rot); }
   .designwahl .vorschau { display: block; height: 58px; border-radius: 11px; margin-bottom: 6px; position: relative; overflow: hidden; }
   .designwahl .vorschau i { position: absolute; border-radius: 6px; }
-  .modus3 { grid-template-columns: 1fr 1fr 1fr; }
+  .modus3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .umschalter button { min-width: 0; overflow-wrap: anywhere; hyphens: auto; -webkit-hyphens: auto; } /* Gesamtprüfung 3 (2.23.84): bei großer Schrift nichts über den Rand */
+  :root.gross .umschalter button { padding: 8px 4px; }
   /* KC-CLUB-PINNWAND: Korkwand mit gelben Zetteln (leicht schräg, Nadel oben) */
   .kork { background: radial-gradient(circle at 20% 30%, rgba(0,0,0,.07) 1px, transparent 2px) 0 0/9px 9px, radial-gradient(circle at 70% 60%, rgba(255,255,255,.12) 1px, transparent 2px) 0 0/13px 13px, linear-gradient(135deg, #c99a62, #b8844c);
     border: 8px solid #8a5a2b; border-radius: 16px; padding: 22px 12px 12px; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 22px 14px; box-shadow: inset 0 2px 8px rgba(0,0,0,.25); min-height: 160px; }
@@ -726,6 +728,7 @@
   .kachel::after { content: ""; position: absolute; right: -24px; top: -24px; width: 72px; height: 72px; border-radius: 50%; background: radial-gradient(circle at 30% 70%, color-mix(in srgb, var(--deko1, var(--gold)) 28%, transparent), color-mix(in srgb, var(--deko2, var(--rot)) 10%, transparent)); }
   .kachel .sym { font-size: 1.65rem; line-height: 1; }
   .kachel b { display: block; font-size: 1.02rem; margin-top: 7px; }
+  .kachel b, .kachel small { overflow-wrap: break-word; hyphens: manual; -webkit-hyphens: manual; } /* Gesamtprüfung 3 (2.23.84): lange Wörter („Bedienungsanleitung“) trennen statt abschneiden */
   .kachel small { color: var(--grau); font-weight: 700; font-size: .82rem; }
   /* KC-CLUB-NEU-KACHEL (1.21.4, Wunsch Hansi): Kachel mit neuen Nachrichten bekommt einen anderen, auffälligen Hintergrund (grün wie WhatsApp) */
   .kachel.neu-da { background: linear-gradient(135deg, #d9f7e2, #a9e8bf); box-shadow: 0 0 0 3px #25a55a inset, var(--schatten); animation: neuDa 2.4s ease-in-out infinite; }
@@ -1255,7 +1258,8 @@
   .hz-inhalt .sym { font-size: 1.6rem; width: 1.6em; text-align: center; }
   .hz-inhalt b { display: block; color: var(--textRot, var(--rot)); text-decoration: underline; text-underline-offset: 3px; }
   .hz-inhalt small { display: block; color: var(--grau); }
-  .hz-inhalt .anz { margin-left: auto; font-weight: 800; white-space: nowrap; color: var(--grau); }
+  .hz-inhalt .anz { margin-left: auto; font-weight: 800; white-space: nowrap; color: var(--grau); flex: none; }
+  .hz-inhalt button > span:nth-child(3) { flex: 1; min-width: 0; overflow-wrap: anywhere; } /* Gesamtprüfung 3 (2.23.84): „x Hilfen“ ragte rechts über den Rand */
   .hz-eintrag h3 { display: flex; gap: 8px; align-items: baseline; }
   .hz-eintrag p { margin: 0 0 8px; }
   .hz-bew { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--linie); font-size: .9rem; color: var(--grau); } /* KC-CLUB-HILFE-BEWERTUNG */
@@ -1485,7 +1489,8 @@
   body.einfach .kopfrechts { align-self: center; } body.einfach .gruss { position: static; max-width: 120px; white-space: normal; text-align: right; line-height: 1.2; }
   body.einfach .marke-klein { white-space: normal; }
   .mg-schalter { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; margin: 0 0 8px; }
-  .mg-schalter .umschalter { margin: 0; flex: 1 1 200px; }
+  .mg-schalter .umschalter { margin: 0; flex: 1 1 200px; min-width: 0; }
+  :root.gross .mg-schalter .umschalter button { white-space: normal; padding: 8px 4px; } /* Gesamtprüfung 3 (2.23.84): große Schrift – nicht breiter als der Bildschirm */
   .mg-schalter #mgAnsichtOben { flex: none; grid-template-columns: 46px 46px; }
   .mg-schalter #mgAnsichtOben button { font-size: 1.15rem; padding: 6px 0; }
   .mg-schalter .umschalter button { padding: 8px 6px; white-space: nowrap; }
@@ -2950,7 +2955,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.83"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.84"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -8708,10 +8713,12 @@ const DOKUMENTE = [
   { id: "vertretung", sym: "🛡️", t: "Vertretung des Admins", u: "Betriebsanleitung + Notfall-Umschlag zum Ausfüllen", datei: "dokumente/Vertretung_Admin_V1.pdf", nur: () => !!ICH?.admin },
   { id: "bilderrechner", sym: "🧮", t: "Schnellanleitung Bilderrechner", u: "Kurzanleitung V4 · 28 Seiten", datei: "dokumente/Kurzanleitung_Bilderrechner_V4.pdf" },
 ];
+// Gesamtprüfung 3 (2.23.84): lange zusammengesetzte Wörter auf schmalen Kacheln an der richtigen Stelle trennen (weiches Trennzeichen)
+const kachelTrennen = (t) => String(t).replace(/(\p{L}{4,})(anleitung|rechner|schulung|übersicht|programme|einstellungen|verwaltung)/giu, "$1\u00AD$2");
 function dokumenteZeigen() {
   const da = (d) => !!(d.datei || d.v);
   $("dokRaster").innerHTML = DOKUMENTE.filter((d) => !d.nur || d.nur()).map((d) => `<button class="kachel${da(d) ? "" : " bald"}" onclick="dokOeffnen('${d.id}')">
-    <div class="sym">${d.sym}</div><b>${esc(d.t)}</b><small>${esc(d.u)}</small>${da(d) ? (dokNeu(d) ? '<span class="zahl">NEU</span>' : "") : '<span class="zahl">bald</span>'}</button>`).join("");
+    <div class="sym">${d.sym}</div><b>${esc(kachelTrennen(d.t))}</b><small>${esc(d.u)}</small>${da(d) ? (dokNeu(d) ? '<span class="zahl">NEU</span>' : "") : '<span class="zahl">bald</span>'}</button>`).join("");
 }
 // KC-CLUB-DOK-NEU (1.61.0, Wunsch Hansi: „nicht mit zu vielen Meldungen überhäufen“): Neues Dokument (neuBis im Eintrag)
 // wird nur leise angezeigt – eine Zeile bei „Für dich“/„Heute wichtig“ und „NEU“ an der Kachel. Kein Fenster, kein Push.
@@ -8805,7 +8812,7 @@ const PROGRAMME = [
   { id: "kasse-schulung", sym: "🧾", t: "Kassen-Schulung", u: "Bilderrechner interaktiv üben", url: "https://sire65.github.io/Kasse/schulung/" },
 ];
 function programmeZeigen() {
-  $("progRaster").innerHTML = PROGRAMME.map((p) => `<button class="kachel" onclick="programmOeffnen('${p.id}')"><div class="sym">${p.sym}</div><b>${esc(p.t)}</b><small>${esc(p.u)}</small></button>`).join("");
+  $("progRaster").innerHTML = PROGRAMME.map((p) => `<button class="kachel" onclick="programmOeffnen('${p.id}')"><div class="sym">${p.sym}</div><b>${esc(kachelTrennen(p.t))}</b><small>${esc(kachelTrennen(p.u))}</small></button>`).join("");
 }
 function programmOeffnen(id) { const p = PROGRAMME.find((x) => x.id === id); if (p) extOeffnen(p.url); }
 
@@ -10035,6 +10042,7 @@ async function rzLoeschen(id) {
 let MDAT = null;
 const MDAT_BEREICH = { termine: "Termine", nachrichten: "Nachrichten", vorschlaege: "Vorschläge & Abstimmungen", dienste: "Dienste", geburtstage: "Geburtstage", pinnwand: "Pinnwand" };
 function mdatAbschnitte(d) {
+  d = { ...d, rollen: d?.rollen || {}, anzahl: d?.anzahl || {} }; // Gesamtprüfung 3: fehlende Teile → „unbekannt“ statt Absturz
   const t = (iso) => (iso ? zeitDe(iso) : "–"), w = (v) => (v == null || v === "" ? "–" : String(v)), ja = (b) => (b ? "ja" : "nein"), p = d.person || {};
   const zahl = (v) => (typeof v === "number" ? String(v) : "unbekannt");
   return [
@@ -13644,7 +13652,7 @@ async function mdStart() {
   const f = blattAuf("mdBlatt", `<h3 style="margin:0">🗓️ Mein Dienst</h3><div id="mdInhalt"><p class="hinweis">Wird geladen …</p></div><button class="knopf" onclick="$('mdBlatt').remove()">Schließen</button>`);
   f.classList.add("sc-blatt");
   try { MD_D = await api("mein_dienst", {}, { warten: true }); } catch (e) { $("mdInhalt").innerHTML = `<div class="karte ta-st-nein">⚠️ Stand konnte nicht geladen werden: ${esc(e?.message || "")} <button class="knopf klein" onclick="mdStart()">🔄 Nochmal</button></div>`; return; }
-  const { wunsch: w, soll: so, ist } = MD_D;
+  const w = MD_D?.wunsch || {}, so = MD_D?.soll || { anzahl: 0 }, ist = MD_D?.ist || {}; // Gesamtprüfung 3: unvollständige Antwort → leer statt Absturz
   const schritt = (n, an) => `<span class="marke${an ? " ta-st-ja" : ""}">${n}</span>`;
   $("mdInhalt").innerHTML = `<p class="hinweis" style="margin:0 0 6px">So entsteht dein Dienst: erst deine <b>Wünsche</b>, dann plant der Planer (<b>Soll</b>), am Ende zählt, was du gearbeitet hast (<b>Ist</b>).</p>
     <div class="karte"><h4 style="margin:0 0 4px">${schritt("1", !!w.status)} 📝 Wunschplan <small class="hinweis">${esc(w.veranstaltung || "")}</small></h4>

@@ -4400,6 +4400,16 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const mig = lies("supabase/migrations/20261005_kc_club_v22383_rezeptbuch.sql");
   assert.ok(/enable row level security/.test(mig) && /revoke all on kc_club_rezepte from anon, authenticated/.test(mig), "Tabelle geschützt");
 }
+// 435. 2.23.84: Gesamtprüfung 3 – nichts breiter als der Bildschirm, lange Wörter sauber getrennt, kein Absturz bei unvollständiger Antwort
+{
+  assert.ok(/\.modus3 \{ grid-template-columns: repeat\(3, minmax\(0, 1fr\)\); \}/.test(html) && /\.umschalter button \{ min-width: 0;/.test(html), "Umschalter passen auch bei großer Schrift");
+  assert.ok(/\.hz-inhalt button > span:nth-child\(3\) \{ flex: 1; min-width: 0;/.test(html), "Hilfe-Inhalt ragt nicht über den Rand");
+  assert.ok(/:root\.gross \.mg-schalter \.umschalter button \{ white-space: normal;/.test(html), "Mitglieder-Umschalter bei großer Schrift");
+  const trennen = new Function("return " + /const kachelTrennen = (\(t\) => [^\n]*);/.exec(html)[1])();
+  assert.equal(trennen("Bedienungsanleitung Club-App"), "Bedienungs­anleitung Club-App");
+  assert.equal(trennen("Schnellanleitung Bilderrechner"), "Schnell­anleitung Bilder­rechner");
+  assert.ok(/const w = MD_D\?\.wunsch \|\| \{\}/.test(html) && /d = \{ \.\.\.d, rollen: d\?\.rollen \|\| \{\}/.test(html), "Mein Dienst / Meine Daten stürzen nicht ab");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
