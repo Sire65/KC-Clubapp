@@ -9,6 +9,11 @@ Abgleich Funktion für Funktion mit dem bisherigen Besuchsprotokoll/Termin-Progr
 - KC-CLUB-BESUCHE: Entwurf eines neuen Besuchs bleibt auf dem Gerät, falls die App zugeht („📝 Entwurf ist wieder da“ + „🗑️ Verwerfen“).
   Bei geplantem Besuch mit bestätigtem Termin: „Schon bestätigt am … für …“ und „Geänderten Termin erneut bestätigen“. Liste: „✅ Termin
   bestätigt“ und „Dazu n geplante Besuche – zählen erst nach dem Besuch“. Sprung #besuch=B-… öffnet den Besuch (wie im alten Programm), #schulungen.
+- Aufgeräumt (Wunsch Hansi „Buttons schmal, nebeneinander, platzsparend“): in Schulungen, Besuchen und Meine Schulung schmale Knöpfe
+  nebeneinander, kürzere Beschriftungen (✅ Bei mir / ✅ Ich fahre hin, 🔄 Neue Termine anbieten, 📨 Neu einladen, 🔗 Link, ✖ Beenden,
+  🚫 Absagen, 📝 Protokoll, 📅 Geplanter Termin, 🏠 Kommt zu mir), Reiter „📅 Termine“ auf dem Handy, Datum + km und Thema + Ergebnis
+  nebeneinander, „Speichern | Abbrechen“ in einer Zeile unten fest, Erklärtexte gekürzt. Für den Admin ist „🎓 Schulungen verwalten“
+  oben in „Meine Schulung“ (2.23.64, nicht eingespielt) enthalten.
 - Bewusst nicht übernommen: „Foto auswerten“ (kostenpflichtig, Wunsch Hansi). Test 414.
 
 ## 2.23.64 – 2026-10-05 – „🎓 Schulungen verwalten“ auch aus „Meine Schulung“ (Hansi: „Ich lande im Archiv“)

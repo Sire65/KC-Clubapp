@@ -1333,6 +1333,16 @@
   .sc-blatt .blatt-innen { max-height: 94vh !important; } .sc-blatt .karte { margin: 8px 0; } .sc-blatt h4 { margin: 0 0 6px; } .sc-blatt summary { cursor: pointer; padding: 2px 0; }
   .sc-eintrag { border-top: 1px solid #8883; padding: 8px 0; } .sc-eintrag:first-child { border-top: 0; } .sc-eintrag .knoepfe { margin-top: 6px; } .sc-eintrag .knopf { width: auto; }
   .sc-mliste { max-height: 40vh; overflow: auto; } .sc-mliste .marke { font-size: .75rem; } .sc-prot { padding: 4px 0; border-top: 1px solid #8882; } .sc-prot > summary { cursor: pointer; } .sc-schluessel { display: block; word-break: break-all; padding: 8px; border-radius: 8px; background: #8881; user-select: all; } .sc-fehler { color: var(--rot); }
+  /* 2.23.65 Wunsch Hansi: Knöpfe schmal, nebeneinander, platzsparend (Schulungen, Besuche, Meine Schulung) */
+  .sc-blatt .knoepfe { gap: 6px; margin-top: 6px; }
+  .sc-blatt .knoepfe .knopf, .sc-blatt .knopf.klein { width: auto; flex: 0 1 auto; margin: 0; padding: 6px 10px; min-height: 34px; font-size: .85rem; border-radius: 10px; text-align: center; line-height: 1.2; }
+  .sc-blatt .sc-eintrag .knoepfe { gap: 5px; } .sc-blatt .sc-eintrag .knoepfe .knopf { padding: 6px 7px; font-size: .82rem; }
+  .sc-blatt .hl-chips { display: flex; flex-wrap: wrap; gap: 6px; } .sc-blatt .hl-chips .chip { width: auto; flex: 0 0 auto; margin: 0; min-height: 34px; padding: 5px 11px; font-size: .86rem; display: inline-flex; align-items: center; }
+  .sc-blatt .hinweis { font-size: .86rem; } .sc-blatt input[type="search"] { width: 100%; box-sizing: border-box; }
+  .sc-blatt .bs-fuss { position: sticky; bottom: -1px; background: var(--karte, #fff); padding: 8px 0; margin: 0; } .sc-blatt .bs-fuss .knopf { font-size: .95rem; padding: 10px 16px; } .sc-blatt .bs-fuss { flex-wrap: nowrap; } .sc-blatt .bs-fuss .knopf.haupt { flex: 1 1 0; }
+  .sc-blatt .karte > .knopf.haupt, .sc-blatt details > .knopf.haupt { padding: 9px 14px; font-size: .95rem; width: auto; }
+  .sc-blatt .sc-eintrag > div, .sc-blatt .hinweis { line-height: 1.35; } .sc-blatt .karte > p.hinweis { margin: 4px 0; }
+  .sc-blatt .blatt-innen > .knopf { padding: 10px 14px; text-align: center; font-size: .95rem; }
   /* 2.23.61 KC-CLUB-BESUCHE */
   .sc-tabs { margin: 6px 0; } .bs-kpi { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 6px 0; } .bs-kpi div { background: var(--karte2, #0001); border-radius: 10px; padding: 6px; text-align: center; }
   .bs-kpi b { display: block; font-size: 1.2rem; } .bs-kpi span { font-size: .8rem; } .bs-frage { margin: 8px 0; } .bs-frage input { width: 100%; box-sizing: border-box; }
@@ -15483,7 +15493,7 @@ async function scStart(tab) {
   if (!ICH?.admin) return;
   if (tab) SC.tab = tab;
   blattAuf("scBlatt", `<h3 style="margin:0">🎓 Schulungen</h3>
-    <p class="hinweis" style="margin:0">Termine anbieten, Mitglieder einladen und Antworten freigeben. Wer die Club-App noch nicht hat, wählt über den Link in der Mail.</p>
+
     <div class="hl-chips sc-tabs" id="scTabs"></div>
     <div id="scInhalt"><p class="hinweis">Wird geladen …</p></div>
     <button class="knopf" onclick="$('scBlatt').remove()">Schließen</button>`).classList.add("sc-blatt");
@@ -15511,7 +15521,7 @@ function scZeigen() {
       <p class="hinweis" id="scArtHinweis" style="margin:2px 0"></p>
       <label class="feld">Notiz (sehen die Mitglieder, freiwillig)<input id="scNotiz" maxlength="300" placeholder="z. B. Kassenprogramm"></label>
       <button class="knopf haupt" onclick="einmal(this, scAnlegen)">➕ Termin einstellen</button>
-      <p class="hinweis" style="margin:4px 0 0">Datum und Uhrzeit bleiben stehen – so sind mehrere Termine schnell eingestellt.</p></details>
+</details>
     <details class="karte" data-k="termine" open><summary><b>📅 Meine Termine</b></summary><div id="scTermine"></div></details>
     <details class="karte" data-k="einladen"${auf.has("einladen") ? " open" : ""}><summary><b>✉️ Mitglieder einladen</b></summary>
       <input id="scSuche" type="search" placeholder="🔍 Name suchen …" oninput="scMitglieder()" style="margin:6px 0">
@@ -15528,7 +15538,7 @@ function scZeigen() {
 // Reiter; die Zahl „wartet auf dich“ erst nach scWartet() (2.23.63: zeigte vorher den alten Stand)
 function scTabs() {
   const tab = SC.tab || "termine", z = $("scTabs"); if (!z) return;
-  z.innerHTML = [["termine", "📅 Termine & Einladungen"], ["besuche", "📝 Besuche"]].map(([k, t]) => `<button type="button" class="chip${tab === k ? " an" : ""}" onclick="SC.tab='${k}';scZeigen()">${t}${k === "termine" && SC.wartet ? ` (${SC.wartet})` : ""}</button>`).join("");
+  z.innerHTML = [["termine", "📅 Termine & Einladungen"], ["besuche", "📝 Besuche"]].map(([k, t]) => [k, innerWidth < 480 && k === "termine" ? "📅 Termine" : t]).map(([k, t]) => `<button type="button" class="chip${tab === k ? " an" : ""}" onclick="SC.tab='${k}';scZeigen()">${t}${k === "termine" && SC.wartet ? ` (${SC.wartet})` : ""}</button>`).join("");
 }
 // ----- Wartet auf dich -----
 function scWartet() {
@@ -15542,13 +15552,13 @@ function scWartet() {
     const vs = T.vorschlaege.filter((v) => v.einladung_id === e.id && v.status === "offen");
     h.push(`<div class="sc-eintrag"><b>${esc(scGruppe(e.person_ids))}</b>: kein Termin passt – Vorschläge:${e.bemerkung ? `<div class="hinweis">„${esc(e.bemerkung)}“</div>` : ""}
       ${vs.map((v) => `<div style="margin-top:6px">${esc(scZeit(v.beginn, v.ende))} · ${SC_ART[v.besuchsart] || ""}<div class="knoepfe">${v.besuchsart === "egal"
-        ? `<button class="knopf haupt klein" onclick="scVorschlag(this,'${e.id}','${v.id}','bei_hansi')">Annehmen – bei mir</button><button class="knopf haupt klein" onclick="scVorschlag(this,'${e.id}','${v.id}','beim_mitglied')">Annehmen – ich fahre hin</button>`
-        : `<button class="knopf haupt klein" onclick="scVorschlag(this,'${e.id}','${v.id}')">Annehmen</button>`}</div></div>`).join("")}
-      <div class="knoepfe"><button class="knopf klein" onclick="scNeueTermine(this,'${e.id}')">Passt nicht – neue Termine anbieten</button></div></div>`);
+        ? `<button class="knopf haupt klein" onclick="scVorschlag(this,'${e.id}','${v.id}','bei_hansi')">✅ Bei mir</button><button class="knopf haupt klein" onclick="scVorschlag(this,'${e.id}','${v.id}','beim_mitglied')">✅ Ich fahre hin</button>`
+        : `<button class="knopf haupt klein" onclick="scVorschlag(this,'${e.id}','${v.id}')">✅ Annehmen</button>`}</div></div>`).join("")}
+      <div class="knoepfe"><button class="knopf klein" onclick="scNeueTermine(this,'${e.id}')">🔄 Neue Termine anbieten</button></div></div>`);
   }
   for (const e of T.einladungen.filter((x) => x.status === "abgelaufen")) {
     h.push(`<div class="sc-eintrag"><b>${esc(scGruppe(e.person_ids))}</b> hat nicht geantwortet (Frist vorbei)
-      <div class="knoepfe"><button class="knopf haupt klein" onclick="scErneut(this,'${e.id}')">Erneut einladen</button><button class="knopf klein" onclick="scZurueck(this,'${e.id}')">Erledigt</button></div></div>`);
+      <div class="knoepfe"><button class="knopf haupt klein" onclick="scErneut(this,'${e.id}')">📨 Neu einladen</button><button class="knopf klein" onclick="scZurueck(this,'${e.id}')">✔ Erledigt</button></div></div>`);
   }
   SC.wartet = h.length;
   $("scWartet").innerHTML = h.join("") || '<p class="hinweis" style="margin:0">Nichts offen. 👍</p>';
@@ -15613,8 +15623,8 @@ function scTermine() {
     const art = bs[0] ? bs[0].besuchsart : s.besuchsart === "wahl" && s.buchungen ? "bei_hansi" : s.besuchsart;
     return `<div class="sc-eintrag"><b>${esc(scZeit(s.beginn, s.ende))}</b> ${marke}${s.herkunft === "gegenvorschlag" ? ' <span class="marke">Vorschlag</span>' : ""}
       <div class="hinweis">${SC_ART[art] || ""} · ${s.belegt}/${s.plaetze} Plätze${s.status === "offen" && frei > 0 && !s.hat_hausbesuch && !vorbei ? ` · ${frei} frei` : ""}${s.notiz ? " · " + esc(s.notiz) : ""}</div>
-      ${bs.map((b) => { const e = scEinl(b.einladung_id); return `<div>• ${esc(e ? scGruppe(e.person_ids) : "?")} – ${b.status === "bestaetigt" ? "✅ gebucht" : "⏳ wartet auf Freigabe"}${b.status === "bestaetigt" ? ` <button type="button" class="tw-nicht" onclick="bsAusTermin('${b.id}')">📝 ${b.besuch_id ? "Protokoll öffnen" : "Besuch eintragen"}</button>` : ""}</div>`; }).join("")}
-      ${s.status === "offen" && !vorbei ? `<div class="knoepfe">${jemals ? `<button class="knopf klein" onclick="scAbsagen(this,'${s.id}',${bs.length})">Termin absagen</button>` : `<button class="knopf klein" onclick="scLoeschen(this,'${s.id}')">Löschen</button>`}</div>` : ""}</div>`;
+      ${bs.map((b) => { const e = scEinl(b.einladung_id); return `<div>• ${esc(e ? scGruppe(e.person_ids) : "?")} – ${b.status === "bestaetigt" ? "✅ gebucht" : "⏳ wartet auf Freigabe"}</div>`; }).join("")}
+      <div class="knoepfe">${bs.filter((b) => b.status === "bestaetigt").map((b) => `<button type="button" class="knopf klein" onclick="bsAusTermin('${b.id}')">📝 ${b.besuch_id ? "Protokoll" : "Besuch eintragen"}</button>`).join("")}${s.status === "offen" && !vorbei ? (jemals ? `<button class="knopf klein" onclick="scAbsagen(this,'${s.id}',${bs.length})">🚫 Absagen</button>` : `<button class="knopf klein" onclick="scLoeschen(this,'${s.id}')">🗑️ Löschen</button>`) : ""}</div></div>`;
   };
   const kommend = T.slots.filter((s) => new Date(s.ende).getTime() >= jetztMs), alt = T.slots.filter((s) => new Date(s.ende).getTime() < jetztMs).reverse();
   $("scTermine").innerHTML = (kommend.map(karte).join("") || '<p class="hinweis" style="margin:0">Noch keine Termine eingestellt.</p>')
@@ -15705,9 +15715,9 @@ function scEinladungen() {
       ${e.mail_link_status === "veraltet" ? '<div class="ta-st-nein">⚠️ Die zuletzt verschickte Mail enthält einen alten Link.</div>' : e.mail_link_status === "kein_link" ? '<div class="ta-st-nein">⚠️ Die Mail enthielt keinen gültigen Termin-Link.</div>' : e.mail_link_status === "aktuell" ? `<div class="hinweis">✉️ Mail-Link aktuell${e.mail_link_gesendet_am ? " · " + esc(zeitKurz(e.mail_link_gesendet_am)) : ""}</div>` : ""}
       ${e.bemerkung ? `<div class="hinweis">„${esc(e.bemerkung)}“</div>` : ""}
       <div class="knoepfe"><button class="knopf klein" onclick="scChronik('${e.id}')">📜 Ablauf</button>
-        ${["offen", "gewaehlt", "gegenvorschlag"].includes(e.status) ? `<button class="knopf klein" onclick="scLinkNeu(this,'${e.id}')">🔗 Link erneuern & teilen</button>` : ""}
-        ${["abgelaufen", "abgesagt"].includes(e.status) ? `<button class="knopf klein" onclick="scErneut(this,'${e.id}')">Erneut einladen</button>` : ""}
-        <button class="knopf klein" onclick="scZurueck(this,'${e.id}')">${e.status === "bestaetigt" ? "Termin absagen" : "Zurückziehen"}</button></div></div>`;
+        ${["offen", "gewaehlt", "gegenvorschlag"].includes(e.status) ? `<button class="knopf klein" onclick="scLinkNeu(this,'${e.id}')">🔗 Link</button>` : ""}
+        ${["abgelaufen", "abgesagt"].includes(e.status) ? `<button class="knopf klein" onclick="scErneut(this,'${e.id}')">📨 Neu einladen</button>` : ""}
+        <button class="knopf klein" onclick="scZurueck(this,'${e.id}')">${e.status === "bestaetigt" ? "🚫 Absagen" : "✖ Beenden"}</button></div></div>`;
   }).join("") || '<p class="hinweis" style="margin:0">Noch niemand eingeladen.</p>';
 }
 // ----- Google-Kalender (nur Stand – eingerichtet bleibt er im Google-Skript) -----
@@ -15810,7 +15820,7 @@ async function bsLaden() {
 function bsListeHtml() {
   const jahre = [...new Set(BS.liste.map((b) => b.datum.slice(0, 4)))].sort().reverse();
   const bs = BS.liste.filter((b) => !BS.jahr || b.datum.startsWith(BS.jahr)), zaehlt = bs.filter((b) => b.status !== "geplant"), nGeplant = bs.length - zaehlt.length;
-  return `<div class="knoepfe"><button class="knopf haupt klein" onclick="bsFormular()">➕ Neuer Besuch</button><button class="knopf klein" onclick="bsFormular(null,{geplant:true})">📅 Abgesprochenen Termin eintragen</button></div>
+  return `<div class="knoepfe"><button class="knopf haupt klein" onclick="bsFormular()">➕ Neuer Besuch</button><button class="knopf klein" onclick="bsFormular(null,{geplant:true})">📅 Geplanter Termin</button></div>
     <div class="hl-chips" style="margin:6px 0">${["", ...jahre].map((j) => `<button type="button" class="chip${BS.jahr === j ? " an" : ""}" onclick="BS.jahr='${j}';scZeigen()">${j || "Alle"}</button>`).join("")}</div>
     <div class="bs-kpi"><div><b>${zaehlt.length}</b><span>Besuche</span></div><div><b>${bsHm(zaehlt.reduce((s, b) => s + (b.dauer_min || 0), 0))}</b><span>Stunden</span></div><div><b>${bsKm(zaehlt.reduce((s, b) => s + Number(b.km_gesamt || 0), 0))}</b><span>km gesamt</span></div></div>
     ${nGeplant ? `<p class="hinweis" style="margin:4px 0">Dazu ${nGeplant} geplante${nGeplant === 1 ? "r Besuch – zählt" : " Besuche – zählen"} erst nach dem Besuch.</p>` : ""}
@@ -15835,15 +15845,15 @@ function bsFormular(id, vorgabe = {}) {
       <label class="feld">Ort<input id="bsOrt" value="${w("ort")}" placeholder="Straße, PLZ Ort"></label>
       <label class="feld">Anwesende<input id="bsAnwesende" value="${w("anwesende")}" placeholder="z. B. Klaus, Dieter, Hansi"></label></div>
     <div class="karte"><h4>Wann und wie weit?</h4>
-      <label class="feld">Datum<input id="bsDatum" type="date" value="${w("datum", vorgabe.datum || heute)}" onchange="BS.f.geplant=this.value>heuteIso();bsZeigen()"></label>
-      <label class="tw-check"><input type="checkbox" id="bsGeplant" onchange="BS.f.geplant=this.checked;bsZeigen()"> 📅 Geplant – der Besuch findet erst noch statt</label>
+      <div class="zwei"><label class="feld">Datum<input id="bsDatum" type="date" value="${w("datum", vorgabe.datum || heute)}" onchange="BS.f.geplant=this.value>heuteIso();bsZeigen()"></label>
+      <label class="feld" id="bsKmFeld">Ein Weg (km)<input id="bsKm" inputmode="decimal" value="${esc(b?.km_einfach != null ? String(b.km_einfach).replace(".", ",") : "")}" placeholder="z. B. 12,5" oninput="bsSumme()"></label></div>
       <div class="zwei"><label class="feld">Von<input id="bsVon" type="time" value="${esc((b?.zeit_von || vorgabe.von || "").slice(0, 5))}" oninput="bsSumme()"></label><label class="feld">Bis<input id="bsBis" type="time" value="${esc((b?.zeit_bis || vorgabe.bis || "").slice(0, 5))}" oninput="bsSumme()"></label></div>
-      <label class="feld" id="bsKmFeld">Ein Weg (km)<input id="bsKm" inputmode="decimal" value="${esc(b?.km_einfach != null ? String(b.km_einfach).replace(".", ",") : "")}" placeholder="z. B. 12,5" oninput="bsSumme()"></label>
+      <label class="tw-check"><input type="checkbox" id="bsGeplant" onchange="BS.f.geplant=this.checked;bsZeigen()"> 📅 Geplant – findet erst noch statt</label>
       <p class="hinweis" id="bsSumme" style="margin:0"></p></div>
     <div class="karte" id="bsInhalt"><h4>Gesprächspunkte</h4>
       ${BS_FRAGEN.map((q) => `<div class="bs-frage"><b>${q.t}</b><div class="hl-chips" data-feld="${q.f}">${q.o.map(([v, t]) => `<button type="button" class="chip" data-w="${v}" onclick="bsWaehle('${q.f}','${v}')">${t}</button>`).join("")}</div>
         ${q.f === "f2_bild_spruch" ? `<label class="feld" id="bsSpruchFeld">Gewünschter Spruch oder Hinweis<input id="bsSpruch" value="${w("f2_spruch")}"></label>` : ""}</div>`).join("")}
-      <div class="bs-frage"><b>7 · Weiterer Punkt</b><input id="bsF7Thema" value="${w("f7_thema")}" placeholder="Thema"><label class="feld">Ergebnis<input id="bsF7Antwort" value="${w("f7_antwort")}"></label></div>
+      <div class="bs-frage"><b>7 · Weiterer Punkt</b><div class="zwei"><label class="feld">Thema<input id="bsF7Thema" value="${w("f7_thema")}"></label><label class="feld">Ergebnis<input id="bsF7Antwort" value="${w("f7_antwort")}"></label></div></div>
       <label class="feld">Worin geschult (für den Dank-Text, freiwillig)<input id="bsThema" value="${w("schulung_thema")}" placeholder="z. B. das Kassensystem"></label>
       <div class="bs-frage"><b>Schulungsversion installiert auf</b><div class="hl-chips" id="bsGeraete"></div></div>
       <h4>Notizen</h4>
@@ -15854,7 +15864,7 @@ function bsFormular(id, vorgabe = {}) {
       <button type="button" class="knopf klein" onclick="$('bsFotoInput').click()">📷 Foto aufnehmen / auswählen</button><input id="bsFotoInput" type="file" accept="image/*,application/pdf" multiple class="versteckt" onchange="bsFotosGewaehlt(this.files)">
       <div id="bsFotos" class="bs-fotos"></div></div>
     <div class="karte" id="bsVersand"></div>
-    <button class="knopf haupt" id="bsSpeichern" onclick="bsSpeichern(this)">Speichern</button><button class="knopf" onclick="$('bsBlatt').remove()">Abbrechen</button>`);
+    <div class="knoepfe bs-fuss"><button class="knopf haupt" id="bsSpeichern" onclick="bsSpeichern(this)">Speichern</button><button class="knopf" onclick="$('bsBlatt').remove()">Abbrechen</button></div>`);
   f.style.zIndex = "2100"; f.classList.add("sc-blatt"); f.onclick = null; // 2.23.63: nicht aus Versehen schließen
   // 2.23.65: Entwurf eines neuen Besuchs wie im alten Programm – bleibt auf diesem Gerät, falls die App zugeht
   if (!b && !Object.keys(vorgabe).length) bsEntwurfLaden();
@@ -15907,7 +15917,7 @@ function bsSumme() {
 }
 function bsZeigen() {
   const F = BS.f;
-  $("bsArt").innerHTML = [["beim_mitglied", "🚗 Ich fahre hin"], ["bei_hansi", "🏠 Mitglied kommt zu mir"]].map(([a, t]) => `<button type="button" class="chip${F.art === a ? " an" : ""}" onclick="BS.f.art='${a}';if('${a}'==='bei_hansi')$('bsOrt').value='bei Hansi';bsZeigen()">${t}</button>`).join("");
+  $("bsArt").innerHTML = [["beim_mitglied", "🚗 Ich fahre hin"], ["bei_hansi", "🏠 Kommt zu mir"]].map(([a, t]) => `<button type="button" class="chip${F.art === a ? " an" : ""}" onclick="BS.f.art='${a}';if('${a}'==='bei_hansi')$('bsOrt').value='bei Hansi';bsZeigen()">${t}</button>`).join("");
   $("bsPersonen").innerHTML = F.personen.map((p) => `<button type="button" class="chip an" onclick="BS.f.personen=BS.f.personen.filter((x)=>x!=='${p}');bsNamen();bsZeigen()">${esc(BS.mitglieder.find((m) => m.person_id === p)?.display_name || p)} ✕</button>`).join("");
   document.querySelectorAll("#bsBlatt [data-feld]").forEach((w) => w.querySelectorAll(".chip").forEach((c) => c.classList.toggle("an", F.antworten[w.dataset.feld] === c.dataset.w)));
   $("bsSpruchFeld").classList.toggle("versteckt", F.antworten.f2_bild_spruch !== "ja");
@@ -15919,7 +15929,7 @@ function bsZeigen() {
   const ohneMail = F.personen.filter((p) => !BS.mitglieder.find((m) => m.person_id === p)?.hat_email).length, tz = bsTermin(F.id);
   $("bsVersand").innerHTML = F.geplant
     ? `<h4>📅 Terminbestätigung</h4><label class="tw-check"><input type="checkbox" id="bsTerminSenden" ${n ? "" : "disabled"} onchange="bsZeigenKnopf()"> ${tz ? "Geänderten Termin erneut bestätigen" : "Terminbestätigung per Push + Mail senden"}</label>
-       <p class="hinweis" style="margin:0">${tz ? `Schon bestätigt${tz.buchung.bestaetigung_gesendet_am ? " am " + esc(zeitKurz(tz.buchung.bestaetigung_gesendet_am)) : ""}${tz.slot ? " für " + esc(scZeit(tz.slot.beginn, tz.slot.ende)) : ""}. Änderungen an Datum/Uhrzeit werden beim Speichern übernommen; nur mit Haken geht eine neue Bestätigung raus. ` : ""}${n ? `Geht an ${esc(namen)}: Push + Mail mit Kalenderdatei, Eintrag im Kalender. Die Zusammenfassung kommt erst nach dem Besuch.${ohneMail ? ` ⚠️ ${ohneMail} ohne E-Mail – bitte selbst Bescheid geben.` : ""}` : "Erst oben ein Mitglied auswählen."}</p>`
+       <p class="hinweis" style="margin:0">${tz ? `✅ Schon bestätigt${tz.buchung.bestaetigung_gesendet_am ? " am " + esc(zeitKurz(tz.buchung.bestaetigung_gesendet_am)) : ""}${tz.slot ? " für " + esc(scZeit(tz.slot.beginn, tz.slot.ende)) : ""}. Neue Zeit wird übernommen, Mail nur mit Haken. ` : ""}${n ? `Geht an ${esc(namen)}: Push + Mail mit Kalenderdatei.${ohneMail ? ` ⚠️ ${ohneMail} ohne E-Mail – bitte selbst Bescheid geben.` : ""}` : "Erst oben ein Mitglied auswählen."}</p>`
     : F.gesendet ? `<h4>✉️ Zusammenfassung</h4><p class="hinweis" style="margin:0">Schon verschickt: ${esc(F.gesendet)}</p>`
     : `<h4>✉️ Zusammenfassung ans Mitglied</h4><label class="tw-check"><input type="checkbox" id="bsSenden" ${n ? "checked" : "disabled"} onchange="bsZeigenKnopf()"> Nach dem Speichern schicken</label>
        <p class="hinweis" style="margin:0">${n ? `Geht an ${esc(namen)}: Push und E-Mail, du bekommst die Mail als BCC. Eine Kopie liegt danach in ihrem Archiv-Ordner (Register „Schulung“).${ohneMail ? ` ⚠️ ${ohneMail} ohne E-Mail.` : ""}` : "Erst oben ein Mitglied auswählen."}</p>`;
@@ -15927,7 +15937,7 @@ function bsZeigen() {
 }
 function bsZeigenKnopf() {
   const k = $("bsSpeichern"); if (!k) return;
-  k.textContent = BS.f.geplant ? ($("bsTerminSenden")?.checked ? "📅 Speichern & Termin bestätigen" : "📅 Als geplant speichern") : $("bsSenden")?.checked ? "Speichern & senden" : BS.f.id ? "Änderungen speichern" : "Speichern";
+  k.textContent = BS.f.geplant ? ($("bsTerminSenden")?.checked ? "📅 Speichern & Termin bestätigen" : "📅 Geplant speichern") : $("bsSenden")?.checked ? "Speichern & senden" : BS.f.id ? "Änderungen speichern" : "Speichern";
 }
 async function bsFotosGewaehlt(files) {
   for (const f of files) {
@@ -15997,7 +16007,7 @@ async function smLaden(oeffnen = false) { // 2.23.63: Fehler sichtbar – nie �
   return SM.liste;
 }
 async function smStart() {
-  blattAuf("smBlatt", `<h3 style="margin:0">🎓 Meine Schulung</h3>${ICH?.admin ? `<button class="knopf haupt" onclick="$('smBlatt').remove();scStart()">🎓 Schulungen verwalten (Termine, Einladungen, Besuche)</button>` : ""}<div id="smInhalt"><p class="hinweis">Wird geladen …</p></div>
+  blattAuf("smBlatt", `<h3 style="margin:0">🎓 Meine Schulung</h3>${ICH?.admin ? `<button class="knopf haupt" onclick="$('smBlatt').remove();scStart()">🎓 Schulungen verwalten</button>` : ""}<div id="smInhalt"><p class="hinweis">Wird geladen …</p></div>
     <button type="button" class="tw-nicht" onclick="$('smBlatt').remove();zeige('archiv')">📄 Meine Zusammenfassungen im Archiv (Register „Schulung“)</button>
     <button class="knopf" onclick="$('smBlatt').remove()">Schließen</button>`).classList.add("sc-blatt");
   await smLaden(true); smZeigen();
@@ -16012,9 +16022,9 @@ function smZeigen() {
     if (e.status === "offen") return `<div class="karte" data-e="${esc(e.id)}">${kopf}<b>Such dir einen Termin aus:</b>
       <p class="hinweis" style="margin:2px 0 6px">Antwort bis ${esc(zeitKurz(e.gueltig_bis))}. Wer zuerst wählt, bekommt den Termin.</p>
       ${(e.frei || []).map((s) => `<div class="sc-eintrag"><b>${esc(zeit(s.beginn, s.ende))}</b><div class="hinweis">${SM_ART[s.besuchsart] || ""}${s.notiz ? " · " + esc(s.notiz) : ""}</div>
-        <div class="knoepfe">${s.besuchsart === "wahl" ? `<button class="knopf haupt klein" onclick="smWaehlen(this,'${esc(e.id)}','${esc(s.id)}','beim_mitglied')">✅ Nehmen – bei mir</button><button class="knopf haupt klein" onclick="smWaehlen(this,'${esc(e.id)}','${esc(s.id)}','bei_hansi')">✅ Nehmen – bei Hansi</button>`
+        <div class="knoepfe">${s.besuchsart === "wahl" ? `<button class="knopf haupt klein" onclick="smWaehlen(this,'${esc(e.id)}','${esc(s.id)}','beim_mitglied')">✅ Bei mir</button><button class="knopf haupt klein" onclick="smWaehlen(this,'${esc(e.id)}','${esc(s.id)}','bei_hansi')">✅ Bei Hansi</button>`
           : `<button class="knopf haupt klein" onclick="smWaehlen(this,'${esc(e.id)}','${esc(s.id)}','')">✅ Diesen Termin nehmen</button>`}</div></div>`).join("") || '<p class="hinweis">Gerade ist kein Termin frei – schlag Hansi einfach einen vor.</p>'}
-      <div class="knoepfe" style="margin-top:8px"><button class="knopf klein" onclick="smVorschlag('${esc(e.id)}')">💬 Kein Termin passt – Vorschlag machen</button><button class="knopf klein" onclick="smAbsagen(this,'${esc(e.id)}')">✖ Zurzeit kein Besuch</button></div></div>`;
+      <div class="knoepfe" style="margin-top:8px"><button class="knopf klein" onclick="smVorschlag('${esc(e.id)}')">💬 Kein Termin passt</button><button class="knopf klein" onclick="smAbsagen(this,'${esc(e.id)}')">✖ Zurzeit kein Besuch</button></div></div>`;
     if (e.status === "gewaehlt") return `<div class="karte">${kopf}<b>⏳ Du hast gewählt:</b><div>${esc(zeit(e.buchung.beginn, e.buchung.ende))} · ${SM_ART[e.buchung.besuchsart] || ""}</div>
       <p class="hinweis" style="margin:4px 0">Hansi bestätigt den Termin noch – du bekommst Bescheid.</p>
       ${e.frist_offen ? `<button class="knopf klein" onclick="smAendern(this,'${esc(e.id)}')">🔄 Anders wählen</button>` : ""}</div>`;

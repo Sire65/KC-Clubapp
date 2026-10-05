@@ -4148,7 +4148,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/protokoll\(ich\.person_id, "schulung_" \+ a\.slice\(2\), \{\}\)/.test(g), "Club-Protokoll ohne Inhalte");
   const k = html.slice(html.indexOf("// ---------- KC-CLUB-SCHULUNG-ADMIN (2.23.60"), html.indexOf("// KC-CLUB-TERMINANFRAGE-HINWEIS (2.23.52"));
   assert.ok(/\{ id: "schulung_admin", sym: "🎓", t: "Schulungen"[^\n]*nur: \(\) => !!ICH\?\.admin/.test(html) && /if \(!ICH\?\.admin\) return;/.test(k), "Kachel und Bereich nur für den Admin");
-  for (const x of ["⏳ Wartet auf dich", "➕ Termin anbieten", "📅 Meine Termine", "✉️ Mitglieder einladen", "📨 Einladungen", "📜 Ablauf", "🔗 Link erneuern & teilen"]) assert.ok(k.includes(x), "Teil fehlt: " + x);
+  for (const x of ["⏳ Wartet auf dich", "➕ Termin anbieten", "📅 Meine Termine", "✉️ Mitglieder einladen", "📨 Einladungen", "📜 Ablauf", "🔗 Link"]) assert.ok(k.includes(x), "Teil fehlt: " + x);
   assert.ok(!/\bconfirm\(|\bprompt\(/.test(k), "App-eigene Rückfragen statt Browser-Fenster");
 }
 // 410. 2.23.61: Besuchsprotokoll in der Club-App (KC-CLUB-BESUCHE)
@@ -4194,6 +4194,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/scApi\("t_kalender_schluessel"\)/.test(k) && /"t_kalender_schluessel"\]\);/.test(server), "Kalender-Schlüssel nur über die Admin-Aktion");
   assert.ok(/h\.startsWith\("#besuch="\)\) bsDirekt\(/.test(html) && /async function bsDirekt\(id\) \{ \/\/ #besuch=B-…\n  if \(!ICH\?\.admin\) return;/.test(k), "Sprung #besuch= nur für Admin");
   assert.ok(/lsSetzen\(BS_ENTWURF, ""\); \/\/ Entwurf erledigt/.test(k), "Entwurf wird nach dem Speichern gelöscht");
+  assert.ok(/\.sc-blatt \.knoepfe \.knopf, \.sc-blatt \.knopf\.klein \{ width: auto; flex: 0 1 auto;/.test(html) && /class="knoepfe bs-fuss"/.test(k), "schmale Knöpfe nebeneinander, Speichern|Abbrechen in einer Zeile");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
