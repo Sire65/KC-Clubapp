@@ -4345,6 +4345,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/data-q="alle">👥 Alle</.test(k) && /MG_GRUPPEN\.map\(\(g, i\) => `<button type="button" class="chip" data-q="g\$\{i\}">/.test(k) && /data-q="leise"/.test(k), "Schnellwahl Alle / Gruppe / alle ohne Push");
   assert.ok(/add column if not exists bis timestamptz/.test(lies("supabase/migrations/20261005_kc_club_v22379_sperre_bis.sql")), "Migration");
 }
+// 431. 2.23.80: Pfeil an der Nachricht – Ausschneiden, Archivieren, Löschen (KC-CLUB-PFEIL-MENUE)
+{
+  const k = html.slice(html.indexOf("function naPfeilMenue(id)"), html.indexOf("async function naKopieren(id)"));
+  for (const x of ["weiterleitenBlatt(", "naKopieren(", "naAusschneiden(", "naInsArchiv(", "naLoeschenFragen("]) assert.ok(k.includes(x), "Pfeil-Menü: " + x);
+  assert.ok(/async function naAusschneiden\(id\) \{ await naKopieren\(id\); naLoeschenFragen\(id\); \}/.test(html), "Ausschneiden = kopieren + gewohnte Lösch-Rückfrage");
+  assert.ok(/archivAblageFragen\("nachricht", /.test(html) && /nachricht: \{ sym: "💬", register: \["Chats", "Sonstiges"\]/.test(html), "Archiv über den Ablage-Kern");
+  assert.ok(/\.na-pfeil-knoepfe \{ display: grid; grid-template-columns: 1fr 1fr;/.test(html), "schmal nebeneinander");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

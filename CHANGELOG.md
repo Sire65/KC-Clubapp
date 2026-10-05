@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.23.80 – 2026-10-05 – Pfeil an der Nachricht: Ausschneiden, Archivieren, Löschen (Wunsch Hansi)
+- KC-CLUB-PFEIL-MENUE: Der Pfeil neben einer einzelnen Nachricht bietet jetzt außer ↪️ Weiterleiten und 📋 Kopieren auch ✂️ Ausschneiden
+  (Text kopieren, danach die gewohnte Lösch-Rückfrage „für mich / für alle“), 🗄️ Archivieren (Nachricht als Textdatei mit Absender, Chat
+  und Zeit in den eigenen Archiv-Ordner; Dateien/Fotos der Nachricht auf Wunsch mit – über den Archiv-Ablage-Kern, Art „nachricht“) und
+  🗑️ Löschen (gewohnte Rückfrage). Schmale Knöpfe, zwei nebeneinander. Test 431.
+
 ## 2.23.79 – 2026-10-05 – 🔒 Sperren in drei klaren Schritten + Uhrzeit + 🔔/📵 je Person (Wunsch Hansi)
 - KC-CLUB-PERSON-SPERRE Stufe 2 (Hansi: „Weg nicht ganz klar“): Wartungs-Blatt in zwei Kästen – „📢 Für alle: Wartung ankündigen“ und
   „🔒 Nur einzelne Personen sperren“ (mit Liste „Zurzeit gesperrt“). Sperren in drei Schritten: ① Was sehen sie? (🔵 Wartungsarbeiten /

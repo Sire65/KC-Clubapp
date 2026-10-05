@@ -2056,6 +2056,7 @@
   .reaktionen button.meine { border-color: var(--gold, #d4a017); background: rgba(212,160,23,.2); }
   .reaktionen button b { font-size: .75rem; }
   .na-menue { gap: 8px; }
+  .na-pfeil-knoepfe { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } .na-pfeil-knoepfe .knopf { margin: 0; white-space: nowrap; text-align: center; padding-inline: 8px; font-size: .95rem; } /* 2.23.80: schmal, nebeneinander, einzeilig */
   .na-vorschau { font-size: .9rem; opacity: .8; max-height: 3.6em; overflow: hidden; }
   .na-schnell { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
   .na-schnell button { font-size: 1.8rem; border: 0; background: var(--karte2, rgba(128,128,128,.15)); border-radius: 14px; padding: 8px 0; cursor: pointer; }
@@ -2938,7 +2939,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.79"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.80"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -14024,13 +14025,35 @@ function naPfeilMenue(id) {
   const m = NA.nachrichten.get(id); if (!m) return;
   document.getElementById("naMenue")?.remove();
   const f = document.createElement("div"); f.id = "naMenue"; f.className = "blatt"; f.setAttribute("role", "dialog"); f.setAttribute("aria-modal", "true");
+  // KC-CLUB-PFEIL-MENUE (2.23.80, Wunsch Hansi): am Pfeil einer einzelnen Nachricht zusätzlich ✂️ Ausschneiden (kopieren + löschen),
+  // 🗄️ ins eigene Archiv legen und 🗑️ Löschen – schmale Knöpfe nebeneinander; Löschen/Ausschneiden fragen wie bisher nach (für mich / für alle)
+  const zu = "document.getElementById('naMenue').remove();";
   f.innerHTML = `<div class="blatt-innen na-menue">
     <div class="na-vorschau">${m.eigen ? "Du" : esc(m.von)}: ${esc(String(m.text || "").slice(0, 120))}</div>
-    <button class="knopf haupt" onclick="document.getElementById('naMenue').remove();weiterleitenBlatt('${id}')">↪️ Weiterleiten</button>
-    ${m.text ? `<button class="knopf" onclick="document.getElementById('naMenue').remove();naKopieren('${id}')">📋 Kopieren</button>` : ""}
-    <button class="knopf" onclick="document.getElementById('naMenue').remove()">Abbrechen</button></div>`;
+    <div class="na-pfeil-knoepfe">
+      <button class="knopf haupt" onclick="${zu}weiterleitenBlatt('${id}')">↪️ Weiterleiten</button>
+      ${m.text ? `<button class="knopf" onclick="${zu}naKopieren('${id}')">📋 Kopieren</button>` : ""}
+      ${m.text ? `<button class="knopf" onclick="${zu}naAusschneiden('${id}')">✂️ Ausschneiden</button>` : ""}
+      <button class="knopf" onclick="${zu}naInsArchiv('${id}')">🗄️ Archivieren</button>
+      <button class="knopf" onclick="${zu}naLoeschenFragen('${id}')">🗑️ Löschen</button>
+      <button class="knopf" onclick="${zu}">Abbrechen</button></div></div>`;
   f.onclick = (e) => { if (e.target === f) f.remove(); };
   document.body.appendChild(f);
+}
+// ✂️ Ausschneiden = Text kopieren, danach die gewohnte Lösch-Rückfrage (für mich / für alle – „Abbrechen“ lässt die Nachricht stehen)
+async function naAusschneiden(id) { await naKopieren(id); naLoeschenFragen(id); }
+// 🗄️ Einzelne Nachricht ins eigene Archiv: Text als Datei (Absender, Chat, Zeit) – Dateien/Fotos der Nachricht auf Wunsch mit (Archiv-Ablage-Kern)
+function naInsArchiv(id) {
+  const m = NA.nachrichten.get(id); if (!m) return;
+  const von = m.eigen ? ICH.name : m.von, chat = typeof chatName === "function" ? chatName() : "Chat", dateien = (m.anlagen || []).filter((a) => ARCHIV_TYP_OK(a.mime));
+  const titel = `Nachricht von ${von} (${zeitDe(m.zeit)})`.slice(0, 120);
+  archivAblageFragen("nachricht", { frage: "Diese Nachricht in deinen Archiv-Ordner legen?", titel, datum: String(m.zeit || "").slice(0, 10) || heuteIso(), hinweis: `aus „${chat}“`,
+    wahl: dateien.length ? { text: `📎 Dateien und Fotos mit ablegen (${dateien.length})` } : null,
+    dateien: async (mitDateien) => {
+      const aus = m.text && m.text !== "📎" ? [{ titel, name: `Nachricht-${String(m.zeit || "").slice(0, 10)}.txt`, mime: "text/plain", blob: textDatei([`Köcheclub Werne – Nachricht aus „${chat}“`, `Von: ${von}`, `Zeit: ${zeitDe(m.zeit)}`, "", m.text, "", `Abgelegt am ${zeitDe(new Date().toISOString())} von ${ICH.name}`].join("\n")), stichworte: "Text" }] : [];
+      if (mitDateien || !aus.length) for (const a of dateien) { const f = await anlageAlsDatei(a); aus.push({ titel: `${a.name} (von ${von})`.slice(0, 120), name: f.name, mime: f.mime, blob: f.blob }); }
+      return aus;
+    } }).then((ok) => { if (!ok) melde("Archiv gerade nicht erreichbar oder noch kein eigener Archiv-Ordner – bitte später nochmal.", true); });
 }
 // KC-CLUB-KOPIEREN (1.8.2, Wunsch Hansi): Nachrichtentext in die Zwischenablage – z. B. um ihn in einen anderen Chat
 // (auch WhatsApp) einzufügen. Ohne Clipboard-Erlaubnis: alter Kopierweg, sonst Text zum Markieren anzeigen.
@@ -19095,6 +19118,7 @@ const ARCHIV_ABLAGE_ARTEN = {
   // 1.19.0 (Wunsch Hansi „alles einbauen“): Chats, Dateien aus Nachrichten, Fotos, Protokolle
   chat: { sym: "💬", register: ["Chats", "Sonstiges"], stichworte: "Chat" },
   anlage: { sym: "📎", register: ["Sonstiges"], stichworte: "aus Nachricht" },
+  nachricht: { sym: "💬", register: ["Chats", "Sonstiges"], stichworte: "Nachricht" }, // 2.23.80: einzelne Nachricht über den Pfeil
   foto: { sym: "📷", register: ["Fotos", "Sonstiges"], stichworte: "Foto" },
   protokoll: { sym: "📝", register: ["Protokolle", "Sonstiges"], stichworte: "Protokoll" },
   geteilt: { sym: "📥", register: ["Chats", "Sonstiges"], stichworte: "geteilt" }, // 1.22.0: über „Teilen → Köcheclub“ (z. B. WhatsApp-Export)
