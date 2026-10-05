@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.23.72 – 2026-10-05 – 🧭 Mikrofon-Assistent (Wunsch Hansi: „so wie heute mit mir, Schritt für Schritt“)
+- KC-CLUB-MIKRO-ASSISTENT: Selbsttest (getUserMedia) → Schritt 1 WhatsApp-Test („🟢 WhatsApp öffnen“, ✅ geht / ❌ geht nicht → liegt am
+  Handy: andere Sprach-App beenden, neu starten) → Schritt 2 Handy-Einstellung für den Browser („Nur während der Nutzung zulassen“, nicht
+  „Jedes Mal fragen“) → Schritt 3 Website-Einstellung im Browser (sire65.github.io → Zulassen) → Schritt 4 Spracherkennung fürs Diktieren.
+  Nach jedem Schritt „✅ Erledigt – jetzt prüfen“ (App prüft selbst). Browser wird erkannt und ist umstellbar: Chrome, Samsung Internet,
+  Firefox, Opera, Edge, Safari, Chrome (iPhone); Android, iPhone und PC mit eigenen Anleitungen. Am Ende ggf. „📨 Hansi Bescheid geben“
+  (nur Prüf-Codes + Browser, keine Inhalte). Erreichbar: „🧭 Schritt für Schritt helfen“ im Mikrofon-Fenster, Hilfe-Zentrum „Diktieren
+  oder Sprachnachricht klappt nicht“, Sprung #mikrofon. Die Einstellungsseiten kann eine Web-App nicht selbst öffnen. Test 422.
+
 ## 2.23.71 – 2026-10-05 – Besuchsliste: „🗂️ Vergangene Termine“ zugeklappt (Wunsch Hansi)
 - KC-CLUB-BESUCH-TERMINSTAND: Oben stehen nur geplante Besuche und solche mit „📝 Protokoll fehlt“; erledigte Besuche liegen zugeklappt unter
   „🗂️ Vergangene Termine (n)“, darunter „✖ Abgesagte Termine (n)“. Zahlen (Besuche, Stunden, km) unverändert über alle.

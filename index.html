@@ -2921,7 +2921,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.71"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.72"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3949,7 +3949,7 @@ const HILFE = [
   { id: "installieren", thema: "technik", sym: "📲", t: "Die App auf den Startbildschirm legen", x: "Dann startet die Club-App wie jede andere App mit eigenem Symbol. Die Anleitung für dein Handy steht unter ⚙️ → <b>„📲 App-Installation“</b>.", zeig: () => einstiegHin("install") },
   { id: "sicherheitscheck", thema: "technik", sym: "🛡️", t: "Läuft alles sicher?", x: "Ein gutes Gefühl mit einem Tipp: Register Technik → „🛡️ Sicherheits-Check“ prüft, ob die App auf deinem Gerät sicher und richtig läuft. Grüne Haken = alles gut; sonst steht dabei, was zu tun ist.", zeig: () => sicherheitStart() },
   { id: "haengt", thema: "technik", sym: "🧯", t: "Die App hängt oder zeigt Altes", x: "Zuerst die App ganz schließen und neu öffnen. Hilft das nicht: Register Technik → „🔄 Update prüfen“. Bleibt das Problem, schreib kurz über <b>💭 Feedback</b>, was passiert ist. Fehler beim Starten meldet die App außerdem selbst an den Admin – nur Technik, keine Inhalte.", zeig: () => zeige("feedback") },
-  { id: "mikrofon", thema: "technik", sym: "🎤", t: "Diktieren oder Sprachnachricht klappt nicht", x: "Fragt das Handy nach dem Mikrofon, tippe <b>„Zulassen“</b>. Wurde es einmal abgelehnt, zeigt die App beim nächsten Versuch eine Anleitung, wie du das Mikrofon in den Handy-Einstellungen wieder erlaubst." },
+  { id: "mikrofon", thema: "technik", sym: "🎤", t: "Diktieren oder Sprachnachricht klappt nicht", x: "Fragt das Handy nach dem Mikrofon, tippe <b>„Zulassen“</b>. Wurde es einmal abgelehnt, zeigt die App beim nächsten Versuch eine Anleitung, wie du das Mikrofon in den Handy-Einstellungen wieder erlaubst. Am einfachsten: <b>🧭 Mikrofon-Assistent</b> – er prüft selbst, woran es liegt, und führt dich Schritt für Schritt (WhatsApp-Test, Handy-Einstellung, Browser-Einstellung – für Chrome, Samsung, Firefox, Opera, Edge und Safari).", zeig: () => mikroAssistent() },
   { id: "version", thema: "technik", sym: "ℹ️", t: "Welche Version habe ich?", x: () => `Du hast gerade <b>Version ${esc(APP_VERSION)}</b>. Mehr dazu unter ⚙️ → „ℹ️ App-Info“.`, zeig: () => einstiegHin("app") },
   { id: "programme_frei", thema: "technik", sym: "💻", t: "Freigegebene Programme", x: "Programme, die der Club für dich freigeschaltet hat (z. B. die Kassen-Schulung), liegen im Register Technik unter „💻 Freigegebene Programme“.", zeig: () => zeige("programme") },
   // 🤝 Clubleben
@@ -5699,6 +5699,7 @@ async function mikroHilfe(weiter, diag = {}) {
       <details><summary class="hinweis">Andere Geräte</summary>${Object.entries(MIKRO_ANL).filter(([k]) => k !== geraet).map(([, t]) => `<p style="margin:4px 0">${t}</p>`).join("")}</details>
       <p class="hinweis" style="margin:6px 0">Sobald du es erlaubt hast, macht die App von selbst weiter – oder tippe auf <b>„🔄 Nochmal probieren“</b>.</p>
       <button class="knopf haupt" data-m="nochmal">🔄 Nochmal probieren</button></div>
+    <button class="knopf" onclick="$('mikroHilfe').remove();mikroAssistent()">🧭 Schritt für Schritt helfen</button>
     ${MIKRO_TASTATUR}<button class="knopf" data-m="tippen">⌨️ Weiter tippen</button>${mikroCodeHtml()}`);
   mikroKnoepfe(f);
   try { navigator.permissions?.query({ name: "microphone" }).then((st) => { st.onchange = () => { if (st.state === "granted" && $("mikroHilfe")) mikroWeiterDiktieren(); }; }).catch(() => {}); } catch {}
@@ -5710,8 +5711,81 @@ function mikroHilfeGoogle() {
     <p style="margin:4px 0"><b>So schaltest du sie frei:</b> Handy-<b>Einstellungen</b> → <b>Apps</b> → <b>Google</b> → <b>Berechtigungen</b> → <b>Mikrofon</b> → <b>Zulassen</b>. Bei manchen Handys heißt die App <b>„Google-Sprachdienste“</b> bzw. <b>„Speech Services by Google“</b> – dort genauso.</p>
     <p class="hinweis" style="margin:6px 0">Danach zurück in die Köcheclub-App und <b>„🔄 Nochmal probieren“</b> tippen.</p>
     <button class="knopf haupt" data-m="nochmal">🔄 Nochmal probieren</button>
+    <button class="knopf" onclick="$('mikroHilfe').remove();mikroAssistent()">🧭 Schritt für Schritt helfen</button>
     ${MIKRO_TASTATUR}<button class="knopf" data-m="tippen">⌨️ Weiter tippen</button>${mikroCodeHtml()}`);
   mikroKnoepfe(f); mikroMelden();
+}
+// ---------- KC-CLUB-MIKRO-ASSISTENT (2.23.72, Wunsch Hansi): Schritt für Schritt wie im Gespräch mit Hansi ----------
+// Selbsttest → WhatsApp-Test (liegt es am Handy?) → Handy-Einstellung für den Browser → Website-Einstellung im Browser → Spracherkennung.
+// Nach jedem Schritt prüft die App selbst (getUserMedia). Browser wird erkannt (Chrome, Samsung, Firefox, Opera, Edge, Safari …) und ist
+// umstellbar. Die Einstellungsseiten kann eine Web-App nicht selbst öffnen – der Assistent sagt genau, wo man tippen muss.
+// Kosten: keine. Meldung an Hansi nur als Codes (diagnose art „mikro“, Schritt + Browser), nie Inhalte.
+const MA = { schritt: 0, browser: null, wa: null };
+const MA_BROWSER = { chrome: "Chrome", samsung: "Samsung Internet", firefox: "Firefox", opera: "Opera", edge: "Edge", safari: "Safari", chrome_ios: "Chrome (iPhone)", andere: "anderer Browser" };
+function maBrowser() {
+  const u = navigator.userAgent;
+  if (/SamsungBrowser/.test(u)) return "samsung"; if (/OPR\/|OPT\/|Opera/.test(u)) return "opera"; if (/EdgA?\/|EdgiOS/.test(u)) return "edge";
+  if (/FxiOS|Firefox\//.test(u)) return "firefox"; if (/CriOS/.test(u)) return "chrome_ios"; if (IST_IOS) return "safari"; if (/Chrome\//.test(u)) return "chrome"; return "andere";
+}
+const MA_SYSTEM = (b) => IST_IOS
+  ? (b === "safari" ? "Öffne die <b>Einstellungen</b> des iPhones → <b>Apps</b> (ältere iPhones: gleich weiter unten) → <b>Safari</b> → <b>Mikrofon</b> → <b>Erlauben</b> oder <b>Fragen</b>."
+    : `Öffne die <b>Einstellungen</b> des iPhones → <b>Apps</b> → <b>${MA_BROWSER[b]}</b> → Schalter <b>Mikrofon</b> einschalten (grün).`)
+  : IST_ANDROID ? `Öffne die <b>Einstellungen</b> des Handys (Zahnrad) → <b>Apps</b> (bei Xiaomi „Apps verwalten“) → <b>${MA_BROWSER[b] === "anderer Browser" ? "deinen Browser" : MA_BROWSER[b]}</b> → <b>Berechtigungen</b> → <b>Mikrofon</b> → <b>„Zugriff nur während der Nutzung der App zulassen“</b>.<br>⚠️ <b>Nicht</b> „Jedes Mal fragen“ – diese Frage kommt bei der Club-App oft gar nicht, dann gilt es als „Nein“.`
+  : "Am <b>PC</b>: Windows → <b>Einstellungen</b> → <b>Datenschutz</b> → <b>Mikrofon</b> → Zugriff für Apps <b>und Desktop-Apps</b> einschalten. Mac: <b>Systemeinstellungen</b> → <b>Datenschutz & Sicherheit</b> → <b>Mikrofon</b> → Browser einschalten.";
+const MA_SEITE = {
+  chrome: "Öffne <b>Chrome</b> (den Browser) → oben rechts <b>⋮</b> → <b>Einstellungen</b> → <b>Website-Einstellungen</b> → <b>Mikrofon</b> → <b>sire65.github.io</b> antippen → <b>Zulassen</b>.",
+  samsung: "Öffne <b>Samsung Internet</b> → unten <b>☰</b> → <b>Einstellungen</b> → <b>Websites und Downloads</b> (bzw. „Datenschutz“) → <b>Website-Berechtigungen</b> → <b>Mikrofon</b> → <b>sire65.github.io</b> → <b>Zulassen</b>.",
+  firefox: "Öffne <b>Firefox</b> → <b>⋮</b> → <b>Einstellungen</b> → <b>Website-Berechtigungen</b> → <b>Mikrofon</b> (bzw. „Ausnahmen“) → <b>sire65.github.io</b> → <b>Erlauben</b>.",
+  opera: "Öffne <b>Opera</b> → Profil/⚙️ <b>Einstellungen</b> → <b>Website-Einstellungen</b> → <b>Mikrofon</b> → <b>sire65.github.io</b> → <b>Zulassen</b>.",
+  edge: "Öffne <b>Edge</b> → <b>⋯</b> → <b>Einstellungen</b> → <b>Datenschutz und Sicherheit</b> → <b>Website-Berechtigungen</b> → <b>Mikrofon</b> → <b>sire65.github.io</b> → <b>Zulassen</b>.",
+  safari: "In <b>Safari</b> die Club-App-Seite öffnen → in der Adresszeile <b>„aA“</b> (bzw. ⓘ) → <b>Website-Einstellungen</b> → <b>Mikrofon</b> → <b>Erlauben</b>. Bei der installierten App reicht der Schritt davor.",
+  chrome_ios: "Auf dem iPhone reicht bei Chrome meist der Schritt davor. Sonst in Chrome die Club-App-Seite öffnen → ⓘ neben der Adresse → <b>Mikrofon</b> → <b>Erlauben</b>.",
+  andere: "Im Browser die Club-App-Seite öffnen → links neben der Adresse auf das <b>Schloss</b> bzw. <b>ⓘ</b> → <b>Berechtigungen</b> → <b>Mikrofon</b> → <b>Zulassen</b>." };
+async function maTest() { // true = Mikrofon geht
+  try { const st = await navigator.mediaDevices.getUserMedia({ audio: true }); st.getTracks().forEach((x) => x.stop()); MIKRO_DIAG.gum = "ok"; return true; }
+  catch (e) { MIKRO_DIAG.gum = e?.name || "Fehler"; return false; }
+  finally { MIKRO_DIAG.stand = await mikroStand(); }
+}
+async function mikroAssistent() {
+  MA.browser = MA.browser || maBrowser(); MA.wa = null; MA.schritt = 0; MIKRO_DIAG = MIKRO_DIAG || {};
+  maZeigen("Ich prüfe kurz, ob dein Mikrofon schon geht …", "");
+  MA.schritt = (await maTest()) ? 9 : IST_ANDROID || IST_IOS ? 1 : 2; maZeigen();
+}
+function maZeigen(warte) {
+  const S = MA.schritt, b = MA.browser, n = (x) => `<span class="marke">Schritt ${x} von 4</span>`;
+  const wahl = `<details style="margin:6px 0"><summary class="hinweis">Browser: <b>${esc(MA_BROWSER[b])}</b> – stimmt nicht? hier ändern</summary><div class="hl-chips">${Object.entries(MA_BROWSER).map(([k, t]) => `<button type="button" class="chip${k === b ? " an" : ""}" onclick="MA.browser='${k}';maZeigen()">${esc(t)}</button>`).join("")}</div></details>`;
+  const pruef = `<div class="knoepfe"><button class="knopf haupt" onclick="maPruefen(this)">✅ Erledigt – jetzt prüfen</button><button class="knopf" onclick="MA.schritt++;maZeigen()">Weiter ›</button></div>`;
+  const inhalt = warte ? `<p>⏳ ${esc(warte)}</p>`
+    : S === 9 ? `<p style="font-size:1.1rem">🎉 <b>Dein Mikrofon geht!</b></p><p class="hinweis">Diktieren und Sprachnachrichten funktionieren jetzt. Klappt das <b>Diktieren</b> trotzdem nicht, tippe unten auf „Spracherkennung prüfen“.</p>
+      <div class="knoepfe"><button class="knopf haupt" onclick="$('maBlatt').remove()">👍 Fertig</button><button class="knopf" onclick="MA.schritt=4;maZeigen()">Spracherkennung prüfen</button></div>`
+    : S === 1 ? `${n(1)}<h4 style="margin:6px 0">Geht das Mikrofon in WhatsApp?</h4><p>Nimm in WhatsApp kurz eine <b>Sprachnachricht</b> auf (Mikrofon-Knopf gedrückt halten, dann wieder löschen). So sehen wir, ob es am Handy oder am Browser liegt.</p>
+      <div class="knoepfe"><a class="knopf" href="https://wa.me/" target="_blank" rel="noopener">🟢 WhatsApp öffnen</a></div>
+      <p class="hinweis" style="margin:6px 0">Danach zurück in die Club-App und antworten:</p>
+      <div class="knoepfe"><button class="knopf haupt" onclick="MA.wa=true;MA.schritt=2;maZeigen()">✅ Geht in WhatsApp</button><button class="knopf" onclick="MA.wa=false;maZeigen()">❌ Geht auch da nicht</button><button class="knopf" onclick="MA.schritt=2;maZeigen()">Kein WhatsApp ›</button></div>
+      ${MA.wa === false ? `<div class="karte ta-st-nein" style="margin-top:6px">Dann liegt es am <b>Handy</b>, nicht an der Club-App: Vermutlich benutzt eine andere App das Mikrofon (z. B. eine Sprach-/Vorlese-App, ein Anruf) oder das Mikrofon ist ganz gesperrt.<br>• andere Sprach-Apps beenden (Einstellungen → Apps → App → „Beenden erzwingen“)<br>• Handy einmal <b>neu starten</b><br>Danach hier weitermachen.</div><div class="knoepfe"><button class="knopf" onclick="MA.schritt=2;maZeigen()">Weiter ›</button></div>` : ""}`
+    : S === 2 ? `${n(2)}<h4 style="margin:6px 0">Handy-Einstellung: Mikrofon für ${esc(MA_BROWSER[b])}</h4>${wahl}<p>${MA_SYSTEM(b)}</p><p class="hinweis">Die App kann diese Seite aus Sicherheitsgründen nicht selbst öffnen. Danach zurück in die Club-App.</p>${pruef}`
+    : S === 3 ? `${n(3)}<h4 style="margin:6px 0">Browser-Einstellung: Mikrofon für die Club-App</h4>${wahl}<p>${MA_SEITE[b] || MA_SEITE.andere}</p><p class="hinweis">Steht sire65.github.io dort nicht, ist das in Ordnung – dann einfach prüfen.</p>${pruef}`
+    : S === 4 ? `${n(4)}<h4 style="margin:6px 0">Spracherkennung (nur fürs Diktieren)</h4><p>${IST_ANDROID ? "Zum Diktieren wandelt die <b>Google-Spracherkennung</b> deine Worte in Text um. Sie braucht eine eigene Erlaubnis: <b>Einstellungen</b> → <b>Apps</b> → <b>Google</b> (bzw. „Google-Sprachdienste“) → <b>Berechtigungen</b> → <b>Mikrofon</b> → <b>Zulassen</b>." : IST_IOS ? "<b>Einstellungen</b> → <b>Datenschutz & Sicherheit</b> → <b>Spracherkennung</b> → Browser einschalten." : "Am PC diktiert der Browser selbst – hier gibt es nichts weiter einzustellen."}</p>
+      <p class="hinweis">💡 Geht immer: ins Feld tippen und auf der <b>Handy-Tastatur das 🎤</b> antippen.</p>
+      <div class="knoepfe"><button class="knopf haupt" onclick="maPruefen(this)">✅ Erledigt – jetzt prüfen</button><button class="knopf" onclick="MA.schritt=5;maZeigen()">Geht immer noch nicht</button></div>`
+    : `<p><b>Das hat leider noch nicht geklappt.</b> Gib Hansi Bescheid – er sieht dann die Prüf-Codes (keine Inhalte) und hilft dir gezielt.</p>
+      <div class="knoepfe"><button class="knopf haupt" onclick="maMelden(this)">📨 Hansi Bescheid geben</button><button class="knopf" onclick="MA.schritt=1;maZeigen()">🔁 Von vorn</button></div>`;
+  const f = $("maBlatt") || blattAuf("maBlatt", `<h3 style="margin:0">🧭 Mikrofon-Assistent</h3><div id="maInhalt"></div><p class="hinweis" style="font-size:.75rem;margin:8px 0 0" id="maCode"></p><button class="knopf" onclick="$('maBlatt').remove()">Schließen</button>`);
+  f.classList.add("sc-blatt"); f.onclick = null;
+  $("maInhalt").innerHTML = inhalt;
+  $("maCode").textContent = `Code: ${[MA_BROWSER[b], MIKRO_DIAG.gum, MIKRO_DIAG.stand, IST_ANDROID ? "Android" : IST_IOS ? "iOS" : "PC"].filter(Boolean).join(" · ")}`;
+}
+async function maPruefen(k) {
+  k.disabled = true; k.textContent = "Prüfe …";
+  const ok = await maTest();
+  if (ok && MA.schritt === 4 && !DIKTAT_GEHT) { MA.schritt = 5; return maZeigen(); }
+  if (ok) { lsSetzen(MIKRO_OK, "1"); MA.schritt = 9; melde("🎉 Mikrofon geht!"); return maZeigen(); }
+  melde("Noch gesperrt – weiter zum nächsten Schritt.", true); MA.schritt = Math.min(MA.schritt + 1, 5); maZeigen();
+}
+function maMelden(k) {
+  k.disabled = true;
+  api("diagnose", { art: "mikro", daten: { sprache: MIKRO_DIAG.sprache || "", gum: MIKRO_DIAG.gum || "", stand: MIKRO_DIAG.stand || "", android: IST_ANDROID, assistent: true, browser: MA.browser, whatsapp: MA.wa } })
+    .then(() => melde("📨 Gemeldet – Hansi sieht deine Prüf-Codes und meldet sich.")).catch(() => melde("Konnte gerade nicht senden – bitte Hansi kurz schreiben.", true));
 }
 const MIKRO_TASTATUR = `<p class="hinweis" style="margin:8px 0 4px">💡 Geht immer: <b>Mit dem Tastatur-Mikrofon sprechen</b> – ins Feld tippen und auf der Handy-Tastatur das 🎤 antippen.</p><button class="knopf" data-m="tastatur">🎤 Tastatur-Mikrofon nutzen</button>`;
 const mikroCodeHtml = () => `<p class="hinweis" style="font-size:.75rem;margin:8px 0 0">Code: ${esc([MIKRO_DIAG.sprache, MIKRO_DIAG.gum, MIKRO_DIAG.stand].filter(Boolean).join(" · ") || "–")}</p>`;
@@ -19501,6 +19575,7 @@ async function fpAdmin(tage) {
     else if (h === "#schulung") smStart(); // KC-CLUB-SCHULUNG-MITGLIED (2.23.62)
     else if (h.startsWith("#besuch=")) bsDirekt(decodeURIComponent(h.slice(8))); // KC-CLUB-BESUCHE (2.23.65): „Protokoll öffnen“ aus Mails wie im alten Programm
     else if (h === "#schulungen") scStart();
+    else if (h === "#mikrofon") mikroAssistent(); // KC-CLUB-MIKRO-ASSISTENT (2.23.72)
     else if (h === "#twinkey") ICH?.admin ? twOffenStart() : twFrageStart();
     else if (h === "#mfrage") twFrageStart(); // KC-CLUB-MITGLIEDER-FRAGEN (2.23.51): Push/Mail → Fragen an mich bzw. Antworten // KC-CLUB-TWINKEY-FRAGEN (2.23.49): Push/Mail → Frage bzw. Antwort
     else if (h.startsWith("#spiel=")) spOeffnen(decodeURIComponent(h.slice(7))); // KC-CLUB-SPIELE (2.7.0): aus dem Push

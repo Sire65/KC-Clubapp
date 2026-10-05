@@ -4247,6 +4247,13 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.ok(/u: \(\) => PW\.geladen \? `📌 \$\{PW\.zettel\.length\} Zettel · \$\{PW\.meine\} von dir` : "Kurze Zettel · wichtig & erledigt", v: "pinnwand", zahl: \(\) => PW\.offen \|\| 0/.test(html), "Anzahl auf der Kachel, rote Zahl unverändert");
 }
+// 422. 2.23.72: Mikrofon-Assistent Schritt für Schritt, für mehrere Browser (KC-CLUB-MIKRO-ASSISTENT)
+{
+  const k = html.slice(html.indexOf("// ---------- KC-CLUB-MIKRO-ASSISTENT (2.23.72"), html.indexOf("async function maPruefen"));
+  for (const x of ["WhatsApp öffnen", "Geht in WhatsApp", "Jedes Mal fragen", "sire65.github.io", "Spracherkennung", "Erledigt – jetzt prüfen", "Hansi Bescheid geben"]) assert.ok(k.includes(x), "Teil fehlt: " + x);
+  for (const b of ["chrome", "samsung", "firefox", "opera", "edge", "safari", "chrome_ios"]) assert.ok(new RegExp("\\b" + b + ": ").test(k), "Browser fehlt: " + b);
+  assert.ok(/onclick="\$\('mikroHilfe'\)\.remove\(\);mikroAssistent\(\)">🧭 Schritt für Schritt helfen/.test(html) && /h === "#mikrofon"\) mikroAssistent\(\)/.test(html) && /zeig: \(\) => mikroAssistent\(\)/.test(html), "erreichbar aus Mikrofon-Fenster, Hilfe und Sprung");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
