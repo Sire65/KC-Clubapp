@@ -1326,6 +1326,10 @@
   .klappen-alle-zeile { display: flex; justify-content: flex-end; margin: -4px 0 -4px; } .klappen-alle-zeile .klappen-alle { margin: 0; width: auto; min-height: 38px; padding: 4px 14px; white-space: nowrap; } /* 2.23.40 KC-CLUB-KLAPPEN-ALLE */
   /* 2.23.39 KC-CLUB-EINGANG-FILTER + KC-CLUB-DIENST-UEBERSICHT */
   .ekh-liste { display: grid; gap: 6px; }
+  /* 2.23.48 KC-CLUB-KUECHENCHEF */
+  .kc-chef-knopf { width: 100%; margin: 8px 0 4px; text-align: center !important; }
+  .kc-blatt .blatt-innen { max-height: 92vh !important; } .kc-antwort { margin: 0; } .kc-chef { font-weight: 800; color: var(--textGruen); }
+  .kc-andere { display: grid; gap: 2px; } .kc-andere > b { margin: 4px 0 2px; }
   #diktatBlatt.blatt { z-index: 9000; } /* 2.23.47: Diktier-Fenster auch über der Suche (z-index 80) */
   /* 2.23.47 KC-CLUB-DIKTAT-FELD: 🎤 rechts im Feld */
   .diktat-wrap { position: relative; display: block; width: 100%; } .diktat-wrap > input, .diktat-wrap > textarea { width: 100%; box-sizing: border-box; padding-right: 52px !important; }
@@ -2315,6 +2319,7 @@
   <section id="v-hilfezentrum" class="versteckt">
     <div class="kopf2"><button class="zurueck" onclick="hzZurueck()" aria-label="Zurück">‹</button><h2>❓ Hilfe &amp; Tipps</h2><button type="button" class="druckknopf" title="Hilfe drucken / als PDF speichern" aria-label="Hilfe drucken oder als PDF speichern" onclick="druckStarten('hilfe')"></button></div>
     <!-- 2.23.2 (Wunsch Hansi): Suchfeld deutlicher – eigene Karte mit Überschrift, kräftigem Rand und Lupe -->
+    <button type="button" class="knopf haupt kc-chef-knopf" onclick="kcFrageStart()">🧑‍🍳 Frag den Küchenchef – einfach fragen oder 🎤 sprechen</button><!-- 2.23.48 KC-CLUB-KUECHENCHEF -->
     <label class="hz-suchfeld" for="hzSuche"><span class="hz-such-titel">🔍 Wonach suchst du?</span>
       <input type="search" id="hzSuche" data-diktat="einmal" class="hz-suche" placeholder="Hier tippen – z. B. „Farbe“ oder „Ton“" oninput="hzSuchen(this.value)" autocomplete="off" enterkeyhint="search"></label>
     <nav class="hz-reg" id="hzRegister" aria-label="Hilfe-Themen"></nav>
@@ -2879,7 +2884,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.47"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.48"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3872,6 +3877,7 @@ const HILFE = [
   { id: "zurueck", thema: "start", sym: "‹", t: "„Zurück“ bleibt in der App", x: "Die Zurück-Taste deines Handys oder der Pfeil <b>‹</b> oben links geht eine Ansicht zurück – die App schließt sich dabei nicht. Ist ein Fenster offen, schließt „Zurück“ zuerst nur das Fenster, deine Eingabe bleibt stehen." },
   { id: "frage_knopf", thema: "start", sym: "❓", t: "Das Fragezeichen unten rechts", x: "Das runde <b>„?“</b> neben der Lupe öffnet in jedem Bereich gleich die passende Hilfe. Stört es dich? <b>Lange darauf drücken</b> blendet es aus. Zurück holst du es unter ⚙️ Einstellungen → <b>„❓ Fragezeichen unten rechts“</b>.", zeig: () => einstiegHin(einfach() ? "einfach" : "ansagen", einfach() ? "setHzFrageE" : "setHzFrage"), seit: "2.23.5" },
   { id: "einstellung_suchen", thema: "start", sym: "🔍", t: "Jede Einstellung schnell finden", x: "In den Einstellungen findest du mit der <b>Lupe 🔍 unten rechts</b> jede Einstellung – z. B. „Ton“ oder „Farbe“ eingeben. Bereiche öffnest du durch Antippen der Überschrift, mit dem Schloss 🔒 hältst du sie offen oder zu.", zeig: () => zeige("einstellungen") },
+  { id: "kuechenchef", thema: "start", sym: "🧑‍🍳", t: "Frag den Küchenchef", x: "Du weißt nicht, wo etwas ist? Tippe auf <b>🧑‍🍳 Frag den Küchenchef</b> (Kachel oder oben im Hilfe-Zentrum) und stell deine Frage in eigenen Worten – getippt oder mit 🎤 gesprochen, z. B. „Wie ändere ich die Farben?“. Er zeigt die passende Antwort, liest sie auf Wunsch vor und bringt dich mit <b>„👉 Zeig es mir“</b> genau an die Stelle. Weiß er es nicht, kannst du die Frage an die Clubleitung weitergeben.", zeig: () => kcFrageStart(), seit: "2.23.48" },
   { id: "diktat_feld", thema: "start", sym: "🎤", t: "Sprechen statt tippen", x: "Wo rechts im Feld ein <b>🎤</b> steht, kannst du diktieren: antippen, sprechen – der Text erscheint im Feld. <b>„✅ Fertig“</b> beendet, bei der Suche geht es nach dem ersten Satz von selbst. Verschickt wird nichts – du prüfst und tippst selbst auf Senden. Das 🎤 gibt es bei der <b>Lupe</b>, im <b>Hilfe-Zentrum</b>, beim <b>Pinnwand-Zettel</b> und bei <b>Hilfe-Aufruf und Angebot</b>; bei SOS heißt es „🎙️ Einsprechen“.", zeig: () => zeige("hilfezentrum"), seit: "2.23.47" },
   { id: "klappen_alle", thema: "start", sym: "▾", t: "Alle Bereiche auf einmal auf- oder zuklappen", x: "In den ⚙️ Einstellungen oben rechts: <b>„▾ Alle auf“</b> öffnet alle Bereiche, danach heißt der Knopf <b>„▴ Alle zu“</b> und klappt alle wieder zu. Bereiche mit 🔒 bleiben, wie du sie festgestellt hast.", zeig: () => zeige("einstellungen"), seit: "2.23.40" },
   { id: "gruppe_bereiche", thema: "nachrichten", sym: "👥", t: "Neue Gruppe: Bereiche auf- und zuklappen", x: "Bei <b>👥 Neue Gruppe</b> hat jeder Bereich – <b>Deine Gruppen</b>, <b>Name &amp; Symbol</b>, <b>Wer ist dabei?</b> – einen Pfeil ▾ zum Auf- und Zuklappen und ein Schloss 🔓. Mit 🔒 bleibt der Bereich so, wie er ist; die App merkt es sich.", zeig: () => gruppeForm(null), seit: "2.23.41" },
@@ -5674,6 +5680,92 @@ function diktatEnde(was) {
   if (was === "senden" && DT.nachSenden) { if (!feld.value) return melde("Es wurde nichts erkannt – bitte nochmal.", true); return DT.nachSenden(); } // 2.22.0: z. B. Notfall-Meldung
   if (was === "senden") { if (!feld.value) return melde("Es wurde nichts erkannt – bitte nochmal.", true); return senden(); }
   feld.focus();
+}
+// ---------- KC-CLUB-KUECHENCHEF (2.23.48, Wunsch Hansi): „🧑‍🍳 Frag den Küchenchef“ – Fragen in eigenen Worten (tippen oder 🎤 sprechen) ----------
+// Kostenlos und ohne fremde Server: sucht die passende Antwort in den vorhandenen Hilfen (Hilfe-Zentrum, Tipps, „Kurz erklärt“).
+// Versteht andere Wörter für dasselbe (Synonyme), Wortformen und kleine Tippfehler. „👉 Zeig es mir“ springt an die Stelle.
+// Nichts gefunden → nur auf Wunsch eine vorbereitete Nachricht an Hansi (verschickt wird erst, wenn man selbst auf Senden tippt).
+const KC_STOP = new Set("wie was wo wann warum wer welche welcher welches kann koennen konnte ich man mir mich mein meine meinen meiner meinem dein deine du ein eine einen einem einer der die das den dem des und oder in im an am auf aus zu zum zur mit von vom fuer bei ist sind wird werden wurde habe hat hast haben es sich nicht noch auch nur so mal bitte gibt geht gehen machen mache macht tun tut kann moechte moechten will wollen soll sollte muss da hier dort jetzt denn dann etwas einfach gerne gern ueber unter funktioniert klappt stellen stelle aendern aendere einstellen bekommen bekomme lade mache mach finde finden sehe sehen kriege leicht schnell".split(" "));
+const KC_SYN = [["termin", "verabredung", "treffen", "datum", "verabreden", "ausmachen", "kalender"], ["terminanfrage", "anfrage", "anfragen", "einladen", "einladung"],
+  ["farbe", "farben", "design", "aussehen", "farbschema", "dunkel", "hell", "nachtmodus", "lieblingsfarbe"], ["nachricht", "schreiben", "chat", "mitteilung", "senden", "schicken", "whatsapp"],
+  ["schrift", "groesser", "gross", "buchstaben", "zoom", "lesbar", "schriftgroesse"], ["ton", "laut", "leise", "klingelton", "benachrichtigung", "push", "mitteilungen"],
+  ["foto", "bild", "fotos", "bilder", "album", "hochladen"], ["pinnwand", "zettel", "aushang", "postit"], ["helfen", "helfer", "hilfeaufruf", "gesucht", "angebot"],
+  ["mitglied", "mitglieder", "person", "kontakt", "telefonnummer", "anrufen"], ["loeschen", "entfernen", "weg", "rueckgaengig"], ["notfall", "sos", "unfall", "notruf"],
+  ["dienst", "dienstplan", "dienstwunsch", "dienstwuensche", "wunsch", "wuensche", "dienstzeiten", "schicht", "weihnachtsmarkt"], ["spiel", "spiele", "schach", "skat", "bauernskat", "quiz", "kuechenterror"], ["tictactoe", "tomaten", "tomate", "brokkoli"],
+  ["anmelden", "login", "code", "zugang", "passwort", "tablet", "computer", "geraet"], ["installieren", "startbildschirm", "symbol", "homebildschirm"],
+  ["archiv", "ordner", "dokument", "dokumente", "ablage", "ablegen"], ["protokoll", "protokolle", "sitzung"], ["geburtstag", "gratulieren", "glueckwunsch"],
+  ["standort", "karte", "position"], ["diktieren", "mikrofon", "sprechen", "sprachnachricht"], ["vorlesen", "ansage", "ansagen", "stimme"], ["gruppe", "gruppen"],
+  ["status", "urlaub", "krank", "abwesend", "verfuegbar"], ["zusagen", "absagen", "komme", "teilnehmen", "dabei"], ["mitfahren", "mitfahrt", "fahrt", "fahrgemeinschaft"],
+  ["erstattung", "geld", "fahrtkosten", "auslage", "kosten"], ["ausleihen", "leihen", "borgen"], ["boerse", "verkaufen", "verschenken", "suche"], ["suche", "suchen", "finden", "lupe"],
+  ["tipp", "tipps", "hilfe", "erklaerung"], ["stumm", "ruhe", "stoeren", "ruhezeit"]];
+const kcNorm = (t) => String(t || "").toLowerCase().replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss").replace(/[^a-z0-9 ]+/g, " ");
+const kcStamm = (w) => (w.length > 4 ? w.replace(/(ungen|ung|en|er|es|e|n|s)$/, "") : w);
+const kcWoerter = (t) => kcNorm(t).split(/\s+/).filter((w) => w.length > 1 && !KC_STOP.has(w));
+const KC_GRUPPE = (() => { const m = new Map(); KC_SYN.forEach((g, i) => g.forEach((w) => m.set(kcStamm(w), i))); return m; })();
+function kcAbstand(a, b) { // Tippfehler: höchstens 1 Buchstabe anders (ersetzt, fehlt, zu viel)
+  if (Math.abs(a.length - b.length) > 1) return 2; let i = 0, j = 0, f = 0;
+  while (i < a.length && j < b.length) { if (a[i] === b[j]) { i++; j++; continue; } if (++f > 1) return 2; if (a.length > b.length) i++; else if (b.length > a.length) j++; else { i++; j++; } }
+  return f + (a.length - i) + (b.length - j);
+}
+let KC_INDEX = null;
+function kcIndex() {
+  if (KC_INDEX) return KC_INDEX;
+  const div = document.createElement("div"), roh = (h) => { div.innerHTML = h || ""; return div.textContent || ""; };
+  KC_INDEX = hzEintraege().map((e) => { const tw = kcWoerter(e.t).map(kcStamm), xw = kcWoerter(roh(e.x)).map(kcStamm);
+    return { e, titel: new Set(tw), text: new Set(xw), gruppen: new Set([...tw, ...xw].map((w) => KC_GRUPPE.get(w)).filter((g) => g !== undefined)), tgruppen: new Set(tw.map((w) => KC_GRUPPE.get(w)).filter((g) => g !== undefined)) }; });
+  return KC_INDEX;
+}
+function kcFinden(fr) {
+  const w = [...new Set(kcWoerter(fr).map(kcStamm))]; if (!w.length) return [];
+  const treffer = kcIndex().map((x) => {
+    let p = 0;
+    for (const q of w) {
+      const g = KC_GRUPPE.get(q);
+      if (x.titel.has(q)) p += 3; else if (x.text.has(q)) p += 1.2;
+      else if (q.length >= 5 && [...x.titel].some((t) => t.length >= 5 && kcAbstand(q, t) <= 1)) p += 2; // Tippfehler
+      else if (q.length >= 5 && [...x.text].some((t) => t.length >= 5 && kcAbstand(q, t) <= 1)) p += 0.6;
+      if (g !== undefined) p += x.tgruppen.has(g) ? 2 : x.gruppen.has(g) ? 0.8 : 0; // anderes Wort für dasselbe
+      if (q.length >= 6 && ![...x.titel].includes(q) && [...x.titel].some((t) => t.length >= 5 && (q.includes(t) || t.includes(q)))) p += 1.2; // zusammengesetzte Wörter („Terminanfrage“ ↔ „Termin“)
+    }
+    if (x.e.id.startsWith("h:")) p += 0.3; // Hilfen vor Tipps
+    return { e: x.e, p: p / Math.sqrt(w.length) };
+  }).filter((t) => t.p >= 1.6).sort((a, b) => b.p - a.p);
+  return treffer.slice(0, 4);
+}
+let KC_TAKT = null;
+function kcFrageStart(vorgabe = "") {
+  const f = blattAuf("kcBlatt", `<h3 style="margin:0">🧑‍🍳 Frag den Küchenchef</h3>
+    <p class="hinweis" style="margin:0">Stell deine Frage in eigenen Worten – tippen oder 🎤 sprechen. Zum Beispiel: <i>„Wie ändere ich die Farben?“</i> oder <i>„Wie stelle ich eine Terminanfrage?“</i></p>
+    <input id="kcFrage" data-diktat="einmal" class="hz-suche" type="search" enterkeyhint="search" autocomplete="off" placeholder="Deine Frage …" value="${esc(vorgabe)}" oninput="clearTimeout(KC_TAKT);KC_TAKT=setTimeout(kcAntworten,450)" onkeydown="if(event.key==='Enter'){event.preventDefault();kcAntworten()}">
+    <div id="kcAntwort"></div>
+    <button class="knopf" onclick="$('kcBlatt').remove()">Schließen</button>`);
+  f.classList.add("kc-blatt");
+  if (vorgabe) kcAntworten(); else setTimeout(() => $("kcFrage")?.focus(), 120);
+}
+function kcAntworten(wahl) {
+  const fr = ($("kcFrage")?.value || "").trim(), z = $("kcAntwort"); if (!z) return;
+  if (kcNorm(fr).replace(/\s/g, "").length < 4) { z.innerHTML = ""; return; }
+  const t = kcFinden(fr), best = (wahl && t.find((x) => x.e.id === wahl)) || t[0];
+  if (!best) {
+    z.innerHTML = `<div class="karte kc-antwort"><div class="kc-chef">🤔 Das weiß ich leider noch nicht.</div><p style="margin:4px 0 8px">Versuch es mit anderen Worten – oder frag direkt nach.</p>
+      <div class="knoepfe"><button class="knopf" onclick="$('kcFrage').select();$('kcFrage').focus()">🔄 Anders fragen</button><button class="knopf haupt" onclick="kcAnHansi()">💬 Frage an ${esc(adminName())} weitergeben</button><button class="knopf" onclick="$('kcBlatt').remove();hzStart()">📖 Alle Hilfen</button></div></div>`;
+    return;
+  }
+  const e = best.e, andere = t.filter((x) => x !== best).slice(0, 3);
+  z.innerHTML = `<div class="karte kc-antwort vorlese-karte"><div class="kc-chef">🧑‍🍳 Das geht so:</div><h3 style="margin:4px 0">${e.sym || "💡"} ${esc(e.t)}</h3><p style="margin:0 0 8px">${e.x}</p>
+      <div class="knoepfe">${e.los ? `<button class="knopf haupt" onclick="kcZeig('${e.id}')">👉 Zeig es mir</button>` : ""}${VORLESE_KNOPF}</div>${hzBewHtml(e.id)}</div>
+    ${andere.length ? `<div class="kc-andere"><b>Oder meintest du:</b>${andere.map((x) => `<button class="ti-zeile" onclick="kcAntworten('${x.e.id}')">${x.e.sym || "💡"} <span>${esc(x.e.t)}</span><b>›</b></button>`).join("")}</div>` : ""}`;
+}
+function kcZeig(id) {
+  const e = hzEintraege().find((x) => x.id === id); $("kcBlatt")?.remove(); if (!e) return;
+  if (e.los) { try { e.los(); } catch { hzZuEintrag(id); } } else hzZuEintrag(id);
+}
+async function kcAnHansi() { // nur vorbereiten – verschickt wird erst mit „Senden“
+  const fr = ($("kcFrage")?.value || "").trim(); $("kcBlatt")?.remove();
+  await direkt(ENTWICKLER.person_id);
+  const t = $("text"); if (!t) return;
+  t.value = `❓ Frage an den Küchenchef, die er noch nicht beantworten konnte: „${fr}“`; t.dispatchEvent(new Event("input", { bubbles: true }));
+  melde("✍️ Deine Frage steht im Schreibfeld – prüfen und auf Senden tippen.");
 }
 // ---------- KC-CLUB-DIKTAT-FELD (2.23.47, Wunsch Hansi): 🎤 rechts im Feld zum Diktieren – ein Baustein für alle Felder mit data-diktat ----------
 // data-diktat="einmal" = Suchfeld (nach dem ersten Satz fertig), sonst längerer Text. Nutzt den Diktier-Kern des Chats (diktatStart):
@@ -8308,6 +8400,7 @@ const KACHELN = {
     // KC-CLUB-SICHERHEIT (1.14.0, Wunsch Hansi): Prüfreihe „ist alles sicher und läuft?“ für alle Mitglieder
     { id: "sicherheit", sym: "🛡️", t: "Sicherheits-Check", u: "Läuft alles sicher? Jetzt prüfen", aktion: "sicherheitStart()" },    // KC-CLUB-HILFEZENTRUM (2.23.0, Wunsch Hansi): alle Tipps und Hinweise nach Themen (Zahl = neue Hilfen seit dem letzten Besuch)
     { id: "hilfezentrum", sym: "❓", t: "Hilfe & Tipps", u: () => `${hzAnzahl()} Hilfen nach Themen`, aktion: "hzStart()", zahl: () => hzNeuZahl() },
+    { id: "kuechenchef", sym: "🧑‍🍳", t: "Frag den Küchenchef", u: "Frage tippen oder 🎤 sprechen", aktion: "kcFrageStart()" }, // 2.23.48 KC-CLUB-KUECHENCHEF
   ],
   // KC-CLUB-ADMIN-REGISTER (2.20.0, Wunsch Hansi): Register „Admin“ – nur Admin/Vertretung; kleine Kacheln (3 je Reihe) mit Lämpchen,
   // Antippen öffnet ein Blatt mit Einzelheiten, Grafik und den Werkzeugen für genau diese Stelle (siehe AD_KACHELN weiter unten)

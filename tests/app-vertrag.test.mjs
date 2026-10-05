@@ -4015,6 +4015,15 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/\$\{!ziel \|\| nachSenden \? '<button class="knopf haupt" data-d="senden">📤 Senden<\/button>' : ""\}/.test(html) && /if \(DT\.aktiv && DT\.einmal && DT\.vorher\.length\) return diktatEnde\("fertig"\);/.test(html), "kein Senden in Feldern, Suche endet von selbst");
   assert.ok(/#diktatBlatt\.blatt \{ z-index: 9000; \}/.test(html) && /\{ id: "diktat_feld", thema: "start"/.test(html), "über der Suche + Hilfe");
 }
+// 397. 2.23.48: „🧑‍🍳 Frag den Küchenchef“ – Fragen in eigenen Worten, Antworten aus den Hilfen (KC-CLUB-KUECHENCHEF)
+{
+  const k = html.slice(html.indexOf("// ---------- KC-CLUB-KUECHENCHEF"), html.indexOf("// ---------- KC-CLUB-DIKTAT-FELD"));
+  assert.ok(/kcIndex\(\)/.test(k) && /hzEintraege\(\)/.test(k) && !/fetch\(|api\(/.test(k), "nur eigene Hilfen, kein fremder Server, keine Kosten");
+  assert.ok(/const KC_SYN = \[/.test(k) && /function kcAbstand\(a, b\)/.test(k) && /zusammengesetzte Wörter/.test(k), "Synonyme, Tippfehler, zusammengesetzte Wörter");
+  assert.ok(/id="kcFrage" data-diktat="einmal"/.test(k) && /👉 Zeig es mir/.test(k) && /\$\{VORLESE_KNOPF\}/.test(k) && /Oder meintest du:/.test(k), "sprechen, zeigen, vorlesen, Alternativen");
+  assert.ok(/async function kcAnHansi\(\) \{ \/\/ nur vorbereiten/.test(k) && !/kcAnHansi[^]*?senden\(\)/.test(k.slice(k.indexOf("async function kcAnHansi"))), "Weitergeben nur vorbereitet, nie automatisch gesendet");
+  assert.ok(/\{ id: "kuechenchef", sym: "🧑‍🍳", t: "Frag den Küchenchef"/.test(html) && /onclick="kcFrageStart\(\)">🧑‍🍳 Frag den Küchenchef/.test(html), "Kachel + Knopf im Hilfe-Zentrum");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

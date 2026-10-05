@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.23.48 – 2026-10-05 – 🧑‍🍳 Frag den Küchenchef (Wunsch Hansi, Stufe 1)
+- KC-CLUB-KUECHENCHEF: Fragen in eigenen Worten stellen – tippen oder 🎤 sprechen („Wie ändere ich die Farben?“, „Wie stelle ich eine
+  Terminanfrage?“). Antwort aus den vorhandenen Hilfen (Hilfe-Zentrum, Tipps, Kurz erklärt) mit „👉 Zeig es mir“, 🔊 Vorlesen, 👍/👎 und
+  „Oder meintest du …“. Versteht andere Wörter für dasselbe (Synonym-Liste), Wortformen, zusammengesetzte Wörter und kleine Tippfehler.
+  Nichts gefunden → „Anders fragen“, „Alle Hilfen“ oder „Frage an Hansi weitergeben“ (nur vorbereitet im Chat, Senden tippt man selbst).
+  Kostenlos, ohne fremde Server, auch ohne Netz. Kachel „🧑‍🍳 Frag den Küchenchef“ + Knopf oben im Hilfe-Zentrum. Hilfe-Eintrag. Test 397.
+
 ## 2.23.47 – 2026-10-05 – 🎤 Sprechen statt tippen an 5 Stellen (Wunsch Hansi)
 - KC-CLUB-DIKTAT-FELD: kleines 🎤 rechts im Feld bei 🔍 Lupe (Suche überall), ❓ Hilfe-Zentrum, 📌 Pinnwand-Zettel, 🙋 Hilfe-Aufruf
   (Beschreibung) und 🤲 Angebot („Was genau?“). Antippen → „Ich schreibe mit …“, der Text erscheint im Feld; Suchfelder sind nach dem
