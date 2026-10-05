@@ -4120,6 +4120,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(vorbehalt && !zusatz\) throw/.test(g) && /vorbehalt: vorbehalt \? zusatz : null/.test(g) && /mitText: !!zusatz \}\)/.test(g), "Vorbehalt braucht Text, wird gespeichert, Protokoll ohne Inhalt");
   assert.ok(/vorbehalt: a\.vorbehalt \?\? null/.test(server) && /add column if not exists vorbehalt text/.test(lies("supabase/migrations/20261005_kc_club_v22357_anfrage_vorbehalt.sql")), "Liste + Migration");
 }
+// 407. 2.23.58: Terminanfrage im Handy-Kalender, Hinweis nach Verlegen/Absage (KC-CLUB-ANFRAGE-KALENDER)
+{
+  const k = html.slice(html.indexOf("// KC-CLUB-ANFRAGE-KALENDER (2.23.58"), html.indexOf("function erinKalender("));
+  assert.ok(/kal && kal !== a\.beginn/.test(k) && /📅 Neuen Termin eintragen/.test(k) && /löschen 🗑️/.test(k), "verlegt → neuen Termin eintragen + alten löschen");
+  assert.ok(/if \(ab\) return kal \?/.test(k) && /📅 \$\{kal \? "Nochmal in den Handy-Kalender" : "In meinen Handy-Kalender"\}/.test(k), "Absage-Hinweis, Knopf");
+  assert.ok(/taKalMerken\(t\.id, t\.beginn\)/.test(html) && /UID:anfrage-\$\{t\.id\}@koecheclub-werne/.test(html) && /\(unter Vorbehalt\)/.test(html), "gleiche UID, gemerkte Zeit, Vorbehalt im Titel");
+  assert.ok(/x\.vorbehalt \? " – unter Vorbehalt" : ""/.test(server) && /x\.meine === "vielleicht" \|\| x\.vorbehalt \? "TENTATIVE"/.test(server), "Kalender-Abo kennt den Vorbehalt");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

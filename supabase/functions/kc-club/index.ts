@@ -41,7 +41,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.23.57";
+const SERVER_VERSION = "2.23.58";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -3062,10 +3062,12 @@ async function kalenderIcs(token: string) {
   // KC-CLUB-TERMINANFRAGE (0.92.0): eigene Anfragen und die, denen ich zugesagt habe (Ja/Vielleicht)
   for (const x of await terminanfragenListe(ich, { von: new Date(Date.now() - 60 * 86400000).toISOString(), bis: new Date(Date.now() + 500 * 86400000).toISOString() })) {
     if (!x.vonMir && x.meine !== "ja" && x.meine !== "vielleicht") continue;
-    z.push("BEGIN:VEVENT", `UID:anfrage-${x.id}@koecheclub-werne`, `DTSTAMP:${stamp}`, `SUMMARY:${icsText("📨 " + x.anlass + (x.vonMir ? "" : " (" + x.von.vorname + ")"))}`,
+    // 2.23.58 KC-CLUB-ANFRAGE-KALENDER: verlegte Anfragen ersetzen den alten Eintrag (gleiche UID); Vorbehalt = „vorläufig“
+    z.push("BEGIN:VEVENT", `UID:anfrage-${x.id}@koecheclub-werne`, `DTSTAMP:${stamp}`, `SEQUENCE:${Math.floor(new Date(x.beginn).getTime() / 60000) % 100000000}`,
+      `SUMMARY:${icsText("📨 " + x.anlass + (x.vonMir ? "" : " (" + x.von.vorname + ")") + (x.vorbehalt ? " – unter Vorbehalt" : ""))}`,
       `DTSTART:${icsZeit(x.beginn)}`, `DTEND:${icsZeit(x.ende || new Date(new Date(x.beginn).getTime() + 3600000).toISOString())}`);
     if (x.ort) z.push(`LOCATION:${icsText(x.ort)}`);
-    z.push(`DESCRIPTION:${icsText((x.notiz ? x.notiz + "\n\n" : "") + APP_URL + "#termine")}`, `STATUS:${x.status === "abgesagt" ? "CANCELLED" : x.meine === "vielleicht" ? "TENTATIVE" : "CONFIRMED"}`, "END:VEVENT");
+    z.push(`DESCRIPTION:${icsText((x.notiz ? x.notiz + "\n\n" : "") + APP_URL + "#termine")}`, `STATUS:${x.status === "abgesagt" ? "CANCELLED" : x.meine === "vielleicht" || x.vorbehalt ? "TENTATIVE" : "CONFIRMED"}`, "END:VEVENT");
   }
   // KC-CLUB-PRIVATTERMIN (1.0.0): eigene private Einträge im eigenen Abo
   const { data: pReihen } = await db.from("kc_club_privattermine").select("*").eq("person_id", ich.person_id).neq("wiederholung", "keine").limit(200);

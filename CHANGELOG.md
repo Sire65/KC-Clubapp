@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.23.58 – 2026-10-05 – 📅 Terminanfrage im Handy-Kalender, auch nach Verlegen (Wunsch Hansi)
+- KC-CLUB-ANFRAGE-KALENDER: Jede eigene bzw. zugesagte Terminanfrage hat „📅 In meinen Handy-Kalender“ (Datei mit Erinnerung, feste UID).
+  Die App merkt sich, welche Zeit eingetragen wurde. Wird der Termin verlegt (Gegenvorschlag angenommen), zeigt die Karte
+  „📅 Termin verlegt – im Handy-Kalender steht noch …“ mit „📅 Neuen Termin eintragen“ und dem Hinweis, den alten Eintrag im Kalender zu
+  löschen (fremde Kalender-Einträge löschen kann eine Web-App kostenlos nicht). Bei Absage: Hinweis zum Löschen. Vorbehalt steht im Titel
+  („unter Vorbehalt“, Status vorläufig). Kalender-Abo: Vorbehalt im Titel/vorläufig, SEQUENCE nach Beginn – Verlegungen ersetzen dort den
+  alten Eintrag automatisch. Test 407.
+
 ## 2.23.57 – 2026-10-05 – 🤔 Gegenvorschlag unter Vorbehalt annehmen (Wunsch Hansi)
 - KC-CLUB-ANFRAGE-VORBEHALT: Beim Gegenvorschlag jetzt drei Knöpfe – „✅ Neue Zeit annehmen“, „🤔 Unter Vorbehalt“, „❌ Passt nicht“. Alle öffnen
   ein Fenster mit Vorschlag, Notiz des Gegenübers und einem kurzen Text (bei „unter Vorbehalt“ Pflicht, sonst freiwillig, 🎤 möglich).

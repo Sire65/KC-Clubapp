@@ -1329,6 +1329,7 @@
   /* 2.23.50 KC-CLUB-TERMINANFRAGE-STATUS */
   .ta-wer { padding: 3px 0; } .ta-st { font-weight: 700; } .ta-st-ja { color: #1e8449; } .ta-st-nein { color: var(--rot); } .ta-st-gv { color: #b9770e; } .ta-st-ab { color: var(--grau); } .ta-st-ge { color: #2471a3; }
   .marke.ta-st-ja { background: #d4efdf; color: #145a32; } .marke.ta-st-nein { background: #fadbd8; color: #78281f; } .marke.ta-st-gv { background: #fdebd0; color: #7e5109; } .marke.ta-st-ab { background: #e5e7e9; color: #424949; } .marke.ta-st-ge { background: #d6eaf8; color: #1b4f72; }
+  .ta-kal-alt { margin: 8px 0 0; padding: 8px; border-radius: 8px; background: #d6eaf8; color: #1b4f72; display: grid; gap: 6px; } .ta-kal-alt .knopf { width: auto; justify-self: start; } /* 2.23.58 */
   .ta-vk { margin: 4px 0 2px; } .ta-vorbehalt { margin: 6px 0 0; padding: 6px 8px; border-radius: 8px; background: #fdebd0; color: #7e5109; } #taVkBlatt textarea { width: 100%; box-sizing: border-box; } #taVkBlatt label { display: grid; gap: 2px; } .ta-gv-zeit { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } #taGvBlatt label { display: grid; gap: 2px; }
   /* 2.23.48 KC-CLUB-KUECHENCHEF → 2.23.49 KC-CLUB-TWINKEY */
   .tw-chef-knopf { width: 100%; margin: 8px 0 4px; text-align: center !important; }
@@ -2898,7 +2899,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.57"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.58"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -15383,6 +15384,7 @@ function taKarte(a) {
       ${a.spiel ? "" : `<button type="button" class="knopf klein" style="margin-top:6px" onclick="taGegenvorschlag('${a.id}')">🔄 ${a.meinVorschlag ? "Anderen Vorschlag machen" : "Andere Zeit vorschlagen"}</button>`}` : ""}
     ${ab ? "" : `<details style="margin-top:8px"${a.vonMir ? " open" : ""}><summary class="hinweis">✅ ${n("ja")} · 🤔 ${n("vielleicht")} · ❌ ${n("nein")} · ⏳ ${offen} offen</summary>${wer}</details>`}
     ${!ab && (a.vonMir || a.meine === "ja" || a.meine === "vielleicht") ? erinZeileHtml(a.erinnerung, `erinAnfrage('${a.id}')`, a.erinnerungStandard) : ""}
+    ${taKalHtml(a, ab)}
     ${a.vonMir && !ab ? `<div class="knoepfe"><button class="knopf klein" onclick="taAbsagen('${a.id}')">🚫 Absagen</button></div>` : ""}</div>`;
 }
 // KC-CLUB-TERMINANFRAGE-STATUS (2.23.50, Wunsch Hansi): Stand je Empfänger – angefragt → gelesen → bestätigt / vielleicht / abgelehnt /
@@ -15541,15 +15543,34 @@ function erinFragen(t) {
   f.querySelector("#erinNein").onclick = (e) => einmal(e.target, () => speichern(true));
 }
 // Termin-Datei mit eingebautem Alarm für den Handy-Kalender (klingelt auch ohne Internet)
+// KC-CLUB-ANFRAGE-KALENDER (2.23.58, Wunsch Hansi): Terminanfrage in den Handy-Kalender (Datei mit fester UID) – die App merkt sich,
+// welche Zeit eingetragen wurde. Wird der Termin verlegt (Gegenvorschlag angenommen) oder abgesagt, zeigt die Karte das an:
+// „📅 Neuen Termin eintragen“ und den Hinweis, den alten Eintrag im Kalender zu löschen (fremde Kalender-Einträge löschen kann eine
+// Web-App nicht – kostenlos und ohne Google-Zugang). Wer das Kalender-Abo nutzt, bekommt Verlegungen automatisch.
+const TA_KAL_KEY = "kc_club_ta_kalender";
+const taKalLesen = () => { try { return JSON.parse(lsLesen(TA_KAL_KEY) || "{}") || {}; } catch { return {}; } };
+function taKalMerken(id, beginn) { const m = taKalLesen(); if (beginn) m[id] = beginn; else delete m[id]; lsSetzen(TA_KAL_KEY, JSON.stringify(m)); }
+function taKalHtml(a, ab) {
+  const kal = taKalLesen()[a.id], dabei = a.vonMir || a.meine === "ja" || a.meine === "vielleicht";
+  if (ab) return kal ? `<div class="ta-kal-alt"><span>📅 <b>Abgesagt</b> – in deinem Handy-Kalender steht der Termin noch (${esc(wann(kal))}). Bitte dort antippen und löschen 🗑️.</span><button type="button" class="tw-nicht" onclick="taKalMerken('${a.id}', null);taLaden()">Erledigt</button></div>` : "";
+  if (!dabei) return "";
+  if (kal && kal !== a.beginn) return `<div class="ta-kal-alt"><span>📅 <b>Termin verlegt</b> – in deinem Handy-Kalender steht noch <b>${esc(wann(kal))}</b>.</span>
+    <button type="button" class="knopf haupt klein" onclick="taKalender('${a.id}')">📅 Neuen Termin eintragen</button>
+    <small>Den alten Eintrag (${esc(wann(kal))}) bitte im Kalender antippen und löschen 🗑️ – das kann die App nicht selbst.</small></div>`;
+  return `<button type="button" class="knopf klein" style="margin-top:6px" onclick="taKalender('${a.id}')">📅 ${kal ? "Nochmal in den Handy-Kalender" : "In meinen Handy-Kalender"}</button>`;
+}
+function taKalender(id) { const t = TA.liste.find((x) => x.id === id); if (!t) return; erinKalender(t, 60); setTimeout(() => taLaden(), 1500); }
 function erinKalender(t, minuten) {
   const z = (iso) => new Date(iso).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, ""), e = (x) => String(x || "").replace(/[\;,]/g, (c) => "\\" + c).replace(/\n/g, "\\n");
   const ende = t.ende || new Date(new Date(t.beginn).getTime() + 3600000).toISOString();
   const ics = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Koecheclub Werne//Club-App//DE", "BEGIN:VEVENT", `UID:anfrage-${t.id}@koecheclub-werne`, `DTSTAMP:${z(new Date().toISOString())}`,
-    `SUMMARY:${e(t.anlass || "Termin")}`, `DTSTART:${z(t.beginn)}`, `DTEND:${z(ende)}`, ...(t.ort ? [`LOCATION:${e(t.ort)}`] : []),
+    `SEQUENCE:${Math.floor(Date.now() / 60000) % 100000000}`, `SUMMARY:${e((t.anlass || "Termin") + (t.vorbehalt ? " (unter Vorbehalt)" : ""))}`, `DTSTART:${z(t.beginn)}`, `DTEND:${z(ende)}`, ...(t.ort ? [`LOCATION:${e(t.ort)}`] : []),
+    ...(t.vorbehalt ? ["STATUS:TENTATIVE"] : []),
     `DESCRIPTION:${e(location.origin + location.pathname + (t.spielId ? "#spiel=" + t.spielId : "#termine"))}`,
     "BEGIN:VALARM", "ACTION:DISPLAY", `DESCRIPTION:${e(t.anlass || "Termin")}`, `TRIGGER:-PT${minuten}M`, "END:VALARM", "END:VEVENT", "END:VCALENDAR"].join("\r\n");
   const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([ics], { type: "text/calendar" })); a.download = String(t.anlass || "Termin").replace(/[^\wäöüÄÖÜß ]/g, "").trim().slice(0, 60) + ".ics";
   document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  if (t.id && !t.spielId) taKalMerken(t.id, t.beginn); // KC-CLUB-ANFRAGE-KALENDER: merken, welche Zeit im Handy-Kalender steht
   melde("📅 Termin-Datei erstellt – antippen, dann „Zum Kalender hinzufügen“. Der Kalender erinnert dich mit Ton.");
 }
 async function taAbsagen(id) {
