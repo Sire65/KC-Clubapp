@@ -3639,7 +3639,7 @@ assert.ok(/const UH_HERVOR = \["Innovation"\];/.test(html) && /function uhAmeise
 {
   assert.ok(/async function diktatStart\(ziel, nachSenden(, opt = \{\})?\) \{[\s\S]{0,400}frei = await mikroFreigabe\(\);[\s\S]{0,120}if \(!frei \|\| DT\.aktiv\) return;/.test(html), "erst Freigabe, dann Diktat");
   const mf = html.slice(html.indexOf("async function mikroFreigabe"), html.indexOf("function mikroHilfe"));
-  assert.ok(/if \(zustand === "granted"\) return true;/.test(mf) && /if \(zustand === "denied"\) return true;/.test(mf) && /onerror = \(ev\) => \{ if \(ev\.error === "not-allowed"[\s\S]{0,120}mikroHilfe\(\)/.test(html) && /await frage\("🎙️ Zum Diktieren braucht die App dein Mikrofon/.test(mf) && /getUserMedia\(\{ audio: true \}\)/.test(mf) && /forEach\(\(x\) => x\.stop\(\)\)/.test(mf), "Erklärung, Abfrage, Mikrofon sofort wieder aus");
+  assert.ok(/if \(zustand === "granted"\) return true;/.test(mf) && /if \(zustand === "denied"\) return true;/.test(mf) && /onerror = \(ev\) => \{ if \(ev\.error === "not-allowed"[\s\S]{0,240}mikroHilfe\((weiter)?\)/.test(html) && /await frage\("🎙️ Zum Diktieren braucht die App dein Mikrofon/.test(mf) && /getUserMedia\(\{ audio: true \}\)/.test(mf) && /forEach\(\(x\) => x\.stop\(\)\)/.test(mf), "Erklärung, Abfrage, Mikrofon sofort wieder aus");
 }
 // 340. 2.22.13: Herausforderungen standardmäßig an, Hinweis wo man es abstellt (KC-CLUB-SPIELE-STANDARD-AN)
 {
@@ -4082,6 +4082,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/!a\.vonMir && !a\.spiel && a\.status === "offen" && !a\.meine && !a\.meinVorschlag/.test(k), "nur unbeantwortete Anfragen an mich");
   assert.ok(/setInterval\(\(\) => taHinweisPruefen\(9\), TAH_TAKT_MS\)/.test(k) && /visibilitychange/.test(k) && /taHinweisPruefen\(\), 5000\)/.test(html) && /setTimeout\(\(\) => taHinweisPruefen\(9\), 1500\)/.test(html), "beim Start, zurück in der App, nach Push, alle 5 Min.");
   assert.ok(/document\.querySelector\("\.blatt:not\(\.versteckt\)"\)/.test(k) && /if \(still && !neu\.length\) return/.test(k), "drängt sich nicht über Fenster, neue Anfrage durchbricht „später“");
+}
+// 402. 2.23.53: „Mikrofon ist gesperrt“ – sofort freischalten und weiter diktieren (KC-CLUB-MIKRO-SOFORT)
+{
+  const k = html.slice(html.indexOf("// KC-CLUB-MIKRO-SOFORT (2.23.53"), html.indexOf("async function diktatStart("));
+  for (const t of ["🎙️ Jetzt freischalten", "🔄 Nochmal probieren", "⌨️ Weiter tippen"]) assert.ok(k.includes(t), "Knopf fehlt: " + t);
+  assert.ok(/getUserMedia\(\{ audio: true \}\)/.test(k) && /s\.getTracks\(\)\.forEach\(\(x\) => x\.stop\(\)\)/.test(k), "fragt das Handy erneut und gibt das Mikrofon gleich wieder frei");
+  assert.ok(/diktatStart\(w\.ziel, w\.nachSenden, \{ einmal: w\.einmal \}\)/.test(k) && /mikroHilfe\(weiter\)/.test(html), "danach geht das Diktat im selben Feld weiter");
+  assert.ok(/st\.onchange = /.test(k) && /#mikroHilfe\.blatt \{ z-index: 9100; \}/.test(html), "Erlaubnis aus den Einstellungen wird erkannt, Fenster liegt oben");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

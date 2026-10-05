@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.23.53 – 2026-10-05 – 🎙️ Mikrofon gleich freischalten und weiter (Wunsch Hansi)
+- KC-CLUB-MIKRO-SOFORT: Das Fenster „🎙️ Mikrofon ist gesperrt“ (z. B. bei Frag Twinkey) hat jetzt „🎙️ Jetzt freischalten“ – das Handy
+  fragt erneut, nach „Zulassen“ läuft das Diktat im selben Feld sofort weiter. Fragt das Handy nicht mehr (endgültig gesperrt), zeigt das
+  Fenster die Anleitung für genau dieses Gerät (Android/iPhone/PC, andere aufklappbar) mit „🔄 Nochmal probieren“; wird die Erlaubnis in den
+  Einstellungen erteilt, macht die App von selbst weiter. „⌨️ Weiter tippen“ schließt und setzt den Cursor ins Feld. Fenster liegt über
+  Twinkey und Diktat. Nur App. Test 402.
+
 ## 2.23.52 – 2026-10-05 – 📨 Hinweis: neue Terminanfrage (Wunsch Hansi)
 - KC-CLUB-TERMINANFRAGE-HINWEIS: Beim Öffnen der App und zwischendurch (zurück in die App, nach einem Push, alle 5 Min.) erscheint
   „📨 Du hast eine neue Terminanfrage“ mit Liste (von wem, Anlass, wann, Ort) und „👀 Ja, jetzt ansehen“ (springt zur Anfrage),

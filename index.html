@@ -1340,6 +1340,7 @@
   .mf-knoepfe { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; } .mf-knoepfe .knopf { width: auto; margin: 0; } .mf-antw { margin: 3px 0; } .mf-stand summary { cursor: pointer; }
   #mfBlatt .blatt-innen { max-height: 92vh !important; } #mfBlatt textarea { width: 100%; box-sizing: border-box; } #mfListe { max-height: 32vh; overflow: auto; } .tw-offen { display: grid; gap: 6px; } .tw-offen input, .tw-offen textarea { width: 100%; box-sizing: border-box; } .kc-antwort { margin: 0; } .kc-chef { font-weight: 800; color: var(--textGruen); }
   .kc-andere { display: grid; gap: 2px; } .kc-andere > b { margin: 4px 0 2px; }
+  #mikroHilfe.blatt { z-index: 9100; } /* 2.23.53: auch über Twinkey und Diktat */
   #diktatBlatt.blatt { z-index: 9000; } /* 2.23.47: Diktier-Fenster auch über der Suche (z-index 80) */
   /* 2.23.47 KC-CLUB-DIKTAT-FELD: 🎤 rechts im Feld */
   .diktat-wrap { position: relative; display: block; width: 100%; } .diktat-wrap > input, .diktat-wrap > textarea { width: 100%; box-sizing: border-box; padding-right: 52px !important; }
@@ -2894,7 +2895,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.52"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.53"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -5643,14 +5644,46 @@ async function mikroFreigabe() {
   try { const s = await navigator.mediaDevices.getUserMedia({ audio: true }); s.getTracks().forEach((x) => x.stop()); lsSetzen(MIKRO_OK, "1"); return true; }
   catch { return true; } // 2.22.18: trotzdem versuchen – die Spracherkennung meldet sich selbst, wenn es wirklich nicht geht
 }
-function mikroHilfe() {
-  blattAuf("mikroHilfe", `<h3 style="margin:0">🎙️ Mikrofon ist gesperrt</h3>
-    <p style="margin:6px 0">Das Handy hat der Köcheclub-App das Mikrofon nicht erlaubt. So schaltest du es frei:</p>
-    <p style="margin:4px 0"><b>Android (Chrome):</b> oben neben der Adresse auf das Schloss bzw. ⓘ tippen → <b>Berechtigungen</b> → <b>Mikrofon</b> → <b>Zulassen</b>. Bei der installierten App: lange auf das App-Symbol drücken → <b>App-Info</b> → <b>Berechtigungen</b> → <b>Mikrofon</b>.</p>
-    <p style="margin:4px 0"><b>iPhone:</b> <b>Einstellungen</b> → <b>Safari</b> → <b>Mikrofon</b> → <b>Fragen</b> oder <b>Erlauben</b>.</p>
-    <p style="margin:4px 0"><b>PC:</b> links neben der Adresse auf das Schloss klicken → <b>Mikrofon</b> → <b>Zulassen</b>.</p>
-    <p class="hinweis" style="margin:6px 0">Danach die App einmal neu laden und nochmal auf 🎙️ tippen.</p>
-    <button class="knopf haupt" onclick="$('mikroHilfe').remove()">Verstanden</button>`);
+// KC-CLUB-MIKRO-SOFORT (2.23.53, Wunsch Hansi): „Mikrofon ist gesperrt“ – gleich hier freischalten und weitermachen.
+// „🎙️ Jetzt freischalten“ fragt das Handy erneut (geht, solange die Sperre nicht endgültig ist); klappt es, läuft das Diktat im selben
+// Feld sofort weiter. Sonst zeigt das Fenster die Anleitung für genau dieses Gerät; ändert man die Erlaubnis in den Einstellungen,
+// merkt die App das (permissions.onchange) und macht von selbst weiter. „⌨️ Weiter tippen“ schließt und setzt den Cursor ins Feld.
+let MIKRO_WEITER = null;
+function mikroHilfe(weiter) {
+  MIKRO_WEITER = weiter || null;
+  const geraet = IST_IOS ? "ios" : IST_ANDROID ? "android" : "pc";
+  const anl = { android: "<b>Android:</b> oben neben der Adresse auf das Schloss bzw. ⓘ tippen → <b>Berechtigungen</b> → <b>Mikrofon</b> → <b>Zulassen</b>. Bei der installierten App: lange auf das App-Symbol drücken → <b>App-Info</b> → <b>Berechtigungen</b> → <b>Mikrofon</b> → <b>Zulassen</b>.",
+    ios: "<b>iPhone/iPad:</b> <b>Einstellungen</b> → <b>Safari</b> → <b>Mikrofon</b> → <b>Fragen</b> oder <b>Erlauben</b>. Dann zurück in die App.",
+    pc: "<b>PC:</b> links neben der Adresse auf das Schloss klicken → <b>Mikrofon</b> → <b>Zulassen</b>." };
+  const f = blattAuf("mikroHilfe", `<h3 style="margin:0">🎙️ Mikrofon ist gesperrt</h3>
+    <p style="margin:6px 0">Die Köcheclub-App darf dein Mikrofon gerade nicht benutzen. Tippe auf <b>„🎙️ Jetzt freischalten“</b> und dann bei deinem Handy auf <b>„Zulassen“</b> bzw. <b>„Erlauben“</b> – danach geht es gleich weiter.</p>
+    <button class="knopf haupt" data-m="frei">🎙️ Jetzt freischalten</button>
+    <div id="mikroAnl" class="versteckt"><p style="margin:6px 0"><b>Das Handy fragt nicht mehr nach – dann einmal selbst erlauben:</b></p><p style="margin:4px 0">${anl[geraet]}</p>
+      <details><summary class="hinweis">Andere Geräte</summary>${Object.entries(anl).filter(([k]) => k !== geraet).map(([, t]) => `<p style="margin:4px 0">${t}</p>`).join("")}</details>
+      <p class="hinweis" style="margin:6px 0">Sobald du es erlaubt hast, macht die App von selbst weiter – oder tippe auf <b>„🔄 Nochmal probieren“</b>.</p>
+      <button class="knopf haupt" data-m="nochmal">🔄 Nochmal probieren</button></div>
+    <button class="knopf" data-m="tippen">⌨️ Weiter tippen</button>`);
+  f.querySelectorAll("[data-m]").forEach((b) => (b.onclick = () => (b.dataset.m === "tippen" ? mikroWeiterTippen() : mikroJetztFrei(b))));
+  try { navigator.permissions?.query({ name: "microphone" }).then((st) => { st.onchange = () => { if (st.state === "granted" && $("mikroHilfe")) mikroWeiterDiktieren(); }; }).catch(() => {}); } catch {}
+}
+async function mikroJetztFrei(knopf) {
+  knopf.disabled = true;
+  let ok = false;
+  try { const s = await navigator.mediaDevices.getUserMedia({ audio: true }); s.getTracks().forEach((x) => x.stop()); ok = true; } catch {}
+  knopf.disabled = false;
+  if (ok) return mikroWeiterDiktieren();
+  $("mikroAnl")?.classList.remove("versteckt"); knopf.classList.add("versteckt");
+  melde("🎙️ Das Handy hat nicht gefragt – bitte einmal selbst erlauben (Anleitung im Fenster).", true);
+}
+function mikroWeiterDiktieren() {
+  lsSetzen(MIKRO_OK, "1"); $("mikroHilfe")?.remove();
+  const w = MIKRO_WEITER; MIKRO_WEITER = null;
+  melde("🎙️ Mikrofon ist frei – sprich einfach los.");
+  if (w && $(w.ziel)) diktatStart(w.ziel, w.nachSenden, { einmal: w.einmal });
+}
+function mikroWeiterTippen() {
+  const w = MIKRO_WEITER; MIKRO_WEITER = null; $("mikroHilfe")?.remove();
+  const feld = w && $(w.ziel); if (feld) { feld.focus(); try { feld.setSelectionRange(feld.value.length, feld.value.length); } catch {} }
 }
 async function diktatStart(ziel, nachSenden, opt = {}) { // 2.22.0: auch für andere Felder (z. B. Notfall-Meldung) – ziel = Feld-ID, nachSenden = was „Senden“ tut
   if (!DIKTAT_GEHT) return ziel ? melde("Dieses Handy kann nicht diktieren – bitte tippen.", true) : spracheStart();
@@ -5680,7 +5713,7 @@ function diktatHoeren() {
     feld.value = (DT.basis ? DT.basis.replace(/\s*$/, " ") : "") + gesagt; feld.dispatchEvent(new Event("input", { bubbles: true }));
     if ($("diktatText")) $("diktatText").textContent = gesagt || "…";
   };
-  e.onerror = (ev) => { if (ev.error === "not-allowed" || ev.error === "service-not-allowed") { lsSetzen(MIKRO_OK, ""); diktatEnde("fertig"); mikroHilfe(); } }; // 2.22.12: Anleitung statt kurzer Meldung
+  e.onerror = (ev) => { if (ev.error === "not-allowed" || ev.error === "service-not-allowed") { const weiter = { ziel: DT.ziel, nachSenden: DT.nachSenden, einmal: DT.einmal }; lsSetzen(MIKRO_OK, ""); diktatEnde("fertig"); mikroHilfe(weiter); } }; // 2.22.12: Anleitung statt kurzer Meldung
   // Chrome hört nach einer Pause von selbst auf – solange das Fenster offen ist, weiter zuhören (höchstens 5 Minuten)
   e.onend = () => { for (const t of [...DT.sitzung, DT.zwischen]) DT.vorher = diktatMerge(DT.vorher, t); DT.sitzung = []; DT.zwischen = ""; // Runde abschließen
     if (DT.aktiv && DT.einmal && DT.vorher.length) return diktatEnde("fertig"); // 2.23.47: Suche – nach der ersten Pause fertig
