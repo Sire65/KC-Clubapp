@@ -2961,7 +2961,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.85"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.86"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2996,9 +2996,21 @@ const AV_FIGUREN = {
   m13: [2, "glatze", "grau", "koch", "schnurr", 1, "#ad1457", "#ffffff"], m14: [1, "kurz", "blond", "koch", 0, 0, "#5d4037", "#2e7d4f"],
   m15: [4, "wuschel", "schwarz", "koch", "stoppel", 0, "#0277bd", "#e8792b"],
 };
+// 2.23.86 Baukasten: Code „b“ + 9 Zeichen (je ein Teil, Zahl 0–9/a–z) – Haut, Frisur, Haarfarbe, Kopf, Bart, Brille, Hintergrund, Halstuch, Typ
+const AV_FRISUREN = ["lang", "zopf", "dutt", "bob", "locken", "kurz", "wuschel", "seiten", "glatze"], AV_KOPF = ["koch", "tuch", "kappe", "keine"], AV_BART = [0, "voll", "schnurr", "stoppel"];
+const AV_BG = ["#741521", "#1d4f91", "#2e7d4f", "#6d4aa3", "#b8860b", "#00796b", "#c2185b", "#455a64", "#8d6e63", "#e8792b", "#3949ab", "#558b2f"];
+const AV_TUCH = ["#c8102e", "#ffcc00", "#e8792b", "#2e7d4f", "#1d4f91", "#741521", "#ffffff", "#6d4aa3"];
+function avTeile(code) { // → [haut, frisur, haarfarbe, kopf, bart, brille, hintergrund, halstuch, frau] oder null
+  if (AV_FIGUREN[code]) { const f = AV_FIGUREN[code]; return [...f, code[0] === "w"]; }
+  if (!/^b[0-9a-z]{9}$/.test(String(code))) return null;
+  const z = [...code.slice(1)].map((c) => parseInt(c, 36)), haarf = Object.keys(AV_HAAR);
+  if (z[0] >= AV_HAUT.length || z[1] >= AV_FRISUREN.length || z[2] >= haarf.length || z[3] >= AV_KOPF.length || z[4] >= AV_BART.length || z[5] > 1 || z[6] >= AV_BG.length || z[7] >= AV_TUCH.length || z[8] > 1) return null;
+  return [z[0], AV_FRISUREN[z[1]], haarf[z[2]], AV_KOPF[z[3]], AV_BART[z[4]], z[5], AV_BG[z[6]], AV_TUCH[z[7]], z[8] === 1];
+}
+const avGueltig = (code) => !!(code && avTeile(code));
 function avatarSvg(code, gr = 40) {
-  const f = AV_FIGUREN[code]; if (!f) return "";
-  const [h, frisur, hf, kopf, bart, brille, bg, tuch] = f, haut = AV_HAUT[h], haar = AV_HAAR[hf], dunkel = h >= 3, frau = code[0] === "w";
+  const f = avTeile(code); if (!f) return "";
+  const [h, frisur, hf, kopf, bart, brille, bg, tuch, frau] = f, haut = AV_HAUT[h], haar = AV_HAAR[hf], dunkel = h >= 3;
   const hinten = { lang: `<path d="M18 26 Q18 12 32 12 Q46 12 46 26 L48 50 Q32 56 16 50 Z" fill="${haar}"/>`, zopf: `<path d="M41 26 Q50 34 46 48 Q44 52 42 48 Q45 38 39 30Z" fill="${haar}"/>`,
     locken: `<g fill="${haar}"><circle cx="20" cy="28" r="6"/><circle cx="44" cy="28" r="6"/><circle cx="21" cy="37" r="5"/><circle cx="43" cy="37" r="5"/></g>`, dutt: "", bob: `<path d="M19 27 Q19 13 32 13 Q45 13 45 27 L45 38 Q40 40 39 34 L25 34 Q24 40 19 38Z" fill="${haar}"/>` }[frisur] || "";
   const vorne = { lang: `<path d="M20 26 Q22 15 32 15 Q42 15 44 26 Q38 20 32 21 Q25 21 20 26Z" fill="${haar}"/>`, zopf: `<path d="M20 26 Q22 15 32 15 Q42 15 44 26 Q36 19 28 22 Q23 23 20 26Z" fill="${haar}"/>`,
@@ -3024,6 +3036,9 @@ function avatarSvg(code, gr = 40) {
       : `<path d="M27.5 36.5 Q32 40.5 36.5 36.5" stroke="#8a3b2e" stroke-width="1.4" fill="none" stroke-linecap="round"/>`}
     ${brille ? `<g fill="none" stroke="#2b2b2b" stroke-width="1.2"><circle cx="27" cy="29.5" r="3.6"/><circle cx="37" cy="29.5" r="3.6"/><path d="M30.6 29.5 H33.4"/></g>` : ""}</svg>`;
 }
+// KC-CLUB-FREIGABE (2.23.86, Wunsch Hansi): neue Funktionen nur sichtbar, wenn freigegeben – der Admin sieht sie immer (zum Testen, mit 🔒)
+const frei = (id) => !!ICH?.admin || INIT?.freigaben?.[id] === "alle";
+const nurTest = (id) => !!ICH?.admin && INIT?.freigaben?.[id] !== "alle";
 // ---------- KC-CLUB-KREISE (0.60.0): Namenskreis ganz farbig nach Zustand – eine Registry für alle Listen ----------
 // Reihenfolge = Vorrang. „fehler“ nur für den Admin (Server liefert fehler nur ihm). Unbekannt wird nie als OK gezeigt.
 const KREIS_ARTEN = [
@@ -3040,7 +3055,7 @@ function kreis(m, name, groesse = 40, extra = "") {
   const k = kreisArt(m), titel = k.info ? `${k.text} – ${k.info(m)}` : k.text;
   // KC-CLUB-AVATAR (2.23.85): gewählte Koch-Figur im Kreis – die Zustandsfarbe bleibt als Ring drumherum sichtbar
   const fig = m?.avatar || (m?.person_id && MITGLIEDER?.find?.((x) => x.person_id === m.person_id)?.avatar) || (m?.person_id && m.person_id === ICH?.person_id ? INIT?.einstellungen?.avatar?.figur : null);
-  return `<div class="avatar k-${k.art}${fig && AV_FIGUREN[fig] ? " mit-figur" : ""}" style="width:${groesse}px;height:${groesse}px${groesse > 60 ? ";font-size:1.6rem;margin:0 auto" : ""}${extra.includes("onclick") ? ";cursor:pointer" : ""}" title="${esc(titel)}" aria-label="${esc((name || "") + ": " + titel)}" ${extra}>${fig && AV_FIGUREN[fig] ? avatarSvg(fig, groesse - 6) : esc(initialen(name))}</div>`;
+  return `<div class="avatar k-${k.art}${avGueltig(fig) ? " mit-figur" : ""}" style="width:${groesse}px;height:${groesse}px${groesse > 60 ? ";font-size:1.6rem;margin:0 auto" : ""}${extra.includes("onclick") ? ";cursor:pointer" : ""}" title="${esc(titel)}" aria-label="${esc((name || "") + ": " + titel)}" ${extra}>${avGueltig(fig) ? avatarSvg(fig, groesse - 6) : esc(initialen(name))}</div>`;
 }
 const kreisLegende = () => `<div class="kreislegende">${KREIS_ARTEN.filter((k) => !k.nurAdmin || ICH?.admin).map((k) =>
   `<span><i class="avatar k-${k.art}" style="width:14px;height:14px;${k.art === "unbekannt" ? "border-width:1px" : ""}"></i>${esc(k.text)}</span>`).join("")}</div>`;
@@ -8952,12 +8967,12 @@ const KACHELN = {
     // KC-CLUB-SPIELE (2.7.0, Wunsch Hansi): Spiele – Köcheclub Edition (Zahl = Partien, in denen ich dran bin / Herausforderungen an mich)
     { id: "spiele", sym: "🎲", t: "Spiele", u: "Tic-Tac-Toe · Schach · Bauernskat · Küchenterror", aktion: "spStart()", zahl: () => INIT?.spieleDran || 0 },
     // KC-CLUB-REZEPTBUCH (2.23.83, Wunsch Hansi): gemeinsames Club-Rezeptbuch – Portionen umrechnen, Einkaufsliste, drucken, teilen
-    { id: "rezepte", sym: "📖", t: "Rezeptbuch", u: () => (RZ?.liste ? `${RZ.liste.length} Rezept${RZ.liste.length === 1 ? "" : "e"} · Portionen umrechnen` : "Club-Rezepte · Einkaufsliste"), aktion: "rzStart()" },
+    { id: "rezepte", sym: "📖", t: "Rezeptbuch", u: () => (nurTest("rezepte") ? "🔒 nur für dich (Test) · " : "") + (RZ?.liste ? `${RZ.liste.length} Rezept${RZ.liste.length === 1 ? "" : "e"}` : "Club-Rezepte · Einkaufsliste"), aktion: "rzStart()", nur: () => frei("rezepte") },
   ],
   mein: [
     { id: "status", sym: "🟢", t: "Mein Status", u: "verfügbar, Urlaub …", aktion: "statusBlatt()" },
     // KC-CLUB-AVATAR (2.23.85, Wunsch Hansi): eigene Koch-Figur statt Buchstaben – später als Update selbst zusammenbauen
-    { id: "avatar", sym: "🧑‍🍳", t: "Mein Bild", u: () => (INIT?.einstellungen?.avatar?.figur ? "Koch-Figur gewählt · ändern" : "Koch-Figur aussuchen"), aktion: "avWahl()" },
+    { id: "avatar", sym: "🧑‍🍳", t: "Mein Bild", u: () => (nurTest("avatar") ? "🔒 Test · " : "") + (INIT?.einstellungen?.avatar?.figur ? "Koch-Figur gewählt · ändern" : "Koch-Figur aussuchen"), aktion: "avWahl()", nur: () => frei("avatar") },
     // KC-CLUB-MEIN-DIENST (2.23.74, Wunsch Hansi): erweiterte Ansicht = EINE Kachel „🗓️ Mein Dienst“ (Wunsch → Soll → Ist);
     // die zwei bisherigen Kacheln bleiben für die einfache Ansicht und als Ziel der Knöpfe erhalten
     { id: "mein_dienst", sym: "🗓️", t: "Mein Dienst", u: () => mdUnter(), aktion: "mdStart()", nur: () => !einfach() },
@@ -9665,6 +9680,7 @@ function adZustand(id) {
     case "versionen": return gemessen(!r ? null : m.alteVersion ? ["gelb", `${m.alteVersion} mit alter Version`] : ["gruen", "alle aktuell"]);
     case "zugang": return gemessen(!r ? null : [m.nieAngemeldet ? "gelb" : "gruen", `${m.mitZugang} von ${m.gesamt} mit Zugang`]);
     case "wartung": return gemessen(!r ? null : r.wartung?.an ? ["gelb", "AN – Mitglieder sehen Blau"] : ["gruen", "aus"]);
+    case "freigaben": { const f = INIT?.freigaben || {}, n = Object.values(f).filter((x) => x !== "alle").length; return ["keine", n ? `${n} nur für dich (Test)` : "alles freigegeben"]; } // KC-CLUB-FREIGABE (2.23.86)
     case "inkognito": return ["keine", inkognitoAn() ? "🕶️ AN" : "aus"];
     case "nutzung": return ["keine", r ? `${m.heute} heute · ${m.online} online` : "Nutzung der App"];
     case "fehler": return ["keine", "Startprobleme der Mitglieder"];
@@ -9683,7 +9699,7 @@ const AD_KACHELN = [
   ["neon", "🪞", "Neon-Spiegel", "ueb"], ["backup", "🛟", "Backups", "ueb"], ["b2", "💾", "B2-Backup", "ueb"], ["not", "🚑", "Notbetrieb", "ueb"],
   ["comm", "📨", "Communicator", "dienst"], ["mail", "✉️", "Mail · Brevo", "dienst"], ["push", "🔔", "Push", "dienst"], ["kasse", "🧾", "Kasse · Gateway", "dienst"],
   ["programme", "💻", "KC-Programme", "dienst"], ["versionen", "📱", "Versionen", "app"], ["fehler", "🩺", "Fehler", "app"], ["nutzung", "👥", "Nutzung", "app"],
-  ["zugang", "🔑", "Zugänge", "app"], ["wartung", "🛠️", "Wartung", "app"], ["inkognito", "🕶️", "Inkognito", "app"], ["stadt", "🏙️", "Stadt-Termine", "app"],
+  ["zugang", "🔑", "Zugänge", "app"], ["wartung", "🛠️", "Wartung", "app"], ["freigaben", "🚦", "Freigaben", "app"], ["inkognito", "🕶️", "Inkognito", "app"], ["stadt", "🏙️", "Stadt-Termine", "app"],
   ...Object.entries(AD_DIENSTE).map(([k, d]) => ["l-" + k, d.sym, d.t, "link"]),
 ];
 KACHELN.admin = AD_KACHELN.map(([id, sym, t, gr]) => ({ id: "ad-" + id, sym, t, nur: () => !!ICH?.admin, aktion: `adBlatt('${id}')`,
@@ -9845,6 +9861,11 @@ function adBlatt(id) {
         <b style="font-size:.95rem">Zurzeit gesperrt</b><div id="adSperren"><p class="hinweis" style="margin:0">Wird geladen …</p></div></div>`;
       setTimeout(sperrenLaden, 0);
       break;
+    case "freigaben":
+      html = `${kopf("🚦", "Freigaben")}<p class="hinweis" style="margin:0">Neue Funktionen erst <b>🔒 nur für dich</b> testen – wenn alles passt, mit einem Tipp <b>✅ für alle</b> freigeben. Mitglieder sehen nicht Freigegebenes gar nicht.</p>
+        <div id="adFreigaben"><p class="hinweis" style="margin:0">Wird geladen …</p></div>`;
+      setTimeout(fgLaden, 0);
+      break;
     case "inkognito":
       html = `${kopf("🕶️", "Inkognito")}${adZeile("keine", "Inkognito", inkognitoAn() ? "AN – du erscheinst nicht als online" : "aus")}
         <div class="knoepfe">${adKnopf(inkognitoAn() ? "🕶️ Inkognito ausschalten" : "🕶️ Inkognito einschalten", "inkognitoSetzen(!inkognitoAn()).then(()=>adBlatt('inkognito'))", true)}</div>`;
@@ -9961,12 +9982,39 @@ function avWahl() {
   const jetzt = INIT?.einstellungen?.avatar?.figur || null;
   const f = blattAuf("avBlatt", `<h3 style="margin:0">🧑‍🍳 Mein Bild</h3>
     <p class="hinweis" style="margin:4px 0 8px">Such dir eine Koch-Figur aus – sie erscheint bei den Mitgliedern, im Chat und bei „Wer ist online“. Der farbige Ring zeigt weiter, ob du gerade da bist.</p>
+    ${jetzt && jetzt[0] === "b" && avGueltig(jetzt) ? `<b>🧩 Deine eigene Figur</b><div class="av-raster" style="margin:6px 0 10px"><button type="button" class="an" aria-label="Eigene Figur" onclick="avBauen()">${avatarSvg(jetzt, 64)}</button></div>` : ""}
     <b>👩‍🍳 Köchinnen</b><div class="av-raster" style="margin:6px 0 10px">${Object.keys(AV_FIGUREN).filter((k) => k[0] === "w").map((k) => `<button type="button" class="${jetzt === k ? "an" : ""}" aria-label="Figur ${k}" onclick="avSetzen('${k}')">${avatarSvg(k, 64)}</button>`).join("")}</div>
     <b>👨‍🍳 Köche</b><div class="av-raster" style="margin:6px 0 10px">${Object.keys(AV_FIGUREN).filter((k) => k[0] === "m").map((k) => `<button type="button" class="${jetzt === k ? "an" : ""}" aria-label="Figur ${k}" onclick="avSetzen('${k}')">${avatarSvg(k, 64)}</button>`).join("")}</div>
     <b>Kein Bild</b><div class="av-raster" style="margin:6px 0 10px"><button type="button" class="${jetzt ? "" : "an"}" aria-label="Kein Bild – Buchstaben" onclick="avSetzen(null)"><span class="av-keins">${esc(initialen(ICH?.name))}</span></button></div>
-    <p class="hinweis" style="margin:0 0 8px;font-size:.85rem">Demnächst: Figur selbst zusammenstellen (Frisur, Bart, Brille, Mütze …).</p>
+    ${frei("avatar_baukasten") ? `<button class="knopf haupt" onclick="avBauen()">🧩 Selbst zusammenstellen${nurTest("avatar_baukasten") ? " · 🔒 Test" : ""}</button>` : '<p class="hinweis" style="margin:0 0 8px;font-size:.85rem">Demnächst: Figur selbst zusammenstellen (Frisur, Bart, Brille, Mütze …).</p>'}
     <button class="knopf" onclick="fensterZu($('avBlatt'))">Schließen</button>`);
   f.classList.add("sc-blatt");
+}
+// KC-CLUB-AVATAR-BAUKASTEN (2.23.86, Wunsch Hansi): Figur selbst zusammenstellen – große Vorschau, je Teil Chips, Speichern
+let AVB = null;
+function avBauen() {
+  const jetzt = INIT?.einstellungen?.avatar?.figur, t = avTeile(jetzt) || avTeile("w01"), haarf = Object.keys(AV_HAAR);
+  AVB = [t[0], AV_FRISUREN.indexOf(t[1]), haarf.indexOf(t[2]), AV_KOPF.indexOf(t[3]), AV_BART.indexOf(t[4]), t[5] ? 1 : 0, Math.max(0, AV_BG.indexOf(t[6])), Math.max(0, AV_TUCH.indexOf(t[7])), t[8] ? 1 : 0];
+  fensterZu($("avBlatt") || document.createElement("div"));
+  const f = blattAuf("avbBlatt", `<h3 style="margin:0">🧩 Figur zusammenstellen${nurTest("avatar_baukasten") ? ' <small class="hinweis">🔒 nur für dich (Test)</small>' : ""}</h3><div id="avbInhalt"></div>`);
+  f.classList.add("sc-blatt"); avbZeigen();
+}
+const avbCode = () => "b" + AVB.map((x) => Math.max(0, x).toString(36)).join("");
+function avbZeigen() {
+  const z = $("avbInhalt"); if (!z || !AVB) return;
+  const punkt = (farbe) => `<span style="display:inline-block;width:20px;height:20px;border-radius:50%;background:${farbe};border:1px solid var(--linie);vertical-align:middle"></span>`;
+  const reihe = (titel, i, werte) => `<div class="ps-schritt"><b>${titel}</b><div class="hl-chips">${werte.map((w, n) => `<button type="button" class="chip${AVB[i] === n ? " an" : ""}" onclick="AVB[${i}]=${n};avbZeigen()">${w}</button>`).join("")}</div></div>`;
+  z.innerHTML = `<div style="display:grid;place-items:center;padding:6px 0;position:sticky;top:44px;z-index:2;background:var(--karte)">${avatarSvg(avbCode(), 104)}</div>
+    ${reihe("Typ", 8, ["👨‍🍳 Koch", "👩‍🍳 Köchin"])}
+    ${reihe("Hautton", 0, AV_HAUT.map(punkt))}
+    ${reihe("Frisur", 1, ["lang", "Zopf", "Dutt", "Bob", "Locken", "kurz", "wuschelig", "Seiten", "Glatze"])}
+    ${reihe("Haarfarbe", 2, Object.values(AV_HAAR).map(punkt))}
+    ${reihe("Auf dem Kopf", 3, ["Kochmütze", "Kopftuch", "Kappe", "nichts"])}
+    ${reihe("Bart", 4, ["keiner", "Vollbart", "Schnurrbart", "Stoppeln"])}
+    ${reihe("Brille", 5, ["ohne", "mit"])}
+    ${reihe("Hintergrund", 6, AV_BG.map(punkt))}
+    ${reihe("Halstuch / Kopftuch-Farbe", 7, AV_TUCH.map(punkt))}
+    <div class="na-pfeil-knoepfe bs-fuss"><button class="knopf haupt" onclick="avSetzen(avbCode());fensterZu($('avbBlatt'))">💾 Speichern</button><button class="knopf" onclick="fensterZu($('avbBlatt'))">Abbrechen</button></div>`;
 }
 async function avSetzen(figur) {
   try {
@@ -10167,6 +10215,22 @@ async function mdatSichern() {
   try { if (navigator.canShare?.({ files: [datei] })) { await navigator.share({ files: [datei], title: "Meine Daten" }); return; } } catch (e) { if (e?.name === "AbortError") return; }
   const url = URL.createObjectURL(datei), a = document.createElement("a"); a.href = url; a.download = datei.name; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 60000); melde("💾 Datei gespeichert");
+}
+// ---------- KC-CLUB-FREIGABE (2.23.86, Wunsch Hansi): neue Funktionen für alle freigeben oder nur für den Admin (Test) ----------
+async function fgLaden() {
+  try {
+    const { funktionen } = await api("freigaben_liste"); if (!$("adFreigaben")) return;
+    $("adFreigaben").innerHTML = `<div style="display:grid;gap:6px">${funktionen.map((f) => `<div class="ps-schritt"><b>${esc(f.t)}</b><small class="hinweis">${esc(f.u)}</small>
+      <div class="umschalter" style="margin:4px 0 0"><button type="button" class="${f.fuer === "admin" ? "an" : ""}" onclick="fgSetzen('${f.id}','admin',this)">🔒 Nur für mich (Test)</button><button type="button" class="${f.fuer === "alle" ? "an" : ""}" onclick="fgSetzen('${f.id}','alle',this)">✅ Für alle frei</button></div></div>`).join("")}</div>`;
+  } catch (e) { if ($("adFreigaben")) $("adFreigaben").innerHTML = `<p class="hinweis" style="margin:0">⚠️ ${esc(e.message)}</p>`; }
+}
+async function fgSetzen(id, fuer, knopf) {
+  if (fuer === "alle" && !(await frage("Für alle freigeben?\n\nAlle Mitglieder sehen die Funktion dann sofort (nach dem nächsten Öffnen der App). Es wird nichts verschickt.", { ja: "✅ Ja, freigeben", nein: "Abbrechen" }))) return;
+  await einmal(knopf, async () => {
+    try { await api("freigabe_setzen", { funktion: id, fuer }, { warten: true }); if (INIT) INIT.freigaben = { ...(INIT.freigaben || {}), [id]: fuer };
+      melde(fuer === "alle" ? "✅ Für alle freigegeben" : "🔒 Nur noch für dich sichtbar"); fgLaden(); try { kachelnZeigen?.(); } catch {} }
+    catch (e) { meldeFehler(e); }
+  });
 }
 // ---------- KC-CLUB-WOCHENBERICHT (2.23.81, Wunsch Hansi): Vorschau + „jetzt senden“; montags kommt er automatisch ----------
 async function wbAnsehen() {

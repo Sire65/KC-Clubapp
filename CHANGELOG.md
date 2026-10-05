@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.23.86 – 2026-10-05 – 🚦 Freigaben + 🧩 Figur selbst zusammenstellen (Wunsch Hansi)
+- KC-CLUB-FREIGABE: Admin-Register → „🚦 Freigaben“: je neue Funktion „🔒 Nur für mich (Test)“ oder „✅ Für alle frei“ (mit Rückfrage,
+  nichts wird verschickt). Mitglieder sehen nicht Freigegebenes gar nicht; der Admin sieht es mit „🔒 Test“-Hinweis. Der Server prüft mit
+  (Rezeptbuch-Aktionen, Avatar-Speichern). Standard: 📖 Rezeptbuch = nur Admin, 🧑‍🍳 Mein Bild (30 Figuren) = für alle, 🧩 Baukasten = nur Admin.
+  Migration 20261005_kc_club_v22386_funktion_freigabe.sql (neue Tabelle, RLS an). Protokoll „funktion_freigabe“.
+- KC-CLUB-AVATAR-BAUKASTEN: „🧩 Selbst zusammenstellen“ in „Mein Bild“ – große Vorschau, Teile zum Antippen: Typ (Koch/Köchin), Hautton,
+  Frisur (9), Haarfarbe (7), Kopf (Kochmütze/Kopftuch/Kappe/nichts), Bart (4), Brille, Hintergrund (12), Tuchfarbe (8). Gespeichert als kurzer
+  Code („b…“), Server prüft Form und Freigabe. Zunächst nur für den Admin (Freigabe). Test 437.
+
 ## 2.23.85 – 2026-10-05 – 🧑‍🍳 Mein Bild – 30 Koch-Figuren (Wunsch Hansi)
 - KC-CLUB-AVATAR: Neue Kachel „🧑‍🍳 Mein Bild“ in Meins – 30 selbst gezeichnete Koch-Figuren (15 Köchinnen, 15 Köche; Hauttöne,
   Frisuren, Bart, Brille, Kochmütze/Kopftuch/Kappe) oder „Kein Bild“ (Buchstaben wie bisher). Die Figur erscheint überall im Namenskreis

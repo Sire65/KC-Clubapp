@@ -41,7 +41,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.23.85";
+const SERVER_VERSION = "2.23.86";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -838,7 +838,7 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
   infofeld: (w) => ({ start: typeof w?.start === "string" && KA_ID.test(w.start) ? w.start : "zuletzt" }),
   // KC-CLUB-ONLINE (0.29.0): anderen zeigen, wann ich online bin (Standard: an)
   online: (w) => ({ zeigen: w?.zeigen !== false }),
-  avatar: (w) => ({ figur: typeof w?.figur === "string" && /^[wm](0[1-9]|1[0-5])$/.test(w.figur) ? w.figur : null }), // KC-CLUB-AVATAR (2.23.85)
+  avatar: (w) => ({ figur: typeof w?.figur === "string" && (/^[wm](0[1-9]|1[0-5])$/.test(w.figur) || /^b[0-9a-z]{9}$/.test(w.figur)) ? w.figur : null }), // KC-CLUB-AVATAR (2.23.85); „b…“ = Baukasten (2.23.86)
   // KC-CLUB-INKOGNITO (2.3.0): nur Admins (Prüfung in einstellung_setzen) – Standard: aus
   inkognito: (w) => ({ an: w?.an === true }),
   // KC-CLUB-SPIELE (2.7.0): darf man mich herausfordern (Standard: nein) + welche Spiele (bisher nur Tic-Tac-Toe)
@@ -2133,6 +2133,23 @@ async function adminIds(): Promise<string[]> {
 }
 // KC-CLUB-PERSON-SPERRE (2.23.77, Wunsch Hansi): vorübergehend gesperrte Personen sehen nur ein Hinweisfenster (Wartung / nicht erreichbar).
 // Liste je Server-Instanz 15 s im Speicher; Lesefehler → alte Liste behalten (nie den ganzen Betrieb blockieren, Regel 12). Admins nie gesperrt.
+// KC-CLUB-FREIGABE (2.23.86, Wunsch Hansi): neue Funktionen erst „nur Admin (Test)“, dann für alle. Standard gilt, solange der Admin nichts gewählt hat.
+const FUNKTIONEN: Record<string, { t: string; u: string; standard: "alle" | "admin" }> = {
+  rezepte: { t: "📖 Rezeptbuch", u: "Club-Rezepte, Portionen umrechnen, Einkaufsliste", standard: "admin" },
+  avatar: { t: "🧑‍🍳 Mein Bild (30 Koch-Figuren)", u: "Figur statt Buchstaben", standard: "alle" },
+  avatar_baukasten: { t: "🧩 Figur selbst zusammenstellen", u: "Haut, Frisur, Bart, Brille, Mütze, Farben", standard: "admin" },
+};
+const FREIGABE = { bis: 0, werte: new Map<string, string>() };
+async function freigaben(): Promise<Record<string, "alle" | "admin">> {
+  if (Date.now() > FREIGABE.bis) {
+    const { data, error } = await db.from("kc_club_funktion_freigabe").select("funktion,fuer");
+    if (!error) { FREIGABE.werte = new Map((data ?? []).map((x: any) => [x.funktion, x.fuer])); FREIGABE.bis = Date.now() + 15_000; }
+  }
+  return Object.fromEntries(Object.entries(FUNKTIONEN).map(([id, f]) => [id, (FREIGABE.werte.get(id) === "alle" || FREIGABE.werte.get(id) === "admin" ? FREIGABE.werte.get(id) : f.standard) as "alle" | "admin"]));
+}
+async function nurWennFrei(id: string, ich: Ich, was: string) {
+  if (!ich.admin && (await freigaben())[id] !== "alle") throw new Fehler(`${was} ist noch nicht freigegeben.`, 403);
+}
 const REZEPT_KATEGORIEN = ["vorspeise", "suppe", "hauptgericht", "beilage", "dessert", "gebaeck", "getraenk", "sonstiges"]; // KC-CLUB-REZEPTBUCH (2.23.83)
 const SPERRE_TEXT: Record<string, string> = {
   wartung: "Zur Zeit führen wir für Sie Wartungsarbeiten durch. Bitte versuchen Sie es später nochmals. Wir bitten um Verständnis.",
@@ -4223,7 +4240,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const kz = await kachelZahlen(ich, p).catch(() => null); // KC-CLUB-KACHEL-ZAHLEN (2.22.12)
         // 🎓 Schulungen: was auf den Admin wartet (gewählt – freigeben, Gegenvorschlag, keine Antwort) – KC-CLUB-SCHULUNG-HINWEIS (2.23.68); Fehler → keine Zahl
         if (kz && ich.admin) (kz as any).schulung = await schulungStand(ich, null).then((x) => x.wartet.length).catch(() => null);
-        return json({ alarm, kz, sosFuerAlle: await sosFuerAlle(), spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, adminName: await adminVorname(), ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, communicator, notfall: nf ?? null, einstellungen, kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
+        return json({ alarm, kz, sosFuerAlle: await sosFuerAlle(), spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, adminName: await adminVorname(), ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, communicator, notfall: nf ?? null, einstellungen, freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
             // KC-CLUB-GERAETE-TIPP: wohin der Link ginge – nur teilweise (z. B. „h…@web.de“)
@@ -5339,12 +5356,14 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       // ----- KC-CLUB-REZEPTBUCH (2.23.83, Wunsch Hansi): gemeinsames Club-Rezeptbuch -----
       // Alle sehen alle Rezepte; ändern/löschen nur, wer es eingestellt hat (und der Admin). Beim Einstellen geht nichts an alle raus.
       case "rezepte_liste": {
+        await nurWennFrei("rezepte", ich, "Das Rezeptbuch");
         const { data } = await db.from("kc_club_rezepte").select("id,von,titel,kategorie,portionen,zutaten,zubereitung,dauer,foto,stichworte,erstellt_am,geaendert_am")
           .is("geloescht_am", null).order("titel").limit(1000);
         const leute = await personen([...new Set<string>((data ?? []).map((x: any) => String(x.von)))]);
         return json({ rezepte: (data ?? []).map((x: any) => ({ ...x, vonName: leute.get(x.von)?.display_name || "Mitglied", eigen: x.von === ich.person_id, darf: x.von === ich.person_id || ich.admin })) });
       }
       case "rezept_speichern": {
+        await nurWennFrei("rezepte", ich, "Das Rezeptbuch");
         const titel = txt(p.titel, 100); if (titel.length < 2) throw new Fehler("Bitte einen Namen für das Rezept eintragen.");
         const kategorie = REZEPT_KATEGORIEN.includes(String(p.kategorie)) ? String(p.kategorie) : "sonstiges";
         const portionen = Math.round(Number(p.portionen)); if (!(portionen >= 1 && portionen <= 500)) throw new Fehler("Portionen bitte zwischen 1 und 500.");
@@ -5378,6 +5397,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         return json({ ok: true, id });
       }
       case "rezept_loeschen": {
+        await nurWennFrei("rezepte", ich, "Das Rezeptbuch");
         const { data: alt } = await db.from("kc_club_rezepte").select("id,von").eq("id", String(p.id || "")).is("geloescht_am", null).maybeSingle();
         if (!alt) throw new Fehler("Rezept nicht gefunden.", 404);
         if (alt.von !== ich.person_id && !ich.admin) throw new Fehler("Löschen darf nur, wer das Rezept eingestellt hat.", 403);
@@ -9388,6 +9408,22 @@ Köcheclub-App`,
         }
         return json({ bericht: await wochenberichtBauen() });
       }
+      // KC-CLUB-FREIGABE (2.23.86): Liste der neuen Funktionen und für wen sie gelten – nur Admin
+      case "freigaben_liste": {
+        nurAdmin(ich);
+        const f = await freigaben();
+        return json({ funktionen: Object.entries(FUNKTIONEN).map(([id, x]) => ({ id, t: x.t, u: x.u, fuer: f[id], standard: x.standard })) });
+      }
+      case "freigabe_setzen": {
+        nurAdmin(ich);
+        const id = String(p.funktion || ""), fuer = p.fuer === "alle" ? "alle" : "admin";
+        if (!FUNKTIONEN[id]) throw new Fehler("Unbekannte Funktion.", 400);
+        const { error } = await db.from("kc_club_funktion_freigabe").upsert({ funktion: id, fuer, geaendert_am: jetzt(), von: ich.person_id }, { onConflict: "funktion" });
+        if (error) throw new Fehler("Freigabe konnte nicht gespeichert werden.", 500);
+        FREIGABE.bis = 0;
+        await protokoll(ich.person_id, "funktion_freigabe", { funktion: id, fuer });
+        return json({ ok: true, fuer });
+      }
       case "communicator_status": {
         return json(await communicatorStatus(ich, true));
       }
@@ -9643,6 +9679,10 @@ Köcheclub-App`,
         const pruefen = EINSTELLUNGEN[schluessel];
         if (!pruefen) throw new Fehler("Unbekannte Einstellung.");
         const wert = pruefen(p.wert);
+        if (schluessel === "avatar") { // KC-CLUB-FREIGABE (2.23.86): Figuren bzw. Baukasten nur, wenn freigegeben
+          const fig = (wert as any).figur as string | null;
+          if (fig) await nurWennFrei(fig.startsWith("b") ? "avatar_baukasten" : "avatar", ich, fig.startsWith("b") ? "Das Selbst-Zusammenstellen" : "Mein Bild");
+        }
         if (schluessel === "inkognito" && !ich.admin && (wert as any).an) throw new Fehler("Nur für den Admin.", 403); // 2.6.1: Ausschalten darf jeder
         const { error } = await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel, wert, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
         if (error) throw new Fehler("Einstellung konnte nicht gespeichert werden.", 500);

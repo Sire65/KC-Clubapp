@@ -4380,7 +4380,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 // 434. 2.23.83: Club-Rezeptbuch – Portionen umrechnen, Einkaufsliste, drucken, teilen (KC-CLUB-REZEPTBUCH)
 {
-  assert.ok(/\{ id: "rezepte", sym: "📖", t: "Rezeptbuch",[^\n]*aktion: "rzStart\(\)" \}/.test(html), "Kachel im Verein");
+  assert.ok(/\{ id: "rezepte", sym: "📖", t: "Rezeptbuch",[^\n]*aktion: "rzStart\(\)"/.test(html), "Kachel im Verein");
   const k = html.slice(html.indexOf("// ---------- KC-CLUB-REZEPTBUCH (2.23.83"), html.indexOf("// ---------- KC-CLUB-MEINE-DATEN (2.23.82"));
   // Zutaten-Zeilen lesen und umrechnen (wie im Code)
   const rzZahl = new Function("return " + k.slice(k.indexOf("function rzZahl"), k.indexOf("function rzZeileLesen")).trim())();
@@ -4413,14 +4413,29 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 436. 2.23.85: 30 Koch-Figuren als Mitgliederbild (KC-CLUB-AVATAR)
 {
   const k = html.slice(html.indexOf("// ---------- KC-CLUB-AVATAR (2.23.85"), html.indexOf("// ---------- KC-CLUB-KREISE (0.60.0)"));
-  const AV = new Function(k + "; return { AV_FIGUREN, avatarSvg };")();
+  const AV = new Function("const AV_HAAR_X = 0;" + k + "; return { AV_FIGUREN, avatarSvg, avTeile };")();
   const codes = Object.keys(AV.AV_FIGUREN);
   assert.equal(codes.length, 30, "30 Figuren"); assert.equal(codes.filter((c) => c[0] === "w").length, 15, "15 Köchinnen");
   for (const c of codes) assert.ok(/^<svg viewBox="0 0 64 64"/.test(AV.avatarSvg(c)) && !/<image|href=|url\(/.test(AV.avatarSvg(c)), "selbst gezeichnet, keine fremden Bilder: " + c);
   assert.equal(AV.avatarSvg("x99"), "", "unbekannter Code → nichts");
-  assert.ok(/fig && AV_FIGUREN\[fig\] \? avatarSvg\(fig, groesse - 6\) : esc\(initialen\(name\)\)/.test(html), "Kreis zeigt Figur, sonst Buchstaben");
+  assert.ok(/avGueltig\(fig\) \? avatarSvg\(fig, groesse - 6\) : esc\(initialen\(name\)\)/.test(html), "Kreis zeigt Figur, sonst Buchstaben");
   assert.ok(/\{ id: "avatar", sym: "🧑‍🍳", t: "Mein Bild",/.test(html) && /api\("einstellung_setzen", \{ schluessel: "avatar", wert: \{ figur \} \}\)/.test(html), "Auswahl in Meins");
-  assert.ok(/avatar: \(w\) => \(\{ figur: typeof w\?\.figur === "string" && \/\^\[wm\]\(0\[1-9\]\|1\[0-5\]\)\$\/\.test\(w\.figur\)/.test(server) && /avatar: avatar\.get\(m\.person_id\) \?\? null/.test(server), "Server prüft den Code, liefert ihn in der Mitgliederliste");
+  assert.ok(/avatar: \(w\) => \(\{ figur: typeof w\?\.figur === "string" && \(\/\^\[wm\]\(0\[1-9\]\|1\[0-5\]\)\$\/\.test\(w\.figur\)/.test(server) && /avatar: avatar\.get\(m\.person_id\) \?\? null/.test(server), "Server prüft den Code, liefert ihn in der Mitgliederliste");
+}
+// 437. 2.23.86: Freigaben für neue Funktionen + Figur selbst zusammenstellen (KC-CLUB-FREIGABE, KC-CLUB-AVATAR-BAUKASTEN)
+{
+  assert.ok(/rezepte: \{ t: "📖 Rezeptbuch",[^\n]*standard: "admin" \}/.test(server) && /avatar: \{ t: "🧑‍🍳 Mein Bild[^\n]*standard: "alle" \}/.test(server) && /avatar_baukasten: \{[^\n]*standard: "admin" \}/.test(server), "Rezeptbuch + Baukasten erst Test, Figuren frei");
+  for (const c of ['case "rezepte_liste": {', 'case "rezept_speichern": {', 'case "rezept_loeschen": {']) assert.ok(server.includes(c + '\n        await nurWennFrei("rezepte", ich, "Das Rezeptbuch");'), "Server sperrt Rezeptbuch ohne Freigabe: " + c);
+  const fg = server.slice(server.indexOf('case "freigaben_liste"'), server.indexOf('case "communicator_status"'));
+  assert.equal((fg.match(/nurAdmin\(ich\);/g) || []).length, 2, "Freigaben nur Admin"); assert.ok(/"funktion_freigabe"/.test(fg), "Protokoll");
+  assert.ok(/freigaben: await freigaben\(\),/.test(server) && /const frei = \(id\) => !!ICH\?\.admin \|\| INIT\?\.freigaben\?\.\[id\] === "alle";/.test(html), "App blendet nicht Freigegebenes aus");
+  assert.ok(/aktion: "rzStart\(\)", nur: \(\) => frei\("rezepte"\) \}/.test(html) && /aktion: "avWahl\(\)", nur: \(\) => frei\("avatar"\) \}/.test(html), "Kacheln hängen an der Freigabe");
+  assert.ok(/\["freigaben", "🚦", "Freigaben", "app"\]/.test(html) && /api\("freigabe_setzen", \{ funktion: id, fuer \}/.test(html), "Admin-Kachel Freigaben");
+  assert.ok(/fig\.startsWith\("b"\) \? "avatar_baukasten" : "avatar"/.test(server), "Baukasten-Figur nur mit Freigabe speicherbar");
+  const k = html.slice(html.indexOf("// ---------- KC-CLUB-AVATAR (2.23.85"), html.indexOf("// KC-CLUB-FREIGABE (2.23.86, Wunsch Hansi): neue Funktionen nur sichtbar"));
+  const AV = new Function(k + "; return { avTeile, avatarSvg };")();
+  assert.ok(AV.avTeile("b012300000") && /^<svg/.test(AV.avatarSvg("b482311b71")), "Baukasten-Code wird gezeichnet");
+  assert.equal(AV.avTeile("bz00000000"), null, "ungültiger Code → nichts"); assert.equal(AV.avTeile("b0000000002"), null, "zu lang → nichts");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
