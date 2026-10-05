@@ -3947,6 +3947,13 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/dienstuebersicht: \{ bauen: \(\) => druckDienstUebersicht\(\) \}/.test(html) && /quer: true, html: dvLegende\(\) \+ dvGanttHtml\(\)/.test(html) && /api\("archiv_hochladen", \{ ordner_id: r\.ordner_id, register: r\.register/.test(html), "Druck A4 quer über den Druck-Kern + Gesamtplan ins Büro");
   assert.ok(/#druck \.dv-gantt, \.dv-gantt \{/.test(html), "Druck-CSS auch fürs Teilen am iPhone");
 }
+// 389. 2.23.40: Einstellungen – „Alle auf / Alle zu“ (KC-CLUB-KLAPPEN-ALLE)
+{
+  assert.ok(/<div class="klappen-alle-zeile"><button type="button" class="knopf klein klappen-alle" data-wurzel="v-einstellungen" onclick="klappenAlle\(this\)"/.test(html), "Umschalter oben in den Einstellungen");
+  const f = html.slice(html.indexOf("function klappenAlle(b)"), html.indexOf("function installHilfe()"));
+  assert.ok(/filter\(\(d\) => !klappeFest\(d\)\)/.test(f) && /l\.forEach\(\(d\) => \(d\.open = auf\)\)/.test(f), "öffnet/schließt alle, Festgestellte bleiben");
+  assert.ok(/!d\.parentElement\.closest\("details\[data-klappe\]"\)/.test(html) && /d\.offsetParent !== null/.test(html), "nur sichtbare oberste Bereiche");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

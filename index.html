@@ -1323,6 +1323,7 @@
   .pr-filter-knopf { position: relative; min-width: 44px; min-height: 44px; font-size: 1.1rem; padding: 4px 8px; margin: 0; } .pr-filter-knopf .anz { margin-left: 6px; background: var(--rot); color: #fff; border-radius: 9px; padding: 0 6px; font-size: .75rem; }
   @media (max-width: 340px) { .pr-filter-raster { grid-template-columns: 1fr; } }
   .pr-filter { position: relative; padding-top: 44px; }
+  .klappen-alle-zeile { display: flex; justify-content: flex-end; margin: -4px 0 -4px; } .klappen-alle-zeile .klappen-alle { margin: 0; width: auto; min-height: 38px; padding: 4px 14px; white-space: nowrap; } /* 2.23.40 KC-CLUB-KLAPPEN-ALLE */
   /* 2.23.39 KC-CLUB-EINGANG-FILTER + KC-CLUB-DIENST-UEBERSICHT */
   .ek-kopf { display: flex; align-items: center; gap: 8px; margin: 12px 0 0; } .ek-kopf > b { flex: 1; font-size: 1.15rem; }
   .dv-blatt { align-items: stretch; } .dv-blatt .blatt-innen { width: 100%; max-height: 100vh !important; height: 100%; border-radius: 0; display: flex; flex-direction: column; gap: 8px; }
@@ -2396,6 +2397,7 @@
   <!-- EINSTELLUNGEN -->
   <section id="v-einstellungen" class="versteckt">
     <div class="kopf2"><button class="zurueck" onclick="zurueck('start')" aria-label="Zurück">‹</button><h2>⚙️ Einstellungen</h2></div>
+    <div class="klappen-alle-zeile"><button type="button" class="knopf klein klappen-alle" data-wurzel="v-einstellungen" onclick="klappenAlle(this)" aria-label="Alle Bereiche aufklappen">▾ Alle auf</button></div>
     <!-- KC-CLUB-ANSICHT (0.62.0): Einstellungen der einfachen Ansicht – nur drei Dinge -->
     <details class="karte" data-klappe="einfach" data-einfach open>
       <summary>⚙️ Das Wichtigste</summary>
@@ -2861,7 +2863,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.39"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.40"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -9656,6 +9658,22 @@ function klappenMerken(wurzel = document) {
     }
   });
 }
+// KC-CLUB-KLAPPEN-ALLE (2.23.40, Wunsch Hansi): oben ein Umschalter „▾ Alle auf / ▴ Alle zu“ für alle Bereiche einer Seite.
+// Festgestellte Bereiche (🔒) bleiben, wie sie sind; nur sichtbare oberste Bereiche zählen (keine inneren Klappen).
+const klappenSichtbar = (w) => [...w.querySelectorAll("details[data-klappe]:not(.innen)")].filter((d) => d.offsetParent !== null && !d.parentElement.closest("details[data-klappe]"));
+const klappeFest = (d) => { try { return localStorage.getItem("kc_club_fest_" + d.dataset.klappe) === "1"; } catch { return false; } };
+function klappenAlleZeigen(b) {
+  const w = $(b.dataset.wurzel); if (!w) return;
+  const auf = klappenSichtbar(w).filter((d) => !klappeFest(d)).some((d) => !d.open);
+  b.textContent = auf ? "▾ Alle auf" : "▴ Alle zu"; b.setAttribute("aria-label", auf ? "Alle Bereiche aufklappen" : "Alle Bereiche zuklappen");
+}
+function klappenAlle(b) {
+  const w = $(b.dataset.wurzel); if (!w) return;
+  const l = klappenSichtbar(w).filter((d) => !klappeFest(d)), auf = l.some((d) => !d.open);
+  l.forEach((d) => (d.open = auf));
+  klappenAlleZeigen(b);
+}
+document.addEventListener("toggle", (e) => { if (e.target.matches?.("details[data-klappe]")) document.querySelectorAll(".klappen-alle").forEach(klappenAlleZeigen); }, true);
 function installHilfe() {
   if (START_ART !== "app") return einrichtenAssistent(); // 1.87.0: Schritt-für-Schritt-Assistent (Android mit „Jetzt installieren“ obenauf)
   zeige("einstellungen"); const d = document.querySelector('details[data-klappe="install"]'); if (d) { d.open = true; setTimeout(() => d.scrollIntoView({ block: "start", behavior: "smooth" }), 100); }
@@ -9808,6 +9826,7 @@ const ZEIGE_OHNE_ICH = new Set(["start", "sos"]);
 let startBereitLoesen; const startBereit = new Promise((ok) => { startBereitLoesen = ok; });
 let ZEIGE_WARTET = null;
 function zeige(v, ausHistorie) {
+  setTimeout(() => document.querySelectorAll(".klappen-alle").forEach(klappenAlleZeigen), 50); // KC-CLUB-KLAPPEN-ALLE: Beschriftung passend zum Stand
   if (v !== "chat" && CV.an) chatVorlesenStopp(true); /* KC-CLUB-CHAT-VORLESEN: nur im offenen Chat */
   document.body.classList.remove("kt-aktiv"); /* 2.17.1: Fußleiste nach dem Quiz wieder zeigen */
   if (v !== "spiele") $("spPause")?.classList.add("versteckt"); /* 2.18.0 */

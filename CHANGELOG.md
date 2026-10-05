@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.23.40 – 2026-10-05 – ▾ Alle auf / ▴ Alle zu in den Einstellungen (Wunsch Hansi)
+- KC-CLUB-KLAPPEN-ALLE: Oben in ⚙️ Einstellungen ein Umschalter „▾ Alle auf“ / „▴ Alle zu“ (Beschriftung passt sich dem Stand an).
+  Wirkt auf alle sichtbaren Bereiche; mit 🔒 festgestellte Bereiche bleiben, wie sie sind. Allgemein gebaut (data-wurzel), für
+  weitere Seiten wiederverwendbar. Nur App. Test 389.
+
 ## 2.23.39 – 2026-10-04 – 🔽 Eingang filtern, 📊 Dienstzeiten-Übersicht quer, Dienstpläne in die Ordner (Wunsch Hansi)
 - KC-CLUB-EINGANG-FILTER: Im Büro-Eingang oben 🔽 (wie bei den Protokollen) → Jahr, Monat, Art, Name (Auswahl nur aus dem, was im Eingang
   liegt), „x von y Sachen“, „↺ Alle zeigen“, ✕ oben rechts schließt (Auswahl bleibt, Zahl am 🔽).
