@@ -41,7 +41,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.23.81";
+const SERVER_VERSION = "2.23.82";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -7540,6 +7540,38 @@ Köcheclub-App`,
       }
 
       // ----- KC-CLUB-AENDERUNG (2.22.7): „Meine Daten haben sich geändert“ -----
+      // ----- KC-CLUB-MEINE-DATEN (2.23.82, Wunsch Hansi): „Was ist über mich gespeichert?“ – nur die EIGENEN Daten, nur lesend -----
+      // Keine Zugangsschlüssel, keine Geräte-Adressen, keine Inhalte anderer; bei Nachrichten/Zetteln/Fotos nur die Anzahl.
+      case "meine_daten": {
+        const pid = ich.person_id, n = (q: any) => q.then((r: any) => (typeof r.count === "number" ? r.count : null));
+        const zaehl = (t: string, sp: string) => n(db.from(t).select("*", { count: "exact", head: true }).eq(sp, pid));
+        const [{ data: pe }, { data: zu }, { data: ro }, { data: st }, { data: be }, { data: ei }, { data: pu }, z] = await Promise.all([
+          db.from("kc_core_people").select("person_id,display_name,given_name,family_name,preferred_name,email,phone,birth_date,street,postal_code,city,country_code,created_at").eq("person_id", pid).maybeSingle(),
+          db.from("kc_club_zugang").select("aktiv,erstellt_am,erstmals_gesehen,zuletzt_gesehen,app_version").eq("person_id", pid).maybeSingle(),
+          db.from("kc_club_rollen").select("ist_admin,ist_vorstand,aemter,protokolle_lesen,kontakte_sehen,buero_recht").eq("person_id", pid).maybeSingle(),
+          db.from("kc_club_status").select("status,hinweis,bis").eq("person_id", pid).maybeSingle(),
+          db.from("kc_club_benachrichtigung").select("bereich,push,email").eq("person_id", pid),
+          db.from("kc_club_person_einstellung").select("schluessel,geaendert_am").eq("person_id", pid),
+          db.from("kc_member_push_subscriptions").select("user_agent,created_at,last_success_at").eq("person_id", pid).eq("active", true),
+          Promise.all([
+            zaehl("kc_communication_messages", "sender_person_id"), zaehl("kc_club_pinnwand", "person_id"), zaehl("kc_club_fotos", "hochgeladen_von"),
+            zaehl("kc_club_archiv_dokumente", "hochgeladen_von"), zaehl("kc_club_erstattung", "person_id"), zaehl("kc_club_aenderungen", "person_id"),
+            zaehl("kc_club_vorschlaege", "erstellt_von"), zaehl("kc_club_gemerkt", "person_id"), zaehl("kc_club_protokoll", "person_id"),
+          ]),
+        ]);
+        const geraet = (ua: string) => /iPhone|iPad/.test(ua) ? "iPhone/iPad" : /Android/.test(ua) ? "Android" : /Windows/.test(ua) ? "Windows-PC" : /Mac/.test(ua) ? "Mac" : "Gerät";
+        await protokoll(pid, "meine_daten_angesehen", {});
+        return json({
+          stand: jetzt(),
+          person: pe ? { nummer: pe.person_id, name: pe.display_name, vorname: pe.given_name, nachname: pe.family_name, rufname: pe.preferred_name, email: pe.email, telefon: pe.phone,
+            geburtstag: pe.birth_date, strasse: pe.street, plz: pe.postal_code, ort: pe.city, land: pe.country_code, seit: pe.created_at } : null,
+          zugang: zu ? { aktiv: zu.aktiv, erstellt: zu.erstellt_am, erstmals: zu.erstmals_gesehen, zuletzt: zu.zuletzt_gesehen, version: zu.app_version } : null,
+          rollen: { admin: !!ro?.ist_admin, clubleitung: !!ro?.ist_vorstand, aemter: ro?.aemter ?? [], protokolle: ro ? ro.protokolle_lesen !== false : true, kontakte: ro ? ro.kontakte_sehen !== false : true, buero: ich.buero },
+          status: st ?? null, benachrichtigung: be ?? [], einstellungen: (ei ?? []).map((x: any) => x.schluessel),
+          geraete: (pu ?? []).map((x: any) => ({ art: geraet(String(x.user_agent || "")), seit: x.created_at, zuletzt: x.last_success_at })),
+          anzahl: { nachrichten: z[0], zettel: z[1], fotos: z[2], dokumente: z[3], erstattungen: z[4], aenderungen: z[5], vorschlaege: z[6], gemerkt: z[7], protokoll: z[8] },
+        });
+      }
       case "aenderung_start": {
         const [stand, { data: meine }] = await Promise.all([aenderungStand(ich),
           db.from("kc_club_aenderungen").select("id,art,neu,gilt_ab,status,erstellt_am,erledigt_am,antwort").eq("person_id", ich.person_id).order("erstellt_am", { ascending: false }).limit(10)]);

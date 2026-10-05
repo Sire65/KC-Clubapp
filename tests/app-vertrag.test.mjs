@@ -4369,6 +4369,15 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/nurAdmin\(ich\);/.test(c) && /\(count \?\? 0\) >= 3\) throw/.test(c), "nur Admin, Bremse");
   assert.ok(/adKnopf\("📊 Wochenbericht", "wbAnsehen\(\)", true\)/.test(html) && /api\("wochenbericht", \{ senden: true \}/.test(html), "Knöpfe im Admin-Register");
 }
+// 433. 2.23.82: „🔐 Meine Daten“ in Meins – nur eigene Daten, ansehen, drucken, als Datei sichern (KC-CLUB-MEINE-DATEN)
+{
+  assert.ok(/\{ id: "meinedaten", sym: "🔐", t: "Meine Daten", u: "Was ist über mich gespeichert\?", aktion: "mdatStart\(\)" \}/.test(html), "Kachel in Meins");
+  const c = server.slice(server.indexOf('case "meine_daten"'), server.indexOf('case "aenderung_start"'));
+  assert.ok(!/\.(insert|update|upsert|delete)\(/.test(c.replace(/await protokoll\([^)]*\)/, "")), "nur lesend");
+  assert.ok(!/token|endpoint|subscription"|neu_token/.test(c) && /const pid = ich\.person_id/.test(c), "keine Schlüssel/Geräte-Adressen, nur die eigene Person");
+  assert.ok(!/p\.(person|id|pid)\b/.test(c), "keine fremde Person abfragbar");
+  assert.ok(/meinedaten: \{ bauen: \(\) => druckMeineDaten\(\) \}/.test(html) && /function mdatSichern\(\)/.test(html) && /aeStart\(\)">✏️ Änderung melden/.test(html), "drucken, sichern, Änderung melden");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

@@ -2942,7 +2942,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.81"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.82"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -8887,6 +8887,8 @@ const KACHELN = {
     { id: "dokumente", sym: "📚", t: "Meine Dokumente", u: "Anleitungen zum Ansehen & Drucken", v: "dokumente" },
     { id: "erstattung", sym: "💶", t: "Erstattung", u: "Fahrtkosten & Auslagen", v: "erstattung" },
     // KC-CLUB-AENDERUNG (2.22.7, Wunsch Hansi): Anschrift, Name, Telefon, Bank, Größe … melden; Clubleitung sieht offene Meldungen als Zahl
+    // KC-CLUB-MEINE-DATEN (2.23.82, Wunsch Hansi „in Meins“): ansehen, was über mich gespeichert ist – drucken, als Datei sichern
+    { id: "meinedaten", sym: "🔐", t: "Meine Daten", u: "Was ist über mich gespeichert?", aktion: "mdatStart()" },
     { id: "aenderung", sym: "✏️", t: "Meine Daten geändert?", u: "Anschrift, Telefon, Größe …", aktion: "aeStart()", zahl: () => (ICH?.vorstand || ICH?.admin ? AE.offen : 0) },
     { id: "schulungen", sym: "🎓", t: "Meine Schulung", u: "Termin aussuchen · Zusammenfassungen", aktion: "smStart()", zahl: () => (SM.liste || []).filter((e) => e.status === "offen").length }, // 2.23.62 KC-CLUB-SCHULUNG-MITGLIED
     { id: "einstellungen", sym: "⚙️", t: "Einstellungen", u: "Push, Ton, Schrift", v: "einstellungen" },
@@ -9874,6 +9876,52 @@ async function sperreAufheben(pid, knopf) {
     try { await api("sperre_aufheben", { ids: [pid] }, { warten: true }); melde(`🔓 ${vfName(pid)} ist wieder freigegeben`); sperrenLaden(); }
     catch (e) { meldeFehler(e); }
   });
+}
+// ---------- KC-CLUB-MEINE-DATEN (2.23.82, Wunsch Hansi): was über mich gespeichert ist – ansehen, drucken, als Datei sichern ----------
+let MDAT = null;
+const MDAT_BEREICH = { termine: "Termine", nachrichten: "Nachrichten", vorschlaege: "Vorschläge & Abstimmungen", dienste: "Dienste", geburtstage: "Geburtstage", pinnwand: "Pinnwand" };
+function mdatAbschnitte(d) {
+  const t = (iso) => (iso ? zeitDe(iso) : "–"), w = (v) => (v == null || v === "" ? "–" : String(v)), ja = (b) => (b ? "ja" : "nein"), p = d.person || {};
+  const zahl = (v) => (typeof v === "number" ? String(v) : "unbekannt");
+  return [
+    ["👤 Stammdaten", [["Mitglieds-Nr.", w(p.nummer)], ["Name", w(p.name)], ["Vorname / Nachname", `${w(p.vorname)} / ${w(p.nachname)}`], ["Rufname", w(p.rufname)],
+      ["E-Mail", w(p.email)], ["Telefon", w(p.telefon)], ["Geburtstag", p.geburtstag ? String(p.geburtstag).split("-").reverse().join(".") : "–"],
+      ["Anschrift", [p.strasse, [p.plz, p.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ") || "–"], ["Gespeichert seit", t(p.seit)]]],
+    ["🔑 Zugang zur App", d.zugang ? [["Zugang aktiv", ja(d.zugang.aktiv)], ["Link erstellt", t(d.zugang.erstellt)], ["Zum ersten Mal geöffnet", t(d.zugang.erstmals)],
+      ["Zuletzt da", t(d.zugang.zuletzt)], ["App-Version", w(d.zugang.version)]] : [["Zugang", "keiner"]]],
+    ["🛡️ Rollen & Rechte", [["Admin", ja(d.rollen.admin)], ["Clubleitung", ja(d.rollen.clubleitung)], ["Ämter", (d.rollen.aemter || []).join(", ") || "–"],
+      ["Protokolle lesen", ja(d.rollen.protokolle)], ["Kontaktdaten anderer sehen", ja(d.rollen.kontakte)], ["Büro", d.rollen.buero === "schreiben" ? "lesen + schreiben" : d.rollen.buero ? "lesen" : "nein"]]],
+    ["🔔 Benachrichtigungen & Einstellungen", [...(d.benachrichtigung || []).map((b) => [MDAT_BEREICH[b.bereich] || b.bereich, [b.push && "Push", b.email && "E-Mail"].filter(Boolean).join(" + ") || "aus"]),
+      ["Mein Status", d.status ? `${STATUS[d.status.status]?.[1] || d.status.status}${d.status.bis ? " bis " + fDatumKurz(d.status.bis) : ""}` : "verfügbar"],
+      ["Gespeicherte Einstellungen", String((d.einstellungen || []).length)],
+      ["Geräte für Push", (d.geraete || []).length ? d.geraete.map((g) => `${g.art} (seit ${t(g.seit)})`).join(", ") : "keine"]]],
+    ["📦 Was ich in der App angelegt habe (Anzahl)", [["Nachrichten geschrieben", zahl(d.anzahl.nachrichten)], ["Pinnwand-Zettel", zahl(d.anzahl.zettel)], ["Fotos hochgeladen", zahl(d.anzahl.fotos)],
+      ["Dokumente im Archiv", zahl(d.anzahl.dokumente)], ["Erstattungsanträge", zahl(d.anzahl.erstattungen)], ["Änderungsmeldungen", zahl(d.anzahl.aenderungen)],
+      ["Vorschläge / Abstimmungen", zahl(d.anzahl.vorschlaege)], ["Gemerkte Nachrichten", zahl(d.anzahl.gemerkt)], ["Technik-Protokoll (Einträge)", zahl(d.anzahl.protokoll)]]],
+  ];
+}
+async function mdatStart() {
+  const f = blattAuf("mdatBlatt", `<h3 style="margin:0">🔐 Meine Daten</h3><div id="mdatInhalt"><p class="hinweis">Wird geladen …</p></div>`);
+  f.classList.add("sc-blatt");
+  try { MDAT = await api("meine_daten", {}, { warten: true }); } catch (e) { $("mdatInhalt").innerHTML = `<div class="karte ta-st-nein">⚠️ ${esc(e?.message || "Nicht geladen")}</div><button class="knopf" onclick="fensterZu($('mdatBlatt'))">Schließen</button>`; return; }
+  $("mdatInhalt").innerHTML = `<p class="hinweis" style="margin:0 0 6px">Das ist gespeichert, was dich betrifft – nur du siehst diese Übersicht. Stand ${esc(zeitDe(MDAT.stand))}.</p>
+    ${mdatAbschnitte(MDAT).map(([t, z]) => `<div class="ps-schritt"><b>${esc(t)}</b><table class="vb-tabelle">${z.map(([a, v]) => `<tr><td>${esc(a)}</td><td>${esc(v)}</td></tr>`).join("")}</table></div>`).join("")}
+    <p class="hinweis" style="margin:6px 0">Stimmt etwas nicht oder hat sich etwas geändert? → <b>„✏️ Meine Daten geändert?“</b> – dann kümmert sich die Clubleitung.</p>
+    <div class="na-pfeil-knoepfe"><button class="knopf haupt" onclick="fensterZu($('mdatBlatt'));aeStart()">✏️ Änderung melden</button><button class="knopf" onclick="druckStarten('meinedaten')">🖨️ Drucken</button>
+      <button class="knopf" onclick="mdatSichern()">💾 Als Datei sichern</button><button class="knopf" onclick="fensterZu($('mdatBlatt'))">Schließen</button></div>`;
+}
+function druckMeineDaten() {
+  if (!MDAT) return null;
+  return { titel: "Meine gespeicherten Daten", unter: `${MDAT.person?.name || ICH?.name || ""} · Stand ${zeitDe(MDAT.stand)}`, fuss: "Auskunft „Meine Daten“",
+    html: mdatAbschnitte(MDAT).map(([t, z]) => `<h3 style="margin:4mm 0 1.5mm;font-size:4mm">${esc(t)}</h3><table style="width:100%;border-collapse:collapse">${z.map(([a, v]) => `<tr><td style="padding:1.2mm 2mm;border:.2mm solid #999;width:42%;font-weight:700;font-size:3.3mm">${esc(a)}</td><td style="padding:1.2mm 2mm;border:.2mm solid #999;font-size:3.3mm">${esc(v)}</td></tr>`).join("")}</table>`).join("") };
+}
+async function mdatSichern() {
+  if (!MDAT) return;
+  const text = [`Köcheclub Werne – Meine gespeicherten Daten`, `Stand: ${zeitDe(MDAT.stand)}`, "", ...mdatAbschnitte(MDAT).flatMap(([t, z]) => [t, ...z.map(([a, v]) => `  ${a}: ${v}`), ""])].join("\n");
+  const datei = new File([textDatei(text)], `Meine-Daten-${heuteIso()}.txt`, { type: "text/plain" });
+  try { if (navigator.canShare?.({ files: [datei] })) { await navigator.share({ files: [datei], title: "Meine Daten" }); return; } } catch (e) { if (e?.name === "AbortError") return; }
+  const url = URL.createObjectURL(datei), a = document.createElement("a"); a.href = url; a.download = datei.name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000); melde("💾 Datei gespeichert");
 }
 // ---------- KC-CLUB-WOCHENBERICHT (2.23.81, Wunsch Hansi): Vorschau + „jetzt senden“; montags kommt er automatisch ----------
 async function wbAnsehen() {
@@ -17821,6 +17869,7 @@ const DRUCKARTEN = {
   bestaetigung: { bauen: () => druckBestaetigung() },
   verbindung: { bauen: () => druckVerbindung() }, // KC-CLUB-VERBINDUNG-MELDEN (2.23.76)
   chat: { bauen: () => druckChat() }, // 2.23.80: ganzer Chat
+  meinedaten: { bauen: () => druckMeineDaten() }, // KC-CLUB-MEINE-DATEN (2.23.82)
   einrichtungskarte: { bauen: (o, param) => druckEinrichtungskarte(param) }, // KC-CLUB-EINRICHTUNGSKARTE (1.88.0) // KC-CLUB-BESTAETIGUNG (1.69.0): Aufstellung der eigenen Eingaben
 };
 // ---- KC-CLUB-KURZANLEITUNG (0.62.0): die App in 3 Schritten – für Einsteiger, zum Ausdrucken oder Verschicken ----

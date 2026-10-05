@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.23.82 – 2026-10-05 – 🔐 Meine Daten (Wunsch Hansi)
+- KC-CLUB-MEINE-DATEN: Neue Kachel „🔐 Meine Daten“ in Meins (vor „Meine Daten geändert?“): zeigt, was über mich gespeichert ist –
+  👤 Stammdaten, 🔑 Zugang (erstellt, zuerst/zuletzt da, Version), 🛡️ Rollen & Rechte, 🔔 Benachrichtigungen/Status/Geräte für Push,
+  📦 was ich angelegt habe (nur Anzahlen). Knöpfe ✏️ Änderung melden, 🖨️ Drucken, 💾 Als Datei sichern. Server-Aktion meine_daten nur
+  lesend, nur die eigene Person, keine Schlüssel und keine Geräte-Adressen; Aufruf wird protokolliert. Test 433.
+
 ## 2.23.81 – 2026-10-05 – 📊 Wochenbericht für den Admin (Wunsch Hansi)
 - KC-CLUB-WOCHENBERICHT: Jeden Montag ab 8 Uhr automatisch an die Admins per Push und E-Mail (einmal pro Woche, im Zeitplaner
   „wartung“): 👥 Nutzung (aktiv, neu, nie angemeldet, alte Version), 🩺 Fehler (schwerwiegend/Hinweise), 🛡️ Sicherheit (Schutz, Spiegel,
