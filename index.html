@@ -742,11 +742,12 @@
   /* KC-CLUB-KACHELN: eigene Anordnung (lange drücken → Bearbeiten) */
   .kachel { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
   /* KC-CLUB-ADMIN-REGISTER (2.20.0): kleinere Kacheln (3 je Reihe), Farbstreifen je Gruppe, Lämpchen rechts oben */
-  #raster.ad-raster { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
-  #raster.ad-raster .kachel { min-height: 0; padding: 9px 7px 8px; border-top: 4px solid transparent; }
-  #raster.ad-raster .kachel .sym { font-size: 1.3rem; }
-  #raster.ad-raster .kachel b { font-size: .8rem; margin-top: 4px; line-height: 1.15; }
-  #raster.ad-raster .kachel small { font-size: .66rem; line-height: 1.2; display: block; margin-top: 2px; overflow-wrap: anywhere; }
+  #raster.klein3, #raster.ad-raster { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+  #raster.klein3 .kachel, #raster.ad-raster .kachel { min-height: 0; padding: 9px 7px 8px; border-top: 4px solid transparent; }
+  #raster.klein3 .kachel .sym, #raster.ad-raster .kachel .sym { font-size: 1.3rem; }
+  #raster.klein3 .kachel b, #raster.ad-raster .kachel b { font-size: .8rem; margin-top: 4px; line-height: 1.15; }
+  #raster.klein3 .kachel small, #raster.ad-raster .kachel small { font-size: .66rem; line-height: 1.2; display: block; margin-top: 2px; overflow-wrap: anywhere; }
+  #raster.klein3 .kachel .zahl { transform: scale(.85); transform-origin: top right; } /* 2.23.87 KC-CLUB-KACHEL-KLEIN: 3 nebeneinander (Einstellung) */
   #raster.ad-raster .kachel.ad-ueb { border-top-color: #2e86de; } #raster.ad-raster .kachel.ad-dienst { border-top-color: #8e44ad; } #raster.ad-raster .kachel.ad-app { border-top-color: #16a085; }
   #raster.ad-raster .kachel.ad-link { border-top-color: #95a5a6; } #raster.ad-raster .kachel.ad-not { border-top-color: #c0392b; } .kachel.l-keine::after, .kachel.ad-link::after { display: none; }
   .kachel.ad::after { content: ""; position: absolute; top: 9px; right: 8px; width: 10px; height: 10px; border-radius: 50%; }
@@ -1142,9 +1143,9 @@
   @keyframes mgOnlinePulsKlein { 0%, 100% { transform: scale(1); box-shadow: 0 0 0 2px var(--karte), 0 0 0 4px #6ee87a, 0 0 0 4px rgba(110, 232, 122, .55); }
     50% { transform: scale(1.06); box-shadow: 0 0 0 2px var(--karte), 0 0 0 4px #6ee87a, 0 0 0 10px rgba(110, 232, 122, 0); } }
   @media (prefers-reduced-motion: reduce) { .mg-kacheln .mg-online .avatar, #mitgliederListe .zeile.mg-online .avatar { animation: none; } }
-  .mg-knoepfe { display: flex; gap: 6px; margin-top: 4px; }
+  .mg-knoepfe { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 4px; }
   .mg-kachel .stmarke { font-size: .8rem; padding: 1px 8px; }
-  .mg-knoepfe .knopf { padding: 6px 12px; }
+  .mg-knoepfe .knopf { padding: 6px 7px; min-width: 0; } .mg-knoepfe { gap: 4px; }
   /* KC-CLUB-TERMIN-KACHELN (1.44.0) */
   .tr-kachel.tr-va { border-left: 5px solid var(--gruen); }
   .tr-kachel.tr-ab { opacity: .7; }
@@ -2610,6 +2611,8 @@
       <div class="schalter"><div><b>📄 Kurzanleitung</b><div class="hinweis">Die App in 3 Schritten – zum Ansehen oder Ausdrucken</div></div><button class="knopf klein" onclick="druckStarten('anleitung')">Ansehen</button></div>
       <div class="schalter"><div><b>🧩 Startseite anordnen</b><div class="hinweis">Kacheln verschieben oder ausblenden – oder auf der Startseite eine Kachel lange drücken</div></div><button class="knopf klein" onclick="zeige('start');kaBearbeiten(true)">Anordnen</button></div>
       <!-- KC-CLUB-MG-KACHELN (1.45.0, Wunsch Hansi): jeder wählt selbst, wie die Mitglieder angezeigt werden (je Gerät) -->
+      <div style="margin-top:8px"><b>🔲 Kacheln auf der Startseite</b> <span class="hinweis">(erweiterte Ansicht, gilt für dieses Gerät)</span></div>
+      <div class="umschalter" id="kachelGroesseWahl"><button data-g="normal" onclick="kachelGroesse('normal')">▣ Normal – 2 nebeneinander</button><button data-g="klein" onclick="kachelGroesse('klein')">▦ Klein – 3 nebeneinander</button></div>
       <div style="margin-top:8px"><b>👥 Mitglieder anzeigen als</b></div>
       <div class="umschalter" id="mgAnsichtWahl"><button data-a="kacheln" onclick="mgAnsichtSetzen('kacheln')">🔲 Kacheln</button><button data-a="liste" onclick="mgAnsichtSetzen('liste')">☰ Liste</button></div>
       <div class="schalter"><div><b>🇩🇪 Feiertage NRW im Kalender</b><div class="hinweis">Gesetzliche Feiertage in Nordrhein-Westfalen</div></div><input type="checkbox" id="setFeiertage" onchange="einstellung('feiertage', this.checked); if (KAL) kalZeichnen()"></div>
@@ -2961,7 +2964,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.86"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.87"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3088,6 +3091,14 @@ let START_HASH = "", KEY = "", ICH = null, INIT = null, MITGLIEDER = null, AEMTE
 let chatId = null, chatTimer = null, empfWahl = { personen: [], aemter: [], alle: false, vorstand: false }, anlagen = [], letzteUngelesen = null;
 
 function einst(k, def) { try { const v = localStorage.getItem("kc_club_" + k); return v === null ? def : v === "1"; } catch { return def; } }
+// KC-CLUB-KACHEL-KLEIN (2.23.87, Wunsch Hansi): Startseiten-Kacheln klein (3 je Reihe) – je Gerät, weil Bildschirme verschieden groß sind
+function kachelKlein() { try { return localStorage.getItem("kc_club_kachelgroesse") === "klein"; } catch { return false; } }
+function kachelGroesse(g) {
+  try { localStorage.setItem("kc_club_kachelgroesse", g); } catch {}
+  document.querySelectorAll("#kachelGroesseWahl button").forEach((b) => b.classList.toggle("an", b.dataset.g === g));
+  try { kachelnZeigen(); } catch {}
+  melde(g === "klein" ? "▦ Kacheln klein – 3 nebeneinander" : "▣ Kacheln normal – 2 nebeneinander");
+}
 function einstellung(k, an) { try { localStorage.setItem("kc_club_" + k, an ? "1" : "0"); } catch {} anwendenDesign(); }
 // ---------- KC-CLUB-DESIGN: fertige Farbdesigns (je mit Tag- und Nacht-Variante) ----------
 // Nur die Grundfarben wechseln; Status-/Warnfarben (grün = OK, rot = Störung, gelb = Hinweis) bleiben in jedem Design gleich.
@@ -9214,6 +9225,7 @@ function registerWischen(schritt) {
 function kachelnZeigen() {
   if (ZIEHEN) return; // nicht neu zeichnen, während eine Kachel am Finger hängt
   $("raster").classList.toggle("ad-raster", reg === "admin" && !einfach()); // KC-CLUB-ADMIN-REGISTER: kleinere Kacheln, 3 je Reihe
+  $("raster").classList.toggle("klein3", reg !== "admin" && !einfach() && kachelKlein()); // KC-CLUB-KACHEL-KLEIN (2.23.87): auf Wunsch überall 3 je Reihe
   if (kaBearb) {
     $("kaAusHinweis").innerHTML = "";
     if (einfach()) { // einfache Ansicht: untereinander, nur ▲ / ▼ (kein Ausblenden)
@@ -16015,7 +16027,8 @@ function mgAnsichtSetzen(a) {
   if (aktuelleAnsicht === "sos") sosZeigen(); // KC-CLUB-SOS-KACHELN: gleiche Einstellung im SOS-Bereich
   melde(MG_ANSICHT === "kacheln" ? "👥 Mitglieder werden als Kacheln gezeigt" : "👥 Mitglieder werden als Liste gezeigt");
 }
-function mgAnsichtWahlZeigen() { document.querySelectorAll("#mgAnsichtWahl button, #mgAnsichtOben button").forEach((b) => b.classList.toggle("an", b.dataset.a === MG_ANSICHT)); }
+function mgAnsichtWahlZeigen() { document.querySelectorAll("#mgAnsichtWahl button, #mgAnsichtOben button").forEach((b) => b.classList.toggle("an", b.dataset.a === MG_ANSICHT));
+  document.querySelectorAll("#kachelGroesseWahl button").forEach((b) => b.classList.toggle("an", b.dataset.g === (kachelKlein() ? "klein" : "normal"))); } // 2.23.87
 function mgKachelnHtml(liste) {
   const k = (m) => {
     const ich = m.person_id === ICH.person_id, on = !!m.online;
@@ -16024,7 +16037,7 @@ function mgKachelnHtml(liste) {
       ${kreis(m, m.name, 58)}<span class="mk-titel">${esc(m.name)}</span>
       ${m.aemter?.length ? `<span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}
       ${m.status || m.aktiv ? `<span class="stmarke st-${statusArt(m.status)}">${esc(m.status ? statusText(m.status) : "🟢 verfügbar")}</span>` : ""}${da}${ICH.admin && m.unerreichbar ? '<span class="mk-unter" title="kein Push, keine E-Mail – nur über 🔗 Link oder Telefon">📵 nicht erreichbar</span>' : ""}
-      ${ich ? '<span class="mk-unter"><b>(du)</b></span>' : `<span class="mg-knoepfe" onclick="event.stopPropagation()"><button class="knopf klein" title="Nachricht" onclick="direkt('${m.person_id}')">💬</button>${on ? `<button class="knopf klein" title="Anklopfen" onclick="anklopfen('${m.person_id}')">👋</button>` : ""}</span>`}</div>`;
+      ${ich ? '<span class="mk-unter"><b>(du)</b></span>' : `<span class="mg-knoepfe" onclick="event.stopPropagation()"><button class="knopf klein" title="Nachricht" onclick="direkt('${m.person_id}')">💬</button>${on ? `<button class="knopf klein" title="Anklopfen" onclick="anklopfen('${m.person_id}')">👋</button>` : ""}${mgAnrufKnoepfe(m)}</span>`}</div>`; // 2.23.87 (Wunsch Hansi): 📞/🎥 auch auf der Kachel – aktiv bei online (gleicher Baustein wie in der Liste)
   };
   return `<p class="hinweis" style="margin:0 2px 8px;font-size:.85rem">🟢 online · 🔵 heute da · 🟠 abwesend · ⚪ noch nie in der App – Kachel antippen für Telefon, Adresse${ICH?.admin ? ", 🔗 Link und 🎖️ Ämter" : " usw."}</p>
     <div class="mini-kacheln mg-kacheln">${liste.map(k).join("")}</div>`;

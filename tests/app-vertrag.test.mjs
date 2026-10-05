@@ -4437,6 +4437,15 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(AV.avTeile("b012300000") && /^<svg/.test(AV.avatarSvg("b482311b71")), "Baukasten-Code wird gezeichnet");
   assert.equal(AV.avTeile("bz00000000"), null, "ungültiger Code → nichts"); assert.equal(AV.avTeile("b0000000002"), null, "zu lang → nichts");
 }
+// 438. 2.23.87: 📞/🎥 auf der Mitglieder-Kachel (aktiv bei online) + Startseiten-Kacheln klein, 3 nebeneinander (Einstellung)
+{
+  const k = html.slice(html.indexOf("function mgKachelnHtml(liste)"), html.indexOf("// KC-CLUB-MG-GRUPPEN (1.34.0"));
+  assert.ok(/\$\{mgAnrufKnoepfe\(m\)\}<\/span>/.test(k), "Kachel nutzt denselben Anruf-Baustein wie die Liste");
+  assert.ok(/const on = !!m\.online[\s\S]{0,400}mg-aus/.test(html.slice(html.indexOf("function mgAnrufKnoepfe"))), "aktiv nur bei online, sonst blass");
+  assert.ok(/\$\("raster"\)\.classList\.toggle\("klein3", reg !== "admin" && !einfach\(\) && kachelKlein\(\)\)/.test(html), "klein nur in der erweiterten Ansicht");
+  assert.ok(/#raster\.klein3, #raster\.ad-raster \{ grid-template-columns: repeat\(3, minmax\(0, 1fr\)\);/.test(html), "gleiche Regeln wie das Admin-Register (kein zweites Raster)");
+  assert.ok(/id="kachelGroesseWahl"/.test(html) && /localStorage\.setItem\("kc_club_kachelgroesse", g\)/.test(html) && /try \{ return localStorage\.getItem\("kc_club_kachelgroesse"\) === "klein"; \} catch \{ return false; \}/.test(html), "Einstellung je Gerät, sicher ohne Speicher");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

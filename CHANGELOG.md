@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.23.87 – 2026-10-05 – 📞🎥 auf Mitglieder-Kacheln + kleine Kacheln (Wunsch Hansi)
+- Mitglieder als Kacheln: zusätzlich 📞 Anrufen und 🎥 Videoanruf – aktiv, wenn die Person online ist; sonst blass mit Hinweis
+  (derselbe Baustein mgAnrufKnoepfe wie in der Liste, 2.23.67). Knöpfe brechen bei Bedarf in eine zweite Reihe um.
+- KC-CLUB-KACHEL-KLEIN: Einstellungen → 🎨 Darstellung → „🔲 Kacheln auf der Startseite“: ▣ Normal (2 nebeneinander) oder ▦ Klein
+  (3 nebeneinander) – nur in der erweiterten Ansicht, je Gerät gespeichert (Bildschirme sind verschieden groß). Nutzt dieselben Regeln wie die
+  kleinen Kacheln im Admin-Register. Test 438.
+
 ## 2.23.86 – 2026-10-05 – 🚦 Freigaben + 🧩 Figur selbst zusammenstellen (Wunsch Hansi)
 - KC-CLUB-FREIGABE: Admin-Register → „🚦 Freigaben“: je neue Funktion „🔒 Nur für mich (Test)“ oder „✅ Für alle frei“ (mit Rückfrage,
   nichts wird verschickt). Mitglieder sehen nicht Freigegebenes gar nicht; der Admin sieht es mit „🔒 Test“-Hinweis. Der Server prüft mit
