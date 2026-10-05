@@ -3,7 +3,7 @@
 ## 2.23.71 – 2026-10-05 – Besuchsliste: „🗂️ Vergangene Termine“ zugeklappt (Wunsch Hansi)
 - KC-CLUB-BESUCH-TERMINSTAND: Oben stehen nur geplante Besuche und solche mit „📝 Protokoll fehlt“; erledigte Besuche liegen zugeklappt unter
   „🗂️ Vergangene Termine (n)“, darunter „✖ Abgesagte Termine (n)“. Zahlen (Besuche, Stunden, km) unverändert über alle.
-  Unter den Zahlen immer sichtbar: „📅 n geplant · 🗂️ n vergangen · ✖ n abgesagt“. Test 420.
+  Zahlen-Kacheln: oben 🗂️ Besuche (vergangen) · Stunden · km, darunter 📅 geplant · 📝 Protokoll fehlt · ✖ abgesagt. Test 420.
 
 ## 2.23.70 – 2026-10-05 – Besuchsliste: abgesagte Termine getrennt (Wunsch Hansi: „Christina steht 2× drauf“)
 - KC-CLUB-BESUCH-TERMINSTAND: Die Besuchsliste kennt den Stand des Termins je Besuch (Server: besuch/liste liefert termin = bestaetigt /

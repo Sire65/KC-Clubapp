@@ -4241,7 +4241,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.ok(/🗂️ Vergangene Termine \(\$\{vorbei\.length\}\)/.test(html) && html.indexOf("🗂️ Vergangene Termine") < html.indexOf("✖ Abgesagte Termine"), "Vergangene über Abgesagte");
   assert.ok(/oben = bs\.filter\(\(b\) => b\.status === "geplant"\)/.test(html), "oben nur Geplantes/Protokoll fehlt");
-  assert.ok(/🗂️ \$\{zaehlt\.length\} vergangen<\/span><span class="marke">✖ \$\{weg\.length\} abgesagt/.test(html), "Anzahl geplant/vergangen/abgesagt immer sichtbar");
+  assert.ok(/<span>🗂️ Besuche \(vergangen\)<\/span>/.test(html) && /<b>\$\{nGeplant\}<\/b><span>📅 geplant<\/span>/.test(html) && /<b>\$\{weg\.length\}<\/b><span>✖ abgesagt<\/span>/.test(html), "Anzahl geplant/vergangen/abgesagt in den Kacheln");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
