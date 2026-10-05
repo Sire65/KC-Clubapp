@@ -4254,6 +4254,15 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   for (const b of ["chrome", "samsung", "firefox", "opera", "edge", "safari", "chrome_ios"]) assert.ok(new RegExp("\\b" + b + ": ").test(k), "Browser fehlt: " + b);
   assert.ok(/onclick="\$\('mikroHilfe'\)\.remove\(\);mikroAssistent\(\)">🧭 Schritt für Schritt helfen/.test(html) && /h === "#mikrofon"\) mikroAssistent\(\)/.test(html) && /zeig: \(\) => mikroAssistent\(\)/.test(html), "erreichbar aus Mikrofon-Fenster, Hilfe und Sprung");
 }
+// 423. 2.23.73: Abstimmung an alle, eine Gruppe oder eine Auswahl (KC-CLUB-ABSTIMMUNG-ZIEL)
+{
+  assert.ok(/chip\("alle", "👥 Alle"\)\}\$\{chip\("gruppe", "🧑‍🤝‍🧑 Gruppe"\)\}\$\{chip\("auswahl", "☑️ Auswahl"\)\}/.test(html) && /async function vfAuswahl\(\)/.test(html), "Auswahl alle / Gruppe / einzelne");
+  assert.ok(/daten\.ziel = \{ art: "gruppe", name: g\.gruppe\.name, ids: g\.personen \}/.test(html) && /daten\.ziel = \{ art: "auswahl", ids: VF_ZIEL\.ids \}/.test(html), "App schickt das Ziel");
+  assert.ok(/zielIds = \[\.\.\.new Set<string>\(\[\.\.\.\(Array\.isArray\(p\.ziel\.ids\)/.test(server) && /filter\(\(id: string\) => aktiv\.has\(id\)\), ich\.person_id\]/.test(server), "Server: nur aktive Mitglieder, ich immer dabei");
+  assert.ok(/v\.ziel_ids && !v\.ziel_ids\.includes\(ich\.person_id\)\) throw new Fehler\("Diese Abstimmung ist nur für eine bestimmte Gruppe\.", 403\)/.test(server), "nur Zielgruppe stimmt ab");
+  assert.ok(/!v\.ziel_ids \|\| v\.ziel_ids\.includes\(ich\.person_id\) \|\| v\.erstellt_von === ich\.person_id \|\| ich\.admin/.test(server), "nur Zielgruppe sieht sie");
+  assert.ok(/const ziel = v\.ziel_ids \?\? \(await aktiveMitglieder\(\)\)/.test(server) && /zielIds \?\? \(await aktiveMitglieder\(\)\)/.test(server), "Benachrichtigung + Ergebnis nur an Zielgruppe");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

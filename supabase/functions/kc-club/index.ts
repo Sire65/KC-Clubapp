@@ -41,7 +41,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.23.72";
+const SERVER_VERSION = "2.23.73";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -2219,7 +2219,8 @@ async function vorschlaegeListe(ich: Ich) {
     db.from("kc_club_vorschlaege").select("*").eq("status", "offen").order("erstellt_am", { ascending: false }).limit(100),
     db.from("kc_club_vorschlaege").select("*").neq("status", "offen").order("abgeschlossen_am", { ascending: false, nullsFirst: false }).limit(30),
   ]);
-  const alle = [...(offen ?? []), ...(fertig ?? [])];
+  // KC-CLUB-ABSTIMMUNG-ZIEL (2.23.73): Abstimmungen nur für die Zielgruppe (Admin sieht alle)
+  const alle = [...(offen ?? []), ...(fertig ?? [])].filter((v: any) => !v.ziel_ids || v.ziel_ids.includes(ich.person_id) || v.erstellt_von === ich.person_id || ich.admin);
   const ids = alle.map((v: any) => v.id);
   const tids = [...new Set(alle.map((v: any) => v.treffen_id).filter(Boolean))];
   const leer = { data: [] as any[] };
@@ -2249,7 +2250,8 @@ async function vorschlaegeListe(ich: Ich) {
       status: v.status, frist: v.frist, erstellt_am: v.erstellt_am, abgeschlossen_am: v.abgeschlossen_am,
       von: { person_id: v.erstellt_von, name: leute.get(v.erstellt_von)?.display_name || v.erstellt_von },
       treffen: t ? { id: t.id, titel: t.titel, beginn: t.beginn } : null,
-      abgestimmt: !!mein, meine: v.geheim ? null : mein?.wahl ?? null, stimmen: s.length, berechtigt, ergebnis,
+      abgestimmt: !!mein, meine: v.geheim ? null : mein?.wahl ?? null, stimmen: s.length, berechtigt: v.ziel_ids?.length || berechtigt, ergebnis,
+      ziel: v.ziel_text || null, fuerMich: !v.ziel_ids || v.ziel_ids.includes(ich.person_id),
       darfAbschliessen: v.status === "offen" && (ich.vorstand || (eigener && unterstuetzbar(v.art))),
       darfZurueckziehen: v.status === "offen" && (ich.vorstand || eigener),
       // löschen: Organisation immer; wer ihn gemacht hat, solange niemand sonst abgestimmt/unterstützt hat
@@ -2263,7 +2265,7 @@ async function vorschlagAbschliessen(v: any, von: string | null) {
   if (!ok?.length) return null;
   if (v.art !== "abstimmung") return { gesendet: 0 };
   const erg = await abstimmungsErgebnis(v);
-  const ziel = (await aktiveMitglieder()).map((x) => x.person_id);
+  const ziel = v.ziel_ids ?? (await aktiveMitglieder()).map((x) => x.person_id); // KC-CLUB-ABSTIMMUNG-ZIEL: Ergebnis an die Zielgruppe
   return await senden("club_vorschlag", ziel, {
     titel: "🗳️ Ergebnis: " + v.titel, kurz: erg,
     betreff: `Köcheclub Werne – Ergebnis der Abstimmung: ${v.titel}`,
@@ -4047,7 +4049,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const { data: pk } = await db.rpc("kc_communication_get_server_secret", { p_name: "kc_communication_vapid_public_key" });
         const meinStatus = (await statusMap([ich.person_id])).get(ich.person_id) ?? { status: "verfuegbar", hinweis: null, bis: null };
         // offene Abstimmungen, bei denen ich noch nicht abgestimmt habe
-        const { data: abst } = await db.from("kc_club_vorschlaege").select("id").eq("status", "offen").eq("art", "abstimmung");
+        const { data: abstAlle } = await db.from("kc_club_vorschlaege").select("id,ziel_ids").eq("status", "offen").eq("art", "abstimmung");
+        const abst = (abstAlle ?? []).filter((x: any) => !x.ziel_ids || x.ziel_ids.includes(ich.person_id)); // KC-CLUB-ABSTIMMUNG-ZIEL
         const { data: meineSt } = (abst ?? []).length ? await db.from("kc_club_stimmen").select("vorschlag_id").eq("person_id", ich.person_id).in("vorschlag_id", (abst ?? []).map((x: any) => x.id)) : { data: [] as any[] };
         const offeneAbstimmungen = (abst ?? []).length - (meineSt ?? []).length;
         const { data: nd } = await db.from("kc_dp_plan_published").select("work_date,start_time,end_time,area").eq("org_id", ORG).eq("status", "published")
@@ -4616,7 +4619,15 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         }
         const frist = p.frist ? new Date(String(p.frist)) : null;
         if (frist && (isNaN(frist.getTime()) || frist.getTime() < Date.now())) throw new Fehler("Die Frist liegt in der Vergangenheit.");
-        const { data: v, error } = await db.from("kc_club_vorschlaege").insert({
+        // KC-CLUB-ABSTIMMUNG-ZIEL (2.23.73, Wunsch Hansi): Abstimmung an alle, eine Gruppe oder eine Auswahl – nur aktive Mitglieder, ich immer dabei
+        let zielIds: string[] | null = null, zielText: string | null = null;
+        if (art === "abstimmung" && p.ziel && typeof p.ziel === "object" && (p.ziel.art === "gruppe" || p.ziel.art === "auswahl")) {
+          const aktiv = new Set((await aktiveMitglieder()).map((x) => x.person_id));
+          zielIds = [...new Set<string>([...(Array.isArray(p.ziel.ids) ? p.ziel.ids : []).map(String).filter((id: string) => aktiv.has(id)), ich.person_id])].slice(0, 300);
+          if (zielIds.length < 2) throw new Fehler("Bitte mindestens eine weitere Person auswählen.");
+          zielText = p.ziel.art === "gruppe" ? `Gruppe ${txt(p.ziel.name, 60) || ""}`.trim() : `${zielIds.length} ausgewählte Mitglieder`;
+        }
+        const { data: v, error } = await db.from("kc_club_vorschlaege").insert({ ziel_ids: zielIds, ziel_text: zielText,
           art, titel, beschreibung: txt(p.beschreibung, 2000) || null, optionen, geheim: art === "abstimmung" && !!p.geheim, spenden,
           treffen_id: p.treffen_id ? String(p.treffen_id) : null, frist: art === "abstimmung" && frist ? frist.toISOString() : null, erstellt_von: ich.person_id,
         }).select().single();
@@ -4624,14 +4635,14 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // Abstimmung → alle; Themenvorschlag → Clubsprecher/Kassenwart (Recht „Organisation“)
         let versand = null;
         if (p.benachrichtigen !== false) {
-          const ziel = art === "abstimmung" ? (await aktiveMitglieder()).map((x) => x.person_id)
+          const ziel = art === "abstimmung" ? (zielIds ?? (await aktiveMitglieder()).map((x) => x.person_id))
             : await leitungIds(); // KC-CLUB-EINGANGSKORB (2.23.6): Clubsprecher, Kassenwart UND Admin
           const fristText = v.frist ? ` Abstimmen bis ${wann(v.frist)}.` : "";
           const spText = spenden ? "\n\n" + spenden.map((x) => `💝 ${x.empfaenger}: ${euroRund(x.betrag)}`).join("\n") + (spenden.length > 1 ? `\nZusammen: ${euroRund(spendenSumme(spenden))}` : "") : "";
           versand = await senden("club_vorschlag", ziel.filter((id: string) => id !== ich.person_id), art === "abstimmung" ? {
             titel: "🗳️ Abstimmung: " + titel, kurz: `Bitte in der App abstimmen.${fristText}`,
             betreff: `Köcheclub Werne – Abstimmung: ${titel}`,
-            text: `Hallo,\n\nes gibt eine neue Abstimmung${v.geheim ? " (geheim)" : ""}:\n\n🗳️ ${titel}${v.beschreibung ? "\n\n" + v.beschreibung : ""}\n\nAntworten: ${optionen.join(" / ")}${fristText ? "\n" + fristText.trim() : ""}\n\nAbstimmen in der Köcheclub-App: ${APP_URL}#vorschlaege\n\nViele Grüße\nKöcheclub Werne`,
+            text: `Hallo,\n\nes gibt eine neue Abstimmung${v.geheim ? " (geheim)" : ""}${zielText ? ` (nur für: ${zielText})` : ""}:\n\n🗳️ ${titel}${v.beschreibung ? "\n\n" + v.beschreibung : ""}\n\nAntworten: ${optionen.join(" / ")}${fristText ? "\n" + fristText.trim() : ""}\n\nAbstimmen in der Köcheclub-App: ${APP_URL}#vorschlaege\n\nViele Grüße\nKöcheclub Werne`,
             url: APP_URL + "#vorschlaege",
           } : {
             titel: spenden ? "💝 Spendenvorschlag" : "💡 Themenvorschlag", kurz: `${ich.name}: ${titel}`,
@@ -4648,6 +4659,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const { data: v } = await db.from("kc_club_vorschlaege").select("*").eq("id", String(p.id || "")).maybeSingle();
         if (!v) throw new Fehler("Vorschlag nicht gefunden.", 404);
         if (v.status !== "offen") throw new Fehler("Hier kann nicht mehr abgestimmt werden.", 409);
+        if (v.ziel_ids && !v.ziel_ids.includes(ich.person_id)) throw new Fehler("Diese Abstimmung ist nur für eine bestimmte Gruppe.", 403); // KC-CLUB-ABSTIMMUNG-ZIEL
         if (unterstuetzbar(v.art)) {
           // Unterstützen an/aus (Thema und Spendenprojekt)
           if (p.wahl) await db.from("kc_club_stimmen").upsert({ vorschlag_id: v.id, person_id: ich.person_id, wahl: "dafuer", geaendert_am: jetzt() });

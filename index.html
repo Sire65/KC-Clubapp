@@ -2921,7 +2921,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.72"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.73"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -11003,7 +11003,7 @@ function vorschlagKachel(v) {
   const sym = v.art === "abstimmung" ? "🗳️" : v.art === "spende" ? "💝" : "💡";
   const lage = !offen ? (v.status === "abgeschlossen" ? '<span class="marke gruen">✔ erledigt</span>' : '<span class="marke rot">zurückgezogen</span>')
     : v.art === "abstimmung" ? (v.meine || v.abgestimmt ? '<span class="marke gruen">✔ Du hast abgestimmt</span>' : '<span class="marke gelb">👉 Stimme fehlt</span>') : "";
-  const zahl = v.art === "abstimmung" ? `🗳️ ${v.stimmen ?? 0} von ${v.berechtigt ?? "?"}` : `👍 ${e}${v.meine ? " · auch von dir" : ""}`;
+  const zahl = (v.art === "abstimmung" ? `🗳️ ${v.stimmen ?? 0} von ${v.berechtigt ?? "?"}` : `👍 ${e}${v.meine ? " · auch von dir" : ""}`) + (v.ziel ? ` · 🔐 ${v.ziel}` : ""); // KC-CLUB-ABSTIMMUNG-ZIEL
   return `<button class="mini-kachel${offen && v.art === "abstimmung" && !(v.meine || v.abgestimmt) ? " mk-offen" : ""}" onclick="vorschlagInfo('${v.id}')"><span class="mk-sym">${sym}</span>
     <span class="mk-titel">${esc(v.titel)}</span>${lage}<span class="mk-unter">${zahl}</span>
     ${offen && v.frist ? `<span class="mk-unter">⏳ bis ${esc(wann(v.frist))}</span>` : ""}<span class="mk-unter">von ${esc(v.von?.name || "?")}</span></button>`;
@@ -11057,11 +11057,54 @@ function vorschlagForm(art) {
     <label class="feld">Für welchen Termin?<select id="vfTreffen"><option value="">– allgemein –</option>${VORSCHLAG_TREFFEN.map((t) => `<option value="${t.id}" ${t.id === t0 ? "selected" : ""}>${esc(t.titel)} · ${esc(wann(t.beginn))}</option>`).join("")}</select></label>
     ${vfArt === "abstimmung" ? `<label class="feld">Antworten (eine pro Zeile)<textarea id="vfOptionen" rows="3">Ja\nNein\nEnthaltung</textarea></label>
       <label class="schalter"><span><b>🔒 Geheime Abstimmung</b><br><small class="hinweis">Niemand sieht, wer wie gestimmt hat; Ergebnis erst am Ende</small></span><input type="checkbox" id="vfGeheim"></label>
-      <div class="zwei"><label class="feld">Abstimmen bis (freiwillig)<input id="vfFristDatum" type="date"></label><label class="feld">Uhrzeit<input id="vfFristZeit" type="time" value="20:00"></label></div>` : ""}
-    <label class="schalter"><span>${vfArt === "abstimmung" ? "Alle Mitglieder benachrichtigen" : "Clubsprecher & Kassenwart benachrichtigen"}</span><input type="checkbox" id="vfInfo" checked></label>
+      <div class="zwei"><label class="feld">Abstimmen bis (freiwillig)<input id="vfFristDatum" type="date"></label><label class="feld">Uhrzeit<input id="vfFristZeit" type="time" value="20:00"></label></div>
+      <div class="feld"><b>An wen?</b><div id="vfZiel"></div></div>` : ""}
+    <label class="schalter"><span>${vfArt === "abstimmung" ? "Teilnehmer benachrichtigen (Push/Mail)" : "Clubsprecher & Kassenwart benachrichtigen"}</span><input type="checkbox" id="vfInfo" checked></label>
     <div class="knoepfe"><button class="knopf haupt" onclick="vorschlagSpeichern(this)">${vfArt === "abstimmung" ? "Abstimmung starten" : "Vorschlagen"}</button><button class="knopf" onclick="$('vorschlagForm').classList.add('versteckt')">Abbrechen</button></div>`;
   $("vorschlagForm").classList.remove("versteckt"); window.scrollTo(0, 0);
   if (vfArt === "spende") vfSpZeigen();
+  if (vfArt === "abstimmung") { VF_ZIEL = { art: "alle", gruppe: null, ids: [] }; vfZielZeigen(); vfGruppenLaden(); }
+}
+// KC-CLUB-ABSTIMMUNG-ZIEL (2.23.73, Wunsch Hansi): Abstimmung an 👥 alle, 🧑‍🤝‍🧑 eine Gruppe (alle Gruppen zur Auswahl) oder ☑️ eine Auswahl
+// (Fenster mit allen Mitgliedern zum Anklicken). Nur die Ausgewählten sehen die Abstimmung, stimmen ab und bekommen Bescheid.
+let VF_ZIEL = { art: "alle", gruppe: null, ids: [] };
+async function vfGruppenLaden() {
+  if (!MG_GRUPPEN.length) try { MG_GRUPPEN = ((await api("unterhaltungen", {})).unterhaltungen || []).filter((u) => u.gruppe && Array.isArray(u.personen)); } catch {}
+  if (!MITGLIEDER) try { await mitgliederHolen(); } catch {}
+  vfZielZeigen();
+}
+const vfName = (pid) => (MITGLIEDER || []).find((m) => m.person_id === pid)?.name || pid;
+function vfZielZeigen() {
+  const z = $("vfZiel"); if (!z) return; const Z = VF_ZIEL;
+  const chip = (a, t) => `<button type="button" class="chip${Z.art === a ? " an" : ""}" onclick="VF_ZIEL.art='${a}';${a === "auswahl" ? "vfAuswahl()" : "vfZielZeigen()"}">${t}</button>`;
+  let unten = "";
+  if (Z.art === "gruppe") unten = MG_GRUPPEN.length ? `<div class="hinweis" style="margin:6px 0 2px">Gruppe wählen:</div><div class="hl-chips">${MG_GRUPPEN.map((g) => `<button type="button" class="chip${Z.gruppe === g.id ? " an" : ""}" onclick="VF_ZIEL.gruppe='${g.id}';VF_ZIEL.ids=MG_GRUPPEN.find((x)=>x.id==='${g.id}').personen.slice();vfZielZeigen()">${esc(g.gruppe.symbol || "👥")} ${esc(g.gruppe.name)} <small>(${g.personen.length})</small></button>`).join("")}</div>`
+    : '<p class="hinweis" style="margin:6px 0">Noch keine Gruppen – Gruppen legst du unter 💬 Nachrichten an. Oder ☑️ Auswahl nehmen.</p>';
+  if (Z.art === "auswahl") unten = `<div class="knoepfe"><button type="button" class="knopf klein" onclick="vfAuswahl()">☑️ Mitglieder auswählen${Z.ids.length ? ` (${Z.ids.length})` : ""}</button></div>`;
+  const g = Z.art === "gruppe" && MG_GRUPPEN.find((x) => x.id === Z.gruppe);
+  const an = Z.art === "alle" ? "Alle Mitglieder" : Z.art === "gruppe" ? (g ? `Gruppe ${g.gruppe.name} – ${g.personen.map(vfName).map((n) => n.split(" ")[0]).join(", ")}` : "bitte eine Gruppe antippen")
+    : Z.ids.length ? `${Z.ids.length} ausgewählt – ${Z.ids.map(vfName).map((n) => n.split(" ")[0]).join(", ")}` : "noch niemand ausgewählt";
+  z.innerHTML = `<div class="hl-chips">${chip("alle", "👥 Alle")}${chip("gruppe", "🧑‍🤝‍🧑 Gruppe")}${chip("auswahl", "☑️ Auswahl")}</div>${unten}<p class="hinweis" style="margin:4px 0 0">An: <b>${esc(an)}</b></p>`;
+}
+async function vfAuswahl() {
+  VF_ZIEL.art = "auswahl"; vfZielZeigen();
+  if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return meldeFehler(e); }
+  const gew = new Set(VF_ZIEL.ids), alle = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id);
+  const f = blattAuf("vfAuswahlBlatt", `<h3 style="margin:0">☑️ Wer soll abstimmen?</h3>
+    <input id="vfaSuche" type="search" placeholder="🔍 Name suchen …" style="width:100%;box-sizing:border-box;margin:6px 0">
+    <div class="knoepfe" style="margin:0 0 6px"><button type="button" class="knopf klein" id="vfaAlle">Alle an</button><button type="button" class="knopf klein" id="vfaKeiner">Keiner</button></div>
+    <div id="vfaListe" class="ta-liste wahlliste" style="max-height:52vh;overflow:auto"></div>
+    <div class="knoepfe bs-fuss"><button class="knopf haupt" id="vfaOk">Übernehmen</button><button class="knopf" onclick="$('vfAuswahlBlatt').remove()">Abbrechen</button></div>`);
+  f.style.zIndex = "2100"; f.classList.add("sc-blatt"); f.onclick = null;
+  const zeichnen = () => { const q = $("vfaSuche").value.toLowerCase();
+    $("vfaListe").innerHTML = alle.filter((m) => !q || m.name.toLowerCase().includes(q)).map((m) => `<label><input type="checkbox" data-p="${esc(m.person_id)}" ${gew.has(m.person_id) ? "checked" : ""}> <span style="flex:1">${esc(m.name)}</span></label>`).join("") || '<p class="hinweis">Niemand gefunden.</p>';
+    $("vfaListe").querySelectorAll("[data-p]").forEach((c) => (c.onchange = () => { c.checked ? gew.add(c.dataset.p) : gew.delete(c.dataset.p); $("vfaOk").textContent = `Übernehmen (${gew.size})`; }));
+    $("vfaOk").textContent = `Übernehmen (${gew.size})`; };
+  $("vfaSuche").oninput = zeichnen;
+  $("vfaAlle").onclick = () => { alle.forEach((m) => gew.add(m.person_id)); zeichnen(); };
+  $("vfaKeiner").onclick = () => { gew.clear(); zeichnen(); };
+  $("vfaOk").onclick = () => { VF_ZIEL.ids = [...gew]; f.remove(); vfZielZeigen(); };
+  zeichnen();
 }
 async function vorschlagSpeichern(knopf) {
   const daten = { art: vfArt, titel: $("vfTitel").value, beschreibung: $("vfBeschr").value, treffen_id: $("vfTreffen").value || null, benachrichtigen: $("vfInfo").checked };
@@ -11074,6 +11117,9 @@ async function vorschlagSpeichern(knopf) {
     daten.optionen = $("vfOptionen").value.split("\n").map((x) => x.trim()).filter(Boolean);
     daten.geheim = $("vfGeheim").checked;
     if ($("vfFristDatum").value) daten.frist = new Date(`${$("vfFristDatum").value}T${$("vfFristZeit").value || "20:00"}:00`).toISOString();
+    // KC-CLUB-ABSTIMMUNG-ZIEL (2.23.73)
+    if (VF_ZIEL.art === "gruppe") { const g = MG_GRUPPEN.find((x) => x.id === VF_ZIEL.gruppe); if (!g) return melde("Bitte eine Gruppe antippen.", true); daten.ziel = { art: "gruppe", name: g.gruppe.name, ids: g.personen }; }
+    if (VF_ZIEL.art === "auswahl") { if (!VF_ZIEL.ids.length) return melde("Bitte Mitglieder auswählen.", true); daten.ziel = { art: "auswahl", ids: VF_ZIEL.ids }; }
   }
   await einmal(knopf, async () => {
     try {

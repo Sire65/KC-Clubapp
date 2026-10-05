@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.23.73 – 2026-10-05 – Abstimmung an alle, eine Gruppe oder eine Auswahl (Wunsch Hansi)
+- KC-CLUB-ABSTIMMUNG-ZIEL: Beim Anlegen einer Abstimmung „An wen?“ – 👥 Alle (wie bisher), 🧑‍🤝‍🧑 Gruppe (alle Gruppen zur Auswahl) oder
+  ☑️ Auswahl (Fenster mit allen Mitgliedern zum Anklicken, Suche, „Alle an“/„Keiner“). Anzeige „An: …“ mit Namen.
+- Server: Nur die Ausgewählten (und wer sie angelegt hat; Admin sieht alle) sehen die Abstimmung, dürfen abstimmen und bekommen
+  Push/Mail – auch das Ergebnis am Ende. „x von n“ rechnet mit der Zielgruppe; Kachel-Zahl „offene Abstimmungen“ ebenso.
+  Kachel zeigt „🔐 Gruppe …“ bzw. „🔐 n ausgewählte Mitglieder“. Migration 20261005_kc_club_v22373_abstimmung_ziel.sql (2 leere Spalten).
+- Enthält 2.23.72 (🧭 Mikrofon-Assistent). Test 423.
+
 ## 2.23.72 – 2026-10-05 – 🧭 Mikrofon-Assistent (Wunsch Hansi: „so wie heute mit mir, Schritt für Schritt“)
 - KC-CLUB-MIKRO-ASSISTENT: Selbsttest (getUserMedia) → Schritt 1 WhatsApp-Test („🟢 WhatsApp öffnen“, ✅ geht / ❌ geht nicht → liegt am
   Handy: andere Sprach-App beenden, neu starten) → Schritt 2 Handy-Einstellung für den Browser („Nur während der Nutzung zulassen“, nicht
