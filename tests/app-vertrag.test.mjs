@@ -4357,6 +4357,18 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/m\.sender_person_id !== ich\.person_id && !ich\.admin\) throw/.test(w) && !/senden|routerSenden/.test(w), "Server: nur Verfasser/Admin, keine Benachrichtigung");
   assert.ok(/druckStarten\('chat'\)">🖨️ Ausdrucken/.test(html) && /chatKopieren\(\)">📋 Kopieren/.test(html) && /chat: \{ bauen: \(\) => druckChat\(\) \}/.test(html), "Ganzer Chat: kopieren + drucken im ⋮-Menü");
 }
+// 432. 2.23.81: Wochenbericht für die Admins – montags automatisch, Vorschau + jetzt senden (KC-CLUB-WOCHENBERICHT)
+{
+  const w = server.slice(server.indexOf("async function wochenberichtBauen()"), server.indexOf("async function adminIds(): Promise<string[]> {"));
+  assert.ok(/sendenGewaehlt\("club_nachricht", ziel, \["push", "email"\]/.test(w) && /ziel = await adminIds\(\)/.test(w), "Push + E-Mail an die Admins");
+  assert.ok(/if \(tag !== "Mon" \|\| berlinStunde\(new Date\(\)\) < 8\) return;/.test(w) && /x\.details\?\.erzwungen === false/.test(w), "montags ab 8 Uhr, einmal");
+  assert.ok(/"❔ unbekannt"/.test(w) && /"unbekannt"/.test(w), "unbekannt nie als OK");
+  assert.ok(!/\.text\b.*nachricht|message_text|\.inhalt/.test(w), "keine Inhalte");
+  assert.ok(/await wochenberichtLauf\(\)\.catch/.test(server), "läuft im Zeitplaner");
+  const c = server.slice(server.indexOf('case "wochenbericht"'), server.indexOf('case "communicator_status"'));
+  assert.ok(/nurAdmin\(ich\);/.test(c) && /\(count \?\? 0\) >= 3\) throw/.test(c), "nur Admin, Bremse");
+  assert.ok(/adKnopf\("📊 Wochenbericht", "wbAnsehen\(\)", true\)/.test(html) && /api\("wochenbericht", \{ senden: true \}/.test(html), "Knöpfe im Admin-Register");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

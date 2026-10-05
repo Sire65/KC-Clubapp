@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.23.81 – 2026-10-05 – 📊 Wochenbericht für den Admin (Wunsch Hansi)
+- KC-CLUB-WOCHENBERICHT: Jeden Montag ab 8 Uhr automatisch an die Admins per Push und E-Mail (einmal pro Woche, im Zeitplaner
+  „wartung“): 👥 Nutzung (aktiv, neu, nie angemeldet, alte Version), 🩺 Fehler (schwerwiegend/Hinweise), 🛡️ Sicherheit (Schutz, Spiegel,
+  Sicherung, Wiederherstellung, Überwachung), 📨 Benachrichtigungen (zugestellt/fehlgeschlagen), 📋 Offen bei dir (Erstattungen,
+  Änderungsmeldungen, Twinkey-Fragen, Abstimmungen/Vorschläge, Dienstwünsche, Besuche ohne Protokoll, Gesperrte). Nur Zahlen, keine Inhalte;
+  unbekannt bleibt „unbekannt“. Admin-Register → 📊 Lage: „📊 Wochenbericht“ (Vorschau) und „📨 Jetzt senden“ (Bremse 3/Std.). Test 432.
+
 ## 2.23.80 – 2026-10-05 – Pfeil an der Nachricht: Ausschneiden, Archivieren, Löschen (Wunsch Hansi)
 - KC-CLUB-PFEIL-MENUE: Der Pfeil neben einer einzelnen Nachricht bietet jetzt außer ↪️ Weiterleiten und 📋 Kopieren auch ✂️ Ausschneiden
   (Text kopieren, danach die gewohnte Lösch-Rückfrage „für mich / für alle“), 🗄️ Archivieren (Nachricht als Textdatei mit Absender, Chat

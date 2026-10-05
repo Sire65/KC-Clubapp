@@ -2942,7 +2942,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.80"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.81"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -9653,7 +9653,9 @@ function adBlatt(id) {
         <div class="adringe">${ringe.map(([p, t, u, w, k]) => adRing(p, adAlt() ? "grau" : adFarbeFuer(p, w, k), t, u)).join("")}</div>
         <div class="adisplay" style="margin:0">${AD_UEBERWACHT.map((x) => { const [f, t] = adZustand(x); const k = AD_KACHELN.find((y) => y[0] === x); return adZeile(f, k[1] + " " + k[2], t); }).join("")}</div>
         ${r ? `<b>👥 Mitglieder</b>${adSaeulen([["online", m.online, "gruen"], ["heute", m.heute, "gruen"], ["7 Tage", m.woche, "gruen"], ["Zugang", m.mitZugang, "gelb"], ["alle", m.gesamt, "grau"]])}` : ""}
-        <p class="hinweis" style="margin:0">⚪ = unbekannt oder älter als ${AD_ALT_MIN} Minuten – nie als „in Ordnung“ gewertet.</p>`;
+        <p class="hinweis" style="margin:0">⚪ = unbekannt oder älter als ${AD_ALT_MIN} Minuten – nie als „in Ordnung“ gewertet.</p>
+        <div class="na-pfeil-knoepfe">${adKnopf("📊 Wochenbericht", "wbAnsehen()", true)}${adKnopf("📨 Jetzt senden", "wbSenden(this)")}</div>
+        <p class="hinweis" style="margin:0;font-size:.85rem">Jeden Montag ab 8 Uhr kommt der Wochenbericht automatisch per Push und E-Mail.</p>`;
       break;
     }
     case "notfall":
@@ -9870,6 +9872,22 @@ async function sperreAuswahl() {
 async function sperreAufheben(pid, knopf) {
   await einmal(knopf, async () => {
     try { await api("sperre_aufheben", { ids: [pid] }, { warten: true }); melde(`🔓 ${vfName(pid)} ist wieder freigegeben`); sperrenLaden(); }
+    catch (e) { meldeFehler(e); }
+  });
+}
+// ---------- KC-CLUB-WOCHENBERICHT (2.23.81, Wunsch Hansi): Vorschau + „jetzt senden“; montags kommt er automatisch ----------
+async function wbAnsehen() {
+  let r; try { r = await api("wochenbericht", {}, { warten: true }); } catch (e) { return meldeFehler(e); }
+  const b = r.bericht;
+  const f = blattAuf("wbBerichtBlatt", `<h3 style="margin:0">📊 Wochenbericht</h3>
+    <p class="hinweis" style="margin:0">${b.probleme ? `⚠️ ${b.probleme} Punkt${b.probleme === 1 ? "" : "e"} ansehen` : "✅ Alles in Ordnung"} · nur Zahlen, keine Inhalte</p>
+    ${b.abschnitte.map(([t, z]) => `<div class="ps-schritt"><b>${esc(t)}</b><table class="vb-tabelle">${z.map(([a, w]) => `<tr><td>${esc(a)}</td><td>${esc(w)}</td></tr>`).join("")}</table></div>`).join("")}
+    <div class="na-pfeil-knoepfe"><button class="knopf haupt" onclick="wbSenden(this)">📨 Jetzt senden</button><button class="knopf" onclick="fensterZu($('wbBerichtBlatt'))">Schließen</button></div>`);
+  f.style.zIndex = "2100";
+}
+async function wbSenden(knopf) {
+  await einmal(knopf, async () => {
+    try { const r = await api("wochenbericht", { senden: true }, { warten: true }); melde(`📨 Wochenbericht geschickt – Push und E-Mail${r.probleme ? ` (${r.probleme} Punkt${r.probleme === 1 ? "" : "e"} ansehen)` : ""}`); }
     catch (e) { meldeFehler(e); }
   });
 }

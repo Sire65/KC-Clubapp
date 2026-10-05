@@ -41,7 +41,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.23.80";
+const SERVER_VERSION = "2.23.81";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -2053,6 +2053,79 @@ async function sicherheitAblegen(ich: Ich, zeilen: string[], probleme: number, m
     if (error) throw new Error(error.message);
   } catch (e) { await dateienEntfernen([datei.id]); throw e; }
 }
+// ---------- KC-CLUB-WOCHENBERICHT (2.23.81, Wunsch Hansi): jeden Montag ab 8 Uhr ein Bericht an die Admins (Push + E-Mail) ----------
+// Nur Zahlen und Zustände – keine Inhalte. Unbekannt bleibt „unbekannt“ (Regel 11). Einmal pro Woche (Protokoll „wochenbericht_gesendet“).
+async function wochenberichtBauen() {
+  const seit7 = new Date(Date.now() - 7 * 86400000).toISOString();
+  const [leute, { data: zug }, { data: fp }, { data: s0, error: sErr }, { data: req }, { count: erst }, { count: aend }, { count: tw }, { data: vs }, { count: dw }, schulung, sperren] = await Promise.all([
+    aktiveMitglieder(),
+    db.from("kc_club_zugang").select("person_id,aktiv,zuletzt_gesehen,erstmals_gesehen,app_version").not("person_id", "like", "KC-P-TEST%"),
+    db.from("kc_club_protokoll").select("aktion,details").or(FP_FILTER).gte("zeit", seit7).limit(2000),
+    db.rpc("kc_club_sicherheit_status"),
+    db.from("kc_communication_requests").select("status").eq("source_program", "kc-club").gte("created_at", seit7).limit(5000),
+    db.from("kc_club_erstattung").select("id", { count: "exact", head: true }).eq("status", "eingereicht"),
+    db.from("kc_club_aenderungen").select("id", { count: "exact", head: true }).neq("status", "erledigt"),
+    db.from("kc_club_twinkey_fragen").select("id", { count: "exact", head: true }).eq("status", "offen"),
+    db.from("kc_club_vorschlaege").select("art").eq("status", "offen"),
+    db.from("kc_dp_wish_inbox").select("id", { count: "exact", head: true }).eq("org_id", ORG).eq("source", "club_app").eq("status", "offen"),
+    schulungProtokollFehlt().catch(() => null),
+    sperrenAktuell().then((x) => x.liste.size).catch(() => null),
+  ]);
+  const aktivIds = new Set(leute.map((x: any) => x.person_id)), mz = (zug ?? []).filter((x: any) => x.aktiv && aktivIds.has(x.person_id));
+  const inWoche = (t: any) => t && Date.parse(t) > Date.now() - 7 * 86400000;
+  const stufen = { schwer: 0, hinweis: 0 } as Record<string, number>;
+  for (const x of fp ?? []) { const st = fpStufe((x as any).aktion, (x as any).details); if (st !== "info") stufen[st]++; }
+  const st: any = s0 ?? {}, frisch = (min: unknown, grenze: number) => (typeof min === "number" ? min <= grenze : null);
+  const z = (v: boolean | null) => (v === true ? "✅" : v === false ? "⚠️" : "❔ unbekannt");
+  const sicher: [string, boolean | null][] = sErr ? [["Sicherheitsstatus", null]] : [
+    ["Zugriffsschutz auf allen Daten", typeof st.ohne_schutz === "number" ? st.ohne_schutz === 0 : null],
+    ["Sicherungskopie (Spiegel) aktuell", frisch(st.spiegel_min, 8 * 60)],
+    ["Nächtliche Sicherung", frisch(st.sicherung_min, 30 * 60)],
+    ["Wiederherstellung getestet", st.wiederherstellung_min == null ? null : frisch(st.wiederherstellung_min, 8 * 24 * 60) && !st.wiederherstellung_fehler_danach],
+    ["Überwachung aktiv", frisch(st.ueberwachung_min, 120)],
+  ];
+  const r = (req ?? []) as any[], gesendet = r.filter((x) => ["sent", "delivered", "displayed", "opened"].includes(x.status)).length, fehlg = r.filter((x) => COMM_FEHLER.includes(x.status)).length;
+  const abst = (vs ?? []).filter((x: any) => x.art === "abstimmung").length, vors = (vs ?? []).length - abst;
+  const zahl = (n: number | null | undefined) => (typeof n === "number" ? String(n) : "unbekannt");
+  const abschnitte: [string, [string, string][]][] = [
+    ["👥 Nutzung (7 Tage)", [["Mitglieder aktiv", `${mz.filter((x: any) => inWoche(x.zuletzt_gesehen)).length} von ${mz.length} mit Zugang`],
+      ["Zum ersten Mal dabei", String(mz.filter((x: any) => inWoche(x.erstmals_gesehen)).length)],
+      ["Noch nie angemeldet", String(mz.filter((x: any) => !x.zuletzt_gesehen).length)],
+      ["Mit alter App-Version", String(mz.filter((x: any) => x.zuletzt_gesehen && x.app_version && x.app_version !== SERVER_VERSION).length)]]],
+    ["🩺 Fehler (7 Tage)", [["Schwerwiegend", String(stufen.schwer)], ["Hinweise", String(stufen.hinweis)]]],
+    ["🛡️ Sicherheit", sicher.map(([t, v]) => [t, z(v)])],
+    ["📨 Benachrichtigungen (7 Tage)", [["Zugestellt", r.length ? String(gesendet) : "keine"], ["Fehlgeschlagen", String(fehlg)]]],
+    ["📋 Offen bei dir", [["Erstattungsanträge", zahl(erst)], ["Änderungsmeldungen", zahl(aend)], ["Fragen an Twinkey", zahl(tw)],
+      ["Abstimmungen / Vorschläge", `${abst} / ${vors}`], ["Dienstwünsche (noch nicht übernommen)", zahl(dw)],
+      ["Besuchstermine ohne Protokoll", schulung ? String(schulung.length) : "unbekannt"], ["Gesperrte Personen", zahl(sperren)]]],
+  ];
+  const probleme = stufen.schwer + sicher.filter(([, v]) => v === false).length + (fehlg > 0 ? 1 : 0);
+  return { abschnitte, probleme, version: SERVER_VERSION };
+}
+async function wochenberichtSenden(erzwungen: string | null) {
+  const wt = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].indexOf(new Intl.DateTimeFormat("en-US", { timeZone: TZ, weekday: "short" }).format(new Date()));
+  const woche = berlinTag(new Date(Date.now() - Math.max(0, wt) * 86400000)); // Montag dieser Woche
+  const b = await wochenberichtBauen(), ziel = await adminIds();
+  if (!ziel.length) return { ok: false, grund: "kein Admin" };
+  const text = b.abschnitte.map(([t, z]) => `${t}\n${z.map(([a, w]) => `  • ${a}: ${w}`).join("\n")}`).join("\n\n");
+  const versand = await sendenGewaehlt("club_nachricht", ziel, ["push", "email"], {
+    titel: b.probleme ? `📊 Wochenbericht: ${b.probleme} Punkt${b.probleme === 1 ? "" : "e"} ansehen` : "📊 Wochenbericht: alles in Ordnung",
+    kurz: `Köcheclub-App – Woche ab ${woche.split("-").reverse().join(".")}`,
+    betreff: `Köcheclub-App: Wochenbericht ab ${woche.split("-").reverse().join(".")}${b.probleme ? ` – ${b.probleme} Punkt${b.probleme === 1 ? "" : "e"} ansehen` : " – alles in Ordnung"}`,
+    text: `Hallo,\n\nhier der Wochenbericht der Köcheclub-App (nur Zahlen, keine Inhalte):\n\n${text}\n\nServer-Version ${b.version}\n\nEinzelheiten: Admin-Register in der App\n${APP_URL}\n\nViele Grüße\nKöcheclub-App`,
+    url: APP_URL,
+  }, `club-wochenbericht:${woche}${erzwungen ? ":" + Date.now() : ""}`);
+  await protokoll(erzwungen, "wochenbericht_gesendet", { woche, probleme: b.probleme, erzwungen: !!erzwungen });
+  return { ok: true, woche, probleme: b.probleme, versand, bericht: b };
+}
+async function wochenberichtLauf() {
+  const tag = new Intl.DateTimeFormat("en-US", { timeZone: TZ, weekday: "short" }).format(new Date());
+  if (tag !== "Mon" || berlinStunde(new Date()) < 8) return;
+  // schon heute automatisch geschickt? (ein „jetzt senden“ des Admins zählt nicht – der Montagsbericht kommt trotzdem)
+  const { data: heute } = await db.from("kc_club_protokoll").select("details").eq("aktion", "wochenbericht_gesendet").gte("zeit", new Date(Date.now() - 20 * 3600000).toISOString()).limit(20);
+  if ((heute ?? []).some((x: any) => x.details?.erzwungen === false)) return;
+  await wochenberichtSenden(null);
+}
 async function adminIds(): Promise<string[]> {
   const { data } = await db.from("kc_club_rollen").select("person_id").eq("ist_admin", true);
   return (data ?? []).map((x: any) => x.person_id);
@@ -3608,6 +3681,7 @@ Deno.serve(async (req) => {
       await adminAbwesendPruefen().catch((e) => console.error("admin abwesend", String(e))); // KC-CLUB-VERTRETUNG (2.2.0)
       await stadtAutoLauf().catch((e) => console.error("stadt termine", String(e)));
       await aeUebernahmeMelden().catch((e) => console.error("aenderung uebernahme", String(e)));
+      await wochenberichtLauf().catch((e) => console.error("wochenbericht", String(e))); // KC-CLUB-WOCHENBERICHT (2.23.81)
       await ekDienstwunschMelden().catch((e) => console.error("eingang dienstwunsch", String(e))); /* KC-CLUB-EINGANGSKORB (2.23.6) */ /* KC-CLUB-AENDERUNG-FREIGABE (2.22.19) */ // KC-CLUB-STADT-TERMINE (2.22.6): wöchentlich, nur wenn eingeschaltet
       // KC-CLUB-NUTZUNG-PERSONEN (2.6.0): Geräte-Kennungen nur 100 Tage aufbewahren
       { const { error } = await db.from("kc_club_nutzung_geraete").delete().lt("tag", berlinTag(new Date(Date.now() - 100 * 86400000))); if (error) console.error("nutzung geraete loeschen", error.message); }
@@ -9213,6 +9287,16 @@ Köcheclub-App`,
         return json({ ok: true });
       }
 
+      // KC-CLUB-WOCHENBERICHT (2.23.81): Vorschau (nur ansehen) oder sofort senden – nur Admin
+      case "wochenbericht": {
+        nurAdmin(ich);
+        if (p.senden) {
+          const { count } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("aktion", "wochenbericht_gesendet").eq("person_id", ich.person_id).gte("zeit", new Date(Date.now() - 3600000).toISOString());
+          if ((count ?? 0) >= 3) throw new Fehler("Der Bericht wurde gerade schon geschickt – bitte etwas später.", 429);
+          return json(await wochenberichtSenden(ich.person_id));
+        }
+        return json({ bericht: await wochenberichtBauen() });
+      }
       case "communicator_status": {
         return json(await communicatorStatus(ich, true));
       }
