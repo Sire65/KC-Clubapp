@@ -1344,7 +1344,7 @@
   .sc-blatt .sc-eintrag > div, .sc-blatt .hinweis { line-height: 1.35; } .sc-blatt .karte > p.hinweis { margin: 4px 0; }
   .sc-blatt .blatt-innen > .knopf { padding: 10px 14px; text-align: center; font-size: .95rem; }
   /* 2.23.61 KC-CLUB-BESUCHE */
-  .sc-tabs { margin: 6px 0; } .bs-kpi { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 6px 0; } .bs-kpi div { background: var(--karte2, #0001); border-radius: 10px; padding: 6px; text-align: center; }
+  .sc-tabs { margin: 6px 0; } .bs-weg { opacity: .6; } /* 2.23.70 abgesagt */ .bs-kpi { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 6px 0; } .bs-kpi div { background: var(--karte2, #0001); border-radius: 10px; padding: 6px; text-align: center; }
   .bs-kpi b { display: block; font-size: 1.2rem; } .bs-kpi span { font-size: .8rem; } .bs-frage { margin: 8px 0; } .bs-frage input { width: 100%; box-sizing: border-box; }
   .bs-fotos { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; } .bs-mini { height: 40px; border-radius: 6px; vertical-align: middle; } #bsBlatt textarea { width: 100%; box-sizing: border-box; }
   .ta-kal-alt { margin: 8px 0 0; padding: 8px; border-radius: 8px; background: #d6eaf8; color: #1b4f72; display: grid; gap: 6px; } .ta-kal-alt .knopf { width: auto; justify-self: start; } /* 2.23.58 */
@@ -2921,7 +2921,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.69"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.70"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -15930,14 +15930,19 @@ async function bsLaden() {
 }
 function bsListeHtml() {
   const jahre = [...new Set(BS.liste.map((b) => b.datum.slice(0, 4)))].sort().reverse();
-  const bs = BS.liste.filter((b) => !BS.jahr || b.datum.startsWith(BS.jahr)), zaehlt = bs.filter((b) => b.status !== "geplant"), nGeplant = bs.length - zaehlt.length;
+  // 2.23.70 (Wunsch Hansi): abgesagte Termine nicht mehr als „geplant“ mitten in der Liste – unten zugeklappt; vorbei + geplant = Protokoll fehlt
+  const abgesagt = (b) => b.status === "geplant" && b.termin === "abgesagt";
+  const alle = BS.liste.filter((b) => !BS.jahr || b.datum.startsWith(BS.jahr)), bs = alle.filter((b) => !abgesagt(b)), weg = alle.filter(abgesagt);
+  const zaehlt = bs.filter((b) => b.status !== "geplant"), nGeplant = bs.length - zaehlt.length, heute = heuteIso();
+  const zeile = (b) => `<button type="button" class="ti-zeile bs-zeile${abgesagt(b) ? " bs-weg" : ""}" onclick="bsFormular('${esc(b.besuch_id)}')">📝 <span><b>${esc(b.mitglied)}</b> <small class="hinweis">${esc(b.besuch_id)}</small><br>
+      <small>${esc(b.datum.split("-").reverse().join("."))}${b.zeit_von ? " · " + b.zeit_von.slice(0, 5) + (b.zeit_bis ? "–" + b.zeit_bis.slice(0, 5) : "") : ""}${b.dauer_min ? ` (${bsHm(b.dauer_min)} Std.)` : ""}${b.km_gesamt != null && b.besuchsart !== "bei_hansi" ? ` · ${bsKm(b.km_gesamt)} km` : ""}
+      ${abgesagt(b) ? " · ✖ Termin abgesagt" : b.status === "geplant" && b.datum < heute ? ' · <b class="ta-st-gv">📝 Protokoll fehlt</b>' : b.status === "geplant" ? " · 📅 geplant" : ""}${!abgesagt(b) && (b.termin === "bestaetigt" || bsTermin(b.besuch_id)) && b.datum >= heute ? " · ✅ Termin bestätigt" : ""}${b.besuchsart === "bei_hansi" ? " · 🏠 kam zu mir" : ""}${b.push_gesendet_am || b.mail_gesendet_am ? " · ✉️ verschickt" : ""}${b.fotos?.length ? ` · 📷 ${b.fotos.length}` : ""}</small></span><b>›</b></button>`;
   return `<div class="knoepfe"><button class="knopf haupt klein" onclick="bsFormular()">➕ Neuer Besuch</button><button class="knopf klein" onclick="bsFormular(null,{geplant:true})">📅 Geplanter Termin</button></div>
     <div class="hl-chips" style="margin:6px 0">${["", ...jahre].map((j) => `<button type="button" class="chip${BS.jahr === j ? " an" : ""}" onclick="BS.jahr='${j}';scZeigen()">${j || "Alle"}</button>`).join("")}</div>
     <div class="bs-kpi"><div><b>${zaehlt.length}</b><span>Besuche</span></div><div><b>${bsHm(zaehlt.reduce((s, b) => s + (b.dauer_min || 0), 0))}</b><span>Stunden</span></div><div><b>${bsKm(zaehlt.reduce((s, b) => s + Number(b.km_gesamt || 0), 0))}</b><span>km gesamt</span></div></div>
     ${nGeplant ? `<p class="hinweis" style="margin:4px 0">Dazu ${nGeplant} geplante${nGeplant === 1 ? "r Besuch – zählt" : " Besuche – zählen"} erst nach dem Besuch.</p>` : ""}
-    ${bs.map((b) => `<button type="button" class="ti-zeile bs-zeile" onclick="bsFormular('${esc(b.besuch_id)}')">📝 <span><b>${esc(b.mitglied)}</b> <small class="hinweis">${esc(b.besuch_id)}</small><br>
-      <small>${esc(b.datum.split("-").reverse().join("."))}${b.zeit_von ? " · " + b.zeit_von.slice(0, 5) + (b.zeit_bis ? "–" + b.zeit_bis.slice(0, 5) : "") : ""}${b.dauer_min ? ` (${bsHm(b.dauer_min)} Std.)` : ""}${b.km_gesamt != null ? ` · ${bsKm(b.km_gesamt)} km` : ""}
-      ${b.status === "geplant" ? " · 📅 geplant" : ""}${bsTermin(b.besuch_id) ? " · ✅ Termin bestätigt" : ""}${b.besuchsart === "bei_hansi" ? " · 🏠 kam zu mir" : ""}${b.push_gesendet_am || b.mail_gesendet_am ? " · ✉️ verschickt" : ""}${b.fotos?.length ? ` · 📷 ${b.fotos.length}` : ""}</small></span><b>›</b></button>`).join("") || '<p class="hinweis">Noch keine Besuche eingetragen.</p>'}`;
+    ${bs.map(zeile).join("") || '<p class="hinweis">Noch keine Besuche eingetragen.</p>'}
+    ${weg.length ? `<details style="margin-top:8px"><summary class="hinweis">✖ Abgesagte Termine (${weg.length})</summary>${weg.map(zeile).join("")}</details>` : ""}`;
 }
 // Formular: neu (optional vorbelegt aus einem Termin) oder bearbeiten
 function bsFormular(id, vorgabe = {}) {
@@ -15949,6 +15954,7 @@ function bsFormular(id, vorgabe = {}) {
     gesendet: b ? [b.push_gesendet_am && "Push " + zeitKurz(b.push_gesendet_am), b.mail_gesendet_am && "Mail " + zeitKurz(b.mail_gesendet_am)].filter(Boolean).join(" · ") : "" };
   const w = (k, d = "") => esc(b?.[k] ?? vorgabe[k] ?? d);
   const f = blattAuf("bsBlatt", `<h3 style="margin:0">📝 ${b ? (BS.f.geplant ? "Geplanter Besuch " : "Besuch ") + esc(b.besuch_id) : "Neuer Besuch"}</h3>
+    ${b?.status === "geplant" && b.termin === "abgesagt" ? '<div class="karte ta-st-gv">✖ Der Termin zu diesem Besuch wurde abgesagt. Nur ausfüllen, wenn der Besuch doch stattgefunden hat – sonst einfach schließen.</div>' : ""}
     <div class="karte"><h4>Besuch</h4><div class="hl-chips" id="bsArt"></div>
       <label class="feld">Mitglied auswählen<select id="bsWahl" onchange="bsPerson(this.value)"><option value="">– antippen –</option>${BS.mitglieder.map((m) => `<option value="${esc(m.person_id)}">${esc(m.display_name)}</option>`).join("")}</select></label>
       <div class="hl-chips" id="bsPersonen"></div>

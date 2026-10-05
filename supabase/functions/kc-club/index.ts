@@ -41,7 +41,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.23.69";
+const SERVER_VERSION = "2.23.70";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -5342,6 +5342,11 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             db.from("kc_besuche").select("*").order("datum", { ascending: false }).order("erstellt_am", { ascending: false }).limit(300),
             db.from("kc_besuche_anrede").select("person_id,anrede"),
             db.from("kc_core_people").select("person_id,display_name,given_name,family_name,street,postal_code,city,email").eq("active", true).not("person_id", "like", "KC-P-TEST%").order("display_name")]);
+          // KC-CLUB-BESUCH-TERMINSTAND (2.23.70): Stand des Termins je Besuch – „storniert“ ohne aktive Buchung = Termin abgesagt
+          const bIds = (bes ?? []).map((b: any) => b.besuch_id);
+          const { data: tb } = bIds.length ? await db.from("kc_termin_buchungen").select("besuch_id,status").in("besuch_id", bIds) : { data: [] as any[] };
+          for (const b of bes ?? []) { const st = (tb ?? []).filter((x: any) => x.besuch_id === b.besuch_id).map((x: any) => x.status);
+            (b as any).termin = st.includes("bestaetigt") ? "bestaetigt" : st.includes("vorgemerkt") ? "vorgemerkt" : st.includes("storniert") ? "abgesagt" : null; }
           return json({ besuche: bes ?? [], anreden: Object.fromEntries((anr ?? []).map((x: any) => [x.person_id, x.anrede])),
             mitglieder: (leute ?? []).map((m: any) => ({ person_id: m.person_id, display_name: m.display_name, given_name: m.given_name, family_name: m.family_name, hat_email: !!m.email,
               adresse: [m.street, [m.postal_code, m.city].filter(Boolean).join(" ")].filter(Boolean).join(", ") })) });

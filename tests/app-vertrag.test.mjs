@@ -4230,6 +4230,13 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(k.indexOf('data-k="termine"') < k.indexOf('data-k="einladen"') && k.indexOf('data-k="einladen"') < k.indexOf('data-k="anbieten"') && k.indexOf('data-k="anbieten"') < k.indexOf('data-k="einladungen"'), "Reihenfolge");
   assert.ok(/async function schulungProtokollFehlt\(\)/.test(server) && /art: "protokoll"/.test(server), "Server zählt fehlende Protokolle");
 }
+// 419. 2.23.70: abgesagte Termine in der Besuchsliste getrennt, nichts gelöscht (KC-CLUB-BESUCH-TERMINSTAND)
+{
+  assert.ok(/\(b as any\)\.termin = st\.includes\("bestaetigt"\) \? "bestaetigt" : st\.includes\("vorgemerkt"\) \? "vorgemerkt" : st\.includes\("storniert"\) \? "abgesagt" : null;/.test(server), "Server liefert Terminstand je Besuch");
+  assert.ok(/const abgesagt = \(b\) => b\.status === "geplant" && b\.termin === "abgesagt";/.test(html) && /✖ Abgesagte Termine \(\$\{weg\.length\}\)/.test(html) && /📝 Protokoll fehlt<\/b>/.test(html), "abgesagt unten zugeklappt, Protokoll fehlt sichtbar");
+  const g = server.slice(server.indexOf('if (a === "liste") {'), server.indexOf('if (a === "speichern") {'));
+  assert.ok(!/delete\(/.test(g), "Liste löscht nichts");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

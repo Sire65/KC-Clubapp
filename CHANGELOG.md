@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.23.70 – 2026-10-05 – Besuchsliste: abgesagte Termine getrennt (Wunsch Hansi: „Christina steht 2× drauf“)
+- KC-CLUB-BESUCH-TERMINSTAND: Die Besuchsliste kennt den Stand des Termins je Besuch (Server: besuch/liste liefert termin = bestaetigt /
+  vorgemerkt / abgesagt). Geplante Besuche, deren Termin abgesagt wurde, stehen nicht mehr als „geplant“ in der Liste, sondern unten
+  zugeklappt unter „✖ Abgesagte Termine (n)“ (blass, zählen nicht als geplant). Nichts wird gelöscht – ein abgesagter Besuch mit Notizen
+  bleibt erhalten; im Formular steht dann „✖ Termin wurde abgesagt – nur ausfüllen, wenn der Besuch doch stattfand“.
+- Geplanter Besuch, dessen Tag vorbei ist: „📝 Protokoll fehlt“ statt „geplant · Termin bestätigt“. „0 km“ bei „kam zu mir“ ausgeblendet. Test 419.
+
 ## 2.23.69 – 2026-10-05 – Schulungstermine: Ablauf rund gemacht (Wunsch Hansi, 5 Punkte)
 - KC-CLUB-SCHULUNG-PROTOKOLL: Nach einem bestätigten Termin (letzte 30 Tage) steht unter „⏳ Wartet auf dich“ „📝 Termin war – Protokoll fehlt“
   mit „📝 Besuch eintragen“, bis das Protokoll gespeichert ist. Zählt auch im Start-Hinweis und auf der Kachel.
