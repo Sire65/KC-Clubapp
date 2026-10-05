@@ -1325,6 +1325,7 @@
   .pr-filter { position: relative; padding-top: 44px; }
   .klappen-alle-zeile { display: flex; justify-content: flex-end; margin: -4px 0 -4px; } .klappen-alle-zeile .klappen-alle { margin: 0; width: auto; min-height: 38px; padding: 4px 14px; white-space: nowrap; } /* 2.23.40 KC-CLUB-KLAPPEN-ALLE */
   /* 2.23.39 KC-CLUB-EINGANG-FILTER + KC-CLUB-DIENST-UEBERSICHT */
+  .ekh-liste { display: grid; gap: 6px; } /* 2.23.43 KC-CLUB-EINGANG-HINWEIS */
   .ek-kopf { display: flex; align-items: center; gap: 8px; margin: 12px 0 0; } .ek-kopf > b { flex: 1; font-size: 1.15rem; }
   .dv-blatt { align-items: stretch; } .dv-blatt .blatt-innen { width: 100%; max-height: 100vh !important; height: 100%; border-radius: 0; display: flex; flex-direction: column; gap: 8px; }
   .dv-kopf { display: flex; align-items: center; gap: 8px; } .dv-kopf h3 { flex: 1; margin: 0; } .dv-kopf .pr-filter-zu { position: static; flex: none; }
@@ -2864,7 +2865,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.42"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.43"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3950,6 +3951,7 @@ const HILFE = [
   { id: "buero_sprache", thema: "club", sym: "🎙️", t: "Im Büro einfach sagen, was du brauchst", x: "Im Büro gibt es das Mikrofon <b>„🎙️ Sag mir, was du brauchst“</b> – zum Beispiel „Öffne Ordner Protokolle“. Das spart Tipperei, wenn es schnell gehen soll.", nur: () => !!ICH?.buero, zeig: () => buStart(), seit: "2.23.1" },
   // 2.23.8: Hilfen zu den Neuerungen aus 2.23.6 (Eingangskorb, Ablage, Büro-Hinweis, Töne, Inkognito)
   { id: "eingangskorb", thema: "club", sym: "📥", t: "Der Eingangskorb im Büro", x: "Alles, was für die Clubleitung neu hereinkommt, liegt im Büro im <b>📥 Eingangskorb</b>: Erstattungen (Fahrtkosten), Dienstzeiten, Vorschläge, Änderungsmeldungen, Ausleihen und mehr. Clubsprecher, Kassenwart und Admin bekommen dazu eine Meldung. Es bleibt im Eingang, bis es erledigt ist – zum Beispiel mit <b>„✅ Erstattet“</b> oder <b>„👁️ Zur Kenntnis genommen“</b>. Oben rechts: <b>🔽</b> filtert nach Jahr, Monat, Art und Name, <b>📊</b> zeigt alle Dienstzeiten als Übersicht quer (Name, Tage, Zeitbalken, Stunden) – mit Drucken und „🗄️ In Ordner ablegen“ (Ordner des Mitglieds, Register Dienstpläne, und im Büro „Dienstpläne“).", nur: () => !!(ICH?.vorstand || ICH?.admin), zeig: () => { buStart(); buEingang(); }, seit: "2.23.8" },
+  { id: "eingang_hinweis", thema: "club", sym: "📥", t: "Hinweis: viel im Eingangskorb", x: "Liegen <b>mehr als 5 Sachen</b> im Eingangskorb, zeigt die App der Clubleitung beim Start eine kleine Liste – z. B. „5 Dienstpläne, 1 Kostenerstattung, 1 Hilfegesuch“. Eine Zeile antippen öffnet den Eingangskorb gleich mit dieser Art. Darunter: <b>„✅ Ja, jetzt bearbeiten“</b>, <b>„⏰ Später“</b> (in ein paar Stunden wieder) oder <b>„🌙 Heute nicht mehr“</b>.", nur: () => !!(ICH?.vorstand || ICH?.admin), zeig: () => { buStart(); buEingang(); }, seit: "2.23.43" },
   { id: "ablage_mehrere", thema: "club", sym: "🗄️", t: "In mehrere Ordner ablegen", x: "Ist etwas im Eingangskorb erledigt, fragt die App <b>„Wo ablegen?“</b>. Setz einfach Häkchen – es dürfen mehrere sein: im Ordner des Mitglieds (zum Nachvollziehen), in unseren Club-Ordnern mit passendem Register oder in deinem eigenen Ordner. Die App merkt sich deine Wahl fürs nächste Mal. Nachträglich geht es über <b>„🗄️ Ablegen …“</b>.", nur: () => !!(ICH?.vorstand || ICH?.admin), zeig: () => { buStart(); buEingang(); }, seit: "2.23.8" },
   { id: "buero_neue_nachricht", thema: "club", sym: "💬", t: "Neue Nachricht, während du im Büro bist", x: "Kommt eine Nachricht, während du im Büro arbeitest, erscheint oben ein grüner Hinweis <b>„💬 Neue Nachricht von …“</b>. Ein Tipp darauf öffnet die Unterhaltung genau an der richtigen Stelle; mit Zurück bist du wieder im Büro.", nur: () => !!ICH?.buero, zeig: () => buStart(), seit: "2.23.8" },
   { id: "ttt_toene", thema: "club", sym: "🔊", t: "Tic-Tac-Toe mit Tönen", x: "Unter dem Spielfeld gibt es den Knopf <b>„🔊 Töne an / 🔇 aus“</b>. Dann klingt jeder Zug – deiner hell, der des Gegners tiefer – und am Ende hörst du, ob du gewonnen, verloren oder unentschieden gespielt hast. Gilt nur auf diesem Gerät.", zeig: () => { zeige("spiele"); spArtWahl("ttt"); }, seit: "2.23.8" },
@@ -10548,6 +10550,41 @@ function buGrussFragen(nochmal) {
   try { sessionStorage.setItem("kc_buero_gefragt", "1"); } catch {}
   tagesinfoZeigen();
 }
+// ---------- KC-CLUB-EINGANG-HINWEIS (2.23.43, Wunsch Hansi): liegen mehr als 5 Sachen im Eingangskorb, weist die App die Clubleitung beim
+// Start darauf hin – mit kleiner Liste je Art („4 Dienstpläne, 1 Kostenerstattung …“). Zeile antippen = Eingangskorb, gefiltert auf diese Art.
+// „✅ Ja, jetzt bearbeiten“ / „⏰ Später“ (3 Stunden Ruhe) / „🌙 Heute nicht mehr“ (bis Mitternacht, je Gerät). Kommt erst, wenn kein
+// anderes Fenster offen ist (z. B. nach der Tages-Übersicht). Ohne Verbindung kein Hinweis (Zahlen werden nie geraten).
+const EKH_HEUTE = "kc_club_ek_hinweis_heute", EKH_SPAETER = "kc_club_ek_hinweis_spaeter", EKH_AB = 6, EKH_RUHE_MS = 3 * 3600000;
+const EKH_ARTEN = [["dienstzeiten", "📅", "Dienstplan", "Dienstpläne", "Dienstzeiten"], ["erstattungen", "💶", "Kostenerstattung", "Kostenerstattungen", "Erstattung"],
+  ["hilfe", "🙋", "Hilfegesuch", "Hilfegesuche", "Hilfe-Aufruf"], ["ausleihen", "📦", "Ausleih-Anfrage", "Ausleih-Anfragen", "Ausleihe"], ["vorschlaege", "💡", "Vorschlag", "Vorschläge", "Vorschlag"],
+  ["aenderungen", "✏️", "Änderungsmeldung", "Änderungsmeldungen", "Änderungsmeldung"], ["archiv", "🗄️", "Dokument zur Prüfung", "Dokumente zur Prüfung", "Archiv-Prüfung"],
+  ["entwuerfe", "📄", "Protokoll-Entwurf", "Protokoll-Entwürfe", "Protokoll"], ["aufgaben", "✔️", "offene Aufgabe", "offene Aufgaben", "Aufgabe"]];
+const ekhLies = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
+async function ekHinweisPruefen(versuch = 0) {
+  if (!(ICH?.vorstand || ICH?.admin) || !buDarf()) return;
+  try { if (sessionStorage.getItem("kc_ek_hinweis_gezeigt")) return; } catch {}
+  if (ekhLies(EKH_HEUTE) === heuteIso() || Date.now() < Number(ekhLies(EKH_SPAETER) || 0)) return;
+  if (document.querySelector(".blatt:not(.versteckt)") || aktuelleAnsicht !== "start") { if (versuch < 15) setTimeout(() => ekHinweisPruefen(versuch + 1), 6000); return; }
+  let z; try { z = await api("eingang_zahlen"); } catch { return; }
+  const l = EKH_ARTEN.map(([k, sym, ein, mehr, art]) => ({ n: Number(z?.[k]) || 0, sym, t: (Number(z?.[k]) || 0) === 1 ? ein : mehr, art })).filter((x) => x.n > 0);
+  const summe = l.reduce((a, x) => a + x.n, 0);
+  if (summe < EKH_AB) return;
+  if (document.querySelector(".blatt:not(.versteckt)") || aktuelleAnsicht !== "start") { if (versuch < 15) setTimeout(() => ekHinweisPruefen(versuch + 1), 6000); return; }
+  try { sessionStorage.setItem("kc_ek_hinweis_gezeigt", "1"); } catch {}
+  const f = blattAuf("ekHinweisBlatt", `<h3 style="margin:0">📥 Im Eingangskorb liegen ${summe} Sachen</h3>
+    <p class="hinweis" style="margin:0">Für die Clubleitung. Antippen öffnet den Eingangskorb.</p>
+    <div class="ekh-liste">${l.map((x) => `<button type="button" class="ti-zeile" data-art="${esc(x.art)}">${x.sym} <span><b>${x.n}</b> ${esc(x.t)}</span><b>›</b></button>`).join("")}</div>
+    <b>Möchtest du das jetzt bearbeiten?</b>
+    <button class="knopf haupt" data-w="jetzt">✅ Ja, jetzt bearbeiten</button><button class="knopf" data-w="spaeter">⏰ Später</button><button class="knopf" data-w="heute">🌙 Heute nicht mehr</button>`);
+  f.querySelectorAll("[data-art]").forEach((b) => (b.onclick = () => { f.remove(); ekHinweisOeffnen(b.dataset.art); }));
+  f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => {
+    f.remove(); const w = b.dataset.w;
+    if (w === "jetzt") return ekHinweisOeffnen("");
+    try { if (w === "heute") localStorage.setItem(EKH_HEUTE, heuteIso()); else localStorage.setItem(EKH_SPAETER, String(Date.now() + EKH_RUHE_MS)); } catch {}
+    melde(w === "heute" ? "🌙 Heute nicht mehr – der Eingangskorb bleibt im Büro erreichbar." : "⏰ Später – in ein paar Stunden erinnere ich dich wieder.");
+  }));
+}
+function ekHinweisOeffnen(art) { Object.assign(EKF, { jahr: "", monat: "", wer: "", art: art || "", offen: !!art }); buStart(); buEingang(); }
 // ---------- KC-CLUB-TAGESINFO (1.33.0, Wunsch Hansi): Tages-Übersicht beim Start – alles Wichtige, jede Zeile antippbar ----------
 // Clubleitung: Eingang, Aufgaben, Geburtstage/Jubiläen, nächste Sitzung; Kassenwart zusätzlich Kasse/Ausleihen; Admin zusätzlich
 // Meldungen und Technik (Ampel: fehlender oder veralteter Messwert = ⚪ „nicht geprüft“, nie grün). Liest nur, sendet nichts.
@@ -18056,6 +18093,7 @@ async function fpAdmin(tage) {
     else if (h === "#eingang" && ICH?.buero) { buStart(); buEingang(); } // KC-CLUB-EINGANGSKORB (2.23.6): Push führt direkt in den Eingang
     else if (h === "#aenderungen") ICH?.vorstand || ICH?.admin ? aeEingang() : aeStart(); // KC-CLUB-AENDERUNG (2.22.7): aus Push/Mail
     if (!h || h === "#") setTimeout(() => buGrussFragen(), 1500); // KC-CLUB-BUERO: Begrüßung der Clubleitung
+    if (!h || h === "#") setTimeout(() => ekHinweisPruefen(), 3000); // KC-CLUB-EINGANG-HINWEIS: viel im Eingangskorb?
     if (!h || h === "#") setTimeout(() => spEinladung(), 4000); // KC-CLUB-SPIEL-EINLADUNG (2.12.0): nach Begrüßung/Neuigkeiten
   });
   // KC-CLUB-UPDATE-AUTO (2.3.2, Wunsch Hansi): auch beim Start und alle 10 Min. (nur auf der Startseite, nichts offen,

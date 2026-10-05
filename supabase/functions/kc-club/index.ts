@@ -41,7 +41,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.23.42";
+const SERVER_VERSION = "2.23.43";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -4411,6 +4411,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           eingang,
         });
       }
+
+      // KC-CLUB-EINGANG-HINWEIS (2.23.43, Wunsch Hansi): nur Zahlen je Art für den Start-Hinweis der Clubleitung (liest nur)
+      case "eingang_zahlen": nurLeitung(ich); return json(await bueroEingang(ich));
 
       case "buero_sitzung": nurBueroLesen(ich); return json(await bueroSitzung(ich, String(p.treffen_id || "")));
 

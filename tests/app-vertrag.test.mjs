@@ -3972,6 +3972,15 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/anleitung: 5/.test(inh) && /▾ Alle auf \/ ▴ Alle zu/.test(inh) && /titel: "Neue Gruppe"/.test(inh), "Inhalt V5");
   assert.ok(/\{ id: "bedienung-club-app-v5",[^}]*datei: "dokumente\/Koecheclub-App_Anleitung_V5\.pdf"/.test(html) && !/bedienung-club-app-v4/.test(html), "V5 in Meine Dokumente");
 }
+// 392. 2.23.43: Start-Hinweis bei mehr als 5 Sachen im Eingangskorb (KC-CLUB-EINGANG-HINWEIS)
+{
+  assert.ok(/case "eingang_zahlen": nurLeitung\(ich\); return json\(await bueroEingang\(ich\)\);/.test(server), "Server: nur Clubleitung, nur Zahlen");
+  const f = html.slice(html.indexOf("async function ekHinweisPruefen"), html.indexOf("function ekHinweisOeffnen"));
+  assert.ok(/EKH_AB = 6/.test(html) && /if \(summe < EKH_AB\) return;/.test(f) && /catch \{ return; \}/.test(f), "erst ab 6, ohne Verbindung kein Hinweis");
+  assert.ok(/✅ Ja, jetzt bearbeiten/.test(f) && /⏰ Später/.test(f) && /🌙 Heute nicht mehr/.test(f) && /localStorage\.setItem\(EKH_HEUTE, heuteIso\(\)\)/.test(f), "Ja / Später / Heute nicht mehr");
+  assert.ok(/document\.querySelector\("\.blatt:not\(\.versteckt\)"\) \|\| aktuelleAnsicht !== "start"/.test(f) && /setTimeout\(\(\) => ekHinweisPruefen\(\), 3000\)/.test(html), "beim Start, nicht über andere Fenster");
+  assert.ok(/\["dienstzeiten", "📅", "Dienstplan", "Dienstpläne", "Dienstzeiten"\]/.test(html) && /ekHinweisOeffnen\(b\.dataset\.art\)/.test(f) && /Object\.assign\(EKF, \{ jahr: "", monat: "", wer: "", art: art \|\| "", offen: !!art \}\); buStart\(\); buEingang\(\);/.test(html), "Zeile öffnet den Eingangskorb mit Filter");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

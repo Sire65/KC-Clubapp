@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.23.43 – 2026-10-05 – 📥 Hinweis an die Clubleitung: viel im Eingangskorb (Wunsch Hansi)
+- KC-CLUB-EINGANG-HINWEIS: Liegen mehr als 5 Sachen im Eingangskorb, zeigt die App Clubsprecher, Kassenwart und Admin beim Start ein Fenster
+  „📥 Im Eingangskorb liegen 10 Sachen“ mit kleiner Liste je Art (z. B. 4 Dienstpläne, 1 Kostenerstattung, 1 Hilfegesuch). Zeile antippen =
+  Eingangskorb, gleich gefiltert auf diese Art. Darunter „✅ Ja, jetzt bearbeiten“ / „⏰ Später“ (3 Stunden Ruhe) / „🌙 Heute nicht mehr“.
+  Kommt erst, wenn kein anderes Fenster offen ist (z. B. nach der Tages-Übersicht); ohne Verbindung kein Hinweis. Kein Push, keine Mail.
+  Server-Aktion eingang_zahlen (nur Clubleitung, nur Zahlen). Hilfe „Hinweis: viel im Eingangskorb“. Test 392.
+
 ## 2.23.42 – 2026-10-05 – Texte zu „Alle auf/zu“ und Neue Gruppe + Bedienungsanleitung V5 (Wunsch Hansi)
 - 🎓 Kurz erklärt: Einstellungen nennt „▾ Alle auf / ▴ Alle zu“ und das Schloss; neu „👥 Neue Gruppe“ (Deine Gruppen, Name & Symbol,
   Wer ist dabei?, Pfeil und Schloss).
