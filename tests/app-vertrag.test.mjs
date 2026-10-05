@@ -4243,6 +4243,10 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/oben = bs\.filter\(\(b\) => b\.status === "geplant"\)/.test(html), "oben nur Geplantes/Protokoll fehlt");
   assert.ok(/<span>🗂️ Besuche \(vergangen\)<\/span>/.test(html) && /<b>\$\{nGeplant\}<\/b><span>📅 geplant<\/span>/.test(html) && /<b>\$\{weg\.length\}<\/b><span>✖ abgesagt<\/span>/.test(html), "Anzahl geplant/vergangen/abgesagt in den Kacheln");
 }
+// 421. 2.23.71: Pinnwand-Kachel zeigt die Anzahl der Zettel (alle sichtbaren · eigene) – rote Zahl bleibt „neu für mich“
+{
+  assert.ok(/u: \(\) => PW\.geladen \? `📌 \$\{PW\.zettel\.length\} Zettel · \$\{PW\.meine\} von dir` : "Kurze Zettel · wichtig & erledigt", v: "pinnwand", zahl: \(\) => PW\.offen \|\| 0/.test(html), "Anzahl auf der Kachel, rote Zahl unverändert");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

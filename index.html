@@ -3183,7 +3183,7 @@ const pwFuerText = (z) => z.fuer === "ich" ? "nur für mich" : z.fuer === "alle"
 const pwDreh = (id) => { let h = 0; for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) | 0; return ((Math.abs(h) % 7) - 3) * 0.8 + (h % 2 ? 0.4 : -0.4); };
 const pwOffen = (z) => z.wichtig && !z.erledigt && (!z.vonMir || z.fuer === "ich");
 function pwUebernehmen(r) {
-  PW.zettel = r.zettel || []; PW.meine = r.meine || 0; PW.max = r.max || 4; PW.zeichen = r.zeichen || 200;
+  PW.zettel = r.zettel || []; PW.meine = r.meine || 0; PW.max = r.max || 4; PW.zeichen = r.zeichen || 200; PW.geladen = true; // 2.23.71: Anzahl auf der Kachel
   PW.hilfe = r.hilfe || null; // KC-CLUB-HILFE-PINNWAND (1.90.0): offene Hilfe-Aufrufe als Aushang
   PW.offen = PW.zettel.filter((z) => !z.vonMir && !z.erledigt).length + pwHilfeNeu().length;
   if (aktuelleAnsicht === "start" && !kaBearb) kachelnZeigen();
@@ -8705,7 +8705,7 @@ const KACHELN = {
     { id: "aktionen", sym: "🧳", t: "Aktionen", u: "Ausflüge & Reisen", v: "aktionen" },
     { id: "fotos", sym: "📷", t: "Fotoalbum", u: "Nach Thema & Datum", aktion: "faFilter={};faPapierkorb=false;zeige('fotos')" },
     { id: "feedback", sym: "💭", t: "Feedback", u: "Deine Meinung zur App", v: "feedback" },
-    { id: "pinnwand", sym: "📌", t: "Pinnwand", u: "Kurze Zettel · wichtig & erledigt", v: "pinnwand", zahl: () => PW.offen || 0 },
+    { id: "pinnwand", sym: "📌", t: "Pinnwand", u: () => PW.geladen ? `📌 ${PW.zettel.length} Zettel · ${PW.meine} von dir` : "Kurze Zettel · wichtig & erledigt", v: "pinnwand", zahl: () => PW.offen || 0 }, // 2.23.71 KC-CLUB-PINNWAND-ANZAHL
     // KC-CLUB-HELFEN / KC-CLUB-LEIHEN (1.23.0, Wunsch Hansi): eine Kachel für „Wer kann helfen?“ und „Ausleihen“
     { id: "helfen", sym: "🤝", t: "Helfen & Leihen", u: "Wer kann helfen? · Ausleihen", aktion: "hlStart()" },
     // KC-CLUB-BUERO (1.25.0): nur für die Clubleitung (Clubsprecher, Kassenwart, Admin)

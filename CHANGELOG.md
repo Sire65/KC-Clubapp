@@ -4,6 +4,8 @@
 - KC-CLUB-BESUCH-TERMINSTAND: Oben stehen nur geplante Besuche und solche mit „📝 Protokoll fehlt“; erledigte Besuche liegen zugeklappt unter
   „🗂️ Vergangene Termine (n)“, darunter „✖ Abgesagte Termine (n)“. Zahlen (Besuche, Stunden, km) unverändert über alle.
   Zahlen-Kacheln: oben 🗂️ Besuche (vergangen) · Stunden · km, darunter 📅 geplant · 📝 Protokoll fehlt · ✖ abgesagt. Test 420.
+- KC-CLUB-PINNWAND-ANZAHL (Wunsch Hansi): Die Kachel „📌 Pinnwand“ zeigt unter dem Namen „📌 n Zettel · m von dir“ (alle Zettel, die du siehst,
+  und deine eigenen). Die rote Zahl bleibt wie bisher: Neues/Offenes für dich. Test 421.
 
 ## 2.23.70 – 2026-10-05 – Besuchsliste: abgesagte Termine getrennt (Wunsch Hansi: „Christina steht 2× drauf“)
 - KC-CLUB-BESUCH-TERMINSTAND: Die Besuchsliste kennt den Stand des Termins je Besuch (Server: besuch/liste liefert termin = bestaetigt /
