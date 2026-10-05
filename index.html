@@ -1333,6 +1333,10 @@
   .sc-blatt .blatt-innen { max-height: 94vh !important; } .sc-blatt .karte { margin: 8px 0; } .sc-blatt h4 { margin: 0 0 6px; } .sc-blatt summary { cursor: pointer; padding: 2px 0; }
   .sc-eintrag { border-top: 1px solid #8883; padding: 8px 0; } .sc-eintrag:first-child { border-top: 0; } .sc-eintrag .knoepfe { margin-top: 6px; } .sc-eintrag .knopf { width: auto; }
   .sc-mliste { max-height: 40vh; overflow: auto; } .sc-mliste .marke { font-size: .75rem; } .sc-prot { padding: 4px 0; border-top: 1px solid #8882; } .sc-fehler { color: var(--rot); }
+  /* 2.23.61 KC-CLUB-BESUCHE */
+  .sc-tabs { margin: 6px 0; } .bs-kpi { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 6px 0; } .bs-kpi div { background: var(--karte2, #0001); border-radius: 10px; padding: 6px; text-align: center; }
+  .bs-kpi b { display: block; font-size: 1.2rem; } .bs-kpi span { font-size: .8rem; } .bs-frage { margin: 8px 0; } .bs-frage input { width: 100%; box-sizing: border-box; }
+  .bs-fotos { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; } .bs-mini { height: 40px; border-radius: 6px; vertical-align: middle; } #bsBlatt textarea { width: 100%; box-sizing: border-box; }
   .ta-kal-alt { margin: 8px 0 0; padding: 8px; border-radius: 8px; background: #d6eaf8; color: #1b4f72; display: grid; gap: 6px; } .ta-kal-alt .knopf { width: auto; justify-self: start; } /* 2.23.58 */
   .ta-vk { margin: 4px 0 2px; } .ta-vorbehalt { margin: 6px 0 0; padding: 6px 8px; border-radius: 8px; background: #fdebd0; color: #7e5109; } #taVkBlatt textarea { width: 100%; box-sizing: border-box; } #taVkBlatt label { display: grid; gap: 2px; } .ta-gv-zeit { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } #taGvBlatt label { display: grid; gap: 2px; }
   /* 2.23.48 KC-CLUB-KUECHENCHEF → 2.23.49 KC-CLUB-TWINKEY */
@@ -2904,7 +2908,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.60"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.61"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3903,6 +3907,7 @@ const HILFE = [
   { id: "einstellung_suchen", thema: "start", sym: "🔍", t: "Jede Einstellung schnell finden", x: "In den Einstellungen findest du mit der <b>Lupe 🔍 unten rechts</b> jede Einstellung – z. B. „Ton“ oder „Farbe“ eingeben. Bereiche öffnest du durch Antippen der Überschrift, mit dem Schloss 🔒 hältst du sie offen oder zu.", zeig: () => zeige("einstellungen") },
   { id: "anfrage_status", thema: "termine", sym: "📨", t: "Wie steht meine Terminanfrage?", x: "Unter <b>📅 Termine</b> steht bei deiner Anfrage <b>„Anfrage an …“</b> und der Stand: <b>📨 angefragt</b>, <b>👁️ gelesen</b>, <b>✅ bestätigt</b>, <b>🤔 vielleicht</b>, <b>❌ abgelehnt</b>, <b>🔄 Gegenvorschlag</b> (eine andere Zeit – mit <b>„✅ Neue Zeit annehmen“</b> oder <b>„❌ Passt nicht“</b> entscheidest du) oder <b>⌛ abgelaufen</b>, wenn bis zur Frist bzw. bis zum Termin keine Antwort kam. Wirst du angefragt, kannst du mit <b>„🔄 Andere Zeit vorschlagen“</b> selbst eine Zeit vorschlagen.", zeig: () => zeige("termine"), seit: "2.23.50" },
   { id: "anfrage_hinweis", thema: "termine", sym: "📨", t: "Hinweis: neue Terminanfrage", x: "Fragt dich jemand nach einem Termin, sagt dir die App das beim Öffnen und zwischendurch: <b>„📨 Du hast eine neue Terminanfrage“</b>. <b>👀 Ja, jetzt ansehen</b> bringt dich hin, <b>⏰ Später</b> erinnert in 2 Stunden, <b>🌙 Heute nicht mehr fragen</b> wartet bis morgen. Sobald du geantwortet hast, kommt der Hinweis nicht mehr.", zeig: () => zeige("termine"), seit: "2.23.52" },
+  { id: "besuche", thema: "termine", sym: "📝", t: "Besuchsprotokoll (Admin)", x: "In <b>🎓 Schulungen</b> → <b>📝 Besuche</b> trägst du jeden Besuch ein: Mitglied, Ort, Datum, Zeit, km, Gesprächspunkte 1–7, Notizen und ein Foto vom Papierprotokoll. Oben siehst du Besuche, Stunden und km je Jahr. Mit <b>„📅 Geplant“</b> merkst du einen Besuch vor – auf Wunsch mit Terminbestätigung ans Mitglied. Nach dem Besuch: Häkchen raus, ausfüllen, <b>Speichern &amp; senden</b> – das Mitglied bekommt die Zusammenfassung per Push und Mail (du als BCC), eine Kopie liegt in seinem Archiv-Ordner.", zeig: () => scStart("besuche"), nur: () => !!ICH?.admin, seit: "2.23.61" },
   { id: "schulungen", thema: "termine", sym: "🎓", t: "Schulungen verwalten (Admin)", x: "Unter der Kachel <b>🎓 Schulungen</b> (nur für den Admin) stellst du Termine ein (bei mir, beim Mitglied oder Mitglied wählt; 1–3 Plätze), lädst Mitglieder einzeln oder gemeinsam ein und gibst ihre Wahl mit <b>✅ Bestätigen</b> frei. Bei jedem Mitglied siehst du den Stand (🎓 geschult, ✅ Termin, ✉️ eingeladen …). Wer die Club-App nicht hat, wählt über den Link in der Mail – ohne E-Mail mit <b>🔗 Link teilen</b> (z. B. WhatsApp).", zeig: () => scStart(), nur: () => !!ICH?.admin, seit: "2.23.60" },
   { id: "twinkey", thema: "start", sym: "🧑‍🍳", t: "Frag Twinkey", x: "Du weißt nicht, wo etwas ist? Tippe auf <b>🧑‍🍳 Frag Twinkey</b> (Kachel oder oben im Hilfe-Zentrum) und stell deine Frage in eigenen Worten – getippt oder mit 🎤 gesprochen, z. B. „Wie ändere ich die Farben?“. Twinkey zeigt die passende Antwort, liest sie auf Wunsch vor und bringt dich mit <b>„👉 Zeig es mir“</b> genau an die Stelle. Weiß er es noch nicht, tippst du auf <b>➤ Fragen</b>: Twinkey recherchiert, du bekommst die Antwort später per Push, E-Mail oder in der App – und unter <b>📬 Deine Fragen</b>. Danach kennt Twinkey die Antwort auch für alle anderen.", zeig: () => twFrageStart(), seit: "2.23.49" },
   { id: "diktat_feld", thema: "start", sym: "🎤", t: "Sprechen statt tippen", x: "Wo rechts im Feld ein <b>🎤</b> steht, kannst du diktieren: antippen, sprechen – der Text erscheint im Feld. <b>„✅ Fertig“</b> beendet, bei der Suche geht es nach dem ersten Satz von selbst. Verschickt wird nichts – du prüfst und tippst selbst auf Senden. Das 🎤 gibt es bei der <b>Lupe</b>, im <b>Hilfe-Zentrum</b>, beim <b>Pinnwand-Zettel</b> und bei <b>Hilfe-Aufruf und Angebot</b>; bei SOS heißt es „🎙️ Einsprechen“.", zeig: () => zeige("hilfezentrum"), seit: "2.23.47" },
@@ -15473,20 +15478,26 @@ function scGruppe(pids) {
 }
 const scEinl = (id) => SC.T.einladungen.find((e) => e.id === id), scSlot = (id) => SC.T.slots.find((s) => s.id === id);
 async function scApi(a, daten = {}) { return api("schulung", { a, ...daten }, { warten: true }); }
-async function scStart() {
+async function scStart(tab) {
   if (!ICH?.admin) return;
+  if (tab) SC.tab = tab;
   blattAuf("scBlatt", `<h3 style="margin:0">🎓 Schulungen</h3>
     <p class="hinweis" style="margin:0">Termine anbieten, Mitglieder einladen und Antworten freigeben. Wer die Club-App noch nicht hat, wählt über den Link in der Mail.</p>
+    <div class="hl-chips sc-tabs" id="scTabs"></div>
     <div id="scInhalt"><p class="hinweis">Wird geladen …</p></div>
     <button class="knopf" onclick="$('scBlatt').remove()">Schließen</button>`).classList.add("sc-blatt");
   await scLaden();
 }
 async function scLaden() {
+  if (!BS.liste.length && !BS.geladen) { BS.geladen = true; bsLaden().then(() => scZeigen()); } // KC-CLUB-BESUCHE: für „🎓 geschult“ und die Liste
   try { SC.T = await scApi("t_init"); } catch (e) { const z = $("scInhalt"); if (z) z.innerHTML = `<div class="karte sc-fehler">⚠️ ${esc(e?.message || "Nicht erreichbar")}</div>`; return; }
   scZeigen();
 }
 function scZeigen() {
   const z = $("scInhalt"); if (!z || !SC.T) return;
+  const tab = SC.tab || "termine";
+  $("scTabs").innerHTML = [["termine", "📅 Termine & Einladungen"], ["besuche", "📝 Besuche"]].map(([k, t]) => `<button type="button" class="chip${tab === k ? " an" : ""}" onclick="SC.tab='${k}';scZeigen()">${t}${k === "termine" && SC.wartet ? ` (${SC.wartet})` : ""}</button>`).join("");
+  if (tab === "besuche") { z.innerHTML = `<div class="karte">${bsListeHtml()}</div>`; return; }
   const offen = z.querySelectorAll("details[open]"), auf = new Set([...offen].map((d) => d.dataset.k));
   z.innerHTML = `
     <div class="karte"><h4>⏳ Wartet auf dich</h4><div id="scWartet"></div></div>
@@ -15595,7 +15606,7 @@ function scTermine() {
     const art = bs[0] ? bs[0].besuchsart : s.besuchsart === "wahl" && s.buchungen ? "bei_hansi" : s.besuchsart;
     return `<div class="sc-eintrag"><b>${esc(scZeit(s.beginn, s.ende))}</b> ${marke}${s.herkunft === "gegenvorschlag" ? ' <span class="marke">Vorschlag</span>' : ""}
       <div class="hinweis">${SC_ART[art] || ""} · ${s.belegt}/${s.plaetze} Plätze${s.status === "offen" && frei > 0 && !s.hat_hausbesuch && !vorbei ? ` · ${frei} frei` : ""}${s.notiz ? " · " + esc(s.notiz) : ""}</div>
-      ${bs.map((b) => { const e = scEinl(b.einladung_id); return `<div>• ${esc(e ? scGruppe(e.person_ids) : "?")} – ${b.status === "bestaetigt" ? "✅ gebucht" : "⏳ wartet auf Freigabe"}</div>`; }).join("")}
+      ${bs.map((b) => { const e = scEinl(b.einladung_id); return `<div>• ${esc(e ? scGruppe(e.person_ids) : "?")} – ${b.status === "bestaetigt" ? "✅ gebucht" : "⏳ wartet auf Freigabe"}${b.status === "bestaetigt" ? ` <button type="button" class="tw-nicht" onclick="bsAusTermin('${b.id}')">📝 ${b.besuch_id ? "Protokoll öffnen" : "Besuch eintragen"}</button>` : ""}</div>`; }).join("")}
       ${s.status === "offen" && !vorbei ? `<div class="knoepfe">${jemals ? `<button class="knopf klein" onclick="scAbsagen(this,'${s.id}',${bs.length})">Termin absagen</button>` : `<button class="knopf klein" onclick="scLoeschen(this,'${s.id}')">Löschen</button>`}</div>` : ""}</div>`;
   };
   const kommend = T.slots.filter((s) => new Date(s.ende).getTime() >= jetztMs), alt = T.slots.filter((s) => new Date(s.ende).getTime() < jetztMs).reverse();
@@ -15617,9 +15628,9 @@ async function scLoeschen(k, id) {
 const scTagKurz = (d) => (d ? new Intl.DateTimeFormat("de-DE", { timeZone: TZ, day: "2-digit", month: "2-digit" }).format(new Date(d)) : "");
 function scStand(pid) {
   const T = SC.T, marken = [], heute = heuteIso();
-  const geschult = (T.besuche || []).filter((b) => b.status !== "geplant" && (b.person_ids || []).includes(pid)).map((b) => b.datum).sort().pop();
+  const geschult = (BS.liste.length ? BS.liste : T.besuche || []).filter((b) => b.status !== "geplant" && (b.person_ids || []).includes(pid)).map((b) => b.datum).sort().pop();
   if (geschult) marken.push(`<span class="marke ta-st-ja">🎓 geschult ${scTagKurz(geschult + "T12:00:00")}</span>`);
-  const geplant = (T.besuche || []).filter((b) => b.status === "geplant" && (b.person_ids || []).includes(pid) && b.datum >= heute).map((b) => b.datum).sort()[0];
+  const geplant = (BS.liste.length ? BS.liste : T.besuche || []).filter((b) => b.status === "geplant" && (b.person_ids || []).includes(pid) && b.datum >= heute).map((b) => b.datum).sort()[0];
   const planMarke = () => (geplant ? `<span class="marke ta-st-ja">✅ Termin ${scTagKurz(geplant + "T12:00:00")}</span>` : "");
   const e = T.einladungen.filter((x) => !x.ist_test && x.person_ids.includes(pid)).sort((a, b) => String(b.erstellt_am).localeCompare(String(a.erstellt_am)))[0];
   if (!e) return [...marken, planMarke()].filter(Boolean).join(" ") || '<span class="marke">noch nicht eingeladen</span>';
@@ -15725,6 +15736,174 @@ async function scChronik(eid) {
       return `<div class="sc-prot"><small class="hinweis">${esc(zeitKurz(x.zeit))}${x.wer ? " · " + esc(SC_WER[x.wer] || x.wer) : ""}${x.person ? " · " + esc(x.person) : ""}</small><br><b>${esc(titel)}</b>${det ? `<br><small>${esc(det)}</small>` : ""}</div>`;
     }).join("") || '<p class="hinweis">Noch keine Einträge.</p>';
   } catch (err) { $("scChronikInhalt").innerHTML = `<p class="ta-st-nein">⚠️ ${esc(err?.message || "Nicht erreichbar")}</p>`; }
+}
+
+// ---------- KC-CLUB-BESUCHE (2.23.61, Wunsch Hansi): Besuchsprotokoll in der Club-App (Stufe 2, nur Admin) ----------
+// Liste mit Stunden/km, neuer Besuch, bearbeiten, „📅 Geplant“ (mit Terminbestätigung über den Termin-Baustein), Gesprächspunkte 1–7,
+// Notizen, Foto vom Papierprotokoll (nur speichern – ohne Auswertung), Zusammenfassung ans Mitglied (Push + Mail, BCC an dich,
+// Kopie in seinen Archiv-Ordner). Gleiche Daten wie im bisherigen Besuchsprotokoll.
+const BS = { liste: [], mitglieder: [], anreden: {}, jahr: "", f: null };
+const BS_FRAGEN = [
+  { f: "f1_praesentation", t: "1 · Weihnachtsmarkt-Präsentation: welche Gestaltung?", o: [["rathaus", "Rathaus"], ["rot", "Rote Version"], ["offen", "Noch offen"]] },
+  { f: "f2_bild_spruch", t: "2 · Mit Bild und Spruch in der Präsentation?", o: [["ja", "Ja"], ["nein", "Nein"], ["klaeren", "Noch klären"]] },
+  { f: "f3_kasse", t: "3 · Kassenprogramm: welche Oberfläche?", o: [["alt", "Alte"], ["neu", "Neue"], ["offen", "Offen"]] },
+  { f: "f4_dienstplan", t: "4 · Dienstplanprogramm einsetzen?", o: [["ja", "Ja"], ["nein", "Nein"], ["spaeter", "Später"]] },
+  { f: "f5_verwaltung", t: "5 · KC Verwaltung einsetzen?", o: [["ja", "Ja"], ["nein", "Nein"], ["spaeter", "Später"]] },
+  { f: "f6_router", t: "6 · Stand vernetzen mit 5G-Router?", o: [["ja", "Ja"], ["nein", "Nein"], ["spaeter", "Später"]] },
+];
+const BS_GERAETE = [["tablet", "📱 Tablet"], ["pc", "💻 PC"], ["handy", "📞 Handy"]];
+const bsHm = (min) => Math.floor(min / 60) + ":" + String(min % 60).padStart(2, "0");
+const bsKm = (x) => Number(x || 0).toLocaleString("de-DE", { maximumFractionDigits: 1 });
+async function bsLaden() {
+  try { const r = await api("besuch", { a: "liste" }, { warten: true }); BS.liste = r.besuche || []; BS.mitglieder = r.mitglieder || []; BS.anreden = r.anreden || {}; }
+  catch (e) { meldeFehler(e); }
+}
+function bsListeHtml() {
+  const jahre = [...new Set(BS.liste.map((b) => b.datum.slice(0, 4)))].sort().reverse();
+  const bs = BS.liste.filter((b) => !BS.jahr || b.datum.startsWith(BS.jahr)), zaehlt = bs.filter((b) => b.status !== "geplant");
+  return `<div class="knoepfe"><button class="knopf haupt klein" onclick="bsFormular()">➕ Neuer Besuch</button><button class="knopf klein" onclick="bsFormular(null,{geplant:true})">📅 Abgesprochenen Termin eintragen</button></div>
+    <div class="hl-chips" style="margin:6px 0">${["", ...jahre].map((j) => `<button type="button" class="chip${BS.jahr === j ? " an" : ""}" onclick="BS.jahr='${j}';scZeigen()">${j || "Alle"}</button>`).join("")}</div>
+    <div class="bs-kpi"><div><b>${zaehlt.length}</b><span>Besuche</span></div><div><b>${bsHm(zaehlt.reduce((s, b) => s + (b.dauer_min || 0), 0))}</b><span>Stunden</span></div><div><b>${bsKm(zaehlt.reduce((s, b) => s + Number(b.km_gesamt || 0), 0))}</b><span>km gesamt</span></div></div>
+    ${bs.map((b) => `<button type="button" class="ti-zeile bs-zeile" onclick="bsFormular('${esc(b.besuch_id)}')">📝 <span><b>${esc(b.mitglied)}</b> <small class="hinweis">${esc(b.besuch_id)}</small><br>
+      <small>${esc(b.datum.split("-").reverse().join("."))}${b.zeit_von ? " · " + b.zeit_von.slice(0, 5) + (b.zeit_bis ? "–" + b.zeit_bis.slice(0, 5) : "") : ""}${b.dauer_min ? ` (${bsHm(b.dauer_min)} Std.)` : ""}${b.km_gesamt != null ? ` · ${bsKm(b.km_gesamt)} km` : ""}
+      ${b.status === "geplant" ? " · 📅 geplant" : ""}${b.besuchsart === "bei_hansi" ? " · 🏠 kam zu mir" : ""}${b.push_gesendet_am || b.mail_gesendet_am ? " · ✉️ verschickt" : ""}${b.fotos?.length ? ` · 📷 ${b.fotos.length}` : ""}</small></span><b>›</b></button>`).join("") || '<p class="hinweis">Noch keine Besuche eingetragen.</p>'}`;
+}
+// Formular: neu (optional vorbelegt aus einem Termin) oder bearbeiten
+function bsFormular(id, vorgabe = {}) {
+  const b = id ? BS.liste.find((x) => x.besuch_id === id) : null;
+  const heute = heuteIso();
+  BS.f = { id: b?.besuch_id || null, art: b?.besuchsart || vorgabe.art || "beim_mitglied", personen: [...(b?.person_ids || vorgabe.personen || [])],
+    antworten: Object.fromEntries(BS_FRAGEN.map((q) => [q.f, b?.[q.f] || null])), geraete: [...(b?.installiert_auf || [])], fotos: [...(b?.fotos || [])], neueFotos: [],
+    geplant: b ? b.status === "geplant" : !!vorgabe.geplant || (vorgabe.datum || heute) > heute,
+    gesendet: b ? [b.push_gesendet_am && "Push " + zeitKurz(b.push_gesendet_am), b.mail_gesendet_am && "Mail " + zeitKurz(b.mail_gesendet_am)].filter(Boolean).join(" · ") : "" };
+  const w = (k, d = "") => esc(b?.[k] ?? vorgabe[k] ?? d);
+  const f = blattAuf("bsBlatt", `<h3 style="margin:0">📝 ${b ? (BS.f.geplant ? "Geplanter Besuch " : "Besuch ") + esc(b.besuch_id) : "Neuer Besuch"}</h3>
+    <div class="karte"><h4>Besuch</h4><div class="hl-chips" id="bsArt"></div>
+      <label class="feld">Mitglied auswählen<select id="bsWahl" onchange="bsPerson(this.value)"><option value="">– antippen –</option>${BS.mitglieder.map((m) => `<option value="${esc(m.person_id)}">${esc(m.display_name)}</option>`).join("")}</select></label>
+      <div class="hl-chips" id="bsPersonen"></div>
+      <label class="feld">Bei wem (Name / Betrieb)<input id="bsMitglied" value="${w("mitglied")}" placeholder="z. B. Klaus und Dieter Zander"></label>
+      <label class="feld">Ort<input id="bsOrt" value="${w("ort")}" placeholder="Straße, PLZ Ort"></label>
+      <label class="feld">Anwesende<input id="bsAnwesende" value="${w("anwesende")}" placeholder="z. B. Klaus, Dieter, Hansi"></label></div>
+    <div class="karte"><h4>Wann und wie weit?</h4>
+      <label class="feld">Datum<input id="bsDatum" type="date" value="${w("datum", vorgabe.datum || heute)}" onchange="BS.f.geplant=this.value>heuteIso();bsZeigen()"></label>
+      <label class="tw-check"><input type="checkbox" id="bsGeplant" onchange="BS.f.geplant=this.checked;bsZeigen()"> 📅 Geplant – der Besuch findet erst noch statt</label>
+      <div class="zwei"><label class="feld">Von<input id="bsVon" type="time" value="${esc((b?.zeit_von || vorgabe.von || "").slice(0, 5))}" oninput="bsSumme()"></label><label class="feld">Bis<input id="bsBis" type="time" value="${esc((b?.zeit_bis || vorgabe.bis || "").slice(0, 5))}" oninput="bsSumme()"></label></div>
+      <label class="feld" id="bsKmFeld">Ein Weg (km)<input id="bsKm" inputmode="decimal" value="${esc(b?.km_einfach != null ? String(b.km_einfach).replace(".", ",") : "")}" placeholder="z. B. 12,5" oninput="bsSumme()"></label>
+      <p class="hinweis" id="bsSumme" style="margin:0"></p></div>
+    <div class="karte" id="bsInhalt"><h4>Gesprächspunkte</h4>
+      ${BS_FRAGEN.map((q) => `<div class="bs-frage"><b>${q.t}</b><div class="hl-chips" data-feld="${q.f}">${q.o.map(([v, t]) => `<button type="button" class="chip" data-w="${v}" onclick="bsWaehle('${q.f}','${v}')">${t}</button>`).join("")}</div>
+        ${q.f === "f2_bild_spruch" ? `<label class="feld" id="bsSpruchFeld">Gewünschter Spruch oder Hinweis<input id="bsSpruch" value="${w("f2_spruch")}"></label>` : ""}</div>`).join("")}
+      <div class="bs-frage"><b>7 · Weiterer Punkt</b><input id="bsF7Thema" value="${w("f7_thema")}" placeholder="Thema"><label class="feld">Ergebnis<input id="bsF7Antwort" value="${w("f7_antwort")}"></label></div>
+      <label class="feld">Worin geschult (für den Dank-Text, freiwillig)<input id="bsThema" value="${w("schulung_thema")}" placeholder="z. B. das Kassensystem"></label>
+      <div class="bs-frage"><b>Schulungsversion installiert auf</b><div class="hl-chips" id="bsGeraete"></div></div>
+      <h4>Notizen</h4>
+      <label class="feld">Notizen und Stichpunkte<textarea id="bsNotizen" data-diktat rows="3">${w("notizen")}</textarea></label>
+      <label class="feld">Vereinbarungen und nächste Schritte<textarea id="bsVereinb" data-diktat rows="3">${w("vereinbarungen")}</textarea></label>
+      <label class="feld">Bemerkungen (für die Abrechnung, nur für dich)<textarea id="bsBem" rows="2">${w("bemerkungen")}</textarea></label></div>
+    <div class="karte"><h4>📷 Foto vom Papierprotokoll</h4><p class="hinweis" style="margin:0 0 6px">Wird beim Besuch gespeichert (ohne automatisches Auslesen).</p>
+      <button type="button" class="knopf klein" onclick="$('bsFotoInput').click()">📷 Foto aufnehmen / auswählen</button><input id="bsFotoInput" type="file" accept="image/*,application/pdf" multiple class="versteckt" onchange="bsFotosGewaehlt(this.files)">
+      <div id="bsFotos" class="bs-fotos"></div></div>
+    <div class="karte" id="bsVersand"></div>
+    <button class="knopf haupt" id="bsSpeichern" onclick="bsSpeichern(this)">Speichern</button><button class="knopf" onclick="$('bsBlatt').remove()">Abbrechen</button>`);
+  f.style.zIndex = "2100"; f.classList.add("sc-blatt");
+  bsZeigen();
+}
+function bsPerson(pid) {
+  $("bsWahl").value = ""; if (!pid || BS.f.personen.includes(pid)) return;
+  BS.f.personen.push(pid); bsNamen();
+  const m = BS.mitglieder.find((x) => x.person_id === pid);
+  if (!$("bsOrt").value && BS.f.art === "beim_mitglied" && m?.adresse) $("bsOrt").value = m.adresse;
+  bsZeigen();
+}
+function bsNamen() {
+  const ms = BS.f.personen.map((p) => BS.mitglieder.find((x) => x.person_id === p)).filter(Boolean); if (!ms.length) return;
+  const nach = [...new Set(ms.map((m) => m.family_name).filter(Boolean))], vor = ms.map((m) => m.given_name || m.display_name);
+  $("bsMitglied").value = nach.length === 1 && ms.length > 1 ? vor.join(" und ") + " " + nach[0] : ms.map((m) => m.display_name).join(", ");
+  $("bsAnwesende").value = [...vor, ICH?.vorname || "Hansi"].join(", ");
+}
+function bsWaehle(feld, wert) { BS.f.antworten[feld] = BS.f.antworten[feld] === wert ? null : wert; bsZeigen(); }
+function bsSumme() {
+  const von = $("bsVon").value, bis = $("bsBis").value, km = parseFloat(($("bsKm").value || "").replace(",", ".")), t = [];
+  if (von && bis && bis > von) { const [a, b] = [von, bis].map((x) => +x.slice(0, 2) * 60 + +x.slice(3)); t.push("Dauer " + bsHm(b - a) + " Std."); }
+  if (BS.f.art === "bei_hansi") t.push("Mitglied kam zu dir – keine km"); else if (!isNaN(km)) t.push("Hin und zurück " + bsKm(km * 2) + " km");
+  $("bsSumme").textContent = t.join(" · ");
+}
+function bsZeigen() {
+  const F = BS.f;
+  $("bsArt").innerHTML = [["beim_mitglied", "🚗 Ich fahre hin"], ["bei_hansi", "🏠 Mitglied kommt zu mir"]].map(([a, t]) => `<button type="button" class="chip${F.art === a ? " an" : ""}" onclick="BS.f.art='${a}';if('${a}'==='bei_hansi')$('bsOrt').value='bei Hansi';bsZeigen()">${t}</button>`).join("");
+  $("bsPersonen").innerHTML = F.personen.map((p) => `<button type="button" class="chip an" onclick="BS.f.personen=BS.f.personen.filter((x)=>x!=='${p}');bsNamen();bsZeigen()">${esc(BS.mitglieder.find((m) => m.person_id === p)?.display_name || p)} ✕</button>`).join("");
+  document.querySelectorAll("#bsBlatt [data-feld]").forEach((w) => w.querySelectorAll(".chip").forEach((c) => c.classList.toggle("an", F.antworten[w.dataset.feld] === c.dataset.w)));
+  $("bsSpruchFeld").classList.toggle("versteckt", F.antworten.f2_bild_spruch !== "ja");
+  $("bsGeraete").innerHTML = BS_GERAETE.map(([g, t]) => `<button type="button" class="chip${F.geraete.includes(g) ? " an" : ""}" onclick="BS.f.geraete=BS.f.geraete.includes('${g}')?BS.f.geraete.filter((x)=>x!=='${g}'):[...BS.f.geraete,'${g}'];bsZeigen()">${t}</button>`).join("");
+  $("bsGeplant").checked = F.geplant; $("bsInhalt").classList.toggle("versteckt", F.geplant); $("bsKmFeld").classList.toggle("versteckt", F.art === "bei_hansi");
+  $("bsFotos").innerHTML = F.fotos.map((p) => `<span class="chip"><button type="button" class="tw-nicht" onclick="bsFotoOeffnen('${esc(p)}')">📄 ansehen</button> <button type="button" class="tw-nicht" onclick="bsFotoWeg('${esc(p)}')">✕</button></span>`).join("")
+    + F.neueFotos.map((x, i) => `<span class="chip">${x.vorschau ? `<img src="${x.vorschau}" alt="" class="bs-mini">` : "PDF"} <button type="button" class="tw-nicht" onclick="BS.f.neueFotos.splice(${i},1);bsZeigen()">✕</button></span>`).join("");
+  const n = F.personen.length, namen = F.personen.map((p) => BS.mitglieder.find((m) => m.person_id === p)?.display_name || p).join(", ");
+  const ohneMail = F.personen.filter((p) => !BS.mitglieder.find((m) => m.person_id === p)?.hat_email).length;
+  $("bsVersand").innerHTML = F.geplant
+    ? `<h4>📅 Terminbestätigung</h4><label class="tw-check"><input type="checkbox" id="bsTerminSenden" ${n ? "" : "disabled"} onchange="bsZeigenKnopf()"> Terminbestätigung per Push + Mail senden</label>
+       <p class="hinweis" style="margin:0">${n ? `Geht an ${esc(namen)}: Push + Mail mit Kalenderdatei, Eintrag im Kalender. Die Zusammenfassung kommt erst nach dem Besuch.${ohneMail ? ` ⚠️ ${ohneMail} ohne E-Mail – bitte selbst Bescheid geben.` : ""}` : "Erst oben ein Mitglied auswählen."}</p>`
+    : F.gesendet ? `<h4>✉️ Zusammenfassung</h4><p class="hinweis" style="margin:0">Schon verschickt: ${esc(F.gesendet)}</p>`
+    : `<h4>✉️ Zusammenfassung ans Mitglied</h4><label class="tw-check"><input type="checkbox" id="bsSenden" ${n ? "checked" : "disabled"} onchange="bsZeigenKnopf()"> Nach dem Speichern schicken</label>
+       <p class="hinweis" style="margin:0">${n ? `Geht an ${esc(namen)}: Push und E-Mail, du bekommst die Mail als BCC. Eine Kopie liegt danach in ihrem Archiv-Ordner (Register „Schulung“).${ohneMail ? ` ⚠️ ${ohneMail} ohne E-Mail.` : ""}` : "Erst oben ein Mitglied auswählen."}</p>`;
+  bsSumme(); bsZeigenKnopf();
+}
+function bsZeigenKnopf() {
+  const k = $("bsSpeichern"); if (!k) return;
+  k.textContent = BS.f.geplant ? ($("bsTerminSenden")?.checked ? "📅 Speichern & Termin bestätigen" : "📅 Als geplant speichern") : $("bsSenden")?.checked ? "Speichern & senden" : BS.f.id ? "Änderungen speichern" : "Speichern";
+}
+async function bsFotosGewaehlt(files) {
+  for (const f of files) {
+    try {
+      if (f.type === "application/pdf") { const d = await new Promise((ok, nein) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(",")[1]); r.onerror = nein; r.readAsDataURL(f); }); BS.f.neueFotos.push({ mime: f.type, data: d, vorschau: null }); }
+      else { const v = await bsVerkleinern(f); BS.f.neueFotos.push({ mime: "image/jpeg", data: v.split(",")[1], vorschau: v }); }
+    } catch { melde("Das Bild konnte nicht gelesen werden.", true); }
+  }
+  $("bsFotoInput").value = ""; bsZeigen();
+}
+function bsVerkleinern(file) {
+  return new Promise((ok, nein) => { const img = new Image(), url = URL.createObjectURL(file);
+    img.onload = () => { const s = Math.min(1, 2200 / Math.max(img.width, img.height)), c = document.createElement("canvas"); c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url); ok(c.toDataURL("image/jpeg", 0.85)); };
+    img.onerror = nein; img.src = url; });
+}
+async function bsFotoOeffnen(pfad) { try { const { url } = await api("besuch", { a: "fotolink", pfad }); extOeffnen(url); } catch (e) { meldeFehler(e); } }
+async function bsFotoWeg(pfad) {
+  if (!(await frage("Dieses Foto endgültig löschen?"))) return;
+  try { const r = await api("besuch", { a: "fotoloeschen", besuch_id: BS.f.id, pfad }); BS.f.fotos = r.besuch.fotos || []; bsZeigen(); melde("🗑️ Foto gelöscht"); } catch (e) { meldeFehler(e); }
+}
+async function bsSpeichern(k) {
+  const F = BS.f, kmT = ($("bsKm").value || "").trim(), km = kmT ? parseFloat(kmT.replace(",", ".")) : null;
+  const d = { mitglied: $("bsMitglied").value.trim(), ort: $("bsOrt").value.trim(), anwesende: $("bsAnwesende").value.trim(), datum: $("bsDatum").value,
+    zeit_von: $("bsVon").value || null, zeit_bis: $("bsBis").value || null, km_einfach: F.art === "bei_hansi" ? null : km, person_ids: F.personen, besuchsart: F.art,
+    f2_spruch: F.antworten.f2_bild_spruch === "ja" ? $("bsSpruch").value.trim() : null, f7_thema: $("bsF7Thema").value.trim(), f7_antwort: $("bsF7Antwort").value.trim(),
+    schulung_thema: $("bsThema").value.trim(), installiert_auf: F.geraete, notizen: $("bsNotizen").value.trim(), vereinbarungen: $("bsVereinb").value.trim(), bemerkungen: $("bsBem").value.trim(),
+    ...Object.fromEntries(BS_FRAGEN.map((q) => [q.f, F.antworten[q.f] || null])) };
+  if (!d.mitglied) return melde("✍️ Bitte eintragen, bei wem du warst.", true);
+  if (!d.datum) return melde("📅 Bitte das Datum eintragen.", true);
+  if (kmT && (isNaN(km) || km < 0)) return melde("Bitte bei km nur eine Zahl eintragen.", true);
+  if (d.zeit_von && d.zeit_bis && d.zeit_bis <= d.zeit_von) return melde("„Bis“ muss nach „Von“ liegen.", true);
+  d.status = F.geplant ? "geplant" : "fertig";
+  d.zusammenfassung_senden = !!F.gesendet || (!F.geplant && !!$("bsSenden")?.checked && F.personen.length > 0);
+  const terminSenden = F.geplant && !!$("bsTerminSenden")?.checked;
+  k.disabled = true; k.textContent = "Wird gespeichert …";
+  try {
+    let r = await api("besuch", { a: "speichern", besuch_id: F.id, daten: d, termin_senden: terminSenden, termin_abgleich: F.geplant && !!F.id }, { warten: true });
+    for (let i = 0; i < F.neueFotos.length; i++) { k.textContent = `Foto ${i + 1} von ${F.neueFotos.length} …`; r = { ...r, besuch: (await api("besuch", { a: "foto", besuch_id: r.besuch.besuch_id, mime: F.neueFotos[i].mime, data: F.neueFotos[i].data })).besuch }; }
+    $("bsBlatt")?.remove();
+    const t = r.termin?.fehler ? `Gespeichert (${r.besuch.besuch_id}) – aber Terminbestätigung: ${r.termin.fehler}` : r.termin?.gesendet ? `📅 Gespeichert und Termin bestätigt – ${r.besuch.besuch_id}`
+      : d.status === "geplant" ? `📅 Als geplant gespeichert – ${r.besuch.besuch_id}` : r.versand ? `✅ Gespeichert – ${r.versand.join(" · ")}` : `✅ Gespeichert – ${r.besuch.besuch_id}`;
+    melde(t, !!r.termin?.fehler);
+    await bsLaden(); await scLaden();
+  } catch (e) { meldeFehler(e); k.disabled = false; bsZeigenKnopf(); }
+}
+// aus „Meine Termine“: bestätigten Termin als Besuch öffnen/anlegen
+function bsAusTermin(bid) {
+  const b = SC.T.buchungen.find((x) => x.id === bid), s = b && scSlot(b.slot_id), e = b && scEinl(b.einladung_id); if (!s || !e) return;
+  if (b.besuch_id && BS.liste.some((x) => x.besuch_id === b.besuch_id)) return bsFormular(b.besuch_id);
+  const datum = berlinIso(s.beginn), personen = e.person_ids.filter((p) => BS.mitglieder.some((m) => m.person_id === p));
+  bsFormular(null, { datum, von: fZeit.format(new Date(s.beginn)), bis: fZeit.format(new Date(s.ende)), personen, art: b.besuchsart, geplant: new Date(s.beginn) > new Date(),
+    mitglied: scGruppe(e.person_ids), ort: b.besuchsart === "bei_hansi" ? "bei Hansi" : BS.mitglieder.find((m) => m.person_id === personen[0])?.adresse || "" });
 }
 
 // KC-CLUB-TERMINANFRAGE-HINWEIS (2.23.52, Wunsch Hansi): Beim Öffnen der App und zwischendurch (zurück in die App, nach einem Push,

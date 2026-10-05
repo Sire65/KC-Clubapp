@@ -1,5 +1,15 @@
 # Änderungen
 
+## 2.23.61 – 2026-10-05 – 📝 Besuchsprotokoll in der Club-App (Wunsch Hansi, Stufe 2)
+- KC-CLUB-BESUCHE: In „🎓 Schulungen“ zweiter Reiter „📝 Besuche“ (nur Admin): Liste mit Besuchen, Stunden und km je Jahr, ➕ Neuer Besuch,
+  📅 Abgesprochenen Termin eintragen, bearbeiten. Formular wie im bisherigen Besuchsprotokoll: Ort (Ich fahre hin / Mitglied kommt zu mir),
+  Mitglieder (Name + Anwesende werden vorgeschlagen, Adresse als Ort), Datum, Von/Bis, km (Hin+Rück wird gerechnet), „📅 Geplant“ (mit
+  Terminbestätigung über den Termin-Baustein t_besuch_termin, bei Änderungen wird der Termin nachgezogen), Gesprächspunkte 1–7, Thema,
+  installiert auf Tablet/PC/Handy, Notizen/Vereinbarungen/Bemerkungen (🎤), Fotos vom Papierprotokoll (nur speichern – Foto-Auswertung
+  weggelassen, Wunsch Hansi). „Speichern & senden“: Dank-Zusammenfassung (gleiche Worte wie bisher) per Push + Mail mit BCC an Hansi über
+  die Club-Benachrichtigung, Kopie als Text in den Archiv-Ordner jedes Mitglieds (Register „Schulung“). Aus „Meine Termine“:
+  „📝 Besuch eintragen / Protokoll öffnen“. Gleiche Tabelle kc_besuche und Fotos – keine Datenübernahme nötig. Test 410.
+
 ## 2.23.60 – 2026-10-05 – 🎓 Schulungen: Termin-Programm in der Club-App (Wunsch Hansi, Stufe 1)
 - KC-CLUB-SCHULUNG-ADMIN: Neue Kachel „🎓 Schulungen“ (nur Admin) – die Bedienung des Termin-Programms gehört jetzt zur Club-App:
   ⏳ Wartet auf dich (gewählt → ✅ Bestätigen / ✖ Ablehnen, Gegenvorschläge annehmen oder neue Termine anbieten, Frist vorbei → erneut

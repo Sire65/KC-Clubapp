@@ -4130,7 +4130,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 // 408. 2.23.59: Schulungstermine aus dem Termin-Programm im Club-Kalender (KC-CLUB-SCHULUNGSTERMINE)
 {
-  const f = server.slice(server.indexOf("async function schulungenListe"), server.indexOf("// ---------- Handy-Kalender (KC-CLUB-KALENDERABO)"));
+  const f = server.slice(server.indexOf("async function schulungenListe"), server.indexOf("// ---------- KC-CLUB-SCHULUNG-ADMIN (2.23.60"));
   assert.ok(f.length > 200 && !/\.(insert|update|upsert|delete)\(/.test(f), "nur lesend – das Termin-Programm bleibt führend");
   assert.ok(/eq\("ist_test", false\)/.test(f) && /in\("status", \["vorgemerkt", "bestaetigt"\]\)/.test(f) && /ich\.admin \|\| \(x\.e\.person_ids \?\? \[\]\)\.includes\(ich\.person_id\)/.test(f), "nur gebuchte, keine Tests, Mitglieder nur eigene");
   assert.ok(!/email|phone|telefon/i.test(f), "keine Kontaktdaten");
@@ -4149,6 +4149,18 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/\{ id: "schulung_admin", sym: "🎓", t: "Schulungen"[^\n]*nur: \(\) => !!ICH\?\.admin/.test(html) && /if \(!ICH\?\.admin\) return;/.test(k), "Kachel und Bereich nur für den Admin");
   for (const x of ["⏳ Wartet auf dich", "➕ Termin anbieten", "📅 Meine Termine", "✉️ Mitglieder einladen", "📨 Einladungen", "📜 Ablauf", "🔗 Link erneuern & teilen"]) assert.ok(k.includes(x), "Teil fehlt: " + x);
   assert.ok(!/\bconfirm\(|\bprompt\(/.test(k), "App-eigene Rückfragen statt Browser-Fenster");
+}
+// 410. 2.23.61: Besuchsprotokoll in der Club-App (KC-CLUB-BESUCHE)
+{
+  const g = server.slice(server.indexOf('case "besuch"'), server.indexOf('// KC-CLUB-SCHULUNG-ADMIN (2.23.60): nur Admin'));
+  assert.ok(/case "besuch": \{\n\s+nurAdmin\(ich\);/.test(g), "nur Admin");
+  assert.ok(!/auswerten|anthropic|ANTHROPIC/i.test(g + server.slice(server.indexOf("// ---------- KC-CLUB-BESUCHE"), server.indexOf("// ---------- Handy-Kalender"))), "keine kostenpflichtige Foto-Auswertung");
+  assert.ok(/for \(const f of BESUCH_FELDER\) if \(f in d\)/.test(g) && /schulungAufruf\("t_besuch_termin"/.test(g), "nur erlaubte Felder, Termin über den einen Termin-Baustein");
+  const v = server.slice(server.indexOf("async function besuchVersand"), server.indexOf("// ---------- Handy-Kalender"));
+  assert.ok(/\{ bcc: \[ich\.person_id\] \}/.test(v) && /persoenlicherOrdner\(l\.person_id/.test(v) && /if \(!da\) await archivTextAblegen/.test(v), "BCC an Hansi, Kopie einmal in den Ordner des Mitglieds");
+  const k = html.slice(html.indexOf("// ---------- KC-CLUB-BESUCHE (2.23.61"), html.indexOf("// KC-CLUB-TERMINANFRAGE-HINWEIS (2.23.52"));
+  for (const x of ["➕ Neuer Besuch", "📅 Geplant", "Gesprächspunkte", "📷 Foto vom Papierprotokoll", "Speichern & senden", "Stunden", "km gesamt"]) assert.ok(k.includes(x), "Teil fehlt: " + x);
+  assert.ok(!/auswerten/i.test(k) && /\["termine", "📅 Termine & Einladungen"\], \["besuche", "📝 Besuche"\]/.test(html), "ohne Auswertung, zweiter Reiter");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

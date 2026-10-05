@@ -41,7 +41,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.23.60";
+const SERVER_VERSION = "2.23.61";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -3057,6 +3057,96 @@ async function schulungAufruf(a: string, daten: Record<string, unknown>) {
   return j;
 }
 
+// ---------- KC-CLUB-BESUCHE (2.23.61, Wunsch Hansi): Besuchsprotokoll in der Club-App (Stufe 2, Admin) ----------
+// Übernommen aus dem Besuchsprotokoll (gleiche Tabelle kc_besuche, gleiche Fotos) – die Club-App ist ab jetzt der Ort dafür;
+// das alte Programm bleibt bis zur Abschaltung nur zum Nachschauen. Ohne Foto-Auswertung (kostenpflichtig, Wunsch Hansi: weglassen).
+// Zusammenfassung nach dem Besuch: Push + Mail (BCC an Hansi) über die Club-Benachrichtigung, Kopie in den Archiv-Ordner des Mitglieds.
+const BESUCH_FELDER = ["person_ids", "mitglied", "anwesende", "ort", "datum", "zeit_von", "zeit_bis", "km_einfach", "f1_praesentation", "f2_bild_spruch", "f2_spruch",
+  "f3_kasse", "f4_dienstplan", "f5_verwaltung", "f6_router", "f7_thema", "f7_antwort", "notizen", "vereinbarungen", "bemerkungen", "status", "besuchsart",
+  "zusammenfassung_senden", "schulung_thema", "installiert_auf"];
+const BESUCH_BUCKET = "kc-besuche-fotos", BESUCH_REGISTER = "Schulung";
+const BESUCH_TEXTE: Record<string, [string, Record<string, string>]> = {
+  f1_praesentation: ["Weihnachtsmarkt-Präsentation", { rathaus: "Rathaus-Version", rot: "Rote Version", offen: "noch offen" }],
+  f2_bild_spruch: ["Mit Bild und Spruch in der Präsentation", { ja: "ja", nein: "nein", klaeren: "wird noch geklärt" }],
+  f3_kasse: ["Kassenprogramm", { alt: "alte Oberfläche", neu: "neue Oberfläche", offen: "Entscheidung offen" }],
+  f4_dienstplan: ["Dienstplanprogramm", { ja: "ja", nein: "nein", spaeter: "später entscheiden" }],
+  f5_verwaltung: ["KC Verwaltung", { ja: "ja", nein: "nein", spaeter: "später entscheiden" }],
+  f6_router: ["Stand-Vernetzung mit 5G-Router", { ja: "ja", nein: "nein", spaeter: "später entscheiden" }],
+};
+const BESUCH_GERAETE: Record<string, string> = { tablet: "Tablet", pc: "PC", handy: "Handy" };
+const aufzaehlenUnd = (t: string[]) => (t.length > 1 ? t.slice(0, -1).join(", ") + " und " + t[t.length - 1] : (t[0] ?? ""));
+function besuchPunkte(b: any) {
+  const pk: { titel: string; wert: string }[] = [];
+  for (const [f, [titel, werte]] of Object.entries(BESUCH_TEXTE)) {
+    if (!b[f]) continue;
+    let wert = werte[b[f]] ?? b[f];
+    if (f === "f2_bild_spruch" && b[f] === "ja" && b.f2_spruch) wert += ` – Spruch: „${b.f2_spruch}“`;
+    pk.push({ titel, wert });
+  }
+  if (b.f7_thema) pk.push({ titel: b.f7_thema, wert: b.f7_antwort || "" });
+  return pk;
+}
+const besuchDatum = (d: string) => d.split("-").reverse().join(".");
+async function besuchLeute(b: any) {
+  if (!b.person_ids?.length) return [];
+  const { data } = await db.from("kc_core_people").select("person_id,preferred_name,given_name,display_name,email").in("person_id", b.person_ids);
+  const { data: anr } = await db.from("kc_besuche_anrede").select("person_id,anrede").in("person_id", b.person_ids);
+  const an = new Map((anr ?? []).map((a: any) => [a.person_id, a.anrede]));
+  return (data ?? []).map((m: any) => ({ person_id: m.person_id, vorname: m.preferred_name || m.given_name || m.display_name, mail: !!m.email, anrede: an.get(m.person_id) || null }));
+}
+// Dankes-Text (gleiche Worte wie bisher): ein/mehrere Mitglieder, bei ihnen/bei Hansi, Thema, Installation
+function besuchMail(b: any, leute: { person_id: string; vorname: string; anrede: string | null }[]) {
+  const mehr = leute.length > 1;
+  const w = mehr ? { du: "ihr", dir: "euch", dich: "euch", dein: "eurem", hast: "habt", bist: "seid", scheue: "scheut euch" }
+    : { du: "du", dir: "dir", dich: "dich", dein: "deinem", hast: "hast", bist: "bist", scheue: "scheue dich" };
+  const anrede = leute.length && leute.every((l) => l.anrede)
+    ? leute.map((l, i) => (i === 0 ? l.anrede! : l.anrede!.toLowerCase()) + " " + l.vorname).join(", ") + ","
+    : `Hallo ${aufzaehlenUnd(leute.map((l) => l.vorname)) || "zusammen"},`;
+  const thema = String(b.schulung_thema || "").trim();
+  const abs = [`ich danke ${w.dir}, dass ${w.du} ${b.besuchsart === "bei_hansi" ? `zu mir gekommen ${w.bist}` : `mich empfangen ${w.hast}`}. Es war eine angenehme Atmosphäre und mir hat es Spaß gemacht, ${w.dich} in ${thema || "unsere Programme"} einzuführen. Ich hoffe, ${w.dir} hat es auch gefallen.`];
+  const pk = besuchPunkte(b);
+  if (pk.length || b.vereinbarungen) abs.push("Im Anschluss haben wir noch ein paar Punkte besprochen. Deren Auswertung steht weiter unten.");
+  const geraete = (b.installiert_auf ?? []).map((g: string) => BESUCH_GERAETE[g]).filter(Boolean);
+  abs.push((geraete.length ? `Ich konnte die Schulungsversion auf ${w.dein} ${aufzaehlenUnd(geraete)} installieren. ` : "") + `Wenn etwas nicht klappt, ${w.scheue} nicht, mich zu kontaktieren. Gerne stehe ich ${w.dir} bei Fragen zur Verfügung.`);
+  const text = [anrede, "", ...abs.flatMap((a) => [a, ""]), ...(pk.length ? ["Besprochen:", ...pk.map((p) => `• ${p.titel}: ${p.wert}`), ""] : []),
+    ...(b.vereinbarungen ? ["Vereinbart / nächste Schritte:", b.vereinbarungen, ""] : []), "Viele Grüße", "Hansi", "Köcheclub Werne"].join("\n");
+  return { betreff: `Köcheclub Werne – Danke für das Treffen am ${besuchDatum(b.datum)}`, text, kurz: pk.slice(0, 4).map((p) => `${p.titel}: ${p.wert}`).join(" · ") };
+}
+// Versand + Ablage; Zeitstempel nur bei Erfolg (sonst beim nächsten Speichern erneut)
+async function besuchVersand(ich: Ich, b: any) {
+  const leute = await besuchLeute(b), m = besuchMail(b, leute), erg: string[] = [];
+  if (!leute.length) return erg;
+  const ids = leute.map((l) => l.person_id), korr = `club-besuch:${b.besuch_id}`;
+  const upd: Record<string, unknown> = {};
+  if (!b.push_gesendet_am) {
+    const r = await routerSenden("club_nachricht_push", ids, { titel: "Köcheclub Werne – Zusammenfassung Schulung", kurz: `Danke für das Treffen am ${besuchDatum(b.datum)}!${m.kurz ? " " + m.kurz : ""}`.slice(0, 180), url: APP_URL }, korr + ":push");
+    erg.push(r.gesendet ? `Push an ${r.gesendet}` : "kein Push"); if (!r.fehler) upd.push_gesendet_am = jetzt();
+  }
+  if (!b.mail_gesendet_am) {
+    const mitMail = leute.filter((l) => l.mail);
+    if (!mitMail.length) { upd.mail_gesendet_am = jetzt(); upd.mail_empfaenger = "(keine E-Mail-Adresse)"; erg.push("keine E-Mail-Adresse"); }
+    else {
+      const r = await routerSenden("club_nachricht_mail", mitMail.map((l) => l.person_id), { titel: "Köcheclub Werne", kurz: m.betreff, betreff: m.betreff, text: m.text }, korr + ":mail",
+        ich.person_id && !mitMail.some((l) => l.person_id === ich.person_id) ? { bcc: [ich.person_id] } : undefined);
+      erg.push(r.gesendet ? `Mail an ${mitMail.map((l) => l.vorname).join(", ")} (BCC an dich)` : "Mail-Fehler");
+      if (r.gesendet) { upd.mail_gesendet_am = jetzt(); upd.mail_empfaenger = `${mitMail.length} Mitglied(er)`; }
+    }
+  }
+  // Kopie in den Archiv-Ordner jedes Mitglieds (Register „Schulung“) – nur einmal je Besuch
+  const jahr = Number(String(b.datum).slice(0, 4)) || new Date().getFullYear();
+  for (const l of leute) {
+    try {
+      const o = await persoenlicherOrdner(l.person_id, l.vorname, jahr, BESUCH_REGISTER); if (!o) continue;
+      const titel = `Schulung am ${besuchDatum(b.datum)} (${b.besuch_id})`;
+      const { data: da } = await db.from("kc_club_archiv_dokumente").select("id").eq("ordner_id", o).eq("titel", titel).is("geloescht_am", null).maybeSingle();
+      if (!da) await archivTextAblegen(ich, o, BESUCH_REGISTER, titel, `Schulung-${b.datum}-${b.besuch_id}.txt`, m.text, "Schulung, Besuch, Zusammenfassung");
+    } catch (e) { console.error("besuch ablage", String(e)); }
+  }
+  upd.versand_fehler = erg.join("; ") || null;
+  await db.from("kc_besuche").update(upd).eq("besuch_id", b.besuch_id);
+  return erg;
+}
+
 // ---------- Handy-Kalender (KC-CLUB-KALENDERABO) ----------
 // Persönlicher, geheimer Abo-Link (nur Hash gespeichert). Enthält Treffen/Veranstaltungen, Aktionen und freigegebene Geburtstage.
 const icsText = (s: unknown) => String(s ?? "").replace(/\\/g, "\\\\").replace(/;/g, "\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
@@ -5157,6 +5247,75 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           return json({ ok: true });
         }
         throw new Fehler("Unbekannte Aktion.");
+      }
+
+      // KC-CLUB-BESUCHE (2.23.61): Besuchsprotokoll – nur Admin
+      case "besuch": {
+        nurAdmin(ich);
+        const a = String(p.a || "");
+        if (a === "liste") {
+          const [{ data: bes }, { data: anr }, { data: leute }] = await Promise.all([
+            db.from("kc_besuche").select("*").order("datum", { ascending: false }).order("erstellt_am", { ascending: false }).limit(300),
+            db.from("kc_besuche_anrede").select("person_id,anrede"),
+            db.from("kc_core_people").select("person_id,display_name,given_name,family_name,street,postal_code,city,email").eq("active", true).not("person_id", "like", "KC-P-TEST%").order("display_name")]);
+          return json({ besuche: bes ?? [], anreden: Object.fromEntries((anr ?? []).map((x: any) => [x.person_id, x.anrede])),
+            mitglieder: (leute ?? []).map((m: any) => ({ person_id: m.person_id, display_name: m.display_name, given_name: m.given_name, family_name: m.family_name, hat_email: !!m.email,
+              adresse: [m.street, [m.postal_code, m.city].filter(Boolean).join(" ")].filter(Boolean).join(", ") })) });
+        }
+        if (a === "speichern") {
+          const d = (p.daten && typeof p.daten === "object") ? p.daten : {}, row: Record<string, unknown> = {};
+          for (const f of BESUCH_FELDER) if (f in d) row[f] = d[f] === "" ? null : d[f];
+          for (const f of ["mitglied", "anwesende", "ort", "f2_spruch", "f7_thema", "f7_antwort", "schulung_thema"]) if (typeof row[f] === "string") row[f] = txt(row[f], 300) || null;
+          for (const f of ["notizen", "vereinbarungen", "bemerkungen"]) if (typeof row[f] === "string") row[f] = txt(row[f], 4000) || null;
+          if (!row.mitglied || !row.datum || !/^\d{4}-\d{2}-\d{2}$/.test(String(row.datum))) throw new Fehler("Bitte eintragen, bei wem du warst, und das Datum.");
+          if (row.person_ids !== undefined) row.person_ids = (Array.isArray(row.person_ids) ? row.person_ids : []).map(String).slice(0, 6);
+          if (row.km_einfach != null && !(Number(row.km_einfach) >= 0 && Number(row.km_einfach) < 1000)) throw new Fehler("Bitte bei km nur eine Zahl eintragen.");
+          row.geaendert_am = jetzt();
+          const id = p.besuch_id ? String(p.besuch_id) : null;
+          const { data, error } = id ? await db.from("kc_besuche").update(row).eq("besuch_id", id).select().single() : await db.from("kc_besuche").insert(row).select().single();
+          if (error || !data) throw new Fehler(error?.message?.includes("check") ? "Bitte die Angaben prüfen (Zeiten, Auswahl)." : "Speichern fehlgeschlagen.", 400);
+          let versand: string[] | null = null, termin: any = null;
+          if (data.zusammenfassung_senden && data.status === "fertig" && (!data.push_gesendet_am || !data.mail_gesendet_am)) versand = await besuchVersand(ich, data);
+          // geplanter Besuch: Termin im Termin-Baustein anlegen/nachziehen (mit oder ohne Bestätigung ans Mitglied)
+          if (data.status === "geplant" && (p.termin_senden === true || p.termin_abgleich === true)) {
+            try { termin = await schulungAufruf("t_besuch_termin", { besuch_id: data.besuch_id, senden: p.termin_senden === true }); }
+            catch (e) { termin = { fehler: e instanceof Fehler ? e.message : "Termin konnte nicht abgeglichen werden." }; }
+          }
+          const { data: neu } = await db.from("kc_besuche").select("*").eq("besuch_id", data.besuch_id).single();
+          await protokoll(ich.person_id, "besuch_gespeichert", { besuch: data.besuch_id, status: data.status, versand: !!versand, termin: !!termin });
+          return json({ besuch: neu ?? data, versand, termin });
+        }
+        if (a === "anrede") {
+          if (!["Lieber", "Liebe"].includes(String(p.anrede))) throw new Fehler("Anrede ungültig.");
+          await db.from("kc_besuche_anrede").upsert({ person_id: String(p.person_id), anrede: String(p.anrede), geaendert_am: jetzt() });
+          return json({ ok: true });
+        }
+        if (a === "foto") {
+          const id = String(p.besuch_id || ""), mime = ["image/jpeg", "image/png", "application/pdf"].includes(String(p.mime)) ? String(p.mime) : "";
+          if (!mime) throw new Fehler("Nur Fotos (JPG/PNG) oder PDF.");
+          const roh = String(p.data || ""); if (roh.length > 12_000_000) throw new Fehler("Die Datei ist zu groß.");
+          const { data: b } = await db.from("kc_besuche").select("fotos").eq("besuch_id", id).maybeSingle(); if (!b) throw new Fehler("Besuch nicht gefunden.", 404);
+          const bytes = Uint8Array.from(atob(roh), (c) => c.charCodeAt(0)), pfad = `${id}/${Date.now()}.${mime === "application/pdf" ? "pdf" : mime === "image/png" ? "png" : "jpg"}`;
+          const up = await db.storage.from(BESUCH_BUCKET).upload(pfad, bytes, { contentType: mime }); if (up.error) throw new Fehler("Hochladen fehlgeschlagen.", 500);
+          const { data: neu } = await db.from("kc_besuche").update({ fotos: [...(b.fotos || []), pfad], geaendert_am: jetzt() }).eq("besuch_id", id).select().single();
+          return json({ besuch: neu });
+        }
+        if (a === "fotoloeschen") {
+          const id = String(p.besuch_id || ""), pfad = String(p.pfad || "");
+          const { data: b } = await db.from("kc_besuche").select("fotos").eq("besuch_id", id).maybeSingle();
+          if (!b || !(b.fotos || []).includes(pfad)) throw new Fehler("Foto nicht gefunden.", 404);
+          await protokoll(ich.person_id, "besuch_foto_geloescht", { besuch: id }); // Recovery: Datei bleibt im Speicher-Papierkorb nicht – deshalb nur nach Rückfrage in der App
+          const rm = await db.storage.from(BESUCH_BUCKET).remove([pfad]); if (rm.error) throw new Fehler("Löschen fehlgeschlagen.", 500);
+          const { data: neu } = await db.from("kc_besuche").update({ fotos: b.fotos.filter((x: string) => x !== pfad), geaendert_am: jetzt() }).eq("besuch_id", id).select().single();
+          return json({ besuch: neu });
+        }
+        if (a === "fotolink") {
+          const pfad = String(p.pfad || ""); if (!/^B-\d{4}-\d+\/[\w.]+$/.test(pfad)) throw new Fehler("Foto nicht gefunden.", 404);
+          const { data, error } = await db.storage.from(BESUCH_BUCKET).createSignedUrl(pfad, 600);
+          if (error) throw new Fehler("Foto nicht gefunden.", 404);
+          return json({ url: data.signedUrl });
+        }
+        throw new Fehler("Unbekannte Besuchs-Aktion.");
       }
 
       // KC-CLUB-SCHULUNG-ADMIN (2.23.60): nur Admin; Aktionen des Termin-Bausteins durchreichen, dazu die Besuche für „🎓 geschult“
