@@ -4075,6 +4075,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const mig = lies("supabase/migrations/20261005_kc_club_v22351_mitglieder_fragen.sql");
   assert.ok((mig.match(/enable row level security/g) || []).length === 2 && !/create policy/i.test(mig), "Tabellen nur über den Server");
 }
+// 401. 2.23.52: Hinweis „📨 Du hast eine neue Terminanfrage“ beim Öffnen und zwischendurch (KC-CLUB-TERMINANFRAGE-HINWEIS)
+{
+  const k = html.slice(html.indexOf("// KC-CLUB-TERMINANFRAGE-HINWEIS (2.23.52"), html.indexOf("async function taAntwort("));
+  for (const t of ["👀 Ja, jetzt ansehen", "⏰ Später", "🌙 Heute nicht mehr fragen"]) assert.ok(k.includes(t), "Knopf fehlt: " + t);
+  assert.ok(/!a\.vonMir && !a\.spiel && a\.status === "offen" && !a\.meine && !a\.meinVorschlag/.test(k), "nur unbeantwortete Anfragen an mich");
+  assert.ok(/setInterval\(\(\) => taHinweisPruefen\(9\), TAH_TAKT_MS\)/.test(k) && /visibilitychange/.test(k) && /taHinweisPruefen\(\), 5000\)/.test(html) && /setTimeout\(\(\) => taHinweisPruefen\(9\), 1500\)/.test(html), "beim Start, zurück in der App, nach Push, alle 5 Min.");
+  assert.ok(/document\.querySelector\("\.blatt:not\(\.versteckt\)"\)/.test(k) && /if \(still && !neu\.length\) return/.test(k), "drängt sich nicht über Fenster, neue Anfrage durchbricht „später“");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

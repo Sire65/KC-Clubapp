@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.23.52 – 2026-10-05 – 📨 Hinweis: neue Terminanfrage (Wunsch Hansi)
+- KC-CLUB-TERMINANFRAGE-HINWEIS: Beim Öffnen der App und zwischendurch (zurück in die App, nach einem Push, alle 5 Min.) erscheint
+  „📨 Du hast eine neue Terminanfrage“ mit Liste (von wem, Anlass, wann, Ort) und „👀 Ja, jetzt ansehen“ (springt zur Anfrage),
+  „⏰ Später“ (2 Std.) oder „🌙 Heute nicht mehr fragen“. Nur Anfragen an mich ohne Antwort/Gegenvorschlag, nicht abgelaufen, ohne
+  Spiel-Termine; nie über einem offenen Fenster oder im Termine-Bereich. Kommt eine weitere Anfrage dazu, erscheint der Hinweis wieder.
+  Nur App, kein Server-Umbau. Hilfe-Eintrag. Test 401.
+
 ## 2.23.51 – 2026-10-05 – 👥 Ein Mitglied fragen (Wunsch Hansi)
 - KC-CLUB-MITGLIEDER-FRAGEN: Bei „🧑‍🍳 Frag Twinkey“ (Link unter dem Fragefeld und in der „gute Frage“-Antwort) eine Frage an andere
   Mitglieder stellen: „👥 Alle Mitglieder“ oder einzelne/mehrere anhaken (mit Namenssuche), Weg wählen (📱 Club-App, 🔔 Push, ✉️ E-Mail,

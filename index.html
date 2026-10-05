@@ -2894,7 +2894,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.51"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.52"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3892,6 +3892,7 @@ const HILFE = [
   { id: "frage_knopf", thema: "start", sym: "❓", t: "Das Fragezeichen unten rechts", x: "Das runde <b>„?“</b> neben der Lupe öffnet in jedem Bereich gleich die passende Hilfe. Stört es dich? <b>Lange darauf drücken</b> blendet es aus. Zurück holst du es unter ⚙️ Einstellungen → <b>„❓ Fragezeichen unten rechts“</b>.", zeig: () => einstiegHin(einfach() ? "einfach" : "ansagen", einfach() ? "setHzFrageE" : "setHzFrage"), seit: "2.23.5" },
   { id: "einstellung_suchen", thema: "start", sym: "🔍", t: "Jede Einstellung schnell finden", x: "In den Einstellungen findest du mit der <b>Lupe 🔍 unten rechts</b> jede Einstellung – z. B. „Ton“ oder „Farbe“ eingeben. Bereiche öffnest du durch Antippen der Überschrift, mit dem Schloss 🔒 hältst du sie offen oder zu.", zeig: () => zeige("einstellungen") },
   { id: "anfrage_status", thema: "termine", sym: "📨", t: "Wie steht meine Terminanfrage?", x: "Unter <b>📅 Termine</b> steht bei deiner Anfrage <b>„Anfrage an …“</b> und der Stand: <b>📨 angefragt</b>, <b>👁️ gelesen</b>, <b>✅ bestätigt</b>, <b>🤔 vielleicht</b>, <b>❌ abgelehnt</b>, <b>🔄 Gegenvorschlag</b> (eine andere Zeit – mit <b>„✅ Neue Zeit annehmen“</b> oder <b>„❌ Passt nicht“</b> entscheidest du) oder <b>⌛ abgelaufen</b>, wenn bis zur Frist bzw. bis zum Termin keine Antwort kam. Wirst du angefragt, kannst du mit <b>„🔄 Andere Zeit vorschlagen“</b> selbst eine Zeit vorschlagen.", zeig: () => zeige("termine"), seit: "2.23.50" },
+  { id: "anfrage_hinweis", thema: "termine", sym: "📨", t: "Hinweis: neue Terminanfrage", x: "Fragt dich jemand nach einem Termin, sagt dir die App das beim Öffnen und zwischendurch: <b>„📨 Du hast eine neue Terminanfrage“</b>. <b>👀 Ja, jetzt ansehen</b> bringt dich hin, <b>⏰ Später</b> erinnert in 2 Stunden, <b>🌙 Heute nicht mehr fragen</b> wartet bis morgen. Sobald du geantwortet hast, kommt der Hinweis nicht mehr.", zeig: () => zeige("termine"), seit: "2.23.52" },
   { id: "twinkey", thema: "start", sym: "🧑‍🍳", t: "Frag Twinkey", x: "Du weißt nicht, wo etwas ist? Tippe auf <b>🧑‍🍳 Frag Twinkey</b> (Kachel oder oben im Hilfe-Zentrum) und stell deine Frage in eigenen Worten – getippt oder mit 🎤 gesprochen, z. B. „Wie ändere ich die Farben?“. Twinkey zeigt die passende Antwort, liest sie auf Wunsch vor und bringt dich mit <b>„👉 Zeig es mir“</b> genau an die Stelle. Weiß er es noch nicht, tippst du auf <b>➤ Fragen</b>: Twinkey recherchiert, du bekommst die Antwort später per Push, E-Mail oder in der App – und unter <b>📬 Deine Fragen</b>. Danach kennt Twinkey die Antwort auch für alle anderen.", zeig: () => twFrageStart(), seit: "2.23.49" },
   { id: "diktat_feld", thema: "start", sym: "🎤", t: "Sprechen statt tippen", x: "Wo rechts im Feld ein <b>🎤</b> steht, kannst du diktieren: antippen, sprechen – der Text erscheint im Feld. <b>„✅ Fertig“</b> beendet, bei der Suche geht es nach dem ersten Satz von selbst. Verschickt wird nichts – du prüfst und tippst selbst auf Senden. Das 🎤 gibt es bei der <b>Lupe</b>, im <b>Hilfe-Zentrum</b>, beim <b>Pinnwand-Zettel</b> und bei <b>Hilfe-Aufruf und Angebot</b>; bei SOS heißt es „🎙️ Einsprechen“.", zeig: () => zeige("hilfezentrum"), seit: "2.23.47" },
   { id: "klappen_alle", thema: "start", sym: "▾", t: "Alle Bereiche auf einmal auf- oder zuklappen", x: "In den ⚙️ Einstellungen oben rechts: <b>„▾ Alle auf“</b> öffnet alle Bereiche, danach heißt der Knopf <b>„▴ Alle zu“</b> und klappt alle wieder zu. Bereiche mit 🔒 bleiben, wie du sie festgestellt hast.", zeig: () => zeige("einstellungen"), seit: "2.23.40" },
@@ -15353,6 +15354,42 @@ async function taVorschlagEntscheiden(id, pid, annehmen) {
   try { await api("terminanfrage_vorschlag_entscheiden", { id, person_id: pid, annehmen }); melde(annehmen ? "✅ Neue Zeit gilt – Bescheid ist raus" : "❌ Abgelehnt – Bescheid ist raus"); TA.markiert = id; await taLaden(); neuLaden(); }
   catch (err) { meldeFehler(err); }
 }
+// KC-CLUB-TERMINANFRAGE-HINWEIS (2.23.52, Wunsch Hansi): Beim Öffnen der App und zwischendurch (zurück in die App, nach einem Push,
+// alle 5 Min.) – „📨 Du hast eine neue Terminanfrage“ mit „👀 Ja, jetzt ansehen“, „⏰ Später“ (2 Std.) und „🌙 Heute nicht mehr fragen“.
+// Gilt für Anfragen an mich ohne Antwort und ohne Gegenvorschlag, die noch nicht abgelaufen sind (Spiel-Termine laufen über das Spiel).
+// Später/heute nicht gilt für die gezeigten Anfragen – kommt eine neue dazu, erscheint der Hinweis wieder.
+const TAH_KEY = "kc_club_ta_hinweis", TAH_SPAETER_MS = 2 * 3600000, TAH_TAKT_MS = 5 * 60000;
+let TAH_LAEUFT = false, TAH_ZULETZT = 0;
+async function taHinweisPruefen(versuch = 0) {
+  if (!ICH || TAH_LAEUFT || document.hidden || $("taHinweisBlatt")) return;
+  if (document.querySelector(".blatt:not(.versteckt)") || !["start", "nachrichten", "pinnwand", "mitglieder", "helfen"].includes(aktuelleAnsicht)) {
+    if (versuch < 10) setTimeout(() => taHinweisPruefen(versuch + 1), 8000); return; }
+  if (Date.now() - TAH_ZULETZT < 20000) return; TAH_ZULETZT = Date.now();
+  TAH_LAEUFT = true; let l = [];
+  try { l = (await api("terminanfragen_liste")).anfragen || []; } catch { return; } finally { TAH_LAEUFT = false; }
+  const offen = l.filter((a) => !a.vonMir && !a.spiel && a.status === "offen" && !a.meine && !a.meinVorschlag
+    && new Date(a.beginn).getTime() > Date.now() && !(a.frist && new Date(a.frist).getTime() < Date.now()));
+  if (!offen.length) return;
+  let ruhe = {}; try { ruhe = JSON.parse(lsLesen(TAH_KEY) || "{}") || {}; } catch {}
+  const neu = offen.filter((a) => !(ruhe.ids || []).includes(a.id));
+  const still = ruhe.heute === heuteIso() || Date.now() < Number(ruhe.bis || 0);
+  if (still && !neu.length) return;
+  if (document.querySelector(".blatt:not(.versteckt)")) { if (versuch < 10) setTimeout(() => taHinweisPruefen(versuch + 1), 8000); return; }
+  const n = offen.length;
+  const f = blattAuf("taHinweisBlatt", `<h3 style="margin:0">📨 Du hast ${n === 1 ? "eine neue Terminanfrage" : n + " neue Terminanfragen"}</h3>
+    <div class="ekh-liste">${offen.slice(0, 5).map((a) => `<button type="button" class="ti-zeile" data-id="${esc(a.id)}">📨 <span><b>${esc(a.von.vorname)}</b>: ${esc(a.anlass)}<br><small class="hinweis">${esc(wann(a.beginn))}${a.ort ? " · 📍 " + esc(a.ort) : ""}</small></span><b>›</b></button>`).join("")}</div>
+    <b>Möchtest du sie jetzt ansehen?</b>
+    <button class="knopf haupt" data-w="jetzt">👀 Ja, jetzt ansehen</button><button class="knopf" data-w="spaeter">⏰ Später</button><button class="knopf" data-w="heute">🌙 Heute nicht mehr fragen</button>`);
+  const merken = (w) => lsSetzen(TAH_KEY, JSON.stringify({ ids: offen.map((a) => a.id), ...(w === "heute" ? { heute: heuteIso() } : { bis: Date.now() + TAH_SPAETER_MS }) }));
+  f.querySelectorAll("[data-id]").forEach((b) => (b.onclick = () => { f.remove(); merken("spaeter"); taZeigen(b.dataset.id); }));
+  f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => {
+    f.remove(); const w = b.dataset.w; merken(w);
+    if (w === "jetzt") return taZeigen(offen[0].id);
+    melde(w === "heute" ? "🌙 Heute frage ich nicht mehr – die Anfrage steht unter 📅 Termine." : "⏰ Später – in 2 Stunden erinnere ich dich wieder.");
+  }));
+}
+setInterval(() => taHinweisPruefen(9), TAH_TAKT_MS);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) setTimeout(() => taHinweisPruefen(9), 2500); });
 async function taAntwort(id, antwort) {
   let notiz = "";
   if (antwort === "nein" || antwort === "vielleicht") {
@@ -18520,7 +18557,7 @@ async function fpAdmin(tage) {
   history.replaceState({ basis: true }, "", url.pathname);
   history.pushState({ v: "start", tiefe: 1 }, "", url.pathname);
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.addEventListener("message", (e) => { if (e.data?.typ === "push") { neuLaden(); onlinePing(); if (chatId) chatLaden(false); ansageAusPush(e.data); if (aktuelleAnsicht === "spiele" && SP.tab === "mg") SP.offen ? spNachsehen() : spLaden(true); }
+    navigator.serviceWorker.addEventListener("message", (e) => { if (e.data?.typ === "push") { neuLaden(); onlinePing(); setTimeout(() => taHinweisPruefen(9), 1500); if (chatId) chatLaden(false); ansageAusPush(e.data); if (aktuelleAnsicht === "spiele" && SP.tab === "mg") SP.offen ? spNachsehen() : spLaden(true); }
       if (e.data?.typ === "online-ansage") onlineAnsageSprechen([e.data.name]); }); // KC-CLUB-ONLINE-ANSAGE-PUSH
   }
   // Messung: wie wurde die App gestartet (einmal je Sitzung) – zeigt, ob die Installation geklappt hat
@@ -18554,6 +18591,7 @@ async function fpAdmin(tage) {
     else if (h === "#aenderungen") ICH?.vorstand || ICH?.admin ? aeEingang() : aeStart(); // KC-CLUB-AENDERUNG (2.22.7): aus Push/Mail
     if (!h || h === "#") setTimeout(() => buGrussFragen(), 1500); // KC-CLUB-BUERO: Begrüßung der Clubleitung
     if (!h || h === "#") setTimeout(() => ekHinweisPruefen(), 3000); // KC-CLUB-EINGANG-HINWEIS: viel im Eingangskorb?
+    if (!h || h === "#") setTimeout(() => taHinweisPruefen(), 5000); // KC-CLUB-TERMINANFRAGE-HINWEIS (2.23.52): neue Terminanfrage?
     if (!h || h === "#") setTimeout(() => twAntwortPruefen(), 6000); // KC-CLUB-TWINKEY-FRAGEN: Antwort „in der Club-App“
     if (!h || h === "#") setTimeout(() => spEinladung(), 4000); // KC-CLUB-SPIEL-EINLADUNG (2.12.0): nach Begrüßung/Neuigkeiten
   });
