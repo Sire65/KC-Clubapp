@@ -4059,6 +4059,22 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const mig = lies("supabase/migrations/20261005_kc_club_v22350_terminanfrage_status.sql");
   assert.ok(/add column if not exists gelesen_am timestamptz/.test(mig) && /add column if not exists vorschlag_beginn timestamptz/.test(mig) && !/drop column|delete|truncate/i.test(mig.replace(/^--.*$/gm, "")), "nur Spalten ergänzt");
 }
+// 400. 2.23.51: „👥 Ein Mitglied fragen“ – an alle/einzelne/mehrere, Weg wählen, Antwort-Knöpfe (KC-CLUB-MITGLIEDER-FRAGEN)
+{
+  const k = html.slice(html.indexOf("// ---------- KC-CLUB-MITGLIEDER-FRAGEN (2.23.51"), html.indexOf("// Admin: offene Fragen beantworten"));
+  assert.ok(/👥 Alle Mitglieder/.test(k) && /type="checkbox"/.test(k) && /id="mfSuche"/.test(k) && /TW_WEGE\.map/.test(k), "alle / einzelne / mehrere + Weg");
+  for (const t of ["✍️ Antworten", "🔎 Ich recherchiere und antworte dir", "🤷 Ich weiß es nicht", "🚫 Bitte nicht mehr fragen", "Wieder fragen lassen"]) assert.ok(k.includes(t), "Knopf fehlt: " + t);
+  assert.ok(/api\("mf_senden", \{ frage: text, an_alle: MF\.alle/.test(k) && /einmal\(this, mfSenden\)/.test(k), "Senden nur mit Knopf, nur einmal");
+  assert.ok(/onclick="mfFormular\(/.test(html) && /h === "#mfrage"/.test(html) && /mfNeu/.test(html), "Einstieg bei Twinkey, Sprung aus Push/Mail, Hinweis beim Start");
+  const t = server.slice(server.indexOf('case "mf_senden"'), server.indexOf('case "hilfe_angebot_speichern"'));
+  assert.ok(/filter\(\(id\) => id !== ich\.person_id && !id\.startsWith\("KC-P-TEST"\)\)/.test(t) && /filter\(\(id\) => aktiv\.includes\(id\)\)/.test(t), "nur aktive Mitglieder, nicht man selbst, keine Testpersonen");
+  assert.ok(/mfAusgenommen\(gewaehlt\)/.test(t) && /schluessel: "mitfragen", wert: \{ aus: true \}/.test(t), "„nicht mehr fragen“ wird beachtet und gespeichert");
+  assert.ok(/sendenGewaehlt\("club_nachricht", ziel, wege/.test(t) && /kanaele\.filter\(\(k\) => k !== "app"\)/.test(t) && /MF_TAG_MAX/.test(t), "nur gewählte Wege, Bremse");
+  assert.ok(/\.eq\("frage_id", f\.id\)\.eq\("person_id", ich\.person_id\)/.test(t) && /\.eq\("von", ich\.person_id\)\.eq\("status", "offen"\)/.test(t), "antworten nur eigene Zeile, schließen nur eigene Frage");
+  assert.ok(/protokoll\(ich\.person_id, "mitfrage_antwort", \{ frage_id: f\.id, art, versand \}\)/.test(t) && !/\.delete\(\)/.test(t), "Protokoll ohne Inhalt, nichts wird gelöscht");
+  const mig = lies("supabase/migrations/20261005_kc_club_v22351_mitglieder_fragen.sql");
+  assert.ok((mig.match(/enable row level security/g) || []).length === 2 && !/create policy/i.test(mig), "Tabellen nur über den Server");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

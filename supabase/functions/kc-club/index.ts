@@ -41,7 +41,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.23.50";
+const SERVER_VERSION = "2.23.51";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -2593,6 +2593,36 @@ const HILFE_ANGEBOT_SYMBOLE = ["🤲", "📱", "🧮", "💻", "🍳", "🔪", "
 // kommt Frage + Antwort in Twinkeys Wissen. Verschickt wird die Antwort nur, wenn der Admin selbst auf „Antwort senden“ tippt.
 const TWINKEY_KANAELE = ["push", "email", "app"], TWINKEY_OFFEN_MAX = 10, TWINKEY_TAG_MAX = 10;
 const twinkeyKanaele = (roh: unknown): string[] => [...new Set((Array.isArray(roh) ? roh : []).map(String).filter((k) => TWINKEY_KANAELE.includes(k)))];
+// KC-CLUB-MITGLIEDER-FRAGEN (2.23.51, Wunsch Hansi): Frage an andere Mitglieder (alle, einzelne, mehrere) per App/Push/E-Mail.
+// Antworten: eigener Text, „weiß ich nicht“, „recherchiere“, „bitte nicht mehr fragen“ (→ Einstellung mitfragen.aus, umkehrbar).
+const MF_ARTEN = ["antwort", "weiss_nicht", "recherchiere", "nicht_fragen"], MF_TAG_MAX = 10;
+async function mfAusgenommen(ids?: string[]): Promise<Set<string>> {
+  let q = db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "mitfragen");
+  if (ids) q = q.in("person_id", ids);
+  const { data } = await q;
+  return new Set((data ?? []).filter((x: any) => x.wert?.aus === true).map((x: any) => x.person_id as string));
+}
+async function mfDaten(ich: Ich) {
+  const [{ data: an }, { data: meine }, aus] = await Promise.all([
+    db.from("kc_club_mitfrage_empfaenger").select("frage_id,status,antwort,gelesen_am").eq("person_id", ich.person_id).order("frage_id").limit(200),
+    db.from("kc_club_mitfragen").select("id,frage,kanaele,an_alle,status,erstellt_am").eq("von", ich.person_id).order("erstellt_am", { ascending: false }).limit(20),
+    mfAusgenommen([ich.person_id])]);
+  const anIds = (an ?? []).map((x: any) => x.frage_id);
+  const { data: anFragen } = anIds.length ? await db.from("kc_club_mitfragen").select("id,von,frage,status,erstellt_am").in("id", anIds).eq("status", "offen").gte("erstellt_am", new Date(Date.now() - 60 * 86400000).toISOString())
+    : { data: [] as any[] };
+  const meineIds = (meine ?? []).map((x: any) => x.id);
+  const { data: zeilen } = meineIds.length ? await db.from("kc_club_mitfrage_empfaenger").select("frage_id,person_id,status,antwort,geantwortet_am").in("frage_id", meineIds) : { data: [] as any[] };
+  const leute = await personen([...(anFragen ?? []).map((x: any) => x.von), ...(zeilen ?? []).map((z: any) => z.person_id)]);
+  const name = (id: string) => leute.get(id)?.display_name || "Mitglied";
+  return {
+    mfAus: aus.has(ich.person_id),
+    mfAnMich: (anFragen ?? []).map((f: any) => { const z: any = (an ?? []).find((x: any) => x.frage_id === f.id);
+      return { id: f.id, frage: f.frage, erstellt_am: f.erstellt_am, von: { person_id: f.von, name: name(f.von), vorname: vorname(leute.get(f.von)) || name(f.von) }, status: z?.status, antwort: z?.antwort ?? null, gelesen: !!z?.gelesen_am }; })
+      .sort((a: any, b: any) => String(b.erstellt_am).localeCompare(String(a.erstellt_am))),
+    mfMeine: (meine ?? []).map((f: any) => ({ ...f, empfaenger: (zeilen ?? []).filter((z: any) => z.frage_id === f.id)
+      .map((z: any) => ({ person_id: z.person_id, name: name(z.person_id), status: z.status, antwort: z.antwort, geantwortet_am: z.geantwortet_am })).sort((x: any, y: any) => x.name.localeCompare(y.name, "de")) })),
+  };
+}
 
 // ---------- KC-CLUB-BUERO (1.25.0, Wunsch Hansi): Büro für die Clubleitung (Clubsprecher, Kassenwart, Admin) ----------
 // Sitzung vorbereiten (Anwesenheit, Anmerkung zum letzten Protokoll, Tagesordnung, Schreiblinien) → Protokoll-Entwurf →
@@ -5092,7 +5122,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           const pm = await personen((o ?? []).map((x: any) => x.von));
           offen = (o ?? []).map((x: any) => ({ id: x.id, frage: x.frage, erstellt_am: x.erstellt_am, von: x.von, name: pm.get(x.von)?.display_name || "Mitglied" }));
         }
-        return json({ wissen: w ?? [], meine: m ?? [], offen });
+        return json({ wissen: w ?? [], meine: m ?? [], offen, ...(await mfDaten(ich)) }); // + KC-CLUB-MITGLIEDER-FRAGEN
       }
       case "twinkey_frage": {
         const frage = txt(p.frage, 300).replace(/\s+/g, " ");
@@ -5147,6 +5177,71 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       }
       case "twinkey_gelesen": {
         await db.from("kc_club_twinkey_fragen").update({ gelesen: true }).eq("von", ich.person_id).eq("status", "beantwortet").eq("gelesen", false);
+        return json({ ok: true });
+      }
+
+      // KC-CLUB-MITGLIEDER-FRAGEN (2.23.51): Frage an Mitglieder stellen
+      case "mf_senden": {
+        const frage = txt(p.frage, 300).replace(/\s+/g, " ");
+        if (frage.length < 3) throw new Fehler("Bitte die Frage etwas genauer schreiben.");
+        const kanaele = [...new Set((Array.isArray(p.kanaele) ? p.kanaele : []).map(String).filter((k: string) => ["app", "push", "email"].includes(k)))] as string[];
+        if (!kanaele.length) throw new Fehler("Bitte wählen, wie die Frage ankommen soll.");
+        const { count } = await db.from("kc_club_mitfragen").select("id", { count: "exact", head: true }).eq("von", ich.person_id).gte("erstellt_am", new Date(Date.now() - 86400000).toISOString());
+        if ((count ?? 0) >= MF_TAG_MAX) throw new Fehler("Heute hast du schon viele Fragen gestellt – bitte morgen weiter.", 429);
+        const aktiv = (await aktiveMitglieder()).map((m) => m.person_id).filter((id) => id !== ich.person_id && !id.startsWith("KC-P-TEST"));
+        const alle = p.an_alle === true;
+        const gewaehlt: string[] = alle ? aktiv : [...new Set<string>((Array.isArray(p.personen) ? p.personen : []).map(String))].filter((id) => aktiv.includes(id));
+        const aus = await mfAusgenommen(gewaehlt), ziel = gewaehlt.filter((id) => !aus.has(id));
+        if (!ziel.length) throw new Fehler(gewaehlt.length ? "Die Gewählten möchten keine Fragen mehr bekommen." : "Bitte mindestens ein Mitglied wählen.");
+        const { data: f, error } = await db.from("kc_club_mitfragen").insert({ von: ich.person_id, frage, kanaele, an_alle: alle }).select("id").single();
+        if (error || !f) throw new Fehler("Die Frage konnte nicht gespeichert werden.", 500);
+        const { error: e2 } = await db.from("kc_club_mitfrage_empfaenger").insert(ziel.map((person_id) => ({ frage_id: f.id, person_id })));
+        if (e2) { await db.from("kc_club_mitfragen").update({ status: "erledigt", geaendert_am: jetzt() }).eq("id", f.id); throw new Fehler("Die Frage konnte nicht gespeichert werden.", 500); }
+        const wege = kanaele.filter((k) => k !== "app");
+        const versand = wege.length ? await sendenGewaehlt("club_nachricht", ziel, wege, {
+          titel: `❓ ${ich.vorname} hat eine Frage an dich`, kurz: frage.slice(0, 120),
+          betreff: `Köcheclub Werne – ${ich.name} hat eine Frage`,
+          text: `Hallo,\n\n${ich.name} fragt:\n\n„${frage}“\n\nAntworten in der Köcheclub-App (auch „Ich weiß es nicht“ geht mit einem Tipp): ${APP_URL}#mfrage\n\nViele Grüße\nKöcheclub Werne`,
+          url: APP_URL + "#mfrage" }, `club-mitfrage:${f.id}`).catch(() => null) : { gesendet: 0 };
+        await protokoll(ich.person_id, "mitfrage_gesendet", { frage_id: f.id, empfaenger: ziel.length, ausgenommen: gewaehlt.length - ziel.length, alle, kanaele, versand });
+        return json({ ok: true, id: f.id, empfaenger: ziel.length, ausgenommen: gewaehlt.length - ziel.length });
+      }
+      case "mf_antwort": {
+        const art = String(p.art || ""), antwort = txt(p.antwort, 2000);
+        if (!MF_ARTEN.includes(art)) throw new Fehler("Bitte eine Antwort wählen.");
+        if (art === "antwort" && antwort.length < 1) throw new Fehler("Bitte eine Antwort schreiben.");
+        const { data: f } = await db.from("kc_club_mitfragen").select("id,von,frage,status").eq("id", String(p.id || "")).maybeSingle();
+        const { data: z } = f ? await db.from("kc_club_mitfrage_empfaenger").select("status,gelesen_am").eq("frage_id", f.id).eq("person_id", ich.person_id).maybeSingle() : { data: null };
+        if (!f || !z) throw new Fehler("Frage nicht gefunden.", 404);
+        if (f.status !== "offen") throw new Fehler("Diese Frage ist schon erledigt.", 409);
+        const status = art === "antwort" ? "beantwortet" : art;
+        await db.from("kc_club_mitfrage_empfaenger").update({ status, antwort: art === "antwort" ? antwort : null, gelesen_am: z.gelesen_am || jetzt(), geantwortet_am: jetzt() })
+          .eq("frage_id", f.id).eq("person_id", ich.person_id);
+        if (art === "nicht_fragen") await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel: "mitfragen", wert: { aus: true }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
+        const text = art === "antwort" ? antwort : art === "weiss_nicht" ? "🤷 Das weiß ich leider nicht." : art === "recherchiere" ? "🔎 Ich recherchiere und schicke dir dann eine Antwort." : null;
+        const versand = text ? await senden("club_nachricht", [f.von], {
+          titel: `${art === "antwort" ? "💡" : art === "recherchiere" ? "🔎" : "🤷"} ${ich.vorname} antwortet auf deine Frage`, kurz: text.slice(0, 120),
+          betreff: `Köcheclub Werne – ${ich.name} antwortet auf deine Frage`,
+          text: `Hallo,\n\ndu hattest gefragt:\n„${f.frage}“\n\n${ich.name} antwortet:\n${text}\n\nAlle Antworten in der Köcheclub-App: ${APP_URL}#mfrage\n\nViele Grüße\nKöcheclub Werne`,
+          url: APP_URL + "#mfrage" }, `club-mitfrage-antwort:${f.id}:${ich.person_id}:${Date.now()}`).catch(() => null) : null; // „nicht mehr fragen“ meldet nichts
+        await protokoll(ich.person_id, "mitfrage_antwort", { frage_id: f.id, art, versand }); // nur die Art, nicht der Inhalt
+        return json({ ok: true });
+      }
+      case "mf_gelesen": {
+        const ids = (Array.isArray(p.ids) ? p.ids : []).map(String).filter((x: string) => /^[0-9a-f-]{36}$/i.test(x)).slice(0, 100);
+        if (ids.length) await db.from("kc_club_mitfrage_empfaenger").update({ status: "gelesen", gelesen_am: jetzt() }).eq("person_id", ich.person_id).in("frage_id", ids).eq("status", "offen");
+        return json({ ok: true });
+      }
+      case "mf_aus": {
+        const aus = p.aus === true;
+        await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel: "mitfragen", wert: { aus }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
+        await protokoll(ich.person_id, "mitfragen_einstellung", { aus });
+        return json({ ok: true, aus });
+      }
+      case "mf_erledigt": {
+        const { data: upd } = await db.from("kc_club_mitfragen").update({ status: "erledigt", geaendert_am: jetzt() }).eq("id", String(p.id || "")).eq("von", ich.person_id).eq("status", "offen").select("id");
+        if (!upd?.length) throw new Fehler("Frage nicht gefunden oder schon erledigt.", 404);
+        await protokoll(ich.person_id, "mitfrage_erledigt", { frage_id: p.id });
         return json({ ok: true });
       }
 

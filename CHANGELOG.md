@@ -1,5 +1,16 @@
 # Änderungen
 
+## 2.23.51 – 2026-10-05 – 👥 Ein Mitglied fragen (Wunsch Hansi)
+- KC-CLUB-MITGLIEDER-FRAGEN: Bei „🧑‍🍳 Frag Twinkey“ (Link unter dem Fragefeld und in der „gute Frage“-Antwort) eine Frage an andere
+  Mitglieder stellen: „👥 Alle Mitglieder“ oder einzelne/mehrere anhaken (mit Namenssuche), Weg wählen (📱 Club-App, 🔔 Push, ✉️ E-Mail,
+  mehrere möglich), „📤 Frage senden“. Die Gefragten sehen sie bei Twinkey unter „❓ Fragen an dich“ (bei neuer Frage öffnet sich Twinkey
+  beim Start; Push/Mail führen mit #mfrage dorthin) und tippen „✍️ Antworten“, „🔎 Ich recherchiere und antworte dir“, „🤷 Ich weiß es
+  nicht“ oder „🚫 Bitte nicht mehr fragen“ (dann keine Mitglieder-Fragen mehr; „Wieder fragen lassen“ macht es rückgängig). Wer gefragt
+  hat, bekommt Antworten/Recherche/„weiß nicht“ als Mitteilung und sieht unter „👥 Deine Fragen an Mitglieder“ die Antworten und den Stand
+  je Person (gefragt, gelesen, recherchiert, weiß es nicht, geantwortet, möchte nicht gefragt werden); „✅ Erledigt“ schließt die Frage.
+  Höchstens 10 Fragen am Tag. Neue Tabellen kc_club_mitfragen + kc_club_mitfrage_empfaenger (RLS an, keine Policies), Aktionen
+  mf_senden/_antwort/_gelesen/_aus/_erledigt, Daten über twinkey_daten. Protokoll ohne Inhalte. Twinkey-Frage + Hilfe-Eintrag. Test 400.
+
 ## 2.23.50 – 2026-10-05 – 📨 Terminanfrage: an wen und wie steht es (Wunsch Hansi)
 - KC-CLUB-TERMINANFRAGE-STATUS: Eigene Anfragen zeigen „Anfrage an Klaus“ (Liste, Kalender, Demnächst) und den Stand je Empfänger:
   📨 angefragt · 👁️ gelesen · ✅ bestätigt · 🤔 vielleicht · ❌ abgelehnt · 🔄 Gegenvorschlag · ⌛ abgelaufen (keine Antwort bis zur Frist
