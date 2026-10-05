@@ -2923,7 +2923,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.73"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.74"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -8792,8 +8792,11 @@ const KACHELN = {
   ],
   mein: [
     { id: "status", sym: "🟢", t: "Mein Status", u: "verfügbar, Urlaub …", aktion: "statusBlatt()" },
-    { id: "meindienst", sym: "🗓️", t: "Mein Dienstplan", u: "Meine Dienste", aktion: "dpNurIch()" },
-    { id: "dienstwunsch", sym: "📝", t: "Dienstwünsche", u: "Mit Twinkey · Weihnachtsmarkt", aktion: "dwOeffnen()" },
+    // KC-CLUB-MEIN-DIENST (2.23.74, Wunsch Hansi): erweiterte Ansicht = EINE Kachel „🗓️ Mein Dienst“ (Wunsch → Soll → Ist);
+    // die zwei bisherigen Kacheln bleiben für die einfache Ansicht und als Ziel der Knöpfe erhalten
+    { id: "mein_dienst", sym: "🗓️", t: "Mein Dienst", u: () => mdUnter(), aktion: "mdStart()", nur: () => !einfach() },
+    { id: "meindienst", sym: "🗓️", t: "Mein Dienstplan", u: "Meine Dienste", nur: () => einfach(), aktion: "dpNurIch()" },
+    { id: "dienstwunsch", sym: "📝", t: "Dienstwünsche", u: "Mit Twinkey · Weihnachtsmarkt", nur: () => einfach(), aktion: "dwOeffnen()" },
     { id: "dokumente", sym: "📚", t: "Meine Dokumente", u: "Anleitungen zum Ansehen & Drucken", v: "dokumente" },
     { id: "erstattung", sym: "💶", t: "Erstattung", u: "Fahrtkosten & Auslagen", v: "erstattung" },
     // KC-CLUB-AENDERUNG (2.22.7, Wunsch Hansi): Anschrift, Name, Telefon, Bank, Größe … melden; Clubleitung sieht offene Meldungen als Zahl
@@ -13181,6 +13184,37 @@ const minuten = (hhmm) => { const [h, m] = String(hhmm || "0:0").split(":").map(
 const hhmm = (min) => `${String(Math.floor(min / 60) % 24).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;
 let dpStart = null, dpWahl = null, DP = null;
 function dpNurIch() { dpWahl = ICH ? [ICH.person_id] : null; zeige("dienste"); }
+// ---------- KC-CLUB-MEIN-DIENST (2.23.74, Wunsch Hansi): Wunschplan → Sollplan → Istplan in einem Fenster ----------
+// Nur anzeigen – geplant wird im Dienstplan-Programm (DP2). Ist-Zeiten kommen aus der Stempeluhr; fehlen sie, steht das ehrlich da.
+let MD_D = null;
+const mdHm = (m) => `${Math.floor(m / 60)}:${String(m % 60).padStart(2, "0")}`;
+const mdTag = (d) => d === heuteIso() ? "heute" : d === tagPlus(heuteIso(), 1) ? "morgen" : fTagDp.format(new Date(d + "T12:00:00Z"));
+function mdUnter() {
+  const nd = INIT?.naechsterDienst;
+  return nd ? `Nächster: ${mdTag(nd.datum)}, ${nd.start} Uhr` : "Wunsch · Soll · Ist";
+}
+const MD_WUNSCH = { offen: "📨 abgegeben – wartet auf den Planer", uebernommen: "✅ vom Planer übernommen", abgelehnt: "✖ vom Planer abgelehnt" };
+async function mdStart() {
+  const f = blattAuf("mdBlatt", `<h3 style="margin:0">🗓️ Mein Dienst</h3><div id="mdInhalt"><p class="hinweis">Wird geladen …</p></div><button class="knopf" onclick="$('mdBlatt').remove()">Schließen</button>`);
+  f.classList.add("sc-blatt");
+  try { MD_D = await api("mein_dienst", {}, { warten: true }); } catch (e) { $("mdInhalt").innerHTML = `<div class="karte ta-st-nein">⚠️ Stand konnte nicht geladen werden: ${esc(e?.message || "")} <button class="knopf klein" onclick="mdStart()">🔄 Nochmal</button></div>`; return; }
+  const { wunsch: w, soll: so, ist } = MD_D;
+  const schritt = (n, an) => `<span class="marke${an ? " ta-st-ja" : ""}">${n}</span>`;
+  $("mdInhalt").innerHTML = `<p class="hinweis" style="margin:0 0 6px">So entsteht dein Dienst: erst deine <b>Wünsche</b>, dann plant der Planer (<b>Soll</b>), am Ende zählt, was du gearbeitet hast (<b>Ist</b>).</p>
+    <div class="karte"><h4 style="margin:0 0 4px">${schritt("1", !!w.status)} 📝 Wunschplan <small class="hinweis">${esc(w.veranstaltung || "")}</small></h4>
+      <div>${w.status ? esc(MD_WUNSCH[w.status] || w.status) + (w.tage ? ` · ${w.tage} Tag${w.tage === 1 ? "" : "e"}` : "") : "Noch keine Wünsche abgegeben."}</div>
+      ${w.abgegeben ? `<div class="hinweis">abgegeben ${esc(zeitKurz(w.abgegeben))}${w.uebernommen ? ` · übernommen ${esc(zeitKurz(w.uebernommen))}` : ""}</div>` : ""}
+      ${w.phase ? `<div class="hinweis">Wunschphase: ${w.phase === "open" || w.phase === "offen" ? "offen" : "geschlossen"}${w.schluss ? ` · bis ${esc(zeitKurz(w.schluss))}` : ""}</div>` : ""}
+      <div class="knoepfe"><button class="knopf haupt klein" onclick="$('mdBlatt').remove();dwOeffnen()">📝 Wünsche ${w.status ? "ansehen/ändern" : "eintragen"}</button></div></div>
+    <div class="karte"><h4 style="margin:0 0 4px">${schritt("2", so.anzahl > 0)} 📅 Sollplan <small class="hinweis">vom Planer veröffentlicht</small></h4>
+      ${so.anzahl ? `<div>${so.anzahl} kommende Dienste · ${so.monat} in diesem Monat</div>${so.naechste.map((d) => `<div>• <b>${esc(mdTag(d.datum))}</b> ${esc(d.start)}–${esc(d.ende)} Uhr${d.bereich ? ` <span class="hinweis">${esc(d.bereich)}</span>` : ""}</div>`).join("")}`
+        : "<div>Noch keine Dienste für dich veröffentlicht.</div>"}
+      <div class="knoepfe"><button class="knopf haupt klein" onclick="$('mdBlatt').remove();dpNurIch()">📅 Meinen Dienstplan ansehen</button></div></div>
+    <div class="karte"><h4 style="margin:0 0 4px">${schritt("3", ist.anzahl > 0)} ⏱️ Istplan <small class="hinweis">gearbeitet (Stempeluhr), letzte 60 Tage</small></h4>
+      ${ist.anzahl ? `<div>${ist.anzahl} Einsätze · <b>${mdHm(ist.istMin)} Std.</b> gearbeitet${ist.sollMin ? ` · geplant waren ${mdHm(ist.sollMin)} Std. (${ist.istMin - ist.sollMin >= 0 ? "+" : "–"}${mdHm(Math.abs(ist.istMin - ist.sollMin))})` : ""}</div>
+        ${ist.liste.map((d) => `<div>• ${esc(mdTag(d.datum))} ${esc(d.start)}–${esc(d.ende)} Uhr</div>`).join("")}`
+        : `<div class="ta-st-gv">Noch keine Ist-Zeiten vorhanden – sie erscheinen hier, sobald die Stempeluhr sie liefert.</div>`}</div>`;
+}
 function dpWoche(n) { dpStart = n === 0 ? montag(heuteIso()) : tagPlus(dpStart, 7 * n); dienstLaden(); }
 function dpFarbe(pid) { const i = (DP?.personen || []).findIndex((p) => p.person_id === pid); return DP_FARBEN[Math.max(0, i) % DP_FARBEN.length]; }
 function dpPerson(pid) {

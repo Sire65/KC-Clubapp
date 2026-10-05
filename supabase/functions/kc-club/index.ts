@@ -41,7 +41,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.23.73";
+const SERVER_VERSION = "2.23.74";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -5816,6 +5816,28 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const r = await eingabenArchivieren(ich, [teil], ich.person_id);
         if (!r.abgelegt) throw new Fehler("Es gibt noch nichts zum Ablegen.", 409);
         return json({ ok: true, ...r });
+      }
+
+      // KC-CLUB-MEIN-DIENST (2.23.74, Wunsch Hansi): eine Übersicht Wunsch → Soll → Ist – nur lesend (den Dienstplan pflegt DP2)
+      case "mein_dienst": {
+        const heute = berlinTag(new Date()), vor60 = berlinTag(new Date(Date.now() - 60 * 86400000)), monat = heute.slice(0, 7);
+        const [{ data: w }, { data: ph }, { data: soll }, { data: sollAlt }, { data: ist }] = await Promise.all([
+          db.from("kc_dp_wish_inbox").select("revision,status,entries,submitted_at,taken_at").eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("person_id", ich.person_id).eq("source", "club_app").maybeSingle(),
+          db.from("kc_dp_wish_phase_settings").select("status,close_at,deadline_date").eq("org_id", ORG).eq("project_id", DW.projekt).maybeSingle(),
+          db.from("kc_dp_plan_published").select("work_date,start_time,end_time,break_minutes,area").eq("org_id", ORG).eq("person_id", ich.person_id).eq("status", "published").gte("work_date", heute).order("work_date").order("start_time").limit(60),
+          db.from("kc_dp_plan_published").select("work_date,start_time,end_time,break_minutes").eq("org_id", ORG).eq("person_id", ich.person_id).eq("status", "published").gte("work_date", vor60).lt("work_date", heute).limit(200),
+          db.from("kc_dp_timeclock_actuals").select("work_date,start_time,end_time,break_minutes,status").eq("org_id", ORG).eq("person_id", ich.person_id).gte("work_date", vor60).order("work_date", { ascending: false }).limit(60)]);
+        const min = (a: unknown, b: unknown, pause: unknown) => { const t = (x: unknown) => { const [h, m] = String(x || "0:0").split(":").map(Number); return h * 60 + (m || 0); };
+          let d = t(b) - t(a); if (d < 0) d += 1440; return Math.max(0, d - (Number(pause) || 0)); };
+        const zeit = (x: any) => ({ datum: x.work_date, start: String(x.start_time || "").slice(0, 5), ende: String(x.end_time || "").slice(0, 5), bereich: x.area || null });
+        return json({
+          wunsch: { veranstaltung: DW.name, phase: ph?.status || null, schluss: ph?.close_at || ph?.deadline_date || null,
+            status: w?.status || null, tage: Array.isArray(w?.entries) ? w.entries.length : 0, abgegeben: w?.submitted_at || null, uebernommen: w?.taken_at || null },
+          soll: { naechste: (soll ?? []).slice(0, 5).map(zeit), anzahl: (soll ?? []).length, monat: (soll ?? []).filter((x: any) => String(x.work_date).startsWith(monat)).length },
+          ist: { liste: (ist ?? []).slice(0, 10).map((x: any) => ({ ...zeit(x), status: x.status })), anzahl: (ist ?? []).length,
+            istMin: (ist ?? []).reduce((a: number, x: any) => a + min(x.start_time, x.end_time, x.break_minutes), 0),
+            sollMin: (sollAlt ?? []).reduce((a: number, x: any) => a + min(x.start_time, x.end_time, x.break_minutes), 0) },
+        });
       }
 
       case "dienstwunsch_laden": {

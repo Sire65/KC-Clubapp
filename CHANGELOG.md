@@ -1,5 +1,15 @@
 # Änderungen
 
+## 2.23.74 – 2026-10-05 – 🗓️ Mein Dienst (Wunsch → Soll → Ist) + Küchenterror fairer (Wunsch Hansi)
+- KC-CLUB-MEIN-DIENST: Im Register Meins (erweiterte Ansicht) ersetzt EINE Kachel „🗓️ Mein Dienst“ die Kacheln „Mein Dienstplan“ und
+  „Dienstwünsche“ (Unterzeile: nächster Dienst). Fenster mit drei Stufen: 📝 Wunschplan (Stand: abgegeben / übernommen, Wunschphase, „📝 Wünsche
+  eintragen“), 📅 Sollplan (kommende Dienste, Anzahl im Monat, „📅 Meinen Dienstplan ansehen“), ⏱️ Istplan (Stempelzeiten der letzten
+  60 Tage mit Vergleich Soll ↔ Ist; ohne Daten ehrlich „Noch keine Ist-Zeiten“). Server-Aktion mein_dienst nur lesend – den Dienstplan pflegt DP2.
+  Die einfache Ansicht behält die bisherigen großen Knöpfe; alle bisherigen Wege bleiben erreichbar.
+- KC-CLUB-KUECHENTERROR-FAIR (Fund Hansi): Die richtige Antwort war bei 156 von 190 Fragen die längste. Falsche Antworten sind jetzt genauso
+  ausführlich und glaubwürdig (teils richtige Antwort gekürzt, Detail in die Erklärung) – jetzt nur noch 31 von 190, nie mehr deutlich länger.
+  ids, Fragen und Reihenfolge unverändert; Server-Kopie gleich. Tests 424, 425.
+
 ## 2.23.73 – 2026-10-05 – Abstimmung an alle, eine Gruppe oder eine Auswahl (Wunsch Hansi)
 - KC-CLUB-ABSTIMMUNG-ZIEL: Beim Anlegen einer Abstimmung „An wen?“ – 👥 Alle (wie bisher), 🧑‍🤝‍🧑 Gruppe (alle Gruppen zur Auswahl) oder
   ☑️ Auswahl (Fenster mit allen Mitgliedern zum Anklicken, Suche, „Alle an“/„Keiner“). Anzeige „An: …“ mit Namen.

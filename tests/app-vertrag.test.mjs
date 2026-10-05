@@ -4263,6 +4263,23 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/!v\.ziel_ids \|\| v\.ziel_ids\.includes\(ich\.person_id\) \|\| v\.erstellt_von === ich\.person_id \|\| ich\.admin/.test(server), "nur Zielgruppe sieht sie");
   assert.ok(/const ziel = v\.ziel_ids \?\? \(await aktiveMitglieder\(\)\)/.test(server) && /zielIds \?\? \(await aktiveMitglieder\(\)\)/.test(server), "Benachrichtigung + Ergebnis nur an Zielgruppe");
 }
+// 424. 2.23.74: Küchenterror – die richtige Antwort darf nicht am längsten Text erkennbar sein (KC-CLUB-KUECHENTERROR-FAIR)
+{
+  const { KT_FRAGEN } = await import(new URL("../lib/kuechenterror/fragen.js", import.meta.url));
+  let laengste = 0; const zuLang = [];
+  for (const q of KT_FRAGEN) { const lx = Math.max(...q.x.map((x) => x.length)); if (q.r.length > lx) laengste++; if (q.r.length > lx * 1.15) zuLang.push(q.id); }
+  assert.ok(laengste / KT_FRAGEN.length <= 0.3, `richtige Antwort zu oft die längste: ${laengste} von ${KT_FRAGEN.length}`);
+  assert.deepEqual(zuLang, [], "richtige Antwort deutlich länger als alle falschen");
+}
+// 425. 2.23.74: „🗓️ Mein Dienst“ – Wunsch → Soll → Ist in einer Kachel (KC-CLUB-MEIN-DIENST)
+{
+  assert.ok(/\{ id: "mein_dienst", sym: "🗓️", t: "Mein Dienst", u: \(\) => mdUnter\(\), aktion: "mdStart\(\)", nur: \(\) => !einfach\(\) \}/.test(html), "eine Kachel in der erweiterten Ansicht");
+  assert.ok(/\{ id: "meindienst", sym: "🗓️", t: "Mein Dienstplan", u: "Meine Dienste", nur: \(\) => einfach\(\), aktion: "dpNurIch\(\)" \}/.test(html), "einfache Ansicht unverändert");
+  const k = html.slice(html.indexOf("// ---------- KC-CLUB-MEIN-DIENST (2.23.74"), html.indexOf("// ---------- KC-CLUB-MEIN-DIENST (2.23.74") + 6000);
+  for (const x of ["📝 Wunschplan", "📅 Sollplan", "⏱️ Istplan", "Noch keine Ist-Zeiten", "dwOeffnen()", "dpNurIch()"]) assert.ok(k.includes(x), "Teil fehlt: " + x);
+  const g = server.slice(server.indexOf('case "mein_dienst"'), server.indexOf('case "dienstwunsch_laden"'));
+  assert.ok(!/\.(insert|update|upsert|delete)\(/.test(g), "mein_dienst schreibt nichts (DP2 pflegt den Plan)");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
