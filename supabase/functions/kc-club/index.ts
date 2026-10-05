@@ -41,7 +41,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.23.48";
+const SERVER_VERSION = "2.23.49";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -2588,6 +2588,11 @@ async function kachelZahlen(ich: Ich, p: any) {
 const HILFE_KANAELE = ["pinnwand", "push", "email"];
 const hilfeKanaele = (roh: unknown): string[] | null => Array.isArray(roh) ? [...new Set(roh.map(String).filter((k) => HILFE_KANAELE.includes(k)))] : null;
 const HILFE_ANGEBOT_SYMBOLE = ["🤲", "📱", "🧮", "💻", "🍳", "🔪", "🚗", "🛠️", "📸", "🎓", "🧾", "🌿"];
+// KC-CLUB-TWINKEY-FRAGEN (2.23.49, Wunsch Hansi): Fragen, die Twinkey nicht kennt, gehen an den Admin. Er antwortet per Push,
+// E-Mail und/oder in der Club-App (die Antwort steht dann bei „Frag Twinkey“ unter „Deine Fragen“). Mit „Twinkey merkt sich das“
+// kommt Frage + Antwort in Twinkeys Wissen. Verschickt wird die Antwort nur, wenn der Admin selbst auf „Antwort senden“ tippt.
+const TWINKEY_KANAELE = ["push", "email", "app"], TWINKEY_OFFEN_MAX = 10, TWINKEY_TAG_MAX = 10;
+const twinkeyKanaele = (roh: unknown): string[] => [...new Set((Array.isArray(roh) ? roh : []).map(String).filter((k) => TWINKEY_KANAELE.includes(k)))];
 
 // ---------- KC-CLUB-BUERO (1.25.0, Wunsch Hansi): Büro für die Clubleitung (Clubsprecher, Kassenwart, Admin) ----------
 // Sitzung vorbereiten (Anwesenheit, Anmerkung zum letzten Protokoll, Tagesordnung, Schreiblinien) → Protokoll-Entwurf →
@@ -4999,6 +5004,75 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           return json({ ok: true });
         }
         throw new Fehler("Unbekannte Aktion.");
+      }
+
+      // KC-CLUB-TWINKEY-FRAGEN (2.23.49): Wissen für alle, eigene Fragen mit Antwort, für den Admin die offenen Fragen
+      case "twinkey_daten": {
+        const [{ data: w }, { data: m }] = await Promise.all([
+          db.from("kc_club_twinkey_fragen").select("id,frage,antwort,beantwortet_am").eq("status", "beantwortet").eq("wissen", true).order("beantwortet_am", { ascending: false }).limit(500),
+          db.from("kc_club_twinkey_fragen").select("id,frage,antwort,status,gelesen,erstellt_am,beantwortet_am").eq("von", ich.person_id).neq("status", "verworfen").order("erstellt_am", { ascending: false }).limit(30)]);
+        let offen: any[] | null = null;
+        if (ich.admin) {
+          const { data: o } = await db.from("kc_club_twinkey_fragen").select("id,von,frage,erstellt_am").eq("status", "offen").order("erstellt_am").limit(100);
+          const pm = await personen((o ?? []).map((x: any) => x.von));
+          offen = (o ?? []).map((x: any) => ({ id: x.id, frage: x.frage, erstellt_am: x.erstellt_am, von: x.von, name: pm.get(x.von)?.display_name || "Mitglied" }));
+        }
+        return json({ wissen: w ?? [], meine: m ?? [], offen });
+      }
+      case "twinkey_frage": {
+        const frage = txt(p.frage, 300).replace(/\s+/g, " ");
+        if (frage.length < 3) throw new Fehler("Bitte die Frage etwas genauer schreiben.");
+        const [{ count: offenZahl }, { count: heute }] = await Promise.all([
+          db.from("kc_club_twinkey_fragen").select("id", { count: "exact", head: true }).eq("von", ich.person_id).eq("status", "offen"),
+          db.from("kc_club_twinkey_fragen").select("id", { count: "exact", head: true }).eq("von", ich.person_id).gte("erstellt_am", new Date(Date.now() - 86400000).toISOString())]);
+        if ((offenZahl ?? 0) >= TWINKEY_OFFEN_MAX || (heute ?? 0) >= TWINKEY_TAG_MAX) throw new Fehler("Twinkey hat schon viele Fragen von dir notiert – sie werden gerade beantwortet.", 429);
+        const { data: eigene } = await db.from("kc_club_twinkey_fragen").select("id,frage").eq("von", ich.person_id).eq("status", "offen").limit(TWINKEY_OFFEN_MAX);
+        const doppelt = (eigene ?? []).find((x: any) => String(x.frage).toLowerCase() === frage.toLowerCase());
+        if (doppelt) return json({ ok: true, id: doppelt.id, schonDa: true });
+        const { data: neu, error } = await db.from("kc_club_twinkey_fragen").insert({ von: ich.person_id, frage }).select("id").single();
+        if (error || !neu) throw new Fehler("Die Frage konnte nicht gespeichert werden.", 500);
+        const admins = (await adminIds()).filter((id) => id !== ich.person_id && !id.startsWith("KC-P-TEST"));
+        const versand = admins.length ? await senden("club_nachricht", admins, {
+          titel: `🧑‍🍳 Neue Frage an Twinkey von ${ich.name}`, kurz: frage.slice(0, 120),
+          betreff: `Köcheclub Werne – Frage an Twinkey von ${ich.name}`,
+          text: `Hallo,\n\n${ich.name} hat Twinkey etwas gefragt, das er noch nicht weiß:\n\n„${frage}“\n\nAntworten in der Köcheclub-App: ${APP_URL}#twinkey\n\nViele Grüße\nKöcheclub Werne`,
+          url: APP_URL + "#twinkey" }, `club-twinkey:${neu.id}`).catch(() => null) : { gesendet: 0 };
+        await protokoll(ich.person_id, "twinkey_frage", { frage_id: neu.id, versand }); // nur die Art, nicht der Inhalt
+        return json({ ok: true, id: neu.id });
+      }
+      case "twinkey_antworten": {
+        nurAdmin(ich);
+        const antwort = txt(p.antwort, 2000), kanaele = twinkeyKanaele(p.kanaele), wissen = p.wissen === true;
+        if (antwort.length < 2) throw new Fehler("Bitte eine Antwort schreiben.");
+        const { data: f } = await db.from("kc_club_twinkey_fragen").select("id,von,frage,status").eq("id", String(p.id || "")).maybeSingle();
+        if (!f) throw new Fehler("Frage nicht gefunden.", 404);
+        if (f.status !== "offen") throw new Fehler("Diese Frage ist schon erledigt.", 409);
+        const frage = txt(p.frage, 300).replace(/\s+/g, " ") || f.frage; // für Twinkeys Wissen darf die Frage allgemeiner formuliert werden
+        if (frage.length < 3) throw new Fehler("Bitte die Frage etwas genauer schreiben.");
+        const { data: upd, error } = await db.from("kc_club_twinkey_fragen").update({ frage, antwort, kanaele, wissen, status: "beantwortet", gelesen: !kanaele.includes("app"), // 📱 Club-App = Hinweis beim nächsten Öffnen
+          beantwortet_von: ich.person_id, beantwortet_am: jetzt() }).eq("id", f.id).eq("status", "offen").select("id");
+        if (error) throw new Fehler("Die Antwort konnte nicht gespeichert werden.", 500);
+        if (!upd?.length) throw new Fehler("Diese Frage ist schon erledigt.", 409);
+        const wege = kanaele.filter((k) => k !== "app");
+        const versand = wege.length ? await sendenGewaehlt("club_nachricht", [f.von], wege, {
+          titel: "🧑‍🍳 Twinkey hat eine Antwort für dich", kurz: `Deine Frage: ${f.frage}`.slice(0, 120),
+          betreff: "Köcheclub Werne – Twinkey hat eine Antwort für dich",
+          text: `Hallo,\n\ndu hattest Twinkey gefragt:\n„${f.frage}“\n\nDie Antwort:\n${antwort}\n\nViele Grüße\nKöcheclub Werne`,
+          url: APP_URL + "#twinkey" }, `club-twinkey-antwort:${f.id}`).catch(() => null) : { gesendet: 0 };
+        await protokoll(ich.person_id, "twinkey_antwort", { frage_id: f.id, an: f.von, kanaele, wissen, versand });
+        return json({ ok: true, versand, kanaele });
+      }
+      case "twinkey_verwerfen": {
+        nurAdmin(ich);
+        const { data: upd } = await db.from("kc_club_twinkey_fragen").update({ status: "verworfen", beantwortet_von: ich.person_id, beantwortet_am: jetzt() })
+          .eq("id", String(p.id || "")).eq("status", "offen").select("id");
+        if (!upd?.length) throw new Fehler("Frage nicht gefunden oder schon erledigt.", 404);
+        await protokoll(ich.person_id, "twinkey_verworfen", { frage_id: p.id });
+        return json({ ok: true });
+      }
+      case "twinkey_gelesen": {
+        await db.from("kc_club_twinkey_fragen").update({ gelesen: true }).eq("von", ich.person_id).eq("status", "beantwortet").eq("gelesen", false);
+        return json({ ok: true });
       }
 
       // KC-CLUB-HILFE-ANGEBOT (1.42.0): eigenes Angebot anlegen/ändern – es wird nichts verschickt

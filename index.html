@@ -1326,9 +1326,13 @@
   .klappen-alle-zeile { display: flex; justify-content: flex-end; margin: -4px 0 -4px; } .klappen-alle-zeile .klappen-alle { margin: 0; width: auto; min-height: 38px; padding: 4px 14px; white-space: nowrap; } /* 2.23.40 KC-CLUB-KLAPPEN-ALLE */
   /* 2.23.39 KC-CLUB-EINGANG-FILTER + KC-CLUB-DIENST-UEBERSICHT */
   .ekh-liste { display: grid; gap: 6px; }
-  /* 2.23.48 KC-CLUB-KUECHENCHEF */
-  .kc-chef-knopf { width: 100%; margin: 8px 0 4px; text-align: center !important; }
-  .kc-blatt .blatt-innen { max-height: 92vh !important; } .kc-antwort { margin: 0; } .kc-chef { font-weight: 800; color: var(--textGruen); }
+  /* 2.23.48 KC-CLUB-KUECHENCHEF → 2.23.49 KC-CLUB-TWINKEY */
+  .tw-chef-knopf { width: 100%; margin: 8px 0 4px; text-align: center !important; }
+  .tw-blatt .blatt-innen, #twOffenBlatt .blatt-innen { max-height: 92vh !important; }
+  .tw-zeile { display: flex; gap: 6px; align-items: center; } .tw-zeile .hz-suche { flex: 1; min-width: 0; margin: 0; } .tw-zeile .tw-fragen { flex: none; width: auto; margin: 0; padding: 8px 12px; }
+  .tw-nicht { background: none; border: 0; color: var(--textGruen); text-decoration: underline; padding: 6px 0 0; font: inherit; font-size: .9rem; cursor: pointer; }
+  .tw-meine { margin-top: 8px; } .tw-meine > summary { font-weight: 800; cursor: pointer; padding: 6px 0; } .tw-frage-zeile { border-top: 1px solid var(--linie, #ddd); padding: 6px 0; }
+  .tw-admin-knopf { width: 100%; margin-top: 8px; } .tw-offen { display: grid; gap: 6px; } .tw-offen input, .tw-offen textarea { width: 100%; box-sizing: border-box; } .kc-antwort { margin: 0; } .kc-chef { font-weight: 800; color: var(--textGruen); }
   .kc-andere { display: grid; gap: 2px; } .kc-andere > b { margin: 4px 0 2px; }
   #diktatBlatt.blatt { z-index: 9000; } /* 2.23.47: Diktier-Fenster auch über der Suche (z-index 80) */
   /* 2.23.47 KC-CLUB-DIKTAT-FELD: 🎤 rechts im Feld */
@@ -2319,7 +2323,7 @@
   <section id="v-hilfezentrum" class="versteckt">
     <div class="kopf2"><button class="zurueck" onclick="hzZurueck()" aria-label="Zurück">‹</button><h2>❓ Hilfe &amp; Tipps</h2><button type="button" class="druckknopf" title="Hilfe drucken / als PDF speichern" aria-label="Hilfe drucken oder als PDF speichern" onclick="druckStarten('hilfe')"></button></div>
     <!-- 2.23.2 (Wunsch Hansi): Suchfeld deutlicher – eigene Karte mit Überschrift, kräftigem Rand und Lupe -->
-    <button type="button" class="knopf haupt kc-chef-knopf" onclick="kcFrageStart()">🧑‍🍳 Frag den Küchenchef – einfach fragen oder 🎤 sprechen</button><!-- 2.23.48 KC-CLUB-KUECHENCHEF -->
+    <button type="button" class="knopf haupt tw-chef-knopf" onclick="twFrageStart()">🧑‍🍳 Frag Twinkey – einfach fragen oder 🎤 sprechen</button><!-- 2.23.49 KC-CLUB-TWINKEY (früher Küchenchef) -->
     <label class="hz-suchfeld" for="hzSuche"><span class="hz-such-titel">🔍 Wonach suchst du?</span>
       <input type="search" id="hzSuche" data-diktat="einmal" class="hz-suche" placeholder="Hier tippen – z. B. „Farbe“ oder „Ton“" oninput="hzSuchen(this.value)" autocomplete="off" enterkeyhint="search"></label>
     <nav class="hz-reg" id="hzRegister" aria-label="Hilfe-Themen"></nav>
@@ -2884,7 +2888,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.48"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.49"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3733,6 +3737,10 @@ function einwSchalterZeigen() { if ($("setEinw")) $("setEinw").checked = einwSta
 // (⚙️ Einstellungen → „💡 Tipp des Tages“, Standard an). Gespeichert in der Server-Einstellung „tipps“ (geräteübergreifend).
 const TIPP_SPAETER_TAGE = 3;
 const TIPPS = [
+  // KC-CLUB-TWINKEY (2.23.49, Wunsch Hansi): ganz vorne = kommt als nächster Tipp
+  { id: "frag_twinkey", sym: "🧑‍🍳", t: "Frag einfach Twinkey!",
+    x: "Du suchst etwas in der App? Tippe auf <b>🧑‍🍳 Frag Twinkey</b> und frag in deinen eigenen Worten – getippt oder mit 🎤 gesprochen. Zum Beispiel: <i>„Wie schicke ich ein Foto?“</i> Weiß Twinkey es noch nicht, recherchiert er und schickt dir die Antwort später.",
+    ja: "🧑‍🍳 Twinkey fragen", testen: () => twFrageStart(), seit: "2.23.49" },
   // KC-CLUB-TIPP-TABLET-PC (2.23.45, Wunsch Hansi): ganz vorne = kommt als nächster Tipp. Weg über den vorhandenen 6-stelligen Anmelde-Code.
   { id: "tablet_pc", sym: "💻", t: "Club-App auch auf Tablet oder PC nutzen?",
     x: () => `Du kannst die Köcheclub-App zusätzlich auf deinem <b>Tablet</b> oder <b>PC</b> einrichten – mit deinen Nachrichten, Terminen und Einstellungen.<br><b>1.</b> Tippe hier auf <b>„🔢 Code holen“</b> – du bekommst einen 6-stelligen Code (gilt nur kurz und nur einmal).<br><b>2.</b> Öffne am Tablet oder PC den Internet-Browser und gib diese Adresse ein: <b>${esc(APP_URL_CLUB.replace(/^https?:\/\//, ""))}</b>. Tippe dort auf <b>„🔢 Mit Code anmelden“</b> und gib den Code ein.<br><b>3.</b> Damit die App dort ein eigenes Symbol bekommt: im Browser-Menü <b>„Zum Startbildschirm hinzufügen“</b> (Tablet) bzw. <b>„App installieren“</b> (PC) wählen.<br>🔒 Deine Zugangsdaten sind persönlich – bitte nicht weitergeben.`,
@@ -3855,7 +3863,7 @@ const HILFE_TIPP_THEMA = {
   farbschemen_neu: "darstellung", sprachansage: "toene", vorlesen: "toene", archiv_ordner: "club", wischen: "nachrichten", emoji: "nachrichten",
   reaktion: "nachrichten", erwaehnung: "nachrichten", sos: "notfall", bearbeiten: "nachrichten", stumm: "nachrichten", schnellstart: "start",
   anklopfen: "nachrichten", notfallpass: "notfall", lupe: "start", ruhe: "toene", antwort_zurueck: "termine", mitfahren: "termine",
-  kalender: "termine", klappe: "start", alle_klappen: "start", tablet_pc: "technik", rechtschreibung: "nachrichten", private_termine: "termine", diktieren: "nachrichten", fotoalben: "club",
+  kalender: "termine", klappe: "start", alle_klappen: "start", tablet_pc: "technik", frag_twinkey: "start", rechtschreibung: "nachrichten", private_termine: "termine", diktieren: "nachrichten", fotoalben: "club",
   chronik: "club", helfen_leihen: "club",
 };
 const hzDesign = () => { const e = einfach(); einstiegHin(e ? "einfach" : "darstellung", e ? "farbeE" : "designWahl"); };
@@ -3877,7 +3885,7 @@ const HILFE = [
   { id: "zurueck", thema: "start", sym: "‹", t: "„Zurück“ bleibt in der App", x: "Die Zurück-Taste deines Handys oder der Pfeil <b>‹</b> oben links geht eine Ansicht zurück – die App schließt sich dabei nicht. Ist ein Fenster offen, schließt „Zurück“ zuerst nur das Fenster, deine Eingabe bleibt stehen." },
   { id: "frage_knopf", thema: "start", sym: "❓", t: "Das Fragezeichen unten rechts", x: "Das runde <b>„?“</b> neben der Lupe öffnet in jedem Bereich gleich die passende Hilfe. Stört es dich? <b>Lange darauf drücken</b> blendet es aus. Zurück holst du es unter ⚙️ Einstellungen → <b>„❓ Fragezeichen unten rechts“</b>.", zeig: () => einstiegHin(einfach() ? "einfach" : "ansagen", einfach() ? "setHzFrageE" : "setHzFrage"), seit: "2.23.5" },
   { id: "einstellung_suchen", thema: "start", sym: "🔍", t: "Jede Einstellung schnell finden", x: "In den Einstellungen findest du mit der <b>Lupe 🔍 unten rechts</b> jede Einstellung – z. B. „Ton“ oder „Farbe“ eingeben. Bereiche öffnest du durch Antippen der Überschrift, mit dem Schloss 🔒 hältst du sie offen oder zu.", zeig: () => zeige("einstellungen") },
-  { id: "kuechenchef", thema: "start", sym: "🧑‍🍳", t: "Frag den Küchenchef", x: "Du weißt nicht, wo etwas ist? Tippe auf <b>🧑‍🍳 Frag den Küchenchef</b> (Kachel oder oben im Hilfe-Zentrum) und stell deine Frage in eigenen Worten – getippt oder mit 🎤 gesprochen, z. B. „Wie ändere ich die Farben?“. Er zeigt die passende Antwort, liest sie auf Wunsch vor und bringt dich mit <b>„👉 Zeig es mir“</b> genau an die Stelle. Weiß er es nicht, kannst du die Frage an die Clubleitung weitergeben.", zeig: () => kcFrageStart(), seit: "2.23.48" },
+  { id: "twinkey", thema: "start", sym: "🧑‍🍳", t: "Frag Twinkey", x: "Du weißt nicht, wo etwas ist? Tippe auf <b>🧑‍🍳 Frag Twinkey</b> (Kachel oder oben im Hilfe-Zentrum) und stell deine Frage in eigenen Worten – getippt oder mit 🎤 gesprochen, z. B. „Wie ändere ich die Farben?“. Twinkey zeigt die passende Antwort, liest sie auf Wunsch vor und bringt dich mit <b>„👉 Zeig es mir“</b> genau an die Stelle. Weiß er es noch nicht, tippst du auf <b>➤ Fragen</b>: Twinkey recherchiert, du bekommst die Antwort später per Push, E-Mail oder in der App – und unter <b>📬 Deine Fragen</b>. Danach kennt Twinkey die Antwort auch für alle anderen.", zeig: () => twFrageStart(), seit: "2.23.49" },
   { id: "diktat_feld", thema: "start", sym: "🎤", t: "Sprechen statt tippen", x: "Wo rechts im Feld ein <b>🎤</b> steht, kannst du diktieren: antippen, sprechen – der Text erscheint im Feld. <b>„✅ Fertig“</b> beendet, bei der Suche geht es nach dem ersten Satz von selbst. Verschickt wird nichts – du prüfst und tippst selbst auf Senden. Das 🎤 gibt es bei der <b>Lupe</b>, im <b>Hilfe-Zentrum</b>, beim <b>Pinnwand-Zettel</b> und bei <b>Hilfe-Aufruf und Angebot</b>; bei SOS heißt es „🎙️ Einsprechen“.", zeig: () => zeige("hilfezentrum"), seit: "2.23.47" },
   { id: "klappen_alle", thema: "start", sym: "▾", t: "Alle Bereiche auf einmal auf- oder zuklappen", x: "In den ⚙️ Einstellungen oben rechts: <b>„▾ Alle auf“</b> öffnet alle Bereiche, danach heißt der Knopf <b>„▴ Alle zu“</b> und klappt alle wieder zu. Bereiche mit 🔒 bleiben, wie du sie festgestellt hast.", zeig: () => zeige("einstellungen"), seit: "2.23.40" },
   { id: "gruppe_bereiche", thema: "nachrichten", sym: "👥", t: "Neue Gruppe: Bereiche auf- und zuklappen", x: "Bei <b>👥 Neue Gruppe</b> hat jeder Bereich – <b>Deine Gruppen</b>, <b>Name &amp; Symbol</b>, <b>Wer ist dabei?</b> – einen Pfeil ▾ zum Auf- und Zuklappen und ein Schloss 🔓. Mit 🔒 bleibt der Bereich so, wie er ist; die App merkt es sich.", zeig: () => gruppeForm(null), seit: "2.23.41" },
@@ -5681,92 +5689,220 @@ function diktatEnde(was) {
   if (was === "senden") { if (!feld.value) return melde("Es wurde nichts erkannt – bitte nochmal.", true); return senden(); }
   feld.focus();
 }
-// ---------- KC-CLUB-KUECHENCHEF (2.23.48, Wunsch Hansi): „🧑‍🍳 Frag den Küchenchef“ – Fragen in eigenen Worten (tippen oder 🎤 sprechen) ----------
-// Kostenlos und ohne fremde Server: sucht die passende Antwort in den vorhandenen Hilfen (Hilfe-Zentrum, Tipps, „Kurz erklärt“).
+// ---------- KC-CLUB-TWINKEY (2.23.49, Wunsch Hansi): „🧑‍🍳 Frag Twinkey“ – Fragen in eigenen Worten (tippen oder 🎤 sprechen) ----------
+// Früher „Frag den Küchenchef“ (2.23.48) – Twinkey, weil auch viele Twinkeys früher Küchenchefs waren.
+// Kostenlos und ohne fremde KI: sucht die passende Antwort in den Hilfen (Hilfe-Zentrum, Tipps, „Kurz erklärt“), in Twinkeys
+// eigenen Fragen und Antworten (TW_FAQ) und in dem, was Twinkey vom Admin gelernt hat (Server: twinkey_daten → wissen).
 // Versteht andere Wörter für dasselbe (Synonyme), Wortformen und kleine Tippfehler. „👉 Zeig es mir“ springt an die Stelle.
-// Nichts gefunden → nur auf Wunsch eine vorbereitete Nachricht an Hansi (verschickt wird erst, wenn man selbst auf Senden tippt).
-const KC_STOP = new Set("wie was wo wann warum wer welche welcher welches kann koennen konnte ich man mir mich mein meine meinen meiner meinem dein deine du ein eine einen einem einer der die das den dem des und oder in im an am auf aus zu zum zur mit von vom fuer bei ist sind wird werden wurde habe hat hast haben es sich nicht noch auch nur so mal bitte gibt geht gehen machen mache macht tun tut kann moechte moechten will wollen soll sollte muss da hier dort jetzt denn dann etwas einfach gerne gern ueber unter funktioniert klappt stellen stelle aendern aendere einstellen bekommen bekomme lade mache mach finde finden sehe sehen kriege leicht schnell".split(" "));
-const KC_SYN = [["termin", "verabredung", "treffen", "datum", "verabreden", "ausmachen", "kalender"], ["terminanfrage", "anfrage", "anfragen", "einladen", "einladung"],
-  ["farbe", "farben", "design", "aussehen", "farbschema", "dunkel", "hell", "nachtmodus", "lieblingsfarbe"], ["nachricht", "schreiben", "chat", "mitteilung", "senden", "schicken", "whatsapp"],
-  ["schrift", "groesser", "gross", "buchstaben", "zoom", "lesbar", "schriftgroesse"], ["ton", "laut", "leise", "klingelton", "benachrichtigung", "push", "mitteilungen"],
-  ["foto", "bild", "fotos", "bilder", "album", "hochladen"], ["pinnwand", "zettel", "aushang", "postit"], ["helfen", "helfer", "hilfeaufruf", "gesucht", "angebot"],
-  ["mitglied", "mitglieder", "person", "kontakt", "telefonnummer", "anrufen"], ["loeschen", "entfernen", "weg", "rueckgaengig"], ["notfall", "sos", "unfall", "notruf"],
-  ["dienst", "dienstplan", "dienstwunsch", "dienstwuensche", "wunsch", "wuensche", "dienstzeiten", "schicht", "weihnachtsmarkt"], ["spiel", "spiele", "schach", "skat", "bauernskat", "quiz", "kuechenterror"], ["tictactoe", "tomaten", "tomate", "brokkoli"],
-  ["anmelden", "login", "code", "zugang", "passwort", "tablet", "computer", "geraet"], ["installieren", "startbildschirm", "symbol", "homebildschirm"],
-  ["archiv", "ordner", "dokument", "dokumente", "ablage", "ablegen"], ["protokoll", "protokolle", "sitzung"], ["geburtstag", "gratulieren", "glueckwunsch"],
-  ["standort", "karte", "position"], ["diktieren", "mikrofon", "sprechen", "sprachnachricht"], ["vorlesen", "ansage", "ansagen", "stimme"], ["gruppe", "gruppen"],
-  ["status", "urlaub", "krank", "abwesend", "verfuegbar"], ["zusagen", "absagen", "komme", "teilnehmen", "dabei"], ["mitfahren", "mitfahrt", "fahrt", "fahrgemeinschaft"],
-  ["erstattung", "geld", "fahrtkosten", "auslage", "kosten"], ["ausleihen", "leihen", "borgen"], ["boerse", "verkaufen", "verschenken", "suche"], ["suche", "suchen", "finden", "lupe"],
-  ["tipp", "tipps", "hilfe", "erklaerung"], ["stumm", "ruhe", "stoeren", "ruhezeit"]];
-const kcNorm = (t) => String(t || "").toLowerCase().replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss").replace(/[^a-z0-9 ]+/g, " ");
-const kcStamm = (w) => (w.length > 4 ? w.replace(/(ungen|ung|en|er|es|e|n|s)$/, "") : w);
-const kcWoerter = (t) => kcNorm(t).split(/\s+/).filter((w) => w.length > 1 && !KC_STOP.has(w));
-const KC_GRUPPE = (() => { const m = new Map(); KC_SYN.forEach((g, i) => g.forEach((w) => m.set(kcStamm(w), i))); return m; })();
-function kcAbstand(a, b) { // Tippfehler: höchstens 1 Buchstabe anders (ersetzt, fehlt, zu viel)
+// KC-CLUB-TWINKEY-FRAGEN: Weiß Twinkey es nicht und tippt man auf „➤ Fragen“, sagt er „Das ist eine gute Frage …“ und gibt die
+// Frage an den Admin weiter (nur auf ausdrückliches Fragen – nie beim bloßen Tippen). Der Admin antwortet per 🔔 Push, ✉️ E-Mail
+// und/oder 📱 in der Club-App und kann Twinkey die Antwort merken lassen. Die eigene Frage + Antwort steht unter „📬 Deine Fragen“.
+const TW_STOP = new Set("wie was wo wann warum wer welche welcher welches kann koennen konnte ich man mir mich mein meine meinen meiner meinem dein deine du ein eine einen einem einer der die das den dem des und oder in im an am auf aus zu zum zur mit von vom fuer bei ist sind wird werden wurde habe hat hast haben es sich nicht noch auch nur so mal bitte gibt geht gehen machen mache macht tun tut kann moechte moechten will wollen soll sollte muss da hier dort jetzt denn dann etwas einfach gerne gern ueber unter funktioniert klappt stellen stelle aendern aendere einstellen bekommen bekomme lade mache mach finde finden sehe sehen kriege leicht schnell hallo hi danke".split(" "));
+const TW_SYN = [["termin", "verabredung", "treffen", "datum", "verabreden", "ausmachen", "kalender", "veranstaltung"], ["terminanfrage", "anfrage", "anfragen", "einladen", "einladung"],
+  ["farbe", "farben", "design", "aussehen", "farbschema", "dunkel", "hell", "nachtmodus", "lieblingsfarbe"], ["nachricht", "schreiben", "chat", "mitteilung", "senden", "schicken", "whatsapp", "unterhaltung"],
+  ["schrift", "groesser", "gross", "buchstaben", "zoom", "lesbar", "schriftgroesse", "lupe"], ["ton", "laut", "leise", "klingelton", "benachrichtigung", "push", "mitteilungen", "piept", "klingelt"],
+  ["foto", "bild", "fotos", "bilder", "album", "hochladen", "galerie"], ["pinnwand", "zettel", "aushang", "postit", "brett"], ["helfen", "helfer", "hilfeaufruf", "gesucht", "angebot", "unterstuetzung"],
+  ["mitglied", "mitglieder", "person", "kontakt", "telefonnummer", "anrufen", "nummer", "handynummer"], ["loeschen", "entfernen", "weg", "rueckgaengig", "wegmachen"], ["notfall", "sos", "unfall", "notruf", "krankenwagen"],
+  ["dienst", "dienstplan", "dienstwunsch", "dienstwuensche", "wunsch", "wuensche", "dienstzeiten", "schicht", "weihnachtsmarkt", "einteilung"], ["spiel", "spiele", "schach", "skat", "bauernskat", "quiz", "kuechenterror", "spielen"], ["tictactoe", "tomaten", "tomate", "brokkoli"],
+  ["anmelden", "login", "code", "zugang", "passwort", "tablet", "computer", "geraet", "link", "einloggen"], ["installieren", "startbildschirm", "symbol", "homebildschirm", "app"],
+  ["archiv", "ordner", "dokument", "dokumente", "ablage", "ablegen", "unterlagen"], ["protokoll", "protokolle", "sitzung", "versammlung"], ["geburtstag", "gratulieren", "glueckwunsch", "geburtstage"],
+  ["standort", "karte", "position", "teilen"], ["diktieren", "mikrofon", "sprechen", "sprachnachricht"], ["vorlesen", "ansage", "ansagen", "stimme"], ["gruppe", "gruppen", "gruppenchat"],
+  ["status", "urlaub", "krank", "abwesend", "verfuegbar"], ["zusagen", "absagen", "komme", "teilnehmen", "dabei", "zusage", "absage"], ["mitfahren", "mitfahrt", "fahrt", "fahrgemeinschaft", "auto", "abholen"],
+  ["erstattung", "geld", "fahrtkosten", "auslage", "kosten", "zurueck", "beleg", "quittung"], ["ausleihen", "leihen", "borgen", "pavillon", "reservieren"], ["boerse", "verkaufen", "verschenken", "biete"], ["suche", "suchen", "finden"],
+  ["tipp", "tipps", "hilfe", "erklaerung", "anleitung", "handbuch", "bedienungsanleitung"], ["stumm", "ruhe", "stoeren", "ruhezeit", "nachts"], ["vorschlag", "vorschlaege", "idee", "abstimmen", "abstimmung"],
+  ["anschrift", "adresse", "umgezogen", "umzug", "wohnung"], ["version", "update", "aktualisieren", "neu", "neuigkeiten"], ["fehler", "problem", "kaputt", "geht", "haengt", "absturz"],
+  ["daten", "datenschutz", "privat", "sicher", "sicherheit", "privatsphaere"], ["kosten", "kostet", "gratis", "kostenlos", "bezahlen"], ["profil", "meine", "angaben", "kleidung", "groesse", "kochjacke"]];
+// Twinkeys eigene Fragen und Antworten (Wunsch Hansi: „mehr Fragen und Antworten“) – kurz, mit Sprung an die richtige Stelle
+const TW_FAQ = [
+  { id: "nachricht", sym: "💬", t: "Wie schreibe ich jemandem eine Nachricht?", x: "Tippe auf <b>💬 Nachrichten</b> und dann auf <b>„＋ Neu“</b>. Wähle das Mitglied aus, schreib deinen Text und tippe auf Senden. Schneller geht es bei <b>👥 Mitglieder</b>: bei der Person auf die Sprechblase <b>💬</b> tippen.", los: () => zeige("nachrichten") },
+  { id: "gruppe", sym: "👥", t: "Wie lege ich eine Gruppe an?", x: "Bei <b>💬 Nachrichten</b> auf <b>„👥 Gruppe“</b> tippen. <b>Name &amp; Symbol</b> wählen, bei <b>„Wer ist dabei?“</b> die Mitglieder anhaken und <b>„👥 Gruppe anlegen“</b> tippen.", los: () => zeige("gruppe") },
+  { id: "foto-schicken", sym: "📷", t: "Wie schicke ich ein Foto im Chat?", x: "Im Chat unten auf die <b>Büroklammer 📎</b> bzw. das Kamera-Symbol tippen, Foto wählen oder aufnehmen und senden. Für alle sichtbar wird ein Foto im <b>📷 Fotoalbum</b> (dort <b>„＋ Neu“</b>).", los: () => zeige("nachrichten") },
+  { id: "foto-album", sym: "📷", t: "Wie lade ich Fotos ins Fotoalbum?", x: "Tippe auf <b>📷 Fotoalbum</b> und dann auf <b>„＋ Neu“</b>. Bilder auswählen – fertig. Mit <b>„☑️ Auswählen“</b> legst du Bilder in ein eigenes Album, z. B. „Weihnachtsmarkt“.", los: () => zeige("fotos") },
+  { id: "zusagen", sym: "✅", t: "Wie sage ich für einen Termin zu oder ab?", x: "Bei <b>📅 Termine</b> den Termin antippen und <b>✅ Ich komme</b>, <b>❓ Vielleicht</b> oder <b>❌ Kann nicht</b> wählen. Nochmal antippen nimmt die Antwort zurück.", los: () => zeige("termine") },
+  { id: "termin-neu", sym: "📅", t: "Wie trage ich einen eigenen Termin ein?", x: "Bei <b>📅 Termine</b> auf <b>„＋ Neu“</b> tippen. Private Termine sieht nur du. Mit einer <b>Terminanfrage</b> fragst du andere Mitglieder, ob sie Zeit haben.", los: () => zeige("termine") },
+  { id: "naechstes-treffen", sym: "📅", t: "Wann ist das nächste Treffen?", x: "Der nächste Termin steht oben im <b>farbigen Info-Feld</b> der Startseite. Alle Termine findest du unter <b>📅 Termine</b> – als Liste oder Kalender.", los: () => zeige("termine") },
+  { id: "mitfahren", sym: "🚗", t: "Wie finde ich eine Mitfahrgelegenheit?", x: "Erst beim Termin <b>✅ Ich komme</b> tippen – danach kannst du eine <b>Mitfahrt suchen oder anbieten</b>.", los: () => zeige("termine") },
+  { id: "anrufen", sym: "📞", t: "Wie rufe ich ein Mitglied an?", x: "Bei <b>👥 Mitglieder</b> die Person antippen. Hat sie ihre Nummer freigegeben, kannst du direkt anrufen. Sonst schreib ihr eine Nachricht mit <b>💬</b>.", los: () => zeige("mitglieder") },
+  { id: "online", sym: "🟢", t: "Wer ist gerade in der App?", x: "Bei <b>👥 Mitglieder</b> zeigt ein <b>grüner Punkt</b>, wer gerade online ist. Mit der Hand <b>👋</b> kannst du dort anklopfen.", los: () => zeige("mitglieder") },
+  { id: "zettel", sym: "📌", t: "Wie hänge ich einen Zettel an die Pinnwand?", x: "Tippe auf <b>📌 Pinnwand</b> und dann auf <b>„＋ Zettel“</b>. Text schreiben (oder 🎤 sprechen) und aufhängen. Auf Zettel anderer antwortest du mit Emojis.", los: () => zeige("pinnwand") },
+  { id: "hilfe-suchen", sym: "🙋", t: "Ich brauche Hilfe von anderen – was tun?", x: "Unter <b>🤝 Helfen &amp; Leihen</b> → <b>🙋 Wer kann helfen?</b> mit <b>„＋ Neu“</b> einen Hilfe-Aufruf anlegen. Du wählst, ob er an die Pinnwand kommt, per Push oder per E-Mail rausgeht.", los: () => zeige("helfen") },
+  { id: "leihen", sym: "📦", t: "Wie leihe ich etwas vom Club aus?", x: "Unter <b>🤝 Helfen &amp; Leihen</b> → <b>📦 Ausleihen</b> reservierst du Club-Sachen wie den Pavillon für deinen Tag.", los: () => zeige("helfen") },
+  { id: "boerse", sym: "🛍️", t: "Wie biete ich privat etwas an oder suche etwas?", x: "Unter <b>🤝 Helfen &amp; Leihen</b> → <b>🛍️ Börse</b> mit <b>„＋ Neu“</b>: Biete oder Suche wählen, gern mit Foto. Ein Angebot bleibt 30 Tage stehen.", los: () => hlStart("boerse") },
+  { id: "vorschlag", sym: "🗳️", t: "Wie mache ich einen Vorschlag für den Club?", x: "Bei <b>🗳️ Vorschläge</b> auf <b>„＋ Neu“</b> tippen und deine Idee beschreiben – die anderen können abstimmen.", los: () => zeige("vorschlaege") },
+  { id: "dienstwunsch", sym: "📝", t: "Wie trage ich meine Dienstwünsche ein?", x: "Tippe auf die Kachel <b>📝 Dienstwünsche</b>. Twinkey führt dich Tag für Tag durch: wann du kannst, wann lieber nicht. Gespeichert wird es für die Dienstplanung.", los: () => dwOeffnen() },
+  { id: "dienstplan", sym: "🗓️", t: "Wo sehe ich den Dienstplan?", x: "Unter <b>🗓️ Dienstpläne</b> – Woche für Woche. Mit <b>‹ Woche</b> / <b>Woche ›</b> blätterst du, <b>„Heute“</b> springt zurück.", los: () => zeige("dienste") },
+  { id: "protokoll", sym: "📄", t: "Wo finde ich die Protokolle?", x: "Unter <b>📄 Protokolle</b>. Neue sind markiert, bis du sie geöffnet hast. Ältere stehen auch im <b>🗄️ Archiv</b> nach Jahren.", los: () => zeige("protokolle") },
+  { id: "archiv", sym: "🗄️", t: "Wo finde ich alte Sachen und meinen Ordner?", x: "Im <b>🗄️ Archiv</b>: Ordner nach Jahren mit Terminen, Protokollen und Fotos, die <b>Clubchronik</b> zum Blättern – und dein <b>eigener Ordner</b>, den nur du siehst.", los: () => zeige("archiv") },
+  { id: "handbuch", sym: "📚", t: "Gibt es eine Anleitung zum Lesen oder Drucken?", x: "Ja – unter <b>📚 Meine Dokumente</b> liegt die <b>Bedienungsanleitung</b> der Club-App. Dort kannst du sie lesen, drucken oder teilen.", los: () => zeige("dokumente") },
+  { id: "geld", sym: "💶", t: "Wie bekomme ich ausgelegtes Geld zurück?", x: "Über <b>💶 Erstattung</b>: Fahrtkosten (die Kilometer rechnet die App aus), Einkauf oder sonstige Auslagen eintragen, Beleg fotografieren, abschicken. Der Kassenwart bekommt es, du eine Bestätigung.", los: () => zeige("erstattung") },
+  { id: "adresse", sym: "✏️", t: "Ich bin umgezogen – wie melde ich die neue Adresse?", x: "Tippe auf <b>✏️ Meine Daten haben sich geändert</b> (Register „Meins“) und dann auf <b>Neue Anschrift</b>. Die Meldung geht von selbst an die Richtigen im Club.", los: () => aeStart() },
+  { id: "status", sym: "🙂", t: "Wie zeige ich, dass ich im Urlaub oder krank bin?", x: "Mit <b>„Mein Status“</b> oben auf der Startseite: z. B. 🏖️ Urlaub oder 🤒 krank wählen – die anderen sehen es bei deinem Namen.", los: () => stStart() },
+  { id: "geburtstag", sym: "🎂", t: "Wie gratuliere ich zum Geburtstag?", x: "Hat jemand Geburtstag, steht es oben im <b>Info-Feld</b> der Startseite. Mit einem Tipp schickst du deinen Glückwunsch." },
+  { id: "notfall", sym: "🆘", t: "Was mache ich im Notfall?", x: "Tippe auf <b>🆘 SOS</b>: oben stehen die <b>Notrufnummern</b> (112, 110) zum Anrufen, mit <b>📍 Wo bin ich?</b> siehst du deinen Standort zum Durchgeben. Bei Lebensgefahr immer zuerst <b>112</b> anrufen.", los: () => zeige("sos") },
+  { id: "standort", sym: "📍", t: "Wie teile ich meinen Standort?", x: "Unter <b>📍 Standorte</b> oben auf <b>„📍 Teilen“</b> tippen und die Dauer wählen. Danach verschwindet dein Standort von selbst.", los: () => zeige("standort") },
+  { id: "spielen", sym: "🎲", t: "Wie spiele ich gegen andere Mitglieder?", x: "Unter <b>🎲 Spiele</b> dein Spiel wählen und <b>👥 Gegen Mitglieder</b> tippen. Jemanden herausfordern – ihr zieht abwechselnd, du bekommst Bescheid, wenn du dran bist.", los: () => spStart() },
+  { id: "diktieren", sym: "🎤", t: "Kann ich sprechen statt tippen?", x: "Ja – überall, wo ein <b>🎤</b> im Feld steht: antippen, sprechen, fertig. Im Chat gibt es dazu Sprachnachrichten." },
+  { id: "kosten", sym: "💚", t: "Kostet die Club-App etwas?", x: "Nein. Die Köcheclub-App ist für alle Mitglieder <b>kostenlos</b> – ohne Werbung und ohne Abo." },
+  { id: "daten", sym: "🔒", t: "Sind meine Daten sicher? Wer sieht was?", x: "Deine Daten sieht nur der Club. Was andere Mitglieder von dir sehen (z. B. Telefonnummer, „zuletzt da“), stellst du selbst unter <b>⚙️ Einstellungen</b> → Privatsphäre ein.", los: () => zeige("einstellungen") },
+  { id: "update", sym: "🔄", t: "Wie bekomme ich die neueste Version?", x: "Die App holt Neuerungen von selbst. Steht oben ein Hinweis auf eine neue Version, einfach antippen. Hängt etwas, die App einmal ganz schließen und neu öffnen." },
+  { id: "ruhe", sym: "🌙", t: "Wie stelle ich ein, dass mich nachts nichts stört?", x: "Unter <b>⚙️ Einstellungen</b> bei <b>„Nicht stören“</b> die Ruhezeit einschalten (z. B. 22–7 Uhr). In der Zeit kommt kein Push – was du verpasst, bekommst du danach gesammelt.", los: () => zeige("einstellungen") },
+  { id: "feedback", sym: "💭", t: "Wie melde ich einen Fehler oder einen Wunsch?", x: "Unter <b>💭 Feedback</b> aufschreiben, was stört oder fehlt – es geht direkt an den Admin.", los: () => zeige("feedback") },
+  { id: "ueber-twinkey", sym: "🧑‍🍳", t: "Wer ist Twinkey?", x: "Ich bin Twinkey, der Helfer der Köcheclub-App – früher waren auch viele von uns Küchenchefs. Frag mich in deinen Worten. Weiß ich etwas nicht, recherchiere ich und du bekommst die Antwort später." },
+];
+const twNorm = (t) => String(t || "").toLowerCase().replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss").replace(/[^a-z0-9 ]+/g, " ");
+const twStamm = (w) => (w.length > 4 ? w.replace(/(ungen|ung|en|er|es|e|n|s)$/, "") : w);
+const twWoerter = (t) => twNorm(t).split(/\s+/).filter((w) => w.length > 1 && !TW_STOP.has(w));
+const TW_GRUPPE = (() => { const m = new Map(); TW_SYN.forEach((g, i) => g.forEach((w) => m.set(twStamm(w), i))); return m; })();
+function twAbstand(a, b) { // Tippfehler: höchstens 1 Buchstabe anders (ersetzt, fehlt, zu viel)
   if (Math.abs(a.length - b.length) > 1) return 2; let i = 0, j = 0, f = 0;
   while (i < a.length && j < b.length) { if (a[i] === b[j]) { i++; j++; continue; } if (++f > 1) return 2; if (a.length > b.length) i++; else if (b.length > a.length) j++; else { i++; j++; } }
   return f + (a.length - i) + (b.length - j);
 }
-let KC_INDEX = null;
-function kcIndex() {
-  if (KC_INDEX) return KC_INDEX;
-  const div = document.createElement("div"), roh = (h) => { div.innerHTML = h || ""; return div.textContent || ""; };
-  KC_INDEX = hzEintraege().map((e) => { const tw = kcWoerter(e.t).map(kcStamm), xw = kcWoerter(roh(e.x)).map(kcStamm);
-    return { e, titel: new Set(tw), text: new Set(xw), gruppen: new Set([...tw, ...xw].map((w) => KC_GRUPPE.get(w)).filter((g) => g !== undefined)), tgruppen: new Set(tw.map((w) => KC_GRUPPE.get(w)).filter((g) => g !== undefined)) }; });
-  return KC_INDEX;
+const TW_DATEN_KEY = "kc_club_twinkey_wissen";
+let TW = { wissen: null, meine: [], offen: null }, TW_INDEX = null;
+const twTextHtml = (t) => esc(t).replace(/\n/g, "<br>");
+function twEintraege() { // Hilfen + Twinkeys Fragen + Gelerntes (w:) – alles in einer Liste
+  const gelernt = (TW.wissen || []).map((w) => ({ id: "w:" + w.id, thema: "twinkey", sym: "🧑‍🍳", t: w.frage, x: twTextHtml(w.antwort), los: null, gelernt: true }));
+  return [...gelernt, ...TW_FAQ.map((e) => ({ id: "f:" + e.id, thema: "twinkey", sym: e.sym, t: e.t, x: e.x, los: e.los || null })), ...hzEintraege()];
 }
-function kcFinden(fr) {
-  const w = [...new Set(kcWoerter(fr).map(kcStamm))]; if (!w.length) return [];
-  const treffer = kcIndex().map((x) => {
+function twIndex() {
+  if (TW_INDEX) return TW_INDEX;
+  const div = document.createElement("div"), roh = (h) => { div.innerHTML = h || ""; return div.textContent || ""; };
+  TW_INDEX = twEintraege().map((e) => { const tw = twWoerter(e.t).map(twStamm), xw = twWoerter(roh(e.x)).map(twStamm);
+    return { e, titel: new Set(tw), text: new Set(xw), gruppen: new Set([...tw, ...xw].map((w) => TW_GRUPPE.get(w)).filter((g) => g !== undefined)), tgruppen: new Set(tw.map((w) => TW_GRUPPE.get(w)).filter((g) => g !== undefined)) }; });
+  return TW_INDEX;
+}
+function twFinden(fr) {
+  const w = [...new Set(twWoerter(fr).map(twStamm))]; if (!w.length) return [];
+  const treffer = twIndex().map((x) => {
     let p = 0;
     for (const q of w) {
-      const g = KC_GRUPPE.get(q);
+      const g = TW_GRUPPE.get(q);
       if (x.titel.has(q)) p += 3; else if (x.text.has(q)) p += 1.2;
-      else if (q.length >= 5 && [...x.titel].some((t) => t.length >= 5 && kcAbstand(q, t) <= 1)) p += 2; // Tippfehler
-      else if (q.length >= 5 && [...x.text].some((t) => t.length >= 5 && kcAbstand(q, t) <= 1)) p += 0.6;
+      else if (q.length >= 5 && [...x.titel].some((t) => t.length >= 5 && twAbstand(q, t) <= 1)) p += 2; // Tippfehler
+      else if (q.length >= 5 && [...x.text].some((t) => t.length >= 5 && twAbstand(q, t) <= 1)) p += 0.6;
       if (g !== undefined) p += x.tgruppen.has(g) ? 2 : x.gruppen.has(g) ? 0.8 : 0; // anderes Wort für dasselbe
       if (q.length >= 6 && ![...x.titel].includes(q) && [...x.titel].some((t) => t.length >= 5 && (q.includes(t) || t.includes(q)))) p += 1.2; // zusammengesetzte Wörter („Terminanfrage“ ↔ „Termin“)
     }
-    if (x.e.id.startsWith("h:")) p += 0.3; // Hilfen vor Tipps
+    if (x.e.gelernt) p += 0.6; else if (x.e.id.startsWith("f:")) p += 0.4; else if (x.e.id.startsWith("h:")) p += 0.3; // Gelerntes und Twinkeys Fragen zuerst
     return { e: x.e, p: p / Math.sqrt(w.length) };
   }).filter((t) => t.p >= 1.6).sort((a, b) => b.p - a.p);
   return treffer.slice(0, 4);
 }
-let KC_TAKT = null;
-function kcFrageStart(vorgabe = "") {
-  const f = blattAuf("kcBlatt", `<h3 style="margin:0">🧑‍🍳 Frag den Küchenchef</h3>
-    <p class="hinweis" style="margin:0">Stell deine Frage in eigenen Worten – tippen oder 🎤 sprechen. Zum Beispiel: <i>„Wie ändere ich die Farben?“</i> oder <i>„Wie stelle ich eine Terminanfrage?“</i></p>
-    <input id="kcFrage" data-diktat="einmal" class="hz-suche" type="search" enterkeyhint="search" autocomplete="off" placeholder="Deine Frage …" value="${esc(vorgabe)}" oninput="clearTimeout(KC_TAKT);KC_TAKT=setTimeout(kcAntworten,450)" onkeydown="if(event.key==='Enter'){event.preventDefault();kcAntworten()}">
-    <div id="kcAntwort"></div>
-    <button class="knopf" onclick="$('kcBlatt').remove()">Schließen</button>`);
-  f.classList.add("kc-blatt");
-  if (vorgabe) kcAntworten(); else setTimeout(() => $("kcFrage")?.focus(), 120);
+async function twLaden() { // Gelerntes vom Server (offline: zuletzt gespeicherter Stand)
+  if (!TW.wissen) { try { const w = JSON.parse(localStorage.getItem(TW_DATEN_KEY) || "null"); if (Array.isArray(w)) { TW.wissen = w; TW_INDEX = null; } } catch {} }
+  try {
+    const d = await api("twinkey_daten");
+    TW = { wissen: d?.wissen || [], meine: d?.meine || [], offen: d?.offen || null }; TW_INDEX = null;
+    lsSetzen(TW_DATEN_KEY, JSON.stringify(TW.wissen));
+  } catch {}
 }
-function kcAntworten(wahl) {
-  const fr = ($("kcFrage")?.value || "").trim(), z = $("kcAntwort"); if (!z) return;
-  if (kcNorm(fr).replace(/\s/g, "").length < 4) { z.innerHTML = ""; return; }
-  const t = kcFinden(fr), best = (wahl && t.find((x) => x.e.id === wahl)) || t[0];
+let TW_TAKT = null;
+async function twFrageStart(vorgabe = "") {
+  const f = blattAuf("twBlatt", `<h3 style="margin:0">🧑‍🍳 Frag Twinkey</h3>
+    <p class="hinweis" style="margin:0">Stell deine Frage in eigenen Worten – tippen oder 🎤 sprechen. Zum Beispiel: <i>„Wie ändere ich die Farben?“</i> oder <i>„Wie stelle ich eine Terminanfrage?“</i></p>
+    <div class="tw-zeile"><input id="twFrage" data-diktat="einmal" class="hz-suche" type="search" enterkeyhint="send" autocomplete="off" placeholder="Deine Frage …" value="${esc(vorgabe)}" oninput="clearTimeout(TW_TAKT);TW_TAKT=setTimeout(twAntworten,450)" onkeydown="if(event.key==='Enter'){event.preventDefault();twAntworten(null,true)}"><button type="button" class="knopf haupt tw-fragen" onclick="twAntworten(null,true)">➤ Fragen</button></div>
+    <div id="twAntwort"></div><div id="twMeine"></div><div id="twAdmin"></div>
+    <button class="knopf" onclick="$('twBlatt').remove()">Schließen</button>`);
+  f.classList.add("tw-blatt");
+  if (vorgabe) twAntworten(); else setTimeout(() => $("twFrage")?.focus(), 120);
+  await twLaden(); if (!$("twBlatt")) return;
+  twMeineZeigen(); twAdminKnopf();
+  if (($("twFrage")?.value || "").trim()) twAntworten();
+}
+function twAntworten(wahl, gefragt = false) {
+  const fr = ($("twFrage")?.value || "").trim(), z = $("twAntwort"); if (!z) return;
+  if (twNorm(fr).replace(/\s/g, "").length < 4) { z.innerHTML = ""; return; }
+  const t = twFinden(fr), best = (wahl && t.find((x) => x.e.id === wahl)) || t[0];
   if (!best) {
-    z.innerHTML = `<div class="karte kc-antwort"><div class="kc-chef">🤔 Das weiß ich leider noch nicht.</div><p style="margin:4px 0 8px">Versuch es mit anderen Worten – oder frag direkt nach.</p>
-      <div class="knoepfe"><button class="knopf" onclick="$('kcFrage').select();$('kcFrage').focus()">🔄 Anders fragen</button><button class="knopf haupt" onclick="kcAnHansi()">💬 Frage an ${esc(adminName())} weitergeben</button><button class="knopf" onclick="$('kcBlatt').remove();hzStart()">📖 Alle Hilfen</button></div></div>`;
+    z.innerHTML = gefragt ? `<div class="karte kc-antwort"><div class="kc-chef">🧑‍🍳 Das ist eine gute Frage.</div><p id="twWeiter" style="margin:4px 0 0">Ich werde recherchieren und dir bei Gelegenheit eine Antwort zukommen lassen.</p></div>`
+      : `<p class="hinweis" style="margin:4px 0">🤔 Dazu weiß ich noch nichts. Tippe auf <b>➤ Fragen</b> – dann kümmere ich mich darum.</p>`;
+    if (gefragt) twWeitergeben(fr);
     return;
   }
-  const e = best.e, andere = t.filter((x) => x !== best).slice(0, 3);
-  z.innerHTML = `<div class="karte kc-antwort vorlese-karte"><div class="kc-chef">🧑‍🍳 Das geht so:</div><h3 style="margin:4px 0">${e.sym || "💡"} ${esc(e.t)}</h3><p style="margin:0 0 8px">${e.x}</p>
-      <div class="knoepfe">${e.los ? `<button class="knopf haupt" onclick="kcZeig('${e.id}')">👉 Zeig es mir</button>` : ""}${VORLESE_KNOPF}</div>${hzBewHtml(e.id)}</div>
-    ${andere.length ? `<div class="kc-andere"><b>Oder meintest du:</b>${andere.map((x) => `<button class="ti-zeile" onclick="kcAntworten('${x.e.id}')">${x.e.sym || "💡"} <span>${esc(x.e.t)}</span><b>›</b></button>`).join("")}</div>` : ""}`;
+  const e = best.e, andere = t.filter((x) => x !== best).slice(0, 3), bew = /^[hte]:/.test(e.id) ? hzBewHtml(e.id) : "";
+  z.innerHTML = `<div class="karte kc-antwort vorlese-karte"><div class="kc-chef">🧑‍🍳 ${e.gelernt ? "Das weiß ich inzwischen:" : "Das geht so:"}</div><h3 style="margin:4px 0">${e.sym || "💡"} ${esc(e.t)}</h3><p style="margin:0 0 8px">${e.x}</p>
+      <div class="knoepfe">${e.los ? `<button class="knopf haupt" onclick="twZeig('${e.id}')">👉 Zeig es mir</button>` : ""}${VORLESE_KNOPF}</div>${bew}
+      <button type="button" class="tw-nicht" onclick="twNichtGefunden()">🙋 Das beantwortet meine Frage nicht</button></div>
+    ${andere.length ? `<div class="kc-andere"><b>Oder meintest du:</b>${andere.map((x) => `<button class="ti-zeile" onclick="twAntworten('${x.e.id}')">${x.e.sym || "💡"} <span>${esc(x.e.t)}</span><b>›</b></button>`).join("")}</div>` : ""}`;
 }
-function kcZeig(id) {
-  const e = hzEintraege().find((x) => x.id === id); $("kcBlatt")?.remove(); if (!e) return;
-  if (e.los) { try { e.los(); } catch { hzZuEintrag(id); } } else hzZuEintrag(id);
+function twNichtGefunden() {
+  const fr = ($("twFrage")?.value || "").trim(), z = $("twAntwort"); if (!z || !fr) return;
+  z.innerHTML = `<div class="karte kc-antwort"><div class="kc-chef">🧑‍🍳 Das ist eine gute Frage.</div><p id="twWeiter" style="margin:4px 0 0">Ich werde recherchieren und dir bei Gelegenheit eine Antwort zukommen lassen.</p></div>`;
+  twWeitergeben(fr);
 }
-async function kcAnHansi() { // nur vorbereiten – verschickt wird erst mit „Senden“
-  const fr = ($("kcFrage")?.value || "").trim(); $("kcBlatt")?.remove();
-  await direkt(ENTWICKLER.person_id);
-  const t = $("text"); if (!t) return;
-  t.value = `❓ Frage an den Küchenchef, die er noch nicht beantworten konnte: „${fr}“`; t.dispatchEvent(new Event("input", { bubbles: true }));
-  melde("✍️ Deine Frage steht im Schreibfeld – prüfen und auf Senden tippen.");
+async function twWeitergeben(fr) { // erst nach ausdrücklichem „➤ Fragen“ – nie beim bloßen Tippen
+  const p = $("twWeiter");
+  try {
+    const r = await api("twinkey_frage", { frage: fr });
+    if (p && r?.schonDa) p.insertAdjacentHTML("beforeend", "<br><small class=\"hinweis\">Diese Frage hatte ich mir schon notiert.</small>");
+    await twLaden(); twMeineZeigen();
+  } catch (e) { if (p) p.innerHTML = `⚠️ ${esc(e?.message || "Gerade keine Verbindung.")} Versuch es später noch einmal.`; }
 }
+function twZeig(id) {
+  const e = twEintraege().find((x) => x.id === id); $("twBlatt")?.remove(); if (!e) return;
+  if (e.los) { try { e.los(); } catch { if (/^[hte]:/.test(id)) hzZuEintrag(id); } } else if (/^[hte]:/.test(id)) hzZuEintrag(id);
+}
+function twMeineZeigen() { // „📬 Deine Fragen“ – offen oder mit Antwort
+  const z = $("twMeine"); if (!z) return;
+  const m = TW.meine || []; if (!m.length) { z.innerHTML = ""; return; }
+  z.innerHTML = `<details class="tw-meine"${m.some((x) => x.status === "beantwortet" && !x.gelesen) ? " open" : ""}><summary>📬 Deine Fragen (${m.length})</summary>
+    ${m.map((x) => `<div class="tw-frage-zeile"><b>${x.status === "beantwortet" ? (x.gelesen ? "✅" : "🆕") : "⏳"} ${esc(x.frage)}</b>
+      ${x.status === "beantwortet" ? `<p style="margin:2px 0 0">${twTextHtml(x.antwort)}</p>` : `<small class="hinweis">Twinkey recherchiert noch …</small>`}</div>`).join("")}</details>`;
+  if (m.some((x) => x.status === "beantwortet" && !x.gelesen)) api("twinkey_gelesen").catch(() => {});
+}
+// Hinweis beim Start: Admin hat mit „📱 in der Club-App“ geantwortet
+async function twAntwortPruefen() {
+  if (!ICH || document.querySelector(".blatt:not(.versteckt)")) return;
+  await twLaden();
+  const neu = (TW.meine || []).filter((x) => x.status === "beantwortet" && !x.gelesen);
+  if (!neu.length || document.querySelector(".blatt:not(.versteckt)")) return;
+  twFrageStart();
+}
+
+// Admin: offene Fragen beantworten (Push / E-Mail / Club-App) und Twinkey lernen lassen
+function twAdminKnopf() {
+  const z = $("twAdmin"); if (!z) return;
+  const n = (TW.offen || []).length;
+  z.innerHTML = ICH?.admin && TW.offen ? `<button type="button" class="knopf tw-admin-knopf" onclick="twOffenStart()">📥 Fragen an Twinkey beantworten${n ? ` (${n})` : " (keine offen)"}</button>` : "";
+}
+const TW_WEGE = [["app", "📱 In der Club-App"], ["push", "🔔 Push"], ["email", "✉️ E-Mail"]];
+async function twOffenStart() {
+  if (!ICH?.admin) return;
+  $("twBlatt")?.remove(); await twLaden();
+  const o = TW.offen || [];
+  blattAuf("twOffenBlatt", `<h3 style="margin:0">📥 Fragen an Twinkey</h3>
+    <p class="hinweis" style="margin:0">Diese Fragen konnte Twinkey nicht beantworten. Antwort schreiben (oder 🎤 sprechen), Weg wählen, senden. Verschickt wird erst mit <b>📤 Antwort senden</b>.</p>
+    ${o.length ? o.map((x) => `<div class="karte tw-offen" data-id="${esc(x.id)}">
+      <div><b>${esc(x.name)}</b> <small class="hinweis">${esc(zeitKurz(x.erstellt_am))}</small></div>
+      <label class="hinweis">Frage <small>(für Twinkeys Wissen gern allgemein formulieren)</small><input class="tw-f" maxlength="300" value="${esc(x.frage)}"></label>
+      <label class="hinweis">Antwort<textarea class="tw-a" data-diktat rows="4" maxlength="2000" placeholder="Deine Antwort …"></textarea></label>
+      <div class="hl-chips">${TW_WEGE.map(([k, t]) => `<button type="button" class="chip${k !== "email" ? " an" : ""}" data-weg="${k}" aria-pressed="${k !== "email"}">${k !== "email" ? "☑️" : "⬜"} ${t}</button>`).join("")}</div>
+      <button type="button" class="chip an tw-wissen" aria-pressed="true">☑️ 🧠 Twinkey merkt sich das (für alle)</button>
+      <div class="knoepfe"><button type="button" class="knopf haupt" data-tw="senden">📤 Antwort senden</button><button type="button" class="knopf" data-tw="weg">🗑️ Verwerfen</button></div></div>`).join("")
+      : `<p>🎉 Keine offenen Fragen.</p>`}
+    <button class="knopf" onclick="$('twOffenBlatt').remove()">Schließen</button>`);
+  document.querySelectorAll("#twOffenBlatt .chip").forEach((c) => (c.onclick = () => { const an = !c.classList.contains("an"); c.classList.toggle("an", an); c.setAttribute("aria-pressed", an); c.textContent = (an ? "☑️" : "⬜") + c.textContent.slice(c.textContent.indexOf(" ")); }));
+  document.querySelectorAll("#twOffenBlatt [data-tw]").forEach((b) => (b.onclick = () => twOffenAktion(b.closest(".tw-offen"), b.dataset.tw, b)));
+}
+async function twOffenAktion(k, was, knopf) {
+  if (!k) return; const id = k.dataset.id;
+  if (was === "weg") {
+    if (!(await frage("Frage verwerfen?\nSie verschwindet aus der Liste. Die fragende Person bekommt keine Antwort.", { ja: "🗑️ Verwerfen" }))) return;
+    try { await api("twinkey_verwerfen", { id }); k.remove(); melde("🗑️ Frage verworfen."); } catch (e) { melde("⚠️ " + (e?.message || "Ging nicht.")); }
+    return;
+  }
+  const antwort = k.querySelector(".tw-a").value.trim(), kanaele = [...k.querySelectorAll("[data-weg].an")].map((c) => c.dataset.weg);
+  if (antwort.length < 2) { melde("✍️ Bitte erst eine Antwort schreiben."); k.querySelector(".tw-a").focus(); return; }
+  if (!kanaele.length && !(await frage("Keinen Weg gewählt?\nDie Antwort wird nur gespeichert – die Person bekommt keinen Hinweis.", { ja: "Trotzdem speichern" }))) return;
+  knopf.disabled = true;
+  try {
+    await api("twinkey_antworten", { id, antwort, kanaele, frage: k.querySelector(".tw-f").value.trim(), wissen: k.querySelector(".tw-wissen").classList.contains("an") });
+    k.remove(); TW_INDEX = null;
+    melde(`📤 Antwort gesendet${kanaele.length ? " – " + kanaele.map((x) => TW_WEGE.find(([k2]) => k2 === x)[1]).join(" + ") : ""}.`);
+  } catch (e) { knopf.disabled = false; melde("⚠️ " + (e?.message || "Ging nicht.")); }
+}
+
 // ---------- KC-CLUB-DIKTAT-FELD (2.23.47, Wunsch Hansi): 🎤 rechts im Feld zum Diktieren – ein Baustein für alle Felder mit data-diktat ----------
 // data-diktat="einmal" = Suchfeld (nach dem ersten Satz fertig), sonst längerer Text. Nutzt den Diktier-Kern des Chats (diktatStart):
 // Text erscheint im Feld, nichts wird verschickt. Kann das Gerät nicht diktieren, erscheint kein Mikrofon. Neue Felder bekommen den Knopf
@@ -8400,7 +8536,7 @@ const KACHELN = {
     // KC-CLUB-SICHERHEIT (1.14.0, Wunsch Hansi): Prüfreihe „ist alles sicher und läuft?“ für alle Mitglieder
     { id: "sicherheit", sym: "🛡️", t: "Sicherheits-Check", u: "Läuft alles sicher? Jetzt prüfen", aktion: "sicherheitStart()" },    // KC-CLUB-HILFEZENTRUM (2.23.0, Wunsch Hansi): alle Tipps und Hinweise nach Themen (Zahl = neue Hilfen seit dem letzten Besuch)
     { id: "hilfezentrum", sym: "❓", t: "Hilfe & Tipps", u: () => `${hzAnzahl()} Hilfen nach Themen`, aktion: "hzStart()", zahl: () => hzNeuZahl() },
-    { id: "kuechenchef", sym: "🧑‍🍳", t: "Frag den Küchenchef", u: "Frage tippen oder 🎤 sprechen", aktion: "kcFrageStart()" }, // 2.23.48 KC-CLUB-KUECHENCHEF
+    { id: "twinkey", sym: "🧑‍🍳", t: "Frag Twinkey", u: "Frage tippen oder 🎤 sprechen", aktion: "twFrageStart()" }, // 2.23.49 KC-CLUB-TWINKEY (früher „Frag den Küchenchef“)
   ],
   // KC-CLUB-ADMIN-REGISTER (2.20.0, Wunsch Hansi): Register „Admin“ – nur Admin/Vertretung; kleine Kacheln (3 je Reihe) mit Lämpchen,
   // Antippen öffnet ein Blatt mit Einzelheiten, Grafik und den Werkzeugen für genau diese Stelle (siehe AD_KACHELN weiter unten)
@@ -18261,6 +18397,7 @@ async function fpAdmin(tage) {
     else if (h === "#standort") zeige("standort");
     else if (h === "#dienstwunsch") dwOeffnen();
     else if (h === "#wunschbogen") wbStart(); // KC-CLUB-WUNSCHBOGEN (2.23.28)
+    else if (h === "#twinkey") ICH?.admin ? twOffenStart() : twFrageStart(); // KC-CLUB-TWINKEY-FRAGEN (2.23.49): Push/Mail → Frage bzw. Antwort
     else if (h.startsWith("#spiel=")) spOeffnen(decodeURIComponent(h.slice(7))); // KC-CLUB-SPIELE (2.7.0): aus dem Push
     else if (h === "#spiele") spStart();
     else if (h === "#hilfezentrum" || h.startsWith("#hilfezentrum=")) hzStart(decodeURIComponent(h.slice(14))); // KC-CLUB-HILFEZENTRUM (2.23.0)
@@ -18270,6 +18407,7 @@ async function fpAdmin(tage) {
     else if (h === "#aenderungen") ICH?.vorstand || ICH?.admin ? aeEingang() : aeStart(); // KC-CLUB-AENDERUNG (2.22.7): aus Push/Mail
     if (!h || h === "#") setTimeout(() => buGrussFragen(), 1500); // KC-CLUB-BUERO: Begrüßung der Clubleitung
     if (!h || h === "#") setTimeout(() => ekHinweisPruefen(), 3000); // KC-CLUB-EINGANG-HINWEIS: viel im Eingangskorb?
+    if (!h || h === "#") setTimeout(() => twAntwortPruefen(), 6000); // KC-CLUB-TWINKEY-FRAGEN: Antwort „in der Club-App“
     if (!h || h === "#") setTimeout(() => spEinladung(), 4000); // KC-CLUB-SPIEL-EINLADUNG (2.12.0): nach Begrüßung/Neuigkeiten
   });
   // KC-CLUB-UPDATE-AUTO (2.3.2, Wunsch Hansi): auch beim Start und alle 10 Min. (nur auf der Startseite, nichts offen,

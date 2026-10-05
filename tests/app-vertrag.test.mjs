@@ -4015,14 +4015,34 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/\$\{!ziel \|\| nachSenden \? '<button class="knopf haupt" data-d="senden">📤 Senden<\/button>' : ""\}/.test(html) && /if \(DT\.aktiv && DT\.einmal && DT\.vorher\.length\) return diktatEnde\("fertig"\);/.test(html), "kein Senden in Feldern, Suche endet von selbst");
   assert.ok(/#diktatBlatt\.blatt \{ z-index: 9000; \}/.test(html) && /\{ id: "diktat_feld", thema: "start"/.test(html), "über der Suche + Hilfe");
 }
-// 397. 2.23.48: „🧑‍🍳 Frag den Küchenchef“ – Fragen in eigenen Worten, Antworten aus den Hilfen (KC-CLUB-KUECHENCHEF)
+// 397. 2.23.48 → 2.23.49: „🧑‍🍳 Frag Twinkey“ (früher „Frag den Küchenchef“) – Fragen in eigenen Worten (KC-CLUB-TWINKEY)
 {
-  const k = html.slice(html.indexOf("// ---------- KC-CLUB-KUECHENCHEF"), html.indexOf("// ---------- KC-CLUB-DIKTAT-FELD"));
-  assert.ok(/kcIndex\(\)/.test(k) && /hzEintraege\(\)/.test(k) && !/fetch\(|api\(/.test(k), "nur eigene Hilfen, kein fremder Server, keine Kosten");
-  assert.ok(/const KC_SYN = \[/.test(k) && /function kcAbstand\(a, b\)/.test(k) && /zusammengesetzte Wörter/.test(k), "Synonyme, Tippfehler, zusammengesetzte Wörter");
-  assert.ok(/id="kcFrage" data-diktat="einmal"/.test(k) && /👉 Zeig es mir/.test(k) && /\$\{VORLESE_KNOPF\}/.test(k) && /Oder meintest du:/.test(k), "sprechen, zeigen, vorlesen, Alternativen");
-  assert.ok(/async function kcAnHansi\(\) \{ \/\/ nur vorbereiten/.test(k) && !/kcAnHansi[^]*?senden\(\)/.test(k.slice(k.indexOf("async function kcAnHansi"))), "Weitergeben nur vorbereitet, nie automatisch gesendet");
-  assert.ok(/\{ id: "kuechenchef", sym: "🧑‍🍳", t: "Frag den Küchenchef"/.test(html) && /onclick="kcFrageStart\(\)">🧑‍🍳 Frag den Küchenchef/.test(html), "Kachel + Knopf im Hilfe-Zentrum");
+  const k = html.slice(html.indexOf("// ---------- KC-CLUB-TWINKEY (2.23.49"), html.indexOf("// ---------- KC-CLUB-DIKTAT-FELD"));
+  assert.ok(k.length > 1000 && /twIndex\(\)/.test(k) && /hzEintraege\(\)/.test(k) && !/fetch\(/.test(k), "Hilfen als Grundlage, keine fremde KI, keine Kosten");
+  assert.ok(/const TW_SYN = \[/.test(k) && /function twAbstand\(a, b\)/.test(k) && /zusammengesetzte Wörter/.test(k), "Synonyme, Tippfehler, zusammengesetzte Wörter");
+  assert.ok((k.match(/^  \{ id: "[a-z-]+", sym: /gm) || []).length >= 30, "mindestens 30 eigene Fragen + Antworten (TW_FAQ)");
+  assert.ok(/id="twFrage" data-diktat="einmal"/.test(k) && /👉 Zeig es mir/.test(k) && /\$\{VORLESE_KNOPF\}/.test(k) && /Oder meintest du:/.test(k), "sprechen, zeigen, vorlesen, Alternativen");
+  assert.ok(/\{ id: "twinkey", sym: "🧑‍🍳", t: "Frag Twinkey"/.test(html) && /onclick="twFrageStart\(\)">🧑‍🍳 Frag Twinkey/.test(html) && /\{ id: "frag_twinkey", sym: "🧑‍🍳"/.test(html), "Kachel, Knopf im Hilfe-Zentrum, Tagestipp");
+  assert.ok(!/kcFrageStart|kcAnHansi|Frag den Küchenchef"/.test(html), "alter Name „Küchenchef“ ist weg");
+}
+// 398. 2.23.49: Unbekannte Fragen gehen an den Admin, Antwort per Push/E-Mail/Club-App, Twinkey lernt (KC-CLUB-TWINKEY-FRAGEN)
+{
+  const k = html.slice(html.indexOf("// ---------- KC-CLUB-TWINKEY (2.23.49"), html.indexOf("// ---------- KC-CLUB-DIKTAT-FELD"));
+  assert.ok(/Das ist eine gute Frage\./.test(k) && /Ich werde recherchieren und dir bei Gelegenheit eine Antwort zukommen lassen\./.test(k), "Twinkeys Antwort auf unbekannte Fragen");
+  const aw = k.slice(k.indexOf("function twAntworten("), k.indexOf("function twNichtGefunden"));
+  assert.ok(/if \(gefragt\) twWeitergeben\(fr\)/.test(aw) && /TW_TAKT=setTimeout\(twAntworten,450\)/.test(k), "weitergegeben wird nur nach ausdrücklichem „Fragen“, nicht beim Tippen");
+  assert.ok(/api\("twinkey_frage", \{ frage: fr \}\)/.test(k) && /api\("twinkey_daten"\)/.test(k) && /api\("twinkey_antworten", \{ id, antwort, kanaele/.test(k), "App ruft die Twinkey-Aktionen");
+  assert.ok(/TW_WEGE = \[\["app", "📱 In der Club-App"\], \["push", "🔔 Push"\], \["email", "✉️ E-Mail"\]\]/.test(k) && /🧠 Twinkey merkt sich das/.test(k), "Wege + Lernen");
+  assert.ok(/id: "w:" \+ w\.id/.test(k) && /esc\(t\)\.replace\(\/\\n\/g, "<br>"\)/.test(k), "Gelerntes kommt in den Index, Antworttext wird maskiert");
+  assert.ok(/h === "#twinkey"/.test(html) && /twAntwortPruefen\(\), 6000/.test(html), "Sprung aus Push/Mail + Hinweis beim Start");
+  const t = server.slice(server.indexOf('case "twinkey_daten"'), server.indexOf('case "hilfe_angebot_speichern"'));
+  assert.ok(/case "twinkey_antworten": \{\n\s+nurAdmin\(ich\);/.test(t) && /case "twinkey_verwerfen": \{\n\s+nurAdmin\(ich\);/.test(t), "Antworten/Verwerfen nur Admin");
+  assert.ok(/if \(ich\.admin\) \{/.test(t) && /\.eq\("von", ich\.person_id\)/.test(t), "offene Fragen nur für den Admin, eigene Fragen nur die eigenen");
+  assert.ok(/sendenGewaehlt\("club_nachricht", \[f\.von\], wege/.test(t) && /kanaele\.filter\(\(k\) => k !== "app"\)/.test(t), "Antwort nur an die fragende Person, nur auf gewählten Wegen");
+  assert.ok(/protokoll\(ich\.person_id, "twinkey_frage", \{ frage_id: neu\.id, versand \}\)/.test(t) && !/protokoll\([^)]*antwort[,:]/.test(t), "Protokoll ohne Inhalte");
+  assert.ok(/TWINKEY_OFFEN_MAX/.test(t) && /429\)/.test(t) && !/\.delete\(\)/.test(t), "Bremse gegen Flut, nichts wird gelöscht");
+  const mig = lies("supabase/migrations/20261005_kc_club_v22349_twinkey_fragen.sql");
+  assert.ok(/enable row level security/.test(mig) && /revoke all on kc_club_twinkey_fragen from anon, authenticated/.test(mig) && !/create policy/i.test(mig), "Tabelle nur über den Server");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

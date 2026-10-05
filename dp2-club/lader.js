@@ -3,7 +3,7 @@
 // start.js dort, wo DP2 twinkey-test-boot.js lädt. Die Seite hat <base href="dp2/">: Pfade sind relativ zu dp2/.
 (function () {
   "use strict";
-  const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club", APP_VERSION = "2.23.48";
+  const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club", APP_VERSION = "2.23.49";
   const laden = document.getElementById("dwLaden");
   // CSP ohne Inline-Skripte: Knopf per addEventListener
   const zurueck = () => (parent !== window ? parent.postMessage("dienstwunsch-zu", location.origin) : history.back());

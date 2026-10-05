@@ -1,5 +1,19 @@
 # Änderungen
 
+## 2.23.49 – 2026-10-05 – 🧑‍🍳 Frag Twinkey (Wunsch Hansi, Stufe 2 – löst „Frag den Küchenchef“ ab)
+- KC-CLUB-TWINKEY: „Frag den Küchenchef“ heißt jetzt „🧑‍🍳 Frag Twinkey“ (früher waren viele Twinkeys auch Küchenchefs) – Kachel, Knopf im
+  Hilfe-Zentrum, Hilfe-Eintrag, Tagestipp. 35 eigene Fragen + Antworten (TW_FAQ: Nachricht, Gruppe, Foto, Zusage, Mitfahrt, Anrufen, Zettel,
+  Hilfe, Leihen, Börse, Vorschlag, Dienstwünsche, Protokolle, Archiv, Anleitung, Erstattung, Umzug, Status, Notfall, Standort, Spiele,
+  Kosten, Datenschutz, Update, Nicht stören, Feedback …) und mehr Synonyme.
+- KC-CLUB-TWINKEY-FRAGEN: Weiß Twinkey etwas nicht und tippt man auf „➤ Fragen“ (oder „🙋 Das beantwortet meine Frage nicht“), sagt er
+  „Das ist eine gute Frage. Ich werde recherchieren und dir bei Gelegenheit eine Antwort zukommen lassen.“ – die Frage geht an den Admin
+  (Push/Mail nach seinen Einstellungen). Nur auf ausdrückliches Fragen, nie beim bloßen Tippen. Der Admin beantwortet sie unter
+  „📥 Fragen an Twinkey beantworten“ (im Twinkey-Fenster): Antwort schreiben oder 🎤 sprechen, Weg wählen (📱 Club-App, 🔔 Push, ✉️ E-Mail,
+  mehrere möglich), „🧠 Twinkey merkt sich das“ → Frage + Antwort kommen in Twinkeys Wissen für alle. Verwerfen statt Löschen.
+  Mitglieder sehen ihre Fragen unter „📬 Deine Fragen“; bei „📱 Club-App“ öffnet sich Twinkey beim nächsten Start mit der Antwort.
+  Neue Tabelle kc_club_twinkey_fragen (RLS an, keine Policies), Server-Aktionen twinkey_daten/_frage/_antworten/_verwerfen/_gelesen.
+  Protokoll nur mit Art und IDs, nicht mit Inhalten. Kostenlos (keine fremde KI). Test 397 angepasst, Test 398.
+
 ## 2.23.48 – 2026-10-05 – 🧑‍🍳 Frag den Küchenchef (Wunsch Hansi, Stufe 1)
 - KC-CLUB-KUECHENCHEF: Fragen in eigenen Worten stellen – tippen oder 🎤 sprechen („Wie ändere ich die Farben?“, „Wie stelle ich eine
   Terminanfrage?“). Antwort aus den vorhandenen Hilfen (Hilfe-Zentrum, Tipps, Kurz erklärt) mit „👉 Zeig es mir“, 🔊 Vorlesen, 👍/👎 und

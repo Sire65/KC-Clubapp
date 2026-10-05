@@ -1,10 +1,16 @@
 {
-  "version": "2.23.48",
+  "version": "2.23.49",
   "datum": "2026-10-05",
   "neu": [
     "🔧 Kleine Systemverbesserungen"
   ],
   "verlauf": [
+    {
+      "version": "2.23.49",
+      "neu": [
+        "🔧 Kleine Systemverbesserungen"
+      ]
+    },
     {
       "version": "2.23.48",
       "neu": [
