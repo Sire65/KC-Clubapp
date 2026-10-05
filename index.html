@@ -2903,6 +2903,9 @@
     <div id="chatStummBereich"></div>
     <button class="knopf" onclick="$('chatBlatt').classList.add('versteckt');chatVorlesenStart('neu')">🔊 Vorlesen ab den neuen Nachrichten</button>
     <button class="knopf" onclick="$('chatBlatt').classList.add('versteckt');chatVorlesenStart('alles')">🔊 Ganzen Chat vorlesen</button>
+    <b style="margin:6px 4px 0;font-size:.95rem">Ganzer Chat</b> <!-- 2.23.80 (Wunsch Hansi „wo?“): alles für den ganzen Chat an einer Stelle -->
+    <div class="na-pfeil-knoepfe"><button class="knopf" onclick="$('chatBlatt').classList.add('versteckt');chatKopieren()">📋 Kopieren</button>
+      <button class="knopf" onclick="$('chatBlatt').classList.add('versteckt');druckStarten('chat')">🖨️ Ausdrucken</button></div>
     <button class="knopf" onclick="chatInsArchiv()">🗄️ Chat in mein Archiv legen</button>
     <button class="knopf" id="chatArchivKnopf" onclick="chatArchivieren(chatId, !!UH.liste.find((u) => u.id === chatId)?.archiviert)">📦 Chat archivieren</button> <!-- KC-CLUB-CHAT-ARCHIV 2.23.28 -->
     <button class="knopf" onclick="unterhaltungWeg(false)">🙈 Nur bei mir entfernen</button>
@@ -14035,10 +14038,33 @@ function naPfeilMenue(id) {
       ${m.text ? `<button class="knopf" onclick="${zu}naKopieren('${id}')">📋 Kopieren</button>` : ""}
       ${m.text ? `<button class="knopf" onclick="${zu}naAusschneiden('${id}')">✂️ Ausschneiden</button>` : ""}
       <button class="knopf" onclick="${zu}naInsArchiv('${id}')">🗄️ Archivieren</button>
+      ${m.eigen || ICH?.admin ? `<button class="knopf" onclick="${zu}naWichtig('${id}', ${!m.wichtig})">${m.wichtig ? "➖ Nicht wichtig" : "❗ Wichtig"}</button>` : ""}
       <button class="knopf" onclick="${zu}naLoeschenFragen('${id}')">🗑️ Löschen</button>
       <button class="knopf" onclick="${zu}">Abbrechen</button></div></div>`;
   f.onclick = (e) => { if (e.target === f) f.remove(); };
   document.body.appendChild(f);
+}
+// ❗ Nachricht nachträglich als wichtig markieren (orangener Rahmen + „❗ WICHTIG“ wie beim Senden mit ❗) – eigene Nachricht oder Admin;
+// alle im Chat sehen die Markierung, es geht KEINE neue Benachrichtigung raus
+async function naWichtig(id, an) {
+  try { await api("nachricht_wichtig", { id, an }); melde(an ? "❗ Als wichtig markiert – orange umrandet" : "Markierung „wichtig“ entfernt"); chatStand = ""; await chatLaden(false); }
+  catch (e) { meldeFehler(e); }
+}
+// Ganzer Chat: Text kopieren (gleicher Verlaufstext wie fürs Archiv) und ausdrucken (Druck-Kern mit Vorschau)
+async function chatKopieren() {
+  if (!CHAT?.nachrichten?.length) return melde("In diesem Chat gibt es noch nichts zu kopieren.", true);
+  const t = chatVerlaufText();
+  try { await navigator.clipboard.writeText(t); return melde(`📋 Chat kopiert (${CHAT.nachrichten.length} Nachrichten)`); } catch {}
+  await eingabe("Text markieren und kopieren:", t);
+}
+function druckChat() {
+  const u = CHAT, msgs = u?.nachrichten || []; if (!msgs.length) return null;
+  const zeilen = msgs.map((m) => { const wer = m.eigen ? ICH?.name || "Ich" : m.von, inhalt = m.umfrage ? `📊 Abstimmung: ${m.umfrage.frage || ""}` : m.kontakt ? `👤 Kontakt: ${m.kontakt.name || ""}` : m.text === "📎" ? "" : String(m.text || "");
+    const dateien = (m.anlagen || []).map((a) => `📎 ${a.name}`).join(" · ");
+    return `<tr${m.wichtig ? ' style="background:#fff3e0"' : ""}><td style="padding:1.2mm 2mm;border-bottom:.2mm solid #ccc;white-space:nowrap;vertical-align:top;font-size:3.1mm;color:#555">${esc(zeitDe(m.zeit))}</td>
+      <td style="padding:1.2mm 2mm;border-bottom:.2mm solid #ccc;vertical-align:top;font-size:3.4mm"><b>${esc(wer)}</b>${m.wichtig ? " ❗" : ""}<br>${esc(inhalt).replace(/\n/g, "<br>")}${dateien ? `<br><span style="color:#555">${esc(dateien)}</span>` : ""}</td></tr>`; }).join("");
+  return { titel: `Chat „${chatName()}“`, unter: `Teilnehmer: ${(u.teilnehmer || []).map((t) => t.name).join(", ")} · ${msgs.length} Nachricht${msgs.length === 1 ? "" : "en"}`,
+    html: `<table style="width:100%;border-collapse:collapse">${zeilen}</table>`, fuss: "Chat-Ausdruck" };
 }
 // ✂️ Ausschneiden = Text kopieren, danach die gewohnte Lösch-Rückfrage (für mich / für alle – „Abbrechen“ lässt die Nachricht stehen)
 async function naAusschneiden(id) { await naKopieren(id); naLoeschenFragen(id); }
@@ -17776,6 +17802,7 @@ const DRUCKARTEN = {
   dienstuebersicht: { bauen: () => druckDienstUebersicht() }, // KC-CLUB-DIENST-UEBERSICHT (2.23.39): A4 quer // KC-CLUB-WUNSCHBOGEN (2.23.28): leerer persönlicher Bogen, randlos A4 quer
   bestaetigung: { bauen: () => druckBestaetigung() },
   verbindung: { bauen: () => druckVerbindung() }, // KC-CLUB-VERBINDUNG-MELDEN (2.23.76)
+  chat: { bauen: () => druckChat() }, // 2.23.80: ganzer Chat
   einrichtungskarte: { bauen: (o, param) => druckEinrichtungskarte(param) }, // KC-CLUB-EINRICHTUNGSKARTE (1.88.0) // KC-CLUB-BESTAETIGUNG (1.69.0): Aufstellung der eigenen Eingaben
 };
 // ---- KC-CLUB-KURZANLEITUNG (0.62.0): die App in 3 Schritten – für Einsteiger, zum Ausdrucken oder Verschicken ----

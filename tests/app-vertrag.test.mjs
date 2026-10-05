@@ -4352,6 +4352,10 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/async function naAusschneiden\(id\) \{ await naKopieren\(id\); naLoeschenFragen\(id\); \}/.test(html), "Ausschneiden = kopieren + gewohnte Lösch-Rückfrage");
   assert.ok(/archivAblageFragen\("nachricht", /.test(html) && /nachricht: \{ sym: "💬", register: \["Chats", "Sonstiges"\]/.test(html), "Archiv über den Ablage-Kern");
   assert.ok(/\.na-pfeil-knoepfe \{ display: grid; grid-template-columns: 1fr 1fr;/.test(html), "schmal nebeneinander");
+  assert.ok(/m\.eigen \|\| ICH\?\.admin \? `<button class="knopf" onclick="\$\{zu\}naWichtig\(/.test(k), "❗ Wichtig nur eigene / Admin");
+  const w = server.slice(server.indexOf('case "nachricht_wichtig"'), server.indexOf('case "gemerkte_nachrichten"'));
+  assert.ok(/m\.sender_person_id !== ich\.person_id && !ich\.admin\) throw/.test(w) && !/senden|routerSenden/.test(w), "Server: nur Verfasser/Admin, keine Benachrichtigung");
+  assert.ok(/druckStarten\('chat'\)">🖨️ Ausdrucken/.test(html) && /chatKopieren\(\)">📋 Kopieren/.test(html) && /chat: \{ bauen: \(\) => druckChat\(\) \}/.test(html), "Ganzer Chat: kopieren + drucken im ⋮-Menü");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

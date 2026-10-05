@@ -6597,6 +6597,18 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         else await db.from("kc_club_gemerkt").delete().eq("person_id", ich.person_id).eq("message_id", m.id);
         return json({ ok: true });
       }
+      // KC-CLUB-WICHTIG-NACHTRAEGLICH (2.23.80, Wunsch Hansi): Nachricht nachträglich ❗ wichtig markieren / zurücknehmen –
+      // nur wer sie geschrieben hat oder der Admin; alle im Chat sehen den orangenen Rahmen, es geht keine neue Benachrichtigung raus
+      case "nachricht_wichtig": {
+        const { data: m } = await db.from("kc_communication_messages").select("id,thread_id,sender_person_id").eq("id", String(p.id || "")).maybeSingle();
+        if (!m) throw new Fehler("Nachricht nicht gefunden.", 404);
+        await binTeilnehmer(m.thread_id, ich.person_id);
+        if (m.sender_person_id !== ich.person_id && !ich.admin) throw new Fehler("Als wichtig markieren kann nur, wer die Nachricht geschrieben hat.", 403);
+        if (p.an) await db.from("kc_club_nachricht_wichtig").upsert({ message_id: m.id, person_id: ich.person_id, am: jetzt() }, { onConflict: "message_id" });
+        else await db.from("kc_club_nachricht_wichtig").delete().eq("message_id", m.id);
+        await protokoll(ich.person_id, p.an ? "nachricht_wichtig_an" : "nachricht_wichtig_aus", { nachricht: m.id });
+        return json({ ok: true });
+      }
       case "gemerkte_nachrichten": {
         const { data: gm } = await db.from("kc_club_gemerkt").select("message_id,am").eq("person_id", ich.person_id).order("am", { ascending: false }).limit(200);
         const ids = (gm ?? []).map((x: any) => x.message_id);

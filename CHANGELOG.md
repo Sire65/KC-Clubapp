@@ -5,6 +5,11 @@
   (Text kopieren, danach die gewohnte Lösch-Rückfrage „für mich / für alle“), 🗄️ Archivieren (Nachricht als Textdatei mit Absender, Chat
   und Zeit in den eigenen Archiv-Ordner; Dateien/Fotos der Nachricht auf Wunsch mit – über den Archiv-Ablage-Kern, Art „nachricht“) und
   🗑️ Löschen (gewohnte Rückfrage). Schmale Knöpfe, zwei nebeneinander. Test 431.
+- KC-CLUB-WICHTIG-NACHTRAEGLICH: am Pfeil „❗ Wichtig“ / „➖ Nicht wichtig“ – eigene Nachricht (Admin: jede) nachträglich wichtig markieren:
+  orangener Rahmen + „❗ WICHTIG“ wie beim Senden mit ❗, für alle im Chat; keine neue Benachrichtigung. Server-Aktion nachricht_wichtig
+  (vorhandene Tabelle kc_club_nachricht_wichtig, Protokoll). 
+- Ganzer Chat (Hansi: „aber wo?“): im Chat oben rechts ⋮ → Abschnitt „Ganzer Chat“ mit 📋 Kopieren (ganzer Verlauf als Text) und
+  🖨️ Ausdrucken (Druckvorschau, wichtige Nachrichten hervorgehoben) – dort wie bisher auch 🗄️ ins Archiv, 📦 archivieren und 🗑️ löschen.
 
 ## 2.23.79 – 2026-10-05 – 🔒 Sperren in drei klaren Schritten + Uhrzeit + 🔔/📵 je Person (Wunsch Hansi)
 - KC-CLUB-PERSON-SPERRE Stufe 2 (Hansi: „Weg nicht ganz klar“): Wartungs-Blatt in zwei Kästen – „📢 Für alle: Wartung ankündigen“ und
