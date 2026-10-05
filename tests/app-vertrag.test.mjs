@@ -4320,6 +4320,16 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const mig = lies("supabase/migrations/20261005_kc_club_v22377_person_sperre.sql");
   assert.ok(/enable row level security/.test(mig) && /revoke all on kc_club_person_sperre from anon, authenticated/.test(mig) && /check \(art in \('wartung', 'stoerung'\)\)/.test(mig), "Tabelle geschützt");
 }
+// 429. 2.23.78: grüner ✓ oben in langen Fenstern – tippt den einen Bestätigungs-Knopf an (KC-CLUB-BLATT-HAKEN)
+{
+  const k = html.slice(html.indexOf("const BLATT_HAKEN_WORT"), html.indexOf("let blattXPlan = 0;"));
+  assert.ok(/return k\.length === 1 \? k\[0\] : null;/.test(k), "nur bei genau einem Kandidaten");
+  assert.ok(/übernehmen\|ok\|okay\|speichern\|fertig\|bestätigen\|anwenden\|verstanden/.test(k) && !/lösch|senden|sperren/i.test(k.slice(0, k.indexOf("function blattHakenZiel"))), "nur Bestätigen – nie Löschen/Senden/Sperren");
+  assert.ok(/if \(BLATT_X_OHNE\.has\(b\.id\) \|\| b\.dataset\.ohneX\) continue;/.test(k) && /const sc = blattScroller\(b\); if \(!sc\?\.innen\) continue;/.test(k), "nur lange Fenster, nie Notfall");
+  assert.ok(/if \(z && !z\.disabled\) z\.click\(\);/.test(k) && /h\.disabled = z\.disabled;/.test(k), "tippt den echten Knopf an, gesperrt bleibt gesperrt");
+  assert.ok(/try \{ blattXPruefen\(\); \} catch \{\} try \{ blattHakenPruefen\(\); \} catch \{\}/.test(html), "im selben Fenster-Kern wie das ✕");
+  assert.ok(/\.blatt-haken \{ margin-right: auto;/.test(html), "links in der Leiste, ✕ bleibt rechts");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

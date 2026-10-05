@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.23.78 – 2026-10-05 – ✓ Grüner Haken oben in langen Fenstern (Wunsch Hansi)
+- KC-CLUB-BLATT-HAKEN: Lange Fenster mit genau einem Bestätigungs-Knopf (Übernehmen, OK, Speichern, Fertig, Bestätigen, Anwenden,
+  Verstanden) bekommen oben links in der vorhandenen ✕-Leiste (KC-CLUB-BLATT-X, ein Kern) einen grünen ✓, der diesen Knopf antippt –
+  kein Scrollen nach unten. Erscheint nur, solange der Knopf unten nicht zu sehen ist; nie bei mehreren Kandidaten, nie für Löschen/
+  Senden/Sperren, nie bei kurzen Fenstern und nie beim Notfall-Fenster. Gesperrter Knopf → ✓ ebenfalls gesperrt. Leiste mit eigenem Platz,
+  nichts wird überdeckt. Test 429.
+
 ## 2.23.77 – 2026-10-05 – 🔒 Einzelne Personen sperren (Wunsch Hansi)
 - KC-CLUB-PERSON-SPERRE: Admin-Register → 🛠️ Wartung → „🔒 Personen sperren“: eine oder mehrere Personen ankreuzen (Suche), wählen, was sie
   sehen – 🔵 „Wartungsarbeiten“ („Zur Zeit führen wir für Sie Wartungsarbeiten durch. Bitte versuchen Sie es später nochmals. Wir bitten um

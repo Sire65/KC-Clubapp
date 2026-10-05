@@ -1444,6 +1444,11 @@
     background: var(--karte); border-radius: 22px 22px 0 0; border-bottom: 1px solid var(--linie); }
   .blatt-x { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--linie); background: var(--karte); color: var(--text);
     font-size: 1.15rem; line-height: 1; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+  /* KC-CLUB-BLATT-HAKEN (2.23.78): grüner ✓ links in derselben Leiste – tippt den einen Bestätigungs-Knopf unten an */
+  .blatt-haken { margin-right: auto; width: 40px; height: 40px; border-radius: 50%; border: 0; background: #2e7d4f; color: #fff; font-size: 1.3rem; font-weight: 800;
+    line-height: 1; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,.25); }
+  .blatt-haken[hidden] { display: none; } .blatt-haken:disabled { opacity: .45; cursor: default; }
+  .blatt-x-leiste:empty { display: none; }
   .begruessung { max-height: 92vh; overflow-y: auto; }
   /* KC-CLUB-ONLINE: grüner Punkt, Online-Leiste, Anklopf-Fenster */
   .onpunkt { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #2ecc71; box-shadow: 0 0 0 2px var(--karte), 0 0 6px #2ecc71; margin-right: 6px; vertical-align: middle; }
@@ -2925,7 +2930,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.77"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.78"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -10675,10 +10680,41 @@ function blattXPruefen() {
     sc.innen.querySelector(".blatt-x").onclick = (e) => { e.stopPropagation(); fensterZu(b); };
   }
 }
+// KC-CLUB-BLATT-HAKEN (2.23.78, Wunsch Hansi): Lange Fenster mit genau EINEM Bestätigungs-Knopf (Übernehmen, OK, Speichern, Fertig,
+// Bestätigen, Anwenden, Verstanden) bekommen in derselben Leiste oben links einen grünen ✓ – er tippt diesen Knopf an, man muss nicht
+// nach unten scrollen. Nur solange der Knopf unten nicht zu sehen ist; nie bei mehreren Kandidaten (unklar), nie für Löschen/Senden/
+// Sperren, nie beim Notfall-Fenster. Die Leiste hat eigenen Platz (sticky, mit Hintergrund) – nichts wird überdeckt.
+const BLATT_HAKEN_WORT = /^(?:[^\p{L}]*)(übernehmen|ok|okay|speichern|fertig|bestätigen|anwenden|verstanden)\b/iu;
+function blattHakenZiel(innen) {
+  const k = [...innen.querySelectorAll("button.knopf.haupt")].filter((x) => !x.closest(".blatt-x-leiste") && x.getClientRects().length && BLATT_HAKEN_WORT.test(x.textContent.trim()));
+  return k.length === 1 ? k[0] : null;
+}
+function blattHakenSicht(b) {
+  const sc = blattScroller(b), h = b.querySelector(".blatt-haken"); if (!sc?.innen || !h) return;
+  const z = blattHakenZiel(sc.innen), r = z?.getBoundingClientRect(), f = sc.el.getBoundingClientRect();
+  const sichtbar = !z || (r.top < f.bottom - 8 && r.bottom > f.top + 56); // Knopf schon zu sehen → kein Haken nötig
+  h.hidden = sichtbar && !!h.parentElement.querySelector(".blatt-x"); // Leiste nur mit ✓ (Fenster hat eigenes ✕): ✓ bleibt stehen, sonst springt der Inhalt
+  if (z) { h.disabled = z.disabled; h.title = z.textContent.trim(); h.setAttribute("aria-label", z.textContent.trim()); }
+}
+function blattHakenPruefen() {
+  for (const b of document.querySelectorAll(".blatt:not(.versteckt)")) {
+    if (BLATT_X_OHNE.has(b.id) || b.dataset.ohneX) continue;
+    const sc = blattScroller(b); if (!sc?.innen) continue;
+    if (!blattHakenZiel(sc.innen)) { b.querySelector(".blatt-haken")?.remove(); continue; }
+    let leiste = b.querySelector(".blatt-x-leiste");
+    if (!leiste) { sc.innen.insertAdjacentHTML("afterbegin", '<div class="blatt-x-leiste"></div>'); leiste = b.querySelector(".blatt-x-leiste"); } // oben sitzt schon ein eigenes ✕
+    if (!leiste.querySelector(".blatt-haken")) {
+      leiste.insertAdjacentHTML("afterbegin", '<button type="button" class="blatt-haken" hidden>✓</button>');
+      leiste.querySelector(".blatt-haken").onclick = (e) => { e.stopPropagation(); const z = blattHakenZiel(sc.innen); if (z && !z.disabled) z.click(); };
+    }
+    if (!sc.el.dataset.haken) { sc.el.dataset.haken = "1"; sc.el.addEventListener("scroll", () => blattHakenSicht(b), { passive: true }); }
+    blattHakenSicht(b);
+  }
+}
 let blattXPlan = 0;
-new MutationObserver(() => { if (blattXPlan || !document.querySelector(".blatt:not(.versteckt)")) return; blattXPlan = requestAnimationFrame(() => { blattXPlan = 0; try { blattXPruefen(); } catch {} }); })
+new MutationObserver(() => { if (blattXPlan || !document.querySelector(".blatt:not(.versteckt)")) return; blattXPlan = requestAnimationFrame(() => { blattXPlan = 0; try { blattXPruefen(); } catch {} try { blattHakenPruefen(); } catch {} }); })
   .observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["class"] });
-addEventListener("resize", () => { try { blattXPruefen(); } catch {} });
+addEventListener("resize", () => { try { blattXPruefen(); } catch {} try { blattHakenPruefen(); } catch {} });
 document.addEventListener("keydown", (e) => {
   if (e.key !== "Escape" || e.defaultPrevented) return;
   const offen = [...document.querySelectorAll(".blatt:not(.versteckt)")]; if (!offen.length) return;
