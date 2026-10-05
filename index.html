@@ -1333,7 +1333,10 @@
   /* 2.23.48 KC-CLUB-KUECHENCHEF → 2.23.49 KC-CLUB-TWINKEY */
   .tw-chef-knopf { width: 100%; margin: 8px 0 4px; text-align: center !important; }
   .tw-blatt .blatt-innen, #twOffenBlatt .blatt-innen { max-height: 92vh !important; }
-  .tw-zeile { display: flex; gap: 6px; align-items: center; } .tw-zeile .hz-suche { flex: 1; min-width: 0; margin: 0; } .tw-zeile .tw-fragen { flex: none; width: auto; margin: 0; padding: 8px 12px; }
+  .such-zeile, .tw-zeile { display: flex; gap: 6px; align-items: center; } .such-zeile .diktat-wrap, .tw-zeile .diktat-wrap, .such-zeile .hz-suche { flex: 1; min-width: 0; margin: 0; }
+  .such-knopf { flex: none; width: auto !important; margin: 0 !important; padding: 8px 12px !important; white-space: nowrap; } /* 2.23.56 KC-CLUB-SUCHEN-KNOPF */
+  .su-kopf .such-knopf { padding: 6px 10px !important; font-size: .9rem; } .su-kopf:has(.such-knopf) .su-lupe { display: none; }
+  @media (max-width: 520px) { .su-kopf .su-filterknopf span { display: none; } } /* Platz fürs Suchfeld: Filter nur als ⚙️ */ .tw-zeile .hz-suche { flex: 1; min-width: 0; margin: 0; } .tw-zeile .tw-fragen { flex: none; width: auto; margin: 0; padding: 8px 12px; }
   .tw-nicht { background: none; border: 0; color: var(--textGruen); text-decoration: underline; padding: 6px 0 0; font: inherit; font-size: .9rem; cursor: pointer; }
   .tw-meine { margin-top: 8px; } .tw-meine > summary { font-weight: 800; cursor: pointer; padding: 6px 0; } .tw-frage-zeile { border-top: 1px solid var(--linie, #ddd); padding: 6px 0; }
   .tw-admin-knopf { width: 100%; margin-top: 8px; } /* 2.23.51 KC-CLUB-MITGLIEDER-FRAGEN */
@@ -2332,7 +2335,7 @@
     <!-- 2.23.2 (Wunsch Hansi): Suchfeld deutlicher – eigene Karte mit Überschrift, kräftigem Rand und Lupe -->
     <button type="button" class="knopf haupt tw-chef-knopf" onclick="twFrageStart()">🧑‍🍳 Frag Twinkey – einfach fragen oder 🎤 sprechen</button><!-- 2.23.49 KC-CLUB-TWINKEY (früher Küchenchef) -->
     <label class="hz-suchfeld" for="hzSuche"><span class="hz-such-titel">🔍 Wonach suchst du?</span>
-      <input type="search" id="hzSuche" data-diktat="einmal" class="hz-suche" placeholder="Hier tippen – z. B. „Farbe“ oder „Ton“" oninput="hzSuchen(this.value)" autocomplete="off" enterkeyhint="search"></label>
+      <span class="such-zeile"><input type="search" id="hzSuche" data-diktat="einmal" class="hz-suche" placeholder="Hier tippen – z. B. „Farbe“ oder „Ton“" oninput="hzSuchen(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();hzSucheKnopf()}" autocomplete="off" enterkeyhint="search"><button type="button" class="knopf haupt such-knopf" onclick="hzSucheKnopf()">🔍 Suchen</button></span></label><!-- 2.23.56 KC-CLUB-SUCHEN-KNOPF -->
     <nav class="hz-reg" id="hzRegister" aria-label="Hilfe-Themen"></nav>
     <div id="hzInhalt"></div>
   </section>
@@ -2895,7 +2898,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.55"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.56"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -18222,7 +18225,7 @@ function sucheAuf(start) {
     const f = document.createElement("div"); f.id = "suFenster"; f.className = "su-fenster versteckt"; f.setAttribute("role", "dialog"); f.setAttribute("aria-modal", "true"); f.setAttribute("aria-label", "Suche");
     f.innerHTML = `<div class="su-innen">
       <div class="su-kopf"><span class="su-lupe" aria-hidden="true">🔍</span><input id="suEingabe" data-diktat="einmal" type="search" enterkeyhint="search" autocomplete="off" placeholder="Suchen … (ab 2 Buchstaben)" oninput="suTippen(this.value)" onkeydown="if(event.key==='Escape')sucheZu();if(event.key==='Enter'){this.blur();suJetzt()}">
-        <button class="su-filterknopf" id="suFilterKnopf" onclick="suFilterUmschalten()" title="Erweiterte Suche mit Filtern">⚙️<span>Filter</span></button><button class="su-zu" onclick="sucheZu()" aria-label="Suche schließen">✕</button></div>
+        <button type="button" class="knopf haupt such-knopf" onclick="suSucheKnopf()">🔍 Suchen</button><button class="su-filterknopf" id="suFilterKnopf" onclick="suFilterUmschalten()" title="Erweiterte Suche mit Filtern">⚙️<span>Filter</span></button><button class="su-zu" onclick="sucheZu()" aria-label="Suche schließen">✕</button></div>
       <div id="suFilter" class="su-filter versteckt"></div><div id="suErgebnis" class="su-ergebnis"></div></div>`;
     f.onclick = (e) => { if (e.target === f) sucheZu(); };
     document.body.appendChild(f);
@@ -18239,6 +18242,18 @@ function sucheZu(ausHistorie) {
   SU.offen = false; clearTimeout(SU.timer);
   $("suFenster")?.classList.add("versteckt"); document.body.classList.remove("su-auf");
   if (!ausHistorie && history.state?.suche) { SU.zurueck = true; history.back(); } // eigener Verlaufseintrag weg, ohne die Ansicht neu zu laden
+}
+// KC-CLUB-SUCHEN-KNOPF (2.23.56, Wunsch Hansi): sichtbarer „🔍 Suchen“-Knopf neben dem Feld – wenn Sprechen nicht geht oder man nicht
+// weiß, dass die Suche schon beim Tippen läuft. Sucht, schließt die Tastatur und zeigt die Treffer; leeres Feld → Hinweis.
+function hzSucheKnopf() {
+  const f = $("hzSuche"), q = (f?.value || "").trim();
+  if (!q) { melde("✍️ Bitte erst ein Wort eintippen – z. B. „Farbe“."); return f?.focus(); }
+  hzSuchen(q); f.blur(); $("hzInhalt")?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+function suSucheKnopf() { // KC-CLUB-SUCHEN-KNOPF (2.23.56)
+  const f = $("suEingabe"), q = (f?.value || "").trim();
+  if (suNorm(q).replace(/\s/g, "").length < 2) { melde("✍️ Bitte mindestens 2 Buchstaben eintippen."); return f?.focus(); }
+  SU.q = q; f.blur(); suJetzt();
 }
 function suTippen(v) { SU.q = v; clearTimeout(SU.timer); if (suNorm(v).replace(/\s/g, "").length < 2) { SU.ergebnis = null; return suZeigen(); } SU.timer = setTimeout(suJetzt, 300); }
 async function suJetzt() {

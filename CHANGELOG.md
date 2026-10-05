@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.23.56 – 2026-10-05 – 🔍 Suchen-Knopf (Wunsch Hansi)
+- KC-CLUB-SUCHEN-KNOPF: Im Hilfe-Zentrum („Wonach suchst du?“) und in der 🔍 Lupe-Suche steht jetzt neben dem Feld ein Knopf
+  „🔍 Suchen“ – für alle, bei denen Sprechen nicht geht oder die nicht wissen, dass schon beim Tippen gesucht wird. Er sucht, schließt
+  die Tastatur und zeigt die Treffer; ist das Feld leer bzw. zu kurz, kommt ein Hinweis. Enter auf der Tastatur macht dasselbe.
+  (Bei Frag Twinkey gibt es schon „➤ Fragen“.) Test 405.
+
 ## 2.23.55 – 2026-10-05 – 🎙️ Diktieren: richtige Ursache erkennen (Fund Hansi)
 - KC-CLUB-MIKRO-URSACHE: Sprachnachrichten brauchen nur das Mikrofon, Diktieren zusätzlich die Spracherkennung von Google – die hat auf
   Android eine eigene Mikrofon-Erlaubnis. Darf Chrome das Mikrofon (Stand „granted“ oder „Jetzt freischalten“ klappt) und die

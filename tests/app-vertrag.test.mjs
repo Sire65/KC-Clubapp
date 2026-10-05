@@ -4105,6 +4105,13 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/api\("diagnose", \{ art: "mikro", daten: \{ sprache: MIKRO_DIAG\.sprache/.test(k), "Ursache als Code ins Fehlerprotokoll");
   assert.ok(/if \(zweiter && IST_ANDROID\)[^\n]*mikroHilfeGoogle\(\)/.test(html) && /e\.onresult = \(ev\) => \{ DT\.zweiter = false;/.test(html), "nach erfolgreicher Freigabe erneut gesperrt → Google-Anleitung");
 }
+// 405. 2.23.56: sichtbarer „🔍 Suchen“-Knopf im Hilfe-Zentrum und in der Lupe (KC-CLUB-SUCHEN-KNOPF)
+{
+  assert.ok(/id="hzSuche"[^>]*><button type="button" class="knopf haupt such-knopf" onclick="hzSucheKnopf\(\)">🔍 Suchen<\/button>/.test(html), "Knopf im Hilfe-Zentrum");
+  assert.ok(/onclick="suSucheKnopf\(\)">🔍 Suchen<\/button>/.test(html), "Knopf in der Lupe-Suche");
+  assert.ok(/function hzSucheKnopf\(\)[\s\S]{0,300}hzSuchen\(q\); f\.blur\(\)/.test(html) && /function suSucheKnopf\(\)[\s\S]{0,300}SU\.q = q; f\.blur\(\); suJetzt\(\)/.test(html), "sucht und schließt die Tastatur");
+  assert.ok(/onclick="twAntworten\(null,true\)">➤ Fragen<\/button>/.test(html), "Twinkey hat seinen Knopf");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
