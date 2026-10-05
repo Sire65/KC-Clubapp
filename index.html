@@ -1329,7 +1329,7 @@
   /* 2.23.50 KC-CLUB-TERMINANFRAGE-STATUS */
   .ta-wer { padding: 3px 0; } .ta-st { font-weight: 700; } .ta-st-ja { color: #1e8449; } .ta-st-nein { color: var(--rot); } .ta-st-gv { color: #b9770e; } .ta-st-ab { color: var(--grau); } .ta-st-ge { color: #2471a3; }
   .marke.ta-st-ja { background: #d4efdf; color: #145a32; } .marke.ta-st-nein { background: #fadbd8; color: #78281f; } .marke.ta-st-gv { background: #fdebd0; color: #7e5109; } .marke.ta-st-ab { background: #e5e7e9; color: #424949; } .marke.ta-st-ge { background: #d6eaf8; color: #1b4f72; }
-  .ta-vk { margin: 4px 0 2px; } .ta-gv-zeit { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } #taGvBlatt label { display: grid; gap: 2px; }
+  .ta-vk { margin: 4px 0 2px; } .ta-vorbehalt { margin: 6px 0 0; padding: 6px 8px; border-radius: 8px; background: #fdebd0; color: #7e5109; } #taVkBlatt textarea { width: 100%; box-sizing: border-box; } #taVkBlatt label { display: grid; gap: 2px; } .ta-gv-zeit { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } #taGvBlatt label { display: grid; gap: 2px; }
   /* 2.23.48 KC-CLUB-KUECHENCHEF → 2.23.49 KC-CLUB-TWINKEY */
   .tw-chef-knopf { width: 100%; margin: 8px 0 4px; text-align: center !important; }
   .tw-blatt .blatt-innen, #twOffenBlatt .blatt-innen { max-height: 92vh !important; }
@@ -2898,7 +2898,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.56"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.57"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -15367,7 +15367,7 @@ function taKarte(a) {
   const k = (w) => `<button class="knopf klein${a.meine === w ? " haupt" : ""}" onclick="taAntwort('${a.id}', '${a.meine === w ? "keine" : w}')">${TA_ANTW[w]}</button>`;
   const wer = a.empfaenger.map((e) => { const st = taStatus(a, e);
     return `<div class="ta-wer"><span class="ta-st ta-st-${st.k}">${st.sym} ${st.t}</span> ${esc(e.name)}${e.notiz ? ` <span class="hinweis">– „${esc(e.notiz)}“</span>` : ""}
-      ${a.vonMir && !ab && e.vorschlag ? `<div class="knoepfe ta-vk"><button class="knopf haupt klein" onclick="taVorschlagEntscheiden('${a.id}','${esc(e.person_id)}',true)">✅ Neue Zeit annehmen</button><button class="knopf klein" onclick="taVorschlagEntscheiden('${a.id}','${esc(e.person_id)}',false)">❌ Passt nicht</button></div>` : ""}</div>`; }).join("");
+      ${a.vonMir && !ab && e.vorschlag ? `<div class="knoepfe ta-vk"><button class="knopf haupt klein" onclick="taVorschlagBlatt('${a.id}','${esc(e.person_id)}','ja')">✅ Neue Zeit annehmen</button><button class="knopf klein" onclick="taVorschlagBlatt('${a.id}','${esc(e.person_id)}','vorbehalt')">🤔 Unter Vorbehalt</button><button class="knopf klein" onclick="taVorschlagBlatt('${a.id}','${esc(e.person_id)}','nein')">❌ Passt nicht</button></div>` : ""}</div>`; }).join("");
   const einer = a.vonMir && a.empfaenger.length === 1 ? taStatus(a, a.empfaenger[0]) : null;
   return `<div class="karte" id="ta-${a.id}" style="border-left:6px solid var(--gold)${ab ? ";opacity:.65" : ""}">
     <span class="marke gelb">📨 Terminanfrage</span>${ab ? ' <span class="marke">🚫 abgesagt</span>' : einer ? ` <span class="marke ta-st-${einer.k}">${einer.sym} ${einer.t}</span>` : ""}${!ab && a.frist ? ` <span class="marke">⏳ Antwort bis ${esc(wann(a.frist))}</span>` : ""}
@@ -15376,6 +15376,7 @@ function taKarte(a) {
     ${a.ort ? `<div>📍 ${esc(a.ort)}</div>` : ""}
     <div class="hinweis" style="font-size:.85rem">${a.vonMir ? `<b>Anfrage an ${esc(taAnWen(a))}</b>` : "von " + esc(a.von.name) + " · an " + (a.empfaenger.length === 1 ? "dich" : a.empfaenger.length + " Mitglieder")}</div>
     ${a.notiz ? `<p class="hinweis" style="white-space:pre-wrap;margin:6px 0 0">📝 ${esc(a.notiz)}</p>` : ""}
+    ${a.vorbehalt && !ab ? `<p class="ta-vorbehalt">🤔 <b>Unter Vorbehalt</b> (${esc(a.vonMir ? "deiner" : a.von.vorname)}): „${esc(a.vorbehalt)}“</p>` : ""}
     ${!a.vonMir && !ab ? `<div class="ta-antw">${k("ja")}${k("vielleicht")}${k("nein")}</div>
       ${a.meine ? `<div class="hinweis" style="font-size:.8rem;margin-top:4px">Nochmal auf deine Antwort tippen nimmt sie zurück.${a.meineNotiz ? ` Deine Notiz: „${esc(a.meineNotiz)}“` : ""}</div>` : ""}
       ${a.meinVorschlag ? `<div class="hinweis" style="margin-top:4px">🔄 Dein Gegenvorschlag: <b>${esc(taVWann(a.meinVorschlag))}</b> – ${esc(a.von.vorname)} entscheidet.</div>` : ""}
@@ -15418,13 +15419,30 @@ function taGegenvorschlag(id) {
       f.remove(); melde(`🔄 Vorschlag ist an ${a.von.vorname} geschickt`); TA.markiert = id; await taLaden(); } catch (e) { meldeFehler(e); }
   };
 }
-async function taVorschlagEntscheiden(id, pid, annehmen) {
+// KC-CLUB-ANFRAGE-VORBEHALT (2.23.57, Wunsch Hansi): Gegenvorschlag annehmen, unter Vorbehalt annehmen oder ablehnen – mit kurzem Text
+function taVorschlagBlatt(id, pid, wahl) {
   const a = TA.liste.find((x) => x.id === id), e = a?.empfaenger.find((x) => x.person_id === pid); if (!a || !e?.vorschlag) return;
-  const text = annehmen ? `Neue Zeit annehmen?\n${a.anlass} wird auf ${taVWann(e.vorschlag)} verlegt.${a.empfaenger.length > 1 ? " Die anderen werden neu gefragt." : ""} ${e.vorname || e.name} bekommt Bescheid.`
-    : `Vorschlag ablehnen?\nEs bleibt bei ${wann(a.beginn)}. ${e.vorname || e.name} bekommt Bescheid.`;
-  if (!(await frage(text, { ja: annehmen ? "✅ Annehmen" : "❌ Passt nicht", gefahr: false }))) return;
-  try { await api("terminanfrage_vorschlag_entscheiden", { id, person_id: pid, annehmen }); melde(annehmen ? "✅ Neue Zeit gilt – Bescheid ist raus" : "❌ Abgelehnt – Bescheid ist raus"); TA.markiert = id; await taLaden(); neuLaden(); }
-  catch (err) { meldeFehler(err); }
+  const wer = e.vorname || e.name;
+  const f = blattAuf("taVkBlatt", `<h3 style="margin:0">🔄 Gegenvorschlag von ${esc(wer)}</h3>
+    <p style="margin:4px 0">📌 <b>${esc(a.anlass)}</b><br>angefragt: ${esc(wann(a.beginn))}<br>🔄 Vorschlag: <b>${esc(taVWann(e.vorschlag))}</b>${e.notiz ? `<br>📝 ${esc(wer)}: „${esc(e.notiz)}“` : ""}</p>
+    <div class="hl-chips" id="taVkWahl">${[["ja", "✅ Annehmen"], ["vorbehalt", "🤔 Unter Vorbehalt"], ["nein", "❌ Passt nicht"]].map(([k, t]) => `<button type="button" class="chip${k === wahl ? " an" : ""}" data-w="${k}">${t}</button>`).join("")}</div>
+    <label class="hinweis" id="taVkLabel">Kurzer Text an ${esc(wer)}<textarea id="taVkText" data-diktat rows="2" maxlength="300"></textarea></label>
+    <p class="hinweis" id="taVkInfo" style="margin:0"></p>
+    <button class="knopf haupt" id="taVkOk">📨 Senden</button><button class="knopf" onclick="$('taVkBlatt').remove()">Abbrechen</button>`);
+  const setz = (w) => { wahl = w; f.querySelectorAll("#taVkWahl .chip").forEach((c) => c.classList.toggle("an", c.dataset.w === w));
+    $("taVkLabel").firstChild.textContent = w === "vorbehalt" ? `Welcher Vorbehalt? (bitte kurz – ${wer} und alle Beteiligten sehen ihn)` : `Kurzer Text an ${wer} (freiwillig)`;
+    $("taVkText").placeholder = w === "vorbehalt" ? "z. B. falls ich rechtzeitig von der Arbeit wegkomme" : w === "ja" ? "z. B. Super, passt mir gut!" : "z. B. Da bin ich leider unterwegs";
+    $("taVkInfo").textContent = w === "nein" ? `Es bleibt bei ${wann(a.beginn)}.` : `Der Termin wird auf ${taVWann(e.vorschlag)} verlegt${a.empfaenger.length > 1 ? " – die anderen werden neu gefragt" : ""}.`; };
+  f.querySelectorAll("#taVkWahl .chip").forEach((c) => (c.onclick = () => setz(c.dataset.w))); setz(wahl);
+  f.querySelector("#taVkOk").onclick = async function () {
+    const text = $("taVkText").value.trim();
+    if (wahl === "vorbehalt" && !text) { melde("✍️ Bitte kurz schreiben, unter welchem Vorbehalt."); return $("taVkText").focus(); }
+    this.disabled = true;
+    try { await api("terminanfrage_vorschlag_entscheiden", { id, person_id: pid, annehmen: wahl !== "nein", vorbehalt: wahl === "vorbehalt", text });
+      f.remove(); melde(wahl === "nein" ? `❌ Abgelehnt – ${wer} bekommt Bescheid` : wahl === "vorbehalt" ? `🤔 Unter Vorbehalt angenommen – ${wer} bekommt Bescheid` : `✅ Neue Zeit gilt – ${wer} bekommt Bescheid`);
+      TA.markiert = id; await taLaden(); neuLaden(); }
+    catch (err) { this.disabled = false; meldeFehler(err); }
+  };
 }
 // KC-CLUB-TERMINANFRAGE-HINWEIS (2.23.52, Wunsch Hansi): Beim Öffnen der App und zwischendurch (zurück in die App, nach einem Push,
 // alle 5 Min.) – „📨 Du hast eine neue Terminanfrage“ mit „👀 Ja, jetzt ansehen“, „⏰ Später“ (2 Std.) und „🌙 Heute nicht mehr fragen“.

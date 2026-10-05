@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.23.57 – 2026-10-05 – 🤔 Gegenvorschlag unter Vorbehalt annehmen (Wunsch Hansi)
+- KC-CLUB-ANFRAGE-VORBEHALT: Beim Gegenvorschlag jetzt drei Knöpfe – „✅ Neue Zeit annehmen“, „🤔 Unter Vorbehalt“, „❌ Passt nicht“. Alle öffnen
+  ein Fenster mit Vorschlag, Notiz des Gegenübers und einem kurzen Text (bei „unter Vorbehalt“ Pflicht, sonst freiwillig, 🎤 möglich).
+  Der Text steht in Push/Mail an den Vorschlagenden; der Vorbehalt bleibt bei der Anfrage sichtbar („🤔 Unter Vorbehalt: …“) und geht bei
+  mehreren Empfängern auch in die Neu-Anfrage. Spalte vorbehalt in kc_club_terminanfragen. Protokoll ohne Text. Test 406.
+
 ## 2.23.56 – 2026-10-05 – 🔍 Suchen-Knopf (Wunsch Hansi)
 - KC-CLUB-SUCHEN-KNOPF: Im Hilfe-Zentrum („Wonach suchst du?“) und in der 🔍 Lupe-Suche steht jetzt neben dem Feld ein Knopf
   „🔍 Suchen“ – für alle, bei denen Sprechen nicht geht oder die nicht wissen, dass schon beim Tippen gesucht wird. Er sucht, schließt

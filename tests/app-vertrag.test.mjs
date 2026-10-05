@@ -4112,6 +4112,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/function hzSucheKnopf\(\)[\s\S]{0,300}hzSuchen\(q\); f\.blur\(\)/.test(html) && /function suSucheKnopf\(\)[\s\S]{0,300}SU\.q = q; f\.blur\(\); suJetzt\(\)/.test(html), "sucht und schließt die Tastatur");
   assert.ok(/onclick="twAntworten\(null,true\)">➤ Fragen<\/button>/.test(html), "Twinkey hat seinen Knopf");
 }
+// 406. 2.23.57: Gegenvorschlag unter Vorbehalt annehmen, mit kurzem Text (KC-CLUB-ANFRAGE-VORBEHALT)
+{
+  for (const x of ["✅ Neue Zeit annehmen", "🤔 Unter Vorbehalt", "❌ Passt nicht"]) assert.ok(html.includes(x), "Knopf fehlt: " + x);
+  assert.ok(/api\("terminanfrage_vorschlag_entscheiden", \{ id, person_id: pid, annehmen: wahl !== "nein", vorbehalt: wahl === "vorbehalt", text \}\)/.test(html) && /class="ta-vorbehalt"/.test(html), "App schickt Vorbehalt + Text und zeigt ihn an");
+  const g = server.slice(server.indexOf('case "terminanfrage_vorschlag_entscheiden"'), server.indexOf('case "erinnerung_setzen"'));
+  assert.ok(/if \(vorbehalt && !zusatz\) throw/.test(g) && /vorbehalt: vorbehalt \? zusatz : null/.test(g) && /mitText: !!zusatz \}\)/.test(g), "Vorbehalt braucht Text, wird gespeichert, Protokoll ohne Inhalt");
+  assert.ok(/vorbehalt: a\.vorbehalt \?\? null/.test(server) && /add column if not exists vorbehalt text/.test(lies("supabase/migrations/20261005_kc_club_v22357_anfrage_vorbehalt.sql")), "Liste + Migration");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
