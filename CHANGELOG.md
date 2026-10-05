@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.23.67 – 2026-10-05 – 📞 / 🎥 bei jedem Namen in der Mitgliederliste (Wunsch Hansi)
+- KC-CLUB-ANRUF-LISTE: In 👥 Mitglieder (Listenansicht) stehen bei jedem Namen 💬 📞 🎥 (online zusätzlich 👋). Ist die Person online,
+  startet 📞 den Anruf, 🎥 den Videoanruf (vorhandener Anruf-Kern, App zu App, kostenlos). Nicht online: Knöpfe blass, Antippen erklärt
+  „geht nur, wenn ihr beide die App offen habt“. Knöpfe kompakt im Block (3 nebeneinander) – Admin-Knöpfe 🔗 🖨️ 🎖️ bleiben dabei.
+  Auf der Mitgliedsseite ein Hinweis, wenn die Person nicht online ist. Test 416.
+
 ## 2.23.66 – 2026-10-05 – 📅 Festen Termin geben (Wunsch Hansi: „wenn ich einen direkt anspreche, muss ich einen anderen Weg gehen“)
 - KC-CLUB-SCHULUNG-FEST: Unter 🎓 Schulungen → „✉️ Mitglieder einladen“ neben „Einladen“ der Knopf „📅 Festen Termin geben“: Mitglied(er)
   ankreuzen (1–3), „🏠 Kommt zu mir“ / „🚗 Ich fahre hin“, Tag, Von, Bis → „📅 Termin bestätigen“. Sofort Push + Mail mit Kalenderdatei,

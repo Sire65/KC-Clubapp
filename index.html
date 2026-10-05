@@ -1698,6 +1698,9 @@
   .neuigkeiten ul { margin: 4px 0 10px; padding-left: 20px; } .neuigkeiten li { margin: 4px 0; }
   .neuigkeiten .vkopf { font-weight: 900; color: var(--rot); margin-top: 6px; }
   .mini .onmini { display: inline-block; margin-top: 6px; padding: 4px 9px; border-radius: 999px; background: #2ecc71; color: #06301a; font-size: .8rem; font-weight: 900; text-transform: none; letter-spacing: 0; box-shadow: 0 0 8px rgba(46,204,113,.7); }
+  #mitgliederListe .knopf.mg-aus { opacity: .4; } /* 2.23.67 KC-CLUB-ANRUF-LISTE: nicht online */
+  #mitgliederListe .mg-akt { display: grid; grid-template-columns: repeat(3, 38px); gap: 4px; flex: none; align-content: center; } #mitgliederListe .mg-akt.mg-akt3 { grid-template-columns: repeat(3, 38px); }
+  #mitgliederListe .mg-akt .knopf { width: 38px; height: 38px; min-height: 38px; padding: 0; margin: 0; display: flex; align-items: center; justify-content: center; font-size: 1.05rem; border-radius: 10px; }
   /* KC-CLUB-ANRUF: Vollbild während eines Anrufs */
   .anruf { position: fixed; inset: 0; z-index: 70; background: linear-gradient(160deg, var(--hero1), var(--rot) 55%, var(--hero4)); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 24px; text-align: center; }
   .anruf .gross { width: 120px; height: 120px; border-radius: 50%; background: rgba(255,255,255,.18); display: grid; place-items: center; font-size: 2.6rem; font-weight: 900; }
@@ -2918,7 +2921,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.66"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.67"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -15244,6 +15247,13 @@ function mgGruppenZeichnen() {
     + (g ? `<div class="karte" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center"><b style="flex:1 1 160px">${esc(g.gruppe.symbol || "👥")} ${esc(g.gruppe.name)} · ${g.personen.length} Mitglieder</b><button class="knopf haupt klein" onclick="chatOeffnen('${g.id}')">💬 In die Gruppe schreiben</button><button class="knopf klein" onclick="mgGruppeSetzen(null)">✖ Alle zeigen</button></div>` : "") : "";
   return g;
 }
+// KC-CLUB-ANRUF-LISTE (2.23.67, Wunsch Hansi): 📞 / 🎥 bei jedem Namen – aktiv, wenn die Person online ist; sonst blass mit Erklärung
+function mgAnrufKnoepfe(m) {
+  const on = !!m.online, vn = esc(String(m.name || "").split(" ")[0]).replace(/'/g, "&#39;");
+  const aus = `melde('${vn} ist gerade nicht online – Anrufen geht nur, wenn ihr beide die App offen habt. Schreib ${vn} lieber 💬 oder klopf später an.')`;
+  return `<button class="knopf klein${on ? "" : " mg-aus"}" title="Anrufen" aria-label="Anrufen" onclick="${on ? `anrufen('${m.person_id}')` : aus}">📞</button>`
+    + `<button class="knopf klein${on ? "" : " mg-aus"}" title="Videoanruf" aria-label="Videoanruf" onclick="${on ? `anrufen('${m.person_id}', true)` : aus}">🎥</button>`;
+}
 function mitgliederZeichnen() {
   try {
     const sichtbar = ONLINE_SICHTBAR !== false, anzahl = MITGLIEDER.filter((m) => m.online).length, nurOnline = (MG_EINMAL || MG_FILTER) === "online" && sichtbar;
@@ -15259,8 +15269,8 @@ function mitgliederZeichnen() {
       <div style="flex:1;cursor:pointer" onclick="mitgliedOeffnen('${m.person_id}')"><b>${esc(m.name)}</b>${wegIcons(m)} <span class="hinweis">›</span>${m.aemter?.length ? ` <span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}
         <div class="hinweis" style="font-size:.85rem">${m.online ? '<b style="color:var(--textGruen)">● online</b> · ' : ""}${m.status || m.aktiv ? `<span class="stmarke st-${statusArt(m.status)}">${esc(m.status ? statusText(m.status) : "🟢 verfügbar")}</span>` : "⚪ noch nicht in der App"}${m.aktiv ? " · 📲 aktiv" : ""}${!m.online && m.zuletztDa ? ` · 🕒 ${esc(zuletztText(m.zuletztDa))}` : ""}</div>
         ${ICH.admin && (m.app || m.push || !m.mail || m.protokolle === false || m.unerreichbar) ? `<div class="hinweis" style="font-size:.85rem">${[m.app && m.zuletzt ? "zuletzt " + zeitKurz(m.zuletzt) : m.app ? "Link verschickt" : "", m.push ? "🔔 Push" : "", m.unerreichbar ? "📵 nicht erreichbar – kein Push, keine Mail" : m.mail ? "" : "⚠️ keine Mail", m.protokolle === false ? "📄 ohne Protokolle" : "", m.app && m.zuletzt ? (m.ansicht === "einfach" ? "🟢 einfache Ansicht" : m.ansicht === "erweitert" ? "🔧 erweiterte Ansicht" : "❔ Ansicht noch nicht gewählt") : ""].filter(Boolean).join(" · ")}</div>` : ""}</div>
-      ${m.online ? `<button class="knopf klein" title="Anklopfen – direkt schreiben" onclick="anklopfen('${m.person_id}')">👋</button>` : ""}${m.person_id !== ICH.person_id ? `<button class="knopf klein" onclick="direkt('${m.person_id}')">💬</button>` : ""}
-      ${ICH.admin ? `<button class="knopf klein" onclick="linkTeilen('${m.person_id}')">🔗</button><button class="knopf klein" title="Einrichtungskarte drucken" onclick="einrichtungskarte('${m.person_id}')">🖨️</button><button class="knopf klein" onclick="rolleBearbeiten('${m.person_id}')">🎖️</button>` : ""}</div>`).join("")
+      <div class="mg-akt${ICH.admin ? " mg-akt3" : ""}">${m.online ? `<button class="knopf klein" title="Anklopfen – direkt schreiben" onclick="anklopfen('${m.person_id}')">👋</button>` : ""}${m.person_id !== ICH.person_id ? `<button class="knopf klein" title="Nachricht" onclick="direkt('${m.person_id}')">💬</button>${mgAnrufKnoepfe(m)}` : ""}
+      ${ICH.admin ? `<button class="knopf klein" title="App-Link" onclick="linkTeilen('${m.person_id}')">🔗</button><button class="knopf klein" title="Einrichtungskarte drucken" onclick="einrichtungskarte('${m.person_id}')">🖨️</button><button class="knopf klein" title="Amt & Rechte" onclick="rolleBearbeiten('${m.person_id}')">🎖️</button>` : ""}</div></div>`).join("")
       + '<p class="hinweis">Namen antippen für Details (Telefon, Adresse … sofern freigegeben).</p>'
       + (ICH.admin ? '<p class="hinweis">🔗 = persönlichen App-Link erzeugen und per WhatsApp schicken (ein neuer Link macht den alten ungültig). 🎖️ = Amt und Rechte.</p>' : "");
   } catch (e) { meldeFehler(e); }
@@ -17784,6 +17794,7 @@ function mitgliedZeigen() {
     ${m.notfall ? `<div class="karte"><h3>🆘 Notfallkontakt</h3><div class="zeile"><div style="flex:1"><b>${esc(m.notfall.name || "–")}</b>${m.notfall.beziehung ? ` <span class="hinweis">(${esc(m.notfall.beziehung)})</span>` : ""}<div class="hinweis">${esc(m.notfall.telefon || "")}</div></div>${m.notfall.telefon ? `<a class="knopf klein" href="tel:${esc(nurZiffern(m.notfall.telefon))}">📞</a>` : ""}</div><p class="hinweis" style="font-size:.85rem;margin-bottom:0">🔒 Nur für ${m.selbst ? "dich und " : ""}Clubsprecher, Kassenwart und Admin sichtbar.</p></div>` : m.selbst ? '<p class="hinweis">🆘 Noch kein Notfallkontakt – eintragen unter ⚙️ Mehr → Privatsphäre.</p>' : ""}
     <div class="knoepfe">
       ${!m.selbst && ONL.ids.has(m.person_id) ? `<button class="knopf haupt" onclick="anklopfen('${m.person_id}')">👋 Anklopfen – ist gerade online</button><div class="knoepfe"><button class="knopf" onclick="anrufen('${m.person_id}')">📞 Anrufen (Test)</button><button class="knopf" onclick="anrufen('${m.person_id}', true)">🎥 Video (Test)</button></div>` : ""}
+      ${!m.selbst && !ONL.ids.has(m.person_id) ? `<p class="hinweis" style="margin:4px 0">📞 🎥 Anrufen und Video gehen, sobald ${esc(String(m.name || "").split(" ")[0])} die App offen hat (🟢 online).</p>` : ""}
       ${m.selbst ? "" : `<button class="knopf ${ONL.ids.has(m.person_id) ? "" : "haupt"}" onclick="direkt('${m.person_id}')">💬 Nachricht in der App</button><div id="mdSpiel"></div>`}
       ${ICH?.admin ? `<div class="knoepfe"><button class="knopf" onclick="linkTeilen('${m.person_id}')">🔗 App-Link</button><button class="knopf" onclick="einrichtungskarte('${m.person_id}')">🖨️ Einrichtungskarte</button><button class="knopf" onclick="rolleBearbeiten('${m.person_id}')">🎖️ Amt & Rechte</button></div>` : ""}
       ${zeilen ? '<button class="knopf" onclick="kontaktSpeichern()">📇 Ins Telefonbuch</button>' : ""}

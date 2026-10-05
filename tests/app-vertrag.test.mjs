@@ -4203,6 +4203,13 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/api\("besuch", \{ a: "speichern", daten, termin_senden: true, termin_abgleich: false \}/.test(k) && /status: "geplant"/.test(k), "gleicher Kern wie geplanter Besuch + Terminbestätigung");
   assert.ok(/await frage\(`Termin fest geben\?/.test(k) && /pids\.length > 3/.test(k) && /in der Vergangenheit/.test(k), "Rückfrage, höchstens 3, nicht in der Vergangenheit");
 }
+// 416. 2.23.67: 📞 / 🎥 bei jedem Namen in der Mitgliederliste (KC-CLUB-ANRUF-LISTE)
+{
+  assert.ok(/function mgAnrufKnoepfe\(m\)/.test(html) && /\$\{mgAnrufKnoepfe\(m\)\}/.test(html), "Anruf-Knöpfe in der Liste");
+  const f = html.slice(html.indexOf("function mgAnrufKnoepfe(m)"), html.indexOf("function mitgliederZeichnen()"));
+  assert.ok(/on \? `anrufen\('\$\{m\.person_id\}'\)` : aus/.test(f) && /on \? `anrufen\('\$\{m\.person_id\}', true\)` : aus/.test(f), "nur online wird angerufen, sonst Erklärung");
+  assert.ok(/<div class="mg-akt\$\{ICH\.admin \? " mg-akt3" : ""\}">/.test(html) && /title="App-Link" onclick="linkTeilen/.test(html), "kompakter Block, Admin-Knöpfe bleiben");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
