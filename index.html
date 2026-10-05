@@ -2908,7 +2908,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.63"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.64"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -15927,7 +15927,7 @@ async function smLaden(oeffnen = false) { // 2.23.63: Fehler sichtbar – nie �
   return SM.liste;
 }
 async function smStart() {
-  blattAuf("smBlatt", `<h3 style="margin:0">🎓 Meine Schulung</h3><div id="smInhalt"><p class="hinweis">Wird geladen …</p></div>
+  blattAuf("smBlatt", `<h3 style="margin:0">🎓 Meine Schulung</h3>${ICH?.admin ? `<button class="knopf haupt" onclick="$('smBlatt').remove();scStart()">🎓 Schulungen verwalten (Termine, Einladungen, Besuche)</button>` : ""}<div id="smInhalt"><p class="hinweis">Wird geladen …</p></div>
     <button type="button" class="tw-nicht" onclick="$('smBlatt').remove();zeige('archiv')">📄 Meine Zusammenfassungen im Archiv (Register „Schulung“)</button>
     <button class="knopf" onclick="$('smBlatt').remove()">Schließen</button>`).classList.add("sc-blatt");
   await smLaden(true); smZeigen();

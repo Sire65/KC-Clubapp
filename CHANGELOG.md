@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.23.64 – 2026-10-05 – „🎓 Schulungen verwalten“ auch aus „Meine Schulung“ (Hansi: „Ich lande im Archiv“)
+- KC-CLUB-SCHULUNG-MITGLIED: Für den Admin oben in „🎓 Meine Schulung“ der Knopf „🎓 Schulungen verwalten“ (vorher nur der Archiv-Link –
+  so landete man im Archiv). Die Admin-Kachel „🎓 Schulungen“ steht bei eigener Kachel-Reihenfolge wie jede neue Kachel ganz unten im
+  Register Club (unverändert, Test 36). Test 413.
+
 ## 2.23.63 – 2026-10-05 – Schulungen: Prüfung nach dem Einspielen (Wunsch Hansi „alles noch mal prüfen“)
 - KC-CLUB-SCHULUNG-ADMIN: Die Zahl am Reiter „📅 Termine & Einladungen (n)“ zeigte den vorherigen Stand – jetzt erst nach dem Zählen.
   Das Nachladen der Besuche baut die Seite nicht mehr komplett neu (Suchtext und persönliche Zeile bleiben stehen).

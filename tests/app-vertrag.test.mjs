@@ -4182,6 +4182,10 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const g = server.slice(server.indexOf('case "schulung_meine"'), server.indexOf('case "schulung_antwort"'));
   assert.ok(/catch \{ unvollstaendig = true; \}/.test(g) && /json\(\{ einladungen: liste, unvollstaendig \}\)/.test(g), "Server meldet unvollständigen Stand");
 }
+// 413. 2.23.64: Admin-Knopf „Schulungen verwalten“ in „Meine Schulung“ (KC-CLUB-SCHULUNG-MITGLIED)
+{
+  assert.ok(/onclick="\$\('smBlatt'\)\.remove\(\);scStart\(\)">🎓 Schulungen verwalten/.test(html), "Admin kommt aus „Meine Schulung“ zur Verwaltung");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
