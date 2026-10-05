@@ -41,7 +41,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.23.75";
+const SERVER_VERSION = "2.23.76";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -6632,6 +6632,41 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
 
       // KC-CLUB-SICHERHEIT-MELDEN (1.15.0, Wunsch Hansi): Prüfergebnis an die Admins (Push + Mail, gleicher Weg wie „Problem
       // melden“). Der Server prüft dabei SELBST erneut – nur App-seitige Punkte (Verbindung, Version, Antwortzeit) kommen vom Gerät.
+      case "verbindung_melden": {
+        // KC-CLUB-VERBINDUNG-MELDEN (2.23.76, Wunsch Hansi): Werte aus dem LED-Fenster (Server, Communicator, Messwerte) an die Admins –
+        // immer Push UND E-Mail, damit Hansi sieht, wenn bei einem Gerät etwas nicht stimmt. Nur Technik-Werte, keine Inhalte.
+        const { count } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("person_id", ich.person_id).eq("aktion", "verbindung_gemeldet").gte("zeit", new Date(Date.now() - 3600000).toISOString());
+        if ((count ?? 0) >= 3) throw new Fehler("Dein Ergebnis ist schon angekommen – bitte etwas später noch einmal.", 429);
+        const werte: [string, string][] = (Array.isArray(p.werte) ? p.werte : []).slice(0, 30)
+          .filter((w: unknown) => Array.isArray(w) && w.length === 2).map((w: unknown[]) => [txt(w[0], 60), txt(w[1], 200)] as [string, string]).filter(([a]: [string, string]) => a);
+        if (!werte.length) throw new Fehler("Keine Werte zum Senden.", 400);
+        const probleme = Math.max(0, Math.min(30, Math.round(Number(p.probleme) || 0)));
+        const notiz = txt(p.notiz, 300), version = txt(req.headers.get("x-club-version"), 20);
+        await protokoll(ich.person_id, "verbindung_gemeldet", { probleme, werte: Object.fromEntries(werte), version, notiz });
+        const ziel = await adminIds();
+        const versand = ziel.length ? await sendenGewaehlt("club_nachricht", ziel, ["push", "email"], {
+          titel: probleme ? `📶 Verbindung: ${probleme} Punkt${probleme === 1 ? "" : "e"} auffällig` : "📶 Verbindung: alles in Ordnung",
+          kurz: `${ich.name} hat das Verbindungs-Ergebnis geschickt${probleme ? " – bitte ansehen" : ""}`,
+          betreff: `Köcheclub-App: Verbindung von ${ich.name}${probleme ? ` – ${probleme} Punkt${probleme === 1 ? "" : "e"} auffällig` : " – alles OK"}`,
+          text: `Hallo,
+
+${ich.name} hat in der Club-App das Ergebnis aus dem Verbindungs-Fenster (LEDs) geschickt:
+
+${werte.map(([a, b]) => `${a}: ${b}`).join("\n")}
+
+Server bei Eingang: ${SERVER_VERSION} · App ${version}${notiz ? `
+
+Notiz: ${notiz}` : ""}
+
+${APP_URL}
+
+Viele Grüße
+Köcheclub-App`,
+          url: APP_URL,
+        }, `club-verbindung:${ich.person_id}:${Date.now()}`) : null;
+        return json({ ok: true, probleme, versand });
+      }
+
       case "sicherheit_melden": {
         const { count } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("person_id", ich.person_id).eq("aktion", "fehler_sicherheit").gte("zeit", new Date(Date.now() - 3600000).toISOString());
         if ((count ?? 0) >= 3) throw new Fehler("Dein Prüfergebnis ist schon angekommen – Hansi meldet sich bei dir.", 429);

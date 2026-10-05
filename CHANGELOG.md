@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.23.76 – 2026-10-05 – 📶 LED-Fenster: Drucken + an Admin senden (Wunsch Hansi)
+- KC-CLUB-VERBINDUNG-MELDEN: Im Verbindungs-Fenster (Tippen auf die LEDs) „🖨️ Drucken“ (A4-Bericht über die Druckvorschau) und
+  „📨 An Admin senden“; Mitglieder haben in ihrer einfachen Ansicht „📨 Ergebnis an Hansi senden“. Inhalt: Server-LED, Communicator-LED,
+  Push/E-Mail-Zustand, Zustellquote, Warteschlange, Antwortzeit, Download/Upload, Datenbank, letzte Antwort, Anfragen/Fehler, letzter Fehler,
+  Handy/Netz, Version App/Server. Unbekannt bleibt „unbekannt“, nicht gemessen bleibt „nicht gemessen“ (Regel 11).
+  Server-Aktion verbindung_melden: immer Push UND E-Mail an die Admins, Protokoll „verbindung_gemeldet“, Bremse 3 pro Stunde, nur Technik-Werte.
+  Test 427.
+
 ## 2.23.75 – 2026-10-05 – 💡 Sperrzeit: Beispiel + Prüfung nach jedem Tag (Fund Hansi)
 - KC-CLUB-SPERRZEIT-PRUEFUNG: Mitglieder trugen zusätzlich zur Kann-Zeit den Rest des Tages als Sperrzeit ein (unnötig – außerhalb der
   Kann-Zeit plant DP2 ohnehin nicht). Im Dienstwunsch-Fenster steht jetzt kurz mit Beispiel: „Sperrzeit nur, wenn du innerhalb deiner Kann-Zeit

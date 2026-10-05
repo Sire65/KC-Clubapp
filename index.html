@@ -965,6 +965,7 @@
   .dw-kopf { display: grid; gap: 6px; padding: 8px 12px; padding-top: max(8px, env(safe-area-inset-top)); background: var(--karte); box-shadow: var(--schatten); }
   .dw-reihe { display: flex; align-items: center; gap: 10px; } .dw-reihe .knopf { min-height: 44px; margin: 0; } .dw-titel { flex: 1; text-align: right; font-size: .95rem; }
   .dw-aktionen { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } /* KC-CLUB-WUNSCHBOGEN 2.23.29: zwei gleich breite Knöpfe */
+  .vb-knoepfe { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } .vb-knoepfe .knopf { margin: 0; } /* KC-CLUB-VERBINDUNG-MELDEN 2.23.76 */
   .dw-tipp { margin: 0; padding: 5px 10px; border-radius: 10px; background: #fff3d6; color: #4a3a12; border: 1px solid var(--gold); font-size: .8rem; line-height: 1.3; } /* KC-CLUB-SPERRZEIT-PRUEFUNG 2.23.75 */
   .wb-knoepfe { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } .wb-knoepfe .knopf { margin: 0; }
   .uh-archiv-kopf { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 8px; }
@@ -2924,7 +2925,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.75"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.76"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -8329,7 +8330,8 @@ function vbEinfachZeigen() {
     const [farbe, text] = vbZustand(), gut = farbe === "gruen";
     $("vbInhalt").innerHTML = `<div class="vb-status"><i class="led ${farbe}"></i><b>${gut ? "✅ Verbindung in Ordnung" : farbe === "blau" ? "🔧 " + esc(text) : farbe === "grau" ? "⏳ Verbindung wird geprüft …" : "⚠️ Gerade Störung – " + esc(text)}</b></div>
       <p class="hinweis" style="margin:8px 0">${gut ? "Nachrichten, Termine und Mitteilungen kommen an." : "Bitte kurz warten. Bleibt es so, hilft „Problem melden“."}</p>
-      <div class="knoepfe"><button class="knopf" onclick="$('verbindungBlatt').classList.add('versteckt');testAnMichStarten()">🧪 Test-Mitteilung an mich</button><button class="knopf" onclick="$('verbindungBlatt').classList.add('versteckt');fpProblemMelden()">🆘 Problem melden</button></div>`;
+      <div class="knoepfe"><button class="knopf" onclick="$('verbindungBlatt').classList.add('versteckt');testAnMichStarten()">🧪 Test-Mitteilung an mich</button><button class="knopf" onclick="$('verbindungBlatt').classList.add('versteckt');fpProblemMelden()">🆘 Problem melden</button></div>
+      <button class="knopf" onclick="verbindungMelden(this)">📨 Ergebnis an ${esc(adminName())} senden</button>`;
   }
 }
 async function communicatorPruefen() {
@@ -8386,6 +8388,7 @@ function vbBlattZeigen() {
         ${v.map((t) => `<tr><td>${esc(zeitKurz(new Date(t.zeit).toISOString()))}</td><td>${NETZARTEN[t.netz] || "–"}</td><td>${z(t.ping, " ms")}</td><td>${z(t.down, "")} / ${z(t.up, "")}</td></tr>`).join("")}</table>
         <p class="hinweis" style="font-size:.8rem;margin:0">WLAN und Mobilfunk unterscheiden sich bei Antwortzeit, Download und Upload. „Datenbank … ms“ misst der Server selbst – das ist bei beiden gleich.</p>`; })()}
     ${vbCommBlock()}
+    <div class="vb-knoepfe"><button class="knopf" onclick="druckStarten('verbindung')">🖨️ Drucken</button><button class="knopf" onclick="verbindungMelden(this)">📨 An Admin senden</button></div>
     ${ICH?.admin ? `<button class="knopf" onclick="wartungUmschalten()">${VB.wartung?.an ? "✅ Wartung beenden" : "🔧 Wartung ankündigen (LED blau)"}</button>` : ""}
     <p class="hinweis" style="font-size:.85rem;margin:0">Obere LED = Server (Supabase): 🟢 verbunden · 🔴 keine Verbindung · 🔵 Wartung · ⚪ unbekannt/veraltet.<br>Mittlere LED = KC Communicator: 🟢 läuft · 🟡 eingeschränkt · 🔴 Störung · 🔵 Versand pausiert · ⚪ unbekannt.<br>Untere LED flackert nur, wenn gerade wirklich Daten übertragen werden.</p>`;
 }
@@ -8423,6 +8426,55 @@ async function wartungUmschalten() {
   if (an && hinweis === null) return;
   try { const r = await api("wartung_setzen", { an, hinweis }); VB.wartung = r.wartung; vbStatusLed(); vbBlattZeigen(); melde(an ? "🔵 Wartung angekündigt – alle sehen die blaue LED" : "🟢 Wartung beendet"); }
   catch (e) { meldeFehler(e); }
+}
+
+// ---------- KC-CLUB-VERBINDUNG-MELDEN (2.23.76, Wunsch Hansi): Werte unter den LEDs drucken und an den Admin senden (Push + E-Mail) ----------
+// Eine Quelle für Druck und Meldung: dieselben Zustände wie im Fenster (unbekannt bleibt „unbekannt“ – nie als OK, Regel 11).
+const VB_FARBE = { gruen: "🟢", gelb: "🟡", rot: "🔴", blau: "🔵", grau: "⚪" };
+function vbBericht() {
+  const [farbe, text] = vbZustand(), [cFarbe, cText] = vbCommZustand(), t = VB.test, c = VB.comm, b = c?.bericht, nc = navigator.connection;
+  const zahl = (x, e) => (x == null ? "nicht gemessen" : x.toLocaleString("de-DE", { maximumFractionDigits: 1 }) + e);
+  const kanal = (k) => (c?.[k] ? `${zustandText[c[k].zustand] || "unbekannt"}${c[k].letzterErfolg ? ` · zuletzt ${zeitKurz(c[k].letzterErfolg)} Uhr` : ""}` : "unbekannt");
+  const antwort = t?.ping ?? (VB.zeiten.length ? Math.round(mittel(VB.zeiten)) : null);
+  const werte = [
+    ["Server (obere LED)", `${VB_FARBE[farbe] || "⚪"} ${text || "unbekannt"}`],
+    ["KC Communicator (mittlere LED)", `${VB_FARBE[cFarbe] || "⚪"} ${cText || "unbekannt"}`],
+    ["Push", kanal("push")], ["E-Mail", kanal("email")],
+    ["Zugestellt (24 Std.)", b?.erfolg != null ? zahl(b.erfolg, " %") : "unbekannt"],
+    ["Warteschlange / Fehler", b ? `${b.warteschlange} / ${b.fehler}` : "unbekannt"],
+    [t?.ping != null ? "Antwortzeit (Test)" : "Antwortzeit (echt, Ø)", zahl(antwort, " ms")],
+    ["Download", zahl(t?.down ?? null, " Mbit/s")], ["Upload", zahl(t?.up ?? null, " Mbit/s")],
+    ["Datenbank / Server gesamt", `${zahl(t?.db ?? null, " ms")} / ${zahl(t?.srv ?? null, " ms")}`],
+    ["Letzter Test", t?.zeit ? `${fZeit.format(new Date(t.zeit))} Uhr${t.netz ? " · " + (NETZARTEN[t.netz] || "") : ""}` : "kein Test"],
+    ["Letzte Antwort", VB.letzteOk ? fZeit.format(new Date(VB.letzteOk)) + " Uhr" : "keine"],
+    ["Anfragen / Fehler (seit App-Start)", `${VB.anfragen} / ${VB.fehler}`],
+    ...(VB.fehler ? [["Letzter Fehler", `${VB.letzterFehler ? fZeit.format(new Date(VB.letzterFehler)) + " Uhr · " : ""}${VB.fehlerText}`]] : []),
+    ["Handy", `${navigator.onLine ? "online" : "offline"}${netzErkannt() ? ` · ${NETZARTEN[netzErkannt()]} erkannt` : ""}${nc?.effectiveType ? ` · Tempo-Klasse ${String(nc.effectiveType).toUpperCase()}` : ""}`],
+    ["Version App / Server", `${APP_VERSION} / ${VB.server || INIT?.server || "unbekannt"}`],
+    ...(VB.wartung?.an ? [["Wartung", VB.wartung.hinweis || "angekündigt"]] : []),
+  ];
+  // auffällig = alles, was nicht grün ist (auch unbekannt) + Fehler seit App-Start
+  const probleme = (farbe !== "gruen") + (cFarbe !== "gruen") + (VB.fehler > 0);
+  return { werte, probleme };
+}
+function druckVerbindung() {
+  const { werte, probleme } = vbBericht();
+  const html = `<p style="margin:0 0 4mm;font-size:4mm"><b>${probleme ? `⚠️ ${probleme} Punkt${probleme === 1 ? "" : "e"} auffällig` : "✅ Alles in Ordnung"}</b> · ${esc(ICH?.name || "")} · ${esc(wann(new Date().toISOString()))}</p>
+    <table style="width:100%;border-collapse:collapse">${werte.map(([a, w]) => `<tr><td style="padding:1.6mm 2mm;border:.2mm solid #999;width:38%;font-weight:700">${esc(a)}</td><td style="padding:1.6mm 2mm;border:.2mm solid #999">${esc(w)}</td></tr>`).join("")}</table>
+    <p style="margin:4mm 0 0;font-size:3mm;color:#555">🟢 in Ordnung · 🟡 eingeschränkt · 🔴 Störung · 🔵 Wartung · ⚪ unbekannt/veraltet. Download/Upload nur nach „▶️ Verbindung testen“.</p>`;
+  return { titel: "Verbindung & LEDs", unter: "Werte aus dem Verbindungs-Fenster", html, fuss: "Verbindungs-Bericht" };
+}
+async function verbindungMelden(knopf) {
+  if (ICH?.admin) await communicatorPruefen(); // frischer Communicator-Stand
+  const { werte, probleme } = vbBericht();
+  const notiz = probleme ? (await eingabe("Möchtest du kurz etwas dazuschreiben? (freiwillig)", "")) : "";
+  if (notiz === null) return;
+  await einmal(knopf, async () => {
+    try {
+      await api("verbindung_melden", { werte, probleme, notiz }, { warten: true });
+      melde("📨 Gesendet – " + adminName() + " bekommt das Ergebnis per Push und E-Mail");
+    } catch (e) { meldeFehler(e); }
+  });
 }
 
 // ---------- Eigener Status ----------
@@ -17547,6 +17599,7 @@ const DRUCKARTEN = {
   wunschbogen: { bauen: () => wbDruckSeite() },
   dienstuebersicht: { bauen: () => druckDienstUebersicht() }, // KC-CLUB-DIENST-UEBERSICHT (2.23.39): A4 quer // KC-CLUB-WUNSCHBOGEN (2.23.28): leerer persönlicher Bogen, randlos A4 quer
   bestaetigung: { bauen: () => druckBestaetigung() },
+  verbindung: { bauen: () => druckVerbindung() }, // KC-CLUB-VERBINDUNG-MELDEN (2.23.76)
   einrichtungskarte: { bauen: (o, param) => druckEinrichtungskarte(param) }, // KC-CLUB-EINRICHTUNGSKARTE (1.88.0) // KC-CLUB-BESTAETIGUNG (1.69.0): Aufstellung der eigenen Eingaben
 };
 // ---- KC-CLUB-KURZANLEITUNG (0.62.0): die App in 3 Schritten – für Einsteiger, zum Ausdrucken oder Verschicken ----

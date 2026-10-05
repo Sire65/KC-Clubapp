@@ -4293,6 +4293,17 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/<p class="dw-tipp">💡 <b>Sperrzeit nur, wenn du innerhalb deiner Kann-Zeit kurz weg musst\.<\/b> Beispiel: Kann 10–18 Uhr, Arzt 13–14 Uhr → Sperrzeit 13–14 Uhr\./.test(html), "Beispiel im Fenster");
   assert.ok(/if \(e\.data\?\.art === "dw-sperre"\) return dwSperreHinweis\(e\.data\.funde\);/.test(html) && /function dwSperreHinweis\(funde\)/.test(html) && /„Sperren ändern“ → „✓ Ich kann an diesem Tag“/.test(html), "Hinweis mit Weg zum Ändern");
 }
+// 427. 2.23.76: LED-Fenster drucken + Ergebnis an Admin per Push und E-Mail (KC-CLUB-VERBINDUNG-MELDEN)
+{
+  assert.ok(/onclick="druckStarten\('verbindung'\)">🖨️ Drucken<\/button><button class="knopf" onclick="verbindungMelden\(this\)">📨 An Admin senden/.test(html), "Knöpfe im Admin-Fenster");
+  assert.ok(/onclick="verbindungMelden\(this\)">📨 Ergebnis an \$\{esc\(adminName\(\)\)\} senden/.test(html), "Knopf für Mitglieder");
+  assert.ok(/verbindung: \{ bauen: \(\) => druckVerbindung\(\) \}/.test(html) && /api\("verbindung_melden", \{ werte, probleme, notiz \}/.test(html), "Druck + Meldung aus einer Quelle (vbBericht)");
+  const b = html.slice(html.indexOf("function vbBericht()"), html.indexOf("function druckVerbindung()"));
+  assert.ok(/"nicht gemessen"/.test(b) && /: "unbekannt"/.test(b) && !/"OK"|"in Ordnung"/.test(b), "unbekannt nie als OK");
+  const g = server.slice(server.indexOf('case "verbindung_melden"'), server.indexOf('case "sicherheit_melden"'));
+  assert.ok(/sendenGewaehlt\("club_nachricht", ziel, \["push", "email"\]/.test(g) && /const ziel = await adminIds\(\)/.test(g), "Push und E-Mail an die Admins");
+  assert.ok(/"verbindung_gemeldet"\)\.gte\("zeit"/.test(g) && /\(count \?\? 0\) >= 3\) throw/.test(g) && /\.slice\(0, 30\)/.test(g) && /txt\(w\[1\], 200\)/.test(g), "Bremse und Längengrenzen");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
