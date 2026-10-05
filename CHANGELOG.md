@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.23.66 – 2026-10-05 – 📅 Festen Termin geben (Wunsch Hansi: „wenn ich einen direkt anspreche, muss ich einen anderen Weg gehen“)
+- KC-CLUB-SCHULUNG-FEST: Unter 🎓 Schulungen → „✉️ Mitglieder einladen“ neben „Einladen“ der Knopf „📅 Festen Termin geben“: Mitglied(er)
+  ankreuzen (1–3), „🏠 Kommt zu mir“ / „🚗 Ich fahre hin“, Tag, Von, Bis → „📅 Termin bestätigen“. Sofort Push + Mail mit Kalenderdatei,
+  Erinnerung am Vortag, Club-Kalender, geplanter Besuch – derselbe Kern wie „📝 Besuche → 📅 Geplanter Termin“ (bleibt zusätzlich).
+  Hinweise bei fehlender E-Mail und bei noch offener Einladung. Kein Server-Umbau. Hilfe ergänzt. Test 415.
+
 ## 2.23.65 – 2026-10-05 – Schulungen: alles aus dem alten Programm übernommen (Wunsch Hansi „alle Funktionen übernommen?“)
 Abgleich Funktion für Funktion mit dem bisherigen Besuchsprotokoll/Termin-Programm; was fehlte, ist jetzt in der Club-App:
 - KC-CLUB-SCHULUNG-ADMIN: „📆 Google-Kalender“ – „🔑 Google-Kalender verbinden“ / „Neuen Schlüssel erzeugen“ (Schlüssel nur einmal sichtbar,

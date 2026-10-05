@@ -4196,6 +4196,13 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/lsSetzen\(BS_ENTWURF, ""\); \/\/ Entwurf erledigt/.test(k), "Entwurf wird nach dem Speichern gelöscht");
   assert.ok(/\.sc-blatt \.knoepfe \.knopf, \.sc-blatt \.knopf\.klein \{ width: auto; flex: 0 1 auto;/.test(html) && /class="knoepfe bs-fuss"/.test(k), "schmale Knöpfe nebeneinander, Speichern|Abbrechen in einer Zeile");
 }
+// 415. 2.23.66: „📅 Festen Termin geben“ – abgesprochener Termin direkt bei den Terminen (KC-CLUB-SCHULUNG-FEST)
+{
+  const k = html.slice(html.indexOf("// ----- KC-CLUB-SCHULUNG-FEST (2.23.66"), html.indexOf("// ----- Einladungen -----"));
+  assert.ok(/id="scFest" onclick="scFestStart\(\)">📅 Festen Termin geben/.test(html), "Knopf bei „Mitglieder einladen“");
+  assert.ok(/api\("besuch", \{ a: "speichern", daten, termin_senden: true, termin_abgleich: false \}/.test(k) && /status: "geplant"/.test(k), "gleicher Kern wie geplanter Besuch + Terminbestätigung");
+  assert.ok(/await frage\(`Termin fest geben\?/.test(k) && /pids\.length > 3/.test(k) && /in der Vergangenheit/.test(k), "Rückfrage, höchstens 3, nicht in der Vergangenheit");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

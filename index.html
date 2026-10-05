@@ -2918,7 +2918,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.65"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.66"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3919,7 +3919,7 @@ const HILFE = [
   { id: "anfrage_hinweis", thema: "termine", sym: "📨", t: "Hinweis: neue Terminanfrage", x: "Fragt dich jemand nach einem Termin, sagt dir die App das beim Öffnen und zwischendurch: <b>„📨 Du hast eine neue Terminanfrage“</b>. <b>👀 Ja, jetzt ansehen</b> bringt dich hin, <b>⏰ Später</b> erinnert in 2 Stunden, <b>🌙 Heute nicht mehr fragen</b> wartet bis morgen. Sobald du geantwortet hast, kommt der Hinweis nicht mehr.", zeig: () => zeige("termine"), seit: "2.23.52" },
   { id: "meine_schulung", thema: "termine", sym: "🎓", t: "Termin für die Schulung aussuchen", x: "Hat Hansi dich zur Schulung eingeladen, tippst du auf die Kachel <b>🎓 Meine Schulung</b> (Register „Meins“) – oder auf den Hinweis beim Start. Dort siehst du die freien Termine und tippst <b>„✅ Diesen Termin nehmen“</b>. Passt keiner: <b>„💬 Kein Termin passt“</b> und bis zu zwei eigene Vorschläge machen. Hansi bestätigt den Termin, dann steht er dort mit Ort und du kannst ihn in deinen Handy-Kalender übernehmen. Der Link aus der Mail funktioniert weiterhin.", zeig: () => smStart(), seit: "2.23.62" },
   { id: "besuche", thema: "termine", sym: "📝", t: "Besuchsprotokoll (Admin)", x: "In <b>🎓 Schulungen</b> → <b>📝 Besuche</b> trägst du jeden Besuch ein: Mitglied, Ort, Datum, Zeit, km, Gesprächspunkte 1–7, Notizen und ein Foto vom Papierprotokoll. Oben siehst du Besuche, Stunden und km je Jahr. Mit <b>„📅 Geplant“</b> merkst du einen Besuch vor – auf Wunsch mit Terminbestätigung ans Mitglied. Nach dem Besuch: Häkchen raus, ausfüllen, <b>Speichern &amp; senden</b> – das Mitglied bekommt die Zusammenfassung per Push und Mail (du als BCC), eine Kopie liegt in seinem Archiv-Ordner.", zeig: () => scStart("besuche"), nur: () => !!ICH?.admin, seit: "2.23.61" },
-  { id: "schulungen", thema: "termine", sym: "🎓", t: "Schulungen verwalten (Admin)", x: "Unter der Kachel <b>🎓 Schulungen</b> (nur für den Admin) stellst du Termine ein (bei mir, beim Mitglied oder Mitglied wählt; 1–3 Plätze), lädst Mitglieder einzeln oder gemeinsam ein und gibst ihre Wahl mit <b>✅ Bestätigen</b> frei. Bei jedem Mitglied siehst du den Stand (🎓 geschult, ✅ Termin, ✉️ eingeladen …). Wer die Club-App nicht hat, wählt über den Link in der Mail – ohne E-Mail mit <b>🔗 Link teilen</b> (z. B. WhatsApp).", zeig: () => scStart(), nur: () => !!ICH?.admin, seit: "2.23.60" },
+  { id: "schulungen", thema: "termine", sym: "🎓", t: "Schulungen verwalten (Admin)", x: "Unter der Kachel <b>🎓 Schulungen</b> (nur für den Admin) stellst du Termine ein (bei mir, beim Mitglied oder Mitglied wählt; 1–3 Plätze), lädst Mitglieder einzeln oder gemeinsam ein und gibst ihre Wahl mit <b>✅ Bestätigen</b> frei. Bei jedem Mitglied siehst du den Stand (🎓 geschult, ✅ Termin, ✉️ eingeladen …). Wer die Club-App nicht hat, wählt über den Link in der Mail – ohne E-Mail mit <b>🔗 Link teilen</b> (z. B. WhatsApp). Schon abgesprochen? Mitglied ankreuzen und <b>📅 Festen Termin geben</b> – die Bestätigung geht sofort raus.", zeig: () => scStart(), nur: () => !!ICH?.admin, seit: "2.23.60" },
   { id: "twinkey", thema: "start", sym: "🧑‍🍳", t: "Frag Twinkey", x: "Du weißt nicht, wo etwas ist? Tippe auf <b>🧑‍🍳 Frag Twinkey</b> (Kachel oder oben im Hilfe-Zentrum) und stell deine Frage in eigenen Worten – getippt oder mit 🎤 gesprochen, z. B. „Wie ändere ich die Farben?“. Twinkey zeigt die passende Antwort, liest sie auf Wunsch vor und bringt dich mit <b>„👉 Zeig es mir“</b> genau an die Stelle. Weiß er es noch nicht, tippst du auf <b>➤ Fragen</b>: Twinkey recherchiert, du bekommst die Antwort später per Push, E-Mail oder in der App – und unter <b>📬 Deine Fragen</b>. Danach kennt Twinkey die Antwort auch für alle anderen.", zeig: () => twFrageStart(), seit: "2.23.49" },
   { id: "diktat_feld", thema: "start", sym: "🎤", t: "Sprechen statt tippen", x: "Wo rechts im Feld ein <b>🎤</b> steht, kannst du diktieren: antippen, sprechen – der Text erscheint im Feld. <b>„✅ Fertig“</b> beendet, bei der Suche geht es nach dem ersten Satz von selbst. Verschickt wird nichts – du prüfst und tippst selbst auf Senden. Das 🎤 gibt es bei der <b>Lupe</b>, im <b>Hilfe-Zentrum</b>, beim <b>Pinnwand-Zettel</b> und bei <b>Hilfe-Aufruf und Angebot</b>; bei SOS heißt es „🎙️ Einsprechen“.", zeig: () => zeige("hilfezentrum"), seit: "2.23.47" },
   { id: "klappen_alle", thema: "start", sym: "▾", t: "Alle Bereiche auf einmal auf- oder zuklappen", x: "In den ⚙️ Einstellungen oben rechts: <b>„▾ Alle auf“</b> öffnet alle Bereiche, danach heißt der Knopf <b>„▴ Alle zu“</b> und klappt alle wieder zu. Bereiche mit 🔒 bleiben, wie du sie festgestellt hast.", zeig: () => zeige("einstellungen"), seit: "2.23.40" },
@@ -15527,7 +15527,7 @@ function scZeigen() {
       <input id="scSuche" type="search" placeholder="🔍 Name suchen …" oninput="scMitglieder()" style="margin:6px 0">
       <div id="scMListe" class="ta-liste wahlliste sc-mliste"></div>
       <label class="feld">Persönliche Zeile in der Mail (freiwillig)<textarea id="scNachricht" data-diktat rows="2" maxlength="1000" placeholder="z. B. Ich zeige dir die neue Kasse."></textarea></label>
-      <div class="knoepfe"><button class="knopf haupt" id="scEinzeln" onclick="scEinladen(false, this)">Einladen</button><button class="knopf" id="scGemeinsam" onclick="scEinladen(true, this)">Gemeinsam einladen</button></div>
+      <div class="knoepfe"><button class="knopf haupt" id="scEinzeln" onclick="scEinladen(false, this)">Einladen</button><button class="knopf" id="scGemeinsam" onclick="scEinladen(true, this)">Gemeinsam einladen</button><button class="knopf" id="scFest" onclick="scFestStart()">📅 Festen Termin geben</button></div>
       <p class="hinweis" style="margin:4px 0 0">Einzeln: jeder bekommt eine eigene Einladung. Gemeinsam: bis zu 3 Personen kommen zusammen (z. B. ein Ehepaar). Antwortfrist: ${SC.T.frist_tage || 3} Tage.</p>
       <div id="scErgebnis"></div></details>
     <details class="karte" data-k="einladungen"${auf.has("einladungen") ? " open" : ""}><summary><b>📨 Einladungen</b></summary><div id="scEinladungen"></div></details>
@@ -15669,6 +15669,7 @@ function scMitglieder() {
   const n = SC.gewaehlt.length;
   $("scEinzeln").textContent = n > 1 ? `Jeden einzeln einladen (${n})` : "Einladen"; $("scEinzeln").disabled = !n;
   $("scGemeinsam").textContent = `Gemeinsam einladen${n > 1 ? ` (${n})` : ""}`; $("scGemeinsam").disabled = n < 2 || n > 3;
+  if ($("scFest")) $("scFest").disabled = !n || n > 3; // KC-CLUB-SCHULUNG-FEST (2.23.66)
 }
 function scWahl(pid, an) { SC.gewaehlt = an ? [...new Set([...SC.gewaehlt, pid])] : SC.gewaehlt.filter((p) => p !== pid); scMitglieder(); }
 async function scEinladen(gemeinsam, knopf) {
@@ -15703,6 +15704,49 @@ async function scLinkNeu(k, eid) {
   k.disabled = true;
   try { const r = await scApi("t_link", { einladung_id: eid }); scVersand(r, r.mail_gesendet ? "🔗 Neuer Link ist per Mail raus" : "🔗 Neuer Link erstellt"); await scLinkTeilen(r.link, scGruppe(e.person_ids)); await scLaden(); }
   catch (err) { meldeFehler(err); } finally { k.disabled = false; }
+}
+// ----- KC-CLUB-SCHULUNG-FEST (2.23.66, Wunsch Hansi): abgesprochenen Termin direkt geben – ohne Auswahl durch das Mitglied -----
+// Gleicher Kern wie „📝 Besuche → 📅 Geplanter Termin“: geplanter Besuch + Terminbestätigung über den Termin-Baustein (Push + Mail mit
+// Kalenderdatei, Erinnerung am Vortag, Club-Kalender). Nur der Startpunkt liegt jetzt bei den Terminen.
+SC.fest = { art: "bei_hansi" };
+async function scFestStart() {
+  const pids = [...SC.gewaehlt]; if (!pids.length) return melde("Bitte erst Mitglieder ankreuzen.", true);
+  if (pids.length > 3) return melde("Höchstens 3 Personen pro Termin.", true);
+  if (!BS.mitglieder.length) await bsLaden();
+  const ms = pids.map((p) => BS.mitglieder.find((m) => m.person_id === p) || scPerson(p)).filter(Boolean);
+  const offen = pids.filter((p) => SC.T.einladungen.some((e) => !e.ist_test && e.person_ids.includes(p) && ["offen", "gewaehlt", "gegenvorschlag"].includes(e.status)));
+  const ohneMail = ms.filter((m) => !m.hat_email).map((m) => m.given_name || m.display_name);
+  const f = blattAuf("scFestBlatt", `<h3 style="margin:0">📅 Festen Termin geben</h3>
+    <p style="margin:4px 0"><b>${esc(scGruppe(pids))}</b></p>
+    <div class="hl-chips" id="scFestArt"></div>
+    <div class="zwei"><label class="feld">Tag<input id="scFestDatum" type="date" min="${heuteIso()}" value="${esc(SC.datum || tagPlus(heuteIso(), 1))}"></label><span></span></div>
+    <div class="zwei"><label class="feld">Von<input id="scFestVon" type="time" step="900" value="${esc(SC.von || "15:00")}"></label><label class="feld">Bis<input id="scFestBis" type="time" step="900" value="${esc(SC.bis || "16:30")}"></label></div>
+    <p class="hinweis" style="margin:4px 0">Geht sofort raus: 🔔 Push + ✉️ Mail mit Kalenderdatei, Erinnerung am Vortag.${ohneMail.length ? ` ⚠️ ${esc(ohneMail.join(", "))} ohne E-Mail – bitte selbst Bescheid geben.` : ""}${offen.length ? " Die offene Einladung bleibt bestehen – unter „📨 Einladungen“ ggf. beenden." : ""}</p>
+    <div class="knoepfe bs-fuss"><button class="knopf haupt" id="scFestOk">📅 Termin bestätigen</button><button class="knopf" onclick="$('scFestBlatt').remove()">Abbrechen</button></div>`);
+  f.style.zIndex = "2100"; f.classList.add("sc-blatt"); f.onclick = null;
+  const art = () => { $("scFestArt").innerHTML = [["bei_hansi", "🏠 Kommt zu mir"], ["beim_mitglied", "🚗 Ich fahre hin"]].map(([a, t]) => `<button type="button" class="chip${SC.fest.art === a ? " an" : ""}" data-a="${a}">${t}</button>`).join("");
+    $("scFestArt").querySelectorAll(".chip").forEach((c) => (c.onclick = () => { SC.fest.art = c.dataset.a; art(); })); };
+  art();
+  $("scFestOk").onclick = () => scFestSenden(pids, ms, $("scFestOk"));
+}
+async function scFestSenden(pids, ms, k) {
+  const datum = $("scFestDatum").value, von = $("scFestVon").value, bis = $("scFestBis").value, art = SC.fest.art;
+  if (!datum || !von || !bis) return melde("Bitte Tag, Von und Bis ausfüllen.", true);
+  if (bis <= von) return melde("„Bis“ muss nach „Von“ liegen.", true);
+  if (new Date(`${datum}T${von}:00`) <= new Date()) return melde("Der Termin liegt in der Vergangenheit.", true);
+  const wann = `${datum.split("-").reverse().join(".")}, ${von}–${bis} Uhr`;
+  if (!(await frage(`Termin fest geben?\n${scGruppe(pids)} · ${wann} · ${art === "bei_hansi" ? "bei dir" : "du fährst hin"}\nDie Bestätigung mit Kalenderdatei geht sofort raus.`, { ja: "📅 Bestätigen", gefahr: false }))) return;
+  const ort = art === "bei_hansi" ? "bei Hansi" : ms[0]?.adresse || "";
+  const daten = { mitglied: scGruppe(pids), person_ids: pids, datum, zeit_von: von, zeit_bis: bis, besuchsart: art, ort, status: "geplant", zusammenfassung_senden: false,
+    anwesende: [...ms.map((m) => m.given_name || m.display_name), ICH?.vorname || "Hansi"].join(", ") };
+  k.disabled = true; k.textContent = "Wird bestätigt …";
+  try {
+    const r = await api("besuch", { a: "speichern", daten, termin_senden: true, termin_abgleich: false }, { warten: true });
+    $("scFestBlatt")?.remove(); SC.gewaehlt = []; SC.datum = datum; SC.von = von; SC.bis = bis;
+    if (r.termin?.fehler) melde(`Gespeichert als geplanter Besuch (${r.besuch.besuch_id}) – aber Bestätigung: ${r.termin.fehler}`, true);
+    else scVersand(r.termin, `📅 Termin bestätigt – ${wann}`);
+    await bsLaden(); await scLaden();
+  } catch (e) { meldeFehler(e); k.disabled = false; k.textContent = "📅 Termin bestätigen"; }
 }
 // ----- Einladungen -----
 function scEinladungen() {
