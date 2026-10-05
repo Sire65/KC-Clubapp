@@ -9773,7 +9773,7 @@ async function sperrenLaden() {
     const [{ sperren }] = await Promise.all([api("sperre_liste"), MITGLIEDER ? null : mitgliederHolen().catch(() => null)]);
     if (!$("adSperren")) return;
     $("adSperren").innerHTML = sperren.length ? `<div style="display:grid;gap:6px">${sperren.map((x) => `<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--linie);border-radius:12px;background:var(--karte)">
-        <span style="flex:1"><b>${esc(vfName(x.person_id))}</b><br><small class="hinweis">${SPERRE_ART[x.art]?.kurz || esc(x.art)} · seit ${esc(zeitKurz(x.seit))} Uhr</small></span>
+        <span style="flex:1"><b>${esc(vfName(x.person_id))}</b><br><small class="hinweis">${SPERRE_ART[x.art]?.kurz || esc(x.art)}${x.stumm ? " · 📵 keine Push/E-Mail" : ""} · seit ${esc(zeitKurz(x.seit))} Uhr</small></span>
         <button class="knopf klein" onclick="sperreAufheben('${esc(x.person_id)}', this)">🔓 Freigeben</button></div>`).join("")}</div>`
       : '<p class="hinweis" style="margin:0">Zurzeit ist niemand gesperrt.</p>';
   } catch (e) { if ($("adSperren")) $("adSperren").innerHTML = `<p class="hinweis" style="margin:0">⚠️ Liste nicht geladen: ${esc(e.message)}</p>`; }
@@ -9784,6 +9784,7 @@ async function sperreAuswahl() {
   let art = "wartung";
   const f = blattAuf("sperreBlatt", `<h3 style="margin:0">🔒 Wen sperren?</h3>
     <div class="feld" style="margin:6px 0 0"><b>Was sehen die Gesperrten?</b><div class="hl-chips" id="psArt"></div></div>
+    <label class="schalter" style="margin:6px 0 0"><span><b>📵 Auch Benachrichtigungen abschalten</b><br><small class="hinweis">Keine Push-Nachrichten und keine E-Mails aus der Club-App an die Gesperrten</small></span><input type="checkbox" id="psStumm"></label>
     <input id="psSuche" type="search" placeholder="🔍 Name suchen …" style="width:100%;box-sizing:border-box;margin:6px 0">
     <div id="psListe" class="ta-liste wahlliste" style="max-height:40vh;overflow:auto"></div>
     <div class="knoepfe bs-fuss"><button class="knopf haupt" id="psOk">🔒 Sperren</button><button class="knopf" onclick="$('sperreBlatt').remove()">Abbrechen</button></div>`);
@@ -9798,9 +9799,9 @@ async function sperreAuswahl() {
   $("psOk").onclick = async (e) => {
     if (!gew.size) return melde("Bitte mindestens eine Person ankreuzen.", true);
     const namen = [...gew].map(vfName).join(", ");
-    if (!(await frage(`${namen} sperren?\n\nSie sehen dann beim Öffnen nur: ${SPERRE_ART[art].kurz}. Freigeben jederzeit hier unter 🛠️ Wartung.`, { ja: "🔒 Ja, sperren", nein: "Abbrechen" }))) return;
+    if (!(await frage(`${namen} sperren?\n\nSie sehen dann beim Öffnen nur: ${SPERRE_ART[art].kurz}.${$("psStumm").checked ? " Push und E-Mail aus der Club-App sind für sie aus." : ""} Freigeben jederzeit hier unter 🛠️ Wartung.`, { ja: "🔒 Ja, sperren", nein: "Abbrechen" }))) return;
     await einmal(e.currentTarget, async () => {
-      try { const r = await api("sperre_setzen", { ids: [...gew], art }, { warten: true }); f.remove(); melde(`🔒 ${r.gesperrt} Person${r.gesperrt === 1 ? "" : "en"} gesperrt`); sperrenLaden(); }
+      try { const r = await api("sperre_setzen", { ids: [...gew], art, stumm: $("psStumm").checked }, { warten: true }); f.remove(); melde(`🔒 ${r.gesperrt} Person${r.gesperrt === 1 ? "" : "en"} gesperrt`); sperrenLaden(); }
       catch (x) { meldeFehler(x); }
     });
   };

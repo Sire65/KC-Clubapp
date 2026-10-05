@@ -1,6 +1,7 @@
 -- KC Club-App – Version 2.23.77
 -- KC-CLUB-PERSON-SPERRE (Wunsch Hansi): Der Admin kann eine oder mehrere Personen vorübergehend sperren. Gesperrte sehen beim Öffnen
 --   ein Fenster: 🔵 „Wartungsarbeiten“ (art 'wartung') oder ⚪ „Server zurzeit nicht erreichbar“ (art 'stoerung').
+--   stumm = true: zusätzlich keine Benachrichtigungen (Push, E-Mail) aus der Club-App an diese Person.
 --   Admins können nicht gesperrt werden. Nichts wird gelöscht: Aufheben = aktiv false (+ Zeitpunkt), jede Änderung im Protokoll.
 --   Zugriff nur über den Server (kc-club), RLS an, keine Policies.
 -- Rückweg: drop table kc_club_person_sperre; (Spiegel-/Resume-Regel löschen)
@@ -8,6 +9,7 @@ create table if not exists kc_club_person_sperre (
   person_id text primary key references kc_core_people(person_id),
   aktiv boolean not null default true,
   art text not null default 'wartung' check (art in ('wartung', 'stoerung')),
+  stumm boolean not null default false,
   seit timestamptz not null default now(),
   von text references kc_core_people(person_id),
   aufgehoben_am timestamptz

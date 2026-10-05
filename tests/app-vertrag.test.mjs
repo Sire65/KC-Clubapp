@@ -4313,7 +4313,10 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.equal((g.match(/nurAdmin\(ich\);/g) || []).length, 3, "alle drei Aktionen nur Admin");
   assert.ok(/x !== ich\.person_id && !admins\.has\(x\)/.test(g) && /aktiv: false, aufgehoben_am: jetzt\(\)/.test(g) && /"person_gesperrt"/.test(g) && /"person_entsperrt"/.test(g), "nicht sich selbst/Admins, Aufheben ohne Löschen, Protokoll");
   assert.ok(/if \(r\.status === 423 && j\?\.gesperrt\) \{ sperreZeigen\(j\.gesperrt, j\.error\);/.test(html) && /function sperreZeigen\(art, text\)/.test(html), "App zeigt das Hinweisfenster");
-  assert.ok(/adKnopf\("🔒 Personen sperren", "sperreAuswahl\(\)", true\)/.test(html) && /api\("sperre_setzen", \{ ids: \[\.\.\.gew\], art \}/.test(html) && /api\("sperre_aufheben"/.test(html), "Verwaltung im Wartungs-Blatt");
+  assert.ok(/adKnopf\("🔒 Personen sperren", "sperreAuswahl\(\)", true\)/.test(html) && /api\("sperre_setzen", \{ ids: \[\.\.\.gew\], art, stumm/.test(html) && /api\("sperre_aufheben"/.test(html), "Verwaltung im Wartungs-Blatt");
+  const rs = server.slice(server.indexOf("async function routerSendenRoh"), server.indexOf("const r = await fetch(`${SUPA}/functions/v1/kc-communication-router`"));
+  assert.ok(/const stumm = \(await sperrenAktuell\(\)\)\.stumm;/.test(rs) && /personIds = personIds\.filter\(\(id\) => !stumm\.has\(id\)\)/.test(rs), "Benachrichtigungen aus: zentral im Versandweg gefiltert");
+  assert.ok(/stumm: \$\("psStumm"\)\.checked/.test(html) && /id="psStumm"/.test(html), "Schalter zum Anklicken");
   const mig = lies("supabase/migrations/20261005_kc_club_v22377_person_sperre.sql");
   assert.ok(/enable row level security/.test(mig) && /revoke all on kc_club_person_sperre from anon, authenticated/.test(mig) && /check \(art in \('wartung', 'stoerung'\)\)/.test(mig), "Tabelle geschützt");
 }

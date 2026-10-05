@@ -125,6 +125,13 @@ async function routerSenden(eventKey: string, personIds: string[], vars: Record<
   catch (e) { console.error("routerSenden", eventKey, String(e)); return { gesendet: 0, fehler: personIds.length }; }
 }
 async function routerSendenRoh(eventKey: string, personIds: string[], vars: Record<string, unknown>, korrelation: string, kopie?: { cc?: string[]; bcc?: string[] }) {
+  // KC-CLUB-PERSON-SPERRE (2.23.77): Gesperrte mit „Benachrichtigungen aus“ bekommen nichts (alle Club-Wege laufen hier durch)
+  const stumm = (await sperrenAktuell()).stumm;
+  if (stumm.size) {
+    personIds = personIds.filter((id) => !stumm.has(id));
+    if (kopie) kopie = { cc: kopie.cc?.filter((id) => !stumm.has(id)), bcc: kopie.bcc?.filter((id) => !stumm.has(id)) };
+    if (!personIds.length && !kopie?.cc?.length && !kopie?.bcc?.length) return { gesendet: 0, fehler: 0 };
+  }
   const r = await fetch(`${SUPA}/functions/v1/kc-communication-router`, { signal: AbortSignal.timeout(20000),
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE}`, apikey: SERVICE },
@@ -2056,13 +2063,16 @@ const SPERRE_TEXT: Record<string, string> = {
   wartung: "Zur Zeit führen wir für Sie Wartungsarbeiten durch. Bitte versuchen Sie es später nochmals. Wir bitten um Verständnis.",
   stoerung: "Unser Server ist zurzeit nicht erreichbar. Bitte versuchen Sie es später nochmals. Wir bitten um Verständnis.",
 };
-const SPERREN = { bis: 0, liste: new Map<string, string>() };
-async function sperreFuer(personId: string): Promise<string | null> {
+const SPERREN = { bis: 0, liste: new Map<string, string>(), stumm: new Set<string>() };
+async function sperrenAktuell() {
   if (Date.now() > SPERREN.bis) {
-    const { data, error } = await db.from("kc_club_person_sperre").select("person_id,art").eq("aktiv", true);
-    if (!error) { SPERREN.liste = new Map((data ?? []).map((x: any) => [x.person_id, x.art])); SPERREN.bis = Date.now() + 15_000; }
+    const { data, error } = await db.from("kc_club_person_sperre").select("person_id,art,stumm").eq("aktiv", true);
+    if (!error) { SPERREN.liste = new Map((data ?? []).map((x: any) => [x.person_id, x.art])); SPERREN.stumm = new Set((data ?? []).filter((x: any) => x.stumm).map((x: any) => x.person_id)); SPERREN.bis = Date.now() + 15_000; }
   }
-  return SPERREN.liste.get(personId) ?? null;
+  return SPERREN;
+}
+async function sperreFuer(personId: string): Promise<string | null> {
+  return (await sperrenAktuell()).liste.get(personId) ?? null;
 }
 async function archivFremdversuch(ich: Ich, o: any, was: string) {
   // je Person und Ordner höchstens eine Meldung pro Stunde (Protokoll immer)
@@ -9195,22 +9205,22 @@ Köcheclub-App`,
       // ----- KC-CLUB-PERSON-SPERRE (2.23.77, Wunsch Hansi): eine oder mehrere Personen vorübergehend sperren -----
       case "sperre_liste": {
         nurAdmin(ich);
-        const { data } = await db.from("kc_club_person_sperre").select("person_id,art,seit").eq("aktiv", true).order("seit", { ascending: false });
+        const { data } = await db.from("kc_club_person_sperre").select("person_id,art,stumm,seit").eq("aktiv", true).order("seit", { ascending: false });
         return json({ sperren: data ?? [] });
       }
       case "sperre_setzen": {
         nurAdmin(ich);
-        const art = p.art === "stoerung" ? "stoerung" : "wartung";
+        const art = p.art === "stoerung" ? "stoerung" : "wartung", stumm = p.stumm === true;
         const admins = new Set(await adminIds());
         const ids: string[] = [...new Set<string>((Array.isArray(p.ids) ? p.ids : []).map((x: unknown) => txt(x, 40)))].filter((x) => x && x !== ich.person_id && !admins.has(x)).slice(0, 100);
         if (!ids.length) throw new Fehler("Bitte mindestens eine Person auswählen (Admins können nicht gesperrt werden).", 400);
         const { data: leute } = await db.from("kc_core_people").select("person_id").in("person_id", ids);
         const gueltig = (leute ?? []).map((x: any) => x.person_id);
         if (!gueltig.length) throw new Fehler("Diese Personen gibt es nicht.", 400);
-        const { error } = await db.from("kc_club_person_sperre").upsert(gueltig.map((id: string) => ({ person_id: id, aktiv: true, art, seit: jetzt(), von: ich.person_id, aufgehoben_am: null })), { onConflict: "person_id" });
+        const { error } = await db.from("kc_club_person_sperre").upsert(gueltig.map((id: string) => ({ person_id: id, aktiv: true, art, stumm, seit: jetzt(), von: ich.person_id, aufgehoben_am: null })), { onConflict: "person_id" });
         if (error) throw new Fehler("Sperre konnte nicht gespeichert werden.", 500);
         SPERREN.bis = 0;
-        await protokoll(ich.person_id, "person_gesperrt", { ids: gueltig, art });
+        await protokoll(ich.person_id, "person_gesperrt", { ids: gueltig, art, stumm });
         return json({ ok: true, gesperrt: gueltig.length });
       }
       case "sperre_aufheben": {
