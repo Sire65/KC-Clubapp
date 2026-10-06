@@ -27,7 +27,7 @@ async function probelauf(sql: postgres.Sql, a: NonNullable<typeof AUFTRAG>) {
   const test = a.test || "do $p$ begin raise exception 'TESTBERICHT (alles wird zurückgerollt): | einspielbar'; end $p$;";
   let bericht = "";
   try { await sql.unsafe(`begin;\n${a.migration}\n${test}`); bericht = "kein Abbruch – Test unvollständig"; }
-  catch (e) { bericht = String((e as Error)?.message || e); }
+  catch (e) { const x = e as { message?: string; where?: string; position?: string }; bericht = String(x?.message || e) + (x?.where ? " | Stelle: " + x.where : "") + (x?.position ? " | Position: " + x.position : ""); }
   finally { await sql.unsafe("rollback").catch(() => {}); }
   const fehlt = a.erwartet.filter((z) => !bericht.includes(z));
   const ok = bericht.includes("TESTBERICHT") && !bericht.includes("KEIN FEHLER") && fehlt.length === 0;
