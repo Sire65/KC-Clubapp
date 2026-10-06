@@ -4543,6 +4543,15 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/\{ id: "sprungknopf", thema: "nachrichten"/.test(html), "Hilfe");
 }
 
+// 448. 2.23.98: Mein Bild – erst auswählen (große Vorschau), dann übernehmen oder bearbeiten (Wunsch Hansi)
+{
+  const f = html.slice(html.indexOf("function avWahl()"), html.indexOf("// KC-CLUB-AVATAR-BAUKASTEN (2.23.86, Wunsch Hansi)"));
+  assert.ok(!/onclick="avSetzen\('\$\{k\}'\)"/.test(f) && (f.match(/onclick="avWaehlen\('\$\{k\}', this\)"/g) || []).length === 2, "Antippen wählt nur aus, speichert nicht sofort");
+  assert.ok(/onclick="avSetzen\(AVW\.wahl\)"/.test(f) && /onclick="avBauen\(AVW\.wahl\)">✏️ Bearbeiten/.test(f), "Übernehmen und Bearbeiten");
+  assert.ok(/bauen = c && !AVF_RE\.test\(c\) && avTeile\(c\) && frei\("avatar_baukasten"\)/.test(f), "Bearbeiten nur, wenn der Baukasten freigegeben ist, nie beim Foto");
+  assert.ok(/function avBauen\(start\) \{[^\n]*\n  const jetzt = start \|\| INIT\?\.einstellungen\?\.avatar\?\.figur/.test(html), "Baukasten startet mit der gewählten Figur");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

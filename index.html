@@ -1499,6 +1499,8 @@
   .av-raster button { border: 3px solid transparent; border-radius: 50%; padding: 0; background: none; cursor: pointer; aspect-ratio: 1; }
   .av-raster button.an { border-color: var(--rot); box-shadow: 0 0 0 3px var(--karte), 0 0 0 5px var(--rot); }
   .av-raster svg { width: 100%; height: 100%; display: block; }
+  .av-vorschau { position: sticky; top: 44px; z-index: 2; background: var(--karte); display: grid; justify-items: center; gap: 6px; padding: 6px 0 10px; border-bottom: 1px solid var(--linie); margin-bottom: 8px; } /* 2.23.98 */
+  .av-vorschau-bild svg { display: block; } .av-vorschau-knoepfe { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; } .av-vorschau-knoepfe .knopf { margin: 0; }
   .av-keins { display: grid; place-items: center; width: 100%; height: 100%; border-radius: 50%; background: var(--rot); color: #fff; font-weight: 800; font-size: 1.1rem; }
   .avatar.k-online { background: #1e8449; } .avatar.k-heute { background: #2471a3; } .avatar.k-weg { background: #d68910; }
   .avatar.k-fehler { background: #c0392b; } .avatar.k-selten { background: #5f6b6d; }
@@ -2983,7 +2985,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.97"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.98"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -4272,7 +4274,7 @@ const HILFE = [
   { id: "ttt_toene", thema: "club", sym: "🔊", t: "Tic-Tac-Toe mit Tönen", x: "Unter dem Spielfeld gibt es den Knopf <b>„🔊 Töne an / 🔇 aus“</b>. Dann klingt jeder Zug – deiner hell, der des Gegners tiefer – und am Ende hörst du, ob du gewonnen, verloren oder unentschieden gespielt hast. Gilt nur auf diesem Gerät.", zeig: () => { zeige("spiele"); spArtWahl("ttt"); }, seit: "2.23.8" },
   { id: "inkognito_blinkt", thema: "privat", sym: "🕶️", t: "Die Brille blinkt rot", x: "Solange <b>Inkognito</b> an ist, blinkt die Brille oben rot – damit du nicht vergisst, dass dich gerade niemand online sieht. Antippen schaltet Inkognito wieder aus.", nur: () => !!ICH?.admin, zeig: () => zeige("start"), seit: "2.23.8" },
   // 2.23.95 (Wunsch Hansi): Hilfen zu den Neuerungen seit Anleitung V5
-  { id: "mein_bild", thema: "darstellung", sym: "🧑‍🍳", t: "Ein Bild statt Buchstaben", x: "Lieber eine Figur als Buchstaben? Bei <b>Meins</b> → <b>„🧑‍🍳 Mein Bild“</b> suchst du dir eine von 40 Koch-Figuren aus. Sie erscheint bei den Mitgliedern, im Chat und bei „Wer ist online“. Mit „Kein Bild“ hast du wieder deine Buchstaben.", zeig: () => avWahl(), seit: "2.23.85" },
+  { id: "mein_bild", thema: "darstellung", sym: "🧑‍🍳", t: "Ein Bild statt Buchstaben", x: "Lieber eine Figur als Buchstaben? Bei <b>Meins</b> → <b>„🧑‍🍳 Mein Bild“</b> tippst du eine von 40 Koch-Figuren an – oben siehst du sie groß – und dann <b>„✅ Übernehmen“</b>. Sie erscheint bei den Mitgliedern, im Chat und bei „Wer ist online“. Mit „Kein Bild“ hast du wieder deine Buchstaben.", zeig: () => avWahl(), seit: "2.23.85" },
   { id: "bild_punkt", thema: "club", sym: "🟢", t: "Was der kleine Punkt am Bild bedeutet", x: "Hat jemand ein Bild, zeigt ein kleiner Punkt unten rechts, wie er gerade erreichbar ist: <b>✓ grün</b> = gerade online, <b>blau</b> = heute in der App, <b>orange</b> = abwesend (Urlaub, krank …), <b>grau</b> = länger nicht da. Der farbige Ring ums Bild zeigt dasselbe.", zeig: () => zeige("mitglieder"), seit: "2.23.89" },
   { id: "anwesenheit", thema: "club", sym: "📋", t: "Wer ist da? Die Anwesenheitstafel", x: "Bei <b>👥 Mitglieder</b> oben auf <b>📋</b> tippen: Dann siehst du nur Namen und ein Lämpchen – wer online ist, steht oben. Einen Namen antippen öffnet das Mitglied; dort kannst du schreiben, anklopfen oder anrufen.", zeig: () => { zeige("mitglieder"); mgAnsichtSetzen("tafel"); }, seit: "2.23.89" },
   { id: "bild_gross", thema: "club", sym: "🔍", t: "Ein Bild groß ansehen", x: "Öffne bei <b>👥 Mitglieder</b> ein Mitglied – ganz oben steht sein Bild. Ein Tipp darauf zeigt es groß; noch ein Tipp schließt es wieder.", zeig: () => zeige("mitglieder"), seit: "2.23.89" },
@@ -10126,25 +10128,43 @@ async function sperreAufheben(pid, knopf) {
   });
 }
 // KC-CLUB-AVATAR (2.23.85): Auswahl – 30 Figuren antippen, „Keins“ = wie bisher Buchstaben. Gespeichert wie andere Einstellungen (geräteübergreifend).
+// 2.23.98 (Wunsch Hansi): Figur antippen = erst auswählen (große Vorschau oben), dann „✅ Übernehmen“ oder „✏️ Bearbeiten“ (Baukasten mit dieser Figur)
+const AVW = { wahl: undefined };
 function avWahl() {
-  const jetzt = INIT?.einstellungen?.avatar?.figur || null;
+  const jetzt = INIT?.einstellungen?.avatar?.figur || null; AVW.wahl = undefined;
   const f = blattAuf("avBlatt", `<h3 style="margin:0">🧑‍🍳 Mein Bild</h3>
-    <p class="hinweis" style="margin:4px 0 8px">Such dir eine Koch-Figur aus – sie erscheint bei den Mitgliedern, im Chat und bei „Wer ist online“. Ring und Abzeichen zeigen weiter, ob du gerade da bist.</p>
-    ${jetzt && jetzt[0] === "b" && avGueltig(jetzt) ? `<b>🧩 Deine eigene Figur</b><div class="av-raster" style="margin:6px 0 10px"><button type="button" class="an" aria-label="Eigene Figur" onclick="avBauen()">${avatarSvg(jetzt, 64)}</button></div>` : ""}
-    <b>👩‍🍳 Köchinnen</b><div class="av-raster" style="margin:6px 0 10px">${Object.keys(AV_FIGUREN).filter((k) => k[0] === "w").map((k) => `<button type="button" class="${jetzt === k ? "an" : ""}" aria-label="Figur ${k}" onclick="avSetzen('${k}')">${avatarSvg(k, 64)}</button>`).join("")}</div>
-    <b>👨‍🍳 Köche</b><div class="av-raster" style="margin:6px 0 10px">${Object.keys(AV_FIGUREN).filter((k) => k[0] === "m").map((k) => `<button type="button" class="${jetzt === k ? "an" : ""}" aria-label="Figur ${k}" onclick="avSetzen('${k}')">${avatarSvg(k, 64)}</button>`).join("")}</div>
-    <b>Kein Bild</b><div class="av-raster" style="margin:6px 0 10px"><button type="button" class="${jetzt ? "" : "an"}" aria-label="Kein Bild – Buchstaben" onclick="avSetzen(null)"><span class="av-keins">${esc(initialen(ICH?.name))}</span></button></div>
+    <p class="hinweis" style="margin:4px 0 8px">Tippe eine Koch-Figur an – oben siehst du sie groß und kannst sie <b>übernehmen</b> oder <b>bearbeiten</b>. Sie erscheint bei den Mitgliedern, im Chat und bei „Wer ist online“. Ring und Abzeichen zeigen weiter, ob du gerade da bist.</p>
+    <div id="avWahlVorschau" class="av-vorschau"></div>
+    ${jetzt && jetzt[0] === "b" && avGueltig(jetzt) ? `<b>🧩 Deine eigene Figur</b><div class="av-raster" style="margin:6px 0 10px"><button type="button" class="an" aria-label="Eigene Figur" onclick="avWaehlen('${jetzt}', this)">${avatarSvg(jetzt, 64)}</button></div>` : ""}
+    <b>👩‍🍳 Köchinnen</b><div class="av-raster" style="margin:6px 0 10px">${Object.keys(AV_FIGUREN).filter((k) => k[0] === "w").map((k) => `<button type="button" class="${jetzt === k ? "an" : ""}" aria-label="Figur ${k}" onclick="avWaehlen('${k}', this)">${avatarSvg(k, 64)}</button>`).join("")}</div>
+    <b>👨‍🍳 Köche</b><div class="av-raster" style="margin:6px 0 10px">${Object.keys(AV_FIGUREN).filter((k) => k[0] === "m").map((k) => `<button type="button" class="${jetzt === k ? "an" : ""}" aria-label="Figur ${k}" onclick="avWaehlen('${k}', this)">${avatarSvg(k, 64)}</button>`).join("")}</div>
+    <b>Kein Bild</b><div class="av-raster" style="margin:6px 0 10px"><button type="button" class="${jetzt ? "" : "an"}" aria-label="Kein Bild – Buchstaben" onclick="avWaehlen(null, this)"><span class="av-keins">${esc(initialen(ICH?.name))}</span></button></div>
     ${frei("avatar_foto") ? `<b>📷 Eigenes Foto${nurTest("avatar_foto") ? ' <small class="hinweis">🔒 nur für dich (Test)</small>' : ""}</b>
       ${AVF_RE.test(jetzt || "") ? `<div class="av-raster" style="margin:6px 0 4px"><button type="button" class="an" aria-label="Dein Foto" onclick="avGross(ICH.person_id)">${avatarSvg(jetzt, 64)}</button></div>` : ""}
       <div class="na-pfeil-knoepfe" style="margin:6px 0 10px"><button class="knopf" onclick="avfWaehlen('selfie')">🤳 Selfie</button><button class="knopf" onclick="avfWaehlen('galerie')">🖼️ Galerie</button><button class="knopf" onclick="avfWaehlen('datei')">📁 Datei</button></div>` : ""}
     ${frei("avatar_baukasten") ? `<button class="knopf haupt" onclick="avBauen()">🧩 Selbst zusammenstellen${nurTest("avatar_baukasten") ? " · 🔒 Test" : ""}</button>` : '<p class="hinweis" style="margin:0 0 8px;font-size:.85rem">Demnächst: Figur selbst zusammenstellen (Frisur, Bart, Brille, Mütze …).</p>'}
     <button class="knopf" onclick="fensterZu($('avBlatt'))">Schließen</button>`);
-  f.classList.add("sc-blatt");
+  f.classList.add("sc-blatt"); avWahlVorschau();
+}
+function avWaehlen(code, knopf) {
+  AVW.wahl = code || null;
+  document.querySelectorAll("#avBlatt .av-raster button").forEach((b) => b.classList.toggle("an", b === knopf));
+  avWahlVorschau();
+  $("avWahlVorschau")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+function avWahlVorschau() {
+  const z = $("avWahlVorschau"); if (!z) return;
+  const jetzt = INIT?.einstellungen?.avatar?.figur || null;
+  if (AVW.wahl === undefined) { z.innerHTML = `<div class="av-vorschau-bild">${avGueltig(jetzt) ? avatarSvg(jetzt, 96) : `<span class="av-keins" style="width:96px;height:96px;font-size:2rem">${esc(initialen(ICH?.name))}</span>`}</div><small class="hinweis">Dein jetziges Bild – tippe unten eine Figur an.</small>`; return; }
+  const c = AVW.wahl, gleich = c === jetzt, bauen = c && !AVF_RE.test(c) && avTeile(c) && frei("avatar_baukasten");
+  z.innerHTML = `<div class="av-vorschau-bild">${c ? avatarSvg(c, 96) : `<span class="av-keins" style="width:96px;height:96px;font-size:2rem">${esc(initialen(ICH?.name))}</span>`}</div>
+    <div class="av-vorschau-knoepfe"><button class="knopf haupt" ${gleich ? "disabled" : ""} onclick="avSetzen(AVW.wahl)">${gleich ? "✓ Das ist dein Bild" : "✅ Übernehmen"}</button>
+    ${bauen ? `<button class="knopf" onclick="avBauen(AVW.wahl)">✏️ Bearbeiten${nurTest("avatar_baukasten") ? " · 🔒" : ""}</button>` : ""}</div>`;
 }
 // KC-CLUB-AVATAR-BAUKASTEN (2.23.86, Wunsch Hansi): Figur selbst zusammenstellen – große Vorschau, je Teil Chips, Speichern
 let AVB = null;
-function avBauen() {
-  const jetzt = INIT?.einstellungen?.avatar?.figur, t = avTeile(jetzt) || avTeile("w01"), haarf = Object.keys(AV_HAAR);
+function avBauen(start) { // 2.23.98: start = gewählte Figur als Vorlage („✏️ Bearbeiten“), sonst das jetzige Bild
+  const jetzt = start || INIT?.einstellungen?.avatar?.figur, t = avTeile(jetzt) || avTeile("w01"), haarf = Object.keys(AV_HAAR);
   AVB = [t[0], AV_FRISUREN.indexOf(t[1]), haarf.indexOf(t[2]), AV_KOPF.indexOf(t[3]), AV_BART.indexOf(t[4]), t[5] ? 1 : 0, Math.max(0, AV_BG.indexOf(t[6])), Math.max(0, AV_TUCH.indexOf(t[7])), t[8] ? 1 : 0];
   fensterZu($("avBlatt") || document.createElement("div"));
   const f = blattAuf("avbBlatt", `<h3 style="margin:0">🧩 Figur zusammenstellen${nurTest("avatar_baukasten") ? ' <small class="hinweis">🔒 nur für dich (Test)</small>' : ""}</h3><div id="avbInhalt"></div>`);

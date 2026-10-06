@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.23.98 – 2026-10-06 – Mein Bild: auswählen, dann übernehmen oder bearbeiten (Wunsch Hansi)
+- Figur antippen = auswählen; oben große Vorschau mit „✅ Übernehmen“ und „✏️ Bearbeiten“ (öffnet den Baukasten mit genau dieser Figur als Vorlage – nur, solange der Baukasten freigegeben ist; sonst nur Übernehmen). „Kein Bild“ und die eigene Figur genauso. Hilfe „Ein Bild statt Buchstaben“ angepasst. Nur App.
+
 ## 2.23.97 – 2026-10-06 – Knopf in der Nachricht, der an eine App-Stelle führt (Wunsch Hansi)
 - KC-CLUB-SPRUNGKNOPF: 📎 → „🔘 Knopf zu einer App-Stelle“ (Mein Bild, Meine Daten, Mein Dienst, Dienstwünsche, Termine, Pinnwand, Mitglieder, Anwesenheitstafel, Fotos, Vorschläge, Helfen, Spiele, Dokumente, Einstellungen, Hilfe, Twinkey, Mikrofon, Update). In der Nachricht steht die App-Adresse …/#zu=<ziel>; die App zeigt einen Knopf, ältere Apps/Push/E-Mail den Link, der die App dort öffnet. Nur Ziele aus der Liste, nicht freigegebene Neuheiten werden nicht angeboten. Hilfe „Einen Knopf in die Nachricht setzen“. Nur App.
 
