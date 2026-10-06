@@ -1492,6 +1492,7 @@
   .mg-tafel button { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: var(--karte); border: 1px solid var(--linie); text-align: left; font: inherit; color: inherit; cursor: pointer; min-height: 48px; }
   .mg-tafel b { overflow-wrap: anywhere; }
   .na-sprung { display: block; margin: 6px 0 2px; white-space: normal; text-align: left; } /* KC-CLUB-SPRUNGKNOPF */
+  .mg-gr-namen { display: flex; flex-wrap: wrap; gap: 6px 12px; margin-top: 6px; } .mg-gr-namen span { display: inline-flex; align-items: center; gap: 6px; font-size: .95rem; } /* 2.23.100 */
   .mg-led { width: 16px; height: 16px; border-radius: 50%; flex: none; }
   .mg-led.l-online { background: #2ecc71; box-shadow: 0 0 8px #2ecc71; } .mg-led.l-heute { background: #2471a3; } .mg-led.l-weg { background: #d68910; } .mg-led.l-fehler { background: #c0392b; }
   .mg-led.l-selten { background: #95a5a6; } .mg-led.l-unbekannt { background: transparent; border: 2px dashed #95a5a6; box-sizing: border-box; }
@@ -2986,7 +2987,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.99"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.24.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -16316,6 +16317,30 @@ function mgKachelnHtml(liste) {
 }
 // KC-CLUB-MG-GRUPPEN (1.34.0, Wunsch Hansi): eigene Gruppen (z. B. „Innovation“) als Filter – antippen zeigt nur deren Mitglieder
 let MG_GRUPPEN = [], MG_GRUPPE = null;
+// 2.23.100 (Wunsch Hansi): Übersicht „zu welchen Gruppen gehöre ich“ – nur Gruppen, in denen man selbst ist (private Gruppen bleiben privat)
+async function mgGruppenLaden() {
+  if (!MG_GRUPPEN.length) try { MG_GRUPPEN = ((await api("unterhaltungen", {})).unterhaltungen || []).filter((u) => u.gruppe && Array.isArray(u.personen)); } catch {}
+  if (!MITGLIEDER) try { await mitgliederHolen(); } catch {}
+  return MG_GRUPPEN;
+}
+const mgName = (pid) => (pid === ICH?.person_id ? "du" : MITGLIEDER?.find?.((x) => x.person_id === pid)?.name || "ehemaliges Mitglied");
+async function mgGruppenUebersicht() {
+  const gr = await mgGruppenLaden();
+  const f = blattAuf("mgGrBlatt", `<h3 style="margin:0">📋 Meine Gruppen</h3>
+    <p class="hinweis" style="margin:0">${gr.length ? `Du bist in <b>${gr.length}</b> Gruppe${gr.length === 1 ? "" : "n"}. Antippen öffnet den Gruppen-Chat.` : "Du bist noch in keiner Gruppe – eine Gruppe legst du bei 💬 Nachrichten → „👥 Gruppe“ an."}</p>
+    ${[...gr].sort((a, b) => String(a.gruppe.name).localeCompare(String(b.gruppe.name), "de")).map((g) => `<div class="ps-schritt"><b>${esc(g.gruppe.symbol || "👥")} ${esc(g.gruppe.name)}</b> <small class="hinweis">· ${g.personen.length} Mitglieder</small>
+      <div class="mg-gr-namen">${[...g.personen].sort((a, b) => (a === ICH?.person_id ? -1 : b === ICH?.person_id ? 1 : mgName(a).localeCompare(mgName(b), "de"))).map((pid) => `<span>${kreis(MITGLIEDER?.find?.((x) => x.person_id === pid) || { person_id: pid }, pid === ICH?.person_id ? ICH.name : mgName(pid), 26)}${esc(mgName(pid))}</span>`).join("")}</div>
+      <div class="na-pfeil-knoepfe" style="margin-top:6px"><button class="knopf haupt klein" onclick="fensterZu($('mgGrBlatt'));chatOeffnen('${g.id}')">💬 Zum Gruppen-Chat</button><button class="knopf klein" onclick="fensterZu($('mgGrBlatt'));zeige('mitglieder');mgGruppeSetzen('${g.id}')">👥 Als Liste</button></div></div>`).join("")}
+    <button class="knopf" onclick="fensterZu($('mgGrBlatt'))">Schließen</button>`);
+  f.style.zIndex = "2100";
+}
+// gemeinsame Gruppen mit einem Mitglied (nur Gruppen, in denen ich auch bin)
+async function mgGemeinsameZeigen(pid) {
+  const z = $("mgGemeinsam"); if (!z) return;
+  const gr = (await mgGruppenLaden()).filter((g) => g.personen.includes(pid));
+  if (!$("mgGemeinsam") || mitgliedId !== pid) return;
+  z.innerHTML = gr.length ? `<div class="hinweis" style="margin-top:6px">👥 Gemeinsame Gruppen:</div><div class="mg-gruppen" style="justify-content:center;margin:4px 0 0">${gr.map((g) => `<button class="knopf klein" onclick="chatOeffnen('${g.id}')">${esc(g.gruppe.symbol || "👥")} ${esc(g.gruppe.name)}</button>`).join("")}</div>` : "";
+}
 function mgGruppeSetzen(id) { MG_GRUPPE = MG_GRUPPE === id ? null : id; mitgliederZeichnen(); }
 async function mitgliederLaden() {
   try { await mitgliederHolen(); mitgliederZeichnen(); } catch (e) { meldeFehler(e); }
@@ -16331,7 +16356,7 @@ function mgGruppenZeichnen() {
     MG_AMEISEN.t = setTimeout(() => document.querySelectorAll(".mg-gruppen .ameisen").forEach((x) => x.remove()), MG_AMEISEN.MS); }
   const ameisen = Date.now() < MG_AMEISEN.bis ? '<svg class="ameisen" aria-hidden="true"><rect width="100%" height="100%" rx="12"/></svg>' : "";
   const g = MG_GRUPPEN.find((x) => x.id === MG_GRUPPE) || null;
-  z.innerHTML = MG_GRUPPEN.length ? `<div class="mg-gruppen"><span class="hinweis">Gruppen:</span>${MG_GRUPPEN.map((x) => `<button class="knopf klein${x.id === MG_GRUPPE ? " an" : ""}" onclick="mgGruppeSetzen('${x.id}')">${esc(x.gruppe.symbol || "👥")} ${esc(x.gruppe.name)} <small>(${x.personen.length})</small>${ameisen}</button>`).join("")}</div>`
+  z.innerHTML = MG_GRUPPEN.length ? `<div class="mg-gruppen"><span class="hinweis">Gruppen:</span>${MG_GRUPPEN.map((x) => `<button class="knopf klein${x.id === MG_GRUPPE ? " an" : ""}" onclick="mgGruppeSetzen('${x.id}')">${esc(x.gruppe.symbol || "👥")} ${esc(x.gruppe.name)} <small>(${x.personen.length})</small>${ameisen}</button>`).join("")}<button class="knopf klein" onclick="mgGruppenUebersicht()" title="Alle meine Gruppen mit Mitgliedern">📋 Übersicht</button></div>`
     + (g ? `<div class="karte" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center"><b style="flex:1 1 160px">${esc(g.gruppe.symbol || "👥")} ${esc(g.gruppe.name)} · ${g.personen.length} Mitglieder</b><button class="knopf haupt klein" onclick="chatOeffnen('${g.id}')">💬 In die Gruppe schreiben</button><button class="knopf klein" onclick="mgGruppeSetzen(null)">✖ Alle zeigen</button></div>` : "") : "";
   return g;
 }
@@ -18955,6 +18980,7 @@ async function mitgliedOeffnen(pid, ausHistorie) {
   catch (e) { $("mitgliedInhalt").innerHTML = `<div class="karte hinweis">${esc(e.message)}</div>`; }
 }
 function mitgliedZeigen() {
+  if (MD && !MD.selbst) setTimeout(() => mgGemeinsameZeigen(MD.person_id), 0); // 2.23.100
   const m = MD, k = m.kontakt || {}, fg = m.freigegeben;
   const nurIch = (f) => fg && !fg[f] ? `<small class="hinweis"> · 🔒 ${m.selbst ? "nicht freigegeben – nur du siehst das" : "nicht freigegeben – nur für dich als Admin"}</small>` : "";
   const zeile = (f, wert, knoepfe) => `<div class="zeile"><div style="flex:1"><div class="hinweis" style="font-size:.85rem">${KONTAKT_NAMEN[f]}${nurIch(f)}</div><b>${esc(wert)}</b></div>${knoepfe}</div>`;
@@ -18972,6 +18998,7 @@ function mitgliedZeigen() {
       <div style="font-size:1.3rem;font-weight:800;margin-top:8px">${esc(m.name)}</div>
       ${ICH?.admin && !m.selbst && AVF_RE.test(m.avatar || "") ? `<button class="knopf klein" style="margin-top:6px" onclick="avfEntfernen('${esc(m.person_id)}', this)">🗑️ Foto entfernen (Admin)</button>` : ""}
       ${m.aemter?.length ? `<div style="margin-top:4px">${m.aemter.map((a) => `<span class="marke">${esc(a)}</span>`).join(" ")}</div>` : ""}
+      ${m.selbst ? `<div style="margin-top:6px"><button class="knopf klein" onclick="mgGruppenUebersicht()">📋 Meine Gruppen</button></div>` : '<div id="mgGemeinsam"></div>'}
       <div class="hinweis" style="margin-top:4px">${m.status ? esc(statusText(m.status)) : ""}${m.geburtstag ? ` · 🎂 ${esc(m.geburtstag.slice(3) + "." + m.geburtstag.slice(0, 2) + ".")}` : ""}</div>
       ${m.zuletztDa ? `<div class="hinweis" style="margin-top:2px">${m.zuletztDa.online ? "🟢 gerade online" : "🕒 " + esc(zuletztText(m.zuletztDa).replace(/^zuletzt da/, "Zuletzt in der App:"))}</div>` : ""}
     </div>

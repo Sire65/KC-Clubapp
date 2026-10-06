@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.24.0 – 2026-10-06 – 📋 Meine Gruppen + gemeinsame Gruppen (Wunsch Hansi)
+- KC-CLUB-GRUPPEN-UEBERSICHT: bei 👥 Mitglieder neben den Gruppen „📋 Übersicht“ (alle eigenen Gruppen mit Mitgliedern, 💬 Zum Gruppen-Chat, 👥 Als Liste); auf der eigenen Mitglieds-Seite „📋 Meine Gruppen“; bei anderen „👥 Gemeinsame Gruppen“. Gezeigt werden nur Gruppen, in denen man selbst ist – private Gruppen anderer bleiben privat. Nur App.
+
 ## 2.23.99 – 2026-10-06 – Baukasten: mehr Gesichtsteile, große Vorschau, Zufall + Hinweis „wird als Knopf angezeigt“ (Wunsch Hansi)
 - KC-CLUB-AVATAR-BAUKASTEN: neue Teile Augen (normal, lachend, groß, Wimpern), Augenbrauen (normal, schmal, kräftig, buschig), Mund (Lächeln, breites Lachen, verschmitzt, ruhig), Wangen (zart, keine, kräftig, Sommersprossen), Brille (rund, eckig, Halbbrille, Sonnenbrille) mit 4 Farben, Kochjacke (weiß, schwarz, grau). Vorschau 160 px, 🎲 Zufall. Neuer Code „c…“ (15 Teile); alle bisherigen Figuren und b-Codes zeichnen unverändert (340 Codes verglichen). Server nimmt c-Codes an.
 - KC-CLUB-SPRUNGKNOPF: Hinweis unter dem Schreibfeld „🔘 Wird nach dem Senden als Knopf angezeigt: …“, solange ein App-Sprung im Entwurf steht.

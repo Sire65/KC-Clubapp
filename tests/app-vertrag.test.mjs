@@ -4566,6 +4566,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/id="sprungHinweis"/.test(html) && /function sprungHinweisZeigen\(\)/.test(html) && /Wird nach dem Senden als Knopf angezeigt/.test(html), "Hinweis unter dem Schreibfeld");
 }
 
+// 450. 2.24.0: „📋 Meine Gruppen“ + gemeinsame Gruppen auf der Mitglieds-Seite (Wunsch Hansi) – nur Gruppen, in denen man selbst ist
+{
+  assert.ok(/async function mgGruppenUebersicht\(\)/.test(html) && /onclick="mgGruppenUebersicht\(\)" title="Alle meine Gruppen mit Mitgliedern">📋 Übersicht/.test(html), "Übersicht bei den Mitgliedern");
+  const f = html.slice(html.indexOf("async function mgGemeinsameZeigen"), html.indexOf("async function mgGemeinsameZeigen") + 700);
+  assert.ok(/\(await mgGruppenLaden\(\)\)\.filter\(\(g\) => g\.personen\.includes\(pid\)\)/.test(f), "gemeinsam = aus meinen eigenen Gruppen (keine fremden privaten Gruppen)");
+  assert.ok(/m\.selbst \? `<div style="margin-top:6px"><button class="knopf klein" onclick="mgGruppenUebersicht\(\)">📋 Meine Gruppen<\/button><\/div>` : '<div id="mgGemeinsam"><\/div>'/.test(html), "eigene Seite: Meine Gruppen, sonst gemeinsame");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
