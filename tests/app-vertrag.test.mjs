@@ -3396,7 +3396,8 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
 {
   const { KT_FRAGEN } = await import(new URL("../lib/kuechenterror/fragen.js", import.meta.url));
   assert.ok(KT_FRAGEN.filter((q) => q.m).length >= 30, "mindestens 30 Meisterfragen");
-  assert.ok(/filter\(\(q\) => !q\.m\)[^\n]*slice\(0, 11\), ktMischen\(\(KT_FRAGEN as any\[\]\)\.filter\(\(q\) => q\.m\)/.test(server), "Server: 11 normale + 1 Meisterfrage");
+  // 2.25.0: Auswahl über ktWahl (ungesehene zuerst, KC-CLUB-KUECHENTERROR-ABWECHSLUNG) – weiterhin 11 normale + 1 Meisterfrage
+  assert.ok(/ktWahl\(\(KT_FRAGEN as any\[\]\)\.filter\(\(q\) => !q\.m\)\.map\(\(q\) => q\.id\), alt, 11\), \.\.\.ktWahl\(\(KT_FRAGEN as any\[\]\)\.filter\(\(q\) => q\.m\)\.map\(\(q\) => q\.id\), alt, 1\)\]/.test(server), "Server: 11 normale + 1 Meisterfrage");
   assert.ok(/\* \(f\?\.m \? 2 : 1\); \/\/ Meisterfrage doppelt/.test(server) && /mal = f\?\.m \? 2 : 1/.test(html), "doppelte Punkte (Server + Computer-Spiel)");
   const hw = server.slice(server.indexOf('case "hilfe_wichtig": {'), server.indexOf('case "hilfe_antwort": {'));
   assert.ok(/if \(h\.von !== ich\.person_id && !ich\.vorstand\) throw/.test(hw) && /if \(wichtig && !h\.wichtig && p\.bescheid\)/.test(hw) && /!schon\.has\(id\)/.test(hw), "Hilfe wichtig: nur Ersteller/Clubleitung, Bescheid nur auf Wunsch an Unbeantwortete");
@@ -3405,7 +3406,7 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
 // 310. 2.16.0: Küchenterror-Zeitstufen + Chat vorlesen mit zwei Stimmen (KC-CLUB-KUECHENTERROR-ZEIT, KC-CLUB-CHAT-VORLESEN)
 {
   assert.ok(/const KT_STUFEN: Record<string, number> = \{ leicht: 20000, mittel: 15000, schwer: KT_MS \};/.test(server) && /const LIM = ktLimit\(q\)/.test(server), "Server: Zeit je Stufe");
-  assert.ok(/spielStart\(art, groesse, \{ stufe: p\.stufe \}\)/.test(server) && /stufe: p\.stufe \?\? g\.quiz\?\.stufe/.test(server), "Stufe beim Herausfordern und bei der Revanche");
+  assert.ok(/spielStart\(art, groesse, \{ stufe: p\.stufe[,}]/.test(server) && /stufe: p\.stufe \?\? g\.quiz\?\.stufe/.test(server), "Stufe beim Herausfordern und bei der Revanche");
   assert.ok(/const KT_ZEIT = \{ leicht: 20000, mittel: 15000, schwer: KT_MS \};/.test(html) && /"spHerausStufe"/.test(html), "App: Stufe wählbar");
   assert.ok(/vonId: m\.sender_person_id/.test(server) && /vorlesestimme: \(w\) => \(\{ art: w\?\.art === "m" \|\| w\?\.art === "w" \? w\.art : null \}\)/.test(server) && /case "vorlese_stimmen": \{/.test(server), "Server: Sender-ID + eigene Stimme");
   for (const k of ["chatVorlesenStart('neu')", "chatVorlesenStart('alles')", "chatVorlesenStart('${id}')", 'id="setStimmeM"', 'id="setStimmeW"', 'id="setMeineStimme"']) assert.ok(html.includes(k), "fehlt: " + k);
@@ -5192,4 +5193,27 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/\.mg-kacheln \.mg-online \.avatar, #mitgliederListe \.zeile\.mg-online \.avatar \{[^}]*#6ee87a[^}]*animation: mgOnlinePuls 2\.4s ease-in-out infinite;/.test(html), "hellgrüner Rand + Pulsieren (Kacheln und Liste)");
   assert.ok(/@keyframes mgOnlinePuls \{/.test(html) && /@keyframes mgOnlinePulsKlein \{/.test(html) && /prefers-reduced-motion: reduce\) \{ \.mg-kacheln \.mg-online \.avatar, #mitgliederListe \.zeile\.mg-online \.avatar \{ animation: (none|kOnlineAtem 3\.2s ease-in-out infinite); \}/.test(html), "Keyframes, ruhig bei „Bewegung reduzieren“"); // 2.24.4: dort nur Leuchten ohne Bewegung
   assert.ok(/liste\.map\(\(m\) => `<div class="zeile\$\{m\.online \? " mg-online" : ""\}">/.test(html) && /class="mini-kachel mg-kachel\$\{on \? " mg-online" : ""\}"/.test(html), "beide Ansichten markieren online");
+}
+
+// 4xx. 2.25.0: Küchenterror – 100 neue Fragen, jede Partie fängt anders an (KC-CLUB-KUECHENTERROR-ABWECHSLUNG, Wunsch Hansi
+// „noch 100 rein, Reihenfolge jedes Mal anders, immer mit verschiedenen anfangen – sonst merkt man sich das“)
+{
+  const { KT_FRAGEN } = await import(new URL("../lib/kuechenterror/fragen.js", import.meta.url));
+  assert.ok(KT_FRAGEN.length >= 290 && KT_FRAGEN.filter((q) => q.m).length >= 60, "mindestens 290 Fragen, davon 60 Meisterfragen");
+  for (let i = 1; i <= 290; i++) assert.ok(KT_FRAGEN.some((q) => q.id === "k" + String(i).padStart(3, "0")), "id fehlt oder wurde umbenannt: k" + i);
+  const neu = KT_FRAGEN.filter((q) => Number(q.id.slice(1)) > 190), anfang = {};
+  for (const q of neu) { const w = q.f.split(" ").slice(0, 2).join(" "); anfang[w] = (anfang[w] || 0) + 1; }
+  assert.ok(Math.max(...Object.values(anfang)) <= 10 && !anfang["Was ist"] && !anfang["Was bedeutet"], "neue Fragen sollen unterschiedlich anfangen");
+  assert.equal(new Set(KT_FRAGEN.map((q) => q.f)).size, KT_FRAGEN.length, "keine Frage doppelt");
+  // Server: echte Auswahl nachrechnen – zuletzt gesehene Fragen kommen erst, wenn die ungesehenen aufgebraucht sind
+  const wahl = server.slice(server.indexOf("const ktWahl = "), server.indexOf("\n", server.indexOf("const ktWahl = ")));
+  assert.ok(/ktMischen\(pool\)\.sort\(\(a, b\) => \(alt\.get\(b\) \?\? 1e9\) - \(alt\.get\(a\) \?\? 1e9\)\)\.slice\(0, n\)/.test(wahl), "Server: ungesehene zuerst, dann die ältesten");
+  const ktMischen = (l) => [...l].sort(() => Math.random() - 0.5), ktWahlS = new Function("ktMischen", "return " + wahl.replace("const ktWahl = ", "").replace(/: string\[\]|: Map<string, number>|: number/g, "").replace(/;$/, ""))(ktMischen);
+  const pool = KT_FRAGEN.filter((q) => !q.m).map((q) => q.id), alt = new Map(pool.slice(0, pool.length - 11).map((id, i) => [id, i]));
+  assert.deepEqual(ktWahlS(pool, alt, 11).sort(), pool.slice(-11).sort(), "nur die ungesehenen 11");
+  const alt2 = new Map(pool.map((id, i) => [id, i])); assert.deepEqual(ktWahlS(pool, alt2, 3).sort(), pool.slice(-3).sort(), "alle gesehen → die am längsten zurückliegenden");
+  assert.ok(/async function ktGesehen\(personen: string\[\]\)/.test(server) && /\.eq\("spiel", "kt"\)/.test(server) && /\.order\("erstellt_am", \{ ascending: false \}\)\.limit\(KT_GEDAECHTNIS\)/.test(server), "Server: Gedächtnis aus den letzten Partien beider Spieler");
+  assert.ok(/alt: art === "kt" \? await ktGesehen\(\[ich\.person_id, an\]\) : undefined/.test(server) && /alt: g\.spiel === "kt" \? await ktGesehen\(\[ich\.person_id, gegner\]\) : undefined/.test(server), "Herausforderung und Revanche nutzen das Gedächtnis");
+  // App (gegen den Computer): Gedächtnis je Gerät, gleiche Regel
+  assert.ok(/const ktWahl = \(pool, zuletzt, n\) =>/.test(html) && /ktZuletztMerken\(KTP\.z\.ids\);/.test(html) && /localStorage\.getItem\("kc_club_kt_zuletzt"\)/.test(html) && /fragen\.js\?v=3/.test(html), "App: Computer-Spiel merkt sich die letzten Fragen, neue Fragen werden geladen");
 }

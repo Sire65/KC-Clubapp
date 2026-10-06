@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.24.19"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.25.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SCHNELLSTART-DATEI (2.24.8, Hinweis Hansi „Start ist langsamer geworden“): das Programm liegt in app.js, damit das Handy es
 // fertig übersetzt behalten kann (statt bei jedem Öffnen 1,8 MB neu einzulesen). Seite und Programm müssen dieselbe Version haben
 // (AGENTS Regel 16, kein Mischstand): passt es nicht (z. B. alte Seite aus einem Zwischenspeicher), einmal frisch laden, sonst anhalten.
@@ -4771,8 +4771,14 @@ const KT_MS = 10000, KT_KEY = "kc_club_kuechenterror_pc";
 const KT_ZEIT = { leicht: 20000, mittel: 15000, schwer: KT_MS };
 const ktpLimit = () => KT_ZEIT[KTP.staerke] || KT_MS;
 let KT_FRAGEN_L = null;
-async function ktFragenLaden() { if (!KT_FRAGEN_L) KT_FRAGEN_L = (await import("./lib/kuechenterror/fragen.js?v=2")).KT_FRAGEN; return KT_FRAGEN_L; }
+async function ktFragenLaden() { if (!KT_FRAGEN_L) KT_FRAGEN_L = (await import("./lib/kuechenterror/fragen.js?v=3")).KT_FRAGEN; return KT_FRAGEN_L; }
 const ktMischen = (l) => { const a = [...l]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+// KC-CLUB-KUECHENTERROR-ABWECHSLUNG (2.25.0): Liste der zuletzt gespielten Frage-ids (neueste zuerst), nur auf diesem Gerät
+const KT_ZULETZT_MAX = 150;
+function ktZuletzt() { try { const l = JSON.parse(localStorage.getItem("kc_club_kt_zuletzt") || "[]"); return Array.isArray(l) ? l : []; } catch { return []; } }
+function ktZuletztMerken(ids) { try { const l = [...ids, ...ktZuletzt().filter((id) => !ids.includes(id))].slice(0, KT_ZULETZT_MAX); localStorage.setItem("kc_club_kt_zuletzt", JSON.stringify(l)); } catch {} }
+// ungespielte zuerst (gemischt), dann die am längsten zurückliegenden
+const ktWahl = (pool, zuletzt, n) => { const rang = (id) => { const i = zuletzt.indexOf(id); return i < 0 ? 1e9 : i; }; return ktMischen(pool).sort((a, b) => rang(b) - rang(a)).slice(0, n); };
 const ktPunkte = (ok, ms, lim = KT_MS) => (ok && ms <= lim ? 100 + Math.round(100 * (1 - ms / lim)) : 0); // Zeitbonus relativ zur Stufe
 const ktSek = (ms) => (ms / 1000).toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 // Frage mit Zeitbalken; aufl = Auflösung (richtig/gewaehlt/ok/p/ms/e) – dann sind die Knöpfe gesperrt und eingefärbt
@@ -4887,7 +4893,10 @@ function ktPcUhren() { // Zeitablauf über den Wächter – auch nach Wiederkomm
 async function ktPcStart() {
   const F = await ktFragenLaden();
   // 11 normale Fragen + zum Schluss 1 🎖️ Meisterfrage (wie gegen Mitglieder)
-  KTP.z = { ids: [...ktMischen(F.filter((q) => !q.m).map((q) => q.id)).slice(0, 11), ...ktMischen(F.filter((q) => q.m).map((q) => q.id)).slice(0, 1)], i: 0, punkte: [0, 0] };
+  // KC-CLUB-KUECHENTERROR-ABWECHSLUNG (2.25.0): zuletzt gespielte Fragen (auf diesem Gerät) kommen erst dran, wenn die anderen durch sind
+  const zuletzt = ktZuletzt();
+  KTP.z = { ids: [...ktWahl(F.filter((q) => !q.m).map((q) => q.id), zuletzt, 11), ...ktWahl(F.filter((q) => q.m).map((q) => q.id), zuletzt, 1)], i: 0, punkte: [0, 0] };
+  ktZuletztMerken(KTP.z.ids);
   ktPcNeueFrage(KTP.z);
   ktPcZeigen();
 }

@@ -1,10 +1,19 @@
 {
-  "version": "2.24.19",
+  "version": "2.25.0",
   "datum": "2026-10-06",
   "neu": [
-    "🔧 Kleine Systemverbesserungen"
+    "🔪 Küchenterror: 100 neue Fragen (jetzt 290)",
+    "🔀 Küchenterror: jede Partie beginnt mit anderen Fragen – Bekanntes kommt erst wieder, wenn der Rest durch ist"
   ],
   "verlauf": [
+    {
+      "version": "2.25.0",
+      "datum": "2026-10-06",
+      "neu": [
+        "🔪 Küchenterror: 100 neue Fragen (jetzt 290)",
+        "🔀 Küchenterror: jede Partie beginnt mit anderen Fragen – Bekanntes kommt erst wieder, wenn der Rest durch ist"
+      ]
+    },
     {
       "version": "2.24.19",
       "datum": "2026-10-06",

@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.25.0 – 2026-10-06 – KC-CLUB-KUECHENTERROR-ABWECHSLUNG: 100 neue Fragen, jede Partie fängt anders an (Wunsch Hansi)
+- 🔪 Küchenterror hat 100 neue Fragen (k191–k290: 80 normale, 20 🎖️ Meisterfragen) – jetzt 290 insgesamt. Die neuen fangen bewusst unterschiedlich an (kein „Was ist …?“/„Was bedeutet …?“), damit man sich nicht am Satzanfang orientiert. Die richtige Antwort ist auch hier nicht an der Länge erkennbar (Vertragstest 424).
+- Fragenauswahl gegen Mitglieder (Server): zuerst Fragen, die **beide** Spieler in ihren letzten 40 Küchenterror-Partien noch nicht hatten, zufällig gemischt. Erst wenn die nicht reichen, kommen die am längsten zurückliegenden. So beginnt jede Partie (auch die Revanche) mit anderen Fragen und es wiederholt sich nichts, bis der Vorrat durch ist.
+- Gegen den Computer (App): gleiche Regel, Gedächtnis der letzten 150 Fragen auf dem Gerät (nur Komfort; ohne Speicher wird wie bisher zufällig gewählt).
+- Bestehende Fragen-ids unverändert (laufende Partien merken sich die ids). Fragen-Datei mit ?v=3, damit Geräte die neuen Fragen laden.
+- Server kc-club 2.25.0 (wird beim Push auf main automatisch hochgeladen). Keine Datenbankänderung.
+
 ## 2.24.19 – 2026-10-06 – KC-CLUB-GRUPPE-AUS-RUNDE + KC-CLUB-CHAT-KOPF-BILD
 - Feste Gruppen haben jetzt ein 🔗-Abzeichen am Symbol (Liste und Chat-Kopf), Runden (Nachricht an mehrere ohne feste Gruppe) einen gestrichelten grauen Kreis mit den Anfangsbuchstaben – so sieht jeder, was eine feste Gruppe ist (Wunsch Hansi).
 - Wer eine Runde begonnen hat, bekommt beim zweiten Mal (zweite eigene Nachricht dort oder weitere Runde mit genau denselben Leuten) im Chat einen Streifen „Daraus eine feste Gruppe machen?“ – Name und Symbol wählen, dieselbe Unterhaltung wird zur Gruppe, alle Nachrichten bleiben. Kein Fenster beim Öffnen, keine Push/Mail an alle; „Nein, danke“ gilt für diese Runde dauerhaft (Gerät).
