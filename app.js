@@ -4035,15 +4035,16 @@ async function spMitgliedKnopf(pid) {
 // Tic-Tac-Toe bewusst ohne. Nutzt die vorhandene Vorlese-Stimme (sprechen); jede Ansage nur einmal (SP_GESAGT).
 const SP_ANSAGE_KEY = "kc_club_sp_ansage", SP_ANSAGE_NAME = { schach: "Schach", kt: "Küchenterror", bsk: "Bauernskat", ttt: "Tic-Tac-Toe" };
 const spAnsageAn = (art) => { try { return !!JSON.parse(localStorage.getItem(SP_ANSAGE_KEY) || "{}")[art]; } catch { return false; } };
-function spAnsageKnopf(art) {
+function spAnsageKnopf(art, kachel = false) {
   const an = spAnsageAn(art);
   const was = art === "ttt" ? "Töne" : "Ansage"; // 2.23.6: Tic-Tac-Toe nur Töne, keine Sprache
+  if (kachel) return `<button class="knopf klein${an ? " haupt" : ""} sp-ansage" data-art="${art}" data-kachel="1" aria-pressed="${an}" onclick="spAnsageSetzen('${art}', ${!an})"><span class="kt-ico">${an ? "🔊" : "🔇"}</span>${was} ${an ? "an" : "aus"}</button>`; // KC-CLUB-KT-KNOEPFE (2.25.9): Kachelform
   return `<button class="knopf klein${an ? " haupt" : ""} sp-ansage" data-art="${art}" aria-pressed="${an}" onclick="spAnsageSetzen('${art}', ${!an})">${an ? "🔊 " + was + " an" : "🔇 " + was + " aus"}</button>`;
 }
 function spAnsageSetzen(art, an) {
   let w = {}; try { w = JSON.parse(localStorage.getItem(SP_ANSAGE_KEY) || "{}") || {}; } catch {}
   w[art] = !!an; lsSetzen(SP_ANSAGE_KEY, JSON.stringify(w));
-  document.querySelectorAll(`.sp-ansage[data-art="${art}"]`).forEach((b) => (b.outerHTML = spAnsageKnopf(art)));
+  document.querySelectorAll(`.sp-ansage[data-art="${art}"]`).forEach((b) => (b.outerHTML = spAnsageKnopf(art, !!b.dataset.kachel)));
   if (art === "ttt") { if (an) spTttTon("sieg"); return melde(an ? "🔊 Töne für Tic-Tac-Toe an" : "🔇 Töne für Tic-Tac-Toe aus"); } // KC-CLUB-TTT-TOENE (2.23.6)
   try { speechSynthesis.cancel(); } catch {}
   if (an) { if (!("speechSynthesis" in window)) return melde("Dieses Gerät kann leider nicht vorlesen.", true); sprechen(`Ansage für ${SP_ANSAGE_NAME[art]} ist an.`); }
@@ -4854,7 +4855,7 @@ async function ktPcZeigen() {
       ${stand}
       <p style="margin:6px 0">🔪 <b>Küchenterror</b> – ${F.length} Fragen aus dem Profi-Küchenalltag. Du beantwortest <b>alle 12 Fragen</b> – der Computer rät jedes Mal <b>gleichzeitig mit</b>.
         Jede Frage hat 4 Antworten, nur eine ist richtig. Der Zeitbalken läuft je nach Stufe <b>20, 15 oder 10 Sekunden</b>: richtig gibt 100 Punkte plus bis zu 100 Punkte Zeitbonus – wer schneller ist, holt mehr. Die letzte ist eine schwere <b>🎖️ Meisterfrage</b> – die zählt doppelt!</p>
-      <div class="kt-knoepfe"><button class="knopf haupt kt-los" onclick="ktPcStart()">▶ Los geht’s</button>${spAnsageKnopf("kt")}${s.ich + s.pc + s.remis ? '<button class="knopf klein" onclick="ktPcStandWeg()" title="Spielstand zurücksetzen">🗑️ Stand</button>' : ""}</div></div>`; return; } // KC-CLUB-KT-KNOEPFE (2.25.9, Wunsch Hansi): Knöpfe ordentlich nebeneinander
+      <div class="kt-knoepfe"><button class="knopf haupt kt-los" onclick="ktPcStart()"><span class="kt-ico">▶</span>Los geht’s</button>${spAnsageKnopf("kt", true)}${s.ich + s.pc + s.remis ? '<button class="knopf klein" onclick="ktPcStandWeg()" title="Spielstand zurücksetzen"><span class="kt-ico">🗑️</span>Stand löschen</button>' : ""}</div></div>`; return; } // KC-CLUB-KT-KNOEPFE (2.25.9, Wunsch Hansi): Knöpfe ordentlich nebeneinander
   const kopf = `<div class="kt-kopf"><span>Du <b>${z.punkte[0]}</b></span><span>Frage ${Math.min(z.i + 1, 12)}/12</span><span><b>${z.punkte[1]}</b> Computer</span></div>`;
   if (z.phase === "ende") {
     const [a, b] = z.punkte, sieg = a > b, remis = a === b;

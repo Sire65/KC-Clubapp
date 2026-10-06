@@ -4777,8 +4777,9 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 
 // 2.25.9 KC-CLUB-KT-KNOEPFE
 {
-  assert.ok(/<div class="kt-knoepfe"><button class="knopf haupt kt-los" onclick="ktPcStart\(\)">▶ Los geht’s<\/button>\$\{spAnsageKnopf\("kt"\)\}/.test(html) && /onclick="ktPcStandWeg\(\)" title="Spielstand zurücksetzen">🗑️ Stand<\/button>/.test(html), "Küchenterror: Los geht’s, Ansage, Stand in einem Raster");
-  assert.ok(/\.kt-knoepfe \{ display: grid; grid-template-columns: 1fr 1fr;/.test(html) && /\.kt-wahl \.sp-wahl > span \{ flex-basis: 100%; \}/.test(html) && /<div class="kt-wahl">\$\{spWahl\("Stufe"/.test(html), "Stufe volle Breite, Knöpfe gleich breit");
+  assert.ok(/<div class="kt-knoepfe"><button class="knopf haupt kt-los" onclick="ktPcStart\(\)"><span class="kt-ico">▶<\/span>Los geht’s<\/button>\$\{spAnsageKnopf\("kt", true\)\}/.test(html) && /onclick="ktPcStandWeg\(\)" title="Spielstand zurücksetzen"><span class="kt-ico">🗑️<\/span>Stand löschen<\/button>/.test(html), "Küchenterror: Los geht’s, Ansage, Stand nebeneinander als Kacheln");
+  assert.ok(/b\.outerHTML = spAnsageKnopf\(art, !!b\.dataset\.kachel\)/.test(html) && /function spAnsageKnopf\(art, kachel = false\)/.test(html), "Umschalten behält Kachelform, andere Spiele unverändert");
+  assert.ok(/\.kt-knoepfe \{ display: grid; grid-template-columns: repeat\(auto-fit, minmax\(0, 1fr\)\);/.test(html) && /\.kt-wahl \.sp-wahl > span \{ flex-basis: 100%; \}/.test(html) && /<div class="kt-wahl">\$\{spWahl\("Stufe"/.test(html), "Stufe volle Breite, Knöpfe gleich breit");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

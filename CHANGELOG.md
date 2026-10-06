@@ -1,7 +1,7 @@
 # Änderungen
 
 ## 2.25.9 – 2026-10-06 – Küchenterror: Knöpfe ordentlich nebeneinander
-Küchenterror gegen den Computer: Stufe über die volle Breite mit gleich hohen Feldern (Symbol, Name, Sekunden untereinander); „▶ Los geht’s“ groß, darunter „Ansage“ und „🗑️ Stand“ gleich breit nebeneinander. (KC-CLUB-KT-KNOEPFE, Wunsch Hansi)
+Küchenterror gegen den Computer: Stufe über die volle Breite mit gleich hohen Feldern (Symbol, Name, Sekunden untereinander); „▶ Los geht’s“, „🔊 Ansage“ und „🗑️ Stand löschen“ als drei gleich große Kacheln nebeneinander (Symbol über dem Text). (KC-CLUB-KT-KNOEPFE, Wunsch Hansi)
 
 ## 2.25.8 – 2026-10-06 – Gruppen: grüne LED wenn alle online
 Am Symbol einer festen Gruppe leuchtet unten rechts eine grüne LED, wenn alle anderen Mitglieder gerade online sind; das 🔗 sitzt jetzt unten links. (KC-CLUB-GRUPPE-ALLE-ONLINE)
