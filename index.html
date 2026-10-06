@@ -829,6 +829,7 @@
   label.feld { display: block; margin-top: 10px; font-weight: 700; font-size: .92rem; }
   .feld input, .feld select, .feld textarea { display: block; width: 100%; margin-top: 5px; padding: 12px; border: 1px solid var(--linie); border-radius: 12px; background: var(--bg); color: var(--text); } /* 0.46.0: Textfarbe immer passend zum Feld-Hintergrund (sonst z. B. weiß auf hell in der Foto-Großansicht) */
   .zwei { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .wn-zeile { display: flex; gap: 10px; align-items: flex-start; font-size: 1.1rem; padding: 8px 10px; margin: 4px 0; border-radius: 12px; background: var(--karte2); } /* KC-CLUB-WAS-NEU */
   .marke { display: inline-block; font-size: .78rem; font-weight: 800; padding: 3px 9px; border-radius: 10px; background: var(--karte2); }
   /* KC-CLUB-GRUPPEN-ADMIN (2.24.3): 👑-Schalter je Mitglied, grau = aus, farbig = Gruppen-Admin */
   .gr-krone { border: 2px solid var(--linie, #ccc); background: transparent; border-radius: 10px; font-size: 1.15rem; min-width: 44px; min-height: 40px; filter: grayscale(1); opacity: .45; cursor: pointer; }
@@ -2564,6 +2565,7 @@
       <p class="hinweis" style="font-size:.85rem" id="wahlHinweis">Nur Push: Kommt der Push nicht an, schicken wir automatisch eine E-Mail.</p>
       <div class="schalter"><div><b>📲 Push auf diesem Handy</b><div class="hinweis" id="pushStatus">…</div></div><button class="knopf klein" id="pushKnopf" onclick="pushUmschalten()">Einschalten</button></div>
       <div class="schalter"><div><b>🔊 Warnton bei neuer Nachricht</b><div class="hinweis">Kurzer Ton, wenn die App offen ist</div></div><input type="checkbox" id="setTon" onchange="einstellung('ton', this.checked)"></div>
+      <div class="schalter"><div><b>👋 Beim Öffnen zeigen, was neu ist</b><div class="hinweis">Neue Nachrichten (Chats und Gruppen) und Pinnwand-Einträge auf einen Blick, mit Knopf direkt dorthin</div></div><input type="checkbox" id="setWasNeu" onchange="einstellung('wasNeu', this.checked)"></div> <!-- 2.24.12 KC-CLUB-WAS-NEU -->
       <div class="knoepfe"><button class="knopf klein" onclick="tonTest()">Ton testen</button><button class="knopf klein" onclick="pushTest()">Test-Push senden</button><button class="knopf klein" onclick="geraeteBlatt()">📱 Meine Geräte</button></div>
       <!-- KC-CLUB-RUHEZEIT (0.98.0) -->
       <div class="schalter" style="margin-top:10px"><div><b>🌙 Nicht stören</b><div class="hinweis" id="ruheHinweis">In dieser Zeit kein Push. Anrufe kommen trotzdem durch, danach eine Sammelmeldung.</div></div><input type="checkbox" id="ruheAn" onchange="ruheSpeichern()"></div>
@@ -3009,6 +3011,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.24.11" data-v="2.24.11"></script>
+<script src="app.js?v=2.24.12" data-v="2.24.12"></script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.24.11"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.24.12"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SCHNELLSTART-DATEI (2.24.8, Hinweis Hansi „Start ist langsamer geworden“): das Programm liegt in app.js, damit das Handy es
 // fertig übersetzt behalten kann (statt bei jedem Öffnen 1,8 MB neu einzulesen). Seite und Programm müssen dieselbe Version haben
 // (AGENTS Regel 16, kein Mischstand): passt es nicht (z. B. alte Seite aus einem Zwischenspeicher), einmal frisch laden, sonst anhalten.
@@ -416,7 +416,7 @@ function anwendenDesign() {
   const MODUS_ZEICHEN = { auto: ["A", "Automatik"], tag: ["T", "Immer Tag"], nacht: ["N", "Immer Nacht"] }, mz = MODUS_ZEICHEN[DS.modus] || MODUS_ZEICHEN.auto;
   if ($("modusKnopf")) { $("modusKnopf").innerHTML = `${nacht ? "☀️" : "🌙"}<span class="modusbuchstabe" aria-hidden="true">${mz[0]}</span>`;
     $("modusKnopf").title = `Tag/Nacht umschalten – eingestellt: ${mz[1]}`; $("modusKnopf").setAttribute("aria-label", `Tag/Nacht umschalten, eingestellt: ${mz[1]}`); }
-  $("setFeiertage").checked = einst("feiertage", true); $("setGross").checked = $("setGrossE").checked = einst("gross", false); $("setAnimiert").checked = einst("animiert", true); $("setTon").checked = einst("ton", true);
+  $("setFeiertage").checked = einst("feiertage", true); $("setGross").checked = $("setGrossE").checked = einst("gross", false); $("setAnimiert").checked = einst("animiert", true); if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
   designWahlZeigen();
 }
 function designWahlZeigen() {
@@ -488,11 +488,31 @@ function pwUebernehmen(r) {
 const pwAufrufAnPinnwand = (a) => !a.kanaele || a.kanaele.includes("pinnwand"); // KC-CLUB-HILFE-KANAELE (2.23.44)
 const pwHilfeNeu = () => (PW.hilfe?.aufrufe || []).filter((a) => pwAufrufAnPinnwand(a) && !a.eigen && !a.meine && !hlVoll(a));
 // Beim Öffnen der App: offene wichtige Zettel → Pinnwand zeigen
+// ---------- KC-CLUB-WAS-NEU (2.24.12, Wunsch Hansi): beim Öffnen auf einen Blick, was neu ist – mit Knopf direkt dorthin ----------
+// „Du hast 3 neue Nachrichten (davon 1 in Gruppen) und 1 neuen Pinnwand-Eintrag.“ Nur beim Öffnen auf der Startseite, nicht über einen
+// Push-/Sprunglink, nicht bei Notfall-Meldung; abschaltbar (⚙️ → Benachrichtigungen). Unsichere Zahlen werden nie als 0 gezeigt (Regel 11).
+function wasNeuZeigen(pw) {
+  const n = INIT?.ungelesen || 0, gr = INIT?.ungelesenGruppen, p = pw?.length || 0;
+  if (!einst("wasNeu", true) || (!n && !p) || (START_HASH && START_HASH !== "#") || INIT?.alarm || aktuelleAnsicht !== "start" || document.querySelector(".blatt:not(.versteckt)")) return false;
+  const mz = (k, w1, wn) => `<b>${k}</b> ${k === 1 ? w1 : wn}`, einzel = gr == null ? null : n - gr;
+  const zeilen = [];
+  if (n) zeilen.push(`<div class="wn-zeile">💬 <span>${mz(n, "neue Nachricht", "neue Nachrichten")}${INIT?.ungelesenUnsicher ? " (vielleicht mehr)" : ""}${gr == null ? "" : gr && einzel ? `<br><small>${mz(einzel, "in deinem Chat", "in deinen Chats")} · ${mz(gr, "in einer Gruppe", "in Gruppen")}</small>` : gr ? "<br><small>in deinen Gruppen</small>" : "<br><small>in deinen Chats</small>"}</span></div>`);
+  if (p) zeilen.push(`<div class="wn-zeile">📌 <span>${mz(p, "neuer Pinnwand-Eintrag", "neue Pinnwand-Einträge")}</span></div>`);
+  const f = blattAuf("wasNeuBlatt", `<h3 style="margin:0 0 8px">👋 Schön, dass du da bist${ICH?.vorname ? ", " + esc(ICH.vorname) : ""}!</h3>
+    <p style="margin:0 0 6px">Seit deinem letzten Besuch ist neu:</p>${zeilen.join("")}
+    <div class="knoepfe" style="flex-direction:column;align-items:stretch;margin-top:10px">
+      ${n ? `<button class="knopf haupt" data-wn="n">💬 Direkt zu den Nachrichten</button>` : ""}${p ? `<button class="knopf${n ? "" : " haupt"}" data-wn="p">📌 Pinnwand-Eintrag${p > 1 ? "e" : ""} ansehen</button>` : ""}
+      <button class="knopf" data-wn="s">Später</button></div>
+    <label class="schalter" style="margin-top:6px"><span><small>Beim Öffnen nicht mehr zeigen</small></span><input type="checkbox" onchange="einstellung('wasNeu', !this.checked); if ($('setWasNeu')) $('setWasNeu').checked = !this.checked"></label>`);
+  f.querySelectorAll("[data-wn]").forEach((b) => (b.onclick = () => { const w = b.dataset.wn; fensterZu(f); if (w === "n") zeige("nachrichten"); else if (w === "p") pwFenster(pw); }));
+  return true;
+}
 async function pwStart(nurZaehlen) { // nurZaehlen: Begrüßung ist offen → Pinnwand nicht zusätzlich öffnen
   // 0.58.0: Zettel, die gekommen sind, während die App zu war, gehen direkt als Post-it-Fenster auf
   let gezeigt = false;
   if (!nurZaehlen) try { const n = (await api("pinnwand_neu")).neu || [];
-    if (n.length) { n.forEach((z) => PW_GEMELDET.add(z.id)); try { localStorage.setItem("kc_club_pw_gemeldet", JSON.stringify([...PW_GEMELDET].slice(-PW_GEMELDET_MAX))); } catch {}
+    if (wasNeuZeigen(n)) { gezeigt = true; n.forEach((z) => PW_GEMELDET.add(z.id)); try { localStorage.setItem("kc_club_pw_gemeldet", JSON.stringify([...PW_GEMELDET].slice(-PW_GEMELDET_MAX))); } catch {} } // KC-CLUB-WAS-NEU
+    else if (n.length) { n.forEach((z) => PW_GEMELDET.add(z.id)); try { localStorage.setItem("kc_club_pw_gemeldet", JSON.stringify([...PW_GEMELDET].slice(-PW_GEMELDET_MAX))); } catch {}
       pwFenster(n); gezeigt = true; } } catch {}
   try { const r = await api("pinnwand"); pwUebernehmen(r);
     if (!gezeigt && !nurZaehlen && (PW.zettel.some(pwOffen) || pwHilfeNeu().some((a) => a.wichtig)) && aktuelleAnsicht === "start") { PW.wichtigStart = true; if (pwHilfeNeu().some((a) => a.wichtig)) PW.hilfeStart = true; /* 2.15.0: wichtiger Hilfe-Aufruf */ zeige("pinnwand"); gezeigt = true; }
@@ -1349,6 +1369,7 @@ const HILFE = [
   { id: "mitglieder_fragen", thema: "start", sym: "👥", t: "Andere Mitglieder um Rat fragen", x: "Weiß Twinkey nicht weiter, stellst du die Frage den Mitgliedern: bei <b>„🧑‍🍳 Frag Twinkey“</b> unter dem Fragefeld auf <b>„👥 Lieber ein Mitglied fragen“</b> – an alle oder an ausgewählte, per App, Push oder E-Mail. Die Antworten siehst du dort unter „Deine Fragen an Mitglieder“.", zeig: () => twFrageStart(), seit: "2.23.51" },
   { id: "anfrage_vorbehalt", thema: "termine", sym: "🤔", t: "Gegenvorschlag unter Vorbehalt annehmen", x: "Schlägt dir jemand eine andere Zeit vor, kannst du <b>„✅ Neue Zeit annehmen“</b>, <b>„🤔 Unter Vorbehalt“</b> oder <b>„❌ Passt nicht“</b> wählen. Beim Vorbehalt schreibst du kurz dazu, woran es noch hängt – der andere sieht es sofort.", zeig: () => zeige("termine"), seit: "2.23.57" },
   { id: "sprungknopf", thema: "nachrichten", sym: "🔘", t: "Einen Knopf in die Nachricht setzen", x: "Willst du jemanden direkt an eine Stelle der App schicken? Unter dem Schreibfeld auf <b>📎</b> → <b>„🔘 Knopf zu einer App-Stelle“</b> und das Ziel wählen, z. B. „Mein Bild wählen“. In der Nachricht erscheint ein Knopf – antippen, und man ist dort.", zeig: () => zeige("nachrichten"), seit: "2.23.97" },
+  { id: "was_neu", thema: "nachrichten", sym: "👋", t: "Was ist neu? Gleich beim Öffnen", x: "Öffnest du die App und es gibt Neues, zeigt sie dir kurz, wie viele <b>neue Nachrichten</b> (in deinen Chats und in Gruppen) und <b>Pinnwand-Einträge</b> da sind – mit Knopf direkt dorthin. Abschalten: ⚙️ Einstellungen → „👋 Beim Öffnen zeigen, was neu ist“.", seit: "2.24.12" },
   { id: "animiert", thema: "darstellung", sym: "✨", t: "Ruhige oder lebendige Knöpfe", x: "Kacheln zoomen kurz beim Antippen, die Reiter bekommen einen laufenden Rahmen und „＋ Neu“ leuchtet auf. Wer es lieber ruhig mag: ⚙️ → „🎨 Darstellung“ → <b>„✨ Animierte Knöpfe“</b> ausschalten. Gilt für dieses Gerät.", zeig: () => einstiegHin("darstellung", "setAnimiert"), seit: "2.24.1" },
   { id: "kacheln_klein", thema: "darstellung", sym: "🔲", t: "Kacheln kleiner – 3 nebeneinander", x: "Mehr Kacheln auf einen Blick: Bei ⚙️ → <b>„🎨 Darstellung“</b> → <b>„🔲 Kacheln auf der Startseite“</b> „Klein“ wählen – dann passen 3 nebeneinander. Das geht nur in der <b>erweiterten Ansicht</b> – in der einfachen Ansicht bleiben die Kacheln groß. Gilt nur für dieses Gerät.", zeig: () => einstiegHin("darstellung", "kachelGroesseWahl"), seit: "2.23.90" },
 ];

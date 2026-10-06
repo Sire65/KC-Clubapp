@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.24.12 – 2026-10-06 – Was ist neu – beim Öffnen
+Beim Öffnen zeigt die App, wie viele neue Nachrichten (in Chats und Gruppen) und Pinnwand-Einträge da sind – mit Knopf direkt dorthin. (KC-CLUB-WAS-NEU)
+
 ## 2.24.11 – 2026-10-06 – Startzeit messen
 Unter ⚙️ → ℹ️ App-Info steht jetzt, wie lange der letzte Start gedauert hat – aufgeteilt in Seite, Programm, Einrichten, Server und Anzeigen, dazu die letzten 10 Starts. (KC-CLUB-STARTZEIT)
 

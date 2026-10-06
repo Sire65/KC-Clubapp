@@ -4684,6 +4684,13 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/el\.innerHTML = startMessHtml\(\) \+ APPINFO/.test(html) && /Gemessen wird nur beim Öffnen der App/.test(html), "in App-Info sichtbar");
   assert.ok(/fpNeu\("startzeit"/.test(html) && /FP_INFO = new Set\(\[[^\]]*"startzeit"/.test(server), "Meldung nur als Info");
 }
+// 2.24.12 KC-CLUB-WAS-NEU: beim Öffnen zeigen, was neu ist (Nachrichten Einzel/Gruppe, Pinnwand) – mit Knopf direkt dorthin
+{
+  assert.ok(/const ungelesenGruppen = grFehler \? null : /.test(server) && /ungelesen, ungelesenLaut, ungelesenGruppen,/.test(server), "Server: Gruppen getrennt gezählt, Fehler = unbekannt");
+  assert.ok(/function wasNeuZeigen\(pw\)/.test(html) && /!einst\("wasNeu", true\) \|\| \(!n && !p\) \|\| \(START_HASH && START_HASH !== "#"\) \|\| INIT\?\.alarm \|\| aktuelleAnsicht !== "start"/.test(html), "nur beim Öffnen, nicht über Links, nicht bei Notfall, abschaltbar");
+  assert.ok(/if \(wasNeuZeigen\(n\)\) \{ gezeigt = true;/.test(html) && /zeige\("nachrichten"\); else if \(w === "p"\) pwFenster\(pw\)/.test(html), "Knöpfe direkt zu Nachrichten / Pinnwand, kein doppeltes Fenster");
+  assert.ok(/id="setWasNeu" onchange="einstellung\('wasNeu', this\.checked\)"/.test(html) && /gr == null \? ""/.test(html), "Schalter in den Einstellungen; unbekannte Gruppen-Zahl nicht als 0");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

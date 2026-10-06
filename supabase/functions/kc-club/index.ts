@@ -41,7 +41,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.24.11";
+const SERVER_VERSION = "2.24.12";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -4195,6 +4195,11 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           ungelesen += n;
           if (!stummJetzt(stummE?.wert, t.thread_id)) ungelesenLaut += n; // KC-CLUB-STUMM: stumme Chats ohne Ton
         }
+        // KC-CLUB-WAS-NEU (2.24.12, Wunsch Hansi): beim Öffnen getrennt nach Einzel- und Gruppenchats zeigen
+        const neuIds = zahlen.filter((x: any) => x.n > 0).map((x: any) => x.t.thread_id);
+        const { data: grNeu, error: grFehler } = neuIds.length ? await db.from("kc_club_gruppen").select("thread_id").in("thread_id", neuIds) : { data: [] as any[], error: null };
+        const grSet = new Set((grNeu ?? []).map((g: any) => g.thread_id));
+        const ungelesenGruppen = grFehler ? null : zahlen.reduce((a: number, x: any) => a + (grSet.has(x.t.thread_id) ? x.n : 0), 0);
         // KC-CLUB-NOTFALL-MELDUNG (2.21.0): ungelesene Notfall-Meldung der letzten 48 Std. → App zeigt sie sofort groß in Rot
         let alarm: any = null;
         { const offen = zahlen.filter((z) => z.n > 0).map((z) => z.t.thread_id);
@@ -4274,7 +4279,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const kz = await kachelZahlen(ich, p).catch(() => null); // KC-CLUB-KACHEL-ZAHLEN (2.22.12)
         // 🎓 Schulungen: was auf den Admin wartet (gewählt – freigeben, Gegenvorschlag, keine Antwort) – KC-CLUB-SCHULUNG-HINWEIS (2.23.68); Fehler → keine Zahl
         if (kz && ich.admin) (kz as any).schulung = await schulungStand(ich, null).then((x) => x.wartet.length).catch(() => null);
-        return json({ alarm, kz, sosFuerAlle: await sosFuerAlle(), spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, adminName: await adminVorname(), ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, communicator, notfall: nf ?? null, einstellungen, freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
+        return json({ alarm, kz, sosFuerAlle: await sosFuerAlle(), spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, adminName: await adminVorname(), ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, communicator, notfall: nf ?? null, einstellungen, freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
             // KC-CLUB-GERAETE-TIPP: wohin der Link ginge – nur teilweise (z. B. „h…@web.de“)
