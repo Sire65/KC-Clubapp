@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.26.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.27.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SCHNELLSTART-DATEI (2.24.8, Hinweis Hansi „Start ist langsamer geworden“): das Programm liegt in app.js, damit das Handy es
 // fertig übersetzt behalten kann (statt bei jedem Öffnen 1,8 MB neu einzulesen). Seite und Programm müssen dieselbe Version haben
 // (AGENTS Regel 16, kein Mischstand): passt es nicht (z. B. alte Seite aus einem Zwischenspeicher), einmal frisch laden, sonst anhalten.
@@ -987,7 +987,7 @@ const EINWEISUNG = [
   { id: "vorschlaege", sym: "🗳️", t: "Vorschläge", x: "Du hast eine Idee für den Club – ein Ausflug, ein Thema, ein Kochabend? Mit <b>„＋ Neu“</b> schlägst du sie vor, die anderen können abstimmen." },
   { id: "dienste", sym: "🗓️", t: "Dienstpläne", x: "Die Dienstpläne Woche für Woche. Mit <b>‹ Woche</b> / <b>Woche ›</b> blätterst du, <b>„Heute“</b> springt zurück." },
   { id: "aktionen", sym: "🧳", t: "Aktionen", x: "Ausflüge und besondere Aktionen des Clubs – antippen zeigt alle Einzelheiten." },
-  { id: "spiele", sym: "🎲", t: "Spiele – Köcheclub Edition", x: "Tippe auf die Kachel deines Spiels: <b>Tic-Tac-Toe</b> (🍅 gegen 🥦 – wer zuerst drei, bei 4 × 4 vier, in einer Reihe hat), <b>♟️ Schach</b> mit der Küchenbrigade (Küchenchef = König, Kaltmamsell = Dame, Souschef = Turm, Patissier = Läufer, Springer, Praktikanten = Bauern; Figur antippen, dann das Zielfeld) , <b>🃏 Bauernskat</b> zu zweit (spielbare Karten sind grün umrandet), <b>🔪 Küchenterror</b> – das Küchenquiz auf Zeit (je Frage 20, 15 oder 10 Sekunden – je nach Stufe; schnell und richtig bringt die meisten Punkte) oder <b>🎲 Mensch ärgere dich nicht</b>: Würfel antippen, dann die Figur, die leuchtet. Mit einer 6 kommt eine Figur raus und du würfelst nochmal; wer auf eine fremde Figur kommt, wirft sie raus. Gegen den Computer mit 1 bis 3 Computer-Gegnern, gegen Mitglieder zu zweit – die freien Farben kann der Computer übernehmen. Im Spiel wählst du <b>🤖 Gegen den Computer</b> – mit Feldgröße und Stärke – oder <b>👥 Gegen Mitglieder</b>: jemanden herausfordern, abwechselnd ziehen, du bekommst Bescheid, wenn du dran bist. Bei Schach, Küchenterror und Bauernskat kannst du dir mit <b>🔊 Ansage</b> alles ansagen lassen – Züge, Fragen und Antworten, Karten und Stiche. Schach geht auch mit <b>⏱️ Schachuhr</b> (5, 10 oder 15 Minuten je Spieler): oben bei „⏱️ Uhr“ gegen den Computer, beim Herausfordern als Live-Partie. Nach jedem Zug hält deine Uhr an und die des Gegners läuft; in der letzten Minute wird sie rot und tickt. Wer keine Zeit mehr hat, verliert." },
+  { id: "spiele", sym: "🎲", t: "Spiele – Köcheclub Edition", x: "Tippe auf die Kachel deines Spiels: <b>Tic-Tac-Toe</b> (🍅 gegen 🥦 – wer zuerst drei, bei 4 × 4 vier, in einer Reihe hat), <b>♟️ Schach</b> mit der Küchenbrigade (Küchenchef = König, Kaltmamsell = Dame, Souschef = Turm, Patissier = Läufer, Springer, Praktikanten = Bauern; Figur antippen, dann das Zielfeld) , <b>🃏 Bauernskat</b> zu zweit (spielbare Karten sind grün umrandet), <b>🔪 Küchenterror</b> – das Küchenquiz auf Zeit (je Frage 20, 15 oder 10 Sekunden – je nach Stufe; schnell und richtig bringt die meisten Punkte) oder <b>🎲 Mensch ärgere dich nicht</b>: Würfel antippen, dann die Figur, die leuchtet. Mit einer 6 kommt eine Figur raus und du würfelst nochmal; wer auf eine fremde Figur kommt, wirft sie raus. Gegen den Computer mit 1 bis 3 Computer-Gegnern, gegen Mitglieder zu zweit – die freien Farben kann der Computer übernehmen. Neu: <b>🧑‍🍳 Fang den Koch</b> – das Küchen-Brettspiel gegen Koch Kurt (Computer): würfeln, an den Lagern Zutaten holen, im Geräteregal das Gerät (gibt es nur einmal!), an der richtigen Station kochen, am Pass abgeben. Die Stationen, die dir gerade weiterhelfen, leuchten grün. Landest du auf Kurts Feld, darfst du ihm etwas abnehmen. Im Spiel wählst du <b>🤖 Gegen den Computer</b> – mit Feldgröße und Stärke – oder <b>👥 Gegen Mitglieder</b>: jemanden herausfordern, abwechselnd ziehen, du bekommst Bescheid, wenn du dran bist. Bei Schach, Küchenterror und Bauernskat kannst du dir mit <b>🔊 Ansage</b> alles ansagen lassen – Züge, Fragen und Antworten, Karten und Stiche. Schach geht auch mit <b>⏱️ Schachuhr</b> (5, 10 oder 15 Minuten je Spieler): oben bei „⏱️ Uhr“ gegen den Computer, beim Herausfordern als Live-Partie. Nach jedem Zug hält deine Uhr an und die des Gegners läuft; in der letzten Minute wird sie rot und tickt. Wer keine Zeit mehr hat, verliert." },
   // 2.22.9 (Wunsch Hansi: „wo fehlen Erklärungsfenster?“) – Bereiche ohne Einweisung ergänzt
   { id: "erstattung", sym: "💶", t: "Erstattung", x: "Hier bekommst du Geld zurück, das du für den Club ausgelegt hast: <b>🚗 Fahrtkosten</b> (die Kilometer rechnet die App aus), <b>🛒 Einkauf</b> oder <b>📦 sonstige Auslagen</b>. Mehrere Posten passen in einen Antrag, Belege fotografierst du einfach dazu. Der Antrag geht an den Kassenwart – du bekommst eine Bestätigung." },
   { id: "feedback", sym: "💭", t: "Feedback", x: "Was gefällt dir, was stört, was fehlt? Schreib es hier hinein – es geht direkt an den Admin. Jede Rückmeldung hilft, die App besser zu machen." },
@@ -3656,9 +3656,9 @@ const SP_ZEICHEN = { x: "🍅", o: "🥦" }, SP_NAME = { x: "Tomate", o: "Brokko
 const SP_KEY = "kc_club_spiel_pc", SP_TAKT_MS = 3000;
 // 2.11.0 KC-CLUB-SPIELE-KACHELN (Wunsch Hansi): art = null → Übersicht mit einer Kachel je Spiel; erst in der Kachel Computer/Mitglieder usw.
 let SP = { tab: "pc", art: null, liste: null, offen: null, takt: null, laedt: false, ch: null };
-const SP_ARTEN = [["ttt", "❌⭕", "Tic-Tac-Toe", "🍅 gegen 🥦 · 3 × 3 oder 4 × 4"], ["schach", "♟️", "Schach", "Die Küchenbrigade tritt an"], ["bsk", "🃏", "Bauernskat", "Zu zweit · französisches Blatt"], ["kt", "🔪", "Küchenterror", "Küchenquiz auf Zeit · 10 Sekunden je Frage"], ["mae", "🎲", "Mensch ärgere dich nicht", "Würfeln, rauswerfen, ins Ziel · bis zu 4 Farben"]];
+const SP_ARTEN = [["ttt", "❌⭕", "Tic-Tac-Toe", "🍅 gegen 🥦 · 3 × 3 oder 4 × 4"], ["schach", "♟️", "Schach", "Die Küchenbrigade tritt an"], ["bsk", "🃏", "Bauernskat", "Zu zweit · französisches Blatt"], ["kt", "🔪", "Küchenterror", "Küchenquiz auf Zeit · 10 Sekunden je Frage"], ["mae", "🎲", "Mensch ärgere dich nicht", "Würfeln, rauswerfen, ins Ziel · bis zu 4 Farben"], ["fdk", "🧑‍🍳", "Fang den Koch", "Küchen-Brettspiel · Gäste, Zutaten, Geräte"]];
 // KC-CLUB-SCHACH (2.8.0): Spielauswahl oben (gilt für „gegen den Computer“ und als Vorschlag beim Herausfordern)
-function spArtWahl(a) { SP.pause = false; SP.nachholen = null; SP.art = ["schach", "bsk", "kt", "mae"].includes(a) ? a : "ttt"; if (SP.offen) SP.offen = null; spZeigen(); if (SP.tab === "mg") spLaden(true); }
+function spArtWahl(a) { SP.pause = false; SP.nachholen = null; SP.art = ["schach", "bsk", "kt", "mae", "fdk"].includes(a) ? a : "ttt"; if (SP.art === "fdk") SP.tab = "pc"; /* FDK Stufe 1: nur gegen den Computer */ if (SP.offen) SP.offen = null; spZeigen(); if (SP.tab === "mg") spLaden(true); }
 // KC-CLUB-SPIELE-PAUSE (2.18.0, Wunsch Hansi): je Spiel unten ein Umschalter ⏸ Pause ↔ ▶ Weiter.
 // Gegen den Computer: Spiel steht still – Computer zieht nicht, Küchenterror-Uhr hält an, das Brett/die Frage ist verschwommen.
 // Weiter: Küchenterror gibt nochmal 3-2-1 Lesezeit, dann läuft die restliche Zeit weiter. Gegen Mitglieder (Küchenterror) misst der
@@ -3757,14 +3757,15 @@ function spZeigen() {
   setTimeout(spPauseZeigen, 0); // 2.18.0
   const uebersicht = !SP.art && !SP.offen;
   ["spEdition", "spTabs"].forEach((id) => $(id).classList.toggle("versteckt", uebersicht));
+  if (!uebersicht) $("spTabs").classList.toggle("versteckt", SP.art === "fdk" && !SP.offen); // KC-CLUB-FDK Stufe 1: nur gegen den Computer
   if (uebersicht) { clearInterval(SP.takt); SP.takt = null; return spKachelnZeigen(); }
   document.querySelectorAll("#spTabs button").forEach((b) => b.classList.toggle("an", b.dataset.t === SP.tab));
   const art = SP.tab === "mg" && SP.offen ? SP.offen.spiel : SP.art;
   document.querySelectorAll("#spArt button").forEach((b) => b.classList.toggle("an", b.dataset.a === art));
   $("spArt").classList.add("versteckt"); // Spielwechsel jetzt über die Kacheln (‹ zurück)
-  $("spEdition").innerHTML = art === "schach" ? `<b>♟️ Schach</b><span>Köcheclub Edition · ${schBrigade() ? "Küchenbrigade Weiß gegen Schwarz" : "Weiß gegen Schwarz"}</span>` : art === "bsk" ? "<b>🃏 Bauernskat</b><span>Köcheclub Edition · zu zweit</span>" : art === "kt" ? "<b>🔪 Küchenterror</b><span>Köcheclub Edition · Küchenquiz auf Zeit</span>" : art === "mae" ? "<b>🎲 Mensch ärgere dich nicht</b><span>Köcheclub Edition · würfeln, rauswerfen, ins Ziel</span>" : "<b>Tic-Tac-Toe</b><span>Köcheclub Edition · 🍅 gegen 🥦</span>";
+  $("spEdition").innerHTML = art === "schach" ? `<b>♟️ Schach</b><span>Köcheclub Edition · ${schBrigade() ? "Küchenbrigade Weiß gegen Schwarz" : "Weiß gegen Schwarz"}</span>` : art === "bsk" ? "<b>🃏 Bauernskat</b><span>Köcheclub Edition · zu zweit</span>" : art === "kt" ? "<b>🔪 Küchenterror</b><span>Köcheclub Edition · Küchenquiz auf Zeit</span>" : art === "mae" ? "<b>🎲 Mensch ärgere dich nicht</b><span>Köcheclub Edition · würfeln, rauswerfen, ins Ziel</span>" : art === "fdk" ? "<b>🧑‍🍳 Fang den Koch</b><span>Köcheclub Edition · das Küchen-Brettspiel</span>" : "<b>Tic-Tac-Toe</b><span>Köcheclub Edition · 🍅 gegen 🥦</span>";
   clearInterval(SP.takt); SP.takt = null;
-  if (SP.tab === "pc") return SP.art === "schach" ? schPcZeigen() : SP.art === "bsk" ? bskPcZeigen() : SP.art === "kt" ? ktPcZeigen() : SP.art === "mae" ? (maePcZeigen(), maePcFortsetzen()) : spPcZeigen();
+  if (SP.tab === "pc") return SP.art === "schach" ? schPcZeigen() : SP.art === "bsk" ? bskPcZeigen() : SP.art === "kt" ? ktPcZeigen() : SP.art === "mae" ? (maePcZeigen(), maePcFortsetzen()) : SP.art === "fdk" ? (fdkPcZeigen(), fdkFortsetzen()) : spPcZeigen();
   if (SP.offen) return spSpielZeigen();
   spListeZeigen();
 }
@@ -4044,7 +4045,7 @@ function mdKachelnOrdnen() {
 // Schach: jeder Zug („Dein Bauer auf C 6“, „Schwarzer Läufer auf E 5 – hat gerade deinen Springer geschlagen“, Schach/Matt),
 // Küchenterror: Frage + Antworten und die Auflösung, Bauernskat: Trumpf, Karten des Gegners, wer den Stich bekommt, Ergebnis.
 // Tic-Tac-Toe bewusst ohne. Nutzt die vorhandene Vorlese-Stimme (sprechen); jede Ansage nur einmal (SP_GESAGT).
-const SP_ANSAGE_KEY = "kc_club_sp_ansage", SP_ANSAGE_NAME = { schach: "Schach", kt: "Küchenterror", bsk: "Bauernskat", ttt: "Tic-Tac-Toe", mae: "Mensch ärgere dich nicht" };
+const SP_ANSAGE_KEY = "kc_club_sp_ansage", SP_ANSAGE_NAME = { schach: "Schach", kt: "Küchenterror", bsk: "Bauernskat", ttt: "Tic-Tac-Toe", mae: "Mensch ärgere dich nicht", fdk: "Fang den Koch" };
 const spAnsageAn = (art) => { try { return !!JSON.parse(localStorage.getItem(SP_ANSAGE_KEY) || "{}")[art]; } catch { return false; } };
 function spAnsageKnopf(art, kachel = false) {
   const an = spAnsageAn(art);
@@ -5104,6 +5105,308 @@ async function maeMgWuerfeln() {
 }
 function maeMgFigur(i) { const g = SP.offen; if (!g?.ichDran || g.mae?.phase !== "ziehen") return; const S = g.mae.sitze[g.mae.dran], m = g.mae.moeglich || [];
   if (S.fig[i] < 0 && !m.includes(i)) i = m.find((k) => S.fig[k] < 0) ?? i; if (m.includes(i)) maeMgZug({ figur: i }); }
+
+// ---------- KC-CLUB-FDK (2.27.0, Idee Hansi): 🧑‍🍳 Fang den Koch – Küchen-Brettspiel, Stufe 1: gegen den Computer ----------
+// Zwei Köche in einer Küche aus 9 Stationen (3 × 3). Am Pass kommen Bons (Gäste bestellen Gerichte). Würfeln = so viele Schritte;
+// Schritt für Schritt auf ein Nachbarfeld tippen. An jeder Station, an der du ankommst, darfst du sofort etwas tun: Zutaten nehmen
+// (Tablett: 8 Plätze), im Geräteregal ein Gerät nehmen, an der richtigen Kochstation kochen (einmal je Zug – Salz, Pfeffer und Gewürze
+// stehen dort bereit), am Pass abgeben. Jedes Gerät gibt es nur einmal; nach dem Kochen geht es in die Spülküche und ist 2 Runden später
+// wieder im Regal. „Fang den Koch!“: Wer auf das Feld des anderen läuft, darf ihm eine Zutat oder ein Gerät abnehmen (einmal je Zug).
+// Gäste warten 8 Runden (Rest = Trinkgeld), danach gehen sie. 15 Runden, die meisten Punkte gewinnen. Nur auf dem Gerät.
+const FDK_RUNDEN = 15, FDK_TABLETT = 8, FDK_WARTE = 8, FDK_BONS_MAX = 4, FDK_KEY = "kc_club_fdk_pc";
+const FDK_ST = { tuer: ["🚪", "Küchentür"], pass: ["🛎️", "Pass"], kuehl: ["🧊", "Kühlhaus"], gemuese: ["🥔", "Gemüselager"], trocken: ["🌾", "Trockenlager"],
+  geraete: ["🍳", "Geräteregal"], herd: ["🔥", "Herd"], ofen: ["♨️", "Backofen"], fritteuse: ["🍟", "Fritteuse"] };
+const FDK_Z = { speck: ["🥓", "Bauchspeck", "kuehl"], eier: ["🥚", "Eier", "kuehl"], butter: ["🧈", "Butter", "kuehl"], schnitzel: ["🥩", "Schnitzelfleisch", "kuehl"],
+  hack: ["🍖", "Hackfleisch", "kuehl"], rind: ["🐄", "Rindfleisch", "kuehl"], milch: ["🥛", "Milch", "kuehl"], quark: ["🥣", "Quark", "kuehl"],
+  kartoffeln: ["🥔", "Kartoffeln", "gemuese"], zwiebeln: ["🧅", "Zwiebeln", "gemuese"], tomaten: ["🍅", "Tomaten", "gemuese"], paprika: ["🫑", "Paprika", "gemuese"], moehren: ["🥕", "Möhren", "gemuese"],
+  mehl: ["🌾", "Mehl", "trocken"], broesel: ["🍞", "Semmelbrösel", "trocken"], spaghetti: ["🍝", "Spaghetti", "trocken"], erbsen: ["🫛", "Erbsen", "trocken"] };
+const FDK_G = { sauteuse: ["🍳", "Sauteuse"], pfanne: ["🥘", "Pfanne"], topf: ["🍲", "Topf"], braeter: ["🫕", "Bräter"], blech: ["🔲", "Backblech"], korb: ["🧺", "Frittierkorb"] };
+const FDK_GERICHTE = {
+  bratkartoffeln: { n: "Bratkartoffeln", e: "🥔", z: ["kartoffeln", "zwiebeln", "speck"], g: "sauteuse", s: "herd", p: 15 },
+  ruehrei: { n: "Rührei mit Speck", e: "🍳", z: ["eier", "speck", "butter"], g: "pfanne", s: "herd", p: 10 },
+  schnitzel: { n: "Schnitzel mit Pommes", e: "🍟", z: ["schnitzel", "eier", "mehl", "broesel", "kartoffeln"], g: "korb", s: "fritteuse", p: 20 },
+  bolognese: { n: "Spaghetti Bolognese", e: "🍝", z: ["spaghetti", "hack", "tomaten", "zwiebeln"], g: "topf", s: "herd", p: 15 },
+  gulasch: { n: "Gulasch", e: "🥘", z: ["rind", "zwiebeln", "paprika"], g: "braeter", s: "ofen", p: 15 },
+  pfannkuchen: { n: "Pfannkuchen", e: "🥞", z: ["mehl", "eier", "milch"], g: "pfanne", s: "herd", p: 10 },
+  erbsensuppe: { n: "Erbsensuppe", e: "🍲", z: ["erbsen", "moehren", "speck", "kartoffeln"], g: "topf", s: "herd", p: 15 },
+  ofenkartoffel: { n: "Ofenkartoffel mit Quark", e: "🥔", z: ["kartoffeln", "quark"], g: "blech", s: "ofen", p: 10 },
+};
+// Küche 3 × 3: ein Schritt geht zur Nachbarkachel oben, unten, links oder rechts (nicht schräg); das Geräteregal liegt in der Mitte
+const FDK_KNOTEN = [[0, 0, "ofen"], [1, 0, "pass"], [2, 0, "herd"], [2, 1, "trocken"], [2, 2, "fritteuse"], [1, 2, "tuer"], [0, 2, "gemuese"], [0, 1, "kuehl"], [1, 1, "geraete"]];
+const FDK_KANTEN = [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7], [7, 0], [8, 1], [8, 3], [8, 5], [8, 7]];
+const FDK_NACHBARN = FDK_KNOTEN.map((_, i) => FDK_KANTEN.filter((k) => k.includes(i)).map((k) => (k[0] === i ? k[1] : k[0])));
+const FDK_DIST = FDK_KNOTEN.map((_, a) => { const d = FDK_KNOTEN.map(() => Infinity); d[a] = 0; const q = [a];
+  while (q.length) { const v = q.shift(); for (const w of FDK_NACHBARN[v]) if (d[w] === Infinity) { d[w] = d[v] + 1; q.push(w); } } return d; });
+const fdkK = (st) => FDK_KNOTEN.findIndex((n) => n[2] === st);
+// ----- Spielstand -----
+function fdkNeu(staerke) {
+  const tuer = fdkK("tuer"), F = { runde: 1, dran: 0, phase: "wuerfeln", wurf: null, schritte: 0, staerke, bonNr: 0, log: [], lz: 0, gefangen: false, gekocht: false,
+    sp: [{ pos: tuer, tab: [], punkte: 0, gerichte: 0, plan: null }, { pos: tuer, tab: [], punkte: 0, gerichte: 0, plan: null }], bons: [], geraete: Object.fromEntries(Object.keys(FDK_G).map((g) => [g, { wo: "regal" }])) };
+  fdkBonNeu(F); fdkBonNeu(F); return F;
+}
+function fdkBonNeu(F) {
+  const ids = Object.keys(FDK_GERICHTE), offen = F.bons.map((b) => b.g), frei = ids.filter((g) => !offen.includes(g)), l = frei.length ? frei : ids;
+  F.bons.push({ nr: ++F.bonNr, g: l[Math.floor(Math.random() * l.length)], rest: FDK_WARTE });
+}
+function fdkFehlt(F, s, g) { // was fehlt Koch s noch für Gericht g? { z: [Zutaten], g: Gerät|null }
+  const G = FDK_GERICHTE[g], rest = [...F.sp[s].tab], z = [];
+  for (const id of G.z) { const i = rest.findIndex((x) => x.t === "z" && x.id === id); if (i >= 0) rest.splice(i, 1); else z.push(id); }
+  return { z, g: F.sp[s].tab.some((x) => x.t === "g" && x.id === G.g) ? null : G.g };
+}
+function fdkAktionen(F, s) { // was geht an dem Feld, auf dem der Koch steht?
+  const S = F.sp[s], st = FDK_KNOTEN[S.pos][2], platz = FDK_TABLETT - S.tab.length, a = { st, zutaten: [], geraete: [], kochen: [], abgeben: false, fang: false };
+  if (platz > 0 && ["kuehl", "gemuese", "trocken"].includes(st)) a.zutaten = Object.keys(FDK_Z).filter((z) => FDK_Z[z][2] === st);
+  if (platz > 0 && st === "geraete") a.geraete = Object.keys(FDK_G).filter((g) => F.geraete[g].wo === "regal");
+  if (!F.gekocht) a.kochen = Object.keys(FDK_GERICHTE).filter((g) => { const f = fdkFehlt(F, s, g); return FDK_GERICHTE[g].s === st && !f.z.length && !f.g; });
+  if (st === "pass") a.abgeben = S.tab.some((x) => x.t === "t" && F.bons.some((b) => b.g === x.id));
+  const O = F.sp[1 - s]; a.fang = F.dran === s && !F.gefangen && !!F.bewegt && O.pos === S.pos && O.tab.some((x) => x.t !== "t"); // nur, wer draufläuft
+  return a;
+}
+function fdkLog(F, text) { F.log.push(text); F.lz++; if (F.log.length > 8) F.log.shift(); if (typeof FDKP !== "undefined") FDKP.text = text; }
+function fdkNehmen(F, s, id) { const S = F.sp[s]; if (S.tab.length >= FDK_TABLETT) return false; S.tab.push({ t: "z", id }); return true; }
+function fdkGeraetNehmen(F, s, id) { const S = F.sp[s]; if (S.tab.length >= FDK_TABLETT || F.geraete[id].wo !== "regal") return false; F.geraete[id] = { wo: "hand", s }; S.tab.push({ t: "g", id }); return true; }
+function fdkKochen(F, s, g) {
+  const S = F.sp[s], G = FDK_GERICHTE[g]; if (!fdkAktionen(F, s).kochen.includes(g)) return false;
+  for (const id of G.z) S.tab.splice(S.tab.findIndex((x) => x.t === "z" && x.id === id), 1);
+  S.tab.splice(S.tab.findIndex((x) => x.t === "g" && x.id === G.g), 1); F.geraete[G.g] = { wo: "spuele", bis: F.runde + 2 };
+  S.tab.push({ t: "t", id: g }); F.gekocht = true;
+  fdkLog(F, `${s ? "🤖 Kurt kocht" : "Du kochst"} ${G.n} ${G.e} – ab zum Pass!`); return true;
+}
+function fdkAbgeben(F, s) {
+  const S = F.sp[s]; let n = 0, p = 0;
+  for (let i = S.tab.length - 1; i >= 0; i--) { const x = S.tab[i]; if (x.t !== "t") continue;
+    const b = F.bons.filter((b) => b.g === x.id).sort((a, c) => a.rest - c.rest)[0]; if (!b) continue;
+    const punkte = FDK_GERICHTE[x.id].p + b.rest; S.punkte += punkte; S.gerichte++; p += punkte; n++; S.tab.splice(i, 1); F.bons.splice(F.bons.indexOf(b), 1); }
+  if (n) fdkLog(F, `🛎️ ${s ? "🤖 Kurt bringt" : "Du bringst"} ${n === 1 ? "ein Gericht" : n + " Gerichte"} raus: +${p} Punkte mit Trinkgeld!`);
+  return n;
+}
+function fdkFangen(F, s, i) { // nimmt dem anderen Koch Teil i vom Tablett
+  const S = F.sp[s], O = F.sp[1 - s], x = O.tab[i]; if (!x || x.t === "t" || !fdkAktionen(F, s).fang || S.tab.length >= FDK_TABLETT) return false;
+  O.tab.splice(i, 1); S.tab.push(x); if (x.t === "g") F.geraete[x.id] = { wo: "hand", s }; F.gefangen = true;
+  const name = x.t === "g" ? `die ${FDK_G[x.id][1]}` : `${FDK_Z[x.id][1]}`;
+  fdkLog(F, s ? `😱 Fang den Koch! 🤖 Kurt nimmt dir ${name} ab.` : `😎 Fang den Koch! Du nimmst 🤖 Kurt ${name} ab.`); return true;
+}
+function fdkWeglegen(F, s, i) { const S = F.sp[s], x = S.tab[i]; if (!x) return;
+  S.tab.splice(i, 1); if (x.t === "g") F.geraete[x.id] = FDK_KNOTEN[S.pos][2] === "geraete" ? { wo: "regal" } : { wo: "spuele", bis: F.runde + 1 }; }
+function fdkSchritt(F, s, ziel) { // einen Schritt auf ein Nachbarfeld
+  if (F.dran !== s || F.phase !== "laufen" || F.schritte < 1 || !FDK_NACHBARN[F.sp[s].pos].includes(ziel)) return false;
+  F.sp[s].pos = ziel; F.schritte--; F.bewegt = true; return true;
+}
+function fdkZugEnde(F) { // nächster Koch; nach Kurt endet die Runde
+  F.wurf = null; F.schritte = 0; F.bewegt = false; F.gefangen = false; F.gekocht = false; F.phase = "wuerfeln";
+  if (F.dran === 0) { F.dran = 1; return; }
+  F.dran = 0;
+  for (const b of F.bons) b.rest--;
+  const weg = F.bons.filter((b) => b.rest <= 0); F.bons = F.bons.filter((b) => b.rest > 0);
+  if (weg.length) fdkLog(F, `😤 ${weg.map((b) => FDK_GERICHTE[b.g].n).join(", ")}: Der Gast hat zu lange gewartet und ist gegangen.`);
+  for (const g of Object.keys(F.geraete)) if (F.geraete[g].wo === "spuele" && F.geraete[g].bis <= F.runde + 1) F.geraete[g] = { wo: "regal" };
+  if (F.runde >= FDK_RUNDEN) { F.phase = "ende"; return; }
+  F.runde++;
+  if (F.runde <= FDK_RUNDEN - 2 && F.bons.length < FDK_BONS_MAX) fdkBonNeu(F); // jede Runde ein neuer Gast, solange Platz am Pass ist
+}
+// ----- Computer (Kurt) -----
+function fdkPcZiel(F, s) { // welches Gericht, welche Station als Nächstes? (bleibt beim gewählten Bon, solange es geht)
+  const S = F.sp[s];
+  if (S.tab.some((x) => x.t === "t" && F.bons.some((b) => b.g === x.id))) return { st: "pass" };
+  const machbar = (b) => { const G = FDK_GERICHTE[b.g], f = fdkFehlt(F, s, b.g), gw = F.geraete[G.g];
+    if (f.g && gw.wo === "hand" && gw.s !== s && F.staerke === "leicht") return null;
+    const halte = [...new Set(f.z.map((z) => FDK_Z[z][2]))].length + (f.g ? 1 : 0) + 2;
+    return halte > b.rest * 2 ? null : { b, f, G, halte }; };
+  let best = null; const plan = F.bons.find((b) => b.nr === S.plan);
+  if (plan) best = machbar(plan);
+  if (!best) { S.plan = null;
+    for (const b of F.bons) { const m = machbar(b); if (!m) continue; m.wert = (m.G.p + b.rest) / m.halte + Math.random() * (F.staerke === "leicht" ? 4 : 0.5); if (!best || m.wert > best.wert) best = m; }
+    if (best) S.plan = best.b.nr; }
+  if (!best) return { st: null };
+  const ziele = [...new Set(best.f.z.map((z) => FDK_Z[z][2]))]; if (best.f.g && F.geraete[best.G.g].wo === "regal") ziele.push("geraete");
+  if (!ziele.length && !best.f.g) ziele.push(best.G.s);
+  if (!ziele.length) return { st: null, b: best.b, f: best.f }; // wartet auf das Gerät
+  return { st: ziele.sort((a, c) => FDK_DIST[S.pos][fdkK(a)] - FDK_DIST[S.pos][fdkK(c)])[0], b: best.b, f: best.f };
+}
+function fdkPcHandeln(F, s) { // auf dem aktuellen Feld alles Sinnvolle tun
+  const S = F.sp[s]; let a = fdkAktionen(F, s);
+  if (a.abgeben) fdkAbgeben(F, s);
+  if (a.kochen.length) fdkKochen(F, s, a.kochen[0]);
+  let z = fdkPcZiel(F, s);
+  if (z.f) { a = fdkAktionen(F, s);
+    for (const id of z.f.z) if (a.zutaten.includes(id)) { if (S.tab.length >= FDK_TABLETT) fdkPcAufraeumen(F, s); fdkNehmen(F, s, id); }
+    if (z.f.g && a.geraete.includes(z.f.g)) { if (S.tab.length >= FDK_TABLETT) fdkPcAufraeumen(F, s); fdkGeraetNehmen(F, s, z.f.g); }
+    a = fdkAktionen(F, s); if (a.kochen.length) fdkKochen(F, s, a.kochen[0]); }
+  const extra = F.staerke === "schwer" ? 2 : F.staerke === "mittel" ? 1 : 0, b = fdkAktionen(F, s); // gleich für weitere Bons mitnehmen
+  if (extra && b.zutaten.length) for (const bon of F.bons.filter((x) => x.nr !== S.plan).slice(0, extra)) {
+    const gw = F.geraete[FDK_GERICHTE[bon.g].g]; if (gw.wo === "hand" && gw.s !== s) continue;
+    for (const id of fdkFehlt(F, s, bon.g).z) if (b.zutaten.includes(id) && S.tab.length < FDK_TABLETT - 2) fdkNehmen(F, s, id); }
+  a = fdkAktionen(F, s); z = fdkPcZiel(F, s); // Fang den Koch: nur, was er für seinen Bon braucht und hier nicht selbst holen kann
+  if (a.fang && z.f && F.staerke !== "leicht") { const O = F.sp[1 - s];
+    const i = O.tab.findIndex((x) => (x.t === "g" && x.id === z.f.g) || (x.t === "z" && z.f.z.includes(x.id) && !a.zutaten.includes(x.id)));
+    if (i >= 0) { if (S.tab.length >= FDK_TABLETT) fdkPcAufraeumen(F, s); fdkFangen(F, s, i); } }
+}
+function fdkPcAufraeumen(F, s) { // Unnützes weglegen, damit Platz ist
+  const S = F.sp[s], braucht = new Set(F.bons.flatMap((b) => [...FDK_GERICHTE[b.g].z, FDK_GERICHTE[b.g].g]));
+  const i = S.tab.findIndex((x) => x.t !== "t" && !braucht.has(x.id)); fdkWeglegen(F, s, i >= 0 ? i : S.tab.findIndex((x) => x.t === "z"));
+}
+function fdkPcNaechstes(F, s) { // nächstes Feld für Kurt (oder null = stehen bleiben)
+  const S = F.sp[s], O = F.sp[1 - s], z = fdkPcZiel(F, s), nb = FDK_NACHBARN[S.pos];
+  if (F.staerke !== "leicht" && z.f && !F.gefangen && nb.includes(O.pos) && O.tab.some((x) => (x.t === "g" && x.id === z.f.g) || (x.t === "z" && z.f.z.includes(x.id)))) return O.pos; // Fang den Koch!
+  if (F.staerke === "leicht" && Math.random() < 0.2) return nb[Math.floor(Math.random() * nb.length)];
+  if (!z.st) return null; const ziel = fdkK(z.st); if (ziel === S.pos) return null;
+  return nb.sort((a, c) => FDK_DIST[a][ziel] - FDK_DIST[c][ziel])[0];
+}
+function fdkPcZugSofort(F, s) { // ganzer Zug ohne Animation (für Tests und schnelle Abläufe)
+  F.wurf = 1 + Math.floor(Math.random() * 6); F.schritte = F.wurf; F.phase = "laufen"; fdkPcHandeln(F, s);
+  for (let k = 0; k < 6 && F.schritte > 0; k++) { const n = fdkPcNaechstes(F, s); if (n === null) break; fdkSchritt(F, s, n); fdkPcHandeln(F, s); }
+  fdkZugEnde(F);
+}
+// ----- FDK Regeln Ende -----
+// ----- Ansicht -----
+let FDKP = (() => { let w = null; try { w = JSON.parse(localStorage.getItem(FDK_KEY) || "null"); } catch {}
+  return { staerke: "leicht", stand: { ich: 0, pc: 0, remis: 0 }, ...(w || {}), rollt: false, text: "", kette: false, laeuft: false }; })();
+const fdkMerken = () => { try { localStorage.setItem(FDK_KEY, JSON.stringify({ staerke: FDKP.staerke, stand: FDKP.stand, F: FDKP.F || null })); } catch {} };
+const fdkSichtbar = () => aktuelleAnsicht === "spiele" && SP.tab === "pc" && SP.art === "fdk";
+const fdkSym = (x) => (x.t === "z" ? FDK_Z[x.id][0] : x.t === "g" ? FDK_G[x.id][0] : "🍽️");
+const fdkName = (x) => (x.t === "z" ? FDK_Z[x.id][1] : x.t === "g" ? FDK_G[x.id][1] : FDK_GERICHTE[x.id].n);
+function fdkNuetzlich(F, s) { // Stationen, die dir gerade weiterhelfen (leuchten grün)
+  const st = new Set(), S = F.sp[s];
+  if (S.tab.some((x) => x.t === "t" && F.bons.some((b) => b.g === x.id))) st.add("pass");
+  for (const b of F.bons) { const f = fdkFehlt(F, s, b.g), G = FDK_GERICHTE[b.g];
+    f.z.forEach((z) => st.add(FDK_Z[z][2])); if (f.g && F.geraete[G.g].wo === "regal") st.add("geraete"); if (!f.z.length && !f.g) st.add(G.s); }
+  return st;
+}
+function fdkBrettHtml(F) { // 3 × 3 Kacheln – ein Schritt geht zur Nachbarkachel (nicht schräg), Köche auf den Kacheln
+  const ich = F.dran === 0 && F.phase === "laufen" && F.schritte > 0 && !FDKP.laeuft, nb = ich ? FDK_NACHBARN[F.sp[0].pos] : [], nuetz = F.phase !== "ende" ? fdkNuetzlich(F, 0) : new Set();
+  const zellen = [];
+  for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++) {
+    const i = FDK_KNOTEN.findIndex((n) => n[0] === x && n[1] === y), st = FDK_KNOTEN[i][2], kann = nb.includes(i);
+    const koeche = F.sp.map((S, s) => (S.pos === i ? `<span class="fdk-koch fdk-k${s}${F.dran === s && F.phase !== "ende" ? " dran" : ""}" aria-label="${s ? "Kurt" : "Du"}">${s ? "🧑‍🍳" : "👨‍🍳"}</span>` : "")).join("");
+    zellen.push(`<button class="fdk-kachel fdk-st-${st}${kann ? " fdk-kann" : ""}${nuetz.has(st) ? " fdk-nuetz" : ""}${F.sp[0].pos === i ? " fdk-hier" : ""}" ${kann ? `onclick="fdkTipp(${i})"` : "tabindex=\"-1\""} aria-label="${FDK_ST[st][1]}${kann ? " – hierhin gehen" : ""}">
+      <span class="fdk-k-sym" aria-hidden="true">${FDK_ST[st][0]}</span><span class="fdk-k-name">${FDK_ST[st][1]}</span>${st === "geraete" ? `<span class="fdk-k-info">${Object.keys(FDK_G).filter((g) => F.geraete[g].wo === "regal").map((g) => FDK_G[g][0]).join("") || "leer"}</span>` : ""}<span class="fdk-k-koeche">${koeche}</span></button>`);
+  }
+  return `<div class="fdk-raster" role="group" aria-label="Küche">${zellen.join("")}</div>`;
+}
+function fdkBonHtml(F, b) {
+  const G = FDK_GERICHTE[b.g], f = fdkFehlt(F, 0, b.g), gw = F.geraete[G.g], fehltZ = [...f.z];
+  const chip = (sym, name, ok, extra = "") => `<span class="fdk-chip${ok ? " ok" : ""}" title="${esc(name)}">${sym}${ok ? "✓" : ""}${extra}</span>`;
+  const zut = G.z.map((id) => { const i = fehltZ.indexOf(id), ok = i < 0; if (!ok) fehltZ.splice(i, 1); return chip(FDK_Z[id][0], FDK_Z[id][1], ok); }).join("");
+  const ger = chip(FDK_G[G.g][0], FDK_G[G.g][1], !f.g, f.g ? (gw.wo === "hand" ? "🔒" : gw.wo === "spuele" ? "🧽" : "") : "");
+  return `<div class="fdk-bon${b.rest <= 2 ? " eilig" : ""}"><div class="fdk-bon-kopf"><b>${G.e} ${esc(G.n)}</b><span>${G.p}+⏳${b.rest}</span></div>
+    <div class="fdk-bon-zeile">${zut}${ger}<span class="fdk-chip st">→ ${FDK_ST[G.s][0]}</span></div><div class="fdk-warte" style="--rest:${Math.max(0, b.rest) / FDK_WARTE}"></div></div>`;
+}
+function fdkAktionHtml(F) {
+  if (F.dran !== 0 || F.phase !== "laufen" || FDKP.laeuft) return "";
+  const a = fdkAktionen(F, 0), S = F.sp[0], brauch = new Set(F.bons.flatMap((b) => fdkFehlt(F, 0, b.g).z)), teile = [];
+  if (a.fang) teile.push(`<div class="fdk-fang"><b>😎 Fang den Koch!</b> Du bist bei Kurt – nimm ihm etwas ab:<div class="fdk-kacheln">${F.sp[1].tab.map((x, i) => x.t === "t" ? "" : `<button class="knopf" onclick="fdkFang(${i})"><span class="kt-ico">${fdkSym(x)}</span>${esc(fdkName(x))}</button>`).join("")}</div></div>`);
+  if (a.abgeben) teile.push(`<button class="knopf haupt fdk-gross" onclick="fdkAbgabe()"><span class="kt-ico">🛎️</span>Gericht abgeben</button>`);
+  if (a.kochen.length) teile.push(`<div class="fdk-kacheln">${a.kochen.map((g) => `<button class="knopf haupt" onclick="fdkKoch('${g}')"><span class="kt-ico">${FDK_GERICHTE[g].e}</span>${esc(FDK_GERICHTE[g].n)} kochen</button>`).join("")}</div>`);
+  if (a.zutaten.length) teile.push(`<div class="fdk-titel">${FDK_ST[a.st][0]} ${FDK_ST[a.st][1]} – antippen zum Nehmen (Tablett ${S.tab.length}/${FDK_TABLETT}):</div><div class="fdk-kacheln">${a.zutaten.map((z) => `<button class="knopf${brauch.has(z) ? " fdk-brauch" : ""}" onclick="fdkNimm('${z}')"><span class="kt-ico">${FDK_Z[z][0]}</span>${esc(FDK_Z[z][1])}</button>`).join("")}</div>`);
+  if (a.st === "geraete") teile.push(a.geraete.length ? `<div class="fdk-titel">🍳 Geräteregal – Gerät nehmen:</div><div class="fdk-kacheln">${a.geraete.map((g) => `<button class="knopf${F.bons.some((b) => fdkFehlt(F, 0, b.g).g === g) ? " fdk-brauch" : ""}" onclick="fdkGeraet('${g}')"><span class="kt-ico">${FDK_G[g][0]}</span>${FDK_G[g][1]}</button>`).join("")}</div>` : '<p class="hinweis" style="margin:0">Das Regal ist leer – die Geräte sind unterwegs oder in der Spülküche.</p>');
+  return `<div class="fdk-aktion">${teile.join("")}<button class="knopf fdk-gross${!F.schritte && !teile.length ? " haupt" : ""}" onclick="fdkFertig()"><span class="kt-ico">✅</span>Zug beenden${F.schritte ? ` (noch ${F.schritte} ${F.schritte === 1 ? "Schritt" : "Schritte"})` : ""}</button></div>`;
+}
+function fdkPcZeigen() {
+  const F = FDKP.F, s = FDKP.stand;
+  if (!F) { $("spInhalt").innerHTML = `<div class="karte sp-karte">
+      <div class="kt-wahl">${spWahl("Stärke von Koch Kurt", FDKP.staerke, [["leicht", "<span class=\"kt-emo\">😊</span>Leicht"], ["mittel", "<span class=\"kt-emo\">🙂</span>Mittel"], ["schwer", "<span class=\"kt-emo\">😎</span>Schwer"]], "fdkStaerke")}</div>
+      <div class="sp-stand"><span>Du <b>${s.ich}</b></span><span>🤝 <b>${s.remis}</b></span><span><b>${s.pc}</b> 🤖 Kurt</span></div>
+      <p style="margin:6px 0">🧑‍🍳 <b>Fang den Koch</b> – du und 🤖 Koch Kurt arbeitet in derselben Küche. Am <b>🛎️ Pass</b> kommen Bons: Gäste bestellen Gerichte.
+        <b>Würfeln</b> = so viele Schritte. Tippe Feld für Feld weiter – an jeder Station kannst du gleich etwas tun: <b>Zutaten</b> nehmen, im <b>🍳 Geräteregal</b>
+        das Gerät holen (gibt es nur einmal!), an der richtigen Station <b>kochen</b> und am Pass <b>abgeben</b>. Was dir gerade hilft, leuchtet grün.
+        Läufst du auf Kurts Feld, heißt es <b>„Fang den Koch!“</b> – du darfst ihm etwas abnehmen. 15 Runden, die meisten Punkte gewinnen.</p>
+      <div class="kt-knoepfe"><button class="knopf haupt kt-los" onclick="fdkStart()"><span class="kt-ico">▶</span>Los geht’s</button>${spAnsageKnopf("fdk", true)}${s.ich + s.pc + s.remis ? '<button class="knopf klein" onclick="fdkStandWeg()" title="Spielstand zurücksetzen"><span class="kt-ico">🗑️</span>Stand löschen</button>' : ""}</div></div>`; return; }
+  const ich = F.dran === 0 && F.phase !== "ende", A = F.sp[0], B = F.sp[1];
+  const kopf = `<div class="fdk-kopf"><span>Runde <b>${Math.min(F.runde, FDK_RUNDEN)}</b>/${FDK_RUNDEN}</span><span class="${F.dran === 0 ? "dran" : ""}">👨‍🍳 Du <b>${A.punkte}</b></span><span class="${F.dran === 1 ? "dran" : ""}">🧑‍🍳 Kurt <b>${B.punkte}</b></span></div>`;
+  const sterne = "⭐".repeat(A.punkte >= 120 ? 3 : A.punkte >= 80 ? 2 : A.punkte >= 40 ? 1 : 0);
+  const ende = F.phase !== "ende" ? "" : A.punkte > B.punkte ? `<div class="sp-banner sieg">🏆 Feierabend – du hast gewonnen! ${A.punkte} : ${B.punkte}<br><small>${A.gerichte} ${A.gerichte === 1 ? "Gericht" : "Gerichte"} rausgebracht ${sterne}</small></div>`
+    : A.punkte < B.punkte ? `<div class="sp-banner niederlage">Feierabend – 🤖 Kurt war schneller: ${A.punkte} : ${B.punkte}</div>` : `<div class="sp-banner remis">🤝 Feierabend – unentschieden ${A.punkte} : ${B.punkte}</div>`;
+  const status = F.phase === "ende" ? "" : `<div class="sp-status${ich ? " sp-ichdran" : ""}">${FDKP.text ? esc(FDKP.text) + "<br>" : ""}${ich ? (F.phase === "wuerfeln" ? "🎲 Du bist dran – würfeln!" : F.schritte ? `👣 Noch <b>${F.schritte}</b> ${F.schritte === 1 ? "Schritt" : "Schritte"} – tippe ein gelb leuchtendes Nachbarfeld an` : "Keine Schritte mehr – fertig machen und Zug beenden") : "🧑‍🍳 Kurt ist dran …"}</div>`;
+  const tablett = `<div class="fdk-tablett"><div class="fdk-titel">🍽️ Dein Tablett (${A.tab.length}/${FDK_TABLETT})${A.tab.length ? " – antippen zum Weglegen" : ""}</div>
+    <div class="fdk-tab-reihe">${A.tab.map((x, i) => `<button class="fdk-teil${x.t === "t" ? " teller" : x.t === "g" ? " geraet" : ""}" onclick="fdkWeg(${i})" title="${esc(fdkName(x))}">${fdkSym(x)}<small>${esc(fdkName(x))}</small></button>`).join("") || '<span class="hinweis">noch leer</span>'}</div>
+    <div class="hinweis fdk-kurt">🧑‍🍳 Kurt hat: ${B.tab.map((x) => fdkSym(x)).join(" ") || "nichts"}</div></div>`;
+  $("spInhalt").innerHTML = `<div class="karte sp-karte fdk-karte">${kopf}${ende}
+      ${F.phase === "ende" ? "" : `<div class="fdk-bons">${F.bons.map((b) => fdkBonHtml(F, b)).join("") || '<p class="hinweis">Gerade keine Bestellung – gleich kommen neue Gäste.</p>'}</div>`}
+      ${status}
+      <div id="fdkBrett">${fdkBrettHtml(F)}</div>
+      ${F.phase === "ende" ? "" : `<div class="mae-wurfzeile">${maeWuerfelKnopf(F.wurf, { kann: ich && F.phase === "wuerfeln" && !FDKP.rollt, rollt: FDKP.rollt, klick: "fdkWuerfeln()", farbe: F.dran ? "blau" : "rot" })}</div>`}
+      ${fdkAktionHtml(F)}
+      ${tablett}
+      ${F.phase === "ende" ? `<div class="sp-knopfreihe"><button class="knopf haupt" onclick="fdkStart()"><span class="kt-ico">↺</span>Neues Spiel</button><button class="knopf" onclick="FDKP.F=null;fdkMerken();fdkPcZeigen()"><span class="kt-ico">⚙️</span>Einstellen</button>${spAnsageKnopf("fdk", true)}</div>`
+        : `<div class="sp-knopfreihe">${spAnsageKnopf("fdk", true)}<button class="knopf" onclick="fdkAbbrechen()"><span class="kt-ico">✖</span>Spiel abbrechen</button></div>`}
+    </div>`;
+}
+const fdkStaerke = (w) => { FDKP.staerke = ["leicht", "mittel", "schwer"].includes(w) ? w : "mittel"; fdkMerken(); fdkPcZeigen(); };
+async function fdkStandWeg() { if (!(await frage("Spielstand Fang den Koch auf 0 : 0 zurücksetzen?", { ja: "🗑️ Zurücksetzen", nein: "Abbrechen" }))) return; FDKP.stand = { ich: 0, pc: 0, remis: 0 }; fdkMerken(); fdkPcZeigen(); }
+function fdkStart() { FDKP.F = fdkNeu(FDKP.staerke); FDKP.text = "Die Küche ist offen – die ersten Gäste sind da!"; FDKP.rollt = false; FDKP.laeuft = false; fdkMerken();
+  spSag("fdk", "Fang den Koch. Die ersten Gäste sind da. Du fängst an.", "fdk:start:" + Date.now(), true); fdkPcZeigen(); }
+async function fdkWurfAnimation() {
+  FDKP.rollt = true; fdkPcZeigen();
+  const tick = setInterval(() => { const b = document.querySelector(".mae-wuerfel.rollt"); if (b) b.innerHTML = maeWuerfelSvg(1 + Math.floor(Math.random() * 6)); }, 90);
+  try { navigator.vibrate?.(25); } catch {}
+  await maeWarte(650); clearInterval(tick); FDKP.rollt = false;
+  return 1 + Math.floor(Math.random() * 6);
+}
+async function fdkWuerfeln() {
+  const F = FDKP.F; if (!F || F.dran !== 0 || F.phase !== "wuerfeln" || FDKP.rollt || SP.pause) return;
+  const w = await fdkWurfAnimation(); if (FDKP.F !== F) return;
+  F.wurf = w; F.schritte = w; F.phase = "laufen"; FDKP.text = `Du würfelst ${w === 6 ? "eine 6!" : w + "."}`; fdkMerken();
+  spSag("fdk", `${FDKP.text} ${w} ${w === 1 ? "Schritt" : "Schritte"}.`, `fdk:${F.runde}:w0`, true); fdkPcZeigen();
+}
+const FDK_AN = { tuer: "an der", pass: "am", kuehl: "im", gemuese: "im", trocken: "im", geraete: "am", herd: "am", ofen: "am", fritteuse: "an der" };
+function fdkAnkunftText(F, s) { const st = FDK_KNOTEN[F.sp[s].pos][2]; return `${s ? "🤖 Kurt ist" : "Du bist"} ${FDK_AN[st]} ${FDK_ST[st][0]} ${FDK_ST[st][1]}.`; }
+function fdkTipp(i) {
+  const F = FDKP.F; if (!F || FDKP.laeuft || !fdkSchritt(F, 0, i)) return;
+  FDKP.text = fdkAnkunftText(F, 0);
+  const a = fdkAktionen(F, 0); if (a.fang) { FDKP.text = "😎 Du hast Kurt erwischt – Fang den Koch!"; spSag("fdk", "Fang den Koch! Du darfst Kurt etwas abnehmen.", `fdk:${F.runde}:fang0`, true); try { navigator.vibrate?.([30, 30, 30]); } catch {} }
+  fdkMerken(); fdkPcZeigen();
+}
+function fdkNimm(id) { const F = FDKP.F; if (F?.phase !== "laufen" || F.dran !== 0) return; if (!fdkAktionen(F, 0).zutaten.includes(id)) return; if (!fdkNehmen(F, 0, id)) return melde("Dein Tablett ist voll – erst etwas weglegen."); fdkMerken(); fdkPcZeigen(); }
+function fdkGeraet(id) { const F = FDKP.F; if (F?.phase !== "laufen" || F.dran !== 0) return; if (!fdkGeraetNehmen(F, 0, id)) return melde("Geht gerade nicht."); FDKP.text = `Du nimmst die ${FDK_G[id][1]}.`; fdkMerken(); fdkPcZeigen(); }
+function fdkKoch(g) { const F = FDKP.F; if (F?.phase !== "laufen" || F.dran !== 0) return; if (fdkKochen(F, 0, g)) { spSag("fdk", FDKP.text, `fdk:${F.lz}`, true); try { navigator.vibrate?.(40); } catch {} } fdkMerken(); fdkPcZeigen(); }
+function fdkAbgabe() { const F = FDKP.F; if (F?.phase !== "laufen" || F.dran !== 0) return; if (fdkAbgeben(F, 0)) { spSag("fdk", FDKP.text, `fdk:${F.lz}`, true); try { navigator.vibrate?.([40, 30, 80]); } catch {} } fdkMerken(); fdkPcZeigen(); }
+function fdkFang(i) { const F = FDKP.F; if (F?.phase !== "laufen" || F.dran !== 0) return; if (!fdkFangen(F, 0, i)) return melde("Dein Tablett ist voll – erst etwas weglegen."); spSag("fdk", FDKP.text, `fdk:${F.lz}`, true); fdkMerken(); fdkPcZeigen(); }
+async function fdkWeg(i) {
+  const F = FDKP.F, x = F?.sp[0].tab[i]; if (!x || F.dran !== 0 || F.phase === "ende") return;
+  if (x.t === "t" && F.bons.some((b) => b.g === x.id)) return melde("Das fertige Gericht bringst du zum 🛎️ Pass.");
+  if (!(await frage(`${fdkSym(x)} ${fdkName(x)} weglegen?${x.t === "g" ? (FDK_KNOTEN[F.sp[0].pos][2] === "geraete" ? " Es kommt zurück ins Regal." : " Es geht in die Spülküche.") : ""}`, { ja: "Weglegen", nein: "Behalten" }))) return;
+  if (FDKP.F !== F) return; fdkWeglegen(F, 0, F.sp[0].tab.indexOf(x)); fdkMerken(); fdkPcZeigen();
+}
+function fdkFertig() {
+  const F = FDKP.F; if (!F || F.dran !== 0 || F.phase !== "laufen" || FDKP.laeuft) return;
+  fdkZugEnde(F); fdkMerken(); fdkPcZeigen(); fdkPcZug();
+}
+async function fdkPcZug() { // Kurt ist dran: würfeln, Schritt für Schritt laufen, an jeder Station handeln
+  if (FDKP.kette) return; FDKP.kette = true;
+  try {
+    const F = FDKP.F; if (!F || F.dran !== 1 || F.phase === "ende" || !fdkSichtbar()) return;
+    if (spPauseHalt(fdkPcZug)) return;
+    await maeWarte(450); if (FDKP.F !== F || !fdkSichtbar()) return;
+    if (F.phase === "wuerfeln") { const w = await fdkWurfAnimation(); if (FDKP.F !== F) return; F.wurf = w; F.schritte = w; F.phase = "laufen"; FDKP.text = `🤖 Kurt würfelt ${w}.`; fdkPcZeigen(); await maeWarte(450); }
+    const sagen = () => { const n = F.lz - lz; if (n > 0) spSag("fdk", F.log.slice(-n).join(" "), `fdk:pc:${F.lz}`); lz = F.lz; };
+    let lz = F.lz; fdkPcHandeln(F, 1); sagen(); fdkPcZeigen();
+    for (let k = 0; k < 6 && F.schritte > 0; k++) {
+      if (FDKP.F !== F || !fdkSichtbar() || spPauseHalt(fdkPcZug)) return;
+      const n = fdkPcNaechstes(F, 1); if (n === null) break;
+      FDKP.laeuft = true; fdkSchritt(F, 1, n); FDKP.text = fdkAnkunftText(F, 1); fdkPcZeigen(); await maeWarte(420); FDKP.laeuft = false; if (FDKP.F !== F) return;
+      fdkPcHandeln(F, 1); sagen(); fdkPcZeigen(); await maeWarte(F.lz !== lz ? 700 : 150);
+    }
+    await maeWarte(500); if (FDKP.F !== F) return;
+    fdkZugEnde(F); fdkMerken();
+    if (F.phase === "ende") fdkWerten(); else fdkPcZeigen();
+  } finally { FDKP.kette = false; FDKP.laeuft = false; }
+}
+function fdkWerten() {
+  const F = FDKP.F; if (!F || F.phase !== "ende" || F.gewertet) return;
+  F.gewertet = true; const [a, b] = [F.sp[0].punkte, F.sp[1].punkte];
+  if (a > b) FDKP.stand.ich++; else if (b > a) FDKP.stand.pc++; else FDKP.stand.remis++;
+  fdkMerken(); spSag("fdk", a > b ? `Feierabend! Du gewinnst mit ${a} zu ${b} Punkten.` : a < b ? `Feierabend! Kurt gewinnt mit ${b} zu ${a} Punkten.` : `Feierabend! Unentschieden, ${a} zu ${b}.`, `fdk:ende:${F.bonNr}:${F.lz}`, true);
+  try { navigator.vibrate?.(a > b ? [60, 40, 60, 40, 120] : 80); } catch {}
+  fdkPcZeigen();
+}
+async function fdkAbbrechen() {
+  const F = FDKP.F; if (!F || F.phase === "ende") return;
+  try { speechSynthesis.cancel(); } catch {}
+  if (!(await frage("Spiel abbrechen? Diese Runde wird nicht gewertet – dein Spielstand bleibt.", { ja: "✖ Abbrechen", nein: "▶ Weiterspielen" }))) { if (FDKP.F === F && F.dran === 1) fdkPcZug(); return; }
+  if (FDKP.F !== F) return; FDKP.F = null; FDKP.rollt = false; FDKP.laeuft = false; fdkMerken();
+  if (fdkSichtbar()) fdkPcZeigen(); melde("Spiel abgebrochen – nicht gewertet.");
+}
+function fdkFortsetzen() { const F = FDKP.F; if (F && F.dran === 1 && F.phase !== "ende" && !FDKP.kette && !FDKP.rollt) setTimeout(fdkPcZug, 400); }
 
 // ---------- KC-CLUB-KUECHENTERROR (2.14.0, Wunsch Hansi): Küchenquiz auf Zeit – Fragen aus dem Profi-Küchenalltag ----------
 // 4 Antworten, nur eine richtig. Zeitbalken 10 Sekunden. Punkte: richtig = 100 + Zeitbonus bis 100 (je schneller, desto mehr),
@@ -6675,7 +6978,7 @@ const KACHELN = {
     { id: "buero", sym: "🗂️", t: "Büro", u: "Sitzung vorbereiten · Einladung · Eingang", aktion: "buStart()", nur: () => !!ICH?.buero },
     { id: "schulung_admin", sym: "🎓", t: "Schulungen", u: "Termine · Einladungen · Freigeben", aktion: "scStart()", nur: () => !!ICH?.admin }, // 2.23.60 KC-CLUB-SCHULUNG-ADMIN (nur Admin)
     // KC-CLUB-SPIELE (2.7.0, Wunsch Hansi): Spiele – Köcheclub Edition (Zahl = Partien, in denen ich dran bin / Herausforderungen an mich)
-    { id: "spiele", sym: "🎲", t: "Spiele", u: "Tic-Tac-Toe · Schach · Bauernskat · Küchenterror · Mensch ärgere dich nicht", aktion: "spStart()", zahl: () => INIT?.spieleDran || 0 },
+    { id: "spiele", sym: "🎲", t: "Spiele", u: "Tic-Tac-Toe · Schach · Bauernskat · Küchenterror · Mensch ärgere dich nicht · Fang den Koch", aktion: "spStart()", zahl: () => INIT?.spieleDran || 0 },
     // KC-CLUB-REZEPTBUCH (2.23.83, Wunsch Hansi): gemeinsames Club-Rezeptbuch – Portionen umrechnen, Einkaufsliste, drucken, teilen
     { id: "rezepte", sym: "📖", t: "Rezeptbuch", u: () => (nurTest("rezepte") ? "🔒 nur für dich (Test) · " : "") + (RZ?.liste ? `${RZ.liste.length} Rezept${RZ.liste.length === 1 ? "" : "e"}` : "Club-Rezepte · Einkaufsliste"), aktion: "rzStart()", nur: () => frei("rezepte") },
   ],

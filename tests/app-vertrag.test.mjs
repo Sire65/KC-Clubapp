@@ -4830,6 +4830,24 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   E.maeWuerfeln(y, 6); E.maeZiehen(y, 3); assert.ok(y.sitze[1].fig.includes(0) && y.dran === 1 && y.phase === "wuerfeln", "6: raus + nochmal");
   E.maeWuerfeln(y, 6); assert.deepEqual(E.maeMoeglich(y), [y.sitze[1].fig.indexOf(0)], "Startfeld räumen");
 }
+// 2.27.0 KC-CLUB-FDK: Fang den Koch (Stufe 1, gegen den Computer) – Regeln, Tempo, Bedienung
+{
+  assert.ok(/\["fdk", "🧑‍🍳", "Fang den Koch"/.test(html) && /SP\.art === "fdk" \? \(fdkPcZeigen\(\), fdkFortsetzen\(\)\)/.test(html), "Kachel + Ansicht");
+  assert.ok(/a\.fang = F\.dran === s && !F\.gefangen && !!F\.bewegt && O\.pos === S\.pos/.test(html), "Fang nur, wer draufläuft (einmal je Zug)");
+  assert.ok(/F\.geraete\[G\.g\] = \{ wo: "spuele", bis: F\.runde \+ 2 \}/.test(html) && /if \(F\.geraete\[g\]\.wo === "spuele" && F\.geraete\[g\]\.bis <= F\.runde \+ 1\) F\.geraete\[g\] = \{ wo: "regal" \}/.test(html), "Gerät nach dem Kochen 2 Runden in der Spülküche");
+  assert.ok(/if \(FDKP\.kette\) return; FDKP\.kette = true;/.test(html) && /async function fdkAbbrechen\(\)/.test(html) && /<div class="sp-knopfreihe">\$\{spAnsageKnopf\("fdk", true\)\}<button class="knopf" onclick="fdkAbbrechen\(\)">/.test(html), "eine Computer-Kette, Abbrechen, Kachel-Knöpfe");
+  // Regeln ohne Oberfläche: ganze Partien, Kurt gegen Kurt – Tempo (Gerichte je Koch) und Ordnung (Geräte nie doppelt)
+  const a = html.indexOf("const FDK_RUNDEN"), b = html.indexOf("// ----- FDK Regeln Ende -----", a);
+  const R = new Function(html.slice(a, b) + "\nreturn { fdkNeu, fdkPcZugSofort, FDK_G, FDK_NACHBARN };")();
+  let gerichte = 0, koeche = 0;
+  for (let n = 0; n < 60; n++) { const F = R.fdkNeu(["leicht", "mittel", "schwer"][n % 3]); let k = 0;
+    while (F.phase !== "ende") { assert.ok(++k < 200, "Partie endet"); R.fdkPcZugSofort(F, F.dran);
+      for (const g of Object.keys(R.FDK_G)) { const n = F.sp.reduce((x, S) => x + S.tab.filter((t) => t.t === "g" && t.id === g).length, 0); assert.ok(n <= 1 && (n === 1) === (F.geraete[g].wo === "hand"), "jedes Gerät nur einmal"); }
+      assert.ok(F.sp.every((S) => S.tab.length <= 8), "Tablett höchstens 8"); }
+    assert.equal(F.runde, 15); for (const S of F.sp) { gerichte += S.gerichte; koeche++; } }
+  assert.ok(gerichte / koeche >= 2.5, "Tempo: im Schnitt mindestens 2,5 Gerichte je Koch in 15 Runden (" + (gerichte / koeche).toFixed(2) + ")");
+  assert.deepEqual(R.FDK_NACHBARN[8].sort(), [1, 3, 5, 7], "Geräteregal in der Mitte, Schritte nur waagerecht/senkrecht");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

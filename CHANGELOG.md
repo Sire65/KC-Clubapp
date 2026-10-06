@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.27.0 – 2026-10-06 – 🧑‍🍳 Fang den Koch (Stufe 1)
+Neues Küchen-Brettspiel in der Köcheclub Edition: Fang den Koch – gegen Koch Kurt (Computer, leicht/mittel/schwer). Küche aus 9 großen Kacheln, würfeln = Schritte, Feld für Feld laufen; an jeder Station Zutaten nehmen, im Geräteregal das Gerät holen (gibt es nur einmal), an der richtigen Station kochen, am Pass abgeben; Gäste warten 8 Runden (Rest = Trinkgeld). „Fang den Koch!“: wer auf den anderen läuft, nimmt ihm etwas ab. 8 Gerichte, 15 Runden, Ansage, Pause, Abbrechen, Kachel-Knöpfe. Stufe 2 (gegen Mitglieder) folgt. (KC-CLUB-FDK, Idee Hansi)
+
 ## 2.26.0 – 2026-10-06 – 🎲 Mensch ärgere dich nicht
 Neues Spiel in der Köcheclub Edition: Mensch ärgere dich nicht. Gegen den Computer (1–3 Computer-Gegner, Stärke, eigene Farbe) und gegen Mitglieder mit Herausforderung, Terminvereinbarung und Einladung – zu zweit, die freien Farben spielt auf Wunsch der Computer. Sauberes Spielfeld (klassisches Kreuz), großer Würfel, leuchtende Figuren zum Antippen, Ansage, Pause, Abbrechen, Knöpfe als Kacheln. Der Server würfelt und prüft jeden Zug. (KC-CLUB-MAE, Wunsch Hansi)
 
