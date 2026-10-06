@@ -4775,6 +4775,11 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(vorher !== \[\.\.\.ONL\.ids\]\.sort\(\)\.join\(\)\) grOnlineAuffrischen\(\);/.test(html) && /setInterval\(grOnlineAuffrischen, 30000\)/.test(html), "LED folgt dem Online-Herzschlag");
 }
 
+// 2.25.9 KC-CLUB-KT-KNOEPFE
+{
+  assert.ok(/<div class="kt-knoepfe"><button class="knopf haupt kt-los" onclick="ktPcStart\(\)">▶ Los geht’s<\/button>\$\{spAnsageKnopf\("kt"\)\}/.test(html) && /onclick="ktPcStandWeg\(\)" title="Spielstand zurücksetzen">🗑️ Stand<\/button>/.test(html), "Küchenterror: Los geht’s, Ansage, Stand in einem Raster");
+  assert.ok(/\.kt-knoepfe \{ display: grid; grid-template-columns: 1fr 1fr;/.test(html) && /\.kt-wahl \.sp-wahl > span \{ flex-basis: 100%; \}/.test(html) && /<div class="kt-wahl">\$\{spWahl\("Stufe"/.test(html), "Stufe volle Breite, Knöpfe gleich breit");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

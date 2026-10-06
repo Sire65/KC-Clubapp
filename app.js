@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.25.8"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.25.9"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SCHNELLSTART-DATEI (2.24.8, Hinweis Hansi „Start ist langsamer geworden“): das Programm liegt in app.js, damit das Handy es
 // fertig übersetzt behalten kann (statt bei jedem Öffnen 1,8 MB neu einzulesen). Seite und Programm müssen dieselbe Version haben
 // (AGENTS Regel 16, kein Mischstand): passt es nicht (z. B. alte Seite aus einem Zwischenspeicher), einmal frisch laden, sonst anhalten.
@@ -4850,12 +4850,11 @@ async function ktPcZeigen() {
   ktBildFrei(false);
   const stand = `<div class="sp-stand"><span>Du <b>${s.ich}</b></span><span>🤝 <b>${s.remis}</b></span><span><b>${s.pc}</b> Computer</span></div>`;
   if (!z) { $("spInhalt").innerHTML = `<div class="karte sp-karte">
-      ${spWahl("Stufe", KTP.staerke, [["leicht", "😊 Leicht<br><small>20 s</small>"], ["mittel", "🙂 Mittel<br><small>15 s</small>"], ["schwer", "😎 Schwer<br><small>10 s</small>"]], "ktPcStaerke")}
+      <div class="kt-wahl">${spWahl("Stufe", KTP.staerke, [["leicht", "<span class=\"kt-emo\">😊</span>Leicht<br><small>20 s</small>"], ["mittel", "<span class=\"kt-emo\">🙂</span>Mittel<br><small>15 s</small>"], ["schwer", "<span class=\"kt-emo\">😎</span>Schwer<br><small>10 s</small>"]], "ktPcStaerke")}</div>
       ${stand}
       <p style="margin:6px 0">🔪 <b>Küchenterror</b> – ${F.length} Fragen aus dem Profi-Küchenalltag. Du beantwortest <b>alle 12 Fragen</b> – der Computer rät jedes Mal <b>gleichzeitig mit</b>.
         Jede Frage hat 4 Antworten, nur eine ist richtig. Der Zeitbalken läuft je nach Stufe <b>20, 15 oder 10 Sekunden</b>: richtig gibt 100 Punkte plus bis zu 100 Punkte Zeitbonus – wer schneller ist, holt mehr. Die letzte ist eine schwere <b>🎖️ Meisterfrage</b> – die zählt doppelt!</p>
-      <div class="knoepfe" style="justify-content:center">${spAnsageKnopf("kt")}</div>
-      <div class="knoepfe"><button class="knopf haupt" onclick="ktPcStart()">▶ Los geht’s</button>${s.ich + s.pc + s.remis ? '<button class="knopf" onclick="ktPcStandWeg()">🗑️ Spielstand zurücksetzen</button>' : ""}</div></div>`; return; }
+      <div class="kt-knoepfe"><button class="knopf haupt kt-los" onclick="ktPcStart()">▶ Los geht’s</button>${spAnsageKnopf("kt")}${s.ich + s.pc + s.remis ? '<button class="knopf klein" onclick="ktPcStandWeg()" title="Spielstand zurücksetzen">🗑️ Stand</button>' : ""}</div></div>`; return; } // KC-CLUB-KT-KNOEPFE (2.25.9, Wunsch Hansi): Knöpfe ordentlich nebeneinander
   const kopf = `<div class="kt-kopf"><span>Du <b>${z.punkte[0]}</b></span><span>Frage ${Math.min(z.i + 1, 12)}/12</span><span><b>${z.punkte[1]}</b> Computer</span></div>`;
   if (z.phase === "ende") {
     const [a, b] = z.punkte, sieg = a > b, remis = a === b;

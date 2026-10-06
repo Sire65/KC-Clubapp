@@ -270,6 +270,10 @@
   .sp-edition b { font-size: 1.35rem; letter-spacing: .03em; } .sp-edition span { font-size: .9rem; font-weight: 700; opacity: .95; }
   .sp-wahl { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 0 0 8px; } .sp-wahl > span { min-width: 4.5em; font-weight: 800; font-size: .9rem; }
   .sp-wahl button { flex: 1 1 0; min-width: 0; padding: 4px 2px; min-height: 44px; border: 2px solid var(--linie); border-radius: 12px; background: var(--karte); color: var(--text); font: inherit; font-weight: 700; cursor: pointer; }
+  /* KC-CLUB-KT-KNOEPFE (2.25.9): Küchenterror – Stufe über die volle Breite, Knöpfe sauber im Raster (Los geht’s groß, darunter Ansage + Zurücksetzen gleich breit) */
+  .kt-wahl .sp-wahl > span { flex-basis: 100%; } .kt-wahl .sp-wahl button { line-height: 1.2; padding: 6px 2px; overflow-wrap: anywhere; } .kt-wahl .kt-emo { display: block; font-size: 1.2em; }
+  .kt-knoepfe { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; } .kt-knoepfe .knopf, .kt-knoepfe .knopf.klein { width: 100%; margin: 0; min-height: 48px; padding: 8px 4px; font-size: .95rem; justify-content: center; text-align: center; }
+  .kt-knoepfe .kt-los, .kt-knoepfe .knopf:nth-child(2):last-child { grid-column: 1 / -1; } .kt-knoepfe .kt-los { min-height: 54px; font-size: 1.1rem; }
   .sp-wahl button.an { border-color: var(--rot); background: var(--rot); color: #fff; }
   .sp-stand { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; margin: 4px 0 8px; border-radius: 12px; background: var(--karte2); font-weight: 700; }
   .sp-stand b { font-size: 1.3rem; }
@@ -3064,6 +3068,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.25.8" data-v="2.25.8"></script>
+<script src="app.js?v=2.25.9" data-v="2.25.9"></script>
 </body>
 </html>
