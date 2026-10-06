@@ -111,8 +111,13 @@ assert.ok((html.match(/<details class="karte" data-klappe=/g) || []).length >= 4
 assert.ok(/function registerWischen\(/.test(html) && /addEventListener\("touchend"/.test(html), "Wischen zwischen Registern fehlt");
 assert.ok(/const da = kacheln\(r\)\.length, alle = kaSortiert\(r\)\.length;/.test(html) && /<span class="anz">\$\{da < alle/.test(html), "Anzahl der Kacheln am Register fehlt"); // ab 0.9.0: nur die Kacheln, die für mich gelten; ab 0.27.2 „sichtbar/gesamt“
 assert.ok(/class="schloss"/.test(html) && /"fest_" \+ name/.test(html), "Schloss zum Feststellen fehlt");
-const rechts = html.slice(html.indexOf('<div class="kopfrechts">'), html.indexOf('<div class="info" id="heroInfo">'));
-assert.ok(rechts.indexOf('class="knopfreihe"') < rechts.indexOf('id="begruessung"'), "Gruß muss unter den Knöpfen stehen");
+// 2.24.17 KC-CLUB-KOPF-ORDNUNG: Gruß unter „KÖCHECLUB WERNE“, rechts nur 🌙 + ↻, darunter Statusleiste (Status, LEDs, Herz, Brille)
+const kopfOben = html.slice(html.indexOf('<div class="kopfzeile">', html.indexOf('<section id="v-start">')), html.indexOf('<div class="statusleiste">'));
+const leiste = html.slice(html.indexOf('<div class="statusleiste">'), html.indexOf('<div class="info" id="heroInfo">'));
+assert.ok(/<div class="kopftext"><div class="marke-klein">KÖCHECLUB WERNE<\/div><div class="gruss"><span id="begruessung">/.test(kopfOben), "Gruß steht unter dem Namen");
+assert.ok(/id="modusKnopf"/.test(kopfOben) && /id="aktualisierenKnopf"/.test(kopfOben) && !/id="leds"|id="herzKnopf"|id="statusChip"/.test(kopfOben), "oben rechts nur Mond und Aktualisieren");
+assert.ok(/id="kopfVersion"[^>]*onclick="updateKachel\(\)"/.test(kopfOben) && /\$\("kopfVersion"\)/.test(html), "Versionsnummer unter der Kochmütze");
+assert.ok(leiste.indexOf('id="statusChip"') < leiste.indexOf('id="leds"') && leiste.indexOf('id="leds"') < leiste.indexOf('id="herzKnopf"') && leiste.indexOf('id="herzKnopf"') < leiste.indexOf('id="inkoKnopf"'), "Statusleiste: Status, LEDs, Herz, Brille");
 
 // 15. 0.5.0: Kachel „Update prüfen“ unter Programme mit Versionsnummer, Versions-Knopf neben Schnellzugriff.
 const progr = html.slice(html.indexOf("  programme: ["), html.indexOf("],", html.indexOf("  programme: [")));
@@ -3254,7 +3259,7 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/ICH = INIT\.ich; einstOffenAnwenden\(\); \/\*[^*]*\*\/ adminNamenSetzen\(\); document\.body\.classList\.toggle\("ist-admin", !!ICH\?\.admin\); inkognitoZeigen\(\);/.test(html) /* nie per //-Kommentar den Rest der Zeile abschneiden */ && /body\.einfach \.kacheln3 \.mini \.mpfeil \{ display: none; \}/.test(html), "Einstellungen gewinnen gegen init; einfache Ansicht ohne Randpfeile");
   assert.ok(/\.from\("kc_club_rollen"\)\.select\("person_id"\)\.eq\("ist_admin", true\)\.in\("person_id", an\)/.test(server) && /!inkoAndere\.has\(z\.person_id\)/.test(server) && /mzS\.filter/.test(server), "Inkognito nur für Admins, nicht über Haken/Admin-Zentrale");
   assert.ok(/typeof p\.admin !== "boolean" \? null : p\.admin/.test(server) && /if \(re\) throw new Fehler\("Die Rolle konnte nicht gespeichert werden/.test(server), "Rolle: alte App entzieht nichts, Fehler bricht ab");
-  assert.ok(/<div class="gruss"><button id="inkoKnopf"[^>]*>🕶️<\/button><span id="begruessung">/.test(html), "🕶️ vor dem Gruß, nicht in der vollen Knopfreihe");
+  assert.ok(/<span class="sl-extra">[^\n]*<button id="inkoKnopf"[^>]*>🕶️<\/button><\/span>/.test(html), "🕶️ in der Statusleiste, nicht in der Knopfreihe"); // 2.24.17 KC-CLUB-KOPF-ORDNUNG
   assert.ok(/\n\s+anmeldungenVergessen\(\); \/\/ KC-CLUB-ANMELDECACHE: alter Link sofort ungültig/.test(server) && /if \(e3 \|\| count === null \|\| count > 0\) return;/.test(server), "Link-Cache, kein Fehlalarm");
 }
 // 296. 2.6.2: Vorlese-Stimme – beste deutsche Stimme statt der ersten, wählbar (KC-CLUB-STIMME)

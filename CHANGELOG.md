@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.24.17 – 2026-10-06 – KC-CLUB-KOPF-ORDNUNG: Kopfzeile aufgeräumt (Wunsch Hansi)
+- Obere Zeile: Kochmütze, darunter klein die Versionsnummer (antippen = Update prüfen, bei neuer Version gelb mit 🆕); daneben „KÖCHECLUB WERNE“ und der Gruß „Hallo …!“; rechts nur noch 🌙 und ↻ gleich groß.
+- Darunter eine Statusleiste: links der Status mit dem Pfeil auf der Unterkante, rechts die Verbindungs-LEDs (jetzt waagerecht), nach einem Trennstrich Herz und 🕶️ (nur Admin).
+- Einfache Ansicht: unverändert ruhig – nur der Status ohne dunklen Balken, LEDs nur bei Störung.
+- Server unverändert (kc-club bleibt 2.24.16).
+
 ## 2.24.16 – 2026-10-06 – Kurzanleitung Bilderrechner Version 4.1 (Wunsch Hansi)
 - Dokumente: „Schnellanleitung Bilderrechner“ zeigt jetzt `dokumente/Kurzanleitung_Bilderrechner_V4.1.pdf` (28 Seiten, Stand Kasse 06.10.2026).
   Neu gegenüber 4: Seite 21 „Bon drucken / Letzten Bon“ mit „Bon ansehen“ (🖨 Drucken, ← Zurück zur Kasse); auf der Titelseite der
