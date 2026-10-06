@@ -1,10 +1,17 @@
 {
-  "version": "2.25.1",
+  "version": "2.25.2",
   "datum": "2026-10-06",
   "neu": [
-    "✅ Schulungen: bei jeder Einladung sieht man, was raus ist – Einladung, Bestätigung, Erinnerung, Danksagung; antippen zeigt wann und wie verschickt"
+    "✅ Schulungen: Erinnerung und Danksagung zählen jetzt auch, wenn sie über den Club-Chat oder per Mail rausgingen; „nicht zugestellt“ ist nie ✅, ◐ = nur ein Teil erreicht"
   ],
   "verlauf": [
+    {
+      "version": "2.25.2",
+      "datum": "2026-10-06",
+      "neu": [
+        "✅ Schulungen: Erinnerung und Danksagung zählen jetzt auch, wenn sie über den Club-Chat oder per Mail rausgingen; „nicht zugestellt“ ist nie ✅, ◐ = nur ein Teil erreicht"
+      ]
+    },
     {
       "version": "2.25.1",
       "datum": "2026-10-06",

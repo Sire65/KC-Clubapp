@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.25.2 – 2026-10-06 – KC-CLUB-SCHULUNG-VERSANDSTAND: auch über den Club-Chat (Hinweis Hansi „die Sachen sind über den Club rübergekommen“)
+- Die Felder Einladung · Bestätigung · Erinnerung · Danksagung zählen jetzt drei Wege: Termin-Programm (mit Ergebnis je Person), eigene Nachricht im Club-Chat und Mail von Hand über den Communicator.
+- Club-Chat zählt nur in Unterhaltungen, in denen außer dir ausschließlich die Personen dieser Einladung sind (keine großen Gruppen). Zuordnung: „erinner…“ in den 3 Tagen vor dem Termin = Erinnerung, „dank…“ bis 7 Tage danach = Danksagung.
+- Fehler aus 2.25.1 behoben: Die Erinnerung zeigte ✅, sobald der Server sie vermerkt hatte – auch wenn sie „nicht zugestellt“ war (Karla/Ruth, 05.10.: keine Mail-Adresse, kein Push). Jetzt: ✅ nur wenn alle Personen erreicht wurden, ◐ teilweise, ⚠️ nicht zugestellt.
+- Antippen zeigt zuerst die Belege (Weg, Zeit, an wen, Textanfang bzw. Ergebnis), darunter den Versand im Communicator.
+- Server kc-club 2.25.2: t_init liefert zusätzlich versandstand (nur lesend).
+
 ## 2.25.1 – 2026-10-06 – KC-CLUB-SCHULUNG-VERSANDSTAND: bei jeder Einladung sehen, was raus ist (Wunsch Hansi)
 - 🎓 Schulungen → Einladungen: unter jedem Eintrag vier Felder – Einladung, Bestätigung, Erinnerung, Danksagung – mit ✅ (verschickt), ⬜ (noch offen), ⚠️ (Problem, z. B. keine E-Mail-Adresse oder Termin vorbei ohne Erinnerung) und ➖ (entfällt, z. B. direkt bestätigt ohne Einladung).
 - Antippen zeigt die Details: wann, ob Mail oder Push, an wen, Betreff und Fehler (aus dem KC Communicator über die vorhandene Chronologie); bei der Danksagung Empfänger und Versandzeit aus dem Besuchsprotokoll. Von dort „📜 Ganzer Ablauf“.

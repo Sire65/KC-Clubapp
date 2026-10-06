@@ -41,7 +41,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.25.0";
+const SERVER_VERSION = "2.25.2";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -3225,6 +3225,69 @@ async function schulungProtokollFehlt() {
   return offen.filter((b: any) => em.has(b.einladung_id)).map((b: any) => ({ beginn: sl.find((x: any) => x.id === b.slot_id)?.beginn || null,
     namen: (em.get(b.einladung_id).person_ids ?? []).map((id: string) => vorname(leute.get(id)) || leute.get(id)?.display_name || "Mitglied").join(" & ") }));
 }
+// KC-CLUB-SCHULUNG-VERSANDSTAND (2.25.2, Hinweis Hansi „die Sachen sind über den Club rübergekommen“): Belege je Einladung und Schritt
+// (einladung/bestaetigung/erinnerung/dank) aus drei Wegen – Termin-Programm (Protokoll mit Versandergebnis je Person, „nicht zugestellt“
+// zählt NICHT), Club-Chat (eigene Nachricht in einer Unterhaltung, deren Teilnehmer nur Admin + Personen dieser Einladung sind – keine
+// großen Gruppen) und Communicator-Mail von Hand (geplanter Versand an diese Personen). Chat/Mail werden über Stichwort + Zeitfenster
+// zugeordnet: Erinnerung = „erinner…“ in den 3 Tagen vor Beginn, Dank = „dank…“ bis 7 Tage nach Beginn. Belege tragen Zeit, Weg, Personen.
+const SC_VS_AKTION: Record<string, string> = { eingeladen: "einladung", erneut_eingeladen: "einladung", neue_termine_angeboten: "einladung",
+  buchung_bestaetigt: "bestaetigung", gegenvorschlag_angenommen: "bestaetigung", termin_direkt_bestaetigt: "bestaetigung", termin_geaendert: "bestaetigung", erinnerung_gesendet: "erinnerung" };
+const SC_VS_TAG = 86400000;
+async function schulungVersandstand(j: any, ich: Ich) {
+  const eins = (j.einladungen ?? []).filter((e: any) => e.status !== "zurueckgezogen" && !e.ist_test).slice(0, 40);
+  const st: Record<string, Record<string, any[]>> = {};
+  if (!eins.length) return st;
+  const add = (eid: string, k: string, beleg: any) => { const x = st[eid] || (st[eid] = {}); (x[k] || (x[k] = [])).push(beleg); };
+  const pm = await personen(eins.flatMap((e: any) => e.person_ids ?? []));
+  const nameVon = (id: string) => pm.get(id)?.display_name || id;
+  // 1) Termin-Programm: Protokoll mit Versandergebnis („Name: Mail + Push“ bzw. „Name: nicht zugestellt (…)“)
+  const { data: pr } = await db.from("kc_termin_protokoll").select("zeit,aktion,einladung_id,details").in("einladung_id", eins.map((e: any) => e.id))
+    .in("aktion", Object.keys(SC_VS_AKTION)).order("zeit").limit(1000);
+  for (const x of pr ?? []) {
+    const v = String(x.details?.versand ?? ""); if (!v || v === "keiner") continue;
+    const teile = v.split("; ").map((t) => { const i = t.indexOf(": "); return { name: t.slice(0, i), wie: t.slice(i + 2) }; }).filter((t) => t.name);
+    add(x.einladung_id, SC_VS_AKTION[x.aktion], { zeit: x.zeit, weg: "termin", an: teile.filter((t) => /^(Mail|Push)/.test(t.wie)).map((t) => t.name),
+      nicht: teile.filter((t) => !/^(Mail|Push)/.test(t.wie)).map((t) => t.name), text: v.slice(0, 200) });
+  }
+  // Beginn je Einladung (bestätigte, sonst vorgemerkte Buchung)
+  const beginn = new Map<string, number>();
+  for (const e of eins) {
+    const bs = (j.buchungen ?? []).filter((b: any) => b.einladung_id === e.id), b = bs.find((x: any) => x.status === "bestaetigt") || bs.find((x: any) => x.status === "vorgemerkt");
+    const s = b && (j.slots ?? []).find((x: any) => x.id === b.slot_id); if (s?.beginn) beginn.set(e.id, new Date(s.beginn).getTime());
+  }
+  if (!beginn.size) return st;
+  const fenster = (eid: string, zeit: string, text: string) => { const t = new Date(zeit).getTime(), b = beginn.get(eid)!;
+    return /erinner/i.test(text) && t >= b - 3 * SC_VS_TAG && t <= b ? "erinnerung" : /dank/i.test(text) && t >= b && t <= b + 7 * SC_VS_TAG ? "dank" : null; };
+  const alle = [...new Set(eins.filter((e: any) => beginn.has(e.id)).flatMap((e: any) => e.person_ids ?? []))], frueh = new Date(Math.min(...beginn.values()) - 3 * SC_VS_TAG).toISOString();
+  // 2) Club-Chat: nur Unterhaltungen, in denen außer mir ausschließlich Personen dieser Einladung sind
+  const { data: tp } = alle.length ? await db.from("kc_communication_thread_participants").select("thread_id").in("person_id", alle).limit(2000) : { data: [] as any[] };
+  const tIds = [...new Set((tp ?? []).map((x: any) => x.thread_id))];
+  if (tIds.length) {
+    const [{ data: teil }, { data: msgs }] = await Promise.all([
+      db.from("kc_communication_thread_participants").select("thread_id,person_id").in("thread_id", tIds).limit(5000),
+      db.from("kc_communication_messages").select("thread_id,body,created_at").in("thread_id", tIds).eq("sender_person_id", ich.person_id).gte("created_at", frueh).order("created_at").limit(1000)]);
+    const tMap = new Map<string, string[]>(); for (const x of teil ?? []) { const l = tMap.get(x.thread_id) || []; l.push(x.person_id); tMap.set(x.thread_id, l); }
+    for (const m of msgs ?? []) for (const e of eins) {
+      if (!beginn.has(e.id)) continue;
+      const andere = (tMap.get(m.thread_id) ?? []).filter((id) => id !== ich.person_id);
+      if (!andere.length || !andere.every((id) => (e.person_ids ?? []).includes(id))) continue;
+      const k = fenster(e.id, m.created_at, m.body || ""); if (k) add(e.id, k, { zeit: m.created_at, weg: "chat", an: andere.map(nameVon), nicht: [], text: String(m.body || "").slice(0, 160) });
+    }
+  }
+  // 3) Communicator-Mail von Hand (geplanter Versand) an Personen dieser Einladung
+  const { data: jobs } = await db.from("kc_communication_scheduled_jobs").select("audience,subject,message,status,result,processed_at,scheduled_for").gte("scheduled_for", frueh).in("status", ["sent", "partial"]).limit(500);
+  for (const jb of jobs ?? []) {
+    const ids: string[] = jb.audience?.type === "persons" && Array.isArray(jb.audience.personIds) ? jb.audience.personIds : [];
+    const ok = new Set(((jb.result?.attempts ?? []) as any[]).filter((a) => a.ok).map((a) => a.personId));
+    for (const e of eins) {
+      if (!beginn.has(e.id)) continue;
+      const treffer = ids.filter((id) => (e.person_ids ?? []).includes(id)); if (!treffer.length) continue;
+      const k = fenster(e.id, jb.processed_at || jb.scheduled_for, `${jb.subject || ""} ${jb.message || ""}`);
+      if (k) add(e.id, k, { zeit: jb.processed_at || jb.scheduled_for, weg: "mail", an: treffer.filter((id) => ok.has(id)).map(nameVon), nicht: treffer.filter((id) => !ok.has(id)).map(nameVon), text: String(jb.subject || "").slice(0, 160) });
+    }
+  }
+  return st;
+}
 async function schulungStand(ich: Ich, seit: string | null) {
   const [{ data: vb }, { data: ei }] = await Promise.all([
     db.from("kc_termin_buchungen").select("id,slot_id,einladung_id").eq("status", "vorgemerkt").limit(100),
@@ -5657,6 +5720,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (a === "t_init") {
           const { data: bes } = await db.from("kc_besuche").select("besuch_id,person_ids,status,datum").order("datum", { ascending: false }).limit(500);
           j.besuche = bes ?? [];
+          j.versandstand = await schulungVersandstand(j, ich); // KC-CLUB-SCHULUNG-VERSANDSTAND (2.25.2)
           j.mitglieder = (j.mitglieder ?? []).map((m: any) => ({ person_id: m.person_id, display_name: m.display_name, given_name: m.given_name, family_name: m.family_name, hat_email: !!m.hat_email, test: !!m.test }));
         } else await protokoll(ich.person_id, "schulung_" + a.slice(2), {}); // nur die Art – Inhalte stehen im Protokoll des Termin-Bausteins
         return json(j);

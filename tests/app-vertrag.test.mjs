@@ -5218,23 +5218,36 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/const ktWahl = \(pool, zuletzt, n\) =>/.test(html) && /ktZuletztMerken\(KTP\.z\.ids\);/.test(html) && /localStorage\.getItem\("kc_club_kt_zuletzt"\)/.test(html) && /fragen\.js\?v=3/.test(html), "App: Computer-Spiel merkt sich die letzten Fragen, neue Fragen werden geladen");
 }
 
-// 4xx. 2.25.1: Schulungen – Versandstand je Einladung (KC-CLUB-SCHULUNG-VERSANDSTAND, Wunsch Hansi „Einladung ✅, Bestätigung ✅,
-// Erinnerung ✅, Danksagung ✅ – antippen zeigt wann/wie verschickt“)
+// 4xx. 2.25.1/2.25.2: Schulungen – Versandstand je Einladung (KC-CLUB-SCHULUNG-VERSANDSTAND, Wunsch Hansi „Einladung ✅, Bestätigung ✅,
+// Erinnerung ✅, Danksagung ✅ – antippen zeigt wann/wie verschickt“; 2.25.2: auch über den Club-Chat, „nicht zugestellt“ ist nie ✅)
 {
   const a = html.indexOf("const SC_SCHRITT_KEYS = "), b = html.indexOf("function scVersandStand(e)");
-  const SC = { T: { buchungen: [], slots: [] } }, BS = { liste: [] };
+  const SC = { T: { buchungen: [], slots: [], mitglieder: [{ person_id: "P1", display_name: "Karla K" }, { person_id: "P2", display_name: "Ruth K" }] } }, BS = { liste: [] };
   const scSchritte = new Function("SC", "BS", "scSlot", html.slice(a, b) + "\nreturn scSchritte;")(SC, BS, (id) => SC.T.slots.find((s) => s.id === id));
   const st = (e) => Object.fromEntries(scSchritte(e).map((x) => [x.k, x.st]));
-  // nur eingeladen, Mail raus
-  assert.deepEqual(st({ id: "e1", status: "offen", gesendet_am: "2026-10-01T10:00:00Z" }), { einladung: "ok", bestaetigung: "offen", erinnerung: "entfaellt", dank: "entfaellt" });
-  // Termin vorbei, bestätigt + erinnert, Besuch fertig, Mail an Mitglied
+  assert.deepEqual(st({ id: "e1", person_ids: ["P1"], status: "offen", gesendet_am: "2026-10-01T10:00:00Z" }), { einladung: "ok", bestaetigung: "offen", erinnerung: "entfaellt", dank: "entfaellt" });
   SC.T.slots.push({ id: "s1", beginn: "2026-10-01T12:00:00Z", ende: "2026-10-01T15:00:00Z" });
-  SC.T.buchungen.push({ id: "b1", einladung_id: "e2", slot_id: "s1", status: "bestaetigt", bestaetigung_gesendet_am: "2026-09-28T10:00:00Z", erinnerung_gesendet_am: "2026-09-30T16:00:00Z", besuch_id: "B-1" });
-  BS.liste.push({ besuch_id: "B-1", status: "fertig", mail_gesendet_am: "2026-10-01T16:00:00Z", mail_empfaenger: "a@b.de" });
-  assert.deepEqual(st({ id: "e2", status: "bestaetigt", gesendet_am: "2026-09-27T10:00:00Z" }), { einladung: "ok", bestaetigung: "ok", erinnerung: "ok", dank: "ok" });
-  // „keine E-Mail-Adresse“ ist kein ✅ (UNKNOWN nie als OK)
-  BS.liste[0].mail_empfaenger = "(keine E-Mail-Adresse)";
-  assert.equal(st({ id: "e2", status: "bestaetigt", gesendet_am: "x" }).dank, "warn");
+  SC.T.buchungen.push({ id: "b1", einladung_id: "e2", slot_id: "s1", status: "bestaetigt", bestaetigung_gesendet_am: null, erinnerung_gesendet_am: "2026-09-30T07:00:00Z", besuch_id: "B-1" });
+  const e2 = { id: "e2", person_ids: ["P1", "P2"], status: "bestaetigt", gesendet_am: null };
+  // Server vermerkt Erinnerung, aber „nicht zugestellt“ → ⚠️ (Fall Karla/Ruth 05.10.)
+  SC.T.versandstand = { e2: { bestaetigung: [{ zeit: "x", weg: "termin", an: [], nicht: ["Karla K"] }], erinnerung: [{ zeit: "2026-09-30T07:00:00Z", weg: "termin", an: [], nicht: ["Karla K"] }] } };
+  assert.equal(st(e2).erinnerung, "warn"); assert.equal(st(e2).bestaetigung, "warn");
+  // dann über den Club-Chat an beide erinnert → ✅; nur an eine → ◐
+  SC.T.versandstand.e2.erinnerung.push({ zeit: "2026-10-01T07:44:00Z", weg: "chat", an: ["Karla K"], nicht: [] });
+  assert.equal(st(e2).erinnerung, "teil");
+  SC.T.versandstand.e2.erinnerung.push({ zeit: "2026-10-01T07:44:30Z", weg: "chat", an: ["Ruth K"], nicht: [] });
+  assert.equal(st(e2).erinnerung, "ok");
+  // Danksagung: Besuchs-Mail ✅; „keine E-Mail-Adresse“ nie ✅
+  BS.liste.push({ besuch_id: "B-1", status: "fertig", mail_gesendet_am: "2026-10-01T16:00:00Z", mail_empfaenger: "(keine E-Mail-Adresse)" });
+  assert.equal(st(e2).dank, "warn");
+  SC.T.versandstand.e2.dank = [{ zeit: "2026-10-01T15:46:00Z", weg: "chat", an: ["Karla K"], nicht: [] }, { zeit: "2026-10-06T16:46:00Z", weg: "mail", an: ["Karla K", "Ruth K"], nicht: [] }];
+  assert.equal(st(e2).dank, "ok");
   assert.ok(/onclick="scSchritt\('\$\{e\.id\}','\$\{x\.k\}'\)"/.test(html) && /\$\{scVersandStand\(e\)\}/.test(html) && /scApi\("t_chronologie", \{ einladung_id: eid \}\), keys = SC_SCHRITT_KEYS\[k\]/.test(html), "antippbar, Details aus der Chronologie");
   assert.ok(/if \(\$\("scEinladungen"\) && SC\.T\) scEinladungen\(\);/.test(html), "nach dem Laden der Besuche neu zeichnen");
+  // Server: Belege – nicht zugestellt zählt nicht, Chat nur in Unterhaltungen ausschließlich mit diesen Personen
+  const sv = server.slice(server.indexOf("async function schulungVersandstand("), server.indexOf("async function schulungStand("));
+  assert.ok(/j\.versandstand = await schulungVersandstand\(j, ich\);/.test(server) && /filter\(\(t\) => \/\^\(Mail\|Push\)\/\.test\(t\.wie\)\)/.test(sv), "Termin-Protokoll: nur Mail/Push zählt");
+  assert.ok(/andere\.every\(\(id\) => \(e\.person_ids \?\? \[\]\)\.includes\(id\)\)/.test(sv) && /\.eq\("sender_person_id", ich\.person_id\)/.test(sv), "Chat: nur eigene Nachrichten, keine großen Gruppen");
+  assert.ok(/\/erinner\/i\.test\(text\) && t >= b - 3 \* SC_VS_TAG && t <= b/.test(sv) && /\/dank\/i\.test\(text\) && t >= b && t <= b \+ 7 \* SC_VS_TAG/.test(sv), "Zeitfenster Erinnerung/Dank");
+  assert.ok(!/\.(insert|update|upsert|delete)\(/.test(sv), "Versandstand schreibt nichts");
 }
