@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.25.4 – 2026-10-06 – KC-CLUB-ERSTATTUNG-BESUCHE: km aus Besuchen über die Erstattung an den Kassenwart (Wunsch Hansi)
+- 💶 Erstattung → 🚗 Fahrtkosten (nur Admin): neuer Knopf „🎓 Fahrten aus Besuchen übernehmen“. Zeigt stattgefundene Besuche mit km (Hin + Rück), die noch in keinem Antrag stehen; Haken setzen → als Fahrtpositionen übernehmen (Datum, km, Satz am Fahrtag, Grund „Mitgliederbesuch/Schulung: Name (Anzahl) · Zeit“, Ziel = Ort, Besuchs-ID).
+- Danach wie gewohnt „📨 Antrag senden“ – Mail an Kassenwart (CC Clubsprecher), Büro-Eingangskorb, Bestätigung. In der Mail steht je Fahrt die Besuchs-ID.
+- Server prüft: Besuch hat stattgefunden, Datum und km wie im Besuchsprotokoll, nicht schon in einem anderen (nicht abgelehnten) Antrag. Ein abgelehnter Antrag gibt die Besuche wieder frei.
+- Besuche bei mir (0 km) und geplante Besuche erscheinen nicht. Server kc-club 2.25.4.
+
 ## 2.25.3 – 2026-10-06 – KC-CLUB-KM-ABRECHNUNG: Fahrten-/km-Abrechnung der Besuche (Wunsch Hansi)
 - 🎓 Schulungen → Besuche: neuer Knopf „🖨️ km-Abrechnung“ (Zeitraum: Jahr, letzter Monat oder von–bis; Besuche bei mir mit 0 km wahlweise).
 - Blatt mit Kopf (Kochmütze, Köcheclub Werne), Antragsteller, Zeitraum; je Einsatz Nr., ID, Datum, Zeit von–bis (mit Dauer), besuchte Personen mit Anzahl, Grund, km (Hin + Rück).

@@ -5275,3 +5275,25 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/#druckBlatt\.blatt \{ z-index: 2050; \}/.test(html), "Druck-Auswahl über dem Schulungen-Fenster");
 }
 
+// 4xx. 2.25.4: Erstattung – Fahrten aus Besuchen übernehmen (KC-CLUB-ERSTATTUNG-BESUCHE, Wunsch Hansi „muss auch unter Erstattung laufen –
+// dort an den Kassenwart schicken“)
+{
+  const a = html.indexOf("function ersBesuchKandidaten()"), b = html.indexOf("async function ersBesucheWahl()");
+  const ERS = { pos: [{ art: "fahrt", besuch_id: "B-2026-004" }], abgerechnet: ["B-2026-001"] };
+  const BS = { liste: [
+    { besuch_id: "B-2026-001", status: "fertig", datum: "2026-09-24", km_gesamt: 2, mitglied: "Klaus und Dieter Zander", person_ids: ["a", "b"] },
+    { besuch_id: "B-2026-003", status: "fertig", datum: "2026-09-21", zeit_von: "14:59:00", zeit_bis: "17:47:00", km_gesamt: 12.8, mitglied: "Marianne Bierkämper", person_ids: ["a"], ort: "Werne" },
+    { besuch_id: "B-2026-004", status: "fertig", datum: "2026-09-23", km_gesamt: 24, mitglied: "Reinhild", person_ids: ["a"] },
+    { besuch_id: "B-2026-006", status: "fertig", datum: "2026-10-06", km_gesamt: 0, mitglied: "Karla", person_ids: ["a"] },
+    { besuch_id: "B-2026-008", status: "geplant", datum: "2026-10-07", km_gesamt: 30, mitglied: "Thomas", person_ids: ["a"] }] };
+  const f = new Function("ERS", "BS", "heuteIso", "satzAm", html.slice(a, b) + "\nreturn { ersBesuchKandidaten, ersBesuchPosition };")(ERS, BS, () => "2026-10-06", () => 0.3);
+  assert.deepEqual(f.ersBesuchKandidaten().map((x) => x.besuch_id), ["B-2026-003"], "nur offene, stattgefundene Besuche mit km");
+  const p = f.ersBesuchPosition(BS.liste[1]);
+  assert.deepEqual([p.art, p.datum, p.km, p.betrag, p.besuch_id, p.ziel], ["fahrt", "2026-09-21", 12.8, 3.84, "B-2026-003", "Werne"]);
+  assert.ok(p.grund.includes("Marianne Bierkämper (1)") && p.grund.includes("14:59–17:47") && p.grund.length <= 120, "Grund mit Person, Anzahl, Zeit");
+  assert.ok(/onclick="ersBesucheWahl\(\)">🎓 Fahrten aus Besuchen übernehmen<\/button>/.test(html) && /art === "fahrt" && ICH\?\.admin/.test(html), "Knopf bei Fahrtkosten, nur Admin");
+  const es = server.slice(server.indexOf('case "erstattung_senden": {'), server.indexOf('case "erstattung_senden": {') + 4000);
+  assert.ok(/const besuchId = ich\.admin && /.test(server) && /schon\.has\(x\.besuch_id\)/.test(es) && /b\.datum !== x\.datum \|\| Math\.round\(Number\(b\.km_gesamt\) \* 10\) \/ 10 !== x\.km/.test(es) && /b\.status === "geplant"/.test(es), "Server: nur Admin, km/Datum wie im Besuch, keine Doppelabrechnung");
+  assert.ok(/\.neq\("status", "abgelehnt"\)/.test(server.slice(server.indexOf("async function erstattungBesucheAbgerechnet("), server.indexOf("async function erstattungBesucheAbgerechnet(") + 400)), "abgelehnte Anträge geben den Besuch wieder frei");
+}
+

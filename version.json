@@ -1,10 +1,17 @@
 {
-  "version": "2.25.3",
+  "version": "2.25.4",
   "datum": "2026-10-06",
   "neu": [
-    "🖨️ Besuche: km-Abrechnung zum Ausdrucken – je Einsatz ID, Datum, Zeit, Personen, Grund, km; Gesamtzeile, Antragsteller, Datum und Unterschrift"
+    "💶 Erstattung: „Fahrten aus Besuchen übernehmen“ – Besuche mit km als Fahrtkosten an den Kassenwart schicken, ohne doppelt abzurechnen"
   ],
   "verlauf": [
+    {
+      "version": "2.25.4",
+      "datum": "2026-10-06",
+      "neu": [
+        "💶 Erstattung: „Fahrten aus Besuchen übernehmen“ – Besuche mit km als Fahrtkosten an den Kassenwart schicken, ohne doppelt abzurechnen"
+      ]
+    },
     {
       "version": "2.25.3",
       "datum": "2026-10-06",

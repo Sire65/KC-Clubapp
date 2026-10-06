@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.25.3"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.25.4"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SCHNELLSTART-DATEI (2.24.8, Hinweis Hansi „Start ist langsamer geworden“): das Programm liegt in app.js, damit das Handy es
 // fertig übersetzt behalten kann (statt bei jedem Öffnen 1,8 MB neu einzulesen). Seite und Programm müssen dieselbe Version haben
 // (AGENTS Regel 16, kein Mischstand): passt es nicht (z. B. alte Seite aus einem Zwischenspeicher), einmal frisch laden, sonst anhalten.
@@ -5057,7 +5057,7 @@ const satzAm = (datum) => { let s = ERS.standard ?? 0.38; for (const x of ERS.sa
 async function erstattungLaden() {
   try {
     const r = await api("erstattung_meine");
-    Object.assign(ERS, { kmSatz: r.kmSatz, standard: r.standard, saetze: r.saetze || [], gruende: r.gruende, arten: r.arten, antraege: r.antraege || [], geladen: true });
+    Object.assign(ERS, { kmSatz: r.kmSatz, standard: r.standard, saetze: r.saetze || [], gruende: r.gruende, arten: r.arten, antraege: r.antraege || [], abgerechnet: r.besucheAbgerechnet || [], geladen: true });
     if (!$("ersForm").innerHTML) erstattungArt("fahrt");
     $("ersMeine").innerHTML = r.antraege.length ? r.antraege.map((a) => `<div class="zeile"><div style="flex:1"><b>${eur(a.summe)}</b> · ${a.anzahl} Position${a.anzahl === 1 ? "" : "en"}<div class="hinweis" style="margin:0;font-size:.85rem">${esc(wann(a.zeit))} · ${a.auszahlung === "bar" ? "bar" : "Überweisung"}</div></div>
       <span class="stmarke ${a.status === "erstattet" ? "st-verfuegbar" : a.status === "abgelehnt" ? "st-abwesend" : "st-beschaeftigt"}">${a.status === "erstattet" ? "✅ erstattet" : a.status === "abgelehnt" ? "❌ abgelehnt" : "📨 eingereicht"}</span></div>`).join("")
@@ -5073,7 +5073,8 @@ function erstattungArt(art) {
        <div class="knopfreihe belegknoepfe"><button type="button" class="knopf klein" onclick="$('ersFoto').click()">📷 Foto aufnehmen</button><button type="button" class="knopf klein" onclick="$('ersDatei').click()">📁 Datei wählen</button></div>
        <input type="file" id="ersFoto" accept="image/*" capture="environment" class="versteckt" onchange="erstattungBeleg(this)">
        <input type="file" id="ersDatei" accept="image/*,application/pdf" multiple class="versteckt" onchange="erstattungBeleg(this)"></div><div class="chips" id="ersBelege"></div>`;
-  $("ersForm").innerHTML = `<label class="feld">Datum<input type="date" id="ersDatum" value="${heute}" max="${heute}" oninput="if(ERS.art==='fahrt')erstattungVorschau()"></label>` + (art === "fahrt"
+  $("ersForm").innerHTML = (art === "fahrt" && ICH?.admin ? `<button type="button" class="knopf" style="margin-bottom:8px" onclick="ersBesucheWahl()">🎓 Fahrten aus Besuchen übernehmen</button>` : "") // KC-CLUB-ERSTATTUNG-BESUCHE (2.25.4)
+    + `<label class="feld">Datum<input type="date" id="ersDatum" value="${heute}" max="${heute}" oninput="if(ERS.art==='fahrt')erstattungVorschau()"></label>` + (art === "fahrt"
     ? `<label class="feld">Gefahrene Kilometer (hin und zurück)<input id="ersKm" inputmode="decimal" placeholder="z. B. 82" oninput="erstattungVorschau()"></label>
        ${comboFeld("ersGrund", "Grund der Fahrt", ERS.gruende, "", "– bitte wählen –", "✏️ Anderer Grund …", "z. B. Messebesuch")}
        <label class="feld">Ziel / Ort (freiwillig)<input id="ersZiel" maxlength="120" placeholder="z. B. Dortmund"></label>
@@ -5121,11 +5122,48 @@ function erstattungHinzu() {
   }
   ERS.pos.push(p); erstattungArt(ERS.art); erstattungZeigen(); melde("➕ Position hinzugefügt");
 }
+// ---------- KC-CLUB-ERSTATTUNG-BESUCHE (2.25.4, Wunsch Hansi „die km-Abrechnung muss auch unter Erstattung laufen – von dort an den Kassenwart“) ----------
+// Stattgefundene Besuche mit km (Hin + Rück) als Fahrtpositionen übernehmen. Schon abgerechnete (in einem nicht abgelehnten Antrag) und schon
+// übernommene erscheinen nicht. Der Server prüft Datum/km gegen das Besuchsprotokoll und verhindert Doppelabrechnung.
+function ersBesuchKandidaten() {
+  const heute = heuteIso(), weg = new Set([...(ERS.abgerechnet || []), ...ERS.pos.map((x) => x.besuch_id).filter(Boolean)]);
+  return (BS.liste || []).filter((b) => b.status !== "geplant" && b.datum <= heute && Number(b.km_gesamt || 0) > 0 && !weg.has(b.besuch_id))
+    .sort((a, b) => (a.datum + (a.zeit_von || "")).localeCompare(b.datum + (b.zeit_von || "")));
+}
+function ersBesuchPosition(b) {
+  const km = Math.round(Number(b.km_gesamt) * 10) / 10, satz = satzAm(b.datum), n = (b.person_ids || []).length || 1;
+  const zeit = b.zeit_von ? " · " + b.zeit_von.slice(0, 5) + (b.zeit_bis ? "–" + b.zeit_bis.slice(0, 5) : "") : "";
+  return { art: "fahrt", datum: b.datum, km, satz, grund: `Mitgliederbesuch/Schulung: ${b.mitglied || ""} (${n})${zeit}`.slice(0, 120), ziel: (b.ort || "").slice(0, 120), betrag: Math.round(km * satz * 100) / 100, belege: [], besuch_id: b.besuch_id };
+}
+async function ersBesucheWahl() {
+  if (!(BS.liste || []).length) { try { await bsLaden(); } catch (e) { return meldeFehler(e); } }
+  const liste = ersBesuchKandidaten();
+  const f = blattAuf("ersBesBlatt", `<h3 style="margin:0">🎓 Fahrten aus Besuchen</h3>
+    ${liste.length ? `<p class="hinweis" style="margin:4px 0">Stattgefundene Besuche mit km (Hin + Rück), noch nicht abgerechnet. Haken setzen und übernehmen.</p>
+      <div id="ersBesListe">${liste.map((b) => { const p = ersBesuchPosition(b); return `<label class="schalter" style="align-items:flex-start"><span><b>${esc(b.datum.split("-").reverse().join("."))}</b> · ${esc(b.mitglied || "")} <small class="hinweis">${esc(b.besuch_id)}</small><br>
+        <small>${String(p.km).replace(".", ",")} km × ${eur(p.satz)} = <b>${eur(p.betrag)}</b>${b.ort ? " · " + esc(b.ort) : ""}</small></span><input type="checkbox" data-besuch="${esc(b.besuch_id)}" checked onchange="ersBesSumme()"></label>`; }).join("")}</div>
+      <p id="ersBesSumme" class="hinweis" style="margin:8px 0;font-weight:700"></p>
+      <div class="knoepfe"><button class="knopf haupt" onclick="ersBesuecheUebernehmen()">➕ Übernehmen</button><button class="knopf" onclick="$('ersBesBlatt').remove()">Abbrechen</button></div>`
+    : `<p class="hinweis">Keine offenen Fahrten: alle Besuche mit km sind schon abgerechnet oder übernommen. Besuche bei dir (0 km) und geplante Besuche zählen nicht.</p><button class="knopf" onclick="$('ersBesBlatt').remove()">Schließen</button>`}`);
+  f.style.zIndex = "2100"; ersBesSumme();
+}
+function ersBesSumme() {
+  const e = $("ersBesSumme"); if (!e) return;
+  const ps = [...document.querySelectorAll("#ersBesListe [data-besuch]:checked")].map((c) => ersBesuchPosition(BS.liste.find((b) => b.besuch_id === c.dataset.besuch)));
+  e.textContent = ps.length ? `${ps.length} Fahrt${ps.length === 1 ? "" : "en"} · ${String(Math.round(ps.reduce((s2, p) => s2 + p.km, 0) * 10) / 10).replace(".", ",")} km · ${eur(ps.reduce((s2, p) => s2 + p.betrag, 0))}` : "Nichts ausgewählt.";
+}
+function ersBesuecheUebernehmen() {
+  const ids = [...document.querySelectorAll("#ersBesListe [data-besuch]:checked")].map((c) => c.dataset.besuch);
+  if (!ids.length) return melde("Bitte mindestens einen Besuch auswählen.", true);
+  const frei = 20 - ERS.pos.length; if (ids.length > frei) return melde(`Ein Antrag hat höchstens 20 Positionen – noch ${frei} frei.`, true);
+  for (const id of ids) ERS.pos.push(ersBesuchPosition(BS.liste.find((b) => b.besuch_id === id)));
+  $("ersBesBlatt")?.remove(); erstattungZeigen(); melde(`➕ ${ids.length} Fahrt${ids.length === 1 ? "" : "en"} aus Besuchen übernommen`);
+}
 function erstattungZeigen() {
   const d = (iso) => iso.split("-").reverse().join(".");
   const summe = ERS.pos.reduce((a, x) => a + x.betrag, 0);
   $("ersListe").innerHTML = ERS.pos.length ? `<table class="todotab">${ERS.pos.map((x, i) => `<tr><td class="kat">${x.art === "fahrt" ? "🚗" : x.art === "einkauf" ? "🛒" : "📦"}</td>
-      <td><div class="aufgabe">${x.art === "fahrt" ? `${String(x.km).replace(".", ",")} km – ${esc(x.grund)}` : esc(x.was)}</div>${x.art === "fahrt" ? `<div class="meta">${String(x.km).replace(".", ",")} km × ${eur(x.satz)}</div>` : ""}<div class="meta">${d(x.datum)}${x.ziel ? " · " + esc(x.ziel) : ""}${x.geschaeft ? " · " + esc(x.geschaeft) : ""}${x.belege?.length ? " · 📎 Beleg" : ""}</div></td>
+      <td><div class="aufgabe">${x.art === "fahrt" ? `${String(x.km).replace(".", ",")} km – ${esc(x.grund)}` : esc(x.was)}</div>${x.art === "fahrt" ? `<div class="meta">${String(x.km).replace(".", ",")} km × ${eur(x.satz)}</div>` : ""}<div class="meta">${d(x.datum)}${x.besuch_id ? " · 🎓 " + esc(x.besuch_id) : ""}${x.ziel ? " · " + esc(x.ziel) : ""}${x.geschaeft ? " · " + esc(x.geschaeft) : ""}${x.belege?.length ? " · 📎 Beleg" : ""}</div></td>
       <td style="text-align:right;font-weight:800;white-space:nowrap">${eur(x.betrag)}</td><td style="width:34px"><button class="weg" onclick="ERS.pos.splice(${i},1);erstattungZeigen()">🗑️</button></td></tr>`).join("")}
       <tr><td></td><td><b>Summe</b></td><td style="text-align:right;font-weight:900;font-size:1.1rem;white-space:nowrap">${eur(summe)}</td><td></td></tr></table>`
     : '<p class="hinweis" style="margin:0">Noch keine Position – oben ausfüllen und „＋ Position hinzufügen“ tippen.</p>';
