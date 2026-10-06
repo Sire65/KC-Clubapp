@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.24.15 – 2026-10-06 – KC-CLUB-PRUEFUNG-4: Status-Pfeil + Hilfe-Korrekturen
+- Status-Pfeil oben: als Zeichnung genau mittig auf der Unterkante (vorher bis 2 px links), in der Farbe des Status mit weißem Rand (Wunsch Hansi).
+- Hilfe/Tipps: Sprung in die Einstellungen öffnet den Bereich auch in der einfachen Ansicht; „Was ist neu“-Schalter zu „Ansagen, Töne & Tipps“ (auch einfache Ansicht), Hilfetext mit Spielen; Twinkey „Urlaub/krank“ öffnet den Status (vorher Standort); Dienstwünsche-Weg über 🗓️ Mein Dienst; Entwickler-Weg über ℹ️ App-Info; Tipp-Text „höchstens einmal in der Woche“; „Später“-Meldungen ohne falsche Tage; Kachel-Tipp nur erweitert; keine Versprechen „was zuletzt dazugekommen ist“.
+- Büro: unvollständige Server-Antwort zeigt Hinweis statt Fehler.
+
 ## 2.24.14 – 2026-10-06 – Tagesmeldung mit Spielen
 Die Meldung beim Öffnen nennt jetzt auch Spiele, die auf dich warten. Unten kann man sie ausschalten. (KC-CLUB-WAS-NEU)
 

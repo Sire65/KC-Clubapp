@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.24.14"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.24.15"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SCHNELLSTART-DATEI (2.24.8, Hinweis Hansi „Start ist langsamer geworden“): das Programm liegt in app.js, damit das Handy es
 // fertig übersetzt behalten kann (statt bei jedem Öffnen 1,8 MB neu einzulesen). Seite und Programm müssen dieselbe Version haben
 // (AGENTS Regel 16, kein Mischstand): passt es nicht (z. B. alte Seite aus einem Zwischenspeicher), einmal frisch laden, sonst anhalten.
@@ -509,7 +509,7 @@ function wasNeuZeigen(pw) {
       <p class="hinweis" style="margin:4px 0 0">In deinen Einstellungen kannst du sie jederzeit wieder aktivieren.</p></div>`);
   f.querySelectorAll("[data-wn]").forEach((b) => (b.onclick = () => { const w = b.dataset.wn; fensterZu(f);
     if (w === "n") zeige("nachrichten"); else if (w === "p") pwFenster(pw); else if (w === "sp") spStart("mg");
-    else if (w === "aus") { einstellung("wasNeu", false); if ($("setWasNeu")) $("setWasNeu").checked = false; melde("🔕 Ausgeschaltet – wieder einschalten: ⚙️ Einstellungen → „👋 Beim Öffnen zeigen, was neu ist“"); } }));
+    else if (w === "aus") { einstellung("wasNeu", false); if ($("setWasNeu")) $("setWasNeu").checked = false; melde("🔕 Ausgeschaltet – wieder einschalten: ⚙️ Einstellungen → 🗣️ Ansagen, Töne & Tipps → „👋 Beim Öffnen zeigen, was neu ist“"); } }));
   return true;
 }
 async function pwStart(nurZaehlen) { // nurZaehlen: Begrüßung ist offen → Pinnwand nicht zusätzlich öffnen
@@ -950,7 +950,7 @@ async function einstiegFristenSpeichern() {
 // „Ja“ führt direkt hin: Einstellungen öffnen, Bereich aufklappen, hinscrollen und kurz hervorheben
 function einstiegHin(klappe, zielId) {
   zeige("einstellungen");
-  const d = document.querySelector(`#v-einstellungen details[data-klappe="${klappe}"]`); if (d) d.open = true;
+  const d = document.querySelector(`#v-einstellungen details[data-klappe="${klappe}"]`); if (d) { d.open = true; d.classList.add("einfach-sichtbar"); } // 2.24.15: auch in der einfachen Ansicht erreichbar
   setTimeout(() => { const z = (zielId && $(zielId)) || d; if (!z) return; z.scrollIntoView({ behavior: "smooth", block: "center" });
     z.classList.add("hervor"); setTimeout(() => z.classList.remove("hervor"), 2600); }, 300);
 }
@@ -1168,7 +1168,7 @@ function tippDesTages() {
   $("tdtTesten").onclick = () => { zu(); spaeterMerken(); tipp.testen(); };
   $("tdtTesten").textContent = tipp.ja || "👉 Jetzt ausprobieren"; $("tdtKenne").textContent = tipp.nein || "✔ Kenne ich"; $("tdtSpaeter").classList.toggle("versteckt", !!tipp.neinSpaeter); $("tdtKenne").parentElement.style.gridTemplateColumns = tipp.neinSpaeter ? "1fr" : "";
   $("tdtKenne").onclick = tipp.neinSpaeter ? () => $("tdtSpaeter").onclick() : () => { zu(); tippSpeichern({ bekannt: { ...tippStand().bekannt, [tipp.key]: new Date().toISOString() } }); melde("👍 Alles klar – dieser Tipp kommt nicht wieder"); };
-  $("tdtSpaeter").onclick = () => { zu(); spaeterMerken(); melde(`⏰ Ich erinnere dich in ${TIPP_SPAETER_TAGE} Tagen`); };
+  $("tdtSpaeter").onclick = () => { zu(); spaeterMerken(); melde(ICH?.admin ? `⏰ Ich erinnere dich in ${TIPP_SPAETER_TAGE} Tagen` : "⏰ Gut, ich erinnere dich ein andermal"); };
   $("tdtAus").onclick = () => { zu(); tippSpeichern({ an: false }); melde("🔕 Keine Tipps mehr – einschalten kannst du sie unter ⚙️ Einstellungen"); };
   $("tdtBlatt").classList.remove("versteckt");
   return true;
@@ -1258,7 +1258,7 @@ const HILFE = [
   { id: "klappen_alle", thema: "start", sym: "▾", t: "Alle Bereiche auf einmal auf- oder zuklappen", x: "In den ⚙️ Einstellungen oben rechts: <b>„▾ Alle auf“</b> öffnet alle Bereiche, danach heißt der Knopf <b>„▴ Alle zu“</b> und klappt alle wieder zu. Bereiche mit 🔒 bleiben, wie du sie festgestellt hast.", zeig: () => zeige("einstellungen"), seit: "2.23.40" },
   { id: "gruppe_bereiche", thema: "nachrichten", sym: "👥", t: "Neue Gruppe: Bereiche auf- und zuklappen", x: "Bei <b>👥 Neue Gruppe</b> hat jeder Bereich – <b>Deine Gruppen</b>, <b>Name &amp; Symbol</b>, <b>Wer ist dabei?</b> – einen Pfeil ▾ zum Auf- und Zuklappen und ein Schloss 🔓. Mit 🔒 bleibt der Bereich so, wie er ist; die App merkt es sich.", zeig: () => gruppeForm(null), seit: "2.23.41" },
   { id: "kurzanleitung", thema: "start", sym: "📄", t: "Kurzanleitung zum Ausdrucken", x: "Die App in 3 Schritten – zum Ansehen oder Ausdrucken, z. B. für jemanden, der neu ist. Zu finden unter ⚙️ → Darstellung → „📄 Kurzanleitung“.", zeig: () => druckStarten("anleitung") },
-  { id: "ueberblick", thema: "start", sym: "🗺️", t: "Die Club-App auf einen Blick", x: "Was kann die App, und was ist zuletzt dazugekommen? Das steht in „🗺️ Club-App auf einen Blick“ unter <b>📚 Meine Dokumente</b> – es aktualisiert sich mit jeder Version selbst.", zeig: () => zeige("ueberblick") },
+  { id: "ueberblick", thema: "start", sym: "🗺️", t: "Die Club-App auf einen Blick", x: "Was kann die App alles? Das steht in „🗺️ Club-App auf einen Blick“ unter <b>📚 Meine Dokumente</b> – es aktualisiert sich mit jeder Version selbst.", zeig: () => zeige("ueberblick") },
   // 🎨 Aussehen & Darstellung
   { id: "farbe", thema: "darstellung", sym: "🎨", t: "Die Farbe der App ändern", x: "Du kannst die Farbe einstellen: ⚙️ Einstellungen → Register <b>🎨 Darstellung</b> → „🎨 Farbdesign“. Unter „Weitere Farbschemen“ und „✨ Ausgefallene Farbschemen“ gibt es noch mehr. Antippen – die App färbt sich sofort um.", zeig: hzDesign },
   { id: "nacht", thema: "darstellung", sym: "🌗", t: "Tag- und Nachtmodus", x: "⚙️ → Darstellung → „🌗 Tag- und Nachtmodus“: <b>🔄 Automatisch</b> (folgt deinem Handy), <b>☀️ Immer Tag</b> oder <b>🌙 Immer Nacht</b>. Nachts ist der dunkle Modus angenehmer für die Augen.", zeig: () => einstiegHin("darstellung", "modusWahl") },
@@ -1294,7 +1294,7 @@ const HILFE = [
   { id: "anheften", thema: "nachrichten", sym: "📌", t: "Wichtiges oben im Chat festhalten", x: "Damit eine wichtige Nachricht nicht nach oben wegrutscht: einfach antippen und <b>„📌 Oben anheften“</b> wählen. Bis zu drei Nachrichten bleiben so über dem Chat stehen. Mit „Lösen“ kommen sie wieder an ihren Platz.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
   { id: "merken", thema: "nachrichten", sym: "⭐", t: "Eine Nachricht für später merken", x: "Manchmal liest man etwas und möchte es später schnell wiederfinden. Tipp die Nachricht an und wähle <b>„⭐ Merken“</b>. Alles Gemerkte liegt in 💬 Nachrichten oben unter <b>„⭐ Gemerkt“</b> – diese Liste siehst nur du.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
   { id: "chat_abstimmung", thema: "nachrichten", sym: "📊", t: "Schnell mal abstimmen", x: "Grillen oder Pizza? Freitag oder Samstag? Über <b>📎</b> unter dem Schreibfeld → <b>„📊 Abstimmung“</b> stellst du eine Frage mit 2 bis 8 Antworten. Alle sehen gleich, wie es gerade steht.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
-  { id: "entwickler", thema: "technik", sym: "👨‍🍳", t: "Wer hat die Club-App gebaut?", x: "Die Club-App hat <b>Hans-Joachim Koch</b> entwickelt und gestaltet – Koch, Küchenmeister und Gründungsmitglied des Köcheclubs. Mehr über ihn mit Foto: <b>⚙️ Mehr → 👨‍🍳 Über die App</b>.", zeig: () => entwicklerZeigen(), seit: "2.23.32" },
+  { id: "entwickler", thema: "technik", sym: "👨‍🍳", t: "Wer hat die Club-App gebaut?", x: "Die Club-App hat <b>Hans-Joachim Koch</b> entwickelt und gestaltet – Koch, Küchenmeister und Gründungsmitglied des Köcheclubs. Mehr über ihn mit Foto: <b>⚙️ Einstellungen → ℹ️ App-Info → „👨‍🍳 Über den Entwickler“</b>.", zeig: () => entwicklerZeigen(), seit: "2.23.32" },
   { id: "wunschbogen", thema: "termine", sym: "🖨️", t: "Leeren Wunschbogen drucken oder mailen", x: "Unter <b>📝 Dienstwünsche</b> oben auf <b>„🖨️ Leerer Bogen“</b> tippen. Du bekommst deinen persönlichen Bogen mit Namen und oben rechts einem QR-Code mit deiner Mitglieds-ID. <b>🖨️ Drucken</b> – oder ohne Drucker <b>✉️ Per E-Mail an mich</b>, dann kommt er als PDF in dein Postfach. Von Hand ausfüllen und die Zeiten danach mit Twinkey eintragen.", zeig: () => wbStart(), seit: "2.23.28" },
   { id: "chat_archiv", thema: "nachrichten", sym: "📦", t: "Chats archivieren, zurückholen und löschen", x: "In der Chat-Liste einmal auf einen Chat tippen: <b>📦 Archivieren</b> räumt ihn aus der Liste – er bleibt dort, auch wenn jemand schreibt, und steht oben unter <b>„📦 Archiviert“</b>. Dort holst du ihn mit <b>📤 Wieder aktivieren</b> zurück. <b>🗑️ Bei mir komplett löschen</b> entfernt den Chat mit allen bisherigen Nachrichten – nur bei dir, die anderen behalten ihn. Dasselbe findest du im Chat oben im Menü.", zeig: () => zeige("nachrichten"), seit: "2.23.28" },
   { id: "kontakt_teilen", thema: "nachrichten", sym: "👤", t: "Eine Telefonnummer weitergeben", x: "Jemand fragt nach einer Nummer? Mit <b>📎 → „👤 Kontakt teilen“</b> schickst du eine Kontaktkarte in den Chat – der andere tippt sie an und hat alles beisammen.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
@@ -1353,7 +1353,7 @@ const HILFE = [
   { id: "verbindung", thema: "technik", sym: "🟢", t: "Das kleine Lämpchen oben", x: "Oben im Kopf zeigt ein Lämpchen, ob die App Verbindung hat. Im Zweifel einfach antippen – dann steht da zum Beispiel <b>„✅ Verbindung in Ordnung“</b>.", zeig: () => zeige("start"), seit: "2.23.1" },
   { id: "app_schliessen", thema: "technik", sym: "🚪", t: "Die App ganz schließen", x: "Wenn du fertig bist, findest du <b>„🚪 App schließen“</b> ganz unten auf der Startseite und in den Einstellungen. Nötig ist das aber nicht – die App darf auch einfach im Hintergrund bleiben.", seit: "2.23.1" },
   { id: "pc_tablet", thema: "technik", sym: "💻", t: "Auch am PC oder Tablet", x: "Auf dem großen Bildschirm liest es sich manchmal angenehmer. Unter ⚙️ → „📲 App-Installation“ → <b>„💻 Auch am PC oder Tablet nutzen“</b> steht, wie das klappt.", zeig: () => einstiegHin("install"), seit: "2.23.1" },
-  { id: "was_ist_neu", thema: "technik", sym: "🆕", t: "Was hat sich geändert?", x: "Neugierig, was die letzte Version gebracht hat? Ein Tipp auf <b>„🔄 Update prüfen“</b> im Register Technik zeigt auch <b>„Was ist neu?“</b>. Neue Hilfen sind hier im Hilfe-Zentrum außerdem mit <span class=\"hz-neu\">neu</span> markiert.", zeig: hzTechnik, seit: "2.23.1" },
+  { id: "was_ist_neu", thema: "technik", sym: "🆕", t: "Was hat sich geändert?", x: "Ob deine App aktuell ist, siehst du mit <b>„🔄 Update prüfen“</b> im Register Technik. Neue Hilfen sind hier im Hilfe-Zentrum außerdem mit <span class=\"hz-neu\">neu</span> markiert.", zeig: hzTechnik, seit: "2.23.1" },
   // 2.23.7: Bereiche, zu denen es noch keine eigene Hilfe gab (für das „?“ der jeweiligen Ansicht)
   { id: "protokoll_aufgaben", thema: "club", sym: "📌", t: "Deine Aufgaben aus dem Protokoll", x: "Steht in einem Sitzungsprotokoll eine Aufgabe für dich, bekommst du Bescheid. In den Protokollen oben unter <b>„📌 Offene Aufgaben“</b> siehst du sie mit Fälligkeit – ist sie geschafft, tippst du auf <b>„✔ erledigt“</b>.", zeig: () => zeige("protokolle"), seit: "2.23.7" },
   { id: "aktionen_kacheln", thema: "club", sym: "🧳", t: "Ausflüge und Reisen auf einen Blick", x: "Jede Aktion steht als Kachel da – mit Zeitraum, wie lange es noch dauert (etwa „in 12 T.“ oder „läuft“) und ob du schon <b>„✅ dabei“</b> bist. Antippen zeigt alle Einzelheiten.", zeig: () => zeige("aktionen"), seit: "2.23.7" },
@@ -1383,9 +1383,9 @@ const HILFE = [
   { id: "mitglieder_fragen", thema: "start", sym: "👥", t: "Andere Mitglieder um Rat fragen", x: "Weiß Twinkey nicht weiter, stellst du die Frage den Mitgliedern: bei <b>„🧑‍🍳 Frag Twinkey“</b> unter dem Fragefeld auf <b>„👥 Lieber ein Mitglied fragen“</b> – an alle oder an ausgewählte, per App, Push oder E-Mail. Die Antworten siehst du dort unter „Deine Fragen an Mitglieder“.", zeig: () => twFrageStart(), seit: "2.23.51" },
   { id: "anfrage_vorbehalt", thema: "termine", sym: "🤔", t: "Gegenvorschlag unter Vorbehalt annehmen", x: "Schlägt dir jemand eine andere Zeit vor, kannst du <b>„✅ Neue Zeit annehmen“</b>, <b>„🤔 Unter Vorbehalt“</b> oder <b>„❌ Passt nicht“</b> wählen. Beim Vorbehalt schreibst du kurz dazu, woran es noch hängt – der andere sieht es sofort.", zeig: () => zeige("termine"), seit: "2.23.57" },
   { id: "sprungknopf", thema: "nachrichten", sym: "🔘", t: "Einen Knopf in die Nachricht setzen", x: "Willst du jemanden direkt an eine Stelle der App schicken? Unter dem Schreibfeld auf <b>📎</b> → <b>„🔘 Knopf zu einer App-Stelle“</b> und das Ziel wählen, z. B. „Mein Bild wählen“. In der Nachricht erscheint ein Knopf – antippen, und man ist dort.", zeig: () => zeige("nachrichten"), seit: "2.23.97" },
-  { id: "was_neu", thema: "nachrichten", sym: "👋", t: "Was ist neu? Gleich beim Öffnen", x: "Öffnest du die App und es gibt Neues, zeigt sie dir kurz, wie viele <b>neue Nachrichten</b> (in deinen Chats und in Gruppen) und <b>Pinnwand-Einträge</b> da sind – mit Knopf direkt dorthin. Abschalten: ⚙️ Einstellungen → „👋 Beim Öffnen zeigen, was neu ist“.", seit: "2.24.12" },
+  { id: "was_neu", thema: "nachrichten", sym: "👋", t: "Was ist neu? Gleich beim Öffnen", x: "Öffnest du die App und es gibt Neues, zeigt sie dir kurz, wie viele <b>neue Nachrichten</b> (in deinen Chats und in Gruppen) und <b>Pinnwand-Einträge</b> da sind und ob <b>Spiele</b> auf dich warten – mit Knopf direkt dorthin. Abschalten: im Fenster selbst mit „🔕 Diese Meldung ausschalten“ oder unter ⚙️ Einstellungen → 🗣️ Ansagen, Töne &amp; Tipps → „👋 Beim Öffnen zeigen, was neu ist“.", zeig: () => einstiegHin("ansagen", "setWasNeu"), seit: "2.24.12" },
   { id: "animiert", thema: "darstellung", sym: "✨", t: "Ruhige oder lebendige Knöpfe", x: "Kacheln zoomen kurz beim Antippen, die Reiter bekommen einen laufenden Rahmen und „＋ Neu“ leuchtet auf. Wer es lieber ruhig mag: ⚙️ → „🎨 Darstellung“ → <b>„✨ Animierte Knöpfe“</b> ausschalten. Gilt für dieses Gerät.", zeig: () => einstiegHin("darstellung", "setAnimiert"), seit: "2.24.1" },
-  { id: "kacheln_klein", thema: "darstellung", sym: "🔲", t: "Kacheln kleiner – 3 nebeneinander", x: "Mehr Kacheln auf einen Blick: Bei ⚙️ → <b>„🎨 Darstellung“</b> → <b>„🔲 Kacheln auf der Startseite“</b> „Klein“ wählen – dann passen 3 nebeneinander. Das geht nur in der <b>erweiterten Ansicht</b> – in der einfachen Ansicht bleiben die Kacheln groß. Gilt nur für dieses Gerät.", zeig: () => einstiegHin("darstellung", "kachelGroesseWahl"), seit: "2.23.90" },
+  { id: "kacheln_klein", thema: "darstellung", sym: "🔲", nur: () => !einfach(), t: "Kacheln kleiner – 3 nebeneinander", x: "Mehr Kacheln auf einen Blick: Bei ⚙️ → <b>„🎨 Darstellung“</b> → <b>„🔲 Kacheln auf der Startseite“</b> „Klein“ wählen – dann passen 3 nebeneinander. Das geht nur in der <b>erweiterten Ansicht</b> – in der einfachen Ansicht bleiben die Kacheln groß. Gilt nur für dieses Gerät.", zeig: () => einstiegHin("darstellung", "kachelGroesseWahl"), seit: "2.23.90" },
 ];
 const HZ = { thema: null, q: "", vorher: null, gruss: 0, unterwegs: null, herkunft: null, sicht: null };
 // 2.23.1 (Wunsch Hansi: „immer etwas anders formuliert, freundlich, nicht aufdringlich“): wechselnde Einleitungen – neu gewählt
@@ -3270,14 +3270,14 @@ const TW_FAQ = [
   { id: "leihen", sym: "📦", t: "Wie leihe ich etwas vom Club aus?", x: "Unter <b>🤝 Helfen &amp; Leihen</b> → <b>📦 Ausleihen</b> reservierst du Club-Sachen wie den Pavillon für deinen Tag.", los: () => zeige("helfen") },
   { id: "boerse", sym: "🛍️", t: "Wie biete ich privat etwas an oder suche etwas?", x: "Unter <b>🤝 Helfen &amp; Leihen</b> → <b>🛍️ Börse</b> mit <b>„＋ Neu“</b>: Biete oder Suche wählen, gern mit Foto. Ein Angebot bleibt 30 Tage stehen.", los: () => hlStart("boerse") },
   { id: "vorschlag", sym: "🗳️", t: "Wie mache ich einen Vorschlag für den Club?", x: "Bei <b>🗳️ Vorschläge</b> auf <b>„＋ Neu“</b> tippen und deine Idee beschreiben – die anderen können abstimmen.", los: () => zeige("vorschlaege") },
-  { id: "dienstwunsch", sym: "📝", t: "Wie trage ich meine Dienstwünsche ein?", x: "Tippe auf die Kachel <b>📝 Dienstwünsche</b>. Twinkey führt dich Tag für Tag durch: wann du kannst, wann lieber nicht. Gespeichert wird es für die Dienstplanung.", los: () => dwOeffnen() },
+  { id: "dienstwunsch", sym: "📝", t: "Wie trage ich meine Dienstwünsche ein?", x: "Tippe auf <b>🗓️ Mein Dienst</b> → <b>„📝 Wünsche eintragen“</b> (in der einfachen Ansicht auf die Kachel <b>📝 Dienstwünsche</b>). Twinkey führt dich Tag für Tag durch: wann du kannst, wann lieber nicht. Gespeichert wird es für die Dienstplanung.", los: () => dwOeffnen() },
   { id: "dienstplan", sym: "🗓️", t: "Wo sehe ich den Dienstplan?", x: "Unter <b>🗓️ Dienstpläne</b> – Woche für Woche. Mit <b>‹ Woche</b> / <b>Woche ›</b> blätterst du, <b>„Heute“</b> springt zurück.", los: () => zeige("dienste") },
   { id: "protokoll", sym: "📄", t: "Wo finde ich die Protokolle?", x: "Unter <b>📄 Protokolle</b>. Neue sind markiert, bis du sie geöffnet hast. Ältere stehen auch im <b>🗄️ Archiv</b> nach Jahren.", los: () => zeige("protokolle") },
   { id: "archiv", sym: "🗄️", t: "Wo finde ich alte Sachen und meinen Ordner?", x: "Im <b>🗄️ Archiv</b>: Ordner nach Jahren mit Terminen, Protokollen und Fotos, die <b>Clubchronik</b> zum Blättern – und dein <b>eigener Ordner</b>, den nur du siehst.", los: () => zeige("archiv") },
   { id: "handbuch", sym: "📚", t: "Gibt es eine Anleitung zum Lesen oder Drucken?", x: "Ja – unter <b>📚 Meine Dokumente</b> liegt die <b>Bedienungsanleitung</b> der Club-App. Dort kannst du sie lesen, drucken oder teilen.", los: () => zeige("dokumente") },
   { id: "geld", sym: "💶", t: "Wie bekomme ich ausgelegtes Geld zurück?", x: "Über <b>💶 Erstattung</b>: Fahrtkosten (die Kilometer rechnet die App aus), Einkauf oder sonstige Auslagen eintragen, Beleg fotografieren, abschicken. Der Kassenwart bekommt es, du eine Bestätigung.", los: () => zeige("erstattung") },
   { id: "adresse", sym: "✏️", t: "Ich bin umgezogen – wie melde ich die neue Adresse?", x: "Tippe auf <b>✏️ Meine Daten haben sich geändert</b> (Register „Meins“) und dann auf <b>Neue Anschrift</b>. Die Meldung geht von selbst an die Richtigen im Club.", los: () => aeStart() },
-  { id: "status", sym: "🙂", t: "Wie zeige ich, dass ich im Urlaub oder krank bin?", x: "Mit <b>„Mein Status“</b> oben auf der Startseite: z. B. 🏖️ Urlaub oder 🤒 krank wählen – die anderen sehen es bei deinem Namen.", los: () => stStart() },
+  { id: "status", sym: "🙂", t: "Wie zeige ich, dass ich im Urlaub oder krank bin?", x: "Mit <b>„Mein Status“</b> oben auf der Startseite: z. B. 🏖️ Urlaub oder 🤒 krank wählen – die anderen sehen es bei deinem Namen.", los: () => statusBlatt() },
   { id: "geburtstag", sym: "🎂", t: "Wie gratuliere ich zum Geburtstag?", x: "Hat jemand Geburtstag, steht es oben im <b>Info-Feld</b> der Startseite. Mit einem Tipp schickst du deinen Glückwunsch." },
   { id: "notfall", sym: "🆘", t: "Was mache ich im Notfall?", x: "Tippe auf <b>🆘 SOS</b>: oben stehen die <b>Notrufnummern</b> (112, 110) zum Anrufen, mit <b>📍 Wo bin ich?</b> siehst du deinen Standort zum Durchgeben. Bei Lebensgefahr immer zuerst <b>112</b> anrufen.", los: () => zeige("sos") },
   { id: "standort", sym: "📍", t: "Wie teile ich meinen Standort?", x: "Unter <b>📍 Standorte</b> oben auf <b>„📍 Teilen“</b> tippen und die Dauer wählen. Danach verschwindet dein Standort von selbst.", los: () => zeige("standort") },
@@ -4746,7 +4746,7 @@ async function spEinlAntwort(a) {
   $("spEinlBlatt")?.remove();
   try { if (a === "spaeter") localStorage.setItem(SPE_SPAETER, String(Date.now() + SPE_SPAETER_MS)); else { localStorage.setItem(SPE_TAG, heuteIso()); localStorage.removeItem(SPE_SPAETER); } } catch {}
   if (a === "ja") return spStart();
-  if (a === "spaeter") { clearTimeout(spEinlAntwort.t); spEinlAntwort.t = setTimeout(() => spEinladung(), SPE_SPAETER_MS + 1000); return melde("⏰ Gut, ich frage später nochmal"); }
+  if (a === "spaeter") { clearTimeout(spEinlAntwort.t); spEinlAntwort.t = setTimeout(() => spEinladung(), SPE_SPAETER_MS + 1000); return melde("⏰ Gut, ich frage ein andermal"); }
   if (a === "aus") return spEinlSchalter(false);
 }
 async function spEinlSchalter(an) {
@@ -5906,8 +5906,8 @@ const statusArt = (s) => (STATUS[s?.status] ? s.status : "verfuegbar");
 const statusKurz = (s) => { const x = STATUS[statusArt(s)]; return `${x[0]} ${x[1]}${s?.bis ? " bis " + fDatumKurz(s.bis) : s?.uhr ? " bis " + s.uhr : ""}`; };
 function meinStatusZeigen() {
   const s = eigenerStatus(), art = statusArt(s);
-  // KC-CLUB-STATUS-PFEIL (1.50.0): Pfeil rechts mittig auf dem Rand wie bei den Feldern darunter
-  $("statusChip").innerHTML = `${esc(statusText(s))}<span class="stpfeil" aria-hidden="true">›</span>`; $("statusChip").className = "statuschip stmarke st-" + art;
+  // KC-CLUB-STATUS-PFEIL (1.50.0, 2.24.15): Pfeil mittig auf der Unterkante – als Zeichnung (genau mittig), in der Farbe des Status
+  $("statusChip").innerHTML = `${esc(statusText(s))}<svg class="stpfeil" viewBox="0 0 20 12" aria-hidden="true"><path class="u" d="M3 2.75l7 6.5L17 2.75"/><path d="M3 2.75l7 6.5L17 2.75"/></svg>`; $("statusChip").className = "statuschip stmarke st-" + art;
   if ($("meinStatusKnopf")) { $("meinStatusKnopf").innerHTML = `<small class="st-titel">Mein Status</small>${esc(statusKurz(s))} ▾`; $("meinStatusKnopf").className = "knopf klein stmarke st-" + art; }
 }
 const statusText = (s) => { const x = STATUS[s?.status] || STATUS.verfuegbar; return `${x[0]} ${x[1]}${s?.bis ? " bis " + fDatumKurz(s.bis) : s?.uhr ? " bis " + s.uhr : ""}${s?.hinweis ? " · " + s.hinweis : ""}`; };
@@ -9401,6 +9401,7 @@ const BU_REGAL = [
 const buRecht = (x) => !x.recht || (x.recht === "S" && buSchreiben()) || (x.recht === "L" && !!ICH?.vorstand) || (x.recht === "A" && !!ICH?.admin);
 function buRaumHtml() {
   const r = BU.start; if (!r) return '<div class="karte hinweis">Wird geladen …</div>';
+  if (!Array.isArray(r.sitzungen) || !r.eingang) return '<div class="karte hinweis">⚠️ Das Büro ist gerade nicht abrufbar – bitte gleich noch einmal öffnen.</div>'; // 2.24.15: unvollständige Antwort nie als leer/OK zeigen
   const S = buSchreiben(), L = !!ICH?.vorstand, t = r.sitzungen[0], n = S ? buNaechster(t) : null, e = r.eingang;
   const summe = Object.values(e).reduce((a, b) => a + b, 0), nt = S ? buNachherTipp() : null;
   const dran = nt ? nt.text : { vorbereiten: "📝 Sitzung vorbereiten", einladung: "📨 Einladung senden", erinnerung: `🔔 ${t?.ohne} Mitglieder erinnern` }[n];

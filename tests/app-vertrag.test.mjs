@@ -2366,7 +2366,8 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/async function statusMap\(ids\?: string\[\], mitRuhe = false\)/.test(server) && /inRuhezeit\(\(x as any\)\.wert\) && \(!alt \|\| alt\.status === "verfuegbar"\)/.test(server), "Server: Ruhezeit nur statt „verfügbar“, Urlaub/krank haben Vorrang");
   assert.ok(/statusMap\(undefined, true\)/.test(server) && /statusMap\(\[pid\], true\)/.test(server) && !/case "status_setzen"[^]{0,300}"ruhe"/.test(server), "andere sehen die Ruhezeit; nicht speicherbar");
   assert.ok(/function inRuheJetzt\(r\)/.test(html) && /function eigenerStatus\(\)/.test(html) && /filter\(\(\[k\]\) => STATUS_WAEHLBAR\.includes\(k\)\)/.test(html), "eigener Status live, Ruhezeit nicht wählbar");
-  assert.ok(/<span class="stpfeil" aria-hidden="true">›<\/span>/.test(html) && /\.statuschip \.stpfeil \{[^}]*rotate\(90deg\)/.test(html), "Pfeil auf dem Rand");
+  // 2.24.15: Pfeil als Zeichnung (genau mittig) in der Statusfarbe (currentColor) mit weißem Rand
+  assert.ok(/<svg class="stpfeil" viewBox="0 0 20 12" aria-hidden="true"><path class="u" d="M3 2\.75l7 6\.5L17 2\.75"\/><path d="M3 2\.75l7 6\.5L17 2\.75"\/><\/svg>/.test(html) && /\.statuschip \.stpfeil \{[^}]*left: 50%; bottom: 0;[^}]*transform: translate\(-50%, 50%\);[^}]*stroke: currentColor/.test(html) && /\.statuschip \.stpfeil \.u \{ stroke: #fff/.test(html), "Pfeil auf dem Rand, mittig, in Statusfarbe");
   assert.ok(/!\["verfuegbar", "ruhe"\]\.includes\(statusArt\(m\.status\)\)/.test(html), "Ruhezeit macht den Kreis nicht orange (abwesend)");
 }
 
@@ -2409,7 +2410,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 
 // 216. 1.52.2: Status-Pfeil auf der Unterkante, Feld-Pfeile einheitlich (Wunsch Hansi)
 {
-  assert.match(html, /\.statuschip \.stpfeil \{[^}]*left: 50%; bottom: 0; transform: translate\(-50%, 50%\) rotate\(90deg\)/, "Status-Pfeil mittig auf der Unterkante");
+  assert.match(html, /\.statuschip \.stpfeil \{[^}]*left: 50%; bottom: 0;[^}]*transform: translate\(-50%, 50%\);/, "Status-Pfeil mittig auf der Unterkante (2.24.15: Zeichnung statt Zeichen)");
   assert.match(html, /body:not\(\.einfach\) \.kacheln3 \.mini \.mpfeil \{ top: 74%; \}/, "Feld-Pfeile in der erweiterten Ansicht einheitlich");
   assert.doesNotMatch(html, /\.mini:last-child \.mpfeil \{ top: auto; bottom: 8px/, "rechter Pfeil nicht mehr unten im Text");
 }
@@ -4701,6 +4702,16 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.24.14 KC-CLUB-WAS-NEU: Tagesmeldung zeigt auch wartende Spiele; „Diese Meldung ausschalten“ unten
 {
   assert.ok(/sp = INIT\?\.spieleDran \|\| 0/.test(html) && /Einladung oder du bist am Zug/.test(html), "Spiele in der Tagesmeldung");
+}
+// 2.24.15 KC-CLUB-PRUEFUNG-4: Status-Pfeil mittig in Statusfarbe, Hilfe-Pfade auch in der einfachen Ansicht, Büro unvollständig ≠ leer
+{
+  assert.ok(/d\.classList\.add\("einfach-sichtbar"\)/.test(html) && /body\.einfach #v-einstellungen > details\[data-klappe\]\.einfach-sichtbar \{ display: block; \}/.test(html), "Sprung aus Hilfe öffnet Bereich auch in der einfachen Ansicht");
+  const ans = html.slice(html.indexOf('data-klappe="ansagen"'), html.indexOf('data-klappe="ansagen"') + 3000);
+  assert.ok(/id="setWasNeu"/.test(ans) && /höchstens einmal in der Woche/.test(ans), "„Was ist neu“-Schalter bei Ansagen, Töne & Tipps (auch einfache Ansicht)");
+  assert.ok(/id: "was_neu"[^\n]*Spiele[^\n]*einstiegHin\("ansagen", "setWasNeu"\)/.test(html), "Hilfe „Was ist neu“ mit Spielen und richtigem Weg");
+  assert.ok(/id: "status", sym: "🙂"[^\n]*los: \(\) => statusBlatt\(\)/.test(html), "Twinkey Status öffnet den Status, nicht den Standort");
+  assert.ok(/id: "kacheln_klein"[^\n]*nur: \(\) => !einfach\(\)/.test(html), "Kachel-Tipp nur in der erweiterten Ansicht");
+  assert.ok(/function buRaumHtml\(\) \{\n[^\n]*\n  if \(!Array\.isArray\(r\.sitzungen\) \|\| !r\.eingang\) return/.test(html), "Büro: unvollständige Antwort → Hinweis statt Absturz");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
