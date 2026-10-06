@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.23.95 – 2026-10-06 – Hilfetexte zu den Neuerungen + Bedienungsanleitung V6 (Wunsch Hansi)
+- ❓ Hilfe-Zentrum: 15 neue Hilfen (Mein Bild, Punkt am Bild, Anwesenheitstafel, Bild groß, 📞/🎥 auf der Kachel, Meine Daten, Mein Dienst, Pfeil-Menü, nachträglich wichtig, Ganzer Chat, Abstimmung an wen, grüner Haken, Verbindung an Hansi, Mitglieder fragen, unter Vorbehalt); „Mitglieder als Kacheln, Liste oder Tafel“ ergänzt.
+- KC-CLUB-ANLEITUNG-V6: Bedienungsanleitung Version 6 (48 Seiten) – neu Teil 18 „Neu in Version 6“ mit Bildern. Ersetzt V5 in „Meine Dokumente“; V1–V5 bleiben unverändert. Baukasten tools/anleitung: fotos5.mjs, inhalt.mjs (V6).
+- Bewusst nicht in Hilfen/Anleitung: Admin-Werkzeuge und noch nicht freigegebene Funktionen.
+
 ## 2.23.94 – 2026-10-06 – Inkognito nicht mehr in der Suche
 - Wunsch Hansi: „Inkognito“ taucht in der App-Suche nicht mehr auf – auch nicht beim Admin (fester Eintrag entfernt, Admin-Kachel aus der Suche ausgenommen). Mitglieder fanden es schon vorher nicht.
 

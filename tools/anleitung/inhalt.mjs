@@ -1,5 +1,5 @@
 // Inhalt der Club-App-Anleitung (Texte). Bilder: bild/<name>.png (ganze Seite) und bild/s-<name>.png (Ausschnitt).
-export const VERSION = { anleitung: 5, app: "2.23.42", stand: "05.10.2026" };
+export const VERSION = { anleitung: 6, app: "2.23.95", stand: "06.10.2026" };
 export const INHALT = [
   ["So fängst du an", "in 5 Schritten"], ["1. Startseite", "einfache Ansicht – das Wichtigste auf einen Blick"], ["2. Erweiterte Ansicht", "alle Funktionen, Anzeigen im Kopf"],
   ["3. Nachrichten", "Chats, Schreiben, Diktieren, wichtige Nachrichten, Chats archivieren"], ["4. Termine", "zu- und absagen, Mitfahren, Kalender, Terminanfragen mit Erinnerung"], ["5. Mitglieder", "wer ist online, Status, Kontakt, Anklopfen"],
@@ -8,12 +8,13 @@ export const INHALT = [
   ["12. Helfen & Leihen", "Hilfe suchen, helfen, „nach Absprache“"], ["13. Bedienen, Anmelden & ohne Netz", "Zurück-Taste, Rückfragen, neues Gerät, kein Internet"],
   ["14. Spiele", "Tic-Tac-Toe, Schach, Bauernskat, Küchenterror – gegen Computer oder Mitglieder"], ["15. Hilfe & Tipps", "das „?“, Hilfe-Zentrum, „Kurz erklärt“"],
   ["16. Dienstwünsche", "mit Twinkey eintragen, leerer Wunschbogen zum Ausdrucken"], ["17. Meine Daten haben sich geändert", "neue Anschrift, Handynummer & Co. melden"],
+  ["18. Neu in Version 6", "Mein Bild, Anwesenheitstafel, Anrufen von der Kachel, mehr am Pfeil, Mein Dienst, Meine Daten und mehr"],
 ];
 export const GUT_ZU_WISSEN = [
   "<b>Gut zu wissen:</b> Alle Bilder zeigen <b>Beispieldaten</b> – Namen wie „Max Mustermann“ und alle Telefonnummern sind erfunden. In deiner App stehen die echten Mitglieder und Termine.",
   "Die App hat eine <b>einfache</b> und eine <b>erweiterte Ansicht</b> – Umschalten geht jederzeit (Teil 1 und 2).",
   "Die Farben kannst du in den Einstellungen ändern („Lieblingsfarbe“) – es gibt jetzt <b>22 Farbschemen</b>. Die Bilder zeigen „Köcheclub Klassik“ am Tag.",
-  "<b>Neu in Version 4</b> (mit <span class=\"neu\">NEU</span> markiert): 🎲 Spiele, ❓ Hilfe-Zentrum, 📝 leerer Wunschbogen, ✏️ Meine Daten ändern, ⏰ eigene Erinnerung zu Terminanfragen, 📦 Chats archivieren, 🚨 SOS an alle, 👨‍🍳 Über die App.",
+  "<b>Neu in Version 6</b> – alles in <b>Teil 18</b>: 🧑‍🍳 Mein Bild, 📋 Anwesenheitstafel, 📞/🎥 direkt von der Mitglieder-Kachel, ✂️ mehr am Pfeil einer Nachricht, 🖨️ ganzen Chat drucken, 🗓️ Mein Dienst, 🔐 Meine Daten, ✅ grüner Haken in langen Fenstern und mehr.",
   "<b><u>Beachte:</u></b> Die Club-App ist noch eine Beta-Version. Einige Funktionen können sich mit der Zeit noch ändern, weil ständig weiterentwickelt wird.",
 ];
 export const START_SCHRITTE = [
@@ -101,7 +102,7 @@ export const TEILE = [
         abschnitte: [{ nr: "+", titel: "Die Anfrage in der Liste", zeilen: [["s-terminanfrage", "Terminanfrage", "Wer angefragt hat, wann und wo, deine Antwort und wer schon zugesagt hat. <b>⏰ Einstellen</b> ändert deine Erinnerung.", "neu"]] }] }] },
   { titel: "5. Mitglieder", unter: "Wer ist online, Status, Kontakt, Anklopfen", bild: "mitglieder",
     legende: [["Mein Status", "eigenen Status ändern"], ["Kacheln / Liste", "Ansicht umschalten"], ["Alle", "alle Mitglieder"], ["Online", "nur wer gerade da ist"], ["Gruppen", "nach Gruppe filtern"], ["Zeichen", "online · heute da · abwesend · noch nie"], ["Du", "deine eigene Kachel"], ["Online", "grüner Ring = gerade in der App"], ["Chat 💬", "sofort schreiben"], ["Anklopfen 👋", "kurz Bescheid geben, dass du sprechen möchtest"]],
-    text: "Eine Kachel antippen zeigt Telefon, Mail und Adresse – soweit das Mitglied sie freigegeben hat. <b>Anklopfen 👋</b> geht nur, wenn der andere gerade online ist. Er kann annehmen oder kurz antworten („Bin beschäftigt“). Nach einer Minute fragt die App, ob du weiter anklopfen, eine Nachricht senden oder auflegen möchtest. Die Mitglieder-Kachel oben im Kopf öffnet direkt <b>nur die Online-Mitglieder</b>; „👥 Alle“ schaltet um." },
+    text: "Eine Kachel antippen zeigt Telefon, Mail und Adresse – soweit das Mitglied sie freigegeben hat. <b>Anklopfen 👋</b> geht nur, wenn der andere gerade online ist. Er kann annehmen oder kurz antworten („Bin beschäftigt“). Nach einer Minute fragt die App, ob du weiter anklopfen, eine Nachricht senden oder auflegen möchtest. Die Mitglieder-Kachel oben im Kopf öffnet direkt <b>nur die Online-Mitglieder</b>; „👥 Alle“ schaltet um. <b>Neu:</b> Bilder, 📞/🎥 auf der Kachel und die 📋 Anwesenheitstafel – siehe Teil 18." },
   { titel: "6. Pinnwand", unter: "Kurze Zettel für alle oder einzelne", bild: "pinnwand",
     legende: [["＋ Zettel", "neuen Zettel anheften (bis zu 4)"], ["Hinweis", "ein wichtiger Zettel wartet auf dich"], ["Wichtig", "rot umrandet"], ["Antworten", "auf den Zettel antworten"], ["✓ erl.", "als erledigt abhaken"], ["Gelesen", "wer deinen Zettel gelesen hat"], ["Abnehmen", "eigenen Zettel entfernen"]],
     text: "Zettel sind für <b>alle</b>, nur <b>für dich</b> oder für <b>bestimmte Personen</b>. Wer einen neuen Zettel bekommt, sieht ihn beim Öffnen der App. Jeder darf höchstens 4 Zettel gleichzeitig anheften.",
@@ -202,4 +203,32 @@ export const TEILE = [
   { titel: "17. Meine Daten haben sich geändert", unter: "Neue Anschrift, Handynummer & Co. – über die Kachel „✏️ Meine Daten geändert?“ im Register Meins", bild: "meine-daten",
     legende: [],
     text: "Antippen, was sich geändert hat, und die neuen Angaben eintragen. Die Meldung geht <b>gleich an die Richtigen</b> im Club (z. B. Clubsprecher und Kassenwart) – die Zeile unter jedem Knopf zeigt, an wen. Unten siehst du deine letzten Meldungen mit dem Stand (eingegangen, gesehen, eingetragen). Ist etwas gerade nicht nötig, ist der Knopf blass." },
+  { titel: "18. Neu in Version 6", unter: "Was seit der letzten Anleitung dazugekommen ist", bild: "neu-mitglieder",
+    legende: [["Dein Bild", "statt Buchstaben eine Koch-Figur (Meins → 🧑‍🍳 Mein Bild)"], ["Der kleine Punkt", "✓ grün = gerade online · blau = heute da · orange = abwesend · grau = länger nicht da"], ["📞 Anrufen", "nur hell, wenn das Mitglied gerade online ist"], ["🎥 Videoanruf", "ebenso – beide brauchen die App offen"]],
+    text: "Bei den <b>👥 Mitgliedern</b> siehst du jetzt die Bilder der anderen. Der farbige Ring und der kleine Punkt unten rechts zeigen, ob jemand gerade da ist. Anrufen und Videoanruf gehen direkt von der Kachel.",
+    weiter: [
+      { bild: "neu-tafel", titel: "Die Anwesenheitstafel", legende: [["📋", "Tafel einschalten (🔲 Kacheln, ☰ Liste)"], ["Lämpchen", "grün = gerade online, blau = heute da, orange = abwesend, grau = länger nicht da"], ["Name", "antippen öffnet das Mitglied"]],
+        text: "Die Tafel zeigt nur <b>Namen und Lämpchen</b> – wer online ist, steht oben. Ein Tipp auf einen Namen öffnet das Mitglied; dort kannst du schreiben, anklopfen oder anrufen. Die Ansicht wählst du auch unter ⚙️ → Darstellung.",
+        abschnitte: [
+      { nr: "+", titel: "Bilder", zeilen: [
+        ["s-mein-bild", "🧑‍🍳 Mein Bild", "Register <b>Meins</b> → <b>„🧑‍🍳 Mein Bild“</b>: 30 Koch-Figuren zur Auswahl. „Kein Bild“ bringt deine Buchstaben zurück.", "neu"],
+        ["s-mitglied-bild", "Bild beim Mitglied", "Öffnest du ein Mitglied, steht sein Bild ganz oben.", "neu"],
+        ["s-bild-gross", "Bild groß ansehen", "Ein Tipp aufs Bild zeigt es groß; noch ein Tipp schließt es.", "neu"]] },
+      { nr: "+", titel: "Nachrichten", zeilen: [
+        ["s-pfeil-menue", "Mehr am Pfeil", "Der kleine Pfeil neben einer Nachricht: <b>↪️ Weiterleiten, 📋 Kopieren, ✂️ Ausschneiden, 🗄️ Archivieren</b> (in deinen eigenen Ordner) und <b>🗑️ Löschen</b>. Bei deinen eigenen Nachrichten außerdem <b>❗ Wichtig</b> – auch nachträglich (orangefarbener Rahmen für alle, ohne neue Benachrichtigung).", "neu"],
+        ["s-chat-ganz", "Ganzer Chat", "Im Chat oben <b>⋮</b> → <b>„Ganzer Chat“</b>: 📋 Kopieren, 🖨️ Ausdrucken oder 🗄️ in dein Archiv legen.", "neu"],
+        [null, "Abstimmung nur für einige", "Beim Anlegen einer Abstimmung fragt die App <b>„An wen?“</b>: alle, eine Gruppe oder eine Auswahl. Nur die Gefragten sehen sie und das Ergebnis.", "neu"]] },
+      { nr: "+", titel: "Meins", zeilen: [
+        [null, "🗓️ Mein Dienst", "Eine Kachel für alles rund um den Dienst (erweiterte Ansicht): <b>📝 Wunschplan</b> (abgegeben oder übernommen), <b>📅 Sollplan</b> (deine nächsten Dienste) und <b>⏱️ Istplan</b> (wann du wirklich da warst).", "neu"],
+        [null, "🔐 Meine Daten", "Zeigt, was die App über dich gespeichert hat – Angaben, Zugang, Rechte, Benachrichtigungen. Zum Ausdrucken oder als Datei; stimmt etwas nicht, meldest du es gleich dort.", "neu"],
+        [null, "Kacheln kleiner", "In der erweiterten Ansicht: ⚙️ → Darstellung → <b>„🔲 Kacheln auf der Startseite“</b> → „Klein“ – dann passen 3 nebeneinander.", "neu"]] },
+      { nr: "+", titel: "Bedienen und Hilfe", zeilen: [
+        [null, "✅ Grüner Haken oben", "In langen Fenstern erscheint oben links ein grüner ✓, wenn der Knopf zum Übernehmen weit unten steht. Ein Tipp darauf wirkt wie der Knopf – kein Wischen nötig.", "neu"],
+        [null, "„＋ Neu“ leuchtet kurz", "Kommst du auf eine Seite, leuchtet der Knopf „＋ Neu“ oben kurz auf – damit du siehst, wo du etwas anlegst.", "neu"],
+        [null, "🤔 Unter Vorbehalt", "Schlägt dir jemand bei einer Terminanfrage eine andere Zeit vor: annehmen, <b>unter Vorbehalt</b> (mit kurzem Satz, woran es hängt) oder ablehnen.", "neu"],
+        [null, "👥 Mitglieder fragen", "Weiß Twinkey nicht weiter: bei „🧑‍🍳 Frag Twinkey“ auf <b>„👥 Lieber ein Mitglied fragen“</b> – an alle oder ausgewählte, per App, Push oder E-Mail.", "neu"],
+        [null, "🎙️ Mikrofon-Hilfe", "Klappt Diktieren nicht, führt <b>„🧭 Schritt für Schritt helfen“</b> im Mikrofon-Fenster durch alle Einstellungen deines Handys.", "neu"],
+        [null, "📨 Verbindung an Hansi", "Tipp oben aufs <b>Lämpchen</b>: Im Fenster stehen die Messwerte. <b>„📨 Ergebnis an Hansi senden“</b> schickt sie ihm (nur Technik-Werte), 🖨️ druckt sie aus.", "neu"]] },
+        ] },
+    ] },
 ];
