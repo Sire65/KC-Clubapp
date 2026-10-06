@@ -4781,6 +4781,12 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/b\.outerHTML = spAnsageKnopf\(art, !!b\.dataset\.kachel\)/.test(html) && /function spAnsageKnopf\(art, kachel = false\)/.test(html), "Umschalten behält Kachelform, andere Spiele unverändert");
   assert.ok(/\.kt-knoepfe \{ display: grid; grid-template-columns: repeat\(auto-fit, minmax\(0, 1fr\)\);/.test(html) && /\.kt-wahl \.sp-wahl > span \{ flex-basis: 100%; \}/.test(html) && /<div class="kt-wahl">\$\{spWahl\("Stufe"/.test(html), "Stufe volle Breite, Knöpfe gleich breit");
 }
+// 2.25.10 KC-CLUB-KT-ABBRECHEN
+{
+  assert.ok(/<div class="kt-abbruch"><button class="knopf klein" onclick="ktPcAbbrechen\(\)">✖ Spiel abbrechen<\/button><\/div>/.test(html), "Küchenterror: Abbrechen-Knopf während des Spiels");
+  assert.ok(/async function ktPcAbbrechen\(\) \{[^]{0,200}if \(lief\) ktPcPausieren\(\);[^]{0,400}nein: "▶ Weiterspielen" \}\)\)\) \{ if \(lief && KTP\.z === z && ktpSichtbar\(\)\) ktPcFortsetzen\(\); return; \}[^]{0,200}KTP\.z = null;/.test(html), "Uhr hält an, Weiterspielen setzt fort, Abbrechen ohne Wertung");
+  assert.ok(!/async function ktPcAbbrechen[^]{0,900}KTP\.stand\.(ich|pc|remis)\+\+/.test(html), "Abbruch zählt nicht in den Spielstand");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

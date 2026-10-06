@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.25.10 – 2026-10-06 – Küchenterror: Spiel abbrechen
+Küchenterror gegen den Computer: Neuer Knopf „✖ Spiel abbrechen“ – die Uhr hält an, nach Rückfrage endet die Runde ohne Wertung (Spielstand bleibt); „▶ Weiterspielen“ macht mit 3-2-1 weiter. (KC-CLUB-KT-ABBRECHEN, Wunsch Hansi)
+
 ## 2.25.9 – 2026-10-06 – Küchenterror: Knöpfe ordentlich nebeneinander
 Küchenterror gegen den Computer: Stufe über die volle Breite mit gleich hohen Feldern (Symbol, Name, Sekunden untereinander); „▶ Los geht’s“, „🔊 Ansage“ und „🗑️ Stand löschen“ als drei gleich große Kacheln nebeneinander (Symbol über dem Text). (KC-CLUB-KT-KNOEPFE, Wunsch Hansi)
 

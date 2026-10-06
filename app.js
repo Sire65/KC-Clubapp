@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.25.9"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.25.10"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SCHNELLSTART-DATEI (2.24.8, Hinweis Hansi „Start ist langsamer geworden“): das Programm liegt in app.js, damit das Handy es
 // fertig übersetzt behalten kann (statt bei jedem Öffnen 1,8 MB neu einzulesen). Seite und Programm müssen dieselbe Version haben
 // (AGENTS Regel 16, kein Mischstand): passt es nicht (z. B. alte Seite aus einem Zwischenspeicher), einmal frisch laden, sonst anhalten.
@@ -4869,7 +4869,8 @@ async function ktPcZeigen() {
   if (z.phase === "frage") spSag("kt", ktFrageSprache(fr, z.i + 1), ktSchl + ":f", true);
   else if (z.phase === "aufl" && z.aufl) spSag("kt", ktAuflSprache(fr, z.aufl) + (z.aufl.pc ? ` Der Computer: ${z.aufl.pc.wahl < 0 ? "keine Antwort" : z.aufl.pc.ok ? "richtig" : "falsch"}.` : ""), ktSchl + ":a", true);
   $("spInhalt").innerHTML = `<div class="karte sp-karte">${kopf}${kopfWer}${ktFrageHtml(fr, { klick: z.phase === "frage" ? "ktPcAntwort" : "", aufl: z.phase === "aufl" ? z.aufl : null })}${pcZeile}
-    ${z.phase === "aufl" ? `<div class="knoepfe"><button class="knopf haupt" onclick="ktPcWeiter()">${z.i >= 11 ? "🏁 Ergebnis" : "Weiter ›"}</button>${spAnsageKnopf("kt")}</div>` : ""}</div>`;
+    ${z.phase === "aufl" ? `<div class="knoepfe"><button class="knopf haupt" onclick="ktPcWeiter()">${z.i >= 11 ? "🏁 Ergebnis" : "Weiter ›"}</button>${spAnsageKnopf("kt")}</div>` : ""}
+    <div class="kt-abbruch"><button class="knopf klein" onclick="ktPcAbbrechen()">✖ Spiel abbrechen</button></div></div>`; // KC-CLUB-KT-ABBRECHEN (2.25.10)
   if (z.phase === "frage" && z.pausiert && !SP.pause) return ktPcFortsetzen(); // 2.18.0: nach Rückkehr weiter
   if (z.phase === "frage" && !SP.pause) ktPcUhren();
   spPauseZeigen();
@@ -4930,6 +4931,18 @@ function ktPcWeiter() {
   ktPcZeigen();
 }
 const ktPcStaerke = (w) => { KTP.staerke = KT_STAERKE[w] ? w : "mittel"; ktpMerken(); ktPcZeigen(); };
+// KC-CLUB-KT-ABBRECHEN (2.25.10, Wunsch Hansi „kein Abbrechen-Knopf, wenn man zwischendurch aufhören will“): Uhr anhalten, fragen;
+// bei „Abbrechen“ endet das Spiel ohne Wertung (Spielstand bleibt), bei „Weiterspielen“ geht es mit 3-2-1 weiter.
+async function ktPcAbbrechen() {
+  const z = KTP.z; if (!z || z.phase === "ende") return;
+  const lief = z.phase === "frage" && !z.pausiert; if (lief) ktPcPausieren();
+  try { speechSynthesis.cancel(); } catch {}
+  if (!(await frage("Spiel abbrechen? Diese Runde wird nicht gewertet – dein Spielstand bleibt.", { ja: "✖ Abbrechen", nein: "▶ Weiterspielen" }))) { if (lief && KTP.z === z && ktpSichtbar()) ktPcFortsetzen(); return; }
+  if (KTP.z !== z) return;
+  clearTimeout(KTP.uhr); clearTimeout(KTP.pcUhr); ktUhrStopp(); KTP.z = null;
+  if (ktpSichtbar()) ktPcZeigen();
+  melde("Spiel abgebrochen – nicht gewertet.");
+}
 async function ktPcStandWeg() { if (!(await frage("Spielstand Küchenterror auf 0 : 0 zurücksetzen?", { ja: "🗑️ Zurücksetzen", nein: "Abbrechen" }))) return; KTP.stand = { ich: 0, pc: 0, remis: 0 }; ktpMerken(); ktPcZeigen(); }
 // ----- gegen Mitglieder -----
 let KTM = { id: null, frage: null, aufl: null, uhr: null, sendet: false, pause: false };
