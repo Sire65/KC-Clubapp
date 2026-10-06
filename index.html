@@ -971,7 +971,9 @@
   .avatar { width: 46px; height: 46px; border-radius: 50%; background: var(--rot); color: #fff; display: grid; place-items: center; font-weight: 800; flex: none; }
   /* KC-CLUB-GRUPPE-AUS-RUNDE (2.24.19): feste Gruppe mit 🔗-Abzeichen, Runde gestrichelt grau mit Anfangsbuchstaben */
   .avatar.uh-gruppe { position: relative; overflow: visible; }
-  .avatar .uh-kette { position: absolute; right: -4px; bottom: -4px; width: 20px; height: 20px; border-radius: 50%; background: var(--karte); box-shadow: 0 0 0 2px var(--karte); font-size: .75rem; font-style: normal; display: grid; place-items: center; line-height: 1; }
+  .avatar .uh-kette { position: absolute; left: -4px; bottom: -4px; width: 20px; height: 20px; border-radius: 50%; background: var(--karte); box-shadow: 0 0 0 2px var(--karte); font-size: .75rem; font-style: normal; display: grid; place-items: center; line-height: 1; }
+  .avatar .uh-led { display: none; position: absolute; right: -2px; bottom: -2px; width: 14px; height: 14px; border-radius: 50%; background: #2ecc40; box-shadow: 0 0 0 2px var(--karte), 0 0 8px #2ecc40; }
+  .avatar.uh-gruppe.alle-online .uh-led { display: block; } @media (prefers-reduced-motion: no-preference) { .avatar.uh-gruppe.alle-online .uh-led { animation: mgOnlinePuls 2.4s ease-in-out infinite; } }
   .avatar.uh-runde { background: transparent; color: var(--grau); border: 2px dashed var(--grau); font-size: .8rem; letter-spacing: .5px; }
   .runde-angebot { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; justify-content: space-between; margin: 6px 0; padding: 8px 10px; border-radius: 12px; background: var(--blaubg); color: var(--text); font-size: .9rem; }
   .runde-angebot .knoepfe { margin: 0; gap: 6px; }
@@ -3062,6 +3064,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.25.7" data-v="2.25.7"></script>
+<script src="app.js?v=2.25.8" data-v="2.25.8"></script>
 </body>
 </html>

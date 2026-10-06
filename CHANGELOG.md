@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.25.8 – 2026-10-06 – Gruppen: grüne LED wenn alle online
+Am Symbol einer festen Gruppe leuchtet unten rechts eine grüne LED, wenn alle anderen Mitglieder gerade online sind; das 🔗 sitzt jetzt unten links. (KC-CLUB-GRUPPE-ALLE-ONLINE)
+
 ## 2.25.7 – 2026-10-06 – KC-CLUB-SPUR-AKTUALISIEREN: ↻ bei „👣 Wege der Mitglieder“ (Wunsch Hansi)
 - Admin → 📊 Nutzung → 👣 Wege der Mitglieder: runder ↻-Knopf oben rechts wie auf der Startseite. Lädt denselben Tag (und, falls offen, dieselbe Person) neu; vorher werden die eigenen noch nicht gesendeten Schritte übertragen. Dreht sich beim Laden.
 - Hinweis: Die Apps der Mitglieder senden ihre Schritte gesammelt alle 2 Minuten (und beim Verlassen der App) – ganz frische Schritte erscheinen erst danach.

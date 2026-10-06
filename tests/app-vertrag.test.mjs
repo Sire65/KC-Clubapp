@@ -4761,10 +4761,18 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/case "runde_zu_gruppe": \{/.test(server) && /t\.created_by_person_id !== ich\.person_id && !ich\.admin\) throw new Fehler/.test(server) && /\(count \?\? 0\) < 3\) throw/.test(server) && /if \(schon\) throw new Fehler\("Das ist schon eine feste Gruppe\."\)/.test(server), "Runde → Gruppe: nur Ersteller/Admin, ab 3 Personen, nicht doppelt");
   assert.ok(!/case "runde_zu_gruppe"[^]{0,2500}(senden|sendenGewaehlt)\(/.test(server.slice(server.indexOf('case "runde_zu_gruppe"'), server.indexOf('case "gruppe_aendern"'))), "keine Push/Mail an alle beim Umwandeln");
   assert.ok(/runde = \{ ersteller: t\?\.created_by_person_id === ich\.person_id \|\| ich\.admin, gleiche \}/.test(server), "Server meldet Ersteller und gleiche Runden");
-  assert.ok(/class="avatar k-neutral uh-gruppe" title="Feste Gruppe">\$\{esc\(u\.gruppe\.symbol\)\}<i class="uh-kette"/.test(html) && /class="avatar uh-runde" title="Runde – keine feste Gruppe"/.test(html), "Gruppe mit 🔗, Runde gestrichelt");
+  assert.ok(/class="avatar k-neutral uh-gruppe\$\{alle \? " alle-online" : ""\}" data-personen="\$\{esc\(p\.join\(","\)\)\}" title="Feste Gruppe\$\{[^}]*\}">\$\{esc\(u\.gruppe\.symbol\)\}<i class="uh-kette"/.test(html) && /class="avatar uh-runde" title="Runde – keine feste Gruppe"/.test(html), "Gruppe mit 🔗, Runde gestrichelt");
   assert.ok(/\(eigene >= 2 \|\| u\.runde\.gleiche >= 1\) && !nein\.includes\(rundeSchluessel\(u\)\)/.test(html) && /!!u\.runde\?\.ersteller && !u\.gruppe && \(u\.teilnehmer \|\| \[\]\)\.length >= 3/.test(html), "Angebot erst beim zweiten Mal, nur Ersteller, Nein merkt sich");
   assert.ok(/<h2 id="chatTitel" onclick="chatMitgliederZeigen\(\)"/.test(html) && /function chatMitgliederZeigen\(\)/.test(html) && /mitgliedOeffnen\(b\.dataset\.pid\)/.test(html), "Tipp auf Gruppennamen zeigt die Mitglieder");
   assert.ok(/\$\("chatKopfBild"\)\.innerHTML = u\.gruppe \|\| andere\.length > 1 \? uhRundeKreis/.test(html) && /#v-chat \.kopf2 > #chatVorlesenKnopf \{ margin-left: auto; \}/.test(html) && /#v-chat \.kopf2 > \.rund \{[^}]*background: var\(--karte\); color: var\(--text\)/.test(html), "Chat-Kopf: Bild vorn, Knöpfe rechts");
+}
+
+// 2.25.8 KC-CLUB-GRUPPE-ALLE-ONLINE
+{
+  assert.ok(/function grAlleOnline\(p\) \{ try \{ return p\.length > 0 && !!ONL\.stand && Date\.now\(\) - ONL\.stand < 3 \* 60 \* 1000 && p\.every\(\(x\) => ONL\.ids\.has\(x\)\)/.test(html), "LED nur bei frischen Daten und wirklich allen online (UNKNOWN nie grün)");
+  assert.ok(/\.avatar\.uh-gruppe\.alle-online \.uh-led \{ display: block; \}/.test(html) && /\.avatar \.uh-led \{ display: none; position: absolute; right: -2px; bottom: -2px;/.test(html), "grüne LED unten rechts");
+  assert.ok(/\.avatar \.uh-kette \{ position: absolute; left: -4px; bottom: -4px;/.test(html), "🔗 unten links");
+  assert.ok(/if \(vorher !== \[\.\.\.ONL\.ids\]\.sort\(\)\.join\(\)\) grOnlineAuffrischen\(\);/.test(html) && /setInterval\(grOnlineAuffrischen, 30000\)/.test(html), "LED folgt dem Online-Herzschlag");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.25.7"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.25.8"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SCHNELLSTART-DATEI (2.24.8, Hinweis Hansi „Start ist langsamer geworden“): das Programm liegt in app.js, damit das Handy es
 // fertig übersetzt behalten kann (statt bei jedem Öffnen 1,8 MB neu einzulesen). Seite und Programm müssen dieselbe Version haben
 // (AGENTS Regel 16, kein Mischstand): passt es nicht (z. B. alte Seite aus einem Zwischenspeicher), einmal frisch laden, sonst anhalten.
@@ -2006,6 +2006,7 @@ async function onlinePing() {
     const vorher = [...ONL.ids].sort().join(); // KC-CLUB-ONLINE-EINE-QUELLE (2.24.18)
     ONL.zeigen = r.zeigen; ONL.liste = r.online || []; ONL.ids = new Set(ONL.liste.map((x) => x.person_id)); ONL.stand = Date.now();
     if (vorher !== [...ONL.ids].sort().join() && aktuelleAnsicht === "mitglieder" && MITGLIEDER) { try { mitgliederZeichnen(); } catch {} }
+    if (vorher !== [...ONL.ids].sort().join()) grOnlineAuffrischen(); // KC-CLUB-GRUPPE-ALLE-ONLINE
     onlineAnsagen(ONL.liste); // KC-CLUB-ONLINE-ANSAGE
     if ($("setOnline")) $("setOnline").checked = r.zeigen;
     onlineLeisteZeigen(); if (INIT) heroZeigen();
@@ -11332,10 +11333,19 @@ async function unterhLaden() {
 // KC-CLUB-GRUPPE-AUS-RUNDE (2.24.19, Wunsch Hansi): feste Gruppe = eigenes Symbol + 🔗-Abzeichen; Runde (mehrere Personen ohne Gruppe)
 // = gestrichelter grauer Kreis mit den Anfangsbuchstaben – so sieht jeder sofort, was eine feste Gruppe ist.
 function uhRundeKreis(u) {
-  if (u.gruppe) return `<div class="avatar k-neutral uh-gruppe" title="Feste Gruppe">${esc(u.gruppe.symbol)}<i class="uh-kette" aria-hidden="true">🔗</i></div>`;
+  // KC-CLUB-GRUPPE-ALLE-ONLINE (2.25.8, Wunsch Hansi): grüne LED unten rechts, wenn alle anderen Mitglieder gerade online sind; 🔗 unten links
+  if (u.gruppe) { const p = (u.personen || []).filter((x) => x !== ICH?.person_id), alle = grAlleOnline(p);
+    return `<div class="avatar k-neutral uh-gruppe${alle ? " alle-online" : ""}" data-personen="${esc(p.join(","))}" title="Feste Gruppe${alle ? " – alle gerade online" : ""}">${esc(u.gruppe.symbol)}<i class="uh-kette" aria-hidden="true">🔗</i><i class="uh-led" aria-hidden="true"></i></div>`; }
   const ini = (u.teilnehmer || []).slice(0, 3).map((n) => esc(String(n).trim().charAt(0).toUpperCase())).join("");
   return `<div class="avatar uh-runde" title="Runde – keine feste Gruppe"><span>${ini || "👥"}</span></div>`;
 }
+// alle (anderen) Mitglieder online? Nur mit frischem Online-Stand (älter als 3 Min. = unbekannt → nie grün)
+function grAlleOnline(p) { try { return p.length > 0 && !!ONL.stand && Date.now() - ONL.stand < 3 * 60 * 1000 && p.every((x) => ONL.ids.has(x)); } catch { return false; } }
+function grOnlineAuffrischen() {
+  document.querySelectorAll(".uh-gruppe[data-personen]").forEach((el) => { const p = el.dataset.personen ? el.dataset.personen.split(",") : [], alle = grAlleOnline(p);
+    el.classList.toggle("alle-online", alle); el.title = "Feste Gruppe" + (alle ? " – alle gerade online" : ""); });
+}
+setInterval(grOnlineAuffrischen, 30000);
 const RUNDE_NEIN = "kc_club_runde_nein";
 const rundeSchluessel = (u) => (u?.teilnehmer || []).map((x) => x.person_id).sort().join("|");
 // Angebot im Chat: nur wer die Runde begonnen hat, ab 3 Personen, beim zweiten Mal (zweite eigene Nachricht hier oder eine weitere Runde
@@ -11358,7 +11368,7 @@ function chatMitgliederZeigen() {
     const m = MITGLIEDER?.find((x) => x.person_id === t.person_id) || { person_id: t.person_id }, ich = t.person_id === ICH.person_id;
     return `<button class="knopf cm-zeile" ${ich ? "disabled" : `data-pid="${esc(t.person_id)}"`}>${kreis(m, t.name, 36)}<span>${esc(ich ? "Du" : t.name)}${u.gruppe && grIstAdmin(u.gruppe, t.person_id) ? " 👑" : ""}</span>${ich ? "" : '<span class="pfeil">›</span>'}</button>`;
   }).join("");
-  const f = blattAuf("chatMitgliederBlatt", `<div style="display:flex;gap:10px;align-items:center;margin-bottom:8px">${uhRundeKreis({ gruppe: u.gruppe, teilnehmer: andere.map((x) => x.name) })}<div><b style="font-size:1.1rem">${esc(u.gruppe ? u.gruppe.name : "Runde")}</b><div class="hinweis">${u.gruppe ? "🔗 Feste Gruppe" : "Runde – keine feste Gruppe"} · ${(u.teilnehmer || []).length} Personen</div></div></div>
+  const f = blattAuf("chatMitgliederBlatt", `<div style="display:flex;gap:10px;align-items:center;margin-bottom:8px">${uhRundeKreis({ gruppe: u.gruppe, teilnehmer: andere.map((x) => x.name), personen: andere.map((x) => x.person_id) })}<div><b style="font-size:1.1rem">${esc(u.gruppe ? u.gruppe.name : "Runde")}</b><div class="hinweis">${u.gruppe ? "🔗 Feste Gruppe" : "Runde – keine feste Gruppe"} · ${(u.teilnehmer || []).length} Personen</div></div></div>
     <div class="cm-liste">${zeilen}</div>${u.gruppe ? "<p class=\"hinweis\" style=\"margin:6px 0 0\">👑 = Gruppen-Admin</p>" : ""}
     <div class="knoepfe" style="margin-top:10px">${u.gruppe ? '<button class="knopf" id="cmMenue">⋮ Gruppe &amp; Einstellungen</button>' : ""}<button class="knopf" onclick="$('chatMitgliederBlatt').remove()">Schließen</button></div>`);
   f.querySelectorAll("[data-pid]").forEach((b) => (b.onclick = () => { f.remove(); mitgliedOeffnen(b.dataset.pid); }));
@@ -11486,7 +11496,7 @@ async function chatLaden(scrollen) {
     // KC-CLUB-CHAT-KOPF-BILD (2.24.19): Bild vorn (Person: Avatar/Kreis; Gruppe: Symbol mit 🔗; Runde: gestrichelt), Titel ohne doppeltes Symbol
     $("chatTitel").textContent = (u.gruppe ? u.gruppe.name : u.betreff || andere.map((x) => x.name).join(", ")) + (stummAn(chatId) ? " 🔕" : "");
     if (andere.length === 1 && !u.gruppe && !MITGLIEDER) await mitgliederHolen().catch(() => {});
-    $("chatKopfBild").innerHTML = u.gruppe || andere.length > 1 ? uhRundeKreis({ gruppe: u.gruppe, teilnehmer: andere.map((x) => x.name) })
+    $("chatKopfBild").innerHTML = u.gruppe || andere.length > 1 ? uhRundeKreis({ gruppe: u.gruppe, teilnehmer: andere.map((x) => x.name), personen: andere.map((x) => x.person_id) })
       : andere.length === 1 ? kreis(MITGLIEDER?.find((m) => m.person_id === andere[0].person_id) || { person_id: andere[0].person_id }, andere[0].name, 40) : "";
     zustellZeigen();
     let st = "";
