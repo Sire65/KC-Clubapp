@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.23.96 – 2026-10-06 – 10 Köche mit Schnauzer (Wunsch Hansi)
+- KC-CLUB-AVATAR: 10 neue Koch-Figuren m16–m25 mit Schnauzer (jetzt 40); neue Bartformen Zwirbelbart, Walross und Schnauzer mit Kinnbart (auch im Baukasten, nur angehängt – alte Codes bleiben gültig); Schnurrbart kräftiger, alle Schnauzer mit feinem Rand (heller Bart auf heller Haut bleibt sichtbar). Server lässt m16–m25 zu. Hilfe und Anleitung V6: 40 Figuren.
+
 ## 2.23.95 – 2026-10-06 – Hilfetexte zu den Neuerungen + Bedienungsanleitung V6 (Wunsch Hansi)
 - ❓ Hilfe-Zentrum: 15 neue Hilfen (Mein Bild, Punkt am Bild, Anwesenheitstafel, Bild groß, 📞/🎥 auf der Kachel, Meine Daten, Mein Dienst, Pfeil-Menü, nachträglich wichtig, Ganzer Chat, Abstimmung an wen, grüner Haken, Verbindung an Hansi, Mitglieder fragen, unter Vorbehalt); „Mitglieder als Kacheln, Liste oder Tafel“ ergänzt.
 - KC-CLUB-ANLEITUNG-V6: Bedienungsanleitung Version 6 (48 Seiten) – neu Teil 18 „Neu in Version 6“ mit Bildern. Ersetzt V5 in „Meine Dokumente“; V1–V5 bleiben unverändert. Baukasten tools/anleitung: fotos5.mjs, inhalt.mjs (V6).

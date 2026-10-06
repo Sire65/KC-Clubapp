@@ -4415,12 +4415,12 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const k = html.slice(html.indexOf("// ---------- KC-CLUB-AVATAR (2.23.85"), html.indexOf("// ---------- KC-CLUB-KREISE (0.60.0)"));
   const AV = new Function("const AV_HAAR_X = 0;" + k + "; return { AV_FIGUREN, avatarSvg, avTeile };")();
   const codes = Object.keys(AV.AV_FIGUREN);
-  assert.equal(codes.length, 30, "30 Figuren"); assert.equal(codes.filter((c) => c[0] === "w").length, 15, "15 Köchinnen");
+  assert.equal(codes.length, 40, "40 Figuren (2.23.96: 10 Köche mit Schnauzer dazu)"); assert.equal(codes.filter((c) => c[0] === "w").length, 15, "15 Köchinnen");
   for (const c of codes) assert.ok(/^<svg viewBox="0 0 64 64"/.test(AV.avatarSvg(c)) && !/<image|href=|url\(/.test(AV.avatarSvg(c)), "selbst gezeichnet, keine fremden Bilder: " + c);
   assert.equal(AV.avatarSvg("x99"), "", "unbekannter Code → nichts");
   assert.ok(/avGueltig\(fig\) \? avatarSvg\(fig, groesse - 8\) \+ abz : esc\(initialen\(name\)\)/.test(html), "Kreis zeigt Figur, sonst Buchstaben");
   assert.ok(/\{ id: "avatar", sym: "🧑‍🍳", t: "Mein Bild",/.test(html) && /api\("einstellung_setzen", \{ schluessel: "avatar", wert: \{ figur \} \}\)/.test(html), "Auswahl in Meins");
-  assert.ok(/avatar: \(w\) => \(\{ figur: typeof w\?\.figur === "string" && \(\/\^\[wm\]\(0\[1-9\]\|1\[0-5\]\)\$\/\.test\(w\.figur\)/.test(server) && /avatar: avatar\.get\(m\.person_id\) \?\? null/.test(server), "Server prüft den Code, liefert ihn in der Mitgliederliste");
+  assert.ok(server.includes('avatar: (w) => ({ figur: typeof w?.figur === "string" && (/^(w(0[1-9]|1[0-5])|m(0[1-9]|1[0-9]|2[0-5]))$/.test(w.figur)') && /avatar: avatar\.get\(m\.person_id\) \?\? null/.test(server), "Server prüft den Code, liefert ihn in der Mitgliederliste");
 }
 // 437. 2.23.86: Freigaben für neue Funktionen + Figur selbst zusammenstellen (KC-CLUB-FREIGABE, KC-CLUB-AVATAR-BAUKASTEN)
 {
@@ -4520,6 +4520,16 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const inh = fs.readFileSync(new URL("../tools/anleitung/inhalt.mjs", import.meta.url), "utf8");
   assert.ok(/anleitung: 6/.test(inh) && /titel: "18\. Neu in Version 6"/.test(inh) && !/inkognito|wege der|spur|sperren|freigabe|wochenbericht|baukasten|rezept/i.test(inh), "Inhalt V6 ohne Admin-Werkzeuge");
   assert.ok(/\{ id: "bedienung-club-app-v6",[^}]*datei: "dokumente\/Koecheclub-App_Anleitung_V6\.pdf"/.test(html) && !/bedienung-club-app-v5/.test(html), "V6 in Meine Dokumente");
+}
+
+// 446. 2.23.96: 10 Köche mit Schnauzer + drei neue Bartformen (Wunsch Hansi)
+{
+  const k = html.slice(html.indexOf("// ---------- KC-CLUB-AVATAR (2.23.85"), html.indexOf("// ---------- KC-CLUB-KREISE (0.60.0)"));
+  const AV = new Function(k + "; return { AV_FIGUREN, AV_BART, avatarSvg, avTeile };")();
+  assert.deepEqual(AV.AV_BART, [0, "voll", "schnurr", "stoppel", "zwirbel", "walross", "kinnbart"], "alte Baukasten-Codes bleiben gültig (nur angehängt)");
+  for (let i = 16; i <= 25; i++) { const f = AV.AV_FIGUREN["m" + i]; assert.ok(f && ["schnurr", "zwirbel", "walross", "kinnbart"].includes(f[4]), `m${i} mit Schnauzer`); }
+  assert.ok(/stroke="rgba\(0,0,0,\.35\)"/.test(AV.avatarSvg("m21")), "feiner Rand am Bart");
+  assert.ok(/reihe\("Bart", 4, \["keiner", "Vollbart", "Schnurrbart", "Stoppeln", "Zwirbelbart", "Walross", "Schnauzer \+ Kinnbart"\]\)/.test(html), "Baukasten kennt die neuen Bärte");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

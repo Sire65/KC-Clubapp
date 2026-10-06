@@ -2981,7 +2981,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.95"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.96"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -2992,7 +2992,7 @@ const fKurz = new Intl.DateTimeFormat("de-DE", { timeZone: TZ, day: "2-digit", m
 const wann = (iso) => `${fTag.format(new Date(iso))}, ${fZeit.format(new Date(iso))} Uhr`;
 const zeitKurz = (iso) => { const d = new Date(iso), h = new Date(); return d.toDateString() === h.toDateString() ? fZeit.format(d) : fKurz.format(d) + " " + fZeit.format(d); };
 const initialen = (n) => String(n || "?").split(/\s+/).map((x) => x[0]).slice(0, 2).join("").toUpperCase();
-// ---------- KC-CLUB-AVATAR (2.23.85, Wunsch Hansi): 30 selbst gezeichnete Koch-Figuren (15 Frauen, 15 Männer) ----------
+// ---------- KC-CLUB-AVATAR (2.23.85, Wunsch Hansi): 30 selbst gezeichnete Koch-Figuren (15 Frauen, 15 Männer); 2.23.96: 10 Köche mit Schnauzer dazu ----------
 // Reine SVG-Zeichnung im Code – keine fremden Bilder, keine Rechte Dritter, keine Kosten. Gespeichert wird nur der Code (z. B. „w03“).
 // Später als Update: eigener Baukasten (dieselben Teile frei kombinierbar).
 const AV_HAUT = ["#f7d7bd", "#ecc19c", "#d59d6f", "#a96d45", "#6f452a"];
@@ -3015,9 +3015,15 @@ const AV_FIGUREN = {
   m11: [3, "kurz", "schwarz", "kappe", "voll", 0, "#3949ab", "#ffcc00"], m12: [0, "locken", "hell", "koch", 0, 0, "#558b2f", "#c8102e"],
   m13: [2, "glatze", "grau", "koch", "schnurr", 1, "#ad1457", "#ffffff"], m14: [1, "kurz", "blond", "koch", 0, 0, "#5d4037", "#2e7d4f"],
   m15: [4, "wuschel", "schwarz", "koch", "stoppel", 0, "#0277bd", "#e8792b"],
+  // 2.23.96 (Wunsch Hansi): zehn Köche mit Schnauzer
+  m16: [0, "kurz", "braun", "koch", "schnurr", 0, "#1d4f91", "#c8102e"], m17: [1, "seiten", "grau", "koch", "zwirbel", 0, "#741521", "#ffffff"],
+  m18: [2, "kurz", "schwarz", "kappe", "walross", 0, "#2e7d4f", "#ffcc00"], m19: [3, "glatze", "schwarz", "koch", "kinnbart", 1, "#6d4aa3", "#e8792b"],
+  m20: [0, "wuschel", "rot", "koch", "zwirbel", 0, "#00796b", "#741521"], m21: [1, "kurz", "weiss", "keine", "walross", 1, "#b8860b", "#1d4f91"],
+  m22: [4, "kurz", "schwarz", "koch", "schnurr", 0, "#c2185b", "#ffcc00"], m23: [2, "seiten", "braun", "tuch", "kinnbart", 0, "#455a64", "#c8102e"],
+  m24: [0, "glatze", "blond", "koch", "walross", 0, "#e8792b", "#2e7d4f"], m25: [3, "locken", "grau", "koch", "zwirbel", 1, "#3949ab", "#ffffff"],
 };
 // 2.23.86 Baukasten: Code „b“ + 9 Zeichen (je ein Teil, Zahl 0–9/a–z) – Haut, Frisur, Haarfarbe, Kopf, Bart, Brille, Hintergrund, Halstuch, Typ
-const AV_FRISUREN = ["lang", "zopf", "dutt", "bob", "locken", "kurz", "wuschel", "seiten", "glatze"], AV_KOPF = ["koch", "tuch", "kappe", "keine"], AV_BART = [0, "voll", "schnurr", "stoppel"];
+const AV_FRISUREN = ["lang", "zopf", "dutt", "bob", "locken", "kurz", "wuschel", "seiten", "glatze"], AV_KOPF = ["koch", "tuch", "kappe", "keine"], AV_BART = [0, "voll", "schnurr", "stoppel", "zwirbel", "walross", "kinnbart"]; // 2.23.96: drei Schnauzer-Formen dazu (Wunsch Hansi)
 const AV_BG = ["#741521", "#1d4f91", "#2e7d4f", "#6d4aa3", "#b8860b", "#00796b", "#c2185b", "#455a64", "#8d6e63", "#e8792b", "#3949ab", "#558b2f"];
 const AV_TUCH = ["#c8102e", "#ffcc00", "#e8792b", "#2e7d4f", "#1d4f91", "#741521", "#ffffff", "#6d4aa3"];
 // ---------- KC-CLUB-NEU-PULS (2.23.91, Wunsch Hansi): beim Betreten einer Seite pulsiert der „＋ Neu“-Knopf oben 3× mit hellem Rand ----------
@@ -3118,7 +3124,13 @@ function avatarSvg(code, gr = 40) {
   const muetze = { koch: `<g fill="#fff" stroke="#d9d4cc" stroke-width=".8"><rect x="22.5" y="10" width="19" height="7" rx="1.5"/><circle cx="25.5" cy="7.5" r="4.6"/><circle cx="32" cy="5" r="5.6"/><circle cx="38.5" cy="7.5" r="4.6"/><rect x="21.5" y="14" width="21" height="4.5" rx="2" stroke="none"/></g><path d="M21.5 18.3 H42.5" stroke="#d9d4cc" stroke-width=".8"/>`,
     tuch: `<path d="M18 26 Q18 12 32 12 Q46 12 46 26 Q40 20 32 20 Q24 20 18 26Z" fill="${tuch}"/><path d="M44 22 L50 27 L45 29Z" fill="${tuch}"/><g fill="rgba(255,255,255,.55)"><circle cx="27" cy="16" r="1.2"/><circle cx="33" cy="15" r="1.2"/><circle cx="39" cy="17" r="1.2"/></g>`,
     kappe: `<path d="M19 23 Q19 11 32 11 Q45 11 45 23Z" fill="${tuch === "#ffffff" ? "#741521" : tuch}"/><path d="M30 22 Q44 21 52 24 Q44 26 30 25Z" fill="${tuch === "#ffffff" ? "#4d0c16" : "rgba(0,0,0,.35)"}"/>`, keine: "" }[kopf] || "";
-  const bartSvg = { voll: `<path d="M21 31 Q22 45 32 46 Q42 45 43 31 Q41 39 32 40 Q23 39 21 31Z" fill="${haar}"/>`, schnurr: `<path d="M26 37 Q32 33 38 37 Q32 35.5 26 37Z" fill="${haar}"/>`,
+  // 2.23.96 (Wunsch Hansi „bessere mit Schnäuzer“): Schnurrbart kräftiger; neu Zwirbel-, Walross- und Schnauzer mit Kinnbart
+  const rand = ` stroke="rgba(0,0,0,.35)" stroke-width=".45"`; // feiner Rand: auch heller Bart auf heller Haut bleibt sichtbar
+  const schnauzer = `<path d="M24.3 37 Q27.8 33.4 32 35.1 Q36.2 33.4 39.7 37 Q36.3 36.3 32 37.4 Q27.7 36.3 24.3 37Z" fill="${haar}"${rand}/>`;
+  const bartSvg = { voll: `<path d="M21 31 Q22 45 32 46 Q42 45 43 31 Q41 39 32 40 Q23 39 21 31Z" fill="${haar}"/>`, schnurr: schnauzer,
+    zwirbel: `<path d="M26.5 36.6 Q29 34 32 35.3 Q35 34 37.5 36.6 Q35 36.3 32 37 Q29 36.3 26.5 36.6Z" fill="${haar}"${rand}/><path d="M27 36.2 Q23.6 36.9 22.6 34.6 M37 36.2 Q40.4 36.9 41.4 34.6" stroke="${haar}" stroke-width="1.6" fill="none" stroke-linecap="round"/>`,
+    walross: `<path d="M23.4 35.8 Q32 31.4 40.6 35.8 L40 40.2 Q37.8 37.6 32 38.7 Q26.2 37.6 24 40.2Z" fill="${haar}"${rand}/>`,
+    kinnbart: schnauzer + `<path d="M28.8 41.6 Q32 47.2 35.2 41.6 Q32 43.2 28.8 41.6Z" fill="${haar}"${rand}/>`,
     stoppel: `<path d="M22 33 Q24 44 32 44.5 Q40 44 42 33 Q40 41 32 41.5 Q24 41 22 33Z" fill="${haar}" opacity=".45"/>` }[bart] || "";
   const auge = dunkel ? "#120b07" : "#2b1d14";
   return `<svg viewBox="0 0 64 64" width="${gr}" height="${gr}" role="img" aria-hidden="true"><circle cx="32" cy="32" r="32" fill="${bg}"/>
@@ -4258,7 +4270,7 @@ const HILFE = [
   { id: "ttt_toene", thema: "club", sym: "🔊", t: "Tic-Tac-Toe mit Tönen", x: "Unter dem Spielfeld gibt es den Knopf <b>„🔊 Töne an / 🔇 aus“</b>. Dann klingt jeder Zug – deiner hell, der des Gegners tiefer – und am Ende hörst du, ob du gewonnen, verloren oder unentschieden gespielt hast. Gilt nur auf diesem Gerät.", zeig: () => { zeige("spiele"); spArtWahl("ttt"); }, seit: "2.23.8" },
   { id: "inkognito_blinkt", thema: "privat", sym: "🕶️", t: "Die Brille blinkt rot", x: "Solange <b>Inkognito</b> an ist, blinkt die Brille oben rot – damit du nicht vergisst, dass dich gerade niemand online sieht. Antippen schaltet Inkognito wieder aus.", nur: () => !!ICH?.admin, zeig: () => zeige("start"), seit: "2.23.8" },
   // 2.23.95 (Wunsch Hansi): Hilfen zu den Neuerungen seit Anleitung V5
-  { id: "mein_bild", thema: "darstellung", sym: "🧑‍🍳", t: "Ein Bild statt Buchstaben", x: "Lieber eine Figur als Buchstaben? Bei <b>Meins</b> → <b>„🧑‍🍳 Mein Bild“</b> suchst du dir eine von 30 Koch-Figuren aus. Sie erscheint bei den Mitgliedern, im Chat und bei „Wer ist online“. Mit „Kein Bild“ hast du wieder deine Buchstaben.", zeig: () => avWahl(), seit: "2.23.85" },
+  { id: "mein_bild", thema: "darstellung", sym: "🧑‍🍳", t: "Ein Bild statt Buchstaben", x: "Lieber eine Figur als Buchstaben? Bei <b>Meins</b> → <b>„🧑‍🍳 Mein Bild“</b> suchst du dir eine von 40 Koch-Figuren aus. Sie erscheint bei den Mitgliedern, im Chat und bei „Wer ist online“. Mit „Kein Bild“ hast du wieder deine Buchstaben.", zeig: () => avWahl(), seit: "2.23.85" },
   { id: "bild_punkt", thema: "club", sym: "🟢", t: "Was der kleine Punkt am Bild bedeutet", x: "Hat jemand ein Bild, zeigt ein kleiner Punkt unten rechts, wie er gerade erreichbar ist: <b>✓ grün</b> = gerade online, <b>blau</b> = heute in der App, <b>orange</b> = abwesend (Urlaub, krank …), <b>grau</b> = länger nicht da. Der farbige Ring ums Bild zeigt dasselbe.", zeig: () => zeige("mitglieder"), seit: "2.23.89" },
   { id: "anwesenheit", thema: "club", sym: "📋", t: "Wer ist da? Die Anwesenheitstafel", x: "Bei <b>👥 Mitglieder</b> oben auf <b>📋</b> tippen: Dann siehst du nur Namen und ein Lämpchen – wer online ist, steht oben. Einen Namen antippen öffnet das Mitglied; dort kannst du schreiben, anklopfen oder anrufen.", zeig: () => { zeige("mitglieder"); mgAnsichtSetzen("tafel"); }, seit: "2.23.89" },
   { id: "bild_gross", thema: "club", sym: "🔍", t: "Ein Bild groß ansehen", x: "Öffne bei <b>👥 Mitglieder</b> ein Mitglied – ganz oben steht sein Bild. Ein Tipp darauf zeigt es groß; noch ein Tipp schließt es wieder.", zeig: () => zeige("mitglieder"), seit: "2.23.89" },
@@ -10146,7 +10158,7 @@ function avbZeigen() {
     ${reihe("Frisur", 1, ["lang", "Zopf", "Dutt", "Bob", "Locken", "kurz", "wuschelig", "Seiten", "Glatze"])}
     ${reihe("Haarfarbe", 2, Object.values(AV_HAAR).map(punkt))}
     ${reihe("Auf dem Kopf", 3, ["Kochmütze", "Kopftuch", "Kappe", "nichts"])}
-    ${reihe("Bart", 4, ["keiner", "Vollbart", "Schnurrbart", "Stoppeln"])}
+    ${reihe("Bart", 4, ["keiner", "Vollbart", "Schnurrbart", "Stoppeln", "Zwirbelbart", "Walross", "Schnauzer + Kinnbart"])}
     ${reihe("Brille", 5, ["ohne", "mit"])}
     ${reihe("Hintergrund", 6, AV_BG.map(punkt))}
     ${reihe("Halstuch / Kopftuch-Farbe", 7, AV_TUCH.map(punkt))}

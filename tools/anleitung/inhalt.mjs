@@ -211,7 +211,7 @@ export const TEILE = [
         text: "Die Tafel zeigt nur <b>Namen und Lämpchen</b> – wer online ist, steht oben. Ein Tipp auf einen Namen öffnet das Mitglied; dort kannst du schreiben, anklopfen oder anrufen. Die Ansicht wählst du auch unter ⚙️ → Darstellung.",
         abschnitte: [
       { nr: "+", titel: "Bilder", zeilen: [
-        ["s-mein-bild", "🧑‍🍳 Mein Bild", "Register <b>Meins</b> → <b>„🧑‍🍳 Mein Bild“</b>: 30 Koch-Figuren zur Auswahl. „Kein Bild“ bringt deine Buchstaben zurück.", "neu"],
+        ["s-mein-bild", "🧑‍🍳 Mein Bild", "Register <b>Meins</b> → <b>„🧑‍🍳 Mein Bild“</b>: 40 Koch-Figuren zur Auswahl, viele Köche auch mit Schnauzer. „Kein Bild“ bringt deine Buchstaben zurück.", "neu"],
         ["s-mitglied-bild", "Bild beim Mitglied", "Öffnest du ein Mitglied, steht sein Bild ganz oben.", "neu"],
         ["s-bild-gross", "Bild groß ansehen", "Ein Tipp aufs Bild zeigt es groß; noch ein Tipp schließt es.", "neu"]] },
       { nr: "+", titel: "Nachrichten", zeilen: [

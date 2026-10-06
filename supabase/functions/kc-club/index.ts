@@ -41,7 +41,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.23.95";
+const SERVER_VERSION = "2.23.96";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -838,7 +838,7 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
   infofeld: (w) => ({ start: typeof w?.start === "string" && KA_ID.test(w.start) ? w.start : "zuletzt" }),
   // KC-CLUB-ONLINE (0.29.0): anderen zeigen, wann ich online bin (Standard: an)
   online: (w) => ({ zeigen: w?.zeigen !== false }),
-  avatar: (w) => ({ figur: typeof w?.figur === "string" && (/^[wm](0[1-9]|1[0-5])$/.test(w.figur) || /^b[0-9a-z]{9}$/.test(w.figur) || AVF_CODE.test(w.figur)) ? w.figur : null }), // 2.23.89: „f…“ = eigenes Foto // KC-CLUB-AVATAR (2.23.85); „b…“ = Baukasten (2.23.86)
+  avatar: (w) => ({ figur: typeof w?.figur === "string" && (/^(w(0[1-9]|1[0-5])|m(0[1-9]|1[0-9]|2[0-5]))$/.test(w.figur) || /^b[0-9a-z]{9}$/.test(w.figur) || AVF_CODE.test(w.figur)) ? w.figur : null }), // 2.23.89: „f…“ = eigenes Foto; 2.23.96: Köche bis m25 // KC-CLUB-AVATAR (2.23.85); „b…“ = Baukasten (2.23.86)
   // KC-CLUB-INKOGNITO (2.3.0): nur Admins (Prüfung in einstellung_setzen) – Standard: aus
   inkognito: (w) => ({ an: w?.an === true }),
   // KC-CLUB-SPIELE (2.7.0): darf man mich herausfordern (Standard: nein) + welche Spiele (bisher nur Tic-Tac-Toe)
@@ -2143,7 +2143,7 @@ async function adminIds(): Promise<string[]> {
 // KC-CLUB-FREIGABE (2.23.86, Wunsch Hansi): neue Funktionen erst „nur Admin (Test)“, dann für alle. Standard gilt, solange der Admin nichts gewählt hat.
 const FUNKTIONEN: Record<string, { t: string; u: string; standard: "alle" | "admin" }> = {
   rezepte: { t: "📖 Rezeptbuch", u: "Club-Rezepte, Portionen umrechnen, Einkaufsliste", standard: "admin" },
-  avatar: { t: "🧑‍🍳 Mein Bild (30 Koch-Figuren)", u: "Figur statt Buchstaben", standard: "alle" },
+  avatar: { t: "🧑‍🍳 Mein Bild (40 Koch-Figuren)", u: "Figur statt Buchstaben", standard: "alle" },
   avatar_baukasten: { t: "🧩 Figur selbst zusammenstellen", u: "Haut, Frisur, Bart, Brille, Mütze, Farben", standard: "admin" },
   avatar_foto: { t: "📷 Eigenes Foto als Bild", u: "Selfie, Galerie oder Datei – Admin kann Fotos entfernen", standard: "admin" }, // 2.23.89
 };
