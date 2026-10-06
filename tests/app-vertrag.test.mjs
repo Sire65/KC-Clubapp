@@ -2276,7 +2276,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 {
   assert.ok(/id="mgAnsichtWahl"/.test(html) && /function mgAnsichtSetzen\(a\)/.test(html) && /localStorage\.setItem\("kc_club_mg_ansicht", MG_ANSICHT\)/.test(html), "Einstellung unter Darstellung (je Gerät)");
   assert.ok(/if \(MG_ANSICHT === "kacheln"\) \{ \$\("mitgliederListe"\)\.innerHTML = mgKachelnHtml\(liste\); return; \}/.test(html), "Kachel-Ansicht; Liste bleibt unverändert");
-  assert.ok(/onclick="mitgliedOeffnen\('\$\{m\.person_id\}'\)"/.test(html) && /ICH\?\.admin \? `<div class="knoepfe"><button class="knopf" onclick="linkTeilen\(/.test(html), "Antippen → Details; Admin: 🔗/🎖️ in den Details");
+  assert.ok(/onclick="mitgliedOeffnen\('\$\{m\.person_id\}'\)"/.test(html) && /ICH\?\.admin \? `<button class="knopf" onclick="linkTeilen\(/.test(html), "Antippen → Details; Admin: 🔗/🎖️ in den Details");
 }
 
 // 201. 1.45.1: DP2 Build 256 RC (dp3 51518cc) – Twinkey einfacher und fehlersicher (KC-DP-TWINKEY-EINFACH)
@@ -3003,7 +3003,7 @@ assert.ok(/<h2>🗂️ Büro<\/h2><span class="bu-kopfgruss" id="buKopfGruss"><\
   assert.ok(fs.existsSync(new URL("../lib/qrcode/qrcode.js", import.meta.url)) && /MIT/.test(fs.readFileSync(new URL("../lib/qrcode/README.txt", import.meta.url), "utf8")), "QR-Baustein mit Lizenzhinweis");
   const k = html.slice(html.indexOf("async function einrichtungskarte("), html.indexOf("async function linkTeilen("));
   assert.ok(/if \(m\.app && !\(await frage\(/.test(k) && /api\("link_erzeugen"/.test(k) && !/kurzcode/.test(k.slice(k.indexOf("function druckEinrichtungskarte"))), "Rückfrage bei aktivem Link, kein Code auf Papier");
-  assert.ok(/onclick="einrichtungskarte\('\$\{m\.person_id\}'\)">🖨️ Einrichtungskarte<\/button>/.test(html), "Knopf beim Mitglied");
+  assert.ok(/onclick="einrichtungskarte\('\$\{m\.person_id\}'\)"><span class="kt-ico">🖨️<\/span>Einrichtungs&shy;karte<\/button>/.test(html), "Knopf beim Mitglied");
   assert.ok(/\{ id: "verlassen", sym: "🚪"/.test(html) && !/\{ id: "verlassen",[^\n]*an: true/.test(html) && /hat die Club-App verlassen\.` \}\);/.test(html), "Verlassen-Ansage, Standard aus");
 }
 // 269. 1.89.0: KC-CLUB-NUTZUNG-BEREICHE – jede Ansicht und jeder gezählte Teilbereich hat einen Namen und ist im Server erlaubt
@@ -3276,7 +3276,7 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/g\.dran !== ich\.person_id\) throw/.test(zug) && /Number\(p\.zuege\) !== g\.zuege\) throw/.test(zug) && /g\.brett\[feld\] !== "\."/.test(zug) && /\.eq\("zuege", g\.zuege\)\.eq\("status", "laeuft"\)/.test(zug), "Server prüft Zug, Reihenfolge, Doppelzug");
   assert.ok(/spielBereitMap\(\[an\]\)\)\.get\(an\) \?\? \[\]\)\.includes\(art\)\) throw/.test(server) /* 2.8.0: je Spiel */ && /spiele: \(w\) => \(\{ herausforderung: w\?\.herausforderung === true/.test(server), "nur wer es erlaubt (Standard aus)");
   assert.ok(/Date\.now\(\) - Date\.parse\(z\.zuletzt_gesehen\) < 45000\) return;/.test(server) && /ruhendePersonen\(\[an\]\)\)\.has\(an\)\) return;/.test(server), "Push nicht bei offener App/Ruhezeit");
-  assert.ok(/\{ id: "spiele", sym: "🎲", t: "Spiele"/.test(html) && /<section id="v-spiele"/.test(html) && /Köcheclub Edition/.test(html) && /id="setSpiele"/.test(html) && /<div id="mdSpiel"><\/div>/.test(html), "Kachel, Ansicht, Einstellung, Mitgliederseite");
+  assert.ok(/\{ id: "spiele", sym: "🎲", t: "Spiele"/.test(html) && /<section id="v-spiele"/.test(html) && /Köcheclub Edition/.test(html) && /id="setSpiele"/.test(html) && /<div id="mdSpiel" hidden><\/div>/.test(html), "Kachel, Ansicht, Einstellung, Mitgliederseite");
   // Computer: 3×3 schwer verliert nie (Stichprobe gegen Zufall)
   const code = html.slice(html.indexOf("function spLinien(n)"), html.indexOf("// ----- Ansicht -----"));
   const { spComputerZug, spAuswerten } = new Function(code + "; return { spComputerZug, spAuswerten };")();
@@ -4791,6 +4791,8 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.ok(/<div class="sp-kacheln"><button class="knopf haupt" onclick="spPcNeu\(\)"><span class="kt-ico">↺<\/span>Neue Runde<\/button>[^]{0,200}Stand löschen<\/button>\$\{spAnsageKnopf\("ttt", true\)\}<\/div>/.test(html), "Tic-Tac-Toe: Kacheln nebeneinander");
   assert.ok(/<div class="sp-kacheln"><button class="knopf haupt" onclick="bskPcNeu\(\)"><span class="kt-ico">↺<\/span>Neues Spiel<\/button>[^]{0,200}Stand löschen<\/button><\/div>/.test(html), "Bauernskat: Kacheln nebeneinander");
+  assert.ok(/<div class="md-kacheln" id="mdKacheln">/.test(html) && /function mdKachelnOrdnen\(\)/.test(html) && /if \(kl\.length % 2 === 1\)/.test(html) && /mdKachelnOrdnen\(\); \/\/ KC-CLUB-MD-KACHELN/.test(html), "Mitglieder-Seite: Kacheln 2 je Reihe, einzelne letzte volle Breite (KC-CLUB-MD-KACHELN)");
+  assert.ok(/ziel\.outerHTML = `<button class="knopf" onclick="spHerausfordernBlatt/.test(html) && /\.md-kacheln \{ display: grid; grid-template-columns: 1fr 1fr;/.test(html), "Spiel-Knopf als Kachel im Raster");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

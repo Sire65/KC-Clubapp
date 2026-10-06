@@ -4023,7 +4023,15 @@ async function spRevanche(id) {
 async function spMitgliedKnopf(pid) {
   if (!SP.liste) await spLaden(true);
   const ziel = $("mdSpiel"); if (!ziel || !SP.liste?.bereit?.some((m) => m.person_id === pid)) return;
-  ziel.innerHTML = `<button class="knopf" onclick="spHerausfordernBlatt('${pid}')">🎲 Zu einem Spiel herausfordern</button>`;
+  ziel.outerHTML = `<button class="knopf" onclick="spHerausfordernBlatt('${pid}')"><span class="kt-ico">🎲</span>Zu einem Spiel herausfordern</button>`; mdKachelnOrdnen();
+}
+// KC-CLUB-MD-KACHELN (2.25.11, Wunsch Hansi): Knöpfe auf der Mitglieder-Seite als gleich breite Kacheln (2 je Reihe);
+// bleibt eine Kachel allein in der letzten Reihe, geht sie über die volle Breite.
+function mdKachelnOrdnen() {
+  const g = $("mdKacheln"); if (!g) return;
+  g.querySelectorAll(":scope > [data-breit-auto]").forEach((e) => { e.classList.remove("breit"); delete e.dataset.breitAuto; });
+  const kl = [...g.children].filter((e) => e.matches(".knopf:not(.breit)"));
+  if (kl.length % 2 === 1) { const l = kl[kl.length - 1]; l.classList.add("breit"); l.dataset.breitAuto = "1"; }
 }
 
 // ---------- KC-CLUB-SCHACH (2.8.0, Wunsch Hansi – Stufe 2 der Spiele): Schach – Köcheclub Edition ----------
@@ -16427,16 +16435,17 @@ function mitgliedZeigen() {
     <div class="karte">${zeilen}${leer}</div>
     ${m.selbst ? '<button class="knopf" onclick="aeStart()">✏️ Stimmt etwas nicht mehr? Änderung melden</button>' : ""}
     ${m.notfall ? `<div class="karte"><h3>🆘 Notfallkontakt</h3><div class="zeile"><div style="flex:1"><b>${esc(m.notfall.name || "–")}</b>${m.notfall.beziehung ? ` <span class="hinweis">(${esc(m.notfall.beziehung)})</span>` : ""}<div class="hinweis">${esc(m.notfall.telefon || "")}</div></div>${m.notfall.telefon ? `<a class="knopf klein" href="tel:${esc(nurZiffern(m.notfall.telefon))}">📞</a>` : ""}</div><p class="hinweis" style="font-size:.85rem;margin-bottom:0">🔒 Nur für ${m.selbst ? "dich und " : ""}Clubsprecher, Kassenwart und Admin sichtbar.</p></div>` : m.selbst ? '<p class="hinweis">🆘 Noch kein Notfallkontakt – eintragen unter ⚙️ Mehr → Privatsphäre.</p>' : ""}
-    <div class="knoepfe">
-      ${!m.selbst && ONL.ids.has(m.person_id) ? `<button class="knopf haupt" onclick="anklopfen('${m.person_id}')">👋 Anklopfen – ist gerade online</button><div class="knoepfe"><button class="knopf" onclick="anrufen('${m.person_id}')">📞 Anrufen (Test)</button><button class="knopf" onclick="anrufen('${m.person_id}', true)">🎥 Video (Test)</button></div>` : ""}
-      ${!m.selbst && !ONL.ids.has(m.person_id) ? `<p class="hinweis" style="margin:4px 0">📞 🎥 Anrufen und Video gehen, sobald ${esc(String(m.name || "").split(" ")[0])} die App offen hat (🟢 online).</p>` : ""}
-      ${m.selbst ? "" : `<button class="knopf ${ONL.ids.has(m.person_id) ? "" : "haupt"}" onclick="direkt('${m.person_id}')">💬 Nachricht in der App</button><div id="mdSpiel"></div>`}
-      ${ICH?.admin ? `<div class="knoepfe"><button class="knopf" onclick="linkTeilen('${m.person_id}')">🔗 App-Link</button><button class="knopf" onclick="einrichtungskarte('${m.person_id}')">🖨️ Einrichtungskarte</button><button class="knopf" onclick="rolleBearbeiten('${m.person_id}')">🎖️ Amt & Rechte</button></div>` : ""}
-      ${zeilen ? '<button class="knopf" onclick="kontaktSpeichern()">📇 Ins Telefonbuch</button>' : ""}
+    <div class="md-kacheln" id="mdKacheln">
+      ${!m.selbst && ONL.ids.has(m.person_id) ? `<button class="knopf haupt breit" onclick="anklopfen('${m.person_id}')"><span class="kt-ico">👋</span>Anklopfen – ist gerade online</button><button class="knopf" onclick="anrufen('${m.person_id}')"><span class="kt-ico">📞</span>Anrufen (Test)</button><button class="knopf" onclick="anrufen('${m.person_id}', true)"><span class="kt-ico">🎥</span>Video (Test)</button>` : ""}
+      ${!m.selbst && !ONL.ids.has(m.person_id) ? `<p class="hinweis breit" style="margin:4px 0">📞 🎥 Anrufen und Video gehen, sobald ${esc(String(m.name || "").split(" ")[0])} die App offen hat (🟢 online).</p>` : ""}
+      ${m.selbst ? "" : `<button class="knopf ${ONL.ids.has(m.person_id) ? "" : "haupt"}" onclick="direkt('${m.person_id}')"><span class="kt-ico">💬</span>Nachricht in der App</button><div id="mdSpiel" hidden></div>`}
+      ${ICH?.admin ? `<button class="knopf" onclick="linkTeilen('${m.person_id}')"><span class="kt-ico">🔗</span>App-Link</button><button class="knopf" onclick="einrichtungskarte('${m.person_id}')"><span class="kt-ico">🖨️</span>Einrichtungs&shy;karte</button><button class="knopf" onclick="rolleBearbeiten('${m.person_id}')"><span class="kt-ico">🎖️</span>Amt & Rechte</button>` : ""}
+      ${zeilen ? '<button class="knopf" onclick="kontaktSpeichern()"><span class="kt-ico">📇</span>Ins Telefonbuch</button>' : ""}
     </div>
     ${m.selbst ? `<div class="karte"><h3>Deine Daten</h3>
       <p class="hinweis" style="margin-top:0">Oben steht alles, was über dich gespeichert ist. 🔒 = nicht freigegeben, sehen die anderen nicht. Freigeben kannst du unter ⚙️ Mehr → Privatsphäre.</p>
       <div class="knoepfe"><button class="knopf" onclick="zeige('einstellungen')">🔒 Freigaben ändern</button><button class="knopf" onclick="korrekturMelden()">📝 Korrektur an ${adminName()} melden</button></div></div>` : ""}`;
+  mdKachelnOrdnen(); // KC-CLUB-MD-KACHELN
 }
 // vCard, damit man den Kontakt mit einem Tipp ins Telefonbuch übernehmen kann
 function kontaktSpeichern() {
