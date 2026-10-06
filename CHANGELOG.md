@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.23.99 – 2026-10-06 – Baukasten: mehr Gesichtsteile, große Vorschau, Zufall + Hinweis „wird als Knopf angezeigt“ (Wunsch Hansi)
+- KC-CLUB-AVATAR-BAUKASTEN: neue Teile Augen (normal, lachend, groß, Wimpern), Augenbrauen (normal, schmal, kräftig, buschig), Mund (Lächeln, breites Lachen, verschmitzt, ruhig), Wangen (zart, keine, kräftig, Sommersprossen), Brille (rund, eckig, Halbbrille, Sonnenbrille) mit 4 Farben, Kochjacke (weiß, schwarz, grau). Vorschau 160 px, 🎲 Zufall. Neuer Code „c…“ (15 Teile); alle bisherigen Figuren und b-Codes zeichnen unverändert (340 Codes verglichen). Server nimmt c-Codes an.
+- KC-CLUB-SPRUNGKNOPF: Hinweis unter dem Schreibfeld „🔘 Wird nach dem Senden als Knopf angezeigt: …“, solange ein App-Sprung im Entwurf steht.
+
 ## 2.23.98 – 2026-10-06 – Mein Bild: auswählen, dann übernehmen oder bearbeiten (Wunsch Hansi)
 - Figur antippen = auswählen; oben große Vorschau mit „✅ Übernehmen“ und „✏️ Bearbeiten“ (öffnet den Baukasten mit genau dieser Figur als Vorlage – nur, solange der Baukasten freigegeben ist; sonst nur Übernehmen). „Kein Bild“ und die eigene Figur genauso. Hilfe „Ein Bild statt Buchstaben“ angepasst. Nur App.
 

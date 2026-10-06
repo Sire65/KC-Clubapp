@@ -4431,7 +4431,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/freigaben: await freigaben\(\),/.test(server) && /const frei = \(id\) => !!ICH\?\.admin \|\| INIT\?\.freigaben\?\.\[id\] === "alle";/.test(html), "App blendet nicht Freigegebenes aus");
   assert.ok(/aktion: "rzStart\(\)", nur: \(\) => frei\("rezepte"\) \}/.test(html) && /aktion: "avWahl\(\)", nur: \(\) => frei\("avatar"\) \}/.test(html), "Kacheln hängen an der Freigabe");
   assert.ok(/\["freigaben", "🚦", "Freigaben", "app"\]/.test(html) && /api\("freigabe_setzen", \{ funktion: id, fuer \}/.test(html), "Admin-Kachel Freigaben");
-  assert.ok(/fig\.startsWith\("b"\) \? "avatar_baukasten" : "avatar"/.test(server), "Baukasten-Figur nur mit Freigabe speicherbar");
+  assert.ok(server.includes('nurWennFrei(/^[bc]/.test(fig) ? "avatar_baukasten" : "avatar"'), "Baukasten-Figur (b… und c…, 2.23.99) nur mit Freigabe speicherbar");
   const k = html.slice(html.indexOf("// ---------- KC-CLUB-AVATAR (2.23.85"), html.indexOf("// KC-CLUB-FREIGABE (2.23.86, Wunsch Hansi): neue Funktionen nur sichtbar"));
   const AV = new Function(k + "; return { avTeile, avatarSvg };")();
   assert.ok(AV.avTeile("b012300000") && /^<svg/.test(AV.avatarSvg("b482311b71")), "Baukasten-Code wird gezeichnet");
@@ -4550,6 +4550,20 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/onclick="avSetzen\(AVW\.wahl\)"/.test(f) && /onclick="avBauen\(AVW\.wahl\)">✏️ Bearbeiten/.test(f), "Übernehmen und Bearbeiten");
   assert.ok(/bauen = c && !AVF_RE\.test\(c\) && avTeile\(c\) && frei\("avatar_baukasten"\)/.test(f), "Bearbeiten nur, wenn der Baukasten freigegeben ist, nie beim Foto");
   assert.ok(/function avBauen\(start\) \{[^\n]*\n  const jetzt = start \|\| INIT\?\.einstellungen\?\.avatar\?\.figur/.test(html), "Baukasten startet mit der gewählten Figur");
+}
+
+// 449. 2.23.99: Baukasten mit mehr Gesichtsteilen, großer Vorschau, 🎲 Zufall + Hinweis „wird als Knopf angezeigt“ (Wunsch Hansi)
+{
+  const k = html.slice(html.indexOf("// ---------- KC-CLUB-AVATAR (2.23.85"), html.indexOf("// ---------- KC-CLUB-KREISE (0.60.0)"));
+  const AV = new Function("var INIT = null;" + k + "; return { AV_FIGUREN, avatarSvg, avTeile };")();
+  assert.equal(AV.avTeile("m05").length, 15, "Figuren bekommen die neuen Teile mit Standardwert");
+  assert.ok(AV.avTeile("c" + "0".repeat(15)) && !AV.avTeile("c" + "z".repeat(15)) && AV.avTeile("b000000000"), "c-Codes geprüft, b-Codes weiter gültig");
+  const c = "c" + [1, 5, 1, 0, 2, 4, 3, 2, 0, 1, 3, 1, 3, 2, 1].map((x) => x.toString(36)).join("");
+  assert.ok(/^<svg viewBox="0 0 64 64"/.test(AV.avatarSvg(c)) && !/<image|href=|url\(/.test(AV.avatarSvg(c)), "selbst gezeichnet, keine fremden Bilder");
+  assert.ok(/reihe\("Augen", 9,/.test(html) && /reihe\("Mund", 11,/.test(html) && /reihe\("Wangen", 12,/.test(html) && /reihe\("Brille", 5, \["ohne", "rund", "eckig", "Halbbrille", "Sonnenbrille"\]\)/.test(html) && /reihe\("Kochjacke", 14,/.test(html), "neue Teile im Baukasten");
+  assert.ok(/avatarSvg\(avbCode\(\), 160\)/.test(html) && /onclick="avbZufall\(\)">🎲 Zufall/.test(html), "große Vorschau + Zufall");
+  assert.ok(server.includes("/^c[0-9a-z]{15}$/.test(w.figur)"), "Server nimmt c-Codes an");
+  assert.ok(/id="sprungHinweis"/.test(html) && /function sprungHinweisZeigen\(\)/.test(html) && /Wird nach dem Senden als Knopf angezeigt/.test(html), "Hinweis unter dem Schreibfeld");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

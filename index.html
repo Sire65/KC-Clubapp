@@ -2762,6 +2762,7 @@
     <button class="knopf klein" onclick="spracheAbbrechen()">✖ Verwerfen</button><button class="knopf haupt klein" onclick="spracheSenden()">➤ Senden</button></div>
   <!-- KC-CLUB-ENTWURF-ANZEIGE (1.21.0): geschrieben, aber noch nicht gesendet -->
   <div class="eingabe-entwurf versteckt" id="entwurfMarke">✏️ Entwurf – noch nicht gesendet</div>
+  <div class="eingabe-entwurf versteckt" id="sprungHinweis"></div> <!-- 2.23.99 (Wunsch Hansi): App-Link im Entwurf → „wird als Knopf angezeigt“ -->
   <div class="innen">
     <button class="rund" title="Anlage" onclick="anlageMenue()">📎</button>
     <button class="rund" title="Mikrofon: Sprachnachricht oder Diktieren" id="mikroKnopf" onclick="mikroWahl()">🎤</button>
@@ -2985,7 +2986,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.98"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.99"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3028,6 +3029,10 @@ const AV_FIGUREN = {
 };
 // 2.23.86 Baukasten: Code „b“ + 9 Zeichen (je ein Teil, Zahl 0–9/a–z) – Haut, Frisur, Haarfarbe, Kopf, Bart, Brille, Hintergrund, Halstuch, Typ
 const AV_FRISUREN = ["lang", "zopf", "dutt", "bob", "locken", "kurz", "wuschel", "seiten", "glatze"], AV_KOPF = ["koch", "tuch", "kappe", "keine"], AV_BART = [0, "voll", "schnurr", "stoppel", "zwirbel", "walross", "kinnbart"]; // 2.23.96: drei Schnauzer-Formen dazu (Wunsch Hansi)
+// 2.23.99 (Wunsch Hansi): mehr Gesichtsteile – Index 0 zeichnet genau wie bisher (alte Figuren und Codes bleiben unverändert)
+const AV_AUGEN = ["normal", "lachend", "gross", "wimpern"], AV_BRAUEN = ["normal", "schmal", "kraeftig", "buschig"], AV_MUND = ["standard", "lachen", "verschmitzt", "ruhig"];
+const AV_WANGEN = ["zart", "keine", "kraeftig", "sommersprossen"], AV_BRILLE = [0, "rund", "eckig", "halb", "sonne"];
+const AV_BRILLENFARBE = ["#2b2b2b", "#6b4423", "#b8962e", "#a61b29"], AV_JACKE = ["#ffffff", "#2a2a2a", "#8e9399"];
 const AV_BG = ["#741521", "#1d4f91", "#2e7d4f", "#6d4aa3", "#b8860b", "#00796b", "#c2185b", "#455a64", "#8d6e63", "#e8792b", "#3949ab", "#558b2f"];
 const AV_TUCH = ["#c8102e", "#ffcc00", "#e8792b", "#2e7d4f", "#1d4f91", "#741521", "#ffffff", "#6d4aa3"];
 // ---------- KC-CLUB-NEU-PULS (2.23.91, Wunsch Hansi): beim Betreten einer Seite pulsiert der „＋ Neu“-Knopf oben 3× mit hellem Rand ----------
@@ -3105,8 +3110,18 @@ function avGross(pid) {
     <button class="knopf" onclick="fensterZu($('avGrossBlatt'))">Schließen</button>`);
   f.style.zIndex = "2100";
 }
-function avTeile(code) { // → [haut, frisur, haarfarbe, kopf, bart, brille, hintergrund, halstuch, frau] oder null
-  if (AV_FIGUREN[code]) { const f = AV_FIGUREN[code]; return [...f, code[0] === "w"]; }
+function avTeile(code) { // → [haut, frisur, haarfarbe, kopf, bart, brille, hintergrund, halstuch, frau, augen, brauen, mund, wangen, brillenfarbe, jacke] oder null
+  const plus = (t) => (t ? [...t, 0, 0, 0, 0, 0, 0] : null); // ältere Codes: neue Teile = wie bisher
+  if (AV_FIGUREN[code]) { const f = AV_FIGUREN[code]; return plus([...f, code[0] === "w"]); }
+  if (/^c[0-9a-z]{15}$/.test(String(code))) { // 2.23.99: erweiterter Baukasten
+    const z = [...code.slice(1)].map((c) => parseInt(c, 36)), haarf = Object.keys(AV_HAAR);
+    if (z[0] >= AV_HAUT.length || z[1] >= AV_FRISUREN.length || z[2] >= haarf.length || z[3] >= AV_KOPF.length || z[4] >= AV_BART.length || z[5] >= AV_BRILLE.length || z[6] >= AV_BG.length || z[7] >= AV_TUCH.length || z[8] > 1
+      || z[9] >= AV_AUGEN.length || z[10] >= AV_BRAUEN.length || z[11] >= AV_MUND.length || z[12] >= AV_WANGEN.length || z[13] >= AV_BRILLENFARBE.length || z[14] >= AV_JACKE.length) return null;
+    return [z[0], AV_FRISUREN[z[1]], haarf[z[2]], AV_KOPF[z[3]], AV_BART[z[4]], z[5], AV_BG[z[6]], AV_TUCH[z[7]], z[8] === 1, z[9], z[10], z[11], z[12], z[13], z[14]];
+  }
+  return plus(avTeileB(code));
+}
+function avTeileB(code) {
   if (!/^b[0-9a-z]{9}$/.test(String(code))) return null;
   const z = [...code.slice(1)].map((c) => parseInt(c, 36)), haarf = Object.keys(AV_HAAR);
   if (z[0] >= AV_HAUT.length || z[1] >= AV_FRISUREN.length || z[2] >= haarf.length || z[3] >= AV_KOPF.length || z[4] >= AV_BART.length || z[5] > 1 || z[6] >= AV_BG.length || z[7] >= AV_TUCH.length || z[8] > 1) return null;
@@ -3117,7 +3132,8 @@ function avatarSvg(code, gr = 40) {
   if (AVF_RE.test(code || "")) { const b = AVF.bild[code] || (INIT?.einstellungen?.avatar_foto?.code === code ? INIT.einstellungen.avatar_foto.bild : ""); // KC-CLUB-AVATAR-FOTO
     return `<img class="av-foto" data-avf="${code}" src="${/^data:image\/jpeg;base64,/.test(b) ? b : AVF_LEER}" alt="" width="${gr}" height="${gr}">`; }
   const f = avTeile(code); if (!f) return "";
-  const [h, frisur, hf, kopf, bart, brille, bg, tuch, frau] = f, haut = AV_HAUT[h], haar = AV_HAAR[hf], dunkel = h >= 3;
+  const [h, frisur, hf, kopf, bart, brille, bg, tuch, frau, augen, brauen, mund, wangen, bfarbe, jacke] = f, haut = AV_HAUT[h], haar = AV_HAAR[hf], dunkel = h >= 3;
+  const jFarbe = AV_JACKE[jacke] || "#fff", knopfF = jacke ? "rgba(255,255,255,.55)" : "#c9c2b6", bF = AV_BRILLENFARBE[bfarbe] || "#2b2b2b";
   const hinten = { lang: `<path d="M18 26 Q18 12 32 12 Q46 12 46 26 L48 50 Q32 56 16 50 Z" fill="${haar}"/>`, zopf: `<path d="M41 26 Q50 34 46 48 Q44 52 42 48 Q45 38 39 30Z" fill="${haar}"/>`,
     locken: `<g fill="${haar}"><circle cx="20" cy="28" r="6"/><circle cx="44" cy="28" r="6"/><circle cx="21" cy="37" r="5"/><circle cx="43" cy="37" r="5"/></g>`, dutt: "", bob: `<path d="M19 27 Q19 13 32 13 Q45 13 45 27 L45 38 Q40 40 39 34 L25 34 Q24 40 19 38Z" fill="${haar}"/>` }[frisur] || "";
   const vorne = { lang: `<path d="M20 26 Q22 15 32 15 Q42 15 44 26 Q38 20 32 21 Q25 21 20 26Z" fill="${haar}"/>`, zopf: `<path d="M20 26 Q22 15 32 15 Q42 15 44 26 Q36 19 28 22 Q23 23 20 26Z" fill="${haar}"/>`,
@@ -3138,16 +3154,27 @@ function avatarSvg(code, gr = 40) {
     stoppel: `<path d="M22 33 Q24 44 32 44.5 Q40 44 42 33 Q40 41 32 41.5 Q24 41 22 33Z" fill="${haar}" opacity=".45"/>` }[bart] || "";
   const auge = dunkel ? "#120b07" : "#2b1d14";
   return `<svg viewBox="0 0 64 64" width="${gr}" height="${gr}" role="img" aria-hidden="true"><circle cx="32" cy="32" r="32" fill="${bg}"/>
-    <path d="M9 64 Q10 49 32 47 Q54 49 55 64Z" fill="#fff"/><path d="M26 47 L32 54 L38 47Z" fill="${tuch}"/><circle cx="29" cy="57" r="1.2" fill="#c9c2b6"/><circle cx="35" cy="57" r="1.2" fill="#c9c2b6"/>
+    <path d="M9 64 Q10 49 32 47 Q54 49 55 64Z" fill="${jFarbe}"/><path d="M26 47 L32 54 L38 47Z" fill="${tuch}"/><circle cx="29" cy="57" r="1.2" fill="${knopfF}"/><circle cx="35" cy="57" r="1.2" fill="${knopfF}"/>
     ${hinten}<rect x="28" y="38" width="8" height="10" rx="3" fill="${haut}"/><circle cx="19.5" cy="30" r="3" fill="${haut}"/><circle cx="44.5" cy="30" r="3" fill="${haut}"/>
     <ellipse cx="32" cy="29" rx="12.5" ry="13.5" fill="${haut}"/>${vorne}
     ${frau && frisur !== "locken" ? `<path d="M19.5 21 Q18 30 20.5 39 L23 38 Q21.5 30 22.5 22Z M44.5 21 Q46 30 43.5 39 L41 38 Q42.5 30 41.5 22Z" fill="${haar}"/>` : ""}${muetze}
-    <circle cx="27" cy="29.5" r="1.6" fill="${auge}"/><circle cx="37" cy="29.5" r="1.6" fill="${auge}"/>
-    <path d="M24.5 26 Q27 24.6 29.5 25.6 M34.5 25.6 Q37 24.6 39.5 26" stroke="${frisur === "glatze" ? "#6b5a4e" : haar}" stroke-width="1.1" fill="none" stroke-linecap="round"/>
-    <circle cx="23.5" cy="34" r="2.2" fill="#e8796b" opacity=".28"/><circle cx="40.5" cy="34" r="2.2" fill="#e8796b" opacity=".28"/>
-    ${bartSvg}${frau ? `<path d="M28 36.6 Q32 35.4 36 36.6 Q32 40.6 28 36.6Z" fill="#cf4a5f"/><path d="M24.6 28.3 L23.4 27.2 M39.4 28.3 L40.6 27.2" stroke="${auge}" stroke-width="1" stroke-linecap="round"/>`
-      : `<path d="M27.5 36.5 Q32 40.5 36.5 36.5" stroke="#8a3b2e" stroke-width="1.4" fill="none" stroke-linecap="round"/>`}
-    ${brille ? `<g fill="none" stroke="#2b2b2b" stroke-width="1.2"><circle cx="27" cy="29.5" r="3.6"/><circle cx="37" cy="29.5" r="3.6"/><path d="M30.6 29.5 H33.4"/></g>` : ""}</svg>`;
+    ${[`<circle cx="27" cy="29.5" r="1.6" fill="${auge}"/><circle cx="37" cy="29.5" r="1.6" fill="${auge}"/>`,
+      `<path d="M25.2 30 Q27 28 28.8 30 M35.2 30 Q37 28 38.8 30" stroke="${auge}" stroke-width="1.3" fill="none" stroke-linecap="round"/>`,
+      `<ellipse cx="27" cy="29.5" rx="2.4" ry="2.6" fill="#fff"/><ellipse cx="37" cy="29.5" rx="2.4" ry="2.6" fill="#fff"/><circle cx="27.3" cy="29.9" r="1.5" fill="${auge}"/><circle cx="37.3" cy="29.9" r="1.5" fill="${auge}"/><circle cx="27.8" cy="29.3" r=".45" fill="#fff"/><circle cx="37.8" cy="29.3" r=".45" fill="#fff"/>`,
+      `<circle cx="27" cy="29.5" r="1.6" fill="${auge}"/><circle cx="37" cy="29.5" r="1.6" fill="${auge}"/><path d="M25.2 28.4 L24.2 27.5 M26.2 27.9 L25.7 26.8 M38.8 28.4 L39.8 27.5 M37.8 27.9 L38.3 26.8" stroke="${auge}" stroke-width=".8" stroke-linecap="round"/>`][augen] || ""}
+    ${(() => { const bc = frisur === "glatze" ? "#6b5a4e" : haar, b = [[1.1, 26, 24.6, 25.6], [.7, 26, 24.9, 25.8], [1.9, 26, 24.4, 25.5], [2.6, 25.6, 24.4, 25.2]][brauen] || [1.1, 26, 24.6, 25.6];
+      return `<path d="M24.5 ${b[1]} Q27 ${b[2]} 29.5 ${b[3]} M34.5 ${b[3]} Q37 ${b[2]} 39.5 ${b[1]}" stroke="${bc}" stroke-width="${b[0]}" fill="none" stroke-linecap="round"/>`; })()}
+    ${wangen === 1 ? "" : `<circle cx="23.5" cy="34" r="2.2" fill="#e8796b" opacity="${wangen === 2 ? ".55" : ".28"}"/><circle cx="40.5" cy="34" r="2.2" fill="#e8796b" opacity="${wangen === 2 ? ".55" : ".28"}"/>`}
+    ${wangen === 3 ? `<g fill="#a5643f" opacity=".7"><circle cx="24.5" cy="32.5" r=".45"/><circle cx="26" cy="33.6" r=".45"/><circle cx="23.4" cy="33.9" r=".45"/><circle cx="39.5" cy="32.5" r=".45"/><circle cx="38" cy="33.6" r=".45"/><circle cx="40.6" cy="33.9" r=".45"/><circle cx="30.6" cy="31.6" r=".4"/><circle cx="33.4" cy="31.6" r=".4"/></g>` : ""}
+    ${bartSvg}${mund === 1 ? `<path d="M27.2 35.8 Q32 36.6 36.8 35.8 Q36 41 32 41 Q28 41 27.2 35.8Z" fill="#7a2a24"/><path d="M27.8 36 Q32 36.8 36.2 36 L36 37.2 Q32 37.9 28 37.2Z" fill="#fff"/>`
+      : mund === 2 ? `<path d="M28 37.4 Q32 38.6 36.6 35.6" stroke="${frau ? "#cf4a5f" : "#8a3b2e"}" stroke-width="1.5" fill="none" stroke-linecap="round"/>`
+      : mund === 3 ? `<path d="M28.5 37.4 H35.5" stroke="${frau ? "#cf4a5f" : "#8a3b2e"}" stroke-width="1.4" stroke-linecap="round"/>`
+      : frau ? `<path d="M28 36.6 Q32 35.4 36 36.6 Q32 40.6 28 36.6Z" fill="#cf4a5f"/>` : `<path d="M27.5 36.5 Q32 40.5 36.5 36.5" stroke="#8a3b2e" stroke-width="1.4" fill="none" stroke-linecap="round"/>`}
+    ${frau && augen === 0 ? `<path d="M24.6 28.3 L23.4 27.2 M39.4 28.3 L40.6 27.2" stroke="${auge}" stroke-width="1" stroke-linecap="round"/>` : ""}
+    ${[``, `<g fill="none" stroke="${bF}" stroke-width="1.2"><circle cx="27" cy="29.5" r="3.6"/><circle cx="37" cy="29.5" r="3.6"/><path d="M30.6 29.5 H33.4"/></g>`,
+      `<g fill="none" stroke="${bF}" stroke-width="1.3"><rect x="23" y="26.6" width="7.6" height="5.8" rx="1"/><rect x="33.4" y="26.6" width="7.6" height="5.8" rx="1"/><path d="M30.6 29 H33.4"/></g>`,
+      `<g fill="none" stroke="${bF}" stroke-width="1.3"><path d="M23.4 29.8 H30.4 Q30.2 33.2 26.9 33.2 Q23.6 33.2 23.4 29.8Z M33.6 29.8 H40.6 Q40.4 33.2 37.1 33.2 Q33.8 33.2 33.6 29.8Z M30.4 29.8 H33.6"/></g>`,
+      `<g stroke="${bF}" stroke-width="1"><path d="M22.8 27 H31 Q30.8 33 26.9 33 Q23 33 22.8 27Z M33 27 H41.2 Q41 33 37.1 33 Q33.2 33 33 27Z" fill="#1d1d1d"/><path d="M31 28 H33" fill="none"/></g><path d="M24.6 28.4 L26.2 28.4 M34.8 28.4 L36.4 28.4" stroke="rgba(255,255,255,.5)" stroke-width=".8" stroke-linecap="round"/>`][brille] || ""}</svg>`;
 }
 // KC-CLUB-FREIGABE (2.23.86, Wunsch Hansi): neue Funktionen nur sichtbar, wenn freigegeben – der Admin sieht sie immer (zum Testen, mit 🔒)
 const frei = (id) => !!ICH?.admin || INIT?.freigaben?.[id] === "alle";
@@ -5298,7 +5325,14 @@ function gruppenFarbe(name) {
   const [hell, dunkel] = GRUPPEN_FARBEN[i % GRUPPEN_FARBEN.length]; return `--pf:${hell};--pfd:${dunkel}`;
 }
 // KC-CLUB-ENTWURF-ANZEIGE (1.21.0, Wunsch Hansi): steht Text im Feld, der noch nicht gesendet ist → „✏️ Entwurf“
-function entwurfMarkeZeigen() { const t = $("text"), m = $("entwurfMarke"); if (t && m) m.classList.toggle("versteckt", !t.value.trim()); }
+function entwurfMarkeZeigen() { const t = $("text"), m = $("entwurfMarke"); if (t && m) m.classList.toggle("versteckt", !t.value.trim()); sprungHinweisZeigen(); }
+// 2.23.99: steht ein App-Sprung im Entwurf, sagen wir, dass daraus nach dem Senden ein Knopf wird (im Schreibfeld geht nur Text)
+function sprungHinweisZeigen() {
+  const t = $("text"), h = $("sprungHinweis"); if (!t || !h) return;
+  const ziele = [...t.value.matchAll(SPRUNG_RE)].map((m) => SPRUENGE[m[1]]).filter(Boolean);
+  h.classList.toggle("versteckt", !ziele.length);
+  h.textContent = ziele.length ? `🔘 Wird nach dem Senden als Knopf angezeigt: ${ziele.map((z) => `„${z.sym} ${z.t}“`).join(", ")}` : "";
+}
 function entwurfWeg(id) { const d = entwurfAlle(); if (!(id in d)) return; delete d[id]; try { localStorage.setItem(entwurfSchluessel(), JSON.stringify(d)); } catch {} }
 // ---------- KC-CLUB-NACH-UNTEN (1.12.0): ⬇️ nur, wenn man weit nach oben gescrollt hat ----------
 const weitOben = () => document.documentElement.scrollHeight - (window.scrollY + window.innerHeight) > 500;
@@ -10135,7 +10169,7 @@ function avWahl() {
   const f = blattAuf("avBlatt", `<h3 style="margin:0">🧑‍🍳 Mein Bild</h3>
     <p class="hinweis" style="margin:4px 0 8px">Tippe eine Koch-Figur an – oben siehst du sie groß und kannst sie <b>übernehmen</b> oder <b>bearbeiten</b>. Sie erscheint bei den Mitgliedern, im Chat und bei „Wer ist online“. Ring und Abzeichen zeigen weiter, ob du gerade da bist.</p>
     <div id="avWahlVorschau" class="av-vorschau"></div>
-    ${jetzt && jetzt[0] === "b" && avGueltig(jetzt) ? `<b>🧩 Deine eigene Figur</b><div class="av-raster" style="margin:6px 0 10px"><button type="button" class="an" aria-label="Eigene Figur" onclick="avWaehlen('${jetzt}', this)">${avatarSvg(jetzt, 64)}</button></div>` : ""}
+    ${jetzt && /^[bc]/.test(jetzt) && avGueltig(jetzt) ? `<b>🧩 Deine eigene Figur</b><div class="av-raster" style="margin:6px 0 10px"><button type="button" class="an" aria-label="Eigene Figur" onclick="avWaehlen('${jetzt}', this)">${avatarSvg(jetzt, 64)}</button></div>` : ""}
     <b>👩‍🍳 Köchinnen</b><div class="av-raster" style="margin:6px 0 10px">${Object.keys(AV_FIGUREN).filter((k) => k[0] === "w").map((k) => `<button type="button" class="${jetzt === k ? "an" : ""}" aria-label="Figur ${k}" onclick="avWaehlen('${k}', this)">${avatarSvg(k, 64)}</button>`).join("")}</div>
     <b>👨‍🍳 Köche</b><div class="av-raster" style="margin:6px 0 10px">${Object.keys(AV_FIGUREN).filter((k) => k[0] === "m").map((k) => `<button type="button" class="${jetzt === k ? "an" : ""}" aria-label="Figur ${k}" onclick="avWaehlen('${k}', this)">${avatarSvg(k, 64)}</button>`).join("")}</div>
     <b>Kein Bild</b><div class="av-raster" style="margin:6px 0 10px"><button type="button" class="${jetzt ? "" : "an"}" aria-label="Kein Bild – Buchstaben" onclick="avWaehlen(null, this)"><span class="av-keins">${esc(initialen(ICH?.name))}</span></button></div>
@@ -10165,24 +10199,38 @@ function avWahlVorschau() {
 let AVB = null;
 function avBauen(start) { // 2.23.98: start = gewählte Figur als Vorlage („✏️ Bearbeiten“), sonst das jetzige Bild
   const jetzt = start || INIT?.einstellungen?.avatar?.figur, t = avTeile(jetzt) || avTeile("w01"), haarf = Object.keys(AV_HAAR);
-  AVB = [t[0], AV_FRISUREN.indexOf(t[1]), haarf.indexOf(t[2]), AV_KOPF.indexOf(t[3]), AV_BART.indexOf(t[4]), t[5] ? 1 : 0, Math.max(0, AV_BG.indexOf(t[6])), Math.max(0, AV_TUCH.indexOf(t[7])), t[8] ? 1 : 0];
+  AVB = [t[0], AV_FRISUREN.indexOf(t[1]), haarf.indexOf(t[2]), AV_KOPF.indexOf(t[3]), AV_BART.indexOf(t[4]), Number(t[5]) || 0, Math.max(0, AV_BG.indexOf(t[6])), Math.max(0, AV_TUCH.indexOf(t[7])), t[8] ? 1 : 0,
+    t[9] || 0, t[10] || 0, t[11] || 0, t[12] || 0, t[13] || 0, t[14] || 0]; // 2.23.99: Augen, Brauen, Mund, Wangen, Brillenfarbe, Jacke
   fensterZu($("avBlatt") || document.createElement("div"));
   const f = blattAuf("avbBlatt", `<h3 style="margin:0">🧩 Figur zusammenstellen${nurTest("avatar_baukasten") ? ' <small class="hinweis">🔒 nur für dich (Test)</small>' : ""}</h3><div id="avbInhalt"></div>`);
   f.classList.add("sc-blatt"); avbZeigen();
 }
-const avbCode = () => "b" + AVB.map((x) => Math.max(0, x).toString(36)).join("");
+const avbCode = () => "c" + AVB.map((x) => Math.max(0, x).toString(36)).join(""); // 2.23.99: „c…“ = erweiterter Baukasten (15 Teile); „b…“ bleibt gültig
+// 🎲 Zufall: würfelt eine Figur als Startpunkt (Typ bleibt, wie gewählt)
+function avbZufall() {
+  const r = (n) => Math.floor(Math.random() * n), haarf = Object.keys(AV_HAAR), frau = AVB[8];
+  AVB = [r(AV_HAUT.length), r(AV_FRISUREN.length), r(haarf.length), r(AV_KOPF.length), frau ? 0 : r(AV_BART.length), r(3) ? 0 : 1 + r(AV_BRILLE.length - 1), r(AV_BG.length), r(AV_TUCH.length), frau,
+    r(AV_AUGEN.length), r(AV_BRAUEN.length), r(AV_MUND.length), r(AV_WANGEN.length), r(AV_BRILLENFARBE.length), r(4) ? 0 : 1 + r(AV_JACKE.length - 1)];
+  avbZeigen();
+}
 function avbZeigen() {
   const z = $("avbInhalt"); if (!z || !AVB) return;
   const punkt = (farbe) => `<span style="display:inline-block;width:20px;height:20px;border-radius:50%;background:${farbe};border:1px solid var(--linie);vertical-align:middle"></span>`;
   const reihe = (titel, i, werte) => `<div class="ps-schritt"><b>${titel}</b><div class="hl-chips">${werte.map((w, n) => `<button type="button" class="chip${AVB[i] === n ? " an" : ""}" onclick="AVB[${i}]=${n};avbZeigen()">${w}</button>`).join("")}</div></div>`;
-  z.innerHTML = `<div style="display:grid;place-items:center;padding:6px 0;position:sticky;top:44px;z-index:2;background:var(--karte)">${avatarSvg(avbCode(), 104)}</div>
+  z.innerHTML = `<div style="display:grid;place-items:center;gap:6px;padding:6px 0 8px;position:sticky;top:44px;z-index:2;background:var(--karte);border-bottom:1px solid var(--linie)">${avatarSvg(avbCode(), 160)}<button type="button" class="knopf klein" style="margin:0" onclick="avbZufall()">🎲 Zufall</button></div>
     ${reihe("Typ", 8, ["👨‍🍳 Koch", "👩‍🍳 Köchin"])}
     ${reihe("Hautton", 0, AV_HAUT.map(punkt))}
     ${reihe("Frisur", 1, ["lang", "Zopf", "Dutt", "Bob", "Locken", "kurz", "wuschelig", "Seiten", "Glatze"])}
     ${reihe("Haarfarbe", 2, Object.values(AV_HAAR).map(punkt))}
     ${reihe("Auf dem Kopf", 3, ["Kochmütze", "Kopftuch", "Kappe", "nichts"])}
     ${reihe("Bart", 4, ["keiner", "Vollbart", "Schnurrbart", "Stoppeln", "Zwirbelbart", "Walross", "Schnauzer + Kinnbart"])}
-    ${reihe("Brille", 5, ["ohne", "mit"])}
+    ${reihe("Augen", 9, ["normal", "lachend", "groß", "mit Wimpern"])}
+    ${reihe("Augenbrauen", 10, ["normal", "schmal", "kräftig", "buschig"])}
+    ${reihe("Mund", 11, ["Lächeln", "breites Lachen", "verschmitzt", "ruhig"])}
+    ${reihe("Wangen", 12, ["zart rosa", "keine", "kräftig", "Sommersprossen"])}
+    ${reihe("Brille", 5, ["ohne", "rund", "eckig", "Halbbrille", "Sonnenbrille"])}
+    ${AVB[5] ? reihe("Brillenfarbe", 13, AV_BRILLENFARBE.map(punkt)) : ""}
+    ${reihe("Kochjacke", 14, ["weiß", "schwarz", "grau"])}
     ${reihe("Hintergrund", 6, AV_BG.map(punkt))}
     ${reihe("Halstuch / Kopftuch-Farbe", 7, AV_TUCH.map(punkt))}
     <div class="na-pfeil-knoepfe bs-fuss"><button class="knopf haupt" onclick="avSetzen(avbCode());fensterZu($('avbBlatt'))">💾 Speichern</button><button class="knopf" onclick="fensterZu($('avbBlatt'))">Abbrechen</button></div>`;
