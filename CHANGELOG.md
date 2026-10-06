@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.23.90 – 2026-10-06 – Tipp des Tages: Kacheln verkleinern (nur erweiterte Ansicht)
+- Neuer Tipp „🔲 Kacheln kleiner – 3 nebeneinander“: Einstellungen → Darstellung, nur in der erweiterten Ansicht; „Zeigen“ springt direkt zur Einstellung.
+
 ## 2.23.89 – 2026-10-06 – Abzeichen am Bild, Anwesenheitstafel, Bild groß, eigenes Foto als Bild
 - KC-CLUB-AVATAR-ABZEICHEN: mit Figur/Foto Zustand als Abzeichen unten rechts (✓ online, blau heute, orange abwesend, ! Fehler, grau selten; unbekannt ohne), Ring breiter.
 - KC-CLUB-ANWESENHEIT: Mitglieder → 📋 Anwesenheitstafel (nur Name + LED, keine Knöpfe); antippen öffnet das Mitglied. Auch unter Einstellungen → Darstellung.

@@ -2976,7 +2976,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.89"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.90"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -4240,6 +4240,7 @@ const HILFE = [
   { id: "buero_neue_nachricht", thema: "club", sym: "💬", t: "Neue Nachricht, während du im Büro bist", x: "Kommt eine Nachricht, während du im Büro arbeitest, erscheint oben ein grüner Hinweis <b>„💬 Neue Nachricht von …“</b>. Ein Tipp darauf öffnet die Unterhaltung genau an der richtigen Stelle; mit Zurück bist du wieder im Büro.", nur: () => !!ICH?.buero, zeig: () => buStart(), seit: "2.23.8" },
   { id: "ttt_toene", thema: "club", sym: "🔊", t: "Tic-Tac-Toe mit Tönen", x: "Unter dem Spielfeld gibt es den Knopf <b>„🔊 Töne an / 🔇 aus“</b>. Dann klingt jeder Zug – deiner hell, der des Gegners tiefer – und am Ende hörst du, ob du gewonnen, verloren oder unentschieden gespielt hast. Gilt nur auf diesem Gerät.", zeig: () => { zeige("spiele"); spArtWahl("ttt"); }, seit: "2.23.8" },
   { id: "inkognito_blinkt", thema: "privat", sym: "🕶️", t: "Die Brille blinkt rot", x: "Solange <b>Inkognito</b> an ist, blinkt die Brille oben rot – damit du nicht vergisst, dass dich gerade niemand online sieht. Antippen schaltet Inkognito wieder aus.", nur: () => !!ICH?.admin, zeig: () => zeige("start"), seit: "2.23.8" },
+  { id: "kacheln_klein", thema: "darstellung", sym: "🔲", t: "Kacheln kleiner – 3 nebeneinander", x: "Mehr Kacheln auf einen Blick: Bei ⚙️ → <b>„🎨 Darstellung“</b> → <b>„🔲 Kacheln auf der Startseite“</b> „Klein“ wählen – dann passen 3 nebeneinander. Das geht nur in der <b>erweiterten Ansicht</b> – in der einfachen Ansicht bleiben die Kacheln groß. Gilt nur für dieses Gerät.", zeig: () => einstiegHin("darstellung", "kachelGroesseWahl"), seit: "2.23.90" },
 ];
 const HZ = { thema: null, q: "", vorher: null, gruss: 0, unterwegs: null, herkunft: null, sicht: null };
 // 2.23.1 (Wunsch Hansi: „immer etwas anders formuliert, freundlich, nicht aufdringlich“): wechselnde Einleitungen – neu gewählt

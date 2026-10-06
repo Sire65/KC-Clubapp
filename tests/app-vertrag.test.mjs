@@ -4484,6 +4484,11 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(!fig \|\| !AVF_CODE\.test\(fig\)\) await db\.from\("kc_club_person_einstellung"\)\.delete\(\)\.eq\("person_id", ich\.person_id\)\.eq\("schluessel", "avatar_foto"\)/.test(server), "anderes Bild gewählt → Foto gelöscht");
 }
 
+// 441. 2.23.90: Tipp des Tages – Kacheln verkleinern geht nur in der erweiterten Ansicht (Wunsch Hansi)
+{
+  assert.ok(/\{ id: "kacheln_klein", thema: "darstellung"[^\n]*erweiterten Ansicht[^\n]*zeig: \(\) => einstiegHin\("darstellung", "kachelGroesseWahl"\), seit: "2\.23\.90" \}/.test(html), "Tipp mit Sprung zur Einstellung");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
