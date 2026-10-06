@@ -4763,7 +4763,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/class="avatar k-neutral uh-gruppe" title="Feste Gruppe">\$\{esc\(u\.gruppe\.symbol\)\}<i class="uh-kette"/.test(html) && /class="avatar uh-runde" title="Runde – keine feste Gruppe"/.test(html), "Gruppe mit 🔗, Runde gestrichelt");
   assert.ok(/\(eigene >= 2 \|\| u\.runde\.gleiche >= 1\) && !nein\.includes\(rundeSchluessel\(u\)\)/.test(html) && /!!u\.runde\?\.ersteller && !u\.gruppe && \(u\.teilnehmer \|\| \[\]\)\.length >= 3/.test(html), "Angebot erst beim zweiten Mal, nur Ersteller, Nein merkt sich");
   assert.ok(/<h2 id="chatTitel" onclick="chatMitgliederZeigen\(\)"/.test(html) && /function chatMitgliederZeigen\(\)/.test(html) && /mitgliedOeffnen\(b\.dataset\.pid\)/.test(html), "Tipp auf Gruppennamen zeigt die Mitglieder");
-  assert.ok(/\$\("chatKopfBild"\)\.innerHTML = u\.gruppe \|\| andere\.length > 1 \? uhRundeKreis/.test(html) && /#v-chat \.kopf2 > #chatVorlesenKnopf \{ margin-left: auto; \}/.test(html), "Chat-Kopf: Bild vorn, Knöpfe rechts");
+  assert.ok(/\$\("chatKopfBild"\)\.innerHTML = u\.gruppe \|\| andere\.length > 1 \? uhRundeKreis/.test(html) && /#v-chat \.kopf2 > #chatVorlesenKnopf \{ margin-left: auto; \}/.test(html) && /#v-chat \.kopf2 > \.rund \{[^}]*background: var\(--karte\); color: var\(--text\)/.test(html), "Chat-Kopf: Bild vorn, Knöpfe rechts");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

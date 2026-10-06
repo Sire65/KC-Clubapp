@@ -1445,8 +1445,9 @@
   .kopf2 h2 { margin: 0; font-size: 1.35rem; flex: 1; }
   /* KC-CLUB-CHAT-KOPF (1.20.1): Chat-Kopf klebt oben (wie WhatsApp); Nachrichten, zu denen gesprungen wird, nicht darunter verstecken */
   /* KC-CLUB-CHAT-KOPF-BILD (2.24.19, Wunsch Hansi): oben zuerst Bild (Avatar bzw. Gruppensymbol), dann der Name in einer Zeile; Knöpfe ganz rechts */
-  #v-chat .kopf2 { flex-wrap: nowrap; gap: 8px; } #v-chat .kopf2 > h2 { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 1.15rem; }
-  #v-chat .kopf2 > .rund { flex: none; width: 36px; height: 36px; min-width: 36px; padding: 0; font-size: 1rem; margin-left: -4px; } #v-chat .kopf2 > #chatVorlesenKnopf { margin-left: auto; }
+  #v-chat .kopf2 { flex-wrap: nowrap; gap: 6px; } #v-chat .kopf2 > h2 { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 1.15rem; }
+  #v-chat .kopf2 > .rund { flex: none; width: 34px; height: 34px; min-width: 34px; padding: 0; font-size: .95rem; margin-left: -2px; background: var(--karte); color: var(--text); border: 1px solid var(--linie); box-shadow: 0 1px 3px rgba(0,0,0,.18); font-weight: 800; }
+  /* 2.24.19 (Hinweis Hansi): Kontrast im hellen Chat-Kopf – Vorlesen an = grün hinterlegt */ #v-chat .kopf2 > #chatVorlesenKnopf[aria-pressed="true"] { background: var(--gruenbg); border-color: var(--textGruen); } #v-chat .kopf2 > #chatVorlesenKnopf { margin-left: auto; }
   #v-chat .kopf2 > .zurueck { flex: none; width: 38px; height: 38px; } #chatTeilnehmer { margin-left: 92px !important; }
   .cm-liste { display: grid; gap: 6px; } .cm-zeile { display: flex; align-items: center; gap: 10px; text-align: left; padding: 6px 10px; } .cm-zeile > span:nth-of-type(1) { flex: 1; font-weight: 700; } .cm-zeile[disabled] { opacity: .8; cursor: default; }
   .chat-kopf-bild { flex: none; display: flex; cursor: pointer; } .chat-kopf-bild:empty { display: none; } .chat-kopf-bild .avatar { width: 40px; height: 40px; font-size: 1rem; }
