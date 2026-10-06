@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.24.5 – 2026-10-06 – Ruhiger Start
+Nach dem Öffnen dreht sich die Kochmütze nicht mehr bei Prüfungen, die die App von selbst im Hintergrund macht. (KC-CLUB-START-STILL)
+
 ## 2.24.4 – 2026-10-06 – Online-Ring leuchtet
 Wer gerade online ist, hat jetzt einen grünen Ring um sein Bild, der langsam an- und abschwillt. (KC-CLUB-ONLINE-ATEM)
 

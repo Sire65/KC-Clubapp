@@ -3000,7 +3000,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.24.4"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.24.5"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -6280,10 +6280,10 @@ function twFinden(fr) {
   }).filter((t) => t.p >= 1.6).sort((a, b) => b.p - a.p);
   return treffer.slice(0, 4);
 }
-async function twLaden() { // Gelerntes vom Server (offline: zuletzt gespeicherter Stand)
+async function twLaden(still = false) { // Gelerntes vom Server (offline: zuletzt gespeicherter Stand); 2.24.5: still = Hintergrund
   if (!TW.wissen) { try { const w = JSON.parse(localStorage.getItem(TW_DATEN_KEY) || "null"); if (Array.isArray(w)) { TW.wissen = w; TW_INDEX = null; } } catch {} }
   try {
-    const d = await api("twinkey_daten");
+    const d = await api("twinkey_daten", {}, { still });
     TW = { wissen: d?.wissen || [], meine: d?.meine || [], offen: d?.offen || null, mf: { aus: !!d?.mfAus, anMich: d?.mfAnMich || [], meine: d?.mfMeine || [] } }; TW_INDEX = null;
     lsSetzen(TW_DATEN_KEY, JSON.stringify(TW.wissen));
   } catch {}
@@ -6347,7 +6347,7 @@ function twMeineZeigen() { // „📬 Deine Fragen“ – offen oder mit Antwort
 // Hinweis beim Start: Admin hat mit „📱 in der Club-App“ geantwortet
 async function twAntwortPruefen() {
   if (!ICH || document.querySelector(".blatt:not(.versteckt)")) return;
-  await twLaden();
+  await twLaden(true); // KC-CLUB-START-STILL
   const neu = (TW.meine || []).filter((x) => x.status === "beantwortet" && !x.gelesen);
   const mfNeu = (TW.mf?.anMich || []).filter((x) => x.status === "offen"); // KC-CLUB-MITGLIEDER-FRAGEN: neue Frage an mich
   if ((!neu.length && !mfNeu.length) || document.querySelector(".blatt:not(.versteckt)")) return;
@@ -8257,8 +8257,10 @@ const WARTEN_TEXT = { standort_ort: "Standort wird bestimmt …", sos_ort: "Adre
 let wartenZahl = 0, wartenTimer = null;
 // KC-CLUB-WARTEN (0.51.0): WARTEN_STILL gilt nur für Hintergrund-Aufrufe (Takt, Nachladen). Tippt das Mitglied selbst
 // (Aktualisieren, Karte öffnen, Admin prüfen …), übergibt der Aufruf { warten: true } → die Kochmütze erscheint auch dort.
-function wartenStart(action, erzwingen) {
-  if (WARTEN_STILL.has(action) && !erzwingen) return false;
+// KC-CLUB-START-STILL (2.24.5, Hinweis Hansi „Kochmütze dreht nach dem Start nochmals“): Prüfungen, die die App nach dem
+// Start von selbst macht (Eingangskorb, Schulungen, Twinkey-Antworten, Tagesinfo), übergeben { still: true } – keine Mütze.
+function wartenStart(action, erzwingen, still) {
+  if (still || WARTEN_STILL.has(action) && !erzwingen) return false;
   wartenZahl++;
   if (!wartenTimer) wartenTimer = setTimeout(() => { $("wartenText").textContent = WARTEN_TEXT[action] || (/speichern|setzen|aendern/.test(action) ? "Wird gespeichert …" : "Einen Moment …");
     $("warten").classList.remove("versteckt"); requestAnimationFrame(() => $("warten").classList.add("an")); }, 350);
@@ -8269,7 +8271,7 @@ function wartenEnde() {
   clearTimeout(wartenTimer); wartenTimer = null; $("warten").classList.remove("an"); setTimeout(() => { if (!wartenZahl) $("warten").classList.add("versteckt"); }, 200);
 }
 async function api(action, daten = {}, opt = {}) {
-  const warte = wartenStart(action, opt.warten);
+  const warte = wartenStart(action, opt.warten, opt.still);
   try {
     if (NOT.an) return await notApi(action, daten); // KC-CLUB-NOTBETRIEB
     const r = await apiRoh(action, daten); NOT.fehler = 0; return r;
@@ -12005,7 +12007,7 @@ async function ekHinweisPruefen(versuch = 0) {
   try { if (sessionStorage.getItem("kc_ek_hinweis_gezeigt")) return; } catch {}
   if (ekhLies(EKH_HEUTE) === heuteIso() || Date.now() < Number(ekhLies(EKH_SPAETER) || 0)) return;
   if (document.querySelector(".blatt:not(.versteckt)") || aktuelleAnsicht !== "start") { if (versuch < 15) setTimeout(() => ekHinweisPruefen(versuch + 1), 6000); return; }
-  let z; try { z = await api("eingang_zahlen"); } catch { return; }
+  let z; try { z = await api("eingang_zahlen", {}, { still: true }); } catch { return; } // KC-CLUB-START-STILL
   const l = EKH_ARTEN.map(([k, sym, ein, mehr, art]) => ({ n: Number(z?.[k]) || 0, sym, t: (Number(z?.[k]) || 0) === 1 ? ein : mehr, art })).filter((x) => x.n > 0);
   const summe = l.reduce((a, x) => a + x.n, 0);
   if (summe < EKH_AB) return;
@@ -12071,7 +12073,7 @@ async function tagesinfoZeigen(manuell = false) {
     if (manuell && s0 !== null) seit = s0 || null;
     else { seit = localStorage.getItem(TI_SEIT); if (!manuell) sessionStorage.setItem(TI_SEIT_SITZUNG, seit || ""); }
   } catch {}
-  const [ti, st, fe] = await Promise.allSettled([api("tagesinfo", { seit }), api("buero_start"), api("buero_feste", { tage: 7 })]);
+  const [ti, st, fe] = await Promise.allSettled([api("tagesinfo", { seit }, { still: true }), api("buero_start", {}, { still: true }), api("buero_feste", { tage: 7 }, { still: true })]); // KC-CLUB-START-STILL: das Fenster zeigt selbst „⏳ Ich schaue kurz nach …“
   const e = $("tiInhalt"); if (!e) return;
   if (ti.status !== "fulfilled") { e.innerHTML = `<p class="hinweis">⚪ Die Übersicht konnte gerade nicht geladen werden (${esc(ti.reason?.message || "keine Verbindung")}).</p>`; return; }
   if (!manuell) try { localStorage.setItem(TI_SEIT, new Date().toISOString()); } catch {}
@@ -17272,8 +17274,8 @@ async function bsAusTermin(bid) {
 const SM = { liste: null };
 const SM_ART = { bei_hansi: "🏠 bei Hansi", beim_mitglied: "🚗 Hansi kommt zu dir", wahl: "📍 du wählst: bei dir oder bei Hansi", egal: "Ort egal" };
 const SM_KEY = "kc_club_sm_hinweis";
-async function smLaden(oeffnen = false) { // 2.23.63: Fehler sichtbar – nie „keine Einladung“ anzeigen, wenn der Stand unbekannt ist
-  try { const r = await api("schulung_meine", { oeffnen }); SM.liste = r.einladungen || []; SM.fehler = !!r.unvollstaendig; } catch { SM.liste = SM.liste || []; SM.fehler = true; }
+async function smLaden(oeffnen = false, still = false) { // 2.23.63: Fehler sichtbar – nie „keine Einladung“ anzeigen, wenn der Stand unbekannt ist
+  try { const r = await api("schulung_meine", { oeffnen }, { still }); SM.liste = r.einladungen || []; SM.fehler = !!r.unvollstaendig; } catch { SM.liste = SM.liste || []; SM.fehler = true; }
   return SM.liste;
 }
 async function smStart() {
@@ -17354,7 +17356,7 @@ async function smHinweisPruefen() {
   if (!ICH || document.querySelector(".blatt:not(.versteckt)")) return;
   let ruhe = {}; try { ruhe = JSON.parse(lsLesen(SM_KEY) || "{}") || {}; } catch {}
   if (ruhe.heute === heuteIso() || Date.now() < Number(ruhe.bis || 0)) return;
-  const offen = (await smLaden()).filter((e) => e.status === "offen");
+  const offen = (await smLaden(false, true)).filter((e) => e.status === "offen"); // KC-CLUB-START-STILL
   if (!offen.length || document.querySelector(".blatt:not(.versteckt)")) return;
   const f = blattAuf("smHinweisBlatt", `<h3 style="margin:0">🎓 Du bist zur Schulung eingeladen</h3>
     <p style="margin:6px 0">Hansi zeigt dir die Programme des Clubs. Such dir einfach einen Termin aus – die Antwort ist bis ${esc(zeitKurz(offen[0].gueltig_bis))} möglich.</p>
@@ -17374,7 +17376,7 @@ async function scHinweisPruefen() {
   if (!ICH?.admin || document.querySelector(".blatt:not(.versteckt)")) return;
   let ruhe = {}; try { ruhe = JSON.parse(lsLesen(SCHU_KEY) || "{}") || {}; } catch {}
   if (ruhe.heute === heuteIso() || Date.now() < Number(ruhe.bis || 0)) return;
-  let r; try { r = await api("schulung_hinweis", { seit: lsLesen(SCHU_SEIT) || null }); } catch { return; }
+  let r; try { r = await api("schulung_hinweis", { seit: lsLesen(SCHU_SEIT) || null }, { still: true }); } catch { return; } // KC-CLUB-START-STILL
   if ((!r.wartet?.length && !r.neu?.length && !r.bald?.length) || document.querySelector(".blatt:not(.versteckt)")) return;
   const tag = (iso) => { const t = berlinIso(iso); return t === heuteIso() ? "Heute" : t === tagPlus(heuteIso(), 1) ? "Morgen" : fTag.format(new Date(iso)); };
   const f = blattAuf("scHinweisBlatt", `<h3 style="margin:0">🎓 Schulungen</h3>

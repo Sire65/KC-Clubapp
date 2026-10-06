@@ -716,7 +716,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 55. 0.33.0: drehende Kochmütze bei längeren Anfragen – nicht bei Hintergrund-Abfragen, immer wieder ausgeblendet
 {
   assert.ok(/id="warten"/.test(html) && /kc-kochmuetze-weiss\.webp" alt=""><\/div><b id="wartenText">/.test(html), "Kochmütze fehlt");
-  assert.ok(/const warte = wartenStart\(action, opt\.warten\);\s*try \{[^]{0,1400}\n  finally \{ if \(warte\) wartenEnde\(\); \}/ /* 2.0.0: api() etwas länger (Notbetrieb nur Lesen) */ /* 0.93.0: catch nur zum Protokollieren, wirft weiter */.test(html), "Kochmütze wird bei Fehlern nicht ausgeblendet");
+  assert.ok(/const warte = wartenStart\(action, opt\.warten(, opt\.still)?\);\s*try \{[^]{0,1400}\n  finally \{ if \(warte\) wartenEnde\(\); \}/ /* 2.0.0: api() etwas länger (Notbetrieb nur Lesen) */ /* 0.93.0: catch nur zum Protokollieren, wirft weiter */.test(html), "Kochmütze wird bei Fehlern nicht ausgeblendet");
   for (const a of ["online", "anruf_status", "unterhaltung", "protokoll_speichern", "init"]) assert.ok(new RegExp(`WARTEN_STILL = new Set\\([^)]*"${a}"`).test(html), `Hintergrund-Abfrage ${a} ließe die Mütze flackern`);
   assert.ok(/nachricht_senden: "Nachricht wird gesendet …"/.test(html), "Text beim Senden fehlt");
 }
@@ -951,8 +951,8 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 
 // 72. 0.51.0: Kochmütze auch bei „stillen“ Abfragen, wenn das Mitglied selbst etwas antippt (Hintergrund bleibt still)
 {
-  assert.ok(/function wartenStart\(action, erzwingen\) \{\s*if \(WARTEN_STILL\.has\(action\) && !erzwingen\) return false;/.test(html), "Erzwingen der Kochmütze fehlt");
-  assert.ok(/async function api\(action, daten = \{\}, opt = \{\}\) \{\s*const warte = wartenStart\(action, opt\.warten\);/.test(html), "api reicht warten nicht durch");
+  assert.ok(/function wartenStart\(action, erzwingen(, still)?\) \{\s*if \((still \|\| )?WARTEN_STILL\.has\(action\) && !erzwingen\) return false;/.test(html), "Erzwingen der Kochmütze fehlt");
+  assert.ok(/async function api\(action, daten = \{\}, opt = \{\}\) \{\s*const warte = wartenStart\(action, opt\.warten(, opt\.still)?\);/.test(html), "api reicht warten nicht durch");
   assert.ok(/api\("init", \{[^}]*\}, \{ warten: !!vonHand \}\)/.test(html), "Aktualisieren ohne Kochmütze"); // 2.22.12: init bekommt fotosSeit/dienstSeit
   assert.ok(/api\("wetter", \{\}, \{ warten: !!sichtbar \}\)/.test(html) && /wetterLaden\(erzwingen\)/.test(html), "Wetter ohne Kochmütze");
   assert.ok(/infoDatenLaden\(f, erzwingen\)/.test(html) && /const warte = sichtbar && wartenStart\(f\.id, true\)/.test(html) && /finally \{ if \(warte\) wartenEnde\(\); \}/.test(html), "Info-Karten ohne Kochmütze");
@@ -4031,7 +4031,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/Das ist eine gute Frage\./.test(k) && /Ich werde recherchieren und dir bei Gelegenheit eine Antwort zukommen lassen\./.test(k), "Twinkeys Antwort auf unbekannte Fragen");
   const aw = k.slice(k.indexOf("function twAntworten("), k.indexOf("function twNichtGefunden"));
   assert.ok(/if \(gefragt\) twWeitergeben\(fr\)/.test(aw) && /TW_TAKT=setTimeout\(twAntworten,450\)/.test(k), "weitergegeben wird nur nach ausdrücklichem „Fragen“, nicht beim Tippen");
-  assert.ok(/api\("twinkey_frage", \{ frage: fr \}\)/.test(k) && /api\("twinkey_daten"\)/.test(k) && /api\("twinkey_antworten", \{ id, antwort, kanaele/.test(k), "App ruft die Twinkey-Aktionen");
+  assert.ok(/api\("twinkey_frage", \{ frage: fr \}\)/.test(k) && /api\("twinkey_daten"(, \{\}, \{ still \})?\)/.test(k) && /api\("twinkey_antworten", \{ id, antwort, kanaele/.test(k), "App ruft die Twinkey-Aktionen");
   assert.ok(/TW_WEGE = \[\["app", "📱 In der Club-App"\], \["push", "🔔 Push"\], \["email", "✉️ E-Mail"\]\]/.test(k) && /🧠 Twinkey merkt sich das/.test(k), "Wege + Lernen");
   assert.ok(/id: "w:" \+ w\.id/.test(k) && /esc\(t\)\.replace\(\/\\n\/g, "<br>"\)/.test(k), "Gelerntes kommt in den Index, Antworttext wird maskiert");
   assert.ok(/h === "#twinkey"/.test(html) && /twAntwortPruefen\(\), 6000/.test(html), "Sprung aus Push/Mail + Hinweis beim Start");
@@ -4606,6 +4606,13 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/\.avatar\.k-online \{ animation: kOnlineAtem 3\.2s ease-in-out infinite; \}/.test(html) && /@keyframes kOnlineAtem \{/.test(html), "Online-Ring atmet");
   assert.ok(/\.kreislegende \.avatar\.k-online, :root\.ohne-anim \.avatar\.k-online \{ animation: none !important; \}/.test(html), "aus bei ohne Animation und in der Legende");
   assert.ok(!/@keyframes kOnlineAtem \{[^}]*transform/.test(html), "keine Bewegung, nur Leuchten");
+}
+// 2.24.5 KC-CLUB-START-STILL: Prüfungen nach dem Start zeigen keine drehende Kochmütze
+{
+  assert.ok(/function wartenStart\(action, erzwingen, still\) \{\n  if \(still \|\| WARTEN_STILL\.has\(action\) && !erzwingen\) return false;/.test(html) && /const warte = wartenStart\(action, opt\.warten, opt\.still\);/.test(html), "api kennt { still: true }");
+  for (const a of ["eingang_zahlen", "schulung_hinweis", "tagesinfo", "buero_start"]) assert.ok(new RegExp(`api\\("${a}"[^\\n]*\\{ still: true \\}`).test(html), `${a} beim Start still`);
+  assert.ok(/await twLaden\(true\); \/\/ KC-CLUB-START-STILL/.test(html) && /\(await smLaden\(false, true\)\)/.test(html), "Twinkey-/Schulungs-Hinweis still");
+  assert.ok(/await smLaden\(true\); smZeigen\(\);/.test(html), "von Hand geöffnet: Mütze wie bisher");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
