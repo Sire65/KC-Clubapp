@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.25.6"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.25.7"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SCHNELLSTART-DATEI (2.24.8, Hinweis Hansi „Start ist langsamer geworden“): das Programm liegt in app.js, damit das Handy es
 // fertig übersetzt behalten kann (statt bei jedem Öffnen 1,8 MB neu einzulesen). Seite und Programm müssen dieselbe Version haben
 // (AGENTS Regel 16, kein Mischstand): passt es nicht (z. B. alte Seite aus einem Zwischenspeicher), einmal frisch laden, sonst anhalten.
@@ -17833,7 +17833,8 @@ async function spurAdmin(tag, person) {
   let r; try { r = await api("spur_liste", { tag: SPW.tag, ...(SPW.person ? { person_id: SPW.person } : {}) }, { warten: true }); } catch (e) { return meldeFehler(e); }
   const tage = Array.from({ length: 30 }, (_, i) => new Intl.DateTimeFormat("sv-SE", { timeZone: TZ }).format(new Date(Date.now() - i * 86400000)));
   const tagText = (t) => (t === tage[0] ? "Heute" : t === tage[1] ? "Gestern" : t.slice(8) + "." + t.slice(5, 7) + ".");
-  const kopf = `<h3 style="margin:0">👣 Wege der Mitglieder</h3>
+  // KC-CLUB-SPUR-AKTUALISIEREN (2.25.7, Wunsch Hansi): ↻ oben rechts wie auf der Startseite – gleicher Tag/gleiche Person neu laden
+  const kopf = `<div class="spur-kopf"><h3 style="margin:0;flex:1">👣 Wege der Mitglieder</h3><button class="rund spur-neu" title="Aktualisieren" aria-label="Wege aktualisieren" onclick="spurNeu(this)">↻</button></div>
     <p class="hinweis" style="margin:0">Was geöffnet wurde und mit wem – mit Uhrzeit, <b>ohne Inhalte</b>. Nur du siehst das; nach 30 Tagen wird es gelöscht.</p>
     <select onchange="spurAdmin(this.value, null)" aria-label="Tag">${tage.map((t) => `<option value="${t}"${t === SPW.tag ? " selected" : ""}>${tagText(t)}</option>`).join("")}</select>`;
   const fuss = `<div class="knoepfe">${SPW.person ? `<button class="knopf" onclick="spurAdmin(null, null)">‹ Alle an diesem Tag</button>` : ""}<button class="knopf" onclick="nzAdmin()">‹ Nutzung</button></div>`;
@@ -17846,6 +17847,11 @@ async function spurAdmin(tag, person) {
   }
   $("adminBlattInhalt").innerHTML = kopf + inhalt + fuss;
   $("adminBlatt").classList.remove("versteckt");
+}
+async function spurNeu(k) {
+  if (k?.classList.contains("dreht")) return;
+  k?.classList.add("dreht");
+  try { await spurSenden(); await spurAdmin(SPW.tag, SPW.person); melde("↻ Wege aktualisiert"); } finally { k?.classList.remove("dreht"); }
 }
 const NZ_NAMEN = { start: "🏠 Startseite", hilfezentrum: "❓ Hilfe & Tipps", termine: "📅 Termine", nachrichten: "💬 Nachrichten (Liste)", chat: "💬 Unterhaltung geöffnet", neu: "✍️ Neue Nachricht",
   pinnwand: "📌 Pinnwand", fotos: "📷 Fotoalbum", mitglieder: "👥 Mitglieder", mitglied: "👤 Mitglied angesehen", einstellungen: "⚙️ Einstellungen", dienste: "🗓️ Dienstpläne",

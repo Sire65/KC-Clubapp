@@ -5324,3 +5324,10 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/#v-mitglieder \.kopf2 > \.mg-neu \{ margin-left: auto;/.test(html), "ganz rechts");
 }
 
+// 4xx. 2.25.7: ↻ bei „👣 Wege der Mitglieder“ (KC-CLUB-SPUR-AKTUALISIEREN, Wunsch Hansi „oben rechts wie auf der Startseite“)
+{
+  assert.ok(/<div class="spur-kopf"><h3 style="margin:0;flex:1">👣 Wege der Mitglieder<\/h3><button class="rund spur-neu" title="Aktualisieren" aria-label="Wege aktualisieren" onclick="spurNeu\(this\)">↻<\/button><\/div>/.test(html), "Knopf oben rechts");
+  const f = html.slice(html.indexOf("async function spurNeu(k)"), html.indexOf("const NZ_NAMEN = "));
+  assert.ok(/await spurSenden\(\); await spurAdmin\(SPW\.tag, SPW\.person\);/.test(f) && /finally \{ k\?\.classList\.remove\("dreht"\); \}/.test(f), "gleicher Tag/Person, eigene Schritte zuerst senden");
+}
+

@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.25.7 – 2026-10-06 – KC-CLUB-SPUR-AKTUALISIEREN: ↻ bei „👣 Wege der Mitglieder“ (Wunsch Hansi)
+- Admin → 📊 Nutzung → 👣 Wege der Mitglieder: runder ↻-Knopf oben rechts wie auf der Startseite. Lädt denselben Tag (und, falls offen, dieselbe Person) neu; vorher werden die eigenen noch nicht gesendeten Schritte übertragen. Dreht sich beim Laden.
+- Hinweis: Die Apps der Mitglieder senden ihre Schritte gesammelt alle 2 Minuten (und beim Verlassen der App) – ganz frische Schritte erscheinen erst danach.
+- Server unverändert (kc-club bleibt 2.25.5).
+
 ## 2.25.6 – 2026-10-06 – KC-CLUB-MG-AKTUALISIEREN: ↻ auf der Mitglieder-Seite (Wunsch Hansi)
 - 👥 Mitglieder: oben rechts ein runder ↻-Knopf wie auf der Startseite. Holt den Online-Stand und die Mitgliederliste neu (Status, LED, „online seit“, „zuletzt online“) – gilt für Kacheln, Liste und Anwesenheitstafel. Dreht sich, solange geladen wird.
 - Server unverändert (kc-club bleibt 2.25.5).
