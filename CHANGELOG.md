@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.24.1 – 2026-10-06 – ✨ Animierte Knöpfe an/aus (Wunsch Hansi)
+- KC-CLUB-ANIMATION-SCHALTER: Einstellungen → 🎨 Darstellung → „✨ Animierte Knöpfe“ (Standard an, je Gerät). Aus: Kacheln öffnen ohne Zoom sofort, Reiter-Rahmen läuft nicht, „＋ Neu“ leuchtet nicht auf. Tipp/Hilfe „Ruhige oder lebendige Knöpfe“. Nur App.
+
 ## 2.24.0 – 2026-10-06 – 📋 Meine Gruppen + gemeinsame Gruppen (Wunsch Hansi)
 - KC-CLUB-GRUPPEN-UEBERSICHT: bei 👥 Mitglieder neben den Gruppen „📋 Übersicht“ (alle eigenen Gruppen mit Mitgliedern, 💬 Zum Gruppen-Chat, 👥 Als Liste); auf der eigenen Mitglieds-Seite „📋 Meine Gruppen“; bei anderen „👥 Gemeinsame Gruppen“. Gezeigt werden nur Gruppen, in denen man selbst ist – private Gruppen anderer bleiben privat. Nur App.
 

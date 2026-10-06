@@ -1483,6 +1483,9 @@
   @keyframes neuPuls { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0), 0 0 0 0 rgba(255, 213, 79, 0); }
     50% { box-shadow: 0 0 0 3px rgba(255, 255, 255, .95), 0 0 0 7px rgba(255, 213, 79, .9), 0 0 18px 8px rgba(255, 213, 79, .55); } }
   .knopf.neu-puls { animation: neuPuls 1.3s ease-in-out 3; position: relative; z-index: 1; }
+  /* 2.24.1 (Wunsch Hansi): „✨ Animierte Knöpfe“ aus → kein Zoom, keine laufenden Reiter-Rahmen, kein Aufleuchten von „＋ Neu“ */
+  :root.ohne-anim .zoomt { animation: none !important; transform: none !important; box-shadow: none !important; } /* „＋ Neu“: neuPulsieren() fragt die Einstellung selbst */
+  :root.ohne-anim .register button.reg-lauf .reg-rahmen rect { animation: none !important; stroke-dasharray: none !important; }
   /* KC-CLUB-AVATAR-ABZEICHEN (2.23.89, Wunsch Hansi): Zustand als Abzeichen unten rechts – auch mit Figur/Foto gut sichtbar */
   .avatar .k-abz { position: absolute; right: -3px; bottom: -3px; width: 38%; height: 38%; min-width: 13px; min-height: 13px; max-width: 24px; max-height: 24px; border-radius: 50%;
     border: 2px solid var(--karte); box-sizing: border-box; display: grid; place-items: center; color: #fff; font-size: 10px; font-weight: 900; font-style: normal; line-height: 1; }
@@ -2618,6 +2621,7 @@
     <details class="karte" data-klappe="darstellung">
       <summary>🎨 Darstellung</summary>
       <div class="schalter"><div><b>🔠 Große Schrift</b></div><input type="checkbox" id="setGross" onchange="einstellung('gross', this.checked)"></div>
+      <div class="schalter"><div><b>✨ Animierte Knöpfe</b><div class="hinweis">Kacheln zoomen kurz beim Antippen, Reiter und „＋ Neu“ leuchten auf – aus: alles ruhig</div></div><input type="checkbox" id="setAnimiert" onchange="einstellung('animiert', this.checked)"></div> <!-- 2.24.1 (Wunsch Hansi) -->
       <div style="margin-top:8px"><b>🌗 Tag- und Nachtmodus</b></div>
       <div class="umschalter modus3" id="modusWahl"><button data-m="auto" onclick="modusWaehlen('auto')">🔄 Automatisch</button><button data-m="tag" onclick="modusWaehlen('tag')">☀️ Immer Tag</button><button data-m="nacht" onclick="modusWaehlen('nacht')">🌙 Immer Nacht</button></div>
       <p class="hinweis" id="modusInfo" style="margin-top:-4px"></p>
@@ -2987,7 +2991,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.24.0"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.24.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3038,7 +3042,7 @@ const AV_BG = ["#741521", "#1d4f91", "#2e7d4f", "#6d4aa3", "#b8860b", "#00796b",
 const AV_TUCH = ["#c8102e", "#ffcc00", "#e8792b", "#2e7d4f", "#1d4f91", "#741521", "#ffffff", "#6d4aa3"];
 // ---------- KC-CLUB-NEU-PULS (2.23.91, Wunsch Hansi): beim Betreten einer Seite pulsiert der „＋ Neu“-Knopf oben 3× mit hellem Rand ----------
 function neuPulsieren(v) {
-  if (aktuelleAnsicht !== v) return;
+  if (aktuelleAnsicht !== v || !einst("animiert", true)) return; // 2.24.1: „✨ Animierte Knöpfe“ aus
   const k = [...document.querySelectorAll(`#v-${v} .kopf2 .knopf.haupt`)].find((b) => b.offsetParent && /＋|\bNeu\b/.test(b.textContent || ""));
   if (!k) return;
   k.classList.remove("neu-puls"); void k.offsetWidth; k.classList.add("neu-puls");
@@ -3374,6 +3378,7 @@ function anwendenDesign() {
   const nacht = istNacht(), f = designAktuell()[nacht ? "nacht" : "tag"], w = document.documentElement;
   w.classList.toggle("dunkel", nacht);
   w.classList.toggle("gross", einst("gross", false));
+  w.classList.toggle("ohne-anim", !einst("animiert", true)); // 2.24.1: „✨ Animierte Knöpfe“ (Standard an)
   // eigener Kopf-Verlauf (Disko, Regenbogen) – sonst der Standard-Verlauf aus hero1/rot/rot2/hero4
   const dv = designAktuell(); if (dv.verlauf) w.style.setProperty("--heroverlauf", dv.verlauf[nacht ? "nacht" : "tag"]); else w.style.removeProperty("--heroverlauf");
   w.classList.toggle("heroschrift", !!dv.heroSchrift); w.classList.toggle("schwarzlicht", !!dv.schwarzlicht);
@@ -3386,7 +3391,7 @@ function anwendenDesign() {
   const MODUS_ZEICHEN = { auto: ["A", "Automatik"], tag: ["T", "Immer Tag"], nacht: ["N", "Immer Nacht"] }, mz = MODUS_ZEICHEN[DS.modus] || MODUS_ZEICHEN.auto;
   if ($("modusKnopf")) { $("modusKnopf").innerHTML = `${nacht ? "☀️" : "🌙"}<span class="modusbuchstabe" aria-hidden="true">${mz[0]}</span>`;
     $("modusKnopf").title = `Tag/Nacht umschalten – eingestellt: ${mz[1]}`; $("modusKnopf").setAttribute("aria-label", `Tag/Nacht umschalten, eingestellt: ${mz[1]}`); }
-  $("setFeiertage").checked = einst("feiertage", true); $("setGross").checked = $("setGrossE").checked = einst("gross", false); $("setTon").checked = einst("ton", true);
+  $("setFeiertage").checked = einst("feiertage", true); $("setGross").checked = $("setGrossE").checked = einst("gross", false); $("setAnimiert").checked = einst("animiert", true); $("setTon").checked = einst("ton", true);
   designWahlZeigen();
 }
 function designWahlZeigen() {
@@ -4318,6 +4323,7 @@ const HILFE = [
   { id: "mitglieder_fragen", thema: "start", sym: "👥", t: "Andere Mitglieder um Rat fragen", x: "Weiß Twinkey nicht weiter, stellst du die Frage den Mitgliedern: bei <b>„🧑‍🍳 Frag Twinkey“</b> unter dem Fragefeld auf <b>„👥 Lieber ein Mitglied fragen“</b> – an alle oder an ausgewählte, per App, Push oder E-Mail. Die Antworten siehst du dort unter „Deine Fragen an Mitglieder“.", zeig: () => twFrageStart(), seit: "2.23.51" },
   { id: "anfrage_vorbehalt", thema: "termine", sym: "🤔", t: "Gegenvorschlag unter Vorbehalt annehmen", x: "Schlägt dir jemand eine andere Zeit vor, kannst du <b>„✅ Neue Zeit annehmen“</b>, <b>„🤔 Unter Vorbehalt“</b> oder <b>„❌ Passt nicht“</b> wählen. Beim Vorbehalt schreibst du kurz dazu, woran es noch hängt – der andere sieht es sofort.", zeig: () => zeige("termine"), seit: "2.23.57" },
   { id: "sprungknopf", thema: "nachrichten", sym: "🔘", t: "Einen Knopf in die Nachricht setzen", x: "Willst du jemanden direkt an eine Stelle der App schicken? Unter dem Schreibfeld auf <b>📎</b> → <b>„🔘 Knopf zu einer App-Stelle“</b> und das Ziel wählen, z. B. „Mein Bild wählen“. In der Nachricht erscheint ein Knopf – antippen, und man ist dort.", zeig: () => zeige("nachrichten"), seit: "2.23.97" },
+  { id: "animiert", thema: "darstellung", sym: "✨", t: "Ruhige oder lebendige Knöpfe", x: "Kacheln zoomen kurz beim Antippen, die Reiter bekommen einen laufenden Rahmen und „＋ Neu“ leuchtet auf. Wer es lieber ruhig mag: ⚙️ → „🎨 Darstellung“ → <b>„✨ Animierte Knöpfe“</b> ausschalten. Gilt für dieses Gerät.", zeig: () => einstiegHin("darstellung", "setAnimiert"), seit: "2.24.1" },
   { id: "kacheln_klein", thema: "darstellung", sym: "🔲", t: "Kacheln kleiner – 3 nebeneinander", x: "Mehr Kacheln auf einen Blick: Bei ⚙️ → <b>„🎨 Darstellung“</b> → <b>„🔲 Kacheln auf der Startseite“</b> „Klein“ wählen – dann passen 3 nebeneinander. Das geht nur in der <b>erweiterten Ansicht</b> – in der einfachen Ansicht bleiben die Kacheln groß. Gilt nur für dieses Gerät.", zeig: () => einstiegHin("darstellung", "kachelGroesseWahl"), seit: "2.23.90" },
 ];
 const HZ = { thema: null, q: "", vorher: null, gruss: 0, unterwegs: null, herkunft: null, sicht: null };
@@ -9369,7 +9375,7 @@ function register(r, richtung) {
 const ZOOM_ZIELE = ".kachel, .mini-kachel, .bu-ordner, .bu-ding, .kacheln3 .mini, .ordner";
 document.addEventListener("click", (e) => {
   const el = e.target.closest?.(ZOOM_ZIELE);
-  if (!el || el.dataset.zoomLos || e.defaultPrevented || el.disabled || kaBearb || ZIEHEN || zogGerade) return;
+  if (!el || el.dataset.zoomLos || e.defaultPrevented || el.disabled || kaBearb || ZIEHEN || zogGerade || !einst("animiert", true)) return; // 2.24.1: ohne Animation sofort öffnen
   const innen = e.target.closest("button, a, input, select, textarea, label, summary"); if (innen && innen !== el && el.contains(innen)) return;
   e.preventDefault(); e.stopImmediatePropagation();
   el.classList.add("zoomt");

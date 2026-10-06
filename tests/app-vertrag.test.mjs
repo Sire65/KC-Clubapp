@@ -2965,7 +2965,7 @@ assert.ok(/<h2>🗂️ Büro<\/h2><span class="bu-kopfgruss" id="buKopfGruss"><\
 // 265. 1.85.0: Zoom beim Öffnen
 {
   assert.ok(/@keyframes zoomOeffnen/.test(html) && /const ZOOM_ZIELE = "\.kachel, \.mini-kachel, \.bu-ordner, \.bu-ding, \.kacheln3 \.mini, \.ordner";/.test(html), "Zoom-Ziele");
-  assert.ok(/if \(!el \|\| el\.dataset\.zoomLos \|\| e\.defaultPrevented \|\| el\.disabled \|\| kaBearb \|\| ZIEHEN \|\| zogGerade\) return;/.test(html), "nicht beim Anordnen/Ziehen");
+  assert.ok(/if \(!el \|\| el\.dataset\.zoomLos \|\| e\.defaultPrevented \|\| el\.disabled \|\| kaBearb \|\| ZIEHEN \|\| zogGerade( \|\| !einst\("animiert", true\))?\) return;/.test(html), "nicht beim Anordnen/Ziehen (2.24.1: und nicht bei ausgeschalteter Animation)");
   assert.ok(html.indexOf("const ZOOM_ZIELE") > html.indexOf('document.addEventListener("click", (e) => { if (unterdruecken'), "Zoom-Abfang nach den Zieh-Sperren registriert");
 }
 // 266. 1.86.0: Einleitung für Vereinsordner (Chronik)
@@ -4572,6 +4572,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const f = html.slice(html.indexOf("async function mgGemeinsameZeigen"), html.indexOf("async function mgGemeinsameZeigen") + 700);
   assert.ok(/\(await mgGruppenLaden\(\)\)\.filter\(\(g\) => g\.personen\.includes\(pid\)\)/.test(f), "gemeinsam = aus meinen eigenen Gruppen (keine fremden privaten Gruppen)");
   assert.ok(/m\.selbst \? `<div style="margin-top:6px"><button class="knopf klein" onclick="mgGruppenUebersicht\(\)">📋 Meine Gruppen<\/button><\/div>` : '<div id="mgGemeinsam"><\/div>'/.test(html), "eigene Seite: Meine Gruppen, sonst gemeinsame");
+}
+
+// 451. 2.24.1: „✨ Animierte Knöpfe“ in Einstellungen → Darstellung, Standard an (Wunsch Hansi)
+{
+  assert.ok(/id="setAnimiert" onchange="einstellung\('animiert', this\.checked\)"/.test(html) && /\$\("setAnimiert"\)\.checked = einst\("animiert", true\)/.test(html), "Schalter, Standard an");
+  assert.ok(/w\.classList\.toggle\("ohne-anim", !einst\("animiert", true\)\)/.test(html), "Klasse am Dokument");
+  assert.ok(/zogGerade \|\| !einst\("animiert", true\)\) return;/.test(html) && /if \(aktuelleAnsicht !== v \|\| !einst\("animiert", true\)\) return;/.test(html), "ohne Animation: kein Zoom (sofort öffnen), kein Aufleuchten");
+  assert.ok(/:root\.ohne-anim \.register button\.reg-lauf \.reg-rahmen rect \{ animation: none !important;/.test(html), "Reiter-Rahmen ruhig");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
