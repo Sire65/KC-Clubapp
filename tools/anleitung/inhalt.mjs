@@ -1,5 +1,5 @@
 // Inhalt der Club-App-Anleitung (Texte). Bilder: bild/<name>.png (ganze Seite) und bild/s-<name>.png (Ausschnitt).
-export const VERSION = { anleitung: 6, app: "2.23.95", stand: "06.10.2026" };
+export const VERSION = { anleitung: 7, app: "2.24.15", stand: "06.10.2026" };
 export const INHALT = [
   ["So fängst du an", "in 5 Schritten"], ["1. Startseite", "einfache Ansicht – das Wichtigste auf einen Blick"], ["2. Erweiterte Ansicht", "alle Funktionen, Anzeigen im Kopf"],
   ["3. Nachrichten", "Chats, Schreiben, Diktieren, wichtige Nachrichten, Chats archivieren"], ["4. Termine", "zu- und absagen, Mitfahren, Kalender, Terminanfragen mit Erinnerung"], ["5. Mitglieder", "wer ist online, Status, Kontakt, Anklopfen"],
@@ -9,12 +9,13 @@ export const INHALT = [
   ["14. Spiele", "Tic-Tac-Toe, Schach, Bauernskat, Küchenterror – gegen Computer oder Mitglieder"], ["15. Hilfe & Tipps", "das „?“, Hilfe-Zentrum, „Kurz erklärt“"],
   ["16. Dienstwünsche", "mit Twinkey eintragen, leerer Wunschbogen zum Ausdrucken"], ["17. Meine Daten haben sich geändert", "neue Anschrift, Handynummer & Co. melden"],
   ["18. Neu in Version 6", "Mein Bild, Anwesenheitstafel, Anrufen von der Kachel, mehr am Pfeil, Mein Dienst, Meine Daten und mehr"],
+  ["19. Neu in Version 7", "Meldung beim Öffnen, weniger Fenster, Gruppen-Admins, Bauernskat nach Köcheclub-Regeln und mehr"],
 ];
 export const GUT_ZU_WISSEN = [
   "<b>Gut zu wissen:</b> Alle Bilder zeigen <b>Beispieldaten</b> – Namen wie „Max Mustermann“ und alle Telefonnummern sind erfunden. In deiner App stehen die echten Mitglieder und Termine.",
   "Die App hat eine <b>einfache</b> und eine <b>erweiterte Ansicht</b> – Umschalten geht jederzeit (Teil 1 und 2).",
   "Die Farben kannst du in den Einstellungen ändern („Lieblingsfarbe“) – es gibt jetzt <b>22 Farbschemen</b>. Die Bilder zeigen „Köcheclub Klassik“ am Tag.",
-  "<b>Neu in Version 6</b> – alles in <b>Teil 18</b>: 🧑‍🍳 Mein Bild, 📋 Anwesenheitstafel, 📞/🎥 direkt von der Mitglieder-Kachel, ✂️ mehr am Pfeil einer Nachricht, 🖨️ ganzen Chat drucken, 🗓️ Mein Dienst, 🔐 Meine Daten, ✅ grüner Haken in langen Fenstern und mehr.",
+  "<b>Neu in Version 7</b> – alles in <b>Teil 19</b>: 👋 beim Öffnen auf einen Blick, was neu ist, weniger Fenster, 👑 Gruppen-Admins und 📋 Meine Gruppen, 🃏 Bauernskat nach Köcheclub-Regeln, ✨ Animierte Knöpfe an/aus, 🎤 Diktieren in mehr Feldern und mehr. Was in Version 6 dazukam, steht in <b>Teil 18</b>.",
   "<b><u>Beachte:</u></b> Die Club-App ist noch eine Beta-Version. Einige Funktionen können sich mit der Zeit noch ändern, weil ständig weiterentwickelt wird.",
 ];
 export const START_SCHRITTE = [
@@ -101,13 +102,13 @@ export const TEILE = [
         text: "Mitglieder können dich zu einem Termin <b>anfragen</b> (Liste oben: „📨 Terminanfragen“) – du antwortest mit ✅ Ja, 🤔 Vielleicht oder ❌ Nein. Danach fragt die App, ob und wie du <b>erinnert</b> werden möchtest. Die Erinnerung gilt nur für dich. Abgesagte Anfragen stehen blass mit „🚫 abgesagt“ da.",
         abschnitte: [{ nr: "+", titel: "Die Anfrage in der Liste", zeilen: [["s-terminanfrage", "Terminanfrage", "Wer angefragt hat, wann und wo, deine Antwort und wer schon zugesagt hat. <b>⏰ Einstellen</b> ändert deine Erinnerung.", "neu"]] }] }] },
   { titel: "5. Mitglieder", unter: "Wer ist online, Status, Kontakt, Anklopfen", bild: "mitglieder",
-    legende: [["Mein Status", "eigenen Status ändern"], ["Kacheln / Liste", "Ansicht umschalten"], ["Alle", "alle Mitglieder"], ["Online", "nur wer gerade da ist"], ["Gruppen", "nach Gruppe filtern"], ["Zeichen", "online · heute da · abwesend · noch nie"], ["Du", "deine eigene Kachel"], ["Online", "grüner Ring = gerade in der App"], ["Chat 💬", "sofort schreiben"], ["Anklopfen 👋", "kurz Bescheid geben, dass du sprechen möchtest"]],
+    legende: [["Mein Status", "eigenen Status ändern"], ["Kacheln / Liste", "Ansicht umschalten"], ["Alle", "alle Mitglieder"], ["Online", "nur wer gerade da ist"], ["Gruppen", "nach Gruppe filtern"], ["Zeichen", "online · heute da · abwesend · noch nie"], ["Du", "deine eigene Kachel"], ["Online", "grüner Ring (pulsiert langsam) = gerade in der App"], ["Chat 💬", "sofort schreiben"], ["Anklopfen 👋", "kurz Bescheid geben, dass du sprechen möchtest"]],
     text: "Eine Kachel antippen zeigt Telefon, Mail und Adresse – soweit das Mitglied sie freigegeben hat. <b>Anklopfen 👋</b> geht nur, wenn der andere gerade online ist. Er kann annehmen oder kurz antworten („Bin beschäftigt“). Nach einer Minute fragt die App, ob du weiter anklopfen, eine Nachricht senden oder auflegen möchtest. Die Mitglieder-Kachel oben im Kopf öffnet direkt <b>nur die Online-Mitglieder</b>; „👥 Alle“ schaltet um. <b>Neu:</b> Bilder, 📞/🎥 auf der Kachel und die 📋 Anwesenheitstafel – siehe Teil 18." },
   { titel: "6. Pinnwand", unter: "Kurze Zettel für alle oder einzelne", bild: "pinnwand",
     legende: [["＋ Zettel", "neuen Zettel anheften (bis zu 4)"], ["Hinweis", "ein wichtiger Zettel wartet auf dich"], ["Wichtig", "rot umrandet"], ["Antworten", "auf den Zettel antworten"], ["✓ erl.", "als erledigt abhaken"], ["Gelesen", "wer deinen Zettel gelesen hat"], ["Abnehmen", "eigenen Zettel entfernen"]],
-    text: "Zettel sind für <b>alle</b>, nur <b>für dich</b> oder für <b>bestimmte Personen</b>. Wer einen neuen Zettel bekommt, sieht ihn beim Öffnen der App. Jeder darf höchstens 4 Zettel gleichzeitig anheften.",
+    text: "Zettel sind für <b>alle</b>, nur <b>für dich</b> oder für <b>bestimmte Personen</b>. Neue Zettel siehst du beim Öffnen der App in der Meldung <b>„👋 Schön, dass du da bist“</b> – ein Tipp auf <b>„📌 Pinnwand-Eintrag ansehen“</b> zeigt sie (Teil 19). Hast du diese Meldung ausgeschaltet, geht der neue Zettel direkt auf. Jeder darf höchstens 4 Zettel gleichzeitig anheften.",
     weiter: [{ bild: "pinnwand-hilfe", titel: "Hilfe-Aushang und Emojis", legende: [["Hilfe gesucht", "grüner Aushang – jemand sucht Helfer"], ["Ansehen & antworten", "öffnet die Zusammenfassung (Teil 12)"], ["Zettel mit Emojis", "z. B. Gute Besserung 🤒💐"]],
-      text: "Offene Hilfe-Aufrufe hängen als <b>grüner Aushang</b> vorne an der Pinnwand. Ist ein neuer Aufruf da, geht beim Öffnen der App einmal die Pinnwand mit dem Hinweis „🙋 Es wird Hilfe gesucht“ auf. Der Aushang zählt nicht zu deinen 4 Zetteln.",
+      text: "Offene Hilfe-Aufrufe hängen als <b>grüner Aushang</b> vorne an der Pinnwand. Ist ein neuer Aufruf da, geht beim Öffnen der App einmal die Pinnwand mit dem Hinweis „🙋 Es wird Hilfe gesucht“ auf – kam beim Öffnen schon eine andere Meldung, findest du den Aushang einfach an der Pinnwand. Der Aushang zählt nicht zu deinen 4 Zetteln.",
       abschnitte: [{ nr: 3, titel: "Emojis auf Zetteln", zeilen: [["s-pw-emoji", "Emojis einfügen", "Unter dem Textfeld eine Reihe für typische Anlässe: 🤒 💐 🍀 💪 ❤️ 🙏 🤗 🎂 🎉 👍 ☀️ 🍲 – antippen setzt das Emoji an die Stelle, an der du schreibst. <b>„😊 Mehr“</b> öffnet die volle Auswahl wie im Chat."]] }] }] },
   { titel: "7. SOS – Notfall", unter: "Notrufnummern, Notfallpass, Kontakte", bild: "sos",
     legende: [["Lebensgefahr", "sofort 112 anrufen"], ["112", "Feuerwehr und Rettungsdienst"], ["110", "Polizei"], ["Weitere Nummern", "Bereitschaftsdienst, Giftnotruf, Apotheke, Seelsorge …"]],
@@ -119,11 +120,12 @@ export const TEILE = [
   { titel: "8. Einstellungen", unter: "Sprachansagen, Farbschemen, Benachrichtigungen, Privatsphäre – unten über „Mehr“", bilderReihe: ["s-ansagen-zeilen", "s-sprachansagen", "einst-farben"],
     abschnitte: [
       { nr: 1, titel: "Ansagen, Töne & Tipps", zeilen: [
-        [null, "💡 Tipp des Tages", "Beim Öffnen ab und zu ein kurzer Tipp. „👉 Ja, zeig mir wo“ führt direkt zur passenden Stelle."],
+        [null, "💡 Tipp des Tages", "Beim Öffnen <b>höchstens einmal in der Woche</b> ein kurzer Tipp. „👉 Ja, zeig mir wo“ führt direkt zur passenden Stelle."],
         [null, "🗣️ Sprachansagen", "Unter <b>„Auswählen“</b> kreuzt du an, was dein Handy ansagen soll: <b>wer online kommt</b>, neue Nachrichten, Anklopfen, Pinnwand, Helfen/Leihen/Börse, Mitfahrt, Standort mit Entfernung (Luftlinie) und Termine. <b>▶</b> spielt ein Beispiel, z. B. „Christina hat dir ein Post-it an die Pinnwand gehängt“. Am Anfang sind nur Nachrichten und Anklopfen an."],
         [null, "Wer kommt, wer geht", "Neu ankreuzbar: <b>„🚪 Jemand verlässt die App“</b> („Klaus hat die Club-App verlassen“). Kommen mehrere gleichzeitig online, gibt es <b>eine</b> Ansage – bei mehr als 3: „5 Clubkameradinnen und Kameraden sind gerade online“."],
         [null, "Wann spricht das Handy?", "Nur, solange die Köcheclub-App <b>offen</b> ist – nicht in deiner Ruhezeit und nicht für den Chat, den du gerade offen hast. Ist die App zu oder im Hintergrund, kommt der normale Push mit Ton (Android und iPhone erlauben Web-Apps im Hintergrund keine Sprache)."],
         [null, "🖍️ Tippfehler rot unterstreichen", "„Prüfen“ zeigt einen Testsatz mit zwei Fehlern und – passend zu deinem Handy – wie du die Rechtschreibprüfung einschaltest."],
+        [null, "👋 Beim Öffnen zeigen, was neu ist", "Zeigt beim Öffnen auf einen Blick neue Nachrichten, Pinnwand-Einträge und wartende Spiele (Teil 19). Haken weg = aus."],
         [null, "🎤 Mikrofon im Chat", "Jedes Mal fragen, immer Sprachnachricht oder immer Diktieren."],
         [null, "🔊 Neue Nachrichten vorlesen", "Liest neue Nachrichten im offenen Chat vor (wie der Lautsprecher im Chat)."]] },
       { nr: 2, titel: "Benachrichtigungen", zeilen: [
@@ -134,6 +136,7 @@ export const TEILE = [
         [null, "Anklopfen erlauben", "Ob andere bei dir anklopfen dürfen, wenn du online bist."],
         [null, "Geburtstag, Kontaktdaten", "Was andere von dir sehen dürfen – nichts wird ohne dein Einverständnis gezeigt."]] },
       { nr: 4, titel: "Darstellung", zeilen: [[null, "Lieblingsfarbe und Ansicht", "Farbe der App, Tag/Nacht und einfache oder erweiterte Ansicht."],
+        [null, "✨ Animierte Knöpfe", "An: Kacheln zoomen kurz beim Antippen, Reiter und „＋ Neu“ leuchten auf, der Online-Ring pulsiert. Aus: alles bleibt ruhig. Zu finden in der <b>erweiterten Ansicht</b> unter ⚙️ → 🎨 Darstellung; gilt für dieses Gerät.", "neu"],
         [null, "🎨 Weitere Farbschemen", "Unter den 8 bekannten Farben klappt „Weitere Farbschemen“ 8 ruhige Töne auf: Toskana, Weinberg, Salbei, Lavendel, Ocker, Schokolade, Petrol, Rosé."],
         ["s-farben-bunt", "✨ Ausgefallene Farbschemen", "6 Schemen mit Farbverlauf oben: Sonnenuntergang, Polarlicht, Kirschblüte, Tiefsee, Glut, Retro 70er. Antippen – die App färbt sich sofort um."]] },
       { nr: 5, titel: "Über die App", zeilen: [["s-ueber-app", "👨‍🍳 Über die App", "Wer die Club-App gebaut hat – mit Foto und Lebenslauf. Unter <b>⚙️ Mehr → ℹ️ App-Info → „Über den Entwickler“</b> (einfache Ansicht: „👨‍🍳 Über die App“). Mit <b>💬 Hansi schreiben</b> erreichst du ihn direkt.", "neu"]] },
@@ -161,7 +164,7 @@ export const TEILE = [
       text: "Blättern geht in jedem Ordner im Archiv – Fotos, PDF und Dokumente erscheinen als Seiten." }] },
   { titel: "12. Helfen & Leihen", unter: "Hilfe suchen, helfen, „nach Absprache“ – über die Kachel „🤝 Helfen & Leihen“", bild: "hilfe-form",
     legende: [["Wobei?", "Art der Hilfe – bei „Sonstiges“ kurz eintragen"], ["Nach Absprache", "kein fester Tag – ihr macht den Termin miteinander aus"], ["Egal wie viele", "keine Grenze, jede Zusage zählt"]],
-    text: "„🙋 Ich suche Hilfe“ öffnet dieses Formular. Bei <b>„📅 Bestimmter Tag“</b> wählst du Tag und Zeit, bei <b>„🤝 Nach Absprache“</b> bleibt der Aufruf 30 Tage offen. Alle Mitglieder bekommen eine Mitteilung und sehen den Aushang an der Pinnwand.",
+    text: "„🙋 Ich suche Hilfe“ öffnet dieses Formular. Bei <b>„📅 Bestimmter Tag“</b> wählst du Tag und Zeit, bei <b>„🤝 Nach Absprache“</b> bleibt der Aufruf 30 Tage offen. Bei <b>„📣 Wie möchtest du es veröffentlichen?“</b> wählst du selbst: <b>📌 Pinnwand</b> (grüner Aushang), <b>🔔 Push</b> und/oder <b>✉️ E-Mail</b> – mehrere gehen. Wählst du nichts, steht der Aufruf nur unter Helfen &amp; Leihen.",
     abschnitte: [{ nr: 4, titel: "Beschreibung", zeilen: [["s-hilfe-text", "Was genau?", "Großes Textfeld (bis 1000 Zeichen): was zu tun ist, was man mitbringen soll, wie man dich erreicht."]] }],
     weiter: [{ bild: "hilfe-kurz", titel: "Einen Aufruf antippen", legende: [["Wer sucht", "Name"], ["Wobei", "was gebraucht wird"], ["Wann", "Tag oder „nach Absprache“"], ["Gesucht", "wie viele, wie viele schon dabei"], ["Beschreibung", "die Einzelheiten"], ["Ja, ich kann helfen", "zusagen"], ["Kann nicht", "absagen"], ["Mehr Details", "Nachricht an die Person, die sucht"]],
       text: "Du siehst nur die <b>Zusammenfassung</b> – keine Eingabefelder. „❓ Ich brauche noch mehr Details“ öffnet eine Nachricht mit vorbereitetem Anfang. Antworten kannst du später zurücknehmen.",
@@ -178,7 +181,7 @@ export const TEILE = [
       [null, "Einrichtungskarte", "Die Clubleitung kann dir eine Karte mit QR-Code ausdrucken: Kamera draufhalten, Link antippen – die App führt dich Schritt für Schritt. Kommt der Link aus WhatsApp oder Google Lens, sagt die App zuerst „In Safari/Chrome öffnen“."],
       [null, "Updates und Startprobleme", "Neue Versionen kommen von selbst: Holst du die App zurück und tippst gerade nichts, aktualisiert sie sich kurz. Startet sie einmal nicht, erscheint nach 12 Sekunden Hilfe mit „🧹 Speicher der App leeren“ – deine Anmeldung bleibt erhalten."]] }] },
   { titel: "14. Spiele", unter: "Köcheclub Edition – gegen den Computer oder gegen Mitglieder", bild: "spiele",
-    legende: [["Tic-Tac-Toe", "🍅 gegen 🥦 – drei (bei 4 × 4 vier) in einer Reihe"], ["Schach", "mit der Küchenbrigade: Küchenchef = König, Kaltmamsell = Dame …"], ["Bauernskat", "zu zweit mit französischem Blatt"], ["Küchenterror", "Küchenquiz auf Zeit – 20, 15 oder 10 Sekunden je Frage"]],
+    legende: [["Tic-Tac-Toe", "🍅 gegen 🥦 – drei (bei 4 × 4 vier) in einer Reihe"], ["Schach", "mit der Küchenbrigade: Küchenchef = König, Kaltmamsell = Dame …"], ["Bauernskat", "zu zweit mit französischem Blatt – nach Köcheclub-Regeln (Teil 19)"], ["Küchenterror", "Küchenquiz auf Zeit – 20, 15 oder 10 Sekunden je Frage"]],
     text: "Die Kachel <b>🎲 Spiele</b> findest du im Register <b>Club</b>. Tippe auf ein Spiel und wähle <b>🤖 Gegen den Computer</b> (mit Stärke) oder <b>👥 Gegen Mitglieder</b>.",
     abschnitte: [{ nr: "+", titel: "Spielen", zeilen: [
       ["s-ttt", "Tic-Tac-Toe", "Feld antippen – dann ist der andere dran. Wer zuerst eine Reihe hat, gewinnt.", "neu"],
@@ -186,7 +189,7 @@ export const TEILE = [
       [null, "⏸ Pause", "In jedem Spiel: „⏸ Pause“ hält an, „▶ Weiter“ geht genau dort weiter.", "neu"],
       [null, "⏱️ Schachuhr", "Bedenkzeit 5, 10 oder 15 Minuten je Spieler – oben bei „⏱️ Uhr“ oder beim Herausfordern („⏱️ Live“). Nach jedem Zug hält deine Uhr an und die des Gegners läuft; in der letzten Minute wird sie rot. Wer keine Zeit mehr hat, verliert.", "neu"]] }],
     weiter: [{ bild: "spiele-mg", titel: "Gegen Mitglieder und der Pokal", legende: [],
-      text: "<b>🎲 Jemanden herausfordern</b>: Mitglied wählen – es bekommt eine Mitteilung und kann annehmen. Ihr zieht abwechselnd, du bekommst Bescheid, wenn du dran bist. Mit <b>📅 Termin vereinbaren</b> verabredet ihr euch zu einer festen Zeit. Für Siege gibt es Punkte: <b>🏆 Pokal des Monats</b> und die <b>Club-Rangliste</b>. Beim Start fragt die App manchmal „Lust auf eine Partie?“ – mit „Keine Spiele“ ist das aus." }] },
+      text: "<b>🎲 Jemanden herausfordern</b>: Mitglied wählen – es bekommt eine Mitteilung und kann annehmen. Ihr zieht abwechselnd, du bekommst Bescheid, wenn du dran bist. Mit <b>📅 Termin vereinbaren</b> verabredet ihr euch zu einer festen Zeit. Für Siege gibt es Punkte: <b>🏆 Pokal des Monats</b> und die <b>Club-Rangliste</b>. Beim Start fragt die App <b>höchstens einmal in der Woche</b> „Lust auf eine Partie?“ – mit „Keine Spiele“ ist das aus." }] },
   { titel: "15. Hilfe & Tipps", unter: "Das „?“ unten rechts, das Hilfe-Zentrum und „Kurz erklärt“", bild: "hilfezentrum",
     legende: [["Suchfeld", "Stichwort eingeben – z. B. „Farbe“ oder „Termin“"]],
     text: "Im <b>Hilfe-Zentrum</b> stehen über 160 kurze Hilfen in Kapiteln – von „Erste Schritte“ bis „Notfall“. Jede Hilfe hat einen Knopf <b>„Zeig es mir“</b>, der gleich an die richtige Stelle springt. Alles lässt sich auch ausdrucken.",
@@ -196,7 +199,7 @@ export const TEILE = [
       [null, "👍 / 👎 Hat es geholfen?", "Unter jeder Hilfe kannst du sagen, ob sie dir weitergeholfen hat – so werden die Hilfen besser.", "neu"]] }] },
   { titel: "16. Dienstwünsche", unter: "Mit Twinkey eintragen – oder erst auf Papier", bild: "dienstwuensche",
     legende: [["Zurück zur Club-App", "Fenster schließen"], ["Leerer Bogen", "deinen persönlichen Bogen drucken oder mailen"], ["Fertig – Bestätigung", "Aufstellung per App-Nachricht und E-Mail"]],
-    text: "Die Kachel <b>📝 Dienstwünsche</b> öffnet <b>Twinkey</b> – den Assistenten aus der Dienstplanung. Er fragt Tag für Tag, wann du kannst und wann du am liebsten arbeitest. Gespeichert wird von selbst.",
+    text: "Tippe auf <b>🗓️ Mein Dienst</b> → <b>„📝 Wünsche eintragen“</b> (in der einfachen Ansicht auf die Kachel <b>📝 Dienstwünsche</b>). Das öffnet <b>Twinkey</b> – den Assistenten aus der Dienstplanung. Er fragt Tag für Tag, wann du kannst und wann du am liebsten arbeitest. Gespeichert wird von selbst.",
     abschnitte: [{ nr: "+", titel: "Der leere Wunschbogen", zeilen: [
       ["s-bogen-seite", "Dein Bogen", "Alle Tage mit Spalten für <b>Kann</b>, <b>Wunsch</b> und <b>Sperre</b>, Seite 2 mit Bereitschaft und Anleitung. Oben dein Name und rechts ein <b>QR-Code mit deiner Mitglieds-ID</b> – daran erkennt die Planung deinen Bogen.", "neu"],
       ["s-bogen-knoepfe", "Drucken oder mailen", "<b>🖨️ Drucken</b> – oder ohne Drucker <b>✉️ Per E-Mail an mich</b>: der Bogen kommt als PDF in dein Postfach. Von Hand ausfüllen und die Zeiten danach mit Twinkey eintragen.", "neu"]] }] },
@@ -205,7 +208,7 @@ export const TEILE = [
     text: "Antippen, was sich geändert hat, und die neuen Angaben eintragen. Die Meldung geht <b>gleich an die Richtigen</b> im Club (z. B. Clubsprecher und Kassenwart) – die Zeile unter jedem Knopf zeigt, an wen. Unten siehst du deine letzten Meldungen mit dem Stand (eingegangen, gesehen, eingetragen). Ist etwas gerade nicht nötig, ist der Knopf blass." },
   { titel: "18. Neu in Version 6", unter: "Was seit der letzten Anleitung dazugekommen ist", bild: "neu-mitglieder",
     legende: [["Dein Bild", "statt Buchstaben eine Koch-Figur (Meins → 🧑‍🍳 Mein Bild)"], ["Der kleine Punkt", "✓ grün = gerade online · blau = heute da · orange = abwesend · grau = länger nicht da"], ["📞 Anrufen", "nur hell, wenn das Mitglied gerade online ist"], ["🎥 Videoanruf", "ebenso – beide brauchen die App offen"]],
-    text: "Bei den <b>👥 Mitgliedern</b> siehst du jetzt die Bilder der anderen. Der farbige Ring und der kleine Punkt unten rechts zeigen, ob jemand gerade da ist. Anrufen und Videoanruf gehen direkt von der Kachel.",
+    text: "Bei den <b>👥 Mitgliedern</b> siehst du jetzt die Bilder der anderen. Der grüne Ring (er pulsiert langsam) und der kleine Punkt unten rechts zeigen, ob jemand gerade da ist. Anrufen und Videoanruf gehen direkt von der Kachel.",
     weiter: [
       { bild: "neu-tafel", titel: "Die Anwesenheitstafel", legende: [["📋", "Tafel einschalten (🔲 Kacheln, ☰ Liste)"], ["Lämpchen", "grün = gerade online, blau = heute da, orange = abwesend, grau = länger nicht da"], ["Name", "antippen öffnet das Mitglied"]],
         text: "Die Tafel zeigt nur <b>Namen und Lämpchen</b> – wer online ist, steht oben. Ein Tipp auf einen Namen öffnet das Mitglied; dort kannst du schreiben, anklopfen oder anrufen. Die Ansicht wählst du auch unter ⚙️ → Darstellung.",
@@ -231,4 +234,25 @@ export const TEILE = [
         [null, "📨 Verbindung an Hansi", "Tipp oben aufs <b>Lämpchen</b>: Im Fenster stehen die Messwerte. <b>„📨 Ergebnis an Hansi senden“</b> schickt sie ihm (nur Technik-Werte), 🖨️ druckt sie aus.", "neu"]] },
         ] },
     ] },
+  { titel: "19. Neu in Version 7", unter: "Was seit Version 6 dazugekommen ist", bild: "neu7-wasneu",
+    legende: [["Was ist neu?", "neue Nachrichten (in Chats und Gruppen), Pinnwand-Einträge, wartende Spiele"], ["💬 Direkt zu den Nachrichten", "öffnet die Chats"], ["📌 Pinnwand-Eintrag ansehen", "zeigt die neuen Zettel"], ["🎲 Zu den Spielen", "Einladung annehmen oder weiterspielen"], ["🔕 Diese Meldung ausschalten", "kommt dann nicht mehr"]],
+    text: "Öffnest du die App und es gibt Neues, begrüßt sie dich mit <b>„👋 Schön, dass du da bist“</b> und zeigt auf einen Blick, was seit deinem letzten Besuch dazugekommen ist – mit Knopf direkt dorthin. „Später“ schließt das Fenster. Wieder einschalten: <b>⚙️ Einstellungen → 🗣️ Ansagen, Töne &amp; Tipps → „👋 Beim Öffnen zeigen, was neu ist“</b>.",
+    abschnitte: [{ nr: "+", titel: "Weniger Fenster beim Öffnen", zeilen: [
+      [null, "Höchstens ein Hinweis-Fenster", "Beim Öffnen kommt <b>höchstens ein</b> Hinweis-Fenster – nicht mehrere hintereinander. Fenster, auf die du antworten musst (z. B. ein Notfall oder eine Terminanfrage), kommen wie bisher.", "neu"],
+      [null, "💡 Tipp und 🎲 Spiele-Einladung", "Der Tipp des Tages und die Frage „Lust auf eine Partie?“ kommen <b>höchstens einmal in der Woche</b>.", "neu"],
+      [null, "🔧 Kleine Systemverbesserungen", "Die App wird laufend ein wenig besser. Das kommt von selbst beim Öffnen – du musst nichts tun.", "neu"]] }],
+    weiter: [
+      { bild: "neu7-bsk", titel: "🃏 Bauernskat nach Köcheclub-Regeln", legende: [["Trumpf ansagen", "Vorhand wählt eine Farbe oder Grand (nur Buben)"], ["Häufchen des Gegners", "8 Häufchen: unten verdeckt, oben offen"], ["Trumpf", "was angesagt ist und wer angesagt hat"], ["Deine Häufchen", "eine offene Karte antippen = ausspielen"]],
+        text: "Jeder hat <b>8 Häufchen</b> auf dem Tisch: unten eine verdeckte Karte, oben eine offene. Vor jedem Spiel siehst du, wie <b>gemischt und ausgeteilt</b> wird (ein Tipp auf den Tisch = gleich fertig). Wer gibt, <b>wechselt</b> jedes Spiel. <b>Vorhand</b> sieht ihre offenen Karten und <b>sagt Trumpf an</b>, dann spielt sie aus. Spielst du eine Karte, wird die Karte darunter sofort aufgedeckt. Wer angesagt hat, braucht <b>61 Augen</b>. Alles Weitere unter <b>„📖 Regeln kurz“</b> im Spiel.",
+        abschnitte: [
+      { nr: "+", titel: "👑 Gruppen-Admins und 📋 Meine Gruppen", zeilen: [
+        ["s-gruppen-admin", "👑 Weitere Gruppen-Admins", "Im Gruppen-Chat oben <b>⋮</b> → <b>„✏️ Gruppe bearbeiten“</b> (auch beim Anlegen einer Gruppe): bei einem Mitglied die <b>👑 Krone</b> antippen – farbig = Gruppen-Admin, grau = nicht. Dann <b>„💾 Speichern“</b>. Gruppen-Admins dürfen die Gruppe mit verwalten. Im Chat-Menü steht bei den Mitgliedern 👑 hinter den Admins.", "neu"],
+        ["s-gruppe-uebergeben", "Gruppe beim Verlassen übergeben", "Hast du die Gruppe angelegt und tippst auf <b>„🚪 Gruppe verlassen“</b>, fragt die App <b>„👑 Wer führt die Gruppe weiter?“</b> – du wählst einen Namen, dann ist er der neue Gruppen-Admin.", "neu"],
+        [null, "📋 Meine Gruppen", "Bei <b>👥 Mitglieder</b> deine eigene Kachel öffnen → <b>„📋 Meine Gruppen“</b> (oder neben den Gruppen-Knöpfen <b>„📋 Übersicht“</b>): alle Gruppen, in denen du bist, mit ihren Mitgliedern. Darunter <b>„💬 Zum Gruppen-Chat“</b> oder <b>„👥 Als Liste“</b>.", "neu"],
+        [null, "👥 Gemeinsame Gruppen", "Öffnest du ein anderes Mitglied, stehen unter seinem Namen die Gruppen, in denen ihr beide seid – antippen öffnet den Gruppen-Chat.", "neu"]] },
+      { nr: "+", titel: "Bedienen und Aussehen", zeilen: [
+        [null, "🟢 Online-Ring pulsiert", "Der grüne Ring um Bild oder Namen eines Mitglieds, das gerade online ist, leuchtet jetzt <b>langsam auf und ab</b>.", "neu"],
+        [null, "✨ Animierte Knöpfe an/aus", "Wer es ruhiger mag: in der <b>erweiterten Ansicht</b> unter ⚙️ → <b>🎨 Darstellung</b> → <b>„✨ Animierte Knöpfe“</b> ausschalten. Dann zoomt und leuchtet nichts mehr, auch der Online-Ring und das Austeilen beim Bauernskat bleiben ruhig.", "neu"],
+        [null, "🎤 Diktieren in mehr Feldern", "Das kleine 🎤 rechts im Feld gibt es jetzt auch in der <b>🔍 Suche</b>, im <b>Hilfe-Zentrum</b>, beim <b>Pinnwand-Zettel</b>, beim <b>Hilfe-Aufruf</b> und beim <b>Angebot</b>: antippen, sprechen – das Handy schreibt mit (wenn dein Handy das kann).", "neu"],
+        [null, "Status-Pfeil in deiner Farbe", "Der kleine Pfeil unter deinem Status oben hat jetzt die <b>Farbe deines Status</b> – z. B. grün bei „verfügbar“. Antippen öffnet die Auswahl.", "neu"]] }] }] },
 ];

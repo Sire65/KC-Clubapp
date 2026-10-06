@@ -503,7 +503,7 @@ function wasNeuZeigen(pw) {
   const f = blattAuf("wasNeuBlatt", `<h3 style="margin:0 0 8px">👋 Schön, dass du da bist${ICH?.vorname ? ", " + esc(ICH.vorname) : ""}!</h3>
     <p style="margin:0 0 6px">Seit deinem letzten Besuch ist neu:</p>${zeilen.join("")}
     <div class="knoepfe" style="flex-direction:column;align-items:stretch;margin-top:10px">
-      ${n ? `<button class="knopf haupt" data-wn="n">💬 Direkt zu den Nachrichten</button>` : ""}${p ? `<button class="knopf${n ? "" : " haupt"}" data-wn="p">📌 Pinnwand-Eintrag${p > 1 ? "e" : ""} ansehen</button>` : ""}${sp ? `<button class="knopf${n || p ? "" : " haupt"}" data-wn="sp">🎲 Zu den Spielen</button>` : ""}
+      ${n ? `<button class="knopf haupt" data-wn="n">💬 Direkt zu den Nachrichten</button>` : ""}${p ? `<button class="knopf${n ? "" : " haupt"}" data-wn="p">📌 ${p > 1 ? "Pinnwand-Einträge" : "Pinnwand-Eintrag"} ansehen</button>` : ""}${sp ? `<button class="knopf${n || p ? "" : " haupt"}" data-wn="sp">🎲 Zu den Spielen</button>` : ""}
       <button class="knopf" data-wn="s">Später</button></div>
     <div style="text-align:center;margin-top:10px"><button class="knopf klein" data-wn="aus">🔕 Diese Meldung ausschalten</button>
       <p class="hinweis" style="margin:4px 0 0">In deinen Einstellungen kannst du sie jederzeit wieder aktivieren.</p></div>`);
@@ -6085,7 +6085,7 @@ const DOKUMENTE = [
   // 1.81.0: Version 2 (Register Club/Technik, Sprachansagen, Diktieren, Tippfehler, Farbschemen, Fotoalben, Archiv & Chronik) – V1 bleibt als Datei unverändert;
   // neue id, damit die leise „NEU“-Zeile (KC-CLUB-DOK-NEU) einmal wieder erscheint
   // KC-CLUB-ANLEITUNG-V4 (2.23.33): Version 4 mit Spielen, Hilfe-Zentrum, Wunschbogen, Meine Daten, Erinnerung, Chats archivieren, SOS an alle – V3 bleibt als Datei
-  { id: "bedienung-club-app-v6", sym: "📖", t: "Bedienungsanleitung Club-App", u: "Version 6 · alles erklärt, mit Bildern · 48 Seiten", datei: "dokumente/Koecheclub-App_Anleitung_V6.pdf", neuBis: "2026-12-31" }, // 2.23.95: ersetzt V5
+  { id: "bedienung-club-app-v7", sym: "📖", t: "Bedienungsanleitung Club-App", u: "Version 7 · alles erklärt, mit Bildern · 51 Seiten", datei: "dokumente/Koecheclub-App_Anleitung_V7.pdf", neuBis: "2026-12-31" }, // 2.24.15: ersetzt V6
   // KC-CLUB-VERTRETUNG (2.2.0): Betriebsanleitung für die Admin-Vertretung + Notfall-Umschlag (ohne Zugangsdaten) – nur für Admins sichtbar
   { id: "vertretung", sym: "🛡️", t: "Vertretung des Admins", u: "Betriebsanleitung + Notfall-Umschlag zum Ausfüllen", datei: "dokumente/Vertretung_Admin_V1.pdf", nur: () => !!ICH?.admin },
   { id: "bilderrechner", sym: "🧮", t: "Schnellanleitung Bilderrechner", u: "Kurzanleitung V4 · 28 Seiten", datei: "dokumente/Kurzanleitung_Bilderrechner_V4.pdf" },

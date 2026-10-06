@@ -5,6 +5,8 @@
 - Hilfe/Tipps: Sprung in die Einstellungen öffnet den Bereich auch in der einfachen Ansicht; „Was ist neu“-Schalter zu „Ansagen, Töne & Tipps“ (auch einfache Ansicht), Hilfetext mit Spielen; Twinkey „Urlaub/krank“ öffnet den Status (vorher Standort); Dienstwünsche-Weg über 🗓️ Mein Dienst; Entwickler-Weg über ℹ️ App-Info; Tipp-Text „höchstens einmal in der Woche“; „Später“-Meldungen ohne falsche Tage; Kachel-Tipp nur erweitert; keine Versprechen „was zuletzt dazugekommen ist“.
 - Büro: unvollständige Server-Antwort zeigt Hinweis statt Fehler.
 - Hilfe „Was speichert die App über mich?“ nur noch für den Admin sichtbar (Wunsch Hansi), Mitglieder sehen keinen Hinweis.
+- Bedienungsanleitung Version 7 (51 Seiten, neuer Teil 19 „Neu in Version 7“, korrigierte Stellen) ersetzt V6 in „Meine Dokumente“; V6-Datei bleibt unverändert.
+- Knopf „📌 Pinnwand-Einträge ansehen“ richtig geschrieben (vorher „Eintrage“).
 
 ## 2.24.14 – 2026-10-06 – Tagesmeldung mit Spielen
 Die Meldung beim Öffnen nennt jetzt auch Spiele, die auf dich warten. Unten kann man sie ausschalten. (KC-CLUB-WAS-NEU)
