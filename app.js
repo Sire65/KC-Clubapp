@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.25.10"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.25.11"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SCHNELLSTART-DATEI (2.24.8, Hinweis Hansi „Start ist langsamer geworden“): das Programm liegt in app.js, damit das Handy es
 // fertig übersetzt behalten kann (statt bei jedem Öffnen 1,8 MB neu einzulesen). Seite und Programm müssen dieselbe Version haben
 // (AGENTS Regel 16, kein Mischstand): passt es nicht (z. B. alte Seite aus einem Zwischenspeicher), einmal frisch laden, sonst anhalten.
@@ -3786,7 +3786,7 @@ function spPcZeigen() {
       ${status}
       ${spBrettHtml(SPC.brett, n, { linie: e?.linie, klick: "spPcZug", aus: !!e || SPC.denkt })}
       <p class="hinweis" style="text-align:center;margin:6px 0">${n === 3 ? "Drei" : "Vier"} in einer Reihe gewinnen – waagerecht, senkrecht oder schräg.</p>
-      <div class="knoepfe"><button class="knopf haupt" onclick="spPcNeu()">↺ Neue Runde</button><button class="knopf" onclick="spPcStandWeg()">🗑️ Spielstand zurücksetzen</button>${spAnsageKnopf("ttt")}</div>
+      <div class="sp-kacheln"><button class="knopf haupt" onclick="spPcNeu()"><span class="kt-ico">↺</span>Neue Runde</button><button class="knopf" onclick="spPcStandWeg()" title="Spielstand zurücksetzen"><span class="kt-ico">🗑️</span>Stand löschen</button>${spAnsageKnopf("ttt", true)}</div>
     </div>`;
 }
 function spPcNeu(zeigen = true) {
@@ -4623,7 +4623,7 @@ function bskPcZeigen() {
       ${status}
       ${bskBrettHtml(z, 0, { klick: "bskPcKarte", aus: BSK.denkt || z.phase !== "spiel" || z.amZug !== 0, gegnerName: "Computer", ansageSicht: z.phase === "ansage" })}
       <div class="knoepfe" style="justify-content:center">${spAnsageKnopf("bsk")}</div>
-      <div class="knoepfe"><button class="knopf haupt" onclick="bskPcNeu()">↺ Neues Spiel</button><button class="knopf" onclick="bskPcStandWeg()">🗑️ Spielstand zurücksetzen</button></div>
+      <div class="sp-kacheln"><button class="knopf haupt" onclick="bskPcNeu()"><span class="kt-ico">↺</span>Neues Spiel</button><button class="knopf" onclick="bskPcStandWeg()" title="Spielstand zurücksetzen"><span class="kt-ico">🗑️</span>Stand löschen</button></div>
       <details class="sch-verlauf"><summary>📖 Regeln kurz</summary><p class="hinweis" style="margin:4px 0">Jeder hat 8 Häufchen auf dem Tisch: unten verdeckt, oben offen. Ausgeteilt wird in Viererpäckchen – je zweimal verdeckt, dann zweimal offen; wer gibt, wechselt. Vorhand sieht ihre offenen Karten und muss Trumpf ansagen – eine Farbe oder Grand (nur Buben), dann spielt sie aus. Gespielt wird immer eine offene Karte; die Karte darunter wird sofort aufgedeckt. Buben sind die höchsten Trümpfe (♣ ♠ ♥ ♦), dann Ass, Zehn, König, Dame, 9, 8, 7. Farbe bedienen, wenn möglich – sonst stechen oder abwerfen. Der Ansager braucht 61 Augen (Ass 11, Zehn 10, König 4, Dame 3, Bube 2).</p></details>
     </div>`;
   if (BSK.teilen) { BSK.teilen = false; bskAusteilen($("spInhalt").querySelector(".bsk"), z, 0); } // KC-CLUB-BAUERNSKAT-AUSTEILEN

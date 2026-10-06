@@ -3677,7 +3677,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.ok(/function spSag\(art, text, schluessel, vorrang = false\) \{\s*if \(!spAnsageAn\(art\) \|\| !text \|\| aktuelleAnsicht !== "spiele"\) return;/.test(html), "Ansage nur wenn eingeschaltet und in den Spielen");
   assert.ok(/function schZugAnsage\(m, ch, ich\)/.test(html) && /hat gerade \$\{fem\(o\) \? "deine" : "deinen"\} \$\{schFigAkk\(o\)\} geschlagen/.test(html), "Schach: Züge und Schlagen");
-  assert.ok((html.match(/spAnsageKnopf\("schach"\)/g) || []).length === 2 && (html.match(/spAnsageKnopf\("kt"\)/g) || []).length >= 3 && (html.match(/spAnsageKnopf\("bsk"\)/g) || []).length === 2 && (html.match(/spAnsageKnopf\("ttt"\)/g) || []).length === 2 && !/spSag\("ttt"/.test(html), "Schalter bei Schach, Küchenterror, Bauernskat; Tic-Tac-Toe nur Töne (2.22.22), keine Sprache");
+  assert.ok((html.match(/spAnsageKnopf\("schach"\)/g) || []).length === 2 && (html.match(/spAnsageKnopf\("kt"\)/g) || []).length >= 3 && (html.match(/spAnsageKnopf\("bsk"\)/g) || []).length === 2 && (html.match(/spAnsageKnopf\("ttt"(, true)?\)/g) || []).length === 2 && !/spSag\("ttt"/.test(html), "Schalter bei Schach, Küchenterror, Bauernskat; Tic-Tac-Toe nur Töne (2.22.22), keine Sprache");
   assert.ok(/spSag\("kt", ktFrageSprache\(fr, z\.i \+ 1\)/.test(html) && /spSag\("bsk", `Der Computer spielt \$\{bskKarteWort\(kc\)\}\.`\)/.test(html), "Küchenterror-Frage, Bauernskat-Karte");
   const regeln = html.slice(html.indexOf("const BSK_FARBEN = "), html.indexOf("// ----- Computer -----", html.indexOf("const BSK_FARBEN = ")));
   assert.ok(!/bskKarteWort|BSK_WNAME/.test(regeln), "Ansage-Helfer nicht in den Regeln (Server-Kopie bleibt gleich)");
@@ -4779,13 +4779,18 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.ok(/<div class="kt-knoepfe"><button class="knopf haupt kt-los" onclick="ktPcStart\(\)"><span class="kt-ico">▶<\/span>Los geht’s<\/button>\$\{spAnsageKnopf\("kt", true\)\}/.test(html) && /onclick="ktPcStandWeg\(\)" title="Spielstand zurücksetzen"><span class="kt-ico">🗑️<\/span>Stand löschen<\/button>/.test(html), "Küchenterror: Los geht’s, Ansage, Stand nebeneinander als Kacheln");
   assert.ok(/b\.outerHTML = spAnsageKnopf\(art, !!b\.dataset\.kachel\)/.test(html) && /function spAnsageKnopf\(art, kachel = false\)/.test(html), "Umschalten behält Kachelform, andere Spiele unverändert");
-  assert.ok(/\.kt-knoepfe \{ display: grid; grid-template-columns: repeat\(auto-fit, minmax\(0, 1fr\)\);/.test(html) && /\.kt-wahl \.sp-wahl > span \{ flex-basis: 100%; \}/.test(html) && /<div class="kt-wahl">\$\{spWahl\("Stufe"/.test(html), "Stufe volle Breite, Knöpfe gleich breit");
+  assert.ok(/\.kt-knoepfe, \.sp-kacheln \{ display: grid; grid-template-columns: repeat\(auto-fit, minmax\(0, 1fr\)\);/.test(html) && /\.kt-wahl \.sp-wahl > span \{ flex-basis: 100%; \}/.test(html) && /<div class="kt-wahl">\$\{spWahl\("Stufe"/.test(html), "Stufe volle Breite, Knöpfe gleich breit");
 }
 // 2.25.10 KC-CLUB-KT-ABBRECHEN
 {
   assert.ok(/<div class="kt-abbruch"><button class="knopf klein" onclick="ktPcAbbrechen\(\)">✖ Spiel abbrechen<\/button><\/div>/.test(html), "Küchenterror: Abbrechen-Knopf während des Spiels");
   assert.ok(/async function ktPcAbbrechen\(\) \{[^]{0,200}if \(lief\) ktPcPausieren\(\);[^]{0,400}nein: "▶ Weiterspielen" \}\)\)\) \{ if \(lief && KTP\.z === z && ktpSichtbar\(\)\) ktPcFortsetzen\(\); return; \}[^]{0,200}KTP\.z = null;/.test(html), "Uhr hält an, Weiterspielen setzt fort, Abbrechen ohne Wertung");
   assert.ok(!/async function ktPcAbbrechen[^]{0,900}KTP\.stand\.(ich|pc|remis)\+\+/.test(html), "Abbruch zählt nicht in den Spielstand");
+}
+// 2.25.11 KC-CLUB-SP-KACHELN
+{
+  assert.ok(/<div class="sp-kacheln"><button class="knopf haupt" onclick="spPcNeu\(\)"><span class="kt-ico">↺<\/span>Neue Runde<\/button>[^]{0,200}Stand löschen<\/button>\$\{spAnsageKnopf\("ttt", true\)\}<\/div>/.test(html), "Tic-Tac-Toe: Kacheln nebeneinander");
+  assert.ok(/<div class="sp-kacheln"><button class="knopf haupt" onclick="bskPcNeu\(\)"><span class="kt-ico">↺<\/span>Neues Spiel<\/button>[^]{0,200}Stand löschen<\/button><\/div>/.test(html), "Bauernskat: Kacheln nebeneinander");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

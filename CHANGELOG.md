@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.25.11 – 2026-10-06 – Spiele: Knöpfe als Kacheln nebeneinander
+Tic-Tac-Toe und Bauernskat gegen den Computer: „↺ Neue Runde/Neues Spiel“, „🗑️ Stand löschen“ und (bei Tic-Tac-Toe) „🔊 Töne“ als gleich große Kacheln nebeneinander – wie beim Küchenterror. (KC-CLUB-SP-KACHELN, Wunsch Hansi)
+
 ## 2.25.10 – 2026-10-06 – Küchenterror: Spiel abbrechen
 Küchenterror gegen den Computer: Neuer Knopf „✖ Spiel abbrechen“ – die Uhr hält an, nach Rückfrage endet die Runde ohne Wertung (Spielstand bleibt); „▶ Weiterspielen“ macht mit 3-2-1 weiter. (KC-CLUB-KT-ABBRECHEN, Wunsch Hansi)
 
