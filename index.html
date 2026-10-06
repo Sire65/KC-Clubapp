@@ -307,6 +307,16 @@
   .bsk { display: flex; flex-direction: column; gap: 8px; }
   .bsk-kopf { display: flex; justify-content: space-between; font-weight: 700; font-size: .92rem; }
   .bsk-tisch, .bsk-hand { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  /* KC-CLUB-BAUERNSKAT-AUSTEILEN (2.24.9): Mischen in der Mitte + Viererpäckchen fliegen an ihren Platz */
+  .bsk { position: relative; } .bsk-mitte { position: relative; }
+  .bsk-mischen { position: absolute; left: 50%; top: 50%; width: 58px; height: 81px; margin: -40px 0 0 -29px; z-index: 5; pointer-events: none; }
+  .bsk-mischen .bsk-karte { position: absolute; inset: 0; max-width: none; animation: bskMisch .35s ease-in-out 2 alternate; }
+  .bsk-mischen .bsk-karte:nth-child(odd) { --mx: -26px; } .bsk-mischen .bsk-karte:nth-child(even) { --mx: 26px; }
+  .bsk-mischen .bsk-karte:nth-child(2) { animation-delay: .04s; } .bsk-mischen .bsk-karte:nth-child(3) { animation-delay: .08s; } .bsk-mischen .bsk-karte:nth-child(4) { animation-delay: .12s; }
+  @keyframes bskMisch { 50% { transform: translateX(var(--mx)) rotate(calc(var(--mx) / 3 * 1deg)); } }
+  .bsk-teilt .bsk-warte { visibility: hidden; }
+  .bsk-teilt .bsk-flug { animation: bskFlug .3s ease-out both; z-index: 4; }
+  @keyframes bskFlug { from { transform: translate(var(--dx), var(--dy)) scale(.8); opacity: .6; } }
   .bsk-stapel { position: relative; display: flex; justify-content: center; min-height: 92px; }
   .bsk-stapel.mit-unten { padding-bottom: 14px; } .bsk-stapel .bsk-karte.rueck.klein { position: absolute; bottom: 0; left: 50%; max-width: 64px; width: 88%; transform: translateX(-42%) rotate(5deg); }
   .bsk-bildkarte { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; border-radius: inherit; pointer-events: none; user-select: none; }
@@ -2999,6 +3009,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.24.8" data-v="2.24.8"></script>
+<script src="app.js?v=2.24.9" data-v="2.24.9"></script>
 </body>
 </html>

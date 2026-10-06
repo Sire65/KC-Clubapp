@@ -41,7 +41,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.24.8";
+const SERVER_VERSION = "2.24.9";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -1669,7 +1669,7 @@ const spielStart = (art: string, n: number, opt: { stufe?: unknown } = {}) => ar
 function bskSicht(z: any, s: number) {
   if (!z) return null;
   const um = (i: number) => (i === s ? 0 : 1), ansage = z.phase === "ansage";
-  const seite = (i: number) => ({ hand: i === s ? (ansage ? [...z.sp[i].hand.slice(0, 4), null, null, null, null] : z.sp[i].hand) : z.sp[i].hand.map(() => null),
+  const seite = (i: number) => ({ hand: i === s ? (ansage && z.sp[i].hand.length ? [...z.sp[i].hand.slice(0, 4), null, null, null, null] : z.sp[i].hand) : z.sp[i].hand.map(() => null), // 2.24.9: neue Partien ohne Hand
     tisch: z.sp[i].tisch.map((p: any) => ({ oben: p.oben, unten: p.unten ? true : null })) });
   return { sp: [seite(s), seite(1 - s)], vorhand: um(z.vorhand), trumpf: z.trumpf, phase: z.phase, amZug: um(z.amZug),
     stich: z.stich.map((x: any) => ({ s: um(x.s), k: x.k })), stiche: [z.stiche[s], z.stiche[1 - s]],

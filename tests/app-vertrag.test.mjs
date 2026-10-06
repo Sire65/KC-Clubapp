@@ -3338,7 +3338,7 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   const mig = lies("supabase/migrations/20261003_kc_club_v2100_bauernskat_mitglieder.sql");
   assert.ok(/add column if not exists bsk jsonb/.test(mig) && /spiel in \('ttt', 'schach', 'bsk'\)/.test(mig), "Migration");
   const sicht = server.slice(server.indexOf("function bskSicht("), server.indexOf("const spielSicht"));
-  assert.ok(/i === s \? \(ansage \? \[\.\.\.z\.sp\[i\]\.hand\.slice\(0, 4\), null, null, null, null\] : z\.sp\[i\]\.hand\) : z\.sp\[i\]\.hand\.map\(\(\) => null\)/.test(sicht) && /unten: p\.unten \? true : null/.test(sicht), "fremde Hand + verdeckte Bauern bleiben geheim");
+  assert.ok(/i === s \? \(ansage( && z\.sp\[i\]\.hand\.length)? \? \[\.\.\.z\.sp\[i\]\.hand\.slice\(0, 4\), null, null, null, null\] : z\.sp\[i\]\.hand\) : z\.sp\[i\]\.hand\.map\(\(\) => null\)/.test(sicht) && /unten: p\.unten \? true : null/.test(sicht), "fremde Hand + verdeckte Bauern bleiben geheim");
   assert.ok(/bsk: g\.spiel === "bsk" \? bskSicht\(g\.bsk, g\.spieler_x === ich \? 0 : 1\) : null/.test(server) && !/bsk: g\.bsk[,\s}]/.test(server), "nur die Sicht verlässt den Server");
   const zug = server.slice(server.indexOf('case "spiel_zug": {'), server.indexOf('case "spiel_aufgeben": {'));
   assert.ok(/if \(!bskErlaubt\(z, s\)\.includes\(k\)\) throw/.test(zug) && /z\.vorhand !== s \|\| !BSK_TRUMPF\.has/.test(zug) && /gewinner: sieg \? ich\.person_id : niederlage \? gegner/.test(zug), "Zugprüfung + Wertung");
@@ -4651,6 +4651,25 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(programm.indexOf("dataset.v !== APP_VERSION") < programm.indexOf("const API ="), "Schutz läuft vor allem anderen");
   assert.ok(/"app\.js\?v=" \+ VERSION/.test(sw) && /const istProgramm = \(url\) => url\.pathname\.endsWith\("\/app\.js"\) && url\.searchParams\.get\("v"\) === VERSION;/.test(sw), "Service Worker: Programm im Versions-Speicher");
   assert.ok((seite.match(/<script>/g) || []).length === 1, "nur noch das kleine Fehler-Wächter-Skript steht in der Seite");
+}
+// 2.24.9 KC-CLUB-BAUERNSKAT-AUSTEILEN: 8 Häufchen je Spieler, Austeilen in Viererpäckchen (Regeln nach Hansi), Mischen + Austeilen sichtbar
+{
+  const vm = await import("node:vm"), a = html.indexOf("const BSK_FARBEN = "), b = html.indexOf("// ----- Computer -----", a);
+  const ctx = {}; vm.runInNewContext(html.slice(a, b) + "\nthis.bskNeu = bskNeu; this.bskSpielen = bskSpielen; this.bskErlaubt = bskErlaubt; this.bskStichAbschliessen = bskStichAbschliessen; this.bskVerfuegbar = bskVerfuegbar;", ctx);
+  for (const vh of [0, 1]) {
+    const z = ctx.bskNeu(vh), alle = z.sp.flatMap((p) => p.tisch.flatMap((t) => [t.unten, t.oben]));
+    assert.equal(new Set(alle).size, 32, "32 verschiedene Karten verteilt");
+    assert.ok(z.sp.every((p) => p.hand.length === 0 && p.tisch.length === 8 && p.tisch.every((t) => t.unten && t.oben)), "je 8 Häufchen, keine Handkarten");
+    assert.equal(z.vorhand, vh); assert.equal(z.phase, "ansage", "Trumpf-Ansage bleibt Pflicht");
+    z.trumpf = "grand"; z.phase = "spiel"; let n = 0;
+    while (z.phase !== "ende" && n++ < 40) { const s = z.amZug, k = ctx.bskErlaubt(z, s)[0], t = z.sp[s].tisch.find((x) => x.oben === k), unten = t.unten;
+      if (ctx.bskSpielen(z, s, k)) ctx.bskStichAbschliessen(z); else assert.equal(t.oben, unten, "Karte darunter sofort aufgedeckt"); }
+    assert.equal(z.phase, "ende", "Spiel läuft bis zum Ende (16 Stiche)"); assert.equal(z.stiche[0].length + z.stiche[1].length, 32);
+  }
+  assert.ok(/for \(const \[lage, ab\] of BSK_AUSTEILEN\) for \(const s of \[vorhand, 1 - vorhand\]\) for \(let j = 0; j < 4; j\+\+\)/.test(html) && /const BSK_AUSTEILEN = \[\["unten", 0\], \["unten", 4\], \["oben", 0\], \["oben", 4\]\];/.test(html), "Reihenfolge: erst Vorhand, je zweimal verdeckt, dann zweimal offen");
+  assert.ok(/function bskAusteilen\(wurzel, z, ich, fertig\)/.test(html) && /!einst\("animiert", true\)\) return fertig\?\.\(\);/.test(html) && /addEventListener\("click", bskTeilenEnde, \{ once: true, capture: true \}\)/.test(html), "Austeilen sichtbar, abschaltbar, Tipp = fertig");
+  assert.ok(/if \(BSK_TEILT\) return setTimeout\(bskPcComputer, 300\);/.test(html), "Computer wartet, bis ausgeteilt ist");
+  assert.ok(/ansage && z\.sp\[i\]\.hand\.length \?/.test(server), "Server-Sicht: neue Partien ohne Handkarten-Platzhalter");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

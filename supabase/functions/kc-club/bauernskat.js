@@ -19,8 +19,15 @@ function bskStichGewinner(stich, t) { // stich = [{s, k}, {s, k}] – erste Kart
 }
 function bskMischen() { const d = []; for (const f of BSK_FARBEN) for (const w of BSK_WERTE) d.push(f + "-" + w);
   for (let i = d.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [d[i], d[j]] = [d[j], d[i]]; } return d; }
+// KC-CLUB-BAUERNSKAT-AUSTEILEN (2.24.9, Regeln nach Hansi): keine Handkarten – jeder hat 8 Häufchen (verdeckt, offen darauf).
+// Ausgeteilt wird in Viererpäckchen, zuerst an Vorhand (wer nicht gibt): 4 verdeckt Vorhand, 4 verdeckt Geber, noch einmal je 4
+// verdeckt, dann je 4 offen, noch einmal je 4 offen. Vorhand sagt Trumpf an (Pflicht) und spielt aus; wer gibt, wechselt jedes Spiel.
+// Laufende Partien von vorher (8 Handkarten + 4 Häufchen) spielen mit denselben Regeln zu Ende – die Funktionen kennen beides.
+const BSK_AUSTEILEN = [["unten", 0], ["unten", 4], ["oben", 0], ["oben", 4]];
 function bskNeu(vorhand) { // Spieler 0 = ich, 1 = Gegner
-  const d = bskMischen(), sp = [0, 1].map((i) => ({ hand: d.slice(i * 16, i * 16 + 8), tisch: [0, 1, 2, 3].map((j) => ({ unten: d[i * 16 + 8 + j], oben: d[i * 16 + 12 + j] })) }));
+  const d = bskMischen(), sp = [0, 1].map(() => ({ hand: [], tisch: Array.from({ length: 8 }, () => ({ unten: null, oben: null })) }));
+  let i = 0;
+  for (const [lage, ab] of BSK_AUSTEILEN) for (const s of [vorhand, 1 - vorhand]) for (let j = 0; j < 4; j++) sp[s].tisch[ab + j][lage] = d[i++];
   return { sp, vorhand, trumpf: null, phase: "ansage", amZug: vorhand, stich: [], stiche: [[], []], letzter: null };
 }
 const bskSichtbarAnsage = (z, s) => [...z.sp[s].tisch.map((p) => p.oben).filter(Boolean), ...z.sp[s].hand.slice(0, 4)]; // was Vorhand vor der Ansage sieht

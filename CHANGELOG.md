@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.24.9 – 2026-10-06 – Bauernskat nach Köcheclub-Regeln
+Bauernskat: jeder hat 8 Häufchen (verdeckt, offen darauf); vor jedem Spiel wird sichtbar gemischt und in Viererpäckchen ausgeteilt – je zweimal verdeckt, dann zweimal offen. Wer gibt, wechselt; Trumpf-Ansage bleibt. (KC-CLUB-BAUERNSKAT-AUSTEILEN)
+
 ## 2.24.8 – 2026-10-06 – Schnellerer Start
 Das Programm liegt jetzt in einer eigenen Datei, die das Handy fertig eingelesen behält – die App startet schneller. Seite und Programm werden immer zusammen aktualisiert. (KC-CLUB-SCHNELLSTART-DATEI)
 

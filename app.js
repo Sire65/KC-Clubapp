@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.24.8"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.24.9"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SCHNELLSTART-DATEI (2.24.8, Hinweis Hansi „Start ist langsamer geworden“): das Programm liegt in app.js, damit das Handy es
 // fertig übersetzt behalten kann (statt bei jedem Öffnen 1,8 MB neu einzulesen). Seite und Programm müssen dieselbe Version haben
 // (AGENTS Regel 16, kein Mischstand): passt es nicht (z. B. alte Seite aus einem Zwischenspeicher), einmal frisch laden, sonst anhalten.
@@ -4388,8 +4388,15 @@ function bskStichGewinner(stich, t) { // stich = [{s, k}, {s, k}] – erste Kart
 }
 function bskMischen() { const d = []; for (const f of BSK_FARBEN) for (const w of BSK_WERTE) d.push(f + "-" + w);
   for (let i = d.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [d[i], d[j]] = [d[j], d[i]]; } return d; }
+// KC-CLUB-BAUERNSKAT-AUSTEILEN (2.24.9, Regeln nach Hansi): keine Handkarten – jeder hat 8 Häufchen (verdeckt, offen darauf).
+// Ausgeteilt wird in Viererpäckchen, zuerst an Vorhand (wer nicht gibt): 4 verdeckt Vorhand, 4 verdeckt Geber, noch einmal je 4
+// verdeckt, dann je 4 offen, noch einmal je 4 offen. Vorhand sagt Trumpf an (Pflicht) und spielt aus; wer gibt, wechselt jedes Spiel.
+// Laufende Partien von vorher (8 Handkarten + 4 Häufchen) spielen mit denselben Regeln zu Ende – die Funktionen kennen beides.
+const BSK_AUSTEILEN = [["unten", 0], ["unten", 4], ["oben", 0], ["oben", 4]];
 function bskNeu(vorhand) { // Spieler 0 = ich, 1 = Gegner
-  const d = bskMischen(), sp = [0, 1].map((i) => ({ hand: d.slice(i * 16, i * 16 + 8), tisch: [0, 1, 2, 3].map((j) => ({ unten: d[i * 16 + 8 + j], oben: d[i * 16 + 12 + j] })) }));
+  const d = bskMischen(), sp = [0, 1].map(() => ({ hand: [], tisch: Array.from({ length: 8 }, () => ({ unten: null, oben: null })) }));
+  let i = 0;
+  for (const [lage, ab] of BSK_AUSTEILEN) for (const s of [vorhand, 1 - vorhand]) for (let j = 0; j < 4; j++) sp[s].tisch[ab + j][lage] = d[i++];
   return { sp, vorhand, trumpf: null, phase: "ansage", amZug: vorhand, stich: [], stiche: [[], []], letzter: null };
 }
 const bskSichtbarAnsage = (z, s) => [...z.sp[s].tisch.map((p) => p.oben).filter(Boolean), ...z.sp[s].hand.slice(0, 4)]; // was Vorhand vor der Ansage sieht
@@ -4507,22 +4514,52 @@ function bskTischHtml(z, s, { klick = "", erlaubt = [], aus = false, ichDran = f
 }
 function bskBrettHtml(z, ich, { klick, aus, gegnerName, ansageSicht }) {
   const er = 1 - ich, erl = !aus && z.phase === "spiel" && z.amZug === ich ? bskErlaubt(z, ich) : [];
-  const hand = ansageSicht ? z.sp[ich].hand.slice(0, 4) : bskSort(z.sp[ich].hand, z.trumpf);
+  const hand = ansageSicht ? z.sp[ich].hand.slice(0, 4) : bskSort(z.sp[ich].hand, z.trumpf), mitHand = z.sp[ich].hand.length > 0 || z.sp[er].hand.length > 0; // 2.24.9: neue Partien ohne Hand
+  const rest = (s) => z.sp[s].hand.length + z.sp[s].tisch.reduce((a, p) => a + (p.oben ? 1 : 0) + (p.unten ? 1 : 0), 0);
   const aug = [bskSumme(z.stiche[0]), bskSumme(z.stiche[1])];
   const stich = z.stich.length ? z.stich : z.letzterZeigen ? z.letzter?.stich || [] : [];
   return `<div class="bsk">
-    <div class="bsk-kopf"><span>${esc(gegnerName)} · ${z.sp[er].hand.length} Handkarten</span><span>Augen: <b>${aug[er]}</b></span></div>
+    <div class="bsk-kopf"><span>${esc(gegnerName)} · ${mitHand ? z.sp[er].hand.length + " Handkarten" : rest(er) + " Karten"}</span><span>Augen: <b>${aug[er]}</b></span></div>
     ${bskTischHtml(z, er)}
     <div class="bsk-mitte"><div class="bsk-trumpf">${z.trumpf ? `Trumpf<br><b>${z.trumpf === "grand" ? "Grand<br><small>nur Buben</small>" : BSK_SYM[z.trumpf] + " " + BSK_FNAME[z.trumpf]}</b>` : "Trumpf<br><b>?</b>"}<br><small>Ansager: ${z.vorhand === ich ? "Du" : esc(gegnerName)}</small></div>
       <div class="bsk-stich">${stich.map((x) => `<div class="bsk-stich-karte ${x.s === ich ? "ich" : "er"}">${bskKarteHtml(x.k, { trumpf: z.trumpf })}</div>`).join("") || '<span class="hinweis">Stich</span>'}</div>
       ${!z.stich.length && stich.length ? `<div class="bsk-letzter">Letzter Stich – ${z.letzter.gewinner === ich ? "an dich" : "an " + esc(gegnerName)}</div>` : ""}</div>
     ${bskTischHtml(z, ich, { klick, erlaubt: erl, aus, ichDran: erl.length > 0 })}
-    <div class="bsk-hand">${hand.map((k) => bskKarteHtml(k, { klick: erl.includes(k) ? klick : "", trumpf: z.trumpf, blass: erl.length > 0 && !erl.includes(k) })).join("")}${ansageSicht ? '<span class="bsk-karte rueck"></span>'.repeat(4) : ""}</div>
+    ${mitHand ? `<div class="bsk-hand">${hand.map((k) => bskKarteHtml(k, { klick: erl.includes(k) ? klick : "", trumpf: z.trumpf, blass: erl.length > 0 && !erl.includes(k) })).join("")}${ansageSicht && z.sp[ich].hand.length ? '<span class="bsk-karte rueck"></span>'.repeat(4) : ""}</div>` : ""}
     <div class="bsk-kopf"><span>Du</span><span>Augen: <b>${aug[ich]}</b></span></div>
   </div>`;
 }
+// KC-CLUB-BAUERNSKAT-AUSTEILEN (2.24.9, Wunsch Hansi „vorher das Mischen, dann das Ausgeben an beide – aber schnell“):
+// neues Spiel → Stapel in der Mitte wird gemischt (0,7 s), dann fliegen die Viererpäckchen in der echten Reihenfolge an ihren Platz
+// (BSK_AUSTEILEN, erst Vorhand). Ein Tipp auf den Tisch = sofort fertig. Mit „✨ Animierte Knöpfe“ aus: Karten liegen gleich da.
+let BSK_TEILT = null;
+function bskTeilenEnde() {
+  const t = BSK_TEILT; if (!t) return; BSK_TEILT = null; t.zeiten.forEach(clearTimeout);
+  t.wurzel.querySelectorAll(".bsk-warte, .bsk-flug").forEach((e) => e.classList.remove("bsk-warte", "bsk-flug"));
+  t.wurzel.querySelector(".bsk-mischen")?.remove(); t.wurzel.classList.remove("bsk-teilt"); t.fertig?.();
+}
+function bskAusteilen(wurzel, z, ich, fertig) {
+  bskTeilenEnde();
+  const tische = wurzel?.querySelectorAll(".bsk-tisch");
+  if (!wurzel || tische?.length !== 2 || !einst("animiert", true)) return fertig?.();
+  const seite = { [1 - ich]: tische[0], [ich]: tische[1] }, karte = (s, j, lage) => { const st = seite[s].children[j]; return !st ? null : lage === "unten" ? st.querySelector(".rueck.klein") : st.lastElementChild; };
+  const mitte = wurzel.querySelector(".bsk-mitte"), m = document.createElement("div"); m.className = "bsk-mischen"; m.setAttribute("aria-hidden", "true");
+  m.innerHTML = '<span class="bsk-karte rueck"></span>'.repeat(5); (mitte || wurzel).appendChild(m);
+  const pakete = []; for (const [lage, ab] of BSK_AUSTEILEN) for (const s of [z.vorhand, 1 - z.vorhand]) pakete.push([0, 1, 2, 3].map((j) => karte(s, ab + j, lage)).filter(Boolean));
+  pakete.flat().forEach((e) => e.classList.add("bsk-warte"));
+  wurzel.classList.add("bsk-teilt");
+  BSK_TEILT = { wurzel, fertig, zeiten: [] };
+  const MISCHEN = 700, TAKT = 170, FLUG = 300;
+  pakete.forEach((paket, n) => BSK_TEILT.zeiten.push(setTimeout(() => {
+    const q = m.getBoundingClientRect();
+    paket.forEach((e) => { const r = e.getBoundingClientRect(); e.style.setProperty("--dx", `${q.left + q.width / 2 - (r.left + r.width / 2)}px`); e.style.setProperty("--dy", `${q.top + q.height / 2 - (r.top + r.height / 2)}px`);
+      e.classList.remove("bsk-warte"); e.classList.add("bsk-flug"); });
+  }, MISCHEN + n * TAKT)));
+  BSK_TEILT.zeiten.push(setTimeout(bskTeilenEnde, MISCHEN + pakete.length * TAKT + FLUG));
+  wurzel.addEventListener("click", bskTeilenEnde, { once: true, capture: true });
+}
 function bskPcZeigen() {
-  bskBilderVorladen();
+  bskBilderVorladen(); bskTeilenEnde(); // 2.24.9: neu gezeichnet → Austeilen sofort fertig
   if (!BSK.z) bskPcNeu(false);
   if (!BSK.denkt && BSK.z && ((BSK.z.phase === "spiel" && BSK.z.amZug === 1 && BSK.z.stich.length < 2) || (BSK.z.phase === "ansage" && BSK.z.vorhand === 1)) && !bskPcZeigen.laeuft) { bskPcZeigen.laeuft = true; setTimeout(() => { bskPcZeigen.laeuft = false; bskPcComputer(); }, 700); }
   const z = BSK.z, s = BSK.stand;
@@ -4538,12 +4575,13 @@ function bskPcZeigen() {
       ${bskBrettHtml(z, 0, { klick: "bskPcKarte", aus: BSK.denkt || z.phase !== "spiel" || z.amZug !== 0, gegnerName: "Computer", ansageSicht: z.phase === "ansage" })}
       <div class="knoepfe" style="justify-content:center">${spAnsageKnopf("bsk")}</div>
       <div class="knoepfe"><button class="knopf haupt" onclick="bskPcNeu()">↺ Neues Spiel</button><button class="knopf" onclick="bskPcStandWeg()">🗑️ Spielstand zurücksetzen</button></div>
-      <details class="sch-verlauf"><summary>📖 Regeln kurz</summary><p class="hinweis" style="margin:4px 0">Jeder hat 8 Karten auf der Hand und 4 Bauern auf dem Tisch (offen auf verdeckt). Vorhand sagt nach den ersten Karten Trumpf an – eine Farbe oder Grand (nur Buben). Buben sind die höchsten Trümpfe (♣ ♠ ♥ ♦), dann Ass, Zehn, König, Dame, 9, 8, 7. Farbe bedienen, wenn möglich – sonst stechen oder abwerfen. Wird ein Bauer gespielt, wird die Karte darunter aufgedeckt. Der Ansager braucht 61 Augen (Ass 11, Zehn 10, König 4, Dame 3, Bube 2).</p></details>
+      <details class="sch-verlauf"><summary>📖 Regeln kurz</summary><p class="hinweis" style="margin:4px 0">Jeder hat 8 Häufchen auf dem Tisch: unten verdeckt, oben offen. Ausgeteilt wird in Viererpäckchen – je zweimal verdeckt, dann zweimal offen; wer gibt, wechselt. Vorhand sieht ihre offenen Karten und muss Trumpf ansagen – eine Farbe oder Grand (nur Buben), dann spielt sie aus. Gespielt wird immer eine offene Karte; die Karte darunter wird sofort aufgedeckt. Buben sind die höchsten Trümpfe (♣ ♠ ♥ ♦), dann Ass, Zehn, König, Dame, 9, 8, 7. Farbe bedienen, wenn möglich – sonst stechen oder abwerfen. Der Ansager braucht 61 Augen (Ass 11, Zehn 10, König 4, Dame 3, Bube 2).</p></details>
     </div>`;
+  if (BSK.teilen) { BSK.teilen = false; bskAusteilen($("spInhalt").querySelector(".bsk"), z, 0); } // KC-CLUB-BAUERNSKAT-AUSTEILEN
 }
 async function bskPcNeu(fragen = true) {
   if (fragen && BSK.z && BSK.z.phase === "spiel" && (BSK.z.stiche[0].length + BSK.z.stiche[1].length) > 0 && !(await frage("Neues Spiel beginnen? Das laufende Spiel wird nicht gewertet.", { ja: "↺ Neues Spiel", nein: "Weiterspielen" }))) return;
-  BSK.runde = (BSK.runde || 0) + 1; BSK.z = bskNeu(BSK.runde % 2 ? 0 : 1); BSK.gewertet = false; BSK.denkt = false; bskMerken();
+  BSK.runde = (BSK.runde || 0) + 1; BSK.z = bskNeu(BSK.runde % 2 ? 0 : 1); BSK.gewertet = false; BSK.denkt = false; BSK.teilen = true; bskMerken(); // Geber wechselt jedes Spiel
   if (fragen !== false || aktuelleAnsicht === "spiele") bskPcZeigen();
   if (BSK.z.vorhand === 1) setTimeout(bskPcComputer, 700);
 }
@@ -4567,6 +4605,7 @@ function bskPcKarte(k) {
 function bskPcComputer() {
   if (spPauseHalt(bskPcComputer)) return; // 2.18.0: Pause
   const z = BSK.z; if (!z || aktuelleAnsicht !== "spiele" || SP.art !== "bsk") return; // weiter, sobald Bauernskat wieder offen ist (siehe bskPcZeigen)
+  if (BSK_TEILT) return setTimeout(bskPcComputer, 300); // 2.24.9: erst fertig austeilen
   if (z.phase === "ansage" && z.vorhand === 1) { z.trumpf = bskAnsageWahl(bskSichtbarAnsage(z, 1)); z.phase = "spiel"; z.amZug = 1; bskMerken();
     melde(`🤖 Der Computer sagt an: ${z.trumpf === "grand" ? "Grand – nur Buben" : BSK_SYM[z.trumpf] + " " + BSK_FNAME[z.trumpf]}`); spSag("bsk", `Der Computer sagt an: ${bskTrumpfWort(z.trumpf)}.`); bskZeichnen(); setTimeout(bskPcComputer, 800); return; }
   if (z.phase !== "spiel" || z.amZug !== 1) return;
@@ -4589,6 +4628,7 @@ function bskMgAnsagen(g, z) {
   if (teile.length) spSag("bsk", teile.join(" "), `bsk:${g.id}:${g.zuege}`);
 }
 function bskSpielZeigen(g) {
+  bskTeilenEnde(); // 2.24.9
   bskBilderVorladen();
   const z = g.bsk, er = esc(g.gegner.vorname);
   if (z) bskMgAnsagen(g, z); // KC-CLUB-SPIEL-ANSAGE
@@ -4613,7 +4653,10 @@ function bskSpielZeigen(g) {
       <p class="hinweis" style="text-align:center;margin:6px 0">Karte antippen zum Spielen. Du musst nicht warten – ${er} bekommt Bescheid.</p>
       <div class="knoepfe">${g.status === "beendet" ? `<button class="knopf haupt" onclick="spRevanche('${g.id}')">↺ Revanche</button>` : g.status === "laeuft" ? `<button class="knopf" onclick="spAufgeben('${g.id}')">🏳️ Aufgeben</button>` : ""}</div>
     </div>`;
+  // KC-CLUB-BAUERNSKAT-AUSTEILEN (2.24.9): eine neue Partie sieht man einmal mischen und austeilen
+  if (g.status === "laeuft" && z.phase === "ansage" && !z.sp[0].hand.length && !BSK_GETEILT.has(g.id)) { BSK_GETEILT.add(g.id); bskAusteilen($("spInhalt").querySelector(".bsk"), z, 0); }
 }
+const BSK_GETEILT = new Set();
 async function bskMgZug(zug) {
   const g = SP.offen; if (!g?.ichDran || SP.sendet) return;
   SP.sendet = true; g.ichDran = false; bskSpielZeigen(g); // sofort sperren (kein Doppeltippen)
