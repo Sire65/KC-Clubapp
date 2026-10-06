@@ -4467,7 +4467,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
     && /spur\(mitBild \? "video" : "anruf", pid\)/.test(html) && /spur\("anklopfen", pid\)/.test(html) && /spur\('telefon', mitgliedId\)/.test(html), "Mitglied, Chat, gesendet, Anruf, Anklopfen, Telefon");
   assert.ok(!/spur\([^)]*(text|\$\("text"\))/.test(html), "nie Text in der Spur");
   assert.ok(/onclick="spurAdmin\(heuteIso\(\), null\)">👣 Wege der Mitglieder/.test(html), "Admin: Nutzung → Wege der Mitglieder");
-  assert.ok(/id: "was_gespeichert", thema: "privat"[^\n]*30 Tage lang[^\n]*ohne Inhalte[^\n]*nur der Admin/.test(html), "Satz in der Hilfe");
+  assert.ok(/id: "was_gespeichert", thema: "privat", sym: "🗂️", nur: \(\) => !!ICH\?\.admin,[^\n]*30 Tage lang[^\n]*ohne Inhalte[^\n]*nur der Admin/.test(html), "Satz in der Hilfe");
   assert.ok(!/was_gespeichert|spurAdmin/.test(html.slice(html.indexOf("function mdatAbschnitte"), html.indexOf("function mdatAbschnitte") + 4000)), "nicht in „Meine Daten“");
 }
 
