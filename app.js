@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.24.13"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.24.14"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SCHNELLSTART-DATEI (2.24.8, Hinweis Hansi „Start ist langsamer geworden“): das Programm liegt in app.js, damit das Handy es
 // fertig übersetzt behalten kann (statt bei jedem Öffnen 1,8 MB neu einzulesen). Seite und Programm müssen dieselbe Version haben
 // (AGENTS Regel 16, kein Mischstand): passt es nicht (z. B. alte Seite aus einem Zwischenspeicher), einmal frisch laden, sonst anhalten.
@@ -492,20 +492,24 @@ const pwHilfeNeu = () => (PW.hilfe?.aufrufe || []).filter((a) => pwAufrufAnPinnw
 // „Du hast 3 neue Nachrichten (davon 1 in Gruppen) und 1 neuen Pinnwand-Eintrag.“ Nur beim Öffnen auf der Startseite, nicht über einen
 // Push-/Sprunglink, nicht bei Notfall-Meldung; abschaltbar (⚙️ → Benachrichtigungen). Unsichere Zahlen werden nie als 0 gezeigt (Regel 11).
 function wasNeuZeigen(pw) {
-  const n = INIT?.ungelesen || 0, gr = INIT?.ungelesenGruppen, p = pw?.length || 0;
-  if (!einst("wasNeu", true) || (!n && !p) || (START_HASH && START_HASH !== "#") || INIT?.alarm || aktuelleAnsicht !== "start" || document.querySelector(".blatt:not(.versteckt)")) return false;
+  const n = INIT?.ungelesen || 0, gr = INIT?.ungelesenGruppen, p = pw?.length || 0, sp = INIT?.spieleDran || 0; // 2.24.13: auch Spiele (Einladung / du bist dran)
+  if (!einst("wasNeu", true) || (!n && !p && !sp) || (START_HASH && START_HASH !== "#") || INIT?.alarm || aktuelleAnsicht !== "start" || document.querySelector(".blatt:not(.versteckt)")) return false;
   const mz = (k, w1, wn) => `<b>${k}</b> ${k === 1 ? w1 : wn}`, einzel = gr == null ? null : n - gr;
   const zeilen = [];
   if (n) zeilen.push(`<div class="wn-zeile">💬 <span>${mz(n, "neue Nachricht", "neue Nachrichten")}${INIT?.ungelesenUnsicher ? " (vielleicht mehr)" : ""}${gr == null ? "" : gr && einzel ? `<br><small>${mz(einzel, "in deinem Chat", "in deinen Chats")} · ${mz(gr, "in einer Gruppe", "in Gruppen")}</small>` : gr ? "<br><small>in deinen Gruppen</small>" : "<br><small>in deinen Chats</small>"}</span></div>`);
   if (p) zeilen.push(`<div class="wn-zeile">📌 <span>${mz(p, "neuer Pinnwand-Eintrag", "neue Pinnwand-Einträge")}</span></div>`);
+  if (sp) zeilen.push(`<div class="wn-zeile">🎲 <span>${mz(sp, "Spiel wartet", "Spiele warten")} auf dich<br><small>Einladung oder du bist am Zug</small></span></div>`);
   if (!ruheInfo()) return false; // KC-CLUB-RUHE
   const f = blattAuf("wasNeuBlatt", `<h3 style="margin:0 0 8px">👋 Schön, dass du da bist${ICH?.vorname ? ", " + esc(ICH.vorname) : ""}!</h3>
     <p style="margin:0 0 6px">Seit deinem letzten Besuch ist neu:</p>${zeilen.join("")}
     <div class="knoepfe" style="flex-direction:column;align-items:stretch;margin-top:10px">
-      ${n ? `<button class="knopf haupt" data-wn="n">💬 Direkt zu den Nachrichten</button>` : ""}${p ? `<button class="knopf${n ? "" : " haupt"}" data-wn="p">📌 Pinnwand-Eintrag${p > 1 ? "e" : ""} ansehen</button>` : ""}
+      ${n ? `<button class="knopf haupt" data-wn="n">💬 Direkt zu den Nachrichten</button>` : ""}${p ? `<button class="knopf${n ? "" : " haupt"}" data-wn="p">📌 Pinnwand-Eintrag${p > 1 ? "e" : ""} ansehen</button>` : ""}${sp ? `<button class="knopf${n || p ? "" : " haupt"}" data-wn="sp">🎲 Zu den Spielen</button>` : ""}
       <button class="knopf" data-wn="s">Später</button></div>
-    <label class="schalter" style="margin-top:6px"><span><small>Beim Öffnen nicht mehr zeigen</small></span><input type="checkbox" onchange="einstellung('wasNeu', !this.checked); if ($('setWasNeu')) $('setWasNeu').checked = !this.checked"></label>`);
-  f.querySelectorAll("[data-wn]").forEach((b) => (b.onclick = () => { const w = b.dataset.wn; fensterZu(f); if (w === "n") zeige("nachrichten"); else if (w === "p") pwFenster(pw); }));
+    <div style="text-align:center;margin-top:10px"><button class="knopf klein" data-wn="aus">🔕 Diese Meldung ausschalten</button>
+      <p class="hinweis" style="margin:4px 0 0">In deinen Einstellungen kannst du sie jederzeit wieder aktivieren.</p></div>`);
+  f.querySelectorAll("[data-wn]").forEach((b) => (b.onclick = () => { const w = b.dataset.wn; fensterZu(f);
+    if (w === "n") zeige("nachrichten"); else if (w === "p") pwFenster(pw); else if (w === "sp") spStart("mg");
+    else if (w === "aus") { einstellung("wasNeu", false); if ($("setWasNeu")) $("setWasNeu").checked = false; melde("🔕 Ausgeschaltet – wieder einschalten: ⚙️ Einstellungen → „👋 Beim Öffnen zeigen, was neu ist“"); } }));
   return true;
 }
 async function pwStart(nurZaehlen) { // nurZaehlen: Begrüßung ist offen → Pinnwand nicht zusätzlich öffnen

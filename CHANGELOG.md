@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.24.14 – 2026-10-06 – Tagesmeldung mit Spielen
+Die Meldung beim Öffnen nennt jetzt auch Spiele, die auf dich warten. Unten kann man sie ausschalten. (KC-CLUB-WAS-NEU)
+
 ## 2.24.13 – 2026-10-06 – Weniger Fenster beim Öffnen
 Beim Öffnen kommt höchstens noch ein Hinweis-Fenster. Tipp des Tages und Spiele-Einladung höchstens einmal in der Woche. (KC-CLUB-RUHE)
 

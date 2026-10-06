@@ -4687,8 +4687,8 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.24.12 KC-CLUB-WAS-NEU: beim Öffnen zeigen, was neu ist (Nachrichten Einzel/Gruppe, Pinnwand) – mit Knopf direkt dorthin
 {
   assert.ok(/const ungelesenGruppen = grFehler \? null : /.test(server) && /ungelesen, ungelesenLaut, ungelesenGruppen,/.test(server), "Server: Gruppen getrennt gezählt, Fehler = unbekannt");
-  assert.ok(/function wasNeuZeigen\(pw\)/.test(html) && /!einst\("wasNeu", true\) \|\| \(!n && !p\) \|\| \(START_HASH && START_HASH !== "#"\) \|\| INIT\?\.alarm \|\| aktuelleAnsicht !== "start"/.test(html), "nur beim Öffnen, nicht über Links, nicht bei Notfall, abschaltbar");
-  assert.ok(/if \(wasNeuZeigen\(n\)\) \{ gezeigt = true;/.test(html) && /zeige\("nachrichten"\); else if \(w === "p"\) pwFenster\(pw\)/.test(html), "Knöpfe direkt zu Nachrichten / Pinnwand, kein doppeltes Fenster");
+  assert.ok(/function wasNeuZeigen\(pw\)/.test(html) && /!einst\("wasNeu", true\) \|\| \(!n && !p && !sp\) \|\| \(START_HASH && START_HASH !== "#"\) \|\| INIT\?\.alarm \|\| aktuelleAnsicht !== "start"/.test(html), "nur beim Öffnen, nicht über Links, nicht bei Notfall, abschaltbar");
+  assert.ok(/if \(wasNeuZeigen\(n\)\) \{ gezeigt = true;/.test(html) && /zeige\("nachrichten"\); else if \(w === "p"\) pwFenster\(pw\); else if \(w === "sp"\) spStart\("mg"\);/.test(html) && /🔕 Diese Meldung ausschalten/.test(html) && /In deinen Einstellungen kannst du sie jederzeit wieder aktivieren\./.test(html), "Knöpfe direkt zu Nachrichten / Pinnwand, kein doppeltes Fenster");
   assert.ok(/id="setWasNeu" onchange="einstellung\('wasNeu', this\.checked\)"/.test(html) && /gr == null \? ""/.test(html), "Schalter in den Einstellungen; unbekannte Gruppen-Zahl nicht als 0");
 }
 // 2.24.13 KC-CLUB-RUHE: je Öffnen höchstens ein Info-Fenster, Tipp + Spiele-Einladung höchstens einmal je Woche, kein Versions-Fenster für Mitglieder
@@ -4697,6 +4697,10 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(!ICH\?\.admin && !ruheSeit\(st\.zuletzt\)\) return false;/.test(html) && /if \(!tipp \|\| !ruheInfo\(\)\) return false;/.test(html), "Tipp höchstens wöchentlich, nur wenn sonst nichts kam");
   assert.ok(/!ruheSeit\(localStorage\.getItem\(SPE_GEZEIGT\)\)\) return;/.test(html) && /localStorage\.setItem\(SPE_GEZEIGT, new Date\(\)\.toISOString\(\)\)/.test(html) && /Höchstens einmal in der Woche: „Heute Lust auf eine Partie\?“/.test(html), "Spiele-Einladung bleibt, aber höchstens wöchentlich");
   assert.ok(/if \(!ICH\?\.admin\) return; \/\/ KC-CLUB-RUHE/.test(html) && /if \(!ruheInfo\(\)\) return false; \/\/ KC-CLUB-RUHE\n  const f = blattAuf\("wasNeuBlatt"/.test(html) && /else if \(n\.length && ruheInfo\(\)\)/.test(html), "Versions-Fenster nur Admin; Was-neu/Pinnwand zählen mit");
+}
+// 2.24.14 KC-CLUB-WAS-NEU: Tagesmeldung zeigt auch wartende Spiele; „Diese Meldung ausschalten“ unten
+{
+  assert.ok(/sp = INIT\?\.spieleDran \|\| 0/.test(html) && /Einladung oder du bist am Zug/.test(html), "Spiele in der Tagesmeldung");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

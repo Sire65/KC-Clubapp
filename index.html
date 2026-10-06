@@ -2565,7 +2565,7 @@
       <p class="hinweis" style="font-size:.85rem" id="wahlHinweis">Nur Push: Kommt der Push nicht an, schicken wir automatisch eine E-Mail.</p>
       <div class="schalter"><div><b>📲 Push auf diesem Handy</b><div class="hinweis" id="pushStatus">…</div></div><button class="knopf klein" id="pushKnopf" onclick="pushUmschalten()">Einschalten</button></div>
       <div class="schalter"><div><b>🔊 Warnton bei neuer Nachricht</b><div class="hinweis">Kurzer Ton, wenn die App offen ist</div></div><input type="checkbox" id="setTon" onchange="einstellung('ton', this.checked)"></div>
-      <div class="schalter"><div><b>👋 Beim Öffnen zeigen, was neu ist</b><div class="hinweis">Neue Nachrichten (Chats und Gruppen) und Pinnwand-Einträge auf einen Blick, mit Knopf direkt dorthin</div></div><input type="checkbox" id="setWasNeu" onchange="einstellung('wasNeu', this.checked)"></div> <!-- 2.24.12 KC-CLUB-WAS-NEU -->
+      <div class="schalter"><div><b>👋 Beim Öffnen zeigen, was neu ist</b><div class="hinweis">Neue Nachrichten (Chats und Gruppen), Pinnwand-Einträge und Spiele, die auf dich warten – auf einen Blick, mit Knopf direkt dorthin</div></div><input type="checkbox" id="setWasNeu" onchange="einstellung('wasNeu', this.checked)"></div> <!-- 2.24.12 KC-CLUB-WAS-NEU -->
       <div class="knoepfe"><button class="knopf klein" onclick="tonTest()">Ton testen</button><button class="knopf klein" onclick="pushTest()">Test-Push senden</button><button class="knopf klein" onclick="geraeteBlatt()">📱 Meine Geräte</button></div>
       <!-- KC-CLUB-RUHEZEIT (0.98.0) -->
       <div class="schalter" style="margin-top:10px"><div><b>🌙 Nicht stören</b><div class="hinweis" id="ruheHinweis">In dieser Zeit kein Push. Anrufe kommen trotzdem durch, danach eine Sammelmeldung.</div></div><input type="checkbox" id="ruheAn" onchange="ruheSpeichern()"></div>
@@ -3011,6 +3011,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.24.13" data-v="2.24.13"></script>
+<script src="app.js?v=2.24.14" data-v="2.24.14"></script>
 </body>
 </html>
