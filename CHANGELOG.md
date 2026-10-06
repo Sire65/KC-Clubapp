@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.24.17 – 2026-10-06 – KC-CLUB-KOPF-ORDNUNG: Kopfzeile aufgeräumt (Wunsch Hansi)
+- Obere Zeile: Kochmütze, darunter klein die Versionsnummer (antippen = Update prüfen, bei neuer Version gelb mit 🆕); daneben „KÖCHECLUB WERNE“ und der Gruß „Hallo …!“; rechts nur noch 🌙 und ↻ gleich groß.
+- Darunter eine Statusleiste: links der Status mit dem Pfeil auf der Unterkante, rechts die Verbindungs-LEDs (jetzt waagerecht), nach einem Trennstrich Herz und 🕶️ (nur Admin).
+- Einfache Ansicht: unverändert ruhig – nur der Status ohne dunklen Balken, LEDs nur bei Störung.
+- Server unverändert (kc-club bleibt 2.24.16).
+
 ## DB – 2026-10-06 – KC-CORE-PERSON-UEBERNAHME V1 (gebaut und lokal getestet, NICHT eingespielt)
 - Migration `20261006_kc_core_person_uebernahme_v1.sql` (abgestimmt mit Codex, Antworten 1–6):
   - Speicherschutz Manager-Abschnitte: `kc_manager_section_speichern` (Compare-and-swap) und Trigger „version = alt + 1“ im Modus „melden“ (Erzwingen nur nach eigener Freigabe).

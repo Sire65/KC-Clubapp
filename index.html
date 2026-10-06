@@ -1871,6 +1871,25 @@
   .led-online.gruen { background: #3ddc6f; box-shadow: 0 0 7px 3px rgba(61,220,111,.8); animation: ledAtmen 2.4s ease-in-out infinite; }
   @keyframes ledAtmen { 50% { box-shadow: 0 0 3px 1px rgba(61,220,111,.5); } }
   @media (max-width: 560px) { .leds { min-height: 42px; padding: 6px 0; } }
+  /* KC-CLUB-KOPF-ORDNUNG (2.24.17, Wunsch Hansi: „besser aufgeräumt“): oben Kochmütze (Version darunter), Name + Gruß, rechts nur 🌙 und ↻;
+     darunter eine Statusleiste – links der Status (Pfeil auf der Unterkante bleibt), rechts LEDs waagerecht, Herz und Brille */
+  .kopfzeile { align-items: center; }
+  .kopflogo { flex: none; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .kopf-version { border: none; background: none; padding: 0 2px; color: rgba(255,255,255,.85); font: 700 .7rem/1.1 system-ui, sans-serif; letter-spacing: .02em; white-space: nowrap; cursor: pointer; }
+  .kopf-version.neu { color: #ffe066; }
+  .kopftext .gruss, body.einfach .kopftext .gruss { position: static; display: block; max-width: none; text-align: left; font-size: 1.2rem; line-height: 1.2; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .kopfrechts, body.einfach .kopfrechts { align-self: center; }
+  .statusleiste { display: flex; align-items: center; gap: 10px; margin-top: 14px; padding: 7px 10px 10px; border-radius: 16px; background: rgba(0,0,0,.2); min-height: 38px; }
+  .statusleiste .statuschip { margin-top: 0; flex: 0 1 auto; min-width: 0; }
+  .sl-luecke { flex: 1 1 0; }
+  .statusleiste .leds { flex-direction: row; width: auto; height: 26px; min-height: 0; padding: 0 10px; gap: 6px; border-radius: 13px; background: rgba(0,0,0,.25); }
+  .statusleiste .led-trenner { width: 2px; height: 12px; }
+  .sl-extra { display: flex; align-items: center; gap: 8px; padding-left: 10px; border-left: 1px solid rgba(255,255,255,.3); }
+  .statusleiste #inkoKnopf { width: 32px; height: 32px; font-size: .95rem; }
+  body:not(.ist-admin) .sl-extra { display: none; }
+  body.einfach .statusleiste { background: none; padding: 0 0 6px; margin-top: 10px; min-height: 0; } /* einfache Ansicht: nur der Status, ohne dunklen Balken */
+  @media (max-width: 420px) { .kopfzeile { gap: 9px; } #v-start .marke-klein { font-size: .84rem; letter-spacing: 0; } }
+  @media (max-width: 380px) { .statusleiste { gap: 7px; padding-left: 8px; padding-right: 8px; } .sl-extra { padding-left: 7px; gap: 5px; } .statusleiste .leds { padding: 0 7px; gap: 5px; } }
   /* Fotoalbum (KC-CLUB-FOTOALBUM) */
   .speicherbalken { height: 10px; border-radius: 6px; background: var(--karte2); overflow: hidden; margin: 8px 0 6px; }
   .speicherbalken i { display: block; height: 100%; background: var(--gruen); border-radius: 6px; }
@@ -2190,18 +2209,22 @@
   <!-- START -->
   <section id="v-start">
     <div class="hero">
+      <!-- KC-CLUB-KOPF-ORDNUNG (2.24.17, Wunsch Hansi): oben Marke + Knöpfe, darunter eine Statusleiste (Status, LEDs, Herz, Brille) -->
       <div class="kopfzeile">
-        <button class="logo" title="Zur Internetseite des Köcheclubs" onclick="webseite()"><img src="kc-kochmuetze-weiss.webp" alt="Kochmütze"></button>
-        <div class="kopftext"><div class="marke-klein">KÖCHECLUB WERNE</div><button class="statuschip" id="statusChip" onclick="statusBlatt()">🟢 verfügbar ▾</button></div>
+        <div class="kopflogo"><button class="logo" title="Zur Internetseite des Köcheclubs" onclick="webseite()"><img src="kc-kochmuetze-weiss.webp" alt="Kochmütze"></button><button class="kopf-version" id="kopfVersion" title="Update prüfen" aria-label="Version – Update prüfen" onclick="updateKachel()">v–</button></div>
+        <div class="kopftext"><div class="marke-klein">KÖCHECLUB WERNE</div><div class="gruss"><span id="begruessung">Hallo!</span></div></div>
         <div class="kopfrechts">
           <div class="knopfreihe">
-            <button class="leds" id="leds" title="Verbindung zum Server" aria-label="Verbindung zum Server" onclick="verbindungBlatt()"><i class="led grau" id="ledStatus"></i><i class="led grau" id="ledComm"></i><i class="led daten" id="ledDaten"></i><i class="led-trenner" aria-hidden="true"></i><i class="led grau led-online" id="ledOnline" role="button" tabindex="0" title="Wer ist gerade online?" aria-label="Wer ist gerade online?" onclick="event.stopPropagation();onlineBlatt()"></i></button>
-            <button class="herz" id="herzKnopf" title="Lebenszeichen – antippen: die letzten 15" aria-label="Lebenszeichen, antippen für die letzten 15" onclick="herzListe()">♥</button>
             <button class="rund" id="modusKnopf" title="Tag/Nacht umschalten" aria-label="Tag/Nacht umschalten" onclick="dunkelUmschalten()">🌙</button>
             <button class="rund" id="aktualisierenKnopf" title="Aktualisieren" aria-label="Aktualisieren" onclick="neuLaden(true)">↻</button>
           </div>
-          <div class="gruss"><button id="inkoKnopf" title="Inkognito – antippen zum Umschalten" aria-label="Inkognito umschalten" aria-pressed="false" onclick="inkognitoSetzen(!inkognitoAn())">🕶️</button><span id="begruessung">Hallo!</span></div>
         </div>
+      </div>
+      <div class="statusleiste">
+        <button class="statuschip" id="statusChip" onclick="statusBlatt()">🟢 verfügbar ▾</button>
+        <span class="sl-luecke"></span>
+        <button class="leds" id="leds" title="Verbindung zum Server" aria-label="Verbindung zum Server" onclick="verbindungBlatt()"><i class="led grau" id="ledStatus"></i><i class="led grau" id="ledComm"></i><i class="led daten" id="ledDaten"></i><i class="led-trenner" aria-hidden="true"></i><i class="led grau led-online" id="ledOnline" role="button" tabindex="0" title="Wer ist gerade online?" aria-label="Wer ist gerade online?" onclick="event.stopPropagation();onlineBlatt()"></i></button>
+        <span class="sl-extra"><button class="herz" id="herzKnopf" title="Lebenszeichen – antippen: die letzten 15" aria-label="Lebenszeichen, antippen für die letzten 15" onclick="herzListe()">♥</button><button id="inkoKnopf" title="Inkognito – antippen zum Umschalten" aria-label="Inkognito umschalten" aria-pressed="false" onclick="inkognitoSetzen(!inkognitoAn())">🕶️</button></span>
       </div>
       <div class="info" id="heroInfo"><h2>Einen Moment …</h2><div class="unter">Daten werden geladen.</div></div>
       <div class="ipunkte" id="infoPunkte"></div>
@@ -3015,6 +3038,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.24.16" data-v="2.24.16"></script>
+<script src="app.js?v=2.24.17" data-v="2.24.17"></script>
 </body>
 </html>
