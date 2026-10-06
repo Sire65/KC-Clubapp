@@ -1,10 +1,17 @@
 {
-  "version": "2.25.4",
+  "version": "2.25.5",
   "datum": "2026-10-06",
   "neu": [
-    "💶 Erstattung: „Fahrten aus Besuchen übernehmen“ – Besuche mit km als Fahrtkosten an den Kassenwart schicken, ohne doppelt abzurechnen"
+    "📋 Anwesenheitstafel: unter dem Namen „online seit 14:32“ bzw. „zuletzt online heute um 18:05“"
   ],
   "verlauf": [
+    {
+      "version": "2.25.5",
+      "datum": "2026-10-06",
+      "neu": [
+        "📋 Anwesenheitstafel: unter dem Namen „online seit 14:32“ bzw. „zuletzt online heute um 18:05“"
+      ]
+    },
     {
       "version": "2.25.4",
       "datum": "2026-10-06",

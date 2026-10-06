@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.25.5 – 2026-10-06 – KC-CLUB-ONLINE-SEIT: Anwesenheitstafel mit „online seit …“ / „zuletzt online um …“ (Wunsch Hansi)
+- 📋 Mitglieder → Anwesenheitstafel: unter jedem Namen eine kleine Zeile – grün „online seit 14:32“ (über Mitternacht „seit gestern 23:50“), sonst „zuletzt online heute um 18:05“, „zuletzt online gestern“, „am 28.09.“ oder „länger nicht online“.
+- Server merkt sich beim Online-Takt den Beginn der aktuellen Sitzung (Einstellung „online_seit“; neue Sitzung nach mehr als 150 s Pause, geschrieben höchstens alle 30 s) und liefert ihn über „zuletzt da“ mit – dieselben Privatsphäre-Regeln (Online/Zuletzt verborgen, Inkognito) wie bisher. Ohne Angabe steht nichts da, nie geraten.
+- Online-Zustand aus derselben Quelle wie LED und Ring (2.24.18). Server kc-club 2.25.5, keine Datenbankänderung.
+
 ## 2.25.4 – 2026-10-06 – KC-CLUB-ERSTATTUNG-BESUCHE: km aus Besuchen über die Erstattung an den Kassenwart (Wunsch Hansi)
 - 💶 Erstattung → 🚗 Fahrtkosten (nur Admin): neuer Knopf „🎓 Fahrten aus Besuchen übernehmen“. Zeigt stattgefundene Besuche mit km (Hin + Rück), die noch in keinem Antrag stehen; Haken setzen → als Fahrtpositionen übernehmen (Datum, km, Satz am Fahrtag, Grund „Mitgliederbesuch/Schulung: Name (Anzahl) · Zeit“, Ziel = Ort, Besuchs-ID).
 - Danach wie gewohnt „📨 Antrag senden“ – Mail an Kassenwart (CC Clubsprecher), Büro-Eingangskorb, Bestätigung. In der Mail steht je Fahrt die Besuchs-ID.

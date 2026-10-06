@@ -1808,7 +1808,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/zuletzt: \(w\) => \(\{ zeigen: w\?\.zeigen !== false \}\)/.test(server), "Einstellung zuletzt, Standard an");
   const f = server.slice(server.indexOf("async function zuletztDaMap("), server.indexOf("async function onlineJetzt("));
   // 2.3.0: + „inkognito“ (verbirgt nur den Admin selbst, nicht gegenseitig)
-  assert.ok(/\.in\("schluessel", \["online", "zuletzt"(, "inkognito")?\]\)/.test(f) && /if \(verborgen\(ich\.person_id(, true)?\)\) return aus;/.test(f), "gegenseitig (online oder zuletzt verborgen)");
+  assert.ok(/\.in\("schluessel", \["online", "zuletzt"(, "inkognito")?(, "online_seit")?\]\)/.test(f) && /if \(verborgen\(ich\.person_id(, true)?\)\) return aus;/.test(f), "gegenseitig (online oder zuletzt verborgen)");
   assert.ok(/zeit: tag === heute \?/.test(f) && /lange: true/.test(f) && /pid\.startsWith\("KC-P-TEST"\)/.test(f), "grob: Uhrzeit nur heute, alt = länger nicht da, Testpersonen nie");
   assert.ok(/zuletztDa: zd\.get\(m\.person_id\) \?\? null/.test(server) && /zuletztDa: selbst \? null : \(await zuletztDaMap\(ich, \[pid\]\)\)/.test(server) && /partnerDa = andere\.length === 1/.test(server), "Server: alle drei Stellen");
   assert.ok(/id="setZuletzt" onchange="zuletztZeigen\(this\.checked\)"/.test(html) && /function zuletztText\(z\)/.test(html), "App: Schalter + Text");
@@ -5295,5 +5295,24 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   const es = server.slice(server.indexOf('case "erstattung_senden": {'), server.indexOf('case "erstattung_senden": {') + 4000);
   assert.ok(/const besuchId = ich\.admin && /.test(server) && /schon\.has\(x\.besuch_id\)/.test(es) && /b\.datum !== x\.datum \|\| Math\.round\(Number\(b\.km_gesamt\) \* 10\) \/ 10 !== x\.km/.test(es) && /b\.status === "geplant"/.test(es), "Server: nur Admin, km/Datum wie im Besuch, keine Doppelabrechnung");
   assert.ok(/\.neq\("status", "abgelehnt"\)/.test(server.slice(server.indexOf("async function erstattungBesucheAbgerechnet("), server.indexOf("async function erstattungBesucheAbgerechnet(") + 400)), "abgelehnte Anträge geben den Besuch wieder frei");
+}
+
+// 4xx. 2.25.5: Anwesenheitstafel – „online seit …“ / „zuletzt online um …“ unter dem Namen (KC-CLUB-ONLINE-SEIT, Wunsch Hansi)
+{
+  const a = html.indexOf("function mgDaText(m)"), b = html.indexOf("\n}", a) + 2;
+  const ONL = { stand: 0, ids: new Set() };
+  const mgDaText = new Function("ONL", "heuteIso", html.slice(a, b) + "\nreturn mgDaText;")(ONL, () => "2026-10-06");
+  assert.equal(mgDaText({ person_id: "a", online: true, zuletztDa: { online: true, tag: "2026-10-06", zeit: "18:40", seit: "14:32", seitTag: "2026-10-06" } }), "online seit 14:32");
+  assert.equal(mgDaText({ person_id: "a", online: true, zuletztDa: { online: true, seit: "23:50", seitTag: "2026-10-05" } }), "online seit gestern 23:50");
+  assert.equal(mgDaText({ person_id: "a", online: true, zuletztDa: null }), "online", "ohne Merker nur „online“");
+  assert.equal(mgDaText({ person_id: "a", online: false, zuletztDa: { online: false, tag: "2026-10-06", zeit: "18:05" } }), "zuletzt online heute um 18:05");
+  assert.equal(mgDaText({ person_id: "a", online: false, zuletztDa: { online: false, tag: "2026-10-05" } }), "zuletzt online gestern");
+  assert.equal(mgDaText({ person_id: "a", online: false, zuletztDa: { online: false, tag: "2026-09-28" } }), "zuletzt online am 28.09.");
+  assert.equal(mgDaText({ person_id: "a", online: false, zuletztDa: null }), "", "verborgen → nichts (nie geraten)");
+  ONL.stand = Date.now(); ONL.ids = new Set(); assert.equal(mgDaText({ person_id: "a", online: true, zuletztDa: { online: false, tag: "2026-10-06", zeit: "18:05" } }), "zuletzt online heute um 18:05", "aktueller Online-Stand gewinnt");
+  assert.ok(/const da = m\.person_id === ICH\.person_id \? "" : mgDaText\(m\);/.test(html) && /<small class="mg-da/.test(html), "Tafel zeigt die Zeile");
+  const ms = server.slice(server.indexOf("async function onlineSeitMerken("), server.indexOf("async function onlineJetzt("));
+  assert.ok(/jetztMs - z > ONLINE_SEK \* 1000/.test(ms) && /schluessel: "online_seit"/.test(ms) && /if \(!neu && jetztMs - z < 30000\) return;/.test(ms), "Sitzungsbeginn: neue Sitzung nach ONLINE_SEK Pause, höchstens alle 30 s schreiben");
+  assert.ok(/if \(!ich\.nurLesen\) await onlineSeitMerken\(ich\.person_id\)/.test(server) && /"inkognito", "online_seit"\]/.test(server), "beim Online-Takt gemerkt, über zuletztDaMap (mit Privatsphäre) geliefert");
 }
 

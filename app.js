@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.25.4"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.25.5"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SCHNELLSTART-DATEI (2.24.8, Hinweis Hansi „Start ist langsamer geworden“): das Programm liegt in app.js, damit das Handy es
 // fertig übersetzt behalten kann (statt bei jedem Öffnen 1,8 MB neu einzulesen). Seite und Programm müssen dieselbe Version haben
 // (AGENTS Regel 16, kein Mischstand): passt es nicht (z. B. alte Seite aus einem Zwischenspeicher), einmal frisch laden, sonst anhalten.
@@ -13583,7 +13583,20 @@ function mgTafelHtml(liste) {
   const sortiert = [...liste].sort((a, b) => (rang(a) < 0 ? 99 : rang(a)) - (rang(b) < 0 ? 99 : rang(b)) || String(a.name).localeCompare(String(b.name), "de"));
   return kreisLegende().replace(/class="avatar k-([a-z]+)"[^>]*>/g, 'class="mg-led l-$1" style="width:12px;height:12px">')
     + `<div class="mg-tafel">${sortiert.map((m) => { const k = kreisArt(m);
-      return `<button type="button" onclick="mitgliedOeffnen('${esc(m.person_id)}')" aria-label="${esc(m.name + ": " + k.text)}" title="${esc(k.text)}"><span class="mg-led l-${k.art}"></span><b>${esc(m.name)}${m.person_id === ICH.person_id ? ` <small class="hinweis">(du${inkognitoAn() ? " · 🕶️ inkognito" : ""})</small>` : ""}</b></button>`; }).join("")}</div>`;
+      const da = m.person_id === ICH.person_id ? "" : mgDaText(m); // KC-CLUB-ONLINE-SEIT (2.25.5): unter dem Namen
+      return `<button type="button" onclick="mitgliedOeffnen('${esc(m.person_id)}')" aria-label="${esc(m.name + ": " + k.text + (da ? ", " + da : ""))}" title="${esc(k.text)}"><span class="mg-led l-${k.art}"></span><span class="mg-tafel-text"><b>${esc(m.name)}${m.person_id === ICH.person_id ? ` <small class="hinweis">(du${inkognitoAn() ? " · 🕶️ inkognito" : ""})</small>` : ""}</b>${da ? `<small class="mg-da${/^online/.test(da) ? " an" : ""}">${esc(da)}</small>` : ""}</span></button>`; }).join("")}</div>`;
+}
+// KC-CLUB-ONLINE-SEIT (2.25.5, Wunsch Hansi): „online seit 14:32“ bzw. „zuletzt online heute um 18:05 / gestern / am 01.10.“.
+// Nur was der Server liefert (Privatsphäre: wer „zuletzt da“ verbirgt, liefert nichts → keine Zeile). Unbekannt = keine Angabe, nie „online“.
+function mgDaText(m) {
+  const z = m.zuletztDa, on = (() => { try { if (ONL.stand && Date.now() - ONL.stand < 3 * 60 * 1000) return ONL.ids.has(m.person_id); } catch {} return !!m.online; })(); // gleiche Quelle wie LED/Ring (2.24.18)
+  if (on) return z && z.seit ? `online seit ${z.seitTag && z.seitTag !== heuteIso() ? "gestern " : ""}${z.seit}` : "online";
+  if (!z) return "";
+  if (z.lange) return "länger nicht online";
+  if (z.zeit) return `zuletzt online heute um ${z.zeit}`;
+  if (!z.tag) return "";
+  const tage = Math.round((Date.parse(heuteIso() + "T12:00:00Z") - Date.parse(z.tag + "T12:00:00Z")) / 86400000);
+  return tage <= 1 ? "zuletzt online gestern" : `zuletzt online am ${z.tag.slice(8, 10)}.${z.tag.slice(5, 7)}.`;
 }
 function mgKachelnHtml(liste) {
   const k = (m) => {

@@ -41,7 +41,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.25.4";
+const SERVER_VERSION = "2.25.5";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -322,7 +322,7 @@ async function zuletztDaMap(ich: Ich, ids: string[]) {
   const ziel = [...new Set(ids)].filter((id) => id && id !== ich.person_id);
   if (!ziel.length) return aus;
   const [{ data: e }, { data: z }] = await Promise.all([
-    db.from("kc_club_person_einstellung").select("person_id,schluessel,wert").in("schluessel", ["online", "zuletzt", "inkognito"]).in("person_id", [...ziel, ich.person_id]),
+    db.from("kc_club_person_einstellung").select("person_id,schluessel,wert").in("schluessel", ["online", "zuletzt", "inkognito", "online_seit"]).in("person_id", [...ziel, ich.person_id]),
     db.from("kc_club_zugang").select("person_id,zuletzt_gesehen").in("person_id", ziel),
   ]);
   // KC-CLUB-INKOGNITO: verbirgt nur den Admin selbst (er sieht die anderen weiter)
@@ -335,8 +335,12 @@ async function zuletztDaMap(ich: Ich, ids: string[]) {
     const t = new Date(zg).getTime();
     if (t < grenze) { aus.set(pid, { online: false, lange: true }); continue; }
     const tag = berlinTag(new Date(zg));
-    aus.set(pid, { online: Date.now() - t < ONLINE_SEK * 1000, tag,
-      zeit: tag === heute ? new Intl.DateTimeFormat("de-DE", { timeZone: TZ, hour: "2-digit", minute: "2-digit" }).format(new Date(zg)) : null });
+    const online = Date.now() - t < ONLINE_SEK * 1000, uhr = (d: Date) => new Intl.DateTimeFormat("de-DE", { timeZone: TZ, hour: "2-digit", minute: "2-digit" }).format(d);
+    // KC-CLUB-ONLINE-SEIT (2.25.5): seit wann ohne Unterbrechung online (nur wenn der Merker zur aktuellen Sitzung passt)
+    const os = online ? (e ?? []).find((x: any) => x.person_id === pid && x.schluessel === "online_seit")?.wert : null;
+    const seitD = os?.seit && os?.zuletzt && Date.now() - Date.parse(os.zuletzt) < ONLINE_SEK * 1000 ? new Date(os.seit) : null;
+    aus.set(pid, { online, tag, zeit: tag === heute ? uhr(new Date(zg)) : null,
+      ...(seitD && !isNaN(seitD.getTime()) ? { seit: uhr(seitD), seitTag: berlinTag(seitD) } : {}) });
   }
   return aus;
 }
@@ -411,6 +415,15 @@ async function onlinePushMelden(wer: Ich) {
     `club-online:${wer.person_id}:${Math.floor(Date.now() / ONLINE_PUSH_PAUSE_MS)}`);
 }
 // 2.6.1: mitInkognito = auch der unsichtbare Admin (z. B. als Empfänger eines Hilfe-Aufrufs „an alle online“ – nur sichtbar ist er nicht)
+// KC-CLUB-ONLINE-SEIT (2.25.5, Wunsch Hansi „wenn online, dann online seit …“): Beginn der aktuellen Sitzung je Person merken.
+// Die App meldet sich alle 15–60 s („online“); liegt die letzte Meldung länger als ONLINE_SEK zurück, beginnt eine neue Sitzung.
+// Geschrieben wird nur bei neuer Sitzung oder alle 30 s (Einstellungs-Tabelle, Schlüssel „online_seit“ – keine neue Tabelle).
+async function onlineSeitMerken(pid: string) {
+  const { data } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", pid).eq("schluessel", "online_seit").maybeSingle();
+  const jetztMs = Date.now(), z = Date.parse(data?.wert?.zuletzt || ""), neu = !(z > 0) || jetztMs - z > ONLINE_SEK * 1000;
+  if (!neu && jetztMs - z < 30000) return;
+  await db.from("kc_club_person_einstellung").upsert({ person_id: pid, schluessel: "online_seit", wert: { seit: neu ? jetzt() : data!.wert.seit, zuletzt: jetzt() }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
+}
 async function onlineJetzt(mitInkognito = false): Promise<Set<string>> {
   const seit = new Date(Date.now() - ONLINE_SEK * 1000).toISOString();
   const { data } = await db.from("kc_club_zugang").select("person_id").eq("aktiv", true).gte("zuletzt_gesehen", seit).not("person_id", "like", "KC-P-TEST%");
@@ -7313,6 +7326,7 @@ Köcheclub-App`,
 
       // ----- Online & Anklopfen (KC-CLUB-ONLINE) -----
       case "online": {
+        if (!ich.nurLesen) await onlineSeitMerken(ich.person_id).catch(() => null); // KC-CLUB-ONLINE-SEIT (2.25.5)
         const zeigen = (await onlineZeigenMap([ich.person_id])).get(ich.person_id) !== false;
         const seit = new Date(Date.now() - ANKLOPFEN_SEK * 1000).toISOString();
         const [on, { data: anMich }, { data: vonMir }] = await Promise.all([
