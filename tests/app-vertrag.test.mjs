@@ -4446,6 +4446,23 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/#raster\.klein3, #raster\.ad-raster \{ grid-template-columns: repeat\(3, minmax\(0, 1fr\)\);/.test(html), "gleiche Regeln wie das Admin-Register (kein zweites Raster)");
   assert.ok(/id="kachelGroesseWahl"/.test(html) && /localStorage\.setItem\("kc_club_kachelgroesse", g\)/.test(html) && /try \{ return localStorage\.getItem\("kc_club_kachelgroesse"\) === "klein"; \} catch \{ return false; \}/.test(html), "Einstellung je Gerät, sicher ohne Speicher");
 }
+// 439. 2.23.88: Datenbank aufräumen im Supabase-Fenster + Warnung ab 400 MB (KC-CLUB-DB-AUFRAEUMEN)
+{
+  const mig = lies("supabase/migrations/20261006_kc_club_v22388_db_aufraeumen.sql");
+  const fn = mig.slice(mig.indexOf("create or replace function public.kc_club_db_aufraeumen"), mig.indexOf("revoke all on function public.kc_club_db_aufraeumen"));
+  const geloescht = [...fn.matchAll(/delete from ([a-z_.]+)/g)].map((m) => m[1]);
+  assert.deepEqual(geloescht, ["public.kc_system_check_history", "public.kc_communication_health_snapshots"], "nur technische Protokolle/Messwerte löschen");
+  assert.ok(/greatest\(coalesce\(p_tage, 90\), 60\)/.test(fn) && /perform kc_internal\.kc_db_mirror_retention_cleanup\(\)/.test(fn) && /kc_lebenszeichen_aufraeumen\(30\)/.test(fn), "bestehende Regeln benutzt, mindestens 60 Tage");
+  assert.ok(/revoke all on function public\.kc_club_db_aufraeumen\(integer\) from public, anon, authenticated/.test(mig) && /revoke all on function public\.kc_club_db_belegung\(\) from public, anon, authenticated/.test(mig), "nur über den Server");
+  assert.ok(/cron\.schedule\('kc-club-db-aufraeumen', '50 3 \* \* \*'/.test(mig), "jede Nacht");
+  const f = server.slice(server.indexOf('case "db_belegung"'), server.indexOf('case "freigaben_liste"'));
+  assert.ok((f.match(/nurAdmin\(ich\)/g) || []).length === 2 && /\(count \?\? 0\) >= 5/.test(f) && /p_tage: 90/.test(f) && /protokoll\(ich\.person_id, "db_aufgeraeumt"/.test(f), "Server: nur Admin, gebremst, protokolliert");
+  const w = server.slice(server.indexOf("async function dbWarnungLauf"), server.indexOf("async function adminIds"));
+  assert.ok(/DB_WARN_BYTES = 400 \* 1024 \* 1024/.test(server) && /bytes < DB_WARN_BYTES\) return/.test(w) && /!Number\.isFinite\(bytes\)/.test(w) && /24 \* 3600000/.test(w) && /\["push", "email"\]/.test(w), "Warnung ab 400 MB, höchstens 1× am Tag, Push + Mail");
+  assert.ok(/await dbWarnungLauf\(\)\.catch/.test(server), "Warnung läuft in der Wartung");
+  assert.ok(/dbAufraeumen\(this\)/.test(html) && /setTimeout\(dbBelegungLaden, 0\)/.test(html) && /await frage\("Jetzt aufräumen\?/.test(html) && /api\("db_aufraeumen"/.test(html), "Knopf mit Rückfrage im Supabase-Fenster");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.23.88 – 2026-10-06 – KC-CLUB-DB-AUFRAEUMEN: Datenbank aufräumen im Supabase-Fenster + Warnung ab 400 MB
+- Admin → 🗄️ Supabase: größte Tabellen und 🧹 „Jetzt aufräumen“ (nur alte technische Protokolle/Messwerte, älter als 90 Tage; Club-Daten bleiben).
+- Jede Nacht 3:50 Uhr automatisch (Migration v22388, nutzt die bestehenden Aufräum-Regeln von Spiegel und Lebenszeichen).
+- Ab 400 MB von 500 MB: Push + E-Mail an den Admin, höchstens einmal am Tag.
+- Einmalig: Spiegel-Protokoll zusammengeschoben (248 MB → 107 MB, keine Einträge verloren).
+
 ## 2.23.87 – 2026-10-05 – 📞🎥 auf Mitglieder-Kacheln + kleine Kacheln (Wunsch Hansi)
 - Mitglieder als Kacheln: zusätzlich 📞 Anrufen und 🎥 Videoanruf – aktiv, wenn die Person online ist; sonst blass mit Hinweis
   (derselbe Baustein mgAnrufKnoepfe wie in der Liste, 2.23.67). Knöpfe brechen bei Bedarf in eine zweite Reihe um.
