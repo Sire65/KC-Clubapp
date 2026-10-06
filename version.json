@@ -1,10 +1,16 @@
 {
-  "version": "2.24.15",
+  "version": "2.24.16",
   "datum": "2026-10-05",
   "neu": [
-    "🔧 Kleine Systemverbesserungen"
+    "📄 Kurzanleitung Bilderrechner Version 4.1: Bon ansehen mit „← Zurück zur Kasse“ und die laufenden Rahmen"
   ],
   "verlauf": [
+    {
+      "version": "2.24.16",
+      "neu": [
+        "📄 Kurzanleitung Bilderrechner Version 4.1: Bon ansehen mit „← Zurück zur Kasse“ und die laufenden Rahmen"
+      ]
+    },
     {
       "version": "2.24.15",
       "datum": "2026-10-06",

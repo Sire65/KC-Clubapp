@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.24.16 – 2026-10-06 – Kurzanleitung Bilderrechner Version 4.1 (Wunsch Hansi)
+- Dokumente: „Schnellanleitung Bilderrechner“ zeigt jetzt `dokumente/Kurzanleitung_Bilderrechner_V4.1.pdf` (28 Seiten, Stand Kasse 06.10.2026).
+  Neu gegenüber 4: Seite 21 „Bon drucken / Letzten Bon“ mit „Bon ansehen“ (🖨 Drucken, ← Zurück zur Kasse); auf der Titelseite der
+  Hinweis auf die laufenden, gestrichelten Rahmen (Warengruppe grün, Artikel hellblau, Warenkorbzeile blau). Version 4 bleibt im Ordner.
+
 ## 2.24.15 – 2026-10-06 – KC-CLUB-PRUEFUNG-4: Status-Pfeil + Hilfe-Korrekturen
 - Status-Pfeil oben: als Zeichnung genau mittig auf der Unterkante (vorher bis 2 px links), in der Farbe des Status mit weißem Rand (Wunsch Hansi).
 - Hilfe/Tipps: Sprung in die Einstellungen öffnet den Bereich auch in der einfachen Ansicht; „Was ist neu“-Schalter zu „Ansagen, Töne & Tipps“ (auch einfache Ansicht), Hilfetext mit Spielen; Twinkey „Urlaub/krank“ öffnet den Status (vorher Standort); Dienstwünsche-Weg über 🗓️ Mein Dienst; Entwickler-Weg über ℹ️ App-Info; Tipp-Text „höchstens einmal in der Woche“; „Später“-Meldungen ohne falsche Tage; Kachel-Tipp nur erweitert; keine Versprechen „was zuletzt dazugekommen ist“.
