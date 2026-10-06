@@ -4446,6 +4446,27 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/#raster\.klein3, #raster\.ad-raster \{ grid-template-columns: repeat\(3, minmax\(0, 1fr\)\);/.test(html), "gleiche Regeln wie das Admin-Register (kein zweites Raster)");
   assert.ok(/id="kachelGroesseWahl"/.test(html) && /localStorage\.setItem\("kc_club_kachelgroesse", g\)/.test(html) && /try \{ return localStorage\.getItem\("kc_club_kachelgroesse"\) === "klein"; \} catch \{ return false; \}/.test(html), "Einstellung je Gerät, sicher ohne Speicher");
 }
+// 439. 2.23.88: Wege der Mitglieder – was geöffnet, mit wem, Uhrzeit; nie Inhalte; 30 Tage; nur Admin (KC-CLUB-SPUR)
+{
+  const f = server.slice(server.indexOf('case "spur_melden"'), server.indexOf('case "spur_liste"'));
+  assert.ok(/SPUR_WAS\.test\(String\(x\[1\]/.test(f) && /SPUR_MIT\.test\(String\(x\[2\]\)\)/.test(f) && /\.slice\(0, 200\)/.test(f) && /protokoll\(ich\.person_id, "spur", \{ s \}\)/.test(f), "nur Kürzel + Kennungen, gedeckelt, je Person");
+  assert.ok(/const SPUR_WAS = \/\^\[a-z\]\[a-z0-9_\]\{0,29\}\$\/;/.test(server) && /const SPUR_MIT = \/\^\(KC-P-/.test(server), "kein freier Text möglich");
+  const l = server.slice(server.indexOf('case "spur_liste"'), server.indexOf("// ----- KC-CLUB-NUTZUNG (0.99.0)"));
+  assert.ok(/^case "spur_liste": \{\s+nurAdmin\(ich\);/.test(l), "lesen nur der Admin");
+  assert.ok(!/body|text/.test(l.replace(/Fehler\([^)]*\)/g, "")), "keine Nachrichteninhalte in der Liste");
+  assert.ok(/\.eq\("aktion", "spur"\)\.lt\("zeit", new Date\(Date\.now\(\) - SPUR_TAGE \* 86400000\)/.test(server) && /const SPUR_TAGE = 30;/.test(server), "30 Tage, Wartung löscht");
+  const n = server.slice(server.indexOf('case "nutzung_melden"'), server.indexOf('case "nutzung_statistik"'));
+  assert.ok(!/protokoll\(|spur/.test(n.split("\n").filter((z) => !z.trim().startsWith("//")).join("\n")), "namenlose Nutzung bleibt ohne Namen");
+  const c = html.slice(html.indexOf("const SPUR_MAX"), html.indexOf("const SPW = {"));
+  assert.ok(/api\("spur_melden", \{ s: teil \}\)/.test(c) && /SPUR\.slice\(-SPUR_MAX\)/.test(c), "App schickt Pakete, begrenzt");
+  assert.ok(/spur\("mitglied", pid\)/.test(html) && /spur\("chat", id\)/.test(html) && /spur\(daten\.anlagen\.length \? "gesendet_anlage" : "gesendet", r\?\.id \|\| chatId\)/.test(html)
+    && /spur\(mitBild \? "video" : "anruf", pid\)/.test(html) && /spur\("anklopfen", pid\)/.test(html) && /spur\('telefon', mitgliedId\)/.test(html), "Mitglied, Chat, gesendet, Anruf, Anklopfen, Telefon");
+  assert.ok(!/spur\([^)]*(text|\$\("text"\))/.test(html), "nie Text in der Spur");
+  assert.ok(/onclick="spurAdmin\(heuteIso\(\), null\)">👣 Wege der Mitglieder/.test(html), "Admin: Nutzung → Wege der Mitglieder");
+  assert.ok(/id: "was_gespeichert", thema: "privat"[^\n]*30 Tage lang[^\n]*ohne Inhalte[^\n]*nur der Admin/.test(html), "Satz in der Hilfe");
+  assert.ok(!/was_gespeichert|spurAdmin/.test(html.slice(html.indexOf("function mdatAbschnitte"), html.indexOf("function mdatAbschnitte") + 4000)), "nicht in „Meine Daten“");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

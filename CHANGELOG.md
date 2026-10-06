@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.23.88 – 2026-10-06 – KC-CLUB-SPUR: Wege der Mitglieder für den Admin (was geöffnet, mit wem, Uhrzeit – ohne Inhalte, 30 Tage)
+- App merkt sich Bereiche, angesehene Mitglieder, geöffnete Unterhaltungen, gesendet (ohne Text), Anruf/Video/Anklopfen/Telefon/WhatsApp/Mail – je mit Uhrzeit.
+- Server: spur_melden (nur Kürzel + Kennungen, kein freier Text), spur_liste nur Admin; Speicherung im Club-App-Protokoll, Wartung löscht nach 30 Tagen. Keine DB-Änderung.
+- Admin: 👥 Nutzung → 👣 Wege der Mitglieder (Tag wählen → Mitglied → Schritte mit Uhrzeit).
+- Hilfe → 🔒 Privatsphäre: „Was speichert die App über mich?“. Die namenlose Nutzungsstatistik bleibt unverändert ohne Namen.
+
 ## 2.23.87 – 2026-10-05 – 📞🎥 auf Mitglieder-Kacheln + kleine Kacheln (Wunsch Hansi)
 - Mitglieder als Kacheln: zusätzlich 📞 Anrufen und 🎥 Videoanruf – aktiv, wenn die Person online ist; sonst blass mit Hinweis
   (derselbe Baustein mgAnrufKnoepfe wie in der Liste, 2.23.67). Knöpfe brechen bei Bedarf in eine zweite Reihe um.

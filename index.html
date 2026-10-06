@@ -2964,7 +2964,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.87"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.88"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -4064,6 +4064,7 @@ const HILFE = [
   // 🔒 Privatsphäre & Zugang
   { id: "privatsphaere", thema: "privat", sym: "🔒", t: "Wer sieht was von mir?", x: "Du entscheidest selbst: Unter ⚙️ → <b>„🔒 Privatsphäre“</b> legst du z. B. fest, ob andere sehen, dass du online bist oder wann du zuletzt da warst, ob dein Geburtstag angezeigt wird, ob man bei dir anklopfen darf und ob andere dich zu Spielen herausfordern dürfen.", zeig: () => einstiegHin("privat") },
   { id: "zugangslink", thema: "privat", sym: "🔗", t: "Dein persönlicher Zugangslink", x: () => `Die App öffnest du über deinen persönlichen Link. Gib ihn bitte <b>nicht weiter</b> – wer ihn hat, ist in der App als du angemeldet. Neues Handy oder Link verloren? ${esc(adminName())} erzeugt dir einen neuen.` },
+  { id: "was_gespeichert", thema: "privat", sym: "🗂️", t: "Was speichert die App über mich?", x: "Zur Fehlersuche und Unterstützung speichert die App 30 Tage lang, welche Bereiche geöffnet und mit wem Nachrichten oder Anrufe ausgetauscht wurden – <b>ohne Inhalte</b>. Einsicht hat nur der Admin." },
   // 🛠️ Technik & Probleme lösen
   { id: "update", thema: "technik", sym: "🔄", t: "Neue Version holen", x: "Register <b>Technik</b> → „🔄 Update prüfen“. Steht dort „Neu“, einfach antippen – die App lädt die neue Version komplett und startet neu. Meist macht sie das auch von selbst.", zeig: hzTechnik },
   { id: "installieren", thema: "technik", sym: "📲", t: "Die App auf den Startbildschirm legen", x: "Dann startet die Club-App wie jede andere App mit eigenem Symbol. Die Anleitung für dein Handy steht unter ⚙️ → <b>„📲 App-Installation“</b>.", zeig: () => einstiegHin("install") },
@@ -4856,6 +4857,7 @@ async function anklopfen(pid) {
   const name = m?.vorname || m?.name || "";
   if (ONL.liste.find((x) => x.person_id === pid)?.klopfbar === false) return melde(`🔕 ${name} hat Anklopfen ausgeschaltet – schreib einfach eine Nachricht.`);
   if (!(await frage(`Bei ${name} anklopfen?\n\n${name} bekommt sofort die Frage, ob ihr jetzt schreiben wollt.`))) return;
+  spur("anklopfen", pid); // KC-CLUB-SPUR
   try {
     const r = await api("anklopfen", { an: pid });
     ONL.wartet = r.id; onlineTakt(); klopfWartenStart(r.id, pid, name);
@@ -5282,7 +5284,7 @@ async function anrufKameraWechseln() {
 async function anrufen(pid, mitBild) {
   if (RUF) return melde("Es läuft schon ein Anruf.", true);
   const m = MITGLIEDER?.find((x) => x.person_id === pid) || ONL.liste.find((x) => x.person_id === pid) || { person_id: pid, name: "" };
-  RUF = { rolle: "rufer", gegen: m, art: mitBild ? "video" : "ton" };
+  RUF = { rolle: "rufer", gegen: m, art: mitBild ? "video" : "ton" }; spur(mitBild ? "video" : "anruf", pid); // KC-CLUB-SPUR
   anrufSchirm(m); anrufKnoepfe("rufe"); anrufZustand(mitBild ? "Kamera und Mikrofon werden vorbereitet …" : "Mikrofon wird vorbereitet …");
   try {
     const { pc, strom } = await anrufVerbindung(mitBild); Object.assign(RUF, { pc, strom }); anrufKnoepfe("rufe");
@@ -8056,7 +8058,7 @@ async function zugangAnfordern() {
 }
 // KC-CLUB-WARTEN (0.33.0): dauert eine Anfrage länger als 0,35 s, erscheint die drehende Kochmütze mit passendem Text.
 // Hintergrund-Abfragen (alle paar Sekunden/Minuten) zeigen sie nicht, damit nichts flackert.
-const WARTEN_STILL = new Set(["nutzung_melden", "standort_update", "standort_liste", "terminanfragen_liste", "init", "online", "anruf_status", "diagnose", "unterhaltung", "unterhaltungen", "einstellung_setzen", "pinnwand", "kalender", "terminumfragen_liste", "communicator_status", "ping", "anruf_ende", "protokoll_speichern", "todo_erledigt", "todo_liste", "wetter", "fotos_neueste", "admin_lage", "tippen", "pinnwand_neu", "pinnwand_gesehen"]);
+const WARTEN_STILL = new Set(["nutzung_melden", "spur_melden", "standort_update", "standort_liste", "terminanfragen_liste", "init", "online", "anruf_status", "diagnose", "unterhaltung", "unterhaltungen", "einstellung_setzen", "pinnwand", "kalender", "terminumfragen_liste", "communicator_status", "ping", "anruf_ende", "protokoll_speichern", "todo_erledigt", "todo_liste", "wetter", "fotos_neueste", "admin_lage", "tippen", "pinnwand_neu", "pinnwand_gesehen"]);
 const WARTEN_TEXT = { standort_ort: "Standort wird bestimmt …", sos_ort: "Adresse wird gesucht …", standort_start: "Standort wird geteilt …", standort_ende: "Wird beendet …", terminanfrage_senden: "Anfrage wird gesendet …", terminanfrage_antwort: "Antwort wird gemeldet …", terminanfrage_absagen: "Wird abgesagt …", nachricht_senden: "Nachricht wird gesendet …", gruppe_anlegen: "Gruppe wird angelegt …", gruppe_aendern: "Wird gespeichert …", treffen_speichern: "Termin wird gespeichert …",
   pinnwand_anheften: "Zettel wird angeheftet …", feedback_senden: "Feedback wird gesendet …", anklopfen: "Es wird angeklopft …", anruf_start: "Anruf wird aufgebaut …", anlage_hochladen: "Wird hochgeladen …", erstattung_senden: "Antrag wird gesendet …", km_satz_setzen: "Wird gespeichert …", todo_zuweisen: "Wird zugewiesen …",
   link_erzeugen: "Link wird erzeugt …", todo_anlegen: "Wird eingetragen …", zugang_anfordern: "Mail wird gesendet …", foto_hochladen: "Foto wird hochgeladen …", test_an_mich: "Test wird gesendet …",
@@ -10978,6 +10980,7 @@ function zeige(v, ausHistorie) {
   }
   if (kaBearb && v !== "start") kaBearbeiten(false); // Anordnen beim Verlassen der Startseite abschließen
   const vorher = aktuelleAnsicht;
+  if (v !== vorher && v !== "chat" && v !== "mitglied") spur(v); // KC-CLUB-SPUR (2.23.88): Chat/Mitglied mit „mit wem“ eigens
   if (v === "dokansicht" && !DOKA.id) v = "dokumente"; // KC-CLUB-DOK-ANZEIGE: ohne Dokument zur Liste
   if (vorher === "dokansicht" && v !== "dokansicht") dokAufraeumen();
   if (vorher === "fotos" && v !== "fotos" && FAW.an) { FAW.an = false; FAW.ziel = null; FAW.ids.clear(); $("faLeiste").classList.add("versteckt"); document.body.classList.remove("fa-waehlen"); } // KC-CLUB-FOTO-ALBEN
@@ -13998,6 +14001,7 @@ async function chatOeffnen(id, ausHistorie) {
   if (id !== chatId && CS.offen) chatSucheZu(); // KC-CLUB-CHATSUCHE: Suche gehört zum vorigen Chat
   if (id !== chatId) { entwurfLaden(id); zustellUmschalten(false); wichtigUmschalten(false); } // KC-CLUB-ENTWURF / -RUHIGE-EINGABE (1.12.0) / -WICHTIG
   NA.trennerChat = null; // KC-CLUB-NEU-LINIE: beim Öffnen neu bestimmen
+  if (id !== chatId || aktuelleAnsicht !== "chat") spur("chat", id); // KC-CLUB-SPUR: welche Unterhaltung (ohne Inhalt)
   chatId = id; zeige("chat", ausHistorie); chatId = id;
   history.replaceState({ v: "chat", id, tiefe: history.state?.tiefe }, "", location.pathname + "#nachricht=" + id); // 2.1.1: Tiefe behalten (sonst ‹-Schleife)
   const offenId = chatId; await chatLaden(true);
@@ -15313,6 +15317,7 @@ async function senden() {
     const empfIds = chatId ? (CHAT?.teilnehmer || []).map((t) => t.person_id) : [...(neuEntwurf?.empfaenger?.personen || [])];
     if (chatId) entwurfWeg(chatId); clearTimeout(entwurfTimer); zustellUmschalten(false); wichtigUmschalten(false); // KC-CLUB-ENTWURF / -RUHIGE-EINGABE / -WICHTIG
     $("text").value = ""; $("text").style.height = "auto"; entwurfMarkeZeigen(); anlagen = []; chipsZeigen(); neuEntwurf = null; naAntwortWeg(); NA.erw.clear(); clearTimeout(TIPP.nach); TIPP = { zuletzt: 0, id: null, nach: null }; // Server beendet „schreibt …“
+    spur(daten.anlagen.length ? "gesendet_anlage" : "gesendet", r?.id || chatId); // KC-CLUB-SPUR: nur „gesendet“ + Unterhaltung, nie der Text
     if (ZW.whatsapp && text) whatsappWeitergeben(text, empfIds.filter((id) => id !== ICH.person_id));
     if (!chatId) { chatId = r.id; history.replaceState({ v: "chat", id: r.id, tiefe: history.state?.tiefe }, "", location.pathname + "#nachricht=" + r.id); clearInterval(chatTimer); chatTimer = setInterval(chatTakt, CHAT_TAKT_MS); }
     await chatLaden(true);
@@ -18675,7 +18680,7 @@ function externBlatt(art, wege, wert, versucht) {
   $("externBlatt").classList.remove("versteckt");
 }
 async function mitgliedOeffnen(pid, ausHistorie) {
-  mitgliedId = pid; MD = null;
+  mitgliedId = pid; MD = null; spur("mitglied", pid); // KC-CLUB-SPUR
   $("mitgliedInhalt").innerHTML = '<div class="karte hinweis">Wird geladen …</div>';
   zeige("mitglied", ausHistorie);
   try { MD = await api("mitglied_details", { person_id: pid }); mitgliedZeigen(); if (!MD.selbst) spMitgliedKnopf(pid); /* KC-CLUB-SPIELE */ }
@@ -18686,9 +18691,9 @@ function mitgliedZeigen() {
   const nurIch = (f) => fg && !fg[f] ? `<small class="hinweis"> · 🔒 ${m.selbst ? "nicht freigegeben – nur du siehst das" : "nicht freigegeben – nur für dich als Admin"}</small>` : "";
   const zeile = (f, wert, knoepfe) => `<div class="zeile"><div style="flex:1"><div class="hinweis" style="font-size:.85rem">${KONTAKT_NAMEN[f]}${nurIch(f)}</div><b>${esc(wert)}</b></div>${knoepfe}</div>`;
   const zeilen = [
-    k.handy ? zeile("handy", k.handy, `<a class="knopf klein" href="tel:${esc(nurZiffern(k.handy))}">📞</a><button class="knopf klein" onclick="extern('whatsapp', MD.kontakt.handy)">WhatsApp</button>`) : "",
-    k.festnetz ? zeile("festnetz", k.festnetz, `<a class="knopf klein" href="tel:${esc(nurZiffern(k.festnetz))}">📞</a>`) : "",
-    k.mail ? zeile("mail", k.mail, `<a class="knopf klein" href="mailto:${esc(k.mail)}">✉️</a>`) : "",
+    k.handy ? zeile("handy", k.handy, `<a class="knopf klein" href="tel:${esc(nurZiffern(k.handy))}" onclick="spur('telefon', mitgliedId)">📞</a><button class="knopf klein" onpointerdown="spur('whatsapp', mitgliedId)" onclick="extern('whatsapp', MD.kontakt.handy)">WhatsApp</button>`) : "",
+    k.festnetz ? zeile("festnetz", k.festnetz, `<a class="knopf klein" href="tel:${esc(nurZiffern(k.festnetz))}" onclick="spur('telefon', mitgliedId)">📞</a>`) : "",
+    k.mail ? zeile("mail", k.mail, `<a class="knopf klein" href="mailto:${esc(k.mail)}" onclick="spur('mail', mitgliedId)">✉️</a>`) : "",
     k.adresse ? zeile("adresse", adresseText(k.adresse), `<button class="knopf klein" onclick="extern('route', adresseText(MD.kontakt.adresse))">🗺️ Route</button>`) : "",
   ].join("");
   const leer = !zeilen ? `<p class="hinweis">${!m.darfKontakte ? "Kontaktdaten anderer Mitglieder sind für dich nicht freigeschaltet." : m.selbst ? "Für dich sind keine Kontaktdaten gespeichert." : `${esc(m.vorname)} hat noch keine Kontaktdaten freigegeben.`}</p>` : "";
@@ -20057,6 +20062,51 @@ async function nzSenden() {
 }
 setInterval(nzSenden, NZ_TAKT_MS);
 document.addEventListener("visibilitychange", () => { if (document.hidden) nzSenden(); });
+// ---------- KC-CLUB-SPUR (2.23.88, Wunsch Hansi): Wege durch die App – was geöffnet wurde und mit wem (Mitglied/Unterhaltung), mit Uhrzeit.
+// NIE Inhalte (kein Text, keine Suchbegriffe, keine Fotos). Getrennt von der namenlosen Nutzungsstatistik (die bleibt ohne Namen).
+// Server speichert 30 Tage; ansehen nur der Admin (👥 Nutzung → 👣 Wege der Mitglieder).
+const SPUR_MAX = 300;
+let SPUR = (() => { try { const s = JSON.parse(localStorage.getItem("kc_club_spur") || "[]"); return Array.isArray(s) ? s.slice(-SPUR_MAX) : []; } catch { return []; } })();
+const spurSchreiben = () => { try { localStorage.setItem("kc_club_spur", JSON.stringify(SPUR)); } catch {} };
+function spur(w, mit) {
+  if (!w || !ICH) return;
+  try { // nie die Bedienung stören (auch nicht, wenn sehr früh beim Start aufgerufen)
+    const l = SPUR[SPUR.length - 1];
+    if (l && l[1] === w && (l[2] || null) === (mit || null) && Date.now() - l[0] < 3000) return; // doppelt angetippt
+    SPUR.push(mit ? [Date.now(), String(w), String(mit)] : [Date.now(), String(w)]);
+    if (SPUR.length > SPUR_MAX) SPUR = SPUR.slice(-SPUR_MAX);
+    spurSchreiben();
+  } catch {}
+}
+async function spurSenden() {
+  if (!INIT || !SPUR.length) return;
+  const teil = SPUR.slice(0, 200);
+  try { await api("spur_melden", { s: teil }); SPUR = SPUR.slice(teil.length); spurSchreiben(); } catch {} // ohne Netz: beim nächsten Mal
+}
+setInterval(spurSenden, NZ_TAKT_MS);
+document.addEventListener("visibilitychange", () => { if (document.hidden) spurSenden(); });
+const SPUR_WAS = { mitglied: "👤 Mitglied angesehen", chat: "💬 Unterhaltung geöffnet", gesendet: "✉️ Nachricht gesendet", gesendet_anlage: "📎 Nachricht mit Anhang gesendet",
+  anruf: "📞 Anruf (App) an", video: "🎥 Videoanruf an", anklopfen: "👋 Angeklopft bei", telefon: "☎️ Telefonnummer angetippt", whatsapp: "🟢 WhatsApp geöffnet", mail: "✉️ E-Mail-Adresse angetippt" };
+const SPW = { tag: null, person: null };
+async function spurAdmin(tag, person) {
+  SPW.tag = tag || SPW.tag || heuteIso(); SPW.person = person === undefined ? SPW.person : person;
+  let r; try { r = await api("spur_liste", { tag: SPW.tag, ...(SPW.person ? { person_id: SPW.person } : {}) }, { warten: true }); } catch (e) { return meldeFehler(e); }
+  const tage = Array.from({ length: 30 }, (_, i) => new Intl.DateTimeFormat("sv-SE", { timeZone: TZ }).format(new Date(Date.now() - i * 86400000)));
+  const tagText = (t) => (t === tage[0] ? "Heute" : t === tage[1] ? "Gestern" : t.slice(8) + "." + t.slice(5, 7) + ".");
+  const kopf = `<h3 style="margin:0">👣 Wege der Mitglieder</h3>
+    <p class="hinweis" style="margin:0">Was geöffnet wurde und mit wem – mit Uhrzeit, <b>ohne Inhalte</b>. Nur du siehst das; nach 30 Tagen wird es gelöscht.</p>
+    <select onchange="spurAdmin(this.value, null)" aria-label="Tag">${tage.map((t) => `<option value="${t}"${t === SPW.tag ? " selected" : ""}>${tagText(t)}</option>`).join("")}</select>`;
+  const fuss = `<div class="knoepfe">${SPW.person ? `<button class="knopf" onclick="spurAdmin(null, null)">‹ Alle an diesem Tag</button>` : ""}<button class="knopf" onclick="nzAdmin()">‹ Nutzung</button></div>`;
+  let inhalt;
+  if (!SPW.person) {
+    inhalt = r.personen.length ? `<div style="display:grid;gap:6px">${r.personen.map((x) => `<button class="knopf" style="text-align:left" onclick="spurAdmin(null, '${esc(x.person_id)}')"><b>${esc(x.name)}</b> <small class="hinweis">· ${x.anzahl} Schritte · ${esc(zeitKurz(x.erste))}–${esc(zeitKurz(x.letzte))} Uhr</small></button>`).join("")}</div>`
+      : `<p class="hinweis">An diesem Tag nichts aufgezeichnet (gezählt ab Version 2.23.88).</p>`;
+  } else {
+    inhalt = `<b>${esc(r.name || "")}</b>${r.schritte.length ? `<table class="vb-tabelle">${r.schritte.map((x) => `<tr><td style="white-space:nowrap;vertical-align:top">${esc(zeitKurz(x.t))}</td><td style="text-align:left">${esc(SPUR_WAS[x.w] || NZ_NAMEN[x.w] || x.w)}${x.mit ? ` <b>${esc(x.mit)}</b>` : ""}</td></tr>`).join("")}</table>` : `<p class="hinweis">An diesem Tag nichts aufgezeichnet.</p>`}`;
+  }
+  $("adminBlattInhalt").innerHTML = kopf + inhalt + fuss;
+  $("adminBlatt").classList.remove("versteckt");
+}
 const NZ_NAMEN = { start: "🏠 Startseite", hilfezentrum: "❓ Hilfe & Tipps", termine: "📅 Termine", nachrichten: "💬 Nachrichten (Liste)", chat: "💬 Unterhaltung geöffnet", neu: "✍️ Neue Nachricht",
   pinnwand: "📌 Pinnwand", fotos: "📷 Fotoalbum", mitglieder: "👥 Mitglieder", mitglied: "👤 Mitglied angesehen", einstellungen: "⚙️ Einstellungen", dienste: "🗓️ Dienstpläne",
   aktionen: "🧳 Aktionen", aktion: "🧳 Aktion angesehen", protokolle: "📄 Protokolle", protokoll: "📄 Protokoll angesehen", vorschlaege: "🗳️ Vorschläge", dokumente: "📚 Dokumente",
@@ -20107,7 +20157,7 @@ async function nzAdmin(tage) {
   const zeilen = [...haupt.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).flatMap(([o, n]) => [[o, n, false], ...liste.filter(([b]) => nzOber(b) === o).map(([b, m]) => [b, m, true])]);
   $("adminBlattInhalt").innerHTML = `<h3 style="margin:0">📊 Nutzung – ohne Namen</h3>
     <p class="hinweis" style="margin:0">Wie oft die Bereiche geöffnet wurden und <b>👤 von wie vielen verschiedenen Mitgliedern</b>. Es wird nie gespeichert, wer – nur Tag, Bereich, Anzahl und eine zufällige Geräte-Kennung; die Uhrzeit nur als Stunde, getrennt vom Bereich.</p>
-    <div class="knoepfe">${[7, 30, 90].map((t) => `<button class="knopf klein${r.tage === t ? " haupt" : ""}" onclick="nzAdmin(${t})">${t} Tage</button>`).join("")}${INFO_DATEN.admin?.r ? `<button class="knopf klein" onclick="adminBlatt()">‹ Admin-Zentrale</button>` : ""}</div>
+    <div class="knoepfe">${[7, 30, 90].map((t) => `<button class="knopf klein${r.tage === t ? " haupt" : ""}" onclick="nzAdmin(${t})">${t} Tage</button>`).join("")}<button class="knopf klein" onclick="spurAdmin(heuteIso(), null)">👣 Wege der Mitglieder</button>${INFO_DATEN.admin?.r ? `<button class="knopf klein" onclick="adminBlatt()">‹ Admin-Zentrale</button>` : ""}</div>
     <b>Insgesamt ${gesamt} Öffnungen in ${r.tage} Tagen${r.geraeteGesamt == null ? " · 👤 unbekannt" : r.geraeteGesamt ? ` · 👤 ${r.geraeteGesamt} verschiedene Geräte (≈ Mitglieder${r.mitglieder ? `, ${r.mitglieder} im Club` : ""})` : ""}</b>
     <span class="hinweis" style="margin:0">👤 = verschiedene Mitglieder (genau: Geräte – wer Handy und Tablet nutzt, zählt doppelt). Gezählt ab Version 2.6.0. <span class="nz-wer nur1">👤 1</span> = nur ein einziges Mitglied. Bei 30/90 Tagen zählen die Öffnungen auch aus der Zeit davor.</span><span class="hinweis" style="margin:0">↳ = Teilbereich (z. B. Büro → Eingang). Die Zahl beim Hauptbereich zählt nur das Öffnen selbst.</span>
     <div class="nz-tage" title="Öffnungen je Tag">${tagListe.map(([t, n]) => `<div title="${esc(t.slice(8) + "." + t.slice(5, 7) + ".: " + n)}"><i style="height:${Math.round(n / tmax * 100)}%"></i></div>`).join("")}</div>
@@ -20122,7 +20172,7 @@ async function nzAdmin(tage) {
 // Der Fehlerfänger (window.KCFP) steht ganz oben im <head> und läuft auch, wenn die App selbst nicht startet. Hier hängt die
 // App ihre eigenen Beobachtungen an (Serveranfragen, alte Version, Gerät/Browser) und zeigt verständliche Hilfe-Schritte.
 const fpNeu = (art, d) => { try { window.KCFP?.neu(art, d); } catch {} };
-const FP_LEISE = new Set(["nutzung_melden", "lebenszeichen", "tippen", "anruf_status", "ping", "online", "standort_update", "fehler_melden", "diagnose"]);
+const FP_LEISE = new Set(["nutzung_melden", "spur_melden", "lebenszeichen", "tippen", "anruf_status", "ping", "online", "standort_update", "fehler_melden", "diagnose"]);
 function fpApiFehler(action, e) {
   if (FP_LEISE.has(action) || notErnstfall() || NOT.an) return; // KC-CLUB-NOTBETRIEB(-ERNSTFALL): Notbetrieb/Simulation nicht ins Fehlerprotokoll
   fpNeu(navigator.onLine ? "api" : "offline", { aktion: action, text: String(e?.message || e) });

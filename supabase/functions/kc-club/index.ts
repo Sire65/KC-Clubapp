@@ -41,7 +41,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.23.87";
+const SERVER_VERSION = "2.23.88";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -2127,6 +2127,10 @@ async function wochenberichtLauf() {
   if ((heute ?? []).some((x: any) => x.details?.erzwungen === false)) return;
   await wochenberichtSenden(null);
 }
+// KC-CLUB-SPUR (2.23.88): erlaubte Schritte (Bereichs-Kürzel) und „mit wem“ (Mitglieds-Kennung oder Unterhaltungs-ID) – nie freier Text
+const SPUR_WAS = /^[a-z][a-z0-9_]{0,29}$/;
+const SPUR_MIT = /^(KC-P-[A-Z0-9-]{1,30}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
+const SPUR_TAGE = 30;
 async function adminIds(): Promise<string[]> {
   const { data } = await db.from("kc_club_rollen").select("person_id").eq("ist_admin", true);
   return (data ?? []).map((x: any) => x.person_id);
@@ -3702,6 +3706,8 @@ Deno.serve(async (req) => {
       await aeUebernahmeMelden().catch((e) => console.error("aenderung uebernahme", String(e)));
       await wochenberichtLauf().catch((e) => console.error("wochenbericht", String(e))); // KC-CLUB-WOCHENBERICHT (2.23.81)
       await ekDienstwunschMelden().catch((e) => console.error("eingang dienstwunsch", String(e))); /* KC-CLUB-EINGANGSKORB (2.23.6) */ /* KC-CLUB-AENDERUNG-FREIGABE (2.22.19) */ // KC-CLUB-STADT-TERMINE (2.22.6): wöchentlich, nur wenn eingeschaltet
+      // KC-CLUB-SPUR (2.23.88): Wege der Mitglieder nur 30 Tage aufbewahren
+      { const { error } = await db.from("kc_club_protokoll").delete().eq("aktion", "spur").lt("zeit", new Date(Date.now() - SPUR_TAGE * 86400000).toISOString()); if (error) console.error("spur loeschen", error.message); }
       // KC-CLUB-NUTZUNG-PERSONEN (2.6.0): Geräte-Kennungen nur 100 Tage aufbewahren
       { const { error } = await db.from("kc_club_nutzung_geraete").delete().lt("tag", berlinTag(new Date(Date.now() - 100 * 86400000))); if (error) console.error("nutzung geraete loeschen", error.message); }
       // Abstimmungen mit abgelaufener Frist beenden (Ergebnis geht an alle)
@@ -6626,6 +6632,49 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         return json({ privat: await privatListe(ich, new Date(Date.now() - 6 * 3600000).toISOString(), new Date(Date.now() + 60 * 86400000).toISOString()) });
       }
 
+      // ----- KC-CLUB-SPUR (2.23.88, Wunsch Hansi): Wege durch die App – was geöffnet wurde und mit wem, mit Uhrzeit, NIE Inhalte.
+      // Getrennt von der namenlosen Nutzung oben (die bleibt ohne Namen). 30 Tage (Wartung löscht), lesen nur der Admin.
+      case "spur_melden": {
+        const jetztMs = Date.now();
+        const s = (Array.isArray(p.s) ? p.s : []).slice(0, 200).filter((x: any) => Array.isArray(x)
+          && Number.isFinite(Number(x[0])) && Number(x[0]) > jetztMs - 3 * 86400000 && Number(x[0]) < jetztMs + 300000
+          && SPUR_WAS.test(String(x[1] ?? "")) && (x[2] == null || SPUR_MIT.test(String(x[2]))))
+          .map((x: any) => (x[2] == null ? [Math.round(Number(x[0])), String(x[1])] : [Math.round(Number(x[0])), String(x[1]), String(x[2])]));
+        if (s.length) await protokoll(ich.person_id, "spur", { s });
+        return json({ ok: true, n: s.length });
+      }
+      case "spur_liste": {
+        nurAdmin(ich);
+        const tag = /^\d{4}-\d{2}-\d{2}$/.test(String(p.tag || "")) ? String(p.tag) : berlinTag(new Date());
+        const pid = p.person_id ? String(p.person_id) : null;
+        const t0 = Date.parse(tag + "T00:00:00Z");
+        if (!Number.isFinite(t0)) throw new Fehler("Ungültiger Tag.", 400);
+        // gesendet wird in Paketen (alle 2 Min. bzw. beim Schließen) – deshalb einen Tag Rand und dann genau nach Berliner Tag filtern
+        let q = db.from("kc_club_protokoll").select("person_id,details").eq("aktion", "spur")
+          .gte("zeit", new Date(t0 - 86400000).toISOString()).lt("zeit", new Date(t0 + 3 * 86400000).toISOString()).order("zeit").limit(5000);
+        if (pid) q = q.eq("person_id", pid);
+        const { data, error } = await q;
+        if (error) throw new Fehler("Die Wege sind gerade nicht abrufbar – bitte gleich noch einmal versuchen.", 503);
+        const schritte = (data ?? []).flatMap((z: any) => (Array.isArray(z.details?.s) ? z.details.s : []).map((x: any) => ({ p: z.person_id as string, t: Number(x[0]), w: String(x[1]), mit: x[2] == null ? null : String(x[2]) })))
+          .filter((x: any) => berlinTag(new Date(x.t)) === tag).sort((a: any, b: any) => a.t - b.t);
+        if (!pid) {
+          const je = new Map<string, { anzahl: number; erste: number; letzte: number }>();
+          for (const x of schritte) { const e = je.get(x.p) ?? { anzahl: 0, erste: x.t, letzte: x.t }; e.anzahl++; e.letzte = x.t; je.set(x.p, e); }
+          const leute = await personen([...je.keys()]);
+          return json({ tag, personen: [...je.entries()].map(([id, e]) => ({ person_id: id, name: leute.get(id)?.display_name || id, anzahl: e.anzahl,
+            erste: new Date(e.erste).toISOString(), letzte: new Date(e.letzte).toISOString() })).sort((a, b) => b.letzte.localeCompare(a.letzte)) });
+        }
+        // „mit wem“: Mitglieds-Kennung → Name; Unterhaltung → Gruppenname oder die anderen Teilnehmer (keine Inhalte)
+        const chats = [...new Set<string>(schritte.filter((x: any) => x.mit && !x.mit.startsWith("KC-P-")).map((x: any) => x.mit as string))].filter((x) => UUID_ALBUM.test(x)).slice(0, 200);
+        const [{ data: th }, { data: tn }] = chats.length ? await Promise.all([
+          db.from("kc_communication_threads").select("id,subject").in("id", chats),
+          db.from("kc_communication_thread_participants").select("thread_id,person_id").in("thread_id", chats)]) : [{ data: [] }, { data: [] }];
+        const leute = await personen([pid, ...schritte.filter((x: any) => x.mit?.startsWith("KC-P-")).map((x: any) => x.mit), ...(tn ?? []).map((x: any) => x.person_id)]);
+        const name = (id: string) => leute.get(id)?.display_name || "unbekannt";
+        const chatName = (id: string) => { const t = (th ?? []).find((x: any) => x.id === id); const andere = (tn ?? []).filter((x: any) => x.thread_id === id && x.person_id !== pid).map((x: any) => name(x.person_id));
+          return t?.subject ? `${t.subject}${andere.length ? ` (${andere.length} Personen)` : ""}` : andere.length ? andere.slice(0, 6).join(", ") + (andere.length > 6 ? ` +${andere.length - 6}` : "") : "Unterhaltung"; };
+        return json({ tag, name: name(pid!), schritte: schritte.map((x: any) => ({ t: new Date(x.t).toISOString(), w: x.w, mit: !x.mit ? null : x.mit.startsWith("KC-P-") ? name(x.mit) : chatName(x.mit) })) });
+      }
       // ----- KC-CLUB-NUTZUNG (0.99.0): Statistik OHNE Namen – nur Tag + Bereich + Anzahl. Wer meldet, wird NICHT gespeichert
       // (kein protokoll(), keine Person, kein Gerät). Nur bekannte Bereiche, gedeckelt gegen Ausreißer.
       case "nutzung_melden": {
