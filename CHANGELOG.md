@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.24.8 – 2026-10-06 – Schnellerer Start
+Das Programm liegt jetzt in einer eigenen Datei, die das Handy fertig eingelesen behält – die App startet schneller. Seite und Programm werden immer zusammen aktualisiert. (KC-CLUB-SCHNELLSTART-DATEI)
+
 ## 2.24.7 – 2026-10-06 – Datenbank aufräumen
 Admin: im Bereich 🗄️ Supabase sieht man, was am meisten Platz braucht, und kann alte technische Protokolle aufräumen. Läuft jede Nacht auch von selbst; ab 400 MB kommt eine Warnung. (KC-CLUB-DB-AUFRAEUMEN)
 

@@ -4,7 +4,10 @@ import fs from "node:fs";
 import assert from "node:assert/strict";
 
 const lies = (p) => fs.readFileSync(new URL("../" + p, import.meta.url), "utf8");
-const html = lies("index.html");
+// KC-CLUB-SCHNELLSTART-DATEI (2.24.8): das Programm steht in app.js – für die Prüfungen wieder an seine Stelle in der Seite setzen
+const seite = lies("index.html"), programm = lies("app.js");
+const html = seite.replace(/<script src="app\.js\?v=([^"]+)" data-v="\1"><\/script>/, () => "<script>" + programm.replace(/^\/\/[^\n]*/, "") + "</script>");
+assert.notEqual(html, seite, "index.html lädt app.js nicht (mit gleicher Version in v= und data-v)");
 // 242. 1.66.0: Das App-Skript muss sich übersetzen lassen (z. B. kein doppelt vergebener Name wie „const SPR“) – sonst startet die App nicht
 {
   const vm = await import("node:vm");
@@ -4638,6 +4641,16 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.24.7 KC-CLUB-DB-AUFRAEUMEN übernommen (Test 439 oben)
 {
   assert.ok(/case "db_aufraeumen"/.test(server) && /function dbAufraeumen\(knopf\)/.test(html), "DB-Aufräumen da");
+}
+// 2.24.8 KC-CLUB-SCHNELLSTART-DATEI: Programm in app.js, versionsgleich, kein Mischstand, aus dem Versions-Speicher
+{
+  const v = seite.match(/<script src="app\.js\?v=([^"]+)" data-v="([^"]+)"><\/script>/);
+  assert.ok(v && v[1] === appV && v[2] === appV, "index.html lädt app.js genau dieser Version");
+  assert.ok(/APP_VERSION = "[^"]+";/.test(programm) && !/const APP_VERSION/.test(seite), "Version steht nur im Programm");
+  assert.ok(/if \(document\.currentScript\?\.dataset\.v !== APP_VERSION\) \{/.test(programm) && /throw new Error\("Seite und Programm passen nicht zusammen/.test(programm) && /kc_club_mischstand/.test(programm), "Mischstand-Schutz (Regel 16)");
+  assert.ok(programm.indexOf("dataset.v !== APP_VERSION") < programm.indexOf("const API ="), "Schutz läuft vor allem anderen");
+  assert.ok(/"app\.js\?v=" \+ VERSION/.test(sw) && /const istProgramm = \(url\) => url\.pathname\.endsWith\("\/app\.js"\) && url\.searchParams\.get\("v"\) === VERSION;/.test(sw), "Service Worker: Programm im Versions-Speicher");
+  assert.ok((seite.match(/<script>/g) || []).length === 1, "nur noch das kleine Fehler-Wächter-Skript steht in der Seite");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

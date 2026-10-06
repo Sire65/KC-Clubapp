@@ -2,7 +2,7 @@
 // Eine Quelle (index.html) – der Server bekommt eine wörtliche Kopie; tests/app-vertrag.test.mjs prüft, dass beide gleich sind.
 // Aufruf: node tools/bauernskat/server-kopie.mjs
 import fs from "node:fs";
-const html = fs.readFileSync(new URL("../../index.html", import.meta.url), "utf8");
+const html = fs.readFileSync(new URL("../../app.js", import.meta.url), "utf8"); // 2.24.8: Programm steht in app.js
 const a = html.indexOf("const BSK_FARBEN = "), b = html.indexOf("// ----- Computer -----", a);
 if (a < 0 || b < 0) throw new Error("Bauernskat-Regeln in index.html nicht gefunden");
 const regeln = html.slice(a, b).trimEnd();
