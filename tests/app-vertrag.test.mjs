@@ -2733,7 +2733,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   const sw = lies("sw.js");
   assert.match(sw, /const online = \/\^🟢 \(\.\+\) ist jetzt online\$\/\.exec\(titel\), sichtbar = fenster\.filter\(\(c\) => c\.visibilityState === "visible"\);/, "SW erkennt Online-Push");
   assert.match(sw, /if \(online && sichtbar\.length\) \{ sichtbar\.forEach\(\(c\) => c\.postMessage\(\{ typ: "online-ansage", name: online\[1\] \}\)\);/, "sichtbare App bekommt die Ansage");
-  assert.match(html, /if \(e\.data\?\.typ === "online-ansage"\) onlineAnsageSprechen\(\[e\.data\.name\]\);/, "App sagt an");
+  assert.match(html, /if \(e\.data\?\.typ === "online-ansage"\) \{ onlineAnsageSprechen\(\[e\.data\.name\]\);/, "App sagt an");
   const code = html.slice(html.indexOf("const ANSAGE = "), html.indexOf("function sprechen("));
   const gesagt = [];
   const run = new Function("ICH", "INIT", "document", "inRuheJetzt", "localStorage", "setTimeout", "sprechen", "anmeldeTon", `${code}; return { onlineAnsagen, onlineAnsageSprechen };`);
@@ -4752,6 +4752,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.24.18 KC-CLUB-ONLINE-EINE-QUELLE: Ring „gerade online“ aus dem Online-Takt (wie LED/Zahl), Mitgliederseite zieht beim Wechsel nach
 {
   assert.ok(/else if \(m\?\.person_id && !m\.verborgen\) \{ try \{ if \(ONL\.stand && Date\.now\(\) - ONL\.stand < 3 \* 60 \* 1000\) m = \{ \.\.\.m, online: ONL\.ids\.has\(m\.person_id\) \}; \} catch \{\} \}/.test(html), "Ring nutzt dieselbe Quelle wie LED und Zahl, alter Stand → Liste");
+  assert.ok(/if \(e\.data\?\.typ === "online-ansage"\) \{ onlineAnsageSprechen\(\[e\.data\.name\]\); onlinePing\(\); \}/.test(html), "Ansage per Push frischt LED/Zahl/Ring sofort auf");
   assert.ok(/const vorher = \[\.\.\.ONL\.ids\]\.sort\(\)\.join\(\);[^]{0,400}if \(vorher !== \[\.\.\.ONL\.ids\]\.sort\(\)\.join\(\) && aktuelleAnsicht === "mitglieder" && MITGLIEDER\)/.test(html), "Mitgliederseite wird bei Änderung neu gezeichnet");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
