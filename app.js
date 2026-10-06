@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.24.12"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.24.13"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SCHNELLSTART-DATEI (2.24.8, Hinweis Hansi „Start ist langsamer geworden“): das Programm liegt in app.js, damit das Handy es
 // fertig übersetzt behalten kann (statt bei jedem Öffnen 1,8 MB neu einzulesen). Seite und Programm müssen dieselbe Version haben
 // (AGENTS Regel 16, kein Mischstand): passt es nicht (z. B. alte Seite aus einem Zwischenspeicher), einmal frisch laden, sonst anhalten.
@@ -498,6 +498,7 @@ function wasNeuZeigen(pw) {
   const zeilen = [];
   if (n) zeilen.push(`<div class="wn-zeile">💬 <span>${mz(n, "neue Nachricht", "neue Nachrichten")}${INIT?.ungelesenUnsicher ? " (vielleicht mehr)" : ""}${gr == null ? "" : gr && einzel ? `<br><small>${mz(einzel, "in deinem Chat", "in deinen Chats")} · ${mz(gr, "in einer Gruppe", "in Gruppen")}</small>` : gr ? "<br><small>in deinen Gruppen</small>" : "<br><small>in deinen Chats</small>"}</span></div>`);
   if (p) zeilen.push(`<div class="wn-zeile">📌 <span>${mz(p, "neuer Pinnwand-Eintrag", "neue Pinnwand-Einträge")}</span></div>`);
+  if (!ruheInfo()) return false; // KC-CLUB-RUHE
   const f = blattAuf("wasNeuBlatt", `<h3 style="margin:0 0 8px">👋 Schön, dass du da bist${ICH?.vorname ? ", " + esc(ICH.vorname) : ""}!</h3>
     <p style="margin:0 0 6px">Seit deinem letzten Besuch ist neu:</p>${zeilen.join("")}
     <div class="knoepfe" style="flex-direction:column;align-items:stretch;margin-top:10px">
@@ -512,7 +513,7 @@ async function pwStart(nurZaehlen) { // nurZaehlen: Begrüßung ist offen → Pi
   let gezeigt = false;
   if (!nurZaehlen) try { const n = (await api("pinnwand_neu")).neu || [];
     if (wasNeuZeigen(n)) { gezeigt = true; n.forEach((z) => PW_GEMELDET.add(z.id)); try { localStorage.setItem("kc_club_pw_gemeldet", JSON.stringify([...PW_GEMELDET].slice(-PW_GEMELDET_MAX))); } catch {} } // KC-CLUB-WAS-NEU
-    else if (n.length) { n.forEach((z) => PW_GEMELDET.add(z.id)); try { localStorage.setItem("kc_club_pw_gemeldet", JSON.stringify([...PW_GEMELDET].slice(-PW_GEMELDET_MAX))); } catch {}
+    else if (n.length && ruheInfo()) { /* KC-CLUB-RUHE */ n.forEach((z) => PW_GEMELDET.add(z.id)); try { localStorage.setItem("kc_club_pw_gemeldet", JSON.stringify([...PW_GEMELDET].slice(-PW_GEMELDET_MAX))); } catch {}
       pwFenster(n); gezeigt = true; } } catch {}
   try { const r = await api("pinnwand"); pwUebernehmen(r);
     if (!gezeigt && !nurZaehlen && (PW.zettel.some(pwOffen) || pwHilfeNeu().some((a) => a.wichtig)) && aktuelleAnsicht === "start") { PW.wichtigStart = true; if (pwHilfeNeu().some((a) => a.wichtig)) PW.hilfeStart = true; /* 2.15.0: wichtiger Hilfe-Aufruf */ zeige("pinnwand"); gezeigt = true; }
@@ -1134,15 +1135,24 @@ function tippSpeichern(neu) {
   INIT.einstellungen = { ...(INIT.einstellungen || {}), tipps: w };
   api("einstellung_setzen", { schluessel: "tipps", wert: w }).catch(() => {});
 }
+// ---------- KC-CLUB-RUHE (2.24.13, Wunsch Hansi „Mitglieder nicht überhäufen – nur Notwendiges, moderat“) ----------
+// Je Öffnen höchstens EIN Info-Fenster (Was-ist-neu, Pinnwand-Zettel, Tipp, Spiele-Einladung) – was zuerst kommt, gewinnt (Was-ist-neu
+// kommt als Erstes). Fenster, die eine Antwort brauchen (Notfall, Schulung, Terminanfrage, Twinkey), bleiben wie bisher.
+// Tipp des Tages und Spiele-Einladung höchstens einmal je Woche. Für den Admin bleibt alles wie bisher.
+let RUHE_INFO = false;
+const ruheInfo = () => { if (ICH?.admin) return true; if (RUHE_INFO) return false; RUHE_INFO = true; return true; };
+const RUHE_WOCHE_MS = 7 * 86400000;
+const ruheSeit = (iso) => !iso || Date.now() - new Date(iso).getTime() >= RUHE_WOCHE_MS;
 function tippDesTages() {
   const st = tippStand();
   if (!st.an || !INIT || document.querySelector(".blatt:not(.versteckt)") || aktuelleAnsicht !== "start") return false;
   if (einwOffen("start")) return false; // KC-CLUB-EINWEISUNG: erst die Startseite erklären, Tipps danach
   const heute = heuteIso();
   if (st.zuletzt && new Date(st.zuletzt).toLocaleDateString("sv-SE", { timeZone: TZ }) === heute) return false; // einer je Tag
+  if (!ICH?.admin && !ruheSeit(st.zuletzt)) return false; // KC-CLUB-RUHE: Mitglieder höchstens einmal je Woche
   if (!st.stand) { st.stand = APP_VERSION; tippSpeichern({ stand: APP_VERSION }); } // 2.23.12: ab hier gilt „neu“ für später hinzukommende Hilfen
   const tipp = tippWaehlen(st);
-  if (!tipp) return false;
+  if (!tipp || !ruheInfo()) return false; // KC-CLUB-RUHE
   tippSpeichern({ zuletzt: new Date().toISOString(), letztesThema: tipp.thema });
   const txt = (v) => (typeof v === "function" ? v() : v) || "";
   $("tdtText").classList.add("vorlese-karte");
@@ -4705,12 +4715,17 @@ function bskMgKarte(k) {
 // Höchstens einmal am Tag und nur auf der Startseite, wenn kein anderes Fenster offen ist (Tagesinfo/Neuigkeiten gehen vor; es wird
 // bis zu 2 Minuten gewartet). Ja → Spiele-Kacheln. Nein → heute nicht mehr. Später → frühestens in 2 Stunden wieder (auch bei offener App).
 // Keine Spiele → aus (Einstellung „spiel_einladung“ am Konto, in ⚙️ Einstellungen wieder einschaltbar). Nie im Notbetrieb/SOS.
+const SPE_GEZEIGT = "kc_club_spiel_einl_gezeigt"; // KC-CLUB-RUHE (2.24.13): wann zuletzt gezeigt – höchstens einmal je Woche
 const SPE_TAG = "kc_club_spiel_einl_tag", SPE_SPAETER = "kc_club_spiel_einl_spaeter", SPE_SPAETER_MS = 2 * 3600000;
 const spEinlAn = () => INIT?.einstellungen?.spiel_einladung?.an !== false;
 function spEinladung(versuch = 0) {
   if (!ICH || !INIT || !spEinlAn() || document.body.classList.contains("im-notbetrieb")) return;
   try { if (localStorage.getItem(SPE_TAG) === heuteIso() || Date.now() < Number(localStorage.getItem(SPE_SPAETER) || 0)) return; } catch { return; }
+  try { if (!ICH.admin && !ruheSeit(localStorage.getItem(SPE_GEZEIGT))) return; } catch {} // KC-CLUB-RUHE: höchstens einmal je Woche
+  if (RUHE_INFO && !ICH.admin) return; // schon ein Info-Fenster bei diesem Öffnen
   if (document.querySelector(".blatt:not(.versteckt)") || aktuelleAnsicht !== "start") { if (versuch < 24) setTimeout(() => spEinladung(versuch + 1), 5000); return; }
+  if (!ruheInfo()) return;
+  try { localStorage.setItem(SPE_GEZEIGT, new Date().toISOString()); } catch {}
   const dran = INIT.spieleDran || 0;
   const f = blattAuf("spEinlBlatt", `<div style="text-align:center"><div style="font-size:2.6rem;line-height:1.2" aria-hidden="true">♟️ 🃏 ❌⭕ 🔪</div>
       <h3 style="margin:6px 0">Hey ${esc(ICH.vorname || ICH.name || "")}, heute Lust auf eine Partie?</h3>
@@ -16481,6 +16496,7 @@ function updateFenster() {
 async function nachUpdatePruefen(begruesst) {
   let alt = null; try { alt = localStorage.getItem("kc_club_version_gesehen"); localStorage.setItem("kc_club_version_gesehen", APP_VERSION); } catch {}
   if (!alt || begruesst || !versionNeuer(APP_VERSION, alt)) return; // erste Nutzung oder nichts Neues
+  if (!ICH?.admin) return; // KC-CLUB-RUHE (2.24.13): Mitglieder bekommen kein „Neu in dieser Version“-Fenster mehr
   try { const v = VERSION_INFO || await (await fetch("version.json?x=" + Date.now(), { cache: "no-store" })).json(); VERSION_INFO = VERSION_INFO || v;
     neuigkeitenZeigen(`✅ Aktualisiert auf Version ${esc(APP_VERSION)} – das ist neu`, neuigkeitenSeit(v, alt, APP_VERSION), false); } catch {}
 }

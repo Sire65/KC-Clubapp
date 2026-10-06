@@ -4691,6 +4691,13 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(wasNeuZeigen\(n\)\) \{ gezeigt = true;/.test(html) && /zeige\("nachrichten"\); else if \(w === "p"\) pwFenster\(pw\)/.test(html), "Knöpfe direkt zu Nachrichten / Pinnwand, kein doppeltes Fenster");
   assert.ok(/id="setWasNeu" onchange="einstellung\('wasNeu', this\.checked\)"/.test(html) && /gr == null \? ""/.test(html), "Schalter in den Einstellungen; unbekannte Gruppen-Zahl nicht als 0");
 }
+// 2.24.13 KC-CLUB-RUHE: je Öffnen höchstens ein Info-Fenster, Tipp + Spiele-Einladung höchstens einmal je Woche, kein Versions-Fenster für Mitglieder
+{
+  assert.ok(/const ruheInfo = \(\) => \{ if \(ICH\?\.admin\) return true; if \(RUHE_INFO\) return false; RUHE_INFO = true; return true; \};/.test(html), "ein Info-Fenster je Öffnen (Admin wie bisher)");
+  assert.ok(/if \(!ICH\?\.admin && !ruheSeit\(st\.zuletzt\)\) return false;/.test(html) && /if \(!tipp \|\| !ruheInfo\(\)\) return false;/.test(html), "Tipp höchstens wöchentlich, nur wenn sonst nichts kam");
+  assert.ok(/!ruheSeit\(localStorage\.getItem\(SPE_GEZEIGT\)\)\) return;/.test(html) && /localStorage\.setItem\(SPE_GEZEIGT, new Date\(\)\.toISOString\(\)\)/.test(html) && /Höchstens einmal in der Woche: „Heute Lust auf eine Partie\?“/.test(html), "Spiele-Einladung bleibt, aber höchstens wöchentlich");
+  assert.ok(/if \(!ICH\?\.admin\) return; \/\/ KC-CLUB-RUHE/.test(html) && /if \(!ruheInfo\(\)\) return false; \/\/ KC-CLUB-RUHE\n  const f = blattAuf\("wasNeuBlatt"/.test(html) && /else if \(n\.length && ruheInfo\(\)\)/.test(html), "Versions-Fenster nur Admin; Was-neu/Pinnwand zählen mit");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

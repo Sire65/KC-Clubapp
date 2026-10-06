@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.24.13 – 2026-10-06 – Weniger Fenster beim Öffnen
+Beim Öffnen kommt höchstens noch ein Hinweis-Fenster. Tipp des Tages und Spiele-Einladung höchstens einmal in der Woche. (KC-CLUB-RUHE)
+
 ## 2.24.12 – 2026-10-06 – Was ist neu – beim Öffnen
 Beim Öffnen zeigt die App, wie viele neue Nachrichten (in Chats und Gruppen) und Pinnwand-Einträge da sind – mit Knopf direkt dorthin. (KC-CLUB-WAS-NEU)
 
