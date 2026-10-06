@@ -1817,7 +1817,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 
 // 156. 1.20.1: Chat-Kopfzeile bleibt oben (KC-CLUB-CHAT-KOPF)
 {
-  assert.ok(/<div class="chat-kopf" id="chatKopf">\s*<div class="kopf2"><button class="zurueck" onclick="(zeige|zurueck)\('nachrichten'\)"( aria-label="Zurück")?>‹<\/button><h2 id="chatTitel">/.test(html), "Kopf im eigenen Bereich");
+  assert.ok(/<div class="chat-kopf" id="chatKopf">\s*<div class="kopf2"><button class="zurueck" onclick="(zeige|zurueck)\('nachrichten'\)"( aria-label="Zurück")?>‹<\/button>(<span class="chat-kopf-bild" id="chatKopfBild" aria-hidden="true"><\/span>)?<h2 id="chatTitel">/.test(html), "Kopf im eigenen Bereich");
   const k = html.slice(html.indexOf('id="chatKopf"'), html.indexOf('<div class="chat" id="chat">'));
   assert.ok(/id="chatSuchKnopf"/.test(k) && /id="chatSuchLeiste"/.test(k) && /id="chatTeilnehmer"/.test(k) && /id="chatAngeheftet"/.test(k), "Lupe, Suche, Untertitel, Angeheftetes im Kopf");
   assert.ok(/\.chat-kopf \{ position: sticky; top: 0;/.test(html) && /#chat > \* \{ scroll-margin-top: var\(--chatKopfHoehe/.test(html), "sticky + Sprungabstand");
@@ -4755,6 +4755,16 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(e\.data\?\.typ === "online-ansage"\) \{ onlineAnsageSprechen\(\[e\.data\.name\]\); onlinePing\(\); \}/.test(html), "Ansage per Push frischt LED/Zahl/Ring sofort auf");
   assert.ok(/const vorher = \[\.\.\.ONL\.ids\]\.sort\(\)\.join\(\);[^]{0,400}if \(vorher !== \[\.\.\.ONL\.ids\]\.sort\(\)\.join\(\) && aktuelleAnsicht === "mitglieder" && MITGLIEDER\)/.test(html), "Mitgliederseite wird bei Änderung neu gezeichnet");
 }
+// 2.24.19 KC-CLUB-GRUPPE-AUS-RUNDE + KC-CLUB-CHAT-KOPF-BILD
+{
+  assert.ok(/case "runde_zu_gruppe": \{/.test(server) && /t\.created_by_person_id !== ich\.person_id && !ich\.admin\) throw new Fehler/.test(server) && /\(count \?\? 0\) < 3\) throw/.test(server) && /if \(schon\) throw new Fehler\("Das ist schon eine feste Gruppe\."\)/.test(server), "Runde → Gruppe: nur Ersteller/Admin, ab 3 Personen, nicht doppelt");
+  assert.ok(!/case "runde_zu_gruppe"[^]{0,2500}(senden|sendenGewaehlt)\(/.test(server.slice(server.indexOf('case "runde_zu_gruppe"'), server.indexOf('case "gruppe_aendern"'))), "keine Push/Mail an alle beim Umwandeln");
+  assert.ok(/runde = \{ ersteller: t\?\.created_by_person_id === ich\.person_id \|\| ich\.admin, gleiche \}/.test(server), "Server meldet Ersteller und gleiche Runden");
+  assert.ok(/class="avatar k-neutral uh-gruppe" title="Feste Gruppe">\$\{esc\(u\.gruppe\.symbol\)\}<i class="uh-kette"/.test(html) && /class="avatar uh-runde" title="Runde – keine feste Gruppe"/.test(html), "Gruppe mit 🔗, Runde gestrichelt");
+  assert.ok(/\(eigene >= 2 \|\| u\.runde\.gleiche >= 1\) && !nein\.includes\(rundeSchluessel\(u\)\)/.test(html) && /!!u\.runde\?\.ersteller && !u\.gruppe && \(u\.teilnehmer \|\| \[\]\)\.length >= 3/.test(html), "Angebot erst beim zweiten Mal, nur Ersteller, Nein merkt sich");
+  assert.ok(/\$\("chatKopfBild"\)\.innerHTML = u\.gruppe \|\| andere\.length > 1 \? uhRundeKreis/.test(html) && /#v-chat \.kopf2 > #chatVorlesenKnopf \{ margin-left: auto; \}/.test(html), "Chat-Kopf: Bild vorn, Knöpfe rechts");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

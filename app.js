@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.24.18"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.24.19"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SCHNELLSTART-DATEI (2.24.8, Hinweis Hansi „Start ist langsamer geworden“): das Programm liegt in app.js, damit das Handy es
 // fertig übersetzt behalten kann (statt bei jedem Öffnen 1,8 MB neu einzulesen). Seite und Programm müssen dieselbe Version haben
 // (AGENTS Regel 16, kein Mischstand): passt es nicht (z. B. alte Seite aus einem Zwischenspeicher), einmal frisch laden, sonst anhalten.
@@ -11275,12 +11275,55 @@ async function unterhLaden() {
     const archKopf = UH.archivAnsicht ? `<div class="uh-archiv-kopf"><button class="knopf klein" onclick="uhArchivAnsicht(false)">← Zurück zu den Chats</button><b>📦 Archivierte Chats (${arch.length})</b></div>`
       : arch.length ? `<button class="uh-archiv-zeile" onclick="uhArchivAnsicht(true)"><span>📦 Archiviert</span><span class="hinweis">${arch.length} Chat${arch.length === 1 ? "" : "s"}</span>${archNeu ? `<span class="punkt">${archNeu}</span>` : ""}</button>` : "";
     $("unterhListe").innerHTML = archKopf + (zeigen.length ? `<p class="hinweis uhtipp">Einmal tippen = auswählen (${UH.archivAnsicht ? "📤 wieder aktivieren" : "📦 archivieren"}, 🗑️ löschen) · doppelt tippen = öffnen</p>` : "") + zeigen.map((u) => `<div class="unterh${u.id === UH.wahl ? " gewaehlt" : ""}${u.wichtigNeu ? " wichtig-neu" : ""}" data-id="${u.id}" onclick="unterhTipp('${u.id}')">
-      ${u.gruppe || u.anzahl > 2 ? `<div class="avatar k-neutral">${u.gruppe ? esc(u.gruppe.symbol) : "👥"}</div>` : kreis(MITGLIEDER?.find((m) => m.name === u.teilnehmer[0]) || null, u.teilnehmer[0], 46)}
+      ${u.gruppe || u.anzahl > 2 ? uhRundeKreis(u) : kreis(MITGLIEDER?.find((m) => m.name === u.teilnehmer[0]) || null, u.teilnehmer[0], 46)}
       <div class="mitte"><div><b>${esc(u.gruppe?.name || u.betreff || u.teilnehmer.join(", "))}</b>${stummAn(u.id) ? ' <span title="stummgeschaltet">🔕</span>' : ""}${u.gruppe ? ` <span class="hinweis" style="font-size:.8rem">· ${u.anzahl} Mitgl.</span>` : ""}</div><div class="hinweis">${entwurfAlle()[u.id]?.trim() ? `<span class="entwurf-marke">✏️ Entwurf:</span> ${esc(entwurfAlle()[u.id].trim().slice(0, 80))}` : u.letzte ? esc(u.letzte.von + ": " + u.letzte.text) : "Noch keine Nachricht"}</div></div>
       <div style="text-align:right"><div class="hinweis" style="font-size:.8rem">${u.letzte ? zeitKurz(u.letzte.zeit) : ""}</div>${u.ungelesen ? `<span class="punkt${u.wichtigNeu ? " wichtig" : ""}" title="${u.wichtigNeu ? "darunter wichtige Nachricht" : ""}">${u.wichtigNeu ? "❗ " : ""}${u.ungelesen}</span>` : ""}</div></div>${u.id === UH.wahl ? unterhAktionen(u) : ""}`).join("")
       || (arch.length ? '<p class="hinweis">Alle Chats sind archiviert – oben auf „📦 Archiviert“ tippen.</p>' : '<p class="hinweis">Noch keine Nachrichten. Tippe oben auf „＋ Neu“.</p>');
     uhAmeisen();
   } catch (e) { meldeFehler(e); }
+}
+// KC-CLUB-GRUPPE-AUS-RUNDE (2.24.19, Wunsch Hansi): feste Gruppe = eigenes Symbol + 🔗-Abzeichen; Runde (mehrere Personen ohne Gruppe)
+// = gestrichelter grauer Kreis mit den Anfangsbuchstaben – so sieht jeder sofort, was eine feste Gruppe ist.
+function uhRundeKreis(u) {
+  if (u.gruppe) return `<div class="avatar k-neutral uh-gruppe" title="Feste Gruppe">${esc(u.gruppe.symbol)}<i class="uh-kette" aria-hidden="true">🔗</i></div>`;
+  const ini = (u.teilnehmer || []).slice(0, 3).map((n) => esc(String(n).trim().charAt(0).toUpperCase())).join("");
+  return `<div class="avatar uh-runde" title="Runde – keine feste Gruppe"><span>${ini || "👥"}</span></div>`;
+}
+const RUNDE_NEIN = "kc_club_runde_nein";
+const rundeSchluessel = (u) => (u?.teilnehmer || []).map((x) => x.person_id).sort().join("|");
+// Angebot im Chat: nur wer die Runde begonnen hat, ab 3 Personen, beim zweiten Mal (zweite eigene Nachricht hier oder eine weitere Runde
+// mit genau denselben Leuten), nie als Fenster beim Öffnen (Ruhe-Regel), „Nein, danke“ gilt für diese Runde dauerhaft (dieses Gerät)
+function rundeAngebotZeigen(u) {
+  const el = $("chatRunde"); if (!el) return;
+  let nein = []; try { nein = JSON.parse(lsLesen(RUNDE_NEIN) || "[]"); } catch {}
+  const eigene = (u.nachrichten || []).filter((m) => m.eigen).length;
+  const zeigen = !!u.runde?.ersteller && !u.gruppe && (u.teilnehmer || []).length >= 3 && (eigene >= 2 || u.runde.gleiche >= 1) && !nein.includes(rundeSchluessel(u));
+  el.innerHTML = zeigen ? `<div class="runde-angebot"><span>🔗 Du schreibst öfter an diese Runde. Daraus eine <b>feste Gruppe</b> machen?</span>
+    <span class="knoepfe"><button class="knopf klein haupt" onclick="rundeZuGruppe()">🔗 Gruppe bilden</button><button class="knopf klein" onclick="rundeNein()">Nein, danke</button></span></div>` : "";
+}
+function rundeNein() {
+  let nein = []; try { nein = JSON.parse(lsLesen(RUNDE_NEIN) || "[]"); } catch {}
+  nein = [...new Set([...nein, rundeSchluessel(CHAT)])].slice(-100);
+  lsSetzen(RUNDE_NEIN, JSON.stringify(nein));
+  $("chatRunde").innerHTML = ""; melde("Gut – für diese Runde frage ich nicht mehr.");
+}
+function rundeZuGruppe() {
+  const u = CHAT; if (!u) return;
+  const vorschlag = u.betreff || "";
+  let sym = GR_SYMBOLE[0];
+  const f = blattAuf("rundeBlatt", `<h3 style="margin-top:0">🔗 Feste Gruppe bilden</h3>
+    <p class="hinweis" style="margin:0 0 8px">Mitglieder: Du, ${esc(u.teilnehmer.filter((x) => x.person_id !== ICH.person_id).map((x) => x.name.split(" ")[0]).join(", "))}. Alle bisherigen Nachrichten bleiben erhalten.</p>
+    <label class="feld">Name der Gruppe<input id="rundeName" maxlength="60" value="${esc(vorschlag)}" placeholder="z. B. Küchenteam"></label>
+    <div class="hinweis" style="margin:8px 0 4px">Symbol</div><div class="symbolwahl" id="rundeSymbole"></div>
+    <div class="knoepfe" style="margin-top:12px"><button class="knopf haupt" id="rundeOk">🔗 Gruppe bilden</button><button class="knopf" onclick="$('rundeBlatt').remove()">Abbrechen</button></div>`);
+  const sy = () => { $("rundeSymbole").innerHTML = GR_SYMBOLE.map((x) => `<button class="${x === sym ? "an" : ""}" data-s="${x}">${x}</button>`).join("");
+    $("rundeSymbole").querySelectorAll("[data-s]").forEach((b) => (b.onclick = () => { sym = b.dataset.s; sy(); })); };
+  sy(); setTimeout(() => $("rundeName")?.focus(), 50);
+  $("rundeOk").onclick = async () => {
+    const name = $("rundeName").value.trim(); if (!name) return melde("Bitte einen Namen eingeben.", true);
+    try { await api("runde_zu_gruppe", { id: u.id, name, symbol: sym }); f.remove(); melde(`🔗 Gruppe „${name}“ ist angelegt`); MG_GRUPPEN = []; chatLaden(); }
+    catch (e) { meldeFehler(e); }
+  };
 }
 // KC-CLUB-GRUPPE-AMEISEN (2.22.6): Gruppen aus UH_HERVOR bekommen beim Öffnen von „Nachrichten“ ~5 s einen laufenden Rahmen (höchstens 1× je Minute)
 const UH_HERVOR = ["Innovation"];
@@ -11377,11 +11420,16 @@ async function chatLaden(scrollen) {
     if (fuer !== chatId) return; // 1.97.0: inzwischen eine andere Unterhaltung geöffnet → alte Antwort verwerfen
     CHAT = u; setTimeout(owZeigen, 0); // KC-CLUB-OFFLINE: vorgemerkte Nachrichten unten zeigen
     const andere = u.teilnehmer.filter((x) => x.person_id !== ICH.person_id);
-    $("chatTitel").textContent = (u.gruppe ? `${u.gruppe.symbol} ${u.gruppe.name}` : u.betreff || andere.map((x) => x.name).join(", ")) + (stummAn(chatId) ? " 🔕" : "");
+    // KC-CLUB-CHAT-KOPF-BILD (2.24.19): Bild vorn (Person: Avatar/Kreis; Gruppe: Symbol mit 🔗; Runde: gestrichelt), Titel ohne doppeltes Symbol
+    $("chatTitel").textContent = (u.gruppe ? u.gruppe.name : u.betreff || andere.map((x) => x.name).join(", ")) + (stummAn(chatId) ? " 🔕" : "");
+    if (andere.length === 1 && !u.gruppe && !MITGLIEDER) await mitgliederHolen().catch(() => {});
+    $("chatKopfBild").innerHTML = u.gruppe || andere.length > 1 ? uhRundeKreis({ gruppe: u.gruppe, teilnehmer: andere.map((x) => x.name) })
+      : andere.length === 1 ? kreis(MITGLIEDER?.find((m) => m.person_id === andere[0].person_id) || { person_id: andere[0].person_id }, andere[0].name, 40) : "";
     zustellZeigen();
     let st = "";
     if (andere.length === 1) { if (!MITGLIEDER) await mitgliederHolen().catch(() => {}); const m = MITGLIEDER?.find((x) => x.person_id === andere[0].person_id); if (m?.status) st = statusText(m.status); }
-    $("chatTeilnehmer").textContent = !andere.length ? "Nur du (Test-Unterhaltung)" : u.gruppe ? `👥 ${andere.length + 1} Mitglieder: Du, ${andere.map((x) => x.name.split(" ")[0]).join(", ")} ›` : u.betreff || andere.length > 1 ? "Mit: " + andere.map((x) => x.name).join(", ") : [zuletztText(u.partnerDa), st].filter(Boolean).join(" · "); // 1.20.0: zuletzt da
+    $("chatTeilnehmer").textContent = !andere.length ? "Nur du (Test-Unterhaltung)" : u.gruppe ? `🔗 Feste Gruppe · ${andere.length + 1} Mitglieder: Du, ${andere.map((x) => x.name.split(" ")[0]).join(", ")} ›` : andere.length > 1 ? "Runde (keine feste Gruppe) · Mit: " + andere.map((x) => x.name).join(", ") : u.betreff ? "Mit: " + andere.map((x) => x.name).join(", ") : [zuletztText(u.partnerDa), st].filter(Boolean).join(" · "); // 1.20.0: zuletzt da
+    rundeAngebotZeigen(u); // KC-CLUB-GRUPPE-AUS-RUNDE
     $("chatAngeheftet").innerHTML = (u.angeheftet || []).map((a) => `<button class="pin-zeile" onclick="zuNachricht('${a.id}')">📌 <b>${esc(a.von)}:</b> ${esc(a.text)}</button>`).join(""); // KC-CLUB-ANHEFTEN
     tipptZeigen(u.tippt || [], u.entwurf || [], u.spricht || []); chatAbstand();
     if (u.tippt?.length && andere.length === 1) $("chatTeilnehmer").textContent = "✍️ schreibt …";

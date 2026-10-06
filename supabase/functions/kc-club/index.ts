@@ -41,7 +41,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.24.16";
+const SERVER_VERSION = "2.24.19";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -6352,7 +6352,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const id = String(p.id || "");
         await binTeilnehmer(id, ich.person_id);
         const [{ data: t }, { data: tn }, { data: msgsRoh }] = await Promise.all([
-          db.from("kc_communication_threads").select("id,subject").eq("id", id).single(),
+          db.from("kc_communication_threads").select("id,subject,created_by_person_id").eq("id", id).single(),
           db.from("kc_communication_thread_participants").select("person_id,last_read_at").eq("thread_id", id),
           db.from("kc_communication_messages").select("id,sender_person_id,body,created_at,reply_to_message_id").eq("thread_id", id).order("created_at").limit(500),
         ]);
@@ -6468,7 +6468,26 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const gelesenBis = (tn ?? []).find((x: any) => x.person_id === ich.person_id)?.last_read_at ?? null;
         // KC-CLUB-ZULETZT-DA (1.20.0): im Einzel-Chat „online“ / „zuletzt da …“ des Gegenübers (gleiche Regeln wie überall)
         const partnerDa = andere.length === 1 ? (await zuletztDaMap(ich, [andere[0].person_id])).get(andere[0].person_id) ?? null : null;
-        return json({ id, betreff: t?.subject ?? "", tippt, entwurf, spricht, angeheftet, gelesenBis, partnerDa,
+        // KC-CLUB-GRUPPE-AUS-RUNDE (2.24.19): Runde = mehrere Personen ohne feste Gruppe. Für das Angebot „Daraus eine feste Gruppe machen?“:
+        // wer sie begonnen hat und wie viele weitere Runden (ohne Gruppe) genau dieselben Teilnehmer haben.
+        let runde: { ersteller: boolean; gleiche: number } | null = null;
+        if (!gr && (tn ?? []).length >= 3) {
+          const satz = (tn ?? []).map((x: any) => x.person_id).sort().join("|");
+          const { data: meineTh } = await db.from("kc_communication_thread_participants").select("thread_id").eq("person_id", ich.person_id).neq("thread_id", id);
+          const andereIds = (meineTh ?? []).map((x: any) => x.thread_id).slice(0, 500);
+          let gleiche = 0;
+          if (andereIds.length) {
+            const [{ data: alleTn }, { data: grIds }] = await Promise.all([
+              db.from("kc_communication_thread_participants").select("thread_id,person_id").in("thread_id", andereIds),
+              db.from("kc_club_gruppen").select("thread_id").in("thread_id", andereIds),
+            ]);
+            const istGruppe = new Set((grIds ?? []).map((x: any) => x.thread_id)), je = new Map<string, string[]>();
+            for (const x of alleTn ?? []) { if (!je.has(x.thread_id)) je.set(x.thread_id, []); je.get(x.thread_id)!.push(x.person_id); }
+            for (const [tid, l] of je) if (!istGruppe.has(tid) && l.sort().join("|") === satz) gleiche++;
+          }
+          runde = { ersteller: t?.created_by_person_id === ich.person_id || ich.admin, gleiche };
+        }
+        return json({ id, betreff: t?.subject ?? "", tippt, entwurf, spricht, angeheftet, gelesenBis, partnerDa, runde,
           gruppe: gr ? { name: gr.name, symbol: gr.symbol, erstellt_von: gr.erstellt_von, admins: gr.admins ?? [], darfVerwalten: gruppenAdmin(gr, ich.person_id) || ich.vorstand } : null, teilnehmer: (tn ?? []).map((x: any) => ({ person_id: x.person_id, name: leute.get(x.person_id)?.display_name || x.person_id })), nachrichten });
       }
 
@@ -7082,6 +7101,32 @@ Köcheclub-App`,
         }, `club-gruppe-neu:${th.id}`);
         await protokoll(ich.person_id, "gruppe_angelegt", { gruppe: th.id, name, mitglieder: mitglieder.length, admins: admins.length, versand });
         return json({ ok: true, id: th.id });
+      }
+
+      // KC-CLUB-GRUPPE-AUS-RUNDE (2.24.19, Wunsch Hansi): eine Runde (mehrere Personen, keine Gruppe) zur festen Gruppe machen –
+      // dieselbe Unterhaltung, alle Nachrichten bleiben. Nur wer die Runde begonnen hat (oder der Admin). Keine Push/Mail an alle,
+      // nur ein Hinweis im Chat (Mitglieder nicht überhäufen).
+      case "runde_zu_gruppe": {
+        const id = String(p.id || "");
+        await binTeilnehmer(id, ich.person_id);
+        const name = txt(p.name, 60);
+        if (!name) throw new Fehler("Bitte einen Namen für die Gruppe eingeben (z. B. „Küchenteam“).");
+        const symbol = GRUPPEN_SYMBOLE.includes(String(p.symbol)) ? String(p.symbol) : "👥";
+        const [{ data: t }, { data: schon }, { count }] = await Promise.all([
+          db.from("kc_communication_threads").select("id,created_by_person_id").eq("id", id).maybeSingle(),
+          db.from("kc_club_gruppen").select("thread_id").eq("thread_id", id).maybeSingle(),
+          db.from("kc_communication_thread_participants").select("person_id", { count: "exact", head: true }).eq("thread_id", id),
+        ]);
+        if (!t) throw new Fehler("Unterhaltung nicht gefunden.", 404);
+        if (schon) throw new Fehler("Das ist schon eine feste Gruppe.");
+        if ((count ?? 0) < 3) throw new Fehler("Eine Gruppe braucht mindestens drei Personen.");
+        if (t.created_by_person_id !== ich.person_id && !ich.admin) throw new Fehler("Eine Gruppe daraus machen kann, wer die Runde begonnen hat.", 403);
+        const { error } = await db.from("kc_club_gruppen").insert({ thread_id: id, name, symbol, erstellt_von: ich.person_id, admins: [] });
+        if (error) throw new Fehler("Gruppe konnte nicht angelegt werden.", 500);
+        await db.from("kc_communication_threads").update({ subject: name, updated_at: jetzt() }).eq("id", id);
+        await db.from("kc_communication_messages").insert({ thread_id: id, sender_person_id: ich.person_id, body: `🔗 Aus dieser Runde ist jetzt die feste Gruppe „${symbol} ${name}“ geworden.` });
+        await protokoll(ich.person_id, "runde_zu_gruppe", { gruppe: id, name, mitglieder: count });
+        return json({ ok: true, id });
       }
 
       case "gruppe_aendern": {

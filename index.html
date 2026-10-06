@@ -969,6 +969,12 @@
   .unterh.uh-ameisen { position: relative; } .unterh .uh-rahmen { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
   .unterh .uh-rahmen rect { fill: none; stroke: var(--rot); stroke-width: 3; stroke-dasharray: 9 6; animation: ameisenLauf .6s linear infinite; }
   .avatar { width: 46px; height: 46px; border-radius: 50%; background: var(--rot); color: #fff; display: grid; place-items: center; font-weight: 800; flex: none; }
+  /* KC-CLUB-GRUPPE-AUS-RUNDE (2.24.19): feste Gruppe mit 🔗-Abzeichen, Runde gestrichelt grau mit Anfangsbuchstaben */
+  .avatar.uh-gruppe { position: relative; overflow: visible; }
+  .avatar .uh-kette { position: absolute; right: -4px; bottom: -4px; width: 20px; height: 20px; border-radius: 50%; background: var(--karte); box-shadow: 0 0 0 2px var(--karte); font-size: .75rem; font-style: normal; display: grid; place-items: center; line-height: 1; }
+  .avatar.uh-runde { background: transparent; color: var(--grau); border: 2px dashed var(--grau); font-size: .8rem; letter-spacing: .5px; }
+  .runde-angebot { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; justify-content: space-between; margin: 6px 0; padding: 8px 10px; border-radius: 12px; background: var(--blaubg); color: var(--text); font-size: .9rem; }
+  .runde-angebot .knoepfe { margin: 0; gap: 6px; }
   .unterh .mitte { flex: 1; min-width: 0; }
   .unterh.gewaehlt { background: var(--karte2); border-radius: 14px; outline: 2px solid var(--gold); outline-offset: -2px; }
   .uhaktion { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 4px 12px; border-bottom: 1px solid var(--linie); }
@@ -1438,6 +1444,11 @@
   .kom-leiste .knopf { flex: 1 1 auto; text-align: center; }
   .kopf2 h2 { margin: 0; font-size: 1.35rem; flex: 1; }
   /* KC-CLUB-CHAT-KOPF (1.20.1): Chat-Kopf klebt oben (wie WhatsApp); Nachrichten, zu denen gesprungen wird, nicht darunter verstecken */
+  /* KC-CLUB-CHAT-KOPF-BILD (2.24.19, Wunsch Hansi): oben zuerst Bild (Avatar bzw. Gruppensymbol), dann der Name in einer Zeile; Knöpfe ganz rechts */
+  #v-chat .kopf2 { flex-wrap: nowrap; gap: 8px; } #v-chat .kopf2 > h2 { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 1.15rem; }
+  #v-chat .kopf2 > .rund { flex: none; width: 36px; height: 36px; min-width: 36px; padding: 0; font-size: 1rem; margin-left: -4px; } #v-chat .kopf2 > #chatVorlesenKnopf { margin-left: auto; }
+  #v-chat .kopf2 > .zurueck { flex: none; width: 38px; height: 38px; } #chatTeilnehmer { margin-left: 92px !important; }
+  .chat-kopf-bild { flex: none; display: flex; } .chat-kopf-bild:empty { display: none; } .chat-kopf-bild .avatar { width: 40px; height: 40px; font-size: 1rem; }
   .chat-kopf { position: sticky; top: 0; z-index: 30; background: var(--bg); padding: 2px 0 4px; margin: 0 -4px; padding-left: 4px; padding-right: 4px; box-shadow: 0 6px 8px -8px rgba(0,0,0,.35); }
   #chat > * { scroll-margin-top: var(--chatKopfHoehe, 120px); }
   .zurueck { width: 44px; height: 44px; border-radius: 50%; border: none; background: var(--karte); box-shadow: var(--schatten); font-size: 1.2rem; cursor: pointer; }
@@ -2392,10 +2403,11 @@
   <section id="v-chat" class="versteckt">
     <!-- KC-CLUB-CHAT-KOPF (1.20.1, Wunsch Hansi): Kopfzeile (Name, Lupe, Menü, Suche, Angeheftetes) bleibt beim Scrollen oben stehen -->
     <div class="chat-kopf" id="chatKopf">
-      <div class="kopf2"><button class="zurueck" onclick="zurueck('nachrichten')" aria-label="Zurück">‹</button><h2 id="chatTitel">…</h2><button class="rund" id="chatVorlesenKnopf" title="Neue Nachrichten vorlesen" aria-label="Neue Nachrichten vorlesen" aria-pressed="false" onclick="vorlesenSchalter(!vorlesenAn())">🔇</button><button class="rund" id="chatSuchKnopf" title="Im Chat suchen" aria-label="Im Chat suchen" onclick="chatSucheAuf()">🔍</button><button class="rund" id="chatMenueKnopf" title="Mehr" onclick="chatMenue()">⋮</button></div>
+      <div class="kopf2"><button class="zurueck" onclick="zurueck('nachrichten')" aria-label="Zurück">‹</button><span class="chat-kopf-bild" id="chatKopfBild" aria-hidden="true"></span><h2 id="chatTitel">…</h2><button class="rund" id="chatVorlesenKnopf" title="Neue Nachrichten vorlesen" aria-label="Neue Nachrichten vorlesen" aria-pressed="false" onclick="vorlesenSchalter(!vorlesenAn())">🔇</button><button class="rund" id="chatSuchKnopf" title="Im Chat suchen" aria-label="Im Chat suchen" onclick="chatSucheAuf()">🔍</button><button class="rund" id="chatMenueKnopf" title="Mehr" onclick="chatMenue()">⋮</button></div>
       <div id="chatSuchLeiste" class="versteckt"><input id="chatSuchFeld" type="search" placeholder="Im Chat suchen …" autocomplete="off" oninput="chatSucheJetzt(true)" onkeydown="if(event.key==='Enter'){event.preventDefault();chatSucheSpringen(1)}"><span id="chatSuchZahl"></span><button title="vorheriger Treffer" onclick="chatSucheSpringen(-1)">▲</button><button title="nächster Treffer" onclick="chatSucheSpringen(1)">▼</button><button title="Suche schließen" onclick="chatSucheZu()">✕</button></div>
       <div class="hinweis" id="chatTeilnehmer" style="margin-left:54px;cursor:pointer" onclick="if(CHAT?.gruppe)chatMenue()"></div>
       <div id="chatAngeheftet"></div>
+      <div id="chatRunde"></div>
     </div>
     <div class="chat" id="chat"></div>
   </section>
@@ -3038,6 +3050,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.24.18" data-v="2.24.18"></script>
+<script src="app.js?v=2.24.19" data-v="2.24.19"></script>
 </body>
 </html>

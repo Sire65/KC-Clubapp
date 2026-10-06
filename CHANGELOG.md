@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.24.19 – 2026-10-06 – KC-CLUB-GRUPPE-AUS-RUNDE + KC-CLUB-CHAT-KOPF-BILD
+- Feste Gruppen haben jetzt ein 🔗-Abzeichen am Symbol (Liste und Chat-Kopf), Runden (Nachricht an mehrere ohne feste Gruppe) einen gestrichelten grauen Kreis mit den Anfangsbuchstaben – so sieht jeder, was eine feste Gruppe ist (Wunsch Hansi).
+- Wer eine Runde begonnen hat, bekommt beim zweiten Mal (zweite eigene Nachricht dort oder weitere Runde mit genau denselben Leuten) im Chat einen Streifen „Daraus eine feste Gruppe machen?“ – Name und Symbol wählen, dieselbe Unterhaltung wird zur Gruppe, alle Nachrichten bleiben. Kein Fenster beim Öffnen, keine Push/Mail an alle; „Nein, danke“ gilt für diese Runde dauerhaft (Gerät).
+- Server: neue Aktion runde_zu_gruppe (nur Ersteller oder Admin, ab 3 Personen), Unterhaltung liefert runde {ersteller, gleiche}.
+- Chat-Kopf: vorn das Bild (Avatar bzw. Gruppensymbol), dann der Name in einer Zeile; Vorlesen, Lupe und Menü kleiner ganz rechts (Wunsch Hansi).
+
 ## 2.24.18 – 2026-10-06 – KC-CLUB-ONLINE-EINE-QUELLE: Online-Anzeige überall gleich
 - Der grüne Ring „gerade online“ um Bild/Namen nimmt jetzt denselben Stand wie die LED oben und die Zahl (Online-Takt alle 15–60 s). Vorher kam er aus der Mitgliederliste, die nur beim Öffnen geladen wurde – darum zeigten LED und Ring zu unterschiedlichen Zeiten an (Hinweis Hansi).
 - Kommt jemand online oder geht, zeichnet sich die Mitgliederseite sofort neu. Ist der Online-Stand älter als 3 Minuten, gilt wie bisher der Wert aus der Liste (unbekannt nie als OK).
