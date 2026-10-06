@@ -4676,6 +4676,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const AVF_DATEI_ACCEPT = "[^"]*image\/jpeg[^"]*application\/octet-stream";/.test(html) && /i\.accept = art === "datei" \? AVF_DATEI_ACCEPT : "image\/\*";/.test(html), "Datei → Datei-Explorer");
   assert.ok(/if \(!avfIstBild\(f\)\) return melde\("Das ist kein Bild/.test(html), "nur Bilder");
 }
+// 2.24.11 KC-CLUB-STARTZEIT: Start in Abschnitte zerlegt, letzte 10 auf dem Gerät, in App-Info sichtbar, einmal je Sitzung gemeldet
+{
+  assert.ok(/const START_MESS = \{ prog: performance\.now\(\) \};/.test(programm) && programm.indexOf("const START_MESS") < programm.indexOf("const API ="), "Messung beginnt ganz oben im Programm");
+  assert.ok(/START_MESS\.eingerichtet = performance\.now\(\);/.test(html) && /if \(!START_MESS\.initBis\) \{ START_MESS\.initAb = tInit; START_MESS\.initBis = performance\.now\(\); \}/.test(html), "Einrichten + erste Server-Anfrage gemessen");
+  assert.ok(/requestAnimationFrame\(\(\) => setTimeout\(startMessFertig, 0\)\)/.test(html) && /\.slice\(0, 10\)\)\);/.test(html), "fertig = erstes Bild, letzte 10 gespeichert");
+  assert.ok(/el\.innerHTML = startMessHtml\(\) \+ APPINFO/.test(html) && /Gemessen wird nur beim Öffnen der App/.test(html), "in App-Info sichtbar");
+  assert.ok(/fpNeu\("startzeit"/.test(html) && /FP_INFO = new Set\(\[[^\]]*"startzeit"/.test(server), "Meldung nur als Info");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

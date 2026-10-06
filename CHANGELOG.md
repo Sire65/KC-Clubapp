@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.24.11 – 2026-10-06 – Startzeit messen
+Unter ⚙️ → ℹ️ App-Info steht jetzt, wie lange der letzte Start gedauert hat – aufgeteilt in Seite, Programm, Einrichten, Server und Anzeigen, dazu die letzten 10 Starts. (KC-CLUB-STARTZEIT)
+
 ## 2.24.10 – 2026-10-06 – Mein Bild aus Datei
 Mein Bild: „Datei“ öffnet jetzt den Datei-Explorer statt der Galerie.
 

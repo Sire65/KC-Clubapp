@@ -41,7 +41,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.24.10";
+const SERVER_VERSION = "2.24.11";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -345,7 +345,7 @@ async function zuletztDaMap(ich: Ich, ids: string[]) {
 // „Script error.“ ohne Einzelheiten (Safari/fremde Skripte) ist nur ein Hinweis; Sicherheitsbericht nur mit Problemen schwer.
 const FP_FILTER = "aktion.like.fehler_%,aktion.eq.hilferuf,aktion.eq.diagnose_start,aktion.eq.zugang_angefordert";
 const FP_SCHWER = new Set(["hilferuf", "hilferuf_anonym", "start_kaputt"]);
-const FP_INFO = new Set(["alte_version", "update_getippt", "umgebung", "hinweis", "link_kopiert", "diagnose_start", "zugang_angefordert", "offline", "anonym_admin_benachrichtigt"]);
+const FP_INFO = new Set(["alte_version", "update_getippt", "umgebung", "startzeit", "hinweis", "link_kopiert", "diagnose_start", "zugang_angefordert", "offline", "anonym_admin_benachrichtigt"]);
 const FP_VOLL = 300; // ab so vielen Einträgen fragt die Tagesinfo, ob geleert werden soll
 function fpStufe(aktion: string, d: any): "schwer" | "hinweis" | "info" {
   const art = String(aktion).replace(/^fehler_anonym_/, "").replace(/^fehler_/, "");

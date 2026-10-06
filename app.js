@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.24.10"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.24.11"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SCHNELLSTART-DATEI (2.24.8, Hinweis Hansi „Start ist langsamer geworden“): das Programm liegt in app.js, damit das Handy es
 // fertig übersetzt behalten kann (statt bei jedem Öffnen 1,8 MB neu einzulesen). Seite und Programm müssen dieselbe Version haben
 // (AGENTS Regel 16, kein Mischstand): passt es nicht (z. B. alte Seite aus einem Zwischenspeicher), einmal frisch laden, sonst anhalten.
@@ -9,6 +9,9 @@ if (document.currentScript?.dataset.v !== APP_VERSION) {
   if (!schon) location.replace(location.pathname + "?neu=" + Date.now() + location.hash);
   throw new Error("Seite und Programm passen nicht zusammen – wird neu geladen");
 }
+// KC-CLUB-STARTZEIT (2.24.11, Wunsch Hansi): jeden Start in Abschnitte zerlegen – Seite, Programm laden, Programm einrichten,
+// Warten auf den Server, Anzeigen. Die letzten 10 Starts bleiben auf dem Gerät (⚙️ → ℹ️ App-Info), einmal je Sitzung geht der Wert mit.
+const START_MESS = { prog: performance.now() };
 try { const u = new URL(location.href); if (u.searchParams.has("neu")) { u.searchParams.delete("neu"); history.replaceState(null, "", u.pathname + u.search + u.hash); } } catch {}
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
@@ -8167,7 +8170,8 @@ function neuLaden(vonHand) {
 }
 async function neuLadenRoh(vonHand) {
   try {
-    INIT = await api("init", { fotosSeit: kzSeit("fotos"), dienstSeit: kzSeit("dienste") }, { warten: !!vonHand }); /* KC-CLUB-KACHEL-ZAHLEN */ ICH = INIT.ich; einstOffenAnwenden(); /* 2.6.1: noch laufende Speicherungen nicht überschreiben */ adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); einwZeigen(aktuelleAnsicht); // KC-CLUB-KOPF-EINFACH
+    const tInit = performance.now(); // KC-CLUB-STARTZEIT: nur die erste Anfrage nach dem Öffnen zählt
+    INIT = await api("init", { fotosSeit: kzSeit("fotos"), dienstSeit: kzSeit("dienste") }, { warten: !!vonHand }); if (!START_MESS.initBis) { START_MESS.initAb = tInit; START_MESS.initBis = performance.now(); } /* KC-CLUB-KACHEL-ZAHLEN */ ICH = INIT.ich; einstOffenAnwenden(); /* 2.6.1: noch laufende Speicherungen nicht überschreiben */ adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); einwZeigen(aktuelleAnsicht); // KC-CLUB-KOPF-EINFACH
     alarmPruefen(); /* KC-CLUB-NOTFALL-MELDUNG */ document.body.classList.toggle("sos-frei", !!INIT?.sosFuerAlle); /* KC-CLUB-SOS-FREIGABE */ fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln);
     if ($("setLiveTippen")) $("setLiveTippen").checked = liveTippen();
@@ -16361,10 +16365,37 @@ async function appInfoDaten() {
     ["🧰 Technik", "Web-App (PWA) · Daten: Supabase · Benachrichtigungen: KC Communicator · Seite: GitHub Pages"]);
   return z;
 }
+// ---------- KC-CLUB-STARTZEIT (2.24.11) ----------
+const STARTMESS_SPEICHER = "kc_club_startmess", STARTMESS_TEILE = [["seite", "📄 Seite laden"], ["programm", "📦 Programm laden"], ["einrichten", "⚙️ Programm einrichten"], ["server", "🌐 Warten auf den Server"], ["anzeige", "🖼️ Anzeigen"]];
+const startMessLesen = () => { try { const l = JSON.parse(localStorage.getItem(STARTMESS_SPEICHER) || "[]"); return Array.isArray(l) ? l : []; } catch { return []; } };
+function startMessFertig() {
+  if (START_MESS.fertig || !START_MESS.initBis) return;
+  START_MESS.fertig = performance.now();
+  const nav = performance.getEntriesByType?.("navigation")?.[0], seite = Math.max(0, Math.round(nav?.responseEnd || 0));
+  const prog = performance.getEntriesByType?.("resource")?.find((e) => /\/app\.js\?v=/.test(e.name));
+  const m = START_MESS, rund = (x) => Math.max(0, Math.round(x));
+  const p = { seite, programm: rund(m.prog - seite), einrichten: rund(m.eingerichtet - m.prog), server: rund(m.initBis - m.initAb), anzeige: rund(m.fertig - m.initBis) };
+  // was zwischen „eingerichtet“ und der Server-Anfrage liegt (kurz), zählt zum Einrichten – die Summe ergibt immer die Gesamtzeit
+  p.einrichten += rund(m.initAb - m.eingerichtet);
+  const eintrag = { z: Date.now(), v: APP_VERSION, netz: navigator.connection?.effectiveType || "", quelle: !prog ? "" : prog.transferSize === 0 ? "speicher" : "netz", ges: rund(m.fertig), p };
+  try { localStorage.setItem(STARTMESS_SPEICHER, JSON.stringify([eintrag, ...startMessLesen()].slice(0, 10))); } catch {}
+  try { if (!sessionStorage.getItem("kc_club_fp_startzeit")) { sessionStorage.setItem("kc_club_fp_startzeit", "1"); fpNeu("startzeit", { ms: eintrag.ges, netz: eintrag.netz, quelle: eintrag.quelle, ...p }); } } catch {}
+  if ($("appInfo")?.offsetParent) appInfoZeigen();
+}
+const sek = (ms) => (ms / 1000).toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " s";
+function startMessHtml() {
+  const l = startMessLesen(); if (!l.length) return `<div class="zeile"><span>⏱️ Startzeit</span><b style="margin-left:auto">noch nicht gemessen</b></div>`;
+  const a = l[0], max = Math.max(1, ...STARTMESS_TEILE.map(([k]) => a.p[k] || 0)), schnitt = Math.round(l.reduce((x, e) => x + e.ges, 0) / l.length);
+  return `<details class="startmess"><summary class="zeile" style="cursor:pointer"><span>⏱️ Startzeit zuletzt</span><b style="margin-left:auto">${sek(a.ges)}</b></summary>
+    <p class="hinweis" style="margin:4px 0">Beim letzten Öffnen (${esc(new Date(a.z).toLocaleString("de-DE", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }))} Uhr, Version ${esc(a.v)}${a.netz ? ", Netz " + esc(a.netz.toUpperCase()) : ""}${a.quelle ? ", Programm " + (a.quelle === "speicher" ? "aus dem Speicher" : "aus dem Netz") : ""}):</p>
+    <table class="vb-tabelle">${STARTMESS_TEILE.map(([k, t]) => `<tr><td>${t}</td><td style="text-align:right;white-space:nowrap">${sek(a.p[k] || 0)}</td><td style="width:32%"><div style="height:8px;border-radius:4px;background:#8884"><div style="height:8px;border-radius:4px;background:var(--textGruen, #1e8449);width:${Math.max(2, Math.round(((a.p[k] || 0) / max) * 100))}%"></div></div></td></tr>`).join("")}
+      <tr><td><b>Gesamt</b></td><td style="text-align:right"><b>${sek(a.ges)}</b></td><td></td></tr></table>
+    <p class="hinweis" style="margin:6px 0 0">Letzte ${l.length} Starts: ${l.map((e) => sek(e.ges)).join(" · ")}<br>Durchschnitt: <b>${sek(schnitt)}</b>. Gemessen wird nur beim Öffnen der App, nicht beim Zurückholen.</p></details>`;
+}
 async function appInfoZeigen() {
   const el = $("appInfo"); if (!el) return;
   APPINFO = await appInfoDaten();
-  el.innerHTML = APPINFO.filter(([k]) => !/App-Version/.test(k)).map(([k, v]) => `<div class="zeile" style="gap:10px"><span style="flex:0 0 auto">${esc(k)}</span><b style="margin-left:auto;text-align:right;overflow-wrap:anywhere">${esc(v)}</b></div>`).join("");
+  el.innerHTML = startMessHtml() + APPINFO.filter(([k]) => !/App-Version/.test(k)).map(([k, v]) => `<div class="zeile" style="gap:10px"><span style="flex:0 0 auto">${esc(k)}</span><b style="margin-left:auto;text-align:right;overflow-wrap:anywhere">${esc(v)}</b></div>`).join("");
 }
 async function appInfoKopieren() {
   if (!APPINFO.length) APPINFO = await appInfoDaten();
@@ -17624,6 +17655,7 @@ function fpNachAnmeldung() {
   if (fpAngemeldet || !window.KCFP) return;
   fpAngemeldet = true; KCFP.angemeldet = true; KCFP.startOk = true; KCFP.version = APP_VERSION;
   const dauer = Date.now() - KCFP.start;
+  requestAnimationFrame(() => setTimeout(startMessFertig, 0)); // KC-CLUB-STARTZEIT: fertig = erstes Bild nach der Anmeldung
   if (dauer > 6000) fpNeu("start_langsam", { ms: dauer, text: `Start dauerte ${Math.round(dauer / 1000)} s` });
   try { if (!sessionStorage.getItem("kc_club_fp_umgebung")) { sessionStorage.setItem("kc_club_fp_umgebung", "1");
     fpNeu("umgebung", { system: fpSystem(), browser: fpBrowser(), start: START_ART, standalone: matchMedia("(display-mode: standalone)").matches || navigator.standalone === true,
@@ -17712,6 +17744,7 @@ const FP_ARTEN = {
   start_langsam: ["🐢", "Start langsam", "schwaches Netz"],
   mehrfachstart: ["🔁", "Mehrmals kurz hintereinander geöffnet", "Zeichen für „geht nicht auf“ – Hilfe wurde angeboten"],
   speicher: ["🔒", "Speicher gesperrt (privater Modus)", "App vergisst den Zugang – normal öffnen"],
+  startzeit: ["⏱️", "Startzeit", "Abschnitte des Starts (nur Messung)"],
   alte_version: ["🕰️", "Alte App-Version", "„Jetzt aktualisieren“ wurde angeboten"],
   update_getippt: ["🔄", "Aktualisieren getippt", ""],
   umgebung: ["📱", "Gerät & Browser", ""],
@@ -17756,6 +17789,7 @@ async function fpAdmin(tage) {
 
 // ---------- Start der App ----------
 (function start() {
+  START_MESS.eingerichtet = performance.now(); // KC-CLUB-STARTZEIT
   anwendenDesign(); lichtSensorStarten();
   versionAnzeigen(); $("appVersion").textContent = APP_VERSION;
   const url = new URL(location.href), k = url.searchParams.get("k");
