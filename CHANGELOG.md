@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.24.2 – 2026-10-06 – Update kommt schneller an
+Findet die App beim Öffnen eine neue Version, lädt sie sie sofort – nicht erst beim nächsten Öffnen. (KC-CLUB-UPDATE-START)
+
 ## 2.24.1 – 2026-10-06 – ✨ Animierte Knöpfe an/aus (Wunsch Hansi)
 - KC-CLUB-ANIMATION-SCHALTER: Einstellungen → 🎨 Darstellung → „✨ Animierte Knöpfe“ (Standard an, je Gerät). Aus: Kacheln öffnen ohne Zoom sofort, Reiter-Rahmen läuft nicht, „＋ Neu“ leuchtet nicht auf. Tipp/Hilfe „Ruhige oder lebendige Knöpfe“. Nur App.
 

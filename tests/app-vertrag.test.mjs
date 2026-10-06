@@ -3190,9 +3190,9 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
 }
 // 288. 2.3.2: Updates automatisch beim Start und alle 10 Min. auf der Startseite
 {
-  assert.ok(/updatePruefen\(false\)\.then\(\(\) => setTimeout\(updateSelbst, 4000\)\);/.test(html), "Selbst-Update beim Start");
+  assert.ok(/updatePruefen\(false\)\.then\(\(\) => setTimeout\(updateSelbst, (updateFrisch\(\) \? 0 : )?4000\)\);/.test(html), "Selbst-Update beim Start");
   assert.ok(/aktuelleAnsicht === "start" && !chatId\) updatePruefen\(false\)\.then\(updateSelbst\); \}, UPDATE_TAKT_MS\)/.test(html) && /const UPDATE_TAKT_MS = 10 \* 60000;/.test(html), "Selbst-Update im Takt nur auf der Startseite");
-  assert.ok(/if \(!NEUE_VERSION \|\| !updateRuhig\(\)( \|\| !ICH[^)]*\)[^\n]*)?\) return;/.test(html) && (/Date\.now\(\) - z\.t < 10 \* 60000\) return;/.test(html) || /UPDATE_PAUSE_MS = 10 \* 60000/.test(html)), "Schutz bleibt"); // 2.6.1: als Konstante
+  assert.ok((/if \(!NEUE_VERSION \|\| !updateRuhig\(\)( \|\| !ICH[^)]*\)[^\n]*)?\) return;/.test(html) || /\(!updateRuhig\(\) \|\| !ICH \|\| aktuelleAnsicht !== "start"/.test(html)) && (/Date\.now\(\) - z\.t < 10 \* 60000\) return;/.test(html) || /UPDATE_PAUSE_MS = 10 \* 60000/.test(html)), "Schutz bleibt"); // 2.6.1: als Konstante
 }
 // 289. 2.3.3: Gegenprobe vor dem automatischen Notbetrieb
 {
@@ -4582,6 +4582,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/:root\.ohne-anim \.register button\.reg-lauf \.reg-rahmen rect \{ animation: none !important;/.test(html), "Reiter-Rahmen ruhig");
 }
 
+// 2.24.2 KC-CLUB-UPDATE-START: Update gleich beim Öffnen sofort laden (vor der ersten Eingabe), sonst wie bisher
+{
+  assert.ok(/const UPDATE_START_MS = 20000, UPDATE_WEG_MS = 120000;/.test(html) && /\["pointerdown", "keydown"\]\.forEach\(\(t\) => addEventListener\(t, \(\) => \{ UPD_FRISCH = 0; \}/.test(html), "Start-Fenster 20 s, endet mit erster Eingabe");
+  assert.ok(/if \(frisch \? etwasGetippt\(\) : \(!updateRuhig\(\) \|\| !ICH \|\| aktuelleAnsicht !== "start" \|\| chatId \|\| RUF\)\) return;/.test(html), "frisch: nur nichts getippt; sonst bisherige Ruhe-Regeln");
+  assert.ok(/if \(!NEUE_VERSION \|\| RUF \|\| SPR \|\| wartenZahl \|\|/.test(html), "nie während Anruf/Aufnahme/Übertragung");
+  assert.ok(/setTimeout\(updateSelbst, updateFrisch\(\) \? 0 : 4000\)/.test(html) && /updWeg\(document\.hidden\); if \(!document\.hidden\)/.test(html), "Start sofort, Zurückholen nach ≥ 2 Min. zählt als Öffnen");
+  assert.ok(/fpNeu\(frisch \? "update_start" : "update_selbst"/.test(html) && /return !etwasGetippt\(\);/.test(html), "Protokoll unterscheidbar, updateRuhig unverändert");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

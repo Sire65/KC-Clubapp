@@ -2991,7 +2991,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.24.1"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.24.2"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -19363,20 +19363,32 @@ function updateRuhig() {
   if (RUF || SPR || wartenZahl) return false; // 2.1.1: nie während Anruf, Sprachaufnahme oder laufender Übertragung
   if (document.querySelector(".blatt:not(.versteckt)")) return false;
   const a = document.activeElement; if (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) return false;
-  return ![...document.querySelectorAll("textarea, input[type=text], input:not([type])")].some((el) => el.offsetParent && el.value.trim());
+  return !etwasGetippt();
 }
+const etwasGetippt = () => [...document.querySelectorAll("textarea, input[type=text], input:not([type])")].some((el) => el.offsetParent && el.value.trim());
+// KC-CLUB-UPDATE-START (2.24.2, Wunsch Hansi, Fund: Update kam bei kurzen Besuchen erst beim übernächsten Öffnen an):
+// gleich nach dem Öffnen (erste 20 s, auch beim Zurückholen nach ≥ 2 Min.) und solange noch nichts angetippt/getippt wurde,
+// lädt die App ein gefundenes Update SOFORT – auch wenn die App selbst schon ein Fenster/Hinweis geöffnet hat.
+// Mitten in der Benutzung bleibt alles wie bisher (updateRuhig + Startseite); Schleifenschutz unverändert.
+const UPDATE_START_MS = 20000, UPDATE_WEG_MS = 120000;
+let UPD_FRISCH = Date.now(), UPD_WEG = 0;
+["pointerdown", "keydown"].forEach((t) => addEventListener(t, () => { UPD_FRISCH = 0; }, { capture: true, passive: true }));
+const updateFrisch = () => !!UPD_FRISCH && Date.now() - UPD_FRISCH < UPDATE_START_MS;
+function updWeg(versteckt) { if (versteckt) UPD_WEG = Date.now(); else if (UPD_WEG && Date.now() - UPD_WEG >= UPDATE_WEG_MS) { UPD_FRISCH = Date.now(); UPD_WEG = 0; } }
 // 2.6.1 (Prüfung): nur wenn angemeldet, auf der Startseite, kein Chat/Anruf/Sprunglink offen; ohne funktionierenden Speicher nie
 // (sonst Endlosschleife/Abmeldung); schon einmal von DIESER Version aus versucht und immer noch alt → 6 Std. Pause + Meldung
 const UPDATE_PAUSE_MS = 10 * 60000, UPDATE_MISSLUNGEN_MS = 6 * 3600000;
 function updateSelbst() {
-  if (!NEUE_VERSION || !updateRuhig() || !ICH || aktuelleAnsicht !== "start" || chatId || RUF || /#(anruf|anklopfen)=/.test(START_HASH || "") && Date.now() - (window.KCFP?.start || 0) < 120000) return;
+  const frisch = updateFrisch(); // KC-CLUB-UPDATE-START: direkt nach dem Öffnen, noch nichts angetippt
+  if (!NEUE_VERSION || RUF || SPR || wartenZahl || /#(anruf|anklopfen)=/.test(START_HASH || "") && Date.now() - (window.KCFP?.start || 0) < 120000) return;
+  if (frisch ? etwasGetippt() : (!updateRuhig() || !ICH || aktuelleAnsicht !== "start" || chatId || RUF)) return;
   let z = {}; try { z = JSON.parse(localStorage.getItem("kc_club_auto_update") || "{}") || {}; } catch {}
   const nochmal = z.v === NEUE_VERSION && z.von === APP_VERSION;
   if (nochmal && Date.now() - z.t < (z.misslungen ? UPDATE_MISSLUNGEN_MS : UPDATE_PAUSE_MS)) return;
   if (nochmal && !z.misslungen) { z.misslungen = true; z.t = Date.now(); try { localStorage.setItem("kc_club_auto_update", JSON.stringify(z)); } catch {} fpNeu("update_misslungen", { hat: APP_VERSION, neu: NEUE_VERSION }); return; }
   const neu = JSON.stringify({ v: NEUE_VERSION, von: APP_VERSION, t: Date.now() });
   try { localStorage.setItem("kc_club_auto_update", neu); if (localStorage.getItem("kc_club_auto_update") !== neu) return; } catch { return; }
-  fpNeu("update_selbst", { hat: APP_VERSION, neu: NEUE_VERSION }); melde(`🔄 Neue Version ${NEUE_VERSION} – wird geladen …`); jetztAktualisieren();
+  fpNeu(frisch ? "update_start" : "update_selbst", { hat: APP_VERSION, neu: NEUE_VERSION }); melde(`🔄 Neue Version ${NEUE_VERSION} – wird geladen …`); jetztAktualisieren();
 }
 
 // ---------- KC-CLUB-NUTZUNG (0.99.0): Nutzungsstatistik OHNE Namen ----------
@@ -20697,10 +20709,10 @@ async function fpAdmin(tage) {
   });
   // KC-CLUB-UPDATE-AUTO (2.3.2, Wunsch Hansi): auch beim Start und alle 10 Min. (nur auf der Startseite, nichts offen,
   // nichts eingetippt) selbst aktualisieren – Schutz wie bisher in updateRuhig/updateSelbst (1× je 10 Min. und Version)
-  updatePruefen(false).then(() => setTimeout(updateSelbst, 4000));
+  updatePruefen(false).then(() => setTimeout(updateSelbst, updateFrisch() ? 0 : 4000)); // KC-CLUB-UPDATE-START: frisch geöffnet → sofort
   setInterval(() => { if (!document.hidden && aktuelleAnsicht === "start" && !chatId) updatePruefen(false).then(updateSelbst); }, UPDATE_TAKT_MS);
   setTimeout(stStart, 2500); // KC-CLUB-STANDORT
-  document.addEventListener("visibilitychange", () => { if (!document.hidden) { if (ST.eigen) stMelden(true); neuLaden(); updatePruefen(false).then(updateSelbst); if (chatId) chatLaden(false); setTimeout(pwLive, 1500); } });
+  document.addEventListener("visibilitychange", () => { updWeg(document.hidden); if (!document.hidden) { if (ST.eigen) stMelden(true); neuLaden(); updatePruefen(false).then(updateSelbst); if (chatId) chatLaden(false); setTimeout(pwLive, 1500); } });
   setInterval(() => { if (!document.hidden && aktuelleAnsicht !== "chat") neuLaden(); }, 60000);
   setInterval(pwLive, PW_LIVE_MS); // KC-CLUB-PINNWAND-LIVE: auch im Chat
 })();
