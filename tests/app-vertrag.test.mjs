@@ -4418,7 +4418,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.equal(codes.length, 30, "30 Figuren"); assert.equal(codes.filter((c) => c[0] === "w").length, 15, "15 Köchinnen");
   for (const c of codes) assert.ok(/^<svg viewBox="0 0 64 64"/.test(AV.avatarSvg(c)) && !/<image|href=|url\(/.test(AV.avatarSvg(c)), "selbst gezeichnet, keine fremden Bilder: " + c);
   assert.equal(AV.avatarSvg("x99"), "", "unbekannter Code → nichts");
-  assert.ok(/avGueltig\(fig\) \? avatarSvg\(fig, groesse - 6\) : esc\(initialen\(name\)\)/.test(html), "Kreis zeigt Figur, sonst Buchstaben");
+  assert.ok(/avGueltig\(fig\) \? avatarSvg\(fig, groesse - 8\) \+ abz : esc\(initialen\(name\)\)/.test(html), "Kreis zeigt Figur, sonst Buchstaben");
   assert.ok(/\{ id: "avatar", sym: "🧑‍🍳", t: "Mein Bild",/.test(html) && /api\("einstellung_setzen", \{ schluessel: "avatar", wert: \{ figur \} \}\)/.test(html), "Auswahl in Meins");
   assert.ok(/avatar: \(w\) => \(\{ figur: typeof w\?\.figur === "string" && \(\/\^\[wm\]\(0\[1-9\]\|1\[0-5\]\)\$\/\.test\(w\.figur\)/.test(server) && /avatar: avatar\.get\(m\.person_id\) \?\? null/.test(server), "Server prüft den Code, liefert ihn in der Mitgliederliste");
 }
@@ -4465,6 +4465,23 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/onclick="spurAdmin\(heuteIso\(\), null\)">👣 Wege der Mitglieder/.test(html), "Admin: Nutzung → Wege der Mitglieder");
   assert.ok(/id: "was_gespeichert", thema: "privat"[^\n]*30 Tage lang[^\n]*ohne Inhalte[^\n]*nur der Admin/.test(html), "Satz in der Hilfe");
   assert.ok(!/was_gespeichert|spurAdmin/.test(html.slice(html.indexOf("function mdatAbschnitte"), html.indexOf("function mdatAbschnitte") + 4000)), "nicht in „Meine Daten“");
+}
+
+// 440. 2.23.89: Abzeichen am Bild, Anwesenheitstafel, Bild groß, eigenes Foto (KC-CLUB-AVATAR-ABZEICHEN, -ANWESENHEIT, -AVATAR-FOTO)
+{
+  assert.ok(/k\.art !== "unbekannt" \? `<i class="k-abz a-\$\{k\.art\}"/.test(html) && /\.k-abz\.a-online \{ background: #1e8449; \}/.test(html), "Abzeichen, nie bei unbekannt");
+  assert.ok(/const MG_ANSICHTEN = \["kacheln", "liste", "tafel"\];/.test(html) && /function mgTafelHtml\(liste\)/.test(html) && /if \(MG_ANSICHT === "tafel"\) \{ \$\("mitgliederListe"\)\.innerHTML = mgTafelHtml\(liste\); return; \}/.test(html), "Tafel als dritte Ansicht");
+  const t = html.slice(html.indexOf("function mgTafelHtml"), html.indexOf("function mgKachelnHtml"));
+  assert.ok(/onclick="mitgliedOeffnen\(/.test(t) && !/anrufen|anklopfen|nachricht/i.test(t.replace(/\/\/[^\n]*/g, "")) && /class="mg-led l-\$\{k\.art\}"/.test(t), "nur Name + LED, antippen öffnet das Mitglied");
+  assert.ok(/data-a="tafel" onclick="mgAnsichtSetzen\('tafel'\)"/.test(html), "Umschalter 📋");
+  assert.ok(/kreis\(mm, m\.name, 96, avGueltig\(avFigurVon\(mm\)\) \? `onclick="avGross\(/.test(html) && /function avGross\(pid\)/.test(html), "Bild oben auf der Mitglieds-Seite, antippen = groß");
+  assert.ok(/avfWaehlen\('selfie'\)/.test(html) && /i\.setAttribute\("capture", "user"\)/.test(html) && /avfWaehlen\('galerie'\)/.test(html) && /avfWaehlen\('datei'\)/.test(html), "Selfie, Galerie, Datei");
+  assert.ok(/c\.width = c\.height = 256/.test(html) && /url\.length > 70000/.test(html), "App verkleinert auf 256×256, begrenzt");
+  const f = server.slice(server.indexOf('case "avatar_foto_setzen"'), server.indexOf('case "einstellung_setzen"'));
+  assert.ok(/await nurWennFrei\("avatar_foto"/.test(f) && f.includes("data:image\\/jpeg;base64,\\/9j\\/") && /bild\.length > AVF_MAX/.test(f) && /\(count \?\? 0\) >= 10/.test(f), "Server: nur freigegeben, nur JPEG, Größe, Bremse");
+  assert.ok(/case "avatar_foto_entfernen": \{\s+nurAdmin\(ich\);/.test(f), "Entfernen nur Admin");
+  assert.ok(/avatar_foto: \{ t: "📷 Eigenes Foto als Bild"[^\n]*standard: "admin" \}/.test(server), "erst nur für den Admin (Freigabe)");
+  assert.ok(/if \(!fig \|\| !AVF_CODE\.test\(fig\)\) await db\.from\("kc_club_person_einstellung"\)\.delete\(\)\.eq\("person_id", ich\.person_id\)\.eq\("schluessel", "avatar_foto"\)/.test(server), "anderes Bild gewählt → Foto gelöscht");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

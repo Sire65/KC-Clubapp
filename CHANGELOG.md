@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.23.89 – 2026-10-06 – Abzeichen am Bild, Anwesenheitstafel, Bild groß, eigenes Foto als Bild
+- KC-CLUB-AVATAR-ABZEICHEN: mit Figur/Foto Zustand als Abzeichen unten rechts (✓ online, blau heute, orange abwesend, ! Fehler, grau selten; unbekannt ohne), Ring breiter.
+- KC-CLUB-ANWESENHEIT: Mitglieder → 📋 Anwesenheitstafel (nur Name + LED, keine Knöpfe); antippen öffnet das Mitglied. Auch unter Einstellungen → Darstellung.
+- Mitglieds-Seite: Bild oben (96 px), antippen = groß.
+- KC-CLUB-AVATAR-FOTO: eigenes Foto (🤳 Selfie, 🖼️ Galerie, 📁 Datei), 256×256 JPEG in den persönlichen Einstellungen (kein Dateispeicher, keine DB-Änderung); erst nur Admin (🚦 Freigaben); Admin kann Fotos entfernen; anderes Bild gewählt → Foto gelöscht.
+
 ## 2.23.88 – 2026-10-06 – KC-CLUB-SPUR: Wege der Mitglieder für den Admin (was geöffnet, mit wem, Uhrzeit – ohne Inhalte, 30 Tage)
 - App merkt sich Bereiche, angesehene Mitglieder, geöffnete Unterhaltungen, gesendet (ohne Text), Anruf/Video/Anklopfen/Telefon/WhatsApp/Mail – je mit Uhrzeit.
 - Server: spur_melden (nur Kürzel + Kennungen, kein freier Text), spur_liste nur Admin; Speicherung im Club-App-Protokoll, Wartung löscht nach 30 Tagen. Keine DB-Änderung.

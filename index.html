@@ -1476,7 +1476,19 @@
   .avatar { position: relative; } .avatar .onpunkt { position: absolute; right: -2px; bottom: -2px; margin: 0; }
   /* KC-CLUB-KREISE (0.60.0): ganzer Namenskreis farbig nach Zustand (Registry KREIS_ARTEN) */
   .avatar.k-neutral { background: #8d6e63; }
-  .avatar.mit-figur { padding: 3px; box-sizing: border-box; overflow: hidden; } .avatar.mit-figur svg { display: block; width: 100%; height: 100%; border-radius: 50%; } /* KC-CLUB-AVATAR 2.23.85 */
+  .avatar.mit-figur { padding: 4px; box-sizing: border-box; } .avatar.mit-figur svg, .avatar.mit-figur img.av-foto { display: block; width: 100%; height: 100%; border-radius: 50%; box-shadow: 0 0 0 2px var(--karte); } /* KC-CLUB-AVATAR 2.23.85; 2.23.89 Ring breiter */
+  img.av-foto { object-fit: cover; background: #b8b0a8; }
+  /* KC-CLUB-AVATAR-ABZEICHEN (2.23.89, Wunsch Hansi): Zustand als Abzeichen unten rechts – auch mit Figur/Foto gut sichtbar */
+  .avatar .k-abz { position: absolute; right: -3px; bottom: -3px; width: 38%; height: 38%; min-width: 13px; min-height: 13px; max-width: 24px; max-height: 24px; border-radius: 50%;
+    border: 2px solid var(--karte); box-sizing: border-box; display: grid; place-items: center; color: #fff; font-size: 10px; font-weight: 900; font-style: normal; line-height: 1; }
+  .k-abz.a-online { background: #1e8449; } .k-abz.a-heute { background: #2471a3; } .k-abz.a-weg { background: #d68910; } .k-abz.a-fehler { background: #c0392b; } .k-abz.a-selten { background: #95a5a6; }
+  /* KC-CLUB-ANWESENHEIT (2.23.89, Wunsch Hansi): Anwesenheitstafel – nur Name + LED, antippen öffnet das Mitglied */
+  .mg-tafel { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+  .mg-tafel button { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: var(--karte); border: 1px solid var(--linie); text-align: left; font: inherit; color: inherit; cursor: pointer; min-height: 48px; }
+  .mg-tafel b { overflow-wrap: anywhere; }
+  .mg-led { width: 16px; height: 16px; border-radius: 50%; flex: none; }
+  .mg-led.l-online { background: #2ecc71; box-shadow: 0 0 8px #2ecc71; } .mg-led.l-heute { background: #2471a3; } .mg-led.l-weg { background: #d68910; } .mg-led.l-fehler { background: #c0392b; }
+  .mg-led.l-selten { background: #95a5a6; } .mg-led.l-unbekannt { background: transparent; border: 2px dashed #95a5a6; box-sizing: border-box; }
   .av-raster { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 8px; }
   .av-raster button { border: 3px solid transparent; border-radius: 50%; padding: 0; background: none; cursor: pointer; aspect-ratio: 1; }
   .av-raster button.an { border-color: var(--rot); box-shadow: 0 0 0 3px var(--karte), 0 0 0 5px var(--rot); }
@@ -1498,7 +1510,7 @@
   .mg-schalter { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; margin: 0 0 8px; }
   .mg-schalter .umschalter { margin: 0; flex: 1 1 200px; min-width: 0; }
   :root.gross .mg-schalter .umschalter button { white-space: normal; padding: 8px 4px; } /* Gesamtprüfung 3 (2.23.84): große Schrift – nicht breiter als der Bildschirm */
-  .mg-schalter #mgAnsichtOben { flex: none; grid-template-columns: 46px 46px; }
+  .mg-schalter #mgAnsichtOben { flex: none; grid-template-columns: 42px 42px 42px; } /* 2.23.89: dritter Knopf 📋 Anwesenheit */
   .mg-schalter #mgAnsichtOben button { font-size: 1.15rem; padding: 6px 0; }
   .mg-schalter .umschalter button { padding: 8px 6px; white-space: nowrap; }
   /* KC-CLUB-MINI-PFEIL (1.47.3): „weiter“-Pfeil rechts mittig auf dem Rand der drei Felder, ohne Umrandung */
@@ -2477,7 +2489,7 @@
     <div class="kopf2"><button class="zurueck" onclick="zurueck('start')" aria-label="Zurück">‹</button><h2>👥 Aktive Mitglieder</h2><button class="knopf klein stmarke st-verfuegbar" id="meinStatusKnopf" onclick="statusBlatt()"><small class="st-titel">Mein Status</small>🟢 verfügbar ▾</button></div>
     <!-- KC-CLUB-ONLINEFILTER (0.72.0): alle oder nur gerade online -->
     <!-- KC-CLUB-MG-UMSCHALTER (1.47.0): Kacheln | Liste direkt oben, daneben Alle | Online -->
-    <div class="mg-schalter"><div class="umschalter" id="mgAnsichtOben"><button data-a="kacheln" onclick="mgAnsichtSetzen('kacheln')" title="Als Kacheln zeigen" aria-label="Als Kacheln zeigen">🔲</button><button data-a="liste" onclick="mgAnsichtSetzen('liste')" title="Als Liste zeigen" aria-label="Als Liste zeigen">☰</button></div>
+    <div class="mg-schalter"><div class="umschalter" id="mgAnsichtOben"><button data-a="kacheln" onclick="mgAnsichtSetzen('kacheln')" title="Als Kacheln zeigen" aria-label="Als Kacheln zeigen">🔲</button><button data-a="liste" onclick="mgAnsichtSetzen('liste')" title="Als Liste zeigen" aria-label="Als Liste zeigen">☰</button><button data-a="tafel" onclick="mgAnsichtSetzen('tafel')" title="Anwesenheitstafel: nur Name und Lämpchen" aria-label="Anwesenheitstafel">📋</button></div>
       <div class="umschalter" id="mgFilter"><button data-f="alle" onclick="mgFilterSetzen('alle')">👥 Alle</button><button data-f="online" onclick="mgFilterSetzen('online')">🟢 Nur online</button></div></div>
     <div id="mgGruppen"></div><!-- KC-CLUB-MG-GRUPPEN (1.34.0): eigene Gruppen als Filter -->
     <div class="karte" id="mitgliederListe"><span class="hinweis">Wird geladen …</span></div>
@@ -2614,7 +2626,7 @@
       <div style="margin-top:8px"><b>🔲 Kacheln auf der Startseite</b> <span class="hinweis">(erweiterte Ansicht, gilt für dieses Gerät)</span></div>
       <div class="umschalter" id="kachelGroesseWahl"><button data-g="normal" onclick="kachelGroesse('normal')">▣ Normal – 2 nebeneinander</button><button data-g="klein" onclick="kachelGroesse('klein')">▦ Klein – 3 nebeneinander</button></div>
       <div style="margin-top:8px"><b>👥 Mitglieder anzeigen als</b></div>
-      <div class="umschalter" id="mgAnsichtWahl"><button data-a="kacheln" onclick="mgAnsichtSetzen('kacheln')">🔲 Kacheln</button><button data-a="liste" onclick="mgAnsichtSetzen('liste')">☰ Liste</button></div>
+      <div class="umschalter" id="mgAnsichtWahl"><button data-a="kacheln" onclick="mgAnsichtSetzen('kacheln')">🔲 Kacheln</button><button data-a="liste" onclick="mgAnsichtSetzen('liste')">☰ Liste</button><button data-a="tafel" onclick="mgAnsichtSetzen('tafel')">📋 Anwesenheit</button></div>
       <div class="schalter"><div><b>🇩🇪 Feiertage NRW im Kalender</b><div class="hinweis">Gesetzliche Feiertage in Nordrhein-Westfalen</div></div><input type="checkbox" id="setFeiertage" onchange="einstellung('feiertage', this.checked); if (KAL) kalZeichnen()"></div>
     </details>
     <!-- 2.23.46 KC-CLUB-LEITUNG-START-SCHALTER (Wunsch Hansi): was beim App-Start für die Clubleitung erscheint – je Gerät an/aus -->
@@ -2964,7 +2976,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.88"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.89"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3003,6 +3015,73 @@ const AV_FIGUREN = {
 const AV_FRISUREN = ["lang", "zopf", "dutt", "bob", "locken", "kurz", "wuschel", "seiten", "glatze"], AV_KOPF = ["koch", "tuch", "kappe", "keine"], AV_BART = [0, "voll", "schnurr", "stoppel"];
 const AV_BG = ["#741521", "#1d4f91", "#2e7d4f", "#6d4aa3", "#b8860b", "#00796b", "#c2185b", "#455a64", "#8d6e63", "#e8792b", "#3949ab", "#558b2f"];
 const AV_TUCH = ["#c8102e", "#ffcc00", "#e8792b", "#2e7d4f", "#1d4f91", "#741521", "#ffffff", "#6d4aa3"];
+// ---------- KC-CLUB-AVATAR-FOTO (2.23.89, Wunsch Hansi): eigenes Foto als Bild (Selfie, Galerie, Datei) – 256×256 JPEG, Code „f…“ ----------
+const AVF_RE = /^f[0-9a-z]{9}$/, AVF_LEER = "data:image/gif;base64,R0lGODlhAQABAAAAACw=";
+const AVF = { bild: (() => { try { const o = JSON.parse(localStorage.getItem("kc_club_avf") || "{}"); return o && typeof o === "object" ? o : {}; } catch { return {}; } })(), offen: new Map(), timer: null, neu: null };
+function avfSetzen(code, bild) {
+  AVF.bild[code] = bild;
+  const k = Object.keys(AVF.bild); if (k.length > 60) for (const x of k.slice(0, k.length - 60)) delete AVF.bild[x];
+  try { localStorage.setItem("kc_club_avf", JSON.stringify(AVF.bild)); } catch {}
+  document.querySelectorAll(`img[data-avf="${code}"]`).forEach((i) => { i.src = bild; });
+}
+function avfMerken(pid, code) { if (!pid || AVF.bild[code] || AVF.offen.has(pid)) return; AVF.offen.set(pid, code); clearTimeout(AVF.timer); AVF.timer = setTimeout(avfHolen, 80); }
+async function avfHolen() {
+  const ids = [...AVF.offen.keys()].slice(0, 60); if (!ids.length || !INIT) return;
+  try { const r = await api("avatar_bilder", { ids });
+    for (const x of Object.values(r.bilder || {})) if (AVF_RE.test(x?.code || "") && /^data:image\/jpeg;base64,/.test(x?.bild || "")) avfSetzen(x.code, x.bild);
+  } catch {} finally { ids.forEach((i) => AVF.offen.delete(i)); }
+}
+function avfWaehlen(art) {
+  const i = document.createElement("input"); i.type = "file"; i.accept = art === "datei" ? "image/jpeg,image/png,image/webp,image/heic,.jpg,.jpeg,.png,.webp,.heic" : "image/*";
+  if (art === "selfie") i.setAttribute("capture", "user");
+  i.onchange = () => { const f = i.files?.[0]; if (f) avfVorschau(f); }; i.click();
+}
+async function avfVorschau(datei) {
+  let bild;
+  try { bild = await createImageBitmap(datei, { imageOrientation: "from-image" }); }
+  catch { try { bild = await new Promise((ok, nein) => { const im = new Image(); im.onload = () => ok(im); im.onerror = nein; im.src = URL.createObjectURL(datei); }); }
+    catch { return melde("Dieses Bild kann die App nicht lesen – bitte ein Foto als JPG oder PNG wählen.", true); } }
+  const w = bild.width || bild.naturalWidth, h = bild.height || bild.naturalHeight, s = Math.min(w, h), c = document.createElement("canvas"); c.width = c.height = 256;
+  c.getContext("2d").drawImage(bild, (w - s) / 2, (h - s) / 2, s, s, 0, 0, 256, 256);
+  let q = 0.85, url = c.toDataURL("image/jpeg", q); while (url.length > 70000 && q > 0.45) { q -= 0.1; url = c.toDataURL("image/jpeg", q); }
+  AVF.neu = url;
+  const f = blattAuf("avfBlatt", `<h3 style="margin:0">📷 Dein Foto</h3>
+    <div style="display:grid;place-items:center;padding:8px 0"><img src="${url}" alt="Vorschau" style="width:200px;height:200px;border-radius:50%;object-fit:cover;box-shadow:0 0 0 4px var(--karte),0 0 0 7px #2ecc71"></div>
+    <p class="hinweis" style="margin:0">So sehen dich die anderen bei den Mitgliedern, im Chat und bei „Wer ist online“. Bitte nur ein Foto von dir selbst.</p>
+    <div class="na-pfeil-knoepfe"><button class="knopf haupt" onclick="avfSpeichern(this)">✅ Übernehmen</button><button class="knopf" onclick="fensterZu($('avfBlatt'))">Abbrechen</button></div>`);
+  f.style.zIndex = "2100";
+}
+async function avfSpeichern(knopf) {
+  if (!AVF.neu) return;
+  await einmal(knopf, async () => {
+    try {
+      const r = await api("avatar_foto_setzen", { bild: AVF.neu }, { warten: true });
+      avfSetzen(r.code, AVF.neu);
+      if (INIT) INIT.einstellungen = { ...(INIT.einstellungen || {}), avatar: { figur: r.code }, avatar_foto: { code: r.code, bild: AVF.neu } };
+      const ich = MITGLIEDER?.find?.((x) => x.person_id === ICH?.person_id); if (ich) ich.avatar = r.code;
+      AVF.neu = null; fensterZu($("avfBlatt")); fensterZu($("avBlatt")); melde("📷 Dein Foto ist jetzt dein Bild");
+      try { kachelnZeigen?.(); } catch {} if (aktuelleAnsicht === "mitglieder" && MITGLIEDER) mitgliederZeichnen();
+    } catch (e) { meldeFehler(e); }
+  });
+}
+async function avfEntfernen(pid, knopf) { // nur Admin: unpassendes Foto entfernen – das Mitglied hat danach wieder seine Buchstaben
+  if (!(await frage("Foto dieses Mitglieds entfernen?\n\nDas Mitglied hat danach wieder seine Buchstaben und kann ein neues Bild wählen.", { ja: "🗑️ Entfernen", nein: "Abbrechen" }))) return;
+  await einmal(knopf, async () => {
+    try { await api("avatar_foto_entfernen", { person_id: pid }, { warten: true }); const x = MITGLIEDER?.find?.((y) => y.person_id === pid); if (x) x.avatar = null;
+      if (MD?.person_id === pid) { MD.avatar = null; mitgliedZeigen(); } melde("🗑️ Foto entfernt"); }
+    catch (e) { meldeFehler(e); }
+  });
+}
+// Bild groß ansehen (Mitglieds-Seite: aufs Bild tippen)
+function avGross(pid) {
+  const m = MITGLIEDER?.find?.((x) => x.person_id === pid) || (MD?.person_id === pid ? MD : null) || { person_id: pid };
+  const fig = avFigurVon(m) || (MD?.person_id === pid ? MD.avatar : null); if (!avGueltig(fig)) return;
+  const f = blattAuf("avGrossBlatt", `<div style="display:grid;place-items:center;gap:10px;padding:6px 0" onclick="fensterZu($('avGrossBlatt'))">
+    <div style="width:min(280px,80vw);height:min(280px,80vw)">${avatarSvg(fig, 280).replace('width="280" height="280"', 'style="width:100%;height:100%;border-radius:50%;object-fit:cover"')}</div>
+    <b style="font-size:1.2rem">${esc(m.name || MD?.name || "")}</b></div>
+    <button class="knopf" onclick="fensterZu($('avGrossBlatt'))">Schließen</button>`);
+  f.style.zIndex = "2100";
+}
 function avTeile(code) { // → [haut, frisur, haarfarbe, kopf, bart, brille, hintergrund, halstuch, frau] oder null
   if (AV_FIGUREN[code]) { const f = AV_FIGUREN[code]; return [...f, code[0] === "w"]; }
   if (!/^b[0-9a-z]{9}$/.test(String(code))) return null;
@@ -3010,8 +3089,10 @@ function avTeile(code) { // → [haut, frisur, haarfarbe, kopf, bart, brille, hi
   if (z[0] >= AV_HAUT.length || z[1] >= AV_FRISUREN.length || z[2] >= haarf.length || z[3] >= AV_KOPF.length || z[4] >= AV_BART.length || z[5] > 1 || z[6] >= AV_BG.length || z[7] >= AV_TUCH.length || z[8] > 1) return null;
   return [z[0], AV_FRISUREN[z[1]], haarf[z[2]], AV_KOPF[z[3]], AV_BART[z[4]], z[5], AV_BG[z[6]], AV_TUCH[z[7]], z[8] === 1];
 }
-const avGueltig = (code) => !!(code && avTeile(code));
+const avGueltig = (code) => !!(code && (AVF_RE.test(code) || avTeile(code)));
 function avatarSvg(code, gr = 40) {
+  if (AVF_RE.test(code || "")) { const b = AVF.bild[code] || (INIT?.einstellungen?.avatar_foto?.code === code ? INIT.einstellungen.avatar_foto.bild : ""); // KC-CLUB-AVATAR-FOTO
+    return `<img class="av-foto" data-avf="${code}" src="${/^data:image\/jpeg;base64,/.test(b) ? b : AVF_LEER}" alt="" width="${gr}" height="${gr}">`; }
   const f = avTeile(code); if (!f) return "";
   const [h, frisur, hf, kopf, bart, brille, bg, tuch, frau] = f, haut = AV_HAUT[h], haar = AV_HAAR[hf], dunkel = h >= 3;
   const hinten = { lang: `<path d="M18 26 Q18 12 32 12 Q46 12 46 26 L48 50 Q32 56 16 50 Z" fill="${haar}"/>`, zopf: `<path d="M41 26 Q50 34 46 48 Q44 52 42 48 Q45 38 39 30Z" fill="${haar}"/>`,
@@ -3053,12 +3134,16 @@ const KREIS_ARTEN = [
   { art: "selten", text: "länger nicht oder noch nie in der App", farbe: "#95a5a6", gilt: () => true },
 ];
 function kreisArt(m) { const k = m ? KREIS_ARTEN.find((x) => (!x.nurAdmin || ICH?.admin) && x.gilt(m)) : null; return k || { art: "unbekannt", text: "unbekannt" }; }
+const avFigurVon = (m) => m?.avatar || (m?.person_id && MITGLIEDER?.find?.((x) => x.person_id === m.person_id)?.avatar) || (m?.person_id && m.person_id === ICH?.person_id ? INIT?.einstellungen?.avatar?.figur : null) || null;
 // Kreis-HTML: m = Mitglied aus MITGLIEDER (oder Online-Liste), groesse in px, extra = zusätzliche Attribute
 function kreis(m, name, groesse = 40, extra = "") {
   const k = kreisArt(m), titel = k.info ? `${k.text} – ${k.info(m)}` : k.text;
   // KC-CLUB-AVATAR (2.23.85): gewählte Koch-Figur im Kreis – die Zustandsfarbe bleibt als Ring drumherum sichtbar
-  const fig = m?.avatar || (m?.person_id && MITGLIEDER?.find?.((x) => x.person_id === m.person_id)?.avatar) || (m?.person_id && m.person_id === ICH?.person_id ? INIT?.einstellungen?.avatar?.figur : null);
-  return `<div class="avatar k-${k.art}${avGueltig(fig) ? " mit-figur" : ""}" style="width:${groesse}px;height:${groesse}px${groesse > 60 ? ";font-size:1.6rem;margin:0 auto" : ""}${extra.includes("onclick") ? ";cursor:pointer" : ""}" title="${esc(titel)}" aria-label="${esc((name || "") + ": " + titel)}" ${extra}>${avGueltig(fig) ? avatarSvg(fig, groesse - 6) : esc(initialen(name))}</div>`;
+  const fig = avFigurVon(m);
+  if (AVF_RE.test(fig || "")) avfMerken(m?.person_id, fig); // KC-CLUB-AVATAR-FOTO (2.23.89): Foto bei Bedarf nachladen
+  // KC-CLUB-AVATAR-ABZEICHEN (2.23.89): mit Figur/Foto zusätzlich ein Abzeichen unten rechts (bei „unbekannt“ keins – nie wie OK aussehen)
+  const abz = avGueltig(fig) && k.art !== "unbekannt" ? `<i class="k-abz a-${k.art}" aria-hidden="true">${k.art === "online" ? "✓" : k.art === "fehler" ? "!" : ""}</i>` : "";
+  return `<div class="avatar k-${k.art}${avGueltig(fig) ? " mit-figur" : ""}" style="width:${groesse}px;height:${groesse}px${groesse > 60 ? ";font-size:1.6rem;margin:0 auto" : ""}${extra.includes("onclick") ? ";cursor:pointer" : ""}" title="${esc(titel)}" aria-label="${esc((name || "") + ": " + titel)}" ${extra}>${avGueltig(fig) ? avatarSvg(fig, groesse - 8) + abz : esc(initialen(name))}</div>`;
 }
 const kreisLegende = () => `<div class="kreislegende">${KREIS_ARTEN.filter((k) => !k.nurAdmin || ICH?.admin).map((k) =>
   `<span><i class="avatar k-${k.art}" style="width:14px;height:14px;${k.art === "unbekannt" ? "border-width:1px" : ""}"></i>${esc(k.text)}</span>`).join("")}</div>`;
@@ -3772,7 +3857,7 @@ const EINWEISUNG = [
   { id: "nachrichten", sym: "💬", t: "Nachrichten", x: "Hier schreibst du anderen Clubmitgliedern – einzeln oder in einer Gruppe. Mit <b>„＋ Neu“</b> beginnst du eine Unterhaltung, mit <b>„👥 Gruppe“</b> legst du eine Gruppe an. Vieles kennst du von WhatsApp: Haken zeigen, ob die Nachricht angekommen ist, nach rechts wischen = antworten. Mit dem Mikrofon <b>🎤</b> kannst du diktieren statt tippen." },
   { id: "pinnwand", sym: "📌", t: "Pinnwand", x: "Wie das schwarze Brett im Clubheim: Mit <b>„＋ Zettel“</b> hängst du etwas für alle auf – Glückwünsche, Hinweise oder eine Bitte um Hilfe. Auf Zettel kannst du mit <b>Emojis</b> antworten. Wichtige Zettel (❗) sieht jeder beim Öffnen der App." },
   { id: "termine", sym: "📅", t: "Termine", x: "Alle Club-Termine. Mit <b>✅ Ich komme</b>, <b>❓ Vielleicht</b> oder <b>❌ Kann nicht</b> antwortest du – nochmal antippen nimmt die Antwort zurück. Nach der Zusage kannst du eine <b>Mitfahrt</b> suchen oder anbieten. Mit <b>„＋ Neu“</b> legst du auch private Termine an, die nur du siehst. Oben wechselst du zwischen Liste, Kalender und To-do. Tipp: Unter <b>⚙️ Einstellungen → „📲 Termine im Handy-Kalender“</b> übernimmst du alle Club-Termine automatisch in den Kalender deines Handys (leider nicht umgekehrt – Termine aus dem Handy-Kalender kommen nicht in die App)." },
-  { id: "mitglieder", sym: "👥", t: "Mitglieder", x: "Alle aktiven Clubmitglieder. Ein <b>grüner Punkt</b> heißt: gerade in der App. Mit der Sprechblase <b>💬</b> schreibst du direkt, mit der Hand <b>👋</b> klopfst du bei jemandem an, der gerade online ist. Mit den Knöpfen 🔲 / ☰ oben wechselst du zwischen Kacheln und Liste." },
+  { id: "mitglieder", sym: "👥", t: "Mitglieder", x: "Alle aktiven Clubmitglieder. Ein <b>grüner Punkt</b> heißt: gerade in der App. Mit der Sprechblase <b>💬</b> schreibst du direkt, mit der Hand <b>👋</b> klopfst du bei jemandem an, der gerade online ist. Mit den Knöpfen 🔲 / ☰ / 📋 oben wechselst du zwischen Kacheln, Liste und Anwesenheitstafel (nur Name und Lämpchen)." },
   { id: "fotos", sym: "📷", t: "Fotoalbum", x: "Fotos vom Clubleben. Mit <b>„＋ Neu“</b> lädst du eigene Bilder hoch. Mit <b>„☑️ Auswählen“</b> hakst du Bilder an und legst sie in ein eigenes Album – z. B. „Weihnachtsmarkt“." },
   { id: "helfen", sym: "🤝", t: "Helfen & Leihen", x: "Oben drei Bereiche: <b>🙋 Wer kann helfen?</b> – Helfer suchen oder Hilfe anbieten. <b>📦 Ausleihen</b> – Club-Sachen wie den Pavillon reservieren. <b>🛍️ Börse</b> – privat etwas anbieten oder suchen. Mit <b>„＋ Neu“</b> legst du etwas an." },
   { id: "archiv", sym: "🗄️", t: "Archiv", x: "Das Regal des Clubs: Ordner nach Jahren mit Terminen, Protokollen, Fotos und mehr – vieles wird automatisch abgelegt. Dort steht auch die <b>Clubchronik</b> zum Blättern. Und du hast einen <b>eigenen Ordner</b>, den nur du siehst." },
@@ -9995,11 +10080,14 @@ async function sperreAufheben(pid, knopf) {
 function avWahl() {
   const jetzt = INIT?.einstellungen?.avatar?.figur || null;
   const f = blattAuf("avBlatt", `<h3 style="margin:0">🧑‍🍳 Mein Bild</h3>
-    <p class="hinweis" style="margin:4px 0 8px">Such dir eine Koch-Figur aus – sie erscheint bei den Mitgliedern, im Chat und bei „Wer ist online“. Der farbige Ring zeigt weiter, ob du gerade da bist.</p>
+    <p class="hinweis" style="margin:4px 0 8px">Such dir eine Koch-Figur aus – sie erscheint bei den Mitgliedern, im Chat und bei „Wer ist online“. Ring und Abzeichen zeigen weiter, ob du gerade da bist.</p>
     ${jetzt && jetzt[0] === "b" && avGueltig(jetzt) ? `<b>🧩 Deine eigene Figur</b><div class="av-raster" style="margin:6px 0 10px"><button type="button" class="an" aria-label="Eigene Figur" onclick="avBauen()">${avatarSvg(jetzt, 64)}</button></div>` : ""}
     <b>👩‍🍳 Köchinnen</b><div class="av-raster" style="margin:6px 0 10px">${Object.keys(AV_FIGUREN).filter((k) => k[0] === "w").map((k) => `<button type="button" class="${jetzt === k ? "an" : ""}" aria-label="Figur ${k}" onclick="avSetzen('${k}')">${avatarSvg(k, 64)}</button>`).join("")}</div>
     <b>👨‍🍳 Köche</b><div class="av-raster" style="margin:6px 0 10px">${Object.keys(AV_FIGUREN).filter((k) => k[0] === "m").map((k) => `<button type="button" class="${jetzt === k ? "an" : ""}" aria-label="Figur ${k}" onclick="avSetzen('${k}')">${avatarSvg(k, 64)}</button>`).join("")}</div>
     <b>Kein Bild</b><div class="av-raster" style="margin:6px 0 10px"><button type="button" class="${jetzt ? "" : "an"}" aria-label="Kein Bild – Buchstaben" onclick="avSetzen(null)"><span class="av-keins">${esc(initialen(ICH?.name))}</span></button></div>
+    ${frei("avatar_foto") ? `<b>📷 Eigenes Foto${nurTest("avatar_foto") ? ' <small class="hinweis">🔒 nur für dich (Test)</small>' : ""}</b>
+      ${AVF_RE.test(jetzt || "") ? `<div class="av-raster" style="margin:6px 0 4px"><button type="button" class="an" aria-label="Dein Foto" onclick="avGross(ICH.person_id)">${avatarSvg(jetzt, 64)}</button></div>` : ""}
+      <div class="na-pfeil-knoepfe" style="margin:6px 0 10px"><button class="knopf" onclick="avfWaehlen('selfie')">🤳 Selfie</button><button class="knopf" onclick="avfWaehlen('galerie')">🖼️ Galerie</button><button class="knopf" onclick="avfWaehlen('datei')">📁 Datei</button></div>` : ""}
     ${frei("avatar_baukasten") ? `<button class="knopf haupt" onclick="avBauen()">🧩 Selbst zusammenstellen${nurTest("avatar_baukasten") ? " · 🔒 Test" : ""}</button>` : '<p class="hinweis" style="margin:0 0 8px;font-size:.85rem">Demnächst: Figur selbst zusammenstellen (Frisur, Bart, Brille, Mütze …).</p>'}
     <button class="knopf" onclick="fensterZu($('avBlatt'))">Schließen</button>`);
   f.classList.add("sc-blatt");
@@ -14819,7 +14907,7 @@ function sosZeigen() {
     };
     // KC-CLUB-SOS-KACHELN (1.49.0): Mitglieder als Kacheln (wählbar: Kacheln | Liste, gleiche Einstellung wie bei Mitglieder);
     // Notfallkontakt rot markiert – das sieht wie bisher nur die Clubleitung (siehtNotfall), alle anderen nur Name/Amt/erreichbar
-    const kachelAn = MG_ANSICHT === "kacheln";
+    const kachelAn = MG_ANSICHT !== "liste"; // 2.23.89: Anwesenheitstafel gibt es nur bei Mitglieder – SOS zeigt dann Kacheln
     // eigener Notfallkontakt: sieht jeder bei sich selbst (Server liefert ihn immer für einen selbst)
     const kachel = (m, leit) => { const k = m.kontakt || {}, hat = k.handy || k.festnetz || k.mail, zeigNf = d.siehtNotfall || m.selbst, nfJa = zeigNf && m.notfall;
       return `<button class="mini-kachel sos-k${nfJa ? " hat-nf" : ""}${leit ? " leit" : ""}${m.selbst ? " selbst" : ""}" onclick="sosInfo('${m.id}')"><span class="avatar sos-av" style="width:46px;height:46px">${esc(initialen(m.name))}</span>
@@ -16025,15 +16113,25 @@ let MG_FILTER = (() => { try { return localStorage.getItem("kc_club_mg_filter") 
 function mgNurOnline() { MG_EINMAL = "online"; zeige("mitglieder"); }
 function mgFilterSetzen(f) { MG_EINMAL = null; MG_FILTER = f === "online" ? "online" : "alle"; try { localStorage.setItem("kc_club_mg_filter", MG_FILTER); } catch {} mitgliederZeichnen(); }
 // KC-CLUB-MG-KACHELN (1.45.0, Wunsch Hansi): Mitglieder als Kacheln oder Liste – jeder wählt selbst (⚙️ → Darstellung, je Gerät)
-let MG_ANSICHT = (() => { try { return localStorage.getItem("kc_club_mg_ansicht") === "liste" ? "liste" : "kacheln"; } catch { return "kacheln"; } })();
+const MG_ANSICHTEN = ["kacheln", "liste", "tafel"]; // KC-CLUB-ANWESENHEIT (2.23.89): „tafel“ = nur Name + LED
+let MG_ANSICHT = (() => { try { const a = localStorage.getItem("kc_club_mg_ansicht"); return MG_ANSICHTEN.includes(a) ? a : "kacheln"; } catch { return "kacheln"; } })();
 function mgAnsichtSetzen(a) {
-  MG_ANSICHT = a === "liste" ? "liste" : "kacheln"; try { localStorage.setItem("kc_club_mg_ansicht", MG_ANSICHT); } catch {}
+  MG_ANSICHT = MG_ANSICHTEN.includes(a) ? a : "kacheln"; try { localStorage.setItem("kc_club_mg_ansicht", MG_ANSICHT); } catch {}
   mgAnsichtWahlZeigen(); if (MITGLIEDER && aktuelleAnsicht === "mitglieder") mitgliederZeichnen();
   if (aktuelleAnsicht === "sos") sosZeigen(); // KC-CLUB-SOS-KACHELN: gleiche Einstellung im SOS-Bereich
-  melde(MG_ANSICHT === "kacheln" ? "👥 Mitglieder werden als Kacheln gezeigt" : "👥 Mitglieder werden als Liste gezeigt");
+  melde(MG_ANSICHT === "kacheln" ? "👥 Mitglieder werden als Kacheln gezeigt" : MG_ANSICHT === "tafel" ? "📋 Anwesenheitstafel: Name und Lämpchen – antippen öffnet das Mitglied" : "👥 Mitglieder werden als Liste gezeigt");
 }
 function mgAnsichtWahlZeigen() { document.querySelectorAll("#mgAnsichtWahl button, #mgAnsichtOben button").forEach((b) => b.classList.toggle("an", b.dataset.a === MG_ANSICHT));
   document.querySelectorAll("#kachelGroesseWahl button").forEach((b) => b.classList.toggle("an", b.dataset.g === (kachelKlein() ? "klein" : "normal"))); } // 2.23.87
+// KC-CLUB-ANWESENHEIT (2.23.89, Wunsch Hansi): Anwesenheitstafel – nur Name + LED (Farben wie KREIS_ARTEN), keine Knöpfe;
+// antippen öffnet das Mitglied (dort Nachricht, Anklopfen, Anruf). Reihenfolge: online, abwesend, heute da, Rest.
+function mgTafelHtml(liste) {
+  const rang = (m) => KREIS_ARTEN.findIndex((x) => x.art === kreisArt(m).art);
+  const sortiert = [...liste].sort((a, b) => (rang(a) < 0 ? 99 : rang(a)) - (rang(b) < 0 ? 99 : rang(b)) || String(a.name).localeCompare(String(b.name), "de"));
+  return kreisLegende().replace(/class="avatar k-([a-z]+)"[^>]*>/g, 'class="mg-led l-$1" style="width:12px;height:12px">')
+    + `<div class="mg-tafel">${sortiert.map((m) => { const k = kreisArt(m);
+      return `<button type="button" onclick="mitgliedOeffnen('${esc(m.person_id)}')" aria-label="${esc(m.name + ": " + k.text)}" title="${esc(k.text)}"><span class="mg-led l-${k.art}"></span><b>${esc(m.name)}${m.person_id === ICH.person_id ? ' <small class="hinweis">(du)</small>' : ""}</b></button>`; }).join("")}</div>`;
+}
 function mgKachelnHtml(liste) {
   const k = (m) => {
     const ich = m.person_id === ICH.person_id, on = !!m.online;
@@ -16083,8 +16181,9 @@ function mitgliederZeichnen() {
     const liste = (nurOnline ? MITGLIEDER.filter((m) => m.online) : MITGLIEDER).filter((m) => !gr || gr.personen.includes(m.person_id));
     if (gr && !liste.length) { $("mitgliederListe").innerHTML = `<div class="leer">Aus dieser Gruppe ist gerade niemand online.<br><button class="knopf klein" style="margin-top:8px" onclick="mgFilterSetzen('alle')">👥 Alle der Gruppe anzeigen</button></div>`; return; }
     if (nurOnline && !liste.length) { $("mitgliederListe").innerHTML = `<div class="leer">Gerade ist niemand online.<br><button class="knopf klein" style="margin-top:8px" onclick="mgFilterSetzen('alle')">👥 Alle anzeigen</button></div>`; return; }
-    $("mitgliederListe").classList.toggle("karte", MG_ANSICHT !== "kacheln"); // Kacheln ohne weiße Unterlage
+    $("mitgliederListe").classList.toggle("karte", MG_ANSICHT === "liste"); // Kacheln/Tafel ohne weiße Unterlage
     if (MG_ANSICHT === "kacheln") { $("mitgliederListe").innerHTML = mgKachelnHtml(liste); return; }
+    if (MG_ANSICHT === "tafel") { $("mitgliederListe").innerHTML = mgTafelHtml(liste); return; }
     $("mitgliederListe").innerHTML = kreisLegende() + liste.map((m) => `<div class="zeile${m.online ? " mg-online" : ""}">
       ${kreis(m, m.name, 40, `onclick="mitgliedOeffnen('${m.person_id}')"`)}
       <div style="flex:1;cursor:pointer" onclick="mitgliedOeffnen('${m.person_id}')"><b>${esc(m.name)}</b>${wegIcons(m)} <span class="hinweis">›</span>${m.aemter?.length ? ` <span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}
@@ -18699,8 +18798,10 @@ function mitgliedZeigen() {
   const leer = !zeilen ? `<p class="hinweis">${!m.darfKontakte ? "Kontaktdaten anderer Mitglieder sind für dich nicht freigeschaltet." : m.selbst ? "Für dich sind keine Kontaktdaten gespeichert." : `${esc(m.vorname)} hat noch keine Kontaktdaten freigegeben.`}</p>` : "";
   $("mitgliedInhalt").innerHTML = `
     <div class="karte" style="text-align:center">
-      ${kreis(MITGLIEDER?.find((x) => x.person_id === mitgliedId) || null, m.name, 72)}
+      ${(() => { const mm = { ...(MITGLIEDER?.find((x) => x.person_id === mitgliedId) || { person_id: mitgliedId }), ...(m.avatar ? { avatar: m.avatar } : {}) }; // KC-CLUB-AVATAR (2.23.89): Bild oben, antippen = groß
+        return kreis(mm, m.name, 96, avGueltig(avFigurVon(mm)) ? `onclick="avGross('${esc(mitgliedId)}')"` : ""); })()}
       <div style="font-size:1.3rem;font-weight:800;margin-top:8px">${esc(m.name)}</div>
+      ${ICH?.admin && !m.selbst && AVF_RE.test(m.avatar || "") ? `<button class="knopf klein" style="margin-top:6px" onclick="avfEntfernen('${esc(m.person_id)}', this)">🗑️ Foto entfernen (Admin)</button>` : ""}
       ${m.aemter?.length ? `<div style="margin-top:4px">${m.aemter.map((a) => `<span class="marke">${esc(a)}</span>`).join(" ")}</div>` : ""}
       <div class="hinweis" style="margin-top:4px">${m.status ? esc(statusText(m.status)) : ""}${m.geburtstag ? ` · 🎂 ${esc(m.geburtstag.slice(3) + "." + m.geburtstag.slice(0, 2) + ".")}` : ""}</div>
       ${m.zuletztDa ? `<div class="hinweis" style="margin-top:2px">${m.zuletztDa.online ? "🟢 gerade online" : "🕒 " + esc(zuletztText(m.zuletztDa).replace(/^zuletzt da/, "Zuletzt in der App:"))}</div>` : ""}

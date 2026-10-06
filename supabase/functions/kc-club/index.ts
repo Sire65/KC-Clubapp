@@ -41,7 +41,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.23.88";
+const SERVER_VERSION = "2.23.89";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -838,7 +838,7 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
   infofeld: (w) => ({ start: typeof w?.start === "string" && KA_ID.test(w.start) ? w.start : "zuletzt" }),
   // KC-CLUB-ONLINE (0.29.0): anderen zeigen, wann ich online bin (Standard: an)
   online: (w) => ({ zeigen: w?.zeigen !== false }),
-  avatar: (w) => ({ figur: typeof w?.figur === "string" && (/^[wm](0[1-9]|1[0-5])$/.test(w.figur) || /^b[0-9a-z]{9}$/.test(w.figur)) ? w.figur : null }), // KC-CLUB-AVATAR (2.23.85); „b…“ = Baukasten (2.23.86)
+  avatar: (w) => ({ figur: typeof w?.figur === "string" && (/^[wm](0[1-9]|1[0-5])$/.test(w.figur) || /^b[0-9a-z]{9}$/.test(w.figur) || AVF_CODE.test(w.figur)) ? w.figur : null }), // 2.23.89: „f…“ = eigenes Foto // KC-CLUB-AVATAR (2.23.85); „b…“ = Baukasten (2.23.86)
   // KC-CLUB-INKOGNITO (2.3.0): nur Admins (Prüfung in einstellung_setzen) – Standard: aus
   inkognito: (w) => ({ an: w?.an === true }),
   // KC-CLUB-SPIELE (2.7.0): darf man mich herausfordern (Standard: nein) + welche Spiele (bisher nur Tic-Tac-Toe)
@@ -2131,6 +2131,9 @@ async function wochenberichtLauf() {
 const SPUR_WAS = /^[a-z][a-z0-9_]{0,29}$/;
 const SPUR_MIT = /^(KC-P-[A-Z0-9-]{1,30}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
 const SPUR_TAGE = 30;
+// KC-CLUB-AVATAR-FOTO (2.23.89)
+const AVF_CODE = /^f[0-9a-z]{9}$/;
+const AVF_MAX = 90000; // Zeichen (≈ 66 KB) – die App schickt 256×256, meist 15–30 KB
 async function adminIds(): Promise<string[]> {
   const { data } = await db.from("kc_club_rollen").select("person_id").eq("ist_admin", true);
   return (data ?? []).map((x: any) => x.person_id);
@@ -2142,6 +2145,7 @@ const FUNKTIONEN: Record<string, { t: string; u: string; standard: "alle" | "adm
   rezepte: { t: "📖 Rezeptbuch", u: "Club-Rezepte, Portionen umrechnen, Einkaufsliste", standard: "admin" },
   avatar: { t: "🧑‍🍳 Mein Bild (30 Koch-Figuren)", u: "Figur statt Buchstaben", standard: "alle" },
   avatar_baukasten: { t: "🧩 Figur selbst zusammenstellen", u: "Haut, Frisur, Bart, Brille, Mütze, Farben", standard: "admin" },
+  avatar_foto: { t: "📷 Eigenes Foto als Bild", u: "Selfie, Galerie oder Datei – Admin kann Fotos entfernen", standard: "admin" }, // 2.23.89
 };
 const FREIGABE = { bis: 0, werte: new Map<string, string>() };
 async function freigaben(): Promise<Record<string, "alle" | "admin">> {
@@ -6177,10 +6181,11 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           .eq("person_id", pid).maybeSingle();
         if (!pe?.active || pe.org_id !== ORG) throw new Fehler("Mitglied nicht gefunden.", 404);
         const selbst = pid === ich.person_id;
-        const [{ data: fr }, { data: rolle }, st] = await Promise.all([
+        const [{ data: fr }, { data: rolle }, st, { data: avE }] = await Promise.all([
           db.from("kc_club_freigaben").select("bereich,erlaubt").eq("person_id", pid),
           db.from("kc_club_rollen").select("aemter").eq("person_id", pid).maybeSingle(),
           statusMap([pid], true),
+          db.from("kc_club_person_einstellung").select("wert").eq("person_id", pid).eq("schluessel", "avatar").maybeSingle(), // 2.23.89: Bild oben
         ]);
         const frei = (b: string) => !!(fr ?? []).find((x: any) => x.bereich === b)?.erlaubt;
         const darf = (f: string) => selbst || ich.admin || (ich.kontakte && frei("kontakt_" + f));
@@ -6196,6 +6201,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         await protokoll(ich.person_id, "mitglied_details", { fuer: pid, felder: Object.keys(kontakt), notfall: !!nf });
         return json({
           person_id: pid, name: pe.display_name, vorname: vorname(pe), aemter: rolle?.aemter ?? [], status: st.get(pid) ?? null, selbst,
+          avatar: typeof (avE?.wert as any)?.figur === "string" ? (avE!.wert as any).figur : null,
           geburtstag: pe.birth_date && (selbst || frei("geburtstag")) ? String(pe.birth_date).slice(5, 10) : null,
           kontakt,
           // welche Angaben freigegeben sind (nur für mich selbst bzw. Admin – für „nur für dich sichtbar“)
@@ -9723,6 +9729,37 @@ Köcheclub-App`,
         return json({ ok: true, spiel: spielSicht(neu, ich.person_id, await personen([ich.person_id, gegner])) });
       }
 
+      // ----- KC-CLUB-AVATAR-FOTO (2.23.89, Wunsch Hansi): eigenes Foto als Bild – 256×256 JPEG in den persönlichen Einstellungen (kein Dateispeicher) -----
+      case "avatar_foto_setzen": {
+        await nurWennFrei("avatar_foto", ich, "Das eigene Foto");
+        const bild = String(p.bild || "");
+        if (!/^data:image\/jpeg;base64,\/9j\/[A-Za-z0-9+/=]+$/.test(bild) || bild.length > AVF_MAX) throw new Fehler("Das Foto ist zu groß oder kein JPG – bitte ein anderes wählen.", 400);
+        const { count } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("person_id", ich.person_id).eq("aktion", "avatar_foto_gesetzt").gte("zeit", new Date(Date.now() - 3600000).toISOString());
+        if ((count ?? 0) >= 10) throw new Fehler("Gerade schon oft geändert – bitte etwas später.", 429);
+        const code = "f" + Date.now().toString(36).padStart(9, "0").slice(-9);
+        const { error: e1 } = await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel: "avatar_foto", wert: { code, bild }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
+        if (e1) throw new Fehler("Foto konnte nicht gespeichert werden.", 500);
+        const { error: e2 } = await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel: "avatar", wert: { figur: code }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
+        if (e2) throw new Fehler("Foto konnte nicht gespeichert werden.", 500);
+        await protokoll(ich.person_id, "avatar_foto_gesetzt", { bytes: bild.length });
+        return json({ ok: true, code });
+      }
+      case "avatar_bilder": {
+        const ids = [...new Set((Array.isArray(p.ids) ? p.ids : []).map(String).filter((x: string) => /^KC-P-[A-Z0-9-]{1,30}$/i.test(x)))].slice(0, 60);
+        if (!ids.length) return json({ bilder: {} });
+        const { data } = await db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "avatar_foto").in("person_id", ids);
+        return json({ bilder: Object.fromEntries((data ?? []).filter((x: any) => AVF_CODE.test(x.wert?.code || "")).map((x: any) => [x.person_id, { code: x.wert.code, bild: x.wert.bild }])) });
+      }
+      case "avatar_foto_entfernen": {
+        nurAdmin(ich);
+        const pid = String(p.person_id || "");
+        if (!/^KC-P-[A-Z0-9-]{1,30}$/i.test(pid)) throw new Fehler("Mitglied nicht gefunden.", 404);
+        await db.from("kc_club_person_einstellung").delete().eq("person_id", pid).eq("schluessel", "avatar_foto");
+        const { data: av } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", pid).eq("schluessel", "avatar").maybeSingle();
+        if (AVF_CODE.test((av?.wert as any)?.figur || "")) await db.from("kc_club_person_einstellung").update({ wert: { figur: null }, geaendert_am: jetzt() }).eq("person_id", pid).eq("schluessel", "avatar");
+        await protokoll(ich.person_id, "avatar_foto_entfernt", { fuer: pid });
+        return json({ ok: true });
+      }
       case "einstellung_setzen": {
         const schluessel = String(p.schluessel || "");
         const pruefen = EINSTELLUNGEN[schluessel];
@@ -9730,7 +9767,12 @@ Köcheclub-App`,
         const wert = pruefen(p.wert);
         if (schluessel === "avatar") { // KC-CLUB-FREIGABE (2.23.86): Figuren bzw. Baukasten nur, wenn freigegeben
           const fig = (wert as any).figur as string | null;
-          if (fig) await nurWennFrei(fig.startsWith("b") ? "avatar_baukasten" : "avatar", ich, fig.startsWith("b") ? "Das Selbst-Zusammenstellen" : "Mein Bild");
+          if (fig && AVF_CODE.test(fig)) { // KC-CLUB-AVATAR-FOTO (2.23.89): nur das eigene, schon hochgeladene Foto
+            const { data: fo } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "avatar_foto").maybeSingle();
+            if ((fo?.wert as any)?.code !== fig) throw new Fehler("Bitte das Foto über 📷 Selfie, Galerie oder Datei wählen.", 400);
+          } else if (fig) await nurWennFrei(fig.startsWith("b") ? "avatar_baukasten" : "avatar", ich, fig.startsWith("b") ? "Das Selbst-Zusammenstellen" : "Mein Bild");
+          // anderes Bild gewählt → das Foto wird nicht mehr gebraucht und gelöscht (Datensparsamkeit)
+          if (!fig || !AVF_CODE.test(fig)) await db.from("kc_club_person_einstellung").delete().eq("person_id", ich.person_id).eq("schluessel", "avatar_foto");
         }
         if (schluessel === "inkognito" && !ich.admin && (wert as any).an) throw new Fehler("Nur für den Admin.", 403); // 2.6.1: Ausschalten darf jeder
         const { error } = await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel, wert, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
