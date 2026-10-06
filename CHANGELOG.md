@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.24.3 – 2026-10-06 – Gruppen-Admins
+Wer eine Gruppe anlegt, kann weitere 👑 Gruppen-Admins bestimmen und die Gruppe beim Verlassen übergeben. (KC-CLUB-GRUPPEN-ADMIN)
+
 ## 2.24.2 – 2026-10-06 – Update kommt schneller an
 Findet die App beim Öffnen eine neue Version, lädt sie sie sofort – nicht erst beim nächsten Öffnen. (KC-CLUB-UPDATE-START)
 

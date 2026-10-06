@@ -41,7 +41,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.24.2";
+const SERVER_VERSION = "2.24.3";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -464,8 +464,10 @@ async function gruppeHolen(ich: Ich, id: unknown) {
   const tid = String(id || "");
   const { data: g } = await db.from("kc_club_gruppen").select("*").eq("thread_id", tid).maybeSingle();
   if (!g) throw new Fehler("Gruppe nicht gefunden.", 404);
-  return { g, darfVerwalten: g.erstellt_von === ich.person_id || ich.vorstand };
+  return { g, darfVerwalten: gruppenAdmin(g, ich.person_id) || ich.vorstand };
 }
+// KC-CLUB-GRUPPEN-ADMIN (2.24.3, Wunsch Hansi): Gruppen-Admin = wer sie angelegt hat + weitere ernannte Admins (Spalte admins)
+const gruppenAdmin = (g: any, pid: string) => g?.erstellt_von === pid || (Array.isArray(g?.admins) && g.admins.includes(pid));
 
 // ---------- Dateien (KC-CLUB-ANLAGEN) ----------
 // Eine Datei in den Anlagen-Kern legen (Bucket + kc_communication_attachments) – für Nachrichten, Protokolle und das Fotoalbum.
@@ -6440,7 +6442,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // KC-CLUB-ZULETZT-DA (1.20.0): im Einzel-Chat „online“ / „zuletzt da …“ des Gegenübers (gleiche Regeln wie überall)
         const partnerDa = andere.length === 1 ? (await zuletztDaMap(ich, [andere[0].person_id])).get(andere[0].person_id) ?? null : null;
         return json({ id, betreff: t?.subject ?? "", tippt, entwurf, spricht, angeheftet, gelesenBis, partnerDa,
-          gruppe: gr ? { name: gr.name, symbol: gr.symbol, erstellt_von: gr.erstellt_von, darfVerwalten: gr.erstellt_von === ich.person_id || ich.vorstand } : null, teilnehmer: (tn ?? []).map((x: any) => ({ person_id: x.person_id, name: leute.get(x.person_id)?.display_name || x.person_id })), nachrichten });
+          gruppe: gr ? { name: gr.name, symbol: gr.symbol, erstellt_von: gr.erstellt_von, admins: gr.admins ?? [], darfVerwalten: gruppenAdmin(gr, ich.person_id) || ich.vorstand } : null, teilnehmer: (tn ?? []).map((x: any) => ({ person_id: x.person_id, name: leute.get(x.person_id)?.display_name || x.person_id })), nachrichten });
       }
 
       // KC-CLUB-TIPPT (0.54.0): ich tippe gerade (aus: true = Feld geleert/verlassen). Nur Teilnehmer der Unterhaltung.
@@ -7043,14 +7045,15 @@ Köcheclub-App`,
         const { data: th, error } = await db.from("kc_communication_threads").insert({ org_id: ORG, subject: name, created_by_person_id: ich.person_id }).select("id").single();
         if (error || !th) throw new Fehler("Gruppe konnte nicht angelegt werden.", 500);
         await db.from("kc_communication_thread_participants").insert([ich.person_id, ...mitglieder].map((person_id) => ({ thread_id: th.id, person_id })));
-        await db.from("kc_club_gruppen").insert({ thread_id: th.id, name, symbol, erstellt_von: ich.person_id });
+        const admins = ([...new Set((Array.isArray(p.admins) ? p.admins : []).map(String))] as string[]).filter((id) => mitglieder.includes(id)); // KC-CLUB-GRUPPEN-ADMIN
+        await db.from("kc_club_gruppen").insert({ thread_id: th.id, name, symbol, erstellt_von: ich.person_id, admins });
         const versand = await sendenGewaehlt("club_nachricht", mitglieder, zustellwege(p.wege), {
           titel: `${symbol} Neue Gruppe: ${name}`, kurz: `${ich.name} hat dich zur Gruppe „${name}“ hinzugefügt.`,
           betreff: `Köcheclub Werne – neue Gruppe „${name}“`,
           text: `Hallo,\n\n${ich.name} hat dich zur Gruppe „${name}“ in der Köcheclub-App hinzugefügt.\n\nZur Gruppe: ${APP_URL}#nachricht=${th.id}\n\nViele Grüße\nKöcheclub Werne`,
           url: `${APP_URL}#nachricht=${th.id}`,
         }, `club-gruppe-neu:${th.id}`);
-        await protokoll(ich.person_id, "gruppe_angelegt", { gruppe: th.id, name, mitglieder: mitglieder.length, versand });
+        await protokoll(ich.person_id, "gruppe_angelegt", { gruppe: th.id, name, mitglieder: mitglieder.length, admins: admins.length, versand });
         return json({ ok: true, id: th.id });
       }
 
@@ -7062,9 +7065,8 @@ Köcheclub-App`,
         if (p.symbol !== undefined && GRUPPEN_SYMBOLE.includes(String(p.symbol))) upd.symbol = String(p.symbol);
         const aktiv = new Set((await aktiveMitglieder()).map((m) => m.person_id));
         // 1.96.0 (Sicherheitsprüfung): in fremden Gruppen darf die Clubleitung verwalten, sich aber nicht selbst hinzufügen (sonst Mitlesen)
-        const hinzu = ([...new Set((Array.isArray(p.hinzu) ? p.hinzu : []).map(String))] as string[]).filter((id) => aktiv.has(id) && (id !== ich.person_id || g.erstellt_von === ich.person_id)).slice(0, 60);
+        const hinzu = ([...new Set((Array.isArray(p.hinzu) ? p.hinzu : []).map(String))] as string[]).filter((id) => aktiv.has(id) && (id !== ich.person_id || gruppenAdmin(g, ich.person_id))).slice(0, 60);
         const weg = ([...new Set((Array.isArray(p.weg) ? p.weg : []).map(String))] as string[]).filter((id) => id !== g.erstellt_von);
-        await db.from("kc_club_gruppen").update(upd).eq("thread_id", g.thread_id);
         let neu: string[] = [];
         if (hinzu.length) {
           const { data: da } = await db.from("kc_communication_thread_participants").select("person_id").eq("thread_id", g.thread_id).in("person_id", hinzu);
@@ -7073,14 +7075,31 @@ Köcheclub-App`,
           if (neu.length) await db.from("kc_communication_thread_participants").insert(neu.map((person_id) => ({ thread_id: g.thread_id, person_id })));
         }
         if (weg.length) await db.from("kc_communication_thread_participants").delete().eq("thread_id", g.thread_id).in("person_id", weg);
+        // KC-CLUB-GRUPPEN-ADMIN (2.24.3): weitere Admins nur aus den (jetzigen) Gruppenmitgliedern, nie der, der sie angelegt hat
+        const adminsVorher: string[] = Array.isArray(g.admins) ? g.admins : [];
+        let adminsNeu = adminsVorher.filter((id) => !weg.includes(id));
+        if (Array.isArray(p.admins)) {
+          const { data: drin } = await db.from("kc_communication_thread_participants").select("person_id").eq("thread_id", g.thread_id);
+          const tn = new Set((drin ?? []).map((x: any) => x.person_id));
+          adminsNeu = ([...new Set(p.admins.map(String))] as string[]).filter((id) => tn.has(id) && id !== g.erstellt_von).slice(0, 60);
+        }
+        upd.admins = adminsNeu;
+        await db.from("kc_club_gruppen").update(upd).eq("thread_id", g.thread_id);
         const name = String(upd.name ?? g.name), symbol = String(upd.symbol ?? g.symbol);
+        const adminsDazu = adminsNeu.filter((id) => !adminsVorher.includes(id) && id !== ich.person_id);
+        if (adminsDazu.length) await senden("club_nachricht", adminsDazu, {
+          titel: `👑 ${symbol} ${name}`, kurz: `${ich.name} hat dich zum Gruppen-Admin von „${name}“ gemacht.`,
+          betreff: `Köcheclub Werne – Gruppen-Admin „${name}“`,
+          text: `Hallo,\n\n${ich.name} hat dich zum Gruppen-Admin der Gruppe „${name}“ in der Köcheclub-App gemacht. Du kannst die Gruppe jetzt mit verwalten.\n\nZur Gruppe: ${APP_URL}#nachricht=${g.thread_id}\n\nViele Grüße\nKöcheclub Werne`,
+          url: `${APP_URL}#nachricht=${g.thread_id}`,
+        }, `club-gruppe-admin:${g.thread_id}:${Date.now()}`).catch((e) => console.error("gruppe_admin senden", String(e)));
         if (neu.length) await senden("club_nachricht", neu, {
           titel: `${symbol} Gruppe: ${name}`, kurz: `${ich.name} hat dich zur Gruppe „${name}“ hinzugefügt.`,
           betreff: `Köcheclub Werne – Gruppe „${name}“`,
           text: `Hallo,\n\n${ich.name} hat dich zur Gruppe „${name}“ in der Köcheclub-App hinzugefügt.\n\nZur Gruppe: ${APP_URL}#nachricht=${g.thread_id}\n\nViele Grüße\nKöcheclub Werne`,
           url: `${APP_URL}#nachricht=${g.thread_id}`,
         }, `club-gruppe-dazu:${g.thread_id}:${Date.now()}`);
-        await protokoll(ich.person_id, "gruppe_geaendert", { gruppe: g.thread_id, vorher: { name: g.name, symbol: g.symbol }, hinzu: neu, weg });
+        await protokoll(ich.person_id, "gruppe_geaendert", { gruppe: g.thread_id, vorher: { name: g.name, symbol: g.symbol, admins: adminsVorher }, hinzu: neu, weg, admins: adminsNeu });
         return json({ ok: true });
       }
 
@@ -7111,9 +7130,29 @@ Köcheclub-App`,
         const { g } = await gruppeHolen(ich, p.id);
         await binTeilnehmer(g.thread_id, ich.person_id);
         const { count } = await db.from("kc_communication_thread_participants").select("person_id", { count: "exact", head: true }).eq("thread_id", g.thread_id);
-        if (g.erstellt_von === ich.person_id && (count ?? 0) > 1) throw new Fehler("Du hast die Gruppe angelegt – bitte erst die anderen entfernen oder die Gruppe behalten.", 409);
+        // KC-CLUB-GRUPPEN-ADMIN (2.24.3): wer die Gruppe angelegt hat, übergibt beim Verlassen an einen Nachfolger aus der Gruppe
+        // (gewählt oder – falls nicht gewählt – der erste weitere Admin); ohne Nachfolger bleibt es beim bisherigen Schutz
+        const adminsVorher: string[] = Array.isArray(g.admins) ? g.admins : [];
+        let nachfolger: string | null = null;
+        if (g.erstellt_von === ich.person_id && (count ?? 0) > 1) {
+          const { data: drin } = await db.from("kc_communication_thread_participants").select("person_id").eq("thread_id", g.thread_id).neq("person_id", ich.person_id);
+          const tn = new Set((drin ?? []).map((x: any) => x.person_id));
+          const wunsch = String(p.nachfolger || "");
+          nachfolger = tn.has(wunsch) ? wunsch : adminsVorher.find((id) => tn.has(id)) ?? null;
+          if (!nachfolger) throw new Fehler("Du hast die Gruppe angelegt – bitte bestimme vorher, wer die Gruppe weiterführt (👑 Gruppen-Admin).", 409);
+          const { error: ue } = await db.from("kc_club_gruppen").update({ erstellt_von: nachfolger, admins: adminsVorher.filter((id) => id !== nachfolger && id !== ich.person_id), geaendert_am: jetzt() }).eq("thread_id", g.thread_id).eq("erstellt_von", ich.person_id);
+          if (ue) throw new Fehler("Die Übergabe hat nicht geklappt – bitte noch einmal versuchen.", 500);
+        } else if (adminsVorher.includes(ich.person_id)) {
+          await db.from("kc_club_gruppen").update({ admins: adminsVorher.filter((id) => id !== ich.person_id) }).eq("thread_id", g.thread_id);
+        }
         await db.from("kc_communication_thread_participants").delete().eq("thread_id", g.thread_id).eq("person_id", ich.person_id);
-        await protokoll(ich.person_id, "gruppe_verlassen", { gruppe: g.thread_id, name: g.name });
+        if (nachfolger) await senden("club_nachricht", [nachfolger], {
+          titel: `👑 ${g.symbol} ${g.name}`, kurz: `${ich.name} hat dir die Gruppe „${g.name}“ übergeben – du bist jetzt Gruppen-Admin.`,
+          betreff: `Köcheclub Werne – Gruppe „${g.name}“ übergeben`,
+          text: `Hallo,\n\n${ich.name} hat die Gruppe „${g.name}“ verlassen und dir übergeben. Du bist jetzt Gruppen-Admin.\n\nZur Gruppe: ${APP_URL}#nachricht=${g.thread_id}\n\nViele Grüße\nKöcheclub Werne`,
+          url: `${APP_URL}#nachricht=${g.thread_id}`,
+        }, `club-gruppe-uebergabe:${g.thread_id}:${Date.now()}`).catch((e) => console.error("gruppe_uebergabe senden", String(e)));
+        await protokoll(ich.person_id, "gruppe_verlassen", { gruppe: g.thread_id, name: g.name, ...(nachfolger ? { nachfolger } : {}) });
         return json({ ok: true });
       }
 

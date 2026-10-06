@@ -1747,7 +1747,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   for (const k of ["chat", "anlage", "foto", "protokoll"]) assert.ok(new RegExp(`\\n  ${k}: \\{ sym:`).test(html), `Ablage-Anlass ${k} fehlt`);
   assert.ok(/onclick="chatInsArchiv\(\)">🗄️ Chat in mein Archiv legen/.test(html), "Chat-Menü: selbst ablegen");
   for (const f of ["unterhaltungWeg", "gruppeLoeschen", "gruppeVerlassen"]) {
-    const t = html.slice(html.indexOf(`async function ${f}(`), html.indexOf(`async function ${f}(`) + 700);
+    const t = html.slice(html.indexOf(`async function ${f}(`), html.indexOf(`async function ${f}(`) + 1400); // 2.24.3: gruppeVerlassen wählt vorher ggf. den Nachfolger
     assert.ok(/if \(!gefragt && await chatAblageFragen\(\{ frage: "Vorher in dein persönliches Archiv ablegen\?"/.test(t) || /!gefragt && await chatAblageFragen\(\{ frage: "Vorher in dein persönliches Archiv ablegen\?"/.test(t), `${f}: vorher fragen`);
     assert.ok(t.indexOf("chatAblageFragen") < t.indexOf("api("), `${f}: erst fragen, dann ausführen`);
   }
@@ -3082,7 +3082,7 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   const za = server.slice(server.indexOf('if (a === "zugang_anfordern") {'), server.indexOf('if (a === "kurzcode_einloesen") {'));
   assert.ok(/neu_token_hash: await sha256\(token\), neu_bis:/.test(za) && /bisher\?\.aktiv/.test(za), "Link verloren nur vormerken"); // 2.1.1: als Bedingungsausdruck
   assert.ok(/\.eq\("neu_token_hash", hash\)\.gt\("neu_bis", jetzt\(\)\)\.eq\("aktiv", true\)/.test(server) && /"zugang_uebernommen"/.test(server), "Übernahme beim ersten Öffnen");
-  assert.ok(/aktiv\.has\(id\) && \(id !== ich\.person_id \|\| g\.erstellt_von === ich\.person_id\)/.test(server), "kein Selbst-Hinzufügen in fremde Gruppen");
+  assert.ok(/aktiv\.has\(id\) && \(id !== ich\.person_id \|\| (g\.erstellt_von === ich\.person_id|gruppenAdmin\(g, ich\.person_id\))\)/.test(server), "kein Selbst-Hinzufügen in fremde Gruppen");
   const mig = lies("supabase/migrations/20261003_kc_club_v1960_zugang_vormerken.sql");
   assert.ok(/add column if not exists neu_token_hash text/.test(mig) && /Rückweg/.test(mig), "Migration Vormerken");
 }
@@ -4589,6 +4589,17 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(!NEUE_VERSION \|\| RUF \|\| SPR \|\| wartenZahl \|\|/.test(html), "nie während Anruf/Aufnahme/Übertragung");
   assert.ok(/setTimeout\(updateSelbst, updateFrisch\(\) \? 0 : 4000\)/.test(html) && /updWeg\(document\.hidden\); if \(!document\.hidden\)/.test(html), "Start sofort, Zurückholen nach ≥ 2 Min. zählt als Öffnen");
   assert.ok(/fpNeu\(frisch \? "update_start" : "update_selbst"/.test(html) && /return !etwasGetippt\(\);/.test(html), "Protokoll unterscheidbar, updateRuhig unverändert");
+}
+// 2.24.3 KC-CLUB-GRUPPEN-ADMIN: weitere Gruppen-Admins, Übergabe beim Verlassen, 👑-Anzeige
+{
+  const mig = lies("supabase/migrations/20261006_kc_club_v2243_gruppen_admin.sql");
+  assert.ok(/add column if not exists admins text\[\] not null default '\{\}'/.test(mig) && !/\bdrop\b(?! column admins;)/i.test(mig.replace(/^--.*$/gm, "")), "Migration nur hinzufügend");
+  assert.ok(/const gruppenAdmin = \(g: any, pid: string\) => g\?\.erstellt_von === pid \|\| \(Array\.isArray\(g\?\.admins\) && g\.admins\.includes\(pid\)\);/.test(server) && /darfVerwalten: gruppenAdmin\(g, ich\.person_id\) \|\| ich\.vorstand/.test(server), "Gruppen-Admin darf verwalten");
+  assert.ok(/filter\(\(id\) => tn\.has\(id\) && id !== g\.erstellt_von\)\.slice\(0, 60\);/.test(server), "Admins nur aus Gruppenmitgliedern");
+  assert.ok(/filter\(\(id\) => aktiv\.has\(id\) && \(id !== ich\.person_id \|\| gruppenAdmin\(g, ich\.person_id\)\)\)/.test(server), "Clubleitung fügt sich weiter nicht selbst in fremde Gruppen");
+  assert.ok(/nachfolger = tn\.has\(wunsch\) \? wunsch : adminsVorher\.find\(\(id\) => tn\.has\(id\)\) \?\? null;/.test(server) && /bitte bestimme vorher, wer die Gruppe weiterführt/.test(server) && /\.eq\("erstellt_von", ich\.person_id\)/.test(server), "Übergabe nur an Gruppenmitglied");
+  assert.ok(/const grIstAdmin = \(g, pid\) =>/.test(html) && /function grAdmin\(p\)/.test(html) && /function grNachfolgerWahl\(andere, g\)/.test(html) && /admins: GR\.admins\.filter\(\(p\) => GR\.personen\.includes\(p\)\)/.test(html), "App: 👑 setzen, Nachfolger wählen");
+  assert.ok(/id: "gruppen_admin", thema: "nachrichten"/.test(html), "Tipp Gruppen-Admin");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

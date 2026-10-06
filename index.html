@@ -820,6 +820,10 @@
   .feld input, .feld select, .feld textarea { display: block; width: 100%; margin-top: 5px; padding: 12px; border: 1px solid var(--linie); border-radius: 12px; background: var(--bg); color: var(--text); } /* 0.46.0: Textfarbe immer passend zum Feld-Hintergrund (sonst z. B. weiß auf hell in der Foto-Großansicht) */
   .zwei { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .marke { display: inline-block; font-size: .78rem; font-weight: 800; padding: 3px 9px; border-radius: 10px; background: var(--karte2); }
+  /* KC-CLUB-GRUPPEN-ADMIN (2.24.3): 👑-Schalter je Mitglied, grau = aus, farbig = Gruppen-Admin */
+  .gr-krone { border: 2px solid var(--linie, #ccc); background: transparent; border-radius: 10px; font-size: 1.15rem; min-width: 44px; min-height: 40px; filter: grayscale(1); opacity: .45; cursor: pointer; }
+  .gr-krone.an { filter: none; opacity: 1; border-color: #c99a06; background: #fff6d6; }
+  .gr-nachfolger { display: flex; flex-direction: column; gap: 8px; max-height: 50vh; overflow-y: auto; margin: 8px 0; }
   .marke.gruen { background: var(--gruenbg); color: var(--textGruen); } /* 1.23.0: zentrale Schriftfarben – kleine Marken ≥ 4,5:1 */
   .marke.gelb { background: var(--gelbbg); color: var(--textOrange); }
   .marke.rot { background: var(--rotbg); color: #a51d1d; }
@@ -2991,7 +2995,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.24.2"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.24.3"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -4249,6 +4253,7 @@ const HILFE = [
   { id: "chat_vorlesen", thema: "nachrichten", sym: "🔊", t: "Hände voll? Chat vorlesen lassen", x: "Gerade beim Kochen praktisch: im Chat oben <b>⋮</b> → <b>„🔊 Vorlesen ab den neuen Nachrichten“</b> oder <b>„🔊 Ganzen Chat vorlesen“</b>. Das Handy liest vor, du hörst einfach zu.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
   { id: "whatsapp", thema: "nachrichten", sym: "🟢", t: "Text zusätzlich per WhatsApp schicken", x: "Ist jemand in der App noch nicht so oft unterwegs? Der grüne Knopf <b>„WA“</b> unter dem Schreibfeld übernimmt deinen Text nach WhatsApp – du musst ihn nicht nochmal tippen.", seit: "2.23.1" },
   { id: "gruppe_loeschen", thema: "nachrichten", sym: "👥", t: "Eine Gruppe wieder auflösen", x: "Eine Gruppe wird nicht mehr gebraucht? Wer sie verwaltet, findet im Gruppenchat oben unter <b>⋮</b> den Punkt <b>„🗑️ Gruppe löschen (für alle)“</b>. Vorher fragt die App lieber noch einmal nach.", seit: "2.23.1" },
+  { id: "gruppen_admin", thema: "nachrichten", sym: "👑", t: "Gruppen-Admin bestimmen", x: "Wer eine Gruppe anlegt, ist ihr <b>👑 Gruppen-Admin</b>. Unter <b>⋮ → ✏️ Gruppe bearbeiten</b> tippst du neben einem Mitglied auf <b>👑</b> – dann darf es die Gruppe mit verwalten. Verlässt du eine Gruppe, die du angelegt hast, wählst du, wer sie weiterführt.", seit: "2.24.3" },
   // 📅 Termine & Kalender
   { id: "wiederholen", thema: "termine", sym: "🔁", t: "Termine, die immer wiederkommen", x: "Jeden Dienstag Chorprobe? Beim Anlegen eines privaten Termins wählst du unter <b>„🔁 Wiederholen“</b> täglich, werktags, wöchentlich, alle 2 Wochen und mehr – dann trägst du ihn nur einmal ein.", zeig: () => zeige("termine"), seit: "2.23.1" },
   { id: "todo", thema: "termine", sym: "✅", t: "Gemeinsame To-do-Liste", x: "In den Terminen gibt es oben den Reiter <b>„✅ To-do“</b> – zum Beispiel für Einkäufe oder Bestellungen. Mit <b>„👉 Wer soll es machen?“</b> kannst du eine Aufgabe auch an mehrere Leute verteilen.", zeig: () => { termineArt = "todo"; zeige("termine"); }, seit: "2.23.1" },
@@ -6194,6 +6199,7 @@ const TW_SYN = [["termin", "verabredung", "treffen", "datum", "verabreden", "aus
 // Twinkeys eigene Fragen und Antworten (Wunsch Hansi: „mehr Fragen und Antworten“) – kurz, mit Sprung an die richtige Stelle
 const TW_FAQ = [
   { id: "nachricht", sym: "💬", t: "Wie schreibe ich jemandem eine Nachricht?", x: "Tippe auf <b>💬 Nachrichten</b> und dann auf <b>„＋ Neu“</b>. Wähle das Mitglied aus, schreib deinen Text und tippe auf Senden. Schneller geht es bei <b>👥 Mitglieder</b>: bei der Person auf die Sprechblase <b>💬</b> tippen.", los: () => zeige("nachrichten") },
+  { id: "gruppen-admin", sym: "👑", t: "Was ist ein Gruppen-Admin?", x: "Der <b>👑 Gruppen-Admin</b> verwaltet eine Gruppe: Name und Symbol ändern, Mitglieder dazunehmen oder entfernen, die Gruppe löschen. Das ist, wer sie angelegt hat – und jeder, den er unter <b>✏️ Gruppe bearbeiten</b> mit <b>👑</b> dazu macht." },
   { id: "gruppe", sym: "👥", t: "Wie lege ich eine Gruppe an?", x: "Bei <b>💬 Nachrichten</b> auf <b>„👥 Gruppe“</b> tippen. <b>Name &amp; Symbol</b> wählen, bei <b>„Wer ist dabei?“</b> die Mitglieder anhaken und <b>„👥 Gruppe anlegen“</b> tippen.", los: () => zeige("gruppe") },
   { id: "foto-schicken", sym: "📷", t: "Wie schicke ich ein Foto im Chat?", x: "Im Chat unten auf die <b>Büroklammer 📎</b> bzw. das Kamera-Symbol tippen, Foto wählen oder aufnehmen und senden. Für alle sichtbar wird ein Foto im <b>📷 Fotoalbum</b> (dort <b>„＋ Neu“</b>).", los: () => zeige("nachrichten") },
   { id: "foto-album", sym: "📷", t: "Wie lade ich Fotos ins Fotoalbum?", x: "Tippe auf <b>📷 Fotoalbum</b> und dann auf <b>„＋ Neu“</b>. Bilder auswählen – fertig. Mit <b>„☑️ Auswählen“</b> legst du Bilder in ein eigenes Album, z. B. „Weihnachtsmarkt“.", los: () => zeige("fotos") },
@@ -15340,7 +15346,7 @@ function chatMenue() {
   const g = chatId && CHAT?.id === chatId ? CHAT.gruppe : null;
   $("chatBlattTitel").textContent = g ? `${g.symbol} ${g.name}` : "Unterhaltung";
   $("chatGruppeInfo").classList.toggle("versteckt", !g);
-  if (g) $("chatGruppeInfo").innerHTML = "<b>Mitglieder:</b> " + CHAT.teilnehmer.map((t) => esc(t.person_id === ICH.person_id ? "Du" : t.name) + (t.person_id === g.erstellt_von ? " (angelegt)" : "")).join(", ");
+  if (g) $("chatGruppeInfo").innerHTML = "<b>Mitglieder:</b> " + CHAT.teilnehmer.map((t) => esc(t.person_id === ICH.person_id ? "Du" : t.name) + (grIstAdmin(g, t.person_id) ? " 👑" : "")).join(", ") + '<br><span class="hinweis">👑 = Gruppen-Admin</span>'; // KC-CLUB-GRUPPEN-ADMIN (2.24.3)
   $("chatGruppeBearb").classList.toggle("versteckt", !g?.darfVerwalten);
   $("chatGruppeRaus").classList.toggle("versteckt", !g);
   $("chatGruppeWeg").classList.toggle("versteckt", !g?.darfVerwalten); // KC-CLUB-GRUPPE-LOESCHEN
@@ -15499,11 +15505,13 @@ async function whatsappWeitergeben(text, ids) {
 
 // ---------- Gruppen (KC-CLUB-GRUPPEN) ----------
 const GR_SYMBOLE = ["👥", "👨‍🍳", "🍳", "🎖️", "🧳", "🎉", "📋", "🍷", "⭐", "🏠"];
-let GR = null; // { id?, name, symbol, personen[], vorher[] }
+let GR = null; // { id?, name, symbol, personen[], vorher[], admins[] }
+// KC-CLUB-GRUPPEN-ADMIN (2.24.3, Wunsch Hansi): 👑 Gruppen-Admin = wer sie angelegt hat + weitere ernannte Admins
+const grIstAdmin = (g, pid) => !!g && (g.erstellt_von === pid || (g.admins || []).includes(pid));
 async function gruppeForm(chat) {
   if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return meldeFehler(e); }
   const personen = chat ? chat.teilnehmer.map((t) => t.person_id).filter((id) => id !== ICH.person_id) : [];
-  GR = { id: chat?.id || null, name: chat?.gruppe?.name || "", symbol: chat?.gruppe?.symbol || "👥", personen, vorher: [...personen], ersteller: chat?.gruppe?.erstellt_von || ICH.person_id };
+  GR = { id: chat?.id || null, name: chat?.gruppe?.name || "", symbol: chat?.gruppe?.symbol || "👥", personen, vorher: [...personen], ersteller: chat?.gruppe?.erstellt_von || ICH.person_id, admins: [...(chat?.gruppe?.admins || [])] };
   $("grTitel").textContent = GR.id ? "✏️ Gruppe bearbeiten" : "👥 Neue Gruppe";
   $("grKnopf").textContent = GR.id ? "💾 Speichern" : "👥 Gruppe anlegen";
   $("grName").value = GR.name; $("grSuche").value = "";
@@ -15516,11 +15524,12 @@ function grListe() {
   $("grListe").innerHTML = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && (!q || m.name.toLowerCase().includes(q))).map((m) => {
     const fest = m.person_id === GR.ersteller && GR.id;
     return `<label><input type="checkbox" ${GR.personen.includes(m.person_id) ? "checked" : ""} ${fest ? "disabled" : ""} onchange="grWahl('${m.person_id}', this.checked)">
-      <span style="flex:1">${esc(m.name)}${fest ? ' <span class="marke">angelegt</span>' : ""}</span>${wegIcons(m)}</label>`; }).join("");
+      <span style="flex:1">${esc(m.name)}${fest ? ' <span class="marke">👑 angelegt</span>' : ""}</span>${wegIcons(m)}${!fest && GR.personen.includes(m.person_id) ? `<button type="button" class="gr-krone${GR.admins.includes(m.person_id) ? " an" : ""}" title="Gruppen-Admin" aria-label="Gruppen-Admin" aria-pressed="${GR.admins.includes(m.person_id)}" onclick="event.preventDefault();grAdmin('${m.person_id}')">👑</button>` : ""}</label>`; }).join("");
   const namen = GR.personen.map((p) => MITGLIEDER.find((m) => m.person_id === p)?.name.split(" ")[0]).filter(Boolean);
   $("grGewaehlt").textContent = "Du" + (namen.length ? ", " + namen.join(", ") : "") + ` (${namen.length + 1})`;
 }
-function grWahl(p, an) { GR.personen = an ? [...new Set([...GR.personen, p])] : GR.personen.filter((x) => x !== p); grListe(); }
+function grWahl(p, an) { GR.personen = an ? [...new Set([...GR.personen, p])] : GR.personen.filter((x) => x !== p); if (!an) GR.admins = GR.admins.filter((x) => x !== p); grListe(); }
+function grAdmin(p) { const an = !GR.admins.includes(p); GR.admins = an ? [...GR.admins, p] : GR.admins.filter((x) => x !== p); melde(an ? "👑 Wird Gruppen-Admin – darf die Gruppe mit verwalten" : "Kein Gruppen-Admin mehr"); grListe(); }
 async function gruppeSpeichern() {
   const name = $("grName").value.trim();
   if (!name) return melde("Bitte einen Namen für die Gruppe eingeben.", true);
@@ -15528,10 +15537,10 @@ async function gruppeSpeichern() {
   $("grKnopf").disabled = true;
   try {
     if (GR.id) {
-      await api("gruppe_aendern", { id: GR.id, name, symbol: GR.symbol, hinzu: GR.personen.filter((p) => !GR.vorher.includes(p)), weg: GR.vorher.filter((p) => !GR.personen.includes(p)) });
+      await api("gruppe_aendern", { id: GR.id, name, symbol: GR.symbol, hinzu: GR.personen.filter((p) => !GR.vorher.includes(p)), weg: GR.vorher.filter((p) => !GR.personen.includes(p)), admins: GR.admins.filter((p) => GR.personen.includes(p)) });
       melde("✅ Gruppe gespeichert"); chatOeffnen(GR.id);
     } else {
-      const r = await api("gruppe_anlegen", { name, symbol: GR.symbol, personen: GR.personen });
+      const r = await api("gruppe_anlegen", { name, symbol: GR.symbol, personen: GR.personen, admins: GR.admins.filter((p) => GR.personen.includes(p)) });
       melde(`✅ Gruppe „${name}“ angelegt – die Mitglieder wurden benachrichtigt`); chatOeffnen(r.id);
     }
   } catch (e) { meldeFehler(e); }
@@ -15549,7 +15558,22 @@ async function gruppeVerlassen(gefragt) {
   $("chatBlatt").classList.add("versteckt");
   if (CHAT?.gruppe && !gefragt && await chatAblageFragen({ frage: "Vorher in dein persönliches Archiv ablegen?", ja: "Ja, ablegen – dann weiter", nein: "Nein, nur weiter", danach: () => gruppeVerlassen(true) })) return; // 1.19.0
   if (!CHAT?.gruppe || !(await frage(`Die Gruppe „${CHAT.gruppe.name}“ verlassen? Du bekommst dann keine Nachrichten mehr daraus.`))) return;
-  try { await api("gruppe_verlassen", { id: CHAT.id }); melde("🚪 Gruppe verlassen"); zeige("nachrichten"); neuLaden(); } catch (e) { meldeFehler(e); }
+  // KC-CLUB-GRUPPEN-ADMIN (2.24.3): wer die Gruppe angelegt hat, wählt beim Verlassen, wer sie weiterführt
+  let nachfolger = null;
+  const andere = CHAT.teilnehmer.filter((t) => t.person_id !== ICH.person_id);
+  if (CHAT.gruppe.erstellt_von === ICH.person_id && andere.length) { nachfolger = await grNachfolgerWahl(andere, CHAT.gruppe); if (!nachfolger) return; }
+  try { await api("gruppe_verlassen", { id: CHAT.id, ...(nachfolger ? { nachfolger } : {}) }); melde(nachfolger ? "🚪 Gruppe verlassen – 👑 übergeben" : "🚪 Gruppe verlassen"); zeige("nachrichten"); neuLaden(); } catch (e) { meldeFehler(e); }
+}
+function grNachfolgerWahl(andere, g) {
+  const liste = [...andere].sort((a, b) => grIstAdmin(g, b.person_id) - grIstAdmin(g, a.person_id) || a.name.localeCompare(b.name, "de"));
+  return new Promise((fertig) => {
+    let f; const zu = (w) => { f?.remove(); fertig(w); };
+    f = dlgOeffnen(`<h3 class="dlg-kopf">👑 Wer führt die Gruppe weiter?</h3><p class="dlg-text">Du hast die Gruppe angelegt. Wähle, wer nach dir Gruppen-Admin ist.</p>
+      <div class="gr-nachfolger">${liste.map((t) => `<button class="knopf" data-p="${esc(t.person_id)}">${grIstAdmin(g, t.person_id) ? "👑 " : ""}${esc(t.name)}</button>`).join("")}</div>
+      <div class="dlg-knoepfe"><button class="knopf" data-w="0">Abbrechen</button></div>`, () => zu(null));
+    f.querySelectorAll("[data-p]").forEach((b) => (b.onclick = () => zu(b.dataset.p)));
+    f.querySelector("[data-w='0']").onclick = () => zu(null);
+  });
 }
 
 // KC-CLUB-WICHTIG (1.53.0, Wunsch Hansi): ❗ = „Wichtigkeit hoch“ für die nächste Nachricht (gilt nur für diesen Chat)
