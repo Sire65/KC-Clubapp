@@ -1478,6 +1478,10 @@
   .avatar.k-neutral { background: #8d6e63; }
   .avatar.mit-figur { padding: 4px; box-sizing: border-box; } .avatar.mit-figur svg, .avatar.mit-figur img.av-foto { display: block; width: 100%; height: 100%; border-radius: 50%; box-shadow: 0 0 0 2px var(--karte); } /* KC-CLUB-AVATAR 2.23.85; 2.23.89 Ring breiter */
   img.av-foto { object-fit: cover; background: #b8b0a8; }
+  /* KC-CLUB-NEU-PULS (2.23.91): „＋ Neu“ oben 3× kurz pulsieren, heller Rand */
+  @keyframes neuPuls { 0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 213, 79, 0); } 50% { transform: scale(1.1); box-shadow: 0 0 0 3px #fff, 0 0 0 6px #ffd54f, 0 0 14px 6px rgba(255, 213, 79, .6); } }
+  .knopf.neu-puls { animation: neuPuls .7s ease-in-out 3; position: relative; z-index: 1; }
+  @media (prefers-reduced-motion: reduce) { .knopf.neu-puls { animation: none; box-shadow: 0 0 0 3px #fff, 0 0 0 6px #ffd54f; } }
   /* KC-CLUB-AVATAR-ABZEICHEN (2.23.89, Wunsch Hansi): Zustand als Abzeichen unten rechts – auch mit Figur/Foto gut sichtbar */
   .avatar .k-abz { position: absolute; right: -3px; bottom: -3px; width: 38%; height: 38%; min-width: 13px; min-height: 13px; max-width: 24px; max-height: 24px; border-radius: 50%;
     border: 2px solid var(--karte); box-sizing: border-box; display: grid; place-items: center; color: #fff; font-size: 10px; font-weight: 900; font-style: normal; line-height: 1; }
@@ -2976,7 +2980,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.90"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.91"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3015,6 +3019,14 @@ const AV_FIGUREN = {
 const AV_FRISUREN = ["lang", "zopf", "dutt", "bob", "locken", "kurz", "wuschel", "seiten", "glatze"], AV_KOPF = ["koch", "tuch", "kappe", "keine"], AV_BART = [0, "voll", "schnurr", "stoppel"];
 const AV_BG = ["#741521", "#1d4f91", "#2e7d4f", "#6d4aa3", "#b8860b", "#00796b", "#c2185b", "#455a64", "#8d6e63", "#e8792b", "#3949ab", "#558b2f"];
 const AV_TUCH = ["#c8102e", "#ffcc00", "#e8792b", "#2e7d4f", "#1d4f91", "#741521", "#ffffff", "#6d4aa3"];
+// ---------- KC-CLUB-NEU-PULS (2.23.91, Wunsch Hansi): beim Betreten einer Seite pulsiert der „＋ Neu“-Knopf oben 3× mit hellem Rand ----------
+function neuPulsieren(v) {
+  if (aktuelleAnsicht !== v) return;
+  const k = [...document.querySelectorAll(`#v-${v} .kopf2 .knopf.haupt`)].find((b) => b.offsetParent && /＋|\bNeu\b/.test(b.textContent || ""));
+  if (!k) return;
+  k.classList.remove("neu-puls"); void k.offsetWidth; k.classList.add("neu-puls");
+  setTimeout(() => k.classList.remove("neu-puls"), 2300);
+}
 // ---------- KC-CLUB-AVATAR-FOTO (2.23.89, Wunsch Hansi): eigenes Foto als Bild (Selfie, Galerie, Datei) – 256×256 JPEG, Code „f…“ ----------
 const AVF_RE = /^f[0-9a-z]{9}$/, AVF_LEER = "data:image/gif;base64,R0lGODlhAQABAAAAACw=";
 const AVF = { bild: (() => { try { const o = JSON.parse(localStorage.getItem("kc_club_avf") || "{}"); return o && typeof o === "object" ? o : {}; } catch { return {}; } })(), offen: new Map(), timer: null, neu: null };
@@ -11070,6 +11082,7 @@ function zeige(v, ausHistorie) {
   if (kaBearb && v !== "start") kaBearbeiten(false); // Anordnen beim Verlassen der Startseite abschließen
   const vorher = aktuelleAnsicht;
   if (v !== vorher && v !== "chat" && v !== "mitglied") spur(v); // KC-CLUB-SPUR (2.23.88): Chat/Mitglied mit „mit wem“ eigens
+  if (v !== vorher) setTimeout(() => neuPulsieren(v), 350); // KC-CLUB-NEU-PULS (2.23.91)
   if (v === "dokansicht" && !DOKA.id) v = "dokumente"; // KC-CLUB-DOK-ANZEIGE: ohne Dokument zur Liste
   if (vorher === "dokansicht" && v !== "dokansicht") dokAufraeumen();
   if (vorher === "fotos" && v !== "fotos" && FAW.an) { FAW.an = false; FAW.ziel = null; FAW.ids.clear(); $("faLeiste").classList.add("versteckt"); document.body.classList.remove("fa-waehlen"); } // KC-CLUB-FOTO-ALBEN

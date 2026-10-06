@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.23.91 – 2026-10-06 – „＋ Neu“ pulsiert beim Betreten einer Seite
+- KC-CLUB-NEU-PULS: Kommt man auf eine Seite mit „＋ Neu“ oben (Termine, Nachrichten, Fotoalbum, Helfen, Vorschläge, Pinnwand …), pulsiert der Knopf 3× kurz mit hellem Rand. Bei „weniger Bewegung“ nur der Rand.
+
 ## 2.23.90 – 2026-10-06 – Tipp des Tages: Kacheln verkleinern (nur erweiterte Ansicht)
 - Neuer Tipp „🔲 Kacheln kleiner – 3 nebeneinander“: Einstellungen → Darstellung, nur in der erweiterten Ansicht; „Zeigen“ springt direkt zur Einstellung.
 
