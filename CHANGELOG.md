@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.24.10 – 2026-10-06 – Mein Bild aus Datei
+Mein Bild: „Datei“ öffnet jetzt den Datei-Explorer statt der Galerie.
+
 ## 2.24.9 – 2026-10-06 – Bauernskat nach Köcheclub-Regeln
 Bauernskat: jeder hat 8 Häufchen (verdeckt, offen darauf); vor jedem Spiel wird sichtbar gemischt und in Viererpäckchen ausgeteilt – je zweimal verdeckt, dann zweimal offen. Wer gibt, wechselt; Trumpf-Ansage bleibt. (KC-CLUB-BAUERNSKAT-AUSTEILEN)
 

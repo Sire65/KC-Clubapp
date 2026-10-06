@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.24.9"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.24.10"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SCHNELLSTART-DATEI (2.24.8, Hinweis Hansi „Start ist langsamer geworden“): das Programm liegt in app.js, damit das Handy es
 // fertig übersetzt behalten kann (statt bei jedem Öffnen 1,8 MB neu einzulesen). Seite und Programm müssen dieselbe Version haben
 // (AGENTS Regel 16, kein Mischstand): passt es nicht (z. B. alte Seite aus einem Zwischenspeicher), einmal frisch laden, sonst anhalten.
@@ -82,10 +82,14 @@ async function avfHolen() {
     for (const x of Object.values(r.bilder || {})) if (AVF_RE.test(x?.code || "") && /^data:image\/jpeg;base64,/.test(x?.bild || "")) avfSetzen(x.code, x.bild);
   } catch {} finally { ids.forEach((i) => AVF.offen.delete(i)); }
 }
+// 2.24.10 (Hinweis Hansi „aus Datei geht auf die Galerie“): Android öffnet bei reiner Bild-Auswahl immer die eigene Foto-Auswahl.
+// Mit einer Nicht-Bild-Art in accept kommt der Datei-Explorer („Dateien“) – ob es ein Bild ist, prüft die App danach selbst.
+const AVF_DATEI_ACCEPT = "image/jpeg,image/png,image/webp,image/heic,.jpg,.jpeg,.png,.webp,.heic,application/octet-stream";
+const avfIstBild = (f) => /^image\//.test(f?.type || "") || /\.(jpe?g|png|webp|heic)$/i.test(f?.name || "");
 function avfWaehlen(art) {
-  const i = document.createElement("input"); i.type = "file"; i.accept = art === "datei" ? "image/jpeg,image/png,image/webp,image/heic,.jpg,.jpeg,.png,.webp,.heic" : "image/*";
+  const i = document.createElement("input"); i.type = "file"; i.accept = art === "datei" ? AVF_DATEI_ACCEPT : "image/*";
   if (art === "selfie") i.setAttribute("capture", "user");
-  i.onchange = () => { const f = i.files?.[0]; if (f) avfVorschau(f); }; i.click();
+  i.onchange = () => { const f = i.files?.[0]; if (!f) return; if (!avfIstBild(f)) return melde("Das ist kein Bild – bitte ein Foto als JPG, PNG oder WEBP wählen.", true); avfVorschau(f); }; i.click();
 }
 async function avfVorschau(datei) {
   let bild;

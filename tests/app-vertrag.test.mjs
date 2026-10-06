@@ -4671,6 +4671,11 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(BSK_TEILT\) return setTimeout\(bskPcComputer, 300\);/.test(html), "Computer wartet, bis ausgeteilt ist");
   assert.ok(/ansage && z\.sp\[i\]\.hand\.length \?/.test(server), "Server-Sicht: neue Partien ohne Handkarten-Platzhalter");
 }
+// 2.24.10: Mein Bild „aus Datei“ öffnet den Datei-Explorer statt der Galerie; Nicht-Bilder werden abgelehnt
+{
+  assert.ok(/const AVF_DATEI_ACCEPT = "[^"]*image\/jpeg[^"]*application\/octet-stream";/.test(html) && /i\.accept = art === "datei" \? AVF_DATEI_ACCEPT : "image\/\*";/.test(html), "Datei → Datei-Explorer");
+  assert.ok(/if \(!avfIstBild\(f\)\) return melde\("Das ist kein Bild/.test(html), "nur Bilder");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
