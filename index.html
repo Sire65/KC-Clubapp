@@ -1479,9 +1479,10 @@
   .avatar.mit-figur { padding: 4px; box-sizing: border-box; } .avatar.mit-figur svg, .avatar.mit-figur img.av-foto { display: block; width: 100%; height: 100%; border-radius: 50%; box-shadow: 0 0 0 2px var(--karte); } /* KC-CLUB-AVATAR 2.23.85; 2.23.89 Ring breiter */
   img.av-foto { object-fit: cover; background: #b8b0a8; }
   /* KC-CLUB-NEU-PULS (2.23.91): „＋ Neu“ oben 3× kurz pulsieren, heller Rand */
-  @keyframes neuPuls { 0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 213, 79, 0); } 50% { transform: scale(1.1); box-shadow: 0 0 0 3px #fff, 0 0 0 6px #ffd54f, 0 0 14px 6px rgba(255, 213, 79, .6); } }
-  .knopf.neu-puls { animation: neuPuls .7s ease-in-out 3; position: relative; z-index: 1; }
-  @media (prefers-reduced-motion: reduce) { .knopf.neu-puls { animation: none; box-shadow: 0 0 0 3px #fff, 0 0 0 6px #ffd54f; } }
+  /* 2.23.92 (Hinweis Hansi): heller Rand schwillt langsam auf und ab – nur Leuchten, keine Bewegung, daher auch bei „Bewegung reduzieren“ */
+  @keyframes neuPuls { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0), 0 0 0 0 rgba(255, 213, 79, 0); }
+    50% { box-shadow: 0 0 0 3px rgba(255, 255, 255, .95), 0 0 0 7px rgba(255, 213, 79, .9), 0 0 18px 8px rgba(255, 213, 79, .55); } }
+  .knopf.neu-puls { animation: neuPuls 1.3s ease-in-out 3; position: relative; z-index: 1; }
   /* KC-CLUB-AVATAR-ABZEICHEN (2.23.89, Wunsch Hansi): Zustand als Abzeichen unten rechts – auch mit Figur/Foto gut sichtbar */
   .avatar .k-abz { position: absolute; right: -3px; bottom: -3px; width: 38%; height: 38%; min-width: 13px; min-height: 13px; max-width: 24px; max-height: 24px; border-radius: 50%;
     border: 2px solid var(--karte); box-sizing: border-box; display: grid; place-items: center; color: #fff; font-size: 10px; font-weight: 900; font-style: normal; line-height: 1; }
@@ -2980,7 +2981,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.91"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.92"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3025,7 +3026,7 @@ function neuPulsieren(v) {
   const k = [...document.querySelectorAll(`#v-${v} .kopf2 .knopf.haupt`)].find((b) => b.offsetParent && /＋|\bNeu\b/.test(b.textContent || ""));
   if (!k) return;
   k.classList.remove("neu-puls"); void k.offsetWidth; k.classList.add("neu-puls");
-  setTimeout(() => k.classList.remove("neu-puls"), 2300);
+  setTimeout(() => k.classList.remove("neu-puls"), 4100); // 3 × 1,3 s
 }
 // ---------- KC-CLUB-AVATAR-FOTO (2.23.89, Wunsch Hansi): eigenes Foto als Bild (Selfie, Galerie, Datei) – 256×256 JPEG, Code „f…“ ----------
 const AVF_RE = /^f[0-9a-z]{9}$/, AVF_LEER = "data:image/gif;base64,R0lGODlhAQABAAAAACw=";

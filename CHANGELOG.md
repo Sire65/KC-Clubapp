@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.23.92 – 2026-10-06 – „＋ Neu“: heller Rand schwillt langsam auf und ab
+- KC-CLUB-NEU-PULS (Hinweis Hansi): statt Hüpfen leuchtet der Rand 3× langsam auf und ab (1,3 s je Mal) – nur Leuchten, daher auch bei „Bewegung reduzieren“ sichtbar.
+
 ## 2.23.91 – 2026-10-06 – „＋ Neu“ pulsiert beim Betreten einer Seite
 - KC-CLUB-NEU-PULS: Kommt man auf eine Seite mit „＋ Neu“ oben (Termine, Nachrichten, Fotoalbum, Helfen, Vorschläge, Pinnwand …), pulsiert der Knopf 3× kurz mit hellem Rand. Bei „weniger Bewegung“ nur der Rand.
 

@@ -4492,8 +4492,9 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 442. 2.23.91: „＋ Neu“ oben pulsiert beim Betreten der Seite 3× mit hellem Rand (KC-CLUB-NEU-PULS, Wunsch Hansi)
 {
   assert.ok(/if \(v !== vorher\) setTimeout\(\(\) => neuPulsieren\(v\), 350\);/.test(html) && /function neuPulsieren\(v\)/.test(html), "beim Betreten einer Seite");
-  assert.ok(/\.knopf\.neu-puls \{ animation: neuPuls \.7s ease-in-out 3;/.test(html) && /prefers-reduced-motion: reduce\) \{ \.knopf\.neu-puls \{ animation: none;/.test(html), "3× pulsieren, ruhig bei „weniger Bewegung“");
+  assert.ok(/\.knopf\.neu-puls \{ animation: neuPuls 1\.3s ease-in-out 3;/.test(html) && !/neu-puls \{ animation: none/.test(html), "3× langsam auf- und abschwellen – auch bei „Bewegung reduzieren“ (nur Leuchten) – 2.23.92");
 }
+
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
