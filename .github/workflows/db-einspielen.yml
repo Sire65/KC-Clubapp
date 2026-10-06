@@ -1,0 +1,104 @@
+# KC-CLUB-DB-EINSPIELEN (06.10.2026, Wunsch Hansi): Datenbank-Migration nur von Hand starten („Run workflow“),
+# weil die Bestätigung der Supabase-Verbindung in der Cloud-Sitzung nicht angezeigt wird. Gestartet wird nur nach Hansis „einspielen“.
+# Ablauf: 1. Vertragstests  2. Migration + Test in EINER Transaktion, die mit „TESTBERICHT“ absichtlich abbricht (= alles zurückgerollt)
+#         3. nur bei grünem Test (und modus=einspielen): Migration einspielen und in supabase_migrations vermerken  4. Nachprüfung
+# Modus „pruefen“ ändert nie etwas. Schlüssel: vorhandenes Repository-Secret SUPABASE_ACCESS_TOKEN (Supabase Management API).
+name: Datenbank einspielen
+on:
+  workflow_dispatch:
+    inputs:
+      migration:
+        description: "Migrationsdatei (Pfad im Repo)"
+        required: true
+      testdatei:
+        description: "Testdatei für den Probelauf (leer = nur Einspielbarkeit prüfen)"
+        required: false
+        default: ""
+      erwartet:
+        description: "Datei mit erwarteten Zeilen im Testbericht (leer = keine)"
+        required: false
+        default: ""
+      nachpruefung:
+        description: "SQL, das nach dem Einspielen true liefern muss"
+        required: false
+        default: "select true"
+      modus:
+        description: "pruefen (nur Probelauf) oder einspielen"
+        required: true
+        default: "pruefen"
+concurrency:
+  group: db-einspielen
+  cancel-in-progress: false
+jobs:
+  db:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      PROJEKT: ptblnpiroqftcvlsrhac
+      MIGRATION: ${{ inputs.migration }}
+      TESTDATEI: ${{ inputs.testdatei }}
+      ERWARTET: ${{ inputs.erwartet }}
+      NACHPRUEFUNG: ${{ inputs.nachpruefung }}
+      MODUS: ${{ inputs.modus }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node tests/app-vertrag.test.mjs
+      - name: Eingaben prüfen
+        run: |
+          case "$MIGRATION" in supabase/migrations/*.sql) ;; *) echo "Nur Dateien aus supabase/migrations"; exit 1;; esac
+          test -f "$MIGRATION"
+          if [ -n "$TESTDATEI" ]; then case "$TESTDATEI" in tools/db-test/*.sql) test -f "$TESTDATEI";; *) echo "Testdatei nur aus tools/db-test"; exit 1;; esac; fi
+          if [ -n "$ERWARTET" ]; then case "$ERWARTET" in tools/db-test/*) test -f "$ERWARTET";; *) exit 1;; esac; fi
+          case "$MODUS" in pruefen|einspielen) ;; *) echo "modus: pruefen oder einspielen"; exit 1;; esac
+      - name: Probelauf (wird immer zurückgerollt)
+        run: |
+          {
+            echo "begin;"
+            cat "$MIGRATION"
+            echo
+            if [ -n "$TESTDATEI" ]; then cat "$TESTDATEI"; else echo "do \$p\$ begin raise exception 'TESTBERICHT (alles wird zurückgerollt): | einspielbar'; end \$p\$;"; fi
+          } > /tmp/probe.sql
+          jq -Rs '{query: .}' /tmp/probe.sql > /tmp/probe.json
+          curl -sS -X POST "https://api.supabase.com/v1/projects/$PROJEKT/database/query" \
+            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" -H "content-type: application/json" \
+            --data-binary @/tmp/probe.json -o /tmp/probe.out -w "%{http_code}\n" > /tmp/probe.code
+          echo "HTTP $(cat /tmp/probe.code)"; cat /tmp/probe.out; echo
+          grep -q "TESTBERICHT" /tmp/probe.out || { echo "Kein Testbericht – Probelauf fehlgeschlagen"; exit 1; }
+          if grep -q "KEIN FEHLER" /tmp/probe.out; then echo "Rechteprüfung im Test fehlgeschlagen"; exit 1; fi
+          if [ -n "$ERWARTET" ]; then
+            while IFS= read -r zeile; do [ -z "$zeile" ] && continue
+              grep -qF "$zeile" /tmp/probe.out || { echo "Erwartet, aber nicht im Bericht: $zeile"; exit 1; }
+            done < "$ERWARTET"
+          fi
+          echo "Probelauf grün"
+      - name: Einspielen
+        if: ${{ inputs.modus == 'einspielen' }}
+        run: |
+          name=$(basename "$MIGRATION" .sql); version=$(date -u +%Y%m%d%H%M%S)
+          {
+            echo "begin;"
+            cat "$MIGRATION"
+            echo
+            echo "insert into supabase_migrations.schema_migrations (version, name, statements) values ('$version', '$name', array['siehe $MIGRATION']);"
+            echo "commit;"
+          } > /tmp/mig.sql
+          jq -Rs '{query: .}' /tmp/mig.sql > /tmp/mig.json
+          code=$(curl -sS -X POST "https://api.supabase.com/v1/projects/$PROJEKT/database/query" \
+            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" -H "content-type: application/json" \
+            --data-binary @/tmp/mig.json -o /tmp/mig.out -w "%{http_code}")
+          echo "HTTP $code"; cat /tmp/mig.out; echo
+          case "$code" in 2*) ;; *) echo "Einspielen fehlgeschlagen – Transaktion nicht abgeschlossen"; exit 1;; esac
+          if grep -qi '"message"' /tmp/mig.out; then echo "Fehlermeldung erhalten"; exit 1; fi
+      - name: Nachprüfung
+        if: ${{ inputs.modus == 'einspielen' }}
+        run: |
+          jq -n --arg q "$NACHPRUEFUNG" '{query: $q}' > /tmp/np.json
+          curl -sS -X POST "https://api.supabase.com/v1/projects/$PROJEKT/database/query" \
+            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" -H "content-type: application/json" \
+            --data-binary @/tmp/np.json -o /tmp/np.out
+          cat /tmp/np.out; echo
+          grep -q 'true' /tmp/np.out || { echo "Nachprüfung nicht erfüllt"; exit 1; }
+          echo "Eingespielt und nachgeprüft"

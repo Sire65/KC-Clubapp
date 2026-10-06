@@ -1,0 +1,14 @@
+T1 geaendert=geaendert
+T2 anschrift ok=true
+T3 wiederholt=true/true
+T4 fremd=bereits_erledigt
+T5 festnetz=manager_schutz_fehlt
+T6 zu_frueh=zu_frueh
+T7 ruhend ok=true
+T8 ablehnen=abgelehnt
+T9 widerspruch=vorgang_widerspruch
+T10 offen festnetz schreibbar=false
+T11 ohne Recht=42501
+T12 Abschnitt ohne Recht=42501
+Audit=4
+Schutzmodus=melden
