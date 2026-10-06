@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.24.7 – 2026-10-06 – Datenbank aufräumen
+Admin: im Bereich 🗄️ Supabase sieht man, was am meisten Platz braucht, und kann alte technische Protokolle aufräumen. Läuft jede Nacht auch von selbst; ab 400 MB kommt eine Warnung. (KC-CLUB-DB-AUFRAEUMEN)
+
 ## 2.24.6 – 2026-10-06 – Bild speichern ohne Fehlermeldung
 Beim Speichern des eigenen Bildes kam manchmal eine Fehlermeldung, obwohl alles gespeichert war. Behoben.
 

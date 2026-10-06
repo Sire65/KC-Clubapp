@@ -41,7 +41,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.24.6";
+const SERVER_VERSION = "2.24.7";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -2136,6 +2136,27 @@ const SPUR_TAGE = 30;
 // KC-CLUB-AVATAR-FOTO (2.23.89)
 const AVF_CODE = /^f[0-9a-z]{9}$/;
 const AVF_MAX = 90000; // Zeichen (≈ 66 KB) – die App schickt 256×256, meist 15–30 KB
+// KC-CLUB-DB-AUFRAEUMEN (2.24.7, Wunsch Hansi): ab 400 MB in der Haupt-Datenbank (500 MB kostenlos) Push + E-Mail an den Admin,
+// höchstens einmal am Tag. Größe unbekannt → nichts senden (UNKNOWN ≠ OK, aber auch kein Fehlalarm; die Admin-Kachel zeigt grau).
+const DB_WARN_BYTES = 400 * 1024 * 1024;
+async function dbWarnungLauf() {
+  const { data, error } = await db.rpc("kc_club_db_groesse");
+  const bytes = Number(data);
+  if (error || !Number.isFinite(bytes) || bytes < DB_WARN_BYTES) return;
+  const { count } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("aktion", "db_warnung_gesendet").gte("zeit", new Date(Date.now() - 24 * 3600000).toISOString());
+  if ((count ?? 0) > 0) return;
+  const ziel = await adminIds();
+  if (!ziel.length) return;
+  const mbText = (b: number) => `${Math.round(b / 1048576)} MB`;
+  await sendenGewaehlt("club_nachricht", ziel, ["push", "email"], {
+    titel: `🗄️ Datenbank fast voll: ${mbText(bytes)} von 500 MB`,
+    kurz: "Bitte im Admin-Bereich unter 🗄️ Supabase → 🧹 Jetzt aufräumen",
+    betreff: `Köcheclub-App: Datenbank ${mbText(bytes)} von 500 MB belegt`,
+    text: `Hallo,\n\ndie Haupt-Datenbank (Supabase, kostenlos bis 500 MB) ist mit ${mbText(bytes)} belegt.\nBei 500 MB kann nichts mehr gespeichert werden.\n\nBitte in der App: Admin-Bereich → 🗄️ Supabase → 🧹 Jetzt aufräumen.\n${APP_URL}\n\nViele Grüße\nKöcheclub-App`,
+    url: APP_URL,
+  }, `club-db-warnung:${berlinTag(new Date())}`);
+  await protokoll(null, "db_warnung_gesendet", { bytes });
+}
 async function adminIds(): Promise<string[]> {
   const { data } = await db.from("kc_club_rollen").select("person_id").eq("ist_admin", true);
   return (data ?? []).map((x: any) => x.person_id);
@@ -3711,6 +3732,7 @@ Deno.serve(async (req) => {
       await stadtAutoLauf().catch((e) => console.error("stadt termine", String(e)));
       await aeUebernahmeMelden().catch((e) => console.error("aenderung uebernahme", String(e)));
       await wochenberichtLauf().catch((e) => console.error("wochenbericht", String(e))); // KC-CLUB-WOCHENBERICHT (2.23.81)
+      await dbWarnungLauf().catch((e) => console.error("db warnung", String(e))); // KC-CLUB-DB-AUFRAEUMEN (2.24.7)
       await ekDienstwunschMelden().catch((e) => console.error("eingang dienstwunsch", String(e))); /* KC-CLUB-EINGANGSKORB (2.23.6) */ /* KC-CLUB-AENDERUNG-FREIGABE (2.22.19) */ // KC-CLUB-STADT-TERMINE (2.22.6): wöchentlich, nur wenn eingeschaltet
       // KC-CLUB-SPUR (2.23.88): Wege der Mitglieder nur 30 Tage aufbewahren
       { const { error } = await db.from("kc_club_protokoll").delete().eq("aktion", "spur").lt("zeit", new Date(Date.now() - SPUR_TAGE * 86400000).toISOString()); if (error) console.error("spur loeschen", error.message); }
@@ -9501,6 +9523,21 @@ Köcheclub-App`,
           return json(await wochenberichtSenden(ich.person_id));
         }
         return json({ bericht: await wochenberichtBauen() });
+      }
+      // KC-CLUB-DB-AUFRAEUMEN (2.24.7): größte Tabellen ansehen + alte Protokolle/Messwerte löschen – nur Admin
+      case "db_belegung": {
+        nurAdmin(ich);
+        const [{ data: g, error: ge }, { data: t, error: te }] = await Promise.all([db.rpc("kc_club_db_groesse"), db.rpc("kc_club_db_belegung")]);
+        return json({ bytes: ge ? null : Number(g), grenze: ADMIN_DB_GRENZE, warnBytes: DB_WARN_BYTES, tabellen: te ? null : (t ?? []) });
+      }
+      case "db_aufraeumen": {
+        nurAdmin(ich);
+        const { count } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("aktion", "db_aufgeraeumt").gte("zeit", new Date(Date.now() - 3600000).toISOString());
+        if ((count ?? 0) >= 5) throw new Fehler("Gerade erst aufgeräumt – bitte etwas später.", 429);
+        const { data, error } = await db.rpc("kc_club_db_aufraeumen", { p_tage: 90 });
+        if (error || !data) throw new Fehler("Aufräumen hat nicht geklappt – es wurde nichts verändert.", 500);
+        await protokoll(ich.person_id, "db_aufgeraeumt", data);
+        return json({ ok: true, ...data });
       }
       // KC-CLUB-FREIGABE (2.23.86): Liste der neuen Funktionen und für wen sie gelten – nur Admin
       case "freigaben_liste": {
