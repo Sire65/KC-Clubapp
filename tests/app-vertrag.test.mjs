@@ -4601,6 +4601,12 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const grIstAdmin = \(g, pid\) =>/.test(html) && /function grAdmin\(p\)/.test(html) && /function grNachfolgerWahl\(andere, g\)/.test(html) && /admins: GR\.admins\.filter\(\(p\) => GR\.personen\.includes\(p\)\)/.test(html), "App: 👑 setzen, Nachfolger wählen");
   assert.ok(/id: "gruppen_admin", thema: "nachrichten"/.test(html), "Tipp Gruppen-Admin");
 }
+// 2.24.4 KC-CLUB-ONLINE-ATEM: Online-Ring schwillt langsam an und ab (nur Leuchten), aus mit „Animierte Knöpfe“ = aus
+{
+  assert.ok(/\.avatar\.k-online \{ animation: kOnlineAtem 3\.2s ease-in-out infinite; \}/.test(html) && /@keyframes kOnlineAtem \{/.test(html), "Online-Ring atmet");
+  assert.ok(/\.kreislegende \.avatar\.k-online, :root\.ohne-anim \.avatar\.k-online \{ animation: none !important; \}/.test(html), "aus bei ohne Animation und in der Legende");
+  assert.ok(!/@keyframes kOnlineAtem \{[^}]*transform/.test(html), "keine Bewegung, nur Leuchten");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
@@ -5025,6 +5031,6 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
 // 367. 2.23.19: Online-Mitglieder – Namenskreis mit hellgrünem Rand, pulsiert leicht (KC-CLUB-MG-ONLINE-PULS)
 {
   assert.ok(/\.mg-kacheln \.mg-online \.avatar, #mitgliederListe \.zeile\.mg-online \.avatar \{[^}]*#6ee87a[^}]*animation: mgOnlinePuls 2\.4s ease-in-out infinite;/.test(html), "hellgrüner Rand + Pulsieren (Kacheln und Liste)");
-  assert.ok(/@keyframes mgOnlinePuls \{/.test(html) && /@keyframes mgOnlinePulsKlein \{/.test(html) && /prefers-reduced-motion: reduce\) \{ \.mg-kacheln \.mg-online \.avatar, #mitgliederListe \.zeile\.mg-online \.avatar \{ animation: none; \}/.test(html), "Keyframes, ruhig bei „Bewegung reduzieren“");
+  assert.ok(/@keyframes mgOnlinePuls \{/.test(html) && /@keyframes mgOnlinePulsKlein \{/.test(html) && /prefers-reduced-motion: reduce\) \{ \.mg-kacheln \.mg-online \.avatar, #mitgliederListe \.zeile\.mg-online \.avatar \{ animation: (none|kOnlineAtem 3\.2s ease-in-out infinite); \}/.test(html), "Keyframes, ruhig bei „Bewegung reduzieren“"); // 2.24.4: dort nur Leuchten ohne Bewegung
   assert.ok(/liste\.map\(\(m\) => `<div class="zeile\$\{m\.online \? " mg-online" : ""\}">/.test(html) && /class="mini-kachel mg-kachel\$\{on \? " mg-online" : ""\}"/.test(html), "beide Ansichten markieren online");
 }

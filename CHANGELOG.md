@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.24.4 – 2026-10-06 – Online-Ring leuchtet
+Wer gerade online ist, hat jetzt einen grünen Ring um sein Bild, der langsam an- und abschwillt. (KC-CLUB-ONLINE-ATEM)
+
 ## 2.24.3 – 2026-10-06 – Gruppen-Admins
 Wer eine Gruppe anlegt, kann weitere 👑 Gruppen-Admins bestimmen und die Gruppe beim Verlassen übergeben. (KC-CLUB-GRUPPEN-ADMIN)
 

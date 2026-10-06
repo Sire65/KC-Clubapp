@@ -1146,7 +1146,7 @@
     50% { transform: scale(1.06); box-shadow: 0 0 0 3px var(--karte), 0 0 0 6px #6ee87a, 0 0 0 14px rgba(110, 232, 122, 0); } }
   @keyframes mgOnlinePulsKlein { 0%, 100% { transform: scale(1); box-shadow: 0 0 0 2px var(--karte), 0 0 0 4px #6ee87a, 0 0 0 4px rgba(110, 232, 122, .55); }
     50% { transform: scale(1.06); box-shadow: 0 0 0 2px var(--karte), 0 0 0 4px #6ee87a, 0 0 0 10px rgba(110, 232, 122, 0); } }
-  @media (prefers-reduced-motion: reduce) { .mg-kacheln .mg-online .avatar, #mitgliederListe .zeile.mg-online .avatar { animation: none; } }
+  @media (prefers-reduced-motion: reduce) { .mg-kacheln .mg-online .avatar, #mitgliederListe .zeile.mg-online .avatar { animation: kOnlineAtem 3.2s ease-in-out infinite; } } /* 2.24.4: ohne Bewegung, nur Leuchten */
   .mg-knoepfe { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 4px; }
   .mg-kachel .stmarke { font-size: .8rem; padding: 1px 8px; }
   .mg-knoepfe .knopf { padding: 6px 7px; min-width: 0; } .mg-knoepfe { gap: 4px; }
@@ -1511,6 +1511,11 @@
   .av-vorschau-bild svg { display: block; } .av-vorschau-knoepfe { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; } .av-vorschau-knoepfe .knopf { margin: 0; }
   .av-keins { display: grid; place-items: center; width: 100%; height: 100%; border-radius: 50%; background: var(--rot); color: #fff; font-weight: 800; font-size: 1.1rem; }
   .avatar.k-online { background: #1e8449; } .avatar.k-heute { background: #2471a3; } .avatar.k-weg { background: #d68910; }
+  /* KC-CLUB-ONLINE-ATEM (2.24.4, Wunsch Hansi): der grüne Online-Ring schwillt überall langsam an und ab – so sieht man sofort, wer online ist.
+     Nur Leuchten, keine Bewegung (darum auch bei „Bewegung reduzieren“ sichtbar); aus mit „✨ Animierte Knöpfe“ = aus. */
+  .avatar.k-online { animation: kOnlineAtem 3.2s ease-in-out infinite; }
+  @keyframes kOnlineAtem { 0%, 100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, .75); filter: brightness(1); } 50% { box-shadow: 0 0 0 6px rgba(46, 204, 113, 0), 0 0 12px 3px rgba(46, 204, 113, .55); filter: brightness(1.18); } }
+  .kreislegende .avatar.k-online, :root.ohne-anim .avatar.k-online { animation: none !important; }
   .avatar.k-fehler { background: #c0392b; } .avatar.k-selten { background: #5f6b6d; }
   .avatar.k-unbekannt { background: transparent; color: var(--grau); border: 2px dashed #95a5a6; }
   /* KC-CLUB-ANSICHT (0.62.0): einfache Ansicht – große Kacheln, nur das Wichtigste; nichts wird gelöscht, nur ausgeblendet */
@@ -2995,7 +3000,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.24.3"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.24.4"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
