@@ -11301,6 +11301,22 @@ function rundeAngebotZeigen(u) {
   el.innerHTML = zeigen ? `<div class="runde-angebot"><span>🔗 Du schreibst öfter an diese Runde. Daraus eine <b>feste Gruppe</b> machen?</span>
     <span class="knoepfe"><button class="knopf klein haupt" onclick="rundeZuGruppe()">🔗 Gruppe bilden</button><button class="knopf klein" onclick="rundeNein()">Nein, danke</button></span></div>` : "";
 }
+// KC-CLUB-CHAT-MITGLIEDER (2.24.19, Wunsch Hansi): Tipp auf Bild/Namen oben im Gruppen- oder Runden-Chat → Mitglieder mit Bild und Online-Ring,
+// Tipp auf ein Mitglied öffnet es; bei Gruppen darunter „⋮ Gruppe & Einstellungen“ (bisheriges Menü)
+function chatMitgliederZeigen() {
+  const u = CHAT; if (!u || chatId !== u.id) return;
+  const andere = (u.teilnehmer || []).filter((x) => x.person_id !== ICH.person_id);
+  if (!u.gruppe && andere.length < 2) { if (andere[0]) mitgliedOeffnen(andere[0].person_id); return; }
+  const zeilen = [...(u.teilnehmer || [])].sort((x, y) => (x.person_id === ICH.person_id) - (y.person_id === ICH.person_id) || String(x.name).localeCompare(String(y.name), "de")).map((t) => {
+    const m = MITGLIEDER?.find((x) => x.person_id === t.person_id) || { person_id: t.person_id }, ich = t.person_id === ICH.person_id;
+    return `<button class="knopf cm-zeile" ${ich ? "disabled" : `data-pid="${esc(t.person_id)}"`}>${kreis(m, t.name, 36)}<span>${esc(ich ? "Du" : t.name)}${u.gruppe && grIstAdmin(u.gruppe, t.person_id) ? " 👑" : ""}</span>${ich ? "" : '<span class="pfeil">›</span>'}</button>`;
+  }).join("");
+  const f = blattAuf("chatMitgliederBlatt", `<div style="display:flex;gap:10px;align-items:center;margin-bottom:8px">${uhRundeKreis({ gruppe: u.gruppe, teilnehmer: andere.map((x) => x.name) })}<div><b style="font-size:1.1rem">${esc(u.gruppe ? u.gruppe.name : "Runde")}</b><div class="hinweis">${u.gruppe ? "🔗 Feste Gruppe" : "Runde – keine feste Gruppe"} · ${(u.teilnehmer || []).length} Personen</div></div></div>
+    <div class="cm-liste">${zeilen}</div>${u.gruppe ? "<p class=\"hinweis\" style=\"margin:6px 0 0\">👑 = Gruppen-Admin</p>" : ""}
+    <div class="knoepfe" style="margin-top:10px">${u.gruppe ? '<button class="knopf" id="cmMenue">⋮ Gruppe &amp; Einstellungen</button>' : ""}<button class="knopf" onclick="$('chatMitgliederBlatt').remove()">Schließen</button></div>`);
+  f.querySelectorAll("[data-pid]").forEach((b) => (b.onclick = () => { f.remove(); mitgliedOeffnen(b.dataset.pid); }));
+  if ($("cmMenue")) $("cmMenue").onclick = () => { f.remove(); chatMenue(); };
+}
 function rundeNein() {
   let nein = []; try { nein = JSON.parse(lsLesen(RUNDE_NEIN) || "[]"); } catch {}
   nein = [...new Set([...nein, rundeSchluessel(CHAT)])].slice(-100);

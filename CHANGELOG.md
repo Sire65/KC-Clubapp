@@ -5,6 +5,7 @@
 - Wer eine Runde begonnen hat, bekommt beim zweiten Mal (zweite eigene Nachricht dort oder weitere Runde mit genau denselben Leuten) im Chat einen Streifen „Daraus eine feste Gruppe machen?“ – Name und Symbol wählen, dieselbe Unterhaltung wird zur Gruppe, alle Nachrichten bleiben. Kein Fenster beim Öffnen, keine Push/Mail an alle; „Nein, danke“ gilt für diese Runde dauerhaft (Gerät).
 - Server: neue Aktion runde_zu_gruppe (nur Ersteller oder Admin, ab 3 Personen), Unterhaltung liefert runde {ersteller, gleiche}.
 - Chat-Kopf: vorn das Bild (Avatar bzw. Gruppensymbol), dann der Name in einer Zeile; Vorlesen, Lupe und Menü kleiner ganz rechts (Wunsch Hansi).
+- Tipp auf Bild oder Namen oben im Gruppen-/Runden-Chat zeigt die Mitglieder mit Bild, Online-Ring und 👑; Tipp auf ein Mitglied öffnet es, darunter „⋮ Gruppe & Einstellungen“ (Wunsch Hansi). Im Einzelchat öffnet der Tipp das Mitglied.
 
 ## 2.24.18 – 2026-10-06 – KC-CLUB-ONLINE-EINE-QUELLE: Online-Anzeige überall gleich
 - Der grüne Ring „gerade online“ um Bild/Namen nimmt jetzt denselben Stand wie die LED oben und die Zahl (Online-Takt alle 15–60 s). Vorher kam er aus der Mitgliederliste, die nur beim Öffnen geladen wurde – darum zeigten LED und Ring zu unterschiedlichen Zeiten an (Hinweis Hansi).
