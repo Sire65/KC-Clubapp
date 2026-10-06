@@ -4502,6 +4502,12 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/\(du\$\{inkognitoAn\(\) \? " · 🕶️ inkognito" : ""\}\)/.test(html), "Tafel zeigt Inkognito beim eigenen Namen");
 }
 
+// 444. 2.23.94: Inkognito erscheint nie in der Suche (Wunsch Hansi)
+{
+  const f = html.slice(html.indexOf("function suAppListe"), html.indexOf("function suAppListe") + 9000);
+  assert.ok(!/Inkognito/i.test(f.replace(/SU_NIE/g, "")) && /const SU_NIE = new Set\(\["ad-inkognito"\]\);/.test(html) && /&& !SU_NIE\.has\(k\.id\)\)/.test(html), "weder fester Eintrag noch Admin-Kachel in der Suche");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

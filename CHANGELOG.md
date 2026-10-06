@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.23.94 – 2026-10-06 – Inkognito nicht mehr in der Suche
+- Wunsch Hansi: „Inkognito“ taucht in der App-Suche nicht mehr auf – auch nicht beim Admin (fester Eintrag entfernt, Admin-Kachel aus der Suche ausgenommen). Mitglieder fanden es schon vorher nicht.
+
 ## 2.23.93 – 2026-10-06 – Eigener Eintrag immer grün (auch mit Inkognito)
 - Hinweis Hansi: Auf der Anwesenheitstafel stand man selbst mit Inkognito nur blau. Jetzt ist der eigene Kreis/LED immer „gerade online“ (Inkognito verbirgt einen nur vor den anderen); Tafel zeigt „(du · 🕶️ inkognito)“.
 
