@@ -1491,6 +1491,7 @@
   .mg-tafel { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
   .mg-tafel button { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: var(--karte); border: 1px solid var(--linie); text-align: left; font: inherit; color: inherit; cursor: pointer; min-height: 48px; }
   .mg-tafel b { overflow-wrap: anywhere; }
+  .na-sprung { display: block; margin: 6px 0 2px; white-space: normal; text-align: left; } /* KC-CLUB-SPRUNGKNOPF */
   .mg-led { width: 16px; height: 16px; border-radius: 50%; flex: none; }
   .mg-led.l-online { background: #2ecc71; box-shadow: 0 0 8px #2ecc71; } .mg-led.l-heute { background: #2471a3; } .mg-led.l-weg { background: #d68910; } .mg-led.l-fehler { background: #c0392b; }
   .mg-led.l-selten { background: #95a5a6; } .mg-led.l-unbekannt { background: transparent; border: 2px dashed #95a5a6; box-sizing: border-box; }
@@ -2961,6 +2962,7 @@
     <button class="knopf" onclick="anlageWahl('dateiDok')">📄 Datei oder PDF</button>
     <button class="knopf" onclick="anlageMenue();cuForm()">📊 Abstimmung</button>
     <button class="knopf" onclick="anlageMenue();kontaktWahl()">👤 Kontakt teilen</button>
+    <button class="knopf" onclick="anlageMenue();sprungWahl()">🔘 Knopf zu einer App-Stelle</button>
     <button class="knopf" onclick="anlageMenue()">Abbrechen</button></div>
 </div>
 <input type="file" id="dateiBild" accept="image/*" multiple class="versteckt" onchange="dateienGewaehlt(this)">
@@ -2981,7 +2983,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.96"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.97"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -4285,6 +4287,7 @@ const HILFE = [
   { id: "verbindung_senden", thema: "technik", sym: "📨", t: "Verbindungs-Ergebnis an Hansi schicken", x: "Hakt etwas? Tipp oben auf das <b>Lämpchen</b>. Im Fenster stehen die Messwerte; mit <b>„📨 Ergebnis an Hansi senden“</b> bekommt er sie sofort, mit 🖨️ kannst du sie ausdrucken. Es werden nur Technik-Werte geschickt, keine Inhalte.", zeig: () => verbindungBlatt(), seit: "2.23.76" },
   { id: "mitglieder_fragen", thema: "start", sym: "👥", t: "Andere Mitglieder um Rat fragen", x: "Weiß Twinkey nicht weiter, stellst du die Frage den Mitgliedern: bei <b>„🧑‍🍳 Frag Twinkey“</b> unter dem Fragefeld auf <b>„👥 Lieber ein Mitglied fragen“</b> – an alle oder an ausgewählte, per App, Push oder E-Mail. Die Antworten siehst du dort unter „Deine Fragen an Mitglieder“.", zeig: () => twFrageStart(), seit: "2.23.51" },
   { id: "anfrage_vorbehalt", thema: "termine", sym: "🤔", t: "Gegenvorschlag unter Vorbehalt annehmen", x: "Schlägt dir jemand eine andere Zeit vor, kannst du <b>„✅ Neue Zeit annehmen“</b>, <b>„🤔 Unter Vorbehalt“</b> oder <b>„❌ Passt nicht“</b> wählen. Beim Vorbehalt schreibst du kurz dazu, woran es noch hängt – der andere sieht es sofort.", zeig: () => zeige("termine"), seit: "2.23.57" },
+  { id: "sprungknopf", thema: "nachrichten", sym: "🔘", t: "Einen Knopf in die Nachricht setzen", x: "Willst du jemanden direkt an eine Stelle der App schicken? Unter dem Schreibfeld auf <b>📎</b> → <b>„🔘 Knopf zu einer App-Stelle“</b> und das Ziel wählen, z. B. „Mein Bild wählen“. In der Nachricht erscheint ein Knopf – antippen, und man ist dort.", zeig: () => zeige("nachrichten"), seit: "2.23.97" },
   { id: "kacheln_klein", thema: "darstellung", sym: "🔲", t: "Kacheln kleiner – 3 nebeneinander", x: "Mehr Kacheln auf einen Blick: Bei ⚙️ → <b>„🎨 Darstellung“</b> → <b>„🔲 Kacheln auf der Startseite“</b> „Klein“ wählen – dann passen 3 nebeneinander. Das geht nur in der <b>erweiterten Ansicht</b> – in der einfachen Ansicht bleiben die Kacheln groß. Gilt nur für dieses Gerät.", zeig: () => einstiegHin("darstellung", "kachelGroesseWahl"), seit: "2.23.90" },
 ];
 const HZ = { thema: null, q: "", vorher: null, gruss: 0, unterwegs: null, herkunft: null, sicht: null };
@@ -14198,8 +14201,59 @@ async function chatLaden(scrollen) {
 // In Gruppen schlägt „@“ beim Tippen die Mitglieder der Unterhaltung vor; Erwähnte bekommen eine eigene Meldung.
 const NA = { nachrichten: new Map(), antwort: null, erw: new Map() };
 const NA_SCHNELL = ["👍", "❤️", "😂", "😮", "😢", "🙏"];
-function naText(t) { // Text sicher ausgeben, @Namen hervorheben
-  return esc(t).replace(/(^|\s)@([A-Za-zÄÖÜäöüß][\wÄÖÜäöüß-]*)/g, (x, v, n) => `${v}<span class="erw">@${n}</span>`);
+function naText(t) { // Text sicher ausgeben, @Namen hervorheben, App-Sprünge als Knopf (KC-CLUB-SPRUNGKNOPF 2.23.97)
+  return esc(t).replace(/(^|\s)@([A-Za-zÄÖÜäöüß][\wÄÖÜäöüß-]*)/g, (x, v, n) => `${v}<span class="erw">@${n}</span>`).replace(SPRUNG_RE, (x, id) => sprungKnopf(id));
+}
+// ---------- KC-CLUB-SPRUNGKNOPF (2.23.97, Wunsch Hansi): Knopf in einer Nachricht, der an eine Stelle der App führt ----------
+// In der Nachricht steht eine ganz normale App-Adresse (…/KC-Clubapp/#zu=avatar): ältere Apps, Push und E-Mail zeigen den Link,
+// der die App an genau dieser Stelle öffnet; die App zeigt statt der Adresse einen Knopf. Ziele nur aus dieser Liste (kein freier Code).
+const SPRUNG_URL = "https://sire65.github.io/KC-Clubapp/#zu=";
+const SPRUNG_RE = /https:\/\/sire65\.github\.io\/KC-Clubapp\/#zu=([a-z]{2,20})/g;
+const SPRUENGE = {
+  avatar: { sym: "🧑‍🍳", t: "Mein Bild wählen", fn: () => avWahl(), frei: "avatar" },
+  meinedaten: { sym: "🔐", t: "Meine Daten ansehen", fn: () => mdatStart() },
+  meindienst: { sym: "🗓️", t: "Mein Dienst", fn: () => mdStart() },
+  dienstwunsch: { sym: "📝", t: "Dienstwünsche eintragen", fn: () => dwOeffnen() },
+  wunschbogen: { sym: "🖨️", t: "Leeren Wunschbogen holen", fn: () => wbStart() },
+  termine: { sym: "📅", t: "Zu den Terminen", fn: () => zeige("termine") },
+  pinnwand: { sym: "📌", t: "Zur Pinnwand", fn: () => zeige("pinnwand") },
+  mitglieder: { sym: "👥", t: "Zu den Mitgliedern", fn: () => zeige("mitglieder") },
+  tafel: { sym: "📋", t: "Anwesenheitstafel", fn: () => { zeige("mitglieder"); mgAnsichtSetzen("tafel"); } },
+  fotos: { sym: "📷", t: "Zum Fotoalbum", fn: () => zeige("fotos") },
+  vorschlaege: { sym: "🗳️", t: "Vorschläge & Abstimmungen", fn: () => zeige("vorschlaege") },
+  helfen: { sym: "🤝", t: "Helfen & Leihen", fn: () => hlStart() },
+  spiele: { sym: "🎲", t: "Zu den Spielen", fn: () => spStart() },
+  dokumente: { sym: "📚", t: "Meine Dokumente (Anleitung)", fn: () => zeige("dokumente") },
+  darstellung: { sym: "🎨", t: "Einstellungen: Darstellung", fn: () => einstiegHin("darstellung") },
+  benachrichtigung: { sym: "🔔", t: "Einstellungen: Benachrichtigungen", fn: () => einstiegHin("benachrichtigung") },
+  hilfe: { sym: "❓", t: "Hilfe & Tipps", fn: () => hzStart() },
+  twinkey: { sym: "🧑‍🍳", t: "Frag Twinkey", fn: () => twFrageStart() },
+  mikrofon: { sym: "🧭", t: "Mikrofon einrichten", fn: () => mikroAssistent() },
+  update: { sym: "🔄", t: "Update holen", fn: () => updateKachel() },
+};
+// nur Ziele, die alle Mitglieder schon haben (nicht freigegebene Neuheiten nicht anbieten)
+const sprungFuerAlle = (id) => !!SPRUENGE[id] && (!SPRUENGE[id].frei || INIT?.freigaben?.[SPRUENGE[id].frei] === "alle");
+function sprungKnopf(id) {
+  const s = SPRUENGE[id]; if (!s) return esc(SPRUNG_URL + id);
+  return `<button type="button" class="knopf klein na-sprung" onclick="event.stopPropagation();sprung('${id}')">${s.sym} ${esc(s.t)} ›</button>`;
+}
+function sprung(id) {
+  const s = SPRUENGE[id];
+  if (!s || (s.frei && !frei(s.frei))) return melde("Diese Stelle gibt es in deiner App noch nicht – bitte unter Technik → 🔄 Update prüfen.", true);
+  try { s.fn(); } catch (e) { meldeFehler(e); }
+}
+function sprungWahl() {
+  const f = blattAuf("sprungBlatt", `<h3 style="margin:0">🔘 Knopf in die Nachricht</h3>
+    <p class="hinweis" style="margin:0">Wähle, wohin der Knopf führen soll. Er kommt ans Ende deines Textes; der andere tippt ihn an und landet genau dort.</p>
+    <div style="display:grid;gap:6px">${Object.keys(SPRUENGE).filter(sprungFuerAlle).map((id) => `<button class="knopf" style="text-align:left" onclick="sprungEinfuegen('${id}')">${SPRUENGE[id].sym} ${esc(SPRUENGE[id].t)}</button>`).join("")}</div>
+    <button class="knopf" onclick="fensterZu($('sprungBlatt'))">Abbrechen</button>`);
+  f.style.zIndex = "2100";
+}
+function sprungEinfuegen(id) {
+  const t = $("text"); if (!t) return;
+  t.value = (t.value.trimEnd() ? t.value.trimEnd() + "\n" : "") + SPRUNG_URL + id;
+  t.dispatchEvent(new Event("input")); fensterZu($("sprungBlatt"));
+  melde(`🔘 Knopf „${SPRUENGE[id].t}“ eingefügt – jetzt senden`); t.focus();
 }
 function naReaktionenZeigen(liste) {
   for (const m of liste) {
@@ -20522,6 +20576,7 @@ async function fpAdmin(tage) {
     else if (h.startsWith("#besuch=")) bsDirekt(decodeURIComponent(h.slice(8))); // KC-CLUB-BESUCHE (2.23.65): „Protokoll öffnen“ aus Mails wie im alten Programm
     else if (h === "#schulungen") scStart();
     else if (h === "#mikrofon") mikroAssistent(); // KC-CLUB-MIKRO-ASSISTENT (2.23.72)
+    else if (h.startsWith("#zu=")) sprung(h.slice(4)); // KC-CLUB-SPRUNGKNOPF (2.23.97): Link aus Nachricht, Push oder E-Mail
     else if (h === "#twinkey") ICH?.admin ? twOffenStart() : twFrageStart();
     else if (h === "#mfrage") twFrageStart(); // KC-CLUB-MITGLIEDER-FRAGEN (2.23.51): Push/Mail → Fragen an mich bzw. Antworten // KC-CLUB-TWINKEY-FRAGEN (2.23.49): Push/Mail → Frage bzw. Antwort
     else if (h.startsWith("#spiel=")) spOeffnen(decodeURIComponent(h.slice(7))); // KC-CLUB-SPIELE (2.7.0): aus dem Push

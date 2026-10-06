@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.23.97 – 2026-10-06 – Knopf in der Nachricht, der an eine App-Stelle führt (Wunsch Hansi)
+- KC-CLUB-SPRUNGKNOPF: 📎 → „🔘 Knopf zu einer App-Stelle“ (Mein Bild, Meine Daten, Mein Dienst, Dienstwünsche, Termine, Pinnwand, Mitglieder, Anwesenheitstafel, Fotos, Vorschläge, Helfen, Spiele, Dokumente, Einstellungen, Hilfe, Twinkey, Mikrofon, Update). In der Nachricht steht die App-Adresse …/#zu=<ziel>; die App zeigt einen Knopf, ältere Apps/Push/E-Mail den Link, der die App dort öffnet. Nur Ziele aus der Liste, nicht freigegebene Neuheiten werden nicht angeboten. Hilfe „Einen Knopf in die Nachricht setzen“. Nur App.
+
 ## 2.23.96 – 2026-10-06 – 10 Köche mit Schnauzer (Wunsch Hansi)
 - KC-CLUB-AVATAR: 10 neue Koch-Figuren m16–m25 mit Schnauzer (jetzt 40); neue Bartformen Zwirbelbart, Walross und Schnauzer mit Kinnbart (auch im Baukasten, nur angehängt – alte Codes bleiben gültig); Schnurrbart kräftiger, alle Schnauzer mit feinem Rand (heller Bart auf heller Haut bleibt sichtbar). Server lässt m16–m25 zu. Hilfe und Anleitung V6: 40 Figuren.
 

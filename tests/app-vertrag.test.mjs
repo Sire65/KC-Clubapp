@@ -4532,6 +4532,17 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/reihe\("Bart", 4, \["keiner", "Vollbart", "Schnurrbart", "Stoppeln", "Zwirbelbart", "Walross", "Schnauzer \+ Kinnbart"\]\)/.test(html), "Baukasten kennt die neuen Bärte");
 }
 
+// 447. 2.23.97: Knopf in einer Nachricht, der an eine Stelle der App führt (KC-CLUB-SPRUNGKNOPF, Wunsch Hansi)
+{
+  const k = html.slice(html.indexOf("// ---------- KC-CLUB-SPRUNGKNOPF"), html.indexOf("function sprungWahl()"));
+  assert.ok(/const SPRUNG_RE = \/https:\\\/\\\/sire65\\\.github\\\.io\\\/KC-Clubapp\\\/#zu=\(\[a-z\]\{2,20\}\)\/g;/.test(k), "nur echte App-Adresse, nur Kleinbuchstaben-Ziel");
+  assert.ok(/if \(!s\) return esc\(SPRUNG_URL \+ id\);/.test(k) && /sprung\('\$\{id\}'\)/.test(k), "unbekanntes Ziel bleibt Text, Knopf nur aus der Liste");
+  assert.ok(/\.replace\(SPRUNG_RE, \(x, id\) => sprungKnopf\(id\)\)/.test(html) && /esc\(t\)\.replace\(/.test(html), "erst sicher ausgeben, dann Knopf");
+  assert.ok(/avatar: \{ sym: "🧑‍🍳", t: "Mein Bild wählen", fn: \(\) => avWahl\(\), frei: "avatar" \}/.test(k) && /INIT\?\.freigaben\?\.\[SPRUENGE\[id\]\.frei\] === "alle"/.test(k), "Mein Bild; nicht freigegebene Ziele nicht anbieten");
+  assert.ok(/onclick="anlageMenue\(\);sprungWahl\(\)">🔘 Knopf zu einer App-Stelle/.test(html) && /else if \(h\.startsWith\("#zu="\)\) sprung\(h\.slice\(4\)\);/.test(html), "📎-Menü und Link aus Push/E-Mail");
+  assert.ok(/\{ id: "sprungknopf", thema: "nachrichten"/.test(html), "Hilfe");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
