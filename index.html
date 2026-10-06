@@ -3000,7 +3000,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.24.5"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.24.6"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -11263,7 +11263,8 @@ function zeige(v, ausHistorie) {
 // KC-CLUB-FENSTER-KERN (2.1.0, Gesamtprüfung: „18 Fenster-Arten“): EINE Regel zum Schließen für alle Fenster – fest im HTML
 // stehende werden versteckt, alle zur Laufzeit gebauten entfernt (Rückfragen über ihr „Abbrechen“). Gilt für Handy-Zurück und Escape.
 document.querySelectorAll(".blatt").forEach((b) => { b.dataset.fest = "1"; });
-function fensterZu(b) { if (b._zu) b._zu(); else if (b.dataset.fest) b.classList.add("versteckt"); else b.remove(); }
+// 2.24.6 (Fehlerprotokoll Hansi: avSetzen → fensterZu(null), wenn „Mein Bild“ schon zu war): ein nicht (mehr) offenes Fenster ist schon zu
+function fensterZu(b) { if (!b) return; if (b._zu) b._zu(); else if (b.dataset.fest) b.classList.add("versteckt"); else b.remove(); }
 // KC-CLUB-TIPP-PULS (2.23.24, Wunsch Hansi): alles Anklickbare – Knöpfe, Reiter, Kacheln, Chips, Links, Zeilen mit onclick – pulsiert beim
 // Antippen kurz (zusammenziehen, etwas heller, zurück). Eine Stelle für die ganze App; neue Elemente bekommen es automatisch.
 // Web Animations mit „scale“ (eigene Eigenschaft): läuft neben vorhandenen CSS-Animationen und transform, ohne sie zu stören.

@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.24.6 – 2026-10-06 – Bild speichern ohne Fehlermeldung
+Beim Speichern des eigenen Bildes kam manchmal eine Fehlermeldung, obwohl alles gespeichert war. Behoben.
+
 ## 2.24.5 – 2026-10-06 – Ruhiger Start
 Nach dem Öffnen dreht sich die Kochmütze nicht mehr bei Prüfungen, die die App von selbst im Hintergrund macht. (KC-CLUB-START-STILL)
 

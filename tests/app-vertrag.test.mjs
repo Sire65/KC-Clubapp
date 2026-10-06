@@ -3138,7 +3138,7 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/if \(!navigator\.onLine && chatId && !anlagen\.length && text\) \{/.test(html) && /async function owSenden\(\)/.test(html) && /window\.addEventListener\("online", \(\) => \{[^\n]*owSenden\(\)/.test(html), "Nachrichten ohne Netz vormerken + senden");
   assert.ok(/function offlineStandLaden\(e\)/.test(html) && /g\.schluessel !== KEY\.slice\(-8\)/.test(html) && /📴 <b>Kein Netz – das ist dein Stand von/.test(html) && /if \(!INIT \|\| INIT\._offline\) return;/.test(html), "Offline-Stand markiert, nur eigener, nie zurückgespeichert");
   assert.ok(/body:not\(\.ist-admin\) #ledComm, body:not\(\.ist-admin\) #ledDaten, body:not\(\.ist-admin\) #herzKnopf \{ display: none; \}/.test(html) && /if \(!ICH\?\.admin\) \{ vbEinfachZeigen\(\);/.test(html) && /function vbEinfachZeigen\(\) \{/.test(html), "einfacher Kopf für Mitglieder"); // 2.1.1: eigene Funktion
-  assert.ok(/function fensterZu\(b\) \{ if \(b\._zu\) b\._zu\(\); else if \(b\.dataset\.fest\) b\.classList\.add\("versteckt"\); else b\.remove\(\); \}/.test(html) && /offen\.forEach\(fensterZu\);/.test(html) && /e\.key !== "Escape"/.test(html), "ein Fenster-Kern");
+  assert.ok(/function fensterZu\(b\) \{ (if \(!b\) return; )?if \(b\._zu\) b\._zu\(\); else if \(b\.dataset\.fest\) b\.classList\.add\("versteckt"\); else b\.remove\(\); \}/.test(html) && /offen\.forEach\(fensterZu\);/.test(html) && /e\.key !== "Escape"/.test(html), "ein Fenster-Kern");
 }
 // 283. 2.1.1: Funde der Nachprüfung
 {
@@ -4613,6 +4613,10 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   for (const a of ["eingang_zahlen", "schulung_hinweis", "tagesinfo", "buero_start"]) assert.ok(new RegExp(`api\\("${a}"[^\\n]*\\{ still: true \\}`).test(html), `${a} beim Start still`);
   assert.ok(/await twLaden\(true\); \/\/ KC-CLUB-START-STILL/.test(html) && /\(await smLaden\(false, true\)\)/.test(html), "Twinkey-/Schulungs-Hinweis still");
   assert.ok(/await smLaden\(true\); smZeigen\(\);/.test(html), "von Hand geöffnet: Mütze wie bisher");
+}
+// 2.24.6: fensterZu verträgt ein schon geschlossenes Fenster (Fund im Fehlerprotokoll: avSetzen nach geschlossenem „Mein Bild“)
+{
+  assert.ok(/function fensterZu\(b\) \{ if \(!b\) return; if \(b\._zu\) b\._zu\(\);/.test(html), "fensterZu(null) ohne Fehler");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
