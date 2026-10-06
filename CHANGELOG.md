@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.25.3 – 2026-10-06 – KC-CLUB-KM-ABRECHNUNG: Fahrten-/km-Abrechnung der Besuche (Wunsch Hansi)
+- 🎓 Schulungen → Besuche: neuer Knopf „🖨️ km-Abrechnung“ (Zeitraum: Jahr, letzter Monat oder von–bis; Besuche bei mir mit 0 km wahlweise).
+- Blatt mit Kopf (Kochmütze, Köcheclub Werne), Antragsteller, Zeitraum; je Einsatz Nr., ID, Datum, Zeit von–bis (mit Dauer), besuchte Personen mit Anzahl, Grund, km (Hin + Rück).
+- Gesamtzeile mit Anzahl Einsätze, Gesamtzeit und Gesamt-km; darunter Ort, Datum, Unterschrift Antragsteller und „Geprüft / ausgezahlt – Kassenwart“.
+- Nur stattgefundene Besuche (geplante zählen nicht, wie bei den Kennzahlen). Fehlende km bei „Ich fahre hin“ stehen als „fehlt“ und werden nie als 0 gezählt.
+- Druck-Auswahl liegt jetzt über offenen Fenstern (z-index), damit sie aus 🎓 Schulungen heraus sichtbar ist. Server unverändert (kc-club bleibt 2.25.2).
+
 ## 2.25.2 – 2026-10-06 – KC-CLUB-SCHULUNG-VERSANDSTAND: auch über den Club-Chat (Hinweis Hansi „die Sachen sind über den Club rübergekommen“)
 - Die Felder Einladung · Bestätigung · Erinnerung · Danksagung zählen jetzt drei Wege: Termin-Programm (mit Ergebnis je Person), eigene Nachricht im Club-Chat und Mail von Hand über den Communicator.
 - Club-Chat zählt nur in Unterhaltungen, in denen außer dir ausschließlich die Personen dieser Einladung sind (keine großen Gruppen). Zuordnung: „erinner…“ in den 3 Tagen vor dem Termin = Erinnerung, „dank…“ bis 7 Tage danach = Danksagung.

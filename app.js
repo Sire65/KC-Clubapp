@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.25.2"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.25.3"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SCHNELLSTART-DATEI (2.24.8, Hinweis Hansi „Start ist langsamer geworden“): das Programm liegt in app.js, damit das Handy es
 // fertig übersetzt behalten kann (statt bei jedem Öffnen 1,8 MB neu einzulesen). Seite und Programm müssen dieselbe Version haben
 // (AGENTS Regel 16, kein Mischstand): passt es nicht (z. B. alte Seite aus einem Zwischenspeicher), einmal frisch laden, sonst anhalten.
@@ -14354,7 +14354,7 @@ function bsListeHtml() {
   const zeile = (b) => `<button type="button" class="ti-zeile bs-zeile${abgesagt(b) ? " bs-weg" : ""}" onclick="bsFormular('${esc(b.besuch_id)}')">📝 <span><b>${esc(b.mitglied)}</b> <small class="hinweis">${esc(b.besuch_id)}</small><br>
       <small>${esc(b.datum.split("-").reverse().join("."))}${b.zeit_von ? " · " + b.zeit_von.slice(0, 5) + (b.zeit_bis ? "–" + b.zeit_bis.slice(0, 5) : "") : ""}${b.dauer_min ? ` (${bsHm(b.dauer_min)} Std.)` : ""}${b.km_gesamt != null && b.besuchsart !== "bei_hansi" ? ` · ${bsKm(b.km_gesamt)} km` : ""}
       ${abgesagt(b) ? " · ✖ Termin abgesagt" : b.status === "geplant" && b.datum < heute ? ' · <b class="ta-st-gv">📝 Protokoll fehlt</b>' : b.status === "geplant" ? " · 📅 geplant" : ""}${!abgesagt(b) && (b.termin === "bestaetigt" || bsTermin(b.besuch_id)) && b.datum >= heute ? " · ✅ Termin bestätigt" : ""}${b.besuchsart === "bei_hansi" ? " · 🏠 kam zu mir" : ""}${b.push_gesendet_am || b.mail_gesendet_am ? " · ✉️ verschickt" : ""}${b.fotos?.length ? ` · 📷 ${b.fotos.length}` : ""}</small></span><b>›</b></button>`;
-  return `<div class="knoepfe"><button class="knopf haupt klein" onclick="bsFormular()">➕ Neuer Besuch</button><button class="knopf klein" onclick="bsFormular(null,{geplant:true})">📅 Geplanter Termin</button></div>
+  return `<div class="knoepfe"><button class="knopf haupt klein" onclick="bsFormular()">➕ Neuer Besuch</button><button class="knopf klein" onclick="bsFormular(null,{geplant:true})">📅 Geplanter Termin</button><button class="knopf klein" onclick="druckStarten('kmabrechnung')">🖨️ km-Abrechnung</button></div>
     <div class="hl-chips" style="margin:6px 0">${["", ...jahre].map((j) => `<button type="button" class="chip${BS.jahr === j ? " an" : ""}" onclick="BS.jahr='${j}';scZeigen()">${j || "Alle"}</button>`).join("")}</div>
     <div class="bs-kpi"><div><b>${zaehlt.length}</b><span>🗂️ Besuche (vergangen)</span></div><div><b>${bsHm(zaehlt.reduce((s, b) => s + (b.dauer_min || 0), 0))}</b><span>Stunden</span></div><div><b>${bsKm(zaehlt.reduce((s, b) => s + Number(b.km_gesamt || 0), 0))}</b><span>km gesamt</span></div></div>
     ${nGeplant ? `<p class="hinweis" style="margin:4px 0">Dazu ${nGeplant} geplante${nGeplant === 1 ? "r Besuch – zählt" : " Besuche – zählen"} erst nach dem Besuch.</p>` : ""}
@@ -15795,6 +15795,7 @@ const DRUCKARTEN = {
   chat: { bauen: () => druckChat() }, // 2.23.80: ganzer Chat
   meinedaten: { bauen: () => druckMeineDaten() }, // KC-CLUB-MEINE-DATEN (2.23.82)
   rezept: { bauen: (o, id) => druckRezept(id) }, // KC-CLUB-REZEPTBUCH (2.23.83)
+  kmabrechnung: { titel: "🖨️ km-Abrechnung drucken", optionen: () => druckKmOptionen(), bauen: () => druckKmAbrechnung() }, // KC-CLUB-KM-ABRECHNUNG (2.25.3)
   einrichtungskarte: { bauen: (o, param) => druckEinrichtungskarte(param) }, // KC-CLUB-EINRICHTUNGSKARTE (1.88.0) // KC-CLUB-BESTAETIGUNG (1.69.0): Aufstellung der eigenen Eingaben
 };
 // ---- KC-CLUB-KURZANLEITUNG (0.62.0): die App in 3 Schritten – für Einsteiger, zum Ausdrucken oder Verschicken ----
@@ -16035,6 +16036,42 @@ function druckErstattung(o) {
       ${a.bemerkung ? `<p><b>Bemerkung:</b> ${esc(a.bemerkung)}</p>` : ""}
       <p class="dklein">${belege ? `Belege: ${belege} (liegen der Antrags-Mail bei bzw. im Original beifügen).` : "Keine Belege angehängt."} Fahrtkosten mit dem km-Satz, der am Tag der Fahrt galt.</p>
       <div class="unterschrift"><div>Datum, Unterschrift Antragsteller</div><div>Geprüft / ausgezahlt am – Kassenwart</div></div>` };
+}
+
+// ---------- KC-CLUB-KM-ABRECHNUNG (2.25.3, Wunsch Hansi): Fahrten-/km-Abrechnung der Besuche zum Ausdrucken ----------
+// Kopf (Kochmütze + Köcheclub Werne) kommt aus dem Druck-Kern. Je Einsatz: Nr., ID, Datum, Zeit von–bis, besuchte Personen (Anzahl), Grund, km
+// (Hin- und Rückweg). Darunter Gesamtzeile (Einsätze, Zeit, km), Antragsteller, Datum und Unterschrift. Nur stattgefundene Besuche
+// (geplante zählen nicht – wie bei den Kennzahlen); fehlende km bei „Ich fahre hin“ werden sichtbar markiert, nie als 0 gezählt.
+function druckKmOptionen() {
+  const j = BS.jahr || String(new Date().getFullYear());
+  return `<b>Zeitraum</b><div class="dwahl">${[["jahr", "📆 Jahr " + j], ["monat", "📅 Letzter Monat"], ["frei", "✏️ Von – bis"]].map(([v, t], i) => `<label><input type="radio" name="dKmZ" value="${v}" ${i ? "" : "checked"} onchange="$('dKmFrei').classList.toggle('versteckt',this.value!=='frei')"> ${t}</label>`).join("")}</div>
+    <div id="dKmFrei" class="versteckt"><label class="feld">Von<input type="date" id="dKmVon" value="${j}-01-01"></label><label class="feld">Bis<input type="date" id="dKmBis" value="${heuteIso()}"></label></div>
+    <label class="schalter" style="margin-top:8px"><span>Besuche bei mir (0 km) mit aufführen</span><input type="checkbox" id="dKmNull" checked></label>`;
+}
+function druckKmAbrechnung() {
+  const z = document.querySelector('input[name="dKmZ"]:checked')?.value || "jahr", j = BS.jahr || String(new Date().getFullYear());
+  let von = j + "-01-01", bis = j + "-12-31";
+  if (z === "monat") { const d = new Date(); d.setUTCDate(1); d.setUTCMonth(d.getUTCMonth() - 1); von = d.toISOString().slice(0, 7) + "-01"; const e = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)); bis = e.toISOString().slice(0, 10); }
+  if (z === "frei") { von = $("dKmVon")?.value || von; bis = $("dKmBis")?.value || bis; }
+  if (bis < von) throw new Error("„Bis“ liegt vor „Von“.");
+  const mitNull = $("dKmNull") ? $("dKmNull").checked : true;
+  const liste = (BS.liste || []).filter((b) => b.status !== "geplant" && b.datum >= von && b.datum <= bis && (mitNull || Number(b.km_gesamt || 0) > 0 || b.km_gesamt == null))
+    .sort((a, b) => (a.datum + (a.zeit_von || "")).localeCompare(b.datum + (b.zeit_von || "")));
+  if (!liste.length) throw new Error("Im gewählten Zeitraum gibt es keine stattgefundenen Besuche.");
+  const fehlt = (b) => b.km_gesamt == null && b.besuchsart !== "bei_hansi";
+  const km = (b) => (b.besuchsart === "bei_hansi" && b.km_gesamt == null ? 0 : Number(b.km_gesamt || 0));
+  const grund = (b) => [b.besuchsart === "bei_hansi" ? "Schulung bei mir" : "Mitgliederbesuch / Schulung", b.schulung_thema && "– " + b.schulung_thema].filter(Boolean).join(" ");
+  const sumMin = liste.reduce((s2, b) => s2 + (b.dauer_min || 0), 0), sumKm = liste.reduce((s2, b) => s2 + km(b), 0), nFehlt = liste.filter(fehlt).length;
+  const zr = `${dz(von)} – ${dz(bis)}`;
+  return { titel: "Fahrten- und km-Abrechnung", unter: `Besuche und Schulungen · ${zr}`,
+    html: `<table class="dinfo"><tbody><tr><th style="width:40mm">Antragsteller</th><td>${esc(ICH?.name || "")}</td></tr><tr><th>Zeitraum</th><td>${esc(zr)}</td></tr>
+        <tr><th>Erstellt am</th><td>${esc(fKurzJahr.format(new Date()))}</td></tr></tbody></table>
+      <table><thead><tr><th style="width:7mm">Nr.</th><th style="width:22mm">ID</th><th style="width:20mm">Datum</th><th style="width:22mm">Zeit</th><th>Besuchte Personen (n)</th><th>Grund</th><th style="width:16mm;text-align:right">km</th></tr></thead><tbody>
+      ${liste.map((b, i) => `<tr><td>${i + 1}</td><td>${esc(b.besuch_id)}</td><td>${esc(dz(b.datum))}</td><td>${b.zeit_von ? esc(b.zeit_von.slice(0, 5) + (b.zeit_bis ? "–" + b.zeit_bis.slice(0, 5) : "")) : "–"}${b.dauer_min ? `<br><span class="dklein">${esc(bsHm(b.dauer_min))} Std.</span>` : ""}</td>
+        <td>${esc(b.mitglied || "")} (${(b.person_ids || []).length || 1})</td><td>${esc(grund(b))}</td><td style="text-align:right">${fehlt(b) ? "<b>fehlt</b>" : esc(bsKm(km(b)))}</td></tr>`).join("")}
+      <tr><td colspan="4"><b>Gesamt: ${liste.length} Einsätze</b></td><td colspan="2"><b>Zeit: ${esc(bsHm(sumMin))} Std.</b></td><td style="text-align:right"><b>${esc(bsKm(sumKm))}</b></td></tr></tbody></table>
+      <p class="dklein">km = Hin- und Rückweg. Nur stattgefundene Besuche; geplante zählen nicht.${nFehlt ? ` <b>Achtung: bei ${nFehlt} Besuch${nFehlt === 1 ? "" : "en"} fehlen die km – bitte im Besuch nachtragen.</b>` : ""}</p>
+      <div class="unterschrift"><div>Ort, Datum, Unterschrift Antragsteller (${esc(ICH?.name || "")})</div><div>Geprüft / ausgezahlt am – Kassenwart</div></div>` };
 }
 
 // ---------- Feedback (KC-CLUB-FEEDBACK) ----------

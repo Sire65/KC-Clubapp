@@ -5251,3 +5251,27 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/\/erinner\/i\.test\(text\) && t >= b - 3 \* SC_VS_TAG && t <= b/.test(sv) && /\/dank\/i\.test\(text\) && t >= b && t <= b \+ 7 \* SC_VS_TAG/.test(sv), "Zeitfenster Erinnerung/Dank");
   assert.ok(!/\.(insert|update|upsert|delete)\(/.test(sv), "Versandstand schreibt nichts");
 }
+
+// 4xx. 2.25.3: km-Abrechnung der Besuche zum Ausdrucken (KC-CLUB-KM-ABRECHNUNG, Wunsch Hansi: ID, Datum, Zeit, Personen (n), Grund, km,
+// Gesamtzeile, Kopf mit Logo + Köcheclub Werne, Antragsteller, Datum und Unterschrift)
+{
+  const a = html.indexOf("function druckKmAbrechnung()"), b = html.indexOf("// ---------- Feedback (KC-CLUB-FEEDBACK) ----------");
+  const BS = { jahr: "2026", liste: [
+    { besuch_id: "B-2026-001", status: "fertig", datum: "2026-09-20", zeit_von: "14:00:00", zeit_bis: "16:30:00", dauer_min: 150, mitglied: "Thomas Hess", person_ids: ["P1"], besuchsart: "beim_mitglied", km_gesamt: "24.0", schulung_thema: "Kasse" },
+    { besuch_id: "B-2026-002", status: "fertig", datum: "2026-10-06", zeit_von: "14:00:00", zeit_bis: "17:45:00", dauer_min: 225, mitglied: "Karla und Ruth Kazik", person_ids: ["P2", "P3"], besuchsart: "bei_hansi", km_gesamt: "0.0" },
+    { besuch_id: "B-2026-003", status: "fertig", datum: "2026-10-01", dauer_min: 60, mitglied: "X", person_ids: ["P4"], besuchsart: "beim_mitglied", km_gesamt: null },
+    { besuch_id: "B-2026-004", status: "geplant", datum: "2026-10-12", dauer_min: 180, mitglied: "Christina", person_ids: ["P5"], besuchsart: "bei_hansi", km_gesamt: "0.0" }] };
+  const esc = (x) => String(x), dz = (iso) => iso.split("-").reverse().join("."), bsHm = (m) => Math.floor(m / 60) + ":" + String(m % 60).padStart(2, "0");
+  const bsKm = (x) => String(Number(x || 0)).replace(".", ","), fKurzJahr = { format: () => "06.10.2026" }, $ = () => null, heuteIso = () => "2026-10-06";
+  const document = { querySelector: () => ({ value: "jahr" }) };
+  const fn = new Function("BS", "esc", "dz", "bsHm", "bsKm", "fKurzJahr", "$", "heuteIso", "document", "ICH", html.slice(a, b) + "\nreturn druckKmAbrechnung;")(BS, esc, dz, bsHm, bsKm, fKurzJahr, $, heuteIso, document, { name: "Hans-Joachim Koch" });
+  const r = fn();
+  assert.equal(r.titel, "Fahrten- und km-Abrechnung");
+  for (const t of ["Hans-Joachim Koch", "B-2026-001", "B-2026-002", "Karla und Ruth Kazik (2)", "Thomas Hess (1)", "14:00–16:30", "Gesamt: 3 Einsätze", "Zeit: 7:15 Std.", "<b>24</b>", "fehlt", "Ort, Datum, Unterschrift Antragsteller", "Schulung bei mir", "Mitgliederbesuch / Schulung – Kasse"])
+    assert.ok(r.html.includes(t), "km-Abrechnung: fehlt " + t);
+  assert.ok(!r.html.includes("B-2026-004"), "geplante Besuche zählen nicht");
+  assert.ok(r.html.indexOf("B-2026-001") < r.html.indexOf("B-2026-003") && r.html.indexOf("B-2026-003") < r.html.indexOf("B-2026-002"), "nach Datum sortiert");
+  assert.ok(/kmabrechnung: \{ titel: "🖨️ km-Abrechnung drucken", optionen: \(\) => druckKmOptionen\(\), bauen: \(\) => druckKmAbrechnung\(\) \}/.test(html) && /onclick="druckStarten\('kmabrechnung'\)">🖨️ km-Abrechnung<\/button>/.test(html), "Druckart + Knopf in Besuche");
+  assert.ok(/#druckBlatt\.blatt \{ z-index: 2050; \}/.test(html), "Druck-Auswahl über dem Schulungen-Fenster");
+}
+

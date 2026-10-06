@@ -1465,7 +1465,7 @@
   .schalter input { flex: none; width: 26px; height: 26px; accent-color: var(--rot); }
   .blatt { position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 40; display: flex; align-items: flex-end; justify-content: center; }
   /* KC-CLUB-DIALOG (1.46.0): Rückfragen/Eingaben als App-Fenster – über allem anderen */
-  .blatt.dlg-blatt { z-index: 5000; }
+  .blatt.dlg-blatt { z-index: 5000; } #druckBlatt.blatt { z-index: 2050; } /* 2.25.3: Druck-Auswahl auch über offenen Fenstern (z. B. 🎓 Schulungen → km-Abrechnung), unter der Vorschau (2100) */
   .dlg-innen { max-height: 88vh; overflow-y: auto; }
   .dlg-kopf { margin: 0 0 6px; font-size: 1.15rem; white-space: pre-line; }
   .dlg-text { margin: 0 0 10px; white-space: pre-line; }
@@ -3055,6 +3055,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.25.2" data-v="2.25.2"></script>
+<script src="app.js?v=2.25.3" data-v="2.25.3"></script>
 </body>
 </html>
