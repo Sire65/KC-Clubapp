@@ -4720,6 +4720,20 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(fs.statSync(new URL("../dokumente/Koecheclub-App_Anleitung_V7.pdf", import.meta.url)).size < 10.5e6, "V7-PDF vorhanden, nicht zu groß");
   assert.ok(/p > 1 \? "Pinnwand-Einträge" : "Pinnwand-Eintrag"/.test(html) && !/Pinnwand-Eintrag\$\{p > 1/.test(html), "Pinnwand-Einträge mit ä");
 }
+// KC-CORE-PERSON-UEBERNAHME V1 (06.10.2026, abgestimmt mit Codex): Speicherschutz Manager-Abschnitte + atomare Personenübernahme
+{
+  const mig = lies("supabase/migrations/20261006_kc_core_person_uebernahme_v1.sql").replace(/\s+/g, " ");
+  assert.ok(/insert into public\.kc_manager_section_schutz \(id, modus, geaendert_von\) values \(1, 'melden'/.test(mig) && /if v_modus = 'erzwingen' then\s+raise exception[^;]*using errcode = '40001'/.test(mig), "Schutz startet im Modus melden, erzwingen bricht mit 40001 ab");
+  assert.ok(/where org_id = p_org_id and section_key = p_section_key and version = p_erwartete_version/.test(mig) && /on conflict \(org_id, section_key\) do nothing/.test(mig), "Compare-and-swap in einer Anweisung, Neuanlage ohne Überschreiben");
+  assert.ok(/insert into public\.kc_core_person_vorgaenge[^;]*on conflict \(vorgang\) do nothing/.test(mig) && /vorgang uuid primary key/.test(mig), "Vorgangsnummer als Primärschlüssel, auch für Ablehnung");
+  assert.ok(/v_v\.aenderung_id <> p_id or v_v\.entscheidung <> p_entscheidung then return jsonb_build_object\('ok', false, 'grund', 'vorgang_widerspruch'\)/.test(mig), "gleiche Nummer mit anderer Meldung/Entscheidung → Widerspruch");
+  assert.ok(/coalesce\(v_v\.ergebnis, [^)]*\)\) \|\| jsonb_build_object\('wiederholt', true\)/.test(mig), "Wiederholung gibt gespeichertes Ergebnis unverändert zurück");
+  assert.ok(/'grund', 'manager_schutz_fehlt'/.test(mig) && /'schreibbar', not \(a\.uebergabe \? 'landline'\)/.test(mig), "Festnetz gesperrt");
+  assert.ok(/p_entscheidung = 'mitgliedschaft_bestaetigt' and not v_admin then raise exception[^;]*42501/.test(mig), "Mitgliedschaft nur Admin (Datenbank prüft selbst)");
+  assert.ok(/p_programm is distinct from 'KC_MANAGER'/.test(mig) && /'zu_frueh'/.test(mig) && /'erwartet_unvollstaendig'/.test(mig) && /'erwartet_unbekannt', 'ziel', 'manager'/.test(mig), "Programm, gültig-ab, erwartete Schlüssel je Ziel");
+  assert.ok(/revoke all on public\.kc_core_people_audit from public, anon, authenticated/.test(mig) && /revoke all on public\.kc_core_person_vorgaenge from public, anon, authenticated/.test(mig), "Audit/Vorgänge nur über die Funktion");
+  assert.ok(!/kc_core_person_aenderung_uebernehmen|kc_manager_section_speichern/.test(server) && !/from\("kc_core_people"\)\.(update|insert|upsert|delete)/.test(server), "Club-App schreibt nie kc_core_people und ruft die Übernahme nicht auf");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

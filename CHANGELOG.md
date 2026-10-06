@@ -1,5 +1,12 @@
 # Änderungen
 
+## DB – 2026-10-06 – KC-CORE-PERSON-UEBERNAHME V1 (gebaut und lokal getestet, NICHT eingespielt)
+- Migration `20261006_kc_core_person_uebernahme_v1.sql` (abgestimmt mit Codex, Antworten 1–6):
+  - Speicherschutz Manager-Abschnitte: `kc_manager_section_speichern` (Compare-and-swap) und Trigger „version = alt + 1“ im Modus „melden“ (Erzwingen nur nach eigener Freigabe).
+  - Personenübernahme: `kc_core_person_aenderung_uebernehmen` schreibt Kernwerte, Audit (`kc_core_people_audit`) und Status in einem Datenbankvorgang; Vorgangsnummern (`kc_core_person_vorgaenge`) auch für Ablehnungen; Mitgliedschaft nur Admin; Festnetz gesperrt.
+  - `kc_core_person_aenderungen_offen` zusätzlich mit `erwartet_schluessel` und `schreibbar`.
+- Lokale Datenbank-Tests unter `tools/db-test/` (30 Fälle, gleichzeitige Aufrufe, Speicherschutz). Die Club-App ruft nichts davon auf.
+
 ## 2.24.16 – 2026-10-06 – Kurzanleitung Bilderrechner Version 4.1 (Wunsch Hansi)
 - Dokumente: „Schnellanleitung Bilderrechner“ zeigt jetzt `dokumente/Kurzanleitung_Bilderrechner_V4.1.pdf` (28 Seiten, Stand Kasse 06.10.2026).
   Neu gegenüber 4: Seite 21 „Bon drucken / Letzten Bon“ mit „Bon ansehen“ (🖨 Drucken, ← Zurück zur Kasse); auf der Titelseite der
