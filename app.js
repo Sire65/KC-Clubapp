@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.25.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.25.1"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SCHNELLSTART-DATEI (2.24.8, Hinweis Hansi „Start ist langsamer geworden“): das Programm liegt in app.js, damit das Handy es
 // fertig übersetzt behalten kann (statt bei jedem Öffnen 1,8 MB neu einzulesen). Seite und Programm müssen dieselbe Version haben
 // (AGENTS Regel 16, kein Mischstand): passt es nicht (z. B. alte Seite aus einem Zwischenspeicher), einmal frisch laden, sonst anhalten.
@@ -13870,7 +13870,7 @@ async function scStart(tab) {
 }
 async function scLaden() {
   // KC-CLUB-BESUCHE: für „🎓 geschult“ und die Liste – danach nur die betroffenen Teile neu zeigen (Eingaben bleiben stehen; 2.23.63)
-  if (!BS.liste.length && !BS.geladen) { BS.geladen = true; bsLaden().then(() => { if ((SC.tab || "termine") === "besuche") scZeigen(); else if ($("scMListe") && SC.T) scMitglieder(); }); }
+  if (!BS.liste.length && !BS.geladen) { BS.geladen = true; bsLaden().then(() => { if ((SC.tab || "termine") === "besuche") scZeigen(); else { if ($("scMListe") && SC.T) scMitglieder(); if ($("scEinladungen") && SC.T) scEinladungen(); /* 2.25.1: Danksagung-Haken braucht die Besuche */ } }); }
   try { SC.T = await scApi("t_init"); } catch (e) { const z = $("scInhalt"); if (z) z.innerHTML = `<div class="karte sc-fehler">⚠️ ${esc(e?.message || "Nicht erreichbar")}</div>`; return; }
   scZeigen();
 }
@@ -14183,11 +14183,58 @@ function scEinladungen() {
       <div class="hinweis">eingeladen ${esc(zeitKurz(e.erstellt_am))}${e.gesendet_am ? ` · Mail ${esc(zeitKurz(e.gesendet_am))}` : ""}${e.status === "offen" ? ` · Frist bis ${esc(zeitKurz(e.gueltig_bis))}` : ""}${e.geoeffnet_am ? ` · Link geöffnet ${esc(zeitKurz(e.geoeffnet_am))}` : " · Link noch nicht geöffnet"}${s ? ` · ${esc(scZeit(s.beginn, s.ende))}` : ""}</div>
       ${e.mail_link_status === "veraltet" ? '<div class="ta-st-nein">⚠️ Die zuletzt verschickte Mail enthält einen alten Link.</div>' : e.mail_link_status === "kein_link" ? '<div class="ta-st-nein">⚠️ Die Mail enthielt keinen gültigen Termin-Link.</div>' : e.mail_link_status === "aktuell" ? `<div class="hinweis">✉️ Mail-Link aktuell${e.mail_link_gesendet_am ? " · " + esc(zeitKurz(e.mail_link_gesendet_am)) : ""}</div>` : ""}
       ${e.bemerkung ? `<div class="hinweis">„${esc(e.bemerkung)}“</div>` : ""}
+      ${scVersandStand(e)}
       <div class="knoepfe"><button class="knopf klein" onclick="scChronik('${e.id}')">📜 Ablauf</button>
         ${["offen", "gewaehlt", "gegenvorschlag"].includes(e.status) ? `<button class="knopf klein" onclick="scLinkNeu(this,'${e.id}')">🔗 Link</button>` : ""}
         ${["abgelaufen", "abgesagt"].includes(e.status) ? `<button class="knopf klein" onclick="scErneut(this,'${e.id}')">📨 Neu einladen</button>` : ""}
         <button class="knopf klein" onclick="scZurueck(this,'${e.id}')">${e.status === "bestaetigt" ? "🚫 Absagen" : "✖ Beenden"}</button></div></div>`;
   }).join("") || '<p class="hinweis" style="margin:0">Noch niemand eingeladen.</p>';
+}
+// KC-CLUB-SCHULUNG-VERSANDSTAND (2.25.1, Wunsch Hansi „bei jedem Termin sehen, was raus ist – Einladung ✅, Bestätigung ✅, Erinnerung ✅,
+// Danksagung ✅; antippen = wann und wie verschickt“). Quelle: Versandzeiten aus Einladung, Buchung und Besuch (keine Annahmen:
+// ✅ nur mit echtem Versandzeitpunkt, ⚠️ bei bekanntem Problem, ⬜ offen, ➖ entfällt). Details: Versand aus der Chronologie bzw. dem Besuch.
+const SC_SCHRITT_KEYS = { einladung: ["termin_einladung"], bestaetigung: ["termin_bestaetigung", "termin_info_mitglied"], erinnerung: ["termin_erinnerung"] };
+function scSchritte(e) {
+  const bs = SC.T.buchungen.filter((x) => x.einladung_id === e.id), b = bs.find((x) => x.status === "bestaetigt") || bs.find((x) => x.status === "vorgemerkt") || null;
+  const s = b && scSlot(b.slot_id), vorbei = s && new Date(s.ende || s.beginn).getTime() < Date.now();
+  const besuch = b && b.besuch_id ? (BS.liste || []).find((x) => x.besuch_id === b.besuch_id) : null;
+  const ohneMail = besuch && besuch.mail_empfaenger === "(keine E-Mail-Adresse)";
+  const dankAm = besuch && besuch.mail_gesendet_am && !ohneMail ? besuch.mail_gesendet_am : null;
+  const direkt = !e.gesendet_am && b && b.bestaetigung_gesendet_am;
+  return [
+    { k: "einladung", t: "Einladung", am: e.gesendet_am, st: e.gesendet_am ? "ok" : direkt ? "entfaellt" : "offen", info: direkt ? "direkt bestätigt – keine Einladung nötig" : "" },
+    { k: "bestaetigung", t: "Bestätigung", am: b && b.bestaetigung_gesendet_am, st: b && b.bestaetigung_gesendet_am ? "ok" : !b && ["abgesagt", "zurueckgezogen", "abgelaufen"].includes(e.status) ? "entfaellt" : "offen", info: b ? "" : "noch kein Termin gebucht" },
+    { k: "erinnerung", t: "Erinnerung", am: b && b.erinnerung_gesendet_am, st: b && b.erinnerung_gesendet_am ? "ok" : vorbei ? "warn" : b && b.status === "bestaetigt" ? "offen" : "entfaellt", info: vorbei ? "Termin vorbei, keine Erinnerung vermerkt" : b && b.status === "bestaetigt" ? "kommt am Vortag" : "" },
+    { k: "dank", t: "Danksagung", am: dankAm, st: dankAm ? "ok" : ohneMail ? "warn" : vorbei || (besuch && besuch.status === "fertig") ? "offen" : "entfaellt", info: ohneMail ? "keine E-Mail-Adresse hinterlegt" : !besuch ? "noch kein Besuchsprotokoll" : "", besuch },
+  ];
+}
+function scVersandStand(e) {
+  const sym = { ok: "✅", warn: "⚠️", offen: "⬜", entfaellt: "➖" };
+  return `<div class="sc-schritte">${scSchritte(e).map((x) => `<button type="button" class="sc-schritt sc-${x.st}" onclick="scSchritt('${e.id}','${x.k}')" title="${esc(x.am ? "verschickt " + zeitKurz(x.am) : x.info || "")}">${sym[x.st]} ${x.t}</button>`).join("")}</div>`;
+}
+async function scSchritt(eid, k) {
+  const e = scEinl(eid); if (!e) return;
+  const x = scSchritte(e).find((y) => y.k === k); if (!x) return;
+  const kopf = `${x.st === "ok" ? "✅" : x.st === "warn" ? "⚠️" : x.st === "entfaellt" ? "➖" : "⬜"} ${x.t} – ${esc(scGruppe(e.person_ids))}`;
+  const f = blattAuf("scSchrittBlatt", `<h3 style="margin:0">${kopf}</h3><p class="hinweis" style="margin:4px 0">${x.am ? "Verschickt " + esc(zeitKurz(x.am)) : esc(x.info || "Noch nicht verschickt.")}</p><div id="scSchrittInhalt"><p class="hinweis">Wird geladen …</p></div>
+    <div class="knoepfe"><button class="knopf klein" onclick="$('scSchrittBlatt').remove();scChronik('${eid}')">📜 Ganzer Ablauf</button><button class="knopf klein" onclick="$('scSchrittBlatt').remove()">Schließen</button></div>`);
+  f.style.zIndex = "2100";
+  const zeile = (zeit, titel, det) => `<div class="sc-prot"><small class="hinweis">${esc(zeitKurz(zeit))}</small><br><b>${esc(titel)}</b>${det ? `<div class="hinweis" style="white-space:pre-line">${esc(det)}</div>` : ""}</div>`;
+  if (k === "dank") {
+    const b = x.besuch;
+    $("scSchrittInhalt").innerHTML = !b ? '<p class="hinweis">Zu diesem Termin gibt es noch kein Besuchsprotokoll.</p>'
+      : [b.mail_gesendet_am && zeile(b.mail_gesendet_am, b.mail_empfaenger === "(keine E-Mail-Adresse)" ? "✉️ Mail nicht möglich – keine E-Mail-Adresse" : "✉️ Mail gesendet", b.mail_empfaenger && b.mail_empfaenger !== "(keine E-Mail-Adresse)" ? "An: " + b.mail_empfaenger : ""),
+        b.push_gesendet_am && zeile(b.push_gesendet_am, "📲 Push-Durchlauf", ""), b.versand_fehler && `<p class="hinweis">Versand-Hinweis: ${esc(b.versand_fehler)}</p>`,
+        `<p class="hinweis">Besuch ${esc(b.besuch_id)} · Status ${esc(b.status)}${b.zusammenfassung_senden ? "" : " · Zusammenfassung senden ist aus"}</p>`].filter(Boolean).join("");
+    return;
+  }
+  try {
+    const r = await scApi("t_chronologie", { einladung_id: eid }), keys = SC_SCHRITT_KEYS[k] || [];
+    const v = (r.ereignisse || []).filter((y) => y.typ === "versand" && keys.includes(y.event_key));
+    $("scSchrittInhalt").innerHTML = v.map((y) => zeile(y.zeit, `${y.channel === "email" ? "✉️ Mail" : y.channel === "push" ? "📲 Push" : y.channel} ${y.status === "sent" ? "gesendet" : y.status === "failed" ? "fehlgeschlagen" : y.status || ""}${y.person ? " an " + y.person : ""}`,
+      [y.betreff && "Betreff: " + y.betreff, y.provider && "Anbieter: " + y.provider, y.fehler && "Fehler: " + y.fehler].filter(Boolean).join("\n"))).join("")
+      || '<p class="hinweis">Kein Versand im Communicator gefunden.</p>';
+  } catch (err) { $("scSchrittInhalt").innerHTML = `<p class="ta-st-nein">⚠️ ${esc(err?.message || "Nicht erreichbar")}</p>`; }
 }
 // ----- Google-Kalender (nur Stand – eingerichtet bleibt er im Google-Skript) -----
 function scKalender() {

@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.25.1 – 2026-10-06 – KC-CLUB-SCHULUNG-VERSANDSTAND: bei jeder Einladung sehen, was raus ist (Wunsch Hansi)
+- 🎓 Schulungen → Einladungen: unter jedem Eintrag vier Felder – Einladung, Bestätigung, Erinnerung, Danksagung – mit ✅ (verschickt), ⬜ (noch offen), ⚠️ (Problem, z. B. keine E-Mail-Adresse oder Termin vorbei ohne Erinnerung) und ➖ (entfällt, z. B. direkt bestätigt ohne Einladung).
+- Antippen zeigt die Details: wann, ob Mail oder Push, an wen, Betreff und Fehler (aus dem KC Communicator über die vorhandene Chronologie); bei der Danksagung Empfänger und Versandzeit aus dem Besuchsprotokoll. Von dort „📜 Ganzer Ablauf“.
+- ✅ nur bei echtem Versandzeitpunkt (Einladung: Mail verschickt; Bestätigung: Mail verschickt; Erinnerung: vom Server vermerkt; Danksagung: Mail an das Mitglied). „Keine E-Mail-Adresse“ zählt nie als verschickt.
+- Server unverändert (kc-club bleibt 2.25.0, kc-termine unverändert).
+
 ## 2.25.0 – 2026-10-06 – KC-CLUB-KUECHENTERROR-ABWECHSLUNG: 100 neue Fragen, jede Partie fängt anders an (Wunsch Hansi)
 - 🔪 Küchenterror hat 100 neue Fragen (k191–k290: 80 normale, 20 🎖️ Meisterfragen) – jetzt 290 insgesamt. Die neuen fangen bewusst unterschiedlich an (kein „Was ist …?“/„Was bedeutet …?“), damit man sich nicht am Satzanfang orientiert. Die richtige Antwort ist auch hier nicht an der Länge erkennbar (Vertragstest 424).
 - Fragenauswahl gegen Mitglieder (Server): zuerst Fragen, die **beide** Spieler in ihren letzten 40 Küchenterror-Partien noch nicht hatten, zufällig gemischt. Erst wenn die nicht reichen, kommen die am längsten zurückliegenden. So beginnt jede Partie (auch die Revanche) mit anderen Fragen und es wiederholt sich nichts, bis der Vorrat durch ist.

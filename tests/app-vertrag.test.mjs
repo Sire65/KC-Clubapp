@@ -5217,3 +5217,24 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   // App (gegen den Computer): Gedächtnis je Gerät, gleiche Regel
   assert.ok(/const ktWahl = \(pool, zuletzt, n\) =>/.test(html) && /ktZuletztMerken\(KTP\.z\.ids\);/.test(html) && /localStorage\.getItem\("kc_club_kt_zuletzt"\)/.test(html) && /fragen\.js\?v=3/.test(html), "App: Computer-Spiel merkt sich die letzten Fragen, neue Fragen werden geladen");
 }
+
+// 4xx. 2.25.1: Schulungen – Versandstand je Einladung (KC-CLUB-SCHULUNG-VERSANDSTAND, Wunsch Hansi „Einladung ✅, Bestätigung ✅,
+// Erinnerung ✅, Danksagung ✅ – antippen zeigt wann/wie verschickt“)
+{
+  const a = html.indexOf("const SC_SCHRITT_KEYS = "), b = html.indexOf("function scVersandStand(e)");
+  const SC = { T: { buchungen: [], slots: [] } }, BS = { liste: [] };
+  const scSchritte = new Function("SC", "BS", "scSlot", html.slice(a, b) + "\nreturn scSchritte;")(SC, BS, (id) => SC.T.slots.find((s) => s.id === id));
+  const st = (e) => Object.fromEntries(scSchritte(e).map((x) => [x.k, x.st]));
+  // nur eingeladen, Mail raus
+  assert.deepEqual(st({ id: "e1", status: "offen", gesendet_am: "2026-10-01T10:00:00Z" }), { einladung: "ok", bestaetigung: "offen", erinnerung: "entfaellt", dank: "entfaellt" });
+  // Termin vorbei, bestätigt + erinnert, Besuch fertig, Mail an Mitglied
+  SC.T.slots.push({ id: "s1", beginn: "2026-10-01T12:00:00Z", ende: "2026-10-01T15:00:00Z" });
+  SC.T.buchungen.push({ id: "b1", einladung_id: "e2", slot_id: "s1", status: "bestaetigt", bestaetigung_gesendet_am: "2026-09-28T10:00:00Z", erinnerung_gesendet_am: "2026-09-30T16:00:00Z", besuch_id: "B-1" });
+  BS.liste.push({ besuch_id: "B-1", status: "fertig", mail_gesendet_am: "2026-10-01T16:00:00Z", mail_empfaenger: "a@b.de" });
+  assert.deepEqual(st({ id: "e2", status: "bestaetigt", gesendet_am: "2026-09-27T10:00:00Z" }), { einladung: "ok", bestaetigung: "ok", erinnerung: "ok", dank: "ok" });
+  // „keine E-Mail-Adresse“ ist kein ✅ (UNKNOWN nie als OK)
+  BS.liste[0].mail_empfaenger = "(keine E-Mail-Adresse)";
+  assert.equal(st({ id: "e2", status: "bestaetigt", gesendet_am: "x" }).dank, "warn");
+  assert.ok(/onclick="scSchritt\('\$\{e\.id\}','\$\{x\.k\}'\)"/.test(html) && /\$\{scVersandStand\(e\)\}/.test(html) && /scApi\("t_chronologie", \{ einladung_id: eid \}\), keys = SC_SCHRITT_KEYS\[k\]/.test(html), "antippbar, Details aus der Chronologie");
+  assert.ok(/if \(\$\("scEinladungen"\) && SC\.T\) scEinladungen\(\);/.test(html), "nach dem Laden der Besuche neu zeichnen");
+}

@@ -1,11 +1,17 @@
 {
-  "version": "2.25.0",
+  "version": "2.25.1",
   "datum": "2026-10-06",
   "neu": [
-    "🔪 Küchenterror: 100 neue Fragen (jetzt 290)",
-    "🔀 Küchenterror: jede Partie beginnt mit anderen Fragen – Bekanntes kommt erst wieder, wenn der Rest durch ist"
+    "✅ Schulungen: bei jeder Einladung sieht man, was raus ist – Einladung, Bestätigung, Erinnerung, Danksagung; antippen zeigt wann und wie verschickt"
   ],
   "verlauf": [
+    {
+      "version": "2.25.1",
+      "datum": "2026-10-06",
+      "neu": [
+        "✅ Schulungen: bei jeder Einladung sieht man, was raus ist – Einladung, Bestätigung, Erinnerung, Danksagung; antippen zeigt wann und wie verschickt"
+      ]
+    },
     {
       "version": "2.25.0",
       "datum": "2026-10-06",
