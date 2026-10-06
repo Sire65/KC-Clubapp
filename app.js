@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.25.5"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.25.6"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SCHNELLSTART-DATEI (2.24.8, Hinweis Hansi „Start ist langsamer geworden“): das Programm liegt in app.js, damit das Handy es
 // fertig übersetzt behalten kann (statt bei jedem Öffnen 1,8 MB neu einzulesen). Seite und Programm müssen dieselbe Version haben
 // (AGENTS Regel 16, kein Mischstand): passt es nicht (z. B. alte Seite aus einem Zwischenspeicher), einmal frisch laden, sonst anhalten.
@@ -13638,6 +13638,13 @@ async function mgGemeinsameZeigen(pid) {
   z.innerHTML = gr.length ? `<div class="hinweis" style="margin-top:6px">👥 Gemeinsame Gruppen:</div><div class="mg-gruppen" style="justify-content:center;margin:4px 0 0">${gr.map((g) => `<button class="knopf klein" onclick="chatOeffnen('${g.id}')">${esc(g.gruppe.symbol || "👥")} ${esc(g.gruppe.name)}</button>`).join("")}</div>` : "";
 }
 function mgGruppeSetzen(id) { MG_GRUPPE = MG_GRUPPE === id ? null : id; mitgliederZeichnen(); }
+// KC-CLUB-MG-AKTUALISIEREN (2.25.6, Wunsch Hansi): ↻ oben rechts – Online-Stand und Mitgliederliste (Status, zuletzt da, online seit) neu holen
+async function mgAktualisieren(k) {
+  if (k?.classList.contains("dreht")) return;
+  k?.classList.add("dreht");
+  try { await onlinePing(); await mitgliederLaden(); melde("↻ Mitglieder aktualisiert"); }
+  catch (e) { meldeFehler(e); } finally { k?.classList.remove("dreht"); }
+}
 async function mitgliederLaden() {
   try { await mitgliederHolen(); mitgliederZeichnen(); } catch (e) { meldeFehler(e); }
   try { MG_GRUPPEN = ((await api("unterhaltungen", {})).unterhaltungen || []).filter((u) => u.gruppe && Array.isArray(u.personen)); } catch { MG_GRUPPEN = []; }

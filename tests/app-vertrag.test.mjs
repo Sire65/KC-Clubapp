@@ -5316,3 +5316,11 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/if \(!ich\.nurLesen\) await onlineSeitMerken\(ich\.person_id\)/.test(server) && /"inkognito", "online_seit"\]/.test(server), "beim Online-Takt gemerkt, über zuletztDaMap (mit Privatsphäre) geliefert");
 }
 
+// 4xx. 2.25.6: ↻ Aktualisieren oben rechts auf der Mitglieder-Seite (KC-CLUB-MG-AKTUALISIEREN, Wunsch Hansi „wie auf der Startseite“)
+{
+  assert.ok(/<button class="rund mg-neu" id="mgAktualisieren" title="Aktualisieren" aria-label="Mitglieder aktualisieren" onclick="mgAktualisieren\(this\)">↻<\/button><\/div>/.test(html), "Knopf im Kopf der Mitglieder-Seite");
+  const f = html.slice(html.indexOf("async function mgAktualisieren(k)"), html.indexOf("async function mitgliederLaden()"));
+  assert.ok(/await onlinePing\(\); await mitgliederLaden\(\);/.test(f) && /finally \{ k\?\.classList\.remove\("dreht"\); \}/.test(f), "holt Online-Stand und Liste, Drehen endet immer");
+  assert.ok(/#v-mitglieder \.kopf2 > \.mg-neu \{ margin-left: auto;/.test(html), "ganz rechts");
+}
+

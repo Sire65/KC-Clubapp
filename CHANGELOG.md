@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.25.6 – 2026-10-06 – KC-CLUB-MG-AKTUALISIEREN: ↻ auf der Mitglieder-Seite (Wunsch Hansi)
+- 👥 Mitglieder: oben rechts ein runder ↻-Knopf wie auf der Startseite. Holt den Online-Stand und die Mitgliederliste neu (Status, LED, „online seit“, „zuletzt online“) – gilt für Kacheln, Liste und Anwesenheitstafel. Dreht sich, solange geladen wird.
+- Server unverändert (kc-club bleibt 2.25.5).
+
 ## 2.25.5 – 2026-10-06 – KC-CLUB-ONLINE-SEIT: Anwesenheitstafel mit „online seit …“ / „zuletzt online um …“ (Wunsch Hansi)
 - 📋 Mitglieder → Anwesenheitstafel: unter jedem Namen eine kleine Zeile – grün „online seit 14:32“ (über Mitternacht „seit gestern 23:50“), sonst „zuletzt online heute um 18:05“, „zuletzt online gestern“, „am 28.09.“ oder „länger nicht online“.
 - Server merkt sich beim Online-Takt den Beginn der aktuellen Sitzung (Einstellung „online_seit“; neue Sitzung nach mehr als 150 s Pause, geschrieben höchstens alle 30 s) und liefert ihn über „zuletzt da“ mit – dieselben Privatsphäre-Regeln (Online/Zuletzt verborgen, Inkognito) wie bisher. Ohne Angabe steht nichts da, nie geraten.
