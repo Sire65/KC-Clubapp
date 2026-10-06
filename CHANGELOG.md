@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.25.12 – 2026-10-06 – Spiele-Übersicht wieder richtig
+Korrektur zu 2.25.11: Die neuen Kachel-Knöpfe bei Tic-Tac-Toe/Bauernskat hatten denselben Klassennamen wie die Spiele-Übersicht – dadurch waren die Spiel-Kacheln schmal und abgeschnitten. Eigener Name (sp-knopfreihe), Übersicht wieder wie vorher; Test verhindert die Doppelbelegung. (KC-CLUB-SP-KACHELN, Fund Hansi)
+
 ## 2.25.11 – 2026-10-06 – Spiele: Knöpfe als Kacheln nebeneinander
 Tic-Tac-Toe und Bauernskat gegen den Computer: „↺ Neue Runde/Neues Spiel“, „🗑️ Stand löschen“ und (bei Tic-Tac-Toe) „🔊 Töne“ als gleich große Kacheln nebeneinander – wie beim Küchenterror. (KC-CLUB-SP-KACHELN, Wunsch Hansi)
 Mitglieder-Seite: Nachricht, Spiel herausfordern, App-Link, Einrichtungskarte, Amt & Rechte, Telefonbuch (und online: Anklopfen, Anrufen, Video) als gleich breite Kacheln, 2 je Reihe. (KC-CLUB-MD-KACHELN, Wunsch Hansi)

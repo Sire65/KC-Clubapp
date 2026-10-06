@@ -4779,7 +4779,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.ok(/<div class="kt-knoepfe"><button class="knopf haupt kt-los" onclick="ktPcStart\(\)"><span class="kt-ico">▶<\/span>Los geht’s<\/button>\$\{spAnsageKnopf\("kt", true\)\}/.test(html) && /onclick="ktPcStandWeg\(\)" title="Spielstand zurücksetzen"><span class="kt-ico">🗑️<\/span>Stand löschen<\/button>/.test(html), "Küchenterror: Los geht’s, Ansage, Stand nebeneinander als Kacheln");
   assert.ok(/b\.outerHTML = spAnsageKnopf\(art, !!b\.dataset\.kachel\)/.test(html) && /function spAnsageKnopf\(art, kachel = false\)/.test(html), "Umschalten behält Kachelform, andere Spiele unverändert");
-  assert.ok(/\.kt-knoepfe, \.sp-kacheln \{ display: grid; grid-template-columns: repeat\(auto-fit, minmax\(0, 1fr\)\);/.test(html) && /\.kt-wahl \.sp-wahl > span \{ flex-basis: 100%; \}/.test(html) && /<div class="kt-wahl">\$\{spWahl\("Stufe"/.test(html), "Stufe volle Breite, Knöpfe gleich breit");
+  assert.ok(/\.kt-knoepfe, \.sp-knopfreihe \{ display: grid; grid-template-columns: repeat\(auto-fit, minmax\(0, 1fr\)\);/.test(html) && /\.kt-wahl \.sp-wahl > span \{ flex-basis: 100%; \}/.test(html) && /<div class="kt-wahl">\$\{spWahl\("Stufe"/.test(html), "Stufe volle Breite, Knöpfe gleich breit");
 }
 // 2.25.10 KC-CLUB-KT-ABBRECHEN
 {
@@ -4789,11 +4789,13 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 // 2.25.11 KC-CLUB-SP-KACHELN
 {
-  assert.ok(/<div class="sp-kacheln"><button class="knopf haupt" onclick="spPcNeu\(\)"><span class="kt-ico">↺<\/span>Neue Runde<\/button>[^]{0,200}Stand löschen<\/button>\$\{spAnsageKnopf\("ttt", true\)\}<\/div>/.test(html), "Tic-Tac-Toe: Kacheln nebeneinander");
-  assert.ok(/<div class="sp-kacheln"><button class="knopf haupt" onclick="bskPcNeu\(\)"><span class="kt-ico">↺<\/span>Neues Spiel<\/button>[^]{0,200}Stand löschen<\/button><\/div>/.test(html), "Bauernskat: Kacheln nebeneinander");
+  assert.ok(/<div class="sp-knopfreihe"><button class="knopf haupt" onclick="spPcNeu\(\)"><span class="kt-ico">↺<\/span>Neue Runde<\/button>[^]{0,200}Stand löschen<\/button>\$\{spAnsageKnopf\("ttt", true\)\}<\/div>/.test(html), "Tic-Tac-Toe: Kacheln nebeneinander");
+  assert.ok(/<div class="sp-knopfreihe"><button class="knopf haupt" onclick="bskPcNeu\(\)"><span class="kt-ico">↺<\/span>Neues Spiel<\/button>[^]{0,200}Stand löschen<\/button><\/div>/.test(html), "Bauernskat: Kacheln nebeneinander");
+  assert.ok((html.match(/class="sp-kacheln"/g) || []).length === 1 && !/\.sp-kacheln \.knopf/.test(html), "Spiele-Übersicht behält ihr eigenes Raster (Klassenname nicht doppelt belegt)");
   assert.ok(/<div class="md-kacheln" id="mdKacheln">/.test(html) && /function mdKachelnOrdnen\(\)/.test(html) && /if \(kl\.length % 2 === 1\)/.test(html) && /mdKachelnOrdnen\(\); \/\/ KC-CLUB-MD-KACHELN/.test(html), "Mitglieder-Seite: Kacheln 2 je Reihe, einzelne letzte volle Breite (KC-CLUB-MD-KACHELN)");
   assert.ok(/ziel\.outerHTML = `<button class="knopf" onclick="spHerausfordernBlatt/.test(html) && /\.md-kacheln \{ display: grid; grid-template-columns: 1fr 1fr;/.test(html), "Spiel-Knopf als Kachel im Raster");
 }
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
