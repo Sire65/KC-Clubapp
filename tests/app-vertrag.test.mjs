@@ -4739,6 +4739,16 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/revoke all on public\.kc_core_people_audit from public, anon, authenticated/.test(mig) && /revoke all on public\.kc_core_person_vorgaenge from public, anon, authenticated/.test(mig), "Audit/Vorgänge nur über die Funktion");
   assert.ok(!/kc_core_person_aenderung_uebernehmen|kc_manager_section_speichern/.test(server) && !/from\("kc_core_people"\)\.(update|insert|upsert|delete)/.test(server), "Club-App schreibt nie kc_core_people und ruft die Übernahme nicht auf");
 }
+// KC-CLUB-DB-EINSPIELEN (06.10.2026, Weg B): Migrationen nur über den Hand-Ablauf, Funktion nur mit GitHub-OIDC, Auftrag im Repo leer
+{
+  const fn = lies("supabase/functions/kc-db-einspielen/index.ts"), auftrag = lies("supabase/functions/kc-db-einspielen/auftrag.ts"), wf = lies(".github/workflows/db-einspielen.yml");
+  assert.ok(/export const AUFTRAG:[^=]*= null;/.test(auftrag), "Auftrag im Repository immer leer");
+  assert.ok(/audience: "kc-db-einspielen"/.test(fn) && /p\.repository === "Sire65\/KC-Clubapp" && p\.ref === "refs\/heads\/main" && p\.workflow_ref === ABLAUF && p\.event_name === "workflow_dispatch"/.test(fn), "nur der Ablauf auf main darf aufrufen");
+  assert.ok(/if \(!\(await berechtigt\(req\)\)\) return antwort\(401/.test(fn) && /if \(!AUFTRAG\) return antwort\(410/.test(fn), "ohne Token 401, ohne Auftrag 410");
+  assert.ok(/if \(!probe\.ok \|\| modus === "pruefen"\) return/.test(fn), "Einspielen nur nach grünem Probelauf");
+  assert.ok(/^on:\n  workflow_dispatch:/m.test(wf) && !/^  push:/m.test(wf) && /Funktion entschärfen \(immer\)\n\s+if: \$\{\{ always\(\) \}\}/.test(wf), "nur von Hand, danach immer entschärfen");
+  assert.ok(/id-token: write/.test(wf) && !/SUPABASE_DB_URL|service_role/i.test(wf), "OIDC, keine Datenbank-Geheimnisse im Ablauf");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
