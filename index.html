@@ -2981,7 +2981,7 @@
 <div id="druck"></div>
 
 <script>
-const APP_VERSION = "2.23.92"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
+const APP_VERSION = "2.23.93"; // gleich halten mit sw.js und version.json (siehe CHANGELOG.md)
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
@@ -3146,7 +3146,11 @@ const KREIS_ARTEN = [
   { art: "heute", text: "heute in der App", farbe: "#2471a3", gilt: (m) => !!m.heute },
   { art: "selten", text: "länger nicht oder noch nie in der App", farbe: "#95a5a6", gilt: () => true },
 ];
-function kreisArt(m) { const k = m ? KREIS_ARTEN.find((x) => (!x.nurAdmin || ICH?.admin) && x.gilt(m)) : null; return k || { art: "unbekannt", text: "unbekannt" }; }
+function kreisArt(m) {
+  // 2.23.93 (Hinweis Hansi): man selbst ist immer „gerade online“ – auch mit Inkognito (das verbirgt einen nur vor den anderen)
+  if (m && ICH && m.person_id === ICH.person_id && !(ICH.admin && m.fehler)) m = { ...m, online: true };
+  const k = m ? KREIS_ARTEN.find((x) => (!x.nurAdmin || ICH?.admin) && x.gilt(m)) : null; return k || { art: "unbekannt", text: "unbekannt" };
+}
 const avFigurVon = (m) => m?.avatar || (m?.person_id && MITGLIEDER?.find?.((x) => x.person_id === m.person_id)?.avatar) || (m?.person_id && m.person_id === ICH?.person_id ? INIT?.einstellungen?.avatar?.figur : null) || null;
 // Kreis-HTML: m = Mitglied aus MITGLIEDER (oder Online-Liste), groesse in px, extra = zusätzliche Attribute
 function kreis(m, name, groesse = 40, extra = "") {
@@ -16145,7 +16149,7 @@ function mgTafelHtml(liste) {
   const sortiert = [...liste].sort((a, b) => (rang(a) < 0 ? 99 : rang(a)) - (rang(b) < 0 ? 99 : rang(b)) || String(a.name).localeCompare(String(b.name), "de"));
   return kreisLegende().replace(/class="avatar k-([a-z]+)"[^>]*>/g, 'class="mg-led l-$1" style="width:12px;height:12px">')
     + `<div class="mg-tafel">${sortiert.map((m) => { const k = kreisArt(m);
-      return `<button type="button" onclick="mitgliedOeffnen('${esc(m.person_id)}')" aria-label="${esc(m.name + ": " + k.text)}" title="${esc(k.text)}"><span class="mg-led l-${k.art}"></span><b>${esc(m.name)}${m.person_id === ICH.person_id ? ' <small class="hinweis">(du)</small>' : ""}</b></button>`; }).join("")}</div>`;
+      return `<button type="button" onclick="mitgliedOeffnen('${esc(m.person_id)}')" aria-label="${esc(m.name + ": " + k.text)}" title="${esc(k.text)}"><span class="mg-led l-${k.art}"></span><b>${esc(m.name)}${m.person_id === ICH.person_id ? ` <small class="hinweis">(du${inkognitoAn() ? " · 🕶️ inkognito" : ""})</small>` : ""}</b></button>`; }).join("")}</div>`;
 }
 function mgKachelnHtml(liste) {
   const k = (m) => {

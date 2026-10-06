@@ -4496,6 +4496,12 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 
 
+// 443. 2.23.93: man selbst ist immer „gerade online“ – auch mit Inkognito (Hinweis Hansi: auf der Tafel nur blauer Punkt)
+{
+  assert.ok(/if \(m && ICH && m\.person_id === ICH\.person_id && !\(ICH\.admin && m\.fehler\)\) m = \{ \.\.\.m, online: true \};/.test(html), "eigener Eintrag grün");
+  assert.ok(/\(du\$\{inkognitoAn\(\) \? " · 🕶️ inkognito" : ""\}\)/.test(html), "Tafel zeigt Inkognito beim eigenen Namen");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

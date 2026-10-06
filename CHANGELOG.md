@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.23.93 – 2026-10-06 – Eigener Eintrag immer grün (auch mit Inkognito)
+- Hinweis Hansi: Auf der Anwesenheitstafel stand man selbst mit Inkognito nur blau. Jetzt ist der eigene Kreis/LED immer „gerade online“ (Inkognito verbirgt einen nur vor den anderen); Tafel zeigt „(du · 🕶️ inkognito)“.
+
 ## 2.23.92 – 2026-10-06 – „＋ Neu“: heller Rand schwillt langsam auf und ab
 - KC-CLUB-NEU-PULS (Hinweis Hansi): statt Hüpfen leuchtet der Rand 3× langsam auf und ab (1,3 s je Mal) – nur Leuchten, daher auch bei „Bewegung reduzieren“ sichtbar.
 
