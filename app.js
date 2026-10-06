@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.24.17"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.24.18"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SCHNELLSTART-DATEI (2.24.8, Hinweis Hansi „Start ist langsamer geworden“): das Programm liegt in app.js, damit das Handy es
 // fertig übersetzt behalten kann (statt bei jedem Öffnen 1,8 MB neu einzulesen). Seite und Programm müssen dieselbe Version haben
 // (AGENTS Regel 16, kein Mischstand): passt es nicht (z. B. alte Seite aus einem Zwischenspeicher), einmal frisch laden, sonst anhalten.
@@ -222,6 +222,9 @@ const KREIS_ARTEN = [
 function kreisArt(m) {
   // 2.23.93 (Hinweis Hansi): man selbst ist immer „gerade online“ – auch mit Inkognito (das verbirgt einen nur vor den anderen)
   if (m && ICH && m.person_id === ICH.person_id && !(ICH.admin && m.fehler)) m = { ...m, online: true };
+  // KC-CLUB-ONLINE-EINE-QUELLE (2.24.18, Hinweis Hansi): „gerade online“ immer aus dem laufenden Online-Takt (dieselbe Quelle wie LED
+  // und Zahl) – die Mitgliederliste wird nur beim Öffnen geladen und wäre sonst älter. Stand älter als 3 Min. → Wert aus der Liste.
+  else if (m?.person_id && !m.verborgen) { try { if (ONL.stand && Date.now() - ONL.stand < 3 * 60 * 1000) m = { ...m, online: ONL.ids.has(m.person_id) }; } catch {} }
   const k = m ? KREIS_ARTEN.find((x) => (!x.nurAdmin || ICH?.admin) && x.gilt(m)) : null; return k || { art: "unbekannt", text: "unbekannt" };
 }
 const avFigurVon = (m) => m?.avatar || (m?.person_id && MITGLIEDER?.find?.((x) => x.person_id === m.person_id)?.avatar) || (m?.person_id && m.person_id === ICH?.person_id ? INIT?.einstellungen?.avatar?.figur : null) || null;
@@ -2000,7 +2003,9 @@ async function onlinePing() {
   if (!KEY || !ICH || document.hidden) return;
   try {
     const r = await api("online");
+    const vorher = [...ONL.ids].sort().join(); // KC-CLUB-ONLINE-EINE-QUELLE (2.24.18)
     ONL.zeigen = r.zeigen; ONL.liste = r.online || []; ONL.ids = new Set(ONL.liste.map((x) => x.person_id)); ONL.stand = Date.now();
+    if (vorher !== [...ONL.ids].sort().join() && aktuelleAnsicht === "mitglieder" && MITGLIEDER) { try { mitgliederZeichnen(); } catch {} }
     onlineAnsagen(ONL.liste); // KC-CLUB-ONLINE-ANSAGE
     if ($("setOnline")) $("setOnline").checked = r.zeigen;
     onlineLeisteZeigen(); if (INIT) heroZeigen();

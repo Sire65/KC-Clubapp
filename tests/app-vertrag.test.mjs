@@ -4749,6 +4749,11 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/^on:\n  workflow_dispatch:/m.test(wf) && !/^  push:/m.test(wf) && /Funktion entschärfen \(immer\)\n\s+if: \$\{\{ always\(\) \}\}/.test(wf), "nur von Hand, danach immer entschärfen");
   assert.ok(/id-token: write/.test(wf) && !/SUPABASE_DB_URL|service_role/i.test(wf), "OIDC, keine Datenbank-Geheimnisse im Ablauf");
 }
+// 2.24.18 KC-CLUB-ONLINE-EINE-QUELLE: Ring „gerade online“ aus dem Online-Takt (wie LED/Zahl), Mitgliederseite zieht beim Wechsel nach
+{
+  assert.ok(/else if \(m\?\.person_id && !m\.verborgen\) \{ try \{ if \(ONL\.stand && Date\.now\(\) - ONL\.stand < 3 \* 60 \* 1000\) m = \{ \.\.\.m, online: ONL\.ids\.has\(m\.person_id\) \}; \} catch \{\} \}/.test(html), "Ring nutzt dieselbe Quelle wie LED und Zahl, alter Stand → Liste");
+  assert.ok(/const vorher = \[\.\.\.ONL\.ids\]\.sort\(\)\.join\(\);[^]{0,400}if \(vorher !== \[\.\.\.ONL\.ids\]\.sort\(\)\.join\(\) && aktuelleAnsicht === "mitglieder" && MITGLIEDER\)/.test(html), "Mitgliederseite wird bei Änderung neu gezeichnet");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

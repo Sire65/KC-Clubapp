@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.24.18 – 2026-10-06 – KC-CLUB-ONLINE-EINE-QUELLE: Online-Anzeige überall gleich
+- Der grüne Ring „gerade online“ um Bild/Namen nimmt jetzt denselben Stand wie die LED oben und die Zahl (Online-Takt alle 15–60 s). Vorher kam er aus der Mitgliederliste, die nur beim Öffnen geladen wurde – darum zeigten LED und Ring zu unterschiedlichen Zeiten an (Hinweis Hansi).
+- Kommt jemand online oder geht, zeichnet sich die Mitgliederseite sofort neu. Ist der Online-Stand älter als 3 Minuten, gilt wie bisher der Wert aus der Liste (unbekannt nie als OK).
+- Server unverändert (kc-club bleibt 2.24.16).
+
 ## 2.24.17 – 2026-10-06 – KC-CLUB-KOPF-ORDNUNG: Kopfzeile aufgeräumt (Wunsch Hansi)
 - Obere Zeile: Kochmütze, darunter klein die Versionsnummer (antippen = Update prüfen, bei neuer Version gelb mit 🆕); daneben „KÖCHECLUB WERNE“ und der Gruß „Hallo …!“; rechts nur noch 🌙 und ↻ gleich groß.
 - Darunter eine Statusleiste: links der Status mit dem Pfeil auf der Unterkante, rechts die Verbindungs-LEDs (jetzt waagerecht), nach einem Trennstrich Herz und 🕶️ (nur Admin).
