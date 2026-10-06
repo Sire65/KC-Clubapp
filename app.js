@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.25.12"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.26.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SCHNELLSTART-DATEI (2.24.8, Hinweis Hansi „Start ist langsamer geworden“): das Programm liegt in app.js, damit das Handy es
 // fertig übersetzt behalten kann (statt bei jedem Öffnen 1,8 MB neu einzulesen). Seite und Programm müssen dieselbe Version haben
 // (AGENTS Regel 16, kein Mischstand): passt es nicht (z. B. alte Seite aus einem Zwischenspeicher), einmal frisch laden, sonst anhalten.
@@ -987,7 +987,7 @@ const EINWEISUNG = [
   { id: "vorschlaege", sym: "🗳️", t: "Vorschläge", x: "Du hast eine Idee für den Club – ein Ausflug, ein Thema, ein Kochabend? Mit <b>„＋ Neu“</b> schlägst du sie vor, die anderen können abstimmen." },
   { id: "dienste", sym: "🗓️", t: "Dienstpläne", x: "Die Dienstpläne Woche für Woche. Mit <b>‹ Woche</b> / <b>Woche ›</b> blätterst du, <b>„Heute“</b> springt zurück." },
   { id: "aktionen", sym: "🧳", t: "Aktionen", x: "Ausflüge und besondere Aktionen des Clubs – antippen zeigt alle Einzelheiten." },
-  { id: "spiele", sym: "🎲", t: "Spiele – Köcheclub Edition", x: "Tippe auf die Kachel deines Spiels: <b>Tic-Tac-Toe</b> (🍅 gegen 🥦 – wer zuerst drei, bei 4 × 4 vier, in einer Reihe hat), <b>♟️ Schach</b> mit der Küchenbrigade (Küchenchef = König, Kaltmamsell = Dame, Souschef = Turm, Patissier = Läufer, Springer, Praktikanten = Bauern; Figur antippen, dann das Zielfeld) , <b>🃏 Bauernskat</b> zu zweit (spielbare Karten sind grün umrandet) oder <b>🔪 Küchenterror</b> – das Küchenquiz auf Zeit (je Frage 20, 15 oder 10 Sekunden – je nach Stufe; schnell und richtig bringt die meisten Punkte). Im Spiel wählst du <b>🤖 Gegen den Computer</b> – mit Feldgröße und Stärke – oder <b>👥 Gegen Mitglieder</b>: jemanden herausfordern, abwechselnd ziehen, du bekommst Bescheid, wenn du dran bist. Bei Schach, Küchenterror und Bauernskat kannst du dir mit <b>🔊 Ansage</b> alles ansagen lassen – Züge, Fragen und Antworten, Karten und Stiche. Schach geht auch mit <b>⏱️ Schachuhr</b> (5, 10 oder 15 Minuten je Spieler): oben bei „⏱️ Uhr“ gegen den Computer, beim Herausfordern als Live-Partie. Nach jedem Zug hält deine Uhr an und die des Gegners läuft; in der letzten Minute wird sie rot und tickt. Wer keine Zeit mehr hat, verliert." },
+  { id: "spiele", sym: "🎲", t: "Spiele – Köcheclub Edition", x: "Tippe auf die Kachel deines Spiels: <b>Tic-Tac-Toe</b> (🍅 gegen 🥦 – wer zuerst drei, bei 4 × 4 vier, in einer Reihe hat), <b>♟️ Schach</b> mit der Küchenbrigade (Küchenchef = König, Kaltmamsell = Dame, Souschef = Turm, Patissier = Läufer, Springer, Praktikanten = Bauern; Figur antippen, dann das Zielfeld) , <b>🃏 Bauernskat</b> zu zweit (spielbare Karten sind grün umrandet), <b>🔪 Küchenterror</b> – das Küchenquiz auf Zeit (je Frage 20, 15 oder 10 Sekunden – je nach Stufe; schnell und richtig bringt die meisten Punkte) oder <b>🎲 Mensch ärgere dich nicht</b>: Würfel antippen, dann die Figur, die leuchtet. Mit einer 6 kommt eine Figur raus und du würfelst nochmal; wer auf eine fremde Figur kommt, wirft sie raus. Gegen den Computer mit 1 bis 3 Computer-Gegnern, gegen Mitglieder zu zweit – die freien Farben kann der Computer übernehmen. Im Spiel wählst du <b>🤖 Gegen den Computer</b> – mit Feldgröße und Stärke – oder <b>👥 Gegen Mitglieder</b>: jemanden herausfordern, abwechselnd ziehen, du bekommst Bescheid, wenn du dran bist. Bei Schach, Küchenterror und Bauernskat kannst du dir mit <b>🔊 Ansage</b> alles ansagen lassen – Züge, Fragen und Antworten, Karten und Stiche. Schach geht auch mit <b>⏱️ Schachuhr</b> (5, 10 oder 15 Minuten je Spieler): oben bei „⏱️ Uhr“ gegen den Computer, beim Herausfordern als Live-Partie. Nach jedem Zug hält deine Uhr an und die des Gegners läuft; in der letzten Minute wird sie rot und tickt. Wer keine Zeit mehr hat, verliert." },
   // 2.22.9 (Wunsch Hansi: „wo fehlen Erklärungsfenster?“) – Bereiche ohne Einweisung ergänzt
   { id: "erstattung", sym: "💶", t: "Erstattung", x: "Hier bekommst du Geld zurück, das du für den Club ausgelegt hast: <b>🚗 Fahrtkosten</b> (die Kilometer rechnet die App aus), <b>🛒 Einkauf</b> oder <b>📦 sonstige Auslagen</b>. Mehrere Posten passen in einen Antrag, Belege fotografierst du einfach dazu. Der Antrag geht an den Kassenwart – du bekommst eine Bestätigung." },
   { id: "feedback", sym: "💭", t: "Feedback", x: "Was gefällt dir, was stört, was fehlt? Schreib es hier hinein – es geht direkt an den Admin. Jede Rückmeldung hilft, die App besser zu machen." },
@@ -1035,7 +1035,7 @@ const EINWEISUNG = [
   { id: "b-mikro-wahl", blatt: true, sym: "🎤", t: "Sprachnachricht oder Diktieren", x: "<b>🎤 Sprachnachricht</b>: deine Stimme wird verschickt. <b>✍️ Diktieren</b>: die App schreibt mit, verschickt wird Text. Mit <b>Immer so</b> fragt die App nicht mehr – ändern unter ⚙️ → Ansagen, Töne &amp; Tipps." },
   { id: "b-neu-wahl", blatt: true, sym: "＋", t: "Etwas Neues anlegen", x: "Wähle, was du neu anlegen möchtest – unter jedem Punkt steht kurz, wofür er da ist. <b>Abbrechen</b> schließt das Fenster, ohne etwas anzulegen." },
   { id: "b-rolle", blatt: true, sym: "🎖️", t: "Ämter und Rechte", x: "Hier legst du fest, welche <b>Ämter</b> das Mitglied hat und was es darf – z. B. Termine anlegen, Protokolle lesen und schreiben oder Kontaktdaten anderer sehen. Schalter aus heißt: darf das nicht. <b>💾 Speichern</b> übernimmt es.", nur: () => !!ICH?.admin },
-  { id: "b-sp-herausfordern", blatt: true, sym: "🎲", t: "Herausfordern", x: "<b>Spiel wählen</b> (Tic-Tac-Toe, Schach, Bauernskat, Küchenterror), je nach Spiel Feldgröße oder Zeit, dann antippen, <b>wen</b> du herausfordern möchtest. Das Mitglied bekommt die Einladung und kann annehmen oder ablehnen." },
+  { id: "b-sp-herausfordern", blatt: true, sym: "🎲", t: "Herausfordern", x: "<b>Spiel wählen</b> (Tic-Tac-Toe, Schach, Bauernskat, Küchenterror, Mensch ärgere dich nicht), je nach Spiel Feldgröße, Zeit oder Mitspieler, dann antippen, <b>wen</b> du herausfordern möchtest. Das Mitglied bekommt die Einladung und kann annehmen oder ablehnen." },
   { id: "b-sp-termin", blatt: true, sym: "📅", t: "Termin für die Partie", x: "<b>Tag, Uhrzeit</b> und <b>Ort</b> wählen. Dein Mitspieler bekommt die Anfrage und kann zu- oder absagen; danach steht der Termin bei euch beiden im Kalender – auf Wunsch mit Erinnerung." },
   { id: "b-teilen", blatt: true, sym: "📥", t: "Mit Köcheclub geteilt", x: "Du hast etwas aus einer anderen App mit dem Köcheclub geteilt. Wähle, wohin es soll: in einen <b>💬 Club-Chat</b>, bei Fotos ins <b>📷 Fotoalbum</b> oder in <b>🗄️ dein Archiv</b>." },
   { id: "b-bu-sitzung", blatt: true, sym: "📝", t: "Sitzung auswählen", x: "Tippe die <b>Sitzung</b> an, um die es gehen soll. Dahinter steht, ob sie schon vorbereitet ist bzw. ob es schon ein Protokoll gibt.", nur: () => !!ICH?.buero },
@@ -3656,9 +3656,9 @@ const SP_ZEICHEN = { x: "🍅", o: "🥦" }, SP_NAME = { x: "Tomate", o: "Brokko
 const SP_KEY = "kc_club_spiel_pc", SP_TAKT_MS = 3000;
 // 2.11.0 KC-CLUB-SPIELE-KACHELN (Wunsch Hansi): art = null → Übersicht mit einer Kachel je Spiel; erst in der Kachel Computer/Mitglieder usw.
 let SP = { tab: "pc", art: null, liste: null, offen: null, takt: null, laedt: false, ch: null };
-const SP_ARTEN = [["ttt", "❌⭕", "Tic-Tac-Toe", "🍅 gegen 🥦 · 3 × 3 oder 4 × 4"], ["schach", "♟️", "Schach", "Die Küchenbrigade tritt an"], ["bsk", "🃏", "Bauernskat", "Zu zweit · französisches Blatt"], ["kt", "🔪", "Küchenterror", "Küchenquiz auf Zeit · 10 Sekunden je Frage"]];
+const SP_ARTEN = [["ttt", "❌⭕", "Tic-Tac-Toe", "🍅 gegen 🥦 · 3 × 3 oder 4 × 4"], ["schach", "♟️", "Schach", "Die Küchenbrigade tritt an"], ["bsk", "🃏", "Bauernskat", "Zu zweit · französisches Blatt"], ["kt", "🔪", "Küchenterror", "Küchenquiz auf Zeit · 10 Sekunden je Frage"], ["mae", "🎲", "Mensch ärgere dich nicht", "Würfeln, rauswerfen, ins Ziel · bis zu 4 Farben"]];
 // KC-CLUB-SCHACH (2.8.0): Spielauswahl oben (gilt für „gegen den Computer“ und als Vorschlag beim Herausfordern)
-function spArtWahl(a) { SP.pause = false; SP.nachholen = null; SP.art = ["schach", "bsk", "kt"].includes(a) ? a : "ttt"; if (SP.offen) SP.offen = null; spZeigen(); if (SP.tab === "mg") spLaden(true); }
+function spArtWahl(a) { SP.pause = false; SP.nachholen = null; SP.art = ["schach", "bsk", "kt", "mae"].includes(a) ? a : "ttt"; if (SP.offen) SP.offen = null; spZeigen(); if (SP.tab === "mg") spLaden(true); }
 // KC-CLUB-SPIELE-PAUSE (2.18.0, Wunsch Hansi): je Spiel unten ein Umschalter ⏸ Pause ↔ ▶ Weiter.
 // Gegen den Computer: Spiel steht still – Computer zieht nicht, Küchenterror-Uhr hält an, das Brett/die Frage ist verschwommen.
 // Weiter: Küchenterror gibt nochmal 3-2-1 Lesezeit, dann läuft die restliche Zeit weiter. Gegen Mitglieder (Küchenterror) misst der
@@ -3762,9 +3762,9 @@ function spZeigen() {
   const art = SP.tab === "mg" && SP.offen ? SP.offen.spiel : SP.art;
   document.querySelectorAll("#spArt button").forEach((b) => b.classList.toggle("an", b.dataset.a === art));
   $("spArt").classList.add("versteckt"); // Spielwechsel jetzt über die Kacheln (‹ zurück)
-  $("spEdition").innerHTML = art === "schach" ? `<b>♟️ Schach</b><span>Köcheclub Edition · ${schBrigade() ? "Küchenbrigade Weiß gegen Schwarz" : "Weiß gegen Schwarz"}</span>` : art === "bsk" ? "<b>🃏 Bauernskat</b><span>Köcheclub Edition · zu zweit</span>" : art === "kt" ? "<b>🔪 Küchenterror</b><span>Köcheclub Edition · Küchenquiz auf Zeit</span>" : "<b>Tic-Tac-Toe</b><span>Köcheclub Edition · 🍅 gegen 🥦</span>";
+  $("spEdition").innerHTML = art === "schach" ? `<b>♟️ Schach</b><span>Köcheclub Edition · ${schBrigade() ? "Küchenbrigade Weiß gegen Schwarz" : "Weiß gegen Schwarz"}</span>` : art === "bsk" ? "<b>🃏 Bauernskat</b><span>Köcheclub Edition · zu zweit</span>" : art === "kt" ? "<b>🔪 Küchenterror</b><span>Köcheclub Edition · Küchenquiz auf Zeit</span>" : art === "mae" ? "<b>🎲 Mensch ärgere dich nicht</b><span>Köcheclub Edition · würfeln, rauswerfen, ins Ziel</span>" : "<b>Tic-Tac-Toe</b><span>Köcheclub Edition · 🍅 gegen 🥦</span>";
   clearInterval(SP.takt); SP.takt = null;
-  if (SP.tab === "pc") return SP.art === "schach" ? schPcZeigen() : SP.art === "bsk" ? bskPcZeigen() : SP.art === "kt" ? ktPcZeigen() : spPcZeigen();
+  if (SP.tab === "pc") return SP.art === "schach" ? schPcZeigen() : SP.art === "bsk" ? bskPcZeigen() : SP.art === "kt" ? ktPcZeigen() : SP.art === "mae" ? (maePcZeigen(), maePcFortsetzen()) : spPcZeigen();
   if (SP.offen) return spSpielZeigen();
   spListeZeigen();
 }
@@ -3864,12 +3864,12 @@ function spPokalHtml(L) {
     <p class="hinweis" style="margin:6px 0 0">Sieg = 2 Punkte, Unentschieden = 1 Punkt. Nur Partien gegen Mitglieder zählen.</p></div>`;
 }
 // KC-CLUB-SPIELE-STANDARD-AN (2.22.13, Wunsch Hansi): nichts eingestellt = für alle Spiele herausforderbar (eigenes „Aus“ bleibt aus)
-const SP_ALLE_ARTEN = ["ttt", "schach", "bsk", "kt"];
+const SP_ALLE_ARTEN = ["ttt", "schach", "bsk", "kt", "mae"];
 const spMeineArten = () => { const w = INIT?.einstellungen?.spiele; if (!w) return [...SP_ALLE_ARTEN]; return Array.isArray(w?.spiele) && w.spiele.length ? w.spiele : ["ttt", "schach"]; };
 const spHerausAn = () => { const w = INIT?.einstellungen?.spiele; return w ? w.herausforderung === true : true; };
 // beim ersten Mal sagen, dass es an ist und wo man es abstellt (je Gerät einmal; nicht, wer selbst schon etwas eingestellt hat)
 const SP_HINWEIS = "kc_club_sp_standard_hinweis";
-const spHinweisText = "🎲 Herausforderungen sind jetzt bei allen eingeschaltet – andere Mitglieder können dich zu Tic-Tac-Toe, Schach, Bauernskat und Küchenterror herausfordern. Möchtest du das nicht, kannst du es jederzeit abstellen: ⚙️ Einstellungen → „Privatsphäre“ → „🎲 Andere dürfen mich zu Spielen herausfordern“.";
+const spHinweisText = "🎲 Herausforderungen sind jetzt bei allen eingeschaltet – andere Mitglieder können dich zu Tic-Tac-Toe, Schach, Bauernskat, Küchenterror und Mensch ärgere dich nicht herausfordern. Möchtest du das nicht, kannst du es jederzeit abstellen: ⚙️ Einstellungen → „Privatsphäre“ → „🎲 Andere dürfen mich zu Spielen herausfordern“.";
 const spHinweisFaellig = () => !INIT?.einstellungen?.spiele && lsLesen(SP_HINWEIS) !== "1";
 async function spHinweisEinmal() {
   if (!spHinweisFaellig()) return;
@@ -3888,29 +3888,30 @@ function spEinstZeigen() {
   const an = spHerausAn(), l = spMeineArten(); // 2.22.13: Standard an
   if ($("setSpiele")) $("setSpiele").checked = an;
   if ($("setSpieleArten")) { $("setSpieleArten").classList.toggle("versteckt", !an);
-    $("setSpieleArten").innerHTML = [["ttt", "❌⭕ Tic-Tac-Toe"], ["schach", "♟️ Schach"], ["bsk", "🃏 Bauernskat"], ["kt", "🔪 Küchenterror"]].map(([a, t]) => `<button class="knopf klein${l.includes(a) ? " haupt" : ""}" aria-pressed="${l.includes(a)}" onclick="spArtSchalten('${a}')">${l.includes(a) ? "✅" : "⬜"} ${t}</button>`).join(""); }
+    $("setSpieleArten").innerHTML = [["ttt", "❌⭕ Tic-Tac-Toe"], ["schach", "♟️ Schach"], ["bsk", "🃏 Bauernskat"], ["kt", "🔪 Küchenterror"], ["mae", "🎲 Mensch ärgere dich nicht"]].map(([a, t]) => `<button class="knopf klein${l.includes(a) ? " haupt" : ""}" aria-pressed="${l.includes(a)}" onclick="spArtSchalten('${a}')">${l.includes(a) ? "✅" : "⬜"} ${t}</button>`).join(""); }
 }
 async function spHerausfordernBlatt(pid) {
   if (!SP.liste) await spLaden(true);
   const alle = SP.liste?.bereit || [];
   if (!alle.length) return melde("Noch niemand hat „Herausfordern erlauben“ eingeschaltet – frag doch mal im Club 🙂");
-  let gr = 3, art = SP.art || "ttt", stufe = "mittel", uhr = "0"; // 2.10.0: auch Bauernskat; 2.16.0: Zeitstufe für Küchenterror; 2.23.38: Schachuhr
+  let gr = 3, art = SP.art || "ttt", stufe = "mittel", uhr = "0", maePc = "ja"; // 2.26.0: Mensch ärgere dich nicht – freie Farben spielt der Computer // 2.10.0: auch Bauernskat; 2.16.0: Zeitstufe für Küchenterror; 2.23.38: Schachuhr
   const f = blattAuf("spHerausBlatt", `${einwHtml("b-sp-herausfordern")}<div id="spHerausInhalt"></div><button class="knopf" onclick="fensterZu(document.getElementById('spHerausBlatt'))">Abbrechen</button>`);
   const zeichnen = () => {
     const b = alle.filter((m) => (m.spiele || ["ttt"]).includes(art));
     $("spHerausInhalt").innerHTML = `<h3 style="margin:0">🎲 Herausfordern</h3>
-      ${spWahl("Spiel", art, [["ttt", "❌⭕ Tic-Tac-Toe"], ["schach", "♟️ Schach"], ["bsk", "🃏 Bauernskat"], ["kt", "🔪 Küchenterror"]], "spHerausArt")}
+      <div class="kt-wahl sp-spielwahl">${spWahl("Spiel", art, [["ttt", "<span class=\"kt-emo\">❌⭕</span>Tic-Tac-Toe"], ["schach", "<span class=\"kt-emo\">♟️</span>Schach"], ["bsk", "<span class=\"kt-emo\">🃏</span>Bauernskat"], ["kt", "<span class=\"kt-emo\">🔪</span>Küchen&shy;terror"], ["mae", "<span class=\"kt-emo\">🎲</span>Mensch ärgere dich nicht"]], "spHerausArt")}</div>
+      ${art === "mae" ? `<div class="kt-wahl">${spWahl("Mitspieler", maePc, [["ja", "<span class=\"kt-emo\">👥🤖🤖</span>Ihr zwei + 2 Computer"], ["nein", "<span class=\"kt-emo\">👥</span>Nur ihr zwei"]], "spHerausMaePc")}</div>` : ""}
       ${art === "ttt" ? spWahl("Feld", String(gr), [["3", "3 × 3"], ["4", "4 × 4"]], "spHerausGroesse") : ""}
       ${art === "kt" ? spWahl("Zeit", stufe, [["leicht", "😊 20 s"], ["mittel", "🙂 15 s"], ["schwer", "😎 10 s"]], "spHerausStufe") : ""}
       ${art === "schach" ? spWahl("Uhr", uhr, [["0", "📨 Fern"], ...SCH_UHR_MIN.map((m) => [String(m), `⏱️ ${m}′`])], "spHerausUhr") : ""}
-      <p class="hinweis" style="margin:0">Wen möchtest du herausfordern? ${art === "bsk" ? "Du bist Vorhand und sagst Trumpf an. Die Karten mischt der Server – niemand sieht fremde Karten." : art === "kt" ? "12 Küchenfragen in 4 Runden, ihr spielt abwechselnd je eine Runde. Die Zeit je Frage wählst du oben – schnell und richtig gibt die meisten Punkte. Die letzte ist eine 🎖️ Meisterfrage und zählt doppelt. Du fängst an." : `Du fängst an (${art === "schach" ? "Weiß" : SP_ZEICHEN.x}).${art === "schach" ? (uhr === "0" ? " 📨 Fernpartie: jeder zieht, wann er Zeit hat." : ` ⏱️ Live mit Schachuhr: ${uhr} Minuten je Spieler – am besten, wenn ihr beide gerade Zeit habt.`) : ""}`}</p>
+      <p class="hinweis" style="margin:0">Wen möchtest du herausfordern? ${art === "mae" ? `Du spielst 🔴 Rot und fängst an, dein Gegenüber spielt 🟢 Grün.${maePc === "ja" ? " 🔵 Blau und 🟡 Gelb spielt der Computer mit – das macht es spannender." : ""} Der Server würfelt für alle – niemand kann schummeln.` : art === "bsk" ? "Du bist Vorhand und sagst Trumpf an. Die Karten mischt der Server – niemand sieht fremde Karten." : art === "kt" ? "12 Küchenfragen in 4 Runden, ihr spielt abwechselnd je eine Runde. Die Zeit je Frage wählst du oben – schnell und richtig gibt die meisten Punkte. Die letzte ist eine 🎖️ Meisterfrage und zählt doppelt. Du fängst an." : `Du fängst an (${art === "schach" ? "Weiß" : SP_ZEICHEN.x}).${art === "schach" ? (uhr === "0" ? " 📨 Fernpartie: jeder zieht, wann er Zeit hat." : ` ⏱️ Live mit Schachuhr: ${uhr} Minuten je Spieler – am besten, wenn ihr beide gerade Zeit habt.`) : ""}`}</p>
       ${(() => {
         // KC-CLUB-SPIEL-LIVE (2.22.6, Wunsch Hansi): sofort herausfordern nur, wer gerade online ist; sonst Person suchen → Terminanfrage
         const sym = art === "schach" ? "♟️" : art === "bsk" ? "🃏" : art === "kt" ? "🔪" : "🎲";
         const on = b.filter((m) => ONL?.ids?.has(m.person_id)), weg = b.filter((m) => !ONL?.ids?.has(m.person_id));
         const q = spHerausSuche.trim().toLowerCase(), treffer = q ? weg.filter((m) => m.name.toLowerCase().includes(q)) : [];
         const person = (m, knopf) => `<div class="zeile sp-wer${m.person_id === pid ? " an" : ""}">${kreis(MITGLIEDER?.find((x) => x.person_id === m.person_id) || {}, m.name, 36)}<b style="flex:1;text-align:left">${esc(m.name)}</b>${knopf}</div>`;
-        if (!b.length) return `<p class="hinweis">Für ${art === "schach" ? "Schach" : art === "bsk" ? "Bauernskat" : art === "kt" ? "Küchenterror" : "Tic-Tac-Toe"} hat sich noch niemand freigeschaltet.</p>`;
+        if (!b.length) return `<p class="hinweis">Für ${art === "schach" ? "Schach" : art === "bsk" ? "Bauernskat" : art === "kt" ? "Küchenterror" : art === "mae" ? "Mensch ärgere dich nicht" : "Tic-Tac-Toe"} hat sich noch niemand freigeschaltet.</p>`;
         return `<b>🟢 Gerade online – sofort spielen</b>
           ${on.length ? on.map((m) => person(m, `<button class="knopf haupt klein" onclick="spHerausfordern('${m.person_id}')">${sym} Herausfordern</button>`)).join("") : '<p class="hinweis" style="margin:0">Gerade ist niemand online, der mitspielt.</p>'}
           ${weg.length ? `<b style="margin-top:8px;display:block">📅 Nicht online? Termin anfragen</b>
@@ -3920,19 +3921,20 @@ async function spHerausfordernBlatt(pid) {
   };
   let spHerausSuche = "";
   window.spHerausSuchen = (v) => { spHerausSuche = v; zeichnen(); const e = $("spHerausSucheFeld"); if (e) { e.focus(); e.setSelectionRange(v.length, v.length); } };
-  window.spHerausArt = (a) => { art = ["schach", "bsk", "kt"].includes(a) ? a : "ttt"; zeichnen(); };
+  window.spHerausArt = (a) => { art = ["schach", "bsk", "kt", "mae"].includes(a) ? a : "ttt"; zeichnen(); };
+  window.spHerausMaePc = (w) => { maePc = w === "nein" ? "nein" : "ja"; zeichnen(); };
   window.spHerausGroesse = (g) => { gr = Number(g) === 4 ? 4 : 3; zeichnen(); };
   window.spHerausStufe = (w) => { stufe = KT_ZEIT[w] ? w : "mittel"; zeichnen(); };
   window.spHerausUhr = (w) => { uhr = SCH_UHR_MIN.includes(Number(w)) ? String(w) : "0"; zeichnen(); };
   zeichnen();
   // nicht online: Herausforderung anlegen und gleich den Termin vorschlagen (vorhandene Terminanfrage für Partien)
   window.spHerausTermin = async (an) => {
-    try { const r = await api("spiel_herausfordern", { an, groesse: gr, spiel: art, ...(art === "kt" ? { stufe } : {}), ...(art === "schach" && uhr !== "0" ? { uhr: Number(uhr) } : {}) }, { warten: true }); f.remove();
+    try { const r = await api("spiel_herausfordern", { an, groesse: gr, spiel: art, ...(art === "kt" ? { stufe } : {}), ...(art === "schach" && uhr !== "0" ? { uhr: Number(uhr) } : {}), ...(art === "mae" ? { computer: maePc === "ja" } : {}) }, { warten: true }); f.remove();
       SP.tab = "mg"; SP.offen = null; SP.art = art; await spLaden(true); spTerminBlatt(r.spiel.id); }
     catch (e) { if (!(await spSchonOffen(e, an, f, true))) meldeFehler(e); }
   };
   window.spHerausfordern = async (an) => {
-    try { const r = await api("spiel_herausfordern", { an, groesse: gr, spiel: art, ...(art === "kt" ? { stufe } : {}), ...(art === "schach" && uhr !== "0" ? { uhr: Number(uhr) } : {}) }, { warten: true }); f.remove(); melde(`🎲 Herausforderung an ${r.spiel.gegner.vorname} geschickt`); SP.tab = "mg"; SP.offen = null; SP.art = art; await spLaden(true); if (aktuelleAnsicht !== "spiele") zeige("spiele"); else spZeigen(); }
+    try { const r = await api("spiel_herausfordern", { an, groesse: gr, spiel: art, ...(art === "kt" ? { stufe } : {}), ...(art === "schach" && uhr !== "0" ? { uhr: Number(uhr) } : {}), ...(art === "mae" ? { computer: maePc === "ja" } : {}) }, { warten: true }); f.remove(); melde(`🎲 Herausforderung an ${r.spiel.gegner.vorname} geschickt`); SP.tab = "mg"; SP.offen = null; SP.art = art; await spLaden(true); if (aktuelleAnsicht !== "spiele") zeige("spiele"); else spZeigen(); }
     catch (e) { if (!(await spSchonOffen(e, an, f, false))) meldeFehler(e); }
   };
 }
@@ -3948,7 +3950,7 @@ async function spSchonOffen(e, an, f, mitTermin) {
   return true;
 }
 // KC-CLUB-SPIEL-LIVE (2.22.6, Wunsch Hansi): bin ich online und jemand fordert mich heraus, erscheint sofort ein Fenster (jede Anfrage einmal)
-const SP_NAMEN = { ttt: "❌⭕ Tic-Tac-Toe", schach: "♟️ Schach", bsk: "🃏 Bauernskat", kt: "🔪 Küchenterror" };
+const SP_NAMEN = { ttt: "❌⭕ Tic-Tac-Toe", schach: "♟️ Schach", bsk: "🃏 Bauernskat", kt: "🔪 Küchenterror", mae: "🎲 Mensch ärgere dich nicht" };
 function spielLive(liste) {
   const a = (liste || []).find((x) => !ONL.erledigt.has("s" + x.id)); if (!a || document.getElementById("spLiveBlatt")) return;
   ONL.erledigt.add("s" + a.id);
@@ -3978,6 +3980,7 @@ async function spOeffnen(id) {
 }
 function spSpielZeigen() {
   if (SP.offen.spiel === "kt") { ktSpielZeigen(SP.offen); if (SP.offen.status === "laeuft" || SP.offen.status === "angefragt") SP.takt = setInterval(spNachsehen, SP_TAKT_MS); return; }
+  if (SP.offen.spiel === "mae") { maeSpielZeigen(SP.offen); if (SP.offen.status === "laeuft" || SP.offen.status === "angefragt") SP.takt = setInterval(spNachsehen, SP_TAKT_MS); return; } // KC-CLUB-MAE
   if (SP.offen.spiel === "bsk") { bskSpielZeigen(SP.offen); if (SP.offen.status === "laeuft" || SP.offen.status === "angefragt") SP.takt = setInterval(spNachsehen, SP_TAKT_MS); return; }
   if (SP.offen.spiel === "schach") { schSpielZeigen(SP.offen); if (SP.offen.status === "laeuft" || SP.offen.status === "angefragt") SP.takt = setInterval(spNachsehen, SP_TAKT_MS); return; }
   const g = SP.offen, n = g.groesse, ich = g.ichBin, er = ich === "x" ? "o" : "x";
@@ -4041,7 +4044,7 @@ function mdKachelnOrdnen() {
 // Schach: jeder Zug („Dein Bauer auf C 6“, „Schwarzer Läufer auf E 5 – hat gerade deinen Springer geschlagen“, Schach/Matt),
 // Küchenterror: Frage + Antworten und die Auflösung, Bauernskat: Trumpf, Karten des Gegners, wer den Stich bekommt, Ergebnis.
 // Tic-Tac-Toe bewusst ohne. Nutzt die vorhandene Vorlese-Stimme (sprechen); jede Ansage nur einmal (SP_GESAGT).
-const SP_ANSAGE_KEY = "kc_club_sp_ansage", SP_ANSAGE_NAME = { schach: "Schach", kt: "Küchenterror", bsk: "Bauernskat", ttt: "Tic-Tac-Toe" };
+const SP_ANSAGE_KEY = "kc_club_sp_ansage", SP_ANSAGE_NAME = { schach: "Schach", kt: "Küchenterror", bsk: "Bauernskat", ttt: "Tic-Tac-Toe", mae: "Mensch ärgere dich nicht" };
 const spAnsageAn = (art) => { try { return !!JSON.parse(localStorage.getItem(SP_ANSAGE_KEY) || "{}")[art]; } catch { return false; } };
 function spAnsageKnopf(art, kachel = false) {
   const an = spAnsageAn(art);
@@ -4771,6 +4774,337 @@ async function spEinlSchalter(an) {
   spEinstZeigen();
 }
 
+// ---------- KC-CLUB-MAE (2.26.0, Wunsch Hansi): Mensch ärgere dich nicht – Köcheclub Edition ----------
+// Klassische Regeln: 40 Felder Runde, je Farbe 4 Figuren, Haus, Startfeld und 4 Zielfelder. Mit einer 6 muss eine Figur raus (wenn das
+// Startfeld frei ist), danach wird nochmal gewürfelt; das Startfeld muss geräumt werden, solange noch Figuren im Haus sind. Wer auf ein
+// besetztes Feld kommt, schlägt die fremde Figur zurück ins Haus (eigene Figuren blockieren). Ins Ziel nur genau und ohne eigene Figuren
+// im Ziel zu überspringen. Hat jemand keine Figur auf der Runde (alle im Haus bzw. im Ziel aufgerückt), gibt es 3 Versuche für eine 6.
+// Gegen den Computer: nur auf dem Gerät. Gegen Mitglieder: der Server würfelt und prüft jeden Zug, freie Farben spielt der Server-Computer.
+// Die Regeln unten (MAE_FARBEN … „MAE Regeln Ende“) bekommt der Server als wörtliche Kopie: node tools/mae/server-kopie.mjs
+const MAE_FARBEN = ["rot", "blau", "gruen", "gelb"], MAE_FNAME = ["Rot", "Blau", "Grün", "Gelb"];
+// Figur-Stand: -1 = im Haus, 0–39 = Schritte ab dem eigenen Startfeld, 40–43 = Zielfelder
+const maeFeld = (f, p) => (f * 10 + p) % 40; // Rundenfeld (0–39) einer Figur der Farbe f
+function maeNeu(sitze, regel = "erster") { // sitze in Zugreihenfolge: [{ f: 0–3, wer: "ich" | "pc" | person_id }]
+  return { sitze: sitze.map((s) => ({ f: s.f, wer: s.wer, fig: [-1, -1, -1, -1] })), dran: 0, wurf: null, versuche: 0, phase: "wuerfeln", sieger: null, platz: [], regel, n: 0, log: [] };
+}
+function maeBesetzt(z, feld) { // wer steht auf Rundenfeld feld? { s: Sitz, i: Figur } oder null
+  for (let s = 0; s < z.sitze.length; s++) { const S = z.sitze[s]; for (let i = 0; i < 4; i++) { const p = S.fig[i]; if (p >= 0 && p < 40 && maeFeld(S.f, p) === feld) return { s, i }; } }
+  return null;
+}
+function maeZiel(z, s, i, w) { // neuer Stand von Figur i (Sitz s) mit Wurf w – oder null, wenn der Zug nicht geht
+  const S = z.sitze[s], p = S.fig[i];
+  if (p < 0) { if (w !== 6) return null; const b = maeBesetzt(z, maeFeld(S.f, 0)); return b && b.s === s ? null : 0; }
+  const q = p + w; if (q > 43) return null;
+  if (q >= 40) { for (let k = Math.max(40, p + 1); k <= q; k++) if (S.fig.includes(k)) return null; return q; } // im Ziel nicht überspringen
+  const b = maeBesetzt(z, maeFeld(S.f, q)); return b && b.s === s ? null : q;
+}
+function maeMoeglich(z, s = z.dran, w = z.wurf) { // Figuren, die jetzt ziehen dürfen (Pflichtregeln beachtet)
+  if (!w || z.phase === "ende") return [];
+  const S = z.sitze[s], alle = [0, 1, 2, 3].filter((i) => maeZiel(z, s, i, w) !== null), imHaus = S.fig.some((p) => p < 0);
+  if (w === 6 && imHaus) { const raus = alle.filter((i) => S.fig[i] < 0); if (raus.length) return [raus[0]]; } // 6 → raus ist Pflicht (Haus-Figuren sind gleich)
+  const aufStart = S.fig.indexOf(0);
+  if (imHaus && aufStart >= 0 && alle.includes(aufStart)) return [aufStart]; // Startfeld räumen ist Pflicht
+  return alle;
+}
+function maeFest(z, s) { // keine Figur auf der Runde, Zielfiguren ganz hinten aufgerückt → 3 Versuche für eine 6
+  const f = z.sitze[s].fig; if (f.some((p) => p >= 0 && p < 40)) return false;
+  return f.filter((p) => p >= 40).sort((a, b) => b - a).every((p, k) => p === 43 - k);
+}
+function maeLog(z, e) { z.log.push({ n: ++z.n, ...e }); if (z.log.length > 40) z.log.splice(0, z.log.length - 40); }
+function maeWeiter(z, nochmal) { // nächster Wurf: derselbe Sitz (nach einer 6) oder der nächste, der noch spielt
+  z.wurf = null; z.phase = "wuerfeln"; z.versuche = 0;
+  if (nochmal) return;
+  for (let k = 1; k <= z.sitze.length; k++) { const s = (z.dran + k) % z.sitze.length; if (!z.platz.includes(s)) { z.dran = s; return; } }
+}
+function maeWuerfeln(z, w) { // w = 1–6 (den Zufall liefert der Aufrufer); Ergebnis: erlaubte Figuren ([] = kein Zug)
+  if (z.phase !== "wuerfeln" || !(w >= 1 && w <= 6)) return null;
+  z.wurf = w; maeLog(z, { t: "wurf", s: z.dran, w });
+  const m = maeMoeglich(z);
+  if (m.length) { z.phase = "ziehen"; return m; }
+  if (maeFest(z, z.dran) && w !== 6 && z.versuche < 2) { const v = z.versuche + 1; z.wurf = null; z.versuche = v; maeLog(z, { t: "nochmal", s: z.dran, v }); return []; }
+  maeLog(z, { t: "aus", s: z.dran, w }); maeWeiter(z, w === 6); return [];
+}
+function maeZiehen(z, i) { // Figur i des Sitzes am Zug ziehen; Ergebnis: Zug-Ereignis oder null (nicht erlaubt)
+  if (z.phase !== "ziehen") return null;
+  const s = z.dran, S = z.sitze[s], m = maeMoeglich(z);
+  if (S.fig[i] < 0 && !m.includes(i)) { const h = m.find((k) => S.fig[k] < 0); if (h !== undefined) i = h; } // Haus: jede Figur gilt
+  if (!m.includes(i)) return null;
+  const von = S.fig[i], w = z.wurf, nach = maeZiel(z, s, i, w);
+  let opfer = null;
+  if (nach < 40) { const b = maeBesetzt(z, maeFeld(S.f, nach)); if (b && b.s !== s) { opfer = { s: b.s, i: b.i, p: z.sitze[b.s].fig[b.i] }; z.sitze[b.s].fig[b.i] = -1; } }
+  S.fig[i] = nach; maeLog(z, { t: "zug", s, i, von, nach, w, opfer });
+  const e = z.log[z.log.length - 1];
+  if (S.fig.every((p) => p >= 40)) {
+    z.platz.push(s); maeLog(z, { t: "fertig", s, platz: z.platz.length });
+    if (z.regel !== "mensch" || S.wer !== "pc") { z.phase = "ende"; z.sieger = s; z.wurf = null; return e; }
+    if (z.sitze.every((x, k) => z.platz.includes(k) || x.wer === "pc")) { z.phase = "ende"; z.wurf = null; return e; }
+    maeWeiter(z, false); return e;
+  }
+  maeWeiter(z, w === 6); return e;
+}
+function maeComputerWahl(z, staerke = "mittel", zufall = Math.random) { // welche Figur zieht der Computer?
+  const s = z.dran, m = maeMoeglich(z); if (m.length <= 1) return m[0];
+  if (staerke === "leicht" && zufall() < 0.5) return m[Math.floor(zufall() * m.length)];
+  const S = z.sitze[s], w = z.wurf, hart = staerke === "schwer";
+  const gefahr = (feld) => { // fremde Figuren, die dieses Feld mit einem Wurf erreichen (auch frisch aus dem Haus aufs Startfeld)
+    let n = 0;
+    for (let t = 0; t < z.sitze.length; t++) { if (t === s) continue; const T = z.sitze[t];
+      for (const p of T.fig) if (p >= 0 && p < 40) { const d = (feld - maeFeld(T.f, p) + 40) % 40; if (d >= 1 && d <= 6 && p + d < 40) n++; }
+      if (hart && T.fig.some((p) => p < 0) && maeFeld(T.f, 0) === feld) n++; }
+    return n; };
+  let best = m[0], bw = -1e9;
+  for (const i of m) {
+    const von = S.fig[i], nach = maeZiel(z, s, i, w); let v = 0;
+    if (von < 0) v += 60;
+    if (nach >= 40) v += 50 + nach;
+    else {
+      const b = maeBesetzt(z, maeFeld(S.f, nach)); if (b && b.s !== s) v += 80 + z.sitze[b.s].fig[b.i] / 2; // schlagen – weit gekommene Figuren zuerst
+      v -= gefahr(maeFeld(S.f, nach)) * (hart ? 25 : 15);
+      if (von >= 0) v += gefahr(maeFeld(S.f, von)) * (hart ? 20 : 10); // aus der Gefahr ziehen
+      v += nach * 0.5;
+    }
+    if (von === 0 && S.fig.some((p) => p < 0)) v += 30;
+    v += zufall() * (hart ? 2 : 8);
+    if (v > bw) { bw = v; best = i; }
+  }
+  return best;
+}
+// ----- MAE Regeln Ende -----
+// Spielfeld: 11 × 11 Raster. Runde im Uhrzeigersinn, Rot startet links oben, dann Blau, Grün, Gelb.
+const MAE_RUNDE = [[0, 4], [1, 4], [2, 4], [3, 4], [4, 4], [4, 3], [4, 2], [4, 1], [4, 0], [5, 0], [6, 0], [6, 1], [6, 2], [6, 3], [6, 4], [7, 4], [8, 4], [9, 4], [10, 4], [10, 5],
+  [10, 6], [9, 6], [8, 6], [7, 6], [6, 6], [6, 7], [6, 8], [6, 9], [6, 10], [5, 10], [4, 10], [4, 9], [4, 8], [4, 7], [4, 6], [3, 6], [2, 6], [1, 6], [0, 6], [0, 5]];
+const MAE_ZIEL = [[[1, 5], [2, 5], [3, 5], [4, 5]], [[5, 1], [5, 2], [5, 3], [5, 4]], [[9, 5], [8, 5], [7, 5], [6, 5]], [[5, 9], [5, 8], [5, 7], [5, 6]]];
+const MAE_HAUS = [[[0, 0], [1, 0], [0, 1], [1, 1]], [[9, 0], [10, 0], [9, 1], [10, 1]], [[9, 9], [10, 9], [9, 10], [10, 10]], [[0, 9], [1, 9], [0, 10], [1, 10]]];
+const maeXY = (f, p, i) => p < 0 ? MAE_HAUS[f][i] : p >= 40 ? MAE_ZIEL[f][p - 40] : MAE_RUNDE[maeFeld(f, p)];
+const MAE_AUGEN = { 1: [[5, 5]], 2: [[2.6, 2.6], [7.4, 7.4]], 3: [[2.6, 2.6], [5, 5], [7.4, 7.4]], 4: [[2.6, 2.6], [7.4, 2.6], [2.6, 7.4], [7.4, 7.4]],
+  5: [[2.6, 2.6], [7.4, 2.6], [5, 5], [2.6, 7.4], [7.4, 7.4]], 6: [[2.6, 2.4], [7.4, 2.4], [2.6, 5], [7.4, 5], [2.6, 7.6], [7.4, 7.6]] };
+function maeWuerfelSvg(w) {
+  return `<svg viewBox="0 0 10 10" aria-hidden="true"><rect x=".4" y=".4" width="9.2" height="9.2" rx="2" class="mae-w-flaeche"/>${(MAE_AUGEN[w] || []).map(([x, y]) => `<circle cx="${x}" cy="${y}" r=".95" class="mae-w-auge"/>`).join("")}${w ? "" : '<text x="5" y="6.6" text-anchor="middle" class="mae-w-frage">?</text>'}</svg>`;
+}
+// Brett als SVG: Felder, Haus, Ziel, Figuren. klick = Funktionsname für antippbare Figuren; ziehbar = Figuren-Indizes (Sitz dran)
+function maeBrettSvg(z, { klick = "", ziehbar = [], anim = null, letzte = [], aus = false } = {}) {
+  const c = (x) => x * 10 + 5, kreis = (xy, kl, r = 4.1) => `<circle cx="${c(xy[0])}" cy="${c(xy[1])}" r="${r}" class="${kl}"/>`;
+  const aktiv = new Set(z.sitze.map((S) => S.f)), teile = [];
+  teile.push(`<rect x="1" y="1" width="108" height="108" rx="9" class="mae-grund"/>`);
+  teile.push(`<polyline points="${[...MAE_RUNDE, MAE_RUNDE[0]].map(([x, y]) => `${c(x)},${c(y)}`).join(" ")}" class="mae-weg"/>`);
+  for (let f = 0; f < 4; f++) {
+    const fa = MAE_FARBEN[f], blass = aktiv.has(f) ? "" : " mae-leer";
+    MAE_HAUS[f].forEach((xy) => teile.push(kreis(xy, `mae-haus mae-${fa}${blass}`)));
+    MAE_ZIEL[f].forEach((xy) => teile.push(kreis(xy, `mae-zielfeld mae-${fa}${blass}`)));
+  }
+  MAE_RUNDE.forEach((xy, k) => teile.push(kreis(xy, k % 10 === 0 ? `mae-start mae-${MAE_FARBEN[k / 10]}${aktiv.has(k / 10) ? "" : " mae-leer"}` : "mae-feld")));
+  teile.push(`<text x="55" y="58.5" text-anchor="middle" class="mae-mitte">👨‍🍳</text>`);
+  for (const l of letzte) if (l.von !== undefined && l.von >= 0 && l.von < 40) teile.push(kreis(maeXY(z.sitze[l.s].f, l.von, l.i), "mae-spur", 4.6));
+  // Ziele der ziehbaren Figuren (gestrichelt), damit man sieht, wohin es geht
+  if (ziehbar.length && z.wurf) { const S = z.sitze[z.dran];
+    for (const i of ziehbar) { const q = maeZiel(z, z.dran, i, z.wurf); if (q !== null) teile.push(kreis(maeXY(S.f, q, i), `mae-zielhin mae-${MAE_FARBEN[S.f]}`, 4.6)); } }
+  z.sitze.forEach((S, s) => S.fig.forEach((p0, i) => {
+    const p = anim && anim.s === s && anim.i === i ? anim.p : p0, [x, y] = maeXY(S.f, p, i), kann = s === z.dran && ziehbar.includes(i) && !aus;
+    const haus = p < 0 && s === z.dran && ziehbar.some((k) => S.fig[k] < 0) && !aus; // im Haus: jede Figur antippbar
+    teile.push(`<g class="mae-figur mae-${MAE_FARBEN[S.f]}${kann || haus ? " mae-kann" : ""}${letzte.some((l) => l.s === s && l.i === i) ? " mae-zuletzt" : ""}"${kann || haus ? ` role="button" tabindex="0" aria-label="${MAE_FNAME[S.f]} Figur ${i + 1} ziehen" onclick="${klick}(${i})"` : ""}>
+      <circle cx="${c(x)}" cy="${c(y)}" r="3.5" class="mae-fig-koerper"/><circle cx="${c(x) - 0.9}" cy="${c(y) - 1}" r="1.3" class="mae-fig-glanz"/></g>`);
+  }));
+  return `<svg class="mae-brett-svg" viewBox="0 0 110 110" role="img" aria-label="Spielfeld Mensch ärgere dich nicht">${teile.join("")}</svg>`;
+}
+const maeZielZahl = (S) => S.fig.filter((p) => p >= 40).length;
+function maeSpielerHtml(z, namen) { // Leiste: wer spielt welche Farbe, wer ist dran, wie viele im Ziel
+  return `<div class="mae-spieler">${z.sitze.map((S, s) => `<div class="mae-sp${s === z.dran && z.phase !== "ende" ? " dran" : ""}${z.platz.includes(s) ? " fertig" : ""}">
+    <span class="mae-punkt mae-${MAE_FARBEN[S.f]}" aria-hidden="true"></span><b>${esc(namen[s])}</b><small>${z.platz.includes(s) ? `🏁 ${z.platz.indexOf(s) + 1}.` : `🏠 ${maeZielZahl(S)}/4`}</small></div>`).join("")}</div>`;
+}
+// Ansage/Text zu einem Ereignis (für Verlauf und Vorlesen); wer(s) = Name des Sitzes
+function maeEreignisText(e, wer, z) {
+  const n = wer(e.s), du = n === "Du", v = (er, dw) => (du ? dw : er); // „Du würfelst“ / „Blau würfelt“
+  if (e.t === "wurf") return `${n} ${v("würfelt", "würfelst")} ${e.w === 6 ? "eine 6!" : e.w + "."}`;
+  if (e.t === "nochmal") return `${du ? "Du hast" : n + " hat"} noch ${3 - e.v} ${3 - e.v === 1 ? "Versuch" : "Versuche"} für eine 6.`;
+  if (e.t === "aus") return `${n} ${v("kann", "kannst")} nicht ziehen.`;
+  if (e.t === "fertig") return `🏁 ${n} ${v("hat", "hast")} alle Figuren im Ziel!`;
+  if (e.t === "zug") { const o = e.opfer ? ` und ${v("wirft", "wirfst")} ${wer(e.opfer.s) === "Du" ? "dich" : wer(e.opfer.s)} raus! 😱` : "";
+    return e.von < 0 ? `${n} ${v("kommt", "kommst")} raus${o || "."}` : e.nach >= 40 ? `${n} ${v("zieht", "ziehst")} ins Ziel${o || "."}` : `${n} ${v("zieht", "ziehst")} ${e.w} ${e.w === 1 ? "Feld" : "Felder"}${o || "."}`; }
+  return "";
+}
+// ----- gegen den Computer -----
+const MAE_KEY = "kc_club_mae_pc";
+let MAEP = (() => { let w = null; try { w = JSON.parse(localStorage.getItem(MAE_KEY) || "null"); } catch {}
+  return { staerke: "mittel", gegner: 3, farbe: 0, stand: { ich: 0, pc: 0 }, ...(w || {}), denkt: false, anim: null, rollt: false, letzte: [], text: "" }; })();
+const maepMerken = () => { try { localStorage.setItem(MAE_KEY, JSON.stringify({ staerke: MAEP.staerke, gegner: MAEP.gegner, farbe: MAEP.farbe, stand: MAEP.stand, z: MAEP.z || null })); } catch {} };
+const maepSichtbar = () => aktuelleAnsicht === "spiele" && SP.tab === "pc" && SP.art === "mae";
+const maepName = (s) => { const S = MAEP.z?.sitze[s]; return !S ? "" : S.wer === "ich" ? "Du" : `🤖 ${MAE_FNAME[S.f]}`; };
+function maePcZeigen() {
+  const z = MAEP.z, s = MAEP.stand;
+  const stand = `<div class="sp-stand"><span>Du <b>${s.ich}</b></span><span><b>${s.pc}</b> Computer</span></div>`;
+  if (!z) { $("spInhalt").innerHTML = `<div class="karte sp-karte">
+      <div class="kt-wahl">${spWahl("Gegner", String(MAEP.gegner), [["1", "<span class=\"kt-emo\">🤖</span>1 Computer"], ["2", "<span class=\"kt-emo\">🤖🤖</span>2 Computer"], ["3", "<span class=\"kt-emo\">🤖🤖🤖</span>3 Computer"]], "maePcGegner")}</div>
+      <div class="kt-wahl">${spWahl("Stärke", MAEP.staerke, [["leicht", "<span class=\"kt-emo\">😊</span>Leicht"], ["mittel", "<span class=\"kt-emo\">🙂</span>Mittel"], ["schwer", "<span class=\"kt-emo\">😎</span>Schwer"]], "maePcStaerke")}</div>
+      <div class="kt-wahl">${spWahl("Deine Farbe", String(MAEP.farbe), MAE_FNAME.map((n, f) => [String(f), `<span class="mae-punkt mae-${MAE_FARBEN[f]}" aria-hidden="true"></span>${n}`]), "maePcFarbe")}</div>
+      ${stand}
+      <p style="margin:6px 0">🎲 <b>Mensch ärgere dich nicht</b> – bring alle 4 Figuren ins Ziel. Mit einer <b>6</b> kommt eine Figur raus, und du darfst nochmal würfeln.
+        Kommst du auf ein Feld mit einer fremden Figur, fliegt sie zurück ins Haus. Ins Ziel geht es nur genau. Wer zuerst alle 4 drin hat, gewinnt!</p>
+      <div class="kt-knoepfe"><button class="knopf haupt kt-los" onclick="maePcStart()"><span class="kt-ico">▶</span>Los geht’s</button>${spAnsageKnopf("mae", true)}${s.ich + s.pc ? '<button class="knopf klein" onclick="maePcStandWeg()" title="Spielstand zurücksetzen"><span class="kt-ico">🗑️</span>Stand löschen</button>' : ""}</div></div>`; return; }
+  const namen = z.sitze.map((_, k) => maepName(k)), ich = z.sitze[z.dran]?.wer === "ich", m = ich && z.phase === "ziehen" && !MAEP.anim ? maeMoeglich(z) : [];
+  const status = z.phase === "ende" ? (z.sitze[z.sieger]?.wer === "ich" ? `<div class="sp-banner sieg">🏆 Du hast gewonnen!</div>` : `<div class="sp-banner niederlage">${esc(maepName(z.sieger))} war schneller</div>`)
+    : `<div class="sp-status${ich ? " sp-ichdran" : ""}">${MAEP.text ? esc(MAEP.text) + " " : ""}${ich ? (z.phase === "wuerfeln" ? (z.versuche ? `🎲 Nochmal würfeln – noch ${3 - z.versuche} ${3 - z.versuche === 1 ? "Versuch" : "Versuche"} für eine 6` : "🎲 Du bist dran – würfeln!") : MAEP.anim ? "" : "👆 Tippe die Figur an, die ziehen soll") : MAEP.anim ? "" : `${esc(maepName(z.dran))} ist dran …`}</div>`;
+  $("spInhalt").innerHTML = `<div class="karte sp-karte mae-karte">
+      ${maeSpielerHtml(z, namen)}
+      ${status}
+      <div class="mae-brett" id="maeBrett">${maeBrettSvg(z, { klick: "maePcFigur", ziehbar: m, anim: MAEP.anim, letzte: MAEP.letzte, aus: SP.pause })}</div>
+      <div class="mae-wurfzeile">${maeWuerfelKnopf(z.wurf, { kann: ich && z.phase === "wuerfeln" && !MAEP.rollt && !MAEP.anim, rollt: MAEP.rollt, klick: "maePcWuerfeln()", farbe: MAE_FARBEN[z.sitze[z.dran]?.f ?? 0] })}</div>
+      ${z.phase === "ende" ? `<div class="sp-knopfreihe"><button class="knopf haupt" onclick="maePcStart()"><span class="kt-ico">↺</span>Neues Spiel</button><button class="knopf" onclick="MAEP.z=null;maepMerken();maePcZeigen()"><span class="kt-ico">⚙️</span>Einstellen</button>${spAnsageKnopf("mae", true)}</div>`
+        : `<div class="sp-knopfreihe">${spAnsageKnopf("mae", true)}<button class="knopf" onclick="maePcAbbrechen()"><span class="kt-ico">✖</span>Spiel abbrechen</button></div>`}
+    </div>`;
+}
+function maeWuerfelKnopf(w, { kann, rollt, klick, farbe }) {
+  return `<button class="mae-wuerfel mae-${farbe}${rollt ? " rollt" : ""}${kann ? " kann" : ""}" ${kann ? `onclick="${klick}"` : "disabled"} aria-label="${kann ? "Würfeln" : w ? `Gewürfelt: ${w}` : "Würfel"}">${maeWuerfelSvg(rollt ? 1 + Math.floor(Math.random() * 6) : w)}</button>${kann ? '<span class="mae-w-text">Antippen zum Würfeln</span>' : ""}`;
+}
+function maeBrettNeu() { const el = $("maeBrett"); if (!el || !MAEP.z) return; const z = MAEP.z, ich = z.sitze[z.dran]?.wer === "ich";
+  el.innerHTML = maeBrettSvg(z, { klick: "maePcFigur", ziehbar: ich && z.phase === "ziehen" && !MAEP.anim ? maeMoeglich(z) : [], anim: MAEP.anim, letzte: MAEP.letzte, aus: SP.pause }); }
+const maePcGegner = (n) => { MAEP.gegner = [1, 2, 3].includes(Number(n)) ? Number(n) : 3; maepMerken(); maePcZeigen(); };
+const maePcStaerke = (w) => { MAEP.staerke = ["leicht", "mittel", "schwer"].includes(w) ? w : "mittel"; maepMerken(); maePcZeigen(); };
+const maePcFarbe = (f) => { MAEP.farbe = [0, 1, 2, 3].includes(Number(f)) ? Number(f) : 0; maepMerken(); maePcZeigen(); };
+async function maePcStandWeg() { if (!(await frage("Spielstand Mensch ärgere dich nicht auf 0 : 0 zurücksetzen?", { ja: "🗑️ Zurücksetzen", nein: "Abbrechen" }))) return; MAEP.stand = { ich: 0, pc: 0 }; maepMerken(); maePcZeigen(); }
+function maePcStart() {
+  const F = MAEP.farbe, n = MAEP.gegner, farben = n === 1 ? [F, (F + 2) % 4] : n === 2 ? [F, (F + 1) % 4, (F + 2) % 4] : [F, (F + 1) % 4, (F + 2) % 4, (F + 3) % 4];
+  MAEP.z = maeNeu(farben.map((f, k) => ({ f, wer: k ? "pc" : "ich" }))); MAEP.letzte = []; MAEP.text = ""; MAEP.anim = null; MAEP.rollt = false;
+  maepMerken(); spSag("mae", `Neues Spiel. Du spielst ${MAE_FNAME[F]} und fängst an.`, "maep:start:" + Date.now(), true); maePcZeigen();
+}
+const maeWarte = (ms) => new Promise((r) => setTimeout(r, ms));
+async function maePcWuerfeln() {
+  const z = MAEP.z; if (!z || z.phase !== "wuerfeln" || z.sitze[z.dran].wer !== "ich" || MAEP.rollt || SP.pause) return;
+  await maeWurf(z);
+  if (!maepSichtbar() || MAEP.z !== z) return;
+  maePcNach();
+}
+async function maeWurf(z) { // Würfel rollen lassen (Animation), dann werten
+  MAEP.rollt = true; MAEP.text = ""; maePcZeigen();
+  const t0 = Date.now(), tick = setInterval(() => { const b = document.querySelector(".mae-wuerfel.rollt"); if (b) b.innerHTML = maeWuerfelSvg(1 + Math.floor(Math.random() * 6)); }, 90);
+  try { navigator.vibrate?.(25); } catch {}
+  await maeWarte(Math.max(0, 650 - (Date.now() - t0))); clearInterval(tick); MAEP.rollt = false;
+  if (MAEP.z !== z) return;
+  const w = 1 + Math.floor(Math.random() * 6), vor = z.n, m = maeWuerfeln(z, w);
+  MAEP.text = maeEreignisText(z.log.find((e) => e.n === vor + 1), maepName, z);
+  const rest = z.log.filter((e) => e.n > vor + 1).map((e) => maeEreignisText(e, maepName, z)).join(" ");
+  spSag("mae", `${MAEP.text} ${rest}`.trim(), `maep:${z.n}`, z.sitze[z.log.find((e) => e.n === vor + 1).s]?.wer === "ich");
+  if (rest) MAEP.text += " " + rest;
+  maepMerken(); maePcZeigen();
+  return m;
+}
+async function maePcNach() { // nach dem Würfeln: genau ein Zug → selbst ziehen; Computer am Zug → Computer
+  const z = MAEP.z; if (!z || !maepSichtbar()) return;
+  if (z.phase === "ende") return maePcWerten();
+  const ich = z.sitze[z.dran].wer === "ich";
+  if (ich && z.phase === "ziehen") { const m = maeMoeglich(z); if (m.length === 1) { await maeWarte(650); if (MAEP.z === z && z.phase === "ziehen" && !SP.pause) return maePcFigur(m[0]); } return; }
+  if (!ich) { await maeWarte(700); if (MAEP.z === z) maePcComputer(); }
+}
+async function maePcFigur(i) {
+  const z = MAEP.z; if (!z || z.phase !== "ziehen" || z.sitze[z.dran].wer !== "ich" || MAEP.anim || SP.pause) return;
+  await maeZugMitAnimation(z, i);
+  if (MAEP.z === z) maePcNach();
+}
+async function maeZugMitAnimation(z, i) { // Figur Feld für Feld laufen lassen, dann den Zug wirklich ausführen
+  const s = z.dran, S = z.sitze[s], m = maeMoeglich(z); if (S.fig[i] < 0 && !m.includes(i)) i = m.find((k) => S.fig[k] < 0) ?? i;
+  if (!m.includes(i)) return;
+  const von = S.fig[i], nach = maeZiel(z, s, i, z.wurf);
+  if (von >= 0) for (let p = von + 1; p < nach; p++) { MAEP.anim = { s, i, p }; maeBrettNeu(); await maeWarte(150); if (MAEP.z !== z) return; }
+  MAEP.anim = null;
+  const vor = z.n, e = maeZiehen(z, i); if (!e) return maePcZeigen();
+  MAEP.letzte = [{ s: e.s, i: e.i, von: e.von }];
+  const texte = z.log.filter((x) => x.n > vor).map((x) => maeEreignisText(x, maepName, z));
+  MAEP.text = texte.join(" ");
+  if (e.opfer) try { navigator.vibrate?.([40, 30, 60]); } catch {}
+  if (e.opfer || texte.length > 1 || z.sitze[s].wer !== "ich") spSag("mae", MAEP.text, `maep:${z.n}`);
+  maepMerken(); maePcZeigen();
+}
+async function maePcComputer() { // die Computer ziehen nacheinander, bis du wieder dran bist (nur eine Kette gleichzeitig)
+  if (MAEP.kette) return; MAEP.kette = true;
+  try {
+    for (;;) {
+      const z = MAEP.z; if (!z || z.phase === "ende" || !maepSichtbar()) break;
+      if (z.sitze[z.dran].wer === "ich") { maePcZeigen(); break; }
+      if (spPauseHalt(maePcComputer)) break;
+      if (z.phase === "wuerfeln") { await maeWurf(z); if (MAEP.z !== z || !maepSichtbar()) break; await maeWarte(z.phase === "ziehen" ? 550 : 800); }
+      if (MAEP.z !== z || !maepSichtbar() || spPauseHalt(maePcComputer)) break;
+      if (z.phase === "ziehen") { await maeZugMitAnimation(z, maeComputerWahl(z, MAEP.staerke)); await maeWarte(450); }
+      if (MAEP.z !== z) break;
+      if (z.phase === "ende") { maePcWerten(); break; }
+    }
+  } finally { MAEP.kette = false; }
+}
+function maePcWerten() {
+  const z = MAEP.z; if (!z || z.phase !== "ende" || z.gewertet) return;
+  z.gewertet = true; const sieg = z.sitze[z.sieger]?.wer === "ich";
+  if (sieg) MAEP.stand.ich++; else MAEP.stand.pc++;
+  maepMerken(); spSag("mae", sieg ? "Glückwunsch! Du hast alle Figuren im Ziel und gewinnst!" : `${maepName(z.sieger).replace("🤖 ", "")} war schneller. Revanche?`, `maep:ende:${z.n}`, true);
+  try { navigator.vibrate?.(sieg ? [60, 40, 60, 40, 120] : 80); } catch {}
+  maePcZeigen();
+}
+// wie beim Küchenterror: Abbrechen ohne Wertung (Spielstand bleibt)
+async function maePcAbbrechen() {
+  const z = MAEP.z; if (!z || z.phase === "ende") return;
+  try { speechSynthesis.cancel(); } catch {}
+  if (!(await frage("Spiel abbrechen? Diese Runde wird nicht gewertet – dein Spielstand bleibt.", { ja: "✖ Abbrechen", nein: "▶ Weiterspielen" }))) { if (MAEP.z === z && z.sitze[z.dran].wer !== "ich") maePcComputer(); return; }
+  if (MAEP.z !== z) return;
+  MAEP.z = null; MAEP.anim = null; MAEP.rollt = false; maepMerken();
+  if (maepSichtbar()) maePcZeigen();
+  melde("Spiel abgebrochen – nicht gewertet.");
+}
+function maePcFortsetzen() { // nach Rückkehr in die Ansicht: läuft der Computer gerade nicht, wieder anstoßen
+  const z = MAEP.z; if (!z || z.phase === "ende" || MAEP.kette || MAEP.anim || MAEP.rollt) return;
+  if (z.sitze[z.dran].wer !== "ich") setTimeout(maePcComputer, 500);
+}
+// ----- gegen Mitglieder (der Server würfelt und prüft) -----
+const MAE_GESEHEN = new Map(); // Partie → zuletzt gezeigtes Ereignis (für Verlauf/Ansage)
+let MAEM = { sendet: false, rollt: false, letzte: [], texte: [] };
+const maeMgName = (g, s) => { const S = g.mae?.sitze[s]; return !S ? "" : S.wer === "ich" ? "Du" : S.wer === "pc" ? `🤖 ${MAE_FNAME[S.f]}` : S.name || "?"; };
+function maeSpielZeigen(g) {
+  if (MAEM.id !== g.id) MAEM = { sendet: false, rollt: false, letzte: [], texte: [], id: g.id };
+  const z = g.mae; if (!z) { $("spInhalt").innerHTML = '<div class="karte hinweis">Wird geladen …</div>'; return; }
+  const gesehen = MAE_GESEHEN.has(g.id) ? MAE_GESEHEN.get(g.id) : z.n, neu = (z.log || []).filter((e) => e.n > gesehen);
+  if (neu.length) { // was die anderen (und der Computer) inzwischen gemacht haben
+    MAEM.texte = neu.map((e) => maeEreignisText(e, (s) => maeMgName(g, s), z)).filter(Boolean).slice(-6);
+    MAEM.letzte = neu.filter((e) => e.t === "zug").map((e) => ({ s: e.s, i: e.i, von: e.von }));
+    if (neu.some((e) => e.s !== z.ich)) spSag("mae", MAEM.texte.join(" "), `maem:${g.id}:${z.n}`, true);
+  }
+  MAE_GESEHEN.set(g.id, z.n);
+  const namen = z.sitze.map((_, s) => maeMgName(g, s)), m = g.ichDran && z.phase === "ziehen" ? z.moeglich || [] : [];
+  const banner = g.status === "beendet" ? (g.ergebnis === "gewonnen" ? `<div class="sp-banner sieg">🏆 Du hast gewonnen!${g.aufgegeben ? ` ${esc(g.gegner.vorname)} hat aufgegeben.` : ""}</div>` : `<div class="sp-banner niederlage">${g.aufgegeben ? "Du hast aufgegeben." : `${esc(g.gegner.vorname)} hat gewonnen.`}</div>`)
+    : g.status === "angefragt" ? `<div class="sp-status">⏳ Warte, bis ${esc(g.gegner.vorname)} annimmt …</div>`
+    : g.status !== "laeuft" ? `<div class="sp-status">Diese Partie findet nicht statt.</div>`
+    : `<div class="sp-status${g.ichDran ? " sp-ichdran" : ""}">${g.ichDran ? (z.phase === "wuerfeln" ? (z.versuche ? `🎲 Nochmal würfeln – noch ${3 - z.versuche} ${3 - z.versuche === 1 ? "Versuch" : "Versuche"} für eine 6` : "🎲 Du bist dran – würfeln!") : `Du hast eine ${z.wurf} – 👆 tippe die Figur an, die ziehen soll`) : `${esc(namen[z.dran])} ist dran …`}</div>`;
+  $("spInhalt").innerHTML = `<div class="karte sp-karte mae-karte">
+      <div class="zeile" style="border:none;padding:0"><button class="knopf klein" onclick="SP.offen=null;spZeigen();spLaden(true)">‹ Übersicht</button><b style="flex:1;text-align:right">🎲 Du gegen ${esc(g.gegner.vorname)}</b></div>
+      ${maeSpielerHtml(z, namen)}
+      ${banner}
+      <div class="mae-brett" id="maeBrett">${maeBrettSvg(z, { klick: "maeMgFigur", ziehbar: m, letzte: MAEM.letzte, aus: MAEM.sendet })}</div>
+      <div class="mae-wurfzeile">${maeWuerfelKnopf(z.wurf, { kann: g.ichDran && z.phase === "wuerfeln" && !MAEM.sendet, rollt: MAEM.rollt, klick: "maeMgWuerfeln()", farbe: MAE_FARBEN[z.sitze[z.dran]?.f ?? 0] })}</div>
+      ${MAEM.texte.length && g.status !== "angefragt" ? `<div class="mae-verlauf" aria-live="polite"><b>Zuletzt:</b>${MAEM.texte.slice(-4).map((t) => `<div>${esc(t)}</div>`).join("")}</div>` : ""}
+      ${spTerminHtml(g)}
+      <p class="hinweis" style="text-align:center;margin:6px 0">${g.status === "laeuft" ? `Du musst nicht warten – ${esc(g.gegner.vorname)} bekommt Bescheid, wenn er dran ist.${z.sitze.some((S) => S.wer === "pc") ? " 🤖 Die freien Farben spielt der Computer." : ""}` : ""}</p>
+      <div class="sp-knopfreihe">${g.status === "beendet" ? `<button class="knopf haupt" onclick="spRevanche('${g.id}')"><span class="kt-ico">↺</span>Revanche</button>` : g.status === "laeuft" ? `<button class="knopf" onclick="spAufgeben('${g.id}')"><span class="kt-ico">🏳️</span>Aufgeben</button>` : ""}${spAnsageKnopf("mae", true)}</div>
+    </div>`;
+  if (g.ichDran && z.phase === "ziehen" && m.length === 1 && !MAEM.sendet) setTimeout(() => { if (SP.offen?.id === g.id && SP.offen.ichDran && SP.offen.mae?.phase === "ziehen") maeMgFigur(m[0]); }, 700);
+}
+async function maeMgZug(zug) {
+  const g = SP.offen; if (!g?.ichDran || MAEM.sendet) return;
+  MAEM.sendet = true;
+  try { SP.offen = (await api("spiel_zug", { id: g.id, zug, zuege: g.zuege })).spiel; }
+  catch (e) { meldeFehler(e); try { SP.offen = (await api("spiel_holen", { id: g.id })).spiel; } catch {} }
+  finally { MAEM.sendet = false; }
+  if (aktuelleAnsicht === "spiele" && SP.offen?.id === g.id) spZeigen();
+}
+async function maeMgWuerfeln() {
+  const g = SP.offen; if (!g?.ichDran || g.mae?.phase !== "wuerfeln" || MAEM.sendet || MAEM.rollt) return;
+  MAEM.rollt = true; spZeigen();
+  const tick = setInterval(() => { const b = document.querySelector(".mae-wuerfel.rollt"); if (b) b.innerHTML = maeWuerfelSvg(1 + Math.floor(Math.random() * 6)); }, 90);
+  try { navigator.vibrate?.(25); } catch {}
+  const t0 = Date.now(); MAEM.sendet = true; let neu = null;
+  try { neu = (await api("spiel_zug", { id: g.id, zug: { wuerfeln: true }, zuege: g.zuege })).spiel; }
+  catch (e) { meldeFehler(e); try { neu = (await api("spiel_holen", { id: g.id })).spiel; } catch {} }
+  await maeWarte(Math.max(0, 650 - (Date.now() - t0))); clearInterval(tick); MAEM.rollt = false; MAEM.sendet = false;
+  if (neu) SP.offen = neu;
+  if (aktuelleAnsicht === "spiele" && SP.offen?.id === g.id) spZeigen();
+}
+function maeMgFigur(i) { const g = SP.offen; if (!g?.ichDran || g.mae?.phase !== "ziehen") return; const S = g.mae.sitze[g.mae.dran], m = g.mae.moeglich || [];
+  if (S.fig[i] < 0 && !m.includes(i)) i = m.find((k) => S.fig[k] < 0) ?? i; if (m.includes(i)) maeMgZug({ figur: i }); }
+
 // ---------- KC-CLUB-KUECHENTERROR (2.14.0, Wunsch Hansi): Küchenquiz auf Zeit – Fragen aus dem Profi-Küchenalltag ----------
 // 4 Antworten, nur eine richtig. Zeitbalken 10 Sekunden. Punkte: richtig = 100 + Zeitbonus bis 100 (je schneller, desto mehr),
 // falsch oder zu spät = 0. Gegen den Computer: abwechselnd je eine Frage (12 Fragen, je 6), nur auf dem Gerät.
@@ -5015,7 +5349,7 @@ function ktMgWeiter() { const g = SP.offen; KTM.aufl = null; if (!KTM.pause && g
 // ---------- KC-CLUB-SPIEL-TERMIN (2.9.1, Wunsch Hansi): zu einer Partie einen Termin vereinbaren ----------
 // Nutzt die vorhandene Terminanfrage (steht dann bei beiden im Kalender und im Kalender-Abo, Vortags-Erinnerung). Dazu eine
 // Erinnerung kurz vor Beginn an beide, sobald zugesagt ist. Zu-/Absagen direkt an der Partie.
-const spTitel = (g) => g.spiel === "schach" ? "♟️ Schach" : g.spiel === "bsk" ? "🃏 Bauernskat" : g.spiel === "kt" ? "🔪 Küchenterror" : `❌⭕ Tic-Tac-Toe ${g.groesse}×${g.groesse}`;
+const spTitel = (g) => g.spiel === "schach" ? "♟️ Schach" : g.spiel === "bsk" ? "🃏 Bauernskat" : g.spiel === "kt" ? "🔪 Küchenterror" : g.spiel === "mae" ? "🎲 Mensch ärgere dich nicht" : `❌⭕ Tic-Tac-Toe ${g.groesse}×${g.groesse}`;
 const spTerminZeit = (t) => new Intl.DateTimeFormat("de-DE", { timeZone: TZ, weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }).format(new Date(t.beginn)) + " Uhr";
 function spTerminKurz(g) {
   const t = g.termin; if (!t) return "";
@@ -6341,7 +6675,7 @@ const KACHELN = {
     { id: "buero", sym: "🗂️", t: "Büro", u: "Sitzung vorbereiten · Einladung · Eingang", aktion: "buStart()", nur: () => !!ICH?.buero },
     { id: "schulung_admin", sym: "🎓", t: "Schulungen", u: "Termine · Einladungen · Freigeben", aktion: "scStart()", nur: () => !!ICH?.admin }, // 2.23.60 KC-CLUB-SCHULUNG-ADMIN (nur Admin)
     // KC-CLUB-SPIELE (2.7.0, Wunsch Hansi): Spiele – Köcheclub Edition (Zahl = Partien, in denen ich dran bin / Herausforderungen an mich)
-    { id: "spiele", sym: "🎲", t: "Spiele", u: "Tic-Tac-Toe · Schach · Bauernskat · Küchenterror", aktion: "spStart()", zahl: () => INIT?.spieleDran || 0 },
+    { id: "spiele", sym: "🎲", t: "Spiele", u: "Tic-Tac-Toe · Schach · Bauernskat · Küchenterror · Mensch ärgere dich nicht", aktion: "spStart()", zahl: () => INIT?.spieleDran || 0 },
     // KC-CLUB-REZEPTBUCH (2.23.83, Wunsch Hansi): gemeinsames Club-Rezeptbuch – Portionen umrechnen, Einkaufsliste, drucken, teilen
     { id: "rezepte", sym: "📖", t: "Rezeptbuch", u: () => (nurTest("rezepte") ? "🔒 nur für dich (Test) · " : "") + (RZ?.liste ? `${RZ.liste.length} Rezept${RZ.liste.length === 1 ? "" : "e"}` : "Club-Rezepte · Einkaufsliste"), aktion: "rzStart()", nur: () => frei("rezepte") },
   ],

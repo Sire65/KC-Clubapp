@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.26.0 – 2026-10-06 – 🎲 Mensch ärgere dich nicht
+Neues Spiel in der Köcheclub Edition: Mensch ärgere dich nicht. Gegen den Computer (1–3 Computer-Gegner, Stärke, eigene Farbe) und gegen Mitglieder mit Herausforderung, Terminvereinbarung und Einladung – zu zweit, die freien Farben spielt auf Wunsch der Computer. Sauberes Spielfeld (klassisches Kreuz), großer Würfel, leuchtende Figuren zum Antippen, Ansage, Pause, Abbrechen, Knöpfe als Kacheln. Der Server würfelt und prüft jeden Zug. (KC-CLUB-MAE, Wunsch Hansi)
+
 ## 2.25.12 – 2026-10-06 – Spiele-Übersicht wieder richtig
 Korrektur zu 2.25.11: Die neuen Kachel-Knöpfe bei Tic-Tac-Toe/Bauernskat hatten denselben Klassennamen wie die Spiele-Übersicht – dadurch waren die Spiel-Kacheln schmal und abgeschnitten. Eigener Name (sp-knopfreihe), Übersicht wieder wie vorher; Test verhindert die Doppelbelegung. (KC-CLUB-SP-KACHELN, Fund Hansi)
 

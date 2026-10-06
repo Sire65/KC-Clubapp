@@ -3348,7 +3348,7 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/bsk: g\.spiel === "bsk" \? bskSicht\(g\.bsk, g\.spieler_x === ich \? 0 : 1\) : null/.test(server) && !/bsk: g\.bsk[,\s}]/.test(server), "nur die Sicht verlässt den Server");
   const zug = server.slice(server.indexOf('case "spiel_zug": {'), server.indexOf('case "spiel_aufgeben": {'));
   assert.ok(/if \(!bskErlaubt\(z, s\)\.includes\(k\)\) throw/.test(zug) && /z\.vorhand !== s \|\| !BSK_TRUMPF\.has/.test(zug) && /gewinner: sieg \? ich\.person_id : niederlage \? gegner/.test(zug), "Zugprüfung + Wertung");
-  assert.ok(/function bskSpielZeigen\(g\)/.test(html) && /api\("spiel_zug", \{ id: g\.id, zug, zuege: g\.zuege \}\)/.test(html) && /\["bsk", "🃏 Bauernskat"\](, \[[^\]]*\])*\], "spHerausArt"/.test(html), "App: Ansicht + Herausfordern");
+  assert.ok(/function bskSpielZeigen\(g\)/.test(html) && /api\("spiel_zug", \{ id: g\.id, zug, zuege: g\.zuege \}\)/.test(html) && /\["bsk", "(🃏 |<span class=\\"kt-emo\\">🃏<\/span>)Bauernskat"\](, \[[^\]]*\])*\], "spHerausArt"/.test(html), "App: Ansicht + Herausfordern");
   // ganze Partien mit der Server-Kopie: 120 Augen, nur erlaubte Karten
   const E = await import(new URL("../supabase/functions/kc-club/bauernskat.js", import.meta.url));
   for (let n = 0; n < 30; n++) { const z = E.bskNeu(0); z.trumpf = ["kr", "pi", "he", "ka", "grand"][n % 5]; z.phase = "spiel"; z.amZug = 0; let i = 0;
@@ -4796,6 +4796,40 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/ziel\.outerHTML = `<button class="knopf" onclick="spHerausfordernBlatt/.test(html) && /\.md-kacheln \{ display: grid; grid-template-columns: 1fr 1fr;/.test(html), "Spiel-Knopf als Kachel im Raster");
 }
 
+// 2.26.0 KC-CLUB-MAE: Mensch ärgere dich nicht – Regeln = eine Quelle (app.js), Server-Kopie, Server würfelt und prüft
+{
+  const kopie = lies("supabase/functions/kc-club/mae.js"), a = html.indexOf("const MAE_FARBEN = "), b = html.indexOf("// ----- MAE Regeln Ende -----", a);
+  assert.ok(a > 0 && b > a && kopie.includes(html.slice(a, b).trimEnd()), "mae.js weicht von app.js ab – node tools/mae/server-kopie.mjs");
+  assert.ok(/import \{ maeNeu, maeMoeglich, maeWuerfeln, maeZiehen, maeComputerWahl \} from "\.\/mae\.js"/.test(server), "Server nutzt die Kopie");
+  const mig = lies("supabase/migrations/20261006_kc_club_v2260_mensch_aergere.sql");
+  assert.ok(/add column if not exists mae jsonb/.test(mig) && /spiel in \('ttt', 'schach', 'bsk', 'kt', 'mae'\)/.test(mig) && /\(spiel = 'mae' and groesse = 4\)/.test(mig) && /\(spiel = 'mae' and brett = 'mae' and mae is not null/.test(mig), "Migration");
+  const zug = server.slice(server.indexOf('case "spiel_zug": {'), server.indexOf('case "spiel_aufgeben": {'));
+  assert.ok(/if \(s < 0 \|\| z\.dran !== s\) throw/.test(zug) && /maeWuerfeln\(z, maeWurf\(\)\)/.test(zug) && /if \(!maeZiehen\(z, Number\(zug\.figur\)\)\) throw/.test(zug) && /maeComputerSpielen\(z\);/.test(zug), "Server würfelt, prüft, zieht Computer-Farben");
+  assert.ok(/function maeWurf\(\) \{ const z = new Uint8Array\(1\); do crypto\.getRandomValues\(z\); while \(z\[0\] >= 252\)/.test(server), "gleich verteilter Server-Würfel");
+  assert.ok(/art === "mae" \? \{ brett: "mae", mae: maeStart\(String\(opt\.x\), String\(opt\.o\), opt\.pc !== false\) \}/.test(server) && /x: g\.spieler_o, o: g\.spieler_x, pc: \(g\.mae\?\.sitze\?\.length \?\? 4\) === 4/.test(server), "Start + Revanche");
+  assert.ok(/mae: g\.spiel === "mae" \? maeSicht\(g\.mae, ich, namen\) : null/.test(server) && /SPIEL_ARTEN = \["ttt", "schach", "bsk", "kt", "mae"\]/.test(server), "Sicht + Spielart");
+  assert.ok(/\["mae", "🎲", "Mensch ärgere dich nicht"/.test(html) && /\["mae", "<span class=\\"kt-emo\\">🎲<\/span>Mensch ärgere dich nicht"\]\], "spHerausArt"/.test(html) && /\.\.\.\(art === "mae" \? \{ computer: maePc === "ja" \} : \{\}\)/.test(html), "App: Kachel + Herausfordern mit Computer-Wahl");
+  assert.ok(/if \(SP\.offen\.spiel === "mae"\) \{ maeSpielZeigen\(SP\.offen\)/.test(html) && /SP\.art === "mae" \? \(maePcZeigen\(\), maePcFortsetzen\(\)\)/.test(html), "App: Ansichten");
+  assert.ok(/if \(MAEP\.kette\) return; MAEP\.kette = true;/.test(html) && /async function maePcAbbrechen\(\)/.test(html) && /<div class="sp-knopfreihe">\$\{spAnsageKnopf\("mae", true\)\}<button class="knopf" onclick="maePcAbbrechen\(\)">/.test(html), "eine Computer-Kette, Abbrechen, Knöpfe als Kacheln");
+  // ganze Partien mit der Server-Kopie: nie zwei Figuren auf einem Feld, Sieger hat alle 4 im Ziel, bei „mensch“ gewinnt nie der Computer
+  const E = await import(new URL("../supabase/functions/kc-club/mae.js", import.meta.url));
+  let saat = 20261006; const zufall = () => { saat = (saat + 0x6d2b79f5) | 0; let t = Math.imul(saat ^ (saat >>> 15), 1 | saat); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; // fester Zufall (wiederholbar)
+  for (let n = 0; n < 150; n++) {
+    const regel = n % 2 ? "mensch" : "erster", farben = [[0, 2], [0, 1, 2], [0, 1, 2, 3]][n % 3];
+    const z = E.maeNeu(farben.map((f, j) => ({ f, wer: regel === "mensch" ? (j % 2 ? "pc" : "P" + j) : j ? "pc" : "ich" })), regel); let i = 0;
+    while (z.phase !== "ende") {
+      assert.ok(++i < 20000, "Partie endet");
+      if (z.phase === "wuerfeln") E.maeWuerfeln(z, 1 + Math.floor(zufall() * 6)); else assert.ok(E.maeZiehen(z, E.maeComputerWahl(z, "mittel", zufall)), "Computerzug erlaubt");
+      const belegt = new Set(); for (const S of z.sitze) for (const p of S.fig) if (p >= 0 && p < 40) { const f = (S.f * 10 + p) % 40; assert.ok(!belegt.has(f), "Feld doppelt"); belegt.add(f); }
+    }
+    assert.ok(z.sieger !== null && z.sitze[z.sieger].fig.every((p) => p >= 40), "Sieger fertig");
+    if (regel === "mensch") assert.ok(z.sitze[z.sieger].wer !== "pc", "Computer gewinnt nie gegen Mitglieder");
+  }
+  const y = E.maeNeu([{ f: 0, wer: "a" }, { f: 2, wer: "b" }]);
+  assert.deepEqual(E.maeWuerfeln(y, 3), []); assert.equal(y.versuche, 1); E.maeWuerfeln(y, 2); E.maeWuerfeln(y, 4); assert.equal(y.dran, 1, "3 Versuche, dann weiter");
+  E.maeWuerfeln(y, 6); E.maeZiehen(y, 3); assert.ok(y.sitze[1].fig.includes(0) && y.dran === 1 && y.phase === "wuerfeln", "6: raus + nochmal");
+  E.maeWuerfeln(y, 6); assert.deepEqual(E.maeMoeglich(y), [y.sitze[1].fig.indexOf(0)], "Startfeld räumen");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
