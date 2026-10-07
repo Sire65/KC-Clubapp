@@ -1229,6 +1229,15 @@
   /* KC-CLUB-MG-ONLINE-FARBE (2.42.0, Wunsch Hansi): Kachel eines Mitglieds, das gerade online ist, sofort erkennbar grün */
   .mg-kacheln .mg-kachel.mg-online { background: var(--gruenbg); border-color: var(--textGruen); }
   .av-gross-tipp { cursor: zoom-in; }
+  /* KC-CLUB-AVATAR-KOMBI (2.50.0): blauer ⓘ-Knopf und Info-Blatt */
+  .av-info-knopf { width: 28px; height: 28px; border-radius: 50%; border: none; background: #1565c0; color: #fff; font: italic 700 16px/1 Georgia, serif; cursor: pointer; flex: none; padding: 0; }
+  .av-kombi-kopf { display: grid; justify-items: center; gap: 2px; margin: 10px 0; padding: 14px 10px; border-radius: 16px; background: linear-gradient(135deg, var(--hero1), var(--rot)); color: #fff; text-align: center; }
+  .av-kombi-kopf b { font-size: 1.7rem; line-height: 1.15; } .av-kombi-kopf small { opacity: .9; font-size: .82rem; }
+  .av-kombi-gruppen { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+  .av-kombi-gruppe { background: var(--karte2); border-radius: 12px; padding: 8px 10px; display: grid; gap: 2px; font-size: .9rem; align-content: start; }
+  .av-kombi-gruppe > b { margin-bottom: 2px; } .av-kombi-gruppe div { display: flex; justify-content: space-between; gap: 6px; }
+  .av-kombi-gruppe i { font-style: normal; font-weight: 800; color: var(--textRot, var(--rot)); }
+  .av-kombi-vergleich { margin: 6px 0 2px; padding: 8px 10px; border-left: 3px solid #1565c0; background: var(--karte2); border-radius: 8px; }
   .av-auto-zeile { display: flex; gap: 10px; align-items: center; padding: 8px 10px; margin: 0 0 8px; border-radius: 12px; background: var(--karte2); cursor: pointer; } .av-auto-zeile input { width: 22px; height: 22px; flex: none; } .av-auto-zeile small { display: block; } /* KC-CLUB-JACKE-WOCHENTAG 2.43.0 */
   .mg-kachel.mg-online .avatar { box-shadow: 0 0 0 3px var(--karte), 0 0 0 6px var(--textGruen); }
   /* KC-CLUB-MG-ONLINE-PULS (2.23.19, Wunsch Hansi): wer gerade online ist – Namenskreis mit hellgrünem Rand, pulsiert leicht
@@ -3201,6 +3210,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.49.0" data-v="2.49.0"></script>
+<script src="app.js?v=2.50.0" data-v="2.50.0"></script>
 </body>
 </html>

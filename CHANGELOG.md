@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.50.0 – 2026-10-07 – KC-CLUB-AVATAR-KOMBI
+Wunsch Hansi: Im Baukasten „🧩 Figur zusammenstellen“ ein kleiner blauer ⓘ-Knopf. Er zeigt, wie viele verschiedene Figuren möglich sind (derzeit rund 11,8 Trillionen), geordnet nach Person, Gesicht, Kopfbedeckung, Brille, Kochjacke, Hintergrund, mit kurzer Erklärung der Rechnung und einem Vergleich (eine Figur je Sekunde ≈ 375 Milliarden Jahre). Die Zahlen rechnet die App aus ihren Auswahllisten – sie stimmen nach jeder Erweiterung von selbst. Nur App.
+
 ## 2.49.0 – 2026-10-07 – KC-CLUB-AVATAR-MUETZEN-2
 Wunsch Hansi (nach Bildern): neue Kopfbedeckungen „Pizzabäcker-Mütze“ (weich, hängt zur Seite), „Kochkappe (flach)“ und „Schiebermütze“; neue Muster Schachbrett, Hahnentritt, Nadelstreifen (für alle Kopfbedeckungen); neue Farben Creme, Anthrazit, Petrol, Gold, Salbei (auch für Streifen und Kragen der Jacke). Alte Bilder unverändert. Nur App.
 

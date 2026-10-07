@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.49.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.50.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -8179,8 +8179,45 @@ function avBauen(start) { // 2.23.98: start = gewählte Figur als Vorlage („�
   const jetzt = start || INIT?.einstellungen?.avatar?.figur, t = avTeile(jetzt) || avTeile("w01"), haarf = Object.keys(AV_HAAR);
   AVB = avTeileZuB(t);
   fensterZu($("avBlatt") || document.createElement("div"));
-  const f = blattAuf("avbBlatt", `<h3 style="margin:0">🧩 Figur zusammenstellen${nurTest("avatar_baukasten") ? ' <small class="hinweis">🔒 nur für dich (Test)</small>' : ""}</h3><div id="avbInhalt"></div>`);
+  const f = blattAuf("avbBlatt", `<h3 style="margin:0;display:flex;align-items:center;gap:8px">🧩 Figur zusammenstellen <button type="button" class="av-info-knopf" onclick="avKombiInfo()" title="Wie viele Figuren sind möglich?" aria-label="Wie viele Figuren sind möglich?">i</button>${nurTest("avatar_baukasten") ? ' <small class="hinweis">🔒 nur für dich (Test)</small>' : ""}</h3><div id="avbInhalt"></div>`);
   f.classList.add("sc-blatt"); avbZeigen();
+}
+// KC-CLUB-AVATAR-KOMBI (2.50.0, Wunsch Hansi): blauer ⓘ-Knopf im Baukasten – wie viele verschiedene Figuren möglich sind.
+// Gerechnet aus den Listen der App (stimmt nach jeder Erweiterung von selbst). Gezählt wird, was wirklich anders aussieht:
+// ohne Brille keine Brillenfarbe/Strass, ohne Kopfbedeckung keine Mützenfarbe/kein Muster, Streifenfarbe nur bei Längsstreifen, Köchin ohne Bart.
+function avKombiZahlen() {
+  const B = BigInt, haar = Object.keys(AV_HAAR).length, kf = AV_KOPFFARBE.length;
+  const gruppen = [
+    ["🧑 Person", [["Typ (Koch/Köchin)", 2], ["Hautton", AV_HAUT.length], ["Kopfform", AV_KOPFFORM.length], ["Frisur", AV_FRISUREN.length], ["Haarfarbe", haar], ["Bart (nur Koch)", AV_BART.length]]],
+    ["🙂 Gesicht", [["Augen", AV_AUGEN.length], ["Augenbrauen", AV_BRAUEN.length], ["Mund", AV_MUND.length], ["Wangen", AV_WANGEN.length]]],
+    ["🧢 Kopfbedeckung", [["Art", AV_KOPF.length], ["Farbe", kf], ["Muster", AV_KOPFMUSTER.length]]],
+    ["👓 Brille", [["Form", AV_BRILLE.length], ["Farbe", AV_BRILLENFARBE.length], ["Strass", AV_BRILLENDEKO.length]]],
+    ["🧥 Kochjacke", [["Farbe", AV_JACKE.length], ["Muster", AV_JACKENMUSTER.length], ["Streifenfarbe", kf], ["Kragen", kf], ["Knöpfe", AV_KNOPF.length], ["Halstuch", AV_TUCH.length]]],
+    ["🎨 Hintergrund", [["Farbe", AV_BG.length]]],
+  ];
+  const brille = 1n + B(AV_BRILLE.length - 1) * B(AV_BRILLENFARBE.length) * B(AV_BRILLENDEKO.length);
+  const kopf = 1n + B(AV_KOPF.length - 1) * B(kf) * B(AV_KOPFMUSTER.length);
+  const jacke = B(AV_JACKE.length) * (1n + B(kf)) * B(kf) * B(AV_KNOPF.length) * B(AV_TUCH.length);
+  const rest = B(AV_HAUT.length * AV_FRISUREN.length * haar * AV_BG.length * AV_AUGEN.length * AV_BRAUEN.length * AV_MUND.length * AV_WANGEN.length * AV_KOPFFORM.length);
+  const gesamt = rest * brille * kopf * jacke * (B(AV_BART.length) + 1n);
+  return { gruppen, gesamt, figuren: Object.keys(AV_FIGUREN).length };
+}
+function avZahlWort(n) { // BigInt → „rund 11,8 Trillionen“
+  const stufen = [[24, "Quadrillionen"], [21, "Trilliarden"], [18, "Trillionen"], [15, "Billiarden"], [12, "Billionen"], [9, "Milliarden"], [6, "Millionen"]];
+  for (const [e, w] of stufen) if (n >= 10n ** B_(e)) { const x = Number(n / 10n ** B_(e - 2)) / 100; return `rund ${x.toLocaleString("de-DE", { maximumFractionDigits: x < 100 ? 1 : 0 })} ${w}`; }
+  return Number(n).toLocaleString("de-DE");
+}
+const B_ = (x) => BigInt(x);
+function avKombiInfo() {
+  const d = avKombiZahlen(), jahre = Number(d.gesamt / 31557600n) / 1e9, all = jahre / 13.8;
+  const f = blattAuf("avKombiBlatt", `<h3 style="margin:0">ⓘ So viele Figuren sind möglich</h3>
+    <div class="av-kombi-kopf"><b>${esc(avZahlWort(d.gesamt))}</b><small>verschiedene Figuren<br>${d.gesamt.toLocaleString("de-DE")}</small></div>
+    <div class="av-kombi-gruppen">${d.gruppen.map(([t, l]) => `<div class="av-kombi-gruppe"><b>${t}</b>${l.map(([n, z]) => `<div><span>${esc(n)}</span><i>${z}</i></div>`).join("")}</div>`).join("")}</div>
+    <p class="hinweis" style="margin:8px 0 4px"><b>So gerechnet:</b> Alle Auswahlmöglichkeiten werden miteinander malgenommen – gezählt wird aber nur, was wirklich anders aussieht: ohne Brille keine Brillenfarbe, ohne Kopfbedeckung keine Mützenfarbe, Streifenfarbe nur bei Längsstreifen, Köchinnen ohne Bart.</p>
+    <p class="av-kombi-vergleich">⏱️ Wer jede Sekunde eine neue Figur anschaut, bräuchte rund <b>${Math.round(jahre).toLocaleString("de-DE")} Milliarden Jahre</b> – etwa ${Math.round(all)}-mal so lange, wie es das Weltall gibt.</p>
+    <p class="hinweis" style="margin:4px 0 8px">Dazu kommen ${d.figuren} fertige Koch-Figuren und eigene Fotos. Deine Figur ist also mit Sicherheit einzigartig.</p>
+    <div class="knoepfe"><button class="knopf haupt" onclick="fensterZu($('avKombiBlatt'))">Schließen</button></div>`);
+  f.style.zIndex = "2200"; f.classList.add("sc-blatt"); try { spur("avatar_kombi"); } catch {}
 }
 function avTeileZuB(t) {
   const haarf = Object.keys(AV_HAAR);
@@ -18800,7 +18837,7 @@ setInterval(spurSenden, sparTakt(NZ_TAKT_MS));
 document.addEventListener("visibilitychange", () => { if (document.hidden) spurSenden(); });
 const SPUR_WAS = { geoeffnet: "📲 App geöffnet", mitglied: "👤 Mitglied angesehen", chat: "💬 Unterhaltung geöffnet", gesendet: "✉️ Nachricht gesendet", gesendet_anlage: "📎 Nachricht mit Anhang gesendet",
   anruf: "📞 Anruf (App) an", video: "🎥 Videoanruf an", anklopfen: "👋 Angeklopft bei", telefon: "☎️ Telefonnummer angetippt", whatsapp: "🟢 WhatsApp geöffnet", mail: "✉️ E-Mail-Adresse angetippt", meine_statistik: "📊 Eigene Nachrichten-Statistik angesehen",
-  mein_bild: "🧑‍🍳 „Mein Bild“ geöffnet", bild_gewaehlt: "🧑‍🍳 Koch-Figur als Bild gewählt", bild_gebaut: "🧩 Eigene Figur gespeichert", bild_foto: "📷 Eigenes Foto als Bild gesetzt", bild_entfernt: "🧑‍🍳 Bild entfernt (Buchstaben)", jacke_auto_an: "🔄 Kochjacke täglich wechselnd eingeschaltet", jacke_auto_aus: "🔄 Kochjacke täglich wechselnd ausgeschaltet" };
+  mein_bild: "🧑‍🍳 „Mein Bild“ geöffnet", bild_gewaehlt: "🧑‍🍳 Koch-Figur als Bild gewählt", bild_gebaut: "🧩 Eigene Figur gespeichert", bild_foto: "📷 Eigenes Foto als Bild gesetzt", bild_entfernt: "🧑‍🍳 Bild entfernt (Buchstaben)", avatar_kombi: "ⓘ Figuren-Möglichkeiten angesehen", jacke_auto_an: "🔄 Kochjacke täglich wechselnd eingeschaltet", jacke_auto_aus: "🔄 Kochjacke täglich wechselnd ausgeschaltet" };
 const SPW = { tag: null, person: null };
 async function spurAdmin(tag, person) {
   SPW.tag = tag || SPW.tag || heuteIso(); SPW.person = person === undefined ? SPW.person : person;

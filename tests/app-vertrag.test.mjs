@@ -5221,6 +5221,18 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   for (const n of ["pizza", "kochkappe", "schieber"]) assert.ok(AV7.avatarSvg(c(AV7.AV_KOPF.indexOf(n), 0), 64).length > 500, "zeichnet " + n);
   assert.ok(/<rect width="2" height="2" fill="#1c1c1c"\/>/.test(AV7.avatarSvg(c(AV7.AV_KOPF.indexOf("kochkappe"), 7), 64)), "Schachbrett kräftig schwarz auf Weiß");
 }
+// 2.50.0 KC-CLUB-AVATAR-KOMBI (Wunsch Hansi): blauer ⓘ-Knopf im Baukasten – wie viele Figuren möglich sind, aus den Listen gerechnet
+{
+  const a = html.indexOf("const AV_HAUT"), b = html.indexOf("// KC-CLUB-FREIGABE (2.23.86", a);
+  const c0 = html.indexOf("function avKombiZahlen()"), c1 = html.indexOf("function avKombiInfo()");
+  const K = new Function("INIT", "ICH", "MITGLIEDER", html.slice(a, b) + "\n" + html.slice(c0, c1) + "\nreturn { avKombiZahlen, avZahlWort };")(null, null, []);
+  const d = K.avKombiZahlen();
+  assert.equal(typeof d.gesamt, "bigint");
+  assert.ok(d.gesamt > 10n ** 18n, "über eine Trillion");
+  assert.match(K.avZahlWort(11827419912496742400n), /^rund 11,8 Trillionen$/);
+  assert.equal(d.gruppen.length, 6, "sechs Gruppen: Person, Gesicht, Kopfbedeckung, Brille, Kochjacke, Hintergrund");
+  assert.ok(/class="av-info-knopf" onclick="avKombiInfo\(\)"/.test(html) && /\.av-info-knopf \{[^}]*background: #1565c0/.test(html), "blauer ⓘ-Knopf im Baukasten");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
