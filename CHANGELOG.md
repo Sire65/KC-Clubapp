@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.28.0 – 2026-10-06 – Terminprogramm komplett in der Club-App; Absage durch Mitglied eintragen
+KC-TERMINE-UMZUG: Quellcode kc-termine, Mitgliederseite termin.html, Google-Skript und Termin-Doku liegen jetzt im Repo KC-Clubapp; Hochladen bei Änderung unter supabase/functions/kc-termine; alte Links leiten weiter. KC-CLUB-SCHULUNG-MITGLIED-ABSAGE: 🚫 Absagen → 📱 Mitglied hat abgesagt (WhatsApp/Telefon/persönlich, Notiz, Bestätigungsmail ohne Link); 📨 Neu einladen danach nur mit angekreuzten Terminen.
+
 ## 2.27.2 – 2026-10-06 – Avatar: Kinnbart, Halstuch, meliert, Brillen, Knöpfe, Initialen
 Avatar-Baukasten: Kinnbart sitzt am Kinn (nicht mehr am Hals); Halstuch größer mit Knoten und zwei herabhängenden Zipfeln; Haarfarbe „grau meliert“; Brillen zusätzlich oval, Hornbrille, Katzenauge, Pilotenbrille; Knopffarbe der Kochjacke wählbar (passend, gold, schwarz, rot, blau, weiß, silber) mit Doppelreihe; auf der Kochmütze klein die Initialen. Alte Figuren bleiben gültig. (KC-CLUB-AVATAR-FEIN, Wunsch Hansi)
 

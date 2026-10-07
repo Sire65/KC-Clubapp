@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.27.2"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.28.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SCHNELLSTART-DATEI (2.24.8, Hinweis Hansi „Start ist langsamer geworden“): das Programm liegt in app.js, damit das Handy es
 // fertig übersetzt behalten kann (statt bei jedem Öffnen 1,8 MB neu einzulesen). Seite und Programm müssen dieselbe Version haben
 // (AGENTS Regel 16, kein Mischstand): passt es nicht (z. B. alte Seite aus einem Zwischenspeicher), einmal frisch laden, sonst anhalten.
@@ -14671,7 +14671,7 @@ function scWartet() {
   }
   for (const e of T.einladungen.filter((x) => x.status === "abgelaufen")) {
     h.push(`<div class="sc-eintrag"><b>${esc(scGruppe(e.person_ids))}</b> hat nicht geantwortet (Frist vorbei)
-      <div class="knoepfe"><button class="knopf haupt klein" onclick="scErneut(this,'${e.id}')">📨 Neu einladen</button><button class="knopf klein" onclick="scZurueck(this,'${e.id}')">✔ Erledigt</button></div></div>`);
+      <div class="knoepfe"><button class="knopf haupt klein" onclick="scErneut(this,'${e.id}')">📨 Neu einladen</button><button class="knopf klein" onclick="scZurueckIch(this,'${e.id}')">✔ Erledigt</button></div></div>`);
   }
   // KC-CLUB-SCHULUNG-PROTOKOLL (2.23.69, Wunsch Hansi): Termin war – Besuchsprotokoll fehlt noch (letzte 30 Tage)
   const besuchStatus = (id) => (BS.liste.length ? BS.liste : T.besuche || []).find((x) => x.besuch_id === id)?.status;
@@ -14715,7 +14715,53 @@ async function scErneut(k, eid) {
   const n = await eingabe("Erneut einladen?\nNeuer Link, wieder 3 Tage Zeit. Kurze Nachricht (freiwillig):", ""); if (n === null) return;
   scTun(k, async () => { const r = await scApi("t_erneut_einladen", { einladung_id: eid, nachricht: n }); scVersand(r, "📨 Einladung ist erneut raus"); });
 }
-async function scZurueck(k, eid) {
+// KC-CLUB-SCHULUNG-MITGLIED-ABSAGE (2.28.0, Wunsch Hansi): Mitglied hat per WhatsApp/Telefon/persönlich abgesagt → hier eintragen.
+// Termin wird frei, Bestätigung per Mail OHNE Link; neue Termine wählt das Mitglied erst, wenn Hansi wieder einlädt (mit ausgewählten Terminen).
+function scZurueck(k, eid) {
+  const e = scEinl(eid); if (!e) return;
+  const b = SC.T.buchungen.find((x) => x.einladung_id === eid && x.status === "bestaetigt") || SC.T.buchungen.find((x) => x.einladung_id === eid && x.status === "vorgemerkt"), s = b && scSlot(b.slot_id);
+  const f = blattAuf("scAbBlatt", `<h3 style="margin:0">${b ? "🚫 Termin absagen" : "✖ Einladung beenden"}</h3>
+    <p style="margin:4px 0"><b>${esc(scGruppe(e.person_ids))}</b>${s ? `<br><span class="hinweis">${esc(scZeit(s.beginn, s.ende))}</span>` : ""}</p>
+    <div class="sc-abwahl knoepfe">
+      <button type="button" class="knopf haupt" id="scAbMg">📱 Mitglied hat abgesagt</button>
+      <button type="button" class="knopf" id="scAbIch">${b ? "🚫 Ich sage ab" : "✖ Einladung beenden"}</button>
+    </div>
+    <div id="scAbForm" hidden>
+      <div class="hinweis" style="margin:8px 0 4px">Wie hat das Mitglied abgesagt?</div>
+      <div class="hl-chips" id="scAbKanal">${[["whatsapp", "💬 WhatsApp"], ["telefon", "📞 Telefon"], ["persoenlich", "🤝 persönlich"]].map(([w, t]) => `<button type="button" class="chip" data-k="${w}">${t}</button>`).join("")}</div>
+      <label class="feld">Notiz (nur für dich, freiwillig)<input id="scAbNotiz" maxlength="300" placeholder="z. B. krank"></label>
+      ${b ? `<label class="schalter" style="margin-top:8px"><span>✉️ Bestätigung per Mail schicken (ohne Link)</span><input type="checkbox" id="scAbMail" checked></label>
+      <label class="feld">Zusatz in der Mail (freiwillig)<input id="scAbZusatz" maxlength="400" placeholder="z. B. Gute Besserung!"></label>` : ""}
+      <p class="hinweis" style="margin:6px 0">Der Termin wird wieder frei. Neue Termine kann das Mitglied erst wählen, wenn du es wieder einlädst – dann mit den Terminen, die du auswählst.</p>
+      <div class="knoepfe bs-fuss"><button class="knopf haupt" id="scAbOk">✅ Absage eintragen</button><button class="knopf" onclick="$('scAbBlatt').remove()">Abbrechen</button></div>
+    </div>
+    <div class="knoepfe bs-fuss" id="scAbFuss"><button class="knopf" onclick="$('scAbBlatt').remove()">Abbrechen</button></div>`);
+  f.style.zIndex = "2100"; f.classList.add("sc-blatt"); f.onclick = null;
+  let kanal = "";
+  $("scAbKanal").onclick = (ev) => { const c = ev.target.closest(".chip"); if (!c) return; kanal = c.dataset.k; $("scAbKanal").querySelectorAll(".chip").forEach((x) => x.classList.toggle("an", x === c)); };
+  $("scAbMg").onclick = () => { $("scAbForm").hidden = false; $("scAbFuss").style.display = "none"; f.querySelector(".sc-abwahl").style.display = "none"; };
+  $("scAbIch").onclick = () => { $("scAbBlatt").remove(); scZurueckIch(k, eid); };
+  $("scAbOk").onclick = async () => {
+    if (!kanal) return melde("Bitte antippen, wie das Mitglied abgesagt hat.", true);
+    const mail = !!$("scAbMail")?.checked, ok = $("scAbOk");
+    ok.disabled = true; ok.textContent = "Wird eingetragen …";
+    try {
+      const r = await scApi("t_zurueckziehen", { einladung_id: eid, grund: "mitglied", kanal, notiz: $("scAbNotiz").value, benachrichtigen: mail, nachricht: $("scAbZusatz")?.value || "" });
+      $("scAbBlatt")?.remove();
+      melde(mail ? (/nicht zugestellt/.test(r?.versand || "") ? "Absage eingetragen – aber die Mail kam nicht an" : "✅ Absage eingetragen – Bestätigung ist raus") : "✅ Absage eingetragen", mail && /nicht zugestellt/.test(r?.versand || ""));
+      await scLaden();
+    } catch (err) { meldeFehler(err); ok.disabled = false; ok.textContent = "✅ Absage eintragen"; }
+  };
+}
+// nach einer Absage: neu einladen nur mit den Terminen, die Hansi ankreuzt (kein Link mit allen freien Terminen)
+function scNeuMitAuswahl(eid) {
+  const e = scEinl(eid); if (!e) return;
+  SC.gewaehlt = [...e.person_ids]; SC.angebot = [];
+  const d = document.querySelector('#scBlatt details[data-k="einladen"]'); if (d) d.open = true;
+  scMitglieder(); scAngebot(); d?.scrollIntoView({ behavior: "smooth", block: "start" });
+  melde("Bitte die Termine ankreuzen, die du anbieten willst – dann „Einladen“.");
+}
+async function scZurueckIch(k, eid) {
   const e = scEinl(eid), hatTermin = SC.T.buchungen.some((b) => b.einladung_id === eid && b.status === "bestaetigt");
   if (!(await frage(hatTermin ? `Einladung von ${scGruppe(e.person_ids)} zurückziehen?\nDer bestätigte Termin wird abgesagt, das Mitglied bekommt eine Absage-Mail.` : `Einladung von ${scGruppe(e.person_ids)} beenden?`, { ja: hatTermin ? "Zurückziehen" : "Beenden" }))) return;
   scTun(k, async () => { await scApi("t_zurueckziehen", { einladung_id: eid }); melde("Erledigt"); });
@@ -14920,7 +14966,7 @@ async function scFestSenden(pids, ms, k) {
 function scEinladungen() {
   const T = SC.T, liste = T.einladungen.filter((e) => e.status !== "zurueckgezogen" && !e.ist_test).slice(0, 40);
   $("scEinladungen").innerHTML = liste.map((e) => {
-    const [t, f] = SC_E[e.status] || [e.status, ""], b = T.buchungen.find((x) => x.einladung_id === e.id && ["vorgemerkt", "bestaetigt"].includes(x.status)), s = b && scSlot(b.slot_id);
+    const [t, f] = e.status === "abgesagt" && /^Abgesagt per /.test(e.bemerkung || "") ? ["✖ hat abgesagt", "grau"] : SC_E[e.status] || [e.status, ""], b = T.buchungen.find((x) => x.einladung_id === e.id && ["vorgemerkt", "bestaetigt"].includes(x.status)), s = b && scSlot(b.slot_id);
     const fk = { blau: "ta-st-ge", gelb: "ta-st-gv", gruen: "ta-st-ja", rot: "ta-st-nein", grau: "ta-st-ab" }[f] || "";
     return `<div class="sc-eintrag"><b>${esc(scGruppe(e.person_ids))}</b> <span class="marke ${fk}">${t}</span>
       <div class="hinweis">eingeladen ${esc(zeitKurz(e.erstellt_am))}${e.gesendet_am ? ` · Mail ${esc(zeitKurz(e.gesendet_am))}` : ""}${e.status === "offen" ? ` · Frist bis ${esc(zeitKurz(e.gueltig_bis))}` : ""}${e.geoeffnet_am ? ` · Link geöffnet ${esc(zeitKurz(e.geoeffnet_am))}` : " · Link noch nicht geöffnet"}${s ? ` · ${esc(scZeit(s.beginn, s.ende))}` : ""}</div>
@@ -14929,8 +14975,9 @@ function scEinladungen() {
       ${scVersandStand(e)}
       <div class="knoepfe"><button class="knopf klein" onclick="scChronik('${e.id}')">📜 Ablauf</button>
         ${["offen", "gewaehlt", "gegenvorschlag"].includes(e.status) ? `<button class="knopf klein" onclick="scLinkNeu(this,'${e.id}')">🔗 Link</button>` : ""}
-        ${["abgelaufen", "abgesagt"].includes(e.status) ? `<button class="knopf klein" onclick="scErneut(this,'${e.id}')">📨 Neu einladen</button>` : ""}
-        <button class="knopf klein" onclick="scZurueck(this,'${e.id}')">${e.status === "bestaetigt" ? "🚫 Absagen" : "✖ Beenden"}</button></div></div>`;
+        ${e.status === "abgelaufen" ? `<button class="knopf klein" onclick="scErneut(this,'${e.id}')">📨 Neu einladen</button>` : ""}
+        ${e.status === "abgesagt" ? `<button class="knopf klein" onclick="scNeuMitAuswahl('${e.id}')">📨 Neu einladen</button>` : ""}
+        <button class="knopf klein" onclick="${["abgelaufen", "abgesagt"].includes(e.status) ? "scZurueckIch" : "scZurueck"}(this,'${e.id}')">${e.status === "bestaetigt" ? "🚫 Absagen" : "✖ Beenden"}</button></div></div>`;
   }).join("") || '<p class="hinweis" style="margin:0">Noch niemand eingeladen.</p>';
 }
 // KC-CLUB-SCHULUNG-VERSANDSTAND (2.25.1, Wunsch Hansi „bei jedem Termin sehen, was raus ist – Einladung ✅, Bestätigung ✅, Erinnerung ✅,
@@ -15001,7 +15048,7 @@ function scKalender() {
   // 2.23.65: verbinden wie im alten Programm (Schlüssel erzeugen, Skript kopieren, Schritte)
   $("scKalender").innerHTML += `<div class="knoepfe"><button class="knopf klein" onclick="scKalVerbinden(this)">🔑 ${k.verbunden ? "Neuen Schlüssel erzeugen" : "Google-Kalender verbinden"}</button></div><div id="scKalSchritte"></div>`;
 }
-const SC_SKRIPT = "https://raw.githubusercontent.com/Sire65/KC-Besuchsprotokoll/main/google/KalenderAbgleich.gs";
+const SC_SKRIPT = "https://raw.githubusercontent.com/Sire65/KC-Clubapp/main/google/KalenderAbgleich.gs";
 async function scKopieren(text, was) { try { await navigator.clipboard.writeText(text); melde(`📋 ${was} kopiert`); } catch { eingabe(`${was} zum Kopieren:`, text); } }
 async function scKalVerbinden(k) {
   if (SC.T.kalender?.verbunden && !(await frage("Neuen Schlüssel erzeugen?\nDer alte funktioniert dann nicht mehr – du musst ihn im Google-Skript ersetzen.", { ja: "🔑 Neuer Schlüssel" }))) return;
@@ -15026,7 +15073,7 @@ async function scSkriptKopieren() {
 const SC_P = { termin_angeboten: "Termin eingestellt", termin_geloescht: "Termin gelöscht", termin_abgesagt: "Termin abgesagt", eingeladen: "Eingeladen", erneut_eingeladen: "Erneut eingeladen",
   link_erneuert: "Neuer Link", link_geoeffnet: "Termin-Link geöffnet", termin_gewaehlt: "Termin gewählt", gegenvorschlag: "Gegenvorschlag", abgesagt: "Kein Besuch gewünscht",
   antwort_zurueckgenommen: "Antwort zurückgenommen", buchung_bestaetigt: "Bestätigt", buchung_abgelehnt: "Abgelehnt", gegenvorschlag_angenommen: "Vorschlag angenommen",
-  neue_termine_angeboten: "Neue Termine angeboten", buchung_storniert_termin_abgesagt: "Buchung storniert (Termin fiel aus)", einladung_zurueckgezogen: "Einladung zurückgezogen",
+  neue_termine_angeboten: "Neue Termine angeboten", buchung_storniert_termin_abgesagt: "Buchung storniert (Termin fiel aus)", einladung_zurueckgezogen: "Einladung zurückgezogen", mitglied_abgesagt_eingetragen: "📱 Absage des Mitglieds eingetragen",
   frist_abgelaufen: "Frist abgelaufen", erinnerung_gesendet: "Erinnerung verschickt", hansi_benachrichtigt: "Dich benachrichtigt", termin_direkt_bestaetigt: "Direkt bestätigt", kalender_schluessel_neu: "Kalender-Schlüssel erzeugt",
   termin_geaendert: "Termin geändert", hansi_erinnert: "Dich erinnert", person_nachgetragen: "Person nachgetragen", termin_vorgemerkt: "Termin vorgemerkt", google_abgeglichen: "Google-Kalender abgeglichen" };
 const SC_WER = { hansi: "Du", mitglied: "Mitglied", system: "System", kalender: "Google" };

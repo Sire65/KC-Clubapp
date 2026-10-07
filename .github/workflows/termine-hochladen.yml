@@ -1,12 +1,12 @@
-# KC-TERMINE-DEPLOY: lädt die Edge Function „kc-termine“ aus dem Repo Sire65/KC-Besuchsprotokoll zu Supabase hoch.
-# Der Quellcode bleibt dort (eine Quelle); hier steht nur, WELCHER Stand hochgeladen wird (.github/deploy/kc-termine.ref),
-# weil nur dieses Repo den Upload-Schlüssel (Secret SUPABASE_ACCESS_TOKEN, nur Edge Functions) hat. Kostenlos.
+# KC-TERMINE-DEPLOY: lädt die Edge Function „kc-termine“ zu Supabase hoch.
+# KC-TERMINE-UMZUG (2.28.0): Der Quellcode liegt jetzt HIER (supabase/functions/kc-termine) – eine Quelle, kein zweites Repo mehr.
+# Bis 2.27 kam er aus Sire65/KC-Besuchsprotokoll über .github/deploy/kc-termine.ref (nur noch Historie). Kostenlos.
 name: Termin-Programm hochladen
 on:
   push:
     branches: [main]
     paths:
-      - ".github/deploy/kc-termine.ref"
+      - "supabase/functions/kc-termine/**"
   workflow_dispatch:
 concurrency:
   group: termine-hochladen
@@ -19,27 +19,15 @@ jobs:
       PROJEKT: ptblnpiroqftcvlsrhac
     steps:
       - uses: actions/checkout@v4
-      - name: Stand bestimmen
-        id: stand
-        run: |
-          sha=$(grep -E '^[0-9a-f]{40}$' .github/deploy/kc-termine.ref | tail -1)
-          test -n "$sha" || { echo "Kein Commit in kc-termine.ref"; exit 1; }
-          echo "sha=$sha" >> "$GITHUB_OUTPUT"
-      - uses: actions/checkout@v4
-        with:
-          repository: Sire65/KC-Besuchsprotokoll
-          ref: ${{ steps.stand.outputs.sha }}
-          path: besuchsprotokoll
       - uses: actions/setup-node@v4
         with:
           node-version: 22
       # erst der Test – ein roter Test verhindert das Hochladen
-      - run: node besuchsprotokoll/tests/termine-kennung.test.mjs
+      - run: node tests/termine-kennung.test.mjs
       - uses: supabase/setup-cli@v1
         with:
           version: 2.118.0
       - name: Edge Function hochladen
-        working-directory: besuchsprotokoll
         run: supabase functions deploy kc-termine --project-ref "$PROJEKT" --no-verify-jwt --use-api
       - name: Prüfen, ob kc-termine antwortet
         run: |

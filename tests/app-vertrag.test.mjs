@@ -4865,6 +4865,26 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/<pattern id="avm\d+"/.test(svg) && />HK<\/text>/.test(svg) && /M29\.4 39\.4/.test(svg), "meliert als Muster, Initialen, Kinnbart am Kinn");
   assert.ok(!/>HK<\/text>/.test(AV2.avatarSvg("c152" + "2" + "0000000000000", 80, "HK")), "Initialen nur auf der Kochmütze");
 }
+// 2.28.0 KC-TERMINE-UMZUG + KC-CLUB-SCHULUNG-MITGLIED-ABSAGE: Termin-Programm gehört jetzt zur Club-App
+{
+  const tm = lies("supabase/functions/kc-termine/index.ts"), th = lies("termin.html"), wf = lies(".github/workflows/termine-hochladen.yml");
+  assert.ok(/const MITGLIED_SEITE = CLUB_APP \+ "termin\.html";/.test(tm) && !/KC-Besuchsprotokoll\//.test(tm.replace(/^\/\/.*$/gm, "")), "Mitglieder-Link zeigt auf die Club-App");
+  assert.ok(/@kc-besuchsprotokoll`/.test(tm), "Kalender-UID bleibt gleich (sonst doppelte Termine im Kalender)");
+  assert.ok(/"supabase\/functions\/kc-termine\/\*\*"/.test(wf) && !/repository: Sire65\/KC-Besuchsprotokoll/.test(wf) && /node tests\/termine-kennung\.test\.mjs/.test(wf), "Hochladen aus diesem Repo, Test vorher");
+  assert.ok(/functions\/v1\/kc-termine/.test(th) && /searchParams\.get\("t"\)/.test(th) && /client: "termin_html"/.test(th), "Mitgliederseite in der Club-App");
+  // Absage durch das Mitglied (WhatsApp/Telefon/persönlich)
+  const z = tm.slice(tm.indexOf('case "t_zurueckziehen"'), tm.indexOf('case "t_besuch_termin"'));
+  assert.ok(/vomMitglied = p\.grund === "mitglied"/.test(z) && /if \(vomMitglied && !kanal\) throw/.test(z), "Kanal Pflicht");
+  assert.ok(/status: "abgesagt", bemerkung: `Abgesagt per \$\{kanal\}/.test(z), "Einladung abgesagt (nicht zurückgezogen)");
+  const mz = z.slice(z.indexOf("if (vomMitglied) {"), z.indexOf("return json({ ok: true, versand: versand || null });"));
+  assert.ok(!/neuOeffnen|\$\{link\}|MITGLIED_SEITE/.test(mz), "Bestätigung ohne Link – neue Termine erst nach neuer Einladung");
+  assert.ok(/p\.benachrichtigen === true/.test(mz) && /termin-absage:\$\{b\.id\}:\$\{b\.slot\.beginn\}/.test(mz), "Mail nur auf Wunsch, Kennung je Termin");
+  assert.ok(/storniert/.test(z.slice(0, z.indexOf("if (vomMitglied) {"))) && /besuchEntfernen/.test(z), "Termin wird frei");
+  // App
+  assert.ok(/scApi\("t_zurueckziehen", \{ einladung_id: eid, grund: "mitglied", kanal,/.test(html) && /📱 Mitglied hat abgesagt/.test(html), "Absage-Feld in der App");
+  assert.ok(/onclick="scNeuMitAuswahl\('\$\{e\.id\}'\)">📨 Neu einladen/.test(html) && /SC\.gewaehlt = \[\.\.\.e\.person_ids\]; SC\.angebot = \[\];/.test(html), "nach Absage nur mit ausgewählten Terminen neu einladen");
+  assert.ok(/Sire65\/KC-Clubapp\/main\/google\/KalenderAbgleich\.gs/.test(html) && lies("google/KalenderAbgleich.gs").length > 100, "Google-Skript liegt hier");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
