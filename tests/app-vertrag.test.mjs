@@ -5382,7 +5382,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
 {
   assert.ok(/id="emoKnopf"[^>]*onclick="emoUmschalten\((undefined, 'text')?\)"/.test(html) /* 1.94.0: Ziel ausdrücklich (Test 275) */ && /id="emoFeld"/.test(html), "Emoji-Knopf/Feld fehlt");
   const gr = [...html.matchAll(/\{ sym: "[^"]+", name: "([^"]+)", liste: "([^"]+)"\.split\(" "\) \}/g)];
-  assert.ok(gr.length === 7 && gr.every((g) => g[2].split(" ").length === 24), "7 Gruppen mit je 24 Emojis erwartet (übersichtlich)");
+  assert.ok(gr.length >= 7 && gr.every((g) => g[2].split(" ").length >= 24), "mind. 7 Gruppen mit je mind. 24 Emojis (2.54.0: deutlich mehr, Wunsch Karla)");
   assert.ok(/function emoEinfuegen\(/.test(html) && /selectionStart/.test(html) && /kc_club_emoji_zuletzt/.test(html), "Einfügen an der Schreibstelle / Zuletzt fehlt");
   assert.ok(/async function senden\(\) \{\s*emoUmschalten\(false\)/.test(html), "Senden schließt die Auswahl nicht");
 }
