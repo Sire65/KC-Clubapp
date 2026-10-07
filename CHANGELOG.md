@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.43.1 – 2026-10-07 – KC-CLUB-TERMIN-WER-SAGT-AB
+Fund Hansi: Thomas hatte abgesagt, beim Streichen des ganzen Termins bekam er trotzdem „leider muss ich unseren Termin absagen“. Jetzt fragt „🚫 Termin absagen“ bei gebuchten Terminen zuerst „Wer sagt ab?“: „📱 <Name> hat abgesagt“ öffnet direkt „Mitglied hat abgesagt“ (keine „ich muss absagen“-Mail, Bestätigung freiwillig, kein neuer Link); nur „🙋 Ich sage ab“ schickt die Absage mit neuem Link. Server kc-termine: t_slot_absagen bei gebuchtem Termin nur mit ausdrücklichem ich_sage_ab (sonst 409, nichts geändert).
+
 ## 2.43.0 – 2026-10-07 – KC-CLUB-JACKE-WOCHENTAG
 Wunsch Hansi: Bei 🧑‍🍳 Mein Bild der Schalter „🔄 Kochjacke wechselt jeden Tag“ (auch im Baukasten unter Kochjacke: „🔄 täglich wechselnd“). Mo weiß/schwarze Knöpfe, Di schwarz/gold, Mi weinrot/weiß, Do marineblau/weiß, Fr grau/weinrot, Sa grün/gold, So hellblau/marine – nach deutscher Zeit; alle sehen dieselbe Tagesfarbe (steckt im Bild-Code). Neue feste Jackenfarben: weinrot, marineblau, grün, hellblau. Kein Server-Eingriff nötig.
 

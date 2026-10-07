@@ -842,6 +842,9 @@ Deno.serve(async (req) => {
         if (!s) throw new Fehler("Termin nicht gefunden.", 404);
         if (s.status === "abgesagt") throw new Fehler("Der Termin ist schon abgesagt.");
         const { data: bs } = await db.from("kc_termin_buchungen").select("*, einladung:kc_termin_einladungen(*)").eq("slot_id", s.id).in("status", AKTIV);
+        // KC-CLUB-TERMIN-WER-SAGT-AB (2.43.1, Fund Hansi): „leider muss ich absagen“ nur, wenn Hansi ausdrücklich selbst absagt.
+        // Hat das Mitglied abgesagt, gilt der Weg „Mitglied hat abgesagt“ (t_zurueckziehen, grund mitglied) – nie diese Mail.
+        if ((bs ?? []).length && p.ich_sage_ab !== true) throw new Fehler("Der Termin ist gebucht – bitte zuerst angeben, wer absagt (App aktualisieren).", 409);
         await db.from("kc_termin_slots").update({ status: "abgesagt", geaendert_am: jetzt() }).eq("id", s.id);
         const nachricht = String(p.nachricht || "").trim().slice(0, 500);
         const ergebnis: string[] = [];

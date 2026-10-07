@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.43.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.43.1"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -14811,7 +14811,7 @@ async function scErneut(k, eid) {
 }
 // KC-CLUB-SCHULUNG-MITGLIED-ABSAGE (2.28.0, Wunsch Hansi): Mitglied hat per WhatsApp/Telefon/persönlich abgesagt → hier eintragen.
 // Termin wird frei, Bestätigung per Mail OHNE Link; neue Termine wählt das Mitglied erst, wenn Hansi wieder einlädt (mit ausgewählten Terminen).
-function scZurueck(k, eid) {
+function scZurueck(k, eid, mitgliedDirekt) {
   const e = scEinl(eid); if (!e) return;
   const b = SC.T.buchungen.find((x) => x.einladung_id === eid && x.status === "bestaetigt") || SC.T.buchungen.find((x) => x.einladung_id === eid && x.status === "vorgemerkt"), s = b && scSlot(b.slot_id);
   const f = blattAuf("scAbBlatt", `<h3 style="margin:0">${b ? "🚫 Termin absagen" : "✖ Einladung beenden"}</h3>
@@ -14835,6 +14835,7 @@ function scZurueck(k, eid) {
   $("scAbKanal").onclick = (ev) => { const c = ev.target.closest(".chip"); if (!c) return; kanal = c.dataset.k; $("scAbKanal").querySelectorAll(".chip").forEach((x) => x.classList.toggle("an", x === c)); };
   $("scAbMg").onclick = () => { $("scAbForm").hidden = false; $("scAbFuss").style.display = "none"; f.querySelector(".sc-abwahl").style.display = "none"; };
   $("scAbIch").onclick = () => { $("scAbBlatt").remove(); scZurueckIch(k, eid); };
+  if (mitgliedDirekt) $("scAbMg").onclick(); // 2.43.1: aus „Wer sagt ab?“ – gleich das Formular „Mitglied hat abgesagt“
   $("scAbOk").onclick = async () => {
     if (!kanal) return melde("Bitte antippen, wie das Mitglied abgesagt hat.", true);
     const mail = !!$("scAbMail")?.checked, ok = $("scAbOk");
@@ -14923,11 +14924,27 @@ async function scVerschieben(bid) {
     } catch (err) { meldeFehler(err); k.disabled = false; k.textContent = "🔁 Verschieben"; }
   };
 }
-async function scAbsagen(k, id, betroffen) {
+// KC-CLUB-TERMIN-WER-SAGT-AB (2.43.1, Fund Hansi: Thomas hatte abgesagt, bekam aber „leider muss ich absagen“): Ist der Termin gebucht,
+// zuerst fragen, WER absagt. Mitglied → derselbe Weg wie „📱 Mitglied hat abgesagt“ (ohne „ich muss absagen“, Mail freiwillig, kein neuer Link).
+// Nur „🙋 Ich sage ab“ schickt die Absage mit neuem Link zum Wählen.
+async function scAbsagen(k, id, betroffen, ichSelbst) {
   const s = scSlot(id);
+  const gebucht = (SC.T.buchungen || []).filter((b) => b.slot_id === id && ["bestaetigt", "vorgemerkt"].includes(b.status));
+  if (gebucht.length && !ichSelbst) {
+    const f = blattAuf("scWerBlatt", `<h3 style="margin:0">🚫 Termin ${esc(scZeit(s.beginn, s.ende))}</h3>
+      <p style="margin:6px 0"><b>Wer sagt ab?</b></p>
+      <div class="knoepfe" style="flex-direction:column;align-items:stretch">${gebucht.map((b) => { const e = scEinl(b.einladung_id); return e ? `<button type="button" class="knopf haupt" data-eid="${esc(e.id)}">📱 ${esc(scGruppe(e.person_ids))} hat abgesagt</button>` : ""; }).join("")}
+        <button type="button" class="knopf" id="scWerIch">🙋 Ich sage ab – ${gebucht.length === 1 ? "Mitglied bekommt" : "Mitglieder bekommen"} eine Absage mit neuem Link</button>
+        <button type="button" class="knopf" onclick="$('scWerBlatt').remove()">Abbrechen</button></div>
+      <p class="hinweis" style="margin:6px 0 0">„Hat abgesagt“: keine Mail „ich muss absagen“, der Platz wird wieder frei. Danach kannst du den freien Termin hier streichen – ohne weitere Mail.</p>`);
+    f.style.zIndex = "2100"; f.classList.add("sc-blatt");
+    f.querySelectorAll("[data-eid]").forEach((b) => (b.onclick = () => { f.remove(); scZurueck(k, b.dataset.eid, true); }));
+    $("scWerIch").onclick = () => { f.remove(); scAbsagen(k, id, betroffen, true); };
+    return;
+  }
   const n = await eingabe(`Termin ${scZeit(s.beginn, s.ende)} absagen?${betroffen ? `\n${betroffen} Einladung(en) sind betroffen – sie bekommen eine Absage mit neuem Link zum Wählen.` : ""} Kurze Begründung (freiwillig):`, "");
   if (n === null) return;
-  scTun(k, async () => { const r = await scApi("t_slot_absagen", { slot_id: id, nachricht: n }); melde(r.betroffen ? `🚫 Abgesagt – ${r.betroffen} Mitglied(er) benachrichtigt` : "🚫 Termin abgesagt"); });
+  scTun(k, async () => { const r = await scApi("t_slot_absagen", { slot_id: id, nachricht: n, ich_sage_ab: ichSelbst === true }); melde(r.betroffen ? `🚫 Abgesagt – ${r.betroffen} Mitglied(er) benachrichtigt` : "🚫 Termin abgesagt"); });
 }
 async function scLoeschen(k, id) {
   const s = scSlot(id);

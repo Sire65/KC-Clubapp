@@ -5131,6 +5131,15 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/onchange="avJackeAuto\(this\.checked, this\)"/.test(html) && /🔄 Kochjacke wechselt jeden Tag/.test(html) && /"🔄 täglich wechselnd"\]\)\}/.test(html), "Schalter in Mein Bild und im Baukasten");
   assert.ok(/r\(4\) \? 0 : 1 \+ r\(AV_JACKE\.length - 2\)/.test(html), "Zufall wählt nie „auto“");
 }
+// 2.43.1 KC-CLUB-TERMIN-WER-SAGT-AB (Fund Hansi: Thomas hatte abgesagt, bekam „leider muss ich absagen“)
+{
+  const f = html.slice(html.indexOf("async function scAbsagen(k, id, betroffen, ichSelbst)"), html.indexOf("async function scLoeschen(k, id)"));
+  assert.ok(/if \(gebucht\.length && !ichSelbst\)/.test(f) && /hat abgesagt<\/button>/.test(f) && /scZurueck\(k, b\.dataset\.eid, true\)/.test(f), "gebuchter Termin: erst „Wer sagt ab?“, Mitglied → Weg „Mitglied hat abgesagt“");
+  assert.ok(/ich_sage_ab: ichSelbst === true/.test(f), "„ich muss absagen“ nur nach ausdrücklichem „Ich sage ab“");
+  const t = lies("supabase/functions/kc-termine/index.ts"), sa = t.slice(t.indexOf('case "t_slot_absagen": {'), t.indexOf('case "t_slot_loeschen": {'));
+  assert.ok(/if \(\(bs \?\? \[\]\)\.length && p\.ich_sage_ab !== true\) throw new Fehler/.test(sa) && sa.indexOf("ich_sage_ab") < sa.indexOf('update({ status: "abgesagt"'), "Server: ohne ausdrückliches „Ich sage ab“ keine Absage-Mail, nichts geändert");
+  assert.ok(/if \(mitgliedDirekt\) \$\("scAbMg"\)\.onclick\(\);/.test(html), "Formular „Mitglied hat abgesagt“ gleich offen");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
