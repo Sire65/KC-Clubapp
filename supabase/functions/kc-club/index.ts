@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.55.0";
+const SERVER_VERSION = "2.56.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -2308,6 +2308,7 @@ async function freigaben(): Promise<Record<string, "alle" | "admin">> {
 async function nurWennFrei(id: string, ich: Ich, was: string) {
   if (!ich.admin && (await freigaben())[id] !== "alle") throw new Fehler(`${was} ist noch nicht freigegeben.`, 403);
 }
+const VF_EV_MAX = 40; // KC-CLUB-VORFUEHREN: so viele Ereignisse merkt sich der Server je Vorführung
 const FIT_MAX = 1500; // KC-CLUB-FITNESS: so viele Einheiten je Mitglied (gut 4 Jahre täglich)
 const REZEPT_KATEGORIEN = ["vorspeise", "suppe", "hauptgericht", "beilage", "dessert", "gebaeck", "getraenk", "sonstiges"]; // KC-CLUB-REZEPTBUCH (2.23.83)
 const SPERRE_TEXT: Record<string, string> = {
@@ -7653,6 +7654,8 @@ Köcheclub-App`,
           db.from("kc_club_anklopfen").select("id,an,status,thread_id,beantwortet_am,antwort").eq("von", ich.person_id).gte("erstellt_am", new Date(Date.now() - 600000).toISOString()),
         ]);
         // KC-CLUB-SPIEL-LIVE (2.22.6, Wunsch Hansi): frische Herausforderungen an mich (15 Min.) – die App zeigt sie sofort als Fenster
+        const { data: vfE } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "vorfuehren").maybeSingle(); // KC-CLUB-VORFUEHREN
+        const vfW: any = vfE?.wert, vf = vfW?.status === "angefragt" && Date.now() - new Date(vfW.seit).getTime() < 3 * 60000 ? vfW : null;
         const { data: spAn } = await db.from("kc_club_spiele").select("id,von,spiel,groesse,uhr,erstellt_am").eq("an", ich.person_id).eq("status", "angefragt")
           .gte("erstellt_am", new Date(Date.now() - 15 * 60000).toISOString()).order("erstellt_am", { ascending: false }).limit(3);
         const { data: rufe } = await db.from("kc_club_anruf").select("id,von,art,erstellt_am").eq("an", ich.person_id).eq("status", "klingelt").eq("automatisch", false).gte("erstellt_am", new Date(Date.now() - ANRUF_KLINGEL_SEK * 1000).toISOString()).order("erstellt_am", { ascending: false }).limit(1);
@@ -7669,13 +7672,58 @@ Köcheclub-App`,
         }
         on.delete(ich.person_id);
         const klopfbar = await anklopfenErlaubtMap([...on]);
-        const leute = await personen([...on, ...(anMich ?? []).map((x: any) => x.von), ...(vonMir ?? []).map((x: any) => x.an), ...(rufe ?? []).map((x: any) => x.von), ...verp.map((x: any) => x.von), ...(spAn ?? []).map((x: any) => x.von)]);
+        const leute = await personen([...on, ...(anMich ?? []).map((x: any) => x.von), ...(vonMir ?? []).map((x: any) => x.an), ...(rufe ?? []).map((x: any) => x.von), ...verp.map((x: any) => x.von), ...(spAn ?? []).map((x: any) => x.von), ...(vf ? [vf.von] : [])]);
         const wer = (id: string) => ({ person_id: id, name: leute.get(id)?.display_name || id, vorname: vorname(leute.get(id) ?? null) || id });
         return json({ zeigen, verpasst: verp.map((x: any) => ({ id: x.id, von: wer(x.von), art: x.art, zeit: x.erstellt_am })), online: [...on].map((id) => ({ ...wer(id), klopfbar: klopfbar.get(id) !== false })), klopfen: (anMich ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), zeit: x.erstellt_am })),
           klopfAntworten: (anMich ?? []).length ? Object.entries(KLOPF_ANTWORTEN).map(([id, text]) => ({ id, text })) : undefined,
           antworten: (vonMir ?? []).map((x: any) => ({ id: x.id, an: wer(x.an), status: x.status, thread: x.thread_id, antwort: x.antwort ?? null })),
           anrufe: (rufe ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), art: x.art, zeit: x.erstellt_am })),
-          spielAnfragen: (spAn ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), spiel: x.spiel, groesse: x.groesse, uhrMin: x.uhr?.min ?? null, zeit: x.erstellt_am })) });
+          spielAnfragen: (spAn ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), spiel: x.spiel, groesse: x.groesse, uhrMin: x.uhr?.min ?? null, zeit: x.erstellt_am })),
+          ...(vf ? { vorfuehren: { id: vf.id, von: wer(vf.von) } } : {}) });
+      }
+
+      // ----- KC-CLUB-VORFUEHREN (2.56.0, Wunsch Hansi „Klaus etwas in der App zeigen“): Live zeigen ohne Bildübertragung -----
+      // Die App des Zuschauers folgt der App des Vorführenden (Seiten, Tipps als Markierung, Scrollen, geöffnete Fenster als Hinweis).
+      // Der Zuschauer sieht dabei SEINE eigenen Daten. Zustand beim Zuschauer in kc_club_person_einstellung „vorfuehren“
+      // (nur die letzten VF_EV_MAX Ereignisse). Vorführen darf vorerst nur der Admin; Zuschauer kann jederzeit beenden.
+      case "vorfuehren_start": {
+        nurAdmin(ich);
+        const an = String(p.an || "");
+        if (an === ich.person_id || !(await aktiveMitglieder()).some((m) => m.person_id === an)) throw new Fehler("Mitglied nicht gefunden.", 404);
+        const id = crypto.randomUUID(), wert = { id, von: ich.person_id, status: "angefragt", seit: jetzt(), ev: [] as any[], n: 0 };
+        const { error } = await db.from("kc_club_person_einstellung").upsert({ person_id: an, schluessel: "vorfuehren", wert, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
+        if (error) throw new Fehler("Live zeigen konnte nicht gestartet werden.", 500);
+        const { data: zug } = await db.from("kc_club_zugang").select("person_id").eq("person_id", an).eq("aktiv", true).not("zuletzt_gesehen", "is", null);
+        let versand = { gesendet: 0, fehler: 0 };
+        if (zug?.length) versand = await routerSenden("club_nachricht_push", [an], {
+          titel: `📺 ${ich.vorname} möchte dir etwas zeigen`, kurz: "Zum Zuschauen hier antippen – deine App folgt dann mit.",
+          betreff: `${ich.vorname} möchte dir etwas zeigen`, text: `${ich.name} möchte dir in der Köcheclub-App etwas zeigen.`, url: `${APP_URL}#vorfuehren=${id}`,
+        }, `club-vorfuehren:${id}`);
+        await protokoll(ich.person_id, "vorfuehren_gestartet", { an, versand });
+        return json({ ok: true, id, push: versand.gesendet > 0 });
+      }
+      case "vorfuehren_antwort": case "vorfuehren_holen": case "vorfuehren_senden": case "vorfuehren_ende": {
+        const an = a === "vorfuehren_senden" || (a === "vorfuehren_ende" && p.an) ? String(p.an || "") : ich.person_id;
+        const { data } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", an).eq("schluessel", "vorfuehren").maybeSingle();
+        const w: any = data?.wert;
+        if (!w || w.id !== String(p.id || "")) return json({ ok: true, status: "beendet", ev: [] });
+        if (an !== ich.person_id && w.von !== ich.person_id) throw new Fehler("Kein Zugriff.", 403);
+        const alt = Date.now() - new Date(w.seit).getTime() > (w.status === "angefragt" ? 3 * 60000 : 3 * 3600000);
+        if (alt && w.status !== "beendet") w.status = "beendet";
+        const speichern = () => db.from("kc_club_person_einstellung").update({ wert: w, geaendert_am: jetzt() }).eq("person_id", an).eq("schluessel", "vorfuehren");
+        if (a === "vorfuehren_antwort" && w.status === "angefragt") { w.status = p.annehmen === true ? "laeuft" : "abgelehnt"; w.seit = jetzt(); await speichern(); }
+        if (a === "vorfuehren_ende" && w.status !== "beendet") { w.status = "beendet"; await speichern(); }
+        if (a === "vorfuehren_senden" && w.status === "laeuft") {
+          const neu = (Array.isArray(p.ev) ? p.ev : []).slice(0, 10).map((e: any) => ({
+            n: ++w.n, art: ["ansicht", "tipp", "scroll", "fenster", "fenster_zu"].includes(String(e?.art)) ? String(e.art) : "tipp",
+            v: txt(e?.v, 40) || null, sel: txt(e?.sel, 120) || null, text: txt(e?.text, 60) || null, titel: txt(e?.titel, 80) || null,
+            x: Number.isFinite(Number(e?.x)) ? Math.max(0, Math.min(1, Number(e.x))) : null, y: Number.isFinite(Number(e?.y)) ? Math.max(0, Math.min(1, Number(e.y))) : null,
+            r: Number.isFinite(Number(e?.r)) ? Math.max(0, Math.min(1, Number(e.r))) : null }));
+          if (neu.length) { w.ev = [...(w.ev || []), ...neu].slice(-VF_EV_MAX); await speichern(); }
+        }
+        const seit = Number(p.seit) || 0, vonP = (await personen([w.von])).get(w.von);
+        return json({ ok: true, status: w.status, von: { person_id: w.von, vorname: vorname(vonP ?? null) || w.von, name: vonP?.display_name || w.von },
+          ev: a === "vorfuehren_holen" ? (w.ev || []).filter((e: any) => e.n > seit) : [], n: w.n || 0 });
       }
 
       case "anklopfen": {

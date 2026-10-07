@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.55.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.56.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -2215,6 +2215,7 @@ async function onlinePing() {
     if ($("setOnline")) $("setOnline").checked = r.zeigen;
     onlineLeisteZeigen(); if (INIT) heroZeigen();
     spielLive(r.spielAnfragen); // KC-CLUB-SPIEL-LIVE
+    if (r.vorfuehren) vfAnfrage(r.vorfuehren); // KC-CLUB-VORFUEHREN
     if (aktuelleAnsicht === "buero" && !PUSH_AKTIV && Date.now() - BNN.zuletzt > 55000) buNeuPruefen(); /* KC-CLUB-BUERO-NEU-NACHRICHT: ohne Push selbst nachsehen */
     // jemand klopft bei mir an → Fenster (jedes Anklopfen nur einmal)
     const ruf = (r.anrufe || []).find((x) => !ONL.erledigt.has("r" + x.id));
@@ -8421,6 +8422,106 @@ async function avSetzen(figur) {
     fensterZu($("avBlatt")); try { kachelnZeigen?.(); } catch {}
   } catch (e) { meldeFehler(e); }
 }
+// ---------- KC-CLUB-VORFUEHREN (2.56.0, Wunsch Hansi): 📺 Live zeigen – die App des Zuschauers folgt meiner App ----------
+// Kein Bildschirm-Teilen (geht in Handy-Browsern nicht): übertragen werden nur Seitenwechsel, Tipps (als Markierung), Scrollen und
+// geöffnete Fenster (als Hinweis). Beim Zuschauer wird nie etwas ausgelöst – er sieht seine EIGENEN Daten. Beide können jederzeit beenden.
+const VF = { rolle: null, id: null, an: null, gegen: null, status: null, takt: null, schlange: [], seit: 0, zuletztTipp: 0, scrollT: null, beob: null, gefragt: new Set() };
+async function vfStart(pid) {
+  if (!ICH?.admin) return;
+  if (VF.rolle) return melde("📺 Es läuft schon eine Vorführung.", true);
+  const m = (MITGLIEDER || []).find((x) => x.person_id === pid) || (MD?.person_id === pid ? MD : { name: "", vorname: "" });
+  if (!(await frage(`📺 ${m.vorname || m.name} live etwas zeigen?\nDie App von ${m.vorname || m.name} folgt dann deiner: Seiten, Fenster und wo du hintippst. ${m.vorname || m.name} sieht dabei die eigenen Daten, nicht deine.`, { ja: "📺 Live zeigen" }))) return;
+  try {
+    const r = await api("vorfuehren_start", { an: pid }, { warten: true });
+    Object.assign(VF, { rolle: "zeigt", id: r.id, an: pid, gegen: m.vorname || m.name, status: "angefragt", schlange: [{ art: "ansicht", v: aktuelleAnsicht }] });
+    spur("vorfuehren"); vfLeiste(); vfBeobachten(true);
+    VF.takt = setInterval(vfSendenTakt, 1200);
+    melde(r.push ? `📺 Anfrage an ${VF.gegen} geschickt – warte auf Zusage …` : `📺 Anfrage gestellt – ${VF.gegen} sieht sie beim nächsten Öffnen der App.`);
+  } catch (e) { meldeFehler(e); }
+}
+async function vfSendenTakt() {
+  if (VF.rolle !== "zeigt") return;
+  const ev = VF.status === "laeuft" ? VF.schlange.splice(0, 10) : [];
+  try {
+    const r = await api("vorfuehren_senden", { id: VF.id, an: VF.an, ev }, { still: true });
+    if (r.status !== VF.status) {
+      if (r.status === "laeuft") { melde(`📺 ${VF.gegen} schaut jetzt zu`); try { navigator.vibrate?.(60); } catch {} VF.schlange.unshift({ art: "ansicht", v: aktuelleAnsicht }); }
+      VF.status = r.status; vfLeiste();
+      if (r.status === "abgelehnt" || r.status === "beendet") { melde(r.status === "abgelehnt" ? `📺 ${VF.gegen} möchte gerade nicht zuschauen.` : `📺 Vorführung beendet.`); vfAufraeumen(); }
+    }
+  } catch { VF.schlange.unshift(...ev); }
+}
+function vfMelden(ev) { if (VF.rolle === "zeigt" && VF.status === "laeuft") { VF.schlange.push(ev); if (VF.schlange.length > 30) VF.schlange.splice(0, VF.schlange.length - 30); } }
+// Vorführender: Tipps, Scrollen und Fenster beobachten
+function vfZiel(el) {
+  const z = el.closest?.("button, a, summary, label, select, input, .kachel, .mini-kachel, [data-id], [onclick]"); if (!z || z.closest("#vfLeiste")) return null;
+  const sel = z.id ? "#" + CSS.escape(z.id) : z.dataset?.id ? `[data-id="${CSS.escape(z.dataset.id)}"]` : null;
+  return { z, sel, text: (z.textContent || z.getAttribute("aria-label") || "").replace(/\s+/g, " ").trim().slice(0, 60) };
+}
+function vfTipp(e) {
+  if (VF.rolle !== "zeigt" || VF.status !== "laeuft" || Date.now() - VF.zuletztTipp < 250) return;
+  VF.zuletztTipp = Date.now(); const t = vfZiel(e.target);
+  vfMelden({ art: "tipp", sel: t?.sel || null, text: t?.text || null, x: e.clientX / innerWidth, y: e.clientY / innerHeight });
+}
+function vfScroll() { if (VF.rolle !== "zeigt") return; clearTimeout(VF.scrollT); VF.scrollT = setTimeout(() => { const h = document.documentElement.scrollHeight - innerHeight; vfMelden({ art: "scroll", r: h > 0 ? scrollY / h : 0 }); }, 400); }
+function vfBeobachten(an) {
+  if (an) {
+    document.addEventListener("pointerdown", vfTipp, true); addEventListener("scroll", vfScroll, { passive: true });
+    VF.beob = new MutationObserver((ml) => { for (const m of ml) { for (const n of m.addedNodes) if (n.nodeType === 1 && n.classList?.contains("blatt") && n.id !== "vfLeiste") vfMelden({ art: "fenster", titel: (n.querySelector("h3, h2")?.textContent || "ein Fenster").trim().slice(0, 80) });
+      for (const n of m.removedNodes) if (n.nodeType === 1 && n.classList?.contains("blatt")) vfMelden({ art: "fenster_zu" }); } });
+    VF.beob.observe(document.body, { childList: true });
+  } else { document.removeEventListener("pointerdown", vfTipp, true); removeEventListener("scroll", vfScroll); VF.beob?.disconnect(); VF.beob = null; }
+}
+// Zuschauer: Einladung annehmen, Ereignisse abholen und nachspielen
+async function vfAnfrage(einl) {
+  if (!einl?.id || VF.gefragt.has(einl.id) || VF.rolle) return; VF.gefragt.add(einl.id);
+  try { navigator.vibrate?.([80, 60, 80]); } catch {}
+  const ja = await frage(`📺 ${einl.von?.vorname || "Hansi"} möchte dir etwas in der App zeigen.\nDeine App folgt dann mit – du siehst dabei deine eigenen Daten. Du kannst jederzeit beenden.`, { ja: "📺 Zuschauen", nein: "Jetzt nicht" });
+  try { const r = await api("vorfuehren_antwort", { id: einl.id, annehmen: ja }, { warten: true });
+    if (!ja || r.status !== "laeuft") { if (ja) melde("📺 Die Vorführung ist schon vorbei."); return; }
+    Object.assign(VF, { rolle: "schaut", id: einl.id, gegen: r.von?.vorname || einl.von?.vorname, status: "laeuft", seit: r.n || 0 });
+    spur("vorfuehren_zuschauen"); vfLeiste(); VF.takt = setInterval(vfHolen, 1200); vfHolen();
+  } catch (e) { meldeFehler(e); }
+}
+async function vfHolen() {
+  if (VF.rolle !== "schaut") return;
+  try {
+    const r = await api("vorfuehren_holen", { id: VF.id, seit: VF.seit }, { still: true });
+    for (const e of r.ev || []) { VF.seit = Math.max(VF.seit, e.n); try { vfNachspielen(e); } catch {} }
+    if (r.status !== "laeuft") { melde(`📺 ${VF.gegen} hat die Vorführung beendet.`); vfAufraeumen(); }
+  } catch {}
+}
+function vfNachspielen(e) {
+  if (e.art === "ansicht" && e.v && e.v !== aktuelleAnsicht && document.getElementById("v-" + e.v)) { document.querySelectorAll(".blatt[data-dyn]").forEach((b) => b.id !== "vfLeiste" && b.remove()); zeige(e.v); vfHinweis(""); }
+  else if (e.art === "scroll" && e.r != null) { const h = document.documentElement.scrollHeight - innerHeight; scrollTo({ top: Math.round(h * e.r), behavior: "smooth" }); }
+  else if (e.art === "fenster") vfHinweis(`öffnet „${e.titel || "ein Fenster"}“`);
+  else if (e.art === "fenster_zu") vfHinweis("");
+  else if (e.art === "tipp") {
+    let el = null;
+    try { if (e.sel) el = [...document.querySelectorAll(e.sel)].find((x) => x.offsetParent); } catch {}
+    if (!el && e.text) el = [...document.querySelectorAll("button, a, summary, .kachel, .mini-kachel, label")].find((x) => x.offsetParent && (x.textContent || "").replace(/\s+/g, " ").trim().startsWith(e.text.slice(0, 24)));
+    const r = el?.getBoundingClientRect();
+    if (el) { el.classList.remove("vf-blink"); void el.offsetWidth; el.classList.add("vf-blink"); setTimeout(() => el.classList.remove("vf-blink"), 1500); if (r.top < 60 || r.bottom > innerHeight - 60) el.scrollIntoView({ block: "center", behavior: "smooth" }); }
+    const x = r ? r.left + r.width / 2 : (e.x ?? .5) * innerWidth, y = r ? r.top + r.height / 2 : (e.y ?? .5) * innerHeight;
+    const p = document.createElement("div"); p.className = "vf-punkt"; p.style.left = x + "px"; p.style.top = y + "px"; document.body.appendChild(p); setTimeout(() => p.remove(), 1400);
+    if (!el && e.text) vfHinweis(`tippt auf „${e.text}“`);
+  }
+}
+function vfHinweis(t) { const h = $("vfWas"); if (h) h.textContent = t ? ` ${t}` : ""; }
+function vfLeiste() {
+  let l = $("vfLeiste"); if (!VF.rolle) { l?.remove(); document.body.classList.remove("vf-an"); return; }
+  if (!l) { l = document.createElement("div"); l.id = "vfLeiste"; l.setAttribute("role", "status"); document.body.appendChild(l); }
+  document.body.classList.add("vf-an");
+  const text = VF.rolle === "zeigt" ? (VF.status === "laeuft" ? `📺 Du zeigst ${esc(VF.gegen)} gerade die App` : `📺 Warte, bis ${esc(VF.gegen)} zuschaut …`) : `📺 ${esc(VF.gegen)} zeigt dir die App<span id="vfWas"></span>`;
+  l.className = "vf-leiste" + (VF.rolle === "schaut" ? " vf-schaut" : "");
+  l.innerHTML = `<span class="vf-text">${text}</span><button type="button" class="knopf klein" onclick="vfBeenden()">⏹ Beenden</button>`;
+}
+async function vfBeenden() {
+  const id = VF.id, an = VF.rolle === "zeigt" ? VF.an : null; vfAufraeumen();
+  try { await api("vorfuehren_ende", { id, ...(an ? { an } : {}) }); } catch {}
+  melde("📺 Vorführung beendet.");
+}
+function vfAufraeumen() { clearInterval(VF.takt); if (VF.rolle === "zeigt") vfBeobachten(false); Object.assign(VF, { rolle: null, id: null, an: null, status: null, takt: null, schlange: [], seit: 0 }); vfLeiste(); }
 // ---------- KC-CLUB-FITNESS (2.55.0, Wunsch Hansi): 🏋️ Fit bleiben – Twinkey macht vor, man macht mit; eigene Auswertung ----------
 // Ruhig und erwachsen: sanfte Übungen (auch im Sitzen), Stufe + Dauer wählbar, großer Countdown, Ansage abschaltbar.
 // Gesundheitsdaten: nur für einen selbst (Server: fitness_daten / fitness_speichern), kein Admin-Einblick, keine Pushs.
@@ -9583,6 +9684,7 @@ const ZEIGE_OHNE_ICH = new Set(["start", "sos"]);
 let startBereitLoesen; const startBereit = new Promise((ok) => { startBereitLoesen = ok; });
 let ZEIGE_WARTET = null;
 function zeige(v, ausHistorie) {
+  if (VF.rolle === "zeigt") vfMelden({ art: "ansicht", v }); // KC-CLUB-VORFUEHREN: Seitenwechsel an den Zuschauer
   setTimeout(() => document.querySelectorAll(".klappen-alle").forEach(klappenAlleZeigen), 50); // KC-CLUB-KLAPPEN-ALLE: Beschriftung passend zum Stand
   if (v !== "chat" && CV.an) chatVorlesenStopp(true); /* KC-CLUB-CHAT-VORLESEN: nur im offenen Chat */
   document.body.classList.remove("kt-aktiv"); /* 2.17.1: Fußleiste nach dem Quiz wieder zeigen */
@@ -17784,6 +17886,7 @@ function mitgliedZeigen() {
       ${!m.selbst && !ONL.ids.has(m.person_id) ? `<p class="hinweis breit" style="margin:4px 0">📞 🎥 Anrufen und Video gehen, sobald ${esc(String(m.name || "").split(" ")[0])} die App offen hat (🟢 online).</p>` : ""}
       ${m.selbst ? "" : `<button class="knopf ${ONL.ids.has(m.person_id) ? "" : "haupt"}" onclick="direkt('${m.person_id}')"><span class="kt-ico">💬</span>Nachricht in der App${m.chatAnzahl ? `<small class="md-zahl">${m.chatAnzahl} ${m.chatAnzahl === 1 ? "Nachricht" : "Nachrichten"}</small>` : ""}</button><div id="mdSpiel" hidden></div>`}
       ${ICH?.admin ? `<button class="knopf" onclick="nachrichtenStatistik('${m.person_id}')"><span class="kt-ico">📊</span>Statistik</button>` : ""}
+      ${ICH?.admin && !m.selbst ? `<button class="knopf" onclick="vfStart('${m.person_id}')"><span class="kt-ico">📺</span>Live zeigen</button>` : ""}
       ${ICH?.admin ? `<button class="knopf" onclick="linkTeilen('${m.person_id}')"><span class="kt-ico">🔗</span>App-Link</button><button class="knopf" onclick="einrichtungskarte('${m.person_id}')"><span class="kt-ico">🖨️</span>Einrichtungs&shy;karte</button><button class="knopf" onclick="rolleBearbeiten('${m.person_id}')"><span class="kt-ico">🎖️</span>Amt & Rechte</button>` : ""}
       ${zeilen ? '<button class="knopf" onclick="kontaktSpeichern()"><span class="kt-ico">📇</span>Ins Telefonbuch</button>' : ""}
     </div>
@@ -19276,7 +19379,7 @@ async function spurSenden() {
 }
 setInterval(spurSenden, sparTakt(NZ_TAKT_MS));
 document.addEventListener("visibilitychange", () => { if (document.hidden) spurSenden(); });
-const SPUR_WAS = { fitness: "🏋️ Fit bleiben geöffnet", probe_gesetzt: "🧪 Probephase gestartet/verlängert", probe_uebernommen: "✅ Probephase übernommen", probe_beendet: "🚪 Probephase beendet", geoeffnet: "📲 App geöffnet", mitglied: "👤 Mitglied angesehen", chat: "💬 Unterhaltung geöffnet", gesendet: "✉️ Nachricht gesendet", gesendet_anlage: "📎 Nachricht mit Anhang gesendet",
+const SPUR_WAS = { vorfuehren: "📺 Live zeigen gestartet", vorfuehren_zuschauen: "📺 Bei Live zeigen zugeschaut", fitness: "🏋️ Fit bleiben geöffnet", probe_gesetzt: "🧪 Probephase gestartet/verlängert", probe_uebernommen: "✅ Probephase übernommen", probe_beendet: "🚪 Probephase beendet", geoeffnet: "📲 App geöffnet", mitglied: "👤 Mitglied angesehen", chat: "💬 Unterhaltung geöffnet", gesendet: "✉️ Nachricht gesendet", gesendet_anlage: "📎 Nachricht mit Anhang gesendet",
   anruf: "📞 Anruf (App) an", video: "🎥 Videoanruf an", anklopfen: "👋 Angeklopft bei", telefon: "☎️ Telefonnummer angetippt", whatsapp: "🟢 WhatsApp geöffnet", mail: "✉️ E-Mail-Adresse angetippt", meine_statistik: "📊 Eigene Nachrichten-Statistik angesehen",
   mein_bild: "🧑‍🍳 „Mein Bild“ geöffnet", bild_gewaehlt: "🧑‍🍳 Koch-Figur als Bild gewählt", bild_gebaut: "🧩 Eigene Figur gespeichert", bild_foto: "📷 Eigenes Foto als Bild gesetzt", bild_entfernt: "🧑‍🍳 Bild entfernt (Buchstaben)", avatar_kombi: "ⓘ Figuren-Möglichkeiten angesehen", jacke_auto_an: "🔄 Kochjacke täglich wechselnd eingeschaltet", jacke_auto_aus: "🔄 Kochjacke täglich wechselnd ausgeschaltet" };
 const SPW = { tag: null, person: null };
@@ -19668,6 +19771,7 @@ async function fpAdmin(tage) {
     else if (h === "#mikrofon") mikroAssistent(); // KC-CLUB-MIKRO-ASSISTENT (2.23.72)
     else if (h.startsWith("#zu=")) sprung(h.slice(4)); // KC-CLUB-SPRUNGKNOPF (2.23.97): Link aus Nachricht, Push oder E-Mail
     else if (h === "#twinkey") ICH?.admin ? twOffenStart() : twFrageStart();
+    else if (h.startsWith("#vorfuehren=")) setTimeout(onlinePing, 300); // KC-CLUB-VORFUEHREN: aus dem Push – die Einladung kommt mit dem nächsten Online-Abgleich
     else if (h === "#mfrage") twFrageStart(); // KC-CLUB-MITGLIEDER-FRAGEN (2.23.51): Push/Mail → Fragen an mich bzw. Antworten // KC-CLUB-TWINKEY-FRAGEN (2.23.49): Push/Mail → Frage bzw. Antwort
     else if (h.startsWith("#spiel=")) spOeffnen(decodeURIComponent(h.slice(7))); // KC-CLUB-SPIELE (2.7.0): aus dem Push
     else if (h === "#spiele") spStart();

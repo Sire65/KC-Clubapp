@@ -320,6 +320,14 @@
   .fdk-kuehl { background: #e3eef8; border-color: #5b8fc4; } .fdk-gemuese { background: #e3efe0; border-color: #5d9a63; } .fdk-trocken { background: #f6ecd6; border-color: #b88a3a; }
   .fdk-gewuerz { background: #fbe3d2; border-color: #d0763a; } .fdk-pass { background: #fbeab0; border-color: #c99a10; } .fdk-glueck { background: #f3e6fb; border-color: #9a63c4; } .fdk-tuer { background: #eeeeee; border-color: #999; }
   .fdk-feld.fdk-gut { box-shadow: 0 0 0 3px #24974a; }
+  /* KC-CLUB-VORFUEHREN (2.56.0): Leiste oben, Markierung beim Zuschauer */
+  .vf-leiste { position: fixed; left: 8px; right: 8px; top: calc(env(safe-area-inset-top, 0px) + 6px); z-index: 2600; display: flex; align-items: center; gap: 8px; padding: 6px 8px 6px 12px; border-radius: 14px;
+    background: #1d4f91; color: #fff; box-shadow: 0 3px 12px rgba(0,0,0,.35); font-weight: 700; font-size: .9rem; }
+  .vf-leiste.vf-schaut { background: #741521; } .vf-leiste .vf-text { flex: 1; min-width: 0; } .vf-leiste .knopf { flex: none; margin: 0; background: #fff; color: #741521; border-color: #fff; }
+  body.vf-an { padding-top: 46px; }
+  .vf-punkt { position: fixed; z-index: 2700; width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%; background: rgba(214,58,58,.45); border: 3px solid #d63a3a; pointer-events: none; animation: vfPunkt 1.4s ease-out forwards; }
+  @keyframes vfPunkt { 0% { transform: scale(.4); opacity: 1; } 60% { transform: scale(1.2); opacity: .9; } 100% { transform: scale(1.6); opacity: 0; } }
+  .vf-blink { outline: 3px solid #d63a3a !important; outline-offset: 2px; box-shadow: 0 0 0 6px rgba(214,58,58,.25) !important; transition: outline-color .2s; }
   /* KC-CLUB-FITNESS (2.55.0): Fit bleiben – Figur, Training, Auswertung */
   .fi-figur { width: 150px; height: 200px; display: block; margin: 4px auto; overflow: visible; }
   .fi-figur .fi-jacke { fill: #ffffff; stroke: #c9c2b6; stroke-width: 1; } .fi-figur .fi-haut { fill: #ecc19c; } .fi-figur .fi-auge { fill: #2b1d14; }
@@ -3333,6 +3341,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.55.0" data-v="2.55.0"></script>
+<script src="app.js?v=2.56.0" data-v="2.56.0"></script>
 </body>
 </html>

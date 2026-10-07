@@ -5356,6 +5356,18 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/Bei Schmerzen, Schwindel oder Atemnot sofort aufhören/.test(html) && /fitness: \{ bauen: \(\) => fiDruck\(\) \}/.test(html), "Sicherheitshinweis, Drucken");
   assert.ok(/fiLsSetzen\(FI_OFFEN_KEY/.test(html) && /async function fiNachtragen\(\)/.test(html), "offline beendete Einheiten werden nachgetragen");
 }
+// 2.56.0 KC-CLUB-VORFUEHREN (Wunsch Hansi „Klaus etwas zeigen“): Live zeigen – Zuschauer-App folgt, ohne Bildübertragung, nichts wird beim Zuschauer ausgelöst
+{
+  const f = server.slice(server.indexOf('case "vorfuehren_start": {'), server.indexOf('case "anklopfen": {'));
+  assert.ok(/case "vorfuehren_start": \{\s*nurAdmin\(ich\);/.test(f), "Vorführen vorerst nur Admin");
+  assert.ok(/if \(an !== ich\.person_id && w\.von !== ich\.person_id\) throw new Fehler\("Kein Zugriff\.", 403\);/.test(f), "nur Vorführender und Zuschauer");
+  assert.ok(/\.slice\(-VF_EV_MAX\)/.test(f) && /3 \* 60000 : 3 \* 3600000/.test(f), "begrenzt, Anfrage verfällt nach 3 Min., Sitzung nach 3 Std.");
+  assert.ok(/\.\.\.\(vf \? \{ vorfuehren: \{ id: vf\.id, von: wer\(vf\.von\) \} \} : \{\}\)/.test(server), "Einladung kommt mit dem Online-Abgleich");
+  const n = html.slice(html.indexOf("function vfNachspielen(e) {"), html.indexOf("function vfHinweis("));
+  assert.ok(!/\.click\(\)/.test(n) && /classList\.add\("vf-blink"\)/.test(n), "beim Zuschauer wird nur markiert, nie geklickt");
+  assert.ok(/if \(VF\.rolle === "zeigt"\) vfMelden\(\{ art: "ansicht", v \}\);/.test(html) && /if \(r\.vorfuehren\) vfAnfrage\(r\.vorfuehren\);/.test(html), "Seitenwechsel gemeldet, Einladung angezeigt");
+  assert.ok(/onclick="vfStart\('\$\{m\.person_id\}'\)"><span class="kt-ico">📺<\/span>Live zeigen/.test(html) && /onclick="vfBeenden\(\)">⏹ Beenden/.test(html), "Knopf auf der Mitglied-Seite, beide können beenden");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

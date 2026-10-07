@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.56.0 – 2026-10-07 – KC-CLUB-VORFUEHREN
+Neu (Admin): 📺 Live zeigen – auf der Mitglied-Seite. Nach Zusage folgt die App des Mitglieds deiner App: Seitenwechsel, Tipps als rote Markierung, Scrollen, geöffnete Fenster als Hinweis. Das Mitglied sieht seine eigenen Daten, beim Zuschauer wird nichts ausgelöst; beide können jederzeit beenden. Server 2.56.0.
+
 ## 2.55.0 – 2026-10-07 – KC-CLUB-FITNESS
 Neu (vorerst nur Admin, Freigabe wie Rezeptbuch): 🏋️ Fit bleiben im Bereich Mein – Twinkey macht 15 sanfte Übungen vor (im Sitzen, im Stehen, Dehnen & Gleichgewicht), Stufe Sanft/Mittel/Fordernd, Dauer 5–20 Min., großer Countdown, Ansage, Pause/Überspringen; Auswertung nach Tag/Woche/Monat/Jahr mit Stufen- und Übungsfilter, Säulen, Monatskalender, Anteilen, Tabelle und Druck. Daten nur für einen selbst. Server 2.55.0.
 
