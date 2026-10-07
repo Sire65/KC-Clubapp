@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.60.1 – 2026-10-07 – KC-CLUB-KLICK-ZEIGEN
+Die roten Rahmen beim 👆 pulsieren jetzt ruhig (bei „Bewegung reduzieren“ stehend).
+
 ## 2.60.0 – 2026-10-07 – KC-CLUB-KLICK-ZEIGEN
 Neuer Knopf 👆 über dem „?“: zeigt rot umrandet alles, was man antippen kann (Aus mit ✕ oder nach 2 Minuten).
 

@@ -1489,7 +1489,10 @@
   .hz-klick:active { transform: scale(.92); }
   .hz-klick.versteckt, body.im-chat .hz-klick, body.su-auf .hz-klick, body.kt-aktiv .hz-klick, body.fa-waehlen .hz-klick { display: none; }
   body.klick-zeigen .hz-klick { background: #e11d48; border-color: #e11d48; }
-  body.klick-zeigen :is(button, a[href], [onclick], [role="button"], [role="tab"], select, input:not([type="hidden"]), textarea, summary, label.schalter, label:has(> input[type="checkbox"]), label:has(> input[type="radio"])):not(.klick-leiste *) { outline: 3px solid #e11d48 !important; outline-offset: 2px !important; }
+  body.klick-zeigen :is(button, a[href], [onclick], [role="button"], [role="tab"], select, input:not([type="hidden"]), textarea, summary, label.schalter, label:has(> input[type="checkbox"]), label:has(> input[type="radio"])):not(.klick-leiste *) { outline: 3px solid #e11d48; outline-offset: 2px; animation: klickPuls 1.1s ease-in-out infinite; }
+  /* 2.60.1 (Wunsch Hansi): Rahmen schwellen ruhig auf und ab (keine Ameisenstraße – die bedeutet „neue Nachricht“) */
+  @keyframes klickPuls { 0%, 100% { outline-width: 2px; outline-offset: 1px; outline-color: rgba(225, 29, 72, .55); } 50% { outline-width: 4px; outline-offset: 4px; outline-color: rgba(225, 29, 72, 1); } }
+  @media (prefers-reduced-motion: reduce) { body.klick-zeigen :is(button, a[href], [onclick], [role="button"], [role="tab"], select, input, textarea, summary, label) { animation: none !important; } }
   .klick-leiste { position: fixed; z-index: 60; left: 50%; transform: translateX(-50%); top: calc(8px + env(safe-area-inset-top)); display: flex; align-items: center; gap: 10px; max-width: calc(100vw - 24px); padding: 8px 8px 8px 14px; border-radius: 999px; background: #e11d48; color: #fff; box-shadow: var(--schatten); font-size: .9rem; white-space: nowrap; }
   .klick-leiste button { border: 0; border-radius: 999px; background: #fff; color: #9f1239; font-weight: 800; padding: 6px 12px; cursor: pointer; }
   .hz-frage.versteckt, body.im-chat .hz-frage, body.su-auf .hz-frage, body.kt-aktiv .hz-frage, body.fa-waehlen .hz-frage { display: none; }
@@ -3357,6 +3360,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.60.0" data-v="2.60.0"></script>
+<script src="app.js?v=2.60.1" data-v="2.60.1"></script>
 </body>
 </html>

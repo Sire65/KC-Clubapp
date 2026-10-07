@@ -5430,9 +5430,10 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.ok(programm.includes('id="klickZeigenKnopf"') && programm.includes("function klickZeigen(an)") && programm.includes("const KLICK_ZEIGEN_MS = 120000"), "👆-Knopf/Schalter fehlt");
   assert.ok(programm.includes('document.body.classList.toggle("klick-zeigen", jetzt)') && programm.includes('onclick="klickZeigen(false)">✕ Aus</button>'), "Ein/Aus fehlt");
-  assert.ok(/body\.klick-zeigen :is\(button, a\[href\], \[onclick\], \[role="button"\]/.test(seite) && seite.includes("outline: 3px solid #e11d48"), "rote Umrandung fehlt");
+  assert.ok(/body\.klick-zeigen :is\(button, a\[href\], \[onclick\], \[role="button"\]/.test(seite) && seite.includes("outline: 3px solid #e11d48") && seite.includes("@keyframes klickPuls") && seite.includes("prefers-reduced-motion: reduce) { body.klick-zeigen"), "rote Umrandung fehlt");
   assert.ok(/\.hz-klick\.versteckt, body\.im-chat \.hz-klick/.test(seite), "👆 muss sich wie das ? ausblenden");
 }
+// 2.60.1: Puls siehe KC-CLUB-KLICK-ZEIGEN-Test
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
