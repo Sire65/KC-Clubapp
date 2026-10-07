@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.27.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.27.1"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SCHNELLSTART-DATEI (2.24.8, Hinweis Hansi „Start ist langsamer geworden“): das Programm liegt in app.js, damit das Handy es
 // fertig übersetzt behalten kann (statt bei jedem Öffnen 1,8 MB neu einzulesen). Seite und Programm müssen dieselbe Version haben
 // (AGENTS Regel 16, kein Mischstand): passt es nicht (z. B. alte Seite aus einem Zwischenspeicher), einmal frisch laden, sonst anhalten.
@@ -2204,8 +2204,13 @@ function zuletztText(z) {
 }
 // ---------- KC-CLUB-INKOGNITO (2.3.0, Wunsch Hansi): Admin unsichtbar online sein ----------
 const inkognitoAn = () => !!(ICH?.admin && INIT?.einstellungen?.inkognito?.an);
+// KC-CLUB-INKO-KNOPF (2.27.1, Wunsch Hansi): Brille auf der Startseite ein-/ausblenden (je Gerät, z. B. für Vorführungen)
+const INKO_KNOPF_KEY = "kc_club_inko_knopf", inkoKnopfSichtbar = () => lsLesen(INKO_KNOPF_KEY) !== "aus";
+function inkoKnopfSetzen(an) { lsSetzen(INKO_KNOPF_KEY, an ? "an" : "aus"); inkognitoZeigen(); melde(an ? "🕶️ Die Brille ist wieder auf der Startseite" : "🕶️ Die Brille ist auf der Startseite ausgeblendet"); }
 function inkognitoZeigen() {
   if ($("setInkognito")) $("setInkognito").checked = inkognitoAn();
+  if ($("setInkoKnopf")) $("setInkoKnopf").checked = inkoKnopfSichtbar();
+  document.body.classList.toggle("inko-knopf-aus", !inkoKnopfSichtbar());
   document.body.classList.toggle("inkognito", inkognitoAn());
   const k = $("inkoKnopf"); if (k) { k.classList.toggle("an", inkognitoAn()); k.setAttribute("aria-pressed", String(inkognitoAn())); k.title = inkognitoAn() ? "Inkognito ist AN – niemand sieht dich online. Antippen zum Ausschalten" : "Inkognito ist aus – antippen zum Einschalten"; }
   try { if (INFO_FELDER[INFO_I]?.id === "treffen" || INFO_FELDER[INFO_I]?.id === "admin") heroZeigen(); } catch {}

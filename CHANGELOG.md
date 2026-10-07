@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.27.1 – 2026-10-06 – Admin: Brille auf der Startseite ausblendbar
+Einstellungen (nur Admin): „🕶️ Brille oben auf der Startseite zeigen“ – aus = die Brille ist auf der Startseite ausgeblendet (z. B. bei einer Vorführung), gilt für dieses Gerät. (KC-CLUB-INKO-KNOPF, Wunsch Hansi)
+
 ## 2.27.0 – 2026-10-06 – 🧑‍🍳 Fang den Koch (Stufe 1)
 Neues Küchen-Brettspiel in der Köcheclub Edition: Fang den Koch – gegen Koch Kurt (Computer, leicht/mittel/schwer). Küche aus 9 großen Kacheln, würfeln = Schritte, Feld für Feld laufen; an jeder Station Zutaten nehmen, im Geräteregal das Gerät holen (gibt es nur einmal), an der richtigen Station kochen, am Pass abgeben; Gäste warten 8 Runden (Rest = Trinkgeld). „Fang den Koch!“: wer auf den anderen läuft, nimmt ihm etwas ab. 8 Gerichte, 15 Runden, Ansage, Pause, Abbrechen, Kachel-Knöpfe. Stufe 2 (gegen Mitglieder) folgt. (KC-CLUB-FDK, Idee Hansi)
 

@@ -4848,6 +4848,11 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(gerichte / koeche >= 2.5, "Tempo: im Schnitt mindestens 2,5 Gerichte je Koch in 15 Runden (" + (gerichte / koeche).toFixed(2) + ")");
   assert.deepEqual(R.FDK_NACHBARN[8].sort(), [1, 3, 5, 7], "Geräteregal in der Mitte, Schritte nur waagerecht/senkrecht");
 }
+// 2.27.1 KC-CLUB-INKO-KNOPF: Brille auf der Startseite ausblenden (nur Admin, je Gerät)
+{
+  assert.ok(/<input type="checkbox" id="setInkoKnopf" checked onchange="inkoKnopfSetzen\(this\.checked\)">/.test(html) && /body:not\(\.ist-admin\) #setInkoKnopfZeile/.test(html) && /body\.inko-knopf-aus #inkoKnopf \{ display: none; \}/.test(html), "Schalter nur für Admin, Brille ausblendbar");
+  assert.ok(/document\.body\.classList\.toggle\("inko-knopf-aus", !inkoKnopfSichtbar\(\)\);/.test(html), "gilt sofort und nach dem Start");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

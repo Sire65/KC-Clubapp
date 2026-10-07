@@ -176,7 +176,7 @@
   .ow-blase small { display: block; color: var(--grau); font-size: .78rem; margin-top: 4px; }
   /* KC-CLUB-KOPF-EINFACH (2.1.0): Mitglieder ohne Technik-Lämpchen und Lebenszeichen-Herz (nur Admin) */
   body:not(.ist-admin) #ledComm, body:not(.ist-admin) #ledDaten, body:not(.ist-admin) #herzKnopf { display: none; }
-  body:not(.ist-admin) #setInkognitoZeile, body:not(.ist-admin) #inkoKnopf { display: none; }
+  body:not(.ist-admin) #setInkognitoZeile, body:not(.ist-admin) #setInkoKnopfZeile, body:not(.ist-admin) #inkoKnopf, body.inko-knopf-aus #inkoKnopf { display: none; }
   body:not(.ist-admin):not(.sos-frei) #naSosKnopf { display: none; } #naSosKnopf { margin: 0; padding: 8px 10px; } #v-nachrichten .kopf2 > h2 { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } #v-nachrichten .kopf2 > #naSosKnopf + .knopf.haupt { margin-left: 0; } /* 2.22.0 KC-CLUB-NOTFALL-KANAELE: SOS im Nachrichten-Kopf nur für den Admin */
   /* 2.3.1: Hauptschalter in der Kopfleiste – aus = blass, an = deutlich markiert */
   /* 2.4.1 (Wunsch Hansi): Inkognito an → Rahmen um den Kopfbereich, beim Einschalten kurz Ameisen.
@@ -2732,6 +2732,8 @@
       <div class="schalter"><div><b>🟢 Anderen zeigen, wann ich online bin</b><div class="hinweis">Dann sehen andere einen grünen Punkt bei dir und können „anklopfen“. Ausgeschaltet siehst du auch selbst nicht, wer online ist.</div></div><input type="checkbox" id="setOnline" onchange="onlineZeigen(this.checked)"></div>
       <!-- KC-CLUB-INKOGNITO (2.3.0): Hauptschalter nur für den Admin -->
       <div class="schalter" id="setInkognitoZeile"><div><b>🕶️ Inkognito (nur Admin)</b><div class="hinweis">Niemand sieht, dass du online oder heute da warst – kein grüner Punkt, keine Ansage, kein „zuletzt da“. Du selbst siehst die anderen weiter.</div></div><input type="checkbox" id="setInkognito" onchange="inkognitoSetzen(this.checked)"></div>
+      <!-- KC-CLUB-INKO-KNOPF (2.27.1, Wunsch Hansi): Brille auf der Startseite ausblenden, z. B. bei einer Vorführung (nur Admin, je Gerät) -->
+      <div class="schalter" id="setInkoKnopfZeile"><div><b>🕶️ Brille oben auf der Startseite zeigen (nur Admin)</b><div class="hinweis">Aus: Die Brille ist auf der Startseite ausgeblendet – z. B. bei einer Vorführung sieht sie dann niemand. Inkognito schaltest du dann hier darüber. Gilt für dieses Gerät.</div></div><input type="checkbox" id="setInkoKnopf" checked onchange="inkoKnopfSetzen(this.checked)"></div>
       <!-- KC-CLUB-SPIELE (2.7.0) -->
       <div class="schalter"><div><b>🎲 Andere dürfen mich zu Spielen herausfordern</b><div class="hinweis">Tic-Tac-Toe, Schach, Bauernskat, Küchenterror und Mensch ärgere dich nicht – darunter wählst du, welche. Aus: Du erscheinst nicht in der Liste und bekommst keine Herausforderungen. Gegen den Computer spielen geht immer.</div></div><input type="checkbox" id="setSpiele" onchange="spBereitSetzen(this.checked)"></div>
       <div class="knoepfe versteckt" id="setSpieleArten" style="margin:-4px 0 10px" aria-label="Zu welchen Spielen darf man dich herausfordern?"></div>
@@ -3130,6 +3132,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.27.0" data-v="2.27.0"></script>
+<script src="app.js?v=2.27.1" data-v="2.27.1"></script>
 </body>
 </html>
