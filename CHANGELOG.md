@@ -1,5 +1,12 @@
 # Änderungen
 
+## Google-Skript – 2026-10-07 – Keine Mails mehr an Gäste (KC-KALENDER-STILL, App unverändert)
+- Fall Thomas: Sein Termin war in Google von Hand mit ihm als Gast eingetragen. Jede Änderung durch das Skript (Titel, Zeit,
+  Ort, Text, Farbe einzeln) löste bei Google eine Mail „Aktualisierte Einladung“ an ihn aus – 4 Mails am 07.10.
+- `google/KalenderAbgleich.gs`: Einträge mit Gästen nur noch still ändern/löschen (erweiterter Dienst „Google Calendar API“,
+  sendUpdates = none); ist der Dienst aus, bleiben sie unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
+- Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
+
 ## 2.31.0 – 2026-10-06 – Startstatistik für den Admin
 KC-CLUB-STARTSTATISTIK: Jeder App-Start wird mit Zeitpunkt, Dauer (Teile: Seite, Programm, Server, Anzeige), Gerät, Browser, App/Browser, Netz und Version gemeldet; Admin → Nutzung → ⏱️ Startstatistik mit 7/30/90/180 Tagen, Filter Mitglied/Gerät, Übersicht je Mitglied, je Gerät/Browser, je Netz und Starts einzeln (grün/gelb/rot). Aufbewahrung 180 Tage.
 

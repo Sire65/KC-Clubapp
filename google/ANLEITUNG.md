@@ -32,6 +32,19 @@ beim nächsten Lauf angepasst. Gelöschte Termine und erledigte Vorschläge vers
    „Erweitert“ → „KC Termine öffnen (unsicher)“ → **Zulassen**. Das ist normal bei eigenen Skripten.
 7. Fertig. Im Ausführungsprotokoll steht „Eingerichtet“. In der App wird die Anzeige „Google-Kalender“ grün.
 
+## Skript erneuern (Stand 07.10.2026 – keine Mails mehr an eingeladene Gäste)
+
+Hast du in Google bei einem Termin ein Mitglied als **Gast** eingetragen, schickte Google bei jeder Änderung
+eine Mail „Aktualisierte Einladung“ an das Mitglied. Das neue Skript verhindert das:
+
+1. Am PC **https://script.google.com** → Projekt **KC Termine** öffnen.
+2. Im Editor den ganzen alten Code markieren und löschen. In der App (🎓 Schulungen → 📆 Google-Kalender) auf
+   **Skript kopieren** tippen und einfügen → 💾 speichern.
+3. Links bei **Dienste** auf **＋** → **Google Calendar API** wählen → **Hinzufügen** (Kennung bleibt `Calendar`).
+   Damit kann das Skript Termine mit Gästen **ganz still** ändern. Ohne diesen Schritt lässt es Termine mit Gästen
+   einfach unverändert – es geht trotzdem nie eine Mail an Mitglieder.
+4. Fertig. Der Zeitplan (alle 5 Minuten) bleibt bestehen.
+
 ## Wenn es nicht läuft
 
 - **App zeigt rot „Abgleich läuft nicht“**: script.google.com → Projekt **KC Termine** → links ⏰ **Trigger**:

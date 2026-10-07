@@ -4952,6 +4952,16 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/API_LESEN = [^\n]*\.\*_statistik/.test(html), "Statistik zählt als Lesen");
   assert.ok(/Außerdem 180 Tage lang jeden App-Start/.test(html), "Hilfe nennt die Aufzeichnung");
 }
+// KC-KALENDER-STILL (Fall Thomas 07.10.2026): Google-Einträge mit Gästen nie mit Mail-Benachrichtigung ändern oder löschen
+{
+  const gs = lies("google/KalenderAbgleich.gs");
+  assert.ok(/const gaeste = ev \? ev\.getGuestList\(\)\.length > 0 : false;/.test(gs), "Gäste werden erkannt");
+  assert.ok(/Calendar\.Events\.patch\([\s\S]*\{ sendUpdates: 'none' \}\)/.test(gs) && /Calendar\.Events\.remove\([\s\S]*?\{ sendUpdates: 'none' \}\)/.test(gs), "mit Gästen nur still (sendUpdates none)");
+  assert.ok(/if \(!still_\(\)\) \{ ergebnisse\.push\(\{ uid: e\.uid, fehler: 'Eintrag hat Gäste – nicht geändert/.test(gs) && /if \(!still_\(\)\) \{ ergebnisse\.push\(\{ uid: e\.uid, fehler: 'Eintrag hat Gäste – nicht gelöscht/.test(gs), "ohne stillen Dienst: Einträge mit Gästen unverändert");
+  const ohne = gs.slice(gs.indexOf("} else {\n          if (ev.getTitle() !== e.titel)"), gs.indexOf("ergebnisse.push({ uid: e.uid, event_id: ev.getId()"));
+  assert.ok(/if \(ev\.getTitle\(\) !== e\.titel\) ev\.setTitle/.test(ohne) && /ev\.getDescription\(\) !== /.test(ohne), "ohne Gäste nur Geändertes setzen");
+  assert.ok(/Google Calendar API/.test(lies("google/ANLEITUNG.md")), "Anleitung: Dienst einschalten");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
