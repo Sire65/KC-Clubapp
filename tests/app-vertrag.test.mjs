@@ -5290,6 +5290,13 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const c = (o) => "c" + [1, 5, 1, 3, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, o, 0, 0].map((x) => x.toString(36)).join("");
   for (let i = 0; i < O.AV_OHREN.length; i++) { const svg = O.avatarSvg(c(i), 64); assert.ok((svg.match(/rgba\(130,70,40,\.38\)/g) || []).length >= 6, "Innenleben bei Ohrform " + O.AV_OHREN[i]); }
 }
+// 2.54.0 KC-CLUB-EMOJI-MEHR (Wunsch Karla): deutlich mehr Emojis, neue Gruppen Tiere & Natur und Dinge – ein Kern, keine doppelten in einer Gruppe
+{
+  const a = html.indexOf("const EMO_GRUPPEN = ["), G = new Function(html.slice(a, html.indexOf("];", a) + 2) + "\nreturn EMO_GRUPPEN;")();
+  assert.ok(G.length >= 10 && G.some((g) => g.name === "Tiere & Natur") && G.some((g) => g.name === "Dinge"), "neue Gruppen");
+  const n = G.filter((g) => g.liste).reduce((s, g) => s + g.liste.length, 0); assert.ok(n >= 700, "mehrere hundert Emojis (" + n + ")");
+  for (const g of G.filter((g) => g.liste)) { assert.equal(new Set(g.liste).size, g.liste.length, "keine doppelten in " + g.name); assert.ok(g.liste.every((e) => e && !/['"<>]/.test(e)), "nur Emojis in " + g.name); }
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

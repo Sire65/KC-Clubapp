@@ -2322,7 +2322,7 @@
   .emo-reiter button { flex: 1 1 0; min-width: 0; background: none; border: 0; border-radius: 10px; font-size: 1.2rem; padding: 6px 0; cursor: pointer; opacity: .6; }
   .emo-reiter button.an { opacity: 1; background: var(--karte2, rgba(128,128,128,.18)); }
   .emo-reiter .emo-zu { flex: 0 0 38px; opacity: .8; font-size: 1rem; }
-  .emo-gitter { display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px; max-height: 168px; overflow-y: auto; }
+  .emo-gitter { display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px; max-height: 216px; overflow-y: auto; overscroll-behavior: contain; } /* 2.54.0: mehr Emojis – etwas höher, scrollt im Feld */
   .emo-gitter button { background: none; border: 0; border-radius: 10px; font-size: 1.55rem; line-height: 1; padding: 7px 0; cursor: pointer; }
   .emo-gitter button:active { background: var(--karte2, rgba(128,128,128,.2)); transform: scale(1.15); }
   /* KC-CLUB-REAKTION / -ANTWORT / -ERWAEHNUNG (0.97.0) */

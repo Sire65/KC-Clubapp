@@ -13096,17 +13096,19 @@ function rsBlatt() {
 }
 
 // ---------- KC-CLUB-EMOJI (0.95.0): Emojis in Nachrichten – übersichtlich in wenigen Gruppen ----------
-// Bewusst eine überschaubare Auswahl (je Gruppe 24) statt tausender Zeichen; alle weiteren gehen wie gewohnt über die
+// 0.95.0: anfangs je Gruppe 24 – seit 2.54.0 deutlich mehr (wie bei WhatsApp), Gruppen bleiben überschaubar; alle weiteren gehen wie gewohnt über die
 // Handy-Tastatur. „Zuletzt“ merkt sich die eigenen Lieblinge auf dem Gerät. Tippen fügt an der Schreibstelle ein.
-const EMO_GRUPPEN = [
+const EMO_GRUPPEN = [ // KC-CLUB-EMOJI-MEHR (2.54.0, Wunsch Karla über Hansi „bei WhatsApp sind es mehr“): größere Auswahl, Tiere & Natur, Dinge
   { sym: "🕘", name: "Zuletzt", liste: null },
-  { sym: "😀", name: "Gesichter", liste: "😀 😃 😄 😁 😆 😅 😂 🤣 😊 🙂 😉 😍 🥰 😘 😋 😎 🤗 🤔 😐 🙄 😴 😢 😭 😮".split(" ") },
-  { sym: "👍", name: "Hände", liste: "👍 👎 👌 ✌️ 🤞 👏 🙌 🙏 💪 👋 🤝 ✋ 👉 👈 ☝️ 👇 🫶 🤙 ✍️ 🖐️ 👊 🤲 🫡 💅".split(" ") },
-  { sym: "❤️", name: "Herzen", liste: "❤️ 🧡 💛 💚 💙 💜 🤎 🖤 🤍 💕 💞 💓 💗 💖 💘 💝 ❣️ 💔 💯 ✨ ⭐ 🌟 🔥 🌈".split(" ") },
-  { sym: "🍲", name: "Essen & Trinken", liste: "🍲 🥘 🍝 🍕 🍖 🍗 🥩 🌭 🍔 🥗 🥔 🥕 🧅 🧄 🍞 🧀 🥚 🍰 🎂 🍪 ☕ 🍷 🍺 🥂".split(" ") },
-  { sym: "🎉", name: "Feiern", liste: "🎉 🎊 🥳 🎁 🎈 🎄 🎅 🤶 ⛄ ❄️ 🎃 🐣 🌷 ☀️ 🌧️ ⛅ 🎶 🎵 📸 🏆 🥇 🍀 🌻 🌹".split(" ") },
-  { sym: "🚗", name: "Unterwegs", liste: "🚗 🚌 🚲 🚶 🏃 ✈️ 🚆 🏠 🏡 🏪 📍 🗺️ ⏰ ⌛ 📅 📞 📱 💬 ✉️ 📦 🛒 💶 🔑 🧳".split(" ") },
-  { sym: "✅", name: "Zeichen", liste: "✅ ❌ ❓ ❗ ⚠️ 🆗 🆕 🔔 🔕 ➡️ ⬅️ ⬆️ ⬇️ 🔁 ➕ ➖ 👀 💡 📌 📎 ✏️ 🗓️ ⏳ 🙋".split(" ") },
+  { sym: "😀", name: "Gesichter", liste: "😀 😃 😄 😁 😆 😅 😂 🤣 🥲 😊 😇 🙂 🙃 😉 😌 😍 🥰 😘 😗 😙 😚 😋 😛 😝 😜 🤪 🤨 🧐 🤓 😎 🥸 🤩 🥳 😏 😒 😞 😔 😟 😕 🙁 ☹️ 😣 😖 😫 😩 🥺 😢 😭 😤 😠 😡 🤬 🤯 😳 🥵 🥶 😱 😨 😰 😥 😓 🤗 🤔 🤭 🤫 🤥 😶 😐 😑 😬 🙄 😯 😦 😧 😮 😲 🥱 😴 🤤 😪 😵 🤐 🥴 🤢 🤮 🤧 😷 🤒 🤕 🤑 🤠 😈 👿 🤡 💩 👻 💀 👽 🤖 😺 😸 😹 😻 🙈 🙉 🙊".split(" ") },
+  { sym: "👍", name: "Hände & Menschen", liste: "👍 👎 👌 🤌 🤏 ✌️ 🤞 🤟 🤘 🤙 👈 👉 👆 👇 ☝️ ✋ 🤚 🖐️ 🖖 👋 👏 🙌 👐 🤲 🤝 🙏 ✍️ 💅 🤳 💪 🦵 🦶 👂 👃 🧠 👀 👁️ 👅 👄 🫶 🫡 👶 🧒 👦 👧 🧑 👨 👩 🧓 👴 👵 👨‍🍳 👩‍🍳 🧑‍🍳 👨‍🌾 👩‍🌾 👮 👷 💂 🕵️ 👩‍⚕️ 👨‍⚕️ 🧑‍🎓 👨‍🏫 👩‍💻 🤵 👰 🤰 🤱 🎅 🤶 🦸 🧙 🧚 🙋 🙆 🙅 💁 🤷 🤦 🙇 💃 🕺 👯 🚶 🏃 🧍 🧎 👫 👬 👭 💏 💑 👪".split(" ") },
+  { sym: "❤️", name: "Herzen", liste: "❤️ 🧡 💛 💚 💙 💜 🤎 🖤 🤍 💔 ❣️ 💕 💞 💓 💗 💖 💘 💝 💟 ❤️‍🔥 ❤️‍🩹 💋 💌 💐 🌹 🥀 💯 ✨ ⭐ 🌟 💫 ⚡ 🔥 🌈 ☀️ 🌙 🫂 😍 🥰 😘 💑 💏 🤗 🙏".split(" ") },
+  { sym: "🐶", name: "Tiere & Natur", liste: "🐶 🐱 🐭 🐹 🐰 🦊 🐻 🐼 🐨 🐯 🦁 🐮 🐷 🐸 🐵 🐔 🐧 🐦 🐤 🦆 🦅 🦉 🐺 🐗 🐴 🦄 🐝 🐛 🦋 🐌 🐞 🐜 🕷️ 🐢 🐍 🦎 🐙 🦑 🦐 🦞 🦀 🐡 🐠 🐟 🐬 🐳 🐋 🦈 🐊 🐅 🐆 🦓 🦍 🐘 🦒 🦘 🐪 🐫 🐄 🐎 🐖 🐏 🐑 🐐 🦌 🐕 🐩 🐈 🐓 🦃 🦚 🦜 🦢 🕊️ 🐇 🦔 🐿️ 🌵 🎄 🌲 🌳 🌴 🌱 🌿 ☘️ 🍀 🍃 🍂 🍁 🍄 🌾 💐 🌷 🌹 🌺 🌸 🌼 🌻 🌞 🌝 🌛 🌍 🌊 💧 ☔ ⛈️ 🌩️ 🌨️ ❄️ ☃️ ⛄ 🌬️ 🌪️ 🌫️ 🌧️ 🌦️ ⛅ 🌤️ ☀️".split(" ") },
+  { sym: "🍲", name: "Essen & Trinken", liste: "🍲 🥘 🍝 🍜 🍛 🍕 🍔 🌭 🥪 🌮 🌯 🥙 🧆 🥚 🍳 🥞 🧇 🥓 🥩 🍗 🍖 🍤 🍣 🍱 🥟 🦪 🍙 🍚 🍘 🥗 🥫 🧂 🧈 🍞 🥐 🥖 🥨 🥯 🧀 🥔 🍠 🥕 🌽 🥦 🥬 🥒 🌶️ 🫑 🧄 🧅 🍄 🥜 🌰 🫘 🍅 🍆 🥑 🫒 🍎 🍏 🍐 🍊 🍋 🍌 🍉 🍇 🍓 🫐 🍈 🍒 🍑 🥭 🍍 🥥 🥝 🍰 🎂 🧁 🥧 🍮 🍩 🍪 🍫 🍬 🍭 🍯 🍦 🍨 🍧 🥛 ☕ 🍵 🧃 🥤 🧋 🍶 🍺 🍻 🥂 🍷 🥃 🍸 🍹 🍾 🧉 🧊 🥄 🍴 🍽️ 🔪 🫕 🥣".split(" ") },
+  { sym: "🎉", name: "Feiern & Freizeit", liste: "🎉 🎊 🥳 🎁 🎈 🎀 🎂 🍾 🥂 🎄 🎅 🤶 🎆 🎇 🧨 ✨ 🎃 🐣 🐰 🥚 🌷 🪅 🎗️ 🎟️ 🎫 🏆 🥇 🥈 🥉 🏅 🎖️ ⚽ 🏀 🏈 ⚾ 🎾 🏐 🏓 🏸 ⛳ 🎳 🏒 🥊 🎯 🎱 🎲 ♟️ 🃏 🀄 🧩 🎮 🎰 🚴 🏊 🏄 ⛷️ 🏂 🧘 🏋️ 🤸 🎣 🛶 🏕️ ⛺ 🎨 🖌️ 🎭 🎬 🎤 🎧 🎼 🎵 🎶 🎹 🥁 🎷 🎺 🎸 🎻 📸 📷 🎥 🎪 🎡 🎢 🎠".split(" ") },
+  { sym: "🚗", name: "Unterwegs & Orte", liste: "🚗 🚕 🚙 🚌 🚎 🏎️ 🚓 🚑 🚒 🚐 🛻 🚚 🚛 🚜 🛵 🏍️ 🚲 🛴 🚶 🏃 ✈️ 🛫 🛬 🚁 🚀 ⛵ 🚤 🛳️ ⛴️ 🚢 🚂 🚆 🚇 🚊 🚉 🚏 ⛽ 🚦 🚧 🅿️ 🗺️ 📍 🧭 🏔️ ⛰️ 🏕️ 🏖️ 🏝️ 🏞️ 🏟️ 🏛️ 🏗️ 🏘️ 🏠 🏡 🏢 🏣 🏥 🏦 🏨 🏪 🏫 🏬 🏰 💒 ⛪ 🕌 🗼 🗽 ⛲ 🌆 🌇 🌃 🌉 🎡 🧳 🎒 🌍 🌅 🌄".split(" ") },
+  { sym: "💡", name: "Dinge", liste: "📱 📞 ☎️ 💻 🖥️ 🖨️ ⌨️ 🖱️ 📺 📻 📷 🔋 🔌 💡 🔦 🕯️ 🧯 🛒 💶 💰 💳 🧾 ✉️ 📧 📨 📩 📦 📫 📮 📝 📄 📃 📑 📊 📈 📉 🗒️ 🗓️ 📅 📆 📇 📋 📁 📂 🗂️ 📚 📖 🔖 🏷️ ✏️ ✒️ 🖊️ 🖋️ 🖍️ 📌 📍 📎 🖇️ 📏 📐 ✂️ 🗃️ 🗄️ 🗑️ 🔒 🔓 🔑 🗝️ 🔨 🪛 🔧 🔩 ⚙️ 🧰 🧲 🧪 🩺 💊 💉 🩹 🧼 🧽 🧹 🧺 🧻 🚿 🛁 🪑 🛏️ 🛋️ 🚪 🪟 🧸 🎁 ⏰ ⏱️ ⌚ ⏳ ⌛ 🧭 🔔 📣 📢 🔍 🔎 👓 🕶️ 👔 👕 👖 🧥 👗 👠 👟 🧢 🎩 👒 🧤 🧣 👜 💍 💎".split(" ") },
+  { sym: "✅", name: "Zeichen", liste: "✅ ☑️ ✔️ ❌ ❎ ❓ ❔ ❗ ❕ ‼️ ⁉️ ⚠️ 🚫 ⛔ 🔞 🆗 🆕 🆒 🆓 🆙 🆘 ℹ️ 🔔 🔕 🔇 🔈 🔊 ➡️ ⬅️ ⬆️ ⬇️ ↗️ ↘️ ↙️ ↖️ ↔️ ↕️ 🔄 🔁 🔂 ▶️ ⏸️ ⏹️ ⏩ ⏪ ➕ ➖ ✖️ ➗ 🟰 💲 💯 🔢 #️⃣ 0️⃣ 1️⃣ 2️⃣ 3️⃣ 4️⃣ 5️⃣ 6️⃣ 7️⃣ 8️⃣ 9️⃣ 🔟 🔴 🟠 🟡 🟢 🔵 🟣 🟤 ⚫ ⚪ 🟥 🟧 🟨 🟩 🟦 🟪 ⬛ ⬜ 🔶 🔷 🔸 🔹 🔺 🔻 💠 ♻️ ⚜️ 🔱 ©️ ®️ ™️ 💤 💬 💭 🗯️ 👀 🙋 📌 📎 ✏️ 🗓️ ⏳".split(" ") },
 ];
 const EMO_ZULETZT_MAX = 16;
 let emoGruppe = 1;
