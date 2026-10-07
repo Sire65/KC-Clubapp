@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.39.1 – 2026-10-07 – KC-CLUB-ANHANG-ANSEHEN
+Meldung Hansi (Bildschirmfoto an Christina/Reinhilde kam nicht an – beim Antippen war es weg): Ein Anhang über dem Schreibfeld zeigt jetzt ein kleines Vorschaubild. Antippen öffnet ihn groß (✅ Behalten / 🗑️ Entfernen); entfernt wird nur noch über das eigene ✕.
+
 ## 2.39.0 – 2026-10-07 – KC-CLUB-AVATAR-RANDLOS
 Wunsch Hansi (nach Foto seiner Brille): neue Brille „randlos“ – rechteckige Gläser ohne Rand, dünner Metallsteg mit Nasenpads, dünne Bügel; dazu Brillenfarbe Titan-Grau.
 

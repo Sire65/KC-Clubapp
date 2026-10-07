@@ -5064,6 +5064,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const code = "c" + [1, 5, 1, 0, 0, 9, 1, 1, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0].map((x) => x.toString(36)).join("");
   assert.ok(/^c[0-9a-z]{15,18}$/.test(code) && server.includes("/^c[0-9a-z]{15,18}$/.test(w.figur)"), "Server nimmt den Code an");
 }
+// 2.39.1 KC-CLUB-ANHANG-ANSEHEN (Meldung Hansi: Bildschirmfoto beim Antippen weg): Anhang antippen = ansehen, nur ✕ entfernt
+{
+  const f = html.slice(html.indexOf("function chipsZeigen()"), html.indexOf("async function verkleinern("));
+  assert.ok(/class="anl-auf" onclick="anlageAnsehen\(\$\{i\}\)"/.test(f) && /class="anl-weg" onclick="anlageEntfernen\(\$\{i\}\)"/.test(f), "Antippen öffnet, ✕ entfernt");
+  assert.ok(!/<button class="chip" onclick="anlagen\.splice/.test(html), "kein Entfernen mehr beim bloßen Antippen");
+  assert.ok(/✅ Behalten/.test(f) && /🗑️ Entfernen/.test(f) && /URL\.revokeObjectURL/.test(f), "Ansicht mit Behalten/Entfernen, Vorschau wird freigegeben");
+  assert.ok(/bild: anlageVorschau\(roh\)/.test(html) && /bild: anlageVorschau\(d\)/.test(html), "Vorschaubild bei Galerie und Teilen");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

@@ -1291,6 +1291,11 @@
   details.prda summary { cursor: pointer; padding: 10px 0; }
   .chips { display: flex; gap: 6px; flex-wrap: wrap; max-width: 1100px; margin: 0 auto 6px; }
   .chip { background: var(--karte2); border: none; border-radius: 12px; padding: 6px 10px; font-weight: 700; }
+  /* KC-CLUB-ANHANG-ANSEHEN (2.39.1): Anhang antippen = ansehen, nur ✕ entfernt */
+  .chip.anl-chip { display: inline-flex; align-items: center; gap: 2px; padding: 0 0 0 4px; max-width: 100%; }
+  .anl-chip .anl-auf { border: none; background: none; font: inherit; font-weight: 700; color: var(--text); display: inline-flex; align-items: center; gap: 6px; padding: 4px 4px; min-height: 38px; cursor: pointer; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 62vw; }
+  .anl-chip .anl-auf img { width: 30px; height: 30px; object-fit: cover; border-radius: 6px; flex: none; }
+  .anl-chip .anl-weg { border: none; background: rgba(0,0,0,.08); color: var(--text); border-radius: 50%; width: 32px; height: 32px; margin: 3px; font-weight: 800; cursor: pointer; flex: none; }
   .chipweg { border: none; background: none; color: inherit; font-weight: 900; padding: 0 0 0 6px; cursor: pointer; }
   .belegfeld { margin-top: 10px; font-weight: 700; font-size: .92rem; }
   .belegknoepfe { flex-wrap: wrap; margin-top: 6px; } .belegknoepfe button { flex: 1 1 140px; }
@@ -3159,6 +3164,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.39.0" data-v="2.39.0"></script>
+<script src="app.js?v=2.39.1" data-v="2.39.1"></script>
 </body>
 </html>

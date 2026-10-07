@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.39.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.39.1"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -13582,7 +13582,7 @@ async function teilenInChat(id) {
   if (id) await chatOeffnen(id); else await neueNachricht();
   $("text").value = t.text; $("text").style.height = "auto"; $("text").style.height = $("text").scrollHeight + "px"; entwurfMarkeZeigen();
   for (const d of t.dateien) {
-    const e = { name: d.name, laedt: true }; anlagen.push(e); chipsZeigen();
+    const e = { name: d.name, laedt: true, bild: anlageVorschau(d) }; anlagen.push(e); chipsZeigen();
     try { const r = await anlageHochladen(d); Object.assign(e, { id: r.id, name: r.name, laedt: false }); } catch (err) { anlagen.splice(anlagen.indexOf(e), 1); melde(err.message, true); }
     chipsZeigen();
   }
@@ -13835,7 +13835,20 @@ async function waEinfuegen() {
 }
 function anlageMenue() { $("anlageBlatt").classList.toggle("versteckt"); }
 function anlageWahl(id) { $("anlageBlatt").classList.add("versteckt"); dateiWahl(id, dateienGewaehlt); }
-function chipsZeigen() { $("anlagenChips").innerHTML = anlagen.map((a, i) => `<button class="chip" onclick="anlagen.splice(${i},1);chipsZeigen()">${a.laedt ? "⏳" : "📎"} ${esc(a.name)} ✕</button>`).join(""); }
+// KC-CLUB-ANHANG-ANSEHEN (2.39.1, Meldung Hansi „Bildschirmfoto beim Antippen weg“): Antippen des Anhangs zeigt ihn groß –
+// entfernt wird nur noch über das eigene ✕ bzw. „🗑️ Entfernen“. Bilder bekommen ein kleines Vorschaubild (nur auf diesem Gerät).
+const anlageVorschau = (datei) => { try { return /^image\//.test(datei?.type || "") ? URL.createObjectURL(datei) : null; } catch { return null; } };
+function chipsZeigen() {
+  $("anlagenChips").innerHTML = anlagen.map((a, i) => `<span class="chip anl-chip"><button type="button" class="anl-auf" onclick="anlageAnsehen(${i})" aria-label="Anhang ansehen: ${esc(a.name)}">${a.bild ? `<img src="${a.bild}" alt="">` : a.laedt ? "⏳" : "📎"} ${esc(a.name)}</button><button type="button" class="anl-weg" onclick="anlageEntfernen(${i})" aria-label="Anhang entfernen" title="Anhang entfernen">✕</button></span>`).join("");
+}
+function anlageEntfernen(i) { const a = anlagen[i]; if (!a) return; anlagen.splice(i, 1); try { if (a.bild) URL.revokeObjectURL(a.bild); } catch {} chipsZeigen(); melde("📎 Anhang entfernt"); }
+function anlageAnsehen(i) {
+  const a = anlagen[i]; if (!a) return;
+  const f = blattAuf("anlAnsehBlatt", `<h3 style="margin:0">📎 Anhang</h3>${a.bild ? `<img src="${a.bild}" alt="" style="max-width:100%;max-height:60vh;border-radius:12px;display:block;margin:8px auto">` : `<p style="margin:10px 0"><b>${esc(a.name)}</b></p>`}
+    <p class="hinweis" style="margin:4px 0 8px">${a.laedt ? "⏳ Wird noch hochgeladen …" : "Wird mit der Nachricht verschickt, sobald du auf ➤ tippst."}</p>
+    <div class="knoepfe"><button class="knopf haupt" onclick="fensterZu($('anlAnsehBlatt'))">✅ Behalten</button><button class="knopf" onclick="fensterZu($('anlAnsehBlatt'));anlageEntfernen(${i})">🗑️ Entfernen</button></div>`);
+  f.style.zIndex = "2100";
+}
 async function verkleinern(datei, max = 1600, qualitaet = 0.82) {
   if (!/^image\/(jpeg|png|webp|heic|heif)/.test(datei.type)) return datei;
   try {
@@ -13855,7 +13868,7 @@ async function anlageHochladen(roh) {
 }
 async function dateienGewaehlt(input) {
   for (const roh of [...input.files].slice(0, 10)) {
-    const eintrag = { name: roh.name, laedt: true }; anlagen.push(eintrag); chipsZeigen();
+    const eintrag = { name: roh.name, laedt: true, bild: anlageVorschau(roh) }; anlagen.push(eintrag); chipsZeigen();
     try {
       const r = await anlageHochladen(roh);
       Object.assign(eintrag, { id: r.id, name: r.name, laedt: false });
