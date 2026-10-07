@@ -35,7 +35,7 @@ function sparZeigen() {
 const WB_KEY = "kc_club_wartebild";
 const WBILD = [
   { id: "muetze", t: "Kochmütze", x: "Einen Moment …" },
-  { id: "besen", t: "Schneebesen", x: "Wird aufgeschlagen …", svg: '<path d="M8 27h32c-1.4 7.6-7.6 12-16 12S9.4 34.6 8 27z"/><path d="M6 27h36"/><g class="wb-a-besen"><path d="M24 5v9"/><path d="M24 14c-5 4-5 11 0 14 5-3 5-10 0-14z"/><path d="M24 14c-2.4 4-2.4 11 0 14 2.4-3 2.4-10 0-14z"/></g>' },
+  { id: "besen", t: "Schneebesen", x: "Wird aufgeschlagen …", svg: '<path d="M8 27h32c-1.4 7.6-7.6 12-16 12S9.4 34.6 8 27z"/><path d="M6 27h36"/><ellipse class="wb-a-spur" cx="24" cy="30.5" rx="9" ry="2.2"/><g class="wb-a-besen"><path d="M24 5v9"/><path d="M24 14c-5 4-5 11 0 14 5-3 5-10 0-14z"/><path d="M24 14c-2.4 4-2.4 11 0 14 2.4-3 2.4-10 0-14z"/></g>' },
   { id: "pfanne", t: "Pfanne schwenken", x: "Kommt gleich aus der Pfanne …", svg: '<path d="M6 30h24c0 4.4-3 7-7 7H13c-4 0-7-2.6-7-7z"/><path d="M30 31l13-4"/><ellipse class="wb-a-flip" cx="18" cy="27" rx="8" ry="1.8"/>' },
   { id: "topf", t: "Suppentopf", x: "Köchelt noch …", svg: '<path d="M11 22h26v12a4 4 0 0 1-4 4H15a4 4 0 0 1-4-4z"/><path d="M11 26H7M37 26h4"/><g class="wb-a-deckel"><path d="M10 19.5h28"/><path d="M22 17.5h4"/></g><g class="wb-a-dampf"><path d="M18 14c-2-2 2-4 0-7"/><path d="M24 13c-2-2 2-4 0-7"/><path d="M30 14c-2-2 2-4 0-7"/></g>' },
   { id: "messer", t: "Messer & Brett", x: "Wird vorbereitet …", svg: '<path d="M5 37h38"/><path d="M8 33h18l4-2-4-2H8z"/><g class="wb-a-messer"><path d="M33 6l8 0 0 4c-2 6-6 9-8 9z"/><path d="M37 6V2"/></g><path class="wb-a-scheibe" d="M33 34v-3"/>' },
