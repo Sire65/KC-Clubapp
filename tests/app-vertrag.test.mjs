@@ -1730,7 +1730,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/const ARCHIV_ABLAGE_ARTEN = \{\s*erstattung: \{ sym: "💶", register: \["Rechnungen", "Sonstiges"\]/.test(f), "Registry der Ablage-Anlässe");
   // 1.19.0: dazu nur lesende, vorhandene Wege für Dateien aus Nachrichten/Protokollen (anlage_url) und Fotos (foto_oeffnen)
   assert.ok([...f.matchAll(/api\("(\w+)"/g)].every((m) => ["archiv_liste", "archiv_hochladen", "anlage_url", "foto_oeffnen"].includes(m[1])), "nur vorhandene Archiv-/Lese-Wege");
-  assert.ok(/const ordner = nfpEigeneOrdner\(d\)/.test(f) && /<select id="ablOrdner"/.test(f) && /<select id="ablReg">/.test(f), "nur eigene Ordner, Auswahl statt Freitext");
+  assert.ok(/const ordner = (nfpEigeneOrdner\(d\)|\[\.\.\.nfpEigeneOrdner\(d\), \.\.\.verein\])/.test(f) && /const verein = d\.darf \? /.test(f) && /<select id="ablOrdner"/.test(f) && /<select id="ablReg">/.test(f), "nur eigene Ordner, Auswahl statt Freitext");
   assert.ok(/onclick="einmal\(this, ablAblegen\)">🗄️ \$\{esc\(ja \|\| "Ja, ablegen"\)\}/.test(f) && /onclick="ablNein\(\)">\$\{esc\(nein \|\| "Nein, danke"\)\}/.test(f), "Rückfrage mit Ja/Nein (1.19.0: Texte je Anlass)");
   const s = html.slice(html.indexOf("async function erstattungSenden()"), html.indexOf("// KC-CLUB-KMSATZ (0.39.0): Admin"));
   assert.ok(s.indexOf('api("erstattung_senden"') < s.indexOf("erstattungAblageFragen(kopie, r)"), "Ablage erst nach erfolgreichem Versand");
@@ -5407,7 +5407,24 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.equal(f("Klaus", { andere: 3 }), "Klaus hat dir und 2 weiteren eine Nachricht in der Club-App geschickt");
   assert.ok(!server.includes(': "Neue Nachricht im Köcheclub",'), "allgemeiner Push-Text noch aktiv");
   assert.ok(server.includes("nachrichtKurz(ich.vorname, { grp, andere: tnIds.size - 1"), "Nachrichten-Push nutzt nachrichtKurz nicht");
-  assert.ok(server.includes('const SERVER_VERSION = "2.58.0"'), "Serverversion nicht erhöht");
+  { const v = (server.match(/const SERVER_VERSION = "(\d+)\.(\d+)\./) || []).slice(1).map(Number); assert.ok(v[0] > 2 || (v[0] === 2 && v[1] >= 58), "Serverversion nicht erhöht"); }
+}
+// KC-CLUB-ARCHIV-KOPIEREN (2.59.0): Kopieren/Verschieben nach Ordner x mit Vorschlag; Vereinsordner „Besprechungen“
+{
+  const k = server.slice(server.indexOf('case "archiv_kopieren"'), server.indexOf('case "archiv_loeschen"'));
+  assert.ok(k.includes('archivDokHolen(ich, p.id, "pflegen")') && k.includes('archivOrdnerHolen(ich, p.ordner_id || d.ordner_id, false, "pflegen")'), "Kopieren ohne Rechteprüfung");
+  assert.ok(k.includes("(ziel.besitzer || null) !== (quelle.besitzer || null)"), "Kopieren zwischen persönlich und Verein muss gesperrt sein");
+  assert.ok(k.includes("dateiDuplizieren(ich, d.attachment_id)") && !/attachment_id: d\.attachment_id/.test(k), "Kopie braucht eine eigene Datei");
+  assert.ok(k.includes("SPEICHER_GRENZE * ARCHIV_STOPP") && k.includes("PERSOENLICH_GRENZE"), "Speichergrenzen beim Kopieren");
+  assert.ok(programm.includes("const AR_VORSCHLAG = [") && programm.includes("function arVorschlag(") && programm.includes("📋 Kopieren nach …") && programm.includes("➡️ Verschieben nach …"), "Knöpfe/Vorschlag fehlen");
+  const a = programm.indexOf("function arVorschlag("), b = programm.indexOf("\n}\n", a) + 2;
+  const vf = new Function("AR_VORSCHLAG", "lsLesen", "return " + programm.slice(a, b))(eval(programm.slice(programm.indexOf("const AR_VORSCHLAG = [") + 21, programm.indexOf("];", programm.indexOf("const AR_VORSCHLAG = [")) + 1)), () => null);
+  const ord = [{ id: "b", titel: "Besprechungen", jahr: 2026, register: ["Entwürfe", "Protokolle"] }, { id: "a", titel: "Admin", jahr: 2026, register: ["Sonstiges"] }];
+  assert.equal(vf("Protokoll-Entwurf Besprechung Klaus", ord)?.r, "Entwürfe");
+  assert.equal(vf("Protokoll Sitzung", ord)?.o.id, "b");
+  assert.equal(vf("Entwurf", ord, { ordner: "b", register: "Entwürfe" }), null, "nie dorthin vorschlagen, wo es schon liegt");
+  assert.ok(programm.includes('{ id: "besprechungen", sym: "🤝", t: "Besprechungen"') && programm.includes("function arStartTitel("), "Büro-Ordner Besprechungen fehlt");
+  assert.ok(lies("supabase/migrations/20261007_kc_club_ordner_besprechungen.sql").includes("where not exists"), "Ordner-Anlage nicht wiederholbar");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.58.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.59.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -10763,6 +10763,7 @@ const BU_REGAL = [
   { id: "termine", sym: "📅", t: "Termine", farbe: "#8b6f5a", fn: "buTermine()", recht: "S" },
   { id: "briefe", sym: "✉️", t: "Briefe", farbe: "#6e6a5c", fn: "buBrief()", recht: "S" },
   { id: "erstattung", sym: "💶", t: "Erstattung", farbe: "#7a7f5e", fn: "zeige('erstattung')", recht: "L" },
+  { id: "besprechungen", sym: "🤝", t: "Besprechungen", farbe: "#6b6f86", fn: "arStartTitel('Besprechungen')", recht: "L" }, // KC-CLUB-ARCHIV-KOPIEREN (2.59.0): Entwürfe/Unterlagen, bevor es ein Protokoll ist
   { id: "chronik", sym: "📖", t: "Chronik", farbe: "#8a6d4e", fn: "arStartArt('chronik')" },
   { id: "archiv", sym: "🗄️", t: "Archiv", farbe: "#5f5a57", fn: "arStart()" },
   { id: "verwaltung", sym: "🔐", t: "Freigaben", farbe: "#55606b", fn: "buRechte()", recht: "A" },
@@ -18437,10 +18438,12 @@ const arFilterMerken = () => { try { localStorage.setItem("kc_club_archiv_filter
 function arStart() { AR.ordner = null; AR.korb = false; AR.suche = ""; zeige("archiv"); }
 // 1.65.0: direkt einen Ordner einer Art öffnen (z. B. die Chronik aus dem Büro-Regal); fehlt er, bleibt das Regal offen
 function arStartArt(art) { AR.zielArt = art; arStart(); }
+function arStartTitel(titel) { AR.zielTitel = titel; arStart(); } // Club-Ordner nach Beschriftung öffnen (neuester Jahrgang)
 async function arLaden() {
   if (!AR.daten) $("arInhalt").innerHTML = '<p class="hinweis">Lädt …</p>';
   try { AR.daten = await api("archiv_liste");
     if (AR.zielArt) { const za = AR.daten.ordner.find((o) => !o.besitzer && o.art === AR.zielArt); AR.zielArt = null; if (za) return arOrdnerOeffnen(za.id); }
+    if (AR.zielTitel) { const zt = AR.daten.ordner.filter((o) => !o.besitzer && o.titel === AR.zielTitel).sort((a, b) => b.jahr - a.jahr)[0]; const t = AR.zielTitel; AR.zielTitel = null; if (zt) return arOrdnerOeffnen(zt.id); melde(`Den Ordner „${t}“ gibt es noch nicht – im Archiv mit „＋“ anlegen.`, true); }
     if (AR.ziel) { const z = AR.ziel; AR.ziel = null; if (AR.daten.ordner.some((o) => o.id === z)) return arOrdnerOeffnen(z); } arZeigen(); } catch (e) { $("arInhalt").innerHTML = `<div class="karte hinweis">⚠️ ${esc(e.message)}</div>`; }
 }
 const arJahr = (datum) => String(datum || "").slice(0, 4);
@@ -18845,7 +18848,69 @@ function arDokForm(id) {
     <label class="feld">${chronik ? "Was sieht man? Wer, was, wo" : "Beschreibung (freiwillig)"}<textarea id="arDokBeschr" rows="3" maxlength="1000" placeholder="${chronik ? "z. B. Auf dem Marktplatz haben wir 92 m Mettwurst am Stück gegrillt – Eintrag ins Rekordbuch." : "kurz, worum es geht"}">${esc(x?.beschreibung || "")}</textarea></label>
     <label class="feld">Stichworte (freiwillig, mit Komma trennen)<input id="arDokStich" maxlength="200" value="${esc((x?.stichworte || []).join(", "))}" placeholder="z. B. Gemeinde, Weihnachtsmarkt"></label>
     <div class="knoepfe"><button class="knopf haupt" onclick="einmal(this, () => arDokSpeichern('${x?.id || ""}'))">${x ? "Speichern" : "📥 Ablegen"}</button>
-      ${x ? `<button class="knopf" onclick="arDokLoeschen('${x.id}')">🗑️ Löschen</button>` : ""}<button class="knopf" onclick="arBlattZu()">Abbrechen</button></div>`);
+      ${x ? `<button class="knopf" onclick="arDokLoeschen('${x.id}')">🗑️ Löschen</button>` : ""}<button class="knopf" onclick="arBlattZu()">Abbrechen</button></div>
+    ${x ? `<div class="knoepfe ar-ziel-knoepfe"><button class="knopf" onclick="arZielBlatt('${x.id}','kopieren')">📋 Kopieren nach …</button><button class="knopf" onclick="arZielBlatt('${x.id}','verschieben')">➡️ Verschieben nach …</button></div>` : ""}`);
+}
+// ---------- KC-CLUB-ARCHIV-KOPIEREN (2.59.0, Wunsch Hansi): „Kopieren / Verschieben nach Ordner x“ mit Vorschlag ----------
+// Vorschlag aus einer Registry (Stichwort im Titel → Ordner/Register), sonst das zuletzt gewählte Ziel. Auswahl statt Freitext.
+// Gleiche Regeln wie der Server: nur innerhalb des eigenen Bereichs (persönlich ↔ Verein nie gemischt).
+const AR_ZIEL_KEY = "kc_club_ar_ziel";
+const AR_VORSCHLAG = [
+  { re: /besprech|tagesordnung|agenda|entwurf/i, ordner: /besprech/i, register: ["Entwürfe", "Unterlagen"] },
+  { re: /protokoll/i, ordner: /besprech|protokoll|versammlung|sitzung/i, register: ["Protokolle"] },
+  { re: /rechnung|beleg|quittung|erstattung|abrechnung/i, register: ["Rechnungen"] },
+  { re: /schulung/i, register: ["Schulungen"] },
+  { re: /dienst(zeit|plan|wunsch)|wünsche/i, ordner: /dienstpl/i, register: ["Wünsche", "Gesamtplan"] },
+  { re: /urkunde|ehrung/i, register: ["Urkunden", "Ehrungen & Urkunden"] },
+  { re: /sicherheit/i, register: ["Sicherheitscheck"] },
+  { re: /chat|nachricht/i, register: ["Chats"] },
+  { re: /foto|bild/i, register: ["Fotos"] },
+];
+// liste: mögliche Zielordner (neueste zuerst) · jetzt: {ordner, register} = wo es schon liegt (wird nicht vorgeschlagen)
+function arVorschlag(text, liste, jetzt = {}) {
+  const passt = (o, r) => o && (o.register || []).includes(r) && !(o.id === jetzt.ordner && r === jetzt.register);
+  for (const v of AR_VORSCHLAG) {
+    if (!v.re.test(String(text || ""))) continue;
+    for (const o of liste.filter((y) => !v.ordner || v.ordner.test(y.titel || ""))) { const r = v.register.find((x) => passt(o, x)); if (r) return { o, r, grund: "passt zum Titel" }; }
+  }
+  let z = null; try { z = JSON.parse(lsLesen(AR_ZIEL_KEY) || "null"); } catch {}
+  const o = z && liste.find((y) => y.id === z.ordner);
+  return o && passt(o, z.register) ? { o, r: z.register, grund: "zuletzt gewählt" } : null;
+}
+let AR_ZIEL = null;
+function arZielBlatt(id, art) {
+  const d = AR.daten, x = d?.dokumente.find((y) => y.id === id), o = x && d.ordner.find((y) => y.id === x.ordner_id); if (!o) return;
+  const liste = d.ordner.filter((y) => !y.auto && (y.besitzer || null) === (o.besitzer || null) && (!o.besitzer || y.eigen) && (y.art !== "chronik") === (o.art !== "chronik"))
+    .sort((a, b) => b.jahr - a.jahr || a.titel.localeCompare(b.titel, "de"));
+  const v = arVorschlag(`${x.titel} ${x.name || ""}`, liste, { ordner: o.id, register: x.register });
+  AR_ZIEL = { id, art, jetzt: { ordner: o.id, register: x.register } };
+  const kop = art === "kopieren";
+  arBlatt(`<h3>${kop ? "📋 Kopieren nach …" : "➡️ Verschieben nach …"}</h3>
+    <p class="hinweis" style="margin:0 0 8px">${arDateiSym(x.mime)} <b>${esc(x.titel)}</b><br>liegt jetzt in: ${esc(o.titel)} ${o.jahr}${o.nur_vorstand ? " 🔒" : ""} › ${esc(x.register || "Allgemein")}</p>
+    ${v ? `<button class="knopf haupt ar-vorschlag" style="width:100%;text-align:left" onclick="arZielSetzen('${v.o.id}', ${esc(JSON.stringify(v.r))})">💡 Vorschlag: <b>${esc(v.o.titel)} ${v.o.jahr} › ${esc(v.r)}</b> <small>(${esc(v.grund)})</small></button>` : ""}
+    <label class="feld">Ordner<select id="arZielOrdner" onchange="arZielRegister()">${liste.map((y) => `<option value="${y.id}">${esc(y.titel)} ${y.jahr}${y.nur_vorstand ? " 🔒" : ""}</option>`).join("")}</select></label>
+    <label class="feld">Register<select id="arZielReg"></select></label>
+    ${kop ? '<p class="hinweis" style="margin:0 0 6px">Die Kopie ist eine eigene Datei – Löschen an einer Stelle lässt die andere stehen.</p>' : ""}
+    <div class="knoepfe"><button class="knopf haupt" onclick="einmal(this, arZielAusfuehren)">${kop ? "📋 Kopieren" : "➡️ Verschieben"}</button><button class="knopf" onclick="arDokForm('${id}')">‹ Zurück</button></div>`);
+  arZielSetzen(v ? v.o.id : o.id, v ? v.r : x.register);
+}
+function arZielSetzen(oid, reg) { const s = $("arZielOrdner"); if (!s) return; s.value = oid; arZielRegister(reg); }
+function arZielRegister(reg) {
+  const o = AR.daten?.ordner.find((y) => y.id === $("arZielOrdner")?.value); if (!o) return;
+  const liste = o.register.length ? o.register : ["Allgemein"], w = liste.includes(reg) ? reg : liste[0];
+  $("arZielReg").innerHTML = liste.map((r) => `<option${r === w ? " selected" : ""}>${esc(r)}</option>`).join("");
+}
+async function arZielAusfuehren() {
+  const z = AR_ZIEL; if (!z) return;
+  const ordner_id = $("arZielOrdner").value, register = $("arZielReg").value;
+  if (z.art === "verschieben" && ordner_id === z.jetzt.ordner && register === z.jetzt.register) return melde("Liegt schon dort – bitte ein anderes Ziel wählen.", true);
+  try {
+    if (z.art === "kopieren") await api("archiv_kopieren", { id: z.id, ordner_id, register }, { warten: true });
+    else await api("archiv_aendern", { id: z.id, ordner_id, register });
+    lsSetzen(AR_ZIEL_KEY, JSON.stringify({ ordner: ordner_id, register }));
+    const o = AR.daten.ordner.find((y) => y.id === ordner_id);
+    AR_ZIEL = null; arBlattZu(); melde(`${z.art === "kopieren" ? "📋 Kopiert" : "➡️ Verschoben"} nach ${o ? `${o.titel} ${o.jahr}` : "…"} › ${register}`); await arLaden();
+  } catch (e) { meldeFehler(e); }
 }
 function arDokOrdnerWechsel(oid) {
   const o = AR.daten.ordner.find((y) => y.id === oid); if (!o) return;
@@ -18909,15 +18974,18 @@ const ablZu = () => { document.getElementById("ablageBlatt")?.remove(); ABL = nu
 async function archivAblageFragen(art, { titel, datum, hinweis, dateien, frage, ja, nein, wahl, danach }) {
   const a = ARCHIV_ABLAGE_ARTEN[art]; if (!a) return false;
   let d; try { d = await api("archiv_liste"); } catch { return false; } // Archiv gerade nicht erreichbar → Frage entfällt, Hauptaktion ist erledigt
-  const ordner = nfpEigeneOrdner(d); if (!ordner.length) return false;
-  const jahr = Number(String(datum || heuteIso()).slice(0, 4)), vor = ordner.find((o) => o.jahr === jahr) || ordner[0];
-  ABL = { a, d, titel, datum: datum || heuteIso(), dateien, danach };
+  // KC-CLUB-ARCHIV-KOPIEREN (2.59.0): wer das Club-Archiv pflegt, kann auch in Club-Ordner ablegen (z. B. „Besprechungen“) – mit Vorschlag
+  const verein = d.darf ? (d.ordner || []).filter((o) => !o.besitzer && !o.auto && o.art !== "chronik" && (o.register || []).length).sort((x, y) => y.jahr - x.jahr || x.titel.localeCompare(y.titel, "de")) : [];
+  const ordner = [...nfpEigeneOrdner(d), ...verein]; if (!ordner.length) return false;
+  const jahr = Number(String(datum || heuteIso()).slice(0, 4)), vs = arVorschlag(titel, ordner), vor = vs?.o || ordner.find((o) => o.besitzer && o.jahr === jahr) || ordner[0];
+  ABL = { a, d, titel, datum: datum || heuteIso(), dateien, danach, vorReg: vs?.r };
   blattAuf("ablageBlatt", `${einwHtml("b-ablage")}<h3 style="margin-top:0">🗄️ ${esc(frage || "Auch in deinen Archiv-Ordner legen?")}</h3>
     <p style="margin:0 0 8px">${a.sym} <b>${esc(titel)}</b>${hinweis ? `<br><span class="hinweis">${esc(hinweis)}</span>` : ""}</p>
-    <label class="feld">Ordner<select id="ablOrdner" onchange="ablRegister()">${ordner.map((o) => `<option value="${esc(o.id)}"${o.id === vor.id ? " selected" : ""}>👤 Mein Ordner ${esc(String(o.jahr))}</option>`).join("")}</select></label>
+    ${vs ? `<p class="hinweis" style="margin:0 0 4px">💡 Vorschlag: <b>${esc(vs.o.besitzer ? "Mein Ordner " + vs.o.jahr : vs.o.titel + " " + vs.o.jahr)} › ${esc(vs.r)}</b> (${esc(vs.grund)})</p>` : ""}
+    <label class="feld">Ordner<select id="ablOrdner" onchange="ablRegister()">${ordner.map((o) => `<option value="${esc(o.id)}"${o.id === vor.id ? " selected" : ""}>${o.besitzer ? `👤 Mein Ordner ${esc(String(o.jahr))}` : `🗄️ ${esc(o.titel)} ${esc(String(o.jahr))}${o.nur_vorstand ? " 🔒" : ""}`}</option>`).join("")}</select></label>
     <label class="feld">Register<select id="ablReg"></select></label>
     ${wahl ? `<label class="schalter"><span>${esc(wahl.text)}</span><input type="checkbox" id="ablWahl"${wahl.an !== false ? " checked" : ""}></label>` : ""}
-    <p class="hinweis">🔒 Deinen Ordner siehst nur du (und wem du ihn selbst freigibst).</p>
+    <p class="hinweis" id="ablSicht">🔒 Deinen Ordner siehst nur du (und wem du ihn selbst freigibst).</p>
     <button class="knopf haupt" style="text-align:center" onclick="einmal(this, ablAblegen)">🗄️ ${esc(ja || "Ja, ablegen")}</button>
     <button class="knopf" style="text-align:center" onclick="ablNein()">${esc(nein || "Nein, danke")}</button>
     ${danach ? '<button class="knopf" style="text-align:center" onclick="ablZu()">Abbrechen</button>' : ""}`);
@@ -18926,8 +18994,9 @@ async function archivAblageFragen(art, { titel, datum, hinweis, dateien, frage, 
 }
 function ablNein() { const weiter = ABL?.danach; ablZu(); weiter?.(); }
 function ablRegister() {
-  const o = nfpEigeneOrdner(ABL?.d).find((x) => x.id === $("ablOrdner")?.value); if (!o) return;
-  const reg = o.register?.length ? o.register : (ABL.d.register || ["Sonstiges"]), vor = ABL.a.register.find((r) => reg.includes(r)) || reg[0];
+  const o = (ABL?.d?.ordner || []).find((x) => x.id === $("ablOrdner")?.value); if (!o) return;
+  const reg = o.register?.length ? o.register : (ABL.d.register || ["Sonstiges"]), vor = (reg.includes(ABL.vorReg) ? ABL.vorReg : null) || ABL.a.register.find((r) => reg.includes(r)) || reg[0];
+  if ($("ablSicht")) $("ablSicht").textContent = o.besitzer ? "🔒 Deinen Ordner siehst nur du (und wem du ihn selbst freigibst)." : o.nur_vorstand ? "🔒 Club-Ordner – sehen nur Clubsprecher, Kassenwart und Admin." : "🗄️ Club-Ordner – alle Mitglieder können ihn sehen.";
   $("ablReg").innerHTML = reg.map((r) => `<option${r === vor ? " selected" : ""}>${esc(r)}</option>`).join("");
 }
 async function ablAblegen() {

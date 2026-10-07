@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.59.0 – 2026-10-07 – KC-CLUB-ARCHIV-KOPIEREN
+Archiv: Dokumente „📋 Kopieren nach …“ / „➡️ Verschieben nach …“ mit Vorschlag; Ablage auch in Vereinsordner; neuer Ordner „🤝 Besprechungen“ im Büro.
+
 ## 2.58.0 – 2026-10-07 – KC-CLUB-PUSH-PERSOENLICH
 Push bei Nachrichten sagt, wer was geschickt hat (z. B. „Klaus hat dir eine Nachricht in der Club-App geschickt“) – nur an die Empfänger.
 

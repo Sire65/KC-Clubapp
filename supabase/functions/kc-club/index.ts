@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.58.0";
+const SERVER_VERSION = "2.59.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -507,6 +507,16 @@ async function dateiAblegen(ich: Ich, nameRoh: unknown, mimeRoh: unknown, datenR
   }).select("id").single();
   if (error || !att) { await db.storage.from(BUCKET).remove([pfad]); throw new Fehler("Anlage konnte nicht gespeichert werden.", 500); }
   return { id: att.id as string, name, groesse: bytes.length };
+}
+// KC-CLUB-ARCHIV-KOPIEREN (2.59.0): vorhandene Datei als eigene, neue Datei ablegen (Kopie im Speicher, eigener Anlagen-Eintrag)
+async function dateiDuplizieren(ich: Ich, attId: unknown) {
+  const { data: a } = await db.from("kc_communication_attachments").select("bucket,object_path,file_name,mime_type").eq("id", String(attId || "")).maybeSingle();
+  if (!a) throw new Fehler("Die Datei ist nicht mehr vorhanden.", 404);
+  const { data: blob, error } = await db.storage.from(a.bucket).download(a.object_path);
+  if (error || !blob) throw new Fehler("Die Datei konnte gerade nicht gelesen werden – bitte gleich noch einmal.", 500);
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  let b = ""; for (let i = 0; i < bytes.length; i += 0x8000) b += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return await dateiAblegen(ich, a.file_name, a.mime_type, btoa(b));
 }
 // Dateien endgültig entfernen (Speicher wird frei) – nur für Dateien, die sonst nirgends verknüpft sind
 async function dateienEntfernen(ids: (string | null | undefined)[]) {
@@ -9928,6 +9938,27 @@ Köcheclub-App`,
         await db.from("kc_club_archiv_dokumente").update(upd).eq("id", d.id);
         await protokoll(ich.person_id, "archiv_geaendert", { dokument: d.id, vorher: { ordner: d.ordner_id, register: d.register, titel: d.titel, datum: d.datum, stichworte: d.stichworte, beschreibung: d.beschreibung } });
         return json({ ok: true });
+      }
+
+      // KC-CLUB-ARCHIV-KOPIEREN (2.59.0, Wunsch Hansi): Dokument in einen anderen Ordner/ein anderes Register kopieren.
+      // Die Kopie bekommt eine EIGENE Datei (wie bei jeder Ablage) – Löschen an einer Stelle trifft die andere nie.
+      // Gleiche Regeln wie beim Verschieben: pflegen dürfen (Quelle + Ziel), nie zwischen persönlichem und Vereins-Archiv.
+      case "archiv_kopieren": {
+        const { d, o: quelle } = await archivDokHolen(ich, p.id, "pflegen");
+        if (d.geloescht_am) throw new Fehler("Das Dokument liegt im Papierkorb.", 409);
+        if (d.status === "pruefung") throw new Fehler("Bitte zuerst annehmen oder ablehnen.", 409);
+        const ziel: any = await archivOrdnerHolen(ich, p.ordner_id || d.ordner_id, false, "pflegen");
+        if ((ziel.besitzer || null) !== (quelle.besitzer || null)) throw new Fehler("Dokumente bleiben im eigenen Bereich – zwischen persönlichem Ordner und Vereinsarchiv wird nicht kopiert.");
+        if (ziel.besitzer && (await archivBelegtVon(ziel.besitzer)) + Number(d.groesse || 0) > PERSOENLICH_GRENZE) throw new Fehler("Dein persönlicher Speicher ist voll (50 MB) – bitte zuerst Altes löschen.", 507);
+        const sp = await speicherStand();
+        if (sp.belegt >= SPEICHER_GRENZE * ARCHIV_STOPP) throw new Fehler("Der kostenlose Speicher ist voll – bitte zuerst Altes löschen oder Hansi Bescheid geben.", 507);
+        const reg = ziel.register.includes(String(p.register)) ? String(p.register) : ziel.register.includes(d.register) ? d.register : ziel.register[0] ?? null;
+        const datei = await dateiDuplizieren(ich, d.attachment_id);
+        const { data: k, error } = await db.from("kc_club_archiv_dokumente").insert({ ordner_id: ziel.id, register: reg, titel: d.titel, datum: d.datum, stichworte: d.stichworte, beschreibung: d.beschreibung,
+          attachment_id: datei.id, datei_name: d.datei_name || datei.name, mime: d.mime, groesse: datei.groesse, hochgeladen_von: ich.person_id, status: "ok" }).select("id").single();
+        if (error || !k) { await dateienEntfernen([datei.id]); throw new Fehler("Die Kopie konnte nicht gespeichert werden.", 500); }
+        await protokoll(ich.person_id, "archiv_kopiert", { dokument: d.id, kopie: k.id, ordner: ziel.id, register: reg, groesse: datei.groesse });
+        return json({ ok: true, id: k.id });
       }
 
       case "archiv_loeschen": {
