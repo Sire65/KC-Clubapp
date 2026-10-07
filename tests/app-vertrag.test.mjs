@@ -5164,6 +5164,16 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(server.includes("/^c[0-9a-z]{15,23}$/.test(w.figur)"), "Server nimmt 23er-Codes an");
   assert.ok(/reihe\("Glitzer", 19, AV_BRILLENDEKO\)/.test(html) && /reihe\("Jackenmuster", 20, AV_JACKENMUSTER\)/.test(html) && /reihe\("Streifenfarbe", 21,/.test(html) && /reihe\("Kragen", 22,/.test(html), "Auswahl im Baukasten");
 }
+// 2.45.1 KC-CLUB-STUNDE (Fund Hansi „Uhrzeiten sind nicht drin“): Stunde als Zahl 0–23 – Nachrichten-Statistik und Nutzung je Uhrzeit
+{
+  const a = html.indexOf("function berlinStunde("), b = html.indexOf("\n}\n", a) + 2;
+  const berlinStunde = new Function("TZ", html.slice(a, b) + "\nreturn berlinStunde;")("Europe/Berlin");
+  assert.equal(berlinStunde(new Date("2026-10-07T07:15:00Z")), 9, "Sommerzeit: 07:15 UTC = 9 Uhr");
+  assert.equal(berlinStunde(new Date("2026-10-07T22:30:00Z")), 0, "Mitternacht = 0, nicht 24");
+  assert.equal(berlinStunde(new Date("2026-12-07T13:00:00Z")), 14, "Winterzeit");
+  assert.ok(!/\+new Intl\.DateTimeFormat\("de-DE", \{ timeZone: TZ, hour: "2-digit"/.test(html) && !/Number\(new Intl\.DateTimeFormat\("de-DE", \{ timeZone: TZ, hour: "2-digit"/.test(html), "kein Number(„11 Uhr“) mehr");
+  assert.ok(/const nzStunde = \(\) => berlinStunde\(\);/.test(html) && /stunde = \(z\) => berlinStunde\(z\)/.test(html), "beide Stellen nutzen dieselbe Funktion");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

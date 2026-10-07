@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.45.1 – 2026-10-07 – KC-CLUB-STUNDE
+Fund Hansi („Uhrzeiten sind nicht drin“): Die Stunde wurde als „11 Uhr“ statt als Zahl gelesen – darum blieben in der 📨 Nachrichten-Statistik die Uhrzeit-Balken leer und die Nutzung je Uhrzeit (seit 2.23.17) wurde nie gezählt. Jetzt eine gemeinsame Funktion berlinStunde (deutsche Zeit, 0–23). Alte ungültige Zwischenstände werden verworfen. Nur App.
+
 ## 2.45.0 – 2026-10-07 – KC-CLUB-AVATAR-JACKE-BRILLE
 Wunsch Hansi: Brille – acht weitere Farben (Silber, Rosé, Lila, Türkis, Blau, Weiß, Grün, Orange), „✨ mit Strass“ (Glitzersteine am Rahmen) und drei Damenformen mit verzierten Bügeln (Schmetterling, Oversize, Herz). Kochjacke – Nikolausrot, Orange, Pink; Jackenmuster „Längsstreifen“ mit wählbarer Streifenfarbe; Kragenfarbe frei wählbar (z. B. rot mit schwarzem Kragen, weiß mit orangem). Code bis 23 Zeichen, alte Bilder unverändert. Server: Avatar-Code bis 23 Zeichen. SERVER_VERSION 2.45.0.
 

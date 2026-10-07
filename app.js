@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.45.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.45.1"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -18648,8 +18648,14 @@ function suLupenEinbauen() {
 const NZ_TAKT_MS = 120000;
 let nzPuffer = (() => { try { return JSON.parse(localStorage.getItem("kc_club_nutzung") || "{}"); } catch { return {}; } })();
 // KC-CLUB-NUTZUNG-UHRZEIT (2.23.17, Wunsch Hansi): je Stunde (0–23, Berliner Zeit beim Antippen) nur die Anzahl – getrennt vom Bereich
-let nzStdPuffer = (() => { try { return JSON.parse(localStorage.getItem("kc_club_nutzung_std") || "{}"); } catch { return {}; } })();
-const nzStunde = () => Number(new Intl.DateTimeFormat("de-DE", { timeZone: TZ, hour: "2-digit", hourCycle: "h23" }).format(new Date())) % 24;
+let nzStdPuffer = (() => { try { return Object.fromEntries(Object.entries(JSON.parse(localStorage.getItem("kc_club_nutzung_std") || "{}")).filter(([k]) => /^(\d|1\d|2[0-3])$/.test(k))); } catch { return {}; } })(); // 2.45.1: alte „NaN“-Einträge verwerfen
+// KC-CLUB-STUNDE (2.45.1, Fund Hansi „Uhrzeiten sind nicht drin“): Stunde 0–23 in deutscher Zeit. Früher Number("11 Uhr") = NaN –
+// darum blieben Nachrichten-Statistik (Uhrzeit) und Nutzung je Uhrzeit leer. Jetzt über formatToParts (nur die Zahl).
+function berlinStunde(d = new Date()) {
+  try { const t = new Intl.DateTimeFormat("de-DE", { timeZone: TZ, hour: "numeric", hourCycle: "h23" }).formatToParts(new Date(d)).find((x) => x.type === "hour"); const h = Number(t?.value); if (h >= 0 && h <= 23) return h; } catch {}
+  return new Date(d).getHours();
+}
+const nzStunde = () => berlinStunde();
 const nzStdSchreiben = () => { try { localStorage.setItem("kc_club_nutzung_std", JSON.stringify(nzStdPuffer)); } catch {} };
 // KC-CLUB-NUTZUNG-PERSONEN (2.6.0, Wunsch Hansi: „welche Funktionen sie nutzen“, ohne Namen): je Gerät eine ZUFÄLLIGE Kennung
 // (nur hier erzeugt, nicht der Zugangsschlüssel, nicht die Fehlerprotokoll-Kennung) und je Tag einmal „Bereich genutzt“ –
@@ -18789,7 +18795,7 @@ function nachrichtenStatistikZeigen() {
   const fuss = NST.eigen ? "" : `<div class="knoepfe"><button class="knopf" onclick="nzAdmin()">‹ Nutzung</button></div>`;
   if (!d) { $("adminBlattInhalt").innerHTML = kopf + `<p class="hinweis">Bitte oben ein Mitglied wählen.</p>` + fuss; $("adminBlatt").classList.remove("versteckt"); return; }
   const mails = d.email || [], push = d.push || [], clubB = (d.club || []).filter((x) => x.a === "bekommen"), clubG = (d.club || []).filter((x) => x.a === "geschrieben");
-  const tag = (z) => new Intl.DateTimeFormat("sv-SE", { timeZone: TZ }).format(new Date(z)), stunde = (z) => +new Intl.DateTimeFormat("de-DE", { timeZone: TZ, hour: "2-digit", hourCycle: "h23" }).format(new Date(z));
+  const tag = (z) => new Intl.DateTimeFormat("sv-SE", { timeZone: TZ }).format(new Date(z)), stunde = (z) => berlinStunde(z);
   const tage = Array.from({ length: Math.min(d.tage, 60) }, (_, i) => tag(new Date(Date.now() - (Math.min(d.tage, 60) - 1 - i) * 86400000)));
   const zaehl = (l, k) => l.filter((x) => k(x)).length;
   const reihen = [["mail", "✉️", mails], ["push", "🔔", push], ["club", "💬", clubB]];
