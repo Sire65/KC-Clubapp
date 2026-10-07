@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.36.0";
+const SERVER_VERSION = "2.40.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -1489,15 +1489,20 @@ async function einstiegFristen() {
 }
 const pinnwandPrivat = (z: { fuer: string; personen?: string[] | null }) => z.fuer === "personen" && (z.personen ?? []).length === 1;
 // KC-CLUB-NACHRICHTEN-ZAHL (2.34.0, Wunsch Hansi): wie viele Nachrichten im Einzelchat zwischen mir und einem Mitglied (ohne Gruppen)
-async function chatAnzahlMit(ich: Ich, pid: string): Promise<number | null> {
-  if (pid === ich.person_id) return null;
+// KC-CLUB-EINZELCHAT (2.40.0): alle Einzelchats (genau ich + pid, keine Gruppe) – gemeinsame Grundlage für Zahl und „💬 Nachricht in der App“
+async function einzelchatsMit(ich: Ich, pid: string): Promise<string[]> {
+  if (pid === ich.person_id) return [];
   const { data: meine } = await db.from("kc_communication_thread_participants").select("thread_id").eq("person_id", ich.person_id);
-  const ids = (meine ?? []).map((x: any) => x.thread_id); if (!ids.length) return 0;
+  const ids = (meine ?? []).map((x: any) => x.thread_id); if (!ids.length) return [];
   const [{ data: tn }, { data: gr }] = await Promise.all([db.from("kc_communication_thread_participants").select("thread_id,person_id").in("thread_id", ids),
     db.from("kc_club_gruppen").select("thread_id").in("thread_id", ids)]);
   const grs = new Set((gr ?? []).map((g: any) => g.thread_id)), je = new Map<string, string[]>();
   for (const x of tn ?? []) je.set(x.thread_id, [...(je.get(x.thread_id) ?? []), x.person_id]);
-  const zwei = [...je.entries()].filter(([t, l]) => !grs.has(t) && l.length === 2 && l.includes(pid)).map(([t]) => t);
+  return [...je.entries()].filter(([t, l]) => !grs.has(t) && l.length === 2 && l.includes(pid)).map(([t]) => t);
+}
+async function chatAnzahlMit(ich: Ich, pid: string): Promise<number | null> {
+  if (pid === ich.person_id) return null;
+  const zwei = await einzelchatsMit(ich, pid);
   if (!zwei.length) return 0;
   const { count } = await db.from("kc_communication_messages").select("id", { count: "exact", head: true }).in("thread_id", zwei);
   return count ?? 0;
@@ -6963,6 +6968,15 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       }
       // KC-CLUB-NACHRICHTEN-STATISTIK (2.34.0, Wunsch Hansi): je Mitglied – was ging per E-Mail, Push und als Club-Nachricht raus, wann.
       // Nur Admin; nur Art, Zeit und Status – nie Inhalte (kein Betreff, kein Text).
+      // KC-CLUB-EINZELCHAT (2.40.0, Wunsch Hansi): „💬 Nachricht in der App“ öffnet den vorhandenen Chat mit der Person (der zuletzt benutzte), sonst null
+      case "einzelchat_finden": {
+        const pid = String(p.person_id || "");
+        if (!/^KC-P-[A-Z0-9-]{1,30}$/i.test(pid)) throw new Fehler("Mitglied nicht gefunden.", 404);
+        const ids = await einzelchatsMit(ich, pid);
+        if (!ids.length) return json({ id: null });
+        const { data: m } = await db.from("kc_communication_messages").select("thread_id,created_at").in("thread_id", ids).order("created_at", { ascending: false }).limit(1);
+        return json({ id: m?.[0]?.thread_id || ids[0] });
+      }
       // KC-CLUB-MEINE-NACHRICHTEN-STATISTIK (2.36.0, Wunsch Hansi): jedes Mitglied sieht seine EIGENE Statistik (Chat ⋮) – gleiche Zählung, nur für ich.person_id
       case "meine_nachrichten_statistik":
       case "nachrichten_statistik": {

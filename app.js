@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.39.1"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.40.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -11045,7 +11045,7 @@ const buFestText = (art, f) => art === "geb" ? `Alles Gute zum ${f.alter ? f.alt
 async function buFestNachricht(art, pid) {
   const f = buFest(art, pid); if (!f) return;
   if (pid === ICH?.person_id) return melde("Das bist du selbst 😊", true);
-  await direkt(pid); $("text").value = buFestText(art, f); $("text").dispatchEvent(new Event("input")); entwurfMarkeZeigen?.();
+  await direkt(pid); textVorbelegen(buFestText(art, f)); $("text").dispatchEvent(new Event("input")); entwurfMarkeZeigen?.();
   melde("💬 Text ist vorbereitet – ändern oder direkt mit ➤ senden");
 }
 function buFestBrief(art, pid) {
@@ -11448,7 +11448,7 @@ async function hilfeDetails(id) {
   const a = HL.hilfe?.aufrufe.find((x) => x.id === id); if (!a) return;
   const wobei = /^Wobei: (.*)(?:\n|$)/.exec(a.notiz || ""), was = wobei ? wobei[1] : (HL.hilfe.arten?.[a.art] || a.art).replace(/^\S+\s/, "");
   $("hilfeInfo")?.remove(); await direkt(a.von.person_id);
-  const t = $("text"); if (t) { t.value = `Zu deinem Hilfe-Aufruf „${was}“: Ich hätte noch eine Frage – `; t.focus(); t.setSelectionRange(t.value.length, t.value.length); }
+  const t = $("text"); if (t) { textVorbelegen(`Zu deinem Hilfe-Aufruf „${was}“: Ich hätte noch eine Frage – `); t.focus(); t.setSelectionRange(t.value.length, t.value.length); }
 }
 // Sprung aus Pinnwand, Push oder E-Mail (#hilfe=…): Daten holen, dann Kurzansicht bzw. für den Ersteller das Formular
 async function hilfeDirekt(id) {
@@ -11526,7 +11526,7 @@ async function angebotNachricht(id) {
   $("angebotInfo")?.remove();
   await direkt(a.von.person_id);
   const t = $("text"); if (!t) return;
-  t.value = `Betreff: ${angebotBetreff(a)}\n\nHallo ${a.von.vorname || a.von.name.split(" ")[0]}, ich hätte gern deine Hilfe bei „${a.titel}“. Wann würde es dir passen?`; // 2.23.44: mit Betreff
+  textVorbelegen(`Betreff: ${angebotBetreff(a)}\n\nHallo ${a.von.vorname || a.von.name.split(" ")[0]}, ich hätte gern deine Hilfe bei „${a.titel}“. Wann würde es dir passen?`); // 2.23.44: mit Betreff
   t.style.height = "auto"; t.style.height = t.scrollHeight + "px"; try { entwurfMarkeZeigen(); } catch {}
 }
 // KC-CLUB-HILFE-KANAELE (2.23.44, Wunsch Hansi): Anfrage an den Einsteller mit Betreff „Dein Angebot „…“ vom TT.MM.JJJJ“
@@ -11618,7 +11618,7 @@ async function boKontakt(id) {
   await direkt(a.von.person_id);
   const t = $("text"); if (!t) return;
   const vn = a.von.vorname || a.von.name.split(" ")[0];
-  t.value = a.art === "biete" ? `Hallo ${vn}, ist „${a.titel}“ aus der Club-Börse noch zu haben?` : `Hallo ${vn}, du suchst „${a.titel}“ – das hätte ich!`;
+  textVorbelegen(a.art === "biete" ? `Hallo ${vn}, ist „${a.titel}“ aus der Club-Börse noch zu haben?` : `Hallo ${vn}, du suchst „${a.titel}“ – das hätte ich!`);
   t.style.height = "auto"; t.style.height = t.scrollHeight + "px"; try { entwurfMarkeZeigen(); } catch {}
 }
 async function boStatus(id, was, tage) {
@@ -17234,10 +17234,18 @@ async function gratulieren(pid, ohneFrage) {
   if (!m || pid === ICH?.person_id) return;
   if (!ohneFrage && !(await frage(`🎂 ${m.name} hat heute Geburtstag.\n\nMöchtest du gratulieren?`))) return;
   await direkt(pid);
-  $("text").value = `Alles Gute zum Geburtstag, ${m.vorname}! 🎂🥳`;
+  textVorbelegen(`Alles Gute zum Geburtstag, ${m.vorname}! 🎂🥳`);
   $("text").focus();
 }
+// KC-CLUB-EINZELCHAT (2.40.0, Wunsch Hansi): gibt es schon einen Chat nur mit dieser Person, öffnet „💬 Nachricht in der App“ ihn
+// (mit allen bisherigen Nachrichten); sonst – oder ohne Verbindung – wie bisher ein leerer Entwurf.
 async function direkt(pid) {
+  if (pid && pid !== ICH?.person_id) try { const r = await api("einzelchat_finden", { person_id: pid }); if (r?.id) return chatOeffnen(r.id); } catch {}
+  return direktNeu(pid);
+}
+// Vorbereiteter Anfang (Gratulation, Hilfe, Börse …): ein schon angefangener, ungesendeter Entwurf im vorhandenen Chat bleibt erhalten – der Anfang kommt darunter
+const textVorbelegen = (neu) => { const t = $("text"); if (!t) return; const alt = t.value.trim(); t.value = alt && alt !== neu.trim() ? t.value.trimEnd() + "\n\n" + neu : neu; };
+async function direktNeu(pid) {
   ZW = { push: false, email: false, whatsapp: false }; CHAT = null; setTimeout(zustellZeigen, 0);
   if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return meldeFehler(e); }
   empfWahl = { personen: [pid], aemter: [], alle: false, vorstand: false }; $("neuBetreff").value = ""; neuEntwurf = { empfaenger: { ...empfWahl }, betreff: "" };

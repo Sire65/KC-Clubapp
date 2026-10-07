@@ -4001,7 +4001,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/function hkHtml\(wo\)/.test(html) && /📣 Wie möchtest du es veröffentlichen\?/.test(html) && /\["pinnwand", "📌 Pinnwand"\], \["push", "🔔 Push"\], \["email", "✉️ E-Mail"\]/.test(html), "Auswahl mehrfach");
   assert.ok(/\$\{hkHtml\("form"\)\}/.test(html) && /\$\{f\.id \? "" : hkHtml\("angebotForm"\)\}/.test(html) && /📣 Angebot veröffentlichen/.test(html) && /📣 Aufruf veröffentlichen/.test(html), "bei Aufruf und Angebot");
   assert.ok(/const pwAufrufAnPinnwand = \(a\) => !a\.kanaele \|\| a\.kanaele\.includes\("pinnwand"\)/.test(html) && /🤲 HILFE ANGEBOTEN/.test(html) && /onclick="angebotDirekt\('\$\{a\.id\}'\)"/.test(html), "Pinnwand: nur gewählt, antippbar");
-  assert.ok(/const angebotBetreff = \(a\) => `Dein Angebot „\$\{a\.titel\}“\$\{a\.erstellt_am \? " vom "/.test(html) && /t\.value = `Betreff: \$\{angebotBetreff\(a\)\}/.test(html) && /h\.startsWith\("#angebot="\)/.test(html), "Anfrage mit Betreff + Sprung #angebot=");
+  assert.ok(/const angebotBetreff = \(a\) => `Dein Angebot „\$\{a\.titel\}“\$\{a\.erstellt_am \? " vom "/.test(html) && /textVorbelegen\(`Betreff: \$\{angebotBetreff\(a\)\}/.test(html) && /h\.startsWith\("#angebot="\)/.test(html), "Anfrage mit Betreff + Sprung #angebot=");
 }
 // 394. 2.23.45: Tipp des Tages „Club-App auch auf Tablet oder PC?“ (KC-CLUB-TIPP-TABLET-PC)
 {
@@ -5071,6 +5071,19 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(!/<button class="chip" onclick="anlagen\.splice/.test(html), "kein Entfernen mehr beim bloßen Antippen");
   assert.ok(/✅ Behalten/.test(f) && /🗑️ Entfernen/.test(f) && /URL\.revokeObjectURL/.test(f), "Ansicht mit Behalten/Entfernen, Vorschau wird freigegeben");
   assert.ok(/bild: anlageVorschau\(roh\)/.test(html) && /bild: anlageVorschau\(d\)/.test(html), "Vorschaubild bei Galerie und Teilen");
+}
+// 2.40.0 KC-CLUB-EINZELCHAT (Wunsch Hansi): „💬 Nachricht in der App“ öffnet den vorhandenen Chat mit der Person, sonst leerer Entwurf
+{
+  const e = server.slice(server.indexOf('case "einzelchat_finden": {'), server.indexOf('case "einzelchat_finden": {') + 900);
+  assert.ok(/await einzelchatsMit\(ich, pid\)/.test(e) && /order\("created_at", \{ ascending: false \}\)\.limit\(1\)/.test(e), "Server: nur meine Einzelchats mit pid, der zuletzt benutzte");
+  assert.ok(/const zwei = await einzelchatsMit\(ich, pid\);/.test(server), "Zahl und Chat nutzen dieselbe Grundlage");
+  const d = html.slice(html.indexOf("async function direkt(pid)"), html.indexOf("async function direktNeu(pid)"));
+  assert.ok(/api\("einzelchat_finden", \{ person_id: pid \}\); if \(r\?\.id\) return chatOeffnen\(r\.id\); \} catch \{\}/.test(d) && /return direktNeu\(pid\);/.test(d), "vorhandener Chat, sonst wie bisher");
+  const tv = html.slice(html.indexOf("const textVorbelegen"), html.indexOf("async function direktNeu(pid)"));
+  const T = { value: "" }; const textVorbelegen = new Function("$", tv + "\nreturn textVorbelegen;")(() => T);
+  textVorbelegen("Alles Gute!"); assert.equal(T.value, "Alles Gute!");
+  T.value = "Mein Entwurf"; textVorbelegen("Alles Gute!"); assert.equal(T.value, "Mein Entwurf\n\nAlles Gute!", "angefangener Entwurf bleibt");
+  assert.ok(!/\$\("text"\)\.value = `Alles Gute zum Geburtstag/.test(html), "Gratulation überschreibt keinen Entwurf");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

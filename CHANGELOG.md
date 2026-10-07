@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.40.0 – 2026-10-07 – KC-CLUB-EINZELCHAT
+Wunsch Hansi: „💬 Nachricht in der App“ (Mitgliederseite und überall, wo man jemandem schreibt) öffnet jetzt den vorhandenen Chat mit dieser Person – mit allen bisherigen Nachrichten. Gibt es noch keinen, kommt wie bisher ein neuer. Vorbereitete Anfänge (Geburtstag, Hilfe, Börse, Büro) überschreiben keinen angefangenen Entwurf. Server: einzelchat_finden. SERVER_VERSION 2.40.0.
+
 ## 2.39.1 – 2026-10-07 – KC-CLUB-ANHANG-ANSEHEN
 Meldung Hansi (Bildschirmfoto an Christina/Reinhilde kam nicht an – beim Antippen war es weg): Ein Anhang über dem Schreibfeld zeigt jetzt ein kleines Vorschaubild. Antippen öffnet ihn groß (✅ Behalten / 🗑️ Entfernen); entfernt wird nur noch über das eigene ✕.
 
