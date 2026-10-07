@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.54.0 – 2026-10-07 – KC-CLUB-AVATAR-OHR-FEIN
+Ohren natürlicher: feiner Ohrrand, Ohrmuschel mit leichtem Schatten und kleiner Ohrknorpel – bei allen Ohrformen, auch den bisherigen Figuren.
+
 ## 2.53.0 – 2026-10-07 – KC-CLUB-AVATAR-GESICHT-2
 Figur zusammenstellen: Ohren (eng anliegend, abstehend, groß, klein, spitz), Nasen (zierlich, klein, Stupsnase, gerade, breit, groß, Adlernase, Knollennase) und Augenfarbe (blau, hellblau, grün, graugrün, braun, haselnuss, grau, bernstein). Das Halstuch geht jetzt sichtbar um den Hals herum. Alte Figuren bleiben unverändert. Server 2.53.0. Grau meliert: feinere und mehr helle Strähnen.
 

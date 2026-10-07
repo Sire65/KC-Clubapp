@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.53.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.54.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -327,14 +327,20 @@ function avatarSvg(code, gr = 40, ini = "") { // 2.27.2: ini = Initialen (klein 
   const auge = dunkel ? "#120b07" : "#2b1d14", iris = AV_AUGENFARBE[afarbe] || "";
   // 2.53.0: Augenfarbe = farbige Iris mit dunkler Pupille (0 = wie bisher nur dunkel)
   const pupille = (cx, cy, r) => iris ? `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${iris}"/><circle cx="${cx}" cy="${cy}" r="${(r * .5).toFixed(2)}" fill="${auge}"/><circle cx="${(cx + r * .38).toFixed(2)}" cy="${(cy - r * .38).toFixed(2)}" r="${(r * .26).toFixed(2)}" fill="#fff" opacity=".85"/>` : `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${auge}"/>`;
-  // 2.53.0: Ohren (0 = wie bisher), feine Innenlinie für alle neuen Formen
-  const ohrIn = (x, s) => `<path d="M${x} ${28.6} q${1.1 * s} 1.4 0 2.8" stroke="rgba(0,0,0,.2)" stroke-width=".5" fill="none" stroke-linecap="round"/>`;
-  const ohrSvg = [`<circle cx="19.5" cy="30" r="3" fill="${haut}"/><circle cx="44.5" cy="30" r="3" fill="${haut}"/>`,
-    `<ellipse cx="20.4" cy="30" rx="1.9" ry="3.1" fill="${haut}"/><ellipse cx="43.6" cy="30" rx="1.9" ry="3.1" fill="${haut}"/>`,
-    `<ellipse cx="18.2" cy="29.6" rx="3.7" ry="3.3" fill="${haut}" transform="rotate(-12 18.2 29.6)"/><ellipse cx="45.8" cy="29.6" rx="3.7" ry="3.3" fill="${haut}" transform="rotate(12 45.8 29.6)"/>${ohrIn(18, 1)}${ohrIn(46, -1)}`,
-    `<ellipse cx="19.2" cy="30" rx="3.4" ry="4.6" fill="${haut}"/><ellipse cx="44.8" cy="30" rx="3.4" ry="4.6" fill="${haut}"/>${ohrIn(18.8, 1)}${ohrIn(45.2, -1)}`,
-    `<circle cx="20.2" cy="30.2" r="2.1" fill="${haut}"/><circle cx="43.8" cy="30.2" r="2.1" fill="${haut}"/>`,
-    `<path d="M21 32.6 Q17 31.6 17.4 25.4 Q19.6 27 21.2 27.6Z M43 32.6 Q47 31.6 46.6 25.4 Q44.4 27 42.8 27.6Z" fill="${haut}"/>${ohrIn(19.2, 1)}${ohrIn(44.8, -1)}`][ohren] || "";
+  // 2.53.0: Ohren (0 = wie bisher); 2.54.0 KC-CLUB-AVATAR-OHR-FEIN (Wunsch Hansi): natürlicher – Ohrrand (Helix), Muschel mit Schatten, kleiner Ohrknorpel
+  const oS = dunkel ? "rgba(0,0,0,.32)" : "rgba(130,70,40,.38)", oF = dunkel ? "rgba(0,0,0,.18)" : "rgba(150,80,45,.2)";
+  const ohrDetail = (cx, cy, rx, ry, s) => { const X = (f) => (cx + f * rx * s).toFixed(2), Y = (f) => (cy + f * ry).toFixed(2), w = Math.max(.32, Math.min(rx, ry) * .17).toFixed(2);
+    return `<path d="M${X(.25)} ${Y(-.72)} Q${X(-.72)} ${Y(-.72)} ${X(-.62)} ${Y(.05)} Q${X(-.5)} ${Y(.62)} ${X(.05)} ${Y(.7)}" stroke="${oS}" stroke-width="${w}" fill="none" stroke-linecap="round"/>`
+      + `<ellipse cx="${X(.12)}" cy="${Y(.08)}" rx="${(rx * .34).toFixed(2)}" ry="${(ry * .36).toFixed(2)}" fill="${oF}"/>`
+      + `<path d="M${X(-.1)} ${Y(-.42)} Q${X(-.35)} ${Y(-.05)} ${X(-.05)} ${Y(.3)}" stroke="${oS}" stroke-width="${(w * .7).toFixed(2)}" fill="none" stroke-linecap="round" opacity=".8"/>`
+      + `<circle cx="${X(.48)}" cy="${Y(.18)}" r="${(Math.min(rx, ry) * .16).toFixed(2)}" fill="${oS}" opacity=".55"/>`; };
+  const ohrPaar = (cx, cy, rx, ry) => ohrDetail(cx, cy, rx, ry, 1) + ohrDetail(64 - cx, cy, rx, ry, -1);
+  const ohrSvg = [`<circle cx="19.5" cy="30" r="3" fill="${haut}"/><circle cx="44.5" cy="30" r="3" fill="${haut}"/>${ohrPaar(19.5, 30, 3, 3)}`,
+    `<ellipse cx="20.4" cy="30" rx="1.9" ry="3.1" fill="${haut}"/><ellipse cx="43.6" cy="30" rx="1.9" ry="3.1" fill="${haut}"/>${ohrPaar(20.4, 30, 1.9, 3.1)}`,
+    `<ellipse cx="18.2" cy="29.6" rx="3.7" ry="3.3" fill="${haut}" transform="rotate(-12 18.2 29.6)"/><ellipse cx="45.8" cy="29.6" rx="3.7" ry="3.3" fill="${haut}" transform="rotate(12 45.8 29.6)"/>${ohrPaar(18.2, 29.6, 3.6, 3.2)}`,
+    `<ellipse cx="19.2" cy="30" rx="3.4" ry="4.6" fill="${haut}"/><ellipse cx="44.8" cy="30" rx="3.4" ry="4.6" fill="${haut}"/>${ohrPaar(19.2, 30, 3.4, 4.6)}`,
+    `<circle cx="20.2" cy="30.2" r="2.1" fill="${haut}"/><circle cx="43.8" cy="30.2" r="2.1" fill="${haut}"/>${ohrPaar(20.2, 30.2, 2.1, 2.1)}`,
+    `<path d="M21 32.6 Q17 31.6 17.4 25.4 Q19.6 27 21.2 27.6Z M43 32.6 Q47 31.6 46.6 25.4 Q44.4 27 42.8 27.6Z" fill="${haut}"/>${ohrPaar(19.5, 29.8, 2, 3)}`][ohren] || "";
   // 2.53.0: Nase (0 = ohne, wie bisher) – dezent mit Schatten in Hautfarbe
   const nS = dunkel ? "rgba(0,0,0,.42)" : "rgba(110,60,35,.5)", nF = dunkel ? "rgba(0,0,0,.14)" : "rgba(160,90,55,.16)";
   const naseSvg = ["",

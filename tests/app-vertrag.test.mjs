@@ -5283,6 +5283,13 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/reihe\("Augenfarbe", 25,/.test(html) && /reihe\("Nase", 24, AV_NASE\)/.test(html) && /reihe\("Ohren", 23, AV_OHREN\)/.test(html), "im Baukasten wählbar");
   assert.ok(server.includes("/^c[0-9a-z]{15,26}$/.test(w.figur)"), "Server nimmt 26er-Codes an");
 }
+// 2.54.0 KC-CLUB-AVATAR-OHR-FEIN (Wunsch Hansi): Ohren natürlicher – Ohrrand, Muschel mit Schatten, Ohrknorpel bei allen Ohrformen
+{
+  const a = html.indexOf("const AV_HAUT"), b = html.indexOf("// KC-CLUB-FREIGABE (2.23.86", a);
+  const O = new Function("INIT", "ICH", "MITGLIEDER", html.slice(a, b) + "\nreturn { avatarSvg, AV_OHREN };")(null, null, []);
+  const c = (o) => "c" + [1, 5, 1, 3, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, o, 0, 0].map((x) => x.toString(36)).join("");
+  for (let i = 0; i < O.AV_OHREN.length; i++) { const svg = O.avatarSvg(c(i), 64); assert.ok((svg.match(/rgba\(130,70,40,\.38\)/g) || []).length >= 6, "Innenleben bei Ohrform " + O.AV_OHREN[i]); }
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
