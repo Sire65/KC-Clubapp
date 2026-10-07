@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.42.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.43.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -87,7 +87,12 @@ const AV_FRISUREN = ["lang", "zopf", "dutt", "bob", "locken", "kurz", "wuschel",
 // 2.23.99 (Wunsch Hansi): mehr Gesichtsteile – Index 0 zeichnet genau wie bisher (alte Figuren und Codes bleiben unverändert)
 const AV_AUGEN = ["normal", "lachend", "gross", "wimpern"], AV_BRAUEN = ["normal", "schmal", "kraeftig", "buschig"], AV_MUND = ["standard", "lachen", "verschmitzt", "ruhig"];
 const AV_WANGEN = ["zart", "keine", "kraeftig", "sommersprossen"], AV_BRILLE = [0, "rund", "eckig", "halb", "sonne", "oval", "horn", "katze", "pilot", "randlos"]; // 2.27.2: mehr Brillen; 2.39.0: randlos (Wunsch Hansi, nach Foto)
-const AV_BRILLENFARBE = ["#2b2b2b", "#6b4423", "#b8962e", "#a61b29", "#7d838a"] /* 2.39.0: + Titan-Grau */, AV_JACKE = ["#ffffff", "#2a2a2a", "#8e9399"];
+const AV_BRILLENFARBE = ["#2b2b2b", "#6b4423", "#b8962e", "#a61b29", "#7d838a"] /* 2.39.0: + Titan-Grau */, AV_JACKE = ["#ffffff", "#2a2a2a", "#8e9399", "#741521", "#1d3557", "#2e5d3a", "#9cc5e8", "auto"]; // 2.43.0: + Weinrot, Marine, Grün, Hellblau, „auto“
+// KC-CLUB-JACKE-WOCHENTAG (2.43.0, Wunsch Hansi): Kochjacke „🔄 täglich wechselnd“ – Mo…So je eine Farbe mit Kontrast-Knöpfen.
+// Steckt im Bild-Code (Jacke = „auto“), darum sehen alle anderen dieselbe Tagesfarbe; gerechnet nach deutscher Zeit.
+const AV_JACKE_TAG = [["Mo", "#ffffff", "#2a2a2a"], ["Di", "#2a2a2a", "#e8c547"], ["Mi", "#741521", "#ffffff"], ["Do", "#1d3557", "#ffffff"], ["Fr", "#8e9399", "#741521"], ["Sa", "#2e5d3a", "#e8c547"], ["So", "#9cc5e8", "#1d3557"]];
+const AV_JACKE_AUTO = AV_JACKE.indexOf("auto");
+function avJackeHeute(d = new Date()) { let i = 0; try { i = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].indexOf(new Intl.DateTimeFormat("en-US", { timeZone: "Europe/Berlin", weekday: "short" }).format(d)); } catch { i = (d.getDay() + 6) % 7; } return AV_JACKE_TAG[Math.max(0, i)]; }
 const AV_KNOPF = [0, "#c9a227", "#2a2a2a", "#c8102e", "#1d4f91", "#ffffff", "#9aa0a6"]; // 2.27.2 (Wunsch Hansi): Knopffarbe der Kochjacke (0 = passend zur Jacke)
 let AV_UID = 0; // eindeutige Muster-Kennung je gezeichnetem Avatar (grau meliert)
 // 2.33.0 KC-CLUB-AVATAR-KOPF (Wunsch Hansi): mehr Kopfbedeckungen, je Farbe und Muster (0 = wie bisher – alte Figuren bleiben gleich)
@@ -220,7 +225,8 @@ function avatarSvg(code, gr = 40, ini = "") { // 2.27.2: ini = Initialen (klein 
     `<path d="M1.2 1 Q2.6 .6 2.6 2 Q2.6 3.2 1.4 3.2 Q2 2.4 1.2 1Z" fill="${kKontrast}"/><circle cx="3.4" cy="3.4" r=".35" fill="${kKontrast}"/>`][kmuster] || ""}</pattern></defs>`;
   const melId = hf === "meliert" ? "avm" + ++AV_UID : "", haar = melId ? `url(#${melId})` : AV_HAAR[hf]; // 2.27.2: grau meliert; 2.28.1: dunkelblond mit feinen grauen Strähnen (Wunsch Hansi)
   const melDef = melId ? `<defs><pattern id="${melId}" width="3.1" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(8)"><rect width="3.1" height="9" fill="#8a6b43"/><rect x=".4" width=".22" height="9" fill="#c4bfb5" opacity=".75"/><rect x="1.5" y="2" width=".16" height="5" fill="#ddd9d0" opacity=".7"/><rect x="2.4" y="4" width=".2" height="5" fill="#b3ada2" opacity=".6"/></pattern></defs>` : "";
-  const jFarbe = AV_JACKE[jacke] || "#fff", knopfF = AV_KNOPF[knopf] || (jacke ? "rgba(255,255,255,.55)" : "#c9c2b6"), bF = AV_BRILLENFARBE[bfarbe] || "#2b2b2b";
+  const jTag = jacke === AV_JACKE_AUTO ? avJackeHeute() : null, jFarbe = jTag ? jTag[1] : AV_JACKE[jacke] || "#fff";
+  const knopfF = AV_KNOPF[knopf] || (jTag ? jTag[2] : jacke >= 3 ? (jacke === 6 ? "#1d3557" : "#ffffff") : jacke ? "rgba(255,255,255,.55)" : "#c9c2b6"), bF = AV_BRILLENFARBE[bfarbe] || "#2b2b2b";
   const hintenAus = kopf === "kopftuch"; // 2.33.0: langes Kopftuch bedeckt die Haare
   const hinten = hintenAus ? "" : { lang: `<path d="M18 26 Q18 12 32 12 Q46 12 46 26 L48 50 Q32 56 16 50 Z" fill="${haar}"/>`, zopf: `<path d="M41 26 Q50 34 46 48 Q44 52 42 48 Q45 38 39 30Z" fill="${haar}"/>`,
     locken: `<g fill="${haar}"><circle cx="20" cy="28" r="6"/><circle cx="44" cy="28" r="6"/><circle cx="21" cy="37" r="5"/><circle cx="43" cy="37" r="5"/></g>`, dutt: "", bob: `<path d="M19 27 Q19 13 32 13 Q45 13 45 27 L45 38 Q40 40 39 34 L25 34 Q24 40 19 38Z" fill="${haar}"/>` }[frisur] || "";
@@ -8013,6 +8019,7 @@ function avWahl() {
   const f = blattAuf("avBlatt", `<h3 style="margin:0">🧑‍🍳 Mein Bild</h3>
     <p class="hinweis" style="margin:4px 0 8px">Tippe eine Koch-Figur an – oben siehst du sie groß und kannst sie <b>übernehmen</b> oder <b>bearbeiten</b>. Sie erscheint bei den Mitgliedern, im Chat und bei „Wer ist online“. Ring und Abzeichen zeigen weiter, ob du gerade da bist.</p>
     <div id="avWahlVorschau" class="av-vorschau"></div>
+    <div id="avJackeAuto"></div>
     ${jetzt && /^[bc]/.test(jetzt) && avGueltig(jetzt) ? `<b>🧩 Deine eigene Figur</b><div class="av-raster" style="margin:6px 0 10px"><button type="button" class="an" aria-label="Eigene Figur" onclick="avWaehlen('${jetzt}', this)">${avatarSvg(jetzt, 64)}</button></div>` : ""}
     <b>👩‍🍳 Köchinnen</b><div class="av-raster" style="margin:6px 0 10px">${Object.keys(AV_FIGUREN).filter((k) => k[0] === "w").map((k) => `<button type="button" class="${jetzt === k ? "an" : ""}" aria-label="Figur ${k}" onclick="avWaehlen('${k}', this)">${avatarSvg(k, 64)}</button>`).join("")}</div>
     <b>👨‍🍳 Köche</b><div class="av-raster" style="margin:6px 0 10px">${Object.keys(AV_FIGUREN).filter((k) => k[0] === "m").map((k) => `<button type="button" class="${jetzt === k ? "an" : ""}" aria-label="Figur ${k}" onclick="avWaehlen('${k}', this)">${avatarSvg(k, 64)}</button>`).join("")}</div>
@@ -8022,7 +8029,27 @@ function avWahl() {
       <p class="hinweis" style="margin:2px 0 10px;font-size:.85rem">🤳 Selfie, 🖼️ Galerie und 📁 Datei findest du oben rechts neben deinem Bild.</p>` : ""}
     ${frei("avatar_baukasten") ? "" : '<p class="hinweis" style="margin:0 0 8px;font-size:.85rem">Demnächst: Figur selbst zusammenstellen (Frisur, Bart, Brille, Mütze …).</p>'}
     <button class="knopf" onclick="fensterZu($('avBlatt'))">Schließen</button>`);
-  f.classList.add("sc-blatt"); avWahlVorschau();
+  f.classList.add("sc-blatt"); avWahlVorschau(); avJackeAutoZeigen();
+}
+// KC-CLUB-JACKE-WOCHENTAG (2.43.0): Schalter in „Mein Bild“ – wandelt das jetzige Bild (Figur oder eigene Figur) in einen Code mit Jacke „auto“
+function avJackeAutoZeigen() {
+  const z = $("avJackeAuto"); if (!z) return;
+  const jetzt = INIT?.einstellungen?.avatar?.figur || null, t = jetzt && !AVF_RE.test(jetzt) ? avTeile(jetzt) : null;
+  if (!t || !frei("avatar_baukasten")) { z.innerHTML = ""; return; }
+  const an = t[14] === AV_JACKE_AUTO, heute = avJackeHeute();
+  z.innerHTML = `<label class="av-auto-zeile"><input type="checkbox" ${an ? "checked" : ""} onchange="avJackeAuto(this.checked, this)"><span><b>🔄 Kochjacke wechselt jeden Tag</b><small class="hinweis">Mo–So je eine andere Farbe mit passenden Knöpfen${an ? ` · heute (${heute[0]})` : ""}</small></span></label>`;
+}
+async function avJackeAuto(an, box) {
+  const jetzt = INIT?.einstellungen?.avatar?.figur, t = avTeile(jetzt); if (!t) return;
+  const b = avTeileZuB(t); b[14] = an ? AV_JACKE_AUTO : 0;
+  if (an && (b[15] || 0) !== 0) b[15] = 0; // Knöpfe „passend“, damit der Kontrast je Tag stimmt
+  const code = "c" + b.map((x) => Math.max(0, x).toString(36)).join("");
+  if (box) box.disabled = true;
+  try { await api("einstellung_setzen", { schluessel: "avatar", wert: { figur: code } }); INIT.einstellungen = { ...(INIT.einstellungen || {}), avatar: { figur: code } };
+    const ich = MITGLIEDER?.find?.((x) => x.person_id === ICH?.person_id); if (ich) ich.avatar = code;
+    melde(an ? "🔄 Deine Kochjacke wechselt jetzt jeden Tag die Farbe" : "Kochjacke bleibt jetzt weiß"); spur(an ? "jacke_auto_an" : "jacke_auto_aus");
+    AVW.wahl = undefined; avWahlVorschau(); avJackeAutoZeigen(); try { kachelnZeigen?.(); } catch {} }
+  catch (e) { meldeFehler(e); if (box) { box.checked = !an; box.disabled = false; } }
 }
 function avWaehlen(code, knopf) {
   AVW.wahl = code || null;
@@ -8047,18 +8074,22 @@ function avWahlVorschau() {
 let AVB = null;
 function avBauen(start) { // 2.23.98: start = gewählte Figur als Vorlage („✏️ Bearbeiten“), sonst das jetzige Bild
   const jetzt = start || INIT?.einstellungen?.avatar?.figur, t = avTeile(jetzt) || avTeile("w01"), haarf = Object.keys(AV_HAAR);
-  AVB = [t[0], AV_FRISUREN.indexOf(t[1]), haarf.indexOf(t[2]), AV_KOPF.indexOf(t[3]), AV_BART.indexOf(t[4]), Number(t[5]) || 0, Math.max(0, AV_BG.indexOf(t[6])), Math.max(0, AV_TUCH.indexOf(t[7])), t[8] ? 1 : 0,
-    t[9] || 0, t[10] || 0, t[11] || 0, t[12] || 0, t[13] || 0, t[14] || 0, t[15] || 0, t[16] || 0, t[17] || 0, t[18] || 0]; // 2.42.0: Kopfform; 2.23.99: Augen, Brauen, Mund, Wangen, Brillenfarbe, Jacke; 2.27.2: Knöpfe; 2.33.0: Farbe/Muster der Kopfbedeckung
+  AVB = avTeileZuB(t);
   fensterZu($("avBlatt") || document.createElement("div"));
   const f = blattAuf("avbBlatt", `<h3 style="margin:0">🧩 Figur zusammenstellen${nurTest("avatar_baukasten") ? ' <small class="hinweis">🔒 nur für dich (Test)</small>' : ""}</h3><div id="avbInhalt"></div>`);
   f.classList.add("sc-blatt"); avbZeigen();
+}
+function avTeileZuB(t) {
+  const haarf = Object.keys(AV_HAAR);
+  return [t[0], AV_FRISUREN.indexOf(t[1]), haarf.indexOf(t[2]), AV_KOPF.indexOf(t[3]), AV_BART.indexOf(t[4]), Number(t[5]) || 0, Math.max(0, AV_BG.indexOf(t[6])), Math.max(0, AV_TUCH.indexOf(t[7])), t[8] ? 1 : 0,
+    t[9] || 0, t[10] || 0, t[11] || 0, t[12] || 0, t[13] || 0, t[14] || 0, t[15] || 0, t[16] || 0, t[17] || 0, t[18] || 0]; // 2.42.0: Kopfform; 2.23.99: Augen, Brauen, Mund, Wangen, Brillenfarbe, Jacke; 2.27.2: Knöpfe; 2.33.0: Farbe/Muster der Kopfbedeckung
 }
 const avbCode = () => "c" + AVB.map((x) => Math.max(0, x).toString(36)).join(""); // 2.23.99: „c…“ = erweiterter Baukasten (15 Teile, seit 2.27.2 16 mit Knopffarbe, seit 2.33.0 18 mit Farbe/Muster der Kopfbedeckung); „b…“ bleibt gültig
 // 🎲 Zufall: würfelt eine Figur als Startpunkt (Typ bleibt, wie gewählt)
 function avbZufall() {
   const r = (n) => Math.floor(Math.random() * n), haarf = Object.keys(AV_HAAR), frau = AVB[8];
   AVB = [r(AV_HAUT.length), r(AV_FRISUREN.length), r(haarf.length), r(AV_KOPF.length), frau ? 0 : r(AV_BART.length), r(3) ? 0 : 1 + r(AV_BRILLE.length - 1), r(AV_BG.length), r(AV_TUCH.length), frau,
-    r(AV_AUGEN.length), r(AV_BRAUEN.length), r(AV_MUND.length), r(AV_WANGEN.length), r(AV_BRILLENFARBE.length), r(4) ? 0 : 1 + r(AV_JACKE.length - 1), r(3) ? 0 : 1 + r(AV_KNOPF.length - 1), r(2) ? 0 : 1 + r(AV_KOPFFARBE.length - 1), r(3) ? 0 : 1 + r(AV_KOPFMUSTER.length - 1), r(AV_KOPFFORM.length)];
+    r(AV_AUGEN.length), r(AV_BRAUEN.length), r(AV_MUND.length), r(AV_WANGEN.length), r(AV_BRILLENFARBE.length), r(4) ? 0 : 1 + r(AV_JACKE.length - 2), r(3) ? 0 : 1 + r(AV_KNOPF.length - 1), r(2) ? 0 : 1 + r(AV_KOPFFARBE.length - 1), r(3) ? 0 : 1 + r(AV_KOPFMUSTER.length - 1), r(AV_KOPFFORM.length)];
   avbZeigen();
 }
 function avbZeigen() {
@@ -8081,7 +8112,8 @@ function avbZeigen() {
     ${reihe("Wangen", 12, ["zart rosa", "keine", "kräftig", "Sommersprossen"])}
     ${reihe("Brille", 5, ["ohne", "rund", "eckig", "Halbbrille", "Sonnenbrille", "oval", "Hornbrille", "Katzenauge", "Pilotenbrille", "randlos"])}
     ${AVB[5] ? reihe("Brillenfarbe", 13, AV_BRILLENFARBE.map(punkt)) : ""}
-    ${reihe("Kochjacke", 14, ["weiß", "schwarz", "grau"])}
+    ${reihe("Kochjacke", 14, ["weiß", "schwarz", "grau", "weinrot", "marineblau", "grün", "hellblau", "🔄 täglich wechselnd"])}
+    ${AVB[14] === AV_JACKE_AUTO ? `<p class="hinweis" style="margin:-4px 2px 6px;font-size:.85rem">Jeden Tag eine andere Jacke: ${AV_JACKE_TAG.map(([t, j, k]) => `<span title="${t}" style="display:inline-flex;align-items:center;gap:2px;margin-right:6px">${t} <span style="display:inline-block;width:14px;height:14px;border-radius:4px;background:${j};border:1px solid var(--linie);position:relative"><i style="position:absolute;left:5px;top:5px;width:4px;height:4px;border-radius:50%;background:${k}"></i></span></span>`).join("")}</p>` : ""}
     ${reihe("Knöpfe", 15, ["passend", ...AV_KNOPF.slice(1).map(punkt)])}
     ${reihe("Hintergrund", 6, AV_BG.map(punkt))}
     ${reihe("Halstuch", 7, AV_TUCH.map(punkt))}
@@ -18639,7 +18671,7 @@ setInterval(spurSenden, sparTakt(NZ_TAKT_MS));
 document.addEventListener("visibilitychange", () => { if (document.hidden) spurSenden(); });
 const SPUR_WAS = { geoeffnet: "📲 App geöffnet", mitglied: "👤 Mitglied angesehen", chat: "💬 Unterhaltung geöffnet", gesendet: "✉️ Nachricht gesendet", gesendet_anlage: "📎 Nachricht mit Anhang gesendet",
   anruf: "📞 Anruf (App) an", video: "🎥 Videoanruf an", anklopfen: "👋 Angeklopft bei", telefon: "☎️ Telefonnummer angetippt", whatsapp: "🟢 WhatsApp geöffnet", mail: "✉️ E-Mail-Adresse angetippt", meine_statistik: "📊 Eigene Nachrichten-Statistik angesehen",
-  mein_bild: "🧑‍🍳 „Mein Bild“ geöffnet", bild_gewaehlt: "🧑‍🍳 Koch-Figur als Bild gewählt", bild_gebaut: "🧩 Eigene Figur gespeichert", bild_foto: "📷 Eigenes Foto als Bild gesetzt", bild_entfernt: "🧑‍🍳 Bild entfernt (Buchstaben)" };
+  mein_bild: "🧑‍🍳 „Mein Bild“ geöffnet", bild_gewaehlt: "🧑‍🍳 Koch-Figur als Bild gewählt", bild_gebaut: "🧩 Eigene Figur gespeichert", bild_foto: "📷 Eigenes Foto als Bild gesetzt", bild_entfernt: "🧑‍🍳 Bild entfernt (Buchstaben)", jacke_auto_an: "🔄 Kochjacke täglich wechselnd eingeschaltet", jacke_auto_aus: "🔄 Kochjacke täglich wechselnd ausgeschaltet" };
 const SPW = { tag: null, person: null };
 async function spurAdmin(tag, person) {
   SPW.tag = tag || SPW.tag || heuteIso(); SPW.person = person === undefined ? SPW.person : person;

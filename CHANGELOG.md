@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.43.0 – 2026-10-07 – KC-CLUB-JACKE-WOCHENTAG
+Wunsch Hansi: Bei 🧑‍🍳 Mein Bild der Schalter „🔄 Kochjacke wechselt jeden Tag“ (auch im Baukasten unter Kochjacke: „🔄 täglich wechselnd“). Mo weiß/schwarze Knöpfe, Di schwarz/gold, Mi weinrot/weiß, Do marineblau/weiß, Fr grau/weinrot, Sa grün/gold, So hellblau/marine – nach deutscher Zeit; alle sehen dieselbe Tagesfarbe (steckt im Bild-Code). Neue feste Jackenfarben: weinrot, marineblau, grün, hellblau. Kein Server-Eingriff nötig.
+
 ## 2.42.0 – 2026-10-07 – KC-CLUB-MG-ONLINE-FARBE, -AVATAR-GROSS, -KOPFFORM, -MUETZEN
 Wunsch Hansi: Mitglieder-Kacheln von Mitgliedern, die gerade online sind, sind grün hinterlegt (sofort erkennbar). Bei 🧑‍🍳 Mein Bild und beim Zusammenstellen: Vorschau antippen = groß ansehen. Neu im Baukasten: Kopfform (normal, rundlich, eckig, oval, länglich, herzförmig) und auf dem Kopf „Chefmütze (hoch)“, „Schiffchen (Lehrling)“ und „Spitzenhaube“ (wie früher Hausmädchen) – mit Farbe und Muster. Code bekommt ein 19. Zeichen (Kopfform), alte Codes bleiben gültig. Server: Avatar-Code bis 19 Zeichen. SERVER_VERSION 2.42.0.
 

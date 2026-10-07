@@ -5118,6 +5118,19 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/^c[0-9a-z]{15,19}$/.test(code(12, 5)) && server.includes("/^c[0-9a-z]{15,19}$/.test(w.figur)"), "Server nimmt 19er-Codes an");
   assert.ok(/reihe\("Kopfform", 18, AV_KOPFFORM\)/.test(html), "Kopfform im Baukasten");
 }
+// 2.43.0 KC-CLUB-JACKE-WOCHENTAG (Wunsch Hansi): Kochjacke „🔄 täglich wechselnd“ – Mo–So je Farbe mit Kontrast-Knöpfen
+{
+  const a = html.indexOf("const AV_HAUT"), b = html.indexOf("// KC-CLUB-FREIGABE (2.23.86", a);
+  const AV5 = new Function("INIT", "ICH", "MITGLIEDER", html.slice(a, b) + "\nreturn { avTeile, avatarSvg, AV_JACKE, AV_JACKE_TAG, AV_JACKE_AUTO, avJackeHeute };")(null, null, []);
+  assert.equal(AV5.AV_JACKE[AV5.AV_JACKE_AUTO], "auto");
+  assert.deepEqual([0, 1, 2, 3, 4, 5, 6].map((i) => AV5.avJackeHeute(new Date(Date.UTC(2026, 9, 5 + i, 10)))[0]), ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"], "Wochentag nach deutscher Zeit");
+  assert.equal(AV5.avJackeHeute(new Date(Date.UTC(2026, 9, 11, 22, 30)))[0], "Mo", "Sonntag 22:30 UTC ist in Deutschland schon Montag");
+  for (const [, j, k] of AV5.AV_JACKE_TAG) assert.notEqual(j, k, "Knöpfe heben sich ab");
+  const code = "c" + [3, 5, 0, 0, 2, 0, 4, 5, 0, 0, 0, 0, 0, 0, AV5.AV_JACKE_AUTO, 0, 0, 0, 0].map((x) => x.toString(36)).join("");
+  assert.ok(AV5.avTeile(code) && AV5.avatarSvg(code, 64).length > 500, "Code mit Jacke „auto“ gültig und zeichnet");
+  assert.ok(/onchange="avJackeAuto\(this\.checked, this\)"/.test(html) && /🔄 Kochjacke wechselt jeden Tag/.test(html) && /"🔄 täglich wechselnd"\]\)\}/.test(html), "Schalter in Mein Bild und im Baukasten");
+  assert.ok(/r\(4\) \? 0 : 1 \+ r\(AV_JACKE\.length - 2\)/.test(html), "Zufall wählt nie „auto“");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
