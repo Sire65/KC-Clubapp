@@ -853,6 +853,24 @@
   #raster.klein3 .kachel b, #raster.ad-raster .kachel b { font-size: .8rem; margin-top: 4px; line-height: 1.15; }
   #raster.klein3 .kachel small, #raster.ad-raster .kachel small { font-size: .66rem; line-height: 1.2; display: block; margin-top: 2px; overflow-wrap: anywhere; }
   /* KC-CLUB-KACHEL-MINI (2.54.0): 4 nebeneinander – nur Symbol und Name */
+  /* KC-CLUB-KACHEL-RUECKSEITE (2.54.0): Kachel dreht sich (halbe Drehung, Inhalt wechselt, zurück) */
+  #raster > .kachel { transition: transform .16s ease-in; }
+  #raster > .kachel.kr-dreht { transform: perspective(600px) rotateY(90deg); }
+  #raster > .kachel.kr-hinten { background: linear-gradient(135deg, var(--rot), var(--hero1)); color: #fff; display: flex; flex-direction: column; gap: 5px; align-items: stretch; justify-content: center; text-align: left; padding: 8px; }
+  #raster > .kachel.kr-hinten .kr-titel { font-size: .75rem; font-weight: 800; opacity: .85; margin-bottom: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 26px; }
+  #raster > .kachel.kr-hinten .kr-akt { display: block; background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.35); border-radius: 10px; padding: 7px 8px; font-size: .82rem; font-weight: 700; line-height: 1.15; cursor: pointer; }
+  #raster > .kachel.kr-hinten .kr-akt:active { background: rgba(255,255,255,.32); }
+  #raster > .kachel.kr-hinten .kr-zurueck { position: absolute; top: 4px; right: 6px; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.2); font-weight: 800; cursor: pointer; }
+  #raster.klein4 > .kachel.kr-hinten .kr-akt, #raster.klein3 > .kachel.kr-hinten .kr-akt { font-size: .68rem; padding: 5px 5px; }
+  /* KC-CLUB-REISSWOLF (2.54.0): Streifen fallen aus dem Schlitz des Aktenvernichters */
+  .rw-box { position: fixed; z-index: 3000; pointer-events: none; overflow: visible; }
+  .rw-streifen { position: absolute; inset: 0; animation: rwFall .8s cubic-bezier(.4,.1,.8,.6) forwards; }
+  .rw-box > .rw-streifen:first-child { } 
+  .rw-box { animation: rwEin .42s ease-in forwards; }
+  @keyframes rwEin { from { transform: translateY(0); } to { transform: translateY(14px); } }
+  @keyframes rwFall { 0% { transform: translate(0, 0) rotate(0); opacity: 1; } 100% { transform: translate(var(--rw-x), 140%) rotate(var(--rw-d)); opacity: 0; } }
+  .rw-schlitz { position: absolute; left: -8px; right: -8px; top: 100%; height: 10px; margin-top: -4px; border-radius: 4px; background: repeating-linear-gradient(90deg, #3b3b3b 0 6px, #555 6px 8px); box-shadow: 0 2px 4px rgba(0,0,0,.4); animation: rwSchlitz 1.25s ease forwards; }
+  @keyframes rwSchlitz { 0%, 85% { opacity: 1; } 100% { opacity: 0; } }
   #raster.klein4 { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; }
   #raster.klein4 .kachel { padding: 8px 4px 7px; text-align: center; border-radius: 12px; }
   #raster.klein4 .kachel .sym { font-size: 1.25rem; margin: 0 auto; }
@@ -2878,6 +2896,8 @@
       <details class="ds-mehr" id="wbKlappe" style="margin:2px 0 10px"><summary>⏳ Warte-Bild: <span id="wbAktName">Kochmütze</span></summary><div class="hinweis" style="margin-top:6px">Erscheint, wenn die App etwas länger braucht. Antippen wählt das Bild.</div><div id="wbWahl"></div></details> <!-- KC-CLUB-WARTEBILD 2.46.0 -->
       <div class="schalter"><div><b>🔠 Große Schrift</b></div><input type="checkbox" id="setGross" onchange="einstellung('gross', this.checked)"></div>
       <div class="schalter"><div><b>✨ Animierte Knöpfe</b><div class="hinweis">Kacheln zoomen kurz beim Antippen, Reiter und „＋ Neu“ leuchten auf – aus: alles ruhig</div></div><input type="checkbox" id="setAnimiert" onchange="einstellung('animiert', this.checked)"></div> <!-- 2.24.1 (Wunsch Hansi) -->
+      <div class="schalter"><div><b>🔄 Kacheln umdrehen</b><div class="hinweis">Doppelt auf eine Kachel tippen – hinten stehen Schnellaktionen (z. B. „Neue Nachricht“)</div></div><input type="checkbox" id="setKachelRueck" onchange="einstellung('kachelrueck', this.checked)"></div> <!-- KC-CLUB-KACHEL-RUECKSEITE 2.54.0 -->
+      <div class="schalter"><div><b>🗑️ Reißwolf beim Löschen</b><div class="hinweis">Gelöschtes läuft sichtbar durch den Aktenvernichter</div></div><input type="checkbox" id="setReisswolf" onchange="einstellung('reisswolf', this.checked)"></div> <!-- KC-CLUB-REISSWOLF 2.54.0 -->
       <div style="margin-top:8px"><b>🌗 Tag- und Nachtmodus</b></div>
       <div class="umschalter modus3" id="modusWahl"><button data-m="auto" onclick="modusWaehlen('auto')">🔄 Automatisch</button><button data-m="tag" onclick="modusWaehlen('tag')">☀️ Immer Tag</button><button data-m="nacht" onclick="modusWaehlen('nacht')">🌙 Immer Nacht</button></div>
       <p class="hinweis" id="modusInfo" style="margin-top:-4px"></p>

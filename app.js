@@ -610,7 +610,7 @@ function anwendenDesign() {
   const MODUS_ZEICHEN = { auto: ["A", "Automatik"], tag: ["T", "Immer Tag"], nacht: ["N", "Immer Nacht"] }, mz = MODUS_ZEICHEN[DS.modus] || MODUS_ZEICHEN.auto;
   if ($("modusKnopf")) { $("modusKnopf").innerHTML = `${nacht ? "☀️" : "🌙"}<span class="modusbuchstabe" aria-hidden="true">${mz[0]}</span>`;
     $("modusKnopf").title = `Tag/Nacht umschalten – eingestellt: ${mz[1]}`; $("modusKnopf").setAttribute("aria-label", `Tag/Nacht umschalten, eingestellt: ${mz[1]}`); }
-  $("setFeiertage").checked = einst("feiertage", true); $("setGross").checked = $("setGrossE").checked = einst("gross", false); $("setAnimiert").checked = einst("animiert", true); if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
+  $("setFeiertage").checked = einst("feiertage", true); $("setGross").checked = $("setGrossE").checked = einst("gross", false); $("setAnimiert").checked = einst("animiert", true); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
   designWahlZeigen();
 }
 function designWahlZeigen() {
@@ -846,7 +846,7 @@ function pwZeigen() {
     const leser = z.leser && z.fuer !== "ich" ? `<details><summary>👁️ gelesen ${z.leser.length}/${z.anzahl} · ✓ erl. ${z.leser.filter((l) => l.erledigt).length}</summary>`
       + z.leser.map((l) => `<div>${esc(l.name.split(" ")[0])}: gesehen ${zeitKurz(l.gesehen)}${l.erledigt ? ` · ✓ ${zeitKurz(l.erledigt)}` : ""}</div>`).join("")
       + (z.offen?.length ? `<div style="margin-top:4px">Noch nicht gesehen: ${z.offen.map((n) => esc(n.split(" ")[0])).join(", ")}</div>` : "") + `</details>` : "";
-    return `<div class="zettel${z.wichtig ? " wichtig" : ""}${pwFarbe(z)}${z.erledigt ? " erledigt" : ""}" style="--dreh:${pwDreh(z.id)}deg">`
+    return `<div class="zettel${z.wichtig ? " wichtig" : ""}${pwFarbe(z)}${z.erledigt ? " erledigt" : ""}" data-zid="${esc(z.id)}" style="--dreh:${pwDreh(z.id)}deg">`
       + (z.wichtig ? `<span class="zwichtig">❗ WICHTIG</span>` : "")
       + pwKopf(z.vonMir ? ICH?.vorname || "mir" : z.von.vorname, z.erstellt_am)
       + `<div class="ztext">${esc(z.text)}</div><div class="zfuss">${esc(pwFuerText(z))}</div>`
@@ -961,7 +961,7 @@ async function hilfeWichtig(id, an) {
 }
 async function pwAbnehmen(id, ausFormular) {
   if (!(await frage("Zettel von der Pinnwand abnehmen?"))) return;
-  try { await api("pinnwand_abnehmen", { id }); melde("🗑️ Abgenommen"); await pwLaden(); if (ausFormular) pwVoll(); } catch (e) { meldeFehler(e); }
+  try { await api("pinnwand_abnehmen", { id }); await reisswolf(document.querySelector(`.zettel[data-zid="${CSS.escape(id)}"]`)); melde("🗑️ Abgenommen"); await pwLaden(); if (ausFormular) pwVoll(); } catch (e) { meldeFehler(e); }
 }
 
 // ---------- KC-CLUB-BEGRUESSUNG (0.28.0): beim ersten Start einmal je Mitglied, danach nie wieder (auch nicht auf neuen Geräten) ----------
@@ -7389,8 +7389,85 @@ function registerWischen(schritt) {
     if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) f(dx < 0 ? 1 : -1);
   }, { passive: true });
 })();
+// ---------- KC-CLUB-KACHEL-RUECKSEITE (2.54.0, Wunsch Hansi): doppelt auf eine Kachel tippen → sie dreht sich um, hinten passende Schnellaktionen ----------
+// Registry: Kachel-ID → Aktionen (vorhandene Funktionen, kein zweiter Weg). Einmal tippen öffnet wie bisher (minimal verzögert, um Doppeltipp zu erkennen).
+// Nur erweiterte Ansicht, abschaltbar (Darstellung), zurück: nochmal doppelt tippen, ↩ oder nach 8 s von selbst.
+const KR_ZEIGE = (v, f) => { zeige(v); if (f) setTimeout(f, 250); };
+const KACHEL_RUECK = {
+  kommunikation: [["✉️", "Neue Nachricht", () => neueNachricht()], ["👥", "Neue Gruppe", () => KR_ZEIGE("nachrichten", () => gruppeForm())], ["⭐", "Gemerkte", () => KR_ZEIGE("nachrichten", () => gemerktZeigen())]],
+  termine: [["＋", "Neu …", () => KR_ZEIGE("termine", () => termineNeuWahl())], ["📅", "Alle Termine", () => zeige("termine")]],
+  mitglieder: [["🟢", "Wer ist online?", () => KR_ZEIGE("mitglieder", () => mgFilterSetzen("online"))], ["📋", "Meine Gruppen", () => mgGruppenUebersicht()]],
+  vorschlaege: [["💡", "Neuer Vorschlag", () => KR_ZEIGE("vorschlaege", () => vorschlagForm())], ["🗳️", "Abstimmungen", () => zeige("vorschlaege")]],
+  pinnwand: [["📝", "Neuer Zettel", () => KR_ZEIGE("pinnwand", () => pwForm(true))], ["📌", "Pinnwand", () => zeige("pinnwand")]],
+  fotos: [["📷", "Foto hochladen", () => KR_ZEIGE("fotos", () => fotoForm())], ["🖼️", "Alle Fotos", () => { faFilter = {}; faPapierkorb = false; zeige("fotos"); }]],
+  helfen: [["＋", "Neu: Hilfe / Leihen", () => { hlStart(); setTimeout(hlNeuWahl, 250); }]],
+  rezepte: [["＋", "Neues Rezept", async () => { await rzStart(); rzForm(); }]],
+  avatar: [["🧩", "Selbst zusammenstellen", () => avBauen(), () => frei("avatar_baukasten")], ["📷", "Foto als Bild", () => avfWaehlen("galerie"), () => frei("avatar_foto")]],
+  erstattung: [["🚗", "Fahrtkosten", () => KR_ZEIGE("erstattung", () => erstattungArt("fahrt"))], ["🛒", "Einkauf", () => KR_ZEIGE("erstattung", () => erstattungArt("einkauf"))]],
+  einstellungen: [["🎨", "Darstellung", () => einstiegHin("darstellung")], ["⚙️", "Alle Einstellungen", () => zeige("einstellungen")]],
+  spiele: [["♟️", "Schach", () => spStart("pc", "schach")], ["🧑‍🍳", "Fang den Koch", () => spStart("pc", "fdk")], ["🎲", "Mensch ärgere dich nicht", () => spStart("pc", "mae")]],
+  schulung_admin: [["📝", "Besuche", () => scStart("besuche")], ["📅", "Termine & Einladungen", () => scStart("termine")]],
+};
+const krAn = () => !einfach() && einst("kachelrueck", true);
+const krAktionen = (id) => (KACHEL_RUECK[id] || []).filter((a) => !a[3] || a[3]());
+const KR = { letzt: { id: null, t: 0 }, warte: null, offen: null, zu: null };
+function krUmdrehen(el, zurueck) {
+  const id = el.dataset.id, k = kacheln(reg).find((x) => x.id === id) || kaSortiert(reg).find((x) => x.id === id);
+  const ruhig = !einst("animiert", true) || matchMedia("(prefers-reduced-motion: reduce)").matches || SPAR?.an;
+  el.classList.add("kr-dreht");
+  setTimeout(() => {
+    if (zurueck || el.classList.contains("kr-hinten")) { el.classList.remove("kr-hinten"); KR.offen = null; clearTimeout(KR.zu); try { kachelnZeigen(); } catch {} return; }
+    el.classList.add("kr-hinten"); KR.offen = id;
+    el.innerHTML = `<div class="kr-titel">${k?.sym || ""} ${esc(k?.t || "")}</div>${krAktionen(id).map((a, i) => `<span class="kr-akt" role="button" tabindex="0" data-kr="${i}">${a[0]} ${esc(a[1])}</span>`).join("")}<span class="kr-zurueck" role="button" tabindex="0" data-kr="zu" aria-label="Zurückdrehen">↩</span>`;
+    requestAnimationFrame(() => el.classList.remove("kr-dreht"));
+    clearTimeout(KR.zu); KR.zu = setTimeout(() => { if (KR.offen === id && el.isConnected) krUmdrehen(el, true); }, 8000);
+    try { spur("kachel_rueck"); } catch {}
+  }, ruhig ? 0 : 160);
+}
+// ein Klick-Wächter für das Raster (Erfassungsphase am window – läuft vor dem Zoom-Öffnen): Doppeltipp erkennen, Rückseiten-Aktionen
+// ausführen, sonst die Kachel wie bisher öffnen (der Nachklick geht dann normal durch Zoom und Öffnen)
+window.addEventListener("click", (e) => {
+  const el = e.target.closest?.("#raster > .kachel"); if (!el || el.classList.contains("bearb")) return;
+  if (el.classList.contains("kr-hinten")) {
+    e.preventDefault(); e.stopImmediatePropagation();
+    const a = e.target.closest("[data-kr]"); if (!a) return;
+    if (a.dataset.kr === "zu") return krUmdrehen(el, true);
+    const akt = krAktionen(el.dataset.id)[Number(a.dataset.kr)]; krUmdrehen(el, true); if (akt) try { akt[2](); } catch (x) { meldeFehler(x); }
+    return;
+  }
+  if (!krAn() || !krAktionen(el.dataset.id).length || e.detail === 0 || el.dataset.krDurch) return; // Tastatur/Screenreader: sofort öffnen
+  e.preventDefault(); e.stopImmediatePropagation();
+  const jetzt = Date.now(), id = el.dataset.id;
+  if (KR.letzt.id === id && jetzt - KR.letzt.t < 320) { clearTimeout(KR.warte); KR.letzt = { id: null, t: 0 }; return krUmdrehen(el); }
+  KR.letzt = { id, t: jetzt }; clearTimeout(KR.warte);
+  KR.warte = setTimeout(() => { KR.letzt = { id: null, t: 0 }; el.dataset.krDurch = "1"; try { el.click(); } finally { delete el.dataset.krDurch; } }, 260);
+}, true);
+// ---------- KC-CLUB-REISSWOLF (2.54.0, Wunsch Hansi): Gelöschtes läuft sichtbar durch einen Aktenvernichter ----------
+// Rein optisch: Streifen-Kopien des Elements fallen aus einem Schlitz. Abschaltbar, ruhig bei „Bewegung reduzieren“/Sparmodus. Fehler hier stören nie das Löschen.
+function reisswolf(el) {
+  try {
+    if (!el?.isConnected || !einst("reisswolf", true) || SPAR?.an || matchMedia("(prefers-reduced-motion: reduce)").matches) return Promise.resolve();
+    const r = el.getBoundingClientRect(); if (r.width < 20 || r.height < 10 || r.bottom < 0 || r.top > innerHeight) return Promise.resolve();
+    const n = Math.max(6, Math.min(16, Math.round(r.width / 22))), box = document.createElement("div");
+    box.className = "rw-box"; box.setAttribute("aria-hidden", "true");
+    box.style.cssText = `left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px`;
+    for (let i = 0; i < n; i++) {
+      const s2 = document.createElement("div"), c = el.cloneNode(true);
+      c.removeAttribute("id"); c.querySelectorAll("[id]").forEach((x) => x.removeAttribute("id"));
+      c.style.cssText += `;position:absolute;left:0;top:0;width:${r.width}px;height:${r.height}px;margin:0;box-sizing:border-box;pointer-events:none`;
+      s2.className = "rw-streifen"; s2.style.clipPath = `inset(0 ${(100 - ((i + 1) * 100) / n).toFixed(2)}% 0 ${((i * 100) / n).toFixed(2)}%)`;
+      s2.style.setProperty("--rw-x", `${((Math.random() - .5) * 18).toFixed(1)}px`); s2.style.setProperty("--rw-d", `${(Math.random() * 10 - 5).toFixed(1)}deg`);
+      s2.style.animationDelay = `${(420 + Math.random() * 120).toFixed(0)}ms`; s2.appendChild(c); box.appendChild(s2);
+    }
+    box.insertAdjacentHTML("beforeend", '<div class="rw-schlitz"></div>');
+    (el.parentElement || document.body).appendChild(box); el.style.visibility = "hidden";
+    try { navigator.vibrate?.([15, 30, 15, 30, 15]); } catch {}
+    return new Promise((ok) => setTimeout(() => { box.remove(); ok(); }, 1250));
+  } catch { return Promise.resolve(); }
+}
 function kachelnZeigen() {
   if (ZIEHEN) return; // nicht neu zeichnen, während eine Kachel am Finger hängt
+  if (KR.offen && document.querySelector("#raster > .kachel.kr-hinten")) return; // 2.54.0: Rückseite bleibt, bis sie zurückdreht
   $("raster").classList.toggle("ad-raster", reg === "admin" && !einfach()); // KC-CLUB-ADMIN-REGISTER: kleinere Kacheln, 3 je Reihe
   $("raster").classList.toggle("klein3", reg !== "admin" && !einfach() && kachelKlein()); // KC-CLUB-KACHEL-KLEIN (2.23.87): auf Wunsch überall 3 je Reihe
   $("raster").classList.toggle("klein4", reg !== "admin" && !einfach() && kachelStufe() === "mini"); // KC-CLUB-KACHEL-MINI (2.54.0): 4 je Reihe
@@ -13510,13 +13587,13 @@ function naLoeschenFragen(id) {
 }
 async function naLoeschen(id, fuerAlle) {
   document.getElementById("naLoeschen")?.remove();
-  try { await api(fuerAlle ? "nachricht_loeschen" : "nachricht_ausblenden", { id }); chatStand = ""; melde(fuerAlle ? "🗑️ Für alle gelöscht" : "🙈 Für dich gelöscht"); chatLaden(false); }
+  try { await api(fuerAlle ? "nachricht_loeschen" : "nachricht_ausblenden", { id }); await reisswolf(document.querySelector(`#chat [data-id="${CSS.escape(id)}"]`)); chatStand = ""; melde(fuerAlle ? "🗑️ Für alle gelöscht" : "🙈 Für dich gelöscht"); chatLaden(false); }
   catch (e) { meldeFehler(e); }
 }
 // KC-CLUB-LOESCHEN: eigene Nachricht für alle löschen; Unterhaltung nur für mich entfernen oder (Admin) für alle löschen
 async function nachrichtLoeschen(id) {
   if (!(await frage("Diese Nachricht für alle löschen?"))) return;
-  try { await api("nachricht_loeschen", { id }); chatStand = ""; melde("🗑️ Gelöscht"); chatLaden(false); } catch (e) { meldeFehler(e); }
+  try { await api("nachricht_loeschen", { id }); await reisswolf(document.querySelector(`#chat [data-id="${CSS.escape(id)}"]`)); chatStand = ""; melde("🗑️ Gelöscht"); chatLaden(false); } catch (e) { meldeFehler(e); }
 }
 function chatMenue() {
   const g = chatId && CHAT?.id === chatId ? CHAT.gruppe : null;
@@ -16859,7 +16936,8 @@ async function fotoLoeschen() {
   const f = FA.fotos[faIndex];
   if (!(await frage("Dieses Foto löschen?\n\nEs kommt 30 Tage in den Papierkorb (Hansi kann es zurückholen), danach wird es endgültig entfernt und der Speicher frei."))) return;
   try {
-    await api("foto_loeschen", { id: f.id });
+    await api("foto_loeschen", { id: f.id }); await reisswolf($("fbBild"));
+    if ($("fbBild")) $("fbBild").style.visibility = "";
     FA.fotos.splice(faIndex, 1); melde("🗑️ Foto gelöscht");
     if (!FA.fotos.length) { fotoSchliessen(); fotosLaden(); return; }
     fotoAnsehen(Math.min(faIndex, FA.fotos.length - 1));

@@ -5303,6 +5303,17 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/#raster\.klein4 \{ grid-template-columns: repeat\(4, minmax\(0, 1fr\)\)/.test(html) && /#raster\.klein4 \.kachel small \{ display: none; \}/.test(html), "4 Spalten, ohne Untertitel");
   assert.ok(/classList\.toggle\("klein4", reg !== "admin" && !einfach\(\) && kachelStufe\(\) === "mini"\)/.test(html), "nur erweiterte Ansicht, nicht im Admin-Register");
 }
+// 2.54.0 KC-CLUB-KACHEL-RUECKSEITE + KC-CLUB-REISSWOLF (Wunsch Hansi): Doppeltipp dreht die Kachel (Schnellaktionen aus vorhandenen Funktionen), Löschen mit Aktenvernichter
+{
+  const a = html.indexOf("const KACHEL_RUECK = {"), K = html.slice(a, html.indexOf("\n};", a));
+  for (const id of ["kommunikation", "pinnwand", "termine", "mitglieder", "fotos", "spiele"]) assert.ok(new RegExp(`\\n  ${id}: \\[`).test(K), "Rückseite für " + id);
+  assert.ok(/window\.addEventListener\("click", \(e\) => \{/.test(html) && /KR\.letzt\.id === id && jetzt - KR\.letzt\.t < 320/.test(html) && /el\.dataset\.krDurch = "1"; try \{ el\.click\(\); \}/.test(html), "Doppeltipp vor dem Zoom erkannt, einfacher Tipp öffnet wie bisher");
+  assert.ok(/const krAn = \(\) => !einfach\(\) && einst\("kachelrueck", true\);/.test(html) && /e\.detail === 0/.test(html), "nur erweiterte Ansicht, abschaltbar, Tastatur sofort");
+  assert.ok(/id="setKachelRueck"/.test(html) && /id="setReisswolf"/.test(html), "Schalter in der Darstellung");
+  const r = html.slice(html.indexOf("function reisswolf(el) {"), html.indexOf("function kachelnZeigen() {"));
+  assert.ok(/einst\("reisswolf", true\)/.test(r) && /prefers-reduced-motion: reduce/.test(r) && /SPAR\?\.an/.test(r) && /catch \{ return Promise\.resolve\(\); \}/.test(r), "abschaltbar, ruhig, Fehler stören das Löschen nie");
+  assert.ok(/await api\("nachricht_loeschen", \{ id \}\); await reisswolf\(/.test(html) && /await api\("pinnwand_abnehmen", \{ id \}\); await reisswolf\(/.test(html) && /await api\("foto_loeschen", \{ id: f\.id \}\); await reisswolf\(/.test(html), "erst nach erfolgreichem Löschen");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
