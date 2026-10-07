@@ -5174,6 +5174,20 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(!/\+new Intl\.DateTimeFormat\("de-DE", \{ timeZone: TZ, hour: "2-digit"/.test(html) && !/Number\(new Intl\.DateTimeFormat\("de-DE", \{ timeZone: TZ, hour: "2-digit"/.test(html), "kein Number(„11 Uhr“) mehr");
   assert.ok(/const nzStunde = \(\) => berlinStunde\(\);/.test(html) && /stunde = \(z\) => berlinStunde\(z\)/.test(html), "beide Stellen nutzen dieselbe Funktion");
 }
+// 2.46.0 KC-CLUB-WARTEBILD (Wunsch Hansi): Warte-Anzeige mit Profiküchen-Motiven – fest, abwechselnd, täglich, nach Jahreszeit (je Gerät)
+{
+  const a = html.indexOf("// ---------- KC-CLUB-WARTEBILD (2.46.0"), b = html.indexOf("function sparInfo() {", a);
+  const ls = {}; const localStorage = { getItem: (k) => ls[k] ?? null, setItem: (k, v) => (ls[k] = String(v)) };
+  const W = new Function("localStorage", "$", "esc", "wartenZahl", html.slice(a, b) + "\nreturn { WBILD, WB_MODUS, wbLesen, wbAktuell };")(localStorage, () => null, (x) => x, 0);
+  assert.ok(["muetze", "besen", "pfanne", "topf", "messer", "nudelholz", "spritzbeutel", "wecker", "flamme", "plaetzchen"].every((id) => W.WBILD.some((x) => x.id === id)), "zehn Motive inkl. Schneebesen");
+  assert.equal(W.wbLesen().bild, "muetze", "Standard bleibt die Kochmütze");
+  ls.kc_club_wartebild = JSON.stringify({ bild: "besen", modus: "fest" }); assert.equal(W.wbAktuell().id, "besen");
+  ls.kc_club_wartebild = JSON.stringify({ bild: "besen", modus: "saison" }); assert.equal(W.wbAktuell(new Date("2026-12-10T10:00:00Z")).id, "plaetzchen", "Dezember: Plätzchen");
+  for (let i = 0; i < 40; i++) { ls.kc_club_wartebild = JSON.stringify({ bild: "besen", modus: "wechsel" }); assert.notEqual(W.wbAktuell(new Date("2026-10-10T10:00:00Z")).id, "plaetzchen", "Plätzchen nur im Dezember"); }
+  ls.kc_club_wartebild = "kaputt"; assert.equal(W.wbLesen().bild, "muetze", "kaputter Speicher → Standard");
+  assert.ok(/const wb = wbAktuell\(\); wbEinsetzen\(wb\);/.test(html) && /id="wbWahl"/.test(html) && /id="wbKlappe"/.test(html), "Warte-Anzeige nutzt die Wahl; Auswahl als Klappbereich in der Darstellung");
+  assert.ok(/html\.spar \*, html\.spar \*::before, html\.spar \*::after \{ animation-duration: \.001s/.test(html) && /@media \(prefers-reduced-motion: reduce\) \{ \.wb-svg \* \{ animation: none/.test(html), "Sparmodus/Bewegung reduzieren: ruhig");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

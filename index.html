@@ -1943,6 +1943,35 @@
   .warten.an { opacity: 1; }
   .warten .muetze { width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, var(--hero1), var(--rot)); display: grid; place-items: center; animation: muetzeDreh 1.6s linear infinite; } /* 2.23.23: etwas ruhiger, damit „since 1991“ lesbar ist */
   .warten .muetze img { width: 42px; height: 42px; }
+  /* KC-CLUB-WARTEBILD (2.46.0): Profiküchen-Motive als feine Strichgrafik; Motive drehen nicht, sie bewegen sich ruhig in sich */
+  .warten .muetze.wb-motiv { animation: none; } .warten .muetze.wb-motiv::after { content: none; }
+  .wb-svg { width: 44px; height: 44px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; overflow: visible; }
+  .wb-svg * { transform-box: view-box; }
+  .wb-a-besen { transform-origin: 24px 27px; animation: wbBesen 1.1s ease-in-out infinite; } @keyframes wbBesen { 0%,100% { transform: rotate(-16deg) translateX(-1px); } 50% { transform: rotate(16deg) translateX(1px); } }
+  .wb-a-flip { transform-origin: 18px 27px; animation: wbFlip 1.6s ease-in-out infinite; } @keyframes wbFlip { 0%,20%,100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-14px) rotate(180deg); } 80% { transform: translateY(0) rotate(360deg); } }
+  .wb-a-deckel { animation: wbDeckel .9s ease-in-out infinite; } @keyframes wbDeckel { 0%,60%,100% { transform: translateY(0); } 75% { transform: translateY(-2px) rotate(-3deg); } 90% { transform: translateY(-1px) rotate(2deg); } }
+  .wb-a-dampf path { animation: wbDampf 1.8s ease-in-out infinite; } .wb-a-dampf path:nth-child(2) { animation-delay: .4s; } .wb-a-dampf path:nth-child(3) { animation-delay: .8s; }
+  @keyframes wbDampf { 0% { opacity: 0; transform: translateY(4px); } 40% { opacity: 1; } 100% { opacity: 0; transform: translateY(-4px); } }
+  .wb-a-messer { animation: wbMesser .7s ease-in-out infinite; } @keyframes wbMesser { 0%,100% { transform: translate(0, 0); } 50% { transform: translate(-1px, 13px); } }
+  .wb-a-scheibe { animation: wbScheibe .7s ease-in-out infinite; } @keyframes wbScheibe { 0%,40% { opacity: 0; } 60%,100% { opacity: 1; } }
+  .wb-a-rollen { animation: wbRollen 1.4s ease-in-out infinite; } @keyframes wbRollen { 0%,100% { transform: translateX(-5px); } 50% { transform: translateX(5px); } }
+  .wb-a-beutel { animation: wbBeutel 1.5s ease-in-out infinite; } @keyframes wbBeutel { 0%,100% { transform: translateX(-8px); } 50% { transform: translateX(8px); } }
+  .wb-a-tupf path { opacity: 0; animation: wbTupf 1.5s linear infinite; } .wb-a-tupf path:nth-child(2) { animation-delay: .5s; } .wb-a-tupf path:nth-child(3) { animation-delay: 1s; }
+  @keyframes wbTupf { 0%,10% { opacity: 0; } 25%,85% { opacity: 1; } 100% { opacity: 0; } }
+  .wb-a-zeiger { transform-origin: 24px 26px; animation: wbZeiger 2.4s linear infinite; } @keyframes wbZeiger { to { transform: rotate(360deg); } }
+  .wb-a-wackel { transform-origin: 24px 38px; animation: wbWackel 2.4s ease-in-out infinite; } @keyframes wbWackel { 0%,85%,100% { transform: rotate(0); } 89% { transform: rotate(-5deg); } 93% { transform: rotate(5deg); } 97% { transform: rotate(-3deg); } }
+  .wb-a-flamme path { transform-origin: center bottom; animation: wbFlamme .9s ease-in-out infinite alternate; } .wb-a-flamme path:nth-child(2) { animation-delay: .3s; } .wb-a-flamme path:nth-child(3) { animation-delay: .6s; }
+  @keyframes wbFlamme { from { transform: scaleY(.8); opacity: .75; } to { transform: scaleY(1.1); opacity: 1; } }
+  .wb-a-stern { animation: wbStern 1.4s ease-in-out infinite; } @keyframes wbStern { 0%,100% { transform: translateY(-4px); } 45%,60% { transform: translateY(8px); } }
+  @media (prefers-reduced-motion: reduce) { .wb-svg * { animation: none !important; } }
+  .wb-raster { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; margin-top: 8px; }
+  .wb-karte { display: grid; justify-items: center; gap: 4px; padding: 8px 4px; border: 2px solid transparent; border-radius: 14px; background: var(--karte2); color: var(--text); cursor: pointer; font: inherit; }
+  .wb-karte.an { border-color: var(--rot); background: var(--karte); }
+  .wb-karte small { font-size: .78rem; font-weight: 700; text-align: center; line-height: 1.2; } .wb-karte small i { font-weight: 400; color: var(--grau); }
+  .wb-kreis { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, var(--hero1), var(--rot)); display: grid; place-items: center; }
+  .wb-kreis img { width: 32px; height: 32px; } .wb-kreis .wb-svg { width: 34px; height: 34px; }
+  .wb-karte:not(.an) .wb-svg * { animation-play-state: paused; }
+  .wb-vorschau-link { border: none; background: none; color: var(--textRot, var(--rot)); font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; padding: 0; }
   .warten b { font-size: .95rem; color: var(--text); text-align: center; max-width: 220px; }
   @keyframes muetzeDreh { from { transform: rotateY(0deg) rotate(0deg); } to { transform: rotateY(360deg) rotate(0deg); } }
   /* KC-CLUB-MUETZE-SINCE (2.23.23, Wunsch Hansi): Rückseite der drehenden Kochmütze zeigt „since 1991“ (vorne Mütze, hinten Spruch).
@@ -2797,6 +2826,7 @@
       <summary>🎨 Darstellung</summary>
       <!-- KC-CLUB-SPARMODUS (2.30.0): je Gerät -->
       <div class="schalter" style="display:block"><div><b>🐢 Sparmodus</b><div class="hinweis">Für schwaches Netz oder ältere Handys: keine Bewegungen, seltener im Hintergrund nachsehen. Automatisch = schaltet sich bei Bedarf selbst ein. <span id="sparStand"></span></div></div><div class="hl-chips" id="sparWahl" style="margin-top:6px"></div></div>
+      <details class="ds-mehr" id="wbKlappe" style="margin:2px 0 10px"><summary>⏳ Warte-Bild: <span id="wbAktName">Kochmütze</span></summary><div class="hinweis" style="margin-top:6px">Erscheint, wenn die App etwas länger braucht. Antippen wählt das Bild.</div><div id="wbWahl"></div></details> <!-- KC-CLUB-WARTEBILD 2.46.0 -->
       <div class="schalter"><div><b>🔠 Große Schrift</b></div><input type="checkbox" id="setGross" onchange="einstellung('gross', this.checked)"></div>
       <div class="schalter"><div><b>✨ Animierte Knöpfe</b><div class="hinweis">Kacheln zoomen kurz beim Antippen, Reiter und „＋ Neu“ leuchten auf – aus: alles ruhig</div></div><input type="checkbox" id="setAnimiert" onchange="einstellung('animiert', this.checked)"></div> <!-- 2.24.1 (Wunsch Hansi) -->
       <div style="margin-top:8px"><b>🌗 Tag- und Nachtmodus</b></div>
@@ -3168,6 +3198,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.45.1" data-v="2.45.1"></script>
+<script src="app.js?v=2.46.0" data-v="2.46.0"></script>
 </body>
 </html>

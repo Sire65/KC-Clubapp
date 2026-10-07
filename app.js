@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.45.1"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.46.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -27,6 +27,52 @@ function sparZeigen() {
   const z = document.getElementById("sparWahl"), w = sparWahl();
   if (z) z.innerHTML = [["auto", "Automatisch"], ["an", "Immer an"], ["aus", "Aus"]].map(([k, t]) => `<button type="button" class="chip${w === k ? " an" : ""}" onclick="sparSetzen('${k}')">${t}</button>`).join("");
   const h = document.getElementById("sparStand"); if (h) h.textContent = SPAR.an ? `Gerade an: ${SPAR.grund}.` : "Gerade aus.";
+  try { wbWahlZeigen(); } catch {} // KC-CLUB-WARTEBILD: Auswahl steht in derselben Darstellung
+}
+// ---------- KC-CLUB-WARTEBILD (2.46.0, Wunsch Hansi): Warte-Anzeige mit Motiven aus der Profiküche ----------
+// Schlichte Strichgrafik (weiß auf Markenkreis), ruhige Bewegung. Je Gerät wählbar: fest, abwechselnd, täglich oder nach Jahreszeit.
+// Sparmodus/„Bewegung reduzieren“: Bewegung aus (html.spar stoppt alle Animationen) – das Bild bleibt ruhig stehen.
+const WB_KEY = "kc_club_wartebild";
+const WBILD = [
+  { id: "muetze", t: "Kochmütze", x: "Einen Moment …" },
+  { id: "besen", t: "Schneebesen", x: "Wird aufgeschlagen …", svg: '<path d="M8 27h32c-1.4 7.6-7.6 12-16 12S9.4 34.6 8 27z"/><path d="M6 27h36"/><g class="wb-a-besen"><path d="M24 5v9"/><path d="M24 14c-5 4-5 11 0 14 5-3 5-10 0-14z"/><path d="M24 14c-2.4 4-2.4 11 0 14 2.4-3 2.4-10 0-14z"/></g>' },
+  { id: "pfanne", t: "Pfanne schwenken", x: "Kommt gleich aus der Pfanne …", svg: '<path d="M6 30h24c0 4.4-3 7-7 7H13c-4 0-7-2.6-7-7z"/><path d="M30 31l13-4"/><ellipse class="wb-a-flip" cx="18" cy="27" rx="8" ry="1.8"/>' },
+  { id: "topf", t: "Suppentopf", x: "Köchelt noch …", svg: '<path d="M11 22h26v12a4 4 0 0 1-4 4H15a4 4 0 0 1-4-4z"/><path d="M11 26H7M37 26h4"/><g class="wb-a-deckel"><path d="M10 19.5h28"/><path d="M22 17.5h4"/></g><g class="wb-a-dampf"><path d="M18 14c-2-2 2-4 0-7"/><path d="M24 13c-2-2 2-4 0-7"/><path d="M30 14c-2-2 2-4 0-7"/></g>' },
+  { id: "messer", t: "Messer & Brett", x: "Wird vorbereitet …", svg: '<path d="M5 37h38"/><path d="M8 33h18l4-2-4-2H8z"/><g class="wb-a-messer"><path d="M33 6l8 0 0 4c-2 6-6 9-8 9z"/><path d="M37 6V2"/></g><path class="wb-a-scheibe" d="M33 34v-3"/>' },
+  { id: "nudelholz", t: "Nudelholz", x: "Wird ausgerollt …", svg: '<path d="M6 36c6-3 30-3 36 0"/><g class="wb-a-rollen"><rect x="13" y="22" width="22" height="7" rx="3.5"/><path d="M13 25.5H7M35 25.5h6"/></g>' },
+  { id: "spritzbeutel", t: "Spritzbeutel", x: "Wird angerichtet …", svg: '<g class="wb-a-beutel"><path d="M15 5h18l-7 19h-4z"/><path d="M22 24l2 4 2-4"/></g><path d="M8 38h32"/><g class="wb-a-tupf"><path d="M14 38c0-3 4-3 4 0"/><path d="M22 38c0-3 4-3 4 0"/><path d="M30 38c0-3 4-3 4 0"/></g>' },
+  { id: "wecker", t: "Küchenwecker", x: "Gleich fertig …", svg: '<g class="wb-a-wackel"><circle cx="24" cy="26" r="13"/><path d="M20 10h8M24 10v3"/><path class="wb-a-zeiger" d="M24 26V17"/><path d="M24 26l5 3"/></g>' },
+  { id: "flamme", t: "Herdflamme", x: "Wird erhitzt …", svg: '<path d="M10 16h28v6a4 4 0 0 1-4 4H14a4 4 0 0 1-4-4z"/><path d="M8 30h32"/><g class="wb-a-flamme"><path d="M17 38c-2-3 1-5 1-8 2 2 3 4 1 8"/><path d="M24 38c-2-3 1-6 1-9 2 3 3 5 1 9"/><path d="M31 38c-2-3 1-5 1-8 2 2 3 4 1 8"/></g>' },
+  { id: "plaetzchen", t: "Plätzchen ausstechen", x: "Wird ausgestochen …", saison: true, svg: '<path d="M6 37c6-3 30-3 36 0"/><path class="wb-a-stern" d="M24 8l3 6 6.5 1-4.7 4.5 1.1 6.5L24 23l-5.9 3 1.1-6.5L14.5 15l6.5-1z"/>' },
+];
+const WB_MODUS = [["fest", "Fest"], ["wechsel", "🔀 Abwechselnd"], ["taeglich", "📅 Täglich anders"], ["saison", "🗓️ Nach Jahreszeit"]];
+function wbLesen() { try { const w = JSON.parse(localStorage.getItem(WB_KEY) || "null"); if (w && WBILD.some((x) => x.id === w.bild) && WB_MODUS.some(([m]) => m === w.modus)) return w; } catch {} return { bild: "muetze", modus: "fest" }; }
+function wbAktuell(d = new Date()) {
+  const w = wbLesen(), alle = WBILD.filter((x) => !x.saison || d.getMonth() === 11);
+  if (w.modus === "wechsel") return alle[Math.floor(Math.random() * alle.length)];
+  if (w.modus === "taeglich") { const t = Math.floor((d.getTime() - d.getTimezoneOffset() * 60000) / 86400000); return alle[t % alle.length]; }
+  if (w.modus === "saison") return WBILD.find((x) => x.id === ["topf", "topf", "messer", "messer", "spritzbeutel", "flamme", "flamme", "flamme", "pfanne", "besen", "topf", "plaetzchen"][d.getMonth()]);
+  return WBILD.find((x) => x.id === w.bild) || WBILD[0];
+}
+const wbGrafik = (b) => b.id === "muetze" ? '<img src="kc-kochmuetze-weiss.webp" alt="">' : `<svg class="wb-svg wb-${b.id}" viewBox="0 0 48 48" aria-hidden="true">${b.svg}</svg>`;
+function wbSetzen(teil) { const w = { ...wbLesen(), ...teil }; try { localStorage.setItem(WB_KEY, JSON.stringify(w)); } catch {} wbWahlZeigen(); if (teil.bild) wbVorschau(); }
+function wbVorschau() {
+  const b = wbAktuell(), z = $("warten"); if (!z) return;
+  wbEinsetzen(b, b.x); z.classList.remove("versteckt"); requestAnimationFrame(() => z.classList.add("an"));
+  clearTimeout(wbVorschau.t); wbVorschau.t = setTimeout(() => { if (!wartenZahl) { z.classList.remove("an"); setTimeout(() => !wartenZahl && z.classList.add("versteckt"), 200); } }, 2200);
+}
+function wbEinsetzen(b, text) {
+  const m = $("warten")?.querySelector(".muetze"); if (!m) return;
+  m.classList.toggle("wb-motiv", b.id !== "muetze"); m.innerHTML = wbGrafik(b);
+  if (text) $("wartenText").textContent = text;
+}
+function wbWahlZeigen() {
+  const z = $("wbWahl"); if (!z) return;
+  const w = wbLesen();
+  if ($("wbAktName")) $("wbAktName").textContent = w.modus === "fest" ? (WBILD.find((x) => x.id === w.bild)?.t || "Kochmütze") : WB_MODUS.find(([m]) => m === w.modus)[1];
+  z.innerHTML = `<div class="wb-raster">${WBILD.map((b) => `<button type="button" class="wb-karte${w.bild === b.id ? " an" : ""}" onclick="wbSetzen({ bild: '${b.id}', modus: 'fest' })" aria-pressed="${w.bild === b.id && w.modus === "fest"}"><span class="wb-kreis${b.id === "muetze" ? "" : " wb-motiv"}">${wbGrafik(b)}</span><small>${esc(b.t)}${b.saison ? "<br><i>nur im Dezember</i>" : ""}</small></button>`).join("")}</div>
+    <div class="hl-chips" style="margin-top:8px">${WB_MODUS.map(([m, t]) => `<button type="button" class="chip${w.modus === m ? " an" : ""}" onclick="wbSetzen({ modus: '${m}' })">${t}</button>`).join("")}</div>
+    <p class="hinweis" style="margin:6px 0 0">${w.modus === "fest" ? "Immer das gewählte Bild." : w.modus === "wechsel" ? "Jedes Mal ein anderes Bild." : w.modus === "taeglich" ? "Jeden Tag ein anderes Bild." : "Passend zur Jahreszeit – im Dezember Plätzchen."} <button type="button" class="wb-vorschau-link" onclick="wbVorschau()">▶ Vorschau</button></p>`;
 }
 function sparInfo() { melde(`🐢 Sparmodus: ${SPAR.grund}. Weniger Bewegung, seltener im Hintergrund nachsehen – Nachrichten kommen trotzdem sofort. Ändern: Einstellungen → 🎨 Darstellung.`); }
 // KC-CLUB-SCHNELLSTART-DATEI (2.24.8, Hinweis Hansi „Start ist langsamer geworden“): das Programm liegt in app.js, damit das Handy es
@@ -6089,7 +6135,7 @@ let wartenZahl = 0, wartenTimer = null;
 function wartenStart(action, erzwingen, still) {
   if (still || WARTEN_STILL.has(action) && !erzwingen) return false;
   wartenZahl++;
-  if (!wartenTimer) wartenTimer = setTimeout(() => { $("wartenText").textContent = WARTEN_TEXT[action] || (/speichern|setzen|aendern/.test(action) ? "Wird gespeichert …" : "Einen Moment …");
+  if (!wartenTimer) wartenTimer = setTimeout(() => { const wb = wbAktuell(); wbEinsetzen(wb); $("wartenText").textContent = WARTEN_TEXT[action] || (/speichern|setzen|aendern/.test(action) ? "Wird gespeichert …" : wb.x);
     $("warten").classList.remove("versteckt"); requestAnimationFrame(() => $("warten").classList.add("an")); }, 350);
   return true;
 }

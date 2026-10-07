@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.46.0 – 2026-10-07 – KC-CLUB-WARTEBILD
+Wunsch Hansi: Warte-Anzeige mit Motiven aus der Profiküche – Schneebesen in der Schüssel, Pfanne schwenken, Suppentopf, Messer & Brett, Nudelholz, Spritzbeutel, Küchenwecker, Herdflamme, im Dezember Plätzchen ausstechen, dazu wie bisher die Kochmütze. Schlichte weiße Strichgrafik im Markenkreis, ruhige Bewegung, passender Text. Einstellungen → 🎨 Darstellung → „⏳ Warte-Bild“ (Klappbereich): fest, 🔀 abwechselnd, 📅 täglich anders, 🗓️ nach Jahreszeit; je Gerät. Sparmodus/„Bewegung reduzieren“: ohne Bewegung. Nur App.
+
 ## 2.45.1 – 2026-10-07 – KC-CLUB-STUNDE
 Fund Hansi („Uhrzeiten sind nicht drin“): Die Stunde wurde als „11 Uhr“ statt als Zahl gelesen – darum blieben in der 📨 Nachrichten-Statistik die Uhrzeit-Balken leer und die Nutzung je Uhrzeit (seit 2.23.17) wurde nie gezählt. Jetzt eine gemeinsame Funktion berlinStunde (deutsche Zeit, 0–23). Alte ungültige Zwischenstände werden verworfen. Nur App.
 
