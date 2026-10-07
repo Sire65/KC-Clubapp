@@ -34,7 +34,9 @@ function einrichten() {
  * Läuft automatisch alle 5 Minuten.
  * KC-KALENDER-STILL (Club-App 2.31.1, Fall Thomas 07.10.2026): Hat ein Kalendereintrag GÄSTE (z. B. ein Mitglied von Hand eingeladen),
  * schickt Google bei jeder Änderung jedem Gast eine Mail „Aktualisierte Einladung“ – bei Thomas kamen so 4 Mails.
- * Deshalb: Einträge mit Gästen werden nur noch STILL geändert (erweiterter Dienst „Google Calendar API“, sendUpdates = none).
+ * Grundsatz (Wunsch Hansi): Google verschickt NIE Mails – Benachrichtigungen kommen nur aus der Köcheclub-App.
+ * Deshalb: Einträge mit Gästen werden nur noch STILL geändert und die Gäste dabei still entfernt
+ * (erweiterter Dienst „Google Calendar API“, sendUpdates = none).
  * Ist dieser Dienst nicht eingeschaltet, bleiben Einträge mit Gästen unverändert – nie wieder Mails an Mitglieder.
  * Ohne Gäste: nur das ändern, was sich wirklich geändert hat.
  */
@@ -63,9 +65,10 @@ function abgleichen() {
           if (KC_FARBEN[e.farbe]) ev.setColor(KC_FARBEN[e.farbe]);
         } else if (gaeste) {
           if (!still_()) { ergebnisse.push({ uid: e.uid, fehler: 'Eintrag hat Gäste – nicht geändert (sonst bekämen sie eine Mail)' }); return; }
+          // Gäste werden dabei STILL entfernt: Mails an Mitglieder kommen nur aus der Köcheclub-App, nie aus Google (Wunsch Hansi)
           Calendar.Events.patch({ summary: e.titel, location: e.ort || '', description: e.beschreibung || '',
             start: { dateTime: beginn.toISOString() }, end: { dateTime: ende.toISOString() },
-            colorId: KC_FARBEN[e.farbe] ? String(KC_FARBEN[e.farbe]) : undefined },
+            colorId: KC_FARBEN[e.farbe] ? String(KC_FARBEN[e.farbe]) : undefined, attendees: [] },
             kal.getId(), ev.getId().replace(/@google\.com$/, ''), { sendUpdates: 'none' });
         } else {
           if (ev.getTitle() !== e.titel) ev.setTitle(e.titel);

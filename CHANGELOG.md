@@ -4,7 +4,8 @@
 - Fall Thomas: Sein Termin war in Google von Hand mit ihm als Gast eingetragen. Jede Änderung durch das Skript (Titel, Zeit,
   Ort, Text, Farbe einzeln) löste bei Google eine Mail „Aktualisierte Einladung“ an ihn aus – 4 Mails am 07.10.
 - `google/KalenderAbgleich.gs`: Einträge mit Gästen nur noch still ändern/löschen (erweiterter Dienst „Google Calendar API“,
-  sendUpdates = none); ist der Dienst aus, bleiben sie unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
+  sendUpdates = none) und die Gäste dabei still entfernen – Grundsatz: Google verschickt nie Mails, nur die Köcheclub-App;
+  ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
 ## 2.31.0 – 2026-10-06 – Startstatistik für den Admin

@@ -4956,6 +4956,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   const gs = lies("google/KalenderAbgleich.gs");
   assert.ok(/const gaeste = ev \? ev\.getGuestList\(\)\.length > 0 : false;/.test(gs), "Gäste werden erkannt");
+  assert.ok(/attendees: \[\] \}/.test(gs) && !/addGuest|sendInvites: true|sendUpdates: 'all'/.test(gs), "Google verschickt nie Mails: Gäste still entfernt, nie eingeladen");
   assert.ok(/Calendar\.Events\.patch\([\s\S]*\{ sendUpdates: 'none' \}\)/.test(gs) && /Calendar\.Events\.remove\([\s\S]*?\{ sendUpdates: 'none' \}\)/.test(gs), "mit Gästen nur still (sendUpdates none)");
   assert.ok(/if \(!still_\(\)\) \{ ergebnisse\.push\(\{ uid: e\.uid, fehler: 'Eintrag hat Gäste – nicht geändert/.test(gs) && /if \(!still_\(\)\) \{ ergebnisse\.push\(\{ uid: e\.uid, fehler: 'Eintrag hat Gäste – nicht gelöscht/.test(gs), "ohne stillen Dienst: Einträge mit Gästen unverändert");
   const ohne = gs.slice(gs.indexOf("} else {\n          if (ev.getTitle() !== e.titel)"), gs.indexOf("ergebnisse.push({ uid: e.uid, event_id: ev.getId()"));

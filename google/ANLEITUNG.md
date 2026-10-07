@@ -41,8 +41,10 @@ eine Mail „Aktualisierte Einladung“ an das Mitglied. Das neue Skript verhind
 2. Im Editor den ganzen alten Code markieren und löschen. In der App (🎓 Schulungen → 📆 Google-Kalender) auf
    **Skript kopieren** tippen und einfügen → 💾 speichern.
 3. Links bei **Dienste** auf **＋** → **Google Calendar API** wählen → **Hinzufügen** (Kennung bleibt `Calendar`).
-   Damit kann das Skript Termine mit Gästen **ganz still** ändern. Ohne diesen Schritt lässt es Termine mit Gästen
-   einfach unverändert – es geht trotzdem nie eine Mail an Mitglieder.
+   Damit ändert das Skript Termine mit Gästen **ganz still** und nimmt die Gäste dabei still heraus – Google verschickt
+   so nie Mails, alle Nachrichten an Mitglieder kommen nur aus der Köcheclub-App. Ohne diesen Schritt lässt es Termine
+   mit Gästen einfach unverändert – es geht trotzdem nie eine Mail an Mitglieder.
+   Bitte in Google keine Mitglieder als Gäste eintragen.
 4. Fertig. Der Zeitplan (alle 5 Minuten) bleibt bestehen.
 
 ## Wenn es nicht läuft
