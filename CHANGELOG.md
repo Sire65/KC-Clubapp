@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.36.0 – 2026-10-07 – KC-CLUB-MEINE-NACHRICHTEN-STATISTIK
+Wunsch Hansi: Jedes Mitglied sieht im Chat unter ⋮ „📊 Meine Nachrichten-Statistik“ – eigene E-Mails, Push und Club-Nachrichten (bekommen/geschrieben), je Tag, Uhrzeit, letzte 20. Nur Anzahl und Zeit, keine Inhalte. Server: meine_nachrichten_statistik (nur ich.person_id). SERVER_VERSION 2.36.0.
+
 ## 2.35.0 – 2026-10-06 – Nachfrage 4 Wochen nach der Schulung
 KC-CLUB-SCHULUNG-NACHFRAGE (Wunsch Hansi): Besuchsprotokoll – installiert auf (neu: Notebook, Leihgerät folgt) und Programme (Bilderrechner, Köcheclub-App, Kasse, Dienstplan, KC Verwaltung, Präsentation). 4 Wochen nach der Schulung: Push an Hansi und Karte in 🎓 Schulungen „📨 Nachfrage senden?“ mit fertigem Text (änderbar, Ihr-Form bei zweien) – Senden mit einem Tipp als Club-Nachricht, oder „Nicht nötig“. Nie automatisch an Mitglieder.
 

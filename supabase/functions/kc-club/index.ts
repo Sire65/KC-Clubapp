@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.35.0";
+const SERVER_VERSION = "2.36.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -6963,9 +6963,12 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       }
       // KC-CLUB-NACHRICHTEN-STATISTIK (2.34.0, Wunsch Hansi): je Mitglied – was ging per E-Mail, Push und als Club-Nachricht raus, wann.
       // Nur Admin; nur Art, Zeit und Status – nie Inhalte (kein Betreff, kein Text).
+      // KC-CLUB-MEINE-NACHRICHTEN-STATISTIK (2.36.0, Wunsch Hansi): jedes Mitglied sieht seine EIGENE Statistik (Chat ⋮) – gleiche Zählung, nur für ich.person_id
+      case "meine_nachrichten_statistik":
       case "nachrichten_statistik": {
-        nurAdmin(ich);
-        const pid = String(p.person_id || ""), tage = [7, 30, 90, 365].includes(Number(p.tage)) ? Number(p.tage) : 30;
+        const eigen = a === "meine_nachrichten_statistik";
+        if (!eigen) nurAdmin(ich);
+        const pid = eigen ? ich.person_id : String(p.person_id || ""), tage = [7, 30, 90, 365].includes(Number(p.tage)) ? Number(p.tage) : 30;
         const { data: pe } = await db.from("kc_core_people").select("person_id,display_name,email").eq("person_id", pid).maybeSingle();
         if (!pe) throw new Fehler("Mitglied nicht gefunden.", 404);
         const seit = new Date(Date.now() - tage * 86400000).toISOString(), mail = String(pe.email || "").trim().toLowerCase();
@@ -6979,7 +6982,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const tids = (tn ?? []).map((x: any) => x.thread_id);
         const { data: ms } = tids.length ? await db.from("kc_communication_messages").select("created_at,sender_person_id").in("thread_id", tids).gte("created_at", seit).limit(5000) : { data: [] as any[] };
         const mails = [...new Map([...(r1 ?? []), ...(r2 ?? [])].map((x: any) => [x.id, x])).values()];
-        await protokoll(ich.person_id, "nachrichten_statistik", { fuer: pid, tage });
+        await protokoll(ich.person_id, eigen ? "meine_nachrichten_statistik" : "nachrichten_statistik", eigen ? { tage } : { fuer: pid, tage });
         return json({ name: pe.display_name, tage, seit,
           email: mails.map((x: any) => ({ z: x.created_at, s: x.status, a: QUELLE[x.source_program] || "Sonstiges" })),
           push: (pu ?? []).map((x: any) => ({ z: x.created_at, s: x.status, a: String(x.anlass || "").slice(0, 40), an: !!x.displayed_at, auf: !!x.opened_at })),

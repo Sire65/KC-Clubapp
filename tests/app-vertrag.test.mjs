@@ -5024,6 +5024,15 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   bs.liste = [{ status: "fertig", datum: "2026-09-21", installiert_auf: ["tablet"] }, { status: "fertig", datum: "2026-09-30", installiert_auf: ["leih"] }, { status: "fertig", datum: "2026-10-06", installiert_auf: [] }, { status: "fertig", datum: "2026-09-20", nachfrage_gesendet_am: "x" }];
   assert.equal(R.scNachfrageFaellig().length, 1, "nur fällige: 4 Wochen um, Leihgerät wartet, schon gesendet fällt weg");
 }
+// 2.36.0 KC-CLUB-MEINE-NACHRICHTEN-STATISTIK (Wunsch Hansi): eigene Statistik im Chat unter ⋮ – nur die eigenen Zahlen
+{
+  const st = server.slice(server.indexOf('case "meine_nachrichten_statistik":'), server.indexOf('case "spur_liste": {'));
+  assert.ok(/const eigen = a === "meine_nachrichten_statistik";\s+if \(!eigen\) nurAdmin\(ich\);/.test(st), "fremde Statistik weiter nur Admin");
+  assert.ok(/const pid = eigen \? ich\.person_id : /.test(st), "eigene Statistik nur für ich.person_id – keine fremde Person wählbar");
+  assert.ok(!/body|subject|title|variables/.test(st.replace(/\/\/[^\n]*/g, "")), "keine Inhalte");
+  assert.ok(/onclick="meineNachrichtenStatistik\(\)">📊 Meine Nachrichten-Statistik<\/button>/.test(html), "Eintrag im Chat-Menü ⋮");
+  assert.ok(/api\("meine_nachrichten_statistik", \{ tage: NST\.tage \}/.test(html) && /wahl = NST\.eigen \? "" :/.test(html) && /fuss = NST\.eigen \? "" :/.test(html), "ohne Mitgliederwahl, ohne Admin-Knopf");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

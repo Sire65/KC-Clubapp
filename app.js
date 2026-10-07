@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.35.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.36.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -18581,7 +18581,7 @@ async function spurSenden() {
 setInterval(spurSenden, sparTakt(NZ_TAKT_MS));
 document.addEventListener("visibilitychange", () => { if (document.hidden) spurSenden(); });
 const SPUR_WAS = { geoeffnet: "📲 App geöffnet", mitglied: "👤 Mitglied angesehen", chat: "💬 Unterhaltung geöffnet", gesendet: "✉️ Nachricht gesendet", gesendet_anlage: "📎 Nachricht mit Anhang gesendet",
-  anruf: "📞 Anruf (App) an", video: "🎥 Videoanruf an", anklopfen: "👋 Angeklopft bei", telefon: "☎️ Telefonnummer angetippt", whatsapp: "🟢 WhatsApp geöffnet", mail: "✉️ E-Mail-Adresse angetippt" };
+  anruf: "📞 Anruf (App) an", video: "🎥 Videoanruf an", anklopfen: "👋 Angeklopft bei", telefon: "☎️ Telefonnummer angetippt", whatsapp: "🟢 WhatsApp geöffnet", mail: "✉️ E-Mail-Adresse angetippt", meine_statistik: "📊 Eigene Nachrichten-Statistik angesehen" };
 const SPW = { tag: null, person: null };
 async function spurAdmin(tag, person) {
   SPW.tag = tag || SPW.tag || heuteIso(); SPW.person = person === undefined ? SPW.person : person;
@@ -18644,19 +18644,28 @@ function startStatistikZeigen() {
 }
 // ---------- KC-CLUB-NACHRICHTEN-STATISTIK (2.34.0, Wunsch Hansi): je Mitglied – E-Mail, Push, Club-Nachrichten; wann und wie viele ----------
 // Nur Admin. Nur Art, Zeit und Status – keine Inhalte. Push mit „angezeigt“/„geöffnet“ (ab 23.09.2026), E-Mails ab 25.08.2026.
-const NST = { pid: null, tage: 30, d: null };
+// KC-CLUB-MEINE-NACHRICHTEN-STATISTIK (2.36.0, Wunsch Hansi): jedes Mitglied sieht im Chat unter ⋮ seine eigene Statistik (NST.eigen) – ohne Mitgliederwahl
+const NST = { pid: null, tage: 30, d: null, eigen: false };
+async function meineNachrichtenStatistik(tage) { $("chatBlatt")?.classList.add("versteckt"); NST.eigen = true; if (tage) NST.tage = tage; spur("meine_statistik"); return nachrichtenStatistikLaden(); }
 async function nachrichtenStatistik(pid, tage) {
+  if (NST.eigen && pid === undefined && tage) return meineNachrichtenStatistik(tage);
+  NST.eigen = false;
   if (pid !== undefined) NST.pid = pid; if (tage) NST.tage = tage;
   if (!MITGLIEDER) try { await mitgliederHolen(); } catch {}
+  return nachrichtenStatistikLaden();
+}
+async function nachrichtenStatistikLaden() {
   NST.d = null;
-  if (NST.pid) try { NST.d = await api("nachrichten_statistik", { person_id: NST.pid, tage: NST.tage }, { warten: true }); } catch (e) { return meldeFehler(e); }
+  if (NST.eigen) try { NST.d = await api("meine_nachrichten_statistik", { tage: NST.tage }, { warten: true }); } catch (e) { return meldeFehler(e); }
+  else if (NST.pid) try { NST.d = await api("nachrichten_statistik", { person_id: NST.pid, tage: NST.tage }, { warten: true }); } catch (e) { return meldeFehler(e); }
   nachrichtenStatistikZeigen();
 }
 function nachrichtenStatistikZeigen() {
-  const d = NST.d, wahl = `<select aria-label="Mitglied" onchange="nachrichtenStatistik(this.value || null)"><option value="">– Mitglied wählen –</option>${(MITGLIEDER || []).slice().sort((a, b) => a.name.localeCompare(b.name)).map((m) => `<option value="${esc(m.person_id)}"${m.person_id === NST.pid ? " selected" : ""}>${esc(m.name)}</option>`).join("")}</select>`;
-  const kopf = `<h3 style="margin:0">📨 Nachrichten-Statistik</h3><p class="hinweis" style="margin:2px 0 6px">Was an ein Mitglied ging – per ✉️ E-Mail, 🔔 Push und 💬 Club-Nachricht. Nur Anzahl, Zeit und Art, <b>keine Inhalte</b>. Nur du siehst das.</p>${wahl}
+  const d = NST.d, wahl = NST.eigen ? "" : `<select aria-label="Mitglied" onchange="nachrichtenStatistik(this.value || null)"><option value="">– Mitglied wählen –</option>${(MITGLIEDER || []).slice().sort((a, b) => a.name.localeCompare(b.name)).map((m) => `<option value="${esc(m.person_id)}"${m.person_id === NST.pid ? " selected" : ""}>${esc(m.name)}</option>`).join("")}</select>`;
+  const kopf = (NST.eigen ? `<h3 style="margin:0">📊 Meine Nachrichten-Statistik</h3><p class="hinweis" style="margin:2px 0 6px">Was du bekommen hast – per ✉️ E-Mail, 🔔 Push und 💬 Club-Nachricht – und wie viel du selbst geschrieben hast. Nur Anzahl und Zeit. Nur du siehst das.</p>`
+    : `<h3 style="margin:0">📨 Nachrichten-Statistik</h3><p class="hinweis" style="margin:2px 0 6px">Was an ein Mitglied ging – per ✉️ E-Mail, 🔔 Push und 💬 Club-Nachricht. Nur Anzahl, Zeit und Art, <b>keine Inhalte</b>. Nur du siehst das.</p>`) + `${wahl}
     <div class="knoepfe">${[7, 30, 90, 365].map((t) => `<button class="knopf klein${NST.tage === t ? " haupt" : ""}" onclick="nachrichtenStatistik(undefined, ${t})">${t === 365 ? "1 Jahr" : t + " Tage"}</button>`).join("")}</div>`;
-  const fuss = `<div class="knoepfe"><button class="knopf" onclick="nzAdmin()">‹ Nutzung</button></div>`;
+  const fuss = NST.eigen ? "" : `<div class="knoepfe"><button class="knopf" onclick="nzAdmin()">‹ Nutzung</button></div>`;
   if (!d) { $("adminBlattInhalt").innerHTML = kopf + `<p class="hinweis">Bitte oben ein Mitglied wählen.</p>` + fuss; $("adminBlatt").classList.remove("versteckt"); return; }
   const mails = d.email || [], push = d.push || [], clubB = (d.club || []).filter((x) => x.a === "bekommen"), clubG = (d.club || []).filter((x) => x.a === "geschrieben");
   const tag = (z) => new Intl.DateTimeFormat("sv-SE", { timeZone: TZ }).format(new Date(z)), stunde = (z) => +new Intl.DateTimeFormat("de-DE", { timeZone: TZ, hour: "2-digit", hourCycle: "h23" }).format(new Date(z));
@@ -18671,7 +18680,7 @@ function nachrichtenStatistikZeigen() {
   const MS = { sent: "verschickt", delivered: "zugestellt", displayed: "angezeigt", opened: "geöffnet", failed: "fehlgeschlagen", dead_letter: "fehlgeschlagen", deduplicated: "schon zugestellt", queued: "wartet", pending: "wartet" };
   const letzte = alle.sort((a, b) => String(b.z).localeCompare(String(a.z))).slice(0, 20).map((x) => `<tr><td style="text-align:left;white-space:nowrap">${esc(zeitKurz(x.z))}</td><td>${x.k === "mail" ? "✉️ E-Mail" : x.k === "push" ? "🔔 Push" : "💬 Club"}</td>
     <td style="text-align:left">${esc(x.k === "club" ? "Nachricht bekommen" : x.a || "")}</td><td style="text-align:left">${esc(x.k === "push" ? (x.auf ? "geöffnet" : x.an ? "angezeigt" : MS[x.s] || x.s || "") : x.k === "mail" ? MS[x.s] || x.s || "" : "")}</td></tr>`).join("");
-  $("adminBlattInhalt").innerHTML = kopf + `<h4 style="margin:10px 0 4px">${esc(d.name)} – letzte ${d.tage === 365 ? "12 Monate" : d.tage + " Tage"}</h4>
+  $("adminBlattInhalt").innerHTML = kopf + `<h4 style="margin:10px 0 4px">${NST.eigen ? "Du" : esc(d.name)} – letzte ${d.tage === 365 ? "12 Monate" : d.tage + " Tage"}</h4>
     <div class="st-kacheln"><div><b>${mails.length}</b><small>✉️ E-Mails</small></div><div><b>${push.length}</b><small>🔔 Push · ${zaehl(push, (x) => x.an || x.auf)} angezeigt · ${zaehl(push, (x) => x.auf)} geöffnet</small></div>
       <div><b>${clubB.length}</b><small>💬 Club bekommen · ${clubG.length} selbst geschrieben</small></div></div>
     <details class="karte" open><summary><b>📅 Je Tag</b> <span class="hinweis">${d.tage > 60 ? "(letzte 60 Tage)" : ""}</span></summary><div class="ns-balken">${balken}</div>
