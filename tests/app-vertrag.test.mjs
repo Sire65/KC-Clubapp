@@ -5263,6 +5263,12 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/fdk-hier\$\{koeche\.length > 1 \? "2" : koeche\[0\]\}/.test(html) && /\.fdk-feld\.fdk-hier0 \{ box-shadow: 0 0 0 3px #d63a3a/.test(html) && /\.fdk-feld\.fdk-hier1 \{ box-shadow: 0 0 0 3px #2f6fdf/.test(html), "Feld des Kochs in seiner Farbe umrandet");
   assert.ok(/@media \(prefers-reduced-motion: reduce\) \{ \.fdk-neu, \.fdk-nimmt/.test(html), "Bewegung reduzieren beachtet");
 }
+// 2.52.1 KC-CLUB-ALT-ANDROID (Fall Leih-Tablet, Chrome 81): Euro-Format nie mit maximumFractionDigits unter der Währungs-Voreinstellung
+{
+  for (const m of programm.matchAll(/style: "currency"[^}]*\}/g)) assert.ok(!/maximumFractionDigits: [^,}]*\? 0/.test(m[0]) || /minimumFractionDigits/.test(m[0]), "Währung: Mindeststellen mit angeben (alte Browser)");
+  const a = programm.indexOf("const spEuro = "), spEuro = new Function(programm.slice(a, programm.indexOf("\n", a)) + "\nreturn spEuro;")();
+  assert.equal(spEuro(10).replace(/\s/g, " "), "10 €"); assert.equal(spEuro(2.5).replace(/\s/g, " "), "2,50 €");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

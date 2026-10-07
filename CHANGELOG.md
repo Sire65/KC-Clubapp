@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.52.1 – 2026-10-07 – KC-CLUB-ALT-ANDROID
+Euro-Anzeige (Spendenprojekte) stürzt auf älteren Browsern (Leih-Tablet, Chrome 81) nicht mehr mit „maximumFractionDigits value is out of range“ ab.
+
 ## 2.52.0 – 2026-10-07 – KC-CLUB-FDK-TABLETT
 Fang den Koch: links dein Tablett, rechts das von Kurt – darauf liegen die Zutaten des Bons (gesammelte groß, fehlende blass). Das Feld, auf dem ein Koch steht, ist in seiner Farbe umrandet, die Figur größer und hüpft beim Laufen; nimmt ein Koch eine Zutat, erscheint sie groß in der Brettmitte.
 

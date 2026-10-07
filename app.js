@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.52.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.52.1"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -9912,7 +9912,9 @@ function vorschlagInfo(id) {
   f.dataset.id = id;
 }
 // KC-CLUB-SPENDE (1.23.0): Spendenprojekte – Empfänger und Betrag per Kachel, Tippen nur für Neues
-const spEuro = (n) => new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: Number.isInteger(Number(n)) ? 0 : 2 }).format(Number(n) || 0);
+// KC-CLUB-ALT-ANDROID (2.52.1): bei Euro ist „mindestens 2 Stellen“ voreingestellt – ältere Browser (z. B. Chrome 81) brechen bei max 0 mit
+// „maximumFractionDigits value is out of range“ ab. Darum Mindest- und Höchststellen immer gemeinsam angeben.
+const spEuro = (n) => { const d = Number.isInteger(Number(n)) ? 0 : 2; return new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", minimumFractionDigits: d, maximumFractionDigits: d }).format(Number(n) || 0); };
 function spendenListeHtml(v) {
   if (v.art !== "spende" || !v.spenden?.length) return "";
   return `<div class="sp-liste">${v.spenden.map((x) => `<div><span>💝 ${esc(x.empfaenger)}</span><b>${esc(spEuro(x.betrag))}</b></div>`).join("")}${v.spenden.length > 1 ? `<div class="summe"><span>Zusammen</span><span>${esc(spEuro(v.summe))}</span></div>` : ""}</div>`;
