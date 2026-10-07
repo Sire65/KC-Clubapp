@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.45.0 – 2026-10-07 – KC-CLUB-AVATAR-JACKE-BRILLE
+Wunsch Hansi: Brille – acht weitere Farben (Silber, Rosé, Lila, Türkis, Blau, Weiß, Grün, Orange), „✨ mit Strass“ (Glitzersteine am Rahmen) und drei Damenformen mit verzierten Bügeln (Schmetterling, Oversize, Herz). Kochjacke – Nikolausrot, Orange, Pink; Jackenmuster „Längsstreifen“ mit wählbarer Streifenfarbe; Kragenfarbe frei wählbar (z. B. rot mit schwarzem Kragen, weiß mit orangem). Code bis 23 Zeichen, alte Bilder unverändert. Server: Avatar-Code bis 23 Zeichen. SERVER_VERSION 2.45.0.
+
 ## 2.44.0 – 2026-10-07 – KC-CLUB-DIENSTWUNSCH: DP2 Build 263 RC (KC-DP-KLAPPBEREICH)
 DP2 auf Build 263 RC übernommen (dp3 ceefe07, Zweig codex/club-app-interface, Codex nach Auftrag docs/DP2_CODEX_AUFTRAG_KLAPPBEREICHE.md). In den Dienstwünschen haben alle Klappbereiche jetzt wie in der Club-App Pfeil ▾, Schloss 🔓/🔒 (feststellen), gemerkten Zustand und unten „▴ Zuklappen“; Twinkey respektiert festgestellte Bereiche. Neue DP2-Dateien src/ui/fold-sections.js/.css. Datenformat, Fragen, Speichern/Versand unverändert. RC.
 
