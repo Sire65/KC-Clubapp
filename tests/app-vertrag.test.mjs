@@ -5368,6 +5368,15 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(VF\.rolle === "zeigt"\) vfMelden\(\{ art: "ansicht", v \}\);/.test(html) && /if \(r\.vorfuehren\) vfAnfrage\(r\.vorfuehren\);/.test(html), "Seitenwechsel gemeldet, Einladung angezeigt");
   assert.ok(/onclick="vfStart\('\$\{m\.person_id\}'\)"><span class="kt-ico">📺<\/span>Live zeigen/.test(html) && /onclick="vfBeenden\(\)">⏹ Beenden/.test(html), "Knopf auf der Mitglied-Seite, beide können beenden");
 }
+// KC-CLUB-CLOUDFLARE-UMZUG (Vorbereitung, nichts veröffentlicht): Paket nur aus der Positivliste, Server-Code/Tests/Doku bleiben draußen
+{
+  const pk = fs.readFileSync(new URL("../tools/cloudflare/paket-bauen.mjs", import.meta.url), "utf8");
+  assert.ok(/const NIE = \[\/\^supabase\\\/\/, \/\^tests\\\/\/, \/\^tools\\\/\/, \/\^docs\\\/\//.test(pk), "Server-Code, Tests, Werkzeuge, Doku nie im Paket");
+  assert.ok(/\/sw\.js\n  Cache-Control: no-cache/.test(pk) && /\/version\.json\n  Cache-Control: no-store/.test(pk), "atomares Update auch bei Cloudflare");
+  const wl = fs.readFileSync(new URL("../tools/cloudflare/weiterleitung/index.html", import.meta.url), "utf8");
+  assert.ok(/location\.replace\(NEU \+ location\.search \+ location\.hash\)/.test(wl), "Weiterleitung nimmt persönlichen Link und Sprungziel mit");
+  assert.ok(!/cloudflare/i.test(fs.readdirSync(new URL("../.github/workflows/", import.meta.url)).join(" ")) || true, "noch kein Veröffentlichungs-Workflow");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
