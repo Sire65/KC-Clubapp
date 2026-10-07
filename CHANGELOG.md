@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.32.0 – 2026-10-06 – Fang den Koch neu und einfach
+KC-CLUB-FDK-EINFACH (Wunsch Hansi): Fang den Koch komplett vereinfacht – Rundweg mit 12 Feldern um ein 4 × 4-Brett, nur vorwärts; Bon mit 3 Zutaten; Zutaten im Vorbeigehen automatisch; alle 3 ✓ + am Pass vorbei = 1 ⭐; genau auf Kurt landen = Zutat wegnehmen; ⭐-Glücksfelder (noch einmal würfeln, Topf übergekocht, Lieferant). Unten nur 🎲 Würfeln, 📖 Regeln, ✖ Abbrechen; Regeln mit 3 Bildern beim ersten Spiel. 15 Runden, Gleichstand: mehr ✓ auf dem Bon.
+
 ## 2.31.0 – 2026-10-06 – Startstatistik für den Admin
 KC-CLUB-STARTSTATISTIK: Jeder App-Start wird mit Zeitpunkt, Dauer (Teile: Seite, Programm, Server, Anzeige), Gerät, Browser, App/Browser, Netz und Version gemeldet; Admin → Nutzung → ⏱️ Startstatistik mit 7/30/90/180 Tagen, Filter Mitglied/Gerät, Übersicht je Mitglied, je Gerät/Browser, je Netz und Starts einzeln (grün/gelb/rot). Aufbewahrung 180 Tage.
 

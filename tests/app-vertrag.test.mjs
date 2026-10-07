@@ -4830,23 +4830,31 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   E.maeWuerfeln(y, 6); E.maeZiehen(y, 3); assert.ok(y.sitze[1].fig.includes(0) && y.dran === 1 && y.phase === "wuerfeln", "6: raus + nochmal");
   E.maeWuerfeln(y, 6); assert.deepEqual(E.maeMoeglich(y), [y.sitze[1].fig.indexOf(0)], "Startfeld räumen");
 }
-// 2.27.0 KC-CLUB-FDK: Fang den Koch (Stufe 1, gegen den Computer) – Regeln, Tempo, Bedienung
+// 2.27.0 KC-CLUB-FDK → 2.32.0 KC-CLUB-FDK-EINFACH: Fang den Koch neu und einfach (Wunsch Hansi) – Regeln, Tempo, Bedienung
 {
   assert.ok(/\["fdk", "🧑‍🍳", "Fang den Koch"/.test(html) && /SP\.art === "fdk" \? \(fdkPcZeigen\(\), fdkFortsetzen\(\)\)/.test(html), "Kachel + Ansicht");
-  assert.ok(/a\.fang = F\.dran === s && !F\.gefangen && !!F\.bewegt && O\.pos === S\.pos/.test(html), "Fang nur, wer draufläuft (einmal je Zug)");
-  assert.ok(/F\.geraete\[G\.g\] = \{ wo: "spuele", bis: F\.runde \+ 2 \}/.test(html) && /if \(F\.geraete\[g\]\.wo === "spuele" && F\.geraete\[g\]\.bis <= F\.runde \+ 1\) F\.geraete\[g\] = \{ wo: "regal" \}/.test(html), "Gerät nach dem Kochen 2 Runden in der Spülküche");
-  assert.ok(/if \(FDKP\.kette\) return; FDKP\.kette = true;/.test(html) && /async function fdkAbbrechen\(\)/.test(html) && /<div class="sp-knopfreihe">\$\{spAnsageKnopf\("fdk", true\)\}<button class="knopf" onclick="fdkAbbrechen\(\)">/.test(html), "eine Computer-Kette, Abbrechen, Kachel-Knöpfe");
-  // Regeln ohne Oberfläche: ganze Partien, Kurt gegen Kurt – Tempo (Gerichte je Koch) und Ordnung (Geräte nie doppelt)
+  assert.ok(/if \(FDKP\.kette\) return; FDKP\.kette = true;/.test(html) && /async function fdkAbbrechen\(\)/.test(html), "eine Computer-Kette, Abbrechen");
+  assert.ok(/onclick="fdkWuerfeln\(\)"[^>]*><span class="kt-ico">🎲<\/span>Würfeln<\/button><button class="knopf" onclick="fdkRegeln\(\)"><span class="kt-ico">📖<\/span>Regeln<\/button><button class="knopf" onclick="fdkAbbrechen\(\)">/.test(html), "unten genau drei Knöpfe: Würfeln, Regeln, Abbrechen");
+  assert.ok(/if \(!FDKP\.regelnGesehen\) return fdkRegeln\(fdkStart\);/.test(html) && /So geht Fang den Koch/.test(html), "Regeln mit 3 Bildern beim ersten Spiel");
+  assert.ok(!/fdkTipp|fdkNimm|fdkWeg\(|Tablett/.test(html.slice(html.indexOf("// ---------- KC-CLUB-FDK"), html.indexOf("function fdkFortsetzen()"))), "nichts mehr auswählen oder weglegen – alles automatisch");
   const a = html.indexOf("const FDK_RUNDEN"), b = html.indexOf("// ----- FDK Regeln Ende -----", a);
-  const R = new Function(html.slice(a, b) + "\nreturn { fdkNeu, fdkPcZugSofort, FDK_G, FDK_NACHBARN };")();
-  let gerichte = 0, koeche = 0;
-  for (let n = 0; n < 60; n++) { const F = R.fdkNeu(["leicht", "mittel", "schwer"][n % 3]); let k = 0;
-    while (F.phase !== "ende") { assert.ok(++k < 200, "Partie endet"); R.fdkPcZugSofort(F, F.dran);
-      for (const g of Object.keys(R.FDK_G)) { const n = F.sp.reduce((x, S) => x + S.tab.filter((t) => t.t === "g" && t.id === g).length, 0); assert.ok(n <= 1 && (n === 1) === (F.geraete[g].wo === "hand"), "jedes Gerät nur einmal"); }
-      assert.ok(F.sp.every((S) => S.tab.length <= 8), "Tablett höchstens 8"); }
-    assert.equal(F.runde, 15); for (const S of F.sp) { gerichte += S.gerichte; koeche++; } }
-  assert.ok(gerichte / koeche >= 2.5, "Tempo: im Schnitt mindestens 2,5 Gerichte je Koch in 15 Runden (" + (gerichte / koeche).toFixed(2) + ")");
-  assert.deepEqual(R.FDK_NACHBARN[8].sort(), [1, 3, 5, 7], "Geräteregal in der Mitte, Schritte nur waagerecht/senkrecht");
+  const R = new Function(html.slice(a, b) + "\nreturn { fdkNeu, fdkZug, fdkSieger, FDK_FELD, FDK_GERICHTE };")();
+  assert.equal(R.FDK_FELD.length, 12); assert.equal(R.FDK_FELD.filter((f) => f === "pass").length, 2);
+  for (const [, g] of Object.entries(R.FDK_GERICHTE)) assert.equal(Object.keys(g[2]).length, 3, "jedes Gericht genau 3 Zutaten aus 3 Lagern");
+  // Vorbeikommen reicht: vom Start mit 6 → Kühlhaus, Gemüse, Trocken, Gewürze durchlaufen
+  { const F = R.fdkNeu(() => 0); F.sp[0].bon = { g: "spaghetti", hat: [] }; F.sp[1].pos = 11; R.fdkZug(F, 0, 5, () => 0);
+    assert.deepEqual(F.sp[0].bon.hat.sort(), ["gemuese", "kuehl", "trocken"], "Zutaten im Vorbeigehen"); R.fdkZug(F, 1, 1, () => 0.9);
+    const r = R.fdkZug(F, 0, 1, () => 0); assert.ok(r.ev.some((e) => e.art === "fertig") && F.sp[0].sterne === 1 && F.sp[0].bon.g !== "spaghetti", "am Pass vorbei: fertig, ⭐, neuer Bon"); }
+  // Fangen: genau auf dem anderen landen nimmt eine Zutat weg
+  { const F = R.fdkNeu(() => 0); F.sp[1].bon = { g: "gulasch", hat: ["kuehl"] }; F.sp[1].pos = 3; F.sp[0].bon = { g: "spaghetti", hat: [] };
+    const r = R.fdkZug(F, 0, 3, () => 0.5); assert.ok(r.ev.some((e) => e.art === "fang") && !F.sp[1].bon.hat.includes("kuehl"), "gefangen: Zutat weg"); }
+  // Ganze Partien: Ende nach 15 Runden, Tempo und Spannung
+  let st = 0, n = 0, remis = 0;
+  for (let p = 0; p < 300; p++) { const F = R.fdkNeu(); let k = 0;
+    while (F.phase !== "ende") { assert.ok(++k < 200, "Partie endet"); R.fdkZug(F, F.dran, 1 + Math.floor(Math.random() * 6)); }
+    assert.equal(F.runde, 16); st += F.sp[0].sterne + F.sp[1].sterne; n += 2; if (R.fdkSieger(F) < 0) remis++; }
+  assert.ok(st / n >= 3 && st / n <= 8, "Tempo: 3–8 ⭐ je Koch (" + (st / n).toFixed(2) + ")");
+  assert.ok(remis / 300 < 0.15, "selten unentschieden (" + remis + "/300)");
 }
 // 2.27.1 KC-CLUB-INKO-KNOPF: Brille auf der Startseite ausblenden (nur Admin, je Gerät)
 {
@@ -4963,6 +4971,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(ev\.getTitle\(\) !== e\.titel\) ev\.setTitle/.test(ohne) && /ev\.getDescription\(\) !== /.test(ohne), "ohne Gäste nur Geändertes setzen");
   assert.ok(/Google Calendar API/.test(lies("google/ANLEITUNG.md")), "Anleitung: Dienst einschalten");
 }
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
