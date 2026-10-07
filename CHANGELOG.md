@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.29.0 – 2026-10-06 – Willkommens-Post-it für neue Mitglieder
+KC-CLUB-WILLKOMMEN-PINNWAND: Meldet sich ein neues Mitglied zum ersten Mal an, hängt die Clubleitung automatisch ein ❗ wichtiges Post-it „💐 Herzlich willkommen! Wir begrüßen unser neues Mitglied …“ für alle an die Pinnwand – genau einmal, ohne Push/Mail.
+
 ## 2.28.1 – 2026-10-06 – Avatar: grau meliert feiner
 Grau meliert = dunkelblond mit feinen, fast senkrechten grauen Strähnen (statt grober Schrägstreifen); Farbpunkt im Baukasten angepasst.
 

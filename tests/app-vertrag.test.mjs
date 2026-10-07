@@ -4886,6 +4886,17 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/Sire65\/KC-Clubapp\/main\/google\/KalenderAbgleich\.gs/.test(html) && lies("google/KalenderAbgleich.gs").length > 100, "Google-Skript liegt hier");
 }
 
+// 2.29.0 KC-CLUB-WILLKOMMEN-PINNWAND: neues Mitglied → einmal ❗ wichtiges Willkommens-Post-it mit 💐 für alle
+{
+  const w = server.slice(server.indexOf("async function willkommenZettel("), server.indexOf("const pinnwandHinweis = "));
+  assert.ok(/if \(\/\^KC-P-TEST\/\.test\(ich\.person_id\) \|\| ich\.admin\) return;/.test(w), "keine Test-Personen, nicht der Admin selbst");
+  assert.ok(/WILLKOMMEN_MIN \* 60000/.test(w) && /erstmals_gesehen/.test(w), "nur kurz nach der ersten Anmeldung (keine alten Mitglieder nachträglich)");
+  assert.ok(/schluessel: "willkommen_zettel"[\s\S]*ignoreDuplicates: true \}\)\.select\("person_id"\)/.test(w) && /if \(!sperre\?\.length\) return;/.test(w), "genau einmal je Mitglied");
+  assert.ok(/wichtig: true, fuer: "alle"/.test(w) && /💐 Herzlich willkommen! Wir begrüßen unser neues Mitglied \$\{name\}/.test(w), "wichtig, für alle, mit Blumenstrauß");
+  assert.ok(!/senden\(/.test(w), "kein Push/Mail (Ruhe-Regel)");
+  assert.ok(/pinnwand_willkommen_voll/.test(w) && /frueher\.has\(z\.id\)/.test(w), "volle Pinnwand: nur alten Willkommens-Zettel abnehmen, sonst Vermerk");
+  assert.ok(/case "init": \{\n\s+await willkommenZettel\(ich\)\.catch/.test(server), "beim Start geprüft, Fehler bremsen den Start nicht");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

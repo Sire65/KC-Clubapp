@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.27.2";
+const SERVER_VERSION = "2.29.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -1488,6 +1488,35 @@ async function einstiegFristen() {
   return { aktiv: w.aktiv !== false, farbeTage: zahl("farbeTage"), privatTage: zahl("privatTage"), erweitertTage: zahl("erweitertTage"), spaeterTage: zahl("spaeterTage"), feedbackTage: zahl("feedbackTage"), geraeteTage: zahl("geraeteTage"), geaendertAm: data?.geaendert_am ?? null };
 }
 const pinnwandPrivat = (z: { fuer: string; personen?: string[] | null }) => z.fuer === "personen" && (z.personen ?? []).length === 1;
+// KC-CLUB-WILLKOMMEN-PINNWAND (2.29.0, Wunsch Hansi): Meldet sich ein neues Mitglied zum ersten Mal an, hängt die Clubleitung
+// automatisch ein ❗ wichtiges Post-it „💐 Herzlich willkommen …“ für alle an die Pinnwand. Genau einmal je Mitglied (Sperre über
+// kc_club_person_einstellung „willkommen_zettel“). Ohne Push/Mail (Ruhe-Regel) – die Mitglieder sehen es beim Öffnen der App.
+// Sind die 4 Zettel der Clubleitung voll, wird der älteste frühere Willkommens-Zettel abgenommen; sonst nur Vermerk im Protokoll.
+const WILLKOMMEN_MIN = 30; // so lange nach der ersten Anmeldung wird begrüßt (ältere Mitglieder nie nachträglich)
+async function willkommenZettel(ich: Ich) {
+  if (/^KC-P-TEST/.test(ich.person_id) || ich.admin) return;
+  const { data: zu } = await db.from("kc_club_zugang").select("erstmals_gesehen").eq("person_id", ich.person_id).maybeSingle();
+  if (!zu?.erstmals_gesehen || Date.now() - new Date(zu.erstmals_gesehen).getTime() > WILLKOMMEN_MIN * 60000) return;
+  const { data: sperre } = await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel: "willkommen_zettel", wert: { am: jetzt() }, geaendert_am: jetzt() },
+    { onConflict: "person_id,schluessel", ignoreDuplicates: true }).select("person_id");
+  if (!sperre?.length) return; // schon begrüßt (oder gerade parallel)
+  const { data: ad } = await db.from("kc_club_rollen").select("person_id").eq("ist_admin", true).not("person_id", "like", "KC-P-TEST%").order("person_id").limit(1);
+  const von = ad?.[0]?.person_id; if (!von) return;
+  const name = ich.name || ich.vorname || "unser neues Mitglied";
+  const text = `💐 Herzlich willkommen! Wir begrüßen unser neues Mitglied ${name} in der Köcheclub-App. Schön, dass du dabei bist! 💐`.slice(0, PINNWAND_ZEICHEN);
+  let { data: haengt } = await db.from("kc_club_pinnwand").select("id,farbe,erstellt_am").eq("person_id", von).is("entfernt_am", null).order("erstellt_am");
+  if ((haengt ?? []).length >= PINNWAND_MAX) {
+    const { data: fr } = await db.from("kc_club_protokoll").select("details").eq("aktion", "pinnwand_willkommen").order("zeit", { ascending: false }).limit(50);
+    const frueher = new Set((fr ?? []).map((x: any) => x.details?.zettel)), alt = (haengt ?? []).find((z: any) => frueher.has(z.id));
+    if (!alt) { await protokoll(ich.person_id, "pinnwand_willkommen_voll", {}); return; }
+    await db.from("kc_club_pinnwand").update({ entfernt_am: jetzt(), entfernt_von: von }).eq("id", alt.id);
+    haengt = (haengt ?? []).filter((z: any) => z.id !== alt.id);
+  }
+  const belegt = new Set((haengt ?? []).map((x: any) => x.farbe)), farbe = [1, 2, 3, 4].find((n) => !belegt.has(n)) ?? 1;
+  const { data: z, error } = await db.from("kc_club_pinnwand").insert({ person_id: von, text, wichtig: true, fuer: "alle", personen: [], farbe, antworten: true }).select("id").single();
+  if (error || !z) { await protokoll(ich.person_id, "pinnwand_willkommen_fehler", {}); return; }
+  await protokoll(von, "pinnwand_willkommen", { zettel: z.id, fuer: ich.person_id });
+}
 const pinnwandHinweis = (von: string, privat: boolean, wichtig: boolean) => `Du hast ein neues ${wichtig ? "wichtiges " : ""}${privat ? "privates " : ""}Post-it von ${von} bekommen`;
 async function pinnwandSichtbar(ich: Ich) {
   const { data } = await db.from("kc_club_pinnwand").select("id,person_id,text,wichtig,fuer,personen,erstellt_am,farbe").is("entfernt_am", null)
@@ -4292,6 +4321,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         return json({ code, bis, minuten: KURZCODE_MIN });
       }
       case "init": {
+        await willkommenZettel(ich).catch((e) => console.error("willkommen", String(e))); // KC-CLUB-WILLKOMMEN-PINNWAND (2.29.0)
         const [naechstes, { data: teil, error: teilFehler }, mitglieder] = await Promise.all([
           treffenListe(ich, true),
           db.from("kc_communication_thread_participants").select("thread_id,last_read_at").eq("person_id", ich.person_id).is("hidden_at", null),
