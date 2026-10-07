@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.57.0 – 2026-10-07 – KC-CLUB-MEHRFACH-NACHRICHT
+Chat-Übersicht: Chats lange drücken = markieren (✓), weitere antippen; „＋ Neu“ schreibt eine Nachricht, die jeder markierte Chat einzeln bekommt.
+
 ## 2.56.1 – 2026-10-07 – KC-CLUB-AVATAR-INITIALEN
 Initialen auf allen Kochmützen (hohe Kochmütze, Pizza-, Kochkappe, Schiffchen) und schon ab kleiner Größe.
 

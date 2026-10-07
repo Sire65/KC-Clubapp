@@ -1177,6 +1177,13 @@
   .runde-angebot { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; justify-content: space-between; margin: 6px 0; padding: 8px 10px; border-radius: 12px; background: var(--blaubg); color: var(--text); font-size: .9rem; }
   .runde-angebot .knoepfe { margin: 0; gap: 6px; }
   .unterh .mitte { flex: 1; min-width: 0; }
+  /* KC-CLUB-MEHRFACH-NACHRICHT: markierte Chats (lange drücken) – ✓ am Bild, goldener Grund; Leiste mit „Nachricht an alle“ */
+  .unterh { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  .unterh.markiert { background: color-mix(in srgb, var(--gold) 16%, var(--karte)); border-radius: 14px; position: relative; }
+  .unterh.markiert > .avatar:first-child::after { content: "✓"; position: absolute; left: -4px; top: -4px; z-index: 2; width: 20px; height: 20px; border-radius: 50%; background: var(--gruen, #2e7d32); color: #fff; font-size: 13px; font-weight: 800; display: grid; place-items: center; border: 2px solid var(--karte); }
+  .unterh > .avatar:first-child { position: relative; }
+  .uh-mark-leiste { position: sticky; top: 44px; z-index: 3; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 8px 12px; margin: 0 0 8px; background: var(--karte); border: 2px solid var(--gold); border-radius: 14px; }
+  .uh-mark-leiste b { flex: 1; min-width: 120px; }
   .unterh.gewaehlt { background: var(--karte2); border-radius: 14px; outline: 2px solid var(--gold); outline-offset: -2px; }
   .uhaktion { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 4px 12px; border-bottom: 1px solid var(--linie); }
   .uhaktion button { flex: 1 1 120px; }
@@ -2676,9 +2683,10 @@
   <!-- NACHRICHTEN -->
   <section id="v-nachrichten" class="versteckt">
     <!-- 1.32.1 (Hinweis Hansi): „＋ Neu“ immer sichtbar in der Kopfzeile, die übrigen Knöpfe beschriftet in einer eigenen Reihe -->
-    <div class="kopf2"><button class="zurueck" onclick="zurueck('start')" aria-label="Zurück">‹</button><h2>💬 Nachrichten</h2><button class="knopf klein alarm-knopf" id="naSosKnopf" onclick="notfallMeldung()" title="Notfall-Meldung sofort an alle – Push, E-Mail, WhatsApp, SMS">🚨 SOS</button><button class="knopf haupt klein" onclick="neueNachricht()">＋ Neu</button></div>
+    <div class="kopf2"><button class="zurueck" onclick="zurueck('start')" aria-label="Zurück">‹</button><h2>💬 Nachrichten</h2><button class="knopf klein alarm-knopf" id="naSosKnopf" onclick="notfallMeldung()" title="Notfall-Meldung sofort an alle – Push, E-Mail, WhatsApp, SMS">🚨 SOS</button><button class="knopf haupt klein" onclick="uhNeu()">＋ Neu</button></div>
     <div class="kom-leiste"><button class="knopf klein" onclick="gruppeForm()">👥 Gruppe</button><button class="knopf klein" onclick="gemerktZeigen()" title="Nachrichten, die du mit „⭐ merken“ markiert hast">⭐ Gemerkt</button><button class="knopf klein" onclick="testAnMichStarten()" title="Nachricht an dich selbst – prüft Push und Mail">🧪 Test</button></div>
     <div id="onlineLeiste"></div>
+    <div id="uhMarkLeiste"></div>
     <div class="karte" id="unterhListe"><span class="hinweis">Wird geladen …</span></div>
   </section>
 
@@ -3341,6 +3349,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.56.1" data-v="2.56.1"></script>
+<script src="app.js?v=2.57.0" data-v="2.57.0"></script>
 </body>
 </html>

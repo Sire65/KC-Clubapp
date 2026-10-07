@@ -2102,7 +2102,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 
 // 182. 1.32.1: „＋ Neu“ immer sichtbar, Kopfzeilen brechen um (KC-CLUB-KOPFZEILE)
 {
-  assert.ok(/<h2>💬 (Kommunikation|Nachrichten)<\/h2>(<button[^>]*id="naSosKnopf"[^>]*>🚨 SOS<\/button>)?<button class="knopf haupt klein" onclick="neueNachricht\(\)">＋ Neu<\/button><\/div>/.test(html), "＋ Neu direkt in der Kopfzeile"); // 2.22.0: davor nur beim Admin 🚨 SOS
+  assert.ok(/<h2>💬 (Kommunikation|Nachrichten)<\/h2>(<button[^>]*id="naSosKnopf"[^>]*>🚨 SOS<\/button>)?<button class="knopf haupt klein" onclick="(neueNachricht|uhNeu)\(\)">＋ Neu<\/button><\/div>/.test(html), "＋ Neu direkt in der Kopfzeile"); // 2.57.0: uhNeu = mit Markierung Mehrfach-Nachricht, sonst neueNachricht // 2.22.0: davor nur beim Admin 🚨 SOS
   assert.ok(/⭐ Gemerkt<\/button>/.test(html) && /\.kopf2 \{ display: flex; align-items: center; gap: 10px; margin: 6px 0 4px; flex-wrap: wrap; \}/.test(html), "Stern beschriftet, Kopfzeile bricht um");
 }
 
@@ -5384,6 +5384,18 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   for (const k of ["koch", "chefhoch", "pizza", "kochkappe", "schiffchen"]) assert.ok(new RegExp(`\\b${k}: \\[`).test(reg[1]), "Initialen-Lage fehlt: " + k);
   assert.ok(programm.includes("iniSvg = iniP && ini && gr >= 26"), "Initialen nicht über Registry");
   assert.ok(!programm.includes('kopf === "koch" && ini && gr >= 32'), "alte Nur-Kochmütze-Regel noch aktiv");
+}
+// KC-CLUB-MEHRFACH-NACHRICHT (2.57.0): lange drücken = Chats markieren, „＋ Neu“ = gleiche Nachricht einzeln in jeden markierten Chat
+{
+  assert.ok(programm.includes("const UH_LANG_MS = 550"), "langes Drücken fehlt");
+  assert.ok(/function uhLangDruck\(\)[\s\S]*?pointerdown[\s\S]*?pointermove[\s\S]*?contextmenu/.test(programm), "Lang-Druck-Erkennung unvollständig");
+  assert.ok(programm.includes("if (UH.mark.size) return uhMarkieren(id);"), "Tipp im Markier-Modus markiert nicht");
+  assert.ok(seite.includes('onclick="uhNeu()">＋ Neu</button>') && seite.includes('<div id="uhMarkLeiste"></div>'), "＋ Neu / Markier-Leiste fehlt");
+  const sd = programm.slice(programm.indexOf("async function uhMehrfachSenden"), programm.indexOf("// ---------- Fotos über „Teilen“"));
+  assert.ok(sd.includes('api("nachricht_senden", { id, ...daten })'), "Mehrfach muss in bestehende Chats einzeln senden (kein neuer Gruppenchat)");
+  assert.ok(sd.includes("UH.mark = new Set(fehl)") && sd.includes('spur("gesendet_mehrfach", null)'), "Fehlschläge bleiben nicht markiert / Spur mit Inhalt");
+  assert.ok(programm.includes("if (!chatId && neuEntwurf?.mehrfach) return await uhMehrfachSenden(daten, text);"), "senden() kennt Mehrfach nicht");
+  assert.ok(seite.includes(".unterh.markiert"), "Markierung nicht sichtbar");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

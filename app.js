@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.56.1"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.57.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -12638,11 +12638,12 @@ async function unterhLaden() {
     const zeigen = unterhaltungen.filter((u) => !!u.archiviert === !!UH.archivAnsicht), archNeu = arch.reduce((n, u) => n + (u.ungelesen || 0), 0);
     const archKopf = UH.archivAnsicht ? `<div class="uh-archiv-kopf"><button class="knopf klein" onclick="uhArchivAnsicht(false)">← Zurück zu den Chats</button><b>📦 Archivierte Chats (${arch.length})</b></div>`
       : arch.length ? `<button class="uh-archiv-zeile" onclick="uhArchivAnsicht(true)"><span>📦 Archiviert</span><span class="hinweis">${arch.length} Chat${arch.length === 1 ? "" : "s"}</span>${archNeu ? `<span class="punkt">${archNeu}</span>` : ""}</button>` : "";
-    $("unterhListe").innerHTML = archKopf + (zeigen.length ? `<p class="hinweis uhtipp">Einmal tippen = auswählen (${UH.archivAnsicht ? "📤 wieder aktivieren" : "📦 archivieren"}, 🗑️ löschen) · doppelt tippen = öffnen</p>` : "") + zeigen.map((u) => `<div class="unterh${u.id === UH.wahl ? " gewaehlt" : ""}${u.wichtigNeu ? " wichtig-neu" : ""}" data-id="${u.id}" onclick="unterhTipp('${u.id}')">
+    $("unterhListe").innerHTML = archKopf + (zeigen.length ? `<p class="hinweis uhtipp">Einmal tippen = auswählen (${UH.archivAnsicht ? "📤 wieder aktivieren" : "📦 archivieren"}, 🗑️ löschen) · doppelt tippen = öffnen · lange drücken = markieren (gleiche Nachricht an mehrere)</p>` : "") + zeigen.map((u) => `<div class="unterh${u.id === UH.wahl ? " gewaehlt" : ""}${UH.mark.has(u.id) ? " markiert" : ""}${u.wichtigNeu ? " wichtig-neu" : ""}" data-id="${u.id}" onclick="unterhTipp('${u.id}')">
       ${u.gruppe || u.anzahl > 2 ? uhRundeKreis(u) : kreis(MITGLIEDER?.find((m) => m.name === u.teilnehmer[0]) || null, u.teilnehmer[0], 46)}
       <div class="mitte"><div><b>${esc(u.gruppe?.name || u.betreff || u.teilnehmer.join(", "))}</b>${stummAn(u.id) ? ' <span title="stummgeschaltet">🔕</span>' : ""}${u.gruppe ? ` <span class="hinweis" style="font-size:.8rem">· ${u.anzahl} Mitgl.</span>` : ""}</div><div class="hinweis">${entwurfAlle()[u.id]?.trim() ? `<span class="entwurf-marke">✏️ Entwurf:</span> ${esc(entwurfAlle()[u.id].trim().slice(0, 80))}` : u.letzte ? esc(u.letzte.von + ": " + u.letzte.text) : "Noch keine Nachricht"}</div></div>
       <div style="text-align:right"><div class="hinweis" style="font-size:.8rem">${u.letzte ? zeitKurz(u.letzte.zeit) : ""}</div>${u.nachrichten ? `<div class="hinweis uh-zahl" title="Nachrichten in dieser Unterhaltung">💬 ${u.nachrichten >= 1000 ? "999+" : u.nachrichten}</div>` : ""}${u.ungelesen ? `<span class="punkt${u.wichtigNeu ? " wichtig" : ""}" title="${u.wichtigNeu ? "darunter wichtige Nachricht" : ""}">${u.wichtigNeu ? "❗ " : ""}${u.ungelesen}</span>` : ""}</div></div>${u.id === UH.wahl ? unterhAktionen(u) : ""}`).join("")
       || (arch.length ? '<p class="hinweis">Alle Chats sind archiviert – oben auf „📦 Archiviert“ tippen.</p>' : '<p class="hinweis">Noch keine Nachrichten. Tippe oben auf „＋ Neu“.</p>');
+    UH.mark.forEach((id) => { if (!zeigen.some((u) => u.id === id)) UH.mark.delete(id); }); uhMarkZeichnen(); uhLangDruck(); // KC-CLUB-MEHRFACH-NACHRICHT
     uhAmeisen();
   } catch (e) { meldeFehler(e); }
 }
@@ -12733,7 +12734,46 @@ function uhAmeisen() {
 // KC-CLUB-CHATLISTE (0.41.0): einmal tippen wählt die Unterhaltung aus (Öffnen / aus Liste entfernen), doppelt tippen öffnet sie.
 // „Entfernen“ blendet nur für mich aus (Server: unterhaltung_ausblenden) – schreibt jemand wieder, erscheint sie erneut.
 // Für alle löschen bleibt Admin-Sache (unterhaltung_loeschen mit Sicherung).
-const UH = { liste: [], wahl: null, letzterTipp: { id: null, t: 0 } };
+const UH = { liste: [], wahl: null, letzterTipp: { id: null, t: 0 }, mark: new Set(), langGerade: false };
+// KC-CLUB-MEHRFACH-NACHRICHT (2.57.0, Wunsch Hansi): in der Chat-Übersicht Chats lange drücken = markieren (✓);
+// „＋ Neu“ schreibt dann EINE Nachricht, die jeder markierte Chat einzeln bekommt (wie „Weiterleiten an mehrere“, kein neuer Gruppenchat).
+const UH_LANG_MS = 550;
+function uhLangDruck() {
+  const l = $("unterhListe"); if (!l || l.dataset.lang) return; l.dataset.lang = "1";
+  let t = null, x0 = 0, y0 = 0;
+  const weg = () => { clearTimeout(t); t = null; };
+  l.addEventListener("pointerdown", (e) => {
+    const z = e.target.closest?.(".unterh[data-id]"); if (!z || e.button > 0) return;
+    x0 = e.clientX; y0 = e.clientY; weg(); UH.langGerade = false; // neue Berührung: nur das Loslassen DIESES langen Drückens wird verschluckt
+    t = setTimeout(() => { t = null; UH.langGerade = true; try { navigator.vibrate?.(30); } catch {} uhMarkieren(z.dataset.id); }, UH_LANG_MS);
+  });
+  l.addEventListener("pointermove", (e) => { if (t && Math.hypot(e.clientX - x0, e.clientY - y0) > 10) weg(); });
+  ["pointerup", "pointercancel", "pointerleave"].forEach((a) => l.addEventListener(a, weg));
+  l.addEventListener("contextmenu", (e) => { if (e.target.closest?.(".unterh[data-id]")) e.preventDefault(); }); // kein Kopier-Menü beim langen Drücken
+}
+function uhMarkieren(id) {
+  if (UH.mark.has(id)) UH.mark.delete(id); else UH.mark.add(id);
+  UH.wahl = null; UH.letzterTipp = { id: null, t: 0 }; unterhZeichnen(); uhMarkZeichnen();
+}
+function uhMarkAufheben() { UH.mark.clear(); uhMarkZeichnen(); }
+function uhMarkZeichnen() {
+  document.querySelectorAll("#unterhListe .unterh").forEach((el) => el.classList.toggle("markiert", UH.mark.has(el.dataset.id)));
+  const z = $("uhMarkLeiste"); if (!z) return; const n = UH.mark.size;
+  z.innerHTML = n ? `<div class="uh-mark-leiste" role="status"><b>✓ ${n} markiert</b><button class="knopf haupt klein" onclick="uhMehrfachStarten()">✏️ ${n === 1 ? "Nachricht schreiben" : `Gleiche Nachricht an ${n}`}</button><button class="knopf klein" onclick="uhMarkAufheben()">✕ Aufheben</button></div>` : "";
+}
+// „＋ Neu“ in der Übersicht: mit Markierung → gleiche Nachricht an alle markierten Chats, sonst wie bisher
+function uhNeu() { return UH.mark.size && aktuelleAnsicht === "nachrichten" ? uhMehrfachStarten() : neueNachricht(); }
+function uhMehrfachStarten() {
+  const chats = [...UH.mark].map((id) => UH.liste.find((u) => u.id === id)).filter(Boolean);
+  if (!chats.length) { uhMarkAufheben(); return neueNachricht(); }
+  ZW = { push: false, email: false, whatsapp: false }; CHAT = null; zustellZeigen(); anlagen = []; chipsZeigen();
+  neuEntwurf = { mehrfach: chats.map((u) => u.id) };
+  chatId = null; zeige("chat"); chatStand = "";
+  $("chatTitel").textContent = `📨 Gleiche Nachricht an ${chats.length} Chat${chats.length === 1 ? "" : "s"}`;
+  $("chatTeilnehmer").textContent = "An: " + chats.map((u) => unterhName(u)).join(", ");
+  $("chat").innerHTML = `<p class="hinweis">Schreib deine Nachricht und tippe auf ➤. Sie geht <b>einzeln</b> in jeden markierten Chat – wie eine normale Nachricht von dir. In Gruppen lesen alle Gruppenmitglieder mit.</p>`;
+  $("text").focus();
+}
 const DOPPELTIPP_MS = 400;
 const unterhName = (u) => u.gruppe?.name || u.betreff || u.teilnehmer.join(", ");
 function unterhAktionen(u) {
@@ -12766,6 +12806,8 @@ async function chatKomplettLoeschen(id, gefragt) {
   } catch (e) { meldeFehler(e); }
 }
 function unterhTipp(id) {
+  if (UH.langGerade) { UH.langGerade = false; return; } // KC-CLUB-MEHRFACH-NACHRICHT: Loslassen nach langem Drücken ist kein Tipp
+  if (UH.mark.size) return uhMarkieren(id); // solange etwas markiert ist, markiert ein Tipp weitere Chats (oder hebt sie auf)
   const jetzt = Date.now(), lt = UH.letzterTipp;
   UH.letzterTipp = { id, t: jetzt };
   if (lt.id === id && jetzt - lt.t < DOPPELTIPP_MS) { UH.letzterTipp = { id: null, t: 0 }; return chatOeffnen(id); }
@@ -14182,6 +14224,7 @@ async function senden() {
     const daten = { text, anlagen: anlagen.map((a) => a.id), wege: ["push", "email"].filter((w) => ZW[w]),
       ...(NA.antwort && chatId ? { antwort_auf: NA.antwort.id } : {}), ...(chatId ? { erwaehnt: naErwaehnteIds(text) } : {}), // KC-CLUB-ANTWORT / -ERWAEHNUNG
       ...(WICHTIG ? { wichtig: true } : {}) }; // KC-CLUB-WICHTIG
+    if (!chatId && neuEntwurf?.mehrfach) return await uhMehrfachSenden(daten, text); // KC-CLUB-MEHRFACH-NACHRICHT
     const r = chatId ? await api("nachricht_senden", { id: chatId, ...daten }) : await api("nachricht_senden", { ...daten, ...neuEntwurf });
     const empfIds = chatId ? (CHAT?.teilnehmer || []).map((t) => t.person_id) : [...(neuEntwurf?.empfaenger?.personen || [])];
     if (chatId) entwurfWeg(chatId); clearTimeout(entwurfTimer); zustellUmschalten(false); wichtigUmschalten(false); // KC-CLUB-ENTWURF / -RUHIGE-EINGABE / -WICHTIG
@@ -14190,6 +14233,22 @@ async function senden() {
     if (ZW.whatsapp && text) whatsappWeitergeben(text, empfIds.filter((id) => id !== ICH.person_id));
     if (!chatId) { chatId = r.id; history.replaceState({ v: "chat", id: r.id, tiefe: history.state?.tiefe }, "", location.pathname + "#nachricht=" + r.id); clearInterval(chatTimer); chatTimer = setInterval(chatTakt, CHAT_TAKT_MS); }
     await chatLaden(true);
+  } catch (e) { meldeFehler(e); }
+  $("sendenKnopf").disabled = false;
+}
+
+// KC-CLUB-MEHRFACH-NACHRICHT: nacheinander in jeden markierten Chat; was nicht ging, bleibt markiert (nochmal versuchen), der Text bleibt dann stehen
+async function uhMehrfachSenden(daten, text) {
+  const ids = neuEntwurf.mehrfach, fehl = [];
+  try {
+    for (const id of ids) { try { await api("nachricht_senden", { id, ...daten }); } catch (e) { fehl.push(id); if (fehl.length === ids.length) throw e; } }
+    spur("gesendet_mehrfach", null); // nur die Aktion, nie Text oder Empfänger
+    UH.mark = new Set(fehl);
+    if (!fehl.length) { clearTimeout(entwurfTimer); zustellUmschalten(false); wichtigUmschalten(false); $("text").value = ""; $("text").style.height = "auto"; entwurfMarkeZeigen(); anlagen = []; chipsZeigen(); neuEntwurf = null;
+      if (ZW.whatsapp && text) melde("🟢 WhatsApp geht bei mehreren Chats nur einzeln – im jeweiligen Chat auf WA tippen."); }
+    else neuEntwurf = { mehrfach: fehl };
+    melde(fehl.length ? `📨 ${ids.length - fehl.length} von ${ids.length} Chats bekommen – ${fehl.length} ging nicht (bleibt markiert, einfach nochmal ➤)` : `📨 An ${ids.length === 1 ? "den Chat" : `alle ${ids.length} Chats`} gesendet`, !!fehl.length);
+    if (!fehl.length) { zeige("nachrichten"); neuLaden(); }
   } catch (e) { meldeFehler(e); }
   $("sendenKnopf").disabled = false;
 }
