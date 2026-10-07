@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.59.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.60.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -1653,7 +1653,27 @@ function hzFrageEinsetzen(v) {
     k.addEventListener("click", () => { if (lang) { lang = false; return; } hzFrage(k.dataset.v); });
   }
   k.dataset.v = v; k.classList.toggle("versteckt", !HZ_SICHT_THEMA[v] || hzFrageAus());
+  // KC-CLUB-KLICK-ZEIGEN (2.60.0): der 👆-Knopf sitzt über dem „?“ und ist sichtbar, wo das „?“ sichtbar ist
+  let kz = $("klickZeigenKnopf");
+  if (!kz) { document.body.insertAdjacentHTML("beforeend", `<button type="button" class="hz-klick" id="klickZeigenKnopf" title="Zeigen, was man antippen kann (rot umrandet)" aria-label="Zeigen, was man antippen kann" aria-pressed="false" onclick="klickZeigen()">👆</button>`); kz = $("klickZeigenKnopf"); }
+  kz.classList.toggle("versteckt", k.classList.contains("versteckt") && !document.body.classList.contains("klick-zeigen"));
   for (const id of ["setHzFrage", "setHzFrageE"]) if ($(id)) $(id).checked = !hzFrageAus();
+}
+// ---------- KC-CLUB-KLICK-ZEIGEN (2.60.0, Wunsch Hansi): „👆“ über dem „?“ → alles, was man antippen kann, wird rot umrandet ----------
+// Reine Anzeige (CSS-Klasse am body): Knöpfe, Links, Kacheln/Zeilen mit onclick, Auswahl- und Eingabefelder, Klappen, Schalter.
+// Antippen funktioniert dabei ganz normal weiter. Aus: 👆 nochmal, „✕ Aus“ oben oder von selbst nach 2 Minuten.
+const KLICK_ZEIGEN_MS = 120000;
+let klickZeigenTimer = null;
+function klickZeigen(an) {
+  const jetzt = an ?? !document.body.classList.contains("klick-zeigen");
+  document.body.classList.toggle("klick-zeigen", jetzt);
+  $("klickZeigenKnopf")?.setAttribute("aria-pressed", String(jetzt));
+  $("klickZeigenLeiste")?.remove(); clearTimeout(klickZeigenTimer);
+  if (jetzt) {
+    document.body.insertAdjacentHTML("beforeend", `<div class="klick-leiste" id="klickZeigenLeiste" role="status"><span>👆 <b>Rot</b> = antippbar</span><button type="button" onclick="klickZeigen(false)">✕ Aus</button></div>`);
+    klickZeigenTimer = setTimeout(() => klickZeigen(false), KLICK_ZEIGEN_MS);
+  }
+  hzFrageEinsetzen(aktuelleAnsicht);
 }
 async function hzFrageLang() {
   if (!(await frage("❓ Fragezeichen ausblenden?\nZurückholen kannst du es jederzeit unter ⚙️ Einstellungen → „❓ Fragezeichen unten rechts“. Die Hilfe selbst bleibt unter Technik → ❓ Hilfe & Tipps.", { ja: "🙈 Ausblenden", nein: "Behalten" }))) return;

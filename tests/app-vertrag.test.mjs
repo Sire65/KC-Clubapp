@@ -5426,6 +5426,13 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(programm.includes('{ id: "besprechungen", sym: "🤝", t: "Besprechungen"') && programm.includes("function arStartTitel("), "Büro-Ordner Besprechungen fehlt");
   assert.ok(lies("supabase/migrations/20261007_kc_club_ordner_besprechungen.sql").includes("where not exists"), "Ordner-Anlage nicht wiederholbar");
 }
+// KC-CLUB-KLICK-ZEIGEN (2.60.0): 👆 über dem „?“ – alles Antippbare rot umrandet, Antippen geht weiter, Aus nach 2 Min.
+{
+  assert.ok(programm.includes('id="klickZeigenKnopf"') && programm.includes("function klickZeigen(an)") && programm.includes("const KLICK_ZEIGEN_MS = 120000"), "👆-Knopf/Schalter fehlt");
+  assert.ok(programm.includes('document.body.classList.toggle("klick-zeigen", jetzt)') && programm.includes('onclick="klickZeigen(false)">✕ Aus</button>'), "Ein/Aus fehlt");
+  assert.ok(/body\.klick-zeigen :is\(button, a\[href\], \[onclick\], \[role="button"\]/.test(seite) && seite.includes("outline: 3px solid #e11d48"), "rote Umrandung fehlt");
+  assert.ok(/\.hz-klick\.versteckt, body\.im-chat \.hz-klick/.test(seite), "👆 muss sich wie das ? ausblenden");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
