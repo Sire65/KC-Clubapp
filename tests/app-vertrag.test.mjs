@@ -2296,7 +2296,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/function frage\(text, opt = \{\}\)/.test(html) && /function eingabe\(text, wert = "", opt = \{\}\)/.test(html) && /\.blatt\.dlg-blatt \{ z-index: 5000; \}/.test(html), "App-Fenster über allem");
   assert.ok(/function rolleBearbeiten\(pid\)[^]{0,1500}class="roAmt"/.test(html) && /function mitfahrtAnbieten\([^]{0,1500}Wie viele freie Plätze\?/.test(html), "Amt & Rechte und Mitfahrt in je einem Fenster");
   assert.ok(/onclick="termineNeuWahl\(\)"[^>]*>＋ Neu<\/button>/.test(html) && !/id="neuAnfrageKnopf"/.test(html) && /onclick="hlNeuWahl\(\)">＋ Neu<\/button>/.test(html), "ein ＋ Neu oben rechts");
-  assert.ok(/protokolle\.length \? `<div class="mini-kacheln">\$\{protokolle\.map\(protokollKarte\)/.test(html) && /data-klappe="pr_aufgaben"/.test(html), "Protokolle als Kacheln, Aufgaben klappbar");
+  assert.ok(/protokolle\.length \? `<div class="mini-kacheln\$\{prAlsListe\(\) \? " prl-ansicht" : ""\}">\$\{protokolle\.map\(prAlsListe\(\) \? protokollZeile : protokollKarte\)/.test(html) && /data-klappe="pr_aufgaben"/.test(html), "Protokolle als Kacheln oder Liste (2.54.0), Aufgaben klappbar");
   assert.ok(/data-klappe="tm_umfragen"/.test(html) && /data-klappe="tm_anfragen"/.test(html) && /data-klappe="tm_privat"/.test(html), "Termine-Bereiche klappbar");
   assert.ok(!/>Zurzeit ist kein Treffen geplant\.</.test(html) && /<span>Nächster Termin<\/span>\$\{mpfeil\("termin"/.test(html), "Begriffe: Termin / Sitzung / Veranstaltung");
 }
