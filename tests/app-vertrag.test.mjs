@@ -5189,6 +5189,16 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const wb = wbAktuell\(\); wbEinsetzen\(wb\);/.test(html) && /id="wbWahl"/.test(html) && /id="wbKlappe"/.test(html), "Warte-Anzeige nutzt die Wahl; Auswahl als Klappbereich in der Darstellung");
   assert.ok(/html\.spar \*, html\.spar \*::before, html\.spar \*::after \{ animation-duration: \.001s/.test(html) && /@media \(prefers-reduced-motion: reduce\) \{ \.wb-svg \* \{ animation: none/.test(html), "Sparmodus/Bewegung reduzieren: ruhig");
 }
+// 2.47.0 KC-CLUB-ABSTURZSCHUTZ (Wunsch Hansi): nicht abgefangene Fehler → Meldung + Protokoll, Häufung → „App neu laden“, Hänger- und Warte-Wächter
+{
+  const a = html.indexOf("// ---------- KC-CLUB-ABSTURZSCHUTZ"), f = html.slice(a, html.indexOf("function meldeFehler(e) {", a));
+  assert.ok(/if \(jetzt - AS\.zuletzt > 20000\)/.test(f) && /AS\.liste\.length >= 3/.test(f) && /location\.reload\(\)/.test(f) && /KCFP\?\.neu\("instabil"/.test(f), "Meldung höchstens alle 20 s, ab 3 Fehlern in 2 Min. Neu-laden-Angebot + Protokoll");
+  assert.ok(/AS_HARMLOS = \/ResizeObserver loop/.test(f) && /!window\.KCFP\?\.startOk\) return;/.test(f), "harmlose Meldungen und Start-Phase ausgenommen");
+  assert.ok(/if \(r instanceof TypeError \|\| r instanceof ReferenceError \|\| JS_FEHLER\.test\(t\)\) absturzFang\(t\)/.test(f), "abgelehnte Server-/Netzanfragen sind keine Programmfehler");
+  assert.ok(/luecke > 5000 && !document\.hidden && jetzt - sichtbarSeit > luecke \+ 1500/.test(f) && /KCFP\?\.neu\("haenger"/.test(f), "Hänger-Wächter, nicht nach Hintergrund");
+  assert.ok(/wartenLangTimer = setTimeout\(\(\) => \{ if \(!wartenZahl\) return; \$\("wartenText"\)\.textContent = "Dauert länger als üblich/.test(html) && /clearTimeout\(wartenLangTimer\); wartenLangTimer = null;/.test(html), "Warte-Wächter > 20 s");
+  for (const k of ["haenger", "warten_lange", "instabil", "gefangen"]) assert.ok(new RegExp(`\\n  ${k}: \\["`).test(html), "Fehlerprotokoll kennt " + k);
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

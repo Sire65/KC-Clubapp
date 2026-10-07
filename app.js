@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.46.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.47.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -5967,6 +5967,44 @@ function appSchliessen() {
 const JS_FEHLER = /Cannot read propert|Cannot set propert|is not a function|is not defined|is not iterable|is not an object|undefined is not|null is not/;
 const JS_FEHLER_TEXT = "Da hat in der App etwas nicht geklappt – bitte nochmal versuchen. Der Fehler ist gemeldet.";
 function fehlerStapel(st) { return String(st || "").split("\n").slice(0, 6).map((z) => z.trim().replace(/https?:\/\/[^\s)]*\/([^/\s)]+)/g, "$1")).join(" < "); }
+// ---------- KC-CLUB-ABSTURZSCHUTZ (2.47.0, Wunsch Hansi: „wenn etwas hängt oder hakt … abfangen, Meldung, protokollieren“) ----------
+// Ergänzt das Fehlerprotokoll (index.html schreibt jeden Fehler mit) um das, was bisher fehlte:
+// 1) Nicht abgefangene Programmfehler zeigen jetzt auch eine verständliche Meldung (höchstens alle 20 s).
+// 2) Häufen sie sich (3 in 2 Minuten), bietet die App „🔄 App neu laden“ an und vermerkt „instabil“.
+// 3) Hänger-Wächter: reagiert die sichtbare App > 5 s nicht, wird das mit Dauer und Bereich protokolliert.
+// 4) Dauert ein Vorgang > 20 s, sagt die Warte-Anzeige das und es wird protokolliert (die Zeitgrenze selbst liegt in apiRoh).
+// Netz-/Server-/Datenbankausfälle laufen wie bisher über apiRoh (verständliche Meldung, LEDs, Notbetrieb).
+const AS = { zuletzt: 0, liste: [], angeboten: 0 };
+const AS_HARMLOS = /ResizeObserver loop|^Script error\.?$|AbortError|The user aborted|NotAllowedError|Load failed$|cancell?ed|chrome-extension|moz-extension|safari-extension/i;
+function absturzFang(text) {
+  const t = String(text || "").trim();
+  if (!t || AS_HARMLOS.test(t) || !window.KCFP?.startOk) return; // vor dem Start kümmert sich der Start-Wächter in index.html
+  const jetzt = Date.now();
+  AS.liste = AS.liste.filter((z) => jetzt - z < 120000); AS.liste.push(jetzt);
+  if (jetzt - AS.zuletzt > 20000) { AS.zuletzt = jetzt; try { melde(JS_FEHLER_TEXT, true); } catch {} }
+  if (AS.liste.length >= 3 && jetzt - AS.angeboten > 600000) {
+    AS.angeboten = jetzt;
+    try { window.KCFP?.neu("instabil", { text: `${AS.liste.length} Programmfehler in 2 Minuten`, letzter: t.slice(0, 200) }); } catch {}
+    try { blattAuf("asBlatt", `<h3 style="margin:0">⚠️ Die App läuft gerade nicht rund</h3><p style="margin:8px 0">Mehrere Fehler kurz hintereinander – sie sind schon gemeldet. Neu laden hilft meistens; nichts geht dabei verloren.</p>
+      <div class="knoepfe"><button class="knopf haupt" onclick="location.reload()">🔄 App neu laden</button><button class="knopf" onclick="fensterZu($('asBlatt'))">Weiter benutzen</button></div>`).style.zIndex = "2300"; } catch {}
+  }
+}
+window.addEventListener("error", (ev) => { if (ev?.target && ev.target !== window && ev.target.tagName) return; absturzFang(ev?.error?.message || ev?.message); }); // Dateien, die nicht laden: nur Protokoll (index.html)
+window.addEventListener("unhandledrejection", (ev) => { const r = ev?.reason, t = String(r?.message ?? r ?? "");
+  if (r instanceof TypeError && /fetch|network|Load failed/i.test(t)) return; // Netz weg: zeigt die Verbindungsanzeige, steht im Protokoll
+  if (r instanceof TypeError || r instanceof ReferenceError || JS_FEHLER.test(t)) absturzFang(t); }); // nur echte Programmfehler – Server-/Netzmeldungen zeigt der Aufrufer bzw. die Verbindungsanzeige
+// Hänger-Wächter: Takt 1 s; eine Lücke > 5 s bei sichtbarer App (nicht nach Hintergrund/Sperrbildschirm) = Hänger
+(() => {
+  let letzt = Date.now(), sichtbarSeit = Date.now();
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) { sichtbarSeit = Date.now(); letzt = Date.now(); } });
+  setInterval(() => {
+    const jetzt = Date.now(), luecke = jetzt - letzt - 1000; letzt = jetzt;
+    if (luecke > 5000 && !document.hidden && jetzt - sichtbarSeit > luecke + 1500) {
+      try { window.KCFP?.neu("haenger", { text: `App reagierte ${Math.round(luecke / 1000)} s nicht`, ms: Math.round(luecke), spar: !!SPAR?.an }); } catch {}
+      if (luecke > 10000) try { melde("Die App hat kurz gehangen – sie läuft wieder. Ist gemeldet."); } catch {}
+    }
+  }, 1000);
+})();
 function meldeFehler(e) {
   const t = String(e?.message ?? e ?? "Unbekannter Fehler");
   if (e instanceof TypeError || e instanceof ReferenceError || JS_FEHLER.test(t)) {
@@ -6127,7 +6165,7 @@ const WARTEN_TEXT = { standort_ort: "Standort wird bestimmt …", sos_ort: "Adre
   fotos_neueste: "Fotos werden geladen …", unterhaltungen: "Nachrichten werden geladen …", pinnwand: "Pinnwand wird geladen …", foto_ort: "Aufnahmeort wird ermittelt …", admin_spiegeln: "Spiegel wird angestoßen …",
   // Info-Karten (Kennung der Karte)
   admin: "Server, Datenbank und Verbindungen werden geprüft …", demnaechst: "Termine werden geladen …", fotos: "Fotos werden geladen …", zentrale: "Nachrichten werden geladen …" };
-let wartenZahl = 0, wartenTimer = null;
+let wartenZahl = 0, wartenTimer = null, wartenLangTimer = null;
 // KC-CLUB-WARTEN (0.51.0): WARTEN_STILL gilt nur für Hintergrund-Aufrufe (Takt, Nachladen). Tippt das Mitglied selbst
 // (Aktualisieren, Karte öffnen, Admin prüfen …), übergibt der Aufruf { warten: true } → die Kochmütze erscheint auch dort.
 // KC-CLUB-START-STILL (2.24.5, Hinweis Hansi „Kochmütze dreht nach dem Start nochmals“): Prüfungen, die die App nach dem
@@ -6135,13 +6173,14 @@ let wartenZahl = 0, wartenTimer = null;
 function wartenStart(action, erzwingen, still) {
   if (still || WARTEN_STILL.has(action) && !erzwingen) return false;
   wartenZahl++;
+  if (!wartenLangTimer) wartenLangTimer = setTimeout(() => { if (!wartenZahl) return; $("wartenText").textContent = "Dauert länger als üblich … (Netz langsam?)"; try { window.KCFP?.neu("warten_lange", { text: "Vorgang > 20 s", aktion: String(action).slice(0, 40) }); } catch {} }, 20000); // KC-CLUB-ABSTURZSCHUTZ
   if (!wartenTimer) wartenTimer = setTimeout(() => { const wb = wbAktuell(); wbEinsetzen(wb); $("wartenText").textContent = WARTEN_TEXT[action] || (/speichern|setzen|aendern/.test(action) ? "Wird gespeichert …" : wb.x);
     $("warten").classList.remove("versteckt"); requestAnimationFrame(() => $("warten").classList.add("an")); }, 350);
   return true;
 }
 function wartenEnde() {
   wartenZahl = Math.max(0, wartenZahl - 1); if (wartenZahl) return;
-  clearTimeout(wartenTimer); wartenTimer = null; $("warten").classList.remove("an"); setTimeout(() => { if (!wartenZahl) $("warten").classList.add("versteckt"); }, 200);
+  clearTimeout(wartenTimer); wartenTimer = null; clearTimeout(wartenLangTimer); wartenLangTimer = null; $("warten").classList.remove("an"); setTimeout(() => { if (!wartenZahl) $("warten").classList.add("versteckt"); }, 200);
 }
 async function api(action, daten = {}, opt = {}) {
   const warte = wartenStart(action, opt.warten, opt.still);
@@ -19038,6 +19077,10 @@ const FP_ARTEN = {
   api: ["🔌", "Server-Anfrage ging schief", "Text zeigt den Grund"],
   offline: ["📵", "Handy war offline", "Internet war aus – nichts zu tun"],
   start_haengt: ["⏳", "Start hängt", "Netz sehr langsam oder Server nicht erreichbar"],
+  haenger: ["🧊", "App hat gehangen", "reagierte mehrere Sekunden nicht – bei Häufung am selben Gerät/Bereich weitergeben"], // KC-CLUB-ABSTURZSCHUTZ 2.47.0
+  warten_lange: ["⌛", "Vorgang dauerte über 20 s", "meist langsames Netz – Aktion steht im Eintrag"],
+  instabil: ["⚠️", "Mehrere Programmfehler kurz hintereinander", "„App neu laden“ wurde angeboten – bitte weitergeben"],
+  gefangen: ["🐞", "Programmfehler (abgefangen)", "Mitglied sah eine verständliche Meldung – bitte weitergeben"],
   start_kaputt: ["💥", "App startet gar nicht", "Browser zu alt oder falscher Browser – Mitglied anrufen"],
   start_langsam: ["🐢", "Start langsam", "schwaches Netz"],
   mehrfachstart: ["🔁", "Mehrmals kurz hintereinander geöffnet", "Zeichen für „geht nicht auf“ – Hilfe wurde angeboten"],
