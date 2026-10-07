@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.37.1 – 2026-10-07 – KC-CLUB-NUR-AUSGEBLENDETE (Nachbesserung)
+Wunsch Hansi: Ohne ausgeblendete Kacheln steht unten kein Hinweis mehr – auch nicht nach dem Wischen in ein Register ohne ausgeblendete; „nur ausgeblendete“ schaltet sich dort von selbst ab.
+
 ## 2.37.0 – 2026-10-07 – KC-CLUB-NUR-AUSGEBLENDETE
 Wunsch Hansi: Unter den Kacheln „👀 Nur ausgeblendete zeigen“ – dann stehen nur die ausgeblendeten Kacheln da (gestrichelt umrandet) und lassen sich ganz normal öffnen. „🙈 Ausgeblendete wieder verbergen“ schaltet zurück. Nur Anzeige, die gespeicherte Anordnung bleibt unverändert.
 

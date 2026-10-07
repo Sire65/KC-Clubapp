@@ -5041,6 +5041,12 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/onclick="kaBearbeiten\(true\)">🙈 \$\{ausN\} ausgeblendete Kachel/.test(f), "bisheriger Anordnen-Hinweis bleibt");
   assert.ok(/function kaNurAus\(an\) \{ KA_NUR_AUS = !!an; kachelnZeigen\(\);/.test(html) && !/kaNurAus[^\n]*kaSpeichern/.test(html), "nur Anzeige, nichts gespeichert");
 }
+// 2.37.1 (Wunsch Hansi): ohne ausgeblendete Kacheln unten kein Hinweis – auch nicht im Modus „nur ausgeblendete“
+{
+  const f = html.slice(html.indexOf("function kachelnZeigen()"), html.indexOf("// ---------- KC-CLUB-INFOFELD (0.42.0)"));
+  assert.ok(/if \(!ausN\) KA_NUR_AUS = false;/.test(f) && !/gibt es keine/.test(f), "schaltet sich ohne ausgeblendete ab, kein Leer-Hinweis");
+  assert.ok(/: ausN \? `<button class="knopf ka-nuraus"/.test(f) && /` : "";\n  \$\("raster"\)\.classList\.toggle\("nur-aus"/.test(f), "ausN = 0 → leer");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

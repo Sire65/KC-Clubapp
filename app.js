@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.37.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.37.1"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -7228,9 +7228,11 @@ function kachelnZeigen() {
           : b(-1, "◀", "nach links") + (sp > 1 ? b(-sp, "▲", "nach oben") + b(sp, "▼", "nach unten") : "") + b(1, "▶", "nach rechts")}</div></div>`; }).join("");
     return;
   }
-  const ausN = kaSortiert(reg).length - kacheln(reg).length, nurAus = KA_NUR_AUS && !einfach();
+  const ausN = kaSortiert(reg).length - kacheln(reg).length;
+  if (!ausN) KA_NUR_AUS = false; // 2.37.1 (Wunsch Hansi): keine ausgeblendeten Kacheln → unten gar kein Hinweis, „nur ausgeblendete“ schaltet sich von selbst ab
+  const nurAus = KA_NUR_AUS && !einfach();
   // KC-CLUB-NUR-AUSGEBLENDETE (2.37.0, Wunsch Hansi): unten umschalten – nur die ausgeblendeten Kacheln zeigen (voll bedienbar), nochmal tippen = wieder verbergen
-  $("kaAusHinweis").innerHTML = nurAus ? `<p class="hinweis ka-nuraus-text">🙈 Du siehst gerade nur die <b>ausgeblendeten</b> Kacheln${ausN ? "" : " – in diesem Register gibt es keine"}.</p><button class="knopf ka-nuraus an" onclick="kaNurAus(false)">🙈 Ausgeblendete wieder verbergen</button>`
+  $("kaAusHinweis").innerHTML = nurAus ? `<p class="hinweis ka-nuraus-text">🙈 Du siehst gerade nur die <b>ausgeblendeten</b> Kacheln.</p><button class="knopf ka-nuraus an" onclick="kaNurAus(false)">🙈 Ausgeblendete wieder verbergen</button>`
     : ausN ? `<button class="knopf ka-nuraus" onclick="kaNurAus(true)">👀 Nur ausgeblendete zeigen (${ausN})</button><button class="kaausgeblendet" onclick="kaBearbeiten(true)">🙈 ${ausN} ausgeblendete Kachel${ausN > 1 ? "n" : ""} – anzeigen</button>` : "";
   $("raster").classList.toggle("nur-aus", nurAus);
   $("raster").innerHTML = (nurAus ? kaSortiert(reg).filter((k) => KA.aus.includes(k.id)) : kacheln(reg)).map((k, i) => {
