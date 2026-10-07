@@ -5377,6 +5377,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/location\.replace\(NEU \+ location\.search \+ location\.hash\)/.test(wl), "Weiterleitung nimmt persönlichen Link und Sprungziel mit");
   assert.ok(!/cloudflare/i.test(fs.readdirSync(new URL("../.github/workflows/", import.meta.url)).join(" ")) || true, "noch kein Veröffentlichungs-Workflow");
 }
+// KC-CLUB-AVATAR-INITIALEN (2.56.1): Initialen auf allen Kochmützen, nicht nur der klassischen
+{
+  const reg = programm.match(/const AV_INI_POS = \{([^}]*)\}/);
+  assert.ok(reg, "AV_INI_POS fehlt");
+  for (const k of ["koch", "chefhoch", "pizza", "kochkappe", "schiffchen"]) assert.ok(new RegExp(`\\b${k}: \\[`).test(reg[1]), "Initialen-Lage fehlt: " + k);
+  assert.ok(programm.includes("iniSvg = iniP && ini && gr >= 26"), "Initialen nicht über Registry");
+  assert.ok(!programm.includes('kopf === "koch" && ini && gr >= 32'), "alte Nur-Kochmütze-Regel noch aktiv");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

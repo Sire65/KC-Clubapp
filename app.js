@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.56.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.56.1"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -263,6 +263,8 @@ function avTeileB(code) {
   return [z[0], AV_FRISUREN[z[1]], haarf[z[2]], AV_KOPF[z[3]], AV_BART[z[4]], z[5], AV_BG[z[6]], AV_TUCH[z[7]], z[8] === 1];
 }
 const avGueltig = (code) => !!(code && (AVF_RE.test(code) || avTeile(code)));
+// KC-CLUB-AVATAR-INITIALEN (2.56.1): Initialen auf allen Kochmützen (Wunsch Hansi) – je Mützenart Lage im Band [x, y, Schriftgröße]
+const AV_INI_POS = { koch: [41.6, 17.8, 3.4], chefhoch: [41.2, 17.9, 3.6], pizza: [41.2, 17.8, 3.6], kochkappe: [42.4, 20.2, 3.2], schiffchen: [40.6, 18.4, 2.8] };
 function avatarSvg(code, gr = 40, ini = "") { // 2.27.2: ini = Initialen (klein unten rechts auf der Kochmütze)
   if (AVF_RE.test(code || "")) { const b = AVF.bild[code] || (INIT?.einstellungen?.avatar_foto?.code === code ? INIT.einstellungen.avatar_foto.bild : ""); // KC-CLUB-AVATAR-FOTO
     return `<img class="av-foto" data-avf="${code}" src="${/^data:image\/jpeg;base64,/.test(b) ? b : AVF_LEER}" alt="" width="${gr}" height="${gr}">`; }
@@ -315,7 +317,7 @@ function avatarSvg(code, gr = 40, ini = "") { // 2.27.2: ini = Initialen (klein 
     kochkappe: `<g fill="${kFill}" stroke="${kHell && !kId ? "#bdb6aa" : "rgba(0,0,0,.3)"}" stroke-width=".6" stroke-linejoin="round"><path d="M20.4 21.8 L21 13.6 Q32 10.4 43 13.6 L43.6 21.8 Q32 19.4 20.4 21.8Z"/></g><path d="M21 13.6 Q32 16.4 43 13.6" stroke="${kKontrast}" stroke-width=".5" fill="none"/>`,
     schieber: `<path d="M19.4 21.6 Q18.8 13.4 27.2 11.8 Q38.4 10.6 45 16.4 L45.2 20.8 Q32 18.6 19.4 21.6Z" fill="${kFill}" stroke="rgba(0,0,0,.3)" stroke-width=".5" stroke-linejoin="round"/><path d="M19.8 21.2 Q31 18.8 41.6 21.2 Q37.6 24 21 23.4Z" fill="${kBasis}" stroke="rgba(0,0,0,.35)" stroke-width=".5"/><path d="M19.8 21.2 Q31 18.8 41.6 21.2 Q37.6 24 21 23.4Z" fill="rgba(0,0,0,.18)"/><path d="M26 12.6 Q33 15.4 44.4 16.4" stroke="${kKontrast}" stroke-width=".45" fill="none"/>`,
     kapperueck: `<path d="M20.5 16.5 Q12.5 14.2 7.6 17.6 Q12.8 20.4 21 20.2Z" fill="${kBasis}" stroke="rgba(0,0,0,.35)" stroke-width=".45"/><path d="M20.5 16.5 Q12.5 14.2 7.6 17.6 Q12.8 20.4 21 20.2Z" fill="rgba(0,0,0,.3)"/><path d="M19 23 Q19 11 32 11 Q45 11 45 23Z" fill="${kFill}"/><path d="M28.4 22.6 Q32 20.4 35.6 22.6" fill="none" stroke="rgba(0,0,0,.35)" stroke-width="1"/>` }[kopf] || "";
-  const iniSvg = kopf === "koch" && ini && gr >= 32 ? `<text x="41.6" y="17.8" text-anchor="end" font-size="3.4" font-weight="800" font-family="Arial, sans-serif" fill="${kHell || kId ? "#741521" : "#ffffff"}"${kId ? ' stroke="#fff" stroke-width=".5" paint-order="stroke"' : ""}>${String(ini).replace(/[^A-ZÄÖÜa-zäöüß]/g, "").slice(0, 2).toUpperCase()}</text>` : ""; // 2.27.2 (Wunsch Hansi)
+  const iniP = AV_INI_POS[kopf], iniSvg = iniP && ini && gr >= 26 ? `<text x="${iniP[0]}" y="${iniP[1]}" text-anchor="end" font-size="${iniP[2]}" font-weight="800" font-family="Arial, sans-serif" fill="${kHell || kId ? "#741521" : "#ffffff"}"${kId ? ' stroke="#fff" stroke-width=".5" paint-order="stroke"' : ""}>${String(ini).replace(/[^A-ZÄÖÜa-zäöüß]/g, "").slice(0, 2).toUpperCase()}</text>` : ""; // 2.27.2 (Wunsch Hansi)
   // 2.23.96 (Wunsch Hansi „bessere mit Schnäuzer“): Schnurrbart kräftiger; neu Zwirbel-, Walross- und Schnauzer mit Kinnbart
   const rand = ` stroke="rgba(0,0,0,.35)" stroke-width=".45"`; // feiner Rand: auch heller Bart auf heller Haut bleibt sichtbar
   const schnauzer = `<path d="M24.3 37 Q27.8 33.4 32 35.1 Q36.2 33.4 39.7 37 Q36.3 36.3 32 37.4 Q27.7 36.3 24.3 37Z" fill="${haar}"${rand}/>`;

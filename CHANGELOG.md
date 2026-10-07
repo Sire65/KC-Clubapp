@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.56.1 – 2026-10-07 – KC-CLUB-AVATAR-INITIALEN
+Initialen auf allen Kochmützen (hohe Kochmütze, Pizza-, Kochkappe, Schiffchen) und schon ab kleiner Größe.
+
 ## 2.56.0 – 2026-10-07 – KC-CLUB-VORFUEHREN
 Neu (Admin): 📺 Live zeigen – auf der Mitglied-Seite. Nach Zusage folgt die App des Mitglieds deiner App: Seitenwechsel, Tipps als rote Markierung, Scrollen, geöffnete Fenster als Hinweis. Das Mitglied sieht seine eigenen Daten, beim Zuschauer wird nichts ausgelöst; beide können jederzeit beenden. Server 2.56.0.
 
