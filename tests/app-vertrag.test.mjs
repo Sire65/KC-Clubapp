@@ -5109,6 +5109,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const AV4 = new Function("INIT", "ICH", "MITGLIEDER", html.slice(a, b) + "\nreturn { avTeile, avatarSvg, AV_KOPF, AV_KOPFFORM };")(null, null, []);
   assert.deepEqual(AV4.AV_KOPFFORM, ["normal", "rundlich", "eckig", "oval", "länglich", "herzförmig"], "Kopfformen");
   assert.ok(AV4.AV_KOPF.includes("chefhoch") && AV4.AV_KOPF.includes("schiffchen"), "Chefmütze hoch + Schiffchen");
+  assert.ok(AV4.AV_KOPF.includes("haube") && /"Spitzenhaube"\]/.test(html) && AV4.avatarSvg(code(AV4.AV_KOPF.indexOf("haube"), 0), 64).length > 500, "Spitzenhaube (wie früher Hausmädchen)");
   const code = (kopf, form) => "c" + [1, 5, 1, kopf, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, form].map((x) => x.toString(36)).join("");
   for (let i = 0; i < 6; i++) assert.equal(AV4.avTeile(code(0, i))[18], i, "Kopfform " + i + " im Code");
   assert.equal(AV4.avTeile("c" + "1510001100000001" + "00").length, 19, "alte 18er-Codes gültig, Kopfform = normal");
