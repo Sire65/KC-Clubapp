@@ -1,0 +1,2 @@
+programme=bilderrechner,clubapp
+falsch=ok
