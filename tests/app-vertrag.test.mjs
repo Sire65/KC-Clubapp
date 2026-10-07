@@ -5397,6 +5397,18 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(programm.includes("if (!chatId && neuEntwurf?.mehrfach) return await uhMehrfachSenden(daten, text);"), "senden() kennt Mehrfach nicht");
   assert.ok(seite.includes(".unterh.markiert"), "Markierung nicht sichtbar");
 }
+// KC-CLUB-PUSH-PERSOENLICH (2.58.0): Push sagt, wer was geschickt hat – nicht mehr „Neue Nachricht im Köcheclub“
+{
+  const a = server.indexOf("function nachrichtKurz("), b = server.indexOf("\n}\n", a) + 2;
+  assert.ok(a > 0, "nachrichtKurz fehlt");
+  const f = new Function("txt", "return " + server.slice(a, b).replace(/: \{[^)]*\}\)/, ")").replace("(von: string, o", "(von, o"))((t, n) => String(t).slice(0, n));
+  assert.equal(f("Klaus", { andere: 1 }), "Klaus hat dir eine Nachricht in der Club-App geschickt");
+  assert.equal(f("Klaus", { grp: { name: "Vorstand" }, andere: 5 }), "Klaus hat in der Gruppe „Vorstand“ geschrieben");
+  assert.equal(f("Klaus", { andere: 3 }), "Klaus hat dir und 2 weiteren eine Nachricht in der Club-App geschickt");
+  assert.ok(!server.includes(': "Neue Nachricht im Köcheclub",'), "allgemeiner Push-Text noch aktiv");
+  assert.ok(server.includes("nachrichtKurz(ich.vorname, { grp, andere: tnIds.size - 1"), "Nachrichten-Push nutzt nachrichtKurz nicht");
+  assert.ok(server.includes('const SERVER_VERSION = "2.58.0"'), "Serverversion nicht erhöht");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

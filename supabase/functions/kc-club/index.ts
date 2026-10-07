@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.56.0";
+const SERVER_VERSION = "2.58.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -1554,6 +1554,15 @@ async function willkommenFuer(ids: string[]): Promise<Map<string, { person_id: s
   const leute = await personen(paar.map(([, p]) => p));
   for (const [z, p] of paar) aus.set(z, { person_id: p, vorname: vorname(leute.get(p) ?? null) || leute.get(p)?.display_name || "" });
   return aus;
+}
+// KC-CLUB-PUSH-PERSOENLICH (2.58.0, Wunsch Hansi): Push-Text sagt, WER WAS geschickt hat – statt „Neue Nachricht im Köcheclub“.
+// Empfänger bleiben nur die Teilnehmer der Unterhaltung; der Titel (💬 Name / Gruppe: Name) bleibt, weil die Sprachansage darauf aufbaut.
+// Inhalt kommt (wie bisher) nicht auf den Sperrbildschirm – außer bei ❗ wichtig.
+function nachrichtKurz(von: string, o: { grp?: { name: string } | null; andere: number; betreff?: string | null; nurAnlage?: boolean; umfrage?: boolean; kontakt?: boolean }) {
+  const was = o.umfrage ? "eine Abstimmung" : o.kontakt ? "einen Kontakt" : o.nurAnlage ? "eine Datei" : "eine Nachricht";
+  const satz = o.grp ? (o.umfrage ? `${von} hat in der Gruppe „${o.grp.name}“ eine Abstimmung gestartet` : `${von} hat in der Gruppe „${o.grp.name}“ ${o.kontakt ? "einen Kontakt geteilt" : o.nurAnlage ? "eine Datei geteilt" : "geschrieben"}`)
+    : o.andere > 1 ? `${von} hat dir und ${o.andere - 1} weiteren ${was} in der Club-App geschickt` : `${von} hat dir ${was} in der Club-App geschickt`;
+  return txt(o.betreff ? `${satz} – „${o.betreff}“` : satz, 140);
 }
 const pinnwandHinweis = (von: string, privat: boolean, wichtig: boolean) => `Du hast ein neues ${wichtig ? "wichtiges " : ""}${privat ? "privates " : ""}Post-it von ${von} bekommen`;
 async function pinnwandSichtbar(ich: Ich) {
@@ -6990,7 +6999,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (notfall) stumm.clear(); // KC-CLUB-NOTFALL-MELDUNG: Notfall erreicht auch stummgeschaltete Chats
         for (let i = ziel.length - 1; i >= 0; i--) if (stumm.has(ziel[i])) ziel.splice(i, 1);
         const versand = await sendenGewaehlt("club_nachricht", ziel, wege, {
-          titel: notfall ? `🚨 NOTFALL${probe ? "-PROBE" : ""} – ${ich.vorname}` : wMarke + (grp ? `${grp.symbol} ${grp.name}: ${ich.vorname}` : `💬 ${ich.name}`), kurz: notfall ? txt(text.replace(NOTFALL_RE, ""), 140) : wichtig ? txt(text, 140) || "Wichtige Nachricht im Köcheclub" : th?.subject ? `Neue Nachricht in „${th.subject}“` : "Neue Nachricht im Köcheclub",
+          titel: notfall ? `🚨 NOTFALL${probe ? "-PROBE" : ""} – ${ich.vorname}` : wMarke + (grp ? `${grp.symbol} ${grp.name}: ${ich.vorname}` : `💬 ${ich.name}`), kurz: notfall ? txt(text.replace(NOTFALL_RE, ""), 140) : wichtig ? txt(text, 140) || "Wichtige Nachricht im Köcheclub" : nachrichtKurz(ich.vorname, { grp, andere: tnIds.size - 1, betreff: th?.subject, nurAnlage: !text && anlagen.length > 0, umfrage: !!umfrage, kontakt: !!kontaktPid }),
           betreff: `${wMarke}Köcheclub Werne – ${wichtig ? "wichtige" : "neue"} Nachricht von ${ich.name}${th?.subject ? ": " + th.subject : ""}`,
           text: `Hallo,\n\n${ich.name} hat dir im Köcheclub geschrieben${th?.subject ? ` („${th.subject}“)` : ""}:\n\n${text}${anlagen.length ? `\n\n📎 ${anlagen.length} Anlage(n) – in der App ansehen.` : ""}\n\nAntworten in der Köcheclub-App: ${APP_URL}#nachricht=${threadId}\n\nViele Grüße\nKöcheclub Werne`,
           url: `${APP_URL}#nachricht=${threadId}`,
