@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.36.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.37.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -7022,7 +7022,10 @@ function kaSpeichern() {
   clearTimeout(kaSpeicherTimer);
   kaSpeicherTimer = setTimeout(() => api("einstellung_setzen", { schluessel: "kacheln", wert: KA }).catch((e) => melde("Anordnung nur auf diesem Handy gespeichert: " + e.message, true)), 800);
 }
+let KA_NUR_AUS = false; // KC-CLUB-NUR-AUSGEBLENDETE (2.37.0): nur für diese Sitzung, ändert nichts an der gespeicherten Anordnung
+function kaNurAus(an) { KA_NUR_AUS = !!an; kachelnZeigen(); if (an) $("kaAusHinweis")?.scrollIntoView?.({ block: "nearest" }); }
 function kaBearbeiten(an, frisch) {
+  if (an) KA_NUR_AUS = false;
   kaBearb = an; kaFrisch = an ? frisch || null : null;
   $("kachelLeiste").classList.toggle("versteckt", !an);
   if (!an) { clearTimeout(kaSpeicherTimer); kaSpeichern(); melde("✅ Startseite gespeichert"); }
@@ -7225,9 +7228,12 @@ function kachelnZeigen() {
           : b(-1, "◀", "nach links") + (sp > 1 ? b(-sp, "▲", "nach oben") + b(sp, "▼", "nach unten") : "") + b(1, "▶", "nach rechts")}</div></div>`; }).join("");
     return;
   }
-  const ausN = kaSortiert(reg).length - kacheln(reg).length;
-  $("kaAusHinweis").innerHTML = ausN ? `<button class="kaausgeblendet" onclick="kaBearbeiten(true)">🙈 ${ausN} ausgeblendete Kachel${ausN > 1 ? "n" : ""} – anzeigen</button>` : "";
-  $("raster").innerHTML = kacheln(reg).map((k, i) => {
+  const ausN = kaSortiert(reg).length - kacheln(reg).length, nurAus = KA_NUR_AUS && !einfach();
+  // KC-CLUB-NUR-AUSGEBLENDETE (2.37.0, Wunsch Hansi): unten umschalten – nur die ausgeblendeten Kacheln zeigen (voll bedienbar), nochmal tippen = wieder verbergen
+  $("kaAusHinweis").innerHTML = nurAus ? `<p class="hinweis ka-nuraus-text">🙈 Du siehst gerade nur die <b>ausgeblendeten</b> Kacheln${ausN ? "" : " – in diesem Register gibt es keine"}.</p><button class="knopf ka-nuraus an" onclick="kaNurAus(false)">🙈 Ausgeblendete wieder verbergen</button>`
+    : ausN ? `<button class="knopf ka-nuraus" onclick="kaNurAus(true)">👀 Nur ausgeblendete zeigen (${ausN})</button><button class="kaausgeblendet" onclick="kaBearbeiten(true)">🙈 ${ausN} ausgeblendete Kachel${ausN > 1 ? "n" : ""} – anzeigen</button>` : "";
+  $("raster").classList.toggle("nur-aus", nurAus);
+  $("raster").innerHTML = (nurAus ? kaSortiert(reg).filter((k) => KA.aus.includes(k.id)) : kacheln(reg)).map((k, i) => {
     const z = k.zahl ? k.zahl() : 0;
     const kl = typeof k.klasse === "function" ? k.klasse() : k.klasse; // 2.20.0: Klasse auch berechnet (Lämpchen im Admin-Register)
     return `<button class="kachel${k.bald ? " bald" : ""}${kl ? " " + kl : ""}${k.neuFarbe && z ? " neu-da" : ""}" data-id="${k.id}" onclick="${k.bald ? `melde('„${k.t}“ kommt in einer der nächsten Versionen.')` : k.aktion || `zeige('${k.v}')`}">

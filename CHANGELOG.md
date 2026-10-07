@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.37.0 – 2026-10-07 – KC-CLUB-NUR-AUSGEBLENDETE
+Wunsch Hansi: Unter den Kacheln „👀 Nur ausgeblendete zeigen“ – dann stehen nur die ausgeblendeten Kacheln da (gestrichelt umrandet) und lassen sich ganz normal öffnen. „🙈 Ausgeblendete wieder verbergen“ schaltet zurück. Nur Anzeige, die gespeicherte Anordnung bleibt unverändert.
+
 ## 2.36.0 – 2026-10-07 – KC-CLUB-MEINE-NACHRICHTEN-STATISTIK
 Wunsch Hansi: Jedes Mitglied sieht im Chat unter ⋮ „📊 Meine Nachrichten-Statistik“ – eigene E-Mails, Push und Club-Nachrichten (bekommen/geschrieben), je Tag, Uhrzeit, letzte 20. Nur Anzahl und Zeit, keine Inhalte. Server: meine_nachrichten_statistik (nur ich.person_id). SERVER_VERSION 2.36.0.
 

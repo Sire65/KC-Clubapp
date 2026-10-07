@@ -5033,6 +5033,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/onclick="meineNachrichtenStatistik\(\)">📊 Meine Nachrichten-Statistik<\/button>/.test(html), "Eintrag im Chat-Menü ⋮");
   assert.ok(/api\("meine_nachrichten_statistik", \{ tage: NST\.tage \}/.test(html) && /wahl = NST\.eigen \? "" :/.test(html) && /fuss = NST\.eigen \? "" :/.test(html), "ohne Mitgliederwahl, ohne Admin-Knopf");
 }
+// 2.37.0 KC-CLUB-NUR-AUSGEBLENDETE (Wunsch Hansi): unten „Nur ausgeblendete zeigen“ – nur diese Kacheln, voll bedienbar; Knopf schaltet zurück
+{
+  const f = html.slice(html.indexOf("function kachelnZeigen()"), html.indexOf("// ---------- KC-CLUB-INFOFELD (0.42.0)"));
+  assert.ok(/nurAus = KA_NUR_AUS && !einfach\(\)/.test(f) && /\(nurAus \? kaSortiert\(reg\)\.filter\(\(k\) => KA\.aus\.includes\(k\.id\)\) : kacheln\(reg\)\)\.map/.test(f), "nur die ausgeblendeten, gleiche Kachel-Knöpfe (voll bedienbar)");
+  assert.ok(/onclick="kaNurAus\(true\)">👀 Nur ausgeblendete zeigen/.test(f) && /onclick="kaNurAus\(false\)">🙈 Ausgeblendete wieder verbergen/.test(f), "Umschalter in beide Richtungen");
+  assert.ok(/onclick="kaBearbeiten\(true\)">🙈 \$\{ausN\} ausgeblendete Kachel/.test(f), "bisheriger Anordnen-Hinweis bleibt");
+  assert.ok(/function kaNurAus\(an\) \{ KA_NUR_AUS = !!an; kachelnZeigen\(\);/.test(html) && !/kaNurAus[^\n]*kaSpeichern/.test(html), "nur Anzeige, nichts gespeichert");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
