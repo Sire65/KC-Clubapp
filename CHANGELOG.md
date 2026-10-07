@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.39.0 – 2026-10-07 – KC-CLUB-AVATAR-RANDLOS
+Wunsch Hansi (nach Foto seiner Brille): neue Brille „randlos“ – rechteckige Gläser ohne Rand, dünner Metallsteg mit Nasenpads, dünne Bügel; dazu Brillenfarbe Titan-Grau.
+
 ## 2.38.0 – 2026-10-07 – KC-CLUB-AVATAR-KNOEPFE-OBEN
 Wunsch Hansi: Bei 🧑‍🍳 Mein Bild stehen „🧩 Selbst zusammenstellen“, 🤳 Selfie, 🖼️ Galerie und 📁 Datei jetzt oben direkt rechts neben dem Bild (mit Trennlinie) – kein Runterscrollen mehr. Unten nur noch ein Hinweis darauf.
 

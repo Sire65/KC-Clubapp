@@ -4865,7 +4865,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   const a = html.indexOf("const AV_HAUT"), b = html.indexOf("// KC-CLUB-FREIGABE (2.23.86", a);
   const AV2 = new Function("INIT", "ICH", "MITGLIEDER", html.slice(a, b) + "\nreturn { avTeile, avatarSvg, AV_HAAR, AV_BRILLE, AV_KNOPF };")(null, null, []);
-  assert.ok(AV2.AV_HAAR.meliert && AV2.AV_BRILLE.length === 9 && AV2.AV_KNOPF.length === 7, "neue Auswahl");
+  assert.ok(AV2.AV_HAAR.meliert && AV2.AV_BRILLE.length >= 9 && AV2.AV_KNOPF.length === 7, "neue Auswahl");
   assert.equal(AV2.avTeile("c" + "100000000000000").length, 18, "alter 15er-Code bleibt gültig");
   assert.equal(AV2.avTeile("c" + "1000000000000003")[15], 3, "16. Zeichen = Knopffarbe");
   assert.equal(AV2.avTeile("c" + "100000000000000z"), null, "ungültige Knopffarbe abgelehnt");
@@ -5055,6 +5055,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/\.av-vorschau-rechts \{[^}]*border-left: 2px solid var\(--linie\)/.test(html), "Trennlinie links der Knöpfe");
   const w = html.slice(html.indexOf("function avWahl()"), html.indexOf("function avWaehlen("));
   assert.ok(!/avfWaehlen\('galerie'\)/.test(w) && !/onclick="avBauen\(\)"/.test(w), "unten nicht doppelt");
+}
+// 2.39.0 KC-CLUB-AVATAR-RANDLOS (Wunsch Hansi, nach Foto): randlose Rechteckbrille + Brillenfarbe Titan-Grau
+{
+  const a = html.indexOf("// [haut, frisur, haarfarbe"), b = html.indexOf("function avTeileB(");
+  assert.ok(/"pilot", "randlos"\]/.test(html) && /"#a61b29", "#7d838a"\]/.test(html) && /"Pilotenbrille", "randlos"\]\)\}/.test(html), "Auswahl im Baukasten + Titan-Grau");
+  assert.ok(/KC-CLUB-AVATAR-RANDLOS/.test(html) && /22\.9, 22\.2\]\[brille\]/.test(html) && /brille === 9 \? \.8 : 1\.15/.test(html), "eigene Zeichnung, dünne Bügel bis zum Ohr");
+  const code = "c" + [1, 5, 1, 0, 0, 9, 1, 1, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0].map((x) => x.toString(36)).join("");
+  assert.ok(/^c[0-9a-z]{15,18}$/.test(code) && server.includes("/^c[0-9a-z]{15,18}$/.test(w.figur)"), "Server nimmt den Code an");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

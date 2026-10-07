@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.38.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.39.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -86,8 +86,8 @@ const AV_FIGUREN = {
 const AV_FRISUREN = ["lang", "zopf", "dutt", "bob", "locken", "kurz", "wuschel", "seiten", "glatze"], AV_KOPF = ["koch", "tuch", "kappe", "keine", "bandana", "military", "kopftuch", "stirnband", "haarreif", "spange", "kapperueck"], AV_BART = [0, "voll", "schnurr", "stoppel", "zwirbel", "walross", "kinnbart"]; // 2.23.96: drei Schnauzer-Formen dazu (Wunsch Hansi)
 // 2.23.99 (Wunsch Hansi): mehr Gesichtsteile – Index 0 zeichnet genau wie bisher (alte Figuren und Codes bleiben unverändert)
 const AV_AUGEN = ["normal", "lachend", "gross", "wimpern"], AV_BRAUEN = ["normal", "schmal", "kraeftig", "buschig"], AV_MUND = ["standard", "lachen", "verschmitzt", "ruhig"];
-const AV_WANGEN = ["zart", "keine", "kraeftig", "sommersprossen"], AV_BRILLE = [0, "rund", "eckig", "halb", "sonne", "oval", "horn", "katze", "pilot"]; // 2.27.2: mehr Brillen
-const AV_BRILLENFARBE = ["#2b2b2b", "#6b4423", "#b8962e", "#a61b29"], AV_JACKE = ["#ffffff", "#2a2a2a", "#8e9399"];
+const AV_WANGEN = ["zart", "keine", "kraeftig", "sommersprossen"], AV_BRILLE = [0, "rund", "eckig", "halb", "sonne", "oval", "horn", "katze", "pilot", "randlos"]; // 2.27.2: mehr Brillen; 2.39.0: randlos (Wunsch Hansi, nach Foto)
+const AV_BRILLENFARBE = ["#2b2b2b", "#6b4423", "#b8962e", "#a61b29", "#7d838a"] /* 2.39.0: + Titan-Grau */, AV_JACKE = ["#ffffff", "#2a2a2a", "#8e9399"];
 const AV_KNOPF = [0, "#c9a227", "#2a2a2a", "#c8102e", "#1d4f91", "#ffffff", "#9aa0a6"]; // 2.27.2 (Wunsch Hansi): Knopffarbe der Kochjacke (0 = passend zur Jacke)
 let AV_UID = 0; // eindeutige Muster-Kennung je gezeichnetem Avatar (grau meliert)
 // 2.33.0 KC-CLUB-AVATAR-KOPF (Wunsch Hansi): mehr Kopfbedeckungen, je Farbe und Muster (0 = wie bisher – alte Figuren bleiben gleich)
@@ -266,8 +266,12 @@ function avatarSvg(code, gr = 40, ini = "") { // 2.27.2: ini = Initialen (klein 
       `<g fill="none" stroke="${bF}" stroke-width="1.2"><ellipse cx="27" cy="29.6" rx="3.9" ry="2.9"/><ellipse cx="37" cy="29.6" rx="3.9" ry="2.9"/><path d="M30.9 29.4 H33.1"/></g>`,
       `<g fill="none" stroke="${bF}" stroke-width="2.3" stroke-linejoin="round"><rect x="22.9" y="26.5" width="7.8" height="6" rx="1.8"/><rect x="33.3" y="26.5" width="7.8" height="6" rx="1.8"/><path d="M30.7 28.6 H33.3"/></g>`,
       `<g fill="none" stroke="${bF}" stroke-width="1.3" stroke-linejoin="round"><path d="M22.4 26.2 L30.6 27.4 Q30.4 32.6 26.8 32.6 Q23.1 32.4 22.4 26.2Z M41.6 26.2 L33.4 27.4 Q33.6 32.6 37.2 32.6 Q40.9 32.4 41.6 26.2Z M30.6 28.4 H33.4"/></g>`,
-      `<g stroke="${bF}" stroke-width="1"><path d="M22.9 27 H30.8 Q31 33.9 26.9 33.9 Q22.9 33.7 22.9 27Z M33.2 27 H41.1 Q41.1 33.7 37.1 33.9 Q33 33.9 33.2 27Z" fill="rgba(120,90,40,.28)"/><path d="M30.8 27.4 H33.2 M30.7 28.8 Q32 28 33.3 28.8" fill="none"/></g>`][brille] || ""}${brille ? (() => { const x = [0, 23.4, 23, 23.4, 22.8, 23.1, 22.9, 22.4, 22.9][brille], y = [0, 29.5, 28.6, 29.8, 27.6, 29.4, 28.4, 27, 27.6][brille];
-      return `<path d="M${x} ${y} L19.6 ${y - .4} M${64 - x} ${y} L44.4 ${y - .4}" stroke="${bF}" stroke-width="${brille === 6 ? 1.8 : 1.15}" stroke-linecap="round"/>`; })() : ""}</svg>`; // 2.27.2: oval, Hornbrille, Katzenauge, Pilotenbrille; 2.33.0: Bügel bis zum Ohr
+      `<g stroke="${bF}" stroke-width="1"><path d="M22.9 27 H30.8 Q31 33.9 26.9 33.9 Q22.9 33.7 22.9 27Z M33.2 27 H41.1 Q41.1 33.7 37.1 33.9 Q33 33.9 33.2 27Z" fill="rgba(120,90,40,.28)"/><path d="M30.8 27.4 H33.2 M30.7 28.8 Q32 28 33.3 28.8" fill="none"/></g>`,
+      // KC-CLUB-AVATAR-RANDLOS (2.39.0): randlose Rechteckbrille – nur Glas (hauchzart), dünner Metallsteg oben, kleine Nasenpads
+      `<g><rect x="22.6" y="26.9" width="8.2" height="5.6" rx="1.5" fill="rgba(215,232,245,.22)" stroke="rgba(0,0,0,.16)" stroke-width=".45"/><rect x="33.2" y="26.9" width="8.2" height="5.6" rx="1.5" fill="rgba(215,232,245,.22)" stroke="rgba(0,0,0,.16)" stroke-width=".45"/>
+        <path d="M24.4 28 L25.8 27.6 M35 28 L36.4 27.6" stroke="rgba(255,255,255,.6)" stroke-width=".6" stroke-linecap="round"/><path d="M29.9 27.7 H30.9 Q31.3 27.2 32 27.2 Q32.7 27.2 33.1 27.7 H34.1 M31.1 27.6 Q31 29.4 30.6 30.2 M32.9 27.6 Q33 29.4 33.4 30.2" fill="none" stroke="${bF}" stroke-width=".75" stroke-linecap="round"/>
+        <path d="M22.1 27.7 H23.6 M40.4 27.7 H41.9" stroke="${bF}" stroke-width=".85" stroke-linecap="round"/></g>`][brille] || ""}${brille ? (() => { const x = [0, 23.4, 23, 23.4, 22.8, 23.1, 22.9, 22.4, 22.9, 22.2][brille], y = [0, 29.5, 28.6, 29.8, 27.6, 29.4, 28.4, 27, 27.6, 27.7][brille];
+      return `<path d="M${x} ${y} L19.6 ${y - .4} M${64 - x} ${y} L44.4 ${y - .4}" stroke="${bF}" stroke-width="${brille === 6 ? 1.8 : brille === 9 ? .8 : 1.15}" stroke-linecap="round"/>`; })() : ""}</svg>`; // 2.27.2: oval, Hornbrille, Katzenauge, Pilotenbrille; 2.33.0: Bügel bis zum Ohr
 }
 // KC-CLUB-FREIGABE (2.23.86, Wunsch Hansi): neue Funktionen nur sichtbar, wenn freigegeben – der Admin sieht sie immer (zum Testen, mit 🔒)
 const frei = (id) => !!ICH?.admin || INIT?.freigaben?.[id] === "alle";
@@ -8056,7 +8060,7 @@ function avbZeigen() {
     ${reihe("Augenbrauen", 10, ["normal", "schmal", "kräftig", "buschig"])}
     ${reihe("Mund", 11, ["Lächeln", "breites Lachen", "verschmitzt", "ruhig"])}
     ${reihe("Wangen", 12, ["zart rosa", "keine", "kräftig", "Sommersprossen"])}
-    ${reihe("Brille", 5, ["ohne", "rund", "eckig", "Halbbrille", "Sonnenbrille", "oval", "Hornbrille", "Katzenauge", "Pilotenbrille"])}
+    ${reihe("Brille", 5, ["ohne", "rund", "eckig", "Halbbrille", "Sonnenbrille", "oval", "Hornbrille", "Katzenauge", "Pilotenbrille", "randlos"])}
     ${AVB[5] ? reihe("Brillenfarbe", 13, AV_BRILLENFARBE.map(punkt)) : ""}
     ${reihe("Kochjacke", 14, ["weiß", "schwarz", "grau"])}
     ${reihe("Knöpfe", 15, ["passend", ...AV_KNOPF.slice(1).map(punkt)])}
