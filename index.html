@@ -1054,6 +1054,14 @@
   .mini-kachel .mk-gross { font-weight: 800; font-size: 1.05rem; }
   .mini-kachel .marke { justify-self: start; }
   .mini-kachel.mk-offen { border-color: var(--gelb); }
+  /* KC-CLUB-PROTOKOLL-LISTE (2.54.0, Wunsch Hansi): Protokolle untereinander – „Protokoll Sitzung vom …“, darunter der Ort */
+  .mini-kacheln.prl-ansicht { display: flex; flex-direction: column; gap: 6px; }
+  .prl-ansicht .prkarte { display: flex; flex-direction: row; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 14px; }
+  .prl-ansicht .prkarte .prl-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .prl-ansicht .prkarte .prl-titel { font-weight: 800; line-height: 1.25; }
+  .prl-ansicht .prkarte .prl-unter { font-size: .85rem; color: var(--grau); line-height: 1.25; overflow-wrap: anywhere; }
+  .prl-ansicht .prkarte .prl-rechts { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; font-size: .8rem; }
+  .prl-ansicht .prkarte .mk-sym { font-size: 1.5rem; }
   .mini-kachel:disabled { opacity: .45; cursor: default; }
   .mini-kachel.mk-dabei, .mini-kachel.mk-voll { border-color: var(--gruen); }
   .info-gross { font-size: 1.12rem; }
@@ -2563,7 +2571,7 @@
 
   <!-- SITZUNGSPROTOKOLLE (KC-CLUB-PROTOKOLLE) -->
   <section id="v-protokolle" class="versteckt">
-    <div class="kopf2"><button class="zurueck" onclick="zurueck('start')" aria-label="Zurück">‹</button><h2>📄 Protokolle</h2><button class="knopf klein pr-filter-knopf" id="prFilterKnopf" onclick="prFilterUmschalten()" title="Protokolle filtern (Jahr, Monat, Ort, Protokollführer)" aria-label="Protokolle filtern" aria-expanded="false">🔽<span class="anz versteckt" id="prFilterAnz"></span></button><button class="knopf haupt klein" onclick="protokollNeu()">＋ Neu</button></div>
+    <div class="kopf2"><button class="zurueck" onclick="zurueck('start')" aria-label="Zurück">‹</button><h2>📄 Protokolle</h2><button class="knopf klein pr-ansicht-knopf" id="prAnsichtKnopf" onclick="prAnsichtUmschalten()" title="Als Liste oder als Kacheln zeigen" aria-label="Ansicht umschalten">▦</button><button class="knopf klein pr-filter-knopf" id="prFilterKnopf" onclick="prFilterUmschalten()" title="Protokolle filtern (Jahr, Monat, Ort, Protokollführer)" aria-label="Protokolle filtern" aria-expanded="false">🔽<span class="anz versteckt" id="prFilterAnz"></span></button><button class="knopf haupt klein" onclick="protokollNeu()">＋ Neu</button></div>
     <!-- KC-CLUB-PROTOKOLL-FILTER (2.23.36, Wunsch Hansi): Filter nach Jahr, Monat, Ort, Protokollführer – Felder in zwei Spalten -->
     <div class="karte pr-filter versteckt" id="prFilterFeld">
       <button type="button" class="pr-filter-zu" onclick="prFilterUmschalten(false)" aria-label="Filter schließen" title="Filter schließen">✕</button><!-- 2.23.37 KC-CLUB-PROTOKOLL-FILTER-ZU -->

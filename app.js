@@ -14297,7 +14297,8 @@ async function protokolleLaden() {
         <button class="knopf haupt klein" onclick="einmal(this, () => protokollAnlegen('${t.id}'))">＋ Anlegen</button></div>`).join("")}</details>` : "";
     const suche = protokolle.length > 5 ? `<label class="feld" style="margin-top:12px"><input id="prSuche" placeholder="🔎 Protokoll suchen …" oninput="protokollFilter()"></label>` : "";
     $("protokollListe").innerHTML = auf + neu + `<div class="abschnitt"><h3>📄 Protokolle</h3></div>` + suche
-      + (protokolle.length ? `<div class="mini-kacheln">${protokolle.map(protokollKarte).join("")}</div>` : "") + (protokolle.length ? "" : '<div class="karte hinweis">Noch keine Protokolle. Nach der nächsten Sitzung erscheint sie oben unter „Protokoll schreiben“.</div>');
+      + (protokolle.length ? `<div class="mini-kacheln${prAlsListe() ? " prl-ansicht" : ""}">${protokolle.map(prAlsListe() ? protokollZeile : protokollKarte).join("")}</div>` : "") + (protokolle.length ? "" : '<div class="karte hinweis">Noch keine Protokolle. Nach der nächsten Sitzung erscheint sie oben unter „Protokoll schreiben“.</div>');
+    prAnsichtKnopf();
     klappenMerken($("protokollListe")); // 1.46.0: Klappbereiche mit Pfeil und Schloss wie überall
     if (!$("prFilterFeld").classList.contains("versteckt")) prFilterFuellen(); else prFilterAnwenden(); // 2.23.36: Filter bleibt nach dem Neuladen
   } catch (e) { meldeFehler(e); }
@@ -14345,6 +14346,28 @@ function protokollKarte(p) {
     <span class="mk-sym">📄</span><span class="mk-titel">${esc(p.titel)}</span><span class="mk-unter">🗓️ ${esc(tagKurz(p.datum))}${p.ort ? " · " + esc(p.ort) : ""}</span>
     <span>${prStatusMarke(p)}${!p.gelesen ? ' <span class="marke rot">🆕 neu</span>' : ""}</span>
     <span class="mk-unter">${p.status === "entwurf" && !p.darfBearbeiten ? "✍️ schreibt " : "von "}${esc(p.verfasser.name.split(" ")[0])}${p.version > 1 ? ` · Fassung ${p.version}` : ""}</span>${info ? `<span class="mk-unter">${info}</span>` : ""}</button>`;
+}
+// KC-CLUB-PROTOKOLL-LISTE (2.54.0, Wunsch Hansi): als Liste untereinander („📄 Protokoll Sitzung vom 25.09.2026“ · „📍 bei Anne“),
+// oben umschaltbar auf die bisherigen Kacheln (je Gerät gemerkt). Gleiche Daten, gleicher Filter, gleiches Öffnen.
+const prAlsListe = () => { try { return localStorage.getItem("kc_club_pr_ansicht") !== "kacheln"; } catch { return true; } };
+function prAnsichtKnopf() { const k = $("prAnsichtKnopf"); if (!k) return; const l = prAlsListe(); k.textContent = l ? "▦" : "☰"; k.title = l ? "Als Kacheln zeigen" : "Als Liste zeigen"; k.setAttribute("aria-label", k.title); }
+function prAnsichtUmschalten() {
+  const l = !prAlsListe(); try { localStorage.setItem("kc_club_pr_ansicht", l ? "liste" : "kacheln"); } catch {}
+  melde(l ? "☰ Protokolle als Liste" : "▦ Protokolle als Kacheln"); protokolleLaden();
+}
+function prZeilenTitel(p) { // „Sitzung des Köcheclubs, 25.09.26“ → „Protokoll Sitzung vom 25.09.2026“; sonst Titel ohne angehängtes Datum + „vom …“
+  const m = /(\d{1,2})\.(\d{1,2})\.(\d{2}|\d{4})\s*$/.exec(String(p.titel || "")); // Datum im Titel geht vor (das gespeicherte ist manchmal der Schreibtag)
+  const d = m ? `${m[1].padStart(2, "0")}.${m[2].padStart(2, "0")}.${m[3].length === 2 ? "20" + m[3] : m[3]}` : String(p.datum || "").split("-").reverse().join("."), t = String(p.titel || "").replace(/[\s,–-]*(vom\s*)?\d{1,2}\.\d{1,2}\.\d{2,4}\s*$/i, "").trim();
+  return /sitzung/i.test(t) ? `Protokoll Sitzung vom ${d}` : `${t || "Protokoll"} vom ${d}`;
+}
+function protokollZeile(p) {
+  const offen = p.status !== "entwurf" || p.darfBearbeiten;
+  const info = [p.anlagen ? `📎 ${p.anlagen}` : "", p.aufgabenOffen ? `📌 ${p.aufgabenOffen} offen` : "", p.einwaende ? `⚠️ ${p.einwaende}` : ""].filter(Boolean).join(" · ");
+  const ort = String(p.ort || "").trim(); // Ort genau wie eingetragen („In der Gartenhütte bei Anne“, „SPD-Büro am Roggenmarkt“)
+  return `<button class="mini-kachel prkarte${!p.gelesen ? " mk-offen" : ""}" data-id="${p.id}" data-suche="${esc((p.titel + " " + (p.ort || "") + " " + p.datum).toLowerCase())}" ${offen ? `onclick="protokollOeffnen('${p.id}')"` : 'disabled style="opacity:.75;cursor:default"'}>
+    <span class="mk-sym">📄</span><span class="prl-text"><span class="prl-titel">${esc(prZeilenTitel(p))}</span>${ort ? `<span class="prl-unter">📍 ${esc(ort.charAt(0).toUpperCase() + ort.slice(1))}</span>` : ""}
+    <span class="prl-unter">${p.status === "entwurf" && !p.darfBearbeiten ? "✍️ schreibt " : "von "}${esc(p.verfasser.name.split(" ")[0])}${p.version > 1 ? ` · Fassung ${p.version}` : ""}${info ? " · " + info : ""}</span></span>
+    <span class="prl-rechts">${prStatusMarke(p)}${!p.gelesen ? '<span class="marke rot">🆕 neu</span>' : ""}</span></button>`;
 }
 async function protokollAnlegen(treffenId) {
   try { const r = await api("protokoll_vorlage", treffenId ? { treffen_id: treffenId } : { titel: (await eingabe("Wofür ist das Protokoll? (z. B. Jahreshauptversammlung)", "Sitzung des Köcheclubs")) || "" }); protokollOeffnen(r.id); }

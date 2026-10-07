@@ -5323,6 +5323,15 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/NICHT dein eigener/.test(f) && /kc_club_zugangslinks_schwaerzen/.test(f) && /link_an_admin_gemailt/.test(f), "deutlich beschriftet, Link im Versandprotokoll geschwärzt, protokolliert");
   assert.ok(/api\("link_an_mich_mailen", \{ person_id: pid, link \}/.test(html), "Knopf im Link-Fenster");
 }
+// 2.54.0 KC-CLUB-PROTOKOLL-LISTE (Wunsch Hansi): Protokolle als Liste („Protokoll Sitzung vom …“, Ort darunter), oben umschaltbar auf Kacheln
+{
+  const a = html.indexOf("function prZeilenTitel"), T = new Function(html.slice(a, html.indexOf("\nfunction protokollZeile", a)) + "\nreturn prZeilenTitel;")();
+  assert.equal(T({ titel: "Sitzung des Köcheclubs ,25.09.26", datum: "2026-09-25" }), "Protokoll Sitzung vom 25.09.2026");
+  assert.equal(T({ titel: "Köcheclub-Sitzung vom 03.07.2026", datum: "2026-07-04" }), "Protokoll Sitzung vom 03.07.2026", "Datum aus dem Titel geht vor");
+  assert.equal(T({ titel: "Jahreshauptversammlung", datum: "2026-03-01" }), "Jahreshauptversammlung vom 01.03.2026");
+  assert.ok(/id="prAnsichtKnopf" onclick="prAnsichtUmschalten\(\)"/.test(html) && /localStorage\.getItem\("kc_club_pr_ansicht"\) !== "kacheln"/.test(html), "Umschalter oben, je Gerät, Standard Liste");
+  assert.ok(/class="mini-kachel prkarte\$\{!p\.gelesen \? " mk-offen" : ""\}" data-id="\$\{p\.id\}" data-suche=/.test(html.slice(html.indexOf("function protokollZeile"))), "gleiche Filter-/Such-Kennungen wie die Kacheln");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
