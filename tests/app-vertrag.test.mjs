@@ -5085,6 +5085,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   T.value = "Mein Entwurf"; textVorbelegen("Alles Gute!"); assert.equal(T.value, "Mein Entwurf\n\nAlles Gute!", "angefangener Entwurf bleibt");
   assert.ok(!/\$\("text"\)\.value = `Alles Gute zum Geburtstag/.test(html), "Gratulation überschreibt keinen Entwurf");
 }
+// 2.40.1 KC-CLUB-SPUR-BILD (Wunsch Hansi: Klaus' Avatar fehlte im Wege-Protokoll): Öffnen und Ändern des Bildes werden vermerkt (nur die Art)
+{
+  assert.ok(/function avWahl\(\) \{\n  spur\("mein_bild"\);/.test(html), "Öffnen von „Mein Bild“");
+  const f = html.slice(html.indexOf("async function avSetzen(figur)"), html.indexOf("// ---------- KC-CLUB-REZEPTBUCH"));
+  assert.ok(/spur\(!figur \? "bild_entfernt" : \/\^\[bc\]\/\.test\(figur\) \? "bild_gebaut" : "bild_gewaehlt"\)/.test(f) && /spur\("bild_foto"\)/.test(html), "Speichern von Figur, eigener Figur, Foto, Entfernen");
+  assert.ok(/mein_bild: "🧑‍🍳 „Mein Bild“ geöffnet", bild_gewaehlt: /.test(html), "lesbare Namen in den Wegen");
+  for (const w of ["mein_bild", "bild_gewaehlt", "bild_gebaut", "bild_foto", "bild_entfernt"]) assert.ok(/^[a-z][a-z0-9_]{0,29}$/.test(w), "Server nimmt " + w + " an");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

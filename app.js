@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.40.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.40.1"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -152,7 +152,7 @@ async function avfSpeichern(knopf) {
       avfSetzen(r.code, AVF.neu);
       if (INIT) INIT.einstellungen = { ...(INIT.einstellungen || {}), avatar: { figur: r.code }, avatar_foto: { code: r.code, bild: AVF.neu } };
       const ich = MITGLIEDER?.find?.((x) => x.person_id === ICH?.person_id); if (ich) ich.avatar = r.code;
-      AVF.neu = null; fensterZu($("avfBlatt")); fensterZu($("avBlatt")); melde("📷 Dein Foto ist jetzt dein Bild");
+      AVF.neu = null; fensterZu($("avfBlatt")); fensterZu($("avBlatt")); melde("📷 Dein Foto ist jetzt dein Bild"); spur("bild_foto"); // KC-CLUB-SPUR-BILD
       try { kachelnZeigen?.(); } catch {} if (aktuelleAnsicht === "mitglieder" && MITGLIEDER) mitgliederZeichnen();
     } catch (e) { meldeFehler(e); }
   });
@@ -7991,6 +7991,7 @@ async function sperreAufheben(pid, knopf) {
 // 2.23.98 (Wunsch Hansi): Figur antippen = erst auswählen (große Vorschau oben), dann „✅ Übernehmen“ oder „✏️ Bearbeiten“ (Baukasten mit dieser Figur)
 const AVW = { wahl: undefined };
 function avWahl() {
+  spur("mein_bild"); // KC-CLUB-SPUR-BILD (2.40.1): „Mein Bild“ ist ein Fenster, keine Seite – darum eigens vermerkt
   const jetzt = INIT?.einstellungen?.avatar?.figur || null; AVW.wahl = undefined;
   const f = blattAuf("avBlatt", `<h3 style="margin:0">🧑‍🍳 Mein Bild</h3>
     <p class="hinweis" style="margin:4px 0 8px">Tippe eine Koch-Figur an – oben siehst du sie groß und kannst sie <b>übernehmen</b> oder <b>bearbeiten</b>. Sie erscheint bei den Mitgliedern, im Chat und bei „Wer ist online“. Ring und Abzeichen zeigen weiter, ob du gerade da bist.</p>
@@ -8074,6 +8075,7 @@ async function avSetzen(figur) {
     if (INIT) INIT.einstellungen = { ...(INIT.einstellungen || {}), avatar: { figur } };
     const ich = MITGLIEDER?.find?.((x) => x.person_id === ICH?.person_id); if (ich) ich.avatar = figur;
     melde(figur ? "🧑‍🍳 Dein Bild ist gespeichert" : "Bild entfernt – wieder deine Buchstaben");
+    spur(!figur ? "bild_entfernt" : /^[bc]/.test(figur) ? "bild_gebaut" : "bild_gewaehlt"); // KC-CLUB-SPUR-BILD (2.40.1, Wunsch Hansi): Bild-Änderung im Wege-Protokoll (nur Art, kein Bild)
     fensterZu($("avBlatt")); try { kachelnZeigen?.(); } catch {}
   } catch (e) { meldeFehler(e); }
 }
@@ -18618,7 +18620,8 @@ async function spurSenden() {
 setInterval(spurSenden, sparTakt(NZ_TAKT_MS));
 document.addEventListener("visibilitychange", () => { if (document.hidden) spurSenden(); });
 const SPUR_WAS = { geoeffnet: "📲 App geöffnet", mitglied: "👤 Mitglied angesehen", chat: "💬 Unterhaltung geöffnet", gesendet: "✉️ Nachricht gesendet", gesendet_anlage: "📎 Nachricht mit Anhang gesendet",
-  anruf: "📞 Anruf (App) an", video: "🎥 Videoanruf an", anklopfen: "👋 Angeklopft bei", telefon: "☎️ Telefonnummer angetippt", whatsapp: "🟢 WhatsApp geöffnet", mail: "✉️ E-Mail-Adresse angetippt", meine_statistik: "📊 Eigene Nachrichten-Statistik angesehen" };
+  anruf: "📞 Anruf (App) an", video: "🎥 Videoanruf an", anklopfen: "👋 Angeklopft bei", telefon: "☎️ Telefonnummer angetippt", whatsapp: "🟢 WhatsApp geöffnet", mail: "✉️ E-Mail-Adresse angetippt", meine_statistik: "📊 Eigene Nachrichten-Statistik angesehen",
+  mein_bild: "🧑‍🍳 „Mein Bild“ geöffnet", bild_gewaehlt: "🧑‍🍳 Koch-Figur als Bild gewählt", bild_gebaut: "🧩 Eigene Figur gespeichert", bild_foto: "📷 Eigenes Foto als Bild gesetzt", bild_entfernt: "🧑‍🍳 Bild entfernt (Buchstaben)" };
 const SPW = { tag: null, person: null };
 async function spurAdmin(tag, person) {
   SPW.tag = tag || SPW.tag || heuteIso(); SPW.person = person === undefined ? SPW.person : person;
