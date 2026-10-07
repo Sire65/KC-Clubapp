@@ -3634,7 +3634,7 @@ assert.ok(/const UH_HERVOR = \["Innovation"\];/.test(html) && /function uhAmeise
 {
   assert.ok(/add column if not exists antworten boolean not null default true/.test(lies("supabase/migrations/20261004_kc_club_v22211_pinnwand_antworten.sql")), "Spalte mit Standard wie bisher");
   assert.ok(/insert\(\{ antworten: p\.antworten !== false,/.test(server) && /fuer: z\.fuer, antworten: z\.antworten !== false,/.test(server) && /zeit: z\.erstellt_am, antworten: z\.antworten !== false \}/.test(server), "Server speichert und liefert die Wahl");
-  assert.ok(/if \(!z\.vonMir && z\.antworten !== false\) knoepfe\.push\(`<button class="antw"/.test(html) && /z\.vonId && z\.antworten !== false \? `<div class="zknoepfe">/.test(html), "Knopf nur, wenn erlaubt (Wand + Fenster)");
+  assert.ok(/if \(!z\.vonMir && z\.antworten !== false\) knoepfe\.push\(`<button class="antw"/.test(html) && /\$\{z\.vonId && z\.antworten !== false \? `<button class="antw" data-antw="\$\{i\}">/.test(html), "Knopf nur, wenn erlaubt (Wand + Fenster)");
   assert.ok(/antworten: PW\.form\.antworten !== false,/.test(html) && /id="pwAntw"/.test(html), "Auswahl beim Anheften");
 }
 // 338. 2.22.12: Zahlen auf weiteren großen Kacheln, nur erweiterte Ansicht (KC-CLUB-KACHEL-ZAHLEN)
@@ -4142,7 +4142,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   const f = server.slice(server.indexOf("async function schulungenListe"), server.indexOf("// ---------- KC-CLUB-SCHULUNG-ADMIN (2.23.60"));
   assert.ok(f.length > 200 && !/\.(insert|update|upsert|delete)\(/.test(f), "nur lesend – das Termin-Programm bleibt führend");
-  assert.ok(/eq\("ist_test", false\)/.test(f) && /in\("status", \["vorgemerkt", "bestaetigt"\]\)/.test(f) && /ich\.admin \|\| \(x\.e\.person_ids \?\? \[\]\)\.includes\(ich\.person_id\)/.test(f), "nur gebuchte, keine Tests, Mitglieder nur eigene");
+  assert.ok(/eq\("ist_test", false\)/.test(f) && /in\("status", \["vorgemerkt", "bestaetigt", "storniert"\]\)/.test(f) && /b\.status !== "storniert" \|\| b\.besuch_id \|\| b\.bestaetigung_gesendet_am/.test(f) && /ich\.admin \|\| \(x\.e\.person_ids \?\? \[\]\)\.includes\(ich\.person_id\)/.test(f), "nur gebuchte, keine Tests, Mitglieder nur eigene");
   assert.ok(!/email|phone|telefon/i.test(f), "keine Kontaktdaten");
   assert.ok(/schulungen,\n\s+\}\);/.test(server) && /UID:schulung-\$\{x\.id\}@koecheclub-werne/.test(server), "Kalender + Abo");
   assert.ok(/for \(const x of Q\.schulungen \|\| \[\]\)/.test(html) && /x\.art === "schulung"/.test(html) && /for \(const x of k\.schulungen \|\| \[\]\)/.test(html), "App zeigt sie im Kalender und in Demnächst");
@@ -4924,6 +4924,20 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   // KC-CLUB-SPUR-OEFFNEN: auch ein kurzer Besuch nur auf der Startseite erscheint im Weg
   assert.ok(/spur\("geoeffnet"\); setTimeout\(spurSenden, 3000\);/.test(html) && /geoeffnet: "📲 App geöffnet"/.test(html) && /const SPUR_WAS = \/\^\[a-z\]\[a-z0-9_\]\{0,29\}\$\/;/.test(server), "Öffnen zählt als Schritt");
   assert.ok(/html\.spar \*, html\.spar \*::before, html\.spar \*::after \{ animation-duration: \.001s !important;/.test(seite) && /id="sparWahl"/.test(seite) && /id="sparZeichen"/.test(seite), "Bewegungen aus, Wahl in Darstellung, 🐢 im Kopf");
+}
+// 2.30.1 KC-CLUB-SCHULUNG-ABGESAGT-KALENDER + KC-CLUB-WILLKOMMEN-BEGRUESSEN
+{
+  const f = server.slice(server.indexOf("async function schulungenListe("), server.indexOf("// ---------- KC-CLUB-SCHULUNG-HINWEIS"));
+  assert.ok(/in\("status", \["offen", "abgesagt"\]\)/.test(f) && /status: "abgesagt"/.test(f), "abgesagte Schulungstermine bleiben im Kalender");
+  assert.ok(/x\.status === "abgesagt" \? "CANCELLED"/.test(server), "Handy-Kalender: abgesagt");
+  assert.ok(/art: x\.status === "abgesagt" \? "schulung-ab" : "schulung"/.test(html) && /x\.art === "schulung-ab"\) return `<div class="keintrag sc-abgesagt">/.test(html) && /❌ abgesagt/.test(html), "eigene Farbe + „abgesagt“");
+  assert.ok(/for \(const x of k\.schulungen \|\| \[\]\) if \(x\.status !== "abgesagt"\)/.test(html) && /\.p-schulung-ab \{ background: #9aa0a6; \}/.test(seite), "Demnächst ohne Abgesagte, grauer Punkt");
+  const tm = lies("supabase/functions/kc-termine/index.ts");
+  assert.ok(/❌ Abgesagt: KC-Besuch \$\{namen\(ab\)\}/.test(tm) && /b\.status === "storniert" && \(b\.besuch_id \|\| b\.bestaetigung_gesendet_am\)/.test(tm), "Google-Kalender: abgesagt mit Namen, rot");
+  // Willkommens-Zettel: „Ich möchte auch begrüßen“ → Chat mit dem neuen Mitglied
+  assert.ok(/async function willkommenFuer\(ids: string\[\]\)/.test(server) && /willkommen: wk\.get\(z\.id\) \?\? null/.test(server) && /willkommen: wk\.get\(z\.id\) \?\? null, von,/.test(server), "Server sagt, wen der Zettel begrüßt (Wand + neu)");
+  assert.ok(/💐 Ich möchte auch begrüßen/.test(html) && /await direkt\(w\.person_id\);/.test(html) && /Herzlich willkommen\$\{w\.vorname \? ", " \+ w\.vorname : ""\}! 💐 /.test(html), "Knopf öffnet den Chat, Anfang eingetragen, nichts wird von selbst gesendet");
+  assert.ok(/z\.willkommen\.person_id !== ICH\?\.person_id/.test(html), "das neue Mitglied selbst sieht den Knopf nicht");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

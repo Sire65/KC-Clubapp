@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.30.1 – 2026-10-06 – Abgesagte Schulungen im Kalender, Begrüßen-Knopf
+KC-CLUB-SCHULUNG-ABGESAGT-KALENDER: abgesagte Schulungstermine bleiben im Kalender – grau, durchgestrichen, „❌ abgesagt“; Handy-Abo CANCELLED; Google-Kalender „❌ Abgesagt: KC-Besuch Name“ in Rot. KC-CLUB-WILLKOMMEN-BEGRUESSEN: am Willkommens-Zettel „💐 Ich möchte auch begrüßen“ → Chat mit dem neuen Mitglied, Anfang eingetragen.
+
 ## 2.30.0 – 2026-10-06 – Schnellerer Start + Sparmodus
 KC-CLUB-START-PARALLEL: Der Server beantwortet den Start mit allen Abfragen gleichzeitig statt ~20 nacheinander (Inhalt unverändert). KC-CLUB-SPARMODUS: bei langsamem Netz, Datensparen, wenig Speicher oder zwei langsamen Starts automatisch: keine Bewegungen, Hintergrund seltener (×3); 🐢 im Kopf; Einstellungen → Darstellung: Automatisch / Immer an / Aus.
 - KC-CLUB-SPUR-OEFFNEN (Fall Reinhilde): Jedes Öffnen der App ist ein Schritt „📲 App geöffnet“ im Weg und wird nach 3 s gemeldet – auch ganz kurze Besuche nur auf der Startseite sind sichtbar.

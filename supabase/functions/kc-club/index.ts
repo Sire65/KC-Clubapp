@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.30.0";
+const SERVER_VERSION = "2.30.1";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -1516,6 +1516,17 @@ async function willkommenZettel(ich: Ich) {
   const { data: z, error } = await db.from("kc_club_pinnwand").insert({ person_id: von, text, wichtig: true, fuer: "alle", personen: [], farbe, antworten: true }).select("id").single();
   if (error || !z) { await protokoll(ich.person_id, "pinnwand_willkommen_fehler", {}); return; }
   await protokoll(von, "pinnwand_willkommen", { zettel: z.id, fuer: ich.person_id });
+}
+// KC-CLUB-WILLKOMMEN-BEGRUESSEN (2.30.1, Wunsch Hansi): Welcher Zettel begrüßt wen? (aus dem Protokoll „pinnwand_willkommen“) →
+// an diesem Zettel „💐 Ich möchte auch begrüßen“ – öffnet den Chat mit dem neuen Mitglied.
+async function willkommenFuer(ids: string[]): Promise<Map<string, { person_id: string; vorname: string }>> {
+  const aus = new Map<string, { person_id: string; vorname: string }>();
+  if (!ids.length) return aus;
+  const { data } = await db.from("kc_club_protokoll").select("details").eq("aktion", "pinnwand_willkommen").in("details->>zettel", ids).limit(50);
+  const paar = (data ?? []).map((x: any) => [String(x.details?.zettel || ""), String(x.details?.fuer || "")]).filter(([z, p]) => z && p);
+  const leute = await personen(paar.map(([, p]) => p));
+  for (const [z, p] of paar) aus.set(z, { person_id: p, vorname: vorname(leute.get(p) ?? null) || leute.get(p)?.display_name || "" });
+  return aus;
 }
 const pinnwandHinweis = (von: string, privat: boolean, wichtig: boolean) => `Du hast ein neues ${wichtig ? "wichtiges " : ""}${privat ? "privates " : ""}Post-it von ${von} bekommen`;
 async function pinnwandSichtbar(ich: Ich) {
@@ -3263,10 +3274,13 @@ async function terminumfragenListe(ich: Ich) {
 // Gebucht = vorgemerkt/bestätigt, Termin nicht abgesagt, keine Testtermine. Namen aus kc_core_people, keine Kontaktdaten.
 const SCHULUNG_ART: Record<string, string> = { bei_hansi: "bei Hansi", beim_mitglied: "beim Mitglied" };
 async function schulungenListe(ich: Ich, von: string, bis: string) {
-  const { data: sl, error } = await db.from("kc_termin_slots").select("id,beginn,ende,besuchsart,status,ist_test").eq("status", "offen").eq("ist_test", false).gte("beginn", von).lt("beginn", bis).limit(300);
+  // KC-CLUB-SCHULUNG-ABGESAGT-KALENDER (2.30.1, Wunsch Hansi): abgesagte Termine bleiben im Kalender stehen – andere Farbe, „abgesagt“.
+  // Abgesagt = eine schon bestätigte Buchung wurde storniert (Termin abgesagt oder Mitglied hat abgesagt); bloß geänderte Vormerkungen nicht.
+  const { data: sl, error } = await db.from("kc_termin_slots").select("id,beginn,ende,besuchsart,status,ist_test").in("status", ["offen", "abgesagt"]).eq("ist_test", false).gte("beginn", von).lt("beginn", bis).limit(300);
   if (error || !sl?.length) return [];
-  const { data: bu } = await db.from("kc_termin_buchungen").select("id,slot_id,einladung_id,personen,besuchsart,status,besuch_id").in("slot_id", sl.map((x: any) => x.id)).in("status", ["vorgemerkt", "bestaetigt"]);
-  if (!bu?.length) return [];
+  const { data: buRoh } = await db.from("kc_termin_buchungen").select("id,slot_id,einladung_id,personen,besuchsart,status,besuch_id,bestaetigung_gesendet_am").in("slot_id", sl.map((x: any) => x.id)).in("status", ["vorgemerkt", "bestaetigt", "storniert"]);
+  const bu = (buRoh ?? []).filter((b: any) => b.status !== "storniert" || b.besuch_id || b.bestaetigung_gesendet_am).map((b: any) => (b.status === "storniert" ? { ...b, status: "abgesagt" } : b));
+  if (!bu.length) return [];
   const { data: ei } = await db.from("kc_termin_einladungen").select("id,person_ids,ist_test").in("id", bu.map((b: any) => b.einladung_id).filter(Boolean));
   const einl = new Map((ei ?? []).map((e: any) => [e.id, e]));
   const liste = bu.map((b: any) => ({ b, s: sl.find((x: any) => x.id === b.slot_id), e: einl.get(b.einladung_id) as any }))
@@ -3549,7 +3563,7 @@ async function kalenderIcs(token: string) {
   for (const x of await schulungenListe({ ...ich, admin: !!rolleAbo?.ist_admin }, new Date(Date.now() - 60 * 86400000).toISOString(), new Date(Date.now() + 500 * 86400000).toISOString()).catch(() => [])) {
     z.push("BEGIN:VEVENT", `UID:schulung-${x.id}@koecheclub-werne`, `DTSTAMP:${stamp}`, `SEQUENCE:${Math.floor(new Date(x.beginn).getTime() / 60000) % 100000000}`,
       `SUMMARY:${icsText("🎓 Schulung: " + x.namen.join(", ") + (x.art ? " (" + x.art + ")" : ""))}`, `DTSTART:${icsZeit(x.beginn)}`, `DTEND:${icsZeit(x.ende)}`,
-      `STATUS:${x.status === "bestaetigt" ? "CONFIRMED" : "TENTATIVE"}`, "END:VEVENT");
+      `STATUS:${x.status === "bestaetigt" ? "CONFIRMED" : x.status === "abgesagt" ? "CANCELLED" : "TENTATIVE"}`, "END:VEVENT");
   }
   // KC-CLUB-PRIVATTERMIN (1.0.0): eigene private Einträge im eigenen Abo
   const { data: pReihen } = await db.from("kc_club_privattermine").select("*").eq("person_id", ich.person_id).neq("wiederholung", "keine").limit(200);
@@ -8323,11 +8337,12 @@ Köcheclub Werne`,
         const aktiv = await aktiveMitglieder();
         const leute = await personen([...zettel.map((z: any) => z.person_id), ...zettel.flatMap((z: any) => z.personen || []), ...(gl ?? []).map((g: any) => g.person_id)]);
         const nm = (id: string) => leute.get(id)?.display_name || aktiv.find((m) => m.person_id === id)?.display_name || id;
+        const wk = await willkommenFuer(zettel.filter((z: any) => z.fuer === "alle").map((z: any) => z.id)).catch(() => new Map());
         return json({ max: PINNWAND_MAX, zeichen: PINNWAND_ZEICHEN, zettel: zettel.map((z: any) => {
           const vonMir = z.person_id === ich.person_id, meine = (gl ?? []).find((g: any) => g.zettel_id === z.id && g.person_id === ich.person_id);
           const empf = z.fuer === "alle" ? aktiv.map((m) => m.person_id).filter((id) => id !== z.person_id) : z.fuer === "personen" ? (z.personen || []) : [];
           const lese = (gl ?? []).filter((g: any) => g.zettel_id === z.id && g.person_id !== z.person_id);
-          return { id: z.id, text: z.text, wichtig: z.wichtig, fuer: z.fuer, antworten: z.antworten !== false, erstellt_am: z.erstellt_am, vonMir, farbe: z.farbe ?? 1,
+          return { id: z.id, text: z.text, wichtig: z.wichtig, fuer: z.fuer, antworten: z.antworten !== false, erstellt_am: z.erstellt_am, vonMir, farbe: z.farbe ?? 1, willkommen: wk.get(z.id) ?? null,
             von: { person_id: z.person_id, vorname: vorname(leute.get(z.person_id) ?? null) || nm(z.person_id) },
             empfaenger: z.fuer === "personen" ? empf.map(nm) : [],
             erledigt: z.fuer === "ich" ? null : meine?.erledigt_am ?? null,
@@ -8385,8 +8400,9 @@ Köcheclub Werne`,
         const gesehen = new Set((gl ?? []).map((g: any) => g.zettel_id));
         const neu = fremd.filter((z: any) => !gesehen.has(z.id)).slice(0, 10);
         const leute = await personen(neu.map((z: any) => z.person_id));
+        const wk = await willkommenFuer(neu.filter((z: any) => z.fuer === "alle").map((z: any) => z.id)).catch(() => new Map());
         return json({ neu: neu.map((z: any) => { const von = vorname(leute.get(z.person_id)) || "jemandem";
-          return { id: z.id, von, vonId: z.person_id, farbe: z.farbe ?? 1, wichtig: !!z.wichtig, privat: pinnwandPrivat(z), hinweis: pinnwandHinweis(von, pinnwandPrivat(z), !!z.wichtig), text: z.text, zeit: z.erstellt_am, antworten: z.antworten !== false }; }) });
+          return { id: z.id, willkommen: wk.get(z.id) ?? null, von, vonId: z.person_id, farbe: z.farbe ?? 1, wichtig: !!z.wichtig, privat: pinnwandPrivat(z), hinweis: pinnwandHinweis(von, pinnwandPrivat(z), !!z.wichtig), text: z.text, zeit: z.erstellt_am, antworten: z.antworten !== false }; }) });
       }
       // KC-CLUB-PINNWAND-DIREKT (0.58.0): der Zettel wurde im Post-it-Fenster angezeigt → als gesehen erfassen (nur sichtbare fremde Zettel)
       case "pinnwand_gesehen": {

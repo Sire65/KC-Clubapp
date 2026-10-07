@@ -415,7 +415,7 @@ async function kalenderEintraege() {
   const { data: slots } = await db.from("kc_termin_slot_stand").select("*").eq("ist_test", false).gte("beginn", seit);
   const ids = (slots ?? []).map((s: any) => s.id);
   const { data: buch } = ids.length
-    ? await db.from("kc_termin_buchungen").select("*, einladung:kc_termin_einladungen(person_ids)").in("slot_id", ids).in("status", AKTIV)
+    ? await db.from("kc_termin_buchungen").select("*, einladung:kc_termin_einladungen(person_ids)").in("slot_id", ids).in("status", [...AKTIV, "storniert"]) // 2.30.1: abgesagte mit Namen
     : { data: [] as any[] };
   const { data: vor } = await db.from("kc_termin_vorschlaege").select("*, einladung:kc_termin_einladungen(person_ids,ist_test,bemerkung)").eq("status", "offen");
   const alleIds = [...new Set([...(buch ?? []).flatMap((b: any) => b.einladung.person_ids), ...(vor ?? []).flatMap((v: any) => v.einladung.person_ids)])];
@@ -425,13 +425,15 @@ async function kalenderEintraege() {
 
   const eintraege: any[] = [];
   for (const s of slots ?? []) {
-    const bs = (buch ?? []).filter((b: any) => b.slot_id === s.id);
+    // KC-CLUB-SCHULUNG-ABGESAGT-KALENDER (Club-App 2.30.1): abgesagt = schon bestätigte Buchung storniert → im Kalender mit Namen, rot
+    const ab = (buch ?? []).filter((b: any) => b.slot_id === s.id && b.status === "storniert" && (b.besuch_id || b.bestaetigung_gesendet_am));
+    const bs = (buch ?? []).filter((b: any) => b.slot_id === s.id && AKTIV.includes(b.status));
     const best = bs.filter((b: any) => b.status === "bestaetigt"), vorg = bs.filter((b: any) => b.status === "vorgemerkt");
     const namen = (l: any[]) => l.map((b: any) => namenKurz(leuteVon(b.einladung.person_ids))).join(", ");
     const art = bs[0]?.besuchsart || artEffektiv(s);
     const frei = s.plaetze - s.belegt;
     let titel: string, farbe: string;
-    if (s.status === "abgesagt") { titel = "❌ Abgesagt: KC-Besuchstermin"; farbe = "abgesagt"; }
+    if (s.status === "abgesagt" || (ab.length && !bs.length)) { titel = ab.length ? `❌ Abgesagt: KC-Besuch ${namen(ab)}${s.status === "abgesagt" ? "" : " (Termin wieder frei)"}` : "❌ Abgesagt: KC-Besuchstermin"; farbe = "abgesagt"; }
     else if (best.length) { titel = `✅ Gebucht: KC-Besuch ${namen(best)}` + (vorg.length ? ` (+ vorgemerkt: ${namen(vorg)})` : ""); farbe = "gebucht"; }
     else if (vorg.length) { titel = `⏳ Vorgemerkt: KC-Besuch ${namen(vorg)} – bitte freigeben`; farbe = "vorgemerkt"; }
     else { titel = `🗓 Geplant: KC-Besuchstermin (${s.plaetze} ${s.plaetze === 1 ? "Platz" : "Plätze"} frei)`; farbe = "geplant"; }
@@ -439,6 +441,7 @@ async function kalenderEintraege() {
     const beschreibung = [
       `Status: ${titel.replace(/^\S+\s/, "")}`, `Ort: ${artKurz(art)}`,
       s.status !== "abgesagt" ? `Plätze: ${s.belegt} von ${s.plaetze} belegt${frei > 0 && !s.hat_hausbesuch ? ` (${frei} frei)` : ""}` : "",
+      ...ab.map((b: any) => `• ${namenKurz(leuteVon(b.einladung.person_ids))} – abgesagt`),
       ...bs.map((b: any) => `• ${namenKurz(leuteVon(b.einladung.person_ids))} – ${b.status === "bestaetigt" ? "gebucht" : "vorgemerkt, wartet auf Freigabe"}${b.besuch_id ? `\n  Protokoll öffnen: ${CLUB_APP}#besuch=${b.besuch_id}` : ""}`),
       s.notiz ? `Notiz: ${s.notiz}` : "", s.herkunft === "gegenvorschlag" ? "Aus einem Gegenvorschlag des Mitglieds." : s.herkunft === "direkt" ? "Mündlich abgesprochen." : "",
     ].filter(Boolean).join("\n") + `\n\nVerwaltet in der Köcheclub-App (🎓 Schulungen): ${CLUB_APP}#schulungen`;

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.30.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.30.1"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -598,7 +598,7 @@ function pwFenster(neu) {
     <div class="pwfenster-zettel">${liste.map((z, i) => `<div class="zettel${z.wichtig ? " wichtig" : ""}${pwFarbe(z)}" style="--dreh:${pwDreh(z.id)}deg">
       ${z.wichtig ? '<span class="zwichtig">❗ WICHTIG</span>' : ""}${pwKopf(z.von, z.zeit)}<div class="ztext">${esc(z.text || "")}</div>
       ${z.privat ? '<div class="zfuss">nur für dich</div>' : ""}
-      ${z.vonId && z.antworten !== false ? `<div class="zknoepfe"><button class="antw" data-antw="${i}">✍️ Antworten</button></div>` : ""}</div>`).join("")}</div>
+      ${(z.vonId && z.antworten !== false) || pwWillkommenWer(z) ? `<div class="zknoepfe">${pwWillkommenWer(z) ? `<button class="antw" data-willk="${i}">💐 Ich möchte auch begrüßen</button>` : ""}${z.vonId && z.antworten !== false ? `<button class="antw" data-antw="${i}">✍️ Antworten</button>` : ""}</div>` : ""}</div>`).join("")}</div>
     ${neu.length > liste.length ? `<p class="hinweis" style="margin:0">… und ${neu.length - liste.length} weitere an der Pinnwand</p>` : ""}
     <button class="knopf haupt" style="text-align:center" data-k="gelesen">✓ Gelesen</button>
     <button class="knopf" style="text-align:center" data-k="wand">📌 Zur Pinnwand</button></div>`;
@@ -608,6 +608,8 @@ function pwFenster(neu) {
   // KC-CLUB-PINNWAND-ANTWORT (0.60.0): gelesen melden und sofort ein Gegen-Post-it schreiben (Empfänger vorausgewählt, änderbar)
   f.querySelectorAll("[data-antw]").forEach((b) => b.onclick = () => { const z = liste[Number(b.dataset.antw)]; zu();
     api("pinnwand_gesehen", { ids: liste.map((x) => x.id) }).catch(() => {}); pwAntworten(z.id, z.vonId, z.von); });
+  f.querySelectorAll("[data-willk]").forEach((b) => b.onclick = () => { const z = liste[Number(b.dataset.willk)]; zu();
+    api("pinnwand_gesehen", { ids: liste.map((x) => x.id) }).catch(() => {}); pwBegruessen(z.willkommen); });
   f.onclick = (e) => { if (e.target === f) zu(); };
   document.body.appendChild(f);
 }
@@ -684,6 +686,7 @@ function pwZeigen() {
   if (!PW.zettel.length) return ($("pwWand").innerHTML = aushang + (aushang ? "" : `<div class="leer">Noch keine Zettel an der Pinnwand.<br>Mit „＋ Zettel“ einen anheften.</div>`));
   $("pwWand").innerHTML = aushang + PW.zettel.map((z) => {
     const knoepfe = [];
+    if (pwWillkommenWer(z)) knoepfe.push(`<button class="antw" onclick="pwBegruessen(PW.zettel.find((x) => x.id === '${z.id}')?.willkommen)">💐 Ich möchte auch begrüßen</button>`); // 2.30.1
     if (!z.vonMir && z.antworten !== false) knoepfe.push(`<button class="antw" onclick="pwAntworten('${z.id}','${esc(z.von.person_id)}','${esc(z.von.vorname).replace(/'/g, "")}')">✍️ Antworten</button>`);
     if (!z.vonMir) knoepfe.push(z.erledigt ? `<button class="erl" onclick="pwErledigt('${z.id}', true)">✓ erl. ${zeitKurz(z.erledigt)}</button>` : `<button onclick="pwErledigt('${z.id}')">✓ erl.</button>`);
     if (z.vonMir) knoepfe.push(`<button onclick="pwWichtig('${z.id}', ${!z.wichtig})">${z.wichtig ? "❗ nicht mehr wichtig" : "❗ wichtig machen"}</button>`); // 2.13.0
@@ -731,6 +734,16 @@ function pwVoll() {
     + eigene.map((z) => `<div class="zeile"><span class="zettelpunkt${pwFarbe(z)}"></span><span style="flex:1">${esc(String(z.text).slice(0, 60))}${String(z.text).length > 60 ? " …" : ""}</span><button class="knopf klein" onclick="pwAbnehmen('${z.id}', true)">🗑️ abnehmen</button></div>`).join("");
 }
 // KC-CLUB-PINNWAND-ANTWORT (0.60.0): aus dem Post-it-Fenster oder von der Wand direkt ins Formular
+// KC-CLUB-WILLKOMMEN-BEGRUESSEN (2.30.1, Wunsch Hansi): am Willkommens-Zettel „💐 Ich möchte auch begrüßen“ → sofort der Chat mit dem
+// neuen Mitglied, Anfang schon eingetragen („Herzlich willkommen, Klara! 💐 “) – den Rest schreibt man selbst, gesendet wird erst mit ➤.
+const pwWillkommenWer = (z) => (z?.willkommen?.person_id && z.willkommen.person_id !== ICH?.person_id ? z.willkommen : null);
+async function pwBegruessen(w) {
+  if (!w?.person_id) return;
+  await direkt(w.person_id);
+  const t = $("text"); if (!t) return;
+  if (!t.value.trim()) t.value = `Herzlich willkommen${w.vorname ? ", " + w.vorname : ""}! 💐 `;
+  t.dispatchEvent(new Event("input")); t.focus(); try { t.setSelectionRange(t.value.length, t.value.length); } catch {}
+}
 async function pwAntworten(id, personId, name) {
   if (aktuelleAnsicht !== "pinnwand") zeige("pinnwand");
   try { pwUebernehmen(await api("pinnwand", {}, { warten: true })); pwZeigen(); } catch {}
@@ -8580,7 +8593,7 @@ function demnaechstListe(k) {
   for (const v of k.fristen || []) if (v.offen) e.push({ tag: berlinIso(v.frist), sym: "🗳️", text: "Abstimmung endet: " + v.titel });
   for (const x of k.anfragen || []) e.push({ tag: berlinIso(x.beginn), zeit: fZeit.format(new Date(x.beginn)), sym: "📨", text: x.anlass + (x.vonMir ? " (an " + taAnWen(x) + ")" : " (" + x.von.vorname + ")") });
   for (const x of k.privat || []) e.push({ tag: berlinIso(x.beginn), zeit: x.ganztaegig ? "" : fZeit.format(new Date(x.beginn)), sym: "🔒", text: x.titel });
-  for (const x of k.schulungen || []) e.push({ tag: berlinIso(x.beginn), zeit: fZeit.format(new Date(x.beginn)), sym: "🎓", text: "Schulung" + (x.ichDabei && !ICH?.admin ? "" : ": " + x.namen.join(", ")) }); // KC-CLUB-SCHULUNGSTERMINE
+  for (const x of k.schulungen || []) if (x.status !== "abgesagt") e.push({ tag: berlinIso(x.beginn), zeit: fZeit.format(new Date(x.beginn)), sym: "🎓", text: "Schulung" + (x.ichDabei && !ICH?.admin ? "" : ": " + x.namen.join(", ")) }); // KC-CLUB-SCHULUNGSTERMINE
   for (const g of k.geburtstage || []) { // nächster Geburtstag im Zeitraum (nur Tag/Monat)
     for (const j of [heute.slice(0, 4), String(+heute.slice(0, 4) + 1)]) { const tag = `${j}-${g.md}`; if (tag >= heute && tag <= bis) { e.push({ tag, sym: "🎂", text: `${g.name} hat Geburtstag` }); break; } }
   }
@@ -9378,13 +9391,13 @@ function kalEintraege(tag, Q = KAL, mitFeiertagen = einst("feiertage", true)) { 
   for (const f of Q.fristen) if (berlinIso(f.frist) === tag) e.push({ art: "frist", f });
   for (const x of Q.anfragen || []) if (berlinIso(x.beginn) === tag) e.push({ art: "anfrage", x }); // KC-CLUB-TERMINANFRAGE
   for (const x of Q.privat || []) { const v = berlinIso(x.beginn), b = x.ende ? berlinIso(x.ende) : v; if (tag >= v && tag <= b) e.push({ art: "privat", x }); } // KC-CLUB-PRIVATTERMIN
-  for (const x of Q.schulungen || []) if (berlinIso(x.beginn) === tag) e.push({ art: "schulung", x }); // KC-CLUB-SCHULUNGSTERMINE (2.23.59)
+  for (const x of Q.schulungen || []) if (berlinIso(x.beginn) === tag) e.push({ art: x.status === "abgesagt" ? "schulung-ab" : "schulung", x }); // KC-CLUB-SCHULUNGSTERMINE (2.23.59); 2.30.1: abgesagte grau
   const md = tag.slice(5), schalt = new Date(Date.UTC(+tag.slice(0, 4), 1, 29)).getUTCDate() === 29;
   for (const g of Q.geburtstage) if (g.md === md || (!schalt && md === "02-28" && g.md === "02-29")) e.push({ art: "geb", g });
   return e;
 }
 function kalZeichnen() {
-  const heute = heuteIso(), rang = ["treffen", "schulung", "anfrage", "privat", "aktion", "veranst", "dienst", "feiertag", "frist", "geb"];
+  const heute = heuteIso(), rang = ["treffen", "schulung", "anfrage", "privat", "aktion", "veranst", "dienst", "feiertag", "frist", "geb", "schulung-ab"];
   const tage = [...Array(42)].map((_, i) => tagPlus(KAL.start, i));
   // letzte Woche weglassen, wenn sie ganz im Folgemonat liegt
   const sichtbar = +tage[35].slice(5, 7) - 1 !== kalM ? tage.slice(0, 35) : tage;
@@ -9407,6 +9420,7 @@ function kalTagZeigen() {
   if (!e.length) { $("kalTag").innerHTML = `<div class="karte">${kopf}<p class="hinweis" style="margin:6px 0 0">Keine Termine an diesem Tag.</p></div>`; return; }
   const zeilen = e.filter((x) => x.art !== "treffen" && x.art !== "veranst").map((x) => {
     if (x.art === "privat") return `<div class="keintrag" onclick="privatForm(PT.nachId('${x.x.id}'),'${kalTagWahl}')"><div class="farbe" style="background:#5b7fa6"></div><div style="flex:1"><b>🔒 ${x.x.ganztaegig ? "" : esc(fZeit.format(new Date(x.x.beginn))) + " "}${esc(x.x.titel)}</b><small>privat – nur du siehst das${x.x.wiederholung && x.x.wiederholung !== "keine" ? " · 🔁 " + esc(WDH_KURZ[x.x.wiederholung]) : ""}${x.x.ort ? " · 📍 " + esc(x.x.ort) : ""}${x.x.erinnerung_min ? " · ⏰" : ""}</small></div></div>`;
+    if (x.art === "schulung-ab") return `<div class="keintrag sc-abgesagt"><div class="farbe" style="background:#9aa0a6"></div><div style="flex:1"><b><s>🎓 ${esc(fZeit.format(new Date(x.x.beginn)))}–${esc(fZeit.format(new Date(x.x.ende)))} Schulung${x.x.ichDabei && !ICH?.admin ? "" : ": " + esc(x.x.namen.join(", "))}</s></b><small><span class="marke rot">❌ abgesagt</span> ${esc(x.x.art || "")} · aus dem Termin-Programm</small></div></div>`; // KC-CLUB-SCHULUNG-ABGESAGT-KALENDER (2.30.1)
     if (x.art === "schulung") return `<div class="keintrag"><div class="farbe" style="background:#7d3c98"></div><div style="flex:1"><b>🎓 ${esc(fZeit.format(new Date(x.x.beginn)))}–${esc(fZeit.format(new Date(x.x.ende)))} Schulung${x.x.ichDabei && !ICH?.admin ? "" : ": " + esc(x.x.namen.join(", "))}</b><small>${esc(x.x.art || "")}${x.x.status === "vorgemerkt" ? " · ⏳ vorgemerkt" : " · ✅ bestätigt"}${x.x.besuch ? " · " + esc(x.x.besuch) : ""} · aus dem Termin-Programm</small></div></div>`; // KC-CLUB-SCHULUNGSTERMINE
     if (x.art === "anfrage") return `<div class="keintrag" onclick="taZeigen('${x.x.id}')"><div class="farbe" style="background:var(--gold)"></div><div style="flex:1"><b>📨 ${esc(fZeit.format(new Date(x.x.beginn)))} ${esc(x.x.anlass)}</b><small>${x.x.vonMir ? "Anfrage an " + esc(taAnWen(x.x)) + (x.x.empfaenger.length === 1 && x.x.status !== "abgesagt" ? " · " + taStatus(x.x, x.x.empfaenger[0]).sym + " " + esc(taStatus(x.x, x.x.empfaenger[0]).t) : "") : "von " + esc(x.x.von.vorname)}${x.x.ort ? " · 📍 " + esc(x.x.ort) : ""}${x.x.meine ? " · " + TA_ANTW[x.x.meine] : ""}</small></div></div>`;
     if (x.art === "feiertag") return `<div class="keintrag"><div class="farbe" style="background:var(--rot3)"></div><div style="flex:1"><b>🇩🇪 Feiertag: ${esc(x.name)}</b><small>gesetzlicher Feiertag in NRW</small></div></div>`;
