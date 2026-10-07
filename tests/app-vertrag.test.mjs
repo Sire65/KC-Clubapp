@@ -4566,13 +4566,13 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   const k = html.slice(html.indexOf("// ---------- KC-CLUB-AVATAR (2.23.85"), html.indexOf("// ---------- KC-CLUB-KREISE (0.60.0)"));
   const AV = new Function("var INIT = null;" + k + "; return { AV_FIGUREN, avatarSvg, avTeile };")();
-  assert.equal(AV.avTeile("m05").length, 18, "Figuren bekommen die neuen Teile mit Standardwert");
+  assert.equal(AV.avTeile("m05").length, 19, "Figuren bekommen die neuen Teile mit Standardwert (2.42.0: + Kopfform)");
   assert.ok(AV.avTeile("c" + "0".repeat(15)) && !AV.avTeile("c" + "z".repeat(15)) && AV.avTeile("b000000000"), "c-Codes geprüft, b-Codes weiter gültig");
   const c = "c" + [1, 5, 1, 0, 2, 4, 3, 2, 0, 1, 3, 1, 3, 2, 1].map((x) => x.toString(36)).join("");
   assert.ok(/^<svg viewBox="0 0 64 64"/.test(AV.avatarSvg(c)) && !/<image|href=|url\(/.test(AV.avatarSvg(c)), "selbst gezeichnet, keine fremden Bilder");
   assert.ok(/reihe\("Augen", 9,/.test(html) && /reihe\("Mund", 11,/.test(html) && /reihe\("Wangen", 12,/.test(html) && /reihe\("Brille", 5, \["ohne", "rund", "eckig", "Halbbrille", "Sonnenbrille"(, "[^"]+")*\]\)/.test(html) && /reihe\("Kochjacke", 14,/.test(html), "neue Teile im Baukasten");
   assert.ok(/avatarSvg\(avbCode\(\), 160(, initialen\(ICH\?\.name\))?\)/.test(html) && /onclick="avbZufall\(\)">🎲 Zufall/.test(html), "große Vorschau + Zufall");
-  assert.ok(server.includes("/^c[0-9a-z]{15,18}$/.test(w.figur)"), "Server nimmt c-Codes an");
+  assert.ok(server.includes("/^c[0-9a-z]{15,19}$/.test(w.figur)"), "Server nimmt c-Codes an");
   assert.ok(/id="sprungHinweis"/.test(html) && /function sprungHinweisZeigen\(\)/.test(html) && /Wird nach dem Senden als Knopf angezeigt/.test(html), "Hinweis unter dem Schreibfeld");
 }
 
@@ -4866,7 +4866,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const a = html.indexOf("const AV_HAUT"), b = html.indexOf("// KC-CLUB-FREIGABE (2.23.86", a);
   const AV2 = new Function("INIT", "ICH", "MITGLIEDER", html.slice(a, b) + "\nreturn { avTeile, avatarSvg, AV_HAAR, AV_BRILLE, AV_KNOPF };")(null, null, []);
   assert.ok(AV2.AV_HAAR.meliert && AV2.AV_BRILLE.length >= 9 && AV2.AV_KNOPF.length === 7, "neue Auswahl");
-  assert.equal(AV2.avTeile("c" + "100000000000000").length, 18, "alter 15er-Code bleibt gültig");
+  assert.equal(AV2.avTeile("c" + "100000000000000").length, 19, "alter 15er-Code bleibt gültig");
   assert.equal(AV2.avTeile("c" + "1000000000000003")[15], 3, "16. Zeichen = Knopffarbe");
   assert.equal(AV2.avTeile("c" + "100000000000000z"), null, "ungültige Knopffarbe abgelehnt");
   const svg = AV2.avatarSvg("c15" + Object.keys(AV2.AV_HAAR).indexOf("meliert").toString(36) + "0600000000000", 80, "HK");
@@ -4988,7 +4988,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   for (let i = 0; i < AV3.AV_KOPF.length; i++) assert.ok(AV3.avatarSvg("c151" + i.toString(36) + "000000000000", 64).length > 500, "zeichnet " + AV3.AV_KOPF[i]);
   assert.ok(/L19\.6 \$\{y - \.4\} M\$\{64 - x\} \$\{y\} L44\.4/.test(html), "Brillenbügel bis zum Ohr");
   assert.ok(/reihe\(`Farbe \$\{AV_KOPF_NAME\[AVB\[3\]\]\}`, 16/.test(html) && /reihe\(`Muster \$\{AV_KOPF_NAME\[AVB\[3\]\]\}`, 17/.test(html), "Baukasten: Farbe und Muster je Kopfbedeckung");
-  assert.ok(server.includes("/^c[0-9a-z]{15,18}$/.test(w.figur)"), "Server nimmt 18er-Codes an");
+  assert.ok(server.includes("/^c[0-9a-z]{15,19}$/.test(w.figur)"), "Server nimmt 18er-Codes an");
 }
 // 2.34.0 KC-CLUB-NACHRICHTEN-ZAHL + KC-CLUB-NACHRICHTEN-STATISTIK (Wunsch Hansi)
 {
@@ -5062,7 +5062,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/"pilot", "randlos"\]/.test(html) && /"#a61b29", "#7d838a"\]/.test(html) && /"Pilotenbrille", "randlos"\]\)\}/.test(html), "Auswahl im Baukasten + Titan-Grau");
   assert.ok(/KC-CLUB-AVATAR-RANDLOS/.test(html) && /22\.9, 22\.2\]\[brille\]/.test(html) && /brille === 9 \? \.8 : 1\.15/.test(html), "eigene Zeichnung, dünne Bügel bis zum Ohr");
   const code = "c" + [1, 5, 1, 0, 0, 9, 1, 1, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0].map((x) => x.toString(36)).join("");
-  assert.ok(/^c[0-9a-z]{15,18}$/.test(code) && server.includes("/^c[0-9a-z]{15,18}$/.test(w.figur)"), "Server nimmt den Code an");
+  assert.ok(/^c[0-9a-z]{15,18}$/.test(code) && server.includes("/^c[0-9a-z]{15,19}$/.test(w.figur)"), "Server nimmt den Code an");
 }
 // 2.39.1 KC-CLUB-ANHANG-ANSEHEN (Meldung Hansi: Bildschirmfoto beim Antippen weg): Anhang antippen = ansehen, nur ✕ entfernt
 {
@@ -5100,6 +5100,22 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/Deine Dienstzeiten wurden erfolgreich verschickt\./.test(sw) && /if\(saved!==true\)throw Error\('Versand nicht bestätigt\.'\)/.test(sw), "Build 258: Bestätigung nur nach bestätigtem Speichern");
   assert.ok(/laeuft = \(async \(\) => \{ do \{ nochmal = false; await senden\(\); \} while \(nochmal\); return true; \}\)\(\)/.test(lies("dp2-club/daten.js")), "Club-App meldet erfolgreiches Speichern mit true (Fehler werfen)");
   assert.ok(/sw-helper-fold/.test(sw) && /sw-fold sw-days/.test(sw), "Build 260: kompakte Tagesauswahl");
+}
+// 2.42.0 KC-CLUB-MG-ONLINE-FARBE + KC-CLUB-AVATAR-GROSS + KC-CLUB-AVATAR-KOPFFORM + KC-CLUB-AVATAR-MUETZEN (Wunsch Hansi)
+{
+  assert.ok(/\.mg-kacheln \.mg-kachel\.mg-online \{ background: var\(--gruenbg\); border-color: var\(--textGruen\); \}/.test(html), "Online-Kachel grün (hell und dunkel über Variablen)");
+  assert.ok(/function avCodeGross\(code\)/.test(html) && /onclick="avCodeGross\(avbCode\(\)\)"/.test(html) && /onclick="avCodeGross\(AVW\.wahl\)"/.test(html), "Vorschau antippen = groß (Mein Bild und Baukasten)");
+  const a = html.indexOf("const AV_HAUT"), b = html.indexOf("// KC-CLUB-FREIGABE (2.23.86", a);
+  const AV4 = new Function("INIT", "ICH", "MITGLIEDER", html.slice(a, b) + "\nreturn { avTeile, avatarSvg, AV_KOPF, AV_KOPFFORM };")(null, null, []);
+  assert.deepEqual(AV4.AV_KOPFFORM, ["normal", "rundlich", "eckig", "oval", "länglich", "herzförmig"], "Kopfformen");
+  assert.ok(AV4.AV_KOPF.includes("chefhoch") && AV4.AV_KOPF.includes("schiffchen"), "Chefmütze hoch + Schiffchen");
+  const code = (kopf, form) => "c" + [1, 5, 1, kopf, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, form].map((x) => x.toString(36)).join("");
+  for (let i = 0; i < 6; i++) assert.equal(AV4.avTeile(code(0, i))[18], i, "Kopfform " + i + " im Code");
+  assert.equal(AV4.avTeile("c" + "1510001100000001" + "00").length, 19, "alte 18er-Codes gültig, Kopfform = normal");
+  assert.notEqual(AV4.avatarSvg(code(3, 2), 64), AV4.avatarSvg(code(3, 0), 64), "eckig sieht anders aus");
+  assert.ok(AV4.avatarSvg(code(AV4.AV_KOPF.indexOf("chefhoch"), 0), 64).length > 500 && AV4.avatarSvg(code(AV4.AV_KOPF.indexOf("schiffchen"), 0), 64).length > 500, "Mützen zeichnen");
+  assert.ok(/^c[0-9a-z]{15,19}$/.test(code(12, 5)) && server.includes("/^c[0-9a-z]{15,19}$/.test(w.figur)"), "Server nimmt 19er-Codes an");
+  assert.ok(/reihe\("Kopfform", 18, AV_KOPFFORM\)/.test(html), "Kopfform im Baukasten");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.42.0 – 2026-10-07 – KC-CLUB-MG-ONLINE-FARBE, -AVATAR-GROSS, -KOPFFORM, -MUETZEN
+Wunsch Hansi: Mitglieder-Kacheln von Mitgliedern, die gerade online sind, sind grün hinterlegt (sofort erkennbar). Bei 🧑‍🍳 Mein Bild und beim Zusammenstellen: Vorschau antippen = groß ansehen. Neu im Baukasten: Kopfform (normal, rundlich, eckig, oval, länglich, herzförmig) und auf dem Kopf „Chefmütze (hoch)“ und „Schiffchen (Lehrling)“ – mit Farbe und Muster. Code bekommt ein 19. Zeichen (Kopfform), alte Codes bleiben gültig. Server: Avatar-Code bis 19 Zeichen. SERVER_VERSION 2.42.0.
+
 ## 2.41.0 – 2026-10-07 – KC-CLUB-DIENSTWUNSCH: DP2 Build 262 RC
 DP2 auf Build 262 RC übernommen (dp3 d8976b9, Zweig codex/club-app-interface, Wunsch Hansi). Für die Mitglieder-Eingabe (Twinkey) neu aus Build 258–260: ganzer Sperrtag ohne Bereitschaft, „Deine Dienstzeiten wurden erfolgreich verschickt“ erst nach bestätigtem Speichern (sonst Hinweis), Abgleich des vollständigen Twinkey-Auftrags, freiwillige Unterbrechungen, kompakte Tagesauswahl (Tage zum Aufklappen, „Twinkey hilft dir“ eingeklappt). Build 261/262 (Personenkonto, Handschrift-Ziffern) betreffen nur DP2. DP2-Dateien unverändert (Prüfsummen in dp2/QUELLE.json). Datenformat unverändert. RC.
 - Auftrag an Codex: docs/DP2_CODEX_AUFTRAG_KLAPPBEREICHE.md (KC-DP-KLAPPBEREICH, DP2 Build 263) – Klappbereiche in DP2 wie in der Club-App (Pfeil ▾, Schloss 🔓/🔒, gemerkt, unten „▴ Zuklappen“).

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.41.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.42.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -83,7 +83,7 @@ const AV_FIGUREN = {
   m24: [0, "glatze", "blond", "koch", "walross", 0, "#e8792b", "#2e7d4f"], m25: [3, "locken", "grau", "koch", "zwirbel", 1, "#3949ab", "#ffffff"],
 };
 // 2.23.86 Baukasten: Code „b“ + 9 Zeichen (je ein Teil, Zahl 0–9/a–z) – Haut, Frisur, Haarfarbe, Kopf, Bart, Brille, Hintergrund, Halstuch, Typ
-const AV_FRISUREN = ["lang", "zopf", "dutt", "bob", "locken", "kurz", "wuschel", "seiten", "glatze"], AV_KOPF = ["koch", "tuch", "kappe", "keine", "bandana", "military", "kopftuch", "stirnband", "haarreif", "spange", "kapperueck"], AV_BART = [0, "voll", "schnurr", "stoppel", "zwirbel", "walross", "kinnbart"]; // 2.23.96: drei Schnauzer-Formen dazu (Wunsch Hansi)
+const AV_FRISUREN = ["lang", "zopf", "dutt", "bob", "locken", "kurz", "wuschel", "seiten", "glatze"], AV_KOPF = ["koch", "tuch", "kappe", "keine", "bandana", "military", "kopftuch", "stirnband", "haarreif", "spange", "kapperueck", "chefhoch", "schiffchen"], AV_BART = [0, "voll", "schnurr", "stoppel", "zwirbel", "walross", "kinnbart"]; // 2.23.96: drei Schnauzer-Formen dazu (Wunsch Hansi)
 // 2.23.99 (Wunsch Hansi): mehr Gesichtsteile – Index 0 zeichnet genau wie bisher (alte Figuren und Codes bleiben unverändert)
 const AV_AUGEN = ["normal", "lachend", "gross", "wimpern"], AV_BRAUEN = ["normal", "schmal", "kraeftig", "buschig"], AV_MUND = ["standard", "lachen", "verschmitzt", "ruhig"];
 const AV_WANGEN = ["zart", "keine", "kraeftig", "sommersprossen"], AV_BRILLE = [0, "rund", "eckig", "halb", "sonne", "oval", "horn", "katze", "pilot", "randlos"]; // 2.27.2: mehr Brillen; 2.39.0: randlos (Wunsch Hansi, nach Foto)
@@ -91,7 +91,9 @@ const AV_BRILLENFARBE = ["#2b2b2b", "#6b4423", "#b8962e", "#a61b29", "#7d838a"] 
 const AV_KNOPF = [0, "#c9a227", "#2a2a2a", "#c8102e", "#1d4f91", "#ffffff", "#9aa0a6"]; // 2.27.2 (Wunsch Hansi): Knopffarbe der Kochjacke (0 = passend zur Jacke)
 let AV_UID = 0; // eindeutige Muster-Kennung je gezeichnetem Avatar (grau meliert)
 // 2.33.0 KC-CLUB-AVATAR-KOPF (Wunsch Hansi): mehr Kopfbedeckungen, je Farbe und Muster (0 = wie bisher – alte Figuren bleiben gleich)
-const AV_KOPF_NAME = ["Kochmütze", "Kopftuch", "Kappe", "nichts", "Bandana", "Military-Mütze", "Kopftuch lang", "Stirnband", "Haarreif", "Haarspange", "Kappe verkehrt"];
+const AV_KOPF_NAME = ["Kochmütze", "Kopftuch", "Kappe", "nichts", "Bandana", "Military-Mütze", "Kopftuch lang", "Stirnband", "Haarreif", "Haarspange", "Kappe verkehrt", "Chefmütze (hoch)", "Schiffchen (Lehrling)"];
+// KC-CLUB-AVATAR-KOPFFORM (2.42.0, Wunsch Hansi): Gesichtsform – 0 = wie bisher; übliche Formen: rund, eckig, oval, länglich, herzförmig
+const AV_KOPFFORM = ["normal", "rundlich", "eckig", "oval", "länglich", "herzförmig"];
 const AV_KOPFFARBE = [0, "#ffffff", "#2a2a2a", "#c8102e", "#741521", "#1d4f91", "#5fa8d3", "#2e7d4f", "#5b6b3a", "#ffcc00", "#e8792b", "#6d4aa3", "#ec8fb0", "#8d6e63"];
 const AV_KOPFMUSTER = ["uni", "Punkte", "Streifen", "Karo", "Tarnmuster", "Blümchen", "Paisley"];
 const AV_BG = ["#741521", "#1d4f91", "#2e7d4f", "#6d4aa3", "#b8860b", "#00796b", "#c2185b", "#455a64", "#8d6e63", "#e8792b", "#3949ab", "#558b2f"];
@@ -166,6 +168,14 @@ async function avfEntfernen(pid, knopf) { // nur Admin: unpassendes Foto entfern
   });
 }
 // Bild groß ansehen (Mitglieds-Seite: aufs Bild tippen)
+// KC-CLUB-AVATAR-GROSS (2.42.0, Wunsch Hansi): Beispielbild/Vorschau antippen = groß ansehen (auch beim Zusammenstellen)
+function avCodeGross(code) {
+  if (!avGueltig(code)) return;
+  const f = blattAuf("avGrossBlatt", `<div style="display:grid;place-items:center;gap:10px;padding:6px 0" onclick="fensterZu($('avGrossBlatt'))">
+    <div style="width:min(320px,86vw);height:min(320px,86vw)">${avatarSvg(code, 320, initialen(ICH?.name)).replace('width="320" height="320"', 'style="width:100%;height:100%;border-radius:50%;object-fit:cover"')}</div></div>
+    <button class="knopf" onclick="fensterZu($('avGrossBlatt'))">Schließen</button>`);
+  f.style.zIndex = "2200";
+}
 function avGross(pid) {
   const m = MITGLIEDER?.find?.((x) => x.person_id === pid) || (MD?.person_id === pid ? MD : null) || { person_id: pid };
   const fig = avFigurVon(m) || (MD?.person_id === pid ? MD.avatar : null); if (!avGueltig(fig)) return;
@@ -175,14 +185,14 @@ function avGross(pid) {
     <button class="knopf" onclick="fensterZu($('avGrossBlatt'))">Schließen</button>`);
   f.style.zIndex = "2100";
 }
-function avTeile(code) { // → [haut, frisur, haarfarbe, kopf, bart, brille, hintergrund, halstuch, frau, augen, brauen, mund, wangen, brillenfarbe, jacke, knopf, kopffarbe, kopfmuster] oder null
-  const plus = (t) => (t ? [...t, 0, 0, 0, 0, 0, 0, 0, 0, 0] : null); // ältere Codes: neue Teile = wie bisher
+function avTeile(code) { // → [haut, frisur, haarfarbe, kopf, bart, brille, hintergrund, halstuch, frau, augen, brauen, mund, wangen, brillenfarbe, jacke, knopf, kopffarbe, kopfmuster, kopfform] oder null
+  const plus = (t) => (t ? [...t, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] : null); // ältere Codes: neue Teile = wie bisher
   if (AV_FIGUREN[code]) { const f = AV_FIGUREN[code]; return plus([...f, code[0] === "w"]); }
-  if (/^c[0-9a-z]{15,18}$/.test(String(code))) { // 2.23.99: erweiterter Baukasten; 2.27.2: 16. Zeichen = Knopffarbe (fehlt = passend); 2.33.0: 17./18. = Farbe/Muster der Kopfbedeckung
+  if (/^c[0-9a-z]{15,19}$/.test(String(code))) { // 2.42.0: 19. Zeichen = Kopfform // 2.23.99: erweiterter Baukasten; 2.27.2: 16. Zeichen = Knopffarbe (fehlt = passend); 2.33.0: 17./18. = Farbe/Muster der Kopfbedeckung
     const z = [...code.slice(1)].map((c) => parseInt(c, 36)), haarf = Object.keys(AV_HAAR);
     if (z[0] >= AV_HAUT.length || z[1] >= AV_FRISUREN.length || z[2] >= haarf.length || z[3] >= AV_KOPF.length || z[4] >= AV_BART.length || z[5] >= AV_BRILLE.length || z[6] >= AV_BG.length || z[7] >= AV_TUCH.length || z[8] > 1
-      || z[9] >= AV_AUGEN.length || z[10] >= AV_BRAUEN.length || z[11] >= AV_MUND.length || z[12] >= AV_WANGEN.length || z[13] >= AV_BRILLENFARBE.length || z[14] >= AV_JACKE.length || (z[15] || 0) >= AV_KNOPF.length || (z[16] || 0) >= AV_KOPFFARBE.length || (z[17] || 0) >= AV_KOPFMUSTER.length) return null;
-    return [z[0], AV_FRISUREN[z[1]], haarf[z[2]], AV_KOPF[z[3]], AV_BART[z[4]], z[5], AV_BG[z[6]], AV_TUCH[z[7]], z[8] === 1, z[9], z[10], z[11], z[12], z[13], z[14], z[15] || 0, z[16] || 0, z[17] || 0];
+      || z[9] >= AV_AUGEN.length || z[10] >= AV_BRAUEN.length || z[11] >= AV_MUND.length || z[12] >= AV_WANGEN.length || z[13] >= AV_BRILLENFARBE.length || z[14] >= AV_JACKE.length || (z[15] || 0) >= AV_KNOPF.length || (z[16] || 0) >= AV_KOPFFARBE.length || (z[17] || 0) >= AV_KOPFMUSTER.length || (z[18] || 0) >= AV_KOPFFORM.length) return null;
+    return [z[0], AV_FRISUREN[z[1]], haarf[z[2]], AV_KOPF[z[3]], AV_BART[z[4]], z[5], AV_BG[z[6]], AV_TUCH[z[7]], z[8] === 1, z[9], z[10], z[11], z[12], z[13], z[14], z[15] || 0, z[16] || 0, z[17] || 0, z[18] || 0];
   }
   return plus(avTeileB(code));
 }
@@ -197,9 +207,9 @@ function avatarSvg(code, gr = 40, ini = "") { // 2.27.2: ini = Initialen (klein 
   if (AVF_RE.test(code || "")) { const b = AVF.bild[code] || (INIT?.einstellungen?.avatar_foto?.code === code ? INIT.einstellungen.avatar_foto.bild : ""); // KC-CLUB-AVATAR-FOTO
     return `<img class="av-foto" data-avf="${code}" src="${/^data:image\/jpeg;base64,/.test(b) ? b : AVF_LEER}" alt="" width="${gr}" height="${gr}">`; }
   const f = avTeile(code); if (!f) return "";
-  const [h, frisur, hf, kopf, bart, brille, bg, tuch, frau, augen, brauen, mund, wangen, bfarbe, jacke, knopf, kfarbe, kmuster] = f, haut = AV_HAUT[h], dunkel = h >= 3;
+  const [h, frisur, hf, kopf, bart, brille, bg, tuch, frau, augen, brauen, mund, wangen, bfarbe, jacke, knopf, kfarbe, kmuster, kform] = f, haut = AV_HAUT[h], dunkel = h >= 3;
   // 2.33.0: Farbe der Kopfbedeckung (0 = wie bisher je Art) und Muster als SVG-Muster
-  const kStd = { koch: "#ffffff", tuch, kappe: tuch === "#ffffff" ? "#741521" : tuch, bandana: "#c8102e", military: "#5b6b3a", kopftuch: tuch, stirnband: "#1d4f91", haarreif: "#2a2a2a", spange: "#ffcc00", kapperueck: tuch === "#ffffff" ? "#741521" : tuch }[kopf] || tuch;
+  const kStd = { koch: "#ffffff", tuch, kappe: tuch === "#ffffff" ? "#741521" : tuch, bandana: "#c8102e", military: "#5b6b3a", kopftuch: tuch, stirnband: "#1d4f91", haarreif: "#2a2a2a", spange: "#ffcc00", kapperueck: tuch === "#ffffff" ? "#741521" : tuch, chefhoch: "#ffffff", schiffchen: "#ffffff" }[kopf] || tuch;
   const kBasis = AV_KOPFFARBE[kfarbe] || kStd, kHell = /^#(f|e|d)/i.test(kBasis) || kBasis === "#ffcc00", kKontrast = kHell ? "rgba(0,0,0,.35)" : "rgba(255,255,255,.6)";
   const kId = kmuster && kopf !== "keine" ? "avk" + ++AV_UID : "", kFill = kId ? `url(#${kId})` : kBasis;
   const kDef = !kId ? "" : `<defs><pattern id="${kId}" width="4" height="4" patternUnits="userSpaceOnUse"${kmuster === 2 ? ' patternTransform="rotate(45)"' : ""}><rect width="4" height="4" fill="${kBasis}"/>${[
@@ -229,6 +239,9 @@ function avatarSvg(code, gr = 40, ini = "") { // 2.27.2: ini = Initialen (klein 
     stirnband: `<path d="M19.4 22.8 Q32 17.4 44.6 22.8 L44.8 26.6 Q32 21.2 19.2 26.6Z" fill="${kFill}" stroke="rgba(0,0,0,.28)" stroke-width=".45"/>`,
     haarreif: `<path d="M20.4 24 Q20.6 13.4 32 13 Q43.4 13.4 43.6 24" fill="none" stroke="${kFill}" stroke-width="2.4" stroke-linecap="round"/><path d="M20.4 24 Q20.6 13.4 32 13 Q43.4 13.4 43.6 24" fill="none" stroke="rgba(0,0,0,.2)" stroke-width=".4"/>`,
     spange: `<g transform="rotate(-28 40.5 18.6)"><rect x="36.4" y="17.2" width="8.2" height="2.8" rx="1.4" fill="${kFill}" stroke="rgba(0,0,0,.35)" stroke-width=".45"/><circle cx="37.6" cy="18.6" r=".55" fill="rgba(255,255,255,.7)"/></g>`,
+    // KC-CLUB-AVATAR-MUETZEN (2.42.0, Wunsch Hansi): hohe Chefmütze (gefaltet, ohne Puff) und Schiffchen für Lehrlinge
+    chefhoch: `<g fill="${kFill}" stroke="${kHell && !kId ? "#cfc9bf" : "rgba(0,0,0,.28)"}" stroke-width=".7" stroke-linejoin="round"><path d="M22.6 16.6 L21.4 2.6 Q21.6 .4 24.4 .4 L39.6 .4 Q42.4 .4 42.6 2.6 L41.4 16.6Z"/><rect x="21.6" y="13.6" width="20.8" height="5.6" rx="1.4"/></g><path d="M25.6 1.2 L26 13.4 M29 .8 L29.2 13.4 M32 .8 V13.4 M35 .8 L34.8 13.4 M38.4 1.2 L38 13.4" stroke="${kKontrast}" stroke-width=".5" opacity=".7"/>`,
+    schiffchen: `<g fill="${kFill}" stroke="${kHell && !kId ? "#bdb6aa" : "rgba(0,0,0,.3)"}" stroke-width=".6" stroke-linejoin="round"><path d="M20.4 20 L22.2 14.6 Q26.6 12.8 30.8 13.6 L32 12.2 L33.2 13.6 Q37.4 12.8 41.8 14.6 L43.6 20 Q32 17.6 20.4 20Z"/><path d="M20.4 20 Q32 17.6 43.6 20 L43.1 22.2 Q32 19.8 20.9 22.2Z"/></g><path d="M32 12.4 V18.2 M22.6 16.8 Q32 14.8 41.4 16.8" stroke="${kKontrast}" stroke-width=".5" fill="none"/>`,
     kapperueck: `<path d="M20.5 16.5 Q12.5 14.2 7.6 17.6 Q12.8 20.4 21 20.2Z" fill="${kBasis}" stroke="rgba(0,0,0,.35)" stroke-width=".45"/><path d="M20.5 16.5 Q12.5 14.2 7.6 17.6 Q12.8 20.4 21 20.2Z" fill="rgba(0,0,0,.3)"/><path d="M19 23 Q19 11 32 11 Q45 11 45 23Z" fill="${kFill}"/><path d="M28.4 22.6 Q32 20.4 35.6 22.6" fill="none" stroke="rgba(0,0,0,.35)" stroke-width="1"/>` }[kopf] || "";
   const iniSvg = kopf === "koch" && ini && gr >= 32 ? `<text x="41.6" y="17.8" text-anchor="end" font-size="3.4" font-weight="800" font-family="Arial, sans-serif" fill="${kHell || kId ? "#741521" : "#ffffff"}"${kId ? ' stroke="#fff" stroke-width=".5" paint-order="stroke"' : ""}>${String(ini).replace(/[^A-ZÄÖÜa-zäöüß]/g, "").slice(0, 2).toUpperCase()}</text>` : ""; // 2.27.2 (Wunsch Hansi)
   // 2.23.96 (Wunsch Hansi „bessere mit Schnäuzer“): Schnurrbart kräftiger; neu Zwirbel-, Walross- und Schnauzer mit Kinnbart
@@ -244,7 +257,9 @@ function avatarSvg(code, gr = 40, ini = "") { // 2.27.2: ini = Initialen (klein 
     <path d="M9 64 Q10 49 32 47 Q54 49 55 64Z" fill="${jFarbe}"/>${[26.6, 37.4].flatMap((x) => [54.6, 59.6].map((y) => `<circle cx="${x}" cy="${y}" r="1.25" fill="${knopfF}" stroke="rgba(0,0,0,.25)" stroke-width=".3"/>`)).join("")}
     <g fill="${tuch}" stroke="rgba(0,0,0,.28)" stroke-width=".45" stroke-linejoin="round"><path d="M24.6 46.4 Q32 50.6 39.4 46.4 L38 50.4 Q32 53 26 50.4Z"/><path d="M31 52 L27.6 61.4 L30.6 60.4 L32.6 52.6Z"/><path d="M33 52 L36.8 61 L33.8 60.2 L31.6 52.6Z"/><ellipse cx="32" cy="51.6" rx="2.7" ry="2.2"/></g>
     ${hinten}<rect x="28" y="38" width="8" height="10" rx="3" fill="${haut}"/><circle cx="19.5" cy="30" r="3" fill="${haut}"/><circle cx="44.5" cy="30" r="3" fill="${haut}"/>
-    <ellipse cx="32" cy="29" rx="12.5" ry="13.5" fill="${haut}"/>${vorne}
+    ${[`<ellipse cx="32" cy="29" rx="12.5" ry="13.5" fill="${haut}"/>`, `<ellipse cx="32" cy="29.8" rx="14.3" ry="12.7" fill="${haut}"/>`,
+      `<rect x="19.6" y="15.6" width="24.8" height="26.6" rx="5.6" fill="${haut}"/>`, `<ellipse cx="32" cy="28.4" rx="10.8" ry="14.4" fill="${haut}"/>`,
+      `<rect x="21.6" y="14.6" width="20.8" height="29.2" rx="8.5" fill="${haut}"/>`, `<path d="M19.4 25.6 Q19.4 15.4 32 15.4 Q44.6 15.4 44.6 25.6 Q44.6 35.6 32 42.8 Q19.4 35.6 19.4 25.6Z" fill="${haut}"/>`][kform] || `<ellipse cx="32" cy="29" rx="12.5" ry="13.5" fill="${haut}"/>`}${vorne}
     ${frau && frisur !== "locken" ? `<path d="M19.5 21 Q18 30 20.5 39 L23 38 Q21.5 30 22.5 22Z M44.5 21 Q46 30 43.5 39 L41 38 Q42.5 30 41.5 22Z" fill="${haar}"/>` : ""}${muetze}${iniSvg}
     ${[`<circle cx="27" cy="29.5" r="1.6" fill="${auge}"/><circle cx="37" cy="29.5" r="1.6" fill="${auge}"/>`,
       `<path d="M25.2 30 Q27 28 28.8 30 M35.2 30 Q37 28 38.8 30" stroke="${auge}" stroke-width="1.3" fill="none" stroke-linecap="round"/>`,
@@ -8020,9 +8035,9 @@ function avWahlVorschau() {
   const rechts = frei("avatar_baukasten") || frei("avatar_foto") ? `<div class="av-vorschau-rechts">${frei("avatar_baukasten") ? `<button class="knopf haupt" onclick="avBauen()">🧩 Selbst zusammen&shy;stellen${nurTest("avatar_baukasten") ? " · 🔒" : ""}</button>` : ""}
     ${frei("avatar_foto") ? `<button class="knopf" onclick="avfWaehlen('selfie')">🤳 Selfie</button><button class="knopf" onclick="avfWaehlen('galerie')">🖼️ Galerie</button><button class="knopf" onclick="avfWaehlen('datei')">📁 Datei</button>` : ""}</div>` : "";
   z.classList.toggle("mit-rechts", !!rechts);
-  if (AVW.wahl === undefined) { z.innerHTML = `<div class="av-vorschau-links"><div class="av-vorschau-bild">${avGueltig(jetzt) ? avatarSvg(jetzt, 96, initialen(ICH?.name)) : `<span class="av-keins" style="width:96px;height:96px;font-size:2rem">${esc(initialen(ICH?.name))}</span>`}</div><small class="hinweis">Dein jetziges Bild – tippe unten eine Figur an.</small></div>${rechts}`; return; }
+  if (AVW.wahl === undefined) { z.innerHTML = `<div class="av-vorschau-links"><div class="av-vorschau-bild av-gross-tipp" role="button" tabindex="0" title="Antippen = groß ansehen" onclick="avCodeGross(INIT?.einstellungen?.avatar?.figur)">${avGueltig(jetzt) ? avatarSvg(jetzt, 96, initialen(ICH?.name)) : `<span class="av-keins" style="width:96px;height:96px;font-size:2rem">${esc(initialen(ICH?.name))}</span>`}</div><small class="hinweis">Dein jetziges Bild – tippe unten eine Figur an.</small></div>${rechts}`; return; }
   const c = AVW.wahl, gleich = c === jetzt, bauen = c && !AVF_RE.test(c) && avTeile(c) && frei("avatar_baukasten");
-  z.innerHTML = `<div class="av-vorschau-links"><div class="av-vorschau-bild">${c ? avatarSvg(c, 96, initialen(ICH?.name)) : `<span class="av-keins" style="width:96px;height:96px;font-size:2rem">${esc(initialen(ICH?.name))}</span>`}</div>
+  z.innerHTML = `<div class="av-vorschau-links"><div class="av-vorschau-bild av-gross-tipp" role="button" tabindex="0" title="Antippen = groß ansehen" onclick="avCodeGross(AVW.wahl)">${c ? avatarSvg(c, 96, initialen(ICH?.name)) : `<span class="av-keins" style="width:96px;height:96px;font-size:2rem">${esc(initialen(ICH?.name))}</span>`}</div>
     <div class="av-vorschau-knoepfe"><button class="knopf haupt" ${gleich ? "disabled" : ""} onclick="avSetzen(AVW.wahl)">${gleich ? "✓ Das ist dein Bild" : "✅ Übernehmen"}</button>
     ${bauen ? `<button class="knopf" onclick="avBauen(AVW.wahl)">✏️ Bearbeiten${nurTest("avatar_baukasten") ? " · 🔒" : ""}</button>` : ""}</div></div>${rechts}`;
 }
@@ -8031,7 +8046,7 @@ let AVB = null;
 function avBauen(start) { // 2.23.98: start = gewählte Figur als Vorlage („✏️ Bearbeiten“), sonst das jetzige Bild
   const jetzt = start || INIT?.einstellungen?.avatar?.figur, t = avTeile(jetzt) || avTeile("w01"), haarf = Object.keys(AV_HAAR);
   AVB = [t[0], AV_FRISUREN.indexOf(t[1]), haarf.indexOf(t[2]), AV_KOPF.indexOf(t[3]), AV_BART.indexOf(t[4]), Number(t[5]) || 0, Math.max(0, AV_BG.indexOf(t[6])), Math.max(0, AV_TUCH.indexOf(t[7])), t[8] ? 1 : 0,
-    t[9] || 0, t[10] || 0, t[11] || 0, t[12] || 0, t[13] || 0, t[14] || 0, t[15] || 0, t[16] || 0, t[17] || 0]; // 2.23.99: Augen, Brauen, Mund, Wangen, Brillenfarbe, Jacke; 2.27.2: Knöpfe; 2.33.0: Farbe/Muster der Kopfbedeckung
+    t[9] || 0, t[10] || 0, t[11] || 0, t[12] || 0, t[13] || 0, t[14] || 0, t[15] || 0, t[16] || 0, t[17] || 0, t[18] || 0]; // 2.42.0: Kopfform; 2.23.99: Augen, Brauen, Mund, Wangen, Brillenfarbe, Jacke; 2.27.2: Knöpfe; 2.33.0: Farbe/Muster der Kopfbedeckung
   fensterZu($("avBlatt") || document.createElement("div"));
   const f = blattAuf("avbBlatt", `<h3 style="margin:0">🧩 Figur zusammenstellen${nurTest("avatar_baukasten") ? ' <small class="hinweis">🔒 nur für dich (Test)</small>' : ""}</h3><div id="avbInhalt"></div>`);
   f.classList.add("sc-blatt"); avbZeigen();
@@ -8041,7 +8056,7 @@ const avbCode = () => "c" + AVB.map((x) => Math.max(0, x).toString(36)).join("")
 function avbZufall() {
   const r = (n) => Math.floor(Math.random() * n), haarf = Object.keys(AV_HAAR), frau = AVB[8];
   AVB = [r(AV_HAUT.length), r(AV_FRISUREN.length), r(haarf.length), r(AV_KOPF.length), frau ? 0 : r(AV_BART.length), r(3) ? 0 : 1 + r(AV_BRILLE.length - 1), r(AV_BG.length), r(AV_TUCH.length), frau,
-    r(AV_AUGEN.length), r(AV_BRAUEN.length), r(AV_MUND.length), r(AV_WANGEN.length), r(AV_BRILLENFARBE.length), r(4) ? 0 : 1 + r(AV_JACKE.length - 1), r(3) ? 0 : 1 + r(AV_KNOPF.length - 1), r(2) ? 0 : 1 + r(AV_KOPFFARBE.length - 1), r(3) ? 0 : 1 + r(AV_KOPFMUSTER.length - 1)];
+    r(AV_AUGEN.length), r(AV_BRAUEN.length), r(AV_MUND.length), r(AV_WANGEN.length), r(AV_BRILLENFARBE.length), r(4) ? 0 : 1 + r(AV_JACKE.length - 1), r(3) ? 0 : 1 + r(AV_KNOPF.length - 1), r(2) ? 0 : 1 + r(AV_KOPFFARBE.length - 1), r(3) ? 0 : 1 + r(AV_KOPFMUSTER.length - 1), r(AV_KOPFFORM.length)];
   avbZeigen();
 }
 function avbZeigen() {
@@ -8049,9 +8064,10 @@ function avbZeigen() {
   const punkt = (farbe) => `<span style="display:inline-block;width:20px;height:20px;border-radius:50%;background:${farbe};border:1px solid var(--linie);vertical-align:middle"></span>`;
   const haarPunkt = (k) => k === "meliert" ? `<span title="grau meliert" style="display:inline-block;width:20px;height:20px;border-radius:50%;background:repeating-linear-gradient(78deg,#8a6b43 0 2px,#bdb8ae 2px 2.6px,#8a6b43 2.6px 4px,#d9d5cc 4px 4.4px);border:1px solid var(--linie);vertical-align:middle"></span>` : punkt(AV_HAAR[k]);
   const reihe = (titel, i, werte) => `<div class="ps-schritt"><b>${titel}</b><div class="hl-chips">${werte.map((w, n) => `<button type="button" class="chip${AVB[i] === n ? " an" : ""}" onclick="AVB[${i}]=${n};avbZeigen()">${w}</button>`).join("")}</div></div>`;
-  z.innerHTML = `<div style="display:grid;place-items:center;gap:6px;padding:6px 0 8px;position:sticky;top:44px;z-index:2;background:var(--karte);border-bottom:1px solid var(--linie)">${avatarSvg(avbCode(), 160, initialen(ICH?.name))}<button type="button" class="knopf klein" style="margin:0" onclick="avbZufall()">🎲 Zufall</button></div>
+  z.innerHTML = `<div style="display:grid;place-items:center;gap:6px;padding:6px 0 8px;position:sticky;top:44px;z-index:2;background:var(--karte);border-bottom:1px solid var(--linie)"><div class="av-gross-tipp" role="button" tabindex="0" title="Antippen = groß ansehen" onclick="avCodeGross(avbCode())">${avatarSvg(avbCode(), 160, initialen(ICH?.name))}</div><button type="button" class="knopf klein" style="margin:0" onclick="avbZufall()">🎲 Zufall</button></div>
     ${reihe("Typ", 8, ["👨‍🍳 Koch", "👩‍🍳 Köchin"])}
     ${reihe("Hautton", 0, AV_HAUT.map(punkt))}
+    ${reihe("Kopfform", 18, AV_KOPFFORM)}
     ${reihe("Frisur", 1, ["lang", "Zopf", "Dutt", "Bob", "Locken", "kurz", "wuschelig", "Seiten", "Glatze"])}
     ${reihe("Haarfarbe", 2, Object.keys(AV_HAAR).map(haarPunkt))}
     ${reihe("Auf dem Kopf", 3, AV_KOPF_NAME)}
