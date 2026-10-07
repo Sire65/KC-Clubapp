@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.27.2 – 2026-10-06 – Avatar: Kinnbart, Halstuch, meliert, Brillen, Knöpfe, Initialen
+Avatar-Baukasten: Kinnbart sitzt am Kinn (nicht mehr am Hals); Halstuch größer mit Knoten und zwei herabhängenden Zipfeln; Haarfarbe „grau meliert“; Brillen zusätzlich oval, Hornbrille, Katzenauge, Pilotenbrille; Knopffarbe der Kochjacke wählbar (passend, gold, schwarz, rot, blau, weiß, silber) mit Doppelreihe; auf der Kochmütze klein die Initialen. Alte Figuren bleiben gültig. (KC-CLUB-AVATAR-FEIN, Wunsch Hansi)
+
 ## 2.27.1 – 2026-10-06 – Admin: Brille auf der Startseite ausblendbar
 Einstellungen (nur Admin): „🕶️ Brille oben auf der Startseite zeigen“ – aus = die Brille ist auf der Startseite ausgeblendet (z. B. bei einer Vorführung), gilt für dieses Gerät. (KC-CLUB-INKO-KNOPF, Wunsch Hansi)
 

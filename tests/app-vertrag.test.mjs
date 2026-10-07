@@ -4428,7 +4428,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.equal(codes.length, 40, "40 Figuren (2.23.96: 10 Köche mit Schnauzer dazu)"); assert.equal(codes.filter((c) => c[0] === "w").length, 15, "15 Köchinnen");
   for (const c of codes) assert.ok(/^<svg viewBox="0 0 64 64"/.test(AV.avatarSvg(c)) && !/<image|href=|url\(/.test(AV.avatarSvg(c)), "selbst gezeichnet, keine fremden Bilder: " + c);
   assert.equal(AV.avatarSvg("x99"), "", "unbekannter Code → nichts");
-  assert.ok(/avGueltig\(fig\) \? avatarSvg\(fig, groesse - 8\) \+ abz : esc\(initialen\(name\)\)/.test(html), "Kreis zeigt Figur, sonst Buchstaben");
+  assert.ok(/avGueltig\(fig\) \? avatarSvg\(fig, groesse - 8(, initialen\(name \|\| m\?\.name \|\| ""\))?\) \+ abz : esc\(initialen\(name\)\)/.test(html), "Kreis zeigt Figur, sonst Buchstaben");
   assert.ok(/\{ id: "avatar", sym: "🧑‍🍳", t: "Mein Bild",/.test(html) && /api\("einstellung_setzen", \{ schluessel: "avatar", wert: \{ figur \} \}\)/.test(html), "Auswahl in Meins");
   assert.ok(server.includes('avatar: (w) => ({ figur: typeof w?.figur === "string" && (/^(w(0[1-9]|1[0-5])|m(0[1-9]|1[0-9]|2[0-5]))$/.test(w.figur)') && /avatar: avatar\.get\(m\.person_id\) \?\? null/.test(server), "Server prüft den Code, liefert ihn in der Mitgliederliste");
 }
@@ -4566,13 +4566,13 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   const k = html.slice(html.indexOf("// ---------- KC-CLUB-AVATAR (2.23.85"), html.indexOf("// ---------- KC-CLUB-KREISE (0.60.0)"));
   const AV = new Function("var INIT = null;" + k + "; return { AV_FIGUREN, avatarSvg, avTeile };")();
-  assert.equal(AV.avTeile("m05").length, 15, "Figuren bekommen die neuen Teile mit Standardwert");
+  assert.equal(AV.avTeile("m05").length, 16, "Figuren bekommen die neuen Teile mit Standardwert");
   assert.ok(AV.avTeile("c" + "0".repeat(15)) && !AV.avTeile("c" + "z".repeat(15)) && AV.avTeile("b000000000"), "c-Codes geprüft, b-Codes weiter gültig");
   const c = "c" + [1, 5, 1, 0, 2, 4, 3, 2, 0, 1, 3, 1, 3, 2, 1].map((x) => x.toString(36)).join("");
   assert.ok(/^<svg viewBox="0 0 64 64"/.test(AV.avatarSvg(c)) && !/<image|href=|url\(/.test(AV.avatarSvg(c)), "selbst gezeichnet, keine fremden Bilder");
-  assert.ok(/reihe\("Augen", 9,/.test(html) && /reihe\("Mund", 11,/.test(html) && /reihe\("Wangen", 12,/.test(html) && /reihe\("Brille", 5, \["ohne", "rund", "eckig", "Halbbrille", "Sonnenbrille"\]\)/.test(html) && /reihe\("Kochjacke", 14,/.test(html), "neue Teile im Baukasten");
-  assert.ok(/avatarSvg\(avbCode\(\), 160\)/.test(html) && /onclick="avbZufall\(\)">🎲 Zufall/.test(html), "große Vorschau + Zufall");
-  assert.ok(server.includes("/^c[0-9a-z]{15}$/.test(w.figur)"), "Server nimmt c-Codes an");
+  assert.ok(/reihe\("Augen", 9,/.test(html) && /reihe\("Mund", 11,/.test(html) && /reihe\("Wangen", 12,/.test(html) && /reihe\("Brille", 5, \["ohne", "rund", "eckig", "Halbbrille", "Sonnenbrille"(, "[^"]+")*\]\)/.test(html) && /reihe\("Kochjacke", 14,/.test(html), "neue Teile im Baukasten");
+  assert.ok(/avatarSvg\(avbCode\(\), 160(, initialen\(ICH\?\.name\))?\)/.test(html) && /onclick="avbZufall\(\)">🎲 Zufall/.test(html), "große Vorschau + Zufall");
+  assert.ok(server.includes("/^c[0-9a-z]{15,16}$/.test(w.figur)"), "Server nimmt c-Codes an");
   assert.ok(/id="sprungHinweis"/.test(html) && /function sprungHinweisZeigen\(\)/.test(html) && /Wird nach dem Senden als Knopf angezeigt/.test(html), "Hinweis unter dem Schreibfeld");
 }
 
@@ -4852,6 +4852,18 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.ok(/<input type="checkbox" id="setInkoKnopf" checked onchange="inkoKnopfSetzen\(this\.checked\)">/.test(html) && /body:not\(\.ist-admin\) #setInkoKnopfZeile/.test(html) && /body\.inko-knopf-aus #inkoKnopf \{ display: none; \}/.test(html), "Schalter nur für Admin, Brille ausblendbar");
   assert.ok(/document\.body\.classList\.toggle\("inko-knopf-aus", !inkoKnopfSichtbar\(\)\);/.test(html), "gilt sofort und nach dem Start");
+}
+// 2.27.2 KC-CLUB-AVATAR-FEIN: Kinnbart am Kinn, Halstuch mit Zipfeln, grau meliert, mehr Brillen, Knopffarbe, Initialen auf der Kochmütze
+{
+  const a = html.indexOf("const AV_HAUT"), b = html.indexOf("// KC-CLUB-FREIGABE (2.23.86", a);
+  const AV2 = new Function("INIT", "ICH", "MITGLIEDER", html.slice(a, b) + "\nreturn { avTeile, avatarSvg, AV_HAAR, AV_BRILLE, AV_KNOPF };")(null, null, []);
+  assert.ok(AV2.AV_HAAR.meliert && AV2.AV_BRILLE.length === 9 && AV2.AV_KNOPF.length === 7, "neue Auswahl");
+  assert.equal(AV2.avTeile("c" + "100000000000000").length, 16, "alter 15er-Code bleibt gültig");
+  assert.equal(AV2.avTeile("c" + "1000000000000003")[15], 3, "16. Zeichen = Knopffarbe");
+  assert.equal(AV2.avTeile("c" + "100000000000000z"), null, "ungültige Knopffarbe abgelehnt");
+  const svg = AV2.avatarSvg("c15" + Object.keys(AV2.AV_HAAR).indexOf("meliert").toString(36) + "0600000000000", 80, "HK");
+  assert.ok(/<pattern id="avm\d+"/.test(svg) && />HK<\/text>/.test(svg) && /M29\.4 39\.4/.test(svg), "meliert als Muster, Initialen, Kinnbart am Kinn");
+  assert.ok(!/>HK<\/text>/.test(AV2.avatarSvg("c152" + "2" + "0000000000000", 80, "HK")), "Initialen nur auf der Kochmütze");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
