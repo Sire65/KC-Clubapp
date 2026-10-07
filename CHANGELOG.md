@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.33.0 – 2026-10-06 – Avatar: Brillenbügel, neue Kopfbedeckungen, Farben und Muster
+KC-CLUB-AVATAR-KOPF (Wunsch Hansi): Brillen mit Bügeln bis zum Ohr; neue Kopfbedeckungen Bandana, Military-Mütze, Kopftuch lang, Stirnband, Haarreif, Haarspange, Kappe verkehrt; für jede Kopfbedeckung (auch Kochmütze) Farbe (13) und Muster (Punkte, Streifen, Karo, Tarnmuster, Blümchen, Paisley). Alte Figuren bleiben unverändert.
+
 ## 2.32.0 – 2026-10-06 – Fang den Koch neu und einfach
 KC-CLUB-FDK-EINFACH (Wunsch Hansi): Fang den Koch komplett vereinfacht – Rundweg mit 12 Feldern um ein 4 × 4-Brett, nur vorwärts; Bon mit 3 Zutaten; Zutaten im Vorbeigehen automatisch; alle 3 ✓ + am Pass vorbei = 1 ⭐; genau auf Kurt landen = Zutat wegnehmen; ⭐-Glücksfelder (noch einmal würfeln, Topf übergekocht, Lieferant). Unten nur 🎲 Würfeln, 📖 Regeln, ✖ Abbrechen; Regeln mit 3 Bildern beim ersten Spiel. 15 Runden, Gleichstand: mehr ✓ auf dem Bon.
 
