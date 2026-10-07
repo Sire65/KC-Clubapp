@@ -5199,6 +5199,17 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/wartenLangTimer = setTimeout\(\(\) => \{ if \(!wartenZahl\) return; \$\("wartenText"\)\.textContent = "Dauert länger als üblich/.test(html) && /clearTimeout\(wartenLangTimer\); wartenLangTimer = null;/.test(html), "Warte-Wächter > 20 s");
   for (const k of ["haenger", "warten_lange", "instabil", "gefangen"]) assert.ok(new RegExp(`\\n  ${k}: \\["`).test(html), "Fehlerprotokoll kennt " + k);
 }
+// 2.48.0 KC-CLUB-FEHLER-ALARM (Wunsch Hansi): ernste Fehler angemeldeter Mitglieder → Admin per Push + E-Mail, mit Grenzen und Protokoll
+{
+  const f = server.slice(server.indexOf("async function fehlerAlarm("), server.indexOf("async function fehlerAlarm(") + 3200);
+  assert.ok(/await fehlerAlarm\(ich, liste\.slice\(0, platz\), ua, version\)\.catch\(\(\) => null\)/.test(server), "nach dem Speichern im Fehlerprotokoll, Fehler im Alarm bremsen nie das Speichern");
+  assert.ok(/\/\^KC-P-TEST\/\.test\(ich\.person_id\)/.test(f) && /\.filter\(\(id\) => id !== ich\.person_id\)/.test(f), "keine Testpersonen, nicht an den Verursacher");
+  assert.ok(/a !== "versprechen" && \(a !== "haenger" \|\| Number\(e\?\.ms\) >= 10000\)/.test(f), "nur ernste Fälle (Hänger ab 10 s)");
+  assert.ok(/6 \* 3600000/.test(f) && /\(alle \?\? 0\) >= 3/.test(f), "je Mitglied 1× in 6 Std., insgesamt 3× je Stunde");
+  assert.ok(/await protokoll\(null, "fehler_alarm"/.test(f) && /senden\("club_nachricht", ziel/.test(f), "Protokoll + Push/E-Mail über den bestehenden Weg");
+  assert.ok(!/\.body|nachricht_text|eingabe/.test(f), "keine Inhalte");
+  assert.ok(/alarm: \["📣", "Admin per Push \+ E-Mail benachrichtigt"/.test(html), "im Fehlerprotokoll sichtbar");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

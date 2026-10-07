@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.47.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.48.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -19081,6 +19081,7 @@ const FP_ARTEN = {
   warten_lange: ["⌛", "Vorgang dauerte über 20 s", "meist langsames Netz – Aktion steht im Eintrag"],
   instabil: ["⚠️", "Mehrere Programmfehler kurz hintereinander", "„App neu laden“ wurde angeboten – bitte weitergeben"],
   gefangen: ["🐞", "Programmfehler (abgefangen)", "Mitglied sah eine verständliche Meldung – bitte weitergeben"],
+  alarm: ["📣", "Admin per Push + E-Mail benachrichtigt", "Fehler-Alarm (höchstens 1× in 6 Std. je Mitglied, 3× je Stunde)"], // KC-CLUB-FEHLER-ALARM 2.48.0
   start_kaputt: ["💥", "App startet gar nicht", "Browser zu alt oder falscher Browser – Mitglied anrufen"],
   start_langsam: ["🐢", "Start langsam", "schwaches Netz"],
   mehrfachstart: ["🔁", "Mehrmals kurz hintereinander geöffnet", "Zeichen für „geht nicht auf“ – Hilfe wurde angeboten"],

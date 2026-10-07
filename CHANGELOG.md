@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.48.0 – 2026-10-07 – KC-CLUB-FEHLER-ALARM
+Wunsch Hansi: Ernste Fehler bei angemeldeten Mitgliedern (Programmfehler, mehrere Fehler kurz hintereinander, App hängt ≥ 10 s, App startet nicht) melden sich jetzt sofort beim Admin per Push und E-Mail – mit Name, Art, Fehlertext, Bereich, Gerät/Browser und App-Version, nie mit Inhalten. Höchstens 1 Alarm je Mitglied in 6 Stunden und 3 je Stunde insgesamt; nicht an den Verursacher selbst, keine Testpersonen. Jeder Alarm steht im 🩺 Fehlerprotokoll („📣 Admin benachrichtigt“). Server SERVER_VERSION 2.48.0.
+
 ## 2.47.0 – 2026-10-07 – KC-CLUB-ABSTURZSCHUTZ
 Wunsch Hansi: Absturzsicherung ergänzt. Nicht abgefangene Programmfehler zeigen jetzt eine verständliche Meldung (höchstens alle 20 s; bisher nur still im Protokoll). Häufen sie sich (3 in 2 Minuten), bietet die App „🔄 App neu laden“ an und vermerkt „instabil“. Hänger-Wächter: reagiert die App über 5 s nicht, wird das protokolliert (ab 10 s mit Hinweis). Dauert ein Vorgang über 20 s, sagt die Warte-Anzeige „Dauert länger als üblich“ und es wird protokolliert. Netz-/Server-/Datenbankausfälle wie bisher (Meldung, LEDs, Notbetrieb). Neue Arten im 🩺 Fehlerprotokoll. Nur App.
 

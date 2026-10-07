@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.45.0";
+const SERVER_VERSION = "2.48.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -3806,6 +3806,36 @@ function fpSauber(d: any): Record<string, unknown> {
   return out;
 }
 const fpArt = (x: unknown) => txt(x, 24).toLowerCase().replace(/[^a-z_]/g, "") || "allg";
+// KC-CLUB-FEHLER-ALARM (2.48.0, Wunsch Hansi: „bekomme ich als Admin Push und E-Mail über solche Fälle?“): ernste Fälle eines
+// angemeldeten Mitglieds → Admins sofort per Push + E-Mail (wie „Problem melden“, Weg club_nachricht). Nicht an den Verursacher selbst,
+// keine Testpersonen. Grenzen: je Mitglied höchstens 1 Alarm in 6 Stunden, insgesamt höchstens 3 je Stunde. Jeder Alarm steht im
+// Protokoll (fehler_alarm). Inhalt nur Art, Fehlertext des Programms, Bereich, Gerät und Version – nie Nachrichten oder Eingaben.
+const FA_ARTEN: Record<string, string> = { skript: "Programmfehler", gefangen: "Programmfehler (abgefangen)", instabil: "Mehrere Programmfehler kurz hintereinander",
+  haenger: "App hat länger gehangen", start_kaputt: "App startet nicht", versprechen: "Programmfehler im Hintergrund" };
+async function fehlerAlarm(ich: Ich, liste: any[], ua: string, version: string) {
+  if (/^KC-P-TEST/.test(ich.person_id)) return;
+  const ernst = liste.find((e: any) => { const a = fpArt(e?.art); return a in FA_ARTEN && a !== "versprechen" && (a !== "haenger" || Number(e?.ms) >= 10000); });
+  if (!ernst) return;
+  const jetztMs = Date.now();
+  const [{ count: jeMitglied }, { count: alle }] = await Promise.all([
+    db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("aktion", "fehler_alarm").eq("details->>fuer", ich.person_id).gte("zeit", new Date(jetztMs - 6 * 3600000).toISOString()),
+    db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("aktion", "fehler_alarm").gte("zeit", new Date(jetztMs - 3600000).toISOString()),
+  ]);
+  if ((jeMitglied ?? 0) > 0 || (alle ?? 0) >= 3) return;
+  const ziel = (await adminIds()).filter((id) => id !== ich.person_id);
+  if (!ziel.length) return;
+  const art = fpArt(ernst.art), was = FA_ARTEN[art], weitere = liste.length - 1;
+  const geraet = /iPhone|iPad/.test(ua) ? "iPhone/iPad" : /Android/.test(ua) ? "Android" : /Windows/.test(ua) ? "Windows" : /Mac/.test(ua) ? "Mac" : "Gerät";
+  const browser = /Edg\//.test(ua) ? "Edge" : /SamsungBrowser/.test(ua) ? "Samsung Internet" : /Chrome\//.test(ua) ? "Chrome" : /Firefox\//.test(ua) ? "Firefox" : /Safari\//.test(ua) ? "Safari" : "Browser";
+  const fehlertext = ohneLinks(txt(ernst.text, 220)), bereich = txt(ernst.sicht, 40);
+  await protokoll(null, "fehler_alarm", { fuer: ich.person_id, art, version });
+  await senden("club_nachricht", ziel, {
+    titel: `🩺 ${was}: ${ich.name}`, kurz: `${fehlertext || was}${bereich ? " · " + bereich : ""} · ${geraet}/${browser} · v${version || "?"}`,
+    betreff: `Köcheclub-App: ${was} bei ${ich.name}`,
+    text: `Hallo,\n\nbei ${ich.name} ist in der Club-App etwas schiefgelaufen.\n\nArt: ${was}\n${fehlertext ? "Fehler: " + fehlertext + "\n" : ""}${bereich ? "Bereich: " + bereich + "\n" : ""}Gerät: ${geraet} · ${browser}\nApp-Version: ${version || "?"}${weitere > 0 ? `\nWeitere Einträge in dieser Meldung: ${weitere}` : ""}\n\nDas Mitglied hat eine verständliche Meldung gesehen. Einzelheiten: Admin-Zentrale → 🩺 Fehlerprotokoll.\nWeitere Alarme zu ${ich.name} frühestens in 6 Stunden.\n${APP_URL}\n\nViele Grüße\nKöcheclub-App`,
+    url: APP_URL,
+  }, `club-fehler-alarm:${ich.person_id}:${Math.floor(jetztMs / 3600000)}`);
+}
 
 // ---------- KC-CLUB-WIEDERHOLUNG (1.1.0): Termine wiederholen – immer in deutscher Ortszeit (18:00 bleibt 18:00, auch nach der Zeitumstellung) ----------
 const WDH = ["keine", "taeglich", "werktags", "woechentlich", "zweiwoechentlich", "monatlich", "monatlich_wochentag", "jaehrlich"];
@@ -4946,6 +4976,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (!platz) return json({ ok: true, gespeichert: 0 });
         const ua = txt(req.headers.get("user-agent"), 200), version = txt(req.headers.get("x-club-version"), 20);
         await db.from("kc_club_protokoll").insert(liste.slice(0, platz).map((e: any) => ({ person_id: ich.person_id, aktion: "fehler_" + fpArt(e?.art), details: { ...fpSauber(e), ua, version } })));
+        await fehlerAlarm(ich, liste.slice(0, platz), ua, version).catch(() => null); // KC-CLUB-FEHLER-ALARM (2.48.0)
         return json({ ok: true, gespeichert: platz });
       }
 
