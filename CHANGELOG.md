@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.49.0 – 2026-10-07 – KC-CLUB-AVATAR-MUETZEN-2
+Wunsch Hansi (nach Bildern): neue Kopfbedeckungen „Pizzabäcker-Mütze“ (weich, hängt zur Seite), „Kochkappe (flach)“ und „Schiebermütze“; neue Muster Schachbrett, Hahnentritt, Nadelstreifen (für alle Kopfbedeckungen); neue Farben Creme, Anthrazit, Petrol, Gold, Salbei (auch für Streifen und Kragen der Jacke). Alte Bilder unverändert. Nur App.
+
 ## 2.48.0 – 2026-10-07 – KC-CLUB-FEHLER-ALARM
 Wunsch Hansi: Ernste Fehler bei angemeldeten Mitgliedern (Programmfehler, mehrere Fehler kurz hintereinander, App hängt ≥ 10 s, App startet nicht) melden sich jetzt sofort beim Admin per Push und E-Mail – mit Name, Art, Fehlertext, Bereich, Gerät/Browser und App-Version, nie mit Inhalten. Höchstens 1 Alarm je Mitglied in 6 Stunden und 3 je Stunde insgesamt; nicht an den Verursacher selbst, keine Testpersonen. Jeder Alarm steht im 🩺 Fehlerprotokoll („📣 Admin benachrichtigt“). Server SERVER_VERSION 2.48.0.
 

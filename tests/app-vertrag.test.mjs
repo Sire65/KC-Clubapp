@@ -5110,7 +5110,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.deepEqual(AV4.AV_KOPFFORM, ["normal", "rundlich", "eckig", "oval", "länglich", "herzförmig"], "Kopfformen");
   assert.ok(AV4.AV_KOPF.includes("chefhoch") && AV4.AV_KOPF.includes("schiffchen"), "Chefmütze hoch + Schiffchen");
   const code = (kopf, form) => "c" + [1, 5, 1, kopf, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, form].map((x) => x.toString(36)).join("");
-  assert.ok(AV4.AV_KOPF.includes("haube") && /"Spitzenhaube"\]/.test(html) && AV4.avatarSvg(code(AV4.AV_KOPF.indexOf("haube"), 0), 64).length > 500, "Spitzenhaube (wie früher Hausmädchen)");
+  assert.ok(AV4.AV_KOPF.includes("haube") && /"Spitzenhaube"[\],]/.test(html) && AV4.avatarSvg(code(AV4.AV_KOPF.indexOf("haube"), 0), 64).length > 500, "Spitzenhaube (wie früher Hausmädchen)");
   for (let i = 0; i < 6; i++) assert.equal(AV4.avTeile(code(0, i))[18], i, "Kopfform " + i + " im Code");
   assert.equal(AV4.avTeile("c" + "1510001100000001" + "00").length, 23, "alte 18er-Codes gültig, Kopfform = normal");
   assert.notEqual(AV4.avatarSvg(code(3, 2), 64), AV4.avatarSvg(code(3, 0), 64), "eckig sieht anders aus");
@@ -5209,6 +5209,17 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/await protokoll\(null, "fehler_alarm"/.test(f) && /senden\("club_nachricht", ziel/.test(f), "Protokoll + Push/E-Mail über den bestehenden Weg");
   assert.ok(!/\.body|nachricht_text|eingabe/.test(f), "keine Inhalte");
   assert.ok(/alarm: \["📣", "Admin per Push \+ E-Mail benachrichtigt"/.test(html), "im Fehlerprotokoll sichtbar");
+}
+// 2.49.0 KC-CLUB-AVATAR-MUETZEN-2 (Wunsch Hansi nach Bildern): Pizzabäcker-Mütze, flache Kochkappe, Schiebermütze; Muster Schachbrett/Hahnentritt/Nadelstreifen; neue Farben
+{
+  const a = html.indexOf("const AV_HAUT"), b = html.indexOf("// KC-CLUB-FREIGABE (2.23.86", a);
+  const AV7 = new Function("INIT", "ICH", "MITGLIEDER", html.slice(a, b) + "\nreturn { avatarSvg, AV_KOPF, AV_KOPF_NAME, AV_KOPFMUSTER, AV_KOPFFARBE };")(null, null, []);
+  assert.ok(["pizza", "kochkappe", "schieber"].every((x) => AV7.AV_KOPF.includes(x)) && AV7.AV_KOPF.length === AV7.AV_KOPF_NAME.length, "drei neue Kopfbedeckungen mit Namen");
+  assert.ok(["Schachbrett", "Hahnentritt", "Nadelstreifen"].every((x) => AV7.AV_KOPFMUSTER.includes(x)) && AV7.AV_KOPFFARBE.length >= 19, "neue Muster und Farben");
+  assert.ok(AV7.AV_KOPF.length <= 36 && AV7.AV_KOPFFARBE.length <= 36 && AV7.AV_KOPFMUSTER.length <= 36, "passt in ein Code-Zeichen");
+  const c = (kopf, muster) => "c" + [1, 5, 2, kopf, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, muster, 0, 0, 0, 0, 0].map((x) => x.toString(36)).join("");
+  for (const n of ["pizza", "kochkappe", "schieber"]) assert.ok(AV7.avatarSvg(c(AV7.AV_KOPF.indexOf(n), 0), 64).length > 500, "zeichnet " + n);
+  assert.ok(/<rect width="2" height="2" fill="#1c1c1c"\/>/.test(AV7.avatarSvg(c(AV7.AV_KOPF.indexOf("kochkappe"), 7), 64)), "Schachbrett kräftig schwarz auf Weiß");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

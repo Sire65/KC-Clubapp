@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.48.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.49.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -129,7 +129,7 @@ const AV_FIGUREN = {
   m24: [0, "glatze", "blond", "koch", "walross", 0, "#e8792b", "#2e7d4f"], m25: [3, "locken", "grau", "koch", "zwirbel", 1, "#3949ab", "#ffffff"],
 };
 // 2.23.86 Baukasten: Code „b“ + 9 Zeichen (je ein Teil, Zahl 0–9/a–z) – Haut, Frisur, Haarfarbe, Kopf, Bart, Brille, Hintergrund, Halstuch, Typ
-const AV_FRISUREN = ["lang", "zopf", "dutt", "bob", "locken", "kurz", "wuschel", "seiten", "glatze"], AV_KOPF = ["koch", "tuch", "kappe", "keine", "bandana", "military", "kopftuch", "stirnband", "haarreif", "spange", "kapperueck", "chefhoch", "schiffchen", "haube"], AV_BART = [0, "voll", "schnurr", "stoppel", "zwirbel", "walross", "kinnbart"]; // 2.23.96: drei Schnauzer-Formen dazu (Wunsch Hansi)
+const AV_FRISUREN = ["lang", "zopf", "dutt", "bob", "locken", "kurz", "wuschel", "seiten", "glatze"], AV_KOPF = ["koch", "tuch", "kappe", "keine", "bandana", "military", "kopftuch", "stirnband", "haarreif", "spange", "kapperueck", "chefhoch", "schiffchen", "haube", "pizza", "kochkappe", "schieber"], AV_BART = [0, "voll", "schnurr", "stoppel", "zwirbel", "walross", "kinnbart"]; // 2.23.96: drei Schnauzer-Formen dazu (Wunsch Hansi)
 // 2.23.99 (Wunsch Hansi): mehr Gesichtsteile – Index 0 zeichnet genau wie bisher (alte Figuren und Codes bleiben unverändert)
 const AV_AUGEN = ["normal", "lachend", "gross", "wimpern"], AV_BRAUEN = ["normal", "schmal", "kraeftig", "buschig"], AV_MUND = ["standard", "lachen", "verschmitzt", "ruhig"];
 const AV_WANGEN = ["zart", "keine", "kraeftig", "sommersprossen"], AV_BRILLE = [0, "rund", "eckig", "halb", "sonne", "oval", "horn", "katze", "pilot", "randlos", "schmetterling", "oversize", "herz"]; // 2.45.0: Damenformen mit verzierten Bügeln // 2.27.2: mehr Brillen; 2.39.0: randlos (Wunsch Hansi, nach Foto)
@@ -142,14 +142,14 @@ function avJackeHeute(d = new Date()) { let i = 0; try { i = ["Mon", "Tue", "Wed
 const AV_KNOPF = [0, "#c9a227", "#2a2a2a", "#c8102e", "#1d4f91", "#ffffff", "#9aa0a6"]; // 2.27.2 (Wunsch Hansi): Knopffarbe der Kochjacke (0 = passend zur Jacke)
 let AV_UID = 0; // eindeutige Muster-Kennung je gezeichnetem Avatar (grau meliert)
 // 2.33.0 KC-CLUB-AVATAR-KOPF (Wunsch Hansi): mehr Kopfbedeckungen, je Farbe und Muster (0 = wie bisher – alte Figuren bleiben gleich)
-const AV_KOPF_NAME = ["Kochmütze", "Kopftuch", "Kappe", "nichts", "Bandana", "Military-Mütze", "Kopftuch lang", "Stirnband", "Haarreif", "Haarspange", "Kappe verkehrt", "Chefmütze (hoch)", "Schiffchen (Lehrling)", "Spitzenhaube"];
+const AV_KOPF_NAME = ["Kochmütze", "Kopftuch", "Kappe", "nichts", "Bandana", "Military-Mütze", "Kopftuch lang", "Stirnband", "Haarreif", "Haarspange", "Kappe verkehrt", "Chefmütze (hoch)", "Schiffchen (Lehrling)", "Spitzenhaube", "Pizzabäcker-Mütze", "Kochkappe (flach)", "Schiebermütze"];
 // KC-CLUB-AVATAR-KOPFFORM (2.42.0, Wunsch Hansi): Gesichtsform – 0 = wie bisher; übliche Formen: rund, eckig, oval, länglich, herzförmig
 const AV_KOPFFORM = ["normal", "rundlich", "eckig", "oval", "länglich", "herzförmig"];
 // KC-CLUB-AVATAR-JACKE-BRILLE (2.45.0, Wunsch Hansi): Code-Zeichen 20–23 = Brillen-Strass, Jackenmuster, Streifenfarbe, Kragenfarbe (Farben wie AV_KOPFFARBE, 0 = passend)
 const AV_BRILLENDEKO = ["ohne", "✨ mit Strass"], AV_JACKENMUSTER = ["uni", "Längsstreifen"];
 const avHell = (hex) => { const n = parseInt(String(hex).slice(1), 16); return !(n >= 0) ? true : ((n >> 16) * 299 + ((n >> 8) & 255) * 587 + (n & 255) * 114) / 1000 > 150; };
-const AV_KOPFFARBE = [0, "#ffffff", "#2a2a2a", "#c8102e", "#741521", "#1d4f91", "#5fa8d3", "#2e7d4f", "#5b6b3a", "#ffcc00", "#e8792b", "#6d4aa3", "#ec8fb0", "#8d6e63"];
-const AV_KOPFMUSTER = ["uni", "Punkte", "Streifen", "Karo", "Tarnmuster", "Blümchen", "Paisley"];
+const AV_KOPFFARBE = [0, "#ffffff", "#2a2a2a", "#c8102e", "#741521", "#1d4f91", "#5fa8d3", "#2e7d4f", "#5b6b3a", "#ffcc00", "#e8792b", "#6d4aa3", "#ec8fb0", "#8d6e63", "#f3ead8", "#4a4f55", "#00838f", "#c9a227", "#a3c4a8"]; // 2.49.0: + Creme, Anthrazit, Petrol, Gold, Salbei
+const AV_KOPFMUSTER = ["uni", "Punkte", "Streifen", "Karo", "Tarnmuster", "Blümchen", "Paisley", "Schachbrett", "Hahnentritt", "Nadelstreifen"]; // 2.49.0: + Schachbrett, Hahnentritt, Nadelstreifen
 const AV_BG = ["#741521", "#1d4f91", "#2e7d4f", "#6d4aa3", "#b8860b", "#00796b", "#c2185b", "#455a64", "#8d6e63", "#e8792b", "#3949ab", "#558b2f"];
 const AV_TUCH = ["#c8102e", "#ffcc00", "#e8792b", "#2e7d4f", "#1d4f91", "#741521", "#ffffff", "#6d4aa3"];
 // ---------- KC-CLUB-NEU-PULS (2.23.91, Wunsch Hansi): beim Betreten einer Seite pulsiert der „＋ Neu“-Knopf oben 3× mit hellem Rand ----------
@@ -263,15 +263,18 @@ function avatarSvg(code, gr = 40, ini = "") { // 2.27.2: ini = Initialen (klein 
   const f = avTeile(code); if (!f) return "";
   const [h, frisur, hf, kopf, bart, brille, bg, tuch, frau, augen, brauen, mund, wangen, bfarbe, jacke, knopf, kfarbe, kmuster, kform, brdeko, jmuster, jstreifen, kragen] = f, haut = AV_HAUT[h], dunkel = h >= 3;
   // 2.33.0: Farbe der Kopfbedeckung (0 = wie bisher je Art) und Muster als SVG-Muster
-  const kStd = { koch: "#ffffff", tuch, kappe: tuch === "#ffffff" ? "#741521" : tuch, bandana: "#c8102e", military: "#5b6b3a", kopftuch: tuch, stirnband: "#1d4f91", haarreif: "#2a2a2a", spange: "#ffcc00", kapperueck: tuch === "#ffffff" ? "#741521" : tuch, chefhoch: "#ffffff", schiffchen: "#ffffff", haube: "#ffffff" }[kopf] || tuch;
-  const kBasis = AV_KOPFFARBE[kfarbe] || kStd, kHell = /^#(f|e|d)/i.test(kBasis) || kBasis === "#ffcc00", kKontrast = kHell ? "rgba(0,0,0,.35)" : "rgba(255,255,255,.6)";
+  const kStd = { koch: "#ffffff", tuch, kappe: tuch === "#ffffff" ? "#741521" : tuch, bandana: "#c8102e", military: "#5b6b3a", kopftuch: tuch, stirnband: "#1d4f91", haarreif: "#2a2a2a", spange: "#ffcc00", kapperueck: tuch === "#ffffff" ? "#741521" : tuch, chefhoch: "#ffffff", schiffchen: "#ffffff", haube: "#ffffff", pizza: "#ffffff", kochkappe: "#ffffff", schieber: "#741521" }[kopf] || tuch;
+  const kBasis = AV_KOPFFARBE[kfarbe] || kStd, kHell = /^#(f|e|d)/i.test(kBasis) || kBasis === "#ffcc00", kKontrast = kHell ? "rgba(0,0,0,.35)" : "rgba(255,255,255,.6)", kStark = kHell ? "#1c1c1c" : "#ffffff"; // kStark: Schachbrett/Hahnentritt kräftig wie echte Kochkappen
   const kId = kmuster && kopf !== "keine" ? "avk" + ++AV_UID : "", kFill = kId ? `url(#${kId})` : kBasis;
   const kDef = !kId ? "" : `<defs><pattern id="${kId}" width="4" height="4" patternUnits="userSpaceOnUse"${kmuster === 2 ? ' patternTransform="rotate(45)"' : ""}><rect width="4" height="4" fill="${kBasis}"/>${[
     "", `<circle cx="2" cy="2" r=".75" fill="${kKontrast}"/>`, `<rect width="1.4" height="4" fill="${kKontrast}"/>`,
     `<rect width="4" height="1.1" fill="${kKontrast}"/><rect width="1.1" height="4" fill="${kKontrast}"/>`,
     `<path d="M0 1.2 Q1.2 0 2.4 1.1 Q3.2 2 4 1.4 V2.6 Q2.8 3.6 1.6 2.6 Q.8 2 0 2.8Z" fill="rgba(40,30,10,.38)"/><circle cx="3" cy="3.4" r=".6" fill="rgba(255,255,255,.25)"/>`,
     `<g fill="${kKontrast}"><circle cx="2" cy="1.3" r=".45"/><circle cx="2.7" cy="2" r=".45"/><circle cx="2" cy="2.7" r=".45"/><circle cx="1.3" cy="2" r=".45"/></g><circle cx="2" cy="2" r=".35" fill="#ffcc00"/>`,
-    `<path d="M1.2 1 Q2.6 .6 2.6 2 Q2.6 3.2 1.4 3.2 Q2 2.4 1.2 1Z" fill="${kKontrast}"/><circle cx="3.4" cy="3.4" r=".35" fill="${kKontrast}"/>`][kmuster] || ""}</pattern></defs>`;
+    `<path d="M1.2 1 Q2.6 .6 2.6 2 Q2.6 3.2 1.4 3.2 Q2 2.4 1.2 1Z" fill="${kKontrast}"/><circle cx="3.4" cy="3.4" r=".35" fill="${kKontrast}"/>`,
+    `<rect width="2" height="2" fill="${kStark}"/><rect x="2" y="2" width="2" height="2" fill="${kStark}"/>`,
+    `<path d="M0 0h1.4l.6.6V2H.6L0 1.4zM2 2h1.4l.6.6V4H2.6L2 3.4z M1.4 1.4 2.6 2.6" fill="${kStark}"/>`,
+    `<rect x="1.8" width=".3" height="4" fill="${kKontrast}"/>`][kmuster] || ""}</pattern></defs>`;
   const melId = hf === "meliert" ? "avm" + ++AV_UID : "", haar = melId ? `url(#${melId})` : AV_HAAR[hf]; // 2.27.2: grau meliert; 2.28.1: dunkelblond mit feinen grauen Strähnen (Wunsch Hansi)
   const melDef = melId ? `<defs><pattern id="${melId}" width="3.1" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(8)"><rect width="3.1" height="9" fill="#8a6b43"/><rect x=".4" width=".22" height="9" fill="#c4bfb5" opacity=".75"/><rect x="1.5" y="2" width=".16" height="5" fill="#ddd9d0" opacity=".7"/><rect x="2.4" y="4" width=".2" height="5" fill="#b3ada2" opacity=".6"/></pattern></defs>` : "";
   const jTag = jacke === AV_JACKE_AUTO ? avJackeHeute() : null, jFarbe = jTag ? jTag[1] : AV_JACKE[jacke] || "#fff";
@@ -301,6 +304,10 @@ function avatarSvg(code, gr = 40, ini = "") { // 2.27.2: ini = Initialen (klein 
     schiffchen: `<g fill="${kFill}" stroke="${kHell && !kId ? "#bdb6aa" : "rgba(0,0,0,.3)"}" stroke-width=".6" stroke-linejoin="round"><path d="M20.4 20 L22.2 14.6 Q26.6 12.8 30.8 13.6 L32 12.2 L33.2 13.6 Q37.4 12.8 41.8 14.6 L43.6 20 Q32 17.6 20.4 20Z"/><path d="M20.4 20 Q32 17.6 43.6 20 L43.1 22.2 Q32 19.8 20.9 22.2Z"/></g><path d="M32 12.4 V18.2 M22.6 16.8 Q32 14.8 41.4 16.8" stroke="${kKontrast}" stroke-width=".5" fill="none"/>`,
     // KC-CLUB-AVATAR-HAUBE (2.42.0, Wunsch Hansi „wie früher Hausmädchen“): weiße Spitzenhaube – Rüschenkante mit Lochmuster
     haube: `<g fill="${kFill}" stroke="${kHell && !kId ? "#c9c2b6" : "rgba(0,0,0,.3)"}" stroke-width=".45"><path d="M20.8 20.6 Q21.6 13.2 32 12.6 Q42.4 13.2 43.2 20.6 Q32 15.6 20.8 20.6Z"/><circle cx="20.60" cy="20.20" r="1.35"/><circle cx="22.88" cy="18.69" r="1.35"/><circle cx="25.16" cy="17.51" r="1.35"/><circle cx="27.44" cy="16.67" r="1.35"/><circle cx="29.72" cy="16.17" r="1.35"/><circle cx="32.00" cy="16.00" r="1.35"/><circle cx="34.28" cy="16.17" r="1.35"/><circle cx="36.56" cy="16.67" r="1.35"/><circle cx="38.84" cy="17.51" r="1.35"/><circle cx="41.12" cy="18.69" r="1.35"/><circle cx="43.40" cy="20.20" r="1.35"/></g><g fill="${kKontrast}"><circle cx="22.8" cy="18.60" r=".38"/><circle cx="25.4" cy="16.93" r=".38"/><circle cx="28.0" cy="15.82" r=".38"/><circle cx="30.6" cy="15.27" r=".38"/><circle cx="33.2" cy="15.27" r=".38"/><circle cx="35.8" cy="15.82" r=".38"/><circle cx="38.4" cy="16.93" r=".38"/><circle cx="41.0" cy="18.60" r=".38"/></g><path d="M23.4 18.4 Q32 14.6 40.6 18.4" stroke="${kKontrast}" stroke-width=".4" fill="none"/>`,
+    // KC-CLUB-AVATAR-MUETZEN-2 (2.49.0, Wunsch Hansi nach Bildern): Pizzabäcker-Mütze (weich, hängt zur Seite), flache Kochkappe, Schiebermütze
+    pizza: `<g fill="${kFill}" stroke="${kHell && !kId ? "#cfc9bf" : "rgba(0,0,0,.28)"}" stroke-width=".7" stroke-linejoin="round"><path d="M22.4 15.6 Q17.6 6.4 25.6 2.6 Q33.4 -.6 40.6 2.6 Q48.6 6 48 13.4 Q47.6 19.4 44.2 20.8 Q43 16.8 41.4 15.6Z"/><rect x="21.6" y="13.6" width="20.8" height="5.4" rx="1.4"/></g><path d="M29 4 Q31 9 30 13.4 M37 3.6 Q41 8.6 43.4 12.4" stroke="${kKontrast}" stroke-width=".55" fill="none"/>`,
+    kochkappe: `<g fill="${kFill}" stroke="${kHell && !kId ? "#bdb6aa" : "rgba(0,0,0,.3)"}" stroke-width=".6" stroke-linejoin="round"><path d="M20.4 21.8 L21 13.6 Q32 10.4 43 13.6 L43.6 21.8 Q32 19.4 20.4 21.8Z"/></g><path d="M21 13.6 Q32 16.4 43 13.6" stroke="${kKontrast}" stroke-width=".5" fill="none"/>`,
+    schieber: `<path d="M19.4 21.6 Q18.8 13.4 27.2 11.8 Q38.4 10.6 45 16.4 L45.2 20.8 Q32 18.6 19.4 21.6Z" fill="${kFill}" stroke="rgba(0,0,0,.3)" stroke-width=".5" stroke-linejoin="round"/><path d="M19.8 21.2 Q31 18.8 41.6 21.2 Q37.6 24 21 23.4Z" fill="${kBasis}" stroke="rgba(0,0,0,.35)" stroke-width=".5"/><path d="M19.8 21.2 Q31 18.8 41.6 21.2 Q37.6 24 21 23.4Z" fill="rgba(0,0,0,.18)"/><path d="M26 12.6 Q33 15.4 44.4 16.4" stroke="${kKontrast}" stroke-width=".45" fill="none"/>`,
     kapperueck: `<path d="M20.5 16.5 Q12.5 14.2 7.6 17.6 Q12.8 20.4 21 20.2Z" fill="${kBasis}" stroke="rgba(0,0,0,.35)" stroke-width=".45"/><path d="M20.5 16.5 Q12.5 14.2 7.6 17.6 Q12.8 20.4 21 20.2Z" fill="rgba(0,0,0,.3)"/><path d="M19 23 Q19 11 32 11 Q45 11 45 23Z" fill="${kFill}"/><path d="M28.4 22.6 Q32 20.4 35.6 22.6" fill="none" stroke="rgba(0,0,0,.35)" stroke-width="1"/>` }[kopf] || "";
   const iniSvg = kopf === "koch" && ini && gr >= 32 ? `<text x="41.6" y="17.8" text-anchor="end" font-size="3.4" font-weight="800" font-family="Arial, sans-serif" fill="${kHell || kId ? "#741521" : "#ffffff"}"${kId ? ' stroke="#fff" stroke-width=".5" paint-order="stroke"' : ""}>${String(ini).replace(/[^A-ZÄÖÜa-zäöüß]/g, "").slice(0, 2).toUpperCase()}</text>` : ""; // 2.27.2 (Wunsch Hansi)
   // 2.23.96 (Wunsch Hansi „bessere mit Schnäuzer“): Schnurrbart kräftiger; neu Zwirbel-, Walross- und Schnauzer mit Kinnbart
