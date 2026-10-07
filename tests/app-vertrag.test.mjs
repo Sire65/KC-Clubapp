@@ -5330,6 +5330,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.equal(T({ titel: "Köcheclub-Sitzung vom 03.07.2026", datum: "2026-07-04" }), "Protokoll Sitzung vom 03.07.2026", "Datum aus dem Titel geht vor");
   assert.equal(T({ titel: "Jahreshauptversammlung", datum: "2026-03-01" }), "Jahreshauptversammlung vom 01.03.2026");
   assert.ok(/id="prAnsichtKnopf" onclick="prAnsichtUmschalten\(\)"/.test(html) && /localStorage\.getItem\("kc_club_pr_ansicht"\) !== "kacheln"/.test(html), "Umschalter oben, je Gerät, Standard Liste");
+  assert.ok(/\.prl-ansicht \.prkarte\.versteckt \{ display: none; \}/.test(html) && /document\.querySelectorAll\("#protokollListe \.prkarte"\)/.test(html), "Filter (Jahr, Monat, Ort, Protokollführer) und Suche wirken auch in der Liste");
   assert.ok(/class="mini-kachel prkarte\$\{!p\.gelesen \? " mk-offen" : ""\}" data-id="\$\{p\.id\}" data-suche=/.test(html.slice(html.indexOf("function protokollZeile"))), "gleiche Filter-/Such-Kennungen wie die Kacheln");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
