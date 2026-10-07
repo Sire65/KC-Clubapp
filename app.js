@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.51.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.52.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -5319,7 +5319,7 @@ function fdkZug(F, s, w, zufall = Math.random) {
   for (let i = 1; i <= w; i++) {
     S.pos = (S.pos + 1) % FDK_FELD.length; weg.push(S.pos);
     const f = FDK_FELD[S.pos];
-    if (f in FDK_GERICHTE[S.bon.g][2] && !S.bon.hat.includes(f)) { S.bon.hat.push(f); ev.push({ art: "nimmt", l: f, z: fdkZutat(S, f) }); }
+    if (f in FDK_GERICHTE[S.bon.g][2] && !S.bon.hat.includes(f)) { S.bon.hat.push(f); ev.push({ art: "nimmt", l: f, z: fdkZutat(S, f), i }); }
     if (f === "pass" && !fdkFehlt(S).length) { const g = S.bon.g; S.sterne++; ev.push({ art: "fertig", g }); fdkBon(F, s, zufall); }
   }
   const f = FDK_FELD[S.pos];
@@ -5357,7 +5357,7 @@ function fdkSieger(F) { const [A, B] = F.sp, a = A.sterne * 10 + A.bon.hat.lengt
 // ----- FDK Regeln Ende -----
 // ----- Ansicht -----
 let FDKP = (() => { let w = null; try { w = JSON.parse(localStorage.getItem(FDK_KEY) || "null"); } catch {}
-  return { stand: { ich: 0, pc: 0, remis: 0 }, regelnGesehen: false, ...(w || {}), rollt: false, text: "", kette: false, anim: null }; })();
+  return { stand: { ich: 0, pc: 0, remis: 0 }, regelnGesehen: false, ...(w || {}), rollt: false, text: "", kette: false, anim: null, zeigt: null, neu: null }; })();
 const fdkMerken = () => { try { localStorage.setItem(FDK_KEY, JSON.stringify({ stand: FDKP.stand, regelnGesehen: FDKP.regelnGesehen, F: FDKP.F || null })); } catch {} };
 const fdkSichtbar = () => aktuelleAnsicht === "spiele" && SP.tab === "pc" && SP.art === "fdk";
 const FDK_RING = [[0, 0], [1, 0], [2, 0], [3, 0], [3, 1], [3, 2], [3, 3], [2, 3], [1, 3], [0, 3], [0, 2], [0, 1]]; // 12 Felder rund um ein 4 × 4-Brett
@@ -5373,14 +5373,26 @@ function fdkBrettHtml(F) {
   const brauch = new Set(fdkFehlt(F.sp[0])), fertig = !brauch.size;
   const felder = FDK_FELD.map((f, i) => { const [x, y] = FDK_RING[i], koeche = [0, 1].filter((s) => pos[s] === i);
     const gut = (brauch.has(f) || (fertig && f === "pass")) && F.phase !== "ende";
-    return `<div class="fdk-feld fdk-${f}${gut ? " fdk-gut" : ""}" style="grid-column:${x + 1};grid-row:${y + 1}" aria-label="${FDK_ST[f][1]}${koeche.length ? " – " + koeche.map(fdkWer).join(" und ") : ""}">
+    const hier = koeche.length ? ` fdk-hier fdk-hier${koeche.length > 1 ? "2" : koeche[0]}${FDKP.anim && koeche.includes(F.dran) ? " fdk-laeuft" : ""}` : ""; // KC-CLUB-FDK-TABLETT: wo steht wer?
+    return `<div class="fdk-feld fdk-${f}${gut ? " fdk-gut" : ""}${hier}" style="grid-column:${x + 1};grid-row:${y + 1}" aria-label="${FDK_ST[f][1]}${koeche.length ? " – " + koeche.map(fdkWer).join(" und ") : ""}">
       <span class="fdk-sym" aria-hidden="true">${FDK_ST[f][0]}</span><span class="fdk-name">${FDK_ST[f][1]}</span>
       ${koeche.length ? `<span class="fdk-koeche">${koeche.map((s) => `<span class="fdk-figur fdk-f${s}">${s ? "🧑‍🍳" : "👨‍🍳"}</span>`).join("")}</span>` : ""}</div>`; }).join("");
+  const nz = FDKP.zeigt; // gerade genommene Zutat groß in der Mitte
   const mitte = F.phase === "ende" ? `<div class="fdk-mitte"><div class="fdk-ende-sym">🏁</div></div>`
+    : nz ? `<div class="fdk-mitte"><div class="fdk-nimmt fdk-nimmt${nz.s}"><span class="fdk-nimmt-sym">${nz.z[0]}</span><b>${nz.s ? "Kurt nimmt" : "Du nimmst"}</b><small>${esc(nz.z[1])}</small></div></div>`
     : `<div class="fdk-mitte"><div class="fdk-runde">Runde ${Math.min(F.runde, FDK_RUNDEN)} von ${FDK_RUNDEN}<br><small>↻ im Uhrzeigersinn</small></div>
       ${maeWuerfelKnopf(F.wurf, { kann: ich, rollt: FDKP.rollt, klick: "fdkWuerfeln()", farbe: F.dran ? "blau" : "rot" })}
       <div class="fdk-wer-dran">${F.dran === 0 ? "👨‍🍳 Du bist dran" : "🤖 Kurt ist dran"}</div></div>`;
-  return `<div class="fdk-brett" role="group" aria-label="Spielfeld">${felder}${mitte}</div>`;
+  return `<div class="fdk-tisch">${fdkTablett(F, 0)}<div class="fdk-brett" role="group" aria-label="Spielfeld">${felder}${mitte}</div>${fdkTablett(F, 1)}</div>`;
+}
+// KC-CLUB-FDK-TABLETT (2.52.0, Wunsch Hansi): links dein Tablett, rechts das von Kurt – darauf liegen die Zutaten des Bons
+// (✓ gesammelt groß, fehlende blass mit Lager-Zeichen). Gerade genommene Zutat springt kurz auf.
+function fdkTablett(F, s) {
+  const S = F.sp[s], G = FDK_GERICHTE[S.bon.g], neu = FDKP.neu && FDKP.neu.s === s ? FDKP.neu.l : null;
+  const plaetze = Object.entries(G[2]).map(([l, z]) => { const ok = S.bon.hat.includes(l);
+    return `<div class="fdk-t-platz${ok ? " voll" : ""}${ok && l === neu ? " fdk-neu" : ""}" title="${esc(z[1])}${ok ? "" : " – fehlt noch (" + esc(FDK_ST[l][1]) + ")"}"><span class="fdk-t-sym">${ok ? z[0] : FDK_ST[l][0]}</span><small>${ok ? esc(z[1]) : "fehlt"}</small></div>`; }).join("");
+  return `<div class="fdk-tablett fdk-t${s}${F.dran === s && F.phase !== "ende" ? " dran" : ""}" aria-label="Tablett ${s ? "Kurt" : "Du"}: ${S.bon.hat.length} von 3 Zutaten">
+    <div class="fdk-t-kopf"><span class="fdk-figur fdk-f${s}">${s ? "🧑‍🍳" : "👨‍🍳"}</span><b>${s ? "Kurt" : "Du"}</b></div>${plaetze}<div class="fdk-t-zahl">${S.bon.hat.length}/3</div></div>`;
 }
 function fdkPcZeigen() {
   const F = FDKP.F, s = FDKP.stand;
@@ -5433,8 +5445,12 @@ async function fdkZugAusfuehren(F, s) { // würfeln, Figur Feld für Feld laufen
   const w = await fdkWurfAnimation(); if (FDKP.F !== F) return null;
   const start = F.sp.map((S) => S.pos), lz = F.lz, r = fdkZug(F, s, w);
   FDKP.anim = [...start]; FDKP.text = `${s ? "🤖 Kurt würfelt" : "Du würfelst"} ${w}.`;
-  for (const p of r.weg) { FDKP.anim[s] = p; if (fdkSichtbar()) fdkPcZeigen(); await maeWarte(SPAR?.an ? 120 : 330); if (FDKP.F !== F) return null; }
-  FDKP.anim = null;
+  for (let i = 0; i < r.weg.length; i++) {
+    FDKP.anim[s] = r.weg[i]; const nimmt = r.ev.find((e) => e.art === "nimmt" && e.i === i + 1);
+    if (nimmt) { FDKP.zeigt = { s, z: nimmt.z }; FDKP.neu = { s, l: nimmt.l }; try { navigator.vibrate?.(20); } catch {} }
+    if (fdkSichtbar()) fdkPcZeigen(); await maeWarte(nimmt ? (SPAR?.an ? 450 : 1100) : SPAR?.an ? 120 : 330); FDKP.zeigt = null; if (FDKP.F !== F) return null;
+  }
+  FDKP.anim = null; setTimeout(() => { if (FDKP.neu?.s === s) FDKP.neu = null; }, 1500);
   const neu = F.log.slice(lz);
   FDKP.text = `${s ? "🤖 Kurt würfelt" : "Du würfelst"} ${w}. ${neu.join(" ") || (s ? "Nichts Besonderes." : "Hier gibt es gerade nichts für dich.")}`;
   if (r.ev.some((e) => e.art === "fertig")) try { navigator.vibrate?.([40, 30, 80]); } catch {}

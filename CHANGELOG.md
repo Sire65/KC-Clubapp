@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.52.0 – 2026-10-07 – KC-CLUB-FDK-TABLETT
+Fang den Koch: links dein Tablett, rechts das von Kurt – darauf liegen die Zutaten des Bons (gesammelte groß, fehlende blass). Das Feld, auf dem ein Koch steht, ist in seiner Farbe umrandet, die Figur größer und hüpft beim Laufen; nimmt ein Koch eine Zutat, erscheint sie groß in der Brettmitte.
+
 ## 2.51.0 – 2026-10-07 – KC-CLUB-PROBEPHASE
 Admin kann Mitglieder erst in eine Probephase setzen (2/4/8 Wochen): kein Willkommens-Zettel, keine Begrüßung, Push/Mail nur nach eigener Wahl (Termine weiter per Mail), nicht in der Nutzung, keine Stimmabgabe. Danach ✅ Übernehmen (optional begrüßen) oder 🚪 Beenden (Link ungültig, Geräte ab, Einstellungen weg, aus Gruppen; Nachrichten bleiben, optional ersetzen). Frist-Erinnerung an den Admin. Server 2.51.0.
 

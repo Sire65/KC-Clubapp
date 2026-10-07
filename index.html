@@ -320,6 +320,33 @@
   .fdk-kuehl { background: #e3eef8; border-color: #5b8fc4; } .fdk-gemuese { background: #e3efe0; border-color: #5d9a63; } .fdk-trocken { background: #f6ecd6; border-color: #b88a3a; }
   .fdk-gewuerz { background: #fbe3d2; border-color: #d0763a; } .fdk-pass { background: #fbeab0; border-color: #c99a10; } .fdk-glueck { background: #f3e6fb; border-color: #9a63c4; } .fdk-tuer { background: #eeeeee; border-color: #999; }
   .fdk-feld.fdk-gut { box-shadow: 0 0 0 3px #24974a; }
+  /* KC-CLUB-FDK-TABLETT (2.52.0): Tabletts links/rechts, Standort des Kochs deutlich */
+  .fdk-tisch { display: grid; grid-template-columns: clamp(50px, 14vw, 84px) minmax(0, 440px) clamp(50px, 14vw, 84px); gap: 5px; justify-content: center; align-items: start; margin: 8px 0; }
+  .fdk-tisch .fdk-brett { margin: 0; max-width: none; width: 100%; padding: 6px; gap: 5px; }
+  .fdk-tablett { display: flex; flex-direction: column; align-items: stretch; gap: 5px; padding: 6px 4px; border-radius: 14px;
+    background: linear-gradient(160deg, #f4f6f8, #cdd3da); border: 3px solid #8d969f; box-shadow: inset 0 1px 0 #fff, 0 2px 5px rgba(0,0,0,.18); color: #2b1a1c; }
+  .fdk-tablett.fdk-t0 { border-color: #d63a3a; } .fdk-tablett.fdk-t1 { border-color: #2f6fdf; }
+  .fdk-tablett.dran { box-shadow: 0 0 0 3px #ffb300, 0 2px 6px rgba(0,0,0,.25); }
+  .fdk-t-kopf { display: flex; flex-direction: column; align-items: center; gap: 1px; font-size: .78rem; }
+  .fdk-t-platz { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; max-width: 70px; margin: 0 auto; border-radius: 50%; aspect-ratio: 1 / 1;
+    background: radial-gradient(circle, #ffffff 52%, #e4e7eb 54%, #ffffff 70%); border: 1.5px dashed #a7aeb6; opacity: .55; }
+  .fdk-t-platz.voll { opacity: 1; border: 2px solid #24974a; background: radial-gradient(circle, #ffffff 52%, #d8efe0 54%, #ffffff 70%); }
+  .fdk-t-sym { font-size: 1.5rem; line-height: 1; } .fdk-t-platz small { font-size: .56rem; font-weight: 700; line-height: 1.05; text-align: center; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 2px; }
+  .fdk-t-zahl { text-align: center; font-weight: 800; font-size: .85rem; }
+  .fdk-neu { animation: fdkNeu .9s ease-out; } @keyframes fdkNeu { 0% { transform: scale(.4); } 55% { transform: scale(1.25); } 100% { transform: scale(1); } }
+  .fdk-feld.fdk-hier0 { box-shadow: 0 0 0 3px #d63a3a; background-image: linear-gradient(rgba(214,58,58,.16), rgba(214,58,58,.16)); }
+  .fdk-feld.fdk-hier1 { box-shadow: 0 0 0 3px #2f6fdf; background-image: linear-gradient(rgba(47,111,223,.16), rgba(47,111,223,.16)); }
+  .fdk-feld.fdk-hier2 { box-shadow: 0 0 0 3px #d63a3a, 0 0 0 6px #2f6fdf; }
+  .fdk-feld.fdk-hier { z-index: 2; } .fdk-feld.fdk-hier .fdk-sym { opacity: .45; }
+  .fdk-feld.fdk-hier .fdk-koeche { top: auto; bottom: 50%; right: 50%; transform: translate(50%, 40%); gap: 2px; z-index: 3; }
+  .fdk-feld.fdk-hier .fdk-koeche .fdk-figur { width: 36px; height: 36px; font-size: 1.35rem; border: 2.5px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,.45); }
+  .fdk-feld.fdk-laeuft .fdk-koeche { animation: fdkHuepf .33s ease-out; } @keyframes fdkHuepf { 0% { transform: translate(50%, 10%); } 50% { transform: translate(50%, 20%) scale(1.12); } 100% { transform: translate(50%, 40%); } }
+  .fdk-nimmt { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 6px; max-width: 100%; text-align: center; overflow-wrap: anywhere; border-radius: 14px; background: #fff; border: 3px solid #d63a3a; animation: fdkNeu .6s ease-out; }
+  .fdk-nimmt1 { border-color: #2f6fdf; } .fdk-nimmt-sym { font-size: 2.3rem; line-height: 1; } .fdk-nimmt b { font-size: .85rem; } .fdk-nimmt small { font-size: .78rem; font-weight: 700; }
+  .fdk-karte .fdk-leiste .fdk-zutaten { display: none; } /* Zutaten liegen jetzt auf den Tabletts */
+  .fdk-tisch .fdk-t-kopf b { font-size: .74rem; }
+  @media (max-width: 520px) { .fdk-tisch .fdk-name, .fdk-t-platz small { display: none; } .fdk-t-sym { font-size: 1.7rem; } .fdk-tisch .fdk-sym { font-size: 1.55rem; } .fdk-tisch .fdk-mitte .mae-wuerfel { width: 58px; height: 58px; } .fdk-tisch .fdk-runde { font-size: .78rem; } }
+  @media (prefers-reduced-motion: reduce) { .fdk-neu, .fdk-nimmt, .fdk-feld.fdk-laeuft .fdk-koeche { animation: none; } }
   .fdk-mitte { grid-column: 2 / span 2; grid-row: 2 / span 2; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-align: center; min-height: 0; overflow: hidden; }
   .fdk-mitte .mae-wuerfel { width: 72px; height: 72px; margin: 0; } .fdk-mitte .mae-w-text { display: none; }
   .fdk-runde { font-weight: 800; font-size: .9rem; color: #5a4630; } .fdk-wer-dran { font-size: .85rem; font-weight: 700; color: #5a4630; } .fdk-ende-sym { font-size: 3rem; }
@@ -3214,6 +3241,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.51.0" data-v="2.51.0"></script>
+<script src="app.js?v=2.52.0" data-v="2.52.0"></script>
 </body>
 </html>

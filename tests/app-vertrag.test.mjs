@@ -4836,7 +4836,8 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(FDKP\.kette\) return; FDKP\.kette = true;/.test(html) && /async function fdkAbbrechen\(\)/.test(html), "eine Computer-Kette, Abbrechen");
   assert.ok(/onclick="fdkWuerfeln\(\)"[^>]*><span class="kt-ico">🎲<\/span>Würfeln<\/button><button class="knopf" onclick="fdkRegeln\(\)"><span class="kt-ico">📖<\/span>Regeln<\/button><button class="knopf" onclick="fdkAbbrechen\(\)">/.test(html), "unten genau drei Knöpfe: Würfeln, Regeln, Abbrechen");
   assert.ok(/if \(!FDKP\.regelnGesehen\) return fdkRegeln\(fdkStart\);/.test(html) && /So geht Fang den Koch/.test(html), "Regeln mit 3 Bildern beim ersten Spiel");
-  assert.ok(!/fdkTipp|fdkNimm|fdkWeg\(|Tablett/.test(html.slice(html.indexOf("// ---------- KC-CLUB-FDK"), html.indexOf("function fdkFortsetzen()"))), "nichts mehr auswählen oder weglegen – alles automatisch");
+  assert.ok(!/fdkTipp|fdkNimm|fdkWeg\(/.test(html.slice(html.indexOf("// ---------- KC-CLUB-FDK"), html.indexOf("function fdkFortsetzen()"))), "nichts mehr auswählen oder weglegen – alles automatisch");
+  { const tb = html.slice(html.indexOf("function fdkTablett("), html.indexOf("function fdkPcZeigen()")); assert.ok(tb && !/onclick/.test(tb), "2.52.0: Tabletts nur zum Ansehen – nichts antippen"); }
   const a = html.indexOf("const FDK_RUNDEN"), b = html.indexOf("// ----- FDK Regeln Ende -----", a);
   const R = new Function(html.slice(a, b) + "\nreturn { fdkNeu, fdkZug, fdkSieger, FDK_FELD, FDK_GERICHTE };")();
   assert.equal(R.FDK_FELD.length, 12); assert.equal(R.FDK_FELD.filter((f) => f === "pass").length, 2);
@@ -5252,6 +5253,15 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/\.\.\.\(ich\.admin && probe\.has\(m\.person_id\) \? \{ probe:/.test(server) && /\.\.\.\(ich\.admin && !selbst \? \{ probe:/.test(server), "Probe-Info nur für den Admin");
   assert.ok(/function prKarte\(m\) \{\n  if \(!ICH\?\.admin \|\| m\.selbst/.test(html) && /\$\{prKarte\(m\)\}/.test(html), "Karte nur für den Admin auf der Mitglied-Seite");
   assert.ok(/api\("probe_ende", \{ person_id: pid, art: "beenden", nachrichten_entfernen: mit \}\)/.test(html) && /api\("probe_ende", \{ person_id: pid, art: "uebernehmen", begruessen \}\)/.test(html), "Übernehmen fragt nach Begrüßung, Beenden mit Häkchen");
+}
+// 2.52.0 KC-CLUB-FDK-TABLETT (Wunsch Hansi): Fang den Koch – Tabletts links (Du) und rechts (Kurt) mit den Zutaten, Standort des Kochs deutlich, Nehmen groß gezeigt
+{
+  const a = html.indexOf("// KC-CLUB-FDK-TABLETT (2.52.0"), f = html.slice(a, html.indexOf("function fdkPcZeigen()", a));
+  assert.ok(/<div class="fdk-tisch">\$\{fdkTablett\(F, 0\)\}<div class="fdk-brett"[^`]*\$\{fdkTablett\(F, 1\)\}<\/div>/.test(html), "links Du, rechts Kurt, Brett in der Mitte");
+  assert.ok(/S\.bon\.hat\.includes\(l\)/.test(f) && /fdk-neu/.test(f) && /\$\{S\.bon\.hat\.length\}\/3/.test(f), "Tablett zeigt gesammelte Zutaten, neue springt auf");
+  assert.ok(/ev\.push\(\{ art: "nimmt", l: f, z: fdkZutat\(S, f\), i \}\)/.test(html) && /e\.art === "nimmt" && e\.i === i \+ 1/.test(html) && /FDKP\.zeigt = \{ s, z: nimmt\.z \}/.test(html), "Nehmen genau auf dem Feld groß in der Mitte");
+  assert.ok(/fdk-hier\$\{koeche\.length > 1 \? "2" : koeche\[0\]\}/.test(html) && /\.fdk-feld\.fdk-hier0 \{ box-shadow: 0 0 0 3px #d63a3a/.test(html) && /\.fdk-feld\.fdk-hier1 \{ box-shadow: 0 0 0 3px #2f6fdf/.test(html), "Feld des Kochs in seiner Farbe umrandet");
+  assert.ok(/@media \(prefers-reduced-motion: reduce\) \{ \.fdk-neu, \.fdk-nimmt/.test(html), "Bewegung reduzieren beachtet");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
