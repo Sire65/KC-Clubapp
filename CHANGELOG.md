@@ -8,6 +8,10 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.41.0 – 2026-10-07 – KC-CLUB-DIENSTWUNSCH: DP2 Build 262 RC
+DP2 auf Build 262 RC übernommen (dp3 d8976b9, Zweig codex/club-app-interface, Wunsch Hansi). Für die Mitglieder-Eingabe (Twinkey) neu aus Build 258–260: ganzer Sperrtag ohne Bereitschaft, „Deine Dienstzeiten wurden erfolgreich verschickt“ erst nach bestätigtem Speichern (sonst Hinweis), Abgleich des vollständigen Twinkey-Auftrags, freiwillige Unterbrechungen, kompakte Tagesauswahl (Tage zum Aufklappen, „Twinkey hilft dir“ eingeklappt). Build 261/262 (Personenkonto, Handschrift-Ziffern) betreffen nur DP2. DP2-Dateien unverändert (Prüfsummen in dp2/QUELLE.json). Datenformat unverändert. RC.
+- Auftrag an Codex: docs/DP2_CODEX_AUFTRAG_KLAPPBEREICHE.md (KC-DP-KLAPPBEREICH, DP2 Build 263) – Klappbereiche in DP2 wie in der Club-App (Pfeil ▾, Schloss 🔓/🔒, gemerkt, unten „▴ Zuklappen“).
+
 ## 2.40.1 – 2026-10-07 – KC-CLUB-SPUR-BILD
 Wunsch Hansi (Klaus' neues Bild fehlte in „👣 Wege der Mitglieder“): Öffnen von „🧑‍🍳 Mein Bild“ und jedes Speichern (Koch-Figur, eigene Figur, Foto, entfernt) stehen jetzt im Wege-Protokoll – nur die Art, nie das Bild.
 
