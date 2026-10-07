@@ -9,7 +9,7 @@
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
 ## 2.54.0 – 2026-10-07 – KC-CLUB-AVATAR-OHR-FEIN
-Ohren natürlicher: feiner Ohrrand, Ohrmuschel mit leichtem Schatten und kleiner Ohrknorpel – bei allen Ohrformen, auch den bisherigen Figuren. Warte-Bilder: in der Auswahl bewegen sich alle Bilder; bei „Animationen reduzieren“ am Handy laufen sie langsamer statt still (wie die Kochmütze). Emojis (Wunsch Karla): deutlich mehr Auswahl wie bei WhatsApp, neue Gruppen „Tiere & Natur“ und „Dinge“.
+Ohren natürlicher: feiner Ohrrand, Ohrmuschel mit leichtem Schatten und kleiner Ohrknorpel – bei allen Ohrformen, auch den bisherigen Figuren. Warte-Bilder: in der Auswahl bewegen sich alle Bilder; bei „Animationen reduzieren“ am Handy laufen sie langsamer statt still (wie die Kochmütze). Emojis (Wunsch Karla): deutlich mehr Auswahl wie bei WhatsApp, neue Gruppen „Tiere & Natur“ und „Dinge“. Startseiten-Kacheln auch „Sehr klein – 4 nebeneinander“ (Einstellungen → Darstellung).
 
 ## 2.53.0 – 2026-10-07 – KC-CLUB-AVATAR-GESICHT-2
 Figur zusammenstellen: Ohren (eng anliegend, abstehend, groß, klein, spitz), Nasen (zierlich, klein, Stupsnase, gerade, breit, groß, Adlernase, Knollennase) und Augenfarbe (blau, hellblau, grün, graugrün, braun, haselnuss, grau, bernstein). Das Halstuch geht jetzt sichtbar um den Hals herum. Alte Figuren bleiben unverändert. Server 2.53.0. Grau meliert: feinere und mehr helle Strähnen.

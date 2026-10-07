@@ -459,12 +459,14 @@ let chatId = null, chatTimer = null, empfWahl = { personen: [], aemter: [], alle
 
 function einst(k, def) { try { const v = localStorage.getItem("kc_club_" + k); return v === null ? def : v === "1"; } catch { return def; } }
 // KC-CLUB-KACHEL-KLEIN (2.23.87, Wunsch Hansi): Startseiten-Kacheln klein (3 je Reihe) – je Gerät, weil Bildschirme verschieden groß sind
-function kachelKlein() { try { return localStorage.getItem("kc_club_kachelgroesse") === "klein"; } catch { return false; } }
+// KC-CLUB-KACHEL-MINI (2.54.0, Wunsch Hansi): zusätzlich „sehr klein“ – 4 nebeneinander (nur Symbol + Name, ohne Untertitel)
+function kachelStufe() { try { const g = localStorage.getItem("kc_club_kachelgroesse"); return g === "klein" || g === "mini" ? g : "normal"; } catch { return "normal"; } }
+function kachelKlein() { return kachelStufe() !== "normal"; }
 function kachelGroesse(g) {
   try { localStorage.setItem("kc_club_kachelgroesse", g); } catch {}
   document.querySelectorAll("#kachelGroesseWahl button").forEach((b) => b.classList.toggle("an", b.dataset.g === g));
   try { kachelnZeigen(); } catch {}
-  melde(g === "klein" ? "▦ Kacheln klein – 3 nebeneinander" : "▣ Kacheln normal – 2 nebeneinander");
+  melde(g === "mini" ? "▪ Kacheln sehr klein – 4 nebeneinander" : g === "klein" ? "▦ Kacheln klein – 3 nebeneinander" : "▣ Kacheln normal – 2 nebeneinander");
 }
 function einstellung(k, an) { try { localStorage.setItem("kc_club_" + k, an ? "1" : "0"); } catch {} anwendenDesign(); }
 // ---------- KC-CLUB-DESIGN: fertige Farbdesigns (je mit Tag- und Nacht-Variante) ----------
@@ -1590,7 +1592,7 @@ const HILFE = [
   { id: "sprungknopf", thema: "nachrichten", sym: "🔘", t: "Einen Knopf in die Nachricht setzen", x: "Willst du jemanden direkt an eine Stelle der App schicken? Unter dem Schreibfeld auf <b>📎</b> → <b>„🔘 Knopf zu einer App-Stelle“</b> und das Ziel wählen, z. B. „Mein Bild wählen“. In der Nachricht erscheint ein Knopf – antippen, und man ist dort.", zeig: () => zeige("nachrichten"), seit: "2.23.97" },
   { id: "was_neu", thema: "nachrichten", sym: "👋", t: "Was ist neu? Gleich beim Öffnen", x: "Öffnest du die App und es gibt Neues, zeigt sie dir kurz, wie viele <b>neue Nachrichten</b> (in deinen Chats und in Gruppen) und <b>Pinnwand-Einträge</b> da sind und ob <b>Spiele</b> auf dich warten – mit Knopf direkt dorthin. Abschalten: im Fenster selbst mit „🔕 Diese Meldung ausschalten“ oder unter ⚙️ Einstellungen → 🗣️ Ansagen, Töne &amp; Tipps → „👋 Beim Öffnen zeigen, was neu ist“.", zeig: () => einstiegHin("ansagen", "setWasNeu"), seit: "2.24.12" },
   { id: "animiert", thema: "darstellung", sym: "✨", t: "Ruhige oder lebendige Knöpfe", x: "Kacheln zoomen kurz beim Antippen, die Reiter bekommen einen laufenden Rahmen und „＋ Neu“ leuchtet auf. Wer es lieber ruhig mag: ⚙️ → „🎨 Darstellung“ → <b>„✨ Animierte Knöpfe“</b> ausschalten. Gilt für dieses Gerät.", zeig: () => einstiegHin("darstellung", "setAnimiert"), seit: "2.24.1" },
-  { id: "kacheln_klein", thema: "darstellung", sym: "🔲", nur: () => !einfach(), t: "Kacheln kleiner – 3 nebeneinander", x: "Mehr Kacheln auf einen Blick: Bei ⚙️ → <b>„🎨 Darstellung“</b> → <b>„🔲 Kacheln auf der Startseite“</b> „Klein“ wählen – dann passen 3 nebeneinander. Das geht nur in der <b>erweiterten Ansicht</b> – in der einfachen Ansicht bleiben die Kacheln groß. Gilt nur für dieses Gerät.", zeig: () => einstiegHin("darstellung", "kachelGroesseWahl"), seit: "2.23.90" },
+  { id: "kacheln_klein", thema: "darstellung", sym: "🔲", nur: () => !einfach(), t: "Kacheln kleiner – 3 oder 4 nebeneinander", x: "Mehr Kacheln auf einen Blick: Bei ⚙️ → <b>„🎨 Darstellung“</b> → <b>„🔲 Kacheln auf der Startseite“</b> „Klein“ wählen – dann passen 3 nebeneinander, bei „Sehr klein“ 4 (nur Symbol und Name). Das geht nur in der <b>erweiterten Ansicht</b> – in der einfachen Ansicht bleiben die Kacheln groß. Gilt nur für dieses Gerät.", zeig: () => einstiegHin("darstellung", "kachelGroesseWahl"), seit: "2.23.90" },
 ];
 const HZ = { thema: null, q: "", vorher: null, gruss: 0, unterwegs: null, herkunft: null, sicht: null };
 // 2.23.1 (Wunsch Hansi: „immer etwas anders formuliert, freundlich, nicht aufdringlich“): wechselnde Einleitungen – neu gewählt
@@ -7391,6 +7393,7 @@ function kachelnZeigen() {
   if (ZIEHEN) return; // nicht neu zeichnen, während eine Kachel am Finger hängt
   $("raster").classList.toggle("ad-raster", reg === "admin" && !einfach()); // KC-CLUB-ADMIN-REGISTER: kleinere Kacheln, 3 je Reihe
   $("raster").classList.toggle("klein3", reg !== "admin" && !einfach() && kachelKlein()); // KC-CLUB-KACHEL-KLEIN (2.23.87): auf Wunsch überall 3 je Reihe
+  $("raster").classList.toggle("klein4", reg !== "admin" && !einfach() && kachelStufe() === "mini"); // KC-CLUB-KACHEL-MINI (2.54.0): 4 je Reihe
   if (kaBearb) {
     $("kaAusHinweis").innerHTML = "";
     if (einfach()) { // einfache Ansicht: untereinander, nur ▲ / ▼ (kein Ausblenden)
@@ -14508,7 +14511,7 @@ function mgAnsichtSetzen(a) {
   melde(MG_ANSICHT === "kacheln" ? "👥 Mitglieder werden als Kacheln gezeigt" : MG_ANSICHT === "tafel" ? "📋 Anwesenheitstafel: Name und Lämpchen – antippen öffnet das Mitglied" : "👥 Mitglieder werden als Liste gezeigt");
 }
 function mgAnsichtWahlZeigen() { document.querySelectorAll("#mgAnsichtWahl button, #mgAnsichtOben button").forEach((b) => b.classList.toggle("an", b.dataset.a === MG_ANSICHT));
-  document.querySelectorAll("#kachelGroesseWahl button").forEach((b) => b.classList.toggle("an", b.dataset.g === (kachelKlein() ? "klein" : "normal"))); } // 2.23.87
+  document.querySelectorAll("#kachelGroesseWahl button").forEach((b) => b.classList.toggle("an", b.dataset.g === kachelStufe())); } // 2.23.87; 2.54.0: + sehr klein
 // KC-CLUB-ANWESENHEIT (2.23.89, Wunsch Hansi): Anwesenheitstafel – nur Name + LED (Farben wie KREIS_ARTEN), keine Knöpfe;
 // antippen öffnet das Mitglied (dort Nachricht, Anklopfen, Anruf). Reihenfolge: online, abwesend, heute da, Rest.
 function mgTafelHtml(liste) {

@@ -852,6 +852,13 @@
   #raster.klein3 .kachel .sym, #raster.ad-raster .kachel .sym { font-size: 1.3rem; }
   #raster.klein3 .kachel b, #raster.ad-raster .kachel b { font-size: .8rem; margin-top: 4px; line-height: 1.15; }
   #raster.klein3 .kachel small, #raster.ad-raster .kachel small { font-size: .66rem; line-height: 1.2; display: block; margin-top: 2px; overflow-wrap: anywhere; }
+  /* KC-CLUB-KACHEL-MINI (2.54.0): 4 nebeneinander – nur Symbol und Name */
+  #raster.klein4 { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; }
+  #raster.klein4 .kachel { padding: 8px 4px 7px; text-align: center; border-radius: 12px; }
+  #raster.klein4 .kachel .sym { font-size: 1.25rem; margin: 0 auto; }
+  #raster.klein4 .kachel b { font-size: .7rem; margin-top: 3px; line-height: 1.1; overflow-wrap: anywhere; hyphens: auto; }
+  #raster.klein4 .kachel small { display: none; }
+  #raster.klein4 .kachel .zahl { transform: scale(.75); right: 4px; top: 4px; }
   #raster.klein3 .kachel .zahl { transform: scale(.85); transform-origin: top right; } /* 2.23.87 KC-CLUB-KACHEL-KLEIN: 3 nebeneinander (Einstellung) */
   #raster.ad-raster .kachel.ad-ueb { border-top-color: #2e86de; } #raster.ad-raster .kachel.ad-dienst { border-top-color: #8e44ad; } #raster.ad-raster .kachel.ad-app { border-top-color: #16a085; }
   #raster.ad-raster .kachel.ad-link { border-top-color: #95a5a6; } #raster.ad-raster .kachel.ad-not { border-top-color: #c0392b; } .kachel.l-keine::after, .kachel.ad-link::after { display: none; }
@@ -2886,7 +2893,7 @@
       <div class="schalter"><div><b>🧩 Startseite anordnen</b><div class="hinweis">Kacheln verschieben oder ausblenden – oder auf der Startseite eine Kachel lange drücken</div></div><button class="knopf klein" onclick="zeige('start');kaBearbeiten(true)">Anordnen</button></div>
       <!-- KC-CLUB-MG-KACHELN (1.45.0, Wunsch Hansi): jeder wählt selbst, wie die Mitglieder angezeigt werden (je Gerät) -->
       <div style="margin-top:8px"><b>🔲 Kacheln auf der Startseite</b> <span class="hinweis">(erweiterte Ansicht, gilt für dieses Gerät)</span></div>
-      <div class="umschalter" id="kachelGroesseWahl"><button data-g="normal" onclick="kachelGroesse('normal')">▣ Normal – 2 nebeneinander</button><button data-g="klein" onclick="kachelGroesse('klein')">▦ Klein – 3 nebeneinander</button></div>
+      <div class="umschalter" id="kachelGroesseWahl"><button data-g="normal" onclick="kachelGroesse('normal')">▣ Normal – 2 nebeneinander</button><button data-g="klein" onclick="kachelGroesse('klein')">▦ Klein – 3 nebeneinander</button><button data-g="mini" onclick="kachelGroesse('mini')">▪ Sehr klein – 4 nebeneinander</button></div>
       <div style="margin-top:8px"><b>👥 Mitglieder anzeigen als</b></div>
       <div class="umschalter" id="mgAnsichtWahl"><button data-a="kacheln" onclick="mgAnsichtSetzen('kacheln')">🔲 Kacheln</button><button data-a="liste" onclick="mgAnsichtSetzen('liste')">☰ Liste</button><button data-a="tafel" onclick="mgAnsichtSetzen('tafel')">📋 Anwesenheit</button></div>
       <div class="schalter"><div><b>🇩🇪 Feiertage NRW im Kalender</b><div class="hinweis">Gesetzliche Feiertage in Nordrhein-Westfalen</div></div><input type="checkbox" id="setFeiertage" onchange="einstellung('feiertage', this.checked); if (KAL) kalZeichnen()"></div>

@@ -4454,7 +4454,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const on = !!m\.online[\s\S]{0,400}mg-aus/.test(html.slice(html.indexOf("function mgAnrufKnoepfe"))), "aktiv nur bei online, sonst blass");
   assert.ok(/\$\("raster"\)\.classList\.toggle\("klein3", reg !== "admin" && !einfach\(\) && kachelKlein\(\)\)/.test(html), "klein nur in der erweiterten Ansicht");
   assert.ok(/#raster\.klein3, #raster\.ad-raster \{ grid-template-columns: repeat\(3, minmax\(0, 1fr\)\);/.test(html), "gleiche Regeln wie das Admin-Register (kein zweites Raster)");
-  assert.ok(/id="kachelGroesseWahl"/.test(html) && /localStorage\.setItem\("kc_club_kachelgroesse", g\)/.test(html) && /try \{ return localStorage\.getItem\("kc_club_kachelgroesse"\) === "klein"; \} catch \{ return false; \}/.test(html), "Einstellung je Gerät, sicher ohne Speicher");
+  assert.ok(/id="kachelGroesseWahl"/.test(html) && /localStorage\.setItem\("kc_club_kachelgroesse", g\)/.test(html) && /try \{ const g = localStorage\.getItem\("kc_club_kachelgroesse"\); return g === "klein" \|\| g === "mini" \? g : "normal"; \} catch \{ return "normal"; \}/.test(html), "Einstellung je Gerät, sicher ohne Speicher (2.54.0: + sehr klein)");
 }
 // 439. 2.23.88: Wege der Mitglieder – was geöffnet, mit wem, Uhrzeit; nie Inhalte; 30 Tage; nur Admin (KC-CLUB-SPUR)
 {
@@ -5296,6 +5296,12 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(G.length >= 10 && G.some((g) => g.name === "Tiere & Natur") && G.some((g) => g.name === "Dinge"), "neue Gruppen");
   const n = G.filter((g) => g.liste).reduce((s, g) => s + g.liste.length, 0); assert.ok(n >= 700, "mehrere hundert Emojis (" + n + ")");
   for (const g of G.filter((g) => g.liste)) { assert.equal(new Set(g.liste).size, g.liste.length, "keine doppelten in " + g.name); assert.ok(g.liste.every((e) => e && !/['"<>]/.test(e)), "nur Emojis in " + g.name); }
+}
+// 2.54.0 KC-CLUB-KACHEL-MINI (Wunsch Hansi): Startseiten-Kacheln auch „sehr klein“ – 4 nebeneinander, je Gerät
+{
+  assert.ok(/<button data-g="mini" onclick="kachelGroesse\('mini'\)">▪ Sehr klein – 4 nebeneinander<\/button>/.test(html), "Auswahl in der Darstellung");
+  assert.ok(/#raster\.klein4 \{ grid-template-columns: repeat\(4, minmax\(0, 1fr\)\)/.test(html) && /#raster\.klein4 \.kachel small \{ display: none; \}/.test(html), "4 Spalten, ohne Untertitel");
+  assert.ok(/classList\.toggle\("klein4", reg !== "admin" && !einfach\(\) && kachelStufe\(\) === "mini"\)/.test(html), "nur erweiterte Ansicht, nicht im Admin-Register");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
