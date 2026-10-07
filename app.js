@@ -17417,6 +17417,9 @@ function startMessFertig() {
   try { localStorage.setItem(STARTMESS_SPEICHER, JSON.stringify([eintrag, ...startMessLesen()].slice(0, 10))); } catch {}
   try { if (!sessionStorage.getItem("kc_club_fp_startzeit")) { sessionStorage.setItem("kc_club_fp_startzeit", "1"); fpNeu("startzeit", { ms: eintrag.ges, netz: eintrag.netz, quelle: eintrag.quelle, ...p }); } } catch {}
   if ($("appInfo")?.offsetParent) appInfoZeigen();
+  // KC-CLUB-SPUR-OEFFNEN (2.30.0, Fall Reinhilde: nur kurz auf der Startseite → im Weg stand nichts): jedes Öffnen zählt als Schritt
+  // und geht nach 3 s gleich los (nicht erst nach 2 Min.), damit auch ganz kurze Besuche sichtbar sind
+  spur("geoeffnet"); setTimeout(spurSenden, 3000);
 }
 const sek = (ms) => (ms / 1000).toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " s";
 function startMessHtml() {
@@ -18588,7 +18591,7 @@ async function spurSenden() {
 }
 setInterval(spurSenden, sparTakt(NZ_TAKT_MS));
 document.addEventListener("visibilitychange", () => { if (document.hidden) spurSenden(); });
-const SPUR_WAS = { mitglied: "👤 Mitglied angesehen", chat: "💬 Unterhaltung geöffnet", gesendet: "✉️ Nachricht gesendet", gesendet_anlage: "📎 Nachricht mit Anhang gesendet",
+const SPUR_WAS = { geoeffnet: "📲 App geöffnet", mitglied: "👤 Mitglied angesehen", chat: "💬 Unterhaltung geöffnet", gesendet: "✉️ Nachricht gesendet", gesendet_anlage: "📎 Nachricht mit Anhang gesendet",
   anruf: "📞 Anruf (App) an", video: "🎥 Videoanruf an", anklopfen: "👋 Angeklopft bei", telefon: "☎️ Telefonnummer angetippt", whatsapp: "🟢 WhatsApp geöffnet", mail: "✉️ E-Mail-Adresse angetippt" };
 const SPW = { tag: null, person: null };
 async function spurAdmin(tag, person) {
