@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.28.1 – 2026-10-06 – Avatar: grau meliert feiner
+Grau meliert = dunkelblond mit feinen, fast senkrechten grauen Strähnen (statt grober Schrägstreifen); Farbpunkt im Baukasten angepasst.
+
 ## 2.28.0 – 2026-10-06 – Terminprogramm komplett in der Club-App; Absage durch Mitglied eintragen
 KC-TERMINE-UMZUG: Quellcode kc-termine, Mitgliederseite termin.html, Google-Skript und Termin-Doku liegen jetzt im Repo KC-Clubapp; Hochladen bei Änderung unter supabase/functions/kc-termine; alte Links leiten weiter. KC-CLUB-SCHULUNG-MITGLIED-ABSAGE: 🚫 Absagen → 📱 Mitglied hat abgesagt (WhatsApp/Telefon/persönlich, Notiz, Bestätigungsmail ohne Link); 📨 Neu einladen danach nur mit angekreuzten Terminen.
 

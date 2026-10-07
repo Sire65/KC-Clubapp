@@ -4885,6 +4885,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/onclick="scNeuMitAuswahl\('\$\{e\.id\}'\)">📨 Neu einladen/.test(html) && /SC\.gewaehlt = \[\.\.\.e\.person_ids\]; SC\.angebot = \[\];/.test(html), "nach Absage nur mit ausgewählten Terminen neu einladen");
   assert.ok(/Sire65\/KC-Clubapp\/main\/google\/KalenderAbgleich\.gs/.test(html) && lies("google/KalenderAbgleich.gs").length > 100, "Google-Skript liegt hier");
 }
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

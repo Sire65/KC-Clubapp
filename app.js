@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.28.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.28.1"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SCHNELLSTART-DATEI (2.24.8, Hinweis Hansi „Start ist langsamer geworden“): das Programm liegt in app.js, damit das Handy es
 // fertig übersetzt behalten kann (statt bei jedem Öffnen 1,8 MB neu einzulesen). Seite und Programm müssen dieselbe Version haben
 // (AGENTS Regel 16, kein Mischstand): passt es nicht (z. B. alte Seite aus einem Zwischenspeicher), einmal frisch laden, sonst anhalten.
@@ -27,7 +27,7 @@ const initialen = (n) => String(n || "?").split(/\s+/).map((x) => x[0]).slice(0,
 // Reine SVG-Zeichnung im Code – keine fremden Bilder, keine Rechte Dritter, keine Kosten. Gespeichert wird nur der Code (z. B. „w03“).
 // Später als Update: eigener Baukasten (dieselben Teile frei kombinierbar).
 const AV_HAUT = ["#f7d7bd", "#ecc19c", "#d59d6f", "#a96d45", "#6f452a"];
-const AV_HAAR = { schwarz: "#241812", braun: "#5b3a26", hell: "#9b6634", blond: "#dcb46a", rot: "#b5462a", grau: "#9ea3a8", weiss: "#e9e5dd", meliert: "#6f6a64" }; // 2.27.2: grau meliert (Muster)
+const AV_HAAR = { schwarz: "#241812", braun: "#5b3a26", hell: "#9b6634", blond: "#dcb46a", rot: "#b5462a", grau: "#9ea3a8", weiss: "#e9e5dd", meliert: "#8a6b43" }; // 2.27.2: grau meliert (Muster)
 // [haut, frisur, haarfarbe, kopf, bart, brille, hintergrund, halstuch]
 const AV_FIGUREN = {
   w01: [0, "lang", "blond", "koch", 0, 0, "#741521", "#c8102e"], w02: [1, "dutt", "braun", "koch", 0, 1, "#1d4f91", "#ffcc00"],
@@ -165,8 +165,8 @@ function avatarSvg(code, gr = 40, ini = "") { // 2.27.2: ini = Initialen (klein 
     return `<img class="av-foto" data-avf="${code}" src="${/^data:image\/jpeg;base64,/.test(b) ? b : AVF_LEER}" alt="" width="${gr}" height="${gr}">`; }
   const f = avTeile(code); if (!f) return "";
   const [h, frisur, hf, kopf, bart, brille, bg, tuch, frau, augen, brauen, mund, wangen, bfarbe, jacke, knopf] = f, haut = AV_HAUT[h], dunkel = h >= 3;
-  const melId = hf === "meliert" ? "avm" + ++AV_UID : "", haar = melId ? `url(#${melId})` : AV_HAAR[hf]; // 2.27.2: grau meliert = dunkle und helle Strähnen
-  const melDef = melId ? `<defs><pattern id="${melId}" width="1.5" height="1.5" patternUnits="userSpaceOnUse" patternTransform="rotate(70)"><rect width="1.5" height="1.5" fill="#77726c"/><rect width=".5" height="1.5" fill="#c9c9c4"/></pattern></defs>` : "";
+  const melId = hf === "meliert" ? "avm" + ++AV_UID : "", haar = melId ? `url(#${melId})` : AV_HAAR[hf]; // 2.27.2: grau meliert; 2.28.1: dunkelblond mit feinen grauen Strähnen (Wunsch Hansi)
+  const melDef = melId ? `<defs><pattern id="${melId}" width="3.1" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(8)"><rect width="3.1" height="9" fill="#8a6b43"/><rect x=".4" width=".22" height="9" fill="#c4bfb5" opacity=".75"/><rect x="1.5" y="2" width=".16" height="5" fill="#ddd9d0" opacity=".7"/><rect x="2.4" y="4" width=".2" height="5" fill="#b3ada2" opacity=".6"/></pattern></defs>` : "";
   const jFarbe = AV_JACKE[jacke] || "#fff", knopfF = AV_KNOPF[knopf] || (jacke ? "rgba(255,255,255,.55)" : "#c9c2b6"), bF = AV_BRILLENFARBE[bfarbe] || "#2b2b2b";
   const hinten = { lang: `<path d="M18 26 Q18 12 32 12 Q46 12 46 26 L48 50 Q32 56 16 50 Z" fill="${haar}"/>`, zopf: `<path d="M41 26 Q50 34 46 48 Q44 52 42 48 Q45 38 39 30Z" fill="${haar}"/>`,
     locken: `<g fill="${haar}"><circle cx="20" cy="28" r="6"/><circle cx="44" cy="28" r="6"/><circle cx="21" cy="37" r="5"/><circle cx="43" cy="37" r="5"/></g>`, dutt: "", bob: `<path d="M19 27 Q19 13 32 13 Q45 13 45 27 L45 38 Q40 40 39 34 L25 34 Q24 40 19 38Z" fill="${haar}"/>` }[frisur] || "";
@@ -8066,7 +8066,7 @@ function avbZufall() {
 function avbZeigen() {
   const z = $("avbInhalt"); if (!z || !AVB) return;
   const punkt = (farbe) => `<span style="display:inline-block;width:20px;height:20px;border-radius:50%;background:${farbe};border:1px solid var(--linie);vertical-align:middle"></span>`;
-  const haarPunkt = (k) => k === "meliert" ? `<span title="grau meliert" style="display:inline-block;width:20px;height:20px;border-radius:50%;background:repeating-linear-gradient(70deg,#77726c 0 2px,#c9c9c4 2px 3px);border:1px solid var(--linie);vertical-align:middle"></span>` : punkt(AV_HAAR[k]);
+  const haarPunkt = (k) => k === "meliert" ? `<span title="grau meliert" style="display:inline-block;width:20px;height:20px;border-radius:50%;background:repeating-linear-gradient(78deg,#8a6b43 0 2px,#bdb8ae 2px 2.6px,#8a6b43 2.6px 4px,#d9d5cc 4px 4.4px);border:1px solid var(--linie);vertical-align:middle"></span>` : punkt(AV_HAAR[k]);
   const reihe = (titel, i, werte) => `<div class="ps-schritt"><b>${titel}</b><div class="hl-chips">${werte.map((w, n) => `<button type="button" class="chip${AVB[i] === n ? " an" : ""}" onclick="AVB[${i}]=${n};avbZeigen()">${w}</button>`).join("")}</div></div>`;
   z.innerHTML = `<div style="display:grid;place-items:center;gap:6px;padding:6px 0 8px;position:sticky;top:44px;z-index:2;background:var(--karte);border-bottom:1px solid var(--linie)">${avatarSvg(avbCode(), 160, initialen(ICH?.name))}<button type="button" class="knopf klein" style="margin:0" onclick="avbZufall()">🎲 Zufall</button></div>
     ${reihe("Typ", 8, ["👨‍🍳 Koch", "👩‍🍳 Köchin"])}
