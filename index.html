@@ -1630,6 +1630,11 @@
   .av-raster button.an { border-color: var(--rot); box-shadow: 0 0 0 3px var(--karte), 0 0 0 5px var(--rot); }
   .av-raster svg { width: 100%; height: 100%; display: block; }
   .av-vorschau { position: sticky; top: 44px; z-index: 2; background: var(--karte); display: grid; justify-items: center; gap: 6px; padding: 6px 0 10px; border-bottom: 1px solid var(--linie); margin-bottom: 8px; } /* 2.23.98 */
+  /* KC-CLUB-AVATAR-KNOEPFE-OBEN (2.38.0): Bild links | Trennlinie | Knöpfe rechts */
+  .av-vorschau.mit-rechts { grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); align-items: center; justify-items: stretch; column-gap: 12px; }
+  .av-vorschau-links { display: grid; justify-items: center; gap: 6px; text-align: center; min-width: 0; }
+  .av-vorschau-rechts { display: grid; gap: 6px; border-left: 2px solid var(--linie); padding-left: 12px; min-width: 0; } .av-vorschau-rechts .knopf, .av-vorschau.mit-rechts .av-vorschau-knoepfe .knopf { margin: 0; padding: 8px 10px; font-size: .9rem; width: 100%; min-width: 0; box-sizing: border-box; white-space: normal; hyphens: auto; text-align: center; }
+  .av-vorschau.mit-rechts .av-vorschau-knoepfe { flex-direction: column; align-items: stretch; } .av-vorschau.mit-rechts .av-vorschau-knoepfe .knopf { padding: 8px 10px; font-size: .9rem; }
   .av-vorschau-bild svg { display: block; } .av-vorschau-knoepfe { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; } .av-vorschau-knoepfe .knopf { margin: 0; }
   .av-keins { display: grid; place-items: center; width: 100%; height: 100%; border-radius: 50%; background: var(--rot); color: #fff; font-weight: 800; font-size: 1.1rem; }
   .avatar.k-online { background: #1e8449; } .avatar.k-heute { background: #2471a3; } .avatar.k-weg { background: #d68910; }
@@ -3154,6 +3159,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.37.1" data-v="2.37.1"></script>
+<script src="app.js?v=2.38.0" data-v="2.38.0"></script>
 </body>
 </html>

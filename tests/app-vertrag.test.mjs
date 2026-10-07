@@ -5047,6 +5047,15 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(!ausN\) KA_NUR_AUS = false;/.test(f) && !/gibt es keine/.test(f), "schaltet sich ohne ausgeblendete ab, kein Leer-Hinweis");
   assert.ok(/: ausN \? `<button class="knopf ka-nuraus"/.test(f) && /` : "";\n  \$\("raster"\)\.classList\.toggle\("nur-aus"/.test(f), "ausN = 0 → leer");
 }
+// 2.38.0 KC-CLUB-AVATAR-KNOEPFE-OBEN (Wunsch Hansi): „Selbst zusammenstellen“ + Selfie/Galerie/Datei rechts neben dem Bild, mit Trennlinie
+{
+  const f = html.slice(html.indexOf("function avWahlVorschau()"), html.indexOf("function avWahlVorschau()") + 3000);
+  assert.ok(/<div class="av-vorschau-rechts">\$\{frei\("avatar_baukasten"\) \? `<button class="knopf haupt" onclick="avBauen\(\)">/.test(f) && /avfWaehlen\('selfie'\)/.test(f) && /avfWaehlen\('galerie'\)/.test(f) && /avfWaehlen\('datei'\)/.test(f), "Knöpfe oben rechts neben dem Bild");
+  assert.equal((f.match(/\$\{rechts\}`/g) || []).length, 2, "rechts in beiden Zuständen (jetziges Bild und gewählte Figur)");
+  assert.ok(/\.av-vorschau-rechts \{[^}]*border-left: 2px solid var\(--linie\)/.test(html), "Trennlinie links der Knöpfe");
+  const w = html.slice(html.indexOf("function avWahl()"), html.indexOf("function avWaehlen("));
+  assert.ok(!/avfWaehlen\('galerie'\)/.test(w) && !/onclick="avBauen\(\)"/.test(w), "unten nicht doppelt");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.38.0 – 2026-10-07 – KC-CLUB-AVATAR-KNOEPFE-OBEN
+Wunsch Hansi: Bei 🧑‍🍳 Mein Bild stehen „🧩 Selbst zusammenstellen“, 🤳 Selfie, 🖼️ Galerie und 📁 Datei jetzt oben direkt rechts neben dem Bild (mit Trennlinie) – kein Runterscrollen mehr. Unten nur noch ein Hinweis darauf.
+
 ## 2.37.1 – 2026-10-07 – KC-CLUB-NUR-AUSGEBLENDETE (Nachbesserung)
 Wunsch Hansi: Ohne ausgeblendete Kacheln steht unten kein Hinweis mehr – auch nicht nach dem Wischen in ein Register ohne ausgeblendete; „nur ausgeblendete“ schaltet sich dort von selbst ab.
 

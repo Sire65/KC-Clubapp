@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.37.1"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.38.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -7997,8 +7997,8 @@ function avWahl() {
     <b>Kein Bild</b><div class="av-raster" style="margin:6px 0 10px"><button type="button" class="${jetzt ? "" : "an"}" aria-label="Kein Bild – Buchstaben" onclick="avWaehlen(null, this)"><span class="av-keins">${esc(initialen(ICH?.name))}</span></button></div>
     ${frei("avatar_foto") ? `<b>📷 Eigenes Foto${nurTest("avatar_foto") ? ' <small class="hinweis">🔒 nur für dich (Test)</small>' : ""}</b>
       ${AVF_RE.test(jetzt || "") ? `<div class="av-raster" style="margin:6px 0 4px"><button type="button" class="an" aria-label="Dein Foto" onclick="avGross(ICH.person_id)">${avatarSvg(jetzt, 64)}</button></div>` : ""}
-      <div class="na-pfeil-knoepfe" style="margin:6px 0 10px"><button class="knopf" onclick="avfWaehlen('selfie')">🤳 Selfie</button><button class="knopf" onclick="avfWaehlen('galerie')">🖼️ Galerie</button><button class="knopf" onclick="avfWaehlen('datei')">📁 Datei</button></div>` : ""}
-    ${frei("avatar_baukasten") ? `<button class="knopf haupt" onclick="avBauen()">🧩 Selbst zusammenstellen${nurTest("avatar_baukasten") ? " · 🔒 Test" : ""}</button>` : '<p class="hinweis" style="margin:0 0 8px;font-size:.85rem">Demnächst: Figur selbst zusammenstellen (Frisur, Bart, Brille, Mütze …).</p>'}
+      <p class="hinweis" style="margin:2px 0 10px;font-size:.85rem">🤳 Selfie, 🖼️ Galerie und 📁 Datei findest du oben rechts neben deinem Bild.</p>` : ""}
+    ${frei("avatar_baukasten") ? "" : '<p class="hinweis" style="margin:0 0 8px;font-size:.85rem">Demnächst: Figur selbst zusammenstellen (Frisur, Bart, Brille, Mütze …).</p>'}
     <button class="knopf" onclick="fensterZu($('avBlatt'))">Schließen</button>`);
   f.classList.add("sc-blatt"); avWahlVorschau();
 }
@@ -8011,11 +8011,15 @@ function avWaehlen(code, knopf) {
 function avWahlVorschau() {
   const z = $("avWahlVorschau"); if (!z) return;
   const jetzt = INIT?.einstellungen?.avatar?.figur || null;
-  if (AVW.wahl === undefined) { z.innerHTML = `<div class="av-vorschau-bild">${avGueltig(jetzt) ? avatarSvg(jetzt, 96, initialen(ICH?.name)) : `<span class="av-keins" style="width:96px;height:96px;font-size:2rem">${esc(initialen(ICH?.name))}</span>`}</div><small class="hinweis">Dein jetziges Bild – tippe unten eine Figur an.</small>`; return; }
+  // KC-CLUB-AVATAR-KNOEPFE-OBEN (2.38.0, Wunsch Hansi): „Selbst zusammenstellen“ und Foto (Selfie/Galerie/Datei) direkt rechts neben dem Bild, mit Trennlinie – kein Runterscrollen
+  const rechts = frei("avatar_baukasten") || frei("avatar_foto") ? `<div class="av-vorschau-rechts">${frei("avatar_baukasten") ? `<button class="knopf haupt" onclick="avBauen()">🧩 Selbst zusammen&shy;stellen${nurTest("avatar_baukasten") ? " · 🔒" : ""}</button>` : ""}
+    ${frei("avatar_foto") ? `<button class="knopf" onclick="avfWaehlen('selfie')">🤳 Selfie</button><button class="knopf" onclick="avfWaehlen('galerie')">🖼️ Galerie</button><button class="knopf" onclick="avfWaehlen('datei')">📁 Datei</button>` : ""}</div>` : "";
+  z.classList.toggle("mit-rechts", !!rechts);
+  if (AVW.wahl === undefined) { z.innerHTML = `<div class="av-vorschau-links"><div class="av-vorschau-bild">${avGueltig(jetzt) ? avatarSvg(jetzt, 96, initialen(ICH?.name)) : `<span class="av-keins" style="width:96px;height:96px;font-size:2rem">${esc(initialen(ICH?.name))}</span>`}</div><small class="hinweis">Dein jetziges Bild – tippe unten eine Figur an.</small></div>${rechts}`; return; }
   const c = AVW.wahl, gleich = c === jetzt, bauen = c && !AVF_RE.test(c) && avTeile(c) && frei("avatar_baukasten");
-  z.innerHTML = `<div class="av-vorschau-bild">${c ? avatarSvg(c, 96, initialen(ICH?.name)) : `<span class="av-keins" style="width:96px;height:96px;font-size:2rem">${esc(initialen(ICH?.name))}</span>`}</div>
+  z.innerHTML = `<div class="av-vorschau-links"><div class="av-vorschau-bild">${c ? avatarSvg(c, 96, initialen(ICH?.name)) : `<span class="av-keins" style="width:96px;height:96px;font-size:2rem">${esc(initialen(ICH?.name))}</span>`}</div>
     <div class="av-vorschau-knoepfe"><button class="knopf haupt" ${gleich ? "disabled" : ""} onclick="avSetzen(AVW.wahl)">${gleich ? "✓ Das ist dein Bild" : "✅ Übernehmen"}</button>
-    ${bauen ? `<button class="knopf" onclick="avBauen(AVW.wahl)">✏️ Bearbeiten${nurTest("avatar_baukasten") ? " · 🔒" : ""}</button>` : ""}</div>`;
+    ${bauen ? `<button class="knopf" onclick="avBauen(AVW.wahl)">✏️ Bearbeiten${nurTest("avatar_baukasten") ? " · 🔒" : ""}</button>` : ""}</div></div>${rechts}`;
 }
 // KC-CLUB-AVATAR-BAUKASTEN (2.23.86, Wunsch Hansi): Figur selbst zusammenstellen – große Vorschau, je Teil Chips, Speichern
 let AVB = null;
