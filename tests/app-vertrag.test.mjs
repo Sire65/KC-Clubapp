@@ -4990,6 +4990,18 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/reihe\(`Farbe \$\{AV_KOPF_NAME\[AVB\[3\]\]\}`, 16/.test(html) && /reihe\(`Muster \$\{AV_KOPF_NAME\[AVB\[3\]\]\}`, 17/.test(html), "Baukasten: Farbe und Muster je Kopfbedeckung");
   assert.ok(server.includes("/^c[0-9a-z]{15,18}$/.test(w.figur)"), "Server nimmt 18er-Codes an");
 }
+// 2.34.0 KC-CLUB-NACHRICHTEN-ZAHL + KC-CLUB-NACHRICHTEN-STATISTIK (Wunsch Hansi)
+{
+  const st = server.slice(server.indexOf('case "nachrichten_statistik": {'), server.indexOf('case "spur_liste": {'));
+  assert.ok(/nurAdmin\(ich\);/.test(st), "Statistik nur für den Admin");
+  assert.ok(!/body|subject|title|variables/.test(st.replace(/\/\/[^\n]*/g, "")), "keine Inhalte (kein Text, kein Betreff)");
+  assert.ok(/contains\("recipient_refs", \[\{ personId: pid \}\]\)/.test(st) && /contains\("recipient_refs", \[\{ email: mail \}\]\)/.test(st), "E-Mails über Person und Adresse");
+  assert.ok(/kc_member_push_messages"\)\.select\("created_at,status,anlass,displayed_at,opened_at"\)/.test(st), "Push mit angezeigt/geöffnet");
+  assert.ok(/chatAnzahl: await chatAnzahlMit\(ich, pid\)/.test(server) && /!grs\.has\(t\) && l\.length === 2 && l\.includes\(pid\)/.test(server), "Zahl = nur der Einzelchat zwischen mir und dem Mitglied");
+  assert.ok(/nachrichten: m\.length, \/\/ KC-CLUB-NACHRICHTEN-ZAHL/.test(server) && /💬 \$\{u\.nachrichten >= 1000 \? "999\+" : u\.nachrichten\}/.test(html), "Zahl in der Chatliste");
+  assert.ok(/<small class="md-zahl">\$\{m\.chatAnzahl\}/.test(html) && /ICH\?\.admin \? `<button class="knopf" onclick="nachrichtenStatistik\('\$\{m\.person_id\}'\)">/.test(html), "Mitgliederseite: Zahl + Statistik (nur Admin)");
+  assert.ok(/onclick="nachrichtenStatistik\(\)">📨 Nachrichten<\/button>/.test(html) && /Je Tag/.test(html) && /Uhrzeit/.test(html) && /Die letzten 20/.test(html), "Statistik unter Nutzung mit Tagen, Uhrzeit, letzten 20");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

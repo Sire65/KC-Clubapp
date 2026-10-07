@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.33.0";
+const SERVER_VERSION = "2.34.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -1488,6 +1488,20 @@ async function einstiegFristen() {
   return { aktiv: w.aktiv !== false, farbeTage: zahl("farbeTage"), privatTage: zahl("privatTage"), erweitertTage: zahl("erweitertTage"), spaeterTage: zahl("spaeterTage"), feedbackTage: zahl("feedbackTage"), geraeteTage: zahl("geraeteTage"), geaendertAm: data?.geaendert_am ?? null };
 }
 const pinnwandPrivat = (z: { fuer: string; personen?: string[] | null }) => z.fuer === "personen" && (z.personen ?? []).length === 1;
+// KC-CLUB-NACHRICHTEN-ZAHL (2.34.0, Wunsch Hansi): wie viele Nachrichten im Einzelchat zwischen mir und einem Mitglied (ohne Gruppen)
+async function chatAnzahlMit(ich: Ich, pid: string): Promise<number | null> {
+  if (pid === ich.person_id) return null;
+  const { data: meine } = await db.from("kc_communication_thread_participants").select("thread_id").eq("person_id", ich.person_id);
+  const ids = (meine ?? []).map((x: any) => x.thread_id); if (!ids.length) return 0;
+  const [{ data: tn }, { data: gr }] = await Promise.all([db.from("kc_communication_thread_participants").select("thread_id,person_id").in("thread_id", ids),
+    db.from("kc_club_gruppen").select("thread_id").in("thread_id", ids)]);
+  const grs = new Set((gr ?? []).map((g: any) => g.thread_id)), je = new Map<string, string[]>();
+  for (const x of tn ?? []) je.set(x.thread_id, [...(je.get(x.thread_id) ?? []), x.person_id]);
+  const zwei = [...je.entries()].filter(([t, l]) => !grs.has(t) && l.length === 2 && l.includes(pid)).map(([t]) => t);
+  if (!zwei.length) return 0;
+  const { count } = await db.from("kc_communication_messages").select("id", { count: "exact", head: true }).in("thread_id", zwei);
+  return count ?? 0;
+}
 // KC-CLUB-WILLKOMMEN-PINNWAND (2.29.0, Wunsch Hansi): Meldet sich ein neues Mitglied zum ersten Mal an, hängt die Clubleitung
 // automatisch ein ❗ wichtiges Post-it „💐 Herzlich willkommen …“ für alle an die Pinnwand. Genau einmal je Mitglied (Sperre über
 // kc_club_person_einstellung „willkommen_zettel“). Ohne Push/Mail (Ruhe-Regel) – die Mitglieder sehen es beim Öffnen der App.
@@ -6428,6 +6442,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           darfKontakte: ich.kontakte || ich.admin,
           notfall: nf ?? null,
           zuletztDa: selbst ? null : (await zuletztDaMap(ich, [pid])).get(pid) ?? null, // KC-CLUB-ZULETZT-DA (1.20.0)
+          chatAnzahl: await chatAnzahlMit(ich, pid).catch(() => null), // KC-CLUB-NACHRICHTEN-ZAHL (2.34.0)
         });
       }
 
@@ -6530,6 +6545,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             ...(gruppe.has(t.id) ? { personen: (tn ?? []).filter((x: any) => x.thread_id === t.id).map((x: any) => x.person_id) } : {}),
             letzte: m[0] ? { von: m[0].sender_person_id === ich.person_id ? "Du" : vorname(leute.get(m[0].sender_person_id)), text: String(m[0].body).slice(0, 120), zeit: m[0].created_at } : null,
             ungelesen: m.filter((x: any) => x.sender_person_id !== ich.person_id && (!lr || x.created_at > lr)).length,
+            nachrichten: m.length, // KC-CLUB-NACHRICHTEN-ZAHL (2.34.0)
             wichtigNeu: m.filter((x: any) => wichtigSet.has(x.id)).length,
             aktualisiert: m[0]?.created_at || t.updated_at,
             ...(archiv[t.id] ? { archiviert: archiv[t.id] } : {}),
@@ -6906,6 +6922,31 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (error) throw new Fehler("Die Startstatistik ist gerade nicht abrufbar – bitte gleich noch einmal versuchen.", 503);
         const leute = await personen([...new Set((data ?? []).map((x: any) => x.person_id))]);
         return json({ tage, starts: (data ?? []).map((x: any) => ({ p: x.person_id, name: leute.get(x.person_id)?.display_name || x.person_id, zeit: x.zeit, ...x.details })) });
+      }
+      // KC-CLUB-NACHRICHTEN-STATISTIK (2.34.0, Wunsch Hansi): je Mitglied – was ging per E-Mail, Push und als Club-Nachricht raus, wann.
+      // Nur Admin; nur Art, Zeit und Status – nie Inhalte (kein Betreff, kein Text).
+      case "nachrichten_statistik": {
+        nurAdmin(ich);
+        const pid = String(p.person_id || ""), tage = [7, 30, 90, 365].includes(Number(p.tage)) ? Number(p.tage) : 30;
+        const { data: pe } = await db.from("kc_core_people").select("person_id,display_name,email").eq("person_id", pid).maybeSingle();
+        if (!pe) throw new Fehler("Mitglied nicht gefunden.", 404);
+        const seit = new Date(Date.now() - tage * 86400000).toISOString(), mail = String(pe.email || "").trim().toLowerCase();
+        const QUELLE: Record<string, string> = { "kc-club": "Club-App", "kc-besuche": "Termine", "kc-termine": "Termine", "kc-communication-system": "Communicator" };
+        const [{ data: r1 }, { data: r2 }, { data: pu }, { data: tn }] = await Promise.all([
+          db.from("kc_communication_requests").select("id,created_at,status,source_program").eq("channel", "email").gte("created_at", seit).contains("recipient_refs", [{ personId: pid }]).limit(2000),
+          mail ? db.from("kc_communication_requests").select("id,created_at,status,source_program").eq("channel", "email").gte("created_at", seit).contains("recipient_refs", [{ email: mail }]).limit(2000) : Promise.resolve({ data: [] as any[] }),
+          db.from("kc_member_push_messages").select("created_at,status,anlass,displayed_at,opened_at").eq("person_id", pid).gte("created_at", seit).limit(3000),
+          db.from("kc_communication_thread_participants").select("thread_id").eq("person_id", pid),
+        ]);
+        const tids = (tn ?? []).map((x: any) => x.thread_id);
+        const { data: ms } = tids.length ? await db.from("kc_communication_messages").select("created_at,sender_person_id").in("thread_id", tids).gte("created_at", seit).limit(5000) : { data: [] as any[] };
+        const mails = [...new Map([...(r1 ?? []), ...(r2 ?? [])].map((x: any) => [x.id, x])).values()];
+        await protokoll(ich.person_id, "nachrichten_statistik", { fuer: pid, tage });
+        return json({ name: pe.display_name, tage, seit,
+          email: mails.map((x: any) => ({ z: x.created_at, s: x.status, a: QUELLE[x.source_program] || "Sonstiges" })),
+          push: (pu ?? []).map((x: any) => ({ z: x.created_at, s: x.status, a: String(x.anlass || "").slice(0, 40), an: !!x.displayed_at, auf: !!x.opened_at })),
+          club: (ms ?? []).map((x: any) => ({ z: x.created_at, a: x.sender_person_id === pid ? "geschrieben" : "bekommen" })),
+          pushAb: "2026-09-23", mailAb: "2026-08-25" });
       }
       case "spur_liste": {
         nurAdmin(ich);

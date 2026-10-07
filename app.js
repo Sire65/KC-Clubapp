@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.33.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.34.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -11966,7 +11966,7 @@ async function unterhLaden() {
     $("unterhListe").innerHTML = archKopf + (zeigen.length ? `<p class="hinweis uhtipp">Einmal tippen = auswählen (${UH.archivAnsicht ? "📤 wieder aktivieren" : "📦 archivieren"}, 🗑️ löschen) · doppelt tippen = öffnen</p>` : "") + zeigen.map((u) => `<div class="unterh${u.id === UH.wahl ? " gewaehlt" : ""}${u.wichtigNeu ? " wichtig-neu" : ""}" data-id="${u.id}" onclick="unterhTipp('${u.id}')">
       ${u.gruppe || u.anzahl > 2 ? uhRundeKreis(u) : kreis(MITGLIEDER?.find((m) => m.name === u.teilnehmer[0]) || null, u.teilnehmer[0], 46)}
       <div class="mitte"><div><b>${esc(u.gruppe?.name || u.betreff || u.teilnehmer.join(", "))}</b>${stummAn(u.id) ? ' <span title="stummgeschaltet">🔕</span>' : ""}${u.gruppe ? ` <span class="hinweis" style="font-size:.8rem">· ${u.anzahl} Mitgl.</span>` : ""}</div><div class="hinweis">${entwurfAlle()[u.id]?.trim() ? `<span class="entwurf-marke">✏️ Entwurf:</span> ${esc(entwurfAlle()[u.id].trim().slice(0, 80))}` : u.letzte ? esc(u.letzte.von + ": " + u.letzte.text) : "Noch keine Nachricht"}</div></div>
-      <div style="text-align:right"><div class="hinweis" style="font-size:.8rem">${u.letzte ? zeitKurz(u.letzte.zeit) : ""}</div>${u.ungelesen ? `<span class="punkt${u.wichtigNeu ? " wichtig" : ""}" title="${u.wichtigNeu ? "darunter wichtige Nachricht" : ""}">${u.wichtigNeu ? "❗ " : ""}${u.ungelesen}</span>` : ""}</div></div>${u.id === UH.wahl ? unterhAktionen(u) : ""}`).join("")
+      <div style="text-align:right"><div class="hinweis" style="font-size:.8rem">${u.letzte ? zeitKurz(u.letzte.zeit) : ""}</div>${u.nachrichten ? `<div class="hinweis uh-zahl" title="Nachrichten in dieser Unterhaltung">💬 ${u.nachrichten >= 1000 ? "999+" : u.nachrichten}</div>` : ""}${u.ungelesen ? `<span class="punkt${u.wichtigNeu ? " wichtig" : ""}" title="${u.wichtigNeu ? "darunter wichtige Nachricht" : ""}">${u.wichtigNeu ? "❗ " : ""}${u.ungelesen}</span>` : ""}</div></div>${u.id === UH.wahl ? unterhAktionen(u) : ""}`).join("")
       || (arch.length ? '<p class="hinweis">Alle Chats sind archiviert – oben auf „📦 Archiviert“ tippen.</p>' : '<p class="hinweis">Noch keine Nachrichten. Tippe oben auf „＋ Neu“.</p>');
     uhAmeisen();
   } catch (e) { meldeFehler(e); }
@@ -17105,7 +17105,8 @@ function mitgliedZeigen() {
     <div class="md-kacheln" id="mdKacheln">
       ${!m.selbst && ONL.ids.has(m.person_id) ? `<button class="knopf haupt breit" onclick="anklopfen('${m.person_id}')"><span class="kt-ico">👋</span>Anklopfen – ist gerade online</button><button class="knopf" onclick="anrufen('${m.person_id}')"><span class="kt-ico">📞</span>Anrufen (Test)</button><button class="knopf" onclick="anrufen('${m.person_id}', true)"><span class="kt-ico">🎥</span>Video (Test)</button>` : ""}
       ${!m.selbst && !ONL.ids.has(m.person_id) ? `<p class="hinweis breit" style="margin:4px 0">📞 🎥 Anrufen und Video gehen, sobald ${esc(String(m.name || "").split(" ")[0])} die App offen hat (🟢 online).</p>` : ""}
-      ${m.selbst ? "" : `<button class="knopf ${ONL.ids.has(m.person_id) ? "" : "haupt"}" onclick="direkt('${m.person_id}')"><span class="kt-ico">💬</span>Nachricht in der App</button><div id="mdSpiel" hidden></div>`}
+      ${m.selbst ? "" : `<button class="knopf ${ONL.ids.has(m.person_id) ? "" : "haupt"}" onclick="direkt('${m.person_id}')"><span class="kt-ico">💬</span>Nachricht in der App${m.chatAnzahl ? `<small class="md-zahl">${m.chatAnzahl} ${m.chatAnzahl === 1 ? "Nachricht" : "Nachrichten"}</small>` : ""}</button><div id="mdSpiel" hidden></div>`}
+      ${ICH?.admin ? `<button class="knopf" onclick="nachrichtenStatistik('${m.person_id}')"><span class="kt-ico">📊</span>Statistik</button>` : ""}
       ${ICH?.admin ? `<button class="knopf" onclick="linkTeilen('${m.person_id}')"><span class="kt-ico">🔗</span>App-Link</button><button class="knopf" onclick="einrichtungskarte('${m.person_id}')"><span class="kt-ico">🖨️</span>Einrichtungs&shy;karte</button><button class="knopf" onclick="rolleBearbeiten('${m.person_id}')"><span class="kt-ico">🎖️</span>Amt & Rechte</button>` : ""}
       ${zeilen ? '<button class="knopf" onclick="kontaktSpeichern()"><span class="kt-ico">📇</span>Ins Telefonbuch</button>' : ""}
     </div>
@@ -18592,6 +18593,46 @@ function startStatistikZeigen() {
     <div class="knoepfe"><button class="knopf" onclick="nzAdmin()">‹ Nutzung</button></div>`;
   $("adminBlatt").classList.remove("versteckt");
 }
+// ---------- KC-CLUB-NACHRICHTEN-STATISTIK (2.34.0, Wunsch Hansi): je Mitglied – E-Mail, Push, Club-Nachrichten; wann und wie viele ----------
+// Nur Admin. Nur Art, Zeit und Status – keine Inhalte. Push mit „angezeigt“/„geöffnet“ (ab 23.09.2026), E-Mails ab 25.08.2026.
+const NST = { pid: null, tage: 30, d: null };
+async function nachrichtenStatistik(pid, tage) {
+  if (pid !== undefined) NST.pid = pid; if (tage) NST.tage = tage;
+  if (!MITGLIEDER) try { await mitgliederHolen(); } catch {}
+  NST.d = null;
+  if (NST.pid) try { NST.d = await api("nachrichten_statistik", { person_id: NST.pid, tage: NST.tage }, { warten: true }); } catch (e) { return meldeFehler(e); }
+  nachrichtenStatistikZeigen();
+}
+function nachrichtenStatistikZeigen() {
+  const d = NST.d, wahl = `<select aria-label="Mitglied" onchange="nachrichtenStatistik(this.value || null)"><option value="">– Mitglied wählen –</option>${(MITGLIEDER || []).slice().sort((a, b) => a.name.localeCompare(b.name)).map((m) => `<option value="${esc(m.person_id)}"${m.person_id === NST.pid ? " selected" : ""}>${esc(m.name)}</option>`).join("")}</select>`;
+  const kopf = `<h3 style="margin:0">📨 Nachrichten-Statistik</h3><p class="hinweis" style="margin:2px 0 6px">Was an ein Mitglied ging – per ✉️ E-Mail, 🔔 Push und 💬 Club-Nachricht. Nur Anzahl, Zeit und Art, <b>keine Inhalte</b>. Nur du siehst das.</p>${wahl}
+    <div class="knoepfe">${[7, 30, 90, 365].map((t) => `<button class="knopf klein${NST.tage === t ? " haupt" : ""}" onclick="nachrichtenStatistik(undefined, ${t})">${t === 365 ? "1 Jahr" : t + " Tage"}</button>`).join("")}</div>`;
+  const fuss = `<div class="knoepfe"><button class="knopf" onclick="nzAdmin()">‹ Nutzung</button></div>`;
+  if (!d) { $("adminBlattInhalt").innerHTML = kopf + `<p class="hinweis">Bitte oben ein Mitglied wählen.</p>` + fuss; $("adminBlatt").classList.remove("versteckt"); return; }
+  const mails = d.email || [], push = d.push || [], clubB = (d.club || []).filter((x) => x.a === "bekommen"), clubG = (d.club || []).filter((x) => x.a === "geschrieben");
+  const tag = (z) => new Intl.DateTimeFormat("sv-SE", { timeZone: TZ }).format(new Date(z)), stunde = (z) => +new Intl.DateTimeFormat("de-DE", { timeZone: TZ, hour: "2-digit", hourCycle: "h23" }).format(new Date(z));
+  const tage = Array.from({ length: Math.min(d.tage, 60) }, (_, i) => tag(new Date(Date.now() - (Math.min(d.tage, 60) - 1 - i) * 86400000)));
+  const zaehl = (l, k) => l.filter((x) => k(x)).length;
+  const reihen = [["mail", "✉️", mails], ["push", "🔔", push], ["club", "💬", clubB]];
+  const maxT = Math.max(1, ...tage.map((t) => reihen.reduce((n, [, , l]) => n + zaehl(l, (x) => tag(x.z) === t), 0)));
+  const balken = tage.map((t) => { const teile = reihen.map(([k, , l]) => [k, zaehl(l, (x) => tag(x.z) === t)]), sum = teile.reduce((n, x) => n + x[1], 0);
+    return `<div class="ns-spalte" title="${t.slice(8)}.${t.slice(5, 7)}.: ${sum}">${teile.map(([k, n]) => n ? `<i class="ns-${k}" style="height:${(n / maxT) * 100}%"></i>` : "").join("")}</div>`; }).join("");
+  const alle = [...mails.map((x) => ({ ...x, k: "mail" })), ...push.map((x) => ({ ...x, k: "push" })), ...clubB.map((x) => ({ ...x, k: "club" }))];
+  const proStd = Array.from({ length: 24 }, (_, h) => zaehl(alle, (x) => stunde(x.z) === h)), maxS = Math.max(1, ...proStd);
+  const MS = { sent: "verschickt", delivered: "zugestellt", displayed: "angezeigt", opened: "geöffnet", failed: "fehlgeschlagen", dead_letter: "fehlgeschlagen", deduplicated: "schon zugestellt", queued: "wartet", pending: "wartet" };
+  const letzte = alle.sort((a, b) => String(b.z).localeCompare(String(a.z))).slice(0, 20).map((x) => `<tr><td style="text-align:left;white-space:nowrap">${esc(zeitKurz(x.z))}</td><td>${x.k === "mail" ? "✉️ E-Mail" : x.k === "push" ? "🔔 Push" : "💬 Club"}</td>
+    <td style="text-align:left">${esc(x.k === "club" ? "Nachricht bekommen" : x.a || "")}</td><td style="text-align:left">${esc(x.k === "push" ? (x.auf ? "geöffnet" : x.an ? "angezeigt" : MS[x.s] || x.s || "") : x.k === "mail" ? MS[x.s] || x.s || "" : "")}</td></tr>`).join("");
+  $("adminBlattInhalt").innerHTML = kopf + `<h4 style="margin:10px 0 4px">${esc(d.name)} – letzte ${d.tage === 365 ? "12 Monate" : d.tage + " Tage"}</h4>
+    <div class="st-kacheln"><div><b>${mails.length}</b><small>✉️ E-Mails</small></div><div><b>${push.length}</b><small>🔔 Push · ${zaehl(push, (x) => x.an || x.auf)} angezeigt · ${zaehl(push, (x) => x.auf)} geöffnet</small></div>
+      <div><b>${clubB.length}</b><small>💬 Club bekommen · ${clubG.length} selbst geschrieben</small></div></div>
+    <details class="karte" open><summary><b>📅 Je Tag</b> <span class="hinweis">${d.tage > 60 ? "(letzte 60 Tage)" : ""}</span></summary><div class="ns-balken">${balken}</div>
+      <div class="ns-achse"><span>${tage[0].slice(8)}.${tage[0].slice(5, 7)}.</span><span>heute</span></div><div class="ns-legende"><i class="ns-mail"></i>E-Mail <i class="ns-push"></i>Push <i class="ns-club"></i>Club</div></details>
+    <details class="karte" open><summary><b>🕒 Uhrzeit</b> <span class="hinweis">– wann ging am meisten raus?</span></summary><div class="ns-balken ns-std">${proStd.map((n, h) => `<div class="ns-spalte" title="${h} Uhr: ${n}"><i class="ns-alle" style="height:${(n / maxS) * 100}%"></i></div>`).join("")}</div>
+      <div class="ns-achse"><span>0 Uhr</span><span>6</span><span>12</span><span>18</span><span>23</span></div></details>
+    <details class="karte" open><summary><b>🧾 Die letzten 20</b></summary>${letzte ? `<div class="st-scroll"><table class="vb-tabelle st-tab"><tr><th style="text-align:left">Wann</th><th>Weg</th><th style="text-align:left">Art</th><th style="text-align:left">Stand</th></tr>${letzte}</table></div>` : '<p class="hinweis">Im Zeitraum nichts.</p>'}</details>
+    <p class="hinweis" style="margin:4px 0">E-Mails werden seit 25.08.2026 aufgezeichnet, „angezeigt/geöffnet“ bei Push seit 23.09.2026.</p>` + fuss;
+  $("adminBlatt").classList.remove("versteckt");
+}
 async function spurNeu(k) {
   if (k?.classList.contains("dreht")) return;
   k?.classList.add("dreht");
@@ -18647,7 +18688,7 @@ async function nzAdmin(tage) {
   const zeilen = [...haupt.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).flatMap(([o, n]) => [[o, n, false], ...liste.filter(([b]) => nzOber(b) === o).map(([b, m]) => [b, m, true])]);
   $("adminBlattInhalt").innerHTML = `<h3 style="margin:0">📊 Nutzung – ohne Namen</h3>
     <p class="hinweis" style="margin:0">Wie oft die Bereiche geöffnet wurden und <b>👤 von wie vielen verschiedenen Mitgliedern</b>. Es wird nie gespeichert, wer – nur Tag, Bereich, Anzahl und eine zufällige Geräte-Kennung; die Uhrzeit nur als Stunde, getrennt vom Bereich.</p>
-    <div class="knoepfe">${[7, 30, 90].map((t) => `<button class="knopf klein${r.tage === t ? " haupt" : ""}" onclick="nzAdmin(${t})">${t} Tage</button>`).join("")}<button class="knopf klein" onclick="spurAdmin(heuteIso(), null)">👣 Wege der Mitglieder</button><button class="knopf klein" onclick="startStatistik(30)">⏱️ Startstatistik</button>${INFO_DATEN.admin?.r ? `<button class="knopf klein" onclick="adminBlatt()">‹ Admin-Zentrale</button>` : ""}</div>
+    <div class="knoepfe">${[7, 30, 90].map((t) => `<button class="knopf klein${r.tage === t ? " haupt" : ""}" onclick="nzAdmin(${t})">${t} Tage</button>`).join("")}<button class="knopf klein" onclick="spurAdmin(heuteIso(), null)">👣 Wege der Mitglieder</button><button class="knopf klein" onclick="startStatistik(30)">⏱️ Startstatistik</button><button class="knopf klein" onclick="nachrichtenStatistik()">📨 Nachrichten</button>${INFO_DATEN.admin?.r ? `<button class="knopf klein" onclick="adminBlatt()">‹ Admin-Zentrale</button>` : ""}</div>
     <b>Insgesamt ${gesamt} Öffnungen in ${r.tage} Tagen${r.geraeteGesamt == null ? " · 👤 unbekannt" : r.geraeteGesamt ? ` · 👤 ${r.geraeteGesamt} verschiedene Geräte (≈ Mitglieder${r.mitglieder ? `, ${r.mitglieder} im Club` : ""})` : ""}</b>
     <span class="hinweis" style="margin:0">👤 = verschiedene Mitglieder (genau: Geräte – wer Handy und Tablet nutzt, zählt doppelt). Gezählt ab Version 2.6.0. <span class="nz-wer nur1">👤 1</span> = nur ein einziges Mitglied. Bei 30/90 Tagen zählen die Öffnungen auch aus der Zeit davor.</span><span class="hinweis" style="margin:0">↳ = Teilbereich (z. B. Büro → Eingang). Die Zahl beim Hauptbereich zählt nur das Öffnen selbst.</span>
     <div class="nz-tage" title="Öffnungen je Tag">${tagListe.map(([t, n]) => `<div title="${esc(t.slice(8) + "." + t.slice(5, 7) + ".: " + n)}"><i style="height:${Math.round(n / tmax * 100)}%"></i></div>`).join("")}</div>

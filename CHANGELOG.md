@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.34.0 – 2026-10-06 – Nachrichtenzahl und Nachrichten-Statistik
+KC-CLUB-NACHRICHTEN-ZAHL: Mitgliederseite „💬 Nachricht in der App – 37 Nachrichten“ (Einzelchat zwischen dir und dem Mitglied), Chatliste „💬 37“. KC-CLUB-NACHRICHTEN-STATISTIK (nur Admin): Mitgliederseite „📊 Statistik“ und Nutzung → „📨 Nachrichten“ – E-Mail, Push (angezeigt/geöffnet), Club-Nachrichten; 7/30/90 Tage/1 Jahr; Balken je Tag, Uhrzeit, die letzten 20 – nur Art, Zeit und Status, keine Inhalte.
+
 ## 2.33.0 – 2026-10-06 – Avatar: Brillenbügel, neue Kopfbedeckungen, Farben und Muster
 KC-CLUB-AVATAR-KOPF (Wunsch Hansi): Brillen mit Bügeln bis zum Ohr; neue Kopfbedeckungen Bandana, Military-Mütze, Kopftuch lang, Stirnband, Haarreif, Haarspange, Kappe verkehrt; für jede Kopfbedeckung (auch Kochmütze) Farbe (13) und Muster (Punkte, Streifen, Karo, Tarnmuster, Blümchen, Paisley). Alte Figuren bleiben unverändert.
 

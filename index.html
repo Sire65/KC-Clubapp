@@ -1509,6 +1509,13 @@
   #druck .dv-summe.dv-duenn, .dv-summe.dv-duenn { background: #fadbd8; color: #922b21; } .pr-filter-zu { position: absolute; top: 6px; right: 6px; min-width: 40px; min-height: 40px; border: 2px solid var(--linie); border-radius: 50%; background: var(--karte); color: var(--text); font-size: 1.1rem; font-weight: 700; cursor: pointer; line-height: 1; } /* 2.23.37: Schließkreuz oben rechts */
   #v-protokolle .kopf2 { gap: 8px; } #v-protokolle .kopf2 > h2 { white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; font-size: 1.2rem; }
   .kopf2 { display: flex; align-items: center; gap: 10px; margin: 6px 0 4px; flex-wrap: wrap; }
+  /* KC-CLUB-NACHRICHTEN-ZAHL/-STATISTIK (2.34.0) */
+  .md-zahl { display: block; font-size: .75rem; font-weight: 600; opacity: .85; } .uh-zahl { font-size: .75rem; margin-top: 2px; }
+  .ns-balken { display: flex; align-items: flex-end; gap: 2px; height: 110px; padding: 4px 0; border-bottom: 1px solid var(--linie); }
+  .ns-spalte { flex: 1; display: flex; flex-direction: column-reverse; height: 100%; min-width: 3px; } .ns-spalte i { display: block; width: 100%; border-radius: 2px 2px 0 0; }
+  .ns-mail { background: #1d4f91; } .ns-push { background: #e8792b; } .ns-club { background: #2e7d4f; } .ns-alle { background: var(--rot); }
+  .ns-achse { display: flex; justify-content: space-between; font-size: .75rem; color: var(--text2, #666); }
+  .ns-legende { display: flex; gap: 10px; align-items: center; font-size: .8rem; margin-top: 4px; } .ns-legende i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: -6px; }
   /* KC-CLUB-STARTSTATISTIK (2.31.0) */
   .st-kacheln { display: grid; grid-template-columns: repeat(auto-fit, minmax(78px, 1fr)); gap: 8px; margin: 10px 0; }
   .st-kacheln > div { background: var(--karte2); border-radius: 12px; padding: 10px; text-align: center; }
@@ -3143,6 +3150,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.33.0" data-v="2.33.0"></script>
+<script src="app.js?v=2.34.0" data-v="2.34.0"></script>
 </body>
 </html>
