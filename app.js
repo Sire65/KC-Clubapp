@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.54.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.55.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -6509,7 +6509,7 @@ const SERVER_REGION = "eu-west-2", REGION_PAUSE_MS = 10 * 60 * 1000;
 let REGION_AUS_BIS = 0;
 const apiAdresse = () => (Date.now() < REGION_AUS_BIS ? API : `${API}?forceFunctionRegion=${SERVER_REGION}`);
 // Aktionen, die nur lesen – nur diese dürfen nach einer Störung still wiederholt werden
-const API_LESEN = /^(init|hilfe_bewertungen|ping|lebenszeichen|online|tagesinfo|pinnwand|pinnwand_neu|unterhaltung|unterhaltungen|mitglieder|mitglied_details|kalender|kalender_daten|protokoll_laden|fotos_neueste|anlage_url|suche|buero_start|.*_liste|.*_statistik|.*_holen|.*_info|.*_stand)$/; // 2.1.1: kein „*_start“ mehr (anruf_start/standort_start schreiben)
+const API_LESEN = /^(init|hilfe_bewertungen|ping|lebenszeichen|online|tagesinfo|pinnwand|pinnwand_neu|unterhaltung|unterhaltungen|mitglieder|mitglied_details|kalender|kalender_daten|protokoll_laden|fotos_neueste|anlage_url|suche|buero_start|.*_liste|.*_statistik|.*_holen|.*_info|.*_stand|fitness_daten)$/; // 2.1.1: kein „*_start“ mehr (anruf_start/standort_start schreiben)
 async function apiRoh(action, daten = {}, zweiterVersuch = false) {
   // KC-CLUB-NOTBETRIEB-ERNSTFALL: simulierter Ausfall – genau der Fehler, den ein unerreichbarer Club-Server liefert
   if (notErnstfall()) { vbStart(); await new Promise((ok) => setTimeout(ok, 300)); vbEnde(false, 0, "Server nicht erreichbar (Simulation)"); throw Object.assign(new Error("Keine Verbindung zum Server – bitte gleich nochmal versuchen."), { leitung: true }); }
@@ -7173,6 +7173,7 @@ const KACHELN = {
     { id: "meinedaten", sym: "🔐", t: "Meine Daten", u: "Was ist über mich gespeichert?", aktion: "mdatStart()" },
     { id: "aenderung", sym: "✏️", t: "Meine Daten geändert?", u: "Anschrift, Telefon, Größe …", aktion: "aeStart()", zahl: () => (ICH?.vorstand || ICH?.admin ? AE.offen : 0) },
     { id: "schulungen", sym: "🎓", t: "Meine Schulung", u: "Termin aussuchen · Zusammenfassungen", aktion: "smStart()", zahl: () => (SM.liste || []).filter((e) => e.status === "offen").length }, // 2.23.62 KC-CLUB-SCHULUNG-MITGLIED
+    { id: "fitness", sym: "🏋️", t: "Fit bleiben", u: () => (nurTest("fitness") ? "🔒 nur für dich (Test) · " : "") + "Übungen mit Twinkey", aktion: "fiStart()", nur: () => frei("fitness") }, // KC-CLUB-FITNESS (2.55.0)
     { id: "einstellungen", sym: "⚙️", t: "Einstellungen", u: "Push, Ton, Schrift", v: "einstellungen" },
     { id: "test", sym: "🧪", t: "Test an mich", u: "Push & Mail ausprobieren", aktion: "testAnMichStarten()" },
   ],
@@ -7417,6 +7418,7 @@ const KACHEL_RUECK = {
   rezepte: [["＋", "Neues Rezept", async () => { await rzStart(); rzForm(); }]],
   avatar: [["🧩", "Selbst zusammenstellen", () => avBauen(), () => frei("avatar_baukasten")], ["📷", "Foto als Bild", () => avfWaehlen("galerie"), () => frei("avatar_foto")]],
   erstattung: [["🚗", "Fahrtkosten", () => KR_ZEIGE("erstattung", () => erstattungArt("fahrt"))], ["🛒", "Einkauf", () => KR_ZEIGE("erstattung", () => erstattungArt("einkauf"))]],
+  fitness: [["▶️", "Training starten", () => fiStart("training")], ["📊", "Auswertung", () => fiStart("auswertung")]], // KC-CLUB-FITNESS
   einstellungen: [["🎨", "Darstellung", () => einstiegHin("darstellung")], ["⚙️", "Alle Einstellungen", () => zeige("einstellungen")]],
   spiele: [["♟️", "Schach", () => spStart("pc", "schach")], ["🧑‍🍳", "Fang den Koch", () => spStart("pc", "fdk")], ["🎲", "Mensch ärgere dich nicht", () => spStart("pc", "mae")]],
   schulung_admin: [["📝", "Besuche", () => scStart("besuche")], ["📅", "Termine & Einladungen", () => scStart("termine")]],
@@ -8418,6 +8420,215 @@ async function avSetzen(figur) {
     spur(!figur ? "bild_entfernt" : /^[bc]/.test(figur) ? "bild_gebaut" : "bild_gewaehlt"); // KC-CLUB-SPUR-BILD (2.40.1, Wunsch Hansi): Bild-Änderung im Wege-Protokoll (nur Art, kein Bild)
     fensterZu($("avBlatt")); try { kachelnZeigen?.(); } catch {}
   } catch (e) { meldeFehler(e); }
+}
+// ---------- KC-CLUB-FITNESS (2.55.0, Wunsch Hansi): 🏋️ Fit bleiben – Twinkey macht vor, man macht mit; eigene Auswertung ----------
+// Ruhig und erwachsen: sanfte Übungen (auch im Sitzen), Stufe + Dauer wählbar, großer Countdown, Ansage abschaltbar.
+// Gesundheitsdaten: nur für einen selbst (Server: fitness_daten / fitness_speichern), kein Admin-Einblick, keine Pushs.
+// Übungs-Registry: neue Übung = neuer Eintrag (Figur-Bewegung über „a“ – CSS-Klasse fi-a-…).
+const FI_UEBUNGEN = [
+  { id: "armkreis", t: "Arme kreisen", k: "Die große Schüssel umrühren", g: "sitzen", s: [1, 2, 3], a: "armkreis", sitz: true, h: "Arme seitlich, langsam große Kreise – nach 15 Sekunden andersherum.", w: 1 },
+  { id: "schulter", t: "Schultern heben", k: "Schultern hoch – locker fallen lassen", g: "sitzen", s: [1, 2, 3], a: "schulter", sitz: true, h: "Schultern Richtung Ohren ziehen, kurz halten, ausatmen und fallen lassen.", w: 1 },
+  { id: "sitzmarsch", t: "Marschieren im Sitzen", k: "Auf dem Weg zum Markt", g: "sitzen", s: [1], a: "marsch", sitz: true, h: "Abwechselnd die Knie anheben, Arme schwingen mit.", w: 1 },
+  { id: "kneten", t: "Teig kneten", k: "Hände öffnen und schließen", g: "sitzen", s: [1, 2, 3], a: "kneten", sitz: true, h: "Arme nach vorn, Hände kräftig zur Faust und weit öffnen." },
+  { id: "beinstrecken", t: "Beine strecken", k: "Unter dem Tisch die Beine lang machen", g: "sitzen", s: [1, 2], a: "bein", sitz: true, h: "Im Sitzen abwechselnd ein Bein strecken, Fußspitze zu dir ziehen." },
+  { id: "fusskreis", t: "Füße kreisen", k: "Die Füße wachen auf", g: "sitzen", s: [1, 2], a: "fuss", sitz: true, h: "Ferse am Boden, Fußspitze kreist – mal links, mal rechts herum." },
+  { id: "marsch", t: "Auf der Stelle gehen", k: "Von der Kühlung zum Herd", g: "stehen", s: [2, 3], a: "marsch", h: "Knie im eigenen Tempo heben, Arme schwingen mit. Wer mag, hält sich an der Stuhllehne.", w: 1 },
+  { id: "seit", t: "Seitschritt", k: "Ausweichen in der engen Küche", g: "stehen", s: [2, 3], a: "seit", h: "Ein Schritt zur Seite, zurück, dann die andere Seite – locker in den Knien." },
+  { id: "kniebeuge", t: "Kniebeuge am Stuhl", k: "In den unteren Kühlschrank schauen", g: "stehen", s: [2, 3], a: "knie", h: "Hände an der Stuhllehne, Po nach hinten, nur so tief wie es angenehm ist." },
+  { id: "zehen", t: "Zehenstand", k: "Ans oberste Fach kommen", g: "stehen", s: [2, 3], a: "zehen", h: "An der Lehne festhalten, langsam auf die Zehen und wieder runter." },
+  { id: "regal", t: "Topf vom Regal holen", k: "Strecken nach oben", g: "stehen", s: [2, 3], a: "strecken", h: "Abwechselnd einen Arm weit nach oben strecken, als wolltest du den Topf greifen." },
+  { id: "nacken", t: "Nacken lockern", k: "Kurz über die Schulter schauen", g: "dehnen", s: [1, 2, 3], a: "nacken", sitz: true, h: "Kopf langsam nach rechts und links drehen – nur so weit, wie es angenehm ist.", ende: 1 },
+  { id: "rumpf", t: "Oberkörper drehen", k: "Zum Kollegen am Nachbarposten", g: "dehnen", s: [1, 2, 3], a: "rumpf", sitz: true, h: "Aufrecht bleiben, Oberkörper ruhig nach links und rechts drehen.", ende: 1 },
+  { id: "einbein", t: "Einbeinstand mit Halt", k: "Gleichgewicht wie beim Tablett-Tragen", g: "dehnen", s: [2, 3], a: "einbein", h: "An der Lehne festhalten, ein Bein leicht anheben, halten – dann wechseln." },
+  { id: "wade", t: "Waden dehnen", k: "Nach dem langen Stehen", g: "dehnen", s: [2, 3], a: "lehnen", h: "Hände an die Wand oder Lehne, ein Bein nach hinten, Ferse bleibt unten.", ende: 1 },
+];
+const FI_STUFEN = [[1, "🪑 Sanft", "alles im Sitzen"], [2, "🙂 Mittel", "Sitzen und Stehen"], [3, "💪 Fordernd", "länger, mehr im Stehen"]];
+const FI_DAUER = [5, 10, 15, 20];
+const FI_ZEIT = { 1: [30, 20], 2: [40, 15], 3: [45, 10] }; // [Übung, Pause] in Sekunden je Stufe
+const FI_GRUPPEN = { sitzen: "🪑 Im Sitzen", stehen: "🧍 Im Stehen", dehnen: "🧘 Dehnen & Gleichgewicht" };
+const FI_OFFEN_KEY = "kc_club_fitness_offen", FI_WAHL_KEY = "kc_club_fitness_wahl", FI_HINWEIS_KEY = "kc_club_fitness_hinweis";
+let FI = { einheiten: null, tab: "training", lauf: null, ausw: { zeit: "woche", off: 0, stufe: 0, gruppe: "" } };
+const fiLs = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || "null"); return v ?? d; } catch { return d; } };
+const fiLsSetzen = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
+const fiWahl = () => ({ stufe: 1, dauer: 10, ton: true, ...fiLs(FI_WAHL_KEY, {}) });
+// Plan: Aufwärmen → Hauptteil (reihum) → Ausklang (Dehnen) – passend zur gewählten Dauer
+function fiPlan(stufe, dauer) {
+  const [ub, pa] = FI_ZEIT[stufe], passt = FI_UEBUNGEN.filter((u) => u.s.includes(stufe) && (stufe > 1 || u.sitz));
+  const warm = passt.filter((u) => u.w), ende = passt.filter((u) => u.ende), mitte = passt.filter((u) => !u.w && !u.ende);
+  const n = Math.max(3, Math.round((dauer * 60) / (ub + pa))), plan = [];
+  const nW = Math.min(warm.length, Math.max(1, Math.round(n * .2))), nE = Math.min(ende.length, Math.max(1, Math.round(n * .2)));
+  warm.slice(0, nW).forEach((u) => plan.push(u));
+  for (let i = 0; plan.length < n - nE; i++) plan.push((mitte.length ? mitte : passt)[i % (mitte.length || passt.length)]);
+  ende.slice(0, nE).forEach((u) => plan.push(u));
+  return plan.map((u) => ({ id: u.id, sek: ub, pause: pa }));
+}
+// Twinkey als Figur (vorne): Mütze, Kopf, Jacke, Arme/Beine als eigene Teile – die Bewegung kommt aus CSS (fi-a-…)
+function fiFigur(a, sitz) {
+  return `<svg class="fi-figur fi-a-${a}${sitz ? " fi-sitz" : ""}" viewBox="0 0 120 160" role="img" aria-label="Twinkey macht es vor">
+    ${sitz ? '<g class="fi-stuhl"><rect x="30" y="58" width="60" height="7" rx="2"/><rect x="34" y="104" width="52" height="7" rx="2"/><rect x="36" y="111" width="5" height="40"/><rect x="79" y="111" width="5" height="40"/></g>' : ""}
+    <g class="fi-beine"><g class="fi-beinL"><rect x="49" y="${sitz ? 106 : 96}" width="9" height="${sitz ? 40 : 50}" rx="4.5"/><ellipse cx="51" cy="${sitz ? 148 : 148}" rx="8" ry="4" class="fi-schuh"/></g>
+      <g class="fi-beinR"><rect x="62" y="${sitz ? 106 : 96}" width="9" height="${sitz ? 40 : 50}" rx="4.5"/><ellipse cx="69" cy="148" rx="8" ry="4" class="fi-schuh"/></g></g>
+    <g class="fi-oben"><g class="fi-rumpf"><path d="M45 ${sitz ? 58 : 48} Q60 ${sitz ? 54 : 44} 75 ${sitz ? 58 : 48} L77 ${sitz ? 108 : 98} L43 ${sitz ? 108 : 98} Z" class="fi-jacke"/>
+      <circle cx="56" cy="${sitz ? 72 : 62}" r="1.6" class="fi-knopf"/><circle cx="64" cy="${sitz ? 72 : 62}" r="1.6" class="fi-knopf"/><circle cx="56" cy="${sitz ? 84 : 74}" r="1.6" class="fi-knopf"/><circle cx="64" cy="${sitz ? 84 : 74}" r="1.6" class="fi-knopf"/></g>
+      <g class="fi-armL"><rect x="37" y="${sitz ? 58 : 48}" width="8" height="38" rx="4" class="fi-jacke"/><circle cx="41" cy="${sitz ? 98 : 88}" r="4.5" class="fi-haut fi-hand"/></g>
+      <g class="fi-armR"><rect x="75" y="${sitz ? 58 : 48}" width="8" height="38" rx="4" class="fi-jacke"/><circle cx="79" cy="${sitz ? 98 : 88}" r="4.5" class="fi-haut fi-hand"/></g>
+      <g class="fi-kopf"><circle cx="60" cy="${sitz ? 42 : 32}" r="12" class="fi-haut"/><circle cx="56" cy="${sitz ? 41 : 31}" r="1.4" class="fi-auge"/><circle cx="64" cy="${sitz ? 41 : 31}" r="1.4" class="fi-auge"/>
+        <path d="M55.5 ${sitz ? 46 : 36} Q60 ${sitz ? 49 : 39} 64.5 ${sitz ? 46 : 36}" class="fi-mund"/>
+        <g class="fi-muetze"><rect x="49" y="${sitz ? 26 : 16}" width="22" height="7" rx="2"/><circle cx="53" cy="${sitz ? 23 : 13}" r="5.5"/><circle cx="60" cy="${sitz ? 20 : 10}" r="6.5"/><circle cx="67" cy="${sitz ? 23 : 13}" r="5.5"/></g></g></g></svg>`;
+}
+async function fiStart(tab) {
+  spur("fitness");
+  if (tab) FI.tab = tab;
+  const f = blattAuf("fiBlatt", `<h3 style="margin:0">🏋️ Fit bleiben${nurTest("fitness") ? ' <small class="hinweis">🔒 nur für dich (Test)</small>' : ""}</h3>
+    <div class="hl-chips fi-tabs" id="fiTabs"></div><div id="fiInhalt"><p class="hinweis">Wird geladen …</p></div>`);
+  f.classList.add("sc-blatt", "fi-blatt");
+  f._zu = () => { fiStopp(true); f.remove(); };
+  await fiNachtragen(); await fiLaden(); fiZeigen();
+}
+async function fiLaden() {
+  try { FI.einheiten = (await api("fitness_daten", {}, { still: true })).einheiten || []; } catch { FI.einheiten = FI.einheiten || []; }
+}
+async function fiNachtragen() { // offline beendete Einheiten nachtragen
+  const offen = fiLs(FI_OFFEN_KEY, []); if (!offen.length) return;
+  const rest = [];
+  for (const e of offen) { try { await api("fitness_speichern", { einheit: e }, { still: true }); } catch { rest.push(e); } }
+  fiLsSetzen(FI_OFFEN_KEY, rest);
+}
+const fiAlle = () => [...(FI.einheiten || []), ...fiLs(FI_OFFEN_KEY, []).filter((o) => !(FI.einheiten || []).some((e) => e.z === o.z))];
+function fiZeigen() {
+  if (!$("fiInhalt")) return;
+  $("fiTabs").innerHTML = [["training", "▶️ Training"], ["auswertung", "📊 Auswertung"]].map(([k, t]) => `<button type="button" class="chip${FI.tab === k ? " an" : ""}" onclick="FI.tab='${k}';fiZeigen()">${t}</button>`).join("");
+  if (FI.lauf) return fiLaufZeigen();
+  if (FI.tab === "auswertung") return fiAuswertung();
+  const w = fiWahl(), hinweis = !fiLs(FI_HINWEIS_KEY, false), plan = fiPlan(w.stufe, w.dauer), heute = fiAlle().filter((e) => berlinTagApp(e.z) === heuteIso());
+  $("fiInhalt").innerHTML = `${hinweis ? `<div class="karte fi-hinweis"><b>🩺 Bitte kurz lesen</b><p style="margin:4px 0 8px">Mach nur so viel, wie es dir angenehm ist. Bei Schmerzen, Schwindel oder Atemnot sofort aufhören – und bei Beschwerden vorher mit dem Arzt sprechen. Die Übungen ersetzen keine Behandlung.</p><button class="knopf klein" onclick="fiLsSetzen(FI_HINWEIS_KEY,true);fiZeigen()">👍 Verstanden</button></div>` : ""}
+    <div class="fi-vorschau">${fiFigur("armkreis", w.stufe === 1)}<div><b>Twinkey macht es vor</b><p class="hinweis" style="margin:2px 0 0">Schau hin und mach einfach mit – in deinem Tempo.${heute.length ? `<br>✅ Heute schon ${heute.length}× trainiert (${Math.round(heute.reduce((s, e) => s + e.sek, 0) / 60)} Min.)` : ""}</p></div></div>
+    <div class="ps-schritt"><b>Stufe</b><div class="hl-chips">${FI_STUFEN.map(([n, t, u]) => `<button type="button" class="chip${w.stufe === n ? " an" : ""}" onclick="fiWahlSetzen({stufe:${n}})" title="${u}">${t}</button>`).join("")}</div><small class="hinweis">${FI_STUFEN[w.stufe - 1][2]}</small></div>
+    <div class="ps-schritt"><b>Dauer</b><div class="hl-chips">${FI_DAUER.map((d) => `<button type="button" class="chip${w.dauer === d ? " an" : ""}" onclick="fiWahlSetzen({dauer:${d}})">${d} Min.</button>`).join("")}</div></div>
+    <label class="schalter"><div><b>🔊 Ansage</b><div class="hinweis">Twinkey sagt die Übungen an</div></div><input type="checkbox" ${w.ton ? "checked" : ""} onchange="fiWahlSetzen({ton:this.checked}, true)"></label>
+    <details class="karte" data-klappe="fi_plan" data-ohne-unten><summary>📋 Heute dran: ${plan.length} Übungen</summary>${plan.map((x, i) => { const u = FI_UEBUNGEN.find((y) => y.id === x.id); return `<div class="zeile"><span style="flex:1">${i + 1}. <b>${esc(u.t)}</b> <small class="hinweis">– ${esc(u.k)}</small></span><small>${x.sek} s</small></div>`; }).join("")}</details>
+    <button class="knopf haupt breit fi-los" onclick="fiLos()" ${hinweis ? "disabled" : ""}>▶️ Los geht’s</button>`;
+  klappenMerken($("fiInhalt"));
+}
+const berlinTagApp = (z) => new Date(z).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" });
+function fiWahlSetzen(teil, still) { fiLsSetzen(FI_WAHL_KEY, { ...fiWahl(), ...teil }); if (!still) fiZeigen(); }
+// ----- Training -----
+async function fiLos() {
+  const w = fiWahl(), plan = fiPlan(w.stufe, w.dauer);
+  FI.lauf = { plan, i: 0, phase: "bereit", rest: 5, pause: false, stufe: w.stufe, ton: w.ton, start: new Date().toISOString(), sek: 0, gemacht: [], g: { sitzen: 0, stehen: 0, dehnen: 0 }, takt: null, wach: null };
+  try { FI.lauf.wach = await navigator.wakeLock?.request("screen"); } catch {}
+  fiSag("Los geht’s. Erste Übung: " + FI_UEBUNGEN.find((u) => u.id === plan[0].id).t);
+  FI.lauf.takt = setInterval(fiTick, 1000); fiLaufZeigen();
+}
+function fiSag(t) { if (FI.lauf?.ton) { try { speechSynthesis.cancel(); } catch {} sprechen(t); } }
+function fiTick() {
+  const L = FI.lauf; if (!L || L.pause) return;
+  if (!$("fiBlatt")) return fiStopp(true);
+  L.rest--;
+  if (L.phase === "uebung") { L.sek++; const u = FI_UEBUNGEN.find((x) => x.id === L.plan[L.i].id); L.g[u.g]++; }
+  if (L.rest === 3 && L.phase !== "bereit") try { navigator.vibrate?.(30); } catch {}
+  if (L.rest > 0) return fiZaehler();
+  if (L.phase === "uebung") { L.gemacht.push(L.plan[L.i].id); if (L.i >= L.plan.length - 1) return fiFertig(true); L.phase = "pause"; L.rest = L.plan[L.i].pause; fiSag("Pause. Gleich: " + FI_UEBUNGEN.find((x) => x.id === L.plan[L.i + 1].id).t); }
+  else { if (L.phase === "pause") L.i++; L.phase = "uebung"; L.rest = L.plan[L.i].sek; const u = FI_UEBUNGEN.find((x) => x.id === L.plan[L.i].id); fiSag(`${u.t}. ${L.rest} Sekunden.`); try { navigator.vibrate?.([40, 40, 40]); } catch {} }
+  fiLaufZeigen();
+}
+function fiZaehler() { const z = $("fiZahl"); if (z) z.textContent = FI.lauf.rest; const b = $("fiBalken"); if (b) { const L = FI.lauf, ges = L.phase === "uebung" ? L.plan[L.i].sek : L.phase === "pause" ? L.plan[L.i].pause : 5; b.style.width = `${Math.max(0, 100 - (L.rest / ges) * 100)}%`; } }
+function fiLaufZeigen() {
+  const L = FI.lauf, z = $("fiInhalt"); if (!L || !z) return;
+  const akt = L.phase === "pause" ? L.plan[L.i + 1] : L.plan[L.i], u = FI_UEBUNGEN.find((x) => x.id === akt.id), sitz = !!u.sitz && (L.stufe === 1 || u.g === "sitzen");
+  const naechste = L.phase === "uebung" && L.plan[L.i + 1] ? FI_UEBUNGEN.find((x) => x.id === L.plan[L.i + 1].id) : null;
+  z.innerHTML = `<div class="fi-lauf${L.phase !== "uebung" ? " fi-ruhe" : ""}${L.pause ? " fi-angehalten" : ""}">
+    <div class="fi-stand">Übung ${Math.min(L.i + 1 + (L.phase === "pause" ? 1 : 0), L.plan.length)} von ${L.plan.length} · ${Math.floor(L.sek / 60)}:${String(L.sek % 60).padStart(2, "0")} trainiert</div>
+    <div class="fi-phase">${L.phase === "bereit" ? "Gleich geht’s los" : L.phase === "pause" ? "☕ Kurze Pause – gleich:" : "Jetzt:"}</div>
+    <h2 class="fi-titel">${esc(u.t)}</h2><div class="hinweis fi-kuechen">„${esc(u.k)}“</div>
+    ${fiFigur(L.phase === "uebung" ? u.a : "ruhe", sitz)}
+    <div class="fi-zahl" id="fiZahl" aria-live="off">${L.rest}</div><div class="fi-balken-bahn"><div class="fi-balken" id="fiBalken"></div></div>
+    <p class="fi-tipp">${esc(u.h)}</p>${naechste ? `<p class="hinweis" style="margin:0">Danach: ${esc(naechste.t)}</p>` : ""}
+    <div class="knoepfe fi-knoepfe"><button class="knopf haupt" onclick="fiPause()">${L.pause ? "▶️ Weiter" : "⏸ Pause"}</button><button class="knopf" onclick="fiWeiter()">⏭ Überspringen</button><button class="knopf" onclick="fiAbbrechen()">✖ Beenden</button></div></div>`;
+  fiZaehler();
+}
+function fiPause() { const L = FI.lauf; if (!L) return; L.pause = !L.pause; try { speechSynthesis.cancel(); } catch {} fiLaufZeigen(); }
+function fiWeiter() { const L = FI.lauf; if (!L) return; L.pause = false; L.rest = 1; fiTick(); }
+async function fiAbbrechen() {
+  const L = FI.lauf; if (!L) return;
+  if (!(await frage(L.sek >= 60 ? `Training beenden?\nDie ${Math.round(L.sek / 60)} Minuten werden gespeichert.` : "Training beenden?\nUnter einer Minute wird nichts gespeichert.", { ja: "✖ Beenden", nein: "▶️ Weitermachen" }))) return;
+  fiFertig(false);
+}
+function fiStopp(still) { const L = FI.lauf; if (!L) return; clearInterval(L.takt); try { L.wach?.release(); } catch {} try { speechSynthesis.cancel(); } catch {} if (still && L.sek >= 60) fiSpeichern(L, false); FI.lauf = null; }
+async function fiFertig(voll) {
+  const L = FI.lauf; if (!L) return; fiStopp(false);
+  if (L.sek < 60) { melde("Unter einer Minute – nichts gespeichert."); return fiZeigen(); }
+  if (voll) fiSag("Geschafft! Gut gemacht.");
+  await fiSpeichern(L, voll);
+  const z = $("fiInhalt"); if (!z) return;
+  z.innerHTML = `<div class="karte fi-ende"><div style="font-size:2.4rem">${voll ? "🏅" : "👍"}</div><h3 style="margin:4px 0">${voll ? "Geschafft – gut gemacht!" : "Auch das zählt!"}</h3>
+    <p style="margin:0 0 8px">${Math.floor(L.sek / 60)} Min. ${L.sek % 60} s · ${L.gemacht.length} Übungen · Stufe ${FI_STUFEN[L.stufe - 1][1]}</p>
+    <div class="knoepfe"><button class="knopf haupt" onclick="FI.tab='auswertung';fiZeigen()">📊 Zur Auswertung</button><button class="knopf" onclick="fiZeigen()">🔁 Nochmal</button></div></div>`;
+}
+async function fiSpeichern(L, voll) {
+  const e = { z: L.start, sek: L.sek, stufe: L.stufe, u: L.gemacht, g: L.g, voll };
+  try { await api("fitness_speichern", { einheit: e }, { warten: true }); await fiLaden(); }
+  catch { const o = fiLs(FI_OFFEN_KEY, []); if (!o.some((x) => x.z === e.z)) o.push(e); fiLsSetzen(FI_OFFEN_KEY, o.slice(-200)); melde("📴 Gespeichert auf dem Gerät – wird später nachgetragen."); }
+}
+// ----- Auswertung (Tag · Woche · Monat · Jahr, Stufe, Übungsgruppe) -----
+const FI_ZEITEN = [["tag", "Tag"], ["woche", "Woche"], ["monat", "Monat"], ["jahr", "Jahr"]];
+function fiZeitraum(art, off) { // → { von, bis (exklusiv, „YYYY-MM-DD“), titel, teile: [{k, t}] }
+  const d = new Date(heuteIso() + "T12:00:00Z"), iso = (x) => x.toISOString().slice(0, 10), plus = (x, n) => { const y = new Date(x); y.setUTCDate(y.getUTCDate() + n); return y; };
+  if (art === "tag") { const a = plus(d, off); return { von: iso(a), bis: iso(plus(a, 1)), titel: a.toLocaleDateString("de-DE", { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric", timeZone: "UTC" }), teile: [] }; }
+  if (art === "woche") { const mo = plus(d, -((d.getUTCDay() + 6) % 7) + off * 7); const teile = [...Array(7)].map((_, i) => { const t = plus(mo, i); return { k: iso(t), t: ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"][i] }; });
+    return { von: iso(mo), bis: iso(plus(mo, 7)), titel: `${dz(iso(mo))} – ${dz(iso(plus(mo, 6)))}`, teile }; }
+  if (art === "monat") { const a = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + off, 1)), e = new Date(Date.UTC(a.getUTCFullYear(), a.getUTCMonth() + 1, 1));
+    const teile = []; for (let t = new Date(a); t < e; t = plus(t, 1)) teile.push({ k: iso(t), t: String(t.getUTCDate()) });
+    return { von: iso(a), bis: iso(e), titel: a.toLocaleDateString("de-DE", { month: "long", year: "numeric", timeZone: "UTC" }), teile }; }
+  const j = d.getUTCFullYear() + off;
+  return { von: `${j}-01-01`, bis: `${j + 1}-01-01`, titel: String(j), teile: PR_MONATE.map((m, i) => ({ k: `${j}-${String(i + 1).padStart(2, "0")}`, t: m.slice(0, 3) })) };
+}
+const fiSek = (e, gruppe) => (gruppe ? Number(e.g?.[gruppe] || 0) : Number(e.sek || 0));
+function fiSerie(alle) { // Tage in Folge bis heute (oder gestern)
+  const tage = new Set(alle.map((e) => berlinTagApp(e.z))); let n = 0, t = new Date(heuteIso() + "T12:00:00Z");
+  if (!tage.has(heuteIso())) t.setUTCDate(t.getUTCDate() - 1);
+  while (tage.has(t.toISOString().slice(0, 10))) { n++; t.setUTCDate(t.getUTCDate() - 1); }
+  return n;
+}
+function fiGefiltert() {
+  const A = FI.ausw, Z = fiZeitraum(A.zeit, A.off);
+  const liste = fiAlle().filter((e) => { const t = berlinTagApp(e.z); return t >= Z.von && t < Z.bis && (!A.stufe || e.stufe === A.stufe) && (!A.gruppe || fiSek(e, A.gruppe) > 0); })
+    .sort((a, b) => String(b.z).localeCompare(String(a.z)));
+  return { Z, liste };
+}
+function fiAuswertung() {
+  const A = FI.ausw, { Z, liste } = fiGefiltert(), alle = fiAlle(), sek = liste.reduce((s, e) => s + fiSek(e, A.gruppe), 0);
+  const werte = Z.teile.map((x) => ({ ...x, s: liste.filter((e) => berlinTagApp(e.z).startsWith(x.k)).reduce((s, e) => s + fiSek(e, A.gruppe), 0) }));
+  const max = Math.max(60, ...werte.map((w) => w.s)), heute = heuteIso();
+  const grafik = werte.length ? `<div class="fi-grafik" role="img" aria-label="Minuten je ${A.zeit === "jahr" ? "Monat" : "Tag"}">${werte.map((w, i) => `<div class="fi-saeule${w.k === heute ? " heute" : ""}" title="${esc(w.t)}: ${Math.round(w.s / 60)} Min."><span class="fi-wert">${w.s ? Math.round(w.s / 60) : ""}</span><i style="height:${Math.round((w.s / max) * 100)}%"></i><small>${werte.length > 12 && i % 5 && i !== werte.length - 1 ? "&nbsp;" : esc(w.t)}</small></div>`).join("")}</div>
+    <p class="hinweis" style="margin:2px 0 8px;font-size:.8rem">Minuten je ${A.zeit === "jahr" ? "Monat" : "Tag"}</p>` : "";
+  const kal = A.zeit === "monat" ? (() => { const erst = (new Date(Z.von + "T12:00:00Z").getUTCDay() + 6) % 7;
+    return `<div class="fi-kal">${["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"].map((t) => `<b>${t}</b>`).join("")}${"<span></span>".repeat(erst)}${werte.map((w) => `<span class="fi-k${w.s ? (w.s >= 900 ? " v3" : w.s >= 300 ? " v2" : " v1") : ""}${w.k === heute ? " heute" : ""}" title="${Math.round(w.s / 60)} Min.">${esc(w.t)}</span>`).join("")}</div>`; })() : "";
+  const gruppen = Object.entries(FI_GRUPPEN).map(([k, t]) => [t, liste.reduce((s, e) => s + Number(e.g?.[k] || 0), 0)]);
+  $("fiInhalt").innerHTML = `<div class="hl-chips">${FI_ZEITEN.map(([k, t]) => `<button type="button" class="chip${A.zeit === k ? " an" : ""}" onclick="FI.ausw.zeit='${k}';FI.ausw.off=0;fiZeigen()">${t}</button>`).join("")}</div>
+    <div class="fi-nav"><button class="knopf klein" onclick="FI.ausw.off--;fiZeigen()" aria-label="zurück">‹</button><b>${esc(Z.titel)}</b><button class="knopf klein" onclick="FI.ausw.off++;fiZeigen()" ${A.off >= 0 ? "disabled" : ""} aria-label="weiter">›</button></div>
+    <div class="fi-filter"><label class="feld">Stufe<select onchange="FI.ausw.stufe=Number(this.value);fiZeigen()"><option value="0">Alle Stufen</option>${FI_STUFEN.map(([n, t]) => `<option value="${n}"${A.stufe === n ? " selected" : ""}>${t}</option>`).join("")}</select></label>
+      <label class="feld">Übungen<select onchange="FI.ausw.gruppe=this.value;fiZeigen()"><option value="">Alle</option>${Object.entries(FI_GRUPPEN).map(([k, t]) => `<option value="${k}"${A.gruppe === k ? " selected" : ""}>${t}</option>`).join("")}</select></label></div>
+    <div class="fi-kpi"><div><b>${liste.length}</b><small>Einheiten</small></div><div><b>${Math.round(sek / 60)}</b><small>Minuten</small></div><div><b>${liste.length ? Math.round(sek / 60 / liste.length) : 0}</b><small>Ø Min.</small></div><div><b>${fiSerie(alle)}</b><small>Tage in Folge</small></div></div>
+    ${grafik}${kal}
+    ${!A.gruppe && sek ? `<div class="fi-anteile">${gruppen.map(([t, s]) => `<div><span>${t}</span><i><b style="width:${Math.round((s / Math.max(1, sek)) * 100)}%"></b></i><small>${Math.round(s / 60)} Min.</small></div>`).join("")}</div>` : ""}
+    <h3 style="margin:12px 0 4px">📋 Einheiten</h3>
+    ${liste.length ? `<div class="fi-tab-wrap"><table class="fi-tabelle"><thead><tr><th>Datum</th><th>Uhr</th><th>Dauer</th><th>Stufe</th><th>Üb.</th><th></th></tr></thead><tbody>${liste.map((e) => `<tr><td>${esc(dz(berlinTagApp(e.z)).slice(0, 6))}</td><td>${esc(new Date(e.z).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Berlin" }))}</td><td>${Math.floor(fiSek(e, A.gruppe) / 60)}:${String(fiSek(e, A.gruppe) % 60).padStart(2, "0")}</td><td>${esc(FI_STUFEN[(e.stufe || 1) - 1][1])}</td><td>${(e.u || []).length}${e.voll ? " ✅" : ""}</td><td><button class="knopf klein" title="Einheit löschen" aria-label="Einheit löschen" onclick="fiLoeschen('${esc(e.z)}', this)">🗑️</button></td></tr>`).join("")}</tbody></table></div>`
+      : '<p class="hinweis">In diesem Zeitraum noch kein Training – mit ▶️ Training geht’s los.</p>'}
+    <div class="knoepfe" style="margin-top:10px"><button class="knopf" onclick="druckStarten('fitness')">🖨️ Drucken / PDF</button></div>
+    <p class="hinweis" style="font-size:.8rem;margin-top:8px">🔒 Deine Trainingsdaten siehst nur du – auch der Admin nicht.</p>`;
+}
+async function fiLoeschen(z, knopf) {
+  if (!(await frage("Diese Trainingseinheit löschen?"))) return;
+  try { await api("fitness_loeschen", { z }, { warten: true }); await reisswolf(knopf?.closest("tr")); fiLsSetzen(FI_OFFEN_KEY, fiLs(FI_OFFEN_KEY, []).filter((x) => x.z !== z)); await fiLaden(); fiZeigen(); melde("🗑️ Gelöscht"); }
+  catch (e) { meldeFehler(e); }
+}
+function fiDruck() {
+  const A = FI.ausw, { Z, liste } = fiGefiltert(), sek = liste.reduce((s, e) => s + fiSek(e, A.gruppe), 0);
+  const filt = [A.stufe ? FI_STUFEN[A.stufe - 1][1] : "", A.gruppe ? FI_GRUPPEN[A.gruppe] : ""].filter(Boolean).join(" · ");
+  return { titel: "🏋️ Fit bleiben – meine Übersicht", unter: `${FI_ZEITEN.find((x) => x[0] === A.zeit)[1]}: ${Z.titel}${filt ? " · " + filt : ""}`,
+    html: `<table class="dinfo"><tbody><tr><th style="width:40mm">Einheiten</th><td>${liste.length}</td></tr><tr><th>Minuten gesamt</th><td>${Math.round(sek / 60)}</td></tr><tr><th>Ø je Einheit</th><td>${liste.length ? Math.round(sek / 60 / liste.length) : 0} Min.</td></tr></tbody></table>
+      <table><thead><tr><th>Datum</th><th>Uhrzeit</th><th>Dauer</th><th>Stufe</th><th>Übungen</th></tr></thead><tbody>${liste.map((e) => `<tr><td>${esc(dz(berlinTagApp(e.z)))}</td><td>${esc(new Date(e.z).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Berlin" }))}</td><td>${Math.floor(fiSek(e, A.gruppe) / 60)}:${String(fiSek(e, A.gruppe) % 60).padStart(2, "0")}</td><td>${esc(FI_STUFEN[(e.stufe || 1) - 1][1])}</td><td>${esc((e.u || []).map((id) => FI_UEBUNGEN.find((u) => u.id === id)?.t || id).filter((v, i, a) => a.indexOf(v) === i).join(", "))}</td></tr>`).join("") || '<tr><td colspan="5">Keine Einheiten</td></tr>'}</tbody></table>` };
 }
 // ---------- KC-CLUB-REZEPTBUCH (2.23.83, Wunsch Hansi): gemeinsames Club-Rezeptbuch ----------
 // Liste (Suche, Kategorie) → Rezept (Foto, Portionen −/＋ rechnet alle Mengen um, Zutaten abhaken, Einkaufsliste kopieren/teilen, Drucken)
@@ -17015,7 +17226,8 @@ const DRUCKARTEN = {
   verbindung: { bauen: () => druckVerbindung() }, // KC-CLUB-VERBINDUNG-MELDEN (2.23.76)
   chat: { bauen: () => druckChat() }, // 2.23.80: ganzer Chat
   meinedaten: { bauen: () => druckMeineDaten() }, // KC-CLUB-MEINE-DATEN (2.23.82)
-  rezept: { bauen: (o, id) => druckRezept(id) }, // KC-CLUB-REZEPTBUCH (2.23.83)
+  rezept: { bauen: (o, id) => druckRezept(id) },
+  fitness: { bauen: () => fiDruck() }, // KC-CLUB-FITNESS (2.55.0) // KC-CLUB-REZEPTBUCH (2.23.83)
   kmabrechnung: { titel: "🖨️ km-Abrechnung drucken", optionen: () => druckKmOptionen(), bauen: () => druckKmAbrechnung() }, // KC-CLUB-KM-ABRECHNUNG (2.25.3)
   einrichtungskarte: { bauen: (o, param) => druckEinrichtungskarte(param) }, // KC-CLUB-EINRICHTUNGSKARTE (1.88.0) // KC-CLUB-BESTAETIGUNG (1.69.0): Aufstellung der eigenen Eingaben
 };
@@ -19064,7 +19276,7 @@ async function spurSenden() {
 }
 setInterval(spurSenden, sparTakt(NZ_TAKT_MS));
 document.addEventListener("visibilitychange", () => { if (document.hidden) spurSenden(); });
-const SPUR_WAS = { probe_gesetzt: "🧪 Probephase gestartet/verlängert", probe_uebernommen: "✅ Probephase übernommen", probe_beendet: "🚪 Probephase beendet", geoeffnet: "📲 App geöffnet", mitglied: "👤 Mitglied angesehen", chat: "💬 Unterhaltung geöffnet", gesendet: "✉️ Nachricht gesendet", gesendet_anlage: "📎 Nachricht mit Anhang gesendet",
+const SPUR_WAS = { fitness: "🏋️ Fit bleiben geöffnet", probe_gesetzt: "🧪 Probephase gestartet/verlängert", probe_uebernommen: "✅ Probephase übernommen", probe_beendet: "🚪 Probephase beendet", geoeffnet: "📲 App geöffnet", mitglied: "👤 Mitglied angesehen", chat: "💬 Unterhaltung geöffnet", gesendet: "✉️ Nachricht gesendet", gesendet_anlage: "📎 Nachricht mit Anhang gesendet",
   anruf: "📞 Anruf (App) an", video: "🎥 Videoanruf an", anklopfen: "👋 Angeklopft bei", telefon: "☎️ Telefonnummer angetippt", whatsapp: "🟢 WhatsApp geöffnet", mail: "✉️ E-Mail-Adresse angetippt", meine_statistik: "📊 Eigene Nachrichten-Statistik angesehen",
   mein_bild: "🧑‍🍳 „Mein Bild“ geöffnet", bild_gewaehlt: "🧑‍🍳 Koch-Figur als Bild gewählt", bild_gebaut: "🧩 Eigene Figur gespeichert", bild_foto: "📷 Eigenes Foto als Bild gesetzt", bild_entfernt: "🧑‍🍳 Bild entfernt (Buchstaben)", avatar_kombi: "ⓘ Figuren-Möglichkeiten angesehen", jacke_auto_an: "🔄 Kochjacke täglich wechselnd eingeschaltet", jacke_auto_aus: "🔄 Kochjacke täglich wechselnd ausgeschaltet" };
 const SPW = { tag: null, person: null };

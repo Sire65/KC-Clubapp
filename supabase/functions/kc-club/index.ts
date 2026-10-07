@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.54.0";
+const SERVER_VERSION = "2.55.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -2292,6 +2292,7 @@ async function adminIds(): Promise<string[]> {
 // KC-CLUB-FREIGABE (2.23.86, Wunsch Hansi): neue Funktionen erst „nur Admin (Test)“, dann für alle. Standard gilt, solange der Admin nichts gewählt hat.
 const FUNKTIONEN: Record<string, { t: string; u: string; standard: "alle" | "admin" }> = {
   rezepte: { t: "📖 Rezeptbuch", u: "Club-Rezepte, Portionen umrechnen, Einkaufsliste", standard: "admin" },
+  fitness: { t: "🏋️ Fit bleiben", u: "Übungen mit Twinkey, eigene Auswertung", standard: "admin" }, // KC-CLUB-FITNESS (2.55.0)
   avatar: { t: "🧑‍🍳 Mein Bild (40 Koch-Figuren)", u: "Figur statt Buchstaben", standard: "alle" },
   avatar_baukasten: { t: "🧩 Figur selbst zusammenstellen", u: "Haut, Frisur, Bart, Brille, Mütze, Farben", standard: "admin" },
   avatar_foto: { t: "📷 Eigenes Foto als Bild", u: "Selfie, Galerie oder Datei – Admin kann Fotos entfernen", standard: "admin" }, // 2.23.89
@@ -2307,6 +2308,7 @@ async function freigaben(): Promise<Record<string, "alle" | "admin">> {
 async function nurWennFrei(id: string, ich: Ich, was: string) {
   if (!ich.admin && (await freigaben())[id] !== "alle") throw new Fehler(`${was} ist noch nicht freigegeben.`, 403);
 }
+const FIT_MAX = 1500; // KC-CLUB-FITNESS: so viele Einheiten je Mitglied (gut 4 Jahre täglich)
 const REZEPT_KATEGORIEN = ["vorspeise", "suppe", "hauptgericht", "beilage", "dessert", "gebaeck", "getraenk", "sonstiges"]; // KC-CLUB-REZEPTBUCH (2.23.83)
 const SPERRE_TEXT: Record<string, string> = {
   wartung: "Zur Zeit führen wir für Sie Wartungsarbeiten durch. Bitte versuchen Sie es später nochmals. Wir bitten um Verständnis.",
@@ -5706,6 +5708,34 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       // ----- KC-CLUB-BOERSE (1.43.0) -----
       // ----- KC-CLUB-REZEPTBUCH (2.23.83, Wunsch Hansi): gemeinsames Club-Rezeptbuch -----
       // Alle sehen alle Rezepte; ändern/löschen nur, wer es eingestellt hat (und der Admin). Beim Einstellen geht nichts an alle raus.
+      // ----- KC-CLUB-FITNESS (2.55.0, Wunsch Hansi): eigene Trainingseinheiten – nur für einen selbst (Gesundheitsdaten: kein Admin-Einblick,
+      // kein Protokoll der Inhalte). Gespeichert in kc_club_person_einstellung „fitness“ (höchstens FIT_MAX Einheiten, älteste fallen weg). -----
+      case "fitness_daten": {
+        await nurWennFrei("fitness", ich, "Fit bleiben");
+        const { data } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "fitness").maybeSingle();
+        return json({ einheiten: Array.isArray((data?.wert as any)?.einheiten) ? (data!.wert as any).einheiten : [] });
+      }
+      case "fitness_speichern": case "fitness_loeschen": {
+        await nurWennFrei("fitness", ich, "Fit bleiben");
+        const { data } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "fitness").maybeSingle();
+        let liste: any[] = Array.isArray((data?.wert as any)?.einheiten) ? (data!.wert as any).einheiten : [];
+        if (a === "fitness_loeschen") liste = liste.filter((e: any) => e.z !== String(p.z || ""));
+        else {
+          const e = p.einheit || {}, z = new Date(String(e.z || ""));
+          if (isNaN(z.getTime()) || Math.abs(Date.now() - z.getTime()) > 7 * 86400000) throw new Fehler("Ungültige Zeit der Einheit.");
+          const sek = Math.round(Number(e.sek)), stufe = Number(e.stufe);
+          if (!(sek >= 30 && sek <= 7200) || ![1, 2, 3].includes(stufe)) throw new Fehler("Ungültige Einheit.");
+          const u = (Array.isArray(e.u) ? e.u : []).map(String).filter((x: string) => /^[a-z_]{2,20}$/.test(x)).slice(0, 80);
+          const g: Record<string, number> = {}; for (const k of ["sitzen", "stehen", "dehnen"]) g[k] = Math.max(0, Math.min(7200, Math.round(Number(e.g?.[k]) || 0)));
+          const neu = { z: z.toISOString(), sek, stufe, u, g, voll: e.voll === true };
+          if (!liste.some((x: any) => x.z === neu.z)) liste.push(neu);
+          liste = liste.sort((x: any, y: any) => String(x.z).localeCompare(String(y.z))).slice(-FIT_MAX);
+        }
+        const { error } = await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel: "fitness", wert: { einheiten: liste }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
+        if (error) throw new Fehler("Die Einheit konnte nicht gespeichert werden – sie bleibt auf dem Gerät und wird später nachgetragen.", 500);
+        return json({ ok: true, anzahl: liste.length });
+      }
+
       case "rezepte_liste": {
         await nurWennFrei("rezepte", ich, "Das Rezeptbuch");
         const { data } = await db.from("kc_club_rezepte").select("id,von,titel,kategorie,portionen,zutaten,zubereitung,dauer,foto,stichworte,erstellt_am,geaendert_am")

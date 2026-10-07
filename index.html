@@ -320,6 +320,63 @@
   .fdk-kuehl { background: #e3eef8; border-color: #5b8fc4; } .fdk-gemuese { background: #e3efe0; border-color: #5d9a63; } .fdk-trocken { background: #f6ecd6; border-color: #b88a3a; }
   .fdk-gewuerz { background: #fbe3d2; border-color: #d0763a; } .fdk-pass { background: #fbeab0; border-color: #c99a10; } .fdk-glueck { background: #f3e6fb; border-color: #9a63c4; } .fdk-tuer { background: #eeeeee; border-color: #999; }
   .fdk-feld.fdk-gut { box-shadow: 0 0 0 3px #24974a; }
+  /* KC-CLUB-FITNESS (2.55.0): Fit bleiben – Figur, Training, Auswertung */
+  .fi-figur { width: 150px; height: 200px; display: block; margin: 4px auto; overflow: visible; }
+  .fi-figur .fi-jacke { fill: #ffffff; stroke: #c9c2b6; stroke-width: 1; } .fi-figur .fi-haut { fill: #ecc19c; } .fi-figur .fi-auge { fill: #2b1d14; }
+  .fi-figur .fi-mund { fill: none; stroke: #8a3b2e; stroke-width: 1.4; stroke-linecap: round; } .fi-figur .fi-knopf { fill: #741521; }
+  .fi-figur .fi-muetze { fill: #fff; stroke: #d9d4cc; stroke-width: .8; } .fi-figur .fi-beine rect { fill: #2a2a2a; } .fi-figur .fi-schuh { fill: #1a1a1a; }
+  .fi-figur .fi-stuhl { fill: #a0784e; }
+  .fi-figur * { transform-box: view-box; }
+  .fi-figur .fi-armL { transform-origin: 41px 52px; } .fi-figur .fi-armR { transform-origin: 79px 52px; }
+  .fi-figur.fi-sitz .fi-armL { transform-origin: 41px 62px; } .fi-figur.fi-sitz .fi-armR { transform-origin: 79px 62px; }
+  .fi-figur .fi-beinL { transform-origin: 53px 98px; } .fi-figur .fi-beinR { transform-origin: 66px 98px; }
+  .fi-figur.fi-sitz .fi-beinL { transform-origin: 53px 108px; } .fi-figur.fi-sitz .fi-beinR { transform-origin: 66px 108px; }
+  .fi-figur .fi-kopf { transform-origin: 60px 44px; } .fi-figur .fi-oben { transform-origin: 60px 98px; }
+  .fi-a-armkreis .fi-armL { animation: fiKreisL 3s linear infinite; } .fi-a-armkreis .fi-armR { animation: fiKreisR 3s linear infinite; }
+  @keyframes fiKreisL { from { transform: rotate(0); } to { transform: rotate(360deg); } } @keyframes fiKreisR { from { transform: rotate(0); } to { transform: rotate(-360deg); } }
+  .fi-a-schulter .fi-armL, .fi-a-schulter .fi-armR, .fi-a-schulter .fi-kopf { animation: fiHeben 2.4s ease-in-out infinite; } @keyframes fiHeben { 0%, 100% { transform: translateY(0); } 40%, 60% { transform: translateY(-5px); } }
+  .fi-a-marsch .fi-beinL { animation: fiBeinL 1.2s ease-in-out infinite; } .fi-a-marsch .fi-beinR { animation: fiBeinL 1.2s ease-in-out infinite .6s; }
+  @keyframes fiBeinL { 0%, 100% { transform: translateY(0) scaleY(1); } 50% { transform: translateY(-10px) scaleY(.82); } }
+  .fi-a-marsch .fi-armL { animation: fiSchwing 1.2s ease-in-out infinite .6s; } .fi-a-marsch .fi-armR { animation: fiSchwing 1.2s ease-in-out infinite; } @keyframes fiSchwing { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(18deg); } }
+  .fi-a-kneten .fi-armL { animation: fiKnetL .9s ease-in-out infinite; } .fi-a-kneten .fi-armR { animation: fiKnetR .9s ease-in-out infinite; } .fi-a-kneten .fi-hand { animation: fiFaust .9s ease-in-out infinite; transform-origin: center; transform-box: fill-box; }
+  @keyframes fiKnetL { 0%, 100% { transform: rotate(-40deg); } 50% { transform: rotate(-30deg); } } @keyframes fiKnetR { 0%, 100% { transform: rotate(40deg); } 50% { transform: rotate(30deg); } } @keyframes fiFaust { 50% { transform: scale(.65); } }
+  .fi-a-bein .fi-beinL { animation: fiStreck 3s ease-in-out infinite; } .fi-a-bein .fi-beinR { animation: fiStreck 3s ease-in-out infinite 1.5s; } @keyframes fiStreck { 0%, 45%, 100% { transform: scaleY(1); } 15%, 30% { transform: scaleY(.6) translateY(-6px); } }
+  .fi-a-fuss .fi-schuh { animation: fiFuss 1.6s linear infinite; transform-box: fill-box; transform-origin: center; } @keyframes fiFuss { 0% { transform: rotate(0); } 25% { transform: rotate(14deg); } 50% { transform: rotate(0) translateY(-1px); } 75% { transform: rotate(-14deg); } }
+  .fi-a-seit { animation: fiSeit 2.4s ease-in-out infinite; } @keyframes fiSeit { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-12px); } 75% { transform: translateX(12px); } }
+  .fi-a-knie .fi-oben { animation: fiKnie 2.6s ease-in-out infinite; } .fi-a-knie .fi-beine { animation: fiKnieB 2.6s ease-in-out infinite; transform-origin: 60px 150px; }
+  @keyframes fiKnie { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(14px); } } @keyframes fiKnieB { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(.75); } }
+  .fi-a-zehen { animation: fiZehen 2.2s ease-in-out infinite; } @keyframes fiZehen { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+  .fi-a-strecken .fi-armL { animation: fiHochL 2.6s ease-in-out infinite; } .fi-a-strecken .fi-armR { animation: fiHochR 2.6s ease-in-out infinite 1.3s; }
+  @keyframes fiHochL { 0%, 50%, 100% { transform: rotate(0); } 20%, 30% { transform: rotate(170deg); } } @keyframes fiHochR { 0%, 50%, 100% { transform: rotate(0); } 20%, 30% { transform: rotate(-170deg); } }
+  .fi-a-nacken .fi-kopf { animation: fiNacken 3.2s ease-in-out infinite; } @keyframes fiNacken { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-18deg); } 75% { transform: rotate(18deg); } }
+  .fi-a-rumpf .fi-oben { animation: fiRumpf 3.2s ease-in-out infinite; } @keyframes fiRumpf { 0%, 100% { transform: rotate(0) scaleX(1); } 25% { transform: rotate(-6deg) scaleX(.9); } 75% { transform: rotate(6deg) scaleX(.9); } }
+  .fi-a-einbein .fi-beinR { animation: fiEinbein 4s ease-in-out infinite; } .fi-a-einbein .fi-armL { transform: rotate(40deg); } .fi-a-einbein .fi-armR { transform: rotate(-40deg); }
+  @keyframes fiEinbein { 0%, 100% { transform: translateY(0) scaleY(1); } 15%, 85% { transform: translateY(-12px) scaleY(.75); } }
+  .fi-a-lehnen .fi-oben { animation: fiLehnen 3s ease-in-out infinite; } .fi-a-lehnen .fi-armL { transform: rotate(-60deg); } .fi-a-lehnen .fi-armR { transform: rotate(60deg); } @keyframes fiLehnen { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(4deg) translateY(3px); } }
+  .fi-a-ruhe .fi-oben { animation: fiAtmen 4s ease-in-out infinite; } @keyframes fiAtmen { 50% { transform: scale(1.02); } }
+  .fi-angehalten .fi-figur * { animation-play-state: paused !important; }
+  @media (prefers-reduced-motion: reduce) { .fi-figur * { animation-duration: 6s !important; } }
+  .fi-vorschau { display: flex; align-items: center; gap: 10px; } .fi-vorschau .fi-figur { width: 90px; height: 120px; margin: 0; flex: none; }
+  .fi-hinweis { border-left: 4px solid #e6a800; }
+  .fi-los { font-size: 1.15rem; padding: 14px; margin-top: 10px; }
+  .fi-lauf { text-align: center; } .fi-stand { font-size: .82rem; color: var(--grau); } .fi-phase { font-weight: 700; color: var(--grau); margin-top: 6px; }
+  .fi-titel { margin: 2px 0 0; font-size: 1.5rem; } .fi-kuechen { font-style: italic; margin-bottom: 2px; }
+  .fi-zahl { font-size: 3.4rem; font-weight: 900; line-height: 1; color: var(--rot); font-variant-numeric: tabular-nums; } .fi-ruhe .fi-zahl { color: #2e7d4f; }
+  .fi-balken-bahn { height: 8px; background: var(--karte2); border-radius: 4px; overflow: hidden; margin: 6px auto 8px; max-width: 320px; } .fi-balken { height: 100%; width: 0; background: var(--rot); transition: width 1s linear; } .fi-ruhe .fi-balken { background: #2e7d4f; }
+  .fi-tipp { margin: 4px auto 6px; max-width: 360px; } .fi-knoepfe { justify-content: center; }
+  .fi-ende { text-align: center; }
+  .fi-nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 8px 0; } .fi-nav b { text-align: center; flex: 1; min-width: 0; font-size: .95rem; } .fi-nav .knopf { flex: none; }
+  .fi-blatt .blatt-innen { overflow-x: hidden; } #fiInhalt { min-width: 0; max-width: 100%; }
+  .fi-filter { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; } .fi-filter .feld { margin: 0; min-width: 0; } .fi-filter select { width: 100%; min-width: 0; }
+  .fi-kpi { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 10px 0; } .fi-kpi div { background: var(--karte2); border-radius: 12px; padding: 8px 4px; text-align: center; } .fi-kpi b { display: block; font-size: 1.3rem; } .fi-kpi small { font-size: .7rem; color: var(--grau); line-height: 1.1; display: block; }
+  .fi-grafik { display: flex; align-items: flex-end; gap: 2px; height: 130px; padding: 4px 0 0; border-bottom: 1px solid var(--linie); }
+  .fi-saeule { flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; }
+  .fi-saeule i { display: block; width: 78%; background: linear-gradient(var(--rot2, #9b2536), var(--rot)); border-radius: 4px 4px 0 0; min-height: 0; }
+  .fi-saeule.heute i { background: #2e7d4f; } .fi-saeule small { font-size: .62rem; color: var(--grau); margin-top: 2px; white-space: nowrap; } .fi-wert { font-size: .62rem; font-weight: 700; }
+  .fi-kal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin: 6px 0 10px; text-align: center; font-size: .78rem; } .fi-kal b { font-size: .7rem; color: var(--grau); }
+  .fi-kal .fi-k { padding: 6px 0; border-radius: 8px; background: var(--karte2); } .fi-kal .v1 { background: #f2c9cf; } .fi-kal .v2 { background: #d77887; color: #fff; } .fi-kal .v3 { background: var(--rot); color: #fff; } .fi-kal .heute { outline: 2px solid #2e7d4f; }
+  .fi-anteile div { display: grid; grid-template-columns: minmax(0, 8.5em) minmax(0, 1fr) 4.2em; gap: 6px; align-items: center; font-size: .82rem; margin: 3px 0; } .fi-anteile i { height: 8px; background: var(--karte2); border-radius: 4px; overflow: hidden; } .fi-anteile i b { display: block; height: 100%; background: var(--rot); } .fi-anteile small { text-align: right; }
+  .fi-tab-wrap { overflow-x: auto; max-width: 100%; } .fi-tabelle { width: 100%; border-collapse: collapse; font-size: .85rem; } .fi-tabelle th, .fi-tabelle td { padding: 6px 3px; border-bottom: 1px solid var(--linie); text-align: left; white-space: nowrap; } .fi-tabelle .knopf { padding: 2px 6px; min-height: 0; }
   /* KC-CLUB-FDK-TABLETT (2.52.0): Tabletts links/rechts, Standort des Kochs deutlich */
   .fdk-tisch { display: grid; grid-template-columns: clamp(50px, 14vw, 84px) minmax(0, 440px) clamp(50px, 14vw, 84px); gap: 5px; justify-content: center; align-items: start; margin: 8px 0; }
   .fdk-tisch .fdk-brett { margin: 0; max-width: none; width: 100%; padding: 6px; gap: 5px; }
@@ -3276,6 +3333,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.54.0" data-v="2.54.0"></script>
+<script src="app.js?v=2.55.0" data-v="2.55.0"></script>
 </body>
 </html>

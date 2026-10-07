@@ -5339,6 +5339,23 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const TW_SCHWACH = new Set\(\["gemacht"/.test(html) && /!w\.some\(\(q\) => !TW_SCHWACH\.has\(q\) && twTrifft/.test(html), "nie nur ein Allerweltswort");
   assert.ok(/Ich werde recherchieren und dir bei Gelegenheit eine Antwort zukommen lassen/.test(html), "dann wie gehabt: recherchieren, an den Admin");
 }
+// 2.55.0 KC-CLUB-FITNESS (Wunsch Hansi): „Fit bleiben“ – Twinkey macht vor, Stufe + Dauer, eigene Auswertung; erst nur Admin (Freigabe wie Rezeptbuch)
+{
+  assert.ok(/fitness: \{ t: "🏋️ Fit bleiben", u: "Übungen mit Twinkey, eigene Auswertung", standard: "admin" \}/.test(server), "Freigabe: Standard nur Admin");
+  for (const a of ["fitness_daten", "fitness_speichern"]) assert.ok(new RegExp(`case "${a}":[^]{0,80}await nurWennFrei\\("fitness"`).test(server), a + " nur mit Freigabe");
+  const f = server.slice(server.indexOf('case "fitness_speichern": case "fitness_loeschen": {'), server.indexOf('case "rezepte_liste": {'));
+  assert.ok(/\.eq\("person_id", ich\.person_id\)\.eq\("schluessel", "fitness"\)/.test(f) && !/p\.person_id/.test(f) && !/protokoll\(/.test(f), "nur eigene Daten, keine Inhalte im Protokoll");
+  assert.ok(/sek >= 30 && sek <= 7200/.test(f) && /\.slice\(-FIT_MAX\)/.test(f), "geprüft und begrenzt");
+  assert.ok(/\{ id: "fitness", sym: "🏋️", t: "Fit bleiben"[^\n]*nur: \(\) => frei\("fitness"\) \}/.test(html), "Kachel in Mein, nur wenn frei");
+  const a = html.indexOf("const FI_UEBUNGEN = ["), b = html.indexOf("// Twinkey als Figur", a);
+  const F = new Function(html.slice(a, b) + "\nreturn { FI_UEBUNGEN, fiPlan, FI_ZEIT };")();
+  assert.ok(F.FI_UEBUNGEN.length >= 12 && F.FI_UEBUNGEN.every((u) => u.id && u.t && u.h && u.a && u.s.length), "Übungen mit Erklärung und Bewegung");
+  for (const st of [1, 2, 3]) for (const d of [5, 10, 15, 20]) { const p = F.fiPlan(st, d), sek = p.reduce((s, x) => s + x.sek + x.pause, 0);
+    assert.ok(Math.abs(sek - d * 60) <= F.FI_ZEIT[st][0] + F.FI_ZEIT[st][1], `Plan passt zur Dauer (${st}/${d})`);
+    if (st === 1) assert.ok(p.every((x) => F.FI_UEBUNGEN.find((u) => u.id === x.id).sitz), "Sanft: nur Übungen im Sitzen"); }
+  assert.ok(/Bei Schmerzen, Schwindel oder Atemnot sofort aufhören/.test(html) && /fitness: \{ bauen: \(\) => fiDruck\(\) \}/.test(html), "Sicherheitshinweis, Drucken");
+  assert.ok(/fiLsSetzen\(FI_OFFEN_KEY/.test(html) && /async function fiNachtragen\(\)/.test(html), "offline beendete Einheiten werden nachgetragen");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
