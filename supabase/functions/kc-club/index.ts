@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.30.1";
+const SERVER_VERSION = "2.31.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -2228,6 +2228,10 @@ async function wochenberichtLauf() {
 const SPUR_WAS = /^[a-z][a-z0-9_]{0,29}$/;
 const SPUR_MIT = /^(KC-P-[A-Z0-9-]{1,30}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
 const SPUR_TAGE = 30;
+// KC-CLUB-STARTSTATISTIK (2.31.0, Wunsch Hansi): jeder App-Start mit Dauer, Gerät und Browser (Name nur für den Admin sichtbar), 180 Tage
+const START_TAGE = 180;
+const startZahl = (v: unknown) => { const n = Math.round(Number(v)); return Number.isFinite(n) && n >= 0 && n < 600000 ? n : null; };
+const startText = (v: unknown, n = 40) => String(v ?? "").replace(/[^\p{L}\p{N} .,_()\/+-]/gu, "").slice(0, n);
 // KC-CLUB-AVATAR-FOTO (2.23.89)
 const AVF_CODE = /^f[0-9a-z]{9}$/;
 const AVF_MAX = 90000; // Zeichen (≈ 66 KB) – die App schickt 256×256, meist 15–30 KB
@@ -3897,6 +3901,8 @@ Deno.serve(async (req) => {
       await ekDienstwunschMelden().catch((e) => console.error("eingang dienstwunsch", String(e))); /* KC-CLUB-EINGANGSKORB (2.23.6) */ /* KC-CLUB-AENDERUNG-FREIGABE (2.22.19) */ // KC-CLUB-STADT-TERMINE (2.22.6): wöchentlich, nur wenn eingeschaltet
       // KC-CLUB-SPUR (2.23.88): Wege der Mitglieder nur 30 Tage aufbewahren
       { const { error } = await db.from("kc_club_protokoll").delete().eq("aktion", "spur").lt("zeit", new Date(Date.now() - SPUR_TAGE * 86400000).toISOString()); if (error) console.error("spur loeschen", error.message); }
+      // KC-CLUB-STARTSTATISTIK (2.31.0): App-Starts nur 180 Tage aufbewahren
+      { const { error } = await db.from("kc_club_protokoll").delete().eq("aktion", "app_start").lt("zeit", new Date(Date.now() - START_TAGE * 86400000).toISOString()); if (error) console.error("app_start loeschen", error.message); }
       // KC-CLUB-NUTZUNG-PERSONEN (2.6.0): Geräte-Kennungen nur 100 Tage aufbewahren
       { const { error } = await db.from("kc_club_nutzung_geraete").delete().lt("tag", berlinTag(new Date(Date.now() - 100 * 86400000))); if (error) console.error("nutzung geraete loeschen", error.message); }
       // Abstimmungen mit abgelaufener Frist beenden (Ergebnis geht an alle)
@@ -6880,6 +6886,26 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           .map((x: any) => (x[2] == null ? [Math.round(Number(x[0])), String(x[1])] : [Math.round(Number(x[0])), String(x[1]), String(x[2])]));
         if (s.length) await protokoll(ich.person_id, "spur", { s });
         return json({ ok: true, n: s.length });
+      }
+      // KC-CLUB-STARTSTATISTIK (2.31.0): App meldet nach jedem Start die Messung (Zeiten in ms, Gerät/Browser als grobe Namen, nie Inhalte)
+      case "start_melden": {
+        if (ich.nurLesen) return json({ ok: true });
+        const t = (p.teile && typeof p.teile === "object") ? p.teile : {};
+        const d: Record<string, unknown> = { ms: startZahl(p.ms), seite: startZahl(t.seite), programm: startZahl(t.programm), einrichten: startZahl(t.einrichten),
+          server: startZahl(t.server), anzeige: startZahl(t.anzeige), netz: startText(p.netz, 10), quelle: startText(p.quelle, 10), app: p.app === true,
+          system: startText(p.system), browser: startText(p.browser), bildschirm: startText(p.bildschirm, 12), v: startText(p.v, 12), spar: p.spar === true };
+        if (d.ms === null) throw new Fehler("Messung ungültig.", 400);
+        await protokoll(ich.person_id, "app_start", d);
+        return json({ ok: true });
+      }
+      case "start_statistik": {
+        nurAdmin(ich);
+        const tage = [7, 30, 90, 180].includes(Number(p.tage)) ? Number(p.tage) : 30;
+        const { data, error } = await db.from("kc_club_protokoll").select("person_id,zeit,details").eq("aktion", "app_start").not("person_id", "like", "KC-P-TEST%")
+          .gte("zeit", new Date(Date.now() - tage * 86400000).toISOString()).order("zeit", { ascending: false }).limit(5000);
+        if (error) throw new Fehler("Die Startstatistik ist gerade nicht abrufbar – bitte gleich noch einmal versuchen.", 503);
+        const leute = await personen([...new Set((data ?? []).map((x: any) => x.person_id))]);
+        return json({ tage, starts: (data ?? []).map((x: any) => ({ p: x.person_id, name: leute.get(x.person_id)?.display_name || x.person_id, zeit: x.zeit, ...x.details })) });
       }
       case "spur_liste": {
         nurAdmin(ich);

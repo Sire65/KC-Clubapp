@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.30.1"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.31.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -1329,7 +1329,7 @@ const HILFE = [
   // 🔒 Privatsphäre & Zugang
   { id: "privatsphaere", thema: "privat", sym: "🔒", t: "Wer sieht was von mir?", x: "Du entscheidest selbst: Unter ⚙️ → <b>„🔒 Privatsphäre“</b> legst du z. B. fest, ob andere sehen, dass du online bist oder wann du zuletzt da warst, ob dein Geburtstag angezeigt wird, ob man bei dir anklopfen darf und ob andere dich zu Spielen herausfordern dürfen.", zeig: () => einstiegHin("privat") },
   { id: "zugangslink", thema: "privat", sym: "🔗", t: "Dein persönlicher Zugangslink", x: () => `Die App öffnest du über deinen persönlichen Link. Gib ihn bitte <b>nicht weiter</b> – wer ihn hat, ist in der App als du angemeldet. Neues Handy oder Link verloren? ${esc(adminName())} erzeugt dir einen neuen.` },
-  { id: "was_gespeichert", thema: "privat", sym: "🗂️", nur: () => !!ICH?.admin, t: "Was speichert die App über mich?", x: "Zur Fehlersuche und Unterstützung speichert die App 30 Tage lang, welche Bereiche geöffnet und mit wem Nachrichten oder Anrufe ausgetauscht wurden – <b>ohne Inhalte</b>. Einsicht hat nur der Admin." },
+  { id: "was_gespeichert", thema: "privat", sym: "🗂️", nur: () => !!ICH?.admin, t: "Was speichert die App über mich?", x: "Zur Fehlersuche und Unterstützung speichert die App 30 Tage lang, welche Bereiche geöffnet und mit wem Nachrichten oder Anrufe ausgetauscht wurden – <b>ohne Inhalte</b>. Außerdem 180 Tage lang jeden App-Start: Zeitpunkt, Dauer, Gerät und Browser – damit die App schneller werden kann. Einsicht hat nur der Admin." },
   // 🛠️ Technik & Probleme lösen
   { id: "update", thema: "technik", sym: "🔄", t: "Neue Version holen", x: "Register <b>Technik</b> → „🔄 Update prüfen“. Steht dort „Neu“, einfach antippen – die App lädt die neue Version komplett und startet neu. Meist macht sie das auch von selbst.", zeig: hzTechnik },
   { id: "installieren", thema: "technik", sym: "📲", t: "Die App auf den Startbildschirm legen", x: "Dann startet die Club-App wie jede andere App mit eigenem Symbol. Die Anleitung für dein Handy steht unter ⚙️ → <b>„📲 App-Installation“</b>.", zeig: () => einstiegHin("install") },
@@ -17434,6 +17434,9 @@ function startMessFertig() {
   // KC-CLUB-SPUR-OEFFNEN (2.30.0, Fall Reinhilde: nur kurz auf der Startseite → im Weg stand nichts): jedes Öffnen zählt als Schritt
   // und geht nach 3 s gleich los (nicht erst nach 2 Min.), damit auch ganz kurze Besuche sichtbar sind
   spur("geoeffnet"); setTimeout(spurSenden, 3000);
+  // KC-CLUB-STARTSTATISTIK (2.31.0, Wunsch Hansi): jeden Start mit Dauer, Gerät und Browser melden (für die Startstatistik des Admins)
+  setTimeout(() => api("start_melden", { ms: eintrag.ges, teile: p, netz: eintrag.netz, quelle: eintrag.quelle, v: APP_VERSION, spar: SPAR.an,
+    app: matchMedia("(display-mode: standalone)").matches || navigator.standalone === true, system: fpSystem(), browser: fpBrowser(), bildschirm: `${screen.width}x${screen.height}` }).catch(() => {}), 1500);
 }
 const sek = (ms) => (ms / 1000).toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " s";
 function startMessHtml() {
@@ -18628,6 +18631,45 @@ async function spurAdmin(tag, person) {
   $("adminBlattInhalt").innerHTML = kopf + inhalt + fuss;
   $("adminBlatt").classList.remove("versteckt");
 }
+// ---------- KC-CLUB-STARTSTATISTIK (2.31.0, Wunsch Hansi): Wie schnell startet die App bei wem, auf welchem Gerät, mit welchem Browser? ----------
+// Nur Admin. Grün bis 3 s, gelb bis 6 s, rot darüber. Filter nach Mitglied und Gerät; Übersichten je Mitglied und je Gerät/Browser, dazu die Starts einzeln.
+const STS = { tage: 30, person: "", geraet: "", daten: null };
+const stSek = (ms) => (ms == null ? "–" : (ms / 1000).toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " s");
+const stAmpel = (ms) => (ms == null ? "" : ms <= 3000 ? "st-gruen" : ms <= 6000 ? "st-gelb" : "st-rot");
+const stMedian = (l) => { const z = l.filter((x) => x != null).sort((a, b) => a - b); return z.length ? z[Math.floor((z.length - 1) / 2)] : null; };
+const stGeraet = (x) => String(x.system || "?").replace(/ [\d.]+$/, "") || "?";
+async function startStatistik(tage) {
+  if (tage) STS.tage = tage;
+  try { STS.daten = await api("start_statistik", { tage: STS.tage }, { warten: true }); } catch (e) { return meldeFehler(e); }
+  startStatistikZeigen();
+}
+function startStatistikZeigen() {
+  const alle = STS.daten?.starts || [], l = alle.filter((x) => (!STS.person || x.p === STS.person) && (!STS.geraet || stGeraet(x) === STS.geraet));
+  const personen = [...new Map(alle.map((x) => [x.p, x.name])).entries()].sort((a, b) => a[1].localeCompare(b[1]));
+  const geraete = [...new Set(alle.map(stGeraet))].sort();
+  const gruppe = (fn) => { const m = new Map(); for (const x of l) { const k = fn(x); m.set(k, [...(m.get(k) || []), x]); } return [...m.entries()].sort((a, b) => b[1].length - a[1].length); };
+  const zeile = (t, g) => `<tr><td style="text-align:left">${t}</td><td>${g.length}</td><td class="${stAmpel(stMedian(g.map((x) => x.ms)))}">${stSek(stMedian(g.map((x) => x.ms)))}</td><td>${stSek(stMedian(g.map((x) => x.server)))}</td><td class="${stAmpel(Math.max(...g.map((x) => x.ms || 0)))}">${stSek(Math.max(...g.map((x) => x.ms || 0)))}</td></tr>`;
+  const kopfT = `<tr><th></th><th>Starts</th><th>üblich</th><th>Server</th><th>max.</th></tr>`;
+  const langsam = l.filter((x) => x.ms > 6000).length;
+  $("adminBlattInhalt").innerHTML = `<div class="spur-kopf"><h3 style="margin:0;flex:1">⏱️ Startstatistik</h3><button class="rund spur-neu" title="Aktualisieren" aria-label="Startstatistik aktualisieren" onclick="startStatistik()">↻</button></div>
+    <p class="hinweis" style="margin:0">Jeder Start der App: wer, wann, welches Gerät, welcher Browser und wie lange es bis zur fertigen Startseite gedauert hat. Nur du siehst das; nach 180 Tagen wird es gelöscht. Grün bis 3 s · Gelb bis 6 s · Rot darüber.</p>
+    <div class="knoepfe">${[7, 30, 90, 180].map((t) => `<button class="knopf klein${STS.tage === t ? " haupt" : ""}" onclick="startStatistik(${t})">${t} Tage</button>`).join("")}</div>
+    <div class="zwei"><select aria-label="Mitglied" onchange="STS.person=this.value;startStatistikZeigen()"><option value="">Alle Mitglieder</option>${personen.map(([id, n]) => `<option value="${esc(id)}"${STS.person === id ? " selected" : ""}>${esc(n)}</option>`).join("")}</select>
+      <select aria-label="Gerät" onchange="STS.geraet=this.value;startStatistikZeigen()"><option value="">Alle Geräte</option>${geraete.map((g) => `<option${STS.geraet === g ? " selected" : ""}>${esc(g)}</option>`).join("")}</select></div>
+    ${l.length ? `<div class="st-kacheln"><div><b>${l.length}</b><small>Starts</small></div><div class="${stAmpel(stMedian(l.map((x) => x.ms)))}"><b>${stSek(stMedian(l.map((x) => x.ms)))}</b><small>üblicher Start</small></div>
+      <div><b>${stSek(stMedian(l.map((x) => x.server)))}</b><small>davon Server</small></div><div class="${langsam ? "st-rot" : "st-gruen"}"><b>${langsam}</b><small>langsam (über 6 s)</small></div></div>
+    <details class="karte" open><summary><b>👥 Je Mitglied</b></summary><div class="st-scroll"><table class="vb-tabelle st-tab">${kopfT}${gruppe((x) => x.name).map(([n, g]) => zeile(esc(n), g)).join("")}</table></div></details>
+    <details class="karte" open><summary><b>📱 Je Gerät und Browser</b></summary><div class="st-scroll"><table class="vb-tabelle st-tab">${kopfT}${gruppe((x) => `${stGeraet(x)} · ${x.browser || "?"} · ${x.app ? "als App" : "im Browser"}`).map(([n, g]) => zeile(esc(n), g)).join("")}</table></div></details>
+    <details class="karte"><summary><b>🌐 Je Netz</b></summary><div class="st-scroll"><table class="vb-tabelle st-tab">${kopfT}${gruppe((x) => (x.netz || "unbekannt").toUpperCase()).map(([n, g]) => zeile(esc(n), g)).join("")}</table></div></details>
+    <details class="karte" open><summary><b>🕒 Starts einzeln</b> <span class="hinweis">(neueste zuerst${l.length > 150 ? ", die letzten 150" : ""})</span></summary>
+      <div class="st-scroll"><table class="vb-tabelle st-tab"><tr><th style="text-align:left">Wann</th><th style="text-align:left">Wer</th><th style="text-align:left">Gerät</th><th>Dauer</th><th>Server</th></tr>${l.slice(0, 150).map((x) => `<tr>
+        <td style="text-align:left;white-space:nowrap">${esc(zeitKurz(x.zeit))}</td><td style="text-align:left">${esc(x.name)}</td>
+        <td style="text-align:left">${esc(x.system || "?")} · ${esc(x.browser || "?")}${x.app ? " · App" : " · Browser"}${x.netz ? " · " + esc(String(x.netz).toUpperCase()) : ""}${x.spar ? " · 🐢" : ""}${x.v ? `<small class="hinweis"> · ${esc(x.v)}</small>` : ""}</td>
+        <td class="${stAmpel(x.ms)}">${stSek(x.ms)}</td><td>${stSek(x.server)}</td></tr>`).join("")}</table></div></details>`
+      : `<p class="hinweis">Im gewählten Zeitraum keine Starts aufgezeichnet (gezählt ab Version 2.31.0).</p>`}
+    <div class="knoepfe"><button class="knopf" onclick="nzAdmin()">‹ Nutzung</button></div>`;
+  $("adminBlatt").classList.remove("versteckt");
+}
 async function spurNeu(k) {
   if (k?.classList.contains("dreht")) return;
   k?.classList.add("dreht");
@@ -18683,7 +18725,7 @@ async function nzAdmin(tage) {
   const zeilen = [...haupt.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).flatMap(([o, n]) => [[o, n, false], ...liste.filter(([b]) => nzOber(b) === o).map(([b, m]) => [b, m, true])]);
   $("adminBlattInhalt").innerHTML = `<h3 style="margin:0">📊 Nutzung – ohne Namen</h3>
     <p class="hinweis" style="margin:0">Wie oft die Bereiche geöffnet wurden und <b>👤 von wie vielen verschiedenen Mitgliedern</b>. Es wird nie gespeichert, wer – nur Tag, Bereich, Anzahl und eine zufällige Geräte-Kennung; die Uhrzeit nur als Stunde, getrennt vom Bereich.</p>
-    <div class="knoepfe">${[7, 30, 90].map((t) => `<button class="knopf klein${r.tage === t ? " haupt" : ""}" onclick="nzAdmin(${t})">${t} Tage</button>`).join("")}<button class="knopf klein" onclick="spurAdmin(heuteIso(), null)">👣 Wege der Mitglieder</button>${INFO_DATEN.admin?.r ? `<button class="knopf klein" onclick="adminBlatt()">‹ Admin-Zentrale</button>` : ""}</div>
+    <div class="knoepfe">${[7, 30, 90].map((t) => `<button class="knopf klein${r.tage === t ? " haupt" : ""}" onclick="nzAdmin(${t})">${t} Tage</button>`).join("")}<button class="knopf klein" onclick="spurAdmin(heuteIso(), null)">👣 Wege der Mitglieder</button><button class="knopf klein" onclick="startStatistik(30)">⏱️ Startstatistik</button>${INFO_DATEN.admin?.r ? `<button class="knopf klein" onclick="adminBlatt()">‹ Admin-Zentrale</button>` : ""}</div>
     <b>Insgesamt ${gesamt} Öffnungen in ${r.tage} Tagen${r.geraeteGesamt == null ? " · 👤 unbekannt" : r.geraeteGesamt ? ` · 👤 ${r.geraeteGesamt} verschiedene Geräte (≈ Mitglieder${r.mitglieder ? `, ${r.mitglieder} im Club` : ""})` : ""}</b>
     <span class="hinweis" style="margin:0">👤 = verschiedene Mitglieder (genau: Geräte – wer Handy und Tablet nutzt, zählt doppelt). Gezählt ab Version 2.6.0. <span class="nz-wer nur1">👤 1</span> = nur ein einziges Mitglied. Bei 30/90 Tagen zählen die Öffnungen auch aus der Zeit davor.</span><span class="hinweis" style="margin:0">↳ = Teilbereich (z. B. Büro → Eingang). Die Zahl beim Hauptbereich zählt nur das Öffnen selbst.</span>
     <div class="nz-tage" title="Öffnungen je Tag">${tagListe.map(([t, n]) => `<div title="${esc(t.slice(8) + "." + t.slice(5, 7) + ".: " + n)}"><i style="height:${Math.round(n / tmax * 100)}%"></i></div>`).join("")}</div>

@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.31.0 – 2026-10-06 – Startstatistik für den Admin
+KC-CLUB-STARTSTATISTIK: Jeder App-Start wird mit Zeitpunkt, Dauer (Teile: Seite, Programm, Server, Anzeige), Gerät, Browser, App/Browser, Netz und Version gemeldet; Admin → Nutzung → ⏱️ Startstatistik mit 7/30/90/180 Tagen, Filter Mitglied/Gerät, Übersicht je Mitglied, je Gerät/Browser, je Netz und Starts einzeln (grün/gelb/rot). Aufbewahrung 180 Tage.
+
 ## 2.30.1 – 2026-10-06 – Abgesagte Schulungen im Kalender, Begrüßen-Knopf
 KC-CLUB-SCHULUNG-ABGESAGT-KALENDER: abgesagte Schulungstermine bleiben im Kalender – grau, durchgestrichen, „❌ abgesagt“; Handy-Abo CANCELLED; Google-Kalender „❌ Abgesagt: KC-Besuch Name“ in Rot. KC-CLUB-WILLKOMMEN-BEGRUESSEN: am Willkommens-Zettel „💐 Ich möchte auch begrüßen“ → Chat mit dem neuen Mitglied, Anfang eingetragen.
 

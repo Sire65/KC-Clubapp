@@ -4939,6 +4939,19 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/💐 Ich möchte auch begrüßen/.test(html) && /await direkt\(w\.person_id\);/.test(html) && /Herzlich willkommen\$\{w\.vorname \? ", " \+ w\.vorname : ""\}! 💐 /.test(html), "Knopf öffnet den Chat, Anfang eingetragen, nichts wird von selbst gesendet");
   assert.ok(/z\.willkommen\.person_id !== ICH\?\.person_id/.test(html), "das neue Mitglied selbst sieht den Knopf nicht");
 }
+// 2.31.0 KC-CLUB-STARTSTATISTIK: jeder App-Start mit Dauer, Gerät, Browser; Ansicht nur Admin, 180 Tage
+{
+  const m = server.slice(server.indexOf('case "start_melden": {'), server.indexOf('case "start_statistik": {'));
+  assert.ok(/protokoll\(ich\.person_id, "app_start", d\)/.test(m) && /startZahl\(p\.ms\)/.test(m) && /startText\(p\.system\)/.test(m) && !/userAgent|ua:/.test(m), "nur Zahlen und grobe Namen, kein vollständiger Browser-Text");
+  assert.ok(!/FP_FILTER = "[^"]*app_start/.test(server), "nicht im Fehlerprotokoll (wird dort nicht mitgelöscht)");
+  const st = server.slice(server.indexOf('case "start_statistik": {'), server.indexOf('case "spur_liste": {'));
+  assert.ok(/nurAdmin\(ich\);/.test(st) && /not\("person_id", "like", "KC-P-TEST%"\)/.test(st), "nur Admin, ohne Testpersonen");
+  assert.ok(/delete\(\)\.eq\("aktion", "app_start"\)\.lt\("zeit", new Date\(Date\.now\(\) - START_TAGE \* 86400000\)/.test(server) && /const START_TAGE = 180;/.test(server), "nach 180 Tagen gelöscht");
+  assert.ok(/api\("start_melden", \{ ms: eintrag\.ges, teile: p,/.test(html) && /system: fpSystem\(\), browser: fpBrowser\(\)/.test(html), "App meldet jeden Start");
+  assert.ok(/onclick="startStatistik\(30\)">⏱️ Startstatistik/.test(html) && /Je Mitglied/.test(html) && /Je Gerät und Browser/.test(html) && /Starts einzeln/.test(html), "Ansicht unter Nutzung");
+  assert.ok(/API_LESEN = [^\n]*\.\*_statistik/.test(html), "Statistik zählt als Lesen");
+  assert.ok(/Außerdem 180 Tage lang jeden App-Start/.test(html), "Hilfe nennt die Aufzeichnung");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
