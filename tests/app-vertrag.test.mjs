@@ -5002,6 +5002,28 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/<small class="md-zahl">\$\{m\.chatAnzahl\}/.test(html) && /ICH\?\.admin \? `<button class="knopf" onclick="nachrichtenStatistik\('\$\{m\.person_id\}'\)">/.test(html), "Mitgliederseite: Zahl + Statistik (nur Admin)");
   assert.ok(/onclick="nachrichtenStatistik\(\)">📨 Nachrichten<\/button>/.test(html) && /Je Tag/.test(html) && /Uhrzeit/.test(html) && /Die letzten 20/.test(html), "Statistik unter Nutzung mit Tagen, Uhrzeit, letzten 20");
 }
+// 2.35.0 KC-CLUB-SCHULUNG-NACHFRAGE: Besuch – Gerät (Notebook, Leihgerät), Programme; 4 Wochen danach Erinnerung an Hansi, Senden mit einem Tipp
+{
+  const mig = lies("supabase/migrations/20261007_kc_club_v2350_besuch_programme_nachfrage.sql");
+  assert.ok(/'notebook', 'leih'/.test(mig) && /add column if not exists programme text\[\]/.test(mig) && /nachfrage_gesendet_am/.test(mig) && /Rückweg:/.test(mig), "Migration mit Rückweg");
+  assert.ok(/"zusammenfassung_senden", "schulung_thema", "installiert_auf", "programme"\]/.test(server) && /filter\(\(g\) => g in SCHULUNG_PROGRAMME\)/.test(server), "Programme gespeichert, nur bekannte");
+  const f = server.slice(server.indexOf("async function schulungNachfrageFaellig()"), server.indexOf("async function schulungNachfrageErinnern()"));
+  assert.ok(/eq\("status", "fertig"\)/.test(f) && /is\("nachfrage_gesendet_am", null\)/.test(f) && /eq\("nachfrage_aus", false\)/.test(f) && /includes\("leih"\)/.test(f), "fällig: fertig, 4 Wochen, nicht gesendet, Leihgerät wartet");
+  const e0 = server.indexOf("async function schulungNachfrageErinnern()"), e = server.slice(e0, server.indexOf("\n}\n", e0));
+  assert.ok(/const ziel = await adminIds\(\)/.test(e) && /nachfrage_erinnert_am: jetzt\(\)/.test(e) && !/nachricht_senden|b\.person_ids/.test(e), "Erinnerung nur an den Admin, nie automatisch an Mitglieder");
+  assert.ok(/await api\("nachricht_senden", \{ text, wege: \["push"\], empfaenger: \{ personen: b\.person_ids/.test(html) && /if \(!\(await frage\(`Nachfrage an \$\{b\.mitglied\} jetzt senden\?`/.test(html), "Senden nur nach Bestätigung durch Hansi");
+  const a = html.indexOf("const NF_GERAET"), b2 = html.indexOf("async function scNachfrage(bid)");
+  const T = new Function("BS", "MITGLIEDER", "ICH", "adminName", "heuteIso", "tagPlus", html.slice(a, b2) + "\nreturn { scNachfrageText, scNachfrageFaellig };");
+  const bs = { programme: { bilderrechner: ["🖼️", "Bilderrechner", "den Bilderrechner"], clubapp: ["📱", "Köcheclub-App", "die Köcheclub-App"] },
+    mitglieder: [{ person_id: "A", given_name: "Klaus" }, { person_id: "B", given_name: "Dieter" }, { person_id: "C", given_name: "Marianne" }], liste: [] };
+  const R = T(bs, [], { vorname: "Hansi" }, () => "Hansi", () => "2026-10-20", (d, n) => { const x = new Date(d + "T12:00:00Z"); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); });
+  const t1 = R.scNachfrageText({ person_ids: ["C"], datum: "2026-09-21", programme: ["bilderrechner"], installiert_auf: ["tablet"] });
+  assert.ok(/^Hallo Marianne,/.test(t1) && /am 21\.09\.2026, haben wir uns gemeinsam den Bilderrechner angesehen, und ich habe dir die Schulungsversion auf deinem Tablet eingerichtet\./.test(t1) && /Liebe Grüße\nHansi$/.test(t1), "Einzeltext");
+  const t2 = R.scNachfrageText({ person_ids: ["A", "B"], datum: "2026-09-24", programme: ["bilderrechner", "clubapp"], installiert_auf: ["notebook"] });
+  assert.ok(/^Hallo Klaus und Dieter,/.test(t2) && /den Bilderrechner und die Köcheclub-App/.test(t2) && /euch die Schulungsversion auf eurem Notebook/.test(t2) && /ihr kommt beim Üben/.test(t2), "Ihr-Form bei zweien");
+  bs.liste = [{ status: "fertig", datum: "2026-09-21", installiert_auf: ["tablet"] }, { status: "fertig", datum: "2026-09-30", installiert_auf: ["leih"] }, { status: "fertig", datum: "2026-10-06", installiert_auf: [] }, { status: "fertig", datum: "2026-09-20", nachfrage_gesendet_am: "x" }];
+  assert.equal(R.scNachfrageFaellig().length, 1, "nur fällige: 4 Wochen um, Leihgerät wartet, schon gesendet fällt weg");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.34.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.35.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -14550,6 +14550,52 @@ function taVorschlagBlatt(id, pid, wahl) {
     catch (err) { this.disabled = false; meldeFehler(err); }
   };
 }
+// ---------- KC-CLUB-SCHULUNG-NACHFRAGE (2.35.0, Wunsch Hansi): 4 Wochen nach der Schulung nachfragen – Hansi wird erinnert,
+// sieht den fertigen Text, kann ihn ändern und sendet mit einem Tipp (nie automatisch an Mitglieder). Als Club-Nachricht mit Push;
+// wer keinen Push hat, bekommt die Nachricht wie jede Club-Nachricht per E-Mail.
+const NF_GERAET = { tablet: "Tablet", notebook: "Notebook", pc: "PC", handy: "Handy" };
+function scNachfrageFaellig() {
+  const bis = tagPlus(heuteIso(), -28);
+  return (BS.liste || []).filter((b) => b.status === "fertig" && b.datum <= bis && b.datum >= "2026-09-01" && !b.nachfrage_gesendet_am && !b.nachfrage_aus
+    && (!(b.installiert_auf || []).includes("leih") || (b.installiert_auf || []).some((g) => g !== "leih")));
+}
+const nfListe = (l) => (l.length < 2 ? l.join("") : l.slice(0, -1).join(", ") + " und " + l[l.length - 1]);
+function scNachfrageText(b) {
+  const leute = (b.person_ids || []).map((id) => (BS.mitglieder || []).find((m) => m.person_id === id) || (MITGLIEDER || []).find((m) => m.person_id === id)).filter(Boolean);
+  const vn = leute.map((m) => m.given_name || m.vorname || String(m.display_name || m.name || "").split(" ")[0]).filter(Boolean), ihr = vn.length > 1;
+  const datum = b.datum.split("-").reverse().join("."), prog = (b.programme || []).map((g) => BS.programme?.[g]?.[2]).filter(Boolean);
+  const geraete = (b.installiert_auf || []).filter((g) => NF_GERAET[g]).map((g) => NF_GERAET[g]);
+  return [`Hallo ${nfListe(vn) || "zusammen"},`, "",
+    `vor vier Wochen, am ${datum}, haben wir uns gemeinsam ${prog.length ? nfListe(prog) : "unsere Programme"} angesehen${geraete.length ? `, und ich habe ${ihr ? "euch" : "dir"} die Schulungsversion auf ${ihr ? "eurem" : "deinem"} ${nfListe(geraete)} eingerichtet` : ""}.`, "",
+    `Ich hoffe, alles läuft gut und ${ihr ? "ihr kommt" : "du kommst"} beim Üben gut voran.`, "",
+    `Damit wir beim Weihnachtsmarkt ein stabiles und gut laufendes System haben, bin ich für jede Rückmeldung dankbar. Wenn ${ihr ? "euch" : "dir"} etwas auffällt, etwas nicht klappt oder ${ihr ? "ihr euch" : "du dir"} etwas anders ${ihr ? "wünscht, sagt" : "wünschst, sag"} mir einfach Bescheid – gern direkt hier als Antwort.`, "",
+    `Vielen Dank für ${ihr ? "eure" : "deine"} Mitarbeit!`, "", "Liebe Grüße", ICH?.vorname || adminName()].join("\n");
+}
+async function scNachfrage(bid) {
+  if (!BS.liste.length || !BS.programme || !Object.keys(BS.programme).length) await bsLaden();
+  const b = BS.liste.find((x) => x.besuch_id === bid); if (!b) return melde("Besuch nicht gefunden.", true);
+  const f = blattAuf("scNfBlatt", `<h3 style="margin:0">📨 Nachfrage nach der Schulung</h3>
+    <p style="margin:4px 0"><b>${esc(b.mitglied)}</b> <span class="hinweis">· Schulung am ${esc(b.datum.split("-").reverse().join("."))}</span></p>
+    <label class="feld">Text (du kannst ihn ändern)<textarea id="scNfText" rows="14" data-diktat>${esc(scNachfrageText(b))}</textarea></label>
+    <p class="hinweis" style="margin:4px 0">Geht als Club-Nachricht von dir mit 🔔 Push. Wer keinen Push hat, bekommt sie per E-Mail.</p>
+    <div class="knoepfe bs-fuss"><button class="knopf haupt" id="scNfSenden">📨 Senden</button><button class="knopf" id="scNfAus">Nicht nötig</button><button class="knopf" onclick="$('scNfBlatt').remove()">Später</button></div>`);
+  f.style.zIndex = "2100"; f.classList.add("sc-blatt"); f.onclick = null;
+  $("scNfSenden").onclick = async () => {
+    const text = $("scNfText").value.trim(), k = $("scNfSenden"); if (!text) return melde("Bitte einen Text schreiben.", true);
+    if (!(await frage(`Nachfrage an ${b.mitglied} jetzt senden?`, { ja: "📨 Senden", gefahr: false }))) return;
+    k.disabled = true; k.textContent = "Wird gesendet …";
+    try {
+      await api("nachricht_senden", { text, wege: ["push"], empfaenger: { personen: b.person_ids || [], aemter: [], alle: false, vorstand: false }, betreff: "" }, { warten: true });
+      await api("besuch", { a: "nachfrage_erledigt", besuch_id: b.besuch_id }, { warten: true }); b.nachfrage_gesendet_am = new Date().toISOString();
+      $("scNfBlatt")?.remove(); melde(`📨 Nachfrage an ${b.mitglied} ist raus`); if ($("scBlatt")) scZeigen?.();
+    } catch (e) { meldeFehler(e); k.disabled = false; k.textContent = "📨 Senden"; }
+  };
+  $("scNfAus").onclick = async () => {
+    if (!(await frage(`Für ${b.mitglied} keine Nachfrage senden?\nDie Erinnerung verschwindet dann.`, { ja: "Keine Nachfrage", nein: "Zurück" }))) return;
+    try { await api("besuch", { a: "nachfrage_erledigt", besuch_id: b.besuch_id, aus: true }, { warten: true }); b.nachfrage_aus = true; $("scNfBlatt")?.remove(); melde("Erledigt – keine Nachfrage"); if ($("scBlatt")) scZeigen?.(); }
+    catch (e) { meldeFehler(e); }
+  };
+}
 // ---------- KC-CLUB-SCHULUNG-ADMIN (2.23.60, Wunsch Hansi): „🎓 Schulungen“ – das Termin-Programm als Admin-Bereich der Club-App ----------
 // Termine anbieten, Mitglieder einladen (einzeln oder gemeinsam bis 3), Antworten freigeben, Gegenvorschläge, Chronologie.
 // Bedienung hier, Logik im vorhandenen Termin-Baustein (Server: Aktion „schulung“ → kc-termine). Mitglieder ohne Club-App wählen
@@ -14591,6 +14637,7 @@ function scZeigen() {
   const offen = z.querySelectorAll("details[open]"), auf = new Set([...offen].map((d) => d.dataset.k));
   z.innerHTML = `
     <div class="karte"><h4>⏳ Wartet auf dich</h4><div id="scWartet"></div></div>
+    ${scNachfrageFaellig().length ? `<div class="karte sc-nachfrage"><b>📨 4 Wochen um – Nachfrage senden?</b>${scNachfrageFaellig().map((b) => `<div class="sc-eintrag"><b>${esc(b.mitglied)}</b> <span class="hinweis">Schulung am ${esc(b.datum.split("-").reverse().join("."))}</span><div class="knoepfe"><button class="knopf haupt klein" onclick="scNachfrage('${esc(b.besuch_id)}')">📨 Ansehen & senden</button></div></div>`).join("")}</div>` : ""}
     <details class="karte" data-k="termine" open><summary><b>📅 Meine Termine</b></summary><div id="scTermine"></div></details>
     <details class="karte" data-k="einladen"${auf.has("einladen") ? " open" : ""}><summary><b>✉️ Mitglieder einladen</b></summary>
       <input id="scSuche" type="search" placeholder="🔍 Name suchen …" oninput="scMitglieder()" style="margin:6px 0">
@@ -15083,7 +15130,7 @@ async function scChronik(eid) {
 // Liste mit Stunden/km, neuer Besuch, bearbeiten, „📅 Geplant“ (mit Terminbestätigung über den Termin-Baustein), Gesprächspunkte 1–7,
 // Notizen, Foto vom Papierprotokoll (nur speichern – ohne Auswertung), Zusammenfassung ans Mitglied (Push + Mail, BCC an dich,
 // Kopie in seinen Archiv-Ordner). Gleiche Daten wie im bisherigen Besuchsprotokoll.
-const BS = { liste: [], mitglieder: [], anreden: {}, jahr: "", f: null };
+const BS = { liste: [], mitglieder: [], anreden: {}, jahr: "", f: null, programme: {} }; // 2.35.0: programme = Liste vom Server (Kennung → [Symbol, Name, „den …“])
 const BS_FRAGEN = [
   { f: "f1_praesentation", t: "1 · Weihnachtsmarkt-Präsentation: welche Gestaltung?", o: [["rathaus", "Rathaus"], ["rot", "Rote Version"], ["offen", "Noch offen"]] },
   { f: "f2_bild_spruch", t: "2 · Mit Bild und Spruch in der Präsentation?", o: [["ja", "Ja"], ["nein", "Nein"], ["klaeren", "Noch klären"]] },
@@ -15092,13 +15139,13 @@ const BS_FRAGEN = [
   { f: "f5_verwaltung", t: "5 · KC Verwaltung einsetzen?", o: [["ja", "Ja"], ["nein", "Nein"], ["spaeter", "Später"]] },
   { f: "f6_router", t: "6 · Stand vernetzen mit 5G-Router?", o: [["ja", "Ja"], ["nein", "Nein"], ["spaeter", "Später"]] },
 ];
-const BS_GERAETE = [["tablet", "📱 Tablet"], ["pc", "💻 PC"], ["handy", "📞 Handy"]];
+const BS_GERAETE = [["tablet", "📱 Tablet"], ["notebook", "💻 Notebook"], ["pc", "🖥️ PC"], ["handy", "📞 Handy"], ["leih", "📦 Leihgerät folgt"]]; // 2.35.0: Notebook, Leihgerät
 const bsHm = (min) => Math.floor(min / 60) + ":" + String(min % 60).padStart(2, "0");
 const bsKm = (x) => Number(x || 0).toLocaleString("de-DE", { maximumFractionDigits: 1 });
 // bestätigter Termin zum Besuch (aus dem Termin-Baustein; 2.23.65 wie im alten Programm)
 function bsTermin(bid) { const b = bid && SC.T?.buchungen.find((x) => x.besuch_id === bid && x.status === "bestaetigt"); return b ? { buchung: b, slot: scSlot(b.slot_id) } : null; }
 async function bsLaden() {
-  try { const r = await api("besuch", { a: "liste" }, { warten: true }); BS.liste = r.besuche || []; BS.mitglieder = r.mitglieder || []; BS.anreden = r.anreden || {}; }
+  try { const r = await api("besuch", { a: "liste" }, { warten: true }); BS.liste = r.besuche || []; BS.mitglieder = r.mitglieder || []; BS.anreden = r.anreden || {}; BS.programme = r.programme || BS.programme; }
   catch (e) { meldeFehler(e); }
 }
 function bsListeHtml() {
@@ -15127,7 +15174,7 @@ function bsFormular(id, vorgabe = {}) {
   const b = id ? BS.liste.find((x) => x.besuch_id === id) : null;
   const heute = heuteIso();
   BS.f = { id: b?.besuch_id || null, art: b?.besuchsart || vorgabe.art || "beim_mitglied", personen: [...(b?.person_ids || vorgabe.personen || [])],
-    antworten: Object.fromEntries(BS_FRAGEN.map((q) => [q.f, b?.[q.f] || null])), geraete: [...(b?.installiert_auf || [])], fotos: [...(b?.fotos || [])], neueFotos: [],
+    antworten: Object.fromEntries(BS_FRAGEN.map((q) => [q.f, b?.[q.f] || null])), geraete: [...(b?.installiert_auf || [])], programme: [...(b?.programme || vorgabe.programme || [])], fotos: [...(b?.fotos || [])], neueFotos: [],
     geplant: b ? b.status === "geplant" && b.datum > heute : !!vorgabe.geplant || (vorgabe.datum || heute) > heute, // 2.23.63: Tag vorbei → Besuch hat stattgefunden
     gesendet: b ? [b.push_gesendet_am && "Push " + zeitKurz(b.push_gesendet_am), b.mail_gesendet_am && "Mail " + zeitKurz(b.mail_gesendet_am)].filter(Boolean).join(" · ") : "" };
   const w = (k, d = "") => esc(b?.[k] ?? vorgabe[k] ?? d);
@@ -15151,6 +15198,7 @@ function bsFormular(id, vorgabe = {}) {
       <div class="bs-frage"><b>7 · Weiterer Punkt</b><div class="zwei"><label class="feld">Thema<input id="bsF7Thema" value="${w("f7_thema")}"></label><label class="feld">Ergebnis<input id="bsF7Antwort" value="${w("f7_antwort")}"></label></div></div>
       <label class="feld">Worin geschult (für den Dank-Text, freiwillig)<input id="bsThema" value="${w("schulung_thema")}" placeholder="z. B. das Kassensystem"></label>
       <div class="bs-frage"><b>Schulungsversion installiert auf</b><div class="hl-chips" id="bsGeraete"></div></div>
+      <div class="bs-frage"><b>Programme installiert / gezeigt</b><div class="hl-chips" id="bsProgramme"></div><div class="hinweis" style="margin:2px 0 0">Steht im Text der 4-Wochen-Nachfrage.</div></div>
       <h4>Notizen</h4>
       <label class="feld">Notizen und Stichpunkte<textarea id="bsNotizen" data-diktat rows="3">${w("notizen")}</textarea></label>
       <label class="feld">Vereinbarungen und nächste Schritte<textarea id="bsVereinb" data-diktat rows="3">${w("vereinbarungen")}</textarea></label>
@@ -15169,13 +15217,13 @@ function bsFormular(id, vorgabe = {}) {
 const BS_ENTWURF = "kc_club_bs_entwurf", BS_TEXTE = ["bsMitglied", "bsOrt", "bsAnwesende", "bsDatum", "bsVon", "bsBis", "bsKm", "bsSpruch", "bsF7Thema", "bsF7Antwort", "bsThema", "bsNotizen", "bsVereinb", "bsBem"];
 function bsEntwurfSichern() {
   if (!BS.f || BS.f.id || !$("bsBlatt")) return;
-  lsSetzen(BS_ENTWURF, JSON.stringify({ felder: Object.fromEntries(BS_TEXTE.map((id) => [id, $(id)?.value || ""])), antworten: BS.f.antworten, personen: BS.f.personen, art: BS.f.art, geraete: BS.f.geraete, geplant: BS.f.geplant }));
+  lsSetzen(BS_ENTWURF, JSON.stringify({ felder: Object.fromEntries(BS_TEXTE.map((id) => [id, $(id)?.value || ""])), antworten: BS.f.antworten, personen: BS.f.personen, art: BS.f.art, geraete: BS.f.geraete, programme: BS.f.programme, geplant: BS.f.geplant }));
 }
 function bsEntwurfLaden() {
   let e = null; try { e = JSON.parse(lsLesen(BS_ENTWURF) || "null"); } catch {}
   if (!e || !Object.values(e.felder || {}).some((v) => v && v !== heuteIso())) return;
   Object.entries(e.felder).forEach(([id, v]) => { if ($(id) && v) $(id).value = v; });
-  Object.assign(BS.f, { antworten: { ...BS.f.antworten, ...(e.antworten || {}) }, personen: e.personen || [], art: e.art || BS.f.art, geraete: e.geraete || [], geplant: !!e.geplant });
+  Object.assign(BS.f, { antworten: { ...BS.f.antworten, ...(e.antworten || {}) }, personen: e.personen || [], art: e.art || BS.f.art, geraete: e.geraete || [], programme: e.programme || BS.f.programme || [], geplant: !!e.geplant });
   const h = document.createElement("div"); h.className = "karte"; h.id = "bsEntwurfHinweis";
   h.innerHTML = `📝 Dein nicht gespeicherter Entwurf ist wieder da. <button type="button" class="knopf klein" onclick="bsEntwurfWeg()">🗑️ Entwurf verwerfen</button>`;
   $("bsBlatt").querySelector("h3").after(h);
@@ -15216,6 +15264,7 @@ function bsZeigen() {
   $("bsPersonen").innerHTML = F.personen.map((p) => `<button type="button" class="chip an" onclick="BS.f.personen=BS.f.personen.filter((x)=>x!=='${p}');bsNamen();bsZeigen()">${esc(BS.mitglieder.find((m) => m.person_id === p)?.display_name || p)} ✕</button>`).join("");
   document.querySelectorAll("#bsBlatt [data-feld]").forEach((w) => w.querySelectorAll(".chip").forEach((c) => c.classList.toggle("an", F.antworten[w.dataset.feld] === c.dataset.w)));
   $("bsSpruchFeld").classList.toggle("versteckt", F.antworten.f2_bild_spruch !== "ja");
+  $("bsProgramme").innerHTML = Object.entries(BS.programme || {}).map(([g, [sym, t]]) => `<button type="button" class="chip${F.programme.includes(g) ? " an" : ""}" onclick="BS.f.programme=BS.f.programme.includes('${g}')?BS.f.programme.filter((x)=>x!=='${g}'):[...BS.f.programme,'${g}'];bsZeigen()">${sym} ${esc(t)}</button>`).join("") || '<span class="hinweis">Liste wird geladen …</span>';
   $("bsGeraete").innerHTML = BS_GERAETE.map(([g, t]) => `<button type="button" class="chip${F.geraete.includes(g) ? " an" : ""}" onclick="BS.f.geraete=BS.f.geraete.includes('${g}')?BS.f.geraete.filter((x)=>x!=='${g}'):[...BS.f.geraete,'${g}'];bsZeigen()">${t}</button>`).join("");
   $("bsGeplant").checked = F.geplant; $("bsInhalt").classList.toggle("versteckt", F.geplant); $("bsKmFeld").classList.toggle("versteckt", F.art === "bei_hansi");
   $("bsFotos").innerHTML = F.fotos.map((p) => `<span class="chip"><button type="button" class="tw-nicht" onclick="bsFotoOeffnen('${esc(p)}')">📄 ansehen</button> <button type="button" class="tw-nicht" onclick="bsFotoWeg('${esc(p)}')">✕</button></span>`).join("")
@@ -15259,7 +15308,7 @@ async function bsSpeichern(k) {
   const d = { mitglied: $("bsMitglied").value.trim(), ort: $("bsOrt").value.trim(), anwesende: $("bsAnwesende").value.trim(), datum: $("bsDatum").value,
     zeit_von: $("bsVon").value || null, zeit_bis: $("bsBis").value || null, km_einfach: F.art === "bei_hansi" ? null : km, person_ids: F.personen, besuchsart: F.art,
     f2_spruch: F.antworten.f2_bild_spruch === "ja" ? $("bsSpruch").value.trim() : null, f7_thema: $("bsF7Thema").value.trim(), f7_antwort: $("bsF7Antwort").value.trim(),
-    schulung_thema: $("bsThema").value.trim(), installiert_auf: F.geraete, notizen: $("bsNotizen").value.trim(), vereinbarungen: $("bsVereinb").value.trim(), bemerkungen: $("bsBem").value.trim(),
+    schulung_thema: $("bsThema").value.trim(), installiert_auf: F.geraete, programme: F.programme, notizen: $("bsNotizen").value.trim(), vereinbarungen: $("bsVereinb").value.trim(), bemerkungen: $("bsBem").value.trim(),
     ...Object.fromEntries(BS_FRAGEN.map((q) => [q.f, F.antworten[q.f] || null])) };
   if (!d.mitglied) return melde("✍️ Bitte eintragen, bei wem du warst.", true);
   if (!d.datum) return melde("📅 Bitte das Datum eintragen.", true);
@@ -15394,7 +15443,7 @@ async function smHinweisPruefen() {
 const SCHU_KEY = "kc_club_sch_hinweis", SCHU_SEIT = "kc_club_sch_seit";
 const SCHU_NEU = { link_geoeffnet: "👀 hat den Link geöffnet", termin_gewaehlt: "⏳ hat einen Termin gewählt", gegenvorschlag: "💬 schlägt einen anderen Termin vor",
   abgesagt: "✖ möchte zurzeit keinen Termin", antwort_zurueckgenommen: "🔄 wählt neu", frist_abgelaufen: "⌛ hat nicht geantwortet (Frist vorbei)", erinnerung_gesendet: "⏰ wurde an den Termin erinnert" };
-const SCHU_WARTET = { gewaehlt: "⏳ hat gewählt – bitte freigeben", gegenvorschlag: "💬 Gegenvorschlag – bitte entscheiden", abgelaufen: "⌛ keine Antwort – erneut einladen?", protokoll: "📝 Termin war – Protokoll fehlt" };
+const SCHU_WARTET = { gewaehlt: "⏳ hat gewählt – bitte freigeben", gegenvorschlag: "💬 Gegenvorschlag – bitte entscheiden", abgelaufen: "⌛ keine Antwort – erneut einladen?", protokoll: "📝 Termin war – Protokoll fehlt", nachfrage: "📨 4 Wochen um – Nachfrage senden?" };
 async function scHinweisPruefen() {
   if (!ICH?.admin || document.querySelector(".blatt:not(.versteckt)")) return;
   let ruhe = {}; try { ruhe = JSON.parse(lsLesen(SCHU_KEY) || "{}") || {}; } catch {}
@@ -15403,7 +15452,7 @@ async function scHinweisPruefen() {
   if ((!r.wartet?.length && !r.neu?.length && !r.bald?.length) || document.querySelector(".blatt:not(.versteckt)")) return;
   const tag = (iso) => { const t = berlinIso(iso); return t === heuteIso() ? "Heute" : t === tagPlus(heuteIso(), 1) ? "Morgen" : fTag.format(new Date(iso)); };
   const f = blattAuf("scHinweisBlatt", `<h3 style="margin:0">🎓 Schulungen</h3>
-    ${r.wartet?.length ? `<div class="karte"><b>Wartet auf dich (${r.wartet.length})</b>${r.wartet.map((w) => `<div>• <b>${esc(w.namen)}</b> ${SCHU_WARTET[w.art] || ""}${w.beginn ? ` <span class="hinweis">(${esc(tag(w.beginn))}, ${esc(fZeit.format(new Date(w.beginn)))})</span>` : ""}</div>`).join("")}</div>` : ""}
+    ${r.wartet?.length ? `<div class="karte"><b>Wartet auf dich (${r.wartet.length})</b>${r.wartet.map((w) => `<div>• <b>${esc(w.namen)}</b> ${SCHU_WARTET[w.art] || ""}${w.art === "nachfrage" ? ` <span class="hinweis">(Schulung ${esc(tag(w.beginn))})</span> <button class="knopf klein" style="margin:2px 0" onclick="$('scHinweisBlatt')?.remove();scNachfrage('${esc(w.besuch_id)}')">📨 Ansehen & senden</button>` : w.beginn ? ` <span class="hinweis">(${esc(tag(w.beginn))}, ${esc(fZeit.format(new Date(w.beginn)))})</span>` : ""}</div>`).join("")}</div>` : ""}
     ${r.bald?.length ? `<div class="karte"><b>📅 Steht an</b>${r.bald.map((x) => `<div>• <b>${esc(tag(x.beginn))} ${esc(fZeit.format(new Date(x.beginn)))}</b> ${esc(x.namen)} <span class="hinweis">${esc(x.art || "")}</span></div>`).join("")}</div>` : ""}
     ${r.neu?.length ? `<div class="karte"><b>Neu seit dem letzten Mal</b>${r.neu.slice(0, 8).map((x) => `<div>• <b>${esc(x.namen || "")}</b> ${SCHU_NEU[x.aktion] || esc(x.aktion)} <span class="hinweis">${esc(zeitKurz(x.zeit))}</span></div>`).join("")}</div>` : ""}
     <div class="knoepfe"><button class="knopf haupt" data-w="jetzt">👀 Jetzt ansehen</button><button class="knopf" data-w="spaeter">⏰ Später</button><button class="knopf" data-w="heute">🌙 Heute nicht mehr</button></div>`);

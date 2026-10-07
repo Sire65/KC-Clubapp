@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.35.0 – 2026-10-06 – Nachfrage 4 Wochen nach der Schulung
+KC-CLUB-SCHULUNG-NACHFRAGE (Wunsch Hansi): Besuchsprotokoll – installiert auf (neu: Notebook, Leihgerät folgt) und Programme (Bilderrechner, Köcheclub-App, Kasse, Dienstplan, KC Verwaltung, Präsentation). 4 Wochen nach der Schulung: Push an Hansi und Karte in 🎓 Schulungen „📨 Nachfrage senden?“ mit fertigem Text (änderbar, Ihr-Form bei zweien) – Senden mit einem Tipp als Club-Nachricht, oder „Nicht nötig“. Nie automatisch an Mitglieder.
+
 ## 2.34.0 – 2026-10-06 – Nachrichtenzahl und Nachrichten-Statistik
 KC-CLUB-NACHRICHTEN-ZAHL: Mitgliederseite „💬 Nachricht in der App – 37 Nachrichten“ (Einzelchat zwischen dir und dem Mitglied), Chatliste „💬 37“. KC-CLUB-NACHRICHTEN-STATISTIK (nur Admin): Mitgliederseite „📊 Statistik“ und Nutzung → „📨 Nachrichten“ – E-Mail, Push (angezeigt/geöffnet), Club-Nachrichten; 7/30/90 Tage/1 Jahr; Balken je Tag, Uhrzeit, die letzten 20 – nur Art, Zeit und Status, keine Inhalte.
 

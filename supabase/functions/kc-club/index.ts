@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.34.0";
+const SERVER_VERSION = "2.35.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -3414,7 +3414,8 @@ async function schulungStand(ich: Ich, seit: string | null) {
     ...(vb ?? []).filter((b: any) => alleE.get(b.einladung_id) && !alleE.get(b.einladung_id).ist_test)
       .map((b: any) => ({ art: "gewaehlt", namen: namen(alleE.get(b.einladung_id)), beginn: (vs ?? []).find((s: any) => s.id === b.slot_id)?.beginn || null })),
     ...(ei ?? []).map((e: any) => ({ art: e.status, namen: namen(e), beginn: null })),
-    ...(await schulungProtokollFehlt()).map((x: any) => ({ art: "protokoll", namen: x.namen, beginn: x.beginn }))]; // 2.23.69
+    ...(await schulungProtokollFehlt()).map((x: any) => ({ art: "protokoll", namen: x.namen, beginn: x.beginn })), // 2.23.69
+    ...(await schulungNachfrageFaellig()).map((b: any) => ({ art: "nachfrage", namen: b.mitglied, beginn: b.datum + "T12:00:00Z", besuch_id: b.besuch_id }))]; // 2.35.0
   const jetztMs = Date.now();
   const bald = (await schulungenListe(ich, new Date(jetztMs).toISOString(), new Date(jetztMs + 2 * 86400000).toISOString())).filter((x: any) => x.status === "bestaetigt")
     .map((x: any) => ({ beginn: x.beginn, ende: x.ende, namen: x.namen.join(" & "), art: x.art }));
@@ -3445,7 +3446,7 @@ async function schulungAufruf(a: string, daten: Record<string, unknown>) {
 // Zusammenfassung nach dem Besuch: Push + Mail (BCC an Hansi) über die Club-Benachrichtigung, Kopie in den Archiv-Ordner des Mitglieds.
 const BESUCH_FELDER = ["person_ids", "mitglied", "anwesende", "ort", "datum", "zeit_von", "zeit_bis", "km_einfach", "f1_praesentation", "f2_bild_spruch", "f2_spruch",
   "f3_kasse", "f4_dienstplan", "f5_verwaltung", "f6_router", "f7_thema", "f7_antwort", "notizen", "vereinbarungen", "bemerkungen", "status", "besuchsart",
-  "zusammenfassung_senden", "schulung_thema", "installiert_auf"];
+  "zusammenfassung_senden", "schulung_thema", "installiert_auf", "programme"];
 const BESUCH_BUCKET = "kc-besuche-fotos", BESUCH_REGISTER = "Schulung";
 const BESUCH_TEXTE: Record<string, [string, Record<string, string>]> = {
   f1_praesentation: ["Weihnachtsmarkt-Präsentation", { rathaus: "Rathaus-Version", rot: "Rote Version", offen: "noch offen" }],
@@ -3455,7 +3456,33 @@ const BESUCH_TEXTE: Record<string, [string, Record<string, string>]> = {
   f5_verwaltung: ["KC Verwaltung", { ja: "ja", nein: "nein", spaeter: "später entscheiden" }],
   f6_router: ["Stand-Vernetzung mit 5G-Router", { ja: "ja", nein: "nein", spaeter: "später entscheiden" }],
 };
-const BESUCH_GERAETE: Record<string, string> = { tablet: "Tablet", pc: "PC", handy: "Handy" };
+const BESUCH_GERAETE: Record<string, string> = { tablet: "Tablet", notebook: "Notebook", pc: "PC", handy: "Handy", leih: "Leihgerät (folgt)" }; // 2.35.0: Notebook, Leihgerät
+// KC-CLUB-SCHULUNG-NACHFRAGE (2.35.0, Wunsch Hansi): welche Programme gezeigt/installiert wurden – EINE Liste (die App bekommt sie vom Server)
+const SCHULUNG_PROGRAMME: Record<string, [string, string, string]> = { // Kennung → [Symbol, Name, „den/die/das …“ für den Nachfragetext]
+  bilderrechner: ["🖼️", "Bilderrechner", "den Bilderrechner"], clubapp: ["📱", "Köcheclub-App", "die Köcheclub-App"], kasse: ["🧾", "Kassenprogramm", "das Kassenprogramm"],
+  dienstplan: ["🗓️", "Dienstplan", "den Dienstplan"], verwaltung: ["🗂️", "KC Verwaltung", "die KC Verwaltung"], praesentation: ["🎄", "Weihnachtsmarkt-Präsentation", "die Weihnachtsmarkt-Präsentation"] };
+const NACHFRAGE_TAGE = 28;
+// fällig: fertiger Besuch vor ≥ 4 Wochen, noch nicht nachgefragt, nicht abgewählt; nur Leihgerät (noch nicht da) → noch warten
+async function schulungNachfrageFaellig() {
+  const bis = berlinTag(new Date(Date.now() - NACHFRAGE_TAGE * 86400000));
+  const { data, error } = await db.from("kc_besuche").select("besuch_id,person_ids,mitglied,datum,installiert_auf,programme,nachfrage_erinnert_am")
+    .eq("status", "fertig").lte("datum", bis).gte("datum", "2026-09-01").is("nachfrage_gesendet_am", null).eq("nachfrage_aus", false).limit(100);
+  if (error) return [];
+  return (data ?? []).filter((b: any) => !(b.installiert_auf ?? []).includes("leih") || (b.installiert_auf ?? []).some((g: string) => g !== "leih"));
+}
+// einmal je Besuch: Push/Mail an den Admin „Nachfrage fällig“ (gesendet wird nur von Hand, mit einem Tipp – nie automatisch an Mitglieder)
+async function schulungNachfrageErinnern() {
+  const f = (await schulungNachfrageFaellig()).filter((b: any) => !b.nachfrage_erinnert_am);
+  if (!f.length) return;
+  const ziel = await adminIds(); if (!ziel.length) return;
+  const namen = f.map((b: any) => `${b.mitglied} (Schulung ${String(b.datum).slice(8, 10)}.${String(b.datum).slice(5, 7)}.)`);
+  await sendenGewaehlt("club_nachricht", ziel, ["push"], { titel: `📨 4-Wochen-Nachfrage fällig: ${f.length === 1 ? f[0].mitglied : f.length + " Mitglieder"}`,
+    kurz: "In der App unter 🎓 Schulungen: Text ansehen und mit einem Tipp senden", betreff: "Köcheclub-App: Nachfrage nach der Schulung fällig",
+    text: `Hallo,\n\nfür diese Schulungen sind 4 Wochen um:\n${namen.map((n) => "• " + n).join("\n")}\n\nIn der App unter 🎓 Schulungen liegt der fertige Text – ansehen, ändern und mit einem Tipp senden.`,
+    url: APP_URL + "#schulungen" }, `club-nachfrage:${berlinTag(new Date())}:${f.map((b: any) => b.besuch_id).join(",")}`);
+  await db.from("kc_besuche").update({ nachfrage_erinnert_am: jetzt() }).in("besuch_id", f.map((b: any) => b.besuch_id));
+  await protokoll(null, "schulung_nachfrage_erinnert", { besuche: f.map((b: any) => b.besuch_id) });
+}
 const aufzaehlenUnd = (t: string[]) => (t.length > 1 ? t.slice(0, -1).join(", ") + " und " + t[t.length - 1] : (t[0] ?? ""));
 function besuchPunkte(b: any) {
   const pk: { titel: string; wert: string }[] = [];
@@ -3912,6 +3939,7 @@ Deno.serve(async (req) => {
       await aeUebernahmeMelden().catch((e) => console.error("aenderung uebernahme", String(e)));
       await wochenberichtLauf().catch((e) => console.error("wochenbericht", String(e))); // KC-CLUB-WOCHENBERICHT (2.23.81)
       await dbWarnungLauf().catch((e) => console.error("db warnung", String(e))); // KC-CLUB-DB-AUFRAEUMEN (2.24.7)
+      await schulungNachfrageErinnern().catch((e) => console.error("schulung nachfrage", String(e))); // KC-CLUB-SCHULUNG-NACHFRAGE (2.35.0)
       await ekDienstwunschMelden().catch((e) => console.error("eingang dienstwunsch", String(e))); /* KC-CLUB-EINGANGSKORB (2.23.6) */ /* KC-CLUB-AENDERUNG-FREIGABE (2.22.19) */ // KC-CLUB-STADT-TERMINE (2.22.6): wöchentlich, nur wenn eingeschaltet
       // KC-CLUB-SPUR (2.23.88): Wege der Mitglieder nur 30 Tage aufbewahren
       { const { error } = await db.from("kc_club_protokoll").delete().eq("aktion", "spur").lt("zeit", new Date(Date.now() - SPUR_TAGE * 86400000).toISOString()); if (error) console.error("spur loeschen", error.message); }
@@ -5778,7 +5806,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           const { data: tb } = bIds.length ? await db.from("kc_termin_buchungen").select("besuch_id,status").in("besuch_id", bIds) : { data: [] as any[] };
           for (const b of bes ?? []) { const st = (tb ?? []).filter((x: any) => x.besuch_id === b.besuch_id).map((x: any) => x.status);
             (b as any).termin = st.includes("bestaetigt") ? "bestaetigt" : st.includes("vorgemerkt") ? "vorgemerkt" : st.includes("storniert") ? "abgesagt" : null; }
-          return json({ besuche: bes ?? [], anreden: Object.fromEntries((anr ?? []).map((x: any) => [x.person_id, x.anrede])),
+          return json({ programme: SCHULUNG_PROGRAMME, nachfrageTage: NACHFRAGE_TAGE, besuche: bes ?? [], anreden: Object.fromEntries((anr ?? []).map((x: any) => [x.person_id, x.anrede])),
             mitglieder: (leute ?? []).map((m: any) => ({ person_id: m.person_id, display_name: m.display_name, given_name: m.given_name, family_name: m.family_name, hat_email: !!m.email,
               adresse: [m.street, [m.postal_code, m.city].filter(Boolean).join(" ")].filter(Boolean).join(", ") })) });
         }
@@ -5789,6 +5817,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           for (const f of ["notizen", "vereinbarungen", "bemerkungen"]) if (typeof row[f] === "string") row[f] = txt(row[f], 4000) || null;
           if (!row.mitglied || !row.datum || !/^\d{4}-\d{2}-\d{2}$/.test(String(row.datum))) throw new Fehler("Bitte eintragen, bei wem du warst, und das Datum.");
           if (row.person_ids !== undefined) row.person_ids = (Array.isArray(row.person_ids) ? row.person_ids : []).map(String).slice(0, 6);
+          if (row.installiert_auf !== undefined) row.installiert_auf = [...new Set((Array.isArray(row.installiert_auf) ? row.installiert_auf : []).map(String))].filter((g) => g in BESUCH_GERAETE);
+          if (row.programme !== undefined) row.programme = [...new Set((Array.isArray(row.programme) ? row.programme : []).map(String))].filter((g) => g in SCHULUNG_PROGRAMME).slice(0, 12); // 2.35.0
           if (row.km_einfach != null && !(Number(row.km_einfach) >= 0 && Number(row.km_einfach) < 1000)) throw new Fehler("Bitte bei km nur eine Zahl eintragen.");
           row.geaendert_am = jetzt();
           const id = p.besuch_id ? String(p.besuch_id) : null;
@@ -5804,6 +5834,14 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           const { data: neu } = await db.from("kc_besuche").select("*").eq("besuch_id", data.besuch_id).single();
           await protokoll(ich.person_id, "besuch_gespeichert", { besuch: data.besuch_id, status: data.status, versand: !!versand, termin: !!termin });
           return json({ besuch: neu ?? data, versand, termin });
+        }
+        // KC-CLUB-SCHULUNG-NACHFRAGE (2.35.0): Nachfrage wurde gesendet (die App schickt sie als Club-Nachricht) – oder „nicht nötig“
+        if (a === "nachfrage_erledigt") {
+          const id = String(p.besuch_id || ""), aus = p.aus === true;
+          const { data: b } = await db.from("kc_besuche").update(aus ? { nachfrage_aus: true } : { nachfrage_gesendet_am: jetzt() }).eq("besuch_id", id).select("besuch_id").maybeSingle();
+          if (!b) throw new Fehler("Besuch nicht gefunden.", 404);
+          await protokoll(ich.person_id, aus ? "schulung_nachfrage_aus" : "schulung_nachfrage_gesendet", { besuch: id });
+          return json({ ok: true });
         }
         if (a === "anrede") {
           if (!["Lieber", "Liebe"].includes(String(p.anrede))) throw new Fehler("Anrede ungültig.");
@@ -5846,7 +5884,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const { action: _x, a: _y, ...daten } = p as Record<string, unknown>;
         const j = await schulungAufruf(a, daten);
         if (a === "t_init") {
-          const { data: bes } = await db.from("kc_besuche").select("besuch_id,person_ids,status,datum").order("datum", { ascending: false }).limit(500);
+          const { data: bes } = await db.from("kc_besuche").select("besuch_id,person_ids,status,datum,mitglied,installiert_auf,programme,nachfrage_gesendet_am,nachfrage_aus").order("datum", { ascending: false }).limit(500);
           j.besuche = bes ?? [];
           j.versandstand = await schulungVersandstand(j, ich); // KC-CLUB-SCHULUNG-VERSANDSTAND (2.25.2)
           j.mitglieder = (j.mitglieder ?? []).map((m: any) => ({ person_id: m.person_id, display_name: m.display_name, given_name: m.given_name, family_name: m.family_name, hat_email: !!m.hat_email, test: !!m.test }));
