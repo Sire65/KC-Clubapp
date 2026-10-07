@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.29.0";
+const SERVER_VERSION = "2.30.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -4321,7 +4321,37 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         return json({ code, bis, minuten: KURZCODE_MIN });
       }
       case "init": {
-        await willkommenZettel(ich).catch((e) => console.error("willkommen", String(e))); // KC-CLUB-WILLKOMMEN-PINNWAND (2.29.0)
+        // KC-CLUB-START-PARALLEL (2.30.0, Fall Klara: 2–10 s Serverzeit im schwachen Netz): alle unabhängigen Abfragen sofort
+        // gleichzeitig starten statt ~20 Runden nacheinander – Inhalt der Antwort bleibt genau gleich.
+        const pWillkommen = willkommenZettel(ich).catch((e) => console.error("willkommen", String(e))); // KC-CLUB-WILLKOMMEN-PINNWAND (2.29.0)
+        const pPk = Promise.resolve(db.rpc("kc_communication_get_server_secret", { p_name: "kc_communication_vapid_public_key" }));
+        const pStatus = statusMap([ich.person_id]);
+        const pAbst = (async () => {
+          const { data: abstAlle } = await db.from("kc_club_vorschlaege").select("id,ziel_ids").eq("status", "offen").eq("art", "abstimmung");
+          const abst = (abstAlle ?? []).filter((x: any) => !x.ziel_ids || x.ziel_ids.includes(ich.person_id)); // KC-CLUB-ABSTIMMUNG-ZIEL
+          const { data: meineSt } = (abst ?? []).length ? await db.from("kc_club_stimmen").select("vorschlag_id").eq("person_id", ich.person_id).in("vorschlag_id", (abst ?? []).map((x: any) => x.id)) : { data: [] as any[] };
+          return (abst ?? []).length - (meineSt ?? []).length;
+        })();
+        const pNd = Promise.resolve(db.from("kc_dp_plan_published").select("work_date,start_time,end_time,area").eq("org_id", ORG).eq("status", "published")
+          .eq("person_id", ich.person_id).gte("work_date", berlinTag(new Date())).order("work_date").order("start_time").limit(1));
+        const pWahlPm = Promise.all([
+          db.from("kc_club_benachrichtigung").select("bereich,push,email").eq("person_id", ich.person_id),
+          db.from("kc_core_people").select("email").eq("person_id", ich.person_id).maybeSingle(),
+        ]);
+        const pGeb = geburtstageSichtbar(ich);
+        const pGfs = Promise.resolve(db.from("kc_club_freigaben").select("bereich,erlaubt").eq("person_id", ich.person_id).in("bereich", ["geburtstag", "runder_geburtstag"]));
+        const pKf = Promise.resolve(db.from("kc_club_freigaben").select("bereich,erlaubt").eq("person_id", ich.person_id).like("bereich", "kontakt_%"));
+        const pSpiele = Promise.resolve(db.from("kc_club_spiele").select("id", { count: "exact", head: true })
+          .or(`and(status.eq.laeuft,dran.eq.${ich.person_id}),and(status.eq.angefragt,an.eq.${ich.person_id})`));
+        const pKz = kachelZahlen(ich, p).catch(() => null).then(async (kz) => {
+          // 🎓 Schulungen: was auf den Admin wartet – KC-CLUB-SCHULUNG-HINWEIS (2.23.68); Fehler → keine Zahl
+          if (kz && ich.admin) (kz as any).schulung = await schulungStand(ich, null).then((x) => x.wartet.length).catch(() => null);
+          return kz;
+        });
+        const pComm = communicatorStatus(ich).catch(() => null), pSos = sosFuerAlle(), pAdmin = adminVorname();
+        // Promise.resolve(…) stößt die Supabase-Abfragen sofort an (sie laufen sonst erst beim await). Bricht der Start vorher ab
+        // (z. B. 503 unten), dürfen die schon laufenden Abfragen keinen „unbehandelten Fehler“ auslösen – Fehler wirken weiter beim await.
+        for (const x of [pPk, pStatus, pAbst, pNd, pWahlPm, pGeb, pGfs, pKf, pSpiele, pSos, pAdmin]) x.catch(() => {});
         const [naechstes, { data: teil, error: teilFehler }, mitglieder] = await Promise.all([
           treffenListe(ich, true),
           db.from("kc_communication_thread_participants").select("thread_id,last_read_at").eq("person_id", ich.person_id).is("hidden_at", null),
@@ -4355,26 +4385,19 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           if (nt) { const { data: nm } = await db.from("kc_communication_messages").select("id,body,sender_person_id,created_at").eq("thread_id", nt.id).neq("sender_person_id", ich.person_id)
               .gte("created_at", new Date(Date.now() - 48 * 3600000).toISOString()).order("created_at", { ascending: false }).limit(1).maybeSingle();
             if (nm && NOTFALL_RE.test(nm.body ?? "")) alarm = { id: nm.id, thread: nt.id, text: String(nm.body).replace(NOTFALL_RE, ""), von: vorname((await personen([nm.sender_person_id])).get(nm.sender_person_id)) || "Admin", zeit: nm.created_at }; } }
-        const { data: pk } = await db.rpc("kc_communication_get_server_secret", { p_name: "kc_communication_vapid_public_key" });
-        const meinStatus = (await statusMap([ich.person_id])).get(ich.person_id) ?? { status: "verfuegbar", hinweis: null, bis: null };
+        const { data: pk } = await pPk;
+        const meinStatus = (await pStatus).get(ich.person_id) ?? { status: "verfuegbar", hinweis: null, bis: null };
         // offene Abstimmungen, bei denen ich noch nicht abgestimmt habe
-        const { data: abstAlle } = await db.from("kc_club_vorschlaege").select("id,ziel_ids").eq("status", "offen").eq("art", "abstimmung");
-        const abst = (abstAlle ?? []).filter((x: any) => !x.ziel_ids || x.ziel_ids.includes(ich.person_id)); // KC-CLUB-ABSTIMMUNG-ZIEL
-        const { data: meineSt } = (abst ?? []).length ? await db.from("kc_club_stimmen").select("vorschlag_id").eq("person_id", ich.person_id).in("vorschlag_id", (abst ?? []).map((x: any) => x.id)) : { data: [] as any[] };
-        const offeneAbstimmungen = (abst ?? []).length - (meineSt ?? []).length;
-        const { data: nd } = await db.from("kc_dp_plan_published").select("work_date,start_time,end_time,area").eq("org_id", ORG).eq("status", "published")
-          .eq("person_id", ich.person_id).gte("work_date", berlinTag(new Date())).order("work_date").order("start_time").limit(1);
+        const offeneAbstimmungen = await pAbst;
+        const { data: nd } = await pNd;
         const naechsterDienst = nd?.[0] ? { datum: nd[0].work_date, start: String(nd[0].start_time).slice(0, 5), ende: String(nd[0].end_time).slice(0, 5), bereich: nd[0].area } : null;
-        const [{ data: wahl }, { data: pm }] = await Promise.all([
-          db.from("kc_club_benachrichtigung").select("bereich,push,email").eq("person_id", ich.person_id),
-          db.from("kc_core_people").select("email").eq("person_id", ich.person_id).maybeSingle(),
-        ]);
+        const [{ data: wahl }, { data: pm }] = await pWahlPm;
         // Geburtstage heute – nur freigegebene (nur Tag/Monat; 29.02. wird in Nicht-Schaltjahren am 28.02. gefeiert)
         const heuteMd = berlinTag(new Date()).slice(5), schalt = new Date(Number(berlinTag(new Date()).slice(0, 4)), 1, 29).getDate() === 29;
-        const geb = await geburtstageSichtbar(ich);
+        const geb = await pGeb;
         const geburtstageHeute = geb.filter((g) => g.md === heuteMd || (!schalt && heuteMd === "02-28" && g.md === "02-29"))
           .map((g) => ({ person_id: g.person_id, name: g.name, vorname: g.vorname }));
-        const { data: gfs } = await db.from("kc_club_freigaben").select("bereich,erlaubt").eq("person_id", ich.person_id).in("bereich", ["geburtstag", "runder_geburtstag"]);
+        const { data: gfs } = await pGfs;
         const gf = (gfs ?? []).find((x: any) => x.bereich === "geburtstag"), rgf = (gfs ?? []).find((x: any) => x.bereich === "runder_geburtstag");
         const hatGeburtstag = !!(mitglieder.find((m: any) => m.person_id === ich.person_id) as any)?.birth_date;
         // KC-CLUB-AUFGABEN / KC-CLUB-PROTOKOLLE: meine offenen Aufgaben, ungelesene Protokolle
@@ -4393,7 +4416,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           const { data: gl } = vids.length ? await db.from("kc_club_sitzungsprotokoll_gelesen").select("protokoll_id,version").eq("person_id", ich.person_id).in("protokoll_id", vids) : { data: [] as any[] };
           protokolleUngelesen = (pv ?? []).filter((x: any) => !(gl ?? []).some((g: any) => g.protokoll_id === x.id && g.version >= x.version)).length;
         }
-        const { data: kf } = await db.from("kc_club_freigaben").select("bereich,erlaubt").eq("person_id", ich.person_id).like("bereich", "kontakt_%");
+        const { data: kf } = await pKf;
         // KC-CLUB-TERMINFINDUNG: offene Umfragen, bei denen ich noch nichts angekreuzt habe
         const { data: tu } = await db.from("kc_club_terminumfragen").select("id,titel").eq("status", "offen");
         let terminfindungOffen: any[] = [];
@@ -4418,16 +4441,14 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           anrufAntworten().catch(() => ({ texte: ANRUF_ANTWORTEN_STANDARD, geaendertAm: null })),
         ]);
         const einstellungen = Object.fromEntries((pe ?? []).map((x: any) => [x.schluessel, x.wert]));
-        const communicator = await communicatorStatus(ich).catch(() => null);
+        const communicator = await pComm;
         const kontaktFreigabe = Object.fromEntries(KONTAKT_FELDER.map((f) => [f, !!(kf ?? []).find((x: any) => x.bereich === "kontakt_" + f)?.erlaubt]));
         const benachrichtigung = Object.fromEntries(BEREICHE.map((b) => { const x: any = (wahl ?? []).find((y: any) => y.bereich === b); return [b, x ? { push: x.push, email: x.email } : STANDARD_WAHL[b]]; }));
         // KC-CLUB-SPIELE (2.7.0): Zahl auf der Kachel = Partien, in denen ich dran bin + Herausforderungen an mich (Fehler → 0, nur Hinweis-Zahl)
-        const { count: spieleDran } = await db.from("kc_club_spiele").select("id", { count: "exact", head: true })
-          .or(`and(status.eq.laeuft,dran.eq.${ich.person_id}),and(status.eq.angefragt,an.eq.${ich.person_id})`);
-        const kz = await kachelZahlen(ich, p).catch(() => null); // KC-CLUB-KACHEL-ZAHLEN (2.22.12)
-        // 🎓 Schulungen: was auf den Admin wartet (gewählt – freigeben, Gegenvorschlag, keine Antwort) – KC-CLUB-SCHULUNG-HINWEIS (2.23.68); Fehler → keine Zahl
-        if (kz && ich.admin) (kz as any).schulung = await schulungStand(ich, null).then((x) => x.wartet.length).catch(() => null);
-        return json({ alarm, kz, sosFuerAlle: await sosFuerAlle(), spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, adminName: await adminVorname(), ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, communicator, notfall: nf ?? null, einstellungen, freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
+        const { count: spieleDran } = await pSpiele;
+        const kz = await pKz; // KC-CLUB-KACHEL-ZAHLEN (2.22.12)
+        await pWillkommen;
+        return json({ alarm, kz, sosFuerAlle: await pSos, spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, communicator, notfall: nf ?? null, einstellungen, freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
             // KC-CLUB-GERAETE-TIPP: wohin der Link ginge – nur teilweise (z. B. „h…@web.de“)

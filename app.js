@@ -1,5 +1,34 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.29.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.30.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+// KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
+// zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
+// Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
+// Automatisch / Immer an / Aus). Nachrichten, Anrufe, SOS und Spiele bleiben unverändert schnell.
+const SPAR_KEY = "kc_club_sparmodus";
+const sparWahl = () => { try { const w = localStorage.getItem(SPAR_KEY); return w === "an" || w === "aus" ? w : "auto"; } catch { return "auto"; } };
+function sparGrund() {
+  const w = sparWahl(); if (w === "an") return "von dir eingeschaltet"; if (w === "aus") return "";
+  const c = navigator.connection;
+  if (c?.saveData) return "Datensparen ist am Gerät eingeschaltet";
+  if (["slow-2g", "2g", "3g"].includes(c?.effectiveType)) return "das Netz ist gerade langsam";
+  if (navigator.deviceMemory && navigator.deviceMemory <= 2) return "das Gerät hat wenig Arbeitsspeicher";
+  try { const l = JSON.parse(localStorage.getItem("kc_club_startmess") || "[]"); if (Array.isArray(l) && l.length >= 2 && l[0]?.ges > 5000 && l[1]?.ges > 5000) return "die letzten Starts waren langsam"; } catch {}
+  return "";
+}
+const SPAR = { grund: sparGrund() }; SPAR.an = !!SPAR.grund;
+const sparTakt = (ms) => (SPAR.an ? ms * 3 : ms);
+try { document.documentElement.classList.toggle("spar", SPAR.an); } catch {}
+function sparSetzen(w) {
+  try { if (w === "auto") localStorage.removeItem(SPAR_KEY); else localStorage.setItem(SPAR_KEY, w); } catch {}
+  SPAR.grund = sparGrund(); SPAR.an = !!SPAR.grund; document.documentElement.classList.toggle("spar", SPAR.an); // Bewegungen sofort, Takte ab dem nächsten Öffnen
+  sparZeigen(); melde(SPAR.an ? `🐢 Sparmodus ist an (${SPAR.grund})` : w === "aus" ? "Sparmodus ist aus" : "Sparmodus ist gerade aus – schaltet sich bei Bedarf selbst ein");
+}
+function sparZeigen() {
+  const z = document.getElementById("sparWahl"), w = sparWahl();
+  if (z) z.innerHTML = [["auto", "Automatisch"], ["an", "Immer an"], ["aus", "Aus"]].map(([k, t]) => `<button type="button" class="chip${w === k ? " an" : ""}" onclick="sparSetzen('${k}')">${t}</button>`).join("");
+  const h = document.getElementById("sparStand"); if (h) h.textContent = SPAR.an ? `Gerade an: ${SPAR.grund}.` : "Gerade aus.";
+}
+function sparInfo() { melde(`🐢 Sparmodus: ${SPAR.grund}. Weniger Bewegung, seltener im Hintergrund nachsehen – Nachrichten kommen trotzdem sofort. Ändern: Einstellungen → 🎨 Darstellung.`); }
 // KC-CLUB-SCHNELLSTART-DATEI (2.24.8, Hinweis Hansi „Start ist langsamer geworden“): das Programm liegt in app.js, damit das Handy es
 // fertig übersetzt behalten kann (statt bei jedem Öffnen 1,8 MB neu einzulesen). Seite und Programm müssen dieselbe Version haben
 // (AGENTS Regel 16, kein Mischstand): passt es nicht (z. B. alte Seite aus einem Zwischenspeicher), einmal frisch laden, sonst anhalten.
@@ -2057,7 +2086,7 @@ function onlineTakt() {
   clearInterval(ONL.timer);
   // KC-CLUB-ANRUF-TAKT (0.80.0): ohne Push erfährt die App von einem Anruf nur über diesen Takt – ein Anruf klingelt 45 s,
   // darum dann alle 15 s nachsehen (mit Push weckt der Push die offene App sofort, 60 s reichen).
-  ONL.timer = setInterval(onlinePing, ONL.wartet ? 4000 : PUSH_AKTIV ? 60000 : 15000);
+  ONL.timer = setInterval(onlinePing, ONL.wartet ? 4000 : sparTakt(PUSH_AKTIV ? 60000 : 15000)); // KC-CLUB-SPARMODUS: seltener
 }
 document.addEventListener("visibilitychange", () => { if (!document.hidden) onlinePing(); });
 // KC-CLUB-ONLINE-LED (0.96.0): vierte LED oben unter den drei Verbindungs-LEDs – grün, sobald jemand anderes online ist,
@@ -2220,6 +2249,7 @@ function inkoKnopfSetzen(an) { lsSetzen(INKO_KNOPF_KEY, an ? "an" : "aus"); inko
 function inkognitoZeigen() {
   if ($("setInkognito")) $("setInkognito").checked = inkognitoAn();
   if ($("setInkoKnopf")) $("setInkoKnopf").checked = inkoKnopfSichtbar();
+  sparZeigen(); // KC-CLUB-SPARMODUS
   document.body.classList.toggle("inko-knopf-aus", !inkoKnopfSichtbar());
   document.body.classList.toggle("inkognito", inkognitoAn());
   const k = $("inkoKnopf"); if (k) { k.classList.toggle("an", inkognitoAn()); k.setAttribute("aria-pressed", String(inkognitoAn())); k.title = inkognitoAn() ? "Inkognito ist AN – niemand sieht dich online. Antippen zum Ausschalten" : "Inkognito ist aus – antippen zum Einschalten"; }
@@ -18533,7 +18563,7 @@ async function nzSenden() {
   } catch { for (const [k, n] of Object.entries(z)) nzPuffer[k] = (nzPuffer[k] || 0) + n; try { localStorage.setItem("kc_club_nutzung", JSON.stringify(nzPuffer)); } catch {}
     for (const [k, n] of Object.entries(std)) nzStdPuffer[k] = (nzStdPuffer[k] || 0) + n; nzStdSchreiben(); }
 }
-setInterval(nzSenden, NZ_TAKT_MS);
+setInterval(nzSenden, sparTakt(NZ_TAKT_MS));
 document.addEventListener("visibilitychange", () => { if (document.hidden) nzSenden(); });
 // ---------- KC-CLUB-SPUR (2.23.88, Wunsch Hansi): Wege durch die App – was geöffnet wurde und mit wem (Mitglied/Unterhaltung), mit Uhrzeit.
 // NIE Inhalte (kein Text, keine Suchbegriffe, keine Fotos). Getrennt von der namenlosen Nutzungsstatistik (die bleibt ohne Namen).
@@ -18556,7 +18586,7 @@ async function spurSenden() {
   const teil = SPUR.slice(0, 200);
   try { await api("spur_melden", { s: teil }); SPUR = SPUR.slice(teil.length); spurSchreiben(); } catch {} // ohne Netz: beim nächsten Mal
 }
-setInterval(spurSenden, NZ_TAKT_MS);
+setInterval(spurSenden, sparTakt(NZ_TAKT_MS));
 document.addEventListener("visibilitychange", () => { if (document.hidden) spurSenden(); });
 const SPUR_WAS = { mitglied: "👤 Mitglied angesehen", chat: "💬 Unterhaltung geöffnet", gesendet: "✉️ Nachricht gesendet", gesendet_anlage: "📎 Nachricht mit Anhang gesendet",
   anruf: "📞 Anruf (App) an", video: "🎥 Videoanruf an", anklopfen: "👋 Angeklopft bei", telefon: "☎️ Telefonnummer angetippt", whatsapp: "🟢 WhatsApp geöffnet", mail: "✉️ E-Mail-Adresse angetippt" };
@@ -18878,6 +18908,6 @@ async function fpAdmin(tage) {
   setInterval(() => { if (!document.hidden && aktuelleAnsicht === "start" && !chatId) updatePruefen(false).then(updateSelbst); }, UPDATE_TAKT_MS);
   setTimeout(stStart, 2500); // KC-CLUB-STANDORT
   document.addEventListener("visibilitychange", () => { updWeg(document.hidden); if (!document.hidden) { if (ST.eigen) stMelden(true); neuLaden(); updatePruefen(false).then(updateSelbst); if (chatId) chatLaden(false); setTimeout(pwLive, 1500); } });
-  setInterval(() => { if (!document.hidden && aktuelleAnsicht !== "chat") neuLaden(); }, 60000);
+  setInterval(() => { if (!document.hidden && aktuelleAnsicht !== "chat") neuLaden(); }, sparTakt(60000)); // KC-CLUB-SPARMODUS
   setInterval(pwLive, PW_LIVE_MS); // KC-CLUB-PINNWAND-LIVE: auch im Chat
 })();

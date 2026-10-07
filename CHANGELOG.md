@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.30.0 – 2026-10-06 – Schnellerer Start + Sparmodus
+KC-CLUB-START-PARALLEL: Der Server beantwortet den Start mit allen Abfragen gleichzeitig statt ~20 nacheinander (Inhalt unverändert). KC-CLUB-SPARMODUS: bei langsamem Netz, Datensparen, wenig Speicher oder zwei langsamen Starts automatisch: keine Bewegungen, Hintergrund seltener (×3); 🐢 im Kopf; Einstellungen → Darstellung: Automatisch / Immer an / Aus.
+
 ## 2.29.0 – 2026-10-06 – Willkommens-Post-it für neue Mitglieder
 KC-CLUB-WILLKOMMEN-PINNWAND: Meldet sich ein neues Mitglied zum ersten Mal an, hängt die Clubleitung automatisch ein ❗ wichtiges Post-it „💐 Herzlich willkommen! Wir begrüßen unser neues Mitglied …“ für alle an die Pinnwand – genau einmal, ohne Push/Mail.
 

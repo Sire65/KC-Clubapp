@@ -1384,7 +1384,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/eq\("von", an\)\.eq\("an", ich\.person_id\)\.eq\("status", "klingelt"\)/.test(st) && /gegenanruf: gegen\[0\]\.id/.test(st) && st.indexOf("gegenanruf") < st.indexOf('from("kc_club_anruf").insert'), "Server: Gegenanruf vor dem Anlegen prüfen");
   assert.ok(/if \(r\.gegenanruf\) \{ anrufAufraeumen\(\); return gegenanrufAnnehmen\(r\.gegenanruf, mitBild\); \}/.test(html), "App: Gegenanruf annehmen");
   assert.ok(/RUF\.gegen\?\.person_id === ruf\.von\?\.person_id && ICH\?\.person_id > ruf\.von\.person_id/.test(html), "Fallback: feste Regel, wer nachgibt");
-  assert.ok(/ONL\.wartet \? 4000 : PUSH_AKTIV \? 60000 : 15000/.test(html) && html.indexOf("let PUSH_AKTIV") < html.indexOf("let ONL ="), "Takt ohne Push 15 s (vor Nutzung deklariert)");
+  assert.ok(/ONL\.wartet \? 4000 : sparTakt\(PUSH_AKTIV \? 60000 : 15000\)/.test(html) && html.indexOf("let PUSH_AKTIV") < html.indexOf("let ONL ="), "Takt ohne Push 15 s (vor Nutzung deklariert)");
 }
 
 // 102. 0.81.0: Anrufe – Kurzantwort, zweiter Anruf, verpasst (KC-CLUB-ANRUF-KURZANTWORT / -ZWEIT / -VERPASST)
@@ -3124,7 +3124,7 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
 // 280. 1.99.0: Admin-Name statt fest „Hansi“, „bald“-Kacheln ausgeblendet, Manifest-Symbole getrennt
 {
   assert.ok(/const adminName = \(\) => INIT\?\.adminName \|\| "Hansi";/.test(html) && /ICH = INIT\.ich; adminNamenSetzen\(\);/.test(html), "Admin-Name aus init");
-  assert.ok(/adminName: await adminVorname\(\)/.test(server) && /async function adminVorname\(\)/.test(server) && /bitte kurz \$\{await adminVorname\(\)\} Bescheid/.test(server), "Server liefert Admin-Namen");
+  assert.ok(/adminName: await (adminVorname\(\)|pAdmin)/.test(server) && /pAdmin = adminVorname\(\)/.test(server) && /async function adminVorname\(\)/.test(server) && /bitte kurz \$\{await adminVorname\(\)\} Bescheid/.test(server), "Server liefert Admin-Namen");
   assert.ok(/Gebaut von Hansi für uns alle/.test(html) && /„Hansi hat die Club-App verlassen“/.test(html), "Urheberschaft/Beispiel bleiben");
   assert.ok(!/bitte Hansi Bescheid|bei Hansi angekommen|Korrektur an Hansi melden/.test(html), "keine festen Ansprechpartner mehr");
   assert.ok(/const kachelnAlle = \(r\) => KACHELN\[r\]\.filter\(\(k\) => !k\.bald && /.test(html) && /Kommt bald: /.test(html), "bald-Kacheln aus, Überblick nennt sie");
@@ -3552,7 +3552,7 @@ assert.ok(/#notfallText \{[^}]*background: var\(--bg\); color: var\(--text\);/.t
 // 328. 2.22.5: SOS für alle freigeben (KC-CLUB-SOS-FREIGABE) – nur der Admin schaltet, gespeichert als Club-Einstellung
 {
   assert.ok(/case "sos_freigabe_setzen": \{\s*nurAdmin\(ich\);[\s\S]{0,300}schluessel: "sos", wert: \{ alle \}/.test(server) && /protokoll\(ich\.person_id, "sos_freigabe"/.test(server), "Freigabe nur Admin, protokolliert");
-  assert.ok(/sosFuerAlle: await sosFuerAlle\(\)/.test(server) && /classList\.toggle\("sos-frei", !!INIT\?\.sosFuerAlle\)/.test(html), "App kennt die Freigabe");
+  assert.ok(/sosFuerAlle: await (sosFuerAlle\(\)|pSos)/.test(server) && /pSos = sosFuerAlle\(\)/.test(server) && /classList\.toggle\("sos-frei", !!INIT\?\.sosFuerAlle\)/.test(html), "App kennt die Freigabe");
   assert.ok(/\$\{ICH\?\.admin \? `<label[^`]*onchange="sosFreigabe\(this\.checked, this\)"/.test(html) && /async function sosFreigabe\(alle, feld\)[\s\S]{0,600}await frage\(/.test(html), "Schalter nur beim Admin, mit Rückfrage");
 }
 // 329. 2.22.6: Ameisenrahmen um die Gruppe „Innovation“ beim Öffnen von Nachrichten (KC-CLUB-GRUPPE-AMEISEN)
@@ -3639,7 +3639,7 @@ assert.ok(/const UH_HERVOR = \["Innovation"\];/.test(html) && /function uhAmeise
 }
 // 338. 2.22.12: Zahlen auf weiteren großen Kacheln, nur erweiterte Ansicht (KC-CLUB-KACHEL-ZAHLEN)
 {
-  assert.ok(/async function kachelZahlen\(ich: Ich, p: any\)/.test(server) && /return \{ termine, helfen, buero, fotos, dienste \};/.test(server) && /const kz = await kachelZahlen\(ich, p\)\.catch\(\(\) => null\);/.test(server), "Server rechnet die Zahlen");
+  assert.ok(/async function kachelZahlen\(ich: Ich, p: any\)/.test(server) && /return \{ termine, helfen, buero, fotos, dienste \};/.test(server) && /const pKz = kachelZahlen\(ich, p\)\.catch\(\(\) => null\)/.test(server) && /const kz = await pKz;/.test(server), "Server rechnet die Zahlen");
   assert.ok(/catch \(e\) \{ console\.error\("kachel zahl", String\(e\)\); return null; \}/.test(server), "Fehler → null, keine falsche 0");
   assert.ok(/const kzZahl = \(k, plus = 0\) => \(einfach\(\) \|\| INIT\?\.kz\?\.\[k\] == null \? 0 :/.test(html), "nur erweiterte Ansicht, unbekannt → keine Zahl");
   assert.ok(/for \(const k of KACHELN\.verein\) if \(KZ_KACHELN\[k\.id\] && !k\.zahl\) k\.zahl = KZ_KACHELN\[k\.id\];/.test(html) && /termine: .*helfen: .*buero: [\s\S]{0,60}fotos: .*dienste:/.test(html), "fünf Kacheln");
@@ -4895,7 +4895,33 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/wichtig: true, fuer: "alle"/.test(w) && /💐 Herzlich willkommen! Wir begrüßen unser neues Mitglied \$\{name\}/.test(w), "wichtig, für alle, mit Blumenstrauß");
   assert.ok(!/senden\(/.test(w), "kein Push/Mail (Ruhe-Regel)");
   assert.ok(/pinnwand_willkommen_voll/.test(w) && /frueher\.has\(z\.id\)/.test(w), "volle Pinnwand: nur alten Willkommens-Zettel abnehmen, sonst Vermerk");
-  assert.ok(/case "init": \{\n\s+await willkommenZettel\(ich\)\.catch/.test(server), "beim Start geprüft, Fehler bremsen den Start nicht");
+  assert.ok(/const pWillkommen = willkommenZettel\(ich\)\.catch/.test(server) && /await pWillkommen;/.test(server), "beim Start geprüft, Fehler bremsen den Start nicht");
+}
+// 2.30.0 KC-CLUB-START-PARALLEL + KC-CLUB-SPARMODUS (Fall Klara: schwaches Netz, Start 3–55 s)
+{
+  const a = server.indexOf('      case "init": {'), ini = server.slice(a, server.indexOf('      case "mitglieder": {', a));
+  // Supabase-Abfragen laufen erst beim await – darum Promise.resolve(…) zum sofortigen Start; keine unbehandelten Fehler
+  for (const n of ["pPk", "pNd", "pGfs", "pKf", "pSpiele"]) assert.ok(new RegExp(`const ${n} = Promise\\.resolve\\(db\\.`).test(ini), n + " startet sofort");
+  assert.ok(/for \(const x of \[pPk, pStatus, pAbst, pNd, pWahlPm, pGeb, pGfs, pKf, pSpiele, pSos, pAdmin\]\) x\.catch\(\(\) => \{\}\);/.test(ini), "abgebrochener Start ohne unbehandelte Fehler");
+  assert.ok(ini.indexOf("const pPk") < ini.indexOf("const [naechstes,"), "alles startet vor dem ersten Warten");
+  for (const x of ["await pPk", "await pStatus", "await pAbst", "await pNd", "await pWahlPm", "await pGeb", "await pGfs", "await pKf", "await pComm", "await pSpiele", "await pKz", "await pWillkommen", "await pSos", "await pAdmin"]) assert.ok(ini.includes(x), "Ergebnis genutzt: " + x);
+  assert.ok(!/await db\.from\("kc_club_vorschlaege"\)\.select\("id,ziel_ids"\)[\s\S]*const \[naechstes/.test(ini.replace(/const pAbst = \(async[\s\S]*?\}\)\(\);/, "")), "keine Abfrage doppelt");
+  // Sparmodus: Erkennung, Wahl je Gerät, nur Hintergrund-Takte langsamer
+  const sp = html.slice(html.indexOf("// KC-CLUB-SPARMODUS (2.30.0"), html.indexOf("function sparInfo()"));
+  const f = new Function("navigator", "localStorage", "document", "melde", sp + "\nreturn { sparGrund, sparTakt, SPAR };");
+  const ls = (o) => ({ getItem: (k) => o[k] ?? null, setItem() {}, removeItem() {} }), doc = { documentElement: { classList: { toggle() {} } }, getElementById: () => null };
+  assert.equal(f({ connection: { effectiveType: "4g" } }, ls({}), doc, () => {}).SPAR.an, false, "gutes Netz → aus");
+  assert.equal(f({ connection: { effectiveType: "3g" } }, ls({}), doc, () => {}).SPAR.an, true, "3G → an");
+  assert.equal(f({ connection: { saveData: true } }, ls({}), doc, () => {}).SPAR.an, true, "Datensparen → an");
+  assert.equal(f({ deviceMemory: 2 }, ls({}), doc, () => {}).SPAR.an, true, "wenig Speicher → an");
+  assert.equal(f({}, ls({ kc_club_startmess: JSON.stringify([{ ges: 6000 }, { ges: 9000 }]) }), doc, () => {}).SPAR.an, true, "2 langsame Starts → an");
+  assert.equal(f({}, ls({ kc_club_startmess: JSON.stringify([{ ges: 6000 }, { ges: 900 }]) }), doc, () => {}).SPAR.an, false, "1 langsamer Start → aus");
+  assert.equal(f({ connection: { effectiveType: "2g" } }, ls({ kc_club_sparmodus: "aus" }), doc, () => {}).SPAR.an, false, "„Aus“ gewinnt");
+  const an = f({}, ls({ kc_club_sparmodus: "an" }), doc, () => {}); assert.equal(an.SPAR.an, true, "„Immer an“"); assert.equal(an.sparTakt(15000), 45000, "Takt ×3");
+  assert.ok(/STARTMESS_SPEICHER = "kc_club_startmess"/.test(html), "gleicher Speicher wie die Startmessung");
+  assert.ok(/ONL\.wartet \? 4000 : sparTakt\(/.test(html) && /neuLaden\(\); \}, sparTakt\(60000\)\)/.test(html) && /setInterval\(nzSenden, sparTakt\(NZ_TAKT_MS\)\)/.test(html), "Hintergrund seltener");
+  assert.ok(!/sparTakt\(CHAT_TAKT_MS|sparTakt\(SP_TAKT_MS|anrufPruefen, sparTakt/.test(html), "Chat, Spiele, Anrufe unverändert");
+  assert.ok(/html\.spar \*, html\.spar \*::before, html\.spar \*::after \{ animation-duration: \.001s !important;/.test(seite) && /id="sparWahl"/.test(seite) && /id="sparZeichen"/.test(seite), "Bewegungen aus, Wahl in Darstellung, 🐢 im Kopf");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

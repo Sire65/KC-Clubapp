@@ -185,6 +185,10 @@
   /* KC-CLUB-INKO-BLINKEN (2.23.11, Wunsch Hansi): der gelbe Rahmen blinkt im Takt der Brille rot */
   @keyframes inkoRandBlink { 0%, 100% { box-shadow: 0 0 0 4px #f1c40f, 0 0 0 0 rgba(255, 23, 68, 0), 0 12px 30px var(--heroschatten); } 50% { box-shadow: 0 0 0 4px #d32f2f, 0 0 16px 0 #ff1744, 0 12px 30px var(--heroschatten); } }
   @media (prefers-reduced-motion: reduce) { body.inkognito #v-start .hero { animation-duration: 2.4s; } }
+  /* KC-CLUB-SPARMODUS (2.30.0): Bewegungen sofort am Ziel statt laufend; 🐢 im Kopf nur, wenn an */
+  html.spar *, html.spar *::before, html.spar *::after { animation-duration: .001s !important; animation-iteration-count: 1 !important; animation-delay: 0s !important; transition-duration: 0s !important; transition-delay: 0s !important; scroll-behavior: auto !important; }
+  .spar-zeichen { display: none; background: none; border: 0; font-size: 1.05rem; padding: 0 4px; cursor: pointer; }
+  html.spar .spar-zeichen { display: inline-block; }
   #v-start .hero.inko-lauf { position: relative; }
   .hero .inko-ameisen { position: absolute; inset: -4px; width: calc(100% + 8px); height: calc(100% + 8px); pointer-events: none; overflow: hidden; border-radius: 30px; }
   .hero .inko-ameisen rect { fill: none; stroke: #000; stroke-width: 8; stroke-dasharray: 10 8; animation: ameisenLauf .7s linear infinite; }
@@ -2315,7 +2319,7 @@
         <button class="statuschip" id="statusChip" onclick="statusBlatt()">🟢 verfügbar ▾</button>
         <span class="sl-luecke"></span>
         <button class="leds" id="leds" title="Verbindung zum Server" aria-label="Verbindung zum Server" onclick="verbindungBlatt()"><i class="led grau" id="ledStatus"></i><i class="led grau" id="ledComm"></i><i class="led daten" id="ledDaten"></i><i class="led-trenner" aria-hidden="true"></i><i class="led grau led-online" id="ledOnline" role="button" tabindex="0" title="Wer ist gerade online?" aria-label="Wer ist gerade online?" onclick="event.stopPropagation();onlineBlatt()"></i></button>
-        <span class="sl-extra"><button class="herz" id="herzKnopf" title="Lebenszeichen – antippen: die letzten 15" aria-label="Lebenszeichen, antippen für die letzten 15" onclick="herzListe()">♥</button><button id="inkoKnopf" title="Inkognito – antippen zum Umschalten" aria-label="Inkognito umschalten" aria-pressed="false" onclick="inkognitoSetzen(!inkognitoAn())">🕶️</button></span>
+        <span class="sl-extra"><button class="herz" id="herzKnopf" title="Lebenszeichen – antippen: die letzten 15" aria-label="Lebenszeichen, antippen für die letzten 15" onclick="herzListe()">♥</button><button id="sparZeichen" class="spar-zeichen" title="Sparmodus an – antippen für Infos" aria-label="Sparmodus an" onclick="sparInfo()">🐢</button><button id="inkoKnopf" title="Inkognito – antippen zum Umschalten" aria-label="Inkognito umschalten" aria-pressed="false" onclick="inkognitoSetzen(!inkognitoAn())">🕶️</button></span>
       </div>
       <div class="info" id="heroInfo"><h2>Einen Moment …</h2><div class="unter">Daten werden geladen.</div></div>
       <div class="ipunkte" id="infoPunkte"></div>
@@ -2762,6 +2766,8 @@
     </details>
     <details class="karte" data-klappe="darstellung">
       <summary>🎨 Darstellung</summary>
+      <!-- KC-CLUB-SPARMODUS (2.30.0): je Gerät -->
+      <div class="schalter" style="display:block"><div><b>🐢 Sparmodus</b><div class="hinweis">Für schwaches Netz oder ältere Handys: keine Bewegungen, seltener im Hintergrund nachsehen. Automatisch = schaltet sich bei Bedarf selbst ein. <span id="sparStand"></span></div></div><div class="hl-chips" id="sparWahl" style="margin-top:6px"></div></div>
       <div class="schalter"><div><b>🔠 Große Schrift</b></div><input type="checkbox" id="setGross" onchange="einstellung('gross', this.checked)"></div>
       <div class="schalter"><div><b>✨ Animierte Knöpfe</b><div class="hinweis">Kacheln zoomen kurz beim Antippen, Reiter und „＋ Neu“ leuchten auf – aus: alles ruhig</div></div><input type="checkbox" id="setAnimiert" onchange="einstellung('animiert', this.checked)"></div> <!-- 2.24.1 (Wunsch Hansi) -->
       <div style="margin-top:8px"><b>🌗 Tag- und Nachtmodus</b></div>
@@ -3132,6 +3138,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.29.0" data-v="2.29.0"></script>
+<script src="app.js?v=2.30.0" data-v="2.30.0"></script>
 </body>
 </html>
