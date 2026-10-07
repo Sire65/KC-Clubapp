@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.48.0";
+const SERVER_VERSION = "2.51.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -185,12 +185,14 @@ async function senden(eventKey: string, personIds: string[], vars: Record<string
   const w = new Map((wahl ?? []).map((x: any) => [x.person_id, x]));
   const hinweis = "\n\n(Die Köcheclub-App hast du noch nicht geöffnet – deinen persönlichen Link bekommst du von Hansi.)";
   const ruhe = await ruhendePersonen(personIds.filter((id) => mitApp.has(id))), verpasst: string[] = []; // KC-CLUB-RUHEZEIT
+  const probe = await probeListe(); // KC-CLUB-PROBEPHASE: ohne eigene Wahl nur Termine per Mail (wie bisher ohne App), sonst nichts
   // Gruppen je Regel; Mitglieder ohne App getrennt (sie bekommen den Hinweis auf den Link)
   const gruppen = new Map<string, { key: string; ohne: boolean; ids: string[] }>();
   for (const id of personIds) {
-    const ohne = !mitApp.has(id);
+    let ohne = !mitApp.has(id);
     let key: string | null;
-    if (ohne) key = eventKey + "_mail";
+    if (probe.has(id) && !w.has(id)) { if (BEREICH_VON[eventKey] !== "termine") continue; ohne = false; key = eventKey + "_mail"; }
+    else if (ohne) key = eventKey + "_mail";
     else {
       const x: any = w.get(id);
       key = !x ? eventKey : x.push && x.email ? eventKey + "_beide" : x.push ? eventKey + "_push" : x.email ? eventKey + "_mail" : null;
@@ -1514,27 +1516,33 @@ async function chatAnzahlMit(ich: Ich, pid: string): Promise<number | null> {
 const WILLKOMMEN_MIN = 30; // so lange nach der ersten Anmeldung wird begrüßt (ältere Mitglieder nie nachträglich)
 async function willkommenZettel(ich: Ich) {
   if (/^KC-P-TEST/.test(ich.person_id) || ich.admin) return;
+  if (await inProbe(ich.person_id)) return; // KC-CLUB-PROBEPHASE: erst beim Übernehmen (wenn der Admin es will)
   const { data: zu } = await db.from("kc_club_zugang").select("erstmals_gesehen").eq("person_id", ich.person_id).maybeSingle();
   if (!zu?.erstmals_gesehen || Date.now() - new Date(zu.erstmals_gesehen).getTime() > WILLKOMMEN_MIN * 60000) return;
-  const { data: sperre } = await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel: "willkommen_zettel", wert: { am: jetzt() }, geaendert_am: jetzt() },
+  await willkommenAushaengen(ich.person_id, ich.name || ich.vorname);
+}
+// Willkommens-Zettel aushängen (gemeinsam für die erste Anmeldung und „Probephase übernehmen“)
+async function willkommenAushaengen(pid: string, name: string): Promise<boolean | undefined> {
+  name = name || "unser neues Mitglied";
+  const { data: sperre } = await db.from("kc_club_person_einstellung").upsert({ person_id: pid, schluessel: "willkommen_zettel", wert: { am: jetzt() }, geaendert_am: jetzt() },
     { onConflict: "person_id,schluessel", ignoreDuplicates: true }).select("person_id");
   if (!sperre?.length) return; // schon begrüßt (oder gerade parallel)
   const { data: ad } = await db.from("kc_club_rollen").select("person_id").eq("ist_admin", true).not("person_id", "like", "KC-P-TEST%").order("person_id").limit(1);
-  const von = ad?.[0]?.person_id; if (!von) return;
-  const name = ich.name || ich.vorname || "unser neues Mitglied";
+  const von = ad?.[0]?.person_id; if (!von) return false;
   const text = `💐 Herzlich willkommen! Wir begrüßen unser neues Mitglied ${name} in der Köcheclub-App. Schön, dass du dabei bist! 💐`.slice(0, PINNWAND_ZEICHEN);
   let { data: haengt } = await db.from("kc_club_pinnwand").select("id,farbe,erstellt_am").eq("person_id", von).is("entfernt_am", null).order("erstellt_am");
   if ((haengt ?? []).length >= PINNWAND_MAX) {
     const { data: fr } = await db.from("kc_club_protokoll").select("details").eq("aktion", "pinnwand_willkommen").order("zeit", { ascending: false }).limit(50);
     const frueher = new Set((fr ?? []).map((x: any) => x.details?.zettel)), alt = (haengt ?? []).find((z: any) => frueher.has(z.id));
-    if (!alt) { await protokoll(ich.person_id, "pinnwand_willkommen_voll", {}); return; }
+    if (!alt) { await protokoll(pid, "pinnwand_willkommen_voll", {}); return false; }
     await db.from("kc_club_pinnwand").update({ entfernt_am: jetzt(), entfernt_von: von }).eq("id", alt.id);
     haengt = (haengt ?? []).filter((z: any) => z.id !== alt.id);
   }
   const belegt = new Set((haengt ?? []).map((x: any) => x.farbe)), farbe = [1, 2, 3, 4].find((n) => !belegt.has(n)) ?? 1;
   const { data: z, error } = await db.from("kc_club_pinnwand").insert({ person_id: von, text, wichtig: true, fuer: "alle", personen: [], farbe, antworten: true }).select("id").single();
-  if (error || !z) { await protokoll(ich.person_id, "pinnwand_willkommen_fehler", {}); return; }
-  await protokoll(von, "pinnwand_willkommen", { zettel: z.id, fuer: ich.person_id });
+  if (error || !z) { await protokoll(pid, "pinnwand_willkommen_fehler", {}); return false; }
+  await protokoll(von, "pinnwand_willkommen", { zettel: z.id, fuer: pid });
+  return true;
 }
 // KC-CLUB-WILLKOMMEN-BEGRUESSEN (2.30.1, Wunsch Hansi): Welcher Zettel begrüßt wen? (aus dem Protokoll „pinnwand_willkommen“) →
 // an diesem Zettel „💐 Ich möchte auch begrüßen“ – öffnet den Chat mit dem neuen Mitglied.
@@ -2314,6 +2322,38 @@ async function sperrenAktuell() {
   }
   const gilt = SPERREN.zeilen.filter(sperreGilt);
   return { liste: new Map(gilt.map((x) => [x.person_id, x])), stumm: new Set(gilt.filter((x) => x.stumm).map((x) => x.person_id)) };
+}
+// KC-CLUB-PROBEPHASE (2.51.0, Wunsch Hansi): Mitglieder können die App erst ausprobieren. Merker in kc_club_person_einstellung
+// „probephase“ {an, seit, bis, von}. In der Probe: kein Willkommens-Zettel, keine Begrüßung in der Tagesinfo, Push/Mail nur nach eigener
+// Wahl (Termine weiter per Mail wie ohne App), nicht in der Nutzungsstatistik, keine Stimmabgabe. Liste je Instanz 15 s im Speicher.
+const PROBE = { bis: 0, liste: new Map<string, any>() };
+const PROBE_TAGE = [14, 28, 56];
+async function probeListe(frisch = false): Promise<Map<string, any>> {
+  if (frisch || Date.now() > PROBE.bis) {
+    const { data, error } = await db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "probephase");
+    if (!error) { PROBE.liste = new Map((data ?? []).filter((x: any) => x.wert?.an).map((x: any) => [x.person_id, x.wert])); PROBE.bis = Date.now() + 15_000; }
+  }
+  return PROBE.liste;
+}
+const inProbe = async (personId: string) => (await probeListe()).has(personId);
+const ichInProbe = (ich: Ich) => inProbe(ich.person_id); // nur prüfen, nichts speichern (z. B. Nutzung bleibt ohne Namen)
+// Wartung: Frist der Probephase abgelaufen → einmal am Tag Push an die Admins (übernehmen oder beenden?)
+async function probeErinnern() {
+  const liste = await probeListe(true), heute = berlinTag(new Date());
+  const faellig = [...liste.entries()].filter(([, w]) => w.bis && String(w.bis) <= heute && w.erinnert !== heute);
+  if (!faellig.length) return;
+  const leute = await personen(faellig.map(([id]) => id)), admins = await adminIds();
+  for (const [pid, w] of faellig) {
+    await db.from("kc_club_person_einstellung").update({ wert: { ...w, erinnert: heute }, geaendert_am: jetzt() }).eq("person_id", pid).eq("schluessel", "probephase");
+    const name = leute.get(pid)?.display_name || pid;
+    await senden("club_nachricht", admins, {
+      titel: "🧪 Probephase abgelaufen", kurz: `${name}: Probephase ist um – übernehmen oder beenden?`,
+      betreff: `Köcheclub-App – Probephase ${name} abgelaufen`,
+      text: `Hallo,\n\ndie Probephase von ${name} ist abgelaufen (seit ${String(w.seit || "").slice(0, 10).split("-").reverse().join(".")}).\nBitte in der App unter Mitglieder → ${name} entscheiden: ✅ Übernehmen oder 🚪 Beenden.\n${APP_URL}#mitglieder\n\nViele Grüße\nKöcheclub-App`,
+      url: APP_URL + "#mitglieder",
+    }, `club-probe-frist:${pid}:${heute}`).catch((e) => console.error("probe erinnern", String(e)));
+    await protokoll(null, "probe_frist_erinnert", { fuer: pid });
+  }
 }
 async function sperreFuer(personId: string) {
   return (await sperrenAktuell()).liste.get(personId) ?? null;
@@ -3975,6 +4015,7 @@ Deno.serve(async (req) => {
       await wochenberichtLauf().catch((e) => console.error("wochenbericht", String(e))); // KC-CLUB-WOCHENBERICHT (2.23.81)
       await dbWarnungLauf().catch((e) => console.error("db warnung", String(e))); // KC-CLUB-DB-AUFRAEUMEN (2.24.7)
       await schulungNachfrageErinnern().catch((e) => console.error("schulung nachfrage", String(e))); // KC-CLUB-SCHULUNG-NACHFRAGE (2.35.0)
+      await probeErinnern().catch((e) => console.error("probe erinnern", String(e))); // KC-CLUB-PROBEPHASE (2.51.0)
       await ekDienstwunschMelden().catch((e) => console.error("eingang dienstwunsch", String(e))); /* KC-CLUB-EINGANGSKORB (2.23.6) */ /* KC-CLUB-AENDERUNG-FREIGABE (2.22.19) */ // KC-CLUB-STADT-TERMINE (2.22.6): wöchentlich, nur wenn eingeschaltet
       // KC-CLUB-SPUR (2.23.88): Wege der Mitglieder nur 30 Tage aufbewahren
       { const { error } = await db.from("kc_club_protokoll").delete().eq("aktion", "spur").lt("zeit", new Date(Date.now() - SPUR_TAGE * 86400000).toISOString()); if (error) console.error("spur loeschen", error.message); }
@@ -4574,6 +4615,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const zd = await zuletztDaMap(ich, leute.map((m) => m.person_id)); // KC-CLUB-ZULETZT-DA (1.20.0)
         const [zeigen, inko] = await Promise.all([onlineZeigenMap(), inkognitoSet()]), tag = (d: string | Date) => new Date(d).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }), heute = tag(new Date());
         const fehler = new Map<string, string>(), ansicht = new Map<string, string>();
+        const probe = ich.admin ? await probeListe() : new Map<string, any>(); // KC-CLUB-PROBEPHASE: 🧪 nur für den Admin
         if (ich.admin) {
           // KC-CLUB-ANSICHT: wer nutzt welche Ansicht (nur für den Admin – zeigt, ob die einfache Ansicht angenommen wird)
           const { data: an } = await db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "ansicht");
@@ -4609,6 +4651,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             aktiv: !(inko.has(m.person_id) && m.person_id !== ich.person_id) && !!(z.get(m.person_id) as any)?.zuletzt_gesehen && Date.now() - new Date((z.get(m.person_id) as any).zuletzt_gesehen).getTime() < 14 * 86400000,
             ...(ich.admin ? { kontakte: (r.get(m.person_id) as any)?.kontakte_sehen !== false, protokolle: (r.get(m.person_id) as any)?.protokolle_lesen !== false, app: !!(z.get(m.person_id) as any)?.aktiv, zuletzt: inko.has(m.person_id) && m.person_id !== ich.person_id ? null : (z.get(m.person_id) as any)?.zuletzt_gesehen ?? null, push: ps.has(m.person_id), mail: !!m.email, fehler: fehler.get(m.person_id) ?? null,
               unerreichbar: !ps.has(m.person_id) && !m.email, /* kein Push, keine E-Mail: Hinweis statt roter Kreis */ ansicht: ansicht.get(m.person_id) ?? null } : {}),
+            ...(ich.admin && probe.has(m.person_id) ? { probe: { seit: probe.get(m.person_id).seit ?? null, bis: probe.get(m.person_id).bis ?? null } } : {}), // KC-CLUB-PROBEPHASE
           })),
         });
       }
@@ -5090,6 +5133,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const { data: v } = await db.from("kc_club_vorschlaege").select("*").eq("id", String(p.id || "")).maybeSingle();
         if (!v) throw new Fehler("Vorschlag nicht gefunden.", 404);
         if (v.status !== "offen") throw new Fehler("Hier kann nicht mehr abgestimmt werden.", 409);
+        if (await inProbe(ich.person_id)) throw new Fehler("In der Probephase kann noch nicht abgestimmt werden.", 403); // KC-CLUB-PROBEPHASE
         if (v.ziel_ids && !v.ziel_ids.includes(ich.person_id)) throw new Fehler("Diese Abstimmung ist nur für eine bestimmte Gruppe.", 403); // KC-CLUB-ABSTIMMUNG-ZIEL
         if (unterstuetzbar(v.art)) {
           // Unterstützen an/aus (Thema und Spendenprojekt)
@@ -5520,7 +5564,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             db.from("kc_club_protokoll").select("details").eq("aktion", "begruessung_gesendet").gte("zeit", new Date(jetztMs - 7 * 86400000).toISOString()),
           ]);
           const begruesst = new Set((schon ?? []).map((x: any) => x.details?.fuer));
-          const heuteNeu = (neu ?? []).filter((z: any) => berlinTag(new Date(z.erstmals_gesehen)) === heute && !begruesst.has(z.person_id));
+          const probe = await probeListe(); // KC-CLUB-PROBEPHASE: Probe-Mitglieder erst nach dem Übernehmen begrüßen
+          const heuteNeu = (neu ?? []).filter((z: any) => berlinTag(new Date(z.erstmals_gesehen)) === heute && !begruesst.has(z.person_id) && !probe.has(z.person_id));
           const lp = await personen(heuteNeu.map((z: any) => z.person_id));
           aus.neuDa = heuteNeu.map((z: any) => ({ person_id: z.person_id, name: lp.get(z.person_id)?.display_name || z.person_id, vorname: vorname(lp.get(z.person_id) ?? null), zeit: z.erstmals_gesehen }));
           // KC-CLUB-FP-UEBERWACHUNG (1.58.0): Fehlerprotokoll zu voll → fragen, ob geleert werden soll
@@ -6517,6 +6562,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           notfall: nf ?? null,
           zuletztDa: selbst ? null : (await zuletztDaMap(ich, [pid])).get(pid) ?? null, // KC-CLUB-ZULETZT-DA (1.20.0)
           chatAnzahl: await chatAnzahlMit(ich, pid).catch(() => null), // KC-CLUB-NACHRICHTEN-ZAHL (2.34.0)
+          ...(ich.admin && !selbst ? { probe: (await probeListe(true)).get(pid) ?? null, probeMoeglich: !/^KC-P-TEST/.test(pid) } : {}), // KC-CLUB-PROBEPHASE
         });
       }
 
@@ -7069,6 +7115,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       // ----- KC-CLUB-NUTZUNG (0.99.0): Statistik OHNE Namen – nur Tag + Bereich + Anzahl. Wer meldet, wird NICHT gespeichert
       // (kein protokoll(), keine Person, kein Gerät). Nur bekannte Bereiche, gedeckelt gegen Ausreißer.
       case "nutzung_melden": {
+        if (await ichInProbe(ich)) return json({ ok: true, probe: true }); // KC-CLUB-PROBEPHASE: Probe zählt nicht in der Nutzung
         const z = (p.zaehler && typeof p.zaehler === "object") ? p.zaehler : {};
         const paare = Object.entries(z).filter(([b, n]) => NUTZUNG_BEREICHE.has(String(b)) && Number.isFinite(Number(n)) && Number(n) > 0).slice(0, 40)
           .map(([b, n]) => [String(b), Math.min(200, Math.round(Number(n)))] as [string, number]);
@@ -10355,6 +10402,77 @@ Köcheclub-App`,
       }
 
       // ----- Admin -----
+      // ----- KC-CLUB-PROBEPHASE (2.51.0): Probe starten / übernehmen / beenden (nur Admin) -----
+      case "probe_setzen": {
+        nurAdmin(ich);
+        const pid = String(p.person_id || ""), tage = Number(p.tage);
+        if (!PROBE_TAGE.includes(tage)) throw new Fehler("Bitte eine Frist wählen (2, 4 oder 8 Wochen).");
+        if (pid === ich.person_id || /^KC-P-TEST/.test(pid)) throw new Fehler("Für dieses Mitglied gibt es keine Probephase.");
+        const [{ data: pe }, { data: ro }] = await Promise.all([db.from("kc_core_people").select("active,org_id").eq("person_id", pid).maybeSingle(),
+          db.from("kc_club_rollen").select("ist_admin").eq("person_id", pid).maybeSingle()]);
+        if (!pe?.active || pe.org_id !== ORG) throw new Fehler("Mitglied nicht gefunden.", 404);
+        if (ro?.ist_admin) throw new Fehler("Admins können nicht in die Probephase.");
+        const alt = (await probeListe(true)).get(pid);
+        const wert = { an: true, seit: alt?.seit ?? jetzt(), bis: berlinTag(new Date(Date.now() + tage * 86400000)), von: ich.person_id };
+        const { error } = await db.from("kc_club_person_einstellung").upsert({ person_id: pid, schluessel: "probephase", wert, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
+        if (error) throw new Fehler("Die Probephase konnte nicht gespeichert werden – bitte noch einmal versuchen.", 500);
+        PROBE.bis = 0;
+        await protokoll(ich.person_id, alt ? "probe_verlaengert" : "probe_gestartet", { fuer: pid, bis: wert.bis });
+        return json({ ok: true, probe: wert });
+      }
+      case "probe_ende": {
+        nurAdmin(ich);
+        const pid = String(p.person_id || ""), art = String(p.art || "");
+        if (!["uebernehmen", "beenden"].includes(art)) throw new Fehler("Bitte „Übernehmen“ oder „Beenden“ wählen.");
+        const w = (await probeListe(true)).get(pid);
+        if (!w) throw new Fehler("Dieses Mitglied ist nicht (mehr) in der Probephase.", 409);
+        const leute = await personen([pid]), name = leute.get(pid)?.display_name || pid;
+        if (art === "uebernehmen") {
+          const { error } = await db.from("kc_club_person_einstellung").delete().eq("person_id", pid).eq("schluessel", "probephase");
+          if (error) throw new Fehler("Das hat nicht geklappt – bitte noch einmal versuchen.", 500);
+          PROBE.bis = 0;
+          let begruesst = false;
+          if (p.begruessen === true) {
+            await db.from("kc_club_person_einstellung").delete().eq("person_id", pid).eq("schluessel", "willkommen_zettel");
+            begruesst = !!(await willkommenAushaengen(pid, name).catch(() => false));
+          }
+          await protokoll(ich.person_id, "probe_uebernommen", { fuer: pid, seit: w.seit ?? null, begruesst });
+          return json({ ok: true, begruesst });
+        }
+        // Beenden: Recovery-Punkt (was geändert wird) ins Protokoll, dann Zugang aus, Geräte ab, Einstellungen weg, aus Gruppen
+        const [{ data: eins }, { data: tn }, { data: gr }] = await Promise.all([
+          db.from("kc_club_person_einstellung").select("schluessel,wert").eq("person_id", pid),
+          db.from("kc_communication_thread_participants").select("thread_id").eq("person_id", pid),
+          db.from("kc_club_gruppen").select("thread_id,erstellt_von,admins"),
+        ]);
+        const gruppen = new Map((gr ?? []).map((g: any) => [g.thread_id, g]));
+        const inGruppen = (tn ?? []).map((x: any) => x.thread_id).filter((id: string) => gruppen.has(id));
+        await geloescht(ich, "probe", { fuer: pid, probe: w, einstellungen: eins ?? [], gruppen: inGruppen });
+        const { error: ze } = await db.from("kc_club_zugang").update({ aktiv: false, neu_token_hash: null, neu_bis: null }).eq("person_id", pid);
+        if (ze) throw new Fehler("Der Zugang konnte nicht abgeschaltet werden – es wurde nichts weiter geändert.", 500);
+        anmeldungenVergessen(); // Link sofort ungültig
+        await db.from("kc_member_push_subscriptions").update({ active: false, updated_at: jetzt() }).eq("person_id", pid);
+        await db.from("kc_club_benachrichtigung").delete().eq("person_id", pid);
+        await db.from("kc_club_person_einstellung").delete().eq("person_id", pid);
+        PROBE.bis = 0;
+        for (const tid of inGruppen) {
+          const g: any = gruppen.get(tid);
+          if (Array.isArray(g.admins) && g.admins.includes(pid)) await db.from("kc_club_gruppen").update({ admins: g.admins.filter((x: string) => x !== pid) }).eq("thread_id", tid);
+          if (g.erstellt_von === pid) await db.from("kc_club_gruppen").update({ erstellt_von: ich.person_id, geaendert_am: jetzt() }).eq("thread_id", tid);
+          await db.from("kc_communication_thread_participants").delete().eq("thread_id", tid).eq("person_id", pid);
+        }
+        let entfernt = 0;
+        if (p.nachrichten_entfernen === true) {
+          const { data: ms } = await db.from("kc_communication_messages").select("id,thread_id,body").eq("sender_person_id", pid).limit(1000);
+          if ((ms ?? []).length) {
+            await geloescht(ich, "probe_nachrichten", { fuer: pid, nachrichten: ms });
+            const { data: up } = await db.from("kc_communication_messages").update({ body: "🗑️ Nachricht entfernt" }).eq("sender_person_id", pid).in("id", (ms ?? []).map((m: any) => m.id)).select("id");
+            entfernt = (up ?? []).length;
+          }
+        }
+        await protokoll(ich.person_id, "probe_beendet", { fuer: pid, seit: w.seit ?? null, gruppen: inGruppen.length, nachrichten_entfernt: entfernt });
+        return json({ ok: true, gruppen: inGruppen.length, entfernt, name });
+      }
       case "link_erzeugen": {
         nurAdmin(ich);
         const pid = String(p.person_id || "");

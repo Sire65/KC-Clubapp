@@ -1078,7 +1078,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/db\.rpc\("kc_club_anmeldung", \{ p_hash: hash, p_version: version \}\)/.test(an) && /if \(!a\) throw new Fehler\("Kein Zugang/.test(an) && /if \(!p\?\.active\) throw/.test(an), "Datenbank-Prüfung beim Nachladen fehlt");
   const rpc = lies("supabase/migrations/20260929_kc_club_v57_anmeldung_rpc.sql");
   assert.ok(/where token_hash = p_hash and aktiv/.test(rpc) && /revoke all on function public\.kc_club_anmeldung\(text, text\) from public, anon, authenticated;/.test(rpc), "Anmelde-RPC prüft nicht aktiv / ist öffentlich");
-  assert.equal((server.match(/anmeldungenVergessen\(\);/g) || []).length, 5, "Zugang/Rollen/Büro-Rechte ändern leert den Speicher nicht"); // 1.96.0: +1 Übernahme des vorgemerkten Links
+  assert.equal((server.match(/anmeldungenVergessen\(\);/g) || []).length, 6, "Zugang/Rollen/Büro-Rechte ändern leert den Speicher nicht"); // 1.96.0: +1 Übernahme des vorgemerkten Links; 2.51.0: +1 Probephase beenden
   assert.ok(/serverMs: Date\.now\(\) - t0Anfrage/.test(server) && /Server gesamt \$\{t\.srv\} ms/.test(html), "Server-Zeit im Verbindungstest fehlt");
   // Live-Tippen
   assert.ok(/live_tippen: \(w\) => \(\{ an: w\?\.an === true \}\)/.test(server), "Einstellung nicht standardmäßig aus");
@@ -5232,6 +5232,26 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.match(K.avZahlWort(11827419912496742400n), /^rund 11,8 Trillionen$/);
   assert.equal(d.gruppen.length, 6, "sechs Gruppen: Person, Gesicht, Kopfbedeckung, Brille, Kochjacke, Hintergrund");
   assert.ok(/class="av-info-knopf" onclick="avKombiInfo\(\)"/.test(html) && /\.av-info-knopf \{[^}]*background: #1565c0/.test(html), "blauer ⓘ-Knopf im Baukasten");
+}
+// 2.51.0 KC-CLUB-PROBEPHASE (Wunsch Hansi): Mitglied testet die App erst – ohne Begrüßung/Pinnwand, Admin übernimmt oder beendet mit einem Schalter
+{
+  const z = server.slice(server.indexOf("async function willkommenZettel("), server.indexOf("// KC-CLUB-WILLKOMMEN-BEGRUESSEN (2.30.1"));
+  assert.ok(/if \(await inProbe\(ich\.person_id\)\) return;/.test(z), "kein Willkommens-Zettel in der Probe");
+  assert.ok(/&& !probe\.has\(z\.person_id\)\);/.test(server), "keine Begrüßung in der Tagesinfo");
+  assert.ok(/if \(probe\.has\(id\) && !w\.has\(id\)\) \{ if \(BEREICH_VON\[eventKey\] !== "termine"\) continue;/.test(server), "Push/Mail nur nach eigener Wahl, Termine weiter per Mail");
+  assert.ok(/In der Probephase kann noch nicht abgestimmt werden/.test(server) && /case "nutzung_melden": \{\n        if \(await ichInProbe\(ich\)\) return json/.test(server), "keine Stimme, keine Nutzung");
+  const e = server.slice(server.indexOf('case "probe_setzen": {'), server.indexOf('case "link_erzeugen": {'));
+  assert.equal((e.match(/nurAdmin\(ich\);/g) || []).length, 2, "nur Admin");
+  assert.ok(/PROBE_TAGE\.includes\(tage\)/.test(e) && /ro\?\.ist_admin/.test(e) && /KC-P-TEST/.test(e), "Frist aus Auswahl, keine Admins/Testpersonen");
+  const ende = e.slice(e.indexOf("// Beenden:"));
+  assert.ok(ende.indexOf('await geloescht(ich, "probe"') < ende.indexOf('kc_club_zugang").update({ aktiv: false'), "Recovery-Punkt vor dem Abschalten");
+  assert.ok(/anmeldungenVergessen\(\)/.test(ende) && /kc_member_push_subscriptions"\)\.update\(\{ active: false/.test(ende) && /thread_participants"\)\.delete\(\)\.eq\("thread_id", tid\)\.eq\("person_id", pid\)/.test(ende), "Link aus, Geräte ab, aus Gruppen");
+  assert.ok(/if \(p\.nachrichten_entfernen === true\)/.test(ende) && /update\(\{ body: "🗑️ Nachricht entfernt" \}\)/.test(ende) && !/kc_communication_messages"\)\.delete/.test(ende), "Nachrichten bleiben, optional nur ersetzt (nie gelöscht)");
+  assert.ok(/kc_core_people"\)\.select\("active,org_id"\)/.test(e) && !/kc_core_people"\)\.(update|insert|upsert|delete)/.test(e), "kc_core_people nur lesen");
+  assert.ok(/await probeErinnern\(\)\.catch/.test(server) && /w\.erinnert !== heute/.test(server), "Frist-Erinnerung einmal am Tag");
+  assert.ok(/\.\.\.\(ich\.admin && probe\.has\(m\.person_id\) \? \{ probe:/.test(server) && /\.\.\.\(ich\.admin && !selbst \? \{ probe:/.test(server), "Probe-Info nur für den Admin");
+  assert.ok(/function prKarte\(m\) \{\n  if \(!ICH\?\.admin \|\| m\.selbst/.test(html) && /\$\{prKarte\(m\)\}/.test(html), "Karte nur für den Admin auf der Mitglied-Seite");
+  assert.ok(/api\("probe_ende", \{ person_id: pid, art: "beenden", nachrichten_entfernen: mit \}\)/.test(html) && /api\("probe_ende", \{ person_id: pid, art: "uebernehmen", begruessen \}\)/.test(html), "Übernehmen fragt nach Begrüßung, Beenden mit Häkchen");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

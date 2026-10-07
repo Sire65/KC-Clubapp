@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.50.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.51.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -14480,7 +14480,7 @@ function mgKachelnHtml(liste) {
     return `<div class="mini-kachel mg-kachel${on ? " mg-online" : ""}" onclick="mitgliedOeffnen('${m.person_id}')" role="button" tabindex="0">
       ${kreis(m, m.name, 58)}<span class="mk-titel">${esc(m.name)}</span>
       ${m.aemter?.length ? `<span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}
-      ${m.status || m.aktiv ? `<span class="stmarke st-${statusArt(m.status)}">${esc(m.status ? statusText(m.status) : "🟢 verfügbar")}</span>` : ""}${da}${ICH.admin && m.unerreichbar ? '<span class="mk-unter" title="kein Push, keine E-Mail – nur über 🔗 Link oder Telefon">📵 nicht erreichbar</span>' : ""}
+      ${m.status || m.aktiv ? `<span class="stmarke st-${statusArt(m.status)}">${esc(m.status ? statusText(m.status) : "🟢 verfügbar")}</span>` : ""}${da}${ICH.admin && m.unerreichbar ? '<span class="mk-unter" title="kein Push, keine E-Mail – nur über 🔗 Link oder Telefon">📵 nicht erreichbar</span>' : ""}${ICH.admin && m.probe ? `<span class="mk-unter" title="Probephase – nur für dich als Admin sichtbar">🧪 Probe${m.probe.bis ? " bis " + esc(prDatum(m.probe.bis)) : ""}</span>` : ""}
       ${ich ? '<span class="mk-unter"><b>(du)</b></span>' : `<span class="mg-knoepfe" onclick="event.stopPropagation()"><button class="knopf klein" title="Nachricht" onclick="direkt('${m.person_id}')">💬</button>${on ? `<button class="knopf klein" title="Anklopfen" onclick="anklopfen('${m.person_id}')">👋</button>` : ""}${mgAnrufKnoepfe(m)}</span>`}</div>`; // 2.23.87 (Wunsch Hansi): 📞/🎥 auch auf der Kachel – aktiv bei online (gleicher Baustein wie in der Liste)
   };
   return `<p class="hinweis" style="margin:0 2px 8px;font-size:.85rem">🟢 online · 🔵 heute da · 🟠 abwesend · ⚪ noch nie in der App – Kachel antippen für Telefon, Adresse${ICH?.admin ? ", 🔗 Link und 🎖️ Ämter" : " usw."}</p>
@@ -14560,7 +14560,7 @@ function mitgliederZeichnen() {
       ${kreis(m, m.name, 40, `onclick="mitgliedOeffnen('${m.person_id}')"`)}
       <div style="flex:1;cursor:pointer" onclick="mitgliedOeffnen('${m.person_id}')"><b>${esc(m.name)}</b>${wegIcons(m)} <span class="hinweis">›</span>${m.aemter?.length ? ` <span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}
         <div class="hinweis" style="font-size:.85rem">${m.online ? '<b style="color:var(--textGruen)">● online</b> · ' : ""}${m.status || m.aktiv ? `<span class="stmarke st-${statusArt(m.status)}">${esc(m.status ? statusText(m.status) : "🟢 verfügbar")}</span>` : "⚪ noch nicht in der App"}${m.aktiv ? " · 📲 aktiv" : ""}${!m.online && m.zuletztDa ? ` · 🕒 ${esc(zuletztText(m.zuletztDa))}` : ""}</div>
-        ${ICH.admin && (m.app || m.push || !m.mail || m.protokolle === false || m.unerreichbar) ? `<div class="hinweis" style="font-size:.85rem">${[m.app && m.zuletzt ? "zuletzt " + zeitKurz(m.zuletzt) : m.app ? "Link verschickt" : "", m.push ? "🔔 Push" : "", m.unerreichbar ? "📵 nicht erreichbar – kein Push, keine Mail" : m.mail ? "" : "⚠️ keine Mail", m.protokolle === false ? "📄 ohne Protokolle" : "", m.app && m.zuletzt ? (m.ansicht === "einfach" ? "🟢 einfache Ansicht" : m.ansicht === "erweitert" ? "🔧 erweiterte Ansicht" : "❔ Ansicht noch nicht gewählt") : ""].filter(Boolean).join(" · ")}</div>` : ""}</div>
+        ${ICH.admin && (m.app || m.push || !m.mail || m.protokolle === false || m.unerreichbar || m.probe) ? `<div class="hinweis" style="font-size:.85rem">${[m.app && m.zuletzt ? "zuletzt " + zeitKurz(m.zuletzt) : m.app ? "Link verschickt" : "", m.push ? "🔔 Push" : "", m.unerreichbar ? "📵 nicht erreichbar – kein Push, keine Mail" : m.mail ? "" : "⚠️ keine Mail", m.protokolle === false ? "📄 ohne Protokolle" : "", m.probe ? "🧪 Probephase" : "", m.app && m.zuletzt ? (m.ansicht === "einfach" ? "🟢 einfache Ansicht" : m.ansicht === "erweitert" ? "🔧 erweiterte Ansicht" : "❔ Ansicht noch nicht gewählt") : ""].filter(Boolean).join(" · ")}</div>` : ""}</div>
       <div class="mg-akt${ICH.admin ? " mg-akt3" : ""}">${m.online ? `<button class="knopf klein" title="Anklopfen – direkt schreiben" onclick="anklopfen('${m.person_id}')">👋</button>` : ""}${m.person_id !== ICH.person_id ? `<button class="knopf klein" title="Nachricht" onclick="direkt('${m.person_id}')">💬</button>${mgAnrufKnoepfe(m)}` : ""}
       ${ICH.admin ? `<button class="knopf klein" title="App-Link" onclick="linkTeilen('${m.person_id}')">🔗</button><button class="knopf klein" title="Einrichtungskarte drucken" onclick="einrichtungskarte('${m.person_id}')">🖨️</button><button class="knopf klein" title="Amt & Rechte" onclick="rolleBearbeiten('${m.person_id}')">🎖️</button>` : ""}</div></div>`).join("")
       + '<p class="hinweis">Namen antippen für Details (Telefon, Adresse … sofern freigegeben).</p>'
@@ -17400,10 +17400,60 @@ function mitgliedZeigen() {
       ${ICH?.admin ? `<button class="knopf" onclick="linkTeilen('${m.person_id}')"><span class="kt-ico">🔗</span>App-Link</button><button class="knopf" onclick="einrichtungskarte('${m.person_id}')"><span class="kt-ico">🖨️</span>Einrichtungs&shy;karte</button><button class="knopf" onclick="rolleBearbeiten('${m.person_id}')"><span class="kt-ico">🎖️</span>Amt & Rechte</button>` : ""}
       ${zeilen ? '<button class="knopf" onclick="kontaktSpeichern()"><span class="kt-ico">📇</span>Ins Telefonbuch</button>' : ""}
     </div>
+    ${prKarte(m)}
     ${m.selbst ? `<div class="karte"><h3>Deine Daten</h3>
       <p class="hinweis" style="margin-top:0">Oben steht alles, was über dich gespeichert ist. 🔒 = nicht freigegeben, sehen die anderen nicht. Freigeben kannst du unter ⚙️ Mehr → Privatsphäre.</p>
       <div class="knoepfe"><button class="knopf" onclick="zeige('einstellungen')">🔒 Freigaben ändern</button><button class="knopf" onclick="korrekturMelden()">📝 Korrektur an ${adminName()} melden</button></div></div>` : ""}`;
   mdKachelnOrdnen(); // KC-CLUB-MD-KACHELN
+}
+// ---------- KC-CLUB-PROBEPHASE (2.51.0, Wunsch Hansi): Mitglied testet die App erst – Admin startet, übernimmt oder beendet ----------
+// In der Probe: kein Willkommens-Zettel, keine Begrüßung, Push/Mail nur nach eigener Wahl, nicht in der Nutzung, noch keine Stimmabgabe.
+const PR_FRIST = [[14, "2 Wochen"], [28, "4 Wochen"], [56, "8 Wochen"]];
+const prDatum = (t) => /^\d{4}-\d{2}-\d{2}/.test(String(t || "")) ? String(t).slice(0, 10).split("-").reverse().join(".") : "–";
+function prKarte(m) {
+  if (!ICH?.admin || m.selbst || !("probe" in m) || !m.probeMoeglich) return "";
+  const p = m.probe, vorbei = p?.bis && p.bis <= new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" });
+  if (!p) return `<div class="karte pr-karte"><h3>🧪 Probephase</h3><p class="hinweis" style="margin-top:0">${esc(m.vorname || m.name)} kann die App erst ausprobieren: ohne Willkommens-Zettel und Begrüßung, Push/E-Mail nur nach eigener Wahl, nicht in der Statistik, noch keine Abstimmungen. Danach mit einem Tipp übernehmen oder beenden.</p>
+    <button class="knopf" onclick="prStarten('${esc(m.person_id)}')">🧪 Probephase starten</button></div>`;
+  return `<div class="karte pr-karte pr-an"><h3>🧪 In der Probephase</h3>
+    <p style="margin-top:0">Seit ${esc(prDatum(p.seit))} · bis ${esc(prDatum(p.bis))}${vorbei ? ' · <b class="pr-um">Frist ist um</b>' : ""}</p>
+    <div class="knoepfe"><button class="knopf haupt" onclick="prUebernehmen('${esc(m.person_id)}')">✅ Übernehmen</button><button class="knopf" onclick="prStarten('${esc(m.person_id)}', true)">⏳ Verlängern</button><button class="knopf" onclick="prBeenden('${esc(m.person_id)}')">🚪 Beenden</button></div></div>`;
+}
+function prStarten(pid, verlaengern) {
+  const m = MD?.person_id === pid ? MD : null;
+  const f = blattAuf("prBlatt", `<h3 style="margin-top:0">🧪 ${verlaengern ? "Probephase verlängern" : "Probephase starten"}</h3>
+    <p class="hinweis" style="margin-top:0">${esc(m?.name || "")} – wie lange soll ${verlaengern ? "sie ab heute noch" : "sie"} laufen? Danach bekommst du eine Erinnerung.</p>
+    <div class="knoepfe">${PR_FRIST.map(([t, n]) => `<button class="knopf" data-t="${t}">${n}</button>`).join("")}</div>
+    <div class="knoepfe" style="margin-top:10px"><button class="knopf" data-zu="1">Abbrechen</button></div>`);
+  f.querySelector("[data-zu]").onclick = () => f.remove();
+  f.querySelectorAll("[data-t]").forEach((b) => (b.onclick = async () => {
+    f.remove();
+    try { await api("probe_setzen", { person_id: pid, tage: Number(b.dataset.t) }); spur("probe_gesetzt", pid); melde(verlaengern ? "⏳ Probephase verlängert" : "🧪 Probephase läuft – keine Begrüßung, keine Pinnwand"); MITGLIEDER = null; mitgliedOeffnen(pid, true); }
+    catch (e) { meldeFehler(e); }
+  }));
+}
+async function prUebernehmen(pid) {
+  const n = MD?.vorname || MD?.name || "";
+  if (!(await frage(`✅ ${n} übernehmen?\nAb jetzt ganz normal dabei: Benachrichtigungen wie bei allen, Statistik, Abstimmungen.`, { ja: "✅ Übernehmen" }))) return;
+  const begruessen = await frage(`💐 ${n} jetzt begrüßen?\nEs wird ein Willkommens-Zettel an die Pinnwand gehängt (ohne Push und E-Mail).`, { ja: "💐 Ja, begrüßen", nein: "Nein, still übernehmen" });
+  try { const r = await api("probe_ende", { person_id: pid, art: "uebernehmen", begruessen }); spur("probe_uebernommen", pid); melde(r.begruesst ? "✅ Übernommen – Willkommens-Zettel hängt" : "✅ Übernommen"); MITGLIEDER = null; mitgliedOeffnen(pid, true); }
+  catch (e) { meldeFehler(e); }
+}
+function prBeenden(pid) {
+  const n = MD?.vorname || MD?.name || "";
+  const f = blattAuf("prBlatt", `<h3 style="margin-top:0">🚪 Probephase beenden</h3>
+    <p style="margin-top:0">${esc(n)} möchte die App nicht nutzen. Beim Beenden:</p>
+    <ul class="pr-liste"><li>Der persönliche Link gilt nicht mehr, Geräte werden abgemeldet</li><li>Push-Anmeldungen und Einstellungen werden gelöscht</li><li>${esc(n)} wird aus den Gruppen genommen</li><li>Nachrichten bleiben stehen (außer du wählst unten anders)</li></ul>
+    <label class="zeile" style="gap:10px"><input type="checkbox" id="prMitNachr"> <span>Eigene Nachrichten von ${esc(n)} auch entfernen <small class="hinweis">(werden durch „🗑️ Nachricht entfernt“ ersetzt)</small></span></label>
+    <p class="hinweis">Kann später wieder rückgängig gemacht werden: einfach einen neuen 🔗 App-Link erzeugen.</p>
+    <div class="dlg-knoepfe"><button class="knopf haupt dlg-gefahr" data-ja="1">🚪 Beenden</button><button class="knopf" data-zu="1">Abbrechen</button></div>`);
+  f.querySelector("[data-zu]").onclick = () => f.remove();
+  f.querySelector("[data-ja]").onclick = async () => {
+    const mit = !!f.querySelector("#prMitNachr")?.checked; f.remove();
+    try { const r = await api("probe_ende", { person_id: pid, art: "beenden", nachrichten_entfernen: mit }); spur("probe_beendet", pid);
+      melde(`🚪 Probephase beendet – Zugang aus${r.gruppen ? `, aus ${r.gruppen} ${r.gruppen === 1 ? "Gruppe" : "Gruppen"} genommen` : ""}${r.entfernt ? `, ${r.entfernt} Nachrichten entfernt` : ""}`); MITGLIEDER = null; mitgliedOeffnen(pid, true); }
+    catch (e) { meldeFehler(e); }
+  };
 }
 // vCard, damit man den Kontakt mit einem Tipp ins Telefonbuch übernehmen kann
 function kontaktSpeichern() {
@@ -18835,7 +18885,7 @@ async function spurSenden() {
 }
 setInterval(spurSenden, sparTakt(NZ_TAKT_MS));
 document.addEventListener("visibilitychange", () => { if (document.hidden) spurSenden(); });
-const SPUR_WAS = { geoeffnet: "📲 App geöffnet", mitglied: "👤 Mitglied angesehen", chat: "💬 Unterhaltung geöffnet", gesendet: "✉️ Nachricht gesendet", gesendet_anlage: "📎 Nachricht mit Anhang gesendet",
+const SPUR_WAS = { probe_gesetzt: "🧪 Probephase gestartet/verlängert", probe_uebernommen: "✅ Probephase übernommen", probe_beendet: "🚪 Probephase beendet", geoeffnet: "📲 App geöffnet", mitglied: "👤 Mitglied angesehen", chat: "💬 Unterhaltung geöffnet", gesendet: "✉️ Nachricht gesendet", gesendet_anlage: "📎 Nachricht mit Anhang gesendet",
   anruf: "📞 Anruf (App) an", video: "🎥 Videoanruf an", anklopfen: "👋 Angeklopft bei", telefon: "☎️ Telefonnummer angetippt", whatsapp: "🟢 WhatsApp geöffnet", mail: "✉️ E-Mail-Adresse angetippt", meine_statistik: "📊 Eigene Nachrichten-Statistik angesehen",
   mein_bild: "🧑‍🍳 „Mein Bild“ geöffnet", bild_gewaehlt: "🧑‍🍳 Koch-Figur als Bild gewählt", bild_gebaut: "🧩 Eigene Figur gespeichert", bild_foto: "📷 Eigenes Foto als Bild gesetzt", bild_entfernt: "🧑‍🍳 Bild entfernt (Buchstaben)", avatar_kombi: "ⓘ Figuren-Möglichkeiten angesehen", jacke_auto_an: "🔄 Kochjacke täglich wechselnd eingeschaltet", jacke_auto_aus: "🔄 Kochjacke täglich wechselnd ausgeschaltet" };
 const SPW = { tag: null, person: null };

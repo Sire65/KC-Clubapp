@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.51.0 – 2026-10-07 – KC-CLUB-PROBEPHASE
+Admin kann Mitglieder erst in eine Probephase setzen (2/4/8 Wochen): kein Willkommens-Zettel, keine Begrüßung, Push/Mail nur nach eigener Wahl (Termine weiter per Mail), nicht in der Nutzung, keine Stimmabgabe. Danach ✅ Übernehmen (optional begrüßen) oder 🚪 Beenden (Link ungültig, Geräte ab, Einstellungen weg, aus Gruppen; Nachrichten bleiben, optional ersetzen). Frist-Erinnerung an den Admin. Server 2.51.0.
+
 ## 2.50.0 – 2026-10-07 – KC-CLUB-AVATAR-KOMBI
 Wunsch Hansi: Im Baukasten „🧩 Figur zusammenstellen“ ein kleiner blauer ⓘ-Knopf. Er zeigt, wie viele verschiedene Figuren möglich sind (derzeit rund 11,8 Trillionen), geordnet nach Person, Gesicht, Kopfbedeckung, Brille, Kochjacke, Hintergrund, mit kurzer Erklärung der Rechnung und einem Vergleich (eine Figur je Sekunde ≈ 375 Milliarden Jahre). Die Zahlen rechnet die App aus ihren Auswahllisten – sie stimmen nach jeder Erweiterung von selbst. Nur App.
 
