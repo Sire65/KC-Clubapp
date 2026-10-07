@@ -5314,6 +5314,15 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/einst\("reisswolf", true\)/.test(r) && /prefers-reduced-motion: reduce/.test(r) && /SPAR\?\.an/.test(r) && /catch \{ return Promise\.resolve\(\); \}/.test(r), "abschaltbar, ruhig, Fehler stören das Löschen nie");
   assert.ok(/await api\("nachricht_loeschen", \{ id \}\); await reisswolf\(/.test(html) && /await api\("pinnwand_abnehmen", \{ id \}\); await reisswolf\(/.test(html) && /await api\("foto_loeschen", \{ id: f\.id \}\); await reisswolf\(/.test(html), "erst nach erfolgreichem Löschen");
 }
+// 2.54.0 KC-CLUB-LINK-AN-MICH (Fall Manfred: eigener statt fremder Link aufs Tablet gemailt): Knöpfe eindeutig, fremden Link nur an den Admin, deutlich beschriftet
+{
+  assert.ok(/>📧 Meinen eigenen Link mailen<\/button>/.test(html) && /betreff: `Köcheclub Werne – dein eigener Link \(\$\{ich\.name\}\) für Tablet und PC`/.test(server), "eigener Link klar benannt");
+  const f = server.slice(server.indexOf('case "link_an_mich_mailen": {'), server.indexOf('case "anruf_antworten_setzen"'));
+  assert.ok(/nurAdmin\(ich\);/.test(f) && /zu\.token_hash !== await sha256\(tm\[1\]\)/.test(f), "nur Admin, nur der echte Link des Mitglieds");
+  assert.ok(/routerSenden\("club_nachricht_mail", \[ich\.person_id\]/.test(f) && !/routerSenden\([^)]*\[pid\]/.test(f), "geht nur an den Admin, nie an das Mitglied");
+  assert.ok(/NICHT dein eigener/.test(f) && /kc_club_zugangslinks_schwaerzen/.test(f) && /link_an_admin_gemailt/.test(f), "deutlich beschriftet, Link im Versandprotokoll geschwärzt, protokolliert");
+  assert.ok(/api\("link_an_mich_mailen", \{ person_id: pid, link \}/.test(html), "Knopf im Link-Fenster");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

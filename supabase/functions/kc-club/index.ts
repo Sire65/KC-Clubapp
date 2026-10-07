@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.53.0";
+const SERVER_VERSION = "2.54.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -8010,13 +8010,46 @@ Köcheclub-App`,
         const link = `${APP_URL}?k=${schluessel}`;
         const versand = await routerSenden("club_nachricht_mail", [ich.person_id], {
           titel: "💻 Die Club-App auf Tablet und PC", kurz: "Dein persönlicher Link für dein weiteres Gerät.",
-          betreff: "Köcheclub Werne – die Club-App auf Tablet und PC",
+          betreff: `Köcheclub Werne – dein eigener Link (${ich.name}) für Tablet und PC`, // 2.54.0 (Fall Manfred): klar, wessen Link es ist
           text: `Hallo ${ich.vorname},\n\nhier ist dein persönlicher Link zur Köcheclub-App für dein Tablet oder deinen PC:\n\n${link}\n\nÖffne diese Mail auf dem Tablet oder PC und tippe auf den Link – fertig. Deine Einstellungen kommen mit (Ansicht, Farbe, Benachrichtigungen); Schriftgröße und Ton stellst du auf jedem Gerät selbst ein.\n\nDer Link gilt auch weiter auf deinem Handy. Bitte nicht weitergeben – er gehört nur dir.\n\nViele Grüße\nKöcheclub Werne`,
           url: link,
         }, `club-zugang-geraet:${ich.person_id}:${Date.now()}`);
         await db.rpc("kc_club_zugangslinks_schwaerzen").then(() => {}, () => {});
         await protokoll(ich.person_id, "zugang_link_gemailt", { versand });
         return json({ ok: (versand.gesendet ?? 0) > 0, versand });
+      }
+
+      // KC-CLUB-LINK-AN-MICH (2.54.0, Fall Manfred): Admin richtet das Gerät eines Mitglieds ein – den gerade erzeugten Link dieses
+      // Mitglieds an die EIGENE Adresse mailen, unübersehbar beschriftet („nicht dein eigener Link“). Nur wenn der Link wirklich zu
+      // diesem Mitglied gehört (Abdruck stimmt); an das Mitglied selbst geht nichts.
+      case "link_an_mich_mailen": {
+        nurAdmin(ich);
+        const pid = String(p.person_id || ""), tm = /[?&]k=([0-9a-f]{32,96})$/.exec(String(p.link || ""));
+        if (!tm || pid === ich.person_id) throw new Fehler("Link fehlt – bitte zuerst „🔗 App-Link“ erzeugen.");
+        const { data: zu } = await db.from("kc_club_zugang").select("token_hash").eq("person_id", pid).maybeSingle();
+        if (!zu || zu.token_hash !== await sha256(tm[1])) throw new Fehler("Dieser Link gehört nicht (mehr) zu diesem Mitglied – bitte neu erzeugen.", 409);
+        const { count } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("person_id", ich.person_id).eq("aktion", "link_an_admin_gemailt").gte("zeit", new Date(Date.now() - 3600000).toISOString());
+        if ((count ?? 0) >= 10) throw new Fehler("Gerade wurden schon viele Links verschickt – bitte später noch einmal.", 429);
+        const name = (await personen([pid])).get(pid)?.display_name || pid, link = `${APP_URL}?k=${tm[1]}`;
+        const versand = await routerSenden("club_nachricht_mail", [ich.person_id], {
+          titel: `🔗 Link für ${name}`, kurz: `Zum Einrichten auf dem Gerät von ${name} – nicht dein eigener Link.`,
+          betreff: `Köcheclub Werne – Link für ${name} (NICHT dein eigener)`,
+          text: `Hallo ${ich.vorname},
+
+das ist der persönliche Link von ${name} – nicht dein eigener:
+
+${link}
+
+Öffne ihn nur auf dem Gerät von ${name}. Wer ihn öffnet, ist in der App als ${name} angemeldet.
+Danach diese Mail am besten löschen.
+
+Viele Grüße
+Köcheclub-App`,
+          url: link,
+        }, `club-link-an-admin:${pid}:${Date.now()}`);
+        await db.rpc("kc_club_zugangslinks_schwaerzen").then(() => {}, () => {});
+        await protokoll(ich.person_id, "link_an_admin_gemailt", { fuer: pid, versand });
+        return json({ ok: (versand.gesendet ?? 0) > 0, versand, name });
       }
 
       // KC-CLUB-ANRUF-KURZANTWORT (0.81.0): Schnellantworten für alle einstellen (Admin)
