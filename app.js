@@ -3530,18 +3530,31 @@ function twIndex() {
     return { e, titel: new Set(tw), text: new Set(xw), gruppen: new Set([...tw, ...xw].map((w) => TW_GRUPPE.get(w)).filter((g) => g !== undefined)), tgruppen: new Set(tw.map((w) => TW_GRUPPE.get(w)).filter((g) => g !== undefined)) }; });
   return TW_INDEX;
 }
+// passt das Wort q (oder ein Wort derselben Bedeutungsgruppe, ein Tippfehler, ein Teilwort) zu diesem Eintrag?
+const TW_SCHWACH = new Set(["gemacht", "macht", "mache", "machen", "tun", "tut", "geht", "gehen", "klappt", "funktioniert", "leicht", "einfach", "schnell", "richtig", "gut", "neu", "alle", "alles", "immer", "bitte", "danke", "hallo", "gibt", "geben", "sehen", "seh", "sieht", "erstellen", "erstelle", "erstellt", "anlegen", "lege", "neue", "neuen", "neuer", "neues", "moechte", "will", "wollen", "brauche", "kann", "koennen", "darf", "muss", "soll"].map((x) => twStamm(x)));
+function twTrifft(x, q, g) {
+  return x.titel.has(q) || x.text.has(q) || (g !== undefined && (x.tgruppen.has(g) || x.gruppen.has(g)))
+    || (q.length >= 5 && [...x.titel, ...x.text].some((t) => t.length >= 5 && twAbstand(q, t) <= 1));
+}
 function twFinden(fr) {
   const w = [...new Set(twWoerter(fr).map(twStamm))]; if (!w.length) return [];
+  // 2.54.0: Wörter, die nirgends in der App vorkommen („Pizza“, „Döner“) – ist das mindestens die Hälfte, geht es nicht um die App
+  const fremd = w.filter((q) => !TW_SCHWACH.has(q) && !twIndex().some((x) => twTrifft(x, q, TW_GRUPPE.get(q))));
+  if (fremd.length && fremd.length >= w.length - fremd.length) return [];
   const treffer = twIndex().map((x) => {
-    let p = 0;
+    let p = 0, n = 0;
     for (const q of w) {
       const g = TW_GRUPPE.get(q);
       if (x.titel.has(q)) p += 3; else if (x.text.has(q)) p += 1.2;
       else if (q.length >= 5 && [...x.titel].some((t) => t.length >= 5 && twAbstand(q, t) <= 1)) p += 2; // Tippfehler
       else if (q.length >= 5 && [...x.text].some((t) => t.length >= 5 && twAbstand(q, t) <= 1)) p += 0.6;
       if (g !== undefined) p += x.tgruppen.has(g) ? 2 : x.gruppen.has(g) ? 0.8 : 0; // anderes Wort für dasselbe
-      if (q.length >= 6 && ![...x.titel].includes(q) && [...x.titel].some((t) => t.length >= 5 && (q.includes(t) || t.includes(q)))) p += 1.2; // zusammengesetzte Wörter („Terminanfrage“ ↔ „Termin“)
+      if (q.length >= 6 && ![...x.titel].includes(q) && [...x.titel].some((t) => t.length >= 5 && ((q.includes(t) && t.length >= q.length * .55) || (t.includes(q) && q.length >= t.length * .55)))) p += 1.2; // zusammengesetzte Wörter („Terminanfrage“ ↔ „Termin“); 2.54.0: nicht „Weihnachten“ ↔ „nachts“
+      if (twTrifft(x, q, g)) n++;
     }
+    // KC-CLUB-TWINKEY-STRENGER (2.54.0, Fund Hansi „Wie wird Pizza gemacht?“ → „Weitersagen leicht gemacht“): mindestens die Hälfte
+    // der wichtigen Wörter muss passen, und nie nur ein Allerweltswort – sonst lieber „Das weiß ich noch nicht“ (→ an den Admin)
+    if (n < Math.ceil(w.length / 2) || !w.some((q) => !TW_SCHWACH.has(q) && twTrifft(x, q, TW_GRUPPE.get(q)))) return { e: x.e, p: 0 };
     if (x.e.gelernt) p += 0.6; else if (x.e.id.startsWith("f:")) p += 0.4; else if (x.e.id.startsWith("h:")) p += 0.3; // Gelerntes und Twinkeys Fragen zuerst
     return { e: x.e, p: p / Math.sqrt(w.length) };
   }).filter((t) => t.p >= 1.6).sort((a, b) => b.p - a.p);

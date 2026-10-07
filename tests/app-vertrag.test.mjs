@@ -5333,6 +5333,12 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/\.prl-ansicht \.prkarte\.versteckt \{ display: none; \}/.test(html) && /document\.querySelectorAll\("#protokollListe \.prkarte"\)/.test(html), "Filter (Jahr, Monat, Ort, Protokollführer) und Suche wirken auch in der Liste");
   assert.ok(/class="mini-kachel prkarte\$\{!p\.gelesen \? " mk-offen" : ""\}" data-id="\$\{p\.id\}" data-suche=/.test(html.slice(html.indexOf("function protokollZeile"))), "gleiche Filter-/Such-Kennungen wie die Kacheln");
 }
+// 2.54.0 KC-CLUB-TWINKEY-STRENGER (Fund Hansi: „Wie wird Pizza gemacht?“ → „Weitersagen leicht gemacht“): fremde Fragen → „weiß ich nicht“ (→ an den Admin)
+{
+  assert.ok(/if \(fremd\.length && fremd\.length >= w\.length - fremd\.length\) return \[\];/.test(html) && /n < Math\.ceil\(w\.length \/ 2\)/.test(html), "fremde Wörter / zu wenig Übereinstimmung → keine Antwort");
+  assert.ok(/const TW_SCHWACH = new Set\(\["gemacht"/.test(html) && /!w\.some\(\(q\) => !TW_SCHWACH\.has\(q\) && twTrifft/.test(html), "nie nur ein Allerweltswort");
+  assert.ok(/Ich werde recherchieren und dir bei Gelegenheit eine Antwort zukommen lassen/.test(html), "dann wie gehabt: recherchieren, an den Admin");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
