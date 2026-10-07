@@ -2006,14 +2006,13 @@
   .wb-a-flamme path { transform-origin: center bottom; animation: wbFlamme .9s ease-in-out infinite alternate; } .wb-a-flamme path:nth-child(2) { animation-delay: .3s; } .wb-a-flamme path:nth-child(3) { animation-delay: .6s; }
   @keyframes wbFlamme { from { transform: scaleY(.8); opacity: .75; } to { transform: scaleY(1.1); opacity: 1; } }
   .wb-a-stern { animation: wbStern 1.4s ease-in-out infinite; } @keyframes wbStern { 0%,100% { transform: translateY(-4px); } 45%,60% { transform: translateY(8px); } }
-  @media (prefers-reduced-motion: reduce) { .wb-svg * { animation: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .wb-svg * { animation-duration: 3s !important; } } /* 2.54.0: wie die Kochmütze langsamer statt still (Hinweis Hansi „nicht animiert“) */
   .wb-raster { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; margin-top: 8px; }
   .wb-karte { display: grid; justify-items: center; gap: 4px; padding: 8px 4px; border: 2px solid transparent; border-radius: 14px; background: var(--karte2); color: var(--text); cursor: pointer; font: inherit; }
   .wb-karte.an { border-color: var(--rot); background: var(--karte); }
   .wb-karte small { font-size: .78rem; font-weight: 700; text-align: center; line-height: 1.2; } .wb-karte small i { font-weight: 400; color: var(--grau); }
   .wb-kreis { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, var(--hero1), var(--rot)); display: grid; place-items: center; }
   .wb-kreis img { width: 32px; height: 32px; } .wb-kreis .wb-svg { width: 34px; height: 34px; }
-  .wb-karte:not(.an) .wb-svg * { animation-play-state: paused; }
   .wb-vorschau-link { border: none; background: none; color: var(--textRot, var(--rot)); font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; padding: 0; }
   .warten b { font-size: .95rem; color: var(--text); text-align: center; max-width: 220px; }
   @keyframes muetzeDreh { from { transform: rotateY(0deg) rotate(0deg); } to { transform: rotateY(360deg) rotate(0deg); } }

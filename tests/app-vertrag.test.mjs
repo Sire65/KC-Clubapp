@@ -5188,7 +5188,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   ls.kc_club_wartebild = "kaputt"; assert.equal(W.wbLesen().bild, "muetze", "kaputter Speicher → Standard");
   assert.ok(/class="wb-a-spur"/.test(W.WBILD[1].svg) && /@keyframes wbBesen \{ 0% \{ transform: translate\(-6px, 0\) rotate\(-14deg\); \} 25%/.test(html), "Schneebesen rührt im Kreis, Rührspur dreht mit");
   assert.ok(/const wb = wbAktuell\(\); wbEinsetzen\(wb\);/.test(html) && /id="wbWahl"/.test(html) && /id="wbKlappe"/.test(html), "Warte-Anzeige nutzt die Wahl; Auswahl als Klappbereich in der Darstellung");
-  assert.ok(/html\.spar \*, html\.spar \*::before, html\.spar \*::after \{ animation-duration: \.001s/.test(html) && /@media \(prefers-reduced-motion: reduce\) \{ \.wb-svg \* \{ animation: none/.test(html), "Sparmodus/Bewegung reduzieren: ruhig");
+  assert.ok(/html\.spar \*, html\.spar \*::before, html\.spar \*::after \{ animation-duration: \.001s/.test(html) && /@media \(prefers-reduced-motion: reduce\) \{ \.wb-svg \* \{ animation-duration: 3s !important; \} \}/.test(html) && !/\.wb-karte:not\(\.an\) \.wb-svg \* \{ animation-play-state: paused/.test(html), "Sparmodus ruhig; Bewegung reduzieren: langsamer (2.54.0); alle Bilder in der Auswahl bewegen sich");
 }
 // 2.47.0 KC-CLUB-ABSTURZSCHUTZ (Wunsch Hansi): nicht abgefangene Fehler → Meldung + Protokoll, Häufung → „App neu laden“, Hänger- und Warte-Wächter
 {
