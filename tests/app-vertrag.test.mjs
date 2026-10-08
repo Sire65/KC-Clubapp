@@ -6200,4 +6200,5 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   const x = programm.slice(programm.indexOf("async function sbAusfuehren(b)"), programm.indexOf("// ---------- KC-CLUB-SCHRITT-HILFE (2.63.0"));
   assert.ok(!/pwSpeichern\(|senden\(|api\(/.test(x), "nie selbst senden oder anheften");
   assert.ok(/spur\("sprache_" \+ b\.art\); \/\/ nur die Art/.test(programm), "Protokoll nur mit der Art, nie mit dem Text");
+  assert.ok(/<button data-v="start" class="an" onclick="startKnopf\(\)">/.test(seite) && /if \(aktuelleAnsicht !== "start" && !\(await sbEingabenOk\(\)\)\) return/.test(programm), "auch 🏠 Start unten fragt vorher");
 }

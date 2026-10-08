@@ -9,7 +9,7 @@
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
 ## 2.75.0 – 2026-10-08 – 🎙️ Sprachsteuerung (Stufe 1)
-Eigener 🎙️-Knopf unten links (unter ⚙️ einschalten): Nachricht an …, Zettel an die Pinnwand, Termine, nächster Termin, Suche, Startseite. Nie wird von selbst gesendet. Vor „Startseite“ wird gefragt, ob ungespeicherte Eingaben verworfen werden sollen. (KC-CLUB-SPRACHSTEUERUNG)
+Eigener 🎙️-Knopf unten links (unter ⚙️ einschalten): Nachricht an …, Zettel an die Pinnwand, Termine, nächster Termin, Suche, Startseite. Nie wird von selbst gesendet. Vor „Startseite“ und beim 🏠 Start-Knopf unten wird gefragt, ob ungespeicherte Eingaben verworfen werden sollen. (KC-CLUB-SPRACHSTEUERUNG)
 
 ## 2.74.0 – 2026-10-08 – KC-CLUB-SPEICHERNAME
 - Fehler behoben: Dateien mit Umlauten oder Sonderzeichen im Namen (z. B. „Vertrag_Köcheclub Werne.pdf“) ließen sich nicht hochladen. Der Speicherpfad wird jetzt umgeschrieben, angezeigt wird weiter der echte Name. Server 2.74.0.

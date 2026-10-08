@@ -1651,6 +1651,11 @@ async function sbStartseite() {
   if (aktuelleAnsicht === "chat" && $("text")?.value.trim()) melde("🏠 Startseite – dein angefangener Text bleibt als Entwurf im Chat"); else melde("🏠 Startseite");
   zeige("start");
 }
+// 🏠 Start unten (Wunsch Hansi): gleiche Rückfrage wie bei „Startseite“ per Sprache – gilt auch ohne Sprachsteuerung
+async function startKnopf() {
+  if (aktuelleAnsicht !== "start" && !(await sbEingabenOk())) return melde("✋ Alles bleibt, wie es ist");
+  zeige("start");
+}
 function sbSchalter(an) {
   if (an && !DIKTAT_GEHT) { if ($("setSprache")) $("setSprache").checked = false; return melde("Dieses Gerät kann leider keine Sprache erkennen.", true); }
   const setzen = () => { lsSetzen(SB_KEY, an ? "1" : "0"); if ($("setSprache")) $("setSprache").checked = an; sbKnopfZeigen(); melde(an ? "🎙️ Sprachsteuerung an – unten links auf 🎙️ tippen und sagen, was du tun möchtest" : "🎙️ Sprachsteuerung aus"); };
