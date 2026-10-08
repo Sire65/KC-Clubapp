@@ -3677,7 +3677,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.ok(/function spSag\(art, text, schluessel, vorrang = false\) \{\s*if \(!spAnsageAn\(art\) \|\| !text \|\| aktuelleAnsicht !== "spiele"\) return;/.test(html), "Ansage nur wenn eingeschaltet und in den Spielen");
   assert.ok(/function schZugAnsage\(m, ch, ich\)/.test(html) && /hat gerade \$\{fem\(o\) \? "deine" : "deinen"\} \$\{schFigAkk\(o\)\} geschlagen/.test(html), "Schach: Züge und Schlagen");
-  assert.ok((html.match(/spAnsageKnopf\("schach"\)/g) || []).length === 2 && (html.match(/spAnsageKnopf\("kt"\)/g) || []).length >= 3 && (html.match(/spAnsageKnopf\("bsk"\)/g) || []).length === 2 && (html.match(/spAnsageKnopf\("ttt"(, true)?\)/g) || []).length === 2 && !/spSag\("ttt"/.test(html), "Schalter bei Schach, Küchenterror, Bauernskat; Tic-Tac-Toe nur Töne (2.22.22), keine Sprache");
+  assert.ok((html.match(/\$\{schSprachKnopf\(\)\}/g) || []).length === 2 && (html.match(/spAnsageKnopf\("kt"\)/g) || []).length >= 3 && (html.match(/spAnsageKnopf\("bsk"\)/g) || []).length === 2 && (html.match(/spAnsageKnopf\("ttt"(, true)?\)/g) || []).length === 2 && !/spSag\("ttt"/.test(html), "Schalter bei Schach, Küchenterror, Bauernskat; Tic-Tac-Toe nur Töne (2.22.22), keine Sprache");
   assert.ok(/spSag\("kt", ktFrageSprache\(fr, z\.i \+ 1\)/.test(html) && /spSag\("bsk", `Der Computer spielt \$\{bskKarteWort\(kc\)\}\.`\)/.test(html), "Küchenterror-Frage, Bauernskat-Karte");
   const regeln = html.slice(html.indexOf("const BSK_FARBEN = "), html.indexOf("// ----- Computer -----", html.indexOf("const BSK_FARBEN = ")));
   assert.ok(!/bskKarteWort|BSK_WNAME/.test(regeln), "Ansage-Helfer nicht in den Regeln (Server-Kopie bleibt gleich)");
@@ -6699,10 +6699,10 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
     assert.ok(/<svg[^>]*viewBox="0 0 45 45"/.test(svg) && !/<script|href=/i.test(svg), `Figur ${c}${t}: viewBox, ohne Skript/Links`);
   }
   assert.ok(/Redistribution and use in source and binary forms/.test(lies("lib/schach/LICENSE")) && /Cburnett/.test(lies("lib/schach/HERKUNFT.txt")) && /BSD/.test(lies("lib/schach/HERKUNFT.txt")), "Lizenz + Herkunft");
-  assert.ok(/localStorage\.getItem\("kc_club_schach_stil"\) === "brigade" \? "brigade" : "klassisch"/.test(programm), "klassisch ist Standard, Brigade bleibt wählbar");
+  assert.ok(/return localStorage\.getItem\("kc_club_schach_stil"\) === "brigade" \? "brigade" : "klassisch";/.test(programm), "klassisch (Cburnett) ist Standard, Brigade bleibt wählbar");
   assert.ok(/onerror="this\.parentNode\.classList\.remove\('bild'\);this\.replaceWith\(/.test(programm), "fehlt ein Bild, steht das Schriftzeichen da");
   // ruhiges Brett statt Braun/Beige mit rotem Rahmen
-  assert.ok(/\.sch-feld\.hell \{ background-color: #f5f4f0; \} \.sch-feld\.dunkel \{ background-color: #dcdad3; \}/.test(html) && !/box-shadow: 0 0 0 3px var\(--rot\), 0 6px 14px/.test(html), "helles, ruhiges Brett");
+  assert.ok(/\.sch-feld\.hell \{ background-color: #f1f1f1;/.test(html) && /\.sch-feld\.dunkel \{ background-color: #bdbdbd;/.test(html) && !/box-shadow: 0 0 0 3px var\(--rot\), 0 6px 14px/.test(html), "graues Brett mit sanftem Glanz (2.123.0), kein roter Rahmen");
   assert.ok(/\.sch-brett:not\(\.aus\) \.sch-feld \{ touch-action: none; \}/.test(html) && /\.sch-geist \{ position: fixed !important;/.test(html), "Schieben mit dem Finger");
   // eingebaut gegen Computer und Mitglieder
   assert.ok(/async function schPcKlick\(feld, neu = false, gezogen = false\)/.test(programm) && /async function schMgKlick\(feld, neu = false, gezogen = false\)/.test(programm), "Klick-Wege kennen Schieben");
@@ -6716,8 +6716,10 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   const { Chess } = await import(new URL("../lib/chess/chess.js", import.meta.url));
   const code = programm.slice(programm.indexOf("const SCH_WEIBLICH"), programm.indexOf("function schGeschlagenHtml(ch) {"));
   const gesagt = [], doc = { addEventListener() {}, querySelector: () => null };
-  const S = new Function("Chess", "esc", "spSag", "document", "SP", "SCH", "SPAR", code + "; return { schRochadeGrund, schRochade, schZieleMitRochade, schHinweisVor, schHinweisNach, schTwKommentar, schTwSag, schBrettHtml, SCH_TW, SCH_TW_SPRUECHE, schComputerZug };")(
-    Chess, (x) => String(x), (art, t) => gesagt.push(t), doc, {}, {}, { an: false });
+  const sprach = [], stimmeFuer = () => ({ voice: { name: "Markus", lang: "de-DE" }, pitch: 1 });
+  const SU = function (t) { this.text = t; }, sps = { speak: (u) => sprach.push(u) };
+  const S = new Function("Chess", "esc", "spSag", "document", "SP", "SCH", "SPAR", "spAnsageAn", "aktuelleAnsicht", "window", "speechSynthesis", "SpeechSynthesisUtterance", "stimmeFuer", code + "; return { schRochadeGrund, schRochade, schZieleMitRochade, schHinweisVor, schHinweisNach, schTwKommentar, schTwSag, schBrettHtml, SCH_TW, SCH_TW_SPRUECHE, schComputerZug };")(
+    Chess, (x) => String(x), (art, t) => gesagt.push(t), doc, {}, {}, { an: false }, () => true, "spiele", { speechSynthesis: sps }, sps, SU, stimmeFuer);
   const grund = (fen, seite) => S.schRochadeGrund(new Chess(fen), seite);
   assert.equal(grund("r3k2r/pppq1ppp/2npbn2/4p3/2B1P3/2NP1N2/PPP2PPP/R1BQK2R w KQkq - 0 1", "k"), null, "Rochade erlaubt → kein Grund");
   assert.match(grund("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", "k"), /stehen noch der Läufer und der Springer/, "Figuren dazwischen");
@@ -6751,7 +6753,8 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(S.SCH_TW_SPRUECHE.start.some((x) => /die ganze Nacht geübt/.test(x)) && S.SCH_TW_SPRUECHE.schnell.some((x) => /schnell unterwegs/.test(x)) && S.SCH_TW_SPRUECHE.bauerWeit.some((x) => /so weit vorne/.test(x)), "Sprüche wie gewünscht");
   for (const [k, l] of Object.entries(S.SCH_TW_SPRUECHE)) assert.ok(l.length && l.every((x) => !/\{(?!dein\}|deinA\}|mein\}|meinA\}|denA\}|zum\}|bauer\}|bauerA\}|er\})/.test(x)), "Platzhalter in " + k);
   // Twinkey spricht nur mit eingeschalteter Ansage (spSag) – ohne Emojis
-  S.schTwSag("Ich habe keine Angst. Du hast Angst. 😄"); assert.equal(gesagt.at(-1), "Ich habe keine Angst. Du hast Angst.", "Vorlesen ohne Emoji");
+  S.schTwSag("Ich habe keine Angst. Du hast Angst. 😄"); assert.equal(sprach.at(-1)?.text, "Ich habe keine Angst. Du hast Angst.", "Vorlesen ohne Emoji");
+  assert.equal(sprach.at(-1)?.voice?.name, "Markus", "Twinkey spricht mit der Männerstimme (2.123.0)");
   // Brett: data-feld zum Schieben, eigener Turm als Rochade-Ziel gestrichelt, Tipp-Feld
   const b = S.schBrettHtml(ro, { unten: "w", auswahl: "e1", ziele: S.schZieleMitRochade(ro, "e1"), klick: "schPcKlick", tipp: "g1" });
   assert.ok(/class="sch-brett" role="grid" aria-label="Schachbrett" data-klick="schPcKlick" data-ich="w"/.test(b) && /class="sch-feld hell ziel rochade" data-feld="h1"/.test(b) && /class="sch-feld dunkel ziel tipp" data-feld="g1"/.test(b), "Brett: Schieben, Rochade-Ziel, Tipp");
@@ -6852,4 +6855,48 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/async function protokollPlatz\(person: string, aktion: string, proStunde: number\)/.test(server)
     && /await protokollPlatz\(ich\.person_id, "spur", 120\)/.test(server) && /await protokollPlatz\(ich\.person_id, "app_start", 60\)/.test(server)
     && /await protokollPlatz\(ich\.person_id, "sprache_unbekannt", 60\)/.test(server) && /await protokollPlatz\(ich\.person_id, "diagnose_%", 120\)/.test(server), "Protokoll-Flut gebremst");
+}
+
+// 4xx. 2.123.0: Figuren „plastisch“ zusätzlich (Klassisch bleibt Standard, Wunsch Hansi), drei Stile umschaltbar; Twinkey mit Männerstimme
+// (KC-CLUB-SCHACH-FIGUREN, KC-CLUB-SCHACH-STIMME)
+{
+  for (const c of ["w", "b"]) for (const t of ["k", "q", "r", "b", "n", "p"]) {
+    const svg = lies(`lib/schach/plastisch/${c}${t}.svg`);
+    assert.ok(/<svg[^>]*viewBox=/.test(svg) && !/<script|<image|href="(?!#)/i.test(svg), `plastisch ${c}${t}: skalierbar, nur interne Verweise`);
+  }
+  assert.ok(/MIT License/.test(lies("lib/schach/plastisch/LICENSE")) && /Maurizio Monge/.test(lies("lib/schach/plastisch/HERKUNFT.txt")), "Lizenz + Herkunft");
+  assert.ok(/const SCH_STILE = \["klassisch", "plastisch", "brigade"\]/.test(programm) && /localStorage\.getItem\("kc_club_schach_stil2"\)/.test(programm), "drei Stile, neuer Schlüssel");
+  assert.ok(/lib\/schach\/\$\{SCH_STIL === "plastisch" \? "plastisch" : "elfenbein"\}\//.test(programm), "Bildpfad je Stil");
+  assert.ok(/SCH_STIL = SCH_STILE\[\(SCH_STILE\.indexOf\(SCH_STIL\) \+ 1\) % SCH_STILE\.length\]/.test(programm) && /♟️ Figuren: \$\{SCH_STIL_NAME\[SCH_STIL\]\}<\/button>/.test(programm), "Knopf schaltet reihum");
+  const f = programm.slice(programm.indexOf("function schTwSprich("), programm.indexOf("const schAbstand"));
+  assert.ok(/const st = stimmeFuer\("m"\)/.test(f) && /if \(!text \|\| schSprache\(\) === "aus"/.test(f), "Männerstimme, nicht wenn stumm");
+}
+
+// 4xx. 2.123.0: Klassisch in Elfenbein/Tiefschwarz, graues Brett, Beschriftung außen (KC-CLUB-SCHACH-ELFENBEIN, Wunsch Hansi nach Bild)
+{
+  for (const c of ["w", "b"]) for (const t of ["k", "q", "r", "b", "n", "p"]) {
+    const svg = lies(`lib/schach/elfenbein/${c}${t}.svg`), orig = lies(`lib/schach/${c}${t}.svg`);
+    assert.ok(svg.includes(c === "w" ? 'id="kcw"' : 'id="kcb"') && /fill(:|=")url\(#kc[wb]\)/.test(svg), `elfenbein ${c}${t}: Verlauf`);
+    assert.deepEqual(svg.match(/ d="[^"]+"/g), orig.match(/ d="[^"]+"/g), `elfenbein ${c}${t}: Formen unverändert`);
+    assert.ok(!(c === "w" ? /fill:\s*#ffffff/i : /fill:\s*#000000/i).test(svg), `elfenbein ${c}${t}: keine alte Füllung übrig`);
+  }
+  assert.ok(/lib\/schach\/\$\{SCH_STIL === "plastisch" \? "plastisch" : "elfenbein"\}\//.test(programm), "Klassisch zeigt die Elfenbein-Figuren");
+  assert.ok(/<div class="sch-rahmen"><div class="sch-zahlen"/.test(programm) && /class="sch-buchst"/.test(programm) && !/class="sch-r"/.test(programm), "Beschriftung außen");
+}
+
+// 4xx. 2.123.0: Sprache beim Schach in drei Stufen – Stumm / Nur Twinkey / Twinkey + Züge (KC-CLUB-SCHACH-SPRACHE)
+{
+  const code = programm.slice(programm.indexOf("const SCH_SPRACHE_KEY"), programm.indexOf("const schAbstand"));
+  const mem = {}, gesagt = [], meldungen = [];
+  const env = { localStorage: { getItem: (k) => mem[k] ?? null, setItem: (k, v) => { mem[k] = v; } } };
+  const T = new Function("localStorage", "lsSetzen", "spAnsageAn", "SP_ANSAGE_KEY", "document", "speechSynthesis", "window", "melde", "schTwSprich",
+    code + "; return { schSprache, schSpracheWechseln, schSprachKnopf };")(env.localStorage, (k, v) => { mem[k] = v; }, () => false, "kc_club_sp_ansage",
+    { querySelectorAll: () => [] }, { cancel() {} }, { speechSynthesis: {} }, (t) => meldungen.push(t), (t) => gesagt.push(t));
+  assert.equal(T.schSprache(), "aus", "Standard wie bisher: stumm");
+  T.schSpracheWechseln(); assert.equal(T.schSprache(), "twinkey"); assert.equal(JSON.parse(mem.kc_club_sp_ansage).schach, false, "Nur Twinkey: keine Zugansage");
+  assert.match(gesagt.at(-1), /rede nur noch ich/, "Twinkey sagt, was jetzt gilt");
+  T.schSpracheWechseln(); assert.equal(T.schSprache(), "alles"); assert.equal(JSON.parse(mem.kc_club_sp_ansage).schach, true, "Twinkey + Züge: Zugansage an");
+  T.schSpracheWechseln(); assert.equal(T.schSprache(), "aus"); assert.equal(JSON.parse(mem.kc_club_sp_ansage).schach, false, "Stumm: Zugansage aus");
+  assert.match(T.schSprachKnopf(), /🔇 Stumm/);
+  assert.ok(!/spAnsageKnopf\("schach"\)/.test(programm), "alter Ansage-Knopf beim Schach ersetzt");
 }

@@ -1,0 +1,5 @@
+Schachfiguren „plastisch“ (Standard) für die Köcheclub-App – KC-CLUB-SCHACH-FIGUREN (Wunsch Testerin: Satz „Spatial“ gewählt)
+Quelle: Maurizio Monge, Figurensatz „Spatial“ – https://github.com/maurimo/chess-art
+        (Dateien wie bei lichess.org unter public/piece/spatial veröffentlicht)
+Lizenz: MIT – siehe LICENSE. Keine Kosten.
+Änderungen für die Köcheclub-App: keine; nur umbenannt in <farbe><figur>.svg mit farbe w/b, figur k/q/r/b/n/p wie in chess.js.

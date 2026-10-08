@@ -1,10 +1,21 @@
 {
-  "version": "2.122.0",
+  "version": "2.123.0",
   "datum": "2026-10-06",
   "neu": [
-    "🔧 Kleine Systemverbesserungen"
+    "♟️ Schach: klassische Figuren in Elfenbein und Schwarz auf grauem Brett, Beschriftung außen",
+    "🧑‍🍳 Twinkey spricht mit Männerstimme – einstellbar: 🔇 Stumm, 🗣️ Nur Twinkey oder 🔊 Twinkey + Züge",
+    "♟️ Neu zur Wahl: plastische Figuren (Knopf „♟️ Figuren“)"
   ],
   "verlauf": [
+    {
+      "version": "2.123.0",
+      "datum": "2026-10-08",
+      "neu": [
+        "♟️ Schach: klassische Figuren in Elfenbein und Schwarz auf grauem Brett, Beschriftung außen",
+        "🧑‍🍳 Twinkey spricht mit Männerstimme – einstellbar: 🔇 Stumm, 🗣️ Nur Twinkey oder 🔊 Twinkey + Züge",
+        "♟️ Neu zur Wahl: plastische Figuren (Knopf „♟️ Figuren“)"
+      ]
+    },
     {
       "version": "2.122.0",
       "datum": "2026-10-08",

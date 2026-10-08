@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.122.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.123.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -1197,7 +1197,7 @@ const EINWEISUNG = [
   { id: "vorschlaege", sym: "🗳️", t: "Vorschläge", x: "Du hast eine Idee für den Club – ein Ausflug, ein Thema, ein Kochabend? Mit <b>„＋ Neu“</b> schlägst du sie vor, die anderen können abstimmen." },
   { id: "dienste", sym: "🗓️", t: "Dienstpläne", x: "Die Dienstpläne Woche für Woche. Mit <b>‹ Woche</b> / <b>Woche ›</b> blätterst du, <b>„Heute“</b> springt zurück." },
   { id: "aktionen", sym: "🧳", t: "Aktionen", x: "Ausflüge und besondere Aktionen des Clubs – antippen zeigt alle Einzelheiten." },
-  { id: "spiele", sym: "🎲", t: "Spiele – Köcheclub Edition", x: "Tippe auf die Kachel deines Spiels: <b>Tic-Tac-Toe</b> (🍅 gegen 🥦 – wer zuerst drei, bei 4 × 4 vier, in einer Reihe hat), <b>♟️ Schach</b> mit der Küchenbrigade (Küchenchef = König, Kaltmamsell = Dame, Souschef = Turm, Patissier = Läufer, Springer, Praktikanten = Bauern – oder klassisch; Figur schieben oder antippen, dann das Zielfeld; Twinkey spielt mit, macht Sprüche und gibt Tipps), <b>🃏 Bauernskat</b> zu zweit (spielbare Karten sind grün umrandet), <b>🔪 Küchenterror</b> – das Küchenquiz auf Zeit (je Frage 20, 15 oder 10 Sekunden – je nach Stufe; schnell und richtig bringt die meisten Punkte) oder <b>🎲 Mensch ärgere dich nicht</b>: Würfel antippen, dann die Figur, die leuchtet. Mit einer 6 kommt eine Figur raus und du würfelst nochmal; wer auf eine fremde Figur kommt, wirft sie raus. Gegen den Computer mit 1 bis 3 Computer-Gegnern, gegen Mitglieder zu zweit – die freien Farben kann der Computer übernehmen. Neu: <b>🧑‍🍳 Fang den Koch</b> – das Würfelspiel gegen Koch Kurt (Computer): Dein Bon zeigt ein Gericht mit 3 Zutaten. Würfeln – dein Koch läuft im Kreis; an den Lagern, die du brauchst, nimmst du die Zutat automatisch. Alle 3 ✓ und am 🛎️ Pass vorbei = 1 ⭐. Landest du genau auf Kurt, nimmst du ihm eine Zutat weg. 15 Runden, die meisten ⭐ gewinnen. Im Spiel wählst du <b>🤖 Gegen den Computer</b> – mit Feldgröße und Stärke – oder <b>👥 Gegen Mitglieder</b>: jemanden herausfordern, abwechselnd ziehen, du bekommst Bescheid, wenn du dran bist. Bei Schach, Küchenterror und Bauernskat kannst du dir mit <b>🔊 Ansage</b> alles ansagen lassen – Züge, Fragen und Antworten, Karten und Stiche. Schach geht auch mit <b>⏱️ Schachuhr</b> (5, 10 oder 15 Minuten je Spieler): oben bei „⏱️ Uhr“ gegen den Computer, beim Herausfordern als Live-Partie. Nach jedem Zug hält deine Uhr an und die des Gegners läuft; in der letzten Minute wird sie rot und tickt. Wer keine Zeit mehr hat, verliert." },
+  { id: "spiele", sym: "🎲", t: "Spiele – Köcheclub Edition", x: "Tippe auf die Kachel deines Spiels: <b>Tic-Tac-Toe</b> (🍅 gegen 🥦 – wer zuerst drei, bei 4 × 4 vier, in einer Reihe hat), <b>♟️ Schach</b> mit der Küchenbrigade (Küchenchef = König, Kaltmamsell = Dame, Souschef = Turm, Patissier = Läufer, Springer, Praktikanten = Bauern – oder klassisch; Figur schieben oder antippen, dann das Zielfeld; Twinkey spielt mit, macht Sprüche und gibt Tipps), <b>🃏 Bauernskat</b> zu zweit (spielbare Karten sind grün umrandet), <b>🔪 Küchenterror</b> – das Küchenquiz auf Zeit (je Frage 20, 15 oder 10 Sekunden – je nach Stufe; schnell und richtig bringt die meisten Punkte) oder <b>🎲 Mensch ärgere dich nicht</b>: Würfel antippen, dann die Figur, die leuchtet. Mit einer 6 kommt eine Figur raus und du würfelst nochmal; wer auf eine fremde Figur kommt, wirft sie raus. Gegen den Computer mit 1 bis 3 Computer-Gegnern, gegen Mitglieder zu zweit – die freien Farben kann der Computer übernehmen. Neu: <b>🧑‍🍳 Fang den Koch</b> – das Würfelspiel gegen Koch Kurt (Computer): Dein Bon zeigt ein Gericht mit 3 Zutaten. Würfeln – dein Koch läuft im Kreis; an den Lagern, die du brauchst, nimmst du die Zutat automatisch. Alle 3 ✓ und am 🛎️ Pass vorbei = 1 ⭐. Landest du genau auf Kurt, nimmst du ihm eine Zutat weg. 15 Runden, die meisten ⭐ gewinnen. Im Spiel wählst du <b>🤖 Gegen den Computer</b> – mit Feldgröße und Stärke – oder <b>👥 Gegen Mitglieder</b>: jemanden herausfordern, abwechselnd ziehen, du bekommst Bescheid, wenn du dran bist. Bei Küchenterror und Bauernskat kannst du dir mit <b>🔊 Ansage</b> alles ansagen lassen – Fragen und Antworten, Karten und Stiche. Beim Schach wählst du: <b>🔇 Stumm</b>, <b>🗣️ Nur Twinkey</b> oder <b>🔊 Twinkey + Züge</b>. Schach geht auch mit <b>⏱️ Schachuhr</b> (5, 10 oder 15 Minuten je Spieler): oben bei „⏱️ Uhr“ gegen den Computer, beim Herausfordern als Live-Partie. Nach jedem Zug hält deine Uhr an und die des Gegners läuft; in der letzten Minute wird sie rot und tickt. Wer keine Zeit mehr hat, verliert." },
   // 2.22.9 (Wunsch Hansi: „wo fehlen Erklärungsfenster?“) – Bereiche ohne Einweisung ergänzt
   { id: "erstattung", sym: "💶", t: "Erstattung", x: "Hier bekommst du Geld zurück, das du für den Club ausgelegt hast: <b>🚗 Fahrtkosten</b> (die Kilometer rechnet die App aus), <b>🛒 Einkauf</b> oder <b>📦 sonstige Auslagen</b>. Mehrere Posten passen in einen Antrag, Belege fotografierst du einfach dazu. Der Antrag geht an den Kassenwart – du bekommst eine Bestätigung." },
   { id: "feedback", sym: "💭", t: "Feedback", x: "Was gefällt dir, was stört, was fehlt? Schreib es hier hinein – es geht direkt an den Admin. Jede Rückmeldung hilft, die App besser zu machen." },
@@ -1546,7 +1546,7 @@ const HILFE = [
   { id: "vorschlag_unterstuetzen", thema: "club", sym: "👍", t: "Gute Ideen unterstützen", x: "Bei den <b>🗳️ Vorschlägen</b> kannst du Themen anderer mit 👍 unterstützen. So sieht die Clubleitung schnell, was vielen am Herzen liegt.", zeig: () => zeige("vorschlaege"), seit: "2.23.1" },
   { id: "spende", thema: "club", sym: "💝", t: "Ein Spendenprojekt vorschlagen", x: "Kennst du ein Projekt, das der Club unterstützen könnte? Bei den Vorschlägen gibt es dafür die Art <b>„💝 Spende“</b> – die Projekte kommen dann in die nächste Sitzung.", zeig: () => zeige("vorschlaege"), seit: "2.23.1" },
   { id: "spiel_mitglieder", thema: "club", sym: "🎲", t: "Gegen andere Mitglieder spielen", x: "In den Spielen unter <b>„👥 Gegen Mitglieder“</b> forderst du jemanden heraus – ihr zieht abwechselnd, und du bekommst Bescheid, wenn du dran bist. An offenen Partien lässt sich sogar <b>„📅 Termin vereinbaren“</b>. Oben steht der 🏆 Pokal des Monats.", zeig: () => spStart(), seit: "2.23.1" },
-  { id: "spiel_schach", thema: "club", sym: "♟️", t: "Schach: schieben, Rochade, Twinkey", x: "Figuren einfach mit dem Finger <b>schieben</b> – oder antippen und dann das Zielfeld. <b>Rochade:</b> den König auf den Turm schieben. Geht sie nicht, sagt dir Twinkey in der Sprechblase, warum (z. B. „Im Schach darfst du nicht rochieren“). Gegen den Computer spielst du gegen <b>🧑‍🍳 Twinkey</b>: Er macht Sprüche, und mit <b>💡 Tipp</b> verrät er dir einen guten Zug. Mit <b>🔊 Ansage</b> spricht er auch. <b>🔔 Töne</b> schaltet das leise Klacken beim Ziehen. Die Küchenbrigade gibt es weiter über <b>👨‍🍳 Brigade</b>. Während einer Partie ist oben alles ausgeblendet, damit das Brett groß ist – mit <b>⚙️ Einstellungen</b> holst du es zurück. <b>📼 Meine Partien:</b> Jede Partie wird aufgezeichnet – mit <b>▶ Nachspielen</b> siehst du sie Zug für Zug noch einmal an (⏮ ◀ ▶ ⏭ oder ▶️ Abspielen). Bei Partien gegen Mitglieder geht das auch über <b>📼 Nachspielen</b>.", zeig: () => spStart("pc", "schach"), seit: "2.118.0" },
+  { id: "spiel_schach", thema: "club", sym: "♟️", t: "Schach: schieben, Rochade, Twinkey", x: "Figuren einfach mit dem Finger <b>schieben</b> – oder antippen und dann das Zielfeld. <b>Rochade:</b> den König auf den Turm schieben. Geht sie nicht, sagt dir Twinkey in der Sprechblase, warum (z. B. „Im Schach darfst du nicht rochieren“). Gegen den Computer spielst du gegen <b>🧑‍🍳 Twinkey</b>: Er macht Sprüche, und mit <b>💡 Tipp</b> verrät er dir einen guten Zug. Ob gesprochen wird, stellst du mit einem Knopf ein: <b>🔇 Stumm</b> → <b>🗣️ Nur Twinkey</b> (nur seine Sprüche und Tipps) → <b>🔊 Twinkey + Züge</b> (auch jeder Zug). <b>🔔 Töne</b> schaltet das leise Klacken beim Ziehen. Mit <b>♟️ Figuren</b> wechselst du zwischen Klassisch (Standard), Plastisch und der Küchenbrigade. Twinkey spricht mit der Männerstimme (⚙️ Einstellungen → Stimme → Männer). Während einer Partie ist oben alles ausgeblendet, damit das Brett groß ist – mit <b>⚙️ Einstellungen</b> holst du es zurück. <b>📼 Meine Partien:</b> Jede Partie wird aufgezeichnet – mit <b>▶ Nachspielen</b> siehst du sie Zug für Zug noch einmal an (⏮ ◀ ▶ ⏭ oder ▶️ Abspielen). Bei Partien gegen Mitglieder geht das auch über <b>📼 Nachspielen</b>.", zeig: () => spStart("pc", "schach"), seit: "2.118.0" },
   { id: "spiel_pause", thema: "club", sym: "⏸", t: "Spiel kurz anhalten", x: "Kommt beim Spielen gegen den Computer etwas dazwischen? Unten auf <b>„⏸ Pause“</b> tippen – mit <b>„▶ Weiter“</b> geht es genau dort weiter.", zeig: () => spStart(), seit: "2.23.1" },
   // 🔔 Benachrichtigungen & Töne
   { id: "meine_geraete", thema: "toene", sym: "📱", t: "Auf welchen Geräten kommt Push an?", x: "Kommt auf dem Tablet nichts an? Unter ⚙️ → „🔔 Benachrichtigungen“ zeigt <b>„📱 Meine Geräte“</b>, welche deiner Handys und Tablets Benachrichtigungen bekommen. Daneben schickt „Test-Push senden“ eine Probe.", zeig: () => einstiegHin("benachrichtigung"), seit: "2.23.1" },
@@ -5578,16 +5578,21 @@ function schComputerZug(ch, staerke) {
 // KC-CLUB-SCHACH-SPASS (2.116.0, Test-Rückmeldung „macht keinen Spaß, Figuren schlecht zu erkennen“): klassisch ist jetzt Standard –
 // mit gezeichneten Figuren (Cburnett, BSD, lib/schach) statt Schriftzeichen; die Küchenbrigade bleibt wählbar (Knopf „👨‍🍳 Brigade“).
 const SCH_BRIGADE = { k: "👨‍🍳", q: "👩‍🍳", r: "🍲", b: "🎂", n: "🔪", p: "🥄" }, SCH_BRIGADE_NAME = { k: "Küchenchef", q: "Kaltmamsell", r: "Souschef", b: "Patissier", n: "Springer", p: "Praktikant" };
-let SCH_STIL = (() => { try { return localStorage.getItem("kc_club_schach_stil") === "brigade" ? "brigade" : "klassisch"; } catch { return "klassisch"; } })();
+// KC-CLUB-SCHACH-FIGUREN (2.123.0, Testerin + Wunsch Hansi): drei Stile – klassisch (Standard, Cburnett, lib/schach),
+// plastisch (Spatial von Maurizio Monge, MIT, lib/schach/plastisch) und Küchenbrigade. Wer die Brigade gewählt hatte, behält sie.
+const SCH_STILE = ["klassisch", "plastisch", "brigade"], SCH_STIL_NAME = { plastisch: "Plastisch", klassisch: "Klassisch", brigade: "Brigade" };
+let SCH_STIL = (() => { try { const w = localStorage.getItem("kc_club_schach_stil2"); if (SCH_STILE.includes(w)) return w;
+  return localStorage.getItem("kc_club_schach_stil") === "brigade" ? "brigade" : "klassisch"; } catch { return "klassisch"; } })();
 const schBrigade = () => SCH_STIL === "brigade";
 const schFigName = (t) => schBrigade() ? SCH_BRIGADE_NAME[t] : SCH_NAME[t];
-const SCH_BILD_V = 1, schFigBild = (t, farbe) => `lib/schach/${farbe === "w" ? "w" : "b"}${t}.svg?v=${SCH_BILD_V}`;
+// KC-CLUB-SCHACH-ELFENBEIN (2.123.0, Wunsch Hansi nach Bild): klassisch = Cburnett in Elfenbein/Tiefschwarz mit Verlauf (lib/schach/elfenbein)
+const SCH_BILD_V = 2, schFigBild = (t, farbe) => `lib/schach/${SCH_STIL === "plastisch" ? "plastisch" : "elfenbein"}/${farbe === "w" ? "w" : "b"}${t}.svg?v=${SCH_BILD_V}`;
 // fehlt ein Bild (offline, nie geladen), steht dort das Schriftzeichen wie bisher
 const schFigHtml = (t, farbe) => schBrigade() ? `<span class="sch-fig brigade ${farbe === "w" ? "weiss" : "schwarz"}${t === "k" ? " chef" : t === "q" ? " dame" : ""}" title="${SCH_BRIGADE_NAME[t]}">${SCH_BRIGADE[t]}</span>`
   : `<span class="sch-fig bild ${farbe === "w" ? "weiss" : "schwarz"}"><img src="${schFigBild(t, farbe)}" alt="" draggable="false" onerror="this.parentNode.classList.remove('bild');this.replaceWith('${SCH_FIG[t]}\uFE0E')"></span>`;
-function schStilWechseln() { SCH_STIL = schBrigade() ? "klassisch" : "brigade"; try { localStorage.setItem("kc_club_schach_stil", SCH_STIL); } catch {} spZeigen(); }
+function schStilWechseln() { SCH_STIL = SCH_STILE[(SCH_STILE.indexOf(SCH_STIL) + 1) % SCH_STILE.length]; lsSetzen("kc_club_schach_stil2", SCH_STIL); melde(`♟️ Figuren: ${SCH_STIL_NAME[SCH_STIL]}`); spZeigen(); }
 // 2.23.38 KC-CLUB-SCHACH-AUFGERAEUMT: Umschalt-Knopf schmal in der Knopfleiste, „Wer ist wer“ eingeklappt unter dem Brett
-const schStilKnopf = () => `<button class="knopf klein" onclick="schStilWechseln()">${schBrigade() ? "♟️ Klassisch" : "👨‍🍳 Brigade"}</button>`;
+const schStilKnopf = () => `<button class="knopf klein" onclick="schStilWechseln()" title="Figuren wechseln: Klassisch → Plastisch → Brigade">♟️ Figuren: ${SCH_STIL_NAME[SCH_STIL]}</button>`;
 const schStilHtml = () => schBrigade() ? `<details class="sch-wer"><summary>👨‍🍳 Wer ist wer?</summary><div class="sch-legende" aria-label="Wer ist wer">${["k", "q", "r", "b", "n", "p"].map((t) => `<span>${SCH_BRIGADE[t]} ${SCH_BRIGADE_NAME[t]}${SCH_BRIGADE_NAME[t] !== SCH_NAME[t] ? ` <small class="hinweis">(${SCH_NAME[t]})</small>` : ""}</span>`).join("")}</div></details>` : "";
 // KC-CLUB-SCHACH-SPASS: data-feld/data-klick/data-ich für das Schieben, eigener Turm als Rochade-Ziel (gestrichelt statt „Schlagen“-Ring),
 // 💡 Tipp-Feld von Twinkey
@@ -5599,10 +5604,12 @@ function schBrettHtml(ch, { unten = "w", auswahl = null, ziele = [], letzter = n
     const feld = "abcdefgh"[c] + (8 - r), f = brett[r][c], hell = (r + c) % 2 === 0, ziel = ziele.includes(feld);
     const kl = ["sch-feld", hell ? "hell" : "dunkel", auswahl === feld ? "gewaehlt" : "", letzter && (letzter.slice(0, 2) === feld || letzter.slice(2, 4) === feld) ? "letzter" : "",
       ziel ? (!f ? "ziel" : f.color === ch.turn() ? "ziel rochade" : "ziel schlag") : "", tipp === feld ? "tipp" : "", f && f.type === "k" && f.color === schachK ? "imschach" : ""].filter(Boolean).join(" ");
-    const rand = (c === spalten[0] ? `<i class="sch-r">${8 - r}</i>` : "") + (r === reihen[7] ? `<i class="sch-l">${"abcdefgh"[c]}</i>` : "");
-    h += `<button class="${kl}" data-feld="${feld}" ${aus ? "disabled" : ""} onclick="${klick}('${feld}')" aria-label="${feld}${f ? ": " + (f.color === "w" ? "Weiß: " : "Schwarz: ") + schFigName(f.type) : ""}">${f ? schFigHtml(f.type, f.color) : ""}${rand}</button>`;
+    h += `<button class="${kl}" data-feld="${feld}" ${aus ? "disabled" : ""} onclick="${klick}('${feld}')" aria-label="${feld}${f ? ": " + (f.color === "w" ? "Weiß: " : "Schwarz: ") + schFigName(f.type) : ""}">${f ? schFigHtml(f.type, f.color) : ""}</button>`;
   }
-  return `<div class="sch-brett${aus ? " aus" : ""}" role="grid" aria-label="Schachbrett" data-klick="${klick}" data-ich="${unten}">${h}</div>`;
+  // KC-CLUB-SCHACH-ELFENBEIN: Beschriftung außen – Zahlen links, Buchstaben unten (wie auf einem echten Brett)
+  return `<div class="sch-rahmen"><div class="sch-zahlen" aria-hidden="true">${reihen.map((r) => `<span>${8 - r}</span>`).join("")}</div>`
+    + `<div class="sch-brett${aus ? " aus" : ""}" role="grid" aria-label="Schachbrett" data-klick="${klick}" data-ich="${unten}">${h}</div>`
+    + `<div></div><div class="sch-buchst" aria-hidden="true">${spalten.map((c) => `<span>${"ABCDEFGH"[c]}</span>`).join("")}</div></div>`;
 }
 // ---------- KC-CLUB-SCHACH-SPASS (2.116.0, Test-Rückmeldung + Wunsch Hansi): Schach soll Spaß machen ----------
 // Figuren schieben (Finger oder Maus) zusätzlich zum Antippen, Figuren gleiten, leise Holz-Töne (🔔, Standard an),
@@ -5711,7 +5718,38 @@ function schTwSag(text, { sprich = true, hinweis = false } = {}) {
   if (!text) return;
   SCH_TW.text = text; SCH_TW.hinweis = hinweis; SCH_TW.neuBis = Date.now() + 300;
   const el = document.querySelector("#spInhalt .sch-twinkey"); if (el) el.outerHTML = schTwHtml();
-  if (sprich) spSag("schach", text.replace(/[\p{Extended_Pictographic}️‍]/gu, "").trim());
+  if (sprich) schTwSprich(text.replace(/[\p{Extended_Pictographic}️‍]/gu, "").trim());
+}
+// KC-CLUB-SCHACH-STIMME (2.123.0, Testerin: „Twinkey klingt wie eine Frau“): Twinkey spricht mit der Männerstimme
+// (dieselbe wie „Männer im Chat“ in ⚙️ Einstellungen → Stimme; ohne Männerstimme auf dem Gerät dieselbe Stimme tiefer).
+// Ob er spricht, regelt der Sprach-Knopf (KC-CLUB-SCHACH-SPRACHE); die Zugansage bleibt in der normalen Stimme.
+function schTwSprich(text) {
+  if (!text || schSprache() === "aus" || aktuelleAnsicht !== "spiele") return;
+  try { if (!("speechSynthesis" in window)) return;
+    const st = stimmeFuer("m"), u = new SpeechSynthesisUtterance(text); u.lang = "de-DE";
+    if (st.voice) { u.voice = st.voice; u.lang = st.voice.lang; } u.pitch = st.pitch; speechSynthesis.speak(u); } catch {}
+}
+// KC-CLUB-SCHACH-SPRACHE (2.123.0, Wunsch Hansi „Ton mit den Zügen oder nur die Kommentare von Twinkey“): ein Knopf, drei Stufen –
+// 🔇 Stumm (Twinkey nur in der Sprechblase) → 🗣️ Nur Twinkey (Sprüche und Tipps) → 🔊 Twinkey + Züge (wie bisher „🔊 Ansage an“).
+// Die Zugansage hängt weiter am bisherigen Ansage-Schalter (spSag) – der wird mitgestellt: an nur bei „Twinkey + Züge“.
+const SCH_SPRACHE_KEY = "kc_club_schach_sprache", SCH_SPRACHEN = ["aus", "twinkey", "alles"];
+const SCH_SPRACHE_TEXT = { aus: "🔇 Stumm", twinkey: "🗣️ Nur Twinkey", alles: "🔊 Twinkey + Züge" };
+function schSprache() {
+  try { const w = localStorage.getItem(SCH_SPRACHE_KEY); if (SCH_SPRACHEN.includes(w)) return w; } catch {}
+  return spAnsageAn("schach") ? "alles" : "aus"; // noch nichts gewählt: wie der alte Ansage-Schalter
+}
+const schSprachKnopf = () => { const s = schSprache();
+  return `<button class="knopf klein sch-sprache-knopf${s !== "aus" ? " haupt" : ""}" aria-label="Sprache: ${SCH_SPRACHE_TEXT[s]} – antippen zum Wechseln" onclick="schSpracheWechseln()">${SCH_SPRACHE_TEXT[s]}</button>`; };
+function schSpracheWechseln() {
+  const neu = SCH_SPRACHEN[(SCH_SPRACHEN.indexOf(schSprache()) + 1) % SCH_SPRACHEN.length];
+  lsSetzen(SCH_SPRACHE_KEY, neu);
+  let w = {}; try { w = JSON.parse(localStorage.getItem(SP_ANSAGE_KEY) || "{}") || {}; } catch {}
+  w.schach = neu === "alles"; lsSetzen(SP_ANSAGE_KEY, JSON.stringify(w));
+  document.querySelectorAll(".sch-sprache-knopf").forEach((b) => (b.outerHTML = schSprachKnopf()));
+  try { speechSynthesis.cancel(); } catch {}
+  if (neu === "aus") return melde("🔇 Schach ist stumm – Twinkey redet nur in der Sprechblase");
+  if (!("speechSynthesis" in window)) return melde("Dieses Gerät kann leider nicht vorlesen.", true);
+  schTwSprich(neu === "alles" ? "Ich sage dir jetzt jeden Zug an – und gebe meinen Senf dazu." : "Ab jetzt rede nur noch ich. Die Züge siehst du ja selbst.");
 }
 const schAbstand = (a, b) => Math.max(Math.abs(a.charCodeAt(0) - b.charCodeAt(0)), Math.abs(+a[1] - +b[1]));
 // Spruch nach einem Zug (m = Zug aus chess.js, ch = Stellung danach, ich = meine Farbe, er = Name des Gegenübers; ohne er = gegen Twinkey)
@@ -5955,7 +5993,7 @@ async function schPcZeigen() {
       ${banner}
       ${schTwHtml()}
       ${schTischHtml(schGeschlagenHtml(ch) + schBrettHtml(ch, { unten: ich, auswahl: SCH.auswahl, ziele: SCH.ziele, letzter: (() => { const h = ch.history({ verbose: true }).slice(-1)[0]; return h ? h.from + h.to : null; })(), klick: "schPcKlick", aus: ende || SCH.denkt, tipp: SCH.tipp }), st, "🧑‍🍳 Twinkey")}
-      <div class="sch-leiste"><button class="knopf haupt klein" onclick="schPcNeu()">↺ Neue Partie</button>${SCH.uhr ? "" : `<button class="knopf klein" onclick="schPcZurueck()" ${ch.history().length < 1 || SCH.denkt ? "disabled" : ""}>↶ Zug zurück</button>`}${SCH.uhr || ende ? "" : `<button class="knopf klein" onclick="schPcTipp()" ${ch.turn() !== ich || SCH.denkt ? "disabled" : ""}>💡 Tipp</button>`}${spAnsageKnopf("schach")}${schTonKnopf()}${schStilKnopf()}${schFokusKnopf(laeuft, partie)}<button class="knopf klein" onclick="schArchivOeffnen()">📼 Meine Partien</button><button class="knopf klein" onclick="schPcStandWeg()" title="Spielstand zurücksetzen">🗑️ Stand</button></div>
+      <div class="sch-leiste"><button class="knopf haupt klein" onclick="schPcNeu()">↺ Neue Partie</button>${SCH.uhr ? "" : `<button class="knopf klein" onclick="schPcZurueck()" ${ch.history().length < 1 || SCH.denkt ? "disabled" : ""}>↶ Zug zurück</button>`}${SCH.uhr || ende ? "" : `<button class="knopf klein" onclick="schPcTipp()" ${ch.turn() !== ich || SCH.denkt ? "disabled" : ""}>💡 Tipp</button>`}${schSprachKnopf()}${schTonKnopf()}${schStilKnopf()}${schFokusKnopf(laeuft, partie)}<button class="knopf klein" onclick="schArchivOeffnen()">📼 Meine Partien</button><button class="knopf klein" onclick="schPcStandWeg()" title="Spielstand zurücksetzen">🗑️ Stand</button></div>
       ${schVerlaufHtml(ch.history())}
       ${schStilHtml()}
       <p class="hinweis sch-tipp">Figur schieben – oder antippen, dann das Zielfeld. Rochade: König auf den Turm schieben.${SCH.uhr ? " Mit Uhr gibt es kein „Zug zurück“ und keinen Tipp – wie im Turnier." : ""}</p>
@@ -6081,7 +6119,7 @@ async function schSpielZeigen(g) {
       ${spTerminHtml(g)}
       ${schTwHtml()}
       ${schTischHtml(schGeschlagenHtml(ch) + schBrettHtml(ch, { unten: ich, auswahl: SCHM.auswahl, ziele: SCHM.ziele, letzter: g.letzterZug, klick: "schMgKlick", aus: !g.ichDran }), st, g.gegner.vorname)}
-      <div class="sch-leiste">${g.status === "beendet" ? `<button class="knopf haupt klein" onclick="spRevanche('${g.id}')">↺ Revanche</button>` : g.status === "laeuft" ? `<button class="knopf klein" onclick="spAufgeben('${g.id}')">🏳️ Aufgeben</button>` : ""}${spAnsageKnopf("schach")}${schTonKnopf()}${schStilKnopf()}${schFokusKnopf(laeuft, g.id)}${(g.verlauf || []).length ? `<button class="knopf klein" onclick="schNachspielen(SCH_NS_MG)">📼 Nachspielen</button>` : ""}</div>
+      <div class="sch-leiste">${g.status === "beendet" ? `<button class="knopf haupt klein" onclick="spRevanche('${g.id}')">↺ Revanche</button>` : g.status === "laeuft" ? `<button class="knopf klein" onclick="spAufgeben('${g.id}')">🏳️ Aufgeben</button>` : ""}${schSprachKnopf()}${schTonKnopf()}${schStilKnopf()}${schFokusKnopf(laeuft, g.id)}${(g.verlauf || []).length ? `<button class="knopf klein" onclick="schNachspielen(SCH_NS_MG)">📼 Nachspielen</button>` : ""}</div>
       ${schVerlaufHtml(g.verlauf || [])}
       ${schStilHtml()}
       <p class="hinweis sch-tipp">Figur schieben – oder antippen, dann das Zielfeld. Rochade: König auf den Turm schieben. ${g.uhr ? "Live-Partie mit Uhr: beide ersten Züge sind frei, danach läuft die Zeit – auch wenn die App zu ist." : `Du musst nicht warten – ${er} bekommt Bescheid.`}</p>

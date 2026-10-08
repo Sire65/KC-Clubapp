@@ -1,5 +1,18 @@
 # Änderungen
 
+## 2.123.0 – 2026-10-08 – ♟️ Schach: Elfenbein-Figuren auf grauem Brett, plastische Figuren zur Wahl, Twinkey mit Männerstimme
+Der Testerin gefielen Figuren und Stimme noch nicht. Aus sechs kostenlosen Figurensätzen kam „Spatial“ dazu; Standard bleibt
+auf Wunsch Hansi der klassische Satz (Cburnett).
+- Klassisch (Standard) im Look nach Hansis Vorlage: Cburnett-Figuren in Elfenbein bzw. Tiefschwarz mit sanftem Verlauf
+  (abgeleitet unter BSD, `lib/schach/elfenbein`, erzeugt mit `tools/schach/elfenbein.mjs`, Formen unverändert), graues Brett
+  mit leichtem Glanz, Beschriftung außen – Zahlen links, Buchstaben unten (KC-CLUB-SCHACH-ELFENBEIN).
+- Neuer Figurensatz „plastisch“ (Spatial von Maurizio Monge, MIT-Lizenz, `lib/schach/plastisch`). Der Knopf „♟️ Figuren“
+  schaltet reihum: Klassisch (Standard) → Plastisch → Brigade (je Gerät). Wer die Brigade gewählt hatte, behält sie (KC-CLUB-SCHACH-FIGUREN).
+- Twinkey spricht mit der Männerstimme – dieselbe wie „Männer im Chat“ (⚙️ Einstellungen → Stimme); hat das Gerät keine,
+  spricht dieselbe Stimme tiefer; die Zugansage bleibt in der normalen Stimme (KC-CLUB-SCHACH-STIMME).
+- Sprache in drei Stufen statt „🔊 Ansage an/aus“: 🔇 Stumm → 🗣️ Nur Twinkey (Sprüche und Tipps) → 🔊 Twinkey + Züge;
+  wer bisher die Ansage an hatte, startet bei „Twinkey + Züge“ (KC-CLUB-SCHACH-SPRACHE).
+
 ## 2.122.0 – 2026-10-08 – Gesamtprüfung 4
 🔧 Kleine Systemverbesserungen
 Admin-Notiz (Gesamtprüfung 4): Notfall-Paket baut 4 Mitglieder parallel (KC-CLUB-NOTPAKET-TEMPO, vorher ~100 s → Abbrüche 546);
