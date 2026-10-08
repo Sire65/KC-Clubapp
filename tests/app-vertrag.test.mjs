@@ -6510,3 +6510,11 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/@keyframes inkoStatusPuls \{ 0%, 100% \{ background-color: #f1c40f;[^}]*\} 50% \{ background-color: #d32f2f;/.test(seite), "gelb ↔ rot");
   assert.ok(/document\.body\.classList\.toggle\("inkognito", inkognitoAn\(\)\)/.test(programm) && /const inkognitoAn = \(\) => !!\(ICH\?\.admin && /.test(programm), "nur Admin mit Inkognito an");
 }
+
+// 4xx. 2.100.0: Hänger-Wächter – Pause über 60 s (iPad friert ein) ist kein Hänger (KC-CLUB-HAENGER-PAUSE, Fund Hansi)
+{
+  const f = programm.slice(programm.indexOf("// Hänger-Wächter:"), programm.indexOf("function meldeFehler(e)"));
+  assert.ok(/if \(luecke > 60000\) \{ sichtbarSeit = jetzt; return; \}/.test(f) && f.indexOf("luecke > 60000") < f.indexOf('neu("haenger"'), "lange Lücke = Pause, vor der Hänger-Meldung geprüft");
+  assert.ok(/\["pageshow", "focus", "resume"\]/.test(f), "Wieder-da-Ereignisse setzen den Takt zurück");
+  assert.ok(/luecke > 5000 && !document\.hidden/.test(f), "kurze echte Hänger werden weiter erkannt");
+}

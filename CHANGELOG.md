@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.100.0 – 2026-10-08 – 🧊 Kein falscher Hänger-Alarm nach Pause (iPad)
+iPad/iPhone frieren die App ein, wenn man kurz in eine andere App wechselt – danach kam fälschlich „Die App hat kurz gehangen“. Pausen über einer Minute zählen jetzt nicht mehr als Hänger.
+
 ## 2.99.0 – 2026-10-08 – 🕶️ Inkognito: Status-Feld pulsiert Gelb ↔ Rot (Admin)
 Ist Inkognito an, pulsiert jetzt auch das eigene Status-Feld von Gelb nach Rot – im Takt der Brille.
 

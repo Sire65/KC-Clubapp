@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.99.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.100.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -7150,8 +7150,14 @@ window.addEventListener("unhandledrejection", (ev) => { const r = ev?.reason, t 
 (() => {
   let letzt = Date.now(), sichtbarSeit = Date.now();
   document.addEventListener("visibilitychange", () => { if (!document.hidden) { sichtbarSeit = Date.now(); letzt = Date.now(); } });
+  // 2.100.0 KC-CLUB-HAENGER-PAUSE (Fund Hansi, iPad: „827 s nicht reagiert“ während Face ID in den Einstellungen eingerichtet wurde):
+  // iPad/iPhone frieren die Home-Bildschirm-App ein, ohne „versteckt“ zu melden. Eine Lücke über 60 s ist darum eine Pause, kein Hänger
+  // (ein echter Hänger dieser Länge würde vom Browser beendet) – kein Eintrag, keine Meldung. Wieder-da-Ereignisse setzen den Takt zurück.
+  const wiederDa = () => { sichtbarSeit = Date.now(); letzt = Date.now(); };
+  ["pageshow", "focus", "resume"].forEach((t) => (t === "resume" ? document : window).addEventListener(t, wiederDa));
   setInterval(() => {
     const jetzt = Date.now(), luecke = jetzt - letzt - 1000; letzt = jetzt;
+    if (luecke > 60000) { sichtbarSeit = jetzt; return; } // eingefroren (Pause), kein Hänger
     if (luecke > 5000 && !document.hidden && jetzt - sichtbarSeit > luecke + 1500) {
       try { window.KCFP?.neu("haenger", { text: `App reagierte ${Math.round(luecke / 1000)} s nicht`, ms: Math.round(luecke), spar: !!SPAR?.an }); } catch {}
       if (luecke > 10000) try { melde("Die App hat kurz gehangen – sie läuft wieder. Ist gemeldet."); } catch {}
