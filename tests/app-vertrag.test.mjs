@@ -6322,7 +6322,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
 {
   assert.ok(/e\.w = x\.w; je\.set\(x\.p, e\);/.test(server) && /zuletzt: e\.w \}\)\)/.test(server), "Server liefert den letzten Schritt je Person (nur die Art)");
   assert.ok(/🟢 Gerade in der App/.test(programm) && /ist bei <b>\$\{esc\(was\(x\.zuletzt\) \|\| "\?"\)\}<\/b>/.test(programm) && /"👉 jetzt" : "zuletzt"/.test(programm), "Übersicht: wer ist gerade wo");
-  assert.ok(/const SERVER_VERSION = "2\.(8[1-9]|9\d)\.0"/.test(server));
+  assert.ok(/const SERVER_VERSION = "2\.(8[1-9]|9\d|1\d\d)\.0"/.test(server));
 }
 
 // 4xx. 2.82.0: Schritt-Hilfe für Mitglieder, Helfen & Leihen (Hilfe suchen, Börse) und Fotos (KC-CLUB-SCHRITT-HILFE, Wunsch Hansi)
@@ -6531,4 +6531,18 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/api\("archiv_loeschen", \{ id \}\)/.test(f) && /Papierkorb/.test(f), "nach Ablage keine doppelte Datei (Papierkorb, wiederherstellbar)");
   assert.ok((programm.match(/onclick="buEinlesen\(\)"/g) || []).length >= 2 && /ding\("bu-scanner"/.test(programm), "Knopf in Liste und Büro-Raum");
   assert.ok(!/fetch\(|sendGewaehlt|api\("nachricht_senden"/.test(f), "schickt nie selbst etwas ab");
+}
+
+// 4xx. 2.102.0: Terminkachel „✅ 3/18 angemeldet“ (KC-CLUB-TERMIN-ANTEIL) + Bildschirm-Schnappschuss nur mit Zustimmung (KC-CLUB-SCHNAPPSCHUSS)
+{
+  assert.ok(/const alle = Number\(INIT\?\.mitgliederAnzahl\) \|\| 0, gesamtTxt = alle \? `✅ <b>\$\{t\.ja\}\/\$\{alle\}<\/b> angemeldet`/.test(programm), "x/y angemeldet auf der Terminkachel");
+  assert.ok(/case "schnappschuss_anfragen": \{\s*nurAdmin\(ich\);/.test(server) && /case "schnappschuss_holen": \{\s*nurAdmin\(ich\);/.test(server), "anfragen und abholen nur Admin");
+  const a = server.slice(server.indexOf('case "schnappschuss_antwort"'), server.indexOf('case "schnappschuss_holen"'));
+  assert.ok(/eq\("person_id", ich\.person_id\)/.test(a) && /p\.erlaubt === true/.test(a) && a.includes("^data:image\\/jpeg;base64,"), "nur das Mitglied selbst antwortet, nur JPEG");
+  const h = server.slice(server.indexOf('case "schnappschuss_holen"'), server.indexOf('case "anklopfen"'));
+  assert.ok(/w\.von !== ich\.person_id/.test(h) && /status: "abgeholt"/.test(h) && h.indexOf('status: "abgeholt"') < h.indexOf('bild: w.bild'), "nur wer gefragt hat; Bild wird beim Abholen gelöscht");
+  assert.ok(!/protokoll\([^)]*bild/.test(server.slice(server.indexOf('case "schnappschuss_anfragen"'), server.indexOf('case "anklopfen"'))), "Bild nie im Protokoll");
+  const f = programm.slice(programm.indexOf("async function ssAnfrage(einl)"), programm.indexOf("// ---------- KC-CLUB-SPRACHE-LERNEN"));
+  assert.ok(/const ja = await frage\(/.test(f) && f.indexOf("await frage(") < f.indexOf("html2canvas(") && /erlaubt: !!\(ja && bild\)/.test(f), "erst fragen, nur bei Ja ein Bild");
+  assert.ok(/if \(r\.schnappschuss\) ssAnfrage\(r\.schnappschuss\);/.test(programm) && /onclick="ssStart\(/.test(programm), "Anfrage kommt über den Online-Takt; Knopf bei den Wegen");
 }

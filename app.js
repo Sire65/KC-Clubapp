@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.101.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.102.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -3095,6 +3095,7 @@ async function onlinePing() {
     onlineLeisteZeigen(); if (INIT) heroZeigen();
     spielLive(r.spielAnfragen); // KC-CLUB-SPIEL-LIVE
     if (r.vorfuehren) vfAnfrage(r.vorfuehren); // KC-CLUB-VORFUEHREN
+    if (r.schnappschuss) ssAnfrage(r.schnappschuss); // KC-CLUB-SCHNAPPSCHUSS (2.102.0)
     if (aktuelleAnsicht === "buero" && !PUSH_AKTIV && Date.now() - BNN.zuletzt > 55000) buNeuPruefen(); /* KC-CLUB-BUERO-NEU-NACHRICHT: ohne Push selbst nachsehen */
     // jemand klopft bei mir an → Fenster (jedes Anklopfen nur einmal)
     const ruf = (r.anrufe || []).find((x) => !ONL.erledigt.has("r" + x.id));
@@ -10549,7 +10550,9 @@ function infoTreffen() {
     const tage = Math.ceil((new Date(t.beginn) - Date.now()) / 86400000);
     const ort = t.ort || (t.gastgeber ? "bei " + t.gastgeber.name : "");
     const meine = { ja: "✅ Ich komme", nein: "❌ Abgesagt", vielleicht: "❓ Vielleicht" }[t.meine] || "❔ Bitte zu- oder absagen";
-    kopf = `<h2>${esc(t.titel)}</h2><div class="unter">${esc(wann(t.beginn))}${ort ? " · " + esc(ort) : ""}</div><div class="unter"><b>${meine}</b> · ✅ ${t.ja} Zusagen</div>`;
+    // 2.102.0 KC-CLUB-TERMIN-ANTEIL (Wunsch Hansi): „✅ 3/18 angemeldet“ = 3 von 18 Mitgliedern haben schon zugesagt
+    const alle = Number(INIT?.mitgliederAnzahl) || 0, gesamtTxt = alle ? `✅ <b>${t.ja}/${alle}</b> angemeldet` : `✅ ${t.ja} Zusagen`;
+    kopf = `<h2>${esc(t.titel)}</h2><div class="unter">${esc(wann(t.beginn))}${ort ? " · " + esc(ort) : ""}</div><div class="unter"><b>${meine}</b> · ${gesamtTxt}</div>`;
     bisTreffen = tage <= 0 ? "Heute" : tage === 1 ? "Morgen" : `in ${tage} Tagen`;
     frist = fristStufe(tage);
   } else kopf = `<h2>Kein Termin geplant</h2><div class="unter">Sobald ein Köcheclub-Termin ansteht, siehst du es hier.</div>`;
@@ -20993,7 +20996,7 @@ async function spurAdmin(tag, person) {
       + (liste.length ? `<div style="display:grid;gap:6px">${liste.map((x) => `<button class="knopf${on(x.person_id) ? " spur-on" : ""}" style="text-align:left" onclick="spurAdmin(null, '${esc(x.person_id)}')">${on(x.person_id) ? "🟢 " : ""}<b>${esc(x.name)}</b>${on(x.person_id) ? ' <small class="spur-jetzt">gerade in der App</small>' : ""} <small class="hinweis">· ${x.anzahl} Schritte · ${esc(zeitKurz(x.erste))}–${esc(zeitKurz(x.letzte))} Uhr</small>${x.zuletzt ? `<br><small>${on(x.person_id) ? "👉 jetzt" : "zuletzt"}: ${esc(was(x.zuletzt))} · ${esc(vor(x.letzte))}</small>` : ""}</button>`).join("")}</div>`
       : `<p class="hinweis">An diesem Tag nichts aufgezeichnet (gezählt ab Version 2.23.88).</p>`);
   } else {
-    inhalt = `<b>${esc(r.name || "")}</b>${r.schritte.length ? `<table class="vb-tabelle">${r.schritte.map((x) => `<tr><td style="white-space:nowrap;vertical-align:top">${esc(zeitKurz(x.t))}</td><td style="text-align:left">${esc(SPUR_WAS[x.w] || NZ_NAMEN[x.w] || x.w)}${x.mit ? ` <b>${esc(x.mit)}</b>` : ""}</td></tr>`).join("")}</table>` : `<p class="hinweis">An diesem Tag nichts aufgezeichnet.</p>`}`;
+    inhalt = `${ICH?.admin && SPW.person !== ICH?.person_id ? `<button class="knopf klein" style="float:right" onclick="ssStart('${esc(SPW.person)}', ${esc(JSON.stringify(r.name || ""))})">📸 Bildschirm ansehen</button>` : ""}<b>${esc(r.name || "")}</b>${r.schritte.length ? `<table class="vb-tabelle">${r.schritte.map((x) => `<tr><td style="white-space:nowrap;vertical-align:top">${esc(zeitKurz(x.t))}</td><td style="text-align:left">${esc(SPUR_WAS[x.w] || NZ_NAMEN[x.w] || x.w)}${x.mit ? ` <b>${esc(x.mit)}</b>` : ""}</td></tr>`).join("")}</table>` : `<p class="hinweis">An diesem Tag nichts aufgezeichnet.</p>`}`;
   }
   $("adminBlattInhalt").innerHTML = kopf + inhalt + fuss;
   $("adminBlatt").classList.remove("versteckt");
@@ -21001,6 +21004,66 @@ async function spurAdmin(tag, person) {
   clearTimeout(SPW.uhr);
   if (heuteDa) SPW.uhr = setTimeout(() => { if (!$("adminBlatt").classList.contains("versteckt") && $("adminBlattInhalt").querySelector(".spur-neu[aria-label='Wege aktualisieren']") && !document.hidden) { onlinePing().catch(() => {}).finally(() => spurAdmin(SPW.tag, SPW.person)); } }, 20000);
 }
+// ---------- KC-CLUB-SCHNAPPSCHUSS (2.102.0, Wunsch Hansi „Bildschirm des Mitglieds ansehen – Schnappschuss“) ----------
+// Admin bittet um EIN Bild der Club-App eines Mitglieds (z. B. um zu helfen). Das Mitglied wird gefragt und entscheidet selbst;
+// abgebildet wird nur die Club-App (anderes vom Gerät kann eine Web-App nicht sehen). Das Bild liegt nur bis zum Abholen auf dem Server.
+const SS = { id: null, an: null, name: "", uhr: null, bis: 0, gefragt: new Set() };
+async function ssStart(pid, name) {
+  if (!ICH?.admin) return;
+  if (!(await frage(`📸 ${name || "Das Mitglied"} fragen, ob du kurz sehen darfst, was in der Club-App gerade angezeigt wird?\n\nIn der App kommt eine Frage – die Entscheidung liegt dort. Du siehst dann ein einziges Bild – nur von der Club-App.`, { ja: "📸 Fragen", nein: "Abbrechen" }))) return;
+  try {
+    const r = await api("schnappschuss_anfragen", { an: pid }, { warten: true });
+    Object.assign(SS, { id: r.id, an: pid, name: name || "", bis: Date.now() + 3 * 60000 });
+    ssZeigen("warten"); clearInterval(SS.uhr); SS.uhr = setInterval(ssHolen, 3000);
+  } catch (e) { meldeFehler(e); }
+}
+function ssZeigen(art, bild) {
+  const n = esc(SS.name || "Das Mitglied");
+  const html = art === "bild" ? `<h3 style="margin:0">📸 Bildschirm von ${n}</h3><p class="hinweis" style="margin:2px 0 8px">Aufgenommen ${esc(new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }))} – liegt nicht mehr auf dem Server.</p>
+      <img id="ssBild" src="${bild}" alt="Bildschirm von ${n}" style="width:100%;border:1px solid var(--linie,#ccc);border-radius:12px">
+      <div class="knoepfe" style="margin-top:8px"><button class="knopf haupt" onclick="ssSpeichern()">💾 Speichern</button><button class="knopf" onclick="ssStart('${esc(SS.an)}', ${esc(JSON.stringify(SS.name))})">🔄 Noch einmal</button><button class="knopf" onclick="fensterZu($('ssBlatt'))">Schließen</button></div>`
+    : art === "abgelehnt" ? `<h3 style="margin:0">🙅 ${n} möchte gerade nicht</h3><p>Das ist in Ordnung – am besten kurz persönlich nachfragen.</p><button class="knopf" onclick="fensterZu($('ssBlatt'))">Schließen</button>`
+    : art === "keine_antwort" ? `<h3 style="margin:0">⏳ Keine Antwort</h3><p>${n} hat in 3 Minuten nicht geantwortet – vielleicht ist die App gerade nicht offen.</p><button class="knopf" onclick="fensterZu($('ssBlatt'))">Schließen</button>`
+    : `<h3 style="margin:0">📸 Warte auf ${n} …</h3><p>${n} wird gefragt, ob du den Bildschirm sehen darfst. Das Fenster aktualisiert sich von selbst (höchstens 3 Minuten).</p><button class="knopf" onclick="ssAbbrechen()">Abbrechen</button>`;
+  const f = blattAuf("ssBlatt", html); f.onclick = null;
+}
+function ssAbbrechen() { clearInterval(SS.uhr); SS.id = null; fensterZu($("ssBlatt")); }
+async function ssHolen() {
+  if (!SS.id || !$("ssBlatt")) { clearInterval(SS.uhr); return; }
+  try {
+    const r = await api("schnappschuss_holen", { an: SS.an, id: SS.id });
+    if (r.status === "bild") { clearInterval(SS.uhr); SS.id = null; return ssZeigen("bild", r.bild); }
+    if (["abgelehnt", "keine_antwort", "vorbei", "abgeholt"].includes(r.status) || Date.now() > SS.bis + 10000) { clearInterval(SS.uhr); SS.id = null; return ssZeigen(r.status === "abgelehnt" ? "abgelehnt" : "keine_antwort"); }
+  } catch {}
+}
+function ssSpeichern() {
+  const b = $("ssBild")?.src; if (!b) return;
+  const a = document.createElement("a"); a.href = b; a.download = `Bildschirm_${(SS.name || "Mitglied").replace(/[^\wäöüÄÖÜß]+/g, "_")}_${heuteIso()}.jpg`; document.body.appendChild(a); a.click(); setTimeout(() => a.remove(), 500);
+  melde("💾 Bild gespeichert");
+}
+// beim Mitglied: Frage, dann EIN Bild der Club-App (wie beim eigenen Bildschirmfoto) – verkleinert, als JPEG
+async function ssAnfrage(einl) {
+  if (!einl?.id || SS.gefragt.has(einl.id)) return; SS.gefragt.add(einl.id);
+  try { navigator.vibrate?.([80, 60, 80]); } catch {}
+  const wer = einl.von?.vorname || "Hansi";
+  const ja = await frage(`📸 ${wer} möchte dir helfen und kurz sehen, was in deiner Club-App gerade angezeigt wird.\n\nEs wird ein einziges Bild gemacht – nur von der Club-App, nichts anderes von deinem Gerät. Erlauben?`, { ja: "✅ Ja, erlauben", nein: "Nein, jetzt nicht" });
+  let bild = "";
+  if (ja) {
+    try {
+      await bfBibliothek(); await new Promise((ok) => setTimeout(ok, 450)); // Fragefenster ist zu
+      const c = await window.html2canvas(document.body, { x: scrollX, y: scrollY, width: innerWidth, height: innerHeight, windowWidth: innerWidth, windowHeight: innerHeight,
+        scale: 1, useCORS: true, logging: false, backgroundColor: getComputedStyle(document.body).backgroundColor, ignoreElements: (el) => !!el.classList?.contains("meldung"), onclone: bfKlonGlaetten });
+      const f = Math.min(1, 900 / c.width), k = document.createElement("canvas"); k.width = Math.round(c.width * f); k.height = Math.round(c.height * f);
+      k.getContext("2d").drawImage(c, 0, 0, k.width, k.height);
+      for (const q of [0.7, 0.5, 0.35]) { bild = k.toDataURL("image/jpeg", q); if (bild.length < 1_900_000) break; }
+    } catch { bild = ""; }
+  }
+  try {
+    await api("schnappschuss_antwort", { id: einl.id, erlaubt: !!(ja && bild), bild: ja && bild ? bild : "" }, { warten: !!ja });
+    melde(ja ? (bild ? `📸 Danke – ${wer} sieht jetzt das Bild` : "Das Bild hat leider nicht geklappt.") : "👍 In Ordnung – es wurde nichts gezeigt.", ja && !bild);
+  } catch (e) { meldeFehler(e); }
+}
+
 // ---------- KC-CLUB-SPRACHE-LERNEN (2.83.0, Wunsch Hansi): Admin-Übersicht – was die Sprachsteuerung (noch) nicht kennt und was sie gelernt hat ----------
 // Gelernt ist erst nur für das Mitglied selbst; 🌍 = für alle (vom Admin – oder von selbst, wenn 2 Mitglieder denselben Satz gleich zuordnen).
 async function sbAdmin() {

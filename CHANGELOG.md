@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.102.0 – 2026-10-08 – 📊 Terminkachel „3/18 angemeldet“ + 📸 Bildschirm ansehen (Admin, mit Erlaubnis)
+Auf der Terminkachel steht jetzt, wie viele schon zugesagt haben – z. B. „✅ 3/18 angemeldet“. Neu für den Admin: bei Nutzung → Wege eines Mitglieds „📸 Bildschirm ansehen“ – das Mitglied wird gefragt und entscheidet selbst; dann kommt ein einziges Bild der Club-App, das man speichern kann.
+
 ## 2.101.0 – 2026-10-08 – 📥 Büro: Dokumente einlesen
 Im Büro gibt es „📥 Einlesen“: Foto machen, Datei wählen, am PC hineinziehen oder aus dem Eingangskorb holen. Danach fragt die App, wohin damit – in einen Ordner (mit Vorschlag), in den Eingangskorb für später, als Nachricht in der App oder per E-Mail mit Anhang.
 
