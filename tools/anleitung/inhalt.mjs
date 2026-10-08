@@ -1,5 +1,5 @@
 // Inhalt der Club-App-Anleitung (Texte). Bilder: bild/<name>.png (ganze Seite) und bild/s-<name>.png (Ausschnitt).
-export const VERSION = { anleitung: 8, app: "2.95.0", stand: "08.10.2026" };
+export const VERSION = { anleitung: 9, app: "2.110.0", stand: "08.10.2026" };
 export const INHALT = [
   ["So fängst du an", "in 5 Schritten"], ["1. Startseite", "einfache Ansicht – das Wichtigste auf einen Blick"], ["2. Erweiterte Ansicht", "alle Funktionen, Anzeigen im Kopf"],
   ["3. Nachrichten", "Chats, Schreiben, Diktieren, wichtige Nachrichten, Chats archivieren"], ["4. Termine", "zu- und absagen, Mitfahren, Kalender, Terminanfragen mit Erinnerung"], ["5. Mitglieder", "wer ist online, Status, Kontakt, Anklopfen"],
@@ -11,12 +11,14 @@ export const INHALT = [
   ["18. Neu in Version 6", "Mein Bild, Anwesenheitstafel, Anrufen von der Kachel, mehr am Pfeil, Mein Dienst, Meine Daten und mehr"],
   ["19. Neu in Version 7", "Meldung beim Öffnen, weniger Fenster, Gruppen-Admins, Bauernskat nach Köcheclub-Regeln und mehr"],
   ["20. Neu in Version 8", "Schritt-für-Schritt-Hilfe, Sprachsteuerung, 👆 Was kann ich antippen?, neue Spiele, Inhaltsverzeichnis und mehr"],
+  ["21. Neu in Version 9", "🐌 langsames Netz, „Nochmal versuchen“, 7/18 angemeldet, Schritt-Hilfe überall, Büro: Einlesen und Mail mit CC/BCC"],
 ];
 export const GUT_ZU_WISSEN = [
   "<b>Gut zu wissen:</b> Alle Bilder zeigen <b>Beispieldaten</b> – Namen wie „Max Mustermann“ und alle Telefonnummern sind erfunden. In deiner App stehen die echten Mitglieder und Termine.",
   "Die App hat eine <b>einfache</b> und eine <b>erweiterte Ansicht</b> – Umschalten geht jederzeit (Teil 1 und 2).",
   "Die Farben kannst du in den Einstellungen ändern („Lieblingsfarbe“) – es gibt jetzt <b>22 Farbschemen</b>. Die Bilder zeigen „Köcheclub Klassik“ am Tag.",
   "<b>Neu in Version 8</b> – alles in <b>Teil 20</b>: 🤝 wie viel Hilfe du möchtest, 👣 Schritt für Schritt mit rotem Rahmen, 🎙️ Sprachsteuerung („Nachricht an Klaus“), 👆 Was kann ich antippen?, 🎲 Mensch ärgere dich nicht, 🧑‍🍳 Fang den Koch, 👑 Doppelkopf, 🗂️ Inhaltsverzeichnis deiner Ordner und mehr. Was in Version 7 dazukam, steht in <b>Teil 19</b>.",
+  "<b>Neu in Version 9</b> – alles in <b>Teil 21</b>: 🐌 die Schnecke bei langsamem Netz, „🔄 Nochmal versuchen“ statt Hängen, ✅ „7/18 angemeldet“ auf der Termin-Kachel, Schritt-für-Schritt-Hilfe auf allen Seiten und – für die Clubleitung – Dokumente einlesen und direkt per E-Mail (An/CC/BCC) verschicken.",
   "<b><u>Beachte:</u></b> Die Club-App ist noch eine Beta-Version. Einige Funktionen können sich mit der Zeit noch ändern, weil ständig weiterentwickelt wird.",
 ];
 export const START_SCHRITTE = [
@@ -299,4 +301,21 @@ export const TEILE = [
         [null, "🐢 Sparmodus", "Bei langsamem Netz oder schwachem Handy schaltet die App von selbst Bewegungen ab und lädt seltener nach – im Kopf steht dann 🐢. Ein-/ausschalten: ⚙️ → 🎨 Darstellung.", "neu"],
         [null, "🔄 Kochjacke jeden Tag", "Bei 🧑‍🍳 Mein Bild: „Kochjacke wechselt jeden Tag“ – Montag weiß, Dienstag schwarz … bis Sonntag hellblau.", "neu"],
         [null, "💐 Willkommen", "Meldet sich ein neues Mitglied zum ersten Mal an, hängt die App einen Willkommens-Zettel an die Pinnwand.", "neu"]] }] }] },
+  { titel: "21. Neu in Version 9", unter: "Was seit Version 8 dazugekommen ist", bild: "neu9-schnecke",
+    legende: [["🐌 Die Schnecke", "erscheint oben in der Mitte, solange das Netz gerade langsam ist – auf jeder Seite. Antippen erklärt es kurz."], ["✅ 7/18 angemeldet", "auf der Termin-Kachel: 7 von 18 Mitgliedern haben schon zugesagt"]],
+    text: "Die App misst selbst, wie schnell der Club-Server antwortet. Ist das Netz langsam, siehst du die <b>🐌</b> – alles funktioniert weiter, dauert aber länger. Bitte etwas Geduld und <b>nicht mehrfach tippen</b>. Ist es wieder schnell, verschwindet die Schnecke von selbst.",
+    weiter: [
+      { bild: "neu9-laden", titel: "🔄 Laden dauert zu lange? Nochmal versuchen", text: "Lädt etwas länger als 12 Sekunden oder klappt gar nicht, erscheint unten eine Leiste: <b>„🐌 Laden dauert zu lange – Das Netz ist gerade langsam“</b>. <b>🔄 Nochmal versuchen</b> lädt neu, <b>Abbrechen</b> beendet das Warten – du kannst es später nochmal öffnen. Beim <b>Senden</b> (Nachricht, Zusage, Speichern) wird nie abgebrochen und nie doppelt geschickt: Dort steht nur „bitte warten, nicht doppelt senden“.",
+        abschnitte: [{ nr: "+", titel: "Auch hier hilft die App bei langsamem Netz", zeilen: [
+          [null, "🧑‍🍳 Twinkey", "Nach 8 Sekunden steht „🐌 Das Netz ist gerade langsam – noch einen Moment …“. Klappt es gar nicht, kommt „🔄 Nochmal versuchen“ statt endlosem Laden.", "neu"],
+          [null, "🔄 Neue Version holen", "Hängt das Aktualisieren, lädt die App spätestens nach 30 Sekunden von selbst neu.", "neu"],
+          [null, "🎙️ Mikrofon", "Bleibt die Spracheingabe hängen, beendet die App sie nach kurzer Zeit von selbst – einfach nochmal auf 🎙️ tippen.", "neu"],
+          [null, "🔢 Anmelden mit Code", "Dauert die Anmeldung zu lange, sagt die App „Das Netz ist gerade zu langsam – bitte gleich nochmal versuchen“.", "neu"]] }] },
+      { bild: "neu9-live", titel: "🔴 „Hansi schaut zu“", text: "Hast du ein Problem mit der App, kann Hansi sich – <b>nur wenn du zustimmst</b> – ein Bild deines Bildschirms ansehen oder kurz live mitschauen, um dir zu helfen. Die App fragt dich jedes Mal vorher. Solange jemand zuschaut, steht oben ein <b>rotes Band</b>; mit <b>„Beenden“</b> hörst du sofort auf. Nach 10 Minuten endet es von selbst." },
+      { bild: "neu9-wohin", titel: "📥 Für die Clubleitung: Dokumente einlesen", text: "Im <b>🗂️ Büro</b> auf <b>„📥 Einlesen“</b>: 📷 Foto machen, 📁 Datei wählen, am PC einfach hineinziehen – oder etwas aus dem Eingangskorb nehmen. Danach fragt die App <b>„Wohin damit?“</b>: in einen Ordner (mit Vorschlag), als 💬 Nachricht in der App oder 📧 per E-Mail mit Anhang." },
+      { bild: "neu9-mail", titel: "📧 Für die Clubleitung: Mail direkt aus der App", text: "Bei <b>„📧 Per E-Mail mit Anhang“</b> öffnet sich ein Fenster in der App – kein fremdes Programm. Bei jedem Namen <b>An</b>, <b>CC</b> (Kopie – alle sehen es) oder <b>BCC</b> (Blindkopie – unsichtbar für die anderen) antippen; oben den Namen eintippen geht schneller. Betreff prüfen, Text dazu (kann leer bleiben), „Kopie an mich“ – dann <b>„📧 Jetzt senden“</b>. Die Datei hängt schon an. Für Adressen außerhalb des Clubs gibt es <b>„📤 Anderes Mail-Programm“</b> (Teilen)." }],
+    abschnitte: [
+      { nr: "+", titel: "Sonst noch neu", zeilen: [
+        [null, "👣 Schritt-Hilfe überall", "Der rote Rahmen führt jetzt auf <b>jeder Seite</b> (außer SOS) und in den wichtigen Fenstern Schritt für Schritt – z. B. Daten ändern, Mitfahren anbieten, Album anlegen, Feedback, Büro. Ein-/ausschalten: ⚙️ → „🤝 Unterstützung“.", "neu"],
+        [null, "📖 Diese Anleitung", "Version 9 findest du wie immer unter <b>📄 Dokumente</b>. Alle Neuerungen stehen auch im <b>Hilfe-Zentrum</b> (das „?“ unten rechts).", "neu"]] }] },
 ];

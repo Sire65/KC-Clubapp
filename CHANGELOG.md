@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.110.0 – 2026-10-08 – Hilfe-Zentrum und Bedienungsanleitung V9
+Neue Hilfe-Einträge zu allen Neuerungen seit Anleitung V8 (Schnecke, Laden dauert zu lange, 7/18 angemeldet, Schritt-Hilfe überall, Büro: Einlesen und Mail mit An/CC/BCC u. a.) und die Bedienungsanleitung Version 9 mit Teil 21 (63 Seiten) unter Dokumente. Hinweis im Fenster „Wohin damit?“ aktualisiert, Mail-Fenster passt jetzt auch mit langen Namen (KC-CLUB-ANLEITUNG-V9).
+
 ## 2.109.0 – 2026-10-08 – Büro-Mail mit CC und BCC
 Beim Mailen aus dem Büro wählst du je Person An, CC oder BCC; „Kopie an mich“ geht als BCC (KC-CLUB-BUERO-MAIL).
 
