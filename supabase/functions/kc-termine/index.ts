@@ -120,9 +120,10 @@ function artText(art: string, n: number) {
 // Hinweis Schulungsversion (ab 1.3.4): steht in Einladung, Bestätigung und Erinnerung
 function tabletHinweis(n: number, art?: string) {
   const ihr = n > 1;
-  const was = art === "beim_mitglied" ? (ihr ? "Legt gerne ein Tablet bereit" : "Leg gerne ein Tablet bereit")
-    : art === "bei_hansi" ? (ihr ? "Bringt gerne ein Tablet mit" : "Bring gerne ein Tablet mit")
-    : (ihr ? "Wenn ihr ein Tablet habt, bringt es gerne mit bzw. legt es bereit" : "Wenn du ein Tablet hast, bring es gerne mit bzw. leg es bereit");
+  // 2.124.0 KC-TERMINE-TABLET-TEXT (Wunsch Hansi): klar sagen – kommt das Mitglied zu mir, bringt es sein Tablet mit; fahre ich hin, legt es das Tablet bereit
+  const was = art === "beim_mitglied" ? (ihr ? "Legt bitte euer Tablet bereit" : "Leg bitte dein Tablet bereit")
+    : art === "bei_hansi" ? (ihr ? "Bringt bitte euer Tablet mit" : "Bring bitte dein Tablet mit")
+    : (ihr ? "Kommt ihr zu mir, bringt bitte euer Tablet mit – komme ich zu euch, legt es bitte bereit" : "Kommst du zu mir, bring bitte dein Tablet mit – komme ich zu dir, leg es bitte bereit");
   return `📱 ${was} – dann installiere ich ${ihr ? "euch" : "dir"} die Schulungsversion unserer Programme direkt darauf, und ${ihr ? "ihr könnt" : "du kannst"} zu Hause in Ruhe weiter üben.`;
 }
 function artKurz(art: string) {
@@ -273,7 +274,7 @@ async function einladungSenden(e: any, leute: Person[], link: string, gueltig: s
     einstieg[anlass] + (extra ? "\n\n" + extra : "") + (e.nachricht && anlass === "neu" ? "\n\n" + e.nachricht : ""), "",
     `Über diesen Link ${w.kannst} ${w.du} ${n > 1 ? "euch" : "dir"} einen Termin aussuchen:`, link, "",
     "Zurzeit frei:", liste, "",
-    tabletHinweis(n), "",
+    tabletHinweis(n, frei.length && frei.every((s) => s.besuchsart === frei[0].besuchsart) ? frei[0].besuchsart : undefined), "",
     `Wer zuerst wählt, bekommt den Termin – der Link zeigt immer den aktuellen Stand. Passt keiner, ${w.kannst} ${w.du} dort „Kein Termin passt“ ankreuzen und mir zwei eigene Vorschläge schicken.`, "",
     `${w.antworte === "antwortet" ? "Bitte antwortet" : "Bitte antworte"} bis ${frist(gueltig)}.`, "",
     "Viele Grüße", "Hansi", "Köcheclub Werne",

@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.122.0";
+const SERVER_VERSION = "2.124.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 10 * 60000; // 2.103.0: Live-Mitschauen endet nach 10 Min.
 // Beenden = Bild sofort vom Server löschen (KC-CLUB-MITSCHAUEN)
@@ -4116,7 +4116,17 @@ Deno.serve(async (req) => {
       if (!geheim || p.cronSecret !== geheim) return json({ error: "Kein Zugang" }, 401);
       // KC-CLUB-NOTBETRIEB-STUFE2 (1.54.0): zuerst nachtragen, was im Notbetrieb geschrieben wurde – dann das Paket bauen
       const nachtrag = await notEingangLauf().catch((e) => ({ ok: false, fehler: txt(String(e?.message || e), 200) }));
-      return json({ ...(await notpaketLauf(!!p.erzwingen)), nachtrag });
+      return json({ ...(await notpaketLauf(!!p.erzwingen, geheim)), nachtrag });
+    }
+    // KC-CLUB-NOTPAKET-TEILE (2.124.0): ein Mitglied des Notfall-Pakets bauen – nur der Hauptlauf (Zeitplaner-Geheimnis) ruft das auf
+    if (a === "notpaket_teil") {
+      const { data: geheim } = await db.rpc("kc_communication_get_server_secret", { p_name: "kc_club_cron_secret" });
+      if (!geheim || p.cronSecret !== geheim) return json({ error: "Kein Zugang" }, 401);
+      const pid = String(p.person_id || "");
+      if (!/^KC-P-[A-Z0-9-]{1,40}$/.test(pid) || pid.startsWith("KC-P-TEST")) return json({ error: "Ungültig" }, 400);
+      const antworten = await notpaketMitglied(pid);
+      if (DB_AUS.n !== dbAusVorher) return json({ error: "Datenbank antwortet nicht" }, 503); // nie ein halbes Ergebnis
+      return json({ ok: true, antworten });
     }
     // ----- Zeitplaner: Erinnerung am Vortag (ab 9 Uhr) an alle, die nicht abgesagt haben -----
     if (a === "wartung") {
@@ -11043,34 +11053,44 @@ async function gzip(text: string): Promise<Uint8Array> {
   const s = new Blob([text]).stream().pipeThrough(new CompressionStream("gzip"));
   return new Uint8Array(await new Response(s).arrayBuffer());
 }
-const NOT_PARALLEL = 4;
-async function notpaketBauen() {
-  const { data: zug } = await db.from("kc_club_zugang").select("person_id,token_hash").eq("aktiv", true).not("token_hash", "is", null).not("person_id", "like", "KC-P-TEST%");
-  const ids = (zug ?? []).map((z: any) => z.person_id);
-  const [{ data: pe }, { data: ro }] = await Promise.all([
-    db.from("kc_core_people").select("person_id,display_name,given_name,preferred_name,active").in("person_id", ids),
-    db.from("kc_club_rollen").select("*").in("person_id", ids),
+// KC-CLUB-NOTPAKET-TEILE (2.124.0, Gesamtprüfung 4): Ein Lauf für alle 17 Mitglieder brauchte ~100 s und wurde immer öfter mit
+// „CPU Time exceeded“ (Status 546) abgebrochen – die Rechenzeit je Server-Aufruf ist begrenzt. Darum baut jetzt JEDES Mitglied
+// in einem eigenen Server-Aufruf (Aktion „notpaket_teil“, nur mit dem Zeitplaner-Geheimnis), NOT_PARALLEL gleichzeitig.
+// Der Hauptlauf setzt nur zusammen. Fehlt auch nur ein Teil, bleibt das alte, vollständige Paket stehen (nie ein lückenhaftes).
+const NOT_PARALLEL = 4, NOT_TEIL_MS = 60000;
+async function notpaketMitglied(personId: string): Promise<Record<string, unknown> | null> {
+  const [{ data: p0 }, { data: ro }] = await Promise.all([
+    db.from("kc_core_people").select("person_id,display_name,given_name,preferred_name,active").eq("person_id", personId).maybeSingle(),
+    db.from("kc_club_rollen").select("*").eq("person_id", personId).maybeSingle(),
   ]);
-  const pm = new Map<string, any>((pe ?? []).map((x: any) => [x.person_id, x])), rm = new Map<string, any>((ro ?? []).map((x: any) => [x.person_id, x]));
+  if (!p0?.active) return null;
   const heute = berlinTag(new Date()), bis = tagDazu(heute, NOT_DIENST_TAGE), anfrage = new Request(APP_URL, { method: "POST" });
-  const mitglieder: Record<string, unknown> = {};
-  const holen = async (ich: Ich, a: string, prm: Record<string, unknown>) => {
+  const ich: Ich = { ...ichAus(p0, ro ?? null), nurLesen: true };
+  const holen = async (a: string, prm: Record<string, unknown>) => {
     try { const r = await aktionAusfuehren(a, prm, ich, anfrage, 0, 0); return r.ok ? await r.json() : null; } catch { return null; }
   };
-  const einer = async (z: any) => {
-    const p0 = pm.get(z.person_id); if (!p0?.active) return;
-    const ich: Ich = { ...ichAus(p0, rm.get(z.person_id) ?? null), nurLesen: true };
-    const antworten: Record<string, unknown> = {};
-    for (const [a, prm] of NOT_AKTIONEN) { const j = await holen(ich, a, prm); if (j) antworten[a] = j; }
-    const d = await holen(ich, "dienste", { von: heute, bis, personen: [] }); if (d) antworten.dienste = d;
-    const chats = ((antworten.unterhaltungen as any)?.unterhaltungen ?? []).slice(0, NOT_CHATS);
-    for (const c of chats) { const j = await holen(ich, "unterhaltung", { id: c.id }); if (j) antworten["unterhaltung:" + c.id] = j; }
-    mitglieder[z.token_hash] = { person_id: z.person_id, antworten };
+  const antworten: Record<string, unknown> = {};
+  for (const [a, prm] of NOT_AKTIONEN) { const j = await holen(a, prm); if (j) antworten[a] = j; }
+  const d = await holen("dienste", { von: heute, bis, personen: [] }); if (d) antworten.dienste = d;
+  const chats = ((antworten.unterhaltungen as any)?.unterhaltungen ?? []).slice(0, NOT_CHATS);
+  for (const c of chats) { const j = await holen("unterhaltung", { id: c.id }); if (j) antworten["unterhaltung:" + c.id] = j; }
+  return antworten;
+}
+async function notpaketBauen(geheim: string) {
+  const { data: zug } = await db.from("kc_club_zugang").select("person_id,token_hash").eq("aktiv", true).not("token_hash", "is", null).not("person_id", "like", "KC-P-TEST%");
+  const mitglieder: Record<string, unknown> = {};
+  const teil = async (z: any) => {
+    const r = await fetch(`${SUPA}/functions/v1/kc-club`, {
+      method: "POST", signal: AbortSignal.timeout(NOT_TEIL_MS),
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE}`, apikey: SERVICE },
+      body: JSON.stringify({ action: "notpaket_teil", cronSecret: geheim, person_id: z.person_id }),
+    });
+    const j = await r.json().catch(() => null);
+    if (!r.ok || !j?.ok) throw new Error(`Notfall-Paket: Teil für ein Mitglied fehlgeschlagen (${r.status}) – altes Paket bleibt`);
+    if (j.antworten) mitglieder[z.token_hash] = { person_id: z.person_id, antworten: j.antworten };
   };
-  // KC-CLUB-NOTPAKET-TEMPO (2.122.0, Gesamtprüfung 4): nacheinander dauerte es ~100 s für 17 Mitglieder – der Lauf wurde oft vom
-  // Server-Zeitlimit abgebrochen (Status 546). Jetzt NOT_PARALLEL Mitglieder gleichzeitig (je Mitglied weiter der Reihe nach).
   const liste = [...(zug ?? [])];
-  await Promise.all(Array.from({ length: Math.min(NOT_PARALLEL, liste.length) }, async () => { for (let z = liste.shift(); z; z = liste.shift()) await einer(z); }));
+  await Promise.all(Array.from({ length: Math.min(NOT_PARALLEL, liste.length) }, async () => { for (let z = liste.shift(); z; z = liste.shift()) await teil(z); }));
   return { mitglieder, anzahl: Object.keys(mitglieder).length };
 }
 // ---------- KC-CLUB-NOTBETRIEB-STUFE2 (1.54.0): im Notbetrieb Geschriebenes nachtragen ----------
@@ -11144,7 +11164,7 @@ async function notEingangLauf() {
   await protokoll(null, "notbetrieb_nachgetragen", bericht);
   return { ok: true, ...bericht };
 }
-async function notpaketLauf(erzwingen: boolean) {
+async function notpaketLauf(erzwingen: boolean, geheim: string) {
   await notSchluessel(); // Schlüsselpaar gleich anlegen – den öffentlichen Teil braucht der Ersatz-Server schon beim Einrichten
   const st = await notStand();
   if (!st.url) return { ok: true, aus: "Ersatz-Server noch nicht eingerichtet" };
@@ -11164,7 +11184,7 @@ async function notpaketLauf(erzwingen: boolean) {
       await db.from("kc_club_notbetrieb").update({ bestaetigt_am: erstellt, fehler: null }).eq("id", 1);
       return { ok: true, unveraendert: true };
     }
-    const dbVorher = DB_AUS.n, t0 = Date.now(), paket = await notpaketBauen();
+    const dbVorher = DB_AUS.n, t0 = Date.now(), paket = await notpaketBauen(geheim);
     // KC-CLUB-DB-ZEITGRENZE: hing die Datenbank beim Bauen, das gute alte Paket NICHT durch ein lückenhaftes ersetzen
     if (DB_AUS.n !== dbVorher) throw new Error("Datenbank antwortet nicht – Notfall-Paket bleibt auf dem letzten guten Stand");
     const roh = await gzip(JSON.stringify({ format: 1, erstellt, stand: erstellt, fingerabdruck: fp, server: SERVER_VERSION, mitglieder: paket.mitglieder }));

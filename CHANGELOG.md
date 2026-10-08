@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.124.0 – 2026-10-08 – Notfall-Paket in Teilen, Tablet-Hinweis
+🔧 Kleine Systemverbesserungen
+Admin-Notiz: Notfall-Paket wird je Mitglied in einem eigenen Server-Aufruf gebaut (KC-CLUB-NOTPAKET-TEILE) – der Gesamtlauf brach mit „CPU Time exceeded“ (546) ab; fehlt ein Teil, bleibt das alte Paket.
+Schulungs-Einladung: Tablet-Hinweis klar – „Kommst du zu mir, bring bitte dein Tablet mit – komme ich zu dir, leg es bitte bereit“; sind alle freien Termine gleicher Art, nur der passende Satz (KC-TERMINE-TABLET-TEXT).
+
 ## 2.123.0 – 2026-10-08 – ♟️ Schach: Elfenbein-Figuren auf grauem Brett, plastische Figuren zur Wahl, Twinkey mit Männerstimme
 Der Testerin gefielen Figuren und Stimme noch nicht. Aus sechs kostenlosen Figurensätzen kam „Spatial“ dazu; Standard bleibt
 auf Wunsch Hansi der klassische Satz (Cburnett).

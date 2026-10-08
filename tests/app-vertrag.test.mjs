@@ -6832,7 +6832,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
 // 4xx. 2.122.0: Gesamtprüfung 4
 {
   // KC-CLUB-NOTPAKET-TEMPO: Notfall-Paket mit 4 parallelen Läufen statt nacheinander (vorher ~100 s → 546)
-  assert.ok(/const NOT_PARALLEL = 4;/.test(server) && /Array\.from\(\{ length: Math\.min\(NOT_PARALLEL, liste\.length\) \}, async \(\) => \{ for \(let z = liste\.shift\(\); z; z = liste\.shift\(\)\) await einer\(z\); \}\)/.test(server), "Notpaket parallel");
+  assert.ok(/const NOT_PARALLEL = 4(, NOT_TEIL_MS = 60000)?;/.test(server) && /Array\.from\(\{ length: Math\.min\(NOT_PARALLEL, liste\.length\) \}, async \(\) => \{ for \(let z = liste\.shift\(\); z; z = liste\.shift\(\)\) await teil\(z\); \}\)/.test(server), "Notpaket parallel");
   // Anruf: Auflegen während der Vorbereitung
   const an = programm.slice(programm.indexOf("const lauf = RUF, art = RUF.art;"), programm.indexOf("const lauf = RUF, art = RUF.art;") + 1500);
   assert.ok(an.length > 100 && /if \(RUF !== lauf\) \{ try \{ strom\?\.getTracks/.test(an) && /catch \(e\) \{ if \(RUF !== lauf\) return; anrufAufraeumen\(\)/.test(an), "Anruf-Rennen abgefangen");
@@ -6899,4 +6899,16 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   T.schSpracheWechseln(); assert.equal(T.schSprache(), "aus"); assert.equal(JSON.parse(mem.kc_club_sp_ansage).schach, false, "Stumm: Zugansage aus");
   assert.match(T.schSprachKnopf(), /🔇 Stumm/);
   assert.ok(!/spAnsageKnopf\("schach"\)/.test(programm), "alter Ansage-Knopf beim Schach ersetzt");
+}
+
+// 4xx. 2.124.0: Notfall-Paket je Mitglied in eigenem Aufruf (KC-CLUB-NOTPAKET-TEILE) + Tablet-Hinweis (KC-TERMINE-TABLET-TEXT)
+{
+  const termine = lies("supabase/functions/kc-termine/index.ts");
+  const nt = server.slice(server.indexOf('if (a === "notpaket_teil")'), server.indexOf('if (a === "notpaket_teil")') + 900);
+  assert.ok(/p\.cronSecret !== geheim\) return json\(\{ error: "Kein Zugang" \}, 401\)/.test(nt) && /pid\.startsWith\("KC-P-TEST"\)/.test(nt) && /DB_AUS\.n !== dbAusVorher\) return json\(\{ error: "Datenbank antwortet nicht" \}, 503\)/.test(nt), "Teil nur mit Geheimnis, nie halb");
+  const nb = server.slice(server.indexOf("async function notpaketBauen(geheim: string)"), server.indexOf("// ---------- KC-CLUB-NOTBETRIEB-STUFE2"));
+  assert.ok(/action: "notpaket_teil", cronSecret: geheim, person_id: z\.person_id/.test(nb) && /if \(!r\.ok \|\| !j\?\.ok\) throw new Error/.test(nb) && !/aktionAusfuehren/.test(nb), "Hauptlauf setzt nur zusammen, fehlender Teil → altes Paket bleibt");
+  assert.ok(/ich: Ich = \{ \.\.\.ichAus\(p0, ro \?\? null\), nurLesen: true \}/.test(server), "Teil weiter nur lesend");
+  assert.ok(/Kommst du zu mir, bring bitte dein Tablet mit – komme ich zu dir, leg es bitte bereit/.test(termine) && /Leg bitte dein Tablet bereit/.test(termine) && /Bring bitte dein Tablet mit/.test(termine), "Tablet-Hinweis klar");
+  assert.ok(/tabletHinweis\(n, frei\.length && frei\.every\(\(s\) => s\.besuchsart === frei\[0\]\.besuchsart\) \? frei\[0\]\.besuchsart : undefined\)/.test(termine), "gleiche Art → passender Satz");
 }
