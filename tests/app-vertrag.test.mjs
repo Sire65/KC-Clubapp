@@ -5197,7 +5197,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/AS_HARMLOS = \/ResizeObserver loop/.test(f) && /!window\.KCFP\?\.startOk\) return;/.test(f), "harmlose Meldungen und Start-Phase ausgenommen");
   assert.ok(/if \(r instanceof TypeError \|\| r instanceof ReferenceError \|\| JS_FEHLER\.test\(t\)\) absturzFang\(t\)/.test(f), "abgelehnte Server-/Netzanfragen sind keine Programmfehler");
   assert.ok(/luecke > 5000 && !document\.hidden && jetzt - sichtbarSeit > luecke \+ 1500/.test(f) && /KCFP\?\.neu\("haenger"/.test(f), "Hänger-Wächter, nicht nach Hintergrund");
-  assert.ok(/wartenLangTimer = setTimeout\(\(\) => \{ if \(!wartenZahl\) return; \$\("wartenText"\)\.textContent = "Dauert länger als üblich/.test(html) && /clearTimeout\(wartenLangTimer\); wartenLangTimer = null;/.test(html), "Warte-Wächter > 20 s");
+  assert.ok(/wartenLangTimer = setTimeout\(\(\) => \{ if \(!wartenZahl\) return; \$\("wartenText"\)\.textContent = "(?:🐌 )?Dauert länger als üblich/.test(html) && /clearTimeout\(wartenLangTimer\); wartenLangTimer = null;/.test(html), "Warte-Wächter > 20 s");
   for (const k of ["haenger", "warten_lange", "instabil", "gefangen"]) assert.ok(new RegExp(`\\n  ${k}: \\["`).test(html), "Fehlerprotokoll kennt " + k);
 }
 // 2.48.0 KC-CLUB-FEHLER-ALARM (Wunsch Hansi): ernste Fehler angemeldeter Mitglieder → Admin per Push + E-Mail, mit Grenzen und Protokoll
@@ -6582,4 +6582,20 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.deepEqual([...new Set(bu)].filter((x) => !new RegExp("\\n  " + x + ": ").test(txt)), [], "jeder Büro-Bereich hat einen Text");
   for (const [f, k] of [["aeBlatt", "aenderung"], ["mfAnbieten", "mitfahrt"], ["faAlbumForm", "album"], ["einlBlatt", "einlesen"]])
     assert.ok(programm.includes(`["${f}", "${k}"]`) && keys.has(k), "Fenster " + f);
+}
+
+// 4xx. 2.106.0: Schnecke bei langsamem Netz überall (KC-CLUB-SCHNECKE) + Twinkey hängt nicht mehr (KC-CLUB-TWINKEY-FRIST)
+{
+  assert.ok(/const SCHNECKE_LANGSAM_MS = 2500, SCHNECKE_SCHNELL_MS = 1500, SCHNECKE_ALTER_MS = 120000;/.test(programm), "Grenzen");
+  assert.ok(/try \{ if \(r\.ok && API_LESEN\.test\(action\) && !SCHNECKE_NICHT\.has\(action\)\) schneckeMessen\(performance\.now\(\) - t0\);/.test(programm), "nur Lese-Anfragen messen");
+  assert.ok(/vbEnde\(false, 0, "Server antwortet nicht"\); try \{ if \(navigator\.onLine\) schneckeMessen\(zeitMs\);/.test(programm), "Zeitüberschreitung zählt");
+  assert.ok(/if \(!navigator\.onLine\) an = false;/.test(programm), "offline = rote LED, keine Schnecke");
+  assert.ok(/jetzt - m\.t < SCHNECKE_ALTER_MS/.test(programm), "alte Messungen zählen nicht");
+  assert.ok(/id="schnecke" class="schnecke versteckt"/.test(programm) && /\.schnecke \{ position: fixed;/.test(seite), "Schnecke fest am Rand, auf jeder Seite");
+  assert.ok(programm.includes('"🐌 Dauert länger als üblich … (Netz langsam?)"'), "Wartebild mit Schnecke");
+  const l = lies("dp2-club/lader.js");
+  assert.ok(/const frist = \(p, ms, was\) => Promise\.race/.test(l) && /setTimeout\(\(\) => ab\.abort\(\), 20000\)/.test(l), "Twinkey: Fristen");
+  assert.ok(/id="dwLangsam"[^\n]*🐌/.test(l) && /}, 8000\);/.test(l), "Twinkey: nach 8 s Hinweis");
+  assert.ok(/id="dwNochmal"/.test(l) && /addEventListener\("click", \(\) => location\.reload\(\)\)/.test(l), "Twinkey: Nochmal versuchen");
+  assert.ok(/skript = \(src\) => frist\(/.test(l) && /clearTimeout\(langsam\); laden\.remove\(\);/.test(l), "Twinkey: Skripte mit Frist");
 }

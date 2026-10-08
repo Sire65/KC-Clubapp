@@ -3,18 +3,23 @@
 // start.js dort, wo DP2 twinkey-test-boot.js lädt. Die Seite hat <base href="dp2/">: Pfade sind relativ zu dp2/.
 (function () {
   "use strict";
-  const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club", APP_VERSION = "2.105.0";
+  const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club", APP_VERSION = "2.106.0";
   const laden = document.getElementById("dwLaden");
   // CSP ohne Inline-Skripte: Knopf per addEventListener
   const zurueck = () => (parent !== window ? parent.postMessage("dienstwunsch-zu", location.origin) : history.back());
-  const fehler = (t) => { laden.innerHTML = `<div><div style="font-size:2.4rem">🧑‍🍳</div>${t}<br><br><button type="button" id="dwZurueck" style="min-height:44px;padding:8px 18px;border-radius:12px;border:1px solid #c9a37a;background:#fff;font:inherit">Zurück zur Club-App</button></div>`;
-    document.getElementById("dwZurueck").addEventListener("click", zurueck); };
+  // 2.106.0 KC-CLUB-TWINKEY-FRIST (Fund Hansi „Twinkey hängt“, langsames Netz): jeder Ladeschritt hat eine Frist; nach 8 s ein
+  // Hinweis 🐌, bei Fehler oder Zeitüberschreitung „🔄 Nochmal versuchen“ statt endlos „wird geladen“
+  const frist = (p, ms, was) => Promise.race([p, new Promise((_, nein) => setTimeout(() => nein(new Error(was)), ms))]);
+  const langsam = setTimeout(() => { if (document.getElementById("dwLaden")?.isConnected && !document.getElementById("dwLangsam")) laden.firstElementChild?.insertAdjacentHTML("beforeend", '<div id="dwLangsam" style="font-size:.9rem;margin-top:8px">🐌 Das Netz ist gerade langsam – noch einen Moment …</div>'); }, 8000);
+  const fehler = (t) => { clearTimeout(langsam); laden.innerHTML = `<div><div style="font-size:2.4rem">🧑‍🍳</div>${t}<br><br><button type="button" id="dwNochmal" style="min-height:44px;padding:8px 18px;border-radius:12px;border:0;background:#7b1e23;color:#fff;font:inherit;margin:0 6px 8px 0">🔄 Nochmal versuchen</button><button type="button" id="dwZurueck" style="min-height:44px;padding:8px 18px;border-radius:12px;border:1px solid #c9a37a;background:#fff;font:inherit">Zurück zur Club-App</button></div>`;
+    document.getElementById("dwZurueck").addEventListener("click", zurueck); document.getElementById("dwNochmal")?.addEventListener("click", () => location.reload()); };
   let key = ""; try { key = localStorage.getItem("kc_club_key") || ""; } catch {}
   if (!key) return fehler("Bitte die Club-App mit deinem persönlichen Link öffnen.");
   // KC-CLUB-NAHE-REGION (1.16.0): wie die Club-App – Server neben der Datenbank; antwortet die Region nicht, Standardweg
   let regionAus = false;
   window.KC_CLUB_DW_API = async (action, daten = {}) => {
-    const anfrage = (url) => fetch(url, { method: "POST", headers: { "Content-Type": "application/json", "x-club-token": key, "x-club-version": APP_VERSION }, body: JSON.stringify({ action, ...daten }) });
+    const anfrage = (url) => { const ab = new AbortController(), t = setTimeout(() => ab.abort(), 20000); // Frist 20 s je Anfrage
+      return fetch(url, { method: "POST", signal: ab.signal, headers: { "Content-Type": "application/json", "x-club-token": key, "x-club-version": APP_VERSION }, body: JSON.stringify({ action, ...daten }) }).finally(() => clearTimeout(t)); };
     let r;
     if (!regionAus) {
       try { r = await anfrage(API + "?forceFunctionRegion=eu-west-2"); if (r.status >= 502 && r.status <= 504) { regionAus = true; r = null; } }
@@ -25,10 +30,10 @@
     if (!r.ok || !j || j.error) throw new Error(j?.error || "Keine Verbindung zum Server.");
     return j;
   };
-  const skript = (src) => new Promise((ok, nein) => { const s = document.createElement("script"); s.src = src; s.async = false; s.onload = ok; s.onerror = () => nein(new Error("Datei fehlt: " + src)); document.body.appendChild(s); });
+  const skript = (src) => frist(new Promise((ok, nein) => { const s = document.createElement("script"); s.src = src; s.async = false; s.onload = ok; s.onerror = () => nein(new Error("Datei fehlt: " + src)); document.body.appendChild(s); }), 30000, "Das Netz ist zu langsam – eine Datei kam nicht rechtzeitig an.");
   (async () => {
     try {
-      const [quelle, daten] = await Promise.all([fetch("QUELLE.json?v=" + APP_VERSION, { cache: "no-cache" }).then((r) => r.json()), window.KC_CLUB_DW_API("dienstwunsch_laden")]);
+      const [quelle, daten] = await Promise.all([frist(fetch("QUELLE.json?v=" + APP_VERSION, { cache: "no-cache" }).then((r) => r.json()), 20000, "Das Netz ist zu langsam – bitte gleich nochmal."), window.KC_CLUB_DW_API("dienstwunsch_laden")]);
       window.KC_CLUB_DW = daten;
       const v = "?v=" + encodeURIComponent(quelle.dp2Version + "-" + String(quelle.commit || "").slice(0, 7)); // 1.16.1: Commit im Schlüssel – Nachträge bei gleicher Build-Nummer kommen sicher an
       for (const f of quelle.reihenfolge.filter((f) => f.endsWith(".css"))) { const l = document.createElement("link"); l.rel = "stylesheet"; l.href = f + v; document.head.appendChild(l); }
@@ -40,7 +45,7 @@
         if (f === "src/core/model.js") reihe.push("../dp2-club/daten.js?v=" + APP_VERSION);   // DP2: twinkey-test-data.js direkt nach model.js
       }
       for (const s of reihe) await skript(s);
-      laden.remove();
-    } catch (e) { fehler("Twinkey konnte nicht geladen werden:<br>" + String(e.message || e).replace(/[<>&]/g, "")); }
+      clearTimeout(langsam); laden.remove();
+    } catch (e) { fehler("Twinkey konnte nicht geladen werden:<br>" + (e?.name === "AbortError" ? "Das Netz ist zu langsam – der Server hat nicht rechtzeitig geantwortet." : String(e.message || e).replace(/[<>&]/g, ""))); }
   })();
 })();

@@ -2030,6 +2030,12 @@
   .ae-art-hinweis { background: #fff8e1; border-left: 4px solid #f9a825; padding: 8px 10px; font-size: .9rem; color: #4e3b00; } /* 2.94.0 KC-CLUB-NOTFALL-HINWEIS */
   /* 2.103.0 KC-CLUB-MITSCHAUEN: beim Mitglied, solange jemand zuschaut */
   .ss-live-leiste { position: fixed; top: 0; left: 0; right: 0; z-index: 2500; display: flex; align-items: center; justify-content: center; gap: 12px; padding: calc(6px + env(safe-area-inset-top)) 10px 6px; background: #d32f2f; color: #fff; font-weight: 800; box-shadow: 0 2px 10px rgba(0,0,0,.3); }
+  /* KC-CLUB-SCHNECKE: 🐌 oben in der Mitte, auf jeder Seite, solange das Netz langsam ist */
+  .schnecke { position: fixed; z-index: 2400; left: 50%; top: calc(1px + env(safe-area-inset-top)); width: 26px; height: 26px; margin-left: -13px; border-radius: 50%; border: 2px solid #f9a825; background: #fff8e1; font-size: .9rem; line-height: 1; padding: 0; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,.25); animation: schneckeKriechen 3s ease-in-out infinite; }
+  .schnecke.versteckt { display: none; }
+  @keyframes schneckeKriechen { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(4px); } }
+  html.spar .schnecke { animation: none; }
+  @media (prefers-reduced-motion: reduce) { .schnecke { animation: none; } }
   .ss-live-leiste button { background: #fff; color: #d32f2f; border: 0; border-radius: 999px; padding: 6px 14px; font-weight: 800; cursor: pointer; }
   /* 2.101.0 KC-CLUB-BUERO-EINLESEN */
   .einl-wahl { display: grid; gap: 8px; margin: 0 0 8px; } .einl-wahl .knopf { text-align: center; cursor: pointer; }
@@ -3460,6 +3466,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.105.0" data-v="2.105.0"></script>
+<script src="app.js?v=2.106.0" data-v="2.106.0"></script>
 </body>
 </html>

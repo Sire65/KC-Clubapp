@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.106.0 – 2026-10-08 – Schnecke bei langsamem Netz + Twinkey hängt nicht mehr
+🐌 erscheint auf jeder Seite, solange das Netz gerade langsam ist (gemessen an den echten Antwortzeiten), und verschwindet von selbst. Twinkey zeigt bei langsamem Netz nach 8 s einen Hinweis und statt endlosem Laden „🔄 Nochmal versuchen“ (KC-CLUB-SCHNECKE, KC-CLUB-TWINKEY-FRIST).
+
 ## 2.105.0 – 2026-10-08 – 👣 Schritt-Hilfe jetzt überall
 Alle Seiten der App (außer SOS) haben jetzt eine Schritt-Hilfe – auch Startseite, Hilfe & Tipps, PDF-Ansicht, Standorte, Sicherheits-Check, alle Büro-Bereiche sowie die Fenster Änderungsmeldung, Mitfahren anbieten, Fotoalbum anlegen und Einlesen.
 

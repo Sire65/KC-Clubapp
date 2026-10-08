@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.105.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.106.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -7415,7 +7415,7 @@ let wartenZahl = 0, wartenTimer = null, wartenLangTimer = null;
 function wartenStart(action, erzwingen, still) {
   if (still || WARTEN_STILL.has(action) && !erzwingen) return false;
   wartenZahl++;
-  if (!wartenLangTimer) wartenLangTimer = setTimeout(() => { if (!wartenZahl) return; $("wartenText").textContent = "Dauert länger als üblich … (Netz langsam?)"; try { window.KCFP?.neu("warten_lange", { text: "Vorgang > 20 s", aktion: String(action).slice(0, 40) }); } catch {} }, 20000); // KC-CLUB-ABSTURZSCHUTZ
+  if (!wartenLangTimer) wartenLangTimer = setTimeout(() => { if (!wartenZahl) return; $("wartenText").textContent = "🐌 Dauert länger als üblich … (Netz langsam?)"; try { window.KCFP?.neu("warten_lange", { text: "Vorgang > 20 s", aktion: String(action).slice(0, 40) }); } catch {} }, 20000); // KC-CLUB-ABSTURZSCHUTZ
   if (!wartenTimer) wartenTimer = setTimeout(() => { const wb = wbAktuell(); wbEinsetzen(wb); $("wartenText").textContent = WARTEN_TEXT[action] || (/speichern|setzen|aendern/.test(action) ? "Wird gespeichert …" : wb.x);
     $("warten").classList.remove("versteckt"); requestAnimationFrame(() => $("warten").classList.add("an")); }, 350);
   return true;
@@ -7678,6 +7678,7 @@ const SERVER_REGION = "eu-west-2", REGION_PAUSE_MS = 10 * 60 * 1000;
 let REGION_AUS_BIS = 0;
 const apiAdresse = () => (Date.now() < REGION_AUS_BIS ? API : `${API}?forceFunctionRegion=${SERVER_REGION}`);
 // Aktionen, die nur lesen – nur diese dürfen nach einer Störung still wiederholt werden
+const SCHNECKE_NICHT = new Set(["admin_lage", "wetter", "suche", "anlage_url"]); // KC-CLUB-SCHNECKE: diese dauern auch bei schnellem Netz länger
 const API_LESEN = /^(init|hilfe_bewertungen|ping|lebenszeichen|online|tagesinfo|pinnwand|pinnwand_neu|unterhaltung|unterhaltungen|mitglieder|mitglied_details|kalender|kalender_daten|protokoll_laden|fotos_neueste|anlage_url|suche|buero_start|.*_liste|.*_statistik|.*_holen|.*_info|.*_stand|fitness_daten)$/; // 2.1.1: kein „*_start“ mehr (anruf_start/standort_start schreiben)
 async function apiRoh(action, daten = {}, zweiterVersuch = false) {
   // KC-CLUB-NOTBETRIEB-ERNSTFALL: simulierter Ausfall – genau der Fehler, den ein unerreichbarer Club-Server liefert
@@ -7691,10 +7692,11 @@ async function apiRoh(action, daten = {}, zweiterVersuch = false) {
   // 2.1.1: Lesen 25 s; Schreiben 140 s (der Server speichert zuerst und benachrichtigt dann – das darf dauern, sonst doppelt)
   const zeitMs = API_LESEN.test(action) ? 25000 : 140000;
   try { r = await fetch(adresse, { method: "POST", headers: { "Content-Type": "application/json", "x-club-token": KEY, "x-club-version": APP_VERSION }, body: JSON.stringify({ action, ...daten }), signal: zeitSignal(zeitMs) }); if (action !== "lebenszeichen") verkehrZaehlen(); }
-  catch (fe) { if (fe?.name === "TimeoutError" || fe?.name === "AbortError") { vbEnde(false, 0, "Server antwortet nicht"); throw Object.assign(new Error(API_LESEN.test(action) ? "Der Server antwortet gerade nicht – bitte gleich nochmal versuchen." : "Der Server antwortet gerade nicht – bitte kurz prüfen, ob es angekommen ist, bevor du es nochmal sendest."), { leitung: true, zeit: true }); }
+  catch (fe) { if (fe?.name === "TimeoutError" || fe?.name === "AbortError") { vbEnde(false, 0, "Server antwortet nicht"); try { if (navigator.onLine) schneckeMessen(zeitMs); } catch {} /* KC-CLUB-SCHNECKE: nur Anzeige, darf api() nie stören */ throw Object.assign(new Error(API_LESEN.test(action) ? "Der Server antwortet gerade nicht – bitte gleich nochmal versuchen." : "Der Server antwortet gerade nicht – bitte kurz prüfen, ob es angekommen ist, bevor du es nochmal sendest."), { leitung: true, zeit: true }); }
     if (mitRegion && navigator.onLine) { REGION_AUS_BIS = Date.now() + REGION_PAUSE_MS; vbEnde(true, performance.now() - t0, ""); return apiRoh(action, daten, zweiterVersuch); } // Region weg → Standardweg
     vbEnde(false, 0, navigator.onLine ? "Server nicht erreichbar" : "Handy offline"); throw Object.assign(new Error(navigator.onLine ? "Keine Verbindung zum Server – bitte gleich nochmal versuchen." : "Keine Internetverbindung."), { leitung: navigator.onLine }); }
   const j = await r.json().catch(() => null);
+  try { if (r.ok && API_LESEN.test(action) && !SCHNECKE_NICHT.has(action)) schneckeMessen(performance.now() - t0); } catch {} // KC-CLUB-SCHNECKE: nur Lesen (Schreiben darf länger dauern)
   // Region gestört → Standardweg. 1.97.0: LED-Zähler ausgleichen; Schreib-Aktionen NICHT still wiederholen (sonst evtl. doppelt gespeichert)
   if (mitRegion && r.status >= 502 && r.status <= 504 && !j?.error) { REGION_AUS_BIS = Date.now() + REGION_PAUSE_MS; vbEnde(false, performance.now() - t0, "Region gestört " + r.status); if (API_LESEN.test(action)) return apiRoh(action, daten, zweiterVersuch); }
   if (r.status === 503 && !j?.error && !zweiterVersuch) { vbEnde(true, performance.now() - t0, ""); await new Promise((ok) => setTimeout(ok, AUSSETZER_PAUSE_MS)); return apiRoh(action, daten, true); }
@@ -7713,6 +7715,43 @@ async function apiRoh(action, daten = {}, zweiterVersuch = false) {
 // Mittlere LED = KC Communicator (Push & E-Mail): Zustand vom Server (KC-CLUB-COMMUNICATOR-STATUS), gelb = eingeschränkt.
 // Untere LED = Datenverkehr: leuchtet nur, während wirklich Daten mit dem Server (Supabase) laufen.
 const SUPA_HOST = new URL(API).host;
+// ---------- KC-CLUB-SCHNECKE (2.106.0, Wunsch Hansi „Netz langsam – als Zeichen eine Schnecke überall“) ----------
+// Eine kleine 🐌 oben am Rand, auf jeder Seite, solange das Netz spürbar langsam ist. Grundlage: echte Messungen der App
+// (Lese-Anfragen an den Club-Server, letzte 2 Minuten) und – wo der Browser es verrät – navigator.connection.
+// Langsam: 2 von den letzten 3 Lese-Anfragen > SCHNECKE_LANGSAM_MS, eine Zeitüberschreitung, oder 2G/3G bzw. rtt hoch.
+// Wieder weg: die letzten 3 Lese-Anfragen schnell. Alte Messungen (> 2 Min.) zählen nicht – keine Schnecke aus alten Daten.
+// Offline zeigt die rote LED (keine Schnecke). Antippen erklärt es kurz. Nur Anzeige – ändert keine Abläufe.
+const SCHNECKE_LANGSAM_MS = 2500, SCHNECKE_SCHNELL_MS = 1500, SCHNECKE_ALTER_MS = 120000;
+const SCHNECKE = { mess: [], an: false, grund: "" };
+function schneckeNetzGrund() {
+  const c = navigator.connection; if (!c) return "";
+  if (["slow-2g", "2g", "3g"].includes(c.effectiveType)) return "das Handy meldet ein langsames Netz";
+  if (c.rtt >= 700) return "das Handy meldet lange Antwortzeiten";
+  if (c.downlink > 0 && c.downlink < 0.5) return "das Handy meldet wenig Datentempo";
+  return "";
+}
+function schneckeMessen(ms) { SCHNECKE.mess.push({ ms: Math.round(ms), t: Date.now() }); if (SCHNECKE.mess.length > 5) SCHNECKE.mess.shift(); schneckePruefen(); }
+function schneckePruefen() {
+  const jetzt = Date.now(), frisch = SCHNECKE.mess.filter((m) => jetzt - m.t < SCHNECKE_ALTER_MS).slice(-3);
+  const langsam = frisch.filter((m) => m.ms > SCHNECKE_LANGSAM_MS).length, netz = schneckeNetzGrund();
+  let an = false, grund = "";
+  if (!navigator.onLine) an = false;
+  else if (frisch.length >= 3 && frisch.every((m) => m.ms < SCHNECKE_SCHNELL_MS)) an = false; // gemessen schnell schlägt die Schätzung des Handys
+  else if (langsam >= 2 || frisch.some((m) => m.ms >= 25000)) { an = true; grund = "die letzten Anfragen haben lange gedauert"; }
+  else if (netz) { an = true; grund = netz; }
+  else if (SCHNECKE.an && langsam >= 1) { an = true; grund = SCHNECKE.grund; } // nicht flackern: bleibt, bis es wirklich wieder schnell ist
+  SCHNECKE.an = an; SCHNECKE.grund = grund; schneckeZeigen();
+}
+function schneckeZeigen() {
+  let z = document.getElementById("schnecke");
+  if (!z && document.body) { document.body.insertAdjacentHTML("beforeend", `<button type="button" id="schnecke" class="schnecke versteckt" title="Netz gerade langsam – antippen für Infos" aria-label="Netz gerade langsam" onclick="schneckeInfo()">🐌</button>`); z = document.getElementById("schnecke"); }
+  if (z) z.classList.toggle("versteckt", !SCHNECKE.an);
+  try { document.documentElement.classList.toggle("netz-langsam", SCHNECKE.an); } catch {}
+}
+function schneckeInfo() { melde(`🐌 Das Netz ist gerade langsam (${SCHNECKE.grund || "Messung"}). Die App funktioniert, braucht aber länger – bitte etwas Geduld, nicht mehrfach tippen. Die Schnecke verschwindet von selbst, sobald es wieder schnell ist.`); }
+try { navigator.connection?.addEventListener?.("change", schneckePruefen); } catch {}
+setInterval(schneckePruefen, 30000);
+addEventListener("online", schneckePruefen); addEventListener("offline", schneckePruefen);
 const VB_VERALTET_MS = 3 * 60 * 1000; // ohne erfolgreiche Antwort länger als 3 Minuten → „veraltet“ (nie als OK anzeigen)
 // KC-CLUB-NETZART (0.55.0): Netzart beim Verbindungstest. Der Browser verrät sie meist nicht (iPhone nie; Android nur teils über
 // navigator.connection.type) – daher Auswahl (vorbelegt: erkannt > zuletzt gewählt). effectiveType ist nur eine Tempo-Klasse, keine Netzart.
