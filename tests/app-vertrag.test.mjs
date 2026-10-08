@@ -6494,3 +6494,12 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/await mitFrist\(navigator\.serviceWorker\?\.getRegistration\(\), 5000\)/.test(f) && /await mitFrist\(reg\.update\(\), 10000\)/.test(f), "Fristen für getRegistration und update");
   assert.ok(!/await navigator\.serviceWorker\?\.getRegistration\(\)/.test(f) && !/await reg\.update\(\)\.catch/.test(f), "kein Warten ohne Frist mehr");
 }
+
+// 4xx. 2.98.0: Sprachsteuerung bleibt nie mehr bei „Ich höre zu …“ stehen (KC-CLUB-SPRACHE-WACHHUND, Fund Hansi iPad)
+{
+  const f = programm.slice(programm.indexOf("function sbZuhoeren(fertig, fehler)"), programm.indexOf("const SB_WELLE = "));
+  assert.ok(/uhr1 = setTimeout\(\(\) => \{ if \(!lebt && !zuletzt\) haengt\("startet_nicht"\); \}, 6000\);/.test(f) && /uhr2 = setTimeout\(\(\) => haengt\("kein_ende"\), 15000\);/.test(f), "6 s ohne Lebenszeichen, 15 s ohne Ende");
+  assert.ok(/const haengt = \(art\) => \{ if \(aus \|\| SB\.erk !== e\) return;/.test(f), "nach Abbrechen kein falscher Eintrag");
+  assert.ok(/zuletzt \? fertig\(zuletzt\)/.test(f) && /e\.onend = \(\) => ende\(\(\) => zuletzt \? fertig\(zuletzt\)/.test(f), "mit dem bisher Gehörten weiter");
+  assert.ok(/fpNeu\("sprache_haengt", \{ art, browser: fpBrowser\(\), system: fpSystem\(\), start: START_ART \}\)/.test(f) && !/fpNeu\("sprache_haengt"[^)]*zuletzt/.test(f), "nur die Art protokollieren, nie das Gesagte");
+}

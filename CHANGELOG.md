@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.98.0 – 2026-10-08 – 🎙️ Sprachsteuerung bleibt nicht mehr hängen
+Auf manchen Geräten (z. B. iPad als Home-Bildschirm-App) meldete sich die Spracherkennung nie zurück und „Ich höre zu …“ blieb stehen. Jetzt bricht die App nach 6 bzw. 15 Sekunden von selbst ab – mit dem bisher Gehörten oder einem verständlichen Hinweis.
+
 ## 2.97.0 – 2026-10-08 – 🔄 Aktualisieren bleibt nicht mehr hängen
 Auf iPad/iPhone konnte das Aktualisieren nach langer Pause im Hintergrund hängen bleiben (blaue LED). Jetzt hat jeder Schritt eine Frist – spätestens nach 30 Sekunden lädt die App neu.
 

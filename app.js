@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.97.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.98.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -1929,14 +1929,27 @@ function sbZuhoeren(fertig, fehler) {
   try { SB.erk?.abort(); } catch {}
   const Erk = window.SpeechRecognition || window.webkitSpeechRecognition, e = new Erk(); SB.erk = e;
   e.lang = "de-DE"; e.interimResults = true; e.maxAlternatives = 3; e.continuous = false;
-  let aus = false; const ende = (f) => { if (aus || SB.erk !== e) return; aus = true; SB.erk = null; $("sbBlatt")?.classList.add("sb-still"); f(); };
+  // 2.98.0 KC-CLUB-SPRACHE-WACHHUND (Fund Hansi, iPad): manche Geräte (v. a. iPad/iPhone als Home-Bildschirm-App) starten die
+  // Erkennung, melden sich aber nie wieder → „Ich höre zu …“ blieb stehen. Jetzt: kein Lebenszeichen in 6 s oder kein Ende in 15 s
+  // → mit dem bisher Gehörten weiter bzw. verständliche Meldung (nur die Art wird im Fehlerprotokoll vermerkt, nie das Gesagte)
+  let aus = false, lebt = false, zuletzt = null, uhr1 = 0, uhr2 = 0;
+  const ende = (f) => { if (aus || SB.erk !== e) return; aus = true; SB.erk = null; clearTimeout(uhr1); clearTimeout(uhr2); $("sbBlatt")?.classList.add("sb-still"); f(); };
+  const haengt = (art) => { if (aus || SB.erk !== e) return; try { e.abort(); } catch {} try { fpNeu("sprache_haengt", { art, browser: fpBrowser(), system: fpSystem(), start: START_ART }); } catch {}
+    ende(() => zuletzt ? fertig(zuletzt) : fehler(art === "startet_nicht"
+      ? "Die Spracherkennung meldet sich auf diesem Gerät nicht. Auf iPhone/iPad klappt es oft nur in Safari – oder du tippst auf das 🎤 der Tastatur und sprichst dort."
+      : "Ich habe nichts verstanden – bitte nochmal tippen und gleich sprechen.", art)); };
+  e.onstart = e.onaudiostart = () => { lebt = true; };
+  uhr1 = setTimeout(() => { if (!lebt && !zuletzt) haengt("startet_nicht"); }, 6000);
+  uhr2 = setTimeout(() => haengt("kein_ende"), 15000);
   e.onresult = (ev) => {
+    lebt = true;
     const r = ev.results[ev.results.length - 1], alt = [...r].map((x) => x.transcript);
+    zuletzt = alt;
     if ($("sbGehoert")) $("sbGehoert").textContent = "„" + alt[0] + "“";
     if (r.isFinal) ende(() => fertig(alt));
   };
   e.onerror = (ev) => ende(() => fehler(ev.error === "not-allowed" || ev.error === "service-not-allowed" ? "Das Mikrofon ist nicht erlaubt – bitte in den Handy-Einstellungen für den Browser freigeben." : ev.error === "no-speech" ? "Ich habe nichts gehört." : ev.error === "network" ? "Ohne Internet geht die Spracherkennung leider nicht." : "", ev.error));
-  e.onend = () => ende(() => fehler("Ich habe nichts gehört.", "no-speech"));
+  e.onend = () => ende(() => zuletzt ? fertig(zuletzt) : fehler("Ich habe nichts gehört.", "no-speech"));
   try { e.start(); } catch { ende(() => fehler("Die Spracherkennung startet gerade nicht – bitte nochmal tippen.", "start")); }
 }
 const SB_WELLE = '<div class="sb-welle" aria-hidden="true"><i></i><i></i><i></i><i></i></div>';
@@ -21135,6 +21148,7 @@ async function fpProblemMelden() {
 // ---- Admin: Fehlerprotokoll ansehen ----
 const FP_ARTEN = {
   skript: ["🐞", "Programmfehler", "Fehler im App-Programm – bitte an Claude/Hansi weitergeben"],
+  sprache_haengt: ["🎙️", "Sprachsteuerung meldete sich nicht", "das Gerät hat die Spracherkennung nicht gestartet bzw. nicht beendet – die App hat nach 6 bzw. 15 s von selbst abgebrochen"], // 2.98.0
   versprechen: ["🐞", "Programmfehler im Hintergrund", "meist harmlos, bei Häufung weitergeben"],
   laden: ["📦", "Datei nicht geladen", "schlechtes Netz oder alter Zwischenspeicher – App neu laden/aktualisieren"],
   api: ["🔌", "Server-Anfrage ging schief", "Text zeigt den Grund"],
