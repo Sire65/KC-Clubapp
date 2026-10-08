@@ -5522,6 +5522,19 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const deckt = z && z\.height && a\.top < z\.bottom \+ 10 && a\.bottom > z\.top - 10;/.test(programm), "Leiste weicht aus, wenn sie das Ziel verdeckt");
 }
 
+// 4xx. 2.68.0: Schritt-Unterstützung – Sonderwege bei Nachrichten (Öffnen, mehrere markieren, Gruppe) (KC-CLUB-SCHRITT-HILFE, Wunsch Hansi)
+{
+  const ab = programm.slice(programm.indexOf("const SH_ABLAEUFE = {"), programm.indexOf("const SH = {"));
+  assert.ok(/id: "oeffnen", ziel: "#unterhListe \.uhaktion \.knopf\.haupt"[^\n]*wenn: \(\) => !!UH\.wahl && !UH\.mark\.size/.test(ab), "angetippt → „💬 Öffnen“");
+  assert.ok(/id: "mark", ziel: "#unterhListe"[^\n]*wenn: \(\) => UH\.mark\.size > 0[^\n]*weiter: true/.test(ab) && /id: "los", ziel: "#uhMarkLeiste \.knopf\.haupt"/.test(ab), "markiert → weitere markieren → „Gleiche Nachricht an …“");
+  assert.ok(/<button class="knopf haupt klein" onclick="uhMehrfachStarten\(\)">/.test(programm), "Ziel-Knopf der Markier-Leiste");
+  assert.ok(/function uhMarkZeichnen\(\) \{[\s\S]{0,300}setTimeout\(shAktualisieren, 60\);/.test(programm), "langes Drücken aktualisiert die Schritte");
+  assert.ok(ab.includes("gruppe: [") && /ziel: "#grName"/.test(ab) && /ziel: "#grSymbole"/.test(ab) && /ziel: "#grListe"/.test(ab) && /ziel: "#grKnopf"/.test(ab), "Gruppe anlegen");
+  for (const id of ["grName", "grSymbole", "grListe", "grKnopf"]) assert.ok(seite.includes(`id="${id}"`), "Ziel vorhanden: " + id);
+  assert.ok(/const lob = shAn\(\) && SH\.beruehrt\.has\("los"\) && SH_ABLAEUFE\[SH\.bereich\]\?\.find\(\(x\) => x\.ende\)\?\.lob;/.test(programm), "Lob auch, wenn die App danach selbst die Ansicht wechselt");
+  assert.ok(/const unten = z\.bottom \+ 14 \+ a\.height < innerHeight - 8;/.test(programm), "Leiste lieber unter das Ziel, wenn Platz");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

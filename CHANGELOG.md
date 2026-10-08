@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.68.0 – 2026-10-08 – KC-CLUB-SCHRITT-HILFE Nachrichten-Sonderwege
+- Schritt-Unterstützung bei Nachrichten auch für: Gespräch öffnen, gleiche Nachricht an mehrere markierte Gespräche (lange drücken), neue Gruppe anlegen. „Geschafft!“ auch nach Senden an mehrere; Leiste setzt sich bei großen Zielen darunter.
+
 ## 2.67.0 – 2026-10-08 – KC-CLUB-SCHRITT-HILFE Nachrichten
 - Pinnwand: „❗ Hoch – beim Öffnen zeigen“ wird wieder übernommen (Funktionsname war doppelt seit 2.13.0; Test verhindert das künftig).
 - Schritt-Unterstützung jetzt auch bei Nachrichten: ＋ Neu → An wen? → Betreff (freiwillig) → Weiter zum Schreiben → schreiben → ➤. Leiste weicht aus, wenn sie das Ziel verdeckt.

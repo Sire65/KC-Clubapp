@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.67.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.68.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -1602,7 +1602,7 @@ const HILFE = [
 // ---------- KC-CLUB-SCHRITT-HILFE (2.63.0, Wunsch Hansi; 2.64.0 verfeinert): Schritt-Unterstützung ----------
 // Eingeschaltet (⚙️ Einstellungen → „👣 Schritt-Unterstützung“, nur auf diesem Gerät) bekommt immer genau der nächste Schritt
 // einen pulsierenden roten Rahmen; unten steht mit zwei laufenden Schuhen „Schritt 2 von 6: …“ (bei offener Tastatur oben,
-// damit sie nichts verdeckt). Abläufe stehen in der Registry SH_ABLAEUFE (Bereich → Schritte); Pinnwand (2.63.0), Nachrichten (2.67.0) – weitere
+// damit sie nichts verdeckt). Abläufe stehen in der Registry SH_ABLAEUFE (Bereich → Schritte); Pinnwand (2.63.0), Nachrichten (2.67.0, Sonderwege 2.68.0) – weitere
 // Bereiche = neuer Eintrag hier, sonst nichts. Schritt: ziel (CSS), t (Text, mit Ort), fertig() erledigt?, wenn() gilt nur dann,
 // waehlen = Auswahl ist vorbelegt: erledigt, sobald angetippt oder ein späterer Schritt schon dran war; ende = letzter Knopf;
 // weiter = Eingabe (2.66.0): bleibt dran, bis man „Weiter ➜“ tippt oder selbst einen späteren Schritt antippt – nie mitten im Schreiben.
@@ -1619,8 +1619,18 @@ const SH_ABLAEUFE = {
   ],
   // 2.67.0 Nachrichten: Übersicht → „＋ Neu“ → An wen? → Betreff (freiwillig) → Weiter zum Schreiben → Chat: schreiben → ➤
   // (vorhandenes Gespräch: Antippen öffnet den Chat, dort geht es mit „schreiben → ➤“ weiter)
+  // 2.68.0 Sonderwege: Gespräch öffnen · gleiche Nachricht an mehrere markierte Gespräche (lange drücken) · neue Gruppe
   nachrichten: [
-    { id: "neu", ziel: '#v-nachrichten .kopf2 [onclick="uhNeu()"]', t: "Neue Nachricht? Tippe oben rechts auf „＋ Neu“. Weiterschreiben: tippe unten ein Gespräch an", fertig: () => false },
+    { id: "oeffnen", ziel: "#unterhListe .uhaktion .knopf.haupt", t: "Tippe auf „💬 Öffnen“ – dann kannst du in diesem Gespräch schreiben", wenn: () => !!UH.wahl && !UH.mark.size, fertig: () => false },
+    { id: "neu", ziel: '#v-nachrichten .kopf2 [onclick="uhNeu()"]', t: "Neue Nachricht? Tippe oben rechts auf „＋ Neu“. Gleiche Nachricht an mehrere? Halte ein Gespräch unten lange gedrückt. Weiterschreiben: Gespräch antippen", wenn: () => !UH.mark.size && !UH.wahl, fertig: () => false },
+    { id: "mark", ziel: "#unterhListe", t: "Halte weitere Gespräche lange gedrückt, um sie dazuzunehmen (✓). Nochmal lange drücken nimmt eins wieder heraus", wenn: () => UH.mark.size > 0, fertig: () => UH.mark.size > 0, weiter: true },
+    { id: "los", ziel: "#uhMarkLeiste .knopf.haupt", t: "Tippe auf „✏️ Gleiche Nachricht an …“ – dann schreibst du einmal, und jedes markierte Gespräch bekommt sie", wenn: () => UH.mark.size > 0, fertig: () => false, ende: true },
+  ],
+  gruppe: [
+    { id: "name", ziel: "#grName", t: "Gib der Gruppe einen Namen, z. B. „Grillabend“", fertig: () => !!$("grName").value.trim(), weiter: true },
+    { id: "symbol", ziel: "#grSymbole", t: "Such ein Symbol für die Gruppe aus", waehlen: true },
+    { id: "wer", ziel: "#grListe", t: "Hake an, wer dabei sein soll – suchen geht über „Name suchen“", fertig: () => GR.personen.length > 0, weiter: true },
+    { id: "los", ziel: "#grKnopf", t: "Tippe unten auf „👥 Gruppe anlegen“ (beim Ändern: „💾 Speichern“) – danach kannst du gleich in der Gruppe schreiben", fertig: () => false, ende: true, lob: "Die Gruppe ist fertig." },
   ],
   neu: [
     { id: "an", ziel: "#empfWahlBereich", t: "An wen? Tippe einen Namen an – oder „Alle“. Suchen geht über das Feld „Name suchen“", fertig: () => !!(empfWahl.alle || empfWahl.vorstand || empfWahl.aemter.length || empfWahl.personen.length), weiter: true },
@@ -1670,8 +1680,13 @@ function shAufraeumen() {
 }
 function shBereich(v) { // beim Wechsel der Ansicht (zeige)
   if ($("setSchrittHilfe")) $("setSchrittHilfe").checked = shAn(); if ($("setSchrittVorlesen")) $("setSchrittVorlesen").checked = shVorlesenAn();
+  // letzter Schritt angetippt und die App wechselt selbst die Ansicht (z. B. gleiche Nachricht an mehrere) → trotzdem kurz loben
+  const lob = shAn() && SH.beruehrt.has("los") && SH_ABLAEUFE[SH.bereich]?.find((x) => x.ende)?.lob;
   SH.bereich = SH_ABLAEUFE[v] ? v : null; SH.beruehrt.clear(); SH.geschafft = false; clearTimeout(SH.timer);
-  shAufraeumen(); if (SH.bereich) setTimeout(shAktualisieren, 120);
+  shAufraeumen();
+  if (lob) { SH.geschafft = true; shLeiste(`✅ <b>Geschafft!</b> ${esc(lob)}`); shSag("Geschafft! " + lob);
+    SH.timer = setTimeout(() => { SH.geschafft = false; $("shLeiste")?.remove(); if (SH.bereich) shAktualisieren(); }, 3500); return; }
+  if (SH.bereich) setTimeout(shAktualisieren, 120);
 }
 // Tastatur offen (sichtbarer Bereich deutlich kleiner) → Leiste oben in den sichtbaren Bereich, sonst unten über dem „?“
 // 2.67.0: liegt die Leiste über dem Ziel (z. B. Eingabefeld im Chat), weicht sie ebenfalls nach oben aus
@@ -1682,7 +1697,9 @@ function shLage() {
   const a = l.getBoundingClientRect(), z = SH.el?.isConnected ? SH.el.getBoundingClientRect() : null;
   const deckt = z && z.height && a.top < z.bottom + 10 && a.bottom > z.top - 10;
   if (tastatur) { l.classList.add("oben"); l.style.top = `${Math.round(vv.offsetTop) + 8}px`; }
-  else if (deckt) { l.classList.add("oben"); l.style.top = `${Math.max(8, Math.round(z.top - a.height - 18))}px`; } // direkt über das Ziel
+  else if (deckt) { // unter das Ziel, wenn dort Platz ist (darf die Fußleiste kurz überdecken – Tipps gehen hindurch), sonst direkt darüber
+    const unten = z.bottom + 14 + a.height < innerHeight - 8;
+    l.classList.add("oben"); l.style.top = `${Math.max(8, Math.round(unten ? z.bottom + 14 : z.top - a.height - 18))}px`; }
 }
 window.visualViewport?.addEventListener("resize", shLage); window.visualViewport?.addEventListener("scroll", shLage);
 function shLeiste(html) {
@@ -13108,6 +13125,7 @@ function uhMarkieren(id) {
 function uhMarkAufheben() { UH.mark.clear(); uhMarkZeichnen(); }
 function uhMarkZeichnen() {
   document.querySelectorAll("#unterhListe .unterh").forEach((el) => el.classList.toggle("markiert", UH.mark.has(el.dataset.id)));
+  setTimeout(shAktualisieren, 60); // KC-CLUB-SCHRITT-HILFE: Markieren per langem Drücken löst keinen Klick aus
   const z = $("uhMarkLeiste"); if (!z) return; const n = UH.mark.size;
   z.innerHTML = n ? `<div class="uh-mark-leiste" role="status"><b>✓ ${n} markiert</b><button class="knopf haupt klein" onclick="uhMehrfachStarten()">✏️ ${n === 1 ? "Nachricht schreiben" : `Gleiche Nachricht an ${n}`}</button><button class="knopf klein" onclick="uhMarkAufheben()">✕ Aufheben</button></div>` : "";
 }
