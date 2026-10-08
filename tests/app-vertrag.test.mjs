@@ -3677,7 +3677,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.ok(/function spSag\(art, text, schluessel, vorrang = false\) \{\s*if \(!spAnsageAn\(art\) \|\| !text \|\| aktuelleAnsicht !== "spiele"\) return;/.test(html), "Ansage nur wenn eingeschaltet und in den Spielen");
   assert.ok(/function schZugAnsage\(m, ch, ich\)/.test(html) && /hat gerade \$\{fem\(o\) \? "deine" : "deinen"\} \$\{schFigAkk\(o\)\} geschlagen/.test(html), "Schach: Züge und Schlagen");
-  assert.ok((html.match(/spAnsageKnopf\("schach"\)/g) || []).length === 2 && (html.match(/spAnsageKnopf\("kt"\)/g) || []).length >= 3 && (html.match(/spAnsageKnopf\("bsk"\)/g) || []).length === 2 && (html.match(/spAnsageKnopf\("ttt"(, true)?\)/g) || []).length === 2 && !/spSag\("ttt"/.test(html), "Schalter bei Schach, Küchenterror, Bauernskat; Tic-Tac-Toe nur Töne (2.22.22), keine Sprache");
+  assert.ok((html.match(/\$\{schSprachKnopf\(\)\}/g) || []).length === 2 && (html.match(/spAnsageKnopf\("kt"\)/g) || []).length >= 3 && (html.match(/spAnsageKnopf\("bsk"\)/g) || []).length === 2 && (html.match(/spAnsageKnopf\("ttt"(, true)?\)/g) || []).length === 2 && !/spSag\("ttt"/.test(html), "Schalter bei Schach, Küchenterror, Bauernskat; Tic-Tac-Toe nur Töne (2.22.22), keine Sprache");
   assert.ok(/spSag\("kt", ktFrageSprache\(fr, z\.i \+ 1\)/.test(html) && /spSag\("bsk", `Der Computer spielt \$\{bskKarteWort\(kc\)\}\.`\)/.test(html), "Küchenterror-Frage, Bauernskat-Karte");
   const regeln = html.slice(html.indexOf("const BSK_FARBEN = "), html.indexOf("// ----- Computer -----", html.indexOf("const BSK_FARBEN = ")));
   assert.ok(!/bskKarteWort|BSK_WNAME/.test(regeln), "Ansage-Helfer nicht in den Regeln (Server-Kopie bleibt gleich)");
@@ -6869,7 +6869,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/lib\/schach\/\$\{SCH_STIL === "plastisch" \? "plastisch" : "elfenbein"\}\//.test(programm), "Bildpfad je Stil");
   assert.ok(/SCH_STIL = SCH_STILE\[\(SCH_STILE\.indexOf\(SCH_STIL\) \+ 1\) % SCH_STILE\.length\]/.test(programm) && /♟️ Figuren: \$\{SCH_STIL_NAME\[SCH_STIL\]\}<\/button>/.test(programm), "Knopf schaltet reihum");
   const f = programm.slice(programm.indexOf("function schTwSprich("), programm.indexOf("const schAbstand"));
-  assert.ok(/const st = stimmeFuer\("m"\)/.test(f) && /if \(!text \|\| !spAnsageAn\("schach"\)/.test(f), "Männerstimme, nur mit 🔊 Ansage");
+  assert.ok(/const st = stimmeFuer\("m"\)/.test(f) && /if \(!text \|\| schSprache\(\) === "aus"/.test(f), "Männerstimme, nicht wenn stumm");
 }
 
 // 4xx. 2.123.0: Klassisch in Elfenbein/Tiefschwarz, graues Brett, Beschriftung außen (KC-CLUB-SCHACH-ELFENBEIN, Wunsch Hansi nach Bild)
@@ -6882,4 +6882,21 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   }
   assert.ok(/lib\/schach\/\$\{SCH_STIL === "plastisch" \? "plastisch" : "elfenbein"\}\//.test(programm), "Klassisch zeigt die Elfenbein-Figuren");
   assert.ok(/<div class="sch-rahmen"><div class="sch-zahlen"/.test(programm) && /class="sch-buchst"/.test(programm) && !/class="sch-r"/.test(programm), "Beschriftung außen");
+}
+
+// 4xx. 2.123.0: Sprache beim Schach in drei Stufen – Stumm / Nur Twinkey / Twinkey + Züge (KC-CLUB-SCHACH-SPRACHE)
+{
+  const code = programm.slice(programm.indexOf("const SCH_SPRACHE_KEY"), programm.indexOf("const schAbstand"));
+  const mem = {}, gesagt = [], meldungen = [];
+  const env = { localStorage: { getItem: (k) => mem[k] ?? null, setItem: (k, v) => { mem[k] = v; } } };
+  const T = new Function("localStorage", "lsSetzen", "spAnsageAn", "SP_ANSAGE_KEY", "document", "speechSynthesis", "window", "melde", "schTwSprich",
+    code + "; return { schSprache, schSpracheWechseln, schSprachKnopf };")(env.localStorage, (k, v) => { mem[k] = v; }, () => false, "kc_club_sp_ansage",
+    { querySelectorAll: () => [] }, { cancel() {} }, { speechSynthesis: {} }, (t) => meldungen.push(t), (t) => gesagt.push(t));
+  assert.equal(T.schSprache(), "aus", "Standard wie bisher: stumm");
+  T.schSpracheWechseln(); assert.equal(T.schSprache(), "twinkey"); assert.equal(JSON.parse(mem.kc_club_sp_ansage).schach, false, "Nur Twinkey: keine Zugansage");
+  assert.match(gesagt.at(-1), /rede nur noch ich/, "Twinkey sagt, was jetzt gilt");
+  T.schSpracheWechseln(); assert.equal(T.schSprache(), "alles"); assert.equal(JSON.parse(mem.kc_club_sp_ansage).schach, true, "Twinkey + Züge: Zugansage an");
+  T.schSpracheWechseln(); assert.equal(T.schSprache(), "aus"); assert.equal(JSON.parse(mem.kc_club_sp_ansage).schach, false, "Stumm: Zugansage aus");
+  assert.match(T.schSprachKnopf(), /🔇 Stumm/);
+  assert.ok(!/spAnsageKnopf\("schach"\)/.test(programm), "alter Ansage-Knopf beim Schach ersetzt");
 }
