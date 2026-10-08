@@ -6699,7 +6699,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
     assert.ok(/<svg[^>]*viewBox="0 0 45 45"/.test(svg) && !/<script|href=/i.test(svg), `Figur ${c}${t}: viewBox, ohne Skript/Links`);
   }
   assert.ok(/Redistribution and use in source and binary forms/.test(lies("lib/schach/LICENSE")) && /Cburnett/.test(lies("lib/schach/HERKUNFT.txt")) && /BSD/.test(lies("lib/schach/HERKUNFT.txt")), "Lizenz + Herkunft");
-  assert.ok(/localStorage\.getItem\("kc_club_schach_stil"\) === "brigade" \? "brigade" : "klassisch"/.test(programm), "klassisch ist Standard, Brigade bleibt wählbar");
+  assert.ok(/return localStorage\.getItem\("kc_club_schach_stil"\) === "brigade" \? "brigade" : "plastisch";/.test(programm), "plastisch ist Standard (2.123.0), Brigade bleibt wählbar");
   assert.ok(/onerror="this\.parentNode\.classList\.remove\('bild'\);this\.replaceWith\(/.test(programm), "fehlt ein Bild, steht das Schriftzeichen da");
   // ruhiges Brett statt Braun/Beige mit rotem Rahmen
   assert.ok(/\.sch-feld\.hell \{ background-color: #f5f4f0; \} \.sch-feld\.dunkel \{ background-color: #dcdad3; \}/.test(html) && !/box-shadow: 0 0 0 3px var\(--rot\), 0 6px 14px/.test(html), "helles, ruhiges Brett");
@@ -6716,8 +6716,10 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   const { Chess } = await import(new URL("../lib/chess/chess.js", import.meta.url));
   const code = programm.slice(programm.indexOf("const SCH_WEIBLICH"), programm.indexOf("function schGeschlagenHtml(ch) {"));
   const gesagt = [], doc = { addEventListener() {}, querySelector: () => null };
-  const S = new Function("Chess", "esc", "spSag", "document", "SP", "SCH", "SPAR", code + "; return { schRochadeGrund, schRochade, schZieleMitRochade, schHinweisVor, schHinweisNach, schTwKommentar, schTwSag, schBrettHtml, SCH_TW, SCH_TW_SPRUECHE, schComputerZug };")(
-    Chess, (x) => String(x), (art, t) => gesagt.push(t), doc, {}, {}, { an: false });
+  const sprach = [], stimmeFuer = () => ({ voice: { name: "Markus", lang: "de-DE" }, pitch: 1 });
+  const SU = function (t) { this.text = t; }, sps = { speak: (u) => sprach.push(u) };
+  const S = new Function("Chess", "esc", "spSag", "document", "SP", "SCH", "SPAR", "spAnsageAn", "aktuelleAnsicht", "window", "speechSynthesis", "SpeechSynthesisUtterance", "stimmeFuer", code + "; return { schRochadeGrund, schRochade, schZieleMitRochade, schHinweisVor, schHinweisNach, schTwKommentar, schTwSag, schBrettHtml, SCH_TW, SCH_TW_SPRUECHE, schComputerZug };")(
+    Chess, (x) => String(x), (art, t) => gesagt.push(t), doc, {}, {}, { an: false }, () => true, "spiele", { speechSynthesis: sps }, sps, SU, stimmeFuer);
   const grund = (fen, seite) => S.schRochadeGrund(new Chess(fen), seite);
   assert.equal(grund("r3k2r/pppq1ppp/2npbn2/4p3/2B1P3/2NP1N2/PPP2PPP/R1BQK2R w KQkq - 0 1", "k"), null, "Rochade erlaubt → kein Grund");
   assert.match(grund("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", "k"), /stehen noch der Läufer und der Springer/, "Figuren dazwischen");
@@ -6751,7 +6753,8 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(S.SCH_TW_SPRUECHE.start.some((x) => /die ganze Nacht geübt/.test(x)) && S.SCH_TW_SPRUECHE.schnell.some((x) => /schnell unterwegs/.test(x)) && S.SCH_TW_SPRUECHE.bauerWeit.some((x) => /so weit vorne/.test(x)), "Sprüche wie gewünscht");
   for (const [k, l] of Object.entries(S.SCH_TW_SPRUECHE)) assert.ok(l.length && l.every((x) => !/\{(?!dein\}|deinA\}|mein\}|meinA\}|denA\}|zum\}|bauer\}|bauerA\}|er\})/.test(x)), "Platzhalter in " + k);
   // Twinkey spricht nur mit eingeschalteter Ansage (spSag) – ohne Emojis
-  S.schTwSag("Ich habe keine Angst. Du hast Angst. 😄"); assert.equal(gesagt.at(-1), "Ich habe keine Angst. Du hast Angst.", "Vorlesen ohne Emoji");
+  S.schTwSag("Ich habe keine Angst. Du hast Angst. 😄"); assert.equal(sprach.at(-1)?.text, "Ich habe keine Angst. Du hast Angst.", "Vorlesen ohne Emoji");
+  assert.equal(sprach.at(-1)?.voice?.name, "Markus", "Twinkey spricht mit der Männerstimme (2.123.0)");
   // Brett: data-feld zum Schieben, eigener Turm als Rochade-Ziel gestrichelt, Tipp-Feld
   const b = S.schBrettHtml(ro, { unten: "w", auswahl: "e1", ziele: S.schZieleMitRochade(ro, "e1"), klick: "schPcKlick", tipp: "g1" });
   assert.ok(/class="sch-brett" role="grid" aria-label="Schachbrett" data-klick="schPcKlick" data-ich="w"/.test(b) && /class="sch-feld hell ziel rochade" data-feld="h1"/.test(b) && /class="sch-feld dunkel ziel tipp" data-feld="g1"/.test(b), "Brett: Schieben, Rochade-Ziel, Tipp");
@@ -6852,4 +6855,19 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/async function protokollPlatz\(person: string, aktion: string, proStunde: number\)/.test(server)
     && /await protokollPlatz\(ich\.person_id, "spur", 120\)/.test(server) && /await protokollPlatz\(ich\.person_id, "app_start", 60\)/.test(server)
     && /await protokollPlatz\(ich\.person_id, "sprache_unbekannt", 60\)/.test(server) && /await protokollPlatz\(ich\.person_id, "diagnose_%", 120\)/.test(server), "Protokoll-Flut gebremst");
+}
+
+// 4xx. 2.123.0: Figuren „plastisch“ als Standard (Wahl der Testerin), drei Stile umschaltbar; Twinkey mit Männerstimme
+// (KC-CLUB-SCHACH-FIGUREN, KC-CLUB-SCHACH-STIMME)
+{
+  for (const c of ["w", "b"]) for (const t of ["k", "q", "r", "b", "n", "p"]) {
+    const svg = lies(`lib/schach/plastisch/${c}${t}.svg`);
+    assert.ok(/<svg[^>]*viewBox=/.test(svg) && !/<script|<image|href="(?!#)/i.test(svg), `plastisch ${c}${t}: skalierbar, nur interne Verweise`);
+  }
+  assert.ok(/MIT License/.test(lies("lib/schach/plastisch/LICENSE")) && /Maurizio Monge/.test(lies("lib/schach/plastisch/HERKUNFT.txt")), "Lizenz + Herkunft");
+  assert.ok(/const SCH_STILE = \["plastisch", "klassisch", "brigade"\]/.test(programm) && /localStorage\.getItem\("kc_club_schach_stil2"\)/.test(programm), "drei Stile, neuer Schlüssel");
+  assert.ok(/lib\/schach\/\$\{SCH_STIL === "plastisch" \? "plastisch\/" : ""\}/.test(programm), "Bildpfad je Stil");
+  assert.ok(/SCH_STIL = SCH_STILE\[\(SCH_STILE\.indexOf\(SCH_STIL\) \+ 1\) % SCH_STILE\.length\]/.test(programm) && /♟️ Figuren: \$\{SCH_STIL_NAME\[SCH_STIL\]\}<\/button>/.test(programm), "Knopf schaltet reihum");
+  const f = programm.slice(programm.indexOf("function schTwSprich("), programm.indexOf("const schAbstand"));
+  assert.ok(/const st = stimmeFuer\("m"\)/.test(f) && /if \(!text \|\| !spAnsageAn\("schach"\)/.test(f), "Männerstimme, nur mit 🔊 Ansage");
 }

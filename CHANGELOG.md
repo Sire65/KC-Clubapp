@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.123.0 – 2026-10-08 – ♟️ Schach: plastische Figuren, Twinkey mit Männerstimme (Rückmeldung Testerin)
+Der Testerin gefielen Figuren und Stimme noch nicht. Aus sechs kostenlosen Figurensätzen hat sie „Spatial“ gewählt.
+- Neue Standard-Figuren „plastisch“ (Spatial von Maurizio Monge, MIT-Lizenz, `lib/schach/plastisch`). Der Knopf
+  „♟️ Figuren“ schaltet reihum: Plastisch → Klassisch → Brigade (je Gerät). Wer die Brigade gewählt hatte, behält sie (KC-CLUB-SCHACH-FIGUREN).
+- Twinkey spricht mit der Männerstimme – dieselbe wie „Männer im Chat“ (⚙️ Einstellungen → Stimme); hat das Gerät keine,
+  spricht dieselbe Stimme tiefer. Nur mit 🔊 Ansage; die Zugansage bleibt in der normalen Stimme (KC-CLUB-SCHACH-STIMME).
+
 ## 2.122.0 – 2026-10-08 – Gesamtprüfung 4
 🔧 Kleine Systemverbesserungen
 Admin-Notiz (Gesamtprüfung 4): Notfall-Paket baut 4 Mitglieder parallel (KC-CLUB-NOTPAKET-TEMPO, vorher ~100 s → Abbrüche 546);

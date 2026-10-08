@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.122.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.123.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -1546,7 +1546,7 @@ const HILFE = [
   { id: "vorschlag_unterstuetzen", thema: "club", sym: "👍", t: "Gute Ideen unterstützen", x: "Bei den <b>🗳️ Vorschlägen</b> kannst du Themen anderer mit 👍 unterstützen. So sieht die Clubleitung schnell, was vielen am Herzen liegt.", zeig: () => zeige("vorschlaege"), seit: "2.23.1" },
   { id: "spende", thema: "club", sym: "💝", t: "Ein Spendenprojekt vorschlagen", x: "Kennst du ein Projekt, das der Club unterstützen könnte? Bei den Vorschlägen gibt es dafür die Art <b>„💝 Spende“</b> – die Projekte kommen dann in die nächste Sitzung.", zeig: () => zeige("vorschlaege"), seit: "2.23.1" },
   { id: "spiel_mitglieder", thema: "club", sym: "🎲", t: "Gegen andere Mitglieder spielen", x: "In den Spielen unter <b>„👥 Gegen Mitglieder“</b> forderst du jemanden heraus – ihr zieht abwechselnd, und du bekommst Bescheid, wenn du dran bist. An offenen Partien lässt sich sogar <b>„📅 Termin vereinbaren“</b>. Oben steht der 🏆 Pokal des Monats.", zeig: () => spStart(), seit: "2.23.1" },
-  { id: "spiel_schach", thema: "club", sym: "♟️", t: "Schach: schieben, Rochade, Twinkey", x: "Figuren einfach mit dem Finger <b>schieben</b> – oder antippen und dann das Zielfeld. <b>Rochade:</b> den König auf den Turm schieben. Geht sie nicht, sagt dir Twinkey in der Sprechblase, warum (z. B. „Im Schach darfst du nicht rochieren“). Gegen den Computer spielst du gegen <b>🧑‍🍳 Twinkey</b>: Er macht Sprüche, und mit <b>💡 Tipp</b> verrät er dir einen guten Zug. Mit <b>🔊 Ansage</b> spricht er auch. <b>🔔 Töne</b> schaltet das leise Klacken beim Ziehen. Die Küchenbrigade gibt es weiter über <b>👨‍🍳 Brigade</b>. Während einer Partie ist oben alles ausgeblendet, damit das Brett groß ist – mit <b>⚙️ Einstellungen</b> holst du es zurück. <b>📼 Meine Partien:</b> Jede Partie wird aufgezeichnet – mit <b>▶ Nachspielen</b> siehst du sie Zug für Zug noch einmal an (⏮ ◀ ▶ ⏭ oder ▶️ Abspielen). Bei Partien gegen Mitglieder geht das auch über <b>📼 Nachspielen</b>.", zeig: () => spStart("pc", "schach"), seit: "2.118.0" },
+  { id: "spiel_schach", thema: "club", sym: "♟️", t: "Schach: schieben, Rochade, Twinkey", x: "Figuren einfach mit dem Finger <b>schieben</b> – oder antippen und dann das Zielfeld. <b>Rochade:</b> den König auf den Turm schieben. Geht sie nicht, sagt dir Twinkey in der Sprechblase, warum (z. B. „Im Schach darfst du nicht rochieren“). Gegen den Computer spielst du gegen <b>🧑‍🍳 Twinkey</b>: Er macht Sprüche, und mit <b>💡 Tipp</b> verrät er dir einen guten Zug. Mit <b>🔊 Ansage</b> spricht er auch. <b>🔔 Töne</b> schaltet das leise Klacken beim Ziehen. Mit <b>♟️ Figuren</b> wechselst du zwischen Plastisch (Standard), Klassisch und der Küchenbrigade. Twinkey spricht mit der Männerstimme (⚙️ Einstellungen → Stimme → Männer). Während einer Partie ist oben alles ausgeblendet, damit das Brett groß ist – mit <b>⚙️ Einstellungen</b> holst du es zurück. <b>📼 Meine Partien:</b> Jede Partie wird aufgezeichnet – mit <b>▶ Nachspielen</b> siehst du sie Zug für Zug noch einmal an (⏮ ◀ ▶ ⏭ oder ▶️ Abspielen). Bei Partien gegen Mitglieder geht das auch über <b>📼 Nachspielen</b>.", zeig: () => spStart("pc", "schach"), seit: "2.118.0" },
   { id: "spiel_pause", thema: "club", sym: "⏸", t: "Spiel kurz anhalten", x: "Kommt beim Spielen gegen den Computer etwas dazwischen? Unten auf <b>„⏸ Pause“</b> tippen – mit <b>„▶ Weiter“</b> geht es genau dort weiter.", zeig: () => spStart(), seit: "2.23.1" },
   // 🔔 Benachrichtigungen & Töne
   { id: "meine_geraete", thema: "toene", sym: "📱", t: "Auf welchen Geräten kommt Push an?", x: "Kommt auf dem Tablet nichts an? Unter ⚙️ → „🔔 Benachrichtigungen“ zeigt <b>„📱 Meine Geräte“</b>, welche deiner Handys und Tablets Benachrichtigungen bekommen. Daneben schickt „Test-Push senden“ eine Probe.", zeig: () => einstiegHin("benachrichtigung"), seit: "2.23.1" },
@@ -5578,16 +5578,21 @@ function schComputerZug(ch, staerke) {
 // KC-CLUB-SCHACH-SPASS (2.116.0, Test-Rückmeldung „macht keinen Spaß, Figuren schlecht zu erkennen“): klassisch ist jetzt Standard –
 // mit gezeichneten Figuren (Cburnett, BSD, lib/schach) statt Schriftzeichen; die Küchenbrigade bleibt wählbar (Knopf „👨‍🍳 Brigade“).
 const SCH_BRIGADE = { k: "👨‍🍳", q: "👩‍🍳", r: "🍲", b: "🎂", n: "🔪", p: "🥄" }, SCH_BRIGADE_NAME = { k: "Küchenchef", q: "Kaltmamsell", r: "Souschef", b: "Patissier", n: "Springer", p: "Praktikant" };
-let SCH_STIL = (() => { try { return localStorage.getItem("kc_club_schach_stil") === "brigade" ? "brigade" : "klassisch"; } catch { return "klassisch"; } })();
+// KC-CLUB-SCHACH-FIGUREN (2.123.0, Testerin: „Figuren gefallen immer noch nicht“, aus 6 Sätzen „Spatial“ gewählt): drei Stile –
+// plastisch (Standard, Spatial von Maurizio Monge, MIT, lib/schach/plastisch), klassisch (Cburnett) und Küchenbrigade.
+// Neuer Schlüssel, damit alle den neuen Standard sehen; wer die Brigade gewählt hatte, behält sie.
+const SCH_STILE = ["plastisch", "klassisch", "brigade"], SCH_STIL_NAME = { plastisch: "Plastisch", klassisch: "Klassisch", brigade: "Brigade" };
+let SCH_STIL = (() => { try { const w = localStorage.getItem("kc_club_schach_stil2"); if (SCH_STILE.includes(w)) return w;
+  return localStorage.getItem("kc_club_schach_stil") === "brigade" ? "brigade" : "plastisch"; } catch { return "plastisch"; } })();
 const schBrigade = () => SCH_STIL === "brigade";
 const schFigName = (t) => schBrigade() ? SCH_BRIGADE_NAME[t] : SCH_NAME[t];
-const SCH_BILD_V = 1, schFigBild = (t, farbe) => `lib/schach/${farbe === "w" ? "w" : "b"}${t}.svg?v=${SCH_BILD_V}`;
+const SCH_BILD_V = 1, schFigBild = (t, farbe) => `lib/schach/${SCH_STIL === "plastisch" ? "plastisch/" : ""}${farbe === "w" ? "w" : "b"}${t}.svg?v=${SCH_BILD_V}`;
 // fehlt ein Bild (offline, nie geladen), steht dort das Schriftzeichen wie bisher
 const schFigHtml = (t, farbe) => schBrigade() ? `<span class="sch-fig brigade ${farbe === "w" ? "weiss" : "schwarz"}${t === "k" ? " chef" : t === "q" ? " dame" : ""}" title="${SCH_BRIGADE_NAME[t]}">${SCH_BRIGADE[t]}</span>`
   : `<span class="sch-fig bild ${farbe === "w" ? "weiss" : "schwarz"}"><img src="${schFigBild(t, farbe)}" alt="" draggable="false" onerror="this.parentNode.classList.remove('bild');this.replaceWith('${SCH_FIG[t]}\uFE0E')"></span>`;
-function schStilWechseln() { SCH_STIL = schBrigade() ? "klassisch" : "brigade"; try { localStorage.setItem("kc_club_schach_stil", SCH_STIL); } catch {} spZeigen(); }
+function schStilWechseln() { SCH_STIL = SCH_STILE[(SCH_STILE.indexOf(SCH_STIL) + 1) % SCH_STILE.length]; lsSetzen("kc_club_schach_stil2", SCH_STIL); melde(`♟️ Figuren: ${SCH_STIL_NAME[SCH_STIL]}`); spZeigen(); }
 // 2.23.38 KC-CLUB-SCHACH-AUFGERAEUMT: Umschalt-Knopf schmal in der Knopfleiste, „Wer ist wer“ eingeklappt unter dem Brett
-const schStilKnopf = () => `<button class="knopf klein" onclick="schStilWechseln()">${schBrigade() ? "♟️ Klassisch" : "👨‍🍳 Brigade"}</button>`;
+const schStilKnopf = () => `<button class="knopf klein" onclick="schStilWechseln()" title="Figuren wechseln: Plastisch → Klassisch → Brigade">♟️ Figuren: ${SCH_STIL_NAME[SCH_STIL]}</button>`;
 const schStilHtml = () => schBrigade() ? `<details class="sch-wer"><summary>👨‍🍳 Wer ist wer?</summary><div class="sch-legende" aria-label="Wer ist wer">${["k", "q", "r", "b", "n", "p"].map((t) => `<span>${SCH_BRIGADE[t]} ${SCH_BRIGADE_NAME[t]}${SCH_BRIGADE_NAME[t] !== SCH_NAME[t] ? ` <small class="hinweis">(${SCH_NAME[t]})</small>` : ""}</span>`).join("")}</div></details>` : "";
 // KC-CLUB-SCHACH-SPASS: data-feld/data-klick/data-ich für das Schieben, eigener Turm als Rochade-Ziel (gestrichelt statt „Schlagen“-Ring),
 // 💡 Tipp-Feld von Twinkey
@@ -5711,7 +5716,16 @@ function schTwSag(text, { sprich = true, hinweis = false } = {}) {
   if (!text) return;
   SCH_TW.text = text; SCH_TW.hinweis = hinweis; SCH_TW.neuBis = Date.now() + 300;
   const el = document.querySelector("#spInhalt .sch-twinkey"); if (el) el.outerHTML = schTwHtml();
-  if (sprich) spSag("schach", text.replace(/[\p{Extended_Pictographic}️‍]/gu, "").trim());
+  if (sprich) schTwSprich(text.replace(/[\p{Extended_Pictographic}️‍]/gu, "").trim());
+}
+// KC-CLUB-SCHACH-STIMME (2.123.0, Testerin: „Twinkey klingt wie eine Frau“): Twinkey spricht mit der Männerstimme
+// (dieselbe wie „Männer im Chat“ in ⚙️ Einstellungen → Stimme; ohne Männerstimme auf dem Gerät dieselbe Stimme tiefer).
+// Wie bisher nur mit 🔊 Ansage; die Zugansage bleibt in der normalen Stimme.
+function schTwSprich(text) {
+  if (!text || !spAnsageAn("schach") || aktuelleAnsicht !== "spiele") return;
+  try { if (!("speechSynthesis" in window)) return;
+    const st = stimmeFuer("m"), u = new SpeechSynthesisUtterance(text); u.lang = "de-DE";
+    if (st.voice) { u.voice = st.voice; u.lang = st.voice.lang; } u.pitch = st.pitch; speechSynthesis.speak(u); } catch {}
 }
 const schAbstand = (a, b) => Math.max(Math.abs(a.charCodeAt(0) - b.charCodeAt(0)), Math.abs(+a[1] - +b[1]));
 // Spruch nach einem Zug (m = Zug aus chess.js, ch = Stellung danach, ich = meine Farbe, er = Name des Gegenübers; ohne er = gegen Twinkey)

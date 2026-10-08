@@ -1,10 +1,19 @@
 {
-  "version": "2.122.0",
+  "version": "2.123.0",
   "datum": "2026-10-06",
   "neu": [
-    "🔧 Kleine Systemverbesserungen"
+    "♟️ Schach: neue, plastische Figuren (umschaltbar mit „♟️ Figuren“)",
+    "🧑‍🍳 Twinkey spricht jetzt mit Männerstimme"
   ],
   "verlauf": [
+    {
+      "version": "2.123.0",
+      "datum": "2026-10-08",
+      "neu": [
+        "♟️ Schach: neue, plastische Figuren (umschaltbar mit „♟️ Figuren“)",
+        "🧑‍🍳 Twinkey spricht jetzt mit Männerstimme"
+      ]
+    },
     {
       "version": "2.122.0",
       "datum": "2026-10-08",
