@@ -1,9 +1,10 @@
 # Änderungen
 
-## 2.123.0 – 2026-10-08 – ♟️ Schach: plastische Figuren, Twinkey mit Männerstimme (Rückmeldung Testerin)
-Der Testerin gefielen Figuren und Stimme noch nicht. Aus sechs kostenlosen Figurensätzen hat sie „Spatial“ gewählt.
-- Neue Standard-Figuren „plastisch“ (Spatial von Maurizio Monge, MIT-Lizenz, `lib/schach/plastisch`). Der Knopf
-  „♟️ Figuren“ schaltet reihum: Plastisch → Klassisch → Brigade (je Gerät). Wer die Brigade gewählt hatte, behält sie (KC-CLUB-SCHACH-FIGUREN).
+## 2.123.0 – 2026-10-08 – ♟️ Schach: plastische Figuren zur Wahl, Twinkey mit Männerstimme (Rückmeldung Testerin)
+Der Testerin gefielen Figuren und Stimme noch nicht. Aus sechs kostenlosen Figurensätzen kam „Spatial“ dazu; Standard bleibt
+auf Wunsch Hansi der klassische Satz (Cburnett).
+- Neuer Figurensatz „plastisch“ (Spatial von Maurizio Monge, MIT-Lizenz, `lib/schach/plastisch`). Der Knopf „♟️ Figuren“
+  schaltet reihum: Klassisch (Standard) → Plastisch → Brigade (je Gerät). Wer die Brigade gewählt hatte, behält sie (KC-CLUB-SCHACH-FIGUREN).
 - Twinkey spricht mit der Männerstimme – dieselbe wie „Männer im Chat“ (⚙️ Einstellungen → Stimme); hat das Gerät keine,
   spricht dieselbe Stimme tiefer. Nur mit 🔊 Ansage; die Zugansage bleibt in der normalen Stimme (KC-CLUB-SCHACH-STIMME).
 

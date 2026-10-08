@@ -6699,7 +6699,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
     assert.ok(/<svg[^>]*viewBox="0 0 45 45"/.test(svg) && !/<script|href=/i.test(svg), `Figur ${c}${t}: viewBox, ohne Skript/Links`);
   }
   assert.ok(/Redistribution and use in source and binary forms/.test(lies("lib/schach/LICENSE")) && /Cburnett/.test(lies("lib/schach/HERKUNFT.txt")) && /BSD/.test(lies("lib/schach/HERKUNFT.txt")), "Lizenz + Herkunft");
-  assert.ok(/return localStorage\.getItem\("kc_club_schach_stil"\) === "brigade" \? "brigade" : "plastisch";/.test(programm), "plastisch ist Standard (2.123.0), Brigade bleibt wählbar");
+  assert.ok(/return localStorage\.getItem\("kc_club_schach_stil"\) === "brigade" \? "brigade" : "klassisch";/.test(programm), "klassisch (Cburnett) ist Standard, Brigade bleibt wählbar");
   assert.ok(/onerror="this\.parentNode\.classList\.remove\('bild'\);this\.replaceWith\(/.test(programm), "fehlt ein Bild, steht das Schriftzeichen da");
   // ruhiges Brett statt Braun/Beige mit rotem Rahmen
   assert.ok(/\.sch-feld\.hell \{ background-color: #f5f4f0; \} \.sch-feld\.dunkel \{ background-color: #dcdad3; \}/.test(html) && !/box-shadow: 0 0 0 3px var\(--rot\), 0 6px 14px/.test(html), "helles, ruhiges Brett");
@@ -6857,7 +6857,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
     && /await protokollPlatz\(ich\.person_id, "sprache_unbekannt", 60\)/.test(server) && /await protokollPlatz\(ich\.person_id, "diagnose_%", 120\)/.test(server), "Protokoll-Flut gebremst");
 }
 
-// 4xx. 2.123.0: Figuren „plastisch“ als Standard (Wahl der Testerin), drei Stile umschaltbar; Twinkey mit Männerstimme
+// 4xx. 2.123.0: Figuren „plastisch“ zusätzlich (Klassisch bleibt Standard, Wunsch Hansi), drei Stile umschaltbar; Twinkey mit Männerstimme
 // (KC-CLUB-SCHACH-FIGUREN, KC-CLUB-SCHACH-STIMME)
 {
   for (const c of ["w", "b"]) for (const t of ["k", "q", "r", "b", "n", "p"]) {
@@ -6865,7 +6865,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
     assert.ok(/<svg[^>]*viewBox=/.test(svg) && !/<script|<image|href="(?!#)/i.test(svg), `plastisch ${c}${t}: skalierbar, nur interne Verweise`);
   }
   assert.ok(/MIT License/.test(lies("lib/schach/plastisch/LICENSE")) && /Maurizio Monge/.test(lies("lib/schach/plastisch/HERKUNFT.txt")), "Lizenz + Herkunft");
-  assert.ok(/const SCH_STILE = \["plastisch", "klassisch", "brigade"\]/.test(programm) && /localStorage\.getItem\("kc_club_schach_stil2"\)/.test(programm), "drei Stile, neuer Schlüssel");
+  assert.ok(/const SCH_STILE = \["klassisch", "plastisch", "brigade"\]/.test(programm) && /localStorage\.getItem\("kc_club_schach_stil2"\)/.test(programm), "drei Stile, neuer Schlüssel");
   assert.ok(/lib\/schach\/\$\{SCH_STIL === "plastisch" \? "plastisch\/" : ""\}/.test(programm), "Bildpfad je Stil");
   assert.ok(/SCH_STIL = SCH_STILE\[\(SCH_STILE\.indexOf\(SCH_STIL\) \+ 1\) % SCH_STILE\.length\]/.test(programm) && /♟️ Figuren: \$\{SCH_STIL_NAME\[SCH_STIL\]\}<\/button>/.test(programm), "Knopf schaltet reihum");
   const f = programm.slice(programm.indexOf("function schTwSprich("), programm.indexOf("const schAbstand"));
