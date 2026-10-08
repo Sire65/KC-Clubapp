@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.71.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.72.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -1602,7 +1602,7 @@ const HILFE = [
 // ---------- KC-CLUB-SCHRITT-HILFE (2.63.0, Wunsch Hansi; 2.64.0 verfeinert): Schritt-Unterstützung ----------
 // Eingeschaltet (⚙️ Einstellungen → „👣 Schritt-Unterstützung“, nur auf diesem Gerät) bekommt immer genau der nächste Schritt
 // einen pulsierenden roten Rahmen; unten steht mit zwei laufenden Schuhen „Schritt 2 von 6: …“ (bei offener Tastatur oben,
-// damit sie nichts verdeckt). Abläufe stehen in der Registry SH_ABLAEUFE (Bereich → Schritte); Pinnwand (2.63.0), Nachrichten (2.67.0, Sonderwege 2.68.0), Termine (2.69.0, Kalender/To-do/Terminfindung 2.70.0), Protokolle (2.71.0) – weitere
+// damit sie nichts verdeckt). Abläufe stehen in der Registry SH_ABLAEUFE (Bereich → Schritte); Pinnwand (2.63.0), Nachrichten (2.67.0, Sonderwege 2.68.0), Termine (2.69.0, Kalender/To-do/Terminfindung 2.70.0), Protokolle (2.71.0), Vorschläge (2.72.0) – weitere
 // Bereiche = neuer Eintrag hier, sonst nichts. Schritt: ziel (CSS), t (Text, mit Ort), fertig() erledigt?, wenn() gilt nur dann,
 // ruhe = Ausgangszustand (nichts angefangen; dort wird nach dem letzten Schritt gelobt); start = erster Schritt eines Wegs:
 // solange er nicht erledigt ist, gilt der Weg als nicht angefangen (wie ein Schritt ohne wenn);
@@ -1682,6 +1682,22 @@ const SH_ABLAEUFE = {
     { id: "los", ziel: '#protokollInhalt [onclick="einmal(this, protokollVeroeffentlichen)"]', t: "Fertig? Tippe auf „📢 Veröffentlichen“ – alle bekommen Bescheid. Noch nicht fertig: „💾 Speichern“", wenn: () => !!$("prT"), fertig: () => false, ende: true, lob: "Das Protokoll ist veröffentlicht – alle bekommen Bescheid." },
     { id: "pr-lesen", ruhe: true, ziel: '#protokollInhalt [onclick="einwandSchreiben()"]', t: "Lies das Protokoll in Ruhe. Stimmt etwas nicht? Unten „⚠️ Einwand erheben“. Behalten: „🗄️ In mein Archiv legen“", wenn: () => !$("prT"), fertig: () => false },
   ],
+  // 2.72.0 Vorschläge: ＋ Neu → Art (Thema / Spende / Abstimmung) → Titel → Beschreibung → Sitzung → (Abstimmung: Antworten, geheim,
+  // Frist, an wen) → Bescheid → Vorschlagen. Es gilt immer der Weg der gewählten Art.
+  vorschlaege: [
+    { id: "start", ruhe: true, ziel: "#vorschlagNeuKnopf", t: "Eigenen Vorschlag einreichen? Tippe oben rechts auf „＋ Neu“. Mitmachen: bei einem Vorschlag 👍 antippen bzw. bei einer Abstimmung deine Antwort", wenn: () => !shTmForm("vorschlagForm"), fertig: () => false },
+    { id: "vf-art", ziel: "#vorschlagForm .artwahl", t: () => `Was möchtest du? 💡 Thema für die Sitzung, 💝 Spende vorschlagen${ICH?.vorstand ? " oder 🗳️ Abstimmung starten" : ""} – antippen`, wenn: () => shTmForm("vorschlagForm"), fertig: () => true, weiter: true },
+    { id: "vf-spende", ziel: "#vfSpenden", t: "💝 Spendenprojekt antippen und den Betrag eintragen – mehrere gehen auch", wenn: () => shTmForm("vorschlagForm") && vfArt === "spende", fertig: () => true, weiter: true },
+    { id: "vf-titel", ziel: "#vfTitel", t: () => vfArt === "abstimmung" ? "Deine Frage, z. B. „Sollen wir im Mai ein Grillfest machen?“" : vfArt === "spende" ? "Überschrift – freiwillig, sonst automatisch" : "Worum geht es? Schreib kurz dein Thema", wenn: () => shTmForm("vorschlagForm"), fertig: () => vfArt === "spende" || !!$("vfTitel")?.value.trim(), weiter: true },
+    { id: "vf-beschr", ziel: "#vfBeschr", t: "Beschreibung – freiwillig, ein paar Sätze dazu helfen", wenn: () => shTmForm("vorschlagForm"), fertig: () => true, weiter: true },
+    { id: "vf-termin", ziel: "#vfTreffen", t: "Für welche Sitzung? Auswählen – oder „allgemein“ lassen", wenn: () => shTmForm("vorschlagForm"), fertig: () => true, weiter: true },
+    { id: "vf-optionen", ziel: "#vfOptionen", t: "Antwortmöglichkeiten – eine pro Zeile (Ja / Nein / Enthaltung steht schon da)", wenn: () => shTmForm("vorschlagForm") && vfArt === "abstimmung", fertig: () => true, weiter: true },
+    { id: "vf-geheim", ziel: "#vorschlagForm label:has(#vfGeheim)", t: "🔒 Geheim abstimmen? Haken an = niemand sieht, wer wie gestimmt hat", wenn: () => shTmForm("vorschlagForm") && vfArt === "abstimmung", fertig: () => true, weiter: true },
+    { id: "vf-frist", ziel: "#vorschlagForm .zwei", t: "Bis wann abstimmen? Freiwillig – leer lassen geht auch", wenn: () => shTmForm("vorschlagForm") && vfArt === "abstimmung", fertig: () => true, weiter: true },
+    { id: "vf-ziel", ziel: "#vfZiel", t: "An wen? 👥 Alle, 🧑‍🤝‍🧑 eine Gruppe oder ☑️ eine Auswahl", wenn: () => shTmForm("vorschlagForm") && vfArt === "abstimmung", fertig: () => true, weiter: true },
+    { id: "vf-info", ziel: "#vorschlagForm label:has(#vfInfo)", t: () => vfArt === "abstimmung" ? "Teilnehmer benachrichtigen? Haken an = Push bzw. E-Mail" : "Clubsprecher und Kassenwart benachrichtigen? Haken an = sie bekommen Bescheid", wenn: () => shTmForm("vorschlagForm"), fertig: () => true, weiter: true },
+    { id: "los", ziel: "#vorschlagForm .knoepfe .knopf.haupt", t: () => vfArt === "abstimmung" ? "Tippe unten auf „Abstimmung starten“" : "Tippe unten auf „Vorschlagen“", wenn: () => shTmForm("vorschlagForm"), fertig: () => false, ende: true, lob: () => vfArt === "abstimmung" ? "Die Abstimmung läuft." : "Dein Vorschlag ist eingereicht – die Clubleitung sieht ihn." },
+  ],
   gruppe: [
     { id: "name", ziel: "#grName", t: "Gib der Gruppe einen Namen, z. B. „Grillabend“", fertig: () => !!$("grName").value.trim(), weiter: true },
     { id: "symbol", ziel: "#grSymbole", t: "Such ein Symbol für die Gruppe aus", waehlen: true },
@@ -1701,6 +1717,7 @@ const SH_ABLAEUFE = {
 // 2.70.0 Auswahlfenster mitten im Ablauf (z. B. „Wer soll es machen?“): solange offen, zeigt die Hilfe darauf
 const SH_FENSTER = [
   { offen: () => !$("personenBlatt")?.classList.contains("versteckt"), ziel: "#personenBlatt .blatt-innen", t: "Hake an, wer es machen soll – dann unten auf „✅ Fertig“ tippen" },
+  { offen: () => !!$("vfAuswahlBlatt"), ziel: "#vfAuswahlBlatt .blatt-innen", t: "Hake an, wer abstimmen soll – dann unten auf „Übernehmen“ tippen" },
 ];
 // Termine: welches Formular ist offen? (ohne Fenster „＋ Neu“ / Termin-Info)
 const shTmForm = (id, feld) => !!$(id) && !$(id).classList.contains("versteckt") && (!feld || !!$(feld));
@@ -1745,7 +1762,7 @@ function shAufraeumen() {
 function shBereich(v) { // beim Wechsel der Ansicht (zeige)
   if ($("setSchrittHilfe")) $("setSchrittHilfe").checked = shAn(); if ($("setSchrittVorlesen")) $("setSchrittVorlesen").checked = shVorlesenAn();
   // letzter Schritt angetippt und die App wechselt selbst die Ansicht (z. B. gleiche Nachricht an mehrere) → trotzdem kurz loben
-  const lob = shAn() && SH.beruehrt.has("los") && (SH.lobJetzt || SH_ABLAEUFE[SH.bereich]?.find((x) => x.ende)?.lob);
+  const lob = shAn() && SH.beruehrt.has("los") && (SH.lobJetzt || shText({ t: SH_ABLAEUFE[SH.bereich]?.find((x) => x.ende)?.lob }));
   SH.bereich = SH_ABLAEUFE[v] ? v : null; SH.beruehrt.clear(); SH.geschafft = false; clearTimeout(SH.timer);
   shAufraeumen();
   if (lob) { SH.geschafft = true; shLeiste(`✅ <b>Geschafft!</b> ${esc(lob)}`); shSag("Geschafft! " + lob);
@@ -1783,7 +1800,7 @@ function shAktualisieren() {
   // Ruhe (nichts angefangen): Ruhe-Schritt vorn, oder erster Schritt ohne Bedingung noch nicht erledigt (Formular zu / Feld leer)
   if (ruhe) {
     if (SH.beruehrt.has("los")) { // gerade angeheftet → kurz loben, dann Ruhe bis zum nächsten Besuch
-      const lob = SH.lobJetzt || ablauf.find((x) => x.ende)?.lob || "Fertig.";
+      const lob = SH.lobJetzt || shText({ t: ablauf.find((x) => x.ende)?.lob }) || "Fertig.";
       SH.geschafft = true; shAufraeumen(); shLeiste(`✅ <b>Geschafft!</b> ${esc(lob)}`); shSag("Geschafft! " + lob);
       SH.timer = setTimeout(() => $("shLeiste")?.remove(), 4000); return;
     }
@@ -1817,7 +1834,7 @@ for (const art of ["click", "input", "change"]) document.addEventListener(art, (
   if (!SH.bereich || !shAn()) return;
   if (art === "click" && SH.geschafft && e.target.closest?.(SH_ABLAEUFE[SH.bereich][0].ziel)) { SH.geschafft = false; SH.beruehrt.clear(); clearTimeout(SH.timer); } // noch einmal von vorn
   if (art === "click") { SH.beruehrt.delete("los"); /* nur der letzte Tipp zählt (Abbrechen ≠ angeheftet) */
-    for (const s of SH_ABLAEUFE[SH.bereich]) if ((!s.wenn || s.wenn()) && e.target.closest?.(s.ziel)) { SH.beruehrt.add(s.id); if (s.ende) SH.lobJetzt = s.lob; } }
+    for (const s of SH_ABLAEUFE[SH.bereich]) if ((!s.wenn || s.wenn()) && e.target.closest?.(s.ziel)) { SH.beruehrt.add(s.id); if (s.ende) SH.lobJetzt = typeof s.lob === "function" ? s.lob() : s.lob; } }
   clearTimeout(SH.warte); SH.warte = setTimeout(shAktualisieren, art === "input" ? 250 : 80);
   if (art === "click") { clearTimeout(SH.nach); SH.nach = setTimeout(shAktualisieren, 700); } // Fenster, die erst nach dem Laden aufgehen
 }, true);

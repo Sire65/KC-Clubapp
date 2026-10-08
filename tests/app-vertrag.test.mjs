@@ -5518,7 +5518,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   for (const z of ["#empfWahlBereich", "#neuBetreff", "#text", "#sendenKnopf"]) { assert.ok(ab.includes(`ziel: "${z}"`), "Schritt " + z); assert.ok(seite.includes(`id="${z.slice(1)}"`), "Ziel vorhanden: " + z); }
   assert.ok(ab.includes(`ziel: '#v-nachrichten .kopf2 [onclick="uhNeu()"]'`) && /<button[^>]*onclick="uhNeu\(\)"/.test(seite), "＋ Neu");
   assert.ok(ab.includes(`ziel: '#v-neu [onclick="neuWeiter()"]'`) && /onclick="neuWeiter\(\)">Weiter zum Schreiben ›<\/button>/.test(seite), "Weiter zum Schreiben");
-  assert.ok(/lob: "Deine Nachricht ist unterwegs\."/.test(ab) && /const lob = SH\.lobJetzt \|\| ablauf\.find\(\(x\) => x\.ende\)\?\.lob/.test(programm), "Lob je Ablauf");
+  assert.ok(/lob: "Deine Nachricht ist unterwegs\."/.test(ab) && /const lob = SH\.lobJetzt \|\| shText\(\{ t: ablauf\.find\(\(x\) => x\.ende\)\?\.lob \}\)/.test(programm), "Lob je Ablauf");
   assert.ok(/const deckt = z && z\.height && a\.top < z\.bottom \+ 10 && a\.bottom > z\.top - 10;/.test(programm), "Leiste weicht aus, wenn sie das Ziel verdeckt");
 }
 
@@ -5531,7 +5531,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/function uhMarkZeichnen\(\) \{[\s\S]{0,300}setTimeout\(shAktualisieren, 60\);/.test(programm), "langes Drücken aktualisiert die Schritte");
   assert.ok(ab.includes("gruppe: [") && /ziel: "#grName"/.test(ab) && /ziel: "#grSymbole"/.test(ab) && /ziel: "#grListe"/.test(ab) && /ziel: "#grKnopf"/.test(ab), "Gruppe anlegen");
   for (const id of ["grName", "grSymbole", "grListe", "grKnopf"]) assert.ok(seite.includes(`id="${id}"`), "Ziel vorhanden: " + id);
-  assert.ok(/const lob = shAn\(\) && SH\.beruehrt\.has\("los"\) && \(SH\.lobJetzt \|\| SH_ABLAEUFE\[SH\.bereich\]\?\.find\(\(x\) => x\.ende\)\?\.lob\);/.test(programm), "Lob auch, wenn die App danach selbst die Ansicht wechselt");
+  assert.ok(/const lob = shAn\(\) && SH\.beruehrt\.has\("los"\) && \(SH\.lobJetzt \|\| shText\(\{ t: SH_ABLAEUFE\[SH\.bereich\]\?\.find\(\(x\) => x\.ende\)\?\.lob \}\)\);/.test(programm), "Lob auch, wenn die App danach selbst die Ansicht wechselt");
   assert.ok(/const unten = z\.bottom \+ 14 \+ a\.height < innerHeight - 8;/.test(programm), "Leiste lieber unter das Ziel, wenn Platz");
 }
 
@@ -5544,7 +5544,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/comboFeld\("taAnlass"/.test(programm) && /comboFeld\("taOrt"/.test(programm) && /comboFeld\("tfTitel"/.test(programm) && /<select id="\$\{id\}Wahl"/.test(programm), "Auswahl-Felder heißen …Wahl");
   assert.ok(/const shTmOffen = \(\) =>/.test(programm) && /id: "start", ruhe: true, ziel: "#neuTreffenKnopf"/.test(ab), "Ausgangszustand nur ohne offenes Formular");
   assert.ok(/lob: "Deine Antwort ist gespeichert\."/.test(ab) && /lob: "Deine Anfrage ist unterwegs\."/.test(ab), "Lob je Weg");
-  assert.ok(/if \(\(!s\.wenn \|\| s\.wenn\(\)\) && e\.target\.closest\?\.\(s\.ziel\)\) \{ SH\.beruehrt\.add\(s\.id\); if \(s\.ende\) SH\.lobJetzt = s\.lob; \}/.test(programm), "nur geltende Schritte zählen beim Antippen");
+  assert.ok(/if \(\(!s\.wenn \|\| s\.wenn\(\)\) && e\.target\.closest\?\.\(s\.ziel\)\) \{ SH\.beruehrt\.add\(s\.id\); if \(s\.ende\) SH\.lobJetzt = typeof s\.lob === "function" \? s\.lob\(\) : s\.lob; \}/.test(programm), "nur geltende Schritte zählen beim Antippen");
   assert.ok(/const dlg = document\.querySelector\("\.dlg-blatt \.blatt-innen"\)/.test(programm) && /\.sh-rahmen \{ position: fixed; z-index: 5001;/.test(seite) && /\.sh-leiste \{ position: fixed; z-index: 5002;/.test(seite), "Rückfrage-Fenster zuerst; Rahmen und Leiste über allen Fenstern");
   assert.ok(/new MutationObserver\(\(\) => \{ if \(SH\.bereich && shAn\(\)\)/.test(programm), "Fenster auf/zu prüft neu");
   assert.ok(/if \(SH\.geschafft\) \{ if \(ruhe\) return; SH\.geschafft = false;/.test(programm), "nach „Geschafft“ läuft die Hilfe beim nächsten Anfang wieder");
@@ -5572,6 +5572,17 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(ab.includes(`ziel: '#v-protokolle [onclick*="protokollAnlegen("]'`) && /onclick="einmal\(this, \(\) => protokollAnlegen\('\$\{t\.id\}'\)\)">＋ Anlegen/.test(programm), "Anlegen aus der Liste");
   assert.ok(ab.includes(`ziel: '#protokollInhalt [onclick="einwandSchreiben()"]'`) && /onclick="einwandSchreiben\(\)">⚠️ Einwand erheben/.test(programm), "Lesen: Einwand");
   assert.ok(/if \(!el && \(SH\.suche = \(SH\.suche \|\| 0\) \+ 1\) < 8\)/.test(programm), "Seite lädt noch → nochmal suchen");
+}
+
+// 4xx. 2.72.0: Schritt-Unterstützung bei Vorschlägen (KC-CLUB-SCHRITT-HILFE, Wunsch Hansi „ich möchte einen Vorschlag einreichen“)
+{
+  const ab = programm.slice(programm.indexOf("const SH_ABLAEUFE = {"), programm.indexOf("const SH = {"));
+  assert.ok(ab.includes("vorschlaege: ["), "Ablauf Vorschläge");
+  for (const z of ["#vorschlagNeuKnopf", "#vorschlagForm .artwahl", "#vfSpenden", "#vfTitel", "#vfBeschr", "#vfTreffen", "#vfOptionen", "#vorschlagForm label:has(#vfGeheim)", "#vorschlagForm .zwei", "#vfZiel", "#vorschlagForm label:has(#vfInfo)", "#vorschlagForm .knoepfe .knopf.haupt"]) assert.ok(ab.includes(`ziel: "${z}"`), "Schritt " + z);
+  for (const id of ["vorschlagNeuKnopf", "vfSpenden", "vfTitel", "vfBeschr", "vfTreffen", "vfOptionen", "vfGeheim", "vfZiel", "vfInfo"]) assert.ok(seite.includes(`id="${id}"`) || programm.includes(`id="${id}"`), "Ziel vorhanden: " + id);
+  assert.ok(/wenn: \(\) => shTmForm\("vorschlagForm"\) && vfArt === "abstimmung"/.test(ab) && /wenn: \(\) => shTmForm\("vorschlagForm"\) && vfArt === "spende"/.test(ab), "Weg je Art");
+  assert.ok(/lob: \(\) => vfArt === "abstimmung" \? "Die Abstimmung läuft\."/.test(ab), "Lob je Art");
+  assert.ok(/\{ offen: \(\) => !!\$\("vfAuswahlBlatt"\), ziel: "#vfAuswahlBlatt \.blatt-innen"/.test(programm) && /blattAuf\("vfAuswahlBlatt"/.test(programm), "Auswahlfenster „Wer soll abstimmen?“");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
