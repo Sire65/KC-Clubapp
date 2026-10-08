@@ -6678,3 +6678,14 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/if \(!INIT \|\| INIT\._offline\) return;/.test(programm), "Sofort-/Offline-Stand wird nie als frischer Stand gespeichert");
   assert.ok(/api\("buero_start"\)\.then\(\(b\) => \{ BU\.start = b; \}\)\]\);/.test(programm) && !/try \{ BU\.start = await api\("buero_start"\); \} catch \{\}\n  if \(aktuelleAnsicht === "buero" && BU\.sicht === "eingang"\)/.test(programm), "Büro-Eingang: alles gleichzeitig");
 }
+
+// 4xx. 2.114.0: Protokoll-Wächter – Lärm 60 Tage, Rest 365 Tage, Wichtiges nie automatisch, Füllstand-Grenze (KC-CLUB-PROTOKOLL-WAECHTER)
+{
+  const w = server.slice(server.indexOf("const PROT_LAERM_TAGE"), server.indexOf("const startZahl"));
+  assert.ok(/const PROT_LAERM_TAGE = 60, PROT_ALT_TAGE = 365, PROT_MAX_ZEILEN = 50000, PROT_ZIEL_ZEILEN = 40000;/.test(w), "Fristen und Grenzen");
+  for (const m of ["%zugang%", "%sperr%", "%geloescht%", "%zusammengefuehrt%", "%notbetrieb%", "%schnappschuss%", "aenderung_%", "erstattung%", "protokoll_waechter"]) assert.ok(w.includes(`"${m}"`), "wichtig bleibt: " + m);
+  assert.ok(/protNichtWichtig\(db\.from\("kc_club_protokoll"\)\.delete\(\{ count: "exact" \}\)\.lt\("zeit", tag\(PROT_ALT_TAGE\)\)\)/.test(w) && /protNichtWichtig\(db\.from\("kc_club_protokoll"\)\.delete\(\{ count: "exact" \}\)\.lt\("zeit", g\[0\]\.zeit\)\)/.test(w), "Altes und Füllstand nur ohne Wichtiges");
+  assert.ok((w.match(/\.delete\(/g) || []).length === 4 && !/\.delete\(\{ count: "exact" \}\)\)?\s*;/.test(w), "kein Löschen ohne Bedingung");
+  assert.ok(/await protokoll\(null, "protokoll_waechter", \{ laerm, alt, voll, vorher: /.test(w), "Zahlen im Protokoll, keine Inhalte");
+  assert.ok(/await protokollWaechter\(\)\.catch\(/.test(server), "läuft im Wartungslauf");
+}

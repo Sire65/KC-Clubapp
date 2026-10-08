@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.113.0";
+const SERVER_VERSION = "2.114.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 10 * 60000; // 2.103.0: Live-Mitschauen endet nach 10 Min.
 // Beenden = Bild sofort vom Server löschen (KC-CLUB-MITSCHAUEN)
@@ -2315,6 +2315,36 @@ const SPUR_MIT = /^(KC-P-[A-Z0-9-]{1,30}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-
 const SPUR_TAGE = 30;
 // KC-CLUB-STARTSTATISTIK (2.31.0, Wunsch Hansi): jeder App-Start mit Dauer, Gerät und Browser (Name nur für den Admin sichtbar), 180 Tage
 const START_TAGE = 180;
+// ---------- KC-CLUB-PROTOKOLL-WAECHTER (2.114.0, Wunsch Hansi „muss das Protokoll so wachsen? Wächter, der es leert, wenn zu voll“) ----------
+// Das Protokoll hält fest, was in der App passiert. Drei Stufen statt „alles leer“:
+//  1. Wichtig (Nachweis, Sicherheit, Rechte, Zugänge, Löschungen, Änderungen an Daten, Notfall) – wird NIE automatisch gelöscht.
+//  2. Lärm (Ansehen, Diagnose, harmlose Browser-/Update-Meldungen) – nach PROT_LAERM_TAGE weg.
+//  3. Alles andere – nach PROT_ALT_TAGE weg (reicht für Jahres-Statistiken).
+// Dazu der Füllstand-Wächter: Sind es mehr als PROT_MAX_ZEILEN, werden die ältesten nicht-wichtigen Einträge entfernt, bis
+// PROT_ZIEL_ZEILEN erreicht sind – und es steht eine Zeile „protokoll_waechter“ mit den Zahlen im Protokoll (nie Inhalte).
+// Läuft im nächtlichen Wartungslauf; spur (30 Tage) und app_start (180 Tage) behalten ihre eigenen Fristen.
+const PROT_LAERM_TAGE = 60, PROT_ALT_TAGE = 365, PROT_MAX_ZEILEN = 50000, PROT_ZIEL_ZEILEN = 40000;
+const PROT_LAERM = ["mitglied_details", "aenderungen_angesehen", "meine_daten_angesehen", "fehler_alte_version", "fehler_umgebung", "fehler_startzeit", "sos_geoeffnet"];
+const PROT_LAERM_PRAEFIX = ["diagnose_%", "fehler_update_%"];
+const PROT_WICHTIG = ["%zugang%", "%link%", "%kurzcode%", "%sperr%", "%rolle%", "%recht%", "admin_%", "%geloescht%", "%endgueltig%", "%entfernt%",
+  "%zusammengefuehrt%", "%freigab%", "%notbetrieb%", "%sicherheit%", "%schnappschuss%", "%mitschau%", "notfall_%", "hilferuf", "aenderung_%", "erstattung%",
+  "protokoll_waechter", "db_aufgeraeumt", "fehler_alarm", "fp_schwer_gemeldet"];
+const protNichtWichtig = (q: any) => { for (const m of PROT_WICHTIG) q = q.not("aktion", "like", m); return q; };
+async function protokollWaechter() {
+  const tag = (n: number) => new Date(Date.now() - n * 86400000).toISOString();
+  let laerm = 0, alt = 0, voll = 0;
+  { const { count } = await db.from("kc_club_protokoll").delete({ count: "exact" }).in("aktion", PROT_LAERM).lt("zeit", tag(PROT_LAERM_TAGE)); laerm += count ?? 0; }
+  for (const m of PROT_LAERM_PRAEFIX) { const { count } = await db.from("kc_club_protokoll").delete({ count: "exact" }).like("aktion", m).lt("zeit", tag(PROT_LAERM_TAGE)); laerm += count ?? 0; }
+  { const { count } = await protNichtWichtig(db.from("kc_club_protokoll").delete({ count: "exact" }).lt("zeit", tag(PROT_ALT_TAGE))); alt = count ?? 0; }
+  const { count: n } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true });
+  if ((n ?? 0) > PROT_MAX_ZEILEN) {
+    // Grenze: Zeitpunkt, ab dem die jüngsten PROT_ZIEL_ZEILEN Einträge beginnen – alles Nicht-Wichtige davor geht
+    const { data: g } = await db.from("kc_club_protokoll").select("zeit").order("zeit", { ascending: false }).range(PROT_ZIEL_ZEILEN, PROT_ZIEL_ZEILEN);
+    if (g?.[0]?.zeit) { const { count } = await protNichtWichtig(db.from("kc_club_protokoll").delete({ count: "exact" }).lt("zeit", g[0].zeit)); voll = count ?? 0; }
+  }
+  if (laerm || alt || voll) await protokoll(null, "protokoll_waechter", { laerm, alt, voll, vorher: (n ?? 0) + laerm + alt, grenze: PROT_MAX_ZEILEN });
+  return { laerm, alt, voll, zeilen: (n ?? 0) - voll };
+}
 const startZahl = (v: unknown) => { const n = Math.round(Number(v)); return Number.isFinite(n) && n >= 0 && n < 600000 ? n : null; };
 const startText = (v: unknown, n = 40) => String(v ?? "").replace(/[^\p{L}\p{N} .,_()\/+-]/gu, "").slice(0, n);
 // KC-CLUB-AVATAR-FOTO (2.23.89)
@@ -4083,6 +4113,7 @@ Deno.serve(async (req) => {
       { const { error } = await db.from("kc_club_protokoll").delete().eq("aktion", "spur").lt("zeit", new Date(Date.now() - SPUR_TAGE * 86400000).toISOString()); if (error) console.error("spur loeschen", error.message); }
       // KC-CLUB-STARTSTATISTIK (2.31.0): App-Starts nur 180 Tage aufbewahren
       { const { error } = await db.from("kc_club_protokoll").delete().eq("aktion", "app_start").lt("zeit", new Date(Date.now() - START_TAGE * 86400000).toISOString()); if (error) console.error("app_start loeschen", error.message); }
+      await protokollWaechter().catch((e) => console.error("protokoll waechter", String(e))); // KC-CLUB-PROTOKOLL-WAECHTER (2.114.0)
       // KC-CLUB-NUTZUNG-PERSONEN (2.6.0): Geräte-Kennungen nur 100 Tage aufbewahren
       { const { error } = await db.from("kc_club_nutzung_geraete").delete().lt("tag", berlinTag(new Date(Date.now() - 100 * 86400000))); if (error) console.error("nutzung geraete loeschen", error.message); }
       // Abstimmungen mit abgelaufener Frist beenden (Ergebnis geht an alle)

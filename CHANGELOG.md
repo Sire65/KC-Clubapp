@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.114.0 – 2026-10-08 – Protokoll-Wächter
+Der nächtliche Wartungslauf hält das Club-Protokoll klein: Ansehen/Diagnose nach 60 Tagen, Alltägliches nach einem Jahr; Wichtiges (Zugänge, Rechte, Sperren, Löschungen, Datenänderungen, Notfall) bleibt. Über 50.000 Einträge werden die ältesten nicht-wichtigen entfernt (KC-CLUB-PROTOKOLL-WAECHTER).
+
 ## 2.113.0 – 2026-10-08 – Tempo: Sofort-Start, Verzeichnisse, Tempo-Messung
 Die App zeigt beim Öffnen sofort den zuletzt geladenen Stand (markiert „wird gerade aktualisiert“) und lädt im Hintergrund frisch. Die Datenbank bekommt Verzeichnisse für die wachsende Protokoll-Tabelle und häufige Verknüpfungen. Der Server notiert langsame Vorgänge (nur Name und Dauer). Büro-Eingang lädt alles gleichzeitig (KC-CLUB-TEMPO, KC-CLUB-SOFORTSTART).
 
