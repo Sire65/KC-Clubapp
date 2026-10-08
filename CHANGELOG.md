@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.85.0 – 2026-10-08 – 🤝 Wie viel Unterstützung möchtest du?
+Einmal beim Start (wenn nichts anderes offen ist) fragt die App: 🙋 Viel Hilfe (einfache Ansicht, große Schrift, Schritt-Hilfe mit Vorlesen, Sprachsteuerung), 👌 Ein bisschen (Schritt-Hilfe) oder 😎 Ich komme klar. Jederzeit änderbar unter ⚙️ → 🤝 Unterstützung. (KC-CLUB-UNTERSTUETZUNG, Server 2.85.0)
+
 ## 2.84.0 – 2026-10-08 – 🔇 Stumm und 📋 Liste am Mikrofon
 Über dem 🎙️-Knopf zwei kleine Knöpfe: 🔇 Stumm schaltet das Mikrofon aus (Knopf wird grau, Tippen öffnet die Liste) – 📋 Liste zeigt alle Sprachbefehle mit Erklärung, auch die gelernten, mit Live-Suche zum Scrollen; Antippen führt den Befehl aus; oben „🎙️ Mikrofon wieder an“. (KC-CLUB-SPRACHE-LISTE)
 

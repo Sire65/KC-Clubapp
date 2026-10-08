@@ -6367,3 +6367,14 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/such\.oninput = \(\) => \{ const q = sbNorm\(such\.value\);/.test(programm), "Live-Suche");
   assert.ok(/\.sb-mini \{ position: fixed;/.test(seite) && /\.sb-knopf\.stumm \{/.test(seite));
 }
+
+// 4xx. 2.85.0: „Wie viel Unterstützung möchtest du?“ – einmal fragen, „Viel Hilfe“ schaltet alles ein (KC-CLUB-UNTERSTUETZUNG, Wunsch Hansi)
+{
+  assert.ok(/unterstuetzung: \(w\) => \(\{ stufe: \["viel", "etwas", "keine"\]\.includes\(w\?\.stufe\)/.test(server), "Server merkt sich die Wahl");
+  assert.ok(/if \(!begruesst\) ustPruefen\(\);/.test(programm), "nicht zusammen mit der Begrüßung");
+  const f = programm.slice(programm.indexOf("function ustPruefen()"), programm.indexOf("// ---------- KC-CLUB-SPRACHSTEUERUNG (2.75.0"));
+  assert.ok(/INIT\?\.einstellungen\?\.unterstuetzung \|\| lsLesen\(ustKey\(\)\)\) return;/.test(f), "nur einmal fragen");
+  assert.ok(/document\.querySelector\("\.dlg-blatt, \.blatt:not\(\.versteckt\)"\)/.test(f), "nie über eine andere Frage");
+  assert.ok(/if \(stufe === "keine"\) return/.test(f) && /shSchalter\(true\);/.test(f) && /shVorlesen\(true\); einstellung\("gross", true\);/.test(f) && /ansichtSetzen\("einfach"\)/.test(f), "Viel = Schritt-Hilfe, Vorlesen, große Schrift, einfache Ansicht");
+  assert.ok(/onclick="ustFragen\(false\)">Wählen<\/button>/.test(seite), "jederzeit unter ⚙️ änderbar");
+}

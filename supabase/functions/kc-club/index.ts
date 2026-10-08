@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.83.0";
+const SERVER_VERSION = "2.85.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -927,6 +927,8 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
   wetterort: (w) => ({ ort: w?.ort ? wetterOrtPruefen(w.ort) : null }),
   // KC-CLUB-ANSICHT (0.62.0): einfache oder erweiterte Ansicht – beim ersten Start einmal gefragt, jederzeit umschaltbar
   ansicht: (w) => ({ art: w?.art === "erweitert" ? "erweitert" : "einfach", gewaehlt: w?.gewaehlt === true, am: new Date().toISOString() }),
+  // KC-CLUB-UNTERSTUETZUNG (2.85.0): wie viel Hilfe sich das Mitglied wünscht (einmal gefragt, änderbar unter ⚙️)
+  unterstuetzung: (w) => ({ stufe: ["viel", "etwas", "keine"].includes(w?.stufe) ? w.stufe : "keine", am: new Date().toISOString() }),
   // KC-CLUB-BEGRUESSUNG (0.28.0): Begrüßung beim ersten Start einmal je Mitglied (geräteübergreifend)
   begruessung: (w) => ({ gesehen: !!w?.gesehen, am: new Date().toISOString() }),
   // KC-CLUB-DESIGN (0.24.0): fertiges Farbdesign + Tag/Nacht (automatisch, immer Tag, immer Nacht)

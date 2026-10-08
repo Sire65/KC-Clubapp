@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.84.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.85.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -1599,6 +1599,48 @@ const HILFE = [
   { id: "animiert", thema: "darstellung", sym: "✨", t: "Ruhige oder lebendige Knöpfe", x: "Kacheln zoomen kurz beim Antippen, die Reiter bekommen einen laufenden Rahmen und „＋ Neu“ leuchtet auf. Wer es lieber ruhig mag: ⚙️ → „🎨 Darstellung“ → <b>„✨ Animierte Knöpfe“</b> ausschalten. Gilt für dieses Gerät.", zeig: () => einstiegHin("darstellung", "setAnimiert"), seit: "2.24.1" },
   { id: "kacheln_klein", thema: "darstellung", sym: "🔲", nur: () => !einfach(), t: "Kacheln kleiner – 3 oder 4 nebeneinander", x: "Mehr Kacheln auf einen Blick: Bei ⚙️ → <b>„🎨 Darstellung“</b> → <b>„🔲 Kacheln auf der Startseite“</b> „Klein“ wählen – dann passen 3 nebeneinander, bei „Sehr klein“ 4 (nur Symbol und Name). Das geht nur in der <b>erweiterten Ansicht</b> – in der einfachen Ansicht bleiben die Kacheln groß. Gilt nur für dieses Gerät.", zeig: () => einstiegHin("darstellung", "kachelGroesseWahl"), seit: "2.23.90" },
 ];
+// ---------- KC-CLUB-UNTERSTUETZUNG (2.85.0, Wunsch Hansi): „Wie viel Unterstützung möchtest du?“ – einmal, dann unter ⚙️ ----------
+// „Viel“ schaltet in einem Rutsch ein: einfache Ansicht, große Schrift, Schritt-Hilfe mit Vorlesen, Sprachsteuerung (wenn das Handy es kann).
+// „Ein bisschen“: nur die Schritt-Hilfe. „Komme klar“: nichts. Alles bleibt einzeln unter ⚙️ abschaltbar. Gefragt wird erst, wenn
+// nichts anderes offen ist (nicht zusammen mit Begrüßung/Ansicht-Wahl). Gemerkt: Server (Einstellung) + Gerät.
+const UST = { gefragt: false };
+const UST_STUFEN = [
+  { id: "viel", sym: "🙋", t: "Viel Hilfe, bitte", u: "Einfache Ansicht, große Schrift, Schritt-für-Schritt-Hilfe mit Vorlesen und 🎙️ Sprachsteuerung" },
+  { id: "etwas", sym: "👌", t: "Ein bisschen Hilfe", u: "Ein roter Rahmen zeigt Schritt für Schritt, was als Nächstes kommt" },
+  { id: "keine", sym: "😎", t: "Danke, ich komme klar", u: "Alles bleibt, wie es ist" },
+];
+const ustKey = () => "kc_club_unterstuetzung_" + (ICH?.person_id || "");
+function ustPruefen() {
+  if (UST.gefragt || !ICH || INIT?.einstellungen?.unterstuetzung || lsLesen(ustKey())) return;
+  UST.gefragt = true; setTimeout(() => ustWennFrei(0), 8000);
+}
+function ustWennFrei(n) {
+  const besetzt = aktuelleAnsicht !== "start" || document.hidden || document.querySelector(".dlg-blatt, .blatt:not(.versteckt)");
+  if (besetzt) { if (n < 12) setTimeout(() => ustWennFrei(n + 1), 15000); return; } // später nochmal – nie über eine andere Frage
+  ustFragen(true);
+}
+function ustFragen(erstes) {
+  const f = blattAuf("ustBlatt", `<h3 style="margin:0 0 4px">🤝 Wie viel Unterstützung möchtest du?</h3>
+    <p class="hinweis" style="margin:0 0 10px">${erstes ? "Die App kann dir beim Bedienen helfen. " : ""}Du kannst das jederzeit ändern: ⚙️ Einstellungen → „🤝 Unterstützung“.</p>
+    <div class="ust-wahl">${UST_STUFEN.map((x) => `<button class="knopf${x.id === "viel" ? " haupt" : ""}" data-s="${x.id}"><span class="ust-sym">${x.sym}</span><span><b>${esc(x.t)}</b><small>${esc(x.u)}</small></span></button>`).join("")}</div>
+    ${DIKTAT_GEHT ? '<p class="hinweis" style="margin:8px 0 0">🎙️ Bei „Viel Hilfe“ wird auch die Sprachsteuerung eingeschaltet: Zugehört wird nur, wenn du auf 🎙️ tippst. Das Gesprochene wandelt dein Handy (Google bzw. Apple) in Text um.</p>' : ""}`);
+  f.onclick = null; // nicht aus Versehen wegtippen
+  f.querySelectorAll("[data-s]").forEach((k) => (k.onclick = () => { fensterZu(f); ustSetzen(k.dataset.s); }));
+}
+async function ustSetzen(stufe) {
+  lsSetzen(ustKey(), stufe); spur("unterstuetzung_" + stufe);
+  if (INIT) INIT.einstellungen = { ...(INIT.einstellungen || {}), unterstuetzung: { stufe } };
+  api("einstellung_setzen", { schluessel: "unterstuetzung", wert: { stufe } }).catch(() => {});
+  if (stufe === "keine") return melde("😎 Alles klar – Hilfe findest du jederzeit unter ⚙️ Einstellungen");
+  shSchalter(true);
+  if (stufe === "viel") {
+    shVorlesen(true); einstellung("gross", true); ["setGross", "setGrossE"].forEach((id) => { if ($(id)) $(id).checked = true; });
+    if (DIKTAT_GEHT) { lsSetzen(SB_KEY + "_ok", "1"); lsSetzen(SB_KEY, "1"); lsSetzen(SB_STUMM_KEY, "0"); sbKnopfZeigen(); }
+    if (ANSICHT !== "einfach") await ansichtSetzen("einfach");
+    melde("🙋 Viel Hilfe ist an: einfache Ansicht, große Schrift, Schritt-Hilfe mit Vorlesen" + (DIKTAT_GEHT ? " und 🎙️ unten links" : ""));
+    sprechen("Viel Hilfe ist eingeschaltet. Ein roter Rahmen zeigt dir immer den nächsten Schritt.");
+  } else melde("👌 Schritt-Hilfe ist an – ein roter Rahmen zeigt dir den nächsten Schritt");
+}
 // ---------- KC-CLUB-SPRACHSTEUERUNG (2.75.0, Wunsch Hansi): 🎙️ Sprachbefehle, Stufe 1; Stufe 2 (2.76.0): Rückfragen im Gespräch ----------
 // Stufe 2: „Nachricht an Klaus“ → bei mehreren Klaus „Welchen Klaus?“, unbekannt → ähnliche Namen; angekommen → „Soll ich das Diktieren gleich einschalten?“ (Ja/Nein sagen oder tippen).
 // Eigener Knopf unten links (nur wenn unter ⚙️ eingeschaltet und das Gerät Sprache erkennt). Zugehört wird NUR nach Antippen.
@@ -10504,6 +10546,7 @@ async function neuLadenRoh(vonHand) {
     if (!ONL.timer) nachUpdatePruefen(begruesst);
     if (!ONL.timer) { onlinePing(); onlineTakt(); pushAktivPruefen(); herzStarten(); const a = /#anklopfen=([0-9a-f-]{36})/.exec(START_HASH || ""); if (a) anklopfenAusLink(a[1]); const c = /#anruf=([0-9a-f-]{36})/.exec(START_HASH || ""); if (c) { ONL.erledigt.add("r" + c[1]); anrufEingehend(c[1]); } }
     if (!PW.startGeprueft) { PW.startGeprueft = true; pwStart(begruesst); }
+    if (!begruesst) ustPruefen(); // KC-CLUB-UNTERSTUETZUNG (2.85.0): einmal fragen, wie viel Hilfe gewünscht ist
     designUebernehmen(INIT.einstellungen?.design); infoFelderAktualisieren(); infoStartUebernehmen(INIT.einstellungen?.infofeld); ansichtInfo();
     VB.wartung = INIT.wartung || null; VB.server = INIT.server || null; vbCommSetzen(INIT.communicator || null);
     $("begruessung").textContent = "Hallo " + ICH.vorname + "!";
@@ -20615,7 +20658,7 @@ document.addEventListener("visibilitychange", () => { if (document.hidden) spurS
 const SPUR_WAS = { vorfuehren: "📺 Live zeigen gestartet", vorfuehren_zuschauen: "📺 Bei Live zeigen zugeschaut", fitness: "🏋️ Fit bleiben geöffnet", probe_gesetzt: "🧪 Probephase gestartet/verlängert", probe_uebernommen: "✅ Probephase übernommen", probe_beendet: "🚪 Probephase beendet", geoeffnet: "📲 App geöffnet", mitglied: "👤 Mitglied angesehen", chat: "💬 Unterhaltung geöffnet", gesendet: "✉️ Nachricht gesendet", gesendet_anlage: "📎 Nachricht mit Anhang gesendet",
   anruf: "📞 Anruf (App) an", video: "🎥 Videoanruf an", anklopfen: "👋 Angeklopft bei", telefon: "☎️ Telefonnummer angetippt", whatsapp: "🟢 WhatsApp geöffnet", mail: "✉️ E-Mail-Adresse angetippt", meine_statistik: "📊 Eigene Nachrichten-Statistik angesehen",
   mein_bild: "🧑‍🍳 „Mein Bild“ geöffnet", bild_gewaehlt: "🧑‍🍳 Koch-Figur als Bild gewählt", bild_gebaut: "🧩 Eigene Figur gespeichert", bild_foto: "📷 Eigenes Foto als Bild gesetzt", bild_entfernt: "🧑‍🍳 Bild entfernt (Buchstaben)", avatar_kombi: "ⓘ Figuren-Möglichkeiten angesehen", jacke_auto_an: "🔄 Kochjacke täglich wechselnd eingeschaltet", jacke_auto_aus: "🔄 Kochjacke täglich wechselnd ausgeschaltet",
-  sprache_start: "🎙️ Sprache: Startseite", sprache_zurueck: "🎙️ Sprache: zurück", sprache_pinnwand: "🎙️ Sprache: neuer Zettel", sprache_nachricht: "🎙️ Sprache: neue Nachricht", sprache_termine: "🎙️ Sprache: Termine", sprache_naechster: "🎙️ Sprache: nächster Termin", sprache_suche: "🎙️ Sprache: Suche", sprache_hilfe: "🎙️ Sprache: Hilfe", sprache_unklar: "🎙️ Sprache: nicht verstanden", sensibel_gaeste_frage: "⚠️ Vertrauliches an Nicht-Mitglieder: nachgefragt", sprache_ziel: "🎙️ Sprache: Seite geöffnet", sprache_gelernt: "🎙️ Sprache: neuen Befehl gelernt", sprache_liste: "📋 Liste der Sprachbefehle geöffnet", inhaltsverzeichnis: "🗂️ Inhaltsverzeichnis gedruckt" }; // KC-CLUB-SPRACHSTEUERUNG (2.75.0)
+  sprache_start: "🎙️ Sprache: Startseite", sprache_zurueck: "🎙️ Sprache: zurück", sprache_pinnwand: "🎙️ Sprache: neuer Zettel", sprache_nachricht: "🎙️ Sprache: neue Nachricht", sprache_termine: "🎙️ Sprache: Termine", sprache_naechster: "🎙️ Sprache: nächster Termin", sprache_suche: "🎙️ Sprache: Suche", sprache_hilfe: "🎙️ Sprache: Hilfe", sprache_unklar: "🎙️ Sprache: nicht verstanden", sensibel_gaeste_frage: "⚠️ Vertrauliches an Nicht-Mitglieder: nachgefragt", sprache_ziel: "🎙️ Sprache: Seite geöffnet", sprache_gelernt: "🎙️ Sprache: neuen Befehl gelernt", sprache_liste: "📋 Liste der Sprachbefehle geöffnet", unterstuetzung_viel: "🙋 Unterstützung: viel Hilfe gewählt", unterstuetzung_etwas: "👌 Unterstützung: ein bisschen Hilfe", unterstuetzung_keine: "😎 Unterstützung: keine", inhaltsverzeichnis: "🗂️ Inhaltsverzeichnis gedruckt" }; // KC-CLUB-SPRACHSTEUERUNG (2.75.0)
 const SPW = { tag: null, person: null, uhr: null };
 async function spurAdmin(tag, person) {
   SPW.tag = tag || SPW.tag || heuteIso(); SPW.person = person === undefined ? SPW.person : person;
