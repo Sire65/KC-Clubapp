@@ -6414,3 +6414,12 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/const aeOffen = await aeOffenLaden\(\);/.test(programm) && /\$\{aeOffenHtml\(aeOffen\)\}/.test(programm) && /id="mdAeHinweis"/.test(programm), "Hinweis in Meine Daten und auf der eigenen Seite");
   assert.ok(/\["offen", "freigegeben"\]\.includes\(x\.status\)/.test(programm), "nur offene/freigegebene");
 }
+
+// 4xx. 2.90.0: Schritt-Hilfe für Ausleihen, Hilfe anbieten, Dienstpläne, Einstellungen, Spiele (KC-CLUB-SCHRITT-HILFE-REST)
+{
+  for (const k of ["li-was", "li-ab", "li-rueck", "li-zweck", "af-was", "af-sym"]) {
+    assert.ok(programm.includes(`data-sh="${k}"`), "Anker " + k + " im Formular");
+    assert.ok(programm.includes(`{ id: "${k}", ziel: '[data-sh="${k}"]`), "Schritt " + k + " zeigt auf den Anker");
+  }
+  for (const k of ["dienste", "einstellungen", "spiele"]) assert.ok(new RegExp("\\n\\s*" + k + ": \\[\\s*\\{ id: \"\\w+\", ruhe: true").test(programm), "Ablauf " + k);
+}

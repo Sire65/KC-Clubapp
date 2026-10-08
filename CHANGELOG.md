@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.90.0 – 2026-10-08 – 👣 Schritt-Hilfe: Ausleihen, Hilfe anbieten, Dienstpläne, Einstellungen, Spiele
+Die Schritt-Hilfe zeigt jetzt auch beim Ausleihen, beim Hilfe-Anbieten, in den Dienstplänen, in den Einstellungen und bei den Spielen, was als Nächstes zu tun ist.
+
 ## 2.89.0 – 2026-10-08 – 🎙️ Weniger Knöpfe am Mikrofon
 📋 Alle Befehle und 🔇 Mikro aus stehen jetzt im Fenster „Ich höre zu …“ statt als zwei zusätzliche Knöpfe auf dem Bildschirm. Merkblatt „Die App hilft dir“ aktualisiert (mit den neuen Befehlen der Stufe 3). (KC-CLUB-SPRACHE-LISTE)
 

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.89.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.90.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -2232,8 +2232,26 @@ const SH_ABLAEUFE = {
     { id: "bo-betrag", ziel: "#boPreis", t: "Betrag in Euro eintragen", wenn: () => HL.tab === "boerse" && !!BO.form && ["preis", "vb"].includes(BO.form.preis_art), fertig: () => true, weiter: true },
     { id: "bo-fotos", ziel: "#hlInhalt .bo-fotos", t: "📷 Fotos – freiwillig, bis zu 3. Auf „📷 ＋“ tippen", wenn: () => HL.tab === "boerse" && !!BO.form, fertig: () => !BO.form?.laedt, weiter: true },
     { id: "bo-text", ziel: "#boText", t: "Beschreibung – freiwillig, z. B. „kaum getragen, abzuholen in Werne“", wenn: () => HL.tab === "boerse" && !!BO.form, fertig: () => true, weiter: true },
+    // 2.90.0 Ausleihen und „Ich biete Hilfe an“
+    { id: "li-was", ziel: '[data-sh="li-was"] + .hl-dinge', t: "Was möchtest du ausleihen? Mit ＋ die Anzahl einstellen", wenn: () => HL.tab === "leihen" && !!HL.form, fertig: () => Object.values(HL.form?.menge || {}).some((n) => n > 0), weiter: true },
+    { id: "li-ab", ziel: '[data-sh="li-ab"] + *', t: "Wann holst du es ab? Tag und Uhrzeit antippen", wenn: () => HL.tab === "leihen" && !!HL.form, fertig: () => true, weiter: true },
+    { id: "li-rueck", ziel: '[data-sh="li-rueck"] + .hl-chips', t: "Wann bringst du es zurück? Antippen", wenn: () => HL.tab === "leihen" && !!HL.form, fertig: () => true, weiter: true },
+    { id: "li-zweck", ziel: '[data-sh="li-zweck"] + .hl-chips', t: "Wofür? Freiwillig – antippen oder weiter", wenn: () => HL.tab === "leihen" && !!HL.form, fertig: () => true, weiter: true },
+    { id: "af-was", ziel: '[data-sh="af-was"] + .hl-chips', t: "Wobei kannst du helfen? Eine Idee antippen – oder darunter eigenen Text schreiben", wenn: () => !!HL.angebotForm, fertig: () => !!HL.angebotForm?.titel.trim(), weiter: true },
+    { id: "af-sym", ziel: '[data-sh="af-sym"] + .symbolwahl', t: "Symbol für deine Kachel antippen", wenn: () => !!HL.angebotForm, waehlen: true },
+    { id: "af-text", ziel: "#afText", t: "Was genau? Freiwillig – z. B. wie lange es dauert. 🎤 rechts zum Diktieren", wenn: () => !!HL.angebotForm, fertig: () => true, weiter: true },
     { id: "los", ziel: "#hlInhalt .hl-form .knoepfe .knopf.haupt", t: () => BO.form ? "Tippe auf „✅ Anzeige einstellen“" : HL.form && HL.tab === "helfen" ? "Tippe auf „📣 Aufruf veröffentlichen“ – alle bekommen Bescheid" : "Fertig? Tippe auf den roten Knopf unten",
       wenn: () => !!(BO.form || HL.form || HL.angebotForm), fertig: () => false, ende: true, lob: () => HL.tab === "boerse" ? "Deine Anzeige ist drin – wer passt, bekommt Bescheid." : "Erledigt – alle können es jetzt sehen." },
+  ],
+  // 2.90.0 kurze Tipps für Dienstpläne, Einstellungen, Spiele (ein Schritt – zeigt, wo es losgeht)
+  dienste: [
+    { id: "wer", ruhe: true, ziel: "#dpPersonen", t: "Tippe deinen Namen an – mehrere Namen zeigen eure Zeiten untereinander. Mit ‹ Woche und Woche › blätterst du", fertig: () => false },
+  ],
+  einstellungen: [
+    { id: "ust", ruhe: true, ziel: '#v-einstellungen [onclick="ustFragen(false)"]', t: "Hier stellst du ein, wie viel Hilfe du möchtest – „🤝 Unterstützung → Wählen“. Darunter: Schritt-Hilfe, Vorlesen, Sprachsteuerung, große Schrift", fertig: () => false },
+  ],
+  spiele: [
+    { id: "wahl", ruhe: true, ziel: "#spInhalt", t: "Such dir ein Spiel aus und tippe es an. Oben: gegen den Computer oder gegen Mitglieder", fertig: () => false },
   ],
   fotos: [
     { id: "neu", ruhe: true, ziel: "#v-fotos .kopf2 .knopf.haupt", t: "Fotos hochladen? Tippe oben rechts auf „＋ Neu“. Ansehen: unten ein Foto antippen – wischen blättert weiter", wenn: () => $("fotoForm").classList.contains("versteckt"), fertig: () => false },
@@ -13241,10 +13259,10 @@ const ANGEBOT_IDEEN = ["Einrichtung der Club-App", "Einführung in den Bilderrec
 function angebotFormHtml() {
   const f = HL.angebotForm, sy = HL.hilfe?.angebotSymbole || ["🤲"];
   return `<div class="karte hl-form"><h3 style="margin:0 0 6px">🤲 ${f.id ? "Angebot ändern" : "Ich biete Hilfe an"}</h3>
-    <div class="hl-frage">Wobei kannst du helfen?</div>
+    <div class="hl-frage" data-sh="af-was">Wobei kannst du helfen?</div>
     <div class="hl-chips">${ANGEBOT_IDEEN.map((t) => `<button class="chip${f.titel === t ? " an" : ""}" onclick="HL.angebotForm.titel=${JSON.stringify(t).replace(/"/g, "&quot;")};hlZeigen()">${esc(t)}</button>`).join("")}</div>
     <label class="feld">oder eigener Text<input maxlength="80" placeholder="z. B. Einführung in den Bilderrechner" value="${esc(f.titel)}" oninput="HL.angebotForm.titel=this.value"></label>
-    <div class="hl-frage">Symbol</div><div class="symbolwahl">${sy.map((x) => `<button class="${x === f.sym ? "an" : ""}" onclick="HL.angebotForm.sym='${x}';hlZeigen()">${x}</button>`).join("")}</div>
+    <div class="hl-frage" data-sh="af-sym">Symbol</div><div class="symbolwahl">${sy.map((x) => `<button class="${x === f.sym ? "an" : ""}" onclick="HL.angebotForm.sym='${x}';hlZeigen()">${x}</button>`).join("")}</div>
     <label class="feld">Was genau? (freiwillig)<textarea id="afText" data-diktat rows="3" maxlength="600" placeholder="z. B. Ich komme vorbei oder wir treffen uns im Vereinsheim – ca. 30 Minuten, Handy bitte mitbringen." oninput="HL.angebotForm.text=this.value">${esc(f.text)}</textarea></label>
     <p class="hinweis" style="margin:4px 0 8px">Dein Angebot erscheint als Kachel unter „🤲 Hilfe-Angebote“. Mitglieder tippen es an und fragen dich per Terminanfrage oder Nachricht.</p>
     ${f.id ? "" : hkHtml("angebotForm")}
@@ -13410,12 +13428,12 @@ function leihFormHtml() {
   const rueck = [0, 1, 2, 3, 7].map((n) => ({ w: tagPlus(f.abholung, n), t: n === 0 ? "Gleicher Tag" : n === 7 ? "1 Woche später" : `${hlTagName(tagPlus(f.abholung, n))} (+${n})` }));
   const summe = aktiv.filter((g) => f.menge[g.id]).map((g) => `${f.menge[g.id]} × ${g.sym} ${g.name}`);
   return `<div class="karte hl-form"><h3 style="margin:0 0 6px">📦 Anfrage Ausleihe</h3>
-    <div class="hl-frage">Was möchtest du ausleihen?</div><div class="hl-dinge">${kacheln || '<p class="hinweis">Noch keine Gegenstände eingetragen.</p>'}</div>
-    <div class="hl-frage">Abholung</div>${hlTageWahl("abholung", f.abholung)}${hlChips("abholung_slot", hlSlots(d.zeitfenster, true), f.abholung_slot)}
-    <div class="hl-frage">Rückgabe</div>${hlChips("rueckgabe", rueck, f.rueckgabe)}
+    <div class="hl-frage" data-sh="li-was">Was möchtest du ausleihen?</div><div class="hl-dinge">${kacheln || '<p class="hinweis">Noch keine Gegenstände eingetragen.</p>'}</div>
+    <div class="hl-frage" data-sh="li-ab">Abholung</div>${hlTageWahl("abholung", f.abholung)}${hlChips("abholung_slot", hlSlots(d.zeitfenster, true), f.abholung_slot)}
+    <div class="hl-frage" data-sh="li-rueck">Rückgabe</div>${hlChips("rueckgabe", rueck, f.rueckgabe)}
     <label class="hl-kal${rueck.some((r) => r.w === f.rueckgabe) ? "" : " an"}">📅 ${rueck.some((r) => r.w === f.rueckgabe) ? "Anderer Tag" : esc(hlTagName(f.rueckgabe))}<input type="date" min="${f.abholung}" max="${tagPlus(f.abholung, d.maxTage || 30)}" value="${f.rueckgabe}" onchange="this.value && hlSetze('rueckgabe', this.value)"></label>
     ${hlChips("rueckgabe_slot", hlSlots(d.zeitfenster, true), f.rueckgabe_slot)}
-    <div class="hl-frage">Wofür? <small class="hinweis">(freiwillig)</small></div>${hlChips("zweck", [{ w: "", t: "– ohne –" }, ...Object.entries(d.zwecke || {}).map(([w, t]) => ({ w, t }))], f.zweck)}
+    <div class="hl-frage" data-sh="li-zweck">Wofür? <small class="hinweis">(freiwillig)</small></div>${hlChips("zweck", [{ w: "", t: "– ohne –" }, ...Object.entries(d.zwecke || {}).map(([w, t]) => ({ w, t }))], f.zweck)}
     ${f.zweck === "sonstiges" ? `<label class="feld">Wofür genau?<input maxlength="80" placeholder="z. B. Schulfest" value="${esc(f.zweckText)}" oninput="hlText('zweckText', this)"></label>` : ""}
     <label class="feld">Notiz (freiwillig)<input maxlength="500" placeholder="z. B. hole mit dem Anhänger ab" value="${esc(f.notiz)}" oninput="hlText('notiz', this)"></label>
     <div class="hl-summe">${summe.length ? `<b>${summe.map(esc).join(" · ")}</b><br>${esc(hlTagLang(f.abholung, f.abholung_slot, d.zeitfenster))} → ${esc(hlTagLang(f.rueckgabe, f.rueckgabe_slot, d.zeitfenster))} (${tage ? tage + (tage === 1 ? " Tag" : " Tage") : "gleicher Tag"})` : "Noch nichts ausgewählt – tippe bei den Gegenständen auf ＋"}</div>
