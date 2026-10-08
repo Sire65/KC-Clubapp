@@ -6404,3 +6404,13 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/if \(ok\) anrufen\(pid\);/.test(f) && /if \(!ONL\.ids\?\.has\(pid\)\)/.test(f), "anrufen nur nach Ja und nur, wenn online");
   assert.ok(/chatVorlesenStart\("neu"\)/.test(f), "vorlesen über den vorhandenen Vorlese-Kern");
 }
+
+// 4xx. 2.88.0: gemeldete, noch nicht eingetragene Änderungen sichtbar + Push bei Freigabe (KC-CLUB-AE-HINWEIS, KC-CLUB-AE-FREIGABE-PUSH, Fall Wilfried)
+{
+  assert.ok(/async function aeFreigabeMelden\(\)/.test(server) && /await aeFreigabeMelden\(\)\.catch/.test(server), "Zeitplaner meldet Freigaben");
+  const f = server.slice(server.indexOf("async function aeFreigabeMelden()"), server.indexOf("async function aeUebernahmeMelden()"));
+  assert.ok(/\.eq\("aktion", "aenderung_freigabe_gemeldet"\)\.contains\("details", \{ id: x\.id \}\)/.test(f) && /if \(count\) continue;/.test(f), "nur einmal je Meldung");
+  assert.ok(/\["push"\]/.test(f) && !/x\.neu/.test(f), "nur Push, nie die neuen Werte im Text");
+  assert.ok(/const aeOffen = await aeOffenLaden\(\);/.test(programm) && /\$\{aeOffenHtml\(aeOffen\)\}/.test(programm) && /id="mdAeHinweis"/.test(programm), "Hinweis in Meine Daten und auf der eigenen Seite");
+  assert.ok(/\["offen", "freigegeben"\]\.includes\(x\.status\)/.test(programm), "nur offene/freigegebene");
+}

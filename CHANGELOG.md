@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.88.0 – 2026-10-08 – 📮 Gemeldete Änderungen sichtbar
+Hat ein Mitglied z. B. eine neue Anschrift gemeldet, steht in „Meine Daten“ und auf der eigenen Mitglieder-Seite: „📮 Von dir gemeldet – noch nicht eingetragen: Anschrift (ab …): 👍 freigegeben – wird in Kürze eingetragen“. Nach der Freigabe bekommt das Mitglied einmal eine Push-Nachricht. Nur Anzeige – eingetragen wird weiter im KC Manager. (KC-CLUB-AE-HINWEIS, KC-CLUB-AE-FREIGABE-PUSH, Server 2.88.0)
+
 ## 2.87.0 – 2026-10-08 – 🎙️ Sprachsteuerung Stufe 3
 Neue Sprachbefehle: „Ich komme zum Clubabend“ / „Ich kann nicht“ / „Vielleicht“ (Antwort für den nächsten Termin, nach Rückfrage), „Lies mir die neuen Nachrichten vor“ (sagt, wer geschrieben hat, und liest vor), „Was steht auf der Pinnwand?“ (liest die Zettel vor), „Ruf Klaus an“ (in der App, wenn online – sonst Telefon & WhatsApp), „Öffne den Ordner Verträge“. Alle auch in der 📋 Liste. (KC-CLUB-SPRACHE-STUFE3)
 

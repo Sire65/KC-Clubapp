@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.87.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.88.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -9925,11 +9925,24 @@ async function mdatStart() {
   const f = blattAuf("mdatBlatt", `<h3 style="margin:0">🔐 Meine Daten</h3><div id="mdatInhalt"><p class="hinweis">Wird geladen …</p></div>`);
   f.classList.add("sc-blatt");
   try { MDAT = await api("meine_daten", {}, { warten: true }); } catch (e) { $("mdatInhalt").innerHTML = `<div class="karte ta-st-nein">⚠️ ${esc(e?.message || "Nicht geladen")}</div><button class="knopf" onclick="fensterZu($('mdatBlatt'))">Schließen</button>`; return; }
-  $("mdatInhalt").innerHTML = `<p class="hinweis" style="margin:0 0 6px">Das ist gespeichert, was dich betrifft – nur du siehst diese Übersicht. Stand ${esc(zeitDe(MDAT.stand))}.</p>
+  const aeOffen = await aeOffenLaden(); // KC-CLUB-AE-HINWEIS (2.88.0)
+  $("mdatInhalt").innerHTML = `<p class="hinweis" style="margin:0 0 6px">Das ist gespeichert, was dich betrifft – nur du siehst diese Übersicht. Stand ${esc(zeitDe(MDAT.stand))}.</p>${aeOffenHtml(aeOffen)}
     ${mdatAbschnitte(MDAT).map(([t, z]) => `<div class="ps-schritt"><b>${esc(t)}</b><table class="vb-tabelle">${z.map(([a, v]) => `<tr><td>${esc(a)}</td><td>${esc(v)}</td></tr>`).join("")}</table></div>`).join("")}
     <p class="hinweis" style="margin:6px 0">Stimmt etwas nicht oder hat sich etwas geändert? → <b>„✏️ Meine Daten geändert?“</b> – dann kümmert sich die Clubleitung.</p>
     <div class="na-pfeil-knoepfe"><button class="knopf haupt" onclick="fensterZu($('mdatBlatt'));aeStart()">✏️ Änderung melden</button><button class="knopf" onclick="druckStarten('meinedaten')">🖨️ Drucken</button>
       <button class="knopf" onclick="mdatSichern()">💾 Als Datei sichern</button><button class="knopf" onclick="fensterZu($('mdatBlatt'))">Schließen</button></div>`;
+}
+// ---------- KC-CLUB-AE-HINWEIS (2.88.0, Wunsch Hansi): gemeldete, noch nicht eingetragene Änderungen sichtbar machen ----------
+// In „Meine Daten“ und auf der eigenen Mitglieder-Seite: „📮 Anschrift – freigegeben, wird in Kürze eingetragen“. Nur Anzeige – Stammdaten trägt der KC Manager ein.
+async function aeOffenLaden() {
+  try { const r = await api("aenderung_start"); const n = Object.fromEntries((r.arten || []).map((a) => [a.id, `${a.sym || ""} ${a.t || a.id}`.trim()]));
+    return (r.meine || []).filter((x) => ["offen", "freigegeben"].includes(x.status)).map((x) => ({ ...x, name: n[x.art] || x.art })); } catch { return []; }
+}
+function aeOffenHtml(liste) {
+  if (!liste?.length) return "";
+  const ab = (d) => d ? ` (ab ${String(d).slice(0, 10).split("-").reverse().join(".")})` : "";
+  return `<div class="karte ae-offen-hinweis"><b>📮 Von dir gemeldet – noch nicht eingetragen</b>${liste.map((x) => `<div>• ${esc(x.name)}${esc(ab(x.gilt_ab))}: ${x.status === "freigegeben" ? "👍 freigegeben – wird in Kürze eingetragen" : "⏳ gemeldet – wird geprüft"}</div>`).join("")}
+    <small class="hinweis">Bis dahin steht hier noch der bisherige Stand. Sobald es eingetragen ist, bekommst du Bescheid.</small></div>`;
 }
 function druckMeineDaten() {
   if (!MDAT) return null;
@@ -18993,6 +19006,7 @@ async function mitgliedOeffnen(pid, ausHistorie) {
 }
 function mitgliedZeigen() {
   if (MD && !MD.selbst) setTimeout(() => mgGemeinsameZeigen(MD.person_id), 0); // 2.23.100
+  if (MD?.selbst) aeOffenLaden().then((l) => { const z = $("mdAeHinweis"); if (z && MD?.selbst) z.innerHTML = aeOffenHtml(l); }); // KC-CLUB-AE-HINWEIS (2.88.0)
   const m = MD, k = m.kontakt || {}, fg = m.freigegeben;
   const nurIch = (f) => fg && !fg[f] ? `<small class="hinweis"> · 🔒 ${m.selbst ? "nicht freigegeben – nur du siehst das" : "nicht freigegeben – nur für dich als Admin"}</small>` : "";
   const zeile = (f, wert, knoepfe) => `<div class="zeile"><div style="flex:1"><div class="hinweis" style="font-size:.85rem">${KONTAKT_NAMEN[f]}${nurIch(f)}</div><b>${esc(wert)}</b></div>${knoepfe}</div>`;
@@ -19014,7 +19028,7 @@ function mitgliedZeigen() {
       <div class="hinweis" style="margin-top:4px">${m.status ? esc(statusText(m.status)) : ""}${m.geburtstag ? ` · 🎂 ${esc(m.geburtstag.slice(3) + "." + m.geburtstag.slice(0, 2) + ".")}` : ""}</div>
       ${m.zuletztDa ? `<div class="hinweis" style="margin-top:2px">${m.zuletztDa.online ? "🟢 gerade online" : "🕒 " + esc(zuletztText(m.zuletztDa).replace(/^zuletzt da/, "Zuletzt in der App:"))}</div>` : ""}
     </div>
-    <div class="karte">${zeilen}${leer}</div>
+    ${m.selbst ? '<div id="mdAeHinweis"></div>' : ""}<div class="karte">${zeilen}${leer}</div>
     ${m.selbst ? '<button class="knopf" onclick="aeStart()">✏️ Stimmt etwas nicht mehr? Änderung melden</button>' : ""}
     ${m.notfall ? `<div class="karte"><h3>🆘 Notfallkontakt</h3><div class="zeile"><div style="flex:1"><b>${esc(m.notfall.name || "–")}</b>${m.notfall.beziehung ? ` <span class="hinweis">(${esc(m.notfall.beziehung)})</span>` : ""}<div class="hinweis">${esc(m.notfall.telefon || "")}</div></div>${m.notfall.telefon ? `<a class="knopf klein" href="tel:${esc(nurZiffern(m.notfall.telefon))}">📞</a>` : ""}</div><p class="hinweis" style="font-size:.85rem;margin-bottom:0">🔒 Nur für ${m.selbst ? "dich und " : ""}Clubsprecher, Kassenwart und Admin sichtbar.</p></div>` : m.selbst ? '<p class="hinweis">🆘 Noch kein Notfallkontakt – eintragen unter ⚙️ Mehr → Privatsphäre.</p>' : ""}
     <div class="md-kacheln" id="mdKacheln">

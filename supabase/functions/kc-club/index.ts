@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.85.0";
+const SERVER_VERSION = "2.88.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -1104,6 +1104,22 @@ const aeDarfFreigeben = (ich: Ich, x: any) => ich.admin || ((x.empfaenger || [])
 const aeKenntnisVon = (x: any, pid: string) => (Array.isArray(x.kenntnis) ? x.kenntnis : []).some((k: any) => k.person_id === pid);
 // wartet auf mich? offen und (noch nicht zur Kenntnis genommen oder ich darf freigeben)
 const aeWartetAufMich = (ich: Ich, x: any) => x.status === "offen" && (!aeKenntnisVon(x, ich.person_id) || aeDarfFreigeben(ich, x));
+// KC-CLUB-AE-FREIGABE-PUSH (2.88.0, Wunsch Hansi): freigegeben → Mitglied bekommt einmal einen Push „freigegeben, wird in Kürze eingetragen“
+// (sonst schaut es immer wieder nach, warum „Meine Daten“ noch den alten Stand zeigt). Nur die Art, nie die Werte. Einmal je Meldung (Protokoll).
+async function aeFreigabeMelden() {
+  const seit = new Date(Date.now() - 14 * 86400000).toISOString();
+  const { data } = await db.from("kc_club_aenderungen").select("id,person_id,art,freigegeben_am").eq("status", "freigegeben").gte("freigegeben_am", seit).limit(20);
+  for (const x of data ?? []) {
+    const { count } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("aktion", "aenderung_freigabe_gemeldet").contains("details", { id: x.id });
+    if (count) continue;
+    const art = AENDERUNG.arten.find((a) => a.id === x.art); if (!art) continue;
+    await protokoll(x.person_id, "aenderung_freigabe_gemeldet", { id: x.id, art: x.art });
+    await sendenGewaehlt("club_nachricht", [x.person_id], ["push"], {
+      titel: `👍 Freigegeben: ${art.t}`, kurz: "Deine Änderung ist angekommen und freigegeben – sie wird in Kürze eingetragen.", betreff: `Köcheclub Werne – deine Änderung ist freigegeben: ${art.t}`,
+      text: `Hallo,\n\ndeine Änderung „${art.sym} ${art.t}“ ist angekommen und freigegeben. Eingetragen wird sie in Kürze – bis dahin zeigt „Meine Daten“ noch den bisherigen Stand. Sobald sie eingetragen ist, bekommst du nochmal Bescheid.\n\nViele Grüße\nKöcheclub Werne`, url: APP_URL,
+    }, `club-aenderung-freigegeben:${x.id}`).catch(() => null);
+  }
+}
 // Zeitplaner: hat ein KC-Programm „übernommen“ (oder „abgelehnt“) zurückgemeldet → Mitglied bekommt Bescheid, Ablage ins Archiv
 async function aeUebernahmeMelden() {
   const { data } = await db.from("kc_club_aenderungen").select("*").in("status", ["uebernommen", "abgelehnt"]).is("mitglied_informiert_am", null).limit(20);
@@ -4048,6 +4064,7 @@ Deno.serve(async (req) => {
       await adminAbwesendPruefen().catch((e) => console.error("admin abwesend", String(e))); // KC-CLUB-VERTRETUNG (2.2.0)
       await stadtAutoLauf().catch((e) => console.error("stadt termine", String(e)));
       await aeUebernahmeMelden().catch((e) => console.error("aenderung uebernahme", String(e)));
+      await aeFreigabeMelden().catch((e) => console.error("aenderung freigabe", String(e))); // KC-CLUB-AE-FREIGABE-PUSH (2.88.0)
       await wochenberichtLauf().catch((e) => console.error("wochenbericht", String(e))); // KC-CLUB-WOCHENBERICHT (2.23.81)
       await dbWarnungLauf().catch((e) => console.error("db warnung", String(e))); // KC-CLUB-DB-AUFRAEUMEN (2.24.7)
       await schulungNachfrageErinnern().catch((e) => console.error("schulung nachfrage", String(e))); // KC-CLUB-SCHULUNG-NACHFRAGE (2.35.0)
