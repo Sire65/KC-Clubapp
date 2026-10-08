@@ -6503,3 +6503,10 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/zuletzt \? fertig\(zuletzt\)/.test(f) && /e\.onend = \(\) => ende\(\(\) => zuletzt \? fertig\(zuletzt\)/.test(f), "mit dem bisher Gehörten weiter");
   assert.ok(/fpNeu\("sprache_haengt", \{ art, browser: fpBrowser\(\), system: fpSystem\(\), start: START_ART \}\)/.test(f) && !/fpNeu\("sprache_haengt"[^)]*zuletzt/.test(f), "nur die Art protokollieren, nie das Gesagte");
 }
+
+// 4xx. 2.99.0: Inkognito → eigenes Status-Feld pulsiert Gelb ↔ Rot (KC-CLUB-INKO-STATUS, Wunsch Hansi)
+{
+  assert.ok(/body\.inkognito #statusChip, body\.inkognito #meinStatusKnopf \{ animation: inkoStatusPuls 1\.2s ease-in-out infinite; \}/.test(seite), "Status-Feld pulsiert nur bei Inkognito");
+  assert.ok(/@keyframes inkoStatusPuls \{ 0%, 100% \{ background-color: #f1c40f;[^}]*\} 50% \{ background-color: #d32f2f;/.test(seite), "gelb ↔ rot");
+  assert.ok(/document\.body\.classList\.toggle\("inkognito", inkognitoAn\(\)\)/.test(programm) && /const inkognitoAn = \(\) => !!\(ICH\?\.admin && /.test(programm), "nur Admin mit Inkognito an");
+}

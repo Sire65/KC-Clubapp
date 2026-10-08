@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.99.0 – 2026-10-08 – 🕶️ Inkognito: Status-Feld pulsiert Gelb ↔ Rot (Admin)
+Ist Inkognito an, pulsiert jetzt auch das eigene Status-Feld von Gelb nach Rot – im Takt der Brille.
+
 ## 2.98.0 – 2026-10-08 – 🎙️ Sprachsteuerung bleibt nicht mehr hängen
 Auf manchen Geräten (z. B. iPad als Home-Bildschirm-App) meldete sich die Spracherkennung nie zurück und „Ich höre zu …“ blieb stehen. Jetzt bricht die App nach 6 bzw. 15 Sekunden von selbst ab – mit dem bisher Gehörten oder einem verständlichen Hinweis.
 
