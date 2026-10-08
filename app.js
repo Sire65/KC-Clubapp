@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.112.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.113.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -10879,6 +10879,7 @@ function neuLaden(vonHand) {
   return (NEU_LADEN_LAUF = lauf);
 }
 async function neuLadenRoh(vonHand) {
+  if (!INIT) sofortStart(); // KC-CLUB-SOFORTSTART (2.113.0): gespeicherten Stand sofort zeigen, frisch laden im Hintergrund
   try {
     const tInit = performance.now(); // KC-CLUB-STARTZEIT: nur die erste Anfrage nach dem Öffnen zählt
     INIT = await api("init", { fotosSeit: kzSeit("fotos"), dienstSeit: kzSeit("dienste") }, { warten: !!vonHand }); if (!START_MESS.initBis) { START_MESS.initAb = tInit; START_MESS.initBis = performance.now(); } /* KC-CLUB-KACHEL-ZAHLEN */ ICH = INIT.ich; einstOffenAnwenden(); /* 2.6.1: noch laufende Speicherungen nicht überschreiben */ adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); einwZeigen(aktuelleAnsicht); // KC-CLUB-KOPF-EINFACH
@@ -10912,24 +10913,40 @@ function standMerken() {
   try { const t = JSON.stringify({ zeit: Date.now(), person: ICH?.person_id, schluessel: KEY.slice(-8), init: INIT }); if (t.length < 400000) localStorage.setItem(STAND_KEY, t); } catch {}
 }
 function offlineStandLaden(e) {
+  if (INIT?._vorab) { // KC-CLUB-SOFORTSTART: der Sofort-Stand bleibt, wird aber ehrlich als „nicht aktuell“ markiert
+    INIT._vorab = false; offlineStandZeigen(true); if (!(e?.leitung || !navigator.onLine)) meldeFehler(e); return true; }
   if (INIT?._offline) { offlineStandZeigen(true); return true; } // schon im Offline-Stand: Hinweis bleibt, keine Fehlermeldung
   if (INIT || !(e?.leitung || !navigator.onLine)) return false;
-  let g = null; try { g = JSON.parse(localStorage.getItem(STAND_KEY) || "null"); } catch {}
+  return standZeigen(standLesen(), false);
+}
+const standLesen = () => { let g = null; try { g = JSON.parse(localStorage.getItem(STAND_KEY) || "null"); } catch {} return g; };
+// Gespeicherten Stand anzeigen – bei „kein Netz“ (vorab = false) und beim Sofort-Start (vorab = true). Gleicher Weg wie beim Laden.
+function standZeigen(g, vorab) {
   if (!g?.init?.ich || g.schluessel !== KEY.slice(-8)) return false; // nur der eigene Stand (anderer Link auf dem Gerät → nichts zeigen)
   try {
-    INIT = { ...g.init, _offline: g.zeit }; ICH = INIT.ich; adminNamenSetzen();
+    INIT = { ...g.init, _offline: g.zeit, _vorab: vorab }; ICH = INIT.ich; adminNamenSetzen();
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln); ansichtUebernehmen(INIT.einstellungen?.ansicht); designUebernehmen(INIT.einstellungen?.design);
     $("begruessung").textContent = "Hallo " + ICH.vorname + "!"; meinStatusZeigen();
     heroZeigen(); registerZeigen(); kachelnZeigen(); wichtigZeigen(); zaehlerZeigen();
   } catch {}
   offlineStandZeigen(true); if (ICH) startBereitLoesen(); return true;
 }
+// KC-CLUB-SOFORTSTART (2.113.0, Tempo-Check Wunsch Hansi): beim Öffnen sofort den zuletzt geladenen Stand zeigen (höchstens
+// SOFORT_MAX_MS alt, nur der eigene) – deutlich markiert „wird aktualisiert“ (AGENTS Regel 11), bis die frische Antwort ihn ersetzt.
+// Schreiben läuft wie immer direkt über den Server; nur das Anzeigen wartet nicht mehr auf die erste Antwort.
+const SOFORT_MAX_MS = 3 * 86400000;
+function sofortStart() {
+  const g = standLesen(); if (!g?.zeit || Date.now() - g.zeit > SOFORT_MAX_MS) return false;
+  try { return standZeigen(g, true); } catch { return false; }
+}
 function offlineStandZeigen(an) {
   let el = $("offlineStand");
   if (!an) { el?.remove(); if (INIT?._offline) INIT._offline = null; return; }
   if (!el) { el = document.createElement("div"); el.id = "offlineStand"; el.className = "karte offline-stand"; $("v-start").prepend(el); }
   const d = new Date(INIT._offline);
-  el.innerHTML = `📴 <b>Kein Netz – das ist dein Stand von ${esc(fKurz.format(d))} ${esc(fZeit.format(d))} Uhr.</b> Neues kommt, sobald du wieder Internet hast.`;
+  el.classList.toggle("vorab", !!INIT._vorab);
+  el.innerHTML = INIT._vorab ? `🔄 <b>Stand von ${esc(fKurz.format(d))} ${esc(fZeit.format(d))} Uhr</b> – wird gerade aktualisiert …`
+    : `📴 <b>Kein Netz – das ist dein Stand von ${esc(fKurz.format(d))} ${esc(fZeit.format(d))} Uhr.</b> Neues kommt, sobald du wieder Internet hast.`;
 }
 window.addEventListener("online", () => { if (KEY) neuLaden(); owSenden(); }); // 2.1.1: INIT nicht leeren – das Neuladen ersetzt den Offline-Stand
 // Nachrichten ohne Netz: nicht verlieren, sondern auf dem Gerät vormerken und bei Netz automatisch senden.
@@ -12427,13 +12444,13 @@ async function buEingangLaden() {
   const [l, v, h, pr, ar] = await Promise.allSettled([api("leihen_liste"), api("vorschlaege_liste"), api("hilfe_liste"),
     ICH?.protokolle === false ? Promise.reject(0) : api("protokolle_liste"), api("archiv_liste"),
     ICH?.vorstand || ICH?.admin ? aeEingangLaden() : Promise.reject(0), // KC-CLUB-AENDERUNG (2.22.8): Meldungen im Posteingang
-    ICH?.vorstand || ICH?.admin ? api("eingang_korb").then((k) => { BU_EIN.korb = k; }) : Promise.reject(0)]); // KC-CLUB-EINGANGSKORB (2.23.6)
+    ICH?.vorstand || ICH?.admin ? api("eingang_korb").then((k) => { BU_EIN.korb = k; }) : Promise.reject(0), // KC-CLUB-EINGANGSKORB (2.23.6)
+    api("buero_start").then((b) => { BU.start = b; })]); // KC-CLUB-TEMPO (2.113.0): gleichzeitig statt danach – eine Wartezeit weniger
   if (pr.status === "fulfilled") BU_EIN.protokolle = pr.value;
   if (ar.status === "fulfilled") { BU_EIN.archiv = ar.value; if (!AR.daten) AR.daten = ar.value; }
   if (l.status === "fulfilled") { BU_EIN.leihen = l.value; HL.leihen = l.value; }
   if (v.status === "fulfilled") { BU_EIN.vorschlaege = v.value.vorschlaege; VORSCHLAG_MAP = new Map(v.value.vorschlaege.map((x) => [x.id, x])); VORSCHLAG_TREFFEN = v.value.treffen; }
   if (h.status === "fulfilled") { BU_EIN.hilfe = h.value; HL.hilfe = h.value; }
-  try { BU.start = await api("buero_start"); } catch {}
   if (aktuelleAnsicht === "buero" && BU.sicht === "eingang") buZeigen();
 }
 // nach einer Aktion in einem Info-Fenster (genehmigen, unterstützen …) den Eingang auffrischen

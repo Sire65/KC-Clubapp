@@ -6664,3 +6664,17 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/if \(!d\.anhaenge\?\.length\) return einlZiel\(\[text\]/.test(f), "ohne Anhänge keine Frage");
   assert.ok(/await urlAlsDatei\(a\.url, a\.name, a\.mime\)/.test(f) && /async function urlAlsDatei\(url, name, mime\) \{\n  const r = await fetch\(url, \{ signal: zeitSignal\(60000\) \}\)/.test(programm), "Laden mit Zeitgrenze (gemeinsamer Datei-Weg)");
 }
+
+// 4xx. 2.113.0: Tempo-Check – Verzeichnisse (Indizes), Sofort-Start, Tempo-Log, Büro-Eingang gleichzeitig (KC-CLUB-TEMPO, KC-CLUB-SOFORTSTART)
+{
+  const m = lies("supabase/migrations/20261008_kc_club_tempo_indizes.sql");
+  assert.ok(/on public\.kc_club_protokoll \(aktion, zeit desc\)/.test(m) && /on public\.kc_club_protokoll \(person_id, aktion, zeit desc\)/.test(m) && /kc_club_person_einstellung \(schluessel\)/.test(m), "Verzeichnisse für die wachsende Protokoll-Tabelle");
+  assert.ok(!/\b(drop|delete|update|truncate|alter)\b/i.test(m.replace(/^--.*$/gm, "")), "nur neue Verzeichnisse, keine Datenänderung");
+  assert.ok((m.match(/create index if not exists kc_club_tempo_/g) || []).length >= 20, "alle mit kc_club_tempo_ (Rückweg)");
+  assert.ok(/const TEMPO_LOG_MS = 1500;/.test(server) && /if \(serverMs >= TEMPO_LOG_MS\) console\.log\(JSON\.stringify\(\{ tempo: txt\(a, 40\), ms: serverMs, anmeldungMs \}\)\);/.test(server), "Tempo-Log ohne Inhalte");
+  assert.ok(/if \(!INIT\) sofortStart\(\);/.test(programm) && /const SOFORT_MAX_MS = 3 \* 86400000;/.test(programm), "Sofort-Start");
+  assert.ok(/INIT = \{ \.\.\.g\.init, _offline: g\.zeit, _vorab: vorab \}/.test(programm) && /wird gerade aktualisiert …/.test(programm), "Sofort-Stand sichtbar markiert (nie als aktuell)");
+  assert.ok(/if \(INIT\?\._vorab\) \{[^\n]*\n[^\n]*INIT\._vorab = false; offlineStandZeigen\(true\);/.test(programm), "scheitert das Laden: als alter Stand markiert");
+  assert.ok(/if \(!INIT \|\| INIT\._offline\) return;/.test(programm), "Sofort-/Offline-Stand wird nie als frischer Stand gespeichert");
+  assert.ok(/api\("buero_start"\)\.then\(\(b\) => \{ BU\.start = b; \}\)\]\);/.test(programm) && !/try \{ BU\.start = await api\("buero_start"\); \} catch \{\}\n  if \(aktuelleAnsicht === "buero" && BU\.sicht === "eingang"\)/.test(programm), "Büro-Eingang: alles gleichzeitig");
+}

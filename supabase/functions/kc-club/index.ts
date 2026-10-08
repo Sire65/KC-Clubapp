@@ -42,7 +42,8 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.112.0";
+const SERVER_VERSION = "2.113.0";
+const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 10 * 60000; // 2.103.0: Live-Mitschauen endet nach 10 Min.
 // Beenden = Bild sofort vom Server löschen (KC-CLUB-MITSCHAUEN)
 async function ssBeenden(pid: string, w: any) {
@@ -4488,6 +4489,10 @@ Köcheclub Werne`,
     if (gesperrt) return json({ error: SPERRE_TEXT[gesperrt.art] || SPERRE_TEXT.wartung, gesperrt: gesperrt.art, bis: gesperrt.bis }, 423);
     const anmeldungMs = Date.now() - tAnm;
     const antwort = await aktionAusfuehren(a, p, ich, req, t0Anfrage, anmeldungMs);
+    // KC-CLUB-TEMPO (2.113.0, Wunsch Hansi „Tempo-Check“): langsame Vorgänge mit Namen und Dauer ins Server-Log (keine Inhalte,
+    // keine Personen) – so sieht man über die Tage, welche Stelle bremst. Keine Datenbank-Schreibung, kostet nichts.
+    const serverMs = Date.now() - t0Anfrage;
+    if (serverMs >= TEMPO_LOG_MS) console.log(JSON.stringify({ tempo: txt(a, 40), ms: serverMs, anmeldungMs }));
     return DB_AUS.n !== dbAusVorher ? dbWeg() : antwort; // KC-CLUB-DB-ZEITGRENZE: kein halbes Ergebnis
   } catch (e) {
     if (DB_AUS.n !== dbAusVorher) return dbWeg(); // KC-CLUB-DB-ZEITGRENZE

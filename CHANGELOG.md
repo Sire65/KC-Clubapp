@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.113.0 – 2026-10-08 – Tempo: Sofort-Start, Verzeichnisse, Tempo-Messung
+Die App zeigt beim Öffnen sofort den zuletzt geladenen Stand (markiert „wird gerade aktualisiert“) und lädt im Hintergrund frisch. Die Datenbank bekommt Verzeichnisse für die wachsende Protokoll-Tabelle und häufige Verknüpfungen. Der Server notiert langsame Vorgänge (nur Name und Dauer). Büro-Eingang lädt alles gleichzeitig (KC-CLUB-TEMPO, KC-CLUB-SOFORTSTART).
+
 ## 2.112.0 – 2026-10-08 – Einlesen aus dem Eingang: Anhänge mitschicken?
 Gehören zu einem Vorgang aus dem Eingang Belege oder Bilder (z. B. bei einer Erstattung), fragt die App, welche mitgeschickt bzw. mit abgelegt werden sollen – Häkchen je Anhang. Mail aus dem Büro: bis zu 10 Dateien (KC-CLUB-BUERO-EINLESEN-EINGANG).
 
