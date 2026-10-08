@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.95.0 – 2026-10-08 – 🧭 Browser-Meldungen im Fehlerprotokoll grau
+„Script error.“ ohne Fundstelle kommt vom Browser selbst (z. B. Safari) und steht jetzt grau als „Browser-Meldung“ statt gelb als Programmfehler.
+
 ## 2.94.0 – 2026-10-08 – 🆘 Notfallkontakt: Hinweis „eine andere Person eintragen“
 Beim Notfallkontakt steht jetzt deutlich: bitte nicht sich selbst eintragen, sondern eine andere Person, die im Notfall benachrichtigt werden soll. Trägt man doch den eigenen Namen oder die eigene Nummer ein, fragt die App nach.
 

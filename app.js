@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.94.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.95.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -21174,7 +21174,9 @@ async function fpAdmin(tage) {
   const nurStarts = (x) => x.aktion === "diagnose_start";
   const gruppen = new Map();
   for (const x of r.eintraege) { const k = x.name || `anonym ${x.details?.geraet || ""}`; if (!gruppen.has(k)) gruppen.set(k, []); gruppen.get(k).push(x); }
-  const zeile = (x) => { const art = fpArtVon(x.aktion), [sym, name, tun] = FP_ARTEN[art] || ["•", art, ""], d = x.details || {};
+  const zeile = (x) => { const art = fpArtVon(x.aktion), d = x.details || {};
+    // 2.95.0 KC-CLUB-FP-SAFARI-GRAU: „Script error.“ ohne Fundstelle = Meldung des Browsers, kein Fehler der App
+    const [sym, name, tun] = art === "skript" && x.stufe === "info" ? ["🧭", "Browser-Meldung", "kommt vom Browser selbst (z. B. Safari-Teilen-Menü) – kein Fehler der App, nichts zu tun"] : FP_ARTEN[art] || ["•", art, ""];
     const info = [d.text, d.aktion ? "bei „" + d.aktion + "“" : "", d.browser, d.system, d.start ? "läuft als " + d.start : "", d.version ? "v" + d.version : "", d.datei ? d.datei + ":" + d.zeile : ""].filter(Boolean).join(" · ");
     return `<div class="fp-zeile${x.stufe === "schwer" || art === "hilferuf" ? " fp-rot" : ""}"><span class="hinweis">${esc(fKurz.format(new Date(x.zeit)) + " " + fZeit.format(new Date(x.zeit)))}</span> ${FP_STUFE_ZEICHEN[x.stufe] || ""} ${sym} <b>${esc(name)}</b>${info ? `<div class="hinweis">${esc(info)}</div>` : ""}${tun ? `<div class="hinweis" style="font-style:italic">→ ${esc(tun)}</div>` : ""}</div>`; };
   const karten = [...gruppen.entries()].map(([name, liste]) => { const probleme = liste.filter((x) => x.stufe ? x.stufe !== "info" : !nurStarts(x) && !/umgebung|hinweis|update_getippt|link_kopiert/.test(x.aktion));

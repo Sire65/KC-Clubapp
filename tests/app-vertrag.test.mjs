@@ -2595,10 +2595,10 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 228. 1.58.0: Fehlerprotokoll einstufen, leeren, überwachen (KC-CLUB-FP-UEBERWACHUNG)
 {
   const srv = lies("supabase/functions/kc-club/index.ts");
-  const def = srv.slice(srv.indexOf("const FP_SCHWER"), srv.indexOf("async function fpZaehlen(")).replace(/: "schwer" \| "hinweis" \| "info"/, "").replace(/\(aktion: string, d: any\)/, "(aktion, d)");
+  const def = srv.slice(srv.indexOf("const FP_SCHWER"), srv.indexOf("async function fpZaehlen(")).replace(/: "schwer" \| "hinweis" \| "info"/, "").replace(/\(aktion: string, d: any\)/, "(aktion, d)").replace(/: any/g, "");
   const fpStufe = new Function(`${def}; return fpStufe;`)();
   assert.equal(fpStufe("hilferuf", {}), "schwer"); assert.equal(fpStufe("fehler_anonym_start_kaputt", {}), "schwer");
-  assert.equal(fpStufe("fehler_skript", { text: "Script error." }), "hinweis", "Safari ohne Einzelheiten nur Hinweis");
+  assert.equal(fpStufe("fehler_skript", { text: "Script error." }), "info", "Safari ohne Einzelheiten nur Info (seit 2.95.0 grau, Wunsch Hansi)");
   assert.equal(fpStufe("fehler_skript", { text: "x is not defined" }), "schwer");
   assert.equal(fpStufe("fehler_sicherheit", { probleme: [] }), "info"); assert.equal(fpStufe("fehler_sicherheit", { probleme: ["a"] }), "schwer");
   for (const a of ["fehler_alte_version", "fehler_update_getippt", "diagnose_start", "fehler_umgebung"]) assert.equal(fpStufe(a, {}), "info", a);
@@ -6465,4 +6465,15 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/hinweis: "Bitte NICHT dich selbst eintragen/.test(server) && /\$\{art\.hinweis \? `<div class="karte ae-art-hinweis">/.test(programm), "Hinweis aus dem Register in der Änderungsmeldung");
   assert.ok(/Bitte <b>nicht dich selbst<\/b> eintragen/.test(seite), "Hinweis in den Einstellungen");
   assert.ok(/art\.id === "notfall" && nfIstSelbst\(neu,/.test(programm) && /if \(nfIstSelbst\(d, /.test(programm), "Nachfrage an beiden Stellen");
+}
+
+// 4xx. 2.95.0: „Script error.“ ohne Fundstelle = Browser-Meldung → grau (KC-CLUB-FP-SAFARI-GRAU, Wunsch Hansi)
+{
+  const a = server.indexOf("const fpNurBrowser = "), b = server.indexOf("async function fpZaehlen()");
+  const code = server.slice(a, b).replace(/: any/g, "").replace(/\): "schwer" \| "hinweis" \| "info"/, ")").replace(/aktion: string/, "aktion");
+  const fpStufe = new Function("FP_SCHWER", "FP_INFO", code + "\nreturn fpStufe;")(new Set(["start_kaputt"]), new Set(["umgebung"]));
+  assert.equal(fpStufe("fehler_skript", { text: "Script error.", datei: "", zeile: 0, stapel: "" }), "info", "ohne Fundstelle → grau");
+  assert.equal(fpStufe("fehler_skript", { text: "Script error.", datei: "app.js", zeile: 12 }), "hinweis", "mit Fundstelle bleibt gelb");
+  assert.equal(fpStufe("fehler_skript", { text: "TypeError: x is undefined", datei: "app.js", zeile: 3 }), "schwer", "echte Fehler bleiben rot");
+  assert.ok(/art === "skript" && x\.stufe === "info" \? \["🧭", "Browser-Meldung"/.test(programm), "eigene Beschriftung");
 }

@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.94.0";
+const SERVER_VERSION = "2.95.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -354,10 +354,12 @@ const FP_FILTER = "aktion.like.fehler_%,aktion.eq.hilferuf,aktion.eq.diagnose_st
 const FP_SCHWER = new Set(["hilferuf", "hilferuf_anonym", "start_kaputt"]);
 const FP_INFO = new Set(["alte_version", "update_getippt", "umgebung", "startzeit", "hinweis", "link_kopiert", "diagnose_start", "zugang_angefordert", "offline", "anonym_admin_benachrichtigt"]);
 const FP_VOLL = 300; // ab so vielen Einträgen fragt die Tagesinfo, ob geleert werden soll
+const fpNurBrowser = (d: any) => /^Script error\.?$/i.test(String(d?.text ?? "").trim()) && !d?.datei && !Number(d?.zeile) && !String(d?.stapel ?? "").trim();
 function fpStufe(aktion: string, d: any): "schwer" | "hinweis" | "info" {
   const art = String(aktion).replace(/^fehler_anonym_/, "").replace(/^fehler_/, "");
   if (FP_SCHWER.has(art)) return "schwer";
-  if (art === "skript") return /^Script error\.?$/i.test(String(d?.text ?? "").trim()) ? "hinweis" : "schwer";
+  // 2.95.0 KC-CLUB-FP-SAFARI-GRAU (Wunsch Hansi): „Script error.“ ganz ohne Datei/Zeile/Stapel kommt vom Browser selbst (z. B. Safari-Teilen-Menü) → grau (Info)
+  if (art === "skript") return fpNurBrowser(d) ? "info" : /^Script error\.?$/i.test(String(d?.text ?? "").trim()) ? "hinweis" : "schwer";
   if (art === "sicherheit") return Array.isArray(d?.probleme) && d.probleme.length ? "schwer" : "info";
   return FP_INFO.has(art) ? "info" : "hinweis";
 }
