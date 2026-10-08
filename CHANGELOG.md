@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.119.0 – 2026-10-08 – Kein Stau beim Tippen
+Bei langsamem Netz stauten sich die „schreibt …“-Meldungen und bremsten danach Chat und Senden. Jetzt ist immer nur eine unterwegs (KC-CLUB-TEMPO).
+Vorbereitet als 2.115.0 (Zweig claude/aenderungsmeldung); live als 2.119.0, weil 2.116.0 und 2.118.0 (Schach) schon vorher live gingen.
+
 ## 2.118.0 – 2026-10-08 – 🧑‍🍳 Twinkey: viele neue Schach-Sprüche, 📼 Partien nachspielen (Wunsch Hansi)
 Twinkey hat je Spiellage mehr Sprüche (6–9 statt 2–4) – frech im Stil bekannter Schach-Figuren aus Lern-Apps, aber eigene
 Küchen-Sprüche: „Meine Dame! Was wird bloß mein Küchenchef dazu sagen?“, „Ich hol mir jetzt die Kochmütze – Schach!“,
