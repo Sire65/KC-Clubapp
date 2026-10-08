@@ -2420,6 +2420,7 @@
   .bl-buehne.zurueck .bl-seite { animation: blZurueck .38s ease-out; transform-origin: right center; }
   @media (prefers-reduced-motion: reduce) { .bl-buehne.vor .bl-seite, .bl-buehne.zurueck .bl-seite { animation-duration: .12s; } }
   .ar-blaettern { width: 100%; margin: 4px 0 8px; min-height: 48px; }
+  .spur-on { border: 2px solid #1e8449 !important; } .spur-jetzt { color: #1e8449; font-weight: 700; } /* 2.81.0 KC-CLUB-SPUR-LIVE */
   .abl-vorschlag { border: 2px solid #2e7d4f; background: rgba(46,125,79,.08); margin: 0 0 4px; font-size: 1.02rem; } /* 2.80.0 KC-CLUB-ABLAGE-VORSCHLAG */
   .ar-anleitung summary { cursor: pointer; } .ar-anl { margin: 8px 0 0; padding-left: 22px; } .ar-anl li { margin: 4px 0; }
   .ar-dok .ar-weg { align-self: center; padding: 4px 8px; }
@@ -2791,7 +2792,7 @@
     <div class="kopf2"><button class="zurueck" onclick="zurueck('start')" aria-label="Zurück">‹</button><h2>💶 Erstattung beantragen</h2><button type="button" class="druckknopf" title="Erstattungsantrag drucken / als PDF" aria-label="Drucken" onclick="druckStarten('erstattung')" id="druckErstattung"></button></div>
     <div id="ersHinweis"></div>
     <div class="karte todoform"><b>1. Was möchtest du erstattet haben?</b>
-      <div class="umschalter modus3" id="ersArt" style="margin:0"><button data-a="fahrt" onclick="erstattungArt('fahrt')">🚗 Fahrt&shy;kosten</button><button data-a="einkauf" onclick="erstattungArt('einkauf')">🛒 Einkauf vorgestreckt</button><button data-a="sonstiges" onclick="erstattungArt('sonstiges')">📦 Sonstiges</button></div>
+      <div class="umschalter modus3" id="ersArt" style="margin:0"><button data-a="fahrt" onclick="erstattungArt('fahrt', true)">🚗 Fahrt&shy;kosten</button><button data-a="einkauf" onclick="erstattungArt('einkauf', true)">🛒 Einkauf vorgestreckt</button><button data-a="sonstiges" onclick="erstattungArt('sonstiges', true)">📦 Sonstiges</button></div>
       <div id="ersForm"></div>
       <button class="knopf" onclick="erstattungHinzu()">＋ Position hinzufügen</button></div>
     <div class="karte"><b>2. Deine Positionen</b><div id="ersListe" style="margin-top:6px"></div></div>
@@ -3434,6 +3435,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.80.0" data-v="2.80.0"></script>
+<script src="app.js?v=2.81.0" data-v="2.81.0"></script>
 </body>
 </html>

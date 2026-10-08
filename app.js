@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.80.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.81.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -1961,6 +1961,43 @@ const SH_ABLAEUFE = {
       .map(([teil, t, nur]) => ({ id: "teil-" + teil, ziel: `#avbInhalt [data-teil="${teil}"]`, t: t + " – oben siehst du es sofort", wenn: nur, fertig: () => true, weiter: true })),
     { id: "los", ziel: '#avbInhalt .bs-fuss .knopf.haupt', t: "Fertig? Tippe unten auf „💾 Speichern“. Nase, Mund, Wangen & Co. findest du zwischendurch auch noch", fertig: () => false, ende: true, lob: "Deine eigene Figur ist gespeichert." },
   ],
+  // 2.81.0 Erstattung (Wunsch Hansi): Art → Datum → Fahrt (km, Grund, Ziel) oder Einkauf/Sonstiges (Betrag, was, Geschäft, Beleg) → Position
+  // hinzufügen → Auszahlung → Bemerkung → senden. Nach der ersten Position springt die Hilfe weiter (weitere Positionen gehen jederzeit).
+  erstattung: [
+    { id: "art", ruhe: true, ziel: "#ersArt", t: "Was möchtest du erstattet haben? Tippe 🚗 Fahrtkosten, 🛒 Einkauf vorgestreckt oder Sonstiges an", wenn: () => !ERS.gewaehlt && !ERS.pos.length, fertig: () => false },
+    { id: "datum", ziel: "#ersDatum", t: "Wann war das? Datum prüfen – zum Ändern hineintippen", wenn: () => shErsForm(), fertig: () => !!$("ersDatum")?.value, weiter: true },
+    { id: "km", ziel: "#ersKm", t: "Wie viele Kilometer bist du gefahren – hin und zurück zusammen?", wenn: () => shErsForm() && ERS.art === "fahrt", fertig: () => Number(String($("ersKm")?.value || "").replace(",", ".")) > 0, weiter: true },
+    { id: "grund", ziel: "#ersGrundWahl", t: "Grund der Fahrt auswählen – oder „✏️ Anderer Grund …“", wenn: () => shErsForm() && ERS.art === "fahrt", fertig: () => !!$("ersGrund")?.value.trim(), weiter: true },
+    { id: "ziel", ziel: "#ersZiel", t: "Wohin ging die Fahrt? Freiwillig – leer lassen geht auch", wenn: () => shErsForm() && ERS.art === "fahrt", fertig: () => true, weiter: true },
+    { id: "betrag", ziel: "#ersBetrag", t: "Wie viel Euro hast du ausgelegt? z. B. 23,90", wenn: () => shErsForm() && ERS.art !== "fahrt", fertig: () => Number(String($("ersBetrag")?.value || "").replace(",", ".")) > 0, weiter: true },
+    { id: "was", ziel: "#ersWas", t: () => ERS.art === "einkauf" ? "Was wurde eingekauft? z. B. „Getränke für die Sitzung“" : "Wofür war die Auslage? z. B. „Parkgebühr“", wenn: () => shErsForm() && ERS.art !== "fahrt", fertig: () => !!$("ersWas")?.value.trim(), weiter: true },
+    { id: "geschaeft", ziel: "#ersGeschaeft", t: "In welchem Geschäft? Freiwillig", wenn: () => shErsForm() && ERS.art === "einkauf", fertig: () => true, weiter: true },
+    { id: "beleg", ziel: "#ersForm .belegfeld", t: "📷 Beleg fotografieren oder 📁 Datei wählen – freiwillig, hilft aber dem Kassenwart", wenn: () => shErsForm() && ERS.art !== "fahrt", fertig: () => !ERS.belege.some((b) => b.laedt), weiter: true },
+    { id: "hinzu", ziel: '#v-erstattung [onclick="erstattungHinzu()"]', t: "Tippe auf „＋ Position hinzufügen“ – sie erscheint dann unter „2. Deine Positionen“", wenn: () => shErsForm(), fertig: () => false },
+    { id: "auszahlung", ziel: "#ersAuszahlung", t: "Wie möchtest du das Geld bekommen? 🏦 Überweisung oder 💶 Bar. Noch etwas dazu? Oben einfach die nächste Position eintragen", wenn: () => !shErsForm(), waehlen: true },
+    { id: "bemerkung", ziel: "#ersBemerkung", t: "Bemerkung – freiwillig, z. B. „Kontodaten hat der Kassenwart“", wenn: () => !shErsForm(), fertig: () => true, weiter: true },
+    { id: "los", ziel: "#ersSendenKnopf", t: "Tippe auf „📨 Antrag senden“ – Kassenwart und Clubsprecher bekommen ihn per Mail, du eine Kopie", wenn: () => !shErsForm(), fertig: () => false, ende: true, lob: "Dein Antrag ist unterwegs – du bekommst eine Kopie per Mail." },
+  ],
+  // 2.81.0 Archiv: Regal → Ordner → Dokument ablegen (eigenes Fenster) · Ablage-Vorschlag (Fenster „Wohin damit?“)
+  archiv: [
+    { id: "regal", ruhe: true, ziel: "#arListe .regal", t: "Tippe einen Ordner an, um ihn zu öffnen. 👤 Dein eigener Ordner ist nur für dich. Suchen geht oben im Feld 🔍", wenn: () => !AR.ordner && !AR.korb && !!$("arListe"), fertig: () => false },
+    { id: "ordner-neu", ruhe: true, ziel: '#arInhalt [onclick="arDokForm()"]', t: "Neues Dokument hineinlegen? Tippe auf „＋ Dokument“ bzw. „📥“. Ansehen: oben ein Register antippen, dann ein Dokument", wenn: () => !!AR.ordner && !!document.querySelector('#arInhalt [onclick="arDokForm()"]'), fertig: () => false },
+    { id: "ordner-lesen", ruhe: true, ziel: "#arInhalt .ar-register", t: "Tippe oben ein Register an – darunter stehen seine Dokumente. Antippen öffnet ein Dokument, „📖 Blättern“ zeigt alles wie ein Buch", wenn: () => !!AR.ordner && !document.querySelector('#arInhalt [onclick="arDokForm()"]'), fertig: () => false },
+  ],
+  archivDok: [
+    { id: "datei", start: true, ziel: "#arFenster .knoepfe", t: "📄 Datei wählen – oder 📷 ein Papier mit dem Handy fotografieren", fertig: () => !!AR.datei },
+    { id: "titel", ziel: "#arDokTitel", t: "Titel – steht schon da, wenn du magst, verbessern. z. B. „Mietvertrag Vereinsheim“", fertig: () => !!$("arDokTitel")?.value.trim(), weiter: true },
+    { id: "register", ziel: "#arFenster .zwei", t: "Datum prüfen und Register wählen – 💡 das passende Register ist schon vorgewählt", fertig: () => true, weiter: true },
+    { id: "beschr", ziel: "#arDokBeschr", t: "Beschreibung – freiwillig", fertig: () => true, weiter: true },
+    { id: "stich", ziel: "#arDokStich", t: "Stichworte – freiwillig, helfen beim Suchen", fertig: () => true, weiter: true },
+    { id: "los", ziel: "#arFenster .knoepfe .knopf.haupt", t: "Tippe auf „📥 Ablegen“", fertig: () => false, ende: true, lob: "Dein Dokument liegt jetzt im Ordner." },
+  ],
+  ablage: [
+    { id: "vorschlag", ziel: "#ablageBlatt .abl-vorschlag", t: "Das ist mein Vorschlag, wohin es gehört. Passt das? Dann unten „✅ Ja, dort ablegen“", wenn: () => !!$("ablageBlatt")?.querySelector(".abl-vorschlag"), fertig: () => true, weiter: true },
+    { id: "ordner", ziel: "#ablOrdner", t: "Anderer Ordner? Hier auswählen", waehlen: true },
+    { id: "reg", ziel: "#ablReg", t: "Und das Register wählen", waehlen: true },
+    { id: "los", ziel: "#ablJa", t: "Tippe auf den roten Knopf – dann liegt es im Archiv. Nicht ablegen: „Nein, danke“", fertig: () => false, ende: true, lob: "Es liegt jetzt im Archiv." },
+  ],
   gruppe: [
     { id: "name", ziel: "#grName", t: "Gib der Gruppe einen Namen, z. B. „Grillabend“", fertig: () => !!$("grName").value.trim(), weiter: true },
     { id: "symbol", ziel: "#grSymbole", t: "Such ein Symbol für die Gruppe aus", waehlen: true },
@@ -1983,8 +2020,10 @@ const SH_FENSTER = [
   { offen: () => !!$("vfAuswahlBlatt"), ziel: "#vfAuswahlBlatt .blatt-innen", t: "Hake an, wer abstimmen soll – dann unten auf „Übernehmen“ tippen" },
 ];
 // 2.73.0 Fenster mit eigenem Ablauf (gehen vor der Seite): offen = Ablauf aktiv, zu = zurück zur Seite
-const SH_FENSTER_ABLAEUFE = [["avbBlatt", "avatarBauen"], ["avBlatt", "avatar"]];
-const shAblaufKey = () => SH_FENSTER_ABLAEUFE.find(([id]) => $(id))?.[1] || (SH_ABLAEUFE[aktuelleAnsicht] ? aktuelleAnsicht : null);
+// 2.81.0: statt Fenster-ID geht auch eine Prüfung (z. B. nur das Formular „Dokument ablegen“, nicht jedes Archiv-Fenster)
+const SH_FENSTER_ABLAEUFE = [["avbBlatt", "avatarBauen"], ["avBlatt", "avatar"], ["ablageBlatt", "ablage"], [() => !!$("arDateiEin"), "archivDok"]];
+const shAblaufKey = () => SH_FENSTER_ABLAEUFE.find(([id]) => (typeof id === "function" ? id() : $(id)))?.[1] || (SH_ABLAEUFE[aktuelleAnsicht] ? aktuelleAnsicht : null);
+const shErsForm = () => !ERS.pos.length || !!($("ersKm")?.value || $("ersBetrag")?.value || $("ersWas")?.value); // Erstattung: Formular dran?
 // Termine: welches Formular ist offen? (ohne Fenster „＋ Neu“ / Termin-Info)
 const shTmForm = (id, feld) => !!$(id) && !$(id).classList.contains("versteckt") && (!feld || !!$(feld));
 const shTmOffen = () => !!$("neuWahlBlatt") || !!$("treffenInfo") || shTmForm("treffenForm") || shTmForm("terminanfrageForm") || shTmForm("terminumfrageForm");
@@ -6598,8 +6637,8 @@ async function erstattungLaden() {
   } catch (e) { meldeFehler(e); }
   erstattungZeigen();
 }
-function erstattungArt(art) {
-  ERS.art = art; ERS.belege = [];
+function erstattungArt(art, getippt) {
+  ERS.art = art; ERS.belege = []; if (getippt) ERS.gewaehlt = true; // 2.81.0: für die Schritt-Hilfe – Art selbst gewählt?
   document.querySelectorAll("#ersArt button").forEach((b) => b.classList.toggle("an", b.dataset.a === art));
   const heute = heuteIso(), beleg = `<div class="feld belegfeld">Belege (freiwillig, bis ${BELEG_MAX})
        <div class="knopfreihe belegknoepfe"><button type="button" class="knopf klein" onclick="$('ersFoto').click()">📷 Foto aufnehmen</button><button type="button" class="knopf klein" onclick="$('ersDatei').click()">📁 Datei wählen</button></div>
@@ -6710,7 +6749,7 @@ async function erstattungSenden() {
   try {
     const kopie = { pos: ERS.pos.slice(), auszahlung: ERS.auszahlung, bemerkung: $("ersBemerkung").value.trim() };
     const r = await api("erstattung_senden", { positionen: ERS.pos.map(({ belegNamen, belegDateien, satz, ...x }) => x), auszahlung: ERS.auszahlung, bemerkung: kopie.bemerkung });
-    ERS.pos = []; $("ersBemerkung").value = ""; erstattungZeigen();
+    ERS.pos = []; ERS.gewaehlt = false; $("ersBemerkung").value = ""; erstattungZeigen();
     melde(`📨 Antrag über ${eur(r.summe)} verschickt an ${[...r.an, ...r.cc].join(" und ")} – du bekommst eine Kopie per Mail.`);
     erstattungLaden();
     erstattungAblageFragen(kopie, r); // KC-CLUB-ARCHIV-ABLAGE (1.18.0): erst nach erfolgreichem Versand
@@ -20412,20 +20451,26 @@ function spur(w, mit) {
     SPUR.push(mit ? [Date.now(), String(w), String(mit)] : [Date.now(), String(w)]);
     if (SPUR.length > SPUR_MAX) SPUR = SPUR.slice(-SPUR_MAX);
     spurSchreiben();
+    spurBaldSenden(); // KC-CLUB-SPUR-LIVE (2.81.0)
   } catch {}
 }
+let SPUR_LAEUFT = false, SPUR_BALD = null;
 async function spurSenden() {
-  if (!INIT || !SPUR.length) return;
-  const teil = SPUR.slice(0, 200);
+  if (!INIT || !SPUR.length || SPUR_LAEUFT) return; // 2.81.0: nie zwei Sendungen gleichzeitig (sonst doppelte Schritte)
+  SPUR_LAEUFT = true; const teil = SPUR.slice(0, 200);
   try { await api("spur_melden", { s: teil }); SPUR = SPUR.slice(teil.length); spurSchreiben(); } catch {} // ohne Netz: beim nächsten Mal
+  finally { SPUR_LAEUFT = false; }
 }
+// KC-CLUB-SPUR-LIVE (2.81.0, Wunsch Hansi „schnell sehen, wenn gerade einer drin ist“): neue Schritte schon nach 15 s schicken
+// (gebündelt – ein Aufruf je Ruhepause), nicht erst beim 2-Minuten-Takt. Im Sparmodus bleibt es beim langen Takt.
+function spurBaldSenden() { if (SPAR.an || document.hidden) return; clearTimeout(SPUR_BALD); SPUR_BALD = setTimeout(spurSenden, 15000); }
 setInterval(spurSenden, sparTakt(NZ_TAKT_MS));
 document.addEventListener("visibilitychange", () => { if (document.hidden) spurSenden(); });
 const SPUR_WAS = { vorfuehren: "📺 Live zeigen gestartet", vorfuehren_zuschauen: "📺 Bei Live zeigen zugeschaut", fitness: "🏋️ Fit bleiben geöffnet", probe_gesetzt: "🧪 Probephase gestartet/verlängert", probe_uebernommen: "✅ Probephase übernommen", probe_beendet: "🚪 Probephase beendet", geoeffnet: "📲 App geöffnet", mitglied: "👤 Mitglied angesehen", chat: "💬 Unterhaltung geöffnet", gesendet: "✉️ Nachricht gesendet", gesendet_anlage: "📎 Nachricht mit Anhang gesendet",
   anruf: "📞 Anruf (App) an", video: "🎥 Videoanruf an", anklopfen: "👋 Angeklopft bei", telefon: "☎️ Telefonnummer angetippt", whatsapp: "🟢 WhatsApp geöffnet", mail: "✉️ E-Mail-Adresse angetippt", meine_statistik: "📊 Eigene Nachrichten-Statistik angesehen",
   mein_bild: "🧑‍🍳 „Mein Bild“ geöffnet", bild_gewaehlt: "🧑‍🍳 Koch-Figur als Bild gewählt", bild_gebaut: "🧩 Eigene Figur gespeichert", bild_foto: "📷 Eigenes Foto als Bild gesetzt", bild_entfernt: "🧑‍🍳 Bild entfernt (Buchstaben)", avatar_kombi: "ⓘ Figuren-Möglichkeiten angesehen", jacke_auto_an: "🔄 Kochjacke täglich wechselnd eingeschaltet", jacke_auto_aus: "🔄 Kochjacke täglich wechselnd ausgeschaltet",
   sprache_start: "🎙️ Sprache: Startseite", sprache_zurueck: "🎙️ Sprache: zurück", sprache_pinnwand: "🎙️ Sprache: neuer Zettel", sprache_nachricht: "🎙️ Sprache: neue Nachricht", sprache_termine: "🎙️ Sprache: Termine", sprache_naechster: "🎙️ Sprache: nächster Termin", sprache_suche: "🎙️ Sprache: Suche", sprache_hilfe: "🎙️ Sprache: Hilfe", sprache_unklar: "🎙️ Sprache: nicht verstanden", sensibel_gaeste_frage: "⚠️ Vertrauliches an Nicht-Mitglieder: nachgefragt", inhaltsverzeichnis: "🗂️ Inhaltsverzeichnis gedruckt" }; // KC-CLUB-SPRACHSTEUERUNG (2.75.0)
-const SPW = { tag: null, person: null };
+const SPW = { tag: null, person: null, uhr: null };
 async function spurAdmin(tag, person) {
   SPW.tag = tag || SPW.tag || heuteIso(); SPW.person = person === undefined ? SPW.person : person;
   let r; try { r = await api("spur_liste", { tag: SPW.tag, ...(SPW.person ? { person_id: SPW.person } : {}) }, { warten: true }); } catch (e) { return meldeFehler(e); }
@@ -20435,16 +20480,23 @@ async function spurAdmin(tag, person) {
   const kopf = `<div class="spur-kopf"><h3 style="margin:0;flex:1">👣 Wege der Mitglieder</h3><button class="rund spur-neu" title="Aktualisieren" aria-label="Wege aktualisieren" onclick="spurNeu(this)">↻</button></div>
     <p class="hinweis" style="margin:0">Was geöffnet wurde und mit wem – mit Uhrzeit, <b>ohne Inhalte</b>. Nur du siehst das; nach 30 Tagen wird es gelöscht.</p>
     <select onchange="spurAdmin(this.value, null)" aria-label="Tag">${tage.map((t) => `<option value="${t}"${t === SPW.tag ? " selected" : ""}>${tagText(t)}</option>`).join("")}</select>`;
-  const fuss = `<div class="knoepfe">${SPW.person ? `<button class="knopf" onclick="spurAdmin(null, null)">‹ Alle an diesem Tag</button>` : ""}<button class="knopf" onclick="nzAdmin()">‹ Nutzung</button></div>`;
+  const heuteDa = SPW.tag === tage[0];
+  const fuss = `${heuteDa ? `<p class="hinweis" style="margin:8px 0 0">⚡ Stand ${esc(new Date().toLocaleTimeString("de-DE"))} · aktualisiert sich alle 20 Sekunden von selbst, solange dieses Fenster offen ist</p>` : ""}<div class="knoepfe">${SPW.person ? `<button class="knopf" onclick="spurAdmin(null, null)">‹ Alle an diesem Tag</button>` : ""}<button class="knopf" onclick="nzAdmin()">‹ Nutzung</button></div>`;
   let inhalt;
   if (!SPW.person) {
-    inhalt = r.personen.length ? `<div style="display:grid;gap:6px">${r.personen.map((x) => `<button class="knopf" style="text-align:left" onclick="spurAdmin(null, '${esc(x.person_id)}')"><b>${esc(x.name)}</b> <small class="hinweis">· ${x.anzahl} Schritte · ${esc(zeitKurz(x.erste))}–${esc(zeitKurz(x.letzte))} Uhr</small></button>`).join("")}</div>`
+    // KC-CLUB-SPUR-LIVE (2.81.0): wer gerade in der App ist, steht oben mit 🟢 (Quelle: Online-Takt – Verborgene erscheinen nie als online)
+    const on = (id) => heuteDa && ONL.stand && Date.now() - ONL.stand < 3 * 60000 && ONL.ids.has(id);
+    const liste = [...r.personen].sort((a, b) => on(b.person_id) - on(a.person_id));
+    inhalt = liste.length ? `<div style="display:grid;gap:6px">${liste.map((x) => `<button class="knopf${on(x.person_id) ? " spur-on" : ""}" style="text-align:left" onclick="spurAdmin(null, '${esc(x.person_id)}')">${on(x.person_id) ? "🟢 " : ""}<b>${esc(x.name)}</b>${on(x.person_id) ? ' <small class="spur-jetzt">gerade in der App</small>' : ""} <small class="hinweis">· ${x.anzahl} Schritte · ${esc(zeitKurz(x.erste))}–${esc(zeitKurz(x.letzte))} Uhr</small></button>`).join("")}</div>`
       : `<p class="hinweis">An diesem Tag nichts aufgezeichnet (gezählt ab Version 2.23.88).</p>`;
   } else {
     inhalt = `<b>${esc(r.name || "")}</b>${r.schritte.length ? `<table class="vb-tabelle">${r.schritte.map((x) => `<tr><td style="white-space:nowrap;vertical-align:top">${esc(zeitKurz(x.t))}</td><td style="text-align:left">${esc(SPUR_WAS[x.w] || NZ_NAMEN[x.w] || x.w)}${x.mit ? ` <b>${esc(x.mit)}</b>` : ""}</td></tr>`).join("")}</table>` : `<p class="hinweis">An diesem Tag nichts aufgezeichnet.</p>`}`;
   }
   $("adminBlattInhalt").innerHTML = kopf + inhalt + fuss;
   $("adminBlatt").classList.remove("versteckt");
+  // KC-CLUB-SPUR-LIVE (2.81.0): heute → alle 20 s still neu laden, solange das Fenster die Wege zeigt
+  clearTimeout(SPW.uhr);
+  if (heuteDa) SPW.uhr = setTimeout(() => { if (!$("adminBlatt").classList.contains("versteckt") && $("adminBlattInhalt").querySelector(".spur-neu[aria-label='Wege aktualisieren']") && !document.hidden) { onlinePing().catch(() => {}).finally(() => spurAdmin(SPW.tag, SPW.person)); } }, 20000);
 }
 // ---------- KC-CLUB-STARTSTATISTIK (2.31.0, Wunsch Hansi): Wie schnell startet die App bei wem, auf welchem Gerät, mit welchem Browser? ----------
 // Nur Admin. Grün bis 3 s, gelb bis 6 s, rot darüber. Filter nach Mitglied und Gerät; Übersichten je Mitglied und je Gerät/Browser, dazu die Starts einzeln.
@@ -20537,7 +20589,7 @@ function nachrichtenStatistikZeigen() {
 async function spurNeu(k) {
   if (k?.classList.contains("dreht")) return;
   k?.classList.add("dreht");
-  try { await spurSenden(); await spurAdmin(SPW.tag, SPW.person); melde("↻ Wege aktualisiert"); } finally { k?.classList.remove("dreht"); }
+  try { await Promise.all([spurSenden(), onlinePing().catch(() => {})]); await spurAdmin(SPW.tag, SPW.person); melde("↻ Wege aktualisiert"); } finally { k?.classList.remove("dreht"); }
 }
 const NZ_NAMEN = { start: "🏠 Startseite", hilfezentrum: "❓ Hilfe & Tipps", termine: "📅 Termine", nachrichten: "💬 Nachrichten (Liste)", chat: "💬 Unterhaltung geöffnet", neu: "✍️ Neue Nachricht",
   pinnwand: "📌 Pinnwand", fotos: "📷 Fotoalbum", mitglieder: "👥 Mitglieder", mitglied: "👤 Mitglied angesehen", einstellungen: "⚙️ Einstellungen", dienste: "🗓️ Dienstpläne",

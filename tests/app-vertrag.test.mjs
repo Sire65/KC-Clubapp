@@ -5589,7 +5589,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   const ab = programm.slice(programm.indexOf("const SH_ABLAEUFE = {"), programm.indexOf("const SH = {"));
   assert.ok(ab.includes("avatar: [") && ab.includes("avatarBauen: ["), "Abläufe Mein Bild + Baukasten");
-  assert.ok(/const SH_FENSTER_ABLAEUFE = \[\["avbBlatt", "avatarBauen"\], \["avBlatt", "avatar"\]\];/.test(programm) && /blattAuf\("avBlatt"/.test(programm) && /blattAuf\("avbBlatt"/.test(programm), "Fenster haben eigenen Ablauf");
+  assert.ok(/const SH_FENSTER_ABLAEUFE = \[\["avbBlatt", "avatarBauen"\], \["avBlatt", "avatar"\][,\]]/.test(programm) && /blattAuf\("avBlatt"/.test(programm) && /blattAuf\("avbBlatt"/.test(programm), "Fenster haben eigenen Ablauf");
   assert.ok(/const key = shAblaufKey\(\); if \(key !== SH\.bereich\) return shWechsel\(key\);/.test(programm), "Fenster auf/zu wechselt den Ablauf");
   assert.ok(/const reihe = \(titel, i, werte\) => `<div class="ps-schritt" data-teil="\$\{i\}">/.test(programm), "Baukasten-Reihen sind markiert");
   for (const t of [8, 0, 1, 2, 3, 16, 4, 9, 5, 13, 14, 20, 15, 6, 7]) assert.ok(new RegExp(`\\[${t}, "`).test(ab) && new RegExp(`reihe\\([^\\n]*, ${t}, `).test(programm), "Teil " + t + " im Baukasten und als Schritt");
@@ -6170,7 +6170,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
 {
   assert.ok(/<div class="spur-kopf"><h3 style="margin:0;flex:1">👣 Wege der Mitglieder<\/h3><button class="rund spur-neu" title="Aktualisieren" aria-label="Wege aktualisieren" onclick="spurNeu\(this\)">↻<\/button><\/div>/.test(html), "Knopf oben rechts");
   const f = html.slice(html.indexOf("async function spurNeu(k)"), html.indexOf("const NZ_NAMEN = "));
-  assert.ok(/await spurSenden\(\); await spurAdmin\(SPW\.tag, SPW\.person\);/.test(f) && /finally \{ k\?\.classList\.remove\("dreht"\); \}/.test(f), "gleicher Tag/Person, eigene Schritte zuerst senden");
+  assert.ok(/(await spurSenden\(\);|await Promise\.all\(\[spurSenden\(\), onlinePing\(\)\.catch\(\(\) => \{\}\)\]\);) await spurAdmin\(SPW\.tag, SPW\.person\);/.test(f) && /finally \{ k\?\.classList\.remove\("dreht"\); \}/.test(f), "gleicher Tag/Person, eigene Schritte zuerst senden");
 }
 
 
@@ -6305,4 +6305,15 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/k\.textContent = amVorschlag \? "✅ Ja, dort ablegen"/.test(programm), "Knopf sagt, wohin");
   assert.ok(/const gesendet = gesendetAblegbar\(anlagenVorher\);/.test(programm) && /if \(gesendet\.length\) setTimeout\(\(\) => gesendetAblageFragen\(gesendet\), 500\);/.test(programm), "nach dem Senden von Dokumenten/Fotos fragen");
   assert.ok(/arDokVorschlag\(`\$\{\$\("arDokTitel"\)\.value\} \$\{roh\.name\}`\);/.test(programm) && /➡️ Dorthin<\/button>/.test(programm), "beim Hochladen im Archiv: Register vorwählen, besseren Ordner anbieten");
+}
+
+// 4xx. 2.81.0: Schritt-Hilfe für Erstattung und Archiv + Wege der Mitglieder „live“ (KC-CLUB-SCHRITT-HILFE, KC-CLUB-SPUR-LIVE, Wunsch Hansi)
+{
+  for (const k of ["erstattung", "archiv", "archivDok", "ablage"]) assert.ok(new RegExp(`\\n  ${k}: \\[`).test(programm), "Ablauf " + k);
+  assert.ok(/\["ablageBlatt", "ablage"\], \[\(\) => !!\$\("arDateiEin"\), "archivDok"\]\]/.test(programm) && /typeof id === "function" \? id\(\) : \$\(id\)/.test(programm), "Fenster-Abläufe auch mit Prüfung");
+  assert.ok(/const shErsForm = \(\) => !ERS\.pos\.length/.test(programm), "nach der ersten Position weiter zur Auszahlung");
+  assert.ok(/id: "los", ziel: "#ersSendenKnopf"[^\n]*ende: true/.test(programm) && /id: "los", ziel: "#ablJa"[^\n]*ende: true/.test(programm), "Ende-Schritte");
+  assert.ok(/function spurBaldSenden\(\) \{ if \(SPAR\.an \|\| document\.hidden\) return; clearTimeout\(SPUR_BALD\); SPUR_BALD = setTimeout\(spurSenden, 15000\); \}/.test(programm) && /spurBaldSenden\(\); \/\/ KC-CLUB-SPUR-LIVE/.test(programm), "Schritte nach 15 s gebündelt senden");
+  assert.ok(/if \(!INIT \|\| !SPUR\.length \|\| SPUR_LAEUFT\) return;/.test(programm), "nie doppelt senden");
+  assert.ok(/if \(heuteDa\) SPW\.uhr = setTimeout\(/.test(programm) && /aktualisiert sich alle 20 Sekunden von selbst/.test(programm) && /gerade in der App/.test(programm), "Wege: alle 20 s neu, wer gerade drin ist, oben mit 🟢");
 }

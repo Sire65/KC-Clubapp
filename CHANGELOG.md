@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.81.0 – 2026-10-08 – 👣 Schritt-Hilfe Archiv & Erstattung, Wege der Mitglieder live
+Schritt-Unterstützung jetzt auch für 💶 Erstattung (Art, Datum, km/Betrag, Grund, Beleg, Position, Auszahlung, senden), das 🗄️ Archiv (Ordner öffnen, Dokument ablegen) und den Ablage-Vorschlag. 👣 Wege der Mitglieder: wer gerade in der App ist, steht oben mit 🟢, die Seite aktualisiert sich alle 20 Sekunden von selbst, und die Handys schicken neue Schritte schon nach 15 Sekunden. (KC-CLUB-SCHRITT-HILFE, KC-CLUB-SPUR-LIVE)
+
 ## 2.80.0 – 2026-10-08 – 💡 Ablage-Vorschlag: wohin gehört das Dokument?
 Bei jedem Dokument, Foto oder Papier schlägt die App vor, wo es hingehört: „Soll ich das in den Ordner „Verträge 2026“ im Register „Vereinsverträge“ ablegen?“ – nach dem Senden mit Anhang, beim Ablegen aus Chats/Nachrichten/Fotos/Protokollen und beim Hochladen im Archiv (Register vorgewählt, besserer Ordner als Knopf). Erkennt Verträge, Miete, Versicherungen, Lieferanten, Protokolle, Rechnungen, Urkunden, Fotos … und passende Register-Namen; zur Not „Sonstiges“. (KC-CLUB-ABLAGE-VORSCHLAG)
 
