@@ -6324,3 +6324,11 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/🟢 Gerade in der App/.test(programm) && /ist bei <b>\$\{esc\(was\(x\.zuletzt\) \|\| "\?"\)\}<\/b>/.test(programm) && /"👉 jetzt" : "zuletzt"/.test(programm), "Übersicht: wer ist gerade wo");
   assert.ok(/const SERVER_VERSION = "2\.81\.0"/.test(server));
 }
+
+// 4xx. 2.82.0: Schritt-Hilfe für Mitglieder, Helfen & Leihen (Hilfe suchen, Börse) und Fotos (KC-CLUB-SCHRITT-HILFE, Wunsch Hansi)
+{
+  for (const k of ["mitglieder", "mitglied", "helfen", "fotos"]) assert.ok(new RegExp(`\\n  ${k}: \\[`).test(programm), "Ablauf " + k);
+  for (const a of ["hf-art", "hf-wann", "hf-anzahl", "hf-wo", "hf-an", "bo-art", "bo-rubrik", "bo-preis"]) assert.ok(programm.includes(`<div class="hl-frage" data-sh="${a}">`) && programm.includes(`'[data-sh="${a}"] + `), "Formular-Anker " + a);
+  assert.ok(/<input id="boTitel"/.test(programm) && /<input id="boPreis"/.test(programm) && /<textarea id="boText"/.test(programm), "Börse-Felder haben IDs");
+  assert.ok(/id: "los", ziel: "#faKnopf"[^\n]*ende: true/.test(programm) && /id: "los", ziel: "#hlInhalt \.hl-form \.knoepfe \.knopf\.haupt"/.test(programm), "Ende-Schritte Fotos/Helfen");
+}

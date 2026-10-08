@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.81.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.82.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -1997,6 +1997,41 @@ const SH_ABLAEUFE = {
     { id: "ordner", ziel: "#ablOrdner", t: "Anderer Ordner? Hier auswählen", waehlen: true },
     { id: "reg", ziel: "#ablReg", t: "Und das Register wählen", waehlen: true },
     { id: "los", ziel: "#ablJa", t: "Tippe auf den roten Knopf – dann liegt es im Archiv. Nicht ablegen: „Nein, danke“", fertig: () => false, ende: true, lob: "Es liegt jetzt im Archiv." },
+  ],
+  // 2.82.0 Mitglieder, Helfen & Leihen (Hilfe suchen, Börse), Fotos (Wunsch Hansi „Schritt für Schritt weiter einbauen“)
+  mitglieder: [
+    { id: "liste", ruhe: true, ziel: "#mitgliederListe", t: "Tippe ein Mitglied an – dann kannst du schreiben, anrufen oder anklopfen. 🟢 = gerade online. Oben: „🟢 Nur online“ zeigt nur die, die gerade da sind", fertig: () => false },
+  ],
+  mitglied: [
+    { id: "wege", ruhe: true, ziel: "#mitgliedInhalt .knopf.haupt", t: "Was möchtest du? 💬 Nachricht schreiben – ist jemand 🟢 online, kannst du auch 👋 anklopfen oder 📞 in der App anrufen. Darunter: Telefon, WhatsApp, E-Mail", fertig: () => false },
+  ],
+  helfen: [
+    { id: "start", ruhe: true, ziel: '#v-helfen .kopf2 .knopf.haupt', t: () => (HL.tab === "boerse" ? "🛍️ Börse: Tippe oben rechts auf „＋ Neu“ – „Ich biete …“ oder „Ich suche …“. Eine Anzeige antippen zeigt sie groß"
+      : HL.tab === "leihen" ? "📦 Etwas ausleihen? Tippe oben rechts auf „＋ Neu“" : "🙋 Hilfe gesucht oder angeboten? Tippe oben rechts auf „＋ Neu“. Bei einem Aufruf: „✋ Ich helfe“ antippen") + ". Oben wechselst du zwischen Helfen, Ausleihen und Börse",
+      wenn: () => !HL.form && !HL.angebotForm && !BO.form && !HL.edit, fertig: () => false },
+    { id: "hf-art", ziel: '[data-sh="hf-art"] + .hl-chips', t: "Wobei brauchst du Hilfe? Tippe eins an", wenn: () => HL.tab === "helfen" && !!HL.form, fertig: () => !!HL.form?.art },
+    { id: "hf-wann", ziel: '[data-sh="hf-wann"] + .umschalter', t: "Wann? „📅 Bestimmter Tag“ – dann darunter Tag und Uhrzeit antippen – oder „🤝 Nach Absprache“", wenn: () => HL.tab === "helfen" && !!HL.form, fertig: () => true, weiter: true },
+    { id: "hf-anzahl", ziel: '[data-sh="hf-anzahl"] + .hl-anzahl', t: "Wie viele Helfer brauchst du? Mit − und ＋ einstellen", wenn: () => HL.tab === "helfen" && !!HL.form, fertig: () => true, weiter: true },
+    { id: "hf-wo", ziel: '[data-sh="hf-wo"] + .hl-chips', t: "Wo? Ort antippen – freiwillig", wenn: () => HL.tab === "helfen" && !!HL.form, fertig: () => true, weiter: true },
+    { id: "hf-an", ziel: '[data-sh="hf-an"] + .umschalter', t: "Wer soll den Aufruf bekommen? Alle Mitglieder oder nur die gerade online sind", wenn: () => HL.tab === "helfen" && !!HL.form && !HL.form.id, fertig: () => true, weiter: true },
+    { id: "hf-notiz", ziel: "#hfNotiz", t: "Beschreibung – freiwillig: was genau, was mitbringen. 🎤 rechts im Feld zum Diktieren", wenn: () => HL.tab === "helfen" && !!HL.form, fertig: () => true, weiter: true },
+    { id: "bo-art", ziel: '[data-sh="bo-art"] + .hl-chips', t: "Biete oder suche? Antippen", wenn: () => HL.tab === "boerse" && !!BO.form, waehlen: true },
+    { id: "bo-rubrik", ziel: '[data-sh="bo-rubrik"] + .hl-chips', t: "Rubrik antippen – z. B. Haushalt, Küche, Freizeit", wenn: () => HL.tab === "boerse" && !!BO.form, fertig: () => !!BO.form?.rubrik },
+    { id: "bo-titel", ziel: "#boTitel", t: "Was bietest bzw. suchst du? Kurz beschreiben", wenn: () => HL.tab === "boerse" && !!BO.form, fertig: () => !!BO.form?.titel.trim(), weiter: true },
+    { id: "bo-preis", ziel: '[data-sh="bo-preis"] + .hl-chips', t: "Preis: verschenken, tauschen, fester Preis oder Verhandlungsbasis – antippen", wenn: () => HL.tab === "boerse" && !!BO.form, fertig: () => !!BO.form?.preis_art },
+    { id: "bo-betrag", ziel: "#boPreis", t: "Betrag in Euro eintragen", wenn: () => HL.tab === "boerse" && !!BO.form && ["preis", "vb"].includes(BO.form.preis_art), fertig: () => true, weiter: true },
+    { id: "bo-fotos", ziel: "#hlInhalt .bo-fotos", t: "📷 Fotos – freiwillig, bis zu 3. Auf „📷 ＋“ tippen", wenn: () => HL.tab === "boerse" && !!BO.form, fertig: () => !BO.form?.laedt, weiter: true },
+    { id: "bo-text", ziel: "#boText", t: "Beschreibung – freiwillig, z. B. „kaum getragen, abzuholen in Werne“", wenn: () => HL.tab === "boerse" && !!BO.form, fertig: () => true, weiter: true },
+    { id: "los", ziel: "#hlInhalt .hl-form .knoepfe .knopf.haupt", t: () => BO.form ? "Tippe auf „✅ Anzeige einstellen“" : HL.form && HL.tab === "helfen" ? "Tippe auf „📣 Aufruf veröffentlichen“ – alle bekommen Bescheid" : "Fertig? Tippe auf den roten Knopf unten",
+      wenn: () => !!(BO.form || HL.form || HL.angebotForm), fertig: () => false, ende: true, lob: () => HL.tab === "boerse" ? "Deine Anzeige ist drin – wer passt, bekommt Bescheid." : "Erledigt – alle können es jetzt sehen." },
+  ],
+  fotos: [
+    { id: "neu", ruhe: true, ziel: "#v-fotos .kopf2 .knopf.haupt", t: "Fotos hochladen? Tippe oben rechts auf „＋ Neu“. Ansehen: unten ein Foto antippen – wischen blättert weiter", wenn: () => $("fotoForm").classList.contains("versteckt"), fertig: () => false },
+    { id: "wahl", ziel: "#fotoForm .knoepfe", t: "🖼️ Fotos aus der Galerie wählen – oder 📷 mit der Kamera aufnehmen", wenn: () => !$("fotoForm").classList.contains("versteckt"), fertig: () => faDateien.length > 0 },
+    { id: "thema", ziel: "#faThema", t: "Thema wählen – z. B. Clubabend. Neues Thema geht auch", wenn: () => !$("fotoForm").classList.contains("versteckt"), fertig: () => true, weiter: true },
+    { id: "anlass", ziel: "#faAnlass", t: "Zu welchem Anlass? Freiwillig", wenn: () => !$("fotoForm").classList.contains("versteckt"), fertig: () => true, weiter: true },
+    { id: "beschr", ziel: "#faBeschr", t: "Beschreibung – freiwillig, z. B. „Hauptgang beim Clubabend“", wenn: () => !$("fotoForm").classList.contains("versteckt"), fertig: () => true, weiter: true },
+    { id: "los", ziel: "#faKnopf", t: "Tippe auf „⬆️ Hochladen“", wenn: () => !$("fotoForm").classList.contains("versteckt"), fertig: () => false, ende: true, lob: "Deine Fotos sind im Album." },
   ],
   gruppe: [
     { id: "name", ziel: "#grName", t: "Gib der Gruppe einen Namen, z. B. „Grillabend“", fertig: () => !!$("grName").value.trim(), weiter: true },
@@ -12817,16 +12852,16 @@ function hilfeFormHtml() {
   const f = HL.form, d = HL.hilfe || {}, orte = d.orte || [];
   return `<div class="karte hl-form"><h3 style="margin:0 0 6px">${f.id ? "✏️ Aufruf ändern" : "🙋 Hilfe suchen"}</h3>
     ${f.id ? `<div class="hl-stand${hlVoll(f.a) ? " voll" : ""}" style="margin:0 0 8px"><b>✋ ${hlStand(f.a)}</b>${f.a.komme.length ? `<br><small>${esc(f.a.komme.join(", "))}</small>` : ""}${f.a.kannNicht ? `<br><small class="hinweis">🙅 ${f.a.kannNicht} kann nicht</small>` : ""}</div>` : ""}
-    <div class="hl-frage">Wobei?</div>${hlChips("art", Object.entries(d.arten || {}).map(([w, t]) => ({ w, t })), f.art)}
+    <div class="hl-frage" data-sh="hf-art">Wobei?</div>${hlChips("art", Object.entries(d.arten || {}).map(([w, t]) => ({ w, t })), f.art)}
     ${f.art === "sonstiges" ? `<label class="feld">Wobei genau?<input maxlength="80" placeholder="z. B. Zelt reparieren" value="${esc(f.artText)}" oninput="hlText('artText', this)"></label>` : ""}
-    <div class="hl-frage">Wann?</div><div class="umschalter"><button class="${f.absprache ? "" : "an"}" onclick="hlSetze('absprache', false)">📅 Bestimmter Tag</button><button class="${f.absprache ? "an" : ""}" onclick="hlSetze('absprache', true)">🤝 Nach Absprache</button></div>
+    <div class="hl-frage" data-sh="hf-wann">Wann?</div><div class="umschalter"><button class="${f.absprache ? "" : "an"}" onclick="hlSetze('absprache', false)">📅 Bestimmter Tag</button><button class="${f.absprache ? "an" : ""}" onclick="hlSetze('absprache', true)">🤝 Nach Absprache</button></div>
     ${f.absprache ? '<p class="hinweis" style="margin:4px 0 0">Kein fester Tag – wer helfen kann, sagt zu, und ihr macht den Termin miteinander aus. Der Aufruf bleibt 30 Tage offen (vorher schließbar).</p>' : hlTageWahl("datum", f.datum) + hlChips("slot", hlSlots(d.zeitfenster, true), f.slot)}
-    <div class="hl-frage">Wie viele Helfer?</div><div class="hl-anzahl">${f.ohne ? "" : hlStepper(f.anzahl, 1, 20, "hlSetze('anzahl', HL.form.anzahl - 1)", "hlSetze('anzahl', HL.form.anzahl + 1)")}<button class="chip${f.ohne ? " an" : ""}" onclick="hlSetze('ohne', !HL.form.ohne)">♾️ Egal wie viele</button></div>
+    <div class="hl-frage" data-sh="hf-anzahl">Wie viele Helfer?</div><div class="hl-anzahl">${f.ohne ? "" : hlStepper(f.anzahl, 1, 20, "hlSetze('anzahl', HL.form.anzahl - 1)", "hlSetze('anzahl', HL.form.anzahl + 1)")}<button class="chip${f.ohne ? " an" : ""}" onclick="hlSetze('ohne', !HL.form.ohne)">♾️ Egal wie viele</button></div>
     ${f.ohne ? '<p class="hinweis" style="margin:4px 0 0">Keine Grenze – jede Zusage zählt, der Aufruf wird nie „voll“.</p>' : ""}
-    <div class="hl-frage">Wo? <small class="hinweis">(freiwillig)</small></div>
+    <div class="hl-frage" data-sh="hf-wo">Wo? <small class="hinweis">(freiwillig)</small></div>
     ${hlChips("ort", [{ w: "", t: "– keine Angabe –" }, ...orte.map((o) => ({ w: o, t: "📍 " + o }))], f.ortFrei ? "\u0000" : f.ort)}
     ${f.ortFrei ? `<label class="feld"><input id="hfOrt" maxlength="80" placeholder="z. B. Vereinsheim" value="${esc(f.ort)}" oninput="hlText('ort', this)"></label>` : `<button class="knopf klein" onclick="HL.form.ortFrei=true;HL.form.ort='';hlZeigen();$('hfOrt')?.focus()">✏️ Anderer Ort</button>`}
-    ${f.id ? "" : `<div class="hl-frage">An wen?</div>
+    ${f.id ? "" : `<div class="hl-frage" data-sh="hf-an">An wen?</div>
     <div class="umschalter"><button class="${f.ziel === "alle" ? "an" : ""}" onclick="hlSetze('ziel','alle')">👥 Alle Mitglieder</button><button class="${f.ziel === "online" ? "an" : ""}" onclick="hlSetze('ziel','online')">🟢 Alle gerade online</button></div>${hkHtml("form")}`}
     <label class="feld">Beschreibung (freiwillig) – was genau, was mitbringen, wie erreichbar<textarea id="hfNotiz" data-diktat class="hl-notiz" rows="6" maxlength="900" placeholder="z. B. Für den Weihnachtsmarkt bauen wir den Stand auf. Bitte Arbeitshandschuhe mitbringen. Meldet euch kurz, wann es euch passt." oninput="hlText('notiz', this)">${esc(f.notiz)}</textarea></label>
     ${f.id ? '<p class="hinweis" style="margin:0">Kein neuer Rundruf. Wer schon zugesagt hat, bekommt Bescheid, wenn sich Tag oder Ort ändern.</p>' : ""}
@@ -13078,15 +13113,15 @@ function boFormHtml() {
   const f = BO.form, d = BO.d || { rubriken: {}, preisArten: {} };
   const chips = (feld, liste, wert) => `<div class="hl-chips">${Object.entries(liste).map(([k, t]) => `<button class="chip${wert === k ? " an" : ""}" onclick="BO.form.${feld}='${k}';hlZeigen()">${esc(t)}</button>`).join("")}</div>`;
   return `<div class="karte hl-form"><h3 style="margin:0 0 6px">🛍️ ${f.id ? "Anzeige ändern" : f.art === "suche" ? "🔵 Ich suche …" : "🟢 Ich biete …"}</h3>
-    <div class="hl-frage">Biete oder suche?</div>${chips("art", { biete: "🟢 Biete", suche: "🔵 Suche" }, f.art)}
-    <div class="hl-frage">Rubrik</div>${chips("rubrik", d.rubriken, f.rubrik)}
-    <label class="feld">Was?<input maxlength="80" placeholder="${f.art === "suche" ? "z. B. Pink Floyd CD (The Wall o. ä.)" : "z. B. Schlittschuhe Größe 39"}" value="${esc(f.titel)}" oninput="BO.form.titel=this.value"></label>
-    <div class="hl-frage">Preis</div>${chips("preis_art", d.preisArten, f.preis_art)}
-    ${f.preis_art === "preis" || f.preis_art === "vb" ? `<label class="feld">${f.art === "suche" ? "Wie viel würdest du zahlen? (freiwillig)" : f.preis_art === "preis" ? "Preis in €" : "Preisvorstellung in € (freiwillig)"}<input inputmode="decimal" maxlength="9" placeholder="z. B. 15" value="${esc(f.preis)}" oninput="BO.form.preis=this.value"></label>` : ""}
+    <div class="hl-frage" data-sh="bo-art">Biete oder suche?</div>${chips("art", { biete: "🟢 Biete", suche: "🔵 Suche" }, f.art)}
+    <div class="hl-frage" data-sh="bo-rubrik">Rubrik</div>${chips("rubrik", d.rubriken, f.rubrik)}
+    <label class="feld">Was?<input id="boTitel" maxlength="80" placeholder="${f.art === "suche" ? "z. B. Pink Floyd CD (The Wall o. ä.)" : "z. B. Schlittschuhe Größe 39"}" value="${esc(f.titel)}" oninput="BO.form.titel=this.value"></label>
+    <div class="hl-frage" data-sh="bo-preis">Preis</div>${chips("preis_art", d.preisArten, f.preis_art)}
+    ${f.preis_art === "preis" || f.preis_art === "vb" ? `<label class="feld">${f.art === "suche" ? "Wie viel würdest du zahlen? (freiwillig)" : f.preis_art === "preis" ? "Preis in €" : "Preisvorstellung in € (freiwillig)"}<input id="boPreis" inputmode="decimal" maxlength="9" placeholder="z. B. 15" value="${esc(f.preis)}" oninput="BO.form.preis=this.value"></label>` : ""}
     <div class="hl-frage">Fotos (freiwillig, bis 3)</div>
     <div class="bo-fotos">${f.fotos.map((x, i) => `<span class="bo-mini"><img data-anlage="${esc(x)}" alt=""><button onclick="BO.form.fotos.splice(${i},1);hlZeigen()" aria-label="Foto entfernen">✕</button></span>`).join("")}
       ${f.fotos.length + f.laedt < 3 ? `<label class="bo-plus">${f.laedt ? "⏳" : "📷 ＋"}<input type="file" accept="image/*" multiple hidden onchange="boFotos(this)"></label>` : ""}</div>
-    <label class="feld">Beschreibung (freiwillig)<textarea rows="3" maxlength="600" placeholder="z. B. kaum getragen, abzuholen in Werne" oninput="BO.form.text=this.value">${esc(f.text)}</textarea></label>
+    <label class="feld">Beschreibung (freiwillig)<textarea id="boText" rows="3" maxlength="600" placeholder="z. B. kaum getragen, abzuholen in Werne" oninput="BO.form.text=this.value">${esc(f.text)}</textarea></label>
     <p class="hinweis" style="margin:4px 0 8px">Die Anzeige läuft ${BO.d?.tage || 30} Tage. 3 Tage vorher bekommst du eine Erinnerung – verlängern oder auslaufen lassen. Beim Einstellen wird nichts an alle verschickt; nur wer eine passende Anzeige hat, bekommt Bescheid.</p>
     <div class="knoepfe"><button class="knopf haupt" ${f.laedt ? "disabled" : ""} onclick="einmal(this, boSpeichern)">✅ ${f.id ? "Speichern" : "Anzeige einstellen"}</button><button class="knopf" onclick="BO.form=null;hlZeigen()">Abbrechen</button></div></div>`;
 }
