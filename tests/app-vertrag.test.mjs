@@ -1730,7 +1730,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/const ARCHIV_ABLAGE_ARTEN = \{\s*erstattung: \{ sym: "💶", register: \["Rechnungen", "Sonstiges"\]/.test(f), "Registry der Ablage-Anlässe");
   // 1.19.0: dazu nur lesende, vorhandene Wege für Dateien aus Nachrichten/Protokollen (anlage_url) und Fotos (foto_oeffnen)
   assert.ok([...f.matchAll(/api\("(\w+)"/g)].every((m) => ["archiv_liste", "archiv_hochladen", "anlage_url", "foto_oeffnen"].includes(m[1])), "nur vorhandene Archiv-/Lese-Wege");
-  assert.ok(/const ordner = (nfpEigeneOrdner\(d\)|\[\.\.\.nfpEigeneOrdner\(d\), \.\.\.verein\])/.test(f) && /const verein = d\.darf \? /.test(f) && /<select id="ablOrdner"/.test(f) && /<select id="ablReg"( onchange="ablKnopf\(\)")?>/.test(f), "nur eigene Ordner, Auswahl statt Freitext");
+  assert.ok(/const ordner = (nfpEigeneOrdner\(d\)|\[\.\.\.nfpEigeneOrdner\(d\)(\.map\([^\n]*?\))?, \.\.\.verein\])/.test(f) && /const verein = d\.darf \? /.test(f) && /<select id="ablOrdner"/.test(f) && /<select id="ablReg"( onchange="ablKnopf\(\)")?>/.test(f), "nur eigene Ordner, Auswahl statt Freitext");
   assert.ok(/( id="ablJa" style="text-align:center"| style="text-align:center") onclick="einmal\(this, ablAblegen\)">🗄️ \$\{esc\(ja \|\| "Ja, ablegen"\)\}/.test(f) && /onclick="ablNein\(\)">\$\{esc\(nein \|\| "Nein, danke"\)\}/.test(f), "Rückfrage mit Ja/Nein (1.19.0: Texte je Anlass)");
   const s = html.slice(html.indexOf("async function erstattungSenden()"), html.indexOf("// KC-CLUB-KMSATZ (0.39.0): Admin"));
   assert.ok(s.indexOf('api("erstattung_senden"') < s.indexOf("erstattungAblageFragen(kopie, r)"), "Ablage erst nach erfolgreichem Versand");
