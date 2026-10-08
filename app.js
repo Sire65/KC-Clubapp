@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.76.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.77.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -1694,10 +1694,21 @@ function sbSchalter(an) {
 function sbKnopfZeigen() {
   if ($("setSprache")) $("setSprache").checked = sbAn();
   let k = $("sbKnopf");
-  if (!k && sbAn()) { document.body.insertAdjacentHTML("beforeend", '<button type="button" class="sb-knopf" id="sbKnopf" title="Sprachsteuerung" aria-label="Sprachsteuerung – sag, was du tun möchtest" onclick="sbHoeren()">🎙️</button>'); k = $("sbKnopf"); }
+  if (!k && sbAn()) { document.body.insertAdjacentHTML("beforeend", '<button type="button" class="sb-knopf" id="sbKnopf" title="Sprachsteuerung" aria-label="Sprachsteuerung – sag, was du tun möchtest" onclick="sbKnopfTipp()">🎙️</button>'); k = $("sbKnopf"); sbLangDruck(k); }
   k?.classList.toggle("versteckt", !sbAn());
 }
 const SB = { erk: null, text: "", antwort: null };
+// 2.77.0 (Wunsch Hansi): lange auf 🎙️ drücken → „Sprachsteuerung ausschalten?“ (kurz tippen hört wie bisher zu)
+function sbLangDruck(k) {
+  let uhr = null; const weg = () => { clearTimeout(uhr); uhr = null; };
+  k.addEventListener("pointerdown", () => { weg(); SB.lang = false; uhr = setTimeout(() => { uhr = null; SB.lang = true; try { navigator.vibrate?.(30); } catch {} sbAusFragen(); }, 650); });
+  ["pointerup", "pointerleave", "pointercancel"].forEach((e) => k.addEventListener(e, weg));
+  k.addEventListener("contextmenu", (e) => e.preventDefault());
+}
+function sbKnopfTipp() { if (SB.lang) { SB.lang = false; return; } sbHoeren(); }
+async function sbAusFragen() {
+  if (await frage("🎙️ Sprachsteuerung ausschalten?\n\nDer 🎙️-Knopf verschwindet. Wieder einschalten: ⚙️ → „🎙️ Sprachsteuerung“.", { ja: "🔇 Ausschalten", nein: "🎙️ Anlassen" })) sbSchalter(false);
+}
 function sbStopp() {
   try { SB.erk?.abort(); } catch {} SB.erk = null; try { speechSynthesis.cancel(); } catch {}
   const a = SB.antwort; SB.antwort = null; a?.(null); fensterZu($("sbBlatt"));

@@ -1532,7 +1532,8 @@
   @keyframes sbWelle { 0%, 100% { height: 12px; } 50% { height: 40px; } }
   @media (prefers-reduced-motion: reduce) { .sb-welle i { animation: none; height: 24px; } }
   .sb-gehoert { font-size: 1.15rem; font-weight: 700; text-align: center; margin: 4px 0 8px; }
-  .sb-still .sb-welle { display: none; } /* 2.76.0: Welle nur, solange wirklich zugehört wird */
+  .sb-still .sb-welle { display: none; }
+  .sb-knopf { -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; touch-action: manipulation; } /* 2.77.0: langes Drücken ohne Handy-Menü */ /* 2.76.0: Welle nur, solange wirklich zugehört wird */
   .sb-wer { display: grid; gap: 8px; margin: 10px 0 0; } .sb-wer .knopf { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; } .sb-wer .knopf b { flex: 1; }
   /* KC-CLUB-SCHRITT-HILFE (2.63.0/2.64.0): genau der nächste Schritt rot pulsierend mit Leuchten; Leiste unten über „?“
      (bei offener Tastatur oben im sichtbaren Bereich), zwei laufende Schuhe; Tipps gehen durch die Leiste hindurch */
@@ -3432,6 +3433,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.76.0" data-v="2.76.0"></script>
+<script src="app.js?v=2.77.0" data-v="2.77.0"></script>
 </body>
 </html>

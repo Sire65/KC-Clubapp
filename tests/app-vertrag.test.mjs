@@ -6227,3 +6227,12 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/sbSagen\(kopf\.replace/.test(programm) && /u\.onend = weiter;/.test(programm), "erst fertig sprechen, dann zuhören");
   assert.ok(/\.sb-still \.sb-welle \{ display: none; \}/.test(seite) && /\.sb-wer \{/.test(seite));
 }
+
+// 4xx. 2.77.0: lange auf 🎙️ drücken → „Sprachsteuerung ausschalten?“ (KC-CLUB-SPRACHSTEUERUNG, Wunsch Hansi)
+{
+  assert.ok(/onclick="sbKnopfTipp\(\)">🎙️<\/button>'\); k = \$\("sbKnopf"\); sbLangDruck\(k\);/.test(programm), "Knopf bekommt langes Drücken");
+  const f = programm.slice(programm.indexOf("function sbLangDruck(k)"), programm.indexOf("function sbStopp()"));
+  assert.ok(/SB\.lang = true;[^\n]*sbAusFragen\(\); \}, 650\)/.test(f) && /function sbKnopfTipp\(\) \{ if \(SB\.lang\) \{ SB\.lang = false; return; \} sbHoeren\(\); \}/.test(f), "lang → Frage, danach kein Zuhören");
+  assert.ok(/ja: "🔇 Ausschalten", nein: "🎙️ Anlassen" \}\)\) sbSchalter\(false\);/.test(f), "erst nach Ja aus");
+  assert.ok(/\.sb-knopf \{ -webkit-touch-callout: none;/.test(seite));
+}

@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.77.0 – 2026-10-08 – 🎙️ Lange drücken: Sprachsteuerung ausschalten
+Lange auf den 🎙️-Knopf drücken fragt: „Sprachsteuerung ausschalten?“ – kurz tippen hört wie bisher zu. (KC-CLUB-SPRACHSTEUERUNG)
+
 ## 2.76.0 – 2026-10-08 – 🎙️ Sprachsteuerung Stufe 2: Rückfragen
 „Nachricht an Klaus“: bei mehreren Klaus „Welchen Klaus?“, unbekannte Namen → ähnliche Namen vorschlagen, nur „Nachricht“ → „An wen?“. Namen werden nach Klang erkannt (Claus/Klaus, Maier/Meier). Angekommen fragt die App sofort: „Soll ich das Diktieren gleich einschalten?“ – Ja/Nein sagen oder tippen. Auch beim neuen Pinnwand-Zettel. Gesendet wird weiter nur per Tipp. (KC-CLUB-SPRACHSTEUERUNG)
 
