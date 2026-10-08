@@ -5546,7 +5546,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/lob: "Deine Antwort ist gespeichert\."/.test(ab) && /lob: "Deine Anfrage ist unterwegs\."/.test(ab), "Lob je Weg");
   assert.ok(/if \(\(!s\.wenn \|\| s\.wenn\(\)\) && e\.target\.closest\?\.\(s\.ziel\)\) \{ SH\.beruehrt\.add\(s\.id\); if \(s\.ende\) SH\.lobJetzt = typeof s\.lob === "function" \? s\.lob\(\) : s\.lob; \}/.test(programm), "nur geltende Schritte zählen beim Antippen");
   assert.ok(/const dlg = document\.querySelector\("\.dlg-blatt \.blatt-innen"\)/.test(programm) && /\.sh-rahmen \{ position: fixed; z-index: 5001;/.test(seite) && /\.sh-leiste \{ position: fixed; z-index: 5002;/.test(seite), "Rückfrage-Fenster zuerst; Rahmen und Leiste über allen Fenstern");
-  assert.ok(/new MutationObserver\(\(\) => \{ if \(SH\.bereich && shAn\(\)\)/.test(programm), "Fenster auf/zu prüft neu");
+  assert.ok(/new MutationObserver\(\(\) => \{ if \(shAn\(\)\)/.test(programm), "Fenster auf/zu prüft neu");
   assert.ok(/if \(SH\.geschafft\) \{ if \(ruhe\) return; SH\.geschafft = false;/.test(programm), "nach „Geschafft“ läuft die Hilfe beim nächsten Anfang wieder");
 }
 
@@ -5583,6 +5583,18 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/wenn: \(\) => shTmForm\("vorschlagForm"\) && vfArt === "abstimmung"/.test(ab) && /wenn: \(\) => shTmForm\("vorschlagForm"\) && vfArt === "spende"/.test(ab), "Weg je Art");
   assert.ok(/lob: \(\) => vfArt === "abstimmung" \? "Die Abstimmung läuft\."/.test(ab), "Lob je Art");
   assert.ok(/\{ offen: \(\) => !!\$\("vfAuswahlBlatt"\), ziel: "#vfAuswahlBlatt \.blatt-innen"/.test(programm) && /blattAuf\("vfAuswahlBlatt"/.test(programm), "Auswahlfenster „Wer soll abstimmen?“");
+}
+
+// 4xx. 2.73.0: Schritt-Unterstützung für „Mein Bild“ und den Baukasten – Fenster mit eigenem Ablauf (KC-CLUB-SCHRITT-HILFE, Wunsch Hansi)
+{
+  const ab = programm.slice(programm.indexOf("const SH_ABLAEUFE = {"), programm.indexOf("const SH = {"));
+  assert.ok(ab.includes("avatar: [") && ab.includes("avatarBauen: ["), "Abläufe Mein Bild + Baukasten");
+  assert.ok(/const SH_FENSTER_ABLAEUFE = \[\["avbBlatt", "avatarBauen"\], \["avBlatt", "avatar"\]\];/.test(programm) && /blattAuf\("avBlatt"/.test(programm) && /blattAuf\("avbBlatt"/.test(programm), "Fenster haben eigenen Ablauf");
+  assert.ok(/const key = shAblaufKey\(\); if \(key !== SH\.bereich\) return shWechsel\(key\);/.test(programm), "Fenster auf/zu wechselt den Ablauf");
+  assert.ok(/const reihe = \(titel, i, werte\) => `<div class="ps-schritt" data-teil="\$\{i\}">/.test(programm), "Baukasten-Reihen sind markiert");
+  for (const t of [8, 0, 1, 2, 3, 16, 4, 9, 5, 13, 14, 20, 15, 6, 7]) assert.ok(new RegExp(`\\[${t}, "`).test(ab) && new RegExp(`reihe\\([^\\n]*, ${t}, `).test(programm), "Teil " + t + " im Baukasten und als Schritt");
+  assert.ok(ab.includes(`ziel: "#avWahlVorschau .av-vorschau-knoepfe .knopf.haupt"`) && /<div class="av-vorschau-knoepfe"><button class="knopf haupt"/.test(programm), "Übernehmen");
+  assert.ok(ab.includes(`ziel: '#avbInhalt .bs-fuss .knopf.haupt'`) && /<div class="na-pfeil-knoepfe bs-fuss"><button class="knopf haupt" onclick="avSetzen\(avbCode\(\)\)/.test(programm), "Speichern im Baukasten");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

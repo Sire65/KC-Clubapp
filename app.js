@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.72.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.73.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -1698,6 +1698,20 @@ const SH_ABLAEUFE = {
     { id: "vf-info", ziel: "#vorschlagForm label:has(#vfInfo)", t: () => vfArt === "abstimmung" ? "Teilnehmer benachrichtigen? Haken an = Push bzw. E-Mail" : "Clubsprecher und Kassenwart benachrichtigen? Haken an = sie bekommen Bescheid", wenn: () => shTmForm("vorschlagForm"), fertig: () => true, weiter: true },
     { id: "los", ziel: "#vorschlagForm .knoepfe .knopf.haupt", t: () => vfArt === "abstimmung" ? "Tippe unten auf „Abstimmung starten“" : "Tippe unten auf „Vorschlagen“", wenn: () => shTmForm("vorschlagForm"), fertig: () => false, ende: true, lob: () => vfArt === "abstimmung" ? "Die Abstimmung läuft." : "Dein Vorschlag ist eingereicht – die Clubleitung sieht ihn." },
   ],
+  // 2.73.0 Mein Bild (Fenster): Figur antippen → Übernehmen (oder Bearbeiten); Baukasten (Fenster): Teil für Teil → Speichern
+  avatar: [
+    { id: "av-figur", start: true, ziel: "#avBlatt .av-raster", t: () => "Tippe eine Figur an – Köchinnen hier, Köche darunter. Oben siehst du sie dann groß" + (frei("avatar_baukasten") ? ". Ganz eigene Figur: oben „🧩 Selbst zusammenstellen“" : ""), fertig: () => AVW.wahl !== undefined },
+    { id: "los", ziel: "#avWahlVorschau .av-vorschau-knoepfe .knopf.haupt", t: "Gefällt sie dir? Tippe auf „✅ Übernehmen“ – oder auf „✏️ Bearbeiten“, um sie zu verändern", fertig: () => false, ende: true, lob: "Dein neues Bild ist gespeichert – alle sehen es im Chat und bei den Mitgliedern." },
+  ],
+  avatarBauen: [
+    ...[[8, "Koch oder Köchin? Antippen"], [0, "Hautton wählen"], [1, "Frisur wählen"], [2, "Haarfarbe wählen"], [3, "Was trägst du auf dem Kopf? Kochmütze, Kappe … oder nichts"],
+      [16, "Farbe der Kopfbedeckung wählen", () => AV_KOPF[AVB?.[3]] !== "keine"], [4, "Bart? Wähle einen – oder „keiner“", () => !AVB?.[8]],
+      [9, "Augen wählen"], [5, "Brille? Wähle eine – oder „ohne“"], [13, "Farbe der Brille wählen", () => !!AVB?.[5]],
+      [14, "👨‍🍳 Kochjacke: Farbe wählen – „🔄 täglich wechselnd“ geht auch"], [20, "Muster der Kochjacke wählen"], [15, "Farbe der Knöpfe wählen"],
+      [6, "Hintergrund wählen"], [7, "Halstuch wählen"]]
+      .map(([teil, t, nur]) => ({ id: "teil-" + teil, ziel: `#avbInhalt [data-teil="${teil}"]`, t: t + " – oben siehst du es sofort", wenn: nur, fertig: () => true, weiter: true })),
+    { id: "los", ziel: '#avbInhalt .bs-fuss .knopf.haupt', t: "Fertig? Tippe unten auf „💾 Speichern“. Nase, Mund, Wangen & Co. findest du zwischendurch auch noch", fertig: () => false, ende: true, lob: "Deine eigene Figur ist gespeichert." },
+  ],
   gruppe: [
     { id: "name", ziel: "#grName", t: "Gib der Gruppe einen Namen, z. B. „Grillabend“", fertig: () => !!$("grName").value.trim(), weiter: true },
     { id: "symbol", ziel: "#grSymbole", t: "Such ein Symbol für die Gruppe aus", waehlen: true },
@@ -1719,6 +1733,9 @@ const SH_FENSTER = [
   { offen: () => !$("personenBlatt")?.classList.contains("versteckt"), ziel: "#personenBlatt .blatt-innen", t: "Hake an, wer es machen soll – dann unten auf „✅ Fertig“ tippen" },
   { offen: () => !!$("vfAuswahlBlatt"), ziel: "#vfAuswahlBlatt .blatt-innen", t: "Hake an, wer abstimmen soll – dann unten auf „Übernehmen“ tippen" },
 ];
+// 2.73.0 Fenster mit eigenem Ablauf (gehen vor der Seite): offen = Ablauf aktiv, zu = zurück zur Seite
+const SH_FENSTER_ABLAEUFE = [["avbBlatt", "avatarBauen"], ["avBlatt", "avatar"]];
+const shAblaufKey = () => SH_FENSTER_ABLAEUFE.find(([id]) => $(id))?.[1] || (SH_ABLAEUFE[aktuelleAnsicht] ? aktuelleAnsicht : null);
 // Termine: welches Formular ist offen? (ohne Fenster „＋ Neu“ / Termin-Info)
 const shTmForm = (id, feld) => !!$(id) && !$(id).classList.contains("versteckt") && (!feld || !!$(feld));
 const shTmOffen = () => !!$("neuWahlBlatt") || !!$("treffenInfo") || shTmForm("treffenForm") || shTmForm("terminanfrageForm") || shTmForm("terminumfrageForm");
@@ -1761,9 +1778,12 @@ function shAufraeumen() {
 }
 function shBereich(v) { // beim Wechsel der Ansicht (zeige)
   if ($("setSchrittHilfe")) $("setSchrittHilfe").checked = shAn(); if ($("setSchrittVorlesen")) $("setSchrittVorlesen").checked = shVorlesenAn();
+  shWechsel(shAblaufKey());
+}
+function shWechsel(key) { // anderer Ablauf (Seite gewechselt, Fenster auf/zu)
   // letzter Schritt angetippt und die App wechselt selbst die Ansicht (z. B. gleiche Nachricht an mehrere) → trotzdem kurz loben
   const lob = shAn() && SH.beruehrt.has("los") && (SH.lobJetzt || shText({ t: SH_ABLAEUFE[SH.bereich]?.find((x) => x.ende)?.lob }));
-  SH.bereich = SH_ABLAEUFE[v] ? v : null; SH.beruehrt.clear(); SH.geschafft = false; clearTimeout(SH.timer);
+  SH.bereich = key; SH.beruehrt.clear(); SH.geschafft = false; clearTimeout(SH.timer);
   shAufraeumen();
   if (lob) { SH.geschafft = true; shLeiste(`✅ <b>Geschafft!</b> ${esc(lob)}`); shSag("Geschafft! " + lob);
     SH.timer = setTimeout(() => { SH.geschafft = false; $("shLeiste")?.remove(); if (SH.bereich) shAktualisieren(); }, 3500); return; }
@@ -1788,8 +1808,9 @@ function shLeiste(html) {
   l.querySelector("span").innerHTML = html; shLage();
 }
 function shAktualisieren() {
-  const ablauf = SH_ABLAEUFE[SH.bereich];
-  if (!ablauf || !shAn() || aktuelleAnsicht !== SH.bereich) return;
+  if (!shAn()) return;
+  const key = shAblaufKey(); if (key !== SH.bereich) return shWechsel(key);
+  const ablauf = SH_ABLAEUFE[key]; if (!ablauf) return;
   const gilt = ablauf.filter((s) => !s.wenn || s.wenn());
   const ruhe = gilt[0].ruhe || ((gilt[0].start ?? !gilt[0].wenn) && !gilt[0].fertig());
   if (SH.geschafft) { if (ruhe) return; SH.geschafft = false; clearTimeout(SH.timer); SH.beruehrt.clear(); } // 2.69.0: etwas Neues angefangen → Hilfe läuft wieder
@@ -1828,12 +1849,13 @@ function shAktualisieren() {
 }
 function shWeiter(id) { SH.beruehrt.add(id + ":weiter"); document.activeElement?.blur?.(); shAktualisieren(); } // Eingabe fertig → Tastatur zu, nächster Schritt
 // Fenster gehen auf/zu (Termin-Info, Rückfragen) → Schritte neu prüfen
-new MutationObserver(() => { if (SH.bereich && shAn()) { clearTimeout(SH.warte); SH.warte = setTimeout(shAktualisieren, 120); } }).observe(document.body, { childList: true });
+new MutationObserver(() => { if (shAn()) { clearTimeout(SH.warte); SH.warte = setTimeout(shAktualisieren, 120); } }).observe(document.body, { childList: true });
 // angetippt / getippt → Schritt merken und den nächsten zeigen (eine Stelle für alle Bereiche)
 for (const art of ["click", "input", "change"]) document.addEventListener(art, (e) => {
-  if (!SH.bereich || !shAn()) return;
-  if (art === "click" && SH.geschafft && e.target.closest?.(SH_ABLAEUFE[SH.bereich][0].ziel)) { SH.geschafft = false; SH.beruehrt.clear(); clearTimeout(SH.timer); } // noch einmal von vorn
-  if (art === "click") { SH.beruehrt.delete("los"); /* nur der letzte Tipp zählt (Abbrechen ≠ angeheftet) */
+  if (!shAn()) return;
+  if (art === "click" && SH.bereich && SH.bereich === shAblaufKey()) {
+    if (SH.geschafft && e.target.closest?.(SH_ABLAEUFE[SH.bereich][0].ziel)) { SH.geschafft = false; SH.beruehrt.clear(); clearTimeout(SH.timer); } // noch einmal von vorn
+    SH.beruehrt.delete("los"); /* nur der letzte Tipp zählt (Abbrechen ≠ angeheftet) */
     for (const s of SH_ABLAEUFE[SH.bereich]) if ((!s.wenn || s.wenn()) && e.target.closest?.(s.ziel)) { SH.beruehrt.add(s.id); if (s.ende) SH.lobJetzt = typeof s.lob === "function" ? s.lob() : s.lob; } }
   clearTimeout(SH.warte); SH.warte = setTimeout(shAktualisieren, art === "input" ? 250 : 80);
   if (art === "click") { clearTimeout(SH.nach); SH.nach = setTimeout(shAktualisieren, 700); } // Fenster, die erst nach dem Laden aufgehen
@@ -8847,7 +8869,7 @@ function avbZeigen() {
   const z = $("avbInhalt"); if (!z || !AVB) return;
   const punkt = (farbe) => `<span style="display:inline-block;width:20px;height:20px;border-radius:50%;background:${farbe};border:1px solid var(--linie);vertical-align:middle"></span>`;
   const haarPunkt = (k) => k === "meliert" ? `<span title="grau meliert" style="display:inline-block;width:20px;height:20px;border-radius:50%;background:repeating-linear-gradient(78deg,#8a6b43 0 1.1px,#e4e0d8 1.1px 1.5px,#8a6b43 1.5px 2.4px,#cfcac0 2.4px 2.75px,#8a6b43 2.75px 3.5px,#ece9e2 3.5px 3.85px);border:1px solid var(--linie);vertical-align:middle"></span>` : punkt(AV_HAAR[k]);
-  const reihe = (titel, i, werte) => `<div class="ps-schritt"><b>${titel}</b><div class="hl-chips">${werte.map((w, n) => `<button type="button" class="chip${AVB[i] === n ? " an" : ""}" onclick="AVB[${i}]=${n};avbZeigen()">${w}</button>`).join("")}</div></div>`;
+  const reihe = (titel, i, werte) => `<div class="ps-schritt" data-teil="${i}"><b>${titel}</b><div class="hl-chips">${werte.map((w, n) => `<button type="button" class="chip${AVB[i] === n ? " an" : ""}" onclick="AVB[${i}]=${n};avbZeigen()">${w}</button>`).join("")}</div></div>`;
   z.innerHTML = `<div style="display:grid;place-items:center;gap:6px;padding:6px 0 8px;position:sticky;top:44px;z-index:2;background:var(--karte);border-bottom:1px solid var(--linie)"><div class="av-gross-tipp" role="button" tabindex="0" title="Antippen = groß ansehen" onclick="avCodeGross(avbCode())">${avatarSvg(avbCode(), 160, initialen(ICH?.name))}</div><button type="button" class="knopf klein" style="margin:0" onclick="avbZufall()">🎲 Zufall</button></div>
     ${reihe("Typ", 8, ["👨‍🍳 Koch", "👩‍🍳 Köchin"])}
     ${reihe("Hautton", 0, AV_HAUT.map(punkt))}
