@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.97.0 – 2026-10-08 – 🔄 Aktualisieren bleibt nicht mehr hängen
+Auf iPad/iPhone konnte das Aktualisieren nach langer Pause im Hintergrund hängen bleiben (blaue LED). Jetzt hat jeder Schritt eine Frist – spätestens nach 30 Sekunden lädt die App neu.
+
 ## 2.96.0 – 2026-10-08 – 📖 Bedienungsanleitung Version 8
 Die Bedienungsanleitung gibt es jetzt in Version 8 (58 Seiten) – neu ist Teil 20 mit allem, was seit Version 7 dazugekommen ist: Unterstützung wählen, Schritt-für-Schritt-Hilfe, Sprachsteuerung, 👆 Was kann ich antippen?, neue Spiele, Inhaltsverzeichnis, Rückfragen und mehr. Zu finden unter Meine Dokumente.
 

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.96.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.97.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -19557,11 +19557,15 @@ async function jetztAktualisieren() {
   VB.update = true; vbStatusLed(); // blaue LED: Wartung/Update läuft
   try { localStorage.setItem("kc_club_neustart_update", "1"); } catch {} // KC-CLUB-FEHLERPROTOKOLL: kein Fehlalarm „mehrfach geöffnet“
   let fertig = false; const neu = () => { if (!fertig) { fertig = true; location.reload(); } };
+  // 2.97.0 KC-CLUB-UPDATE-FRIST (Fund Hansi, iPad: blaue LED, Update hing nach langer Pause im Hintergrund): iOS beantwortet
+  // getRegistration()/update() manchmal nie → jeder Schritt hat eine Frist, und spätestens nach 30 s wird neu geladen
+  const mitFrist = (p, ms) => Promise.race([Promise.resolve(p).catch(() => null), new Promise((ok) => setTimeout(() => ok(null), ms))]);
+  setTimeout(neu, 30000);
   try {
-    const reg = await navigator.serviceWorker?.getRegistration();
+    const reg = await mitFrist(navigator.serviceWorker?.getRegistration(), 5000);
     if (reg) {
       navigator.serviceWorker.addEventListener("controllerchange", neu, { once: true });
-      await reg.update().catch(() => {});
+      await mitFrist(reg.update(), 10000);
       const sw = reg.installing;
       if (sw) await new Promise((ok) => { const t = setTimeout(ok, 15000); sw.addEventListener("statechange", () => { if (sw.state !== "installing") { clearTimeout(t); ok(); } }); });
       if (reg.waiting) { reg.waiting.postMessage("jetzt-aktivieren"); setTimeout(neu, 4000); return; }

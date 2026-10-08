@@ -6486,3 +6486,11 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/Code <b>dort<\/b> eingeben – dann reicht ein einziger Code/.test(inh), "Start-Schritt: iPhone/iPad nur ein Code");
   assert.ok(fs.statSync(new URL("../dokumente/Koecheclub-App_Anleitung_V8.pdf", import.meta.url)).size < 10.5e6, "V8-PDF vorhanden, nicht zu groß");
 }
+
+// 4xx. 2.97.0: Aktualisieren hängt nie mehr – Fristen + spätestens nach 30 s neu laden (KC-CLUB-UPDATE-FRIST, Fund Hansi iPad)
+{
+  const f = programm.slice(programm.indexOf("async function jetztAktualisieren()"), programm.indexOf("function updateRuhig()"));
+  assert.ok(/setTimeout\(neu, 30000\);/.test(f), "Wachhund: spätestens nach 30 s neu laden");
+  assert.ok(/await mitFrist\(navigator\.serviceWorker\?\.getRegistration\(\), 5000\)/.test(f) && /await mitFrist\(reg\.update\(\), 10000\)/.test(f), "Fristen für getRegistration und update");
+  assert.ok(!/await navigator\.serviceWorker\?\.getRegistration\(\)/.test(f) && !/await reg\.update\(\)\.catch/.test(f), "kein Warten ohne Frist mehr");
+}
