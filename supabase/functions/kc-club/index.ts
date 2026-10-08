@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.103.0";
+const SERVER_VERSION = "2.108.0";
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 10 * 60000; // 2.103.0: Live-Mitschauen endet nach 10 Min.
 // Beenden = Bild sofort vom Server löschen (KC-CLUB-MITSCHAUEN)
 async function ssBeenden(pid: string, w: any) {
@@ -6418,6 +6418,40 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           if (x.wert > 0) e.ja++; else { e.nein++; if (x.notiz && e.hinweise.length < 20) e.hinweise.push({ text: x.notiz, am: x.geaendert_am }); }
         }
         return json({ bewertungen: [...je.values()].sort((a, b) => b.nein - a.nein || a.ja - b.ja), gesamt: (data ?? []).length });
+      }
+
+      case "buero_mail_senden": {
+        // KC-CLUB-BUERO-MAIL (2.108.0, Wunsch Hansi „Einlesen per Mail ruft ein fremdes Programm über Teilen auf – geht das nicht direkt?“):
+        // eingelesene Dateien direkt aus der Club-App per E-Mail an ausgewählte Mitglieder (Auswahl, keine freie Adresse – der KC
+        // Communicator kennt nur hinterlegte Adressen). Gleicher Weg wie der Wunschbogen: Anlagen-Kern + routerSenden mit Anhang.
+        // Nur Büro mit Schreibrecht, höchstens 5 Dateien (je 8 MB, zusammen 12 MB), höchstens 3 Mails je Minute. Protokoll nur Zahlen.
+        nurBueroSchreiben(ich);
+        const an = [...new Set((Array.isArray(p.an) ? p.an : []).map((x: unknown) => String(x || "")).filter(Boolean))].slice(0, 120);
+        if (!an.length) throw new Fehler("Bitte mindestens einen Empfänger auswählen.", 400);
+        const mitMail = new Map((await aktiveMitglieder()).filter((m: any) => m.email).map((m: any) => [m.person_id, m]));
+        const ziel = an.filter((id) => mitMail.has(id));
+        if (ziel.length !== an.length) throw new Fehler("Bei einem Empfänger ist keine E-Mail-Adresse hinterlegt – bitte die Auswahl prüfen.", 400);
+        const dateien = Array.isArray(p.dateien) ? p.dateien : [];
+        if (!dateien.length) throw new Fehler("Es hängt keine Datei an.", 400);
+        if (dateien.length > 5) throw new Fehler("Höchstens 5 Dateien auf einmal – bitte aufteilen.", 400);
+        if (dateien.reduce((n: number, d: any) => n + String(d?.daten || "").length * 0.75, 0) > 12 * 1024 * 1024) throw new Fehler("Die Dateien sind zusammen zu groß (höchstens 12 MB) – bitte aufteilen.", 413);
+        const { count } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("person_id", ich.person_id).eq("aktion", "buero_mail").gte("zeit", new Date(Date.now() - 60_000).toISOString());
+        if ((count ?? 0) >= 3) throw new Fehler("Gerade sind schon mehrere Mails verschickt worden – bitte eine Minute warten.", 429);
+        const sp = await speicherStand();
+        if (sp.belegt >= SPEICHER_GRENZE * FOTO_STOPP) throw new Fehler(`Der kostenlose Speicher ist fast voll – bitte ${await adminVorname()} Bescheid geben.`, 507);
+        const anl: { id: string; name: string }[] = [];
+        for (const d of dateien) anl.push(await dateiAblegen(ich, d?.name, d?.mime, d?.daten, ARCHIV_DATEITYPEN));
+        const betreff = txt(p.betreff, 150) || (anl.length === 1 ? anl[0].name : `${anl.length} Dokumente`);
+        const text = txt(p.text, 3000);
+        const versand = await routerSenden("club_nachricht_mail", ziel, {
+          titel: `📧 ${betreff}`, kurz: `${anl.length === 1 ? "1 Anhang" : anl.length + " Anhänge"} von ${ich.vorname}`,
+          betreff: `Köcheclub Werne – ${betreff}`,
+          text: `${text || `Hallo,\n\nim Anhang ${anl.length === 1 ? "findest du das Dokument" : "findest du die Dokumente"}: ${anl.map((x) => x.name).join(", ")}.`}\n\nViele Grüße\n${ich.name}`,
+          url: APP_URL, attachmentIds: anl.map((x) => x.id),
+        }, `club-buero-mail:${ich.person_id}:${Date.now()}`, p.kopie ? { bcc: [ich.person_id] } : undefined);
+        await protokoll(ich.person_id, "buero_mail", { empfaenger: ziel.length, anhaenge: anl.length, kopie: !!p.kopie, versand });
+        if (!versand.gesendet) throw new Fehler("Die E-Mail konnte gerade nicht verschickt werden – bitte später noch einmal.", 502);
+        return json({ ok: true, ...versand, empfaenger: ziel.length });
       }
 
       case "wunschbogen_mailen": {

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.107.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.108.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -2299,7 +2299,9 @@ const SH_ABLAEUFE = {
   ],
   einlesen: [
     { id: "wie", ziel: "#einlBlatt .einl-wahl", t: "📷 Foto machen oder 📁 Datei wählen – am PC kannst du sie auch hineinziehen", wenn: () => !!$("einlZiehen"), fertig: () => !$("einlZiehen") },
-    { id: "wohin", ziel: "#einlBlatt .knoepfe", t: "Wohin damit? 🗄️ in einen Ordner (mit Vorschlag), 📥 Eingangskorb, 💬 als Nachricht oder 📧 per E-Mail – antippen", wenn: () => !$("einlZiehen"), fertig: () => false },
+    { id: "wohin", ziel: "#einlBlatt .knoepfe", t: "Wohin damit? 🗄️ in einen Ordner (mit Vorschlag), 📥 Eingangskorb, 💬 als Nachricht oder 📧 per E-Mail – antippen", wenn: () => !$("einlZiehen") && !$("emListe"), fertig: () => false },
+    { id: "mailan", ziel: "#emListe", t: "Hake an, wer die Mail bekommt – oben den Namen eintippen, dann geht das Suchen schneller", wenn: () => !!$("emListe") && !EMAIL?.wahl.size, fertig: () => !!EMAIL?.wahl.size },
+    { id: "mailsenden", ziel: "#emSenden", t: "Betreff prüfen, wenn du magst einen Text dazuschreiben – dann 📧 Jetzt senden. Die Datei hängt schon an", wenn: () => !!$("emListe") && !!EMAIL?.wahl.size, fertig: () => false, ende: true },
   ],
   dienste: [
     { id: "wer", ruhe: true, ziel: "#dpPersonen", t: "Tippe deinen Namen an – mehrere Namen zeigen eure Zeiten untereinander. Mit ‹ Woche und Woche › blätterst du", fertig: () => false },
@@ -7400,7 +7402,7 @@ async function zugangAnfordern() {
 // KC-CLUB-WARTEN (0.33.0): dauert eine Anfrage länger als 0,35 s, erscheint die drehende Kochmütze mit passendem Text.
 // Hintergrund-Abfragen (alle paar Sekunden/Minuten) zeigen sie nicht, damit nichts flackert.
 const WARTEN_STILL = new Set(["nutzung_melden", "spur_melden", "standort_update", "standort_liste", "terminanfragen_liste", "init", "online", "anruf_status", "diagnose", "unterhaltung", "unterhaltungen", "einstellung_setzen", "pinnwand", "kalender", "terminumfragen_liste", "communicator_status", "ping", "anruf_ende", "protokoll_speichern", "todo_erledigt", "todo_liste", "wetter", "fotos_neueste", "admin_lage", "tippen", "pinnwand_neu", "pinnwand_gesehen"]);
-const WARTEN_TEXT = { standort_ort: "Standort wird bestimmt …", sos_ort: "Adresse wird gesucht …", standort_start: "Standort wird geteilt …", standort_ende: "Wird beendet …", terminanfrage_senden: "Anfrage wird gesendet …", terminanfrage_antwort: "Antwort wird gemeldet …", terminanfrage_absagen: "Wird abgesagt …", nachricht_senden: "Nachricht wird gesendet …", gruppe_anlegen: "Gruppe wird angelegt …", gruppe_aendern: "Wird gespeichert …", treffen_speichern: "Termin wird gespeichert …",
+const WARTEN_TEXT = { buero_mail_senden: "E-Mail wird gesendet …", standort_ort: "Standort wird bestimmt …", sos_ort: "Adresse wird gesucht …", standort_start: "Standort wird geteilt …", standort_ende: "Wird beendet …", terminanfrage_senden: "Anfrage wird gesendet …", terminanfrage_antwort: "Antwort wird gemeldet …", terminanfrage_absagen: "Wird abgesagt …", nachricht_senden: "Nachricht wird gesendet …", gruppe_anlegen: "Gruppe wird angelegt …", gruppe_aendern: "Wird gespeichert …", treffen_speichern: "Termin wird gespeichert …",
   pinnwand_anheften: "Zettel wird angeheftet …", feedback_senden: "Feedback wird gesendet …", anklopfen: "Es wird angeklopft …", anruf_start: "Anruf wird aufgebaut …", anlage_hochladen: "Wird hochgeladen …", erstattung_senden: "Antrag wird gesendet …", km_satz_setzen: "Wird gespeichert …", todo_zuweisen: "Wird zugewiesen …",
   link_erzeugen: "Link wird erzeugt …", todo_anlegen: "Wird eingetragen …", zugang_anfordern: "Mail wird gesendet …", foto_hochladen: "Foto wird hochgeladen …", test_an_mich: "Test wird gesendet …",
   init: "Wird aktualisiert …", wetter: "Wetter wird abgefragt …", admin_lage: "Server, Datenbank und Verbindungen werden geprüft …", kalender: "Termine werden geladen …",
@@ -15750,7 +15752,59 @@ function einlNachricht() {
   const E = EINL; if (!E) return; $("einlBlatt")?.remove();
   TEILEN = { text: "", dateien: E.dateien }; teilenChatWahl(); // gleicher Weg wie „Teilen → Köcheclub“: Anhänge vorausgefüllt, ➤ drückst du selbst
 }
+// KC-CLUB-BUERO-MAIL (2.108.0, Wunsch Hansi „per Mail ruft ein fremdes Programm über Teilen auf – geht das nicht direkt?“):
+// Mail direkt aus der Club-App – Empfänger aus der Mitgliederliste wählen (nur wer eine Mail-Adresse hinterlegt hat), Betreff,
+// Text, Anhang hängt schon an. Versand über den KC Communicator (Server „buero_mail_senden“). Für Adressen außerhalb des Clubs
+// bleibt „📤 Anderes Mail-Programm“ (Teilen) als zweiter Weg.
+let EMAIL = null;
 async function einlPerMail() {
+  const E = EINL; if (!E) return;
+  try { if (!MITGLIEDER) await mitgliederHolen(); } catch (e) { return meldeFehler(e); }
+  EMAIL = { wahl: new Set(), suche: "", kopie: true };
+  const groesse = E.dateien.reduce((n, f) => n + (f.size || 0), 0);
+  blattAuf("einlBlatt", `<div class="em-mail"><h3 style="margin-top:0">📧 Per E-Mail senden</h3>
+    <p class="hinweis" style="margin:0 0 8px">📎 ${E.dateien.map((f) => esc(f.name || "Dokument")).join(", ")} <span style="opacity:.7">(${groesse < 102400 ? Math.max(1, Math.round(groesse / 1024)) + " KB" : (groesse / 1048576).toFixed(1).replace(".", ",") + " MB"})</span></p>
+    <label style="font-weight:700">An wen?</label>
+    <input id="emSuche" type="search" placeholder="🔍 Name eintippen …" autocomplete="off" style="width:100%;margin:4px 0" oninput="EMAIL.suche=this.value.toLowerCase();emListe()">
+    <div id="emListe" style="max-height:34vh;overflow-y:auto;border:1px solid var(--rand,#ddd);border-radius:12px;padding:4px"></div>
+    <div id="emGewaehlt" class="hinweis" style="margin:6px 0"></div>
+    <label style="font-weight:700" for="emBetreff">Betreff</label>
+    <input id="emBetreff" maxlength="150" style="width:100%;margin:4px 0 8px" value="${esc(E.titel || "")}">
+    <label style="font-weight:700" for="emText">Text <span style="font-weight:400;opacity:.7">(kann leer bleiben)</span></label>
+    <textarea id="emText" rows="4" maxlength="3000" style="width:100%;margin:4px 0" placeholder="Hallo, im Anhang …"></textarea>
+    <label style="display:flex;gap:8px;align-items:center;margin:6px 0"><input type="checkbox" id="emKopie" checked onchange="EMAIL.kopie=this.checked"> Kopie an mich</label>
+    <div class="knoepfe" style="flex-direction:column;align-items:stretch">
+      <button class="knopf haupt" id="emSenden" onclick="emSenden()">📧 Jetzt senden</button>
+      <button class="knopf" onclick="einlPerMailExtern()">📤 Anderes Mail-Programm (Adresse außerhalb des Clubs)</button>
+      <button class="knopf" onclick="einlNachher(EINL)">↩️ Zurück</button></div></div>`);
+  emListe();
+}
+function emListe() {
+  const z = $("emListe"); if (!z || !EMAIL) return;
+  const alle = (MITGLIEDER || []).filter((m) => m.wege?.mail).sort((a, b) => String(a.name).localeCompare(String(b.name), "de"));
+  const sicht = alle.filter((m) => !EMAIL.suche || String(m.name).toLowerCase().includes(EMAIL.suche));
+  z.innerHTML = (sicht.length ? sicht.map((m) => `<label style="display:flex;gap:10px;align-items:center;padding:8px 6px;min-height:40px"><input type="checkbox" ${EMAIL.wahl.has(m.person_id) ? "checked" : ""} onchange="emWahl('${esc(m.person_id)}',this.checked)"> ${esc(m.name)}${m.person_id === ICH?.person_id ? " (ich)" : ""}</label>`).join("")
+    : '<p class="hinweis" style="margin:8px">Niemand gefunden.</p>');
+  const ohne = (MITGLIEDER || []).length - alle.length;
+  $("emGewaehlt").textContent = (EMAIL.wahl.size ? `✅ ${EMAIL.wahl.size} ausgewählt` : "Noch niemand ausgewählt") + (ohne > 0 ? ` · ${ohne} ohne hinterlegte Mail-Adresse (nicht in der Liste)` : "");
+}
+function emWahl(pid, an) { if (!EMAIL) return; if (an) EMAIL.wahl.add(pid); else EMAIL.wahl.delete(pid); emListe(); }
+async function emSenden() {
+  const E = EINL; if (!E || !EMAIL) return;
+  if (!EMAIL.wahl.size) return melde("Bitte zuerst oben mindestens einen Empfänger anhaken.", true);
+  const k = $("emSenden"); if (k?.disabled) return; if (k) k.disabled = true;
+  try {
+    const dateien = [];
+    for (const f of E.dateien) {
+      if (!ARCHIV_TYP_OK(einlMime(f))) { melde(`„${f.name}“ kann nicht per Mail verschickt werden (Dateityp).`, true); if (k) k.disabled = false; return; }
+      dateien.push({ name: f.name || "Dokument", mime: einlMime(f), daten: base64(await f.arrayBuffer()) });
+    }
+    const r = await api("buero_mail_senden", { an: [...EMAIL.wahl], betreff: $("emBetreff")?.value || "", text: $("emText")?.value || "", kopie: EMAIL.kopie, dateien }, { warten: true });
+    melde(`📧 Gesendet an ${r.empfaenger === 1 ? "1 Person" : r.empfaenger + " Personen"}${EMAIL.kopie ? " – Kopie an dich" : ""}`);
+    EMAIL = null; einlNachher(E);
+  } catch (e) { if (k) k.disabled = false; meldeFehler(e); }
+}
+async function einlPerMailExtern() {
   const E = EINL; if (!E) return;
   const files = E.dateien.map((d) => d instanceof File ? d : new File([d], d.name || "Dokument", { type: d.type }));
   try {

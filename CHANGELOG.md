@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.108.0 – 2026-10-08 – Büro: Mail direkt aus der App
+Eingelesene Dokumente gehen im Büro jetzt direkt aus der Club-App per E-Mail an ausgewählte Mitglieder – Empfänger anhaken, Betreff, Text, Anhang hängt schon an, auf Wunsch Kopie an mich. Für Adressen außerhalb des Clubs bleibt „Anderes Mail-Programm“ (KC-CLUB-BUERO-MAIL).
+
 ## 2.107.0 – 2026-10-08 – Lade-Sicherheit überall
 Dauert Laden wegen langsamem Netz zu lange (12 s) oder klappt nicht, erscheint überall eine Leiste „Laden dauert zu lange – bitte gleich nochmal versuchen“ mit 🔄 Nochmal versuchen und Abbrechen. Senden/Speichern wird nie doppelt wiederholt. Alle übrigen Abrufe haben jetzt eine Zeitgrenze (KC-CLUB-LADE-SICHERHEIT).
 

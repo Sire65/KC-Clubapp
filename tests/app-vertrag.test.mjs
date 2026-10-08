@@ -6614,3 +6614,17 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   const ohne = [...programm.matchAll(/await fetch\(([^\n]*)/g)].map((m) => m[1]).filter((z) => !/signal:/.test(z));
   assert.deepEqual(ohne, [], "fetch ohne Zeitgrenze");
 }
+
+// 4xx. 2.108.0: Büro – eingelesene Dateien direkt aus der App per E-Mail (KC-CLUB-BUERO-MAIL)
+{
+  const n = server.indexOf('case "buero_mail_senden"'), c = server.slice(n, server.indexOf("\n      case ", n + 10));
+  assert.ok(n > 0 && /nurBueroSchreiben\(ich\);/.test(c), "nur Büro mit Schreibrecht");
+  assert.ok(/aktiveMitglieder\(\)\)\.filter\(\(m: any\) => m\.email\)/.test(c) && /ziel\.length !== an\.length/.test(c), "nur aktive Mitglieder mit Mail – keine freie Adresse");
+  assert.ok(/dateien\.length > 5/.test(c) && /12 \* 1024 \* 1024/.test(c) && /dateiAblegen\(ich, d\?\.name, d\?\.mime, d\?\.daten, ARCHIV_DATEITYPEN\)/.test(c), "Grenzen + erlaubte Dateitypen");
+  assert.ok(/\(count \?\? 0\) >= 3/.test(c), "höchstens 3 Mails je Minute");
+  assert.ok(/routerSenden\("club_nachricht_mail", ziel, \{[^]*attachmentIds: anl\.map/.test(c), "Versand über den KC Communicator mit Anhang");
+  assert.ok(/protokoll\(ich\.person_id, "buero_mail", \{ empfaenger: ziel\.length, anhaenge: anl\.length/.test(c) && !/betreff|text/.test(c.slice(c.indexOf('protokoll(ich.person_id, "buero_mail"'), c.indexOf('protokoll(ich.person_id, "buero_mail"') + 120)), "Protokoll nur Zahlen");
+  assert.ok(/onclick="emSenden\(\)">📧 Jetzt senden/.test(programm) && /\(MITGLIEDER \|\| \[\]\)\.filter\(\(m\) => m\.wege\?\.mail\)/.test(programm), "Fenster mit Auswahl aus der Mitgliederliste");
+  assert.ok(/onclick="einlPerMailExtern\(\)">📤 Anderes Mail-Programm/.test(programm) && /async function einlPerMailExtern\(\)/.test(programm), "Teilen bleibt als zweiter Weg");
+  assert.ok(/\{ id: "mailan", ziel: "#emListe"/.test(programm), "Schritt-Hilfe im Mail-Fenster");
+}
