@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.122.0 – 2026-10-08 – Gesamtprüfung 4
+🔧 Kleine Systemverbesserungen
+Admin-Notiz (Gesamtprüfung 4): Notfall-Paket baut 4 Mitglieder parallel (KC-CLUB-NOTPAKET-TEMPO, vorher ~100 s → Abbrüche 546);
+Anruf: Auflegen während der Vorbereitung stürzt nicht mehr ab; #zu=-Sprunglinks beim Start funktionieren wieder (KC-CLUB-SPRUNG-START);
+Mitschauen: nur eine Abfrage gleichzeitig, keine falsche „Keine Antwort“-Meldung (KC-CLUB-SS-TAKT); „online“ nie aus altem Stand (KC-CLUB-ONLINE-FRISCH);
+„Laden hat nicht geklappt“ antwortet nach 60 s / bei Netz-Rückkehr von selbst (KC-CLUB-LADE-FRAGE-FRIST); Mitglieder-Seite wackelte 7 px seitlich (KC-CLUB-MG-SCHALTER-BREITE);
+große Schrift „📨 Jetzt senden“; Server: Mail-Bremse zählt Versuche vor dem Senden (KC-CLUB-MAIL-BREMSE), Spur/Start/Diagnose/Sprache je Person und Stunde begrenzt (KC-CLUB-PROTOKOLL-BREMSE).
+
 ## 2.121.0 – 2026-10-08 – Online-Zahl überall gleich
 „Online (n)“ auf der Mitgliederseite, der Online-Filter und die Anklopf-/Anruf-Knöpfe nehmen jetzt dieselbe, laufend aufgefrischte Online-Liste wie die Zahl in der unteren Leiste (KC-CLUB-ONLINE-EINE-QUELLE).
 

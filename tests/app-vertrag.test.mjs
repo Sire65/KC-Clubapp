@@ -6621,7 +6621,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(n > 0 && /nurBueroSchreiben\(ich\);/.test(c), "nur Büro mit Schreibrecht");
   assert.ok(/aktiveMitglieder\(\)\)\.filter\(\(m: any\) => m\.email\)/.test(c) && /ziel\.length !== an\.length/.test(c), "nur aktive Mitglieder mit Mail – keine freie Adresse");
   assert.ok(/dateien\.length > (5|10)/.test(c) && /12 \* 1024 \* 1024/.test(c) && /dateiAblegen\(ich, d\?\.name, d\?\.mime, d\?\.daten, ARCHIV_DATEITYPEN\)/.test(c), "Grenzen + erlaubte Dateitypen");
-  assert.ok(/\(count \?\? 0\) >= 3/.test(c), "höchstens 3 Mails je Minute");
+  assert.ok(/\(count \?\? 0\) >= 3|\(count \?\? 0\) > 3/.test(c), "höchstens 3 Mails je Minute");
   assert.ok(/routerSenden\("club_nachricht_mail", ziel, \{[^]*attachmentIds: anl\.map/.test(c), "Versand über den KC Communicator mit Anhang");
   assert.ok(/protokoll\(ich\.person_id, "buero_mail", \{ empfaenger: ziel\.length, anhaenge: anl\.length/.test(c) && !/betreff|text/.test(c.slice(c.indexOf('protokoll(ich.person_id, "buero_mail"'), c.indexOf('protokoll(ich.person_id, "buero_mail"') + 120)), "Protokoll nur Zahlen");
   assert.ok(/const an = liste\(p\.an\), cc = liste\(p\.cc\)\.filter\(\(id\) => !an\.includes\(id\)\), bcc = liste\(p\.bcc\)/.test(c) && /cc\.length \|\| bcc\.length \? \{ cc, bcc \} : undefined/.test(c), "2.109.0: CC und BCC");
@@ -6824,4 +6824,32 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/const mgOn = \(m\) => \{ try \{ if \(m && !m\.verborgen && ONL\.stand && Date\.now\(\) - ONL\.stand < 3 \* 60 \* 1000\) return ONL\.ids\.has\(m\.person_id\)/.test(programm), "eine Quelle, alter Stand → Liste");
   const f = programm.slice(programm.indexOf("function mitgliederZeichnen()"), programm.indexOf("function mitgliederZeichnen()") + 3000);
   assert.ok(/anzahl = MITGLIEDER\.filter\(\(m\) => mgOn\(m\)\)\.length/.test(f) && !/\bm\.online\b/.test(f), "Zahl „Online (n)“ = Leiste");
+}
+
+// 4xx. 2.122.0: Gesamtprüfung 4
+{
+  // KC-CLUB-NOTPAKET-TEMPO: Notfall-Paket mit 4 parallelen Läufen statt nacheinander (vorher ~100 s → 546)
+  assert.ok(/const NOT_PARALLEL = 4;/.test(server) && /Array\.from\(\{ length: Math\.min\(NOT_PARALLEL, liste\.length\) \}, async \(\) => \{ for \(let z = liste\.shift\(\); z; z = liste\.shift\(\)\) await einer\(z\); \}\)/.test(server), "Notpaket parallel");
+  // Anruf: Auflegen während der Vorbereitung
+  const an = programm.slice(programm.indexOf("const lauf = RUF, art = RUF.art;"), programm.indexOf("const lauf = RUF, art = RUF.art;") + 1500);
+  assert.ok(an.length > 100 && /if \(RUF !== lauf\) \{ try \{ strom\?\.getTracks/.test(an) && /catch \(e\) \{ if \(RUF !== lauf\) return; anrufAufraeumen\(\)/.test(an), "Anruf-Rennen abgefangen");
+  // KC-CLUB-SPRUNG-START: lokale Variable verdeckt function sprung() nicht mehr
+  assert.ok(/const startSprung = location\.hash; START_HASH = startSprung;/.test(programm) && /const h = startSprung;/.test(programm) && !/const sprung = location\.hash/.test(programm) && /^function sprung\(id\)/m.test(programm), "#zu=-Links");
+  // KC-CLUB-SS-TAKT
+  const ss = programm.slice(programm.indexOf("async function ssHolen()"), programm.indexOf("function ssSpeichern()"));
+  assert.ok(/if \(SS\.laeuft\) return; SS\.laeuft = true; const id = SS\.id;/.test(ss) && /if \(SS\.id !== id\) return;/.test(ss) && /!\(r\.n <= SS\.seit\)/.test(ss) && /finally \{ SS\.laeuft = false; \}/.test(ss), "Mitschauen: eine Abfrage, alte Antworten verwerfen");
+  // KC-CLUB-ONLINE-FRISCH
+  assert.ok(/MITGLIEDER = r\.mitglieder; MITGLIEDER_STAND = Date\.now\(\);/.test(programm) && /return !!m\?\.online && Date\.now\(\) - MITGLIEDER_STAND < 3 \* 60 \* 1000; \}/.test(programm), "online nie aus altem Stand");
+  // KC-CLUB-LADE-FRAGE-FRIST
+  const lf = programm.slice(programm.indexOf("function ladeFrage()"), programm.indexOf("function ladeZeigen()"));
+  assert.ok(/addEventListener\("online", netz\)/.test(lf) && /ladeWahl\("abbrechen"\); \}, 60000\)/.test(lf) && /p\.then\(weg\)/.test(lf), "Frage hängt nicht ewig");
+  // Layout
+  assert.ok(/\.mg-schalter #mgFilter button \{ white-space: normal;/.test(seite) && /:root\.gross \.na-pfeil-knoepfe \.knopf \{ white-space: normal; \}/.test(seite), "nicht breiter als der Bildschirm");
+  // KC-CLUB-MAIL-BREMSE: erst Versuch eintragen, dann zählen
+  const bm = server.slice(server.indexOf('case "buero_mail_senden"'), server.indexOf('case "buero_mail_senden"') + 4000);
+  assert.ok(bm.indexOf('protokoll(ich.person_id, "buero_mail_versuch"') > 0 && bm.indexOf('protokoll(ich.person_id, "buero_mail_versuch"') < bm.indexOf('.eq("aktion", "buero_mail_versuch")') && bm.indexOf('.eq("aktion", "buero_mail_versuch")') < bm.indexOf("routerSenden(") && /if \(\(count \?\? 0\) > 3\)/.test(bm), "Mail-Bremse vor dem Senden");
+  // KC-CLUB-PROTOKOLL-BREMSE
+  assert.ok(/async function protokollPlatz\(person: string, aktion: string, proStunde: number\)/.test(server)
+    && /await protokollPlatz\(ich\.person_id, "spur", 120\)/.test(server) && /await protokollPlatz\(ich\.person_id, "app_start", 60\)/.test(server)
+    && /await protokollPlatz\(ich\.person_id, "sprache_unbekannt", 60\)/.test(server) && /await protokollPlatz\(ich\.person_id, "diagnose_%", 120\)/.test(server), "Protokoll-Flut gebremst");
 }

@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.120.0";
+const SERVER_VERSION = "2.122.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 10 * 60000; // 2.103.0: Live-Mitschauen endet nach 10 Min.
 // Beenden = Bild sofort vom Server löschen (KC-CLUB-MITSCHAUEN)
@@ -117,6 +117,14 @@ async function aktiveMitglieder() {
 }
 async function protokoll(person: string | null, aktion: string, details: Record<string, unknown> = {}) {
   await db.from("kc_club_protokoll").insert({ person_id: person, aktion, details });
+}
+// KC-CLUB-PROTOKOLL-BREMSE (2.122.0, Gesamtprüfung 4): Meldungen ohne Inhalt (Spur, Start, Diagnose, Sprache) höchstens n je Person und Stunde –
+// sonst könnte jemand das Protokoll fluten, und der Protokoll-Wächter würde dafür die normalen Einträge der anderen wegräumen. Muster mit % = Anfang.
+async function protokollPlatz(person: string, aktion: string, proStunde: number) {
+  let q = db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("person_id", person).gte("zeit", new Date(Date.now() - 3600000).toISOString());
+  q = aktion.endsWith("%") ? q.like("aktion", aktion) : q.eq("aktion", aktion);
+  const { count, error } = await q;
+  return !!error || (count ?? 0) < proStunde; // Zählfehler → nicht blockieren (Meldungen sind nur Hilfsdaten)
 }
 // KC-CLUB-LOESCHEN: vor jedem Löschen eine vollständige Sicherung ins Änderungsprotokoll (Wiederherstellungspunkt)
 async function geloescht(ich: { person_id: string }, was: string, sicherung: Record<string, unknown>) {
@@ -2324,7 +2332,7 @@ const START_TAGE = 180;
 // PROT_ZIEL_ZEILEN erreicht sind – und es steht eine Zeile „protokoll_waechter“ mit den Zahlen im Protokoll (nie Inhalte).
 // Läuft im nächtlichen Wartungslauf; spur (30 Tage) und app_start (180 Tage) behalten ihre eigenen Fristen.
 const PROT_LAERM_TAGE = 60, PROT_ALT_TAGE = 365, PROT_MAX_ZEILEN = 50000, PROT_ZIEL_ZEILEN = 40000;
-const PROT_LAERM = ["mitglied_details", "aenderungen_angesehen", "meine_daten_angesehen", "fehler_alte_version", "fehler_umgebung", "fehler_startzeit", "sos_geoeffnet"];
+const PROT_LAERM = ["mitglied_details", "aenderungen_angesehen", "meine_daten_angesehen", "fehler_alte_version", "fehler_umgebung", "fehler_startzeit", "sos_geoeffnet", "buero_mail_versuch"]; // 2.122.0: Mail-Bremse braucht ihn nur 1 Minute
 const PROT_LAERM_PRAEFIX = ["diagnose_%", "fehler_update_%"];
 const PROT_WICHTIG = ["%zugang%", "%link%", "%kurzcode%", "%sperr%", "%rolle%", "%recht%", "admin_%", "%geloescht%", "%endgueltig%", "%entfernt%",
   "%zusammengefuehrt%", "%freigab%", "%notbetrieb%", "%sicherheit%", "%schnappschuss%", "%mitschau%", "notfall_%", "hilferuf", "aenderung_%", "erstattung%",
@@ -6491,8 +6499,10 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (!dateien.length) throw new Fehler("Es hängt keine Datei an.", 400);
         if (dateien.length > 10) throw new Fehler("Höchstens 10 Dateien auf einmal – bitte aufteilen.", 400); // 2.112.0: 10 (Aufstellung + Belege)
         if (dateien.reduce((n: number, d: any) => n + String(d?.daten || "").length * 0.75, 0) > 12 * 1024 * 1024) throw new Fehler("Die Dateien sind zusammen zu groß (höchstens 12 MB) – bitte aufteilen.", 413);
-        const { count } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("person_id", ich.person_id).eq("aktion", "buero_mail").gte("zeit", new Date(Date.now() - 60_000).toISOString());
-        if ((count ?? 0) >= 3) throw new Fehler("Gerade sind schon mehrere Mails verschickt worden – bitte eine Minute warten.", 429);
+        // 2.122.0 KC-CLUB-MAIL-BREMSE (Gesamtprüfung 4): erst den Versuch eintragen, dann zählen – sonst kämen viele gleichzeitige Anfragen alle durch
+        await protokoll(ich.person_id, "buero_mail_versuch", { empfaenger: ziel.length });
+        const { count } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("person_id", ich.person_id).eq("aktion", "buero_mail_versuch").gte("zeit", new Date(Date.now() - 60_000).toISOString());
+        if ((count ?? 0) > 3) throw new Fehler("Gerade sind schon mehrere Mails verschickt worden – bitte eine Minute warten.", 429);
         const sp = await speicherStand();
         if (sp.belegt >= SPEICHER_GRENZE * FOTO_STOPP) throw new Fehler(`Der kostenlose Speicher ist fast voll – bitte ${await adminVorname()} Bescheid geben.`, 507);
         const anl: { id: string; name: string }[] = [];
@@ -7204,7 +7214,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           && Number.isFinite(Number(x[0])) && Number(x[0]) > jetztMs - 3 * 86400000 && Number(x[0]) < jetztMs + 300000
           && SPUR_WAS.test(String(x[1] ?? "")) && (x[2] == null || SPUR_MIT.test(String(x[2]))))
           .map((x: any) => (x[2] == null ? [Math.round(Number(x[0])), String(x[1])] : [Math.round(Number(x[0])), String(x[1]), String(x[2])]));
-        if (s.length) await protokoll(ich.person_id, "spur", { s });
+        if (s.length && await protokollPlatz(ich.person_id, "spur", 120)) await protokoll(ich.person_id, "spur", { s });
         return json({ ok: true, n: s.length });
       }
       // KC-CLUB-STARTSTATISTIK (2.31.0): App meldet nach jedem Start die Messung (Zeiten in ms, Gerät/Browser als grobe Namen, nie Inhalte)
@@ -7215,7 +7225,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           server: startZahl(t.server), anzeige: startZahl(t.anzeige), netz: startText(p.netz, 10), quelle: startText(p.quelle, 10), app: p.app === true,
           system: startText(p.system), browser: startText(p.browser), bildschirm: startText(p.bildschirm, 12), v: startText(p.v, 12), spar: p.spar === true };
         if (d.ms === null) throw new Fehler("Messung ungültig.", 400);
-        await protokoll(ich.person_id, "app_start", d);
+        if (await protokollPlatz(ich.person_id, "app_start", 60)) await protokoll(ich.person_id, "app_start", d);
         return json({ ok: true });
       }
       case "start_statistik": {
@@ -7292,7 +7302,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       }
       case "sprache_unbekannt": {
         const satz = sprachSatz(p.satz);
-        if (satz && !ich.nurLesen) await protokoll(ich.person_id, "sprache_unbekannt", { satz });
+        if (satz && !ich.nurLesen && await protokollPlatz(ich.person_id, "sprache_unbekannt", 60)) await protokoll(ich.person_id, "sprache_unbekannt", { satz });
         return json({ ok: true, gespeichert: !!satz });
       }
       case "sprache_admin": {
@@ -10342,6 +10352,7 @@ Köcheclub-App`,
         const d = (p.daten && typeof p.daten === "object") ? p.daten : {};
         const sauber: Record<string, unknown> = {};
         for (const [k, v] of Object.entries(d).slice(0, 20)) sauber[txt(k, 30)] = typeof v === "number" || typeof v === "boolean" ? v : txt(v, 200);
+        if (!await protokollPlatz(ich.person_id, "diagnose_%", 120)) return json({ ok: true });
         await protokoll(ich.person_id, "diagnose_" + (txt(p.art, 20).replace(/[^a-z_]/g, "") || "allg"), { ...sauber, ua: txt(req.headers.get("user-agent"), 200), version: txt(req.headers.get("x-club-version"), 20) });
         return json({ ok: true });
       }
@@ -11032,6 +11043,7 @@ async function gzip(text: string): Promise<Uint8Array> {
   const s = new Blob([text]).stream().pipeThrough(new CompressionStream("gzip"));
   return new Uint8Array(await new Response(s).arrayBuffer());
 }
+const NOT_PARALLEL = 4;
 async function notpaketBauen() {
   const { data: zug } = await db.from("kc_club_zugang").select("person_id,token_hash").eq("aktiv", true).not("token_hash", "is", null).not("person_id", "like", "KC-P-TEST%");
   const ids = (zug ?? []).map((z: any) => z.person_id);
@@ -11045,8 +11057,8 @@ async function notpaketBauen() {
   const holen = async (ich: Ich, a: string, prm: Record<string, unknown>) => {
     try { const r = await aktionAusfuehren(a, prm, ich, anfrage, 0, 0); return r.ok ? await r.json() : null; } catch { return null; }
   };
-  for (const z of zug ?? []) {
-    const p0 = pm.get(z.person_id); if (!p0?.active) continue;
+  const einer = async (z: any) => {
+    const p0 = pm.get(z.person_id); if (!p0?.active) return;
     const ich: Ich = { ...ichAus(p0, rm.get(z.person_id) ?? null), nurLesen: true };
     const antworten: Record<string, unknown> = {};
     for (const [a, prm] of NOT_AKTIONEN) { const j = await holen(ich, a, prm); if (j) antworten[a] = j; }
@@ -11054,7 +11066,11 @@ async function notpaketBauen() {
     const chats = ((antworten.unterhaltungen as any)?.unterhaltungen ?? []).slice(0, NOT_CHATS);
     for (const c of chats) { const j = await holen(ich, "unterhaltung", { id: c.id }); if (j) antworten["unterhaltung:" + c.id] = j; }
     mitglieder[z.token_hash] = { person_id: z.person_id, antworten };
-  }
+  };
+  // KC-CLUB-NOTPAKET-TEMPO (2.122.0, Gesamtprüfung 4): nacheinander dauerte es ~100 s für 17 Mitglieder – der Lauf wurde oft vom
+  // Server-Zeitlimit abgebrochen (Status 546). Jetzt NOT_PARALLEL Mitglieder gleichzeitig (je Mitglied weiter der Reihe nach).
+  const liste = [...(zug ?? [])];
+  await Promise.all(Array.from({ length: Math.min(NOT_PARALLEL, liste.length) }, async () => { for (let z = liste.shift(); z; z = liste.shift()) await einer(z); }));
   return { mitglieder, anzahl: Object.keys(mitglieder).length };
 }
 // ---------- KC-CLUB-NOTBETRIEB-STUFE2 (1.54.0): im Notbetrieb Geschriebenes nachtragen ----------

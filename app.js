@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.121.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.122.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -458,6 +458,7 @@ function entwicklerZeigen() {
 // KC-CLUB-ZURUECK-FENSTER (1.98.0): zuletzt gesetzter Verlaufseintrag (für „Zurück schließt nur das Fenster“)
 const VERLAUF = { state: null, url: "" };
 for (const m of ["pushState", "replaceState"]) { const o = history[m].bind(history); history[m] = (st, t, u) => { o(st, t, u); VERLAUF.state = history.state; VERLAUF.url = location.href; }; } // KC-CLUB-ONLINE-SEITE (1.91.0): einmaliger Filter der Mitglieder-Seite (früh deklariert, zeige() nutzt ihn)
+let MITGLIEDER_STAND = 0; // 2.122.0 KC-CLUB-ONLINE-FRISCH: wann die Mitgliederliste (mit .online) zuletzt frisch geholt wurde
 let START_HASH = "", KEY = "", ICH = null, INIT = null, MITGLIEDER = null, AEMTER = [], aktuelleAnsicht = "start", reg = "verein";
 let chatId = null, chatTimer = null, empfWahl = { personen: [], aemter: [], alle: false, vorstand: false }, anlagen = [], letzteUngelesen = null;
 
@@ -3703,14 +3704,19 @@ async function anrufen(pid, mitBild) {
   const m = MITGLIEDER?.find((x) => x.person_id === pid) || ONL.liste.find((x) => x.person_id === pid) || { person_id: pid, name: "" };
   RUF = { rolle: "rufer", gegen: m, art: mitBild ? "video" : "ton" }; spur(mitBild ? "video" : "anruf", pid); // KC-CLUB-SPUR
   anrufSchirm(m); anrufKnoepfe("rufe"); anrufZustand(mitBild ? "Kamera und Mikrofon werden vorbereitet …" : "Mikrofon wird vorbereitet …");
+  const lauf = RUF, art = RUF.art; // 2.122.0 (Gesamtprüfung 4, Fehlerprotokoll): wird während der Vorbereitung aufgelegt, ist RUF schon weg
   try {
-    const { pc, strom } = await anrufVerbindung(mitBild); Object.assign(RUF, { pc, strom }); anrufKnoepfe("rufe");
+    const { pc, strom } = await anrufVerbindung(mitBild);
+    if (RUF !== lauf) { try { strom?.getTracks?.().forEach((t) => t.stop()); pc?.close?.(); } catch {} return; } // abgebrochen: Mikrofon/Kamera wieder frei
+    Object.assign(RUF, { pc, strom }); anrufKnoepfe("rufe");
     await pc.setLocalDescription(await pc.createOffer()); await iceFertig(pc);
-    const r = await api("anruf_start", { an: pid, angebot: pc.localDescription.sdp, art: RUF.art });
+    if (RUF !== lauf) return;
+    const r = await api("anruf_start", { an: pid, angebot: pc.localDescription.sdp, art });
     if (r.gegenanruf) { anrufAufraeumen(); return gegenanrufAnnehmen(r.gegenanruf, mitBild); }
+    if (RUF !== lauf) { api("anruf_ende", { id: r.id }).catch(() => {}); return; } // während des Startens aufgelegt → beim Server gleich beenden
     RUF.id = r.id; anrufZustand(`${mitBild ? "🎥" : "📞"} Klingelt bei ${m.vorname || m.name} …`); klang("frei");
     RUF.poll = setInterval(anrufPruefen, 1500);
-  } catch (e) { anrufAufraeumen(); meldeFehler(e); }
+  } catch (e) { if (RUF !== lauf) return; anrufAufraeumen(); meldeFehler(e); }
 }
 // Status abfragen: Anrufer wartet auf Antwort; beide merken, wenn der andere auflegt
 async function anrufPruefen() {
@@ -7887,7 +7893,15 @@ function ladeWahl(w) { // w: "nochmal" | "abbrechen" | "ok"
   for (const l of LADE.laufe) if (l.lesen && l.langsam) { l.wunsch = w; l.ab.abort(); }
 }
 function ladeFrage() {
-  if (!LADE.frage) { let ok; const p = new Promise((j) => { ok = j; }); LADE.frage = { p, ok }; ladeZeigen(); }
+  if (!LADE.frage) {
+    let ok; const p = new Promise((j) => { ok = j; }); LADE.frage = { p, ok }; ladeZeigen();
+    // 2.122.0 KC-CLUB-LADE-FRAGE-FRIST: die Frage hält sonst Neu-Laden und Updates fest, bis jemand tippt.
+    // Netz wieder da → von selbst nochmal versuchen; nach 60 s ohne Antwort → abbrechen (Stand bleibt sichtbar als alt markiert).
+    const f = LADE.frage, weg = () => { clearTimeout(uhr); removeEventListener("online", netz); };
+    const netz = () => { weg(); if (LADE.frage === f) ladeWahl("nochmal"); };
+    const uhr = setTimeout(() => { weg(); if (LADE.frage === f) ladeWahl("abbrechen"); }, 60000);
+    addEventListener("online", netz); p.then(weg);
+  }
   return LADE.frage.p;
 }
 function ladeZeigen() {
@@ -15731,7 +15745,7 @@ async function bildLaden(img, frisch = false) {
 async function anlageOeffnen(id) { try { const r = await api("anlage_url", { id }); window.open(r.url, "_blank"); } catch (e) { meldeFehler(e); } }
 
 let ONLINE_SICHTBAR = true; // KC-CLUB-ONLINEFILTER: sehe ich überhaupt, wer online ist? (Server: onlineSichtbar)
-async function mitgliederHolen() { const r = await api("mitglieder"); MITGLIEDER = r.mitglieder; AEMTER = r.aemter; ONLINE_SICHTBAR = r.onlineSichtbar !== false; return r; }
+async function mitgliederHolen() { const r = await api("mitglieder"); MITGLIEDER = r.mitglieder; MITGLIEDER_STAND = Date.now(); AEMTER = r.aemter; ONLINE_SICHTBAR = r.onlineSichtbar !== false; return r; }
 async function neueNachricht() {
   if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return meldeFehler(e); }
   empfWahl = { personen: [], aemter: [], alle: false, vorstand: false }; $("neuBetreff").value = ""; $("empfSuche").value = "";
@@ -17073,7 +17087,7 @@ function mgGruppenZeichnen() {
 // KC-CLUB-ONLINE-EINE-QUELLE (2.121.0, Hinweis Hansi „oben Online (0), unten 1“): auch Zahl, Filter, Anklopfen und Anruf-Knöpfe der
 // Mitgliederseite aus dem laufenden Online-Takt (wie Kreis, LED und Zahl in der Leiste) – die Liste wird nur beim Öffnen geladen.
 // Stand älter als 3 Min. → Wert aus der Liste (nie „online“ aus altem Stand erfinden).
-const mgOn = (m) => { try { if (m && !m.verborgen && ONL.stand && Date.now() - ONL.stand < 3 * 60 * 1000) return ONL.ids.has(m.person_id) && m.person_id !== ICH?.person_id; } catch {} return !!m?.online; };
+const mgOn = (m) => { try { if (m && !m.verborgen && ONL.stand && Date.now() - ONL.stand < 3 * 60 * 1000) return ONL.ids.has(m.person_id) && m.person_id !== ICH?.person_id; } catch {} return !!m?.online && Date.now() - MITGLIEDER_STAND < 3 * 60 * 1000; }; // 2.122.0: alter Stand → nie „online“ erfinden
 function mgAnrufKnoepfe(m) {
   const on = mgOn(m), vn = esc(String(m.name || "").split(" ")[0]).replace(/'/g, "&#39;");
   const aus = `melde('${vn} ist gerade nicht online – Anrufen geht nur, wenn ihr beide die App offen habt. Schreib ${vn} lieber 💬 oder klopf später an.')`;
@@ -21732,13 +21746,16 @@ function ssAbbrechen() {
 }
 async function ssHolen() {
   if (!SS.id || !$("ssBlatt")) { if (SS.id) api("schnappschuss_ende", { an: SS.an, id: SS.id }).catch(() => {}); clearInterval(SS.uhr); SS.id = null; return; } // Fenster weg → Mitschauen beenden
+  // 2.122.0 KC-CLUB-SS-TAKT: nur eine Abfrage gleichzeitig; späte Antworten zu einer beendeten Sitzung oder alte Bilder verwerfen
+  if (SS.laeuft) return; SS.laeuft = true; const id = SS.id;
   try {
-    const r = await api("schnappschuss_holen", { an: SS.an, id: SS.id, seit: SS.seit });
-    if (r.status === "live") { if (r.bild) { SS.seit = r.n; ssZeigen("live", r.bild); } return; }
+    const r = await api("schnappschuss_holen", { an: SS.an, id, seit: SS.seit });
+    if (SS.id !== id) return;
+    if (r.status === "live") { if (r.bild && !(r.n <= SS.seit)) { SS.seit = r.n; ssZeigen("live", r.bild); } return; }
     if (r.status === "bild") { clearInterval(SS.uhr); SS.id = null; return ssZeigen("bild", r.bild); }
     if (r.status === "beendet" && SS.seit) { clearInterval(SS.uhr); SS.id = null; return ssZeigen("beendet", $("ssBild")?.src); }
     if (["abgelehnt", "keine_antwort", "vorbei", "abgeholt", "beendet"].includes(r.status) || Date.now() > SS.bis + 10000 && !SS.seit) { clearInterval(SS.uhr); SS.id = null; return ssZeigen(r.status === "abgelehnt" ? "abgelehnt" : "keine_antwort"); }
-  } catch {}
+  } catch {} finally { SS.laeuft = false; }
 }
 function ssSpeichern() {
   const b = $("ssBild")?.src; if (!b) return;
@@ -22148,7 +22165,7 @@ async function fpAdmin(tage) {
   // 2.0.0: jeder Aufbauschritt für sich – ein Fehler in einem Teil hält den Rest (und die Update-Prüfung) nicht auf
   for (const f of [klappenMerken, registerZeigen, kachelnZeigen, suLupenEinbauen]) try { f(); } catch (e) { fpNeu("skript", { text: `Start: ${f.name}: ${e?.message || e}` }); }
   // Verlauf: unten ein „Basis“-Eintrag, darüber die Startseite → „Zurück“ bleibt in der App
-  const sprung = location.hash; START_HASH = sprung;
+  const startSprung = location.hash; START_HASH = startSprung; // 2.122.0 KC-CLUB-SPRUNG-START: hieß „sprung“ und verdeckte function sprung() → #zu=-Links liefen ins Leere
   history.replaceState({ basis: true }, "", url.pathname);
   history.pushState({ v: "start", tiefe: 1 }, "", url.pathname);
   if ("serviceWorker" in navigator) {
@@ -22158,7 +22175,7 @@ async function fpAdmin(tage) {
   // Messung: wie wurde die App gestartet (einmal je Sitzung) – zeigt, ob die Installation geklappt hat
   try { if (!sessionStorage.getItem("kc_club_start_gemeldet")) { sessionStorage.setItem("kc_club_start_gemeldet", "1"); setTimeout(() => api("diagnose", { art: "start", daten: { start: START_ART, referrer: (document.referrer || "").slice(0, 80) } }).catch(() => {}), 1500); } } catch {}
   neuLaden().then(() => {
-    const h = sprung;
+    const h = startSprung;
     if (h.startsWith("#nachricht=")) chatOeffnen(h.slice(11));
     else if (h.startsWith("#gratulieren=")) gratulieren(h.slice(13));
     else if (h.startsWith("#protokoll=")) protokollOeffnen(h.slice(11));
