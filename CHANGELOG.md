@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.115.0 – 2026-10-08 – Kein Stau beim Tippen
+Bei langsamem Netz stauten sich die „schreibt …“-Meldungen und bremsten danach Chat und Senden. Jetzt ist immer nur eine unterwegs (KC-CLUB-TEMPO).
+
 ## 2.114.0 – 2026-10-08 – Protokoll-Wächter
 Der nächtliche Wartungslauf hält das Club-Protokoll klein: Ansehen/Diagnose nach 60 Tagen, Alltägliches nach einem Jahr; Wichtiges (Zugänge, Rechte, Sperren, Löschungen, Datenänderungen, Notfall) bleibt. Über 50.000 Einträge werden die ältesten nicht-wichtigen entfernt (KC-CLUB-PROTOKOLL-WAECHTER).
 

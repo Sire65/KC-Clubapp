@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.114.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.115.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -3518,9 +3518,15 @@ function tippenMelden() {
   const live = liveTippen(), abstand = live ? 1000 : 3000;
   clearTimeout(TIPP.nach);
   if (TIPP.id === chatId && Date.now() - TIPP.zuletzt < abstand) { if (live) TIPP.nach = setTimeout(tippenMelden, abstand); return; }
+  // KC-CLUB-TEMPO (2.115.0, Tempo-Log 08.10.: bei langsamem Netz 6 „tippen“ gleichzeitig, je 2–8 s – danach waren Chat und Senden
+  // 7–8 s langsam): nie mehr als eine Meldung unterwegs; der letzte Stand geht hinterher, sobald die vorige angekommen ist
+  if (TIPP_UNTERWEGS) { TIPP_NOCHMAL = true; return; }
   TIPP = { zuletzt: Date.now(), id: chatId, nach: null }; CHAT_AKTIV = Date.now(); // KC-CLUB-SPARTAKT
-  api("tippen", { id: chatId, ...(live ? { text: [...text].slice(-LIVE_TIPPEN_ZEICHEN).join("") } : {}) }).catch(() => {});
+  TIPP_UNTERWEGS = true;
+  api("tippen", { id: chatId, ...(live ? { text: [...text].slice(-LIVE_TIPPEN_ZEICHEN).join("") } : {}) }).catch(() => {})
+    .finally(() => { TIPP_UNTERWEGS = false; if (TIPP_NOCHMAL) { TIPP_NOCHMAL = false; if (live) tippenMelden(); } });
 }
+let TIPP_UNTERWEGS = false, TIPP_NOCHMAL = false;
 // KC-CLUB-CHAT-ABSTAND (1.11.0, Wunsch Hansi): letzte Nachricht stößt nicht mehr unten an – Abstand = gemessene Höhe
 // des Eingabebereichs (+ untere Leiste) + etwas Luft; passt sich an, wenn Antwort-/Emoji-/Aufnahmeleiste dazukommt.
 function chatAbstand() {

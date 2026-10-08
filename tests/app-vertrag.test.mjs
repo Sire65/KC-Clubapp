@@ -6689,3 +6689,9 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/await protokoll\(null, "protokoll_waechter", \{ laerm, alt, voll, vorher: /.test(w), "Zahlen im Protokoll, keine Inhalte");
   assert.ok(/await protokollWaechter\(\)\.catch\(/.test(server), "läuft im Wartungslauf");
 }
+
+// 4xx. 2.115.0: „schreibt …“ – nie mehr als eine Meldung unterwegs (KC-CLUB-TEMPO, Befund Tempo-Log)
+{
+  const f = programm.slice(programm.indexOf("function tippenMelden()"), programm.indexOf("let TIPP_UNTERWEGS"));
+  assert.ok(/if \(TIPP_UNTERWEGS\) \{ TIPP_NOCHMAL = true; return; \}/.test(f) && /\.finally\(\(\) => \{ TIPP_UNTERWEGS = false;/.test(f), "kein Stau beim Tippen");
+}
