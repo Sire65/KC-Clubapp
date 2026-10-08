@@ -1,0 +1,7 @@
+Schachfiguren (klassisch) für die Köcheclub-App – KC-CLUB-SCHACH-SPASS (2.116.0)
+Quelle: Colin M.L. Burnett („Cburnett“), Wikimedia Commons, Dateien Chess_{k,q,r,b,n,p}{l,d}t45.svg
+        https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces
+Lizenz: Der Urheber stellt die Dateien wahlweise unter GFDL, BSD, GPL (und CC BY-SA 3.0) bereit.
+        Die Köcheclub-App nutzt sie unter der BSD-Lizenz – siehe LICENSE. Keine Kosten.
+Änderungen für die Köcheclub-App: nur viewBox="0 0 45 45" ergänzt (damit die Figur mit dem Feld mitwächst),
+Dateinamen <farbe><figur>.svg mit farbe w/b (Weiß/Schwarz), figur k/q/r/b/n/p wie in chess.js.
