@@ -6378,3 +6378,9 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/if \(stufe === "keine"\) return/.test(f) && /shSchalter\(true\);/.test(f) && /shVorlesen\(true\); einstellung\("gross", true\);/.test(f) && /ansichtSetzen\("einfach"\)/.test(f), "Viel = Schritt-Hilfe, Vorlesen, große Schrift, einfache Ansicht");
   assert.ok(/onclick="ustFragen\(false\)">Wählen<\/button>/.test(seite), "jederzeit unter ⚙️ änderbar");
 }
+
+// 4xx. 2.86.0: Merkblatt „Die App hilft dir“ (Schritt-Hilfe & Sprachsteuerung) unter 📚 Meine Dokumente (KC-CLUB-MERKBLATT-HILFE)
+{
+  assert.ok(/\{ id: "merkblatt-hilfe", sym: "🤝", t: "Die App hilft dir"[^\n]*datei: "dokumente\/Koecheclub-App_Merkblatt_Hilfe\.pdf"/.test(programm), "Eintrag in Meine Dokumente");
+  assert.ok(fs.existsSync(new URL("../dokumente/Koecheclub-App_Merkblatt_Hilfe.pdf", import.meta.url)), "PDF liegt bei");
+}

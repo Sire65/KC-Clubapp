@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.85.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.86.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -7932,6 +7932,7 @@ window.addEventListener("message", (e) => {
 const DOKUMENTE = [
   { id: "ueberblick", sym: "🗺️", t: "Club-App auf einen Blick", u: "Alle Bereiche & das Neueste", v: "ueberblick" },
   { id: "anleitung-club-app", sym: "📲", t: "Anleitung Club-App", u: "In 3 Schritten zur App", datei: "dokumente/Koecheclub-App_Kurzanleitung.pdf" },
+  { id: "merkblatt-hilfe", sym: "🤝", t: "Die App hilft dir", u: "Merkblatt · Schritt-Hilfe & Sprachsteuerung · 2 Seiten", datei: "dokumente/Koecheclub-App_Merkblatt_Hilfe.pdf", neuBis: "2026-12-31" }, // KC-CLUB-MERKBLATT-HILFE (2.86.0)
   // 1.81.0: Version 2 (Register Club/Technik, Sprachansagen, Diktieren, Tippfehler, Farbschemen, Fotoalben, Archiv & Chronik) – V1 bleibt als Datei unverändert;
   // neue id, damit die leise „NEU“-Zeile (KC-CLUB-DOK-NEU) einmal wieder erscheint
   // KC-CLUB-ANLEITUNG-V4 (2.23.33): Version 4 mit Spielen, Hilfe-Zentrum, Wunschbogen, Meine Daten, Erinnerung, Chats archivieren, SOS an alle – V3 bleibt als Datei

@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.86.0 – 2026-10-08 – 🤝 Merkblatt „Die App hilft dir“
+Neues Merkblatt (2 Seiten, mit Bildern) unter 📚 Meine Dokumente: Wie viel Hilfe, Schritt-Hilfe mit rotem Rahmen und Vorlesen, Ablage-Vorschlag, Sprachsteuerung mit Beispielsätzen, Stumm und Liste, die App lernt dazu. Zum Ausdrucken für den Clubabend. (KC-CLUB-MERKBLATT-HILFE)
+
 ## 2.85.0 – 2026-10-08 – 🤝 Wie viel Unterstützung möchtest du?
 Einmal beim Start (wenn nichts anderes offen ist) fragt die App: 🙋 Viel Hilfe (einfache Ansicht, große Schrift, Schritt-Hilfe mit Vorlesen, Sprachsteuerung), 👌 Ein bisschen (Schritt-Hilfe) oder 😎 Ich komme klar. Jederzeit änderbar unter ⚙️ → 🤝 Unterstützung. (KC-CLUB-UNTERSTUETZUNG, Server 2.85.0)
 
