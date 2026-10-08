@@ -2023,6 +2023,7 @@
   .kc-code-karte { border: 2px solid var(--rot); }
   .kc-code { width: 100%; box-sizing: border-box; font-size: 2.2rem; font-weight: 800; letter-spacing: .25em; text-align: center; padding: 10px; border-radius: 14px; border: 2px solid var(--linie); background: var(--karte); color: var(--text); font-family: inherit; }
   .kc-code-gross { font-size: 2.6rem; font-weight: 900; letter-spacing: .2em; text-align: center; margin: 10px 0 4px; color: var(--rot); }
+  .ae-art-hinweis { background: #fff8e1; border-left: 4px solid #f9a825; padding: 8px 10px; font-size: .9rem; color: #4e3b00; } /* 2.94.0 KC-CLUB-NOTFALL-HINWEIS */
   .kc-code-merk { font-size: 1.5rem; letter-spacing: .12em; color: var(--rot); white-space: nowrap; } /* 2.91.0 KC-CLUB-KURZCODE-IOS */
   .er-schritte { padding-left: 1.4em; margin: 0; } .er-schritte li { margin: 0 0 14px; } .er-schritte li > b { font-size: 1.08rem; } .er-schritte li > div { margin: 2px 0 6px; line-height: 1.45; }
   .er-geraet { border: 2px solid var(--linie); border-radius: 14px; overflow: hidden; max-width: 280px; background: var(--karte2); display: flex; flex-direction: column; }
@@ -3058,6 +3059,7 @@
       <div class="knoepfe"><button class="knopf klein" onclick="mitgliedOeffnen(ICH.person_id)">👁️ So sehen mich die anderen</button></div>
       <p style="margin:16px 0 0"><b>🆘 Mein Notfallkontakt</b></p>
       <p class="hinweis" style="margin:2px 0 0;font-size:.85rem">Wer soll im Notfall (z. B. auf einem Ausflug) benachrichtigt werden? Sehen nur Clubsprecher, Kassenwart und Admin.</p>
+      <div class="karte ae-art-hinweis" style="margin:6px 0 0">💡 Bitte <b>nicht dich selbst</b> eintragen, sondern eine <b>andere Person</b>, die im Notfall benachrichtigt werden soll – z. B. Ehefrau, Sohn, Tochter oder Nachbar.</div>
       <label class="feld">Name<input id="nfName" maxlength="120" placeholder="z. B. Maria Muster"></label>
       <div class="zwei"><label class="feld">Telefon<input id="nfTel" maxlength="40" inputmode="tel"></label><label class="feld">Beziehung<input id="nfBez" maxlength="60" placeholder="z. B. Ehefrau"></label></div>
       <div class="knoepfe"><button class="knopf klein" onclick="einmal(this, notfallSpeichern)">💾 Notfallkontakt speichern</button></div>
@@ -3446,6 +3448,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.93.0" data-v="2.93.0"></script>
+<script src="app.js?v=2.94.0" data-v="2.94.0"></script>
 </body>
 </html>

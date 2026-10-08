@@ -6452,3 +6452,17 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/if \(ziel\.length === 1 && !betreff\) threadId = \(await zweierGespraech\(ich\.person_id, ziel\[0\]\)\) \|\| "";/.test(server), "Server führt Zweiergespräch ohne Betreff weiter");
   assert.ok(fs.existsSync("supabase/migrations/20261008_kc_club_chat_wilfried_zusammen.sql"), "Zusammenführung per Weg B");
 }
+
+// 4xx. 2.94.0: Notfallkontakt = eine ANDERE Person – Hinweis an beiden Eingabestellen, Nachfrage bei sich selbst (KC-CLUB-NOTFALL-HINWEIS, Fall Wilfried)
+{
+  const a = programm.indexOf("const nfZiffern = "), b = programm.indexOf("const nfSelbstFrage = ");
+  const nfIstSelbst = new Function("ICH", programm.slice(a, b) + "\nreturn nfIstSelbst;")({ name: "Willfried Wittwer" });
+  assert.equal(nfIstSelbst({ name: "Wilfried Wittwer" }, []), true, "eigener Name (auch leicht anders geschrieben)");
+  assert.equal(nfIstSelbst({ name: "Wittwer, Willfried" }, []), true, "Reihenfolge egal");
+  assert.equal(nfIstSelbst({ name: "Maria Wittwer" }, []), false, "Ehefrau mit gleichem Nachnamen ist ok");
+  assert.equal(nfIstSelbst({ name: "Maria", telefon: "+49 171 1234567" }, ["0171/1234567"]), true, "eigene Nummer");
+  assert.equal(nfIstSelbst({ name: "Maria", telefon: "0171 7654321" }, ["01711234567"]), false, "andere Nummer");
+  assert.ok(/hinweis: "Bitte NICHT dich selbst eintragen/.test(server) && /\$\{art\.hinweis \? `<div class="karte ae-art-hinweis">/.test(programm), "Hinweis aus dem Register in der Änderungsmeldung");
+  assert.ok(/Bitte <b>nicht dich selbst<\/b> eintragen/.test(seite), "Hinweis in den Einstellungen");
+  assert.ok(/art\.id === "notfall" && nfIstSelbst\(neu,/.test(programm) && /if \(nfIstSelbst\(d, /.test(programm), "Nachfrage an beiden Stellen");
+}

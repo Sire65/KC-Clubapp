@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.91.0";
+const SERVER_VERSION = "2.94.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -988,6 +988,7 @@ const AENDERUNG = {
       felder: [{ k: "inhaber", t: "Kontoinhaber", pflicht: true }, { k: "iban", t: "IBAN", typ: "iban", pflicht: true }, { k: "bank", t: "Bank (freiwillig)" }] },
     { id: "geburtstag", sym: "🎂", t: "Geburtsdatum falsch", an: ["admin"], felder: [{ k: "datum", t: "Richtiges Geburtsdatum", typ: "date", pflicht: true }] },
     { id: "notfall", sym: "🆘", t: "Notfallkontakt", an: ["Clubsprecher", "admin"], auto: true,
+      hinweis: "Bitte NICHT dich selbst eintragen, sondern eine andere Person, die im Notfall benachrichtigt werden soll – z. B. Ehefrau, Sohn, Tochter oder Nachbar.", // 2.94.0 KC-CLUB-NOTFALL-HINWEIS
       felder: [{ k: "name", t: "Name" }, { k: "telefon", t: "Telefon", typ: "tel" }, { k: "beziehung", t: "Beziehung (z. B. Ehefrau)" }] },
     { id: "kleidung", sym: "👕", t: "Kleidergröße", an: ["Clubsprecher", "Kassenwart", "admin"], auto: true,
       felder: [{ k: "kochjacke", t: "Kochjacke", typ: "wahl", opt: KLEIDER_GROESSEN }, { k: "kochhose", t: "Kochhose", typ: "wahl", opt: HOSEN_GROESSEN }] },

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.93.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.94.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -18008,6 +18008,7 @@ function aeZeichnen() {
     };
     html = `${einwHtml("b-aenderung-schritt")}<h3 style="margin:0">${art.sym} ${esc(art.t)}</h3>
       ${!leer ? `<p class="hinweis" style="margin:0">Bisher: <b>${esc(aeWert(art.id, alt))}</b></p>` : ""}
+      ${art.hinweis ? `<div class="karte ae-art-hinweis">💡 ${esc(art.hinweis)}</div>` : ""}
       ${art.felder.map(feld).join("")}
       ${art.gilt ? `<label class="ae-feld">Gilt ab${art.giltPflicht ? "" : ' <small class="hinweis">(freiwillig)</small>'}<input id="aeGilt" type="date"></label>` : ""}
       ${art.waehlbar ? `<p style="margin:0"><b>An wen?</b></p>${art.waehlbar.map((x) => `<label class="ae-haken"><input type="checkbox" class="aeAn" value="${esc(x)}" checked> ${esc(d.anNamen[x] || x)}</label>`).join("")}` : ""}
@@ -18025,6 +18026,7 @@ async function aeSenden(knopf) {
   const neu = {}; for (const f of art.felder) { const v = ($("aeF_" + f.k)?.value || "").trim(); if (v) neu[f.k] = v; }
   const alt = d.stand[art.id];
   if (alt && !["bank", "sonstiges", "mitgliedschaft"].includes(art.id) && art.felder.every((f) => (neu[f.k] || "") === String(alt[f.k] ?? ""))) return melde("Da hat sich noch nichts geändert – bitte die neue Angabe eintragen.", true);
+  if (art.id === "notfall" && nfIstSelbst(neu, [d.stand.handy?.nummer, d.stand.festnetz?.nummer]) && !(await nfSelbstFrage())) return; // 2.94.0 KC-CLUB-NOTFALL-HINWEIS
   if (art.id === "mitgliedschaft" && !(await frage(`Wirklich melden: Mitgliedschaft „${neu.wunsch || "?"}“?\n\nClubsprecher und Admin melden sich dann bei dir.`, { ja: "Ja, melden" }))) return;
   const an = [...document.querySelectorAll(".aeAn")].filter((x) => x.checked).map((x) => x.value);
   await einmal(knopf, async () => {
@@ -18111,8 +18113,20 @@ async function aeRueckfrage(id, knopf) {
 
 // ---------- Notfallkontakt (KC-CLUB-NOTFALL) ----------
 function notfallZeigen() { const n = INIT?.notfall || {}; $("nfName").value = n.name || ""; $("nfTel").value = n.telefon || ""; $("nfBez").value = n.beziehung || ""; }
+// 2.94.0 KC-CLUB-NOTFALL-HINWEIS (Fall Wilfried): Notfallkontakt = eine ANDERE Person. Trägt sich jemand selbst ein
+// (eigener Name oder eigene Nummer), fragt die App nach – speichern bleibt möglich, aber nur bewusst.
+const nfZiffern = (x) => String(x || "").replace(/\D/g, "").replace(/^0049|^49/, "0");
+const nfNorm = (x) => String(x || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zß ]/g, " ").replace(/\s+/g, " ").trim();
+function nfIstSelbst(n, nummern) {
+  const name = nfNorm(n?.name), ich = nfNorm(ICH?.name).split(" ").filter((w) => w.length > 1);
+  const nameGleich = !!name && ich.length > 1 && ich.every((w) => name.split(" ").some((x) => x === w || (x.length > 3 && x.slice(0, 3) === w.slice(0, 3) && x.slice(-3) === w.slice(-3))));
+  const tel = nfZiffern(n?.telefon), eigene = (nummern || []).map(nfZiffern).filter((x) => x.length >= 6);
+  return nameGleich || (tel.length >= 6 && eigene.includes(tel));
+}
+const nfSelbstFrage = () => frage("🆘 Das sieht aus, als hättest du dich selbst eingetragen.\n\nEin Notfallkontakt sollte eine ANDERE Person sein, die im Notfall benachrichtigt wird – z. B. Ehefrau, Sohn, Tochter oder Nachbar.\n\nTrotzdem so speichern?", { ja: "Trotzdem speichern", nein: "Ändern" });
 async function notfallSpeichern() {
   const d = { name: $("nfName").value, telefon: $("nfTel").value, beziehung: $("nfBez").value };
+  if (nfIstSelbst(d, [MDAT?.person?.telefon, MDAT?.person?.festnetz]) && !(await nfSelbstFrage())) return $("nfName").focus();
   try { await api("notfall_setzen", d); INIT.notfall = d.name || d.telefon ? d : null; melde(d.name || d.telefon ? "🆘 Notfallkontakt gespeichert" : "Notfallkontakt entfernt"); } catch (e) { meldeFehler(e); }
 }
 
