@@ -6540,9 +6540,23 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   const a = server.slice(server.indexOf('case "schnappschuss_antwort"'), server.indexOf('case "schnappschuss_holen"'));
   assert.ok(/eq\("person_id", ich\.person_id\)/.test(a) && /p\.erlaubt === true/.test(a) && a.includes("^data:image\\/jpeg;base64,"), "nur das Mitglied selbst antwortet, nur JPEG");
   const h = server.slice(server.indexOf('case "schnappschuss_holen"'), server.indexOf('case "anklopfen"'));
-  assert.ok(/w\.von !== ich\.person_id/.test(h) && /status: "abgeholt"/.test(h) && h.indexOf('status: "abgeholt"') < h.indexOf('bild: w.bild'), "nur wer gefragt hat; Bild wird beim Abholen gelöscht");
+  assert.ok(/w\.von !== ich\.person_id/.test(h) && /status: "abgeholt"/.test(h) && h.indexOf('status: "abgeholt"') < h.indexOf('status: "bild", bild: w.bild'), "nur wer gefragt hat; Bild wird beim Abholen gelöscht");
   assert.ok(!/protokoll\([^)]*bild/.test(server.slice(server.indexOf('case "schnappschuss_anfragen"'), server.indexOf('case "anklopfen"'))), "Bild nie im Protokoll");
   const f = programm.slice(programm.indexOf("async function ssAnfrage(einl)"), programm.indexOf("// ---------- KC-CLUB-SPRACHE-LERNEN"));
-  assert.ok(/const ja = await frage\(/.test(f) && f.indexOf("await frage(") < f.indexOf("html2canvas(") && /erlaubt: !!\(ja && bild\)/.test(f), "erst fragen, nur bei Ja ein Bild");
+  assert.ok(/const ja = await frage\(/.test(f) && f.indexOf("await frage(") < f.indexOf("await ssBildMachen()") && /erlaubt: !!\(ja && bild\)/.test(f), "erst fragen, nur bei Ja ein Bild");
   assert.ok(/if \(r\.schnappschuss\) ssAnfrage\(r\.schnappschuss\);/.test(programm) && /onclick="ssStart\(/.test(programm), "Anfrage kommt über den Online-Takt; Knopf bei den Wegen");
+}
+
+// 4xx. 2.103.0: Live-Mitschauen als Bildfolge – nur mit Zustimmung, roter Balken beim Mitglied, Ende nach 10 Min. (KC-CLUB-MITSCHAUEN)
+{
+  assert.ok(/SS_LIVE_MS = 10 \* 60000/.test(server) && /async function ssBeenden\(pid: string, w: any\)/.test(server), "Ende nach 10 Min.; Beenden löscht das Bild");
+  const b = server.slice(server.indexOf('case "schnappschuss_bild"'), server.indexOf('case "schnappschuss_ende"'));
+  assert.ok(/eq\("person_id", ich\.person_id\)/.test(b) && /w\.status !== "live"/.test(b) && /n: \(w\.n \|\| 0\) \+ 1/.test(b), "nur das Mitglied selbst schickt Bilder, nur solange live; immer nur das neueste");
+  const e = server.slice(server.indexOf('case "schnappschuss_ende"'), server.indexOf('case "schnappschuss_holen"'));
+  assert.ok(/an !== ich\.person_id && w\.von !== ich\.person_id/.test(e), "beenden darf Mitglied oder fragender Admin");
+  const m = programm.slice(programm.indexOf("// ----- beim Mitglied -----"), programm.indexOf("// ---------- KC-CLUB-SPRACHE-LERNEN"));
+  assert.ok(/id="ssLiveLeiste"/.test(m) && /onclick="mlEnde\(true\)">Beenden<\/button>/.test(m), "roter Balken mit Beenden");
+  assert.ok(/if \(MSCH\.laeuft \|\| document\.hidden\) return;/.test(m) && /setInterval\(mlTakt, 2500\)/.test(m) && /Date\.now\(\) \+ 10 \* 60000/.test(m), "Takt 2,5 s, nur sichtbar, 10 Min.");
+  assert.ok(m.indexOf("await frage(") < m.indexOf("mlStart(einl.id"), "erst fragen");
+  assert.ok(/ssStart\('\$\{esc\(SPW\.person\)\}', \$\{esc\(JSON\.stringify\(r\.name \|\| ""\)\)\}, true\)">🔴 Live mitschauen/.test(programm), "Knopf bei den Wegen");
 }

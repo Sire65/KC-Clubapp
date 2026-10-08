@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.102.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.103.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -20996,7 +20996,7 @@ async function spurAdmin(tag, person) {
       + (liste.length ? `<div style="display:grid;gap:6px">${liste.map((x) => `<button class="knopf${on(x.person_id) ? " spur-on" : ""}" style="text-align:left" onclick="spurAdmin(null, '${esc(x.person_id)}')">${on(x.person_id) ? "🟢 " : ""}<b>${esc(x.name)}</b>${on(x.person_id) ? ' <small class="spur-jetzt">gerade in der App</small>' : ""} <small class="hinweis">· ${x.anzahl} Schritte · ${esc(zeitKurz(x.erste))}–${esc(zeitKurz(x.letzte))} Uhr</small>${x.zuletzt ? `<br><small>${on(x.person_id) ? "👉 jetzt" : "zuletzt"}: ${esc(was(x.zuletzt))} · ${esc(vor(x.letzte))}</small>` : ""}</button>`).join("")}</div>`
       : `<p class="hinweis">An diesem Tag nichts aufgezeichnet (gezählt ab Version 2.23.88).</p>`);
   } else {
-    inhalt = `${ICH?.admin && SPW.person !== ICH?.person_id ? `<button class="knopf klein" style="float:right" onclick="ssStart('${esc(SPW.person)}', ${esc(JSON.stringify(r.name || ""))})">📸 Bildschirm ansehen</button>` : ""}<b>${esc(r.name || "")}</b>${r.schritte.length ? `<table class="vb-tabelle">${r.schritte.map((x) => `<tr><td style="white-space:nowrap;vertical-align:top">${esc(zeitKurz(x.t))}</td><td style="text-align:left">${esc(SPUR_WAS[x.w] || NZ_NAMEN[x.w] || x.w)}${x.mit ? ` <b>${esc(x.mit)}</b>` : ""}</td></tr>`).join("")}</table>` : `<p class="hinweis">An diesem Tag nichts aufgezeichnet.</p>`}`;
+    inhalt = `${ICH?.admin && SPW.person !== ICH?.person_id ? `<span style="float:right;display:flex;gap:4px"><button class="knopf klein" onclick="ssStart('${esc(SPW.person)}', ${esc(JSON.stringify(r.name || ""))})">📸 Bild</button><button class="knopf klein" onclick="ssStart('${esc(SPW.person)}', ${esc(JSON.stringify(r.name || ""))}, true)">🔴 Live mitschauen</button></span>` : ""}<b>${esc(r.name || "")}</b>${r.schritte.length ? `<table class="vb-tabelle">${r.schritte.map((x) => `<tr><td style="white-space:nowrap;vertical-align:top">${esc(zeitKurz(x.t))}</td><td style="text-align:left">${esc(SPUR_WAS[x.w] || NZ_NAMEN[x.w] || x.w)}${x.mit ? ` <b>${esc(x.mit)}</b>` : ""}</td></tr>`).join("")}</table>` : `<p class="hinweis">An diesem Tag nichts aufgezeichnet.</p>`}`;
   }
   $("adminBlattInhalt").innerHTML = kopf + inhalt + fuss;
   $("adminBlatt").classList.remove("versteckt");
@@ -21007,61 +21007,100 @@ async function spurAdmin(tag, person) {
 // ---------- KC-CLUB-SCHNAPPSCHUSS (2.102.0, Wunsch Hansi „Bildschirm des Mitglieds ansehen – Schnappschuss“) ----------
 // Admin bittet um EIN Bild der Club-App eines Mitglieds (z. B. um zu helfen). Das Mitglied wird gefragt und entscheidet selbst;
 // abgebildet wird nur die Club-App (anderes vom Gerät kann eine Web-App nicht sehen). Das Bild liegt nur bis zum Abholen auf dem Server.
-const SS = { id: null, an: null, name: "", uhr: null, bis: 0, gefragt: new Set() };
-async function ssStart(pid, name) {
+const SS = { id: null, an: null, name: "", uhr: null, bis: 0, live: false, seit: 0, gefragt: new Set() };
+// 2.103.0 KC-CLUB-MITSCHAUEN (Wunsch Hansi „live mitschauen“): wie der Schnappschuss, aber als Bildfolge (alle ~2,5 s ein neues Bild),
+// beim Mitglied die ganze Zeit ein roter Balken „🔴 … schaut zu – Beenden“, Ende spätestens nach 10 Min. Auf dem Server liegt nur das neueste Bild.
+async function ssStart(pid, name, live = false) {
   if (!ICH?.admin) return;
-  if (!(await frage(`📸 ${name || "Das Mitglied"} fragen, ob du kurz sehen darfst, was in der Club-App gerade angezeigt wird?\n\nIn der App kommt eine Frage – die Entscheidung liegt dort. Du siehst dann ein einziges Bild – nur von der Club-App.`, { ja: "📸 Fragen", nein: "Abbrechen" }))) return;
+  const n = name || "Das Mitglied";
+  if (!(await frage(live ? `🔴 ${n} fragen, ob du eine Weile mitschauen darfst, was in der Club-App angezeigt wird?\n\nIn der App kommt eine Frage – die Entscheidung liegt dort. Dann siehst du alle paar Sekunden ein neues Bild (höchstens 10 Minuten); beim Mitglied steht die ganze Zeit „🔴 … schaut zu – Beenden“.`
+    : `📸 ${n} fragen, ob du kurz sehen darfst, was in der Club-App gerade angezeigt wird?\n\nIn der App kommt eine Frage – die Entscheidung liegt dort. Du siehst dann ein einziges Bild – nur von der Club-App.`, { ja: live ? "🔴 Fragen" : "📸 Fragen", nein: "Abbrechen" }))) return;
   try {
-    const r = await api("schnappschuss_anfragen", { an: pid }, { warten: true });
-    Object.assign(SS, { id: r.id, an: pid, name: name || "", bis: Date.now() + 3 * 60000 });
-    ssZeigen("warten"); clearInterval(SS.uhr); SS.uhr = setInterval(ssHolen, 3000);
+    const r = await api("schnappschuss_anfragen", { an: pid, live }, { warten: true });
+    Object.assign(SS, { id: r.id, an: pid, name: name || "", bis: Date.now() + 3 * 60000, live, seit: 0 });
+    ssZeigen("warten"); clearInterval(SS.uhr); SS.uhr = setInterval(ssHolen, 2000);
   } catch (e) { meldeFehler(e); }
 }
 function ssZeigen(art, bild) {
-  const n = esc(SS.name || "Das Mitglied");
-  const html = art === "bild" ? `<h3 style="margin:0">📸 Bildschirm von ${n}</h3><p class="hinweis" style="margin:2px 0 8px">Aufgenommen ${esc(new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }))} – liegt nicht mehr auf dem Server.</p>
+  const n = esc(SS.name || "Das Mitglied"), knopfStart = (live) => `ssStart('${esc(SS.an)}', ${esc(JSON.stringify(SS.name))}, ${live})`;
+  if (art === "live" && $("ssBild") && $("ssBlatt")?.dataset.art === "live") { $("ssBild").src = bild; $("ssZeit").textContent = new Date().toLocaleTimeString("de-DE"); return; } // nur das Bild tauschen
+  const html = art === "live" ? `<h3 style="margin:0">🔴 Live: ${n}</h3><p class="hinweis" style="margin:2px 0 8px">Neues Bild alle paar Sekunden · zuletzt <b id="ssZeit">${esc(new Date().toLocaleTimeString("de-DE"))}</b> · endet spätestens nach 10 Min.</p>
+      <img id="ssBild" src="${bild}" alt="Bildschirm von ${n}" style="width:100%;border:3px solid #d32f2f;border-radius:12px">
+      <div class="knoepfe" style="margin-top:8px"><button class="knopf" onclick="ssSpeichern()">💾 Dieses Bild speichern</button><button class="knopf haupt" onclick="ssAbbrechen()">⏹ Beenden</button></div>`
+    : art === "bild" ? `<h3 style="margin:0">📸 Bildschirm von ${n}</h3><p class="hinweis" style="margin:2px 0 8px">Aufgenommen ${esc(new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }))} – liegt nicht mehr auf dem Server.</p>
       <img id="ssBild" src="${bild}" alt="Bildschirm von ${n}" style="width:100%;border:1px solid var(--linie,#ccc);border-radius:12px">
-      <div class="knoepfe" style="margin-top:8px"><button class="knopf haupt" onclick="ssSpeichern()">💾 Speichern</button><button class="knopf" onclick="ssStart('${esc(SS.an)}', ${esc(JSON.stringify(SS.name))})">🔄 Noch einmal</button><button class="knopf" onclick="fensterZu($('ssBlatt'))">Schließen</button></div>`
+      <div class="knoepfe" style="margin-top:8px"><button class="knopf haupt" onclick="ssSpeichern()">💾 Speichern</button><button class="knopf" onclick="${knopfStart(false)}">🔄 Noch einmal</button><button class="knopf" onclick="${knopfStart(true)}">🔴 Live</button><button class="knopf" onclick="fensterZu($('ssBlatt'))">Schließen</button></div>`
+    : art === "beendet" ? `<h3 style="margin:0">⏹ Mitschauen beendet</h3>${bild ? `<img id="ssBild" src="${bild}" alt="" style="width:100%;opacity:.6;border-radius:12px;margin:6px 0">` : ""}<p>Das Mitschauen ist zu Ende – auf dem Server liegt kein Bild mehr.</p>
+      <div class="knoepfe"><button class="knopf" onclick="${knopfStart(true)}">🔴 Neu fragen</button><button class="knopf" onclick="fensterZu($('ssBlatt'))">Schließen</button></div>`
     : art === "abgelehnt" ? `<h3 style="margin:0">🙅 ${n} möchte gerade nicht</h3><p>Das ist in Ordnung – am besten kurz persönlich nachfragen.</p><button class="knopf" onclick="fensterZu($('ssBlatt'))">Schließen</button>`
     : art === "keine_antwort" ? `<h3 style="margin:0">⏳ Keine Antwort</h3><p>${n} hat in 3 Minuten nicht geantwortet – vielleicht ist die App gerade nicht offen.</p><button class="knopf" onclick="fensterZu($('ssBlatt'))">Schließen</button>`
-    : `<h3 style="margin:0">📸 Warte auf ${n} …</h3><p>${n} wird gefragt, ob du den Bildschirm sehen darfst. Das Fenster aktualisiert sich von selbst (höchstens 3 Minuten).</p><button class="knopf" onclick="ssAbbrechen()">Abbrechen</button>`;
-  const f = blattAuf("ssBlatt", html); f.onclick = null;
+    : `<h3 style="margin:0">${SS.live ? "🔴" : "📸"} Warte auf ${n} …</h3><p>${n} wird gefragt, ob du ${SS.live ? "mitschauen" : "den Bildschirm sehen"} darfst. Das Fenster aktualisiert sich von selbst (höchstens 3 Minuten).</p><button class="knopf" onclick="ssAbbrechen()">Abbrechen</button>`;
+  const f = blattAuf("ssBlatt", html); f.onclick = null; f.dataset.art = art;
 }
-function ssAbbrechen() { clearInterval(SS.uhr); SS.id = null; fensterZu($("ssBlatt")); }
+function ssAbbrechen() {
+  clearInterval(SS.uhr); if (SS.id) api("schnappschuss_ende", { an: SS.an, id: SS.id }).catch(() => {});
+  SS.id = null; fensterZu($("ssBlatt"));
+}
 async function ssHolen() {
-  if (!SS.id || !$("ssBlatt")) { clearInterval(SS.uhr); return; }
+  if (!SS.id || !$("ssBlatt")) { if (SS.id) api("schnappschuss_ende", { an: SS.an, id: SS.id }).catch(() => {}); clearInterval(SS.uhr); SS.id = null; return; } // Fenster weg → Mitschauen beenden
   try {
-    const r = await api("schnappschuss_holen", { an: SS.an, id: SS.id });
+    const r = await api("schnappschuss_holen", { an: SS.an, id: SS.id, seit: SS.seit });
+    if (r.status === "live") { if (r.bild) { SS.seit = r.n; ssZeigen("live", r.bild); } return; }
     if (r.status === "bild") { clearInterval(SS.uhr); SS.id = null; return ssZeigen("bild", r.bild); }
-    if (["abgelehnt", "keine_antwort", "vorbei", "abgeholt"].includes(r.status) || Date.now() > SS.bis + 10000) { clearInterval(SS.uhr); SS.id = null; return ssZeigen(r.status === "abgelehnt" ? "abgelehnt" : "keine_antwort"); }
+    if (r.status === "beendet" && SS.seit) { clearInterval(SS.uhr); SS.id = null; return ssZeigen("beendet", $("ssBild")?.src); }
+    if (["abgelehnt", "keine_antwort", "vorbei", "abgeholt", "beendet"].includes(r.status) || Date.now() > SS.bis + 10000 && !SS.seit) { clearInterval(SS.uhr); SS.id = null; return ssZeigen(r.status === "abgelehnt" ? "abgelehnt" : "keine_antwort"); }
   } catch {}
 }
 function ssSpeichern() {
   const b = $("ssBild")?.src; if (!b) return;
-  const a = document.createElement("a"); a.href = b; a.download = `Bildschirm_${(SS.name || "Mitglied").replace(/[^\wäöüÄÖÜß]+/g, "_")}_${heuteIso()}.jpg`; document.body.appendChild(a); a.click(); setTimeout(() => a.remove(), 500);
+  const a = document.createElement("a"); a.href = b; a.download = `Bildschirm_${(SS.name || "Mitglied").replace(/[^\wäöüÄÖÜß]+/g, "_")}_${heuteIso()}_${new Date().toTimeString().slice(0, 8).replace(/:/g, "")}.jpg`; document.body.appendChild(a); a.click(); setTimeout(() => a.remove(), 500);
   melde("💾 Bild gespeichert");
 }
-// beim Mitglied: Frage, dann EIN Bild der Club-App (wie beim eigenen Bildschirmfoto) – verkleinert, als JPEG
+// ----- beim Mitglied -----
+const MSCH = { id: null, uhr: null, bis: 0, laeuft: false, wer: "" };
+async function ssBildMachen() {
+  await bfBibliothek();
+  const c = await window.html2canvas(document.body, { x: scrollX, y: scrollY, width: innerWidth, height: innerHeight, windowWidth: innerWidth, windowHeight: innerHeight,
+    scale: 1, useCORS: true, logging: false, backgroundColor: getComputedStyle(document.body).backgroundColor,
+    ignoreElements: (el) => !!el.classList?.contains("meldung") || el.id === "ssLiveLeiste", onclone: bfKlonGlaetten });
+  const f = Math.min(1, 900 / c.width), k = document.createElement("canvas"); k.width = Math.round(c.width * f); k.height = Math.round(c.height * f);
+  k.getContext("2d").drawImage(c, 0, 0, k.width, k.height);
+  let bild = ""; for (const q of [0.7, 0.5, 0.35]) { bild = k.toDataURL("image/jpeg", q); if (bild.length < 1_900_000) break; }
+  return bild;
+}
 async function ssAnfrage(einl) {
-  if (!einl?.id || SS.gefragt.has(einl.id)) return; SS.gefragt.add(einl.id);
+  if (!einl?.id || SS.gefragt.has(einl.id) || MSCH.id) return; SS.gefragt.add(einl.id);
   try { navigator.vibrate?.([80, 60, 80]); } catch {}
-  const wer = einl.von?.vorname || "Hansi";
-  const ja = await frage(`📸 ${wer} möchte dir helfen und kurz sehen, was in deiner Club-App gerade angezeigt wird.\n\nEs wird ein einziges Bild gemacht – nur von der Club-App, nichts anderes von deinem Gerät. Erlauben?`, { ja: "✅ Ja, erlauben", nein: "Nein, jetzt nicht" });
+  const wer = einl.von?.vorname || "Hansi", live = !!einl.live;
+  const ja = await frage(live ? `🔴 ${wer} möchte dir helfen und eine Weile mitschauen, was in deiner Club-App angezeigt wird.\n\nAlle paar Sekunden geht ein Bild der Club-App an ${wer} – nichts anderes von deinem Gerät. Oben steht dann ein roter Balken; damit kannst du jederzeit beenden. Spätestens nach 10 Minuten endet es von selbst. Erlauben?`
+    : `📸 ${wer} möchte dir helfen und kurz sehen, was in deiner Club-App gerade angezeigt wird.\n\nEs wird ein einziges Bild gemacht – nur von der Club-App, nichts anderes von deinem Gerät. Erlauben?`, { ja: "✅ Ja, erlauben", nein: "Nein, jetzt nicht" });
   let bild = "";
-  if (ja) {
-    try {
-      await bfBibliothek(); await new Promise((ok) => setTimeout(ok, 450)); // Fragefenster ist zu
-      const c = await window.html2canvas(document.body, { x: scrollX, y: scrollY, width: innerWidth, height: innerHeight, windowWidth: innerWidth, windowHeight: innerHeight,
-        scale: 1, useCORS: true, logging: false, backgroundColor: getComputedStyle(document.body).backgroundColor, ignoreElements: (el) => !!el.classList?.contains("meldung"), onclone: bfKlonGlaetten });
-      const f = Math.min(1, 900 / c.width), k = document.createElement("canvas"); k.width = Math.round(c.width * f); k.height = Math.round(c.height * f);
-      k.getContext("2d").drawImage(c, 0, 0, k.width, k.height);
-      for (const q of [0.7, 0.5, 0.35]) { bild = k.toDataURL("image/jpeg", q); if (bild.length < 1_900_000) break; }
-    } catch { bild = ""; }
-  }
+  if (ja) { try { await new Promise((ok) => setTimeout(ok, 450)); bild = await ssBildMachen(); } catch { bild = ""; } }
   try {
-    await api("schnappschuss_antwort", { id: einl.id, erlaubt: !!(ja && bild), bild: ja && bild ? bild : "" }, { warten: !!ja });
+    const r = await api("schnappschuss_antwort", { id: einl.id, erlaubt: !!(ja && bild), bild: ja && bild ? bild : "" }, { warten: !!ja });
+    if (ja && bild && live && r.status === "live") return mlStart(einl.id, wer);
     melde(ja ? (bild ? `📸 Danke – ${wer} sieht jetzt das Bild` : "Das Bild hat leider nicht geklappt.") : "👍 In Ordnung – es wurde nichts gezeigt.", ja && !bild);
   } catch (e) { meldeFehler(e); }
+}
+function mlStart(id, wer) {
+  Object.assign(MSCH, { id, wer, bis: Date.now() + 10 * 60000, laeuft: false });
+  document.getElementById("ssLiveLeiste")?.remove();
+  document.body.insertAdjacentHTML("beforeend", `<div id="ssLiveLeiste" class="ss-live-leiste" role="status"><span>🔴 ${esc(wer)} schaut zu</span><button onclick="mlEnde(true)">Beenden</button></div>`);
+  spur("mitschauen_laeuft");
+  clearInterval(MSCH.uhr); MSCH.uhr = setInterval(mlTakt, 2500);
+}
+async function mlTakt() {
+  if (!MSCH.id) return;
+  if (Date.now() > MSCH.bis) return mlEnde(true, "⏹ Mitschauen nach 10 Minuten beendet");
+  if (MSCH.laeuft || document.hidden) return; // nur, wenn die App sichtbar ist; nie zwei Bilder gleichzeitig
+  MSCH.laeuft = true;
+  try { const r = await api("schnappschuss_bild", { id: MSCH.id, bild: await ssBildMachen() }); if (r.status !== "live") mlEnde(false, `⏹ ${MSCH.wer} schaut nicht mehr zu`); }
+  catch {} finally { MSCH.laeuft = false; }
+}
+function mlEnde(selbst, text) {
+  const id = MSCH.id; clearInterval(MSCH.uhr); MSCH.id = null; document.getElementById("ssLiveLeiste")?.remove();
+  if (selbst && id) api("schnappschuss_ende", { id }).catch(() => {});
+  if (id) melde(text || "⏹ Mitschauen beendet");
 }
 
 // ---------- KC-CLUB-SPRACHE-LERNEN (2.83.0, Wunsch Hansi): Admin-Übersicht – was die Sprachsteuerung (noch) nicht kennt und was sie gelernt hat ----------

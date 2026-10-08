@@ -42,8 +42,12 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.102.0";
-const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000; // KC-CLUB-SCHNAPPSCHUSS: 3 Min. zum Antworten, Bild höchstens ~1,5 MB
+const SERVER_VERSION = "2.103.0";
+const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 10 * 60000; // 2.103.0: Live-Mitschauen endet nach 10 Min.
+// Beenden = Bild sofort vom Server löschen (KC-CLUB-MITSCHAUEN)
+async function ssBeenden(pid: string, w: any) {
+  await db.from("kc_club_person_einstellung").update({ wert: { id: w.id, von: w.von, status: "beendet", seit: w.seit, am: jetzt() }, geaendert_am: jetzt() }).eq("person_id", pid).eq("schluessel", "schnappschuss");
+} // KC-CLUB-SCHNAPPSCHUSS: 3 Min. zum Antworten, Bild höchstens ~1,5 MB
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -7803,7 +7807,7 @@ Köcheclub-App`,
           antworten: (vonMir ?? []).map((x: any) => ({ id: x.id, an: wer(x.an), status: x.status, thread: x.thread_id, antwort: x.antwort ?? null })),
           anrufe: (rufe ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), art: x.art, zeit: x.erstellt_am })),
           spielAnfragen: (spAn ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), spiel: x.spiel, groesse: x.groesse, uhrMin: x.uhr?.min ?? null, zeit: x.erstellt_am })),
-          ...(vf ? { vorfuehren: { id: vf.id, von: wer(vf.von) } } : {}), ...(ss ? { schnappschuss: { id: ss.id, von: wer(ss.von) } } : {}) });
+          ...(vf ? { vorfuehren: { id: vf.id, von: wer(vf.von) } } : {}), ...(ss ? { schnappschuss: { id: ss.id, von: wer(ss.von), live: !!ss.live } } : {}) });
       }
 
       // ----- KC-CLUB-VORFUEHREN (2.56.0, Wunsch Hansi „Klaus etwas in der App zeigen“): Live zeigen ohne Bildübertragung -----
@@ -7857,14 +7861,14 @@ Köcheclub-App`,
         nurAdmin(ich);
         const an = String(p.an || "");
         if (an === ich.person_id || !(await aktiveMitglieder()).some((m) => m.person_id === an)) throw new Fehler("Mitglied nicht gefunden.", 404);
-        const id = crypto.randomUUID(), wert = { id, von: ich.person_id, status: "angefragt", seit: jetzt() };
+        const id = crypto.randomUUID(), live = p.live === true, wert = { id, von: ich.person_id, status: "angefragt", seit: jetzt(), live };
         const { error } = await db.from("kc_club_person_einstellung").upsert({ person_id: an, schluessel: "schnappschuss", wert, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
         if (error) throw new Fehler("Die Anfrage konnte nicht gespeichert werden.", 500);
         const versand = await routerSenden("club_nachricht_push", [an], {
-          titel: `📸 ${ich.vorname} möchte dir helfen`, kurz: "Darf er kurz sehen, was in deiner Club-App angezeigt wird? Zum Antworten antippen.",
+          titel: `📸 ${ich.vorname} möchte dir helfen`, kurz: live ? "Darf er eine Weile mitschauen, was in deiner Club-App angezeigt wird? Zum Antworten antippen." : "Darf er kurz sehen, was in deiner Club-App angezeigt wird? Zum Antworten antippen.",
           betreff: `${ich.vorname} möchte dir helfen`, text: `${ich.name} möchte kurz sehen, was in deiner Köcheclub-App gerade angezeigt wird. Du entscheidest in der App.`, url: APP_URL,
         }, `club-schnappschuss:${id}`).catch(() => ({ gesendet: 0, fehler: 1 }));
-        await protokoll(ich.person_id, "schnappschuss_angefragt", { an, push: versand.gesendet > 0 });
+        await protokoll(ich.person_id, live ? "mitschauen_angefragt" : "schnappschuss_angefragt", { an, push: versand.gesendet > 0 });
         return json({ ok: true, id, push: versand.gesendet > 0 });
       }
       case "schnappschuss_antwort": {
@@ -7873,10 +7877,31 @@ Köcheclub-App`,
         if (!w || w.id !== String(p.id || "") || w.status !== "angefragt" || Date.now() - new Date(w.seit).getTime() > SS_FRIST_MS) return json({ ok: true, status: "vorbei" });
         const bild = String(p.bild || "");
         if (p.erlaubt === true && (!/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(bild) || bild.length > SS_MAX_ZEICHEN)) throw new Fehler("Das Bild ist zu groß oder ungültig.", 400);
-        const neu = p.erlaubt === true ? { ...w, status: "bild", bild, am: jetzt() } : { id: w.id, von: w.von, status: "abgelehnt", seit: w.seit, am: jetzt() };
+        const neu = p.erlaubt === true ? { ...w, status: w.live ? "live" : "bild", bild, am: jetzt(), n: 1, ...(w.live ? { bis: new Date(Date.now() + SS_LIVE_MS).toISOString() } : {}) }
+          : { id: w.id, von: w.von, status: "abgelehnt", seit: w.seit, am: jetzt() };
         await db.from("kc_club_person_einstellung").update({ wert: neu, geaendert_am: jetzt() }).eq("person_id", ich.person_id).eq("schluessel", "schnappschuss");
-        await protokoll(ich.person_id, p.erlaubt === true ? "schnappschuss_erlaubt" : "schnappschuss_abgelehnt", { von: w.von });
+        await protokoll(ich.person_id, p.erlaubt === true ? (w.live ? "mitschauen_erlaubt" : "schnappschuss_erlaubt") : "schnappschuss_abgelehnt", { von: w.von });
         return json({ ok: true, status: neu.status });
+      }
+      case "schnappschuss_bild": {
+        const { data } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "schnappschuss").maybeSingle();
+        const w: any = data?.wert;
+        if (!w || w.id !== String(p.id || "") || w.status !== "live") return json({ ok: true, status: w?.status === "live" ? "vorbei" : (w?.status || "vorbei") });
+        if (Date.now() > new Date(w.bis).getTime()) { await ssBeenden(ich.person_id, w); return json({ ok: true, status: "beendet" }); }
+        const bild = String(p.bild || "");
+        if (!/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(bild) || bild.length > SS_MAX_ZEICHEN) throw new Fehler("Das Bild ist zu groß oder ungültig.", 400);
+        await db.from("kc_club_person_einstellung").update({ wert: { ...w, bild, am: jetzt(), n: (w.n || 0) + 1 }, geaendert_am: jetzt() }).eq("person_id", ich.person_id).eq("schluessel", "schnappschuss");
+        return json({ ok: true, status: "live" });
+      }
+      case "schnappschuss_ende": {
+        const an = p.an ? String(p.an) : ich.person_id;
+        const { data } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", an).eq("schluessel", "schnappschuss").maybeSingle();
+        const w: any = data?.wert;
+        if (!w || w.id !== String(p.id || "")) return json({ ok: true });
+        if (an !== ich.person_id && w.von !== ich.person_id) throw new Fehler("Kein Zugriff.", 403);
+        if (["angefragt", "live", "bild"].includes(w.status)) await ssBeenden(an, w);
+        await protokoll(ich.person_id, "mitschauen_beendet", { durch: an === ich.person_id ? "mitglied" : "admin" });
+        return json({ ok: true });
       }
       case "schnappschuss_holen": {
         nurAdmin(ich);
@@ -7885,6 +7910,11 @@ Köcheclub-App`,
         const w: any = data?.wert;
         if (!w || w.id !== String(p.id || "") || w.von !== ich.person_id) return json({ ok: true, status: "vorbei" });
         if (w.status === "angefragt" && Date.now() - new Date(w.seit).getTime() > SS_FRIST_MS) return json({ ok: true, status: "keine_antwort" });
+        if (w.status === "live") {
+          if (Date.now() > new Date(w.bis).getTime()) { await ssBeenden(an, w); return json({ ok: true, status: "beendet" }); }
+          const seit = Number(p.seit) || 0; // nur ein neueres Bild ausliefern; immer nur das neueste liegt auf dem Server
+          return json({ ok: true, status: "live", n: w.n || 0, am: w.am, bis: w.bis, ...((w.n || 0) > seit ? { bild: w.bild } : {}) });
+        }
         if (w.status !== "bild") return json({ ok: true, status: w.status });
         // Bild nur einmal ausliefern und sofort vom Server löschen
         await db.from("kc_club_person_einstellung").update({ wert: { id: w.id, von: w.von, status: "abgeholt", seit: w.seit, am: w.am }, geaendert_am: jetzt() }).eq("person_id", an).eq("schluessel", "schnappschuss");
